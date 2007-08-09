@@ -386,10 +386,10 @@ convert_date(uint8_t *dvb_buf)
 static void
 dvb_datetime_callback(int events, void *opaque, int fd)
 {
-  //  th_dvb_adapter_t *tda = opaque;
+  th_dvb_adapter_t *tda = opaque;
   uint8_t sec[4096];
   int seclen, r;
-  time_t t, now;
+  time_t t;
 
   if(!(events & DISPATCH_READ))
     return;
