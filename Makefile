@@ -1,6 +1,6 @@
 include ../config.mak
 
-SRCS = main.c dispatch.c channels.c transports.c
+SRCS = main.c dispatch.c channels.c transports.c teletext.c
 
 SRCS += pvr.c pvr_rec.c
 

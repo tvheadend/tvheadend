@@ -103,8 +103,8 @@ pvr_recorder_thread(void *aux)
   ts_pid_t *tsp;
   void *opaque = NULL;
   th_subscription_t *s;
-  char txt[50];
-
+  char txt[50], txt2[50], *t;
+  
   LIST_INIT(&pids);
   
   pthread_mutex_lock(&pvr_mutex);
@@ -172,8 +172,13 @@ pvr_recorder_thread(void *aux)
     txt[0] = 0;
   }
   
-  syslog(LOG_INFO, "pvr: \"%s\" - Recording started%s",
-	 pvrr->pvrr_printname, txt);
+  ctime_r(&pvrr->pvrr_stop, txt2);
+  t = strchr(txt2, '\n');
+  if(t != NULL)
+    *t = 0;
+
+  syslog(LOG_INFO, "pvr: \"%s\" - Recording started%s, ends at %s",
+	 pvrr->pvrr_printname, txt, txt2);
 
   pvrr->pvrr_status = HTSTV_PVR_STATUS_PAUSED_WAIT_FOR_START;
   pvr_inform_status_change(pvrr);
@@ -373,12 +378,18 @@ pvr_generate_filename(pvr_rec_t *pvrr)
 	   config_get_str("pvrdir", "."), chname, out);
 
   while(1) {
-    if(stat(fullname, &st) == -1)
+    if(stat(fullname, &st) == -1) {
+      syslog(LOG_DEBUG, "pvr: File \"%s\" -- %s -- Using for recording",
+	     fullname, strerror(errno));
       break;
-    
+    }
+
     tally++;
     snprintf(fullname, sizeof(fullname), "%s/%s-%s-%d",
 	     config_get_str("pvrdir", "."), chname, out, tally);
+
+    syslog(LOG_DEBUG, "pvr: Testing filename \"%s\"", fullname);
+
   }
 
   pvrr->pvrr_filename = strdup(fullname);
@@ -680,6 +691,7 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
 	     tv_streamtype_t type)
 {
   pwo_ffmpeg_t *pf = pvrr->pvrr_opaque;
+  th_transport_t *th = s->ths_transport;
   uint8_t flags, hlen, x;
   int64_t dts = AV_NOPTS_VALUE, pts = AV_NOPTS_VALUE;
   int r, rlen, i, g, fs;
@@ -826,7 +838,7 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
     switch(pvrr->pvrr_status) {
     case HTSTV_PVR_STATUS_PAUSED_WAIT_FOR_START:
     case HTSTV_PVR_STATUS_PAUSED_COMMERCIAL:
-      break;
+      return 0;
       
     case HTSTV_PVR_STATUS_WAIT_KEY_FRAME:
       if(st->codec->codec_type == CODEC_TYPE_VIDEO && 
@@ -836,6 +848,13 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
 	return 0;
       }
       break;
+
+    case HTSTV_PVR_STATUS_RECORDING:
+      if(th != NULL && th->tht_tt_commercial_advice == COMMERCIAL_YES) {
+	pvrr->pvrr_status = HTSTV_PVR_STATUS_PAUSED_COMMERCIAL;
+	return 0;
+      }
+
     default:
       break;
     }

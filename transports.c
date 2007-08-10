@@ -39,7 +39,7 @@
 #include "input_dvb.h"
 #include "input_v4l.h"
 #include "input_iptv.h"
-
+#include "teletext.h"
 #include "transports.h"
 
 /*
@@ -94,6 +94,8 @@ transport_purge(th_transport_t *t)
   default:
     break;
   }
+
+  t->tht_tt_commercial_advice = COMMERCIAL_UNKNOWN;
 }
 
 
@@ -346,7 +348,7 @@ transport_recv_tsb(th_transport_t *t, int pid, uint8_t *tsb)
 
     if(pi->type == HTSTV_TELETEXT) {
       /* teletext */
-      //	  teletext_input(t, tsb);
+      teletext_input(t, tsb);
       continue;
     }
 

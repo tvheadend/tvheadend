@@ -31,9 +31,9 @@
 
 #include "tvhead.h"
 #include "teletext.h"
-#include "client.h"
 
-static void teletext_rundown(th_transport_t *t, tt_page_t *ttp);
+static void teletext_rundown(th_transport_t *t, th_channel_t *ch, 
+			     tt_page_t *ttp);
 
 #define bitreverse(b) \
 (((b) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
@@ -181,7 +181,7 @@ tt_decode_line(th_transport_t *t, uint8_t *buf)
   int page, magidx, i;
   tt_mag_t *mag;
   th_channel_t *ch = t->tht_channel;
-  tt_decoder_t *ttd = &ch->thc_tt;
+  tt_decoder_t *ttd = &ch->ch_tt;
   tt_page_t *ttp;
 
   mpag = ham_decode(buf[0], buf[1]);
@@ -223,9 +223,9 @@ tt_decode_line(th_transport_t *t, uint8_t *buf)
     }
 
     if(update_tt_clock(t, (char *)buf + 34)) {
-      if(ch->thc_teletext_rundown != 0) {
-	ttp = tt_get_page(ttd, ch->thc_teletext_rundown);
-	teletext_rundown(t, ttp);
+      if(ch->ch_teletext_rundown != 0) {
+	ttp = tt_get_page(ttd, ch->ch_teletext_rundown);
+	teletext_rundown(t, ch, ttp);
       }
     }
 
@@ -255,8 +255,8 @@ tt_decode_line(th_transport_t *t, uint8_t *buf)
       break;
     }
 
-    if(ttp->ttp_page == ch->thc_teletext_rundown)
-      teletext_rundown(t, ttp);
+    if(ttp->ttp_page == ch->ch_teletext_rundown)
+      teletext_rundown(t, ch, ttp);
   }
 }
 
@@ -308,17 +308,23 @@ tt_time_to_len(const char *buf)
   return l;
 }
 
+/*
+ * Decode the Swedish TV4 teletext rundown page to figure out if we are 
+ * currently in a commercial break
+ */
 
 static void
-teletext_rundown(th_transport_t *t, tt_page_t *ttp)
+teletext_rundown(th_transport_t *t, th_channel_t *ch, tt_page_t *ttp)
 {
   char r[50];
   int i;
   time_t ti, d, l;
   int curlen = -1;
+  th_commercial_advice_t prev;
+
 #if 0
   printf("%c", 0x0c);
-  printf("%-20s %s", 
+  printf("%-20s %s\n", 
 	 t->tht_tt_rundown_content_length > 400 ? "real stuff" : "commercial",
 	 ctime(&t->tht_tt_clock));
 #endif
@@ -337,12 +343,30 @@ teletext_rundown(th_transport_t *t, tt_page_t *ttp)
       /* Currently playing show */
       curlen = l;
     }
-    //    printf("%02d|%s|\t(%5lds) : %ld, %d\n", i, r, l, d, curlen);
+    //  printf("%02d|%s|\t(%5lds) : %ld, %d\n", i, r, l, d, curlen);
   }
 
   t->tht_tt_rundown_content_length = curlen;
+
+  prev = t->tht_tt_commercial_advice;
+
+  if(curlen < 0) {
+    t->tht_tt_commercial_advice = COMMERCIAL_UNKNOWN;
+    return;
+  }
+
   if(curlen < 400)
     t->tht_tt_commercial_advice = COMMERCIAL_YES;
   else
     t->tht_tt_commercial_advice = COMMERCIAL_NO;
+
+  if(prev != t->tht_tt_commercial_advice) {
+
+    syslog(LOG_DEBUG, 
+	   "teletext-rundown: \"%s\" on \"%s\": "
+	   "%s commercial break (chunk %ds)",
+	   ch->ch_name, t->tht_name, 
+	   t->tht_tt_commercial_advice == COMMERCIAL_YES ? "In" : "Not in",
+	   curlen);
+  }
 }
