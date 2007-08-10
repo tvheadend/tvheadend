@@ -592,8 +592,7 @@ pwo_init(th_subscription_t *s, pvr_rec_t *pvrr)
 
   pf->fctx->oformat = pf->fmt;
 
-  snprintf(urlname, sizeof(urlname), "file:%s.%s", 
-	   pvrr->pvrr_filename, pvrr->pvrr_format);
+  snprintf(urlname, sizeof(urlname), "file:%s", pvrr->pvrr_filename);
 
   if((err = url_fopen(&pf->fctx->pb, urlname, URL_WRONLY)) < 0) {
     syslog(LOG_ERR, 
