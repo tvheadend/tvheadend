@@ -350,10 +350,8 @@ teletext_rundown(th_transport_t *t, th_channel_t *ch, tt_page_t *ttp)
 
   prev = t->tht_tt_commercial_advice;
 
-  if(curlen < 0) {
-    t->tht_tt_commercial_advice = COMMERCIAL_UNKNOWN;
+  if(curlen < 0)
     return;
-  }
 
   if(curlen < 400)
     t->tht_tt_commercial_advice = COMMERCIAL_YES;
