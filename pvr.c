@@ -191,6 +191,7 @@ pvr_free(pvr_rec_t *pvrr)
   free(pvrr->pvrr_desc);
   free(pvrr->pvrr_printname);
   free(pvrr->pvrr_filename);
+  free(pvrr->pvrr_format);
   free(pvrr);
 }
 

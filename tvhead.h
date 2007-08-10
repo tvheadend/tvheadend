@@ -410,6 +410,7 @@ typedef struct pvr_rec {
   char *pvrr_desc;           /* Description in UTF-8 */
 
   char *pvrr_printname;      /* Only ASCII chars, used for logging and such */
+  char *pvrr_format;         /* File format trailer */
 
   char pvrr_status;          /* defined in libhts/htstv.h */
 

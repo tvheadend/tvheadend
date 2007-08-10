@@ -347,6 +347,9 @@ pvr_generate_filename(pvr_rec_t *pvrr)
     pvrr->pvrr_filename = NULL;
   }
 
+  free(pvrr->pvrr_format);
+  pvrr->pvrr_format = strdup("asf");
+
   if(name != NULL && name[0] != 0) {
     /* Convert from utf8 */
 
@@ -374,8 +377,8 @@ pvr_generate_filename(pvr_rec_t *pvrr)
   strcpy(chname, pvrr->pvrr_channel->ch_name);
   deslashify(chname);
 
-  snprintf(fullname, sizeof(fullname), "%s/%s-%s",
-	   config_get_str("pvrdir", "."), chname, out);
+  snprintf(fullname, sizeof(fullname), "%s/%s-%s.%s",
+	   config_get_str("pvrdir", "."), chname, out, pvrr->pvrr_format);
 
   while(1) {
     if(stat(fullname, &st) == -1) {
@@ -385,8 +388,9 @@ pvr_generate_filename(pvr_rec_t *pvrr)
     }
 
     tally++;
-    snprintf(fullname, sizeof(fullname), "%s/%s-%s-%d",
-	     config_get_str("pvrdir", "."), chname, out, tally);
+    snprintf(fullname, sizeof(fullname), "%s/%s-%s-%d.%s",
+	     config_get_str("pvrdir", "."), chname, out, tally,
+	     pvrr->pvrr_format);
 
     syslog(LOG_DEBUG, "pvr: Testing filename \"%s\"", fullname);
 
@@ -557,7 +561,6 @@ pwo_init(th_subscription_t *s, pvr_rec_t *pvrr)
 {
   char urlname[400];
   int i, err;
-  const char *format = NULL;
   th_transport_t *t = s->ths_transport;
   pwo_ffmpeg_t *pf;
   pidinfo_t *p;
@@ -565,15 +568,13 @@ pwo_init(th_subscription_t *s, pvr_rec_t *pvrr)
   AVCodec *codec;
   const char *cname;
 
-  format = "asf";
-
   pf = calloc(1, sizeof(pwo_ffmpeg_t));
 
-  pf->fmt = guess_format(format, NULL, NULL);
+  pf->fmt = guess_format(pvrr->pvrr_format, NULL, NULL);
   if(pf->fmt == NULL) {
     syslog(LOG_ERR, 
 	   "pvr: \"%s\" - Unable to open file format \".%s\" for output",
-	   pvrr->pvrr_printname, format);
+	   pvrr->pvrr_printname, pvrr->pvrr_format);
     free(pf);
     return NULL;
   }
@@ -592,7 +593,7 @@ pwo_init(th_subscription_t *s, pvr_rec_t *pvrr)
   pf->fctx->oformat = pf->fmt;
 
   snprintf(urlname, sizeof(urlname), "file:%s.%s", 
-	   pvrr->pvrr_filename,format);
+	   pvrr->pvrr_filename, pvrr->pvrr_format);
 
   if((err = url_fopen(&pf->fctx->pb, urlname, URL_WRONLY)) < 0) {
     syslog(LOG_ERR, 
@@ -789,7 +790,7 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
     if(pf->hdr_written == 0) {
       if(av_write_header(pf->fctx))
 	return 0;
-      dump_format(pf->fctx, 0, "pvr", 1);
+      //      dump_format(pf->fctx, 0, "pvr", 1);
       pf->hdr_written = 1;
       syslog(LOG_DEBUG, "pvr: \"%s\" - Header written to file, stream dump:", 
 	     pvrr->pvrr_printname);
@@ -837,9 +838,17 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
     
     switch(pvrr->pvrr_status) {
     case HTSTV_PVR_STATUS_PAUSED_WAIT_FOR_START:
-    case HTSTV_PVR_STATUS_PAUSED_COMMERCIAL:
       return 0;
-      
+
+    case HTSTV_PVR_STATUS_PAUSED_COMMERCIAL:
+      if(th == NULL || th->tht_tt_commercial_advice != COMMERCIAL_YES) {
+	pvrr->pvrr_status = HTSTV_PVR_STATUS_WAIT_KEY_FRAME;
+      } else {
+	return 0;
+      }
+
+      /* FALLTHRU */
+
     case HTSTV_PVR_STATUS_WAIT_KEY_FRAME:
       if(st->codec->codec_type == CODEC_TYPE_VIDEO && 
 	 st->parser->pict_type == FF_I_TYPE) {
