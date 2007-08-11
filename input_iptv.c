@@ -133,6 +133,8 @@ iptv_configure_transport(th_transport_t *t, const char *muxname)
   if((ce = find_mux_config("iptvmux", muxname)) == NULL)
     return -1;
 
+  printf("Added IPTV mux\n");
+
   t->tht_type = TRANSPORT_IPTV;
   
   if((s = config_get_str_sub(&ce->ce_sub, "group-address", NULL)) == NULL)

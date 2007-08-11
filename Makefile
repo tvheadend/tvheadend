@@ -15,7 +15,7 @@ CFLAGS += -g -Wall -Werror -O2
 CFLAGS += -I$(CURDIR)/../install/include
 CFLAGS += -Wno-deprecated-declarations
 CFLAGS += -D_LARGEFILE64_SOURCE
-
+CFLAGS += -DENABLE_INPUT_IPTV -DENABLE_INPUT_DVB
 LDFLAGS += -L$(CURDIR)/../install/lib
 
 DLIBS += -lhts 

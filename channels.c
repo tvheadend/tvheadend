@@ -84,7 +84,7 @@ transportcmp(th_transport_t *a, th_transport_t *b)
 static void
 service_load(struct config_head *head)
 {
-  const char *name,  *v, *mux;
+  const char *name,  *v;
   pidinfo_t pids[10];
   int i, npids = 0;
   th_transport_t *t;
@@ -98,21 +98,24 @@ service_load(struct config_head *head)
 
   t = calloc(1, sizeof(th_transport_t));
 
-  if((mux = config_get_str_sub(head, "dvbmux", NULL)) != NULL) {
-    if(dvb_configure_transport(t, mux)) {
-      free(t);
-      return;
-    }
-#ifdef HAVE_IPTV
-  } else if((mux = config_get_str_sub(head, "iptvmux", NULL)) != NULL) {
-    if(iptv_configure_transport(t, mux)) {
+  if(0) {
+#ifdef ENABLE_INPUT_DVB
+  } else if((v = config_get_str_sub(head, "dvbmux", NULL)) != NULL) {
+    if(dvb_configure_transport(t, v)) {
       free(t);
       return;
     }
 #endif
-#ifdef HAVE_V4L
-  } else if((mux = config_get_str_sub(head, "v4lmux", NULL)) != NULL) {
-    if(v4l_configure_transport(t, mux)) {
+#ifdef ENABLE_INPUT_IPTV
+  } else if((v = config_get_str_sub(head, "iptvmux", NULL)) != NULL) {
+    if(iptv_configure_transport(t, v)) {
+      free(t);
+      return;
+    }
+#endif
+#ifdef ENABLE_INPUT_V4L
+  } else if((v = config_get_str_sub(head, "v4lmux", NULL)) != NULL) {
+    if(v4l_configure_transport(t, v)) {
       free(t);
       return;
     }

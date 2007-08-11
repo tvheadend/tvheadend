@@ -76,17 +76,17 @@ transport_purge(th_transport_t *t)
     return;
 
   switch(t->tht_type) {
+#ifdef ENABLE_INPUT_DVB
   case TRANSPORT_DVB:
     dvb_stop_feed(t);
     break;
-
-#ifdef ENABLE_IPTV
+#endif
+#ifdef ENABLE_INPUT_IPTV
   case TRANSPORT_IPTV:
     iptv_stop_feed(t);
     break;
 #endif
-
-#ifdef ENABLE_V4L
+#ifdef ENABLE_INPUT_V4L
   case TRANSPORT_V4L:
     v4l_stop_feed(t);
     break;
@@ -107,14 +107,15 @@ transport_start(th_transport_t *t, unsigned int weight)
   t->tht_monitor_suspend = 10;
 
   switch(t->tht_type) {
+#ifdef ENABLE_INPUT_DVB
   case TRANSPORT_DVB:
     return dvb_start_feed(t, weight);
-#ifdef ENABLE_IPTV
+#endif
+#ifdef ENABLE_INPUT_IPTV
   case TRANSPORT_IPTV:
     return iptv_start_feed(t, weight);
 #endif
-
-#ifdef ENABLE_V4L
+#ifdef ENABLE_INPUT_V4L
   case TRANSPORT_V4L:
     return v4l_start_feed(t, weight);
 #endif
