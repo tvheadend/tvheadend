@@ -320,50 +320,52 @@ transport_compute_weight(struct th_transport_list *head)
 void
 transport_recv_tsb(th_transport_t *t, int pid, uint8_t *tsb)
 {
-  pidinfo_t *pi;
+  pidinfo_t *pi = NULL;
   th_subscription_t *s;
   th_channel_t *ch;
   int i, cc, err = 0;
   
   for(i = 0; i < t->tht_npids; i++) {
-
-    pi = t->tht_pids + i;
-
-    if(pi->pid != pid)
-      continue;
-	
-    cc = tsb[3] & 0xf;
-
-    if(tsb[3] & 0x10) {
-      if(pi->cc_valid && cc != pi->cc) {
-	/* Incorrect CC */
-	avgstat_add(&t->tht_cc_errors, 1, dispatch_clock);
-	err = 1;
-      }
-      pi->cc_valid = 1;
-      pi->cc = (cc + 1) & 0xf;
+    if(t->tht_pids[i].pid == pid) {
+      pi = t->tht_pids + i;
+      break;
     }
-
-    avgstat_add(&t->tht_rate, 188, dispatch_clock);
-
-    ch = t->tht_channel;
-
-    if(pi->type == HTSTV_TELETEXT) {
-      /* teletext */
-      teletext_input(t, tsb);
-      continue;
-    }
-
-    tsb[0] = pi->type;
-
-    pthread_mutex_lock(&subscription_mutex);
-
-    LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link) {
-      s->ths_total_err += err;
-      s->ths_callback(s, tsb, pi, i);
-    }
-    pthread_mutex_unlock(&subscription_mutex);
   }
+
+  if(pi == NULL)
+    return;
+
+  cc = tsb[3] & 0xf;
+
+  if(tsb[3] & 0x10) {
+    if(pi->cc_valid && cc != pi->cc) {
+      /* Incorrect CC */
+      avgstat_add(&t->tht_cc_errors, 1, dispatch_clock);
+      err = 1;
+    }
+    pi->cc_valid = 1;
+    pi->cc = (cc + 1) & 0xf;
+  }
+
+  avgstat_add(&t->tht_rate, 188, dispatch_clock);
+
+  ch = t->tht_channel;
+
+  if(pi->type == HTSTV_TELETEXT) {
+    /* teletext */
+    teletext_input(t, tsb);
+    return;
+  }
+
+  tsb[0] = pi->type;
+
+  pthread_mutex_lock(&subscription_mutex);
+
+  LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link) {
+    s->ths_total_err += err;
+    s->ths_callback(s, tsb, pi, i);
+  }
+  pthread_mutex_unlock(&subscription_mutex);
 }
 
 
