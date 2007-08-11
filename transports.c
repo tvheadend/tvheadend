@@ -334,14 +334,15 @@ transport_recv_tsb(th_transport_t *t, int pid, uint8_t *tsb)
 	
     cc = tsb[3] & 0xf;
 
-    if(pi->cc_valid && cc != pi->cc) {
-      /* Incorrect CC */
-      avgstat_add(&t->tht_cc_errors, 1, dispatch_clock);
-      err = 1;
+    if(tsb[3] & 0x10) {
+      if(pi->cc_valid && cc != pi->cc) {
+	/* Incorrect CC */
+	avgstat_add(&t->tht_cc_errors, 1, dispatch_clock);
+	err = 1;
+      }
+      pi->cc_valid = 1;
+      pi->cc = (cc + 1) & 0xf;
     }
-
-    pi->cc_valid = 1;
-    pi->cc = (cc + 1) & 0xf;
 
     avgstat_add(&t->tht_rate, 188, dispatch_clock);
 
