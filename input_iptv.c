@@ -30,6 +30,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <errno.h>
+#include <linux/netdevice.h>
 
 #include <libhts/htscfg.h>
 
@@ -84,6 +85,7 @@ iptv_start_feed(th_transport_t *t, unsigned int weight)
   memset(&m, 0, sizeof(m));
   m.imr_multiaddr.s_addr = t->tht_iptv_group_addr.s_addr;
   m.imr_address.s_addr = t->tht_iptv_interface_addr.s_addr;
+  m.imr_ifindex = t->tht_iptv_ifindex;
 
   if(setsockopt(fd, SOL_IP, IP_ADD_MEMBERSHIP, &m, 
 		sizeof(struct ip_mreqn)) == -1) {
@@ -128,7 +130,10 @@ iptv_configure_transport(th_transport_t *t, const char *muxname)
 {
   config_entry_t *ce;
   const char *s;
+  int fd;
   char buf[100];
+  char ifname[100];
+  struct ifreq ifr;
 
   if((ce = find_mux_config("iptvmux", muxname)) == NULL)
     return -1;
@@ -139,16 +144,38 @@ iptv_configure_transport(th_transport_t *t, const char *muxname)
     return -1;
   t->tht_iptv_group_addr.s_addr = inet_addr(s);
 
-  if((s = config_get_str_sub(&ce->ce_sub, "interface-address", NULL)) == NULL)
-    return -1;
-  t->tht_iptv_interface_addr.s_addr = inet_addr(s);
+  t->tht_iptv_ifindex = 0;
+
+  if((s = config_get_str_sub(&ce->ce_sub, "interface-address", NULL)) != NULL)
+    t->tht_iptv_interface_addr.s_addr = inet_addr(s);
+  else
+    t->tht_iptv_interface_addr.s_addr = INADDR_ANY; 
+  
+  snprintf(ifname, sizeof(ifname), "%s",
+	   inet_ntoa(t->tht_iptv_interface_addr));
+
+  if((s = config_get_str_sub(&ce->ce_sub, "interface", NULL)) != NULL) {
+
+    memset(&ifr, 0, sizeof(ifr));
+    strncpy(ifr.ifr_name, s, IFNAMSIZ - 1);
+    ifr.ifr_name[IFNAMSIZ - 1] = 0;
+    
+    fd = socket(PF_INET,SOCK_STREAM,0);
+    if(fd != -1) {
+      if(ioctl(fd, SIOCGIFINDEX, &ifr) == 0) {
+	t->tht_iptv_ifindex = ifr.ifr_ifindex;
+	snprintf(ifname, sizeof(ifname), "%s", s);
+      }
+      close(fd);
+    }
+  }
 
   if((s = config_get_str_sub(&ce->ce_sub, "port", NULL)) == NULL)
     return -1;
   t->tht_iptv_port = atoi(s);
 
-  snprintf(buf, sizeof(buf), "IPTV: %s (%s:%d)", muxname, 
-	   inet_ntoa(t->tht_iptv_group_addr), t->tht_iptv_port);
+  snprintf(buf, sizeof(buf), "IPTV: %s (%s:%s:%d)", muxname, 
+	   ifname, inet_ntoa(t->tht_iptv_group_addr), t->tht_iptv_port);
   t->tht_name = strdup(buf);
 
   return 0;

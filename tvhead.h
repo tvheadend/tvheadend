@@ -186,6 +186,8 @@ typedef struct th_transport {
 
       struct in_addr group_addr;
       struct in_addr interface_addr;
+      int ifindex;
+
       int port;
       int fd;
       void *dispatch_handle;
@@ -205,6 +207,7 @@ typedef struct th_transport {
 
 #define tht_iptv_group_addr      u.iptv.group_addr
 #define tht_iptv_interface_addr  u.iptv.interface_addr
+#define tht_iptv_ifindex         u.iptv.ifindex
 #define tht_iptv_port            u.iptv.port
 #define tht_iptv_dispatch_handle u.iptv.dispatch_handle
 #define tht_iptv_fd              u.iptv.fd
