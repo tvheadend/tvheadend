@@ -651,8 +651,10 @@ client_data_read(client_t *c)
   int r, cr = 0, i;
   char buf[100];
 
-  if(space < 1)
+  if(space < 1) {
     client_teardown(c, EBADMSG);
+    return;
+  }
 
   r = read(c->c_fd, c->c_input_buf + c->c_input_buf_ptr, space);
   if(r < 0) {
@@ -701,12 +703,13 @@ client_socket_callback(int events, void *opaque, int fd)
 {
   client_t *c = opaque;
 
-  if(events & DISPATCH_ERR)
+  if(events & DISPATCH_ERR) {
     client_teardown(c, ECONNRESET);
+    return;
+  }
 
   if(events & DISPATCH_READ)
     client_data_read(c);
-
 }
 
 
