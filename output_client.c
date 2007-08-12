@@ -43,7 +43,7 @@ static void
 cprintf(client_t *c, const char *fmt, ...)
 {
   va_list ap;
-  char buf[1000];
+  char buf[5000];
 
   va_start(ap, fmt);
   vsnprintf(buf, sizeof(buf), fmt, ap);
