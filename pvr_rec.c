@@ -699,9 +699,10 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
   AVStream *st, *stx;
   AVPacket pkt;
   uint8_t *pbuf;
-  int pbuflen, gotpic;
+  int pbuflen, data_size;
   char txt[100];
   const char *tp;
+  void *abuf;
   AVFrame pic;
 
   if(stream_index == -1)
@@ -762,10 +763,11 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
 	break;
 
       case CODEC_TYPE_VIDEO:
-	r = avcodec_decode_video(st->codec, &pic, &gotpic, buf, len);
-	if(r != 0 && gotpic) {
+	r = avcodec_decode_video(st->codec, &pic, &data_size, buf, len);
+	if(r != 0 && data_size) {
 	  syslog(LOG_DEBUG, "pvr: \"%s\" - "
-		 "Stream #%d: Decoded a complete frame: %d x %d in %.2fHz\n",
+		 "Stream #%d: Decoded a complete video frame: "
+		 "%d x %d in %.2fHz\n",
 		 pvrr->pvrr_printname, stream_index,
 		 st->codec->width, st->codec->height,
 		 (float)st->codec->time_base.den / 
@@ -773,13 +775,27 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
 
 	  pf->pids[streamidx].decoded = 1;
 	  pf->decode_ctd--;
-	  break;
+	}
+	break;
 	
       case CODEC_TYPE_AUDIO:
-	pf->pids[streamidx].decoded = 1;
-	pf->decode_ctd--;
-	break;
+	abuf = malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE);
+
+	r = avcodec_decode_audio(st->codec, abuf, &data_size, buf, len);
+
+	free(abuf);
+
+	if(r != 0 && data_size) {
+	  syslog(LOG_DEBUG, "pvr: \"%s\" - "
+		 "Stream #%d: Decoded a complete audio frame: "
+		 "%d channels in %d Hz\n",
+		 pvrr->pvrr_printname, stream_index,
+		 st->codec->channels,
+		 st->codec->sample_rate);
+	  pf->pids[streamidx].decoded = 1;
+	  pf->decode_ctd--;
 	}
+	break;
       }
     }
 
