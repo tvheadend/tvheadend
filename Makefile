@@ -12,11 +12,11 @@ SRCS +=	output_client.c output_multicast.c
 
 PROG = tvhead
 CFLAGS += -g -Wall -Werror -O2
-CFLAGS += -I$(CURDIR)/../install/include
+CFLAGS += -I$(INCLUDES_INSTALL_BASE)
 CFLAGS += -Wno-deprecated-declarations
 CFLAGS += -D_LARGEFILE64_SOURCE
 CFLAGS += -DENABLE_INPUT_IPTV -DENABLE_INPUT_DVB
-LDFLAGS += -L$(CURDIR)/../install/lib
+LDFLAGS += -L$(LIBS_INSTALL_BASE)
 
 DLIBS += -lhts 
 
@@ -56,7 +56,7 @@ install:
 
 ${PROG}: $(.OBJDIR) $(OBJS) Makefile
 	cd $(.OBJDIR) && $(CC) $(LDFLAGS) -o $@ $(OBJS) \
-	-Wl,-Bstatic $(SLIBS) -Wl,-Bdynamic $(DLIBS)
+	$(STATIC_LINKFLAGS) $(SLIBS) $(DYNAMIC_LINKFLAGS) $(DLIBS)
 
 $(.OBJDIR):
 	mkdir $(.OBJDIR)
