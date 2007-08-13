@@ -122,6 +122,10 @@ pvr_recorder_thread(void *aux)
     goto done;
   }
 
+  TAILQ_INIT(&pvrr->pvrr_dq);
+  pthread_cond_init(&pvrr->pvrr_dq_cond, NULL);
+  pthread_mutex_init(&pvrr->pvrr_dq_mutex, NULL);
+
   s = channel_subscribe(ch, pvrr, pvr_record_callback, 1000, "pvr");
 
   /* Wait for a transponder to become available */
@@ -149,10 +153,6 @@ pvr_recorder_thread(void *aux)
     }
   }
 
-  TAILQ_INIT(&pvrr->pvrr_dq);
-
-  pthread_cond_init(&pvrr->pvrr_dq_cond, NULL);
-  pthread_mutex_init(&pvrr->pvrr_dq_mutex, NULL);
 
   pthread_mutex_unlock(&pvr_mutex);
 
@@ -538,16 +538,16 @@ typedef struct pwo_ffmpeg {
   AVFormatContext *fctx;
 
   struct {
-    int64_t pts;
+    int64_t source_dts;
     int64_t dts;
     int streamid;
     int decoded;
-
   } pids[PWO_FFMPEG_MAXPIDS];
+
+  int64_t ref_clock;
 
   int iframe_lock;
   int hdr_written;
-  int64_t pts_delta;
   int decode_ctd;
 
   tv_pvr_status_t logged_status;
@@ -603,8 +603,6 @@ pwo_init(th_subscription_t *s, pvr_rec_t *pvrr)
     free(pf);
     return NULL;
   }
-
-  pf->pts_delta = AV_NOPTS_VALUE;
 
   av_set_parameters(pf->fctx, NULL);  /* Fix NULL -stuff */
 
@@ -687,7 +685,7 @@ pwo_init(th_subscription_t *s, pvr_rec_t *pvrr)
 
 static int
 pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
-	     int streamidx, uint8_t *buf, size_t len,
+	     int pidindex, uint8_t *buf, size_t len,
 	     tv_streamtype_t type)
 {
   pwo_ffmpeg_t *pf = pvrr->pvrr_opaque;
@@ -695,7 +693,7 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
   uint8_t flags, hlen, x;
   int64_t dts = AV_NOPTS_VALUE, pts = AV_NOPTS_VALUE;
   int r, rlen, i, g, fs;
-  int stream_index = pf->pids[streamidx].streamid;
+  int lavf_index = pf->pids[pidindex].streamid;
   AVStream *st, *stx;
   AVPacket pkt;
   uint8_t *pbuf;
@@ -705,7 +703,11 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
   void *abuf;
   AVFrame pic;
 
-  if(stream_index == -1)
+  AVRational mpeg_tc = {1, 90000};
+
+  int64_t pdelta;
+
+  if(lavf_index == -1)
     return 0;
 
   x = getu8(buf, len);
@@ -726,30 +728,31 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
     dts = getpts(buf, len);
 
     hlen -= 10;
+
+    pdelta = pts - dts;
+
   } else if((flags & 0xc0) == 0x80) {
     if(hlen < 5)
       return 0;
 
     dts = pts = getpts(buf, len);
     hlen -= 5;
+    pdelta = 0;
   } else {
 
-    
+    pdelta = 0;
+   
   }
 
   buf += hlen;
   len -= hlen;
 
-  st = pf->fctx->streams[stream_index];
+  st = pf->fctx->streams[lavf_index];
 
-  if(pf->pts_delta == AV_NOPTS_VALUE)
-    pf->pts_delta = pts;
+  if(dts != AV_NOPTS_VALUE)
+    pf->pids[pidindex].source_dts = av_rescale_q(dts, mpeg_tc, AV_TIME_BASE_Q);
 
-  pts -= pf->pts_delta;
-  dts -= pf->pts_delta;
-
-  if(pts < 0 || dts < 0)
-    return 0;
+  pdelta = av_rescale_q(pdelta, mpeg_tc, AV_TIME_BASE_Q);
 
   while(len > 0) {
     rlen = av_parser_parse(st->parser, st->codec, &pbuf, &pbuflen,
@@ -757,7 +760,7 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
     if(pbuflen == 0)
       return 0;
 
-    if(pf->pids[streamidx].decoded == 0) {
+    if(pf->pids[pidindex].decoded == 0) {
       switch(st->codec->codec_type) {
       default:
 	break;
@@ -768,12 +771,12 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
 	  syslog(LOG_DEBUG, "pvr: \"%s\" - "
 		 "Stream #%d: Decoded a complete video frame: "
 		 "%d x %d in %.2fHz\n",
-		 pvrr->pvrr_printname, stream_index,
+		 pvrr->pvrr_printname, lavf_index,
 		 st->codec->width, st->codec->height,
 		 (float)st->codec->time_base.den / 
 		 (float)st->codec->time_base.num);
 
-	  pf->pids[streamidx].decoded = 1;
+	  pf->pids[pidindex].decoded = 1;
 	  pf->decode_ctd--;
 	}
 	break;
@@ -789,10 +792,10 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
 	  syslog(LOG_DEBUG, "pvr: \"%s\" - "
 		 "Stream #%d: Decoded a complete audio frame: "
 		 "%d channels in %d Hz\n",
-		 pvrr->pvrr_printname, stream_index,
+		 pvrr->pvrr_printname, lavf_index,
 		 st->codec->channels,
 		 st->codec->sample_rate);
-	  pf->pids[streamidx].decoded = 1;
+	  pf->pids[pidindex].decoded = 1;
 	  pf->decode_ctd--;
 	}
 	break;
@@ -805,10 +808,14 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
     if(pf->hdr_written == 0) {
       if(av_write_header(pf->fctx))
 	return 0;
-      //      dump_format(pf->fctx, 0, "pvr", 1);
       pf->hdr_written = 1;
       syslog(LOG_DEBUG, "pvr: \"%s\" - Header written to file, stream dump:", 
 	     pvrr->pvrr_printname);
+
+      for(i = 1; i < PWO_FFMPEG_MAXPIDS; i++)
+	pf->pids[i].dts = pf->pids[i].source_dts - pf->pids[0].source_dts;
+
+      pf->pids[0].dts = 0;
 
       for(i = 0; i < pf->fctx->nb_streams; i++) {
 	stx = pf->fctx->streams[i];
@@ -819,11 +826,10 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
 	syslog(LOG_DEBUG, "pvr: \"%s\" - Stream #%d: %s [%d/%d]",
 	       pvrr->pvrr_printname, i, txt, 
 	       stx->time_base.num/g, stx->time_base.den/g);
+	       
       }
     }
     
-    pf->pids[streamidx].dts++;
-
     if(pf->logged_status != pvrr->pvrr_status) {
       pf->logged_status = pvrr->pvrr_status;
       
@@ -884,29 +890,34 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
     }
 
     av_init_packet(&pkt);
-    pkt.stream_index = stream_index;
+    pkt.stream_index = lavf_index;
 
-    pkt.pts = pts / 90LL; /* Scale to ASF time base */
-    pkt.dts = dts / 90LL; /* FIXME: This needs to be fixed */
-    pkt.data = buf;
-    pkt.size = len;
+    if(pf->pids[pidindex].dts >= 0) {
 
-    if(st->codec->codec_type == CODEC_TYPE_VIDEO && 
-       st->parser->pict_type == FF_I_TYPE)
-      pkt.flags |= PKT_FLAG_KEY;
+      pkt.dts = av_rescale_q(pf->pids[pidindex].dts, 
+			     AV_TIME_BASE_Q, st->time_base);
 
-    r = av_interleaved_write_frame(pf->fctx, &pkt);
+      pkt.pts = av_rescale_q(pf->pids[pidindex].dts + pdelta,
+			   AV_TIME_BASE_Q, st->time_base);
+      pkt.data = pbuf;
+      pkt.size = pbuflen;
+
+      if(st->codec->codec_type == CODEC_TYPE_VIDEO && 
+	 st->parser->pict_type == FF_I_TYPE)
+	pkt.flags |= PKT_FLAG_KEY;
+      
+      r = av_interleaved_write_frame(pf->fctx, &pkt);
+    }
 
     switch(st->codec->codec_type) {
     case CODEC_TYPE_VIDEO:
-      pts += 90000 * st->codec->time_base.num / st->codec->time_base.den;
-      dts += 90000 * st->codec->time_base.num / st->codec->time_base.den;
+      pf->pids[pidindex].dts += 1000000 * 
+	st->codec->time_base.num / st->codec->time_base.den;
       break;
 
     case CODEC_TYPE_AUDIO:
       fs = st->codec->frame_size;
-      //      pts += 90000 * fs / st->codec->sample_rate;
-      //      dts += 90000 * fs / st->codec->sample_rate;
+      pf->pids[pidindex].dts += 1000000 * fs / st->codec->sample_rate;
       break;
 
     default:
