@@ -387,12 +387,13 @@ pvr_generate_filename(pvr_rec_t *pvrr)
       break;
     }
 
+    syslog(LOG_DEBUG, "pvr: Overwrite protection, file \"%s\" exists", 
+	   fullname);
+
     tally++;
     snprintf(fullname, sizeof(fullname), "%s/%s-%s-%d.%s",
 	     config_get_str("pvrdir", "."), chname, out, tally,
 	     pvrr->pvrr_format);
-
-    syslog(LOG_DEBUG, "pvr: Testing filename \"%s\"", fullname);
 
   }
 
