@@ -16,8 +16,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef INPUT_IPTV_H
-#define UNPUT_IPTV_H
+#ifndef IPTV_INPUT_H_
+#define IPTV_INPUT_H_
 
 int iptv_configure_transport(th_transport_t *t, const char *muxname);
 
@@ -25,4 +25,4 @@ int iptv_start_feed(th_transport_t *t, unsigned int weight);
 
 int iptv_stop_feed(th_transport_t *t);
 
-#endif /* INPUT_IPTV_H */
+#endif /* IPTV_INPUT_H_ */

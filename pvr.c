@@ -37,7 +37,7 @@
 #include "tvhead.h"
 #include "channels.h"
 #include "transports.h"
-#include "output_client.h"
+#include "htsclient.h"
 #include "pvr.h"
 #include "pvr_rec.h"
 #include "epg.h"

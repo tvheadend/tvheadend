@@ -37,15 +37,15 @@
 #include <ffmpeg/avformat.h>
 
 #include "tvhead.h"
-#include "input_dvb.h"
-#include "input_v4l.h"
+#include "dvb.h"
+#include "v4l.h"
 #include "channels.h"
-#include "output_client.h"
+#include "htsclient.h"
 #include "epg.h"
 #include "epg_xmltv.h"
 #include "pvr.h"
 #include "dispatch.h"
-#include "output_multicast.h"
+#include "iptv_output.h"
 
 int running;
 int xmltvreload;

@@ -1,5 +1,5 @@
 /*
- *  TV Input - Linux analogue (v4lv2) interface
+ *  Output functions for fixed multicast streaming
  *  Copyright (C) 2007 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,15 +16,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef INPUT_V4L_H
-#define INPUT_V4L_H
+#ifndef IPTV_OUTPUT_H_
+#define IPTV_OUTPUT_H_
 
-void v4l_add_adapters(void);
+void output_multicast_setup(void);
 
-int v4l_configure_transport(th_transport_t *t, const char *muxname);
-
-int v4l_start_feed(th_transport_t *t, unsigned int weight);
-
-void v4l_stop_feed(th_transport_t *t);
-
-#endif /* INPUT_V4L_H */
+#endif /* IPTV_OUTPUT_H_ */

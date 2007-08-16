@@ -29,7 +29,7 @@
 #include <arpa/inet.h>
 
 #include "tvhead.h"
-#include "output_multicast.h"
+#include "iptv_output.h"
 #include "dispatch.h"
 #include "channels.h"
 #include "transports.h"

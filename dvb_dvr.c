@@ -36,7 +36,7 @@
 
 #include "tvhead.h"
 #include "dispatch.h"
-#include "input_dvb.h"
+#include "dvb.h"
 #include "dvb_dvr.h"
 #include "channels.h"
 #include "transports.h"

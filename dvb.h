@@ -1,5 +1,5 @@
 /*
- *  Output functions for fixed multicast streaming
+ *  TV Input - Linux DVB interface
  *  Copyright (C) 2007 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,9 +16,17 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OUTPUT_MULTICAST_H
-#define OUTPUT_MULTICAST_H
+#ifndef DVB_H_
+#define DVB_H_
 
-void output_multicast_setup(void);
+extern struct th_dvb_adapter_list dvb_adapters_probing;
+extern struct th_dvb_adapter_list dvb_adapters_running;
+extern struct th_dvb_mux_list dvb_muxes;
 
-#endif /* OUTPUT_MULTICAST_H */
+void dvb_init(void);
+
+int dvb_configure_transport(th_transport_t *t, const char *muxname);
+
+int dvb_tune(th_dvb_adapter_t *tda, th_dvb_mux_t *tdm, int maylog);
+
+#endif /* DVB_H_ */

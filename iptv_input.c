@@ -35,7 +35,7 @@
 #include <libhts/htscfg.h>
 
 #include "tvhead.h"
-#include "input_iptv.h"
+#include "iptv_input.h"
 #include "channels.h"
 #include "transports.h"
 #include "dispatch.h"

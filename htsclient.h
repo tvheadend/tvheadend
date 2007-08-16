@@ -16,8 +16,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OUTPUT_CLIENT_H
-#define OUTPUT_CLIENT_H
+#ifndef HTSCLIENT_H_
+#define HTSCLIENT_H_
 
 void client_start(void);
 
@@ -27,4 +27,4 @@ void clients_enq_ref(int ref);
 
 void client_status_update(void);
 
-#endif /* OUTPUT__CLIENT_H */
+#endif /* HTSCLIENT_H_ */

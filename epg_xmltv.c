@@ -35,7 +35,6 @@
 #include "channels.h"
 #include "epg.h"
 #include "epg_xmltv.h"
-#include "output_client.h"
 
 extern int xmltvreload;
 

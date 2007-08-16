@@ -31,9 +31,9 @@
 #include <libhts/htscfg.h>
 
 #include "tvhead.h"
-#include "input_dvb.h"
-#include "input_v4l.h"
-#include "input_iptv.h"
+#include "dvb.h"
+#include "v4l.h"
+#include "iptv_input.h"
 
 #include "dvb_pmt.h"
 #include "channels.h"
