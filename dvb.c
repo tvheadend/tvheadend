@@ -44,6 +44,7 @@
 #include "dvb_support.h"
 #include "dvb_pmt.h"
 #include "dvb_dvr.h"
+#include "dvb_muxconfig.h"
 
 struct th_dvb_mux_list dvb_muxes;
 struct th_dvb_adapter_list dvb_adapters_probing;
@@ -56,8 +57,6 @@ static void dvb_sdt_add_demux(th_dvb_mux_instance_t *tdmi);
 static int dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog);
 
 static void *dvb_monitor_thread(void *aux);
-
-static void dvb_add_muxes(void);
 
 static void tdmi_check_scan_status(th_dvb_mux_instance_t *tdmi);
 
@@ -129,11 +128,17 @@ dvb_init(void)
     dvb_add_adapter(path);
   }
 
-  dvb_add_muxes();
+  dvb_mux_setup();
 
   LIST_FOREACH(tda, &dvb_adapters_probing, tda_link) {
     tdmi = LIST_FIRST(&tda->tda_muxes_configured);
-    dvb_start_initial_scan(tdmi);
+    if(tdmi == NULL) {
+      syslog(LOG_WARNING,
+	     "No muxes configured on \"%s\" DVB adapter unused",
+	     tda->tda_name);
+    } else {
+      dvb_start_initial_scan(tdmi);
+    }
   }
 }
 
@@ -285,72 +290,6 @@ dvb_tune(th_dvb_adapter_t *tda, th_dvb_mux_t *tdm, int maylog)
 
 
 
-
-
-
-static void
-dvb_add_mux_instance(th_dvb_adapter_t *tda, th_dvb_mux_t *tdm)
-{
-  th_dvb_mux_instance_t *tdmi;
-
-  tdmi = calloc(1, sizeof(th_dvb_mux_instance_t));
-
-  tdmi->tdmi_status = TDMI_CONFIGURED;
-
-  tdmi->tdmi_mux = tdm;
-  tdmi->tdmi_adapter = tda;
-
-  LIST_INSERT_HEAD(&tda->tda_muxes_configured, tdmi, tdmi_adapter_link);
-  LIST_INSERT_HEAD(&tdm->tdm_instances, tdmi, tdmi_mux_link);
-}
-
-
-
-static void
-dvb_add_muxes(void)
-{
-  th_dvb_mux_t *tdm;
-  th_dvb_adapter_t *tda;
-  config_entry_t *ce;
-  const char *s;
-  struct dvb_frontend_parameters *fe_param;
-  char buf[100];
-
-  TAILQ_FOREACH(ce, &config_list, ce_link) {
-    if(ce->ce_type == CFG_SUB && !strcasecmp("dvbmux", ce->ce_key)) {
-
-      if((s = config_get_str_sub(&ce->ce_sub, "name", NULL)) == NULL)
-	continue;
-
-      tdm = calloc(1, sizeof(th_dvb_mux_t));
-      fe_param = &tdm->tdm_fe_params;
-
-      fe_param->inversion = INVERSION_AUTO;
-      fe_param->u.ofdm.bandwidth = BANDWIDTH_8_MHZ;
-      fe_param->u.ofdm.code_rate_HP = FEC_2_3;
-      fe_param->u.ofdm.code_rate_LP = FEC_1_2;
-      fe_param->u.ofdm.constellation = QAM_64;
-      fe_param->u.ofdm.transmission_mode = TRANSMISSION_MODE_8K;
-      fe_param->u.ofdm.guard_interval = GUARD_INTERVAL_1_8;
-      fe_param->u.ofdm.hierarchy_information = HIERARCHY_NONE;
-      
-      fe_param->frequency = 
-	atoi(config_get_str_sub(&ce->ce_sub, "frequency", "0"));
-      
-      tdm->tdm_name = strdup(s);
-
-      snprintf(buf, sizeof(buf), "DVB-T: %s (%.1f MHz)", s, 
-	       (float)fe_param->frequency / 1000000.0f);
-      tdm->tdm_title = strdup(buf);
-
-      LIST_INSERT_HEAD(&dvb_muxes, tdm, tdm_global_link);
-      
-      LIST_FOREACH(tda, &dvb_adapters_probing, tda_link) {
-	dvb_add_mux_instance(tda, tdm);
-      }
-    }
-  }
-}
 
 
 
