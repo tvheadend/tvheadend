@@ -80,6 +80,7 @@ transport_set_channel(th_transport_t *t, const char *name)
 {
   th_channel_t *ch;
   th_pid_t *tp;
+  char *chname;
 
   if(LIST_FIRST(&t->tht_pids) == NULL)
     return -1;
@@ -91,8 +92,12 @@ transport_set_channel(th_transport_t *t, const char *name)
   t->tht_channel = ch;
   LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
 
+  chname = utf8toprintable(ch->ch_name);
+
   syslog(LOG_DEBUG, "Added service \"%s\" for channel \"%s\"",
-	 t->tht_name, ch->ch_name);
+	 t->tht_name, chname);
+  free(chname);
+
   LIST_FOREACH(tp, &t->tht_pids, tp_link)
     syslog(LOG_DEBUG, "   Pid %5d [%s]",
 	   tp->tp_pid, htstvstreamtype2txt(tp->tp_type));
