@@ -296,8 +296,7 @@ xmltv_resolve_by_events(xmltv_channel_t *xc)
   th_channel_t *ch;
   event_t *ec, *ex;
   time_t now;
-  int thres;
-  int i;
+  int cnt, i;
 
   time(&now);
 
@@ -311,26 +310,27 @@ xmltv_resolve_by_events(xmltv_channel_t *xc)
     TAILQ_FOREACH(ch, &channels, ch_global_link) {
       ec = epg_event_find_by_time0(&ch->ch_epg_events, now);
 
-      thres = 10;
+      cnt = 0;
       
       while(1) {
-	if(ec == NULL || ex == NULL)
-	  break;
-	
-	if(thres == 0) {
+	if((cnt >= 10 && ec == NULL) || cnt >= 30) {
 	  if(xmltv_map(xc, ch) == 0)
 	    syslog(LOG_DEBUG,
-		   "xmltv: Heuristically mapped \"%s\" (%s) to \"%s\"",
-		   xc->xc_displayname, xc->xc_name, ch->ch_name);
+		   "xmltv: Heuristically mapped \"%s\" (%s) to \"%s\" "
+		   "(%d consequtive events matches)",
+		   xc->xc_displayname, xc->xc_name, ch->ch_name, cnt);
 	  break;
 	}
 
+	if(ec == NULL || ex == NULL)
+	  break;
+	
 	if(ec->e_start != ex->e_start || ec->e_duration != ex->e_duration)
 	  break;
 	
 	ec = TAILQ_NEXT(ec, e_link);
 	ex = TAILQ_NEXT(ex, e_link);
-	thres--;
+	cnt++;
       }
     }
   }
@@ -375,7 +375,7 @@ xmltv_thread(void *aux)
   xmltvreload = 1;
   while(1) {
 
-    sleep(1);
+    sleep(10);
 
     if(xmltvreload) {
       xmltvreload = 0;
