@@ -1,5 +1,5 @@
 /*
- *  Private Video Recorder
+ *  TV Input - Linux DVB interface
  *  Copyright (C) 2007 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,26 +16,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PVR_H
-#define PVR_H
+#ifndef DVB_PMT_H
+#define DVB_PMT_H
 
-extern char *pvrpath;
-extern pthread_mutex_t pvr_mutex;
-extern struct pvr_rec_list pvrr_work_list[PVRR_WORK_MAX];
-extern struct pvr_rec_list pvrr_global_list;
+int dvb_parse_pmt(th_transport_t *t, uint8_t *ptr, int len);
 
-void pvr_init(void);
+const char *htstvstreamtype2txt(tv_streamtype_t s);
 
-void pvr_add_recording_by_event(th_channel_t *ch, event_t *e);
-
-char pvr_prog_status(event_t *e);
-
-pvr_rec_t *pvr_get_log_entry(int e);
-
-pvr_rec_t *pvr_get_tag_entry(int e);
-
-void pvr_inform_status_change(pvr_rec_t *pvrr);
-
-void pvr_database_save(void);
-
-#endif /* PVR_H */
+#endif /* DVB_PMT_H */

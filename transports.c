@@ -36,7 +36,7 @@
 
 #include "tvhead.h"
 #include "dispatch.h"
-#include "input_dvb.h"
+#include "dvb_dvr.h"
 #include "input_v4l.h"
 #include "input_iptv.h"
 #include "teletext.h"
@@ -47,6 +47,21 @@
  */
 
 static pthread_mutex_t subscription_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+/*
+ *
+ */
+void
+subscription_lock(void)
+{
+  pthread_mutex_lock(&subscription_mutex);
+}
+
+void
+subscription_unlock(void)
+{
+  pthread_mutex_unlock(&subscription_mutex);
+}
 
 
 /*
@@ -186,7 +201,7 @@ subscription_unsubscribe(th_subscription_t *s)
 {
   pthread_mutex_lock(&subscription_mutex);
 
-  s->ths_callback(s, NULL, NULL, 0);
+  s->ths_callback(s, NULL, NULL);
 
   LIST_REMOVE(s, ths_global_link);
   LIST_REMOVE(s, ths_channel_link);
@@ -221,8 +236,7 @@ subscription_sort(th_subscription_t *a, th_subscription_t *b)
 th_subscription_t *
 channel_subscribe(th_channel_t *ch, void *opaque,
 		  void (*callback)(struct th_subscription *s, 
-				   uint8_t *pkt, pidinfo_t *pi,
-				   int streamindex),
+				   uint8_t *pkt, th_pid_t *pi),
 		  unsigned int weight,
 		  const char *name)
 {
@@ -289,7 +303,7 @@ transport_flush_subscribers(th_transport_t *t)
   while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL) {
     LIST_REMOVE(s, ths_transport_link);
     s->ths_transport = NULL;
-    s->ths_callback(s, NULL, NULL, 0);
+    s->ths_callback(s, NULL, NULL);
   }
 }
 
@@ -320,17 +334,14 @@ transport_compute_weight(struct th_transport_list *head)
 void
 transport_recv_tsb(th_transport_t *t, int pid, uint8_t *tsb)
 {
-  pidinfo_t *pi = NULL;
+  th_pid_t *pi = NULL;
   th_subscription_t *s;
   th_channel_t *ch;
-  int i, cc, err = 0;
+  int cc, err = 0;
   
-  for(i = 0; i < t->tht_npids; i++) {
-    if(t->tht_pids[i].pid == pid) {
-      pi = t->tht_pids + i;
+  LIST_FOREACH(pi, &t->tht_pids, tp_link) 
+    if(pi->tp_pid == pid)
       break;
-    }
-  }
 
   if(pi == NULL)
     return;
@@ -338,43 +349,44 @@ transport_recv_tsb(th_transport_t *t, int pid, uint8_t *tsb)
   cc = tsb[3] & 0xf;
 
   if(tsb[3] & 0x10) {
-    if(pi->cc_valid && cc != pi->cc) {
+    if(pi->tp_cc_valid && cc != pi->tp_cc) {
       /* Incorrect CC */
       avgstat_add(&t->tht_cc_errors, 1, dispatch_clock);
       err = 1;
     }
-    pi->cc_valid = 1;
-    pi->cc = (cc + 1) & 0xf;
+    pi->tp_cc_valid = 1;
+    pi->tp_cc = (cc + 1) & 0xf;
   }
 
   avgstat_add(&t->tht_rate, 188, dispatch_clock);
 
   ch = t->tht_channel;
 
-  if(pi->type == HTSTV_TELETEXT) {
+  if(pi->tp_type == HTSTV_TELETEXT) {
     /* teletext */
     teletext_input(t, tsb);
     return;
   }
 
-  tsb[0] = pi->type;
+  tsb[0] = pi->tp_type;
 
   pthread_mutex_lock(&subscription_mutex);
 
   LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link) {
     s->ths_total_err += err;
-    s->ths_callback(s, tsb, pi, i);
+    s->ths_callback(s, tsb, pi);
   }
   pthread_mutex_unlock(&subscription_mutex);
 }
 
 
-
 static void
 transport_monitor(void *aux)
-  {
+{
   th_transport_t *t = aux;
   int v;
+
+  stimer_add(transport_monitor, t, 1);
 
   if(t->tht_status == TRANSPORT_IDLE)
     return;
@@ -405,5 +417,26 @@ transport_monitor_init(th_transport_t *t)
   avgstat_init(&t->tht_cc_errors, 3600);
   avgstat_init(&t->tht_rate, 10);
 
-  dispatch_add_1sec_event(transport_monitor, t);
+  stimer_add(transport_monitor, t, 5);
+}
+
+
+void
+transport_add_pid(th_transport_t *t, uint16_t pid, tv_streamtype_t type)
+{
+  th_pid_t *pi;
+  int i = 0;
+  LIST_FOREACH(pi, &t->tht_pids, tp_link) {
+    i++;
+    if(pi->tp_pid == pid)
+      return;
+  }
+
+  pi = calloc(1, sizeof(th_pid_t));
+  pi->tp_index = i;
+  pi->tp_pid = pid;
+  pi->tp_type = type;
+  pi->tp_demuxer_fd = -1;
+
+  LIST_INSERT_HEAD(&t->tht_pids, pi, tp_link);
 }

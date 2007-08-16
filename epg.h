@@ -19,17 +19,33 @@
 #ifndef EPG_H
 #define EPG_H
 
-programme_t *epg_find_programme(th_channel_t *ch, 
-				time_t start, time_t stop);
+void epg_init(void);
 
-programme_t *epg_find_programme_by_time(th_channel_t *ch, time_t t);
+void epg_lock(void);
 
-/* XXX: this is an ugly one */
+void epg_unlock(void);
 
-programme_t *epg_get_prog_by_id(th_channel_t *ch, unsigned int progid);
+event_t *epg_event_find_by_time0(struct event_queue *q, time_t start);
 
-/* epg_get_cur_prog must be called while holding ch_prg_mutex */
+event_t *epg_event_find_by_time(th_channel_t *ch, time_t start);
 
-programme_t *epg_get_cur_prog(th_channel_t *ch);
+event_t *epg_event_find_by_tag(uint32_t id);
+
+event_t *epg_event_get_current(th_channel_t *ch);
+
+event_t *epg_event_build(struct event_queue *head, time_t start, int duration);
+
+void epg_event_free(event_t *e);
+
+void epg_event_set_title(event_t *e, const char *title);
+
+void epg_event_set_desc(event_t *e, const char *desc);
+
+void epg_update_event_by_id(th_channel_t *ch, uint16_t event_id, 
+			    time_t start, int duration, const char *title,
+			    const char *desc);
+
+void epg_transfer_events(th_channel_t *ch, struct event_queue *src, 
+			 const char *srcname);
 
 #endif /* EPG_H */

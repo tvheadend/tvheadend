@@ -27,12 +27,12 @@ int dispatch_init(void);
 void *dispatch_addfd(int fd, 
 		     void (*callback)(int events, void *opaque, int fd),
 		     void *opaque, int flags);
-void dispatch_delfd(void *handle);
+int dispatch_delfd(void *handle);
 void dispatch_set(void *handle, int flags);
 void dispatch_clr(void *handle, int flags);
 void dispatcher(void);
 
-void *dispatch_add_1sec_event(void (*callback)(void *aux), void *aux);
-void dispatch_del_1sec_event(void *p);
+void *stimer_add(void (*callback)(void *aux), void *aux, int delta);
+void stimer_del(void *handle);
 
 #endif /* DISPATCH_H */

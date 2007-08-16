@@ -81,7 +81,7 @@ static int pwo_end(pvr_rec_t *pvrr);
 static void pvr_generate_filename(pvr_rec_t *pvrr);
 
 static void pvr_record_callback(struct th_subscription *s, uint8_t *pkt,
-				pidinfo_t *pi, int streamindex);
+				th_pid_t *pi);
 
 
 
@@ -290,8 +290,7 @@ pvr_recorder_thread(void *aux)
  */
 
 static void 
-pvr_record_callback(struct th_subscription *s, uint8_t *pkt, pidinfo_t *pi,
-		    int streamindex)
+pvr_record_callback(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi)
 {
   pvr_data_t *pd;
   pvr_rec_t *pvrr = s->ths_opaque;
@@ -301,7 +300,6 @@ pvr_record_callback(struct th_subscription *s, uint8_t *pkt, pidinfo_t *pi,
 
   pd = malloc(sizeof(pvr_data_t));
   pd->tsb = malloc(188);
-  pd->streamindex = streamindex;
   memcpy(pd->tsb, pkt, 188);
   pd->pi = *pi;
   pthread_mutex_lock(&pvrr->pvrr_dq_mutex);
@@ -333,14 +331,15 @@ deslashify(char *s)
 static void
 pvr_generate_filename(pvr_rec_t *pvrr)
 {
-  char tmp1[200];
-  char fullname[500];
-  char *x, *chname, *out = tmp1;
-  size_t ibl,  tmp1len = sizeof(tmp1) - 1;
+  char fullname[1000];
+  char *x;
   int tally = 0;
   struct stat st;
-  iconv_t ic;
   char *name = pvrr->pvrr_title;
+
+  char *chname;
+  char *filename;
+
 
   if(pvrr->pvrr_filename != NULL) {
     free(pvrr->pvrr_filename);
@@ -350,35 +349,14 @@ pvr_generate_filename(pvr_rec_t *pvrr)
   free(pvrr->pvrr_format);
   pvrr->pvrr_format = strdup("asf");
 
-  if(name != NULL && name[0] != 0) {
-    /* Convert from utf8 */
+  filename = utf8tofilename(name && name[0] ? name : "untitled");
+  deslashify(filename);
 
-    ic = iconv_open("ISO_8859-1", "UTF8");
-    if(ic != (iconv_t) -1) {
-
-      memset(tmp1, 0, sizeof(tmp1));
-
-      ibl = strlen(pvrr->pvrr_title);
-      iconv(ic, &name, &ibl, &out, &tmp1len);
-      iconv_close(ic);
-      out = tmp1;
-    } else {
-      out = name;
-    }
-
-    deslashify(out);
-
-  } else {
-    strcpy(tmp1, "untitled");
-    out = tmp1;
-  }
-
-  chname = alloca(strlen(pvrr->pvrr_channel->ch_name) + 1);
-  strcpy(chname, pvrr->pvrr_channel->ch_name);
+  chname = utf8tofilename(pvrr->pvrr_channel->ch_name);
   deslashify(chname);
 
   snprintf(fullname, sizeof(fullname), "%s/%s-%s.%s",
-	   config_get_str("pvrdir", "."), chname, out, pvrr->pvrr_format);
+	   config_get_str("pvrdir", "."), chname, filename, pvrr->pvrr_format);
 
   while(1) {
     if(stat(fullname, &st) == -1) {
@@ -392,7 +370,7 @@ pvr_generate_filename(pvr_rec_t *pvrr)
 
     tally++;
     snprintf(fullname, sizeof(fullname), "%s/%s-%s-%d.%s",
-	     config_get_str("pvrdir", "."), chname, out, tally,
+	     config_get_str("pvrdir", "."), chname, filename, tally,
 	     pvrr->pvrr_format);
 
   }
@@ -404,6 +382,9 @@ pvr_generate_filename(pvr_rec_t *pvrr)
 
   x = strrchr(pvrr->pvrr_filename, '/');
   pvrr->pvrr_printname = strdup(x ? x + 1 :  pvrr->pvrr_filename);
+
+  free(filename);
+  free(chname);
 }
 
 
@@ -496,7 +477,7 @@ pvr_proc_tsb(pvr_rec_t *pvrr, struct ts_pid_head *pidlist, pvr_data_t *pd,
 	  sc = getu32(b, l);
 	  getu16(b, l);  /* Skip len */
 
-	  if(pwo_writepkt(pvrr, s, sc, pd->streamindex, b, l, pd->pi.type))
+	  if(pwo_writepkt(pvrr, s, sc, pd->pi.tp_index, b, l, pd->pi.tp_type))
 	    return 1;
 	}
 	tsp->tsp_bufptr = 0;
@@ -564,7 +545,7 @@ pwo_init(th_subscription_t *s, pvr_rec_t *pvrr)
   int i, err;
   th_transport_t *t = s->ths_transport;
   pwo_ffmpeg_t *pf;
-  pidinfo_t *p;
+  th_pid_t *p;
   AVStream *st;
   AVCodec *codec;
   const char *cname;
@@ -607,10 +588,10 @@ pwo_init(th_subscription_t *s, pvr_rec_t *pvrr)
 
   av_set_parameters(pf->fctx, NULL);  /* Fix NULL -stuff */
 
-  for(i = 0; i < t->tht_npids; i++) {
-    p = t->tht_pids + i;
+  LIST_FOREACH(p, &t->tht_pids, tp_link) {
+    i = p->tp_index;
 
-    switch(p->type) {
+    switch(p->tp_type) {
     case HTSTV_MPEG2VIDEO:
       break;
     case HTSTV_MPEG2AUDIO:
@@ -629,7 +610,7 @@ pwo_init(th_subscription_t *s, pvr_rec_t *pvrr)
 
     st->codec = avcodec_alloc_context();
 
-    switch(p->type) {
+    switch(p->tp_type) {
     default:
       continue;
     case HTSTV_MPEG2VIDEO:

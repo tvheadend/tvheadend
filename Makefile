@@ -6,6 +6,8 @@ SRCS += pvr.c pvr_rec.c
 
 SRCS += epg.c epg_xmltv.c
 
+SRCS += dvb_support.c dvb_pmt.c dvb_dvr.c
+
 SRCS += input_dvb.c input_iptv.c #input_v4l.c
 
 SRCS +=	output_client.c output_multicast.c

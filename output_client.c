@@ -54,8 +54,7 @@ cprintf(client_t *c, const char *fmt, ...)
 
 
 static void 
-client_ip_streamer(struct th_subscription *s, uint8_t *pkt, pidinfo_t *pi,
-		   int streamindex)
+client_ip_streamer(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi)
 {
   client_t *c = s->ths_opaque;
   char stoppkt[4];
@@ -138,8 +137,8 @@ cr_show(client_t *c, char **argv, int argc)
   th_subscription_t *s;
   th_transport_t *t;
   th_channel_t *ch;
-  programme_t *p;
-  int chid = 0;
+  event_t *e;
+  char *tmp;
   char *txt;
   int v, remain;
 
@@ -164,20 +163,42 @@ cr_show(client_t *c, char **argv, int argc)
 
   if(!strcasecmp(subcmd, "channel")) {
     
-    while((ch = channel_by_id(chid++)) != NULL) {
+    
+    TAILQ_FOREACH(ch, &channels, ch_global_link) {
 
-      pthread_mutex_lock(&ch->ch_epg_mutex);
-      
-      p = epg_get_cur_prog(ch);
+      tmp = utf8toprintable(ch->ch_name);
+      cprintf(c, "%3d: \"%s\"\n", ch->ch_index, tmp);
+      free(tmp);
 
-      txt = p && p->pr_title ? p->pr_title: "<no current programme>";
-      remain = p ? p->pr_stop - time(NULL) : 0;
-      remain /= 60;
+      epg_lock();
 
-      cprintf(c, "%3d: \"%s\":   \"%s\"  %d:%02d remaining\n", 
-	      ch->ch_index, ch->ch_name, txt, remain / 60, remain % 60);
+      e = epg_event_get_current(ch);
 
-      pthread_mutex_unlock(&ch->ch_epg_mutex);
+      if(e != NULL) {
+
+	tmp = utf8toprintable(e->e_title ?: "<no current event>");
+
+	remain = e->e_start + e->e_duration - time(NULL);
+	remain /= 60;
+
+	switch(e->e_source) {
+	case EVENT_SRC_XMLTV:
+	  txt = "xmltv";
+	  break;
+	case EVENT_SRC_DVB:
+	  txt = "dvb";
+	  break;
+	default:
+	  txt = "???";
+	  break;
+	}
+
+	cprintf(c, "\tNow: %-40s %2d:%02d [%s] tag: %d\n", 
+		tmp, remain / 60, remain % 60, txt, e->e_tag);
+	free(tmp);
+      }
+
+      epg_unlock();
 
       LIST_FOREACH(t, &ch->ch_transports, tht_channel_link) {
 
@@ -237,25 +258,14 @@ cr_show(client_t *c, char **argv, int argc)
  */
 
 static int
-cr_channels_total(client_t *c, char **argv, int argc)
-{
-  cprintf(c, "%d\n", channel_get_channels());
-  return 0;
-}
- 
-/*
- *
- */
-
-static int
 cr_channel_reftag(client_t *c, char **argv, int argc)
 {
   th_channel_t *ch;
 
-  if(argc != 1 || (ch = channel_by_id(atoi(argv[0]))) == NULL)
+  if(argc != 1 || (ch = channel_by_index(atoi(argv[0]))) == NULL)
     return 1;
 
-  cprintf(c, "%d\n", ch->ch_ref);
+  cprintf(c, "%u\n", ch->ch_tag);
   return 0;
 }
 
@@ -271,16 +281,16 @@ cr_channel_info(client_t *c, char **argv, int argc)
   if(argc < 1)
     return 1;
   
-  if((ch = channel_by_id(atoi(argv[0]))) == NULL)
+  if((ch = channel_by_index(atoi(argv[0]))) == NULL)
     return 1;
 
   cprintf(c,
 	  "displayname = %s\n"
 	  "icon = %s\n"
-	  "reftag = %d\n",
+	  "tag = %d\n",
 	  ch->ch_name,
 	  ch->ch_icon ?: "",
-	  ch->ch_ref);
+	  ch->ch_tag);
 
   return 0;
 }
@@ -339,7 +349,7 @@ cr_channel_subscribe(client_t *c, char **argv, int argc)
     }
   }
 
-  if((ch = channel_by_id(chindex)) == NULL)
+  if((ch = channel_by_index(chindex)) == NULL)
     return 1;
 
   s = channel_subscribe(ch, c, client_ip_streamer, weight, "client");
@@ -377,44 +387,53 @@ cr_streamport(client_t *c, char **argv, int argc)
  */
 
 static int
-cr_programme_info(client_t *c, char **argv, int argc)
+cr_event_info(client_t *c, char **argv, int argc)
 {
-  th_channel_t *ch;
-  programme_t *pr;
+  event_t *e, *x;
+  uint32_t tag, prev, next;
 
   if(argc < 1)
     return 1;
 
-  if((ch = channel_by_id(atoi(argv[0]))) == NULL)
-    return 1;
+  epg_lock();
 
-  pthread_mutex_lock(&ch->ch_epg_mutex);
+  e = epg_event_find_by_tag(atoi(argv[0]));
 
-  pr = argc == 2 ? epg_get_prog_by_id(ch, atoi(argv[1])) : 
-    epg_get_cur_prog(ch);
-
-  if(pr == NULL) {
-    pthread_mutex_unlock(&ch->ch_epg_mutex);
+  if(e == NULL) {
+    epg_unlock();
     return 1;
   }
 
+  tag = e->e_tag;
+  x = TAILQ_PREV(e, event_queue, e_link);
+  prev = x != NULL ? x->e_tag : 0;
+
+  x = TAILQ_NEXT(e, e_link);
+  next = x != NULL ? x->e_tag : 0;
+
   cprintf(c,
-	  "index = %d\n"
-	  "title = %s\n"
 	  "start = %ld\n"
 	  "stop = %ld\n"
+	  "title = %s\n"
 	  "desc = %s\n"
-	  "reftag = %d\n"
+	  "tag = %u\n"
+	  "prev = %u\n"
+	  "next = %u\n"
 	  "pvrstatus = %c\n",
-	  pr->pr_index,
-	  pr->pr_title ?: "",
-	  pr->pr_start,
-	  pr->pr_stop,
-	  pr->pr_desc ?: "",
-	  pr->pr_ref,
-	  pvr_prog_status(pr));
 
-  pthread_mutex_unlock(&ch->ch_epg_mutex);
+	  e->e_start,
+	  e->e_start + e->e_duration,
+
+	  e->e_title ?: "",
+	  e->e_desc  ?: "",
+
+	  tag,
+	  prev,
+	  next,
+
+	  pvr_prog_status(e));
+
+  epg_unlock();
   return 0;
 }
 
@@ -423,30 +442,28 @@ cr_programme_info(client_t *c, char **argv, int argc)
  */
 
 static int
-cr_programme_bytime(client_t *c, char **argv, int argc)
+cr_event_bytime(client_t *c, char **argv, int argc)
 {
   th_channel_t *ch;
-  programme_t *pr;
-  time_t t;
+  event_t *e;
 
   if(argc < 2)
     return 1;
 
-  if((ch = channel_by_id(atoi(argv[0]))) == NULL)
+  if((ch = channel_by_index(atoi(argv[0]))) == NULL)
     return 1;
 
-  t = atoi(argv[1]);
+  epg_lock();
 
-  pthread_mutex_lock(&ch->ch_epg_mutex);
+  e = epg_event_find_by_time(ch, atoi(argv[1]));
 
-  pr = epg_find_programme_by_time(ch, t);
-  if(pr == NULL) {
-    pthread_mutex_unlock(&ch->ch_epg_mutex);
+  if(e == NULL) {
+    epg_unlock();
     return 1;
   }
 
-  cprintf(c, "%d\n", pr->pr_index);
-  pthread_mutex_unlock(&ch->ch_epg_mutex);
+  cprintf(c, "%u\n", e->e_tag);
+  epg_unlock();
   return 0;
 }
 
@@ -455,30 +472,24 @@ cr_programme_bytime(client_t *c, char **argv, int argc)
  */
 
 static int
-cr_programme_record(client_t *c, char **argv, int argc)
+cr_event_record(client_t *c, char **argv, int argc)
 {
-  th_channel_t *ch;
-  programme_t *pr;
+  event_t *e;
 
   if(argc < 1)
     return 1;
 
-  if((ch = channel_by_id(atoi(argv[0]))) == NULL)
-    return 1;
+  epg_lock();
 
-  pthread_mutex_lock(&ch->ch_epg_mutex);
-
-  pr = argc == 2 ? epg_get_prog_by_id(ch, atoi(argv[1])) : 
-    epg_get_cur_prog(ch);
-
-
-  if(pr == NULL) {
-    pthread_mutex_unlock(&ch->ch_epg_mutex);
+  e = epg_event_find_by_tag(atoi(argv[0]));
+  if(e == NULL) {
+    epg_unlock();
     return 1;
   }
 
-  pvr_add_recording_by_pr(ch, pr);
-  pthread_mutex_unlock(&ch->ch_epg_mutex);
+  pvr_add_recording_by_event(e->e_ch, e);
+
+  epg_unlock();
   return 0;
 }
 
@@ -488,7 +499,7 @@ cr_programme_record(client_t *c, char **argv, int argc)
 static int
 cr_pvr_entry(client_t *c, pvr_rec_t *pvrr)
 {
-  programme_t *pr;
+  event_t *e;
 
   if(pvrr == NULL)
     return 1;
@@ -498,7 +509,7 @@ cr_pvr_entry(client_t *c, pvr_rec_t *pvrr)
 	  "start = %ld\n"
 	  "stop = %ld\n"
 	  "desc = %s\n"
-	  "reftag = %d\n"
+	  "tag = %d\n"
 	  "pvrstatus = %c\n"
 	  "filename = %s\n"
 	  "channel = %d\n",
@@ -512,10 +523,9 @@ cr_pvr_entry(client_t *c, pvr_rec_t *pvrr)
 	  pvrr->pvrr_channel->ch_index);
 
 
-  pr = epg_find_programme(pvrr->pvrr_channel, pvrr->pvrr_start,
-			  pvrr->pvrr_stop);
-  if(pr != NULL)
-    cprintf(c, "index = %d\n", pr->pr_index);
+  e = epg_event_find_by_time(pvrr->pvrr_channel, pvrr->pvrr_start);
+  if(e != NULL)
+    cprintf(c, "event_tag = %d\n", e->e_tag);
 
   return 0;
 }
@@ -564,14 +574,13 @@ const struct {
 } cr_cmds[] = {
   { "show", cr_show },
   { "streamport", cr_streamport },
-  { "channels.total", cr_channels_total },
   { "channel.reftag", cr_channel_reftag },
   { "channel.info", cr_channel_info },
   { "channel.subscribe", cr_channel_subscribe },
   { "channel.unsubscribe", cr_channel_unsubscribe },
-  { "programme.info", cr_programme_info },
-  { "programme.bytime", cr_programme_bytime },
-  { "programme.record", cr_programme_record },
+  { "event.info", cr_event_info },
+  { "event.bytime", cr_event_bytime },
+  { "event.record", cr_event_record },
   { "pvr.getlog", cr_pvr_getlog },
   { "pvr.gettag", cr_pvr_gettag },
 };
@@ -847,7 +856,7 @@ client_status_update(void)
   th_channel_t *ch;
   th_dvb_adapter_t *dvb;
   th_v4l_adapter_t *v4l;
-  const char *info;
+  //  const char *info;
   th_subscription_t *s;
   th_transport_t *t;
   int ccerr;
@@ -882,7 +891,7 @@ client_status_update(void)
 	  continue;
 	}
 
-
+#if 0
 	if(dvb->tda_fe_status & FE_HAS_LOCK) {
 	  csprintf(c, ch, 
 		  "status = 1\n"
@@ -912,7 +921,7 @@ client_status_update(void)
 	  info = "No lock, but faint signal";
 	else 
 	  info = "No signal";
-    
+
 	csprintf(c, ch, 
 		"status = 0"
 		"info = %s"
@@ -921,6 +930,7 @@ client_status_update(void)
 		info,
 		dvb->tda_name,
 		t->tht_name);
+#endif	
 	break;
 
 

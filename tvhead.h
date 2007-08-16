@@ -35,14 +35,19 @@ TAILQ_HEAD(th_channel_queue, th_channel);
 LIST_HEAD(th_dvb_adapter_list, th_dvb_adapter);
 LIST_HEAD(th_v4l_adapter_list, th_v4l_adapter);
 LIST_HEAD(client_list, client);
-LIST_HEAD(programme_list, programme);
+LIST_HEAD(event_list, event);
+TAILQ_HEAD(event_queue, event);
 LIST_HEAD(pvr_rec_list, pvr_rec);
 TAILQ_HEAD(ref_update_queue, ref_update);
 LIST_HEAD(th_transport_list, th_transport);
+LIST_HEAD(th_dvb_mux_list, th_dvb_mux);
+LIST_HEAD(th_dvb_mux_instance_list, th_dvb_mux_instance);
+LIST_HEAD(th_pid_list, th_pid);
 
 extern time_t dispatch_clock;
+extern struct th_transport_list all_transports;
 
-extern int reftally;
+uint32_t tag_get(void);
 
 typedef struct th_v4l_adapter {
 
@@ -64,34 +69,100 @@ typedef struct th_v4l_adapter {
 } th_v4l_adapter_t;
 
 
+/*
+ *
+ */
+
+typedef struct th_dvb_mux_instance {
+  LIST_ENTRY(th_dvb_mux_instance) tdmi_mux_link;
+  LIST_ENTRY(th_dvb_mux_instance) tdmi_adapter_link;
+
+  struct th_dvb_mux *tdmi_mux;
+  struct th_dvb_adapter *tdmi_adapter;
+
+  fe_status_t tdmi_fe_status;
+  uint16_t tdmi_snr, tdmi_signal;
+  uint32_t tdmi_ber, tdmi_uncorrected_blocks;
+
+  time_t tdmi_time;
+  LIST_HEAD(, th_dvb_table) tdmi_tables;
+
+  enum {
+    TDMI_CONFIGURED,
+    TDMI_INITIAL_SCAN,
+    TDMI_ACTIVE,
+  } tdmi_state;
+
+  void *tdmi_initial_scan_timer;
+  const char *tdmi_status;
+
+} th_dvb_mux_instance_t;
+
+/*
+ *
+ */
+
+typedef struct th_dvb_table {
+  LIST_ENTRY(th_dvb_table) tdt_link;
+  void *tdt_handle;
+  struct th_dvb_mux_instance *tdt_tdmi;
+  int tdt_count; /* times seen */
+  void *tdt_opaque;
+  int (*tdt_callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
+		      uint8_t tableid, void *opaque);
+} th_dvb_table_t;
+
+
+/*
+ *
+ */
+
+typedef struct th_dvb_mux {
+  LIST_ENTRY(th_dvb_mux) tdm_global_link;
+
+  struct th_dvb_mux_instance_list tdm_instances;
+
+  struct dvb_frontend_parameters tdm_fe_params;
+
+  const char *tdm_name;
+  const char *tdm_title;
+
+} th_dvb_mux_t;
+
+
 typedef struct th_dvb_adapter {
+
+  LIST_ENTRY(th_dvb_adapter) tda_adapter_to_mux_link;
+
+  struct th_dvb_mux_instance_list tda_muxes_configured;
+
+  struct th_dvb_mux_instance_list tda_muxes_active;
+  th_dvb_mux_instance_t *tda_mux_current;
 
   const char *tda_path;
   const char *tda_name;
 
   LIST_ENTRY(th_dvb_adapter) tda_link;
 
+  LIST_HEAD(, th_dvb_mux) tda_muxes;
+
   int tda_running;
 
-  struct dvb_frontend_parameters tda_fe_params;
 
-  struct th_transport_list tda_transports;
 
   int tda_fe_fd;
   struct dvb_frontend_info tda_fe_info;
 
-  fe_status_t tda_fe_status;
-  uint16_t tda_snr, tda_signal;
-  uint32_t tda_ber, tda_uncorrected_blocks;
-
   char *tda_demux_path;
 
-  int tda_dvr_fd;
   char *tda_dvr_path;
 
-  time_t tda_time;
+  struct th_transport_list tda_transports; /* Currently bound transports */
 
 } th_dvb_adapter_t;
+
+
+
 
 
 /*
@@ -112,15 +183,17 @@ typedef struct th_iptv_adapter {
 
 
 
-typedef struct pidinfo {
-  int pid;
-  tv_streamtype_t type;
-  int demuxer_fd;
+typedef struct th_pid {
+  LIST_ENTRY(th_pid) tp_link;
+  uint16_t tp_pid;
+  uint8_t tp_cc;             /* Last CC */
+  uint8_t tp_cc_valid;       /* Is CC valid at all? */
 
-  int cc;             /* Last CC */
-  int cc_valid;       /* Is CC valid at all? */
+  tv_streamtype_t tp_type;
+  int tp_demuxer_fd;
+  int tp_index;
 
-} pidinfo_t;
+} th_pid_t;
 
 typedef enum {
   COMMERCIAL_UNKNOWN,
@@ -132,6 +205,8 @@ typedef enum {
 typedef struct th_transport {
   
   const char *tht_name;
+
+  LIST_ENTRY(th_transport) tht_global_link;
 
   enum {
     TRANSPORT_DVB,
@@ -150,11 +225,13 @@ typedef struct th_transport {
   int tht_tt_rundown_content_length;
   time_t tht_tt_clock;   /* Network clock as determined by teletext
 			    decoder */
-
   int tht_prio;
   
-  pidinfo_t *tht_pids;
-  int tht_npids;
+  struct th_pid_list tht_pids;
+
+  uint16_t tht_dvb_network_id;
+  uint16_t tht_dvb_transport_id;
+  uint16_t tht_dvb_service_id;
 
   avgstat_t tht_cc_errors;
   avgstat_t tht_rate;
@@ -165,13 +242,12 @@ typedef struct th_transport {
   LIST_ENTRY(th_transport) tht_channel_link;
   struct th_channel *tht_channel;
 
-
   LIST_HEAD(, th_subscription) tht_subscriptions;
 
   union {
 
     struct {
-      struct dvb_frontend_parameters fe_params;
+      struct th_dvb_mux *mux;
       struct th_dvb_adapter *adapter;
     } dvb;
 
@@ -202,7 +278,7 @@ typedef struct th_transport {
 #define tht_v4l_frequency u.v4l.frequency
 #define tht_v4l_adapter   u.v4l.adapter
 
-#define tht_dvb_fe_params u.dvb.fe_params
+#define tht_dvb_mux       u.dvb.mux
 #define tht_dvb_adapter   u.dvb.adapter
 
 #define tht_iptv_group_addr      u.iptv.group_addr
@@ -240,17 +316,6 @@ typedef struct tt_decoder {
 
 } tt_decoder_t;
 
-
-typedef struct th_proglist {
-
-  struct programme_list tpl_programs;   // linked list of all programs
-  unsigned int tpl_nprograms;           // number of programs
-  struct programme **tpl_prog_vec;      // array pointing to all programs
-  struct programme *tpl_prog_current;   // pointer to current programme
-  const char *tpl_refname;              // channel reference name
-
-} th_proglist_t;
-
 /*
  * Channel definition
  */ 
@@ -272,26 +337,14 @@ typedef struct th_channel {
 
   struct tt_decoder ch_tt;
 
-  int ch_ref;
+  int ch_tag;
 
   int ch_teletext_rundown;
 
-
-
-  pthread_mutex_t ch_epg_mutex; ///< protects the epg fields
-
-  th_proglist_t ch_xmltv;
+  struct event_queue ch_epg_events;
+  struct event *ch_epg_cur_event;
 
 } th_channel_t;
-
-/*
- * XXXX: DELETE ME?
- */
-
-typedef struct ref_update {
-  TAILQ_ENTRY(ref_update) link;
-  int ref;
-} ref_update_t;
 
 /*
  * Subscription
@@ -313,8 +366,8 @@ typedef struct th_subscription {
   LIST_ENTRY(th_subscription) ths_subscriber_link; /* Caller is responsible
 						      for this link */
 
-  void (*ths_callback)(struct th_subscription *s, uint8_t *pkt, pidinfo_t *pi,
-		       int streamindex);
+  void (*ths_callback)(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi);
+
   void *ths_opaque;
 
   char *ths_pkt;
@@ -361,26 +414,31 @@ typedef struct client {
 
 
 /*
- * EPG Programme
+ * EPG event
  */
 
-typedef struct programme {
-  LIST_ENTRY(programme) pr_link;
+typedef struct event {
+  TAILQ_ENTRY(event) e_link;
+  LIST_ENTRY(event) e_hash_link;
 
-  time_t pr_start;
-  time_t pr_stop;
+  time_t e_start;  /* UTC time */
+  int e_duration;  /* in seconds */
 
-  char *pr_title;
-  char *pr_desc;
+  const char *e_title;   /* UTF-8 encoded */
+  const char *e_desc;    /* UTF-8 encoded */
 
-  th_channel_t *pr_ch;
+  uint16_t e_event_id;  /* DVB event id */
 
-  int pr_ref;
-  int pr_index;
+  uint32_t e_tag;
 
-  int pr_delete_me;
+  th_channel_t *e_ch;
 
-} programme_t;
+  int e_source; /* higer is better, and we never downgrade */
+
+#define EVENT_SRC_XMLTV 1
+#define EVENT_SRC_DVB   2
+
+} event_t;
 
 
 /*
@@ -391,8 +449,7 @@ typedef struct programme {
 typedef struct pvr_data {
   TAILQ_ENTRY(pvr_data) link;
   uint8_t *tsb;
-  pidinfo_t pi;
-  int streamindex;
+  th_pid_t pi;
 } pvr_data_t;
 
 
@@ -438,5 +495,8 @@ extern struct pvr_rec_list pvrr_work_list[PVRR_WORK_MAX];
 extern struct pvr_rec_list pvrr_global_list;
 
 config_entry_t *find_mux_config(const char *muxtype, const char *muxname);
+
+char *utf8toprintable(const char *in);
+char *utf8tofilename(const char *in);
 
 #endif /* TV_HEAD_H */

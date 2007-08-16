@@ -1,5 +1,5 @@
 /*
- *  socket fd dispathcer
+ *  socket fd dispatcher and (very simple) timer handling
  *  Copyright (C) 2007 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -21,13 +21,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/epoll.h>
+#include <sys/time.h>
 #include <time.h>
 #include <fcntl.h>
 
 #include <libhts/htsq.h>
 
 #include "dispatch.h"
-
 
 static int epoll_fd;
 
@@ -39,20 +39,100 @@ typedef struct epoll_entry {
 } epoll_entry_t;
 
 
+
+typedef struct stimer {
+  LIST_ENTRY(stimer) link;
+  void (*callback)(void *aux);
+  void *aux;
+  time_t t;
+} stimer_t;
+
+LIST_HEAD(, stimer) dispatch_timers;
+
+
+static int
+stimercmp(stimer_t *a, stimer_t *b)
+{
+  return a->t - b->t;
+}
+
+
+void *
+stimer_add(void (*callback)(void *aux), void *aux, int delta)
+{
+  time_t now;
+  stimer_t *ti = malloc(sizeof(stimer_t));
+
+  time(&now);
+
+  ti->t = now + delta;
+  ti->aux = aux;
+  ti->callback = callback;
+
+  LIST_INSERT_SORTED(&dispatch_timers, ti, link, stimercmp);
+  return ti;
+}
+
+void
+stimer_del(void *handle)
+{
+  stimer_t *ti = handle;
+  LIST_REMOVE(ti, link);
+  free(ti);
+}
+
+
+static int
+stimer_next(void)
+{
+  stimer_t *ti = LIST_FIRST(&dispatch_timers);
+  struct timeval tv;
+  int64_t next, now, delta;
+  
+  if(ti == NULL)
+    return -1;
+
+  next = (uint64_t)ti->t * 1000000ULL;
+
+  gettimeofday(&tv, NULL);
+
+  now = (uint64_t)tv.tv_sec * 1000000ULL + (uint64_t)tv.tv_usec;
+
+  delta = next - now;
+  return delta < 0 ? 0 : delta / 1000ULL;
+}
+
+
+
+
+
+
+
+static void
+stimer_dispatch(time_t now)
+{
+  stimer_t *ti;
+
+  while((ti = LIST_FIRST(&dispatch_timers)) != NULL) {
+    if(ti->t > now)
+      break;
+
+    LIST_REMOVE(ti, link);
+    ti->callback(ti->aux);
+    free(ti);
+  }
+}
+
+
 int 
 dispatch_init(void)
 {
-  int fdflag;
-
   epoll_fd = epoll_create(100);
   if(epoll_fd == -1) {
     perror("epoll_create()");
     exit(1);
   }
 
-  fdflag = fcntl(epoll_fd, F_GETFD);
-  fdflag |= FD_CLOEXEC;
-  fcntl(epoll_fd, F_SETFD, fdflag);
   return 0;
 }
 
@@ -105,51 +185,17 @@ dispatch_clr(void *handle, int flags)
 
 
 
-void 
+int
 dispatch_delfd(void *handle)
 {
   struct epoll_entry *e = handle;
-
-  epoll_ctl(epoll_fd, EPOLL_CTL_DEL, e->fd, &e->event);
+  int fd = e->fd;
+  epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, &e->event);
   free(e);
+  return fd;
 }
 
 
-
-
-typedef struct dtimer {
-  LIST_ENTRY(dtimer) link;
-  void (*callback)(void *aux);
-  void *aux;
-} dtimer_t;
-
-LIST_HEAD(, dtimer) dispatcher_timers;
-
-void *
-dispatch_add_1sec_event(void (*callback)(void *aux), void *aux)
-{
-  dtimer_t *ti = malloc(sizeof(dtimer_t));
-  LIST_INSERT_HEAD(&dispatcher_timers, ti, link);
-  ti->callback = callback;
-  ti->aux = aux;
-  return ti;
-}
-
-void
-dispatch_del_1sec_event(void *p)
-{
-  dtimer_t *ti = p;
-  LIST_REMOVE(ti, link);
-  free(ti);
-}
-
-static void
-run_1sec_events(void)
-{
-  dtimer_t *ti;
-  LIST_FOREACH(ti, &dispatcher_timers, link)
-    ti->callback(ti->aux);
-}
 
 
 
@@ -162,17 +208,14 @@ dispatcher(void)
 {
   struct epoll_entry *e;
   int i, n;
-  time_t now;
 
   static struct epoll_event events[EPOLL_FDS_PER_ROUND];
 
-  n = epoll_wait(epoll_fd, events, EPOLL_FDS_PER_ROUND, 1000);
+  n = epoll_wait(epoll_fd, events, EPOLL_FDS_PER_ROUND, stimer_next());
 
-  time(&now);
-  if(now != dispatch_clock) {
-    run_1sec_events();
-    dispatch_clock = now;
-  }
+  time(&dispatch_clock);
+  stimer_dispatch(dispatch_clock);
+  
 
   for(i = 0; i < n; i++) {
     e = events[i].data.ptr;

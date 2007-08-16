@@ -22,7 +22,6 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
-#include <iconv.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -72,14 +71,14 @@ pvr_init(void)
 }
 
 char 
-pvr_prog_status(programme_t *pr)
+pvr_prog_status(event_t *e)
 {
   pvr_rec_t *pvrr;
 
   LIST_FOREACH(pvrr, &pvrr_global_list, pvrr_global_link) {
-    if(pvrr->pvrr_start >= pr->pr_start &&
-       pvrr->pvrr_stop <= pr->pr_stop &&
-       pvrr->pvrr_channel == pr->pr_ch) {
+    if(pvrr->pvrr_start   >= e->e_start &&
+       pvrr->pvrr_stop    <= e->e_start + e->e_duration &&
+       pvrr->pvrr_channel == e->e_ch) {
       return pvrr->pvrr_status;
     }
   }
@@ -169,15 +168,14 @@ pvr_main_thread(void *aux)
 void
 pvr_inform_status_change(pvr_rec_t *pvrr)
 {
-  programme_t *pr;
+  event_t *e;
 
   clients_enq_ref(pvrr->pvrr_ref);
 
-  pr = epg_find_programme(pvrr->pvrr_channel, pvrr->pvrr_start,
-			  pvrr->pvrr_stop);
-
-  if(pr != NULL)
-    clients_enq_ref(pr->pr_ref);
+  e = epg_event_find_by_time(pvrr->pvrr_channel, pvrr->pvrr_start);
+  
+  if(e != NULL)
+    clients_enq_ref(e->e_tag);
 }
 
 
@@ -250,7 +248,7 @@ pvr_link_pvrr(pvr_rec_t *pvrr)
     break;
   }
 
-  pvrr->pvrr_ref = ++reftally;
+  pvrr->pvrr_ref = tag_get();
 
   LIST_INSERT_SORTED(&pvrr_global_list, pvrr, pvrr_global_link, pvr_glob_cmp);
   LIST_INSERT_SORTED(l, pvrr, pvrr_work_link, pvr_rec_cmp);
@@ -260,10 +258,10 @@ pvr_link_pvrr(pvr_rec_t *pvrr)
 
 
 void
-pvr_add_recording_by_pr(th_channel_t *ch, programme_t *pr)
+pvr_add_recording_by_event(th_channel_t *ch, event_t *e)
 {
-  time_t start = pr->pr_start;
-  time_t stop = pr->pr_stop;
+  time_t start = e->e_start;
+  time_t stop  = e->e_start + e->e_duration;
   time_t now;
   pvr_rec_t *pvrr;
 
@@ -287,8 +285,8 @@ pvr_add_recording_by_pr(th_channel_t *ch, programme_t *pr)
   pvrr->pvrr_channel = ch;
   pvrr->pvrr_start   = start;
   pvrr->pvrr_stop    = stop;
-  pvrr->pvrr_title   = pr->pr_title ? strdup(pr->pr_title) : NULL;
-  pvrr->pvrr_desc    = pr->pr_desc ?  strdup(pr->pr_desc)  : NULL;
+  pvrr->pvrr_title   = e->e_title ? strdup(e->e_title) : NULL;
+  pvrr->pvrr_desc    = e->e_desc ?  strdup(e->e_desc)  : NULL;
 
   pvr_link_pvrr(pvrr);  
   pvr_database_save();

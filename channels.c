@@ -28,9 +28,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <linux/dvb/frontend.h>
-#include <linux/dvb/dmx.h>
-
 #include <libhts/htscfg.h>
 
 #include "tvhead.h"
@@ -38,37 +35,35 @@
 #include "input_v4l.h"
 #include "input_iptv.h"
 
+#include "dvb_pmt.h"
 #include "channels.h"
 #include "transports.h"
 
 struct th_channel_queue channels;
-static int channel_tally;
+struct th_transport_list all_transports;
+static int chtally;
 
-#define MAXCHANNELS 256
-
-static th_channel_t *charray[MAXCHANNELS];
-static int numchannels;
+void scanner_init(void);
 
 th_channel_t *
 channel_find(const char *name, int create)
 {
   th_channel_t *ch;
 
-  TAILQ_FOREACH(ch, &channels, ch_global_link) {
-    if(!strcmp(name, ch->ch_name))
+  TAILQ_FOREACH(ch, &channels, ch_global_link)
+    if(!strcasecmp(name, ch->ch_name))
       return ch;
-  }
+
   if(create == 0)
     return NULL;
 
   ch = calloc(1, sizeof(th_channel_t));
   ch->ch_name = strdup(name);
-  TAILQ_INSERT_TAIL(&channels, ch, ch_global_link);
-  ch->ch_index = channel_tally++;
-  ch->ch_ref = ++reftally;
+  ch->ch_index = ++chtally;
+  TAILQ_INIT(&ch->ch_epg_events);
 
-  charray[ch->ch_index] = ch;
-  numchannels++;
+  TAILQ_INSERT_TAIL(&channels, ch, ch_global_link);
+  ch->ch_tag = tag_get();
   return ch;
 }
 
@@ -80,15 +75,39 @@ transportcmp(th_transport_t *a, th_transport_t *b)
 }
 
 
+int 
+transport_set_channel(th_transport_t *t, const char *name)
+{
+  th_channel_t *ch;
+  th_pid_t *tp;
+
+  if(LIST_FIRST(&t->tht_pids) == NULL)
+    return -1;
+
+  if(t->tht_channel != NULL)
+    return 0;
+
+  ch = channel_find(name, 1);
+  t->tht_channel = ch;
+  LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
+
+  syslog(LOG_DEBUG, "Added service \"%s\" for channel \"%s\"",
+	 t->tht_name, ch->ch_name);
+  LIST_FOREACH(tp, &t->tht_pids, tp_link)
+    syslog(LOG_DEBUG, "   Pid %5d [%s]",
+	   tp->tp_pid, htstvstreamtype2txt(tp->tp_type));
+
+  return 0;
+}
+
+
+
 
 static void
 service_load(struct config_head *head)
 {
   const char *name,  *v;
-  pidinfo_t pids[10];
-  int i, npids = 0;
   th_transport_t *t;
-  pidinfo_t *pi;
   th_channel_t *ch;
 
   if((name = config_get_str_sub(head, "channel", NULL)) == NULL)
@@ -125,56 +144,39 @@ service_load(struct config_head *head)
     return;
   }
 
-  transport_monitor_init(t);
+  if((v = config_get_str_sub(head, "service_id", NULL)) != NULL)
+    t->tht_dvb_service_id = strtol(v, NULL, 0);
 
-  if(t->tht_npids == 0) {
+  if((v = config_get_str_sub(head, "network_id", NULL)) != NULL)
+    t->tht_dvb_network_id = strtol(v, NULL, 0);
 
-    if((v = config_get_str_sub(head, "video", NULL)) != NULL) {
-      pids[npids].pid = strtol(v, NULL, 0);
-      pids[npids++].type = HTSTV_MPEG2VIDEO;
-    }
+  if((v = config_get_str_sub(head, "transport_id", NULL)) != NULL)
+    t->tht_dvb_transport_id = strtol(v, NULL, 0);
 
-    if((v = config_get_str_sub(head, "h264", NULL)) != NULL) {
-      pids[npids].pid = strtol(v, NULL, 0);
-      pids[npids++].type = HTSTV_H264;
-    }
+  if((v = config_get_str_sub(head, "video", NULL)) != NULL)
+    transport_add_pid(t, strtol(v, NULL, 0), HTSTV_MPEG2VIDEO);
 
-    if((v = config_get_str_sub(head, "audio", NULL)) != NULL) {
-      pids[npids].pid = strtol(v, NULL, 0);
-      pids[npids++].type = HTSTV_MPEG2AUDIO;
-    }
+  if((v = config_get_str_sub(head, "h264", NULL)) != NULL)
+    transport_add_pid(t, strtol(v, NULL, 0), HTSTV_H264);
   
-    if((v = config_get_str_sub(head, "ac3", NULL)) != NULL) {
-      pids[npids].pid = strtol(v, NULL, 0);
-      pids[npids++].type = HTSTV_AC3;
-    }
+  if((v = config_get_str_sub(head, "audio", NULL)) != NULL) 
+    transport_add_pid(t, strtol(v, NULL, 0), HTSTV_MPEG2AUDIO);
+  
+  if((v = config_get_str_sub(head, "ac3", NULL)) != NULL)
+    transport_add_pid(t, strtol(v, NULL, 0), HTSTV_AC3);
 
-    if((v = config_get_str_sub(head, "teletext", NULL)) != NULL) {
-      pids[npids].pid = strtol(v, NULL, 0);
-      pids[npids++].type = HTSTV_TELETEXT;
-    }
+  if((v = config_get_str_sub(head, "teletext", NULL)) != NULL)
+    transport_add_pid(t, strtol(v, NULL, 0), HTSTV_TELETEXT);
 
-    t->tht_pids = calloc(1, npids * sizeof(pidinfo_t));
-
-    for(i = 0; i < npids; i++) {
-      pi = t->tht_pids + i;
-
-      pi->pid = pids[i].pid;
-      pi->type = pids[i].type;
-      pi->demuxer_fd = -1;
-      pi->cc_valid = 0;
-    }
-
-    t->tht_npids = npids;
-  }
   t->tht_prio = atoi(config_get_str_sub(head, "prio", ""));
 
-  syslog(LOG_DEBUG, "Added service \"%s\" for channel \"%s\"",
-	 t->tht_name, ch->ch_name);
+  transport_set_channel(t, name);
 
-  t->tht_channel = ch;
-  LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
+  transport_monitor_init(t);
+  LIST_INSERT_HEAD(&all_transports, t, tht_global_link);
 }
+
+
 
 
 
@@ -218,21 +220,13 @@ channels_load(void)
 
 
 th_channel_t *
-channel_by_id(unsigned int id)
+channel_by_index(uint32_t index)
 {
-  return id < MAXCHANNELS ? charray[id] : NULL;
-}
+  th_channel_t *ch;
 
+  TAILQ_FOREACH(ch, &channels, ch_global_link)
+    if(ch->ch_index == index)
+      return ch;
 
-int
-id_by_channel(th_channel_t *ch)
-{
-  return ch->ch_index;
-}
-
-
-int
-channel_get_channels(void)
-{
-  return numchannels;
+  return NULL;
 }

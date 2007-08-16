@@ -44,8 +44,7 @@ typedef struct output_multicast {
 
 
 static void 
-om_ip_streamer(struct th_subscription *s, uint8_t *pkt, pidinfo_t *pi,
-		   int streamindex)
+om_ip_streamer(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi)
 {
   output_multicast_t *om = s->ths_opaque;
   struct sockaddr_in sin;

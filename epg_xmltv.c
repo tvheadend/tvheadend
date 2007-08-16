@@ -33,10 +33,55 @@
 
 #include "tvhead.h"
 #include "channels.h"
+#include "epg.h"
 #include "epg_xmltv.h"
 #include "output_client.h"
 
 extern int xmltvreload;
+
+LIST_HEAD(, xmltv_channel) xmltv_channel_list;
+
+typedef struct xmltv_map {
+  LIST_ENTRY(xmltv_map) xm_link;
+  th_channel_t *xm_channel; /* Set if we have resolved the channel */
+
+  int xm_isupdated;
+
+} xmltv_map_t;
+
+
+
+
+typedef struct xmltv_channel {
+  LIST_ENTRY(xmltv_channel) xc_link;
+  const char *xc_name;
+  const char *xc_displayname; 
+  const char *xc_icon;
+
+  LIST_HEAD(, xmltv_map) xc_maps;
+
+  struct event_queue xc_events;
+
+} xmltv_channel_t;
+
+
+static xmltv_channel_t *
+xc_find(const char *name)
+{
+  xmltv_channel_t *xc;
+
+  LIST_FOREACH(xc, &xmltv_channel_list, xc_link)
+    if(!strcmp(xc->xc_name, name))
+      return xc;
+
+  xc = calloc(1, sizeof(xmltv_channel_t));
+  xc->xc_name = strdup(name);
+  TAILQ_INIT(&xc->xc_events);
+  LIST_INSERT_HEAD(&xmltv_channel_list, xc, xc_link);
+  return xc;
+}
+
+
 
 
 #define XML_FOREACH(n) for(; (n) != NULL; (n) = (n)->next)
@@ -45,56 +90,28 @@ static void
 xmltv_parse_channel(xmlNode *n, char *chid)
 {
   char *t, *c;
-  char *dname = NULL;
-  char *iname = NULL;
-  th_channel_t *tdc;
-  th_proglist_t *tpl;
+  xmltv_channel_t *xc;
+
+  xc = xc_find(chid);
 
   XML_FOREACH(n) {
 
     c = (char *)xmlNodeGetContent(n);
     
     if(!strcmp((char *)n->name, "display-name")) {
-      if(dname != NULL)
-	free(dname);
-      dname = strdup(c);
+      free((void *)xc->xc_displayname);
+      xc->xc_displayname = strdup(c);
     }
 
     if(!strcmp((char *)n->name, "icon")) {
       t = (char *)xmlGetProp(n, (unsigned char *)"src");
 
-      iname = t ? strdup(t) : NULL;
+      free((void *)xc->xc_icon);
+      xc->xc_icon = strdup(t);
       xmlFree(t);
     }
     xmlFree(c);
   }
-
-
-  if(dname != NULL) {
-
-    TAILQ_FOREACH(tdc, &channels, ch_global_link) {
-      if(strcmp(tdc->ch_name, dname))
-	continue;
-
-      pthread_mutex_lock(&tdc->ch_epg_mutex);
-      tpl = &tdc->ch_xmltv;
-
-      if(tpl->tpl_refname != NULL)
-	free((void *)tpl->tpl_refname);
-      tpl->tpl_refname = strdup(chid);
-
-      if(tdc->ch_icon != NULL)
-	free((void *)tdc->ch_icon);
-      tdc->ch_icon = iname ? strdup(iname) : NULL;
-
-      pthread_mutex_unlock(&tdc->ch_epg_mutex);
-      break;
-    }
-    free(dname);
-  }
-
-  if(iname != NULL)
-    free(iname);
 }
 
 
@@ -128,71 +145,36 @@ str2time(char *str)
 
 
 static void
-xmltv_parse_programme(xmlNode *n, char *chid, char *start, char *stop)
+xmltv_parse_programme(xmlNode *n, char *chid, char *startstr, char *stopstr)
 {
   char *c;
-  th_channel_t *tdc;
-  programme_t *pr, *t;
-  th_proglist_t *tpl;
+  event_t *e;
+  time_t start, stop;
+  int duration;
+  xmltv_channel_t *xc;
 
-  TAILQ_FOREACH(tdc, &channels, ch_global_link) {
-    pthread_mutex_lock(&tdc->ch_epg_mutex);
-    tpl = &tdc->ch_xmltv;
-    if(tpl->tpl_refname != NULL && !strcmp(tpl->tpl_refname, chid))
-      break;
-    pthread_mutex_unlock(&tdc->ch_epg_mutex);
-  }
+  xc = xc_find(chid);
+  start = str2time(startstr);
+  stop  = str2time(stopstr);
 
-  if(tdc == NULL)
+  duration = stop - start;
+
+  e = epg_event_build(&xc->xc_events, start, duration);
+  if(e == NULL)
     return;
-
-  pr = calloc(1, sizeof(programme_t));
-
-  pr->pr_start = str2time(start);
-  pr->pr_stop = str2time(stop);
 
   XML_FOREACH(n) {
 
     c = (char *)xmlNodeGetContent(n);
     
     if(!strcmp((char *)n->name, "title")) {
-      pr->pr_title = strdup(c);
+      epg_event_set_title(e, c);
     } else if(!strcmp((char *)n->name, "desc")) {
-      pr->pr_desc = strdup(c);
+      epg_event_set_desc(e, c);
     }
     xmlFree(c);
   }
-
-
-  LIST_FOREACH(t, &tpl->tpl_programs, pr_link) {
-    if(pr->pr_start == t->pr_start &&
-       pr->pr_stop == t->pr_stop) 
-      break;
-  }
-    
-  if(t != NULL) {
-    free(t->pr_title);
-    free(t->pr_desc);
-    
-    t->pr_title = pr->pr_title;
-    t->pr_desc = pr->pr_desc;
-    
-    free(pr);
-    
-    t->pr_delete_me = 0;
-  
-  } else {
-
-    tpl->tpl_nprograms++;
-
-    pr->pr_ref = ++reftally;
-
-    pr->pr_ch = tdc;
-    LIST_INSERT_HEAD(&tpl->tpl_programs, pr, pr_link);
-  }
-  pthread_mutex_unlock(&tdc->ch_epg_mutex);
 }
-
 
 
 static void
@@ -240,232 +222,27 @@ xmltv_parse_root(xmlNode *n)
 
 
 /*
- *  Sorting functions
  *
  */
-
-static int
-xmltvpcmp(const void *A, const void *B)
-{
-  programme_t *a = *(programme_t **)A;
-  programme_t *b = *(programme_t **)B;
-  
-  return a->pr_start - b->pr_start;
-}
-
-
-static void
-xmltv_sort_channel(th_proglist_t *tpl)
-{
-  programme_t *pr;
-  int i;
-
-  if(tpl->tpl_prog_vec != NULL)
-    free(tpl->tpl_prog_vec);
-
-  if(tpl->tpl_nprograms == 0)
-    return;
-  
-  tpl->tpl_prog_vec = malloc(tpl->tpl_nprograms * sizeof(void *));
-  i = 0;
-
-  LIST_FOREACH(pr, &tpl->tpl_programs, pr_link)
-    tpl->tpl_prog_vec[i++] = pr;
-
-  qsort(tpl->tpl_prog_vec, tpl->tpl_nprograms, sizeof(void *), xmltvpcmp);
-
-  for(i = 0; i < tpl->tpl_nprograms; i++) {
-    tpl->tpl_prog_vec[i]->pr_index = i;
-  }
-}
-
-
-static void
-xmltv_insert_dummies(th_channel_t *ch, th_proglist_t *tpl)
-{
-  programme_t *pr2, *pr;
-  int i, delta = 0;
-
-  time_t nu, *prev;
-  struct tm tm;
-
-  if(tpl->tpl_nprograms < 1)
-    return;
-
-  nu = tpl->tpl_prog_vec[0]->pr_start;
-
-  localtime_r(&nu, &tm);
-  
-  tm.tm_hour = 0;
-  tm.tm_min = 0;
-  tm.tm_sec = 0;
-
-  nu = mktime(&tm);
-
-  prev = &nu;
-
-  for(i = 0; i < tpl->tpl_nprograms - 1; i++) {
-
-    nu = *prev;
-
-    pr2 = tpl->tpl_prog_vec[i];
-
-    if(nu != pr2->pr_start) {
-
-      pr = calloc(1, sizeof(programme_t));
-    
-      pr->pr_start = nu;
-      pr->pr_stop = pr2->pr_start;
-
-      pr->pr_title = NULL;
-      pr->pr_desc = NULL;
-    
-      delta++;
-
-      pr->pr_ch = ch;
-      pr->pr_ref = ++reftally;
-      LIST_INSERT_HEAD(&tpl->tpl_programs, pr, pr_link);
-    }
-    prev = &pr2->pr_stop;
-  }
-  tpl->tpl_nprograms += delta;
-}
-
-
-
-static void
-xmltv_purge_channel(th_proglist_t *tpl)
-{
-  programme_t *pr, *t;
-
-  for(pr = LIST_FIRST(&tpl->tpl_programs) ; pr != NULL; pr = t) {
-    t = LIST_NEXT(pr, pr_link);
-
-    if(pr->pr_delete_me == 0)
-      continue;
-
-    free(pr->pr_title);
-    free(pr->pr_desc);
-
-    LIST_REMOVE(pr, pr_link);
-    free(pr);
-    tpl->tpl_nprograms--;
-  }
-}
-
-static void
-xmltv_prep_reload(void)
-{
-  programme_t *pr;
-  th_channel_t *tdc;
-  th_proglist_t *tpl;
-
-  TAILQ_FOREACH(tdc, &channels, ch_global_link) {
-    pthread_mutex_lock(&tdc->ch_epg_mutex);
-    tpl = &tdc->ch_xmltv;
-
-    LIST_FOREACH(pr, &tpl->tpl_programs, pr_link)
-      pr->pr_delete_me = 1;
-    pthread_mutex_unlock(&tdc->ch_epg_mutex);
-  }
-}
-
-
-
-static void
-xmltv_set_current(th_proglist_t *tpl)
-{
-  time_t now;
-  programme_t *pr;
-  programme_t **vec = tpl->tpl_prog_vec;
-  int i, len = tpl->tpl_nprograms;
-  
-  time(&now);
-
-  pr = NULL;
-
-  for(i = len - 1; i >= 0; i--) {
-
-    pr = vec[i];
-    if(pr->pr_start < now)
-      break;
-  }
-
-  if(i == len || pr == NULL || pr->pr_start > now) {
-    tpl->tpl_prog_current = NULL;
-  } else {
-    tpl->tpl_prog_current = pr;
-  }
-}
-
-
-static void
-xmltv_sort_programs(void)
-{
-  th_channel_t *tdc;
-  th_proglist_t *tpl;
-
-  TAILQ_FOREACH(tdc, &channels, ch_global_link) {
-
-    pthread_mutex_lock(&tdc->ch_epg_mutex);
-
-    tpl = &tdc->ch_xmltv;
-
-    if(tpl->tpl_refname != NULL) {
-      syslog(LOG_DEBUG, "xmltv: %s (%s) %d programs loaded",
-	     tdc->ch_name, tpl->tpl_refname, tpl->tpl_nprograms);
-
-      xmltv_purge_channel(tpl);
-      xmltv_sort_channel(tpl);
-      xmltv_insert_dummies(tdc, tpl);
-      xmltv_sort_channel(tpl);
-      xmltv_set_current(tpl);
-    }
-
-    pthread_mutex_unlock(&tdc->ch_epg_mutex);
-    
-    clients_enq_ref(tdc->ch_ref);
-  }
-}
-
-
 void
-xmltv_update_current(void)
+xmltv_flush(void)
 {
-  th_channel_t *tdc;
-  th_proglist_t *tpl;
-  programme_t *pr;
-  time_t now;
-  int idx;
+  xmltv_channel_t *xc;
+  xmltv_map_t *xm;
+  event_t *e;
 
-  time(&now);
-
-  TAILQ_FOREACH(tdc, &channels, ch_global_link) {
-
-    pthread_mutex_lock(&tdc->ch_epg_mutex);
-    tpl = &tdc->ch_xmltv;
-
-    pr = tpl->tpl_prog_current;
-
-    if(pr != NULL && pr->pr_stop < now) {
-
-      clients_enq_ref(pr->pr_ref);
-      
-      idx = pr->pr_index + 1;
-      if(idx < tpl->tpl_nprograms) {
-
-	pr = tpl->tpl_prog_vec[idx];
-	tpl->tpl_prog_current = pr;
-
-	clients_enq_ref(pr->pr_ref);
-	clients_enq_ref(tdc->ch_ref);
-      }
+  LIST_FOREACH(xc, &xmltv_channel_list, xc_link) {
+    while((e = TAILQ_FIRST(&xc->xc_events)) != NULL) {
+      TAILQ_REMOVE(&xc->xc_events, e, e_link);
+      epg_event_free(e);
     }
-    pthread_mutex_unlock(&tdc->ch_epg_mutex);
+
+    while((xm = LIST_FIRST(&xc->xc_maps)) != NULL) {
+      LIST_REMOVE(xm, xm_link);
+      free(xm);
+    }
   }
 }
-
-
 
 /*
  *
@@ -485,17 +262,109 @@ xmltv_load(void)
     return;
   }
 
-  xmltv_prep_reload();
+  xmltv_flush();
 
   root_element = xmlDocGetRootElement(doc);
   xmltv_parse_root(root_element);
   xmlFreeDoc(doc);
   xmlCleanupParser();
+}
 
-  xmltv_sort_programs();
+/*
+ *
+ */
+static int
+xmltv_map(xmltv_channel_t *xc, th_channel_t *ch)
+{
+  xmltv_map_t *xm;
+  LIST_FOREACH(xm, &xc->xc_maps, xm_link)
+    if(xm->xm_channel == ch)
+      return -1;
+
+  xm = calloc(1, sizeof(xmltv_map_t));
+  xm->xm_channel = ch;
+  LIST_INSERT_HEAD(&xc->xc_maps, xm, xm_link);
+  return 0;
 }
 
 
+/*
+ *
+ */
+static void
+xmltv_resolve_by_events(xmltv_channel_t *xc)
+{
+  th_channel_t *ch;
+  event_t *ec, *ex;
+  time_t now;
+  int thres;
+  int i;
+
+  time(&now);
+
+  for(i = 0; i < 4; i++) {
+    now += 7200;
+
+    ex = epg_event_find_by_time0(&xc->xc_events, now);
+    if(ex == NULL)
+      break;
+
+    TAILQ_FOREACH(ch, &channels, ch_global_link) {
+      ec = epg_event_find_by_time0(&ch->ch_epg_events, now);
+
+      thres = 10;
+      
+      while(1) {
+	if(ec == NULL || ex == NULL)
+	  break;
+	
+	if(thres == 0) {
+	  if(xmltv_map(xc, ch) == 0)
+	    syslog(LOG_DEBUG,
+		   "xmltv: Heuristically mapped \"%s\" (%s) to \"%s\"",
+		   xc->xc_displayname, xc->xc_name, ch->ch_name);
+	  break;
+	}
+
+	if(ec->e_start != ex->e_start || ec->e_duration != ex->e_duration)
+	  break;
+	
+	ec = TAILQ_NEXT(ec, e_link);
+	ex = TAILQ_NEXT(ex, e_link);
+	thres--;
+      }
+    }
+  }
+}
+
+
+/*
+ *
+ */
+void
+xmltv_transfer(void)
+{
+  xmltv_channel_t *xc;
+  xmltv_map_t *xm;
+  th_channel_t *ch;
+
+  LIST_FOREACH(xc, &xmltv_channel_list, xc_link) {
+
+    ch = channel_find(xc->xc_displayname, 0);
+    if(ch != NULL)
+      xmltv_map(xc, ch);
+
+    xmltv_resolve_by_events(xc);
+
+    LIST_FOREACH(xm, &xc->xc_maps, xm_link) {
+      if(xm->xm_isupdated)
+	continue;
+
+      epg_transfer_events(xm->xm_channel, &xc->xc_events, xc->xc_name);
+      xm->xm_isupdated = 1;
+    }
+  }
+}
 
 
 /*
@@ -514,7 +383,8 @@ xmltv_thread(void *aux)
       xmltv_load();
     }
 
-    xmltv_update_current();
+    xmltv_transfer();
+
   }
 }
 

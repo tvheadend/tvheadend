@@ -19,12 +19,13 @@
 #include <pthread.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
+#include <iconv.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <errno.h>
 
 #include <pwd.h>
 #include <grp.h>
@@ -40,15 +41,33 @@
 #include "input_v4l.h"
 #include "channels.h"
 #include "output_client.h"
+#include "epg.h"
 #include "epg_xmltv.h"
 #include "pvr.h"
 #include "dispatch.h"
 #include "output_multicast.h"
 
-int reftally;
 int running;
-
 int xmltvreload;
+
+static pthread_mutex_t tag_mutex = PTHREAD_MUTEX_INITIALIZER;
+static uint32_t tag_tally;
+
+uint32_t
+tag_get(void)
+{
+  uint32_t r;
+
+  pthread_mutex_lock(&tag_mutex);
+  r = ++tag_tally;
+  if(r == 0)
+    r = ++tag_tally;
+
+  pthread_mutex_unlock(&tag_mutex);
+  return r;
+}
+
+
 
 static void
 xmltvdoreload(int x)
@@ -145,15 +164,16 @@ main(int argc, char **argv)
   signal(SIGINT, doexit);
 
   av_register_all();
-  av_log_set_level(AV_LOG_QUIET);
+  av_log_set_level(AV_LOG_DEBUG);
 
   client_start();
-  dvb_add_adapters();
+  dvb_init();
 
   //  v4l_add_adapters();
 
   channels_load();
-
+  
+  epg_init();
   xmltv_init();
 
   pvr_init();
@@ -195,4 +215,67 @@ find_mux_config(const char *muxtype, const char *muxname)
   return ce;
 }
 
+
+
+static char *
+convert_to(const char *in, const char *target_encoding)
+{
+  iconv_t ic;
+  size_t inlen, outlen, alloced, pos;
+  char *out, *start;
+  int r;
+
+  inlen = strlen(in);
+  alloced = 100;
+  outlen = alloced;
+
+  ic = iconv_open(target_encoding, "UTF8");
+  if(ic == NULL)
+    return NULL;
+
+  out = start = malloc(alloced + 1);
+
+  while(inlen > 0) {
+    r = iconv(ic, (char **)&in, &inlen, &out, &outlen);
+
+    if(r == (size_t) -1) {
+      if(errno == EILSEQ) {
+	in++;
+	inlen--;
+	continue;
+      }
+
+      if(errno == E2BIG) {
+	pos = alloced - outlen;
+	alloced *= 2;
+	start = realloc(start, alloced + 1);
+	out = start + pos;
+	outlen = alloced - pos;
+	continue;
+      }
+      break;
+    }
+  }
+
+  iconv_close(ic);
+  pos = alloced - outlen;
+  start[pos] = 0;
+  return start;
+}
+
+
+
+
+
+char *
+utf8toprintable(const char *in) 
+{
+  return convert_to(in, "ISO_8859-1");
+}
+
+char *
+utf8tofilename(const char *in) 
+{
+  return convert_to(in, "LATIN1");
+}
 

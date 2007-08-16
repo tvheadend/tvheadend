@@ -19,9 +19,11 @@
 #ifndef CHANNELS_H
 #define CHANNELS_H
 
+extern struct th_channel_queue channels;
+
 void channels_load(void);
 
-th_channel_t *channel_by_id(unsigned int id);
+th_channel_t *channel_by_index(uint32_t id);
 
 int id_by_channel(th_channel_t *ch);
 

@@ -19,15 +19,14 @@
 #ifndef INPUT_DVB_H
 #define INPUT_DVB_H
 
-void dvb_add_adapters(void);
+extern struct th_dvb_adapter_list dvb_adapters_probing;
+extern struct th_dvb_adapter_list dvb_adapters_running;
+extern struct th_dvb_mux_list dvb_muxes;
 
-th_dvb_adapter_t *dvb_alloc_adapter(struct dvb_frontend_parameters *params,
-				    int force);
+void dvb_init(void);
 
 int dvb_configure_transport(th_transport_t *t, const char *muxname);
 
-int dvb_start_feed(th_transport_t *t, unsigned int weight);
-
-void dvb_stop_feed(th_transport_t *t);
+int dvb_tune(th_dvb_adapter_t *tda, th_dvb_mux_t *tdm, int maylog);
 
 #endif /* INPUT_DVB_H */
