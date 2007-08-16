@@ -50,7 +50,6 @@ struct th_dvb_adapter_list dvb_adapters_probing;
 struct th_dvb_adapter_list dvb_adapters_running;
 
 static void dvb_tdt_add_demux(th_dvb_mux_instance_t *tdmi);
-//static void dvb_nit_add_demux(th_dvb_mux_instance_t *tdmi);
 static void dvb_eit_add_demux(th_dvb_mux_instance_t *tdmi);
 static void dvb_sdt_add_demux(th_dvb_mux_instance_t *tdmi);
 
@@ -248,7 +247,6 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog)
 
   dvb_tdt_add_demux(tdmi);
   dvb_eit_add_demux(tdmi);
-  //  dvb_nit_add_demux(tdmi);
   dvb_sdt_add_demux(tdmi);
 
   return 0;
