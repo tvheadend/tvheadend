@@ -64,6 +64,8 @@ static void dvb_start_initial_scan(th_dvb_mux_instance_t *tdmi);
 
 static void tdmi_activate(th_dvb_mux_instance_t *tdmi);
 
+static void dvb_mux_scanner(void *aux);
+
 static void
 dvb_add_adapter(const char *path)
 {
@@ -874,6 +876,7 @@ tdmi_activate(th_dvb_mux_instance_t *tdmi)
     /* no more muxes to probe, link adapter to the world */
     LIST_REMOVE(tda, tda_link);
     LIST_INSERT_HEAD(&dvb_adapters_running, tda, tda_link);
+    stimer_add(dvb_mux_scanner, tda, 10);
     return;
   }
 
@@ -934,5 +937,39 @@ dvb_start_initial_scan(th_dvb_mux_instance_t *tdmi)
   tdmi->tdmi_state = TDMI_INITIAL_SCAN;
   tdmi->tdmi_initial_scan_timer = 
     stimer_add(tdmi_initial_scan_timeout, tdmi, 5);
+
+}
+
+/**
+ * If nobody is subscribing, cycle thru all muxes to get some stats
+ * and EIT updates
+ */
+
+static void
+dvb_mux_scanner(void *aux)
+{
+  th_dvb_adapter_t *tda = aux;
+  th_dvb_mux_instance_t *tdmi;
+  unsigned int w;
+
+  stimer_add(dvb_mux_scanner, tda, 10);
+
+  subscription_lock();
+
+  w = transport_compute_weight(&tda->tda_transports);
+
+  subscription_unlock();
+
+  if(w > 0)
+    return; /* someone is here */
+
+  tdmi = tda->tda_mux_current;
+  tdmi = tdmi != NULL ? LIST_NEXT(tdmi, tdmi_adapter_link) : NULL;
+  tdmi = tdmi != NULL ? tdmi : LIST_FIRST(&tda->tda_muxes_active);
+
+  if(tdmi == NULL)
+    return; /* no instances */
+
+  dvb_tune_tdmi(tdmi, 0);
 
 }
