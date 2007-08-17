@@ -35,6 +35,7 @@
 #include "epg.h"
 #include "teletext.h"
 #include "dispatch.h"
+#include "dvb.h"
 
 struct client_list all_clients;
 
@@ -129,7 +130,40 @@ clients_enq_ref(int ref)
 /*
  *
  */
+static void
+print_tdmi(client_t *c, th_dvb_mux_instance_t *tdmi)
+{
+  switch(tdmi->tdmi_state) {
+  case TDMI_CONFIGURED:
+    cprintf(c, "Configured, awaiting scan slot\n");
+    return;
 
+  case TDMI_INITIAL_SCAN:
+    cprintf(c, "Initial scan\n");
+    return;
+
+  case TDMI_IDLE:
+    cprintf(c, "   Idle since %s", ctime(&tdmi->tdmi_lost_adapter));
+    cprintf(c, "\tLast known status: ");
+    break;
+
+  case TDMI_RUNNING:
+    cprintf(c, "Running since %s", ctime(&tdmi->tdmi_got_adapter));
+    cprintf(c, "\t   Current status: ");
+    break;
+  }
+
+  if(tdmi->tdmi_status != NULL) {
+    cprintf(c, "%s\n", tdmi->tdmi_status);
+    return;
+  }
+
+  cprintf(c, "ok, %d errors / second\n", tdmi->tdmi_fec_err_per_sec);
+}
+
+/*
+ *
+ */
 static int
 cr_show(client_t *c, char **argv, int argc)
 {
@@ -137,6 +171,8 @@ cr_show(client_t *c, char **argv, int argc)
   th_subscription_t *s;
   th_transport_t *t;
   th_channel_t *ch;
+  th_dvb_mux_t *tdm;
+  th_dvb_mux_instance_t *tdmi;
   event_t *e;
   char *tmp;
   char *txt;
@@ -243,6 +279,22 @@ cr_show(client_t *c, char **argv, int argc)
       cprintf(c, "\n");
  
 
+    }
+    return 0;
+  }
+
+  if(!strcasecmp(subcmd, "dvbmuxes")) {
+    LIST_FOREACH(tdm, &dvb_muxes, tdm_global_link) {
+
+      cprintf(c, "\"%s\"\n", tdm->tdm_title);
+      
+      LIST_FOREACH(tdmi, &tdm->tdm_instances, tdmi_mux_link) {
+	cprintf(c, "%20s: ", tdmi->tdmi_adapter->tda_path);
+
+	print_tdmi(c, tdmi);
+
+
+      }
     }
     return 0;
   }
