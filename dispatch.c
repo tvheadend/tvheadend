@@ -214,8 +214,6 @@ dispatcher(void)
   n = epoll_wait(epoll_fd, events, EPOLL_FDS_PER_ROUND, stimer_next());
 
   time(&dispatch_clock);
-  stimer_dispatch(dispatch_clock);
-  
 
   for(i = 0; i < n; i++) {
     e = events[i].data.ptr;
@@ -232,4 +230,6 @@ dispatcher(void)
 		
 		e->opaque, e->fd);
   }
+
+  stimer_dispatch(dispatch_clock);
 }
