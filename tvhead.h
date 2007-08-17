@@ -73,6 +73,13 @@ typedef struct th_v4l_adapter {
  *
  */
 
+typedef enum {
+    TDMI_CONFIGURED,
+    TDMI_INITIAL_SCAN,
+    TDMI_IDLE,
+    TDMI_RUNNING,
+} tdmi_state_t;
+
 typedef struct th_dvb_mux_instance {
   LIST_ENTRY(th_dvb_mux_instance) tdmi_mux_link;
   LIST_ENTRY(th_dvb_mux_instance) tdmi_adapter_link;
@@ -84,17 +91,18 @@ typedef struct th_dvb_mux_instance {
   uint16_t tdmi_snr, tdmi_signal;
   uint32_t tdmi_ber, tdmi_uncorrected_blocks;
 
+  uint32_t tdmi_fec_err_per_sec;
+
   time_t tdmi_time;
   LIST_HEAD(, th_dvb_table) tdmi_tables;
 
-  enum {
-    TDMI_CONFIGURED,
-    TDMI_INITIAL_SCAN,
-    TDMI_ACTIVE,
-  } tdmi_state;
+  tdmi_state_t tdmi_state;
 
   void *tdmi_initial_scan_timer;
   const char *tdmi_status;
+
+  time_t tdmi_got_adapter;
+  time_t tdmi_lost_adapter;
 
 } th_dvb_mux_instance_t;
 
