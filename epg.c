@@ -351,10 +351,10 @@ epg_update_event_by_id(th_channel_t *ch, uint16_t event_id,
       event_time_txt(e->e_start, e->e_duration, before, sizeof(before));
       event_time_txt(start, duration, after, sizeof(after));
        
-      syslog(LOG_DEBUG, "\"%s\": \"%s\" (serviceid = 0x04x) "
+      syslog(LOG_DEBUG, "\"%s\": \"%s\" (serviceid = 0x%04x) "
 	     "%s changed duration to %s",
 	     ch->ch_name, e->e_title ?: "<unnamed>",
-	     before, after);
+	     e->e_event_id, before, after);
 
       TAILQ_REMOVE(&ch->ch_epg_events, e, e_link);
 
