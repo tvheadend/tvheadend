@@ -148,7 +148,7 @@ typedef struct th_dvb_adapter {
 
   int tda_running;
 
-
+  pthread_mutex_t tda_mux_lock;
 
   int tda_fe_fd;
   struct dvb_frontend_info tda_fe_info;

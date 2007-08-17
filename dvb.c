@@ -104,7 +104,8 @@ dvb_add_adapter(const char *path)
     free(tda);
     return;
   }
-
+  
+  pthread_mutex_init(&tda->tda_mux_lock, NULL);
   LIST_INSERT_HEAD(&dvb_adapters_probing, tda, tda_link);
 
   tda->tda_name = strdup(tda->tda_fe_info.name);
@@ -232,6 +233,8 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog)
   if(tda->tda_mux_current == tdmi)
     return 0;
 
+  pthread_mutex_lock(&tda->tda_mux_lock);
+
   if(tda->tda_mux_current != NULL)
     tdmi_clean_tables(tda->tda_mux_current);
 
@@ -255,6 +258,7 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog)
   dvb_tdt_add_demux(tdmi);
   dvb_eit_add_demux(tdmi);
   dvb_sdt_add_demux(tdmi);
+  pthread_mutex_unlock(&tda->tda_mux_lock);
 
   return 0;
 }
@@ -279,59 +283,47 @@ dvb_tune(th_dvb_adapter_t *tda, th_dvb_mux_t *tdm, int maylog)
   return dvb_tune_tdmi(tdmi, maylog);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 static void
 dvb_monitor_current_mux(th_dvb_adapter_t *tda)
 {
-  th_dvb_mux_instance_t *tdmi = tda->tda_mux_current;
+  th_dvb_mux_instance_t *tdmi;
 
-  if(tdmi == NULL)
-    return;
+  pthread_mutex_lock(&tda->tda_mux_lock);
 
-  if(ioctl(tda->tda_fe_fd, FE_READ_STATUS, &tdmi->tdmi_fe_status) < 0)
-    tdmi->tdmi_fe_status = 0;
+  tdmi = tda->tda_mux_current;
 
-  if(tdmi->tdmi_fe_status & FE_HAS_LOCK)
-    tdmi->tdmi_status = NULL;
-  else if(tdmi->tdmi_fe_status & FE_HAS_SYNC)
-    tdmi->tdmi_status = "No lock, but sync ok";
-  else if(tdmi->tdmi_fe_status & FE_HAS_VITERBI)
-    tdmi->tdmi_status = "No lock, but FEC stable";
-  else if(tdmi->tdmi_fe_status & FE_HAS_CARRIER)
-    tdmi->tdmi_status = "No lock, but carrier present";
-  else if(tdmi->tdmi_fe_status & FE_HAS_SIGNAL)
-    tdmi->tdmi_status = "No lock, but faint signal present";
-  else
-    tdmi->tdmi_status = "No signal";
+  if(tdmi != NULL) {
 
-  if(ioctl(tda->tda_fe_fd, FE_READ_SIGNAL_STRENGTH, &tdmi->tdmi_signal) < 0)
-    tdmi->tdmi_signal = 0;
+    if(ioctl(tda->tda_fe_fd, FE_READ_STATUS, &tdmi->tdmi_fe_status) < 0)
+      tdmi->tdmi_fe_status = 0;
 
-  if(ioctl(tda->tda_fe_fd, FE_READ_SNR, &tdmi->tdmi_snr) < 0)
-    tdmi->tdmi_snr = 0;
+    if(tdmi->tdmi_fe_status & FE_HAS_LOCK)
+      tdmi->tdmi_status = NULL;
+    else if(tdmi->tdmi_fe_status & FE_HAS_SYNC)
+      tdmi->tdmi_status = "No lock, but sync ok";
+    else if(tdmi->tdmi_fe_status & FE_HAS_VITERBI)
+      tdmi->tdmi_status = "No lock, but FEC stable";
+    else if(tdmi->tdmi_fe_status & FE_HAS_CARRIER)
+      tdmi->tdmi_status = "No lock, but carrier present";
+    else if(tdmi->tdmi_fe_status & FE_HAS_SIGNAL)
+      tdmi->tdmi_status = "No lock, but faint signal present";
+    else
+      tdmi->tdmi_status = "No signal";
 
-  if(ioctl(tda->tda_fe_fd, FE_READ_BER, &tdmi->tdmi_ber) < 0)
-    tdmi->tdmi_ber = 0;
+    if(ioctl(tda->tda_fe_fd, FE_READ_SIGNAL_STRENGTH, &tdmi->tdmi_signal) < 0)
+      tdmi->tdmi_signal = 0;
+
+    if(ioctl(tda->tda_fe_fd, FE_READ_SNR, &tdmi->tdmi_snr) < 0)
+      tdmi->tdmi_snr = 0;
+
+    if(ioctl(tda->tda_fe_fd, FE_READ_BER, &tdmi->tdmi_ber) < 0)
+      tdmi->tdmi_ber = 0;
   
-  if(ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, 
-	   &tdmi->tdmi_uncorrected_blocks) < 0)
-    tdmi->tdmi_uncorrected_blocks = 0;
+    if(ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, 
+	     &tdmi->tdmi_uncorrected_blocks) < 0)
+      tdmi->tdmi_uncorrected_blocks = 0;
+  }
+  pthread_mutex_unlock(&tda->tda_mux_lock);
 }
     
     
