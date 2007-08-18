@@ -27,6 +27,7 @@
 #include "tvhead.h"
 #include "dvb.h"
 #include "dvb_muxconfig.h"
+#include "strtab.h"
 
 
 static void
@@ -79,14 +80,6 @@ dvb_add_mux(struct dvb_frontend_parameters *fe_param, const char *name)
     dvb_add_mux_instance(tda, tdm);
   }
 }
-
-
-
-struct strtab {
-  const char *str;
-  int val;
-};
-
 
 static struct strtab fectab[] = {
   { "NONE", FEC_NONE },
@@ -142,21 +135,6 @@ static struct strtab hiertab[] = {
   { "4",    HIERARCHY_4 },
   { "AUTO", HIERARCHY_AUTO }
 };
-
-
-
-static int
-str2val0(const char *str, struct strtab tab[], int l)
-{
-  int i;
-  for(i = 0; i < l; i++)
-    if(!strcasecmp(str, tab[i].str))
-      return tab[i].val;
-
-  return -1;
-}
-
-#define str2val(str, tab) str2val0(str, tab, sizeof(tab) / sizeof(tab[0]))
 
 
 
