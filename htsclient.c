@@ -519,14 +519,12 @@ cr_event_record(client_t *c, char **argv, int argc)
     return 1;
 
   op = str2val(argv[1], recoptab);
-  printf("op = %d\n", op);
   if(op == -1)
     return 1;
 
   epg_lock();
 
   e = epg_event_find_by_tag(atoi(argv[0]));
-  printf("e[%d] = %p\n", atoi(argv[0]), e);
   if(e == NULL) {
     epg_unlock();
     return 1;
