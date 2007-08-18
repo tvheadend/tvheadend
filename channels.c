@@ -41,7 +41,7 @@
 
 struct th_channel_queue channels;
 struct th_transport_list all_transports;
-static int chtally;
+int nchannels;
 
 void scanner_init(void);
 
@@ -59,11 +59,12 @@ channel_find(const char *name, int create)
 
   ch = calloc(1, sizeof(th_channel_t));
   ch->ch_name = strdup(name);
-  ch->ch_index = ++chtally;
+  ch->ch_index = nchannels;
   TAILQ_INIT(&ch->ch_epg_events);
 
   TAILQ_INSERT_TAIL(&channels, ch, ch_global_link);
   ch->ch_tag = tag_get();
+  nchannels++;
   return ch;
 }
 
