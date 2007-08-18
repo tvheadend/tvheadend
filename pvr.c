@@ -258,14 +258,20 @@ pvr_link_pvrr(pvr_rec_t *pvrr)
 
 
 void
-pvr_add_recording_by_event(th_channel_t *ch, event_t *e)
+pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op)
 {
   time_t start = e->e_start;
   time_t stop  = e->e_start + e->e_duration;
   time_t now;
   pvr_rec_t *pvrr;
+  char buf[100];
 
   time(&now);
+
+  event_time_txt(start, e->e_duration, buf, sizeof(buf));
+
+  syslog(LOG_NOTICE, "Got recording command %d for %s", op, buf);
+      
 
   if(stop < now)
     return;
@@ -274,10 +280,32 @@ pvr_add_recording_by_event(th_channel_t *ch, event_t *e)
 
   LIST_FOREACH(pvrr, &pvrr_global_list, pvrr_global_link) {
     if(pvrr->pvrr_channel == ch && pvrr->pvrr_start == start &&
-       pvrr->pvrr_stop == stop) {
+       pvrr->pvrr_stop == stop)
+      break;
+  }
+
+  switch(op) {
+  case RECOP_TOGGLE:
+    if(pvrr != NULL) {
       pvr_unrecord(pvrr);
       return;
     }
+    break;
+
+  case RECOP_CANCEL:
+    if(pvrr != NULL)
+      pvr_unrecord(pvrr);
+    return;
+
+  case RECOP_ONCE:
+    if(pvrr != NULL)
+      return;
+    break;
+
+  case RECOP_DAILY:
+  case RECOP_WEEKLY:
+    syslog(LOG_ERR,"Recording type not supported yet");
+    return;
   }
 
   pvrr = calloc(1, sizeof(pvr_rec_t));

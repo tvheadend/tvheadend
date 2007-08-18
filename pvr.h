@@ -24,9 +24,17 @@ extern pthread_mutex_t pvr_mutex;
 extern struct pvr_rec_list pvrr_work_list[PVRR_WORK_MAX];
 extern struct pvr_rec_list pvrr_global_list;
 
+typedef enum {
+  RECOP_TOGGLE,
+  RECOP_ONCE,
+  RECOP_DAILY,
+  RECOP_WEEKLY,
+  RECOP_CANCEL,
+} recop_t;
+
 void pvr_init(void);
 
-void pvr_add_recording_by_event(th_channel_t *ch, event_t *e);
+void pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op);
 
 char pvr_prog_status(event_t *e);
 

@@ -36,6 +36,7 @@
 #include "teletext.h"
 #include "dispatch.h"
 #include "dvb.h"
+#include "strtab.h"
 
 struct client_list all_clients;
 
@@ -303,24 +304,6 @@ cr_show(client_t *c, char **argv, int argc)
 }
 
 
-
-
-/*
- *
- */
-
-static int
-cr_channel_reftag(client_t *c, char **argv, int argc)
-{
-  th_channel_t *ch;
-
-  if(argc != 1 || (ch = channel_by_index(atoi(argv[0]))) == NULL)
-    return 1;
-
-  cprintf(c, "%u\n", ch->ch_tag);
-  return 0;
-}
-
 /*
  *
  */
@@ -412,6 +395,23 @@ cr_channel_subscribe(client_t *c, char **argv, int argc)
   return 0;
 }
 
+
+/*
+ *
+ */
+
+int
+cr_channels_list(client_t *c, char **argv, int argc)
+{
+  th_channel_t *ch;
+
+  TAILQ_FOREACH(ch, &channels, ch_global_link)
+    cprintf(c, "channel = %d\n", ch->ch_index);
+
+  return 0;
+}
+
+
 /*
  *
  */
@@ -441,15 +441,23 @@ cr_streamport(client_t *c, char **argv, int argc)
 static int
 cr_event_info(client_t *c, char **argv, int argc)
 {
-  event_t *e, *x;
+  event_t *e = NULL, *x;
   uint32_t tag, prev, next;
+  th_channel_t *ch;
 
-  if(argc < 1)
+  if(argc < 2)
     return 1;
 
   epg_lock();
 
-  e = epg_event_find_by_tag(atoi(argv[0]));
+  if(!strcasecmp(argv[0], "tag")) 
+    e = epg_event_find_by_tag(atoi(argv[1]));
+  if(!strcasecmp(argv[0], "now")) 
+    if((ch = channel_by_index(atoi(argv[1]))) != NULL)
+      e = epg_event_get_current(ch);
+  if(!strcasecmp(argv[0], "at") && argc == 3) 
+    if((ch = channel_by_index(atoi(argv[1]))) != NULL)
+      e = epg_event_find_by_time(ch, atoi(argv[2]));
 
   if(e == NULL) {
     epg_unlock();
@@ -493,53 +501,38 @@ cr_event_info(client_t *c, char **argv, int argc)
  *
  */
 
-static int
-cr_event_bytime(client_t *c, char **argv, int argc)
-{
-  th_channel_t *ch;
-  event_t *e;
-
-  if(argc < 2)
-    return 1;
-
-  if((ch = channel_by_index(atoi(argv[0]))) == NULL)
-    return 1;
-
-  epg_lock();
-
-  e = epg_event_find_by_time(ch, atoi(argv[1]));
-
-  if(e == NULL) {
-    epg_unlock();
-    return 1;
-  }
-
-  cprintf(c, "%u\n", e->e_tag);
-  epg_unlock();
-  return 0;
-}
-
-/*
- *
- */
+static struct strtab recoptab[] = {
+  { "once",   RECOP_ONCE },
+  { "daily",  RECOP_DAILY },
+  { "weekly", RECOP_WEEKLY },
+  { "cancel", RECOP_CANCEL },
+  { "toggle", RECOP_TOGGLE }
+};
 
 static int
 cr_event_record(client_t *c, char **argv, int argc)
 {
   event_t *e;
+  recop_t op;
 
-  if(argc < 1)
+  if(argc < 2)
+    return 1;
+
+  op = str2val(argv[1], recoptab);
+  printf("op = %d\n", op);
+  if(op == -1)
     return 1;
 
   epg_lock();
 
   e = epg_event_find_by_tag(atoi(argv[0]));
+  printf("e[%d] = %p\n", atoi(argv[0]), e);
   if(e == NULL) {
     epg_unlock();
     return 1;
   }
 
-  pvr_add_recording_by_event(e->e_ch, e);
+  pvr_event_record_op(e->e_ch, e, op);
 
   epg_unlock();
   return 0;
@@ -626,12 +619,11 @@ const struct {
 } cr_cmds[] = {
   { "show", cr_show },
   { "streamport", cr_streamport },
-  { "channel.reftag", cr_channel_reftag },
+  { "channels.list", cr_channels_list },
   { "channel.info", cr_channel_info },
   { "channel.subscribe", cr_channel_subscribe },
   { "channel.unsubscribe", cr_channel_unsubscribe },
   { "event.info", cr_event_info },
-  { "event.bytime", cr_event_bytime },
   { "event.record", cr_event_record },
   { "pvr.getlog", cr_pvr_getlog },
   { "pvr.gettag", cr_pvr_gettag },
@@ -808,6 +800,9 @@ client_connect_callback(int events, void *opaque, int fd)
 
   val = 5;
   setsockopt(newfd, SOL_TCP, TCP_KEEPCNT, &val, sizeof(val));
+
+  val = 1;
+  setsockopt(newfd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
 
   c = calloc(1, sizeof(client_t));
   c->c_fd = newfd;
