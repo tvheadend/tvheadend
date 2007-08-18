@@ -28,7 +28,7 @@
 #include <libhts/htstv.h>
 #include <libhts/htscfg.h>
 #include <libhts/avg.h>
-
+#include "refstr.h"
 
 LIST_HEAD(th_subscription_list, th_subscription);
 TAILQ_HEAD(th_channel_queue, th_channel);
@@ -339,7 +339,6 @@ typedef struct th_channel {
   int ch_index;
 
   const char *ch_name;
-  const char *ch_icon;
 
   struct pvr_rec *ch_rec;
 
@@ -351,6 +350,7 @@ typedef struct th_channel {
 
   struct event_queue ch_epg_events;
   struct event *ch_epg_cur_event;
+  refstr_t *ch_icon;
 
 } th_channel_t;
 
@@ -445,6 +445,8 @@ typedef struct event {
 
 #define EVENT_SRC_XMLTV 1
 #define EVENT_SRC_DVB   2
+
+  refstr_t *e_icon;
 
 } event_t;
 

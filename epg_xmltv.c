@@ -35,6 +35,7 @@
 #include "channels.h"
 #include "epg.h"
 #include "epg_xmltv.h"
+#include "refstr.h"
 
 extern int xmltvreload;
 
@@ -55,7 +56,7 @@ typedef struct xmltv_channel {
   LIST_ENTRY(xmltv_channel) xc_link;
   const char *xc_name;
   const char *xc_displayname; 
-  const char *xc_icon;
+  refstr_t *xc_icon;
 
   LIST_HEAD(, xmltv_map) xc_maps;
 
@@ -105,8 +106,8 @@ xmltv_parse_channel(xmlNode *n, char *chid)
     if(!strcmp((char *)n->name, "icon")) {
       t = (char *)xmlGetProp(n, (unsigned char *)"src");
 
-      free((void *)xc->xc_icon);
-      xc->xc_icon = strdup(t);
+      refstr_free(xc->xc_icon);
+      xc->xc_icon = refstr_alloc(t);
       xmlFree(t);
     }
     xmlFree(c);
@@ -359,7 +360,8 @@ xmltv_transfer(void)
       if(xm->xm_isupdated)
 	continue;
 
-      epg_transfer_events(xm->xm_channel, &xc->xc_events, xc->xc_name);
+      epg_transfer_events(xm->xm_channel, &xc->xc_events, xc->xc_name,
+			  xc->xc_icon);
       xm->xm_isupdated = 1;
     }
   }

@@ -324,7 +324,7 @@ cr_channel_info(client_t *c, char **argv, int argc)
 	  "icon = %s\n"
 	  "tag = %d\n",
 	  ch->ch_name,
-	  ch->ch_icon ?: "",
+	  ch->ch_icon ? refstr_get(ch->ch_icon) : "",
 	  ch->ch_tag);
 
   return 0;
