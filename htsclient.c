@@ -552,7 +552,7 @@ cr_pvr_entry(client_t *c, pvr_rec_t *pvrr)
 	  "start = %ld\n"
 	  "stop = %ld\n"
 	  "desc = %s\n"
-	  "tag = %d\n"
+	  "pvr_tag = %d\n"
 	  "pvrstatus = %c\n"
 	  "filename = %s\n"
 	  "channel = %d\n",
