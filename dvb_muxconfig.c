@@ -247,7 +247,7 @@ dvb_mux_setup(void)
 {
   const char *s;
   
-  s = config_get_str("muxfile", NULL);
+  s = config_get_str("dvbmuxfile", NULL);
   if(s != NULL)
     dvb_muxfile_add(s);
 
