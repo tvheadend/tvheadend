@@ -891,8 +891,7 @@ tdmi_activate(th_dvb_mux_instance_t *tdmi)
     stimer_add(dvb_mux_scanner, tda, 10);
     return;
   }
-
-  dvb_tune_tdmi(tdmi, 1, TDMI_INITIAL_SCAN);
+  dvb_start_initial_scan(tdmi);
 }
 
 
