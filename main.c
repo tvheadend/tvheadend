@@ -46,6 +46,7 @@
 #include "pvr.h"
 #include "dispatch.h"
 #include "iptv_output.h"
+#include "config.h"
 
 int running;
 int xmltvreload;
@@ -100,8 +101,7 @@ main(int argc, char **argv)
   const char *groupnam = NULL;
   char *cfgfile;
   int logfacility = LOG_DAEMON;
-
-  
+  int r;
 
   signal(SIGPIPE, handle_sigpipe);
 
@@ -124,7 +124,22 @@ main(int argc, char **argv)
     }
   }
 
-  config_read_file(cfgfile);
+  if((r = config_read_file(cfgfile)) < 0) {
+    fprintf(stderr, 
+	    "configfile \"%s\" not found, trying from build structure\n",
+	    cfgfile);
+
+    cfgfile = HTS_BUILD_ROOT "/etc/tvheadend.cfg";
+    r = config_read_file(cfgfile);
+  }
+
+
+  if(r < 0)
+    fprintf(stderr, 
+	    "configfile \"%s\" not found, running with defaults\n",
+	    cfgfile);
+  else
+    fprintf(stderr, "Config from \"%s\" loaded\n", cfgfile);
 
   if(forkaway) {
     if(daemon(0, 0)) {

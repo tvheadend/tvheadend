@@ -12,9 +12,9 @@ SRCS += iptv_input.c iptv_output.c
 
 SRCS +=	htsclient.c
 
-PROG = tvhead
+PROG = tvheadend
 CFLAGS += -g -Wall -Werror -O2
-CFLAGS += -I$(INCLUDES_INSTALL_BASE)
+CFLAGS += -I$(INCLUDES_INSTALL_BASE) $(HTS_CFLAGS)
 CFLAGS += -Wno-deprecated-declarations
 CFLAGS += -D_LARGEFILE64_SOURCE
 CFLAGS += -DENABLE_INPUT_IPTV -DENABLE_INPUT_DVB
