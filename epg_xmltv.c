@@ -377,14 +377,13 @@ xmltv_thread(void *aux)
   xmltvreload = 1;
   while(1) {
 
-    sleep(10);
-
     if(xmltvreload) {
       xmltvreload = 0;
       xmltv_load();
     }
 
     xmltv_transfer();
+    sleep(10);
 
   }
 }
