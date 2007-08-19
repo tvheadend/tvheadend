@@ -239,7 +239,7 @@ cr_show(client_t *c, char **argv, int argc)
 
       LIST_FOREACH(t, &ch->ch_transports, tht_channel_link) {
 
-	cprintf(c, "\tTransport: %-35s", t->tht_name);
+	cprintf(c, "\t%-47s", t->tht_name);
 
 	switch(t->tht_status) {
 	case TRANSPORT_IDLE:

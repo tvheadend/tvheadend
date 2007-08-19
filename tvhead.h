@@ -66,6 +66,26 @@ typedef struct th_v4l_adapter {
 
   pthread_cond_t tva_run_cond;
 
+  int tva_fd;
+
+  void *tva_dispatch_handle;
+
+
+  uint32_t tva_startcode;
+  uint16_t tva_packet_len;
+  int tva_lenlock;
+
+  struct {
+    void *tva_pes_packet;
+    uint16_t tva_pes_packet_len;
+    uint16_t tva_pes_packet_pos;
+
+    void *tva_parser;
+    void *tva_ctx;
+    int tva_cc;
+  } tva_streams[2];
+
+
 } th_v4l_adapter_t;
 
 

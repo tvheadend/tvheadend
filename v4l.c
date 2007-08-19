@@ -42,12 +42,69 @@ extern AVInputFormat mpegps_demuxer;
 
 #include "tvhead.h"
 #include "v4l.h"
-#include "client.h"
 #include "channels.h"
-#include "teletext.h"
+#include "dispatch.h"
+#include "transports.h"
 
 static struct th_v4l_adapter_list v4l_adapters;
 
+static void v4l_fd_callback(int events, void *opaque, int fd);
+
+static int v4l_setfreq(th_v4l_adapter_t *tva, int frequency);
+
+static void v4l_pes_packet(th_v4l_adapter_t *tva, uint8_t *buf, int len,
+			   int type);
+
+static void v4l_ts_generate(th_v4l_adapter_t *tva, uint8_t *ptr, int len,
+			    int type, int64_t pts, int64_t dts);
+
+static void v4l_add_adapter(const char *path);
+
+
+
+
+/* 
+ *
+ */
+void
+v4l_add_adapters(void)
+{
+  v4l_add_adapter("/dev/video0");
+}
+
+
+
+/* 
+ *
+ */
+int
+v4l_configure_transport(th_transport_t *t, const char *muxname)
+{
+  config_entry_t *ce;
+  char buf[100];
+
+  if((ce = find_mux_config("v4lmux", muxname)) == NULL)
+    return -1;
+
+  t->tht_type = TRANSPORT_V4L;
+
+  t->tht_v4l_frequency = 
+    atoi(config_get_str_sub(&ce->ce_sub, "frequency", "0"));
+
+  transport_add_pid(t, 100, HTSTV_MPEG2VIDEO);
+  transport_add_pid(t, 101, HTSTV_MPEG2AUDIO);
+
+  snprintf(buf, sizeof(buf), "Analog: %s (%.2f MHz)", muxname, 
+	   (float)t->tht_v4l_frequency / 1000000.0f);
+  t->tht_name = strdup(buf);
+
+  return 0;
+}
+
+
+/*
+ *
+ */
 static void
 v4l_add_adapter(const char *path)
 {
@@ -60,16 +117,11 @@ v4l_add_adapter(const char *path)
     return;
 
   r = ioctl(fd, VIDIOC_QUERYCAP, &caps);
+
   close(fd);
   if(r < 0)
     return;
 
-  printf("%s: %s: %s %08x caps = 0x%08x\n",
-	 caps.driver,
-	 caps.card,
-	 caps.bus_info,
-	 caps.version,
-	 caps.capabilities);
 
   tva = calloc(1, sizeof(th_v4l_adapter_t));
 
@@ -82,254 +134,59 @@ v4l_add_adapter(const char *path)
 }
 
 
-void
-v4l_add_adapters(void)
-{
-  v4l_add_adapter("/dev/video0");
-}
 
 
-
+/* 
+ *
+ */
 static int 
-v4l_setfreq(const char *device, int frequency)
+v4l_setfreq(th_v4l_adapter_t *tva, int frequency)
 {
   struct v4l2_frequency vf;
   struct v4l2_tuner vt;
-  int fd, result;
-
-  if ((fd = open(device, O_RDWR)) < 0)
-    {
-      fprintf(stderr, "Failed to open %s\n", device);
-      return 1;
-    }
+  int result;
 
   vf.tuner = 0;
   vf.type = V4L2_TUNER_ANALOG_TV;
   vf.frequency = (frequency * 16) / 1000000;
-  result = ioctl(fd, VIDIOC_S_FREQUENCY, &vf);
+  result = ioctl(tva->tva_fd, VIDIOC_S_FREQUENCY, &vf);
+  if(result < 0) {
+    fprintf(stderr, "ioctl VIDIOC_S_FREQUENCY failed\n");
+    return 1;
+  }
 
   vt.index = 0;
-  result = ioctl(fd, VIDIOC_G_TUNER, &vt);
+  result = ioctl(tva->tva_fd, VIDIOC_G_TUNER, &vt);
 
-  close(fd);
-
-  if (result < 0)
-    {
-      fprintf(stderr, "ioctl VIDIOC_S_FREQUENCY failed\n");
-      return 1;
-    }
+  if(result < 0) {
+    fprintf(stderr, "ioctl VIDIOC_S_FREQUENCY failed\n");
+    return 1;
+  }
 	
-  fprintf(stderr, "%s: %.3f MHz%s\n", device, frequency/1000000.0,
+  fprintf(stderr, "%s: %.3f MHz%s\n", tva->tva_path, frequency/1000000.0,
 	  vt.signal ? "  (Signal Detected)" : "");
 
   return 0;
 }
 
 
-
-
-static void
-v4l_receive_loop(th_v4l_adapter_t *tva)
-{
-  uint8_t tsb0[188];
-  uint8_t *tsb, *src;
-  tv_streamtype_t type;
-  AVCodecContext *ctx;
-  AVFormatContext *fctx;
-  AVPacket pkt;
-  int64_t ts;
-  uint16_t u16;
-  int i, slen, plen, tlen, len, pad;
-  uint32_t sc;
-  th_transport_t *t;
-  th_subscription_t *s;
-  pidinfo_t pid_a;
-  pidinfo_t pid_v;
-  pidinfo_t *pp;
-
-  memset(&pid_a, 0, sizeof(pidinfo_t));
-  memset(&pid_v, 0, sizeof(pidinfo_t));
-
-  pid_a.pid = 200;
-  pid_v.pid = 100;
-
-  printf("opening %s\n", tva->tva_path);
-
-  if(av_open_input_file(&fctx, tva->tva_path, &mpegps_demuxer, 0, NULL) != 0) {
-    fprintf(stderr, "v4l: Unable to open input file\n");
-    return;
-  }
-  
-
-  pthread_mutex_lock(&tvh_mutex);
-
-  tva->tva_running = 2;
-
-  pthread_cond_signal(&tva->tva_run_cond);
-
-  while(1) {
-    pthread_mutex_unlock(&tvh_mutex);
-    i = av_read_frame(fctx, &pkt);
-
-
-    if(tva->tva_running == 0 || i < 0) {
-      break;
-    }
-
-    pthread_mutex_lock(&tvh_mutex);
-
-#if 0   
-    printf("[%3d] %d bytes %lld %lld\t", 
-	   pkt.stream_index, pkt.size, pkt.pts, pkt.dts);
-    for(i = 0; i < 16; i++)
-      printf("%02x ", pkt.data[i]);
-    printf("\n");
-#endif
-
-    tsb = tsb0;
-
-    ctx = fctx->streams[pkt.stream_index]->codec;
-
-    type = 0;
-
-    switch(ctx->codec_type) {
-    case CODEC_TYPE_VIDEO:
-      sc = 0x1e0;
-      type = HTSTV_MPEG2VIDEO;
-      pp = &pid_v;
-      break;
-
-    case CODEC_TYPE_AUDIO:
-      sc = 0x1c0;
-      type = HTSTV_MPEG2AUDIO;
-      pp = &pid_a;
-      break;
-
-    default:
-      break;
-    }
-
-    len = pkt.size + 3 + 10;
-
-    if(type != 0) {
-      
-      *tsb++ = type;
-      *tsb++ = pp->pid >> 8 | 0x40; /* payload unit start indicator */
-      *tsb++ = pp->pid;
-      pp->cc++;
-      *tsb++ = (pp->cc & 0xf) | 0x10;
-
-      *tsb++ = 0;
-      *tsb++ = 0;
-      *tsb++ = sc >> 8;
-      *tsb++ = sc;
-      
-      *tsb++ = len >> 8;
-      *tsb++ = len;
-
-      *tsb++ = 0x80;  /* MPEG2 */
-      *tsb++ = 0xc0;  /* pts & dts */
-      *tsb++ = 10;    /* pts & dts */
-
-      ts = pkt.pts;
-      *tsb++ = (((ts >> 30) & 7) << 1) | 1;
-      u16 = (((ts >> 15) & 0x7fff) << 1) | 1;
-      *tsb++ = u16 >> 8;
-      *tsb++ = u16;
-      u16 = ((ts & 0x7fff) << 1) | 1;
-      *tsb++ = u16 >> 8;
-      *tsb++ = u16;
-
-      ts = pkt.dts;
-      *tsb++ = (((ts >> 30) & 7) << 1) | 1;
-      u16 = (((ts >> 15) & 0x7fff) << 1) | 1;
-      *tsb++ = u16 >> 8;
-      *tsb++ = u16;
-      u16 = ((ts & 0x7fff) << 1) | 1;
-      *tsb++ = u16 >> 8;
-      *tsb++ = u16;
-
-      tlen = 188 - 4 - 4 - 2 - 3 - 10;
-
-      src = pkt.data;
-      slen = pkt.size;
-
-      plen = FFMIN(tlen, slen);
-
-      while(1) {
-	assert(plen != 0);
-	assert(slen > 0);
-
-	memcpy(tsb, src, plen);
-
-
-	LIST_FOREACH(t, &tva->tva_transports, tht_adapter_link) {
-	  LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link) {
-	    s->ths_callback(s, tsb0, pp, pkt.stream_index);
-	  }
-	}
-
-	slen -= plen;
-	if(slen == 0)
-	  break;
-
-	src += plen;
-
-	tsb = tsb0;
-
-	*tsb++ = type;
-	*tsb++ = pp->pid >> 8;
-	*tsb++ = pp->pid;
-
-	tlen = 188 - 4;
-	pp->cc++;
-
-	plen = FFMIN(tlen, slen);
-	if(plen == slen) {
-	  tlen -= 2;
-	  plen = FFMIN(tlen, slen);
-	  pad = tlen - plen;
-
-	  *tsb++ = (pp->cc & 0xf) | 0x30;
-	  *tsb++ = pad + 1;
-	  *tsb++ = 0;
-	  tsb += pad;
-
-	} else {
-	  *tsb++ = (pp->cc & 0xf) | 0x10;
-	}
-      }
-    }
-    av_free_packet(&pkt);
-  }
-  av_close_input_file(fctx);
-}
-
-static void *
-v4l_thread(void *aux)
-{
-  th_v4l_adapter_t *tva = aux;
-
-  v4l_receive_loop(tva);
-  return NULL;
-}
-
+/* 
+ *
+ */
 static void
 v4l_stop(th_v4l_adapter_t *tva)
 {
-  tva->tva_running = 0;
-  if(tva->tva_ptid == 0)
-    return;
-
-  pthread_mutex_unlock(&tvh_mutex);
-  pthread_join(tva->tva_ptid, NULL);
-  pthread_mutex_lock(&tvh_mutex);
-
-  tva->tva_ptid = 0;
+  if(tva->tva_dispatch_handle != NULL) {
+    close(dispatch_delfd(tva->tva_dispatch_handle));
+    tva->tva_dispatch_handle = NULL;
+  }
 }
 
 
 
+/* 
+ *
+ */
 void
 v4l_stop_feed(th_transport_t *t)
 {
@@ -347,6 +204,9 @@ v4l_stop_feed(th_transport_t *t)
 
 
 
+/* 
+ *
+ */
 static void
 v4l_adapter_clean(th_v4l_adapter_t *tva)
 {
@@ -359,11 +219,18 @@ v4l_adapter_clean(th_v4l_adapter_t *tva)
 }
 
 
+
+
+
+/* 
+ *
+ */
 int 
 v4l_start_feed(th_transport_t *t, unsigned int weight)
 {
   th_v4l_adapter_t *tva, *cand = NULL;
-  int w;
+  int w, fd;
+  AVCodec *c;
 
   LIST_FOREACH(tva, &v4l_adapters, tva_link) {
     w = transport_compute_weight(&tva->tva_transports);
@@ -382,27 +249,204 @@ v4l_start_feed(th_transport_t *t, unsigned int weight)
     tva = cand;
   }
 
+
+  if(tva->tva_streams[0].tva_ctx == NULL) {
+    c = avcodec_find_decoder(CODEC_ID_MPEG2VIDEO);
+    tva->tva_streams[0].tva_ctx = avcodec_alloc_context();
+    avcodec_open(tva->tva_streams[0].tva_ctx, c);
+    tva->tva_streams[0].tva_parser = av_parser_init(CODEC_ID_MPEG2VIDEO);
+  }
+
+  if(tva->tva_streams[1].tva_ctx == NULL) {
+    c = avcodec_find_decoder(CODEC_ID_MP2);
+    tva->tva_streams[1].tva_ctx = avcodec_alloc_context();
+    avcodec_open(tva->tva_streams[1].tva_ctx, c);
+    tva->tva_streams[1].tva_parser = av_parser_init(CODEC_ID_MP2);
+  }
+
+  if(tva->tva_dispatch_handle == NULL) {
+    fd = open(tva->tva_path, O_RDWR);
+    if(fd == -1)
+      return 1;
+
+    tva->tva_dispatch_handle = 
+      dispatch_addfd(fd, v4l_fd_callback, tva, DISPATCH_READ);
+    tva->tva_fd = fd;
+  }
+
   tva->tva_frequency = t->tht_v4l_frequency;
 
-  v4l_setfreq(tva->tva_path, tva->tva_frequency);
+  if(v4l_setfreq(tva, tva->tva_frequency))
+    return 1;
 
   LIST_INSERT_HEAD(&tva->tva_transports, t, tht_adapter_link);
   t->tht_v4l_adapter = tva;
   t->tht_status = TRANSPORT_RUNNING;
   
-  assert(tva->tva_running == 0);
-  assert(tva->tva_ptid == 0);
-
-  tva->tva_running = 1;
-
-  pthread_create(&tva->tva_ptid, NULL, v4l_thread, tva);
-
-  while(tva->tva_running != 2)
-    pthread_cond_wait(&tva->tva_run_cond, &tvh_mutex);
-
   return 0;
 }
 
+
+
+
+
+
+static void
+v4l_fd_callback(int events, void *opaque, int fd)
+{
+  th_v4l_adapter_t *tva = opaque;
+  uint8_t buf[4000];
+  uint8_t *ptr, *pkt;
+  int len, s = 0, l, r;
+
+  if(!(events & DISPATCH_READ))
+    return;
+
+  len = read(fd, buf, 4000);
+  if(len < 1)
+    return;
+
+  ptr = buf;
+
+  while(len > 0) {
+
+    switch(tva->tva_startcode) {
+    default:
+      tva->tva_startcode = tva->tva_startcode << 8 | *ptr;
+      tva->tva_lenlock = 0;
+      ptr++; len--;
+      continue;
+
+    case 0x000001e0:
+      s = 0; /* video */
+      break;
+    case 0x000001c0:
+      s = 1; /* audio */
+      break;
+    }
+
+    if(tva->tva_lenlock == 2) {
+      l = tva->tva_streams[s].tva_pes_packet_len;
+      pkt = realloc(tva->tva_streams[s].tva_pes_packet, l);
+      tva->tva_streams[s].tva_pes_packet = pkt;
+      
+      r = l - tva->tva_streams[s].tva_pes_packet_pos;
+      if(r > len)
+	r = len;
+      memcpy(pkt + tva->tva_streams[s].tva_pes_packet_pos, ptr, r);
+      
+      ptr += r;
+      len -= r;
+
+      tva->tva_streams[s].tva_pes_packet_pos += r;
+      if(tva->tva_streams[s].tva_pes_packet_pos == l) {
+	v4l_pes_packet(tva, pkt, l, s);
+	tva->tva_startcode = 0;
+      }
+      
+    } else {
+      tva->tva_streams[s].tva_pes_packet_len = 
+	tva->tva_streams[s].tva_pes_packet_len << 8 | *ptr;
+      tva->tva_lenlock++;
+      if(tva->tva_lenlock == 2) {
+	tva->tva_streams[s].tva_pes_packet_pos = 0;
+      }
+      ptr++; len--;
+    }
+  }
+}
+
+
+
+
+#define getu32(b, l) ({						\
+  uint32_t x = (b[0] << 24 | b[1] << 16 | b[2] << 8 | b[3]);	\
+  b+=4;								\
+  l-=4; 							\
+  x;								\
+})
+
+#define getu16(b, l) ({						\
+  uint16_t x = (b[0] << 8 | b[1]);	                        \
+  b+=2;								\
+  l-=2; 							\
+  x;								\
+})
+
+#define getu8(b, l) ({						\
+  uint8_t x = b[0];	                                        \
+  b+=1;								\
+  l-=1; 							\
+  x;								\
+})
+
+#define getpts(b, l) ({					\
+  int64_t _pts;						\
+  _pts = (int64_t)((getu8(b, l) >> 1) & 0x07) << 30;	\
+  _pts |= (int64_t)(getu16(b, l) >> 1) << 15;		\
+  _pts |= (int64_t)(getu16(b, l) >> 1);			\
+  _pts;							\
+})
+
+
+/* 
+ *
+ */
+static void
+v4l_pes_packet(th_v4l_adapter_t *tva, uint8_t *buf, int len, int type)
+{
+  uint8_t flags, hlen, x;
+  int64_t dts = AV_NOPTS_VALUE, pts = AV_NOPTS_VALUE;
+  uint8_t *outbuf;
+  int outlen, rlen;
+  AVCodecParserContext *p;
+
+  x = getu8(buf, len);
+  flags = getu8(buf, len);
+  hlen = getu8(buf, len);
+  
+  if(len < hlen)
+    return;
+
+  if((x & 0xc0) != 0x80)
+    /* no MPEG 2 PES */
+    return;
+
+  if((flags & 0xc0) == 0xc0) {
+    if(hlen < 10)
+      return;
+
+    pts = getpts(buf, len);
+    dts = getpts(buf, len);
+
+    hlen -= 10;
+  } else if((flags & 0xc0) == 0x80) {
+    if(hlen < 5)
+      return;
+
+    dts = pts = getpts(buf, len);
+    hlen -= 5;
+  }
+
+  buf += hlen;
+  len -= hlen;
+
+  p = tva->tva_streams[type].tva_parser;
+
+  while(len > 0) {
+
+    rlen = av_parser_parse(p, tva->tva_streams[type].tva_ctx,
+			   &outbuf, &outlen, buf, len, 
+			   pts, dts);
+
+    if(outlen)
+      v4l_ts_generate(tva, outbuf, outlen, type, pts, dts);
+
+    buf += rlen;
+    len -= rlen;
+  }
+
+}
 
 
 
@@ -411,35 +455,131 @@ v4l_start_feed(th_transport_t *t, unsigned int weight)
 /* 
  *
  */
-
-
-int
-v4l_configure_transport(th_transport_t *t, const char *muxname)
+static void
+v4l_ts_generate(th_v4l_adapter_t *tva, uint8_t *ptr, int len, int type,
+		int64_t pts, int64_t dts)
 {
-  config_entry_t *ce;
-  char buf[100];
+  th_pid_t p;
+  uint32_t sc;
+  uint8_t tsb0[188];
+  uint8_t *tsb, *src;
+  int64_t ts;
+  int hlen, tlen, slen, plen, cc, pad;
+  uint16_t u16;
+  th_transport_t *t;
+  
+  memset(&p, 0, sizeof(p));
 
-  if((ce = find_mux_config("v4lmux", muxname)) == NULL)
-    return -1;
+  
 
-  t->tht_type = TRANSPORT_V4L;
+  if(type) {
+    sc = 0x1c0;
+    p.tp_type = HTSTV_MPEG2AUDIO;
+    p.tp_pid = 101;
 
-  t->tht_v4l_frequency = 
-    atoi(config_get_str_sub(&ce->ce_sub, "frequency", "0"));
+  } else {
+    sc = 0x1e0;
+    p.tp_type = HTSTV_MPEG2VIDEO;
+    p.tp_pid = 100;
+  }
 
-  t->tht_pids = calloc(1, 2 * sizeof(pidinfo_t));
-  t->tht_npids = 2;
+  tsb = tsb0;
 
-  t->tht_pids[0].pid = 100;
-  t->tht_pids[0].type = HTSTV_MPEG2VIDEO;
+  slen = len;
+  len += 13;
+  
+  *tsb++ = type;
+  *tsb++ = p.tp_pid >> 8 | 0x40; /* payload unit start indicator */
+  *tsb++ = p.tp_pid;
 
-  t->tht_pids[1].pid = 200;
-  t->tht_pids[1].type = HTSTV_MPEG2AUDIO;
+  cc = ++tva->tva_streams[type].tva_cc;
 
-  snprintf(buf, sizeof(buf), "Analog: %s (%.1f MHz)", muxname, 
-	   (float)t->tht_v4l_frequency / 1000000.0f);
-  t->tht_name = strdup(buf);
+  *tsb++ = (cc & 0xf) | 0x10;
 
-  return 0;
+  *tsb++ = 0;
+  *tsb++ = 0;
+  *tsb++ = sc >> 8;
+  *tsb++ = sc;
+      
+  *tsb++ = len >> 8;
+  *tsb++ = len;
+
+  *tsb++ = 0x80;  /* MPEG2 */
+
+  if(pts == AV_NOPTS_VALUE || dts == AV_NOPTS_VALUE) {
+    *tsb++ = 0x00;  /* no ts */
+    *tsb++ = 0;     /* hdrlen */
+    hlen = 0;
+  } else {
+
+    *tsb++ = 0xc0;  /* pts & dts */
+    *tsb++ = 10;    /* pts & dts */
+    hlen = 10;
+
+    ts = pts;
+    *tsb++ = (((ts >> 30) & 7) << 1) | 1;
+    u16 = (((ts >> 15) & 0x7fff) << 1) | 1;
+    *tsb++ = u16 >> 8;
+    *tsb++ = u16;
+    u16 = ((ts & 0x7fff) << 1) | 1;
+    *tsb++ = u16 >> 8;
+    *tsb++ = u16;
+
+    ts = dts;
+    *tsb++ = (((ts >> 30) & 7) << 1) | 1;
+    u16 = (((ts >> 15) & 0x7fff) << 1) | 1;
+    *tsb++ = u16 >> 8;
+    *tsb++ = u16;
+    u16 = ((ts & 0x7fff) << 1) | 1;
+    *tsb++ = u16 >> 8;
+    *tsb++ = u16;
+  }
+
+  tlen = 188 - 4 - 4 - 2 - 3 - hlen;
+
+  src = ptr;
+
+  plen = FFMIN(tlen, slen);
+
+  while(1) {
+    assert(plen != 0);
+    assert(slen > 0);
+
+    memcpy(tsb, src, plen);
+
+
+    LIST_FOREACH(t, &tva->tva_transports, tht_adapter_link)
+      transport_recv_tsb(t, p.tp_pid, tsb0);
+
+    slen -= plen;
+    if(slen == 0)
+      break;
+
+    src += plen;
+
+    tsb = tsb0;
+
+    *tsb++ = type;
+    *tsb++ = p.tp_pid >> 8;
+    *tsb++ = p.tp_pid;
+
+    tlen = 188 - 4;
+
+    cc = ++tva->tva_streams[type].tva_cc;
+
+    plen = FFMIN(tlen, slen);
+    if(plen == slen) {
+      tlen -= 2;
+      plen = FFMIN(tlen, slen);
+      pad = tlen - plen;
+
+      *tsb++ = (cc & 0xf) | 0x30;
+      *tsb++ = pad + 1;
+      *tsb++ = 0;
+      tsb += pad;
+
+    } else {
+      *tsb++ = (cc & 0xf) | 0x10;
+    }
+  }
 }
-

@@ -165,7 +165,7 @@ main(int argc, char **argv)
   client_start();
   dvb_init();
 
-  //  v4l_add_adapters();
+  v4l_add_adapters();
 
   channels_load();
   

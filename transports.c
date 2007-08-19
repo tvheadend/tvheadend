@@ -40,6 +40,7 @@
 #include "teletext.h"
 #include "transports.h"
 
+#include "v4l.h"
 #include "dvb_dvr.h"
 #include "iptv_input.h"
 
