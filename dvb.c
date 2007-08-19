@@ -408,6 +408,7 @@ dvb_find_transport(th_dvb_mux_instance_t *tdmi, uint16_t nid, uint16_t tid,
 
   t->tht_dvb_mux = tdm;
   t->tht_type = TRANSPORT_DVB;
+  t->tht_prio = 50;
 
  
   fd = open(tdmi->tdmi_adapter->tda_demux_path, O_RDWR);
