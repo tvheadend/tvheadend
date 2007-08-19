@@ -105,7 +105,7 @@ main(int argc, char **argv)
 
   signal(SIGPIPE, handle_sigpipe);
 
-  cfgfile = "/etc/tvhead.cfg";
+  cfgfile = "/etc/tvheadend.cfg";
 
   while((c = getopt(argc, argv, "c:fu:g:")) != -1) {
     switch(c) {
