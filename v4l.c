@@ -151,7 +151,7 @@ v4l_setfreq(th_v4l_adapter_t *tva, int frequency)
   vf.frequency = (frequency * 16) / 1000000;
   result = ioctl(tva->tva_fd, VIDIOC_S_FREQUENCY, &vf);
   if(result < 0) {
-    fprintf(stderr, "ioctl VIDIOC_S_FREQUENCY failed\n");
+    syslog(LOG_ERR, "%s: Unable to tune to %dHz\n", tva->tva_path, frequency);
     return 1;
   }
 
@@ -159,12 +159,13 @@ v4l_setfreq(th_v4l_adapter_t *tva, int frequency)
   result = ioctl(tva->tva_fd, VIDIOC_G_TUNER, &vt);
 
   if(result < 0) {
-    fprintf(stderr, "ioctl VIDIOC_S_FREQUENCY failed\n");
+    syslog(LOG_ERR, "%s: Unable read tuner status\n", tva->tva_path);
     return 1;
   }
 	
-  fprintf(stderr, "%s: %.3f MHz%s\n", tva->tva_path, frequency/1000000.0,
-	  vt.signal ? "  (Signal Detected)" : "");
+  syslog(LOG_DEBUG, "%s: Tuned to %.3f MHz%s",
+	 tva->tva_path, (float)frequency/1000000.0,
+	 vt.signal ? "  (Signal Detected)" : "");
 
   return 0;
 }
