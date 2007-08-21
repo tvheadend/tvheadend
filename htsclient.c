@@ -734,7 +734,7 @@ client_data_read(client_t *c)
     memcpy(buf, c->c_input_buf, i);
     buf[i] = 0;
     i++;
-    memmove(c->c_input_buf, c->c_input_buf + i, sizeof(c->c_input_buf) - 1);
+    memmove(c->c_input_buf, c->c_input_buf + i, sizeof(c->c_input_buf) - i);
     c->c_input_buf_ptr -= i;
 
     i = strlen(buf);
