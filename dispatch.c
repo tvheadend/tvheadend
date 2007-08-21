@@ -36,6 +36,7 @@ typedef struct epoll_entry {
   void *opaque;
   struct epoll_event event;
   int fd;
+  int refcnt;
 } epoll_entry_t;
 
 
@@ -148,6 +149,7 @@ dispatch_addfd(int fd, void (*callback)(int events, void *opaque, int fd),
   e->fd = fd;
   e->event.events = EPOLLERR | EPOLLHUP;
   e->event.data.ptr = e;
+  e->refcnt = 1;
   epoll_ctl(epoll_fd, EPOLL_CTL_ADD, e->fd, &e->event);
   dispatch_set(e, flags);
   return e;
@@ -183,6 +185,14 @@ dispatch_clr(void *handle, int flags)
   epoll_ctl(epoll_fd, EPOLL_CTL_MOD, e->fd, &e->event);
 }
 
+static void
+dispatch_deref(struct epoll_entry *e)
+{
+  if(e->refcnt > 1)
+    e->refcnt--;
+  else
+    free(e);
+}
 
 
 int
@@ -191,7 +201,10 @@ dispatch_delfd(void *handle)
   struct epoll_entry *e = handle;
   int fd = e->fd;
   epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, &e->event);
-  free(e);
+
+  e->callback = NULL;
+  e->opaque = NULL;
+  dispatch_deref(e);
   return fd;
 }
 
@@ -217,6 +230,13 @@ dispatcher(void)
 
   for(i = 0; i < n; i++) {
     e = events[i].data.ptr;
+    e->refcnt++;
+  }
+
+  for(i = 0; i < n; i++) {
+    e = events[i].data.ptr;
+    if(e->callback == NULL)
+      continue; /* poll entry has been free'd during loop */
 
     e->callback(
 		((events[i].events & (EPOLLERR | EPOLLHUP)) ?
@@ -229,6 +249,11 @@ dispatcher(void)
 		 DISPATCH_WRITE : 0 ),
 		
 		e->opaque, e->fd);
+  }
+
+  for(i = 0; i < n; i++) {
+    e = events[i].data.ptr;
+    dispatch_deref(e);
   }
 
   stimer_dispatch(dispatch_clock);
