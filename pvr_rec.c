@@ -264,8 +264,8 @@ pvr_recorder_thread(void *aux)
 
   while((pd = TAILQ_FIRST(&pvrr->pvrr_dq)) != NULL) {
     TAILQ_REMOVE(&pvrr->pvrr_dq, pd, link);
-    free(pd);
     free(pd->tsb);
+    free(pd);
   }
   pthread_mutex_unlock(&pvrr->pvrr_dq_mutex);
 
