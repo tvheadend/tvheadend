@@ -54,11 +54,6 @@ static void dvb_tdt_add_demux(th_dvb_mux_instance_t *tdmi);
 static void dvb_eit_add_demux(th_dvb_mux_instance_t *tdmi);
 static void dvb_sdt_add_demux(th_dvb_mux_instance_t *tdmi);
 
-static int dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, 
-			 tdmi_state_t state);
-
-static void *dvb_monitor_thread(void *aux);
-
 static void tdmi_check_scan_status(th_dvb_mux_instance_t *tdmi);
 
 static void dvb_start_initial_scan(th_dvb_mux_instance_t *tdmi);
@@ -67,13 +62,58 @@ static void tdmi_activate(th_dvb_mux_instance_t *tdmi);
 
 static void dvb_mux_scanner(void *aux);
 
+static void dvb_fec_monitor(void *aux);
+
+static void
+dvb_frontend_event(int events, void *opaque, int fd)
+{
+  th_dvb_adapter_t *tda = opaque;
+  struct dvb_frontend_event ev;
+  th_dvb_mux_instance_t *tdmi;
+  int r, v;
+
+  if(!(events & DISPATCH_PRI))
+    return;
+
+  r = ioctl(fd, FE_GET_EVENT, &ev);
+  if(r == 0) {
+
+    pthread_mutex_lock(&tda->tda_mux_lock);
+
+    tdmi = tda->tda_mux_current;
+    if(tdmi != NULL) {
+      tdmi->tdmi_fe_status = ev.status;
+    
+      if(tdmi->tdmi_fe_status & FE_HAS_LOCK) {
+	tdmi->tdmi_status = NULL;
+      } else if(tdmi->tdmi_fe_status & FE_HAS_SYNC)
+	tdmi->tdmi_status = "No lock, but sync ok";
+      else if(tdmi->tdmi_fe_status & FE_HAS_VITERBI)
+	tdmi->tdmi_status = "No lock, but FEC stable";
+      else if(tdmi->tdmi_fe_status & FE_HAS_CARRIER)
+	tdmi->tdmi_status = "No lock, but carrier present";
+      else if(tdmi->tdmi_fe_status & FE_HAS_SIGNAL)
+	tdmi->tdmi_status = "No lock, but faint signal present";
+      else
+	tdmi->tdmi_status = "No signal";
+
+      /* Reset FEC Error counter */
+
+      ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &v);
+    }
+
+    pthread_mutex_unlock(&tda->tda_mux_lock);
+  }
+}
+
+
+
 static void
 dvb_add_adapter(const char *path)
 {
   char fname[256];
   int fe;
   th_dvb_adapter_t *tda;
-  pthread_t ptid;
 
   snprintf(fname, sizeof(fname), "%s/frontend0", path);
   
@@ -110,9 +150,11 @@ dvb_add_adapter(const char *path)
   LIST_INSERT_HEAD(&dvb_adapters_probing, tda, tda_link);
 
   tda->tda_name = strdup(tda->tda_fe_info.name);
-  pthread_create(&ptid, NULL, dvb_monitor_thread, tda);
+
+  dispatch_addfd(tda->tda_fe_fd, dvb_frontend_event, tda, DISPATCH_PRI);
 
   syslog(LOG_INFO, "Adding adapter %s (%s)", tda->tda_fe_info.name, path);
+  stimer_add(dvb_fec_monitor, tda, 1);
 
 }
 
@@ -227,7 +269,7 @@ tdt_add(th_dvb_mux_instance_t *tdmi, int fd,
 
 
 
-static int
+int
 dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
@@ -259,104 +301,17 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
     return -1;
   }
 
-
   dvb_tdt_add_demux(tdmi);
   dvb_eit_add_demux(tdmi);
   dvb_sdt_add_demux(tdmi);
 
   time(&tdmi->tdmi_got_adapter);
 
-
   /* Reset FEC counter */
   ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &v);
 
   pthread_mutex_unlock(&tda->tda_mux_lock);
-
   return 0;
-}
-
-
-
-
-
-
-
-int
-dvb_tune(th_dvb_adapter_t *tda, th_dvb_mux_t *tdm, int maylog)
-{
-  th_dvb_mux_instance_t *tdmi;
-  
-  LIST_FOREACH(tdmi, &tda->tda_muxes_active, tdmi_adapter_link)
-    if(tdmi->tdmi_mux == tdm)
-      break;
-  if(tdmi == NULL)
-    return -1;
-
-  return dvb_tune_tdmi(tdmi, maylog, TDMI_RUNNING);
-}
-
-static void
-dvb_monitor_current_mux(th_dvb_adapter_t *tda)
-{
-  th_dvb_mux_instance_t *tdmi;
-  time_t now;
-  int v;
-  time(&now);
-
-  pthread_mutex_lock(&tda->tda_mux_lock);
-
-  tdmi = tda->tda_mux_current;
-
-  if(tdmi != NULL && now > tdmi->tdmi_got_adapter + 1) {
-
-    if(ioctl(tda->tda_fe_fd, FE_READ_STATUS, &tdmi->tdmi_fe_status) < 0)
-      tdmi->tdmi_fe_status = 0;
-
-    if(tdmi->tdmi_fe_status & FE_HAS_LOCK) {
-      tdmi->tdmi_status = NULL;
-    } else if(tdmi->tdmi_fe_status & FE_HAS_SYNC)
-      tdmi->tdmi_status = "No lock, but sync ok";
-    else if(tdmi->tdmi_fe_status & FE_HAS_VITERBI)
-      tdmi->tdmi_status = "No lock, but FEC stable";
-    else if(tdmi->tdmi_fe_status & FE_HAS_CARRIER)
-      tdmi->tdmi_status = "No lock, but carrier present";
-    else if(tdmi->tdmi_fe_status & FE_HAS_SIGNAL)
-      tdmi->tdmi_status = "No lock, but faint signal present";
-    else
-      tdmi->tdmi_status = "No signal";
-
-#if 0
-    if(ioctl(tda->tda_fe_fd, FE_READ_SIGNAL_STRENGTH, &tdmi->tdmi_signal) < 0)
-      tdmi->tdmi_signal = 0;
-
-    if(ioctl(tda->tda_fe_fd, FE_READ_SNR, &tdmi->tdmi_snr) < 0)
-      tdmi->tdmi_snr = 0;
-
-    if(ioctl(tda->tda_fe_fd, FE_READ_BER, &tdmi->tdmi_ber) < 0)
-      tdmi->tdmi_ber = 0;
-#endif
-
-    if(tdmi->tdmi_status == NULL) {
-      v = 0;
-      ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &v);
-      tdmi->tdmi_fec_err_per_sec = (tdmi->tdmi_fec_err_per_sec + v) / 2;
-    }
-  }
-  pthread_mutex_unlock(&tda->tda_mux_lock);
-}
-    
-    
-
-
-static void *
-dvb_monitor_thread(void *aux)
-{
-  th_dvb_adapter_t *tda = aux;
-
-  while(1) {
-    sleep(1);
-    dvb_monitor_current_mux(tda);
-  }
 }
 
 
@@ -948,6 +903,44 @@ dvb_start_initial_scan(th_dvb_mux_instance_t *tdmi)
   tdmi->tdmi_initial_scan_timer = 
     stimer_add(tdmi_initial_scan_timeout, tdmi, 5);
 
+}
+
+/**
+ *
+ *
+ */
+
+static int
+mux_sort_quality(th_dvb_mux_instance_t *a, th_dvb_mux_instance_t *b)
+{
+  return a->tdmi_fec_err_per_sec - b->tdmi_fec_err_per_sec;
+}
+
+
+static void
+dvb_fec_monitor(void *aux)
+{
+  th_dvb_adapter_t *tda = aux;
+  th_dvb_mux_instance_t *tdmi;
+  th_dvb_mux_t *tdm;
+  int v;
+
+  stimer_add(dvb_fec_monitor, tda, 1);
+  tdmi = tda->tda_mux_current;
+
+  if(tdmi != NULL && tdmi->tdmi_status == NULL) {
+    if(ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &v) < 0)
+      v = 0;
+    tdmi->tdmi_fec_err_per_sec = (tdmi->tdmi_fec_err_per_sec + v) / 2;
+
+    subscription_lock();
+
+    tdm = tdmi->tdmi_mux;
+    LIST_REMOVE(tdmi, tdmi_mux_link);
+    LIST_INSERT_SORTED(&tdm->tdm_instances, tdmi, tdmi_mux_link,
+		       mux_sort_quality);
+    subscription_unlock();
+  }
 }
 
 /**

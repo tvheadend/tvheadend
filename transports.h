@@ -38,11 +38,14 @@ void transport_add_pid(th_transport_t *t, uint16_t pid, tv_streamtype_t type);
 
 int transport_set_channel(th_transport_t *th, const char *name);
 
+void transport_scheduler_init(void);
+
 th_subscription_t *channel_subscribe(th_channel_t *ch, void *opaque,
 				     void (*ths_callback)
 				     (struct th_subscription *s, 
 				      uint8_t *pkt, th_pid_t *pi),
 				     unsigned int weight,
 				     const char *name);
+
 
 #endif /* TRANSPORTS_H */

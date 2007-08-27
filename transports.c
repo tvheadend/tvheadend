@@ -195,6 +195,17 @@ subscription_reschedule(void)
 
 
 
+static void
+auto_reschedule(void *aux)
+{
+  stimer_add(auto_reschedule, NULL, 10);
+
+  pthread_mutex_lock(&subscription_mutex);
+  subscription_reschedule();
+  pthread_mutex_unlock(&subscription_mutex);
+}
+
+
 
 
 
@@ -382,6 +393,7 @@ transport_recv_tsb(th_transport_t *t, int pid, uint8_t *tsb)
 }
 
 
+
 static void
 transport_monitor(void *aux)
 {
@@ -420,6 +432,13 @@ transport_monitor_init(th_transport_t *t)
   avgstat_init(&t->tht_rate, 10);
 
   stimer_add(transport_monitor, t, 5);
+}
+
+
+void
+transport_scheduler_init(void)
+{
+  stimer_add(auto_reschedule, NULL, 60);
 }
 
 

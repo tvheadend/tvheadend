@@ -45,6 +45,7 @@
 #include "epg_xmltv.h"
 #include "pvr.h"
 #include "dispatch.h"
+#include "transports.h"
 #include "iptv_output.h"
 
 int running;
@@ -175,6 +176,7 @@ main(int argc, char **argv)
   pvr_init();
   output_multicast_setup();
 
+  transport_scheduler_init();
   
   running = 1;
 

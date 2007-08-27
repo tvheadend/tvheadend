@@ -27,6 +27,6 @@ void dvb_init(void);
 
 int dvb_configure_transport(th_transport_t *t, const char *muxname);
 
-int dvb_tune(th_dvb_adapter_t *tda, th_dvb_mux_t *tdm, int maylog);
+int dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state);
 
 #endif /* DVB_H_ */

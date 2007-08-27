@@ -139,28 +139,39 @@ dvb_stop_feed(th_transport_t *t)
 int
 dvb_start_feed(th_transport_t *t, unsigned int weight)
 {
-  th_dvb_adapter_t *tda, *cand = NULL;
+  th_dvb_adapter_t *tda;
   struct dmx_pes_filter_params dmx_param;
   th_pid_t *tp;
   int w, fd, pid;
 
-  LIST_FOREACH(tda, &dvb_adapters_running, tda_link) {
-    w = transport_compute_weight(&tda->tda_transports);
-    if(w < weight)
-      cand = tda;
+  th_dvb_mux_instance_t *tdmi, *cand = NULL;
+  th_dvb_mux_t *mux = t->tht_dvb_mux;
 
-    if(tda->tda_mux_current != NULL &&
-       tda->tda_mux_current->tdmi_mux == t->tht_dvb_mux)
-      break;
+  LIST_FOREACH(tdmi, &mux->tdm_instances, tdmi_mux_link) {
+
+    if(tdmi->tdmi_status != NULL)
+      continue; /* no lock */
+
+    if(tdmi->tdmi_fec_err_per_sec > 100)
+      continue; /* too much errors to even consider */
+
+    if(tdmi->tdmi_state == TDMI_RUNNING)
+      goto gotmux;
+
+    w = transport_compute_weight(&tdmi->tdmi_adapter->tda_transports);
+    if(w < weight && cand == NULL)
+      cand = tdmi;
   }
 
-  if(tda == NULL) {
-    if(cand == NULL)
-      return 1;
+  if(cand == NULL)
+    return 1;
 
-    dvb_adapter_clean(cand);
-    tda = cand;
-  }
+  tdmi = cand;
+
+  dvb_adapter_clean(tdmi->tdmi_adapter);
+  
+ gotmux:
+  tda = tdmi->tdmi_adapter;
 
   LIST_FOREACH(tp, &t->tht_pids, tp_link) {
     
@@ -198,8 +209,8 @@ dvb_start_feed(th_transport_t *t, unsigned int weight)
   LIST_INSERT_HEAD(&tda->tda_transports, t, tht_adapter_link);
   t->tht_dvb_adapter = tda;
   t->tht_status = TRANSPORT_RUNNING;
-
-  dvb_tune(tda, t->tht_dvb_mux, 1);
+  
+  dvb_tune_tdmi(tdmi, 1, TDMI_RUNNING);
   return 0;
 }
 
