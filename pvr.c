@@ -390,7 +390,6 @@ pvr_database_load(void)
 {
   char line[4000];
   pvr_rec_t *pvrr = NULL;
-  th_channel_t *ch;
   FILE *fp;
   int l;
   char *key, *val;
@@ -418,12 +417,8 @@ pvr_database_load(void)
       continue;
     *val++ = 0;
 
-    if(!strcmp(key, "channel")) {
-      TAILQ_FOREACH(ch, &channels, ch_global_link)
-	if(!strcmp(ch->ch_name, val))
-	  break;
-      pvrr->pvrr_channel = ch;
-    }
+    if(!strcmp(key, "channel"))
+      pvrr->pvrr_channel = channel_find(val, 1);
     
     else if(!strcmp(key, "start"))
       pvrr->pvrr_start = atoi(val);
