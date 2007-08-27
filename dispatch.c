@@ -161,6 +161,9 @@ dispatch_set(void *handle, int flags)
 {
   struct epoll_entry *e = handle;
 
+  if(flags & DISPATCH_PRI)
+    e->event.events |= EPOLLPRI;
+
   if(flags & DISPATCH_READ)
     e->event.events |= EPOLLIN;
   
@@ -175,6 +178,9 @@ void
 dispatch_clr(void *handle, int flags)
 {
   struct epoll_entry *e = handle;
+
+  if(flags & DISPATCH_PRI)
+    e->event.events &= ~EPOLLPRI;
 
   if(flags & DISPATCH_READ)
     e->event.events &= ~EPOLLIN;
@@ -238,16 +244,11 @@ dispatcher(void)
     if(e->callback == NULL)
       continue; /* poll entry has been free'd during loop */
 
-    e->callback(
-		((events[i].events & (EPOLLERR | EPOLLHUP)) ?
+    e->callback(((events[i].events & (EPOLLERR | EPOLLHUP)) ?
 		 DISPATCH_ERR : 0 ) |
-		
-		((events[i].events & EPOLLIN) ?
-		 DISPATCH_READ : 0 ) |
-		
-		((events[i].events & EPOLLOUT) ?
-		 DISPATCH_WRITE : 0 ),
-		
+		((events[i].events & EPOLLIN)  ? DISPATCH_READ : 0 ) |
+		((events[i].events & EPOLLOUT) ? DISPATCH_WRITE : 0 ) |
+		((events[i].events & EPOLLPRI) ? DISPATCH_PRI : 0 ),
 		e->opaque, e->fd);
   }
 

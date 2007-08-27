@@ -22,6 +22,7 @@
 #define DISPATCH_READ  0x1
 #define DISPATCH_WRITE 0x2
 #define DISPATCH_ERR   0x4
+#define DISPATCH_PRI   0x8
 
 int dispatch_init(void);
 void *dispatch_addfd(int fd, 
