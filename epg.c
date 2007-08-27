@@ -185,7 +185,7 @@ event_time_txt(time_t start, int duration, char *out, int outlen)
 }
 
 
-static void
+static int
 check_overlap0(th_channel_t *ch, event_t *a)
 {
   char atime[100];
@@ -195,12 +195,12 @@ check_overlap0(th_channel_t *ch, event_t *a)
 
   b = TAILQ_NEXT(a, e_link);
   if(b == NULL)
-    return;
+    return 0;
 
   overshot = a->e_start + a->e_duration - b->e_start;
 
   if(overshot < 1)
-    return;
+    return 0;
 
   event_time_txt(a->e_start, a->e_duration, atime, sizeof(atime));
   event_time_txt(b->e_start, b->e_duration, btime, sizeof(btime));
@@ -241,6 +241,8 @@ check_overlap0(th_channel_t *ch, event_t *a)
 	     ch->ch_name, a->e_title);
 
       epg_event_destroy(ch, a);
+      return 1;
+
     } else {
 
       syslog(LOG_WARNING,
@@ -248,9 +250,10 @@ check_overlap0(th_channel_t *ch, event_t *a)
 	     ch->ch_name, a->e_title, overshot);
     }
   }
+  return 0;
 }
 
-static void
+static int
 check_overlap(th_channel_t *ch, event_t *e)
 {
   event_t *p;
@@ -259,7 +262,7 @@ check_overlap(th_channel_t *ch, event_t *e)
   if(p != NULL)
     check_overlap0(ch, p);
   
-  check_overlap0(ch, e);
+  return check_overlap0(ch, e);
 }
 
 
@@ -366,7 +369,8 @@ epg_update_event_by_id(th_channel_t *ch, uint16_t event_id,
       e->e_start = start;
       TAILQ_INSERT_SORTED(&ch->ch_epg_events, e, e_link, startcmp);
 
-      check_overlap(ch, e);
+      if(check_overlap(ch, e))
+	return; /* event was destroyed, return at once */
     }
 
     epg_event_set_title(e, title);
