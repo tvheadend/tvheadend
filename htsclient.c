@@ -290,7 +290,7 @@ cr_show(client_t *c, char **argv, int argc)
       cprintf(c, "\"%s\"\n", tdm->tdm_title);
       
       LIST_FOREACH(tdmi, &tdm->tdm_instances, tdmi_mux_link) {
-	cprintf(c, "%20s: ", tdmi->tdmi_adapter->tda_path);
+	cprintf(c, "%20s:   ", tdmi->tdmi_adapter->tda_path);
 
 	print_tdmi(c, tdmi);
 
