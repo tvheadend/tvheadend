@@ -935,6 +935,17 @@ dvb_fec_monitor(void *aux)
 
     subscription_lock();
 
+    if(tdmi->tdmi_fec_err_per_sec > DVB_FEC_ERROR_LIMIT) {
+
+      if(LIST_FIRST(&tda->tda_transports) != NULL) {
+	syslog(LOG_ERR, "%s: on %s: Too many FEC errors (%d / s), "
+	       "flushing subscribers\n", 
+	       tdmi->tdmi_mux->tdm_name, tda->tda_path,
+	       tdmi->tdmi_fec_err_per_sec);
+	dvb_adapter_clean(tdmi->tdmi_adapter);
+      }
+    }
+
     tdm = tdmi->tdmi_mux;
     LIST_REMOVE(tdmi, tdmi_mux_link);
     LIST_INSERT_SORTED(&tdm->tdm_instances, tdmi, tdmi_mux_link,

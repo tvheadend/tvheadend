@@ -103,7 +103,7 @@ dvr_fd_callback(int events, void *opaque, int fd)
 /*
  *
  */
-static void
+void
 dvb_adapter_clean(th_dvb_adapter_t *tda)
 {
   th_transport_t *t;
@@ -152,7 +152,7 @@ dvb_start_feed(th_transport_t *t, unsigned int weight)
     if(tdmi->tdmi_status != NULL)
       continue; /* no lock */
 
-    if(tdmi->tdmi_fec_err_per_sec > 100)
+    if(tdmi->tdmi_fec_err_per_sec > DVB_FEC_ERROR_LIMIT)
       continue; /* too much errors to even consider */
 
     if(tdmi->tdmi_state == TDMI_RUNNING)

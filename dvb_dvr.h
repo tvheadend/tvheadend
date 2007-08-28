@@ -25,4 +25,6 @@ int dvb_start_feed(th_transport_t *t, unsigned int weight);
 
 void dvb_stop_feed(th_transport_t *t);
 
+void dvb_adapter_clean(th_dvb_adapter_t *tda);
+
 #endif /* DVB_DVR_H */
