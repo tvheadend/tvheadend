@@ -366,6 +366,7 @@ epg_update_event_by_id(th_channel_t *ch, uint16_t event_id,
 
       TAILQ_REMOVE(&ch->ch_epg_events, e, e_link);
 
+      e->e_duration = duration;
       e->e_start = start;
       TAILQ_INSERT_SORTED(&ch->ch_epg_events, e, e_link, startcmp);
 
