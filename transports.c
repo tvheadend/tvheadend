@@ -413,14 +413,49 @@ transport_monitor(void *aux)
   v = avgstat_read_and_expire(&t->tht_rate, dispatch_clock) * 8 / 1000 / 10;
 
   if(v < 500) {
-    syslog(LOG_WARNING, "\"%s\" on \"%s\", very low bitrate: %d kb/s",
-	   t->tht_channel->ch_name, t->tht_name, v);
+    switch(t->tht_rate_error_log_limiter) {
+    case 0:
+      syslog(LOG_WARNING, "\"%s\" on \"%s\", very low bitrate: %d kb/s",
+	     t->tht_channel->ch_name, t->tht_name, v);
+      /* FALLTHRU */
+    case 1 ... 9:
+      t->tht_rate_error_log_limiter++;
+      break;
+    }
+  } else {
+    switch(t->tht_rate_error_log_limiter) {
+    case 0:
+      break;
+
+    case 1:
+      syslog(LOG_NOTICE, "\"%s\" on \"%s\", bitrate ok (%d kb/s)",
+	     t->tht_channel->ch_name, t->tht_name, v);
+      /* FALLTHRU */
+    default:
+      t->tht_rate_error_log_limiter--;
+    }
   }
 
+
   v = avgstat_read(&t->tht_cc_errors, 10, dispatch_clock);
-  if(v > 1) {
-    syslog(LOG_WARNING, "\"%s\" on \"%s\", Excessive bit errors: %f errs/s",
+  if(v > t->tht_cc_error_log_limiter) {
+    t->tht_cc_error_log_limiter += v * 3;
+
+    syslog(LOG_WARNING, "\"%s\" on \"%s\", "
+	   "%.2f continuity errors/s (10 sec average)",
 	   t->tht_channel->ch_name, t->tht_name, (float)v / 10.);
+
+  } else if(v == 0) {
+    switch(t->tht_cc_error_log_limiter) {
+    case 0:
+      break;
+    case 1:
+      syslog(LOG_NOTICE, "\"%s\" on \"%s\", no continuity errors",
+	     t->tht_channel->ch_name, t->tht_name);
+      /* FALLTHRU */
+    default:
+      t->tht_cc_error_log_limiter--;
+    }
   }
 }
 

@@ -265,6 +265,10 @@ typedef struct th_transport {
   avgstat_t tht_rate;
   int tht_monitor_suspend;
 
+  int tht_cc_error_log_limiter;
+  int tht_rate_error_log_limiter;
+
+
   LIST_ENTRY(th_transport) tht_adapter_link;
 
   LIST_ENTRY(th_transport) tht_channel_link;
