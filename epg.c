@@ -259,8 +259,9 @@ check_overlap(th_channel_t *ch, event_t *e)
   event_t *p;
 
   p = TAILQ_PREV(e, event_queue, e_link);
-  if(p != NULL)
-    check_overlap0(ch, p);
+  if(p != NULL) {
+    if(check_overlap0(ch, p))
+      return 1;
   
   return check_overlap0(ch, e);
 }
