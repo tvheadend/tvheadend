@@ -931,7 +931,7 @@ dvb_fec_monitor(void *aux)
   if(tdmi != NULL && tdmi->tdmi_status == NULL) {
     if(ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &v) < 0)
       v = 0;
-    tdmi->tdmi_fec_err_per_sec = (tdmi->tdmi_fec_err_per_sec + v) / 2;
+    tdmi->tdmi_fec_err_per_sec = (tdmi->tdmi_fec_err_per_sec * 7 + v) / 8;
 
     subscription_lock();
 
