@@ -490,7 +490,6 @@ typedef struct pvr_data {
 typedef struct pvr_rec {
 
   LIST_ENTRY(pvr_rec) pvrr_global_link;
-  LIST_ENTRY(pvr_rec) pvrr_work_link;
 
   th_channel_t *pvrr_channel;
 
@@ -518,14 +517,14 @@ typedef struct pvr_rec {
 
   void *pvrr_opaque;  /* For write out code */
 
+  th_subscription_t *pvrr_s;
+
+  pthread_t pvrr_ptid;
+
+  void *pvrr_timer;
+
 } pvr_rec_t;
 
-#define PVRR_WORK_SCHEDULED 0
-#define PVRR_WORK_RECORDING 1
-#define PVRR_WORK_DONE      2
-#define PVRR_WORK_MAX       3
-
-extern struct pvr_rec_list pvrr_work_list[PVRR_WORK_MAX];
 extern struct pvr_rec_list pvrr_global_list;
 
 config_entry_t *find_mux_config(const char *muxtype, const char *muxname);

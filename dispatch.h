@@ -19,6 +19,8 @@
 #ifndef DISPATCH_H
 #define DISPATCH_H
 
+extern time_t dispatch_clock;
+
 #define DISPATCH_READ  0x1
 #define DISPATCH_WRITE 0x2
 #define DISPATCH_ERR   0x4

@@ -20,8 +20,6 @@
 #define PVR_H
 
 extern char *pvrpath;
-extern pthread_mutex_t pvr_mutex;
-extern struct pvr_rec_list pvrr_work_list[PVRR_WORK_MAX];
 extern struct pvr_rec_list pvrr_global_list;
 
 typedef enum {

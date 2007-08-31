@@ -79,129 +79,72 @@ static int pwo_end(pvr_rec_t *pvrr);
 
 static void pvr_generate_filename(pvr_rec_t *pvrr);
 
-static void pvr_record_callback(struct th_subscription *s, uint8_t *pkt,
-				th_pid_t *pi);
-
-
 
 /*
- * Main decoder thread
+ * Recording thread
  */
-
-
 
 void *
 pvr_recorder_thread(void *aux)
 {
   pvr_rec_t *pvrr = aux;
-  th_channel_t *ch = pvrr->pvrr_channel;
   pvr_data_t *pd;
-  time_t now;
-  int x;
+  char *t, txt2[50];
+  int x, run = 1;
   struct ts_pid_head pids;
   ts_pid_t *tsp;
-  void *opaque = NULL;
-  th_subscription_t *s;
-  char txt[50], txt2[50], *t;
+  th_subscription_t *s = pvrr->pvrr_s;
+  void *opaque;
+  time_t now;
   
-  LIST_INIT(&pids);
-  
-  pthread_mutex_lock(&pvr_mutex);
-
-  LIST_INSERT_HEAD(&pvrr_work_list[PVRR_WORK_RECORDING], pvrr, pvrr_work_link);
-
   pvr_generate_filename(pvrr);
-
-  time(&now);
-
-  if(pvrr->pvrr_stop <= now) {
-    syslog(LOG_NOTICE, 
-	   "pvr: \"%s\" - Recording skipped, program has already come to pass",
-	   pvrr->pvrr_printname);
-    goto done;
-  }
-
-  TAILQ_INIT(&pvrr->pvrr_dq);
-  pthread_cond_init(&pvrr->pvrr_dq_cond, NULL);
-  pthread_mutex_init(&pvrr->pvrr_dq_mutex, NULL);
-
-  s = channel_subscribe(ch, pvrr, pvr_record_callback, 1000, "pvr");
-
-  /* Wait for a transponder to become available */
-
-  x = 0;
-
-  while(1) {
-    if(s->ths_transport != NULL)
-      break;
-
-    x++;
-    
-    pthread_mutex_unlock(&pvr_mutex);
-    sleep(1);
-    pthread_mutex_lock(&pvr_mutex);
-
-    time(&now);
-
-    if(now >= pvrr->pvrr_stop) {
-      syslog(LOG_ERR, 
-	     "pvr: \"%s\" - Could not allocate transponder, recording failed", 
-	     pvrr->pvrr_printname);
-      pvrr->pvrr_status = HTSTV_PVR_STATUS_NO_TRANSPONDER;
-      goto err;
-    }
-  }
-
-
-  pthread_mutex_unlock(&pvr_mutex);
-
-  time(&now);
+  
 
   opaque = pwo_init(s, pvrr);
 
   if(opaque == NULL) {
     pvrr->pvrr_status = HTSTV_PVR_STATUS_FILE_ERROR;
-    goto err;
+    return NULL;
   }
 
-  if(x > 2) {
-    snprintf(txt, sizeof(txt), 
-	     ", %d seconds delayed due to unavailable transponder", x);
-  } else {
-    txt[0] = 0;
-  }
-  
   ctime_r(&pvrr->pvrr_stop, txt2);
   t = strchr(txt2, '\n');
   if(t != NULL)
     *t = 0;
 
-  syslog(LOG_INFO, "pvr: \"%s\" - Recording started%s, ends at %s",
-	 pvrr->pvrr_printname, txt, txt2);
+  syslog(LOG_INFO, "pvr: \"%s\" - Recording started, ends at %s",
+	 pvrr->pvrr_printname, txt2);
 
-  pvrr->pvrr_status = HTSTV_PVR_STATUS_PAUSED_WAIT_FOR_START;
-  pvr_inform_status_change(pvrr);
 
-  while(
-	pvrr->pvrr_status == HTSTV_PVR_STATUS_RECORDING             || 
-	pvrr->pvrr_status == HTSTV_PVR_STATUS_WAIT_KEY_FRAME        || 
-	pvrr->pvrr_status == HTSTV_PVR_STATUS_PAUSED_COMMERCIAL     || 
-	pvrr->pvrr_status == HTSTV_PVR_STATUS_PAUSED_WAIT_FOR_START
-	) {
-    
-    time(&now);
+  LIST_INIT(&pids);
 
-    if(pvrr->pvrr_status == HTSTV_PVR_STATUS_PAUSED_WAIT_FOR_START && 
-       now >= pvrr->pvrr_start) {
-      pvrr->pvrr_status = HTSTV_PVR_STATUS_WAIT_KEY_FRAME;
+  while(run) {
+
+    switch(pvrr->pvrr_status) {
+    case HTSTV_PVR_STATUS_PAUSED_WAIT_FOR_START:
+
+      time(&now);
+      if(now >= pvrr->pvrr_start)
+	pvrr->pvrr_status = HTSTV_PVR_STATUS_WAIT_KEY_FRAME;
+
+      break;
+
+    case HTSTV_PVR_STATUS_RECORDING:
+    case HTSTV_PVR_STATUS_WAIT_KEY_FRAME:
+    case HTSTV_PVR_STATUS_PAUSED_COMMERCIAL:
+      break;
+      
+    default:
+      run = 0;
+      continue;
     }
-
+    
     if(pvrr->pvrr_stop < now) {
-      pvrr->pvrr_status = HTSTV_PVR_STATUS_DONE;
       syslog(LOG_INFO, "pvr: \"%s\" - Recording completed", 
 	     pvrr->pvrr_printname);
       break;
     }
+
     pthread_mutex_lock(&pvrr->pvrr_dq_mutex);
 
     while((pd = TAILQ_FIRST(&pvrr->pvrr_dq)) == NULL)
@@ -221,25 +164,30 @@ pvr_recorder_thread(void *aux)
       break;
     }
 
-    x = pvr_proc_tsb(pvrr, &pids, pd, s);
-    free(pd->tsb);
-    free(pd);
+    if(pd->tsb == NULL) {
+      run = 0;
+    } else {
 
-    if(x != 0) {
+      x = pvr_proc_tsb(pvrr, &pids, pd, s);
+      free(pd->tsb);
 
-      switch(errno) {
-      case ENOSPC:
-	pvrr->pvrr_status = HTSTV_PVR_STATUS_DISK_FULL;
-	syslog(LOG_INFO, "pvr: \"%s\" - Disk full, aborting", 
-	       pvrr->pvrr_printname);
-	break;
-      default:
-	pvrr->pvrr_status = HTSTV_PVR_STATUS_FILE_ERROR;
-	syslog(LOG_INFO, "pvr: \"%s\" - File error, aborting", 
-	       pvrr->pvrr_printname);
-	break;
+      if(x != 0) {
+
+	switch(errno) {
+	case ENOSPC:
+	  pvrr->pvrr_status = HTSTV_PVR_STATUS_DISK_FULL;
+	  syslog(LOG_INFO, "pvr: \"%s\" - Disk full, aborting", 
+		 pvrr->pvrr_printname);
+	  break;
+	default:
+	  pvrr->pvrr_status = HTSTV_PVR_STATUS_FILE_ERROR;
+	  syslog(LOG_INFO, "pvr: \"%s\" - File error, aborting", 
+		 pvrr->pvrr_printname);
+	  break;
+	}
       }
     }
+    free(pd);
   }
 
   pwo_end(pvrr);
@@ -250,63 +198,10 @@ pvr_recorder_thread(void *aux)
     free(tsp);
   }
 
-  pthread_mutex_lock(&pvr_mutex);
-
- err:
-  
-  subscription_unsubscribe(s);
-
-  /*
-   * Drain any pending blocks
-   */
-
-  pthread_mutex_lock(&pvrr->pvrr_dq_mutex);
-
-  while((pd = TAILQ_FIRST(&pvrr->pvrr_dq)) != NULL) {
-    TAILQ_REMOVE(&pvrr->pvrr_dq, pd, link);
-    free(pd->tsb);
-    free(pd);
-  }
-  pthread_mutex_unlock(&pvrr->pvrr_dq_mutex);
-
-
- done:
-  pvr_inform_status_change(pvrr);
-  
-  LIST_REMOVE(pvrr, pvrr_work_link);
-  LIST_INSERT_HEAD(&pvrr_work_list[PVRR_WORK_DONE], pvrr, pvrr_work_link);
-
-  pvr_database_save();
-
-  pthread_mutex_unlock(&pvr_mutex);
+  pvrr->pvrr_ptid = 0;
   return NULL;
 }
 
-
-
-/*
- * Data input callback
- */
-
-static void 
-pvr_record_callback(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi)
-{
-  pvr_data_t *pd;
-  pvr_rec_t *pvrr = s->ths_opaque;
-  
-  if(pkt == NULL)
-    return;
-
-  pd = malloc(sizeof(pvr_data_t));
-  pd->tsb = malloc(188);
-  memcpy(pd->tsb, pkt, 188);
-  pd->pi = *pi;
-  pthread_mutex_lock(&pvrr->pvrr_dq_mutex);
-  TAILQ_INSERT_TAIL(&pvrr->pvrr_dq, pd, link);
-  pvrr->pvrr_dq_len++;
-  pthread_cond_signal(&pvrr->pvrr_dq_cond);
-  pthread_mutex_unlock(&pvrr->pvrr_dq_mutex);
-}
 
 
 
