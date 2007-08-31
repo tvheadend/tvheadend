@@ -152,7 +152,7 @@ dvb_start_feed(th_transport_t *t, unsigned int weight)
     if(tdmi->tdmi_status != NULL)
       continue; /* no lock */
 
-    if(tdmi->tdmi_fec_err_per_sec > DVB_FEC_ERROR_LIMIT)
+    if(tdmi->tdmi_fec_err_per_sec > DVB_FEC_ERROR_LIMIT / 3)
       continue; /* too much errors to even consider */
 
     if(tdmi->tdmi_state == TDMI_RUNNING)

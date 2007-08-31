@@ -19,7 +19,7 @@
 #ifndef DVB_H_
 #define DVB_H_
 
-#define DVB_FEC_ERROR_LIMIT 20
+#define DVB_FEC_ERROR_LIMIT 10
 
 extern struct th_dvb_adapter_list dvb_adapters_probing;
 extern struct th_dvb_adapter_list dvb_adapters_running;

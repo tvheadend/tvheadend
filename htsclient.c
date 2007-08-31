@@ -172,6 +172,7 @@ cr_show(client_t *c, char **argv, int argc)
   th_subscription_t *s;
   th_transport_t *t;
   th_channel_t *ch;
+  th_dvb_adapter_t *tda;
   th_dvb_mux_t *tdm;
   th_dvb_mux_instance_t *tdmi;
   event_t *e;
@@ -296,6 +297,27 @@ cr_show(client_t *c, char **argv, int argc)
 
 
       }
+    }
+    return 0;
+  }
+
+  if(!strcasecmp(subcmd, "dvbadapters")) {
+    LIST_FOREACH(tda, &dvb_adapters_running, tda_link) {
+
+      cprintf(c, "%20s:   ", tda->tda_path);
+
+      tdmi = tda->tda_mux_current;
+
+      if(tdmi == NULL) {
+	cprintf(c, "inactive\n");
+	continue;
+      }
+
+      cprintf(c, "Tuned to \"%s\"\n", tdmi->tdmi_mux->tdm_title);
+      cprintf(c, "\t\t     ");
+
+      print_tdmi(c, tda->tda_mux_current);
+      cprintf(c, "\n");
     }
     return 0;
   }
