@@ -262,7 +262,8 @@ check_overlap(th_channel_t *ch, event_t *e)
   if(p != NULL) {
     if(check_overlap0(ch, p))
       return 1;
-  
+  }
+
   return check_overlap0(ch, e);
 }
 
