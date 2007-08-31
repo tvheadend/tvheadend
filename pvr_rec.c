@@ -103,7 +103,7 @@ pvr_recorder_thread(void *aux)
   opaque = pwo_init(s, pvrr);
 
   if(opaque == NULL) {
-    pvrr->pvrr_status = HTSTV_PVR_STATUS_FILE_ERROR;
+    pvrr->pvrr_error = HTSTV_PVR_STATUS_FILE_ERROR;
     return NULL;
   }
 
@@ -120,18 +120,18 @@ pvr_recorder_thread(void *aux)
 
   while(run) {
 
-    switch(pvrr->pvrr_status) {
-    case HTSTV_PVR_STATUS_PAUSED_WAIT_FOR_START:
+    switch(pvrr->pvrr_rec_status) {
+    case PVR_REC_WAIT_FOR_START:
 
       time(&now);
       if(now >= pvrr->pvrr_start)
-	pvrr->pvrr_status = HTSTV_PVR_STATUS_WAIT_KEY_FRAME;
+	pvrr->pvrr_rec_status = PVR_REC_WAIT_KEY_FRAME;
 
       break;
 
-    case HTSTV_PVR_STATUS_RECORDING:
-    case HTSTV_PVR_STATUS_WAIT_KEY_FRAME:
-    case HTSTV_PVR_STATUS_PAUSED_COMMERCIAL:
+    case PVR_REC_WAIT_KEY_FRAME:
+    case PVR_REC_RUNNING:
+    case PVR_REC_COMMERCIAL:
       break;
       
     default:
@@ -160,7 +160,7 @@ pvr_recorder_thread(void *aux)
       syslog(LOG_INFO, "pvr: \"%s\" - Disk i/o too slow, aborting",
 	     pvrr->pvrr_printname);
 
-      pvrr->pvrr_status = HTSTV_PVR_STATUS_BUFFER_ERROR;
+      pvrr->pvrr_error = HTSTV_PVR_STATUS_BUFFER_ERROR;
       break;
     }
 
@@ -175,12 +175,12 @@ pvr_recorder_thread(void *aux)
 
 	switch(errno) {
 	case ENOSPC:
-	  pvrr->pvrr_status = HTSTV_PVR_STATUS_DISK_FULL;
+	  pvrr->pvrr_error = HTSTV_PVR_STATUS_DISK_FULL;
 	  syslog(LOG_INFO, "pvr: \"%s\" - Disk full, aborting", 
 		 pvrr->pvrr_printname);
 	  break;
 	default:
-	  pvrr->pvrr_status = HTSTV_PVR_STATUS_FILE_ERROR;
+	  pvrr->pvrr_error = HTSTV_PVR_STATUS_FILE_ERROR;
 	  syslog(LOG_INFO, "pvr: \"%s\" - File error, aborting", 
 		 pvrr->pvrr_printname);
 	  break;
@@ -198,7 +198,6 @@ pvr_recorder_thread(void *aux)
     free(tsp);
   }
 
-  pvrr->pvrr_ptid = 0;
   return NULL;
 }
 
@@ -426,7 +425,7 @@ typedef struct pwo_ffmpeg {
   int hdr_written;
   int decode_ctd;
 
-  tv_pvr_status_t logged_status;
+  pvrr_rec_status_t logged_status;
 
 } pwo_ffmpeg_t;
 
@@ -706,21 +705,21 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
       }
     }
     
-    if(pf->logged_status != pvrr->pvrr_status) {
-      pf->logged_status = pvrr->pvrr_status;
+    if(pf->logged_status != pvrr->pvrr_rec_status) {
+      pf->logged_status = pvrr->pvrr_rec_status;
       
       switch(pf->logged_status) {
-      case HTSTV_PVR_STATUS_PAUSED_WAIT_FOR_START:
+      case PVR_REC_WAIT_SUBSCRIPTION:
 	tp = "wait for start";
 	break;
-      case HTSTV_PVR_STATUS_PAUSED_COMMERCIAL:
-	tp = "commercial break";
-	break;
-      case HTSTV_PVR_STATUS_WAIT_KEY_FRAME:
+      case PVR_REC_WAIT_KEY_FRAME:
 	tp = "waiting for key frame";
 	break;
-      case HTSTV_PVR_STATUS_RECORDING:
+      case PVR_REC_RUNNING:
 	tp = "running";
+	break;
+      case PVR_REC_COMMERCIAL:
+	tp = "commercial break";
 	break;
       default:
 	tp = NULL;
@@ -734,30 +733,31 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
     }
     
     switch(pvrr->pvrr_status) {
-    case HTSTV_PVR_STATUS_PAUSED_WAIT_FOR_START:
+    case PVR_REC_WAIT_FOR_START:
       return 0;
 
-    case HTSTV_PVR_STATUS_PAUSED_COMMERCIAL:
+    case PVR_REC_COMMERCIAL:
       if(th == NULL || th->tht_tt_commercial_advice != COMMERCIAL_YES) {
-	pvrr->pvrr_status = HTSTV_PVR_STATUS_WAIT_KEY_FRAME;
+	pvrr->pvrr_status = PVR_REC_WAIT_KEY_FRAME;
       } else {
 	return 0;
       }
 
       /* FALLTHRU */
 
-    case HTSTV_PVR_STATUS_WAIT_KEY_FRAME:
+    case PVR_REC_WAIT_KEY_FRAME:
+      /* this check is not enough .. we need to scan for GOP start */
       if(st->codec->codec_type == CODEC_TYPE_VIDEO && 
 	 st->parser->pict_type == FF_I_TYPE) {
-	pvrr->pvrr_status = HTSTV_PVR_STATUS_RECORDING;
+	pvrr->pvrr_rec_status = PVR_REC_RUNNING;
       } else {
 	return 0;
       }
       break;
 
-    case HTSTV_PVR_STATUS_RECORDING:
+    case PVR_REC_RUNNING:
       if(th != NULL && th->tht_tt_commercial_advice == COMMERCIAL_YES) {
-	pvrr->pvrr_status = HTSTV_PVR_STATUS_PAUSED_COMMERCIAL;
+	pvrr->pvrr_status = PVR_REC_COMMERCIAL;
 	return 0;
       }
 

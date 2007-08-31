@@ -487,6 +487,16 @@ typedef struct pvr_data {
 } pvr_data_t;
 
 
+typedef enum {
+  PVR_REC_STOP,
+  PVR_REC_WAIT_SUBSCRIPTION,
+  PVR_REC_WAIT_FOR_START,
+  PVR_REC_WAIT_KEY_FRAME,
+  PVR_REC_RUNNING,
+  PVR_REC_COMMERCIAL,
+
+} pvrr_rec_status_t;
+
 typedef struct pvr_rec {
 
   LIST_ENTRY(pvr_rec) pvrr_global_link;
@@ -506,6 +516,9 @@ typedef struct pvr_rec {
   char *pvrr_format;         /* File format trailer */
 
   char pvrr_status;          /* defined in libhts/htstv.h */
+  char pvrr_error;           /* dito - but status returned from recorder */
+
+  pvrr_rec_status_t pvrr_rec_status; /* internal recording status */
 
   TAILQ_HEAD(, pvr_data) pvrr_dq;
   int pvrr_dq_len;

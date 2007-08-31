@@ -152,7 +152,7 @@ pvr_unrecord(pvr_rec_t *pvrr)
   if(pvrr->pvrr_status == HTSTV_PVR_STATUS_SCHEDULED) {
     pvr_free(pvrr);
   } else {
-    pvrr->pvrr_status = HTSTV_PVR_STATUS_ABORTED;
+    pvrr->pvrr_error = HTSTV_PVR_STATUS_ABORTED;
     pvrr_fsm(pvrr);
   }
   
@@ -167,8 +167,9 @@ pvr_link_pvrr(pvr_rec_t *pvrr)
 {
   pvrr->pvrr_ref = tag_get();
 
-  LIST_INSERT_HEAD(&pvrr_global_list, pvrr, pvrr_global_link);
+  pvrr->pvrr_printname = strdup(pvrr->pvrr_title ?: "");
 
+  LIST_INSERT_HEAD(&pvrr_global_list, pvrr, pvrr_global_link);
 
   switch(pvrr->pvrr_status) {
   case HTSTV_PVR_STATUS_FILE_ERROR:
@@ -179,11 +180,7 @@ pvr_link_pvrr(pvr_rec_t *pvrr)
     break;
 
   case HTSTV_PVR_STATUS_SCHEDULED:
-  case HTSTV_PVR_STATUS_WAIT_SUBSCRIPTION:
-  case HTSTV_PVR_STATUS_PAUSED_WAIT_FOR_START:
-  case HTSTV_PVR_STATUS_WAIT_KEY_FRAME:
   case HTSTV_PVR_STATUS_RECORDING:
-  case HTSTV_PVR_STATUS_PAUSED_COMMERCIAL:
     pvrr->pvrr_status = HTSTV_PVR_STATUS_SCHEDULED;
     pvrr_fsm(pvrr);
     break;
@@ -208,9 +205,6 @@ pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op)
 
   event_time_txt(start, e->e_duration, buf, sizeof(buf));
 
-  syslog(LOG_NOTICE, "Got recording command %d for %s", op, buf);
-      
-
   if(stop < now)
     return;
 
@@ -220,6 +214,19 @@ pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op)
     if(pvrr->pvrr_channel == ch && pvrr->pvrr_start == start &&
        pvrr->pvrr_stop == stop)
       break;
+  }
+
+  if(pvrr != NULL) {
+    switch(pvrr->pvrr_status) {
+    case HTSTV_PVR_STATUS_ABORTED:
+    case HTSTV_PVR_STATUS_NO_TRANSPONDER:
+    case HTSTV_PVR_STATUS_FILE_ERROR:
+    case HTSTV_PVR_STATUS_DISK_FULL:
+    case HTSTV_PVR_STATUS_BUFFER_ERROR:
+      pvr_free(pvrr);
+      pvrr = NULL;
+      break;
+    }
   }
 
   switch(op) {
@@ -411,15 +418,18 @@ pvr_wait_thread(pvr_rec_t *pvrr)
 {
   pvr_data_t *pd;
   
+  if(pvrr->pvrr_rec_status == PVR_REC_STOP)
+    return;
+
+  pvrr->pvrr_rec_status = PVR_REC_STOP;
+    
   pd = malloc(sizeof(pvr_data_t));
   pd->tsb = NULL;
   pthread_mutex_lock(&pvrr->pvrr_dq_mutex);
   TAILQ_INSERT_TAIL(&pvrr->pvrr_dq, pd, link);
   pthread_cond_signal(&pvrr->pvrr_dq_cond);
   pthread_mutex_unlock(&pvrr->pvrr_dq_mutex);
-
   pthread_join(pvrr->pvrr_ptid, NULL);
-  printf("%s: thread joined\n", pvrr->pvrr_printname);
 }
 
 
@@ -449,14 +459,16 @@ static void
 pvrr_fsm(pvr_rec_t *pvrr)
 {
   time_t delta;
+  time_t now;
+
+  time(&now);
 
   switch(pvrr->pvrr_status) {
   case HTSTV_PVR_STATUS_NONE:
     break;
 
   case HTSTV_PVR_STATUS_SCHEDULED:
-    delta = pvrr->pvrr_start - 30 - dispatch_clock;
-
+    delta = pvrr->pvrr_start - 30 - now;
     assert(pvrr->pvrr_timer == NULL);
     
     if(delta > 0) {
@@ -464,7 +476,7 @@ pvrr_fsm(pvr_rec_t *pvrr)
       break;
     }
 
-    delta = pvrr->pvrr_stop - dispatch_clock;
+    delta = pvrr->pvrr_stop - now;
 
     if(delta <= 0) {
       syslog(LOG_NOTICE, "pvr: \"%s\" - Recording skipped, "
@@ -486,52 +498,25 @@ pvrr_fsm(pvr_rec_t *pvrr)
     pvrr->pvrr_s = channel_subscribe(pvrr->pvrr_channel, pvrr,
 				     pvr_record_callback, 1000, "pvr");
 
-    printf("recording, stop timer fires at %ld\n", delta);
-
-    pvrr->pvrr_status = HTSTV_PVR_STATUS_WAIT_SUBSCRIPTION;
+    pvrr->pvrr_status = HTSTV_PVR_STATUS_RECORDING;
     pvr_inform_status_change(pvrr);
+    pvrr->pvrr_rec_status = PVR_REC_WAIT_SUBSCRIPTION;
     break;
 
-  case HTSTV_PVR_STATUS_WAIT_SUBSCRIPTION:
-    subscription_unsubscribe(pvrr->pvrr_s);
-    
-    pvrr->pvrr_status = HTSTV_PVR_STATUS_NO_TRANSPONDER;
-    pvr_inform_status_change(pvrr);
-    pvr_database_save();
-    break;
-
-  case HTSTV_PVR_STATUS_FILE_ERROR:
-  case HTSTV_PVR_STATUS_DISK_FULL:
-  case HTSTV_PVR_STATUS_ABORTED:
-  case HTSTV_PVR_STATUS_BUFFER_ERROR:
-    subscription_unsubscribe(pvrr->pvrr_s);
-    pvr_inform_status_change(pvrr);
-    pvr_database_save();
-    pvr_wait_thread(pvrr);
-    break;
-
-  case HTSTV_PVR_STATUS_PAUSED_WAIT_FOR_START:
-  case HTSTV_PVR_STATUS_WAIT_KEY_FRAME:
   case HTSTV_PVR_STATUS_RECORDING:    
-  case HTSTV_PVR_STATUS_PAUSED_COMMERCIAL:
+    /* recording completed */
+    pvrr->pvrr_status = pvrr->pvrr_error;
+    pvr_inform_status_change(pvrr);
+    pvr_database_save();
 
-    delta = pvrr->pvrr_stop - dispatch_clock;
-    printf("____ DELTA = %ld\n", delta);
-    if(delta <= 0) {
-      /* recording completed */
-      printf("recording completed\n");
-      subscription_unsubscribe(pvrr->pvrr_s);
+    subscription_unsubscribe(pvrr->pvrr_s);
 
-      pvrr->pvrr_status = HTSTV_PVR_STATUS_DONE;
-      pvr_inform_status_change(pvrr);
-      pvr_database_save();
-      pvr_wait_thread(pvrr);
-    }
+    pvr_wait_thread(pvrr);
 
-    if(pvrr->pvrr_timer != NULL)
+    if(pvrr->pvrr_timer != NULL) {
       stimer_del(pvrr->pvrr_timer);
-
-    pvrr->pvrr_timer = stimer_add(pvrr_fsm_timeout, pvrr, delta);
+      pvrr->pvrr_timer = NULL;
+    }
     break;
   }
 }
@@ -561,11 +546,9 @@ pvr_record_callback(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi)
   pthread_cond_signal(&pvrr->pvrr_dq_cond);
   pthread_mutex_unlock(&pvrr->pvrr_dq_mutex);
 
-  if(pvrr->pvrr_status == HTSTV_PVR_STATUS_WAIT_SUBSCRIPTION) {
+  if(pvrr->pvrr_rec_status == PVR_REC_WAIT_SUBSCRIPTION) {
     /* ok, first packet, start recording thread */
-    printf("recording starting\n");
-
-    pvrr->pvrr_status = HTSTV_PVR_STATUS_PAUSED_WAIT_FOR_START;
+    pvrr->pvrr_rec_status = PVR_REC_WAIT_FOR_START;
     pthread_create(&pvrr->pvrr_ptid, NULL, pvr_recorder_thread, pvrr);
   }
 }
