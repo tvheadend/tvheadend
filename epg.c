@@ -429,7 +429,7 @@ epg_channel_maintain(void)
       continue;
 
     e = TAILQ_NEXT(e, e_link);
-    if(now >= e->e_start && now < e->e_start + e->e_duration) {
+    if(e != NULL && now >= e->e_start && now < e->e_start + e->e_duration) {
       ch->ch_epg_cur_event = e;
       continue;
     }
