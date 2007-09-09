@@ -41,6 +41,8 @@
 struct client_list all_clients;
 
 
+static void client_status_update(void *aux);
+
 static void
 cprintf(client_t *c, const char *fmt, ...)
 {
@@ -697,6 +699,8 @@ client_teardown(client_t *c, int err)
 
   syslog(LOG_INFO, "%s disconnected -- %s", c->c_title, strerror(err));
 
+  stimer_del(c->c_status_timer);
+
   dispatch_delfd(c->c_dispatch_handle);
 
   close(c->c_fd);
@@ -840,6 +844,8 @@ client_connect_callback(int events, void *opaque, int fd)
 
   c->c_dispatch_handle = dispatch_addfd(newfd, client_socket_callback, c, 
 					DISPATCH_READ);
+
+  c->c_status_timer = stimer_add(client_status_update, c, 1);
 }
 
 
@@ -916,124 +922,116 @@ csprintf(client_t *c, th_channel_t *ch, const char *fmt, ...)
 }
 
 
-void
-client_status_update(void)
+static void
+client_status_update(void *aux)
 {
-  client_t *c;
+  client_t *c = aux;
   th_channel_t *ch;
-  th_dvb_adapter_t *dvb;
+  th_dvb_adapter_t *tda;
   th_v4l_adapter_t *v4l;
-  //  const char *info;
+  th_dvb_mux_instance_t *tdmi;
   th_subscription_t *s;
   th_transport_t *t;
-  int ccerr;
+  int ccerr, rate;
 
-  LIST_FOREACH(c, &all_clients, c_global_link) {
-    if(c->c_streamfd == -1)
+  c->c_status_timer = stimer_add(client_status_update, c, 1);
+
+  LIST_FOREACH(s, &c->c_subscriptions, ths_subscriber_link) {
+
+    ch = s->ths_channel;
+    t = s->ths_transport;
+
+    if(t == NULL) {
+      csprintf(c, ch, 
+	       "status = 0\n"
+	       "info = No transport available");
       continue;
+    }
 
-    LIST_FOREACH(s, &c->c_subscriptions, ths_subscriber_link) {
+    ccerr = avgstat_read(&t->tht_cc_errors, 60, dispatch_clock);
+    rate = avgstat_read_and_expire(&t->tht_rate, dispatch_clock);
+    rate = rate * 8 / 1000 / 10; /* convert to kbit / s */
 
-      ch = s->ths_channel;
-      t = s->ths_transport;
-
-      if(t == NULL) {
+    switch(t->tht_type) {
+    case TRANSPORT_DVB:
+      if((tda = t->tht_dvb_adapter) == NULL) {
 	csprintf(c, ch, 
-		"status = 0\n"
-		"info = No transport available");
+		 "status = 0\n"
+		 "info = No adapter available"
+		 "transport = %s\n",
+		 t->tht_name);
+	break;
+      }
+      if((tdmi = tda->tda_mux_current) == NULL) {
+	csprintf(c, ch,
+		 "status = 0\n"
+		 "info = No mux available"
+		 "transport = %s\n",
+		 t->tht_name);
+	break;
+      }
+
+      if(tdmi->tdmi_status == NULL) {
+	csprintf(c, ch, 
+		 "status = 1\n"
+		 "info = Signal ok\n"
+		 "adapter = %s\n"
+		 "transport = %s\n"
+		 "uncorrected-blocks = %d\n"
+		 "rate = %d\n"
+		 "cc-errors = %d\n",
+		 tda->tda_name,
+		 t->tht_name,
+		 tdmi->tdmi_uncorrected_blocks,
+		 rate, ccerr);
+		   
+		   
+      } else {
+	csprintf(c, ch, 
+		 "status = 0"
+		 "info = %s"
+		 "adapter = %s\n"
+		 "transport = %s\n",
+		 tdmi->tdmi_status,
+		 tda->tda_name,
+		 t->tht_name);
+      }
+      break;
+
+    case TRANSPORT_IPTV:
+      csprintf(c, ch, 
+	       "status = 1\n"
+	       "info = Signal ok\n"
+	       "transport = %s\n"
+	       "rate = %d\n"
+	       "cc-errors = %d\n",
+	       t->tht_name,
+	       rate, ccerr);
+      break;
+
+    case TRANSPORT_V4L:
+      v4l = t->tht_v4l_adapter;
+      if(v4l == NULL) {
+	csprintf(c, ch, 
+		 "status = 0\n"
+		 "info = No adapter available"
+		 "transport = %s\n",
+		 t->tht_name);
 	continue;
       }
 
-      ccerr = avgstat_read(&t->tht_cc_errors, 60, dispatch_clock);
+      csprintf(c, ch, 
+	       "status = 1\n"
+	       "info = Signal ok\n"
+	       "adapter = %s\n"
+	       "transport = %s\n"
+	       "rate = %d\n"
+	       "cc-errors = %d\n",
+	       v4l->tva_name,
+	       t->tht_name,
+	       rate, ccerr);
+      break;
 
-      switch(t->tht_type) {
-      case TRANSPORT_DVB:
-	dvb = t->tht_dvb_adapter;
-	if(dvb == NULL) {
-	  csprintf(c, ch, 
-		  "status = 0\n"
-		  "info = No adapter available"
-		  "transport = %s\n",
-		  t->tht_name);
-	  continue;
-	}
-
-#if 0
-	if(dvb->tda_fe_status & FE_HAS_LOCK) {
-	  csprintf(c, ch, 
-		  "status = 1\n"
-		  "info = Signal ok\n"
-		  "adapter = %s\n"
-		  "transport = %s\n"
-		  "signal-strength = 0x%04x\n"
-		  "snr = %d\n"
-		  "ber = %d\n"
-		  "uncorrected-blocks = %d\n"
-		  "cc-errors = %d\n",
-		  dvb->tda_name,
-		  t->tht_name,
-		  dvb->tda_signal,
-		  (dvb->tda_snr & 0xff) * 100 / 256,
-		  dvb->tda_ber,
-		  dvb->tda_uncorrected_blocks,
-		  ccerr);
-	  continue;
-	} else if(dvb->tda_fe_status & FE_HAS_SYNC)
-	  info = "No lock, but sync ok";
-	else if(dvb->tda_fe_status & FE_HAS_VITERBI)
-	  info = "No lock, but FEC stable";
-	else if(dvb->tda_fe_status & FE_HAS_CARRIER)
-	  info = "No lock, but carrier seen";
-	else if(dvb->tda_fe_status & FE_HAS_SIGNAL)
-	  info = "No lock, but faint signal";
-	else 
-	  info = "No signal";
-
-	csprintf(c, ch, 
-		"status = 0"
-		"info = %s"
-		"adapter = %s\n"
-		"transport = %s\n",
-		info,
-		dvb->tda_name,
-		t->tht_name);
-#endif	
-	break;
-
-
-      case TRANSPORT_IPTV:
-	csprintf(c, ch, 
-		"status = 1\n"
-		"info = Signal ok\n"
-		"transport = %s\n"
-		"cc-errors = %d\n",
-		t->tht_name,
-		ccerr);
-	break;
-
-      case TRANSPORT_V4L:
-	v4l = t->tht_v4l_adapter;
-	if(v4l == NULL) {
-	  csprintf(c, ch, 
-		  "status = 0\n"
-		  "info = No adapter available"
-		  "transport = %s\n",
-		  t->tht_name);
-	  continue;
-	}
-
-	csprintf(c, ch, 
-		"status = 1\n"
-		"info = Signal ok\n"
-		"adapter = %s\n"
-		"transport = %s\n"
-		"cc-errors = %d\n",
-		v4l->tva_name,
-		t->tht_name,
-		ccerr);
-	break;
-
-      }
     }
   }
 }

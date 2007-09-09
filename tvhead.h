@@ -441,6 +441,8 @@ typedef struct client {
 
   void *c_dispatch_handle;
 
+  void *c_status_timer;
+
 } client_t;
 
 
