@@ -503,18 +503,15 @@ cr_event_info(client_t *c, char **argv, int argc)
 	  "tag = %u\n"
 	  "prev = %u\n"
 	  "next = %u\n"
-	  "pvrstatus = %c\n",
+	  "pvrstatus = %d\n",
 
 	  e->e_start,
 	  e->e_start + e->e_duration,
-
 	  e->e_title ?: "",
 	  e->e_desc  ?: "",
-
 	  tag,
 	  prev,
 	  next,
-
 	  pvr_prog_status(e));
 
   epg_unlock();
@@ -577,7 +574,7 @@ cr_pvr_entry(client_t *c, pvr_rec_t *pvrr)
 	  "stop = %ld\n"
 	  "desc = %s\n"
 	  "pvr_tag = %d\n"
-	  "pvrstatus = %c\n"
+	  "pvrstatus = %d\n"
 	  "filename = %s\n"
 	  "channel = %d\n",
 	  pvrr->pvrr_title ?: "",
