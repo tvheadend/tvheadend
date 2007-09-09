@@ -356,7 +356,7 @@ pvr_proc_tsb(pvr_rec_t *pvrr, struct ts_pid_head *pidlist, pvr_data_t *pd,
       
       len = 188 - 4 - adaptation_field_length;
 
-      if(len < 1)
+      if(len < 0)
 	return 0;
       
       if(tsb[1] & 0x40) {
