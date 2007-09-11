@@ -795,7 +795,7 @@ static void
 client_connect_callback(int events, void *opaque, int fd)
 {
   struct sockaddr_in from;
-  size_t socklen = sizeof(struct sockaddr_in);
+  socklen_t socklen = sizeof(struct sockaddr_in);
   int newfd;
   int val;
   client_t *c;
