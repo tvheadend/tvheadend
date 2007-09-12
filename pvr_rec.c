@@ -125,11 +125,11 @@ pvr_recorder_thread(void *aux)
 
       time(&now);
       if(now >= pvrr->pvrr_start)
-	pvrr->pvrr_rec_status = PVR_REC_WAIT_KEY_FRAME;
-
+	pvrr->pvrr_rec_status = PVR_REC_WAIT_AUDIO_LOCK;
       break;
 
-    case PVR_REC_WAIT_KEY_FRAME:
+    case PVR_REC_WAIT_AUDIO_LOCK:
+    case PVR_REC_WAIT_VIDEO_LOCK:
     case PVR_REC_RUNNING:
     case PVR_REC_COMMERCIAL:
       break;
@@ -240,7 +240,7 @@ pvr_generate_filename(pvr_rec_t *pvrr)
   }
 
   free(pvrr->pvrr_format);
-  pvrr->pvrr_format = strdup("asf");
+  pvrr->pvrr_format = strdup("nut");
 
   filename = utf8tofilename(name && name[0] ? name : "untitled");
   deslashify(filename);
@@ -413,22 +413,27 @@ typedef struct pwo_ffmpeg {
   AVFormatContext *fctx;
 
   struct {
-    int64_t source_dts;
-    int64_t dts;
     int streamid;
     int decoded;
+    enum CodecType codec_type;
+    int64_t next_dts;
+    int64_t next_pts;
+    int64_t last_dts;
+    int64_t duration;
+
+
   } pids[PWO_FFMPEG_MAXPIDS];
 
   int64_t ref_clock;
 
-  int iframe_lock;
   int hdr_written;
-  int decode_ctd;
+  int audio_pids;
+  int video_pids;
 
-  pvrr_rec_status_t logged_status;
+  int prologue;
+  int header_written;
 
 } pwo_ffmpeg_t;
-
 
 
 static void *
@@ -454,6 +459,7 @@ pwo_init(th_subscription_t *s, pvr_rec_t *pvrr)
     return NULL;
   }
 
+  pf->ref_clock = AV_NOPTS_VALUE;
   pf->fctx = av_alloc_format_context();
 
   av_strlcpy(pf->fctx->title,   pvrr->pvrr_title ?: "", 
@@ -510,24 +516,28 @@ pwo_init(th_subscription_t *s, pvr_rec_t *pvrr)
       st->codec->codec_id = CODEC_ID_MPEG2VIDEO;
       st->codec->codec_type = CODEC_TYPE_VIDEO;
       cname = "mpeg2 video";
+      pf->video_pids++;
       break;
 
     case HTSTV_MPEG2AUDIO:
       st->codec->codec_id = CODEC_ID_MP2;
       st->codec->codec_type = CODEC_TYPE_AUDIO;
       cname = "mpeg2 audio";
+      pf->audio_pids++;
       break;
 
     case HTSTV_AC3:
       st->codec->codec_id = CODEC_ID_AC3;
       st->codec->codec_type = CODEC_TYPE_AUDIO;
       cname = "ac3 audio";
+      pf->audio_pids++;
       break;
 
     case HTSTV_H264:
       st->codec->codec_id = CODEC_ID_H264;
       st->codec->codec_type = CODEC_TYPE_VIDEO;
       cname = "h.264 video";
+      pf->video_pids++;
       break;
     }
 
@@ -547,10 +557,14 @@ pwo_init(th_subscription_t *s, pvr_rec_t *pvrr)
     }
 
     st->parser = av_parser_init(st->codec->codec_id);
-
+    pf->pids[i].codec_type = st->codec->codec_type;
     pf->pids[i].streamid = pf->fctx->nb_streams;
+    pf->pids[i].next_dts = AV_NOPTS_VALUE;
+    pf->pids[i].next_pts = AV_NOPTS_VALUE;
+    pf->pids[i].last_dts = AV_NOPTS_VALUE;
+    pf->pids[i].duration = 0;
+
     pf->fctx->nb_streams++;
-    pf->decode_ctd++;
   }
   pvrr->pvrr_opaque = pf;
   return pf;
@@ -567,20 +581,17 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
   th_transport_t *th = s->ths_transport;
   uint8_t flags, hlen, x;
   int64_t dts = AV_NOPTS_VALUE, pts = AV_NOPTS_VALUE;
-  int r, rlen, i, g, fs;
+  int r, rlen, i, g, j;
   int lavf_index = pf->pids[pidindex].streamid;
   AVStream *st, *stx;
   AVPacket pkt;
   uint8_t *pbuf;
-  int pbuflen, data_size;
+  int pbuflen, data_size, duration;
   char txt[100];
-  const char *tp;
   void *abuf;
   AVFrame pic;
 
   AVRational mpeg_tc = {1, 90000};
-
-  int64_t pdelta;
 
   if(lavf_index == -1)
     return 0;
@@ -604,19 +615,12 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
 
     hlen -= 10;
 
-    pdelta = pts - dts;
-
   } else if((flags & 0xc0) == 0x80) {
     if(hlen < 5)
       return 0;
 
     dts = pts = getpts(buf, len);
     hlen -= 5;
-    pdelta = 0;
-  } else {
-
-    pdelta = 0;
-   
   }
 
   buf += hlen;
@@ -624,188 +628,200 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
 
   st = pf->fctx->streams[lavf_index];
 
+  if(dts != AV_NOPTS_VALUE && pf->ref_clock == AV_NOPTS_VALUE)
+    pf->ref_clock = dts;
+
+  if(dts == AV_NOPTS_VALUE)
+    dts = pf->pids[pidindex].next_dts;
+  if(dts != AV_NOPTS_VALUE) {
+    dts -= pf->ref_clock;
+    if(dts < 0 && pf->prologue > 0)
+      dts = AV_NOPTS_VALUE;
+    else
+      dts &= 0x1ffffffffULL;
+  }
   if(dts != AV_NOPTS_VALUE)
-    pf->pids[pidindex].source_dts = av_rescale_q(dts, mpeg_tc, AV_TIME_BASE_Q);
+    dts = av_rescale_q(dts, mpeg_tc, AV_TIME_BASE_Q);
 
-  pdelta = av_rescale_q(pdelta, mpeg_tc, AV_TIME_BASE_Q);
 
-  while(len > 0) {
+  if(pts == AV_NOPTS_VALUE)
+    pts = pf->pids[pidindex].next_pts;
+  if(pts != AV_NOPTS_VALUE) {
+    pts -= pf->ref_clock;
+    if(pts < 0 && pf->prologue > 0)
+      pts = AV_NOPTS_VALUE;
+    else
+      pts &= 0x1ffffffffULL;
+  }
+  if(pts != AV_NOPTS_VALUE)
+    pts = av_rescale_q(pts, mpeg_tc, AV_TIME_BASE_Q);
+  
+
+  while(1) {
     rlen = av_parser_parse(st->parser, st->codec, &pbuf, &pbuflen,
 			   buf, len, pts, dts);
     if(pbuflen == 0)
       return 0;
 
-    if(pf->pids[pidindex].decoded == 0) {
+    switch(pvrr->pvrr_rec_status) {
+    default:
+      break;
+
+
+    case PVR_REC_WAIT_AUDIO_LOCK:
+      if(st->codec->codec_type != CODEC_TYPE_AUDIO ||
+	 pf->pids[pidindex].decoded)
+	break;
+	
+      abuf = malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE);
+      r = avcodec_decode_audio(st->codec, abuf, &data_size, pbuf, pbuflen);
+      free(abuf);
+      
+      if(r != 0 && data_size) {
+	syslog(LOG_DEBUG, "pvr: \"%s\" - "
+	       "Stream #%d: Decoded a complete audio frame: "
+	       "%d channels in %d Hz\n",
+	       pvrr->pvrr_printname, lavf_index,
+	       st->codec->channels,
+	       st->codec->sample_rate);
+	
+	pf->pids[pidindex].decoded = 1;
+      }
+      
+      j = 0;
+      for(i = 0; i < PWO_FFMPEG_MAXPIDS; i++) {
+	if(pf->pids[i].codec_type == CODEC_TYPE_AUDIO && pf->pids[i].decoded)
+	  j++;
+      }
+
+      if(j == pf->audio_pids)
+	pvrr_set_rec_state(pvrr, PVR_REC_WAIT_VIDEO_LOCK);
+      break;
+
+    case PVR_REC_WAIT_VIDEO_LOCK:
+      if(st->codec->codec_type != CODEC_TYPE_VIDEO ||
+	 pf->pids[pidindex].decoded)
+	break;
+
+      r = avcodec_decode_video(st->codec, &pic, &data_size, pbuf, pbuflen);
+      if(r != 0 && data_size) {
+	syslog(LOG_DEBUG, "pvr: \"%s\" - "
+	       "Stream #%d: Decoded a complete video frame: "
+	       "%d x %d in %.2fHz\n",
+	       pvrr->pvrr_printname, lavf_index,
+	       st->codec->width, st->codec->height,
+	       (float)st->codec->time_base.den / 
+	       (float)st->codec->time_base.num);
+
+	pf->pids[pidindex].decoded = 1;
+      }
+
+      j = 0;
+      for(i = 0; i < PWO_FFMPEG_MAXPIDS; i++) {
+	if(pf->pids[i].codec_type == CODEC_TYPE_VIDEO && pf->pids[i].decoded)
+	  j++;
+      }
+
+      if(j != pf->audio_pids)
+	break;
+
+      pvrr_set_rec_state(pvrr, PVR_REC_RUNNING);
+
+      if(!pf->header_written) {
+	pf->header_written = 1;
+
+	if(av_write_header(pf->fctx))
+	  return 0;
+
+	syslog(LOG_DEBUG, 
+	       "pvr: \"%s\" - Header written to file, stream dump:", 
+	       pvrr->pvrr_printname);
+      
+	for(i = 0; i < pf->fctx->nb_streams; i++) {
+	  stx = pf->fctx->streams[i];
+	  g = ff_gcd(stx->time_base.num, stx->time_base.den);
+	
+	  avcodec_string(txt, sizeof(txt), stx->codec, 1);
+  
+	  syslog(LOG_DEBUG, "pvr: \"%s\" - Stream #%d: %s [%d/%d]",
+		 pvrr->pvrr_printname, i, txt, 
+		 stx->time_base.num, stx->time_base.den);
+	
+	}
+      }
+      /* FALLTHRU */
+      
+    case PVR_REC_RUNNING:
+     
+      if(th != NULL && th->tht_tt_commercial_advice == COMMERCIAL_YES) {
+	pvrr_set_rec_state(pvrr, PVR_REC_COMMERCIAL);
+	break;
+      }
+
+      if(dts == AV_NOPTS_VALUE || pts == AV_NOPTS_VALUE)
+	break;
+
       switch(st->codec->codec_type) {
       default:
+	duration = 0;
 	break;
 
       case CODEC_TYPE_VIDEO:
-	r = avcodec_decode_video(st->codec, &pic, &data_size, buf, len);
-	if(r != 0 && data_size) {
-	  syslog(LOG_DEBUG, "pvr: \"%s\" - "
-		 "Stream #%d: Decoded a complete video frame: "
-		 "%d x %d in %.2fHz\n",
-		 pvrr->pvrr_printname, lavf_index,
-		 st->codec->width, st->codec->height,
-		 (float)st->codec->time_base.den / 
-		 (float)st->codec->time_base.num);
-
-	  pf->pids[pidindex].decoded = 1;
-	  pf->decode_ctd--;
-	}
+	duration = 1000000 * 
+	  st->codec->time_base.num / st->codec->time_base.den;
 	break;
-	
+
       case CODEC_TYPE_AUDIO:
-	abuf = malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE);
-
-	r = avcodec_decode_audio(st->codec, abuf, &data_size, buf, len);
-
-	free(abuf);
-
-	if(r != 0 && data_size) {
-	  syslog(LOG_DEBUG, "pvr: \"%s\" - "
-		 "Stream #%d: Decoded a complete audio frame: "
-		 "%d channels in %d Hz\n",
-		 pvrr->pvrr_printname, lavf_index,
-		 st->codec->channels,
-		 st->codec->sample_rate);
-	  pf->pids[pidindex].decoded = 1;
-	  pf->decode_ctd--;
-	}
-	break;
-      }
-    }
-
-    if(pf->decode_ctd > 0)
-      goto next;
-
-    if(pf->hdr_written == 0) {
-      if(av_write_header(pf->fctx))
-	return 0;
-      pf->hdr_written = 1;
-      syslog(LOG_DEBUG, "pvr: \"%s\" - Header written to file, stream dump:", 
-	     pvrr->pvrr_printname);
-
-      for(i = 1; i < PWO_FFMPEG_MAXPIDS; i++)
-	pf->pids[i].dts = pf->pids[i].source_dts - pf->pids[0].source_dts;
-
-      pf->pids[0].dts = 0;
-
-      for(i = 0; i < pf->fctx->nb_streams; i++) {
-	stx = pf->fctx->streams[i];
-        g = ff_gcd(stx->time_base.num, stx->time_base.den);
-
-	avcodec_string(txt, sizeof(txt), stx->codec, 1);
-  
-	syslog(LOG_DEBUG, "pvr: \"%s\" - Stream #%d: %s [%d/%d]",
-	       pvrr->pvrr_printname, i, txt, 
-	       stx->time_base.num/g, stx->time_base.den/g);
-	       
-      }
-    }
-    
-    if(pf->logged_status != pvrr->pvrr_rec_status) {
-      pf->logged_status = pvrr->pvrr_rec_status;
-      
-      switch(pf->logged_status) {
-      case PVR_REC_WAIT_SUBSCRIPTION:
-	tp = "wait for start";
-	break;
-      case PVR_REC_WAIT_KEY_FRAME:
-	tp = "waiting for key frame";
-	break;
-      case PVR_REC_RUNNING:
-	tp = "running";
-	break;
-      case PVR_REC_COMMERCIAL:
-	tp = "commercial break";
-	break;
-      default:
-	tp = NULL;
-	break;
+	duration = 1000000 * st->codec->frame_size / st->codec->sample_rate;
       }
 
-      if(tp != NULL) {
-	syslog(LOG_INFO, "pvr: \"%s\" - Recorder entering state \"%s\"",
-	       pvrr->pvrr_printname, tp);
+      av_init_packet(&pkt);
+      pkt.stream_index = lavf_index;
+
+      pkt.dts = av_rescale_q(dts, AV_TIME_BASE_Q, st->time_base);
+      pkt.pts = av_rescale_q(pts, AV_TIME_BASE_Q, st->time_base);
+
+      if(pkt.dts <= pf->pids[pidindex].last_dts) {
+	if(pkt.pts == pkt.dts)
+	  pkt.pts = pf->pids[pidindex].last_dts + 1;
+	pkt.dts = pf->pids[pidindex].last_dts + 1;
       }
-    }
-    
-    switch(pvrr->pvrr_status) {
-    case PVR_REC_WAIT_FOR_START:
-      return 0;
+
+      pf->pids[pidindex].last_dts = pkt.dts;
+
+      pkt.data = pbuf;
+      pkt.size = pbuflen;
+      pkt.duration = duration;
+
+      if(st->codec->codec_type == CODEC_TYPE_AUDIO ||
+	 st->parser->pict_type == FF_I_TYPE)
+	pkt.flags |= PKT_FLAG_KEY;
+      r = av_interleaved_write_frame(pf->fctx, &pkt);
+
+      dts += duration;
+      pts += duration;
+      pf->pids[pidindex].next_dts = dts;
+      pf->pids[pidindex].next_pts = pts;
+      break;
+
 
     case PVR_REC_COMMERCIAL:
       if(th == NULL || th->tht_tt_commercial_advice != COMMERCIAL_YES) {
-	pvrr->pvrr_status = PVR_REC_WAIT_KEY_FRAME;
-      } else {
-	return 0;
-      }
+	
+	for(i = 0; i < PWO_FFMPEG_MAXPIDS; i++)
+	  pf->pids[i].decoded = 0;
 
-      /* FALLTHRU */
-
-    case PVR_REC_WAIT_KEY_FRAME:
-      /* this check is not enough .. we need to scan for GOP start */
-      if(st->codec->codec_type == CODEC_TYPE_VIDEO && 
-	 st->parser->pict_type == FF_I_TYPE) {
-	pvrr->pvrr_rec_status = PVR_REC_RUNNING;
-      } else {
-	return 0;
+	pvrr_set_rec_state(pvrr, PVR_REC_WAIT_AUDIO_LOCK);
       }
       break;
-
-    case PVR_REC_RUNNING:
-      if(th != NULL && th->tht_tt_commercial_advice == COMMERCIAL_YES) {
-	pvrr->pvrr_status = PVR_REC_COMMERCIAL;
-	return 0;
-      }
-
-    default:
-      break;
     }
-
-    av_init_packet(&pkt);
-    pkt.stream_index = lavf_index;
-
-    if(pf->pids[pidindex].dts >= 0) {
-
-      pkt.dts = av_rescale_q(pf->pids[pidindex].dts, 
-			     AV_TIME_BASE_Q, st->time_base);
-
-      pkt.pts = av_rescale_q(pf->pids[pidindex].dts + pdelta,
-			   AV_TIME_BASE_Q, st->time_base);
-      pkt.data = pbuf;
-      pkt.size = pbuflen;
-
-      if(st->codec->codec_type == CODEC_TYPE_VIDEO && 
-	 st->parser->pict_type == FF_I_TYPE)
-	pkt.flags |= PKT_FLAG_KEY;
-      
-      r = av_interleaved_write_frame(pf->fctx, &pkt);
-    }
-
-    switch(st->codec->codec_type) {
-    case CODEC_TYPE_VIDEO:
-      pf->pids[pidindex].dts += 1000000 * 
-	st->codec->time_base.num / st->codec->time_base.den;
-      break;
-
-    case CODEC_TYPE_AUDIO:
-      fs = st->codec->frame_size;
-      pf->pids[pidindex].dts += 1000000 * fs / st->codec->sample_rate;
-      break;
-
-    default:
-      break;
-    }
-
-  next:
     buf += rlen;
     len -= rlen;
   }
   return 0;
 }
+
+
 
 static int
 pwo_end(pvr_rec_t *pvrr)
