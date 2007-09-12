@@ -161,7 +161,7 @@ main(int argc, char **argv)
   signal(SIGINT, doexit);
 
   av_register_all();
-  av_log_set_level(AV_LOG_DEBUG);
+  av_log_set_level(AV_LOG_INFO);
 
   client_start();
   dvb_init();
