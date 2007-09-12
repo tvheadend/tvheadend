@@ -421,7 +421,7 @@ pvr_wait_thread(pvr_rec_t *pvrr)
   if(pvrr->pvrr_rec_status == PVR_REC_STOP)
     return;
 
-  pvrr->pvrr_rec_status = PVR_REC_STOP;
+  pvrr_set_rec_state(pvrr, PVR_REC_STOP);
     
   pd = malloc(sizeof(pvr_data_t));
   pd->tsb = NULL;
@@ -500,7 +500,7 @@ pvrr_fsm(pvr_rec_t *pvrr)
 
     pvrr->pvrr_status = HTSTV_PVR_STATUS_RECORDING;
     pvr_inform_status_change(pvrr);
-    pvrr->pvrr_rec_status = PVR_REC_WAIT_SUBSCRIPTION;
+    pvrr_set_rec_state(pvrr,PVR_REC_WAIT_SUBSCRIPTION); 
     break;
 
   case HTSTV_PVR_STATUS_RECORDING:    
@@ -548,7 +548,50 @@ pvr_record_callback(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi)
 
   if(pvrr->pvrr_rec_status == PVR_REC_WAIT_SUBSCRIPTION) {
     /* ok, first packet, start recording thread */
-    pvrr->pvrr_rec_status = PVR_REC_WAIT_FOR_START;
+    pvrr_set_rec_state(pvrr, PVR_REC_WAIT_FOR_START);
     pthread_create(&pvrr->pvrr_ptid, NULL, pvr_recorder_thread, pvrr);
   }
 }
+
+
+void
+pvrr_set_rec_state(pvr_rec_t *pvrr, pvrr_rec_status_t status)
+{
+  const char *tp;
+
+  if(pvrr->pvrr_rec_status == status)
+    return;
+
+  switch(status) {
+  case PVR_REC_STOP:
+    tp = "stopped";
+    break;
+  case PVR_REC_WAIT_SUBSCRIPTION:
+    tp = "waiting for subscription";
+    break;
+  case PVR_REC_WAIT_FOR_START:
+    tp = "waiting for program start";
+    break;
+  case PVR_REC_WAIT_AUDIO_LOCK:
+    tp = "waiting for audio lock";
+    break;
+  case PVR_REC_WAIT_VIDEO_LOCK:
+    tp = "waiting for video lock";
+    break;
+  case PVR_REC_RUNNING:
+    tp = "running";
+    break;
+  case PVR_REC_COMMERCIAL:
+    tp = "commercial break";
+    break;
+  default:
+    tp = "<invalid state>";
+    break;
+  }
+
+  syslog(LOG_INFO, "pvr: \"%s\" - Recorder entering state \"%s\"",
+	 pvrr->pvrr_printname, tp);
+
+  pvrr->pvrr_rec_status = status;
+}
+
