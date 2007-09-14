@@ -464,7 +464,7 @@ v4l_ts_generate(th_v4l_adapter_t *tva, uint8_t *ptr, int len, int type,
   uint32_t sc;
   uint8_t tsb0[188];
   uint8_t *tsb, *src;
-  int64_t ts;
+  int64_t ts, pcr = AV_NOPTS_VALUE;
   int hlen, tlen, slen, plen, cc, pad;
   uint16_t u16;
   th_transport_t *t;
@@ -482,6 +482,8 @@ v4l_ts_generate(th_v4l_adapter_t *tva, uint8_t *ptr, int len, int type,
     sc = 0x1e0;
     p.tp_type = HTSTV_MPEG2VIDEO;
     p.tp_pid = 100;
+    if(pts != AV_NOPTS_VALUE)
+      pcr = dts;
   }
 
   tsb = tsb0;
@@ -489,7 +491,7 @@ v4l_ts_generate(th_v4l_adapter_t *tva, uint8_t *ptr, int len, int type,
   slen = len;
   len += 13;
   
-  *tsb++ = type;
+  *tsb++ = 0x47;
   *tsb++ = p.tp_pid >> 8 | 0x40; /* payload unit start indicator */
   *tsb++ = p.tp_pid;
 
@@ -549,8 +551,10 @@ v4l_ts_generate(th_v4l_adapter_t *tva, uint8_t *ptr, int len, int type,
     memcpy(tsb, src, plen);
 
 
-    LIST_FOREACH(t, &tva->tva_transports, tht_adapter_link)
-      transport_recv_tsb(t, p.tp_pid, tsb0);
+    LIST_FOREACH(t, &tva->tva_transports, tht_adapter_link) {
+      transport_recv_tsb(t, p.tp_pid, tsb0, 0, pcr);
+      pcr = AV_NOPTS_VALUE;
+    }
 
     slen -= plen;
     if(slen == 0)
@@ -560,7 +564,7 @@ v4l_ts_generate(th_v4l_adapter_t *tva, uint8_t *ptr, int len, int type,
 
     tsb = tsb0;
 
-    *tsb++ = type;
+    *tsb++ = 0x47;
     *tsb++ = p.tp_pid >> 8;
     *tsb++ = p.tp_pid;
 

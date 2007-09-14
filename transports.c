@@ -20,6 +20,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -34,6 +35,8 @@
 
 #include <libhts/htscfg.h>
 
+#include <ffmpeg/avcodec.h>
+
 #include "tvhead.h"
 #include "dispatch.h"
 #include "dvb_dvr.h"
@@ -43,6 +46,7 @@
 #include "v4l.h"
 #include "dvb_dvr.h"
 #include "iptv_input.h"
+#include "psi.h"
 
 /*
  * transport_mutex protects all operations concerning subscription lists
@@ -214,7 +218,7 @@ subscription_unsubscribe(th_subscription_t *s)
 {
   pthread_mutex_lock(&subscription_mutex);
 
-  s->ths_callback(s, NULL, NULL);
+  s->ths_callback(s, NULL, NULL, AV_NOPTS_VALUE);
 
   LIST_REMOVE(s, ths_global_link);
   LIST_REMOVE(s, ths_channel_link);
@@ -249,7 +253,7 @@ subscription_sort(th_subscription_t *a, th_subscription_t *b)
 th_subscription_t *
 channel_subscribe(th_channel_t *ch, void *opaque,
 		  void (*callback)(struct th_subscription *s, 
-				   uint8_t *pkt, th_pid_t *pi),
+				   uint8_t *pkt, th_pid_t *pi, int64_t pcr),
 		  unsigned int weight,
 		  const char *name)
 {
@@ -316,7 +320,7 @@ transport_flush_subscribers(th_transport_t *t)
   while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL) {
     LIST_REMOVE(s, ths_transport_link);
     s->ths_transport = NULL;
-    s->ths_callback(s, NULL, NULL);
+    s->ths_callback(s, NULL, NULL, AV_NOPTS_VALUE);
   }
 }
 
@@ -345,13 +349,14 @@ transport_compute_weight(struct th_transport_list *head)
  */
 
 void
-transport_recv_tsb(th_transport_t *t, int pid, uint8_t *tsb)
+transport_recv_tsb(th_transport_t *t, int pid, uint8_t *tsb, int scanpcr,
+		   int64_t pcr)
 {
   th_pid_t *pi = NULL;
   th_subscription_t *s;
-  th_channel_t *ch;
-  int cc, err = 0;
-  
+  int cc, err = 0, afc, afl = 0;
+  int len, pusi;
+
   LIST_FOREACH(pi, &t->tht_pids, tp_link) 
     if(pi->tp_pid == pid)
       break;
@@ -359,9 +364,12 @@ transport_recv_tsb(th_transport_t *t, int pid, uint8_t *tsb)
   if(pi == NULL)
     return;
 
-  cc = tsb[3] & 0xf;
+  avgstat_add(&t->tht_rate, 188, dispatch_clock);
 
-  if(tsb[3] & 0x10) {
+  afc = (tsb[3] >> 4) & 3;
+
+  if(afc & 1) {
+    cc = tsb[3] & 0xf;
     if(pi->tp_cc_valid && cc != pi->tp_cc) {
       /* Incorrect CC */
       avgstat_add(&t->tht_cc_errors, 1, dispatch_clock);
@@ -371,25 +379,63 @@ transport_recv_tsb(th_transport_t *t, int pid, uint8_t *tsb)
     pi->tp_cc = (cc + 1) & 0xf;
   }
 
-  avgstat_add(&t->tht_rate, 188, dispatch_clock);
+  if(afc & 2) {
+    afl = tsb[4] + 1;
 
-  ch = t->tht_channel;
+    if(afl > 0 && scanpcr && tsb[5] & 0x10) {
+      pcr  = (uint64_t)tsb[6] << 25;
+      pcr |= (uint64_t)tsb[7] << 17;
+      pcr |= (uint64_t)tsb[8] << 9;
+      pcr |= (uint64_t)tsb[9] << 1;
+      pcr |= (uint64_t)(tsb[10] >> 7) & 0x01;
+    }
+  }
+  
+  switch(pi->tp_type) {
 
-  if(pi->tp_type == HTSTV_TELETEXT) {
-    /* teletext */
+  case HTSTV_TABLE:
+    if(pi->tp_section == NULL)
+      pi->tp_section = calloc(1, sizeof(struct psi_section));
+
+    afl += 4;
+    if(err || afl >= 188) {
+      pi->tp_section->ps_offset = -1; /* hold parser until next pusi */
+      break;
+    }
+
+    pusi = tsb[1] & 0x40;
+
+    if(pusi) {
+      len = tsb[afl++];
+      if(len > 0) {
+	if(len > 188 - afl)
+	  break;
+	if(!psi_section_reassemble(pi->tp_section, tsb + afl, len, 0, 1))
+	  pi->tp_got_section(t, pi, pi->tp_section->ps_data,
+			     pi->tp_section->ps_offset);
+
+	afl += len;
+      }
+    }
+    
+    if(!psi_section_reassemble(pi->tp_section, tsb + afl, 188 - afl, pusi, 1))
+      pi->tp_got_section(t, pi, pi->tp_section->ps_data,
+			 pi->tp_section->ps_offset);
+    break;
+
+  case HTSTV_TELETEXT:
     teletext_input(t, tsb);
-    return;
+    break;
+
+  default:
+    pthread_mutex_lock(&subscription_mutex);
+    LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link) {
+      s->ths_total_err += err;
+      s->ths_callback(s, tsb, pi, pcr);
+    }
+    pthread_mutex_unlock(&subscription_mutex);
+    break;
   }
-
-  tsb[0] = pi->tp_type;
-
-  pthread_mutex_lock(&subscription_mutex);
-
-  LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link) {
-    s->ths_total_err += err;
-    s->ths_callback(s, tsb, pi);
-  }
-  pthread_mutex_unlock(&subscription_mutex);
 }
 
 
@@ -477,7 +523,7 @@ transport_scheduler_init(void)
 }
 
 
-void
+th_pid_t *
 transport_add_pid(th_transport_t *t, uint16_t pid, tv_streamtype_t type)
 {
   th_pid_t *pi;
@@ -485,7 +531,7 @@ transport_add_pid(th_transport_t *t, uint16_t pid, tv_streamtype_t type)
   LIST_FOREACH(pi, &t->tht_pids, tp_link) {
     i++;
     if(pi->tp_pid == pid)
-      return;
+      return pi;
   }
 
   pi = calloc(1, sizeof(th_pid_t));
@@ -495,4 +541,5 @@ transport_add_pid(th_transport_t *t, uint16_t pid, tv_streamtype_t type)
   pi->tp_demuxer_fd = -1;
 
   LIST_INSERT_HEAD(&t->tht_pids, pi, tp_link);
+  return pi;
 }

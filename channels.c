@@ -35,7 +35,6 @@
 #include "v4l.h"
 #include "iptv_input.h"
 
-#include "dvb_pmt.h"
 #include "channels.h"
 #include "transports.h"
 

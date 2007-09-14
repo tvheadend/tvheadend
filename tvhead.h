@@ -209,7 +209,12 @@ typedef struct th_iptv_adapter {
  *
  */
 
+struct th_transport;
+struct th_pid;
 
+typedef void (pid_section_callback_t)(struct th_transport *t,
+				      struct th_pid *pi,
+				      uint8_t *section, int section_len);
 
 typedef struct th_pid {
   LIST_ENTRY(th_pid) tp_link;
@@ -221,6 +226,8 @@ typedef struct th_pid {
   int tp_demuxer_fd;
   int tp_index;
 
+  struct psi_section *tp_section;
+  pid_section_callback_t *tp_got_section;
 } th_pid_t;
 
 typedef enum {
@@ -257,6 +264,7 @@ typedef struct th_transport {
   
   struct th_pid_list tht_pids;
 
+  uint16_t tht_pcr_pid;
   uint16_t tht_dvb_network_id;
   uint16_t tht_dvb_transport_id;
   uint16_t tht_dvb_service_id;
@@ -288,10 +296,7 @@ typedef struct th_transport {
       struct th_v4l_adapter *adapter;
     } v4l;
     
-
-
     struct {
-
       struct in_addr group_addr;
       struct in_addr interface_addr;
       int ifindex;
@@ -299,9 +304,7 @@ typedef struct th_transport {
       int port;
       int fd;
       void *dispatch_handle;
-
     } iptv;
-
   } u;
 
 
@@ -398,7 +401,8 @@ typedef struct th_subscription {
   LIST_ENTRY(th_subscription) ths_subscriber_link; /* Caller is responsible
 						      for this link */
 
-  void (*ths_callback)(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi);
+  void (*ths_callback)(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi,
+		       int64_t pcr);
 
   void *ths_opaque;
 
@@ -547,5 +551,6 @@ config_entry_t *find_mux_config(const char *muxtype, const char *muxname);
 
 char *utf8toprintable(const char *in);
 char *utf8tofilename(const char *in);
+const char *htstvstreamtype2txt(tv_streamtype_t s);
 
 #endif /* TV_HEAD_H */

@@ -41,8 +41,8 @@
 #include "transports.h"
 #include "teletext.h"
 #include "epg.h"
+#include "psi.h"
 #include "dvb_support.h"
-#include "dvb_pmt.h"
 #include "dvb_dvr.h"
 #include "dvb_muxconfig.h"
 
@@ -327,7 +327,7 @@ dvb_service_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 {
   th_transport_t *t = opaque;
 
-  return dvb_parse_pmt(t, ptr, len);
+  return psi_parse_pmt(t, ptr, len, 1);
 }
 
 

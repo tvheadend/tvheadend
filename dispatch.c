@@ -45,7 +45,7 @@ typedef struct stimer {
   LIST_ENTRY(stimer) link;
   void (*callback)(void *aux);
   void *aux;
-  time_t t;
+  int64_t t;
 } stimer_t;
 
 LIST_HEAD(, stimer) dispatch_timers;
@@ -54,24 +54,33 @@ LIST_HEAD(, stimer) dispatch_timers;
 static int
 stimercmp(stimer_t *a, stimer_t *b)
 {
-  return a->t - b->t;
+  if(a->t < b->t)
+    return -1;
+  else if(a->t > b->t)
+    return 1;
+  return 0;
 }
+
+
+void *
+stimer_add_hires(void (*callback)(void *aux), void *aux, int64_t t)
+{
+  stimer_t *ti = malloc(sizeof(stimer_t));  
+  ti->t = t;
+  ti->aux = aux;
+  ti->callback = callback;
+  LIST_INSERT_SORTED(&dispatch_timers, ti, link, stimercmp);
+  return ti;
+}
+
 
 
 void *
 stimer_add(void (*callback)(void *aux), void *aux, int delta)
 {
   time_t now;
-  stimer_t *ti = malloc(sizeof(stimer_t));
-
   time(&now);
-
-  ti->t = now + delta;
-  ti->aux = aux;
-  ti->callback = callback;
-
-  LIST_INSERT_SORTED(&dispatch_timers, ti, link, stimercmp);
-  return ti;
+  return stimer_add_hires(callback, aux, (uint64_t)(now + delta) * 1000000ULL);
 }
 
 void
@@ -87,37 +96,23 @@ static int
 stimer_next(void)
 {
   stimer_t *ti = LIST_FIRST(&dispatch_timers);
-  struct timeval tv;
-  int64_t next, now, delta;
+  int64_t delta;
   
   if(ti == NULL)
     return -1;
 
-  next = (uint64_t)ti->t * 1000000ULL;
-
-  gettimeofday(&tv, NULL);
-
-  now = (uint64_t)tv.tv_sec * 1000000ULL + (uint64_t)tv.tv_usec;
-
-  delta = next - now;
+  delta = ti->t - getclock_hires();
   return delta < 0 ? 0 : delta / 1000ULL;
 }
 
-
-
-
-
-
-
 static void
-stimer_dispatch(time_t now)
+stimer_dispatch(int64_t now)
 {
   stimer_t *ti;
 
   while((ti = LIST_FIRST(&dispatch_timers)) != NULL) {
     if(ti->t > now)
       break;
-
     LIST_REMOVE(ti, link);
     ti->callback(ti->aux);
     free(ti);
@@ -227,12 +222,18 @@ dispatcher(void)
 {
   struct epoll_entry *e;
   int i, n;
+  struct timeval tv;
+  int64_t now;
 
   static struct epoll_event events[EPOLL_FDS_PER_ROUND];
 
   n = epoll_wait(epoll_fd, events, EPOLL_FDS_PER_ROUND, stimer_next());
 
-  time(&dispatch_clock);
+  gettimeofday(&tv, NULL);
+
+  dispatch_clock = tv.tv_sec;
+  now = (uint64_t)tv.tv_sec * 1000000ULL + (uint64_t)tv.tv_usec;
+
 
   for(i = 0; i < n; i++) {
     e = events[i].data.ptr;
@@ -257,5 +258,5 @@ dispatcher(void)
     dispatch_deref(e);
   }
 
-  stimer_dispatch(dispatch_clock);
+  stimer_dispatch(now);
 }

@@ -19,12 +19,25 @@
 #ifndef DISPATCH_H
 #define DISPATCH_H
 
+#include <sys/time.h>
+
 extern time_t dispatch_clock;
 
 #define DISPATCH_READ  0x1
 #define DISPATCH_WRITE 0x2
 #define DISPATCH_ERR   0x4
 #define DISPATCH_PRI   0x8
+
+extern inline int64_t 
+getclock_hires(void)
+{
+  int64_t now;
+  struct timeval tv;
+
+  gettimeofday(&tv, NULL);
+  now = (uint64_t)tv.tv_sec * 1000000ULL + (uint64_t)tv.tv_usec;
+  return now;
+}
 
 int dispatch_init(void);
 void *dispatch_addfd(int fd, 
@@ -36,6 +49,7 @@ void dispatch_clr(void *handle, int flags);
 void dispatcher(void);
 
 void *stimer_add(void (*callback)(void *aux), void *aux, int delta);
+void *stimer_add_hires(void (*callback)(void *aux), void *aux, int64_t t);
 void stimer_del(void *handle);
 
 #endif /* DISPATCH_H */

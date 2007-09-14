@@ -1,5 +1,5 @@
 /*
- *  TV Input - Linux DVB interface
+ *  Multicasted IPTV Input
  *  Copyright (C) 2007 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,11 +16,23 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DVB_PMT_H
-#define DVB_PMT_H
+#ifndef PSI_H_
+#define PSI_H_
 
-int dvb_parse_pmt(th_transport_t *t, uint8_t *ptr, int len);
+#define PSI_SECTION_SIZE 4096
 
-const char *htstvstreamtype2txt(tv_streamtype_t s);
+typedef struct psi_section {
+  int ps_offset;
+  uint8_t ps_data[PSI_SECTION_SIZE];
+} psi_section_t;
 
-#endif /* DVB_PMT_H */
+
+int psi_section_reassemble(psi_section_t *ps, uint8_t *data, int len,
+			   int pusi, int chkcrc);
+
+int psi_parse_pat(th_transport_t *t, uint8_t *ptr, int len,
+		  pid_section_callback_t *pmt_callback);
+
+int psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid);
+
+#endif /* PSI_H_ */

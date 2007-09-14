@@ -19,6 +19,7 @@
 #ifndef TRANSPORTS_H
 #define TRANSPORTS_H
 
+#include <ffmpeg/avcodec.h>
 
 void subscription_unsubscribe(th_subscription_t *s);
 void subscription_set_weight(th_subscription_t *s, unsigned int weight);
@@ -30,11 +31,13 @@ unsigned int transport_compute_weight(struct th_transport_list *head);
 
 void transport_flush_subscribers(th_transport_t *t);
 
-void transport_recv_tsb(th_transport_t *t, int pid, uint8_t *tsb);
+void transport_recv_tsb(th_transport_t *t, int pid, uint8_t *tsb, 
+			int scanpcr, int64_t pcr);
 
 void transport_monitor_init(th_transport_t *t);
 
-void transport_add_pid(th_transport_t *t, uint16_t pid, tv_streamtype_t type);
+th_pid_t *transport_add_pid(th_transport_t *t, uint16_t pid,
+			    tv_streamtype_t type);
 
 int transport_set_channel(th_transport_t *th, const char *name);
 
@@ -43,7 +46,8 @@ void transport_scheduler_init(void);
 th_subscription_t *channel_subscribe(th_channel_t *ch, void *opaque,
 				     void (*ths_callback)
 				     (struct th_subscription *s, 
-				      uint8_t *pkt, th_pid_t *pi),
+				      uint8_t *pkt, th_pid_t *pi,
+				      int64_t pcr),
 				     unsigned int weight,
 				     const char *name);
 

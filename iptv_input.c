@@ -39,6 +39,7 @@
 #include "channels.h"
 #include "transports.h"
 #include "dispatch.h"
+#include "psi.h"
 
 static void
 iptv_fd_callback(int events, void *opaque, int fd)
@@ -52,7 +53,7 @@ iptv_fd_callback(int events, void *opaque, int fd)
 
   while(r >= 188) {
     pid = (tsb[1] & 0x1f) << 8 | tsb[2];
-    transport_recv_tsb(t, pid, tsb);
+    transport_recv_tsb(t, pid, tsb, 1, AV_NOPTS_VALUE);
     r -= 188;
     tsb += 188;
   }
@@ -125,6 +126,35 @@ iptv_stop_feed(th_transport_t *t)
  *
  */
 
+static void
+iptv_parse_pmt(struct th_transport *t, struct th_pid *pi,
+	       uint8_t *table, int table_len)
+{
+  if(table[0] != 2)
+    return;
+
+  psi_parse_pmt(t, table + 3, table_len - 3, 0);
+}
+
+
+/*
+ *
+ */
+
+static void
+iptv_parse_pat(struct th_transport *t, struct th_pid *pi,
+	       uint8_t *table, int table_len)
+{
+  if(table[0] != 0)
+    return;
+
+  psi_parse_pat(t, table + 3, table_len - 3, iptv_parse_pmt);
+}
+
+/*
+ *
+ */
+
 int
 iptv_configure_transport(th_transport_t *t, const char *muxname)
 {
@@ -134,6 +164,7 @@ iptv_configure_transport(th_transport_t *t, const char *muxname)
   char buf[100];
   char ifname[100];
   struct ifreq ifr;
+  th_pid_t *pi;
 
   if((ce = find_mux_config("iptvmux", muxname)) == NULL)
     return -1;
@@ -177,6 +208,9 @@ iptv_configure_transport(th_transport_t *t, const char *muxname)
   snprintf(buf, sizeof(buf), "IPTV: %s (%s:%s:%d)", muxname, 
 	   ifname, inet_ntoa(t->tht_iptv_group_addr), t->tht_iptv_port);
   t->tht_name = strdup(buf);
+
+  pi = transport_add_pid(t, 0, HTSTV_TABLE);
+  pi->tp_got_section = iptv_parse_pat;
 
   return 0;
 }

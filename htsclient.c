@@ -58,7 +58,8 @@ cprintf(client_t *c, const char *fmt, ...)
 
 
 static void 
-client_ip_streamer(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi)
+client_ip_streamer(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi,
+		   int64_t pcr)
 {
   client_t *c = s->ths_opaque;
   char stoppkt[4];
@@ -87,7 +88,7 @@ client_ip_streamer(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi)
   }
 
   memcpy(s->ths_pkt + s->ths_pkt_ptr, pkt, 188);
-
+  s->ths_pkt[s->ths_pkt_ptr] = pi->tp_type;
   s->ths_pkt_ptr += 188;
   
   if(s->ths_pkt_ptr == c->c_pkt_maxsiz + 2) {

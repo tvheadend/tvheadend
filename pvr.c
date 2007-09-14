@@ -441,7 +441,7 @@ pvr_wait_thread(pvr_rec_t *pvrr)
 
 
 static void pvr_record_callback(struct th_subscription *s, uint8_t *pkt,
-				th_pid_t *pi);
+				th_pid_t *pi, int64_t pcr);
 
 
 static void
@@ -528,7 +528,8 @@ pvrr_fsm(pvr_rec_t *pvrr)
  */
 
 static void 
-pvr_record_callback(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi)
+pvr_record_callback(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi,
+		    int64_t pcr)
 {
   pvr_data_t *pd;
   pvr_rec_t *pvrr = s->ths_opaque;
