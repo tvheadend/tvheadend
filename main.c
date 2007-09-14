@@ -47,6 +47,7 @@
 #include "dispatch.h"
 #include "transports.h"
 #include "iptv_output.h"
+#include "rtsp.h"
 
 int running;
 int xmltvreload;
@@ -178,6 +179,8 @@ main(int argc, char **argv)
 
   transport_scheduler_init();
   
+  rtsp_start();
+
   running = 1;
 
 
