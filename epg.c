@@ -24,6 +24,8 @@
 #include "tvhead.h"
 #include "channels.h"
 #include "epg.h"
+#include "dispatch.h"
+#include "htsclient.h"
 
 #define EPG_MAX_AGE 86400
 
@@ -387,7 +389,18 @@ epg_update_event_by_id(th_channel_t *ch, uint16_t event_id,
 }
 
 
+static void
+epg_set_current_event(th_channel_t *ch, event_t *e)
+{
+  if(e == ch->ch_epg_cur_event)
+    return;
 
+  ch->ch_epg_cur_event = e;
+
+  /* Notify clients that a new programme is on */
+
+  clients_send_ref(ch->ch_tag);
+}
 
 static void
 epg_locate_current_event(th_channel_t *ch, time_t now)
@@ -399,25 +412,33 @@ epg_locate_current_event(th_channel_t *ch, time_t now)
     refstr_free(ch->ch_icon);
     ch->ch_icon = refstr_dup(e->e_icon);
   }
-  ch->ch_epg_cur_event = e;
+  epg_set_current_event(ch, e);
 }
 
 
 
 static void
-epg_channel_maintain(void)
+epg_channel_maintain(void *aux)
 {
   th_channel_t *ch;
-  event_t *e;
+  event_t *e, *cur;
   time_t now;
 
-  time(&now);
+  stimer_add(epg_channel_maintain, NULL, 5);
+
+  now = dispatch_clock;
+
+  epg_lock();
 
   TAILQ_FOREACH(ch, &channels, ch_global_link) {
+
+    /* Age out any old events */
 
     e = TAILQ_FIRST(&ch->ch_epg_events);
     if(e != NULL && e->e_start + e->e_duration < now - EPG_MAX_AGE)
       epg_event_destroy(ch, e);
+
+    cur = ch->ch_epg_cur_event;
 
     e = ch->ch_epg_cur_event;
     if(e == NULL) {
@@ -430,12 +451,15 @@ epg_channel_maintain(void)
 
     e = TAILQ_NEXT(e, e_link);
     if(e != NULL && now >= e->e_start && now < e->e_start + e->e_duration) {
-      ch->ch_epg_cur_event = e;
+      epg_set_current_event(ch, e);
       continue;
     }
 
     epg_locate_current_event(ch, now);
   }
+
+  epg_unlock();
+
 }
 
 
@@ -470,30 +494,12 @@ epg_transfer_events(th_channel_t *ch, struct event_queue *src,
 
 
 
-
-/*
- *
- */
-static void *
-epg_thread(void *aux)
-{
-  while(1) {
-    sleep(5);
-    epg_lock();
-    epg_channel_maintain();
-    epg_unlock();
-  }
-}
-
-
-
 /*
  *
  */
 void
 epg_init(void)
 {
-  pthread_t ptid;
-  pthread_create(&ptid, NULL, epg_thread, NULL);
+  stimer_add(epg_channel_maintain, NULL, 5);
 }
 
