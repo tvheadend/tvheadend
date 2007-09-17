@@ -151,8 +151,6 @@ rtp_streamer(struct th_subscription *s, uint8_t *buf, th_pid_t *pi,
 
   if(buf == NULL)
     return;
-  if(pcr != AV_NOPTS_VALUE)
-    printf("RTP PCR = %lld\n", pcr);
 
   pkt = TAILQ_LAST(&trs->trs_pktq, th_rtp_pkt_queue);
 
