@@ -424,7 +424,7 @@ epg_channel_maintain(void)
       epg_locate_current_event(ch, now);
       continue;
     }
-    
+
     if(now >= e->e_start && now < e->e_start + e->e_duration)
       continue;
 

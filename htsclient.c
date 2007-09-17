@@ -108,7 +108,7 @@ client_ip_streamer(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi,
  */
 
 void
-clients_enq_ref(int ref)
+clients_send_ref(int ref)
 {
   client_t  *c;
   char buf[10];

@@ -118,12 +118,12 @@ pvr_inform_status_change(pvr_rec_t *pvrr)
 {
   event_t *e;
 
-  clients_enq_ref(pvrr->pvrr_ref);
+  clients_send_ref(pvrr->pvrr_ref);
 
   e = epg_event_find_by_time(pvrr->pvrr_channel, pvrr->pvrr_start);
   
   if(e != NULL)
-    clients_enq_ref(e->e_tag);
+    clients_send_ref(e->e_tag);
 }
 
 
@@ -157,7 +157,7 @@ pvr_unrecord(pvr_rec_t *pvrr)
   }
   
   pvr_database_save();
-  clients_enq_ref(-1);
+  clients_send_ref(-1);
 }
 
 
@@ -188,7 +188,7 @@ pvr_link_pvrr(pvr_rec_t *pvrr)
 
 
   pvr_inform_status_change(pvrr);
-  clients_enq_ref(-1);
+  clients_send_ref(-1);
 }
 
 
