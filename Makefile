@@ -1,4 +1,4 @@
-include ../config.mak
+-include ../config.mak
 
 SRCS = main.c dispatch.c channels.c transports.c teletext.c psi.c
 
@@ -53,10 +53,14 @@ OBJS = $(patsubst %.c,%.o, $(SRCS))
 OBJS += $(patsubst %.arbfp1,%.o, $(CG_SRCS))
 DEPS= ${OBJS:%.o=%.d}
 
+prefix ?= $(INSTALLPREFIX)
+INSTDIR= $(prefix)/bin
+
 all:	$(PROG)
 
 install:
-	cd $(.OBJDIR) && install ${PROG} $(CURDIR)/../bin
+	mkdir -p $(INSTDIR)
+	cd $(.OBJDIR) && install -s ${PROG} $(INSTDIR)
 
 ${PROG}: $(.OBJDIR) $(OBJS) Makefile
 	cd $(.OBJDIR) && $(CC) $(LDFLAGS) -o $@ $(OBJS) \
