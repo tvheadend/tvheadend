@@ -558,6 +558,30 @@ cr_event_record(client_t *c, char **argv, int argc)
   return 0;
 }
 
+
+
+
+/*
+ *
+ */
+static int
+cr_channel_record(client_t *c, char **argv, int argc)
+{
+  th_channel_t *ch;
+  int duration;
+
+  if(argc < 2)
+    return 1;
+
+  if((ch = channel_by_index(atoi(argv[0]))) == NULL)
+    return 1;
+
+  duration = atoi(argv[1]);
+  
+  pvr_channel_record_op(ch, duration);
+  return 0;
+}
+
 /*
  *
  */
@@ -643,6 +667,7 @@ const struct {
   { "channel.info", cr_channel_info },
   { "channel.subscribe", cr_channel_subscribe },
   { "channel.unsubscribe", cr_channel_unsubscribe },
+  { "channel.record", cr_channel_record },
   { "event.info", cr_event_info },
   { "event.record", cr_event_record },
   { "pvr.getlog", cr_pvr_getlog },

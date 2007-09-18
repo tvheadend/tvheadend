@@ -268,6 +268,29 @@ pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op)
 
 
 
+void
+pvr_channel_record_op(th_channel_t *ch, int duration)
+{
+  time_t now   = dispatch_clock;
+  time_t start = now;
+  time_t stop  = now + duration;
+  pvr_rec_t *pvrr;
+
+  pvrr = calloc(1, sizeof(pvr_rec_t));
+  pvrr->pvrr_status  = HTSTV_PVR_STATUS_SCHEDULED;
+  pvrr->pvrr_channel = ch;
+  pvrr->pvrr_start   = start;
+  pvrr->pvrr_stop    = stop;
+  pvrr->pvrr_title   = strdup("Manual recording");
+  pvrr->pvrr_desc    = NULL;
+
+  pvr_link_pvrr(pvrr);  
+  pvr_database_save();
+}
+
+
+
+
 /*****************************************************************************
  *
  * Plain text "database" of pvr programmes
