@@ -253,3 +253,30 @@ dvb_mux_setup(void)
 
   dvb_add_configured_muxes();
 }
+
+
+
+/* 
+ *
+ */
+
+int
+dvb_configure_transport(th_transport_t *t, const char *muxname)
+{
+  th_dvb_mux_t *tdm;
+
+  LIST_FOREACH(tdm, &dvb_muxes, tdm_global_link)
+    if(!strcmp(tdm->tdm_name, muxname))
+      break;
+
+  if(tdm == NULL)
+    return -1;
+
+  t->tht_type = TRANSPORT_DVB;
+  t->tht_dvb_mux = tdm;
+  t->tht_name = strdup(tdm->tdm_title);
+  return 0;
+}
+
+
+
