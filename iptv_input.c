@@ -84,7 +84,7 @@ iptv_start_feed(th_transport_t *t, int status)
   sin.sin_addr.s_addr = t->tht_iptv_group_addr.s_addr;
 
   if(bind(fd, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
-    syslog(LOG_ERR, "\"%s\" cannot bind %s:%d -- %s", 
+    syslog(LOG_ERR, "iptv: \"%s\" cannot bind %s:%d -- %s", 
 	   t->tht_name, inet_ntoa(sin.sin_addr), t->tht_iptv_port,
 	   strerror(errno));
     close(fd);
@@ -98,7 +98,7 @@ iptv_start_feed(th_transport_t *t, int status)
 
   if(setsockopt(fd, SOL_IP, IP_ADD_MEMBERSHIP, &m, 
 		sizeof(struct ip_mreqn)) == -1) {
-    syslog(LOG_ERR, "\"%s\" cannot join %s -- %s", 
+    syslog(LOG_ERR, "iptv: \"%s\" cannot join %s -- %s", 
 	   t->tht_name, inet_ntoa(m.imr_multiaddr),
 	   strerror(errno));
     close(fd);
@@ -108,7 +108,7 @@ iptv_start_feed(th_transport_t *t, int status)
   t->tht_iptv_fd = fd;
   t->tht_status = status;
 
-  syslog(LOG_ERR, "\"%s\" joined group", t->tht_name);
+  syslog(LOG_ERR, "iptv: \"%s\" joined group", t->tht_name);
 
   t->tht_iptv_dispatch_handle = dispatch_addfd(fd, iptv_fd_callback, t,
 					       DISPATCH_READ);
@@ -125,7 +125,7 @@ iptv_stop_feed(th_transport_t *t)
   dispatch_delfd(t->tht_iptv_dispatch_handle);
   close(t->tht_iptv_fd);
 
-  syslog(LOG_ERR, "\"%s\" left group", t->tht_name);
+  syslog(LOG_ERR, "iptv: \"%s\" left group", t->tht_name);
   return 0;
 }
 
