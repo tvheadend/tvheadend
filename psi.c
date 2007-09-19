@@ -213,6 +213,7 @@ htstvstreamtype2txt(tv_streamtype_t s)
   case HTSTV_AC3:        return "AC-3";
   case HTSTV_TELETEXT:   return "teletext";
   case HTSTV_SUBTITLES:  return "subtitles";
+  case HTSTV_TABLE:      return "PSI table";
   default:               return "<unknown>";
   }
 }
