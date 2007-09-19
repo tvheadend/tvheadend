@@ -830,7 +830,8 @@ pwo_end(pvr_rec_t *pvrr)
   AVStream *st;
   int i;
 
-  av_write_trailer(pf->fctx);
+  if(pf->header_written)
+    av_write_trailer(pf->fctx);
 
   for(i = 0; i < pf->fctx->nb_streams; i++) {
     st = pf->fctx->streams[i];
@@ -841,6 +842,12 @@ pwo_end(pvr_rec_t *pvrr)
   
   url_fclose(&pf->fctx->pb);
   free(pf->fctx);
+
+  if(!pf->header_written) {
+    syslog(LOG_DEBUG, "pvr: \"%s\" - No content recorded, removing file",
+	   pvrr->pvrr_printname);
+    unlink(pvrr->pvrr_filename);
+  }
 
   free(pf);
   return 0;
