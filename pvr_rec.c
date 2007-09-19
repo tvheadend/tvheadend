@@ -679,9 +679,10 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
       
       if(r != 0 && data_size) {
 	syslog(LOG_DEBUG, "pvr: \"%s\" - "
-	       "Stream #%d: Decoded a complete audio frame: "
+	       "Stream #%d: \"%s\" decoded a complete audio frame: "
 	       "%d channels in %d Hz\n",
 	       pvrr->pvrr_printname, lavf_index,
+	       st->codec->codec->name,
 	       st->codec->channels,
 	       st->codec->sample_rate);
 	
@@ -706,9 +707,10 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
       r = avcodec_decode_video(st->codec, &pic, &data_size, pbuf, pbuflen);
       if(r != 0 && data_size) {
 	syslog(LOG_DEBUG, "pvr: \"%s\" - "
-	       "Stream #%d: Decoded a complete video frame: "
-	       "%d x %d in %.2fHz\n",
+	       "Stream #%d: \"%s\" decoded a complete video frame: "
+	       "%d x %d at %.2fHz\n",
 	       pvrr->pvrr_printname, lavf_index,
+	       st->codec->codec->name,
 	       st->codec->width, st->codec->height,
 	       (float)st->codec->time_base.den / 
 	       (float)st->codec->time_base.num);
