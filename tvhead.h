@@ -252,7 +252,7 @@ typedef struct th_transport {
   enum {
     TRANSPORT_IDLE,
     TRANSPORT_RUNNING,
-
+    TRANSPORT_PROBING,
   } tht_status;
 
   th_commercial_advice_t tht_tt_commercial_advice;
@@ -304,11 +304,16 @@ typedef struct th_transport {
       int port;
       int fd;
       void *dispatch_handle;
+      enum {
+	IPTV_MODE_RAWUDP,
+      } mode;
     } iptv;
   } u;
 
 
 } th_transport_t;
+
+
 
 #define tht_v4l_frequency u.v4l.frequency
 #define tht_v4l_adapter   u.v4l.adapter
@@ -322,6 +327,7 @@ typedef struct th_transport {
 #define tht_iptv_port            u.iptv.port
 #define tht_iptv_dispatch_handle u.iptv.dispatch_handle
 #define tht_iptv_fd              u.iptv.fd
+#define tht_iptv_mode            u.iptv.mode
 
 /*
  *  Teletext

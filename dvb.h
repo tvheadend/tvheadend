@@ -27,7 +27,8 @@ extern struct th_dvb_mux_list dvb_muxes;
 
 void dvb_init(void);
 
-int dvb_configure_transport(th_transport_t *t, const char *muxname);
+int dvb_configure_transport(th_transport_t *t, const char *muxname,
+			    const char *channel_name);
 
 int dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state);
 

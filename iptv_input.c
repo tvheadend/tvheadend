@@ -41,6 +41,14 @@
 #include "dispatch.h"
 #include "psi.h"
 
+static struct th_transport_list iptv_probing_transports;
+static struct th_transport_list iptv_stale_transports;
+static void *iptv_probe_timer;
+
+static void iptv_probe_transport(th_transport_t *t);
+static void iptv_probe_callback(void *aux);
+static void iptv_probe_done(th_transport_t *t, int timeout);
+
 static void
 iptv_fd_callback(int events, void *opaque, int fd)
 {
@@ -60,7 +68,7 @@ iptv_fd_callback(int events, void *opaque, int fd)
 }
 
 int
-iptv_start_feed(th_transport_t *t, unsigned int weight)
+iptv_start_feed(th_transport_t *t, int status)
 {
   int fd;
   struct ip_mreqn m;
@@ -98,7 +106,7 @@ iptv_start_feed(th_transport_t *t, unsigned int weight)
   }
 
   t->tht_iptv_fd = fd;
-  t->tht_status = TRANSPORT_RUNNING;
+  t->tht_status = status;
 
   syslog(LOG_ERR, "\"%s\" joined group", t->tht_name);
 
@@ -130,10 +138,12 @@ static void
 iptv_parse_pmt(struct th_transport *t, struct th_pid *pi,
 	       uint8_t *table, int table_len)
 {
-  if(table[0] != 2)
+  if(table[0] != 2 || t->tht_status != TRANSPORT_PROBING)
     return;
 
   psi_parse_pmt(t, table + 3, table_len - 3, 0);
+
+  iptv_probe_done(t, 0);
 }
 
 
@@ -145,7 +155,7 @@ static void
 iptv_parse_pat(struct th_transport *t, struct th_pid *pi,
 	       uint8_t *table, int table_len)
 {
-  if(table[0] != 0)
+  if(table[0] != 0 || t->tht_status != TRANSPORT_PROBING)
     return;
 
   psi_parse_pat(t, table + 3, table_len - 3, iptv_parse_pmt);
@@ -156,28 +166,30 @@ iptv_parse_pat(struct th_transport *t, struct th_pid *pi,
  */
 
 int
-iptv_configure_transport(th_transport_t *t, const char *muxname)
+iptv_configure_transport(th_transport_t *t, const char *iptv_type,
+			 struct config_head *head, const char *channel_name)
 {
-  config_entry_t *ce;
   const char *s;
   int fd;
   char buf[100];
   char ifname[100];
   struct ifreq ifr;
   th_pid_t *pi;
-
-  if((ce = find_mux_config("iptvmux", muxname)) == NULL)
+  
+  if(!strcasecmp(iptv_type, "rawudp"))
+    t->tht_iptv_mode = IPTV_MODE_RAWUDP;
+  else
     return -1;
 
   t->tht_type = TRANSPORT_IPTV;
   
-  if((s = config_get_str_sub(&ce->ce_sub, "group-address", NULL)) == NULL)
+  if((s = config_get_str_sub(head, "group-address", NULL)) == NULL)
     return -1;
   t->tht_iptv_group_addr.s_addr = inet_addr(s);
 
   t->tht_iptv_ifindex = 0;
 
-  if((s = config_get_str_sub(&ce->ce_sub, "interface-address", NULL)) != NULL)
+  if((s = config_get_str_sub(head, "interface-address", NULL)) != NULL)
     t->tht_iptv_interface_addr.s_addr = inet_addr(s);
   else
     t->tht_iptv_interface_addr.s_addr = INADDR_ANY; 
@@ -185,7 +197,7 @@ iptv_configure_transport(th_transport_t *t, const char *muxname)
   snprintf(ifname, sizeof(ifname), "%s",
 	   inet_ntoa(t->tht_iptv_interface_addr));
 
-  if((s = config_get_str_sub(&ce->ce_sub, "interface", NULL)) != NULL) {
+  if((s = config_get_str_sub(head, "interface", NULL)) != NULL) {
 
     memset(&ifr, 0, sizeof(ifr));
     strncpy(ifr.ifr_name, s, IFNAMSIZ - 1);
@@ -201,16 +213,75 @@ iptv_configure_transport(th_transport_t *t, const char *muxname)
     }
   }
 
-  if((s = config_get_str_sub(&ce->ce_sub, "port", NULL)) == NULL)
+  if((s = config_get_str_sub(head, "port", NULL)) == NULL)
     return -1;
   t->tht_iptv_port = atoi(s);
 
-  snprintf(buf, sizeof(buf), "IPTV: %s (%s:%s:%d)", muxname, 
+  snprintf(buf, sizeof(buf), "IPTV: %s (%s:%s:%d)", channel_name,
 	   ifname, inet_ntoa(t->tht_iptv_group_addr), t->tht_iptv_port);
   t->tht_name = strdup(buf);
 
   pi = transport_add_pid(t, 0, HTSTV_TABLE);
   pi->tp_got_section = iptv_parse_pat;
 
+  t->tht_channel = channel_find(channel_name, 1);
+  LIST_INSERT_HEAD(&iptv_probing_transports, t, tht_adapter_link);
+
+  if(iptv_probe_timer == NULL) {
+    iptv_probe_transport(t);
+    iptv_probe_timer = stimer_add(iptv_probe_callback, t, 5);
+  }
+
   return 0;
 }
+
+static void
+iptv_probe_transport(th_transport_t *t)
+{
+  syslog(LOG_INFO, "iptv: Probing transport %s", t->tht_name);
+  iptv_start_feed(t, TRANSPORT_PROBING);
+}
+
+
+static void
+iptv_probe_done(th_transport_t *t, int timeout)
+{
+  int pidcnt = 0;
+  th_pid_t *tp;
+
+  if(!timeout)
+    stimer_del(iptv_probe_timer);
+
+  LIST_FOREACH(tp, &t->tht_pids, tp_link)
+    pidcnt++;
+  
+  LIST_REMOVE(t, tht_adapter_link);
+
+  syslog(LOG_INFO, "iptv: Transport %s probed, %d pids found%s", 
+	 t->tht_name, pidcnt, timeout ? ", but probe timeouted" : "");
+
+  iptv_stop_feed(t);
+
+  if(!timeout)
+    transport_link(t, t->tht_channel);
+  else
+    LIST_INSERT_HEAD(&iptv_stale_transports, t, tht_adapter_link);
+
+  t = LIST_FIRST(&iptv_probing_transports);
+  if(t == NULL) {
+    iptv_probe_timer = NULL;
+    return;
+  }
+
+  iptv_probe_transport(t);
+  iptv_probe_timer = stimer_add(iptv_probe_callback, t, 5);
+}
+
+
+
+static void
+iptv_probe_callback(void *aux)
+{
+  th_transport_t *t = aux;
+  iptv_probe_done(t, 1);
+ }

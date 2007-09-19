@@ -39,9 +39,11 @@ void transport_monitor_init(th_transport_t *t);
 th_pid_t *transport_add_pid(th_transport_t *t, uint16_t pid,
 			    tv_streamtype_t type);
 
-int transport_set_channel(th_transport_t *th, const char *name);
+int transport_set_channel(th_transport_t *th, th_channel_t *ch);
+void transport_link(th_transport_t *t, th_channel_t *ch);
 
 void transport_scheduler_init(void);
+
 
 th_subscription_t *channel_subscribe(th_channel_t *ch, void *opaque,
 				     void (*ths_callback)

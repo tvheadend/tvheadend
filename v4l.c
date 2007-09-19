@@ -78,7 +78,8 @@ v4l_add_adapters(void)
  *
  */
 int
-v4l_configure_transport(th_transport_t *t, const char *muxname)
+v4l_configure_transport(th_transport_t *t, const char *muxname,
+			const char *channel_name)
 {
   config_entry_t *ce;
   char buf[100];
@@ -98,6 +99,7 @@ v4l_configure_transport(th_transport_t *t, const char *muxname)
 	   (float)t->tht_v4l_frequency / 1000000.0f);
   t->tht_name = strdup(buf);
 
+  transport_link(t, channel_find(channel_name, 1));
   return 0;
 }
 

@@ -76,19 +76,11 @@ transportcmp(th_transport_t *a, th_transport_t *b)
 
 
 int 
-transport_set_channel(th_transport_t *t, const char *name)
+transport_set_channel(th_transport_t *t, th_channel_t *ch)
 {
-  th_channel_t *ch;
   th_pid_t *tp;
   char *chname;
 
-  if(LIST_FIRST(&t->tht_pids) == NULL)
-    return -1;
-
-  if(t->tht_channel != NULL)
-    return 0;
-
-  ch = channel_find(name, 1);
   t->tht_channel = ch;
   LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
 
@@ -113,75 +105,39 @@ service_load(struct config_head *head)
 {
   const char *name,  *v;
   th_transport_t *t;
-  th_channel_t *ch;
+  int r = 1;
 
   if((name = config_get_str_sub(head, "channel", NULL)) == NULL)
     return;
 
-  ch = channel_find(name, 1);
-
   t = calloc(1, sizeof(th_transport_t));
+  t->tht_prio = atoi(config_get_str_sub(head, "prio", ""));
 
   if(0) {
 #ifdef ENABLE_INPUT_DVB
   } else if((v = config_get_str_sub(head, "dvbmux", NULL)) != NULL) {
-    if(dvb_configure_transport(t, v)) {
-      free(t);
-      return;
-    }
+    r = dvb_configure_transport(t, v, name);
 #endif
 #ifdef ENABLE_INPUT_IPTV
-  } else if((v = config_get_str_sub(head, "iptvmux", NULL)) != NULL) {
-    if(iptv_configure_transport(t, v)) {
-      free(t);
-      return;
-    }
+  } else if((v = config_get_str_sub(head, "iptv", NULL)) != NULL) {
+    r = iptv_configure_transport(t, v, head, name);
 #endif
 #ifdef ENABLE_INPUT_V4L
   } else if((v = config_get_str_sub(head, "v4lmux", NULL)) != NULL) {
-    if(v4l_configure_transport(t, v)) {
-      free(t);
-      return;
-    }
+    r = v4l_configure_transport(t, v, name);
 #endif
-  } else {
-    free(t);
-    return;
   }
+  if(r)
+    free(t);
+}
 
-  if((v = config_get_str_sub(head, "service_id", NULL)) != NULL)
-    t->tht_dvb_service_id = strtol(v, NULL, 0);
-
-  if((v = config_get_str_sub(head, "network_id", NULL)) != NULL)
-    t->tht_dvb_network_id = strtol(v, NULL, 0);
-
-  if((v = config_get_str_sub(head, "transport_id", NULL)) != NULL)
-    t->tht_dvb_transport_id = strtol(v, NULL, 0);
-
-  if((v = config_get_str_sub(head, "video", NULL)) != NULL)
-    transport_add_pid(t, strtol(v, NULL, 0), HTSTV_MPEG2VIDEO);
-
-  if((v = config_get_str_sub(head, "h264", NULL)) != NULL)
-    transport_add_pid(t, strtol(v, NULL, 0), HTSTV_H264);
-  
-  if((v = config_get_str_sub(head, "audio", NULL)) != NULL) 
-    transport_add_pid(t, strtol(v, NULL, 0), HTSTV_MPEG2AUDIO);
-  
-  if((v = config_get_str_sub(head, "ac3", NULL)) != NULL)
-    transport_add_pid(t, strtol(v, NULL, 0), HTSTV_AC3);
-
-  if((v = config_get_str_sub(head, "teletext", NULL)) != NULL)
-    transport_add_pid(t, strtol(v, NULL, 0), HTSTV_TELETEXT);
-
-  t->tht_prio = atoi(config_get_str_sub(head, "prio", ""));
-
-  transport_set_channel(t, name);
-
+void
+transport_link(th_transport_t *t, th_channel_t *ch)
+{
+  transport_set_channel(t, ch);
   transport_monitor_init(t);
   LIST_INSERT_HEAD(&all_transports, t, tht_global_link);
 }
-
-
 
 
 

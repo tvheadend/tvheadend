@@ -134,7 +134,7 @@ transport_start(th_transport_t *t, unsigned int weight)
 #endif
 #ifdef ENABLE_INPUT_IPTV
   case TRANSPORT_IPTV:
-    return iptv_start_feed(t, weight);
+    return iptv_start_feed(t, TRANSPORT_RUNNING);
 #endif
 #ifdef ENABLE_INPUT_V4L
   case TRANSPORT_V4L:

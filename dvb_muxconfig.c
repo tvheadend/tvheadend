@@ -25,9 +25,11 @@
 #include <linux/dvb/frontend.h>
 
 #include "tvhead.h"
+#include "channels.h"
 #include "dvb.h"
 #include "dvb_muxconfig.h"
 #include "strtab.h"
+#include "transports.h"
 
 
 static void
@@ -261,7 +263,8 @@ dvb_mux_setup(void)
  */
 
 int
-dvb_configure_transport(th_transport_t *t, const char *muxname)
+dvb_configure_transport(th_transport_t *t, const char *muxname,
+			const char *channel_name)
 {
   th_dvb_mux_t *tdm;
 
@@ -275,6 +278,8 @@ dvb_configure_transport(th_transport_t *t, const char *muxname)
   t->tht_type = TRANSPORT_DVB;
   t->tht_dvb_mux = tdm;
   t->tht_name = strdup(tdm->tdm_title);
+
+  transport_link(t, channel_find(channel_name, 1));
   return 0;
 }
 

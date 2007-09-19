@@ -782,7 +782,8 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 			     transport_stream_id,
 			     service_id, 1);
 
-      ret |= transport_set_channel(t, chname);
+       if(LIST_FIRST(&t->tht_pids) != NULL && t->tht_channel == NULL)
+	 ret |= transport_set_channel(t, channel_find(chname, 1));
     }
   }
   return ret;
