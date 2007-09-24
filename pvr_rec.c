@@ -724,7 +724,7 @@ pwo_writepkt(pvr_rec_t *pvrr, th_subscription_t *s, uint32_t startcode,
 	  j++;
       }
 
-      if(j != pf->audio_pids)
+      if(j != pf->video_pids)
 	break;
 
       pvrr_set_rec_state(pvrr, PVR_REC_RUNNING);
