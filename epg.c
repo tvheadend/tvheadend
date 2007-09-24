@@ -211,7 +211,8 @@ check_overlap0(th_channel_t *ch, event_t *a)
     syslog(LOG_WARNING,
 	   "\"%s\": Event \"%s\" %s with higest "
 	   "precedence extends over \"%s\" %s",
-	   ch->ch_name, a->e_title, atime, b->e_title, btime);
+	   ch->ch_name, a->e_title ?: "<unnamed>", atime, 
+	   b->e_title ?: "<unnamed>", btime);
 
     b->e_start += overshot;
     b->e_duration -= overshot;
@@ -219,28 +220,29 @@ check_overlap0(th_channel_t *ch, event_t *a)
     if(b->e_duration < 1) {
       syslog(LOG_WARNING,
 	     "\"%s\": Event \"%s\" destroyed",
-	     ch->ch_name, b->e_title);
+	     ch->ch_name, b->e_title ?: "<unnamed>");
 
       epg_event_destroy(ch, b);
     } else {
 
       syslog(LOG_WARNING,
 	     "\"%s\": Event \"%s\" delayed and shortened by %ds",
-	     ch->ch_name, b->e_title, overshot);
+	     ch->ch_name, b->e_title ?: "<unnamed>", overshot);
     }
   } else {
 
     syslog(LOG_WARNING,
 	   "\"%s\": Event \"%s\" %s with higest "
 	   "precedence extends over \"%s\" %s",
-	   ch->ch_name, b->e_title, btime, a->e_title, atime);
+	   ch->ch_name, b->e_title ?: "<unnamed>", btime, 
+	   a->e_title ?: "<unnamed>", atime);
 
     a->e_duration -= overshot;
 
     if(a->e_duration < 1) {
       syslog(LOG_WARNING,
 	     "\"%s\": Event \"%s\" destroyed",
-	     ch->ch_name, a->e_title);
+	     ch->ch_name, a->e_title ?: "<unnamed>");
 
       epg_event_destroy(ch, a);
       return 1;
@@ -249,7 +251,7 @@ check_overlap0(th_channel_t *ch, event_t *a)
 
       syslog(LOG_WARNING,
 	     "\"%s\": Event \"%s\" shortened by %ds",
-	     ch->ch_name, a->e_title, overshot);
+	     ch->ch_name, a->e_title ?: "<unnamed>", overshot);
     }
   }
   return 0;
