@@ -38,7 +38,42 @@
 #include "dvb.h"
 #include "strtab.h"
 
+LIST_HEAD(client_list, client);
+
 struct client_list all_clients;
+
+
+/*
+ * Client
+ */
+
+typedef struct client {
+
+  LIST_ENTRY(client) c_global_link;
+  int c_fd;
+  int c_streamfd;
+  pthread_t c_ptid;
+  
+  LIST_HEAD(, th_subscription) c_subscriptions;
+
+  struct in_addr c_ipaddr;
+  int c_port;
+
+  struct ref_update_queue c_refq;
+
+  int c_pkt_maxsiz;
+
+  char c_input_buf[100];
+  int c_input_buf_ptr;
+
+  char *c_title;
+
+  void *c_dispatch_handle;
+
+  void *c_status_timer;
+
+} client_t;
+
 
 
 static void client_status_update(void *aux);

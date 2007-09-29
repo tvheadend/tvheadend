@@ -21,8 +21,6 @@
 
 void client_start(void);
 
-void client_unsubscribe(client_t *c);
-
 void clients_send_ref(int ref);
 
 void client_status_update(void);

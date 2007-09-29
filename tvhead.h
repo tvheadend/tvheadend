@@ -34,7 +34,6 @@ LIST_HEAD(th_subscription_list, th_subscription);
 TAILQ_HEAD(th_channel_queue, th_channel);
 LIST_HEAD(th_dvb_adapter_list, th_dvb_adapter);
 LIST_HEAD(th_v4l_adapter_list, th_v4l_adapter);
-LIST_HEAD(client_list, client);
 LIST_HEAD(event_list, event);
 TAILQ_HEAD(event_queue, event);
 LIST_HEAD(pvr_rec_list, pvr_rec);
@@ -422,38 +421,6 @@ typedef struct th_subscription {
   int ths_total_err; /* total errors during entire subscription */
 
 } th_subscription_t;
-
-
-/*
- * Client
- */
-
-typedef struct client {
-
-  LIST_ENTRY(client) c_global_link;
-  int c_fd;
-  int c_streamfd;
-  pthread_t c_ptid;
-  
-  LIST_HEAD(, th_subscription) c_subscriptions;
-
-  struct in_addr c_ipaddr;
-  int c_port;
-
-  struct ref_update_queue c_refq;
-
-  int c_pkt_maxsiz;
-
-  char c_input_buf[100];
-  int c_input_buf_ptr;
-
-  char *c_title;
-
-  void *c_dispatch_handle;
-
-  void *c_status_timer;
-
-} client_t;
 
 
 
