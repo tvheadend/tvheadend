@@ -25,10 +25,6 @@ void subscription_unsubscribe(th_subscription_t *s);
 
 void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 
-void subscription_lock(void);
-
-void subscription_unlock(void);
-
 typedef void (subscription_callback_t)(struct th_subscription *s,
 				       uint8_t *pkt, th_pid_t *pi,
 				       int64_t pcr);

@@ -48,28 +48,6 @@
 #include "iptv_input.h"
 #include "psi.h"
 
-/*
- * subscriptions_mutex protects all operations concerning subscription lists
- */
-
-static pthread_mutex_t subscription_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-/*
- *
- */
-void
-subscription_lock(void)
-{
-  pthread_mutex_lock(&subscription_mutex);
-}
-
-void
-subscription_unlock(void)
-{
-  pthread_mutex_unlock(&subscription_mutex);
-}
-
-
 struct th_subscription_list subscriptions;
 
 static void
@@ -99,10 +77,7 @@ static void
 auto_reschedule(void *aux)
 {
   stimer_add(auto_reschedule, NULL, 10);
-
-  pthread_mutex_lock(&subscription_mutex);
   subscription_reschedule();
-  pthread_mutex_unlock(&subscription_mutex);
 }
 
 
@@ -112,8 +87,6 @@ auto_reschedule(void *aux)
 void 
 subscription_unsubscribe(th_subscription_t *s)
 {
-  pthread_mutex_lock(&subscription_mutex);
-
   s->ths_callback(s, NULL, NULL, AV_NOPTS_VALUE);
 
   LIST_REMOVE(s, ths_global_link);
@@ -131,8 +104,6 @@ subscription_unsubscribe(th_subscription_t *s)
   free(s);
 
   subscription_reschedule();
-
-  pthread_mutex_unlock(&subscription_mutex);
 }
 
 
@@ -154,8 +125,6 @@ subscription_create(th_channel_t *ch, void *opaque,
 		    const char *name)
 {
   th_subscription_t *s;
-
-  pthread_mutex_lock(&subscription_mutex);
 
   s = malloc(sizeof(th_subscription_t));
   s->ths_pkt = NULL;
@@ -179,8 +148,6 @@ subscription_create(th_channel_t *ch, void *opaque,
 	   "to channel \"%s\"",
 	   s->ths_title, s->ths_channel->ch_name);
 
-  pthread_mutex_unlock(&subscription_mutex);
-
   return s;
 }
 
@@ -190,15 +157,11 @@ subscription_set_weight(th_subscription_t *s, unsigned int weight)
   if(s->ths_weight == weight)
     return;
 
-  pthread_mutex_lock(&subscription_mutex);
-
   LIST_REMOVE(s, ths_global_link);
   s->ths_weight = weight;
   LIST_INSERT_SORTED(&subscriptions, s, ths_global_link, subscription_sort);
 
   subscription_reschedule();
-
-  pthread_mutex_unlock(&subscription_mutex);
 }
 
 

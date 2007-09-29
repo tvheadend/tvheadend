@@ -935,8 +935,6 @@ dvb_fec_monitor(void *aux)
       v = 0;
     tdmi->tdmi_fec_err_per_sec = (tdmi->tdmi_fec_err_per_sec * 7 + v) / 8;
 
-    subscription_lock();
-
     if(tdmi->tdmi_fec_err_per_sec > DVB_FEC_ERROR_LIMIT) {
 
       if(LIST_FIRST(&tda->tda_transports) != NULL) {
@@ -952,7 +950,6 @@ dvb_fec_monitor(void *aux)
     LIST_REMOVE(tdmi, tdmi_mux_link);
     LIST_INSERT_SORTED(&tdm->tdm_instances, tdmi, tdmi_mux_link,
 		       mux_sort_quality);
-    subscription_unlock();
   }
 }
 
@@ -966,17 +963,10 @@ dvb_mux_scanner(void *aux)
 {
   th_dvb_adapter_t *tda = aux;
   th_dvb_mux_instance_t *tdmi;
-  unsigned int w;
 
   stimer_add(dvb_mux_scanner, tda, 10);
 
-  subscription_lock();
-
-  w = transport_compute_weight(&tda->tda_transports);
-
-  subscription_unlock();
-
-  if(w > 0)
+  if(transport_compute_weight(&tda->tda_transports) > 0)
     return; /* someone is here */
 
   tdmi = tda->tda_mux_current;

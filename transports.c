@@ -255,12 +255,10 @@ transport_recv_tsb(th_transport_t *t, int pid, uint8_t *tsb, int scanpcr,
     break;
 
   default:
-    subscription_lock();
     LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link) {
       s->ths_total_err += err;
       s->ths_callback(s, tsb, pi, pcr);
     }
-    subscription_unlock();
     break;
   }
 }
