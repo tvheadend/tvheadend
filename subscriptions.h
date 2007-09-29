@@ -1,5 +1,5 @@
 /*
- *  tvheadend, transport functions
+ *  tvheadend, subscription functions
  *  Copyright (C) 2007 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,30 +16,28 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TRANSPORTS_H
-#define TRANSPORTS_H
+#ifndef SUBSCRIPTIONS_H
+#define SUBSCRIPTIONS_H
 
 #include <ffmpeg/avcodec.h>
 
-unsigned int transport_compute_weight(struct th_transport_list *head);
+void subscription_unsubscribe(th_subscription_t *s);
 
-void transport_flush_subscribers(th_transport_t *t);
+void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 
-void transport_recv_tsb(th_transport_t *t, int pid, uint8_t *tsb, 
-			int scanpcr, int64_t pcr);
+void subscription_lock(void);
 
-void transport_monitor_init(th_transport_t *t);
+void subscription_unlock(void);
 
-th_pid_t *transport_add_pid(th_transport_t *t, uint16_t pid,
-			    tv_streamtype_t type);
+typedef void (subscription_callback_t)(struct th_subscription *s,
+				       uint8_t *pkt, th_pid_t *pi,
+				       int64_t pcr);
 
-int transport_set_channel(th_transport_t *th, th_channel_t *ch);
+th_subscription_t *subscription_create(th_channel_t *ch, void *opaque,
+				       subscription_callback_t *ths_callback,
+				       unsigned int weight,
+				       const char *name);
 
-void transport_link(th_transport_t *t, th_channel_t *ch);
+void subscriptions_init(void);
 
-th_transport_t *transport_find(th_channel_t *ch, unsigned int weight);
-
-void transport_purge(th_transport_t *t);
-
-
-#endif /* TRANSPORTS_H */
+#endif /* SUBSCRIPTIONS_H */

@@ -42,55 +42,14 @@
 #include "dvb_dvr.h"
 #include "teletext.h"
 #include "transports.h"
+#include "subscriptions.h"
 
 #include "v4l.h"
 #include "dvb_dvr.h"
 #include "iptv_input.h"
 #include "psi.h"
 
-/*
- * transport_mutex protects all operations concerning subscription lists
- */
-
-static pthread_mutex_t subscription_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-/*
- *
- */
 void
-subscription_lock(void)
-{
-  pthread_mutex_lock(&subscription_mutex);
-}
-
-void
-subscription_unlock(void)
-{
-  pthread_mutex_unlock(&subscription_mutex);
-}
-
-
-/*
- *
- */
-
-static void
-subscription_lock_check(const char *file, const int line)
-{
-  if(pthread_mutex_trylock(&subscription_mutex) == EBUSY)
-    return;
-
-  fprintf(stderr, "GLW lock not held at %s : %d, crashing\n",
-	  file, line);
-  abort();
-}
-
-#define subscription_lock_assert() subscription_lock_check(__FILE__, __LINE__)
-
-
-struct th_subscription_list subscriptions;
-
-static void
 transport_purge(th_transport_t *t)
 {
   if(LIST_FIRST(&t->tht_subscriptions))
@@ -149,7 +108,7 @@ transport_start(th_transport_t *t, unsigned int weight)
 
 
 
-static th_transport_t *
+th_transport_t *
 transport_find(th_channel_t *ch, unsigned int weight)
 {
   th_transport_t *t;
@@ -176,134 +135,6 @@ transport_find(th_channel_t *ch, unsigned int weight)
 
 
 
-static void
-subscription_reschedule(void)
-{
-  th_subscription_t *s;
-  th_transport_t *t;
-
-  LIST_FOREACH(s, &subscriptions, ths_global_link) {
-    if(s->ths_transport != NULL)
-      continue; /* Got a transport, we're happy */
-
-    t = transport_find(s->ths_channel, s->ths_weight);
-
-    if(t == NULL)
-      continue;
-
-    s->ths_transport = t;
-    LIST_INSERT_HEAD(&t->tht_subscriptions, s, ths_transport_link);
-  }
-}
-
-
-
-
-static void
-auto_reschedule(void *aux)
-{
-  stimer_add(auto_reschedule, NULL, 10);
-
-  pthread_mutex_lock(&subscription_mutex);
-  subscription_reschedule();
-  pthread_mutex_unlock(&subscription_mutex);
-}
-
-
-
-
-
-void 
-subscription_unsubscribe(th_subscription_t *s)
-{
-  pthread_mutex_lock(&subscription_mutex);
-
-  s->ths_callback(s, NULL, NULL, AV_NOPTS_VALUE);
-
-  LIST_REMOVE(s, ths_global_link);
-  LIST_REMOVE(s, ths_channel_link);
-
-  if(s->ths_transport != NULL) {
-    LIST_REMOVE(s, ths_transport_link);
-    transport_purge(s->ths_transport);
-  }
-
-  if(s->ths_pkt != NULL)
-    free(s->ths_pkt);
-
-  free(s->ths_title);
-  free(s);
-
-  subscription_reschedule();
-
-  pthread_mutex_unlock(&subscription_mutex);
-}
-
-
-
-
-
-static int
-subscription_sort(th_subscription_t *a, th_subscription_t *b)
-{
-  return b->ths_weight - a->ths_weight;
-}
-
-
-th_subscription_t *
-subscription_create(th_channel_t *ch, void *opaque,
-		    void (*callback)(struct th_subscription *s, 
-				     uint8_t *pkt, th_pid_t *pi, int64_t pcr),
-		    unsigned int weight,
-		    const char *name)
-{
-  th_subscription_t *s;
-
-  pthread_mutex_lock(&subscription_mutex);
-
-  s = malloc(sizeof(th_subscription_t));
-  s->ths_pkt = NULL;
-  s->ths_callback = callback;
-  s->ths_opaque = opaque;
-  s->ths_title = strdup(name);
-  s->ths_total_err = 0;
-  time(&s->ths_start);
-  s->ths_weight = weight;
-  LIST_INSERT_SORTED(&subscriptions, s, ths_global_link, subscription_sort);
-
-  s->ths_channel = ch;
-  LIST_INSERT_HEAD(&ch->ch_subscriptions, s, ths_channel_link);
-
-  s->ths_transport = NULL;
-
-  subscription_reschedule();
-
-  if(s->ths_transport == NULL)
-    syslog(LOG_NOTICE, "No transponder available for subscription \"%s\" "
-	   "to channel \"%s\"",
-	   s->ths_title, s->ths_channel->ch_name);
-
-  pthread_mutex_unlock(&subscription_mutex);
-
-  return s;
-}
-
-void
-subscription_set_weight(th_subscription_t *s, unsigned int weight)
-{
-  if(s->ths_weight == weight)
-    return;
-
-  pthread_mutex_lock(&subscription_mutex);
-
-  LIST_REMOVE(s, ths_global_link);
-  s->ths_weight = weight;
-  LIST_INSERT_SORTED(&subscriptions, s, ths_global_link, subscription_sort);
-
-  subscription_reschedule();
-
-  pthread_mutex_unlock(&subscription_mutex);
-}
 
 
 /*
@@ -315,8 +146,6 @@ transport_flush_subscribers(th_transport_t *t)
 {
   th_subscription_t *s;
   
-  subscription_lock_assert();
-
   while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL) {
     LIST_REMOVE(s, ths_transport_link);
     s->ths_transport = NULL;
@@ -330,8 +159,6 @@ transport_compute_weight(struct th_transport_list *head)
   th_transport_t *t;
   th_subscription_t *s;
   int w = 0;
-
-  subscription_lock_assert();
 
   LIST_FOREACH(t, head, tht_adapter_link) {
     LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link) {
@@ -428,12 +255,12 @@ transport_recv_tsb(th_transport_t *t, int pid, uint8_t *tsb, int scanpcr,
     break;
 
   default:
-    pthread_mutex_lock(&subscription_mutex);
+    subscription_lock();
     LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link) {
       s->ths_total_err += err;
       s->ths_callback(s, tsb, pi, pcr);
     }
-    pthread_mutex_unlock(&subscription_mutex);
+    subscription_unlock();
     break;
   }
 }
@@ -514,14 +341,6 @@ transport_monitor_init(th_transport_t *t)
 
   stimer_add(transport_monitor, t, 5);
 }
-
-
-void
-transport_scheduler_init(void)
-{
-  stimer_add(auto_reschedule, NULL, 60);
-}
-
 
 th_pid_t *
 transport_add_pid(th_transport_t *t, uint16_t pid, tv_streamtype_t type)

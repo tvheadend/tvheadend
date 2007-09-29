@@ -46,6 +46,7 @@
 #include "pvr.h"
 #include "dispatch.h"
 #include "transports.h"
+#include "subscriptions.h"
 #include "iptv_output.h"
 #include "rtsp.h"
 
@@ -177,7 +178,7 @@ main(int argc, char **argv)
   pvr_init();
   output_multicast_setup();
 
-  transport_scheduler_init();
+  subscriptions_init();
   
   rtsp_start();
 

@@ -30,7 +30,7 @@
 
 #include "tvhead.h"
 #include "channels.h"
-#include "transports.h"
+#include "subscriptions.h"
 #include "pvr.h"
 #include "epg.h"
 #include "teletext.h"

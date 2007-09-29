@@ -32,7 +32,7 @@
 #include "iptv_output.h"
 #include "dispatch.h"
 #include "channels.h"
-#include "transports.h"
+#include "subscriptions.h"
 
 typedef struct output_multicast {
   int fd;

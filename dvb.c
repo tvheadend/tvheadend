@@ -39,6 +39,7 @@
 #include "dvb.h"
 #include "channels.h"
 #include "transports.h"
+#include "subscriptions.h"
 #include "teletext.h"
 #include "epg.h"
 #include "psi.h"
