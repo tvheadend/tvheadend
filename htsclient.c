@@ -412,7 +412,7 @@ cr_channel_subscribe(client_t *c, char **argv, int argc)
   if((ch = channel_by_index(chindex)) == NULL)
     return 1;
 
-  s = channel_subscribe(ch, c, client_ip_streamer, weight, "client");
+  s = subscription_create(ch, c, client_ip_streamer, weight, "client");
   if(s == NULL)
     return 1;
 

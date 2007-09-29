@@ -251,11 +251,11 @@ subscription_sort(th_subscription_t *a, th_subscription_t *b)
 
 
 th_subscription_t *
-channel_subscribe(th_channel_t *ch, void *opaque,
-		  void (*callback)(struct th_subscription *s, 
-				   uint8_t *pkt, th_pid_t *pi, int64_t pcr),
-		  unsigned int weight,
-		  const char *name)
+subscription_create(th_channel_t *ch, void *opaque,
+		    void (*callback)(struct th_subscription *s, 
+				     uint8_t *pkt, th_pid_t *pi, int64_t pcr),
+		    unsigned int weight,
+		    const char *name)
 {
   th_subscription_t *s;
 

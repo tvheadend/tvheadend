@@ -44,14 +44,14 @@ void transport_link(th_transport_t *t, th_channel_t *ch);
 
 void transport_scheduler_init(void);
 
+typedef void (subscription_callback_t)(struct th_subscription *s,
+				       uint8_t *pkt, th_pid_t *pi,
+				       int64_t pcr);
 
-th_subscription_t *channel_subscribe(th_channel_t *ch, void *opaque,
-				     void (*ths_callback)
-				     (struct th_subscription *s, 
-				      uint8_t *pkt, th_pid_t *pi,
-				      int64_t pcr),
-				     unsigned int weight,
-				     const char *name);
+th_subscription_t *subscription_create(th_channel_t *ch, void *opaque,
+				       subscription_callback_t *ths_callback,
+				       unsigned int weight,
+				       const char *name);
 
 
 #endif /* TRANSPORTS_H */

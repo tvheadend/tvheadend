@@ -135,7 +135,7 @@ output_multicast_load(struct config_head *head)
   syslog(LOG_INFO, "Static multicast output: \"%s\" to %s, source %s ",
 	 ch->ch_name, title, inet_ntoa(sin.sin_addr));
 
-  channel_subscribe(ch, om, om_ip_streamer, 900, title);
+  subscription_create(ch, om, om_ip_streamer, 900, title);
 
   return;
 

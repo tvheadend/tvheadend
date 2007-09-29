@@ -209,8 +209,8 @@ rtsp_session_create(th_channel_t *ch, struct sockaddr_in *dst)
 
     rtp_streamer_init(&rs->rs_rtp_streamer, rs->rs_fd[0], dst);
 
-    rs->rs_s = channel_subscribe(ch, &rs->rs_rtp_streamer, 
-				 rtp_streamer, 600, "RTSP");
+    rs->rs_s = subscription_create(ch, &rs->rs_rtp_streamer, 
+				   rtp_streamer, 600, "RTSP");
     return rs;
   }
 

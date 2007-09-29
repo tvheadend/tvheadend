@@ -518,8 +518,8 @@ pvrr_fsm(pvr_rec_t *pvrr)
     pthread_cond_init(&pvrr->pvrr_dq_cond, NULL);
     pthread_mutex_init(&pvrr->pvrr_dq_mutex, NULL);
 
-    pvrr->pvrr_s = channel_subscribe(pvrr->pvrr_channel, pvrr,
-				     pvr_record_callback, 1000, "pvr");
+    pvrr->pvrr_s = subscription_create(pvrr->pvrr_channel, pvrr,
+				       pvr_record_callback, 1000, "pvr");
 
     pvrr->pvrr_status = HTSTV_PVR_STATUS_RECORDING;
     pvr_inform_status_change(pvrr);
