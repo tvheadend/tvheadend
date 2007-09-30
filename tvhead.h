@@ -30,6 +30,20 @@
 #include <libhts/avg.h>
 #include "refstr.h"
 
+/*
+ * Commercial status
+ */
+typedef enum {
+  COMMERCIAL_UNKNOWN,
+  COMMERCIAL_YES,
+  COMMERCIAL_NO,
+} th_commercial_advice_t;
+
+
+/*
+ * List / Queue header declarations
+ */
+
 LIST_HEAD(th_subscription_list, th_subscription);
 TAILQ_HEAD(th_channel_queue, th_channel);
 LIST_HEAD(th_dvb_adapter_list, th_dvb_adapter);
@@ -43,11 +57,21 @@ LIST_HEAD(th_dvb_mux_list, th_dvb_mux);
 LIST_HEAD(th_dvb_mux_instance_list, th_dvb_mux_instance);
 LIST_HEAD(th_pid_list, th_pid);
 
+
+
 extern time_t dispatch_clock;
 extern struct th_transport_list all_transports;
+extern struct th_channel_queue channels;
+extern struct pvr_rec_list pvrr_global_list;
+extern struct th_subscription_list subscriptions;
 
-uint32_t tag_get(void);
 
+struct th_transport;
+struct th_pid;
+
+/*
+ * Video4linux adapter
+ */
 typedef struct th_v4l_adapter {
 
   const char *tva_name;
@@ -89,9 +113,8 @@ typedef struct th_v4l_adapter {
 
 
 /*
- *
+ * Mux instance modes
  */
-
 typedef enum {
     TDMI_CONFIGURED,
     TDMI_INITIAL_SCAN,
@@ -99,6 +122,9 @@ typedef enum {
     TDMI_RUNNING,
 } tdmi_state_t;
 
+/*
+ * DVB Mux instance
+ */
 typedef struct th_dvb_mux_instance {
   LIST_ENTRY(th_dvb_mux_instance) tdmi_mux_link;
   LIST_ENTRY(th_dvb_mux_instance) tdmi_adapter_link;
@@ -128,7 +154,6 @@ typedef struct th_dvb_mux_instance {
 /*
  *
  */
-
 typedef struct th_dvb_table {
   LIST_ENTRY(th_dvb_table) tdt_link;
   void *tdt_handle;
@@ -141,9 +166,8 @@ typedef struct th_dvb_table {
 
 
 /*
- *
+ * DVB Mux (more or less the DVB frontend configuration on)
  */
-
 typedef struct th_dvb_mux {
   LIST_ENTRY(th_dvb_mux) tdm_global_link;
 
@@ -157,6 +181,9 @@ typedef struct th_dvb_mux {
 } th_dvb_mux_t;
 
 
+/*
+ * DVB Adapter (one of these per physical adapter)
+ */
 typedef struct th_dvb_adapter {
 
   LIST_ENTRY(th_dvb_adapter) tda_adapter_to_mux_link;
@@ -192,29 +219,17 @@ typedef struct th_dvb_adapter {
 
 
 
-/*
- *
- *
- */
-
-
-typedef struct th_iptv_adapter {
-  
-
-} th_iptv_adapter_t;
 
 /*
- *
- *
+ * Section callback, called when a PSI table is fully received
  */
-
-struct th_transport;
-struct th_pid;
-
 typedef void (pid_section_callback_t)(struct th_transport *t,
 				      struct th_pid *pi,
 				      uint8_t *section, int section_len);
 
+/*
+ * A PID in an MPEG transport stream is represented by this struct
+ */
 typedef struct th_pid {
   LIST_ENTRY(th_pid) tp_link;
   uint16_t tp_pid;
@@ -229,13 +244,11 @@ typedef struct th_pid {
   pid_section_callback_t *tp_got_section;
 } th_pid_t;
 
-typedef enum {
-  COMMERCIAL_UNKNOWN,
-  COMMERCIAL_YES,
-  COMMERCIAL_NO,
-} th_commercial_advice_t;
 
 
+/*
+ * A Transport (or in MPEG TS terms: a 'service')
+ */
 typedef struct th_transport {
   
   const char *tht_name;
@@ -330,10 +343,7 @@ typedef struct th_transport {
 
 /*
  *  Teletext
- *
  */
-
-
 typedef struct tt_page {
   int ttp_page;
   int ttp_subpage;
@@ -356,12 +366,10 @@ typedef struct tt_decoder {
 
 } tt_decoder_t;
 
+
 /*
  * Channel definition
  */ 
-
-extern struct th_channel_queue channels;
-
 typedef struct th_channel {
   
   TAILQ_ENTRY(th_channel) ch_global_link;
@@ -386,12 +394,10 @@ typedef struct th_channel {
 
 } th_channel_t;
 
+
 /*
  * Subscription
  */
-
-extern struct th_subscription_list subscriptions;
-
 typedef struct th_subscription {
   LIST_ENTRY(th_subscription) ths_global_link;
   int ths_weight;
@@ -427,7 +433,6 @@ typedef struct th_subscription {
 /*
  * EPG event
  */
-
 typedef struct event {
   TAILQ_ENTRY(event) e_link;
   LIST_ENTRY(event) e_hash_link;
@@ -455,10 +460,8 @@ typedef struct event {
 
 
 /*
- * PVR
+ * PVR packet data
  */
-
-
 typedef struct pvr_data {
   TAILQ_ENTRY(pvr_data) link;
   uint8_t *tsb;
@@ -466,6 +469,9 @@ typedef struct pvr_data {
 } pvr_data_t;
 
 
+/*
+ * PVR Internal recording status
+ */
 typedef enum {
   PVR_REC_STOP,
   PVR_REC_WAIT_SUBSCRIPTION,
@@ -477,6 +483,10 @@ typedef enum {
 
 } pvrr_rec_status_t;
 
+
+/*
+ * PVR recording session
+ */
 typedef struct pvr_rec {
 
   LIST_ENTRY(pvr_rec) pvrr_global_link;
@@ -518,12 +528,13 @@ typedef struct pvr_rec {
 
 } pvr_rec_t;
 
-extern struct pvr_rec_list pvrr_global_list;
+
+
 
 config_entry_t *find_mux_config(const char *muxtype, const char *muxname);
-
 char *utf8toprintable(const char *in);
 char *utf8tofilename(const char *in);
 const char *htstvstreamtype2txt(tv_streamtype_t s);
+uint32_t tag_get(void);
 
 #endif /* TV_HEAD_H */
