@@ -33,8 +33,6 @@
 #include <ffmpeg/avio.h>
 #include <ffmpeg/avformat.h>
 
-extern AVInputFormat mpegps_demuxer;
-
 #define __user
 #include <linux/videodev2.h>
 
