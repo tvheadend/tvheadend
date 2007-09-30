@@ -45,6 +45,7 @@ extern AVInputFormat mpegps_demuxer;
 #include "channels.h"
 #include "dispatch.h"
 #include "transports.h"
+#include "ts.h"
 
 static struct th_v4l_adapter_list v4l_adapters;
 
@@ -92,8 +93,8 @@ v4l_configure_transport(th_transport_t *t, const char *muxname,
   t->tht_v4l_frequency = 
     atoi(config_get_str_sub(&ce->ce_sub, "frequency", "0"));
 
-  transport_add_pid(t, 100, HTSTV_MPEG2VIDEO);
-  transport_add_pid(t, 101, HTSTV_MPEG2AUDIO);
+  ts_add_pid(t, 100, HTSTV_MPEG2VIDEO);
+  ts_add_pid(t, 101, HTSTV_MPEG2AUDIO);
 
   snprintf(buf, sizeof(buf), "Analog: %s (%.2f MHz)", muxname, 
 	   (float)t->tht_v4l_frequency / 1000000.0f);
@@ -554,7 +555,7 @@ v4l_ts_generate(th_v4l_adapter_t *tva, uint8_t *ptr, int len, int type,
 
 
     LIST_FOREACH(t, &tva->tva_transports, tht_adapter_link) {
-      transport_recv_tsb(t, p.tp_pid, tsb0, 0, pcr);
+      ts_recv_tsb(t, p.tp_pid, tsb0, 0, pcr);
       pcr = AV_NOPTS_VALUE;
     }
 

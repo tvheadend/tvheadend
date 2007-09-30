@@ -27,6 +27,7 @@
 #include "psi.h"
 #include "transports.h"
 #include "dvb_support.h"
+#include "ts.h"
 
 int
 psi_section_reassemble(psi_section_t *ps, uint8_t *data, int len, 
@@ -86,7 +87,7 @@ psi_parse_pat(th_transport_t *t, uint8_t *ptr, int len,
     pid     = (ptr[2] & 0x1f) << 8 | ptr[3];
 
     if(prognum != 0) {
-      pi = transport_add_pid(t, pid, HTSTV_TABLE);
+      pi = ts_add_pid(t, pid, HTSTV_TABLE);
       pi->tp_got_section = pmt_callback;
 
     }
@@ -193,7 +194,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
     }
 
     if(hts_stream_type != 0)
-      transport_add_pid(t, pid, hts_stream_type);
+      ts_add_pid(t, pid, hts_stream_type);
   } 
   return 0;
 }

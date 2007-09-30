@@ -1,5 +1,5 @@
 /*
- *  tvheadend, transport functions
+ *  tvheadend, MPEG transport stream functions
  *  Copyright (C) 2007 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,24 +16,12 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TRANSPORTS_H
-#define TRANSPORTS_H
+#ifndef TS_H
+#define TS_H
 
-#include <ffmpeg/avcodec.h>
+void ts_recv_tsb(th_transport_t *t, int pid, uint8_t *tsb, 
+			int scanpcr, int64_t pcr);
 
-unsigned int transport_compute_weight(struct th_transport_list *head);
+th_pid_t *ts_add_pid(th_transport_t *t, uint16_t pid, tv_streamtype_t type);
 
-void transport_flush_subscribers(th_transport_t *t);
-
-void transport_monitor_init(th_transport_t *t);
-
-int transport_set_channel(th_transport_t *th, th_channel_t *ch);
-
-void transport_link(th_transport_t *t, th_channel_t *ch);
-
-th_transport_t *transport_find(th_channel_t *ch, unsigned int weight);
-
-void transport_purge(th_transport_t *t);
-
-
-#endif /* TRANSPORTS_H */
+#endif /* TS_H */

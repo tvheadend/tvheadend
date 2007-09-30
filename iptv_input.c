@@ -40,6 +40,7 @@
 #include "transports.h"
 #include "dispatch.h"
 #include "psi.h"
+#include "ts.h"
 
 static struct th_transport_list iptv_probing_transports;
 static struct th_transport_list iptv_stale_transports;
@@ -61,7 +62,7 @@ iptv_fd_callback(int events, void *opaque, int fd)
 
   while(r >= 188) {
     pid = (tsb[1] & 0x1f) << 8 | tsb[2];
-    transport_recv_tsb(t, pid, tsb, 1, AV_NOPTS_VALUE);
+    ts_recv_tsb(t, pid, tsb, 1, AV_NOPTS_VALUE);
     r -= 188;
     tsb += 188;
   }
@@ -221,7 +222,7 @@ iptv_configure_transport(th_transport_t *t, const char *iptv_type,
 	   ifname, inet_ntoa(t->tht_iptv_group_addr), t->tht_iptv_port);
   t->tht_name = strdup(buf);
 
-  pi = transport_add_pid(t, 0, HTSTV_TABLE);
+  pi = ts_add_pid(t, 0, HTSTV_TABLE);
   pi->tp_got_section = iptv_parse_pat;
 
   t->tht_channel = channel_find(channel_name, 1);
