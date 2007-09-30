@@ -351,19 +351,14 @@ typedef struct tt_page {
   unsigned char ttp_pagebuf[23*40 + 1];
 } tt_page_t;
 
-
 typedef struct tt_mag {
   tt_page_t *pageptr;
 } tt_mag_t;
 
-
-
 typedef struct tt_decoder {
   tt_mag_t mags[8];
   tt_page_t *pages[900];
-
   int magazine_serial;
-
 } tt_decoder_t;
 
 
