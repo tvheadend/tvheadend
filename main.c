@@ -49,9 +49,11 @@
 #include "subscriptions.h"
 #include "iptv_output.h"
 #include "rtsp.h"
+#include "buffer.h"
 
 int running;
 int xmltvreload;
+int startupcounter;
 
 static pthread_mutex_t tag_mutex = PTHREAD_MUTEX_INITIALIZER;
 static uint32_t tag_tally;
@@ -165,10 +167,10 @@ main(int argc, char **argv)
   av_register_all();
   av_log_set_level(AV_LOG_INFO);
 
-  client_start();
-  dvb_init();
+  pkt_init();
 
-  v4l_add_adapters();
+  dvb_init();
+  v4l_init();
 
   channels_load();
   
@@ -176,17 +178,23 @@ main(int argc, char **argv)
   xmltv_init();
 
   pvr_init();
-  output_multicast_setup();
 
   subscriptions_init();
-  
-  rtsp_start();
 
   running = 1;
+  while(running) {
 
+    if(startupcounter == 0) {
+      startupcounter = -1;
+      syslog(LOG_NOTICE, 
+	     "Initial input setup completed, starting output modules");
 
-  while(running)
+      rtsp_start();
+      output_multicast_setup();
+      client_start();
+    }
     dispatcher();
+  }
 
   syslog(LOG_NOTICE, "Exiting HTS TV Headend");
 
@@ -281,3 +289,22 @@ utf8tofilename(const char *in)
   return convert_to(in, "LATIN1");
 }
 
+
+
+
+
+
+const char *
+htstvstreamtype2txt(tv_streamtype_t s)
+{
+  switch(s) {
+  case HTSTV_MPEG2VIDEO: return "mpeg2video";
+  case HTSTV_MPEG2AUDIO: return "mpeg2audio";
+  case HTSTV_H264:       return "h264";
+  case HTSTV_AC3:        return "AC-3";
+  case HTSTV_TELETEXT:   return "teletext";
+  case HTSTV_SUBTITLES:  return "subtitles";
+  case HTSTV_TABLE:      return "PSI table";
+  default:               return "<unknown>";
+  }
+}

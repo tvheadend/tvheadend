@@ -40,15 +40,21 @@
 #include "subscriptions.h"
 #include "htsclient.h"
 #include "pvr.h"
-#include "pvr_rec.h"
 #include "epg.h"
 #include "dispatch.h"
+#include "buffer.h"
 
 struct pvr_rec_list pvrr_global_list;
 
 static void pvr_database_load(void);
 static void pvr_unrecord(pvr_rec_t *pvrr);
 static void pvrr_fsm(pvr_rec_t *pvrr);
+static void pvrr_subscription_callback(struct th_subscription *s,
+				       subscription_event_t event,
+				       void *opaque);
+
+static void *pvr_recorder_thread(void *aux);
+static void pvrr_record_packet(pvr_rec_t *pvrr, th_pkt_t *pkt);
 
 /****************************************************************************
  *
@@ -131,9 +137,7 @@ pvr_inform_status_change(pvr_rec_t *pvrr)
 static void
 pvr_free(pvr_rec_t *pvrr)
 {
-  if(pvrr->pvrr_timer != NULL)
-    stimer_del(pvrr->pvrr_timer);
-
+  dtimer_disarm(&pvrr->pvrr_timer);
   LIST_REMOVE(pvrr, pvrr_global_link);
   free(pvrr->pvrr_title);
   free(pvrr->pvrr_desc);
@@ -431,48 +435,90 @@ pvr_database_load(void)
   fclose(fp);
 }
 
+/*
+ * Replace any slash chars in a string with dash
+ */
+static void
+deslashify(char *s)
+{
+  int i, len = strlen(s);
+  for(i = 0; i < len; i++) if(s[i]  == '/')
+    s[i] = '-';
+}
+
 
 /**
- * wait for thread to exit
+ * Filename generator
+ *
+ * - convert from utf8
+ * - avoid duplicate filenames
+ *
  */
-
-static void 
-pvr_wait_thread(pvr_rec_t *pvrr)
+static void
+pvr_generate_filename(pvr_rec_t *pvrr)
 {
-  pvr_data_t *pd;
-  
-  if(pvrr->pvrr_rec_status == PVR_REC_STOP)
-    return;
+  char fullname[1000];
+  char *x;
+  int tally = 0;
+  struct stat st;
+  char *name = pvrr->pvrr_title;
 
-  pvrr_set_rec_state(pvrr, PVR_REC_STOP);
-    
-  pd = malloc(sizeof(pvr_data_t));
-  pd->tsb = NULL;
-  pthread_mutex_lock(&pvrr->pvrr_dq_mutex);
-  TAILQ_INSERT_TAIL(&pvrr->pvrr_dq, pd, link);
-  pthread_cond_signal(&pvrr->pvrr_dq_cond);
-  pthread_mutex_unlock(&pvrr->pvrr_dq_mutex);
-  pthread_join(pvrr->pvrr_ptid, NULL);
+  char *chname;
+  char *filename;
+
+
+  if(pvrr->pvrr_filename != NULL) {
+    free(pvrr->pvrr_filename);
+    pvrr->pvrr_filename = NULL;
+  }
+
+  free(pvrr->pvrr_format);
+  pvrr->pvrr_format = strdup("matroska");
+
+  filename = utf8tofilename(name && name[0] ? name : "untitled");
+  deslashify(filename);
+
+  chname = utf8tofilename(pvrr->pvrr_channel->ch_name);
+  deslashify(chname);
+
+  snprintf(fullname, sizeof(fullname), "%s/%s-%s.%s",
+	   config_get_str("pvrdir", "."), chname, filename, pvrr->pvrr_format);
+
+  while(1) {
+    if(stat(fullname, &st) == -1) {
+      syslog(LOG_DEBUG, "pvr: File \"%s\" -- %s -- Using for recording",
+	     fullname, strerror(errno));
+      break;
+    }
+
+    syslog(LOG_DEBUG, "pvr: Overwrite protection, file \"%s\" exists", 
+	   fullname);
+
+    tally++;
+    snprintf(fullname, sizeof(fullname), "%s/%s-%s-%d.%s",
+	     config_get_str("pvrdir", "."), chname, filename, tally,
+	     pvrr->pvrr_format);
+
+  }
+
+  pvrr->pvrr_filename = strdup(fullname);
+
+  if(pvrr->pvrr_printname != NULL)
+    free(pvrr->pvrr_printname);
+
+  x = strrchr(pvrr->pvrr_filename, '/');
+  pvrr->pvrr_printname = strdup(x ? x + 1 :  pvrr->pvrr_filename);
+
+  free(filename);
+  free(chname);
 }
 
 
 
-
-/**
- * pvrr finite state machine
- */
-
-
-static void pvr_record_callback(struct th_subscription *s, uint8_t *pkt,
-				th_pid_t *pi, int64_t pcr);
-
-
 static void
-pvrr_fsm_timeout(void *aux)
+pvrr_fsm_timeout(void *aux, int64_t now)
 {
   pvr_rec_t *pvrr = aux;
-
-  pvrr->pvrr_timer = NULL;
   pvrr_fsm(pvrr);
 }
 
@@ -484,6 +530,8 @@ pvrr_fsm(pvr_rec_t *pvrr)
   time_t delta;
   time_t now;
 
+  dtimer_disarm(&pvrr->pvrr_timer);
+
   time(&now);
 
   switch(pvrr->pvrr_status) {
@@ -492,10 +540,9 @@ pvrr_fsm(pvr_rec_t *pvrr)
 
   case HTSTV_PVR_STATUS_SCHEDULED:
     delta = pvrr->pvrr_start - 30 - now;
-    assert(pvrr->pvrr_timer == NULL);
     
     if(delta > 0) {
-      pvrr->pvrr_timer = stimer_add(pvrr_fsm_timeout, pvrr, delta);
+      dtimer_arm(&pvrr->pvrr_timer, pvrr_fsm_timeout, pvrr, delta);
       break;
     }
 
@@ -512,34 +559,29 @@ pvrr_fsm(pvr_rec_t *pvrr)
 
     /* Add a timer that fires when recording ends */
 
-    pvrr->pvrr_timer = stimer_add(pvrr_fsm_timeout, pvrr, delta);
+    dtimer_arm(&pvrr->pvrr_timer, pvrr_fsm_timeout, pvrr, delta);
 
-    TAILQ_INIT(&pvrr->pvrr_dq);
-    pthread_cond_init(&pvrr->pvrr_dq_cond, NULL);
-    pthread_mutex_init(&pvrr->pvrr_dq_mutex, NULL);
-
-    pvrr->pvrr_s = subscription_create(pvrr->pvrr_channel, pvrr,
-				       pvr_record_callback, 1000, "pvr");
+    TAILQ_INIT(&pvrr->pvrr_pktq);
+    pthread_cond_init(&pvrr->pvrr_pktq_cond, NULL);
+    pthread_mutex_init(&pvrr->pvrr_pktq_mutex, NULL);
 
     pvrr->pvrr_status = HTSTV_PVR_STATUS_RECORDING;
     pvr_inform_status_change(pvrr);
     pvrr_set_rec_state(pvrr,PVR_REC_WAIT_SUBSCRIPTION); 
+
+    pvrr->pvrr_s = subscription_create(pvrr->pvrr_channel, 1000, "pvr",
+				       pvrr_subscription_callback,
+				       pvrr);
     break;
 
-  case HTSTV_PVR_STATUS_RECORDING:    
-    /* recording completed */
+  case HTSTV_PVR_STATUS_RECORDING:
+    /* recording completed (or aborted, or failed or somthing) */
     pvrr->pvrr_status = pvrr->pvrr_error;
     pvr_inform_status_change(pvrr);
     pvr_database_save();
 
     subscription_unsubscribe(pvrr->pvrr_s);
-
-    pvr_wait_thread(pvrr);
-
-    if(pvrr->pvrr_timer != NULL) {
-      stimer_del(pvrr->pvrr_timer);
-      pvrr->pvrr_timer = NULL;
-    }
+    dtimer_disarm(&pvrr->pvrr_timer);
     break;
   }
 }
@@ -547,37 +589,37 @@ pvrr_fsm(pvr_rec_t *pvrr)
 
 
 /*
- * PVR data input callback
+ * PVR new packet received
  */
-
-static void 
-pvr_record_callback(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi,
-		    int64_t pcr)
+static void
+pvrr_packet_input(th_muxer_t *tm, th_stream_t *st, th_pkt_t *pkt)
 {
-  pvr_data_t *pd;
-  pvr_rec_t *pvrr = s->ths_opaque;
-  
-  if(pkt == NULL)
+  pvr_rec_t *pvrr = tm->tm_opaque;
+
+  if(pvrr->pvrr_dts_offset == AV_NOPTS_VALUE)
+    pvrr->pvrr_dts_offset = pkt->pkt_dts;
+
+  pkt = pkt_copy(pkt);
+
+  pkt->pkt_dts -= pvrr->pvrr_dts_offset;
+  pkt->pkt_pts -= pvrr->pvrr_dts_offset;
+
+  if(pkt->pkt_dts < 0 || pkt->pkt_pts < 0) {
+    pkt_deref(pkt);
+    printf("trashing negative dts/pts\n");
     return;
-
-  pd = malloc(sizeof(pvr_data_t));
-  pd->tsb = malloc(188);
-  memcpy(pd->tsb, pkt, 188);
-  pd->pi = *pi;
-  pthread_mutex_lock(&pvrr->pvrr_dq_mutex);
-  TAILQ_INSERT_TAIL(&pvrr->pvrr_dq, pd, link);
-  pvrr->pvrr_dq_len++;
-  pthread_cond_signal(&pvrr->pvrr_dq_cond);
-  pthread_mutex_unlock(&pvrr->pvrr_dq_mutex);
-
-  if(pvrr->pvrr_rec_status == PVR_REC_WAIT_SUBSCRIPTION) {
-    /* ok, first packet, start recording thread */
-    pvrr_set_rec_state(pvrr, PVR_REC_WAIT_FOR_START);
-    pthread_create(&pvrr->pvrr_ptid, NULL, pvr_recorder_thread, pvrr);
   }
+
+  pthread_mutex_lock(&pvrr->pvrr_pktq_mutex);
+  TAILQ_INSERT_TAIL(&pvrr->pvrr_pktq, pkt, pkt_queue_link);
+  pvrr->pvrr_pktq_len++;
+  pthread_cond_signal(&pvrr->pvrr_pktq_cond);
+  pthread_mutex_unlock(&pvrr->pvrr_pktq_mutex);
 }
 
-
+/*
+ *  Internal recording state
+ */
 void
 pvrr_set_rec_state(pvr_rec_t *pvrr, pvrr_rec_status_t status)
 {
@@ -617,5 +659,459 @@ pvrr_set_rec_state(pvr_rec_t *pvrr, pvrr_rec_status_t status)
 	 pvrr->pvrr_printname, tp);
 
   pvrr->pvrr_rec_status = status;
+}
+
+/*
+ * We've got a transport now, start recording
+ */
+static void
+pvrr_transport_available(pvr_rec_t *pvrr, th_transport_t *t)
+{
+  th_muxer_t *tm = &pvrr->pvrr_muxer;
+  th_stream_t *st;
+  th_muxstream_t *tms;
+  AVFormatContext *fctx;
+  AVOutputFormat *fmt;
+  AVCodecContext *ctx;
+  AVCodec *codec;
+  enum CodecID codec_id;
+  enum CodecType codec_type;
+  const char *codec_name;
+  char urlname[500];
+  int err;
+
+  assert(pvrr->pvrr_rec_status == PVR_REC_WAIT_SUBSCRIPTION);
+
+  tm->tm_opaque = pvrr;
+  tm->tm_new_pkt = pvrr_packet_input;
+
+  pvr_generate_filename(pvrr);
+
+  /* Find lavf format */
+
+  fmt = guess_format(pvrr->pvrr_format, NULL, NULL);
+  if(fmt == NULL) {
+    syslog(LOG_ERR, 
+	   "pvr: \"%s\" - Unable to open file format \".%s\" for output",
+	   pvrr->pvrr_printname, pvrr->pvrr_format);
+    pvrr->pvrr_error = HTSTV_PVR_STATUS_FILE_ERROR;
+    pvrr_fsm(pvrr);
+    return;
+  }
+
+  /* Init format context */
+
+  fctx = tm->tm_avfctx = av_alloc_format_context();
+
+  av_strlcpy(fctx->title, pvrr->pvrr_title ?: "", 
+	     sizeof(fctx->title));
+
+  av_strlcpy(fctx->comment, pvrr->pvrr_desc ?: "", 
+	     sizeof(tm->tm_avfctx->comment));
+
+  av_strlcpy(fctx->copyright, pvrr->pvrr_channel->ch_name, 
+	     sizeof(fctx->copyright));
+
+  
+  fctx->oformat = fmt;
+
+  /* Open output file */
+
+  snprintf(urlname, sizeof(urlname), "file:%s", pvrr->pvrr_filename);
+
+  if((err = url_fopen(&fctx->pb, urlname, URL_WRONLY)) < 0) {
+    syslog(LOG_ERR, 
+	   "pvr: \"%s\" - Unable to create output file \"%s\" -- %s\n", 
+	   pvrr->pvrr_printname, pvrr->pvrr_filename, 
+	   strerror(AVUNERROR(err)));
+    av_free(fctx);
+    tm->tm_avfctx = NULL;
+    pvrr->pvrr_error = HTSTV_PVR_STATUS_FILE_ERROR;
+    pvrr_fsm(pvrr);
+    return;
+  }
+
+
+  av_set_parameters(tm->tm_avfctx, NULL);
+
+  LIST_FOREACH(st, &t->tht_streams, st_link) {
+    switch(st->st_type) {
+    default:
+      continue;
+    case HTSTV_MPEG2VIDEO:
+      codec_id   = CODEC_ID_MPEG2VIDEO;
+      codec_type = CODEC_TYPE_VIDEO;
+      codec_name = "mpeg2 video";
+      break;
+
+    case HTSTV_MPEG2AUDIO:
+      codec_id   = CODEC_ID_MP2;
+      codec_type = CODEC_TYPE_AUDIO;
+      codec_name = "mpeg2 audio";
+      break;
+
+    case HTSTV_AC3:
+      codec_id   = CODEC_ID_AC3;
+      codec_type = CODEC_TYPE_AUDIO;
+      codec_name = "AC3 audio";
+      break;
+
+    case HTSTV_H264:
+      codec_id   = CODEC_ID_H264;
+      codec_type = CODEC_TYPE_VIDEO;
+      codec_name = "h.264 video";
+      break;
+    }
+
+    codec = avcodec_find_decoder(codec_id);
+    if(codec == NULL) {
+      syslog(LOG_ERR, 
+	     "pvr: \"%s\" - Cannot find codec for %s, ignoring stream", 
+	     pvrr->pvrr_printname, codec_name);
+      continue;
+    }
+
+    ctx = avcodec_alloc_context();
+    ctx->codec_id   = codec_id;
+    ctx->codec_type = codec_type;
+
+    if(avcodec_open(ctx, codec) < 0) {
+      syslog(LOG_ERR,
+	     "pvr: \"%s\" - Cannot open codec for %s, ignoring stream", 
+	     pvrr->pvrr_printname, codec_name);
+      free(ctx);
+      continue;
+    }
+
+    tms = calloc(1, sizeof(th_muxstream_t));
+    tms->tms_stream   = st;
+    LIST_INSERT_HEAD(&tm->tm_media_streams, tms, tms_muxer_media_link);
+
+
+    tms->tms_avstream = av_mallocz(sizeof(AVStream));
+    tms->tms_avstream->codec = ctx;
+
+    tms->tms_index = fctx->nb_streams;
+    tm->tm_avfctx->streams[fctx->nb_streams] = tms->tms_avstream;
+    fctx->nb_streams++;
+  }
+
+  /* Fire up recorder thread */
+
+  pvrr_set_rec_state(pvrr, PVR_REC_WAIT_FOR_START);
+  pthread_create(&pvrr->pvrr_ptid, NULL, pvr_recorder_thread, pvrr);
+  LIST_INSERT_HEAD(&t->tht_muxers, tm, tm_transport_link);
+}
+
+
+/*
+ * We've lost our transport, stop recording
+ */
+
+static void
+pvrr_transport_unavailable(pvr_rec_t *pvrr, th_transport_t *t)
+{
+  th_muxer_t *tm = &pvrr->pvrr_muxer;
+  th_muxstream_t *tms;
+  th_pkt_t *pkt;
+  AVFormatContext *fctx = tm->tm_avfctx;
+  AVStream *avst;
+  int i;
+
+  LIST_REMOVE(tm, tm_transport_link);
+
+  pvrr->pvrr_dts_offset = AV_NOPTS_VALUE;
+
+  pvrr_set_rec_state(pvrr, PVR_REC_STOP);
+  pthread_cond_signal(&pvrr->pvrr_pktq_cond);
+  pthread_join(pvrr->pvrr_ptid, NULL);
+
+  if(fctx != NULL) {
+
+    /* Write trailer if we've written anything at all */
+    
+    if(pvrr->pvrr_header_written)
+      av_write_trailer(tm->tm_avfctx);
+
+    /* Close streams and format */
+
+    for(i = 0; i < fctx->nb_streams; i++) {
+      avst = fctx->streams[i];
+      avcodec_close(avst->codec);
+      free(avst->codec);
+      free(avst);
+    }
+    
+    url_fclose(&fctx->pb);
+    free(fctx);
+  }
+
+  /* Remove any pending packet for queue */
+
+  while((pkt = TAILQ_FIRST(&pvrr->pvrr_pktq)) != NULL)
+    pkt_deref(pkt);
+
+  /* Destroy muxstreams */
+
+  while((tms = LIST_FIRST(&tm->tm_media_streams)) != NULL) {
+    LIST_REMOVE(tms, tms_muxer_media_link);
+    free(tms);
+  }
+
+}
+
+
+
+/*
+ * We get a callback here when the subscription status is updated, 
+ * ie, when we are attached to a transport and when we are detached
+ */
+static void
+pvrr_subscription_callback(struct th_subscription *s,
+			   subscription_event_t event, void *opaque)
+{
+  th_transport_t *t = s->ths_transport;
+  pvr_rec_t *pvrr = opaque;
+
+  switch(event) {
+  case TRANSPORT_AVAILABLE:
+    pvrr_transport_available(pvrr, t);
+    break;
+
+  case TRANSPORT_UNAVAILABLE:
+    pvrr_transport_unavailable(pvrr, t);
+    break;
+  }
+}
+
+/*
+ * Recorder thread
+ */
+static void *
+pvr_recorder_thread(void *aux)
+{
+  th_pkt_t *pkt;
+  pvr_rec_t *pvrr = aux;
+  char *t, txt2[50];
+  int run = 1;
+  time_t now;
+
+  ctime_r(&pvrr->pvrr_stop, txt2);
+  t = strchr(txt2, '\n');
+  if(t != NULL)
+    *t = 0;
+
+  syslog(LOG_INFO, "pvr: \"%s\" - Recording started, ends at %s",
+	 pvrr->pvrr_printname, txt2);
+  
+
+  pthread_mutex_lock(&pvrr->pvrr_pktq_mutex);
+
+  while(run) {
+    switch(pvrr->pvrr_rec_status) {
+    case PVR_REC_WAIT_FOR_START:
+
+      time(&now);
+      if(now >= pvrr->pvrr_start)
+	pvrr->pvrr_rec_status = PVR_REC_WAIT_AUDIO_LOCK;
+      break;
+
+    case PVR_REC_WAIT_AUDIO_LOCK:
+    case PVR_REC_WAIT_VIDEO_LOCK:
+    case PVR_REC_RUNNING:
+    case PVR_REC_COMMERCIAL:
+      break;
+      
+    default:
+      run = 0;
+      continue;
+    }
+    
+    if(pvrr->pvrr_stop < now)
+      break;
+
+    if((pkt = TAILQ_FIRST(&pvrr->pvrr_pktq)) == NULL) {
+      pthread_cond_wait(&pvrr->pvrr_pktq_cond, &pvrr->pvrr_pktq_mutex);
+      continue;
+    }
+
+    TAILQ_REMOVE(&pvrr->pvrr_pktq, pkt, pkt_queue_link);
+    pvrr->pvrr_pktq_len--;
+    pthread_mutex_unlock(&pvrr->pvrr_pktq_mutex);
+
+    pvrr_record_packet(pvrr, pkt);
+    pkt_deref(pkt);
+
+    pthread_mutex_lock(&pvrr->pvrr_pktq_mutex);
+  }
+  pthread_mutex_unlock(&pvrr->pvrr_pktq_mutex);
+  
+  syslog(LOG_INFO, "pvr: \"%s\" - Recording completed", 
+	 pvrr->pvrr_printname);
+
+  return NULL;
+}
+
+
+
+/** 
+ * Check if all streams of the given type has been decoded
+ */
+static int
+is_all_decoded(th_muxer_t *tm, enum CodecType type)
+{
+  th_muxstream_t *tms;
+  AVStream *st;
+
+  LIST_FOREACH(tms, &tm->tm_media_streams, tms_muxer_media_link) {
+    st = tms->tms_avstream;
+    if(st->codec->codec->type == type && tms->tms_decoded == 0)
+      return 0;
+  }
+  return 1;
+}
+
+
+
+/** 
+ * Write a packet to output file
+ */
+static void
+pvrr_record_packet(pvr_rec_t *pvrr, th_pkt_t *pkt)
+{
+  th_muxer_t *tm = &pvrr->pvrr_muxer;
+  AVFormatContext *fctx = tm->tm_avfctx;
+  th_muxstream_t *tms;
+  AVStream *st, *stx;
+  AVCodecContext *ctx;
+  AVPacket avpkt;
+  void *abuf;
+  AVFrame pic;
+  int r, data_size, i;
+  void *buf;
+  char txt[100];
+  size_t bufsize;
+
+  LIST_FOREACH(tms, &tm->tm_media_streams, tms_muxer_media_link)
+    if(tms->tms_stream == pkt->pkt_stream)
+      break;
+
+  if(tms == NULL)
+    return;
+
+  st = tms->tms_avstream;
+  ctx = st->codec;
+
+  /* Make sure packet is in memory */
+
+  buf = pkt_payload(pkt);
+  bufsize = pkt_len(pkt);
+  
+  switch(pvrr->pvrr_rec_status) {
+  default:
+    break;
+
+  case PVR_REC_WAIT_AUDIO_LOCK:
+    if(ctx->codec_type != CODEC_TYPE_AUDIO || tms->tms_decoded)
+      break;
+
+    abuf = malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE);
+    r = avcodec_decode_audio(ctx, abuf, &data_size, buf, bufsize);
+    free(abuf);
+
+    if(r != 0 && data_size) {
+      syslog(LOG_DEBUG, "pvr: \"%s\" - "
+	     "Stream #%d: \"%s\" decoded a complete audio frame: "
+	     "%d channels in %d Hz\n",
+	     pvrr->pvrr_printname, tms->tms_index,
+	     st->codec->codec->name,
+	     st->codec->channels,
+	     st->codec->sample_rate);
+	
+      tms->tms_decoded = 1;
+    }
+
+    if(is_all_decoded(tm, CODEC_TYPE_AUDIO))
+      pvrr_set_rec_state(pvrr, PVR_REC_WAIT_VIDEO_LOCK);
+    break;
+    
+  case PVR_REC_WAIT_VIDEO_LOCK:
+    if(ctx->codec_type != CODEC_TYPE_VIDEO || tms->tms_decoded)
+      break;
+
+    r = avcodec_decode_video(st->codec, &pic, &data_size, buf, bufsize);
+    if(r != 0 && data_size) {
+      syslog(LOG_DEBUG, "pvr: \"%s\" - "
+	     "Stream #%d: \"%s\" decoded a complete video frame: "
+	     "%d x %d at %.2fHz\n",
+	     pvrr->pvrr_printname, tms->tms_index,
+	     ctx->codec->name,
+	     ctx->width, st->codec->height,
+	     (float)ctx->time_base.den / (float)ctx->time_base.num);
+      
+      tms->tms_decoded = 1;
+    }
+    
+    if(!is_all_decoded(tm, CODEC_TYPE_VIDEO))
+      break;
+
+    /* All Audio & Video decoded, start recording */
+
+    pvrr_set_rec_state(pvrr, PVR_REC_RUNNING);
+
+    if(!pvrr->pvrr_header_written) {
+      pvrr->pvrr_header_written = 1;
+
+      if(av_write_header(fctx))
+	break;
+      
+      syslog(LOG_DEBUG, 
+	     "pvr: \"%s\" - Header written to file, stream dump:", 
+	     pvrr->pvrr_printname);
+      
+      for(i = 0; i < fctx->nb_streams; i++) {
+	stx = fctx->streams[i];
+	
+	avcodec_string(txt, sizeof(txt), stx->codec, 1);
+	
+	syslog(LOG_DEBUG, "pvr: \"%s\" - Stream #%d: %s [%d/%d]",
+	       pvrr->pvrr_printname, i, txt, 
+	       stx->time_base.num, stx->time_base.den);
+	
+      }
+    }
+    /* FALLTHRU */
+      
+  case PVR_REC_RUNNING:
+     
+    if(pkt->pkt_commercial == COMMERCIAL_YES) {
+      pvrr_set_rec_state(pvrr, PVR_REC_COMMERCIAL);
+      break;
+    }
+
+    av_init_packet(&avpkt);
+    avpkt.stream_index = tms->tms_index;
+
+    avpkt.dts = av_rescale_q(pkt->pkt_dts, AV_TIME_BASE_Q, st->time_base);
+    avpkt.pts = av_rescale_q(pkt->pkt_pts, AV_TIME_BASE_Q, st->time_base);
+    avpkt.data = buf;
+    avpkt.size = bufsize;
+    avpkt.duration = pkt->pkt_duration;
+
+    r = av_interleaved_write_frame(fctx, &avpkt);
+    break;
+
+
+  case PVR_REC_COMMERCIAL:
+
+    if(pkt->pkt_commercial != COMMERCIAL_YES) {
+
+      LIST_FOREACH(tms, &tm->tm_media_streams, tms_muxer_media_link)
+	tms->tms_decoded = 0;
+      
+      pvrr_set_rec_state(pvrr, PVR_REC_WAIT_AUDIO_LOCK);
+    }
+    break;
+  }
 }
 

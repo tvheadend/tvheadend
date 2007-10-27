@@ -17,6 +17,7 @@
  */
 
 #include <pthread.h>
+#include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -31,13 +32,13 @@
 #include "tvhead.h"
 #include "channels.h"
 #include "subscriptions.h"
-#include "pvr.h"
 #include "epg.h"
 #include "teletext.h"
 #include "dispatch.h"
 #include "dvb.h"
 #include "strtab.h"
 #include "rtp.h"
+#include "tsmux.h"
 
 #include <ffmpeg/avformat.h>
 #include <ffmpeg/rtspcodes.h>
@@ -63,6 +64,8 @@ typedef struct rtsp_session {
   th_subscription_t *rs_s;
 
   th_rtp_streamer_t rs_rtp_streamer;
+
+  void *rs_muxer;
 
 } rtsp_session_t;
 
@@ -96,7 +99,9 @@ typedef struct rtsp_connection {
     RTSP_CMD_DESCRIBE,
     RTSP_CMD_OPTIONS,
     RTSP_CMD_SETUP,
+    RTSP_CMD_TEARDOWN,
     RTSP_CMD_PLAY,
+    RTSP_CMD_PAUSE,
 
   } rc_cmd;
 
@@ -106,6 +111,9 @@ typedef struct rtsp_connection {
   char rc_input_buf[RTSP_MAX_LINE_LEN];
   struct sockaddr_in rc_from;
 
+  char *rc_logname;  /* Printable name used when logging stuff related
+			to this connection */
+
 } rtsp_connection_t;
 
 
@@ -114,6 +122,8 @@ static struct strtab RTSP_cmdtab[] = {
   { "OPTIONS",    RTSP_CMD_OPTIONS },
   { "SETUP",      RTSP_CMD_SETUP },
   { "PLAY",       RTSP_CMD_PLAY },
+  { "TEARDOWN",   RTSP_CMD_TEARDOWN },
+  { "PAUSE",      RTSP_CMD_PAUSE },
 };
 
 /**
@@ -137,20 +147,37 @@ rtsp_channel_by_url(char *url)
     return NULL;
   c++; 
 
-  printf("URL RESOLVER: %s\n", c);
-  
-
   if(sscanf(c, "chid-%d", &chid) != 1)
     return NULL;
-  printf("\t\t\t == %d\n", chid);
-
   return channel_by_index(chid);
+}
+
+/*
+ * Called when a subscription gets/loses access to a transport
+ */
+static void
+rtsp_subscription_callback(struct th_subscription *s,
+			   subscription_event_t event, void *opaque)
+{
+  rtsp_session_t *rs = opaque;
+
+  switch(event) {
+  case TRANSPORT_AVAILABLE:
+    assert(rs->rs_muxer == NULL);
+    rs->rs_muxer = ts_muxer_init(s, rtp_output_ts, &rs->rs_rtp_streamer, 0);
+    break;
+
+  case TRANSPORT_UNAVAILABLE:
+    assert(rs->rs_muxer != NULL);
+    ts_muxer_deinit(rs->rs_muxer);
+    rs->rs_muxer = NULL;
+    break;
+  }
 }
 
 /**
  * Create an RTSP session
  */
-
 static rtsp_session_t *
 rtsp_session_create(th_channel_t *ch, struct sockaddr_in *dst)
 {
@@ -190,7 +217,6 @@ rtsp_session_create(th_channel_t *ch, struct sockaddr_in *dst)
     getsockname(rs->rs_fd[0], (struct sockaddr *)&sin, &slen);
 
     rs->rs_server_port[0] = ntohs(sin.sin_port);
-    printf("rtpserver: bound to port %d\n", rs->rs_server_port[0]);
     rs->rs_server_port[1] = rs->rs_server_port[0] + 1;
     
     sin.sin_port = htons(rs->rs_server_port[1]);
@@ -203,14 +229,14 @@ rtsp_session_create(th_channel_t *ch, struct sockaddr_in *dst)
       continue;
     }
     
-    printf("bound server_port %d-%d\n", 
-	   rs->rs_server_port[0], rs->rs_server_port[1]);
     LIST_INSERT_HEAD(&rtsp_sessions, rs, rs_global_link);
 
-    rtp_streamer_init(&rs->rs_rtp_streamer, rs->rs_fd[0], dst);
+    rs->rs_s = subscription_create(ch, 600, "RTSP",
+				   rtsp_subscription_callback, rs);
 
-    rs->rs_s = subscription_create(ch, &rs->rs_rtp_streamer, 
-				   rtp_streamer, 600, "RTSP");
+    /* Initialize RTP */
+    
+    rtp_streamer_init(&rs->rs_rtp_streamer, rs->rs_fd[0], dst);
     return rs;
   }
 
@@ -221,16 +247,16 @@ rtsp_session_create(th_channel_t *ch, struct sockaddr_in *dst)
 /**
  * Destroy an RTSP session
  */
-
 static void
 rtsp_session_destroy(rtsp_session_t *rs)
 {
-  subscription_unsubscribe(rs->rs_s);
+  subscription_unsubscribe(rs->rs_s); /* will call subscription_callback
+					 with TRANSPORT_UNAVAILABLE if
+					 we are hooked on a transport */
   close(rs->rs_fd[0]);
   close(rs->rs_fd[1]);
   LIST_REMOVE(rs, rs_global_link);
   LIST_REMOVE(rs, rs_con_link);
-  rtp_streamer_deinit(&rs->rs_rtp_streamer);
 
   free(rs);
 }
@@ -238,7 +264,6 @@ rtsp_session_destroy(rtsp_session_t *rs)
 /*
  *  Prints data on rtsp connection
  */
-
 static void
 rcprintf(rtsp_connection_t *rc, const char *fmt, ...)
 {
@@ -256,7 +281,6 @@ rcprintf(rtsp_connection_t *rc, const char *fmt, ...)
 /*
  * Delete all arguments associated with an RTSP connection
  */
-
 static void
 rtsp_con_flush_args(rtsp_connection_t *rc)
 {
@@ -273,7 +297,6 @@ rtsp_con_flush_args(rtsp_connection_t *rc)
 /**
  * Find an argument associated with an RTSP connection
  */
-
 static char *
 rtsp_con_get_arg(rtsp_connection_t *rc, char *name)
 {
@@ -288,11 +311,12 @@ rtsp_con_get_arg(rtsp_connection_t *rc, char *name)
 /**
  * Set an argument associated with an RTSP connection
  */
-
 static void
 rtsp_con_set_arg(rtsp_connection_t *rc, char *key, char *val)
 {
   rtsp_arg_t *ra;
+  char buf[100];
+
   LIST_FOREACH(ra, &rc->rc_args, link)
     if(!strcasecmp(ra->key, key))
       break;
@@ -305,13 +329,21 @@ rtsp_con_set_arg(rtsp_connection_t *rc, char *key, char *val)
     free(ra->val);
   }
   ra->val = strdup(val);
+  
+  if(!strcasecmp(key, "User-Agent")) {
+    free(rc->rc_logname);
+
+    snprintf(buf, sizeof(buf), "%s:%d [%s]",
+	     inet_ntoa(rc->rc_from.sin_addr), ntohs(rc->rc_from.sin_port),
+	     val);
+    rc->rc_logname = strdup(buf);
+  }
 }
 
 
 /*
- *
+ * Split a string in components delimited by 'delimiter'
  */
-
 static int
 tokenize(char *buf, char **vec, int vecsize, int delimiter)
 {
@@ -338,7 +370,6 @@ tokenize(char *buf, char **vec, int vecsize, int delimiter)
 /*
  * RTSP return code to string
  */
-
 static const char *
 rtsp_err2str(int err)
 {
@@ -361,52 +392,86 @@ rtsp_err2str(int err)
 }
 
 /*
- *
+ * Return an error
  */
-static int
+static void
 rtsp_reply_error(rtsp_connection_t *rc, int error)
 {
   char *c;
+  const char *errstr = rtsp_err2str(error);
 
-  syslog(LOG_NOTICE, "RTSP error %d %s", error, rtsp_err2str(error));
+  syslog(LOG_INFO, "rtsp: %s: %s", rc->rc_logname, errstr);
 
-  rcprintf(rc, "RTSP/1.0 %d %s\r\n", error, rtsp_err2str(error));
+  rcprintf(rc, "RTSP/1.0 %d %s\r\n", error, errstr);
   if((c = rtsp_con_get_arg(rc, "cseq")) != NULL)
     rcprintf(rc, "CSeq: %s\r\n", c);
   rcprintf(rc, "\r\n");
-  return ECONNRESET;
 }
 
+/*
+ * Find a session pointed do by the current connection
+ */
+static rtsp_session_t *
+rtsp_get_session(rtsp_connection_t *rc)
+{
+  char *ses;
+  int sesid;
+  rtsp_session_t *rs;
+  th_channel_t *ch;
+
+  if((ch = rtsp_channel_by_url(rc->rc_url)) == NULL) {
+    rtsp_reply_error(rc, RTSP_STATUS_SERVICE);
+    return NULL;
+  }
+
+
+  if((ses = rtsp_con_get_arg(rc, "session")) == NULL) {
+    rtsp_reply_error(rc, RTSP_STATUS_SESSION);
+    return NULL;
+  }
+
+  sesid = atoi(ses);
+  LIST_FOREACH(rs, &rtsp_sessions, rs_global_link)
+    if(rs->rs_id == sesid)
+      break;
+  
+  if(rs == NULL)
+    rtsp_reply_error(rc, RTSP_STATUS_SESSION);
+  
+  return rs;
+}
 
 
 /*
  * RTSP PLAY
  */
 
-static int
+static void
 rtsp_cmd_play(rtsp_connection_t *rc)
 {
-  char *ses, *c;
-  int sesid;
+  char *c;
+  int64_t start;
   rtsp_session_t *rs;
-  th_channel_t *ch;
-
-  if((ch = rtsp_channel_by_url(rc->rc_url)) == NULL)
-    return rtsp_reply_error(rc, RTSP_STATUS_SERVICE);
-
-  printf(">>> PLAY\n");
-
-  if((ses = rtsp_con_get_arg(rc, "session:")) == NULL) 
-    return rtsp_reply_error(rc, RTSP_STATUS_SESSION);
-
-  sesid = atoi(ses);
-  printf("\t\tsesid = %u\n", sesid);
-  LIST_FOREACH(rs, &rtsp_sessions, rs_global_link)
-    if(rs->rs_id == sesid)
-      break;
-  
+ 
+  rs = rtsp_get_session(rc);
   if(rs == NULL)
-    return rtsp_reply_error(rc, RTSP_STATUS_SESSION);
+    return;
+
+  if((c = rtsp_con_get_arg(rc, "range")) != NULL) {
+    start = AV_NOPTS_VALUE;
+  } else {
+    start = AV_NOPTS_VALUE;
+  }
+
+  if(rs->rs_muxer == NULL) {
+    rtsp_reply_error(rc, RTSP_STATUS_SERVICE);
+    return;
+  }
+
+  ts_muxer_play(rs->rs_muxer, start);
+
+  syslog(LOG_INFO, "rtsp: %s: Starting playback of %s",
+	 rc->rc_logname, rs->rs_s->ths_channel->ch_name);
 
   rcprintf(rc,
 	   "RTSP/1.0 200 OK\r\n"
@@ -417,15 +482,48 @@ rtsp_cmd_play(rtsp_connection_t *rc)
     rcprintf(rc, "CSeq: %s\r\n", c);
   
   rcprintf(rc, "\r\n");
+}
 
-  return 0;
+/*
+ * RTSP PAUSE
+ */
+
+static void
+rtsp_cmd_pause(rtsp_connection_t *rc)
+{
+  char *c;
+  rtsp_session_t *rs;
+  
+  rs = rtsp_get_session(rc);
+  if(rs == NULL)
+    return;
+
+  if(rs->rs_muxer == NULL) {
+    rtsp_reply_error(rc, RTSP_STATUS_SERVICE);
+    return;
+  }
+
+  ts_muxer_pause(rs->rs_muxer);
+
+  syslog(LOG_INFO, "rtsp: %s: Pausing playback of %s",
+	 rc->rc_logname, rs->rs_s->ths_channel->ch_name);
+
+  rcprintf(rc,
+	   "RTSP/1.0 200 OK\r\n"
+	   "Session: %u\r\n",
+	   rs->rs_id);
+
+  if((c = rtsp_con_get_arg(rc, "cseq")) != NULL)
+    rcprintf(rc, "CSeq: %s\r\n", c);
+  
+  rcprintf(rc, "\r\n");
 }
 
 /*
  * RTSP SETUP
  */
 
-static int
+static void
 rtsp_cmd_setup(rtsp_connection_t *rc)
 {
   char *transports[10];
@@ -439,15 +537,18 @@ rtsp_cmd_setup(rtsp_connection_t *rc)
   th_channel_t *ch;
   struct sockaddr_in dst;
 
-  if((ch = rtsp_channel_by_url(rc->rc_url)) == NULL)
-    return rtsp_reply_error(rc, RTSP_STATUS_SERVICE);
+  if((ch = rtsp_channel_by_url(rc->rc_url)) == NULL) {
+    rtsp_reply_error(rc, RTSP_STATUS_SERVICE);
+    return;
+  }
 
   client_ports[0] = 0;
   client_ports[1] = 0;
 
-  printf(">>> SETUP\n");
-  if((t = rtsp_con_get_arg(rc, "transport:")) == NULL) 
-    return rtsp_reply_error(rc, RTSP_STATUS_TRANSPORT);
+  if((t = rtsp_con_get_arg(rc, "transport")) == NULL) {
+    rtsp_reply_error(rc, RTSP_STATUS_TRANSPORT);
+    return;
+  }
 
   nt = tokenize(t, transports, 10, ',');
   
@@ -471,8 +572,6 @@ rtsp_cmd_setup(rtsp_connection_t *rc)
       if((navp = tokenize(params[j], avp, 2, '=')) == 0)
 	continue;
 
-      printf("%s = %s\n", avp[0], navp == 2 ? avp[1] : "");
-
       if(navp == 1 && !strcmp(avp[0], "unicast")) {
 	ismulticast = 0;
       } else if(navp == 2 && !strcmp(avp[0], "client_port")) {
@@ -481,27 +580,25 @@ rtsp_cmd_setup(rtsp_connection_t *rc)
 	if(nports > 1) client_ports[1] = atoi(ports[1]);
       }
     }
-    printf("\t%d %d %d\n",
-	   ismulticast, client_ports[0], client_ports[1]);
-
     if(!ismulticast && client_ports[0] && client_ports[1])
       break;
   }
 
-  if(i == nt) /* couldnt find a suitable transport */ {
-    printf(">>> SETUP; no transport\n");
-    return rtsp_reply_error(rc, RTSP_STATUS_TRANSPORT);
+  if(i == nt) {
+    /* couldnt find a suitable transport */
+    rtsp_reply_error(rc, RTSP_STATUS_TRANSPORT);
+    return;
   }
 
   dst = rc->rc_from;
   dst.sin_port = htons(client_ports[0]);
 
-  if((rs = rtsp_session_create(ch, &dst)) == NULL)
-    return rtsp_reply_error(rc, RTSP_STATUS_INTERNAL);
+  if((rs = rtsp_session_create(ch, &dst)) == NULL) {
+    rtsp_reply_error(rc, RTSP_STATUS_INTERNAL);
+    return;
+  }
 
   LIST_INSERT_HEAD(&rc->rc_sessions, rs, rs_con_link);
-
-  printf(">>> SETUP, rending reply\n");
 
   rcprintf(rc,
 	   "RTSP/1.0 200 OK\r\n"
@@ -518,7 +615,6 @@ rtsp_cmd_setup(rtsp_connection_t *rc)
     rcprintf(rc, "CSeq: %s\r\n", c);
   
   rcprintf(rc, "\r\n");
-  return 0;
 }
 
 
@@ -527,15 +623,17 @@ rtsp_cmd_setup(rtsp_connection_t *rc)
  * RTSP DESCRIBE
  */
 
-static int
+static void
 rtsp_cmd_describe(rtsp_connection_t *rc)
 {
   char sdpreply[1000];
   th_channel_t *ch;
   char *c;
 
-  if((ch = rtsp_channel_by_url(rc->rc_url)) == NULL)
-    return rtsp_reply_error(rc, RTSP_STATUS_SERVICE);
+  if((ch = rtsp_channel_by_url(rc->rc_url)) == NULL) {
+    rtsp_reply_error(rc, RTSP_STATUS_SERVICE);
+    return;
+  }
 
   snprintf(sdpreply, sizeof(sdpreply),
 	   "v=0\r\n"
@@ -545,7 +643,6 @@ rtsp_cmd_describe(rtsp_connection_t *rc)
 	   "m=video 0 RTP/AVP 33\r\n",
 	   ch->ch_name);
 
-  printf("sdpreply = %s\n", sdpreply);
 
   rcprintf(rc,
 	   "RTSP/1.0 200 OK\r\n"
@@ -557,21 +654,21 @@ rtsp_cmd_describe(rtsp_connection_t *rc)
     rcprintf(rc, "CSeq: %s\r\n", c);
   
   rcprintf(rc, "\r\n%s", sdpreply);
-  return 0;
 }
 
 
 /*
  * RTSP OPTIONS
  */
-
-static int
+static void
 rtsp_cmd_options(rtsp_connection_t *rc)
 {
   char *c;
 
-  if(strcmp(rc->rc_url, "*") && rtsp_channel_by_url(rc->rc_url) == NULL)
-    return rtsp_reply_error(rc, RTSP_STATUS_SERVICE);
+  if(strcmp(rc->rc_url, "*") && rtsp_channel_by_url(rc->rc_url) == NULL) {
+    rtsp_reply_error(rc, RTSP_STATUS_SERVICE);
+    return;
+  }
 
   rcprintf(rc,
 	   "RTSP/1.0 200 OK\r\n"
@@ -580,9 +677,33 @@ rtsp_cmd_options(rtsp_connection_t *rc)
   if((c = rtsp_con_get_arg(rc, "cseq")) != NULL)
     rcprintf(rc, "CSeq: %s\r\n", c);
   rcprintf(rc, "\r\n");
-  return 0;
 }
 
+/*
+ * RTSP TEARDOWN
+ */
+static void
+rtsp_cmd_teardown(rtsp_connection_t *rc)
+{
+  rtsp_session_t *rs;
+  char *c;
+
+  rs = rtsp_get_session(rc);
+  if(rs == NULL)
+    return;
+
+  rcprintf(rc,
+	   "RTSP/1.0 200 OK\r\n"
+	   "Session: %u\r\n",
+	   rs->rs_id);
+
+  if((c = rtsp_con_get_arg(rc, "cseq")) != NULL)
+    rcprintf(rc, "CSeq: %s\r\n", c);
+  
+  rcprintf(rc, "\r\n");
+
+  rtsp_session_destroy(rs);
+}
 
 /*
  * RTSP connection state machine & parser
@@ -591,7 +712,7 @@ static int
 rtsp_con_parse(rtsp_connection_t *rc, char *buf)
 {
   int n;
-  char *argv[3];
+  char *argv[3], *c;
 
   switch(rc->rc_state) {
   case RTSP_CON_WAIT_REQUEST:
@@ -601,7 +722,6 @@ rtsp_con_parse(rtsp_connection_t *rc, char *buf)
       rc->rc_url = NULL;
     }
 
-    printf(">>>> %s\n", buf);
     n = tokenize(buf, argv, 3, -1);
     
     if(n < 3)
@@ -619,18 +739,16 @@ rtsp_con_parse(rtsp_connection_t *rc, char *buf)
   case RTSP_CON_READ_HEADER:
     if(*buf == 0) {
       rc->rc_state = RTSP_CON_WAIT_REQUEST;
-      printf("cmd = %d\n", rc->rc_cmd);
       switch(rc->rc_cmd) {
       default:
-	return rtsp_reply_error(rc, RTSP_STATUS_METHOD);
-      case RTSP_CMD_DESCRIBE:
-	return rtsp_cmd_describe(rc);
-      case RTSP_CMD_SETUP:
-	return rtsp_cmd_setup(rc);
-      case RTSP_CMD_PLAY:
-	return rtsp_cmd_play(rc);
-      case RTSP_CMD_OPTIONS:
-	return rtsp_cmd_options(rc);
+	rtsp_reply_error(rc, RTSP_STATUS_METHOD);
+	break;
+      case RTSP_CMD_DESCRIBE:  	rtsp_cmd_describe(rc);  break;
+      case RTSP_CMD_SETUP: 	rtsp_cmd_setup(rc);     break;
+      case RTSP_CMD_PLAY:       rtsp_cmd_play(rc);      break;
+      case RTSP_CMD_PAUSE:      rtsp_cmd_pause(rc);     break;
+      case RTSP_CMD_OPTIONS:    rtsp_cmd_options(rc);   break;
+      case RTSP_CMD_TEARDOWN:   rtsp_cmd_teardown(rc);  break;
 
       }
       break;
@@ -640,8 +758,10 @@ rtsp_con_parse(rtsp_connection_t *rc, char *buf)
     if(n < 2)
       break;
 
-    printf("'%s' '%s'\n", argv[0], argv[1]);
-
+    c = strrchr(argv[0], ':');
+    if(c == NULL)
+      break;
+    *c = 0;
     rtsp_con_set_arg(rc, argv[0], argv[1]);
     break;
 
@@ -659,14 +779,16 @@ static void
 rtsp_con_teardown(rtsp_connection_t *rc, int err)
 {
   rtsp_session_t *rs;
-  syslog(LOG_INFO, "RTSP disconnected -- %s", strerror(err));
-
+  syslog(LOG_INFO, "rtsp: %s: disconnected -- %s",
+	 rc->rc_logname, strerror(err));
+	 
   while((rs = LIST_FIRST(&rc->rc_sessions)) != NULL)
     rtsp_session_destroy(rs);
 
   close(dispatch_delfd(rc->rc_dispatch_handle));
 
   free(rc->rc_url);
+  free(rc->rc_logname);
   rtsp_con_flush_args(rc);
   free(rc);
 }
@@ -791,7 +913,9 @@ rtsp_connect_callback(int events, void *opaque, int fd)
   snprintf(txt, sizeof(txt), "%s:%d",
 	   inet_ntoa(from.sin_addr), ntohs(from.sin_port));
 
-  syslog(LOG_INFO, "Got RTSP/TCP connection from %s", txt);
+  rc->rc_logname = strdup(txt);
+
+  syslog(LOG_INFO, "rtsp: %s: connected", rc->rc_logname);
 
   rc->rc_from = from;
 
@@ -821,11 +945,12 @@ rtsp_start(void)
 
   fcntl(s, F_SETFL, fcntl(s, F_GETFL) | O_NONBLOCK);
 
-  syslog(LOG_INFO, "Listening for RTSP/TCP connections on %s:%d",
+  syslog(LOG_INFO, "rtsp: Listening for RTSP/TCP connections on %s:%d",
 	 inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
 
   if(bind(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-    syslog(LOG_ERR, "Unable to bind socket for incomming RTSP/TCP connections"
+    syslog(LOG_ERR, 
+	   "rtsp: Unable to bind socket for incomming RTSP/TCP connections"
 	   "%s:%d -- %s",
 	   inet_ntoa(sin.sin_addr), ntohs(sin.sin_port),
 	   strerror(errno));

@@ -40,14 +40,14 @@
 #include "transports.h"
 #include "dispatch.h"
 #include "psi.h"
-#include "ts.h"
+#include "tsdemux.h"
 
 static struct th_transport_list iptv_probing_transports;
 static struct th_transport_list iptv_stale_transports;
-static void *iptv_probe_timer;
+static dtimer_t iptv_probe_timer;
 
 static void iptv_probe_transport(th_transport_t *t);
-static void iptv_probe_callback(void *aux);
+static void iptv_probe_callback(void *aux, int64_t now);
 static void iptv_probe_done(th_transport_t *t, int timeout);
 
 static void
@@ -62,7 +62,7 @@ iptv_fd_callback(int events, void *opaque, int fd)
 
   while(r >= 188) {
     pid = (tsb[1] & 0x1f) << 8 | tsb[2];
-    ts_recv_tsb(t, pid, tsb, 1, AV_NOPTS_VALUE);
+    ts_recv_packet(t, pid, tsb);
     r -= 188;
     tsb += 188;
   }
@@ -136,7 +136,7 @@ iptv_stop_feed(th_transport_t *t)
  */
 
 static void
-iptv_parse_pmt(struct th_transport *t, struct th_pid *pi,
+iptv_parse_pmt(struct th_transport *t, th_stream_t *st,
 	       uint8_t *table, int table_len)
 {
   if(table[0] != 2 || t->tht_status != TRANSPORT_PROBING)
@@ -153,7 +153,7 @@ iptv_parse_pmt(struct th_transport *t, struct th_pid *pi,
  */
 
 static void
-iptv_parse_pat(struct th_transport *t, struct th_pid *pi,
+iptv_parse_pat(struct th_transport *t, th_stream_t *st,
 	       uint8_t *table, int table_len)
 {
   if(table[0] != 0 || t->tht_status != TRANSPORT_PROBING)
@@ -175,7 +175,7 @@ iptv_configure_transport(th_transport_t *t, const char *iptv_type,
   char buf[100];
   char ifname[100];
   struct ifreq ifr;
-  th_pid_t *pi;
+  th_stream_t *st;
   
   if(!strcasecmp(iptv_type, "rawudp"))
     t->tht_iptv_mode = IPTV_MODE_RAWUDP;
@@ -222,15 +222,16 @@ iptv_configure_transport(th_transport_t *t, const char *iptv_type,
 	   ifname, inet_ntoa(t->tht_iptv_group_addr), t->tht_iptv_port);
   t->tht_name = strdup(buf);
 
-  pi = ts_add_pid(t, 0, HTSTV_TABLE);
-  pi->tp_got_section = iptv_parse_pat;
+  st = transport_add_stream(t, 0, HTSTV_TABLE);
+  st->st_got_section = iptv_parse_pat;
 
   t->tht_channel = channel_find(channel_name, 1);
   LIST_INSERT_HEAD(&iptv_probing_transports, t, tht_adapter_link);
+  startupcounter++;
 
-  if(iptv_probe_timer == NULL) {
+  if(!dtimer_isarmed(&iptv_probe_timer)) {
     iptv_probe_transport(t);
-    iptv_probe_timer = stimer_add(iptv_probe_callback, t, 5);
+    dtimer_arm(&iptv_probe_timer, iptv_probe_callback, t, 5);
   }
 
   return 0;
@@ -248,12 +249,13 @@ static void
 iptv_probe_done(th_transport_t *t, int timeout)
 {
   int pidcnt = 0;
-  th_pid_t *tp;
+  th_stream_t *st;
 
-  if(!timeout)
-    stimer_del(iptv_probe_timer);
+  startupcounter--;
 
-  LIST_FOREACH(tp, &t->tht_pids, tp_link)
+  dtimer_disarm(&iptv_probe_timer);
+
+  LIST_FOREACH(st, &t->tht_streams, st_link)
     pidcnt++;
   
   LIST_REMOVE(t, tht_adapter_link);
@@ -269,19 +271,17 @@ iptv_probe_done(th_transport_t *t, int timeout)
     LIST_INSERT_HEAD(&iptv_stale_transports, t, tht_adapter_link);
 
   t = LIST_FIRST(&iptv_probing_transports);
-  if(t == NULL) {
-    iptv_probe_timer = NULL;
+  if(t == NULL)
     return;
-  }
 
   iptv_probe_transport(t);
-  iptv_probe_timer = stimer_add(iptv_probe_callback, t, 5);
+  dtimer_arm(&iptv_probe_timer, iptv_probe_callback, t, 5);
 }
 
 
 
 static void
-iptv_probe_callback(void *aux)
+iptv_probe_callback(void *aux, int64_t now)
 {
   th_transport_t *t = aux;
   iptv_probe_done(t, 1);

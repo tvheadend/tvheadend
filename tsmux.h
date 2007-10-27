@@ -1,5 +1,5 @@
 /*
- *  Multicasted IPTV Input
+ *  tvheadend, MPEG transport stream muxer
  *  Copyright (C) 2007 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,29 +16,16 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PSI_H_
-#define PSI_H_
+#ifndef TSMUX_H
+#define TSMUX_H
 
-#define PSI_SECTION_SIZE 4096
+th_muxer_t *ts_muxer_init(th_subscription_t *s, th_mux_output_t *cb,
+			  void *opaque, int flags);
 
-typedef struct psi_section {
-  int ps_offset;
-  uint8_t ps_data[PSI_SECTION_SIZE];
-} psi_section_t;
+void ts_muxer_deinit(th_muxer_t *tm);
 
+void ts_muxer_play(th_muxer_t *tm, int64_t toffset);
 
-int psi_section_reassemble(psi_section_t *ps, uint8_t *data, int len,
-			   int pusi, int chkcrc);
+void ts_muxer_pause(th_muxer_t *tm);
 
-int psi_parse_pat(th_transport_t *t, uint8_t *ptr, int len,
-		  pid_section_callback_t *pmt_callback);
-
-int psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid);
-
-uint32_t psi_crc32(uint8_t *data, size_t datalen);
-
-int psi_build_pat(th_transport_t *t, uint8_t *buf, int maxlen);
-
-int psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen);
-
-#endif /* PSI_H_ */
+#endif /* TSMUX_H */

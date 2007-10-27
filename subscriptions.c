@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <pthread.h>
 
 #include <sys/types.h>
@@ -42,6 +43,7 @@
 #include "dvb_dvr.h"
 #include "teletext.h"
 #include "transports.h"
+#include "subscriptions.h"
 
 #include "v4l.h"
 #include "dvb_dvr.h"
@@ -49,6 +51,8 @@
 #include "psi.h"
 
 struct th_subscription_list subscriptions;
+static dtimer_t auto_reschedule_timer;
+
 
 static void
 subscription_reschedule(void)
@@ -67,38 +71,39 @@ subscription_reschedule(void)
 
     s->ths_transport = t;
     LIST_INSERT_HEAD(&t->tht_subscriptions, s, ths_transport_link);
+    s->ths_callback(s, TRANSPORT_AVAILABLE, s->ths_opaque);
   }
 }
 
 
-
-
 static void
-auto_reschedule(void *aux)
+auto_reschedule(void *aux, int64_t now)
 {
-  stimer_add(auto_reschedule, NULL, 10);
+  dtimer_arm(&auto_reschedule_timer, auto_reschedule, NULL, 10);
   subscription_reschedule();
 }
 
-
+void
+subscription_stop(th_subscription_t *s)
+{
+  s->ths_callback(s, TRANSPORT_UNAVAILABLE, s->ths_opaque);
+  LIST_REMOVE(s, ths_transport_link);
+  s->ths_transport = NULL;
+}
 
 
 
 void 
 subscription_unsubscribe(th_subscription_t *s)
 {
-  s->ths_callback(s, NULL, NULL, AV_NOPTS_VALUE);
-
+  th_transport_t *t = s->ths_transport;
   LIST_REMOVE(s, ths_global_link);
   LIST_REMOVE(s, ths_channel_link);
 
-  if(s->ths_transport != NULL) {
-    LIST_REMOVE(s, ths_transport_link);
-    transport_purge(s->ths_transport);
+  if(t != NULL) {
+    subscription_stop(s);
+    transport_purge(t);
   }
-
-  if(s->ths_pkt != NULL)
-    free(s->ths_pkt);
 
   free(s->ths_title);
   free(s);
@@ -118,22 +123,19 @@ subscription_sort(th_subscription_t *a, th_subscription_t *b)
 
 
 th_subscription_t *
-subscription_create(th_channel_t *ch, void *opaque,
-		    void (*callback)(struct th_subscription *s, 
-				     uint8_t *pkt, th_pid_t *pi, int64_t pcr),
-		    unsigned int weight,
-		    const char *name)
+subscription_create(th_channel_t *ch, unsigned int weight, const char *name,
+		    subscription_callback_t *cb, void *opaque)
 {
   th_subscription_t *s;
 
   s = malloc(sizeof(th_subscription_t));
-  s->ths_pkt = NULL;
-  s->ths_callback = callback;
-  s->ths_opaque = opaque;
-  s->ths_title = strdup(name);
+  s->ths_callback  = cb;
+  s->ths_opaque    = opaque;
+  s->ths_title     = strdup(name);
   s->ths_total_err = 0;
+  s->ths_weight    = weight;
+
   time(&s->ths_start);
-  s->ths_weight = weight;
   LIST_INSERT_SORTED(&subscriptions, s, ths_global_link, subscription_sort);
 
   s->ths_channel = ch;
@@ -168,5 +170,6 @@ subscription_set_weight(th_subscription_t *s, unsigned int weight)
 void
 subscriptions_init(void)
 {
-  stimer_add(auto_reschedule, NULL, 60);
+  dtimer_arm(&auto_reschedule_timer, auto_reschedule, NULL, 10);
 }
+

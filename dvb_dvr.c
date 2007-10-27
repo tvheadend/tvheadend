@@ -41,8 +41,7 @@
 #include "channels.h"
 #include "transports.h"
 #include "dvb_support.h"
-#include "ts.h"
-
+#include "tsdemux.h"
 
 static void dvr_fd_callback(int events, void *opaque, int fd);
 
@@ -75,7 +74,7 @@ dvb_dvr_process_packets(th_dvb_adapter_t *tda, uint8_t *tsb, int r)
   while(r >= 188) {
     pid = (tsb[1] & 0x1f) << 8 | tsb[2];
     LIST_FOREACH(t, &tda->tda_transports, tht_adapter_link)
-      ts_recv_tsb(t, pid, tsb, 1, AV_NOPTS_VALUE);
+      ts_recv_packet(t, pid, tsb);
     r -= 188;
     tsb += 188;
   }
@@ -121,13 +120,13 @@ dvb_adapter_clean(th_dvb_adapter_t *tda)
 void
 dvb_stop_feed(th_transport_t *t)
 {
-  th_pid_t *tp;
+  th_stream_t *st;
 
   t->tht_dvb_adapter = NULL;
   LIST_REMOVE(t, tht_adapter_link);
-  LIST_FOREACH(tp, &t->tht_pids, tp_link) {
-    close(tp->tp_demuxer_fd);
-    tp->tp_demuxer_fd = -1;
+  LIST_FOREACH(st, &t->tht_streams, st_link) {
+    close(st->st_demuxer_fd);
+    st->st_demuxer_fd = -1;
   }
   t->tht_status = TRANSPORT_IDLE;
   transport_flush_subscribers(t);
@@ -142,7 +141,7 @@ dvb_start_feed(th_transport_t *t, unsigned int weight)
 {
   th_dvb_adapter_t *tda;
   struct dmx_pes_filter_params dmx_param;
-  th_pid_t *tp;
+  th_stream_t *st;
   int w, fd, pid;
 
   th_dvb_mux_instance_t *tdmi, *cand = NULL;
@@ -174,15 +173,15 @@ dvb_start_feed(th_transport_t *t, unsigned int weight)
  gotmux:
   tda = tdmi->tdmi_adapter;
 
-  LIST_FOREACH(tp, &t->tht_pids, tp_link) {
+  LIST_FOREACH(st, &t->tht_streams, st_link) {
     
     fd = open(tda->tda_demux_path, O_RDWR);
     
-    pid = tp->tp_pid;
-    tp->tp_cc_valid = 0;
+    pid = st->st_pid;
+    st->st_cc_valid = 0;
 
     if(fd == -1) {
-      tp->tp_demuxer_fd = -1;
+      st->st_demuxer_fd = -1;
       syslog(LOG_ERR,
 	     "\"%s\" unable to open demuxer \"%s\" for pid %d -- %s",
 	     t->tht_name, tda->tda_demux_path, pid, strerror(errno));
@@ -204,7 +203,7 @@ dvb_start_feed(th_transport_t *t, unsigned int weight)
       fd = -1;
     }
 
-    tp->tp_demuxer_fd = fd;
+    st->st_demuxer_fd = fd;
   }
 
   LIST_INSERT_HEAD(&tda->tda_transports, t, tht_adapter_link);

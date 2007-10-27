@@ -25,15 +25,13 @@ void subscription_unsubscribe(th_subscription_t *s);
 
 void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 
-typedef void (subscription_callback_t)(struct th_subscription *s,
-				       uint8_t *pkt, th_pid_t *pi,
-				       int64_t pcr);
-
-th_subscription_t *subscription_create(th_channel_t *ch, void *opaque,
-				       subscription_callback_t *ths_callback,
-				       unsigned int weight,
-				       const char *name);
+th_subscription_t *subscription_create(th_channel_t *ch, unsigned int weight,
+				       const char *name, 
+				       subscription_callback_t *cb,
+				       void *opaque);
 
 void subscriptions_init(void);
+
+void subscription_stop(th_subscription_t *s);
 
 #endif /* SUBSCRIPTIONS_H */

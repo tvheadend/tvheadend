@@ -20,6 +20,7 @@
 #define DISPATCH_H
 
 #include <sys/time.h>
+#include "tvhead.h"
 
 extern time_t dispatch_clock;
 
@@ -48,8 +49,20 @@ void dispatch_set(void *handle, int flags);
 void dispatch_clr(void *handle, int flags);
 void dispatcher(void);
 
-void *stimer_add(void (*callback)(void *aux), void *aux, int delta);
-void *stimer_add_hires(void (*callback)(void *aux), void *aux, int64_t t);
-void stimer_del(void *handle);
+void dtimer_arm(dtimer_t *ti, dti_callback_t *callback, void *aux, int delta);
+void dtimer_arm_hires(dtimer_t *ti, dti_callback_t *callback,
+		      void *aux, int64_t t);
+
+
+extern inline void
+dtimer_disarm(dtimer_t *ti)
+{
+  if(ti->dti_callback) {
+    LIST_REMOVE(ti, dti_link);
+    ti->dti_callback = NULL;
+  }
+}
+
+#define dtimer_isarmed(ti) ((ti)->dti_callback ? 1 : 0)
 
 #endif /* DISPATCH_H */

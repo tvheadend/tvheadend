@@ -17,6 +17,7 @@
  */
 
 #include <pthread.h>
+#include <assert.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -43,15 +44,26 @@
 #include "teletext.h"
 #include "transports.h"
 #include "subscriptions.h"
+#include "tsdemux.h"
 
 #include "v4l.h"
 #include "dvb_dvr.h"
 #include "iptv_input.h"
 #include "psi.h"
+#include "pes.h"
+#include "buffer.h"
+
+static dtimer_t transport_monitor_timer;
+
+
 
 void
 transport_purge(th_transport_t *t)
 {
+  th_stream_t *st;
+  th_pkt_t *pkt, *next;
+
+
   if(LIST_FIRST(&t->tht_subscriptions))
     return;
 
@@ -76,15 +88,107 @@ transport_purge(th_transport_t *t)
   }
 
   t->tht_tt_commercial_advice = COMMERCIAL_UNKNOWN;
+ 
+
+  /*
+   * Clean up each stream
+   */
+
+  LIST_FOREACH(st, &t->tht_streams, st_link) {
+
+    if(st->st_parser != NULL)
+      av_parser_close(st->st_parser);
+    
+    if(st->st_ctx != NULL)
+      avcodec_close(st->st_ctx);
+
+    /* Clear reassembly buffer */
+
+    free(st->st_buffer);
+    st->st_buffer = NULL;
+    st->st_buffer_size = 0;
+    st->st_buffer_ptr = 0;
+
+
+    /* Clear DTS queue */
+
+    while((pkt = TAILQ_FIRST(&st->st_dtsq)) != NULL) {
+      TAILQ_REMOVE(&st->st_dtsq, pkt, pkt_queue_link);
+      assert(pkt->pkt_refcount == 1);
+      pkt_deref(pkt);
+    }
+    st->st_dtsq_len = 0;
+
+    /* Clear PTS queue */
+
+    while((pkt = TAILQ_FIRST(&st->st_ptsq)) != NULL) {
+      TAILQ_REMOVE(&st->st_ptsq, pkt, pkt_queue_link);
+      assert(pkt->pkt_refcount == 1);
+      pkt_deref(pkt);
+    }
+    st->st_ptsq_len = 0;
+
+    /* Clear durationq */
+
+    while((pkt = TAILQ_FIRST(&st->st_durationq)) != NULL) {
+      TAILQ_REMOVE(&st->st_durationq, pkt, pkt_queue_link);
+      assert(pkt->pkt_refcount == 1);
+      pkt_deref(pkt);
+    }
+
+    /* Flush framestore */
+
+    for(pkt = TAILQ_FIRST(&st->st_pktq); pkt != NULL; pkt = next) {
+      next = TAILQ_NEXT(pkt, pkt_queue_link);
+      pkt_unstore(pkt);
+    }
+    assert(TAILQ_FIRST(&st->st_pktq) == NULL);
+  }
 }
 
 
-
-
+/*
+ *
+ */
 static int
 transport_start(th_transport_t *t, unsigned int weight)
 {
+  th_stream_t *st;
+  AVCodec *c;
+  enum CodecID id;
+
   t->tht_monitor_suspend = 10;
+  t->tht_dts_start = AV_NOPTS_VALUE;
+
+  LIST_FOREACH(st, &t->tht_streams, st_link) {
+  
+    st->st_dts      = AV_NOPTS_VALUE;
+    st->st_last_dts = 0;
+    st->st_dts_u    = 0; 
+ 
+    /* Open ffmpeg context and parser */
+
+    switch(st->st_type) {
+    case HTSTV_MPEG2VIDEO: id = CODEC_ID_MPEG2VIDEO; break;
+    case HTSTV_MPEG2AUDIO: id = CODEC_ID_MP3;        break;
+    case HTSTV_H264:       id = CODEC_ID_H264;       break;
+    case HTSTV_AC3:        id = CODEC_ID_AC3;        break;
+    default:               id = CODEC_ID_NONE;       break;
+    }
+    
+    st->st_ctx = NULL;
+    st->st_parser = NULL;
+
+    if(id != CODEC_ID_NONE) {
+      c = avcodec_find_decoder(id);
+      if(c != NULL) {
+	st->st_ctx = avcodec_alloc_context();
+	avcodec_open(st->st_ctx, c);
+	st->st_parser = av_parser_init(id);
+      }
+    }
+  }
+  
 
   switch(t->tht_type) {
 #ifdef ENABLE_INPUT_DVB
@@ -146,11 +250,8 @@ transport_flush_subscribers(th_transport_t *t)
 {
   th_subscription_t *s;
   
-  while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL) {
-    LIST_REMOVE(s, ths_transport_link);
-    s->ths_transport = NULL;
-    s->ths_callback(s, NULL, NULL, AV_NOPTS_VALUE);
-  }
+  while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL)
+    subscription_stop(s);
 }
 
 unsigned int 
@@ -174,12 +275,12 @@ transport_compute_weight(struct th_transport_list *head)
 
 
 static void
-transport_monitor(void *aux)
+transport_monitor(void *aux, int64_t now)
 {
   th_transport_t *t = aux;
   int v;
 
-  stimer_add(transport_monitor, t, 1);
+  dtimer_arm(&transport_monitor_timer, transport_monitor, t, 1);
 
   if(t->tht_status == TRANSPORT_IDLE)
     return;
@@ -245,26 +346,33 @@ transport_monitor_init(th_transport_t *t)
   avgstat_init(&t->tht_cc_errors, 3600);
   avgstat_init(&t->tht_rate, 10);
 
-  stimer_add(transport_monitor, t, 5);
+  dtimer_arm(&transport_monitor_timer, transport_monitor, t, 5);
 }
 
-th_pid_t *
-transport_add_pid(th_transport_t *t, uint16_t pid, tv_streamtype_t type)
+
+th_stream_t *
+transport_add_stream(th_transport_t *t, int pid, tv_streamtype_t type)
 {
-  th_pid_t *pi;
+  th_stream_t *st;
   int i = 0;
-  LIST_FOREACH(pi, &t->tht_pids, tp_link) {
+
+  LIST_FOREACH(st, &t->tht_streams, st_link) {
     i++;
-    if(pi->tp_pid == pid)
-      return pi;
+    if(pid != -1 && st->st_pid == pid)
+      return st;
   }
 
-  pi = calloc(1, sizeof(th_pid_t));
-  pi->tp_index = i;
-  pi->tp_pid = pid;
-  pi->tp_type = type;
-  pi->tp_demuxer_fd = -1;
+  st = calloc(1, sizeof(th_stream_t));
+  st->st_index = i;
+  st->st_pid = pid;
+  st->st_type = type;
+  st->st_demuxer_fd = -1;
+  LIST_INSERT_HEAD(&t->tht_streams, st, st_link);
 
-  LIST_INSERT_HEAD(&t->tht_pids, pi, tp_link);
-  return pi;
+  TAILQ_INIT(&st->st_dtsq);
+  TAILQ_INIT(&st->st_ptsq);
+  TAILQ_INIT(&st->st_durationq);
+  TAILQ_INIT(&st->st_pktq);
+
+  return st;
 }

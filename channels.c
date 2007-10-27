@@ -78,7 +78,7 @@ transportcmp(th_transport_t *a, th_transport_t *b)
 int 
 transport_set_channel(th_transport_t *t, th_channel_t *ch)
 {
-  th_pid_t *tp;
+  th_stream_t *st;
   char *chname;
 
   t->tht_channel = ch;
@@ -90,9 +90,9 @@ transport_set_channel(th_transport_t *t, th_channel_t *ch)
 	 t->tht_name, chname);
   free(chname);
 
-  LIST_FOREACH(tp, &t->tht_pids, tp_link)
-    syslog(LOG_DEBUG, "   Pid %5d [%s]",
-	   tp->tp_pid, htstvstreamtype2txt(tp->tp_type));
+  LIST_FOREACH(st, &t->tht_streams, st_link)
+    syslog(LOG_DEBUG, "   Stream [%s] - pid %d",
+	   htstvstreamtype2txt(st->st_type), st->st_pid);
 
   return 0;
 }
@@ -111,6 +111,7 @@ service_load(struct config_head *head)
     return;
 
   t = calloc(1, sizeof(th_transport_t));
+
   t->tht_prio = atoi(config_get_str_sub(head, "prio", ""));
 
   if(0) {

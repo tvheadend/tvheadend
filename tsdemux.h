@@ -1,5 +1,5 @@
 /*
- *  Private Video Recorder, Recording functions
+ *  tvheadend, MPEG transport stream functions
  *  Copyright (C) 2007 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,9 +16,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PVR_REC_H
-#define PVR_REC_H
+#ifndef TSDEMUX_H
+#define TSDEMUX_H
 
-void *pvr_recorder_thread(void *aux);
+void ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb);
 
-#endif /* PVR_H */
+#endif /* TSDEMUX_H */

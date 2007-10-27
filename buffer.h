@@ -1,5 +1,5 @@
 /*
- *  Multicasted IPTV Input
+ *  Packet / Buffer management
  *  Copyright (C) 2007 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,29 +16,37 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PSI_H_
-#define PSI_H_
+#ifndef BUFFER_H_
+#define BUFFER_H_
 
-#define PSI_SECTION_SIZE 4096
+th_pkt_t *pkt_ref(th_pkt_t *pkt);
 
-typedef struct psi_section {
-  int ps_offset;
-  uint8_t ps_data[PSI_SECTION_SIZE];
-} psi_section_t;
+void pkt_deref(th_pkt_t *pkt);
+
+void pkt_init(void);
+
+th_pkt_t *pkt_alloc(void *data, size_t datalen, int64_t pts, int64_t dts);
+
+th_pkt_t *pkt_copy(th_pkt_t *pkt);
+
+void pkt_store(th_pkt_t *pkt);
+
+void pkt_unstore(th_pkt_t *pkt);
+
+void pkt_load(th_pkt_t *pkt);
+
+void *pkt_payload(th_pkt_t *pkt);
+
+size_t pkt_len(th_pkt_t *pkt);
+
+extern int64_t store_mem_size;
+extern int64_t store_mem_size_max;
+extern int64_t store_disk_size;
+extern int64_t store_disk_size_max;
+extern int store_packets;
 
 
-int psi_section_reassemble(psi_section_t *ps, uint8_t *data, int len,
-			   int pusi, int chkcrc);
+#define pkt_payload(pkt) ((pkt)->pkt_payload)
+#define pkt_len(pkt)     ((pkt)->pkt_payloadlen)
 
-int psi_parse_pat(th_transport_t *t, uint8_t *ptr, int len,
-		  pid_section_callback_t *pmt_callback);
-
-int psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid);
-
-uint32_t psi_crc32(uint8_t *data, size_t datalen);
-
-int psi_build_pat(th_transport_t *t, uint8_t *buf, int maxlen);
-
-int psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen);
-
-#endif /* PSI_H_ */
+#endif /* BUFFER_H_ */

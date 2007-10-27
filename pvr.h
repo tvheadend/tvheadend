@@ -19,8 +19,75 @@
 #ifndef PVR_H
 #define PVR_H
 
+#include <ffmpeg/avformat.h>
+
 extern char *pvrpath;
 extern struct pvr_rec_list pvrr_global_list;
+
+
+/*
+ * PVR Internal recording status
+ */
+typedef enum {
+  PVR_REC_STOP,
+  PVR_REC_WAIT_SUBSCRIPTION,
+  PVR_REC_WAIT_FOR_START,
+  PVR_REC_WAIT_AUDIO_LOCK,
+  PVR_REC_WAIT_VIDEO_LOCK,
+  PVR_REC_RUNNING,
+  PVR_REC_COMMERCIAL,
+
+} pvrr_rec_status_t;
+
+
+/*
+ * PVR recording session
+ */
+typedef struct pvr_rec {
+
+  LIST_ENTRY(pvr_rec) pvrr_global_link;
+
+  th_channel_t *pvrr_channel;
+
+  time_t pvrr_start;
+  time_t pvrr_stop;
+
+  char *pvrr_filename;       /* May be null if we havent figured out a name
+				yet, this happens upon record start.
+				Notice that this is full path */
+  char *pvrr_title;          /* Title in UTF-8 */
+  char *pvrr_desc;           /* Description in UTF-8 */
+
+  char *pvrr_printname;      /* Only ASCII chars, used for logging and such */
+  char *pvrr_format;         /* File format trailer */
+
+  char pvrr_status;          /* defined in libhts/htstv.h */
+  char pvrr_error;           /* dito - but status returned from recorder */
+
+  pvrr_rec_status_t pvrr_rec_status; /* internal recording status */
+
+  struct th_pkt_queue pvrr_pktq;
+  int pvrr_pktq_len;
+  pthread_mutex_t pvrr_pktq_mutex;
+  pthread_cond_t pvrr_pktq_cond;
+
+  int pvrr_ref;
+
+  th_subscription_t *pvrr_s;
+
+  pthread_t pvrr_ptid;
+  dtimer_t pvrr_timer;
+
+  th_muxer_t pvrr_muxer;
+
+  int pvrr_header_written;
+
+  int64_t pvrr_dts_offset;
+
+} pvr_rec_t;
+
+
+
 
 typedef enum {
   RECOP_TOGGLE,

@@ -35,5 +35,8 @@ th_transport_t *transport_find(th_channel_t *ch, unsigned int weight);
 
 void transport_purge(th_transport_t *t);
 
+th_stream_t *transport_add_stream(th_transport_t *t, int pid,
+				  tv_streamtype_t type);
+
 
 #endif /* TRANSPORTS_H */

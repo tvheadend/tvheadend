@@ -1,9 +1,9 @@
 -include ../config.mak
 
 SRCS = main.c dispatch.c channels.c transports.c teletext.c psi.c \
-	subscriptions.c ts.c
+	subscriptions.c tsmux.c tsdemux.c pes.c buffer.c
 
-SRCS += pvr.c pvr_rec.c
+SRCS += pvr.c
 
 SRCS += epg.c epg_xmltv.c
 

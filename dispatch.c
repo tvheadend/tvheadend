@@ -29,6 +29,9 @@
 
 #include "dispatch.h"
 
+#define EPOLL_FDS_PER_ROUND 100
+time_t dispatch_clock;
+
 static int epoll_fd;
 
 typedef struct epoll_entry {
@@ -39,83 +42,69 @@ typedef struct epoll_entry {
   int refcnt;
 } epoll_entry_t;
 
-
-
-typedef struct stimer {
-  LIST_ENTRY(stimer) link;
-  void (*callback)(void *aux);
-  void *aux;
-  int64_t t;
-} stimer_t;
-
-LIST_HEAD(, stimer) dispatch_timers;
-
+LIST_HEAD(, dtimer) dispatch_timers;
 
 static int
-stimercmp(stimer_t *a, stimer_t *b)
+stimercmp(dtimer_t *a, dtimer_t *b)
 {
-  if(a->t < b->t)
+  if(a->dti_expire < b->dti_expire)
     return -1;
-  else if(a->t > b->t)
+  else if(a->dti_expire > b->dti_expire)
     return 1;
   return 0;
 }
 
 
-void *
-stimer_add_hires(void (*callback)(void *aux), void *aux, int64_t t)
+void
+dtimer_arm_hires(dtimer_t *ti, dti_callback_t *callback, void *aux, int64_t t)
 {
-  stimer_t *ti = malloc(sizeof(stimer_t));  
-  ti->t = t;
-  ti->aux = aux;
-  ti->callback = callback;
-  LIST_INSERT_SORTED(&dispatch_timers, ti, link, stimercmp);
-  return ti;
+  if(ti->dti_callback != NULL)
+    LIST_REMOVE(ti, dti_link);
+  ti->dti_expire   = t;
+  ti->dti_opaque   = aux;
+  ti->dti_callback = callback;
+  LIST_INSERT_SORTED(&dispatch_timers, ti, dti_link, stimercmp);
 }
 
 
-
-void *
-stimer_add(void (*callback)(void *aux), void *aux, int delta)
+void
+dtimer_arm(dtimer_t *ti, dti_callback_t *callback, void *opaque, int delta)
 {
   time_t now;
   time(&now);
-  return stimer_add_hires(callback, aux, (uint64_t)(now + delta) * 1000000ULL);
+  dtimer_arm_hires(ti, callback, opaque,
+		   (uint64_t)(now + delta) * 1000000ULL);
 }
 
-void
-stimer_del(void *handle)
-{
-  stimer_t *ti = handle;
-  LIST_REMOVE(ti, link);
-  free(ti);
-}
 
 
 static int
 stimer_next(void)
 {
-  stimer_t *ti = LIST_FIRST(&dispatch_timers);
-  int64_t delta;
+  dtimer_t *ti = LIST_FIRST(&dispatch_timers);
+  int delta;
   
   if(ti == NULL)
     return -1;
 
-  delta = ti->t - getclock_hires();
-  return delta < 0 ? 0 : delta / 1000ULL;
+  delta = (ti->dti_expire - getclock_hires() + 999) / 1000;
+
+  return delta > 0 ? delta : 0;
 }
 
 static void
 stimer_dispatch(int64_t now)
 {
-  stimer_t *ti;
+  dtimer_t *ti;
+  dti_callback_t *cb;
 
   while((ti = LIST_FIRST(&dispatch_timers)) != NULL) {
-    if(ti->t > now)
+    if(ti->dti_expire > now + 100ULL)
       break;
-    LIST_REMOVE(ti, link);
-    ti->callback(ti->aux);
-    free(ti);
+    LIST_REMOVE(ti, dti_link);
+    cb = ti->dti_callback;
+    ti->dti_callback = NULL;
+    cb(ti->dti_opaque, now);
   }
 }
 
@@ -213,21 +202,19 @@ dispatch_delfd(void *handle)
 
 
 
-#define EPOLL_FDS_PER_ROUND 100
-
-time_t dispatch_clock;
 
 void
 dispatcher(void)
 {
   struct epoll_entry *e;
-  int i, n;
+  int i, n, delta;
   struct timeval tv;
   int64_t now;
 
   static struct epoll_event events[EPOLL_FDS_PER_ROUND];
 
-  n = epoll_wait(epoll_fd, events, EPOLL_FDS_PER_ROUND, stimer_next());
+  delta = stimer_next();
+  n = epoll_wait(epoll_fd, events, EPOLL_FDS_PER_ROUND, delta);
 
   gettimeofday(&tv, NULL);
 
@@ -247,9 +234,9 @@ dispatcher(void)
 
     e->callback(((events[i].events & (EPOLLERR | EPOLLHUP)) ?
 		 DISPATCH_ERR : 0 ) |
-		((events[i].events & EPOLLIN)  ? DISPATCH_READ : 0 ) |
+		((events[i].events & EPOLLIN)  ? DISPATCH_READ  : 0 ) |
 		((events[i].events & EPOLLOUT) ? DISPATCH_WRITE : 0 ) |
-		((events[i].events & EPOLLPRI) ? DISPATCH_PRI : 0 ),
+		((events[i].events & EPOLLPRI) ? DISPATCH_PRI   : 0 ),
 		e->opaque, e->fd);
   }
 

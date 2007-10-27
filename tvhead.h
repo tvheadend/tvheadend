@@ -41,6 +41,20 @@ typedef enum {
 
 
 /*
+ * Dispatch timer
+ */
+typedef void (dti_callback_t)(void *opaque, int64_t now);
+
+typedef struct dtimer {
+  LIST_ENTRY(dtimer) dti_link;
+  dti_callback_t *dti_callback;
+  void *dti_opaque;
+  int64_t dti_expire;
+} dtimer_t;
+
+
+
+/*
  * List / Queue header declarations
  */
 
@@ -55,11 +69,15 @@ TAILQ_HEAD(ref_update_queue, ref_update);
 LIST_HEAD(th_transport_list, th_transport);
 LIST_HEAD(th_dvb_mux_list, th_dvb_mux);
 LIST_HEAD(th_dvb_mux_instance_list, th_dvb_mux_instance);
-LIST_HEAD(th_pid_list, th_pid);
-
+LIST_HEAD(th_stream_list, th_stream);
+TAILQ_HEAD(th_pkt_queue, th_pkt);
+LIST_HEAD(th_pkt_list, th_pkt);
+LIST_HEAD(th_muxer_list, th_muxer);
+LIST_HEAD(th_muxstream_list, th_muxstream);
 
 
 extern time_t dispatch_clock;
+extern int startupcounter;
 extern struct th_transport_list all_transports;
 extern struct th_channel_queue channels;
 extern struct pvr_rec_list pvrr_global_list;
@@ -67,7 +85,7 @@ extern struct th_subscription_list subscriptions;
 
 
 struct th_transport;
-struct th_pid;
+struct th_stream;
 
 /*
  * Video4linux adapter
@@ -97,17 +115,6 @@ typedef struct th_v4l_adapter {
   uint32_t tva_startcode;
   uint16_t tva_packet_len;
   int tva_lenlock;
-
-  struct {
-    void *tva_pes_packet;
-    uint16_t tva_pes_packet_len;
-    uint16_t tva_pes_packet_pos;
-
-    void *tva_parser;
-    void *tva_ctx;
-    int tva_cc;
-  } tva_streams[2];
-
 
 } th_v4l_adapter_t;
 
@@ -143,7 +150,7 @@ typedef struct th_dvb_mux_instance {
 
   tdmi_state_t tdmi_state;
 
-  void *tdmi_initial_scan_timer;
+  dtimer_t tdmi_initial_scan_timer;
   const char *tdmi_status;
 
   time_t tdmi_got_adapter;
@@ -156,6 +163,7 @@ typedef struct th_dvb_mux_instance {
  */
 typedef struct th_dvb_table {
   LIST_ENTRY(th_dvb_table) tdt_link;
+  char *tdt_name;
   void *tdt_handle;
   struct th_dvb_mux_instance *tdt_tdmi;
   int tdt_count; /* times seen */
@@ -213,6 +221,9 @@ typedef struct th_dvb_adapter {
 
   struct th_transport_list tda_transports; /* Currently bound transports */
 
+  dtimer_t tda_fec_monitor_timer;
+  dtimer_t tda_mux_scanner_timer;
+
 } th_dvb_adapter_t;
 
 
@@ -224,26 +235,68 @@ typedef struct th_dvb_adapter {
  * Section callback, called when a PSI table is fully received
  */
 typedef void (pid_section_callback_t)(struct th_transport *t,
-				      struct th_pid *pi,
+				      struct th_stream *pi,
 				      uint8_t *section, int section_len);
 
 /*
- * A PID in an MPEG transport stream is represented by this struct
+ * Stream, one media component for a transport
  */
-typedef struct th_pid {
-  LIST_ENTRY(th_pid) tp_link;
-  uint16_t tp_pid;
-  uint8_t tp_cc;             /* Last CC */
-  uint8_t tp_cc_valid;       /* Is CC valid at all? */
+typedef struct th_stream {
+  LIST_ENTRY(th_stream) st_link;
+  uint16_t st_pid;
+  uint8_t st_cc;             /* Last CC */
+  uint8_t st_cc_valid;       /* Is CC valid at all? */
 
-  tv_streamtype_t tp_type;
-  int tp_demuxer_fd;
-  int tp_index;
+  tv_streamtype_t st_type;
+  int st_demuxer_fd;
+  int st_index;
+  int st_peak_presentation_delay; /* Max seen diff. of DTS and PTS */
 
-  struct psi_section *tp_section;
-  pid_section_callback_t *tp_got_section;
-} th_pid_t;
+  struct psi_section *st_section;
+  pid_section_callback_t *st_got_section;
 
+  /* For transport stream packet reassembly */
+
+  uint8_t *st_buffer;
+  int st_buffer_ptr;
+  int st_buffer_size;
+  int st_buffer_errors;   /* Errors accumulated for this packet */
+
+  /* DTS generator */
+
+  int32_t st_dts_u;  /* upper bits (auto generated) */
+  int64_t st_dts;
+
+  /* Codec */
+
+  struct AVCodecContext *st_ctx;
+  struct AVCodecParserContext *st_parser;
+
+  /* All packets currently hanging on to us */
+
+  struct th_pkt_list st_packets;
+
+  /* Temporary frame store for calculating DTS */
+
+  struct th_pkt_queue st_dtsq;
+  int st_dtsq_len;
+  int64_t st_last_dts;
+
+  /* Temporary frame store for calculating PTS */
+
+  struct th_pkt_queue st_ptsq;
+  int st_ptsq_len;
+
+  /* Temporary frame store for calculating duration */
+
+  struct th_pkt_queue st_durationq;
+  int st_duration;
+
+  /* Final frame store */
+
+  struct th_pkt_queue st_pktq;
+
+} th_stream_t;
 
 
 /*
@@ -274,7 +327,9 @@ typedef struct th_transport {
 			    decoder */
   int tht_prio;
   
-  struct th_pid_list tht_pids;
+  struct th_stream_list tht_streams;
+  th_stream_t *tht_video;
+  th_stream_t *tht_audio;
 
   uint16_t tht_pcr_pid;
   uint16_t tht_dvb_network_id;
@@ -288,13 +343,21 @@ typedef struct th_transport {
   int tht_cc_error_log_limiter;
   int tht_rate_error_log_limiter;
 
-
+  int64_t tht_dts_start;
+  
   LIST_ENTRY(th_transport) tht_adapter_link;
 
   LIST_ENTRY(th_transport) tht_channel_link;
   struct th_channel *tht_channel;
 
   LIST_HEAD(, th_subscription) tht_subscriptions;
+
+
+  struct th_muxer_list tht_muxers; /* muxers */
+
+  /*
+   * Per source type structs
+   */
 
   union {
 
@@ -340,6 +403,154 @@ typedef struct th_transport {
 #define tht_iptv_dispatch_handle u.iptv.dispatch_handle
 #define tht_iptv_fd              u.iptv.fd
 #define tht_iptv_mode            u.iptv.mode
+
+
+/*
+ * Storage
+ */
+typedef struct th_storage {
+  unsigned int ts_offset;
+  unsigned int ts_refcount;
+  int ts_fd;
+  char *ts_filename;
+} th_storage_t;
+
+/*
+ * A packet
+ */
+
+#define PKT_I_FRAME 1
+#define PKT_P_FRAME 2
+#define PKT_B_FRAME 3
+
+
+typedef struct th_pkt {
+  TAILQ_ENTRY(th_pkt) pkt_queue_link;
+  uint8_t pkt_on_stream_queue;
+  uint8_t pkt_frametype;
+  uint8_t pkt_commercial;
+
+  th_stream_t *pkt_stream;
+
+  int64_t pkt_dts;
+  int64_t pkt_pts;
+  int pkt_duration;
+  int pkt_refcount;
+
+
+  th_storage_t *pkt_storage;
+  TAILQ_ENTRY(th_pkt) pkt_disk_link;
+  int pkt_storage_offset;
+
+  uint8_t *pkt_payload;
+  int pkt_payloadlen;
+  TAILQ_ENTRY(th_pkt) pkt_mem_link;
+} th_pkt_t;
+
+
+/*
+ * A mux stream reader
+ */
+typedef struct th_muxstream {
+
+  LIST_ENTRY(th_muxstream) tms_muxer_link;
+  struct th_muxer *tms_muxer;
+
+  th_pkt_t *tms_curpkt;
+
+  int tms_offset;          /* offset in current packet */
+
+  th_stream_t *tms_stream;
+  LIST_ENTRY(th_muxstream) tms_muxer_media_link;
+
+  int64_t tms_nextblock;   /* Time for delivery of next block */
+  int tms_block_interval;
+  int tms_block_rate;
+
+  int tms_mux_offset;
+
+  int tms_index; /* Used as PID or whatever */
+
+  th_pkt_t *tms_tmppkt; /* temporary pkt pointer during lock phaze */
+
+  /* MPEG TS multiplex stuff */
+
+  int tms_sc; /* start code */
+  int tms_cc;
+  int tms_dopcr;
+  int64_t tms_nextpcr;
+
+  /* Memebers used when running with ffmpeg */
+  
+  struct AVStream *tms_avstream;
+  int tms_decoded;
+
+  int tms_blockcnt;
+  int64_t tms_dl;
+  int64_t tms_staletime;
+
+} th_muxstream_t;
+
+
+/*
+ *
+ */
+
+struct th_subscription;
+
+typedef void (th_mux_output_t)(void *opaque, struct th_subscription *s,
+			       uint8_t *pkt, int blocks, int64_t pcr);
+
+
+typedef void (th_mux_newpkt_t)(struct th_muxer *tm, th_stream_t *st,
+			       th_pkt_t *pkt);
+
+typedef struct th_muxer {
+
+  th_mux_newpkt_t *tm_new_pkt;
+
+  LIST_ENTRY(th_muxer) tm_transport_link;
+
+  int64_t tm_clockref;  /* Base clock ref */
+  int64_t tm_pauseref;  /* Time when we were paused */
+
+  int tm_flags;
+#define TM_HTSCLIENTMODE 0x1
+
+  int64_t tm_start_dts;
+  int64_t tm_next_pat;
+
+  struct th_muxstream_list tm_media_streams;
+
+  struct th_muxstream_list tm_active_streams;
+  struct th_muxstream_list tm_stale_streams;
+  struct th_muxstream_list tm_stopped_streams;
+
+  uint8_t *tm_packet;
+  int tm_blocks_per_packet;
+
+  struct th_subscription *tm_subscription;
+
+  th_mux_output_t *tm_callback;
+  void *tm_opaque;
+  
+  dtimer_t tm_timer;
+
+  enum {
+    TM_IDLE,
+    TM_WAITING_FOR_LOCK,
+    TM_PLAY,
+    TM_PAUSE,
+  } tm_status;
+
+  th_muxstream_t *tm_pat;
+  th_muxstream_t *tm_pmt;
+
+  struct AVFormatContext *tm_avfctx;
+} th_muxer_t;
+
+
+
 
 /*
  *  Teletext
@@ -393,6 +604,16 @@ typedef struct th_channel {
 /*
  * Subscription
  */
+
+typedef enum {
+  TRANSPORT_AVAILABLE,
+  TRANSPORT_UNAVAILABLE,
+} subscription_event_t;
+
+typedef void (subscription_callback_t)(struct th_subscription *s,
+				       subscription_event_t event,
+				       void *opaque);
+
 typedef struct th_subscription {
   LIST_ENTRY(th_subscription) ths_global_link;
   int ths_weight;
@@ -407,19 +628,12 @@ typedef struct th_subscription {
   LIST_ENTRY(th_subscription) ths_subscriber_link; /* Caller is responsible
 						      for this link */
 
-  void (*ths_callback)(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi,
-		       int64_t pcr);
-
-  void *ths_opaque;
-
-  char *ths_pkt;
-  int ths_pkt_ptr;
-
   char *ths_title; /* display title */
-
   time_t ths_start;  /* time when subscription started */
-  
   int ths_total_err; /* total errors during entire subscription */
+
+  subscription_callback_t *ths_callback;
+  void *ths_opaque;
 
 } th_subscription_t;
 
@@ -452,79 +666,6 @@ typedef struct event {
   refstr_t *e_icon;
 
 } event_t;
-
-
-/*
- * PVR packet data
- */
-typedef struct pvr_data {
-  TAILQ_ENTRY(pvr_data) link;
-  uint8_t *tsb;
-  th_pid_t pi;
-} pvr_data_t;
-
-
-/*
- * PVR Internal recording status
- */
-typedef enum {
-  PVR_REC_STOP,
-  PVR_REC_WAIT_SUBSCRIPTION,
-  PVR_REC_WAIT_FOR_START,
-  PVR_REC_WAIT_AUDIO_LOCK,
-  PVR_REC_WAIT_VIDEO_LOCK,
-  PVR_REC_RUNNING,
-  PVR_REC_COMMERCIAL,
-
-} pvrr_rec_status_t;
-
-
-/*
- * PVR recording session
- */
-typedef struct pvr_rec {
-
-  LIST_ENTRY(pvr_rec) pvrr_global_link;
-
-  th_channel_t *pvrr_channel;
-
-  time_t pvrr_start;
-  time_t pvrr_stop;
-
-  char *pvrr_filename;       /* May be null if we havent figured out a name
-				yet, this happens upon record start.
-				Notice that this is full path */
-  char *pvrr_title;          /* Title in UTF-8 */
-  char *pvrr_desc;           /* Description in UTF-8 */
-
-  char *pvrr_printname;      /* Only ASCII chars, used for logging and such */
-  char *pvrr_format;         /* File format trailer */
-
-  char pvrr_status;          /* defined in libhts/htstv.h */
-  char pvrr_error;           /* dito - but status returned from recorder */
-
-  pvrr_rec_status_t pvrr_rec_status; /* internal recording status */
-
-  TAILQ_HEAD(, pvr_data) pvrr_dq;
-  int pvrr_dq_len;
-
-  pthread_mutex_t pvrr_dq_mutex;
-  pthread_cond_t pvrr_dq_cond;
-
-  int pvrr_ref;
-
-  void *pvrr_opaque;  /* For write out code */
-
-  th_subscription_t *pvrr_s;
-
-  pthread_t pvrr_ptid;
-
-  void *pvrr_timer;
-
-} pvr_rec_t;
-
-
-
 
 config_entry_t *find_mux_config(const char *muxtype, const char *muxname);
 char *utf8toprintable(const char *in);

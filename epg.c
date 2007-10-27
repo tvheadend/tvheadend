@@ -33,6 +33,7 @@
 
 static pthread_mutex_t epg_mutex = PTHREAD_MUTEX_INITIALIZER;
 struct event_list epg_hash[EPG_HASH_ID_WIDTH];
+static dtimer_t epg_channel_maintain_timer;
 
 void
 epg_lock(void)
@@ -420,13 +421,13 @@ epg_locate_current_event(th_channel_t *ch, time_t now)
 
 
 static void
-epg_channel_maintain(void *aux)
+epg_channel_maintain(void *aux, int64_t clk)
 {
   th_channel_t *ch;
   event_t *e, *cur;
   time_t now;
 
-  stimer_add(epg_channel_maintain, NULL, 5);
+  dtimer_arm(&epg_channel_maintain_timer, epg_channel_maintain, NULL, 5);
 
   now = dispatch_clock;
 
@@ -502,6 +503,6 @@ epg_transfer_events(th_channel_t *ch, struct event_queue *src,
 void
 epg_init(void)
 {
-  stimer_add(epg_channel_maintain, NULL, 5);
+  dtimer_arm(&epg_channel_maintain_timer, epg_channel_maintain, NULL, 5);
 }
 

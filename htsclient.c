@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -37,6 +38,8 @@
 #include "dispatch.h"
 #include "dvb.h"
 #include "strtab.h"
+#include "buffer.h"
+#include "tsmux.h"
 
 LIST_HEAD(client_list, client);
 
@@ -70,13 +73,15 @@ typedef struct client {
 
   void *c_dispatch_handle;
 
-  void *c_status_timer;
+  dtimer_t c_status_timer;
+
+  void *c_muxer;
 
 } client_t;
 
 
 
-static void client_status_update(void *aux);
+static void client_status_update(void *aux, int64_t now);
 
 static void
 cprintf(client_t *c, const char *fmt, ...)
@@ -92,6 +97,46 @@ cprintf(client_t *c, const char *fmt, ...)
 }
 
 
+void
+client_output_ts(void *opaque, th_subscription_t *s, 
+		 uint8_t *pkt, int blocks, int64_t pcr)
+{
+  struct msghdr msg;
+  struct iovec vec[2];
+  int r;
+  client_t *c = opaque;
+  struct sockaddr_in sin;
+  char hdr[2];
+
+
+  memset(&sin, 0, sizeof(sin));
+  sin.sin_family = AF_INET;
+  sin.sin_port = htons(c->c_port);
+  sin.sin_addr = c->c_ipaddr;
+
+  hdr[0] = HTSTV_TRANSPORT_STREAM;
+  hdr[1] = s->ths_channel->ch_index;
+
+  vec[0].iov_base = hdr;
+  vec[0].iov_len  = 2;
+  vec[1].iov_base = pkt;
+  vec[1].iov_len  = blocks * 188;
+
+  memset(&msg, 0, sizeof(msg));
+  msg.msg_name    = &sin;
+  msg.msg_namelen = sizeof(struct sockaddr_in);
+  msg.msg_iov     = vec;
+  msg.msg_iovlen  = 2;
+
+  r = sendmsg(c->c_streamfd, &msg, 0);
+  if(r < 0)
+    perror("sendmsg");
+}
+
+
+
+
+#if 0
 static void 
 client_ip_streamer(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi,
 		   int64_t pcr)
@@ -136,6 +181,7 @@ client_ip_streamer(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi,
     s->ths_pkt_ptr = 2;
   }
 }
+#endif
 
 /*
  *
@@ -360,6 +406,18 @@ cr_show(client_t *c, char **argv, int argc)
     return 0;
   }
 
+  if(!strcasecmp(subcmd, "storage")) {
+    cprintf(c, "In-memory storage %lld / %lld\n", 
+	    store_mem_size, store_mem_size_max);
+
+    cprintf(c, "  On-disk storage %lld / %lld\n", 
+	    store_disk_size, store_disk_size_max);
+
+    cprintf(c, "  %d packets in memory\n",
+	    store_packets);
+    return 0;
+  }
+
   return 1;
 }
 
@@ -419,10 +477,34 @@ cr_channel_unsubscribe(client_t *c, char **argv, int argc)
   return 0;
 }
 
+
+/*
+ * Called when a subscription gets/loses access to a transport
+ */
+static void
+client_subscription_callback(struct th_subscription *s,
+			     subscription_event_t event, void *opaque)
+{
+  client_t *c = opaque;
+
+  switch(event) {
+  case TRANSPORT_AVAILABLE:
+    assert(c->c_muxer == NULL);
+    c->c_muxer = ts_muxer_init(s, client_output_ts, c, TM_HTSCLIENTMODE);
+    ts_muxer_play(c->c_muxer, 0);
+    break;
+
+  case TRANSPORT_UNAVAILABLE:
+    assert(c->c_muxer != NULL);
+    ts_muxer_deinit(c->c_muxer);
+    c->c_muxer = NULL;
+    break;
+  }
+}
+
 /*
  *
  */
-
 int
 cr_channel_subscribe(client_t *c, char **argv, int argc)
 {
@@ -447,7 +529,8 @@ cr_channel_subscribe(client_t *c, char **argv, int argc)
   if((ch = channel_by_index(chindex)) == NULL)
     return 1;
 
-  s = subscription_create(ch, c, client_ip_streamer, weight, "client");
+  s = subscription_create(ch, weight, "client", 
+			  client_subscription_callback, c);
   if(s == NULL)
     return 1;
 
@@ -757,7 +840,7 @@ client_teardown(client_t *c, int err)
 
   syslog(LOG_INFO, "%s disconnected -- %s", c->c_title, strerror(err));
 
-  stimer_del(c->c_status_timer);
+  dtimer_disarm(&c->c_status_timer);
 
   dispatch_delfd(c->c_dispatch_handle);
 
@@ -903,7 +986,7 @@ client_connect_callback(int events, void *opaque, int fd)
   c->c_dispatch_handle = dispatch_addfd(newfd, client_socket_callback, c, 
 					DISPATCH_READ);
 
-  c->c_status_timer = stimer_add(client_status_update, c, 1);
+  dtimer_arm(&c->c_status_timer, client_status_update, c, 1);
 }
 
 
@@ -981,7 +1064,7 @@ csprintf(client_t *c, th_channel_t *ch, const char *fmt, ...)
 
 
 static void
-client_status_update(void *aux)
+client_status_update(void *aux, int64_t now)
 {
   client_t *c = aux;
   th_channel_t *ch;
@@ -992,7 +1075,7 @@ client_status_update(void *aux)
   th_transport_t *t;
   int ccerr, rate;
 
-  c->c_status_timer = stimer_add(client_status_update, c, 1);
+  dtimer_arm(&c->c_status_timer, client_status_update, c, 1);
 
   LIST_FOREACH(s, &c->c_subscriptions, ths_subscriber_link) {
 

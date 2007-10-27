@@ -19,27 +19,17 @@
 #ifndef RTP_H_
 #define RTP_H_
 
-TAILQ_HEAD(th_rtp_pkt_queue, th_rtp_pkt);
-
-
 typedef struct th_rtp_streamer {
-  struct th_rtp_pkt_queue trs_pktq;
-  struct th_rtp_pkt_queue trs_sendq;
-  int trs_qlen;
-  int16_t trs_seq;
   int trs_fd;
   struct sockaddr_in trs_dest;
-  int64_t trs_last_ts;
+  int16_t trs_seq;
 
 } th_rtp_streamer_t;
 
 void rtp_streamer_init(th_rtp_streamer_t *trs, int fd,
 		       struct sockaddr_in *dst);
 
-void rtp_streamer_deinit(th_rtp_streamer_t *trs);
-
-void rtp_streamer(struct th_subscription *s, uint8_t *buf, th_pid_t *pi,
-		  int64_t pcr);
-
+void rtp_output_ts(void *opaque, struct th_subscription *s,
+		   uint8_t *pkt, int blocks, int64_t pcr);
 
 #endif /* RTP_H_ */

@@ -42,6 +42,7 @@ typedef struct output_multicast {
 
 #define MULTICAST_PKT_SIZ (188 * 7)
 
+#if 0
 
 static void 
 om_ip_streamer(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi,
@@ -74,6 +75,7 @@ om_ip_streamer(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi,
     s->ths_pkt_ptr = 0;
   }
 }
+#endif
 
 
 
@@ -135,8 +137,7 @@ output_multicast_load(struct config_head *head)
   syslog(LOG_INFO, "Static multicast output: \"%s\" to %s, source %s ",
 	 ch->ch_name, title, inet_ntoa(sin.sin_addr));
 
-  subscription_create(ch, om, om_ip_streamer, 900, title);
-
+  //  subscription_create(ch, 900, title);
   return;
 
  err:

@@ -61,9 +61,9 @@ static void dvb_start_initial_scan(th_dvb_mux_instance_t *tdmi);
 
 static void tdmi_activate(th_dvb_mux_instance_t *tdmi);
 
-static void dvb_mux_scanner(void *aux);
+static void dvb_mux_scanner(void *aux, int64_t now);
 
-static void dvb_fec_monitor(void *aux);
+static void dvb_fec_monitor(void *aux, int64_t now);
 
 static void
 dvb_frontend_event(int events, void *opaque, int fd)
@@ -149,14 +149,14 @@ dvb_add_adapter(const char *path)
   
   pthread_mutex_init(&tda->tda_mux_lock, NULL);
   LIST_INSERT_HEAD(&dvb_adapters_probing, tda, tda_link);
+  startupcounter++;
 
   tda->tda_name = strdup(tda->tda_fe_info.name);
 
   dispatch_addfd(tda->tda_fe_fd, dvb_frontend_event, tda, DISPATCH_PRI);
 
   syslog(LOG_INFO, "Adding adapter %s (%s)", tda->tda_fe_info.name, path);
-  stimer_add(dvb_fec_monitor, tda, 1);
-
+  dtimer_arm(&tda->tda_fec_monitor_timer, dvb_fec_monitor, tda, 1);
 }
 
 
@@ -199,6 +199,7 @@ tdt_destroy(th_dvb_table_t *tdt)
 {
   LIST_REMOVE(tdt, tdt_link);
   close(dispatch_delfd(tdt->tdt_handle));
+  free(tdt->tdt_name);
   free(tdt);
 }
 
@@ -254,11 +255,12 @@ static void
 tdt_add(th_dvb_mux_instance_t *tdmi, int fd, 
 	int (*callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
 			uint8_t tableid, void *opaque), void *opaque,
-	int initial_count)
+	int initial_count, char *name)
 {
   th_dvb_table_t *tdt = malloc(sizeof(th_dvb_table_t));
 
   LIST_INSERT_HEAD(&tdmi->tdmi_tables, tdt, tdt_link);
+  tdt->tdt_name = strdup(name);
   tdt->tdt_callback = callback;
   tdt->tdt_opaque = opaque;
   tdt->tdt_tdmi = tdmi;
@@ -386,7 +388,7 @@ dvb_find_transport(th_dvb_mux_instance_t *tdmi, uint16_t nid, uint16_t tid,
     return NULL;
   }
   
-  tdt_add(tdmi, fd, dvb_service_callback, t, 0);
+  tdt_add(tdmi, fd, dvb_service_callback, t, 0, "PMT");
   t->tht_name = strdup(tdm->tdm_title);
   LIST_INSERT_HEAD(&all_transports, t, tht_global_link);
   return t;
@@ -486,7 +488,7 @@ dvb_tdt_add_demux(th_dvb_mux_instance_t *tdmi)
     close(fd);
     return;
   }
-  tdt_add(tdmi, fd, dvb_tdt_callback, NULL, 1);
+  tdt_add(tdmi, fd, dvb_tdt_callback, NULL, 1, "tdt");
 }
 
 
@@ -690,7 +692,7 @@ dvb_eit_add_demux(th_dvb_mux_instance_t *tdmi)
     return;
   }
 
-  tdt_add(tdmi, fd, dvb_eit_callback, NULL, 1);
+  tdt_add(tdmi, fd, dvb_eit_callback, NULL, 1, "eit");
 }
 
 
@@ -778,13 +780,15 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
     if(stype == 1 && 
        free_ca_mode == 0 /* We dont have any CA-support (yet) */) {
-
        t = dvb_find_transport(tdmi, original_network_id, 
 			     transport_stream_id,
 			     service_id, 1);
 
-       if(LIST_FIRST(&t->tht_pids) != NULL && t->tht_channel == NULL)
-	 ret |= transport_set_channel(t, channel_find(chname, 1));
+       if(LIST_FIRST(&t->tht_streams) != NULL && t->tht_channel == NULL) {
+	 transport_set_channel(t, channel_find(chname, 1));
+       } else {
+	 ret |= 1;
+       }
     }
   }
   return ret;
@@ -815,7 +819,7 @@ dvb_sdt_add_demux(th_dvb_mux_instance_t *tdmi)
     return;
   }
 
-  tdt_add(tdmi, fd, dvb_sdt_callback, NULL, 0);
+  tdt_add(tdmi, fd, dvb_sdt_callback, NULL, 0, "sdt");
 }
 
 
@@ -824,10 +828,7 @@ tdmi_activate(th_dvb_mux_instance_t *tdmi)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
-  if(tdmi->tdmi_initial_scan_timer != NULL) {
-    stimer_del(tdmi->tdmi_initial_scan_timer);
-    tdmi->tdmi_initial_scan_timer = NULL;
-  }
+  dtimer_disarm(&tdmi->tdmi_initial_scan_timer);
 
   tdmi->tdmi_state = TDMI_IDLE;
   
@@ -839,13 +840,14 @@ tdmi_activate(th_dvb_mux_instance_t *tdmi)
   tdmi = LIST_FIRST(&tda->tda_muxes_configured);
   
   if(tdmi == NULL) {
+    startupcounter--;
     syslog(LOG_INFO,
 	   "\"%s\" Initial scan completed, adapter available",
 	   tda->tda_name);
     /* no more muxes to probe, link adapter to the world */
     LIST_REMOVE(tda, tda_link);
     LIST_INSERT_HEAD(&dvb_adapters_running, tda, tda_link);
-    stimer_add(dvb_mux_scanner, tda, 10);
+    dtimer_arm(&tda->tda_mux_scanner_timer, dvb_mux_scanner, tda, 10);
     return;
   }
   dvb_start_initial_scan(tdmi);
@@ -853,13 +855,13 @@ tdmi_activate(th_dvb_mux_instance_t *tdmi)
 
 
 static void
-tdmi_initial_scan_timeout(void *aux)
+tdmi_initial_scan_timeout(void *aux, int64_t now)
 {
   th_dvb_mux_instance_t *tdmi = aux;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   const char *err;
 
-  tdmi->tdmi_initial_scan_timer = NULL;
+  dtimer_disarm(&tdmi->tdmi_initial_scan_timer);
 
   err = "Unknown error";
 
@@ -882,6 +884,7 @@ tdmi_check_scan_status(th_dvb_mux_instance_t *tdmi)
 
   if(tdmi->tdmi_state >= TDMI_IDLE)
     return;
+
   
   LIST_FOREACH(tdt, &tdmi->tdmi_tables, tdt_link)
     if(tdt->tdt_count == 0)
@@ -902,8 +905,8 @@ dvb_start_initial_scan(th_dvb_mux_instance_t *tdmi)
 {
   dvb_tune_tdmi(tdmi, 1, TDMI_INITIAL_SCAN);
 
-  tdmi->tdmi_initial_scan_timer = 
-    stimer_add(tdmi_initial_scan_timeout, tdmi, 5);
+  dtimer_arm(&tdmi->tdmi_initial_scan_timer,
+	     tdmi_initial_scan_timeout, tdmi, 5);
 
 }
 
@@ -920,14 +923,15 @@ mux_sort_quality(th_dvb_mux_instance_t *a, th_dvb_mux_instance_t *b)
 
 
 static void
-dvb_fec_monitor(void *aux)
+dvb_fec_monitor(void *aux, int64_t now)
 {
   th_dvb_adapter_t *tda = aux;
   th_dvb_mux_instance_t *tdmi;
   th_dvb_mux_t *tdm;
   int v;
 
-  stimer_add(dvb_fec_monitor, tda, 1);
+  dtimer_arm(&tda->tda_fec_monitor_timer, dvb_fec_monitor, tda, 1);
+
   tdmi = tda->tda_mux_current;
 
   if(tdmi != NULL && tdmi->tdmi_status == NULL) {
@@ -959,12 +963,12 @@ dvb_fec_monitor(void *aux)
  */
 
 static void
-dvb_mux_scanner(void *aux)
+dvb_mux_scanner(void *aux, int64_t now)
 {
   th_dvb_adapter_t *tda = aux;
   th_dvb_mux_instance_t *tdmi;
 
-  stimer_add(dvb_mux_scanner, tda, 10);
+  dtimer_arm(&tda->tda_mux_scanner_timer, dvb_mux_scanner, tda, 10);
 
   if(transport_compute_weight(&tda->tda_transports) > 0)
     return; /* someone is here */
