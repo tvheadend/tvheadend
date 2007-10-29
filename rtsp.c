@@ -395,10 +395,12 @@ rtsp_err2str(int err)
  * Return an error
  */
 static void
-rtsp_reply_error(rtsp_connection_t *rc, int error)
+rtsp_reply_error(rtsp_connection_t *rc, int error, const char *errstr)
 {
   char *c;
-  const char *errstr = rtsp_err2str(error);
+
+  if(errstr == NULL)
+    errstr = rtsp_err2str(error);
 
   syslog(LOG_INFO, "rtsp: %s: %s", rc->rc_logname, errstr);
 
@@ -420,13 +422,13 @@ rtsp_get_session(rtsp_connection_t *rc)
   th_channel_t *ch;
 
   if((ch = rtsp_channel_by_url(rc->rc_url)) == NULL) {
-    rtsp_reply_error(rc, RTSP_STATUS_SERVICE);
+    rtsp_reply_error(rc, RTSP_STATUS_SERVICE, "URL does not resolve");
     return NULL;
   }
 
 
   if((ses = rtsp_con_get_arg(rc, "session")) == NULL) {
-    rtsp_reply_error(rc, RTSP_STATUS_SESSION);
+    rtsp_reply_error(rc, RTSP_STATUS_SESSION, NULL);
     return NULL;
   }
 
@@ -436,7 +438,7 @@ rtsp_get_session(rtsp_connection_t *rc)
       break;
   
   if(rs == NULL)
-    rtsp_reply_error(rc, RTSP_STATUS_SESSION);
+    rtsp_reply_error(rc, RTSP_STATUS_SESSION, NULL);
   
   return rs;
 }
@@ -464,7 +466,8 @@ rtsp_cmd_play(rtsp_connection_t *rc)
   }
 
   if(rs->rs_muxer == NULL) {
-    rtsp_reply_error(rc, RTSP_STATUS_SERVICE);
+    rtsp_reply_error(rc, RTSP_STATUS_SERVICE, 
+		     "No muxer attached (missing SETUP ?)");
     return;
   }
 
@@ -499,7 +502,8 @@ rtsp_cmd_pause(rtsp_connection_t *rc)
     return;
 
   if(rs->rs_muxer == NULL) {
-    rtsp_reply_error(rc, RTSP_STATUS_SERVICE);
+    rtsp_reply_error(rc, RTSP_STATUS_SERVICE,
+		     "No muxer attached (missing SETUP ?)");
     return;
   }
 
@@ -538,7 +542,7 @@ rtsp_cmd_setup(rtsp_connection_t *rc)
   struct sockaddr_in dst;
 
   if((ch = rtsp_channel_by_url(rc->rc_url)) == NULL) {
-    rtsp_reply_error(rc, RTSP_STATUS_SERVICE);
+    rtsp_reply_error(rc, RTSP_STATUS_SERVICE, "URL does not resolve");
     return;
   }
 
@@ -546,7 +550,7 @@ rtsp_cmd_setup(rtsp_connection_t *rc)
   client_ports[1] = 0;
 
   if((t = rtsp_con_get_arg(rc, "transport")) == NULL) {
-    rtsp_reply_error(rc, RTSP_STATUS_TRANSPORT);
+    rtsp_reply_error(rc, RTSP_STATUS_TRANSPORT, NULL);
     return;
   }
 
@@ -586,7 +590,7 @@ rtsp_cmd_setup(rtsp_connection_t *rc)
 
   if(i == nt) {
     /* couldnt find a suitable transport */
-    rtsp_reply_error(rc, RTSP_STATUS_TRANSPORT);
+    rtsp_reply_error(rc, RTSP_STATUS_TRANSPORT, NULL);
     return;
   }
 
@@ -594,7 +598,7 @@ rtsp_cmd_setup(rtsp_connection_t *rc)
   dst.sin_port = htons(client_ports[0]);
 
   if((rs = rtsp_session_create(ch, &dst)) == NULL) {
-    rtsp_reply_error(rc, RTSP_STATUS_INTERNAL);
+    rtsp_reply_error(rc, RTSP_STATUS_INTERNAL, NULL);
     return;
   }
 
@@ -631,7 +635,7 @@ rtsp_cmd_describe(rtsp_connection_t *rc)
   char *c;
 
   if((ch = rtsp_channel_by_url(rc->rc_url)) == NULL) {
-    rtsp_reply_error(rc, RTSP_STATUS_SERVICE);
+    rtsp_reply_error(rc, RTSP_STATUS_SERVICE, "URL does not resolve");
     return;
   }
 
@@ -666,7 +670,7 @@ rtsp_cmd_options(rtsp_connection_t *rc)
   char *c;
 
   if(strcmp(rc->rc_url, "*") && rtsp_channel_by_url(rc->rc_url) == NULL) {
-    rtsp_reply_error(rc, RTSP_STATUS_SERVICE);
+    rtsp_reply_error(rc, RTSP_STATUS_SERVICE, "URL does not resolve");
     return;
   }
 
@@ -728,7 +732,7 @@ rtsp_con_parse(rtsp_connection_t *rc, char *buf)
       return EBADRQC;
 
     if(strcmp(argv[2], "RTSP/1.0")) {
-      rtsp_reply_error(rc, RTSP_STATUS_VERSION);
+      rtsp_reply_error(rc, RTSP_STATUS_VERSION, NULL);
       return ECONNRESET;
     }
     rc->rc_cmd = str2val(argv[0], RTSP_cmdtab);
@@ -741,7 +745,7 @@ rtsp_con_parse(rtsp_connection_t *rc, char *buf)
       rc->rc_state = RTSP_CON_WAIT_REQUEST;
       switch(rc->rc_cmd) {
       default:
-	rtsp_reply_error(rc, RTSP_STATUS_METHOD);
+	rtsp_reply_error(rc, RTSP_STATUS_METHOD, NULL);
 	break;
       case RTSP_CMD_DESCRIBE:  	rtsp_cmd_describe(rc);  break;
       case RTSP_CMD_SETUP: 	rtsp_cmd_setup(rc);     break;
