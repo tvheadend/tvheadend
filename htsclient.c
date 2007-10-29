@@ -135,54 +135,6 @@ client_output_ts(void *opaque, th_subscription_t *s,
 
 
 
-
-#if 0
-static void 
-client_ip_streamer(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi,
-		   int64_t pcr)
-{
-  client_t *c = s->ths_opaque;
-  char stoppkt[4];
-  struct sockaddr_in sin;
-
-
-  memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_port = htons(c->c_port);
-  sin.sin_addr = c->c_ipaddr;
- 
-  if(pkt == NULL) {
-    stoppkt[0] = HTSTV_EOS;
-    stoppkt[1] = s->ths_channel->ch_index;
-    free(s->ths_pkt);
-    s->ths_pkt = NULL;
-
-    sendto(c->c_streamfd, stoppkt, 2, 0, 
-	   (struct sockaddr *)&sin, sizeof(sin));
-    return;
-  }
-
-  if(s->ths_pkt == NULL) {
-    s->ths_pkt = malloc(c->c_pkt_maxsiz + 2);
-    s->ths_pkt_ptr = 2;
-  }
-
-  memcpy(s->ths_pkt + s->ths_pkt_ptr, pkt, 188);
-  s->ths_pkt[s->ths_pkt_ptr] = pi->tp_type;
-  s->ths_pkt_ptr += 188;
-  
-  if(s->ths_pkt_ptr == c->c_pkt_maxsiz + 2) {
-    
-    s->ths_pkt[0] = HTSTV_TRANSPORT_STREAM;
-    s->ths_pkt[1] = s->ths_channel->ch_index;
-    
-    sendto(c->c_streamfd, s->ths_pkt, s->ths_pkt_ptr, 0, 
-	   (struct sockaddr *)&sin, sizeof(sin));
-    s->ths_pkt_ptr = 2;
-  }
-}
-#endif
-
 /*
  *
  *
