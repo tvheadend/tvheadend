@@ -39,10 +39,13 @@
 #include "strtab.h"
 #include "rtp.h"
 #include "tsmux.h"
+#include "tcp.h"
 
 #include <ffmpeg/avformat.h>
 #include <ffmpeg/rtspcodes.h>
 #include <ffmpeg/random.h>
+
+#define rcprintf(c, fmt...) tcp_printf(&(rc)->rc_tcp_session, fmt)
 
 static AVRandomState rtsp_rnd;
 
@@ -82,8 +85,7 @@ typedef struct rtsp_arg {
 
 
 typedef struct rtsp_connection {
-  int rc_fd;
-  void *rc_dispatch_handle;
+  tcp_session_t rc_tcp_session; /* Must be first */
   char *rc_url;
 
   LIST_HEAD(, rtsp_arg) rc_args;
@@ -106,14 +108,6 @@ typedef struct rtsp_connection {
   } rc_cmd;
 
   struct rtsp_session_head rc_sessions;
-
-  int rc_input_buf_ptr;
-  char rc_input_buf[RTSP_MAX_LINE_LEN];
-  struct sockaddr_in rc_from;
-
-  char *rc_logname;  /* Printable name used when logging stuff related
-			to this connection */
-
 } rtsp_connection_t;
 
 
@@ -261,21 +255,6 @@ rtsp_session_destroy(rtsp_session_t *rs)
   free(rs);
 }
 
-/*
- *  Prints data on rtsp connection
- */
-static void
-rcprintf(rtsp_connection_t *rc, const char *fmt, ...)
-{
-  va_list ap;
-  char buf[5000];
-
-  va_start(ap, fmt);
-  vsnprintf(buf, sizeof(buf), fmt, ap);
-  va_end(ap);
-
-  write(rc->rc_fd, buf, strlen(buf));
-}
 
 
 /*
@@ -315,7 +294,6 @@ static void
 rtsp_con_set_arg(rtsp_connection_t *rc, char *key, char *val)
 {
   rtsp_arg_t *ra;
-  char buf[100];
 
   LIST_FOREACH(ra, &rc->rc_args, link)
     if(!strcasecmp(ra->key, key))
@@ -329,7 +307,7 @@ rtsp_con_set_arg(rtsp_connection_t *rc, char *key, char *val)
     free(ra->val);
   }
   ra->val = strdup(val);
-  
+#if 0  
   if(!strcasecmp(key, "User-Agent")) {
     free(rc->rc_logname);
 
@@ -338,6 +316,7 @@ rtsp_con_set_arg(rtsp_connection_t *rc, char *key, char *val)
 	     val);
     rc->rc_logname = strdup(buf);
   }
+#endif
 }
 
 
@@ -402,7 +381,7 @@ rtsp_reply_error(rtsp_connection_t *rc, int error, const char *errstr)
   if(errstr == NULL)
     errstr = rtsp_err2str(error);
 
-  syslog(LOG_INFO, "rtsp: %s: %s", rc->rc_logname, errstr);
+  syslog(LOG_INFO, "rtsp: %s: %s", tcp_logname(&rc->rc_tcp_session), errstr);
 
   rcprintf(rc, "RTSP/1.0 %d %s\r\n", error, errstr);
   if((c = rtsp_con_get_arg(rc, "cseq")) != NULL)
@@ -474,7 +453,7 @@ rtsp_cmd_play(rtsp_connection_t *rc)
   ts_muxer_play(rs->rs_muxer, start);
 
   syslog(LOG_INFO, "rtsp: %s: Starting playback of %s",
-	 rc->rc_logname, rs->rs_s->ths_channel->ch_name);
+	 tcp_logname(&rc->rc_tcp_session), rs->rs_s->ths_channel->ch_name);
 
   rcprintf(rc,
 	   "RTSP/1.0 200 OK\r\n"
@@ -510,7 +489,7 @@ rtsp_cmd_pause(rtsp_connection_t *rc)
   ts_muxer_pause(rs->rs_muxer);
 
   syslog(LOG_INFO, "rtsp: %s: Pausing playback of %s",
-	 rc->rc_logname, rs->rs_s->ths_channel->ch_name);
+	 tcp_logname(&rc->rc_tcp_session), rs->rs_s->ths_channel->ch_name);
 
   rcprintf(rc,
 	   "RTSP/1.0 200 OK\r\n"
@@ -594,7 +573,7 @@ rtsp_cmd_setup(rtsp_connection_t *rc)
     return;
   }
 
-  dst = rc->rc_from;
+  memcpy(&dst, &rc->rc_tcp_session.tcp_peer_addr, sizeof(struct sockaddr_in));
   dst.sin_port = htons(client_ports[0]);
 
   if((rs = rtsp_session_create(ch, &dst)) == NULL) {
@@ -713,8 +692,9 @@ rtsp_cmd_teardown(rtsp_connection_t *rc)
  * RTSP connection state machine & parser
  */
 static int
-rtsp_con_parse(rtsp_connection_t *rc, char *buf)
+rtsp_con_parse(void *aux, char *buf)
 {
+  rtsp_connection_t *rc = aux;
   int n;
   char *argv[3], *c;
 
@@ -777,156 +757,43 @@ rtsp_con_parse(rtsp_connection_t *rc, char *buf)
 
 
 /*
- * client error, teardown connection
+ * disconnect
  */
 static void
-rtsp_con_teardown(rtsp_connection_t *rc, int err)
+rtsp_disconnect(rtsp_connection_t *rc)
 {
   rtsp_session_t *rs;
-  syslog(LOG_INFO, "rtsp: %s: disconnected -- %s",
-	 rc->rc_logname, strerror(err));
-	 
+
+  rtsp_con_flush_args(rc);
+
   while((rs = LIST_FIRST(&rc->rc_sessions)) != NULL)
     rtsp_session_destroy(rs);
 
-  close(dispatch_delfd(rc->rc_dispatch_handle));
-
   free(rc->rc_url);
-  free(rc->rc_logname);
-  rtsp_con_flush_args(rc);
-  free(rc);
 }
-
-/*
- * data available on socket
- */
-static void
-rtsp_con_data_read(rtsp_connection_t *rc)
-{
-  int space = sizeof(rc->rc_input_buf) - rc->rc_input_buf_ptr - 1;
-  int r, cr = 0, i, err;
-  char buf[RTSP_MAX_LINE_LEN];
-
-  if(space < 1) {
-    rtsp_con_teardown(rc, EBADMSG);
-    return;
-  }
-
-  r = read(rc->rc_fd, rc->rc_input_buf + rc->rc_input_buf_ptr, space);
-  if(r < 0) {
-    rtsp_con_teardown(rc, errno);
-    return;
-  }
-
-  if(r == 0) {
-    rtsp_con_teardown(rc, ECONNRESET);
-    return;
-  }
-
-  rc->rc_input_buf_ptr += r;
-  rc->rc_input_buf[rc->rc_input_buf_ptr] = 0;
-
-  while(1) {
-    cr = 0;
-
-    for(i = 0; i < rc->rc_input_buf_ptr; i++)
-      if(rc->rc_input_buf[i] == 0xa)
-	break;
-
-    if(i == rc->rc_input_buf_ptr)
-      break;
-
-    memcpy(buf, rc->rc_input_buf, i);
-    buf[i] = 0;
-    i++;
-    memmove(rc->rc_input_buf, rc->rc_input_buf + i, 
-	    sizeof(rc->rc_input_buf) - i);
-    rc->rc_input_buf_ptr -= i;
-
-    i = strlen(buf);
-    while(i > 0 && buf[i-1] < 32)
-      buf[--i] = 0;
-
-    if((err = rtsp_con_parse(rc, buf)) != 0) {
-      rtsp_con_teardown(rc, err);
-      break;
-    }
-  }
-}
-
-
-/*
- * dispatcher callback
- */
-static void
-rtsp_con_socket_callback(int events, void *opaque, int fd)
-{
-  rtsp_connection_t *rc = opaque;
-
-  if(events & DISPATCH_ERR) {
-    rtsp_con_teardown(rc, ECONNRESET);
-    return;
-  }
-
-  if(events & DISPATCH_READ)
-    rtsp_con_data_read(rc);
-}
-
 
 
 /*
  *
  */
 static void
-rtsp_connect_callback(int events, void *opaque, int fd)
+rtsp_tcp_callback(tcpevent_t event, void *tcpsession)
 {
-  struct sockaddr_in from;
-  socklen_t socklen = sizeof(struct sockaddr_in);
-  int newfd;
-  int val;
-  rtsp_connection_t *rc;
-  char txt[30];
+  rtsp_connection_t *rc = tcpsession;
 
-  if(!(events & DISPATCH_READ))
-    return;
+  switch(event) {
+  case TCP_CONNECT:
+    break;
 
-  newfd = accept(fd, (struct sockaddr *)&from, &socklen);
-  if(newfd == -1)
-    return;
-  
-  fcntl(newfd, F_SETFL, fcntl(newfd, F_GETFL) | O_NONBLOCK);
+  case TCP_DISCONNECT:
+    rtsp_disconnect(rc);
+    break;
 
-  val = 1;
-  setsockopt(newfd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
-  
-  val = 30;
-  setsockopt(newfd, SOL_TCP, TCP_KEEPIDLE, &val, sizeof(val));
-
-  val = 15;
-  setsockopt(newfd, SOL_TCP, TCP_KEEPINTVL, &val, sizeof(val));
-
-  val = 5;
-  setsockopt(newfd, SOL_TCP, TCP_KEEPCNT, &val, sizeof(val));
-
-  val = 1;
-  setsockopt(newfd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
-
-  rc = calloc(1, sizeof(rtsp_connection_t));
-  rc->rc_fd = newfd;
-
-  snprintf(txt, sizeof(txt), "%s:%d",
-	   inet_ntoa(from.sin_addr), ntohs(from.sin_port));
-
-  rc->rc_logname = strdup(txt);
-
-  syslog(LOG_INFO, "rtsp: %s: connected", rc->rc_logname);
-
-  rc->rc_from = from;
-
-  rc->rc_dispatch_handle = dispatch_addfd(newfd, rtsp_con_socket_callback, rc,
-					  DISPATCH_READ);
+  case TCP_INPUT:
+    tcp_line_read(&rc->rc_tcp_session, rtsp_con_parse);
+    break;
+  }
 }
-
 
 
 /*
@@ -936,33 +803,7 @@ rtsp_connect_callback(int events, void *opaque, int fd)
 void
 rtsp_start(void)
 {
-  struct sockaddr_in sin;
-  int s;
-  int one = 1;
-  s = socket(AF_INET, SOCK_STREAM, 0);
-  memset(&sin, 0, sizeof(sin));
-
-  sin.sin_family = AF_INET;
-  sin.sin_port = htons(9908);
-
-  setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
-
-  fcntl(s, F_SETFL, fcntl(s, F_GETFL) | O_NONBLOCK);
-
-  syslog(LOG_INFO, "rtsp: Listening for RTSP/TCP connections on %s:%d",
-	 inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
-
-  if(bind(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-    syslog(LOG_ERR, 
-	   "rtsp: Unable to bind socket for incomming RTSP/TCP connections"
-	   "%s:%d -- %s",
-	   inet_ntoa(sin.sin_addr), ntohs(sin.sin_port),
-	   strerror(errno));
-    return;
-  }
-
   av_init_random(time(NULL), &rtsp_rnd);
-
-  listen(s, 1);
-  dispatch_addfd(s, rtsp_connect_callback, NULL, DISPATCH_READ);
+  tcp_create_server(9908, sizeof(rtsp_connection_t), "rtsp",
+		    rtsp_tcp_callback);
 }

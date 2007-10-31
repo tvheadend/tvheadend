@@ -37,9 +37,9 @@
 #include "teletext.h"
 #include "dispatch.h"
 #include "dvb.h"
-#include "strtab.h"
 #include "buffer.h"
 #include "tsmux.h"
+#include "tcp.h"
 
 LIST_HEAD(client_list, client);
 
@@ -51,9 +51,9 @@ struct client_list all_clients;
  */
 
 typedef struct client {
+  tcp_session_t c_tcp_session;
 
   LIST_ENTRY(client) c_global_link;
-  int c_fd;
   int c_streamfd;
   pthread_t c_ptid;
   
@@ -63,15 +63,6 @@ typedef struct client {
   int c_port;
 
   struct ref_update_queue c_refq;
-
-  int c_pkt_maxsiz;
-
-  char c_input_buf[100];
-  int c_input_buf_ptr;
-
-  char *c_title;
-
-  void *c_dispatch_handle;
 
   dtimer_t c_status_timer;
 
@@ -83,18 +74,7 @@ typedef struct client {
 
 static void client_status_update(void *aux, int64_t now);
 
-static void
-cprintf(client_t *c, const char *fmt, ...)
-{
-  va_list ap;
-  char buf[5000];
-
-  va_start(ap, fmt);
-  vsnprintf(buf, sizeof(buf), fmt, ap);
-  va_end(ap);
-
-  write(c->c_fd, buf, strlen(buf));
-}
+#define cprintf(c, fmt...) tcp_printf(&(c)->c_tcp_session, fmt)
 
 
 void
@@ -524,7 +504,7 @@ cr_streamport(client_t *c, char **argv, int argc)
   c->c_port = atoi(argv[1]);
 
   syslog(LOG_INFO, "%s registers UDP stream target %s:%d",
-	 c->c_title, inet_ntoa(c->c_ipaddr), c->c_port);
+	 tcp_logname(&c->c_tcp_session), inet_ntoa(c->c_ipaddr), c->c_port);
 
   return 0;
 }
@@ -593,14 +573,6 @@ cr_event_info(client_t *c, char **argv, int argc)
  *
  */
 
-static struct strtab recoptab[] = {
-  { "once",   RECOP_ONCE },
-  { "daily",  RECOP_DAILY },
-  { "weekly", RECOP_WEEKLY },
-  { "cancel", RECOP_CANCEL },
-  { "toggle", RECOP_TOGGLE }
-};
-
 static int
 cr_event_record(client_t *c, char **argv, int argc)
 {
@@ -610,7 +582,7 @@ cr_event_record(client_t *c, char **argv, int argc)
   if(argc < 2)
     return 1;
 
-  op = str2val(argv[1], recoptab);
+  op = pvr_op2int(argv[1]);
   if(op == -1)
     return 1;
 
@@ -745,9 +717,10 @@ const struct {
 };
 
 
-static void
-client_req(client_t *c, char *buf)
+static int
+client_req(void *aux, char *buf)
 {
+  client_t *c = aux;
   int i, l, x;
   const char *n;
   char *argv[40];
@@ -776,27 +749,22 @@ client_req(client_t *c, char *buf)
       if(x >= 0)
 	cprintf(c, "eom %s\n", x ? "error" : "ok");
 
-      return;
+      return 0;
     }
   }
   cprintf(c, "eom nocommand\n");
+  return 0;
 }
 
 /*
- * client error
+ * client disconnect
  */
 static void
-client_teardown(client_t *c, int err)
+client_disconnect(client_t *c)
 {
   th_subscription_t *s;
 
-  syslog(LOG_INFO, "%s disconnected -- %s", c->c_title, strerror(err));
-
   dtimer_disarm(&c->c_status_timer);
-
-  dispatch_delfd(c->c_dispatch_handle);
-
-  close(c->c_fd);
 
   if(c->c_streamfd != -1)
     close(c->c_streamfd);
@@ -807,140 +775,34 @@ client_teardown(client_t *c, int err)
     LIST_REMOVE(s, ths_subscriber_link);
     subscription_unsubscribe(s);
   }
-  free(c->c_title);
-  free(c);
 }
-
-/*
- * data available on socket
- */
-static void
-client_data_read(client_t *c)
-{
-  int space = sizeof(c->c_input_buf) - c->c_input_buf_ptr - 1;
-  int r, cr = 0, i;
-  char buf[100];
-
-  if(space < 1) {
-    client_teardown(c, EBADMSG);
-    return;
-  }
-
-  r = read(c->c_fd, c->c_input_buf + c->c_input_buf_ptr, space);
-  if(r < 0) {
-    client_teardown(c, errno);
-    return;
-  }
-
-  if(r == 0) {
-    client_teardown(c, ECONNRESET);
-    return;
-  }
-
-  c->c_input_buf_ptr += r;
-  c->c_input_buf[c->c_input_buf_ptr] = 0;
-
-  while(1) {
-    cr = 0;
-
-    for(i = 0; i < c->c_input_buf_ptr; i++)
-      if(c->c_input_buf[i] == 0xa)
-	break;
-
-    if(i == c->c_input_buf_ptr)
-      break;
-
-    memcpy(buf, c->c_input_buf, i);
-    buf[i] = 0;
-    i++;
-    memmove(c->c_input_buf, c->c_input_buf + i, sizeof(c->c_input_buf) - i);
-    c->c_input_buf_ptr -= i;
-
-    i = strlen(buf);
-    while(i > 0 && buf[i-1] < 32)
-      buf[--i] = 0;
-    //    printf("buf = |%s|\n", buf);
-    client_req(c, buf);
-  }
-}
-
-
-/*
- * dispatcher callback
- */
-static void
-client_socket_callback(int events, void *opaque, int fd)
-{
-  client_t *c = opaque;
-
-  if(events & DISPATCH_ERR) {
-    client_teardown(c, ECONNRESET);
-    return;
-  }
-
-  if(events & DISPATCH_READ)
-    client_data_read(c);
-}
-
 
 
 /*
  *
  */
 static void
-client_connect_callback(int events, void *opaque, int fd)
+htsclient_tcp_callback(tcpevent_t event, void *tcpsession)
 {
-  struct sockaddr_in from;
-  socklen_t socklen = sizeof(struct sockaddr_in);
-  int newfd;
-  int val;
-  client_t *c;
-  char txt[30];
+  client_t *c = tcpsession;
 
-  if(!(events & DISPATCH_READ))
-    return;
+  switch(event) {
+  case TCP_CONNECT:
+    TAILQ_INIT(&c->c_refq);
+    LIST_INSERT_HEAD(&all_clients, c, c_global_link);
+    c->c_streamfd = -1;
+    dtimer_arm(&c->c_status_timer, client_status_update, c, 1);
+    break;
 
-  newfd = accept(fd, (struct sockaddr *)&from, &socklen);
-  if(newfd == -1)
-    return;
-  
-  fcntl(newfd, F_SETFL, fcntl(newfd, F_GETFL) | O_NONBLOCK);
+  case TCP_DISCONNECT:
+    client_disconnect(c);
+    break;
 
-  val = 1;
-  setsockopt(newfd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
-  
-  val = 30;
-  setsockopt(newfd, SOL_TCP, TCP_KEEPIDLE, &val, sizeof(val));
-
-  val = 15;
-  setsockopt(newfd, SOL_TCP, TCP_KEEPINTVL, &val, sizeof(val));
-
-  val = 5;
-  setsockopt(newfd, SOL_TCP, TCP_KEEPCNT, &val, sizeof(val));
-
-  val = 1;
-  setsockopt(newfd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
-
-  c = calloc(1, sizeof(client_t));
-  c->c_fd = newfd;
-  c->c_pkt_maxsiz = 188 * 7;
-  TAILQ_INIT(&c->c_refq);
-  LIST_INSERT_HEAD(&all_clients, c, c_global_link);
-  c->c_streamfd = -1; //socket(AF_INET, SOCK_DGRAM, 0);
-
-  snprintf(txt, sizeof(txt), "%s:%d",
-	   inet_ntoa(from.sin_addr), ntohs(from.sin_port));
-
-  c->c_title = strdup(txt);
-
-  syslog(LOG_INFO, "Got TCP connection from %s", c->c_title);
-
-  c->c_dispatch_handle = dispatch_addfd(newfd, client_socket_callback, c, 
-					DISPATCH_READ);
-
-  dtimer_arm(&c->c_status_timer, client_status_update, c, 1);
+  case TCP_INPUT:
+    tcp_line_read(&c->c_tcp_session, client_req);
+    break;
+  }
 }
-
 
 
 /*
@@ -950,32 +812,8 @@ client_connect_callback(int events, void *opaque, int fd)
 void
 client_start(void)
 {
-  struct sockaddr_in sin;
-  int s;
-  int one = 1;
-  s = socket(AF_INET, SOCK_STREAM, 0);
-  memset(&sin, 0, sizeof(sin));
-
-  sin.sin_family = AF_INET;
-  sin.sin_port = htons(9909);
-
-  setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
-
-  fcntl(s, F_SETFL, fcntl(s, F_GETFL) | O_NONBLOCK);
-
-  syslog(LOG_INFO, "Listening for TCP connections on %s:%d",
-	 inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
-
-  if(bind(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-    syslog(LOG_ERR, "Unable to bind socket for incomming TCP connections"
-	   "%s:%d -- %s",
-	   inet_ntoa(sin.sin_addr), ntohs(sin.sin_port),
-	   strerror(errno));
-    return;
-  }
-
-  listen(s, 1);
-  dispatch_addfd(s, client_connect_callback, NULL, DISPATCH_READ);
+  tcp_create_server(9909, sizeof(client_t), "htsclient",
+		    htsclient_tcp_callback);
 }
 
 
