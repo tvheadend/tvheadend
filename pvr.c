@@ -43,6 +43,7 @@
 #include "epg.h"
 #include "dispatch.h"
 #include "buffer.h"
+#include "strtab.h"
 
 struct pvr_rec_list pvrr_global_list;
 
@@ -1115,3 +1116,19 @@ pvrr_record_packet(pvr_rec_t *pvrr, th_pkt_t *pkt)
   }
 }
 
+
+
+
+static struct strtab recoptab[] = {
+  { "once",   RECOP_ONCE },
+  { "daily",  RECOP_DAILY },
+  { "weekly", RECOP_WEEKLY },
+  { "cancel", RECOP_CANCEL },
+  { "toggle", RECOP_TOGGLE }
+};
+
+int
+pvr_op2int(const char *op)
+{
+  return str2val(op, recoptab);
+}

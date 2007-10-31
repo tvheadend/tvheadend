@@ -115,4 +115,6 @@ void pvrr_set_rec_state(pvr_rec_t *pvrr, pvrr_rec_status_t status);
 
 void pvr_channel_record_op(th_channel_t *ch, int duration);
 
+int pvr_op2int(const char *op);
+
 #endif /* PVR_H */
