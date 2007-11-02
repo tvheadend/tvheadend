@@ -106,11 +106,15 @@ main(int argc, char **argv)
   const char *groupnam = NULL;
   char *cfgfile = NULL;
   int logfacility = LOG_DAEMON;
+  int disable_dvb = 0;
 
   signal(SIGPIPE, handle_sigpipe);
 
-  while((c = getopt(argc, argv, "c:fu:g:")) != -1) {
+  while((c = getopt(argc, argv, "c:fu:g:d")) != -1) {
     switch(c) {
+    case 'd':
+      disable_dvb = 1;
+      break;
     case 'c':
       cfgfile = optarg;
       break;
@@ -170,7 +174,8 @@ main(int argc, char **argv)
 
   pkt_init();
 
-  dvb_init();
+  if(!disable_dvb)
+    dvb_init();
   v4l_init();
 
   channels_load();
