@@ -3,6 +3,8 @@
 SRCS = main.c dispatch.c channels.c transports.c teletext.c psi.c \
 	subscriptions.c tsmux.c tsdemux.c pes.c buffer.c tcp.c
 
+SRCS += http.c
+
 SRCS += pvr.c
 
 SRCS += epg.c epg_xmltv.c

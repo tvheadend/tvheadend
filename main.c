@@ -49,6 +49,7 @@
 #include "subscriptions.h"
 #include "iptv_output.h"
 #include "rtsp.h"
+#include "http.h"
 #include "buffer.h"
 
 int running;
@@ -192,6 +193,7 @@ main(int argc, char **argv)
       rtsp_start();
       output_multicast_setup();
       client_start();
+      http_start();
     }
     dispatcher();
   }

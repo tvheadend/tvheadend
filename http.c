@@ -1,0 +1,465 @@
+/*
+ *  tvheadend, HTTP interface
+ *  Copyright (C) 2007 Andreas Öman
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <pthread.h>
+#include <assert.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
+
+#include <ffmpeg/base64.h>
+
+#include "tvhead.h"
+#include "channels.h"
+#include "subscriptions.h"
+#include "epg.h"
+#include "teletext.h"
+#include "dispatch.h"
+#include "dvb.h"
+#include "strtab.h"
+#include "rtp.h"
+#include "tsmux.h"
+#include "tcp.h"
+
+#define http_printf(x, fmt...) tcp_printf(&(x)->hc_tcp_session, fmt)
+
+typedef struct http_arg {
+  LIST_ENTRY(http_arg) link;
+  char *key;
+  char *val;
+} http_arg_t;
+
+
+typedef struct http_connection {
+  tcp_session_t hc_tcp_session; /* Must be first */
+  char *hc_url;
+  int hc_keep_alive;
+
+  LIST_HEAD(, http_arg) hc_args;
+
+  enum {
+    HTTP_CON_WAIT_REQUEST,
+    HTTP_CON_READ_HEADER,
+    HTTP_CON_END,
+  } hc_state;
+
+  enum {
+    HTTP_CMD_GET,
+  } hc_cmd;
+
+  enum {
+    HTTP_VERSION_0_9,
+    HTTP_VERSION_1_0,
+    HTTP_VERSION_1_1,
+  } hc_version;
+
+  char *hc_username;
+  char *hc_password;
+} http_connection_t;
+
+
+static struct strtab HTTP_cmdtab[] = {
+  { "GET",        HTTP_CMD_GET },
+};
+
+
+
+static struct strtab HTTP_versiontab[] = {
+  { "HTTP/0.9",        HTTP_VERSION_0_9 },
+  { "HTTP/1.0",        HTTP_VERSION_1_0 },
+  { "HTTP/1.1",        HTTP_VERSION_1_1 },
+};
+
+
+
+/*
+ * Delete all arguments associated with an HTTP connection
+ */
+static void
+http_con_flush_args(http_connection_t *hc)
+{
+  http_arg_t *ra;
+  while((ra = LIST_FIRST(&hc->hc_args)) != NULL) {
+    LIST_REMOVE(ra, link);
+    free(ra->key);
+    free(ra->val);
+    free(ra);
+  }
+}
+
+
+/**
+ * Find an argument associated with an HTTP connection
+ */
+static char *
+http_con_get_arg(http_connection_t *hc, char *name)
+{
+  http_arg_t *ra;
+  LIST_FOREACH(ra, &hc->hc_args, link)
+    if(!strcasecmp(ra->key, name))
+      return ra->val;
+  return NULL;
+}
+
+
+/**
+ * Set an argument associated with an HTTP connection
+ */
+static void
+http_con_set_arg(http_connection_t *hc, char *key, char *val)
+{
+  http_arg_t *ra;
+
+  LIST_FOREACH(ra, &hc->hc_args, link)
+    if(!strcasecmp(ra->key, key))
+      break;
+
+  if(ra == NULL) {
+    ra = malloc(sizeof(http_arg_t));
+    LIST_INSERT_HEAD(&hc->hc_args, ra, link);
+    ra->key = strdup(key);
+  } else {
+    free(ra->val);
+  }
+  ra->val = strdup(val);
+}
+
+
+/*
+ * Split a string in components delimited by 'delimiter'
+ */
+static int
+tokenize(char *buf, char **vec, int vecsize, int delimiter)
+{
+  int n = 0;
+
+  while(1) {
+    while((*buf > 0 && *buf < 33) || *buf == delimiter)
+      buf++;
+    if(*buf == 0)
+      break;
+    vec[n++] = buf;
+    if(n == vecsize)
+      break;
+    while(*buf > 32 && *buf != delimiter)
+      buf++;
+    if(*buf == 0)
+      break;
+    *buf = 0;
+    buf++;
+  }
+  return n;
+}
+
+/*
+ * HTTP status code to string
+ */
+
+#define HTTP_STATUS_OK           200
+#define HTTP_STATUS_BAD_REQUEST  400
+#define HTTP_STATUS_UNAUTHORIZED 401
+#define HTTP_STATUS_NOT_FOUND    404
+
+static const char *
+http_rc2str(int code)
+{
+  switch(code) {
+  case HTTP_STATUS_OK:              return "OK";
+  case HTTP_STATUS_NOT_FOUND:       return "Not found";
+  case HTTP_STATUS_UNAUTHORIZED:    return "Unauthorized";
+  case HTTP_STATUS_BAD_REQUEST:     return "Bad request";
+  default:
+    return "Unknown returncode";
+    break;
+  }
+}
+
+/**
+ * If current version mandates it, send a HTTP reply header back
+ */
+static void
+http_output_reply_header(http_connection_t *hc, int rc)
+{
+  if(hc->hc_version < HTTP_VERSION_1_0)
+    return;
+  
+  http_printf(hc, "%s %d %s\r\n", val2str(hc->hc_version, HTTP_versiontab),
+	      rc, http_rc2str(rc));
+  http_printf(hc, "Server: HTS/tvheadend\r\n");
+  http_printf(hc, "Connection: %s\r\n", 
+	      hc->hc_keep_alive ? "Keep-Alive" : "Close");
+}
+
+
+/**
+ * Send HTTP error back
+ */
+static void
+http_error(http_connection_t *hc, int error)
+{
+  char ret[300];
+  const char *errtxt = http_rc2str(error);
+
+  http_output_reply_header(hc, error);
+
+  snprintf(ret, sizeof(ret),
+	   "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\r\n"
+	   "<HTML><HEAD>\r\n"
+	   "<TITLE>%d %s</TITLE>\r\n"
+	   "</HEAD><BODY>\r\n"
+	   "<H1>%d %s</H1>\r\n"
+	   "</BODY></HTML>\r\n",
+	   error, errtxt,
+	   error, errtxt);
+
+  if(hc->hc_version >= HTTP_VERSION_1_0) {
+    http_printf(hc, "Content-Type: text/html\r\n");
+    http_printf(hc, "Content-Length: %d\r\n", strlen(ret));
+    http_printf(hc, "\r\n");
+  }
+  http_printf(hc, "%s", ret);
+}
+
+#if 0
+/**
+ * Send HTTP unauthorized back, and ask for authentication
+ */
+static void
+http_unauthorized(http_connection_t *hc)
+{
+  char ret[300];
+  const char *errtxt = http_rc2str(HTTP_STATUS_UNAUTHORIZED);
+
+  http_output_reply_header(hc, HTTP_STATUS_UNAUTHORIZED);
+
+  snprintf(ret, sizeof(ret),
+	   "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\r\n"
+	   "<HTML><HEAD>\r\n"
+	   "<TITLE>%d %s</TITLE>\r\n"
+	   "</HEAD><BODY>\r\n"
+	   "<H1>%d %s</H1>\r\n"
+	   "</BODY></HTML>\r\n",
+	   HTTP_STATUS_UNAUTHORIZED, errtxt,
+	   HTTP_STATUS_UNAUTHORIZED, errtxt);
+
+  if(hc->hc_version >= HTTP_VERSION_1_0) {
+    http_printf(hc, "WWW-Authenticate: Basic realm=\"tvheadend\"\r\n");
+    http_printf(hc, "Content-Type: text/html\r\n");
+    http_printf(hc, "Content-Length: %d\r\n", strlen(ret));
+    http_printf(hc, "\r\n");
+  }
+  http_printf(hc, "%s", ret);
+}
+#endif
+
+
+/**
+ * GET
+ */
+static void
+http_cmd_get(http_connection_t *hc)
+{
+  http_error(hc, HTTP_STATUS_NOT_FOUND);
+}
+
+
+/**
+ * Process a HTTP request, extract info from headers, dispatch command
+ * and clean up
+ */
+static int
+http_process_request(http_connection_t *hc)
+{
+  char *v, *argv[2];
+  int n;
+  uint8_t authbuf[150];
+  
+  /* Set keep-alive status */
+  v = http_con_get_arg(hc, "connection");
+
+  switch(hc->hc_version) {
+  case HTTP_VERSION_0_9:
+    hc->hc_keep_alive = 0;
+    break;
+
+  case HTTP_VERSION_1_0:
+    /* Keep-alive is default off, but can be enabled */
+    hc->hc_keep_alive = v != NULL && !strcasecmp(v, "keep-alive");
+    break;
+    
+  case HTTP_VERSION_1_1:
+    /* Keep-alive is default on, but can be disabled */
+    hc->hc_keep_alive = !(v != NULL && !strcasecmp(v, "close"));
+    break;
+  }
+
+  /* Extract authorization */
+  if((v = http_con_get_arg(hc, "Authorization")) != NULL) {
+    if((n = tokenize(v, argv, 2, -1)) == 2) {
+      n = av_base64_decode(authbuf, argv[1], sizeof(authbuf) - 1);
+      authbuf[n] = 0;
+      if((n = tokenize((char *)authbuf, argv, 2, ':')) == 2) {
+	hc->hc_username = strdup(argv[0]);
+	hc->hc_password = strdup(argv[1]);
+      }
+    }
+  }
+
+  /* Process the command */
+
+  switch(hc->hc_cmd) {
+  default:
+    http_error(hc, HTTP_STATUS_BAD_REQUEST);
+    break;
+  case HTTP_CMD_GET:
+    http_cmd_get(hc); 
+    break;
+  }
+  hc->hc_state = HTTP_CON_WAIT_REQUEST;
+
+  /* Clean up */
+
+  free(hc->hc_username);
+  hc->hc_username = NULL;
+
+  free(hc->hc_password);
+  hc->hc_password = NULL;
+
+  if(hc->hc_keep_alive == 0)
+    return -1;
+  return 0;
+}
+
+
+
+/*
+ * HTTP connection state machine & parser
+ */
+static int
+http_con_parse(void *aux, char *buf)
+{
+  http_connection_t *hc = aux;
+  int n, v;
+  char *argv[3], *c;
+
+  printf("HTTP INPUT: %s\n", buf);
+
+  switch(hc->hc_state) {
+  case HTTP_CON_WAIT_REQUEST:
+    http_con_flush_args(hc);
+    if(hc->hc_url != NULL) {
+      free(hc->hc_url);
+      hc->hc_url = NULL;
+    }
+
+    n = tokenize(buf, argv, 3, -1);
+    
+    if(n < 2)
+      return EBADRQC;
+
+    hc->hc_cmd = str2val(argv[0], HTTP_cmdtab);
+    hc->hc_url = strdup(argv[1]);
+
+
+    if(n == 3) {
+      v = str2val(argv[2], HTTP_versiontab);
+      if(v == -1) 
+	return EBADRQC;
+
+      hc->hc_version = v;
+      hc->hc_state = HTTP_CON_READ_HEADER;
+    } else {
+      hc->hc_version = HTTP_VERSION_0_9;
+      return http_process_request(hc);
+    }
+
+    break;
+
+  case HTTP_CON_READ_HEADER:
+    if(*buf == 0) /* Empty crlf line, end of header lines */
+      return http_process_request(hc);
+
+    n = tokenize(buf, argv, 2, -1);
+    if(n < 2)
+      break;
+
+    c = strrchr(argv[0], ':');
+    if(c == NULL)
+      break;
+    *c = 0;
+    http_con_set_arg(hc, argv[0], argv[1]);
+    break;
+
+  case HTTP_CON_END:
+    break;
+  }
+  return 0;
+}
+
+
+/*
+ * disconnect
+ */
+static void
+http_disconnect(http_connection_t *hc)
+{
+  http_con_flush_args(hc);
+  free(hc->hc_url);
+}
+
+
+/*
+ *
+ */
+static void
+http_tcp_callback(tcpevent_t event, void *tcpsession)
+{
+  http_connection_t *hc = tcpsession;
+
+  switch(event) {
+  case TCP_CONNECT:
+    break;
+
+  case TCP_DISCONNECT:
+    http_disconnect(hc);
+    break;
+
+  case TCP_INPUT:
+    tcp_line_read(&hc->hc_tcp_session, http_con_parse);
+    break;
+  }
+}
+
+
+/*
+ *  Fire up HTTP server
+ */
+
+void
+http_start(void)
+{
+  tcp_create_server(9980, sizeof(http_connection_t), "http",
+		    http_tcp_callback);
+}
