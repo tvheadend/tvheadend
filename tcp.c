@@ -104,7 +104,7 @@ tcp_line_read(tcp_session_t *ses, tcp_line_input_t *callback)
       buf[--i] = 0;
 
     if((err = callback(ses, buf)) != 0) {
-      tcp_disconnect(ses, err);
+      tcp_disconnect(ses, err < 0 ? 0 : err);
       break;
     }
   }
