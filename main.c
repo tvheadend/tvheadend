@@ -170,7 +170,7 @@ main(int argc, char **argv)
 
   pkt_init();
 
-  dvb_init();
+  //  dvb_init();
   v4l_init();
 
   channels_load();
@@ -190,7 +190,6 @@ main(int argc, char **argv)
       syslog(LOG_NOTICE, 
 	     "Initial input setup completed, starting output modules");
 
-      rtsp_start();
       output_multicast_setup();
       client_start();
       http_start();

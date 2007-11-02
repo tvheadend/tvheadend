@@ -21,6 +21,8 @@
 
 #include "tcp.h"
 
+LIST_HEAD(rtsp_session_head, rtsp_session);
+
 #define http_printf(x, fmt...) tcp_printf(&(x)->hc_tcp_session, fmt)
 
 LIST_HEAD(http_arg_list, http_arg);
@@ -47,18 +49,27 @@ typedef struct http_connection {
 
   enum {
     HTTP_CMD_GET,
+    RTSP_CMD_DESCRIBE,
+    RTSP_CMD_OPTIONS,
+    RTSP_CMD_SETUP,
+    RTSP_CMD_TEARDOWN,
+    RTSP_CMD_PLAY,
+    RTSP_CMD_PAUSE,
   } hc_cmd;
 
   enum {
     HTTP_VERSION_0_9,
     HTTP_VERSION_1_0,
     HTTP_VERSION_1_1,
+    RTSP_VERSION_1_0,
   } hc_version;
 
   char *hc_username;
   char *hc_password;
-} http_connection_t;
 
+  struct rtsp_session_head hc_rtsp_sessions;
+
+} http_connection_t;
 
 
 

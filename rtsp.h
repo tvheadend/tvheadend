@@ -19,6 +19,10 @@
 #ifndef RTSP_H_
 #define RTSP_H_
 
-void rtsp_start(void);
+#include "http.h"
+
+int rtsp_process_request(http_connection_t *hc);
+
+void rtsp_disconncet(http_connection_t *hc);
 
 #endif /* RTSP_H_ */

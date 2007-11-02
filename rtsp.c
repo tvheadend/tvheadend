@@ -50,7 +50,6 @@
 
 static AVRandomState rtsp_rnd;
 
-LIST_HEAD(rtsp_session_head, rtsp_session);
 static struct rtsp_session_head rtsp_sessions;
 
 
@@ -73,42 +72,6 @@ typedef struct rtsp_session {
 
 
 
-
-typedef struct rtsp_connection {
-  tcp_session_t rc_tcp_session; /* Must be first */
-  char *rc_url;
-
-  struct http_arg_list rc_args;
-
-  enum {
-    RTSP_CON_WAIT_REQUEST,
-    RTSP_CON_READ_HEADER,
-    RTSP_CON_END,
-  } rc_state;
-
-  enum {
-    RTSP_CMD_NONE,
-    RTSP_CMD_DESCRIBE,
-    RTSP_CMD_OPTIONS,
-    RTSP_CMD_SETUP,
-    RTSP_CMD_TEARDOWN,
-    RTSP_CMD_PLAY,
-    RTSP_CMD_PAUSE,
-
-  } rc_cmd;
-
-  struct rtsp_session_head rc_sessions;
-} rtsp_connection_t;
-
-
-static struct strtab RTSP_cmdtab[] = {
-  { "DESCRIBE",   RTSP_CMD_DESCRIBE },
-  { "OPTIONS",    RTSP_CMD_OPTIONS },
-  { "SETUP",      RTSP_CMD_SETUP },
-  { "PLAY",       RTSP_CMD_PLAY },
-  { "TEARDOWN",   RTSP_CMD_TEARDOWN },
-  { "PAUSE",      RTSP_CMD_PAUSE },
-};
 
 /**
  * Resolve an URL into a channel
@@ -275,40 +238,40 @@ rtsp_err2str(int err)
  * Return an error
  */
 static void
-rtsp_reply_error(rtsp_connection_t *rc, int error, const char *errstr)
+rtsp_reply_error(http_connection_t *hc, int error, const char *errstr)
 {
   char *c;
 
   if(errstr == NULL)
     errstr = rtsp_err2str(error);
 
-  syslog(LOG_INFO, "rtsp: %s: %s", tcp_logname(&rc->rc_tcp_session), errstr);
+  syslog(LOG_INFO, "rtsp: %s: %s", tcp_logname(&hc->hc_tcp_session), errstr);
 
-  rcprintf(rc, "RTSP/1.0 %d %s\r\n", error, errstr);
-  if((c = http_arg_get(&rc->rc_args, "cseq")) != NULL)
-    rcprintf(rc, "CSeq: %s\r\n", c);
-  rcprintf(rc, "\r\n");
+  http_printf(hc, "RTSP/1.0 %d %s\r\n", error, errstr);
+  if((c = http_arg_get(&hc->hc_args, "cseq")) != NULL)
+    http_printf(hc, "CSeq: %s\r\n", c);
+  http_printf(hc, "\r\n");
 }
 
 /*
  * Find a session pointed do by the current connection
  */
 static rtsp_session_t *
-rtsp_get_session(rtsp_connection_t *rc)
+rtsp_get_session(http_connection_t *hc)
 {
   char *ses;
   int sesid;
   rtsp_session_t *rs;
   th_channel_t *ch;
 
-  if((ch = rtsp_channel_by_url(rc->rc_url)) == NULL) {
-    rtsp_reply_error(rc, RTSP_STATUS_SERVICE, "URL does not resolve");
+  if((ch = rtsp_channel_by_url(hc->hc_url)) == NULL) {
+    rtsp_reply_error(hc, RTSP_STATUS_SERVICE, "URL does not resolve");
     return NULL;
   }
 
 
-  if((ses = http_arg_get(&rc->rc_args, "session")) == NULL) {
-    rtsp_reply_error(rc, RTSP_STATUS_SESSION, NULL);
+  if((ses = http_arg_get(&hc->hc_args, "session")) == NULL) {
+    rtsp_reply_error(hc, RTSP_STATUS_SESSION, NULL);
     return NULL;
   }
 
@@ -318,7 +281,7 @@ rtsp_get_session(rtsp_connection_t *rc)
       break;
   
   if(rs == NULL)
-    rtsp_reply_error(rc, RTSP_STATUS_SESSION, NULL);
+    rtsp_reply_error(hc, RTSP_STATUS_SESSION, NULL);
   
   return rs;
 }
@@ -329,24 +292,24 @@ rtsp_get_session(rtsp_connection_t *rc)
  */
 
 static void
-rtsp_cmd_play(rtsp_connection_t *rc)
+rtsp_cmd_play(http_connection_t *hc)
 {
   char *c;
   int64_t start;
   rtsp_session_t *rs;
  
-  rs = rtsp_get_session(rc);
+  rs = rtsp_get_session(hc);
   if(rs == NULL)
     return;
 
-  if((c = http_arg_get(&rc->rc_args, "range")) != NULL) {
+  if((c = http_arg_get(&hc->hc_args, "range")) != NULL) {
     start = AV_NOPTS_VALUE;
   } else {
     start = AV_NOPTS_VALUE;
   }
 
   if(rs->rs_muxer == NULL) {
-    rtsp_reply_error(rc, RTSP_STATUS_SERVICE, 
+    rtsp_reply_error(hc, RTSP_STATUS_SERVICE, 
 		     "No muxer attached (missing SETUP ?)");
     return;
   }
@@ -354,17 +317,17 @@ rtsp_cmd_play(rtsp_connection_t *rc)
   ts_muxer_play(rs->rs_muxer, start);
 
   syslog(LOG_INFO, "rtsp: %s: Starting playback of %s",
-	 tcp_logname(&rc->rc_tcp_session), rs->rs_s->ths_channel->ch_name);
+	 tcp_logname(&hc->hc_tcp_session), rs->rs_s->ths_channel->ch_name);
 
-  rcprintf(rc,
-	   "RTSP/1.0 200 OK\r\n"
-	   "Session: %u\r\n",
-	   rs->rs_id);
+  http_printf(hc,
+	      "RTSP/1.0 200 OK\r\n"
+	      "Session: %u\r\n",
+	      rs->rs_id);
 
-  if((c = http_arg_get(&rc->rc_args, "cseq")) != NULL)
-    rcprintf(rc, "CSeq: %s\r\n", c);
+  if((c = http_arg_get(&hc->hc_args, "cseq")) != NULL)
+    http_printf(hc, "CSeq: %s\r\n", c);
   
-  rcprintf(rc, "\r\n");
+  http_printf(hc, "\r\n");
 }
 
 /*
@@ -372,17 +335,17 @@ rtsp_cmd_play(rtsp_connection_t *rc)
  */
 
 static void
-rtsp_cmd_pause(rtsp_connection_t *rc)
+rtsp_cmd_pause(http_connection_t *hc)
 {
   char *c;
   rtsp_session_t *rs;
   
-  rs = rtsp_get_session(rc);
+  rs = rtsp_get_session(hc);
   if(rs == NULL)
     return;
 
   if(rs->rs_muxer == NULL) {
-    rtsp_reply_error(rc, RTSP_STATUS_SERVICE,
+    rtsp_reply_error(hc, RTSP_STATUS_SERVICE,
 		     "No muxer attached (missing SETUP ?)");
     return;
   }
@@ -390,17 +353,17 @@ rtsp_cmd_pause(rtsp_connection_t *rc)
   ts_muxer_pause(rs->rs_muxer);
 
   syslog(LOG_INFO, "rtsp: %s: Pausing playback of %s",
-	 tcp_logname(&rc->rc_tcp_session), rs->rs_s->ths_channel->ch_name);
+	 tcp_logname(&hc->hc_tcp_session), rs->rs_s->ths_channel->ch_name);
 
-  rcprintf(rc,
-	   "RTSP/1.0 200 OK\r\n"
-	   "Session: %u\r\n",
-	   rs->rs_id);
+  http_printf(hc,
+	      "RTSP/1.0 200 OK\r\n"
+	      "Session: %u\r\n",
+	      rs->rs_id);
 
-  if((c = http_arg_get(&rc->rc_args, "cseq")) != NULL)
-    rcprintf(rc, "CSeq: %s\r\n", c);
+  if((c = http_arg_get(&hc->hc_args, "cseq")) != NULL)
+    http_printf(hc, "CSeq: %s\r\n", c);
   
-  rcprintf(rc, "\r\n");
+  http_printf(hc, "\r\n");
 }
 
 /*
@@ -408,7 +371,7 @@ rtsp_cmd_pause(rtsp_connection_t *rc)
  */
 
 static void
-rtsp_cmd_setup(rtsp_connection_t *rc)
+rtsp_cmd_setup(http_connection_t *hc)
 {
   char *transports[10];
   char *params[10];
@@ -421,16 +384,16 @@ rtsp_cmd_setup(rtsp_connection_t *rc)
   th_channel_t *ch;
   struct sockaddr_in dst;
 
-  if((ch = rtsp_channel_by_url(rc->rc_url)) == NULL) {
-    rtsp_reply_error(rc, RTSP_STATUS_SERVICE, "URL does not resolve");
+  if((ch = rtsp_channel_by_url(hc->hc_url)) == NULL) {
+    rtsp_reply_error(hc, RTSP_STATUS_SERVICE, "URL does not resolve");
     return;
   }
 
   client_ports[0] = 0;
   client_ports[1] = 0;
 
-  if((t = http_arg_get(&rc->rc_args, "transport")) == NULL) {
-    rtsp_reply_error(rc, RTSP_STATUS_TRANSPORT, NULL);
+  if((t = http_arg_get(&hc->hc_args, "transport")) == NULL) {
+    rtsp_reply_error(hc, RTSP_STATUS_TRANSPORT, NULL);
     return;
   }
 
@@ -470,35 +433,35 @@ rtsp_cmd_setup(rtsp_connection_t *rc)
 
   if(i == nt) {
     /* couldnt find a suitable transport */
-    rtsp_reply_error(rc, RTSP_STATUS_TRANSPORT, NULL);
+    rtsp_reply_error(hc, RTSP_STATUS_TRANSPORT, NULL);
     return;
   }
 
-  memcpy(&dst, &rc->rc_tcp_session.tcp_peer_addr, sizeof(struct sockaddr_in));
+  memcpy(&dst, &hc->hc_tcp_session.tcp_peer_addr, sizeof(struct sockaddr_in));
   dst.sin_port = htons(client_ports[0]);
 
   if((rs = rtsp_session_create(ch, &dst)) == NULL) {
-    rtsp_reply_error(rc, RTSP_STATUS_INTERNAL, NULL);
+    rtsp_reply_error(hc, RTSP_STATUS_INTERNAL, NULL);
     return;
   }
 
-  LIST_INSERT_HEAD(&rc->rc_sessions, rs, rs_con_link);
+  LIST_INSERT_HEAD(&hc->hc_rtsp_sessions, rs, rs_con_link);
 
-  rcprintf(rc,
-	   "RTSP/1.0 200 OK\r\n"
-	   "Session: %u\r\n"
-	   "Transport: RTP/AVP/UDP;unicast;client_port=%d-%d;"
-	   "server_port=%d-%d\r\n",
-	   rs->rs_id,
-	   client_ports[0],
-	   client_ports[1],
-	   rs->rs_server_port[0],
-	   rs->rs_server_port[1]);
+  http_printf(hc,
+	      "RTSP/1.0 200 OK\r\n"
+	      "Session: %u\r\n"
+	      "Transport: RTP/AVP/UDP;unicast;client_port=%d-%d;"
+	      "server_port=%d-%d\r\n",
+	      rs->rs_id,
+	      client_ports[0],
+	      client_ports[1],
+	      rs->rs_server_port[0],
+	      rs->rs_server_port[1]);
 
-  if((c = http_arg_get(&rc->rc_args, "cseq")) != NULL)
-    rcprintf(rc, "CSeq: %s\r\n", c);
+  if((c = http_arg_get(&hc->hc_args, "cseq")) != NULL)
+    http_printf(hc, "CSeq: %s\r\n", c);
   
-  rcprintf(rc, "\r\n");
+  http_printf(hc, "\r\n");
 }
 
 
@@ -508,14 +471,14 @@ rtsp_cmd_setup(rtsp_connection_t *rc)
  */
 
 static void
-rtsp_cmd_describe(rtsp_connection_t *rc)
+rtsp_cmd_describe(http_connection_t *hc)
 {
   char sdpreply[1000];
   th_channel_t *ch;
   char *c;
 
-  if((ch = rtsp_channel_by_url(rc->rc_url)) == NULL) {
-    rtsp_reply_error(rc, RTSP_STATUS_SERVICE, "URL does not resolve");
+  if((ch = rtsp_channel_by_url(hc->hc_url)) == NULL) {
+    rtsp_reply_error(hc, RTSP_STATUS_SERVICE, "URL does not resolve");
     return;
   }
 
@@ -528,16 +491,16 @@ rtsp_cmd_describe(rtsp_connection_t *rc)
 	   ch->ch_name);
 
 
-  rcprintf(rc,
-	   "RTSP/1.0 200 OK\r\n"
-	   "Content-Type: application/sdp\r\n"
-	   "Content-Length: %d\r\n",
-	   strlen(sdpreply));
+  http_printf(hc,
+	      "RTSP/1.0 200 OK\r\n"
+	      "Content-Type: application/sdp\r\n"
+	      "Content-Length: %d\r\n",
+	      strlen(sdpreply));
 
-  if((c = http_arg_get(&rc->rc_args, "cseq")) != NULL)
-    rcprintf(rc, "CSeq: %s\r\n", c);
+  if((c = http_arg_get(&hc->hc_args, "cseq")) != NULL)
+    http_printf(hc, "CSeq: %s\r\n", c);
   
-  rcprintf(rc, "\r\n%s", sdpreply);
+  http_printf(hc, "\r\n%s", sdpreply);
 }
 
 
@@ -545,46 +508,45 @@ rtsp_cmd_describe(rtsp_connection_t *rc)
  * RTSP OPTIONS
  */
 static void
-rtsp_cmd_options(rtsp_connection_t *rc)
+rtsp_cmd_options(http_connection_t *hc)
 {
   char *c;
 
-  if(strcmp(rc->rc_url, "*") && rtsp_channel_by_url(rc->rc_url) == NULL) {
-    rtsp_reply_error(rc, RTSP_STATUS_SERVICE, "URL does not resolve");
+  if(strcmp(hc->hc_url, "*") && rtsp_channel_by_url(hc->hc_url) == NULL) {
+    rtsp_reply_error(hc, RTSP_STATUS_SERVICE, "URL does not resolve");
     return;
   }
 
-  rcprintf(rc,
-	   "RTSP/1.0 200 OK\r\n"
-	   "Public: DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE\r\n");
+  http_printf(hc,
+	      "RTSP/1.0 200 OK\r\n"
+	      "Public: DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE\r\n");
 
-  if((c = http_arg_get(&rc->rc_args, "cseq")) != NULL)
-    rcprintf(rc, "CSeq: %s\r\n", c);
-  rcprintf(rc, "\r\n");
+  if((c = http_arg_get(&hc->hc_args, "cseq")) != NULL)
+    http_printf(hc, "CSeq: %s\r\n", c);
+  http_printf(hc, "\r\n");
 }
 
 /*
  * RTSP TEARDOWN
  */
 static void
-rtsp_cmd_teardown(rtsp_connection_t *rc)
+rtsp_cmd_teardown(http_connection_t *hc)
 {
   rtsp_session_t *rs;
   char *c;
 
-  rs = rtsp_get_session(rc);
-  if(rs == NULL)
+  if((rs = rtsp_get_session(hc)) == NULL)
     return;
 
-  rcprintf(rc,
-	   "RTSP/1.0 200 OK\r\n"
-	   "Session: %u\r\n",
-	   rs->rs_id);
+  http_printf(hc,
+	      "RTSP/1.0 200 OK\r\n"
+	      "Session: %u\r\n",
+	      rs->rs_id);
 
-  if((c = http_arg_get(&rc->rc_args, "cseq")) != NULL)
-    rcprintf(rc, "CSeq: %s\r\n", c);
+  if((c = http_arg_get(&hc->hc_args, "cseq")) != NULL)
+    http_printf(hc, "CSeq: %s\r\n", c);
   
-  rcprintf(rc, "\r\n");
+  http_printf(hc, "\r\n");
 
   rtsp_session_destroy(rs);
 }
@@ -592,119 +554,43 @@ rtsp_cmd_teardown(rtsp_connection_t *rc)
 /*
  * RTSP connection state machine & parser
  */
-static int
-rtsp_con_parse(void *aux, char *buf)
+int 
+rtsp_process_request(http_connection_t *hc)
 {
-  rtsp_connection_t *rc = aux;
-  int n;
-  char *argv[3], *c;
-
-  switch(rc->rc_state) {
-  case RTSP_CON_WAIT_REQUEST:
-    http_arg_flush(&rc->rc_args);
-    if(rc->rc_url != NULL) {
-      free(rc->rc_url);
-      rc->rc_url = NULL;
-    }
-
-    n = http_tokenize(buf, argv, 3, -1);
-    
-    if(n < 3)
-      return EBADRQC;
-
-    if(strcmp(argv[2], "RTSP/1.0")) {
-      rtsp_reply_error(rc, RTSP_STATUS_VERSION, NULL);
-      return ECONNRESET;
-    }
-    rc->rc_cmd = str2val(argv[0], RTSP_cmdtab);
-    rc->rc_url = strdup(argv[1]);
-    rc->rc_state = RTSP_CON_READ_HEADER;
+  switch(hc->hc_cmd) {
+  default:
+    rtsp_reply_error(hc, RTSP_STATUS_METHOD, NULL);
     break;
-
-  case RTSP_CON_READ_HEADER:
-    if(*buf == 0) {
-      rc->rc_state = RTSP_CON_WAIT_REQUEST;
-      switch(rc->rc_cmd) {
-      default:
-	rtsp_reply_error(rc, RTSP_STATUS_METHOD, NULL);
-	break;
-      case RTSP_CMD_DESCRIBE:  	rtsp_cmd_describe(rc);  break;
-      case RTSP_CMD_SETUP: 	rtsp_cmd_setup(rc);     break;
-      case RTSP_CMD_PLAY:       rtsp_cmd_play(rc);      break;
-      case RTSP_CMD_PAUSE:      rtsp_cmd_pause(rc);     break;
-      case RTSP_CMD_OPTIONS:    rtsp_cmd_options(rc);   break;
-      case RTSP_CMD_TEARDOWN:   rtsp_cmd_teardown(rc);  break;
-
-      }
-      break;
-    }
-
-    n = http_tokenize(buf, argv, 2, -1);
-    if(n < 2)
-      break;
-
-    c = strrchr(argv[0], ':');
-    if(c == NULL)
-      break;
-    *c = 0;
-    http_arg_set(&rc->rc_args, argv[0], argv[1]);
+  case RTSP_CMD_DESCRIBE:
+    rtsp_cmd_describe(hc);
     break;
-
-  case RTSP_CON_END:
+  case RTSP_CMD_SETUP:
+    rtsp_cmd_setup(hc);
+    break;
+  case RTSP_CMD_PLAY:
+    rtsp_cmd_play(hc);
+    break;
+  case RTSP_CMD_PAUSE:
+    rtsp_cmd_pause(hc); 
+    break;
+  case RTSP_CMD_OPTIONS:   
+    rtsp_cmd_options(hc);
+    break;
+  case RTSP_CMD_TEARDOWN: 
+    rtsp_cmd_teardown(hc);
     break;
   }
   return 0;
 }
 
-
-/*
- * disconnect
- */
-static void
-rtsp_disconnect(rtsp_connection_t *rc)
-{
-  rtsp_session_t *rs;
-
-  http_arg_flush(&rc->rc_args);
-
-  while((rs = LIST_FIRST(&rc->rc_sessions)) != NULL)
-    rtsp_session_destroy(rs);
-
-  free(rc->rc_url);
-}
-
-
 /*
  *
  */
-static void
-rtsp_tcp_callback(tcpevent_t event, void *tcpsession)
-{
-  rtsp_connection_t *rc = tcpsession;
-
-  switch(event) {
-  case TCP_CONNECT:
-    break;
-
-  case TCP_DISCONNECT:
-    rtsp_disconnect(rc);
-    break;
-
-  case TCP_INPUT:
-    tcp_line_read(&rc->rc_tcp_session, rtsp_con_parse);
-    break;
-  }
-}
-
-
-/*
- *  Fire up RTSP server
- */
-
 void
-rtsp_start(void)
+rtsp_disconncet(http_connection_t *hc)
 {
-  av_init_random(time(NULL), &rtsp_rnd);
-  tcp_create_server(9908, sizeof(rtsp_connection_t), "rtsp",
-		    rtsp_tcp_callback);
+  rtsp_session_t *rs;
+
+  while((rs = LIST_FIRST(&hc->hc_rtsp_sessions)) != NULL)
+    rtsp_session_destroy(rs);
 }

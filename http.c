@@ -42,9 +42,16 @@
 #include "rtp.h"
 #include "tsmux.h"
 #include "http.h"
+#include "rtsp.h"
 
 static struct strtab HTTP_cmdtab[] = {
   { "GET",        HTTP_CMD_GET },
+  { "DESCRIBE",   RTSP_CMD_DESCRIBE },
+  { "OPTIONS",    RTSP_CMD_OPTIONS },
+  { "SETUP",      RTSP_CMD_SETUP },
+  { "PLAY",       RTSP_CMD_PLAY },
+  { "TEARDOWN",   RTSP_CMD_TEARDOWN },
+  { "PAUSE",      RTSP_CMD_PAUSE },
 };
 
 
@@ -53,6 +60,7 @@ static struct strtab HTTP_versiontab[] = {
   { "HTTP/0.9",        HTTP_VERSION_0_9 },
   { "HTTP/1.0",        HTTP_VERSION_1_0 },
   { "HTTP/1.1",        HTTP_VERSION_1_1 },
+  { "RTSP/1.0",        RTSP_VERSION_1_0 },
 };
 
 
@@ -183,6 +191,9 @@ http_process_request(http_connection_t *hc)
   v = http_arg_get(&hc->hc_args, "connection");
 
   switch(hc->hc_version) {
+  case RTSP_VERSION_1_0:
+    break;
+
   case HTTP_VERSION_0_9:
     hc->hc_keep_alive = 0;
     break;
@@ -220,7 +231,6 @@ http_process_request(http_connection_t *hc)
     http_cmd_get(hc); 
     break;
   }
-  hc->hc_state = HTTP_CON_WAIT_REQUEST;
 
   /* Clean up */
 
@@ -281,8 +291,19 @@ http_con_parse(void *aux, char *buf)
     break;
 
   case HTTP_CON_READ_HEADER:
-    if(*buf == 0) /* Empty crlf line, end of header lines */
-      return http_process_request(hc);
+    if(*buf == 0) { 
+      /* Empty crlf line, end of header lines */
+
+      hc->hc_state = HTTP_CON_WAIT_REQUEST;
+
+      switch(hc->hc_version) {
+      case RTSP_VERSION_1_0:
+	return rtsp_process_request(hc);
+
+      default:
+	return http_process_request(hc);
+      }
+    }
 
     n = http_tokenize(buf, argv, 2, -1);
     if(n < 2)
@@ -308,6 +329,7 @@ http_con_parse(void *aux, char *buf)
 static void
 http_disconnect(http_connection_t *hc)
 {
+  rtsp_disconncet(hc);
   http_arg_flush(&hc->hc_args);
   free(hc->hc_url);
 }
