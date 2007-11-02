@@ -26,6 +26,9 @@ struct strtab {
   int val;
 };
 
+static int str2val0(const char *str, struct strtab tab[], int l)
+     __attribute((unused));
+
 static int
 str2val0(const char *str, struct strtab tab[], int l)
 {
@@ -38,5 +41,20 @@ str2val0(const char *str, struct strtab tab[], int l)
 }
 
 #define str2val(str, tab) str2val0(str, tab, sizeof(tab) / sizeof(tab[0]))
+
+static const char * val2str0(int val, struct strtab tab[], int l)
+     __attribute__((unused));
+
+static const char *
+val2str0(int val, struct strtab tab[], int l)
+{
+  int i;
+  for(i = 0; i < l; i++)
+    if(tab[i].val == val)
+      return tab[i].str;
+  return NULL;
+} 
+
+#define val2str(val, tab) val2str0(val, tab, sizeof(tab) / sizeof(tab[0]))
 
 #endif /* STRTAB_H_ */
