@@ -42,9 +42,17 @@
 #include "tcp.h"
 #include "http.h"
 
-#include <ffmpeg/avformat.h>
-#include <ffmpeg/rtspcodes.h>
 #include <ffmpeg/random.h>
+
+#define RTSP_STATUS_OK           200
+#define RTSP_STATUS_UNAUTHORIZED 401
+#define RTSP_STATUS_METHOD       405
+#define RTSP_STATUS_SESSION      454
+#define RTSP_STATUS_TRANSPORT    461
+#define RTSP_STATUS_INTERNAL     500
+#define RTSP_STATUS_SERVICE      503
+
+
 
 #define rcprintf(c, fmt...) tcp_printf(&(rc)->rc_tcp_session, fmt)
 
@@ -218,16 +226,12 @@ rtsp_err2str(int err)
 {
   switch(err) {
   case RTSP_STATUS_OK:              return "OK";
+  case RTSP_STATUS_UNAUTHORIZED:    return "Unauthorized";
   case RTSP_STATUS_METHOD:          return "Method Not Allowed";
-  case RTSP_STATUS_BANDWIDTH:       return "Not Enough Bandwidth";
   case RTSP_STATUS_SESSION:         return "Session Not Found";
-  case RTSP_STATUS_STATE:           return "Method Not Valid in This State";
-  case RTSP_STATUS_AGGREGATE:       return "Aggregate operation not allowed";
-  case RTSP_STATUS_ONLY_AGGREGATE:  return "Only aggregate operation allowed";
   case RTSP_STATUS_TRANSPORT:       return "Unsupported transport";
   case RTSP_STATUS_INTERNAL:        return "Internal Server Error";
   case RTSP_STATUS_SERVICE:         return "Service Unavailable";
-  case RTSP_STATUS_VERSION:         return "RTSP Version not supported";
   default:
     return "Unknown Error";
     break;
@@ -252,6 +256,7 @@ rtsp_reply_error(http_connection_t *hc, int error, const char *errstr)
     http_printf(hc, "CSeq: %s\r\n", c);
   http_printf(hc, "\r\n");
 }
+
 
 /*
  * Find a session pointed do by the current connection
@@ -383,7 +388,7 @@ rtsp_cmd_setup(http_connection_t *hc)
   rtsp_session_t *rs;
   th_channel_t *ch;
   struct sockaddr_in dst;
-
+  
   if((ch = rtsp_channel_by_url(hc->hc_url)) == NULL) {
     rtsp_reply_error(hc, RTSP_STATUS_SERVICE, "URL does not resolve");
     return;
