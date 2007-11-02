@@ -76,15 +76,6 @@ typedef struct rtsp_session {
 
 
 
-
-typedef struct rtsp_arg {
-  LIST_ENTRY(rtsp_arg) link;
-  char *key;
-  char *val;
-} rtsp_arg_t;
-
-
-
 typedef struct rtsp_connection {
   tcp_session_t rc_tcp_session; /* Must be first */
   char *rc_url;
