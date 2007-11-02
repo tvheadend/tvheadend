@@ -167,7 +167,7 @@ http_unauthorized(http_connection_t *hc)
 
 
 /**
- * GET
+ * HTTP GET
  */
 static void
 http_cmd_get(http_connection_t *hc)
@@ -177,11 +177,28 @@ http_cmd_get(http_connection_t *hc)
 
 
 /**
- * Process a HTTP request, extract info from headers, dispatch command
- * and clean up
+ * Process a HTTP request
+ */
+static void
+http_process_request(http_connection_t *hc)
+{
+  switch(hc->hc_cmd) {
+  default:
+    http_error(hc, HTTP_STATUS_BAD_REQUEST);
+    break;
+  case HTTP_CMD_GET:
+    http_cmd_get(hc); 
+    break;
+  }
+}
+
+
+/**
+ * Process a request, extract info from headers, dispatch command and
+ * clean up
  */
 static int
-http_process_request(http_connection_t *hc)
+process_request(http_connection_t *hc)
 {
   char *v, *argv[2];
   int n;
@@ -192,6 +209,7 @@ http_process_request(http_connection_t *hc)
 
   switch(hc->hc_version) {
   case RTSP_VERSION_1_0:
+    hc->hc_keep_alive = 1;
     break;
 
   case HTTP_VERSION_0_9:
@@ -221,16 +239,20 @@ http_process_request(http_connection_t *hc)
     }
   }
 
-  /* Process the command */
+  
 
-  switch(hc->hc_cmd) {
-  default:
-    http_error(hc, HTTP_STATUS_BAD_REQUEST);
+  switch(hc->hc_version) {
+  case RTSP_VERSION_1_0:
+    rtsp_process_request(hc);
     break;
-  case HTTP_CMD_GET:
-    http_cmd_get(hc); 
+
+  case HTTP_VERSION_0_9:
+  case HTTP_VERSION_1_0:
+  case HTTP_VERSION_1_1:
+    http_process_request(hc);
     break;
   }
+
 
   /* Clean up */
 
@@ -285,7 +307,7 @@ http_con_parse(void *aux, char *buf)
       hc->hc_state = HTTP_CON_READ_HEADER;
     } else {
       hc->hc_version = HTTP_VERSION_0_9;
-      return http_process_request(hc);
+      return process_request(hc);
     }
 
     break;
@@ -293,16 +315,8 @@ http_con_parse(void *aux, char *buf)
   case HTTP_CON_READ_HEADER:
     if(*buf == 0) { 
       /* Empty crlf line, end of header lines */
-
       hc->hc_state = HTTP_CON_WAIT_REQUEST;
-
-      switch(hc->hc_version) {
-      case RTSP_VERSION_1_0:
-	return rtsp_process_request(hc);
-
-      default:
-	return http_process_request(hc);
-      }
+      return process_request(hc);
     }
 
     n = http_tokenize(buf, argv, 2, -1);
