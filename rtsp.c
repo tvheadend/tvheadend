@@ -50,8 +50,6 @@
 
 static AVRandomState rtsp_rnd;
 
-#define RTSP_MAX_LINE_LEN 1000
-
 LIST_HEAD(rtsp_session_head, rtsp_session);
 static struct rtsp_session_head rtsp_sessions;
 
