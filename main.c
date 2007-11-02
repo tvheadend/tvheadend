@@ -170,7 +170,7 @@ main(int argc, char **argv)
 
   pkt_init();
 
-  //  dvb_init();
+  dvb_init();
   v4l_init();
 
   channels_load();
