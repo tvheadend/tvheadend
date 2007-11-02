@@ -19,6 +19,57 @@
 #ifndef HTTP_H_
 #define HTTP_H_
 
+#include "tcp.h"
+
+#define http_printf(x, fmt...) tcp_printf(&(x)->hc_tcp_session, fmt)
+
+LIST_HEAD(http_arg_list, http_arg);
+
+typedef struct http_arg {
+  LIST_ENTRY(http_arg) link;
+  char *key;
+  char *val;
+} http_arg_t;
+
+
+typedef struct http_connection {
+  tcp_session_t hc_tcp_session; /* Must be first */
+  char *hc_url;
+  int hc_keep_alive;
+
+  struct http_arg_list hc_args;
+
+  enum {
+    HTTP_CON_WAIT_REQUEST,
+    HTTP_CON_READ_HEADER,
+    HTTP_CON_END,
+  } hc_state;
+
+  enum {
+    HTTP_CMD_GET,
+  } hc_cmd;
+
+  enum {
+    HTTP_VERSION_0_9,
+    HTTP_VERSION_1_0,
+    HTTP_VERSION_1_1,
+  } hc_version;
+
+  char *hc_username;
+  char *hc_password;
+} http_connection_t;
+
+
+
+
 void http_start(void);
+
+void http_arg_flush(struct http_arg_list *list);
+
+char *http_arg_get(struct http_arg_list *list, char *name);
+
+void http_arg_set(struct http_arg_list *list, char *key, char *val);
+
+int http_tokenize(char *buf, char **vec, int vecsize, int delimiter);
 
 #endif /* HTTP_H_ */

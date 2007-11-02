@@ -40,6 +40,7 @@
 #include "rtp.h"
 #include "tsmux.h"
 #include "tcp.h"
+#include "http.h"
 
 #include <ffmpeg/avformat.h>
 #include <ffmpeg/rtspcodes.h>
@@ -88,7 +89,7 @@ typedef struct rtsp_connection {
   tcp_session_t rc_tcp_session; /* Must be first */
   char *rc_url;
 
-  LIST_HEAD(, rtsp_arg) rc_args;
+  struct http_arg_list rc_args;
 
   enum {
     RTSP_CON_WAIT_REQUEST,
@@ -258,95 +259,6 @@ rtsp_session_destroy(rtsp_session_t *rs)
 
 
 /*
- * Delete all arguments associated with an RTSP connection
- */
-static void
-rtsp_con_flush_args(rtsp_connection_t *rc)
-{
-  rtsp_arg_t *ra;
-  while((ra = LIST_FIRST(&rc->rc_args)) != NULL) {
-    LIST_REMOVE(ra, link);
-    free(ra->key);
-    free(ra->val);
-    free(ra);
-  }
-}
-
-
-/**
- * Find an argument associated with an RTSP connection
- */
-static char *
-rtsp_con_get_arg(rtsp_connection_t *rc, char *name)
-{
-  rtsp_arg_t *ra;
-  LIST_FOREACH(ra, &rc->rc_args, link)
-    if(!strcasecmp(ra->key, name))
-      return ra->val;
-  return NULL;
-}
-
-
-/**
- * Set an argument associated with an RTSP connection
- */
-static void
-rtsp_con_set_arg(rtsp_connection_t *rc, char *key, char *val)
-{
-  rtsp_arg_t *ra;
-
-  LIST_FOREACH(ra, &rc->rc_args, link)
-    if(!strcasecmp(ra->key, key))
-      break;
-
-  if(ra == NULL) {
-    ra = malloc(sizeof(rtsp_arg_t));
-    LIST_INSERT_HEAD(&rc->rc_args, ra, link);
-    ra->key = strdup(key);
-  } else {
-    free(ra->val);
-  }
-  ra->val = strdup(val);
-#if 0  
-  if(!strcasecmp(key, "User-Agent")) {
-    free(rc->rc_logname);
-
-    snprintf(buf, sizeof(buf), "%s:%d [%s]",
-	     inet_ntoa(rc->rc_from.sin_addr), ntohs(rc->rc_from.sin_port),
-	     val);
-    rc->rc_logname = strdup(buf);
-  }
-#endif
-}
-
-
-/*
- * Split a string in components delimited by 'delimiter'
- */
-static int
-tokenize(char *buf, char **vec, int vecsize, int delimiter)
-{
-  int n = 0;
-
-  while(1) {
-    while((*buf > 0 && *buf < 33) || *buf == delimiter)
-      buf++;
-    if(*buf == 0)
-      break;
-    vec[n++] = buf;
-    if(n == vecsize)
-      break;
-    while(*buf > 32 && *buf != delimiter)
-      buf++;
-    if(*buf == 0)
-      break;
-    *buf = 0;
-    buf++;
-  }
-  return n;
-}
-
-/*
  * RTSP return code to string
  */
 static const char *
@@ -384,7 +296,7 @@ rtsp_reply_error(rtsp_connection_t *rc, int error, const char *errstr)
   syslog(LOG_INFO, "rtsp: %s: %s", tcp_logname(&rc->rc_tcp_session), errstr);
 
   rcprintf(rc, "RTSP/1.0 %d %s\r\n", error, errstr);
-  if((c = rtsp_con_get_arg(rc, "cseq")) != NULL)
+  if((c = http_arg_get(&rc->rc_args, "cseq")) != NULL)
     rcprintf(rc, "CSeq: %s\r\n", c);
   rcprintf(rc, "\r\n");
 }
@@ -406,7 +318,7 @@ rtsp_get_session(rtsp_connection_t *rc)
   }
 
 
-  if((ses = rtsp_con_get_arg(rc, "session")) == NULL) {
+  if((ses = http_arg_get(&rc->rc_args, "session")) == NULL) {
     rtsp_reply_error(rc, RTSP_STATUS_SESSION, NULL);
     return NULL;
   }
@@ -438,7 +350,7 @@ rtsp_cmd_play(rtsp_connection_t *rc)
   if(rs == NULL)
     return;
 
-  if((c = rtsp_con_get_arg(rc, "range")) != NULL) {
+  if((c = http_arg_get(&rc->rc_args, "range")) != NULL) {
     start = AV_NOPTS_VALUE;
   } else {
     start = AV_NOPTS_VALUE;
@@ -460,7 +372,7 @@ rtsp_cmd_play(rtsp_connection_t *rc)
 	   "Session: %u\r\n",
 	   rs->rs_id);
 
-  if((c = rtsp_con_get_arg(rc, "cseq")) != NULL)
+  if((c = http_arg_get(&rc->rc_args, "cseq")) != NULL)
     rcprintf(rc, "CSeq: %s\r\n", c);
   
   rcprintf(rc, "\r\n");
@@ -496,7 +408,7 @@ rtsp_cmd_pause(rtsp_connection_t *rc)
 	   "Session: %u\r\n",
 	   rs->rs_id);
 
-  if((c = rtsp_con_get_arg(rc, "cseq")) != NULL)
+  if((c = http_arg_get(&rc->rc_args, "cseq")) != NULL)
     rcprintf(rc, "CSeq: %s\r\n", c);
   
   rcprintf(rc, "\r\n");
@@ -528,17 +440,17 @@ rtsp_cmd_setup(rtsp_connection_t *rc)
   client_ports[0] = 0;
   client_ports[1] = 0;
 
-  if((t = rtsp_con_get_arg(rc, "transport")) == NULL) {
+  if((t = http_arg_get(&rc->rc_args, "transport")) == NULL) {
     rtsp_reply_error(rc, RTSP_STATUS_TRANSPORT, NULL);
     return;
   }
 
-  nt = tokenize(t, transports, 10, ',');
+  nt = http_tokenize(t, transports, 10, ',');
   
   /* Select a transport we can accept */
 
   for(i = 0; i < nt; i++) {
-    np = tokenize(transports[i], params, 10, ';');
+    np = http_tokenize(transports[i], params, 10, ';');
 
     if(np == 0)
       continue;
@@ -552,13 +464,13 @@ rtsp_cmd_setup(rtsp_connection_t *rc)
 
 
     for(j = 1; j < np; j++) {
-      if((navp = tokenize(params[j], avp, 2, '=')) == 0)
+      if((navp = http_tokenize(params[j], avp, 2, '=')) == 0)
 	continue;
 
       if(navp == 1 && !strcmp(avp[0], "unicast")) {
 	ismulticast = 0;
       } else if(navp == 2 && !strcmp(avp[0], "client_port")) {
-	nports = tokenize(avp[1], ports, 2, '-');
+	nports = http_tokenize(avp[1], ports, 2, '-');
 	if(nports > 0) client_ports[0] = atoi(ports[0]);
 	if(nports > 1) client_ports[1] = atoi(ports[1]);
       }
@@ -594,7 +506,7 @@ rtsp_cmd_setup(rtsp_connection_t *rc)
 	   rs->rs_server_port[0],
 	   rs->rs_server_port[1]);
 
-  if((c = rtsp_con_get_arg(rc, "cseq")) != NULL)
+  if((c = http_arg_get(&rc->rc_args, "cseq")) != NULL)
     rcprintf(rc, "CSeq: %s\r\n", c);
   
   rcprintf(rc, "\r\n");
@@ -633,7 +545,7 @@ rtsp_cmd_describe(rtsp_connection_t *rc)
 	   "Content-Length: %d\r\n",
 	   strlen(sdpreply));
 
-  if((c = rtsp_con_get_arg(rc, "cseq")) != NULL)
+  if((c = http_arg_get(&rc->rc_args, "cseq")) != NULL)
     rcprintf(rc, "CSeq: %s\r\n", c);
   
   rcprintf(rc, "\r\n%s", sdpreply);
@@ -657,7 +569,7 @@ rtsp_cmd_options(rtsp_connection_t *rc)
 	   "RTSP/1.0 200 OK\r\n"
 	   "Public: DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE\r\n");
 
-  if((c = rtsp_con_get_arg(rc, "cseq")) != NULL)
+  if((c = http_arg_get(&rc->rc_args, "cseq")) != NULL)
     rcprintf(rc, "CSeq: %s\r\n", c);
   rcprintf(rc, "\r\n");
 }
@@ -680,7 +592,7 @@ rtsp_cmd_teardown(rtsp_connection_t *rc)
 	   "Session: %u\r\n",
 	   rs->rs_id);
 
-  if((c = rtsp_con_get_arg(rc, "cseq")) != NULL)
+  if((c = http_arg_get(&rc->rc_args, "cseq")) != NULL)
     rcprintf(rc, "CSeq: %s\r\n", c);
   
   rcprintf(rc, "\r\n");
@@ -700,13 +612,13 @@ rtsp_con_parse(void *aux, char *buf)
 
   switch(rc->rc_state) {
   case RTSP_CON_WAIT_REQUEST:
-    rtsp_con_flush_args(rc);
+    http_arg_flush(&rc->rc_args);
     if(rc->rc_url != NULL) {
       free(rc->rc_url);
       rc->rc_url = NULL;
     }
 
-    n = tokenize(buf, argv, 3, -1);
+    n = http_tokenize(buf, argv, 3, -1);
     
     if(n < 3)
       return EBADRQC;
@@ -738,7 +650,7 @@ rtsp_con_parse(void *aux, char *buf)
       break;
     }
 
-    n = tokenize(buf, argv, 2, -1);
+    n = http_tokenize(buf, argv, 2, -1);
     if(n < 2)
       break;
 
@@ -746,7 +658,7 @@ rtsp_con_parse(void *aux, char *buf)
     if(c == NULL)
       break;
     *c = 0;
-    rtsp_con_set_arg(rc, argv[0], argv[1]);
+    http_arg_set(&rc->rc_args, argv[0], argv[1]);
     break;
 
   case RTSP_CON_END:
@@ -764,7 +676,7 @@ rtsp_disconnect(rtsp_connection_t *rc)
 {
   rtsp_session_t *rs;
 
-  rtsp_con_flush_args(rc);
+  http_arg_flush(&rc->rc_args);
 
   while((rs = LIST_FIRST(&rc->rc_sessions)) != NULL)
     rtsp_session_destroy(rs);

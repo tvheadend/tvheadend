@@ -41,44 +41,7 @@
 #include "strtab.h"
 #include "rtp.h"
 #include "tsmux.h"
-#include "tcp.h"
-
-#define http_printf(x, fmt...) tcp_printf(&(x)->hc_tcp_session, fmt)
-
-typedef struct http_arg {
-  LIST_ENTRY(http_arg) link;
-  char *key;
-  char *val;
-} http_arg_t;
-
-
-typedef struct http_connection {
-  tcp_session_t hc_tcp_session; /* Must be first */
-  char *hc_url;
-  int hc_keep_alive;
-
-  LIST_HEAD(, http_arg) hc_args;
-
-  enum {
-    HTTP_CON_WAIT_REQUEST,
-    HTTP_CON_READ_HEADER,
-    HTTP_CON_END,
-  } hc_state;
-
-  enum {
-    HTTP_CMD_GET,
-  } hc_cmd;
-
-  enum {
-    HTTP_VERSION_0_9,
-    HTTP_VERSION_1_0,
-    HTTP_VERSION_1_1,
-  } hc_version;
-
-  char *hc_username;
-  char *hc_password;
-} http_connection_t;
-
+#include "http.h"
 
 static struct strtab HTTP_cmdtab[] = {
   { "GET",        HTTP_CMD_GET },
@@ -92,86 +55,6 @@ static struct strtab HTTP_versiontab[] = {
   { "HTTP/1.1",        HTTP_VERSION_1_1 },
 };
 
-
-
-/*
- * Delete all arguments associated with an HTTP connection
- */
-static void
-http_con_flush_args(http_connection_t *hc)
-{
-  http_arg_t *ra;
-  while((ra = LIST_FIRST(&hc->hc_args)) != NULL) {
-    LIST_REMOVE(ra, link);
-    free(ra->key);
-    free(ra->val);
-    free(ra);
-  }
-}
-
-
-/**
- * Find an argument associated with an HTTP connection
- */
-static char *
-http_con_get_arg(http_connection_t *hc, char *name)
-{
-  http_arg_t *ra;
-  LIST_FOREACH(ra, &hc->hc_args, link)
-    if(!strcasecmp(ra->key, name))
-      return ra->val;
-  return NULL;
-}
-
-
-/**
- * Set an argument associated with an HTTP connection
- */
-static void
-http_con_set_arg(http_connection_t *hc, char *key, char *val)
-{
-  http_arg_t *ra;
-
-  LIST_FOREACH(ra, &hc->hc_args, link)
-    if(!strcasecmp(ra->key, key))
-      break;
-
-  if(ra == NULL) {
-    ra = malloc(sizeof(http_arg_t));
-    LIST_INSERT_HEAD(&hc->hc_args, ra, link);
-    ra->key = strdup(key);
-  } else {
-    free(ra->val);
-  }
-  ra->val = strdup(val);
-}
-
-
-/*
- * Split a string in components delimited by 'delimiter'
- */
-static int
-tokenize(char *buf, char **vec, int vecsize, int delimiter)
-{
-  int n = 0;
-
-  while(1) {
-    while((*buf > 0 && *buf < 33) || *buf == delimiter)
-      buf++;
-    if(*buf == 0)
-      break;
-    vec[n++] = buf;
-    if(n == vecsize)
-      break;
-    while(*buf > 32 && *buf != delimiter)
-      buf++;
-    if(*buf == 0)
-      break;
-    *buf = 0;
-    buf++;
-  }
-  return n;
-}
 
 /*
  * HTTP status code to string
@@ -297,7 +180,7 @@ http_process_request(http_connection_t *hc)
   uint8_t authbuf[150];
   
   /* Set keep-alive status */
-  v = http_con_get_arg(hc, "connection");
+  v = http_arg_get(&hc->hc_args, "connection");
 
   switch(hc->hc_version) {
   case HTTP_VERSION_0_9:
@@ -316,11 +199,11 @@ http_process_request(http_connection_t *hc)
   }
 
   /* Extract authorization */
-  if((v = http_con_get_arg(hc, "Authorization")) != NULL) {
-    if((n = tokenize(v, argv, 2, -1)) == 2) {
+  if((v = http_arg_get(&hc->hc_args, "Authorization")) != NULL) {
+    if((n = http_tokenize(v, argv, 2, -1)) == 2) {
       n = av_base64_decode(authbuf, argv[1], sizeof(authbuf) - 1);
       authbuf[n] = 0;
-      if((n = tokenize((char *)authbuf, argv, 2, ':')) == 2) {
+      if((n = http_tokenize((char *)authbuf, argv, 2, ':')) == 2) {
 	hc->hc_username = strdup(argv[0]);
 	hc->hc_password = strdup(argv[1]);
       }
@@ -368,13 +251,13 @@ http_con_parse(void *aux, char *buf)
 
   switch(hc->hc_state) {
   case HTTP_CON_WAIT_REQUEST:
-    http_con_flush_args(hc);
+    http_arg_flush(&hc->hc_args);
     if(hc->hc_url != NULL) {
       free(hc->hc_url);
       hc->hc_url = NULL;
     }
 
-    n = tokenize(buf, argv, 3, -1);
+    n = http_tokenize(buf, argv, 3, -1);
     
     if(n < 2)
       return EBADRQC;
@@ -401,7 +284,7 @@ http_con_parse(void *aux, char *buf)
     if(*buf == 0) /* Empty crlf line, end of header lines */
       return http_process_request(hc);
 
-    n = tokenize(buf, argv, 2, -1);
+    n = http_tokenize(buf, argv, 2, -1);
     if(n < 2)
       break;
 
@@ -409,7 +292,7 @@ http_con_parse(void *aux, char *buf)
     if(c == NULL)
       break;
     *c = 0;
-    http_con_set_arg(hc, argv[0], argv[1]);
+    http_arg_set(&hc->hc_args, argv[0], argv[1]);
     break;
 
   case HTTP_CON_END:
@@ -425,7 +308,7 @@ http_con_parse(void *aux, char *buf)
 static void
 http_disconnect(http_connection_t *hc)
 {
-  http_con_flush_args(hc);
+  http_arg_flush(&hc->hc_args);
   free(hc->hc_url);
 }
 
@@ -462,4 +345,91 @@ http_start(void)
 {
   tcp_create_server(9980, sizeof(http_connection_t), "http",
 		    http_tcp_callback);
+}
+
+
+
+
+
+
+
+
+
+/*
+ * Delete all arguments associated with a connection
+ */
+void
+http_arg_flush(struct http_arg_list *list)
+{
+  http_arg_t *ra;
+  while((ra = LIST_FIRST(list)) != NULL) {
+    LIST_REMOVE(ra, link);
+    free(ra->key);
+    free(ra->val);
+    free(ra);
+  }
+}
+
+
+/**
+ * Find an argument associated with a connection
+ */
+char *
+http_arg_get(struct http_arg_list *list, char *name)
+{
+  http_arg_t *ra;
+  LIST_FOREACH(ra, list, link)
+    if(!strcasecmp(ra->key, name))
+      return ra->val;
+  return NULL;
+}
+
+
+/**
+ * Set an argument associated with a connection
+ */
+void
+http_arg_set(struct http_arg_list *list, char *key, char *val)
+{
+  http_arg_t *ra;
+
+  LIST_FOREACH(ra, list, link)
+    if(!strcasecmp(ra->key, key))
+      break;
+
+  if(ra == NULL) {
+    ra = malloc(sizeof(http_arg_t));
+    LIST_INSERT_HEAD(list, ra, link);
+    ra->key = strdup(key);
+  } else {
+    free(ra->val);
+  }
+  ra->val = strdup(val);
+}
+
+
+/*
+ * Split a string in components delimited by 'delimiter'
+ */
+int
+http_tokenize(char *buf, char **vec, int vecsize, int delimiter)
+{
+  int n = 0;
+
+  while(1) {
+    while((*buf > 0 && *buf < 33) || *buf == delimiter)
+      buf++;
+    if(*buf == 0)
+      break;
+    vec[n++] = buf;
+    if(n == vecsize)
+      break;
+    while(*buf > 32 && *buf != delimiter)
+      buf++;
+    if(*buf == 0)
+      break;
+    *buf = 0;
+    buf++;
+  }
+  return n;
 }
