@@ -44,6 +44,8 @@
 #include "http.h"
 #include "rtsp.h"
 
+static LIST_HEAD(, http_path) http_paths;
+
 static struct strtab HTTP_cmdtab[] = {
   { "GET",        HTTP_CMD_GET },
   { "DESCRIBE",   RTSP_CMD_DESCRIBE },
@@ -62,6 +64,33 @@ static struct strtab HTTP_versiontab[] = {
   { "HTTP/1.1",        HTTP_VERSION_1_1 },
   { "RTSP/1.0",        RTSP_VERSION_1_0 },
 };
+
+
+/**
+ *
+ */
+static http_path_t *
+http_resolve(http_connection_t *hc, char **remainp)
+{
+  http_path_t *hp;
+  char *v;
+  LIST_FOREACH(hp, &http_paths, hp_link) {
+    if(!strncmp(hc->hc_url, hp->hp_path, hp->hp_len))
+      break;
+  }
+
+  if(hp == NULL)
+    return NULL;
+
+  v = hc->hc_url + hp->hp_len;
+
+  if(*v != 0 && *v != '/')
+    return NULL;
+
+  *remainp = v;
+  return hp;
+}
+
 
 
 /*
@@ -107,7 +136,7 @@ http_output_reply_header(http_connection_t *hc, int rc)
 /**
  * Send HTTP error back
  */
-static void
+void
 http_error(http_connection_t *hc, int error)
 {
   char ret[300];
@@ -126,45 +155,15 @@ http_error(http_connection_t *hc, int error)
 	   error, errtxt);
 
   if(hc->hc_version >= HTTP_VERSION_1_0) {
+    if(error == HTTP_STATUS_UNAUTHORIZED)
+      http_printf(hc, "WWW-Authenticate: Basic realm=\"tvheadend\"\r\n");
+
     http_printf(hc, "Content-Type: text/html\r\n");
     http_printf(hc, "Content-Length: %d\r\n", strlen(ret));
     http_printf(hc, "\r\n");
   }
   http_printf(hc, "%s", ret);
 }
-
-#if 0
-/**
- * Send HTTP unauthorized back, and ask for authentication
- */
-static void
-http_unauthorized(http_connection_t *hc)
-{
-  char ret[300];
-  const char *errtxt = http_rc2str(HTTP_STATUS_UNAUTHORIZED);
-
-  http_output_reply_header(hc, HTTP_STATUS_UNAUTHORIZED);
-
-  snprintf(ret, sizeof(ret),
-	   "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\r\n"
-	   "<HTML><HEAD>\r\n"
-	   "<TITLE>%d %s</TITLE>\r\n"
-	   "</HEAD><BODY>\r\n"
-	   "<H1>%d %s</H1>\r\n"
-	   "</BODY></HTML>\r\n",
-	   HTTP_STATUS_UNAUTHORIZED, errtxt,
-	   HTTP_STATUS_UNAUTHORIZED, errtxt);
-
-  if(hc->hc_version >= HTTP_VERSION_1_0) {
-    http_printf(hc, "WWW-Authenticate: Basic realm=\"tvheadend\"\r\n");
-    http_printf(hc, "Content-Type: text/html\r\n");
-    http_printf(hc, "Content-Length: %d\r\n", strlen(ret));
-    http_printf(hc, "\r\n");
-  }
-  http_printf(hc, "%s", ret);
-}
-#endif
-
 
 /**
  * HTTP GET
@@ -172,7 +171,19 @@ http_unauthorized(http_connection_t *hc)
 static void
 http_cmd_get(http_connection_t *hc)
 {
-  http_error(hc, HTTP_STATUS_NOT_FOUND);
+  http_path_t *hp;
+  char *remain;
+  int err;
+
+  hp = http_resolve(hc, &remain);
+  if(hp == NULL) {
+    http_error(hc, HTTP_STATUS_NOT_FOUND);
+    return;
+  }
+
+  err = hp->hp_callback(hc, remain, hp->hp_opaque);
+  if(err)
+    http_error(hc, err);
 }
 
 
@@ -469,3 +480,21 @@ http_tokenize(char *buf, char **vec, int vecsize, int delimiter)
   }
   return n;
 }
+
+
+/**
+ * Add a callback for a given "virtual path" on our HTTP server
+ */
+http_path_t *
+http_path_add(const char *path, void *opaque, http_callback_t *callback)
+{
+  http_path_t *hp = malloc(sizeof(http_path_t));
+
+  hp->hp_len      = strlen(path);
+  hp->hp_path     = strdup(path);
+  hp->hp_opaque   = opaque;
+  hp->hp_callback = callback;
+  LIST_INSERT_HEAD(&http_paths, hp, hp_link);
+  return hp;
+}
+

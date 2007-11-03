@@ -83,4 +83,21 @@ void http_arg_set(struct http_arg_list *list, char *key, char *val);
 
 int http_tokenize(char *buf, char **vec, int vecsize, int delimiter);
 
+void http_error(http_connection_t *hc, int error);
+
+
+typedef int (http_callback_t)(http_connection_t *hc, const char *remain,
+			      void *opaque);
+
+typedef struct http_path {
+  LIST_ENTRY(http_path) hp_link;
+  const char *hp_path;
+  void *hp_opaque;
+  http_callback_t *hp_callback;
+  int hp_len;
+} http_path_t;
+
+http_path_t *http_path_add(const char *path, void *opaque,
+			   http_callback_t *callback);
+
 #endif /* HTTP_H_ */
