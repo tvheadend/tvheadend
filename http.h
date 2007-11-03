@@ -85,6 +85,7 @@ int http_tokenize(char *buf, char **vec, int vecsize, int delimiter);
 
 void http_error(http_connection_t *hc, int error);
 
+void http_output_reply_header(http_connection_t *hc, int rc);
 
 typedef int (http_callback_t)(http_connection_t *hc, const char *remain,
 			      void *opaque);

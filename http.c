@@ -119,7 +119,7 @@ http_rc2str(int code)
 /**
  * If current version mandates it, send a HTTP reply header back
  */
-static void
+void
 http_output_reply_header(http_connection_t *hc, int rc)
 {
   if(hc->hc_version < HTTP_VERSION_1_0)
