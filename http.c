@@ -87,6 +87,9 @@ http_resolve(http_connection_t *hc, char **remainp)
   if(*v != 0 && *v != '/')
     return NULL;
 
+  if(*v == '/')
+    v++;
+
   *remainp = v;
   return hp;
 }
