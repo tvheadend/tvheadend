@@ -74,6 +74,10 @@ typedef struct tcp_session {
 
 } tcp_session_t;
 
+void tcp_init_queue(tcp_queue_t *tq, int maxdepth);
+
+void tcp_flush_queue(tcp_queue_t *tq);
+
 void tcp_disconnect(tcp_session_t *ses, int err);
 
 void tcp_create_server(int port, size_t session_size, const char *name,
@@ -87,5 +91,9 @@ int tcp_send_msg(tcp_session_t *ses, tcp_queue_t *tq, const void *data,
 		 size_t len);
 
 void tcp_printf(tcp_session_t *ses, const char *fmt, ...);
+
+void tcp_qprintf(tcp_queue_t *tq, const char *fmt, ...);
+
+void tcp_output_queue(tcp_session_t *ses, tcp_queue_t *dst, tcp_queue_t *src);
 
 #endif /* TCP_H_ */

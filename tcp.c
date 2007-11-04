@@ -34,6 +34,34 @@
 
 
 /*
+ *  printf data on a TCP queue
+ */
+void
+tcp_qprintf(tcp_queue_t *tq, const char *fmt, ...)
+{
+  va_list ap;
+  char buf[5000];
+  void *out;
+  tcp_data_t *td;
+
+  td = malloc(sizeof(tcp_data_t));
+  td->td_offset = 0;
+
+  va_start(ap, fmt);
+  td->td_datalen = vsnprintf(buf, sizeof(buf), fmt, ap);
+  va_end(ap);
+
+  out = malloc(td->td_datalen);
+  memcpy(out, buf, td->td_datalen);
+  td->td_data = out;
+  TAILQ_INSERT_TAIL(&tq->tq_messages, td, td_link);
+  tq->tq_depth += td->td_datalen;
+}
+
+
+
+
+/*
  *  printfs data on a TCP connection
  */
 void
@@ -53,8 +81,6 @@ tcp_printf(tcp_session_t *ses, const char *fmt, ...)
 
   tcp_send_msg(ses, &ses->tcp_q_hi, out, l);
 }
-
-
 
 /**
  * Line parser for TCP based connections. Note that callback cannot
@@ -115,7 +141,7 @@ tcp_line_read(tcp_session_t *ses, tcp_line_input_t *callback)
 /**
  * Create an output queue
  */
-static void
+void
 tcp_init_queue(tcp_queue_t *tq, int maxdepth)
 {
   TAILQ_INIT(&tq->tq_messages);
@@ -126,7 +152,7 @@ tcp_init_queue(tcp_queue_t *tq, int maxdepth)
 /**
  * Flusing all pending data from a queue
  */
-static void
+void
 tcp_flush_queue(tcp_queue_t *tq)
 {
   tcp_data_t *td;
@@ -233,6 +259,28 @@ tcp_send_msg(tcp_session_t *ses, tcp_queue_t *tq, const void *data,
 }
 
 
+/*
+ *  Move a tcp queue onto a session
+ */
+void
+tcp_output_queue(tcp_session_t *ses, tcp_queue_t *dst, tcp_queue_t *src)
+{
+  tcp_data_t *td;
+
+  if(dst == NULL)
+    dst = &ses->tcp_q_low;
+
+  while((td = TAILQ_FIRST(&src->tq_messages)) != NULL) {
+    TAILQ_REMOVE(&src->tq_messages, td, td_link);
+    TAILQ_INSERT_TAIL(&dst->tq_messages, td, td_link);
+    dst->tq_depth += td->td_datalen;
+  }
+
+  if(!ses->tcp_blocked)
+    tcp_transmit(ses);
+
+  src->tq_depth = 0;
+}
 
 /**
  * Disconnect handler
