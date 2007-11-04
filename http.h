@@ -87,6 +87,9 @@ void http_error(http_connection_t *hc, int error);
 
 void http_output_reply_header(http_connection_t *hc, int rc);
 
+void http_output_queue(http_connection_t *hc, tcp_queue_t *tq,
+		       const char *content);
+
 typedef int (http_callback_t)(http_connection_t *hc, const char *remain,
 			      void *opaque);
 

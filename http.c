@@ -166,6 +166,25 @@ http_error(http_connection_t *hc, int error)
 }
 
 /**
+ * Send an HTTP OK and post data from a tcp queue
+ */
+void
+http_output_queue(http_connection_t *hc, tcp_queue_t *tq, const char *content)
+{
+  http_output_reply_header(hc, 200);
+
+  if(hc->hc_version >= HTTP_VERSION_1_0) {
+    http_printf(hc, 
+		"Content-Type: %s\r\n"
+		"Content-Length: %d\r\n"
+		"\r\n",
+		content, tq->tq_depth);
+  }
+
+  tcp_output_queue(&hc->hc_tcp_session, NULL, tq);
+}
+
+/**
  * HTTP GET
  */
 static void
