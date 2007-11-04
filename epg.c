@@ -109,6 +109,18 @@ epg_event_get_current(th_channel_t *ch)
   return e;
 }
 
+event_t *
+epg_event_find_current_or_upcoming(th_channel_t *ch)
+{
+  event_t *e;
+
+  TAILQ_FOREACH(e, &ch->ch_epg_events, e_link)
+    if(e->e_start + e->e_duration > dispatch_clock)
+      break;
+  return e;
+}
+
+
 static int
 startcmp(event_t *a, event_t *b)
 {

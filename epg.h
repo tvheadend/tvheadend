@@ -50,4 +50,6 @@ void epg_transfer_events(th_channel_t *ch, struct event_queue *src,
 
 void event_time_txt(time_t start, int duration, char *out, int outlen);
 
+event_t *epg_event_find_current_or_upcoming(th_channel_t *ch);
+
 #endif /* EPG_H */
