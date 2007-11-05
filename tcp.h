@@ -50,7 +50,7 @@ typedef struct tcpserver {
   const char *tcp_server_name;
 } tcp_server_t;
 
-#define TCP_MAX_LINE_LEN 256
+#define TCP_MAX_LINE_LEN 4000
 
 typedef struct tcp_session {
   void *tcp_dispatch_handle;
