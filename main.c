@@ -51,6 +51,7 @@
 #include "rtsp.h"
 #include "http.h"
 #include "buffer.h"
+#include "htmlui.h"
 
 int running;
 int xmltvreload;
@@ -107,10 +108,11 @@ main(int argc, char **argv)
   char *cfgfile = NULL;
   int logfacility = LOG_DAEMON;
   int disable_dvb = 0;
+  int http_port = 0;
 
   signal(SIGPIPE, handle_sigpipe);
 
-  while((c = getopt(argc, argv, "c:fu:g:d")) != -1) {
+  while((c = getopt(argc, argv, "c:fu:g:dh:")) != -1) {
     switch(c) {
     case 'd':
       disable_dvb = 1;
@@ -126,6 +128,9 @@ main(int argc, char **argv)
       break;
     case 'g':
       groupnam = optarg;
+      break;
+    case 'h':
+      http_port = atoi(optarg);
       break;
     }
   }
@@ -187,6 +192,8 @@ main(int argc, char **argv)
 
   subscriptions_init();
 
+  htmlui_start();
+
   running = 1;
   while(running) {
 
@@ -197,7 +204,9 @@ main(int argc, char **argv)
 
       output_multicast_setup();
       client_start();
-      http_start();
+      if(http_port)
+	http_start(http_port);
+
     }
     dispatcher();
   }

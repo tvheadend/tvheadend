@@ -410,9 +410,9 @@ http_tcp_callback(tcpevent_t event, void *tcpsession)
  */
 
 void
-http_start(void)
+http_start(int port)
 {
-  tcp_create_server(9980, sizeof(http_connection_t), "http",
+  tcp_create_server(port, sizeof(http_connection_t), "http",
 		    http_tcp_callback);
 }
 
