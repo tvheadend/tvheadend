@@ -230,6 +230,7 @@ pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op)
     case HTSTV_PVR_STATUS_BUFFER_ERROR:
       pvr_free(pvrr);
       pvrr = NULL;
+      pvr_database_save();
       break;
     }
   }
