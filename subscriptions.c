@@ -128,7 +128,7 @@ subscription_create(th_channel_t *ch, unsigned int weight, const char *name,
 {
   th_subscription_t *s;
 
-  s = malloc(sizeof(th_subscription_t));
+  s = calloc(1, sizeof(th_subscription_t));
   s->ths_callback  = cb;
   s->ths_opaque    = opaque;
   s->ths_title     = strdup(name);
