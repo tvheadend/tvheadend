@@ -187,8 +187,9 @@ pkt_store(th_pkt_t *pkt)
   storage_mem_enq(pkt);
   storage_disk_enq(pkt);
 
-  pwrite(pkt->pkt_storage->ts_fd, pkt->pkt_payload, pkt->pkt_payloadlen,
-	 pkt->pkt_storage_offset);
+  if(pkt->pkt_storage)
+    pwrite(pkt->pkt_storage->ts_fd, pkt->pkt_payload, pkt->pkt_payloadlen,
+	   pkt->pkt_storage_offset);
 }
 
 
