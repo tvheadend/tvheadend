@@ -42,52 +42,20 @@ typedef struct output_multicast {
   void *om_muxer;
   int om_fd;
   struct sockaddr_in om_dst;
-  int om_ptr;
-  char om_buf[MULTICAST_PKT_SIZ];
 } output_multicast_t;
 
-
 /**
- *  Raw output directly from input, without internal remux
- */
-static void
-iptv_output_raw(struct th_subscription *s, void *data, int len,
-		th_stream_t *st, void *opaque)
-{
-  output_multicast_t *om = opaque;
-
-  if(st->st_type == HTSTV_TABLE)
-    return;
-  
-  assert(len == 188);
-
-  memcpy(om->om_buf + om->om_ptr, data, 188);
-  om->om_ptr += 188;
-  
-  if(om->om_ptr != MULTICAST_PKT_SIZ)
-    return;
-
-  sendto(om->om_fd, om->om_buf, om->om_ptr, 0, 
-	 (struct sockaddr *)&om->om_dst, sizeof(struct sockaddr_in));
-
-  om->om_ptr = 0;
-}
-
-
-
-/**
- *  Output internally remuxed content
+ *  Output MPEG TS
  */
 void
 iptv_output_ts(void *opaque, th_subscription_t *s, 
-	       uint8_t *pkt, int blocks, int64_t pcr)
+              uint8_t *pkt, int blocks, int64_t pcr)
 {
   output_multicast_t *om = opaque;
 
   sendto(om->om_fd, pkt, blocks * 188, 0, 
-	 (struct sockaddr *)&om->om_dst, sizeof(struct sockaddr_in));
+        (struct sockaddr *)&om->om_dst, sizeof(struct sockaddr_in));
 }
-
 
 
 /**
@@ -98,40 +66,17 @@ iptv_subscription_callback(struct th_subscription *s,
 			   subscription_event_t event, void *opaque)
 {
   output_multicast_t *om = opaque;
-  th_transport_t *t = s->ths_transport;
 
   switch(event) {
   case TRANSPORT_AVAILABLE:
     assert(om->om_muxer == NULL);
-
-    switch(t->tht_type) {
-    case TRANSPORT_IPTV:
-      s->ths_raw_input = iptv_output_raw;
-      break;
-
-    case TRANSPORT_V4L:
-    case TRANSPORT_DVB:
-      om->om_muxer = ts_muxer_init(s, iptv_output_ts, om, 0);
-      ts_muxer_play(om->om_muxer, 0);
-      break;
-
-    }
+    om->om_muxer = ts_muxer_init(s, iptv_output_ts, om, 0);
+    ts_muxer_play(om->om_muxer, 0);
     break;
 
   case TRANSPORT_UNAVAILABLE:
-    assert(om->om_muxer != NULL);
-
-    switch(t->tht_type) {
-    case TRANSPORT_IPTV:
-      s->ths_raw_input = NULL;
-      break;
-
-    case TRANSPORT_V4L:
-    case TRANSPORT_DVB:
-      ts_muxer_deinit(om->om_muxer);
-      om->om_muxer = NULL;
-      break;
-    }
+    ts_muxer_deinit(om->om_muxer);
+    om->om_muxer = NULL;
     break;
   }
 }
