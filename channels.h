@@ -25,6 +25,8 @@ void channels_load(void);
 
 th_channel_t *channel_by_index(uint32_t id);
 
+th_channel_t *channel_by_tag(uint32_t tag);
+
 int id_by_channel(th_channel_t *ch);
 
 int channel_get_channels(void);

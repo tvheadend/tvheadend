@@ -192,3 +192,17 @@ channel_by_index(uint32_t index)
 
   return NULL;
 }
+
+
+
+th_channel_t *
+channel_by_tag(uint32_t tag)
+{
+  th_channel_t *ch;
+
+  TAILQ_FOREACH(ch, &channels, ch_global_link)
+    if(ch->ch_tag == tag)
+      return ch;
+
+  return NULL;
+}
