@@ -139,7 +139,6 @@ typedef struct th_dvb_mux_instance {
   struct th_dvb_mux *tdmi_mux;
   struct th_dvb_adapter *tdmi_adapter;
 
-  fe_status_t tdmi_fe_status;
   uint16_t tdmi_snr, tdmi_signal;
   uint32_t tdmi_ber, tdmi_uncorrected_blocks;
 
