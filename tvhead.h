@@ -614,6 +614,11 @@ typedef void (subscription_callback_t)(struct th_subscription *s,
 				       subscription_event_t event,
 				       void *opaque);
 
+typedef void (subscription_raw_input_t)(struct th_subscription *s,
+					void *data, int len,
+					th_stream_t *st,
+					void *opaque);
+
 typedef struct th_subscription {
   LIST_ENTRY(th_subscription) ths_global_link;
   int ths_weight;
@@ -634,6 +639,8 @@ typedef struct th_subscription {
 
   subscription_callback_t *ths_callback;
   void *ths_opaque;
+
+  subscription_raw_input_t *ths_raw_input;
 
 } th_subscription_t;
 

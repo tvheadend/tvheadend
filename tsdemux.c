@@ -98,6 +98,7 @@ void
 ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb)
 {
   th_stream_t *st = NULL;
+  th_subscription_t *s;
   int cc, err = 0, afc, afl = 0;
   int len, pusi;
 
@@ -107,6 +108,10 @@ ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb)
 
   if(st == NULL)
     return;
+
+  LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link)
+    if(s->ths_raw_input != NULL)
+      s->ths_raw_input(s, tsb, 188, st, s->ths_opaque);
 
   avgstat_add(&t->tht_rate, 188, dispatch_clock);
 
