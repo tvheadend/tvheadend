@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -33,54 +34,113 @@
 #include "dispatch.h"
 #include "channels.h"
 #include "subscriptions.h"
-
-typedef struct output_multicast {
-  int fd;
-  int port;
-  struct in_addr group;
-} output_multicast_t;
+#include "tsmux.h"
 
 #define MULTICAST_PKT_SIZ (188 * 7)
 
-#if 0
+typedef struct output_multicast {
+  void *om_muxer;
+  int om_fd;
+  struct sockaddr_in om_dst;
+  int om_ptr;
+  char om_buf[MULTICAST_PKT_SIZ];
+} output_multicast_t;
 
-static void 
-om_ip_streamer(struct th_subscription *s, uint8_t *pkt, th_pid_t *pi,
-	       int64_t pcr)
+
+/**
+ *  Raw output directly from input, without internal remux
+ */
+static void
+iptv_output_raw(struct th_subscription *s, void *data, int len,
+		th_stream_t *st, void *opaque)
 {
-  output_multicast_t *om = s->ths_opaque;
-  struct sockaddr_in sin;
+  output_multicast_t *om = opaque;
 
-  memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_port = htons(om->port);
-  sin.sin_addr = om->group;
- 
-  if(pkt == NULL)
+  if(st->st_type == HTSTV_TABLE)
+    return;
+  
+  assert(len == 188);
+
+  memcpy(om->om_buf + om->om_ptr, data, 188);
+  om->om_ptr += 188;
+  
+  if(om->om_ptr != MULTICAST_PKT_SIZ)
     return;
 
-  if(s->ths_pkt == NULL) {
-    s->ths_pkt = malloc(MULTICAST_PKT_SIZ);
-    s->ths_pkt_ptr = 0;
-  }
+  sendto(om->om_fd, om->om_buf, om->om_ptr, 0, 
+	 (struct sockaddr *)&om->om_dst, sizeof(struct sockaddr_in));
 
-  memcpy(s->ths_pkt + s->ths_pkt_ptr, pkt, 188);
-  s->ths_pkt[s->ths_pkt_ptr] = 0x47;
+  om->om_ptr = 0;
+}
 
-  s->ths_pkt_ptr += 188;
-  
-  if(s->ths_pkt_ptr == MULTICAST_PKT_SIZ) {
-    sendto(om->fd, s->ths_pkt, s->ths_pkt_ptr, 0,
-	   (struct sockaddr *)&sin, sizeof(sin));
-    s->ths_pkt_ptr = 0;
+
+
+/**
+ *  Output internally remuxed content
+ */
+void
+iptv_output_ts(void *opaque, th_subscription_t *s, 
+	       uint8_t *pkt, int blocks, int64_t pcr)
+{
+  output_multicast_t *om = opaque;
+
+  sendto(om->om_fd, pkt, blocks * 188, 0, 
+	 (struct sockaddr *)&om->om_dst, sizeof(struct sockaddr_in));
+}
+
+
+
+/**
+ * Called when a subscription gets/loses access to a transport
+ */
+static void
+iptv_subscription_callback(struct th_subscription *s,
+			   subscription_event_t event, void *opaque)
+{
+  output_multicast_t *om = opaque;
+  th_transport_t *t = s->ths_transport;
+
+  switch(event) {
+  case TRANSPORT_AVAILABLE:
+    assert(om->om_muxer == NULL);
+
+    switch(t->tht_type) {
+    case TRANSPORT_IPTV:
+      s->ths_raw_input = iptv_output_raw;
+      break;
+
+    case TRANSPORT_V4L:
+    case TRANSPORT_DVB:
+      om->om_muxer = ts_muxer_init(s, iptv_output_ts, om, 0);
+      ts_muxer_play(om->om_muxer, 0);
+      break;
+
+    }
+    break;
+
+  case TRANSPORT_UNAVAILABLE:
+    assert(om->om_muxer != NULL);
+
+    switch(t->tht_type) {
+    case TRANSPORT_IPTV:
+      s->ths_raw_input = NULL;
+      break;
+
+    case TRANSPORT_V4L:
+    case TRANSPORT_DVB:
+      ts_muxer_deinit(om->om_muxer);
+      om->om_muxer = NULL;
+      break;
+    }
+    break;
   }
 }
-#endif
 
 
 
-
-
+/**
+ * Setup IPTV (TS over UDP) output
+ */
 static void
 output_multicast_load(struct config_head *head)
 {
@@ -111,33 +171,34 @@ output_multicast_load(struct config_head *head)
     fprintf(stderr, "no group address configured\n");
     goto err;
   }
-  om->group.s_addr = inet_addr(s);
+  om->om_dst.sin_addr.s_addr = inet_addr(s);
 
   if((s = config_get_str_sub(head, "port", NULL)) == NULL) {
     fprintf(stderr, "no port configured\n");
     goto err;
   }
-  om->port = atoi(s);
+  om->om_dst.sin_port = htons(atoi(s));
 
-  om->fd = socket(AF_INET, SOCK_DGRAM, 0);
+  om->om_fd = socket(AF_INET, SOCK_DGRAM, 0);
 
-  if(bind(om->fd, (struct sockaddr *)&sin, sizeof(sin))==-1) {
+  if(bind(om->om_fd, (struct sockaddr *)&sin, sizeof(sin))==-1) {
     fprintf(stderr, "cannot bind to %s\n", b);
-    close(om->fd);
+    close(om->om_fd);
     goto err;
   }
 
   if((s = config_get_str_sub(head, "ttl", NULL)) != NULL)
     ttl = atoi(s);
 
-  setsockopt(om->fd, SOL_IP, IP_MULTICAST_TTL, &ttl, sizeof(int));
+  setsockopt(om->om_fd, SOL_IP, IP_MULTICAST_TTL, &ttl, sizeof(int));
 
-  snprintf(title, sizeof(title), "%s:%d", inet_ntoa(om->group), om->port);
+  snprintf(title, sizeof(title), "%s:%d", inet_ntoa(om->om_dst.sin_addr),
+	   ntohs(om->om_dst.sin_port));
 
   syslog(LOG_INFO, "Static multicast output: \"%s\" to %s, source %s ",
 	 ch->ch_name, title, inet_ntoa(sin.sin_addr));
 
-  //  subscription_create(ch, 900, title);
+  subscription_create(ch, 900, "iptv output", iptv_subscription_callback, om);
   return;
 
  err:
