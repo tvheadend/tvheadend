@@ -27,4 +27,7 @@ int iptv_start_feed(th_transport_t *t, int status);
 
 int iptv_stop_feed(th_transport_t *t);
 
+extern struct th_transport_list iptv_probing_transports;
+extern struct th_transport_list iptv_stale_transports;
+
 #endif /* IPTV_INPUT_H_ */

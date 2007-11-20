@@ -35,9 +35,11 @@
 #include "epg.h"
 #include "pvr.h"
 #include "strtab.h"
+#include "dvb.h"
+#include "iptv_input.h"
 
 static struct strtab recstatustxt[] = {
-  { "Scheduled",          HTSTV_PVR_STATUS_SCHEDULED      },
+  { "Recording scheduled",HTSTV_PVR_STATUS_SCHEDULED      },
   { "Recording",          HTSTV_PVR_STATUS_RECORDING      },
   { "Done",               HTSTV_PVR_STATUS_DONE           },
 
@@ -81,8 +83,15 @@ pvrstatus_to_html(tv_pvr_status_t pvrstatus, const char **text,
 
 
 static void
-html_header(tcp_queue_t *tq, const char *title, int javascript)
+html_header(tcp_queue_t *tq, const char *title, int javascript, int width)
 {
+  char w[30];
+
+  if(width > 0)
+    snprintf(w, sizeof(w), "width: %dpx; ", width);
+  else
+    w[0] = 0;
+
   tcp_qprintf(tq, 
 	      "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" "
 	      "http://www.w3.org/TR/html4/strict.dtd\">\r\n"
@@ -105,7 +114,7 @@ html_header(tcp_queue_t *tq, const char *title, int javascript)
 	      ""
 	      "body {margin: 4px 4px; "
 	      "font: 75% Verdana, Arial, Helvetica, sans-serif; "
-	      "width: 600px; margin-right: auto; margin-left: auto;}\r\n"
+	      "%s margin-right: auto; margin-left: auto;}\r\n"
 	      ""
 	      "#box {background: #cccc99;}\r\n"
 	      ".roundtop {background: #ffffff;}\r\n"
@@ -133,6 +142,8 @@ html_header(tcp_queue_t *tq, const char *title, int javascript)
 	      ".content {padding-left: 3px; border-left: 1px solid #000000; "
 	      "border-right: 1px solid #000000;}\r\n"
 	      ""
+	      ".statuscont {float: left; margin: 4px; width: 400px}\r\n"
+	      ""
 	      ".logo {padding: 2px; width: 60px; height: 56px; "
 	      "float: left};\r\n"
 	      ""
@@ -143,7 +154,7 @@ html_header(tcp_queue_t *tq, const char *title, int javascript)
 	      "#meny li{display: inline; list-style-type: none;}\r\n"
 	      "#meny a{padding: 1.15em 0.8em; text-decoration: none;}\r\n"
 	      "-->\r\n"
-	      "</style>");
+	      "</style>", w);
 
   if(javascript) {
     tcp_qprintf(tq, 
@@ -210,6 +221,9 @@ box_bottom(tcp_queue_t *tq)
 static void
 top_menu(tcp_queue_t *tq)
 {
+  tcp_qprintf(tq, "<div style=\"width: 700px; "
+	      "margin-left: auto; margin-right: auto\">");
+
   box_top(tq, "box");
 
   tcp_qprintf(tq, 
@@ -221,7 +235,7 @@ top_menu(tcp_queue_t *tq)
 	      "</ul></div>");
 
   box_bottom(tq);
-  tcp_qprintf(tq, "<br>\r\n");
+  tcp_qprintf(tq, "</div><br>\r\n");
 }
 
 
@@ -319,13 +333,14 @@ output_event(http_connection_t *hc, tcp_queue_t *tq, th_channel_t *ch,
 	      "<a href=\"%s\" %s>"
 	      "<span style=\"width: %dpx;float: left%s\">"
 	      "%02d:%02d - %02d:%02d</span>"
-	      "<span style=\"width: %dpx; float: left%s\">%s</span></a>",
+	      "<span style=\"overflow: hidden; height: 15px; width: %dpx; "
+	      "float: left%s\">%s</span></a>",
 	      bufa,
 	      overlibstuff,
 	      simple ? 80 : 100,
 	      e == cur ? ";font-weight:bold" : "",
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min,
-	      simple ? 100 : 250,
+	      simple ? 100 : 350,
 	      e == cur ? ";font-weight:bold" : "",
 	      title
 	      );
@@ -352,11 +367,8 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
   int i;
   int simple = is_client_simple(hc);
   
-
   tcp_init_queue(&tq, -1);
-
-  html_header(&tq, "HTS/tvheadend", !simple);
-
+  html_header(&tq, "HTS/tvheadend", !simple, 700);
   top_menu(&tq);
 
   epg_lock();
@@ -383,8 +395,9 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
     e = epg_event_find_current_or_upcoming(ch);
 
     for(i = 0; i < 3 && e != NULL; i++) {
+
       output_event(hc, &tq, ch, e, simple);
-      e = TAILQ_NEXT(e, e_link);
+       e = TAILQ_NEXT(e, e_link);
     }
 
     tcp_qprintf(&tq, "</div></div>");
@@ -440,7 +453,7 @@ page_channel(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_init_queue(&tq, -1);
 
-  html_header(&tq, "HTS/tvheadend", !simple);
+  html_header(&tq, "HTS/tvheadend", !simple, 700);
 
   top_menu(&tq);
 
@@ -461,8 +474,8 @@ page_channel(http_connection_t *hc, const char *remain, void *opaque)
     for(w = 0; w < 7; w++) {
 
       tcp_qprintf(&tq, 
-		  "<a href=\"/channel/%d/%d\""
-		  "<u><i>%s</i></u></a><br>",
+		  "<a href=\"/channel/%d/%d\">"
+		  "<i><u>%s</i></u></a><br>",
 		  ch->ch_tag, w,
 		  days[(wday + w) % 7]);
 
@@ -471,8 +484,9 @@ page_channel(http_connection_t *hc, const char *remain, void *opaque)
 	if(a.tm_wday != wday + w)
 	  break;
 
-	if(a.tm_wday == wday + doff)
+	if(a.tm_wday == wday + doff) {
 	  output_event(hc, &tq, ch, e, simple);
+	}
 	e = TAILQ_NEXT(e, e_link);
       }
     }
@@ -536,7 +550,7 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_init_queue(&tq, -1);
 
-  html_header(&tq, "HTS/tvheadend", 0);
+  html_header(&tq, "HTS/tvheadend", 0, 700);
   top_menu(&tq);
 
   tcp_qprintf(&tq, "<form method=\"get\" action=\"/event/%d\">", eventid);
@@ -619,7 +633,7 @@ pvrcmp(const void *A, const void *B)
 }
 
 /**
- * Event page
+ * PVR log
  */
 static int
 page_pvrlog(http_connection_t *hc, const char *remain, void *opaque)
@@ -637,7 +651,7 @@ page_pvrlog(http_connection_t *hc, const char *remain, void *opaque)
   pvr_rec_t **pv;
 
   tcp_init_queue(&tq, -1);
-  html_header(&tq, "HTS/tvheadend", 0);
+  html_header(&tq, "HTS/tvheadend", 0, 700);
   top_menu(&tq);
 
   box_top(&tq, "box");
@@ -740,6 +754,163 @@ page_pvrlog(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+
+static void
+html_iptv_status(tcp_queue_t *tq, th_transport_t *t, const char *status)
+{
+  tcp_qprintf(tq,
+	      "<span style=\"overflow: hidden; height: 15px; width: 270px; "
+	      "float:left\">"
+	      "%s (%s)"
+	      "</span>",
+	      inet_ntoa(t->tht_iptv_group_addr),
+	      t->tht_channel->ch_name);
+
+  tcp_qprintf(tq,
+	      "<span style=\"overflow: hidden; height: 15px; width: 100px; "
+	      "float:left\">"
+	      "%s"
+	      "</span><br>",
+	      status);
+
+}
+
+
+/**
+ * System status
+ */
+static int
+page_status(http_connection_t *hc, const char *remain, void *opaque)
+{
+  tcp_queue_t tq;
+  int simple = is_client_simple(hc);
+  th_dvb_adapter_t *tda;
+  th_transport_t *t;
+  th_dvb_mux_instance_t *tdmi;
+  const char *txt;
+
+  tcp_init_queue(&tq, -1);
+
+  html_header(&tq, "HTS/tvheadend", !simple, -1);
+
+  top_menu(&tq);
+
+  tcp_qprintf(&tq, "<div style=\"width: 1300px; margin: auto\">");
+
+  tcp_qprintf(&tq, "<div class=\"statuscont\">");
+
+
+  /* DVB adapters */
+
+  box_top(&tq, "box");
+  tcp_qprintf(&tq, "<div class=\"content\">");
+  tcp_qprintf(&tq, "<b>DVB source adapters</b><br>");
+
+  if(LIST_FIRST(&dvb_adapters_running) == NULL) {
+    tcp_qprintf(&tq, "No DVB adapters configured<br>");
+  } else {
+    LIST_FOREACH(tda, &dvb_adapters_running, tda_link) {
+      tcp_qprintf(&tq, "<br>%s<br>", tda->tda_path, tda->tda_name);
+      LIST_FOREACH(tdmi, &tda->tda_muxes_active, tdmi_adapter_link) {
+
+	tcp_qprintf(&tq,
+		    "<span style=\"overflow: hidden; height: 15px; "
+		    "width: 160px; float: left\">"
+		    "%s"
+		    "</span>",
+		    tdmi->tdmi_mux->tdm_title);
+
+	txt = tdmi->tdmi_status ?: "Ok";
+	if(tdmi->tdmi_fec_err_per_sec > DVB_FEC_ERROR_LIMIT)
+	  txt = "Too high FEC rate";
+
+	tcp_qprintf(&tq,
+		    "<span style=\"overflow: hidden; height: 15px; "
+		    "width: 110px; float: left\">"
+		    "%s"
+		    "</span>",
+		    txt);
+
+	switch(tdmi->tdmi_state) {
+	default:
+	  txt = "???";
+	  break;
+	case TDMI_IDLE:
+	  txt = "Idle";
+	  break;
+	case TDMI_RUNNING:
+	  txt = "Running";
+	  break;
+	}
+
+	tcp_qprintf(&tq,
+		    "<span style=\"overflow: hidden; height: 15px; "
+		    "width: 70px; float: left\">"
+		    "%s"
+		    "</span>",
+		    txt);
+
+	tcp_qprintf(&tq,
+		    "<span style=\"overflow: hidden; height: 15px; "
+		    "width: 50px; float: left\">"
+		    "%d"
+		    "</span><br>",
+		    tdmi->tdmi_fec_err_per_sec);
+      }
+    }
+  }
+  tcp_qprintf(&tq, "</div>");
+  box_bottom(&tq);
+
+  tcp_qprintf(&tq, "<br>");
+
+  /* IPTV adapters */
+
+  box_top(&tq, "box");
+  tcp_qprintf(&tq, "<div class=\"content\">");
+  tcp_qprintf(&tq, "<b>IPTV sources</b><br><br>");
+
+  LIST_FOREACH(t, &all_transports, tht_global_link) {
+    if(t->tht_type != TRANSPORT_IPTV)
+      continue;
+    html_iptv_status(&tq, t, 
+		     t->tht_status == TRANSPORT_IDLE ? "Idle" : "Running");
+  }
+
+  LIST_FOREACH(t, &iptv_stale_transports, tht_adapter_link)
+    html_iptv_status(&tq, t, "Probe failed");
+
+  tcp_qprintf(&tq, "</div>");
+  box_bottom(&tq);
+
+  tcp_qprintf(&tq, "</div>");
+  
+
+  tcp_qprintf(&tq, "<div class=\"statuscont\">");
+  box_top(&tq, "box");
+  tcp_qprintf(&tq, "<div class=\"content\">");
+  tcp_qprintf(&tq, "space for a rent");
+  tcp_qprintf(&tq, "</div>");
+  box_bottom(&tq);
+  tcp_qprintf(&tq, "</div>");
+  
+
+  tcp_qprintf(&tq, "<div class=\"statuscont\">");
+  box_top(&tq, "box");
+  tcp_qprintf(&tq, "<div class=\"content\">");
+  tcp_qprintf(&tq, "space for a rent");
+  tcp_qprintf(&tq, "</div>");
+  box_bottom(&tq);
+  tcp_qprintf(&tq, "</div>");
+
+  tcp_qprintf(&tq, "</div>");
+
+  html_footer(&tq);
+  http_output_queue(hc, &tq, "text/html; charset=UTF-8");
+  return 0;
+}
+
+
 /**
  * HTML user interface setup code
  */
@@ -750,4 +921,5 @@ htmlui_start(void)
   http_path_add("/event", NULL, page_event);
   http_path_add("/channel", NULL, page_channel);
   http_path_add("/pvrlog", NULL, page_pvrlog);
+  http_path_add("/status", NULL, page_status);
 }

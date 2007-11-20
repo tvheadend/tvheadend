@@ -42,8 +42,8 @@
 #include "psi.h"
 #include "tsdemux.h"
 
-static struct th_transport_list iptv_probing_transports;
-static struct th_transport_list iptv_stale_transports;
+struct th_transport_list iptv_probing_transports;
+struct th_transport_list iptv_stale_transports;
 static dtimer_t iptv_probe_timer;
 
 static void iptv_probe_transport(th_transport_t *t);
