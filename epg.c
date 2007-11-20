@@ -221,50 +221,19 @@ check_overlap0(th_channel_t *ch, event_t *a)
   event_time_txt(b->e_start, b->e_duration, btime, sizeof(btime));
 
   if(a->e_source > b->e_source) {
-    syslog(LOG_WARNING,
-	   "\"%s\": Event \"%s\" %s with higest "
-	   "precedence extends over \"%s\" %s",
-	   ch->ch_name, a->e_title ?: "<unnamed>", atime, 
-	   b->e_title ?: "<unnamed>", btime);
 
     b->e_start += overshot;
     b->e_duration -= overshot;
     
     if(b->e_duration < 1) {
-      syslog(LOG_WARNING,
-	     "\"%s\": Event \"%s\" destroyed",
-	     ch->ch_name, b->e_title ?: "<unnamed>");
-
       epg_event_destroy(ch, b);
-    } else {
-
-      syslog(LOG_WARNING,
-	     "\"%s\": Event \"%s\" delayed and shortened by %ds",
-	     ch->ch_name, b->e_title ?: "<unnamed>", overshot);
     }
   } else {
-
-    syslog(LOG_WARNING,
-	   "\"%s\": Event \"%s\" %s with higest "
-	   "precedence extends over \"%s\" %s",
-	   ch->ch_name, b->e_title ?: "<unnamed>", btime, 
-	   a->e_title ?: "<unnamed>", atime);
-
     a->e_duration -= overshot;
 
     if(a->e_duration < 1) {
-      syslog(LOG_WARNING,
-	     "\"%s\": Event \"%s\" destroyed",
-	     ch->ch_name, a->e_title ?: "<unnamed>");
-
       epg_event_destroy(ch, a);
       return 1;
-
-    } else {
-
-      syslog(LOG_WARNING,
-	     "\"%s\": Event \"%s\" shortened by %ds",
-	     ch->ch_name, a->e_title ?: "<unnamed>", overshot);
     }
   }
   return 0;
@@ -341,8 +310,6 @@ epg_event_create(th_channel_t *ch, time_t start, int duration,
       event_time_txt(e->e_start, e->e_duration, before, sizeof(before));
       event_time_txt(e->e_start, duration, after, sizeof(after));
 
-      syslog(LOG_DEBUG, "\"%s\": \"%s\" %s changed duration to %s",
-	     ch->ch_name, e->e_title ?: "<unnamed>", before, after);
       e->e_duration = duration;
     }
 
@@ -378,11 +345,6 @@ epg_update_event_by_id(th_channel_t *ch, uint16_t event_id,
       event_time_txt(e->e_start, e->e_duration, before, sizeof(before));
       event_time_txt(start, duration, after, sizeof(after));
        
-      syslog(LOG_DEBUG, "\"%s\": \"%s\" (serviceid = 0x%04x) "
-	     "%s changed duration to %s",
-	     ch->ch_name, e->e_title ?: "<unnamed>",
-	     e->e_event_id, before, after);
-
       TAILQ_REMOVE(&ch->ch_epg_events, e, e_link);
 
       e->e_duration = duration;
@@ -501,10 +463,6 @@ epg_transfer_events(th_channel_t *ch, struct event_queue *src,
     cnt++;
   }
   epg_unlock();
-
-  syslog(LOG_DEBUG,
-	 "Transfered %d events from \"%s\" to \"%s\"\n",
-	 cnt, srcname, ch->ch_name);
 }
 
 
