@@ -294,9 +294,6 @@ storage_disk_enq(th_pkt_t *pkt)
   char fbuf[500];
   int fd;
 
-  TAILQ_INSERT_TAIL(&store_disk_queue, pkt, pkt_disk_link);
-  store_disk_size += pkt->pkt_payloadlen;
-
   if(curstore == NULL) {
     snprintf(fbuf, sizeof(fbuf), "%s/s%d", store_path, ++store_tally);
     
@@ -315,6 +312,9 @@ storage_disk_enq(th_pkt_t *pkt)
 
 
   if(s != NULL) {
+    TAILQ_INSERT_TAIL(&store_disk_queue, pkt, pkt_disk_link);
+    store_disk_size += pkt->pkt_payloadlen;
+
     s->ts_refcount++;
     pkt->pkt_storage = s;
     pkt->pkt_storage_offset = s->ts_offset;
