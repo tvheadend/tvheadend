@@ -82,6 +82,8 @@ pes_packet_input(th_transport_t *t, th_stream_t *st, uint8_t *buf, size_t len)
   th_pkt_t *pkt;
   AVRational mpeg_tc = {1, 90000};
 
+  avgstat_add(&st->st_rate, len, dispatch_clock);
+
   hdr   = getu8(buf, len);
   flags = getu8(buf, len);
   hlen  = getu8(buf, len);

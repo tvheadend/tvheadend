@@ -122,6 +122,7 @@ ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb)
     if(st->st_cc_valid && cc != st->st_cc) {
       /* Incorrect CC */
       avgstat_add(&t->tht_cc_errors, 1, dispatch_clock);
+      avgstat_add(&st->st_cc_errors, 1, dispatch_clock);
       err = 1;
     }
     st->st_cc_valid = 1;

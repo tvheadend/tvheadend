@@ -247,6 +247,9 @@ typedef struct th_stream {
   uint8_t st_cc;             /* Last CC */
   uint8_t st_cc_valid;       /* Is CC valid at all? */
 
+  avgstat_t st_cc_errors;
+  avgstat_t st_rate;
+
   tv_streamtype_t st_type;
   int st_demuxer_fd;
   int st_index;

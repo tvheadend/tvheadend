@@ -374,5 +374,7 @@ transport_add_stream(th_transport_t *t, int pid, tv_streamtype_t type)
   TAILQ_INIT(&st->st_durationq);
   TAILQ_INIT(&st->st_pktq);
 
+  avgstat_init(&st->st_rate, 10);
+  avgstat_init(&st->st_cc_errors, 10);
   return st;
 }
