@@ -911,7 +911,7 @@ client_status_update(void *aux, int64_t now)
 		 "uncorrected-blocks = %d\n"
 		 "rate = %d\n"
 		 "cc-errors = %d\n",
-		 tda->tda_name,
+		 tda->tda_path,
 		 t->tht_name,
 		 tdmi->tdmi_uncorrected_blocks,
 		 rate, ccerr);
@@ -924,7 +924,7 @@ client_status_update(void *aux, int64_t now)
 		 "adapter = %s\n"
 		 "transport = %s\n",
 		 tdmi->tdmi_status,
-		 tda->tda_name,
+		 tda->tda_path,
 		 t->tht_name);
       }
       break;

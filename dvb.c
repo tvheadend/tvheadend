@@ -158,7 +158,7 @@ dvb_add_adapter(const char *path)
   LIST_INSERT_HEAD(&dvb_adapters_probing, tda, tda_link);
   startupcounter++;
 
-  tda->tda_name = strdup(tda->tda_fe_info.name);
+  tda->tda_info = strdup(tda->tda_fe_info.name);
 
   dispatch_addfd(tda->tda_fe_fd, dvb_frontend_event, tda, DISPATCH_PRI);
 
@@ -189,7 +189,7 @@ dvb_init(void)
     if(tdmi == NULL) {
       syslog(LOG_WARNING,
 	     "No muxes configured on \"%s\" DVB adapter unused",
-	     tda->tda_name);
+	     tda->tda_path);
     } else {
       dvb_start_initial_scan(tdmi);
     }
@@ -299,15 +299,15 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
   tdmi->tdmi_state = state;
 
   if(maylog)
-    syslog(LOG_DEBUG, "%s (%s) tuning to mux \"%s\"", 
-	   tda->tda_name, tda->tda_path, tdmi->tdmi_mux->tdm_title);
+    syslog(LOG_DEBUG, "\"%s\" tuning to mux \"%s\"", 
+	   tda->tda_path, tdmi->tdmi_mux->tdm_title);
 
   i = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, &tdm->tdm_fe_params);
   if(i != 0) {
     if(maylog)
-      syslog(LOG_ERR, "%s (%s) tuning to transport \"%s\""
+      syslog(LOG_ERR, "\"%s\" tuning to transport \"%s\""
 	     " -- Front configuration failed -- %s",
-	     tda->tda_name, tda->tda_path, tdm->tdm_title,
+	     tda->tda_path, tdm->tdm_title,
 	     strerror(errno));
     return -1;
   }
@@ -794,10 +794,15 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 			     transport_stream_id,
 			     service_id, 1);
 
-       if(LIST_FIRST(&t->tht_streams) != NULL && t->tht_channel == NULL) {
-	 transport_set_channel(t, channel_find(chname, 1));
-       } else {
-	 ret |= 1;
+       if(t->tht_channel == NULL) {
+	 /* Not yet mapped to a channel */
+	 if(LIST_FIRST(&t->tht_streams) != NULL) {
+	   /* We have seen a PMT (streams are created), map it */
+	   transport_set_channel(t, channel_find(chname, 1));
+	 } else {
+	   /* Return error (so scanning wont continue yet) */
+	   ret |= 1;
+	 }
        }
     }
   }
@@ -853,7 +858,7 @@ tdmi_activate(th_dvb_mux_instance_t *tdmi)
     startupcounter--;
     syslog(LOG_INFO,
 	   "\"%s\" Initial scan completed, adapter available",
-	   tda->tda_name);
+	   tda->tda_path);
     /* no more muxes to probe, link adapter to the world */
     LIST_REMOVE(tda, tda_link);
     LIST_INSERT_HEAD(&dvb_adapters_running, tda, tda_link);
@@ -870,16 +875,17 @@ tdmi_initial_scan_timeout(void *aux, int64_t now)
   th_dvb_mux_instance_t *tdmi = aux;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   const char *err;
+  th_dvb_table_t *tdt;
 
   dtimer_disarm(&tdmi->tdmi_initial_scan_timer);
 
   if(tdmi->tdmi_status != NULL)
     err = tdmi->tdmi_status;
   else
-    err = "No signal";
+    err = "Missing PSI tables, scan will continue";
 
-  syslog(LOG_DEBUG, "\"%s\" on \"%s\" Initial scan timed out -- %s",
-	 tdmi->tdmi_mux->tdm_name, tda->tda_name, err);
+  syslog(LOG_DEBUG, "\"%s\" mux \"%s\" Initial scan timed out -- %s",
+	 tda->tda_path, tdmi->tdmi_mux->tdm_name, err);
 
   tdmi_activate(tdmi);
 }
@@ -903,7 +909,7 @@ tdmi_check_scan_status(th_dvb_mux_instance_t *tdmi)
   /* All tables seen at least once */
 
   syslog(LOG_DEBUG, "\"%s\" on \"%s\" Initial scan completed",
-	 tdmi->tdmi_mux->tdm_name, tda->tda_name);
+	 tda->tda_path, tdmi->tdmi_mux->tdm_name);
 
   tdmi_activate(tdmi);
 }

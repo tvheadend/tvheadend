@@ -810,7 +810,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
     tcp_qprintf(&tq, "No DVB adapters configured<br>");
   } else {
     LIST_FOREACH(tda, &dvb_adapters_running, tda_link) {
-      tcp_qprintf(&tq, "<br>%s<br>", tda->tda_path, tda->tda_name);
+      tcp_qprintf(&tq, "<br>%s<br>%s<br>", tda->tda_path, tda->tda_info);
       LIST_FOREACH(tdmi, &tda->tda_muxes_active, tdmi_adapter_link) {
 
 	tcp_qprintf(&tq,
@@ -826,7 +826,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 
 	tcp_qprintf(&tq,
 		    "<span style=\"overflow: hidden; height: 15px; "
-		    "width: 110px; float: left\">"
+		    "width: 120px; float: left\">"
 		    "%s"
 		    "</span>",
 		    txt);
@@ -845,7 +845,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 
 	tcp_qprintf(&tq,
 		    "<span style=\"overflow: hidden; height: 15px; "
-		    "width: 70px; float: left\">"
+		    "width: 60px; float: left\">"
 		    "%s"
 		    "</span>",
 		    txt);

@@ -201,7 +201,7 @@ typedef struct th_dvb_adapter {
   th_dvb_mux_instance_t *tda_mux_current;
 
   const char *tda_path;
-  const char *tda_name;
+  const char *tda_info;
 
   LIST_ENTRY(th_dvb_adapter) tda_link;
 
