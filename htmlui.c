@@ -789,9 +789,10 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
   th_transport_t *t;
   th_dvb_mux_instance_t *tdmi;
   th_stream_t *st;
-  const char *txt;
+  const char *txt, *t1, *t2;
   th_muxer_t *tm;
   th_muxstream_t *tms;
+  char tmptxt[100];
 
   tcp_init_queue(&tq, -1);
 
@@ -929,19 +930,42 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 		t->tht_name,
 		t->tht_channel->ch_name);
 
+ 
+    switch(t->tht_type) {
+    case TRANSPORT_IPTV:
+      t1 = tmptxt;
+      snprintf(tmptxt, sizeof(tmptxt), "IPTV: %s",
+	       inet_ntoa(t->tht_iptv_group_addr));
+      t2 = "";
+      break;
+
+    case TRANSPORT_V4L:
+      t1 = tmptxt;
+      snprintf(tmptxt, sizeof(tmptxt), "V4L: %.2f MHz",
+	       (float)t->tht_v4l_frequency / 1000000.0f);
+      t2 = t->tht_v4l_adapter->tva_path;
+      break;
+
+    case TRANSPORT_DVB:
+      t1 = t->tht_dvb_mux->tdm_name;
+      t2 = t->tht_dvb_adapter->tda_path;
+      break;
+
+    default:
+      continue;
+    }
+
     tcp_qprintf(&tq,
 		"<span style=\"overflow: hidden; height: 15px; "
-		"width: 200px; float: left; font-weight:bold\">"
+		"width: 200px; float: left;\">"
 		"%s"
 		"</span>"
 		"<span style=\"overflow: hidden; height: 15px; "
 		"width: 190px; float: left\">"
 		"%s"
 		"</span><br><br>",
-		t->tht_dvb_mux->tdm_name,
-		t->tht_dvb_adapter->tda_path);
+		t1, t2);
 
-    
     LIST_FOREACH(st, &t->tht_streams, st_link) {
 
       tcp_qprintf(&tq,
