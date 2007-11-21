@@ -785,6 +785,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
   tcp_queue_t tq;
   int simple = is_client_simple(hc);
   th_dvb_adapter_t *tda;
+  th_subscription_t *s;
   th_transport_t *t;
   th_dvb_mux_instance_t *tdmi;
   const char *txt;
@@ -892,7 +893,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
   tcp_qprintf(&tq, "<div class=\"statuscont\">");
   box_top(&tq, "box");
   tcp_qprintf(&tq, "<div class=\"content\">");
-  tcp_qprintf(&tq, "space for a rent");
+  tcp_qprintf(&tq, "<b>Active transports</b>");
   tcp_qprintf(&tq, "</div>");
   box_bottom(&tq);
   tcp_qprintf(&tq, "</div>");
@@ -901,7 +902,34 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
   tcp_qprintf(&tq, "<div class=\"statuscont\">");
   box_top(&tq, "box");
   tcp_qprintf(&tq, "<div class=\"content\">");
-  tcp_qprintf(&tq, "space for a rent");
+  tcp_qprintf(&tq, "<b>Subscriptions</b><br>");
+
+  LIST_FOREACH(s, &subscriptions, ths_global_link) {
+    tcp_qprintf(&tq,
+		"<br><span style=\"overflow: hidden; height: 15px; "
+		"width: 230px; float: left; font-weight:bold\">"
+		"%s"
+		"</span>",
+		s->ths_title);
+
+    tcp_qprintf(&tq,
+		"<span style=\"overflow: hidden; height: 15px; "
+		"width: 160px; float: left\">"
+		"%s"
+		"</span><br>",
+		s->ths_channel->ch_name);
+
+    if((t = s->ths_transport) == NULL) {
+      tcp_qprintf(&tq,
+		  "<i>No transport available</i><br>");
+    } else {
+      tcp_qprintf(&tq,
+		  "Using transport \"%s\"<br>",
+		  t->tht_name);
+    }
+  }
+
+
   tcp_qprintf(&tq, "</div>");
   box_bottom(&tq);
   tcp_qprintf(&tq, "</div>");
