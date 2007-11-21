@@ -844,7 +844,7 @@ pvrr_transport_unavailable(pvr_rec_t *pvrr, th_transport_t *t)
       free(avst);
     }
     
-    url_fclose(&fctx->pb);
+    url_fclose(fctx->pb);
     free(fctx);
   }
 
