@@ -802,6 +802,13 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
   tcp_qprintf(&tq, "<div class=\"statuscont\">");
 
 
+  box_top(&tq, "box");
+  tcp_qprintf(&tq, "<div class=\"content\">");
+  tcp_qprintf(&tq, "<b><center>Input sources</b><br>");
+  tcp_qprintf(&tq, "</div>");
+  box_bottom(&tq);
+  tcp_qprintf(&tq, "<br>");
+
   /* DVB adapters */
 
   box_top(&tq, "box");
