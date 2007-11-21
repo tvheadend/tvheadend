@@ -134,13 +134,14 @@ ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb)
   
   pusi = tsb[1] & 0x40;
 
+  afl += 4;
+
   switch(st->st_type) {
 
   case HTSTV_TABLE:
     if(st->st_section == NULL)
       st->st_section = calloc(1, sizeof(struct psi_section));
 
-    afl += 4;
     if(err || afl >= 188) {
       st->st_section->ps_offset = -1; /* hold parser until next pusi */
       break;
@@ -169,7 +170,9 @@ ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb)
     break;
 
   default:
-    afl += 4;
+    if(afl > 188)
+      break;
+
     ts_reassembly(t, st, tsb + afl, 188 - afl, pusi, err);
     break;
   }
