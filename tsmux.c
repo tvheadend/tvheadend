@@ -136,16 +136,6 @@ tms_stream_set_active(th_muxer_t *tm, th_muxstream_t *tms, th_pkt_t *pkt,
   tms->tms_dl = dl;
   tms->tms_block_interval = dt / l;
 
-#if 0
-  if(tms->tms_stream)
-    printf("%-15s dts=%lld, ft=%d, bi = %5d dt = %6d dl = %lld pcr = %lld "
-	   "size=%d\n",
-	   htstvstreamtype2txt(tms->tms_stream->st_type),
-	   pkt->pkt_dts,
-	   pkt->pkt_frametype, tms->tms_block_interval, dt, dl, pcr,
-	   pkt_len(pkt) + PES_HEADER_SIZE);
-#endif
-
   if(tms->tms_block_interval < 10)
     tms->tms_block_interval = 10;
 
@@ -369,9 +359,6 @@ ts_mux_packet(th_muxer_t *tm, int64_t pcr, uint8_t *outbuf, int maxblocks)
 
 
     pkt = tms->tms_curpkt;
-    if(pkt == NULL)
-      continue;
- 
     /* Do we need to send a new PCR update? */
 
     if(tms->tms_dopcr && tms->tms_nextpcr <= pcr) {
@@ -383,13 +370,14 @@ ts_mux_packet(th_muxer_t *tm, int64_t pcr, uint8_t *outbuf, int maxblocks)
 
     /* Generate a transport stream packet */
 
-    if(ts_make_pkt(tm, tms, outbuf, pcr1) < 0) {
-      /* Packet buffer no longer exist, we need to seek again */
-      return -1;
+    if(ts_make_pkt(tm, tms, outbuf, pcr1) == 0) {
+      outbuf += 188;
+      rem = pkt_len(pkt) - tms->tms_offset;
+    } else {
+      i--;
+      rem = 0;
     }
-    outbuf += 188;
 
-    rem = pkt_len(pkt) - tms->tms_offset;
     if(rem == 0) {
       /* End of frame, find next */
       while(1) {
@@ -586,6 +574,7 @@ ts_muxer_start(th_muxer_t *tm)
   }
 
   tm->tm_clockref = getclock_hires();
+  tm_gen_pat_pmt(tm, 0);
   ts_gen_packet(tm, tm->tm_clockref);
   return 0;
 }
