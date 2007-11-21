@@ -875,7 +875,6 @@ tdmi_initial_scan_timeout(void *aux, int64_t now)
   th_dvb_mux_instance_t *tdmi = aux;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   const char *err;
-  th_dvb_table_t *tdt;
 
   dtimer_disarm(&tdmi->tdmi_initial_scan_timer);
 
@@ -996,6 +995,6 @@ dvb_mux_scanner(void *aux, int64_t now)
   if(tdmi == NULL)
     return; /* no instances */
 
-  dvb_tune_tdmi(tdmi, 0, TDMI_RUNNING);
+  dvb_tune_tdmi(tdmi, 0, TDMI_IDLESCAN);
 
 }

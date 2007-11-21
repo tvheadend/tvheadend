@@ -158,6 +158,11 @@ dvb_start_feed(th_transport_t *t, unsigned int weight)
     if(tdmi->tdmi_state == TDMI_RUNNING)
       goto gotmux;
 
+    if(tdmi->tdmi_state == TDMI_IDLESCAN) {
+      tdmi->tdmi_state = TDMI_RUNNING;
+      goto gotmux;
+    }
+
     w = transport_compute_weight(&tdmi->tdmi_adapter->tda_transports);
     if(w < weight && cand == NULL)
       cand = tdmi;

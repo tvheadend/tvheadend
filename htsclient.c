@@ -168,6 +168,11 @@ print_tdmi(client_t *c, th_dvb_mux_instance_t *tdmi)
     cprintf(c, "Running since %s", ctime(&tdmi->tdmi_got_adapter));
     cprintf(c, "\t   Current status: ");
     break;
+
+  case TDMI_IDLESCAN:
+    cprintf(c, "Idle but scanning\n");
+    cprintf(c, "\t   Current status: ");
+    break;
   }
 
   if(tdmi->tdmi_status != NULL) {

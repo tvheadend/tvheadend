@@ -841,6 +841,9 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 	case TDMI_RUNNING:
 	  txt = "Running";
 	  break;
+	case TDMI_IDLESCAN:
+	  txt = "IdleScan";
+	  break;
 	}
 
 	tcp_qprintf(&tq,

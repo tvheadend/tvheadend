@@ -127,6 +127,7 @@ typedef enum {
     TDMI_INITIAL_SCAN,
     TDMI_IDLE,
     TDMI_RUNNING,
+    TDMI_IDLESCAN,
 } tdmi_state_t;
 
 /*
