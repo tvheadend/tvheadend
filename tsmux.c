@@ -369,6 +369,8 @@ ts_mux_packet(th_muxer_t *tm, int64_t pcr, uint8_t *outbuf, int maxblocks)
 
 
     pkt = tms->tms_curpkt;
+    if(pkt == NULL)
+      continue;
  
     /* Do we need to send a new PCR update? */
 
