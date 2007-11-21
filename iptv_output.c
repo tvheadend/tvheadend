@@ -94,7 +94,8 @@ output_multicast_load(struct config_head *head)
   output_multicast_t *om;
   int ttl = 32;
   struct sockaddr_in sin;
-  char title[30];
+  char title[100];
+  char title2[100];
 
   if((name = config_get_str_sub(head, "channel", NULL)) == NULL)
     return;
@@ -143,7 +144,9 @@ output_multicast_load(struct config_head *head)
   syslog(LOG_INFO, "Static multicast output: \"%s\" to %s, source %s ",
 	 ch->ch_name, title, inet_ntoa(sin.sin_addr));
 
-  subscription_create(ch, 900, "iptv output", iptv_subscription_callback, om);
+  snprintf(title2, sizeof(title2), "IPTV-OUT: %s", title);
+
+  subscription_create(ch, 900, title2, iptv_subscription_callback, om);
   return;
 
  err:
