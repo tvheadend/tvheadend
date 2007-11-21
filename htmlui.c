@@ -788,6 +788,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
   th_subscription_t *s;
   th_transport_t *t;
   th_dvb_mux_instance_t *tdmi;
+  th_stream_t *st;
   const char *txt;
 
   tcp_init_queue(&tq, -1);
@@ -811,7 +812,8 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
     tcp_qprintf(&tq, "No DVB adapters configured<br>");
   } else {
     LIST_FOREACH(tda, &dvb_adapters_running, tda_link) {
-      tcp_qprintf(&tq, "<br>%s<br>%s<br>", tda->tda_path, tda->tda_info);
+      tcp_qprintf(&tq, "<br><b>%s</b><br>%s<br>",
+		  tda->tda_path, tda->tda_info);
       LIST_FOREACH(tdmi, &tda->tda_muxes_active, tdmi_adapter_link) {
 
 	tcp_qprintf(&tq,
@@ -889,24 +891,98 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_qprintf(&tq, "</div>");
   
+  /* Active transports */
 
   tcp_qprintf(&tq, "<div class=\"statuscont\">");
   box_top(&tq, "box");
   tcp_qprintf(&tq, "<div class=\"content\">");
-  tcp_qprintf(&tq, "<b>Active transports</b>");
+  tcp_qprintf(&tq, "<b><center>Active transports</b><br>");
   tcp_qprintf(&tq, "</div>");
   box_bottom(&tq);
+  tcp_qprintf(&tq, "<br>");
+
+  LIST_FOREACH(t, &all_transports, tht_global_link) {
+    if(t->tht_status != TRANSPORT_RUNNING)
+      continue;
+
+    box_top(&tq, "box");
+    tcp_qprintf(&tq, "<div class=\"content\">");
+
+    tcp_qprintf(&tq,
+		"<span style=\"overflow: hidden; height: 15px; "
+		"width: 200px; float: left; font-weight:bold\">"
+		"%s"
+		"</span>"
+		"<span style=\"overflow: hidden; height: 15px; "
+		"width: 190px; float: left\">"
+		"%s"
+		"</span><br>",
+		t->tht_name,
+		t->tht_channel->ch_name);
+
+    tcp_qprintf(&tq,
+		"<span style=\"overflow: hidden; height: 15px; "
+		"width: 200px; float: left; font-weight:bold\">"
+		"%s"
+		"</span>"
+		"<span style=\"overflow: hidden; height: 15px; "
+		"width: 190px; float: left\">"
+		"%s"
+		"</span><br><br>",
+		t->tht_dvb_mux->tdm_name,
+		t->tht_dvb_adapter->tda_path);
+
+    
+    LIST_FOREACH(st, &t->tht_streams, st_link) {
+
+      tcp_qprintf(&tq,
+		  "<span style=\"overflow: hidden; height: 15px; "
+		  "width: 100px; float: left\">"
+		  "%s"
+		  "</span>",
+		  htstvstreamtype2txt(st->st_type));
+
+      tcp_qprintf(&tq,
+		  "<span style=\"overflow: hidden; height: 15px; "
+		  "width: 100px; float: left\">"
+		  "%d kb/s"
+		  "</span>",
+		  avgstat_read_and_expire(&st->st_rate, dispatch_clock) 
+		  / 1000);
+
+
+      tcp_qprintf(&tq,
+		  "<span style=\"overflow: hidden; height: 15px; "
+		  "width: 100px; float: left\">"
+		  "%d errors/s"
+		  "</span><br>",
+		  avgstat_read_and_expire(&st->st_cc_errors, dispatch_clock));
+    }
+
+    tcp_qprintf(&tq, "</div>");
+    box_bottom(&tq);
+    tcp_qprintf(&tq, "<br>");
+  }
   tcp_qprintf(&tq, "</div>");
   
 
+  /* Subscribers */
+
   tcp_qprintf(&tq, "<div class=\"statuscont\">");
   box_top(&tq, "box");
   tcp_qprintf(&tq, "<div class=\"content\">");
-  tcp_qprintf(&tq, "<b>Subscriptions</b><br>");
+  tcp_qprintf(&tq, "<b><center>Subscriptions</b><br>");
+  tcp_qprintf(&tq, "</div>");
+  box_bottom(&tq);
+  tcp_qprintf(&tq, "<br>");
 
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
+
+    box_top(&tq, "box");
+    tcp_qprintf(&tq, "<div class=\"content\">");
+
     tcp_qprintf(&tq,
-		"<br><span style=\"overflow: hidden; height: 15px; "
+		"<span style=\"overflow: hidden; height: 15px; "
 		"width: 230px; float: left; font-weight:bold\">"
 		"%s"
 		"</span>",
@@ -927,11 +1003,14 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 		  "Using transport \"%s\"<br>",
 		  t->tht_name);
     }
+
+    tcp_qprintf(&tq, "</div>");
+    box_bottom(&tq);
+    tcp_qprintf(&tq, "<br>");
+
   }
 
 
-  tcp_qprintf(&tq, "</div>");
-  box_bottom(&tq);
   tcp_qprintf(&tq, "</div>");
 
   tcp_qprintf(&tq, "</div>");
