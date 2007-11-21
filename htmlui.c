@@ -790,6 +790,8 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
   th_dvb_mux_instance_t *tdmi;
   th_stream_t *st;
   const char *txt;
+  th_muxer_t *tm;
+  th_muxstream_t *tms;
 
   tcp_init_queue(&tq, -1);
 
@@ -1006,22 +1008,39 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
       tcp_qprintf(&tq,
 		  "<i>No transport available</i><br>");
     } else {
+
       tcp_qprintf(&tq,
 		  "Using transport \"%s\"<br>",
 		  t->tht_name);
-    }
+      
+      if((tm = s->ths_muxer) != NULL) {
+	int64_t i64min = INT64_MAX;
+	int64_t i64max = INT64_MIN;
 
+	LIST_FOREACH(tms, &tm->tm_media_streams, tms_muxer_media_link) {
+	  if(tms->tms_curpkt == NULL)
+	    continue; /* stream is currently stale */
+
+	  if(tms->tms_nextblock < i64min)
+	    i64min = tms->tms_nextblock;
+
+	  if(tms->tms_nextblock > i64max)
+	    i64max = tms->tms_nextblock;
+	}
+
+	tcp_qprintf(&tq,
+		    "Internal stream delta: %lld us<br>",
+		    i64max - i64min);
+      }
+    }
     tcp_qprintf(&tq, "</div>");
     box_bottom(&tq);
     tcp_qprintf(&tq, "<br>");
-
   }
 
-
   tcp_qprintf(&tq, "</div>");
 
   tcp_qprintf(&tq, "</div>");
-
   html_footer(&tq);
   http_output_queue(hc, &tq, "text/html; charset=UTF-8");
   return 0;
