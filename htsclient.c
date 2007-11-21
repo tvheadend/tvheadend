@@ -448,6 +448,8 @@ cr_channel_subscribe(client_t *c, char **argv, int argc)
   th_channel_t *ch;
   th_subscription_t *s;
   unsigned int chindex, weight;
+  char tmp[100];
+  struct sockaddr_in *si;
 
   if(argc < 1)
     return 1;
@@ -466,8 +468,12 @@ cr_channel_subscribe(client_t *c, char **argv, int argc)
   if((ch = channel_by_index(chindex)) == NULL)
     return 1;
 
-  s = subscription_create(ch, weight, "client", 
-			  client_subscription_callback, c);
+  si = (struct sockaddr_in *)&c->c_tcp_session.tcp_peer_addr;
+
+  snprintf(tmp, sizeof(tmp), "HTS Client @ %s",
+	   inet_ntoa(si->sin_addr));
+
+  s = subscription_create(ch, weight, tmp, client_subscription_callback, c);
   if(s == NULL)
     return 1;
 
