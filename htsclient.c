@@ -433,7 +433,7 @@ client_subscription_callback(struct th_subscription *s,
 
   case TRANSPORT_UNAVAILABLE:
     assert(c->c_muxer != NULL);
-    ts_muxer_deinit(c->c_muxer);
+    ts_muxer_deinit(c->c_muxer, s);
     c->c_muxer = NULL;
     break;
   }

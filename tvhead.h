@@ -645,6 +645,8 @@ typedef struct th_subscription {
 
   subscription_raw_input_t *ths_raw_input;
 
+  th_muxer_t *ths_muxer;
+
 } th_subscription_t;
 
 

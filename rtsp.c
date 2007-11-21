@@ -124,7 +124,7 @@ rtsp_subscription_callback(struct th_subscription *s,
 
   case TRANSPORT_UNAVAILABLE:
     assert(rs->rs_muxer != NULL);
-    ts_muxer_deinit(rs->rs_muxer);
+    ts_muxer_deinit(rs->rs_muxer, s);
     rs->rs_muxer = NULL;
     break;
   }

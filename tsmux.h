@@ -22,7 +22,7 @@
 th_muxer_t *ts_muxer_init(th_subscription_t *s, th_mux_output_t *cb,
 			  void *opaque, int flags);
 
-void ts_muxer_deinit(th_muxer_t *tm);
+void ts_muxer_deinit(th_muxer_t *tm, th_subscription_t *s);
 
 void ts_muxer_play(th_muxer_t *tm, int64_t toffset);
 

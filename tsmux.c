@@ -811,6 +811,8 @@ ts_muxer_init(th_subscription_t *s, th_mux_output_t *cb, void *opaque,
 
   tm->tm_pat = tm_create_meta_stream(tm, 0);
   tm->tm_pmt = tm_create_meta_stream(tm, 100);
+
+  s->ths_muxer = tm;
   return tm;
 }
 
@@ -835,9 +837,11 @@ tms_destroy(th_muxstream_t *tms)
  *
  */
 void
-ts_muxer_deinit(th_muxer_t *tm)
+ts_muxer_deinit(th_muxer_t *tm, th_subscription_t *s)
 {
   th_muxstream_t *tms;
+
+  s->ths_muxer = NULL;
 
   LIST_REMOVE(tm, tm_transport_link);
 

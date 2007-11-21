@@ -75,7 +75,7 @@ iptv_subscription_callback(struct th_subscription *s,
     break;
 
   case TRANSPORT_UNAVAILABLE:
-    ts_muxer_deinit(om->om_muxer);
+    ts_muxer_deinit(om->om_muxer, s);
     om->om_muxer = NULL;
     break;
   }
