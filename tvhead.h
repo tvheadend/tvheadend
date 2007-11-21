@@ -103,7 +103,6 @@ typedef struct th_v4l_adapter {
   struct th_transport_list tva_transports;
 
   int tva_frequency;
-  int tva_running;
 
   pthread_cond_t tva_run_cond;
 

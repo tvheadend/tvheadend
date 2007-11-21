@@ -45,7 +45,7 @@
 #include "transports.h"
 #include "pes.h"
 
-static struct th_v4l_adapter_list v4l_adapters;
+struct th_v4l_adapter_list v4l_adapters;
 
 static void v4l_fd_callback(int events, void *opaque, int fd);
 

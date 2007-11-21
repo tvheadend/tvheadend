@@ -36,6 +36,7 @@
 #include "pvr.h"
 #include "strtab.h"
 #include "dvb.h"
+#include "v4l.h"
 #include "iptv_input.h"
 
 static struct strtab recstatustxt[] = {
@@ -785,6 +786,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
   tcp_queue_t tq;
   int simple = is_client_simple(hc);
   th_dvb_adapter_t *tda;
+  th_v4l_adapter_t *tva;
   th_subscription_t *s;
   th_transport_t *t;
   th_dvb_mux_instance_t *tdmi;
@@ -807,7 +809,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 
   box_top(&tq, "box");
   tcp_qprintf(&tq, "<div class=\"content\">");
-  tcp_qprintf(&tq, "<b><center>Input sources</b><br>");
+  tcp_qprintf(&tq, "<b><center>Input devices</b><br>");
   tcp_qprintf(&tq, "</div>");
   box_bottom(&tq);
   tcp_qprintf(&tq, "<br>");
@@ -816,7 +818,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 
   box_top(&tq, "box");
   tcp_qprintf(&tq, "<div class=\"content\">");
-  tcp_qprintf(&tq, "<b>DVB source adapters</b><br>");
+  tcp_qprintf(&tq, "<b><center>DVB adapters</center></b>");
 
   if(LIST_FIRST(&dvb_adapters_running) == NULL) {
     tcp_qprintf(&tq, "No DVB adapters configured<br>");
@@ -884,7 +886,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 
   box_top(&tq, "box");
   tcp_qprintf(&tq, "<div class=\"content\">");
-  tcp_qprintf(&tq, "<b>IPTV sources</b><br><br>");
+  tcp_qprintf(&tq, "<b><center>IPTV sources</center></b><br>");
 
   LIST_FOREACH(t, &all_transports, tht_global_link) {
     if(t->tht_type != TRANSPORT_IPTV)
@@ -898,9 +900,34 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_qprintf(&tq, "</div>");
   box_bottom(&tq);
+  tcp_qprintf(&tq, "<br>");
+
+  /* Video4Linux adapters */
+
+  box_top(&tq, "box");
+  tcp_qprintf(&tq, "<div class=\"content\">");
+  tcp_qprintf(&tq, "<b><center>Video4Linux adapters</center></b>");
+
+  LIST_FOREACH(tva, &v4l_adapters, tva_link) {
+    tcp_qprintf(&tq, "<br><b>%s</b><br>",
+		tva->tva_path);
+
+    if(tva->tva_dispatch_handle == NULL) {
+      tcp_qprintf(&tq, "Not currently active<br>");
+    } else {
+      tcp_qprintf(&tq, "Tuned to %.3f MHz<br>",
+		  (float)tva->tva_frequency/1000000.0);
+    }
+  }
 
   tcp_qprintf(&tq, "</div>");
+  box_bottom(&tq);
+  tcp_qprintf(&tq, "</div>");
+
   
+
+
+
   /* Active transports */
 
   tcp_qprintf(&tq, "<div class=\"statuscont\">");
@@ -941,7 +968,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 
     case TRANSPORT_V4L:
       t1 = tmptxt;
-      snprintf(tmptxt, sizeof(tmptxt), "V4L: %.2f MHz",
+      snprintf(tmptxt, sizeof(tmptxt), "V4L: %.3f MHz",
 	       (float)t->tht_v4l_frequency / 1000000.0f);
       t2 = t->tht_v4l_adapter->tva_path;
       break;

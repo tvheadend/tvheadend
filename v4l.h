@@ -19,6 +19,8 @@
 #ifndef V4L_H_
 #define V4L_H_
 
+extern struct th_v4l_adapter_list v4l_adapters;
+
 void v4l_init(void);
 
 int v4l_configure_transport(th_transport_t *t, const char *muxname,
