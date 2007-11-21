@@ -287,6 +287,8 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
   fe_status_t fe_status;
   int i;
   
+  tdmi->tdmi_state = state;
+
   if(tda->tda_mux_current == tdmi)
     return 0;
 
@@ -296,7 +298,6 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
     tdmi_stop(tda->tda_mux_current);
 
   tda->tda_mux_current = tdmi;
-  tdmi->tdmi_state = state;
 
   if(maylog)
     syslog(LOG_DEBUG, "\"%s\" tuning to mux \"%s\"", 
