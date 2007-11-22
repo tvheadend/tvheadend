@@ -21,6 +21,12 @@
 
 #include "tcp.h"
 
+#define HTTP_STATUS_OK           200
+#define HTTP_STATUS_BAD_REQUEST  400
+#define HTTP_STATUS_UNAUTHORIZED 401
+#define HTTP_STATUS_NOT_FOUND    404
+
+
 LIST_HEAD(rtsp_session_head, rtsp_session);
 
 #define http_printf(x, fmt...) tcp_printf(&(x)->hc_tcp_session, fmt)
@@ -68,6 +74,8 @@ typedef struct http_connection {
   char *hc_password;
 
   struct rtsp_session_head hc_rtsp_sessions;
+
+  struct config_head *hc_user_config;
 
 } http_connection_t;
 

@@ -100,11 +100,6 @@ http_resolve(http_connection_t *hc, char **remainp)
  * HTTP status code to string
  */
 
-#define HTTP_STATUS_OK           200
-#define HTTP_STATUS_BAD_REQUEST  400
-#define HTTP_STATUS_UNAUTHORIZED 401
-#define HTTP_STATUS_NOT_FOUND    404
-
 static const char *
 http_rc2str(int code)
 {
@@ -225,6 +220,39 @@ http_process_request(http_connection_t *hc)
   }
 }
 
+/**
+ * Verify username, and if password match, set 'hc->hc_user_config'
+ * to subconfig for that user
+ */
+static void
+hc_user_resolve(http_connection_t *hc)
+{
+  config_entry_t *ce;
+  const char *name, *pass;
+
+  hc->hc_user_config = NULL;
+
+  TAILQ_FOREACH(ce, &config_list, ce_link) {
+    if(ce->ce_type == CFG_SUB && !strcasecmp("user", ce->ce_key)) {
+      if((name = config_get_str_sub(&ce->ce_sub, "name", NULL)) == NULL)
+	continue;
+      if(!strcmp(name, hc->hc_username))
+	break;
+    }
+  }
+
+  if(ce == NULL)
+    return;
+
+  if((pass = config_get_str_sub(&ce->ce_sub, "password", NULL)) == NULL)
+    return;
+
+  if(strcmp(pass, hc->hc_password))
+    return;
+
+  hc->hc_user_config = &ce->ce_sub;
+}
+
 
 /**
  * Process a request, extract info from headers, dispatch command and
@@ -268,6 +296,7 @@ process_request(http_connection_t *hc)
       if((n = http_tokenize((char *)authbuf, argv, 2, ':')) == 2) {
 	hc->hc_username = strdup(argv[0]);
 	hc->hc_password = strdup(argv[1]);
+	hc_user_resolve(hc);
       }
     }
   }
