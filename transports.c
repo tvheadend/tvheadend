@@ -61,8 +61,7 @@ void
 transport_purge(th_transport_t *t)
 {
   th_stream_t *st;
-  th_pkt_t *pkt, *next;
-
+  th_pkt_t *pkt;
 
   if(LIST_FIRST(&t->tht_subscriptions))
     return;
@@ -138,11 +137,9 @@ transport_purge(th_transport_t *t)
 
     /* Flush framestore */
 
-    for(pkt = TAILQ_FIRST(&st->st_pktq); pkt != NULL; pkt = next) {
-      next = TAILQ_NEXT(pkt, pkt_queue_link);
+    while((pkt = TAILQ_FIRST(&st->st_pktq)) != NULL)
       pkt_unstore(pkt);
-    }
-    assert(TAILQ_FIRST(&st->st_pktq) == NULL);
+
   }
 }
 
