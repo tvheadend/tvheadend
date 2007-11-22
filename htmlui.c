@@ -761,7 +761,7 @@ html_iptv_status(tcp_queue_t *tq, th_transport_t *t, const char *status)
 {
   tcp_qprintf(tq,
 	      "<span style=\"overflow: hidden; height: 15px; width: 270px; "
-	      "float:left\">"
+	      "float:left; font-weight:bold\">"
 	      "%s (%s)"
 	      "</span>",
 	      inet_ntoa(t->tht_iptv_group_addr),
@@ -886,7 +886,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 
   box_top(&tq, "box");
   tcp_qprintf(&tq, "<div class=\"content\">");
-  tcp_qprintf(&tq, "<b><center>IPTV sources</center></b><br>");
+  tcp_qprintf(&tq, "<b><center>IPTV sources</center></b>");
 
   LIST_FOREACH(t, &all_transports, tht_global_link) {
     if(t->tht_type != TRANSPORT_IPTV)
@@ -909,15 +909,27 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
   tcp_qprintf(&tq, "<b><center>Video4Linux adapters</center></b>");
 
   LIST_FOREACH(tva, &v4l_adapters, tva_link) {
-    tcp_qprintf(&tq, "<br><b>%s</b><br>",
+
+    tcp_qprintf(&tq,
+		"<span style=\"overflow: hidden; height: 15px; width: 270px; "
+		"float:left; font-weight:bold\">"
+		"%s"
+		"</span>",
 		tva->tva_path);
 
+
     if(tva->tva_dispatch_handle == NULL) {
-      tcp_qprintf(&tq, "Not currently active<br>");
+      snprintf(tmptxt, sizeof(tmptxt), "Idle");
     } else {
-      tcp_qprintf(&tq, "Tuned to %.3f MHz<br>",
-		  (float)tva->tva_frequency/1000000.0);
+      snprintf(tmptxt, sizeof(tmptxt), "Tuned to %.3f MHz",
+	       (float)tva->tva_frequency/1000000.0);
     }
+    tcp_qprintf(&tq,
+		"<span style=\"overflow: hidden; height: 15px; width: 100px; "
+		"float:left\">"
+		"%s"
+		"</span><br>",
+		tmptxt);
   }
 
   tcp_qprintf(&tq, "</div>");
