@@ -249,10 +249,10 @@ top_menu(http_connection_t *hc, tcp_queue_t *tq)
 
   tcp_qprintf(tq, "<li><a href=\"/\">TV Guide</a></li>");
 
-  if(html_verify_access(hc, "record_events"))
+  if(html_verify_access(hc, "record-events"))
     tcp_qprintf(tq, "<li><a href=\"/pvrlog\">Recordings</a></li>");
   
-  if(html_verify_access(hc, "system_status"))
+  if(html_verify_access(hc, "system-status"))
     tcp_qprintf(tq, "<li><a href=\"/status\">System Status</a></li>");
 
   tcp_qprintf(tq, "</div>");
@@ -390,7 +390,7 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
   int i;
   int simple = is_client_simple(hc);
   
-  if(!html_verify_access(hc, "browse_events"))
+  if(!html_verify_access(hc, "browse-events"))
     return HTTP_STATUS_UNAUTHORIZED;
 
   tcp_init_queue(&tq, -1);
@@ -467,7 +467,7 @@ page_channel(http_connection_t *hc, const char *remain, void *opaque)
   int w, doff = 0, wday;
   struct tm a;
 
-  if(!html_verify_access(hc, "browse_events"))
+  if(!html_verify_access(hc, "browse-events"))
     return HTTP_STATUS_UNAUTHORIZED;
 
   i = sscanf(remain, "%d/%d", &channeltag, &doff);
@@ -553,7 +553,7 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
   tv_pvr_status_t pvrstatus;
   const char *pvr_txt, *pvr_color;
   
-  if(!html_verify_access(hc, "browse_events"))
+  if(!html_verify_access(hc, "browse-events"))
     return HTTP_STATUS_UNAUTHORIZED;
 
   epg_lock();
@@ -566,7 +566,7 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
   remain = strchr(remain, '?');
   if(remain != NULL) {
 
-    if(!html_verify_access(hc, "record_events")) {
+    if(!html_verify_access(hc, "record-events")) {
       epg_unlock();
       return HTTP_STATUS_UNAUTHORIZED;
     }
@@ -625,7 +625,7 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_qprintf(&tq,"<div style=\"text-align: center\">");
 
-  if(html_verify_access(hc, "record_events")) {
+  if(html_verify_access(hc, "record-events")) {
     switch(pvrstatus) {
     case HTSTV_PVR_STATUS_SCHEDULED:
     case HTSTV_PVR_STATUS_RECORDING:
@@ -690,7 +690,7 @@ page_pvrlog(http_connection_t *hc, const char *remain, void *opaque)
   int c, i;
   pvr_rec_t **pv;
 
-  if(!html_verify_access(hc, "record_events"))
+  if(!html_verify_access(hc, "record-events"))
     return HTTP_STATUS_UNAUTHORIZED;
 
   tcp_init_queue(&tq, -1);
@@ -838,7 +838,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
   th_muxstream_t *tms;
   char tmptxt[100];
 
-  if(!html_verify_access(hc, "system_status"))
+  if(!html_verify_access(hc, "system-status"))
     return HTTP_STATUS_UNAUTHORIZED;
 
   tcp_init_queue(&tq, -1);
