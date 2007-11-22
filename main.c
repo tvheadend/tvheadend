@@ -108,11 +108,11 @@ main(int argc, char **argv)
   char *cfgfile = NULL;
   int logfacility = LOG_DAEMON;
   int disable_dvb = 0;
-  int http_port = 0;
+  int p;
 
   signal(SIGPIPE, handle_sigpipe);
 
-  while((c = getopt(argc, argv, "c:fu:g:dh:")) != -1) {
+  while((c = getopt(argc, argv, "c:fu:g:d")) != -1) {
     switch(c) {
     case 'd':
       disable_dvb = 1;
@@ -128,9 +128,6 @@ main(int argc, char **argv)
       break;
     case 'g':
       groupnam = optarg;
-      break;
-    case 'h':
-      http_port = atoi(optarg);
       break;
     }
   }
@@ -188,8 +185,6 @@ main(int argc, char **argv)
   epg_init();
   xmltv_init();
 
-  pvr_init();
-
   subscriptions_init();
 
   htmlui_start();
@@ -202,10 +197,13 @@ main(int argc, char **argv)
       syslog(LOG_NOTICE, 
 	     "Initial input setup completed, starting output modules");
 
+      pvr_init();
       output_multicast_setup();
       client_start();
-      if(http_port)
-	http_start(http_port);
+
+      p = atoi(config_get_str("http-server-port", "9980"));
+      if(p)
+	http_start(p);
 
     }
     dispatcher();
