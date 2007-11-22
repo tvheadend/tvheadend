@@ -141,6 +141,9 @@ v4l_setfreq(th_v4l_adapter_t *tva, int frequency)
   struct v4l2_tuner vt;
   int result;
 
+  memset(&vf, 0, sizeof(vf));
+  memset(&vt, 0, sizeof(vt));
+
   vf.tuner = 0;
   vf.type = V4L2_TUNER_ANALOG_TV;
   vf.frequency = (frequency * 16) / 1000000;
