@@ -64,6 +64,21 @@ static struct strtab recstatuscolor[] = {
 };
 
 
+/*
+ * Return 1 if current user have access to a feature
+ */
+
+static int
+html_verify_access(http_connection_t *hc, const char *feature)
+{
+  if(hc->hc_user_config == NULL)
+    return 0;
+  return atoi(config_get_str_sub(hc->hc_user_config, feature, "0"));
+}
+
+
+
+
 static int
 pvrstatus_to_html(tv_pvr_status_t pvrstatus, const char **text,
 		  const char **col)
@@ -220,7 +235,7 @@ box_bottom(tcp_queue_t *tq)
 
 
 static void
-top_menu(tcp_queue_t *tq)
+top_menu(http_connection_t *hc, tcp_queue_t *tq)
 {
   tcp_qprintf(tq, "<div style=\"width: 700px; "
 	      "margin-left: auto; margin-right: auto\">");
@@ -229,11 +244,18 @@ top_menu(tcp_queue_t *tq)
 
   tcp_qprintf(tq, 
 	      "<div class=\"content\">"
-	      "<ul id=\"meny\">"
-	      "<li><a href=\"/\">TV Guide</a></li>"
-	      "<li><a href=\"/pvrlog\">Recordings</a></li>"
-	      "<li><a href=\"/status\">System Status</a></li>"
-	      "</ul></div>");
+	      "<ul id=\"meny\">");
+
+
+  tcp_qprintf(tq, "<li><a href=\"/\">TV Guide</a></li>");
+
+  if(html_verify_access(hc, "record_events"))
+    tcp_qprintf(tq, "<li><a href=\"/pvrlog\">Recordings</a></li>");
+  
+  if(html_verify_access(hc, "system_status"))
+    tcp_qprintf(tq, "<li><a href=\"/status\">System Status</a></li>");
+
+  tcp_qprintf(tq, "</div>");
 
   box_bottom(tq);
   tcp_qprintf(tq, "</div><br>\r\n");
@@ -368,9 +390,12 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
   int i;
   int simple = is_client_simple(hc);
   
+  if(!html_verify_access(hc, "browse_events"))
+    return HTTP_STATUS_UNAUTHORIZED;
+
   tcp_init_queue(&tq, -1);
   html_header(&tq, "HTS/tvheadend", !simple, 700);
-  top_menu(&tq);
+  top_menu(hc, &tq);
 
   epg_lock();
   TAILQ_FOREACH(ch, &channels, ch_global_link) {
@@ -442,6 +467,9 @@ page_channel(http_connection_t *hc, const char *remain, void *opaque)
   int w, doff = 0, wday;
   struct tm a;
 
+  if(!html_verify_access(hc, "browse_events"))
+    return HTTP_STATUS_UNAUTHORIZED;
+
   i = sscanf(remain, "%d/%d", &channeltag, &doff);
   ch = channel_by_tag(channeltag);
   if(i != 2)
@@ -456,7 +484,7 @@ page_channel(http_connection_t *hc, const char *remain, void *opaque)
 
   html_header(&tq, "HTS/tvheadend", !simple, 700);
 
-  top_menu(&tq);
+  top_menu(hc, &tq);
 
   epg_lock();
 
@@ -525,6 +553,9 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
   tv_pvr_status_t pvrstatus;
   const char *pvr_txt, *pvr_color;
   
+  if(!html_verify_access(hc, "browse_events"))
+    return HTTP_STATUS_UNAUTHORIZED;
+
   epg_lock();
   e = epg_event_find_by_tag(eventid);
   if(e == NULL) {
@@ -534,6 +565,12 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
 
   remain = strchr(remain, '?');
   if(remain != NULL) {
+
+    if(!html_verify_access(hc, "record_events")) {
+      epg_unlock();
+      return HTTP_STATUS_UNAUTHORIZED;
+    }
+
     remain++;
     if(!strncmp(remain, "rec=", 4))
       cmd = RECOP_ONCE;
@@ -552,7 +589,7 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
   tcp_init_queue(&tq, -1);
 
   html_header(&tq, "HTS/tvheadend", 0, 700);
-  top_menu(&tq);
+  top_menu(hc, &tq);
 
   tcp_qprintf(&tq, "<form method=\"get\" action=\"/event/%d\">", eventid);
 
@@ -588,27 +625,29 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_qprintf(&tq,"<div style=\"text-align: center\">");
 
-  switch(pvrstatus) {
-  case HTSTV_PVR_STATUS_SCHEDULED:
-  case HTSTV_PVR_STATUS_RECORDING:
-    tcp_qprintf(&tq,
-		"<input type=\"submit\" name=\"cancel\" "
-		"value=\"Cancel recording\">");
-    break;
+  if(html_verify_access(hc, "record_events")) {
+    switch(pvrstatus) {
+    case HTSTV_PVR_STATUS_SCHEDULED:
+    case HTSTV_PVR_STATUS_RECORDING:
+      tcp_qprintf(&tq,
+		  "<input type=\"submit\" name=\"cancel\" "
+		  "value=\"Cancel recording\">");
+      break;
 
 
-  case HTSTV_PVR_STATUS_NONE:
-    tcp_qprintf(&tq,
-		"<input type=\"submit\" name=\"rec\" "
-		"value=\"Record\">");
-    break;
+    case HTSTV_PVR_STATUS_NONE:
+      tcp_qprintf(&tq,
+		  "<input type=\"submit\" name=\"rec\" "
+		  "value=\"Record\">");
+      break;
 
-  default:
-    tcp_qprintf(&tq,
-		"<input type=\"submit\" name=\"cancel\" "
-		"value=\"Clear error status\">");
-    break;
+    default:
+      tcp_qprintf(&tq,
+		  "<input type=\"submit\" name=\"cancel\" "
+		  "value=\"Clear error status\">");
+      break;
 
+    }
   }
 
   tcp_qprintf(&tq, "</div></div></div>");
@@ -651,9 +690,12 @@ page_pvrlog(http_connection_t *hc, const char *remain, void *opaque)
   int c, i;
   pvr_rec_t **pv;
 
+  if(!html_verify_access(hc, "record_events"))
+    return HTTP_STATUS_UNAUTHORIZED;
+
   tcp_init_queue(&tq, -1);
   html_header(&tq, "HTS/tvheadend", 0, 700);
-  top_menu(&tq);
+  top_menu(hc, &tq);
 
   box_top(&tq, "box");
 
@@ -796,11 +838,14 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
   th_muxstream_t *tms;
   char tmptxt[100];
 
+  if(!html_verify_access(hc, "system_status"))
+    return HTTP_STATUS_UNAUTHORIZED;
+
   tcp_init_queue(&tq, -1);
 
   html_header(&tq, "HTS/tvheadend", !simple, -1);
 
-  top_menu(&tq);
+  top_menu(hc, &tq);
 
   tcp_qprintf(&tq, "<div style=\"width: 1300px; margin: auto\">");
 
