@@ -84,6 +84,9 @@ pes_packet_input(th_transport_t *t, th_stream_t *st, uint8_t *buf, size_t len)
 
   avgstat_add(&st->st_rate, len, dispatch_clock);
 
+  if(len < 3)
+    return -1;
+
   hdr   = getu8(buf, len);
   flags = getu8(buf, len);
   hlen  = getu8(buf, len);
