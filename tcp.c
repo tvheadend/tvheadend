@@ -259,21 +259,47 @@ tcp_send_msg(tcp_session_t *ses, tcp_queue_t *tq, const void *data,
 }
 
 
-/*
- *  Move a tcp queue onto a session
+/**
+ * Move a tcp queue onto a session
+ *
+ * Coalesce smaller chunks into bigger ones for more efficient I/O
  */
 void
 tcp_output_queue(tcp_session_t *ses, tcp_queue_t *dst, tcp_queue_t *src)
 {
-  tcp_data_t *td;
+  tcp_data_t *sd;
+  tcp_data_t *dd;
+  int l, s;
 
   if(dst == NULL)
     dst = &ses->tcp_q_low;
 
-  while((td = TAILQ_FIRST(&src->tq_messages)) != NULL) {
-    TAILQ_REMOVE(&src->tq_messages, td, td_link);
-    TAILQ_INSERT_TAIL(&dst->tq_messages, td, td_link);
-    dst->tq_depth += td->td_datalen;
+  while((sd = TAILQ_FIRST(&src->tq_messages)) != NULL) {
+
+    l = 4096;
+    if(sd->td_datalen > l)
+      l = sd->td_datalen;
+    
+    dd = malloc(sizeof(tcp_data_t));
+    dd->td_offset = 0;
+    dd->td_data = malloc(l);
+
+    s = 0; /* accumulated size */
+    while((sd = TAILQ_FIRST(&src->tq_messages)) != NULL) {
+
+      if(sd->td_datalen + s > l)
+	break;
+
+      memcpy((char *)dd->td_data + s, sd->td_data, sd->td_datalen);
+      s += sd->td_datalen;
+      TAILQ_REMOVE(&src->tq_messages, sd, td_link);
+      free((void *)sd->td_data);
+      free(sd);
+    }
+
+    dd->td_datalen = s;
+    TAILQ_INSERT_TAIL(&dst->tq_messages, dd, td_link);
+    dst->tq_depth += s;
   }
 
   if(!ses->tcp_blocked)
