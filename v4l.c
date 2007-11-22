@@ -176,6 +176,7 @@ v4l_stop(th_v4l_adapter_t *tva)
     close(dispatch_delfd(tva->tva_dispatch_handle));
     tva->tva_dispatch_handle = NULL;
   }
+  tva->tva_startcode = 0;
 }
 
 
