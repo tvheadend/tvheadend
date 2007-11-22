@@ -209,13 +209,12 @@ pkt_unstore(th_pkt_t *pkt)
     storage_deref(pkt->pkt_storage);
     TAILQ_REMOVE(&store_disk_queue, pkt, pkt_disk_link);
     store_disk_size -= pkt->pkt_payloadlen;
-
-    if(pkt->pkt_payload != NULL) {
-      TAILQ_REMOVE(&store_mem_queue, pkt, pkt_mem_link);
-      store_mem_size -= pkt->pkt_payloadlen;
-    }
-
     pkt->pkt_storage = NULL;
+  }
+
+  if(pkt->pkt_payload != NULL) {
+    TAILQ_REMOVE(&store_mem_queue, pkt, pkt_mem_link);
+    store_mem_size -= pkt->pkt_payloadlen;
   }
   pkt_deref(pkt);
 }
