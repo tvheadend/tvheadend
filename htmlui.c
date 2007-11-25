@@ -99,7 +99,8 @@ pvrstatus_to_html(tv_pvr_status_t pvrstatus, const char **text,
 
 
 static void
-html_header(tcp_queue_t *tq, const char *title, int javascript, int width)
+html_header(tcp_queue_t *tq, const char *title, int javascript, int width,
+	    int autorefresh)
 {
   char w[30];
 
@@ -115,6 +116,11 @@ html_header(tcp_queue_t *tq, const char *title, int javascript, int width)
 	      "<title>%s</title>\r\n"
 	      "<meta http-equiv=\"Content-Type\" "
 	      "content=\"text/html; charset=utf-8\">\r\n", title);
+
+  if(autorefresh) 
+    tcp_qprintf(tq, 
+		"<meta http-equiv=\"refresh\" content=\"%d\">\r\n",
+		autorefresh);
 
   tcp_qprintf(tq, 
 	      "<style type=\"text/css\">\r\n"
@@ -389,15 +395,29 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
   event_t *e;
   int i;
   int simple = is_client_simple(hc);
+  time_t firstend = INT32_MAX;
   
   if(!html_verify_access(hc, "browse-events"))
     return HTTP_STATUS_UNAUTHORIZED;
 
+  epg_lock();
+
   tcp_init_queue(&tq, -1);
-  html_header(&tq, "HTS/tvheadend", !simple, 700);
+
+  TAILQ_FOREACH(ch, &channels, ch_global_link) {
+    e = epg_event_find_current_or_upcoming(ch);
+    if(e && e->e_start + e->e_duration < firstend) {
+      firstend = e->e_start + e->e_duration;
+    }
+  }
+
+  i = 5 + firstend - dispatch_clock;
+  if(i < 30)
+    i = 30;
+
+  html_header(&tq, "HTS/tvheadend", !simple, 700, i);
   top_menu(hc, &tq);
 
-  epg_lock();
   TAILQ_FOREACH(ch, &channels, ch_global_link) {
     box_top(&tq, "box");
     tcp_qprintf(&tq, "<div class=\"content3\">");
@@ -482,7 +502,7 @@ page_channel(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_init_queue(&tq, -1);
 
-  html_header(&tq, "HTS/tvheadend", !simple, 700);
+  html_header(&tq, "HTS/tvheadend", !simple, 700, 0);
 
   top_menu(hc, &tq);
 
@@ -588,7 +608,7 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_init_queue(&tq, -1);
 
-  html_header(&tq, "HTS/tvheadend", 0, 700);
+  html_header(&tq, "HTS/tvheadend", 0, 700, 0);
   top_menu(hc, &tq);
 
   tcp_qprintf(&tq, "<form method=\"get\" action=\"/event/%d\">", eventid);
@@ -694,7 +714,7 @@ page_pvrlog(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_UNAUTHORIZED;
 
   tcp_init_queue(&tq, -1);
-  html_header(&tq, "HTS/tvheadend", 0, 700);
+  html_header(&tq, "HTS/tvheadend", 0, 700, 0);
   top_menu(hc, &tq);
 
   box_top(&tq, "box");
@@ -843,7 +863,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_init_queue(&tq, -1);
 
-  html_header(&tq, "HTS/tvheadend", !simple, -1);
+  html_header(&tq, "HTS/tvheadend", !simple, -1, 0);
 
   top_menu(hc, &tq);
 
