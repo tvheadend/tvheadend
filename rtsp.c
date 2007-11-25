@@ -254,6 +254,8 @@ rtsp_reply_error(http_connection_t *hc, int error, const char *errstr)
   http_printf(hc, "RTSP/1.0 %d %s\r\n", error, errstr);
   if((c = http_arg_get(&hc->hc_args, "cseq")) != NULL)
     http_printf(hc, "CSeq: %s\r\n", c);
+  if(error == HTTP_STATUS_UNAUTHORIZED)
+    http_printf(hc, "WWW-Authenticate: Basic realm=\"tvheadend\"\r\n");
   http_printf(hc, "\r\n");
 }
 
@@ -562,6 +564,9 @@ rtsp_cmd_teardown(http_connection_t *hc)
 int 
 rtsp_process_request(http_connection_t *hc)
 {
+  rtsp_reply_error(hc, RTSP_STATUS_UNAUTHORIZED, NULL);
+  return 0;
+
   switch(hc->hc_cmd) {
   default:
     rtsp_reply_error(hc, RTSP_STATUS_METHOD, NULL);
