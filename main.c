@@ -50,6 +50,7 @@
 #include "iptv_output.h"
 #include "rtsp.h"
 #include "http.h"
+#include "htsp.h"
 #include "buffer.h"
 #include "htmlui.h"
 
@@ -204,6 +205,10 @@ main(int argc, char **argv)
       p = atoi(config_get_str("http-server-port", "9980"));
       if(p)
 	http_start(p);
+
+      p = atoi(config_get_str("htsp-server-port", "0"));
+      if(p)
+	htsp_start(p);
 
     }
     dispatcher();

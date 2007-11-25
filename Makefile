@@ -5,6 +5,8 @@ SRCS = main.c dispatch.c channels.c transports.c teletext.c psi.c \
 
 SRCS += http.c htmlui.c
 
+SRCS += htsp.c rpc.c
+
 SRCS += pvr.c
 
 SRCS += epg.c epg_xmltv.c
