@@ -62,7 +62,7 @@ static struct strtab HTTP_versiontab[] = {
   { "HTTP/0.9",        HTTP_VERSION_0_9 },
   { "HTTP/1.0",        HTTP_VERSION_1_0 },
   { "HTTP/1.1",        HTTP_VERSION_1_1 },
-  //  { "RTSP/1.0",        RTSP_VERSION_1_0 }, /* not enabled yet */
+  { "RTSP/1.0",        RTSP_VERSION_1_0 }, /* not enabled yet */
 };
 
 
@@ -125,6 +125,7 @@ http_output_reply_header(http_connection_t *hc, int rc)
   
   http_printf(hc, "%s %d %s\r\n", val2str(hc->hc_version, HTTP_versiontab),
 	      rc, http_rc2str(rc));
+  http_printf(hc, "Cache-Control: no-cache\r\n");
   http_printf(hc, "Server: HTS/tvheadend\r\n");
   http_printf(hc, "Connection: %s\r\n", 
 	      hc->hc_keep_alive ? "Keep-Alive" : "Close");
@@ -341,7 +342,7 @@ http_con_parse(void *aux, char *buf)
   int n, v;
   char *argv[3], *c;
 
-  printf("HTTP INPUT: %s\n", buf);
+  //  printf("HTTP INPUT: %s\n", buf);
 
   switch(hc->hc_state) {
   case HTTP_CON_WAIT_REQUEST:
