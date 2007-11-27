@@ -97,6 +97,24 @@ pes_packet_input(th_transport_t *t, th_stream_t *st, uint8_t *buf, size_t len)
   if((flags & 0xc0) == 0xc0) {
     if(hlen < 10) 
       return -1;
+#if 0 /* write a more robust DTS/PTS decode which checks for 
+	 correct static bits */
+
+    u8 = getu8(buf, len);
+    if(u8 >> 4 != 3) {
+      printf("DTSPTS error\n");
+      return -1;
+    }
+
+    pts = (int64_t)(u8 & 0xe) << 29;
+    u16 = getu16(buf, len);
+    if((u16 & 1) == 0) {
+      printf("DTSPTS error\n");
+      return -1;
+    }
+#endif
+    
+    
 
     pts = getpts(buf, len);
     dts = getpts(buf, len);
@@ -134,7 +152,7 @@ pes_packet_input(th_transport_t *t, th_stream_t *st, uint8_t *buf, size_t len)
     }
 
     st->st_dts = dts;
-   
+    
     pts = dts + ptsoff;
 
     dts = av_rescale_q(dts, mpeg_tc, AV_TIME_BASE_Q);
@@ -318,7 +336,7 @@ pes_compute_duration(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 
   TAILQ_REMOVE(&st->st_durationq, pkt, pkt_queue_link);
 
-  if(pkt->pkt_duration < 1) {
+  if(pkt->pkt_duration < 1 || pkt->pkt_duration > 500000) {
     pkt_deref(pkt);
     return;
   }
