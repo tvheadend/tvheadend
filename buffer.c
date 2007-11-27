@@ -194,7 +194,7 @@ pkt_store(th_pkt_t *pkt)
 
 
 /*
- * Force flush of a packet (if a transport is stopped)
+ * Force flush of a packet
  */
 void
 pkt_unstore(th_pkt_t *pkt)
@@ -223,7 +223,7 @@ pkt_unstore(th_pkt_t *pkt)
 /*
  *
  */
-void
+int
 pkt_load(th_pkt_t *pkt)
 {
   if(pkt->pkt_payload == NULL && pkt->pkt_storage != NULL) {
@@ -232,8 +232,7 @@ pkt_load(th_pkt_t *pkt)
 	  pkt->pkt_storage_offset);
     storage_mem_enq(pkt);
   }
-  if(pkt->pkt_payload == NULL)
-    printf("Packet %p load failed\n", pkt);
+  return pkt->pkt_payload == NULL ? -1 : 0;
 }
 
 
@@ -277,6 +276,9 @@ storage_mem_enq(th_pkt_t *pkt)
 
     free(pkt->pkt_payload);
     pkt->pkt_payload = NULL;
+
+    if(pkt->pkt_storage == NULL)
+      pkt_unstore(pkt);
   }
 }
 

@@ -33,7 +33,7 @@ void pkt_store(th_pkt_t *pkt);
 
 void pkt_unstore(th_pkt_t *pkt);
 
-void pkt_load(th_pkt_t *pkt);
+int pkt_load(th_pkt_t *pkt);
 
 void *pkt_payload(th_pkt_t *pkt);
 
