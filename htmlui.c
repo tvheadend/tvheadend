@@ -442,8 +442,11 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
 		ch->ch_tag, ch->ch_name);
 
     if(tvheadend_streaming_host != NULL) {
-      tcp_qprintf(&tq, "<i><a href=\"rtsp://%s:%d/%s\">Watch live</a></i><br>",
+      tcp_qprintf(&tq,
+		  "<i><a href=\"rtsp://%s:%d/%s\">Watch live</a></i><br>",
 		  tvheadend_streaming_host, http_port, ch->ch_sname);
+    } else {
+      tcp_qprintf(&tq, "<br>");
     }
 
     e = epg_event_find_current_or_upcoming(ch);
