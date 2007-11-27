@@ -187,6 +187,7 @@ dvb_muxfile_add(const char *fname)
   if(fp == NULL) {
     syslog(LOG_ERR, "dvb: Unable to open file %s -- %s", 
 	   fname, strerror(errno));
+    return;
   }
 
   while(!feof(fp)) {
