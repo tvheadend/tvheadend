@@ -15,6 +15,8 @@ SRCS += dvb.c dvb_support.c dvb_dvr.c dvb_muxconfig.c
 
 SRCS += iptv_input.c iptv_output.c
 
+SRCS += avgen.c
+
 SRCS +=	htsclient.c rtsp.c rtp.c
 
 SRCS += v4l.c

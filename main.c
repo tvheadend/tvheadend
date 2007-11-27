@@ -53,6 +53,7 @@
 #include "htsp.h"
 #include "buffer.h"
 #include "htmlui.h"
+#include "avgen.h"
 
 int running;
 int xmltvreload;
@@ -189,6 +190,8 @@ main(int argc, char **argv)
   subscriptions_init();
 
   htmlui_start();
+
+  avgen_init();
 
   running = 1;
   while(running) {

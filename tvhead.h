@@ -316,6 +316,7 @@ typedef struct th_transport {
     TRANSPORT_DVB,
     TRANSPORT_IPTV,
     TRANSPORT_V4L,
+    TRANSPORT_AVGEN,
   } tht_type;
 
   enum {
@@ -392,8 +393,11 @@ typedef struct th_transport {
 	IPTV_MODE_RAWUDP,
       } mode;
     } iptv;
-  } u;
 
+    struct {
+      struct avgen *avgen;
+    } avgen;
+ } u;
 
 } th_transport_t;
 
@@ -413,6 +417,7 @@ typedef struct th_transport {
 #define tht_iptv_fd              u.iptv.fd
 #define tht_iptv_mode            u.iptv.mode
 
+#define tht_avgen                u.avgen.avgen
 
 /*
  * Storage

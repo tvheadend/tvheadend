@@ -895,6 +895,9 @@ client_status_update(void *aux, int64_t now)
     rate = rate * 8 / 1000 / 10; /* convert to kbit / s */
 
     switch(t->tht_type) {
+    default:
+      break;
+
     case TRANSPORT_DVB:
       if((tda = t->tht_dvb_adapter) == NULL) {
 	csprintf(c, ch, 

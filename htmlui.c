@@ -1055,6 +1055,11 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
       t2 = t->tht_dvb_adapter->tda_path;
       break;
 
+    case TRANSPORT_AVGEN:
+      t1 = "A/V Generator";
+      t2 = "";
+      break;
+
     default:
       continue;
     }
