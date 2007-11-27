@@ -44,6 +44,8 @@
 
 #include <ffmpeg/random.h>
 
+#include <libhts/htscfg.h>
+
 #define RTSP_STATUS_OK           200
 #define RTSP_STATUS_UNAUTHORIZED 401
 #define RTSP_STATUS_METHOD       405
@@ -558,14 +560,67 @@ rtsp_cmd_teardown(http_connection_t *hc)
   rtsp_session_destroy(rs);
 }
 
+/**
+ *
+ */
+static int
+rtsp_access_list(http_connection_t *hc)
+{
+  config_entry_t *ce;
+  struct config_head *head;
+  int prefixlen;
+  char *p;
+  struct sockaddr_in *si;
+  char buf[100];
+
+  uint32_t a, b, m;
+
+  ce = config_get_key(&config_list, "rtsp-access");
+  if(ce == NULL || ce->ce_type != CFG_SUB)
+    return -1;
+
+  si = (struct sockaddr_in *)&hc->hc_tcp_session.tcp_peer_addr;
+
+  b = ntohl(si->sin_addr.s_addr);
+
+  head = &ce->ce_sub;
+
+  TAILQ_FOREACH(ce, head, ce_link) {
+    if(strcasecmp("permit", ce->ce_key) || ce->ce_type != CFG_VALUE)
+      continue;
+
+    if(strlen(ce->ce_value) > 90)
+      continue;
+
+    strcpy(buf, ce->ce_value);
+    p = strchr(buf, '/');
+    if(p) {
+      *p++ = 0;
+      prefixlen = atoi(p);
+    } else {
+      prefixlen = 32;
+    }
+    
+    m = prefixlen ? 0xffffffff << (32 - prefixlen) : 0;
+    a = ntohl(inet_addr(buf));
+    if((b & m) == (a & m))
+      return 0;
+  }
+  return -1;
+}
+
+
+
 /*
  * RTSP connection state machine & parser
  */
 int 
 rtsp_process_request(http_connection_t *hc)
 {
-  rtsp_reply_error(hc, RTSP_STATUS_UNAUTHORIZED, NULL);
-  return 0;
+  if(rtsp_access_list(hc)) {
+    rtsp_reply_error(hc, RTSP_STATUS_UNAUTHORIZED, NULL);
+    return 0;
+  }
 
   switch(hc->hc_cmd) {
   default:
