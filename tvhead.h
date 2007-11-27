@@ -337,9 +337,9 @@ typedef struct th_transport {
   th_stream_t *tht_audio;
 
   uint16_t tht_pcr_pid;
-  uint16_t tht_dvb_network_id;
   uint16_t tht_dvb_transport_id;
   uint16_t tht_dvb_service_id;
+  int tht_pmt_seen;
 
   avgstat_t tht_cc_errors;
   avgstat_t tht_rate;

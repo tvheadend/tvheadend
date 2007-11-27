@@ -256,6 +256,8 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
     if(hts_stream_type != 0)
       transport_add_stream(t, pid, hts_stream_type);
   } 
+
+  t->tht_pmt_seen = 1;
   return 0;
 }
 
