@@ -49,6 +49,24 @@
 #include "buffer.h"
 #include "tsdemux.h"
 
+static int 
+ts_reassembly_pes(th_transport_t *t, th_stream_t *st, uint8_t *data, int len)
+{
+  int l2;
+
+  if(len < 9) 
+    return -1;
+
+  if(data[0] != 0 || data[1] != 0 || data[2] != 1)
+    return -1;
+
+  l2 = (data[4] << 8) | data[5];
+  
+  len  -= 6;
+  data += 6;
+ 
+  return pes_packet_input(t, st, data, len);
+}
 
 /*
  * TS packet reassembly
@@ -58,11 +76,8 @@ ts_reassembly(th_transport_t *t, th_stream_t *st, uint8_t *data, int len,
 	      int pusi, int err)
 {
   if(pusi) {
-    if(st->st_buffer_ptr > 6) {
-      if(pes_packet_input(t, st, st->st_buffer + 6, 
-			  st->st_buffer_ptr - 6) == 0)
-	st->st_buffer = NULL; /* Memory was consumed by pes_packet_input() */
-    }
+    if(ts_reassembly_pes(t, st, st->st_buffer, st->st_buffer_ptr) == 0)
+      st->st_buffer = NULL; /* Memory was consumed by pes_packet_input() */
 
     st->st_buffer_ptr = 0;
     st->st_buffer_errors = 0;
