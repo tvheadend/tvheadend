@@ -141,7 +141,9 @@ dvb_add_adapter(const char *path)
 
   tda->tda_fe_fd = fe;
 
-  if(ioctl(tda->tda_fe_fd, FE_GET_INFO, &tda->tda_fe_info)) {
+  tda->tda_fe_info = malloc(sizeof(struct dvb_frontend_info));
+
+  if(ioctl(tda->tda_fe_fd, FE_GET_INFO, tda->tda_fe_info)) {
     syslog(LOG_ALERT, "%s: Unable to query adapter\n", fname);
     close(fe);
     free(tda);
@@ -158,11 +160,11 @@ dvb_add_adapter(const char *path)
   LIST_INSERT_HEAD(&dvb_adapters_probing, tda, tda_link);
   startupcounter++;
 
-  tda->tda_info = strdup(tda->tda_fe_info.name);
+  tda->tda_info = strdup(tda->tda_fe_info->name);
 
   dispatch_addfd(tda->tda_fe_fd, dvb_frontend_event, tda, DISPATCH_PRI);
 
-  syslog(LOG_INFO, "Adding adapter %s (%s)", tda->tda_fe_info.name, path);
+  syslog(LOG_INFO, "Adding adapter %s (%s)", path, tda->tda_fe_info->name);
   dtimer_arm(&tda->tda_fec_monitor_timer, dvb_fec_monitor, tda, 1);
 }
 
@@ -190,6 +192,7 @@ dvb_init(void)
       syslog(LOG_WARNING,
 	     "No muxes configured on \"%s\" DVB adapter unused",
 	     tda->tda_path);
+      startupcounter--;
     } else {
       dvb_start_initial_scan(tdmi);
     }
@@ -303,7 +306,7 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
     syslog(LOG_DEBUG, "\"%s\" tuning to mux \"%s\"", 
 	   tda->tda_path, tdmi->tdmi_mux->tdm_title);
 
-  i = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, &tdm->tdm_fe_params);
+  i = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, tdm->tdm_fe_params);
   if(i != 0) {
     if(maylog)
       syslog(LOG_ERR, "\"%s\" tuning to transport \"%s\""

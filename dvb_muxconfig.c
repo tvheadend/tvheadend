@@ -51,27 +51,49 @@ dvb_add_mux_instance(th_dvb_adapter_t *tda, th_dvb_mux_t *tdm)
 
 
 static void
-dvb_add_mux(struct dvb_frontend_parameters *fe_param, const char *name)
+dvb_add_mux(struct dvb_frontend_parameters *fe_param, const char *name,
+	    fe_type_t type)
 {
   th_dvb_mux_t *tdm;
   th_dvb_adapter_t *tda;
   char buf[100];
+  char *typetxt;
+
+  switch(type) {
+  case FE_QPSK:
+    typetxt = "DVB-S";
+    break;
+  case FE_QAM:
+    typetxt = "DVB-C";
+    break;
+  case FE_OFDM:
+    typetxt = "DVB-T";
+    break;
+  case FE_ATSC:
+    typetxt = "ASCT";
+    break;
+  default:
+    return;
+  }
 
   tdm = calloc(1, sizeof(th_dvb_mux_t));
+  tdm->tdm_type = type;
 
-  memcpy(&tdm->tdm_fe_params, fe_param,
+  tdm->tdm_fe_params = malloc(sizeof(struct dvb_frontend_parameters));
+
+  memcpy(tdm->tdm_fe_params, fe_param,
 	 sizeof(struct dvb_frontend_parameters));
 
   if(name == NULL) {
-    snprintf(buf, sizeof(buf), "DVB-%d", fe_param->frequency);
+    snprintf(buf, sizeof(buf), "%s-%d", typetxt, fe_param->frequency);
 
     tdm->tdm_name = strdup(buf);
     
-    snprintf(buf, sizeof(buf), "DVB-T: %.1f MHz", 
+    snprintf(buf, sizeof(buf), "%s: %.1f MHz", typetxt,
 	     (float)fe_param->frequency / 1000000.0f);
   } else {
     tdm->tdm_name = strdup(name);
-    snprintf(buf, sizeof(buf), "DVB-T: %.1f MHz (%s)", 
+    snprintf(buf, sizeof(buf), "%s: %.1f MHz (%s)", typetxt,
 	     (float)fe_param->frequency / 1000000.0f, name);
   }
 
@@ -80,7 +102,8 @@ dvb_add_mux(struct dvb_frontend_parameters *fe_param, const char *name)
   LIST_INSERT_HEAD(&dvb_muxes, tdm, tdm_global_link);
       
   LIST_FOREACH(tda, &dvb_adapters_probing, tda_link) {
-    dvb_add_mux_instance(tda, tdm);
+    if(tda->tda_fe_info->type == type)
+      dvb_add_mux_instance(tda, tdm);
   }
 }
 
@@ -171,9 +194,35 @@ dvb_t_config(const char *l)
   r = str2val(fec2, fectab);
   f.u.ofdm.code_rate_LP = r == FEC_NONE ? FEC_AUTO : r;
 
-  dvb_add_mux(&f, NULL);
+  dvb_add_mux(&f, NULL, FE_OFDM);
 }
 
+
+
+static void
+dvb_c_config(const char *l)
+{
+  unsigned long freq, symrate;
+  char fec[20], qam[20];
+  struct dvb_frontend_parameters f;
+  int r;
+
+  r = sscanf(l, "%lu %lu %s %s",
+	     &freq, &symrate, fec, qam);
+
+  if(r != 4)
+    return;
+
+  memset(&f, 0, sizeof(f));
+  
+  f.inversion                    = INVERSION_AUTO;
+  f.frequency                    = freq;
+  f.u.qam.symbol_rate            = symrate;
+  f.u.qam.fec_inner              = str2val(fec, fectab);
+  f.u.qam.modulation             = str2val(qam,   qamtab);
+
+  dvb_add_mux(&f, NULL, FE_QAM);
+}
 
 
 
@@ -203,6 +252,10 @@ dvb_muxfile_add(const char *fname)
 
     case 'T':
       dvb_t_config(line + 1);
+      break;
+
+    case 'C':
+      dvb_c_config(line + 1);
       break;
 
     default:
@@ -240,7 +293,7 @@ dvb_add_configured_muxes(void)
       fe_param.frequency = 
 	atoi(config_get_str_sub(&ce->ce_sub, "frequency", "0"));
       
-      dvb_add_mux(&fe_param, s);
+      dvb_add_mux(&fe_param, s, FE_OFDM);
     }
   }
 }
@@ -249,11 +302,11 @@ dvb_add_configured_muxes(void)
 void
 dvb_mux_setup(void)
 {
-  const char *s;
+  config_entry_t *ce;
   
-  s = config_get_str("dvbmuxfile", NULL);
-  if(s != NULL)
-    dvb_muxfile_add(s);
+  TAILQ_FOREACH(ce, &config_list, ce_link)
+    if(ce->ce_type == CFG_VALUE && !strcasecmp("dvbmuxfile", ce->ce_key))
+      dvb_muxfile_add(ce->ce_value);
 
   dvb_add_configured_muxes();
 }

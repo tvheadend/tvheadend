@@ -22,8 +22,6 @@
 #include <pthread.h>
 #include <syslog.h>
 #include <netinet/in.h>
-#include <linux/dvb/frontend.h>
-#include <linux/dvb/dmx.h>
 #include <libhts/htsq.h>
 #include <libhts/htstv.h>
 #include <libhts/htscfg.h>
@@ -180,10 +178,12 @@ typedef struct th_dvb_mux {
 
   struct th_dvb_mux_instance_list tdm_instances;
 
-  struct dvb_frontend_parameters tdm_fe_params;
+  struct dvb_frontend_parameters *tdm_fe_params;
 
   const char *tdm_name;
   const char *tdm_title;
+
+  int tdm_type;  /* really fe_type_t */
 
 } th_dvb_mux_t;
 
@@ -212,7 +212,7 @@ typedef struct th_dvb_adapter {
   pthread_mutex_t tda_mux_lock;
 
   int tda_fe_fd;
-  struct dvb_frontend_info tda_fe_info;
+  struct dvb_frontend_info *tda_fe_info;
 
   char *tda_demux_path;
 
