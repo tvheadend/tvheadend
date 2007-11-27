@@ -569,6 +569,8 @@ ts_muxer_start(th_muxer_t *tm)
       LIST_REMOVE(tms, tms_muxer_link);
       LIST_INSERT_HEAD(&tm->tm_active_streams, tms, tms_muxer_link);
     } else {
+      pkt_load(pkt);
+
       tms_stream_set_active(tm, tms, pkt, tm->tm_start_dts);
     }
   }
