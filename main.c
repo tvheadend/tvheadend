@@ -58,6 +58,7 @@
 int running;
 int xmltvreload;
 int startupcounter;
+const char *tvheadend_streaming_host;
 
 static pthread_mutex_t tag_mutex = PTHREAD_MUTEX_INITIALIZER;
 static uint32_t tag_tally;
@@ -188,6 +189,8 @@ main(int argc, char **argv)
   xmltv_init();
 
   subscriptions_init();
+
+  tvheadend_streaming_host = config_get_str("streaming-host", NULL);
 
   htmlui_start();
 

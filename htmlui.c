@@ -435,8 +435,16 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
     }
 
     tcp_qprintf(&tq, "<div class=\"over\">");
-    tcp_qprintf(&tq, "<strong><a href=\"channel/%d\">%s</a></strong><br>",
+    tcp_qprintf(&tq, 
+		"<span style=\"overflow: hidden; height: 15px; "
+		"width: 300px; float: left; font-weight:bold\">"
+		"<a href=\"channel/%d\">%s</a></span>",
 		ch->ch_tag, ch->ch_name);
+
+    if(tvheadend_streaming_host != NULL) {
+      tcp_qprintf(&tq, "<i><a href=\"rtsp://%s:%d/%s\">Watch live</a></i><br>",
+		  tvheadend_streaming_host, http_port, ch->ch_sname);
+    }
 
     e = epg_event_find_current_or_upcoming(ch);
 

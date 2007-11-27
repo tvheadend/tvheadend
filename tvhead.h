@@ -599,6 +599,7 @@ typedef struct th_channel {
   int ch_index;
 
   const char *ch_name;
+  const char *ch_sname;
 
   struct pvr_rec *ch_rec;
 
@@ -695,5 +696,6 @@ char *utf8toprintable(const char *in);
 char *utf8tofilename(const char *in);
 const char *htstvstreamtype2txt(tv_streamtype_t s);
 uint32_t tag_get(void);
+extern const char *tvheadend_streaming_host;
 
 #endif /* TV_HEAD_H */

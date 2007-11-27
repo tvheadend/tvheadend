@@ -19,6 +19,8 @@
 #ifndef HTTP_H_
 #define HTTP_H_
 
+extern int http_port;
+
 #include "tcp.h"
 
 #define HTTP_STATUS_OK           200

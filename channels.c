@@ -22,7 +22,7 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
-
+#include <ctype.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -47,7 +47,10 @@ void scanner_init(void);
 th_channel_t *
 channel_find(const char *name, int create)
 {
+  const char *n2;
   th_channel_t *ch;
+  int l, i;
+  char *cp, c;
 
   TAILQ_FOREACH(ch, &channels, ch_global_link)
     if(!strcasecmp(name, ch->ch_name))
@@ -58,6 +61,21 @@ channel_find(const char *name, int create)
 
   ch = calloc(1, sizeof(th_channel_t));
   ch->ch_name = strdup(name);
+
+  l = strlen(name);
+  ch->ch_sname = cp = malloc(l + 1);
+
+  n2 = utf8toprintable(name);
+
+  for(i = 0; i < strlen(n2); i++) {
+    c = tolower(n2[i]);
+    if(isalnum(c))
+      *cp++ = c;
+    else
+      *cp++ = '-';
+  }
+  *cp = 0;
+
   ch->ch_index = nchannels;
   TAILQ_INIT(&ch->ch_epg_events);
 

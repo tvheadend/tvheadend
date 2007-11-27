@@ -90,8 +90,8 @@ typedef struct rtsp_session {
 static th_channel_t *
 rtsp_channel_by_url(char *url)
 {
+  th_channel_t *ch;
   char *c;
-  int chid;
 
   c = strrchr(url, '/');
   if(c != NULL && c[1] == 0) {
@@ -104,9 +104,11 @@ rtsp_channel_by_url(char *url)
     return NULL;
   c++; 
 
-  if(sscanf(c, "chid-%d", &chid) != 1)
-    return NULL;
-  return channel_by_index(chid);
+  TAILQ_FOREACH(ch, &channels, ch_global_link)
+    if(!strcasecmp(ch->ch_sname, c))
+      return ch;
+
+  return NULL;
 }
 
 /*

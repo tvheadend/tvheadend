@@ -44,6 +44,8 @@
 #include "http.h"
 #include "rtsp.h"
 
+int http_port;
+
 static LIST_HEAD(, http_path) http_paths;
 
 static struct strtab HTTP_cmdtab[] = {
@@ -442,6 +444,7 @@ http_tcp_callback(tcpevent_t event, void *tcpsession)
 void
 http_start(int port)
 {
+  http_port = port;
   tcp_create_server(port, sizeof(http_connection_t), "http",
 		    http_tcp_callback);
 }
