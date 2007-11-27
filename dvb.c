@@ -375,8 +375,11 @@ dvb_find_transport(th_dvb_mux_instance_t *tdmi, uint16_t nid, uint16_t tid,
   t->tht_dvb_transport_id = tid;
   t->tht_dvb_service_id   = sid;
 
-  t->tht_dvb_mux = tdm;
   t->tht_type = TRANSPORT_DVB;
+  t->tht_start_feed = dvb_start_feed;
+  t->tht_stop_feed  = dvb_stop_feed;
+  t->tht_dvb_mux = tdm;
+
   t->tht_prio = 50;
 
  

@@ -68,8 +68,8 @@ iptv_fd_callback(int events, void *opaque, int fd)
   }
 }
 
-int
-iptv_start_feed(th_transport_t *t, int status)
+static int
+iptv_start_feed(th_transport_t *t, unsigned int weight, int status)
 {
   int fd;
   struct ip_mreqn m;
@@ -116,18 +116,17 @@ iptv_start_feed(th_transport_t *t, int status)
   return 0;
 }
 
-int
+static void
 iptv_stop_feed(th_transport_t *t)
 {
   if(t->tht_status == TRANSPORT_IDLE)
-    return 0;
+    return;
 
   t->tht_status = TRANSPORT_IDLE;
   dispatch_delfd(t->tht_iptv_dispatch_handle);
   close(t->tht_iptv_fd);
 
   syslog(LOG_ERR, "iptv: \"%s\" left group", t->tht_name);
-  return 0;
 }
 
 
@@ -183,7 +182,9 @@ iptv_configure_transport(th_transport_t *t, const char *iptv_type,
     return -1;
 
   t->tht_type = TRANSPORT_IPTV;
-  
+  t->tht_start_feed = iptv_start_feed;
+  t->tht_stop_feed  = iptv_stop_feed;
+
   if((s = config_get_str_sub(head, "group-address", NULL)) == NULL)
     return -1;
   t->tht_iptv_group_addr.s_addr = inet_addr(s);
@@ -241,7 +242,7 @@ static void
 iptv_probe_transport(th_transport_t *t)
 {
   syslog(LOG_INFO, "iptv: Probing transport %s", t->tht_name);
-  iptv_start_feed(t, TRANSPORT_PROBING);
+  iptv_start_feed(t, 1, TRANSPORT_PROBING);
 }
 
 

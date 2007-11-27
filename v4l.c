@@ -54,7 +54,9 @@ static int v4l_setfreq(th_v4l_adapter_t *tva, int frequency);
 static void v4l_add_adapter(const char *path);
 
 
+static void v4l_stop_feed(th_transport_t *t);
 
+static int v4l_start_feed(th_transport_t *t, unsigned int weight, int status);
 
 /* 
  *
@@ -81,6 +83,8 @@ v4l_configure_transport(th_transport_t *t, const char *muxname,
     return -1;
 
   t->tht_type = TRANSPORT_V4L;
+  t->tht_start_feed = v4l_start_feed;
+  t->tht_stop_feed  = v4l_stop_feed;
 
   t->tht_v4l_frequency = 
     atoi(config_get_str_sub(&ce->ce_sub, "frequency", "0"));
@@ -187,7 +191,7 @@ v4l_stop(th_v4l_adapter_t *tva)
 /* 
  *
  */
-void
+static void
 v4l_stop_feed(th_transport_t *t)
 {
   th_v4l_adapter_t *tva = t->tht_v4l_adapter;
@@ -225,8 +229,8 @@ v4l_adapter_clean(th_v4l_adapter_t *tva)
 /* 
  *
  */
-int 
-v4l_start_feed(th_transport_t *t, unsigned int weight)
+static int 
+v4l_start_feed(th_transport_t *t, unsigned int weight, int status)
 {
   th_v4l_adapter_t *tva, *cand = NULL;
   int w, fd;

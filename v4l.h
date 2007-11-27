@@ -26,8 +26,4 @@ void v4l_init(void);
 int v4l_configure_transport(th_transport_t *t, const char *muxname,
 			    const char *channel_name);
 
-int v4l_start_feed(th_transport_t *t, unsigned int weight);
-
-void v4l_stop_feed(th_transport_t *t);
-
 #endif /* V4L_H */

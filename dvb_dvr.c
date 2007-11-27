@@ -137,7 +137,7 @@ dvb_stop_feed(th_transport_t *t)
  *
  */
 int
-dvb_start_feed(th_transport_t *t, unsigned int weight)
+dvb_start_feed(th_transport_t *t, unsigned int weight, int status)
 {
   th_dvb_adapter_t *tda;
   struct dmx_pes_filter_params dmx_param;

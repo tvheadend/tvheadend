@@ -27,6 +27,7 @@
 #include "tvhead.h"
 #include "channels.h"
 #include "dvb.h"
+#include "dvb_dvr.h"
 #include "dvb_muxconfig.h"
 #include "strtab.h"
 #include "transports.h"
@@ -277,6 +278,8 @@ dvb_configure_transport(th_transport_t *t, const char *muxname,
     return -1;
 
   t->tht_type = TRANSPORT_DVB;
+  t->tht_start_feed = dvb_start_feed;
+  t->tht_stop_feed  = dvb_stop_feed;
   t->tht_dvb_mux = tdm;
   t->tht_name = strdup(tdm->tdm_title);
 

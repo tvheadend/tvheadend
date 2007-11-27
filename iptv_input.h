@@ -23,10 +23,6 @@ int iptv_configure_transport(th_transport_t *t, const char *muxname,
 			     struct config_head *head, 
 			     const char *channel_name);
 
-int iptv_start_feed(th_transport_t *t, int status);
-
-int iptv_stop_feed(th_transport_t *t);
-
 extern struct th_transport_list iptv_probing_transports;
 extern struct th_transport_list iptv_stale_transports;
 

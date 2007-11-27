@@ -66,25 +66,7 @@ transport_purge(th_transport_t *t)
   if(LIST_FIRST(&t->tht_subscriptions))
     return;
 
-  switch(t->tht_type) {
-#ifdef ENABLE_INPUT_DVB
-  case TRANSPORT_DVB:
-    dvb_stop_feed(t);
-    break;
-#endif
-#ifdef ENABLE_INPUT_IPTV
-  case TRANSPORT_IPTV:
-    iptv_stop_feed(t);
-    break;
-#endif
-#ifdef ENABLE_INPUT_V4L
-  case TRANSPORT_V4L:
-    v4l_stop_feed(t);
-    break;
-#endif
-  default:
-    break;
-  }
+  t->tht_stop_feed(t);
 
   t->tht_tt_commercial_advice = COMMERCIAL_UNKNOWN;
  
@@ -186,24 +168,7 @@ transport_start(th_transport_t *t, unsigned int weight)
     }
   }
   
-
-  switch(t->tht_type) {
-#ifdef ENABLE_INPUT_DVB
-  case TRANSPORT_DVB:
-    return dvb_start_feed(t, weight);
-#endif
-#ifdef ENABLE_INPUT_IPTV
-  case TRANSPORT_IPTV:
-    return iptv_start_feed(t, TRANSPORT_RUNNING);
-#endif
-#ifdef ENABLE_INPUT_V4L
-  case TRANSPORT_V4L:
-    return v4l_start_feed(t, weight);
-#endif
-  default:
-    return 1;
-  }
-  return 1;
+  return t->tht_start_feed(t, weight, TRANSPORT_RUNNING);
 }
 
 
