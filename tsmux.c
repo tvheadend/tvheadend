@@ -134,7 +134,7 @@ tms_stream_set_active(th_muxer_t *tm, th_muxstream_t *tms, th_pkt_t *pkt,
   l = (pkt_len(pkt) + PES_HEADER_SIZE) / 188;
 
   tms->tms_dl = dl;
-  tms->tms_block_interval = dt / l;
+  tms->tms_block_interval = l == 0 ? 1 : dt / l;
 
   if(tms->tms_block_interval < 10)
     tms->tms_block_interval = 10;
