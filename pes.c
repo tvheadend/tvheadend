@@ -317,7 +317,7 @@ pes_compute_duration(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   th_pkt_t *next;
   th_muxer_t *tm;
   int delta;
-
+  int64_t d;
   delta = abs(pkt->pkt_dts - pkt->pkt_pts);
 
   if(delta > 250000) 
@@ -332,15 +332,33 @@ pes_compute_duration(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   if((next = TAILQ_NEXT(pkt, pkt_queue_link)) == NULL)
     return;
 
-  pkt->pkt_duration = next->pkt_dts - pkt->pkt_dts;
+  d = next->pkt_dts - pkt->pkt_dts;
 
   TAILQ_REMOVE(&st->st_durationq, pkt, pkt_queue_link);
 
-  if(pkt->pkt_duration < 1 || pkt->pkt_duration > 500000) {
+  if(d != st->st_last_duration) {
+
+    if(st->st_last_duration_frames > 30) {
+      syslog(LOG_INFO, "\"%s\" on \"%s\": \"%s\" "
+	     "Non-linear timestamps detected. "
+	     "DTS delta was %lld, but should be %lld for this stream",
+	     t->tht_channel->ch_name,
+	     t->tht_name,
+	     htstvstreamtype2txt(st->st_type),
+	     d, st->st_last_duration);
+    }
+    st->st_last_duration = d;
+    st->st_last_duration_frames = 0;
+  } else {
+    st->st_last_duration_frames++;
+  }
+
+  if(d < 1 || d > 500000) {
     pkt_deref(pkt);
     return;
   }
 
+  pkt->pkt_duration = d;
   pkt->pkt_stream = st;
 
   /* Alert all muxers tied to us that a new packet has arrived */

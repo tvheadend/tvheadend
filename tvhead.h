@@ -292,7 +292,9 @@ typedef struct th_stream {
   /* Temporary frame store for calculating duration */
 
   struct th_pkt_queue st_durationq;
-  int st_duration;
+
+  int64_t st_last_duration;
+  int st_last_duration_frames;
 
   /* Final frame store */
 
