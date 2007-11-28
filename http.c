@@ -444,6 +444,8 @@ http_tcp_callback(tcpevent_t event, void *tcpsession)
 void
 http_start(int port)
 {
+  rtsp_init();
+
   http_port = port;
   tcp_create_server(port, sizeof(http_connection_t), "http",
 		    http_tcp_callback);

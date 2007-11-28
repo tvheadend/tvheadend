@@ -661,3 +661,12 @@ rtsp_disconncet(http_connection_t *hc)
   while((rs = LIST_FIRST(&hc->hc_rtsp_sessions)) != NULL)
     rtsp_session_destroy(rs);
 }
+
+/*
+ *
+ */
+void
+rtsp_init(void)
+{
+  av_init_random(time(NULL), &rtsp_rnd);
+}

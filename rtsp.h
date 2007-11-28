@@ -25,4 +25,6 @@ int rtsp_process_request(http_connection_t *hc);
 
 void rtsp_disconncet(http_connection_t *hc);
 
+void rtsp_init(void);
+
 #endif /* RTSP_H_ */
