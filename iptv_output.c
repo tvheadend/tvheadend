@@ -84,7 +84,6 @@ iptv_subscription_callback(struct th_subscription *s,
     assert(om->om_muxer == NULL);
     om->om_muxer = ts_muxer_init(s, iptv_output_ts, om, 0);
     om->om_muxer->tm_drop_rate = om->om_intra_drop_rate;
-    printf("intrarate = %d\n", om->om_muxer->tm_drop_rate);
     ts_muxer_play(om->om_muxer, 0);
     break;
 
