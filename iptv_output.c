@@ -39,9 +39,15 @@
 #define MULTICAST_PKT_SIZ (188 * 7)
 
 typedef struct output_multicast {
-  void *om_muxer;
+  th_muxer_t *om_muxer;
   int om_fd;
   struct sockaddr_in om_dst;
+
+  int om_intra_drop_rate;
+
+  int om_inter_drop_rate;
+  int om_inter_drop_cnt;
+
 } output_multicast_t;
 
 /**
@@ -52,6 +58,12 @@ iptv_output_ts(void *opaque, th_subscription_t *s,
               uint8_t *pkt, int blocks, int64_t pcr)
 {
   output_multicast_t *om = opaque;
+
+  if(om->om_inter_drop_rate && 
+     ++om->om_inter_drop_cnt == om->om_inter_drop_rate) {
+    om->om_inter_drop_cnt = 0;
+    return;
+  }
 
   sendto(om->om_fd, pkt, blocks * 188, 0, 
         (struct sockaddr *)&om->om_dst, sizeof(struct sockaddr_in));
@@ -71,6 +83,8 @@ iptv_subscription_callback(struct th_subscription *s,
   case TRANSPORT_AVAILABLE:
     assert(om->om_muxer == NULL);
     om->om_muxer = ts_muxer_init(s, iptv_output_ts, om, 0);
+    om->om_muxer->tm_drop_rate = om->om_intra_drop_rate;
+    printf("intrarate = %d\n", om->om_muxer->tm_drop_rate);
     ts_muxer_play(om->om_muxer, 0);
     break;
 
@@ -135,6 +149,13 @@ output_multicast_load(struct config_head *head)
 
   if((s = config_get_str_sub(head, "ttl", NULL)) != NULL)
     ttl = atoi(s);
+
+
+  if((s = config_get_str_sub(head, "intra-drop-rate", NULL)) != NULL)
+    om->om_intra_drop_rate = atoi(s);
+
+  if((s = config_get_str_sub(head, "inter-drop-rate", NULL)) != NULL)
+    om->om_inter_drop_rate = atoi(s);
 
   setsockopt(om->om_fd, SOL_IP, IP_MULTICAST_TTL, &ttl, sizeof(int));
 

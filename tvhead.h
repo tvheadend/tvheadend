@@ -561,6 +561,10 @@ typedef struct th_muxer {
   th_muxstream_t *tm_pmt;
 
   struct AVFormatContext *tm_avfctx;
+
+  int tm_drop_rate;
+  int tm_drop_cnt;
+
 } th_muxer_t;
 
 

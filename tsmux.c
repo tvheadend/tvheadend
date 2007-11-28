@@ -371,8 +371,18 @@ ts_mux_packet(th_muxer_t *tm, int64_t pcr, uint8_t *outbuf, int maxblocks)
     /* Generate a transport stream packet */
 
     if(ts_make_pkt(tm, tms, outbuf, pcr1) == 0) {
-      outbuf += 188;
       rem = pkt_len(pkt) - tms->tms_offset;
+
+      /* Periodic drop (for testing purposes) */
+
+      if(i != 0 && i != maxblocks - 1 &&
+	 tm->tm_drop_rate && ++tm->tm_drop_cnt == tm->tm_drop_rate) {
+	tm->tm_drop_cnt = 0;
+	i--;
+      } else {
+	outbuf += 188;
+      }
+
     } else {
       i--;
       rem = 0;
