@@ -76,6 +76,8 @@ channel_find(const char *name, int create)
   }
   *cp = 0;
 
+  free((void *)n2);
+
   ch->ch_index = nchannels;
   TAILQ_INIT(&ch->ch_epg_events);
 
