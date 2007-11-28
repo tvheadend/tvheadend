@@ -102,7 +102,7 @@ subscription_unsubscribe(th_subscription_t *s)
 
   if(t != NULL) {
     subscription_stop(s);
-    transport_purge(t);
+    transport_stop(t, 0);
   }
 
   free(s->ths_title);

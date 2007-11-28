@@ -109,7 +109,7 @@ dvb_adapter_clean(th_dvb_adapter_t *tda)
   th_transport_t *t;
   
   while((t = LIST_FIRST(&tda->tda_transports)) != NULL)
-    dvb_stop_feed(t);
+    transport_stop(t, 1);
 }
 
 
@@ -129,7 +129,6 @@ dvb_stop_feed(th_transport_t *t)
     st->st_demuxer_fd = -1;
   }
   t->tht_status = TRANSPORT_IDLE;
-  transport_flush_subscribers(t);
 }
 
 

@@ -58,13 +58,19 @@ static dtimer_t transport_monitor_timer;
 
 
 void
-transport_purge(th_transport_t *t)
+transport_stop(th_transport_t *t, int flush_subscriptions)
 {
+  th_subscription_t *s;
   th_stream_t *st;
   th_pkt_t *pkt;
 
-  if(LIST_FIRST(&t->tht_subscriptions))
-    return;
+  if(flush_subscriptions) {
+    while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL)
+      subscription_stop(s);
+  } else {
+    if(LIST_FIRST(&t->tht_subscriptions))
+      return;
+  }
 
   t->tht_stop_feed(t);
 
@@ -82,6 +88,9 @@ transport_purge(th_transport_t *t)
     
     if(st->st_ctx != NULL)
       avcodec_close(st->st_ctx);
+
+    st->st_parser = NULL;
+    st->st_ctx = NULL;
 
     /* Clear reassembly buffer */
 
@@ -136,6 +145,11 @@ transport_start(th_transport_t *t, unsigned int weight)
   AVCodec *c;
   enum CodecID id;
 
+  assert(t->tht_status != TRANSPORT_RUNNING);
+
+  if(t->tht_start_feed(t, weight, TRANSPORT_RUNNING))
+    return -1;
+
   t->tht_monitor_suspend = 10;
   t->tht_dts_start = AV_NOPTS_VALUE;
 
@@ -155,8 +169,8 @@ transport_start(th_transport_t *t, unsigned int weight)
     default:               id = CODEC_ID_NONE;       break;
     }
     
-    st->st_ctx = NULL;
-    st->st_parser = NULL;
+    assert(st->st_ctx == NULL);
+    assert(st->st_parser == NULL);
 
     if(id != CODEC_ID_NONE) {
       c = avcodec_find_decoder(id);
@@ -167,8 +181,7 @@ transport_start(th_transport_t *t, unsigned int weight)
       }
     }
   }
-  
-  return t->tht_start_feed(t, weight, TRANSPORT_RUNNING);
+  return 0;
 }
 
 

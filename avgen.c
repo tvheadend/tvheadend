@@ -142,7 +142,6 @@ avgen_stop_feed(th_transport_t *t)
   free(avg);
 
   t->tht_status = TRANSPORT_IDLE;
-  transport_flush_subscribers(t);
 }
 
 

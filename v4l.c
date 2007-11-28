@@ -200,7 +200,6 @@ v4l_stop_feed(th_transport_t *t)
   LIST_REMOVE(t, tht_adapter_link);
 
   t->tht_status = TRANSPORT_IDLE;
-  transport_flush_subscribers(t);
 
   if(LIST_FIRST(&tva->tva_transports) == NULL)
     v4l_stop(tva);
