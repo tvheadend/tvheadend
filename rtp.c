@@ -37,39 +37,22 @@
 #include <ffmpeg/avformat.h>
 #include <ffmpeg/random.h>
 
-//static int64_t lts;
-//static int pkts;
-
-void
-rtp_output_ts(void *opaque, struct th_subscription *s,
-	      uint8_t *pkt, int blocks, int64_t pcr)
+int
+rtp_sendmsg(uint8_t *pkt, int blocks, int64_t pcr,
+	    int fd, struct sockaddr *dst, socklen_t dstlen,
+	    uint16_t seq)
 {
-  th_rtp_streamer_t *trs = opaque;
   struct msghdr msg;
   struct iovec vec[2];
-  int r;
-  
   AVRational mpeg_tc = {1, 90000};
   char hdr[12];
-
-#if 0
-  int64_t ts;
-  ts = getclock_hires();
-  pkts++;
-
-  if(ts - lts > 100000) {
-    printf("%d packet per sec\n", pkts * 10);
-    pkts = 0;
-    lts = ts;
-  }
-#endif
 
   pcr = av_rescale_q(pcr, AV_TIME_BASE_Q, mpeg_tc);
 
   hdr[0]  = 0x80;
   hdr[1]  = 33; /* M2TS */
-  hdr[2]  = trs->trs_seq >> 8;
-  hdr[3]  = trs->trs_seq;
+  hdr[2]  = seq >> 8;
+  hdr[3]  = seq;
 
   hdr[4]  = pcr >> 24;
   hdr[5]  = pcr >> 16;
@@ -88,14 +71,25 @@ rtp_output_ts(void *opaque, struct th_subscription *s,
   vec[1].iov_len  = blocks * 188;
 
   memset(&msg, 0, sizeof(msg));
-  msg.msg_name    = &trs->trs_dest;
-  msg.msg_namelen = sizeof(struct sockaddr_in);
+  msg.msg_name    = dst;
+  msg.msg_namelen = dstlen;
   msg.msg_iov     = vec;
   msg.msg_iovlen  = 2;
 
-  r = sendmsg(trs->trs_fd, &msg, 0);
-  if(r < 0)
-    perror("sendmsg");
+  return sendmsg(fd, &msg, 0);
+}
+
+
+
+void
+rtp_output_ts(void *opaque, struct th_subscription *s,
+	      uint8_t *pkt, int blocks, int64_t pcr)
+{
+  th_rtp_streamer_t *trs = opaque;
+
+  rtp_sendmsg(pkt, blocks, pcr, trs->trs_fd, 
+	      (struct sockaddr *)&trs->trs_dest, sizeof(struct sockaddr_in),
+	      trs->trs_seq);
 
   trs->trs_seq++;
 }

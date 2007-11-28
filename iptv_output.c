@@ -35,6 +35,7 @@
 #include "channels.h"
 #include "subscriptions.h"
 #include "tsmux.h"
+#include "rtp.h"
 
 #define MULTICAST_PKT_SIZ (188 * 7)
 
@@ -48,6 +49,12 @@ typedef struct output_multicast {
   int om_inter_drop_rate;
   int om_inter_drop_cnt;
 
+  int om_seq;
+  enum {
+    OM_RAWUDP,
+    OM_RTP,
+  } om_encapsulation;
+
 } output_multicast_t;
 
 /**
@@ -59,14 +66,26 @@ iptv_output_ts(void *opaque, th_subscription_t *s,
 {
   output_multicast_t *om = opaque;
 
+  om->om_seq++;
+
   if(om->om_inter_drop_rate && 
      ++om->om_inter_drop_cnt == om->om_inter_drop_rate) {
     om->om_inter_drop_cnt = 0;
     return;
   }
 
-  sendto(om->om_fd, pkt, blocks * 188, 0, 
-        (struct sockaddr *)&om->om_dst, sizeof(struct sockaddr_in));
+  switch(om->om_encapsulation) {
+  case OM_RTP:
+    rtp_sendmsg(pkt, blocks, pcr, om->om_fd,
+		(struct sockaddr *)&om->om_dst, sizeof(struct sockaddr_in),
+		om->om_seq);
+    break;
+
+  case OM_RAWUDP:
+    sendto(om->om_fd, pkt, blocks * 188, 0, 
+	   (struct sockaddr *)&om->om_dst, sizeof(struct sockaddr_in));
+    break;
+  }
 }
 
 
@@ -155,6 +174,11 @@ output_multicast_load(struct config_head *head)
 
   if((s = config_get_str_sub(head, "inter-drop-rate", NULL)) != NULL)
     om->om_inter_drop_rate = atoi(s);
+
+  if((s = config_get_str_sub(head, "encapsulation", NULL)) != NULL) {
+    if(!strcasecmp(s, "rtp"))
+      om->om_encapsulation = OM_RTP;
+  }
 
   setsockopt(om->om_fd, SOL_IP, IP_MULTICAST_TTL, &ttl, sizeof(int));
 

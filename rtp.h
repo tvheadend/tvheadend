@@ -32,4 +32,8 @@ void rtp_streamer_init(th_rtp_streamer_t *trs, int fd,
 void rtp_output_ts(void *opaque, struct th_subscription *s,
 		   uint8_t *pkt, int blocks, int64_t pcr);
 
+int rtp_sendmsg(uint8_t *pkt, int blocks, int64_t pcr,
+		int fd, struct sockaddr *dst, socklen_t dstlen,
+		uint16_t seq);
+
 #endif /* RTP_H_ */
