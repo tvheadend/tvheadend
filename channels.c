@@ -41,22 +41,12 @@
 struct th_channel_list channels;
 struct th_transport_list all_transports;
 int nchannels;
-int grouporder = 1000;
 
 struct th_channel_group_queue all_channel_groups;
 
 th_channel_group_t *defgroup;
 
 void scanner_init(void);
-
-/**
- *
- */
-static int
-ch_order_cmp(th_channel_t *a, th_channel_t *b)
-{
-  return a->ch_order - b->ch_order;
-}
 
 /**
  *
@@ -77,7 +67,8 @@ channel_group_find(const char *name, int create)
   tcg->tcg_name = strdup(name);
   tcg->tcg_tag = tag_get();
   
-  tcg->tcg_order = grouporder++;
+  TAILQ_INIT(&tcg->tcg_channels);
+
   TAILQ_INSERT_HEAD(&all_channel_groups, tcg, tcg_global_link);
   return tcg;
 }
@@ -92,10 +83,10 @@ void
 channel_set_group(th_channel_t *ch, th_channel_group_t *tcg)
 {
   if(ch->ch_group != NULL)
-    LIST_REMOVE(ch, ch_group_link);
+    TAILQ_REMOVE(&ch->ch_group->tcg_channels, ch, ch_group_link);
 
   ch->ch_group = tcg;
-  LIST_INSERT_SORTED(&tcg->tcg_channels, ch, ch_group_link, ch_order_cmp);
+  TAILQ_INSERT_TAIL(&tcg->tcg_channels, ch, ch_group_link);
 }
 
 /**
@@ -109,7 +100,7 @@ channel_group_destroy(th_channel_group_t *tcg)
   if(defgroup == tcg)
     return;
 
-  while((ch = LIST_FIRST(&tcg->tcg_channels)) != NULL) {
+  while((ch = TAILQ_FIRST(&tcg->tcg_channels)) != NULL) {
     channel_set_group(ch, defgroup);
   }
 
@@ -158,8 +149,7 @@ channel_find(const char *name, int create)
   ch->ch_index = nchannels;
   TAILQ_INIT(&ch->ch_epg_events);
 
-  ch->ch_order = nchannels + 1000;
-  LIST_INSERT_SORTED(&channels, ch, ch_global_link, ch_order_cmp);
+  LIST_INSERT_HEAD(&channels, ch, ch_global_link);
 
   channel_set_group(ch, defgroup);
 

@@ -69,6 +69,7 @@ typedef struct dtimer {
 
 LIST_HEAD(th_subscription_list, th_subscription);
 LIST_HEAD(th_channel_list, th_channel);
+TAILQ_HEAD(th_channel_queue, th_channel);
 TAILQ_HEAD(th_channel_group_queue, th_channel_group);
 LIST_HEAD(th_dvb_adapter_list, th_dvb_adapter);
 LIST_HEAD(th_v4l_adapter_list, th_v4l_adapter);
@@ -622,9 +623,8 @@ typedef struct th_channel_group {
   TAILQ_ENTRY(th_channel_group) tcg_global_link;
 
   const char *tcg_name;
-  struct th_channel_list tcg_channels;
+  struct th_channel_queue tcg_channels;
   int tcg_tag;
-  int tcg_order;
   int tcg_cant_delete_me;
 
 } th_channel_group_t;
@@ -637,9 +637,7 @@ typedef struct th_channel {
   
   LIST_ENTRY(th_channel) ch_global_link;
 
-  int ch_order;
-
-  LIST_ENTRY(th_channel) ch_group_link;
+  TAILQ_ENTRY(th_channel) ch_group_link;
   th_channel_group_t *ch_group;
 
   LIST_HEAD(, th_transport) ch_transports;

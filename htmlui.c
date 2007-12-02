@@ -440,7 +440,7 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
     box_bottom(&tq);
     tcp_qprintf(&tq, "<br>");
 
-    LIST_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
+    TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
       box_top(&tq, "box");
       tcp_qprintf(&tq, "<div class=\"content3\">");
 
@@ -1276,7 +1276,7 @@ page_chgroups(http_connection_t *hc, const char *remain, void *opaque)
     tcp_qprintf(&tq, "<div class=\"content3\">");
 
     cnt = 0;
-    LIST_FOREACH(ch, &tcg->tcg_channels, ch_group_link)
+    TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link)
       cnt++;
 
     tcp_qprintf(&tq, "<b>%s</b> (%d channels)<br>", tcg->tcg_name, cnt);
