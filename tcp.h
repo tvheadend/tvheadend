@@ -57,7 +57,15 @@ typedef struct tcp_session {
   int tcp_fd;
   struct sockaddr_storage tcp_peer_addr;
   char tcp_peer_txt[100];
-  tcp_server_t *tcp_server;
+  tcp_callback_t *tcp_callback;
+  tcp_server_t *tcp_server;  /* if this is NULL, then we are spawned
+				as a client */
+
+  /* These are only used when we spawn as a client */
+
+  dtimer_t tcp_timer;
+  char *tcp_name;
+
   
   /* Output queueing */
 
@@ -95,5 +103,8 @@ void tcp_printf(tcp_session_t *ses, const char *fmt, ...);
 void tcp_qprintf(tcp_queue_t *tq, const char *fmt, ...);
 
 void tcp_output_queue(tcp_session_t *ses, tcp_queue_t *dst, tcp_queue_t *src);
+
+void *tcp_create_client(struct in_addr ip, int port, size_t session_size,
+			const char *name, tcp_callback_t *cb);
 
 #endif /* TCP_H_ */
