@@ -177,6 +177,9 @@ html_header(tcp_queue_t *tq, const char *title, int javascript, int width,
 	      ".over {float: left}\r\n"
 	      ".toptxt {float: left; width: 165px; text-align: center}\r\n"
 	      ""
+	      ".knapp {border: 1px dotted #000000; background: #ddddaa} "
+	      ".knapp:hover {border: 1px dotted #000000; background: #aaaa66} "
+	      ""
 	      "#meny {margin: 0; padding: 0}\r\n"
 	      "#meny li{display: inline; list-style-type: none;}\r\n"
 	      "#meny a{padding: 1.15em 0.8em; text-decoration: none;}\r\n"
@@ -687,20 +690,20 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
     case HTSTV_PVR_STATUS_SCHEDULED:
     case HTSTV_PVR_STATUS_RECORDING:
       tcp_qprintf(&tq,
-		  "<input type=\"submit\" name=\"cancel\" "
+		  "<input type=\"submit\" class=\"knapp\" name=\"cancel\" "
 		  "value=\"Cancel recording\">");
       break;
 
 
     case HTSTV_PVR_STATUS_NONE:
       tcp_qprintf(&tq,
-		  "<input type=\"submit\" name=\"rec\" "
+		  "<input type=\"submit\" class=\"knapp\" name=\"rec\" "
 		  "value=\"Record\">");
       break;
 
     default:
       tcp_qprintf(&tq,
-		  "<input type=\"submit\" name=\"cancel\" "
+		  "<input type=\"submit\" class=\"knapp\" name=\"cancel\" "
 		  "value=\"Clear error status\">");
       break;
 
@@ -1280,16 +1283,16 @@ page_chgroups(http_connection_t *hc, const char *remain, void *opaque)
     tcp_qprintf(&tq, "<b>%s</b> (%d channels)<br><br>", tcg->tcg_name, cnt);
 
      tcp_qprintf(&tq, 
-		  "<input type=\"submit\" name=\"up%d\""
+		  "<input type=\"submit\" class=\"knapp\" name=\"up%d\""
 		  " value=\"Move up\"> ", tcg->tcg_tag);
 
      tcp_qprintf(&tq, 
-		  "<input type=\"submit\" name=\"down%d\""
+		  "<input type=\"submit\" class=\"knapp\" name=\"down%d\""
 		  " value=\"Move down\"> ", tcg->tcg_tag);
 
     if(tcg->tcg_cant_delete_me == 0) {
       tcp_qprintf(&tq, 
-		  "<input type=\"submit\" name=\"delgroup%d\""
+		  "<input type=\"submit\" class=\"knapp\" name=\"delgroup%d\""
 		  " value=\"Delete this group\">", tcg->tcg_tag);
     }
 
@@ -1304,7 +1307,7 @@ page_chgroups(http_connection_t *hc, const char *remain, void *opaque)
   box_top(&tq, "box");
   tcp_qprintf(&tq, "<div class=\"content3\">"
 	      "<input type=\"text\" name=\"newgrpname\"> "
-	      "<input type=\"submit\" name=\"newgrp\""
+	      "<input type=\"submit\" class=\"knapp\" name=\"newgrp\""
 	      " value=\"Add new group\">"
 	      "</div>");
 
