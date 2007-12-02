@@ -69,7 +69,7 @@ channel_group_find(const char *name, int create)
   
   TAILQ_INIT(&tcg->tcg_channels);
 
-  TAILQ_INSERT_HEAD(&all_channel_groups, tcg, tcg_global_link);
+  TAILQ_INSERT_TAIL(&all_channel_groups, tcg, tcg_global_link);
   return tcg;
 }
 

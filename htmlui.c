@@ -1255,19 +1255,6 @@ page_chgroups(http_connection_t *hc, const char *remain, void *opaque)
   top_menu(hc, &tq);
 
 
-  tcp_qprintf(&tq, "<form method=\"get\" action=\"/chgrp\">");
-
-  box_top(&tq, "box");
-  tcp_qprintf(&tq, "<div class=\"content3\">"
-	      "<input type=\"text\" name=\"newgrpname\"> "
-	      "<input type=\"submit\" name=\"newgrp\""
-	      " value=\"Add new group\">"
-	      "</div>");
-
-  box_bottom(&tq);
-  tcp_qprintf(&tq, "</form><br>\r\n");
-
-
   TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
 
     tcp_qprintf(&tq, "<form method=\"get\" action=\"/chgrp\">");
@@ -1293,6 +1280,20 @@ page_chgroups(http_connection_t *hc, const char *remain, void *opaque)
     tcp_qprintf(&tq, "</form><br>\r\n");
     
   }
+
+
+  tcp_qprintf(&tq, "<form method=\"get\" action=\"/chgrp\">");
+
+  box_top(&tq, "box");
+  tcp_qprintf(&tq, "<div class=\"content3\">"
+	      "<input type=\"text\" name=\"newgrpname\"> "
+	      "<input type=\"submit\" name=\"newgrp\""
+	      " value=\"Add new group\">"
+	      "</div>");
+
+  box_bottom(&tq);
+  tcp_qprintf(&tq, "</form><br>\r\n");
+
 
 
   http_output_queue(hc, &tq, "text/html; charset=UTF-8");
