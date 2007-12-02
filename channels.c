@@ -34,7 +34,7 @@
 #include "dvb.h"
 #include "v4l.h"
 #include "iptv_input.h"
-
+#include "psi.h"
 #include "channels.h"
 #include "transports.h"
 
@@ -100,7 +100,7 @@ transport_set_channel(th_transport_t *t, th_channel_t *ch)
 {
   th_stream_t *st;
   char *chname;
-
+  const char *n;
   t->tht_channel = ch;
   LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
 
@@ -110,9 +110,14 @@ transport_set_channel(th_transport_t *t, th_channel_t *ch)
 	 t->tht_name, chname);
   free(chname);
 
-  LIST_FOREACH(st, &t->tht_streams, st_link)
-    syslog(LOG_DEBUG, "   Stream [%s] - pid %d",
-	   htstvstreamtype2txt(st->st_type), st->st_pid);
+  LIST_FOREACH(st, &t->tht_streams, st_link) {
+    if(st->st_caid != 0) {
+      n = psi_caid2name(st->st_caid);
+    } else {
+      n = htstvstreamtype2txt(st->st_type);
+    }
+    syslog(LOG_DEBUG, "   Stream [%s] - pid %d", n, st->st_pid);
+  }
 
   return 0;
 }

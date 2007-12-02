@@ -38,6 +38,17 @@ typedef enum {
 } th_commercial_advice_t;
 
 
+/**
+ * Auxiliary data for plugins
+ */
+typedef struct pluginaux {
+  LIST_ENTRY(pluginaux) pa_link;
+  struct th_plugin *pa_plugin;
+} pluginaux_t;
+
+LIST_HEAD(pluginaux_list, pluginaux);
+
+
 /*
  * Dispatch timer
  */
@@ -255,7 +266,9 @@ typedef struct th_stream {
   int st_peak_presentation_delay; /* Max seen diff. of DTS and PTS */
 
   struct psi_section *st_section;
+  int st_section_docrc;           /* Set if we should verify CRC on tables */
   pid_section_callback_t *st_got_section;
+  void *st_got_section_opaque;
 
   /* For transport stream packet reassembly */
 
@@ -300,7 +313,12 @@ typedef struct th_stream {
 
   struct th_pkt_queue st_pktq;
 
+  /* ca id for this stream */
+
+  uint16_t st_caid;
+
 } th_stream_t;
+
 
 
 /*
@@ -328,8 +346,7 @@ typedef struct th_transport {
   th_commercial_advice_t tht_tt_commercial_advice;
 
   int tht_tt_rundown_content_length;
-  time_t tht_tt_clock;   /* Network clock as determined by teletext
-			    decoder */
+  time_t tht_tt_clock;   /* Network clock as determined by teletext decoder */
   int tht_prio;
   
   struct th_stream_list tht_streams;
@@ -365,6 +382,8 @@ typedef struct th_transport {
 
   struct th_muxer_list tht_muxers; /* muxers */
 
+  struct pluginaux_list tht_plugin_aux;
+
   /*
    * Per source type structs
    */
@@ -397,6 +416,9 @@ typedef struct th_transport {
     struct {
       struct avgen *avgen;
     } avgen;
+
+    char pad[256]; /* for api stability */
+
  } u;
 
 } th_transport_t;

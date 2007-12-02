@@ -1,7 +1,7 @@
 -include ../config.mak
 
 SRCS = main.c dispatch.c channels.c transports.c teletext.c psi.c \
-	subscriptions.c tsmux.c tsdemux.c pes.c buffer.c tcp.c
+	subscriptions.c tsmux.c tsdemux.c pes.c buffer.c tcp.c plugin.c
 
 SRCS += http.c htmlui.c
 

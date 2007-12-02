@@ -29,6 +29,7 @@
 #include "transports.h"
 #include "dvb_support.h"
 #include "tsdemux.h"
+#include "strtab.h"
 
 int
 psi_section_reassemble(psi_section_t *ps, uint8_t *data, int len, 
@@ -89,6 +90,7 @@ psi_parse_pat(th_transport_t *t, uint8_t *ptr, int len,
 
     if(prognum != 0) {
       st = transport_add_stream(t, pid, HTSTV_TABLE);
+      st->st_section_docrc = 1;
       st->st_got_section = pmt_callback;
 
     }
@@ -173,6 +175,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
   uint8_t dtag, dlen;
   uint16_t sid;
   tv_streamtype_t hts_stream_type;
+  th_stream_t *st;
 
   if(len < 9)
     return -1;
@@ -197,6 +200,17 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
     len -= 2; ptr += 2; dllen -= 2; 
     if(dlen > len)
       break;
+
+    switch(dtag) {
+    case DVB_DESC_CA:
+      st = transport_add_stream(t, (ptr[2] & 0x1f) << 8 | ptr[3], HTSTV_TABLE);
+      st->st_caid = (ptr[0] << 8) | ptr[1];
+      break;
+
+    default:
+      break;
+    }
+
 
     len -= dlen; ptr += dlen; dllen -= dlen;
   }
@@ -434,4 +448,53 @@ psi_crc32(uint8_t *data, size_t datalen)
     crc = (crc << 8) ^ crc_tab[((crc >> 24) ^ *data++) & 0xff];
 
   return crc;
+}
+
+
+static struct strtab caidnametab[] = {
+  { "Seca",             0x0100 }, 
+  { "CCETT",            0x0200 }, 
+  { "Deutsche Telecom", 0x0300 }, 
+  { "Eurodec",          0x0400 }, 
+  { "Viaccess",         0x0500 }, 
+  { "Irdeto",           0x0600 }, 
+  { "Irdeto",           0x0602 }, 
+  { "Irdeto",           0x0604 }, 
+  { "Jerroldgi",        0x0700 }, 
+  { "Matra",            0x0800 }, 
+  { "NDS",              0x0900 }, 
+  { "Nokia",            0x0A00 }, 
+  { "Conax",            0x0B00 }, 
+  { "NTL",              0x0C00 }, 
+  { "CryptoWorks",      0x0D00 }, 
+  { "PowerVu",          0x0E00 }, 
+  { "Sony",             0x0F00 }, 
+  { "Tandberg",         0x1000 }, 
+  { "Thompson",         0x1100 }, 
+  { "TV-Com",           0x1200 }, 
+  { "HPT",              0x1300 }, 
+  { "HRT",              0x1400 }, 
+  { "IBM",              0x1500 }, 
+  { "Nera",             0x1600 }, 
+  { "BetaCrypt",        0x1700 }, 
+  { "BetaCrypt",        0x1702 }, 
+  { "BetaCrypt",        0x1722 }, 
+  { "BetaCrypt",        0x1762 }, 
+  { "NagraVision",      0x1800 }, 
+  { "Titan",            0x1900 }, 
+  { "Telefonica",       0x2000 }, 
+  { "Stentor",          0x2100 }, 
+  { "Tadiran Scopus",   0x2200 }, 
+  { "BARCO AS",         0x2300 }, 
+  { "StarGuide",        0x2400 }, 
+  { "Mentor",           0x2500 }, 
+  { "EBU",              0x2600 }, 
+  { "GI",               0x4700 }, 
+  { "Telemann",         0x4800 }
+};
+
+const char *
+psi_caid2name(uint16_t caid)
+{
+  return val2str(caid, caidnametab);
 }

@@ -74,7 +74,7 @@ dvb_dvr_process_packets(th_dvb_adapter_t *tda, uint8_t *tsb, int r)
   while(r >= 188) {
     pid = (tsb[1] & 0x1f) << 8 | tsb[2];
     LIST_FOREACH(t, &tda->tda_transports, tht_adapter_link)
-      ts_recv_packet(t, pid, tsb);
+      ts_recv_packet(t, pid, tsb, 1);
     r -= 188;
     tsb += 188;
   }

@@ -799,8 +799,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       len -= dlen; ptr += dlen; dllen -= dlen;
     }
 
-    if(stype == 1 && 
-       free_ca_mode == 0 /* We dont have any CA-support (yet) */) {
+    if(stype == 1) {
       t = dvb_find_transport(tdmi, transport_stream_id, service_id, 0);
       
       if(t == NULL)

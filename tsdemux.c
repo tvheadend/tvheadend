@@ -48,6 +48,7 @@
 #include "psi.h"
 #include "buffer.h"
 #include "tsdemux.h"
+#include "plugin.h"
 
 static int 
 ts_reassembly_pes(th_transport_t *t, th_stream_t *st, uint8_t *data, int len)
@@ -105,17 +106,38 @@ ts_reassembly(th_transport_t *t, th_stream_t *st, uint8_t *data, int len,
   st->st_buffer_ptr += len;
 }
 
+/**
+ * Code for dealing with a complete section
+ */
+
+static void
+got_section(th_transport_t *t, th_stream_t *st)
+{
+  th_plugin_t *p;
+  LIST_FOREACH(p, &th_plugins, thp_link)
+    if(p->thp_psi_table != NULL)
+      p->thp_psi_table(p, &t->tht_plugin_aux, t, st, 
+		       st->st_section->ps_data, st->st_section->ps_offset);
+
+  if(st->st_got_section != NULL)
+    st->st_got_section(t, st, st->st_section->ps_data,
+		       st->st_section->ps_offset);
+}
+
+
 
 /*
  * Process transport stream packets
  */
 void
-ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb)
+ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb, int doplugin)
 {
   th_stream_t *st = NULL;
   th_subscription_t *s;
   int cc, err = 0, afc, afl = 0;
   int len, pusi;
+  pluginaux_t *pa;
+  th_plugin_t *p;
 
   LIST_FOREACH(st, &t->tht_streams, st_link) 
     if(st->st_pid == pid)
@@ -124,11 +146,23 @@ ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb)
   if(st == NULL)
     return;
 
+  if(doplugin) {
+    LIST_FOREACH(pa, &t->tht_plugin_aux, pa_link) {
+      p = pa->pa_plugin;
+      if(p->thp_tsb_process != NULL)
+	if(p->thp_tsb_process(pa, t, st, tsb))
+	  return;
+    }
+  }
+    
+  avgstat_add(&t->tht_rate, 188, dispatch_clock);
+  if((tsb[3] >> 6) & 3)
+    return; /* channel is encrypted */
+
+
   LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link)
     if(s->ths_raw_input != NULL)
       s->ths_raw_input(s, tsb, 188, st, s->ths_opaque);
-
-  avgstat_add(&t->tht_rate, 188, dispatch_clock);
 
   afc = (tsb[3] >> 4) & 3;
 
@@ -143,6 +177,7 @@ ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb)
     st->st_cc_valid = 1;
     st->st_cc = (cc + 1) & 0xf;
   }
+
 
   if(afc & 2)
     afl = tsb[4] + 1;
@@ -167,17 +202,16 @@ ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb)
       if(len > 0) {
 	if(len > 188 - afl)
 	  break;
-	if(!psi_section_reassemble(st->st_section, tsb + afl, len, 0, 1))
-	  st->st_got_section(t, st, st->st_section->ps_data,
-			     st->st_section->ps_offset);
-
+	if(!psi_section_reassemble(st->st_section, tsb + afl, len, 0,
+				   st->st_section_docrc))
+	  got_section(t, st);
 	afl += len;
       }
     }
     
-    if(!psi_section_reassemble(st->st_section, tsb + afl, 188 - afl, pusi, 1))
-      st->st_got_section(t, st, st->st_section->ps_data,
-			 st->st_section->ps_offset);
+    if(!psi_section_reassemble(st->st_section, tsb + afl, 188 - afl, pusi,
+			       st->st_section_docrc))
+      got_section(t, st);
     break;
 
   case HTSTV_TELETEXT:

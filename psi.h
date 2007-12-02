@@ -41,4 +41,6 @@ int psi_build_pat(th_transport_t *t, uint8_t *buf, int maxlen);
 
 int psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen);
 
+const char *psi_caid2name(uint16_t caid);
+
 #endif /* PSI_H_ */

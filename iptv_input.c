@@ -62,7 +62,7 @@ iptv_fd_callback(int events, void *opaque, int fd)
 
   while(r >= 188) {
     pid = (tsb[1] & 0x1f) << 8 | tsb[2];
-    ts_recv_packet(t, pid, tsb);
+    ts_recv_packet(t, pid, tsb, 1);
     r -= 188;
     tsb += 188;
   }
@@ -225,6 +225,7 @@ iptv_configure_transport(th_transport_t *t, const char *iptv_type,
 
   st = transport_add_stream(t, 0, HTSTV_TABLE);
   st->st_got_section = iptv_parse_pat;
+  st->st_section_docrc = 1;
 
   t->tht_channel = channel_find(channel_name, 1);
   LIST_INSERT_HEAD(&iptv_probing_transports, t, tht_adapter_link);
