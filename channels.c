@@ -41,8 +41,11 @@
 struct th_channel_list channels;
 struct th_transport_list all_transports;
 int nchannels;
+int grouporder = 1000;
 
-struct th_channel_group_list all_channel_groups;
+struct th_channel_group_queue all_channel_groups;
+
+th_channel_group_t *defgroup;
 
 void scanner_init(void);
 
@@ -63,33 +66,56 @@ channel_group_find(const char *name, int create)
 {
   th_channel_group_t *tcg;
 
-  LIST_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
+  TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
     if(!strcmp(name, tcg->tcg_name))
-      break;
+      return tcg;
   }
   if(!create)
     return NULL;
 
   tcg = calloc(1, sizeof(th_channel_group_t));
   tcg->tcg_name = strdup(name);
-  LIST_INSERT_HEAD(&all_channel_groups, tcg, tcg_global_link);
+  tcg->tcg_tag = tag_get();
+  
+  tcg->tcg_order = grouporder++;
+  TAILQ_INSERT_HEAD(&all_channel_groups, tcg, tcg_global_link);
   return tcg;
+}
+
+
+
+
+/**
+ *
+ */
+void
+channel_set_group(th_channel_t *ch, th_channel_group_t *tcg)
+{
+  if(ch->ch_group != NULL)
+    LIST_REMOVE(ch, ch_group_link);
+
+  ch->ch_group = tcg;
+  LIST_INSERT_SORTED(&tcg->tcg_channels, ch, ch_group_link, ch_order_cmp);
 }
 
 /**
  *
  */
 void
-channel_set_group(th_channel_t *ch, const char *groupname)
+channel_group_destroy(th_channel_group_t *tcg)
 {
-  th_channel_group_t *tcg;
+  th_channel_t *ch;
 
-  if(ch->ch_group != NULL)
-    LIST_REMOVE(ch, ch_group_link);
+  if(defgroup == tcg)
+    return;
 
-  tcg = channel_group_find(groupname, 1);
-  ch->ch_group = tcg;
-  LIST_INSERT_SORTED(&tcg->tcg_channels, ch, ch_group_link, ch_order_cmp);
+  while((ch = LIST_FIRST(&tcg->tcg_channels)) != NULL) {
+    channel_set_group(ch, defgroup);
+  }
+
+  TAILQ_REMOVE(&all_channel_groups, tcg, tcg_global_link);
+  free((void *)tcg->tcg_name);
+  free(tcg);
 }
 
 /**
@@ -135,7 +161,7 @@ channel_find(const char *name, int create)
   ch->ch_order = nchannels + 1000;
   LIST_INSERT_SORTED(&channels, ch, ch_global_link, ch_order_cmp);
 
-  channel_set_group(ch, "Default");
+  channel_set_group(ch, defgroup);
 
   ch->ch_tag = tag_get();
   nchannels++;
@@ -264,6 +290,11 @@ channels_load(void)
 {
   config_entry_t *ce;
 
+  TAILQ_INIT(&all_channel_groups);
+
+  defgroup = channel_group_find("Uncategorized", 1);
+  defgroup->tcg_cant_delete_me = 1;
+
   TAILQ_FOREACH(ce, &config_list, ce_link) {
     if(ce->ce_type == CFG_SUB && !strcasecmp("channel", ce->ce_key)) {
       channel_load(&ce->ce_sub);
@@ -306,6 +337,23 @@ channel_by_tag(uint32_t tag)
   LIST_FOREACH(ch, &channels, ch_global_link)
     if(ch->ch_tag == tag)
       return ch;
+
+  return NULL;
+}
+
+
+
+/**
+ *
+ */
+th_channel_group_t *
+channel_group_by_tag(uint32_t tag)
+{
+  th_channel_group_t *tcg;
+
+  TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link)
+    if(tcg->tcg_tag == tag)
+      return tcg;
 
   return NULL;
 }

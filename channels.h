@@ -33,4 +33,10 @@ void channel_unsubscribe(th_subscription_t *s);
 
 th_channel_t *channel_find(const char *name, int create);
 
+th_channel_group_t *channel_group_find(const char *name, int create);
+
+th_channel_group_t *channel_group_by_tag(uint32_t tag);
+
+void channel_group_destroy(th_channel_group_t *tcg);
+
 #endif /* CHANNELS_H */

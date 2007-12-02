@@ -164,6 +164,11 @@ html_header(tcp_queue_t *tq, const char *title, int javascript, int width,
 	      ".content {padding-left: 3px; border-left: 1px solid #000000; "
 	      "border-right: 1px solid #000000;}\r\n"
 	      ""
+	      ".contentbig {padding-left: 3px; "
+	      "border-left: 1px solid #000000; "
+	      "border-right: 1px solid #000000; "
+	      "font: 150% Verdana, Arial, Helvetica, sans-serif;}\r\n"
+	      ""
 	      ".statuscont {float: left; margin: 4px; width: 400px}\r\n"
 	      ""
 	      ".logo {padding: 2px; width: 60px; height: 56px; "
@@ -260,6 +265,12 @@ top_menu(http_connection_t *hc, tcp_queue_t *tq)
   
   if(html_verify_access(hc, "system-status"))
     tcp_qprintf(tq, "<li><a href=\"/status\">System Status</a></li>");
+
+  if(html_verify_access(hc, "admin"))
+    tcp_qprintf(tq, "<li><a href=\"/chgrp\">Manage channel groups</a></li>");
+
+  if(html_verify_access(hc, "admin"))
+    tcp_qprintf(tq, "<li><a href=\"/chadm\">Manage channels</a></li>");
 
   tcp_qprintf(tq, "</div>");
 
@@ -396,6 +407,7 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
   int i;
   int simple = is_client_simple(hc);
   time_t firstend = INT32_MAX;
+  th_channel_group_t *tcg;
   
   if(!html_verify_access(hc, "browse-events"))
     return HTTP_STATUS_UNAUTHORIZED;
@@ -418,48 +430,59 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
   html_header(&tq, "HTS/tvheadend", !simple, 700, i);
   top_menu(hc, &tq);
 
-  LIST_FOREACH(ch, &channels, ch_global_link) {
+  TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
+
     box_top(&tq, "box");
-    tcp_qprintf(&tq, "<div class=\"content3\">");
 
-    if(!simple) {
-      tcp_qprintf(&tq, "<div class=\"logo\">");
-      if(ch->ch_icon) {
-	tcp_qprintf(&tq, "<a href=\"channel/%d\">"
-		    "<img src=\"%s\" height=56px>"
-		    "</a>",
-		    ch->ch_tag,
-		    refstr_get(ch->ch_icon));
-      }
-      tcp_qprintf(&tq, "</div>");
-    }
-
-    tcp_qprintf(&tq, "<div class=\"over\">");
     tcp_qprintf(&tq, 
-		"<span style=\"overflow: hidden; height: 15px; "
-		"width: 300px; float: left; font-weight:bold\">"
-		"<a href=\"channel/%d\">%s</a></span>",
-		ch->ch_tag, ch->ch_name);
-
-    if(tvheadend_streaming_host != NULL) {
-      tcp_qprintf(&tq,
-		  "<i><a href=\"rtsp://%s:%d/%s\">Watch live</a></i><br>",
-		  tvheadend_streaming_host, http_port, ch->ch_sname);
-    } else {
-      tcp_qprintf(&tq, "<br>");
-    }
-
-    e = epg_event_find_current_or_upcoming(ch);
-
-    for(i = 0; i < 3 && e != NULL; i++) {
-
-      output_event(hc, &tq, ch, e, simple);
-       e = TAILQ_NEXT(e, e_link);
-    }
-
-    tcp_qprintf(&tq, "</div></div>");
+		"<div class=\"contentbig\"><center><b>%s</b></center></div>",
+		tcg->tcg_name);
     box_bottom(&tq);
-    tcp_qprintf(&tq, "<br>\r\n");
+    tcp_qprintf(&tq, "<br>");
+
+    LIST_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
+      box_top(&tq, "box");
+      tcp_qprintf(&tq, "<div class=\"content3\">");
+
+      if(!simple) {
+	tcp_qprintf(&tq, "<div class=\"logo\">");
+	if(ch->ch_icon) {
+	  tcp_qprintf(&tq, "<a href=\"channel/%d\">"
+		      "<img src=\"%s\" height=56px>"
+		      "</a>",
+		      ch->ch_tag,
+		      refstr_get(ch->ch_icon));
+	}
+	tcp_qprintf(&tq, "</div>");
+      }
+
+      tcp_qprintf(&tq, "<div class=\"over\">");
+      tcp_qprintf(&tq, 
+		  "<span style=\"overflow: hidden; height: 15px; "
+		  "width: 300px; float: left; font-weight:bold\">"
+		  "<a href=\"channel/%d\">%s</a></span>",
+		  ch->ch_tag, ch->ch_name);
+
+      if(tvheadend_streaming_host != NULL) {
+	tcp_qprintf(&tq,
+		    "<i><a href=\"rtsp://%s:%d/%s\">Watch live</a></i><br>",
+		    tvheadend_streaming_host, http_port, ch->ch_sname);
+      } else {
+	tcp_qprintf(&tq, "<br>");
+      }
+
+      e = epg_event_find_current_or_upcoming(ch);
+
+      for(i = 0; i < 3 && e != NULL; i++) {
+
+	output_event(hc, &tq, ch, e, simple);
+	e = TAILQ_NEXT(e, e_link);
+      }
+
+      tcp_qprintf(&tq, "</div></div>");
+      box_bottom(&tq);
+      tcp_qprintf(&tq, "<br>\r\n");
+    }
   }
   epg_unlock();
 
@@ -580,7 +603,7 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
   struct tm a, b;
   time_t stop;
   char desc[4000];
-  recop_t cmd = 0;
+  recop_t cmd = -1;
   tv_pvr_status_t pvrstatus;
   const char *pvr_txt, *pvr_color;
   
@@ -594,22 +617,25 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
     return 404;
   }
 
-  remain = strchr(remain, '?');
-  if(remain != NULL) {
 
+  if(http_arg_get(&hc->hc_url_args, "rec")) {
     if(!html_verify_access(hc, "record-events")) {
       epg_unlock();
       return HTTP_STATUS_UNAUTHORIZED;
     }
-
-    remain++;
-    if(!strncmp(remain, "rec=", 4))
-      cmd = RECOP_ONCE;
-    if(!strncmp(remain, "cancel=", 7))
-      cmd = RECOP_CANCEL;
-    pvr_event_record_op(e->e_ch, e, cmd);
-
+    cmd = RECOP_ONCE;
   }
+
+  if(http_arg_get(&hc->hc_url_args, "cancel")) {
+    if(!html_verify_access(hc, "record-events")) {
+      epg_unlock();
+      return HTTP_STATUS_UNAUTHORIZED;
+    }
+    cmd = RECOP_CANCEL;
+  }
+
+  if(cmd != -1)
+    pvr_event_record_op(e->e_ch, e, cmd);
 
   pvrstatus = pvr_prog_status(e);
 
@@ -884,7 +910,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 
 
   box_top(&tq, "box");
-  tcp_qprintf(&tq, "<div class=\"content\">");
+  tcp_qprintf(&tq, "<div class=\"contentbig\">");
   tcp_qprintf(&tq, "<b><center>Input devices</b><br>");
   tcp_qprintf(&tq, "</div>");
   box_bottom(&tq);
@@ -1020,7 +1046,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_qprintf(&tq, "<div class=\"statuscont\">");
   box_top(&tq, "box");
-  tcp_qprintf(&tq, "<div class=\"content\">");
+  tcp_qprintf(&tq, "<div class=\"contentbig\">");
   tcp_qprintf(&tq, "<b><center>Active transports</b><br>");
   tcp_qprintf(&tq, "</div>");
   box_bottom(&tq);
@@ -1123,7 +1149,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_qprintf(&tq, "<div class=\"statuscont\">");
   box_top(&tq, "box");
-  tcp_qprintf(&tq, "<div class=\"content\">");
+  tcp_qprintf(&tq, "<div class=\"contentbig\">");
   tcp_qprintf(&tq, "<b><center>Subscriptions</b><br>");
   tcp_qprintf(&tq, "</div>");
   box_bottom(&tq);
@@ -1191,6 +1217,91 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 
+
+/**
+ * Manage channel groups
+ */
+static int
+page_chgroups(http_connection_t *hc, const char *remain, void *opaque)
+{
+  tcp_queue_t tq;
+  th_channel_group_t *tcg;
+  th_channel_t *ch;
+  int cnt;
+  const char *grp;
+  http_arg_t *ra;
+
+  if(!html_verify_access(hc, "admin"))
+    return HTTP_STATUS_UNAUTHORIZED;
+
+  if((grp = http_arg_get(&hc->hc_url_args, "newgrpname")) != NULL)
+    channel_group_find(grp, 1);
+
+  LIST_FOREACH(ra, &hc->hc_url_args, link) {
+    if(!strncmp(ra->key, "delgroup", 8))
+      break;
+  }
+
+  if(ra != NULL) {
+    tcg = channel_group_by_tag(atoi(ra->key + 8));
+    if(tcg != NULL) {
+      channel_group_destroy(tcg);
+    }
+  }
+
+  tcp_init_queue(&tq, -1);
+
+  html_header(&tq, "HTS/tvheadend", 0, 700, 0);
+  top_menu(hc, &tq);
+
+
+  tcp_qprintf(&tq, "<form method=\"get\" action=\"/chgrp\">");
+
+  box_top(&tq, "box");
+  tcp_qprintf(&tq, "<div class=\"content3\">"
+	      "<input type=\"text\" name=\"newgrpname\"> "
+	      "<input type=\"submit\" name=\"newgrp\""
+	      " value=\"Add new group\">"
+	      "</div>");
+
+  box_bottom(&tq);
+  tcp_qprintf(&tq, "</form><br>\r\n");
+
+
+  TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
+
+    tcp_qprintf(&tq, "<form method=\"get\" action=\"/chgrp\">");
+
+    box_top(&tq, "box");
+    tcp_qprintf(&tq, "<div class=\"content3\">");
+
+    cnt = 0;
+    LIST_FOREACH(ch, &tcg->tcg_channels, ch_group_link)
+      cnt++;
+
+    tcp_qprintf(&tq, "<b>%s</b> (%d channels)<br>", tcg->tcg_name, cnt);
+
+    if(tcg->tcg_cant_delete_me == 0) {
+      tcp_qprintf(&tq, 
+		  "<input type=\"submit\" name=\"delgroup%d\""
+		  " value=\"Delete this group\">"
+		  "</div>", tcg->tcg_tag);
+    }
+
+    tcp_qprintf(&tq, "</div>");
+    box_bottom(&tq);
+    tcp_qprintf(&tq, "</form><br>\r\n");
+    
+  }
+
+
+  http_output_queue(hc, &tq, "text/html; charset=UTF-8");
+  return 0;
+}
+
+
+
+
 /**
  * HTML user interface setup code
  */
@@ -1202,4 +1313,5 @@ htmlui_start(void)
   http_path_add("/channel", NULL, page_channel);
   http_path_add("/pvrlog", NULL, page_pvrlog);
   http_path_add("/status", NULL, page_status);
+  http_path_add("/chgrp", NULL, page_chgroups);
 }
