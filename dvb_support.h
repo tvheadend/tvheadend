@@ -26,6 +26,7 @@
 #ifndef DVB_SUPPORT_H
 #define DVB_SUPPORT_H
 
+#define DVB_DESC_CA           0x09
 
 /* Descriptors defined in EN 300 468 */
 
