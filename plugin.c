@@ -137,7 +137,6 @@ plugin_init(void)
     }
 
     ini();
-
-    closedir(dir);
   }
+  closedir(dir);
 }
