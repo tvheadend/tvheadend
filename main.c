@@ -225,6 +225,8 @@ main(int argc, char **argv)
 
   syslog(LOG_NOTICE, "Exiting HTS TV Headend");
 
+  settings_write();
+
   if(forkaway)
     unlink("/var/run/tvhead.pid");
 
