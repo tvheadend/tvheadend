@@ -21,6 +21,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <dlfcn.h>
+#include <dirent.h>
 
 #include "tvhead.h"
 #include "plugin.h"
@@ -87,4 +89,55 @@ plugin_alloc(const char *name, void *opaque, size_t minsiz)
   LIST_INSERT_HEAD(&th_plugins, p, thp_link);
 
   return p;
+}
+
+/**
+ *
+ */
+void
+plugin_init(void)
+{
+  const char *path;
+  char file[400];
+  DIR *dir;
+  struct dirent *d;
+  char *c;
+  void *h;
+
+  void (*ini)(void);
+
+  if((path = config_get_str("plugins", NULL)) == NULL)
+    return;
+
+  if((dir = opendir(path)) == NULL)
+    return;
+
+  while((d = readdir(dir)) != NULL) {
+    if(d->d_name[0] == '.')
+      continue;
+    
+    if((c = strrchr(d->d_name, '.')) == NULL)
+      continue;
+    
+    if(strcmp(c, ".so"))
+      continue;
+    
+    snprintf(file, sizeof(file), "%s/%s", path, d->d_name);
+
+    h = dlopen(file, RTLD_NOW | RTLD_LOCAL);
+    if(h == NULL) {
+      syslog(LOG_ERR, "%s", dlerror());
+      continue;
+    }
+
+    ini = dlsym(h, "plugin_init");
+    if(ini == NULL) {
+      syslog(LOG_ERR, "Plugin \"%s\" lacks init function", file);
+      continue;
+    }
+
+    ini();
+
+    closedir(dir);
+  }
 }

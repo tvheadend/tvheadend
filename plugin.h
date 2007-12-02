@@ -58,4 +58,6 @@ void plugin_aux_destroy(void *pa);
 
 th_plugin_t *plugin_alloc(const char *name, void *opaque, size_t minsiz);
 
+void plugin_init(void);
+
 #endif /* PLUGIN_H_ */

@@ -54,6 +54,7 @@
 #include "buffer.h"
 #include "htmlui.h"
 #include "avgen.h"
+#include "plugin.h"
 
 int running;
 int xmltvreload;
@@ -195,6 +196,8 @@ main(int argc, char **argv)
   htmlui_start();
 
   avgen_init();
+
+  plugin_init();
 
   running = 1;
   while(running) {
