@@ -49,6 +49,8 @@ typedef struct http_connection {
 
   struct http_arg_list hc_args;
 
+  struct http_arg_list hc_url_args;
+
   enum {
     HTTP_CON_WAIT_REQUEST,
     HTTP_CON_READ_HEADER,

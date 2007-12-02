@@ -67,12 +67,13 @@ static struct strtab HTTP_versiontab[] = {
   { "RTSP/1.0",        RTSP_VERSION_1_0 }, /* not enabled yet */
 };
 
+static void http_parse_get_args(http_connection_t *hc, char *args);
 
 /**
  *
  */
 static http_path_t *
-http_resolve(http_connection_t *hc, char **remainp)
+http_resolve(http_connection_t *hc, char **remainp, char **argsp)
 {
   http_path_t *hp;
   char *v;
@@ -86,13 +87,35 @@ http_resolve(http_connection_t *hc, char **remainp)
 
   v = hc->hc_url + hp->hp_len;
 
-  if(*v != 0 && *v != '/' && *v != '?')
+  *remainp = NULL;
+  *argsp = NULL;
+
+  switch(*v) {
+  case 0:
+    break;
+
+  case '/':
+    if(v[1] == '?') {
+      *argsp = v + 1;
+      break;
+    }
+
+    *remainp = v + 1;
+    v = strchr(v + 1, '?');
+    if(v != NULL) {
+      *v = 0;  /* terminate remaining url */
+      *argsp = v + 1;
+    }
+    break;
+
+  case '?':
+    *argsp = v + 1;
+    break;
+
+  default:
     return NULL;
+  }
 
-  if(*v == '/' || *v == '?')
-    v++;
-
-  *remainp = v;
   return hp;
 }
 
@@ -193,13 +216,17 @@ http_cmd_get(http_connection_t *hc)
 {
   http_path_t *hp;
   char *remain;
+  char *args;
   int err;
 
-  hp = http_resolve(hc, &remain);
+  hp = http_resolve(hc, &remain, &args);
   if(hp == NULL) {
     http_error(hc, HTTP_STATUS_NOT_FOUND);
     return;
   }
+
+  if(args != NULL)
+    http_parse_get_args(hc, args);
 
   err = hp->hp_callback(hc, remain, hp->hp_opaque);
   if(err)
@@ -349,6 +376,7 @@ http_con_parse(void *aux, char *buf)
   switch(hc->hc_state) {
   case HTTP_CON_WAIT_REQUEST:
     http_arg_flush(&hc->hc_args);
+    http_arg_flush(&hc->hc_url_args);
     if(hc->hc_url != NULL) {
       free(hc->hc_url);
       hc->hc_url = NULL;
@@ -410,6 +438,7 @@ http_disconnect(http_connection_t *hc)
 {
   rtsp_disconncet(hc);
   http_arg_flush(&hc->hc_args);
+  http_arg_flush(&hc->hc_url_args);
   free(hc->hc_url);
 }
 
@@ -555,3 +584,33 @@ http_path_add(const char *path, void *opaque, http_callback_t *callback)
   return hp;
 }
 
+
+/**
+ * Parse arguments of a HTTP GET url, not perfect, but works for us
+ */
+static void
+http_parse_get_args(http_connection_t *hc, char *args)
+{
+  char *k, *v, *s;
+
+  while(args) {
+    k = args;
+    if((args = strchr(args, '=')) == NULL)
+      break;
+    *args++ = 0;
+    v = args;
+    args = strchr(args, '&');
+
+    if(args != NULL)
+      *args++ = 0;
+
+    s = v;
+    while(*s) {
+      if(*s == '+')
+	*s = ' ';
+      s++;
+    }
+
+    http_arg_set(&hc->hc_url_args, k, v);
+  }
+}
