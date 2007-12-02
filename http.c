@@ -86,10 +86,10 @@ http_resolve(http_connection_t *hc, char **remainp)
 
   v = hc->hc_url + hp->hp_len;
 
-  if(*v != 0 && *v != '/')
+  if(*v != 0 && *v != '/' && *v != '?')
     return NULL;
 
-  if(*v == '/')
+  if(*v == '/' || *v == '?')
     v++;
 
   *remainp = v;
