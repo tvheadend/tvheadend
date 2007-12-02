@@ -222,8 +222,7 @@ cr_show(client_t *c, char **argv, int argc)
 
   if(!strcasecmp(subcmd, "channel")) {
     
-    
-    TAILQ_FOREACH(ch, &channels, ch_global_link) {
+    LIST_FOREACH(ch, &channels, ch_global_link) {
 
       tmp = utf8toprintable(ch->ch_name);
       cprintf(c, "%3d: \"%s\"\n", ch->ch_index, tmp);
@@ -491,7 +490,7 @@ cr_channels_list(client_t *c, char **argv, int argc)
 {
   th_channel_t *ch;
 
-  TAILQ_FOREACH(ch, &channels, ch_global_link)
+  LIST_FOREACH(ch, &channels, ch_global_link)
     cprintf(c, "channel = %d\n", ch->ch_index);
 
   return 0;

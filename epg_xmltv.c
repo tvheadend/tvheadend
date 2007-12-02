@@ -308,7 +308,7 @@ xmltv_resolve_by_events(xmltv_channel_t *xc)
     if(ex == NULL)
       break;
 
-    TAILQ_FOREACH(ch, &channels, ch_global_link) {
+    LIST_FOREACH(ch, &channels, ch_global_link) {
       ec = epg_event_find_by_time0(&ch->ch_epg_events, now);
 
       cnt = 0;

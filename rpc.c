@@ -150,7 +150,7 @@ rpc_channels_list(rpc_session_t *ses, htsmsg_t *in, void *opaque)
   out = htsmsg_create();
   htsmsg_add_u32(out, "seq", ses->rs_seq);
 
-  TAILQ_FOREACH(ch, &channels, ch_global_link)
+  LIST_FOREACH(ch, &channels, ch_global_link)
     htsmsg_add_msg(out, "channel", rpc_build_channel_msg(ch));
 
   return out;

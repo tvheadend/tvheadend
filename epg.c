@@ -407,7 +407,7 @@ epg_channel_maintain(void *aux, int64_t clk)
 
   epg_lock();
 
-  TAILQ_FOREACH(ch, &channels, ch_global_link) {
+  LIST_FOREACH(ch, &channels, ch_global_link) {
 
     /* Age out any old events */
 

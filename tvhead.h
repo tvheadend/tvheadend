@@ -69,6 +69,8 @@ typedef struct dtimer {
 
 LIST_HEAD(th_subscription_list, th_subscription);
 TAILQ_HEAD(th_channel_queue, th_channel);
+LIST_HEAD(th_channel_list, th_channel);
+LIST_HEAD(th_channel_group_list, th_channel_group);
 LIST_HEAD(th_dvb_adapter_list, th_dvb_adapter);
 LIST_HEAD(th_v4l_adapter_list, th_v4l_adapter);
 LIST_HEAD(event_list, event);
@@ -88,7 +90,7 @@ LIST_HEAD(th_muxstream_list, th_muxstream);
 extern time_t dispatch_clock;
 extern int startupcounter;
 extern struct th_transport_list all_transports;
-extern struct th_channel_queue channels;
+extern struct th_channel_list channels;
 extern struct pvr_rec_list pvrr_global_list;
 extern struct th_subscription_list subscriptions;
 
@@ -613,21 +615,38 @@ typedef struct tt_decoder {
 } tt_decoder_t;
 
 
+/**
+ * Channel groups
+ */
+typedef struct th_channel_group {
+  LIST_ENTRY(th_channel_group) tcg_global_link;
+
+  const char *tcg_name;
+  struct th_channel_list tcg_channels;
+
+} th_channel_group_t;
+
+
 /*
  * Channel definition
  */ 
 typedef struct th_channel {
   
-  TAILQ_ENTRY(th_channel) ch_global_link;
+  LIST_ENTRY(th_channel) ch_global_link;
+
+  int ch_order;
+
+  LIST_ENTRY(th_channel) ch_group_link;
+  th_channel_group_t *ch_group;
+
   LIST_HEAD(, th_transport) ch_transports;
   LIST_HEAD(, th_subscription) ch_subscriptions;
+
 
   int ch_index;
 
   const char *ch_name;
   const char *ch_sname;
-
-  struct pvr_rec *ch_rec;
 
   struct tt_decoder ch_tt;
 

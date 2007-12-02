@@ -104,7 +104,7 @@ rtsp_channel_by_url(char *url)
     return NULL;
   c++; 
 
-  TAILQ_FOREACH(ch, &channels, ch_global_link)
+  LIST_FOREACH(ch, &channels, ch_global_link)
     if(!strcasecmp(ch->ch_sname, c))
       return ch;
 

@@ -38,12 +38,63 @@
 #include "channels.h"
 #include "transports.h"
 
-struct th_channel_queue channels;
+struct th_channel_list channels;
 struct th_transport_list all_transports;
 int nchannels;
 
+struct th_channel_group_list all_channel_groups;
+
 void scanner_init(void);
 
+/**
+ *
+ */
+static int
+ch_order_cmp(th_channel_t *a, th_channel_t *b)
+{
+  return a->ch_order - b->ch_order;
+}
+
+/**
+ *
+ */
+th_channel_group_t *
+channel_group_find(const char *name, int create)
+{
+  th_channel_group_t *tcg;
+
+  LIST_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
+    if(!strcmp(name, tcg->tcg_name))
+      break;
+  }
+  if(!create)
+    return NULL;
+
+  tcg = calloc(1, sizeof(th_channel_group_t));
+  tcg->tcg_name = strdup(name);
+  LIST_INSERT_HEAD(&all_channel_groups, tcg, tcg_global_link);
+  return tcg;
+}
+
+/**
+ *
+ */
+void
+channel_set_group(th_channel_t *ch, const char *groupname)
+{
+  th_channel_group_t *tcg;
+
+  if(ch->ch_group != NULL)
+    LIST_REMOVE(ch, ch_group_link);
+
+  tcg = channel_group_find(groupname, 1);
+  ch->ch_group = tcg;
+  LIST_INSERT_SORTED(&tcg->tcg_channels, ch, ch_group_link, ch_order_cmp);
+}
+
+/**
+ *
+ */
 th_channel_t *
 channel_find(const char *name, int create)
 {
@@ -52,7 +103,7 @@ channel_find(const char *name, int create)
   int l, i;
   char *cp, c;
 
-  TAILQ_FOREACH(ch, &channels, ch_global_link)
+  LIST_FOREACH(ch, &channels, ch_global_link)
     if(!strcasecmp(name, ch->ch_name))
       return ch;
 
@@ -81,13 +132,20 @@ channel_find(const char *name, int create)
   ch->ch_index = nchannels;
   TAILQ_INIT(&ch->ch_epg_events);
 
-  TAILQ_INSERT_TAIL(&channels, ch, ch_global_link);
+  ch->ch_order = nchannels + 1000;
+  LIST_INSERT_SORTED(&channels, ch, ch_global_link, ch_order_cmp);
+
+  channel_set_group(ch, "Default");
+
   ch->ch_tag = tag_get();
   nchannels++;
   return ch;
 }
 
 
+/**
+ *
+ */
 static int
 transportcmp(th_transport_t *a, th_transport_t *b)
 {
@@ -95,6 +153,9 @@ transportcmp(th_transport_t *a, th_transport_t *b)
 }
 
 
+/**
+ *
+ */
 int 
 transport_set_channel(th_transport_t *t, th_channel_t *ch)
 {
@@ -125,6 +186,9 @@ transport_set_channel(th_transport_t *t, th_channel_t *ch)
 
 
 
+/**
+ *
+ */
 static void
 service_load(struct config_head *head)
 {
@@ -157,6 +221,9 @@ service_load(struct config_head *head)
     free(t);
 }
 
+/**
+ *
+ */
 void
 transport_link(th_transport_t *t, th_channel_t *ch)
 {
@@ -167,6 +234,9 @@ transport_link(th_transport_t *t, th_channel_t *ch)
 
 
 
+/**
+ *
+ */
 static void
 channel_load(struct config_head *head)
 {
@@ -186,11 +256,13 @@ channel_load(struct config_head *head)
 }
 
 
+/**
+ *
+ */
 void
 channels_load(void)
 {
   config_entry_t *ce;
-  TAILQ_INIT(&channels);
 
   TAILQ_FOREACH(ce, &config_list, ce_link) {
     if(ce->ce_type == CFG_SUB && !strcasecmp("channel", ce->ce_key)) {
@@ -206,12 +278,15 @@ channels_load(void)
 }
 
 
+/**
+ * The index stuff should go away
+ */
 th_channel_t *
 channel_by_index(uint32_t index)
 {
   th_channel_t *ch;
 
-  TAILQ_FOREACH(ch, &channels, ch_global_link)
+  LIST_FOREACH(ch, &channels, ch_global_link)
     if(ch->ch_index == index)
       return ch;
 
@@ -220,12 +295,15 @@ channel_by_index(uint32_t index)
 
 
 
+/**
+ *
+ */
 th_channel_t *
 channel_by_tag(uint32_t tag)
 {
   th_channel_t *ch;
 
-  TAILQ_FOREACH(ch, &channels, ch_global_link)
+  LIST_FOREACH(ch, &channels, ch_global_link)
     if(ch->ch_tag == tag)
       return ch;
 

@@ -404,7 +404,7 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_init_queue(&tq, -1);
 
-  TAILQ_FOREACH(ch, &channels, ch_global_link) {
+  LIST_FOREACH(ch, &channels, ch_global_link) {
     e = epg_event_find_current_or_upcoming(ch);
     if(e && e->e_start + e->e_duration < firstend) {
       firstend = e->e_start + e->e_duration;
@@ -418,7 +418,7 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
   html_header(&tq, "HTS/tvheadend", !simple, 700, i);
   top_menu(hc, &tq);
 
-  TAILQ_FOREACH(ch, &channels, ch_global_link) {
+  LIST_FOREACH(ch, &channels, ch_global_link) {
     box_top(&tq, "box");
     tcp_qprintf(&tq, "<div class=\"content3\">");
 
