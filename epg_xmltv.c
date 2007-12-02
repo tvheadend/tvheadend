@@ -350,7 +350,7 @@ xmltv_transfer(void)
 
   LIST_FOREACH(xc, &xmltv_channel_list, xc_link) {
 
-    ch = channel_find(xc->xc_displayname, 0);
+    ch = channel_find(xc->xc_displayname, 0, NULL);
     if(ch != NULL)
       xmltv_map(xc, ch);
 

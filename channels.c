@@ -46,6 +46,8 @@ struct th_channel_group_queue all_channel_groups;
 
 th_channel_group_t *defgroup;
 
+static int dontwritesettings;
+
 void scanner_init(void);
 
 /**
@@ -70,6 +72,10 @@ channel_group_find(const char *name, int create)
   TAILQ_INIT(&tcg->tcg_channels);
 
   TAILQ_INSERT_TAIL(&all_channel_groups, tcg, tcg_global_link);
+
+  if(!dontwritesettings)
+    channel_settings_write();
+
   return tcg;
 }
 
@@ -87,6 +93,8 @@ channel_set_group(th_channel_t *ch, th_channel_group_t *tcg)
 
   ch->ch_group = tcg;
   TAILQ_INSERT_TAIL(&tcg->tcg_channels, ch, ch_group_link);
+  if(!dontwritesettings)
+    channel_settings_write();
 }
 
 /**
@@ -113,7 +121,7 @@ channel_group_destroy(th_channel_group_t *tcg)
  *
  */
 th_channel_t *
-channel_find(const char *name, int create)
+channel_find(const char *name, int create, th_channel_group_t *tcg)
 {
   const char *n2;
   th_channel_t *ch;
@@ -151,7 +159,7 @@ channel_find(const char *name, int create)
 
   LIST_INSERT_HEAD(&channels, ch, ch_global_link);
 
-  channel_set_group(ch, defgroup);
+  channel_set_group(ch, tcg ?: defgroup);
 
   ch->ch_tag = tag_get();
   nchannels++;
@@ -249,53 +257,53 @@ transport_link(th_transport_t *t, th_channel_t *ch)
 }
 
 
-
-/**
- *
- */
-static void
-channel_load(struct config_head *head)
-{
-  const char *name, *v;
-  th_channel_t *ch;
-
-  if((name = config_get_str_sub(head, "name", NULL)) == NULL)
-    return;
-
-  ch = channel_find(name, 1);
-
-  syslog(LOG_DEBUG, "Added channel \"%s\"", name);
-
-  if((v = config_get_str_sub(head, "teletext-rundown", NULL)) != NULL) {
-    ch->ch_teletext_rundown = atoi(v);
-  }
-}
-
-
 /**
  *
  */
 void
 channels_load(void)
 {
-  config_entry_t *ce;
+  config_entry_t *ce, *ce1, *ce2;
+  const char *name;
+  th_channel_group_t *tcg;
+  th_channel_t *ch;
+
+  dontwritesettings = 1;
 
   TAILQ_INIT(&all_channel_groups);
 
-  defgroup = channel_group_find("Uncategorized", 1);
-  defgroup->tcg_cant_delete_me = 1;
+  TAILQ_FOREACH(ce1, &settings_list, ce_link) {
+    if(ce1->ce_type != CFG_SUB || strcasecmp("channel-group", ce1->ce_key))
+      continue;
+    
+    if((name = config_get_str_sub(&ce1->ce_sub, "name", NULL)) == NULL)
+      continue;
 
-  TAILQ_FOREACH(ce, &config_list, ce_link) {
-    if(ce->ce_type == CFG_SUB && !strcasecmp("channel", ce->ce_key)) {
-      channel_load(&ce->ce_sub);
+    tcg = channel_group_find(name, 1);
+    TAILQ_FOREACH(ce2, &ce1->ce_sub, ce_link) {
+      if(ce2->ce_type != CFG_SUB || strcasecmp("channel", ce2->ce_key))
+	continue;
+
+      if((name = config_get_str_sub(&ce2->ce_sub, "name", NULL)) == NULL)
+	continue;
+
+      ch = channel_find(name, 1, tcg);
+      
+      ch->ch_teletext_rundown = 
+	atoi(config_get_str_sub(&ce2->ce_sub, "teletext-rundown", "0"));
     }
   }
+
+  defgroup = channel_group_find("Uncategorized", 1);
+  defgroup->tcg_cant_delete_me = 1;
 
   TAILQ_FOREACH(ce, &config_list, ce_link) {
     if(ce->ce_type == CFG_SUB && !strcasecmp("service", ce->ce_key)) {
       service_load(&ce->ce_sub);
     }
   }
+  dontwritesettings = 0;
+
 }
 
 
@@ -346,4 +354,36 @@ channel_group_by_tag(uint32_t tag)
       return tcg;
 
   return NULL;
+}
+
+/**
+ *
+ */
+void
+channel_settings_write(void)
+{
+  FILE *fp;
+  th_channel_group_t *tcg;
+  th_channel_t *ch;
+
+  if(settingsfile == NULL)
+    return;
+
+  fp = fopen(settingsfile, "w+");
+  if(fp == NULL)
+    return;
+
+  TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
+    fprintf(fp, "channel-group {\n"
+	    "\tname = %s\n", tcg->tcg_name);
+    TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
+      fprintf(fp, "\tchannel {\n"
+	      "\t\tname = %s\n", ch->ch_name);
+      if(ch->ch_teletext_rundown)
+	fprintf(fp, "\t\tteletext-rundown = %d", ch->ch_teletext_rundown);
+      fprintf(fp, "\t}\n");
+    }
+    fprintf(fp, "}\n");
+  }
+  fclose(fp);
 }

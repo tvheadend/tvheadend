@@ -808,7 +808,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	/* Not yet mapped to a channel */
 	if(LIST_FIRST(&t->tht_streams) != NULL) {
 	  /* We have streams, map it */
-	  transport_set_channel(t, channel_find(chname, 1));
+	  transport_set_channel(t, channel_find(chname, 1, NULL));
 	} else {
 	  if(t->tht_pmt_seen == 0)
 	    ret |= 1; /* Return error (so scanning wont continue yet) */

@@ -395,7 +395,7 @@ pvr_database_load(void)
     *val++ = 0;
 
     if(!strcmp(key, "channel"))
-      pvrr->pvrr_channel = channel_find(val, 1);
+      pvrr->pvrr_channel = channel_find(val, 1, NULL);
     
     else if(!strcmp(key, "start"))
       pvrr->pvrr_start = atoi(val);

@@ -177,7 +177,7 @@ rpc_event_info(rpc_session_t *ses, htsmsg_t *in, void *opaque)
   if(htsmsg_get_u32(in, "tag", &u32) >= 0) {
     e = epg_event_find_by_tag(u32);
   } else if((s = htsmsg_get_str(in, "channel")) != NULL) {
-    if((ch = channel_find(s, 0)) == NULL) {
+    if((ch = channel_find(s, 0, NULL)) == NULL) {
       errtxt = "Channel not found";
     } else {
       if(htsmsg_get_u32(in, "time", &u32) < 0) {
