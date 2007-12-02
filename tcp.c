@@ -330,8 +330,8 @@ tcp_disconnect(tcp_session_t *ses, int err)
     free(ses->tcp_name);
     free(ses);
   } else {
-    /* Try to reconnect in 5 seconds */
-    dtimer_arm(&ses->tcp_timer, tcp_client_reconnect_timeout, ses, 5);
+    /* Try to reconnect in 2 seconds */
+    dtimer_arm(&ses->tcp_timer, tcp_client_reconnect_timeout, ses, 2);
   }
 }
 
