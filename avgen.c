@@ -100,7 +100,7 @@ avgen_init(void)
   if(avcodec_find_encoder(CODEC_ID_MP2) == NULL)
     return;
 
-  ch = channel_find("Test 1", 1, NULL);
+  ch = channel_find("Test 1", 1, channel_group_find("Test channels", 1));
 
   t = calloc(1, sizeof(th_transport_t));
   t->tht_prio = 100;

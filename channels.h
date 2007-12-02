@@ -40,5 +40,10 @@ th_channel_group_t *channel_group_by_tag(uint32_t tag);
 
 void channel_group_destroy(th_channel_group_t *tcg);
 
+void channel_group_move_prev(th_channel_group_t *tcg);
+
+void channel_group_move_next(th_channel_group_t *tcg);
+
 void channel_settings_write(void);
+
 #endif /* CHANNELS_H */

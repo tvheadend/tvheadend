@@ -1238,14 +1238,25 @@ page_chgroups(http_connection_t *hc, const char *remain, void *opaque)
     channel_group_find(grp, 1);
 
   LIST_FOREACH(ra, &hc->hc_url_args, link) {
-    if(!strncmp(ra->key, "delgroup", 8))
+    if(!strncmp(ra->key, "delgroup", 8)) {
+      tcg = channel_group_by_tag(atoi(ra->key + 8));
+      if(tcg != NULL)
+	channel_group_destroy(tcg);
       break;
-  }
+    }
 
-  if(ra != NULL) {
-    tcg = channel_group_by_tag(atoi(ra->key + 8));
-    if(tcg != NULL) {
-      channel_group_destroy(tcg);
+    if(!strncmp(ra->key, "up", 2)) {
+      tcg = channel_group_by_tag(atoi(ra->key + 2));
+      if(tcg != NULL)
+	channel_group_move_prev(tcg);
+      break;
+    }
+
+    if(!strncmp(ra->key, "down", 4)) {
+      tcg = channel_group_by_tag(atoi(ra->key + 4));
+      if(tcg != NULL)
+	channel_group_move_next(tcg);
+      break;
     }
   }
 
@@ -1266,19 +1277,25 @@ page_chgroups(http_connection_t *hc, const char *remain, void *opaque)
     TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link)
       cnt++;
 
-    tcp_qprintf(&tq, "<b>%s</b> (%d channels)<br>", tcg->tcg_name, cnt);
+    tcp_qprintf(&tq, "<b>%s</b> (%d channels)<br><br>", tcg->tcg_name, cnt);
+
+     tcp_qprintf(&tq, 
+		  "<input type=\"submit\" name=\"up%d\""
+		  " value=\"Move up\"> ", tcg->tcg_tag);
+
+     tcp_qprintf(&tq, 
+		  "<input type=\"submit\" name=\"down%d\""
+		  " value=\"Move down\"> ", tcg->tcg_tag);
 
     if(tcg->tcg_cant_delete_me == 0) {
       tcp_qprintf(&tq, 
 		  "<input type=\"submit\" name=\"delgroup%d\""
-		  " value=\"Delete this group\">"
-		  "</div>", tcg->tcg_tag);
+		  " value=\"Delete this group\">", tcg->tcg_tag);
     }
 
     tcp_qprintf(&tq, "</div>");
     box_bottom(&tq);
     tcp_qprintf(&tq, "</form><br>\r\n");
-    
   }
 
 
@@ -1293,8 +1310,6 @@ page_chgroups(http_connection_t *hc, const char *remain, void *opaque)
 
   box_bottom(&tq);
   tcp_qprintf(&tq, "</form><br>\r\n");
-
-
 
   http_output_queue(hc, &tq, "text/html; charset=UTF-8");
   return 0;

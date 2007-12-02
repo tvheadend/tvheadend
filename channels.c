@@ -356,6 +356,33 @@ channel_group_by_tag(uint32_t tag)
   return NULL;
 }
 
+void
+channel_group_move_next(th_channel_group_t *tcg)
+{
+  th_channel_group_t *n = TAILQ_NEXT(tcg, tcg_global_link);
+  if(n == NULL)
+    return;
+
+  TAILQ_REMOVE(&all_channel_groups, tcg, tcg_global_link);
+  TAILQ_INSERT_AFTER(&all_channel_groups, n, tcg, tcg_global_link);
+  channel_settings_write();
+}
+
+void
+channel_group_move_prev(th_channel_group_t *tcg)
+{
+  th_channel_group_t *p = TAILQ_PREV(tcg, th_channel_group_queue,
+				     tcg_global_link);
+  if(p == NULL)
+    return;
+
+  TAILQ_REMOVE(&all_channel_groups, tcg, tcg_global_link);
+  TAILQ_INSERT_BEFORE(p, tcg, tcg_global_link);
+  channel_settings_write();
+}
+
+
+
 /**
  *
  */
