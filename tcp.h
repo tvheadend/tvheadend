@@ -65,7 +65,8 @@ typedef struct tcp_session {
 
   dtimer_t tcp_timer;
   char *tcp_name;
-
+  int tcp_port;
+  char *tcp_hostname;
   
   /* Output queueing */
 
@@ -104,7 +105,7 @@ void tcp_qprintf(tcp_queue_t *tq, const char *fmt, ...);
 
 void tcp_output_queue(tcp_session_t *ses, tcp_queue_t *dst, tcp_queue_t *src);
 
-void *tcp_create_client(struct in_addr ip, int port, size_t session_size,
+void *tcp_create_client(const char *hostname, int port, size_t session_size,
 			const char *name, tcp_callback_t *cb);
 
 #endif /* TCP_H_ */

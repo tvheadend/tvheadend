@@ -31,6 +31,7 @@
 
 #include "dispatch.h"
 #include "tcp.h"
+#include "resolver.h"
 
 static void tcp_client_reconnect_timeout(void *aux, int64_t now);
 
@@ -391,7 +392,9 @@ tcp_start_session(tcp_session_t *ses)
   snprintf(ses->tcp_peer_txt, sizeof(ses->tcp_peer_txt), "%s:%d",
 	   inet_ntoa(si->sin_addr), ntohs(si->sin_port));
 
-  syslog(LOG_INFO, "%s: %s: connected", ses->tcp_name, ses->tcp_peer_txt);
+  syslog(LOG_INFO, "%s: %s%sConnected to %s", ses->tcp_name,
+	 ses->tcp_hostname ?: "", ses->tcp_hostname ? ": " : "",
+	 ses->tcp_peer_txt);
 
 
   ses->tcp_dispatch_handle = dispatch_addfd(ses->tcp_fd, tcp_socket_callback,
@@ -421,8 +424,8 @@ tcp_client_connect_fail(tcp_session_t *c, int error)
   struct sockaddr_in *si = (struct sockaddr_in *)&c->tcp_peer_addr;
 
   
-  syslog(LOG_ERR, "%s: Unable to connect to %s:%d -- %s",
-	 c->tcp_name, inet_ntoa(si->sin_addr),
+  syslog(LOG_ERR, "%s: Unable to connect to \"%s\" (%s) : %d -- %s",
+	 c->tcp_name, c->tcp_hostname, inet_ntoa(si->sin_addr),
 	 ntohs(si->sin_port), strerror(error));
 
   /* Try to reconnect in 10 seconds */
@@ -471,10 +474,27 @@ tcp_client_connect_timeout(void *aux, int64_t now)
  *
  */
 static void
-tcp_session_try_connect(tcp_session_t *c)
+tcp_session_peer_resolved(void *aux, struct sockaddr *so, const char *error)
 {
+  tcp_session_t *c = aux;
+  struct sockaddr_in *si;
+  
+  if(error != NULL) {
+    syslog(LOG_ERR, "%s: Unable to resolve \"%s\" -- %s",
+	   c->tcp_name, c->tcp_hostname, error);
+    /* Try again in 30 seconds */
+    dtimer_arm(&c->tcp_timer, tcp_client_reconnect_timeout, c, 30);
+    return;
+  }
+
+
   c->tcp_fd = socket(AF_INET, SOCK_STREAM, 0);
   fcntl(c->tcp_fd, F_SETFL, fcntl(c->tcp_fd, F_GETFL) | O_NONBLOCK);
+
+
+  si = (struct sockaddr_in *)&c->tcp_peer_addr;
+  memcpy(si, so, sizeof(struct sockaddr_in));
+  si->sin_port = htons(c->tcp_port);
 
   if(connect(c->tcp_fd, (struct sockaddr *)&c->tcp_peer_addr,
 	     sizeof(struct sockaddr_in)) == 0) {
@@ -496,6 +516,15 @@ tcp_session_try_connect(tcp_session_t *c)
   tcp_client_connect_fail(c, errno);
 }
 
+/**
+ * Start by resolving hostname
+ */
+static void
+tcp_session_try_connect(tcp_session_t *c)
+{
+  async_resolve(c->tcp_hostname, tcp_session_peer_resolved, c);
+}
+
 
 /**
  * We come here after a failed connection attempt or if we disconnected
@@ -512,24 +541,17 @@ tcp_client_reconnect_timeout(void *aux, int64_t now)
  * Create a TCP based client
  */
 void *
-tcp_create_client(struct in_addr ip, int port, size_t session_size,
+tcp_create_client(const char *hostname, int port, size_t session_size,
 		  const char *name, tcp_callback_t *cb)
 {
-  struct sockaddr_in *si;
   tcp_session_t *c = calloc(1, session_size);
 
   c->tcp_callback = cb;
   c->tcp_name = strdup(name);
-  
-  si = (struct sockaddr_in *)&c->tcp_peer_addr;
-  
-  memset(si, 0, sizeof(struct sockaddr_in));
-  si->sin_family = AF_INET;
-  si->sin_port = htons(port);
-  si->sin_addr = ip;
+  c->tcp_port = port;
+  c->tcp_hostname = strdup(hostname);
 
   tcp_session_try_connect(c);
-
   return c;
 }
 
