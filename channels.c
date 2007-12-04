@@ -186,6 +186,9 @@ transport_set_channel(th_transport_t *t, th_channel_t *ch)
   th_stream_t *st;
   char *chname;
   const char *n;
+
+  char pid[30];
+  char lang[30];
   t->tht_channel = ch;
   LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
 
@@ -201,7 +204,19 @@ transport_set_channel(th_transport_t *t, th_channel_t *ch)
     } else {
       n = htstvstreamtype2txt(st->st_type);
     }
-    syslog(LOG_DEBUG, "   Stream [%s] - pid %d", n, st->st_pid);
+    if(st->st_pid < 8192) {
+      snprintf(pid, sizeof(pid), " on pid [%d]", st->st_pid);
+    } else {
+      pid[0] = 0;
+    }
+
+    if(st->st_lang[0]) {
+      snprintf(lang, sizeof(lang), ", language \"%s\"", st->st_lang);
+    } else {
+      lang[0] = 0;
+    }
+
+    syslog(LOG_DEBUG, "   Stream \"%s\"%s%s", n, lang, pid);
   }
 
   return 0;

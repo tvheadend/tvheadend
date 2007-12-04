@@ -27,6 +27,7 @@
 #define DVB_SUPPORT_H
 
 #define DVB_DESC_CA           0x09
+#define DVB_DESC_LANGUAGE     0x0a
 
 /* Descriptors defined in EN 300 468 */
 

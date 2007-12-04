@@ -176,6 +176,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
   uint16_t sid;
   tv_streamtype_t hts_stream_type;
   th_stream_t *st;
+  char lang[4];
 
   if(len < 9)
     return -1;
@@ -242,6 +243,8 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
       break;
     }
 
+    memset(lang, 0, 4);
+
     while(dllen > 1) {
       dtag = ptr[0];
       dlen = ptr[1];
@@ -251,24 +254,30 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
 	break;
 
       switch(dtag) {
+      case DVB_DESC_LANGUAGE:
+	memcpy(lang, ptr, 3);
+	break;
+
       case DVB_DESC_TELETEXT:
 	if(estype == 0x06)
 	  hts_stream_type = HTSTV_TELETEXT;
-	break;
-
-      case DVB_DESC_SUBTITLE:
 	break;
 
       case DVB_DESC_AC3:
 	if(estype == 0x06 || estype == 0x81)
 	  hts_stream_type = HTSTV_AC3;
 	break;
+
+      default:
+	break;
       }
       len -= dlen; ptr += dlen; dllen -= dlen;
     }
 
-    if(hts_stream_type != 0)
-      transport_add_stream(t, pid, hts_stream_type);
+    if(hts_stream_type != 0) {
+      st = transport_add_stream(t, pid, hts_stream_type);
+      memcpy(st->st_lang, lang, 4);
+    }
   } 
 
   t->tht_pmt_seen = 1;

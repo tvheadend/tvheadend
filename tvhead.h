@@ -320,6 +320,8 @@ typedef struct th_stream {
 
   uint16_t st_caid;
 
+  char st_lang[4]; /* ISO 639 3-letter language code */
+
 } th_stream_t;
 
 
