@@ -801,7 +801,14 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       len -= dlen; ptr += dlen; dllen -= dlen;
     }
 
-    if(stype == 1) {
+    switch(stype) {
+
+    case DVB_ST_SDTV:
+    case DVB_ST_HDTV:
+    case DVB_ST_AC_SDTV:
+    case DVB_ST_AC_HDTV:
+      /* TV service */
+
       t = dvb_find_transport(tdmi, transport_stream_id, service_id, 0);
       
       if(t == NULL)
@@ -816,6 +823,8 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	    ret |= 1; /* Return error (so scanning wont continue yet) */
 	}
       }
+      break;
+
     }
   }
   return ret;

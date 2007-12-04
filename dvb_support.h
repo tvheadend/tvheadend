@@ -38,6 +38,15 @@
 #define DVB_DESC_SUBTITLE     0x59
 #define DVB_DESC_AC3          0x6a
 
+
+/* Service types defined in EN 300 468 */
+
+#define DVB_ST_SDTV           0x1    /* SDTV (MPEG2) */
+#define DVB_ST_RADIO          0x2
+#define DVB_ST_HDTV           0x11   /* HDTV (MPEG2) */
+#define DVB_ST_AC_SDTV        0x16   /* Advanced codec SDTV */
+#define DVB_ST_AC_HDTV        0x19   /* Advanced codec HDTV */
+
 int dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, 
 		   const size_t srclen, const char *target_encoding);
 
