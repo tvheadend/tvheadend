@@ -55,6 +55,7 @@ static void dvb_tdt_add_demux(th_dvb_mux_instance_t *tdmi);
 static void dvb_eit_add_demux(th_dvb_mux_instance_t *tdmi);
 static void dvb_sdt_add_demux(th_dvb_mux_instance_t *tdmi);
 static void dvb_pat_add_demux(th_dvb_mux_instance_t *tdmi);
+static void dvb_cat_add_demux(th_dvb_mux_instance_t *tdmi);
 
 static void tdmi_check_scan_status(th_dvb_mux_instance_t *tdmi);
 
@@ -321,6 +322,7 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
   dvb_eit_add_demux(tdmi);
   dvb_sdt_add_demux(tdmi);
   dvb_pat_add_demux(tdmi);
+  dvb_cat_add_demux(tdmi);
 
   time(&tdmi->tdmi_got_adapter);
 
@@ -905,6 +907,71 @@ dvb_pat_add_demux(th_dvb_mux_instance_t *tdmi)
   }
 
   tdt_add(tdmi, fd, dvb_pat_callback, NULL, 0, "pat");
+}
+
+
+/**
+ * CAT - Condition Access Table
+ */
+static int
+dvb_cat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
+		 uint8_t tableid, void *opaque)
+{
+  int tag, tlen;
+  uint16_t caid;
+  uint16_t pid;
+
+  ptr += 5;
+  len -= 5;
+
+  while(len > 2) {
+    tag = *ptr++;
+    tlen = *ptr++;
+    len -= 2;
+    switch(tag) {
+    case DVB_DESC_CA:
+      caid =  (ptr[0]        << 8)  | ptr[1];
+      pid  = ((ptr[2] & 0x1f << 8)) | ptr[3];
+      break;
+
+    default:
+      break;
+    }
+
+    ptr += tlen;
+    len -= tlen;
+  }
+
+
+  return 0;
+}
+
+
+
+static void
+dvb_cat_add_demux(th_dvb_mux_instance_t *tdmi)
+{
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  struct dmx_sct_filter_params fparams;
+  int fd;
+
+  fd = open(tda->tda_demux_path, O_RDWR);
+  if(fd == -1)
+    return;
+
+  memset(&fparams, 0, sizeof(fparams));
+  fparams.pid = 1;
+  fparams.timeout = 0;
+  fparams.flags = DMX_IMMEDIATE_START | DMX_CHECK_CRC;
+  fparams.filter.filter[0] = 0x01;
+  fparams.filter.mask[0] = 0xff;
+
+  if(ioctl(fd, DMX_SET_FILTER, &fparams) < 0) {
+    close(fd);
+    return;
+  }
+
+  tdt_add(tdmi, fd, dvb_cat_callback, NULL, 1, "cat");
 }
 
 
