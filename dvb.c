@@ -804,8 +804,10 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	    chname++;
 
 	  l = strlen(chname);
-	  while(l > 1 && chname[l - 1] <= 32)
+	  while(l > 1 && chname[l - 1] <= 32) {
+	    chname[l - 1] = 0;
 	    l--;
+	  }
 
 	}
 	break;
