@@ -53,6 +53,78 @@ void scanner_init(void);
 /**
  *
  */
+#if 0
+static int
+dictcmp(const char *s1, const char *s2)
+{
+  long int da, db;
+  int n1, n2;
+
+  while(1) {
+    n1 = *s1 >= '0' && *s1 <= '9' ? 1 : 0;
+    n2 = *s2 >= '0' && *s2 <= '9' ? 2 : 0;
+
+    switch(n1 | n2) {
+    case 0:
+      if(*s1 != *s2)
+        return *(const unsigned char *)s1 - *(const unsigned char *)s2;
+      if(*s1 == 0)
+        return 0;
+      s1++;
+      s2++;
+      break;
+    case 1 ... 2:
+      return *(const unsigned char *)s1 - *(const unsigned char *)s2;
+    case 3:
+      da = strtol(s1, (char **)&s1, 10);
+      db = strtol(s2, (char **)&s2, 10);
+      if(da != db)
+        return da - db;
+      break;
+    }
+  }
+}
+#endif
+
+static int
+ch_number(const char *s1)
+{
+  while(*s1) {
+    if(*s1 >= '0' && *s1 <= '9') {
+      return strtol(s1, NULL, 10);
+    }
+    s1++;
+  }
+  return INT32_MAX;
+}
+
+static int
+chcmp(const char *s1, const char *s2)
+{
+  int n1, n2;
+
+  n1 = ch_number(s1);
+  n2 = ch_number(s2);
+  
+  if(n1 != n2) {
+    return n1 - n2;
+  }
+  return strcmp(s1, s2);
+}
+
+/**
+ *
+ */
+static int
+channelcmp(th_channel_t *a, th_channel_t *b)
+{
+  return chcmp(a->ch_name, b->ch_name);
+}
+
+
+/**
+ *
+ */
 th_channel_group_t *
 channel_group_find(const char *name, int create)
 {
@@ -92,7 +164,7 @@ channel_set_group(th_channel_t *ch, th_channel_group_t *tcg)
     TAILQ_REMOVE(&ch->ch_group->tcg_channels, ch, ch_group_link);
 
   ch->ch_group = tcg;
-  TAILQ_INSERT_TAIL(&tcg->tcg_channels, ch, ch_group_link);
+  TAILQ_INSERT_SORTED(&tcg->tcg_channels, ch, ch_group_link, channelcmp);
   if(!dontwritesettings)
     channel_settings_write();
 }
@@ -157,7 +229,7 @@ channel_find(const char *name, int create, th_channel_group_t *tcg)
   ch->ch_index = nchannels;
   TAILQ_INIT(&ch->ch_epg_events);
 
-  LIST_INSERT_HEAD(&channels, ch, ch_global_link);
+  LIST_INSERT_SORTED(&channels, ch, ch_global_link, channelcmp);
 
   channel_set_group(ch, tcg ?: defgroup);
 
@@ -308,6 +380,10 @@ channels_load(void)
 	atoi(config_get_str_sub(&ce2->ce_sub, "teletext-rundown", "0"));
     }
   }
+
+  tcg = channel_group_find("-disabled-", 1);
+  tcg->tcg_cant_delete_me = 1;
+  tcg->tcg_hidden = 1;
 
   defgroup = channel_group_find("Uncategorized", 1);
   defgroup->tcg_cant_delete_me = 1;

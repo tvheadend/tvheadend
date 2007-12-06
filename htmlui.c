@@ -94,37 +94,16 @@ pvrstatus_to_html(tv_pvr_status_t pvrstatus, const char **text,
   return 0;
 }
 
-
-
-
-
-static void
-html_header(tcp_queue_t *tq, const char *title, int javascript, int width,
-	    int autorefresh)
+/*
+ * Root page
+ */
+static int
+page_css(http_connection_t *hc, const char *remain, void *opaque)
 {
-  char w[30];
+  tcp_queue_t tq;
+  tcp_init_queue(&tq, -1);
 
-  if(width > 0)
-    snprintf(w, sizeof(w), "width: %dpx; ", width);
-  else
-    w[0] = 0;
-
-  tcp_qprintf(tq, 
-	      "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" "
-	      "http://www.w3.org/TR/html4/strict.dtd\">\r\n"
-	      "<html><head>\r\n"
-	      "<title>%s</title>\r\n"
-	      "<meta http-equiv=\"Content-Type\" "
-	      "content=\"text/html; charset=utf-8\">\r\n", title);
-
-  if(autorefresh) 
-    tcp_qprintf(tq, 
-		"<meta http-equiv=\"refresh\" content=\"%d\">\r\n",
-		autorefresh);
-
-  tcp_qprintf(tq, 
-	      "<style type=\"text/css\">\r\n"
-	      "<!--\r\n"
+  tcp_qprintf(&tq, 
 	      "img { border: 0px; }\r\n"
 	      "a:link { text-decoration: none}\r\n"
 	      "a:visited { text-decoration: none}\r\n"
@@ -133,10 +112,6 @@ html_header(tcp_queue_t *tq, const char *title, int javascript, int width,
 	      "a:visited { text-decoration: none; color: #000000}\r\n"
 	      "a:active { text-decoration: none; color: #000000}\r\n"
 	      "a:hover { text-decoration: underline; color: CC3333}\r\n"
-	      ""
-	      "body {margin: 4px 4px; "
-	      "font: 75% Verdana, Arial, Helvetica, sans-serif; "
-	      "%s margin-right: auto; margin-left: auto;}\r\n"
 	      ""
 	      "#box {background: #cccc99;}\r\n"
 	      ".roundtop {background: #ffffff;}\r\n"
@@ -178,31 +153,67 @@ html_header(tcp_queue_t *tq, const char *title, int javascript, int width,
 	      ".toptxt {float: left; width: 165px; text-align: center}\r\n"
 	      ""
 	      ".knapp {border: 1px dotted #000000; background: #ddddaa} "
-	      ".knapp:hover {border: 1px dotted #000000; background: #aaaa66} "
+	      ".knapp:hover {border: 1px dotted #000000; background: #aaaa66}"
+	      ""
+	      ".drop {border: 1px dotted #000000; background: #ddddaa} "
 	      ""
 	      "#meny {margin: 0; padding: 0}\r\n"
 	      "#meny li{display: inline; list-style-type: none;}\r\n"
 	      "#meny a{padding: 1.15em 0.8em; text-decoration: none;}\r\n"
+	      );
+
+  http_output_queue(hc, &tq, "text/css", 60);
+  return 0;
+}
+
+
+
+
+
+
+
+static void
+html_header(tcp_queue_t *tq, const char *title, int javascript, int width,
+	    int autorefresh)
+{
+  char w[30];
+
+  if(width > 0)
+    snprintf(w, sizeof(w), "width: %dpx; ", width);
+  else
+    w[0] = 0;
+
+  tcp_qprintf(tq, 
+	      "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" "
+	      "http://www.w3.org/TR/html4/strict.dtd\">\r\n"
+	      "<html><head>\r\n"
+	      "<title>%s</title>\r\n"
+	      "<meta http-equiv=\"Content-Type\" "
+	      "content=\"text/html; charset=utf-8\">\r\n", title);
+
+  if(autorefresh) 
+    tcp_qprintf(tq, 
+		"<meta http-equiv=\"refresh\" content=\"%d\">\r\n",
+		autorefresh);
+
+  tcp_qprintf(tq, 
+	      "<link href=\"/css.css\" rel=\"stylesheet\" type=\"text/css\">"
+	      );
+
+  tcp_qprintf(tq,
+             "<style type=\"text/css\">\r\n"
+            "<!--\r\n"
+	      "body {margin: 4px 4px; "
+	      "font: 75% Verdana, Arial, Helvetica, sans-serif; "
+	      "%s margin-right: auto; margin-left: auto;}\r\n"
 	      "-->\r\n"
 	      "</style>", w);
+
 
   if(javascript) {
     tcp_qprintf(tq, 
 		"<script type=\"text/javascript\" "
 		"src=\"http://www.olebyn.nu/hts/overlib.js\"></script>\r\n");
-
-
-
-    tcp_qprintf(tq,
-		"<script language=\"javascript\">\r\n"
-		"<!-- Begin\r\n"
-		"function epop() {\r\n"
-		"  props=window.open(epop.arguments[0],"
-		"'poppage', 'toolbars=0, scrollbars=0, location=0, "
-		"statusbars=0, menubars=0, resizable=0, "
-		"width=600, height=300 left = 100, top = 100');\r\n}\r\n"
-		"// End -->\r\n"
-		"</script>\r\n");
   }
   /* BODY start */
   
@@ -434,6 +445,8 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
   top_menu(hc, &tq);
 
   TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
+    if(tcg->tcg_hidden)
+      continue;
 
     box_top(&tq, "box");
 
@@ -490,7 +503,7 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
   epg_unlock();
 
   html_footer(&tq);
-  http_output_queue(hc, &tq, "text/html; charset=UTF-8");
+  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
   return 0;
 }
 
@@ -584,7 +597,7 @@ page_channel(http_connection_t *hc, const char *remain, void *opaque)
   epg_unlock();
 
   html_footer(&tq);
-  http_output_queue(hc, &tq, "text/html; charset=UTF-8");
+  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
   return 0;
 }
 
@@ -714,7 +727,7 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
   box_bottom(&tq);
   tcp_qprintf(&tq, "</form>\r\n");
   html_footer(&tq);
-  http_output_queue(hc, &tq, "text/html; charset=UTF-8");
+  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
 
   epg_unlock();
 
@@ -852,7 +865,7 @@ page_pvrlog(http_connection_t *hc, const char *remain, void *opaque)
   box_bottom(&tq);
   tcp_qprintf(&tq, "</form>\r\n");
   html_footer(&tq);
-  http_output_queue(hc, &tq, "text/html; charset=UTF-8");
+  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
 
   return 0;
 }
@@ -1215,7 +1228,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_qprintf(&tq, "</div>");
   html_footer(&tq);
-  http_output_queue(hc, &tq, "text/html; charset=UTF-8");
+  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
   return 0;
 }
 
@@ -1270,6 +1283,8 @@ page_chgroups(http_connection_t *hc, const char *remain, void *opaque)
 
 
   TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
+    if(tcg->tcg_hidden)
+      continue;
 
     tcp_qprintf(&tq, "<form method=\"get\" action=\"/chgrp\">");
 
@@ -1298,15 +1313,16 @@ page_chgroups(http_connection_t *hc, const char *remain, void *opaque)
 
     tcp_qprintf(&tq, "</div>");
     box_bottom(&tq);
-    tcp_qprintf(&tq, "</form><br>\r\n");
+    tcp_qprintf(&tq, "</form>\r\n");
   }
 
 
   tcp_qprintf(&tq, "<form method=\"get\" action=\"/chgrp\">");
 
   box_top(&tq, "box");
-  tcp_qprintf(&tq, "<div class=\"content3\">"
-	      "<input type=\"text\" name=\"newgrpname\"> "
+  tcp_qprintf(&tq, "<div class=\"content\">"
+	      "<input type=\"text\" name=\"newgrpname\""
+	      " style=\"border: 1px dotted #000000\"> "
 	      "<input type=\"submit\" class=\"knapp\" name=\"newgrp\""
 	      " value=\"Add new group\">"
 	      "</div>");
@@ -1314,10 +1330,100 @@ page_chgroups(http_connection_t *hc, const char *remain, void *opaque)
   box_bottom(&tq);
   tcp_qprintf(&tq, "</form><br>\r\n");
 
-  http_output_queue(hc, &tq, "text/html; charset=UTF-8");
+  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
   return 0;
 }
 
+
+/**
+ * Manage channels
+ */
+static int
+page_chadm(http_connection_t *hc, const char *remain, void *opaque)
+{
+  tcp_queue_t tq;
+  th_channel_t *ch;
+  int simple = is_client_simple(hc);
+  
+  if(!html_verify_access(hc, "admin"))
+    return HTTP_STATUS_UNAUTHORIZED;
+
+  tcp_init_queue(&tq, -1);
+  html_header(&tq, "HTS/tvheadend", !simple, 700, 0);
+  top_menu(hc, &tq);
+
+  LIST_FOREACH(ch, &channels, ch_global_link) {
+    tcp_qprintf(&tq, 
+		"<iframe src=\"/editchannel/%d\" "
+		"height=\"50\" width=\"700\" frameborder=\"0\"></iframe>\r\n",
+		ch->ch_tag);
+  }
+
+  html_footer(&tq);
+  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
+  return 0;
+}
+
+/**
+ * Edit a single channel
+ */
+static int
+page_editchannel(http_connection_t *hc, const char *remain, void *opaque)
+{
+  tcp_queue_t tq;
+  th_channel_t *ch;
+  th_channel_group_t *tcg, *dis;
+  const char *grp;
+  if(!html_verify_access(hc, "admin"))
+    return HTTP_STATUS_UNAUTHORIZED;
+
+  if(remain == NULL || (ch = channel_by_tag(atoi(remain))) == NULL)
+    return 404;
+  
+  if((grp = http_arg_get(&hc->hc_url_args, "grp")) != NULL) {
+    tcg = channel_group_find(grp, 1);
+    channel_set_group(ch, tcg);
+  }
+  dis = channel_group_find("-disabled-", 1);
+
+  tcp_init_queue(&tq, -1);
+  html_header(&tq, "HTS/tvheadend", 0, 700, 0);
+
+  tcp_qprintf(&tq, 
+	      "<form method=\"get\" action=\"/editchannel/%d\">",
+	      ch->ch_tag);
+
+  box_top(&tq, "box");
+
+  tcp_qprintf(&tq, 
+	      "<div class=\"content\">"
+	      "<span style=\"overflow: hidden; width: 200px; float: left\">"
+	      "%s</span>"
+	      "<span style=\"width: 250px\">"
+	      "<select name=\"grp\" class=\"drop\" "
+	      "onChange=\"this.form.submit()\">",
+	      ch->ch_name);
+
+  TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
+    if(tcg->tcg_hidden)
+      continue;
+    tcp_qprintf(&tq, "<option%s>%s</option>",
+		ch->ch_group == tcg ? " selected" : "",
+		tcg->tcg_name);
+  }
+
+  tcp_qprintf(&tq, "<option%s>%s</option></select></span>",
+	      ch->ch_group == dis ? " selected" : "",
+	      dis->tcg_name);
+
+  tcp_qprintf(&tq, "<br></div>");
+  box_bottom(&tq);
+  tcp_qprintf(&tq, "</form>");
+
+  html_footer(&tq);
+  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
+  return 0;
+}
 
 
 
@@ -1333,4 +1439,7 @@ htmlui_start(void)
   http_path_add("/pvrlog", NULL, page_pvrlog);
   http_path_add("/status", NULL, page_status);
   http_path_add("/chgrp", NULL, page_chgroups);
+  http_path_add("/chadm", NULL, page_chadm);
+  http_path_add("/editchannel", NULL, page_editchannel);
+  http_path_add("/css.css", NULL, page_css);
 }

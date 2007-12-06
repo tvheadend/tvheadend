@@ -628,6 +628,7 @@ typedef struct th_channel_group {
   struct th_channel_queue tcg_channels;
   int tcg_tag;
   int tcg_cant_delete_me;
+  int tcg_hidden;
 
 } th_channel_group_t;
 
