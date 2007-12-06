@@ -139,18 +139,54 @@ http_rc2str(int code)
   }
 }
 
+static const char *cachedays[7] = {
+  "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+};
+
+static const char *cachemonths[12] = {
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov",
+  "Dec"
+};
+
 /**
  * If current version mandates it, send a HTTP reply header back
  */
-void
-http_output_reply_header(http_connection_t *hc, int rc)
+static void
+http_output_reply_header(http_connection_t *hc, int rc, int maxage)
 {
+  struct tm tm0, *tm;
+  time_t t;
+
   if(hc->hc_version < HTTP_VERSION_1_0)
     return;
   
   http_printf(hc, "%s %d %s\r\n", val2str(hc->hc_version, HTTP_versiontab),
 	      rc, http_rc2str(rc));
-  http_printf(hc, "Cache-Control: no-cache\r\n");
+
+  if(maxage == 0) {
+    http_printf(hc, "Cache-Control: no-cache\r\n");
+  } else {
+    t = dispatch_clock;
+
+    tm = gmtime_r(&t, &tm0);
+    http_printf(hc, 
+		"Last-Modified: %s, %d %s %d %d:%d:%d GMT\r\n",
+		cachedays[tm->tm_wday],	tm->tm_year + 1900,
+		cachemonths[tm->tm_mon], tm->tm_mday,
+		tm->tm_hour, tm->tm_min, tm->tm_sec);
+
+    t += maxage;
+
+    tm = gmtime_r(&t, &tm0);
+    http_printf(hc, 
+		"Expires: %s, %d %s %d %d:%d:%d GMT\r\n",
+		cachedays[tm->tm_wday],	tm->tm_year + 1900,
+		cachemonths[tm->tm_mon], tm->tm_mday,
+		tm->tm_hour, tm->tm_min, tm->tm_sec);
+
+    http_printf(hc, "Cache-Control: max-age=%d\r\n", maxage);
+  }
+
   http_printf(hc, "Server: HTS/tvheadend\r\n");
   http_printf(hc, "Connection: %s\r\n", 
 	      hc->hc_keep_alive ? "Keep-Alive" : "Close");
@@ -166,7 +202,7 @@ http_error(http_connection_t *hc, int error)
   char ret[300];
   const char *errtxt = http_rc2str(error);
 
-  http_output_reply_header(hc, error);
+  http_output_reply_header(hc, error, 0);
 
   snprintf(ret, sizeof(ret),
 	   "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\r\n"
@@ -193,9 +229,10 @@ http_error(http_connection_t *hc, int error)
  * Send an HTTP OK and post data from a tcp queue
  */
 void
-http_output_queue(http_connection_t *hc, tcp_queue_t *tq, const char *content)
+http_output_queue(http_connection_t *hc, tcp_queue_t *tq, const char *content,
+		  int maxage)
 {
-  http_output_reply_header(hc, 200);
+  http_output_reply_header(hc, 200, maxage);
 
   if(hc->hc_version >= HTTP_VERSION_1_0) {
     http_printf(hc, 
