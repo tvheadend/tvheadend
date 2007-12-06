@@ -746,9 +746,9 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   uint8_t dtag, dlen;
 
   char provider[256];
-  char chname[256];
+  char chname0[256], *chname;
   uint8_t stype;
-  int ret = 0;
+  int ret = 0, l;
 
   if(len < 8)
     return -1;
@@ -779,7 +779,9 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       break;
 
     stype = 0;
-    
+
+    chname = NULL;
+
     while(dllen > 2) {
       dtag = ptr[0];
       dlen = ptr[1];
@@ -793,15 +795,27 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       case DVB_DESC_SERVICE:
 	if(dvb_desc_service(ptr, dlen, &stype,
 			    provider, sizeof(provider),
-			    chname, sizeof(chname)) < 0)
+			    chname0, sizeof(chname0)) < 0) {
 	  stype = 0;
+	} else {
+	  chname = chname0;
+	  /* Some providers insert spaces */
+	  while(*chname <= 32 && *chname != 0)
+	    chname++;
+
+	  l = strlen(chname);
+	  while(l > 1 && chname[l - 1] <= 32)
+	    l--;
+
+	}
 	break;
       }
 
       len -= dlen; ptr += dlen; dllen -= dlen;
     }
 
-    switch(stype) {
+    
+    if(chname != NULL) switch(stype) {
 
     case DVB_ST_SDTV:
     case DVB_ST_HDTV:
