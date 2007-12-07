@@ -38,4 +38,6 @@ th_stream_t *transport_add_stream(th_transport_t *t, int pid,
 
 void transport_set_priority(th_transport_t *t, int prio);
 
+void transport_move(th_transport_t *t, th_channel_t *ch);
+
 #endif /* TRANSPORTS_H */

@@ -438,3 +438,15 @@ transport_set_priority(th_transport_t *t, int prio)
   t->tht_prio = prio;
   LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
 }
+
+
+/**
+ *
+ */
+void
+transport_move(th_transport_t *t, th_channel_t *ch)
+{
+  LIST_REMOVE(t, tht_channel_link);
+  t->tht_channel = ch;
+  LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
+}
