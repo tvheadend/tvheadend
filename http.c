@@ -260,7 +260,7 @@ http_redirect(http_connection_t *hc, const char *location)
 
   tcp_init_queue(&tq, -1);
 
-  tcp_qprintf(&tq, "Please follow <a href=\"%s\"\"></a>");
+  tcp_qprintf(&tq, "Please follow <a href=\"%s\"\"></a>", location);
 
   http_printf(hc,
 	      "Location: %s\r\n"
