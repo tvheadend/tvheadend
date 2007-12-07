@@ -227,6 +227,7 @@ check_overlap0(th_channel_t *ch, event_t *a)
     
     if(b->e_duration < 1) {
       epg_event_destroy(ch, b);
+      return 1;
     }
   } else {
     a->e_duration -= overshot;
