@@ -1597,6 +1597,8 @@ page_updatechannel(http_connection_t *hc, const char *remain, void *opaque)
     }
   }
   
+  channel_settings_write();
+
   snprintf(buf, sizeof(buf), "/editchannel/%d", ch->ch_tag);
   http_redirect(hc, buf);
   return 0;

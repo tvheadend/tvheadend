@@ -407,7 +407,7 @@ channel_settings_write(void)
       fprintf(fp, "\tchannel {\n"
 	      "\t\tname = %s\n", ch->ch_name);
       if(ch->ch_teletext_rundown)
-	fprintf(fp, "\t\tteletext-rundown = %d", ch->ch_teletext_rundown);
+	fprintf(fp, "\t\tteletext-rundown = %d\n", ch->ch_teletext_rundown);
       fprintf(fp, "\t}\n");
     }
     fprintf(fp, "}\n");
