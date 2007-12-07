@@ -389,7 +389,6 @@ dvb_find_transport(th_dvb_mux_instance_t *tdmi, uint16_t tid,
   t->tht_stop_feed  = dvb_stop_feed;
   t->tht_dvb_mux = tdm;
 
-  t->tht_prio = 50;
   snprintf(tmp, sizeof(tmp), "%s:%04x:%04x", tdm->tdm_name, tid, sid);
 
   free((void *)t->tht_uniquename);
@@ -852,6 +851,11 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	  /* Not yet mapped to a channel */
 	  if(LIST_FIRST(&t->tht_streams) != NULL) {
 	    /* We have streams, map it */
+	    if(t->tht_scrambled)
+	      t->tht_prio = 75;
+	    else
+	      t->tht_prio = 25;
+
 	    transport_set_channel(t, channel_find(chname, 1, NULL));
 	  } else {
 	    if(t->tht_pmt_seen == 0)
