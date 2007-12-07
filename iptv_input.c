@@ -241,6 +241,10 @@ iptv_configure_transport(th_transport_t *t, const char *iptv_type,
   else
     t->tht_network = strdup(inet_ntoa(t->tht_iptv_group_addr));
 
+  snprintf(buf, sizeof(buf), "IPTV:%s:%d",
+	   inet_ntoa(t->tht_iptv_group_addr), t->tht_iptv_port);
+  t->tht_uniquename = strdup(buf);
+
   t->tht_channel = channel_find(channel_name, 1, NULL);
   LIST_INSERT_HEAD(&iptv_probing_transports, t, tht_adapter_link);
   startupcounter++;

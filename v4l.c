@@ -98,6 +98,8 @@ v4l_configure_transport(th_transport_t *t, const char *muxname,
 
   t->tht_network = strdup("Analog TV");
   t->tht_provider = strdup("Analog TV");
+  snprintf(buf, sizeof(buf), "ANALOG:%u", t->tht_v4l_frequency);
+  t->tht_uniquename = strdup(buf);
 
   transport_link(t, channel_find(channel_name, 1, NULL));
   return 0;

@@ -116,6 +116,8 @@ avgen_init(void)
   t->tht_provider = strdup("HTS Tvheadend");
   t->tht_network = strdup("Internal");
 
+  t->tht_uniquename = strdup("TEST1");
+
   transport_link(t, ch);
 }
 
