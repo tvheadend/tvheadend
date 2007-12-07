@@ -132,6 +132,8 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src,
 	in++;
 	inlen--;
 	continue;
+      } else {
+	return -1;
       }
     }
   }
