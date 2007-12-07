@@ -112,8 +112,7 @@ channel_group_find(const char *name, int create)
 
   TAILQ_INSERT_TAIL(&all_channel_groups, tcg, tcg_global_link);
 
-  if(!dontwritesettings)
-    channel_settings_write();
+  channel_settings_write();
 
   return tcg;
 }
@@ -132,8 +131,7 @@ channel_set_group(th_channel_t *ch, th_channel_group_t *tcg)
 
   ch->ch_group = tcg;
   TAILQ_INSERT_SORTED(&tcg->tcg_channels, ch, ch_group_link, channelcmp);
-  if(!dontwritesettings)
-    channel_settings_write();
+  channel_settings_write();
 }
 
 /**
@@ -392,8 +390,9 @@ channel_settings_write(void)
   FILE *fp;
   th_channel_group_t *tcg;
   th_channel_t *ch;
+  th_transport_t *t;
 
-  if(settingsfile == NULL)
+  if(dontwritesettings || startupcounter > 0 || settingsfile == NULL)
     return;
 
   fp = fopen(settingsfile, "w+");
@@ -404,6 +403,9 @@ channel_settings_write(void)
     fprintf(fp, "channel-group {\n"
 	    "\tname = %s\n", tcg->tcg_name);
     TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
+      if(LIST_FIRST(&ch->ch_transports) == NULL)
+	continue;
+
       fprintf(fp, "\tchannel {\n"
 	      "\t\tname = %s\n", ch->ch_name);
       if(ch->ch_teletext_rundown)
@@ -411,6 +413,20 @@ channel_settings_write(void)
       fprintf(fp, "\t}\n");
     }
     fprintf(fp, "}\n");
+  }
+
+  LIST_FOREACH(t, &all_transports, tht_global_link) {
+    if(t->tht_channel == NULL)
+      continue;
+
+    fprintf(fp, "transport {\n"
+	    "\tuniquename = %s\n"
+	    "\tchannel = %s\n"
+	    "\tprio = %d\n"
+	    "}\n",
+	    t->tht_uniquename,
+	    t->tht_channel->ch_name,
+	    t->tht_prio);
   }
   fclose(fp);
 }

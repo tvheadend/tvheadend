@@ -53,6 +53,7 @@
 #include "pes.h"
 #include "buffer.h"
 #include "plugin.h"
+#include "channels.h"
 
 static dtimer_t transport_monitor_timer;
 
@@ -387,11 +388,28 @@ transport_set_channel(th_transport_t *t, th_channel_t *ch)
   th_stream_t *st;
   char *chname;
   const char *n;
-
+  config_entry_t *ce;
   char pid[30];
   char lang[30];
 
   assert(t->tht_uniquename != NULL);
+
+  TAILQ_FOREACH(ce, &settings_list, ce_link) {
+    if(ce->ce_type != CFG_SUB || strcasecmp("transport", ce->ce_key))
+      continue;
+
+    n = config_get_str_sub(&ce->ce_sub, "uniquename", NULL);
+    if(n != NULL && !strcmp(n, t->tht_uniquename))
+      break;
+  }
+
+  if(ce != NULL) {
+    t->tht_prio = atoi(config_get_str_sub(&ce->ce_sub, "prio", "0"));
+    n = config_get_str_sub(&ce->ce_sub, "channel", NULL);
+    if(n != NULL)
+      ch = channel_find(n, 1, NULL); 
+  }
+
   t->tht_channel = ch;
   LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
 
@@ -437,6 +455,7 @@ transport_set_priority(th_transport_t *t, int prio)
   LIST_REMOVE(t, tht_channel_link);
   t->tht_prio = prio;
   LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
+  channel_settings_write();
 }
 
 
@@ -449,4 +468,5 @@ transport_move(th_transport_t *t, th_channel_t *ch)
   LIST_REMOVE(t, tht_channel_link);
   t->tht_channel = ch;
   LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
+  channel_settings_write();
 }

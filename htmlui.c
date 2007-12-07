@@ -460,6 +460,9 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
     tcp_qprintf(&tq, "<br>");
 
     TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
+      if(LIST_FIRST(&ch->ch_transports) == NULL)
+	continue;
+
       box_top(&tq, "box");
       tcp_qprintf(&tq, "<div class=\"content3\">");
 
@@ -1550,11 +1553,11 @@ static int
 page_updatechannel(http_connection_t *hc, const char *remain, void *opaque)
 {
   th_channel_t *ch, *ch2;
-  th_transport_t *t;
+  th_transport_t *t, **tv;
   th_channel_group_t *tcg;
   const char *grp, *s;
   char buf[100];
-  int pri;
+  int pri, i, n;
 
   if(!html_verify_access(hc, "admin"))
     return HTTP_STATUS_UNAUTHORIZED;
@@ -1587,7 +1590,20 @@ page_updatechannel(http_connection_t *hc, const char *remain, void *opaque)
     channel_set_group(ch, tcg);
   }
 
-  LIST_FOREACH(t, &ch->ch_transports, tht_channel_link) {
+  /* We are going to rearrange listorder by changing priority, so we
+     cannot just loop the list */
+
+  n = 0;
+  LIST_FOREACH(t, &ch->ch_transports, tht_channel_link)
+    n++;
+
+  tv = alloca(n * sizeof(th_transport_t *));
+  n = 0;
+  LIST_FOREACH(t, &ch->ch_transports, tht_channel_link)
+    tv[n++] = t;
+  
+  for(i = 0; i < n; i++) {
+    t = tv[i];
     s = http_arg_get(&hc->hc_url_args, t->tht_uniquename);
     if(s != NULL) {
       pri = atoi(s);
@@ -1597,8 +1613,6 @@ page_updatechannel(http_connection_t *hc, const char *remain, void *opaque)
     }
   }
   
-  channel_settings_write();
-
   snprintf(buf, sizeof(buf), "/editchannel/%d", ch->ch_tag);
   http_redirect(hc, buf);
   return 0;

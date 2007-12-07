@@ -203,6 +203,8 @@ main(int argc, char **argv)
   while(running) {
 
     if(startupcounter == 0) {
+      channel_settings_write();
+
       startupcounter = -1;
       syslog(LOG_NOTICE, 
 	     "Initial input setup completed, starting output modules");
