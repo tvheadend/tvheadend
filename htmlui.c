@@ -38,6 +38,7 @@
 #include "dvb.h"
 #include "v4l.h"
 #include "iptv_input.h"
+#include "transports.h"
 
 static struct strtab recstatustxt[] = {
   { "Recording scheduled",HTSTV_PVR_STATUS_SCHEDULED      },
@@ -156,6 +157,8 @@ page_css(http_connection_t *hc, const char *remain, void *opaque)
 	      ".knapp:hover {border: 1px dotted #000000; background: #aaaa66}"
 	      ""
 	      ".drop {border: 1px dotted #000000; background: #ddddaa} "
+	      ""
+	      ".prioval {border: 0px; background: #ddddaa} "
 	      ""
 	      "#meny {margin: 0; padding: 0}\r\n"
 	      "#meny li{display: inline; list-style-type: none;}\r\n"
@@ -1342,6 +1345,46 @@ static int
 page_chadm(http_connection_t *hc, const char *remain, void *opaque)
 {
   tcp_queue_t tq;
+  int simple = is_client_simple(hc);
+
+  if(!html_verify_access(hc, "admin"))
+    return HTTP_STATUS_UNAUTHORIZED;
+
+  tcp_init_queue(&tq, -1);
+  html_header(&tq, "HTS/tvheadend", !simple, 800, 0);
+  top_menu(hc, &tq);
+
+  tcp_qprintf(&tq,
+	      "<table border=\"0\" cellspacing=\"0\" cellpadding=\"5\"> "
+	      "<tr><td>");
+
+  box_top(&tq, "box");
+
+  tcp_qprintf(&tq,
+	      "<div class=\"content\" style=\"width: 260px\">"
+	      "<iframe src=\"/chadm2\" frameborder=\"0\" "
+	      "width=\"250\" height=\"600\"></iframe>"
+	      "</div>");
+
+  box_bottom(&tq);
+
+  tcp_qprintf(&tq,
+	      "</td><td>"
+	      "<iframe name=\"chf\" frameborder=\"0\" "
+	      "width=\"530\" height=\"600\" scrolling=\"no\"></iframe>"
+	      "</td></tr></table>");
+
+  html_footer(&tq);
+  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
+  return 0;
+}
+
+
+
+static int
+page_chadm2(http_connection_t *hc, const char *remain, void *opaque)
+{
+  tcp_queue_t tq;
   th_channel_t *ch;
   int simple = is_client_simple(hc);
   
@@ -1349,20 +1392,19 @@ page_chadm(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_UNAUTHORIZED;
 
   tcp_init_queue(&tq, -1);
-  html_header(&tq, "HTS/tvheadend", !simple, 700, 0);
-  top_menu(hc, &tq);
+  html_header(&tq, "HTS/tvheadend", !simple, 230, 0);
 
   LIST_FOREACH(ch, &channels, ch_global_link) {
     tcp_qprintf(&tq, 
-		"<iframe src=\"/editchannel/%d\" "
-		"height=\"50\" width=\"700\" frameborder=\"0\"></iframe>\r\n",
-		ch->ch_tag);
+		"<a href=\"/editchannel/%d\" target=\"chf\">%s</a><br>",
+		ch->ch_tag, ch->ch_name);
   }
 
   html_footer(&tq);
   http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
   return 0;
 }
+
 
 /**
  * Edit a single channel
@@ -1371,35 +1413,32 @@ static int
 page_editchannel(http_connection_t *hc, const char *remain, void *opaque)
 {
   tcp_queue_t tq;
-  th_channel_t *ch;
+  th_channel_t *ch, *ch2;
   th_channel_group_t *tcg, *dis;
-  const char *grp;
+  th_transport_t *t;
+
   if(!html_verify_access(hc, "admin"))
     return HTTP_STATUS_UNAUTHORIZED;
 
   if(remain == NULL || (ch = channel_by_tag(atoi(remain))) == NULL)
     return 404;
   
-  if((grp = http_arg_get(&hc->hc_url_args, "grp")) != NULL) {
-    tcg = channel_group_find(grp, 1);
-    channel_set_group(ch, tcg);
-  }
   dis = channel_group_find("-disabled-", 1);
 
   tcp_init_queue(&tq, -1);
-  html_header(&tq, "HTS/tvheadend", 0, 700, 0);
+  html_header(&tq, "HTS/tvheadend", 0, 530, 0);
 
   tcp_qprintf(&tq, 
-	      "<form method=\"get\" action=\"/editchannel/%d\">",
+	      "<form method=\"get\" action=\"/updatechannel/%d\">",
 	      ch->ch_tag);
 
   box_top(&tq, "box");
 
   tcp_qprintf(&tq, 
 	      "<div class=\"content\">"
-	      "<span style=\"overflow: hidden; width: 200px; float: left\">"
-	      "%s</span>"
-	      "<span style=\"width: 250px\">"
+	      "<span style=\"font-weight:bold;\">"
+	      "<center>%s</center></span><br>"
+	      "Channel group: <span style=\"width: 250px\">"
 	      "<select name=\"grp\" class=\"drop\" "
 	      "onChange=\"this.form.submit()\">",
 	      ch->ch_name);
@@ -1416,12 +1455,126 @@ page_editchannel(http_connection_t *hc, const char *remain, void *opaque)
 	      ch->ch_group == dis ? " selected" : "",
 	      dis->tcg_name);
 
-  tcp_qprintf(&tq, "<br></div>");
+  tcp_qprintf(&tq, "<br><br>\r\n");
+
+  tcp_qprintf(&tq, 
+	      "<span style=\"font-weight:bold;\">"
+	      "<center>Transports</center></span><br>"
+	      "<table border=\"1\" cellspacing=\"0\" cellpadding=\"0\" "
+	      "style=\"font: 75% Verdana, Arial, Helvetica, sans-serif\">");
+
+  tcp_qprintf(&tq, 
+	      "<tr>"
+	      "<th width=\"45\">Priority</td>"
+	      "<th width=\"60\">Scrambled</td>"
+	      "<th width=\"130\">Provider</td>"
+	      "<th width=\"130\">Network</td>"
+	      "<th width=\"140\">Transport ID</td>"
+	      "</tr>");
+
+
+  LIST_FOREACH(t, &ch->ch_transports, tht_channel_link) {
+    tcp_qprintf(&tq, 
+		"<tr>"
+		"<td><center>"
+		"<input class=\"prioval\" type=\"text\" name=\"%s\" "
+		"maxlength=\"4\" value=\"%d\" size=\"5\" "
+		"onChange=\"this.form.submit()\">"
+		"</center></td>"
+		"<td><center>%s</center></td>"
+		"<td><center>%s</center></td>"
+		"<td><center>%s</center></td>"
+		"<td><center>%s</center></td>"
+		"</tr>",
+		t->tht_uniquename,
+		t->tht_prio,
+		t->tht_scrambled ? "Yes" : "No",
+		t->tht_provider,
+		t->tht_network,
+		t->tht_uniquename);
+
+  }
+
+  tcp_qprintf(&tq, "</table><br><br>\r\n");
+
+
+  tcp_qprintf(&tq, 
+	      "Merge with channel: <span style=\"width: 250px\">"
+	      "<select name=\"merge\" class=\"drop\" "
+	      "onChange=\"this.form.submit()\">");
+  
+  tcp_qprintf(&tq, "<option selected>-select-</option>");
+
+  LIST_FOREACH(ch2, &channels, ch_global_link) {
+    if(ch2 == ch)
+      continue;
+    tcp_qprintf(&tq, "<option>%s</option>", ch2->ch_name);
+  }
+  tcp_qprintf(&tq, "</select></span>");
+
+
+  tcp_qprintf(&tq, "</div>");
   box_bottom(&tq);
   tcp_qprintf(&tq, "</form>");
 
   html_footer(&tq);
   http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
+  return 0;
+}
+
+/**
+ * Update a single channel, then redirect back to the edit page
+ */
+static int
+page_updatechannel(http_connection_t *hc, const char *remain, void *opaque)
+{
+  th_channel_t *ch, *ch2;
+  th_transport_t *t;
+  th_channel_group_t *tcg;
+  const char *grp, *s;
+  char buf[100];
+  int pri;
+
+  if(!html_verify_access(hc, "admin"))
+    return HTTP_STATUS_UNAUTHORIZED;
+
+  if(remain == NULL || (ch = channel_by_tag(atoi(remain))) == NULL)
+    return 404;
+
+  if((s = http_arg_get(&hc->hc_url_args, "merge")) != NULL) {
+    ch2 = channel_find(s, 0, NULL);
+    if(ch2 != NULL) {
+
+      if(LIST_FIRST(&ch->ch_subscriptions) == NULL) {
+	while((t = LIST_FIRST(&ch->ch_transports)) != NULL) {
+	  transport_move(t, ch2);
+	}
+      }
+
+      /* Redirect to new channel */
+      snprintf(buf, sizeof(buf), "/editchannel/%d", ch2->ch_tag);
+      http_redirect(hc, buf);
+      return 0;
+    }
+  }
+
+  if((grp = http_arg_get(&hc->hc_url_args, "grp")) != NULL) {
+    tcg = channel_group_find(grp, 1);
+    channel_set_group(ch, tcg);
+  }
+
+  LIST_FOREACH(t, &ch->ch_transports, tht_channel_link) {
+    s = http_arg_get(&hc->hc_url_args, t->tht_uniquename);
+    if(s != NULL) {
+      pri = atoi(s);
+      if(pri >= 0 && pri <= 9999) {
+	transport_set_priority(t, pri);
+      }
+    }
+  }
+  
+  snprintf(buf, sizeof(buf), "/editchannel/%d", ch->ch_tag);
+  http_redirect(hc, buf);
   return 0;
 }
 
@@ -1440,6 +1593,8 @@ htmlui_start(void)
   http_path_add("/status", NULL, page_status);
   http_path_add("/chgrp", NULL, page_chgroups);
   http_path_add("/chadm", NULL, page_chadm);
+  http_path_add("/chadm2", NULL, page_chadm2);
   http_path_add("/editchannel", NULL, page_editchannel);
+  http_path_add("/updatechannel", NULL, page_updatechannel);
   http_path_add("/css.css", NULL, page_css);
 }
