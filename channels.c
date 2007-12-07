@@ -17,7 +17,7 @@
  */
 
 #include <pthread.h>
-
+#include <assert.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
@@ -261,6 +261,8 @@ transport_set_channel(th_transport_t *t, th_channel_t *ch)
 
   char pid[30];
   char lang[30];
+
+  assert(t->tht_uniquename != NULL);
   t->tht_channel = ch;
   LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
 
