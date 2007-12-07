@@ -226,7 +226,10 @@ typedef struct th_dvb_adapter {
 
   int tda_running;
 
-  pthread_mutex_t tda_mux_lock;
+  pthread_mutex_t tda_lock;
+  pthread_cond_t tda_cond;
+  TAILQ_HEAD(, dvb_fe_cmd) tda_fe_cmd_queue;
+  int tda_fe_errors;
 
   int tda_fe_fd;
   struct dvb_frontend_info *tda_fe_info;

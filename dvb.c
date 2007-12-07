@@ -69,15 +69,59 @@ static void dvb_mux_scanner(void *aux, int64_t now);
 
 static void dvb_fec_monitor(void *aux, int64_t now);
 
+typedef struct dvb_fe_cmd {
+  TAILQ_ENTRY(dvb_fe_cmd) link;
+  struct dvb_frontend_parameters *feparams;
+} dvb_fe_cmd_t;
+
+
+
+
+
+static void *
+tda_monitor1(void *aux)
+{
+  th_dvb_adapter_t *tda = aux;
+  struct timespec ts;
+  dvb_fe_cmd_t *c;
+  int i, v;
+
+  while(1) {
+    ts.tv_sec = time(NULL) + 1;
+    ts.tv_nsec = 0;
+    
+    pthread_mutex_lock(&tda->tda_lock);
+    pthread_cond_timedwait(&tda->tda_cond, &tda->tda_lock, &ts);
+    c = TAILQ_FIRST(&tda->tda_fe_cmd_queue);
+    if(c != NULL)
+      TAILQ_REMOVE(&tda->tda_fe_cmd_queue, c, link);
+
+    pthread_mutex_unlock(&tda->tda_lock);
+
+    if(c != NULL) {
+      i = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, c->feparams);
+      if(i != 0) {
+	syslog(LOG_ERR, "\"%s\" tuning to %dHz"
+	       " -- Front configuration failed -- %s",
+	       tda->tda_path, c->feparams->frequency,
+	       strerror(errno));
+      }
+      free(c);
+    }
+    ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &v);
+    tda->tda_fe_errors = v;
+  }
+}
+
+
+
 static void
 tda_parse_status(th_dvb_adapter_t *tda, fe_status_t fe_status)
 {
   th_dvb_mux_instance_t *tdmi;
-  int v;
 
   tdmi = tda->tda_mux_current;
   if(tdmi != NULL) {
-
     if(fe_status & FE_HAS_LOCK) {
       tdmi->tdmi_status = NULL;
     } else if(fe_status & FE_HAS_SYNC)
@@ -90,33 +134,30 @@ tda_parse_status(th_dvb_adapter_t *tda, fe_status_t fe_status)
       tdmi->tdmi_status = "No lock, but faint signal present";
     else
       tdmi->tdmi_status = "No signal";
+  }
+}
 
-    /* Reset FEC Error counter */
 
-    ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &v);
+static void *
+tda_monitor2(void *aux)
+{
+  th_dvb_adapter_t *tda = aux;
+  struct dvb_frontend_event ev;
+  int r, v;
+
+  while(1) {
+    r = ioctl(tda->tda_fe_fd, FE_GET_EVENT, &ev);
+    if(r == 0) {
+      tda_parse_status(tda, ev.status);
+
+      /* Read to reset */
+      ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &v);
+    }
   }
 }
 
 
 
-static void
-dvb_frontend_event(int events, void *opaque, int fd)
-{
-  th_dvb_adapter_t *tda = opaque;
-  struct dvb_frontend_event ev;
-  int r;
-
-  if(!(events & DISPATCH_PRI))
-    return;
-
-  pthread_mutex_lock(&tda->tda_mux_lock);
-
-  r = ioctl(fd, FE_GET_EVENT, &ev);
-  if(r == 0)
-    tda_parse_status(tda, ev.status);
-
-  pthread_mutex_unlock(&tda->tda_mux_lock);
-}
 
 
 
@@ -126,6 +167,7 @@ dvb_add_adapter(const char *path)
   char fname[256];
   int fe;
   th_dvb_adapter_t *tda;
+  pthread_t ptid;
 
   snprintf(fname, sizeof(fname), "%s/frontend0", path);
   
@@ -160,16 +202,20 @@ dvb_add_adapter(const char *path)
     return;
   }
   
-  pthread_mutex_init(&tda->tda_mux_lock, NULL);
+  pthread_mutex_init(&tda->tda_lock, NULL);
+  pthread_cond_init(&tda->tda_cond, NULL);
+  TAILQ_INIT(&tda->tda_fe_cmd_queue);
+
   LIST_INSERT_HEAD(&dvb_adapters_probing, tda, tda_link);
   startupcounter++;
 
   tda->tda_info = strdup(tda->tda_fe_info->name);
 
-  dispatch_addfd(tda->tda_fe_fd, dvb_frontend_event, tda, DISPATCH_PRI);
-
   syslog(LOG_INFO, "Adding adapter %s (%s)", path, tda->tda_fe_info->name);
   dtimer_arm(&tda->tda_fec_monitor_timer, dvb_fec_monitor, tda, 1);
+
+  pthread_create(&ptid, NULL, tda_monitor1, tda);
+  pthread_create(&ptid, NULL, tda_monitor2, tda);
 }
 
 
@@ -291,15 +337,12 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   th_dvb_mux_t *tdm  = tdmi->tdmi_mux;
-  fe_status_t fe_status;
-  int i;
-  
+  dvb_fe_cmd_t *c;
+
   tdmi->tdmi_state = state;
 
   if(tda->tda_mux_current == tdmi)
     return 0;
-
-  pthread_mutex_lock(&tda->tda_mux_lock);
 
   if(tda->tda_mux_current != NULL)
     tdmi_stop(tda->tda_mux_current);
@@ -310,15 +353,13 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
     syslog(LOG_DEBUG, "\"%s\" tuning to mux \"%s\"", 
 	   tda->tda_path, tdmi->tdmi_mux->tdm_title);
 
-  i = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, tdm->tdm_fe_params);
-  if(i != 0) {
-    if(maylog)
-      syslog(LOG_ERR, "\"%s\" tuning to transport \"%s\""
-	     " -- Front configuration failed -- %s",
-	     tda->tda_path, tdm->tdm_title,
-	     strerror(errno));
-    return -1;
-  }
+  c = malloc(sizeof(dvb_fe_cmd_t));
+  c->feparams = tdm->tdm_fe_params;
+
+  pthread_mutex_lock(&tda->tda_lock);
+  TAILQ_INSERT_TAIL(&tda->tda_fe_cmd_queue, c, link);
+  pthread_cond_signal(&tda->tda_cond);
+  pthread_mutex_unlock(&tda->tda_lock);
 
   dvb_tdt_add_demux(tdmi);
   dvb_eit_add_demux(tdmi);
@@ -328,13 +369,6 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
   dvb_nit_add_demux(tdmi);
 
   time(&tdmi->tdmi_got_adapter);
-
-  if(ioctl(tda->tda_fe_fd, FE_READ_STATUS, &fe_status) < 0)
-    fe_status = 0;
-
-  tda_parse_status(tda, fe_status);
-
-  pthread_mutex_unlock(&tda->tda_mux_lock);
   return 0;
 }
 
@@ -1229,8 +1263,9 @@ dvb_fec_monitor(void *aux, int64_t now)
   tdmi = tda->tda_mux_current;
 
   if(tdmi != NULL && tdmi->tdmi_status == NULL) {
-    if(ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &v) < 0)
-      v = 0;
+
+    v = tda->tda_fe_errors;
+
     tdmi->tdmi_fec_err_per_sec = (tdmi->tdmi_fec_err_per_sec * 7 + v) / 8;
 
     if(tdmi->tdmi_fec_err_per_sec > DVB_FEC_ERROR_LIMIT) {
