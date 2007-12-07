@@ -89,7 +89,7 @@ void http_start(int port);
 
 void http_arg_flush(struct http_arg_list *list);
 
-char *http_arg_get(struct http_arg_list *list, char *name);
+char *http_arg_get(struct http_arg_list *list, const char *name);
 
 void http_arg_set(struct http_arg_list *list, char *key, char *val);
 
@@ -99,6 +99,8 @@ void http_error(http_connection_t *hc, int error);
 
 void http_output_queue(http_connection_t *hc, tcp_queue_t *tq,
 		       const char *content, int maxage);
+
+int http_redirect(http_connection_t *hc, const char *location);
 
 typedef int (http_callback_t)(http_connection_t *hc, const char *remain,
 			      void *opaque);

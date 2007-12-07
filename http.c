@@ -246,6 +246,33 @@ http_output_queue(http_connection_t *hc, tcp_queue_t *tq, const char *content,
 }
 
 /**
+ * Send an HTTP REDIRECT
+ */
+int
+http_redirect(http_connection_t *hc, const char *location)
+{
+  tcp_queue_t tq;
+
+  http_output_reply_header(hc, 303, 0);
+
+  if(hc->hc_version < HTTP_VERSION_1_0)
+    return -1;
+
+  tcp_init_queue(&tq, -1);
+
+  tcp_qprintf(&tq, "Please follow <a href=\"%s\"\"></a>");
+
+  http_printf(hc,
+	      "Location: %s\r\n"
+	      "Content-Type: text/html\r\n"
+	      "Content-Length: %d\r\n"
+	      "\r\n", location, tq.tq_depth);
+  tcp_output_queue(&hc->hc_tcp_session, NULL, &tq);
+  return 0;
+}
+
+
+/**
  * HTTP GET
  */
 static void
@@ -545,7 +572,7 @@ http_arg_flush(struct http_arg_list *list)
  * Find an argument associated with a connection
  */
 char *
-http_arg_get(struct http_arg_list *list, char *name)
+http_arg_get(struct http_arg_list *list, const char *name)
 {
   http_arg_t *ra;
   LIST_FOREACH(ra, list, link)
