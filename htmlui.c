@@ -1433,15 +1433,21 @@ page_editchannel(http_connection_t *hc, const char *remain, void *opaque)
 	      ch->ch_tag);
 
   box_top(&tq, "box");
+  tcp_qprintf(&tq, 
+	      "<div class=\"contentbig\"><center><b>%s</b></center></div>",
+	      ch->ch_name);
+  box_bottom(&tq);
+  tcp_qprintf(&tq, "<br>");
 
+  box_top(&tq, "box");
   tcp_qprintf(&tq, 
 	      "<div class=\"content\">"
-	      "<span style=\"font-weight:bold;\">"
-	      "<center>%s</center></span><br>"
-	      "Channel group: <span style=\"width: 250px\">"
+	      "<div style=\"width: 170px; float: left\">"
+	      "Channel group: "
+	      "</div>"
+	      "<span style=\"width: 250px\">"
 	      "<select name=\"grp\" class=\"drop\" "
-	      "onChange=\"this.form.submit()\">",
-	      ch->ch_name);
+	      "onChange=\"this.form.submit()\">");
 
   TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
     if(tcg->tcg_hidden)
@@ -1456,6 +1462,37 @@ page_editchannel(http_connection_t *hc, const char *remain, void *opaque)
 	      dis->tcg_name);
 
   tcp_qprintf(&tq, "<br><br>\r\n");
+
+
+  tcp_qprintf(&tq, 
+	      "<div style=\"width: 170px; float: left\">"
+	      "Merge with channel: "
+	      "</div>"
+	      "<span style=\"width: 250px\">"
+	      "<select name=\"merge\" class=\"drop\" "
+	      "onChange=\"this.form.submit()\">");
+ 
+  tcp_qprintf(&tq, "<option selected>-select-</option>");
+
+  LIST_FOREACH(ch2, &channels, ch_global_link) {
+    if(ch2 == ch)
+      continue;
+    tcp_qprintf(&tq, "<option>%s</option>", ch2->ch_name);
+  }
+  tcp_qprintf(&tq, "</select></span><br><br>\r\n");
+
+  tcp_qprintf(&tq, 
+	      "<div style=\"width: 170px; float: left\">"
+	      "Teletext rundown page: "
+	      "</div>"
+	      "<span style=\"width: 250px\">"
+	      "<input class=\"drop\" type=\"text\" name=\"ttrp\" "
+	      "maxlength=\"3\" value=\"%d\" size=\"4\" "
+	      "onChange=\"this.form.submit()\"></span><br>",
+	      ch->ch_teletext_rundown);
+
+  tcp_qprintf(&tq, "<br><br>\r\n");
+
 
   tcp_qprintf(&tq, 
 	      "<span style=\"font-weight:bold;\">"
@@ -1495,23 +1532,7 @@ page_editchannel(http_connection_t *hc, const char *remain, void *opaque)
 
   }
 
-  tcp_qprintf(&tq, "</table><br><br>\r\n");
-
-
-  tcp_qprintf(&tq, 
-	      "Merge with channel: <span style=\"width: 250px\">"
-	      "<select name=\"merge\" class=\"drop\" "
-	      "onChange=\"this.form.submit()\">");
-  
-  tcp_qprintf(&tq, "<option selected>-select-</option>");
-
-  LIST_FOREACH(ch2, &channels, ch_global_link) {
-    if(ch2 == ch)
-      continue;
-    tcp_qprintf(&tq, "<option>%s</option>", ch2->ch_name);
-  }
-  tcp_qprintf(&tq, "</select></span>");
-
+  tcp_qprintf(&tq, "</table>\r\n");
 
   tcp_qprintf(&tq, "</div>");
   box_bottom(&tq);
@@ -1557,6 +1578,9 @@ page_updatechannel(http_connection_t *hc, const char *remain, void *opaque)
       return 0;
     }
   }
+
+  if((s = http_arg_get(&hc->hc_url_args, "ttrp")) != NULL)
+    ch->ch_teletext_rundown = atoi(s);
 
   if((grp = http_arg_get(&hc->hc_url_args, "grp")) != NULL) {
     tcg = channel_group_find(grp, 1);
