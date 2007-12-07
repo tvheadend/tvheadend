@@ -623,12 +623,66 @@ http_path_add(const char *path, void *opaque, http_callback_t *callback)
 
 
 /**
+ * De-escape HTTP URL
+ */
+static void
+http_deescape(char *s)
+{
+  char v, *d = s;
+
+  while(*s) {
+    if(*s == '+') {
+      *d++ = ' ';
+      s++;
+    } else if(*s == '%') {
+      s++;
+      switch(*s) {
+      case '0' ... '9':
+	v = (*s - '0') << 4;
+	break;
+      case 'a' ... 'f':
+	v = (*s - 'a' + 10) << 4;
+	break;
+      case 'A' ... 'F':
+	v = (*s - 'A' + 10) << 4;
+	break;
+      default:
+	*d = 0;
+	return;
+      }
+      s++;
+      switch(*s) {
+      case '0' ... '9':
+	v |= (*s - '0');
+	break;
+      case 'a' ... 'f':
+	v |= (*s - 'a' + 10);
+	break;
+      case 'A' ... 'F':
+	v |= (*s - 'A' + 10);
+	break;
+      default:
+	*d = 0;
+	return;
+      }
+      s++;
+
+      *d++ = v;
+    } else {
+      *d++ = *s++;
+    }
+  }
+  *d = 0;
+}
+
+
+/**
  * Parse arguments of a HTTP GET url, not perfect, but works for us
  */
 static void
 http_parse_get_args(http_connection_t *hc, char *args)
 {
-  char *k, *v, *s;
+  char *k, *v;
 
   while(args) {
     k = args;
@@ -641,13 +695,8 @@ http_parse_get_args(http_connection_t *hc, char *args)
     if(args != NULL)
       *args++ = 0;
 
-    s = v;
-    while(*s) {
-      if(*s == '+')
-	*s = ' ';
-      s++;
-    }
-
+    http_deescape(k);
+    http_deescape(v);
     http_arg_set(&hc->hc_url_args, k, v);
   }
 }
