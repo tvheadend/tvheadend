@@ -366,3 +366,75 @@ transport_add_stream(th_transport_t *t, int pid, tv_streamtype_t type)
   avgstat_init(&st->st_cc_errors, 10);
   return st;
 }
+
+
+/**
+ *
+ */
+static int
+transportcmp(th_transport_t *a, th_transport_t *b)
+{
+  return a->tht_prio - b->tht_prio;
+}
+
+
+/**
+ *
+ */
+int 
+transport_set_channel(th_transport_t *t, th_channel_t *ch)
+{
+  th_stream_t *st;
+  char *chname;
+  const char *n;
+
+  char pid[30];
+  char lang[30];
+
+  assert(t->tht_uniquename != NULL);
+  t->tht_channel = ch;
+  LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
+
+  chname = utf8toprintable(ch->ch_name);
+
+  syslog(LOG_DEBUG, "Added service \"%s\" for channel \"%s\"",
+	 t->tht_name, chname);
+  free(chname);
+
+  LIST_FOREACH(st, &t->tht_streams, st_link) {
+    if(st->st_caid != 0) {
+      n = psi_caid2name(st->st_caid);
+    } else {
+      n = htstvstreamtype2txt(st->st_type);
+    }
+    if(st->st_pid < 8192) {
+      snprintf(pid, sizeof(pid), " on pid [%d]", st->st_pid);
+    } else {
+      pid[0] = 0;
+    }
+
+    if(st->st_lang[0]) {
+      snprintf(lang, sizeof(lang), ", language \"%s\"", st->st_lang);
+    } else {
+      lang[0] = 0;
+    }
+
+    syslog(LOG_DEBUG, "   Stream \"%s\"%s%s", n, lang, pid);
+  }
+
+  return 0;
+}
+
+
+/**
+ *
+ */
+void
+transport_set_priority(th_transport_t *t, int prio)
+{
+  th_channel_t *ch = t->tht_channel;
+
+  LIST_REMOVE(t, tht_channel_link);
+  t->tht_prio = prio;
+  LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
+}
