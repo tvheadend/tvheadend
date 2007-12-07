@@ -53,39 +53,6 @@ void scanner_init(void);
 /**
  *
  */
-#if 0
-static int
-dictcmp(const char *s1, const char *s2)
-{
-  long int da, db;
-  int n1, n2;
-
-  while(1) {
-    n1 = *s1 >= '0' && *s1 <= '9' ? 1 : 0;
-    n2 = *s2 >= '0' && *s2 <= '9' ? 2 : 0;
-
-    switch(n1 | n2) {
-    case 0:
-      if(*s1 != *s2)
-        return *(const unsigned char *)s1 - *(const unsigned char *)s2;
-      if(*s1 == 0)
-        return 0;
-      s1++;
-      s2++;
-      break;
-    case 1 ... 2:
-      return *(const unsigned char *)s1 - *(const unsigned char *)s2;
-    case 3:
-      da = strtol(s1, (char **)&s1, 10);
-      db = strtol(s2, (char **)&s2, 10);
-      if(da != db)
-        return da - db;
-      break;
-    }
-  }
-}
-#endif
-
 static int
 ch_number(const char *s1)
 {
