@@ -227,6 +227,20 @@ iptv_configure_transport(th_transport_t *t, const char *iptv_type,
   st->st_got_section = iptv_parse_pat;
   st->st_section_docrc = 1;
 
+  t->tht_prio = 50;
+
+  s = config_get_str_sub(head, "provider", NULL);
+  if(s != NULL)
+    t->tht_provider = strdup(s);
+  else
+    t->tht_provider = strdup("IPTV");
+
+  s = config_get_str_sub(head, "network", NULL);
+  if(s != NULL)
+    t->tht_network = strdup(s);
+  else
+    t->tht_network = strdup(inet_ntoa(t->tht_iptv_group_addr));
+
   t->tht_channel = channel_find(channel_name, 1, NULL);
   LIST_INSERT_HEAD(&iptv_probing_transports, t, tht_adapter_link);
   startupcounter++;

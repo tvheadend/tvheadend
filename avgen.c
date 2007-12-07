@@ -113,6 +113,8 @@ avgen_init(void)
   t->tht_audio = transport_add_stream(t, -1, HTSTV_MPEG2AUDIO);
 
   t->tht_name = strdup(ch->ch_name);
+  t->tht_provider = strdup("HTS Tvheadend");
+  t->tht_network = strdup("Internal");
 
   transport_link(t, ch);
 }
