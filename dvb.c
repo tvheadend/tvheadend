@@ -33,6 +33,7 @@
 #include <linux/dvb/dmx.h>
 
 #include <libhts/htscfg.h>
+#include <ffmpeg/avstring.h>
 
 #include "tvhead.h"
 #include "dispatch.h"
@@ -56,6 +57,7 @@ static void dvb_eit_add_demux(th_dvb_mux_instance_t *tdmi);
 static void dvb_sdt_add_demux(th_dvb_mux_instance_t *tdmi);
 static void dvb_pat_add_demux(th_dvb_mux_instance_t *tdmi);
 static void dvb_cat_add_demux(th_dvb_mux_instance_t *tdmi);
+static void dvb_nit_add_demux(th_dvb_mux_instance_t *tdmi);
 
 static void tdmi_check_scan_status(th_dvb_mux_instance_t *tdmi);
 
@@ -323,6 +325,7 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
   dvb_sdt_add_demux(tdmi);
   dvb_pat_add_demux(tdmi);
   dvb_cat_add_demux(tdmi);
+  dvb_nit_add_demux(tdmi);
 
   time(&tdmi->tdmi_got_adapter);
 
@@ -363,7 +366,7 @@ dvb_find_transport(th_dvb_mux_instance_t *tdmi, uint16_t tid,
   th_transport_t *t;
   th_dvb_mux_t *tdm = tdmi->tdmi_mux;
   struct dmx_sct_filter_params fparams;
-  char pmtname[50];
+  char pmtname[50], tmp[100];
   int fd;
 
   LIST_FOREACH(t, &all_transports, tht_global_link) {
@@ -387,8 +390,11 @@ dvb_find_transport(th_dvb_mux_instance_t *tdmi, uint16_t tid,
   t->tht_dvb_mux = tdm;
 
   t->tht_prio = 50;
+  snprintf(tmp, sizeof(tmp), "%s:%04x:%04x", tdm->tdm_name, tid, sid);
 
- 
+  free((void *)t->tht_uniquename);
+  t->tht_uniquename = strdup(tmp);
+
   fd = open(tdmi->tdmi_adapter->tda_demux_path, O_RDWR);
   if(fd == -1) {
     free(t);
@@ -731,6 +737,7 @@ static int
 dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
+  th_dvb_mux_t *tdm = tdmi->tdmi_mux;
   th_transport_t *t;
   int version;
   int current_next_indicator;
@@ -749,6 +756,9 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   char chname0[256], *chname;
   uint8_t stype;
   int ret = 0, l;
+
+  if(tdm->tdm_network == NULL)
+    return -1;
 
   if(len < 8)
     return -1;
@@ -827,16 +837,26 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
       t = dvb_find_transport(tdmi, transport_stream_id, service_id, 0);
       
-      if(t == NULL)
+      if(t == NULL) {
 	ret |= 1;
-      else if(t->tht_channel == NULL) {
-	/* Not yet mapped to a channel */
-	if(LIST_FIRST(&t->tht_streams) != NULL) {
-	  /* We have streams, map it */
-	  transport_set_channel(t, channel_find(chname, 1, NULL));
-	} else {
-	  if(t->tht_pmt_seen == 0)
-	    ret |= 1; /* Return error (so scanning wont continue yet) */
+      } else {
+	t->tht_scrambled = free_ca_mode;
+
+	free((void *)t->tht_provider);
+	t->tht_provider = strdup(provider);
+
+	free((void *)t->tht_network);
+	t->tht_network = strdup(tdm->tdm_network);
+
+	if(t->tht_channel == NULL) {
+	  /* Not yet mapped to a channel */
+	  if(LIST_FIRST(&t->tht_streams) != NULL) {
+	    /* We have streams, map it */
+	    transport_set_channel(t, channel_find(chname, 1, NULL));
+	  } else {
+	    if(t->tht_pmt_seen == 0)
+	      ret |= 1; /* Return error (so scanning wont continue yet) */
+	  }
 	}
       }
       break;
@@ -997,6 +1017,94 @@ dvb_cat_add_demux(th_dvb_mux_instance_t *tdmi)
   }
 
   tdt_add(tdmi, fd, dvb_cat_callback, NULL, 1, "cat");
+}
+
+/**
+ * NIT - Network Information Table
+ */
+static int
+dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
+		 uint8_t tableid, void *opaque)
+{
+  uint8_t tag, tlen;
+  int ntl;
+  char networkname[256];
+  th_dvb_mux_t *tdm = tdmi->tdmi_mux;
+
+
+  ptr += 5;
+  len -= 5;
+
+  if(tableid != 0x40)
+    return -1;
+
+  ntl = ((ptr[0] & 0xf) << 8) | ptr[1];
+  ptr += 2;
+  len -= 2;
+  if(ntl > len)
+    return 0;
+
+  while(ntl > 2) {
+    tag = *ptr++;
+    tlen = *ptr++;
+    len -= 2;
+    ntl -= 2;
+
+    switch(tag) {
+    case DVB_DESC_NETWORK_NAME:
+      if(dvb_get_string(networkname, sizeof(networkname), ptr, tlen, "UTF8"))
+	return 0;
+
+      if(tdm->tdm_network != NULL) {
+	if(strcmp(tdm->tdm_network, networkname)) {
+	  syslog(LOG_ALERT,
+		 "DVB Mux conflict \"%s\" on \"%s\" says it's \"%s\", "
+		 "but is has alrady been reported as \"%s\"",
+		 tdm->tdm_name,
+		 tdmi->tdmi_adapter->tda_path,
+		 networkname,
+		 tdm->tdm_network);
+	}
+      } else {
+	tdm->tdm_network = strdup(networkname);
+      }
+      break;
+    }
+
+    ptr += tlen;
+    len -= tlen;
+    ntl -= tlen;
+  }
+
+  return 0;
+}
+
+
+
+static void
+dvb_nit_add_demux(th_dvb_mux_instance_t *tdmi)
+{
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  struct dmx_sct_filter_params fparams;
+  int fd;
+
+  fd = open(tda->tda_demux_path, O_RDWR);
+  if(fd == -1)
+    return;
+
+  memset(&fparams, 0, sizeof(fparams));
+  fparams.pid = 0x10;
+  fparams.timeout = 0;
+  fparams.flags = DMX_IMMEDIATE_START | DMX_CHECK_CRC;
+  fparams.filter.filter[0] = 0x00;
+  fparams.filter.mask[0] = 0x00;
+
+  if(ioctl(fd, DMX_SET_FILTER, &fparams) < 0) {
+    close(fd);
+    return;
+  }
+
+  tdt_add(tdmi, fd, dvb_nit_callback, NULL, 0, "nit");
 }
 
 

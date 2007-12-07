@@ -194,8 +194,11 @@ typedef struct th_dvb_mux {
 
   struct dvb_frontend_parameters *tdm_fe_params;
 
+  /* XXX: One of these shoud go, there has to be limits */
+
   const char *tdm_name;
   const char *tdm_title;
+  const char *tdm_network;
 
   int tdm_type;  /* really fe_type_t */
 
@@ -425,6 +428,11 @@ typedef struct th_transport {
     char pad[256]; /* for api stability */
 
  } u;
+
+  int tht_scrambled;         /* informational */
+  const char *tht_provider;
+  const char *tht_uniquename;
+  const char *tht_network;
 
 } th_transport_t;
 
