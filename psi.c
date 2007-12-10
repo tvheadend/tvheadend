@@ -190,10 +190,9 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
   ptr += 9;
   len -= 9;
 
-  if(chksvcid && sid != t->tht_dvb_service_id) {
-    printf("the service id is invalid\n");
+  if(chksvcid && sid != t->tht_dvb_service_id)
     return -1;
-  }
+
   while(dllen > 1) {
     dtag = ptr[0];
     dlen = ptr[1];
