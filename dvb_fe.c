@@ -94,9 +94,6 @@ dvb_fe_manager(void *aux)
 
       time(&tdmi->tdmi_got_adapter);
 
-      /* Reset FEC counter */
-
-      ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &v);
 
       /* Now that we have tuned, start demuxing of tables */
 
@@ -111,6 +108,12 @@ dvb_fe_manager(void *aux)
       }
 
       pthread_mutex_unlock(&tdmi->tdmi_table_lock);
+
+      /* Allow tuning to settle */
+      sleep(1);
+
+      /* Reset FEC counter */
+      ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &v);
     }
 
     if(tdmi == NULL)
@@ -131,9 +134,11 @@ dvb_fe_manager(void *aux)
       tdmi->tdmi_status = "No lock, but faint signal present";
     else
       tdmi->tdmi_status = "No signal";
-    
+
     ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &v);
-    tdmi->tdmi_fec_err_per_sec = (tdmi->tdmi_fec_err_per_sec * 7 + v) / 8;
+
+    if(fe_status & FE_HAS_LOCK)
+      tdmi->tdmi_fec_err_per_sec = (tdmi->tdmi_fec_err_per_sec * 7 + v) / 8;
   }
 }
 
