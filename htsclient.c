@@ -490,9 +490,11 @@ cr_channels_list(client_t *c, char **argv, int argc)
 {
   th_channel_t *ch;
 
-  LIST_FOREACH(ch, &channels, ch_global_link)
+  LIST_FOREACH(ch, &channels, ch_global_link) {
+    if(ch->ch_group == NULL)
+      continue;
     cprintf(c, "channel = %d\n", ch->ch_index);
-
+  }
   return 0;
 }
 
