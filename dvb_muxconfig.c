@@ -40,6 +40,8 @@ dvb_add_mux_instance(th_dvb_adapter_t *tda, th_dvb_mux_t *tdm)
 
   tdmi = calloc(1, sizeof(th_dvb_mux_instance_t));
 
+  pthread_mutex_init(&tdmi->tdmi_table_lock, NULL);
+
   tdmi->tdmi_status = TDMI_CONFIGURED;
 
   tdmi->tdmi_mux = tdm;

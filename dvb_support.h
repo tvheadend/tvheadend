@@ -55,4 +55,8 @@ int dvb_get_string_with_len(char *dst, size_t dstlen,
 			    const uint8_t *buf, size_t buflen, 
 			    const char *target_encoding);
 
+#define bcdtoint(i) ((((i & 0xf0) >> 4) * 10) + (i & 0x0f))
+
+time_t dvb_convert_date(uint8_t *dvb_buf);
+
 #endif /* DVB_SUPPORT_H */

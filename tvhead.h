@@ -159,6 +159,8 @@ typedef struct th_dvb_mux_instance {
   time_t tdmi_time;
   LIST_HEAD(, th_dvb_table) tdmi_tables;
 
+  pthread_mutex_t tdmi_table_lock;
+
   tdmi_state_t tdmi_state;
 
   dtimer_t tdmi_initial_scan_timer;
@@ -181,6 +183,9 @@ typedef struct th_dvb_table {
   void *tdt_opaque;
   int (*tdt_callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
 		      uint8_t tableid, void *opaque);
+
+  int tdt_fd;
+  struct dmx_sct_filter_params *tdt_fparams;
 } th_dvb_table_t;
 
 

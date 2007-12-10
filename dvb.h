@@ -30,6 +30,21 @@ void dvb_init(void);
 int dvb_configure_transport(th_transport_t *t, const char *muxname,
 			    const char *channel_name);
 
-int dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state);
+void dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog,
+		   tdmi_state_t state);
+
+void dvb_table_add_default(th_dvb_mux_instance_t *tdmi);
+
+void dvb_table_add_transport(th_dvb_mux_instance_t *tdmi, th_transport_t *t,
+			     int pmt_pid);
+
+void dvb_tdt_destroy(th_dvb_table_t *tdt);
+
+void dvb_fe_start(th_dvb_adapter_t *tda);
+
+void tdmi_check_scan_status(th_dvb_mux_instance_t *tdmi);
+
+th_transport_t *dvb_find_transport(th_dvb_mux_instance_t *tdmi, uint16_t tid,
+				   uint16_t sid, int pmt_pid);
 
 #endif /* DVB_H_ */
