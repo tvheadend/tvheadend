@@ -78,8 +78,13 @@ dvb_table_recv(int events, void *opaque, int fd)
   if(r < 3)
     return;
 
-  r -= 3;
+  /* It seems some hardware (or is it the dvb API?) does not honour the
+     DMX_CHECK_CRC flag, so we check it again */
 
+  if(psi_crc32(sec, r))
+    return;
+
+  r -= 3;
   tableid = sec[0];
   len = ((sec[1] & 0x0f) << 8) | sec[2];
   
@@ -87,7 +92,8 @@ dvb_table_recv(int events, void *opaque, int fd)
     return;
 
   ptr = &sec[3];
-  len -= 3;
+  len -= 4;   /* Strip trailing CRC */
+
   if(!tdt->tdt_callback(tdt->tdt_tdmi, ptr, len, tableid, tdt->tdt_opaque))
     tdt->tdt_count++;
 
