@@ -101,7 +101,7 @@ v4l_configure_transport(th_transport_t *t, const char *muxname,
   snprintf(buf, sizeof(buf), "ANALOG:%u", t->tht_v4l_frequency);
   t->tht_uniquename = strdup(buf);
 
-  transport_link(t, channel_find(channel_name, 1, NULL));
+  transport_link(t, channel_find(channel_name, 1, NULL), THT_OTHER);
   return 0;
 }
 

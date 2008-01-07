@@ -118,7 +118,7 @@ avgen_init(void)
 
   t->tht_uniquename = strdup("TEST1");
 
-  transport_link(t, ch);
+  transport_link(t, ch, THT_OTHER);
 }
 
 

@@ -243,18 +243,6 @@ service_load(struct config_head *head)
  *
  */
 void
-transport_link(th_transport_t *t, th_channel_t *ch)
-{
-  transport_set_channel(t, ch);
-  transport_monitor_init(t);
-  LIST_INSERT_HEAD(&all_transports, t, tht_global_link);
-}
-
-
-/**
- *
- */
-void
 channels_load(void)
 {
   config_entry_t *ce, *ce1, *ce2;

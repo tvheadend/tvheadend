@@ -168,7 +168,7 @@ dvb_find_transport(th_dvb_mux_instance_t *tdmi, uint16_t tid,
     return NULL;
 
   t = calloc(1, sizeof(th_transport_t));
-  transport_monitor_init(t);
+  transport_init(t, THT_MPEG_TS);
 
   t->tht_dvb_transport_id = tid;
   t->tht_dvb_service_id   = sid;

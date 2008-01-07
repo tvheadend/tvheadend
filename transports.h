@@ -25,11 +25,11 @@ unsigned int transport_compute_weight(struct th_transport_list *head);
 
 void transport_stop(th_transport_t *t, int flush_subscriptions);
 
-void transport_monitor_init(th_transport_t *t);
+void transport_init(th_transport_t *t, int source_type);
 
-int transport_set_channel(th_transport_t *th, th_channel_t *ch);
+void transport_link(th_transport_t *t, th_channel_t *ch, int source_type);
 
-void transport_link(th_transport_t *t, th_channel_t *ch);
+int transport_set_channel(th_transport_t *t, th_channel_t *ch);
 
 th_transport_t *transport_find(th_channel_t *ch, unsigned int weight);
 

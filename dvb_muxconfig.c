@@ -338,7 +338,7 @@ dvb_configure_transport(th_transport_t *t, const char *muxname,
   t->tht_dvb_mux = tdm;
   t->tht_name = strdup(tdm->tdm_title);
 
-  transport_link(t, channel_find(channel_name, 1, NULL));
+  transport_link(t, channel_find(channel_name, 1, NULL), THT_MPEG_TS);
   return 0;
 }
 

@@ -442,6 +442,11 @@ typedef struct th_transport {
   const char *tht_uniquename;
   const char *tht_network;
 
+  enum {
+    THT_MPEG_TS,
+    THT_OTHER,
+  } tht_source_type;
+
 } th_transport_t;
 
 

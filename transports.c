@@ -329,14 +329,32 @@ transport_monitor(void *aux, int64_t now)
 }
 
 
+/**
+ *
+ */
 void
-transport_monitor_init(th_transport_t *t)
+transport_init(th_transport_t *t, int source_type)
 {
+  t->tht_source_type = source_type;
+
   avgstat_init(&t->tht_cc_errors, 3600);
   avgstat_init(&t->tht_rate, 10);
 
   dtimer_arm(&transport_monitor_timer, transport_monitor, t, 5);
 }
+
+
+/**
+ *
+ */
+void
+transport_link(th_transport_t *t, th_channel_t *ch, int source_type)
+{
+  transport_set_channel(t, ch);
+  transport_init(t, source_type);
+  LIST_INSERT_HEAD(&all_transports, t, tht_global_link);
+}
+
 
 
 th_stream_t *

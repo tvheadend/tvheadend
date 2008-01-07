@@ -286,7 +286,7 @@ iptv_probe_done(th_transport_t *t, int timeout)
   iptv_stop_feed(t);
 
   if(!timeout)
-    transport_link(t, t->tht_channel);
+    transport_link(t, t->tht_channel, THT_MPEG_TS);
   else
     LIST_INSERT_HEAD(&iptv_stale_transports, t, tht_adapter_link);
 
