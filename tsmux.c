@@ -624,6 +624,108 @@ ts_muxer_relock(th_muxer_t *tm, uint64_t pcr)
 }
 
 
+/**
+ * Push a MPEG TS packet to output, used in shortcut mode
+ */
+static void
+ts_muxer_raw_push_packet(th_muxer_t *tm, void *data, uint16_t pid)
+{
+  uint8_t *tsb;
+
+  tsb = tm->tm_packet + tm->tm_block_offset * 188;
+  tm->tm_block_offset++;
+
+  memcpy(tsb, data, 188);
+  
+  /* Set PID */
+
+  tsb[2] =                    pid;
+  tsb[1] = (tsb[1] & 0xf0) | (pid >> 8);
+  
+  if(tm->tm_block_offset == tm->tm_blocks_per_packet) {
+    tm->tm_callback(tm->tm_opaque, tm->tm_subscription, tm->tm_packet, 
+		    tm->tm_block_offset, AV_NOPTS_VALUE);
+    tm->tm_block_offset = 0;
+  }
+}
+
+/**
+ * Function for encapsulating a short table into a transport stream packet
+ */
+static void
+ts_muxer_raw_push_table(th_muxer_t *tm, void *table, int tlen, int cc, int pid)
+{
+  int pad;
+
+  uint8_t tsb0[188], *tsb;
+  tsb = tsb0;
+
+  pad = 184 - (tlen + 1);
+  
+  *tsb++ = 0x47;
+  *tsb++ = 0x40;
+  *tsb++ = 0;
+  *tsb++ = (cc & 0xf) | 0x30;
+  *tsb++ = --pad;
+  memset(tsb, 0, pad);
+  tsb += pad;
+  
+  *tsb++ = 0; /* Pointer field for tables */
+  memcpy(tsb, table, tlen);
+  ts_muxer_raw_push_packet(tm, tsb0, pid);
+}
+
+
+/**
+ * Periodic timer callback for generating PAT/PMT tables when in 
+ * shortcut mode
+ */
+static void
+ts_muxer_raw_table_generator(void *aux, int64_t now)
+{
+  th_muxer_t *tm = aux;
+  uint8_t table[180];
+  th_muxstream_t *tms;
+  int l;
+
+  /* rearm timer */
+  dtimer_arm_hires(&tm->tm_table_timer, ts_muxer_raw_table_generator,
+		   tm, now + 100000);
+
+  l = psi_build_pat(NULL, table, sizeof(table));
+  tms = tm->tm_pat;
+  tms->tms_cc++;
+  ts_muxer_raw_push_table(tm, table, l, tms->tms_cc, 0);
+
+  l = psi_build_pmt(tm, table, sizeof(table));
+  tms = tm->tm_pmt;
+  tms->tms_cc++;
+  ts_muxer_raw_push_table(tm, table, l, tms->tms_cc, 100);
+}
+
+
+
+/**
+ * Shortcutted MPEG TS input
+ */
+static void
+ts_muxer_raw_input(struct th_subscription *s, void *data, int len,
+		   th_stream_t *st, void *opaque)
+{
+  th_muxer_t *tm = s->ths_muxer;
+  th_muxstream_t *tms;
+
+  LIST_FOREACH(tms, &tm->tm_media_streams, tms_muxer_media_link)
+    if(tms->tms_stream == st)
+      break;
+
+  if(tms == NULL)
+    return; /* Unknown / non-mapped stream */
+  
+  ts_muxer_raw_push_packet(tm, data, tms->tms_index);
+}
+
+
 /*
  * pause playback
  */
@@ -649,6 +751,25 @@ ts_muxer_play(th_muxer_t *tm, int64_t toffset)
   th_muxstream_t *tms;
   th_stream_t *st;
   int64_t clk;
+  th_subscription_t *s = tm->tm_subscription;
+  
+  if(!(tm->tm_flags & TM_SEEKABLE) && 
+     s->ths_transport->tht_source_type == THT_MPEG_TS) {
+    /* We dont need to seek and source is MPEG TS, we can use a 
+       shortcut to avoid remuxing stream */
+
+    s->ths_raw_input = ts_muxer_raw_input;
+    dtimer_arm_hires(&tm->tm_table_timer, ts_muxer_raw_table_generator,
+		     tm, getclock_hires() + 100000);
+    return;
+  }
+
+  /* Use normal muxer */
+
+  if(!tm->tm_transport_linked) {
+    LIST_INSERT_HEAD(&s->ths_transport->tht_muxers, tm, tm_transport_link);
+    tm->tm_transport_linked = 1;
+  }
 
   switch(tm->tm_status) {
   case TM_IDLE:
@@ -771,15 +892,14 @@ ts_muxer_init(th_subscription_t *s, th_mux_output_t *cb, void *opaque,
   int offset;
 
   tm = calloc(1, sizeof(th_muxer_t));
-  LIST_INSERT_HEAD(&t->tht_muxers, tm, tm_transport_link);
   tm->tm_subscription = s;
 
   tm->tm_clockref = getclock_hires();
   tm->tm_blocks_per_packet = 7;
   tm->tm_callback = cb;
   tm->tm_opaque = opaque;
-  tm->tm_new_pkt = ts_encode_new_packet;
   tm->tm_flags = flags;
+  tm->tm_new_pkt = ts_encode_new_packet;
 
   tm->tm_packet = malloc(188 * tm->tm_blocks_per_packet);
 
@@ -853,11 +973,14 @@ ts_muxer_deinit(th_muxer_t *tm, th_subscription_t *s)
 {
   th_muxstream_t *tms;
 
+  s->ths_raw_input = NULL;
   s->ths_muxer = NULL;
 
-  LIST_REMOVE(tm, tm_transport_link);
+  if(tm->tm_transport_linked)
+    LIST_REMOVE(tm, tm_transport_link);
 
   dtimer_disarm(&tm->tm_timer);
+  dtimer_disarm(&tm->tm_table_timer);
     
   tms_destroy(tm->tm_pat);
   tms_destroy(tm->tm_pmt);

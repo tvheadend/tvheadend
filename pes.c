@@ -84,6 +84,9 @@ pes_packet_input(th_transport_t *t, th_stream_t *st, uint8_t *buf, size_t len)
 
   avgstat_add(&st->st_rate, len, dispatch_clock);
 
+  if(LIST_FIRST(&t->tht_muxers) == NULL)
+    return 0; /* No muxers will take packet, so drop here*/
+
   if(len < 3)
     return -1;
 

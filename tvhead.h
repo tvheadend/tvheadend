@@ -572,12 +572,14 @@ typedef struct th_muxer {
   th_mux_newpkt_t *tm_new_pkt;
 
   LIST_ENTRY(th_muxer) tm_transport_link;
+  int tm_transport_linked;
 
   int64_t tm_clockref;  /* Base clock ref */
   int64_t tm_pauseref;  /* Time when we were paused */
 
   int tm_flags;
-#define TM_HTSCLIENTMODE 0x1
+#define TM_HTSCLIENTMODE 0x1 /* Ugly workaround for now */
+#define TM_SEEKABLE      0x2 /* We need the pause / seek to work */
 
   int64_t tm_start_dts;
   int64_t tm_next_pat;
@@ -613,6 +615,8 @@ typedef struct th_muxer {
   int tm_drop_rate;
   int tm_drop_cnt;
 
+  dtimer_t tm_table_timer;
+  int tm_block_offset;
 } th_muxer_t;
 
 
