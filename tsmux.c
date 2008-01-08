@@ -702,7 +702,7 @@ ts_muxer_play(th_muxer_t *tm, int64_t toffset)
 /*
  * Meta streams
  */
-th_muxstream_t *
+static th_muxstream_t *
 tm_create_meta_stream(th_muxer_t *tm, int pid)
 {
   th_muxstream_t *tms;
