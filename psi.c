@@ -343,7 +343,7 @@ psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen)
       break;
 
     case HTSTV_MPEG2AUDIO:
-      c = 0x04;
+      c = 0x03;
       break;
 
     case HTSTV_H264:
