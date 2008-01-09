@@ -140,7 +140,6 @@ file_input_init(void)
  	break;
 
       default:
-	printf("Unknown codec %x\n", ctx->codec_id);
 	break;
       }
     }
@@ -222,7 +221,6 @@ file_input_get_pkt(th_transport_t *t, file_input_t *fi, int64_t now)
       file_input_reset(fi);
       d = 20000;
       fi->fi_dts_offset += fi->fi_last_dts;
-      printf("WRAP!!!\n");
       break;
     }
     
@@ -234,13 +232,11 @@ file_input_get_pkt(th_transport_t *t, file_input_t *fi, int64_t now)
       continue;
 
 
-    if(fi->fi_initial_dts == AV_NOPTS_VALUE) {
+    if(fi->fi_initial_dts == AV_NOPTS_VALUE)
       fi->fi_initial_dts = ffpkt.dts;
-      printf("Initial DTS = %lld\n", fi->fi_initial_dts);
-    }
+
     ffpkt.dts -= fi->fi_initial_dts;
     ffpkt.pts -= fi->fi_initial_dts;
-
 
     pts = av_rescale_q(ffpkt.pts,
 		       fi->fi_fctx->streams[ffpkt.stream_index]->time_base,
