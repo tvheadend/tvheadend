@@ -22,4 +22,6 @@
 int pes_packet_input(th_transport_t *th, th_stream_t *st, uint8_t *data, 
 		     size_t len);
 
+void pes_compute_duration(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
+
 #endif /* PES_H */

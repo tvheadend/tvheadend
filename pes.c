@@ -32,9 +32,6 @@
 
 static void pes_compute_dts(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
 static void pes_compute_pts(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
-static void pes_compute_duration(th_transport_t *t, th_stream_t *st,
-				 th_pkt_t *pkt);
-
 
 #define getu32(b, l) ({						\
   uint32_t x = (b[0] << 24 | b[1] << 16 | b[2] << 8 | b[3]);	\
@@ -314,7 +311,7 @@ pes_compute_pts(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
  * Compute duration of a packet, we do this by keeping a packet
  * until the next one arrives, then we release it
  */
-static void
+void
 pes_compute_duration(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 {
   th_pkt_t *next;
