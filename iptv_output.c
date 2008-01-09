@@ -136,15 +136,20 @@ output_multicast_load(struct config_head *head)
 
   om = calloc(1, sizeof(output_multicast_t));
   
-  if((b = config_get_str_sub(head, "interface-address", NULL)) == NULL) {
-    fprintf(stderr, "no interface address configured\n");
-    goto err;
-  }
-  memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_port = 0;
-  sin.sin_addr.s_addr = inet_addr(b);
+  om->om_fd = socket(AF_INET, SOCK_DGRAM, 0);
 
+  if((b = config_get_str_sub(head, "interface-address", NULL)) != NULL) {
+    memset(&sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;
+    sin.sin_port = 0;
+    sin.sin_addr.s_addr = inet_addr(b);
+
+    if(bind(om->om_fd, (struct sockaddr *)&sin, sizeof(sin))==-1) {
+      fprintf(stderr, "cannot bind to %s\n", b);
+      goto err;
+    }
+  }
+    
   if((s = config_get_str_sub(head, "group-address", NULL)) == NULL) {
     fprintf(stderr, "no group address configured\n");
     goto err;
@@ -156,14 +161,6 @@ output_multicast_load(struct config_head *head)
     goto err;
   }
   om->om_dst.sin_port = htons(atoi(s));
-
-  om->om_fd = socket(AF_INET, SOCK_DGRAM, 0);
-
-  if(bind(om->om_fd, (struct sockaddr *)&sin, sizeof(sin))==-1) {
-    fprintf(stderr, "cannot bind to %s\n", b);
-    close(om->om_fd);
-    goto err;
-  }
 
   if((s = config_get_str_sub(head, "ttl", NULL)) != NULL)
     ttl = atoi(s);
@@ -194,6 +191,7 @@ output_multicast_load(struct config_head *head)
   return;
 
  err:
+  close(om->om_fd);
   free(om);
 }
 
