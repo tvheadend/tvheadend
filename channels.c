@@ -222,10 +222,6 @@ service_load(struct config_head *head)
   t->tht_prio = atoi(config_get_str_sub(head, "prio", ""));
 
   if(0) {
-#ifdef ENABLE_INPUT_DVB
-  } else if((v = config_get_str_sub(head, "dvbmux", NULL)) != NULL) {
-    r = dvb_configure_transport(t, v, name);
-#endif
 #ifdef ENABLE_INPUT_IPTV
   } else if((v = config_get_str_sub(head, "iptv", NULL)) != NULL) {
     r = iptv_configure_transport(t, v, head, name);

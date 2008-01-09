@@ -122,7 +122,6 @@ dvb_stop_feed(th_transport_t *t)
 {
   th_stream_t *st;
 
-  t->tht_dvb_adapter = NULL;
   LIST_REMOVE(t, tht_adapter_link);
   LIST_FOREACH(st, &t->tht_streams, st_link) {
     close(st->st_demuxer_fd);
@@ -133,44 +132,40 @@ dvb_stop_feed(th_transport_t *t)
 
 
 /*
+ * Switch the adapter (which is implicitly tied to our transport)
+ * to receive the given transport.
  *
+ * But we only do this if 'weight' is higher than all of the current
+ * transports that is subscribing to the adapter
  */
 int
 dvb_start_feed(th_transport_t *t, unsigned int weight, int status)
 {
-  th_dvb_adapter_t *tda;
   struct dmx_pes_filter_params dmx_param;
   th_stream_t *st;
   int w, fd, pid;
+  th_dvb_adapter_t *tda = t->tht_dvb_mux_instance->tdmi_adapter;
+  th_dvb_mux_instance_t *tdmi = tda->tda_mux_current;
 
-  th_dvb_mux_instance_t *tdmi, *cand = NULL;
-  th_dvb_mux_t *mux = t->tht_dvb_mux;
+  /* Check if adapter is idle, or already tuned */
 
-  LIST_FOREACH(tdmi, &mux->tdm_instances, tdmi_mux_link) {
+  if(tdmi != NULL && tdmi == t->tht_dvb_mux_instance) {
 
-    if(tdmi->tdmi_state == TDMI_RUNNING)
-      goto gotmux;
+    /* Nope .. */
 
     if(tdmi->tdmi_status != NULL)
-      continue; /* no lock */
+      return 1;  /* no lock on adapter, cant use it */
 
     if(tdmi->tdmi_fec_err_per_sec > DVB_FEC_ERROR_LIMIT / 3)
-      continue; /* too much errors to even consider */
+      return 1; /* too many errors for using it */
 
     w = transport_compute_weight(&tdmi->tdmi_adapter->tda_transports);
-    if(w < weight && cand == NULL)
-      cand = tdmi;
+    if(w >= weight)
+      return 1; /* We are outranked by weight, cant use it */
+    
+    tdmi = t->tht_dvb_mux_instance;
+    dvb_adapter_clean(tda);
   }
-
-  if(cand == NULL)
-    return 1;
-
-  tdmi = cand;
-
-  dvb_adapter_clean(tdmi->tdmi_adapter);
-  
- gotmux:
-  tda = tdmi->tdmi_adapter;
 
   LIST_FOREACH(st, &t->tht_streams, st_link) {
     
@@ -206,8 +201,7 @@ dvb_start_feed(th_transport_t *t, unsigned int weight, int status)
   }
 
   LIST_INSERT_HEAD(&tda->tda_transports, t, tht_adapter_link);
-  t->tht_dvb_adapter = tda;
-  t->tht_status = TRANSPORT_RUNNING;
+  t->tht_status = status;
   
   dvb_tune_tdmi(tdmi, 1, TDMI_RUNNING);
   return 0;

@@ -194,7 +194,6 @@ cr_show(client_t *c, char **argv, int argc)
   th_transport_t *t;
   th_channel_t *ch;
   th_dvb_adapter_t *tda;
-  th_dvb_mux_t *tdm;
   th_dvb_mux_instance_t *tdmi;
   event_t *e;
   char *tmp;
@@ -305,26 +304,10 @@ cr_show(client_t *c, char **argv, int argc)
     return 0;
   }
 
-  if(!strcasecmp(subcmd, "dvbmuxes")) {
-    LIST_FOREACH(tdm, &dvb_muxes, tdm_global_link) {
-
-      cprintf(c, "\"%s\"\n", tdm->tdm_title);
-      
-      LIST_FOREACH(tdmi, &tdm->tdm_instances, tdmi_mux_link) {
-	cprintf(c, "%20s:   ", tdmi->tdmi_adapter->tda_path);
-
-	print_tdmi(c, tdmi);
-
-
-      }
-    }
-    return 0;
-  }
-
   if(!strcasecmp(subcmd, "dvbadapters")) {
     LIST_FOREACH(tda, &dvb_adapters_running, tda_link) {
 
-      cprintf(c, "%20s:   ", tda->tda_path);
+      cprintf(c, "%20s:   ", tda->tda_rootpath);
 
       tdmi = tda->tda_mux_current;
 
@@ -333,7 +316,7 @@ cr_show(client_t *c, char **argv, int argc)
 	continue;
       }
 
-      cprintf(c, "Tuned to \"%s\"\n", tdmi->tdmi_mux->tdm_title);
+      cprintf(c, "Tuned to \"%s\"\n", tdmi->tdmi_shortname);
       cprintf(c, "\t\t     ");
 
       print_tdmi(c, tda->tda_mux_current);
@@ -870,12 +853,8 @@ client_status_update(void *aux, int64_t now)
 {
   client_t *c = aux;
   th_channel_t *ch;
-  th_dvb_adapter_t *tda;
-  th_v4l_adapter_t *v4l;
-  th_dvb_mux_instance_t *tdmi;
   th_subscription_t *s;
   th_transport_t *t;
-  int ccerr, rate;
 
   dtimer_arm(&c->c_status_timer, client_status_update, c, 1);
 
@@ -891,93 +870,8 @@ client_status_update(void *aux, int64_t now)
       continue;
     }
 
-    ccerr = avgstat_read(&t->tht_cc_errors, 60, dispatch_clock);
-    rate = avgstat_read_and_expire(&t->tht_rate, dispatch_clock);
-    rate = rate * 8 / 1000 / 10; /* convert to kbit / s */
-
-    switch(t->tht_type) {
-    default:
-      break;
-
-    case TRANSPORT_DVB:
-      if((tda = t->tht_dvb_adapter) == NULL) {
-	csprintf(c, ch, 
-		 "status = 0\n"
-		 "info = No adapter available"
-		 "transport = %s\n",
-		 t->tht_name);
-	break;
-      }
-      if((tdmi = tda->tda_mux_current) == NULL) {
-	csprintf(c, ch,
-		 "status = 0\n"
-		 "info = No mux available"
-		 "transport = %s\n",
-		 t->tht_name);
-	break;
-      }
-
-      if(tdmi->tdmi_status == NULL) {
-	csprintf(c, ch, 
-		 "status = 1\n"
-		 "info = Signal ok\n"
-		 "adapter = %s\n"
-		 "transport = %s\n"
-		 "uncorrected-blocks = %d\n"
-		 "rate = %d\n"
-		 "cc-errors = %d\n",
-		 tda->tda_path,
-		 t->tht_name,
-		 tdmi->tdmi_uncorrected_blocks,
-		 rate, ccerr);
-		   
-		   
-      } else {
-	csprintf(c, ch, 
-		 "status = 0"
-		 "info = %s"
-		 "adapter = %s\n"
-		 "transport = %s\n",
-		 tdmi->tdmi_status,
-		 tda->tda_path,
-		 t->tht_name);
-      }
-      break;
-
-    case TRANSPORT_IPTV:
-      csprintf(c, ch, 
-	       "status = 1\n"
-	       "info = Signal ok\n"
-	       "transport = %s\n"
-	       "rate = %d\n"
-	       "cc-errors = %d\n",
-	       t->tht_name,
-	       rate, ccerr);
-      break;
-
-    case TRANSPORT_V4L:
-      v4l = t->tht_v4l_adapter;
-      if(v4l == NULL) {
-	csprintf(c, ch, 
-		 "status = 0\n"
-		 "info = No adapter available"
-		 "transport = %s\n",
-		 t->tht_name);
-	continue;
-      }
-
-      csprintf(c, ch, 
-	       "status = 1\n"
-	       "info = Signal ok\n"
-	       "adapter = %s\n"
-	       "transport = %s\n"
-	       "rate = %d\n"
-	       "cc-errors = %d\n",
-	       v4l->tva_name,
-	       t->tht_name,
-	       rate, ccerr);
-      break;
-
-    }
+    csprintf(c, ch,
+	     "status = 0\n"
+	     "info = Running");
   }
 }

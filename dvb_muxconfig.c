@@ -33,33 +33,15 @@
 #include "transports.h"
 
 
-static void
-dvb_add_mux_instance(th_dvb_adapter_t *tda, th_dvb_mux_t *tdm)
-{
-  th_dvb_mux_instance_t *tdmi;
-
-  tdmi = calloc(1, sizeof(th_dvb_mux_instance_t));
-
-  pthread_mutex_init(&tdmi->tdmi_table_lock, NULL);
-
-  tdmi->tdmi_status = TDMI_CONFIGURED;
-
-  tdmi->tdmi_mux = tdm;
-  tdmi->tdmi_adapter = tda;
-
-  LIST_INSERT_HEAD(&tda->tda_muxes_configured, tdmi, tdmi_adapter_link);
-  LIST_INSERT_HEAD(&tdm->tdm_instances, tdmi, tdmi_mux_link);
-}
-
 
 static void
-dvb_add_mux(struct dvb_frontend_parameters *fe_param, const char *name,
-	    fe_type_t type)
+dvb_add_mux(struct dvb_frontend_parameters *fe_param, fe_type_t type)
 {
-  th_dvb_mux_t *tdm;
   th_dvb_adapter_t *tda;
   char buf[100];
   char *typetxt;
+
+  th_dvb_mux_instance_t *tdmi;
 
   switch(type) {
   case FE_QPSK:
@@ -78,36 +60,38 @@ dvb_add_mux(struct dvb_frontend_parameters *fe_param, const char *name,
     return;
   }
 
-  tdm = calloc(1, sizeof(th_dvb_mux_t));
-  tdm->tdm_type = type;
-
-  tdm->tdm_fe_params = malloc(sizeof(struct dvb_frontend_parameters));
-
-  memcpy(tdm->tdm_fe_params, fe_param,
-	 sizeof(struct dvb_frontend_parameters));
-
-  if(name == NULL) {
-    snprintf(buf, sizeof(buf), "%s-%d", typetxt, fe_param->frequency);
-
-    tdm->tdm_name = strdup(buf);
-    
-    snprintf(buf, sizeof(buf), "%s: %.1f MHz", typetxt,
-	     (float)fe_param->frequency / 1000000.0f);
-  } else {
-    tdm->tdm_name = strdup(name);
-    snprintf(buf, sizeof(buf), "%s: %.1f MHz (%s)", typetxt,
-	     (float)fe_param->frequency / 1000000.0f, name);
-  }
-
-  tdm->tdm_title = strdup(buf);
-
-  LIST_INSERT_HEAD(&dvb_muxes, tdm, tdm_global_link);
-      
   LIST_FOREACH(tda, &dvb_adapters_probing, tda_link) {
-    if(tda->tda_fe_info->type == type)
-      dvb_add_mux_instance(tda, tdm);
+    if(tda->tda_fe_info->type != type)
+      continue; /* Does not match frontend */
+
+    tdmi = calloc(1, sizeof(th_dvb_mux_instance_t));
+    pthread_mutex_init(&tdmi->tdmi_table_lock, NULL);
+
+    tdmi->tdmi_status = TDMI_CONFIGURED;
+    tdmi->tdmi_adapter = tda;
+    LIST_INSERT_HEAD(&tda->tda_muxes_configured, tdmi, tdmi_adapter_link);
+
+    tdmi->tdmi_type = type;
+
+    tdmi->tdmi_fe_params = malloc(sizeof(struct dvb_frontend_parameters));
+    
+    memcpy(tdmi->tdmi_fe_params, fe_param,
+	   sizeof(struct dvb_frontend_parameters));
+    
+    /* Generate names */
+    
+    snprintf(buf, sizeof(buf), "%s/%s/%.1fMHz",
+	     tda->tda_rootpath, typetxt,
+	     (float)fe_param->frequency / 1000000.0f);
+    tdmi->tdmi_uniquename = strdup(buf);
+
+    snprintf(buf, sizeof(buf), "%s/%.1fMHz",
+	     typetxt, (float)fe_param->frequency / 1000000.0f);
+    tdmi->tdmi_shortname = strdup(buf);
   }
 }
+
+
 
 static struct strtab fectab[] = {
   { "NONE", FEC_NONE },
@@ -196,7 +180,7 @@ dvb_t_config(const char *l)
   r = str2val(fec2, fectab);
   f.u.ofdm.code_rate_LP = r == FEC_NONE ? FEC_AUTO : r;
 
-  dvb_add_mux(&f, NULL, FE_OFDM);
+  dvb_add_mux(&f, FE_OFDM);
 }
 
 
@@ -223,7 +207,7 @@ dvb_c_config(const char *l)
   f.u.qam.fec_inner              = str2val(fec, fectab);
   f.u.qam.modulation             = str2val(qam, qamtab);
 
-  dvb_add_mux(&f, NULL, FE_QAM);
+  dvb_add_mux(&f, FE_QAM);
 }
 
 
@@ -279,35 +263,4 @@ dvb_mux_setup(void)
     if(ce->ce_type == CFG_VALUE && !strcasecmp("dvbmuxfile", ce->ce_key))
       dvb_muxfile_add(ce->ce_value);
 }
-
-
-
-/* 
- *
- */
-
-int
-dvb_configure_transport(th_transport_t *t, const char *muxname,
-			const char *channel_name)
-{
-  th_dvb_mux_t *tdm;
-
-  LIST_FOREACH(tdm, &dvb_muxes, tdm_global_link)
-    if(!strcmp(tdm->tdm_name, muxname))
-      break;
-
-  if(tdm == NULL)
-    return -1;
-
-  t->tht_type = TRANSPORT_DVB;
-  t->tht_start_feed = dvb_start_feed;
-  t->tht_stop_feed  = dvb_stop_feed;
-  t->tht_dvb_mux = tdm;
-  t->tht_name = strdup(tdm->tdm_title);
-
-  transport_link(t, channel_find(channel_name, 1, NULL), THT_MPEG_TS);
-  return 0;
-}
-
-
 

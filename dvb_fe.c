@@ -81,13 +81,12 @@ dvb_fe_manager(void *aux)
 
       tdmi = c->tdmi;
 
-      i = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND,
-		tdmi->tdmi_mux->tdm_fe_params);
+      i = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, tdmi->tdmi_fe_params);
 
       if(i != 0) {
 	syslog(LOG_ERR, "\"%s\" tuning to %dHz"
 	       " -- Front configuration failed -- %s",
-	       tda->tda_path, tdmi->tdmi_mux->tdm_fe_params->frequency,
+	       tda->tda_rootpath, tdmi->tdmi_fe_params->frequency,
 	       strerror(errno));
       }
       free(c);
@@ -195,7 +194,7 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
 
   if(maylog)
     syslog(LOG_DEBUG, "\"%s\" tuning to mux \"%s\"", 
-	   tda->tda_path, tdmi->tdmi_mux->tdm_title);
+	   tda->tda_rootpath, tdmi->tdmi_shortname);
 
   /* Add tables which will be activated once the tuning is completed */
 

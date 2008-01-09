@@ -75,7 +75,7 @@ dvb_add_adapter(const char *path)
     return;
   }
   tda = calloc(1, sizeof(th_dvb_adapter_t));
-  tda->tda_path = strdup(path);
+  tda->tda_rootpath = strdup(path);
   tda->tda_demux_path = malloc(256);
   snprintf(tda->tda_demux_path, 256, "%s/demux0", path);
   tda->tda_dvr_path = malloc(256);
@@ -137,7 +137,7 @@ dvb_init(void)
     if(tdmi == NULL) {
       syslog(LOG_WARNING,
 	     "No muxes configured on \"%s\" DVB adapter unused",
-	     tda->tda_path);
+	     tda->tda_rootpath);
       startupcounter--;
     } else {
       dvb_start_initial_scan(tdmi);
@@ -148,18 +148,23 @@ dvb_init(void)
 
 
 /**
- * Based on the gived transport id and service id, try to locate the transport
+ * Based on the gived transport id and service id on the given mux
+ * try to locate the transport.
+ *
+ * If it cannot be found we create it
  */
 th_transport_t *
 dvb_find_transport(th_dvb_mux_instance_t *tdmi, uint16_t tid,
 		   uint16_t sid, int pmt_pid)
 {
   th_transport_t *t;
-  th_dvb_mux_t *tdm = tdmi->tdmi_mux;
   char tmp[100];
 
+  /* XXX: Minimize this search */
+
   LIST_FOREACH(t, &all_transports, tht_global_link) {
-    if(t->tht_dvb_transport_id == tid &&
+    if(t->tht_dvb_mux_instance == tdmi &&
+       t->tht_dvb_transport_id == tid &&
        t->tht_dvb_service_id   == sid)
       return t;
   }
@@ -176,13 +181,13 @@ dvb_find_transport(th_dvb_mux_instance_t *tdmi, uint16_t tid,
   t->tht_type = TRANSPORT_DVB;
   t->tht_start_feed = dvb_start_feed;
   t->tht_stop_feed  = dvb_stop_feed;
-  t->tht_dvb_mux = tdm;
+  t->tht_dvb_mux_instance = tdmi;
 
-  snprintf(tmp, sizeof(tmp), "%s:%04x:%04x", tdm->tdm_name, tid, sid);
+  snprintf(tmp, sizeof(tmp), "%s/%04x", tdmi->tdmi_uniquename, sid);
 
   free((void *)t->tht_uniquename);
   t->tht_uniquename = strdup(tmp);
-  t->tht_name = strdup(tdm->tdm_title);
+  t->tht_name = strdup(tmp);
   LIST_INSERT_HEAD(&all_transports, t, tht_global_link);
 
   dvb_table_add_transport(tdmi, t, pmt_pid);
@@ -213,7 +218,7 @@ tdmi_activate(th_dvb_mux_instance_t *tdmi)
     startupcounter--;
     syslog(LOG_INFO,
 	   "\"%s\" Initial scan completed, adapter available",
-	   tda->tda_path);
+	   tda->tda_rootpath);
     /* no more muxes to probe, link adapter to the world */
     LIST_REMOVE(tda, tda_link);
     LIST_INSERT_HEAD(&dvb_adapters_running, tda, tda_link);
@@ -231,7 +236,6 @@ static void
 tdmi_initial_scan_timeout(void *aux, int64_t now)
 {
   th_dvb_mux_instance_t *tdmi = aux;
-  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   const char *err;
 #if 0
   th_dvb_table_t *tdt;
@@ -246,8 +250,8 @@ tdmi_initial_scan_timeout(void *aux, int64_t now)
   else
     err = "Missing PSI tables, scan will continue";
 
-  syslog(LOG_DEBUG, "\"%s\" mux \"%s\" Initial scan timed out -- %s",
-	 tda->tda_path, tdmi->tdmi_mux->tdm_name, err);
+  syslog(LOG_DEBUG, "\"%s\" Initial scan timed out -- %s",
+	 tdmi->tdmi_uniquename, err);
 
   tdmi_activate(tdmi);
 }
@@ -260,11 +264,9 @@ void
 tdmi_check_scan_status(th_dvb_mux_instance_t *tdmi)
 {
   th_dvb_table_t *tdt;
-  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
   if(tdmi->tdmi_state >= TDMI_IDLE)
     return;
-
   
   LIST_FOREACH(tdt, &tdmi->tdmi_tables, tdt_link)
     if(tdt->tdt_count == 0)
@@ -272,8 +274,8 @@ tdmi_check_scan_status(th_dvb_mux_instance_t *tdmi)
 
   /* All tables seen at least once */
 
-  syslog(LOG_DEBUG, "\"%s\" on \"%s\" Initial scan completed",
-	 tda->tda_path, tdmi->tdmi_mux->tdm_name);
+  syslog(LOG_DEBUG, "\"%s\" Initial scan completed",
+	 tdmi->tdmi_uniquename);
 
   tdmi_activate(tdmi);
 }
@@ -292,17 +294,6 @@ dvb_start_initial_scan(th_dvb_mux_instance_t *tdmi)
 
 }
 
-
-/**
- *
- */
-static int
-mux_sort_quality(th_dvb_mux_instance_t *a, th_dvb_mux_instance_t *b)
-{
-  return a->tdmi_fec_err_per_sec - b->tdmi_fec_err_per_sec;
-}
-
-
 /**
  *
  */
@@ -311,7 +302,6 @@ dvb_fec_monitor(void *aux, int64_t now)
 {
   th_dvb_adapter_t *tda = aux;
   th_dvb_mux_instance_t *tdmi;
-  th_dvb_mux_t *tdm;
 
   dtimer_arm(&tda->tda_fec_monitor_timer, dvb_fec_monitor, tda, 1);
 
@@ -322,18 +312,12 @@ dvb_fec_monitor(void *aux, int64_t now)
     if(tdmi->tdmi_fec_err_per_sec > DVB_FEC_ERROR_LIMIT) {
 
       if(LIST_FIRST(&tda->tda_transports) != NULL) {
-	syslog(LOG_ERR, "%s: on %s: Too many FEC errors (%d / s), "
+	syslog(LOG_ERR, "\"%s\": Too many FEC errors (%d / s), "
 	       "flushing subscribers\n", 
-	       tdmi->tdmi_mux->tdm_name, tda->tda_path,
-	       tdmi->tdmi_fec_err_per_sec);
+	       tdmi->tdmi_uniquename, tdmi->tdmi_fec_err_per_sec);
 	dvb_adapter_clean(tdmi->tdmi_adapter);
       }
     }
-
-    tdm = tdmi->tdmi_mux;
-    LIST_REMOVE(tdmi, tdmi_mux_link);
-    LIST_INSERT_SORTED(&tdm->tdm_instances, tdmi, tdmi_mux_link,
-		       mux_sort_quality);
   }
 }
 

@@ -310,7 +310,6 @@ static int
 dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
-  th_dvb_mux_t *tdm = tdmi->tdmi_mux;
   th_transport_t *t;
   int version;
   int current_next_indicator;
@@ -330,7 +329,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   uint8_t stype;
   int ret = 0, l;
 
-  if(tdm->tdm_network == NULL)
+  if(tdmi->tdmi_network == NULL)
     return -1;
 
   if(len < 8)
@@ -419,7 +418,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	t->tht_provider = strdup(provider);
 
 	free((void *)t->tht_network);
-	t->tht_network = strdup(tdm->tdm_network);
+	t->tht_network = strdup(tdmi->tdmi_network);
 
 	if(t->tht_channel == NULL) {
 	  /* Not yet mapped to a channel */
@@ -521,8 +520,6 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   uint8_t tag, tlen;
   int ntl;
   char networkname[256];
-  th_dvb_mux_t *tdm = tdmi->tdmi_mux;
-
 
   ptr += 5;
   len -= 5;
@@ -547,19 +544,8 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       if(dvb_get_string(networkname, sizeof(networkname), ptr, tlen, "UTF8"))
 	return 0;
 
-      if(tdm->tdm_network != NULL) {
-	if(strcmp(tdm->tdm_network, networkname)) {
-	  syslog(LOG_ALERT,
-		 "DVB Mux conflict \"%s\" on \"%s\" says it's \"%s\", "
-		 "but is has alrady been reported as \"%s\"",
-		 tdm->tdm_name,
-		 tdmi->tdmi_adapter->tda_path,
-		 networkname,
-		 tdm->tdm_network);
-	}
-      } else {
-	tdm->tdm_network = strdup(networkname);
-      }
+      free((void *)tdmi->tdmi_network);
+      tdmi->tdmi_network = strdup(networkname);
       break;
     }
 

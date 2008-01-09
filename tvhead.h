@@ -145,10 +145,8 @@ typedef enum {
  * DVB Mux instance
  */
 typedef struct th_dvb_mux_instance {
-  LIST_ENTRY(th_dvb_mux_instance) tdmi_mux_link;
   LIST_ENTRY(th_dvb_mux_instance) tdmi_adapter_link;
 
-  struct th_dvb_mux *tdmi_mux;
   struct th_dvb_adapter *tdmi_adapter;
 
   uint16_t tdmi_snr, tdmi_signal;
@@ -169,7 +167,15 @@ typedef struct th_dvb_mux_instance {
   time_t tdmi_got_adapter;
   time_t tdmi_lost_adapter;
 
+  int tdmi_type;                           /* really fe_type_t */
+  struct dvb_frontend_parameters *tdmi_fe_params;
+
+  const char *tdmi_shortname;   /* Only unique for the specific adapter */
+  const char *tdmi_uniquename;  /* Globally unique */
+  const char *tdmi_network;     /* Name of network, from NIT table */
 } th_dvb_mux_instance_t;
+
+
 
 /*
  *
@@ -190,27 +196,6 @@ typedef struct th_dvb_table {
 
 
 /*
- * DVB Mux (more or less the DVB frontend configuration on)
- */
-typedef struct th_dvb_mux {
-  LIST_ENTRY(th_dvb_mux) tdm_global_link;
-
-  struct th_dvb_mux_instance_list tdm_instances;
-
-  struct dvb_frontend_parameters *tdm_fe_params;
-
-  /* XXX: One of these shoud go, there has to be limits */
-
-  const char *tdm_name;
-  const char *tdm_title;
-  const char *tdm_network;
-
-  int tdm_type;  /* really fe_type_t */
-
-} th_dvb_mux_t;
-
-
-/*
  * DVB Adapter (one of these per physical adapter)
  */
 typedef struct th_dvb_adapter {
@@ -222,7 +207,7 @@ typedef struct th_dvb_adapter {
   struct th_dvb_mux_instance_list tda_muxes_active;
   th_dvb_mux_instance_t *tda_mux_current;
 
-  const char *tda_path;
+  const char *tda_rootpath;
   const char *tda_info;
 
   LIST_ENTRY(th_dvb_adapter) tda_link;
@@ -408,8 +393,7 @@ typedef struct th_transport {
   union {
 
     struct {
-      struct th_dvb_mux *mux;
-      struct th_dvb_adapter *adapter;
+      struct th_dvb_mux_instance *mux_instance;
     } dvb;
 
     struct {
@@ -459,8 +443,7 @@ typedef struct th_transport {
 #define tht_v4l_frequency u.v4l.frequency
 #define tht_v4l_adapter   u.v4l.adapter
 
-#define tht_dvb_mux       u.dvb.mux
-#define tht_dvb_adapter   u.dvb.adapter
+#define tht_dvb_mux_instance u.dvb.mux_instance
 
 #define tht_iptv_group_addr      u.iptv.group_addr
 #define tht_iptv_interface_addr  u.iptv.interface_addr

@@ -949,7 +949,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
   } else {
     LIST_FOREACH(tda, &dvb_adapters_running, tda_link) {
       tcp_qprintf(&tq, "<br><b>%s</b><br>%s<br>",
-		  tda->tda_path, tda->tda_info);
+		  tda->tda_rootpath, tda->tda_info);
       LIST_FOREACH(tdmi, &tda->tda_muxes_active, tdmi_adapter_link) {
 
 	tcp_qprintf(&tq,
@@ -957,7 +957,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 		    "width: 160px; float: left\">"
 		    "%s"
 		    "</span>",
-		    tdmi->tdmi_mux->tdm_title);
+		    tdmi->tdmi_shortname);
 
 	txt = tdmi->tdmi_status ?: "Ok";
 	if(tdmi->tdmi_fec_err_per_sec > DVB_FEC_ERROR_LIMIT)
@@ -1110,8 +1110,8 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
       break;
 
     case TRANSPORT_DVB:
-      t1 = t->tht_dvb_mux->tdm_name;
-      t2 = t->tht_dvb_adapter->tda_path;
+      t1 = t->tht_dvb_mux_instance->tdmi_shortname;
+      t2 = t->tht_dvb_mux_instance->tdmi_adapter->tda_rootpath;
       break;
 
     case TRANSPORT_AVGEN:
