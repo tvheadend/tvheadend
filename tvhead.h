@@ -351,6 +351,7 @@ typedef struct th_transport {
     TRANSPORT_IPTV,
     TRANSPORT_V4L,
     TRANSPORT_AVGEN,
+    TRANSPORT_STREAMEDFILE,
   } tht_type;
 
   enum {
@@ -433,6 +434,10 @@ typedef struct th_transport {
       struct avgen *avgen;
     } avgen;
 
+    struct {
+      struct file_input *file_input;
+    } file_input;
+
     char pad[256]; /* for api stability */
 
  } u;
@@ -466,6 +471,8 @@ typedef struct th_transport {
 #define tht_iptv_mode            u.iptv.mode
 
 #define tht_avgen                u.avgen.avgen
+
+#define tht_file_input           u.file_input.file_input
 
 /*
  * Storage

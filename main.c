@@ -54,6 +54,7 @@
 #include "buffer.h"
 #include "htmlui.h"
 #include "avgen.h"
+#include "file_input.h"
 #include "plugin.h"
 
 int running;
@@ -196,6 +197,8 @@ main(int argc, char **argv)
   htmlui_start();
 
   avgen_init();
+
+  file_input_init();
 
   plugin_init();
 
