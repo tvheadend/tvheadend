@@ -375,8 +375,11 @@ ts_mux_packet(th_muxer_t *tm, int64_t pcr, uint8_t *outbuf, int maxblocks)
 
       /* Periodic drop (for testing purposes) */
 
-      if(i != 0 && i != maxblocks - 1 &&
-	 tm->tm_drop_rate && ++tm->tm_drop_cnt == tm->tm_drop_rate) {
+      if(tm->tm_drop_rate && i != 0 && i != maxblocks - 1 &&
+	 tms->tms_stream && 
+	 (tms->tms_stream->st_type == HTSTV_H264 || 
+	  tms->tms_stream->st_type == HTSTV_MPEG2VIDEO) &&
+	 ++tm->tm_drop_cnt == tm->tm_drop_rate) {
 	tm->tm_drop_cnt = 0;
 	i--;
       } else {
