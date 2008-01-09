@@ -72,7 +72,7 @@ dvb_add_mux(struct dvb_frontend_parameters *fe_param, const char *name,
     typetxt = "DVB-T";
     break;
   case FE_ATSC:
-    typetxt = "ASCT";
+    typetxt = "ATSC";
     break;
   default:
     return;
