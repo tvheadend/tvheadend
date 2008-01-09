@@ -87,8 +87,8 @@ file_input_init(void)
     if(ce->ce_type != CFG_SUB || strcasecmp("streamedfile", ce->ce_key))
       continue;
     
-     if((s = config_get_str_sub(&ce->ce_sub, "file", NULL)) == NULL)
-	continue;
+    if((s = config_get_str_sub(&ce->ce_sub, "file", NULL)) == NULL)
+      continue;
 
     if(av_open_input_file(&fctx, s, NULL, 0, NULL) != 0) {
       syslog(LOG_ERR, "streamedfile: Unable to open file \"%s\"", s);
