@@ -269,37 +269,6 @@ dvb_muxfile_add(const char *fname)
 
 
 
-static void
-dvb_add_configured_muxes(void)
-{
-  config_entry_t *ce;
-  const char *s;
-  struct dvb_frontend_parameters fe_param;
-
-  TAILQ_FOREACH(ce, &config_list, ce_link) {
-    if(ce->ce_type == CFG_SUB && !strcasecmp("dvbmux", ce->ce_key)) {
-
-      if((s = config_get_str_sub(&ce->ce_sub, "name", NULL)) == NULL)
-	continue;
-
-      
-      fe_param.inversion = INVERSION_AUTO;
-      fe_param.u.ofdm.bandwidth = BANDWIDTH_8_MHZ;
-      fe_param.u.ofdm.code_rate_HP = FEC_2_3;
-      fe_param.u.ofdm.code_rate_LP = FEC_1_2;
-      fe_param.u.ofdm.constellation = QAM_64;
-      fe_param.u.ofdm.transmission_mode = TRANSMISSION_MODE_8K;
-      fe_param.u.ofdm.guard_interval = GUARD_INTERVAL_1_8;
-      fe_param.u.ofdm.hierarchy_information = HIERARCHY_NONE;
-      
-      fe_param.frequency = 
-	atoi(config_get_str_sub(&ce->ce_sub, "frequency", "0"));
-      
-      dvb_add_mux(&fe_param, s, FE_OFDM);
-    }
-  }
-}
-
 
 void
 dvb_mux_setup(void)
@@ -309,8 +278,6 @@ dvb_mux_setup(void)
   TAILQ_FOREACH(ce, &config_list, ce_link)
     if(ce->ce_type == CFG_VALUE && !strcasecmp("dvbmuxfile", ce->ce_key))
       dvb_muxfile_add(ce->ce_value);
-
-  dvb_add_configured_muxes();
 }
 
 
