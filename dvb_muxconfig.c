@@ -221,7 +221,7 @@ dvb_c_config(const char *l)
   f.frequency                    = freq;
   f.u.qam.symbol_rate            = symrate;
   f.u.qam.fec_inner              = str2val(fec, fectab);
-  f.u.qam.modulation             = str2val(qam,   qamtab);
+  f.u.qam.modulation             = str2val(qam, qamtab);
 
   dvb_add_mux(&f, NULL, FE_QAM);
 }
