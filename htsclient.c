@@ -409,7 +409,8 @@ client_subscription_callback(struct th_subscription *s,
   switch(event) {
   case TRANSPORT_AVAILABLE:
     assert(c->c_muxer == NULL);
-    c->c_muxer = ts_muxer_init(s, client_output_ts, c, TM_HTSCLIENTMODE);
+    c->c_muxer = ts_muxer_init(s, client_output_ts, c,
+			       TM_HTSCLIENTMODE | TM_SEEKABLE);
     ts_muxer_play(c->c_muxer, 0);
     break;
 
