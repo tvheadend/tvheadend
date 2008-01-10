@@ -149,7 +149,7 @@ dvb_start_feed(th_transport_t *t, unsigned int weight, int status)
 
   /* Check if adapter is idle, or already tuned */
 
-  if(tdmi != NULL && tdmi == t->tht_dvb_mux_instance) {
+  if(tdmi != NULL && tdmi != t->tht_dvb_mux_instance) {
 
     /* Nope .. */
 
@@ -163,9 +163,9 @@ dvb_start_feed(th_transport_t *t, unsigned int weight, int status)
     if(w >= weight)
       return 1; /* We are outranked by weight, cant use it */
     
-    tdmi = t->tht_dvb_mux_instance;
     dvb_adapter_clean(tda);
   }
+  tdmi = t->tht_dvb_mux_instance;
 
   LIST_FOREACH(st, &t->tht_streams, st_link) {
     
