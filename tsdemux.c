@@ -48,7 +48,6 @@
 #include "psi.h"
 #include "buffer.h"
 #include "tsdemux.h"
-#include "plugin.h"
 
 static int 
 ts_reassembly_pes(th_transport_t *t, th_stream_t *st, uint8_t *data, int len)
