@@ -85,6 +85,7 @@ TAILQ_HEAD(th_pkt_queue, th_pkt);
 LIST_HEAD(th_pkt_list, th_pkt);
 LIST_HEAD(th_muxer_list, th_muxer);
 LIST_HEAD(th_muxstream_list, th_muxstream);
+LIST_HEAD(th_descrambler_list, th_descrambler);
 
 
 extern time_t dispatch_clock;
@@ -236,7 +237,23 @@ typedef struct th_dvb_adapter {
 } th_dvb_adapter_t;
 
 
+/**
+ * Descrambler superclass
+ *
+ * Created/Destroyed on per-transport basis upon transport start/stop
+ */
+typedef struct th_descrambler {
+  LIST_ENTRY(th_descrambler) td_transport_link;
 
+  void (*td_table)(struct th_descrambler *d, struct th_transport *t,
+		   struct th_stream *st, uint8_t *section, int section_len);
+
+  int (*td_descramble)(struct th_descrambler *d, struct th_transport *t,
+		       struct th_stream *st, uint8_t *tsb);
+
+  void (*td_stop)(struct th_descrambler *d);
+
+} th_descrambler_t;
 
 
 
@@ -421,12 +438,8 @@ typedef struct th_transport {
     struct {
       struct file_input *file_input;
     } file_input;
-
-    char pad[256]; /* for api stability */
-
  } u;
 
-  int tht_scrambled;         /* informational */
   const char *tht_provider;
   const char *tht_uniquename;
   const char *tht_network;
@@ -435,6 +448,14 @@ typedef struct th_transport {
     THT_MPEG_TS,
     THT_OTHER,
   } tht_source_type;
+
+  /*
+   * (De)scrambling support
+   */
+
+  struct th_descrambler_list tht_descramblers;
+  int tht_scrambled;
+  int tht_caid;
 
 } th_transport_t;
 

@@ -22,16 +22,21 @@ SRCS +=	htsclient.c rtsp.c rtp.c
 
 SRCS += v4l.c
 
+SRCS += cwc.c krypt.c
+
+VPATH += ffdecsa
+SRCS += FFdecsa.c
+
 PROG = tvheadend
-CFLAGS += -g -Wall -Werror -O2
+CFLAGS += -g -Wall -Werror -O2 -mmmx
 CFLAGS += -I$(INCLUDES_INSTALL_BASE) $(HTS_CFLAGS)
 CFLAGS += -Wno-deprecated-declarations
 CFLAGS += -D_LARGEFILE64_SOURCE
 CFLAGS += -DENABLE_INPUT_IPTV -DENABLE_INPUT_DVB -DENABLE_INPUT_V4L
-LDFLAGS += -L$(LIBS_INSTALL_BASE) -rdynamic
+LDFLAGS += -L$(LIBS_INSTALL_BASE)
 
 SLIBS += ${LIBHTS_SLIBS}
-DLIBS += ${LIBHTS_DLIBS}
+DLIBS += ${LIBHTS_DLIBS} -lcrypt
 
 #
 # ffmpeg

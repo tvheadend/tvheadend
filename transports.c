@@ -52,8 +52,8 @@
 #include "psi.h"
 #include "pes.h"
 #include "buffer.h"
-#include "plugin.h"
 #include "channels.h"
+#include "cwc.h"
 
 static dtimer_t transport_monitor_timer;
 
@@ -63,9 +63,9 @@ void
 transport_stop(th_transport_t *t, int flush_subscriptions)
 {
   th_subscription_t *s;
+  th_descrambler_t *td;
   th_stream_t *st;
   th_pkt_t *pkt;
-  th_plugin_t *p;
 
   if(flush_subscriptions) {
     while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL)
@@ -75,11 +75,10 @@ transport_stop(th_transport_t *t, int flush_subscriptions)
       return;
   }
 
-  LIST_FOREACH(p, &th_plugins, thp_link)
-    if(p->thp_transport_stop != NULL)
-	p->thp_transport_stop(p, &t->tht_plugin_aux, t);
-
   t->tht_stop_feed(t);
+
+  while((td = LIST_FIRST(&t->tht_descramblers)) != NULL)
+      td->td_stop(td);
 
   t->tht_tt_commercial_advice = COMMERCIAL_UNKNOWN;
  
@@ -151,7 +150,6 @@ transport_start(th_transport_t *t, unsigned int weight)
   th_stream_t *st;
   AVCodec *c;
   enum CodecID id;
-  th_plugin_t *p;
 
   assert(t->tht_status != TRANSPORT_RUNNING);
 
@@ -190,11 +188,7 @@ transport_start(th_transport_t *t, unsigned int weight)
     }
   }
 
-  LIST_FOREACH(p, &th_plugins, thp_link)
-    if(p->thp_transport_start != NULL)
-	p->thp_transport_start(p, &t->tht_plugin_aux, t);
-
-
+  cwc_transport_start(t);
   return 0;
 }
 

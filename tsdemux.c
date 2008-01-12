@@ -113,11 +113,11 @@ ts_reassembly(th_transport_t *t, th_stream_t *st, uint8_t *data, int len,
 static void
 got_section(th_transport_t *t, th_stream_t *st)
 {
-  th_plugin_t *p;
-  LIST_FOREACH(p, &th_plugins, thp_link)
-    if(p->thp_psi_table != NULL)
-      p->thp_psi_table(p, &t->tht_plugin_aux, t, st, 
-		       st->st_section->ps_data, st->st_section->ps_offset);
+  th_descrambler_t *td;
+
+  LIST_FOREACH(td, &t->tht_descramblers, td_transport_link)
+    td->td_table(td, t, st, 
+		 st->st_section->ps_data, st->st_section->ps_offset);
 
   if(st->st_got_section != NULL)
     st->st_got_section(t, st, st->st_section->ps_data,
@@ -130,14 +130,13 @@ got_section(th_transport_t *t, th_stream_t *st)
  * Process transport stream packets
  */
 void
-ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb, int doplugin)
+ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb, int dodescramble)
 {
   th_stream_t *st = NULL;
   th_subscription_t *s;
   int cc, err = 0, afc, afl = 0;
   int len, pusi;
-  pluginaux_t *pa;
-  th_plugin_t *p;
+  th_descrambler_t *td;
 
   LIST_FOREACH(st, &t->tht_streams, st_link) 
     if(st->st_pid == pid)
@@ -146,14 +145,10 @@ ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb, int doplugin)
   if(st == NULL)
     return;
 
-  if(doplugin) {
-    LIST_FOREACH(pa, &t->tht_plugin_aux, pa_link) {
-      p = pa->pa_plugin;
-      if(p->thp_tsb_process != NULL)
-	if(p->thp_tsb_process(pa, t, st, tsb))
-	  return;
-    }
-  }
+  if(((tsb[3] >> 6) & 3) && dodescramble)
+    LIST_FOREACH(td, &t->tht_descramblers, td_transport_link)
+      if(td->td_descramble(td, t, st, tsb))
+	return;
     
   avgstat_add(&t->tht_rate, 188, dispatch_clock);
   if((tsb[3] >> 6) & 3)

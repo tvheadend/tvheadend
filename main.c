@@ -55,7 +55,7 @@
 #include "htmlui.h"
 #include "avgen.h"
 #include "file_input.h"
-#include "plugin.h"
+#include "cwc.h"
 
 int running;
 int xmltvreload;
@@ -200,7 +200,7 @@ main(int argc, char **argv)
 
   file_input_init();
 
-  plugin_init();
+  cwc_init();
 
   running = 1;
   while(running) {
@@ -211,6 +211,9 @@ main(int argc, char **argv)
       startupcounter = -1;
       syslog(LOG_NOTICE, 
 	     "Initial input setup completed, starting output modules");
+
+      fprintf(stderr,
+	      "Initial input setup completed, starting output modules\n");
 
       pvr_init();
       output_multicast_setup();
