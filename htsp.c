@@ -37,8 +37,11 @@
 #include "htsp.h"
 #include "htsp_muxer.h"
 #include "tcp.h"
+#include "epg.h"
 
 #include <libhts/htsmsg_binary.h>
+
+static LIST_HEAD(, htsp) htsp_sessions;
 
 /*
  *
@@ -64,6 +67,79 @@ htsp_send_msg(htsp_t *htsp, htsmsg_t *m, int media)
 }
 
 
+/**
+ * build a channel message
+ */
+static htsmsg_t *
+htsp_build_channel_msg(th_channel_t *ch, const char *method)
+{
+  htsmsg_t *msg = htsmsg_create();
+  event_t *e;
+
+  htsmsg_add_str(msg, "method", method);
+  htsmsg_add_str(msg, "channelGroupName", ch->ch_group->tcg_name);
+  htsmsg_add_str(msg, "channelName", ch->ch_name);
+  htsmsg_add_u32(msg, "channelTag", ch->ch_tag);
+  if(ch->ch_icon != NULL)
+    htsmsg_add_str(msg, "channelIcon", refstr_get(ch->ch_icon));
+  
+  if((e = epg_event_get_current(ch)) != NULL)
+    htsmsg_add_u32(msg, "currentEvent", e->e_tag);
+
+  return msg;
+}
+
+
+
+
+/**
+ * channels_list
+ */
+static void
+htsp_send_all_channels(htsp_t *htsp)
+{
+  htsmsg_t *msg;
+  th_channel_group_t *tcg;
+  th_channel_t *ch;
+
+  TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
+    if(tcg->tcg_hidden)
+      continue;
+
+    msg = htsmsg_create();
+    htsmsg_add_str(msg, "method", "channelGroupAdd");
+    htsmsg_add_str(msg, "channelGroupName", tcg->tcg_name);
+    htsp_send_msg(htsp, msg, 0);
+
+    TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
+      if(LIST_FIRST(&ch->ch_transports) == NULL)
+	continue;
+
+      msg = htsp_build_channel_msg(ch, "channelAdd");
+      htsp_send_msg(htsp, msg, 0);
+    }
+  }
+}
+
+/**
+ * 
+ */
+void
+htsp_async_channel_update(th_channel_t *ch)
+{
+  htsp_t *htsp;
+  htsmsg_t *msg;
+
+  LIST_FOREACH(htsp, &htsp_sessions, htsp_global_link) {
+    if(!htsp->htsp_rpc.rs_is_async)
+      continue;
+
+    msg = htsp_build_channel_msg(ch, "channelUpdate");
+    htsp_send_msg(htsp, msg, 0);
+  }
+}
+
+
 /*
  *
  */
@@ -71,7 +147,7 @@ static void
 htsp_input(htsp_t *htsp, const void *buf, int len)
 {
   htsmsg_t *in, *out;
-  int i;
+  int i, was_async;
   const uint8_t *v = buf;
 
   printf("Got %d bytes\n", len);
@@ -83,6 +159,9 @@ htsp_input(htsp_t *htsp, const void *buf, int len)
     printf("deserialize failed\n");
     return;
   }
+
+  was_async = htsp->htsp_rpc.rs_is_async;
+
   printf("INPUT:\n");
   htsmsg_print(in);
 
@@ -94,6 +173,11 @@ htsp_input(htsp_t *htsp, const void *buf, int len)
   htsmsg_print(out);
 
   htsp_send_msg(htsp, out, 0);
+
+  if(!was_async && htsp->htsp_rpc.rs_is_async) {
+    /* Session went into async state */
+    htsp_send_all_channels(htsp);
+  }
 }
 
 
@@ -158,6 +242,8 @@ htsp_data_input(htsp_t *htsp)
 static void
 htsp_disconnect(htsp_t *htsp)
 {
+  LIST_REMOVE(htsp, htsp_global_link);
+
   free(htsp->htsp_buf);
   rpc_deinit(&htsp->htsp_rpc);
 }
@@ -173,6 +259,8 @@ htsp_connect(htsp_t *htsp)
  
   htsp->htsp_bufsize = 1000;
   htsp->htsp_buf = malloc(htsp->htsp_bufsize);
+
+  LIST_INSERT_HEAD(&htsp_sessions, htsp, htsp_global_link);
 }
 
 /*

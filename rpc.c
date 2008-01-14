@@ -58,26 +58,6 @@ rpc_build_channel_msg(th_channel_t *ch)
 
 
 
-#if 0
-
-/**
- * channels_list
- */
-static void
-htsp_send_all_channels(htsp_connection_t *hc)
-{
-  htsp_msg_t *msg;
-  th_channel_t *ch;
-
-  TAILQ_FOREACH(ch, &channels, ch_global_link) {
-    msg = htsp_build_channel_msg(ch);
-    htsp_add_string(msg, "msgtype", "channelAdd");
-    htsp_send_msg(hc, NULL, msg);
-    htsp_free_msg(msg);
-  }
-}
-
-#endif
 
 
 

@@ -27,6 +27,8 @@
 typedef struct htsp {
   tcp_session_t htsp_tcp_session; /* Must be first */
 
+  LIST_ENTRY(htsp) htsp_global_link;
+
   int htsp_bufsize;
   int htsp_bufptr;
   int htsp_msglen;
@@ -41,5 +43,7 @@ typedef struct htsp {
 void htsp_start(int port);
 
 int htsp_send_msg(htsp_t *htsp, htsmsg_t *m, int media);
+
+void htsp_async_channel_update(th_channel_t *ch);
 
 #endif /* HTSP_H_ */

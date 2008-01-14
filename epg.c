@@ -26,6 +26,7 @@
 #include "epg.h"
 #include "dispatch.h"
 #include "htsclient.h"
+#include "htsp.h"
 
 #define EPG_MAX_AGE 86400
 
@@ -378,6 +379,8 @@ epg_set_current_event(th_channel_t *ch, event_t *e)
   /* Notify clients that a new programme is on */
 
   clients_send_ref(ch->ch_tag);
+
+  htsp_async_channel_update(ch);
 }
 
 static void
