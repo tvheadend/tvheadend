@@ -123,7 +123,8 @@ rtsp_subscription_callback(struct th_subscription *s,
   switch(event) {
   case TRANSPORT_AVAILABLE:
     assert(rs->rs_muxer == NULL);
-    rs->rs_muxer = ts_muxer_init(s, rtp_output_ts, &rs->rs_rtp_streamer, 0);
+    rs->rs_muxer = ts_muxer_init(s, rtp_output_ts, &rs->rs_rtp_streamer, 
+				 TS_SEEK);
     break;
 
   case TRANSPORT_UNAVAILABLE:

@@ -787,7 +787,7 @@ pvrr_transport_available(pvr_rec_t *pvrr, th_transport_t *t)
 
     tms = calloc(1, sizeof(th_muxstream_t));
     tms->tms_stream   = st;
-    LIST_INSERT_HEAD(&tm->tm_media_streams, tms, tms_muxer_media_link);
+    LIST_INSERT_HEAD(&tm->tm_streams, tms, tms_muxer_link0);
 
 
     tms->tms_avstream = av_mallocz(sizeof(AVStream));
@@ -855,8 +855,8 @@ pvrr_transport_unavailable(pvr_rec_t *pvrr, th_transport_t *t)
 
   /* Destroy muxstreams */
 
-  while((tms = LIST_FIRST(&tm->tm_media_streams)) != NULL) {
-    LIST_REMOVE(tms, tms_muxer_media_link);
+  while((tms = LIST_FIRST(&tm->tm_streams)) != NULL) {
+    LIST_REMOVE(tms, tms_muxer_link0);
     free(tms);
   }
 
@@ -965,7 +965,7 @@ is_all_decoded(th_muxer_t *tm, enum CodecType type)
   th_muxstream_t *tms;
   AVStream *st;
 
-  LIST_FOREACH(tms, &tm->tm_media_streams, tms_muxer_media_link) {
+  LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0) {
     st = tms->tms_avstream;
     if(st->codec->codec->type == type && tms->tms_decoded == 0)
       return 0;
@@ -994,7 +994,7 @@ pvrr_record_packet(pvr_rec_t *pvrr, th_pkt_t *pkt)
   char txt[100];
   size_t bufsize;
 
-  LIST_FOREACH(tms, &tm->tm_media_streams, tms_muxer_media_link)
+  LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0)
     if(tms->tms_stream == pkt->pkt_stream)
       break;
 
@@ -1108,7 +1108,7 @@ pvrr_record_packet(pvr_rec_t *pvrr, th_pkt_t *pkt)
 
     if(pkt->pkt_commercial != COMMERCIAL_YES) {
 
-      LIST_FOREACH(tms, &tm->tm_media_streams, tms_muxer_media_link)
+      LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0)
 	tms->tms_decoded = 0;
       
       pvrr_set_rec_state(pvrr, PVR_REC_WAIT_AUDIO_LOCK);

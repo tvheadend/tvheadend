@@ -40,7 +40,7 @@
 #define MULTICAST_PKT_SIZ (188 * 7)
 
 typedef struct output_multicast {
-  th_muxer_t *om_muxer;
+  ts_muxer_t *om_muxer;
   int om_fd;
   struct sockaddr_in om_dst;
 
@@ -61,8 +61,8 @@ typedef struct output_multicast {
  *  Output MPEG TS
  */
 void
-iptv_output_ts(void *opaque, th_subscription_t *s, 
-              uint8_t *pkt, int blocks, int64_t pcr)
+iptv_output_ts(void *opaque, th_subscription_t *s, uint8_t *pkt,
+	       int blocks, int64_t pcr)
 {
   output_multicast_t *om = opaque;
 
@@ -101,8 +101,8 @@ iptv_subscription_callback(struct th_subscription *s,
   switch(event) {
   case TRANSPORT_AVAILABLE:
     assert(om->om_muxer == NULL);
-    om->om_muxer = ts_muxer_init(s, iptv_output_ts, om, 0);
-    om->om_muxer->tm_drop_rate = om->om_intra_drop_rate;
+    om->om_muxer = ts_muxer_init(s, iptv_output_ts, om, TS_SEEK);
+    //    om->om_muxer->tm_drop_rate = om->om_intra_drop_rate;
     ts_muxer_play(om->om_muxer, 0);
     break;
 

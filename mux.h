@@ -1,5 +1,5 @@
 /*
- *  tvheadend, RTP interface
+ *  tvheadend, Stream muxer
  *  Copyright (C) 2007 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,24 +16,16 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RTP_H_
-#define RTP_H_
+#ifndef MUX_H
+#define MUX_H
 
-typedef struct th_rtp_streamer {
-  int trs_fd;
-  struct sockaddr_in trs_dest;
-  int16_t trs_seq;
+th_muxer_t *muxer_init(th_subscription_t *s, th_mux_output_t *cb,
+		       void *opaque);
 
-} th_rtp_streamer_t;
+void muxer_deinit(th_muxer_t *tm, th_subscription_t *s);
 
-void rtp_streamer_init(th_rtp_streamer_t *trs, int fd,
-		       struct sockaddr_in *dst);
+void muxer_play(th_muxer_t *tm, int64_t toffset);
 
-void rtp_output_ts(void *opaque, th_subscription_t *s, 
-		   uint8_t *pkt, int blocks, int64_t pcr);
+void muxer_pause(th_muxer_t *tm);
 
-int rtp_sendmsg(uint8_t *pkt, int blocks, int64_t pcr,
-		int fd, struct sockaddr *dst, socklen_t dstlen,
-		uint16_t seq);
-
-#endif /* RTP_H_ */
+#endif /* MUX_H */

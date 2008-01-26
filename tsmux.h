@@ -19,13 +19,53 @@
 #ifndef TSMUX_H
 #define TSMUX_H
 
-th_muxer_t *ts_muxer_init(th_subscription_t *s, th_mux_output_t *cb,
+typedef void (ts_mux_output_t)(void *opaque, th_subscription_t *s, 
+			       uint8_t *pkt, int npackets, int64_t pcr);
+
+
+typedef struct ts_muxer {
+  th_subscription_t *ts_subscription;
+  int ts_flags;
+#define TS_SEEK 0x1
+#define TS_HTSCLIENT 0x2
+
+  int ts_running;
+
+  th_muxer_t *ts_muxer;
+  ts_mux_output_t *ts_output;
+  void *ts_output_opaque;
+
+  int64_t ts_pcr_offset;
+  int64_t ts_pcr_ref;
+
+
+  int ts_pat_cc;
+  int ts_pmt_cc;
+
+  dtimer_t ts_patpmt_timer;
+
+  uint8_t *ts_packet;
+  int ts_block;
+  int ts_blocks_per_packet;
+
+  dtimer_t ts_stream_timer;
+
+  int ts_pcrpid;
+
+  int64_t ts_last_pcr;
+
+} ts_muxer_t;
+
+
+
+
+ts_muxer_t *ts_muxer_init(th_subscription_t *s, ts_mux_output_t *output,
 			  void *opaque, int flags);
 
-void ts_muxer_deinit(th_muxer_t *tm, th_subscription_t *s);
+void ts_muxer_deinit(ts_muxer_t *ts, th_subscription_t *s);
 
-void ts_muxer_play(th_muxer_t *tm, int64_t toffset);
+void ts_muxer_play(ts_muxer_t *ts, int64_t toffset);
 
-void ts_muxer_pause(th_muxer_t *tm);
+void ts_muxer_pause(ts_muxer_t *ts);
 
 #endif /* TSMUX_H */

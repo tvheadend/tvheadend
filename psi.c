@@ -131,7 +131,7 @@ psi_append_crc32(uint8_t *buf, int offset, int maxlen)
  */
 
 int
-psi_build_pat(th_transport_t *t, uint8_t *buf, int maxlen)
+psi_build_pat(th_transport_t *t, uint8_t *buf, int maxlen, int pmtpid)
 {
   if(maxlen < 12)
     return -1;
@@ -150,8 +150,8 @@ psi_build_pat(th_transport_t *t, uint8_t *buf, int maxlen)
   buf[8] = 0;    /* Program number, we only have one program */
   buf[9] = 1;
 
-  buf[10] = 0;   /* PMT pid */
-  buf[11] = 100;
+  buf[10] = 0xe0 | (pmtpid >> 8);
+  buf[11] =         pmtpid;
 
   return psi_append_crc32(buf, 12, maxlen);
 }
@@ -292,7 +292,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
  */
 
 int
-psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen)
+psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen, int pcrpid)
 {
   th_stream_t *st;
   th_muxstream_t *tms;
@@ -314,19 +314,8 @@ psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen)
   buf[6] = 0;
   buf[7] = 0;
 
-  /* Find PID that carries PCR */
-
-  LIST_FOREACH(tms, &tm->tm_media_streams, tms_muxer_media_link)
-    if(tms->tms_dopcr)
-      break;
-  
-  if(tms == NULL) {
-    buf[8] = 0xff;
-    buf[9] = 0xff;
-  } else {
-    buf[8] = 0xe0 | (tms->tms_index >> 8);
-    buf[9] =         tms->tms_index;
-  }
+  buf[8] = 0xe0 | (pcrpid >> 8);
+  buf[9] =         pcrpid;
 
   buf[10] = 0xf0; /* Program info length */
   buf[11] = 0x00; /* We dont have any such things atm */
@@ -334,7 +323,7 @@ psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen)
   buf += 12;
   tlen = 12;
 
-  LIST_FOREACH(tms, &tm->tm_media_streams, tms_muxer_media_link) {
+  LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0) {
     st = tms->tms_stream;
 
     switch(st->st_type) {

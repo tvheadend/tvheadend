@@ -82,7 +82,7 @@ rtp_sendmsg(uint8_t *pkt, int blocks, int64_t pcr,
 
 
 void
-rtp_output_ts(void *opaque, struct th_subscription *s,
+rtp_output_ts(void *opaque, th_subscription_t *s, 
 	      uint8_t *pkt, int blocks, int64_t pcr)
 {
   th_rtp_streamer_t *trs = opaque;

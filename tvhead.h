@@ -86,7 +86,7 @@ LIST_HEAD(th_pkt_list, th_pkt);
 LIST_HEAD(th_muxer_list, th_muxer);
 LIST_HEAD(th_muxstream_list, th_muxstream);
 LIST_HEAD(th_descrambler_list, th_descrambler);
-
+TAILQ_HEAD(th_metapkt_queue, th_metapkt);
 
 extern time_t dispatch_clock;
 extern int startupcounter;
@@ -521,37 +521,39 @@ typedef struct th_pkt {
 } th_pkt_t;
 
 
+
+/**
+ * Meta packets
+ */
+typedef struct th_metapkt {
+  TAILQ_ENTRY(th_metapkt) tm_link;
+  int64_t tm_ts_start;
+  int64_t tm_ts_stop;
+  int tm_pcroffset;
+  uint8_t tm_pkt[0];
+} th_metapkt_t;
+
+
 /*
  * A mux stream reader
  */
 typedef struct th_muxstream {
 
-  LIST_ENTRY(th_muxstream) tms_muxer_link;
+  LIST_ENTRY(th_muxstream) tms_muxer_link0;
   struct th_muxer *tms_muxer;
-
-  th_pkt_t *tms_curpkt;
-
-  int tms_offset;          /* offset in current packet */
-
   th_stream_t *tms_stream;
-  LIST_ENTRY(th_muxstream) tms_muxer_media_link;
-
-  int64_t tms_nextblock;   /* Time for delivery of next block */
-  int tms_block_interval;
-  int tms_block_rate;
-
-  int tms_mux_offset;
-
   int tms_index; /* Used as PID or whatever */
 
-  th_pkt_t *tms_tmppkt; /* temporary pkt pointer during lock phaze */
+  struct th_metapkt_queue tms_metaqueue;
+  uint32_t tms_meta_packets; /* number of packets "" */
+
+  
 
   /* MPEG TS multiplex stuff */
 
   int tms_sc; /* start code */
   int tms_cc;
-  int tms_dopcr;
-  int64_t tms_nextpcr;
+  int64_t tms_muxoffset;          /* DTS offset from PCR */
 
   /* Memebers used when running with ffmpeg */
   
@@ -571,8 +573,8 @@ typedef struct th_muxstream {
 
 struct th_subscription;
 
-typedef void (th_mux_output_t)(void *opaque, struct th_subscription *s,
-			       uint8_t *pkt, int blocks, int64_t pcr);
+typedef void (th_mux_output_t)(void *opaque, th_muxstream_t *tms,
+			       th_pkt_t *pkt);
 
 
 typedef void (th_mux_newpkt_t)(struct th_muxer *tm, th_stream_t *st,
@@ -583,33 +585,17 @@ typedef struct th_muxer {
   th_mux_newpkt_t *tm_new_pkt;
 
   LIST_ENTRY(th_muxer) tm_transport_link;
-  int tm_transport_linked;
+  int tm_linked;
 
-  int64_t tm_clockref;  /* Base clock ref */
-  int64_t tm_pauseref;  /* Time when we were paused */
+  int64_t tm_offset;
 
-  int tm_flags;
-#define TM_HTSCLIENTMODE 0x1 /* Ugly workaround for now */
-#define TM_SEEKABLE      0x2 /* We need the pause / seek to work */
-
-  int64_t tm_start_dts;
-  int64_t tm_next_pat;
-
-  struct th_muxstream_list tm_media_streams;
-
-  struct th_muxstream_list tm_active_streams;
-  struct th_muxstream_list tm_stale_streams;
-  struct th_muxstream_list tm_stopped_streams;
-
-  uint8_t *tm_packet;
-  int tm_blocks_per_packet;
+  struct th_muxstream_list tm_streams;
 
   struct th_subscription *tm_subscription;
 
-  th_mux_output_t *tm_callback;
+  th_mux_output_t *tm_output;
   void *tm_opaque;
   
-  dtimer_t tm_timer;
 
   enum {
     TM_IDLE,
@@ -618,16 +604,7 @@ typedef struct th_muxer {
     TM_PAUSE,
   } tm_status;
 
-  th_muxstream_t *tm_pat;
-  th_muxstream_t *tm_pmt;
-
   struct AVFormatContext *tm_avfctx;
-
-  int tm_drop_rate;
-  int tm_drop_cnt;
-
-  dtimer_t tm_table_timer;
-  int tm_block_offset;
 } th_muxer_t;
 
 
