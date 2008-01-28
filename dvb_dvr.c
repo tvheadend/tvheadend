@@ -160,9 +160,9 @@ dvb_start_feed(th_transport_t *t, unsigned int weight, int status)
       return 1; /* too many errors for using it */
 
     w = transport_compute_weight(&tdmi->tdmi_adapter->tda_transports);
-    if(w >= weight)
+    if(w > weight)
       return 1; /* We are outranked by weight, cant use it */
-    
+
     dvb_adapter_clean(tda);
   }
   tdmi = t->tht_dvb_mux_instance;
