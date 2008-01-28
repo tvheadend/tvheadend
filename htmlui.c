@@ -1510,7 +1510,7 @@ page_editchannel(http_connection_t *hc, const char *remain, void *opaque)
 		t->tht_scrambled ? "Yes" : "No",
 		t->tht_provider,
 		t->tht_network,
-		t->tht_uniquename);
+		t->tht_name);
 
   }
 
@@ -1562,7 +1562,7 @@ page_updatechannel(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   if((s = http_arg_get(&hc->hc_url_args, "ttrp")) != NULL)
-    ch->ch_teletext_rundown = atoi(s);
+    channel_set_teletext_rundown(ch, atoi(s));
 
   if((grp = http_arg_get(&hc->hc_url_args, "grp")) != NULL) {
     tcg = channel_group_find(grp, 1);

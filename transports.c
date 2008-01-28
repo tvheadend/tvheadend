@@ -25,7 +25,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <errno.h>
-
+#include <ctype.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -57,6 +57,7 @@
 
 static dtimer_t transport_monitor_timer;
 
+static const char *transport_settings_path(th_transport_t *t);
 
 
 void
@@ -400,27 +401,22 @@ transport_set_channel(th_transport_t *t, th_channel_t *ch)
   th_stream_t *st;
   char *chname;
   const char *n;
-  config_entry_t *ce;
   char pid[30];
   char lang[30];
+  struct config_head cl;
 
   assert(t->tht_uniquename != NULL);
 
-  TAILQ_FOREACH(ce, &settings_list, ce_link) {
-    if(ce->ce_type != CFG_SUB || strcasecmp("transport", ce->ce_key))
-      continue;
+  n = transport_settings_path(t);
+  TAILQ_INIT(&cl);
+  config_read_file0(n, &cl);
 
-    n = config_get_str_sub(&ce->ce_sub, "uniquename", NULL);
-    if(n != NULL && !strcmp(n, t->tht_uniquename))
-      break;
-  }
+  t->tht_prio = atoi(config_get_str_sub(&cl, "prio", "0"));
+  n = config_get_str_sub(&cl, "channel", NULL);
+  if(n != NULL)
+    ch = channel_find(n, 1, NULL); 
 
-  if(ce != NULL) {
-    t->tht_prio = atoi(config_get_str_sub(&ce->ce_sub, "prio", "0"));
-    n = config_get_str_sub(&ce->ce_sub, "channel", NULL);
-    if(n != NULL)
-      ch = channel_find(n, 1, NULL); 
-  }
+  config_free0(&cl);
 
   t->tht_channel = ch;
   LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
@@ -464,10 +460,13 @@ transport_set_priority(th_transport_t *t, int prio)
 {
   th_channel_t *ch = t->tht_channel;
 
+  if(t->tht_prio == prio)
+    return;
+
   LIST_REMOVE(t, tht_channel_link);
   t->tht_prio = prio;
   LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
-  channel_settings_write();
+  transport_settings_write(t);
 }
 
 
@@ -480,5 +479,63 @@ transport_move(th_transport_t *t, th_channel_t *ch)
   LIST_REMOVE(t, tht_channel_link);
   t->tht_channel = ch;
   LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
-  channel_settings_write();
+  transport_settings_write(t);
 }
+
+
+/**
+ * Generate a settings-dir relative path to transport config
+ *
+ * Must be free'd by caller
+ */
+static const char *
+transport_settings_path(th_transport_t *t)
+{
+  char buf[400];
+  char buf2[400];
+
+  int l, i;
+  char c;
+
+  l = strlen(t->tht_uniquename);
+  if(l >= sizeof(buf2))
+      l = sizeof(buf2) - 1;
+
+  for(i = 0; i < l; i++) {
+    c = tolower(t->tht_uniquename[i]);
+    if(isalnum(c))
+      buf2[i] = c;
+    else
+      buf2[i] = '_';
+  }
+
+  buf2[i] = 0;
+  snprintf(buf, sizeof(buf), "%s/transports/%s", settings_dir, buf2);
+  return strdup(buf);
+}
+
+
+/**
+ * Write out a config file for a channel
+ */
+void
+transport_settings_write(th_transport_t *t)
+{
+  FILE *fp;
+  const char *n;
+
+  n = transport_settings_path(t);
+    
+  if((fp = settings_open_for_write(n)) != NULL) {
+    fprintf(fp, 
+	    "uniquename = %s\n"
+	    "channel = %s\n"
+	    "prio = %d\n",
+	    t->tht_uniquename,
+	    t->tht_channel->ch_name,
+	    t->tht_prio);
+    fclose(fp);
+  }
+  free((void *)n);
+}
+

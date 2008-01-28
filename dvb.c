@@ -23,7 +23,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <errno.h>
-
+#include <ctype.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -63,8 +63,10 @@ static void
 dvb_add_adapter(const char *path)
 {
   char fname[256];
-  int fe;
-  th_dvb_adapter_t *tda;
+  int fe, i, r;
+  th_dvb_adapter_t *tda, *x;
+  char c;
+  char buf[400], *cp;
 
   snprintf(fname, sizeof(fname), "%s/frontend0", path);
   
@@ -103,10 +105,43 @@ dvb_add_adapter(const char *path)
   pthread_cond_init(&tda->tda_cond, NULL);
   TAILQ_INIT(&tda->tda_fe_cmd_queue);
 
-  LIST_INSERT_HEAD(&dvb_adapters_probing, tda, tda_link);
   startupcounter++;
 
   tda->tda_info = strdup(tda->tda_fe_info->name);
+
+  /*
+   * Generate a decent unique name for the adapter.
+   * If multiple adapters with the same name is found, we add
+   * a sequence number at the end
+   */
+
+  for(i = 0; i < strlen(tda->tda_info); i++) {
+    c = tolower(tda->tda_info[i]);
+    if(isalnum(c))
+      buf[i] = c;
+    else
+      buf[i] = '_';
+  }
+  cp = &buf[i];
+
+  r = 0;
+
+ again:
+  if(r)
+    sprintf(cp, "-%d", r);
+  else
+    *cp = 0;
+  
+  LIST_FOREACH(x, &dvb_adapters_probing, tda_link) {
+    if(!strcmp(buf, x->tda_sname)) {
+      r++;
+      goto again;
+    }
+  }
+
+  tda->tda_sname = strdup(buf);
+
+  LIST_INSERT_HEAD(&dvb_adapters_probing, tda, tda_link);
 
   syslog(LOG_INFO, "Adding adapter %s (%s)", path, tda->tda_fe_info->name);
   dtimer_arm(&tda->tda_fec_monitor_timer, dvb_fec_monitor, tda, 1);
@@ -184,10 +219,13 @@ dvb_find_transport(th_dvb_mux_instance_t *tdmi, uint16_t tid,
   t->tht_dvb_mux_instance = tdmi;
 
   snprintf(tmp, sizeof(tmp), "%s/%04x", tdmi->tdmi_uniquename, sid);
-
   free((void *)t->tht_uniquename);
   t->tht_uniquename = strdup(tmp);
+
+  snprintf(tmp, sizeof(tmp), "%s/%04x", tdmi->tdmi_shortname, sid);
+  free((void *)t->tht_name);
   t->tht_name = strdup(tmp);
+
   LIST_INSERT_HEAD(&all_transports, t, tht_global_link);
 
   dvb_table_add_transport(tdmi, t, pmt_pid);

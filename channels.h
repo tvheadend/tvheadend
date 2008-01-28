@@ -44,8 +44,8 @@ void channel_group_move_prev(th_channel_group_t *tcg);
 
 void channel_group_move_next(th_channel_group_t *tcg);
 
-void channel_settings_write(void);
-
 void channel_set_group(th_channel_t *ch, th_channel_group_t *tcg);
+
+void channel_set_teletext_rundown(th_channel_t *ch, int v);
 
 #endif /* CHANNELS_H */

@@ -61,6 +61,7 @@ int running;
 int xmltvreload;
 int startupcounter;
 const char *tvheadend_streaming_host;
+const char *settings_dir;
 
 static pthread_mutex_t tag_mutex = PTHREAD_MUTEX_INITIALIZER;
 static uint32_t tag_tally;
@@ -114,6 +115,7 @@ main(int argc, char **argv)
   int logfacility = LOG_DAEMON;
   int disable_dvb = 0;
   int p;
+  char buf[400];
 
   signal(SIGPIPE, handle_sigpipe);
 
@@ -168,7 +170,18 @@ main(int argc, char **argv)
 
   openlog("tvheadend", LOG_PID, logfacility);
   
-  syslog(LOG_NOTICE, "Started HTS TV Headend");
+  settings_dir = config_get_str("settings-dir", "/tmp/tvheadend");
+  mkdir(settings_dir, 0777);
+
+  snprintf(buf, sizeof(buf), "%s/channels", settings_dir);
+  mkdir(buf, 0777);
+
+  snprintf(buf, sizeof(buf), "%s/transports", settings_dir);
+  mkdir(buf, 0777);
+
+
+  syslog(LOG_NOTICE, "Started HTS TV Headend, settings located in \"%s\"",
+	 settings_dir);
 
   dispatch_init();
 
@@ -206,14 +219,13 @@ main(int argc, char **argv)
   while(running) {
 
     if(startupcounter == 0) {
-      channel_settings_write();
-
-      startupcounter = -1;
       syslog(LOG_NOTICE, 
 	     "Initial input setup completed, starting output modules");
 
       fprintf(stderr,
 	      "Initial input setup completed, starting output modules\n");
+
+      startupcounter = -1;
 
       pvr_init();
       output_multicast_setup();
@@ -343,3 +355,17 @@ htstvstreamtype2txt(tv_streamtype_t s)
   default:               return "<unknown>";
   }
 }
+
+
+FILE *
+settings_open_for_write(const char *name)
+{
+  FILE *fp;
+
+  fp = fopen(name, "w+");
+  if(fp == NULL)
+    syslog(LOG_ALERT, "Unable to open settings file \"%s\" -- %s",
+	   name, strerror(errno));
+  return fp;
+}
+

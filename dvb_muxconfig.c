@@ -81,7 +81,7 @@ dvb_add_mux(struct dvb_frontend_parameters *fe_param, fe_type_t type)
     /* Generate names */
     
     snprintf(buf, sizeof(buf), "%s/%s/%.1fMHz",
-	     tda->tda_rootpath, typetxt,
+	     tda->tda_sname, typetxt,
 	     (float)fe_param->frequency / 1000000.0f);
     tdmi->tdmi_uniquename = strdup(buf);
 

@@ -210,6 +210,7 @@ typedef struct th_dvb_adapter {
 
   const char *tda_rootpath;
   const char *tda_info;
+  const char *tda_sname;
 
   LIST_ENTRY(th_dvb_adapter) tda_link;
 
@@ -759,5 +760,8 @@ char *utf8tofilename(const char *in);
 const char *htstvstreamtype2txt(tv_streamtype_t s);
 uint32_t tag_get(void);
 extern const char *tvheadend_streaming_host;
+extern const char *settings_dir;
+FILE *settings_open_for_write(const char *name);
+FILE *settings_open_for_read(const char *name);
 
 #endif /* TV_HEAD_H */

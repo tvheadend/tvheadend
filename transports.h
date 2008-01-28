@@ -40,4 +40,6 @@ void transport_set_priority(th_transport_t *t, int prio);
 
 void transport_move(th_transport_t *t, th_channel_t *ch);
 
+void transport_settings_write(th_transport_t *t);
+
 #endif /* TRANSPORTS_H */
