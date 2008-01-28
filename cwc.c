@@ -487,8 +487,6 @@ cwc_dispatch_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
 	break;
     }
 
-    printf("got key response, ct = %p, len = %d\n", ct, len);
-
     if(ct == NULL)
       return 0;
 
@@ -653,8 +651,6 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
   if((data[0] & 0xf0) != 0x80)
     return;
 
-  printf("cwc table %x\n", data[0]);
-
   switch(data[0]) {
   case 0x80:
   case 0x81:
@@ -674,7 +670,6 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
 
     memcpy(ct->ct_ecm, data, len);
     ct->ct_ecmsize = len;
-    printf("Key xmitted\n");
     ct->ct_seq = cwc_send_msg(cwc, data, len, sid);
     LIST_INSERT_HEAD(&cwc_pending_requests, ct, ct_link);
     ct->ct_pending = 1;
@@ -770,7 +765,6 @@ cwc_transport_start(th_transport_t *t)
     td->td_table      = cwc_table_input;
     td->td_descramble = cwc_descramble;
     LIST_INSERT_HEAD(&t->tht_descramblers, td, td_transport_link);
-    printf("descrambler created\n");
   }
 }
 
