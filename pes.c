@@ -62,6 +62,66 @@ static void pes_compute_pts(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
   _pts;							\
 })
 
+/**
+ * pes_reassembly()
+ *
+ * 
+ */
+
+void
+pes_reassembly(th_transport_t *t, th_stream_t *st, uint8_t *data, 
+	       int len, int start, int err)
+{
+  uint32_t sc;
+  int i;
+
+  if(LIST_FIRST(&t->tht_muxers) == NULL)
+    return; /* No muxers will take packet, so drop here */
+
+  sc = st->st_startcond;
+
+  if(st->st_buffer == NULL) {
+    st->st_buffer_size = 4000;
+    st->st_buffer = malloc(st->st_buffer_size);
+  }
+
+  if(st->st_buffer_ptr + len >= st->st_buffer_size) {
+    st->st_buffer_size += len * 4;
+    st->st_buffer = realloc(st->st_buffer, st->st_buffer_size);
+  }
+
+  for(i = 0; i < len; i++) {
+    st->st_buffer[st->st_buffer_ptr++] = data[i];
+    sc = sc << 8 | data[i];
+
+    if((sc & 0xffffff00) == 0x00000100) {
+      /* Startcode condition */
+      switch(sc) {
+      case 0x000001e0 ... 0x000001ef:
+      case 0x000001c0 ... 0x000001cf:
+      case 0x000001bd:
+	st->st_buffer_ptr -= 4;
+	if(st->st_buffer_ptr < 0) {
+	  /* Fake startcode, can be seen during stream start */
+	  st->st_buffer_ptr = 0;
+	  break;
+	}
+
+	if(st->st_startcode != 0) {
+	  /* It would be nice to embed much of what's done in
+	   *  pes_packet_input() here to avoid a bunch of memcpy()s 
+	   */
+	  pes_packet_input(t, st, st->st_buffer + 2, st->st_buffer_ptr - 2);
+	  st->st_buffer_ptr = 0;
+	}
+	st->st_startcode = sc;
+	break;
+      }
+    }
+  }
+  st->st_startcond = sc;
+}
+
 
 
 

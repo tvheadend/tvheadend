@@ -49,61 +49,6 @@
 #include "buffer.h"
 #include "tsdemux.h"
 
-static int 
-ts_reassembly_pes(th_transport_t *t, th_stream_t *st, uint8_t *data, int len)
-{
-  int l2;
-
-  if(len < 9) 
-    return -1;
-
-  if(data[0] != 0 || data[1] != 0 || data[2] != 1)
-    return -1;
-
-  l2 = (data[4] << 8) | data[5];
-  
-  len  -= 6;
-  data += 6;
- 
-  return pes_packet_input(t, st, data, len);
-}
-
-/*
- * TS packet reassembly
- */
-static void
-ts_reassembly(th_transport_t *t, th_stream_t *st, uint8_t *data, int len, 
-	      int pusi, int err)
-{
-  if(pusi) {
-    if(ts_reassembly_pes(t, st, st->st_buffer, st->st_buffer_ptr) == 0)
-      st->st_buffer = NULL; /* Memory was consumed by pes_packet_input() */
-
-    st->st_buffer_ptr = 0;
-    st->st_buffer_errors = 0;
-
-    if(st->st_buffer == NULL) {
-
-      if(st->st_buffer_size < 1000)
-	st->st_buffer_size = 4000;
-
-      st->st_buffer = malloc(st->st_buffer_size);
-    }
-  }
-
-  if(st->st_buffer == NULL)
-    return;
-
-  st->st_buffer_errors += err;
-
-  if(st->st_buffer_ptr + len >= st->st_buffer_size) {
-    st->st_buffer_size += len * 4;
-    st->st_buffer = realloc(st->st_buffer, st->st_buffer_size);
-  }
-  
-  memcpy(st->st_buffer + st->st_buffer_ptr, data, len);
-  st->st_buffer_ptr += len;
-}
 
 /**
  * Code for dealing with a complete section
@@ -216,7 +161,7 @@ ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb, int dodescramble)
     if(afl > 188)
       break;
 
-    ts_reassembly(t, st, tsb + afl, 188 - afl, pusi, err);
+    pes_reassembly(t, st, tsb + afl, 188 - afl, pusi, err);
     break;
   }
 }
