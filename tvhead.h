@@ -293,6 +293,8 @@ typedef struct th_stream {
   int st_buffer_ptr;
   int st_buffer_size;
   int st_buffer_errors;   /* Errors accumulated for this packet */
+  uint32_t st_startcond;
+  uint32_t st_startcode;
 
   /* DTS generator */
 

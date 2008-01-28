@@ -105,7 +105,7 @@ transport_stop(th_transport_t *t, int flush_subscriptions)
     st->st_buffer = NULL;
     st->st_buffer_size = 0;
     st->st_buffer_ptr = 0;
-
+    st->st_startcode = 0;
 
     /* Clear DTS queue */
 
@@ -162,6 +162,8 @@ transport_start(th_transport_t *t, unsigned int weight)
 
   LIST_FOREACH(st, &t->tht_streams, st_link) {
   
+    st->st_startcond = 0xffffffff;
+    
     st->st_dts      = AV_NOPTS_VALUE;
     st->st_last_dts = 0;
     st->st_dts_u    = 0; 
