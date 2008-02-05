@@ -24,6 +24,7 @@
 #include <string.h>
 #include <errno.h>
 #include <ffmpeg/avcodec.h>
+#include <assert.h>
 
 #include "tvhead.h"
 #include "parsers.h"
@@ -88,8 +89,7 @@ static void parse_mpegaudio(th_transport_t *t, th_stream_t *st, uint8_t *data,
 static void parse_ac3(th_transport_t *t, th_stream_t *st, uint8_t *data,
 		      int len);
 
-static void parse_compute_pts(th_transport_t *t, th_stream_t *st,
-			      th_pkt_t *pkt);
+void parse_compute_pts(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
 
 static void parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
 
@@ -676,20 +676,24 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
  * We do this by placing packets on a queue and wait for next I/P
  * frame to appear
  */
-static void
+void
 parse_compute_pts(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 {
   th_pkt_t *p;
  
   if(pkt->pkt_pts != AV_NOPTS_VALUE && st->st_ptsq_len == 0) {
     /* PTS known and no other packets in queue, deliver at once */
-    parser_deliver(t, st, pkt);
+
+    if(pkt->pkt_duration == 0)
+      parser_compute_duration(t, st, pkt);
+    else
+      parser_deliver(t, st, pkt);
     return;
   }
 
   TAILQ_INSERT_TAIL(&st->st_ptsq, pkt, pkt_queue_link);
   st->st_ptsq_len++;
-  
+
   while((pkt = TAILQ_FIRST(&st->st_ptsq)) != NULL) {
     switch(pkt->pkt_frametype) {
     case PKT_B_FRAME:
@@ -716,7 +720,11 @@ parse_compute_pts(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
     
     TAILQ_REMOVE(&st->st_ptsq, pkt, pkt_queue_link);
     st->st_ptsq_len--;
-    parser_deliver(t, st, pkt);
+
+    if(pkt->pkt_duration == 0)
+      parser_compute_duration(t, st, pkt);
+    else
+      parser_deliver(t, st, pkt);
   }
 }
 
@@ -738,6 +746,13 @@ parser_compute_duration(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 
   d = next->pkt_dts - pkt->pkt_dts;
   TAILQ_REMOVE(&st->st_durationq, pkt, pkt_queue_link);
+  if(d < 10) {
+    printf("%s: duration is %lld, pkt dropped\n", 
+	   htstvstreamtype2txt(st->st_type), d);
+    pkt_deref(pkt);
+    return;
+  }
+
   pkt->pkt_duration = d;
 
   parser_deliver(t, st, pkt);
@@ -753,6 +768,10 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 {
   th_muxer_t *tm;
   int64_t dts, pts, ptsoff;
+
+  assert(pkt->pkt_dts != AV_NOPTS_VALUE);
+  assert(pkt->pkt_pts != AV_NOPTS_VALUE);
+  assert(pkt->pkt_duration > 10);
 
   if(t->tht_dts_start == AV_NOPTS_VALUE) {
     pkt_deref(pkt);
@@ -789,8 +808,7 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   pkt->pkt_pts     =av_rescale_q(pts,               st->st_tb, AV_TIME_BASE_Q);
   pkt->pkt_duration=av_rescale_q(pkt->pkt_duration, st->st_tb, AV_TIME_BASE_Q);
 #if 0
-  printf("%20lld: %-12s %d %10lld %10lld %d\n",
-	 getclock_hires(),
+  printf("%-12s %d %10lld %10lld %d\n",
 	 htstvstreamtype2txt(st->st_type),
 	 pkt->pkt_frametype,
 	 pkt->pkt_dts,

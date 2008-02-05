@@ -216,7 +216,7 @@ file_input_get_pkt(th_transport_t *t, file_input_t *fi, int64_t now)
   th_pkt_t *pkt;
   th_stream_t *st;
   int i, frametype;
-  int64_t pts, d = 1;
+  int64_t dts, pts, d = 1;
   uint32_t sc;
 
   do {
@@ -225,6 +225,7 @@ file_input_get_pkt(th_transport_t *t, file_input_t *fi, int64_t now)
       file_input_reset(t, fi);
       d = 20000;
       fi->fi_dts_offset += fi->fi_last_dts;
+      printf("File wrap\n");
       break;
     }
     
@@ -239,11 +240,7 @@ file_input_get_pkt(th_transport_t *t, file_input_t *fi, int64_t now)
     if(t->tht_dts_start == AV_NOPTS_VALUE)
 	t->tht_dts_start = ffpkt.dts;
 
-    pts = av_rescale_q(ffpkt.pts,
-		       fi->fi_fctx->streams[ffpkt.stream_index]->time_base,
-		       AV_TIME_BASE_Q);
-
-    /* Figure frametype */
+   /* Figure frametype */
 
     switch(st->st_type) {
     case HTSTV_MPEG2VIDEO:
@@ -254,32 +251,47 @@ file_input_get_pkt(th_transport_t *t, file_input_t *fi, int64_t now)
       } else {
 	frametype = PKT_I_FRAME;
       }
+      if(frametype == PKT_B_FRAME)
+	ffpkt.pts = ffpkt.dts;
+
       break;
     default:
       frametype = 0;
       break;
     }
+    assert(ffpkt.dts != AV_NOPTS_VALUE); /* fixme */
 
-    pkt = pkt_alloc(ffpkt.data, ffpkt.size, 
-		    ffpkt.pts + fi->fi_dts_offset,
+    pts = ffpkt.pts;
+    if(pts != AV_NOPTS_VALUE)
+      pts += fi->fi_dts_offset;
+
+    pkt = pkt_alloc(ffpkt.data, ffpkt.size, pts,
 		    ffpkt.dts + fi->fi_dts_offset);
     pkt->pkt_frametype = frametype;
-
+    pkt->pkt_duration = 0;
     pkt->pkt_stream = st;
     st->st_tb = fi->fi_fctx->streams[ffpkt.stream_index]->time_base;
     fi->fi_last_dts = ffpkt.dts;
 
     avgstat_add(&st->st_rate, ffpkt.size, dispatch_clock);
 
-    parser_compute_duration(t, st, pkt);
+    switch(st->st_type) {
+    case HTSTV_MPEG2VIDEO:
+      parse_compute_pts(t, st, pkt);
+      break;
 
-    pts = av_rescale_q(ffpkt.pts - t->tht_dts_start,
+    default:
+      parser_compute_duration(t, st, pkt);
+      break;
+    }
+
+    dts = av_rescale_q(ffpkt.dts - t->tht_dts_start + fi->fi_dts_offset,
 		       fi->fi_fctx->streams[ffpkt.stream_index]->time_base,
 		       AV_TIME_BASE_Q);
 
     av_free_packet(&ffpkt);
 
-    d = pts - 1000000 - (now - fi->fi_refclock);
+    d = dts - 1000000 - (now - fi->fi_refclock);
   } while(d <= 0);
 
   dtimer_arm_hires(&fi->fi_timer, fi_timer_callback, t, now + d);

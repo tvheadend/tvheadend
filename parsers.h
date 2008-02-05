@@ -25,4 +25,6 @@ void parse_raw_mpeg(th_transport_t *t, th_stream_t *st, uint8_t *data,
 void parser_compute_duration(th_transport_t *t, th_stream_t *st,
 			     th_pkt_t *pkt);
 
+void parse_compute_pts(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
+
 #endif /* PARSERS_H */
