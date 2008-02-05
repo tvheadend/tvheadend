@@ -138,8 +138,6 @@ muxer_init(th_subscription_t *s, th_mux_output_t *cb, void *opaque,
   th_muxer_t *tm;
   th_muxstream_t *tms;
 
-  printf("muxer init!\n");
-
   tm = calloc(1, sizeof(th_muxer_t));
   tm->tm_subscription = s;
 
