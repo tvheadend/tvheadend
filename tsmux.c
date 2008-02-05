@@ -366,7 +366,7 @@ lookahead_dequeue(ts_muxer_t *ts, th_muxstream_t *tms)
   
   if(tms->tms_mux_offset == AV_NOPTS_VALUE) {
     if(tms->tms_stream->st_vbv_delay == -1)
-      tms->tms_mux_offset = tdur + pkt->pkt_duration;
+      tms->tms_mux_offset = tdur - pkt->pkt_duration;
     else
       tms->tms_mux_offset = tms->tms_stream->st_vbv_delay;
   }
@@ -532,15 +532,31 @@ lookahead_dequeue(ts_muxer_t *ts, th_muxstream_t *tms)
 	*tsb++ = u16 >> 8;
 	*tsb++ = u16;
       }
-    
+
       memcpy(tsb, pkt->pkt_payload + off, tsrem);
+
+      if(tms->tms_corruption_interval != 0) {
+	/* Only corruption payload, never the header */
+	if(tms->tms_corruption_last + tms->tms_corruption_interval < pcr &&
+	   off != 0 && pkt->pkt_frametype == PKT_I_FRAME) {
+	  tms->tms_corruption_counter = 50;
+	  tms->tms_corruption_last = pcr;
+	}
+
+	if(tms->tms_corruption_counter) {
+	  tms->tms_cc++;
+	  tms->tms_corruption_counter--;
+	}
+      }
+    
       tm->tm_contentsize = tsrem;
       
       tmf_enq(&tms->tms_delivery_fifo, tm);
 
       toff += tsrem;
       off += tsrem;
-    }
+
+     }
 
     tms->tms_lookahead_depth -= pkt->pkt_payloadlen;
     tms->tms_lookahead_packets--;
@@ -587,7 +603,7 @@ ts_mux_packet_input(void *opaque, th_muxstream_t *tms, th_pkt_t *pkt)
  */
 ts_muxer_t *
 ts_muxer_init(th_subscription_t *s, ts_mux_output_t *output,
-	      void *opaque, int flags)
+	      void *opaque, int flags, int corruption)
 {
   ts_muxer_t *ts = calloc(1, sizeof(ts_muxer_t));
   int dopcr;
@@ -610,6 +626,7 @@ ts_muxer_init(th_subscription_t *s, ts_mux_output_t *output,
   ts->ts_pcr_start = AV_NOPTS_VALUE;
   ts->ts_pcr_ref   = AV_NOPTS_VALUE;
   ts->ts_pcr_last  = INT64_MIN;
+  
 
   /* Do TS MUX specific init per stream */
 
@@ -619,6 +636,7 @@ ts_muxer_init(th_subscription_t *s, ts_mux_output_t *output,
     dopcr = 0;
     switch(st->st_type) {
     case HTSTV_MPEG2VIDEO:
+      tms->tms_corruption_interval = (int64_t)corruption * 1000000LL;
       tms->tms_sc = 0x1e0;
       dopcr = 1;
       break;

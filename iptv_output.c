@@ -44,7 +44,7 @@ typedef struct output_multicast {
   int om_fd;
   struct sockaddr_in om_dst;
 
-  int om_intra_drop_rate;
+  int om_corruption;
 
   int om_inter_drop_rate;
   int om_inter_drop_cnt;
@@ -101,8 +101,8 @@ iptv_subscription_callback(struct th_subscription *s,
   switch(event) {
   case TRANSPORT_AVAILABLE:
     assert(om->om_muxer == NULL);
-    om->om_muxer = ts_muxer_init(s, iptv_output_ts, om, TS_SEEK);
-    //    om->om_muxer->tm_drop_rate = om->om_intra_drop_rate;
+    om->om_muxer = ts_muxer_init(s, iptv_output_ts, om, TS_SEEK, 
+				 om->om_corruption);
     ts_muxer_play(om->om_muxer, 0);
     break;
 
@@ -166,8 +166,8 @@ output_multicast_load(struct config_head *head)
     ttl = atoi(s);
 
 
-  if((s = config_get_str_sub(head, "intra-drop-rate", NULL)) != NULL)
-    om->om_intra_drop_rate = atoi(s);
+  if((s = config_get_str_sub(head, "corruption-interval", NULL)) != NULL)
+    om->om_corruption = atoi(s);
 
   if((s = config_get_str_sub(head, "inter-drop-rate", NULL)) != NULL)
     om->om_inter_drop_rate = atoi(s);

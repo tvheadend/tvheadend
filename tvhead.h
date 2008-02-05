@@ -601,7 +601,11 @@ typedef struct th_muxstream {
 
   int tms_sc; /* start code */
   int tms_cc;
- 
+
+  int64_t tms_corruption_interval;
+  int64_t tms_corruption_last;
+  int tms_corruption_counter;
+
   /* Memebers used when running with ffmpeg */
   
   struct AVStream *tms_avstream;

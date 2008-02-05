@@ -45,14 +45,13 @@ typedef struct ts_muxer {
   int64_t ts_pcr_start;
   int64_t ts_pcr_ref;  /* System clock when PCR was/is/will be 0 */
   int64_t ts_pcr_last;
-
 } ts_muxer_t;
 
 
 
 
 ts_muxer_t *ts_muxer_init(th_subscription_t *s, ts_mux_output_t *output,
-			  void *opaque, int flags);
+			  void *opaque, int flags, int corruption);
 
 void ts_muxer_deinit(ts_muxer_t *ts, th_subscription_t *s);
 
