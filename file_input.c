@@ -225,7 +225,6 @@ file_input_get_pkt(th_transport_t *t, file_input_t *fi, int64_t now)
       file_input_reset(t, fi);
       d = 20000;
       fi->fi_dts_offset += fi->fi_last_dts;
-      printf("File wrap\n");
       break;
     }
     
