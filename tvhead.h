@@ -803,7 +803,6 @@ char *utf8toprintable(const char *in);
 char *utf8tofilename(const char *in);
 const char *htstvstreamtype2txt(tv_streamtype_t s);
 uint32_t tag_get(void);
-extern const char *tvheadend_streaming_host;
 extern const char *settings_dir;
 FILE *settings_open_for_write(const char *name);
 FILE *settings_open_for_read(const char *name);

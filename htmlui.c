@@ -425,7 +425,8 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
   int simple = is_client_simple(hc);
   time_t firstend = INT32_MAX;
   th_channel_group_t *tcg;
-  
+  struct sockaddr_in *si;
+
   if(!html_verify_access(hc, "browse-events"))
     return HTTP_STATUS_UNAUTHORIZED;
 
@@ -485,13 +486,12 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
 		  "<a href=\"channel/%d\">%s</a></span>",
 		  ch->ch_tag, ch->ch_name);
 
-      if(tvheadend_streaming_host != NULL) {
-	tcp_qprintf(&tq,
-		    "<i><a href=\"rtsp://%s:%d/%s\">Watch live</a></i><br>",
-		    tvheadend_streaming_host, http_port, ch->ch_sname);
-      } else {
-	tcp_qprintf(&tq, "<br>");
-      }
+      si = (struct sockaddr_in *)&hc->hc_tcp_session.tcp_self_addr;
+
+      tcp_qprintf(&tq,
+		  "<i><a href=\"rtsp://%s:%d/%s\">Watch live</a></i><br>",
+		  inet_ntoa(si->sin_addr), ntohs(si->sin_port),
+		  ch->ch_sname);
 
       e = epg_event_find_current_or_upcoming(ch);
 
