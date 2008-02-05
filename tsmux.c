@@ -1,6 +1,6 @@
 /*
  *  tvheadend, MPEG Transport stream muxer
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2008 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -39,15 +39,15 @@
 #include "teletext.h"
 #include "transports.h"
 #include "subscriptions.h"
-#include "pes.h"
 #include "psi.h"
 #include "buffer.h"
 #include "mux.h"
 #include "tsmux.h"
 
-#define TS_LOOKAHEAD 500000
+static void lookahead_dequeue(ts_muxer_t *ts, th_muxstream_t *tms);
 
 static const AVRational mpeg_tc = {1, 90000};
+static const AVRational mpeg_tc_27M = {1, 27000000};
 
 #define PID_PMT     1000
 #define PID_ES_BASE 2000
@@ -58,9 +58,36 @@ static const AVRational mpeg_tc = {1, 90000};
 static void
 ts_muxer_send_packet(ts_muxer_t *ts)
 {
+  int i;
+  int64_t t, tlow, pcr;
+  uint8_t *d;
+
   if(ts->ts_block == 0)
     return;
 
+  d = ts->ts_packet;
+
+  /* Update PCR */
+
+  if(ts->ts_pcr_ref != AV_NOPTS_VALUE) {
+    for(i = 0; i < ts->ts_block; i++) {
+      d = ts->ts_packet + i * 188;
+      if((d[3] & 0xf0) == 0x30 && d[4] >= 7 && d[5] & 0x10) {
+
+	pcr = getclock_hires() - ts->ts_pcr_ref;
+	t = av_rescale_q(pcr, AV_TIME_BASE_Q, mpeg_tc_27M);
+	tlow = t % 300LL;
+	t =    t / 300LL;
+
+	d[6] =  t >> 25;
+	d[7] =  t >> 17;
+	d[8] =  t >> 9;
+	d[9] =  t >> 1;
+	d[10] = ((t & 1) << 7) | ((tlow >> 8) & 1);
+	d[11] = tlow;
+      }
+    }
+  }
   ts->ts_output(ts->ts_output_opaque, ts->ts_subscription, ts->ts_packet,
 		ts->ts_block, 0);
   ts->ts_block = 0;
@@ -154,364 +181,378 @@ ts_muxer_generate_tables(void *aux, int64_t now)
   ts_muxer_build_table(ts, table, l, ts->ts_pat_cc, 0);
   ts->ts_pat_cc++;
 
-  l = psi_build_pmt(tm, table, sizeof(table), ts->ts_pcrpid);
+  l = psi_build_pmt(tm, table, sizeof(table), ts->ts_pcr_stream->tms_index);
   ts_muxer_build_table(ts, table, l, ts->ts_pmt_cc, PID_PMT);
   ts->ts_pmt_cc++;
 
   ts_muxer_send_packet(ts);
 }
 
+
+
+
 /**
  *
  */
-static int64_t
-get_delay(th_muxstream_t *tms)
+static void
+tmf_enq(th_muxfifo_t *tmf, th_muxpkt_t *tm)
 {
-  th_metapkt_t *f, *l;
+  /* record real content size */
+  tmf->tmf_contentsize += tm->tm_contentsize;
 
-  f = TAILQ_FIRST(&tms->tms_metaqueue);
-  if(f == NULL)
-    return -1;
+  /* Enqueue packet */
+  TAILQ_INSERT_TAIL(&tmf->tmf_queue, tm, tm_link);
+  tmf->tmf_len++;
+}
 
-  l = TAILQ_LAST(&tms->tms_metaqueue, th_metapkt_queue);
-
-  return l->tm_ts_stop - f->tm_ts_start; /* Delta time */
-
+/**
+ *
+ */
+static void
+tmf_remove(th_muxfifo_t *tmf, th_muxpkt_t *tm)
+{
+  tmf->tmf_contentsize -= tm->tm_contentsize;
+  TAILQ_REMOVE(&tmf->tmf_queue, tm, tm_link);
+  tmf->tmf_len--;
 }
 
 
 /**
  *
  */
-#if 0
-static int
-estimate_bitrate(th_muxstream_t *tms)
+static th_muxpkt_t *
+tmf_deq(th_muxfifo_t *tmf)
 {
-  int64_t delta, rate;
+  th_muxpkt_t *tm;
 
-  delta = get_delay(tms);
-  if(delta == -1)
-    return -1;
-  rate = (uint64_t)tms->tms_meta_bytes * 1000000LL / delta;
-  return rate;
+  tm = TAILQ_FIRST(&tmf->tmf_queue);
+  if(tm != NULL)
+    tmf_remove(tmf, tm);
+  return tm;
 }
-#endif
+
+
+
 
 /**
  *
  */
-#if 0
-static int
-estimate_blockrate(th_muxstream_t *tms)
+static void
+tmf_init(th_muxfifo_t *tmf)
 {
-  int64_t delta, rate;
-
-  delta = get_delay(tms);
-  if(delta == -1)
-    return 0;
-  rate = (uint64_t)tms->tms_meta_packets * 1000000LL / delta;
-  return rate;
+  TAILQ_INIT(&tmf->tmf_queue);
 }
-#endif
+
 
 /**
  *
  */
-#define PES_HEADER_SIZE 19
+static void
+ts_deliver(void *opaque, int64_t now)
+{
+  th_muxstream_t *tms = opaque;
+  th_muxer_t *tm = tms->tms_muxer;
+  ts_muxer_t *ts = tm->tm_opaque;
+  th_muxpkt_t *f;
+  th_muxfifo_t *tmf = &tms->tms_delivery_fifo;
+  int64_t pcr = now - ts->ts_pcr_ref;
+  int64_t dl, next, delta;
+
+  f = tmf_deq(tmf);
+  dl = f->tm_deadline;
+
+  delta = pcr - dl;
+
+  ts_muxer_add_packet(ts, f->tm_pkt, tms->tms_index);
+  free(f);
+
+  f = TAILQ_FIRST(&tmf->tmf_queue);  /* next packet we are going to send */
+  if(f == NULL) {
+    lookahead_dequeue(ts, tms);
+    f = TAILQ_FIRST(&tmf->tmf_queue);
+    if(f == NULL)
+      return;
+  }
+
+  next = f->tm_deadline + ts->ts_pcr_ref;
+  if(next < now + 100)
+    next = now + 100;
+
+  dtimer_arm_hires(&tms->tms_mux_timer, ts_deliver, tms, next - 500);
+}
+
+
+
+/**
+ * Check if we need to start delivery timer for the given stream
+ * 
+ * Also, if it is the PCR stream and we're not yet runnig, figure out
+ * PCR and start generating packets
+ */
+static void
+ts_check_deliver(ts_muxer_t *ts, th_muxstream_t *tms)
+{
+  int64_t now;
+  th_muxpkt_t *f;
+  th_muxfifo_t *tmf = &tms->tms_delivery_fifo;
+  int64_t next;
+
+  if(dtimer_isarmed(&tms->tms_mux_timer))
+    return; /* timer already running, we're fine */
+
+  assert(tms->tms_delivery_fifo.tmf_len != 0);
+
+  now = getclock_hires();
+
+  if(ts->ts_pcr_ref == AV_NOPTS_VALUE) {
+
+    if(ts->ts_pcr_start == AV_NOPTS_VALUE)
+      return; /* dont know anything yet */
+
+    ts->ts_pcr_ref = now - ts->ts_pcr_start;
+  }
+
+  f = TAILQ_FIRST(&tmf->tmf_queue);  /* next packet we are going to send */
+  next = f->tm_deadline + ts->ts_pcr_ref;
+
+  if(next < now + 100)
+    next = now + 100;
+ 
+  dtimer_arm_hires(&tms->tms_mux_timer, ts_deliver, tms, next - 500);
+}
+
+
+
+
+/**
+ * Generate TS packet, see comments inline
+ *
+ * TODO: Dont insert both DTS and PTS if they're equal
+ */
 
 static void
-ts_mux_gen_packets(ts_muxer_t *ts, th_muxstream_t *tms, th_pkt_t *pkt)
+lookahead_dequeue(ts_muxer_t *ts, th_muxstream_t *tms)
 {
-  th_metapkt_t *tm;
-  int off = 0;
+  //  th_stream_t *st = tms->tms_stream;
+  th_pkt_t *pkt;
+  th_muxpkt_t *tm;
+  th_refpkt_t *o;
   uint8_t *tsb;
-  int64_t t;
-  int frrem, pad, tsrem, len;
   uint16_t u16;
-  //  int pcroffset;
-  int printts = 0;
+  int frrem, pad, tsrem, len, off, cc, hlen, flags;
+  int64_t t, tdur, toff, tlen, dts, pcr, basedelivery;
 
-  if(printts)printf("Generating TS packets, DTS = %lld +%d\n", pkt->pkt_dts,
-	 pkt->pkt_duration);
+  tlen = 0;
+  TAILQ_FOREACH(o, &tms->tms_lookahead, trp_link) {
+    pkt = o->trp_pkt;
+    tlen += pkt->pkt_payloadlen;
 
-  while(off < pkt->pkt_payloadlen) {
-
-
-    tm = malloc(sizeof(th_metapkt_t) + 188);
-    tsb = tm->tm_pkt;
-    tm->tm_pcroffset = 0;
-
-    /* Timestamp of first byte */
-    tm->tm_ts_start = pkt->pkt_duration * off / 
-      (pkt->pkt_payloadlen + PES_HEADER_SIZE)
-      + pkt->pkt_dts - tms->tms_muxoffset;
-
-
-    if(ts->ts_flags & TS_HTSCLIENT) {
-      /* Temporary hack */
-      *tsb++ = tms->tms_stream->st_type;
+    if(pkt->pkt_pts != pkt->pkt_dts) {
+      tlen += 19; /* pes header with DTS and PTS */
     } else {
-      /* TS marker */
-      *tsb++ = 0x47;
+      tlen += 14; /* pes header with PTS only */
+    }
+  }
+
+  if(tlen == 0)
+    return;
+
+  o = TAILQ_FIRST(&tms->tms_lookahead);
+  pkt = o->trp_pkt;
+  toff = 0;
+
+  /* XXX: assumes duration is linear, but it's probably ok */
+  tdur = pkt->pkt_duration * tms->tms_lookahead_packets;
+  
+  if(tms->tms_mux_offset == AV_NOPTS_VALUE) {
+    if(tms->tms_stream->st_vbv_delay == -1)
+      tms->tms_mux_offset = tdur + pkt->pkt_duration;
+    else
+      tms->tms_mux_offset = tms->tms_stream->st_vbv_delay;
+  }
+
+  if(ts->ts_pcr_start == AV_NOPTS_VALUE && ts->ts_pcr_stream == tms)
+    ts->ts_pcr_start = pkt->pkt_dts - tms->tms_mux_offset;
+
+  basedelivery = pkt->pkt_dts - tms->tms_mux_offset;
+
+  while((o = TAILQ_FIRST(&tms->tms_lookahead)) != NULL) {
+
+    off = 0;
+    pkt = o->trp_pkt;
+
+    pkt_load(pkt);
+
+    if(pkt->pkt_dts == pkt->pkt_pts) {
+      hlen = 8;
+      flags = 0x80;
+    } else {
+      hlen = 13;
+      flags = 0xc0;
     }
 
+    while(off < pkt->pkt_payloadlen) {
+  
+      tm = malloc(sizeof(th_muxpkt_t) + 188);
+      tm->tm_deadline = basedelivery + tdur * toff / tlen;
+
+      dts = (int64_t)pkt->pkt_duration * 
+	(int64_t)off / (int64_t)pkt->pkt_payloadlen;
+      dts += pkt->pkt_dts;
+
+      tm->tm_dts = dts;
+      tsb = tm->tm_pkt;
+      
+      if(ts->ts_flags & TS_HTSCLIENT) {
+	/* Temporary hack */
+	*tsb++ = tms->tms_stream->st_type;
+      } else {
+	/* TS marker */
+	*tsb++ = 0x47;
+      }
+      
     
-    /* Write PID and optionally payload unit start indicator */
-    *tsb++ = tms->tms_index >> 8 | (off ? 0 : 0x40);
-    *tsb++ = tms->tms_index;
+      /* Write PID and optionally payload unit start indicator */
+      *tsb++ = tms->tms_index >> 8 | (off ? 0 : 0x40);
+      *tsb++ = tms->tms_index;
 
-    /* Remaing bytes after 4 bytes of TS header */
-    tsrem = 184;
+      cc = tms->tms_cc & 0xf;
+      tms->tms_cc++;
 
-    if(off == 0) {
-      /* When writing the packet header, shave of a bit of available 
-	 payload size */
-      tsrem -= PES_HEADER_SIZE;
-    }
+      /* Remaing bytes after 4 bytes of TS header */
+      tsrem = 184;
+
+      if(off == 0) {
+	/* When writing the packet header, shave of a bit of available 
+	   payload size */
+	tsrem -= hlen + 6;
+      }
       
-    /* Remaining length of frame */
-    frrem = pkt->pkt_payloadlen - off;
+      /* Remaining length of frame */
+      frrem = pkt->pkt_payloadlen - off;
 
-    /* Compute amout of padding needed */
-    pad = tsrem - frrem;
+      /* Compute amout of padding needed */
+      pad = tsrem - frrem;
 
-    if(pad > 0) {
-      /* Must pad TS packet */
+      pcr = tm->tm_deadline;
+      tm->tm_pcr = AV_NOPTS_VALUE;
+
+      if(ts->ts_pcr_stream == tms && ts->ts_pcr_last + 20000 < pcr) {
+	 
+	tm->tm_pcr = pcr;
+	/* Insert PCR */
+    
+	tlen  += 8; /* compensate total length */
+	tsrem -= 8;
+	pad   -= 8;
+	if(pad < 0)
+	  pad = 0;
 	
-      *tsb++ = 0x30;
-      tsrem -= pad;
-      *tsb++ = --pad;
+	*tsb++ = 0x30 | cc;
+	*tsb++ = 7 + pad;
+	*tsb++ = 0x10;   /* PCR flag */
+	
+	t = av_rescale_q(pcr, AV_TIME_BASE_Q, mpeg_tc);
+	*tsb++ =  t >> 25;
+	*tsb++ =  t >> 17;
+	*tsb++ =  t >> 9;
+	*tsb++ =  t >> 1;
+	*tsb++ = (t & 1) << 7;
+	*tsb++ = 0;
+	
+	memset(tsb, 0xff, pad);
+	tsb   += pad;
+	tsrem -= pad;
+	
+	ts->ts_pcr_last = pcr + 20000;
 
-      memset(tsb, 0x00, pad);
-      tsb += pad;
-    } else {
-      *tsb++ = 0x10;
-    }
+      } else if(pad > 0) {
+	/* Must pad TS packet */
+	
+	*tsb++ = 0x30 | cc;
+	tsrem -= pad;
+	*tsb++ = --pad;
 
-
-    if(off == 0) {
-      /* Insert PES header */
-      
-      /* Write startcode */
-
-      *tsb++ = 0;
-      *tsb++ = 0;
-      *tsb++ = tms->tms_sc >> 8;
-      *tsb++ = tms->tms_sc;
-
-      /* Write total frame length (without accounting for startcode and
-	 length field itself */
-
-      len = pkt_len(pkt) + PES_HEADER_SIZE - 6;
-
-      if(len > 65535) {
-	/* It's okay to write len as 0 in transport streams,
-	   but only for video frames, and i dont expect any of the
-	   audio frames to exceed 64k 
-	*/
-	len = 0;
+	memset(tsb, 0x00, pad);
+	tsb += pad;
+      } else {
+	*tsb++ = 0x10 | cc;
       }
 
-      *tsb++ = len >> 8;
-      *tsb++ = len;
 
-      *tsb++ = 0x80;  /* MPEG2 */
-      *tsb++ = 0xc0;  /* pts & dts is present */
-      *tsb++ = 10;    /* length of rest of header (pts & dts) */
-
-      /* Write PTS */
-
-      t = av_rescale_q(pkt->pkt_pts, AV_TIME_BASE_Q, mpeg_tc);
-      *tsb++ = (((t >> 30) & 7) << 1) | 1;
-      u16 = (((t >> 15) & 0x7fff) << 1) | 1;
-      *tsb++ = u16 >> 8;
-      *tsb++ = u16;
-      u16 = ((t & 0x7fff) << 1) | 1;
-      *tsb++ = u16 >> 8;
-      *tsb++ = u16;
-
-      /* Write DTS */
-
-      t = av_rescale_q(pkt->pkt_dts, AV_TIME_BASE_Q, mpeg_tc);
-      *tsb++ = (((t >> 30) & 7) << 1) | 1;
-      u16 = (((t >> 15) & 0x7fff) << 1) | 1;
-      *tsb++ = u16 >> 8;
-      *tsb++ = u16;
-      u16 = ((t & 0x7fff) << 1) | 1;
-      *tsb++ = u16 >> 8;
-      *tsb++ = u16;
-    }
-    
-    memcpy(tsb, pkt->pkt_payload + off, tsrem);
-
-    /* Timestamp of last byte + 1 */
-    t = pkt->pkt_duration * (off + tsrem) / (pkt->pkt_payloadlen + 
-					      PES_HEADER_SIZE);
-
-    /* Fix any rounding errors */
-    if(t > pkt->pkt_duration)
-      t = pkt->pkt_duration;
-
-    tm->tm_ts_stop = pkt->pkt_dts + t - tms->tms_muxoffset;
-
-
-    if(printts)printf("TS: copy %7d (%3d bytes) pad = %7d: %lld - %lld\n",
-		      off, tsrem, pad, tm->tm_ts_start, tm->tm_ts_stop);
-    
-    TAILQ_INSERT_TAIL(&tms->tms_metaqueue, tm, tm_link);
-    tms->tms_meta_packets++;
-
-    off += tsrem;
-  }
-  if(printts)printf("end @ %lld\n", pkt->pkt_dts + pkt->pkt_duration);
-  if(printts)exit(0);
-}
-
-
-/**
- *
- */
-static int64_t
-check_total_delay(th_muxer_t *tm)
-{
-  th_muxstream_t *tms;
-  int64_t delta = -1, v;
-  LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0) {
-    v = get_delay(tms);
-    if(v > delta)
-      delta = v;
-  }
-  return delta;
-}
-
-
-
-/**
- *
- */
-static int64_t
-get_start_pcr(th_muxer_t *tm)
-{
-  th_muxstream_t *tms;
-  th_metapkt_t *f;
-  int64_t r = INT64_MAX;
-
-  LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0) {
-
-    f = TAILQ_FIRST(&tms->tms_metaqueue);
-    if(f == NULL)
-      continue;
-    if(f->tm_ts_start < r)
-      r = f->tm_ts_start;
-  }
-  return r;
-}
-
-
-
-
-/**
- *
- */
-static void
-ts_deliver(void *aux, int64_t now)
-{
-  ts_muxer_t *ts = aux;
-  th_muxer_t *tm = ts->ts_muxer;
-  th_muxstream_t *tms, *c;
-  int rate;
-  int64_t v, pcr;
-  th_metapkt_t *x, *y;
-  uint8_t *tsb;
-  
-  int cnt;
-
-  pcr = now - ts->ts_pcr_ref + ts->ts_pcr_offset;
-
-  if(ts->ts_last_pcr + 20000 < now) {
-    LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0)
-      if(tms->tms_index == ts->ts_pcrpid)
-	break;
-
-    if(tms != NULL) {
-      uint8_t pkt[188];
-      tsb = &pkt[0];
-      *tsb++ = 0x47;
-      *tsb++ = 0;
-      *tsb++ = 0;
-
-      /* Insert CC */
-      *tsb++ = 0x20 | (tms->tms_cc & 0xf);
-
-      *tsb++ = 183;
-      *tsb++ = 0x10;   /* PCR flag */
-
-      v = av_rescale_q(pcr, AV_TIME_BASE_Q, mpeg_tc);
-      *tsb++ =  v >> 25;
-      *tsb++ =  v >> 17;
-      *tsb++ =  v >> 9;
-      *tsb++ =  v >> 1;
-      *tsb++ = (v & 1) << 7;
-      *tsb++ = 0;
- 
-      ts_muxer_add_packet(ts, pkt, tms->tms_index);
-      ts->ts_last_pcr = now;
-    }
-  }
- 
-  cnt = ts->ts_blocks_per_packet - ts->ts_block;
-
-  while(--cnt >= 0) {
-    c = LIST_FIRST(&tm->tm_streams);
-    tms = LIST_NEXT(c, tms_muxer_link0);
-    for(; tms != NULL; tms = LIST_NEXT(tms, tms_muxer_link0)) {
-      x = TAILQ_FIRST(&c->tms_metaqueue);
-      y = TAILQ_FIRST(&tms->tms_metaqueue);
+      if(off == 0) {
+	/* Insert PES header */
       
-      if(x != NULL && y != NULL && y->tm_ts_start < x->tm_ts_start)
-	c = tms;
-    }
+	/* Write startcode */
+	*tsb++ = 0;
+	*tsb++ = 0;
+	*tsb++ = tms->tms_sc >> 8;
+	*tsb++ = tms->tms_sc;
 
-    tms = NULL;
+	/* Write total frame length (without accounting for startcode and
+	   length field itself */
+	len = pkt_len(pkt) + hlen;
 
-    x = TAILQ_FIRST(&c->tms_metaqueue);
-    if(x == NULL) {
-      printf("underrun\n");
-      break;
-    }
-    TAILQ_REMOVE(&c->tms_metaqueue, x, tm_link);
-    c->tms_meta_packets--;
+	if(tms->tms_stream->st_type == HTSTV_MPEG2VIDEO) {
+	  /* It's okay to write len as 0 in transport streams,
+	     but only for video frames, and i dont expect any of the
+	     audio frames to exceed 64k 
+	  */
+	  len = 0;
+	}
 
-    /* Insert CC */
-    x->tm_pkt[3] = (x->tm_pkt[3] & 0xf0) | (c->tms_cc & 0xf);
-    c->tms_cc++;
+	*tsb++ = len >> 8;
+	*tsb++ = len;
 
-    ts_muxer_add_packet(ts, x->tm_pkt, c->tms_index);
-    free(x);
-  }
+	*tsb++ = 0x80;      /* MPEG2 */
+	*tsb++ = flags;
+	*tsb++ = hlen - 3;  /* length of rest of header (pts & dts) */
 
+	/* Write PTS */
+	
+	if(flags == 0xc0) {
+	  t = av_rescale_q(pkt->pkt_pts, AV_TIME_BASE_Q, mpeg_tc);
+	  *tsb++ = (((t >> 30) & 7) << 1) | 1;
+	  u16 = (((t >> 15) & 0x7fff) << 1) | 1;
+	  *tsb++ = u16 >> 8;
+	  *tsb++ = u16;
+	  u16 = ((t & 0x7fff) << 1) | 1;
+	  *tsb++ = u16 >> 8;
+	  *tsb++ = u16;
+	}
 
-  rate = 0;
-  LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0) {
-    rate += (tms->tms_meta_packets * 1000000ULL) / (uint64_t)TS_LOOKAHEAD;
-    //    rate += estimate_blockrate(tms);
-  }
+	/* Write DTS */
 
-#if 0
-  printf("TS blockrate = %d\n", rate);
-
-  LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0) {
-    printf("%-10s: %-5d %-8lld | ",
-	   htstvstreamtype2txt(tms->tms_stream->st_type), 
-	   tms->tms_meta_packets,
-	   get_delay(tms));
-  }
-  printf("\n");
-#endif
+	t = av_rescale_q(pkt->pkt_dts, AV_TIME_BASE_Q, mpeg_tc);
+	*tsb++ = (((t >> 30) & 7) << 1) | 1;
+	u16 = (((t >> 15) & 0x7fff) << 1) | 1;
+	*tsb++ = u16 >> 8;
+	*tsb++ = u16;
+	u16 = ((t & 0x7fff) << 1) | 1;
+	*tsb++ = u16 >> 8;
+	*tsb++ = u16;
+      }
     
-  v = 1000000 / (rate / ts->ts_blocks_per_packet);
-  dtimer_arm_hires(&ts->ts_stream_timer, ts_deliver, ts, now + v);
+      memcpy(tsb, pkt->pkt_payload + off, tsrem);
+      tm->tm_contentsize = tsrem;
+      
+      tmf_enq(&tms->tms_delivery_fifo, tm);
+
+      toff += tsrem;
+      off += tsrem;
+    }
+
+    tms->tms_lookahead_depth -= pkt->pkt_payloadlen;
+    tms->tms_lookahead_packets--;
+    pkt_deref(pkt);
+    TAILQ_REMOVE(&tms->tms_lookahead, o, trp_link);
+
+    free(o);
+  }
+  ts_check_deliver(ts, tms);
 }
+
+
 
 /**
  *
@@ -520,26 +561,26 @@ static void
 ts_mux_packet_input(void *opaque, th_muxstream_t *tms, th_pkt_t *pkt)
 {
   ts_muxer_t *ts = opaque;
-  th_muxer_t *tm = ts->ts_muxer;
-  int64_t v, pcr;
+  th_stream_t *st = tms->tms_stream;
+  th_refpkt_t *trp;
 
-  ts_mux_gen_packets(ts, tms, pkt);
+  if(tms->tms_index == 0)
+    return;
 
-  if(ts->ts_running == 0) {
-    v = check_total_delay(tm);
-    if(v < TS_LOOKAHEAD)
-      return;
-    pcr = get_start_pcr(tm);
-    if(pcr == INT64_MAX)
-      return;
-    ts->ts_pcr_offset = pcr;
-    ts->ts_pcr_ref = getclock_hires();
-    ts->ts_running = 1;
-    ts_deliver(ts, getclock_hires());
+  if(st->st_vbv_delay == -1) {
+    if(tms->tms_lookahead_depth + pkt->pkt_payloadlen > st->st_vbv_size) 
+      lookahead_dequeue(ts, tms);
+  } else {
+    lookahead_dequeue(ts, tms);
   }
+
+  trp = malloc(sizeof(th_refpkt_t));
+  trp->trp_pkt = pkt_ref(pkt);
+  tms->tms_lookahead_depth += pkt->pkt_payloadlen;
+  tms->tms_lookahead_packets++;
+  TAILQ_INSERT_TAIL(&tms->tms_lookahead, trp, trp_link);
+
 }
-
-
 
 /**
  *
@@ -555,8 +596,6 @@ ts_muxer_init(th_subscription_t *s, ts_mux_output_t *output,
   th_muxer_t *tm;
   th_stream_t *st;
 
-  ts->ts_pcr_offset = AV_NOPTS_VALUE;
-  ts->ts_pcr_ref = AV_NOPTS_VALUE;
 
   ts->ts_output = output;
   ts->ts_output_opaque = opaque;
@@ -567,6 +606,10 @@ ts_muxer_init(th_subscription_t *s, ts_mux_output_t *output,
  
   ts->ts_blocks_per_packet = 7;
   ts->ts_packet = malloc(188 * ts->ts_blocks_per_packet);
+  
+  ts->ts_pcr_start = AV_NOPTS_VALUE;
+  ts->ts_pcr_ref   = AV_NOPTS_VALUE;
+  ts->ts_pcr_last  = INT64_MIN;
 
   /* Do TS MUX specific init per stream */
 
@@ -576,29 +619,34 @@ ts_muxer_init(th_subscription_t *s, ts_mux_output_t *output,
     dopcr = 0;
     switch(st->st_type) {
     case HTSTV_MPEG2VIDEO:
-      tms->tms_muxoffset = 200000;
-      tms->tms_sc = 0x1ec;
+      tms->tms_sc = 0x1e0;
       dopcr = 1;
       break;
     case HTSTV_MPEG2AUDIO:
-      tms->tms_muxoffset = 75000;
-      tms->tms_sc = 0x1cd;
+      tms->tms_sc = 0x1c0;
+      st->st_vbv_delay = 45000;
       break;
+#if 0
     case HTSTV_AC3:
-      tms->tms_muxoffset = 75000;
       tms->tms_sc = 0x1bd;
+      st->st_vbv_delay = 50000;
       break;
     case HTSTV_H264:
       tms->tms_muxoffset = 900000;
       tms->tms_sc = 0x1e0;
       dopcr = 1;
       break;
+#endif
     default:
       continue;
     }
 
-    if(dopcr && ts->ts_pcrpid == 0)
-      ts->ts_pcrpid = pididx;
+    tms->tms_mux_offset = AV_NOPTS_VALUE;
+    tmf_init(&tms->tms_delivery_fifo);
+    TAILQ_INIT(&tms->tms_lookahead);
+
+    if(dopcr && ts->ts_pcr_stream == NULL)
+      ts->ts_pcr_stream = tms;
 
     tms->tms_index = pididx++;
   }

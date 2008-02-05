@@ -27,6 +27,7 @@
 #include <libhts/htscfg.h>
 #include <libhts/avg.h>
 #include "refstr.h"
+#include <ffmpeg/avcodec.h>
 
 /*
  * Commercial status
@@ -86,7 +87,8 @@ LIST_HEAD(th_pkt_list, th_pkt);
 LIST_HEAD(th_muxer_list, th_muxer);
 LIST_HEAD(th_muxstream_list, th_muxstream);
 LIST_HEAD(th_descrambler_list, th_descrambler);
-TAILQ_HEAD(th_metapkt_queue, th_metapkt);
+TAILQ_HEAD(th_refpkt_queue, th_refpkt);
+TAILQ_HEAD(th_muxpkt_queue, th_muxpkt);
 
 extern time_t dispatch_clock;
 extern int startupcounter;
@@ -295,11 +297,19 @@ typedef struct th_stream {
   int st_buffer_errors;   /* Errors accumulated for this packet */
   uint32_t st_startcond;
   uint32_t st_startcode;
+  uint32_t st_startcode_offset;
+  int st_parser_state;
+
+  struct th_pkt *st_curpkt;
+  int64_t st_curpts;
+  int64_t st_curdts;
+  int64_t st_prevdts;
+  int st_frame_duration;
 
   /* DTS generator */
 
-  int32_t st_dts_u;  /* upper bits (auto generated) */
-  int64_t st_dts;
+  int64_t st_dts_epoch;  /* upper bits (auto generated) */
+  int64_t st_last_dts;
 
   /* Codec */
 
@@ -310,12 +320,6 @@ typedef struct th_stream {
 
   struct th_pkt_list st_packets;
 
-  /* Temporary frame store for calculating DTS */
-
-  struct th_pkt_queue st_dtsq;
-  int st_dtsq_len;
-  int64_t st_last_dts;
-
   /* Temporary frame store for calculating PTS */
 
   struct th_pkt_queue st_ptsq;
@@ -324,9 +328,6 @@ typedef struct th_stream {
   /* Temporary frame store for calculating duration */
 
   struct th_pkt_queue st_durationq;
-
-  int64_t st_last_duration;
-  int st_last_duration_frames;
 
   /* Final frame store */
 
@@ -337,6 +338,12 @@ typedef struct th_stream {
   uint16_t st_caid;
 
   char st_lang[4]; /* ISO 639 3-letter language code */
+
+  /* Remuxing information */
+  AVRational st_tb;
+
+  int st_vbv_size;        /* Video buffer size (in bytes) */
+  int st_vbv_delay;       /* -1 if CBR */
 
 } th_stream_t;
 
@@ -523,23 +530,51 @@ typedef struct th_pkt {
   TAILQ_ENTRY(th_pkt) pkt_mem_link;
 } th_pkt_t;
 
+/**
+ * Referenced packets
+ */
+typedef struct th_refpkt {
+  TAILQ_ENTRY(th_refpkt) trp_link;
+  th_pkt_t *trp_pkt;
+} th_refpkt_t;
 
 
 /**
- * Meta packets
+ * Muxed packets
  */
-typedef struct th_metapkt {
-  TAILQ_ENTRY(th_metapkt) tm_link;
-  int64_t tm_ts_start;
-  int64_t tm_ts_stop;
-  int tm_pcroffset;
+typedef struct th_muxpkt {
+  TAILQ_ENTRY(th_muxpkt) tm_link;
+  int64_t tm_pcr;
+  int64_t tm_dts;
+
+  int tm_contentsize;
+  int64_t tm_deadline;   /* Packet transmission deadline */
+
   uint8_t tm_pkt[0];
-} th_metapkt_t;
+} th_muxpkt_t;
 
 
 /*
  * A mux stream reader
  */
+
+
+struct th_subscription;
+struct th_muxstream;
+
+typedef void (th_mux_output_t)(void *opaque, struct th_muxstream *tms,
+			       th_pkt_t *pkt);
+
+
+typedef struct th_muxfifo {
+  struct th_muxpkt_queue tmf_queue;
+  uint32_t tmf_len;
+  int tmf_contentsize;
+
+} th_muxfifo_t;
+
+
+
 typedef struct th_muxstream {
 
   LIST_ENTRY(th_muxstream) tms_muxer_link0;
@@ -547,17 +582,26 @@ typedef struct th_muxstream {
   th_stream_t *tms_stream;
   int tms_index; /* Used as PID or whatever */
 
-  struct th_metapkt_queue tms_metaqueue;
-  uint32_t tms_meta_packets; /* number of packets "" */
+  struct th_refpkt_queue tms_lookahead;
 
-  
+  int tms_lookahead_depth;  /* bytes in lookahead queue */
+  int tms_lookahead_packets;
+
+  th_muxfifo_t tms_cbr_fifo;
+  th_muxfifo_t tms_delivery_fifo;
+
+  int64_t tms_deadline;
+  int64_t tms_delay;
+  int64_t tms_delta;
+  int64_t tms_mux_offset;
+
+  dtimer_t tms_mux_timer;
 
   /* MPEG TS multiplex stuff */
 
   int tms_sc; /* start code */
   int tms_cc;
-  int64_t tms_muxoffset;          /* DTS offset from PCR */
-
+ 
   /* Memebers used when running with ffmpeg */
   
   struct AVStream *tms_avstream;
@@ -566,18 +610,12 @@ typedef struct th_muxstream {
   int tms_blockcnt;
   int64_t tms_dl;
   int64_t tms_staletime;
-
 } th_muxstream_t;
 
 
 /*
  *
  */
-
-struct th_subscription;
-
-typedef void (th_mux_output_t)(void *opaque, th_muxstream_t *tms,
-			       th_pkt_t *pkt);
 
 
 typedef void (th_mux_newpkt_t)(struct th_muxer *tm, th_stream_t *st,

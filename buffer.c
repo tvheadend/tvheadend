@@ -130,9 +130,11 @@ pkt_alloc(void *data, size_t datalen, int64_t pts, int64_t dts)
 
   pkt = calloc(1, sizeof(th_pkt_t));
   pkt->pkt_payloadlen = datalen;
-  pkt->pkt_payload = malloc(datalen);
-  if(data != NULL)
-    memcpy(pkt->pkt_payload, data, datalen);
+  if(datalen > 0) {
+    pkt->pkt_payload = malloc(datalen);
+    if(data != NULL)
+      memcpy(pkt->pkt_payload, data, datalen);
+  }
 
   pkt->pkt_dts = dts;
   pkt->pkt_pts = pts;

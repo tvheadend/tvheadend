@@ -42,7 +42,7 @@
 #include "channels.h"
 #include "dispatch.h"
 #include "transports.h"
-#include "pes.h"
+#include "parsers.h"
 #include "buffer.h"
 
 
@@ -50,7 +50,6 @@ typedef struct file_input {
   AVFormatContext *fi_fctx;
   const char *fi_name;
   dtimer_t fi_timer;
-  int64_t fi_initial_dts;
   int64_t fi_refclock;
   int64_t fi_last_dts;
   int64_t fi_dts_offset;
@@ -81,6 +80,7 @@ file_input_init(void)
   AVCodecContext *ctx;
   config_entry_t *ce;
   th_transport_t *t;
+  th_stream_t *st;
   th_channel_t *ch;
 
   TAILQ_FOREACH(ce, &config_list, ce_link) {
@@ -123,10 +123,12 @@ file_input_init(void)
       switch(ctx->codec_id) {
       case CODEC_ID_H264:
 	transport_add_stream(t, i, HTSTV_H264);
- 	break;
-
+	break;
+	
       case CODEC_ID_MPEG2VIDEO:
-	transport_add_stream(t, i, HTSTV_MPEG2VIDEO);
+	st = transport_add_stream(t, i, HTSTV_MPEG2VIDEO);
+	st->st_vbv_delay = -1;
+	st->st_vbv_size = 229376;
  	break;
 
       case CODEC_ID_MP2:
@@ -179,10 +181,10 @@ file_input_stop_feed(th_transport_t *t)
 
   
 static void
-file_input_reset(file_input_t *fi)
+file_input_reset(th_transport_t *t, file_input_t *fi)
 {
   av_seek_frame(fi->fi_fctx, -1, 0, AVSEEK_FLAG_BACKWARD);
-  fi->fi_initial_dts = AV_NOPTS_VALUE;
+  t->tht_dts_start = AV_NOPTS_VALUE;
 }
 
 
@@ -196,9 +198,10 @@ file_input_start_feed(th_transport_t *t, unsigned int weight, int status)
   
   t->tht_status = TRANSPORT_RUNNING;
 
-  file_input_reset(fi);
+  file_input_reset(t, fi);
   fi->fi_refclock = getclock_hires();
-  file_input_get_pkt(t, fi, fi->fi_refclock);
+
+  dtimer_arm(&fi->fi_timer, fi_timer_callback, t, 1);
   return 0;
 }
 
@@ -212,13 +215,14 @@ file_input_get_pkt(th_transport_t *t, file_input_t *fi, int64_t now)
   AVPacket ffpkt;
   th_pkt_t *pkt;
   th_stream_t *st;
-  int i;
-  int64_t pts, dts, d = 1;
+  int i, frametype;
+  int64_t pts, d = 1;
+  uint32_t sc;
 
   do {
     i = av_read_frame(fi->fi_fctx, &ffpkt);
     if(i < 0) {
-      file_input_reset(fi);
+      file_input_reset(t, fi);
       d = 20000;
       fi->fi_dts_offset += fi->fi_last_dts;
       break;
@@ -232,35 +236,50 @@ file_input_get_pkt(th_transport_t *t, file_input_t *fi, int64_t now)
       continue;
 
 
-    if(fi->fi_initial_dts == AV_NOPTS_VALUE)
-      fi->fi_initial_dts = ffpkt.dts;
-
-    ffpkt.dts -= fi->fi_initial_dts;
-    ffpkt.pts -= fi->fi_initial_dts;
+    if(t->tht_dts_start == AV_NOPTS_VALUE)
+	t->tht_dts_start = ffpkt.dts;
 
     pts = av_rescale_q(ffpkt.pts,
 		       fi->fi_fctx->streams[ffpkt.stream_index]->time_base,
 		       AV_TIME_BASE_Q);
 
-    dts = av_rescale_q(ffpkt.dts,
-		       fi->fi_fctx->streams[ffpkt.stream_index]->time_base,
-		       AV_TIME_BASE_Q);
- 
+    /* Figure frametype */
+
+    switch(st->st_type) {
+    case HTSTV_MPEG2VIDEO:
+      sc = ffpkt.data[0] << 24 | ffpkt.data[1] << 16 | ffpkt.data[2] << 8 |
+	ffpkt.data[3];
+      if(sc == 0x100) {
+	frametype = (ffpkt.data[5] >> 3) & 7;
+      } else {
+	frametype = PKT_I_FRAME;
+      }
+      break;
+    default:
+      frametype = 0;
+      break;
+    }
+
     pkt = pkt_alloc(ffpkt.data, ffpkt.size, 
-		    pts + fi->fi_dts_offset, dts + fi->fi_dts_offset);
+		    ffpkt.pts + fi->fi_dts_offset,
+		    ffpkt.dts + fi->fi_dts_offset);
+    pkt->pkt_frametype = frametype;
 
     pkt->pkt_stream = st;
-    pkt->pkt_duration = ffpkt.duration;
-  
-    fi->fi_last_dts = dts;
+    st->st_tb = fi->fi_fctx->streams[ffpkt.stream_index]->time_base;
+    fi->fi_last_dts = ffpkt.dts;
 
     avgstat_add(&st->st_rate, ffpkt.size, dispatch_clock);
 
-    pes_compute_duration(t, st, pkt);
+    parser_compute_duration(t, st, pkt);
+
+    pts = av_rescale_q(ffpkt.pts - t->tht_dts_start,
+		       fi->fi_fctx->streams[ffpkt.stream_index]->time_base,
+		       AV_TIME_BASE_Q);
 
     av_free_packet(&ffpkt);
 
-    d = pts + fi->fi_dts_offset - 1000000 - (now - fi->fi_refclock);
+    d = pts - 1000000 - (now - fi->fi_refclock);
   } while(d <= 0);
 
   dtimer_arm_hires(&fi->fi_timer, fi_timer_callback, t, now + d);

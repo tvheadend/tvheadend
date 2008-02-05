@@ -1,5 +1,5 @@
 /*
- *  Elementary stream functions
+ *  Packet parsing functions
  *  Copyright (C) 2007 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,15 +16,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PES_H
-#define PES_H
+#ifndef PARSER_H264_H_
+#define PARSER_H264_H_
 
-int pes_packet_input(th_transport_t *th, th_stream_t *st, uint8_t *data, 
-		     size_t len);
+#include "bitstream.h"
 
-void pes_compute_duration(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
+int h264_decode_seq_parameter_set(th_stream_t *st, bitstream_t *bs);
 
-void pes_reassembly(th_transport_t *t, th_stream_t *st, uint8_t *data, 
-		    int len, int start, int err);
-
-#endif /* PES_H */
+#endif /* PARSER_H264_H_ */

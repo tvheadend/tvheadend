@@ -43,7 +43,6 @@
 #include "channels.h"
 #include "dispatch.h"
 #include "transports.h"
-#include "pes.h"
 
 struct th_v4l_adapter_list v4l_adapters;
 
@@ -337,7 +336,7 @@ v4l_fd_callback(int events, void *opaque, int fd)
 
       st->st_buffer_ptr += r;
       if(st->st_buffer_ptr == l) {
-	pes_packet_input(t, st, pkt, l);
+	//	pes_packet_input(t, st, pkt, l);
 	st->st_buffer_size = 0;
 	tva->tva_startcode = 0;
       }

@@ -50,7 +50,6 @@
 #include "dvb_dvr.h"
 #include "iptv_input.h"
 #include "psi.h"
-#include "pes.h"
 #include "buffer.h"
 #include "channels.h"
 #include "cwc.h"
@@ -107,14 +106,8 @@ transport_stop(th_transport_t *t, int flush_subscriptions)
     st->st_buffer_ptr = 0;
     st->st_startcode = 0;
 
-    /* Clear DTS queue */
-
-    while((pkt = TAILQ_FIRST(&st->st_dtsq)) != NULL) {
-      TAILQ_REMOVE(&st->st_dtsq, pkt, pkt_queue_link);
-      assert(pkt->pkt_refcount == 1);
-      pkt_deref(pkt);
-    }
-    st->st_dtsq_len = 0;
+    if(st->st_curpkt != NULL)
+      pkt_deref(st->st_curpkt);
 
     /* Clear PTS queue */
 
@@ -163,10 +156,12 @@ transport_start(th_transport_t *t, unsigned int weight)
   LIST_FOREACH(st, &t->tht_streams, st_link) {
   
     st->st_startcond = 0xffffffff;
-    
-    st->st_dts      = AV_NOPTS_VALUE;
-    st->st_last_dts = 0;
-    st->st_dts_u    = 0; 
+    st->st_curdts = AV_NOPTS_VALUE;
+    st->st_curpts = AV_NOPTS_VALUE;
+    st->st_prevdts = AV_NOPTS_VALUE;
+
+    st->st_last_dts = AV_NOPTS_VALUE;
+    st->st_dts_epoch = 0; 
  
     /* Open ffmpeg context and parser */
 
@@ -373,7 +368,6 @@ transport_add_stream(th_transport_t *t, int pid, tv_streamtype_t type)
   st->st_demuxer_fd = -1;
   LIST_INSERT_HEAD(&t->tht_streams, st, st_link);
 
-  TAILQ_INIT(&st->st_dtsq);
   TAILQ_INIT(&st->st_ptsq);
   TAILQ_INIT(&st->st_durationq);
   TAILQ_INIT(&st->st_pktq);

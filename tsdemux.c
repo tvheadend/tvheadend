@@ -44,10 +44,10 @@
 #include "teletext.h"
 #include "transports.h"
 #include "subscriptions.h"
-#include "pes.h"
 #include "psi.h"
 #include "buffer.h"
 #include "tsdemux.h"
+#include "parsers.h"
 
 
 /**
@@ -161,7 +161,7 @@ ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb, int dodescramble)
     if(afl > 188)
       break;
 
-    pes_reassembly(t, st, tsb + afl, 188 - afl, pusi, err);
+    parse_raw_mpeg(t, st, tsb + afl, 188 - afl, pusi, err);
     break;
   }
 }

@@ -275,6 +275,8 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
 
     if(hts_stream_type != 0) {
       st = transport_add_stream(t, pid, hts_stream_type);
+      st->st_tb = (AVRational){1, 90000};
+
       memcpy(st->st_lang, lang, 4);
     }
   } 
@@ -325,6 +327,9 @@ psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen, int pcrpid)
 
   LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0) {
     st = tms->tms_stream;
+
+    if(tms->tms_index == 0)
+      continue;
 
     switch(st->st_type) {
     case HTSTV_MPEG2VIDEO:

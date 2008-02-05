@@ -39,7 +39,6 @@
 #include "teletext.h"
 #include "transports.h"
 #include "subscriptions.h"
-#include "pes.h"
 #include "psi.h"
 #include "buffer.h"
 
@@ -150,13 +149,24 @@ muxer_init(th_subscription_t *s, th_mux_output_t *cb, void *opaque,
 
 
   LIST_FOREACH(st, &t->tht_streams, st_link) {
+
+    switch(st->st_type) {
+    case HTSTV_MPEG2VIDEO:
+    case HTSTV_MPEG2AUDIO:
+    case HTSTV_AC3:
+    case HTSTV_H264:
+      break;
+
+    default:
+      continue;
+    }
+
     tms = calloc(1, sizeof(th_muxstream_t));
     tms->tms_muxer = tm;
     tms->tms_stream = st;
 
  
     LIST_INSERT_HEAD(&tm->tm_streams, tms, tms_muxer_link0);
-    TAILQ_INIT(&tms->tms_metaqueue);
   }
 
   s->ths_muxer = tm;
