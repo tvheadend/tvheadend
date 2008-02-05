@@ -56,6 +56,7 @@ typedef struct tcp_session {
   void *tcp_dispatch_handle;
   int tcp_fd;
   struct sockaddr_storage tcp_peer_addr;
+  struct sockaddr_storage tcp_self_addr;
   char tcp_peer_txt[100];
   tcp_callback_t *tcp_callback;
   tcp_server_t *tcp_server;  /* if this is NULL, then we are spawned

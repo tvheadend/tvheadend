@@ -584,6 +584,10 @@ tcp_server_callback(int events, void *opaque, int fd)
   ses->tcp_server = srv;
   memcpy(&ses->tcp_peer_addr, &from, socklen);
 
+  socklen = sizeof(struct sockaddr_storage);
+  if(getsockname(newfd, (struct sockaddr *)&ses->tcp_self_addr, &socklen))
+    memset(&ses->tcp_self_addr, 0, sizeof(struct sockaddr_storage));
+
   tcp_start_session(ses);
 }
 
