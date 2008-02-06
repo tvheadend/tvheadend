@@ -43,6 +43,7 @@
 #include "dispatch.h"
 #include "transports.h"
 #include "buffer.h"
+#include "parsers.h"
 
 
 typedef struct avgen {
@@ -99,7 +100,7 @@ avgen_init(void)
   if(avcodec_find_encoder(CODEC_ID_MP2) == NULL)
     return;
 
-  ch = channel_find("Test 1", 1, channel_group_find("Test channels", 1));
+  ch = channel_find("Test PAL", 1, channel_group_find("Test channels", 1));
 
   t = calloc(1, sizeof(th_transport_t));
   t->tht_prio = 100;
@@ -109,7 +110,10 @@ avgen_init(void)
   t->tht_stop_feed  = avgen_stop_feed;
 
   t->tht_video = transport_add_stream(t, -1, HTSTV_MPEG2VIDEO);
+  t->tht_video->st_tb = (AVRational){1, 1000000};
+
   t->tht_audio = transport_add_stream(t, -1, HTSTV_MPEG2AUDIO);
+  t->tht_audio->st_tb = (AVRational){1, 1000000};
 
   t->tht_name = strdup(ch->ch_name);
   t->tht_provider = strdup("HTS Tvheadend");
@@ -252,23 +256,13 @@ avgen_enqueue(th_transport_t *t, th_stream_t *st, int64_t dts, int64_t pts,
 	      int duration, uint8_t *data, int datalen)
 {
   th_pkt_t *pkt;
-  th_muxer_t *tm;
 
   avgstat_add(&st->st_rate, datalen, dispatch_clock);
 
   pkt = pkt_alloc(data, datalen, pts, dts);
-  pkt->pkt_stream = st;
   pkt->pkt_duration = duration;
-  
-  /* Alert all muxers tied to us that a new packet has arrived */
 
-  LIST_FOREACH(tm, &t->tht_muxers, tm_transport_link)
-    tm->tm_new_pkt(tm, st, pkt);
-
-  /* Unref (and possibly free) the packet, muxers are supposed
-     to increase refcount or copy packet if they need anything */
-
-  pkt_deref(pkt);
+  parser_enqueue_packet(t, st, pkt);
 }
 
 
@@ -305,8 +299,7 @@ avgen_deliver(th_transport_t *t, avgen_t *avg, int64_t clk0)
 			     &avg->videoframe);
 
     if(r > 0) {
-      pts = av_rescale_q(avctx->coded_frame->pts, avctx->time_base,
-			 AV_TIME_BASE_Q);
+      pts = AV_NOPTS_VALUE;
       avgen_enqueue(t, t->tht_video, avg->video_next, pts, avg->video_duration,
 		    avg->video_outbuf, r);
 
