@@ -483,6 +483,8 @@ parse_mpeg2video_pic_start(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt,
   if(pct < PKT_I_FRAME || pct > PKT_B_FRAME)
     return 1; /* Illegal picture_coding_type */
 
+  pkt->pkt_frametype = pct;
+
   /* If this is the first I-frame seen, set dts_start as a reference
      offset */
   if(pct == PKT_I_FRAME && t->tht_dts_start == AV_NOPTS_VALUE)
