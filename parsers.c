@@ -474,7 +474,7 @@ parse_mpeg2video_pic_start(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt,
 {
   int v, pct;
 
-  if(bs->len < 6 * 8)
+  if(bs->len < 29)
     return 1;
 
   skip_bits(bs, 10); /* temporal reference */
@@ -507,7 +507,7 @@ parse_mpeg2video_seq_start(th_transport_t *t, th_stream_t *st,
 {
   int v;
 
-  if(bs->len < 11 * 8)
+  if(bs->len < 61)
     return 1;
   
   skip_bits(bs, 12);
