@@ -51,8 +51,10 @@ typedef struct file_input {
   const char *fi_name;
   dtimer_t fi_timer;
   int64_t fi_refclock;
-  int64_t fi_last_dts;
   int64_t fi_dts_offset;
+  int64_t fi_last_dts;
+
+  th_pkt_t *fi_next;
 
 } file_input_t;
 
@@ -62,7 +64,7 @@ static void file_input_stop_feed(th_transport_t *t);
 static int file_input_start_feed(th_transport_t *t, unsigned int weight,
 				 int status);
 
-static void fi_timer_callback(void *aux, int64_t now);
+static void fi_deliver(void *aux, int64_t now);
 
 static void file_input_get_pkt(th_transport_t *t, file_input_t *fi,
 			       int64_t now);
@@ -200,8 +202,9 @@ file_input_start_feed(th_transport_t *t, unsigned int weight, int status)
 
   file_input_reset(t, fi);
   fi->fi_refclock = getclock_hires();
+  fi->fi_dts_offset = AV_NOPTS_VALUE;
 
-  dtimer_arm(&fi->fi_timer, fi_timer_callback, t, 1);
+  dtimer_arm(&fi->fi_timer, fi_deliver, t, 1);
   return 0;
 }
 
@@ -215,90 +218,73 @@ file_input_get_pkt(th_transport_t *t, file_input_t *fi, int64_t now)
   AVPacket ffpkt;
   th_pkt_t *pkt;
   th_stream_t *st;
-  int i, frametype;
-  int64_t dts, pts, d = 1;
-  uint32_t sc;
+  int i;
+  int64_t dts, pts, errcnt = 0, dt;
 
-  do {
-    i = av_read_frame(fi->fi_fctx, &ffpkt);
-    if(i < 0) {
-      file_input_reset(t, fi);
-      d = 20000;
-      fi->fi_dts_offset += fi->fi_last_dts;
-      break;
-    }
-    
-    LIST_FOREACH(st, &t->tht_streams, st_link)
-      if(st->st_pid == ffpkt.stream_index)
-	break;
-    
-    if(st == NULL)
-      continue;
+ again:
+  i = av_read_frame(fi->fi_fctx, &ffpkt);
+  if(i < 0) {
+    fi->fi_dts_offset += fi->fi_last_dts;
+    file_input_reset(t, fi);
+    fi->fi_next = NULL;
 
-
-    if(t->tht_dts_start == AV_NOPTS_VALUE)
-	t->tht_dts_start = ffpkt.dts;
-
-   /* Figure frametype */
-
-    switch(st->st_type) {
-    case HTSTV_MPEG2VIDEO:
-      sc = ffpkt.data[0] << 24 | ffpkt.data[1] << 16 | ffpkt.data[2] << 8 |
-	ffpkt.data[3];
-      if(sc == 0x100) {
-	frametype = (ffpkt.data[5] >> 3) & 7;
-      } else {
-	frametype = PKT_I_FRAME;
-      }
-      if(frametype == PKT_B_FRAME)
-	ffpkt.pts = ffpkt.dts;
-
-      break;
-    default:
-      frametype = 0;
-      break;
-    }
-    assert(ffpkt.dts != AV_NOPTS_VALUE); /* fixme */
-
-    pts = ffpkt.pts;
-    if(pts != AV_NOPTS_VALUE)
-      pts += fi->fi_dts_offset;
-
-    pkt = pkt_alloc(ffpkt.data, ffpkt.size, pts,
-		    ffpkt.dts + fi->fi_dts_offset);
-    pkt->pkt_frametype = frametype;
-    pkt->pkt_duration = 0;
-    pkt->pkt_stream = st;
-    st->st_tb = fi->fi_fctx->streams[ffpkt.stream_index]->time_base;
-    fi->fi_last_dts = ffpkt.dts;
-
-    avgstat_add(&st->st_rate, ffpkt.size, dispatch_clock);
-
-    switch(st->st_type) {
-    case HTSTV_MPEG2VIDEO:
-      parse_compute_pts(t, st, pkt);
-      break;
-
-    default:
-      parser_compute_duration(t, st, pkt);
-      break;
+    if(errcnt == 0) {
+      errcnt++;
+      goto again;
     }
 
-    dts = av_rescale_q(ffpkt.dts - t->tht_dts_start + fi->fi_dts_offset,
-		       fi->fi_fctx->streams[ffpkt.stream_index]->time_base,
-		       AV_TIME_BASE_Q);
+    syslog(LOG_ERR, "streamedfile: Unable to read from file \"%s\"",
+	   fi->fi_name);
+    return;
+  }
 
-    av_free_packet(&ffpkt);
+  LIST_FOREACH(st, &t->tht_streams, st_link)
+    if(st->st_pid == ffpkt.stream_index)
+      break;
+  
+  if(st == NULL)
+    goto again;
 
-    d = dts - 1000000 - (now - fi->fi_refclock);
-  } while(d <= 0);
+  /* Update stream timebase */
+  st->st_tb = fi->fi_fctx->streams[ffpkt.stream_index]->time_base;
 
-  dtimer_arm_hires(&fi->fi_timer, fi_timer_callback, t, now + d);
+  assert(ffpkt.dts != AV_NOPTS_VALUE); /* fixme */
+
+  if(fi->fi_dts_offset == AV_NOPTS_VALUE)
+    fi->fi_dts_offset = ffpkt.dts;
+
+  dts = ffpkt.dts - fi->fi_dts_offset;
+  fi->fi_last_dts = dts;
+
+  pts = ffpkt.pts;
+  if(pts != AV_NOPTS_VALUE)
+    pts -= fi->fi_dts_offset;
+
+  pkt = pkt_alloc(ffpkt.data, ffpkt.size, pts, dts);
+  pkt->pkt_duration = 0;
+  pkt->pkt_stream = st;
+
+  fi->fi_next = pkt;
+ 
+  /* compute delivery time */
+
+  dt = av_rescale_q(dts, st->st_tb, AV_TIME_BASE_Q) + fi->fi_refclock;
+  dtimer_arm_hires(&fi->fi_timer, fi_deliver, t, dt);
 }
 
 static void
-fi_timer_callback(void *aux, int64_t now)
+fi_deliver(void *aux, int64_t now)
 {
   th_transport_t *t = aux;
-  file_input_get_pkt(t, t->tht_file_input, now);
+  file_input_t *fi = t->tht_file_input;
+  th_stream_t *st;
+
+  if(fi->fi_next != NULL) {
+    st = fi->fi_next->pkt_stream;
+    fi->fi_next->pkt_stream = NULL; /* this must be null upon enqueue */
+    parser_enqueue_packet(t, st, fi->fi_next);
+    fi->fi_next = NULL;
+  }
+
+  file_input_get_pkt(t, fi, now);
 }
