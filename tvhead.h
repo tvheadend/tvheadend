@@ -304,6 +304,7 @@ typedef struct th_stream {
   int64_t st_curpts;
   int64_t st_curdts;
   int64_t st_prevdts;
+  int64_t st_nextdts;
   int st_frame_duration;
 
   /* DTS generator */
