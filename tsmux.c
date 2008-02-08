@@ -644,11 +644,11 @@ ts_muxer_init(th_subscription_t *s, ts_mux_output_t *output,
       tms->tms_sc = 0x1c0;
       st->st_vbv_delay = 45000;
       break;
-#if 0
     case HTSTV_AC3:
       tms->tms_sc = 0x1bd;
       st->st_vbv_delay = 50000;
       break;
+#if 0
     case HTSTV_H264:
       tms->tms_muxoffset = 900000;
       tms->tms_sc = 0x1e0;
