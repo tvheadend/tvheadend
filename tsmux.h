@@ -28,6 +28,12 @@ typedef struct ts_muxer {
 #define TS_SEEK 0x1
 #define TS_HTSCLIENT 0x2
 
+  enum {
+    TS_SRC_MUX,
+    TS_SRC_RAW_TS,
+
+  } ts_source;
+
   th_muxer_t *ts_muxer;
   ts_mux_output_t *ts_output;
   void *ts_output_opaque;

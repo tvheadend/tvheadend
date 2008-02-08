@@ -170,8 +170,10 @@ ts_muxer_generate_tables(void *aux, int64_t now)
 {
   ts_muxer_t *ts = aux;
   th_muxer_t *tm = ts->ts_muxer;
+  th_transport_t *t;
+  th_muxstream_t *tms;
   uint8_t table[180];
-  int l;
+  int l, pcrpid;
 
   /* rearm timer */
   dtimer_arm_hires(&ts->ts_patpmt_timer, ts_muxer_generate_tables, 
@@ -181,7 +183,26 @@ ts_muxer_generate_tables(void *aux, int64_t now)
   ts_muxer_build_table(ts, table, l, ts->ts_pat_cc, 0);
   ts->ts_pat_cc++;
 
-  l = psi_build_pmt(tm, table, sizeof(table), ts->ts_pcr_stream->tms_index);
+  switch(ts->ts_source) {
+  case TS_SRC_MUX:
+    pcrpid = ts->ts_pcr_stream->tms_index;
+    break;
+
+  case TS_SRC_RAW_TS:
+    t = tm->tm_subscription->ths_transport;
+
+    LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0)
+      if(tms->tms_stream->st_pid == t->tht_pcr_pid)
+	break;
+
+    pcrpid = tms ? tms->tms_index : 0x1fff;
+    break;
+  default:
+    pcrpid = 0x1fff;
+    break;
+  }
+
+  l = psi_build_pmt(tm, table, sizeof(table), pcrpid);
   ts_muxer_build_table(ts, table, l, ts->ts_pmt_cc, PID_PMT);
   ts->ts_pmt_cc++;
 
@@ -648,13 +669,10 @@ ts_muxer_init(th_subscription_t *s, ts_mux_output_t *output,
       tms->tms_sc = 0x1bd;
       st->st_vbv_delay = 50000;
       break;
-#if 0
     case HTSTV_H264:
-      tms->tms_muxoffset = 900000;
       tms->tms_sc = 0x1e0;
       dopcr = 1;
       break;
-#endif
     default:
       continue;
     }
@@ -693,18 +711,27 @@ ts_muxer_play(ts_muxer_t *ts, int64_t toffset)
 {
   th_subscription_t *s = ts->ts_muxer->tm_subscription;
 
+  if(!(ts->ts_flags & TS_SEEK) &&
+     s->ths_transport->tht_source_type == THT_MPEG_TS) {
+   /* We dont need to seek and source is MPEG TS, we can use a 
+       shortcut to avoid remuxing stream */
+
+    ts->ts_source = TS_SRC_RAW_TS;
+  } else {
+    ts->ts_source = TS_SRC_MUX;
+  }
+
   /* Start PAT / PMT generator */
   ts_muxer_generate_tables(ts, getclock_hires());
 
-  if(!(ts->ts_flags & TS_SEEK) &&
-     s->ths_transport->tht_source_type == THT_MPEG_TS) {
-    /* We dont need to seek and source is MPEG TS, we can use a 
-       shortcut to avoid remuxing stream */
-
+  switch(ts->ts_source) {
+  case TS_SRC_MUX:
+    muxer_play(ts->ts_muxer, toffset);
+    break;
+  case TS_SRC_RAW_TS:
     s->ths_raw_input = ts_muxer_raw_input;
     s->ths_opaque = ts;
-  } else {
-    muxer_play(ts->ts_muxer, toffset);
+    break;
   }
 }
 
