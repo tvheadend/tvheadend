@@ -387,7 +387,7 @@ lookahead_dequeue(ts_muxer_t *ts, th_muxstream_t *tms)
   
   if(tms->tms_mux_offset == AV_NOPTS_VALUE) {
     if(tms->tms_stream->st_vbv_delay == -1)
-      tms->tms_mux_offset = tdur - pkt->pkt_duration;
+      tms->tms_mux_offset = tdur / 2 - pkt->pkt_duration;
     else
       tms->tms_mux_offset = tms->tms_stream->st_vbv_delay;
   }
