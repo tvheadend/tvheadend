@@ -95,6 +95,8 @@ transport_stop(th_transport_t *t, int flush_subscriptions)
     if(st->st_ctx != NULL)
       avcodec_close(st->st_ctx);
 
+    av_free(st->st_ctx);
+
     st->st_parser = NULL;
     st->st_ctx = NULL;
 

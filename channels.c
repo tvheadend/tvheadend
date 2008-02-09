@@ -297,17 +297,15 @@ channels_load(void)
     TAILQ_INIT(&cl);
     config_read_file0(buf, &cl);
 
-    if((name = config_get_str_sub(&cl, "name", NULL)) == NULL)
-      continue;
-
-    if((grp = config_get_str_sub(&cl, "channel-group", NULL)) == NULL)
-      continue;
-
-    tcg = channel_group_find(grp, 1);
-    ch = channel_find(name, 1, tcg);
+    name = config_get_str_sub(&cl, "name", NULL);
+    grp = config_get_str_sub(&cl, "channel-group", NULL);
+    if(name != NULL && grp != NULL) {
+      tcg = channel_group_find(grp, 1);
+      ch = channel_find(name, 1, tcg);
       
-    ch->ch_teletext_rundown = 
-      atoi(config_get_str_sub(&cl, "teletext-rundown", "0"));
+      ch->ch_teletext_rundown = 
+	atoi(config_get_str_sub(&cl, "teletext-rundown", "0"));
+    }
 
     config_free0(&cl);
   }

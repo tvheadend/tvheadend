@@ -714,6 +714,7 @@ ts_muxer_deinit(ts_muxer_t *ts, th_subscription_t *s)
     while((o = TAILQ_FIRST(&tms->tms_lookahead)) != NULL) {
       pkt_deref(o->trp_pkt);
       TAILQ_REMOVE(&tms->tms_lookahead, o, trp_link);
+      free(o);
     }
   }
 
