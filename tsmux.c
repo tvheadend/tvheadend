@@ -696,9 +696,29 @@ ts_muxer_init(th_subscription_t *s, ts_mux_output_t *output,
 void 
 ts_muxer_deinit(ts_muxer_t *ts, th_subscription_t *s)
 {
-  free(ts->ts_packet);
-  muxer_deinit(ts->ts_muxer, s);
+  th_muxstream_t *tms;
+  th_muxer_t *tm = s->ths_muxer;
+  th_muxpkt_t *f;
+  th_refpkt_t *o;
+
   dtimer_disarm(&ts->ts_patpmt_timer);
+
+  LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0) {
+    dtimer_disarm(&tms->tms_mux_timer);
+
+    /* Free mux packets */
+    while((f = tmf_deq(&tms->tms_delivery_fifo)) != NULL)
+      free(f);
+
+    /* Unreference lookahead queue */
+    while((o = TAILQ_FIRST(&tms->tms_lookahead)) != NULL) {
+      pkt_deref(o->trp_pkt);
+      TAILQ_REMOVE(&tms->tms_lookahead, o, trp_link);
+    }
+  }
+
+  free(ts->ts_packet);
+  muxer_deinit(tm, s);
   free(ts);
 }
 

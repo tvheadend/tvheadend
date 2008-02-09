@@ -64,8 +64,10 @@ muxer_play(th_muxer_t *tm, int64_t toffset)
 {
   th_subscription_t *s = tm->tm_subscription;
 
-  if(!tm->tm_linked)
+  if(!tm->tm_linked) {
     LIST_INSERT_HEAD(&s->ths_transport->tht_muxers, tm, tm_transport_link);
+    tm->tm_linked = 1;
+  }
 
   if(toffset == AV_NOPTS_VALUE) {
     /* continue from last playback */
@@ -197,7 +199,7 @@ muxer_deinit(th_muxer_t *tm, th_subscription_t *s)
   s->ths_muxer = NULL;
 
   if(tm->tm_linked)
-    LIST_INSERT_HEAD(&s->ths_transport->tht_muxers, tm, tm_transport_link);
+    LIST_REMOVE(tm, tm_transport_link);
 
   while((tms = LIST_FIRST(&tm->tm_streams)) != NULL)
     tms_destroy(tms);

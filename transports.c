@@ -108,8 +108,10 @@ transport_stop(th_transport_t *t, int flush_subscriptions)
     st->st_buffer_ptr = 0;
     st->st_startcode = 0;
 
-    if(st->st_curpkt != NULL)
+    if(st->st_curpkt != NULL) {
       pkt_deref(st->st_curpkt);
+      st->st_curpkt = NULL;
+    }
 
     /* Clear PTS queue */
 
