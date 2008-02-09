@@ -312,6 +312,8 @@ channels_load(void)
     config_free0(&cl);
   }
 
+  closedir(dir);
+
   tcg = channel_group_find("-disabled-", 1);
   tcg->tcg_cant_delete_me = 1;
   tcg->tcg_hidden = 1;
