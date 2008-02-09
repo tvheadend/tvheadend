@@ -30,19 +30,19 @@
 
 #include "tvhead.h"
 #include "parsers.h"
+#include "parser_h264.h"
 #include "buffer.h"
 #include "bitstream.h"
 
-#if 0
 /**
- * H.264 parser, nal constructor
+ * H.264 parser, nal escaper
  */
-static int
-build_nal(bitstream_t *bs, uint8_t *data, int size, int maxsize)
+int
+h264_nal_deescape(bitstream_t *bs, uint8_t *data, int size)
 {
   int rbsp_size, i;
   
-  bs->data = malloc(maxsize);
+  bs->data = malloc(size);
 
   /* Escape 0x000003 into 0x0000 */
 
@@ -62,15 +62,42 @@ build_nal(bitstream_t *bs, uint8_t *data, int size, int maxsize)
   return 0;
 }
 
-#endif
+
+/**
+ * Level to CPB size table
+ */
+
+static const int h264_lev2cpbsize[][2] = {
+  {10, 175},
+  {11, 500},
+  {12, 1000},
+  {13, 2000},
+  {20, 2000},
+  {21, 4000},
+  {22, 4000},
+  {30, 10000},
+  {31, 14000},
+  {32, 20000},
+  {40, 25000},
+  {41, 62500},
+  {42, 62500},
+  {50, 135000},
+  {51, 240000},
+  {-1, -1},
+};
+
 
 
 typedef struct h264_private {
 
-    struct {
-	int frame_duration;
-
-    } sps[256];
+  struct {
+    int frame_duration;
+    int cbpsize;
+  } sps[256];
+  
+  struct {
+    int sps;
+  } pps[256];
 
 } h264_private_t;
 
@@ -83,6 +110,7 @@ decode_vui(th_stream_t *st, bitstream_t *bs, int spsid)
   int units_in_tick;
   int time_scale;
   int fixed_rate;
+  return 0;
 
   if(read_bits1(bs)) {
     if(read_bits(bs, 8) == 255) {
@@ -110,17 +138,17 @@ decode_vui(th_stream_t *st, bitstream_t *bs, int spsid)
     read_golomb_ue(bs);  /* chroma_sample_location_type_bottom_field */
   }
 
-  if(!read_bits1(bs)) /* We want timing info */
+  if(!read_bits1(bs)) /* We need timing info */
     return -1;
     
   units_in_tick = read_bits(bs, 32);
   time_scale    = read_bits(bs, 32);
   fixed_rate    = read_bits1(bs);
-
+#if 0
   printf("units_in_tick = %d\n", units_in_tick);
   printf("time_scale = %d\n", time_scale);
   printf("fixed_rate = %d\n", fixed_rate);
-
+#endif
   return 0;
 }
 
@@ -146,9 +174,13 @@ decode_scaling_list(bitstream_t *bs, int size)
 int
 h264_decode_seq_parameter_set(th_stream_t *st, bitstream_t *bs)
 {
-  //    h264_private_t *priv = st->st_parser_private;
   int profile_idc, level_idc, poc_type;
   unsigned int sps_id, tmp, i;
+  int cbpsize = -1;
+  h264_private_t *p;
+
+  if((p = st->st_priv) == NULL)
+    p = st->st_priv = calloc(1, sizeof(h264_private_t));
 
   profile_idc= read_bits(bs, 8);
   read_bits1(bs);   //constraint_set0_flag
@@ -159,9 +191,19 @@ h264_decode_seq_parameter_set(th_stream_t *st, bitstream_t *bs)
   level_idc= read_bits(bs, 8);
   sps_id= read_golomb_ue(bs);
 
-  printf("profile = %d\n", profile_idc);
-  printf("level_idc = %d\n", level_idc);
-  printf("sps_id = %d\n", sps_id);
+
+  i = 0;
+  while(h264_lev2cpbsize[i][0] != -1) {
+    if(h264_lev2cpbsize[i][0] >= level_idc) {
+      cbpsize = h264_lev2cpbsize[i][1];
+      break;
+    }
+    i++;
+  }
+  if(cbpsize < 0)
+    return -1;
+
+  p->sps[sps_id].cbpsize = cbpsize * 125; /* Convert from kbit to bytes */
 
 
   if(profile_idc >= 100){ //high profile
@@ -172,7 +214,6 @@ h264_decode_seq_parameter_set(th_stream_t *st, bitstream_t *bs)
     read_bits1(bs);
 
     if(read_bits1(bs)) {
-      printf("scaling\n");
       /* Scaling matrices */
       decode_scaling_list(bs, 16);
       decode_scaling_list(bs, 16);
@@ -188,10 +229,8 @@ h264_decode_seq_parameter_set(th_stream_t *st, bitstream_t *bs)
   }
 
   tmp = read_golomb_ue(bs); /* max frame num */
-  printf("maxframenum = %d\n", tmp);
   poc_type= read_golomb_ue(bs);
-  printf("poc_type = %d\n", poc_type);
-
+ 
   if(poc_type == 0){ //FIXME #define
     read_golomb_ue(bs);
   } else if(poc_type == 1){//FIXME #define
@@ -203,13 +242,11 @@ h264_decode_seq_parameter_set(th_stream_t *st, bitstream_t *bs)
       read_golomb_se(bs);
 
   }else if(poc_type != 2){
-    printf("Illegal POC type %d\n", poc_type);
     /* Illegal poc */
     return -1;
   }
 
   tmp = read_golomb_ue(bs);
-  printf("reference frames = %d\n", tmp);
 
   read_bits1(bs);
 
@@ -235,4 +272,57 @@ h264_decode_seq_parameter_set(th_stream_t *st, bitstream_t *bs)
   } else {
     return -1;
   }
+}
+
+
+int
+h264_decode_pic_parameter_set(th_stream_t *st, bitstream_t *bs)
+{
+  h264_private_t *p;
+  int pps_id, sps_id;
+
+  if((p = st->st_priv) == NULL)
+    p = st->st_priv = calloc(1, sizeof(h264_private_t));
+  
+  pps_id = read_golomb_ue(bs);
+  sps_id = read_golomb_ue(bs);
+  p->pps[pps_id].sps = sps_id;
+  return 0;
+}
+
+
+int
+h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype)
+{
+  h264_private_t *p;
+  int slice_type, pps_id, sps_id;
+
+  if((p = st->st_priv) == NULL)
+    return -1;
+
+  read_golomb_ue(bs); /* first_mb_in_slice */
+  slice_type = read_golomb_ue(bs);
+  
+  switch(slice_type) {
+  case 0:
+    *pkttype = PKT_P_FRAME;
+    break;
+  case 1:
+    *pkttype = PKT_B_FRAME;
+    break;
+  case 2:
+    *pkttype = PKT_I_FRAME;
+    break;
+  default:
+    return -1;
+  }
+
+  pps_id = read_golomb_ue(bs);
+  sps_id = p->pps[pps_id].sps;
+  if(p->sps[sps_id].cbpsize == 0)
+    return -1;
+
+  st->st_vbv_size = p->sps[sps_id].cbpsize;
+  st->st_vbv_delay = -1;
+  return 0;
 }

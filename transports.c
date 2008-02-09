@@ -98,8 +98,10 @@ transport_stop(th_transport_t *t, int flush_subscriptions)
     st->st_parser = NULL;
     st->st_ctx = NULL;
 
-    /* Clear reassembly buffer */
+    free(st->st_priv);
 
+    /* Clear reassembly buffer */
+    
     free(st->st_buffer);
     st->st_buffer = NULL;
     st->st_buffer_size = 0;

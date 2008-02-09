@@ -21,6 +21,12 @@
 
 #include "bitstream.h"
 
+int h264_nal_deescape(bitstream_t *bs, uint8_t *data, int size);
+
 int h264_decode_seq_parameter_set(th_stream_t *st, bitstream_t *bs);
+
+int h264_decode_pic_parameter_set(th_stream_t *st, bitstream_t *bs);
+
+int h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype);
 
 #endif /* PARSER_H264_H_ */

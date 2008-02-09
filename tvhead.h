@@ -299,6 +299,7 @@ typedef struct th_stream {
   uint32_t st_startcode;
   uint32_t st_startcode_offset;
   int st_parser_state;
+  void *st_priv;          /* Parser private data */
 
   struct th_pkt *st_curpkt;
   int64_t st_curpts;

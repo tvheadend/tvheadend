@@ -594,6 +594,8 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
   uint8_t *buf = st->st_buffer + sc_offset;
   uint32_t sc = st->st_startcode;
   int64_t d;
+  int l2, pkttype;
+  bitstream_t bs;
 
   if(sc >= 0x000001e0 && sc <= 0x000001ef) {
     /* System start codes for video */
@@ -610,33 +612,48 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
     st->st_prevdts = st->st_curdts;
     return 1;
   }
-
-  printf("sc = %x\n", sc & 0x1f);
+  
+  bs.data = NULL;
 
   switch(sc & 0x1f) {
 
+  case 7:
+    h264_nal_deescape(&bs, buf + 3, len - 3);
+    if(h264_decode_seq_parameter_set(st, &bs))
+      return 1;
+    break;
+
+  case 8:
+    h264_nal_deescape(&bs, buf + 3, len - 3);
+    if(h264_decode_pic_parameter_set(st, &bs))
+      return 1;
+    break;
+
+
   case 5: /* IDR+SLICE */
-    /* IDR seen, set DTS offset if not already set */
+  case 1:
+    if(st->st_curpkt != NULL || st->st_frame_duration == 0)
+      break;
+
     if(t->tht_dts_start == AV_NOPTS_VALUE)
       t->tht_dts_start = st->st_curdts;
 
-  case 1:
-    if(st->st_curpkt != NULL)
-      break;
-    printf("Creating pkt @ %lld %lld\n", st->st_curpts, st->st_curdts);
+    l2 = len - 3 > 64 ? 64 : len - 3;
+    h264_nal_deescape(&bs, buf + 3, len); /* we just the first stuff */
+    if(h264_decode_slice_header(st, &bs, &pkttype))
+      return 1;
 
     st->st_curpkt = pkt_alloc(NULL, 0, st->st_curpts, st->st_curdts);
-    st->st_curpkt->pkt_frametype = 0;
+    st->st_curpkt->pkt_frametype = pkttype;
     st->st_curpkt->pkt_duration = st->st_frame_duration;
     st->st_curpkt->pkt_commercial = t->tht_tt_commercial_advice;
-
-
     break;
-
 
   default:
     break;
   }
+
+  free(bs.data);
 
   if(next_startcode >= 0x000001e0 && next_startcode <= 0x000001ef) {
     /* Complete frame */
@@ -652,7 +669,6 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
     st->st_buffer = malloc(st->st_buffer_size);
     return 1;
   }
-
   return 0;
 }
 
