@@ -53,7 +53,6 @@ struct pvr_rec_list pvrr_global_list;
 static void pvr_database_save(pvr_rec_t *pvrr);
 static void pvr_database_erase(pvr_rec_t *pvrr);
 static void pvr_database_load(void);
-static void pvr_unrecord(pvr_rec_t *pvrr);
 static void pvrr_fsm(pvr_rec_t *pvrr);
 static void pvrr_subscription_callback(struct th_subscription *s,
 				       subscription_event_t event,
@@ -156,15 +155,14 @@ pvr_free(pvr_rec_t *pvrr)
 
 
 static void
-pvr_unrecord(pvr_rec_t *pvrr)
+pvr_abort(pvr_rec_t *pvrr)
 {
-  if(pvrr->pvrr_status == HTSTV_PVR_STATUS_SCHEDULED) {
-    pvr_free(pvrr);
-  } else {
-    pvrr->pvrr_error = HTSTV_PVR_STATUS_ABORTED;
-    pvrr_fsm(pvrr);
-  }
-  
+  if(pvrr->pvrr_status != HTSTV_PVR_STATUS_RECORDING)
+    return;
+
+  pvrr->pvrr_error = HTSTV_PVR_STATUS_ABORTED;
+  pvrr_fsm(pvrr);
+
   pvr_database_save(pvrr);
   clients_send_ref(-1);
 }
@@ -225,31 +223,38 @@ pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op)
       break;
   }
 
-  if(pvrr != NULL) {
+  if(pvrr != NULL && op == RECOP_CLEAR) {
     switch(pvrr->pvrr_status) {
     case HTSTV_PVR_STATUS_ABORTED:
     case HTSTV_PVR_STATUS_NO_TRANSPONDER:
     case HTSTV_PVR_STATUS_FILE_ERROR:
     case HTSTV_PVR_STATUS_DISK_FULL:
     case HTSTV_PVR_STATUS_BUFFER_ERROR:
+    case HTSTV_PVR_STATUS_SCHEDULED:
       pvr_database_erase(pvrr);
       pvr_free(pvrr);
-      pvrr = NULL;
-      break;
+      return;
     }
   }
 
   switch(op) {
-  case RECOP_TOGGLE:
-    if(pvrr != NULL) {
-      pvr_unrecord(pvrr);
-      return;
+  case RECOP_CLEAR:
+    if(pvrr != NULL) switch(pvrr->pvrr_status) {
+    case HTSTV_PVR_STATUS_ABORTED:
+    case HTSTV_PVR_STATUS_NO_TRANSPONDER:
+    case HTSTV_PVR_STATUS_FILE_ERROR:
+    case HTSTV_PVR_STATUS_DISK_FULL:
+    case HTSTV_PVR_STATUS_BUFFER_ERROR:
+    case HTSTV_PVR_STATUS_SCHEDULED:
+      pvr_database_erase(pvrr);
+      pvr_free(pvrr);
+      break;
     }
-    break;
+    return;
 
-  case RECOP_CANCEL:
+  case RECOP_ABORT:
     if(pvrr != NULL)
-      pvr_unrecord(pvrr);
+      pvr_abort(pvrr);
     return;
 
   case RECOP_ONCE:
@@ -1106,8 +1111,8 @@ static struct strtab recoptab[] = {
   { "once",   RECOP_ONCE },
   { "daily",  RECOP_DAILY },
   { "weekly", RECOP_WEEKLY },
-  { "cancel", RECOP_CANCEL },
-  { "toggle", RECOP_TOGGLE }
+  { "abort",  RECOP_ABORT },
+  { "clear",  RECOP_CLEAR }
 };
 
 int

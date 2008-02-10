@@ -654,7 +654,15 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
       epg_unlock();
       return HTTP_STATUS_UNAUTHORIZED;
     }
-    cmd = RECOP_CANCEL;
+    cmd = RECOP_ABORT;
+  }
+
+  if(http_arg_get(&hc->hc_url_args, "clear")) {
+    if(!html_verify_access(hc, "record-events")) {
+      epg_unlock();
+      return HTTP_STATUS_UNAUTHORIZED;
+    }
+    cmd = RECOP_CLEAR;
   }
 
   if(cmd != -1)
@@ -723,7 +731,7 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
 
     default:
       tcp_qprintf(&tq,
-		  "<input type=\"submit\" class=\"knapp\" name=\"cancel\" "
+		  "<input type=\"submit\" class=\"knapp\" name=\"clear\" "
 		  "value=\"Clear error status\">");
       break;
 

@@ -92,11 +92,11 @@ typedef struct pvr_rec {
 
 
 typedef enum {
-  RECOP_TOGGLE,
   RECOP_ONCE,
   RECOP_DAILY,
   RECOP_WEEKLY,
-  RECOP_CANCEL,
+  RECOP_ABORT,
+  RECOP_CLEAR,
 } recop_t;
 
 void pvr_init(void);
