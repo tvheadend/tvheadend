@@ -68,13 +68,11 @@ dvb_dvr_init(th_dvb_adapter_t *tda)
 static void
 dvb_dvr_process_packets(th_dvb_adapter_t *tda, uint8_t *tsb, int r)
 {
-  int pid;
   th_transport_t *t;
 
   while(r >= 188) {
-    pid = (tsb[1] & 0x1f) << 8 | tsb[2];
     LIST_FOREACH(t, &tda->tda_transports, tht_adapter_link)
-      ts_recv_packet(t, pid, tsb, 1);
+      ts_recv_packet1(t, tsb);
     r -= 188;
     tsb += 188;
   }

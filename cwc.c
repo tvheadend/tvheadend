@@ -716,7 +716,7 @@ cwc_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
     if(r == 0)
       break;
     for(i = 0; i < r; i++) {
-      ts_recv_packet(t, (t0[1] & 0x1f) << 8 | t0[2], t0, 0);
+      ts_recv_packet2(t, t0);
       t0 += 188;
     }
   }

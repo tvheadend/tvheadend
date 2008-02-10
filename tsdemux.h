@@ -19,6 +19,8 @@
 #ifndef TSDEMUX_H
 #define TSDEMUX_H
 
-void ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb, int doplugin);
+void ts_recv_packet1(th_transport_t *t, uint8_t *tsb);
+
+void ts_recv_packet2(th_transport_t *t, uint8_t *tsb);
 
 #endif /* TSDEMUX_H */

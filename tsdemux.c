@@ -70,42 +70,22 @@ got_section(th_transport_t *t, th_stream_t *st)
 
 
 
-/*
- * Process transport stream packets
+/**
+ * Continue processing of transport stream packets
  */
-void
-ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb, int dodescramble)
+static void
+ts_recv_packet0(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
 {
-  th_stream_t *st = NULL;
   th_subscription_t *s;
-  int cc, err = 0, afc, afl = 0;
-  int len, pusi;
-  th_descrambler_t *td;
-
-  LIST_FOREACH(st, &t->tht_streams, st_link) 
-    if(st->st_pid == pid)
-      break;
-
-  if(st == NULL)
-    return;
-
-  if(((tsb[3] >> 6) & 3) && dodescramble)
-    LIST_FOREACH(td, &t->tht_descramblers, td_transport_link)
-      if(td->td_descramble(td, t, st, tsb))
-	return;
-    
-  avgstat_add(&t->tht_rate, 188, dispatch_clock);
-  if((tsb[3] >> 6) & 3)
-    return; /* channel is encrypted */
-
+  int off, len, pusi, cc, err = 0;
 
   LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link)
     if(s->ths_raw_input != NULL)
       s->ths_raw_input(s, tsb, 188, st, s->ths_opaque);
 
-  afc = (tsb[3] >> 4) & 3;
+  /* Check CC */
 
-  if(afc & 1) {
+  if(tsb[3] & 0x10) {
     cc = tsb[3] & 0xf;
     if(st->st_cc_valid && cc != st->st_cc) {
       /* Incorrect CC */
@@ -117,13 +97,8 @@ ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb, int dodescramble)
     st->st_cc = (cc + 1) & 0xf;
   }
 
-
-  if(afc & 2)
-    afl = tsb[4] + 1;
-  
+  off = tsb[3] & 0x20 ? tsb[4] + 5 : 4;
   pusi = tsb[1] & 0x40;
-
-  afl += 4;
 
   switch(st->st_type) {
 
@@ -131,24 +106,24 @@ ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb, int dodescramble)
     if(st->st_section == NULL)
       st->st_section = calloc(1, sizeof(struct psi_section));
 
-    if(err || afl >= 188) {
+    if(err || off >= 188) {
       st->st_section->ps_offset = -1; /* hold parser until next pusi */
       break;
     }
 
     if(pusi) {
-      len = tsb[afl++];
+      len = tsb[off++];
       if(len > 0) {
-	if(len > 188 - afl)
+	if(len > 188 - off)
 	  break;
-	if(!psi_section_reassemble(st->st_section, tsb + afl, len, 0,
+	if(!psi_section_reassemble(st->st_section, tsb + off, len, 0,
 				   st->st_section_docrc))
 	  got_section(t, st);
-	afl += len;
+	off += len;
       }
     }
     
-    if(!psi_section_reassemble(st->st_section, tsb + afl, 188 - afl, pusi,
+    if(!psi_section_reassemble(st->st_section, tsb + off, 188 - off, pusi,
 			       st->st_section_docrc))
       got_section(t, st);
     break;
@@ -158,10 +133,110 @@ ts_recv_packet(th_transport_t *t, int pid, uint8_t *tsb, int dodescramble)
     break;
 
   default:
-    if(afl > 188)
+    if(off > 188)
       break;
 
-    parse_raw_mpeg(t, st, tsb + afl, 188 - afl, pusi, err);
+    parse_raw_mpeg(t, st, tsb + off, 188 - off, pusi, err);
     break;
   }
+}
+
+
+/**
+ * Process transport stream packets, extract PCR and optionally descramble
+ */
+static void
+ts_extract_pcr(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
+{
+  int64_t real = getclock_hires();
+  int64_t pcr;
+
+  pcr  = tsb[6] << 25;
+  pcr |= tsb[7] << 17;
+  pcr |= tsb[8] << 9;
+  pcr |= tsb[9] << 1;
+  pcr |= (tsb[10] >> 7) & 0x01;
+
+  pcr = av_rescale_q(pcr, st->st_tb, AV_TIME_BASE_Q);
+
+
+  {
+    static int64_t pcr0;
+    static int64_t real0, dv;
+
+    int64_t pcr_d, real_d, dx;
+
+    pcr_d = pcr - pcr0;
+    real_d = real - real0;
+
+    dx = pcr_d - real_d;
+
+    if(real0 && dx > -1000000LL && dx < 1000000LL)
+      dv += dx;
+#if 0
+    printf("B: realtime = %-12lld pcr = %-12lld delta = %lld\n",
+	   real_d, pcr_d, dv / 1000);
+#endif
+    pcr0 = pcr;
+    real0 = real;
+  }
+}
+
+/**
+ * Process transport stream packets, extract PCR and optionally descramble
+ */
+void
+ts_recv_packet1(th_transport_t *t, uint8_t *tsb)
+{
+  th_stream_t *st;
+  int pid;
+  th_descrambler_t *td;
+
+  pid = (tsb[1] & 0x1f) << 8 | tsb[2];
+
+  LIST_FOREACH(st, &t->tht_streams, st_link) 
+    if(st->st_pid == pid)
+      break;
+
+  if(st == NULL)
+    return;
+
+  avgstat_add(&t->tht_rate, 188, dispatch_clock);
+
+  /* Extract PCR */
+  if(tsb[3] & 0x20 && tsb[4] > 0 && tsb[5] & 0x10)
+    ts_extract_pcr(t, st, tsb);
+
+
+  if(tsb[3] & 0xc0) {
+    /* scrambled stream */
+    LIST_FOREACH(td, &t->tht_descramblers, td_transport_link)
+      if(td->td_descramble(td, t, st, tsb))
+	break;
+    
+    return;
+  }
+
+  ts_recv_packet0(t, st, tsb);
+}
+
+
+/*
+ * Process transport stream packets, simple version
+ */
+void
+ts_recv_packet2(th_transport_t *t, uint8_t *tsb)
+{
+  th_stream_t *st;
+  int pid;
+
+  pid = (tsb[1] & 0x1f) << 8 | tsb[2];
+  LIST_FOREACH(st, &t->tht_streams, st_link) 
+    if(st->st_pid == pid)
+      break;
+
+  if(st == NULL)
+    return;
+
+  ts_recv_packet0(t, st, tsb);
 }

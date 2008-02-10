@@ -55,14 +55,13 @@ iptv_fd_callback(int events, void *opaque, int fd)
 {
   th_transport_t *t = opaque;
   uint8_t buf[2000];
-  int r, pid;
+  int r;
   uint8_t *tsb = buf;
 
   r = read(fd, buf, sizeof(buf));
 
   while(r >= 188) {
-    pid = (tsb[1] & 0x1f) << 8 | tsb[2];
-    ts_recv_packet(t, pid, tsb, 1);
+    ts_recv_packet1(t, tsb);
     r -= 188;
     tsb += 188;
   }
