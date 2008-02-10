@@ -780,6 +780,7 @@ pvrr_transport_available(pvr_rec_t *pvrr, th_transport_t *t)
     tms->tms_avstream = av_mallocz(sizeof(AVStream));
     tms->tms_avstream->codec = ctx;
 
+    memcpy(tms->tms_avstream->language, tms->tms_stream->st_lang, 4);
     tms->tms_index = fctx->nb_streams;
     tm->tm_avfctx->streams[fctx->nb_streams] = tms->tms_avstream;
     fctx->nb_streams++;
