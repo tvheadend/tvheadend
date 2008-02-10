@@ -40,6 +40,8 @@
 #include "iptv_input.h"
 #include "transports.h"
 
+#define MAIN_WIDTH 800
+
 static struct strtab recstatustxt[] = {
   { "Recording scheduled",HTSTV_PVR_STATUS_SCHEDULED      },
   { "Recording",          HTSTV_PVR_STATUS_RECORDING      },
@@ -265,7 +267,7 @@ box_bottom(tcp_queue_t *tq)
 static void
 top_menu(http_connection_t *hc, tcp_queue_t *tq)
 {
-  tcp_qprintf(tq, "<div style=\"width: 700px; "
+  tcp_qprintf(tq, "<div style=\"width: 800px; "
 	      "margin-left: auto; margin-right: auto\">");
 
   box_top(tq, "box");
@@ -275,7 +277,9 @@ top_menu(http_connection_t *hc, tcp_queue_t *tq)
 	      "<ul id=\"meny\">");
 
 
-  tcp_qprintf(tq, "<li><a href=\"/\">TV Guide</a></li>");
+  tcp_qprintf(tq, "<li><a href=\"/\">Channel Guide</a></li>");
+
+  tcp_qprintf(tq, "<li><a href=\"/contentlist\">Content Guide</a></li>");
 
   if(html_verify_access(hc, "record-events"))
     tcp_qprintf(tq, "<li><a href=\"/pvrlog\">Recordings</a></li>");
@@ -345,7 +349,7 @@ is_client_simple(http_connection_t *hc)
 
 static void
 output_event(http_connection_t *hc, tcp_queue_t *tq, th_channel_t *ch,
-	     event_t *e, int simple)
+	     event_t *e, int simple, int print_channel)
 {
   char title[100];
   char bufa[4000];
@@ -383,17 +387,24 @@ output_event(http_connection_t *hc, tcp_queue_t *tq, th_channel_t *ch,
 	     "javascript:epop('/event/%d')", e->e_tag);
   }
 
-  esacpe_char(title, sizeof(title), e->e_title, '"', "'");
+  tcp_qprintf(tq, "<div><a href=\"%s\" %s>", bufa, overlibstuff);
 
+  if(print_channel) {
+    esacpe_char(title, sizeof(title), ch->ch_name, '"', "'");
+    
+    tcp_qprintf(tq, 
+		"<span style=\"width: %dpx;float: left\">"
+		"%s</span>",
+		simple ? 80 : 150, title);
+  }
+
+
+  esacpe_char(title, sizeof(title), e->e_title, '"', "'");
   tcp_qprintf(tq, 
-	      "<div>"
-	      "<a href=\"%s\" %s>"
 	      "<span style=\"width: %dpx;float: left%s\">"
 	      "%02d:%02d - %02d:%02d</span>"
 	      "<span style=\"overflow: hidden; height: 15px; width: %dpx; "
 	      "float: left%s\">%s</span>",
-	      bufa,
-	      overlibstuff,
 	      simple ? 80 : 100,
 	      e == cur ? ";font-weight:bold" : "",
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min,
@@ -446,7 +457,7 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
   if(i < 30)
     i = 30;
 
-  html_header(&tq, "HTS/tvheadend", !simple, 700, i);
+  html_header(&tq, "HTS/tvheadend", !simple, MAIN_WIDTH, i);
   top_menu(hc, &tq);
 
   TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
@@ -498,7 +509,7 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
 
       for(i = 0; i < 3 && e != NULL; i++) {
 
-	output_event(hc, &tq, ch, e, simple);
+	output_event(hc, &tq, ch, e, simple, 0);
 	e = TAILQ_NEXT(e, e_link);
       }
 
@@ -559,7 +570,7 @@ page_channel(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_init_queue(&tq, -1);
 
-  html_header(&tq, "HTS/tvheadend", !simple, 700, 0);
+  html_header(&tq, "HTS/tvheadend", !simple, MAIN_WIDTH, 0);
 
   top_menu(hc, &tq);
 
@@ -591,7 +602,7 @@ page_channel(http_connection_t *hc, const char *remain, void *opaque)
 	  break;
 
 	if(a.tm_wday == wday + doff) {
-	  output_event(hc, &tq, ch, e, simple);
+	  output_event(hc, &tq, ch, e, simple, 0);
 	}
 	e = TAILQ_NEXT(e, e_link);
       }
@@ -676,7 +687,7 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_init_queue(&tq, -1);
 
-  html_header(&tq, "HTS/tvheadend", 0, 700, 0);
+  html_header(&tq, "HTS/tvheadend", 0, MAIN_WIDTH, 0);
   top_menu(hc, &tq);
 
   tcp_qprintf(&tq, "<form method=\"get\" action=\"/event/%d\">", eventid);
@@ -782,7 +793,7 @@ page_pvrlog(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_UNAUTHORIZED;
 
   tcp_init_queue(&tq, -1);
-  html_header(&tq, "HTS/tvheadend", 0, 700, 0);
+  html_header(&tq, "HTS/tvheadend", 0, MAIN_WIDTH, 0);
   top_menu(hc, &tq);
 
   box_top(&tq, "box");
@@ -888,6 +899,124 @@ page_pvrlog(http_connection_t *hc, const char *remain, void *opaque)
 
   return 0;
 }
+
+/**
+ * Content listing
+ */
+
+
+static int
+eventcmp(const void *A, const void *B)
+{
+  const event_t *a = *(const event_t **)A;
+  const event_t *b = *(const event_t **)B;
+
+  return a->e_start - b->e_start;
+}
+
+static int
+page_contentlist(http_connection_t *hc, const char *remain, void *opaque)
+{
+  tcp_queue_t tq;
+  int simple = is_client_simple(hc);
+  event_t *e, **ev;
+  int c, i, j, k;
+  struct tm a, day;
+  th_channel_t *ch;
+  epg_content_group_t *ecg;
+  epg_content_type_t *ect;
+  th_channel_group_t *dis;
+  struct event_list events;
+
+  dis = channel_group_find("-disabled-", 1);
+
+  tcp_init_queue(&tq, -1);
+  html_header(&tq, "HTS/tvheadend", !simple, MAIN_WIDTH, 0);
+  top_menu(hc, &tq);
+
+  epg_lock();
+
+  for(i = 1; i < 17; i++) {
+    if((ecg = epg_content_groups[i & 0xf]) == NULL)
+      continue;
+
+    LIST_INIT(&events);
+
+
+    c = 0;
+    for(j = 0; j < 16; j++) {
+      if((ect = ecg->ecg_types[j]) == NULL)
+	continue;
+      LIST_FOREACH(e, &ect->ect_events, e_content_type_link) {
+	ch = e->e_ch;
+	if(ch->ch_group == dis)
+	  continue;
+	if(e->e_start + e->e_duration < dispatch_clock)
+	  continue;
+
+	LIST_INSERT_HEAD(&events, e, e_tmp_link);
+	c++;
+      }
+    }
+  
+    if(c == 0)
+      continue;
+
+    ev = alloca(c * sizeof(event_t *));
+
+    c = 0;
+    LIST_FOREACH(e, &events, e_tmp_link)
+      ev[c++] = e;
+
+    qsort(ev, c, sizeof(event_t *), eventcmp);
+
+    box_top(&tq, "box");
+
+    tcp_qprintf(&tq, 
+		"<div class=\"contentbig\">"
+		"<center><b>%s</b></center></div>", ecg->ecg_name);
+    tcp_qprintf(&tq, "<div class=\"content\">");
+ 
+    if(c > 25)
+      c = 25;
+
+    memset(&day, -1, sizeof(struct tm));
+
+    for(k = 0; k < c; k++) {
+      e = ev[k];
+
+      localtime_r(&e->e_start, &a);
+
+      if(a.tm_wday  != day.tm_wday  ||
+	 a.tm_mday  != day.tm_mday  ||
+	 a.tm_mon   != day.tm_mon   ||
+	 a.tm_year  != day.tm_year) {
+
+	memcpy(&day, &a, sizeof(struct tm));
+	tcp_qprintf(&tq, 
+		    "<br><b><i>%s, %d/%d</i></b><br>",
+		    days[day.tm_wday],
+		    day.tm_mday,
+		    day.tm_mon + 1);
+      }
+    
+    
+      output_event(hc, &tq, e->e_ch, e, simple, 1);
+    }
+    tcp_qprintf(&tq, "</div>");
+    box_bottom(&tq);
+    tcp_qprintf(&tq, "<br>\r\n");
+  }
+
+  epg_unlock();
+
+  tcp_qprintf(&tq, "<br></div>\r\n");
+  html_footer(&tq);
+  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
+
+  return 0;
+}
+
 
 
 static void
@@ -1276,7 +1405,7 @@ page_chgroups(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_init_queue(&tq, -1);
 
-  html_header(&tq, "HTS/tvheadend", 0, 700, 0);
+  html_header(&tq, "HTS/tvheadend", 0, MAIN_WIDTH, 0);
   top_menu(hc, &tq);
 
 
@@ -1346,7 +1475,7 @@ page_chadm(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_UNAUTHORIZED;
 
   tcp_init_queue(&tq, -1);
-  html_header(&tq, "HTS/tvheadend", !simple, 800, 0);
+  html_header(&tq, "HTS/tvheadend", !simple, MAIN_WIDTH, 0);
   top_menu(hc, &tq);
 
   tcp_qprintf(&tq,
@@ -1629,4 +1758,6 @@ htmlui_start(void)
   http_path_add("/editchannel", NULL, page_editchannel);
   http_path_add("/updatechannel", NULL, page_updatechannel);
   http_path_add("/css.css", NULL, page_css);
+  http_path_add("/contentlist", NULL, page_contentlist);
+
 }

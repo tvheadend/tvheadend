@@ -801,6 +801,7 @@ typedef struct epg_content_group {
 typedef struct event {
   TAILQ_ENTRY(event) e_link;
   LIST_ENTRY(event) e_hash_link;
+  LIST_ENTRY(event) e_tmp_link;
 
   LIST_ENTRY(event) e_content_type_link;
   epg_content_type_t *e_content_type;

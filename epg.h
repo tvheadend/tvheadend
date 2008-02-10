@@ -19,6 +19,8 @@
 #ifndef EPG_H
 #define EPG_H
 
+extern epg_content_group_t *epg_content_groups[16];
+
 void epg_init(void);
 
 void epg_lock(void);

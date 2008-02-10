@@ -487,6 +487,20 @@ epg_transfer_events(th_channel_t *ch, struct event_queue *src,
   epg_unlock();
 }
 
+static const char *groupnames[16] = {
+  [1] = "Movie / Drama",
+  [2] = "News / Current affairs",
+  [3] = "Show / Games",
+  [4] = "Sports",
+  [5] = "Children's/Youth",
+  [6] = "Music",
+  [7] = "Art/Culture",
+  [8] = "Social/Political issues/Economics",
+  [9] = "Education/Science/Factual topics",
+  [10] = "Leisure hobbies",
+  [11] = "Special characteristics",
+};
+
 /**
  * Find a content type
  */
@@ -502,8 +516,7 @@ epg_content_type_find_by_dvbcode(uint8_t dvbcode)
   ecg = epg_content_groups[group];
   if(ecg == NULL) {
     ecg = epg_content_groups[group] = calloc(1, sizeof(epg_content_group_t));
-    snprintf(buf, sizeof(buf), "group%d", group);
-    ecg->ecg_name = strdup(buf);
+    ecg->ecg_name = groupnames[group] ?: "Unknown";
   }
 
   ect = ecg->ecg_types[type];
