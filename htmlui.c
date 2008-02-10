@@ -391,24 +391,25 @@ output_event(http_connection_t *hc, tcp_queue_t *tq, th_channel_t *ch,
 	      "<span style=\"width: %dpx;float: left%s\">"
 	      "%02d:%02d - %02d:%02d</span>"
 	      "<span style=\"overflow: hidden; height: 15px; width: %dpx; "
-	      "float: left%s\">%s</span></a>",
+	      "float: left%s\">%s</span>",
 	      bufa,
 	      overlibstuff,
 	      simple ? 80 : 100,
 	      e == cur ? ";font-weight:bold" : "",
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min,
-	      simple ? 100 : 350,
+	      simple ? 100 : 330,
 	      e == cur ? ";font-weight:bold" : "",
 	      title
 	      );
 
   if(!pvrstatus_to_html(pvrstatus, &pvr_txt, &pvr_color)) {
     tcp_qprintf(tq, 
-		"<span style=\"font-style:italic;color:%s;font-weight:bold\">"
-		"%s</span></div><br>",
+		"<span style=\"float:left;font-style:italic;"
+		"color:%s;font-weight:bold\">%s</span></a></div><br>",
 		pvr_color, pvr_txt);
+
   } else {
-    tcp_qprintf(tq, "</div><br>");
+    tcp_qprintf(tq, "</a></div><br>");
   } 
 }
 
