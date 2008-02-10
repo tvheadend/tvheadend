@@ -278,7 +278,6 @@ channels_load(void)
     if((name = config_get_str_sub(&ce->ce_sub, "name", NULL)) == NULL)
       continue;
 
-    printf("Added channel group %s\n", name);
     channel_group_find(name, 1);
   }
   config_free0(&cl);
