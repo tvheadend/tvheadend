@@ -787,6 +787,10 @@ page_pvrlog(http_connection_t *hc, const char *remain, void *opaque)
   LIST_FOREACH(pvrr, &pvrr_global_list, pvrr_global_link)
     c++;
 
+  if(c == 0) {
+    tcp_qprintf(&tq, "<center>Nothing in recording log</center><br>");
+  }
+
   pv = alloca(c * sizeof(pvr_rec_t *));
 
   i = 0;
