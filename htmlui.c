@@ -364,7 +364,7 @@ output_event(http_connection_t *hc, tcp_queue_t *tq, th_channel_t *ch,
 
   cur = epg_event_get_current(ch);
 
-  if(!simple && e->e_desc != NULL) {
+  if(!simple && e->e_desc != NULL && e->e_desc[0] != 0) {
     esacpe_char(bufa, sizeof(bufa), e->e_desc, '\'', "");
 	
     snprintf(overlibstuff, sizeof(overlibstuff), 
