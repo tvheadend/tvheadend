@@ -144,7 +144,6 @@ pvr_free(pvr_rec_t *pvrr)
   free(pvrr->pvrr_desc);
   free(pvrr->pvrr_printname);
   free(pvrr->pvrr_filename);
-  free(pvrr->pvrr_format);
   free(pvrr);
 }
 
@@ -474,8 +473,8 @@ pvr_generate_filename(pvr_rec_t *pvrr)
     pvrr->pvrr_filename = NULL;
   }
 
-  free(pvrr->pvrr_format);
-  pvrr->pvrr_format = strdup("matroska");
+  pvrr->pvrr_fmt_lavfname = "matroska";
+  pvrr->pvrr_fmt_postfix  = "mkv";
 
   filename = utf8tofilename(name && name[0] ? name : "untitled");
   deslashify(filename);
@@ -484,7 +483,8 @@ pvr_generate_filename(pvr_rec_t *pvrr)
   deslashify(chname);
 
   snprintf(fullname, sizeof(fullname), "%s/%s-%s.%s",
-	   config_get_str("pvrdir", "."), chname, filename, pvrr->pvrr_format);
+	   config_get_str("pvrdir", "."), chname, filename,
+	   pvrr->pvrr_fmt_postfix);
 
   while(1) {
     if(stat(fullname, &st) == -1) {
@@ -499,8 +499,7 @@ pvr_generate_filename(pvr_rec_t *pvrr)
     tally++;
     snprintf(fullname, sizeof(fullname), "%s/%s-%s-%d.%s",
 	     config_get_str("pvrdir", "."), chname, filename, tally,
-	     pvrr->pvrr_format);
-
+	     pvrr->pvrr_fmt_postfix);
   }
 
   pvrr->pvrr_filename = strdup(fullname);
@@ -691,11 +690,11 @@ pvrr_transport_available(pvr_rec_t *pvrr, th_transport_t *t)
 
   /* Find lavf format */
 
-  fmt = guess_format(pvrr->pvrr_format, NULL, NULL);
+  fmt = guess_format(pvrr->pvrr_fmt_lavfname, NULL, NULL);
   if(fmt == NULL) {
     syslog(LOG_ERR, 
-	   "pvr: \"%s\" - Unable to open file format \".%s\" for output",
-	   pvrr->pvrr_printname, pvrr->pvrr_format);
+	   "pvr: \"%s\" - Unable to open file format \"%s\" for output",
+	   pvrr->pvrr_printname, pvrr->pvrr_fmt_lavfname);
     pvrr->pvrr_error = HTSTV_PVR_STATUS_FILE_ERROR;
     pvrr_fsm(pvrr);
     return;
