@@ -591,7 +591,6 @@ pvrr_packet_input(th_muxer_t *tm, th_stream_t *st, th_pkt_t *pkt)
 
   if(pkt->pkt_dts < 0 || pkt->pkt_pts < 0) {
     pkt_deref(pkt);
-    printf("trashing negative dts/pts\n");
     return;
   }
 
