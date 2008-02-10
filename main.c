@@ -178,6 +178,8 @@ main(int argc, char **argv)
   snprintf(buf, sizeof(buf), "%s/transports", settings_dir);
   mkdir(buf, 0777);
 
+  snprintf(buf, sizeof(buf), "%s/recordings", settings_dir);
+  mkdir(buf, 0777);
 
   syslog(LOG_NOTICE, "Started HTS TV Headend, settings located in \"%s\"",
 	 settings_dir);

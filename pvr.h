@@ -47,6 +47,7 @@ typedef struct pvr_rec {
 
   LIST_ENTRY(pvr_rec) pvrr_global_link;
 
+  int pvrr_id;               /* on-disk database id (filename) */
   th_channel_t *pvrr_channel;
 
   time_t pvrr_start;
@@ -109,8 +110,6 @@ pvr_rec_t *pvr_get_log_entry(int e);
 pvr_rec_t *pvr_get_tag_entry(int e);
 
 void pvr_inform_status_change(pvr_rec_t *pvrr);
-
-void pvr_database_save(void);
 
 void pvrr_set_rec_state(pvr_rec_t *pvrr, pvrr_rec_status_t status);
 

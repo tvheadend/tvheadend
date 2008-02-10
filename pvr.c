@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <dirent.h>
 
 #include <ffmpeg/avcodec.h>
 #include <ffmpeg/avformat.h>
@@ -45,8 +46,12 @@
 #include "buffer.h"
 #include "strtab.h"
 
+static int pvr_id_ceil;  /* number generator for database entries */
+
 struct pvr_rec_list pvrr_global_list;
 
+static void pvr_database_save(pvr_rec_t *pvrr);
+static void pvr_database_erase(pvr_rec_t *pvrr);
 static void pvr_database_load(void);
 static void pvr_unrecord(pvr_rec_t *pvrr);
 static void pvrr_fsm(pvr_rec_t *pvrr);
@@ -160,7 +165,7 @@ pvr_unrecord(pvr_rec_t *pvrr)
     pvrr_fsm(pvrr);
   }
   
-  pvr_database_save();
+  pvr_database_save(pvrr);
   clients_send_ref(-1);
 }
 
@@ -227,9 +232,9 @@ pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op)
     case HTSTV_PVR_STATUS_FILE_ERROR:
     case HTSTV_PVR_STATUS_DISK_FULL:
     case HTSTV_PVR_STATUS_BUFFER_ERROR:
+      pvr_database_erase(pvrr);
       pvr_free(pvrr);
       pvrr = NULL;
-      pvr_database_save();
       break;
     }
   }
@@ -267,7 +272,7 @@ pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op)
   pvrr->pvrr_desc    = e->e_desc ?  strdup(e->e_desc)  : NULL;
 
   pvr_link_pvrr(pvrr);  
-  pvr_database_save();
+  pvr_database_save(pvrr);
 }
 
 
@@ -290,7 +295,7 @@ pvr_channel_record_op(th_channel_t *ch, int duration)
   pvrr->pvrr_desc    = NULL;
 
   pvr_link_pvrr(pvrr);  
-  pvr_database_save();
+  pvr_database_save(pvrr);
 }
 
 
@@ -298,143 +303,120 @@ pvr_channel_record_op(th_channel_t *ch, int duration)
 
 /*****************************************************************************
  *
- * Plain text "database" of pvr programmes
+ * The recording database is real simple.
+ *
+ * We just store meta information about each recording in a separate
+ * textfile stored in a directory
  *
  */
 
-
-static char *
-pvr_schedule_path_get(void)
+static void
+pvr_database_save(pvr_rec_t *pvrr)
 {
-  static char path[400];
-  snprintf(path, sizeof(path), "%s/.pvrschedule.sav",
-	   config_get_str("pvrdir", "."));
-  return path;
-}
-
-
-void
-pvr_database_save(void)
-{
-  pvr_rec_t *pvrr, *next;
+  char buf[400];
   FILE *fp;
-  struct stat st;
-  char status;
 
-  fp = fopen(pvr_schedule_path_get(), "w");
-  if(fp == NULL)
+  if(pvrr->pvrr_id == 0)
+    pvrr->pvrr_id = ++pvr_id_ceil;
+
+  snprintf(buf, sizeof(buf), "%s/recordings/%d", settings_dir, pvrr->pvrr_id);
+  
+  if((fp = settings_open_for_write(buf)) == NULL)
     return;
+  
+  fprintf(fp, "channel = %s\n", pvrr->pvrr_channel->ch_name);
+  fprintf(fp, "start = %ld\n", pvrr->pvrr_start);
+  fprintf(fp, "stop = %ld\n", pvrr->pvrr_stop);
 
-  for(pvrr = LIST_FIRST(&pvrr_global_list); pvrr ; pvrr = next) {
-    next = LIST_NEXT(pvrr, pvrr_global_link);
+  if(pvrr->pvrr_title != NULL)
+    fprintf(fp, "title = %s\n", pvrr->pvrr_title);
 
-    if(pvrr->pvrr_filename) {
+  if(pvrr->pvrr_desc != NULL)
+    fprintf(fp, "description = %s\n", pvrr->pvrr_desc);
 
-      /* Check if file is still around */
-
-      if(stat(pvrr->pvrr_filename, &st) == -1) {
-	/* Nope, dont save this entry, instead remove it from memory too */
-	pvr_free(pvrr);
-	break;
-      }
-
-      fprintf(fp, "filename %s\n", pvrr->pvrr_filename);
-    }
-
-    fprintf(fp, "channel %s\n", pvrr->pvrr_channel->ch_name);
-    fprintf(fp, "start %ld\n", pvrr->pvrr_start);
-    fprintf(fp, "stop %ld\n", pvrr->pvrr_stop);
-
-    if(pvrr->pvrr_title)
-      fprintf(fp, "title %s\n", pvrr->pvrr_title);
-
-    if(pvrr->pvrr_desc)
-      fprintf(fp, "desc %s\n", pvrr->pvrr_desc);
-
-    status = pvrr->pvrr_status;
-
-
-    fprintf(fp, "status %c\n", pvrr->pvrr_status);
-    fprintf(fp, "end of record ------------------------------\n");
-  }
+  if(pvrr->pvrr_filename != NULL)
+    fprintf(fp, "filename = %s\n", pvrr->pvrr_filename);
+  
+  fprintf(fp, "status = %c\n", pvrr->pvrr_status);
   fclose(fp);
 }
 
+/**
+ * Erase status from a recording
+ */
+static void
+pvr_database_erase(pvr_rec_t *pvrr)
+{
+  char buf[400];
 
+  if(pvrr->pvrr_id == 0)
+    return;
+
+  snprintf(buf, sizeof(buf), "%s/recordings/%d", settings_dir, pvrr->pvrr_id);
+  unlink(buf);
+}
+
+/**
+ * Load database
+ */
 static void
 pvr_database_load(void)
 {
-  char line[4000];
-  pvr_rec_t *pvrr = NULL;
-  FILE *fp;
-  int l;
-  char *key, *val;
+  struct config_head cl;
+  char buf[400];
+  struct dirent *d;
+  const char *channel, *title, *desc, *fname, *status;
+  DIR *dir;
+  time_t start, stop;
+  pvr_rec_t *pvrr;
 
-  fp = fopen(pvr_schedule_path_get(), "r");
-  if(fp == NULL) {
-    perror("Cant open schedule");
+  snprintf(buf, sizeof(buf), "%s/recordings", settings_dir);
+
+  if((dir = opendir(buf)) == NULL)
     return;
-  }
-  while(!feof(fp)) {
 
-    if(pvrr == NULL)
-      pvrr = calloc(1, sizeof(pvr_rec_t));
-    
-    if(fgets(line, sizeof(line), fp) == NULL)
-      break;
+  while((d = readdir(dir)) != NULL) {
 
-    l = strlen(line) - 1;
-
-    while(l > 0 && line[l] < 32)
-      line[l--] = 0;
-    key = line;
-    val = strchr(line, ' ');
-    if(val == NULL)
+    if(d->d_name[0] == '.')
       continue;
-    *val++ = 0;
 
-    if(!strcmp(key, "channel"))
-      pvrr->pvrr_channel = channel_find(val, 1, NULL);
+    snprintf(buf, sizeof(buf), "%s/recordings/%s", settings_dir, d->d_name);
+
+    TAILQ_INIT(&cl);
+    config_read_file0(buf, &cl);
+
+    channel = config_get_str_sub(&cl, "channel", NULL);
+    start = atoi(config_get_str_sub(&cl, "start", "0"));
+    stop  = atoi(config_get_str_sub(&cl, "stop",  "0"));
     
-    else if(!strcmp(key, "start"))
-      pvrr->pvrr_start = atoi(val);
-      
-    else if(!strcmp(key, "stop"))
-      pvrr->pvrr_stop = atoi(val);
+    title = config_get_str_sub(&cl, "title", NULL);
+    desc  = config_get_str_sub(&cl, "description", NULL);
+    fname = config_get_str_sub(&cl, "filename", NULL);
+    status = config_get_str_sub(&cl, "status", NULL);
 
-    else if(!strcmp(key, "title"))
-      pvrr->pvrr_title = strdup(val);
+    if(channel != NULL && start && stop && title && status) {
+      pvrr = calloc(1, sizeof(pvr_rec_t));
 
-    else if(!strcmp(key, "desc"))
-      pvrr->pvrr_desc = strdup(val);
+      pvrr->pvrr_channel  = channel_find(channel, 1, NULL);
+      pvrr->pvrr_start    = start;
+      pvrr->pvrr_stop     = stop;
+      pvrr->pvrr_status   = *status;
+      pvrr->pvrr_filename = fname ? strdup(fname) : NULL;
+      pvrr->pvrr_title    = title ? strdup(title) : NULL;
+      pvrr->pvrr_desc     = desc ?  strdup(desc)  : NULL;
+      pvrr->pvrr_id       = atoi(d->d_name);
 
-    else if(!strcmp(key, "filename"))
-      pvrr->pvrr_filename = strdup(val);
-    
-    else if(!strcmp(key, "status"))
-      pvrr->pvrr_status = *val;
-
-    else if(!strcmp(key, "end")) {
-
-      if(pvrr->pvrr_channel == NULL || 
-	 pvrr->pvrr_start == 0 || 
-	 pvrr->pvrr_stop == 0 || 
-	 pvrr->pvrr_status == 0) {
-	memset(pvrr, 0, sizeof(pvr_rec_t));
-	continue;
-      }
+      if(pvrr->pvrr_id > pvr_id_ceil)
+	pvr_id_ceil = pvrr->pvrr_id;
 
       pvr_link_pvrr(pvrr);
-      pvrr = NULL;
     }
+    config_free0(&cl);
   }
-
-  if(pvrr)
-    free(pvrr);
-
-  pvr_database_save();
-  fclose(fp);
+  closedir(dir);
 }
+
+
 
 /*
  * Replace any slash chars in a string with dash
@@ -554,7 +536,7 @@ pvrr_fsm(pvr_rec_t *pvrr)
 	     "program has already come to pass", pvrr->pvrr_printname);
       pvrr->pvrr_status = HTSTV_PVR_STATUS_DONE;
       pvr_inform_status_change(pvrr);
-      pvr_database_save();
+      pvr_database_save(pvrr);
       break;
     }
 
@@ -579,7 +561,7 @@ pvrr_fsm(pvr_rec_t *pvrr)
     /* recording completed (or aborted, or failed or somthing) */
     pvrr->pvrr_status = pvrr->pvrr_error;
     pvr_inform_status_change(pvrr);
-    pvr_database_save();
+    pvr_database_save(pvrr);
 
     subscription_unsubscribe(pvrr->pvrr_s);
     dtimer_disarm(&pvrr->pvrr_timer);
