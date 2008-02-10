@@ -30,6 +30,7 @@
 #include "dvb_support.h"
 #include "tsdemux.h"
 #include "strtab.h"
+#include "parsers.h"
 
 int
 psi_section_reassemble(psi_section_t *ps, uint8_t *data, int len, 
@@ -177,7 +178,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
   tv_streamtype_t hts_stream_type;
   th_stream_t *st;
   char lang[4];
-
+  int frameduration;
   if(len < 9)
     return -1;
 
@@ -222,7 +223,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
 
     ptr += 5;
     len -= 5;
-
+    frameduration = 0;
     hts_stream_type = 0;
 
     switch(estype) {
@@ -253,6 +254,10 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
 	break;
 
       switch(dtag) {
+      case DVB_DESC_VIDEO_STREAM:
+	frameduration = mpeg2video_framedurations[(ptr[0] >> 3) & 0xf];
+	break;
+
       case DVB_DESC_LANGUAGE:
 	memcpy(lang, ptr, 3);
 	break;
@@ -276,10 +281,12 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
     if(hts_stream_type != 0) {
       st = transport_add_stream(t, pid, hts_stream_type);
       st->st_tb = (AVRational){1, 90000};
-
       memcpy(st->st_lang, lang, 4);
+
+      if(st->st_frame_duration == 0)
+	st->st_frame_duration = frameduration;
     }
-  } 
+  }
 
   t->tht_pmt_seen = 1;
   return 0;

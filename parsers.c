@@ -409,7 +409,7 @@ parse_pes_header(th_transport_t *t, th_stream_t *st, uint8_t *buf, size_t len)
 /**
  * MPEG2VIDEO frame duration table (in 90kHz clock domain)
  */
-const static unsigned int mpeg2video_framedurations[16] = {
+const unsigned int mpeg2video_framedurations[16] = {
   0,
   3753,
   3750,
