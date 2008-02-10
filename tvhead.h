@@ -778,6 +778,21 @@ typedef struct th_subscription {
 
 } th_subscription_t;
 
+/**
+ * EPG content group
+ *
+ * Based on the content types defined in EN 300 468
+ */
+typedef struct epg_content_type {
+  const char *ect_name;
+  struct event_list ect_events;
+} epg_content_type_t;
+
+
+typedef struct epg_content_group {
+  const char *ecg_name;
+  struct epg_content_type *ecg_types[16];
+} epg_content_group_t;
 
 
 /*
@@ -786,6 +801,9 @@ typedef struct th_subscription {
 typedef struct event {
   TAILQ_ENTRY(event) e_link;
   LIST_ENTRY(event) e_hash_link;
+
+  LIST_ENTRY(event) e_content_type_link;
+  epg_content_type_t *e_content_type;
 
   time_t e_start;  /* UTC time */
   int e_duration;  /* in seconds */

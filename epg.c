@@ -36,6 +36,8 @@ static pthread_mutex_t epg_mutex = PTHREAD_MUTEX_INITIALIZER;
 struct event_list epg_hash[EPG_HASH_ID_WIDTH];
 static dtimer_t epg_channel_maintain_timer;
 
+epg_content_group_t *epg_content_groups[16];
+
 void
 epg_lock(void)
 {
@@ -63,6 +65,16 @@ epg_event_set_desc(event_t *e, const char *desc)
   e->e_desc = strdup(desc);
 }
 
+void
+epg_event_set_content_type(event_t *e, epg_content_type_t *ect)
+{
+  if(e->e_content_type != NULL)
+    LIST_REMOVE(e, e_content_type_link);
+  
+  e->e_content_type = ect;
+  if(ect != NULL)
+    LIST_INSERT_HEAD(&ect->ect_events, e, e_content_type_link);
+}
 
 event_t *
 epg_event_find_by_time0(struct event_queue *q, time_t start)
@@ -157,6 +169,9 @@ epg_event_build(struct event_queue *head, time_t start, int duration)
 void
 epg_event_free(event_t *e)
 {
+  if(e->e_content_type != NULL)
+    LIST_REMOVE(e, e_content_type_link);
+
   free((void *)e->e_title);
   free((void *)e->e_desc);
   free(e);
@@ -261,7 +276,7 @@ check_overlap(th_channel_t *ch, event_t *e)
 static void
 epg_event_create(th_channel_t *ch, time_t start, int duration, 
 		 const char *title, const char *desc, int source, 
-		 uint16_t id, refstr_t *icon)
+		 uint16_t id, refstr_t *icon, epg_content_type_t *ect)
 {
   unsigned int l;
   time_t now;
@@ -317,6 +332,7 @@ epg_event_create(th_channel_t *ch, time_t start, int duration,
 
     if(title != NULL) epg_event_set_title(e, title);
     if(desc  != NULL) epg_event_set_desc(e, desc);
+    if(ect   != NULL) epg_event_set_content_type(e, ect);
   }
   
   check_overlap(ch, e);
@@ -328,7 +344,7 @@ epg_event_create(th_channel_t *ch, time_t start, int duration,
 void
 epg_update_event_by_id(th_channel_t *ch, uint16_t event_id, 
 		       time_t start, int duration, const char *title,
-		       const char *desc)
+		       const char *desc, epg_content_type_t *ect)
 {
   event_t *e;
 
@@ -359,11 +375,12 @@ epg_update_event_by_id(th_channel_t *ch, uint16_t event_id,
 
     epg_event_set_title(e, title);
     epg_event_set_desc(e, desc);
+    epg_event_set_content_type(e, ect);
 
   } else {
   
     epg_event_create(ch, start, duration, title, desc,
-		     EVENT_SRC_DVB, event_id, NULL);
+		     EVENT_SRC_DVB, event_id, NULL, ect);
   }
 }
 
@@ -463,10 +480,40 @@ epg_transfer_events(th_channel_t *ch, struct event_queue *src,
   TAILQ_FOREACH(e, src, e_link) {
 
     epg_event_create(ch, e->e_start, e->e_duration, e->e_title,
-		     e->e_desc, EVENT_SRC_XMLTV, 0, refstr_dup(icon));
+		     e->e_desc, EVENT_SRC_XMLTV, 0, refstr_dup(icon),
+		     e->e_content_type);
     cnt++;
   }
   epg_unlock();
+}
+
+/**
+ * Find a content type
+ */
+epg_content_type_t *
+epg_content_type_find_by_dvbcode(uint8_t dvbcode)
+{
+  epg_content_group_t *ecg;
+  epg_content_type_t *ect;
+  int group = dvbcode >> 4;
+  int type  = dvbcode & 0xf;
+  char buf[20];
+
+  ecg = epg_content_groups[group];
+  if(ecg == NULL) {
+    ecg = epg_content_groups[group] = calloc(1, sizeof(epg_content_group_t));
+    snprintf(buf, sizeof(buf), "group%d", group);
+    ecg->ecg_name = strdup(buf);
+  }
+
+  ect = ecg->ecg_types[type];
+  if(ect == NULL) {
+    ect = ecg->ecg_types[type] = calloc(1, sizeof(epg_content_type_t));
+    snprintf(buf, sizeof(buf), "type%d", type);
+    ect->ect_name = strdup(buf);
+  }
+
+  return ect;
 }
 
 

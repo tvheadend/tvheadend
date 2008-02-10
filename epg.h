@@ -43,7 +43,7 @@ void epg_event_set_desc(event_t *e, const char *desc);
 
 void epg_update_event_by_id(th_channel_t *ch, uint16_t event_id, 
 			    time_t start, int duration, const char *title,
-			    const char *desc);
+			    const char *desc, epg_content_type_t *ect);
 
 void epg_transfer_events(th_channel_t *ch, struct event_queue *src, 
 			 const char *srcname, refstr_t *icon);
@@ -51,5 +51,7 @@ void epg_transfer_events(th_channel_t *ch, struct event_queue *src,
 void event_time_txt(time_t start, int duration, char *out, int outlen);
 
 event_t *epg_event_find_current_or_upcoming(th_channel_t *ch);
+
+epg_content_type_t *epg_content_type_find_by_dvbcode(uint8_t dvbcode);
 
 #endif /* EPG_H */

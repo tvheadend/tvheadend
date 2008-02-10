@@ -36,6 +36,7 @@
 #define DVB_DESC_SERVICE_LIST 0x41
 #define DVB_DESC_SHORT_EVENT  0x4d
 #define DVB_DESC_SERVICE      0x48
+#define DVB_DESC_CONTENT      0x54
 #define DVB_DESC_TELETEXT     0x56
 #define DVB_DESC_SUBTITLE     0x59
 #define DVB_DESC_AC3          0x6a
