@@ -289,6 +289,13 @@ typedef struct th_stream {
   pid_section_callback_t *st_got_section;
   void *st_got_section_opaque;
 
+  /* PCR recovery */
+
+  int st_pcr_recovery_fails;
+  int64_t st_pcr_real_last;     /* realtime clock when we saw last PCR */
+  int64_t st_pcr_last;          /* PCR clock when we saw last PCR */
+  int64_t st_pcr_drift;
+
   /* For transport stream packet reassembly */
 
   uint8_t *st_buffer;
@@ -383,7 +390,8 @@ typedef struct th_transport {
   struct th_stream_list tht_streams;
   th_stream_t *tht_video;
   th_stream_t *tht_audio;
-
+  
+  int64_t  tht_pcr_drift;
   uint16_t tht_pcr_pid;
   uint16_t tht_dvb_transport_id;
   uint16_t tht_dvb_service_id;

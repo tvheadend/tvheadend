@@ -61,6 +61,7 @@ ts_muxer_send_packet(ts_muxer_t *ts)
   int i;
   int64_t t, tlow, pcr;
   uint8_t *d;
+  th_transport_t *tr;
 
   if(ts->ts_block == 0)
     return;
@@ -73,8 +74,9 @@ ts_muxer_send_packet(ts_muxer_t *ts)
     for(i = 0; i < ts->ts_block; i++) {
       d = ts->ts_packet + i * 188;
       if((d[3] & 0xf0) == 0x30 && d[4] >= 7 && d[5] & 0x10) {
+	tr = ts->ts_muxer->tm_subscription->ths_transport;
 
-	pcr = getclock_hires() - ts->ts_pcr_ref;
+	pcr = getclock_hires() - ts->ts_pcr_ref - tr->tht_pcr_drift;
 	t = av_rescale_q(pcr, AV_TIME_BASE_Q, mpeg_tc_27M);
 	tlow = t % 300LL;
 	t =    t / 300LL;
@@ -273,10 +275,11 @@ ts_deliver(void *opaque, int64_t now)
 {
   th_muxstream_t *tms = opaque;
   th_muxer_t *tm = tms->tms_muxer;
+  th_transport_t *t = tm->tm_subscription->ths_transport;
   ts_muxer_t *ts = tm->tm_opaque;
   th_muxpkt_t *f;
   th_muxfifo_t *tmf = &tms->tms_delivery_fifo;
-  int64_t pcr = now - ts->ts_pcr_ref;
+  int64_t pcr = now - ts->ts_pcr_ref - t->tht_pcr_drift;
   int64_t dl, next, delta;
 
   f = tmf_deq(tmf);
@@ -295,7 +298,7 @@ ts_deliver(void *opaque, int64_t now)
       return;
   }
 
-  next = f->tm_deadline + ts->ts_pcr_ref;
+  next = f->tm_deadline + ts->ts_pcr_ref - t->tht_pcr_drift;
   if(next < now + 100)
     next = now + 100;
 
@@ -316,6 +319,7 @@ ts_check_deliver(ts_muxer_t *ts, th_muxstream_t *tms)
   int64_t now;
   th_muxpkt_t *f;
   th_muxfifo_t *tmf = &tms->tms_delivery_fifo;
+  th_transport_t *t = ts->ts_muxer->tm_subscription->ths_transport;
   int64_t next;
 
   if(dtimer_isarmed(&tms->tms_mux_timer))
@@ -330,11 +334,11 @@ ts_check_deliver(ts_muxer_t *ts, th_muxstream_t *tms)
     if(ts->ts_pcr_start == AV_NOPTS_VALUE)
       return; /* dont know anything yet */
 
-    ts->ts_pcr_ref = now - ts->ts_pcr_start;
+    ts->ts_pcr_ref = now - ts->ts_pcr_start + t->tht_pcr_drift;
   }
 
   f = TAILQ_FIRST(&tmf->tmf_queue);  /* next packet we are going to send */
-  next = f->tm_deadline + ts->ts_pcr_ref;
+  next = f->tm_deadline + ts->ts_pcr_ref - t->tht_pcr_drift;
 
   if(next < now + 100)
     next = now + 100;

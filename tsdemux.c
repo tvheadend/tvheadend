@@ -143,43 +143,48 @@ ts_recv_packet0(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
 
 
 /**
- * Process transport stream packets, extract PCR and optionally descramble
+ * Recover PCR
+ *
+ * st->st_pcr_drift will increase if our (system clock) runs faster
+ * than the stream PCR
  */
 static void
 ts_extract_pcr(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
 {
   int64_t real = getclock_hires();
-  int64_t pcr;
+  int64_t pcr, d;
 
   pcr  = tsb[6] << 25;
   pcr |= tsb[7] << 17;
   pcr |= tsb[8] << 9;
   pcr |= tsb[9] << 1;
   pcr |= (tsb[10] >> 7) & 0x01;
-
+  
   pcr = av_rescale_q(pcr, st->st_tb, AV_TIME_BASE_Q);
 
-
-  {
-    static int64_t pcr0;
-    static int64_t real0, dv;
-
-    int64_t pcr_d, real_d, dx;
-
-    pcr_d = pcr - pcr0;
-    real_d = real - real0;
-
-    dx = pcr_d - real_d;
-
-    if(real0 && dx > -1000000LL && dx < 1000000LL)
-      dv += dx;
-#if 0
-    printf("B: realtime = %-12lld pcr = %-12lld delta = %lld\n",
-	   real_d, pcr_d, dv / 1000);
-#endif
-    pcr0 = pcr;
-    real0 = real;
+  if(st->st_pcr_real_last != AV_NOPTS_VALUE) {
+    d = (real - st->st_pcr_real_last) - (pcr - st->st_pcr_last);
+    
+    if(d < -1000000LL || d > 1000000LL) {
+      st->st_pcr_recovery_fails++;
+      if(st->st_pcr_recovery_fails > 10) {
+	st->st_pcr_recovery_fails = 0;
+	st->st_pcr_real_last = AV_NOPTS_VALUE;
+      }
+      return;
+    }
+    st->st_pcr_recovery_fails = 0;
+    st->st_pcr_drift += d;
+    
+    if(t->tht_pcr_pid == st->st_pid) {
+      /* This is the registered PCR PID, adjust transport PCR drift
+	 via an IIR filter */
+      
+      t->tht_pcr_drift = (t->tht_pcr_drift * 255 + st->st_pcr_drift) / 256;
+    }
   }
+  st->st_pcr_last = pcr;
+  st->st_pcr_real_last = real;
 }
 
 /**

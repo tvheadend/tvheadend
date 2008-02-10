@@ -158,7 +158,7 @@ transport_start(th_transport_t *t, unsigned int weight)
 
   t->tht_monitor_suspend = 10;
   t->tht_dts_start = AV_NOPTS_VALUE;
-
+  t->tht_pcr_drift = 0;
   LIST_FOREACH(st, &t->tht_streams, st_link) {
   
     st->st_startcond = 0xffffffff;
@@ -169,6 +169,10 @@ transport_start(th_transport_t *t, unsigned int weight)
     st->st_last_dts = AV_NOPTS_VALUE;
     st->st_dts_epoch = 0; 
  
+    st->st_pcr_real_last = AV_NOPTS_VALUE;
+    st->st_pcr_last      = AV_NOPTS_VALUE;
+    st->st_pcr_drift     = 0;
+    st->st_pcr_recovery_fails = 0;
     /* Open ffmpeg context and parser */
 
     switch(st->st_type) {
