@@ -632,7 +632,8 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
 
   case 5: /* IDR+SLICE */
   case 1:
-    if(st->st_curpkt != NULL || st->st_frame_duration == 0)
+    if(st->st_curpkt != NULL || st->st_frame_duration == 0 ||
+       st->st_curdts == AV_NOPTS_VALUE)
       break;
 
     if(t->tht_dts_start == AV_NOPTS_VALUE)
