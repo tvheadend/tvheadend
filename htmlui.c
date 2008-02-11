@@ -267,8 +267,8 @@ box_bottom(tcp_queue_t *tq)
 static void
 top_menu(http_connection_t *hc, tcp_queue_t *tq)
 {
-  tcp_qprintf(tq, "<div style=\"width: 800px; "
-	      "margin-left: auto; margin-right: auto\">");
+  tcp_qprintf(tq, "<div style=\"width: %dpx; "
+	      "margin-left: auto; margin-right: auto\">", MAIN_WIDTH);
 
   box_top(tq, "box");
 
