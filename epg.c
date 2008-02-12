@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <regex.h>
 
 #include "tvhead.h"
 #include "channels.h"
@@ -488,6 +489,7 @@ epg_transfer_events(th_channel_t *ch, struct event_queue *src,
 }
 
 static const char *groupnames[16] = {
+  [0] = "Unclassified",
   [1] = "Movie / Drama",
   [2] = "News / Current affairs",
   [3] = "Show / Games",
@@ -516,12 +518,13 @@ epg_content_type_find_by_dvbcode(uint8_t dvbcode)
   ecg = epg_content_groups[group];
   if(ecg == NULL) {
     ecg = epg_content_groups[group] = calloc(1, sizeof(epg_content_group_t));
-    ecg->ecg_name = groupnames[group] ?: "Unknown";
+    ecg->ecg_name = groupnames[group];
   }
 
   ect = ecg->ecg_types[type];
   if(ect == NULL) {
     ect = ecg->ecg_types[type] = calloc(1, sizeof(epg_content_type_t));
+    ect->ect_group = ecg;
     snprintf(buf, sizeof(buf), "type%d", type);
     ect->ect_name = strdup(buf);
   }
@@ -529,7 +532,85 @@ epg_content_type_find_by_dvbcode(uint8_t dvbcode)
   return ect;
 }
 
+/**
+ *
+ */
+epg_content_group_t *
+epg_content_group_find_by_name(const char *name)
+{
+  epg_content_group_t *ecg;
+  int i;
+  
+  for(i = 0; i < 16; i++) {
+    ecg = epg_content_groups[i];
+    if(ecg->ecg_name && !strcmp(name, ecg->ecg_name))
+      return ecg;
+  }
+  return NULL;
+}
 
+
+/**
+ * Given the arguments, search all EPG events and enlist them
+ *
+ * XXX: Optimize if we know channel, group, etc
+ */
+int
+epg_search(struct event_list *h, const char *title, epg_content_group_t *s_ecg,
+	   th_channel_group_t *s_tcg, th_channel_t *s_ch)
+{
+  th_channel_group_t *dis;
+  th_channel_t *ch;
+  event_t *e;
+  int num = 0;
+  regex_t preg;
+
+  if(title != NULL && 
+     regcomp(&preg, title, REG_ICASE | REG_EXTENDED | REG_NOSUB))
+    return -1;
+
+  dis = channel_group_find("-disabled-", 1);
+
+  LIST_FOREACH(ch, &channels, ch_global_link) {
+    if(ch->ch_group == dis)
+      continue;
+
+    if(LIST_FIRST(&ch->ch_transports) == NULL)
+      continue;
+
+    if(s_ch != NULL && s_ch != ch)
+      continue;
+
+    if(s_tcg != NULL && s_tcg != ch->ch_group)
+      continue;
+
+    TAILQ_FOREACH(e, &ch->ch_epg_events, e_link) {
+
+      if(e->e_start + e->e_duration < dispatch_clock)
+	continue; /* old */
+
+      if(s_ecg != NULL) {
+	if(e->e_content_type == NULL)
+	  continue;
+	
+	if(e->e_content_type->ect_group != s_ecg)
+	  continue;
+      }
+
+      if(title != NULL) {
+	if(regexec(&preg, e->e_title, 0, NULL, 0))
+	  continue;
+      }
+
+      LIST_INSERT_HEAD(h, e, e_tmp_link);
+      num++;
+    }
+  }
+  if(title != NULL)
+    regfree(&preg);
+
+  return num;
+}
 
 /*
  *
@@ -537,6 +618,11 @@ epg_content_type_find_by_dvbcode(uint8_t dvbcode)
 void
 epg_init(void)
 {
+  int i;
+
+  for(i = 0x0; i < 0x100; i+=16)
+    epg_content_type_find_by_dvbcode(i);
+
   dtimer_arm(&epg_channel_maintain_timer, epg_channel_maintain, NULL, 5);
 }
 

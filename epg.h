@@ -56,4 +56,10 @@ event_t *epg_event_find_current_or_upcoming(th_channel_t *ch);
 
 epg_content_type_t *epg_content_type_find_by_dvbcode(uint8_t dvbcode);
 
+epg_content_group_t *epg_content_group_find_by_name(const char *name);
+
+int epg_search(struct event_list *h, const char *title,
+	       epg_content_group_t *s_ecg, th_channel_group_t *s_tcg,
+	       th_channel_t *s_ch);
+
 #endif /* EPG_H */

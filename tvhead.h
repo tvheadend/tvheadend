@@ -783,10 +783,6 @@ typedef struct th_subscription {
  *
  * Based on the content types defined in EN 300 468
  */
-typedef struct epg_content_type {
-  const char *ect_name;
-  struct event_list ect_events;
-} epg_content_type_t;
 
 
 typedef struct epg_content_group {
@@ -794,6 +790,11 @@ typedef struct epg_content_group {
   struct epg_content_type *ecg_types[16];
 } epg_content_group_t;
 
+typedef struct epg_content_type {
+  const char *ect_name;
+  struct event_list ect_events;
+  epg_content_group_t *ect_group;
+} epg_content_type_t;
 
 /*
  * EPG event

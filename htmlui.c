@@ -67,6 +67,19 @@ static struct strtab recstatuscolor[] = {
 };
 
 
+/**
+ * Compare start for two events, used as argument to qsort(3)
+ */
+static int
+eventcmp(const void *A, const void *B)
+{
+  const event_t *a = *(const event_t **)A;
+  const event_t *b = *(const event_t **)B;
+
+  return a->e_start - b->e_start;
+}
+
+
 /*
  * Return 1 if current user have access to a feature
  */
@@ -147,6 +160,9 @@ page_css(http_connection_t *hc, const char *remain, void *opaque)
 	      "border-right: 1px solid #000000; "
 	      "font: 150% Verdana, Arial, Helvetica, sans-serif;}\r\n"
 	      ""
+	      ".smalltxt {padding-left: 3px; "
+	      "font: 100% Verdana, Arial, Helvetica, sans-serif;}\r\n"
+	      ""
 	      ".statuscont {float: left; margin: 4px; width: 400px}\r\n"
 	      ""
 	      ".logo {padding: 2px; width: 60px; height: 56px; "
@@ -179,7 +195,7 @@ page_css(http_connection_t *hc, const char *remain, void *opaque)
 
 static void
 html_header(tcp_queue_t *tq, const char *title, int javascript, int width,
-	    int autorefresh)
+	    int autorefresh, const char *extrascript)
 {
   char w[30];
 
@@ -220,6 +236,10 @@ html_header(tcp_queue_t *tq, const char *title, int javascript, int width,
 		"<script type=\"text/javascript\" "
 		"src=\"http://www.olebyn.nu/hts/overlib.js\"></script>\r\n");
   }
+
+  if(extrascript)
+    tcp_qprintf(tq, "%s", extrascript);
+
   /* BODY start */
   
   tcp_qprintf(tq, "</head><body>\r\n");
@@ -279,11 +299,11 @@ top_menu(http_connection_t *hc, tcp_queue_t *tq)
 
   tcp_qprintf(tq, "<li><a href=\"/\">Channel Guide</a></li>");
 
-  tcp_qprintf(tq, "<li><a href=\"/contentlist\">Content Guide</a></li>");
+  tcp_qprintf(tq, "<li><a href=\"/search\">Search</a></li>");
 
   if(html_verify_access(hc, "record-events"))
-    tcp_qprintf(tq, "<li><a href=\"/pvrlog\">Recordings</a></li>");
-  
+    tcp_qprintf(tq, "<li><a href=\"/pvrlog\">Recorder log</a></li>");
+ 
   if(html_verify_access(hc, "system-status"))
     tcp_qprintf(tq, "<li><a href=\"/status\">System Status</a></li>");
 
@@ -349,7 +369,8 @@ is_client_simple(http_connection_t *hc)
 
 static void
 output_event(http_connection_t *hc, tcp_queue_t *tq, th_channel_t *ch,
-	     event_t *e, int simple, int print_channel)
+	     event_t *e, int simple, int print_channel, int print_pvr,
+	     int maxsize)
 {
   char title[100];
   char bufa[4000];
@@ -393,27 +414,29 @@ output_event(http_connection_t *hc, tcp_queue_t *tq, th_channel_t *ch,
     esacpe_char(title, sizeof(title), ch->ch_name, '"', "'");
     
     tcp_qprintf(tq, 
-		"<span style=\"width: %dpx;float: left\">"
+		"<span style=\"overflow: hidden; height: 15px;"
+		"width: %dpx;float: left\">"
 		"%s</span>",
-		simple ? 80 : 150, title);
+		simple ? 80 : maxsize * 125 / 600, title);
   }
 
 
   esacpe_char(title, sizeof(title), e->e_title, '"', "'");
   tcp_qprintf(tq, 
-	      "<span style=\"width: %dpx;float: left%s\">"
+	      "<span style=\"width: %dpx;height: 15px;overflow: hidden;"
+	      "float: left%s\">"
 	      "%02d:%02d - %02d:%02d</span>"
 	      "<span style=\"overflow: hidden; height: 15px; width: %dpx; "
 	      "float: left%s\">%s</span>",
-	      simple ? 80 : 100,
+	      simple ? 80 : maxsize * 125 / 600,
 	      e == cur ? ";font-weight:bold" : "",
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min,
-	      simple ? 100 : 330,
+	      simple ? 100 : maxsize * 350 / 600,
 	      e == cur ? ";font-weight:bold" : "",
 	      title
 	      );
 
-  if(!pvrstatus_to_html(pvrstatus, &pvr_txt, &pvr_color)) {
+  if(print_pvr && !pvrstatus_to_html(pvrstatus, &pvr_txt, &pvr_color)) {
     tcp_qprintf(tq, 
 		"<span style=\"float:left;font-style:italic;"
 		"color:%s;font-weight:bold\">%s</span></a></div><br>",
@@ -457,7 +480,7 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
   if(i < 30)
     i = 30;
 
-  html_header(&tq, "HTS/tvheadend", !simple, MAIN_WIDTH, i);
+  html_header(&tq, "HTS/tvheadend", !simple, MAIN_WIDTH, i, NULL);
   top_menu(hc, &tq);
 
   TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
@@ -509,7 +532,7 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
 
       for(i = 0; i < 3 && e != NULL; i++) {
 
-	output_event(hc, &tq, ch, e, simple, 0);
+	output_event(hc, &tq, ch, e, simple, 0, 1, 580);
 	e = TAILQ_NEXT(e, e_link);
       }
 
@@ -570,7 +593,7 @@ page_channel(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_init_queue(&tq, -1);
 
-  html_header(&tq, "HTS/tvheadend", !simple, MAIN_WIDTH, 0);
+  html_header(&tq, "HTS/tvheadend", !simple, MAIN_WIDTH, 0, NULL);
 
   top_menu(hc, &tq);
 
@@ -602,7 +625,7 @@ page_channel(http_connection_t *hc, const char *remain, void *opaque)
 	  break;
 
 	if(a.tm_wday == wday + doff) {
-	  output_event(hc, &tq, ch, e, simple, 0);
+	  output_event(hc, &tq, ch, e, simple, 0, 1, 580);
 	}
 	e = TAILQ_NEXT(e, e_link);
       }
@@ -687,7 +710,7 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_init_queue(&tq, -1);
 
-  html_header(&tq, "HTS/tvheadend", 0, MAIN_WIDTH, 0);
+  html_header(&tq, "HTS/tvheadend", 0, MAIN_WIDTH, 0, NULL);
   top_menu(hc, &tq);
 
   tcp_qprintf(&tq, "<form method=\"get\" action=\"/event/%d\">", eventid);
@@ -793,7 +816,7 @@ page_pvrlog(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_UNAUTHORIZED;
 
   tcp_init_queue(&tq, -1);
-  html_header(&tq, "HTS/tvheadend", 0, MAIN_WIDTH, 0);
+  html_header(&tq, "HTS/tvheadend", 0, MAIN_WIDTH, 0, NULL);
   top_menu(hc, &tq);
 
   box_top(&tq, "box");
@@ -900,122 +923,6 @@ page_pvrlog(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
-/**
- * Content listing
- */
-
-
-static int
-eventcmp(const void *A, const void *B)
-{
-  const event_t *a = *(const event_t **)A;
-  const event_t *b = *(const event_t **)B;
-
-  return a->e_start - b->e_start;
-}
-
-static int
-page_contentlist(http_connection_t *hc, const char *remain, void *opaque)
-{
-  tcp_queue_t tq;
-  int simple = is_client_simple(hc);
-  event_t *e, **ev;
-  int c, i, j, k;
-  struct tm a, day;
-  th_channel_t *ch;
-  epg_content_group_t *ecg;
-  epg_content_type_t *ect;
-  th_channel_group_t *dis;
-  struct event_list events;
-
-  dis = channel_group_find("-disabled-", 1);
-
-  tcp_init_queue(&tq, -1);
-  html_header(&tq, "HTS/tvheadend", !simple, MAIN_WIDTH, 0);
-  top_menu(hc, &tq);
-
-  epg_lock();
-
-  for(i = 1; i < 17; i++) {
-    if((ecg = epg_content_groups[i & 0xf]) == NULL)
-      continue;
-
-    LIST_INIT(&events);
-
-
-    c = 0;
-    for(j = 0; j < 16; j++) {
-      if((ect = ecg->ecg_types[j]) == NULL)
-	continue;
-      LIST_FOREACH(e, &ect->ect_events, e_content_type_link) {
-	ch = e->e_ch;
-	if(ch->ch_group == dis)
-	  continue;
-	if(e->e_start + e->e_duration < dispatch_clock)
-	  continue;
-
-	LIST_INSERT_HEAD(&events, e, e_tmp_link);
-	c++;
-      }
-    }
-  
-    if(c == 0)
-      continue;
-
-    ev = alloca(c * sizeof(event_t *));
-
-    c = 0;
-    LIST_FOREACH(e, &events, e_tmp_link)
-      ev[c++] = e;
-
-    qsort(ev, c, sizeof(event_t *), eventcmp);
-
-    box_top(&tq, "box");
-
-    tcp_qprintf(&tq, 
-		"<div class=\"contentbig\">"
-		"<center><b>%s</b></center></div>", ecg->ecg_name);
-    tcp_qprintf(&tq, "<div class=\"content\">");
- 
-    if(c > 25)
-      c = 25;
-
-    memset(&day, -1, sizeof(struct tm));
-
-    for(k = 0; k < c; k++) {
-      e = ev[k];
-
-      localtime_r(&e->e_start, &a);
-
-      if(a.tm_wday  != day.tm_wday  ||
-	 a.tm_mday  != day.tm_mday  ||
-	 a.tm_mon   != day.tm_mon   ||
-	 a.tm_year  != day.tm_year) {
-
-	memcpy(&day, &a, sizeof(struct tm));
-	tcp_qprintf(&tq, 
-		    "<br><b><i>%s, %d/%d</i></b><br>",
-		    days[day.tm_wday],
-		    day.tm_mday,
-		    day.tm_mon + 1);
-      }
-    
-    
-      output_event(hc, &tq, e->e_ch, e, simple, 1);
-    }
-    tcp_qprintf(&tq, "</div>");
-    box_bottom(&tq);
-    tcp_qprintf(&tq, "<br>\r\n");
-  }
-
-  epg_unlock();
-
-  tcp_qprintf(&tq, "<br></div>\r\n");
-  html_footer(&tq);
-  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
-
-  return 0;
-}
 
 
 
@@ -1062,7 +969,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_init_queue(&tq, -1);
 
-  html_header(&tq, "HTS/tvheadend", !simple, -1, 0);
+  html_header(&tq, "HTS/tvheadend", !simple, -1, 0, NULL);
 
   top_menu(hc, &tq);
 
@@ -1405,7 +1312,7 @@ page_chgroups(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_init_queue(&tq, -1);
 
-  html_header(&tq, "HTS/tvheadend", 0, MAIN_WIDTH, 0);
+  html_header(&tq, "HTS/tvheadend", 0, MAIN_WIDTH, 0, NULL);
   top_menu(hc, &tq);
 
 
@@ -1475,7 +1382,7 @@ page_chadm(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_UNAUTHORIZED;
 
   tcp_init_queue(&tq, -1);
-  html_header(&tq, "HTS/tvheadend", !simple, MAIN_WIDTH, 0);
+  html_header(&tq, "HTS/tvheadend", !simple, MAIN_WIDTH, 0, NULL);
   top_menu(hc, &tq);
 
   tcp_qprintf(&tq,
@@ -1516,7 +1423,7 @@ page_chadm2(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_UNAUTHORIZED;
 
   tcp_init_queue(&tq, -1);
-  html_header(&tq, "HTS/tvheadend", !simple, 230, 0);
+  html_header(&tq, "HTS/tvheadend", !simple, 230, 0, NULL);
 
   LIST_FOREACH(ch, &channels, ch_global_link) {
     tcp_qprintf(&tq, 
@@ -1550,7 +1457,7 @@ page_editchannel(http_connection_t *hc, const char *remain, void *opaque)
   dis = channel_group_find("-disabled-", 1);
 
   tcp_init_queue(&tq, -1);
-  html_header(&tq, "HTS/tvheadend", 0, 530, 0);
+  html_header(&tq, "HTS/tvheadend", 0, 530, 0, NULL);
 
   tcp_qprintf(&tq, 
 	      "<form method=\"get\" action=\"/updatechannel/%d\">",
@@ -1740,6 +1647,209 @@ page_updatechannel(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 
+/**
+ * Search for a specific event
+ */
+static int
+page_search(http_connection_t *hc, const char *remain, void *opaque)
+{
+  tcp_queue_t tq;
+  epg_content_group_t *ecg, *s_ecg;
+  th_channel_group_t *tcg, *s_tcg;
+  th_channel_t *ch, *s_ch;
+  int simple = is_client_simple(hc);
+  int i, c, k;
+  char escapebuf[1000];
+  struct event_list events;
+  event_t *e, **ev;
+  struct tm a, day;
+  
+  const char *search  = http_arg_get(&hc->hc_url_args, "s");
+  const char *title   = http_arg_get(&hc->hc_url_args, "n");
+  const char *content = http_arg_get(&hc->hc_url_args, "c");
+  const char *chgroup = http_arg_get(&hc->hc_url_args, "g");
+  const char *channel = http_arg_get(&hc->hc_url_args, "ch");
+
+  if(title   != NULL && *title == 0)               title   = NULL;
+  if(content != NULL && !strcmp(content, "-All-")) content = NULL;
+  if(chgroup != NULL && !strcmp(chgroup, "-All-")) chgroup = NULL;
+  if(channel != NULL && !strcmp(channel, "-All-")) channel = NULL;
+
+  s_ecg = content ? epg_content_group_find_by_name(content) : NULL;
+  s_tcg = chgroup ? channel_group_find(chgroup, 0)          : NULL;
+  s_ch  = channel ? channel_find(channel, 0, NULL)          : NULL;
+
+  tcp_init_queue(&tq, -1);
+  html_header(&tq, "HTS/tvheadend", !simple, MAIN_WIDTH, 0, NULL);
+  top_menu(hc, &tq);
+
+  tcp_qprintf(&tq, 
+	      "<form method=\"get\" action=\"/search\">");
+
+  box_top(&tq, "box");
+
+  tcp_qprintf(&tq, 
+	      "<div class=\"content\">"
+	      "<br>");
+
+  /* Title */
+
+  tcp_qprintf(&tq, 
+	      "<div>"
+	      "<span style=\"text-align: right; width: 120px; float: left\">"
+	      "Event title:"
+	      "</span>"
+	      "<span style=\"width: 275px; float: left\">"
+	      "<input type=\"text\" size=40 name=\"n\"");
+
+  if(title != NULL) {
+    esacpe_char(escapebuf, sizeof(escapebuf), title, '"', "&quot;");
+    tcp_qprintf(&tq, " value=\"%s\"", escapebuf);
+  }
+
+  tcp_qprintf(&tq,
+	      " style=\"border: 1px dotted #000000\"> "
+	      "</span>");
+
+  
+  /* Specific content */
+
+  tcp_qprintf(&tq, 
+	      "<span style=\"text-align: right; width: 120px; float: left\">"
+	      "Content:"
+	      "</span>"
+	      "<span style=\"width: 275px\">"
+	      "<select name=\"c\" class=\"drop\">");
+  
+  tcp_qprintf(&tq, "<option%s>-All-</option>", content ? "" : " selected");
+
+  for(i = 0; i < 16; i++) {
+    ecg = epg_content_groups[i];
+
+    if(ecg->ecg_name == NULL)
+      continue;
+    tcp_qprintf(&tq, "<option%s>%s</option>", 
+		ecg == s_ecg ? " selected" : "", ecg->ecg_name);
+  }
+  tcp_qprintf(&tq, "</select></span></div><br>");
+
+
+
+  /* Specific channel group */
+
+  tcp_qprintf(&tq, 
+	      "<div>"
+	      "<span style=\"text-align: right; width: 120px; float: left\">"
+	      "Channel group:"
+	      "</span>"
+	      "<span style=\"width: 275px; float: left\">"
+	      "<select name=\"g\" class=\"drop\">");
+ 
+  tcp_qprintf(&tq, "<option%s>-All-</option>", chgroup ? "" : " selected");
+
+  TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
+    if(tcg->tcg_hidden)
+      continue;
+    tcp_qprintf(&tq, "<option%s>%s</option>", 
+		tcg == s_tcg ? " selected" : "", tcg->tcg_name);
+  }
+  tcp_qprintf(&tq, "</select></span>");
+
+  /* Specific channel */
+
+  tcp_qprintf(&tq, 
+	      "<span style=\"text-align: right; width: 120px; float: left\">"
+	      "Channel:"
+	      "</span>"
+	      "<span style=\"width: 275px; float: left\">"
+	      "<select name=\"ch\" class=\"drop\">");
+  
+  tcp_qprintf(&tq, "<option%s>-All-</option>", channel ? "" : " selected");
+
+  TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
+    if(tcg->tcg_hidden)
+      continue;
+    
+    TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
+      if(LIST_FIRST(&ch->ch_transports) == NULL)
+	continue;
+      tcp_qprintf(&tq, "<option%s>%s</option>",
+		  ch == s_ch ? " selected" : "", ch->ch_name);
+    }
+  }
+  tcp_qprintf(&tq, "</select></span></div><br>");
+
+  /* Search button */
+
+  tcp_qprintf(&tq,
+	      "<center><input type=\"submit\" class=\"knapp\" name=\"s\" "
+	      "value=\"Search\"></center>");
+
+  tcp_qprintf(&tq, "</div>");
+  box_bottom(&tq);
+  tcp_qprintf(&tq, "</form><br>");
+
+
+  /* output search result, if we've done a query */
+
+  if(search != NULL) {
+
+    box_top(&tq, "box");
+    tcp_qprintf(&tq, 
+		"<div class=\"content\">");
+
+    epg_lock();
+    LIST_INIT(&events);
+    c = epg_search(&events, title, s_ecg, s_tcg, s_ch);
+    if(c == -1) {
+      tcp_qprintf(&tq,
+		  "<center><b>"
+		  "Event title: Regular expression syntax error"
+		  "<b></center>");
+    } else if(c == 0) {
+      tcp_qprintf(&tq,
+		  "<center><b>"
+		  "No matching entries found"
+		  "<b></center>");
+    } else {
+    
+      ev = alloca(c * sizeof(event_t *));
+      c = 0;
+      LIST_FOREACH(e, &events, e_tmp_link)
+	ev[c++] = e;
+      qsort(ev, c, sizeof(event_t *), eventcmp);
+
+      if(c > 25)
+	c = 25;
+  
+      memset(&day, -1, sizeof(struct tm));
+      for(k = 0; k < c; k++) {
+	e = ev[k];
+      
+	localtime_r(&e->e_start, &a);
+      
+	if(a.tm_wday != day.tm_wday || a.tm_mday != day.tm_mday  ||
+	   a.tm_mon  != day.tm_mon  || a.tm_year != day.tm_year) {
+	  memcpy(&day, &a, sizeof(struct tm));
+	  tcp_qprintf(&tq, 
+		      "<br><b><i>%s, %d/%d</i></b><br>",
+		      days[day.tm_wday], day.tm_mday, day.tm_mon + 1);
+	}
+	output_event(hc, &tq, e->e_ch, e, simple, 1, 1, 700);
+      }
+    }
+    epg_unlock();
+    tcp_qprintf(&tq, "</div>");
+    box_bottom(&tq);
+  }
+
+
+  html_footer(&tq);
+  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
+  return 0;
+}
+
+
 
 /**
  * HTML user interface setup code
@@ -1758,6 +1868,5 @@ htmlui_start(void)
   http_path_add("/editchannel", NULL, page_editchannel);
   http_path_add("/updatechannel", NULL, page_updatechannel);
   http_path_add("/css.css", NULL, page_css);
-  http_path_add("/contentlist", NULL, page_contentlist);
-
+  http_path_add("/search", NULL, page_search);
 }
