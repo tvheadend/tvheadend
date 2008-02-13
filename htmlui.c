@@ -971,20 +971,28 @@ page_pvr(http_connection_t *hc, const char *remain, void *opaque)
 		"border-bottom-width:thin; border-bottom-style:solid\">",
 		divid, pvrr_tgt == pvrr ? "block" : "none");
 
-    tcp_qprintf(&tq,
-		"<div>"
-		"<span style=\"text-align: right; width: 120px; float: left\">"
-		"Filename:</span>"
-		"<span>%s</span><br></div>",
+    tcp_qprintf(&tq, 
+		"<table border=\"0\" cellspacing=\"0\" cellpadding=\"0\" "
+		"style=\"font: 85% Verdana, Arial, Helvetica, sans-serif\">");
+
+    tcp_qprintf(&tq, 
+		"<tr>"
+		"<td width=125><span style=\"text-align: right\">"
+		"Filename:</span><td>"
+		"<td>%s</td>"
+		"</tr>",
 		pvrr->pvrr_filename ?: "<i>not set</i>");
 
-    tcp_qprintf(&tq,
-		"<div>"
-		"<span style=\"text-align: right; width: 120px; float: left\">"
-		"Recorder status:</span>"
-		"<span>%s</span><br></div>",
+    tcp_qprintf(&tq, 
+		"<tr>"
+		"<td width=125><span style=\"text-align: right\">"
+		"Recorder status:</span><td>"
+		"<td>%s</td>"
+		"</tr>",
 		val2str(pvrr->pvrr_rec_status, recintstatustxt) ?: "invalid");
 
+    tcp_qprintf(&tq, 
+		"</table>");
 
     switch(pvrr->pvrr_status) {
     case HTSTV_PVR_STATUS_SCHEDULED:
