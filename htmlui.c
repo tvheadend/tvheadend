@@ -834,6 +834,7 @@ page_pvr(http_connection_t *hc, const char *remain, void *opaque)
   int divid = 1;
   int size = 600;
   http_arg_t *ra;
+  autorec_t *ar, *ar_show = NULL;
 
   if(!html_verify_access(hc, "record-events"))
     return HTTP_STATUS_UNAUTHORIZED;
@@ -845,7 +846,15 @@ page_pvr(http_connection_t *hc, const char *remain, void *opaque)
   pvrr_tgt = NULL;
   LIST_FOREACH(ra, &hc->hc_url_args, link) {
     c = 0;
-    if(!strncmp(ra->key, "clear_", 6)) {
+
+    if(!strncmp(ra->key, "ardel_", 6)) {
+      txt = ra->key + 6;
+      autorec_delete_by_id(atoi(txt));
+      /* Redirect back to ourself, to get rid of URL cruft */
+      http_redirect(hc, "/pvr");
+      return 0;
+
+    } else if(!strncmp(ra->key, "clear_", 6)) {
       txt = ra->key + 6;
     } else if(!strncmp(ra->key, "desched_", 8)) {
       txt = ra->key + 8;
@@ -883,12 +892,14 @@ page_pvr(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_qprintf(&tq, "<form method=\"get\" action=\"/pvr\">");
 
-  box_top(&tq, "box");
+  /* 
+   * PVR log
+   */
 
+  box_top(&tq, "box");
   tcp_qprintf(&tq, 
 	      "<div class=\"contentbig\"><center><b>%s</b></center></div>",
 	      "Recorder Log");
-
   tcp_qprintf(&tq, "<div class=\"content\">");
 
   c = 0;
@@ -984,6 +995,14 @@ page_pvr(http_connection_t *hc, const char *remain, void *opaque)
     tcp_qprintf(&tq, 
 		"<tr>"
 		"<td width=125><span style=\"text-align: right\">"
+		"Created by:</span><td>"
+		"<td>%s</td>"
+		"</tr>",
+		pvrr->pvrr_creator ?: "<i>not set</i>");
+
+    tcp_qprintf(&tq, 
+		"<tr>"
+		"<td width=125><span style=\"text-align: right\">"
 		"Filename:</span><td>"
 		"<td>%s</td>"
 		"</tr>",
@@ -996,14 +1015,6 @@ page_pvr(http_connection_t *hc, const char *remain, void *opaque)
 		"<td>%s</td>"
 		"</tr>",
 		val2str(pvrr->pvrr_rec_status, recintstatustxt) ?: "invalid");
-
-    tcp_qprintf(&tq, 
-		"<tr>"
-		"<td width=125><span style=\"text-align: right\">"
-		"Created by:</span><td>"
-		"<td>%s</td>"
-		"</tr>",
-		pvrr->pvrr_creator ?: "<i>not set</i>");
 
     tcp_qprintf(&tq, 
 		"</table>");
@@ -1042,6 +1053,100 @@ page_pvr(http_connection_t *hc, const char *remain, void *opaque)
   tcp_qprintf(&tq, "</div>\r\n");
 
   box_bottom(&tq);
+  tcp_qprintf(&tq, "<br>\r\n");
+
+  /* 
+   * Autorecorder
+   */
+
+  box_top(&tq, "box");
+  tcp_qprintf(&tq, 
+	      "<div class=\"contentbig\"><center><b>%s</b></center></div>",
+	      "Autorecorder ruleset");
+  tcp_qprintf(&tq, "<div class=\"content\">\r\n");
+
+  if(TAILQ_FIRST(&autorecs) == NULL)
+    tcp_qprintf(&tq, "<center>No entries</center><br>");
+
+  TAILQ_FOREACH(ar, &autorecs, ar_link) {
+    tcp_qprintf(&tq, 
+		"<div><a href=\"javascript:expcol('div%d')\">"
+		"%s</a></div><br>\r\n",
+		divid, ar->ar_name);
+
+    tcp_qprintf(&tq,
+		"<div id=\"div%d\" style=\"display:%s; "
+		"border-bottom-width:thin; border-bottom-style:solid\">",
+		divid, ar_show == ar ? "block" : "none");
+
+    tcp_qprintf(&tq, 
+		"<table border=\"0\" cellspacing=\"0\" cellpadding=\"0\" "
+		"style=\"font: 85% Verdana, Arial, Helvetica, sans-serif\">");
+
+
+    tcp_qprintf(&tq, 
+		"<tr>"
+		"<td width=125><span style=\"text-align: right\">"
+		"Created by:</span><td>"
+		"<td>%s</td>"
+		"</tr>",
+		ar->ar_creator ?: "<i>not set</i>");
+
+    tcp_qprintf(&tq, 
+		"<tr>"
+		"<td width=125><span style=\"text-align: right\">"
+		"Recording priority:</span><td>"
+		"<td>%d</td>"
+		"</tr>",
+		ar->ar_rec_prio);
+
+    tcp_qprintf(&tq, 
+		"<tr>"
+		"<td width=125><span style=\"text-align: right\">"
+		"Event tile:</span><td>"
+		"<td>%s</td>"
+		"</tr>",
+		ar->ar_title ?: "<i>All</i>");
+ 
+    tcp_qprintf(&tq, 
+		"<tr>"
+		"<td width=125><span style=\"text-align: right\">"
+		"Content group:</span><td>"
+		"<td>%s</td>"
+		"</tr>",
+		ar->ar_ecg ? ar->ar_ecg->ecg_name: "<i>All</i>");
+
+    tcp_qprintf(&tq, 
+		"<tr>"
+		"<td width=125><span style=\"text-align: right\">"
+		"Channel group:</span><td>"
+		"<td>%s</td>"
+		"</tr>",
+		ar->ar_tcg ? ar->ar_tcg->tcg_name: "<i>All</i>");
+
+    tcp_qprintf(&tq, 
+		"<tr>"
+		"<td width=125><span style=\"text-align: right\">"
+		"Channel:</span><td>"
+		"<td>%s</td>"
+		"</tr>",
+		ar->ar_ch ? ar->ar_ch->ch_name: "<i>All</i>");
+    
+    tcp_qprintf(&tq, 
+		"</table>");
+    
+    tcp_qprintf(&tq,"<div style=\"text-align: center\">"
+		"<input type=\"submit\" class=\"knapp\" name=\"ardel_%d\" "
+		"value=\"Delete rule\"></div>", ar->ar_id);
+
+    tcp_qprintf(&tq, "<br></div>\n");
+
+
+    divid++;
+  }
+  tcp_qprintf(&tq, "<br></div>\r\n");
+  box_bottom(&tq);
+
   tcp_qprintf(&tq, "</form>\r\n");
   html_footer(&tq);
   http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
@@ -1841,7 +1946,8 @@ page_search(http_connection_t *hc, const char *remain, void *opaque)
     }
 
     /* Create autorec rule .. */
-    autorec_create(ar_name, atoi(ar_prio), title, s_ecg, s_tcg, s_ch);
+    autorec_create(ar_name, atoi(ar_prio), title, s_ecg, s_tcg, s_ch,
+		   hc->hc_username);
 
     /* .. and redirect user to video recorder page */
     http_redirect(hc, "/pvr");

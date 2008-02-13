@@ -28,6 +28,7 @@
 #include "dispatch.h"
 #include "htsclient.h"
 #include "htsp.h"
+#include "autorec.h"
 
 #define EPG_MAX_AGE 86400
 
@@ -399,6 +400,17 @@ epg_set_current_event(th_channel_t *ch, event_t *e)
   clients_send_ref(ch->ch_tag);
 
   htsp_async_channel_update(ch);
+
+  if(e == NULL)
+    return;
+  /* Let autorecorder check this event */
+  autorec_check_new_event(e);
+
+  e = TAILQ_NEXT(e, e_link);
+  /* .. and next one, to make better scheduling */
+
+  if(e != NULL)
+    autorec_check_new_event(e);
 }
 
 static void

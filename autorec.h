@@ -19,8 +19,39 @@
 #ifndef AUTOREC_H
 #define AUTOREC_H
 
-void autorec_create(const char *name, int prio, const char *title,
-		    epg_content_group_t *ecg, th_channel_group_t *tcg,
-		    th_channel_t *ch);
+#include <regex.h>
+
+TAILQ_HEAD(autorec_head, autorec);
+
+extern struct autorec_head autorecs;
+
+typedef struct autorec {
+  TAILQ_ENTRY(autorec) ar_link;
+
+  int ar_id;
+  
+  const char *ar_creator;
+  const char *ar_name;
+  int ar_rec_prio;
+
+  const char *ar_title;
+  regex_t ar_title_preg;
+  
+  epg_content_group_t *ar_ecg;
+  th_channel_group_t *ar_tcg;
+  th_channel_t *ar_ch;
+
+} autorec_t;
+
+
+void autorec_init(void);
+
+int autorec_create(const char *name, int prio, const char *title,
+		   epg_content_group_t *ecg, th_channel_group_t *tcg,
+		   th_channel_t *ch, const char *creator);
+
+void autorec_check_new_event(event_t *e);
+
+void autorec_delete_by_id(int id);
 
 #endif /* AUTOREC_H */

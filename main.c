@@ -56,7 +56,7 @@
 #include "avgen.h"
 #include "file_input.h"
 #include "cwc.h"
-
+#include "autorec.h"
 int running;
 int xmltvreload;
 int startupcounter;
@@ -181,6 +181,9 @@ main(int argc, char **argv)
   snprintf(buf, sizeof(buf), "%s/recordings", settings_dir);
   mkdir(buf, 0777);
 
+  snprintf(buf, sizeof(buf), "%s/autorec", settings_dir);
+  mkdir(buf, 0777);
+
   syslog(LOG_NOTICE, "Started HTS TV Headend, settings located in \"%s\"",
 	 settings_dir);
 
@@ -200,7 +203,8 @@ main(int argc, char **argv)
   v4l_init();
 
   channels_load();
-  
+
+  autorec_init();
   epg_init();
   xmltv_init();
 
