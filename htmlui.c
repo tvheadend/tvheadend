@@ -1819,8 +1819,8 @@ page_search(http_connection_t *hc, const char *remain, void *opaque)
 	ev[c++] = e;
       qsort(ev, c, sizeof(event_t *), eventcmp);
 
-      if(c > 25)
-	c = 25;
+      if(c > 100)
+	c = 100;
   
       memset(&day, -1, sizeof(struct tm));
       for(k = 0; k < c; k++) {
