@@ -696,7 +696,7 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
       epg_unlock();
       return HTTP_STATUS_UNAUTHORIZED;
     }
-    pvrr = pvr_schedule_by_event(e);
+    pvrr = pvr_schedule_by_event(e, hc->hc_username);
   }
 
   if(pvrr != NULL && http_arg_get(&hc->hc_url_args, "cancel")) {
@@ -990,6 +990,14 @@ page_pvr(http_connection_t *hc, const char *remain, void *opaque)
 		"<td>%s</td>"
 		"</tr>",
 		val2str(pvrr->pvrr_rec_status, recintstatustxt) ?: "invalid");
+
+    tcp_qprintf(&tq, 
+		"<tr>"
+		"<td width=125><span style=\"text-align: right\">"
+		"Created by:</span><td>"
+		"<td>%s</td>"
+		"</tr>",
+		pvrr->pvrr_creator ?: "<i>not set</i>");
 
     tcp_qprintf(&tq, 
 		"</table>");

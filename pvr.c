@@ -154,6 +154,7 @@ pvr_free(pvr_rec_t *pvrr)
   LIST_REMOVE(pvrr, pvrr_global_link);
   free(pvrr->pvrr_title);
   free(pvrr->pvrr_desc);
+  free(pvrr->pvrr_creator);
   free(pvrr->pvrr_printname);
   free(pvrr->pvrr_filename);
   free(pvrr);
@@ -255,7 +256,7 @@ pvr_clear_all_completed(void)
  * Create a PVR entry based on a given event
  */
 pvr_rec_t *
-pvr_schedule_by_event(event_t *e)
+pvr_schedule_by_event(event_t *e, const char *creator)
 {
   th_channel_t *ch = e->e_ch;
   time_t start = e->e_start;
@@ -290,7 +291,7 @@ pvr_schedule_by_event(event_t *e)
   pvrr->pvrr_stop    = stop;
   pvrr->pvrr_title   = e->e_title ? strdup(e->e_title) : NULL;
   pvrr->pvrr_desc    = e->e_desc ?  strdup(e->e_desc)  : NULL;
-
+  pvrr->pvrr_creator = strdup(creator);
   pvr_link_pvrr(pvrr);  
   pvr_database_save(pvrr);
   return pvrr;
@@ -303,7 +304,8 @@ pvr_schedule_by_event(event_t *e)
  * Record based on a channel
  */
 pvr_rec_t *
-pvr_schedule_by_channel_and_time(th_channel_t *ch, int duration)
+pvr_schedule_by_channel_and_time(th_channel_t *ch, int duration,
+				 const char *creator)
 {
   time_t now   = dispatch_clock;
   time_t start = now;
@@ -317,6 +319,7 @@ pvr_schedule_by_channel_and_time(th_channel_t *ch, int duration)
   pvrr->pvrr_stop    = stop;
   pvrr->pvrr_title   = strdup("Manual recording");
   pvrr->pvrr_desc    = NULL;
+  pvrr->pvrr_creator = strdup(creator);
 
   pvr_link_pvrr(pvrr);  
   pvr_database_save(pvrr);
@@ -359,6 +362,9 @@ pvr_database_save(pvr_rec_t *pvrr)
   if(pvrr->pvrr_desc != NULL)
     fprintf(fp, "description = %s\n", pvrr->pvrr_desc);
 
+  if(pvrr->pvrr_creator != NULL)
+    fprintf(fp, "creator = %s\n", pvrr->pvrr_creator);
+
   if(pvrr->pvrr_filename != NULL)
     fprintf(fp, "filename = %s\n", pvrr->pvrr_filename);
   
@@ -390,7 +396,7 @@ pvr_database_load(void)
   struct config_head cl;
   char buf[400];
   struct dirent *d;
-  const char *channel, *title, *desc, *fname, *status;
+  const char *channel, *title, *desc, *fname, *status, *creator;
   DIR *dir;
   time_t start, stop;
   pvr_rec_t *pvrr;
@@ -418,6 +424,7 @@ pvr_database_load(void)
     desc  = config_get_str_sub(&cl, "description", NULL);
     fname = config_get_str_sub(&cl, "filename", NULL);
     status = config_get_str_sub(&cl, "status", NULL);
+    creator = config_get_str_sub(&cl, "creator", NULL);
 
     if(channel != NULL && start && stop && title && status) {
       pvrr = calloc(1, sizeof(pvr_rec_t));
@@ -429,6 +436,8 @@ pvr_database_load(void)
       pvrr->pvrr_filename = fname ? strdup(fname) : NULL;
       pvrr->pvrr_title    = title ? strdup(title) : NULL;
       pvrr->pvrr_desc     = desc ?  strdup(desc)  : NULL;
+      pvrr->pvrr_creator  = creator ? strdup(creator) : NULL;
+      
       pvrr->pvrr_id       = atoi(d->d_name);
 
       if(pvrr->pvrr_id > pvr_id_ceil)

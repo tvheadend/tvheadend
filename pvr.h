@@ -53,6 +53,8 @@ typedef struct pvr_rec {
   time_t pvrr_start;
   time_t pvrr_stop;
 
+  char *pvrr_creator;        /* Who schedule the recording */
+
   char *pvrr_filename;       /* May be null if we havent figured out a name
 				yet, this happens upon record start.
 				Notice that this is full path */
@@ -105,8 +107,9 @@ int pvr_abort(pvr_rec_t *pvrr);
 
 pvr_rec_t *pvr_get_by_entry(event_t *e);
 
-pvr_rec_t *pvr_schedule_by_event(event_t *e);
+pvr_rec_t *pvr_schedule_by_event(event_t *e, const char *creator);
 
-pvr_rec_t *pvr_schedule_by_channel_and_time(th_channel_t *ch, int duration);
+pvr_rec_t *pvr_schedule_by_channel_and_time(th_channel_t *ch, int duration,
+					    const char *creator);
 
 #endif /* PVR_H */

@@ -588,7 +588,7 @@ cr_event_record(client_t *c, char **argv, int argc)
     return 1;
   }
 
-  pvr_schedule_by_event(e);
+  pvr_schedule_by_event(e, "htsclient");
 
   epg_unlock();
   return 0;
@@ -614,7 +614,7 @@ cr_channel_record(client_t *c, char **argv, int argc)
 
   duration = atoi(argv[1]);
   
-  pvr_schedule_by_channel_and_time(ch, duration);
+  pvr_schedule_by_channel_and_time(ch, duration, "htsclient");
   return 0;
 }
 
