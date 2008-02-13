@@ -2187,7 +2187,7 @@ page_search(http_connection_t *hc, const char *remain, void *opaque)
 		      "<br><b><i>%s, %d/%d</i></b><br>",
 		      days[day.tm_wday], day.tm_mday, day.tm_mon + 1);
 	}
-	output_event(hc, &tq, e->e_ch, e, simple, 1, 1, 700);
+	output_event(hc, &tq, e->e_ch, e, simple, 1, 1, 600);
       }
     }
     epg_unlock();
