@@ -119,4 +119,6 @@ int pvr_op2int(const char *op);
 
 void pvr_do_op(pvr_rec_t *pvrr, recop_t op);
 
+void pvr_clear_all_completed(void);
+
 #endif /* PVR_H */

@@ -831,6 +831,10 @@ page_pvr(http_connection_t *hc, const char *remain, void *opaque)
   if(!html_verify_access(hc, "record-events"))
     return HTTP_STATUS_UNAUTHORIZED;
 
+  if(http_arg_get(&hc->hc_url_args, "clearall")) {
+    pvr_clear_all_completed();
+  }
+
   op = -1;
   pvrr_tgt = NULL;
   LIST_FOREACH(ra, &hc->hc_url_args, link) {
@@ -1004,10 +1008,10 @@ page_pvr(http_connection_t *hc, const char *remain, void *opaque)
     divid++;
   }
 
-    tcp_qprintf(&tq,
-		"<br><div style=\"text-align: center\">"
-		"<input type=\"submit\" class=\"knapp\" name=\"clearall\" "
-		"value=\"Remove all completed recordings\"></div>");
+  tcp_qprintf(&tq,
+	      "<br><div style=\"text-align: center\">"
+	      "<input type=\"submit\" class=\"knapp\" name=\"clearall\" "
+	      "value=\"Remove all completed recording log entries\"></div>");
 
   tcp_qprintf(&tq, "</div>\r\n");
 

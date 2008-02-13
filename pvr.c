@@ -220,6 +220,30 @@ pvr_do_op(pvr_rec_t *pvrr, recop_t op)
 }
 
 
+/**
+ * Remove log info about all completed recordings
+ */
+void
+pvr_clear_all_completed(void)
+{
+  pvr_rec_t *pvrr, *next;
+  for(pvrr = LIST_FIRST(&pvrr_global_list); pvrr != NULL; pvrr = next) {
+    next = LIST_NEXT(pvrr, pvrr_global_link);
+
+    switch(pvrr->pvrr_status) {
+    case HTSTV_PVR_STATUS_SCHEDULED:
+    case HTSTV_PVR_STATUS_RECORDING:
+      break;
+    default:
+      pvr_database_erase(pvrr);
+      pvr_free(pvrr);
+      break;
+    }
+  }
+}
+
+
+
 void
 pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op)
 {
