@@ -39,6 +39,7 @@
 #include "v4l.h"
 #include "iptv_input.h"
 #include "transports.h"
+#include "autorec.h"
 
 #define MAIN_WIDTH 800
 
@@ -1665,19 +1666,62 @@ page_search(http_connection_t *hc, const char *remain, void *opaque)
   struct tm a, day;
   
   const char *search  = http_arg_get(&hc->hc_url_args, "s");
+  const char *autorec = http_arg_get(&hc->hc_url_args, "ar");
   const char *title   = http_arg_get(&hc->hc_url_args, "n");
   const char *content = http_arg_get(&hc->hc_url_args, "c");
   const char *chgroup = http_arg_get(&hc->hc_url_args, "g");
   const char *channel = http_arg_get(&hc->hc_url_args, "ch");
+  const char *ar_name = http_arg_get(&hc->hc_url_args, "ar_name");
+  const char *ar_prio = http_arg_get(&hc->hc_url_args, "ar_prio");
 
   if(title   != NULL && *title == 0)               title   = NULL;
   if(content != NULL && !strcmp(content, "-All-")) content = NULL;
   if(chgroup != NULL && !strcmp(chgroup, "-All-")) chgroup = NULL;
   if(channel != NULL && !strcmp(channel, "-All-")) channel = NULL;
 
+  if(ar_name != NULL && *ar_name == 0)             ar_name = NULL;
+  if(ar_prio != NULL && *ar_prio == 0)             ar_prio = NULL;
+
   s_ecg = content ? epg_content_group_find_by_name(content) : NULL;
   s_tcg = chgroup ? channel_group_find(chgroup, 0)          : NULL;
   s_ch  = channel ? channel_find(channel, 0, NULL)          : NULL;
+
+  if(http_arg_get(&hc->hc_url_args, "ar_create")) {
+    /* Create autorecording */
+
+    
+    if(ar_name == NULL || ar_prio == NULL || atoi(ar_prio) < 1) {
+      /* Invalid arguments */
+
+      tcp_init_queue(&tq, -1);
+      html_header(&tq, "HTS/tvheadend", !simple, MAIN_WIDTH, 0, NULL);
+      top_menu(hc, &tq);
+      tcp_qprintf(&tq, "<form method=\"get\" action=\"/search\">");
+      box_top(&tq, "box");
+      tcp_qprintf(&tq, "<div class=\"content\"><br>"
+		  "<b>Invalid / Missing arguments:<br><br>");
+      if(ar_name == NULL)
+	tcp_qprintf(&tq, 
+		    "- Name is missing<br><br>");
+
+      if(ar_prio == NULL || atoi(ar_prio) < 1)
+	tcp_qprintf(&tq, 
+		    "- Priority is missing or not a positive number<br><br>");
+      
+      tcp_qprintf(&tq, "</div>");
+      box_bottom(&tq);
+      html_footer(&tq);
+      http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
+      return 0;
+    }
+
+    /* Create autorec rule .. */
+    autorec_create(ar_name, atoi(ar_prio), title, s_ecg, s_tcg, s_ch);
+
+    /* .. and redirect user to video recorder page */
+    http_redirect(hc, "/pvrlog");
+    return 0;
+  }
 
   tcp_init_queue(&tq, -1);
   html_header(&tq, "HTS/tvheadend", !simple, MAIN_WIDTH, 0, NULL);
@@ -1744,7 +1788,7 @@ page_search(http_connection_t *hc, const char *remain, void *opaque)
 	      "</span>"
 	      "<span style=\"width: 275px; float: left\">"
 	      "<select name=\"g\" class=\"drop\">");
- 
+
   tcp_qprintf(&tq, "<option%s>-All-</option>", chgroup ? "" : " selected");
 
   TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
@@ -1777,22 +1821,82 @@ page_search(http_connection_t *hc, const char *remain, void *opaque)
 		  ch == s_ch ? " selected" : "", ch->ch_name);
     }
   }
-  tcp_qprintf(&tq, "</select></span></div><br>");
+  tcp_qprintf(&tq, "</select></span></div><br><br>");
 
-  /* Search button */
 
-  tcp_qprintf(&tq,
-	      "<center><input type=\"submit\" class=\"knapp\" name=\"s\" "
-	      "value=\"Search\"></center>");
+  if(autorec != NULL) {
+
+    tcp_qprintf(&tq, "</div>");
+    box_bottom(&tq);
+    tcp_qprintf(&tq, "<br>");
+    box_top(&tq, "box");
+    tcp_qprintf(&tq, 
+		"<div class=\"content\">");
+
+
+    /* User want to create an autorecording, ask for supplemental fields
+       and add some buttons */
+
+    /* Name of recording */
+    
+    tcp_qprintf(&tq, 
+		"<br><div>"
+		"<span style=\"text-align: right; width: 120px; float: left\">"
+		"Recording name:"
+		"</span>"
+		"<span style=\"width: 275px; float: left\">"
+		"<input type=\"text\" size=40 name=\"ar_name\""
+		" style=\"border: 1px dotted #000000\"> "
+		"</span>");
+
+    /* Priority of recorded events */
+
+    tcp_qprintf(&tq, 
+		"<span style=\"text-align: right; width: 120px; float: left\">"
+		"Priority:"
+		"</span>"
+		"<span style=\"width: 275px; float: left\">"
+		"<input type=\"text\" size=5 name=\"ar_prio\""
+		" style=\"border: 1px dotted #000000\"> "
+		"</span></div><br><br>");
+
+    /* Create button */
+    
+    tcp_qprintf(&tq, 
+		"<div>"
+		"<span style=\"text-align: right; width: 120px; float: left\">"
+		"<p></span>"
+		"<span style=\"width: 275px; float: left\">"
+
+		"<input type=\"submit\" class=\"knapp\" name=\"ar_create\" "
+		"value=\"Create autorecording rule\">"
+		"</span>");
+
+    /* Cancel button */
+
+    tcp_qprintf(&tq, 
+		"<span style=\"text-align: right; width: 120px; float: left\">"
+		"<p></span>"
+		"<span style=\"width: 275px; float: left\">"
+		"<input type=\"submit\" class=\"knapp\" name=\"ar_cancel\" "
+		"value=\"Cancel\">"
+		"</span></div><br><br>");
+
+  } else {
+
+    /* Search button */
+    tcp_qprintf(&tq,
+		"<center><input type=\"submit\" class=\"knapp\" name=\"s\" "
+		"value=\"Search\"></center>");
+  }
 
   tcp_qprintf(&tq, "</div>");
   box_bottom(&tq);
   tcp_qprintf(&tq, "<br>");
 
-
   /* output search result, if we've done a query */
 
-  if(search != NULL) {
+  if(search != NULL || autorec != NULL) {
 
     box_top(&tq, "box");
     tcp_qprintf(&tq, 
@@ -1830,8 +1934,14 @@ page_search(http_connection_t *hc, const char *remain, void *opaque)
 		    ", %d entries shown", c);
       }
 
-      tcp_qprintf(&tq,
-		  "</span></div>");
+      if(autorec == NULL)
+	tcp_qprintf(&tq,
+		    "</span>"
+		    "<span style=\"float: left\">"
+		    "<input type=\"submit\" class=\"knapp\" name=\"ar\" "
+		    "value=\"Create autorecording\">");
+
+      tcp_qprintf(&tq, "</span></div>");
 
       memset(&day, -1, sizeof(struct tm));
       for(k = 0; k < c; k++) {

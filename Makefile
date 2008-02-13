@@ -8,7 +8,7 @@ SRCS += http.c htmlui.c
 
 SRCS += htsp.c rpc.c
 
-SRCS += pvr.c
+SRCS += pvr.c autorec.c
 
 SRCS += epg.c epg_xmltv.c
 
