@@ -223,29 +223,9 @@ pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op)
       break;
   }
 
-  if(pvrr != NULL && op == RECOP_CLEAR) {
-    switch(pvrr->pvrr_status) {
-    case HTSTV_PVR_STATUS_ABORTED:
-    case HTSTV_PVR_STATUS_NO_TRANSPONDER:
-    case HTSTV_PVR_STATUS_FILE_ERROR:
-    case HTSTV_PVR_STATUS_DISK_FULL:
-    case HTSTV_PVR_STATUS_BUFFER_ERROR:
-    case HTSTV_PVR_STATUS_SCHEDULED:
-      pvr_database_erase(pvrr);
-      pvr_free(pvrr);
-      return;
-    }
-  }
-
   switch(op) {
   case RECOP_CLEAR:
-    if(pvrr != NULL) switch(pvrr->pvrr_status) {
-    case HTSTV_PVR_STATUS_ABORTED:
-    case HTSTV_PVR_STATUS_NO_TRANSPONDER:
-    case HTSTV_PVR_STATUS_FILE_ERROR:
-    case HTSTV_PVR_STATUS_DISK_FULL:
-    case HTSTV_PVR_STATUS_BUFFER_ERROR:
-    case HTSTV_PVR_STATUS_SCHEDULED:
+    if(pvrr != NULL && pvrr->pvrr_status != HTSTV_PVR_STATUS_RECORDING) {
       pvr_database_erase(pvrr);
       pvr_free(pvrr);
       break;
