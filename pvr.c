@@ -263,11 +263,8 @@ pvr_schedule_by_event(event_t *e, const char *creator)
   time_t stop  = e->e_start + e->e_duration;
   time_t now;
   pvr_rec_t *pvrr;
-  char buf[100];
 
   time(&now);
-
-  event_time_txt(start, e->e_duration, buf, sizeof(buf));
 
   if(stop < now)
     return NULL;
