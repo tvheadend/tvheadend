@@ -62,12 +62,9 @@ static void pvr_subscription_callback(struct th_subscription *s,
 static void *pvr_recorder_thread(void *aux);
 static void pvr_record_packet(pvr_rec_t *pvrr, th_pkt_t *pkt);
 
-/****************************************************************************
- *
- * Externally visible functions
- *
+/**
+ * Initialize PVR framework
  */
-
 void
 pvr_init(void)
 {
@@ -75,6 +72,10 @@ pvr_init(void)
 }
 
 
+/**
+ * For the given event, return pvr-status (if we have a pvr recording
+ * entry that matches the event)
+ */
 char 
 pvr_prog_status(event_t *e)
 {
@@ -92,6 +93,9 @@ pvr_prog_status(event_t *e)
 
 
 
+/**
+ * Find the pvr record entry based on increasing index
+ */
 pvr_rec_t *
 pvr_get_log_entry(int e)
 {
@@ -107,6 +111,9 @@ pvr_get_log_entry(int e)
   return NULL;
 }
 
+/**
+ * Find the pvr record entry based on reference tag
+ */
 pvr_rec_t *
 pvr_get_tag_entry(int e)
 {
@@ -118,13 +125,11 @@ pvr_get_tag_entry(int e)
   return NULL;
 }
 
-/****************************************************************************
- *
- * work queue
- *
+
+
+/**
+ * Inform clients about PVR entry status update
  */
-
-
 void
 pvr_inform_status_change(pvr_rec_t *pvrr)
 {
@@ -140,6 +145,9 @@ pvr_inform_status_change(pvr_rec_t *pvrr)
 
 
 
+/**
+ * Free a pvr entry
+ */
 static void
 pvr_free(pvr_rec_t *pvrr)
 {
@@ -155,6 +163,9 @@ pvr_free(pvr_rec_t *pvrr)
 
 
 
+/**
+ * Abort a current recording
+ */
 static void
 pvr_abort(pvr_rec_t *pvrr)
 {
@@ -170,6 +181,9 @@ pvr_abort(pvr_rec_t *pvrr)
 
 
 
+/**
+ * Insert a pvr entry skeleton into the list and start FSM
+ */
 static void
 pvr_link_pvrr(pvr_rec_t *pvrr)
 {
@@ -200,6 +214,9 @@ pvr_link_pvrr(pvr_rec_t *pvrr)
 }
 
 
+/**
+ * Execute the given 'op'
+ */
 void
 pvr_do_op(pvr_rec_t *pvrr, recop_t op)
 {
@@ -245,6 +262,9 @@ pvr_clear_all_completed(void)
 
 
 
+/**
+ * Create a PVR entry based on a given event
+ */
 void
 pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op)
 {
@@ -309,6 +329,9 @@ pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op)
 
 
 
+/**
+ * Record based on a channel
+ */
 void
 pvr_channel_record_op(th_channel_t *ch, int duration)
 {
@@ -528,7 +551,9 @@ pvr_generate_filename(pvr_rec_t *pvrr)
 }
 
 
-
+/**
+ * Timeout fired, call FSM
+ */
 static void
 pvr_fsm_timeout(void *aux, int64_t now)
 {
@@ -538,6 +563,9 @@ pvr_fsm_timeout(void *aux, int64_t now)
 
 
 
+/**
+ * Main PVR state machine
+ */
 static void
 pvr_fsm(pvr_rec_t *pvrr)
 {
@@ -604,7 +632,7 @@ pvr_fsm(pvr_rec_t *pvrr)
 
 
 
-/*
+/**
  * PVR new packet received
  */
 static void
@@ -632,7 +660,7 @@ pvrr_packet_input(th_muxer_t *tm, th_stream_t *st, th_pkt_t *pkt)
   pthread_mutex_unlock(&pvrr->pvrr_pktq_mutex);
 }
 
-/*
+/**
  *  Internal recording state
  */
 static void
@@ -676,7 +704,7 @@ pvr_set_rec_state(pvr_rec_t *pvrr, pvrr_rec_status_t status)
   pvrr->pvrr_rec_status = status;
 }
 
-/*
+/**
  * We've got a transport now, start recording
  */
 static void
@@ -820,10 +848,9 @@ pvrr_transport_available(pvr_rec_t *pvrr, th_transport_t *t)
 }
 
 
-/*
+/**
  * We've lost our transport, stop recording
  */
-
 static void
 pvrr_transport_unavailable(pvr_rec_t *pvrr, th_transport_t *t)
 {
@@ -878,7 +905,7 @@ pvrr_transport_unavailable(pvr_rec_t *pvrr, th_transport_t *t)
 
 
 
-/*
+/**
  * We get a callback here when the subscription status is updated, 
  * ie, when we are attached to a transport and when we are detached
  */
@@ -900,7 +927,7 @@ pvr_subscription_callback(struct th_subscription *s,
   }
 }
 
-/*
+/**
  * Recorder thread
  */
 static void *
