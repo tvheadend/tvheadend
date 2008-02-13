@@ -882,7 +882,7 @@ page_pvr(http_connection_t *hc, const char *remain, void *opaque)
     c++;
 
   if(c == 0) {
-    tcp_qprintf(&tq, "<center>Nothing in recording log</center><br>");
+    tcp_qprintf(&tq, "<center>No entries</center><br>");
   }
 
   pv = alloca(c * sizeof(pvr_rec_t *));
