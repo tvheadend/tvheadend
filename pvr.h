@@ -89,21 +89,7 @@ typedef struct pvr_rec {
 } pvr_rec_t;
 
 
-
-
-typedef enum {
-  RECOP_ONCE,
-  RECOP_DAILY,
-  RECOP_WEEKLY,
-  RECOP_ABORT,
-  RECOP_CLEAR,
-} recop_t;
-
 void pvr_init(void);
-
-void pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op);
-
-char pvr_prog_status(event_t *e);
 
 pvr_rec_t *pvr_get_log_entry(int e);
 
@@ -111,12 +97,16 @@ pvr_rec_t *pvr_get_tag_entry(int e);
 
 void pvr_inform_status_change(pvr_rec_t *pvrr);
 
-void pvr_channel_record_op(th_channel_t *ch, int duration);
-
-int pvr_op2int(const char *op);
-
-void pvr_do_op(pvr_rec_t *pvrr, recop_t op);
-
 void pvr_clear_all_completed(void);
+
+int pvr_clear(pvr_rec_t *pvrr);
+
+int pvr_abort(pvr_rec_t *pvrr);
+
+pvr_rec_t *pvr_get_by_entry(event_t *e);
+
+pvr_rec_t *pvr_schedule_by_event(event_t *e);
+
+pvr_rec_t *pvr_schedule_by_channel_and_time(th_channel_t *ch, int duration);
 
 #endif /* PVR_H */

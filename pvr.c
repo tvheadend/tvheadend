@@ -73,11 +73,11 @@ pvr_init(void)
 
 
 /**
- * For the given event, return pvr-status (if we have a pvr recording
- * entry that matches the event)
+ * For the given event, return pvr recording entry (if we have a pvr
+ * recording entry that matches the event)
  */
-char 
-pvr_prog_status(event_t *e)
+pvr_rec_t *
+pvr_get_by_entry(event_t *e)
 {
   pvr_rec_t *pvrr;
 
@@ -85,12 +85,11 @@ pvr_prog_status(event_t *e)
     if(pvrr->pvrr_start   >= e->e_start &&
        pvrr->pvrr_stop    <= e->e_start + e->e_duration &&
        pvrr->pvrr_channel == e->e_ch) {
-      return pvrr->pvrr_status;
+      return pvrr;
     }
   }
-  return HTSTV_PVR_STATUS_NONE;
+  return NULL;
 }
-
 
 
 /**
@@ -166,17 +165,32 @@ pvr_free(pvr_rec_t *pvrr)
 /**
  * Abort a current recording
  */
-static void
+int
 pvr_abort(pvr_rec_t *pvrr)
 {
   if(pvrr->pvrr_status != HTSTV_PVR_STATUS_RECORDING)
-    return;
+    return -1;
 
   pvrr->pvrr_error = HTSTV_PVR_STATUS_ABORTED;
   pvr_fsm(pvrr);
 
   pvr_database_save(pvrr);
   clients_send_ref(-1);
+  return 0;
+}
+
+/**
+ * Clear current entry (only works if we are not recording)
+ */
+int
+pvr_clear(pvr_rec_t *pvrr)
+{
+  if(pvrr->pvrr_status == HTSTV_PVR_STATUS_RECORDING)
+    return -1;
+
+  pvr_database_erase(pvrr);
+  pvr_free(pvrr);
+  return 0;
 }
 
 
@@ -208,33 +222,8 @@ pvr_link_pvrr(pvr_rec_t *pvrr)
     break;
   }
 
-
   pvr_inform_status_change(pvrr);
   clients_send_ref(-1);
-}
-
-
-/**
- * Execute the given 'op'
- */
-void
-pvr_do_op(pvr_rec_t *pvrr, recop_t op)
-{
-  switch(op) {
-  case RECOP_CLEAR:
-    if(pvrr->pvrr_status != HTSTV_PVR_STATUS_RECORDING) {
-      pvr_database_erase(pvrr);
-      pvr_free(pvrr);
-      break;
-    }
-    return;
-
-  case RECOP_ABORT:
-    pvr_abort(pvrr);
-    return;
-  default:
-    break;
-  }
 }
 
 
@@ -265,9 +254,10 @@ pvr_clear_all_completed(void)
 /**
  * Create a PVR entry based on a given event
  */
-void
-pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op)
+pvr_rec_t *
+pvr_schedule_by_event(event_t *e)
 {
+  th_channel_t *ch = e->e_ch;
   time_t start = e->e_start;
   time_t stop  = e->e_start + e->e_duration;
   time_t now;
@@ -279,7 +269,7 @@ pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op)
   event_time_txt(start, e->e_duration, buf, sizeof(buf));
 
   if(stop < now)
-    return;
+    return NULL;
 
   /* Try to see if we already have a scheduled or active recording */
 
@@ -289,30 +279,9 @@ pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op)
       break;
   }
 
-  switch(op) {
-  case RECOP_CLEAR:
-    if(pvrr != NULL && pvrr->pvrr_status != HTSTV_PVR_STATUS_RECORDING) {
-      pvr_database_erase(pvrr);
-      pvr_free(pvrr);
-      break;
-    }
-    return;
+  if(pvrr != NULL)
+    return NULL; /* Already exists */
 
-  case RECOP_ABORT:
-    if(pvrr != NULL)
-      pvr_abort(pvrr);
-    return;
-
-  case RECOP_ONCE:
-    if(pvrr != NULL)
-      return;
-    break;
-
-  case RECOP_DAILY:
-  case RECOP_WEEKLY:
-    syslog(LOG_ERR,"Recording type not supported yet");
-    return;
-  }
 
   pvrr = calloc(1, sizeof(pvr_rec_t));
   pvrr->pvrr_status  = HTSTV_PVR_STATUS_SCHEDULED;
@@ -324,6 +293,7 @@ pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op)
 
   pvr_link_pvrr(pvrr);  
   pvr_database_save(pvrr);
+  return pvrr;
 }
 
 
@@ -332,8 +302,8 @@ pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op)
 /**
  * Record based on a channel
  */
-void
-pvr_channel_record_op(th_channel_t *ch, int duration)
+pvr_rec_t *
+pvr_schedule_by_channel_and_time(th_channel_t *ch, int duration)
 {
   time_t now   = dispatch_clock;
   time_t start = now;
@@ -350,6 +320,7 @@ pvr_channel_record_op(th_channel_t *ch, int duration)
 
   pvr_link_pvrr(pvrr);  
   pvr_database_save(pvrr);
+  return pvrr;
 }
 
 
@@ -1156,21 +1127,4 @@ pvr_record_packet(pvr_rec_t *pvrr, th_pkt_t *pkt)
     }
     break;
   }
-}
-
-
-
-
-static struct strtab recoptab[] = {
-  { "once",   RECOP_ONCE },
-  { "daily",  RECOP_DAILY },
-  { "weekly", RECOP_WEEKLY },
-  { "abort",  RECOP_ABORT },
-  { "clear",  RECOP_CLEAR }
-};
-
-int
-pvr_op2int(const char *op)
-{
-  return str2val(op, recoptab);
 }

@@ -515,6 +515,7 @@ cr_event_info(client_t *c, char **argv, int argc)
   event_t *e = NULL, *x;
   uint32_t tag, prev, next;
   th_channel_t *ch;
+  pvr_rec_t *pvrr;
 
   if(argc < 2)
     return 1;
@@ -542,6 +543,8 @@ cr_event_info(client_t *c, char **argv, int argc)
   x = TAILQ_NEXT(e, e_link);
   next = x != NULL ? x->e_tag : 0;
 
+  pvrr = pvr_get_by_entry(e);
+
   cprintf(c,
 	  "start = %ld\n"
 	  "stop = %ld\n"
@@ -559,7 +562,7 @@ cr_event_info(client_t *c, char **argv, int argc)
 	  tag,
 	  prev,
 	  next,
-	  pvr_prog_status(e));
+	  pvrr != NULL ? pvrr->pvrr_status : HTSTV_PVR_STATUS_NONE);
 
   epg_unlock();
   return 0;
@@ -573,13 +576,8 @@ static int
 cr_event_record(client_t *c, char **argv, int argc)
 {
   event_t *e;
-  recop_t op;
 
-  if(argc < 2)
-    return 1;
-
-  op = pvr_op2int(argv[1]);
-  if(op == -1)
+  if(argc < 1)
     return 1;
 
   epg_lock();
@@ -590,7 +588,7 @@ cr_event_record(client_t *c, char **argv, int argc)
     return 1;
   }
 
-  pvr_event_record_op(e->e_ch, e, op);
+  pvr_schedule_by_event(e);
 
   epg_unlock();
   return 0;
@@ -616,7 +614,7 @@ cr_channel_record(client_t *c, char **argv, int argc)
 
   duration = atoi(argv[1]);
   
-  pvr_channel_record_op(ch, duration);
+  pvr_schedule_by_channel_and_time(ch, duration);
   return 0;
 }
 

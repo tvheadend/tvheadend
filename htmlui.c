@@ -392,12 +392,15 @@ output_event(http_connection_t *hc, tcp_queue_t *tq, th_channel_t *ch,
   event_t *cur;
   tv_pvr_status_t pvrstatus;
   const char *pvr_txt, *pvr_color;
+  pvr_rec_t *pvrr;
 
   localtime_r(&e->e_start, &a);
   stop = e->e_start + e->e_duration;
   localtime_r(&stop, &b);
 
-  pvrstatus = pvr_prog_status(e);
+
+  pvrr = pvr_get_by_entry(e);
+  pvrstatus = pvrr != NULL ? pvrr->pvrr_status : HTSTV_PVR_STATUS_NONE; 
 
   cur = epg_event_get_current(ch);
 
@@ -672,8 +675,8 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
   struct tm a, b;
   time_t stop;
   char desc[4000];
-  recop_t cmd = -1;
   tv_pvr_status_t pvrstatus;
+  pvr_rec_t *pvrr;
   const char *pvr_txt, *pvr_color;
   
   if(!html_verify_access(hc, "browse-events"))
@@ -686,35 +689,34 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
     return 404;
   }
 
+  pvrr = pvr_get_by_entry(e);
 
   if(http_arg_get(&hc->hc_url_args, "rec")) {
     if(!html_verify_access(hc, "record-events")) {
       epg_unlock();
       return HTTP_STATUS_UNAUTHORIZED;
     }
-    cmd = RECOP_ONCE;
+    pvrr = pvr_schedule_by_event(e);
   }
 
-  if(http_arg_get(&hc->hc_url_args, "cancel")) {
+  if(pvrr != NULL && http_arg_get(&hc->hc_url_args, "cancel")) {
     if(!html_verify_access(hc, "record-events")) {
       epg_unlock();
       return HTTP_STATUS_UNAUTHORIZED;
     }
-    cmd = RECOP_ABORT;
+    pvr_abort(pvrr);
   }
 
-  if(http_arg_get(&hc->hc_url_args, "clear")) {
+  if(pvrr != NULL && http_arg_get(&hc->hc_url_args, "clear")) {
     if(!html_verify_access(hc, "record-events")) {
       epg_unlock();
       return HTTP_STATUS_UNAUTHORIZED;
     }
-    cmd = RECOP_CLEAR;
+    pvr_clear(pvrr);
   }
 
-  if(cmd != -1)
-    pvr_event_record_op(e->e_ch, e, cmd);
 
-  pvrstatus = pvr_prog_status(e);
+  pvrstatus = pvrr != NULL ? pvrr->pvrr_status : HTSTV_PVR_STATUS_NONE;
 
   localtime_r(&e->e_start, &a);
   stop = e->e_start + e->e_duration;
@@ -825,7 +827,6 @@ page_pvr(http_connection_t *hc, const char *remain, void *opaque)
   pvr_rec_t **pv;
   int divid = 1;
   int size = 600;
-  recop_t op;
   http_arg_t *ra;
 
   if(!html_verify_access(hc, "record-events"))
@@ -835,23 +836,26 @@ page_pvr(http_connection_t *hc, const char *remain, void *opaque)
     pvr_clear_all_completed();
   }
 
-  op = -1;
   pvrr_tgt = NULL;
   LIST_FOREACH(ra, &hc->hc_url_args, link) {
+    c = 0;
     if(!strncmp(ra->key, "clear_", 6)) {
-      op = RECOP_CLEAR;
       txt = ra->key + 6;
     } else if(!strncmp(ra->key, "desched_", 8)) {
-      op = RECOP_CLEAR;
       txt = ra->key + 8;
     } else if(!strncmp(ra->key, "abort_", 6)) {
-      op = RECOP_ABORT;
+      c = 1;
       txt = ra->key + 6;
     } else {
       continue;
     }
     pvrr_tgt = pvr_get_tag_entry(atoi(txt));
-    pvr_do_op(pvrr_tgt, op);
+    if(pvrr_tgt != NULL) {
+      if(c)
+	pvr_abort(pvrr_tgt);
+      else
+	pvr_clear(pvrr_tgt);
+    }
     break;
   }
 

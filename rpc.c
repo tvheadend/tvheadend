@@ -147,7 +147,8 @@ rpc_event_info(rpc_session_t *ses, htsmsg_t *in, void *opaque)
   uint32_t u32;
   const char *s, *errtxt = NULL;
   event_t *e = NULL, *x;
-  uint32_t tag, prev, next, pvrstatus;
+  uint32_t tag, prev, next;
+  pvr_rec_t *pvrr;
 
   out = htsmsg_create();
   htsmsg_add_u32(out, "seq", ses->rs_seq);
@@ -199,8 +200,8 @@ rpc_event_info(rpc_session_t *ses, htsmsg_t *in, void *opaque)
     if(next)
       htsmsg_add_u32(out, "next", next);
 
-    if((pvrstatus = pvr_prog_status(e)) != 0)
-      htsmsg_add_u32(out, "pvrstatus", pvrstatus);
+    if((pvrr = pvr_get_by_entry(e)) != NULL)
+      htsmsg_add_u32(out, "pvrstatus", pvrr->pvrr_status);
   }
 
   epg_unlock();
