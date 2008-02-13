@@ -713,6 +713,7 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
       return HTTP_STATUS_UNAUTHORIZED;
     }
     pvr_clear(pvrr);
+    pvrr = NULL;
   }
 
 
@@ -764,6 +765,11 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
   if(html_verify_access(hc, "record-events")) {
     switch(pvrstatus) {
     case HTSTV_PVR_STATUS_SCHEDULED:
+     tcp_qprintf(&tq,
+		  "<input type=\"submit\" class=\"knapp\" name=\"clear\" "
+		  "value=\"Remove schedule\">");
+      break;
+
     case HTSTV_PVR_STATUS_RECORDING:
       tcp_qprintf(&tq,
 		  "<input type=\"submit\" class=\"knapp\" name=\"cancel\" "
