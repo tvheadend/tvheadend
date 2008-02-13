@@ -582,6 +582,23 @@ dvb_pmt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 }
 
 
+/**
+ * RST - Running Status Table
+ */
+static int
+dvb_rst_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
+		 uint8_t tableid, void *opaque)
+{
+  int i;
+
+  printf("Got RST on %s\t", tdmi->tdmi_uniquename);
+
+  for(i = 0; i < len; i++)
+    printf("%02x.", ptr[i]);
+  printf("\n");
+  return 0;
+}
+
 
 /**
  * Helper for preparing a section filter parameter struct
@@ -638,6 +655,14 @@ dvb_table_add_default(th_dvb_mux_instance_t *tdmi)
 
   fp = dvb_fparams_alloc(0x12, DMX_IMMEDIATE_START | DMX_CHECK_CRC);
   tdt_add(tdmi, fp, dvb_eit_callback, NULL, 1, "eit", 0);
+
+  /* Running Status Table */
+
+  fp = dvb_fparams_alloc(0x13, DMX_IMMEDIATE_START | DMX_CHECK_CRC);
+  fp->filter.filter[0] = 0x71;
+  fp->filter.mask[0] = 0xff;
+  tdt_add(tdmi, fp, dvb_rst_callback, NULL, 1, "rst", 0);
+
 }
 
 
