@@ -53,13 +53,14 @@ struct pvr_rec_list pvrr_global_list;
 static void pvr_database_save(pvr_rec_t *pvrr);
 static void pvr_database_erase(pvr_rec_t *pvrr);
 static void pvr_database_load(void);
-static void pvrr_fsm(pvr_rec_t *pvrr);
-static void pvrr_subscription_callback(struct th_subscription *s,
-				       subscription_event_t event,
-				       void *opaque);
+static void pvr_set_rec_state(pvr_rec_t *pvrr, pvrr_rec_status_t status);
+static void pvr_fsm(pvr_rec_t *pvrr);
+static void pvr_subscription_callback(struct th_subscription *s,
+				      subscription_event_t event,
+				      void *opaque);
 
 static void *pvr_recorder_thread(void *aux);
-static void pvrr_record_packet(pvr_rec_t *pvrr, th_pkt_t *pkt);
+static void pvr_record_packet(pvr_rec_t *pvrr, th_pkt_t *pkt);
 
 /****************************************************************************
  *
@@ -161,7 +162,7 @@ pvr_abort(pvr_rec_t *pvrr)
     return;
 
   pvrr->pvrr_error = HTSTV_PVR_STATUS_ABORTED;
-  pvrr_fsm(pvrr);
+  pvr_fsm(pvrr);
 
   pvr_database_save(pvrr);
   clients_send_ref(-1);
@@ -189,7 +190,7 @@ pvr_link_pvrr(pvr_rec_t *pvrr)
   case HTSTV_PVR_STATUS_SCHEDULED:
   case HTSTV_PVR_STATUS_RECORDING:
     pvrr->pvrr_status = HTSTV_PVR_STATUS_SCHEDULED;
-    pvrr_fsm(pvrr);
+    pvr_fsm(pvrr);
     break;
   }
 
@@ -529,16 +530,16 @@ pvr_generate_filename(pvr_rec_t *pvrr)
 
 
 static void
-pvrr_fsm_timeout(void *aux, int64_t now)
+pvr_fsm_timeout(void *aux, int64_t now)
 {
   pvr_rec_t *pvrr = aux;
-  pvrr_fsm(pvrr);
+  pvr_fsm(pvrr);
 }
 
 
 
 static void
-pvrr_fsm(pvr_rec_t *pvrr)
+pvr_fsm(pvr_rec_t *pvrr)
 {
   time_t delta;
   time_t now;
@@ -555,7 +556,7 @@ pvrr_fsm(pvr_rec_t *pvrr)
     delta = pvrr->pvrr_start - 30 - now;
     
     if(delta > 0) {
-      dtimer_arm(&pvrr->pvrr_timer, pvrr_fsm_timeout, pvrr, delta);
+      dtimer_arm(&pvrr->pvrr_timer, pvr_fsm_timeout, pvrr, delta);
       break;
     }
 
@@ -572,7 +573,7 @@ pvrr_fsm(pvr_rec_t *pvrr)
 
     /* Add a timer that fires when recording ends */
 
-    dtimer_arm(&pvrr->pvrr_timer, pvrr_fsm_timeout, pvrr, delta);
+    dtimer_arm(&pvrr->pvrr_timer, pvr_fsm_timeout, pvrr, delta);
 
     TAILQ_INIT(&pvrr->pvrr_pktq);
     pthread_cond_init(&pvrr->pvrr_pktq_cond, NULL);
@@ -580,10 +581,10 @@ pvrr_fsm(pvr_rec_t *pvrr)
 
     pvrr->pvrr_status = HTSTV_PVR_STATUS_RECORDING;
     pvr_inform_status_change(pvrr);
-    pvrr_set_rec_state(pvrr,PVR_REC_WAIT_SUBSCRIPTION); 
+    pvr_set_rec_state(pvrr,PVR_REC_WAIT_SUBSCRIPTION); 
 
     pvrr->pvrr_s = subscription_create(pvrr->pvrr_channel, 1000, "pvr",
-				       pvrr_subscription_callback,
+				       pvr_subscription_callback,
 				       pvrr);
     pvrr->pvrr_error = HTSTV_PVR_STATUS_DONE; /* assume everything will
 						 work out ok */
@@ -634,8 +635,8 @@ pvrr_packet_input(th_muxer_t *tm, th_stream_t *st, th_pkt_t *pkt)
 /*
  *  Internal recording state
  */
-void
-pvrr_set_rec_state(pvr_rec_t *pvrr, pvrr_rec_status_t status)
+static void
+pvr_set_rec_state(pvr_rec_t *pvrr, pvrr_rec_status_t status)
 {
   const char *tp;
 
@@ -709,7 +710,7 @@ pvrr_transport_available(pvr_rec_t *pvrr, th_transport_t *t)
 	   "pvr: \"%s\" - Unable to open file format \"%s\" for output",
 	   pvrr->pvrr_printname, pvrr->pvrr_fmt_lavfname);
     pvrr->pvrr_error = HTSTV_PVR_STATUS_FILE_ERROR;
-    pvrr_fsm(pvrr);
+    pvr_fsm(pvrr);
     return;
   }
 
@@ -741,7 +742,7 @@ pvrr_transport_available(pvr_rec_t *pvrr, th_transport_t *t)
     av_free(fctx);
     tm->tm_avfctx = NULL;
     pvrr->pvrr_error = HTSTV_PVR_STATUS_FILE_ERROR;
-    pvrr_fsm(pvrr);
+    pvr_fsm(pvrr);
     return;
   }
 
@@ -813,7 +814,7 @@ pvrr_transport_available(pvr_rec_t *pvrr, th_transport_t *t)
 
   /* Fire up recorder thread */
 
-  pvrr_set_rec_state(pvrr, PVR_REC_WAIT_FOR_START);
+  pvr_set_rec_state(pvrr, PVR_REC_WAIT_FOR_START);
   pthread_create(&pvrr->pvrr_ptid, NULL, pvr_recorder_thread, pvrr);
   LIST_INSERT_HEAD(&t->tht_muxers, tm, tm_transport_link);
 }
@@ -837,7 +838,7 @@ pvrr_transport_unavailable(pvr_rec_t *pvrr, th_transport_t *t)
 
   pvrr->pvrr_dts_offset = AV_NOPTS_VALUE;
 
-  pvrr_set_rec_state(pvrr, PVR_REC_STOP);
+  pvr_set_rec_state(pvrr, PVR_REC_STOP);
   pthread_cond_signal(&pvrr->pvrr_pktq_cond);
   pthread_join(pvrr->pvrr_ptid, NULL);
 
@@ -882,8 +883,8 @@ pvrr_transport_unavailable(pvr_rec_t *pvrr, th_transport_t *t)
  * ie, when we are attached to a transport and when we are detached
  */
 static void
-pvrr_subscription_callback(struct th_subscription *s,
-			   subscription_event_t event, void *opaque)
+pvr_subscription_callback(struct th_subscription *s,
+			  subscription_event_t event, void *opaque)
 {
   th_transport_t *t = s->ths_transport;
   pvr_rec_t *pvrr = opaque;
@@ -954,7 +955,7 @@ pvr_recorder_thread(void *aux)
     pvrr->pvrr_pktq_len--;
     pthread_mutex_unlock(&pvrr->pvrr_pktq_mutex);
 
-    pvrr_record_packet(pvrr, pkt);
+    pvr_record_packet(pvrr, pkt);
     pkt_deref(pkt);
 
     pthread_mutex_lock(&pvrr->pvrr_pktq_mutex);
@@ -992,7 +993,7 @@ is_all_decoded(th_muxer_t *tm, enum CodecType type)
  * Write a packet to output file
  */
 static void
-pvrr_record_packet(pvr_rec_t *pvrr, th_pkt_t *pkt)
+pvr_record_packet(pvr_rec_t *pvrr, th_pkt_t *pkt)
 {
   th_muxer_t *tm = &pvrr->pvrr_muxer;
   AVFormatContext *fctx = tm->tm_avfctx;
@@ -1047,7 +1048,7 @@ pvrr_record_packet(pvr_rec_t *pvrr, th_pkt_t *pkt)
     }
 
     if(is_all_decoded(tm, CODEC_TYPE_AUDIO))
-      pvrr_set_rec_state(pvrr, PVR_REC_WAIT_VIDEO_LOCK);
+      pvr_set_rec_state(pvrr, PVR_REC_WAIT_VIDEO_LOCK);
     break;
     
   case PVR_REC_WAIT_VIDEO_LOCK:
@@ -1072,7 +1073,7 @@ pvrr_record_packet(pvr_rec_t *pvrr, th_pkt_t *pkt)
 
     /* All Audio & Video decoded, start recording */
 
-    pvrr_set_rec_state(pvrr, PVR_REC_RUNNING);
+    pvr_set_rec_state(pvrr, PVR_REC_RUNNING);
 
     if(!pvrr->pvrr_header_written) {
       pvrr->pvrr_header_written = 1;
@@ -1100,7 +1101,7 @@ pvrr_record_packet(pvr_rec_t *pvrr, th_pkt_t *pkt)
   case PVR_REC_RUNNING:
      
     if(pkt->pkt_commercial == COMMERCIAL_YES) {
-      pvrr_set_rec_state(pvrr, PVR_REC_COMMERCIAL);
+      pvr_set_rec_state(pvrr, PVR_REC_COMMERCIAL);
       break;
     }
 
@@ -1124,7 +1125,7 @@ pvrr_record_packet(pvr_rec_t *pvrr, th_pkt_t *pkt)
       LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0)
 	tms->tms_decoded = 0;
       
-      pvrr_set_rec_state(pvrr, PVR_REC_WAIT_AUDIO_LOCK);
+      pvr_set_rec_state(pvrr, PVR_REC_WAIT_AUDIO_LOCK);
     }
     break;
   }
