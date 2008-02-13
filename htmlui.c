@@ -1787,7 +1787,7 @@ page_search(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_qprintf(&tq, "</div>");
   box_bottom(&tq);
-  tcp_qprintf(&tq, "</form><br>");
+  tcp_qprintf(&tq, "<br>");
 
 
   /* output search result, if we've done a query */
@@ -1813,15 +1813,26 @@ page_search(http_connection_t *hc, const char *remain, void *opaque)
 		  "<b></center>");
     } else {
     
+      tcp_qprintf(&tq,
+		  "<div>"
+		  "<span style=\"text-align: left; width: 630px; "
+		  "float: left;font-weight:bold\"> %d entries found", c);
+
       ev = alloca(c * sizeof(event_t *));
       c = 0;
       LIST_FOREACH(e, &events, e_tmp_link)
 	ev[c++] = e;
       qsort(ev, c, sizeof(event_t *), eventcmp);
 
-      if(c > 100)
+      if(c > 100) {
 	c = 100;
-  
+	tcp_qprintf(&tq,
+		    ", %d entries shown", c);
+      }
+
+      tcp_qprintf(&tq,
+		  "</span></div>");
+
       memset(&day, -1, sizeof(struct tm));
       for(k = 0; k < c; k++) {
 	e = ev[k];
@@ -1841,6 +1852,7 @@ page_search(http_connection_t *hc, const char *remain, void *opaque)
     epg_unlock();
     tcp_qprintf(&tq, "</div>");
     box_bottom(&tq);
+    tcp_qprintf(&tq, "</form>");
   }
 
 
