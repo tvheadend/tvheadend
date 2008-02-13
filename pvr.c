@@ -200,6 +200,27 @@ pvr_link_pvrr(pvr_rec_t *pvrr)
 
 
 void
+pvr_do_op(pvr_rec_t *pvrr, recop_t op)
+{
+  switch(op) {
+  case RECOP_CLEAR:
+    if(pvrr->pvrr_status != HTSTV_PVR_STATUS_RECORDING) {
+      pvr_database_erase(pvrr);
+      pvr_free(pvrr);
+      break;
+    }
+    return;
+
+  case RECOP_ABORT:
+    pvr_abort(pvrr);
+    return;
+  default:
+    break;
+  }
+}
+
+
+void
 pvr_event_record_op(th_channel_t *ch, event_t *e, recop_t op)
 {
   time_t start = e->e_start;

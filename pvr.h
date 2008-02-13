@@ -117,4 +117,6 @@ void pvr_channel_record_op(th_channel_t *ch, int duration);
 
 int pvr_op2int(const char *op);
 
+void pvr_do_op(pvr_rec_t *pvrr, recop_t op);
+
 #endif /* PVR_H */

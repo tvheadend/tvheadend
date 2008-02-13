@@ -56,6 +56,17 @@ static struct strtab recstatustxt[] = {
   { "Buffer error",       HTSTV_PVR_STATUS_BUFFER_ERROR   },
 };
 
+static struct strtab recintstatustxt[] = {
+  { "Stopped",                        PVR_REC_STOP                    },
+  { "Waiting for transponder",        PVR_REC_WAIT_SUBSCRIPTION       },
+  { "Waiting for program start",      PVR_REC_WAIT_FOR_START          },
+  { "Waiting for valid audio frames", PVR_REC_WAIT_AUDIO_LOCK         },
+  { "Waiting for valid video frames", PVR_REC_WAIT_VIDEO_LOCK         },
+  { "Recording",                      PVR_REC_RUNNING                 },
+  { "Commercial break",               PVR_REC_COMMERCIAL              }
+};
+
+
 static struct strtab recstatuscolor[] = {
   { "#3333aa",      HTSTV_PVR_STATUS_SCHEDULED      },
   { "#aa3333",      HTSTV_PVR_STATUS_RECORDING      },
@@ -303,7 +314,7 @@ top_menu(http_connection_t *hc, tcp_queue_t *tq)
   tcp_qprintf(tq, "<li><a href=\"/search\">Search</a></li>");
 
   if(html_verify_access(hc, "record-events"))
-    tcp_qprintf(tq, "<li><a href=\"/pvrlog\">Recorder log</a></li>");
+    tcp_qprintf(tq, "<li><a href=\"/pvr\">Recorder</a></li>");
  
   if(html_verify_access(hc, "system-status"))
     tcp_qprintf(tq, "<li><a href=\"/status\">System Status</a></li>");
@@ -796,33 +807,73 @@ pvrcmp(const void *A, const void *B)
 }
 
 /**
- * PVR log
+ * PVR main page
  */
 static int
-page_pvrlog(http_connection_t *hc, const char *remain, void *opaque)
+page_pvr(http_connection_t *hc, const char *remain, void *opaque)
 {
   tcp_queue_t tq;
   int simple = is_client_simple(hc);
-  pvr_rec_t *pvrr;
-  event_t *e;
-  char escapebuf[4000], href[4000];
+  pvr_rec_t *pvrr, *pvrr_tgt;
+  char escapebuf[4000];
   char title[100];
   char channel[100];
   struct tm a, b, day;
-  const char *pvr_txt, *pvr_color;
+  const char *pvr_txt, *pvr_color, *buttontxt, *cmd, *txt;
+  char buttonname[100];
   int c, i;
   pvr_rec_t **pv;
+  int divid = 1;
+  int size = 600;
+  recop_t op;
+  http_arg_t *ra;
 
   if(!html_verify_access(hc, "record-events"))
     return HTTP_STATUS_UNAUTHORIZED;
 
+  op = -1;
+  pvrr_tgt = NULL;
+  LIST_FOREACH(ra, &hc->hc_url_args, link) {
+    if(!strncmp(ra->key, "clear_", 6)) {
+      op = RECOP_CLEAR;
+      txt = ra->key + 6;
+    } else if(!strncmp(ra->key, "desched_", 8)) {
+      op = RECOP_CLEAR;
+      txt = ra->key + 8;
+    } else if(!strncmp(ra->key, "abort_", 6)) {
+      op = RECOP_ABORT;
+      txt = ra->key + 6;
+    } else {
+      continue;
+    }
+    pvrr_tgt = pvr_get_tag_entry(atoi(txt));
+    pvr_do_op(pvrr_tgt, op);
+    break;
+  }
+
   tcp_init_queue(&tq, -1);
-  html_header(&tq, "HTS/tvheadend", 0, MAIN_WIDTH, 0, NULL);
+  html_header(&tq, "HTS/tvheadend", 0, MAIN_WIDTH, 0,
+	      "<script type=\"text/javascript\">\n"
+	      "function expcol(id)\n"
+	      "{\n"
+	      " var div = document.getElementById(id);\n"
+	      " if (div.style.display != \"none\") {\n"
+	      "   div.style.display = \"none\";\n"
+	      " } else {\n"
+	      "   div.style.display = \"block\";\n"
+	      "  }\n"
+	      "}\n"
+	      "</script>\n");
+
   top_menu(hc, &tq);
+
+  tcp_qprintf(&tq, "<form method=\"get\" action=\"/pvr\">");
 
   box_top(&tq, "box");
 
-  epg_lock();
+  tcp_qprintf(&tq, 
+	      "<div class=\"contentbig\"><center><b>%s</b></center></div>",
+	      "Recorder Log");
 
   tcp_qprintf(&tq, "<div class=\"content\">");
 
@@ -848,73 +899,117 @@ page_pvrlog(http_connection_t *hc, const char *remain, void *opaque)
   for(i = 0; i < c; i++) {
     pvrr = pv[i];
 
-    e = epg_event_find_by_time(pvrr->pvrr_channel, pvrr->pvrr_start);
-
-    if(e != NULL && !simple && e->e_desc != NULL) {
-      esacpe_char(escapebuf, sizeof(escapebuf), e->e_desc, '\'', "");
-    
-      snprintf(href, sizeof(href), 
-	       "<a href=\"/event/%d\" onmouseover=\"return overlib('%s')\" "
-	       "onmouseout=\"return nd();\">",
-	       e->e_tag,
-	       escapebuf);
-
-    } else {
-      href[0] = 0;
-    }
-
-    esacpe_char(channel, sizeof(channel), 
-		pvrr->pvrr_channel->ch_name, '"', "'");
-
-    esacpe_char(title, sizeof(title), 
-		pvrr->pvrr_title ?: "Unnamed recording", '"', "'");
-
     localtime_r(&pvrr->pvrr_start, &a);
     localtime_r(&pvrr->pvrr_stop, &b);
 
-    if(a.tm_wday  != day.tm_wday  ||
-       a.tm_mday  != day.tm_mday  ||
-       a.tm_mon   != day.tm_mon   ||
-       a.tm_year  != day.tm_year) {
-
+    if(a.tm_wday != day.tm_wday || a.tm_mday != day.tm_mday  ||
+       a.tm_mon  != day.tm_mon  || a.tm_year != day.tm_year) {
       memcpy(&day, &a, sizeof(struct tm));
-
-      tcp_qprintf(&tq, 
-		  "<br><b><i>%s, %d/%d</i></b><br>",
-		  days[day.tm_wday],
-		  day.tm_mday,
-		  day.tm_mon + 1);
+      tcp_qprintf(&tq, "<br><b><i>%s, %d/%d</i></b><br>",
+		  days[day.tm_wday], day.tm_mday, day.tm_mon + 1);
     }
 
 
     tcp_qprintf(&tq, 
-		"%s"
-		"<div style=\"width: %dpx;float: left\">"
-		"%s</div>"
-		"<div style=\"width: %dpx;float: left\">"
-		"%02d:%02d - %02d:%02d</div>"
-		"<div style=\"width: %dpx; float: left\">%s</div>%s",
-		href,
-		simple ? 80 : 100,
-		channel,
-		simple ? 80 : 100,
+		"<div><a href=\"javascript:expcol('div%d')\"",
+		divid);
+    
+    if(!simple && pvrr->pvrr_desc != NULL && pvrr->pvrr_desc[0] != 0) {
+      esacpe_char(escapebuf, sizeof(escapebuf), pvrr->pvrr_desc, '\'', "");
+      
+      tcp_qprintf(&tq, 
+		  " onmouseover=\"return overlib('%s')\""
+		  " onmouseout=\"return nd();\"",
+		  escapebuf);
+    }
+    
+    tcp_qprintf(&tq, ">");
+
+    esacpe_char(channel, sizeof(channel), 
+		pvrr->pvrr_channel->ch_name, '"', "'");
+
+
+    tcp_qprintf(&tq, 
+		"<span style=\"overflow: hidden; height: 15px;"
+		"width: %dpx;float: left\">"
+		"%s</span>",
+		size * 125 / 600,
+		channel);
+
+    esacpe_char(title, sizeof(title), pvrr->pvrr_title, '"', "'");
+    tcp_qprintf(&tq, 
+		"<span style=\"width: %dpx;height: 15px;overflow: hidden;"
+		"float: left\">"
+		"%02d:%02d - %02d:%02d</span>"
+		"<span style=\"overflow: hidden; height: 15px; width: %dpx; "
+		"float: left\">%s</span>",
+		size * 125 / 600,
 		a.tm_hour, a.tm_min, b.tm_hour, b.tm_min,
-		simple ? 100 : 250,
-		title,
-		href[0] ? "</a>" : "");
+		size * 350 / 600,
+		title);
 
     if(!pvrstatus_to_html(pvrr->pvrr_status, &pvr_txt, &pvr_color)) {
       tcp_qprintf(&tq, 
-		  "<div style=\"font-style:italic;color:%s;font-weight:bold\">"
-		  "%s</div>",
+		  "<span style=\"float:left;font-style:italic;"
+		  "color:%s;font-weight:bold\">%s</span>",
 		  pvr_color, pvr_txt);
-    } else {
-      tcp_qprintf(&tq, "<br>");
-    } 
+    }
+
+    tcp_qprintf(&tq, "</a></div><br>");
+
+
+    tcp_qprintf(&tq,
+		"<div id=\"div%d\" style=\"display:%s; "
+		"border-bottom-width:thin; border-bottom-style:solid\">",
+		divid, pvrr_tgt == pvrr ? "block" : "none");
+
+    tcp_qprintf(&tq,
+		"<div>"
+		"<span style=\"text-align: right; width: 120px; float: left\">"
+		"Filename:</span>"
+		"<span>%s</span><br></div>",
+		pvrr->pvrr_filename ?: "<i>not set</i>");
+
+    tcp_qprintf(&tq,
+		"<div>"
+		"<span style=\"text-align: right; width: 120px; float: left\">"
+		"Recorder status:</span>"
+		"<span>%s</span><br></div>",
+		val2str(pvrr->pvrr_rec_status, recintstatustxt) ?: "invalid");
+
+
+    switch(pvrr->pvrr_status) {
+    case HTSTV_PVR_STATUS_SCHEDULED:
+      buttontxt = "Remove from schedule";
+      cmd = "desched";
+      break;
+
+    case HTSTV_PVR_STATUS_RECORDING:
+      buttontxt = "Abort recording";
+      cmd = "abort";
+      break;
+
+    default:
+      buttontxt = "Remove log entry";
+      cmd = "clear";
+      break;
+    }
+    snprintf(buttonname, sizeof(buttonname), "%s_%d", cmd, pvrr->pvrr_ref);
+
+    tcp_qprintf(&tq,"<div style=\"text-align: center\">"
+		"<input type=\"submit\" class=\"knapp\" name=\"%s\" "
+		"value=\"%s\"></div>", buttonname, buttontxt);
+
+    tcp_qprintf(&tq, "<br></div>\n");
+    divid++;
   }
 
-  epg_unlock();
-  tcp_qprintf(&tq, "<br></div>\r\n");
+    tcp_qprintf(&tq,
+		"<br><div style=\"text-align: center\">"
+		"<input type=\"submit\" class=\"knapp\" name=\"clearall\" "
+		"value=\"Remove all completed recordings\"></div>");
+
+  tcp_qprintf(&tq, "</div>\r\n");
 
   box_bottom(&tq);
   tcp_qprintf(&tq, "</form>\r\n");
@@ -1719,7 +1814,7 @@ page_search(http_connection_t *hc, const char *remain, void *opaque)
     autorec_create(ar_name, atoi(ar_prio), title, s_ecg, s_tcg, s_ch);
 
     /* .. and redirect user to video recorder page */
-    http_redirect(hc, "/pvrlog");
+    http_redirect(hc, "/pvr");
     return 0;
   }
 
@@ -1982,7 +2077,7 @@ htmlui_start(void)
   http_path_add("/", NULL, page_root);
   http_path_add("/event", NULL, page_event);
   http_path_add("/channel", NULL, page_channel);
-  http_path_add("/pvrlog", NULL, page_pvrlog);
+  http_path_add("/pvr", NULL, page_pvr);
   http_path_add("/status", NULL, page_status);
   http_path_add("/chgrp", NULL, page_chgroups);
   http_path_add("/chadm", NULL, page_chadm);
