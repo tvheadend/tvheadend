@@ -61,6 +61,7 @@ int running;
 int xmltvreload;
 int startupcounter;
 const char *settings_dir;
+const char *sys_warning;
 
 static pthread_mutex_t tag_mutex = PTHREAD_MUTEX_INITIALIZER;
 static uint32_t tag_tally;
@@ -169,7 +170,15 @@ main(int argc, char **argv)
 
   openlog("tvheadend", LOG_PID, logfacility);
   
-  settings_dir = config_get_str("settings-dir", "/tmp/tvheadend");
+  settings_dir = config_get_str("settings-dir", NULL);
+
+  if(settings_dir == NULL) {
+    settings_dir = "/tmp/tvheadend";
+    sys_warning = 
+      "All channelsetup/recording info is stored in "
+      "'/tmp/tvheadend' and may not survive a system restart. "
+      "Please see the configuration manual for how to setup this correctly.";
+  }
   mkdir(settings_dir, 0777);
 
   snprintf(buf, sizeof(buf), "%s/channels", settings_dir);

@@ -836,5 +836,6 @@ uint32_t tag_get(void);
 extern const char *settings_dir;
 FILE *settings_open_for_write(const char *name);
 FILE *settings_open_for_read(const char *name);
+extern const char *sys_warning;
 
 #endif /* TV_HEAD_H */

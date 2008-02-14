@@ -329,6 +329,17 @@ top_menu(http_connection_t *hc, tcp_queue_t *tq)
 
   box_bottom(tq);
   tcp_qprintf(tq, "</div><br>\r\n");
+
+  if(sys_warning != NULL) {
+    box_top(tq, "box");
+    tcp_qprintf(tq, 
+		"<div class=\"content\">"
+		"<span style=\"color:#aa3333;font-weight:bold\">"
+		"Warning: %s</span></div>",
+		sys_warning);
+    box_bottom(tq);
+    tcp_qprintf(tq, "</div><br>\r\n");
+  }
 }
 
 
