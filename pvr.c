@@ -45,6 +45,7 @@
 #include "dispatch.h"
 #include "buffer.h"
 #include "strtab.h"
+#include "ffmuxer.h"
 
 static int pvr_id_ceil;  /* number generator for database entries */
 
@@ -53,17 +54,12 @@ struct pvr_rec_list pvrr_global_list;
 static void pvr_database_save(pvr_rec_t *pvrr);
 static void pvr_database_erase(pvr_rec_t *pvrr);
 static void pvr_database_load(void);
-static void tffm_set_state(th_ffmuxer_t *tffm, int status);
 static void pvr_fsm(pvr_rec_t *pvrr);
 static void pvr_subscription_callback(struct th_subscription *s,
 				      subscription_event_t event,
 				      void *opaque);
 
 static void *pvr_recorder_thread(void *aux);
-static void pvr_record_packet(th_ffmuxer_t *tffm, th_pkt_t *pkt);
-static void tffm_open(th_ffmuxer_t *tffm, th_transport_t *t,
-		      AVFormatContext *fctx, const char *printname);
-static void tffm_close(th_ffmuxer_t *tffm);
 
 
 /**
@@ -644,47 +640,6 @@ pvrr_packet_input(th_muxer_t *tm, th_stream_t *st, th_pkt_t *pkt)
   pthread_mutex_unlock(&pvrr->pvrr_pktq_mutex);
 }
 
-/**
- *  Internal recording state
- */
-static void
-tffm_set_state(th_ffmuxer_t *tffm, int status)
-{
-  const char *tp;
-
-  if(tffm->tffm_state == status)
-    return;
-
-  switch(status) {
-  case TFFM_STOP:
-    tp = "stopped";
-    break;
-  case TFFM_WAIT_SUBSCRIPTION:
-    tp = "waiting for subscription";
-    break;
-  case TFFM_WAIT_FOR_START:
-    tp = "waiting for program start";
-    break;
-  case TFFM_WAIT_AUDIO_LOCK:
-    tp = "waiting for audio lock";
-    break;
-  case TFFM_WAIT_VIDEO_LOCK:
-    tp = "waiting for video lock";
-    break;
-  case TFFM_RUNNING:
-    tp = "running";
-    break;
-  case TFFM_COMMERCIAL:
-    tp = "commercial break";
-    break;
-  default:
-    tp = "<invalid state>";
-    break;
-  }
-
-  syslog(LOG_INFO, "%s - Entering state \"%s\"", tffm->tffm_printname, tp);
-  tffm->tffm_state = status;
-}
 
 /**
  * We've got a transport now, start recording
@@ -759,96 +714,6 @@ pvrr_transport_available(pvr_rec_t *pvrr, th_transport_t *t)
 }
 
 /**
- * Open TFFM output
- */
-
-static void
-tffm_open(th_ffmuxer_t *tffm, th_transport_t *t, 
-	  AVFormatContext *fctx, const char *printname)
-{
-  th_muxer_t *tm = &tffm->tffm_muxer;
-  th_stream_t *st;
-  th_muxstream_t *tms;
-  AVCodecContext *ctx;
-  AVCodec *codec;
-  enum CodecID codec_id;
-  enum CodecType codec_type;
-  const char *codec_name;
-
-  tffm->tffm_avfctx = fctx;
-  tffm->tffm_printname = strdup(printname);
-
-  av_set_parameters(fctx, NULL);
-
-  LIST_FOREACH(st, &t->tht_streams, st_link) {
-    switch(st->st_type) {
-    default:
-      continue;
-    case HTSTV_MPEG2VIDEO:
-      codec_id   = CODEC_ID_MPEG2VIDEO;
-      codec_type = CODEC_TYPE_VIDEO;
-      codec_name = "mpeg2 video";
-      break;
-
-    case HTSTV_MPEG2AUDIO:
-      codec_id   = CODEC_ID_MP2;
-      codec_type = CODEC_TYPE_AUDIO;
-      codec_name = "mpeg2 audio";
-      break;
-
-    case HTSTV_AC3:
-      codec_id   = CODEC_ID_AC3;
-      codec_type = CODEC_TYPE_AUDIO;
-      codec_name = "AC3 audio";
-      break;
-
-    case HTSTV_H264:
-      codec_id   = CODEC_ID_H264;
-      codec_type = CODEC_TYPE_VIDEO;
-      codec_name = "h.264 video";
-      break;
-    }
-
-    codec = avcodec_find_decoder(codec_id);
-    if(codec == NULL) {
-      syslog(LOG_ERR, 
-	     "%s - Cannot find codec for %s, ignoring stream", 
-	     printname, codec_name);
-      continue;
-    }
-
-    ctx = avcodec_alloc_context();
-    ctx->codec_id   = codec_id;
-    ctx->codec_type = codec_type;
-
-    if(avcodec_open(ctx, codec) < 0) {
-      syslog(LOG_ERR,
-	     "%s - Cannot open codec for %s, ignoring stream", 
-	     printname, codec_name);
-      free(ctx);
-      continue;
-    }
-
-    tms = calloc(1, sizeof(th_muxstream_t));
-    tms->tms_stream   = st;
-    LIST_INSERT_HEAD(&tm->tm_streams, tms, tms_muxer_link0);
-
-
-    tms->tms_avstream = av_mallocz(sizeof(AVStream));
-    tms->tms_avstream->codec = ctx;
-
-    memcpy(tms->tms_avstream->language, tms->tms_stream->st_lang, 4);
-    tms->tms_index = fctx->nb_streams;
-    fctx->streams[fctx->nb_streams] = tms->tms_avstream;
-    fctx->nb_streams++;
-  }
-
-  /* Fire up recorder thread */
-
-  tffm_set_state(tffm, TFFM_WAIT_FOR_START);
-}
-
-/**
  * We've lost our transport, stop recording
  */
 static void
@@ -881,39 +746,6 @@ pvrr_transport_unavailable(pvr_rec_t *pvrr, th_transport_t *t)
     free(tms);
   }
 
-}
-
-/**
- * Close ffmuxer
- */
-static void
-tffm_close(th_ffmuxer_t *tffm)
-{
-  AVFormatContext *fctx = tffm->tffm_avfctx;
-  AVStream *avst;
-  int i;
-
-  if(fctx == NULL)
-    return;
-
-  /* Write trailer if we've written anything at all */
-    
-  if(tffm->tffm_header_written)
-    av_write_trailer(fctx);
-
-  /* Close streams and format */
-  
-  for(i = 0; i < fctx->nb_streams; i++) {
-    avst = fctx->streams[i];
-    avcodec_close(avst->codec);
-    free(avst->codec);
-    free(avst);
-  }
-  
-  url_fclose(fctx->pb);
-  free(fctx);
-
-  free(tffm->tffm_printname);
 }
 
 
@@ -995,7 +827,7 @@ pvr_recorder_thread(void *aux)
     pvrr->pvrr_pktq_len--;
     pthread_mutex_unlock(&pvrr->pvrr_pktq_mutex);
 
-    pvr_record_packet(tffm, pkt);
+    tffm_record_packet(tffm, pkt);
     pkt_deref(pkt);
 
     pthread_mutex_lock(&pvrr->pvrr_pktq_mutex);
@@ -1008,165 +840,3 @@ pvr_recorder_thread(void *aux)
   return NULL;
 }
 
-
-
-/** 
- * Check if all streams of the given type has been decoded
- */
-static int
-is_all_decoded(th_muxer_t *tm, enum CodecType type)
-{
-  th_muxstream_t *tms;
-  AVStream *st;
-
-  LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0) {
-    st = tms->tms_avstream;
-    if(st->codec->codec->type == type && tms->tms_decoded == 0)
-      return 0;
-  }
-  return 1;
-}
-
-
-
-/** 
- * Write a packet to output file
- */
-static void
-pvr_record_packet(th_ffmuxer_t *tffm, th_pkt_t *pkt)
-{
-  th_muxer_t *tm = &tffm->tffm_muxer;
-  AVFormatContext *fctx = tffm->tffm_avfctx;
-  th_muxstream_t *tms;
-  AVStream *st, *stx;
-  AVCodecContext *ctx;
-  AVPacket avpkt;
-  void *abuf;
-  AVFrame pic;
-  int r, data_size, i;
-  void *buf;
-  char txt[100];
-  size_t bufsize;
-
-  LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0)
-    if(tms->tms_stream == pkt->pkt_stream)
-      break;
-
-  if(tms == NULL)
-    return;
-
-  st = tms->tms_avstream;
-  ctx = st->codec;
-
-  /* Make sure packet is in memory */
-
-  buf = pkt_payload(pkt);
-  bufsize = pkt_len(pkt);
-  
-  switch(tffm->tffm_state) {
-  default:
-    break;
-
-  case TFFM_WAIT_AUDIO_LOCK:
-    if(ctx->codec_type != CODEC_TYPE_AUDIO || tms->tms_decoded)
-      break;
-
-    abuf = malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE);
-    r = avcodec_decode_audio(ctx, abuf, &data_size, buf, bufsize);
-    free(abuf);
-
-    if(r != 0 && data_size) {
-      syslog(LOG_DEBUG, "%s - "
-	     "Stream #%d: \"%s\" decoded a complete audio frame: "
-	     "%d channels in %d Hz\n",
-	     tffm->tffm_printname, tms->tms_index,
-	     st->codec->codec->name,
-	     st->codec->channels,
-	     st->codec->sample_rate);
-	
-      tms->tms_decoded = 1;
-    }
-
-    if(is_all_decoded(tm, CODEC_TYPE_AUDIO))
-      tffm_set_state(tffm, TFFM_WAIT_VIDEO_LOCK);
-    break;
-    
-  case TFFM_WAIT_VIDEO_LOCK:
-    if(ctx->codec_type != CODEC_TYPE_VIDEO || tms->tms_decoded)
-      break;
-
-    r = avcodec_decode_video(st->codec, &pic, &data_size, buf, bufsize);
-    if(r != 0 && data_size) {
-      syslog(LOG_DEBUG, "%s - "
-	     "Stream #%d: \"%s\" decoded a complete video frame: "
-	     "%d x %d at %.2fHz\n",
-	     tffm->tffm_printname, tms->tms_index,
-	     ctx->codec->name,
-	     ctx->width, st->codec->height,
-	     (float)ctx->time_base.den / (float)ctx->time_base.num);
-      
-      tms->tms_decoded = 1;
-    }
-    
-    if(!is_all_decoded(tm, CODEC_TYPE_VIDEO))
-      break;
-
-    /* All Audio & Video decoded, start recording */
-
-    tffm_set_state(tffm, TFFM_RUNNING);
-
-    if(!tffm->tffm_header_written) {
-      tffm->tffm_header_written = 1;
-
-      if(av_write_header(fctx))
-	break;
-      
-      syslog(LOG_DEBUG, 
-	     "%s - Header written to file, stream dump:", 
-	     tffm->tffm_printname);
-      
-      for(i = 0; i < fctx->nb_streams; i++) {
-	stx = fctx->streams[i];
-	
-	avcodec_string(txt, sizeof(txt), stx->codec, 1);
-	
-	syslog(LOG_DEBUG, "%s - Stream #%d: %s [%d/%d]",
-	       tffm->tffm_printname, i, txt, 
-	       stx->time_base.num, stx->time_base.den);
-	
-      }
-    }
-    /* FALLTHRU */
-      
-  case TFFM_RUNNING:
-     
-    if(pkt->pkt_commercial == COMMERCIAL_YES) {
-      tffm_set_state(tffm, TFFM_COMMERCIAL);
-      break;
-    }
-
-    av_init_packet(&avpkt);
-    avpkt.stream_index = tms->tms_index;
-
-    avpkt.dts = av_rescale_q(pkt->pkt_dts, AV_TIME_BASE_Q, st->time_base);
-    avpkt.pts = av_rescale_q(pkt->pkt_pts, AV_TIME_BASE_Q, st->time_base);
-    avpkt.data = buf;
-    avpkt.size = bufsize;
-    avpkt.duration = pkt->pkt_duration;
-
-    r = av_interleaved_write_frame(fctx, &avpkt);
-    break;
-
-
-  case TFFM_COMMERCIAL:
-
-    if(pkt->pkt_commercial != COMMERCIAL_YES) {
-
-      LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0)
-	tms->tms_decoded = 0;
-      
-      tffm_set_state(tffm, TFFM_WAIT_AUDIO_LOCK);
-    }
-    break;
-  }
-}
