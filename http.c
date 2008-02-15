@@ -321,30 +321,8 @@ http_process_request(http_connection_t *hc)
 static void
 hc_user_resolve(http_connection_t *hc)
 {
-  config_entry_t *ce;
-  const char *name, *pass;
-
-  hc->hc_user_config = NULL;
-
-  TAILQ_FOREACH(ce, &config_list, ce_link) {
-    if(ce->ce_type == CFG_SUB && !strcasecmp("user", ce->ce_key)) {
-      if((name = config_get_str_sub(&ce->ce_sub, "name", NULL)) == NULL)
-	continue;
-      if(!strcmp(name, hc->hc_username))
-	break;
-    }
-  }
-
-  if(ce == NULL)
-    return;
-
-  if((pass = config_get_str_sub(&ce->ce_sub, "password", NULL)) == NULL)
-    return;
-
-  if(strcmp(pass, hc->hc_password))
-    return;
-
-  hc->hc_user_config = &ce->ce_sub;
+  hc->hc_user_config = user_resolve_to_config(hc->hc_username,
+					      hc->hc_password);
 }
 
 

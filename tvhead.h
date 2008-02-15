@@ -838,4 +838,7 @@ FILE *settings_open_for_write(const char *name);
 FILE *settings_open_for_read(const char *name);
 extern const char *sys_warning;
 
+struct config_head *user_resolve_to_config(const char *username, 
+					   const char *password);
+
 #endif /* TV_HEAD_H */

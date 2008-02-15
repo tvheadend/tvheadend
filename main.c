@@ -381,3 +381,29 @@ settings_open_for_write(const char *name)
   return fp;
 }
 
+struct config_head *
+user_resolve_to_config(const char *username, const char *password)
+{
+  config_entry_t *ce;
+  const char *name, *pass;
+
+  TAILQ_FOREACH(ce, &config_list, ce_link) {
+    if(ce->ce_type == CFG_SUB && !strcasecmp("user", ce->ce_key)) {
+      if((name = config_get_str_sub(&ce->ce_sub, "name", NULL)) == NULL)
+	continue;
+      if(!strcmp(name, username))
+	break;
+    }
+  }
+
+  if(ce == NULL)
+    return NULL;
+
+  if((pass = config_get_str_sub(&ce->ce_sub, "password", NULL)) == NULL)
+    return NULL;
+
+  if(strcmp(pass, password))
+    return NULL;
+
+  return &ce->ce_sub;
+}
