@@ -659,8 +659,32 @@ typedef struct th_muxer {
     TM_PAUSE,
   } tm_status;
 
-  struct AVFormatContext *tm_avfctx;
 } th_muxer_t;
+
+
+/**
+ * Output muxer for usage via ffmpeg (avformat)
+ */
+typedef struct th_ffmuxer {
+  th_muxer_t tffm_muxer;
+  
+  enum {
+    TFFM_STOP,
+    TFFM_WAIT_SUBSCRIPTION,
+    TFFM_WAIT_FOR_START,
+    TFFM_WAIT_AUDIO_LOCK,
+    TFFM_WAIT_VIDEO_LOCK,
+    TFFM_RUNNING,
+    TFFM_COMMERCIAL,
+
+  } tffm_state;
+
+  int tffm_header_written;
+
+  char *tffm_printname;
+
+  struct AVFormatContext *tffm_avfctx;
+} th_ffmuxer_t;
 
 
 

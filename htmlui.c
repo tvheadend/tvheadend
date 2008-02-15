@@ -57,13 +57,13 @@ static struct strtab recstatustxt[] = {
 };
 
 static struct strtab recintstatustxt[] = {
-  { "Stopped",                        PVR_REC_STOP                    },
-  { "Waiting for transponder",        PVR_REC_WAIT_SUBSCRIPTION       },
-  { "Waiting for program start",      PVR_REC_WAIT_FOR_START          },
-  { "Waiting for valid audio frames", PVR_REC_WAIT_AUDIO_LOCK         },
-  { "Waiting for valid video frames", PVR_REC_WAIT_VIDEO_LOCK         },
-  { "Recording",                      PVR_REC_RUNNING                 },
-  { "Commercial break",               PVR_REC_COMMERCIAL              }
+  { "Stopped",                        TFFM_STOP                    },
+  { "Waiting for transponder",        TFFM_WAIT_SUBSCRIPTION       },
+  { "Waiting for program start",      TFFM_WAIT_FOR_START          },
+  { "Waiting for valid audio frames", TFFM_WAIT_AUDIO_LOCK         },
+  { "Waiting for valid video frames", TFFM_WAIT_VIDEO_LOCK         },
+  { "Recording",                      TFFM_RUNNING                 },
+  { "Commercial break",               TFFM_COMMERCIAL              }
 };
 
 
@@ -1025,7 +1025,8 @@ page_pvr(http_connection_t *hc, const char *remain, void *opaque)
 		"Recorder status:</span><td>"
 		"<td>%s</td>"
 		"</tr>",
-		val2str(pvrr->pvrr_rec_status, recintstatustxt) ?: "invalid");
+		val2str(pvrr->pvrr_tffm.tffm_state, recintstatustxt)
+		?: "invalid");
 
     tcp_qprintf(&tq, 
 		"</table>");
