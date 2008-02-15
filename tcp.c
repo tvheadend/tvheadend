@@ -61,8 +61,25 @@ tcp_qprintf(tcp_queue_t *tq, const char *fmt, ...)
   tq->tq_depth += td->td_datalen;
 }
 
+/*
+ *  Put data on a TCP queue
+ */
+void
+tcp_qput(tcp_queue_t *tq, const uint8_t *buf, size_t len)
+{
+  tcp_data_t *td;
+  void *out;
 
+  td = malloc(sizeof(tcp_data_t));
+  td->td_offset = 0;
+  td->td_datalen = len;
 
+  out = malloc(td->td_datalen);
+  memcpy(out, buf, td->td_datalen);
+  td->td_data = out;
+  TAILQ_INSERT_TAIL(&tq->tq_messages, td, td_link);
+  tq->tq_depth += td->td_datalen;
+}
 
 /*
  *  printfs data on a TCP connection

@@ -104,6 +104,8 @@ void tcp_printf(tcp_session_t *ses, const char *fmt, ...);
 
 void tcp_qprintf(tcp_queue_t *tq, const char *fmt, ...);
 
+void tcp_qput(tcp_queue_t *tq, const uint8_t *buf, size_t len);
+
 void tcp_output_queue(tcp_session_t *ses, tcp_queue_t *dst, tcp_queue_t *src);
 
 void *tcp_create_client(const char *hostname, int port, size_t session_size,
