@@ -57,6 +57,9 @@
 #include "file_input.h"
 #include "cwc.h"
 #include "autorec.h"
+
+#include <libhts/htsparachute.h>
+
 int running;
 int xmltvreload;
 int startupcounter;
@@ -100,6 +103,15 @@ handle_sigpipe(int x)
   return;
 }
 
+static void
+pull_chute (int sig)
+{
+  char pwd[PATH_MAX];
+
+  getcwd(pwd, sizeof(pwd));
+  syslog(LOG_ERR, "HTS TV Headend crashed on signal %i (pwd \"%s\")",
+	 sig, pwd);
+}
 
 int
 main(int argc, char **argv)
@@ -197,6 +209,8 @@ main(int argc, char **argv)
 	 settings_dir);
 
   dispatch_init();
+
+  htsparachute_init(pull_chute);
 
   signal(SIGUSR1, xmltvdoreload);
   signal(SIGTERM, doexit);
