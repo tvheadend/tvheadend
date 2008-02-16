@@ -258,7 +258,7 @@ channels_load(void)
 {
   struct config_head cl;
   config_entry_t *ce;
-  char buf[400];
+  char buf[PATH_MAX];
   DIR *dir;
   struct dirent *d;
   const char *name, *grp;
@@ -281,6 +281,13 @@ channels_load(void)
     channel_group_find(name, 1);
   }
   config_free0(&cl);
+
+  tcg = channel_group_find("-disabled-", 1);
+  tcg->tcg_cant_delete_me = 1;
+  tcg->tcg_hidden = 1;
+  
+  defgroup = channel_group_find("Uncategorized", 1);
+  defgroup->tcg_cant_delete_me = 1;
 
   snprintf(buf, sizeof(buf), "%s/channels", settings_dir);
 
@@ -311,12 +318,6 @@ channels_load(void)
 
   closedir(dir);
 
-  tcg = channel_group_find("-disabled-", 1);
-  tcg->tcg_cant_delete_me = 1;
-  tcg->tcg_hidden = 1;
-  
-  defgroup = channel_group_find("Uncategorized", 1);
-  defgroup->tcg_cant_delete_me = 1;
   
   /* Static services */
 
