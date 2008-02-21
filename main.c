@@ -57,11 +57,11 @@
 #include "file_input.h"
 #include "cwc.h"
 #include "autorec.h"
+#include "spawn.h"
 
 #include <libhts/htsparachute.h>
 
 int running;
-int xmltvreload;
 int startupcounter;
 const char *settings_dir;
 const char *sys_warning;
@@ -83,13 +83,6 @@ tag_get(void)
   return r;
 }
 
-
-
-static void
-xmltvdoreload(int x)
-{
-  xmltvreload = 1;
-}
 
 static void
 doexit(int x)
@@ -212,9 +205,10 @@ main(int argc, char **argv)
 
   htsparachute_init(pull_chute);
 
-  signal(SIGUSR1, xmltvdoreload);
   signal(SIGTERM, doexit);
   signal(SIGINT, doexit);
+
+  spawn_init();
 
   av_register_all();
   av_log_set_level(AV_LOG_INFO);

@@ -36,6 +36,7 @@
 #include "epg.h"
 #include "epg_xmltv.h"
 #include "refstr.h"
+#include "spawn.h"
 
 extern int xmltvreload;
 
@@ -252,13 +253,25 @@ xmltv_load(void)
 {
   xmlDoc *doc = NULL;
   xmlNode *root_element = NULL;
-  const char *filename = config_get_str("xmltv", "/tmp/tv.xml");
+  const char *prog;
+  char *outbuf;
+  int outlen;
+  prog = config_get_str("xmltvgrabber", NULL);
+  if(prog == NULL)
+    return;
 
-  syslog(LOG_INFO, "Loading xmltv file \"%s\"", filename);
+  syslog(LOG_INFO, "xmltv: Starting grabber \"%s\"", prog);
   
-  doc = xmlParseFile(filename);
+  outlen = spawn_and_store_stdout(prog, &outbuf);
+  if(outlen < 1) {
+    syslog(LOG_ERR, "xmltv: Cannot parse output from \"%s\"", prog);
+    return;
+  }
+
+  doc = xmlParseMemory(outbuf, outlen);
   if(doc == NULL) {
-    syslog(LOG_ERR, "Error while loading xmltv file \"%s\"", filename);
+    syslog(LOG_ERR, "xmltv: Error while parsing output from  \"%s\"", prog);
+    free(outbuf);
     return;
   }
 
@@ -268,6 +281,8 @@ xmltv_load(void)
   xmltv_parse_root(root_element);
   xmlFreeDoc(doc);
   xmlCleanupParser();
+  syslog(LOG_INFO, "xmltv: EPG sucessfully loaded and parsed");
+  free(outbuf);
 }
 
 /*
@@ -374,17 +389,15 @@ xmltv_transfer(void)
 static void *
 xmltv_thread(void *aux)
 {
-  xmltvreload = 1;
+  int sleeptime;
+
+  /* Default to 12 hours */
+  sleeptime = atoi(config_get_str("xmltvinterval", "43200"));
+
   while(1) {
-
-    if(xmltvreload) {
-      xmltvreload = 0;
-      xmltv_load();
-    }
-
+    xmltv_load();
     xmltv_transfer();
-    sleep(10);
-
+    sleep(sleeptime);
   }
 }
 
@@ -396,5 +409,11 @@ void
 xmltv_init(void)
 {
   pthread_t ptid;
+
+  if(config_get_str("xmltvgrabber", NULL) == NULL) {
+    syslog(LOG_INFO, "xmltv: No grabber configured, xmltv subsystem disabled");
+    return;
+  }
+
   pthread_create(&ptid, NULL, xmltv_thread, NULL);
 }
