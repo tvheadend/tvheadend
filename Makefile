@@ -2,7 +2,7 @@
 
 SRCS = main.c dispatch.c channels.c transports.c teletext.c psi.c \
 	subscriptions.c mux.c tsdemux.c buffer.c tcp.c \
-	resolver.c tsmux.c parsers.c bitstream.c parser_h264.c
+	resolver.c tsmux.c parsers.c bitstream.c parser_h264.c spawn.c
 
 SRCS += http.c htmlui.c
 
