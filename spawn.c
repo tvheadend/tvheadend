@@ -80,10 +80,11 @@ reaper(void *opaque, int64_t now)
     }
 
     syslog(LOG_INFO, "spawn: \"%s\" %s", s ? s->name : "<unknwon spawn>", txt);
-
-    LIST_REMOVE(s, link);
-    free((void *)s->name);
-    free(s);
+    if(s != NULL) {
+      LIST_REMOVE(s, link);
+      free((void *)s->name);
+      free(s);
+    }
     pthread_mutex_unlock(&spawn_mutex);
   }
 }
