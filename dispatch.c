@@ -127,6 +127,8 @@ dispatch_addfd(int fd, void (*callback)(int events, void *opaque, int fd),
 {
   struct epoll_entry *e;
 
+  fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
+
   e = calloc(1, sizeof(struct epoll_entry));
   e->callback = callback;
   e->opaque = opaque;
