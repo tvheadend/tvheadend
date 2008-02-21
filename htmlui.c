@@ -2214,6 +2214,66 @@ page_search(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+/**
+ * XML output
+ */
+static int
+xml_channellist(http_connection_t *hc, const char *remain, void *opaque)
+{
+  tcp_queue_t tq;
+  th_channel_t *ch;
+  th_channel_group_t *tcg;
+  struct sockaddr_in *si;
+  char escapebuf[100];
+
+  if(!html_verify_access(hc, "browse-events"))
+    return HTTP_STATUS_UNAUTHORIZED;
+
+  tcp_init_queue(&tq, -1);
+
+  si = (struct sockaddr_in *)&hc->hc_tcp_session.tcp_self_addr;
+
+  tcp_qprintf(&tq, 
+	      "<?xml version='1.0' encoding='utf-8'?>\n"
+	      "<all-channel-groups>\n");
+
+
+  TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
+    if(tcg->tcg_hidden)
+      continue;
+
+
+    esacpe_char(escapebuf, sizeof(escapebuf), tcg->tcg_name, '&', "");
+
+    tcp_qprintf(&tq, 
+		" <channel-group id=\"%d\">\n"
+		"  <name>%s</name>\n",
+		tcg->tcg_tag, escapebuf);
+
+    TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
+      if(LIST_FIRST(&ch->ch_transports) == NULL)
+	continue;
+
+    esacpe_char(escapebuf, sizeof(escapebuf), ch->ch_name, '&', "");
+
+      tcp_qprintf(&tq, "  <channel id=\"%d\">\n", ch->ch_tag);
+
+      tcp_qprintf(&tq, "   <name>%s</name>\n", escapebuf);
+      if(ch->ch_icon != NULL)
+	tcp_qprintf(&tq,  "  <icon>%s</icon>\n", refstr_get(ch->ch_icon));
+      tcp_qprintf(&tq, "   <mimetype>video/mpeg</mimetype>\n");
+      tcp_qprintf(&tq, "   <url>rtsp://%s:%d/%s</url>\n",
+		  inet_ntoa(si->sin_addr), ntohs(si->sin_port),
+		  ch->ch_sname);
+      tcp_qprintf(&tq, "  </channel>\n");
+    }
+    tcp_qprintf(&tq, " </channel-group>\n");
+  }
+  tcp_qprintf(&tq, 
+	      "</all-channel-groups>\n");
+  http_output_queue(hc, &tq, "text/xml; charset=UTF-8", 0);
+  return 0;
+}
 
 
 /**
@@ -2234,4 +2294,6 @@ htmlui_start(void)
   http_path_add("/updatechannel", NULL, page_updatechannel);
   http_path_add("/css.css", NULL, page_css);
   http_path_add("/search", NULL, page_search);
+
+  http_path_add("/channellist.xml", NULL, xml_channellist);
 }
