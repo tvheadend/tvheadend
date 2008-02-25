@@ -131,7 +131,7 @@ pkt_alloc(void *data, size_t datalen, int64_t pts, int64_t dts)
   pkt = calloc(1, sizeof(th_pkt_t));
   pkt->pkt_payloadlen = datalen;
   if(datalen > 0) {
-    pkt->pkt_payload = malloc(datalen);
+    pkt->pkt_payload = malloc(datalen + FF_INPUT_BUFFER_PADDING_SIZE);
     if(data != NULL)
       memcpy(pkt->pkt_payload, data, datalen);
   }
@@ -159,7 +159,8 @@ pkt_copy(th_pkt_t *orig)
   pkt = malloc(sizeof(th_pkt_t));
   memcpy(pkt, orig, sizeof(th_pkt_t));
 
-  pkt->pkt_payload = malloc(pkt->pkt_payloadlen);
+  pkt->pkt_payload = malloc(pkt->pkt_payloadlen + 
+			    FF_INPUT_BUFFER_PADDING_SIZE);
   memcpy(pkt->pkt_payload, orig->pkt_payload, pkt->pkt_payloadlen);
 
   pkt->pkt_on_stream_queue = 0;
@@ -229,7 +230,8 @@ int
 pkt_load(th_pkt_t *pkt)
 {
   if(pkt->pkt_payload == NULL && pkt->pkt_storage != NULL) {
-    pkt->pkt_payload = malloc(pkt->pkt_payloadlen);
+    pkt->pkt_payload = malloc(pkt->pkt_payloadlen + 
+			      FF_INPUT_BUFFER_PADDING_SIZE);
     pread(pkt->pkt_storage->ts_fd, pkt->pkt_payload, pkt->pkt_payloadlen,
 	  pkt->pkt_storage_offset);
     storage_mem_enq(pkt);
