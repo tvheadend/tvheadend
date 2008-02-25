@@ -333,6 +333,11 @@ Allow (1) or disallow (0) this user inspect system status
 \fB\tadmin = \fR\fI1 \fRor\fI 0\fR (optional, default is 0)
 Allow (1) or disallow (0) this user to perform administrative tasks.
 Such as managing channel groups, moving channels, configuring transports, etc
+.TP
+\fB\txbmsp = \fR\fI1 \fRor\fI 0\fR (optional, default is 0)
+Allows the user to connect via the XBMSP protocol. For more details
+about XBMSP, see the \fBOUTPUT - XBMSP - XBMC Media Streaming Protocol\fR
+chapter.
 .PP
 .nf
   }
@@ -461,10 +466,26 @@ that is controlled via the configuration file.
 \fB\tpvrdir = \fR\fI<directorypath>\fR (optional)
 Sets the directory where recordings will be saved. If this is omitted
 the recordings will be stored in the current directory.
-.SH "OUTPUT - HTSP - Home Theater System Protocol (Proprietary)"
-TBD
+.SH "OUTPUT - XBMSP - XBMC Media Streaming Protocol"
+Tvheadend can act as a native XBMSP server. 
+All channels are presented as virtual files. The channels are located
+in their respective channel group directory.
+Currently, the XBMSP discovery mechanism is not supported, so you need
+to explicitly configure your XBMSP client to point to the tvheadend server.
+.PP
+The XBMSP server requires that the clients authenticate themself.
+Username and Password is looked up in tvheadend's user database, and the
+\fBxbmsp\fR statement must be set to 1 in the user's sub-section
+for access to be granted.
 .SS "Configuration"
-TBD
+XBMSP is disabled by default. To enable it, add the following
+configuration line:
+.TP
+\fB\txbmsp-server-port = \fR\fI<1-65535>\fR (optional)
+The default port for XBMSP is 1400, so you would probably want to set
+it to this number.
+.SH "OUTPUT - HTSP - Home Theater System Protocol (Proprietary)"
+To be described.
 .SH "XMLTV"
 Tvheadend can parse the output from an xmltv grabber. It executes
 the grabber directly and parse the information internally. It's

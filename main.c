@@ -58,6 +58,7 @@
 #include "autorec.h"
 #include "spawn.h"
 #include "ffmuxer.h"
+#include "xbmsp.h"
 
 #include <libhts/htsparachute.h>
 
@@ -258,6 +259,10 @@ main(int argc, char **argv)
       p = atoi(config_get_str("htsp-server-port", "0"));
       if(p)
 	htsp_start(p);
+
+      p = atoi(config_get_str("xbmsp-server-port", "0"));
+      if(p)
+	xbmsp_start(p);
 
     }
     dispatcher();

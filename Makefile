@@ -18,7 +18,7 @@ SRCS += iptv_input.c iptv_output.c
 
 SRCS += avgen.c file_input.c
 
-SRCS +=	htsclient.c rtsp.c rtp.c
+SRCS +=	htsclient.c rtsp.c rtp.c xbmsp.c
 
 SRCS += v4l.c
 
