@@ -533,10 +533,44 @@ To configure this, use the \fBManage channels\fR web page and enter
 the number '192' in the 'teletext rundown' input field. If you are aware
 of any other channel that transmits the program rundown over teletext,
 than please contact me (Andreas).
+.SH "CSA DESCRAMBLER"
+Tvheadend contains a software based CSA descrambler.
+It is not throughly tested, but as usual, any feedback is welcome.
+Codewords are fetched from a code word server using the newcamd protocol.
+.SS "Configuration"
+To make tvheadend connect to a code word server. Add the following
+subsection to your configuration file. Multiple sections can be added
+for multiple server support.
+.PP
+.nf
+  cwc {
+.fi
+.TP
+\fB\thostname = \fR\fI<hostname>\fR
+Server hostname. This hostname will be resolved into an IP address at
+each connection attempt.
+.TP
+\fB\tport = \fR\fI<1-65535>\fR
+Port to connect to.
+.TP
+\fB\tusername = \fR\fI<string>\fR
+Username for this server.
+.TP
+\fB\tusername = \fR\fI<string>\fR
+Password for this server.
+.TP
+\fB\tdeskey = \fR\fI<xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx>\fR
+Initial 14 byte DES key for this server.
+.PP
+.nf
+  }
+.fi
 .SH "AUTHOR"
 .B Tvheadend
 and this man page is maintained by Andreas Oeman
 .PP
 (andreas a lonelycoder d com)
+.PP
+You may also visit #hts at irc.freenode.net
 .SH "SEE ALSO"
 .BR http://www.lonelycoder.com/hts
