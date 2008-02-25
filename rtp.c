@@ -34,9 +34,6 @@
 #include "rtp.h"
 #include "dispatch.h"
 
-#include <ffmpeg/avformat.h>
-#include <ffmpeg/random.h>
-
 int
 rtp_sendmsg(uint8_t *pkt, int blocks, int64_t pcr,
 	    int fd, struct sockaddr *dst, socklen_t dstlen,

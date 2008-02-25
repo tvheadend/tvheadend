@@ -19,7 +19,7 @@
 #ifndef PVR_H
 #define PVR_H
 
-#include <ffmpeg/avformat.h>
+#include <libavformat/avformat.h>
 
 extern char *pvrpath;
 extern struct pvr_rec_list pvrr_global_list;

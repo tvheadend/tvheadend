@@ -33,8 +33,6 @@
 #include <linux/dvb/dmx.h>
 
 #include <libhts/htscfg.h>
-#include <ffmpeg/avstring.h>
-
 #include "tvhead.h"
 #include "dispatch.h"
 #include "dvb.h"

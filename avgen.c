@@ -32,8 +32,6 @@
 #include <string.h>
 
 #include <inttypes.h>
-#include <ffmpeg/avcodec.h>
-#include <ffmpeg/avformat.h>
 
 #include <libhts/htscfg.h>
 

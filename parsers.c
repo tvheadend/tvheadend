@@ -23,7 +23,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <ffmpeg/avcodec.h>
 #include <assert.h>
 
 #include "tvhead.h"

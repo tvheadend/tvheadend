@@ -27,7 +27,7 @@
 #include <libhts/htscfg.h>
 #include <libhts/avg.h>
 #include "refstr.h"
-#include <ffmpeg/avcodec.h>
+#include <libavcodec/avcodec.h>
 
 /*
  * Commercial status

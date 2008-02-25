@@ -36,8 +36,6 @@
 
 #include <libhts/htscfg.h>
 
-#include <ffmpeg/avcodec.h>
-
 #include "tvhead.h"
 #include "dispatch.h"
 #include "dvb_dvr.h"

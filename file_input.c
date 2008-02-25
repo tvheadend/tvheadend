@@ -32,8 +32,6 @@
 #include <string.h>
 
 #include <inttypes.h>
-#include <ffmpeg/avcodec.h>
-#include <ffmpeg/avformat.h>
 
 #include <libhts/htscfg.h>
 
@@ -45,6 +43,7 @@
 #include "parsers.h"
 #include "buffer.h"
 
+#include <libavformat/avformat.h>
 
 typedef struct file_input {
   AVFormatContext *fi_fctx;

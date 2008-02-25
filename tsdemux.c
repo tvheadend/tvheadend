@@ -37,8 +37,6 @@
 
 #include <libhts/htscfg.h>
 
-#include <ffmpeg/avcodec.h>
-
 #include "tvhead.h"
 #include "dispatch.h"
 #include "teletext.h"

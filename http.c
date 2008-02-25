@@ -29,7 +29,7 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 
-#include <ffmpeg/base64.h>
+#include <libavutil/base64.h>
 
 #include "tvhead.h"
 #include "channels.h"

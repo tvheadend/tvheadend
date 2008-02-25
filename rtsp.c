@@ -42,7 +42,7 @@
 #include "tcp.h"
 #include "http.h"
 
-#include <ffmpeg/random.h>
+#include <libavutil/random.h>
 
 #include <libhts/htscfg.h>
 

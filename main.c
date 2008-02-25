@@ -33,8 +33,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <ffmpeg/avcodec.h>
-#include <ffmpeg/avformat.h>
+#include <libavformat/avformat.h>
 
 #include "tvhead.h"
 #include "dvb.h"

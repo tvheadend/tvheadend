@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <ffmpeg/common.h>
+#include <libavutil/common.h>
 
 #include "tvhead.h"
 #include "psi.h"

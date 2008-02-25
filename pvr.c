@@ -30,9 +30,7 @@
 #include <errno.h>
 #include <dirent.h>
 
-#include <ffmpeg/avcodec.h>
-#include <ffmpeg/avformat.h>
-#include <ffmpeg/avstring.h>
+#include <libavutil/avstring.h>
 
 #include <libhts/htscfg.h>
 

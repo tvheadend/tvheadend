@@ -19,8 +19,6 @@
 #ifndef SUBSCRIPTIONS_H
 #define SUBSCRIPTIONS_H
 
-#include <ffmpeg/avcodec.h>
-
 void subscription_unsubscribe(th_subscription_t *s);
 
 void subscription_set_weight(th_subscription_t *s, unsigned int weight);

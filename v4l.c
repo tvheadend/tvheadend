@@ -30,8 +30,6 @@
 #include <string.h>
 
 #include <inttypes.h>
-#include <ffmpeg/avio.h>
-#include <ffmpeg/avformat.h>
 
 #define __user
 #include <linux/videodev2.h>
