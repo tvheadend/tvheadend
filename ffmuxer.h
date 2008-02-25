@@ -19,10 +19,44 @@
 #ifndef FFMUXER_H
 #define FFMUXER_H
 
+TAILQ_HEAD(tffm_fifo_pkt_queue, tffm_fifo_pkt);
+
+
+typedef struct tffm_fifo_pkt {
+  TAILQ_ENTRY(tffm_fifo_pkt) tfp_link;
+
+  size_t tfp_pktsize;
+  uint8_t tfp_buf[0];
+} tffm_fifo_pkt_t;
+
+typedef void (tffm_fifo_callback_t)(void *opaque);
+
+typedef struct tffm_fifo {
+  LIST_ENTRY(tffm_fifo) tf_link;
+
+  uint32_t tf_id;
+  char *tf_filename;
+  
+  size_t tf_pktq_len;
+  struct tffm_fifo_pkt_queue tf_pktq;
+
+  tffm_fifo_callback_t *tf_callback;
+  void *tf_opaque;
+
+} tffm_fifo_t;
+
+void tffm_init(void);
+
 void tffm_set_state(th_ffmuxer_t *tffm, int status);
 void tffm_record_packet(th_ffmuxer_t *tffm, th_pkt_t *pkt);
 void tffm_open(th_ffmuxer_t *tffm, th_transport_t *t,
 	       AVFormatContext *fctx, const char *printname);
 void tffm_close(th_ffmuxer_t *tffm);
+void tffm_packet_input(th_muxer_t *tm, th_stream_t *st, th_pkt_t *pkt);
+
+tffm_fifo_t *tffm_fifo_create(tffm_fifo_callback_t *callback, void *opaque);
+void tffm_fifo_destroy(tffm_fifo_t *tf);
+
+#define tffm_filename(tffm) ((tffm)->tf_filename)
 
 #endif /* FFMUXER_H */

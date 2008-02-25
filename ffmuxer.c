@@ -42,6 +42,20 @@
 #include "ffmuxer.h"
 #include "buffer.h"
 
+static URLProtocol tffm_fifo_proto;
+
+
+/**
+ * Register a callback
+ */
+void
+tffm_init(void)
+{
+  register_protocol(&tffm_fifo_proto);
+}
+
+
+
 /**
  *  Internal state
  */
@@ -143,7 +157,13 @@ tffm_open(th_ffmuxer_t *tffm, th_transport_t *t,
       continue;
     }
 
-    ctx = avcodec_alloc_context();
+    tms = calloc(1, sizeof(th_muxstream_t));
+    tms->tms_stream   = st;
+    tms->tms_index = fctx->nb_streams;
+
+    tms->tms_avstream = av_new_stream(fctx, fctx->nb_streams);
+
+    ctx = tms->tms_avstream->codec;
     ctx->codec_id   = codec_id;
     ctx->codec_type = codec_type;
 
@@ -155,18 +175,8 @@ tffm_open(th_ffmuxer_t *tffm, th_transport_t *t,
       continue;
     }
 
-    tms = calloc(1, sizeof(th_muxstream_t));
-    tms->tms_stream   = st;
     LIST_INSERT_HEAD(&tm->tm_streams, tms, tms_muxer_link0);
-
-
-    tms->tms_avstream = av_mallocz(sizeof(AVStream));
-    tms->tms_avstream->codec = ctx;
-
     memcpy(tms->tms_avstream->language, tms->tms_stream->st_lang, 4);
-    tms->tms_index = fctx->nb_streams;
-    fctx->streams[fctx->nb_streams] = tms->tms_avstream;
-    fctx->nb_streams++;
   }
 
   /* Fire up recorder thread */
@@ -316,11 +326,16 @@ tffm_record_packet(th_ffmuxer_t *tffm, th_pkt_t *pkt)
     tffm_set_state(tffm, TFFM_RUNNING);
 
     if(!tffm->tffm_header_written) {
+
+      if(av_write_header(fctx)) {
+	syslog(LOG_ERR, 
+	       "%s - Unable to write header", 
+	       tffm->tffm_printname);
+ 	break;
+      }
+
       tffm->tffm_header_written = 1;
 
-      if(av_write_header(fctx))
-	break;
-      
       syslog(LOG_DEBUG, 
 	     "%s - Header written to file, stream dump:", 
 	     tffm->tffm_printname);
@@ -340,6 +355,9 @@ tffm_record_packet(th_ffmuxer_t *tffm, th_pkt_t *pkt)
       
   case TFFM_RUNNING:
      
+    if(tffm->tffm_header_written == 0)
+      break;
+
     if(pkt->pkt_commercial == COMMERCIAL_YES) {
       tffm_set_state(tffm, TFFM_COMMERCIAL);
       break;
@@ -370,3 +388,124 @@ tffm_record_packet(th_ffmuxer_t *tffm, th_pkt_t *pkt)
     break;
   }
 }
+
+/**
+ * Packet input
+ */
+void
+tffm_packet_input(th_muxer_t *tm, th_stream_t *st, th_pkt_t *pkt)
+{
+  th_ffmuxer_t *tffm = tm->tm_opaque;
+
+  tffm_record_packet(tffm, pkt);
+}
+
+
+
+/**
+ *
+ */
+static int fifo_tally;
+static LIST_HEAD(, tffm_fifo) tffm_fifos;
+
+tffm_fifo_t *
+tffm_fifo_create(tffm_fifo_callback_t *callback, void *opaque)
+{
+  tffm_fifo_t *tf = calloc(1, sizeof(tffm_fifo_t));
+  char buf[100];
+
+  tf->tf_callback = callback;
+  tf->tf_opaque = opaque;
+
+  tf->tf_id = ++fifo_tally;
+  TAILQ_INIT(&tf->tf_pktq);
+  LIST_INSERT_HEAD(&tffm_fifos, tf, tf_link);
+
+  snprintf(buf, sizeof(buf), "tvheadendfifo:%d", tf->tf_id);
+  tf->tf_filename = strdup(buf);
+  return tf;
+}
+
+
+/**
+ * Destroy a fifo
+ */
+void
+tffm_fifo_destroy(tffm_fifo_t *tf)
+{
+  tffm_fifo_pkt_t *pkt;
+
+  while((pkt = TAILQ_FIRST(&tf->tf_pktq)) != NULL) {
+    TAILQ_REMOVE(&tf->tf_pktq, pkt, tfp_link);
+    free(pkt);
+  }
+
+  LIST_REMOVE(tf, tf_link);
+  free(tf->tf_filename);
+  free(tf);
+}
+
+
+/**
+ * libavformat URLProtocol open func for internal fifo
+ */
+static int
+tffm_fifo_open(URLContext *h, const char *filename, int flags)
+{
+  uint32_t id;
+  char *final;
+  tffm_fifo_t *tf;
+
+  av_strstart(filename, "tvheadendfifo:", &filename);  
+  id = strtol(filename, &final, 10);
+  if(filename == final || *final)
+    return AVERROR(ENOENT);
+
+  LIST_FOREACH(tf, &tffm_fifos, tf_link)
+    if(tf->tf_id == id)
+      break;
+  
+  if(tf == NULL)
+    return AVERROR(ENOENT);
+
+  h->priv_data = tf;
+  h->is_streamed = 1;
+  return 0;
+}
+
+/**
+ * libavformat URLProtocol write function, copy to an internal buffer
+ */
+static int
+tffm_fifo_write(URLContext *h, unsigned char *buf, int size)
+{
+  tffm_fifo_pkt_t *pkt;
+  tffm_fifo_t *tf = h->priv_data;
+
+  pkt = malloc(size + sizeof(tffm_fifo_pkt_t));
+  memcpy(pkt->tfp_buf, buf, size);
+  pkt->tfp_pktsize = size;
+  tf->tf_pktq_len += size;
+  TAILQ_INSERT_TAIL(&tf->tf_pktq, pkt, tfp_link);
+
+  tf->tf_callback(tf->tf_opaque);
+  return size;
+}
+
+
+static int
+tffm_fifo_close(URLContext *h)
+{
+  h->priv_data = NULL;
+  return 0;
+}
+
+
+static URLProtocol tffm_fifo_proto = {
+    "tvheadendfifo",
+    tffm_fifo_open,
+    NULL, /* read */
+    tffm_fifo_write,
+    NULL, /* seek */
+    tffm_fifo_close,
+};

@@ -57,6 +57,7 @@
 #include "cwc.h"
 #include "autorec.h"
 #include "spawn.h"
+#include "ffmuxer.h"
 
 #include <libhts/htsparachute.h>
 
@@ -211,7 +212,7 @@ main(int argc, char **argv)
 
   av_register_all();
   av_log_set_level(AV_LOG_INFO);
-
+  tffm_init();
   pkt_init();
 
   if(!disable_dvb)
