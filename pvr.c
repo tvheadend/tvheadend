@@ -653,8 +653,6 @@ pvrr_transport_available(pvr_rec_t *pvrr, th_transport_t *t)
   char printname[500];
   int err;
 
-  assert(tffm->tffm_state == TFFM_WAIT_SUBSCRIPTION);
-
   tm->tm_opaque = pvrr;
   tm->tm_new_pkt = pvrr_packet_input;
 
