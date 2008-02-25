@@ -150,7 +150,7 @@ All adapters will be registered and probed according to the configuration
 files given (see below).
 Currently, only DVB-T and DVB-C adapters are supported.
 The primary reason for this is that nobody has yet has been able to test
-tvheadend with any DVB-S cards.
+tvheadend with a DVB-S card.
 .SS "Configuration"
 Tvheadend needs at least one configuration statement that points out a
 DVB mux file description. The format of these files are the same as
@@ -177,7 +177,7 @@ Tvheadend's internal concept of a MUX maps directly to a MPEG
 transport stream multiplex as defined in ITU-T Recommendation H.222.0.
 Tvheadend is capable of receiving and demultiplex all services (channels)
 arriving on the same multiplex simultaneously (should there be subscriptions
-requesting them). Appart from the service demultiplex, the following tables
+requesting them). Apart from the service demultiplex, the following tables
 are parsed. All tables are checked for correct CRC before processed.
 .TP
 \fBPAT \fR\fIProgram Allocation Table\fR
@@ -366,8 +366,7 @@ tab.
 .TP
 \fBRTP/AVP/UDP\fR and \fBRTP/AVP\fR \- RTP over UDP
 This transport transmits an MPEG transport stream over RTP over UDP.
-For details about the generated MPEG transport stream, please see the
-\fBMPEG TS MULTIPLEXER\fR chapter. As the name suggest this transport
+As the name suggest this transport
 uses a stream of UDP packets for media delivery. This means that the
 stream may have problems traversing NAT routers, firewalls, etc.
 .SS "Access control"
@@ -399,8 +398,6 @@ Example that allows access from the 192.168.1.0/24 network and localhost:
 This output module can be used to generate an always running IPTV
 multicasted stream. The generated output can be configured to be
 either \fBMPEG-TS/RTP/UDP\fR or \fBMPEG-TS/UDP\fR.
-For details about the generated MPEG transport stream, please see the
-\fBMPEG TS MULTIPLEXER\fR chapter.
 .SS "Configuration"
 .PP
 .nf
@@ -469,8 +466,8 @@ TBD
 .SS "Configuration"
 TBD
 .SH "XMLTV"
-Tvheadend can parse the output from the xmltv grabbers. It executes
-the grabbers directly and parse the information internally. It's
+Tvheadend can parse the output from an xmltv grabber. It executes
+the grabber directly and parse the information internally. It's
 important that you configure your xmltv grabber to take use of its
 cache (this should default be on) or it might cause excessive burden
 on the server if you stop and start tvheadend often.
@@ -482,7 +479,7 @@ forwarded externally via the output modules where applicable.
 Due to the fact that there may be differences between how channels are
 named in xmltv and DVB tvheadend utilizes a channel matching heuristic.
 If more than 10 consequtive events (i.e programs) matches between the
-EPG received from DVB and the xmltv EPG the channels are said to
+EPG received from DVB and the xmltv EPG, the channels are said to
 match.
 .PP
 It will also match a channel from xmltv to the rest of the system if
@@ -496,11 +493,25 @@ the DVB EPG will always take precedence.
 Two global configuration statements are used to configure xmltv:
 .TP
 \fB\txmltvgrabber = \fR\fI<path>\fR (optional)
+Path to the xmltv grabber, e.g '/usr/bin/tv_grab_se_swedb'.
 If not specified, xmltv will be disabled.
 .TP
 \fB\txmltvinterval = \fR\fI<seconds>\fR (optional)
 Specifies the time, in seconds, between executions of the xmltv grabber.
 This defaults to 43200 (12 hours).
+.SH "COMMERCIAL DETECTION"
+Tvheadend is prepared to handle different techniques for detecting and
+removing commercial breaks from recorded shows.
+Currently, however, only one method is supported.
+.SS "Swedish TV4 teletext rundown"
+TV4 in sweden transmit their program rundown on page 192. Tvheadend can
+intercept this page and pause the recorder whenever there currently is
+a program chunk that is less than 400 seconds.
+.PP
+To configure this, use the \fBManage channels\fR web page and enter
+the number '192' in the 'teletext rundown' input field. If you are aware
+of any other channel that transmits the program rundown over teletext,
+than please contact me (Andreas).
 .SH "AUTHOR"
 .B Tvheadend
 and this man page is maintained by Andreas Oeman
