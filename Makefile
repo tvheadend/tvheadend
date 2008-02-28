@@ -28,6 +28,7 @@ VPATH += ffdecsa
 SRCS += FFdecsa.c
 
 PROG = tvheadend
+MAN  = tvheadend.1
 CFLAGS += -g -Wall -Werror -O2 -mmmx
 CFLAGS += -I$(INCLUDES_INSTALL_BASE) $(HTS_CFLAGS)
 CFLAGS += -Wno-deprecated-declarations
@@ -67,13 +68,17 @@ OBJS += $(patsubst %.arbfp1,%.o, $(CG_SRCS))
 DEPS= ${OBJS:%.o=%.d}
 
 prefix ?= $(INSTALLPREFIX)
-INSTDIR= $(prefix)/bin
+INSTBIN= $(prefix)/bin
+INSTMAN= $(prefix)/share/man1
 
 all:	$(PROG)
 
 install:
-	mkdir -p $(INSTDIR)
-	cd $(.OBJDIR) && install -s ${PROG} $(INSTDIR)
+	mkdir -p $(INSTBIN)
+	cd $(.OBJDIR) && install -s ${PROG} $(INSTBIN)
+
+	mkdir -p $(INSTMAN)
+	cd man && install ${MAN} $(INSTMAN)
 
 ${PROG}: $(.OBJDIR) $(OBJS) Makefile
 	cd $(.OBJDIR) && $(CC) $(LDFLAGS) -o $@ $(OBJS) \
