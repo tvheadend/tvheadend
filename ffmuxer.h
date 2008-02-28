@@ -19,6 +19,8 @@
 #ifndef FFMUXER_H
 #define FFMUXER_H
 
+#include <libavformat/avformat.h>
+
 TAILQ_HEAD(tffm_fifo_pkt_queue, tffm_fifo_pkt);
 
 

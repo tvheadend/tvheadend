@@ -28,7 +28,6 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
-#include <ffmpeg/avformat.h>
 
 #include "tvhead.h"
 #include "channels.h"
