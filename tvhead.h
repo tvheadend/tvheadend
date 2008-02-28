@@ -155,7 +155,9 @@ typedef struct th_dvb_mux_instance {
   uint16_t tdmi_snr, tdmi_signal;
   uint32_t tdmi_ber, tdmi_uncorrected_blocks;
 
-  uint32_t tdmi_fec_err_per_sec;
+#define TDMI_FEC_ERR_HISTOGRAM_SIZE 10
+  uint32_t tdmi_fec_err_histogram[TDMI_FEC_ERR_HISTOGRAM_SIZE];
+  int      tdmi_fec_err_ptr;
 
   time_t tdmi_time;
   LIST_HEAD(, th_dvb_table) tdmi_tables;

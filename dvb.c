@@ -339,6 +339,7 @@ dvb_fec_monitor(void *aux, int64_t now)
 {
   th_dvb_adapter_t *tda = aux;
   th_dvb_mux_instance_t *tdmi;
+  int i, v, vv;
 
   dtimer_arm(&tda->tda_fec_monitor_timer, dvb_fec_monitor, tda, 1);
 
@@ -346,12 +347,22 @@ dvb_fec_monitor(void *aux, int64_t now)
 
   if(tdmi != NULL && tdmi->tdmi_status == NULL) {
 
-    if(tdmi->tdmi_fec_err_per_sec > DVB_FEC_ERROR_LIMIT) {
+    v = vv = 0;
+    for(i = 0; i < TDMI_FEC_ERR_HISTOGRAM_SIZE; i++) {
+      if(tdmi->tdmi_fec_err_histogram[i] > DVB_FEC_ERROR_LIMIT)
+	v++;
+      vv += tdmi->tdmi_fec_err_histogram[i];
+    }
+    vv /= TDMI_FEC_ERR_HISTOGRAM_SIZE;
 
+    if(v == TDMI_FEC_ERR_HISTOGRAM_SIZE) {
       if(LIST_FIRST(&tda->tda_transports) != NULL) {
-	syslog(LOG_ERR, "\"%s\": Too many FEC errors (%d / s), "
-	       "flushing subscribers\n", 
-	       tdmi->tdmi_uniquename, tdmi->tdmi_fec_err_per_sec);
+	syslog(LOG_ERR, 
+	       "\"%s\": Constant rate of FEC errors (average at %d / s), "
+	       "last %d seconds, flushing subscribers\n", 
+	       tdmi->tdmi_uniquename, vv,
+	       TDMI_FEC_ERR_HISTOGRAM_SIZE);
+
 	dvb_adapter_clean(tdmi->tdmi_adapter);
       }
     }

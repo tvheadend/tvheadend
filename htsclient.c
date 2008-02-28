@@ -180,7 +180,7 @@ print_tdmi(client_t *c, th_dvb_mux_instance_t *tdmi)
     return;
   }
 
-  cprintf(c, "locked, %d errors / second\n", tdmi->tdmi_fec_err_per_sec);
+  cprintf(c, "locked\n");
 }
 
 /*

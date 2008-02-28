@@ -141,7 +141,7 @@ dvb_start_feed(th_transport_t *t, unsigned int weight, int status)
 {
   struct dmx_pes_filter_params dmx_param;
   th_stream_t *st;
-  int w, fd, pid;
+  int w, fd, pid, i;
   th_dvb_adapter_t *tda = t->tht_dvb_mux_instance->tdmi_adapter;
   th_dvb_mux_instance_t *tdmi = tda->tda_mux_current;
 
@@ -154,8 +154,9 @@ dvb_start_feed(th_transport_t *t, unsigned int weight, int status)
     if(tdmi->tdmi_status != NULL)
       return 1;  /* no lock on adapter, cant use it */
 
-    if(tdmi->tdmi_fec_err_per_sec > DVB_FEC_ERROR_LIMIT / 3)
-      return 1; /* too many errors for using it */
+    for(i = 0; i < TDMI_FEC_ERR_HISTOGRAM_SIZE; i++)
+      if(tdmi->tdmi_fec_err_histogram[i] > DVB_FEC_ERROR_LIMIT)
+	return 1; /* too many errors for using it */
 
     w = transport_compute_weight(&tdmi->tdmi_adapter->tda_transports);
     if(w > weight)

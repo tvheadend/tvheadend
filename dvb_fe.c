@@ -135,8 +135,12 @@ dvb_fe_manager(void *aux)
 
     ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &v);
 
-    if(fe_status & FE_HAS_LOCK)
-      tdmi->tdmi_fec_err_per_sec = (tdmi->tdmi_fec_err_per_sec * 7 + v) / 8;
+    if(fe_status & FE_HAS_LOCK) {
+      tdmi->tdmi_fec_err_histogram[tdmi->tdmi_fec_err_ptr] = v;
+      tdmi->tdmi_fec_err_ptr++;
+      if(tdmi->tdmi_fec_err_ptr == TDMI_FEC_ERR_HISTOGRAM_SIZE)
+      tdmi->tdmi_fec_err_ptr = 0;
+    }
   }
 }
 

@@ -1206,6 +1206,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
   th_stream_t *st;
   const char *txt, *t1, *t2;
   char tmptxt[100];
+  int i, v, vv;
 
   if(!html_verify_access(hc, "system-status"))
     return HTTP_STATUS_UNAUTHORIZED;
@@ -1250,8 +1251,19 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 		    tdmi->tdmi_shortname);
 
 	txt = tdmi->tdmi_status ?: "Ok";
-	if(tdmi->tdmi_fec_err_per_sec > DVB_FEC_ERROR_LIMIT)
-	  txt = "Too high FEC rate";
+
+	v = vv = 0;
+	for(i = 0; i < TDMI_FEC_ERR_HISTOGRAM_SIZE; i++) {
+	  if(tdmi->tdmi_fec_err_histogram[i] > DVB_FEC_ERROR_LIMIT)
+	    v++;
+	  vv += tdmi->tdmi_fec_err_histogram[i];
+	}
+	vv /= TDMI_FEC_ERR_HISTOGRAM_SIZE;
+
+	if(v == TDMI_FEC_ERR_HISTOGRAM_SIZE)
+	  txt = "Constant high FEC rate";
+	else if(v > 0)
+	  txt = "Bursty FEC rate";
 
 	tcp_qprintf(&tq,
 		    "<span style=\"overflow: hidden; height: 15px; "
@@ -1287,7 +1299,7 @@ page_status(http_connection_t *hc, const char *remain, void *opaque)
 		    "width: 50px; float: left\">"
 		    "%d"
 		    "</span><br>",
-		    tdmi->tdmi_fec_err_per_sec);
+		    vv);
       }
     }
   }
