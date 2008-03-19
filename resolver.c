@@ -166,7 +166,8 @@ resolver_loop(void *aux)
   htsmsg_t *m;
   void *buf;
   int r, res, herr;
-  unsigned int l, len;
+  unsigned int l;
+  size_t len;
   struct hostent hostbuf, *hp;
   size_t hstbuflen;
   char *tmphstbuf;
@@ -274,7 +275,7 @@ async_resolve(const char *hostname,
 {
   htsmsg_t *m;
   void *buf;
-  unsigned int len;
+  size_t len;
   int r;
   res_t *res;
 

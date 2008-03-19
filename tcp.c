@@ -458,7 +458,7 @@ static void
 tcp_client_connect_callback(int events, void *opaque, int fd)
 {
   int err;
-  size_t errlen = sizeof(int);
+  socklen_t errlen = sizeof(int);
   tcp_session_t *c = opaque;
 
   dispatch_delfd(c->tcp_dispatch_handle);
