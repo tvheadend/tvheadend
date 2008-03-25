@@ -42,6 +42,22 @@ typedef struct spawn {
 } spawn_t;
 
 
+
+TAILQ_HEAD(spawn_output_buf_queue, spawn_output_buf);
+
+#define MAX_SOB_SIZE 4000
+
+typedef struct spawn_output_buf {
+  TAILQ_ENTRY(spawn_output_buf) sob_link;
+  int sob_size;
+  char sob_buf[MAX_SOB_SIZE];
+} spawn_output_buf_t;
+
+
+
+/**
+ * The reaper is called once a second to finish of any pending spawns
+ */
 static void 
 reaper(void *opaque, int64_t now)
 {
@@ -97,7 +113,9 @@ spawn_init(void)
 }
 
 
-
+/**
+ * Enqueue a spawn on the pending spawn list
+ */
 static spawn_t *
 spawn_enq(const char *name, int pid)
 {
@@ -112,17 +130,6 @@ spawn_enq(const char *name, int pid)
 
 
 
-
-
-TAILQ_HEAD(spawn_output_buf_queue, spawn_output_buf);
-
-#define MAX_SOB_SIZE 4000
-
-typedef struct spawn_output_buf {
-  TAILQ_ENTRY(spawn_output_buf) sob_link;
-  int sob_size;
-  char sob_buf[MAX_SOB_SIZE];
-} spawn_output_buf_t;
 
 
 
@@ -141,8 +148,11 @@ spawn_and_store_stdout(const char *prog, char **outp)
 
   p = fork();
 
-  if(p == -1)
+  if(p == -1) {
+    syslog(LOG_ERR, "spawn: Unable to fork() for \"%s\" -- %s",
+	   prog, strerror(errno));
     return -1;
+  }
 
   if(p == 0) {
     close(0);
@@ -159,7 +169,7 @@ spawn_and_store_stdout(const char *prog, char **outp)
   }
 
   spawn_enq(prog, p);
-  
+
   close(fd[1]);
 
   TAILQ_INIT(&bufs);
