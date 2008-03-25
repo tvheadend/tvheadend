@@ -42,7 +42,9 @@ typedef struct spawn {
 } spawn_t;
 
 
-
+/**
+ * Structs for reading back output from a spawn via a pipe
+ */
 TAILQ_HEAD(spawn_output_buf_queue, spawn_output_buf);
 
 #define MAX_SOB_SIZE 4000
@@ -131,8 +133,12 @@ spawn_enq(const char *name, int pid)
 
 
 
-
-
+/**
+ * Execute the given program and return its output in a malloc()ed buffer
+ * 
+ * *outp will point to the allocated buffer
+ * The function will return the size of the buffer
+ */
 int
 spawn_and_store_stdout(const char *prog, char **outp)
 {
