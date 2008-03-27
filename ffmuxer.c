@@ -370,8 +370,9 @@ tffm_record_packet(th_ffmuxer_t *tffm, th_pkt_t *pkt)
     avpkt.pts = av_rescale_q(pkt->pkt_pts, AV_TIME_BASE_Q, st->time_base);
     avpkt.data = buf;
     avpkt.size = bufsize;
-    avpkt.duration = pkt->pkt_duration;
-
+    avpkt.duration =
+      av_rescale_q(pkt->pkt_duration, AV_TIME_BASE_Q, st->time_base);
+    avpkt.flags = pkt->pkt_frametype >= PKT_P_FRAME ? 0 : PKT_FLAG_KEY;
     r = av_interleaved_write_frame(fctx, &avpkt);
     break;
 
