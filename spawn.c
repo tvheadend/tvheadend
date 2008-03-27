@@ -213,3 +213,42 @@ spawn_and_store_stdout(const char *prog, char **outp)
   *outp = outbuf;
   return totalsize;
 }
+
+
+/**
+ * Execute the given program with arguments
+ * 
+ * *outp will point to the allocated buffer
+ * The function will return the size of the buffer
+ */
+int
+spawnv(const char *prog, char *const argv[])
+{
+  pid_t p;
+
+  char *envp[1];
+
+  envp[0] = NULL;
+
+  p = fork();
+
+  if(p == -1) {
+    syslog(LOG_ERR, "spawn: Unable to fork() for \"%s\" -- %s",
+	   prog, strerror(errno));
+    return -1;
+  }
+
+  if(p == 0) {
+    close(0);
+    close(2);
+    syslog(LOG_INFO, "spawn: Executing \"%s\"", prog);
+    execve(prog, argv, envp);
+    syslog(LOG_ERR, "spawn: pid %d cannot execute %s -- %s",
+	   getpid(), prog, strerror(errno));
+    close(1);
+    exit(1);
+  }
+
+  spawn_enq(prog, p);
+  return 0;
+}

@@ -23,4 +23,6 @@ int spawn_and_store_stdout(const char *prog, char **outp);
 
 void spawn_init(void);
 
+int spawnv(const char *prog, char *const argv[]);
+
 #endif /* SPAWN_H */
