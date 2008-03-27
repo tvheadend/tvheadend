@@ -44,6 +44,7 @@
 #include "buffer.h"
 #include "strtab.h"
 #include "ffmuxer.h"
+#include "spawn.h"
 
 static int pvr_id_ceil;  /* number generator for database entries */
 
@@ -59,6 +60,7 @@ static void pvr_subscription_callback(struct th_subscription *s,
 
 static void *pvr_recorder_thread(void *aux);
 
+static void postrec(pvr_rec_t *pvrr);
 
 /**
  * Initialize PVR framework
@@ -604,6 +606,7 @@ pvr_fsm(pvr_rec_t *pvrr)
 
     subscription_unsubscribe(pvrr->pvrr_s);
     dtimer_disarm(&pvrr->pvrr_timer);
+    postrec(pvrr);
     break;
   }
 }
@@ -836,3 +839,40 @@ pvr_recorder_thread(void *aux)
   return NULL;
 }
 
+/**
+ * After recording is completed, execute a program of users choice
+ */
+
+static struct strtab pvrrstatustab[] = {
+  { "ok",            HTSTV_PVR_STATUS_DONE           },
+  { "aborted",       HTSTV_PVR_STATUS_ABORTED        },
+  { "transponder",   HTSTV_PVR_STATUS_NO_TRANSPONDER },
+  { "file-error",    HTSTV_PVR_STATUS_FILE_ERROR     },
+  { "disk-full",     HTSTV_PVR_STATUS_DISK_FULL      },
+  { "buffer-error",  HTSTV_PVR_STATUS_BUFFER_ERROR   },
+};
+
+static void
+postrec(pvr_rec_t *pvrr)
+{
+  const char *prog, *status;
+  const char *argv[16];
+
+  if((prog = config_get_str("pvrpostproc", NULL)) == NULL)
+    return;
+  
+  if((status = val2str(pvrr->pvrr_status, pvrrstatustab)) == NULL)
+    return;
+
+  argv[0] = prog;
+  argv[1] = pvrr->pvrr_filename;
+  argv[2] = status;
+  argv[3] = "default";            /* recording class, currently unused */
+  argv[4] = pvrr->pvrr_channel->ch_name;
+  argv[5] = pvrr->pvrr_creator;
+  argv[6] = pvrr->pvrr_title ?: "";
+  argv[7] = pvrr->pvrr_desc  ?: "";
+  argv[8] = NULL;
+
+  spawnv(prog, (void *)argv);
+}

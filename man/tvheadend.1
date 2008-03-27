@@ -458,14 +458,62 @@ disk write out and restart once the commercial break has passed.
 Before the recorder starts write out it will wait for an I-frame so the
 output will start in a clean state. This also applies when resuming
 from a commercial break pause.
-.SS "Configuration"
-The video recorder is primarily managed from the web interface or
-via some of the proprietary interfaces. There are, however some parameters
-that is controlled via the configuration file.
+.SS "Storage"
+The user should configure where the recorder store its files. Note that
+the disk write out is done in a separate thread so the system will not
+stall if any harddrives need to spin up.
 .TP
 \fB\tpvrdir = \fR\fI<directorypath>\fR (optional)
 Sets the directory where recordings will be saved. If this is omitted
 the recordings will be stored in the current directory.
+.SS "Post processing"
+Once a recording has been completed tvheadend can be configured to invoke
+an executable program (or script). The program may do any number of things
+such as move the file to a permanent location, do some tagging or even
+transcode the program.
+.PP
+The program to execute is set in the configuration:
+.TP
+\fB\tpvrpostproc = \fR\fI</path/to/program>\fR (optional)
+Points to an executable to be launched after a recording has been completed.
+.PP
+The program is invoked with arguments as follows:
+.TP
+\fB\targ1: \fR\fIfilename\fR
+Full path to the recorded file.
+.TP
+\fB\targ2: \fR\fIStatus\fR
+Status of recording. If 'ok' the recording was successful otherwise it is
+a short string describing the type of error.
+.TP
+\fB\targ3: \fR\fIClass\fR
+Could be used in the future to differentiate various recording actions.
+Currently it is always set to 'default'
+.TP
+\fB\targ4: \fR\fIChannel\fR
+Channelname of the recording.
+.TP
+\fB\targ5: \fR\fICreator\fR
+Username of the creator of the recording.
+.TP
+\fB\targ6: \fR\fITitle\fR
+EPG program title.
+.TP
+\fB\targ7: \fR\fIDescription\fR
+EPG program description.
+.PP
+The following example script would just print the various arguments passed:
+.PP
+.nf
+#!/bin/sh
+echo File.......: $1
+echo Status.....: $2
+echo Class......: $3
+echo Channel....: $4
+echo Creator....: $5
+echo Title......: $6
+echo Description: $7
+.fi
 .SH "OUTPUT - XBMSP - XBMC Media Streaming Protocol"
 Tvheadend can act as a native XBMSP server. 
 All channels are presented as virtual files. The channels are located
