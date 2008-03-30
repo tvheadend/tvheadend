@@ -12,7 +12,8 @@ SRCS += pvr.c autorec.c ffmuxer.c
 
 SRCS += epg.c epg_xmltv.c
 
-SRCS += dvb.c dvb_support.c dvb_dvr.c dvb_muxconfig.c dvb_fe.c dvb_tables.c
+SRCS += dvb.c dvb_support.c dvb_dvr.c dvb_muxconfig.c dvb_fe.c dvb_tables.c \
+	diseqc.c
 
 SRCS += iptv_input.c iptv_output.c
 

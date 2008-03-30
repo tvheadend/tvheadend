@@ -19,6 +19,13 @@
 #ifndef DVB_H_
 #define DVB_H_
 
+enum polarisation {
+	POLARISATION_HORIZONTAL     = 0x00,
+	POLARISATION_VERTICAL       = 0x01,
+	POLARISATION_CIRCULAR_LEFT  = 0x02,
+	POLARISATION_CIRCULAR_RIGHT = 0x03
+};
+
 #define DVB_FEC_ERROR_LIMIT 20
 
 extern struct th_dvb_adapter_list dvb_adapters_probing;

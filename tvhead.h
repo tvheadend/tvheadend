@@ -174,6 +174,7 @@ typedef struct th_dvb_mux_instance {
 
   int tdmi_type;                           /* really fe_type_t */
   struct dvb_frontend_parameters *tdmi_fe_params;
+  int tdmi_polarisation;
 
   const char *tdmi_shortname;   /* Only unique for the specific adapter */
   const char *tdmi_uniquename;  /* Globally unique */

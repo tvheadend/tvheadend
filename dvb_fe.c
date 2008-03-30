@@ -38,7 +38,7 @@
 #include "dispatch.h"
 #include "dvb.h"
 #include "dvb_support.h"
-
+#include "diseqc.h"
 
 typedef struct dvb_fe_cmd {
   TAILQ_ENTRY(dvb_fe_cmd) link;
@@ -61,6 +61,7 @@ dvb_fe_manager(void *aux)
   th_dvb_mux_instance_t *tdmi = NULL;
   fe_status_t fe_status;
   th_dvb_table_t *tdt;
+  struct dvb_frontend_parameters p;
 
   while(1) {
     ts.tv_sec = time(NULL) + 1;
@@ -80,7 +81,32 @@ dvb_fe_manager(void *aux)
 
       tdmi = c->tdmi;
 
-      i = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, tdmi->tdmi_fe_params);
+      p = *tdmi->tdmi_fe_params;
+
+      if(tdmi->tdmi_type == FE_QPSK) {
+	/* DVB-S */
+	int lowfreq, hifreq, switchfreq, hiband;
+
+	lowfreq    = atoi(config_get_str("lnb_lowfreq",    "9750000" ));
+	hifreq     = atoi(config_get_str("lnb_hifreq",     "10600000"));
+	switchfreq = atoi(config_get_str("lnb_switchfreq", "11700000"));
+
+	hiband = switchfreq && p.frequency > switchfreq;
+	
+	diseqc_setup(tda->tda_fe_fd,
+		     0, /* switch position */
+		     tdmi->tdmi_polarisation == POLARISATION_HORIZONTAL,
+		     hiband);
+
+	usleep(50000);
+
+	if(hiband)
+	  p.frequency = abs(p.frequency - hifreq);
+	else
+	  p.frequency = abs(p.frequency - lowfreq);
+      }
+
+      i = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, &p);
 
       if(i != 0) {
 	syslog(LOG_ERR, "\"%s\" tuning to %dHz"

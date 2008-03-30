@@ -147,7 +147,17 @@ adapters.
 .SS "DVB Adapters"
 TVheadend will probe all DVB it can find in /dev/dvb/adapterX.
 All adapters will be registered and probed according to the configuration
-files given (see below).
+files given (see below). Due to limited testing not all DVB standards has
+been fully confirmed to work.
+.TP
+\fB\tDVB-T \fRWorking
+.TP
+\fB\tDVB-C \fRWorking
+.TP
+\fB\tDVB-S \fRExperimental
+.TP
+\fB\tATSC  \fRNot implmented
+.PP
 Currently, only DVB-T and DVB-C adapters are supported.
 The primary reason for this is that nobody has yet has been able to test
 tvheadend with a DVB-S card.
@@ -160,8 +170,8 @@ used for the dvb-utils
 utility (where it is called 'initial-tuning-data-file').
 .PP
 Add this to your configuration file:
-.PP
-  dvbmuxfile = /path/to/your/mux/description/file
+.TP
+  \fB\tdvbmuxfile = \fR\fI/path/to/your/mux/description/file\fR
 .PP
 Multiple 'dvbmuxfile'-statements can be added if you have multiple
 adapters connected to different DVB networks. Tvheadend will make sure
@@ -172,6 +182,22 @@ Tvheadend can not by itself scan for muxes nor can it use the
 information received in the NIT (Network Information Table) to add
 multiplexes by itself.  This might be implemented in the future if
 there is such a demand.
+.SS "LNB configuration"
+To configure the LO/HI bands of the LNB use the following configuration
+statements.
+.TP
+\fB\tlnb_lowfreq = \fR\fI<frequency in kHz>\fR
+Low band bottom frequency, defaults to 9,750,000 kHz
+.TP
+\fB\tlnb_hifreq = \fR\fI<frequency in kHz>\fR
+High band bottom frequency, defaults to 10,600,000 kHz
+.TP
+\fB\tlnb_switchfreq = \fR\fI<frequency in kHz>\fR
+If transponder frequency is higher than this, it will switch the LNB to
+the HI band. Defaults to 11,700,000 kHz.
+.PP
+Thus, the default configuration reflects a Universal LNB for Europe.
+(10800 to 11800 MHz and 11600 to 12700 Mhz)
 .SS "MPEG Transport Stream Multiplex"
 Tvheadend's internal concept of a MUX maps directly to a MPEG
 transport stream multiplex as defined in ITU-T Recommendation H.222.0.

@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <linux/dvb/frontend.h>
 
@@ -35,7 +36,8 @@
 
 
 static void
-dvb_add_mux(struct dvb_frontend_parameters *fe_param, fe_type_t type)
+dvb_add_mux(struct dvb_frontend_parameters *fe_param, fe_type_t type,
+	    int polarisation)
 {
   th_dvb_adapter_t *tda;
   char buf[100];
@@ -74,20 +76,35 @@ dvb_add_mux(struct dvb_frontend_parameters *fe_param, fe_type_t type)
     tdmi->tdmi_type = type;
 
     tdmi->tdmi_fe_params = malloc(sizeof(struct dvb_frontend_parameters));
-    
+    tdmi->tdmi_polarisation = polarisation;
+
     memcpy(tdmi->tdmi_fe_params, fe_param,
 	   sizeof(struct dvb_frontend_parameters));
     
     /* Generate names */
+
+    if(tdmi->tdmi_type == FE_QPSK) {
+      const char *pol;
+
+      switch(polarisation) {
+      case POLARISATION_VERTICAL:   pol = "V"; break;
+      case POLARISATION_HORIZONTAL: pol = "H"; break;
+      default:                      pol = "X"; break;
+      }
+
+
+      /* Frequency is in kHz */
+      snprintf(buf, sizeof(buf), "%s/%.1fMHz/%s",
+	       typetxt, (float)fe_param->frequency / 1000.0f, pol);
+    } else {
+      snprintf(buf, sizeof(buf), "%s/%.1fMHz",
+	       typetxt, (float)fe_param->frequency / 1000000.0f);
+    }
+      tdmi->tdmi_shortname = strdup(buf);
     
-    snprintf(buf, sizeof(buf), "%s/%s/%.1fMHz",
-	     tda->tda_sname, typetxt,
-	     (float)fe_param->frequency / 1000000.0f);
+    snprintf(buf, sizeof(buf), "%s/%s", tda->tda_sname, tdmi->tdmi_shortname),
     tdmi->tdmi_uniquename = strdup(buf);
 
-    snprintf(buf, sizeof(buf), "%s/%.1fMHz",
-	     typetxt, (float)fe_param->frequency / 1000000.0f);
-    tdmi->tdmi_shortname = strdup(buf);
   }
 }
 
@@ -180,7 +197,7 @@ dvb_t_config(const char *l)
   r = str2val(fec2, fectab);
   f.u.ofdm.code_rate_LP = r == FEC_NONE ? FEC_AUTO : r;
 
-  dvb_add_mux(&f, FE_OFDM);
+  dvb_add_mux(&f, FE_OFDM, 0);
 }
 
 
@@ -207,7 +224,45 @@ dvb_c_config(const char *l)
   f.u.qam.fec_inner              = str2val(fec, fectab);
   f.u.qam.modulation             = str2val(qam, qamtab);
 
-  dvb_add_mux(&f, FE_QAM);
+  dvb_add_mux(&f, FE_QAM, 0);
+}
+
+
+
+static void
+dvb_s_config(const char *l)
+{
+  unsigned long freq, symrate;
+  char fec[20], polarisation;
+  struct dvb_frontend_parameters f;
+  int r;
+
+  r = sscanf(l, "%lu %c %lu %s",
+	     &freq, &polarisation, &symrate, fec);
+
+  if(r != 4)
+    return;
+
+  memset(&f, 0, sizeof(f));
+  
+  f.inversion                    = INVERSION_AUTO;
+  f.frequency                    = freq;
+  f.u.qpsk.symbol_rate           = symrate;
+  f.u.qpsk.fec_inner             = str2val(fec, fectab);
+
+
+  switch(toupper(polarisation)) {
+  case 'V':
+    polarisation = POLARISATION_VERTICAL;
+    break;
+  case 'H':
+    polarisation = POLARISATION_HORIZONTAL;
+    break;
+  default:
+    return;
+  }
+
+  dvb_add_mux(&f, FE_QPSK, polarisation);
 }
 
 
@@ -242,6 +297,10 @@ dvb_muxfile_add(const char *fname)
 
     case 'C':
       dvb_c_config(line + 1);
+      break;
+
+    case 'S':
+      dvb_s_config(line + 1);
       break;
 
     default:
