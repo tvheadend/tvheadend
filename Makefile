@@ -56,48 +56,5 @@ CFLAGS 	+= ${LIBXML2_CFLAGS}
 
 DLIBS += -lpthread
 
+include ../build/prog.mk
 
-#############################################################################
-# 
-#
-
-.OBJDIR=        obj
-DEPFLAG = -M
-
-OBJS = $(patsubst %.c,%.o, $(SRCS))
-DEPS= ${OBJS:%.o=%.d}
-
-prefix ?= $(INSTALLPREFIX)
-INSTBIN= $(prefix)/bin
-INSTMAN= $(prefix)/share/man1
-
-all:	$(PROG)
-
-install:
-	mkdir -p $(INSTBIN)
-	cd $(.OBJDIR) && install -s ${PROG} $(INSTBIN)
-
-	mkdir -p $(INSTMAN)
-	cd man && install ${MAN} $(INSTMAN)
-
-${PROG}: $(.OBJDIR) $(OBJS) Makefile
-	cd $(.OBJDIR) && $(CC) $(LDFLAGS) -o $@ $(OBJS) \
-	$(STATIC_LINKFLAGS) $(SLIBS) $(DYNAMIC_LINKFLAGS) $(DLIBS)
-
-$(.OBJDIR):
-	mkdir $(.OBJDIR)
-
-.c.o:	Makefile
-	cd $(.OBJDIR) && $(CC) -MD $(CFLAGS) -c -o $@ $(CURDIR)/$<
-
-clean:
-	rm -rf $(.OBJDIR) *~ core*
-
-vpath %.o ${.OBJDIR}
-vpath %.S ${.OBJDIR}
-vpath ${PROG} ${.OBJDIR}
-vpath ${PROGBIN} ${.OBJDIR}
-
-# include dependency files if they exist
-$(addprefix ${.OBJDIR}/, ${DEPS}): ;
--include $(addprefix ${.OBJDIR}/, ${DEPS})
