@@ -65,7 +65,6 @@ DLIBS += -lpthread
 DEPFLAG = -M
 
 OBJS = $(patsubst %.c,%.o, $(SRCS))
-OBJS += $(patsubst %.arbfp1,%.o, $(CG_SRCS))
 DEPS= ${OBJS:%.o=%.d}
 
 prefix ?= $(INSTALLPREFIX)
