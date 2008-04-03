@@ -205,8 +205,6 @@ typedef struct th_dvb_table {
  */
 typedef struct th_dvb_adapter {
 
-  LIST_ENTRY(th_dvb_adapter) tda_adapter_to_mux_link;
-
   struct th_dvb_mux_instance_list tda_muxes_configured;
 
   struct th_dvb_mux_instance_list tda_muxes_active;
