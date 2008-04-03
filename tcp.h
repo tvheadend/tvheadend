@@ -95,6 +95,8 @@ void tcp_create_server(int port, size_t session_size, const char *name,
 
 void tcp_line_read(tcp_session_t *ses, tcp_line_input_t *callback);
 
+int tcp_line_drain(tcp_session_t *ses, void *buf, int n);
+
 #define tcp_logname(ses) ((ses)->tcp_peer_txt)
 
 int tcp_send_msg(tcp_session_t *ses, tcp_queue_t *tq, const void *data,
@@ -103,6 +105,8 @@ int tcp_send_msg(tcp_session_t *ses, tcp_queue_t *tq, const void *data,
 void tcp_printf(tcp_session_t *ses, const char *fmt, ...);
 
 void tcp_qprintf(tcp_queue_t *tq, const char *fmt, ...);
+
+void tcp_qvprintf(tcp_queue_t *tq, const char *fmt, va_list ap);
 
 void tcp_qput(tcp_queue_t *tq, const uint8_t *buf, size_t len);
 

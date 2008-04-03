@@ -37,12 +37,11 @@ static void tcp_client_reconnect_timeout(void *aux, int64_t now);
 
 
 /*
- *  printf data on a TCP queue
+ *  vprintf data on a TCP queue
  */
 void
-tcp_qprintf(tcp_queue_t *tq, const char *fmt, ...)
+tcp_qvprintf(tcp_queue_t *tq, const char *fmt, va_list ap)
 {
-  va_list ap;
   char buf[5000];
   void *out;
   tcp_data_t *td;
@@ -50,15 +49,25 @@ tcp_qprintf(tcp_queue_t *tq, const char *fmt, ...)
   td = malloc(sizeof(tcp_data_t));
   td->td_offset = 0;
 
-  va_start(ap, fmt);
   td->td_datalen = vsnprintf(buf, sizeof(buf), fmt, ap);
-  va_end(ap);
-
   out = malloc(td->td_datalen);
   memcpy(out, buf, td->td_datalen);
   td->td_data = out;
   TAILQ_INSERT_TAIL(&tq->tq_messages, td, td_link);
   tq->tq_depth += td->td_datalen;
+}
+
+
+/*
+ *  printf data on a TCP queue
+ */
+void
+tcp_qprintf(tcp_queue_t *tq, const char *fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt);
+  tcp_qvprintf(tq, fmt, ap);
+  va_end(ap);
 }
 
 /*
@@ -100,6 +109,26 @@ tcp_printf(tcp_session_t *ses, const char *fmt, ...)
   memcpy(out, buf, l);
 
   tcp_send_msg(ses, &ses->tcp_q_hi, out, l);
+}
+
+/**
+ * Read max 'n' bytes of data from line parser. Used to consume binary data
+ * for mixed line / binary protocols (HTTP)
+ *
+ * Returns bytes read
+ */
+int
+tcp_line_drain(tcp_session_t *ses, void *buf, int n)
+{
+  if(n > ses->tcp_input_buf_ptr)
+    n = ses->tcp_input_buf_ptr;
+
+  memcpy(buf, ses->tcp_input_buf, n);
+
+  memmove(ses->tcp_input_buf, ses->tcp_input_buf + n, 
+	  sizeof(ses->tcp_input_buf) - n);
+  ses->tcp_input_buf_ptr -= n;
+  return n;
 }
 
 /**

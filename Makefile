@@ -28,10 +28,33 @@ SRCS += cwc.c krypt.c
 VPATH += ffdecsa
 SRCS += FFdecsa.c
 
+#
+# Embedded AJAX user interface
+#
+
+VPATH  += ajaxui
+SRCS   += ajaxui.c ajaxui_channels.c ajaxui_config.c
+
+JSSRCS += tvheadend.js
+
+CSSSRCS += ajaxui.css
+
+VPATH  += ajaxui/images
+GIFSRCS+= sbbody_l.gif sbbody_r.gif sbhead_l.gif sbhead_r.gif
+
+
+VPATH  += ajaxui/prototype
+JSSRCS += prototype.js
+
+
+VPATH  += ajaxui/scriptaculous
+JSSRCS += builder.js controls.js dragdrop.js effects.js scriptaculous.js \
+	  slider.js
+
 PROG = tvheadend
 MAN  = tvheadend.1
 CFLAGS += -g -Wall -Werror -O2 -mmmx
-CFLAGS += -I$(INCLUDES_INSTALL_BASE) $(HTS_CFLAGS)
+CFLAGS += -I$(INCLUDES_INSTALL_BASE) $(HTS_CFLAGS) -I$(CURDIR)
 CFLAGS += -Wno-deprecated-declarations
 CFLAGS += -D_LARGEFILE64_SOURCE
 CFLAGS += -DENABLE_INPUT_IPTV -DENABLE_INPUT_DVB -DENABLE_INPUT_V4L
@@ -57,4 +80,5 @@ CFLAGS 	+= ${LIBXML2_CFLAGS}
 DLIBS += -lpthread
 
 include ../build/prog.mk
+
 

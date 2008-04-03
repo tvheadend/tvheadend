@@ -1,0 +1,222 @@
+body {
+  font:       11px Lucida Grande, Verdana, Arial, Helvetica, sans serif;
+}
+
+a, a:hover, a:visited, a:active { 
+  color: #aa6600;
+}
+
+img { border: 0; }
+
+.draglist {
+   margin:0;
+   margin-top:10px;
+   padding:0;
+   list-style-type: none;
+ }
+.draglist li {
+   margin:0;
+   padding:0px;
+   cursor:move;
+ }
+ 
+/**
+ * Input classes
+ */
+
+.textinput {
+  border: 1px dotted #000000;
+  background: #fff
+}
+
+/**
+ * Misc classes
+ */
+
+.chgroupaction {
+  text-align: right;
+}
+
+/**
+ *  Box with round edges
+ */
+.filledbox {
+  display:block;
+}
+
+.filledbox * {
+  display:block;
+  height:1px;
+  overflow:hidden;
+  font-size:.01em;
+  background:#dddddd;
+}
+
+.filledbox1 {
+  margin-left:3px;
+  margin-right:3px;
+  padding-left:1px;
+  padding-right:1px;
+  border-left:1px solid #f0f0f0;
+  border-right:1px solid #f0f0f0;
+  background:#e5e5e5;
+}
+
+.filledbox2 {
+  margin-left:1px;
+  margin-right:1px;
+  padding-right:1px;
+  padding-left:1px;
+  border-left:1px solid #fbfbfb;
+  border-right:1px solid #fbfbfb;
+  background:#e3e3e3;
+}
+
+.filledbox3 {
+  margin-left:1px;
+  margin-right:1px;
+  border-left:1px solid #e3e3e3;
+  border-right:1px solid #e3e3e3;
+}
+
+.filledbox4 {
+  border-left:1px solid #f0f0f0;
+  border-right:1px solid #f0f0f0;
+}
+
+.filledbox5 {
+  border-left:1px solid #e5e5e5;
+  border-right:1px solid #e5e5e5;
+}
+
+.filledboxfg {
+  padding-left:5px;
+  padding-right:5px;
+  background:#dddddd;
+}
+
+
+
+
+
+/**
+ * Box with rounded edges
+ */
+.borderbox {
+  display:block;
+}
+
+.borderbox * {
+  display:block;
+  height:1px;
+  overflow:hidden;
+  font-size:.01em;
+}
+
+.borderbox1 {
+  margin-left:4px;
+  margin-right:4px;
+  padding-left:1px;
+  padding-right:1px;
+  background: #000000;
+  border-left:1px  solid #000;
+  border-right:1px solid #000;
+}
+
+.borderbox2 {
+  margin-left:2px;
+  margin-right:2px;
+  padding-right:1px;
+  padding-left:1px;
+  border-left:2px  solid #000;
+  border-right:2px solid #000;
+}
+
+.borderbox3 {
+  margin-left:1px;
+  margin-right:1px;
+  border-left:1px  solid #000;
+  border-right:1px solid #000;
+}
+
+.borderbox4 {
+  border-left:1px solid  #000;
+  border-right:1px solid #000;
+}
+
+.borderbox5 {
+  border-left:1px solid  #000;
+  border-right:1px solid #000;
+}
+
+.borderboxfg {
+  border-left:1px solid  #000;
+  border-right:1px solid #000;
+  padding-left:5px;
+  padding-right:5px;
+}
+
+
+
+/**
+ * Menubar
+ */
+
+.menubar {
+  margin: 0px;
+  padding: 0px;
+  text-align: center;
+  height: 15px;
+}
+
+.menubar li {
+ margin-left: 5px;
+ margin-right: 5px;
+ display: inline;
+ list-style-type: none;
+}
+
+.menubar a {
+ color: #000000;
+ text-decoration: none;
+}
+
+
+
+
+
+/**
+ * Sidebox
+ *
+ * from http://www.vertexwerks.com/tests/sidebox/
+ */
+
+/* Show only to IE PC \*/
+* html .boxhead h2 {height: 1%;} /* For IE 5 PC */
+
+.sidebox {
+	margin: 0 auto; /* center for now */
+	background: url(/sidebox/sbbody-r.gif) no-repeat bottom right;
+	font-size: 100%;
+}
+.boxhead {
+	background: url(/sidebox/sbhead-r.gif) no-repeat top right;
+	margin: 0;
+	padding: 0;
+	text-align: center;
+}
+.boxhead h2 {
+	background: url(/sidebox/sbhead-l.gif) no-repeat top left;
+	margin: 0;
+	padding: 22px 30px 5px;
+	color: white; 
+	font-weight: bold; 
+	font-size: 1.4em; 
+	line-height: 1em;
+	text-shadow: rgba(0,0,0,.4) 0px 2px 5px; /* Safari-only, but cool */
+}
+.boxbody {
+	background: url(/sidebox/sbbody-l.gif) no-repeat bottom left;
+	margin: 0;
+	padding: 5px 30px 31px;
+}

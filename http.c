@@ -50,6 +50,7 @@ static LIST_HEAD(, http_path) http_paths;
 
 static struct strtab HTTP_cmdtab[] = {
   { "GET",        HTTP_CMD_GET },
+  { "POST",       HTTP_CMD_POST },
   { "DESCRIBE",   RTSP_CMD_DESCRIBE },
   { "OPTIONS",    RTSP_CMD_OPTIONS },
   { "SETUP",      RTSP_CMD_SETUP },
@@ -170,7 +171,7 @@ http_output_reply_header(http_connection_t *hc, int rc, int maxage)
 
     tm = gmtime_r(&t, &tm0);
     http_printf(hc, 
-		"Last-Modified: %s, %d %s %d %d:%d:%d GMT\r\n",
+		"Last-Modified: %s, %02d %s %d %02d:%02d:%02d GMT\r\n",
 		cachedays[tm->tm_wday],	tm->tm_year + 1900,
 		cachemonths[tm->tm_mon], tm->tm_mday,
 		tm->tm_hour, tm->tm_min, tm->tm_sec);
@@ -179,7 +180,7 @@ http_output_reply_header(http_connection_t *hc, int rc, int maxage)
 
     tm = gmtime_r(&t, &tm0);
     http_printf(hc, 
-		"Expires: %s, %d %s %d %d:%d:%d GMT\r\n",
+		"Expires: %s, %02d %s %d %02d:%02d:%02d GMT\r\n",
 		cachedays[tm->tm_wday],	tm->tm_year + 1900,
 		cachemonths[tm->tm_mon], tm->tm_mday,
 		tm->tm_hour, tm->tm_min, tm->tm_sec);
@@ -246,6 +247,29 @@ http_output_queue(http_connection_t *hc, tcp_queue_t *tq, const char *content,
 }
 
 /**
+ * Send an HTTP OK and post data from a tcp queue
+ */
+static void
+http_output_queue_encoding(http_connection_t *hc, tcp_queue_t *tq,
+			   const char *content, int maxage,
+			   const char *encoding)
+{
+  http_output_reply_header(hc, 200, maxage);
+
+  if(hc->hc_version >= HTTP_VERSION_1_0) {
+    http_printf(hc, 
+		"Content-Encoding: %s\r\n"
+		"Content-Type: %s\r\n"
+		"Content-Length: %d\r\n"
+		"\r\n",
+		encoding, content, tq->tq_depth);
+  }
+
+  tcp_output_queue(&hc->hc_tcp_session, NULL, tq);
+}
+
+
+/**
  * Send an HTTP REDIRECT
  */
 int
@@ -299,6 +323,114 @@ http_cmd_get(http_connection_t *hc)
 
 
 /**
+ * Check if a HTTP POST is fully received, and if so, continue processing
+ */
+static void
+http_post_check(http_connection_t *hc)
+{
+  http_path_t *hp;
+  char *remain, *args, *v, *argv[2];
+  int err, n;
+
+  if(hc->hc_post_ptr != hc->hc_post_len)
+    return;
+
+  hc->hc_state = HTTP_CON_WAIT_REQUEST;
+
+  /* Parse content-type */
+  v = http_arg_get(&hc->hc_args, "Content-Type");
+  if(v == NULL) {
+    http_error(hc, HTTP_STATUS_BAD_REQUEST);
+    return;
+  }
+
+  n = http_tokenize(v, argv, 2, ';');
+  if(n == 0) {
+    http_error(hc, HTTP_STATUS_BAD_REQUEST);
+    return;
+  }
+
+  if(!strcmp(argv[0], "application/x-www-form-urlencoded"))
+    http_parse_get_args(hc, hc->hc_post_data);
+
+  hp = http_resolve(hc, &remain, &args);
+  if(hp == NULL) {
+    http_error(hc, HTTP_STATUS_NOT_FOUND);
+    return;
+  }
+
+  err = hp->hp_callback(hc, remain, hp->hp_opaque);
+  if(err)
+    http_error(hc, err);
+}
+
+
+
+
+
+/**
+ * HTTP POST
+ */
+static void
+http_cmd_post(http_connection_t *hc)
+{
+  char *v;
+
+  /* Set keep-alive status */
+  v = http_arg_get(&hc->hc_args, "Content-Length");
+  if(v == NULL) {
+    /* No content length in POST, make us disconnect */
+    hc->hc_keep_alive = 0;
+    return;
+  }
+  
+  hc->hc_post_len = atoi(v);
+  if(hc->hc_post_len > 16 * 1024 * 1024) {
+    /* Bail out if POST data > 16 Mb */
+    hc->hc_keep_alive = 0;
+    return;
+  }
+
+  hc->hc_state = HTTP_CON_POST_DATA;
+
+  /* Allocate space for data, we add a terminating null char to ease
+     string processing on the content */
+
+  hc->hc_post_data = malloc(hc->hc_post_len + 1);
+  hc->hc_post_data[hc->hc_post_len] = 0;
+
+  hc->hc_post_ptr  = 0;
+
+  /* We need to drain the line parser of any excess data */
+
+  hc->hc_post_ptr = tcp_line_drain(&hc->hc_tcp_session, hc->hc_post_data,
+				   hc->hc_post_len);
+
+  http_post_check(hc);
+}
+
+
+/**
+ * Read POST data directly from socket
+ */
+static void
+http_consume_post_data(http_connection_t *hc)
+{
+  tcp_session_t *tcp = &hc->hc_tcp_session;
+  int togo = hc->hc_post_len - hc->hc_post_ptr;
+  int r;
+
+  r = read(tcp->tcp_fd, hc->hc_post_data + hc->hc_post_ptr, togo);
+  if(r < 1) {
+     tcp_disconnect(tcp, r == 0 ? ECONNRESET : errno);
+     return;
+  }
+
+  hc->hc_post_ptr += r;
+  http_post_check(hc);
+}
+
+/**
  * Process a HTTP request
  */
 static void
@@ -310,6 +442,9 @@ http_process_request(http_connection_t *hc)
     break;
   case HTTP_CMD_GET:
     http_cmd_get(hc); 
+    break;
+  case HTTP_CMD_POST:
+    http_cmd_post(hc); 
     break;
   }
 }
@@ -360,6 +495,12 @@ process_request(http_connection_t *hc)
     break;
   }
 
+  free(hc->hc_username);
+  hc->hc_username = NULL;
+
+  free(hc->hc_password);
+  hc->hc_password = NULL;
+
   /* Extract authorization */
   if((v = http_arg_get(&hc->hc_args, "Authorization")) != NULL) {
     if((n = http_tokenize(v, argv, 2, -1)) == 2) {
@@ -387,18 +528,7 @@ process_request(http_connection_t *hc)
     break;
   }
 
-
-  /* Clean up */
-
-  free(hc->hc_username);
-  hc->hc_username = NULL;
-
-  free(hc->hc_password);
-  hc->hc_password = NULL;
-
-  if(hc->hc_keep_alive == 0)
-    return -1;
-  return 0;
+  return hc->hc_keep_alive == 0 ? -1 : 0;
 }
 
 
@@ -413,12 +543,17 @@ http_con_parse(void *aux, char *buf)
   int n, v;
   char *argv[3], *c;
 
-  //  printf("HTTP INPUT: %s\n", buf);
+  // printf("HTTP INPUT: %s\n", buf);
 
   switch(hc->hc_state) {
   case HTTP_CON_WAIT_REQUEST:
+    if(hc->hc_post_data != NULL) {
+      free(hc->hc_post_data);
+      hc->hc_post_data = NULL;
+    }
+
     http_arg_flush(&hc->hc_args);
-    http_arg_flush(&hc->hc_url_args);
+    http_arg_flush(&hc->hc_req_args);
     if(hc->hc_url != NULL) {
       free(hc->hc_url);
       hc->hc_url = NULL;
@@ -465,6 +600,9 @@ http_con_parse(void *aux, char *buf)
     http_arg_set(&hc->hc_args, argv[0], argv[1]);
     break;
 
+  case HTTP_CON_POST_DATA:
+    abort();
+
   case HTTP_CON_END:
     break;
   }
@@ -478,9 +616,13 @@ http_con_parse(void *aux, char *buf)
 static void
 http_disconnect(http_connection_t *hc)
 {
+  free(hc->hc_post_data);
+  free(hc->hc_username);
+  free(hc->hc_password);
+
   rtsp_disconncet(hc);
   http_arg_flush(&hc->hc_args);
-  http_arg_flush(&hc->hc_url_args);
+  http_arg_flush(&hc->hc_req_args);
   free(hc->hc_url);
 }
 
@@ -495,6 +637,8 @@ http_tcp_callback(tcpevent_t event, void *tcpsession)
 
   switch(event) {
   case TCP_CONNECT:
+    TAILQ_INIT(&hc->hc_args);
+    TAILQ_INIT(&hc->hc_req_args);
     break;
 
   case TCP_DISCONNECT:
@@ -502,7 +646,11 @@ http_tcp_callback(tcpevent_t event, void *tcpsession)
     break;
 
   case TCP_INPUT:
-    tcp_line_read(&hc->hc_tcp_session, http_con_parse);
+
+    if(hc->hc_state == HTTP_CON_POST_DATA)
+      http_consume_post_data(hc);
+    else
+      tcp_line_read(&hc->hc_tcp_session, http_con_parse);
     break;
   }
 }
@@ -537,8 +685,8 @@ void
 http_arg_flush(struct http_arg_list *list)
 {
   http_arg_t *ra;
-  while((ra = LIST_FIRST(list)) != NULL) {
-    LIST_REMOVE(ra, link);
+  while((ra = TAILQ_FIRST(list)) != NULL) {
+    TAILQ_REMOVE(list, ra, link);
     free(ra->key);
     free(ra->val);
     free(ra);
@@ -553,7 +701,7 @@ char *
 http_arg_get(struct http_arg_list *list, const char *name)
 {
   http_arg_t *ra;
-  LIST_FOREACH(ra, list, link)
+  TAILQ_FOREACH(ra, list, link)
     if(!strcasecmp(ra->key, name))
       return ra->val;
   return NULL;
@@ -568,13 +716,13 @@ http_arg_set(struct http_arg_list *list, char *key, char *val)
 {
   http_arg_t *ra;
 
-  LIST_FOREACH(ra, list, link)
+  TAILQ_FOREACH(ra, list, link)
     if(!strcasecmp(ra->key, key))
       break;
 
   if(ra == NULL) {
     ra = malloc(sizeof(http_arg_t));
-    LIST_INSERT_HEAD(list, ra, link);
+    TAILQ_INSERT_TAIL(list, ra, link);
     ra->key = strdup(key);
   } else {
     free(ra->val);
@@ -702,6 +850,43 @@ http_parse_get_args(http_connection_t *hc, char *args)
 
     http_deescape(k);
     http_deescape(v);
-    http_arg_set(&hc->hc_url_args, k, v);
+    printf("%s = %s\n", k, v);
+    http_arg_set(&hc->hc_req_args, k, v);
   }
+}
+
+/**
+ * HTTP embedded resource
+ */
+typedef struct http_resource {
+  const void *data;
+  size_t len;
+  const char *content;
+  const char *encoding;
+} http_resource_t;
+
+static int
+deliver_resource(http_connection_t *hc, const char *remain, void *opaque)
+{
+  http_resource_t *hres = opaque;
+  tcp_queue_t tq;
+
+  tcp_init_queue(&tq, -1);
+  tcp_qput(&tq, hres->data, hres->len);
+  http_output_queue_encoding(hc, &tq, hres->content, 15, hres->encoding);
+  return 0;
+}
+
+void
+http_resource_add(const char *path, const void *ptr, size_t len, 
+		  const char *content, const char *encoding)
+{
+  http_resource_t *hres = malloc(sizeof(http_resource_t));
+
+  hres->data     = ptr;
+  hres->len      = len;
+  hres->content  = content;
+  hres->encoding = encoding;
+
+  http_path_add(path, hres, deliver_resource);
 }

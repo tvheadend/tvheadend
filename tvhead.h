@@ -98,7 +98,6 @@ extern struct th_channel_group_queue all_channel_groups;
 extern struct pvr_rec_list pvrr_global_list;
 extern struct th_subscription_list subscriptions;
 
-
 struct th_transport;
 struct th_stream;
 
@@ -864,6 +863,7 @@ extern const char *settings_dir;
 FILE *settings_open_for_write(const char *name);
 FILE *settings_open_for_read(const char *name);
 extern const char *sys_warning;
+extern th_channel_group_t *defgroup;
 
 struct config_head *user_resolve_to_config(const char *username, 
 					   const char *password);

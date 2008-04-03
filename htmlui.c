@@ -702,7 +702,7 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
 
   pvrr = pvr_get_by_entry(e);
 
-  if(http_arg_get(&hc->hc_url_args, "rec")) {
+  if(http_arg_get(&hc->hc_req_args, "rec")) {
     if(!html_verify_access(hc, "record-events")) {
       epg_unlock();
       return HTTP_STATUS_UNAUTHORIZED;
@@ -710,7 +710,7 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
     pvrr = pvr_schedule_by_event(e, hc->hc_username);
   }
 
-  if(pvrr != NULL && http_arg_get(&hc->hc_url_args, "cancel")) {
+  if(pvrr != NULL && http_arg_get(&hc->hc_req_args, "cancel")) {
     if(!html_verify_access(hc, "record-events")) {
       epg_unlock();
       return HTTP_STATUS_UNAUTHORIZED;
@@ -718,7 +718,7 @@ page_event(http_connection_t *hc, const char *remain, void *opaque)
     pvr_abort(pvrr);
   }
 
-  if(pvrr != NULL && http_arg_get(&hc->hc_url_args, "clear")) {
+  if(pvrr != NULL && http_arg_get(&hc->hc_req_args, "clear")) {
     if(!html_verify_access(hc, "record-events")) {
       epg_unlock();
       return HTTP_STATUS_UNAUTHORIZED;
@@ -850,12 +850,12 @@ page_pvr(http_connection_t *hc, const char *remain, void *opaque)
   if(!html_verify_access(hc, "record-events"))
     return HTTP_STATUS_UNAUTHORIZED;
 
-  if(http_arg_get(&hc->hc_url_args, "clearall")) {
+  if(http_arg_get(&hc->hc_req_args, "clearall")) {
     pvr_clear_all_completed();
   }
 
   pvrr_tgt = NULL;
-  LIST_FOREACH(ra, &hc->hc_url_args, link) {
+  TAILQ_FOREACH(ra, &hc->hc_req_args, link) {
     c = 0;
 
     if(!strncmp(ra->key, "ardel_", 6)) {
@@ -1539,10 +1539,10 @@ page_chgroups(http_connection_t *hc, const char *remain, void *opaque)
   if(!html_verify_access(hc, "admin"))
     return HTTP_STATUS_UNAUTHORIZED;
 
-  if((grp = http_arg_get(&hc->hc_url_args, "newgrpname")) != NULL)
+  if((grp = http_arg_get(&hc->hc_req_args, "newgrpname")) != NULL)
     channel_group_find(grp, 1);
 
-  LIST_FOREACH(ra, &hc->hc_url_args, link) {
+  TAILQ_FOREACH(ra, &hc->hc_req_args, link) {
     if(!strncmp(ra->key, "delgroup", 8)) {
       tcg = channel_group_by_tag(atoi(ra->key + 8));
       if(tcg != NULL)
@@ -1848,7 +1848,7 @@ page_updatechannel(http_connection_t *hc, const char *remain, void *opaque)
   if(remain == NULL || (ch = channel_by_tag(atoi(remain))) == NULL)
     return 404;
 
-  if((s = http_arg_get(&hc->hc_url_args, "merge")) != NULL) {
+  if((s = http_arg_get(&hc->hc_req_args, "merge")) != NULL) {
     ch2 = channel_find(s, 0, NULL);
     if(ch2 != NULL) {
 
@@ -1865,10 +1865,10 @@ page_updatechannel(http_connection_t *hc, const char *remain, void *opaque)
     }
   }
 
-  if((s = http_arg_get(&hc->hc_url_args, "ttrp")) != NULL)
+  if((s = http_arg_get(&hc->hc_req_args, "ttrp")) != NULL)
     channel_set_teletext_rundown(ch, atoi(s));
 
-  if((grp = http_arg_get(&hc->hc_url_args, "grp")) != NULL) {
+  if((grp = http_arg_get(&hc->hc_req_args, "grp")) != NULL) {
     tcg = channel_group_find(grp, 1);
     channel_set_group(ch, tcg);
   }
@@ -1887,7 +1887,7 @@ page_updatechannel(http_connection_t *hc, const char *remain, void *opaque)
   
   for(i = 0; i < n; i++) {
     t = tv[i];
-    s = http_arg_get(&hc->hc_url_args, t->tht_uniquename);
+    s = http_arg_get(&hc->hc_req_args, t->tht_uniquename);
     if(s != NULL) {
       pri = atoi(s);
       if(pri >= 0 && pri <= 9999) {
@@ -1919,14 +1919,14 @@ page_search(http_connection_t *hc, const char *remain, void *opaque)
   event_t *e, **ev;
   struct tm a, day;
   
-  const char *search  = http_arg_get(&hc->hc_url_args, "s");
-  const char *autorec = http_arg_get(&hc->hc_url_args, "ar");
-  const char *title   = http_arg_get(&hc->hc_url_args, "n");
-  const char *content = http_arg_get(&hc->hc_url_args, "c");
-  const char *chgroup = http_arg_get(&hc->hc_url_args, "g");
-  const char *channel = http_arg_get(&hc->hc_url_args, "ch");
-  const char *ar_name = http_arg_get(&hc->hc_url_args, "ar_name");
-  const char *ar_prio = http_arg_get(&hc->hc_url_args, "ar_prio");
+  const char *search  = http_arg_get(&hc->hc_req_args, "s");
+  const char *autorec = http_arg_get(&hc->hc_req_args, "ar");
+  const char *title   = http_arg_get(&hc->hc_req_args, "n");
+  const char *content = http_arg_get(&hc->hc_req_args, "c");
+  const char *chgroup = http_arg_get(&hc->hc_req_args, "g");
+  const char *channel = http_arg_get(&hc->hc_req_args, "ch");
+  const char *ar_name = http_arg_get(&hc->hc_req_args, "ar_name");
+  const char *ar_prio = http_arg_get(&hc->hc_req_args, "ar_prio");
 
   if(title   != NULL && *title == 0)               title   = NULL;
   if(content != NULL && !strcmp(content, "-All-")) content = NULL;
@@ -1940,7 +1940,7 @@ page_search(http_connection_t *hc, const char *remain, void *opaque)
   s_tcg = chgroup ? channel_group_find(chgroup, 0)          : NULL;
   s_ch  = channel ? channel_find(channel, 0, NULL)          : NULL;
 
-  if(http_arg_get(&hc->hc_url_args, "ar_create")) {
+  if(http_arg_get(&hc->hc_req_args, "ar_create")) {
     /* Create autorecording */
 
     

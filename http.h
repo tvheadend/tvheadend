@@ -33,10 +33,10 @@ LIST_HEAD(rtsp_session_head, rtsp_session);
 
 #define http_printf(x, fmt...) tcp_printf(&(x)->hc_tcp_session, fmt)
 
-LIST_HEAD(http_arg_list, http_arg);
+TAILQ_HEAD(http_arg_list, http_arg);
 
 typedef struct http_arg {
-  LIST_ENTRY(http_arg) link;
+  TAILQ_ENTRY(http_arg) link;
   char *key;
   char *val;
 } http_arg_t;
@@ -49,16 +49,18 @@ typedef struct http_connection {
 
   struct http_arg_list hc_args;
 
-  struct http_arg_list hc_url_args;
+  struct http_arg_list hc_req_args; /* Argumets from GET or POST request */
 
   enum {
     HTTP_CON_WAIT_REQUEST,
     HTTP_CON_READ_HEADER,
     HTTP_CON_END,
+    HTTP_CON_POST_DATA,
   } hc_state;
 
   enum {
     HTTP_CMD_GET,
+    HTTP_CMD_POST,
     RTSP_CMD_DESCRIBE,
     RTSP_CMD_OPTIONS,
     RTSP_CMD_SETUP,
@@ -80,6 +82,12 @@ typedef struct http_connection {
   struct rtsp_session_head hc_rtsp_sessions;
 
   struct config_head *hc_user_config;
+
+  /* Support for HTTP POST */
+  
+  char *hc_post_data;
+  unsigned int hc_post_len;
+  unsigned int hc_post_ptr;
 
 } http_connection_t;
 
@@ -115,5 +123,8 @@ typedef struct http_path {
 
 http_path_t *http_path_add(const char *path, void *opaque,
 			   http_callback_t *callback);
+
+void http_resource_add(const char *path, const void *ptr, size_t len, 
+		       const char *content, const char *encoding);
 
 #endif /* HTTP_H_ */

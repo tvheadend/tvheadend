@@ -372,9 +372,12 @@ channel_group_by_tag(uint32_t tag)
 {
   th_channel_group_t *tcg;
 
-  TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link)
+  TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
     if(tcg->tcg_tag == tag)
       return tcg;
+    if(tag == 0 && tcg->tcg_hidden == 0)
+      return tcg;
+  }
 
   return NULL;
 }
