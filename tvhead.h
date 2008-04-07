@@ -208,8 +208,7 @@ typedef struct th_dvb_adapter {
   LIST_ENTRY(th_dvb_adapter) tda_global_link;
 
   enum {
-    TDA_STATE_UNCONFIGURED,    /* Found but not configured */
-    TDA_STATE_RUNNING,         /* Configured */
+    TDA_STATE_RUNNING,         /* Running */
     TDA_STATE_ZOMBIE,          /* Configured but not found */
   } tda_state;
 

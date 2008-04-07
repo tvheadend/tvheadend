@@ -39,9 +39,8 @@
 
 
 static struct strtab adapterstatus[] = {
-  { "Unconfigured",                   TDA_STATE_UNCONFIGURED },
-  { "Running",                        TDA_STATE_RUNNING },
-  { "Zombie",                         TDA_STATE_ZOMBIE },
+  { "Hardware detected",    TDA_STATE_RUNNING },
+  { "Hardware not found",   TDA_STATE_ZOMBIE },
 };
 
 static void
@@ -92,8 +91,6 @@ ajax_adaptersummary(http_connection_t *hc, const char *remain, void *opaque)
 	      "<div>%s</div>", 
 	      dvb_adaptertype_to_str(tda->tda_fe_info->type));
  
-  tcp_qprintf(&tq, "<div class=\"infoprefix\">Tuner:</div>"
-	      "<div>...</div>");
   tcp_qprintf(&tq, "<div style=\"text-align: center\">"
 	      "<a href=\"javascript:void(0);\" "
 	      "onClick=\"new Ajax.Updater('dvbadaptereditor', "
