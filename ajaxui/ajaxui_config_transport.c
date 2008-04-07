@@ -134,11 +134,8 @@ ajax_transport_build_list(tcp_queue_t *tq, struct th_transport_list *tlist)
 
   tcp_qprintf(tq, "<div style=\"float: left; width: 6%\">&nbsp;</div>");
 
-  tcp_qprintf(tq, "<div style=\"float: left; width: 25%\">"
+  tcp_qprintf(tq, "<div style=\"float: left; width: 31%\">"
 	      "Channel</div>");
-
-  tcp_qprintf(tq, "<div style=\"float: left; width: 6%\">"
-	      "Bah</div>");
 
   tcp_qprintf(tq, "</div><hr>");
 
@@ -175,7 +172,7 @@ ajax_transport_build_list(tcp_queue_t *tq, struct th_transport_list *tlist)
 		"<img id=\"map%s\" src=\"/gfx/unmapped.png\"></a></div>",
 		t->tht_identifier, t->tht_identifier);
 
-    tcp_qprintf(tq, "<div id=\"chname%s\" style=\"float: left; width: 25%\">",
+    tcp_qprintf(tq, "<div id=\"chname%s\" style=\"float: left; width: 26%\">",
 		t->tht_identifier);
 
     if(t->tht_channel == NULL) {
@@ -197,7 +194,7 @@ ajax_transport_build_list(tcp_queue_t *tq, struct th_transport_list *tlist)
 
 
 
-    tcp_qprintf(tq, "<div style=\"float: left; width: 6%\">"
+    tcp_qprintf(tq, "<div style=\"float: left; width: 5%\">"
 		"<input id=\"sel_%s\" type=\"checkbox\" class=\"nicebox\">"
 		"</div>", t->tht_identifier);
     
