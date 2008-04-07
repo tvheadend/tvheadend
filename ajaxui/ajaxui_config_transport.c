@@ -130,12 +130,12 @@ ajax_transport_build_list(tcp_queue_t *tq, struct th_transport_list *tlist)
   tcp_qprintf(tq, "<div style=\"float: left; width: 12%\">Type</div>");
 
   tcp_qprintf(tq, "<div style=\"float: left; width: 25%\">"
-	      "Service</div>");
-
+	      "Source service</div>");
+  
   tcp_qprintf(tq, "<div style=\"float: left; width: 6%\">&nbsp;</div>");
 
   tcp_qprintf(tq, "<div style=\"float: left; width: 31%\">"
-	      "Channel</div>");
+	      "Target channel</div>");
 
   tcp_qprintf(tq, "</div><hr>");
 
