@@ -26,6 +26,7 @@
 #include <libhts/htstv.h>
 #include <libhts/htscfg.h>
 #include <libhts/avg.h>
+#include <libhts/hts_strtab.h>
 #include "refstr.h"
 #include <libavcodec/avcodec.h>
 

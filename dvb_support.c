@@ -33,7 +33,6 @@
 
 #include "tvhead.h"
 #include "dvb_support.h"
-#include "strtab.h"
 #include "dvb.h"
 
 /*

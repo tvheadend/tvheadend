@@ -42,7 +42,6 @@
 #include "epg.h"
 #include "dispatch.h"
 #include "buffer.h"
-#include "strtab.h"
 #include "ffmuxer.h"
 #include "spawn.h"
 

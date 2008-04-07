@@ -31,7 +31,6 @@
 #include "http.h"
 #include "ajaxui.h"
 #include "channels.h"
-#include "strtab.h"
 #include "psi.h"
 #include "transports.h"
 

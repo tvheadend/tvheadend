@@ -38,7 +38,6 @@
 #include "teletext.h"
 #include "dispatch.h"
 #include "dvb.h"
-#include "strtab.h"
 #include "rtp.h"
 #include "tsmux.h"
 #include "http.h"

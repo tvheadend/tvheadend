@@ -52,7 +52,6 @@
 #include "buffer.h"
 #include "channels.h"
 #include "cwc.h"
-#include "strtab.h"
 
 #define TRANSPORT_HASH_WIDTH 101
 

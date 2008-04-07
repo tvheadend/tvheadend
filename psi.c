@@ -30,7 +30,6 @@
 #include "transports.h"
 #include "dvb_support.h"
 #include "tsdemux.h"
-#include "strtab.h"
 #include "parsers.h"
 
 int

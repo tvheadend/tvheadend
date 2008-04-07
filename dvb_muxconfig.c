@@ -31,7 +31,6 @@
 #include "dvb_dvr.h"
 #include "dvb_muxconfig.h"
 #include "dvb_support.h"
-#include "strtab.h"
 #include "transports.h"
 
 static struct strtab fectab[] = {

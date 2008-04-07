@@ -34,7 +34,6 @@
 #include "dvb.h"
 #include "dvb_support.h"
 #include "dvb_muxconfig.h"
-#include "strtab.h"
 #include "psi.h"
 #include "transports.h"
 
