@@ -1442,6 +1442,7 @@ Ajax.Updater = Class.create(Ajax.Request, {
         options = this.options;
 
     if (!options.evalScripts) responseText = responseText.stripScripts();
+    if (!$(receiver)) this.stop();
 
     if (receiver = $(receiver)) {
       if (options.insertion) {

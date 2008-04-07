@@ -43,4 +43,7 @@ int psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen, int pcrpid);
 
 const char *psi_caid2name(uint16_t caid);
 
+void psi_save_transport(FILE *fp, th_transport_t *t);
+void psi_load_transport(struct config_head *cl, th_transport_t *t);
+
 #endif /* PSI_H_ */

@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include <libavutil/common.h>
+#include <libavutil/avstring.h>
 
 #include "tvhead.h"
 #include "psi.h"
@@ -90,7 +91,7 @@ psi_parse_pat(th_transport_t *t, uint8_t *ptr, int len,
     pid     = (ptr[2] & 0x1f) << 8 | ptr[3];
 
     if(prognum != 0) {
-      st = transport_add_stream(t, pid, HTSTV_TABLE);
+      st = transport_add_stream(t, pid, HTSTV_PMT);
       st->st_section_docrc = 1;
       st->st_got_section = pmt_callback;
 
@@ -204,7 +205,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
 
     switch(dtag) {
     case DVB_DESC_CA:
-      st = transport_add_stream(t, (ptr[2] & 0x1f) << 8 | ptr[3], HTSTV_TABLE);
+      st = transport_add_stream(t, (ptr[2] & 0x1f) << 8 | ptr[3], HTSTV_CA);
       st->st_caid = (ptr[0] << 8) | ptr[1];
       break;
 
@@ -507,3 +508,105 @@ psi_caid2name(uint16_t caid)
 {
   return val2str(caid, caidnametab);
 }
+
+/**
+ *
+ */
+static struct strtab streamtypetab[] = {
+  { "MPEG2VIDEO", HTSTV_MPEG2VIDEO },
+  { "MPEG2AUDIO", HTSTV_MPEG2AUDIO },
+  { "H264",       HTSTV_H264 },
+  { "AC3",        HTSTV_AC3 },
+  { "TELETEXT",   HTSTV_TELETEXT },
+  { "SUBTITLES",  HTSTV_SUBTITLES },
+  { "CA",         HTSTV_CA },
+  { "PMT",        HTSTV_PMT },
+  { "PAT",        HTSTV_PAT },
+};
+
+
+
+
+
+
+
+const char *
+htstvstreamtype2txt(tv_streamtype_t s)
+{
+  return val2str(s, streamtypetab) ?: "INVALID";
+}
+
+
+/**
+ * Save transport info
+ */
+void
+psi_save_transport(FILE *fp, th_transport_t *t)
+{
+  th_stream_t *st;
+
+  fprintf(fp, "\tpcr = %d\n", t->tht_pcr_pid);
+
+  LIST_FOREACH(st, &t->tht_streams, st_link) {
+    fprintf(fp, "\tstream {\n");
+    fprintf(fp, "\t\tpid = %d\n", st->st_pid);
+    fprintf(fp, "\t\ttype = %s\n", val2str(st->st_type, streamtypetab) ?: "?");
+    
+    if(st->st_lang[0])
+      fprintf(fp, "\t\tlanguage = %s\n", st->st_lang);
+
+    if(st->st_type == HTSTV_CA)
+      fprintf(fp, "\t\tcaid = %s\n", val2str(st->st_caid, caidnametab) ?: "?");
+
+    if(st->st_frame_duration)
+      fprintf(fp, "\t\tframeduration = %d\n", st->st_frame_duration);
+    
+    fprintf(fp, "\t}\n");
+  }
+}
+
+
+
+/**
+ * Load transport info
+ */
+void
+psi_load_transport(struct config_head *cl, th_transport_t *t)
+{
+  th_stream_t *st;
+  config_entry_t *ce;
+  tv_streamtype_t type;
+  const char *v;
+  int pid;
+
+  t->tht_pcr_pid = atoi(config_get_str_sub(cl, "pcr", "0"));
+  
+  TAILQ_FOREACH(ce, cl, ce_link) {
+    if(ce->ce_type != CFG_SUB || strcasecmp("stream", ce->ce_key))
+      continue;
+
+    type = str2val(config_get_str_sub(&ce->ce_sub, "type", ""), streamtypetab);
+    if(type == -1)
+      continue;
+
+    pid = atoi(config_get_str_sub(&ce->ce_sub, "pid", "0"));
+    if(pid < 1)
+      continue;
+
+    st = transport_add_stream(t, pid, type);
+    st->st_tb = (AVRational){1, 90000};
+    
+    v = config_get_str_sub(&ce->ce_sub, "lang", NULL);
+    if(v != NULL)
+      av_strlcpy(st->st_lang, v, 4);
+
+    st->st_frame_duration =
+      atoi(config_get_str_sub(&ce->ce_sub, "frameduration", "0"));
+     
+    v = config_get_str_sub(&ce->ce_sub, "caid", NULL);
+    if(v != NULL)
+      st->st_caid = str2val(v, caidnametab);
+  }
+}
+
+

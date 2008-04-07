@@ -28,9 +28,8 @@ enum polarisation {
 
 #define DVB_FEC_ERROR_LIMIT 20
 
-extern struct th_dvb_adapter_list dvb_adapters_probing;
-extern struct th_dvb_adapter_list dvb_adapters_running;
-extern struct th_dvb_mux_list dvb_muxes;
+extern struct th_dvb_adapter_list dvb_adapters;
+extern struct th_dvb_mux_instance_list dvb_muxes;
 
 void dvb_init(void);
 
@@ -48,7 +47,14 @@ void dvb_fe_start(th_dvb_adapter_t *tda);
 
 void tdmi_check_scan_status(th_dvb_mux_instance_t *tdmi);
 
-th_transport_t *dvb_find_transport(th_dvb_mux_instance_t *tdmi, uint16_t tid,
+th_transport_t *dvb_find_transport(th_dvb_mux_instance_t *tdmi,
 				   uint16_t sid, int pmt_pid);
+
+th_dvb_mux_instance_t *dvb_mux_create(th_dvb_adapter_t *tda,
+				      struct dvb_frontend_parameters *fe_param,
+				      int polarisation, int switchport,
+				      int save);
+
+void dvb_tdmi_save(th_dvb_mux_instance_t *tdmi);
 
 #endif /* DVB_H_ */

@@ -543,7 +543,7 @@ http_con_parse(void *aux, char *buf)
   int n, v;
   char *argv[3], *c;
 
-  // printf("HTTP INPUT: %s\n", buf);
+  //printf("HTTP INPUT: %s\n", buf);
 
   switch(hc->hc_state) {
   case HTTP_CON_WAIT_REQUEST:

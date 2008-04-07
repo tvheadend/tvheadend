@@ -95,10 +95,10 @@ v4l_configure_transport(th_transport_t *t, const char *muxname,
 
   t->tht_network = strdup("Analog TV");
   t->tht_provider = strdup("Analog TV");
-  snprintf(buf, sizeof(buf), "ANALOG:%u", t->tht_v4l_frequency);
-  t->tht_uniquename = strdup(buf);
+  snprintf(buf, sizeof(buf), "analog_%u", t->tht_v4l_frequency);
+  t->tht_identifier = strdup(buf);
 
-  transport_link(t, channel_find(channel_name, 1, NULL), THT_OTHER);
+  transport_set_channel(t, channel_name);
   return 0;
 }
 
@@ -199,7 +199,7 @@ v4l_stop_feed(th_transport_t *t)
   th_v4l_adapter_t *tva = t->tht_v4l_adapter;
 
   t->tht_v4l_adapter = NULL;
-  LIST_REMOVE(t, tht_adapter_link);
+  LIST_REMOVE(t, tht_active_link);
 
   t->tht_status = TRANSPORT_IDLE;
 
@@ -268,7 +268,7 @@ v4l_start_feed(th_transport_t *t, unsigned int weight, int status)
   if(v4l_setfreq(tva, tva->tva_frequency))
     return 1;
 
-  LIST_INSERT_HEAD(&tva->tva_transports, t, tht_adapter_link);
+  LIST_INSERT_HEAD(&tva->tva_transports, t, tht_active_link);
   t->tht_v4l_adapter = tva;
   t->tht_status = TRANSPORT_RUNNING;
   

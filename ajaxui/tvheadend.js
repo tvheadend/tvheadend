@@ -1,14 +1,10 @@
 function switchtab(name, index)
 {
     a = new Ajax.Updater(name + 'deck', '/ajax/' + name + 'tab/'  + index, 
-			 { asynchronous: true, 
-			   method: 'get', 
-			   evalScripts: true});
+			 { method: 'get', evalScripts: true});
 
     a = new Ajax.Updater(name + 'menu', '/ajax/' + name + 'menu/' + index,
-			 { asynchronous: true, 
-			   method: 'get', 
-			   evalScripts: true});
+			 { method: 'get', evalScripts: true});
 };
 
 function updatelistonserver(listid, url, resultid)
@@ -16,8 +12,7 @@ function updatelistonserver(listid, url, resultid)
     //    document.getElementById(resultid).innerHTML = "Updating...";
 
     a = new Ajax.Updater(resultid, url, 
-			 { asynchronous: true, 
-			   evalScripts: true,
+			 { evalScripts: true,
 			   parameters:Sortable.serialize(listid)});
 };
 
@@ -27,8 +22,7 @@ function addlistentry(listid, url, name)
 	alert("Emtpy name is not allowed");
     } else {
 	a = new Ajax.Updater(listid, url,
-			     { asynchronous: true, 
-			       evalScripts: true,
+			     { evalScripts: true,
 			       parameters: { name: name },
 			       insertion: Insertion.Bottom
 			     });
@@ -48,4 +42,27 @@ function addlistentry_by_widget(listid, url, widget)
     name = $F(widget);
     $(widget).clear();
     addlistentry(listid, url, name);
+}
+
+
+function showhide(name)
+{
+    ctrlname = 'toggle_' + name;
+    if(document.getElementById(ctrlname).innerHTML == 'More') {
+	document.getElementById(ctrlname).innerHTML = 'Less';
+	new Effect.Appear(name, {duration: 0.5});
+    } else {
+	document.getElementById(ctrlname).innerHTML = 'More';
+	new Effect.Fade(name, {duration: 0.5});
+    }
+}
+
+function tentative_chname(id, url, name)
+{
+	var newname = prompt("Enter name of channel", name);
+	if(newname != null && newname != name) {
+		a = new Ajax.Updater(id, url,
+				 { evalScripts: true,
+				  parameters: { newname: newname }});
+	}
 }

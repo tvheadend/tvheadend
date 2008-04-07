@@ -112,7 +112,6 @@ file_input_init(void)
     fi->fi_name = strdup(s);
     
     t = calloc(1, sizeof(th_transport_t));
-    t->tht_prio = 100;
 
     t->tht_type = TRANSPORT_STREAMEDFILE;
     t->tht_start_feed = file_input_start_feed;
@@ -156,9 +155,9 @@ file_input_init(void)
     t->tht_name = strdup(ch->ch_name);
     t->tht_provider = strdup("HTS Tvheadend");
     t->tht_network = strdup("Internal");
-    t->tht_uniquename = strdup(ch->ch_name);
+    t->tht_identifier = strdup(ch->ch_name);
     t->tht_file_input = fi;
-    transport_link(t, ch, THT_OTHER);
+    transport_set_channel(t, ch->ch_name);
   }
 }
 

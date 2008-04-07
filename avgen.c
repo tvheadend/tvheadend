@@ -101,7 +101,6 @@ avgen_init(void)
   ch = channel_find("Test PAL", 1, channel_group_find("Test channels", 1));
 
   t = calloc(1, sizeof(th_transport_t));
-  t->tht_prio = 100;
 
   t->tht_type = TRANSPORT_AVGEN;
   t->tht_start_feed = avgen_start_feed;
@@ -117,9 +116,9 @@ avgen_init(void)
   t->tht_provider = strdup("HTS Tvheadend");
   t->tht_network = strdup("Internal");
 
-  t->tht_uniquename = strdup("TEST1");
+  t->tht_identifier = strdup("test1");
 
-  transport_link(t, ch, THT_OTHER);
+  transport_set_channel(t, ch->ch_name);
 }
 
 

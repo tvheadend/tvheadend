@@ -57,13 +57,14 @@ got_section(th_transport_t *t, th_stream_t *st)
 {
   th_descrambler_t *td;
 
-  LIST_FOREACH(td, &t->tht_descramblers, td_transport_link)
-    td->td_table(td, t, st, 
-		 st->st_section->ps_data, st->st_section->ps_offset);
-
-  if(st->st_got_section != NULL)
+  if(st->st_type == HTSTV_CA) {
+    LIST_FOREACH(td, &t->tht_descramblers, td_transport_link)
+      td->td_table(td, t, st, 
+		   st->st_section->ps_data, st->st_section->ps_offset);
+  } else if(st->st_got_section != NULL) {
     st->st_got_section(t, st, st->st_section->ps_data,
 		       st->st_section->ps_offset);
+  }
 }
 
 
@@ -100,7 +101,9 @@ ts_recv_packet0(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
 
   switch(st->st_type) {
 
-  case HTSTV_TABLE:
+  case HTSTV_CA:
+  case HTSTV_PAT:
+  case HTSTV_PMT:
     if(st->st_section == NULL)
       st->st_section = calloc(1, sizeof(struct psi_section));
 

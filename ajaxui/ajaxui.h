@@ -50,7 +50,20 @@ void ajax_config_init(void);
 void ajax_menu_bar_from_array(tcp_queue_t *tq, const char *name, 
 			      const char **vec, int num, int cur);
 
+void ajax_a_jsfunc(tcp_queue_t *tq, const char *innerhtml, const char *func,
+		   const char *trailer);
+
 int ajax_channelgroup_tab(http_connection_t *hc);
 int ajax_config_tab(http_connection_t *hc);
+
+int ajax_config_channels_tab(http_connection_t *hc);
+void ajax_config_channels_init(void);
+
+int ajax_config_dvb_tab(http_connection_t *hc);
+void ajax_config_dvb_init(void);
+void ajax_config_transport_init(void);
+
+int ajax_transport_build_list(tcp_queue_t *tq,
+			      struct th_transport_list *tlist);
 
 #endif /* AJAXUI_H_ */

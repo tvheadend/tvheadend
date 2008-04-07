@@ -39,6 +39,7 @@
 #include "tvhead.h"
 #include "dispatch.h"
 #include "dvb_dvr.h"
+#include "dvb_support.h"
 #include "teletext.h"
 #include "transports.h"
 #include "subscriptions.h"
@@ -51,11 +52,17 @@
 #include "buffer.h"
 #include "channels.h"
 #include "cwc.h"
+#include "strtab.h"
 
-static dtimer_t transport_monitor_timer;
+#define TRANSPORT_HASH_WIDTH 101
 
-static const char *transport_settings_path(th_transport_t *t);
+static struct th_transport_list transporthash[TRANSPORT_HASH_WIDTH];
 
+
+//static dtimer_t transport_monitor_timer;
+
+//static const char *transport_settings_path(th_transport_t *t);
+//static void transport_monitor(void *aux, int64_t now);
 
 void
 transport_stop(th_transport_t *t, int flush_subscriptions)
@@ -72,6 +79,8 @@ transport_stop(th_transport_t *t, int flush_subscriptions)
     if(LIST_FIRST(&t->tht_subscriptions))
       return;
   }
+
+  //  dtimer_disarm(&transport_monitor_timer, transport_monitor, t, 1);
 
   t->tht_stop_feed(t);
 
@@ -200,12 +209,70 @@ transport_start(th_transport_t *t, unsigned int weight)
 }
 
 
+/**
+ * Return prio for the given transport
+ */
+static int
+transport_get_prio(th_transport_t *t)
+{
+  switch(t->tht_type) {
+  case TRANSPORT_AVGEN:
+  case TRANSPORT_STREAMEDFILE:
+    return 0;
+    
+  case TRANSPORT_DVB:
+    if(t->tht_scrambled)
+      return 3;
+    return 1;
+
+  case TRANSPORT_IPTV:
+    return 2;
+
+  case TRANSPORT_V4L:
+    return 4;
+
+  default:
+    return 5;
+  }
+}
 
 
+/**
+ *  a - b  -> lowest number first
+ */
+static int
+transportcmp(const void *A, const void *B)
+{
+  th_transport_t *a = *(th_transport_t **)A;
+  th_transport_t *b = *(th_transport_t **)B;
+
+  return transport_get_prio(a) - transport_get_prio(b);
+}
+
+
+/**
+ *
+ */
 th_transport_t *
 transport_find(th_channel_t *ch, unsigned int weight)
 {
-  th_transport_t *t;
+  th_transport_t *t, **vec;
+  int cnt = 0, i;
+  
+  /* First, sort all transports in order */
+
+  LIST_FOREACH(t, &ch->ch_transports, tht_channel_link)
+    cnt++;
+
+  vec = alloca(cnt * sizeof(th_transport_t *));
+  i = 0;
+  LIST_FOREACH(t, &ch->ch_transports, tht_channel_link)
+    vec[i++] = t;
+
+  /* Sort transports, lower priority should come come earlier in the vector
+     (i.e. it will be more favoured when selecting a transport */
+
+  qsort(vec, cnt, sizeof(th_transport_t *), transportcmp);
 
   /* First, try all transports without stealing */
 
@@ -251,7 +318,7 @@ transport_compute_weight(struct th_transport_list *head)
   th_subscription_t *s;
   int w = 0;
 
-  LIST_FOREACH(t, head, tht_adapter_link) {
+  LIST_FOREACH(t, head, tht_active_link) {
     LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link) {
       if(s->ths_weight > w)
 	w = s->ths_weight;
@@ -261,7 +328,7 @@ transport_compute_weight(struct th_transport_list *head)
 }
 
 
-
+#if 0
 
 
 static void
@@ -329,35 +396,44 @@ transport_monitor(void *aux, int64_t now)
   }
 }
 
+#endif
+
 
 /**
- *
+ * Create and initialize a new transport struct
  */
-void
-transport_init(th_transport_t *t, int source_type)
+th_transport_t *
+transport_create(const char *identifier, int type, int source_type)
 {
+  unsigned int hash = tvh_strhash(identifier, TRANSPORT_HASH_WIDTH);
+  th_transport_t *t = calloc(1, sizeof(th_transport_t));
+  t->tht_identifier = strdup(identifier);
+  t->tht_type = type;
   t->tht_source_type = source_type;
 
-  avgstat_init(&t->tht_cc_errors, 3600);
-  avgstat_init(&t->tht_rate, 10);
-
-  dtimer_arm(&transport_monitor_timer, transport_monitor, t, 5);
+  LIST_INSERT_HEAD(&transporthash[hash], t, tht_hash_link);
+  return t;
 }
+
+/**
+ * Find a transport based on the given identifier
+ */
+th_transport_t *
+transport_find_by_identifier(const char *identifier)
+{
+  th_transport_t *t;
+  unsigned int hash = tvh_strhash(identifier, TRANSPORT_HASH_WIDTH);
+  LIST_FOREACH(t, &transporthash[hash], tht_hash_link)
+    if(!strcmp(t->tht_identifier, identifier))
+      break;
+  return t;
+}
+
 
 
 /**
- *
+ * Add a new stream to a transport
  */
-void
-transport_link(th_transport_t *t, th_channel_t *ch, int source_type)
-{
-  transport_set_channel(t, ch);
-  transport_init(t, source_type);
-  LIST_INSERT_HEAD(&all_transports, t, tht_global_link);
-}
-
-
-
 th_stream_t *
 transport_add_stream(th_transport_t *t, int pid, tv_streamtype_t type)
 {
@@ -390,157 +466,59 @@ transport_add_stream(th_transport_t *t, int pid, tv_streamtype_t type)
 /**
  *
  */
-static int
-transportcmp(th_transport_t *a, th_transport_t *b)
+void
+transport_set_channel(th_transport_t *t, const char *chname)
 {
-  return a->tht_prio - b->tht_prio;
-}
+  th_channel_t *ch = channel_find(chname, 1, NULL);
 
+  avgstat_init(&t->tht_cc_errors, 3600);
+  avgstat_init(&t->tht_rate, 10);
 
-/**
- *
- */
-int 
-transport_set_channel(th_transport_t *t, th_channel_t *ch)
-{
-  th_stream_t *st;
-  char *chname;
-  const char *n;
-  char pid[30];
-  char lang[30];
-  struct config_head cl;
-
-  assert(t->tht_uniquename != NULL);
-
-  n = transport_settings_path(t);
-  TAILQ_INIT(&cl);
-  config_read_file0(n, &cl);
-
-  t->tht_prio = atoi(config_get_str_sub(&cl, "prio", "0"));
-  n = config_get_str_sub(&cl, "channel", NULL);
-  if(n != NULL)
-    ch = channel_find(n, 1, NULL); 
-
-  config_free0(&cl);
-
+  assert(t->tht_identifier != NULL);
   t->tht_channel = ch;
-  LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
 
-  chname = utf8toprintable(ch->ch_name);
-
-  syslog(LOG_DEBUG, "Added service \"%s\" for channel \"%s\"",
-	 t->tht_name, chname);
-  free(chname);
-
-  LIST_FOREACH(st, &t->tht_streams, st_link) {
-    if(st->st_caid != 0) {
-      n = psi_caid2name(st->st_caid);
-    } else {
-      n = htstvstreamtype2txt(st->st_type);
-    }
-    if(st->st_pid < 8192) {
-      snprintf(pid, sizeof(pid), " on pid [%d]", st->st_pid);
-    } else {
-      pid[0] = 0;
-    }
-
-    if(st->st_lang[0]) {
-      snprintf(lang, sizeof(lang), ", language \"%s\"", st->st_lang);
-    } else {
-      lang[0] = 0;
-    }
-
-    syslog(LOG_DEBUG, "   Stream \"%s\"%s%s", n, lang, pid);
-  }
-
-  return 0;
+  LIST_INSERT_HEAD(&ch->ch_transports, t, tht_channel_link);
 }
-
 
 /**
  *
  */
 void
-transport_set_priority(th_transport_t *t, int prio)
+transport_unset_channel(th_transport_t *t)
 {
-  th_channel_t *ch = t->tht_channel;
-
-  if(t->tht_prio == prio)
-    return;
-
+  t->tht_channel = NULL;
   LIST_REMOVE(t, tht_channel_link);
-  t->tht_prio = prio;
-  LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
-  transport_settings_write(t);
 }
+
 
 
 /**
  *
  */
-void
-transport_move(th_transport_t *t, th_channel_t *ch)
+
+static struct strtab stypetab[] = {
+  { "SDTV",         ST_SDTV },
+  { "Radio",        ST_RADIO },
+  { "HDTV",         ST_HDTV },
+  { "SDTV-AC",      ST_AC_SDTV },
+  { "HDTV-AC",      ST_AC_HDTV },
+};
+
+const char *
+transport_servicetype_txt(th_transport_t *t)
 {
-  LIST_REMOVE(t, tht_channel_link);
-  t->tht_channel = ch;
-  LIST_INSERT_SORTED(&ch->ch_transports, t, tht_channel_link, transportcmp);
-  transport_settings_write(t);
+  return val2str(t->tht_servicetype, stypetab);
 }
 
-
 /**
- * Generate a settings-dir relative path to transport config
  *
- * Must be free'd by caller
  */
-static const char *
-transport_settings_path(th_transport_t *t)
+int
+transport_is_tv(th_transport_t *t)
 {
-  char buf[400];
-  char buf2[400];
-
-  int l, i;
-  char c;
-
-  l = strlen(t->tht_uniquename);
-  if(l >= sizeof(buf2))
-      l = sizeof(buf2) - 1;
-
-  for(i = 0; i < l; i++) {
-    c = tolower(t->tht_uniquename[i]);
-    if(isalnum(c))
-      buf2[i] = c;
-    else
-      buf2[i] = '_';
-  }
-
-  buf2[i] = 0;
-  snprintf(buf, sizeof(buf), "%s/transports/%s", settings_dir, buf2);
-  return strdup(buf);
+  return 
+    t->tht_servicetype == ST_SDTV    ||
+    t->tht_servicetype == ST_HDTV    ||
+    t->tht_servicetype == ST_AC_SDTV ||
+    t->tht_servicetype == ST_AC_HDTV;
 }
-
-
-/**
- * Write out a config file for a channel
- */
-void
-transport_settings_write(th_transport_t *t)
-{
-  FILE *fp;
-  const char *n;
-
-  n = transport_settings_path(t);
-    
-  if((fp = settings_open_for_write(n)) != NULL) {
-    fprintf(fp, 
-	    "uniquename = %s\n"
-	    "channel = %s\n"
-	    "prio = %d\n",
-	    t->tht_uniquename,
-	    t->tht_channel->ch_name,
-	    t->tht_prio);
-    fclose(fp);
-  }
-  free((void *)n);
-}
-

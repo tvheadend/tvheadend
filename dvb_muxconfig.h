@@ -19,6 +19,21 @@
 #ifndef DVB_MUXCONFIG_H_
 #define DVB_MUXCONFIG_H_
 
-void dvb_mux_setup(void);
+void dvb_mux_store(FILE *fp, th_dvb_mux_instance_t *tdmi);
+
+const char *dvb_mux_create_str(th_dvb_adapter_t *tda,
+			       const char *freqstr,
+			       const char *symratestr,
+			       const char *qamstr,
+			       const char *fecstr,
+			       const char *fechistr,
+			       const char *feclostr,
+			       const char *bwstr,
+			       const char *tmodestr,
+			       const char *guardstr,
+			       const char *hierstr,
+			       const char *polstr,
+			       const char *switchportstr,
+			       int save);
 
 #endif /* DVB_MUXCONFIG_H */

@@ -25,11 +25,14 @@ unsigned int transport_compute_weight(struct th_transport_list *head);
 
 void transport_stop(th_transport_t *t, int flush_subscriptions);
 
-void transport_init(th_transport_t *t, int source_type);
+th_transport_t *transport_create(const char *identifier, int type,
+				 int source_type);
 
-void transport_link(th_transport_t *t, th_channel_t *ch, int source_type);
+th_transport_t *transport_find_by_identifier(const char *identifier);
 
-int transport_set_channel(th_transport_t *t, th_channel_t *ch);
+void transport_set_channel(th_transport_t *t, const char *name);
+
+void transport_unset_channel(th_transport_t *t);
 
 th_transport_t *transport_find(th_channel_t *ch, unsigned int weight);
 
@@ -38,8 +41,10 @@ th_stream_t *transport_add_stream(th_transport_t *t, int pid,
 
 void transport_set_priority(th_transport_t *t, int prio);
 
-void transport_move(th_transport_t *t, th_channel_t *ch);
-
 void transport_settings_write(th_transport_t *t);
+
+const char *transport_servicetype_txt(th_transport_t *t);
+
+int transport_is_tv(th_transport_t *t);
 
 #endif /* TRANSPORTS_H */

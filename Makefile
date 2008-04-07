@@ -4,7 +4,7 @@ SRCS = main.c dispatch.c channels.c transports.c teletext.c psi.c \
 	subscriptions.c mux.c tsdemux.c buffer.c tcp.c \
 	resolver.c tsmux.c parsers.c bitstream.c parser_h264.c spawn.c
 
-SRCS += http.c htmlui.c
+SRCS += http.c
 
 SRCS += htsp.c rpc.c
 
@@ -33,7 +33,9 @@ SRCS += FFdecsa.c
 #
 
 VPATH  += ajaxui
-SRCS   += ajaxui.c ajaxui_channels.c ajaxui_config.c
+SRCS   += ajaxui.c ajaxui_channels.c \
+	  ajaxui_config.c ajaxui_config_channels.c ajaxui_config_dvb.c \
+	  ajaxui_config_transport.c
 
 JSSRCS += tvheadend.js
 
@@ -41,7 +43,7 @@ CSSSRCS += ajaxui.css
 
 VPATH  += ajaxui/images
 GIFSRCS+= sbbody_l.gif sbbody_r.gif sbhead_l.gif sbhead_r.gif
-
+PNGSRCS+= mapped.png unmapped.png
 
 VPATH  += ajaxui/prototype
 JSSRCS += prototype.js

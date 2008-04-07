@@ -34,21 +34,13 @@
 
 #define DVB_DESC_NETWORK_NAME 0x40
 #define DVB_DESC_SERVICE_LIST 0x41
+#define DVB_DESC_CABLE        0x44
 #define DVB_DESC_SHORT_EVENT  0x4d
 #define DVB_DESC_SERVICE      0x48
 #define DVB_DESC_CONTENT      0x54
 #define DVB_DESC_TELETEXT     0x56
 #define DVB_DESC_SUBTITLE     0x59
 #define DVB_DESC_AC3          0x6a
-
-
-/* Service types defined in EN 300 468 */
-
-#define DVB_ST_SDTV           0x1    /* SDTV (MPEG2) */
-#define DVB_ST_RADIO          0x2
-#define DVB_ST_HDTV           0x11   /* HDTV (MPEG2) */
-#define DVB_ST_AC_SDTV        0x16   /* Advanced codec SDTV */
-#define DVB_ST_AC_HDTV        0x19   /* Advanced codec HDTV */
 
 int dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, 
 		   const size_t srclen, const char *target_encoding);
@@ -60,5 +52,11 @@ int dvb_get_string_with_len(char *dst, size_t dstlen,
 #define bcdtoint(i) ((((i & 0xf0) >> 4) * 10) + (i & 0x0f))
 
 time_t dvb_convert_date(uint8_t *dvb_buf);
+
+const char *dvb_adaptertype_to_str(int type);
+const char *dvb_polarisation_to_str(int pol);
+th_dvb_adapter_t *dvb_adapter_find_by_identifier(const char *identifier);
+th_dvb_mux_instance_t *dvb_mux_find_by_identifier(const char *identifier);
+const char *dvb_mux_status(th_dvb_mux_instance_t *tdmi);
 
 #endif /* DVB_SUPPORT_H */

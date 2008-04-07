@@ -29,8 +29,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <linux/dvb/frontend.h>
+
 #include "tvhead.h"
 #include "dvb_support.h"
+#include "strtab.h"
+#include "dvb.h"
 
 /*
  * DVB String conversion according to EN 300 468, Annex A
@@ -204,4 +208,84 @@ dvb_convert_date(uint8_t *dvb_buf)
   dvb_time.tm_wday = 0;
   dvb_time.tm_yday = 0;
   return (timegm(&dvb_time));
+}
+
+/**
+ *
+ */
+static struct strtab adaptertype[] = {
+  { "DVB-S",  FE_QPSK },
+  { "DVB-C",  FE_QAM },
+  { "DVB-T",  FE_OFDM },
+  { "ATSC",   FE_ATSC },
+};
+
+const char *
+dvb_adaptertype_to_str(int type)
+{
+  return val2str(type, adaptertype) ?: "invalid";
+}
+
+const char *
+dvb_polarisation_to_str(int pol)
+{
+  switch(pol) {
+  case POLARISATION_VERTICAL:   return "V";
+  case POLARISATION_HORIZONTAL: return "H";
+  default:                      return "X";
+  }
+}
+
+
+
+th_dvb_mux_instance_t *
+dvb_mux_find_by_identifier(const char *identifier)
+{
+  th_dvb_mux_instance_t *tdmi;
+
+  LIST_FOREACH(tdmi, &dvb_muxes, tdmi_global_link)
+    if(!strcmp(identifier, tdmi->tdmi_identifier))
+      return tdmi;
+  return NULL;
+}
+
+
+
+th_dvb_adapter_t *
+dvb_adapter_find_by_identifier(const char *identifier)
+{
+  th_dvb_adapter_t *tda;
+
+  LIST_FOREACH(tda, &dvb_adapters, tda_global_link)
+    if(!strcmp(identifier, tda->tda_identifier))
+      return tda;
+  return NULL;
+}
+
+
+
+
+/**
+ * 
+ */
+const char *
+dvb_mux_status(th_dvb_mux_instance_t *tdmi)
+{
+  int i, v, vv;
+  const char *txt = tdmi->tdmi_status ?: "Ok";
+
+  v = vv = 0;
+  for(i = 0; i < TDMI_FEC_ERR_HISTOGRAM_SIZE; i++) {
+    if(tdmi->tdmi_fec_err_histogram[i] > DVB_FEC_ERROR_LIMIT)
+      v++;
+    vv += tdmi->tdmi_fec_err_histogram[i];
+  }
+  vv /= TDMI_FEC_ERR_HISTOGRAM_SIZE;
+  
+  if(v == TDMI_FEC_ERR_HISTOGRAM_SIZE)
+    txt = "Constant high FEC rate";
+  else if(v > 0)
+    txt = "Bursty FEC rate";
+
+  return txt;
 }

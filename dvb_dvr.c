@@ -71,7 +71,7 @@ dvb_dvr_process_packets(th_dvb_adapter_t *tda, uint8_t *tsb, int r)
   th_transport_t *t;
 
   while(r >= 188) {
-    LIST_FOREACH(t, &tda->tda_transports, tht_adapter_link)
+    LIST_FOREACH(t, &tda->tda_transports, tht_active_link)
       ts_recv_packet1(t, tsb);
     r -= 188;
     tsb += 188;
@@ -120,7 +120,7 @@ dvb_stop_feed(th_transport_t *t)
 {
   th_stream_t *st;
 
-  LIST_REMOVE(t, tht_adapter_link);
+  LIST_REMOVE(t, tht_active_link);
   LIST_FOREACH(st, &t->tht_streams, st_link) {
     close(st->st_demuxer_fd);
     st->st_demuxer_fd = -1;
@@ -199,7 +199,7 @@ dvb_start_feed(th_transport_t *t, unsigned int weight, int status)
     st->st_demuxer_fd = fd;
   }
 
-  LIST_INSERT_HEAD(&tda->tda_transports, t, tht_adapter_link);
+  LIST_INSERT_HEAD(&tda->tda_transports, t, tht_active_link);
   t->tht_status = status;
   
   dvb_tune_tdmi(tdmi, 1, TDMI_RUNNING);

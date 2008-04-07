@@ -136,17 +136,16 @@ typedef struct th_v4l_adapter {
  * Mux instance modes
  */
 typedef enum {
-    TDMI_CONFIGURED,
-    TDMI_INITIAL_SCAN,
-    TDMI_IDLE,
-    TDMI_RUNNING,
-    TDMI_IDLESCAN,
+  TDMI_IDLE,         /* Not tuned */
+  TDMI_RUNNING,      /* Tuned with a subscriber */
+  TDMI_IDLESCAN,     /* Just scanning */
 } tdmi_state_t;
 
 /*
  * DVB Mux instance
  */
 typedef struct th_dvb_mux_instance {
+  LIST_ENTRY(th_dvb_mux_instance) tdmi_global_link;
   LIST_ENTRY(th_dvb_mux_instance) tdmi_adapter_link;
 
   struct th_dvb_adapter *tdmi_adapter;
@@ -171,15 +170,16 @@ typedef struct th_dvb_mux_instance {
   time_t tdmi_got_adapter;
   time_t tdmi_lost_adapter;
 
-  int tdmi_type;                           /* really fe_type_t */
   struct dvb_frontend_parameters *tdmi_fe_params;
-  int tdmi_polarisation;
+  uint8_t tdmi_polarisation;  /* for DVB-S */
+  uint8_t tdmi_switchport;    /* for DVB-S */
 
-  const char *tdmi_shortname;   /* Only unique for the specific adapter */
-  const char *tdmi_uniquename;  /* Globally unique */
+  char *tdmi_identifier;
   const char *tdmi_network;     /* Name of network, from NIT table */
-} th_dvb_mux_instance_t;
 
+  struct th_transport_list tdmi_transports; /* via tht_mux_link */
+
+} th_dvb_mux_instance_t;
 
 
 /*
@@ -190,10 +190,9 @@ typedef struct th_dvb_table {
   char *tdt_name;
   void *tdt_handle;
   struct th_dvb_mux_instance *tdt_tdmi;
-  int tdt_count; /* times seen */
   void *tdt_opaque;
-  int (*tdt_callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
-		      uint8_t tableid, void *opaque);
+  void (*tdt_callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
+		       uint8_t tableid, void *opaque);
 
   int tdt_fd;
   struct dmx_sct_filter_params *tdt_fparams;
@@ -205,20 +204,21 @@ typedef struct th_dvb_table {
  */
 typedef struct th_dvb_adapter {
 
-  struct th_dvb_mux_instance_list tda_muxes_configured;
+  LIST_ENTRY(th_dvb_adapter) tda_global_link;
 
-  struct th_dvb_mux_instance_list tda_muxes_active;
+  enum {
+    TDA_STATE_UNCONFIGURED,    /* Found but not configured */
+    TDA_STATE_RUNNING,         /* Configured */
+    TDA_STATE_ZOMBIE,          /* Configured but not found */
+  } tda_state;
+
+  struct th_dvb_mux_instance_list tda_muxes;
   th_dvb_mux_instance_t *tda_mux_current;
 
   const char *tda_rootpath;
-  const char *tda_info;
-  const char *tda_sname;
+  char *tda_identifier;
 
-  LIST_ENTRY(th_dvb_adapter) tda_link;
-
-  LIST_HEAD(, th_dvb_mux) tda_muxes;
-
-  int tda_running;
+  char *tda_displayname;
 
   pthread_mutex_t tda_lock;
   pthread_cond_t tda_cond;
@@ -365,7 +365,7 @@ typedef struct th_transport {
   
   const char *tht_name;
 
-  LIST_ENTRY(th_transport) tht_global_link;
+  LIST_ENTRY(th_transport) tht_hash_link;
 
   enum {
     TRANSPORT_DVB,
@@ -385,7 +385,6 @@ typedef struct th_transport {
 
   int tht_tt_rundown_content_length;
   time_t tht_tt_clock;   /* Network clock as determined by teletext decoder */
-  int tht_prio;
   
   struct th_stream_list tht_streams;
   th_stream_t *tht_video;
@@ -393,8 +392,9 @@ typedef struct th_transport {
   
   int64_t  tht_pcr_drift;
   uint16_t tht_pcr_pid;
-  uint16_t tht_dvb_transport_id;
   uint16_t tht_dvb_service_id;
+  uint16_t tht_pmt;
+
   int tht_pmt_seen;
 
   avgstat_t tht_cc_errors;
@@ -406,7 +406,11 @@ typedef struct th_transport {
 
   int64_t tht_dts_start;
   
-  LIST_ENTRY(th_transport) tht_adapter_link;
+  LIST_ENTRY(th_transport) tht_mux_link;
+
+  LIST_ENTRY(th_transport) tht_tmp_link;
+
+  LIST_ENTRY(th_transport) tht_active_link;
 
   LIST_ENTRY(th_transport) tht_channel_link;
   struct th_channel *tht_channel;
@@ -418,6 +422,7 @@ typedef struct th_transport {
 
   void (*tht_stop_feed)(struct th_transport *t);
 
+  void (*tht_config_change)(struct th_transport *t);
 
   struct th_muxer_list tht_muxers; /* muxers */
 
@@ -460,9 +465,20 @@ typedef struct th_transport {
     } file_input;
  } u;
 
+  const char *tht_identifier;
+  const char *tht_servicename;
+  const char *tht_channelname;
   const char *tht_provider;
-  const char *tht_uniquename;
   const char *tht_network;
+  enum {
+    /* Service types defined in EN 300 468 */
+
+    ST_SDTV       = 0x1,    /* SDTV (MPEG2) */
+    ST_RADIO      = 0x2,
+    ST_HDTV       = 0x11,   /* HDTV (MPEG2) */
+    ST_AC_SDTV    = 0x16,   /* Advanced codec SDTV */
+    ST_AC_HDTV    = 0x19,   /* Advanced codec HDTV */
+  } tht_servicetype;
 
   enum {
     THT_MPEG_TS,
@@ -865,5 +881,14 @@ extern th_channel_group_t *defgroup;
 
 struct config_head *user_resolve_to_config(const char *username, 
 					   const char *password);
+
+extern inline unsigned int tvh_strhash(const char *s, unsigned int mod)
+{
+  unsigned int v = 5381;
+  while(*s)
+    v += (v << 5) + v + *s++;
+  return v % mod;
+}
+
 
 #endif /* TV_HEAD_H */

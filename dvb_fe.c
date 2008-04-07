@@ -83,7 +83,7 @@ dvb_fe_manager(void *aux)
 
       p = *tdmi->tdmi_fe_params;
 
-      if(tdmi->tdmi_type == FE_QPSK) {
+      if(tda->tda_fe_info->type == FE_QPSK) {
 	/* DVB-S */
 	int lowfreq, hifreq, switchfreq, hiband;
 
@@ -105,9 +105,8 @@ dvb_fe_manager(void *aux)
 	else
 	  p.frequency = abs(p.frequency - lowfreq);
       }
-
+ 
       i = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, &p);
-
       if(i != 0) {
 	syslog(LOG_ERR, "\"%s\" tuning to %dHz"
 	       " -- Front configuration failed -- %s",
@@ -160,6 +159,8 @@ dvb_fe_manager(void *aux)
       tdmi->tdmi_status = "No signal";
 
     ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &v);
+    if(v < 0)
+      v = 0;
 
     if(fe_status & FE_HAS_LOCK) {
       tdmi->tdmi_fec_err_histogram[tdmi->tdmi_fec_err_ptr] = v;
@@ -223,7 +224,7 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
 
   if(maylog)
     syslog(LOG_DEBUG, "\"%s\" tuning to mux \"%s\"", 
-	   tda->tda_rootpath, tdmi->tdmi_shortname);
+	   tda->tda_rootpath, "FIXME");
 
   /* Add tables which will be activated once the tuning is completed */
 

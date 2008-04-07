@@ -20,6 +20,19 @@ img { border: 0; }
    cursor:move;
  }
  
+
+
+.normallist {
+   margin:0;
+   margin-top:10px;
+   padding:0;
+   list-style-type: none;
+ }
+.normallist li {
+   margin:0;
+   padding:0px;
+ }
+ 
 /**
  * Input classes
  */
@@ -29,13 +42,51 @@ img { border: 0; }
   background: #fff
 }
 
+.nicebox {
+  margin: 1px;
+  padding: 0px;
+  border: 0px;
+  width: 11px;
+  height: 11px;
+}
+
+
 /**
  * Misc classes
  */
 
+.infoprefix {
+	float: left;
+	width: 50px;
+	text-align: right;
+}
+
+.infoprefixwide {
+ 	padding-right: 10px;
+	float: left;
+	width: 100px;
+	text-align: right;
+}
+
+.infoprefixwidefat {
+ 	padding-right: 10px;
+	float: left;
+	width: 130px;
+	text-align: right;
+	margin-top: 4px;
+}
+
+.pidheader {
+  float: left;
+  text-decoration: underline;
+}
+
+
+
 .chgroupaction {
   text-align: right;
 }
+
 
 /**
  *  Box with round edges

@@ -30,85 +30,9 @@
 #include "dvb.h"
 #include "dvb_dvr.h"
 #include "dvb_muxconfig.h"
+#include "dvb_support.h"
 #include "strtab.h"
 #include "transports.h"
-
-
-
-static void
-dvb_add_mux(struct dvb_frontend_parameters *fe_param, fe_type_t type,
-	    int polarisation)
-{
-  th_dvb_adapter_t *tda;
-  char buf[100];
-  char *typetxt;
-
-  th_dvb_mux_instance_t *tdmi;
-
-  switch(type) {
-  case FE_QPSK:
-    typetxt = "DVB-S";
-    break;
-  case FE_QAM:
-    typetxt = "DVB-C";
-    break;
-  case FE_OFDM:
-    typetxt = "DVB-T";
-    break;
-  case FE_ATSC:
-    typetxt = "ATSC";
-    break;
-  default:
-    return;
-  }
-
-  LIST_FOREACH(tda, &dvb_adapters_probing, tda_link) {
-    if(tda->tda_fe_info->type != type)
-      continue; /* Does not match frontend */
-
-    tdmi = calloc(1, sizeof(th_dvb_mux_instance_t));
-    pthread_mutex_init(&tdmi->tdmi_table_lock, NULL);
-
-    tdmi->tdmi_status = TDMI_CONFIGURED;
-    tdmi->tdmi_adapter = tda;
-    LIST_INSERT_HEAD(&tda->tda_muxes_configured, tdmi, tdmi_adapter_link);
-
-    tdmi->tdmi_type = type;
-
-    tdmi->tdmi_fe_params = malloc(sizeof(struct dvb_frontend_parameters));
-    tdmi->tdmi_polarisation = polarisation;
-
-    memcpy(tdmi->tdmi_fe_params, fe_param,
-	   sizeof(struct dvb_frontend_parameters));
-    
-    /* Generate names */
-
-    if(tdmi->tdmi_type == FE_QPSK) {
-      const char *pol;
-
-      switch(polarisation) {
-      case POLARISATION_VERTICAL:   pol = "V"; break;
-      case POLARISATION_HORIZONTAL: pol = "H"; break;
-      default:                      pol = "X"; break;
-      }
-
-
-      /* Frequency is in kHz */
-      snprintf(buf, sizeof(buf), "%s/%.1fMHz/%s",
-	       typetxt, (float)fe_param->frequency / 1000.0f, pol);
-    } else {
-      snprintf(buf, sizeof(buf), "%s/%.1fMHz",
-	       typetxt, (float)fe_param->frequency / 1000000.0f);
-    }
-      tdmi->tdmi_shortname = strdup(buf);
-    
-    snprintf(buf, sizeof(buf), "%s/%s", tda->tda_sname, tdmi->tdmi_shortname),
-    tdmi->tdmi_uniquename = strdup(buf);
-
-  }
-}
-
-
 
 static struct strtab fectab[] = {
   { "NONE", FEC_NONE },
@@ -148,7 +72,6 @@ static struct strtab modetab[] = {
   { "AUTO", TRANSMISSION_MODE_AUTO }
 };
 
-
 static struct strtab guardtab[] = {
   { "1/32", GUARD_INTERVAL_1_32 },
   { "1/16", GUARD_INTERVAL_1_16 },
@@ -164,6 +87,174 @@ static struct strtab hiertab[] = {
   { "4",    HIERARCHY_4 },
   { "AUTO", HIERARCHY_AUTO }
 };
+
+static struct strtab poltab[] = {
+  { "V",    POLARISATION_VERTICAL },
+  { "H",    POLARISATION_HORIZONTAL },
+};
+
+
+void
+dvb_mux_store(FILE *fp, th_dvb_mux_instance_t *tdmi)
+{
+  struct dvb_frontend_parameters *f = tdmi->tdmi_fe_params;
+
+  fprintf(fp, "\tfrequency = %d\n", f->frequency);
+  
+  switch(tdmi->tdmi_adapter->tda_fe_info->type) {
+  case FE_OFDM:
+    fprintf(fp, "\tbandwidth = %s\n",     
+	    val2str(f->u.ofdm.bandwidth, bwtab));
+
+    fprintf(fp, "\tconstellation = %s\n", 
+	    val2str(f->u.ofdm.constellation, qamtab));
+
+    fprintf(fp, "\ttransmission_mode = %s\n", 
+	    val2str(f->u.ofdm.transmission_mode, modetab));
+
+    fprintf(fp, "\tguard_interval = %s\n", 
+	    val2str(f->u.ofdm.guard_interval, guardtab));
+
+    fprintf(fp, "\thierarchy = %s\n", 
+	    val2str(f->u.ofdm.hierarchy_information, hiertab));
+
+    fprintf(fp, "\tfec_hi = %s\n", 
+	    val2str(f->u.ofdm.code_rate_HP, fectab));
+
+    fprintf(fp, "\tfec_lo = %s\n", 
+	    val2str(f->u.ofdm.code_rate_LP, fectab));
+    break;
+
+  case FE_QPSK:
+    fprintf(fp, "\tsymbol_rate = %d\n", f->u.qpsk.symbol_rate);
+
+    fprintf(fp, "\tfec = %s\n", 
+	    val2str(f->u.qpsk.fec_inner, fectab));
+
+    fprintf(fp, "\tpolarisation = %s\n", 
+	    val2str(tdmi->tdmi_polarisation, poltab));
+ 
+    fprintf(fp, "\tswitchport = %d\n", tdmi->tdmi_switchport);
+    break;
+
+  case FE_QAM:
+    fprintf(fp, "\tsymbol_rate = %d\n", f->u.qam.symbol_rate);
+
+    fprintf(fp, "\tfec = %s\n", 
+	    val2str(f->u.qam.fec_inner, fectab));
+
+    fprintf(fp, "\tconstellation = %s\n", 
+	    val2str(f->u.qam.modulation, qamtab));
+    break;
+
+  case FE_ATSC:
+    break;
+  }
+}
+
+/**
+ *
+ */
+const char *
+dvb_mux_create_str(th_dvb_adapter_t *tda,
+		   const char *freqstr,
+		   const char *symratestr,
+		   const char *qamstr,
+		   const char *fecstr,
+		   const char *fechistr,
+		   const char *feclostr,
+		   const char *bwstr,
+		   const char *tmodestr,
+		   const char *guardstr,
+		   const char *hierstr,
+		   const char *polstr,
+		   const char *switchportstr,
+		   int save)
+{
+  struct dvb_frontend_parameters f;
+  int r;
+  int polarisation = 0, switchport = 0;
+
+  memset(&f, 0, sizeof(f));
+  
+  f.inversion = INVERSION_AUTO;
+
+  f.frequency = freqstr ? atoi(freqstr) : 0;
+  if(f.frequency == 0)
+    return "Invalid frequency";
+
+  switch(tda->tda_fe_info->type) {
+  case FE_OFDM:
+    if(bwstr == NULL || (r = str2val(bwstr, bwtab)) < 0)
+      return "Invalid bandwidth";
+    f.u.ofdm.bandwidth = r;
+
+    if(qamstr == NULL || (r = str2val(qamstr, qamtab)) < 0)
+      return "Invalid QAM constellation";
+    f.u.ofdm.constellation = r;
+
+    if(tmodestr == NULL || (r = str2val(tmodestr, modetab)) < 0)
+      return "Invalid transmission mode";
+    f.u.ofdm.transmission_mode = r;
+
+    if(guardstr == NULL || (r = str2val(guardstr, guardtab)) < 0)
+      return "Invalid guard interval";
+    f.u.ofdm.guard_interval = r;
+
+    if(hierstr == NULL || (r = str2val(hierstr, hiertab)) < 0)
+      return "Invalid heirarchy information";
+    f.u.ofdm.hierarchy_information = r;
+
+    if(fechistr == NULL || (r = str2val(fechistr, fectab)) < 0)
+      printf("hifec = %s\n", fechistr);
+    f.u.ofdm.code_rate_HP = r;
+
+    if(feclostr == NULL || (r = str2val(feclostr, fectab)) < 0)
+      return "Invalid lo-FEC";
+    f.u.ofdm.code_rate_LP = r;
+    break;
+
+  case FE_QPSK:
+    f.u.qpsk.symbol_rate = symratestr ? atoi(symratestr) : 0;
+    if(f.u.qpsk.symbol_rate == 0)
+      return "Invalid symbol rate";
+    
+    if(fecstr == NULL || (r = str2val(fecstr, fectab)) < 0)
+      return "Invalid FEC";
+    f.u.qpsk.fec_inner = r;
+
+    if(polstr == NULL || (r = str2val(polstr, poltab)) < 0)
+      return "Invalid polarisation";
+    polarisation = r;
+    
+    switchport = atoi(switchportstr);
+    break;
+
+  case FE_QAM:
+    f.u.qam.symbol_rate = symratestr ? atoi(symratestr) : 0;
+    if(f.u.qam.symbol_rate == 0)
+      return "Invalid symbol rate";
+    
+    if(qamstr == NULL || (r = str2val(qamstr, qamtab)) < 0)
+      return "Invalid QAM constellation";
+    f.u.qam.modulation = r;
+
+    if(fecstr == NULL || (r = str2val(fecstr, fectab)) < 0)
+      return "Invalid FEC";
+    f.u.qam.fec_inner = r;
+    break;
+
+  case FE_ATSC:
+    break;
+  }
+
+  dvb_mux_create(tda, &f, polarisation, switchport, save);
+
+  return NULL;
+}
+
+
+#if 0
 
 
 
@@ -323,3 +414,4 @@ dvb_mux_setup(void)
       dvb_muxfile_add(ce->ce_value);
 }
 
+#endif

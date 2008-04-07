@@ -43,7 +43,6 @@ static void channel_group_settings_write(void);
 static void channel_settings_write(th_channel_t *ch);
 
 struct th_channel_list channels;
-struct th_transport_list all_transports;
 int nchannels;
 
 struct th_channel_group_queue all_channel_groups;
@@ -234,8 +233,6 @@ service_load(struct config_head *head)
 
   t = calloc(1, sizeof(th_transport_t));
 
-  t->tht_prio = atoi(config_get_str_sub(head, "prio", ""));
-
   if(0) {
 #ifdef ENABLE_INPUT_IPTV
   } else if((v = config_get_str_sub(head, "iptv", NULL)) != NULL) {
@@ -380,32 +377,6 @@ channel_group_by_tag(uint32_t tag)
   }
 
   return NULL;
-}
-
-void
-channel_group_move_next(th_channel_group_t *tcg)
-{
-  th_channel_group_t *n = TAILQ_NEXT(tcg, tcg_global_link);
-  if(n == NULL)
-    return;
-
-  TAILQ_REMOVE(&all_channel_groups, tcg, tcg_global_link);
-  TAILQ_INSERT_AFTER(&all_channel_groups, n, tcg, tcg_global_link);
-
-  channel_group_settings_write();
-}
-
-void
-channel_group_move_prev(th_channel_group_t *tcg)
-{
-  th_channel_group_t *p = TAILQ_PREV(tcg, th_channel_group_queue,
-				     tcg_global_link);
-  if(p == NULL)
-    return;
-
-  TAILQ_REMOVE(&all_channel_groups, tcg, tcg_global_link);
-  TAILQ_INSERT_BEFORE(p, tcg, tcg_global_link);
-  channel_group_settings_write();
 }
 
 

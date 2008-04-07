@@ -183,6 +183,8 @@ main(int argc, char **argv)
   
   settings_dir = config_get_str("settings-dir", NULL);
 
+  settings_dir = NULL;
+
   if(settings_dir == NULL) {
     settings_dir = "/tmp/tvheadend";
     sys_warning = 
@@ -202,6 +204,15 @@ main(int argc, char **argv)
   mkdir(buf, 0777);
 
   snprintf(buf, sizeof(buf), "%s/autorec", settings_dir);
+  mkdir(buf, 0777);
+
+  snprintf(buf, sizeof(buf), "%s/dvbadapters", settings_dir);
+  mkdir(buf, 0777);
+
+  snprintf(buf, sizeof(buf), "%s/dvbadapters", settings_dir);
+  mkdir(buf, 0777);
+
+  snprintf(buf, sizeof(buf), "%s/dvbmuxes", settings_dir);
   mkdir(buf, 0777);
 
   syslog(LOG_NOTICE, "Started HTS TV Headend, settings located in \"%s\"",
@@ -233,7 +244,7 @@ main(int argc, char **argv)
 
   subscriptions_init();
 
-  htmlui_start();
+  //  htmlui_start();
   if(doajax)
     ajaxui_start();
 
@@ -366,26 +377,6 @@ char *
 utf8tofilename(const char *in) 
 {
   return convert_to(in, "LATIN1");
-}
-
-
-
-
-
-
-const char *
-htstvstreamtype2txt(tv_streamtype_t s)
-{
-  switch(s) {
-  case HTSTV_MPEG2VIDEO: return "mpeg2video";
-  case HTSTV_MPEG2AUDIO: return "mpeg2audio";
-  case HTSTV_H264:       return "h264";
-  case HTSTV_AC3:        return "AC-3";
-  case HTSTV_TELETEXT:   return "teletext";
-  case HTSTV_SUBTITLES:  return "subtitles";
-  case HTSTV_TABLE:      return "PSI table";
-  default:               return "<unknown>";
-  }
 }
 
 

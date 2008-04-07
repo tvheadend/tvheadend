@@ -222,11 +222,9 @@ iptv_configure_transport(th_transport_t *t, const char *iptv_type,
 	   ifname, inet_ntoa(t->tht_iptv_group_addr), t->tht_iptv_port);
   t->tht_name = strdup(buf);
 
-  st = transport_add_stream(t, 0, HTSTV_TABLE);
+  st = transport_add_stream(t, 0, HTSTV_PAT);
   st->st_got_section = iptv_parse_pat;
   st->st_section_docrc = 1;
-
-  t->tht_prio = 50;
 
   s = config_get_str_sub(head, "provider", NULL);
   if(s != NULL)
@@ -240,12 +238,13 @@ iptv_configure_transport(th_transport_t *t, const char *iptv_type,
   else
     t->tht_network = strdup(inet_ntoa(t->tht_iptv_group_addr));
 
-  snprintf(buf, sizeof(buf), "IPTV:%s:%d",
+  snprintf(buf, sizeof(buf), "iptv_%s_%d",
 	   inet_ntoa(t->tht_iptv_group_addr), t->tht_iptv_port);
-  t->tht_uniquename = strdup(buf);
+  t->tht_identifier = strdup(buf);
 
-  t->tht_channel = channel_find(channel_name, 1, NULL);
-  LIST_INSERT_HEAD(&iptv_probing_transports, t, tht_adapter_link);
+  t->tht_channelname = strdup(channel_name);
+
+  LIST_INSERT_HEAD(&iptv_probing_transports, t, tht_active_link);
   startupcounter++;
 
   if(!dtimer_isarmed(&iptv_probe_timer)) {
@@ -277,7 +276,7 @@ iptv_probe_done(th_transport_t *t, int timeout)
   LIST_FOREACH(st, &t->tht_streams, st_link)
     pidcnt++;
   
-  LIST_REMOVE(t, tht_adapter_link);
+  LIST_REMOVE(t, tht_active_link);
 
   syslog(LOG_INFO, "iptv: Transport %s probed, %d pids found%s", 
 	 t->tht_name, pidcnt, timeout ? ", but probe timeouted" : "");
@@ -285,9 +284,9 @@ iptv_probe_done(th_transport_t *t, int timeout)
   iptv_stop_feed(t);
 
   if(!timeout)
-    transport_link(t, t->tht_channel, THT_MPEG_TS);
+    transport_set_channel(t, t->tht_channelname);
   else
-    LIST_INSERT_HEAD(&iptv_stale_transports, t, tht_adapter_link);
+    LIST_INSERT_HEAD(&iptv_stale_transports, t, tht_active_link);
 
   t = LIST_FIRST(&iptv_probing_transports);
   if(t == NULL)

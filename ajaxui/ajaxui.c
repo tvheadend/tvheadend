@@ -44,6 +44,9 @@
 #include "obj/sbhead_l.gifh"
 #include "obj/sbhead_r.gifh"
 
+#include "obj/mapped.pngh"
+#include "obj/unmapped.pngh"
+
 
 
 const char *ajax_tabnames[] = {
@@ -194,6 +197,19 @@ ajax_menu_bar_from_array(tcp_queue_t *tq, const char *name,
 }
 
 
+/**
+ *
+ */
+void
+ajax_a_jsfunc(tcp_queue_t *tq, const char *innerhtml, const char *func,
+	      const char *trailer)
+{
+  tcp_qprintf(tq, "<a href=\"javascript:void(0)\" "
+	      "onClick=\"javascript:%s\">%s</a>%s\r\n",
+	      func, innerhtml, trailer);
+}
+
+
 /*
  * Titlebar AJAX page
  */
@@ -252,9 +268,13 @@ ajax_page_root(http_connection_t *hc, const char *remain, void *opaque)
   tcp_init_queue(&tq, -1);
 
   tcp_qprintf(&tq, 
+	      "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\r\n"
+	      "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"
+	      /*
 	      "<!DOCTYPE html "
 	      "PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\"\r\n"
 	      "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+	      */
 	      "\r\n"
 	      "<html xmlns=\"http://www.w3.org/1999/xhtml\" "
 	      "xml:lang=\"en\" lang=\"en\">"
@@ -413,7 +433,13 @@ ajaxui_start(void)
   http_resource_add("/sidebox/sbhead-r.gif", embedded_sbhead_r,
 		    sizeof(embedded_sbhead_r), "image/gif", NULL);
 
+  http_resource_add("/gfx/unmapped.png", embedded_unmapped,
+		    sizeof(embedded_unmapped), "image/png", NULL);
+
+  http_resource_add("/gfx/mapped.png", embedded_mapped,
+		    sizeof(embedded_mapped), "image/png", NULL);
+
   ajax_channels_init();
   ajax_config_init();
-
+  ajax_config_transport_init();
 }
