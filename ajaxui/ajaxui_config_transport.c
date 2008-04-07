@@ -204,7 +204,7 @@ ajax_transport_build_list(tcp_queue_t *tq, struct th_transport_list *tlist)
     tcp_qprintf(tq, "</div>");
 
     /* Extra info */
-    tcp_qprintf(tq, "<div name=\"id=\"svcinfo%s\" style=\"display: none\">",
+    tcp_qprintf(tq, "<div id=\"svcinfo%s\" style=\"display: none\">",
 		t->tht_identifier);
 
     tcp_qprintf(tq, "<p>");
