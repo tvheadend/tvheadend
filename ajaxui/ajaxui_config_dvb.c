@@ -607,6 +607,15 @@ ajax_adaptermuxlist(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
+ *
+ */
+static int
+dvbsvccmp(th_transport_t *a, th_transport_t *b)
+{
+  return a->tht_dvb_service_id - b->tht_dvb_service_id;
+}
+
+/**
  * Display detailes about a mux
  */
 static int
@@ -630,7 +639,7 @@ ajax_dvbmuxeditor(http_connection_t *hc, const char *remain, void *opaque)
   LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
     if(transport_servicetype_txt(t) == NULL)
       continue;
-    LIST_INSERT_HEAD(&head, t, tht_tmp_link);
+    LIST_INSERT_SORTED(&head, t, tht_tmp_link, dvbsvccmp);
   }
 
   ajax_box_begin(&tq, AJAX_BOX_SIDEBOX, NULL, NULL, buf);
