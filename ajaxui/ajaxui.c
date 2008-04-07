@@ -53,6 +53,7 @@ const char *ajax_tabnames[] = {
   [AJAX_TAB_CHANNELS]      = "Channels",
   [AJAX_TAB_RECORDER]      = "Recorder",
   [AJAX_TAB_CONFIGURATION] = "Configuration",
+  [AJAX_TAB_ABOUT]         = "About",
 };
 
 /**
@@ -227,6 +228,53 @@ ajax_page_titlebar(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+
+
+/**
+ * About
+ */
+static int
+ajax_about_tab(http_connection_t *hc)
+{
+  tcp_queue_t tq;
+  
+  tcp_init_queue(&tq, -1);
+
+  tcp_qprintf(&tq, "<center>");
+  tcp_qprintf(&tq, "<div style=\"padding: auto; width: 400px\">");
+
+  ajax_box_begin(&tq, AJAX_BOX_SIDEBOX, NULL, NULL, "About");
+
+  tcp_qprintf(&tq, "<div style=\"text-align: center\">");
+
+  tcp_qprintf(&tq, 
+	      "<p>HTS / Tvheadend</p>"
+	      "<p>(c) 2006-2008 Andreas \303\226man</p>"
+	      "<p>Latest release and information is available at:</p>"
+	      "<p><a href=\"http://www.lonelycoder.com/hts/\">"
+	      "http://www.lonelycoder.com/hts/</a></p>"
+	      "<p>&nbsp;</p>"
+	      "<p>This webinterface is powered by</p>"
+	      "<p><a href=\"http://www.prototypejs.org/\">Prototype</a>"
+	      " and "
+	      "<a href=\"http://script.aculo.us/\">script.aculo.us</a>"
+	      "</p>"
+	      "<p>&nbsp;</p>"
+	      "<p>Media formats and codecs by</p>"
+	      "<p><a href=\"http://www.ffmpeg.org/\">FFmpeg</a></p>"
+	      );
+
+  tcp_qprintf(&tq, "</div>");
+  ajax_box_end(&tq, AJAX_BOX_SIDEBOX);
+  tcp_qprintf(&tq, "</div>");
+  tcp_qprintf(&tq, "</center>");
+
+  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
+  return 0;
+}
+
+
+
 /*
  * Tab AJAX page
  *
@@ -248,6 +296,9 @@ ajax_page_tab(http_connection_t *hc, const char *remain, void *opaque)
 
   case AJAX_TAB_CONFIGURATION:
     return ajax_config_tab(hc);
+
+  case AJAX_TAB_ABOUT:
+    return ajax_about_tab(hc);
 
   default:
     return HTTP_STATUS_NOT_FOUND;

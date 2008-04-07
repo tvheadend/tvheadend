@@ -39,7 +39,8 @@ TAILQ_HEAD(ajax_menu_entry_queue, ajax_menu_entry);
 #define AJAX_TAB_CHANNELS      0
 #define AJAX_TAB_RECORDER      1
 #define AJAX_TAB_CONFIGURATION 2
-#define AJAX_TABS 3
+#define AJAX_TAB_ABOUT         3
+#define AJAX_TABS              4
 
 
 void ajaxui_start(void);
