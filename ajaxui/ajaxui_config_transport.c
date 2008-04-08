@@ -169,8 +169,9 @@ ajax_transport_build_list(tcp_queue_t *tq, struct th_transport_list *tlist)
 		"onClick=\"new "
 		"Ajax.Request('/ajax/transport_op/%s', "
 		"{parameters: {action: 'toggle'}})\">"
-		"<img id=\"map%s\" src=\"/gfx/unmapped.png\"></a></div>",
-		t->tht_identifier, t->tht_identifier);
+		"<img id=\"map%s\" src=\"/gfx/%smapped.png\"></a></div>",
+		t->tht_identifier, t->tht_identifier,
+		t->tht_channel ? "" : "un");
 
     tcp_qprintf(tq, "<div id=\"chname%s\" style=\"float: left; width: 26%\">",
 		t->tht_identifier);
