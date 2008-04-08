@@ -81,6 +81,8 @@ ajax_chgroup_updateorder(http_connection_t *hc, const char *remain,
     TAILQ_INSERT_TAIL(&all_channel_groups, tcg, tcg_global_link);
   }
 
+  channel_group_settings_write();
+
   tcp_qprintf(&tq, "<span id=\"updatedok\">Updated on server</span>");
   ajax_js(&tq, "Effect.Fade('updatedok')");
   http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);

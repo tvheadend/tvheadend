@@ -225,6 +225,8 @@ main(int argc, char **argv)
   signal(SIGTERM, doexit);
   signal(SIGINT, doexit);
 
+  channels_load();
+
   spawn_init();
 
   av_register_all();
@@ -235,8 +237,6 @@ main(int argc, char **argv)
   if(!disable_dvb)
     dvb_init();
   v4l_init();
-
-  channels_load();
 
   autorec_init();
   epg_init();

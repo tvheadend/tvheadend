@@ -39,7 +39,6 @@
 #include "channels.h"
 #include "transports.h"
 
-static void channel_group_settings_write(void);
 static void channel_settings_write(th_channel_t *ch);
 
 struct th_channel_list channels;
@@ -385,7 +384,7 @@ channel_group_by_tag(uint32_t tag)
  *
  * We do this to maintain order of groups
  */
-static void
+void
 channel_group_settings_write(void)
 {
   FILE *fp;
