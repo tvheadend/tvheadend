@@ -235,6 +235,15 @@ dvb_polarisation_to_str(int pol)
   }
 }
 
+static const char *
+dvb_polarisation_to_str_long(int pol)
+{
+  switch(pol) {
+  case POLARISATION_VERTICAL:   return "Vertical";
+  case POLARISATION_HORIZONTAL: return "Horizontal";
+  default:                      return "??";
+  }
+}
 
 
 th_dvb_mux_instance_t *
@@ -287,4 +296,18 @@ dvb_mux_status(th_dvb_mux_instance_t *tdmi)
     txt = "Bursty FEC rate";
 
   return txt;
+}
+
+/**
+ * 
+ */
+void
+dvb_mux_nicename(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
+{
+  if(tdmi->tdmi_adapter->tda_fe_info->type == FE_QPSK)
+    snprintf(buf, size, "%dkHz %s port %d", tdmi->tdmi_fe_params->frequency,
+	     dvb_polarisation_to_str_long(tdmi->tdmi_polarisation),
+	     tdmi->tdmi_switchport);
+  else 
+    snprintf(buf, size, "%dHz", tdmi->tdmi_fe_params->frequency);
 }

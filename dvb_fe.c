@@ -62,6 +62,7 @@ dvb_fe_manager(void *aux)
   fe_status_t fe_status;
   th_dvb_table_t *tdt;
   struct dvb_frontend_parameters p;
+  char buf[100];
 
   while(1) {
     ts.tv_sec = time(NULL) + 1;
@@ -108,10 +109,10 @@ dvb_fe_manager(void *aux)
  
       i = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, &p);
       if(i != 0) {
-	syslog(LOG_ERR, "\"%s\" tuning to %dHz"
+	dvb_mux_nicename(buf, sizeof(buf), tdmi);
+	syslog(LOG_ERR, "\"%s\" tuning to \"%s\""
 	       " -- Front configuration failed -- %s",
-	       tda->tda_rootpath, tdmi->tdmi_fe_params->frequency,
-	       strerror(errno));
+	       tda->tda_rootpath, buf, strerror(errno));
       }
       free(c);
 
@@ -211,6 +212,7 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
 {
   dvb_fe_cmd_t *c;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  char buf[100];
 
   tdmi->tdmi_state = state;
 
@@ -222,10 +224,10 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
 
   tda->tda_mux_current = tdmi;
 
-  if(maylog)
-    syslog(LOG_DEBUG, "\"%s\" tuning to mux \"%s\"", 
-	   tda->tda_rootpath, "FIXME");
-
+  if(maylog) {
+    dvb_mux_nicename(buf, sizeof(buf), tdmi);
+    syslog(LOG_DEBUG, "\"%s\" tuning to mux \"%s\"", tda->tda_rootpath, buf);
+  }
   /* Add tables which will be activated once the tuning is completed */
 
   dvb_table_add_default(tdmi);
