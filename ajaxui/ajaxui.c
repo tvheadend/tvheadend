@@ -104,9 +104,7 @@ ajax_box_begin(tcp_queue_t *tq, ajax_box_t type,
 		"<b class=\"borderbox\">"
 		"<b class=\"borderbox1\"><b></b></b>"
 		"<b class=\"borderbox2\"><b></b></b>"
-		"<b class=\"borderbox3\"></b>"
-		"<b class=\"borderbox4\"></b>"
-		"<b class=\"borderbox5\"></b></b>"
+		"<b class=\"borderbox3\"></b></b>"
 		"<div class=\"borderboxfg\" %s%s>\r\n",
 		id0, style0);
 
@@ -141,8 +139,6 @@ ajax_box_end(tcp_queue_t *tq, ajax_box_t type)
     tcp_qprintf(tq,
 		"</div>"
 		"<b class=\"borderbox\">"
-		"<b class=\"borderbox5\"></b>"
-		"<b class=\"borderbox4\"></b>"
 		"<b class=\"borderbox3\"></b>"
 		"<b class=\"borderbox2\"><b></b></b>"
 		"<b class=\"borderbox1\"><b></b></b></b>"
