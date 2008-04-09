@@ -149,13 +149,13 @@ dvb_fe_manager(void *aux)
     if(fe_status & FE_HAS_LOCK) {
       tdmi->tdmi_status = NULL;
     } else if(fe_status & FE_HAS_SYNC)
-      tdmi->tdmi_status = "No lock, but sync ok";
+      tdmi->tdmi_status = "No lock, Sync Ok";
     else if(fe_status & FE_HAS_VITERBI)
-      tdmi->tdmi_status = "No lock, but FEC stable";
+      tdmi->tdmi_status = "No lock, FEC stable";
     else if(fe_status & FE_HAS_CARRIER)
-      tdmi->tdmi_status = "No lock, but carrier present";
+      tdmi->tdmi_status = "Carrier only";
     else if(fe_status & FE_HAS_SIGNAL)
-      tdmi->tdmi_status = "No lock, but faint signal present";
+      tdmi->tdmi_status = "Faint signal";
     else
       tdmi->tdmi_status = "No signal";
 
