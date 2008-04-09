@@ -40,14 +40,21 @@ ajax_chgroup_build(tcp_queue_t *tq, th_channel_group_t *tcg)
   
   ajax_box_begin(tq, AJAX_BOX_BORDER, NULL, NULL, NULL);
   
+  tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
+  
   tcp_qprintf(tq,
-	      "<div %s>%s</div>",
-	      tcg == defgroup ? "" : "style=\"float: left\" ",
-	      tcg->tcg_name);
+	      "<div style=\"float: left; width: 60%\">"
+	      "<a href=\"javascript:void(0)\" "
+	      "onClick=\"new Ajax.Updater('groupeditortab', "
+	      "'/ajax/chgroup_editor/%d', {method: 'get'})\" >"
+	      "%s</a></div>",
+	      tcg->tcg_tag, tcg->tcg_name);
+
 
   if(tcg != defgroup) {
     tcp_qprintf(tq,
-		"<div class=\"chgroupaction\">"
+		"<div style=\"float: left; width: 40%\" "
+		"class=\"chgroupaction\">"
 		"<a href=\"javascript:void(0)\" "
 		"onClick=\"dellistentry('/ajax/chgroup_del','%d', '%s');\""
 		">Delete</a></div>",
@@ -55,6 +62,7 @@ ajax_chgroup_build(tcp_queue_t *tq, th_channel_group_t *tcg)
   }
   
 
+  tcp_qprintf(tq, "</div>");
   ajax_box_end(tq, AJAX_BOX_BORDER);
   tcp_qprintf(tq, "</li>");
 }
@@ -170,7 +178,7 @@ ajax_config_channels_tab(http_connection_t *hc)
 
   tcp_init_queue(&tq, -1);
   
-  tcp_qprintf(&tq, "<div style=\"float: left; width: 400px\">");
+  tcp_qprintf(&tq, "<div style=\"float: left; width: 40%\">");
 
   ajax_box_begin(&tq, AJAX_BOX_SIDEBOX, "channelgroups",
 		 NULL, "Channel groups");
@@ -216,6 +224,63 @@ ajax_config_channels_tab(http_connection_t *hc)
     
   ajax_box_end(&tq, AJAX_BOX_SIDEBOX);
   tcp_qprintf(&tq, "</div>");
+
+  tcp_qprintf(&tq, 
+	      "<div id=\"groupeditortab\" "
+	      "style=\"height: 600px; overflow: auto; "
+	      "float: left; width: 60%\">");
+
+
+  tcp_qprintf(&tq, "</div>");
+
+
+  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
+  return 0;
+}
+
+/**
+ * Display all channels within the group
+ */
+static int
+ajax_chgroup_editor(http_connection_t *hc, const char *remain, void *opaque)
+{
+  tcp_queue_t tq;
+  th_channel_t *ch;
+  th_channel_group_t *tcg;
+
+  if(remain == NULL || (tcg = channel_group_by_tag(atoi(remain))) == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  tcp_init_queue(&tq, -1);
+
+  ajax_box_begin(&tq, AJAX_BOX_SIDEBOX, NULL, NULL, tcg->tcg_name);
+
+  tcp_qprintf(&tq, "<ul id=\"channellist\" class=\"draglist\">");
+
+  TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
+    tcp_qprintf(&tq, "<li id=\"ch_%d\">", ch->ch_tag);
+  
+    ajax_box_begin(&tq, AJAX_BOX_BORDER, NULL, NULL, NULL);
+  
+    tcp_qprintf(&tq, "<div style=\"overflow: auto; width: 100%\">");
+  
+    tcp_qprintf(&tq,
+		"<div style=\"float: left; width: 100%\">"
+		"<a href=\"javascript:void(0)\" >"
+		"%s</a>"
+		"</div>",
+		ch->ch_name);
+
+    tcp_qprintf(&tq, "</div>");
+    ajax_box_end(&tq, AJAX_BOX_BORDER);
+    tcp_qprintf(&tq, "</li>");
+  }
+
+  tcp_qprintf(&tq, "</ul>");
+
+  ajax_box_end(&tq, AJAX_BOX_SIDEBOX);
+
+
   http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
   return 0;
 }
@@ -229,7 +294,5 @@ ajax_config_channels_init(void)
   http_path_add("/ajax/chgroup_add"        , NULL, ajax_chgroup_add);
   http_path_add("/ajax/chgroup_del"        , NULL, ajax_chgroup_del);
   http_path_add("/ajax/chgroup_updateorder", NULL, ajax_chgroup_updateorder);
-
-  
-
+  http_path_add("/ajax/chgroup_editor",      NULL, ajax_chgroup_editor);
 }
