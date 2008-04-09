@@ -521,3 +521,12 @@ transport_is_tv(th_transport_t *t)
     t->tht_servicetype == ST_AC_SDTV ||
     t->tht_servicetype == ST_AC_HDTV;
 }
+
+/**
+ *
+ */
+int
+transport_is_available(th_transport_t *t)
+{
+  return transport_servicetype_txt(t) && LIST_FIRST(&t->tht_streams);
+}

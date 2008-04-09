@@ -540,7 +540,7 @@ ajax_adaptermuxlist(http_connection_t *hc, const char *remain, void *opaque)
   th_dvb_adapter_t *tda;
   char buf[50], buf2[500], buf3[20];
   const char *txt;
-  int fetype, n;
+  int fetype, n, m;
   th_transport_t *t;
   int o = 1, v;
   int csize[10];
@@ -610,11 +610,13 @@ ajax_adaptermuxlist(http_connection_t *hc, const char *remain, void *opaque)
 
     cells[3] = txt;
 
-    n = 0;
-    LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link)
+    n = m = 0;
+    LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
       n++;
-
-    snprintf(buf3, sizeof(buf3), "%d", n);
+      if(transport_is_available(t))
+	m++;
+     }
+    snprintf(buf3, sizeof(buf3), "%d / %d", m, n);
     cells[4] = buf3;
     cells[5] = NULL;
 
@@ -658,9 +660,8 @@ ajax_dvbmuxeditor(http_connection_t *hc, const char *remain, void *opaque)
   LIST_INIT(&head);
 
   LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
-    if(transport_servicetype_txt(t) == NULL)
-      continue;
-    LIST_INSERT_SORTED(&head, t, tht_tmp_link, dvbsvccmp);
+    if(transport_is_available(t))
+      LIST_INSERT_SORTED(&head, t, tht_tmp_link, dvbsvccmp);
   }
 
   ajax_box_begin(&tq, AJAX_BOX_SIDEBOX, NULL, NULL, buf);
