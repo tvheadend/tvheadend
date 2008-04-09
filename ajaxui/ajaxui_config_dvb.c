@@ -245,8 +245,8 @@ ajax_adaptereditor(http_connection_t *hc, const char *remain, void *opaque)
   
 
   ajax_js(&tq, 
-	  "new Ajax.PeriodicalUpdater('dvbmuxlist%s', "
-	  "'/ajax/dvbadaptermuxlist/%s', {method: 'get', frequency: 5}) ",
+	  "new Ajax.Updater('dvbmuxlist%s', "
+	  "'/ajax/dvbadaptermuxlist/%s', {method: 'get'}) ",
 	  tda->tda_identifier, tda->tda_identifier);
 
   tcp_qprintf(&tq, "<hr><div id=\"addmux\">");
