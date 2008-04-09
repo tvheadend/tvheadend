@@ -378,6 +378,21 @@ ajax_adapteraddmux(http_connection_t *hc, const char *remain, void *opaque)
 	     ", fec: $F('fec')");
   }
 
+  if(fetype == FE_QPSK) {
+    tcp_qprintf(&tq,
+		"<div class=\"infoprefixwidefat\">Polarisation:</div>"
+		"<div><select id=\"pol\" class=\"textinput\">");
+
+    add_option(&tq, 1,  "Vertical");
+    add_option(&tq, 1,  "Horizontal");
+    tcp_qprintf(&tq, "</select></div>");
+
+    snprintf(params + strlen(params), sizeof(params) - strlen(params), 
+	     ", pol: $F('pol')");
+    
+
+  }
+
 
   if(fetype == FE_OFDM) {
     tcp_qprintf(&tq,
