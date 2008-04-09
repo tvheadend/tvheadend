@@ -890,5 +890,7 @@ extern inline unsigned int tvh_strhash(const char *s, unsigned int mod)
   return v % mod;
 }
 
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 #endif /* TV_HEAD_H */
