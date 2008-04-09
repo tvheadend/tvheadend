@@ -57,6 +57,63 @@ const char *ajax_tabnames[] = {
 };
 
 /**
+ * AJAX table header
+ */
+void
+ajax_table_header(http_connection_t *hc, tcp_queue_t *tq,
+		  const char *names[], int weights[],
+		  int scrollbar, int columnsizes[])
+{
+  int n = 0, i, tw = 0;
+  while(names[n]) {
+    tw += weights[n];
+    n++;
+  }
+
+  for(i = 0; i < n; i++)
+    columnsizes[i] = 100 * weights[i] / tw;
+
+  if(scrollbar)
+    tcp_qprintf(tq, "<div style=\"padding-right: 20px\">");
+
+  tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
+
+  for(i = 0; i < n; i++)
+    tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%s</div>",
+		columnsizes[i], names[i] ?: "&nbsp;");
+
+  tcp_qprintf(tq, "</div>");
+  if(scrollbar)
+    tcp_qprintf(tq, "</div>");
+}
+		  
+		  
+/**
+ * AJAX table row
+ */
+void
+ajax_table_row(tcp_queue_t *tq, const char *cells[], int columnsizes[],
+	       int *bgptr)
+{
+  int i = 0;
+
+  tcp_qprintf(tq, "<div style=\"%soverflow: auto; width: 100%\">",
+	      *bgptr ? "background: #fff; " : "");
+
+  *bgptr = !*bgptr;
+
+  while(cells[i]) {
+    tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%s</div>",
+		columnsizes[i], cells[i]);
+    i++;
+  }
+  tcp_qprintf(tq, "</div>\r\n");
+}
+
+
+
+
+/**
  * AJAX box start
  */
 void

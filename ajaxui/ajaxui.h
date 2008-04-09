@@ -67,4 +67,12 @@ void ajax_config_transport_init(void);
 int ajax_transport_build_list(tcp_queue_t *tq,
 			      struct th_transport_list *tlist);
 
+
+void ajax_table_header(http_connection_t *hc, tcp_queue_t *tq,
+		       const char *names[], int weights[],
+		       int scrollbar, int columnsizes[]);
+
+void ajax_table_row(tcp_queue_t *tq, const char *cells[], int columnsizes[],
+		    int *bgptr);
+
 #endif /* AJAXUI_H_ */

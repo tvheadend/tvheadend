@@ -219,30 +219,11 @@ ajax_adaptereditor(http_connection_t *hc, const char *remain, void *opaque)
   //  tcp_qprintf(&tq, "<div class=\"infoprefixwide\">Capabilities:</div>");
 
   tcp_qprintf(&tq, "<div style=\"float: left; width:45%\">");
+
   ajax_box_begin(&tq, AJAX_BOX_SIDEBOX, NULL, NULL, "Multiplexes");
 
-  /* List of muxes */
-
-  tcp_qprintf(&tq, "<div style=\"overflow: auto; width: 100%\">");
-
-  tcp_qprintf(&tq, "<div style=\"float: left; width: 20%\">"
-	      "Freq.</div>");
-  tcp_qprintf(&tq, "<div style=\"float: left; width: 25%\">%s</div>",
-	      "Status");
-  tcp_qprintf(&tq, "<div style=\"float: left; width: 15%\">%s</div>",
-	      "State");
-  tcp_qprintf(&tq, "<div style=\"float: left; width: 25%\">%s</div>",
-	      "Name");
-  tcp_qprintf(&tq, "<div style=\"float: left; width: 15%\">%s</div>",
-	      "Services");
-  tcp_qprintf(&tq, "</div><hr>");
-
-
-  tcp_qprintf(&tq, "<div id=\"dvbmuxlist%s\" class=\"normallist\">",
+  tcp_qprintf(&tq, "<div id=\"dvbmuxlist%s\"></div>",
 	      tda->tda_identifier);
-  tcp_qprintf(&tq, "</div>");
-  
-  
 
   ajax_js(&tq, 
 	  "new Ajax.Updater('dvbmuxlist%s', "
@@ -557,11 +538,17 @@ ajax_adaptermuxlist(http_connection_t *hc, const char *remain, void *opaque)
   th_dvb_mux_instance_t *tdmi;
   tcp_queue_t tq;
   th_dvb_adapter_t *tda;
-  char buf[50];
+  char buf[50], buf2[500], buf3[20];
   const char *txt;
   int fetype, n;
   th_transport_t *t;
-  int o = 1;
+  int o = 1, v;
+  int csize[10];
+  int nmuxes = 0;
+
+  int displines = 21;
+
+  const char *cells[10];
 
   if(remain == NULL || (tda = dvb_adapter_find_by_identifier(remain)) == NULL)
     return HTTP_STATUS_NOT_FOUND;
@@ -570,27 +557,44 @@ ajax_adaptermuxlist(http_connection_t *hc, const char *remain, void *opaque)
 
   tcp_init_queue(&tq, -1);
 
-  if(LIST_FIRST(&tda->tda_muxes) == NULL) {
+  /* List of muxes */
+  
+  LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
+    nmuxes++;
+  
+  ajax_table_header(hc, &tq,
+		    (const char *[])
+		    {"Freq", "Status", "State", "Name", "Services", NULL},
+		    (int[]){3,3,2,4,2},
+		    nmuxes > displines,
+		    csize);
+
+  tcp_qprintf(&tq, "<hr>");
+
+  v = displines;
+  if(nmuxes < displines)
+    v = nmuxes;
+
+  tcp_qprintf(&tq, "<div id=\"dvbmuxlist%s\" "
+	      "style=\"height: %dpx; overflow: auto\" class=\"normallist\">",
+	      tda->tda_identifier, v * 14);
+
+  if(nmuxes == 0) {
     tcp_qprintf(&tq, "<div style=\"text-align: center\">"
 		"No muxes configured</div>");
   } else LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
 
-    tcp_qprintf(&tq, "<div%s>", o ? " style=\"background: #fff\"" : "");
-    o = !o;
-
     tdmi_displayname(tdmi, buf, sizeof(buf));
 
-    tcp_qprintf(&tq, "<div style=\"overflow: auto; width: 100%\">");
-    tcp_qprintf(&tq, "<div style=\"float: left; width: 20%\">"
-		"<a href=\"javascript:void(0);\" "
-		"onClick=\"new Ajax.Updater('servicepane', "
-		"'/ajax/dvbmuxeditor/%s', "
-		"{method: 'get', evalScripts: true})\""
-		">%s</a></div>", tdmi->tdmi_identifier, buf);
+    snprintf(buf2, sizeof(buf2), 
+	     "<a href=\"javascript:void(0);\" "
+	     "onClick=\"new Ajax.Updater('servicepane', "
+	     "'/ajax/dvbmuxeditor/%s', {method: 'get', evalScripts: true})\""
+	     ">%s</a>", tdmi->tdmi_identifier, buf);
 
-    tcp_qprintf(&tq, "<div style=\"float: left; width: 25%\">%s</div>",
-		dvb_mux_status(tdmi));
-
+    cells[0] = buf2;
+    cells[1] = dvb_mux_status(tdmi);
+ 
     switch(tdmi->tdmi_state) {
     case TDMI_IDLE:      txt = "Idle";      break;
     case TDMI_IDLESCAN:  txt = "Scanning";  break;
@@ -598,24 +602,26 @@ ajax_adaptermuxlist(http_connection_t *hc, const char *remain, void *opaque)
     default:             txt = "???";       break;
     }
 
-    tcp_qprintf(&tq, "<div style=\"float: left; width: 15%\">%s</div>",
-		txt);
-
+    cells[2] = txt;
+ 
     txt = tdmi->tdmi_network;
     if(txt == NULL)
       txt = "Unknown";
 
-    tcp_qprintf(&tq, "<div style=\"float: left; width: 25%\">%s</div>",
-		txt);
+    cells[3] = txt;
 
     n = 0;
     LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link)
       n++;
 
-    tcp_qprintf(&tq, "<div style=\"float: left; width: 15%\">%d</div>", n);
+    snprintf(buf3, sizeof(buf3), "%d", n);
+    cells[4] = buf3;
+    cells[5] = NULL;
 
-    tcp_qprintf(&tq, "</div></div>");
+    ajax_table_row(&tq, cells, csize, &o);
+
   }
+  tcp_qprintf(&tq, "</div>");
 
   http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
   return 0;
