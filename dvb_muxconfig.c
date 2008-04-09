@@ -88,8 +88,8 @@ static struct strtab hiertab[] = {
 };
 
 static struct strtab poltab[] = {
-  { "V",    POLARISATION_VERTICAL },
-  { "H",    POLARISATION_HORIZONTAL },
+  { "Vertical",      POLARISATION_VERTICAL },
+  { "Horizontal",    POLARISATION_HORIZONTAL },
 };
 
 
@@ -226,7 +226,7 @@ dvb_mux_create_str(th_dvb_adapter_t *tda,
       return "Invalid polarisation";
     polarisation = r;
     
-    switchport = atoi(switchportstr);
+    switchport = atoi(switchportstr ?: "0");
     break;
 
   case FE_QAM:
