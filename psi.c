@@ -505,7 +505,13 @@ static struct strtab caidnametab[] = {
 const char *
 psi_caid2name(uint16_t caid)
 {
-  return val2str(caid, caidnametab);
+  const char *s = val2str(caid, caidnametab);
+  static char buf[20];
+
+  if(s != NULL)
+    return s;
+  snprintf(buf, sizeof(buf), "0x%x", caid);
+  return buf;
 }
 
 /**
@@ -555,7 +561,7 @@ psi_save_transport(FILE *fp, th_transport_t *t)
       fprintf(fp, "\t\tlanguage = %s\n", st->st_lang);
 
     if(st->st_type == HTSTV_CA)
-      fprintf(fp, "\t\tcaid = %s\n", val2str(st->st_caid, caidnametab) ?: "?");
+      fprintf(fp, "\t\tcaid = %s\n", psi_caid2name(st->st_caid));
 
     if(st->st_frame_duration)
       fprintf(fp, "\t\tframeduration = %d\n", st->st_frame_duration);
@@ -576,7 +582,7 @@ psi_load_transport(struct config_head *cl, th_transport_t *t)
   config_entry_t *ce;
   tv_streamtype_t type;
   const char *v;
-  int pid;
+  int pid, i;
 
   t->tht_pcr_pid = atoi(config_get_str_sub(cl, "pcr", "0"));
   
@@ -603,8 +609,10 @@ psi_load_transport(struct config_head *cl, th_transport_t *t)
       atoi(config_get_str_sub(&ce->ce_sub, "frameduration", "0"));
      
     v = config_get_str_sub(&ce->ce_sub, "caid", NULL);
-    if(v != NULL)
-      st->st_caid = str2val(v, caidnametab);
+    if(v != NULL) {
+      i = str2val(v, caidnametab);
+      st->st_caid = i < 0 ? strtol(v, NULL, 0) : i;
+    }
   }
 }
 
