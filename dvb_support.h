@@ -34,6 +34,7 @@
 
 #define DVB_DESC_NETWORK_NAME 0x40
 #define DVB_DESC_SERVICE_LIST 0x41
+#define DVB_DESC_SAT          0x43
 #define DVB_DESC_CABLE        0x44
 #define DVB_DESC_SHORT_EVENT  0x4d
 #define DVB_DESC_SERVICE      0x48
