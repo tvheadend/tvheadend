@@ -64,8 +64,9 @@ int ajax_config_dvb_tab(http_connection_t *hc);
 void ajax_config_dvb_init(void);
 void ajax_config_transport_init(void);
 
-int ajax_transport_build_list(tcp_queue_t *tq,
-			      struct th_transport_list *tlist);
+int ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
+			      struct th_transport_list *tlist,
+			      int ntransports);
 
 
 void ajax_table_header(http_connection_t *hc, tcp_queue_t *tq,

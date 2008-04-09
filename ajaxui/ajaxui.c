@@ -80,7 +80,7 @@ ajax_table_header(http_connection_t *hc, tcp_queue_t *tq,
 
   for(i = 0; i < n; i++)
     tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%s</div>",
-		columnsizes[i], names[i] ?: "&nbsp;");
+		columnsizes[i], *names[i] ? names[i]: "&nbsp;");
 
   tcp_qprintf(tq, "</div>");
   if(scrollbar)

@@ -39,7 +39,8 @@
  * 
  */
 int
-ajax_transport_build_list(tcp_queue_t *tq, struct th_transport_list *tlist)
+ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
+			  struct th_transport_list *tlist, int numtransports)
 {
   char buf[1000];
   th_transport_t *t;
@@ -47,7 +48,8 @@ ajax_transport_build_list(tcp_queue_t *tq, struct th_transport_list *tlist)
   int o = 1;
   th_stream_t *st;
   const char *extra;
-
+  int displines = 21;
+  int csize[10];
 
   tcp_qprintf(tq, "<script type=\"text/javascript\">\r\n"
 	      "//<![CDATA[\r\n");
@@ -120,24 +122,14 @@ ajax_transport_build_list(tcp_queue_t *tq, struct th_transport_list *tlist)
 
   tcp_qprintf(tq, "<form id=\"transports\">");
 
-  tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
-
-  tcp_qprintf(tq, "<div style=\"float: left; width: 8%\">&nbsp;</div>");
-  tcp_qprintf(tq, "<div style=\"float: left; width: 8%\">SID</div>");
-
-  tcp_qprintf(tq, "<div style=\"float: left; width: 10%\">Crypto</div>");
-
-  tcp_qprintf(tq, "<div style=\"float: left; width: 12%\">Type</div>");
-
-  tcp_qprintf(tq, "<div style=\"float: left; width: 25%\">"
-	      "Source service</div>");
-  
-  tcp_qprintf(tq, "<div style=\"float: left; width: 6%\">&nbsp;</div>");
-
-  tcp_qprintf(tq, "<div style=\"float: left; width: 31%\">"
-	      "Target channel</div>");
-
-  tcp_qprintf(tq, "</div><hr>");
+  ajax_table_header(hc, tq,
+		    (const char *[])
+		    {"", "ServiceID", "Crypto", "Type", "Source service",
+		       "", "Target channel", "", NULL},
+		    (int[]){3,5,4,4,12,3,12,1},
+		    numtransports > displines,
+		    csize);
+  tcp_qprintf(tq, "<hr>");
 
 
   LIST_FOREACH(t, tlist, tht_tmp_link) {
@@ -146,35 +138,37 @@ ajax_transport_build_list(tcp_queue_t *tq, struct th_transport_list *tlist)
 
     tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
 
-    tcp_qprintf(tq, "<div style=\"float: left; width: 8%\">"
+    tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">"
 		"<a id=\"toggle_svcinfo%s\" href=\"javascript:void(0)\" "
 		"onClick=\"showhide('svcinfo%s')\" >"
-		"More</a></div>", t->tht_identifier, t->tht_identifier);
+		"More</a></div>",
+		csize[0], t->tht_identifier, t->tht_identifier);
 
-    tcp_qprintf(tq, "<div style=\"float: left; width: 8%\">%d</div>",
-		t->tht_dvb_service_id);
+    tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%d</div>",
+		csize[1], t->tht_dvb_service_id);
 
-    tcp_qprintf(tq, "<div style=\"float: left; width: 10%\">%s</div>",
-		t->tht_scrambled ? "CSA" : "Free");
+    tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%s</div>",
+		csize[2], t->tht_scrambled ? "CSA" : "Free");
 
-    tcp_qprintf(tq, "<div style=\"float: left; width: 12%\">%s</div>",
-		transport_servicetype_txt(t));
+    tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%s</div>",
+		csize[3], transport_servicetype_txt(t));
 
-    tcp_qprintf(tq, "<div style=\"float: left; width: 25%\">%s</div>",
-		t->tht_servicename ?: "");
+    tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%s</div>",
+		csize[4], t->tht_servicename ?: "");
 
     tcp_qprintf(tq, 
-		"<div style=\"float: left; width: 6%; text-align: center\">"
+		"<div style=\"float: left; width: %d%%; text-align: center\">"
 		"<a href=\"javascript:void(0)\" "
 		"onClick=\"new "
 		"Ajax.Request('/ajax/transport_op/%s', "
 		"{parameters: {action: 'toggle'}})\">"
 		"<img id=\"map%s\" src=\"/gfx/%smapped.png\"></a></div>",
+		csize[5],
 		t->tht_identifier, t->tht_identifier,
 		t->tht_channel ? "" : "un");
 
-    tcp_qprintf(tq, "<div id=\"chname%s\" style=\"float: left; width: 26%\">",
-		t->tht_identifier);
+    tcp_qprintf(tq, "<div id=\"chname%s\" style=\"float: left; width: %d%%\">",
+		t->tht_identifier, csize[6]);
 
     if(t->tht_channel == NULL) {
       /* Unmapped */
@@ -195,9 +189,9 @@ ajax_transport_build_list(tcp_queue_t *tq, struct th_transport_list *tlist)
 
 
 
-    tcp_qprintf(tq, "<div style=\"float: left; width: 5%\">"
+    tcp_qprintf(tq, "<div style=\"float: left; width: %d%\">"
 		"<input id=\"sel_%s\" type=\"checkbox\" class=\"nicebox\">"
-		"</div>", t->tht_identifier);
+		"</div>", csize[7], t->tht_identifier);
     
     tcp_qprintf(tq, "</div>");
 
@@ -208,25 +202,29 @@ ajax_transport_build_list(tcp_queue_t *tq, struct th_transport_list *tlist)
     tcp_qprintf(tq, "<p>");
       
     tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
-    tcp_qprintf(tq, "<div style=\"float: left; width: 8%\">"
-		"&nbsp;</div>");
-    tcp_qprintf(tq, "<div class=\"pidheader\" style=\"width: 8%\">"
-		"PID</div>");
 
-    tcp_qprintf(tq, "<div class=\"pidheader\" style=\"width: 22%\">"
-		"Payload</div>");
+    tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">"
+		"&nbsp;</div>", csize[0]);
+    tcp_qprintf(tq, "<div class=\"pidheader\" style=\"width: %d%%\">"
+		"PID</div>", csize[1]);
 
-    tcp_qprintf(tq, "<div class=\"pidheader\" style=\"width: 62%\">Details"
-		"</div>");
+    tcp_qprintf(tq, "<div class=\"pidheader\" style=\"width: %d%%\">"
+		"Payload</div>", csize[2] + csize[3]);
+
+    tcp_qprintf(tq, "<div class=\"pidheader\" style=\"width: %d%%\">Details"
+		"</div>",
+		csize[4] + csize[5] + csize[6] + csize[7]);
     tcp_qprintf(tq, "</div>");
 
 
     LIST_FOREACH(st, &t->tht_streams, st_link) {
       tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
-      tcp_qprintf(tq, "<div style=\"float: left; width: 8%\">&nbsp;</div>");
-      tcp_qprintf(tq, "<div style=\"float: left; width: 8%\">%d</div>",
-		  st->st_pid);
-      tcp_qprintf(tq, "<div style=\"float: left; width: 22%\">%s</div>",
+      tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">&nbsp;</div>",
+		  csize[0]);
+      tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%d</div>",
+		  csize[1], st->st_pid);
+      tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%s</div>",
+		  csize[2] + csize[3],
 		  htstvstreamtype2txt(st->st_type));
 
       switch(st->st_type) {
@@ -243,7 +241,8 @@ ajax_transport_build_list(tcp_queue_t *tq, struct th_transport_list *tlist)
       }
 
       if(extra != NULL)
-	tcp_qprintf(tq, "<div style=\"float: left; width: 62%\">%s</div>",
+	tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%s</div>",
+		    csize[4] + csize[5] + csize[6] + csize[7],
 		    extra);
       
       tcp_qprintf(tq, "</div>");

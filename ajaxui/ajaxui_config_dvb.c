@@ -649,6 +649,7 @@ ajax_dvbmuxeditor(http_connection_t *hc, const char *remain, void *opaque)
   char buf[1000];
   th_transport_t *t;
   struct th_transport_list head;
+  int n = 0;
 
   if(remain == NULL || (tdmi = dvb_mux_find_by_identifier(remain)) == NULL)
     return HTTP_STATUS_NOT_FOUND;
@@ -660,12 +661,14 @@ ajax_dvbmuxeditor(http_connection_t *hc, const char *remain, void *opaque)
   LIST_INIT(&head);
 
   LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
-    if(transport_is_available(t))
+    if(transport_is_available(t)) {
       LIST_INSERT_SORTED(&head, t, tht_tmp_link, dvbsvccmp);
+      n++;
+    }
   }
 
   ajax_box_begin(&tq, AJAX_BOX_SIDEBOX, NULL, NULL, buf);
-  ajax_transport_build_list(&tq, &head);
+  ajax_transport_build_list(hc, &tq, &head, n);
   ajax_box_end(&tq, AJAX_BOX_SIDEBOX);
 
   http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
