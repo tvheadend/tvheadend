@@ -389,6 +389,11 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	    l--;
 	  }
 
+	  if(l == 0) {
+	    chname = chname0;
+	    snprintf(chname0, sizeof(chname0), "noname-sid-0x%x", service_id);
+	  }
+
 	  t = dvb_find_transport(tdmi, service_id, 0);
 	  if(t == NULL)
 	    break;
