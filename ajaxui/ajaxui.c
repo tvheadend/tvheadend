@@ -382,37 +382,20 @@ ajax_page_root(http_connection_t *hc, http_reply_t *hr,
 	      "<head>"
 	      "<title>HTS/Tvheadend</title>"
 	      "<meta http-equiv=\"Content-Type\" "
-	      "content=\"text/html; charset=utf-8\">\r\n");
-
-
-  tcp_qprintf(tq, 
+	      "content=\"text/html; charset=utf-8\">\r\n"
 	      "<link href=\"/ajax/ajaxui.css\" rel=\"stylesheet\" "
-	      "type=\"text/css\">\r\n");
-
-  tcp_qprintf(tq,
+	      "type=\"text/css\">\r\n"
 	      "<script src=\"/ajax/prototype.js\" type=\"text/javascript\">"
-	      "</script>\r\n");
-
-  tcp_qprintf(tq,
+	      "</script>\r\n"
 	      "<script src=\"/ajax/effects.js\" type=\"text/javascript\">"
-	      "</script>\r\n");
-
-  tcp_qprintf(tq,
+	      "</script>\r\n"
 	      "<script src=\"/ajax/dragdrop.js\" type=\"text/javascript\">"
-	      "</script>\r\n");
-
-  tcp_qprintf(tq,
+	      "</script>\r\n"
 	      "<script src=\"/ajax/controls.js\" type=\"text/javascript\">"
-	      "</script>\r\n");
-
- tcp_qprintf(tq,
+	      "</script>\r\n"
 	      "<script src=\"/ajax/tvheadend.js\" type=\"text/javascript\">"
-	      "</script>\r\n");
-
-  tcp_qprintf(tq,
-	      "</head>");
-
-  tcp_qprintf(tq,
+	      "</script>\r\n"
+	      "</head>"
 	      "<body>");
 
 
