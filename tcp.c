@@ -351,7 +351,7 @@ tcp_output_queue(tcp_session_t *ses, tcp_queue_t *dst, tcp_queue_t *src)
     dst->tq_depth += s;
   }
 
-  if(!ses->tcp_blocked)
+  if(ses != NULL && !ses->tcp_blocked)
     tcp_transmit(ses);
 
   src->tq_depth = 0;

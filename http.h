@@ -42,10 +42,36 @@ typedef struct http_arg {
 } http_arg_t;
 
 
+TAILQ_HEAD(http_reply_queue, http_reply);
+
+typedef struct http_reply {
+  TAILQ_ENTRY(http_reply) hr_link;
+
+  void *hr_opaque;
+
+  void (*hr_destroy)(struct http_reply *hr, void *opaque);
+
+  int hr_version; /* HTTP version */
+  int hr_keep_alive;
+  
+  char *hr_location;
+
+  int hr_rc;      /* Return code */
+  int hr_maxage;
+  const char *hr_encoding;
+  const char *hr_content;
+
+  tcp_queue_t hr_tq;
+
+} http_reply_t;
+
+
 typedef struct http_connection {
   tcp_session_t hc_tcp_session; /* Must be first */
   char *hc_url;
   int hc_keep_alive;
+
+  struct http_reply_queue hc_replies;
 
   struct http_arg_list hc_args;
 
@@ -103,15 +129,18 @@ void http_arg_set(struct http_arg_list *list, char *key, char *val);
 
 int http_tokenize(char *buf, char **vec, int vecsize, int delimiter);
 
-void http_error(http_connection_t *hc, int error);
+void http_error(http_connection_t *hc, http_reply_t *hr, int error);
 
-void http_output_queue(http_connection_t *hc, tcp_queue_t *tq,
-		       const char *content, int maxage);
+void http_output(http_connection_t *hc, http_reply_t *hr,
+		 const char *content, const char *encoding, int maxage);
 
-int http_redirect(http_connection_t *hc, const char *location);
+void http_output_html(http_connection_t *hc, http_reply_t *hr);
 
-typedef int (http_callback_t)(http_connection_t *hc, const char *remain,
-			      void *opaque);
+void http_redirect(http_connection_t *hc, http_reply_t *hr, 
+		   const char *location);
+
+typedef int (http_callback_t)(http_connection_t *hc, http_reply_t *hr, 
+			      const char *remain, void *opaque);
 
 typedef struct http_path {
   LIST_ENTRY(http_path) hp_link;

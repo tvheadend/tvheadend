@@ -43,18 +43,18 @@ const char *ajax_config_tabnames[] = {
  * Titlebar AJAX page
  */
 static int
-ajax_config_menu(http_connection_t *hc, const char *remain, void *opaque)
+ajax_config_menu(http_connection_t *hc, http_reply_t *hr, 
+		 const char *remain, void *opaque)
 {
-  tcp_queue_t tq;
+  tcp_queue_t *tq = &hr->hr_tq;
   
   if(remain == NULL)
     return HTTP_STATUS_NOT_FOUND;
 
-  tcp_init_queue(&tq, -1);
-  ajax_menu_bar_from_array(&tq, "config", 
+  ajax_menu_bar_from_array(tq, "config", 
 			   ajax_config_tabnames, AJAX_CONFIG_TABS,
 			   atoi(remain));
-  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
+  http_output_html(hc, hr);
   return 0;
 }
 
@@ -64,7 +64,8 @@ ajax_config_menu(http_connection_t *hc, const char *remain, void *opaque)
  * Switch to different tabs
  */
 static int
-ajax_config_dispatch(http_connection_t *hc, const char *remain, void *opaque)
+ajax_config_dispatch(http_connection_t *hc, http_reply_t *hr,
+		     const char *remain, void *opaque)
 {
   int tab;
 
@@ -75,9 +76,9 @@ ajax_config_dispatch(http_connection_t *hc, const char *remain, void *opaque)
 
   switch(tab) {
   case AJAX_CONFIG_TAB_CHANNELS:
-    return ajax_config_channels_tab(hc);
+    return ajax_config_channels_tab(hc, hr);
   case AJAX_CONFIG_TAB_DVB:
-    return ajax_config_dvb_tab(hc);
+    return ajax_config_dvb_tab(hc, hr);
 
   default:
     return HTTP_STATUS_NOT_FOUND;
@@ -94,23 +95,21 @@ ajax_config_dispatch(http_connection_t *hc, const char *remain, void *opaque)
  * This is the top level menu for this c-file
  */
 int
-ajax_config_tab(http_connection_t *hc)
+ajax_config_tab(http_connection_t *hc, http_reply_t *hr)
 {
-  tcp_queue_t tq;
+  tcp_queue_t *tq = &hr->hr_tq;
 
-  tcp_init_queue(&tq, -1);
+  ajax_box_begin(tq, AJAX_BOX_FILLED, "configmenu", NULL, NULL);
+  ajax_box_end(tq, AJAX_BOX_FILLED);
 
-  ajax_box_begin(&tq, AJAX_BOX_FILLED, "configmenu", NULL, NULL);
-  ajax_box_end(&tq, AJAX_BOX_FILLED);
+  tcp_qprintf(tq, "<div id=\"configdeck\"></div>");
 
-  tcp_qprintf(&tq, "<div id=\"configdeck\"></div>");
-
-  tcp_qprintf(&tq,
+  tcp_qprintf(tq,
 	      "<script type=\"text/javascript\">"
 	      "switchtab('config', '0')"
 	      "</script>");
 
-  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
+  http_output_html(hc, hr);
   return 0;
 }
 

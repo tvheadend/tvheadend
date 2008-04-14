@@ -149,218 +149,269 @@ static const char *cachemonths[12] = {
 };
 
 /**
- * If current version mandates it, send a HTTP reply header back
+ *
  */
 static void
-http_output_reply_header(http_connection_t *hc, int rc, int maxage)
+http_destroy_reply(http_connection_t *hc, http_reply_t *hr)
+{
+  if(hr->hr_destroy != NULL)
+    hr->hr_destroy(hr, hr->hr_opaque);
+
+  TAILQ_REMOVE(&hc->hc_replies, hr, hr_link);
+  free(hr->hr_location);
+  tcp_flush_queue(&hr->hr_tq);
+  free(hr);
+}
+
+/**
+ * Transmit a HTTP reply
+ *
+ * Return non-zero if we should disconnect (no more keep-alive)
+ */
+static int
+http_send_reply(http_connection_t *hc, http_reply_t *hr)
 {
   struct tm tm0, *tm;
   time_t t;
+  tcp_queue_t *tq = &hr->hr_tq;
+  int r;
 
-  if(hc->hc_version < HTTP_VERSION_1_0)
-    return;
-  
-  http_printf(hc, "%s %d %s\r\n", val2str(hc->hc_version, HTTP_versiontab),
-	      rc, http_rc2str(rc));
+  if(hr->hr_version > HTTP_VERSION_1_0) {
+    http_printf(hc, "%s %d %s\r\n", val2str(hr->hr_version, HTTP_versiontab),
+		hr->hr_rc, http_rc2str(hr->hr_rc));
 
-  if(maxage == 0) {
-    http_printf(hc, "Cache-Control: no-cache\r\n");
-  } else {
-    t = dispatch_clock;
+    http_printf(hc, "Server: HTS/tvheadend\r\n");
 
-    tm = gmtime_r(&t, &tm0);
+    if(hr->hr_maxage == 0) {
+      http_printf(hc, "Cache-Control: no-cache\r\n");
+    } else {
+      t = dispatch_clock;
+      
+      tm = gmtime_r(&t, &tm0);
+      http_printf(hc, 
+		  "Last-Modified: %s, %02d %s %d %02d:%02d:%02d GMT\r\n",
+		  cachedays[tm->tm_wday],	tm->tm_year + 1900,
+		  cachemonths[tm->tm_mon], tm->tm_mday,
+		  tm->tm_hour, tm->tm_min, tm->tm_sec);
+
+      t += hr->hr_maxage;
+
+      tm = gmtime_r(&t, &tm0);
+      http_printf(hc, 
+		  "Expires: %s, %02d %s %d %02d:%02d:%02d GMT\r\n",
+		  cachedays[tm->tm_wday],	tm->tm_year + 1900,
+		  cachemonths[tm->tm_mon], tm->tm_mday,
+		  tm->tm_hour, tm->tm_min, tm->tm_sec);
+      
+      http_printf(hc, "Cache-Control: max-age=%d\r\n", hr->hr_maxage);
+    }
+
+    http_printf(hc, "Connection: %s\r\n", 
+		hr->hr_keep_alive ? "Keep-Alive" : "Close");
+
+    if(hr->hr_rc == HTTP_STATUS_UNAUTHORIZED)
+      http_printf(hc, "WWW-Authenticate: Basic realm=\"tvheadend\"\r\n");
+
+    if(hr->hr_encoding != NULL)
+      http_printf(hc, "Content-Encoding: %s\r\n", hr->hr_encoding);
+
+    if(hr->hr_location != NULL)
+      http_printf(hc, "Location: %s\r\n", hr->hr_location);
+
     http_printf(hc, 
-		"Last-Modified: %s, %02d %s %d %02d:%02d:%02d GMT\r\n",
-		cachedays[tm->tm_wday],	tm->tm_year + 1900,
-		cachemonths[tm->tm_mon], tm->tm_mday,
-		tm->tm_hour, tm->tm_min, tm->tm_sec);
-
-    t += maxage;
-
-    tm = gmtime_r(&t, &tm0);
-    http_printf(hc, 
-		"Expires: %s, %02d %s %d %02d:%02d:%02d GMT\r\n",
-		cachedays[tm->tm_wday],	tm->tm_year + 1900,
-		cachemonths[tm->tm_mon], tm->tm_mday,
-		tm->tm_hour, tm->tm_min, tm->tm_sec);
-
-    http_printf(hc, "Cache-Control: max-age=%d\r\n", maxage);
+		"Content-Type: %s\r\n"
+		"Content-Length: %d\r\n"
+		"\r\n",
+		hr->hr_content, tq->tq_depth);
   }
+  tcp_output_queue(&hc->hc_tcp_session, NULL, tq);
 
-  http_printf(hc, "Server: HTS/tvheadend\r\n");
-  http_printf(hc, "Connection: %s\r\n", 
-	      hc->hc_keep_alive ? "Keep-Alive" : "Close");
+  r = !hr->hr_keep_alive;
+
+  http_destroy_reply(hc, hr);
+  return r;
 }
+
+
+/**
+ * Send HTTP replies
+ *
+ * Return non-zero if we should disconnect
+ */
+static int
+http_xmit_queue(http_connection_t *hc)
+{
+  http_reply_t *hr;
+
+  while((hr = TAILQ_FIRST(&hc->hc_replies)) != NULL) {
+    if(hr->hr_destroy != NULL)
+      break; /* Pending reply, cannot send this yet */
+    if(http_send_reply(hc, hr))
+      return 1;
+  }
+  return 0;
+}
+
 
 
 /**
  * Send HTTP error back
  */
 void
-http_error(http_connection_t *hc, int error)
+http_error(http_connection_t *hc, http_reply_t *hr, int error)
 {
-  char ret[300];
   const char *errtxt = http_rc2str(error);
+  tcp_queue_t *tq = &hr->hr_tq;
 
-  http_output_reply_header(hc, error, 0);
+  tcp_flush_queue(tq);
 
-  snprintf(ret, sizeof(ret),
-	   "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\r\n"
-	   "<HTML><HEAD>\r\n"
-	   "<TITLE>%d %s</TITLE>\r\n"
-	   "</HEAD><BODY>\r\n"
-	   "<H1>%d %s</H1>\r\n"
-	   "</BODY></HTML>\r\n",
-	   error, errtxt,
-	   error, errtxt);
+  tcp_qprintf(tq,
+	      "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\r\n"
+	      "<HTML><HEAD>\r\n"
+	      "<TITLE>%d %s</TITLE>\r\n"
+	      "</HEAD><BODY>\r\n"
+	      "<H1>%d %s</H1>\r\n"
+	      "</BODY></HTML>\r\n",
+	      error, errtxt,  error, errtxt);
 
-  if(hc->hc_version >= HTTP_VERSION_1_0) {
-    if(error == HTTP_STATUS_UNAUTHORIZED)
-      http_printf(hc, "WWW-Authenticate: Basic realm=\"tvheadend\"\r\n");
-
-    http_printf(hc, "Content-Type: text/html\r\n");
-    http_printf(hc, "Content-Length: %d\r\n", strlen(ret));
-    http_printf(hc, "\r\n");
-  }
-  http_printf(hc, "%s", ret);
+  hr->hr_destroy = NULL;
+  hr->hr_rc = error;
+  hr->hr_content = "text/html";
 }
 
 /**
- * Send an HTTP OK and post data from a tcp queue
+ * Send an HTTP OK
  */
 void
-http_output_queue(http_connection_t *hc, tcp_queue_t *tq, const char *content,
-		  int maxage)
+http_output(http_connection_t *hc, http_reply_t *hr, const char *content,
+	    const char *encoding, int maxage)
 {
-  http_output_reply_header(hc, 200, maxage);
-
-  if(hc->hc_version >= HTTP_VERSION_1_0) {
-    http_printf(hc, 
-		"Content-Type: %s\r\n"
-		"Content-Length: %d\r\n"
-		"\r\n",
-		content, tq->tq_depth);
-  }
-
-  tcp_output_queue(&hc->hc_tcp_session, NULL, tq);
+  hr->hr_encoding = encoding;
+  hr->hr_content = content;
+  hr->hr_maxage = maxage;
 }
 
 /**
- * Send an HTTP OK and post data from a tcp queue
+ * Send an HTTP OK, simple version for text/html
  */
-static void
-http_output_queue_encoding(http_connection_t *hc, tcp_queue_t *tq,
-			   const char *content, int maxage,
-			   const char *encoding)
+void
+http_output_html(http_connection_t *hc, http_reply_t *hr)
 {
-  http_output_reply_header(hc, 200, maxage);
-
-  if(hc->hc_version >= HTTP_VERSION_1_0) {
-    http_printf(hc, 
-		"Content-Encoding: %s\r\n"
-		"Content-Type: %s\r\n"
-		"Content-Length: %d\r\n"
-		"\r\n",
-		encoding, content, tq->tq_depth);
-  }
-
-  tcp_output_queue(&hc->hc_tcp_session, NULL, tq);
+  hr->hr_content = "text/html; charset=UTF-8";
 }
+
 
 
 /**
  * Send an HTTP REDIRECT
  */
-int
-http_redirect(http_connection_t *hc, const char *location)
+void
+http_redirect(http_connection_t *hc, http_reply_t *hr, const char *location)
 {
-  tcp_queue_t tq;
+  tcp_queue_t *tq = &hr->hr_tq;
 
-  http_output_reply_header(hc, 303, 0);
+  tcp_qprintf(tq,
+	      "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\r\n"
+	      "<HTML><HEAD>\r\n"
+	      "<TITLE>Redirect</TITLE>\r\n"
+	      "</HEAD><BODY>\r\n"
+	      "Please follow <a href=\"%s\">%s</a>\r\n"
+	      "</BODY></HTML>\r\n",
+	      location, location);
 
-  if(hc->hc_version < HTTP_VERSION_1_0)
-    return -1;
-
-  tcp_init_queue(&tq, -1);
-
-  tcp_qprintf(&tq, "Please follow <a href=\"%s\"\"></a>", location);
-
-  http_printf(hc,
-	      "Location: %s\r\n"
-	      "Content-Type: text/html\r\n"
-	      "Content-Length: %d\r\n"
-	      "\r\n", location, tq.tq_depth);
-  tcp_output_queue(&hc->hc_tcp_session, NULL, &tq);
-  return 0;
+  hr->hr_location = strdup(location);
+  hr->hr_rc = 303;
+  hr->hr_content = "text/html";
 }
+
+
+/**
+ * Execute url callback
+ *
+ * Returns 1 if we should disconnect
+ * 
+ */
+static int
+http_exec(http_connection_t *hc, http_path_t *hp, char *remain, int err)
+{
+  http_reply_t *hr = calloc(1, sizeof(http_reply_t));
+
+  /* Insert reply in order */
+  TAILQ_INSERT_TAIL(&hc->hc_replies, hr, hr_link);
+  
+  tcp_init_queue(&hr->hr_tq, -1);
+  hr->hr_version    = hc->hc_version;
+  hr->hr_keep_alive = hc->hc_keep_alive;
+
+  if(!err)
+    err = hp->hp_callback(hc, hr, remain, hp->hp_opaque);
+
+  if(err)
+    http_error(hc, hr, err);
+
+  if(hr->hr_destroy != NULL)
+    return 0; /* New entry is delayed, do not transmit anything */
+
+  return http_xmit_queue(hc);
+}
+
 
 
 /**
  * HTTP GET
  */
-static void
+static int
 http_cmd_get(http_connection_t *hc)
 {
   http_path_t *hp;
   char *remain;
   char *args;
-  int err;
 
   hp = http_resolve(hc, &remain, &args);
-  if(hp == NULL) {
-    http_error(hc, HTTP_STATUS_NOT_FOUND);
-    return;
-  }
+  if(hp == NULL)
+    return http_exec(hc, NULL, NULL, HTTP_STATUS_NOT_FOUND);
 
   if(args != NULL)
     http_parse_get_args(hc, args);
 
-  err = hp->hp_callback(hc, remain, hp->hp_opaque);
-  if(err)
-    http_error(hc, err);
+  return http_exec(hc, hp, remain, 0);
 }
 
 
 /**
  * Check if a HTTP POST is fully received, and if so, continue processing
+ *
+ * Return non-zero if we should disconnect
  */
-static void
+static int
 http_post_check(http_connection_t *hc)
 {
   http_path_t *hp;
   char *remain, *args, *v, *argv[2];
-  int err, n;
+  int n;
 
   if(hc->hc_post_ptr != hc->hc_post_len)
-    return;
+    return 0;
 
   hc->hc_state = HTTP_CON_WAIT_REQUEST;
 
   /* Parse content-type */
   v = http_arg_get(&hc->hc_args, "Content-Type");
-  if(v == NULL) {
-    http_error(hc, HTTP_STATUS_BAD_REQUEST);
-    return;
-  }
+  if(v == NULL)
+    return http_exec(hc, NULL, NULL, HTTP_STATUS_BAD_REQUEST);
 
   n = http_tokenize(v, argv, 2, ';');
-  if(n == 0) {
-    http_error(hc, HTTP_STATUS_BAD_REQUEST);
-    return;
-  }
+  if(n == 0)
+    return http_exec(hc, NULL, NULL, HTTP_STATUS_BAD_REQUEST);
 
   if(!strcmp(argv[0], "application/x-www-form-urlencoded"))
     http_parse_get_args(hc, hc->hc_post_data);
 
   hp = http_resolve(hc, &remain, &args);
-  if(hp == NULL) {
-    http_error(hc, HTTP_STATUS_NOT_FOUND);
-    return;
-  }
+  if(hp == NULL)
+    return http_exec(hc, NULL, NULL, HTTP_STATUS_NOT_FOUND);
 
-  err = hp->hp_callback(hc, remain, hp->hp_opaque);
-  if(err)
-    http_error(hc, err);
+  return http_exec(hc, hp, remain, 0);
 }
 
 
@@ -368,27 +419,23 @@ http_post_check(http_connection_t *hc)
 
 
 /**
- * HTTP POST
+ * Initial processing of HTTP POST
+ *
+ * Return non-zero if we should disconnect
  */
-static void
+static int
 http_cmd_post(http_connection_t *hc)
 {
   char *v;
 
   /* Set keep-alive status */
   v = http_arg_get(&hc->hc_args, "Content-Length");
-  if(v == NULL) {
-    /* No content length in POST, make us disconnect */
-    hc->hc_keep_alive = 0;
-    return;
-  }
+  if(v == NULL)
+    return 1; /* No content length in POST, make us disconnect */
   
   hc->hc_post_len = atoi(v);
-  if(hc->hc_post_len > 16 * 1024 * 1024) {
-    /* Bail out if POST data > 16 Mb */
-    hc->hc_keep_alive = 0;
-    return;
-  }
+  if(hc->hc_post_len > 16 * 1024 * 1024)
+    return 1; /* Bail out if POST data > 16 Mb */
 
   hc->hc_state = HTTP_CON_POST_DATA;
 
@@ -404,8 +451,7 @@ http_cmd_post(http_connection_t *hc)
 
   hc->hc_post_ptr = tcp_line_drain(&hc->hc_tcp_session, hc->hc_post_data,
 				   hc->hc_post_len);
-
-  http_post_check(hc);
+  return http_post_check(hc);
 }
 
 
@@ -426,25 +472,23 @@ http_consume_post_data(http_connection_t *hc)
   }
 
   hc->hc_post_ptr += r;
-  http_post_check(hc);
+  if(http_post_check(hc))
+    tcp_disconnect(tcp, 0);
 }
 
 /**
  * Process a HTTP request
  */
-static void
+static int
 http_process_request(http_connection_t *hc)
 {
   switch(hc->hc_cmd) {
   default:
-    http_error(hc, HTTP_STATUS_BAD_REQUEST);
-    break;
+    return http_exec(hc, NULL, NULL, HTTP_STATUS_BAD_REQUEST);
   case HTTP_CMD_GET:
-    http_cmd_get(hc); 
-    break;
+    return http_cmd_get(hc); 
   case HTTP_CMD_POST:
-    http_cmd_post(hc); 
-    break;
+    return http_cmd_post(hc); 
   }
 }
 
@@ -518,22 +562,22 @@ process_request(http_connection_t *hc)
   switch(hc->hc_version) {
   case RTSP_VERSION_1_0:
     rtsp_process_request(hc);
-    break;
+    return 0;
 
   case HTTP_VERSION_0_9:
   case HTTP_VERSION_1_0:
   case HTTP_VERSION_1_1:
-    http_process_request(hc);
-    break;
+    return http_process_request(hc) ? -1 : 0;
   }
-
-  return hc->hc_keep_alive == 0 ? -1 : 0;
+  return -1;
 }
 
 
 
 /*
  * HTTP connection state machine & parser
+ *
+ * If we return non zero we will disconnect
  */
 static int
 http_con_parse(void *aux, char *buf)
@@ -615,6 +659,11 @@ http_con_parse(void *aux, char *buf)
 static void
 http_disconnect(http_connection_t *hc)
 {
+  http_reply_t *hr;
+
+  while((hr = TAILQ_FIRST(&hc->hc_replies)) != NULL)
+    http_destroy_reply(hc, hr);
+
   free(hc->hc_post_data);
   free(hc->hc_username);
   free(hc->hc_password);
@@ -636,6 +685,7 @@ http_tcp_callback(tcpevent_t event, void *tcpsession)
 
   switch(event) {
   case TCP_CONNECT:
+    TAILQ_INIT(&hc->hc_replies);
     TAILQ_INIT(&hc->hc_args);
     TAILQ_INIT(&hc->hc_req_args);
     break;
@@ -865,14 +915,13 @@ typedef struct http_resource {
 } http_resource_t;
 
 static int
-deliver_resource(http_connection_t *hc, const char *remain, void *opaque)
+deliver_resource(http_connection_t *hc, http_reply_t *hr, 
+		 const char *remain, void *opaque)
 {
   http_resource_t *hres = opaque;
-  tcp_queue_t tq;
 
-  tcp_init_queue(&tq, -1);
-  tcp_qput(&tq, hres->data, hres->len);
-  http_output_queue_encoding(hc, &tq, hres->content, 15, hres->encoding);
+  tcp_qput(&hr->hr_tq, hres->data, hres->len);
+  http_output(hc, hr, hres->content, hres->encoding, 15);
   return 0;
 }
 

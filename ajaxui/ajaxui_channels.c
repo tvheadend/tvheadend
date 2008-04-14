@@ -58,17 +58,16 @@ ajax_channelgroupmenu_content(tcp_queue_t *tq, int current)
  * Channelgroup menu bar
  */
 static int
-ajax_channelgroup_menu(http_connection_t *hc, const char *remain, void *opaque)
+ajax_channelgroup_menu(http_connection_t *hc, http_reply_t *hr, 
+		       const char *remain, void *opaque)
 {
-  tcp_queue_t tq;
+  tcp_queue_t *tq = &hr->hr_tq;
   
   if(remain == NULL)
     return HTTP_STATUS_NOT_FOUND;
 
-  tcp_init_queue(&tq, -1);
-
-  ajax_channelgroupmenu_content(&tq, atoi(remain));
-  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
+  ajax_channelgroupmenu_content(tq, atoi(remain));
+  http_output_html(hc, hr);
   return 0;
 }
 
@@ -82,9 +81,10 @@ ajax_channelgroup_menu(http_connection_t *hc, const char *remain, void *opaque)
  * Group is given by 'tag' as an ASCII string in remain
  */
 int
-ajax_channel_tab(http_connection_t *hc, const char *remain, void *opaque)
+ajax_channel_tab(http_connection_t *hc, http_reply_t *hr,
+		 const char *remain, void *opaque)
 {
-  tcp_queue_t tq;
+  //  tcp_queue_t *tq = &hr->hr_tq;
   th_channel_t *ch;
   th_channel_group_t *tcg;
 
@@ -93,8 +93,6 @@ ajax_channel_tab(http_connection_t *hc, const char *remain, void *opaque)
   
   if((tcg = channel_group_by_tag(atoi(remain))) == NULL)
     return HTTP_STATUS_NOT_FOUND;
-
-  tcp_init_queue(&tq, -1);
 
   TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
     if(LIST_FIRST(&ch->ch_transports) == NULL)
@@ -108,7 +106,7 @@ ajax_channel_tab(http_connection_t *hc, const char *remain, void *opaque)
 #endif
   }
 
-  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
+  http_output_html(hc, hr);
   return 0;
 }
 
@@ -121,23 +119,21 @@ ajax_channel_tab(http_connection_t *hc, const char *remain, void *opaque)
  * This is the top level menu for this c-file
  */
 int
-ajax_channelgroup_tab(http_connection_t *hc)
+ajax_channelgroup_tab(http_connection_t *hc, http_reply_t *hr)
 {
-  tcp_queue_t tq;
+  tcp_queue_t *tq = &hr->hr_tq;
 
-  tcp_init_queue(&tq, -1);
+  ajax_box_begin(tq, AJAX_BOX_FILLED, "channelgroupmenu", NULL, NULL);
+  ajax_box_end(tq, AJAX_BOX_FILLED);
 
-  ajax_box_begin(&tq, AJAX_BOX_FILLED, "channelgroupmenu", NULL, NULL);
-  ajax_box_end(&tq, AJAX_BOX_FILLED);
+  tcp_qprintf(tq, "<div id=\"channelgroupdeck\"></div>");
 
-  tcp_qprintf(&tq, "<div id=\"channelgroupdeck\"></div>");
-
-  tcp_qprintf(&tq,
+  tcp_qprintf(tq,
 	      "<script type=\"text/javascript\">"
 	      "switchtab('channelgroup', '0')"
 	      "</script>");
 
-  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
+  http_output_html(hc, hr);
   return 0;
 }
 

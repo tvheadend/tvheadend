@@ -54,13 +54,13 @@ void ajax_menu_bar_from_array(tcp_queue_t *tq, const char *name,
 void ajax_a_jsfunc(tcp_queue_t *tq, const char *innerhtml, const char *func,
 		   const char *trailer);
 
-int ajax_channelgroup_tab(http_connection_t *hc);
-int ajax_config_tab(http_connection_t *hc);
+int ajax_channelgroup_tab(http_connection_t *hc, http_reply_t *hr);
+int ajax_config_tab(http_connection_t *hc, http_reply_t *hr);
 
-int ajax_config_channels_tab(http_connection_t *hc);
+int ajax_config_channels_tab(http_connection_t *hc, http_reply_t *hr);
 void ajax_config_channels_init(void);
 
-int ajax_config_dvb_tab(http_connection_t *hc);
+int ajax_config_dvb_tab(http_connection_t *hc, http_reply_t *hr);
 void ajax_config_dvb_init(void);
 void ajax_config_transport_init(void);
 

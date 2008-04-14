@@ -268,16 +268,15 @@ ajax_a_jsfunc(tcp_queue_t *tq, const char *innerhtml, const char *func,
  * Titlebar AJAX page
  */
 static int
-ajax_page_titlebar(http_connection_t *hc, const char *remain, void *opaque)
+ajax_page_titlebar(http_connection_t *hc, http_reply_t *hr, 
+		   const char *remain, void *opaque)
 {
-  tcp_queue_t tq;
-  
   if(remain == NULL)
     return HTTP_STATUS_NOT_FOUND;
 
-  tcp_init_queue(&tq, -1);
-  ajax_menu_bar_from_array(&tq, "top", ajax_tabnames, AJAX_TABS, atoi(remain));
-  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
+  ajax_menu_bar_from_array(&hr->hr_tq, "top", 
+			   ajax_tabnames, AJAX_TABS, atoi(remain));
+  http_output_html(hc, hr);
   return 0;
 }
 
@@ -287,20 +286,18 @@ ajax_page_titlebar(http_connection_t *hc, const char *remain, void *opaque)
  * About
  */
 static int
-ajax_about_tab(http_connection_t *hc)
+ajax_about_tab(http_connection_t *hc, http_reply_t *hr)
 {
-  tcp_queue_t tq;
+  tcp_queue_t *tq = &hr->hr_tq;
   
-  tcp_init_queue(&tq, -1);
+  tcp_qprintf(tq, "<center>");
+  tcp_qprintf(tq, "<div style=\"padding: auto; width: 400px\">");
 
-  tcp_qprintf(&tq, "<center>");
-  tcp_qprintf(&tq, "<div style=\"padding: auto; width: 400px\">");
+  ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, "About");
 
-  ajax_box_begin(&tq, AJAX_BOX_SIDEBOX, NULL, NULL, "About");
+  tcp_qprintf(tq, "<div style=\"text-align: center\">");
 
-  tcp_qprintf(&tq, "<div style=\"text-align: center\">");
-
-  tcp_qprintf(&tq, 
+  tcp_qprintf(tq, 
 	      "<p>HTS / Tvheadend</p>"
 	      "<p>(c) 2006-2008 Andreas \303\226man</p>"
 	      "<p>Latest release and information is available at:</p>"
@@ -317,12 +314,12 @@ ajax_about_tab(http_connection_t *hc)
 	      "<p><a href=\"http://www.ffmpeg.org/\">FFmpeg</a></p>"
 	      );
 
-  tcp_qprintf(&tq, "</div>");
-  ajax_box_end(&tq, AJAX_BOX_SIDEBOX);
-  tcp_qprintf(&tq, "</div>");
-  tcp_qprintf(&tq, "</center>");
+  tcp_qprintf(tq, "</div>");
+  ajax_box_end(tq, AJAX_BOX_SIDEBOX);
+  tcp_qprintf(tq, "</div>");
+  tcp_qprintf(tq, "</center>");
 
-  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
+  http_output_html(hc, hr);
   return 0;
 }
 
@@ -334,7 +331,8 @@ ajax_about_tab(http_connection_t *hc)
  * Find the 'tab' id and continue with tab specific code
  */
 static int
-ajax_page_tab(http_connection_t *hc, const char *remain, void *opaque)
+ajax_page_tab(http_connection_t *hc, http_reply_t *hr, 
+	      const char *remain, void *opaque)
 {
   int tab;
 
@@ -345,13 +343,13 @@ ajax_page_tab(http_connection_t *hc, const char *remain, void *opaque)
 
   switch(tab) {
   case AJAX_TAB_CHANNELS:
-    return ajax_channelgroup_tab(hc);
+    return ajax_channelgroup_tab(hc, hr);
 
   case AJAX_TAB_CONFIGURATION:
-    return ajax_config_tab(hc);
+    return ajax_config_tab(hc, hr);
 
   case AJAX_TAB_ABOUT:
-    return ajax_about_tab(hc);
+    return ajax_about_tab(hc, hr);
 
   default:
     return HTTP_STATUS_NOT_FOUND;
@@ -365,13 +363,12 @@ ajax_page_tab(http_connection_t *hc, const char *remain, void *opaque)
  * Root page
  */
 static int
-ajax_page_root(http_connection_t *hc, const char *remain, void *opaque)
+ajax_page_root(http_connection_t *hc, http_reply_t *hr, 
+	       const char *remain, void *opaque)
 {
-  tcp_queue_t tq;
+  tcp_queue_t *tq = &hr->hr_tq;
 
-  tcp_init_queue(&tq, -1);
-
-  tcp_qprintf(&tq, 
+  tcp_qprintf(tq, 
 	      "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\r\n"
 	      "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"
 	      /*
@@ -388,110 +385,50 @@ ajax_page_root(http_connection_t *hc, const char *remain, void *opaque)
 	      "content=\"text/html; charset=utf-8\">\r\n");
 
 
-  tcp_qprintf(&tq, 
+  tcp_qprintf(tq, 
 	      "<link href=\"/ajax/ajaxui.css\" rel=\"stylesheet\" "
 	      "type=\"text/css\">\r\n");
 
-  tcp_qprintf(&tq,
+  tcp_qprintf(tq,
 	      "<script src=\"/ajax/prototype.js\" type=\"text/javascript\">"
 	      "</script>\r\n");
 
-  tcp_qprintf(&tq,
+  tcp_qprintf(tq,
 	      "<script src=\"/ajax/effects.js\" type=\"text/javascript\">"
 	      "</script>\r\n");
 
-  tcp_qprintf(&tq,
+  tcp_qprintf(tq,
 	      "<script src=\"/ajax/dragdrop.js\" type=\"text/javascript\">"
 	      "</script>\r\n");
 
-  tcp_qprintf(&tq,
+  tcp_qprintf(tq,
 	      "<script src=\"/ajax/controls.js\" type=\"text/javascript\">"
 	      "</script>\r\n");
 
- tcp_qprintf(&tq,
+ tcp_qprintf(tq,
 	      "<script src=\"/ajax/tvheadend.js\" type=\"text/javascript\">"
 	      "</script>\r\n");
 
-  tcp_qprintf(&tq,
+  tcp_qprintf(tq,
 	      "</head>");
 
-  tcp_qprintf(&tq,
+  tcp_qprintf(tq,
 	      "<body>");
 
 
-  ajax_box_begin(&tq, AJAX_BOX_FILLED, "topmenu", NULL, NULL);
-  ajax_box_end(&tq, AJAX_BOX_FILLED);
+  ajax_box_begin(tq, AJAX_BOX_FILLED, "topmenu", NULL, NULL);
+  ajax_box_end(tq, AJAX_BOX_FILLED);
 
-  tcp_qprintf(&tq, "<div id=\"topdeck\"></div>");
+  tcp_qprintf(tq, "<div id=\"topdeck\"></div>");
   
-  ajax_js(&tq, "switchtab('top', '0')");
+  ajax_js(tq, "switchtab('top', '0')");
 
-  tcp_qprintf(&tq, "</body></html>");
+  tcp_qprintf(tq, "</body></html>");
 
-  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
+  http_output_html(hc, hr);
   return 0;
 }
 
-#if 0
-void blah(void) {
-  tcp_qprintf(&tq,
-	      "<ul id=\"list\">"
-	      "<li id=\"item_1\">I'm number 1 <a href=\"/\">a link</a></li>"
-	      "<li id=\"item_2\">");
-  ajax_box_top(&tq, NULL, NULL);
-  tcp_qprintf(&tq,
-	      "I'm number 2");
-
-  ajax_box_bottom(&tq);
-
-  tcp_qprintf(&tq,
-	      "</li>"
-	      "<li id=\"item_3\">I'm number 3</li>"
-	      "<li id=\"item_4\">I'm number 4</li>"
-	      "</ul>"
-	      "\r\n"
-	      "<p id=\"list-info\"></p>\r\n");
-
-
-  tcp_qprintf(&tq,
-	      "<script type=\"text/javascript\">\r\n"
-	      "//<![CDATA[\r\n"
-	      "Sortable.create(\"list\", {onUpdate:function(){new Ajax.Updater('list-info', '/ajax/order', {asynchronous:true, evalScripts:true, onComplete:function(request){new Effect.Highlight(\"list\",{});}, parameters:Sortable.serialize(\"list\")})}})\r\n"
-	      "//]]>\r\n"
-	      "</script>\r\n");
-
-
- tcp_qprintf(&tq,
-	     "<div id=\"updateDiv\"></div>\r\n"
-	     "<form id=\"testform\">\n"
-	     "<input name=\"name\" type=\"text\"><br>\r\n"
-	     "<textarea name=\"comment\" cols=\"20\" rows=\"3\">"
-	     "</textarea><br>\r\n"
-	     "<input name=\"sendbutton\" type=\"button\" value=\"Send\""
-	     " onClick=\"new Ajax.Updater('updateDiv', '/ajax/formupdate', "
-	     "{asynchronous:true, "
-	     " parameters:Form.serialize($('testform'))})\">\r\n"
-	     "</form>\r\n");
-
-
- for(i = 0; i < 40; i++) {
-   tcp_qprintf(&tq,
-	       "<div style=\"float: left\" class=\"sidebox\">\r\n"
-	       " <div class=\"boxhead\"><h2>Discovery</h2></div>\r\n"
-	       "  <div class=\"boxbody\">"
-	       "   <p>Idag e det bra saker pa TV</p>"
-	       "   <p>Imorgon vet vi inte</p>"
-	       "</div></div>");
- }
-
-  tcp_qprintf(&tq,
-	      "</body></html>");
-
-  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
-  return 0;
-}
-
-#endif
 
 
 /**

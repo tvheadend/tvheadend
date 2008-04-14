@@ -282,12 +282,12 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
  *  Rename of unmapped channel
  */
 static int
-ajax_transport_rename_channel(http_connection_t *hc, 
+ajax_transport_rename_channel(http_connection_t *hc, http_reply_t *hr,
 			      const char *remain, void *opaque)
 {
   th_transport_t *t;
   const char *newname, *v;
-  tcp_queue_t tq;
+  tcp_queue_t *tq = &hr->hr_tq;
   char buf[1000];
 
   if(remain == NULL || (t = transport_find_by_identifier(remain)) == NULL)
@@ -299,8 +299,6 @@ ajax_transport_rename_channel(http_connection_t *hc,
   free((void *)t->tht_channelname);
   t->tht_channelname = strdup(newname);
 
-  tcp_init_queue(&tq, -1);
-
   v = newname;
 
   snprintf(buf, sizeof(buf), 
@@ -308,9 +306,9 @@ ajax_transport_rename_channel(http_connection_t *hc,
 	   "'/ajax/transport_rename_channel/%s', '%s')",
 	   t->tht_identifier, t->tht_identifier, v);
   
-  ajax_a_jsfunc(&tq, v, buf, "");
+  ajax_a_jsfunc(tq, v, buf, "");
       
-  http_output_queue(hc, &tq, "text/html; charset=UTF-8", 0);
+  http_output_html(hc, hr);
   t->tht_config_change(t);
   return 0;
 }
@@ -361,10 +359,11 @@ dvb_unmap_channel(th_transport_t *t, tcp_queue_t *tq)
  *
  */
 int
-ajax_transport_op(http_connection_t *hc, const char *remain, void *opaque)
+ajax_transport_op(http_connection_t *hc, http_reply_t *hr, 
+		  const char *remain, void *opaque)
 {
   th_transport_t *t;
-  tcp_queue_t tq;
+  tcp_queue_t *tq = &hr->hr_tq;
   const char *op;
 
   if(remain == NULL || (t = transport_find_by_identifier(remain)) == NULL)
@@ -373,20 +372,18 @@ ajax_transport_op(http_connection_t *hc, const char *remain, void *opaque)
   if((op = http_arg_get(&hc->hc_req_args, "action")) == NULL)
     return HTTP_STATUS_BAD_REQUEST;
 
-  tcp_init_queue(&tq, -1);
-
   if(!strcmp(op, "toggle")) {
     if(t->tht_channel)
-      dvb_unmap_channel(t, &tq);
+      dvb_unmap_channel(t, tq);
     else
-      dvb_map_channel(t, &tq);
+      dvb_map_channel(t, tq);
   } else if(!strcmp(op, "map") && t->tht_channel == NULL) {
-    dvb_map_channel(t, &tq);
+    dvb_map_channel(t, tq);
   } else if(!strcmp(op, "unmap") && t->tht_channel != NULL) {
-    dvb_unmap_channel(t, &tq);
+    dvb_unmap_channel(t, tq);
   }
 
-  http_output_queue(hc, &tq, "text/javascript; charset=UTF-8", 0);
+  http_output(hc, hr, "text/javascript; charset=UTF8", NULL, 0);
 
   t->tht_config_change(t);
   return 0;
