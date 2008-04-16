@@ -262,8 +262,7 @@ ajax_mailbox_update_div(const char *subscription, const char *prefix,
 {
   char buf[1000];
 
-  snprintf(buf, sizeof(buf),
-	   "document.getElementById('%s_%s').innerHTML='%s';\r\n",
+  snprintf(buf, sizeof(buf), "$('%s_%s').innerHTML='%s';\r\n",
 	   prefix, postfix, content);
 
   ajax_mailbox_add_to_subscription(subscription, buf);
