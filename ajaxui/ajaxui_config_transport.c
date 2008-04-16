@@ -58,7 +58,7 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
   tcp_qprintf(tq, "select_all = function() {\r\n");
   LIST_FOREACH(t, tlist, tht_tmp_link) {
     tcp_qprintf(tq, 
-		"document.getElementById('sel_%s').checked = true;\r\n",
+		"$('sel_%s').checked = true;\r\n",
 		t->tht_identifier);
   }
   tcp_qprintf(tq, "}\r\n");
@@ -67,7 +67,7 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
   tcp_qprintf(tq, "select_none = function() {\r\n");
   LIST_FOREACH(t, tlist, tht_tmp_link) {
     tcp_qprintf(tq, 
-		"document.getElementById('sel_%s').checked = false;\r\n",
+		"$('sel_%s').checked = false;\r\n",
 		t->tht_identifier);
   }
   tcp_qprintf(tq, "}\r\n");
@@ -76,8 +76,7 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
   tcp_qprintf(tq, "select_invert = function() {\r\n");
   LIST_FOREACH(t, tlist, tht_tmp_link) {
     tcp_qprintf(tq, 
-		"document.getElementById('sel_%s').checked = !"
-		"document.getElementById('sel_%s').checked;\r\n",
+		"$('sel_%s').checked = !$('sel_%s').checked;\r\n",
 		t->tht_identifier, t->tht_identifier);
   }
   tcp_qprintf(tq, "}\r\n");
@@ -86,7 +85,7 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
   tcp_qprintf(tq, "select_tv = function() {\r\n");
   LIST_FOREACH(t, tlist, tht_tmp_link) {
     tcp_qprintf(tq, 
-		"document.getElementById('sel_%s').checked = %s;\r\n",
+		"$('sel_%s').checked = %s;\r\n",
 		t->tht_identifier, 
 		transport_is_tv(t) ? "true" : "false");
   }
@@ -96,7 +95,7 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
   tcp_qprintf(tq, "select_tv_nocrypt = function() {\r\n");
   LIST_FOREACH(t, tlist, tht_tmp_link) {
     tcp_qprintf(tq, 
-		"document.getElementById('sel_%s').checked = %s;\r\n",
+		"$('sel_%s').checked = %s;\r\n",
 		t->tht_identifier, 
 		transport_is_tv(t) && !t->tht_scrambled ? "true" : "false");
   }
@@ -106,7 +105,7 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
   tcp_qprintf(tq, "selected_do = function(op) {\r\n");
   LIST_FOREACH(t, tlist, tht_tmp_link) {
     tcp_qprintf(tq, 
-		"if(document.getElementById('sel_%s').checked) {\r\n"
+		"if($('sel_%s').checked) {\r\n"
 		"  new Ajax.Request('/ajax/transport_op/%s', "
 		"{parameters: {action: op}});\r\n}\r\n",
 		t->tht_identifier, t->tht_identifier);
@@ -325,8 +324,8 @@ dvb_map_channel(th_transport_t *t, tcp_queue_t *tq)
 	 t->tht_servicename, t->tht_channel->ch_name);
 
   tcp_qprintf(tq, 
-	      "document.getElementById('chname%s').innerHTML='%s';\n\r"
-	      "document.getElementById('map%s').src='/gfx/mapped.png';\n\r",
+	      "$('chname%s').innerHTML='%s';\n\r"
+	      "$('map%s').src='/gfx/mapped.png';\n\r",
 	      t->tht_identifier, t->tht_channel->ch_name,
 	      t->tht_identifier);
 }
@@ -343,12 +342,12 @@ dvb_unmap_channel(th_transport_t *t, tcp_queue_t *tq)
   printf("Unmapped transport %s\n", t->tht_servicename);
 
   tcp_qprintf(tq, 
-	      "document.getElementById('chname%s').innerHTML='"
+	      "$('chname%s').innerHTML='"
 	      "<a href=\"javascript:void(0)\" "
 	      "onClick=\"javascript:tentative_chname(\\'chname%s\\', "
 	      "\\'/ajax/transport_rename_channel/%s\\', \\'%s\\')\">%s</a>"
 	      "';\n\r"
-	      "document.getElementById('map%s').src='/gfx/unmapped.png';\n\r",
+	      "$('map%s').src='/gfx/unmapped.png';\n\r",
 	      t->tht_identifier, t->tht_identifier, t->tht_identifier,
 	      t->tht_channelname, t->tht_channelname, t->tht_identifier);
 }
