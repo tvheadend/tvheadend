@@ -45,8 +45,10 @@ ajax_chgroup_build(tcp_queue_t *tq, th_channel_group_t *tcg)
   tcp_qprintf(tq,
 	      "<div style=\"float: left; width: 60%\">"
 	      "<a href=\"javascript:void(0)\" "
-	      "onClick=\"new Ajax.Updater('groupeditortab', "
-	      "'/ajax/chgroup_editor/%d', {method: 'get'})\" >"
+	      "onClick=\"$('cheditortab').innerHTML=''; "
+	      "new Ajax.Updater('groupeditortab', "
+	      "'/ajax/chgroup_editor/%d', "
+	      "{method: 'get', evalScripts: true})\" >"
 	      "%s</a></div>",
 	      tcg->tcg_tag, tcg->tcg_name);
 
@@ -172,7 +174,7 @@ ajax_config_channels_tab(http_connection_t *hc, http_reply_t *hr)
   tcp_queue_t *tq = &hr->hr_tq;
   th_channel_group_t *tcg;
 
-  tcp_qprintf(tq, "<div style=\"float: left; width: 40%\">");
+  tcp_qprintf(tq, "<div style=\"float: left; width: 30%\">");
 
   ajax_box_begin(tq, AJAX_BOX_SIDEBOX, "channelgroups",
 		 NULL, "Channel groups");
@@ -200,6 +202,9 @@ ajax_config_channels_tab(http_connection_t *hc, http_reply_t *hr)
   /**
    * Add new group
    */
+
+  tcp_qprintf(tq, "<hr>");
+
   ajax_box_begin(tq, AJAX_BOX_BORDER, NULL, NULL, NULL);
 
   tcp_qprintf(tq,
@@ -221,10 +226,12 @@ ajax_config_channels_tab(http_connection_t *hc, http_reply_t *hr)
 
   tcp_qprintf(tq, 
 	      "<div id=\"groupeditortab\" "
-	      "style=\"height: 600px; overflow: auto; "
-	      "float: left; width: 60%\">");
+	      "style=\"overflow: auto; float: left; width: 30%\"></div>");
 
-  tcp_qprintf(tq, "</div>");
+  tcp_qprintf(tq, 
+	      "<div id=\"cheditortab\" "
+	      "style=\"overflow: auto; float: left; width: 40%\"></div>");
+
   http_output_html(hc, hr);
   return 0;
 }
@@ -239,38 +246,169 @@ ajax_chgroup_editor(http_connection_t *hc, http_reply_t *hr,
   tcp_queue_t *tq = &hr->hr_tq;
   th_channel_t *ch;
   th_channel_group_t *tcg;
+  int rowcol = 1;
+  int disprows;
 
   if(remain == NULL || (tcg = channel_group_by_tag(atoi(remain))) == NULL)
     return HTTP_STATUS_BAD_REQUEST;
 
+
+
+  tcp_qprintf(tq, "<script type=\"text/javascript\">\r\n"
+	      "//<![CDATA[\r\n");
+  
+  /* Select all */
+  tcp_qprintf(tq, "select_all = function() {\r\n");
+  TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
+    tcp_qprintf(tq, 
+		"$('sel_%d').checked = true;\r\n",
+		ch->ch_tag);
+  }
+  tcp_qprintf(tq, "}\r\n");
+
+  /* Select none */
+  tcp_qprintf(tq, "select_none = function() {\r\n");
+  TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
+    tcp_qprintf(tq, 
+		"$('sel_%d').checked = false;\r\n",
+		ch->ch_tag);
+  }
+  tcp_qprintf(tq, "}\r\n");
+
+  /* Invert selection */
+  tcp_qprintf(tq, "select_invert = function() {\r\n");
+  TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
+    tcp_qprintf(tq, 
+		"$('sel_%d').checked = !$('sel_%d').checked;\r\n",
+		ch->ch_tag, ch->ch_tag);
+  }
+  tcp_qprintf(tq, "}\r\n");
+
+  tcp_qprintf(tq, 
+	      "\r\n//]]>\r\n"
+	      "</script>\r\n");
+
+
   ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, tcg->tcg_name);
 
-  tcp_qprintf(tq, "<ul id=\"channellist\" class=\"draglist\">");
+  tcp_qprintf(tq, "<div style=\"width: 100%%\">"
+	      "Channels</div><hr>");
+
+  disprows = 30;
+
+  tcp_qprintf(tq, "<div id=\"chlist\" "
+	      "style=\"height: %dpx; overflow: auto\" class=\"normallist\">",
+	      disprows * 14);
 
   TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
-    tcp_qprintf(tq, "<li id=\"ch_%d\">", ch->ch_tag);
-  
-    ajax_box_begin(tq, AJAX_BOX_BORDER, NULL, NULL, NULL);
-  
-    tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
-  
     tcp_qprintf(tq,
-		"<div style=\"float: left; width: 100%\">"
-		"<a href=\"javascript:void(0)\" >"
-		"%s</a>"
+		"<div style=\"%swidth: 100%%; overflow: auto\">"
+		"<div style=\"float: left; width: 90%\">"
+		"<a href=\"javascript:void(0)\" "
+		"onclick=\"new Ajax.Updater('cheditortab', "
+		"'/ajax/cheditor/%d', {method: 'get'})\""
+		">%s</a>"
+		"</div>"
+		"<input id=\"sel_%d\" type=\"checkbox\" class=\"nicebox\">"
 		"</div>",
-		ch->ch_name);
-
-    tcp_qprintf(tq, "</div>");
-    ajax_box_end(tq, AJAX_BOX_BORDER);
-    tcp_qprintf(tq, "</li>");
+		rowcol ? "background: #fff; " : "",
+		ch->ch_tag, ch->ch_name, ch->ch_tag);
+    rowcol = !rowcol;
   }
 
-  tcp_qprintf(tq, "</ul>");
+  tcp_qprintf(tq, "</div>");
+
+  tcp_qprintf(tq, "<hr>\r\n");
+
+  tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
+
+  tcp_qprintf(tq, "<div class=\"infoprefix\">Select:</div><div>");
+
+  ajax_a_jsfunc(tq, "All",                       "select_all();",      " / ");
+  ajax_a_jsfunc(tq, "None",                      "select_none();",     " / ");
+  ajax_a_jsfunc(tq, "Invert",                    "select_invert();",   "");
+
+  tcp_qprintf(tq, "</div></div>\r\n");
+  
 
   ajax_box_end(tq, AJAX_BOX_SIDEBOX);
 
 
+  http_output_html(hc, hr);
+  return 0;
+}
+
+
+/**
+ *
+ */
+static struct strtab sourcetypetab[] = {
+  { "DVB",        TRANSPORT_DVB },
+  { "V4L",        TRANSPORT_V4L },
+  { "IPTV",       TRANSPORT_IPTV },
+  { "AVgen",      TRANSPORT_AVGEN },
+  { "File",       TRANSPORT_STREAMEDFILE },
+};
+
+
+/**
+ * Display all channels within the group
+ */
+static int
+ajax_cheditor(http_connection_t *hc, http_reply_t *hr,
+	      const char *remain, void *opaque)
+{
+  tcp_queue_t *tq = &hr->hr_tq;
+  th_channel_t *ch;
+  th_transport_t *t;
+  const char *s;
+
+  if(remain == NULL || (ch = channel_by_tag(atoi(remain))) == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, ch->ch_name);
+  
+  tcp_qprintf(tq, "<div>Sources:</div>");
+
+  LIST_FOREACH(t, &ch->ch_transports, tht_channel_link) {
+    ajax_box_begin(tq, AJAX_BOX_BORDER, NULL, NULL, NULL);
+    tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
+    tcp_qprintf(tq, "<div style=\"float: left; width: 13%%\">%s</div>",
+		val2str(t->tht_type, sourcetypetab) ?: "???");
+    tcp_qprintf(tq, "<div style=\"float: left; width: 87%%\">\"%s\"%s</div>",
+		t->tht_servicename, t->tht_scrambled ? " - (scrambled)" : "");
+    s = t->tht_sourcename ? t->tht_sourcename(t) : NULL;
+
+    tcp_qprintf(tq, "</div><div style=\"overflow: auto; width: 100%\">");
+
+    tcp_qprintf(tq,
+		"<div style=\"float: left; width: 13%%\">"
+		"<input type=\"checkbox\" class=\"nicebox\">"
+		"</div>");
+
+    if(s != NULL)
+      tcp_qprintf(tq, "<div style=\"float: left; width: 87%%\">%s</div>",
+		  s);
+
+    tcp_qprintf(tq, "</div>");
+
+    ajax_box_end(tq, AJAX_BOX_BORDER);
+  }
+
+  tcp_qprintf(tq, "<hr>\r\n");
+
+  tcp_qprintf(tq,
+	      "<div class=\"infoprefixwidefat\">Commercial detection:</div>"
+	      "<div>"
+	      "<select id=\"cdetect_%d\" class=\"textinput\">",
+	      ch->ch_tag);
+  tcp_qprintf(tq, "<option>None</option>");
+  tcp_qprintf(tq, "<option>TV4 Teletext, p192</option>");
+  tcp_qprintf(tq, "</select></div>");
+  tcp_qprintf(tq, "</div>");
+
+
+  ajax_box_end(tq, AJAX_BOX_SIDEBOX);
   http_output_html(hc, hr);
   return 0;
 }
@@ -285,4 +423,5 @@ ajax_config_channels_init(void)
   http_path_add("/ajax/chgroup_del"        , NULL, ajax_chgroup_del);
   http_path_add("/ajax/chgroup_updateorder", NULL, ajax_chgroup_updateorder);
   http_path_add("/ajax/chgroup_editor",      NULL, ajax_chgroup_editor);
+  http_path_add("/ajax/cheditor",            NULL, ajax_cheditor);
 }
