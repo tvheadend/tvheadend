@@ -223,7 +223,7 @@ ajax_adaptereditor(http_connection_t *hc, http_reply_t *hr,
 
   ajax_js(tq, 
 	  "new Ajax.Updater('dvbmuxlist%s', "
-	  "'/ajax/dvbadaptermuxlist/%s', {method: 'get'}) ",
+	  "'/ajax/dvbadaptermuxlist/%s', {method: 'get', evalScripts: true})",
 	  tda->tda_identifier, tda->tda_identifier);
 
   tcp_qprintf(tq, "<hr><div id=\"addmux\">");
@@ -516,7 +516,7 @@ ajax_adaptercreatemux(http_connection_t *hc, http_reply_t *hr,
 
   ajax_js(tq, 
 	  "new Ajax.Updater('dvbmuxlist%s', "
-	  "'/ajax/dvbadaptermuxlist/%s', {method: 'get'}) ",
+	  "'/ajax/dvbadaptermuxlist/%s', {method: 'get', evalScripts: true})",
 	  tda->tda_identifier, tda->tda_identifier);
 
   http_output_html(hc, hr);
@@ -586,9 +586,10 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
 	     "'/ajax/dvbmuxeditor/%s', {method: 'get', evalScripts: true})\""
 	     ">%s</a>", tdmi->tdmi_identifier, buf);
 
+
     cells[0] = buf2;
     cells[1] = dvb_mux_status(tdmi);
- 
+
     switch(tdmi->tdmi_state) {
     case TDMI_IDLE:      txt = "Idle";      break;
     case TDMI_IDLESCAN:  txt = "Scanning";  break;
@@ -597,7 +598,7 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
     }
 
     cells[2] = txt;
- 
+
     txt = tdmi->tdmi_network;
     if(txt == NULL)
       txt = "Unknown";
@@ -614,10 +615,14 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
     cells[4] = buf3;
     cells[5] = NULL;
 
-    ajax_table_row(tq, cells, csize, &o);
+    ajax_table_row(tq, cells, csize, &o,
+		   (const char *[]){NULL, "status", "state", "name", NULL},
+		   tdmi->tdmi_identifier);
 
   }
   tcp_qprintf(tq, "</div>");
+  ajax_js(tq, "new Ajax.Request('/ajax/mailbox/%d')",
+	  ajax_mailbox_create(tda->tda_identifier));
 
   http_output_html(hc, hr);
   return 0;

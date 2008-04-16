@@ -41,6 +41,7 @@
 #include "transports.h"
 #include "channels.h"
 #include "psi.h"
+#include "notify.h"
 
 #define TDT_NOW 0x1
 
@@ -614,8 +615,11 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       if(dvb_get_string(networkname, sizeof(networkname), ptr, tlen, "UTF8"))
 	return;
 
-      free((void *)tdmi->tdmi_network);
-      tdmi->tdmi_network = strdup(networkname);
+      if(strcmp(tdmi->tdmi_network ?: "", networkname)) {
+	free((void *)tdmi->tdmi_network);
+	tdmi->tdmi_network = strdup(networkname);
+	notify_tdmi_name_change(tdmi);
+      }
       break;
     }
 

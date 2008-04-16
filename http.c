@@ -253,6 +253,15 @@ http_xmit_queue(http_connection_t *hc)
 }
 
 
+/**
+ * Continue HTTP session, called by deferred replies
+ */
+void
+http_continue(http_connection_t *hc)
+{
+  if(http_xmit_queue(hc))
+    tcp_disconnect(&hc->hc_tcp_session, 0);
+}
 
 /**
  * Send HTTP error back
@@ -286,6 +295,7 @@ void
 http_output(http_connection_t *hc, http_reply_t *hr, const char *content,
 	    const char *encoding, int maxage)
 {
+  hr->hr_destroy = NULL;
   hr->hr_encoding = encoding;
   hr->hr_content = content;
   hr->hr_maxage = maxage;
@@ -297,6 +307,7 @@ http_output(http_connection_t *hc, http_reply_t *hr, const char *content,
 void
 http_output_html(http_connection_t *hc, http_reply_t *hr)
 {
+  hr->hr_destroy = NULL;
   hr->hr_content = "text/html; charset=UTF-8";
 }
 
@@ -340,6 +351,7 @@ http_exec(http_connection_t *hc, http_path_t *hp, char *remain, int err)
   TAILQ_INSERT_TAIL(&hc->hc_replies, hr, hr_link);
   
   tcp_init_queue(&hr->hr_tq, -1);
+  hr->hr_connection = hc;
   hr->hr_version    = hc->hc_version;
   hr->hr_keep_alive = hc->hc_keep_alive;
 

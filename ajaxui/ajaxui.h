@@ -19,7 +19,6 @@
 #ifndef AJAXUI_H_
 #define AJAXUI_H_
 
-
 typedef enum {
   AJAX_BOX_FILLED,
   AJAX_BOX_SIDEBOX,
@@ -46,6 +45,8 @@ TAILQ_HEAD(ajax_menu_entry_queue, ajax_menu_entry);
 void ajaxui_start(void);
 void ajax_channels_init(void);
 void ajax_config_init(void);
+void ajax_mailbox_init(void);
+int ajax_mailbox_create(char *subscriptionid);
 
 
 void ajax_menu_bar_from_array(tcp_queue_t *tq, const char *name, 
@@ -74,6 +75,6 @@ void ajax_table_header(http_connection_t *hc, tcp_queue_t *tq,
 		       int scrollbar, int columnsizes[]);
 
 void ajax_table_row(tcp_queue_t *tq, const char *cells[], int columnsizes[],
-		    int *bgptr);
+		    int *bgptr, const char *idprefix[], const char *idpostfix);
 
 #endif /* AJAXUI_H_ */

@@ -51,6 +51,7 @@ typedef struct http_reply {
 
   void (*hr_destroy)(struct http_reply *hr, void *opaque);
 
+  struct http_connection *hr_connection;
   int hr_version; /* HTTP version */
   int hr_keep_alive;
   
@@ -135,6 +136,8 @@ void http_output(http_connection_t *hc, http_reply_t *hr,
 		 const char *content, const char *encoding, int maxage);
 
 void http_output_html(http_connection_t *hc, http_reply_t *hr);
+
+void http_continue(http_connection_t *hc);
 
 void http_redirect(http_connection_t *hc, http_reply_t *hr, 
 		   const char *location);

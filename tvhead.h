@@ -167,6 +167,7 @@ typedef struct th_dvb_mux_instance {
 
   dtimer_t tdmi_initial_scan_timer;
   const char *tdmi_status;
+  const char *tdmi_last_status; /* For notification updates */
 
   time_t tdmi_got_adapter;
   time_t tdmi_lost_adapter;

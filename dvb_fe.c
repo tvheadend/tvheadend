@@ -39,6 +39,7 @@
 #include "dvb.h"
 #include "dvb_support.h"
 #include "diseqc.h"
+#include "notify.h"
 
 typedef struct dvb_fe_cmd {
   TAILQ_ENTRY(dvb_fe_cmd) link;
@@ -200,6 +201,7 @@ tdmi_stop(th_dvb_mux_instance_t *tdmi)
   pthread_mutex_unlock(&tdmi->tdmi_table_lock);
 
   tdmi->tdmi_state = TDMI_IDLE;
+  notify_tdmi_state_change(tdmi);
   time(&tdmi->tdmi_lost_adapter);
 }
 
@@ -214,7 +216,10 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   char buf[100];
 
-  tdmi->tdmi_state = state;
+  if(tdmi->tdmi_state != state) {
+    tdmi->tdmi_state = state;
+    notify_tdmi_state_change(tdmi);
+  }
 
   if(tda->tda_mux_current == tdmi)
     return;

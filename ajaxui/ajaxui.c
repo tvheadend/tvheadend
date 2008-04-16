@@ -26,6 +26,7 @@
 #include "tvhead.h"
 #include "http.h"
 #include "ajaxui.h"
+#include "dispatch.h"
 
 #include "obj/ajaxui.cssh"
 
@@ -93,7 +94,7 @@ ajax_table_header(http_connection_t *hc, tcp_queue_t *tq,
  */
 void
 ajax_table_row(tcp_queue_t *tq, const char *cells[], int columnsizes[],
-	       int *bgptr)
+	       int *bgptr, const char *idprefix[], const char *idpostfix)
 {
   int i = 0;
 
@@ -103,7 +104,13 @@ ajax_table_row(tcp_queue_t *tq, const char *cells[], int columnsizes[],
   *bgptr = !*bgptr;
 
   while(cells[i]) {
-    tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%s</div>",
+    tcp_qprintf(tq, 
+		"<div %s%s%s%s%sstyle=\"float: left; width: %d%%\">%s</div>",
+		idprefix && idprefix[i]              ? "id=\""     : "",
+		idprefix && idprefix[i]              ? idprefix[i] : "",
+		idprefix && idprefix[i] && idpostfix ? "_"         : "",
+		idprefix && idprefix[i] && idpostfix ? idpostfix   : "",
+		idprefix && idprefix[i]              ? "\" "       : "",
 		columnsizes[i], cells[i]);
     i++;
   }
@@ -399,19 +406,27 @@ ajax_page_root(http_connection_t *hc, http_reply_t *hr,
 	      "<body>");
 
 
+  tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
+
+  tcp_qprintf(tq, "<div style=\"float: left; width: 80%\">");
+
   ajax_box_begin(tq, AJAX_BOX_FILLED, "topmenu", NULL, NULL);
   ajax_box_end(tq, AJAX_BOX_FILLED);
 
   tcp_qprintf(tq, "<div id=\"topdeck\"></div>");
   
   ajax_js(tq, "switchtab('top', '0')");
+#if 0
+  tcp_qprintf(tq, "</div><div style=\"float: left; width: 20%\">");
 
-  tcp_qprintf(tq, "</body></html>");
+  ajax_box_begin(tq, AJAX_BOX_SIDEBOX, "statusbox", NULL, "System status");
+  ajax_box_end(tq, AJAX_BOX_SIDEBOX);
+#endif
+  tcp_qprintf(tq, "</div></div></body></html>");
 
   http_output_html(hc, hr);
   return 0;
 }
-
 
 
 /**
@@ -424,7 +439,6 @@ ajaxui_start(void)
 
   http_path_add("/ajax/topmenu",              NULL, ajax_page_titlebar);
   http_path_add("/ajax/toptab",               NULL, ajax_page_tab);
-
 
   /* Stylesheet */
   http_resource_add("/ajax/ajaxui.css", embedded_ajaxui,
@@ -463,6 +477,7 @@ ajaxui_start(void)
   http_resource_add("/gfx/mapped.png", embedded_mapped,
 		    sizeof(embedded_mapped), "image/png", NULL);
 
+  ajax_mailbox_init();
   ajax_channels_init();
   ajax_config_init();
   ajax_config_transport_init();
