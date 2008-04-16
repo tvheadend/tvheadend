@@ -48,7 +48,7 @@ void dvb_fe_start(th_dvb_adapter_t *tda);
 void tdmi_check_scan_status(th_dvb_mux_instance_t *tdmi);
 
 th_transport_t *dvb_find_transport(th_dvb_mux_instance_t *tdmi,
-				   uint16_t sid, int pmt_pid);
+				   uint16_t sid, int pmt_pid, int *created);
 
 th_dvb_mux_instance_t *dvb_mux_create(th_dvb_adapter_t *tda,
 				      struct dvb_frontend_parameters *fe_param,

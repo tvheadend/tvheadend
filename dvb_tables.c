@@ -240,7 +240,7 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   len -= 11;
   ptr += 11;
 
-  t = dvb_find_transport(tdmi, serviceid, 0);
+  t = dvb_find_transport(tdmi, serviceid, 0, NULL);
   if(t == NULL)
     return;
 
@@ -395,7 +395,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	    snprintf(chname0, sizeof(chname0), "noname-sid-0x%x", service_id);
 	  }
 
-	  t = dvb_find_transport(tdmi, service_id, 0);
+	  t = dvb_find_transport(tdmi, service_id, 0, NULL);
 	  if(t == NULL)
 	    break;
 
@@ -437,7 +437,7 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 {
   uint16_t service, pmt, tid;
   th_transport_t *t;
-
+  int created;
   if(len < 5)
     return;
 
@@ -451,8 +451,9 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     pmt     = (ptr[2] & 0x1f) << 8 | ptr[3];
 
     if(service != 0) {
-      t = dvb_find_transport(tdmi, service, pmt);
-      dvb_table_add_transport(tdmi, t, pmt); /* Add PMT to our table scanner */
+      t = dvb_find_transport(tdmi, service, pmt, &created);
+      if(created)  /* Add PMT to our table scanner */
+	dvb_table_add_transport(tdmi, t, pmt);
     }
     ptr += 4;
     len -= 4;
