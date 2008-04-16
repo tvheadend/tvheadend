@@ -425,6 +425,8 @@ typedef struct th_transport {
 
   void (*tht_config_change)(struct th_transport *t);
 
+  const char *(*tht_sourcename)(struct th_transport *t);
+
   struct th_muxer_list tht_muxers; /* muxers */
 
   struct pluginaux_list tht_plugin_aux;
