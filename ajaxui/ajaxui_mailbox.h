@@ -25,4 +25,6 @@ void ajax_mailbox_tdmi_name_change(th_dvb_mux_instance_t *tdmi);
 
 void ajax_mailbox_tdmi_status_change(th_dvb_mux_instance_t *tdmi);
 
+void ajax_mailbox_tda_change(th_dvb_adapter_t *tda);
+
 #endif /* AJAXUI_MAILBOX_H_ */

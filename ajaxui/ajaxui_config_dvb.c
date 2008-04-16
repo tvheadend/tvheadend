@@ -218,11 +218,11 @@ ajax_adaptereditor(http_connection_t *hc, http_reply_t *hr,
 
   ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, "Multiplexes");
 
-  tcp_qprintf(tq, "<div id=\"dvbmuxlist%s\"></div>",
+  tcp_qprintf(tq, "<div id=\"dvbmuxlist_%s\"></div>",
 	      tda->tda_identifier);
 
   ajax_js(tq, 
-	  "new Ajax.Updater('dvbmuxlist%s', "
+	  "new Ajax.Updater('dvbmuxlist_%s', "
 	  "'/ajax/dvbadaptermuxlist/%s', {method: 'get', evalScripts: true})",
 	  tda->tda_identifier, tda->tda_identifier);
 
@@ -515,7 +515,7 @@ ajax_adaptercreatemux(http_connection_t *hc, http_reply_t *hr,
   dvb_make_add_link(tq, tda, "Successfully created");
 
   ajax_js(tq, 
-	  "new Ajax.Updater('dvbmuxlist%s', "
+	  "new Ajax.Updater('dvbmuxlist_%s', "
 	  "'/ajax/dvbadaptermuxlist/%s', {method: 'get', evalScripts: true})",
 	  tda->tda_identifier, tda->tda_identifier);
 
@@ -569,7 +569,7 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
   if(nmuxes < displines)
     v = nmuxes;
 
-  tcp_qprintf(tq, "<div id=\"dvbmuxlist%s\" "
+  tcp_qprintf(tq, "<div id=\"dvbmuxinnerlist%s\" "
 	      "style=\"height: %dpx; overflow: auto\" class=\"normallist\">",
 	      tda->tda_identifier, v * 14);
 

@@ -45,3 +45,10 @@ notify_tdmi_status_change(th_dvb_mux_instance_t *tdmi)
 {
   ajax_mailbox_tdmi_status_change(tdmi);
 }
+
+
+void
+notify_tda_change(th_dvb_adapter_t *tda)
+{
+  ajax_mailbox_tda_change(tda);
+}

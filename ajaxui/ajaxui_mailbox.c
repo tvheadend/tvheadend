@@ -270,6 +270,21 @@ ajax_mailbox_update_div(const char *subscription, const char *prefix,
 
 
 
+static void
+ajax_mailbox_reload_div(const char *subscription, const char *prefix,
+			const char *postfix, const char *url)
+{
+  char buf[1000];
+
+  snprintf(buf, sizeof(buf), "new Ajax.Updater('%s_%s', '%s', "
+	   "{method: 'get', evalScripts: true});\r\n",
+	   prefix, postfix, url);
+
+  ajax_mailbox_add_to_subscription(subscription, buf);
+}
+
+
+
 void
 ajax_mailbox_tdmi_state_change(th_dvb_mux_instance_t *tdmi)
 {
@@ -303,4 +318,19 @@ ajax_mailbox_tdmi_status_change(th_dvb_mux_instance_t *tdmi)
   ajax_mailbox_update_div(tdmi->tdmi_adapter->tda_identifier,
 			  "status", tdmi->tdmi_identifier,
 			  tdmi->tdmi_last_status);
+}
+
+
+
+void
+ajax_mailbox_tda_change(th_dvb_adapter_t *tda)
+{
+  char buf[500];
+
+  snprintf(buf, sizeof(buf), "/ajax/dvbadaptermuxlist/%s",
+	   tda->tda_identifier);
+
+  ajax_mailbox_reload_div(tda->tda_identifier,
+			  "dvbmuxlist", tda->tda_identifier,
+			  buf);
 }

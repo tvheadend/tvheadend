@@ -25,4 +25,6 @@ void notify_tdmi_name_change(th_dvb_mux_instance_t *tdmi);
 
 void notify_tdmi_status_change(th_dvb_mux_instance_t *tdmi);
 
+void notify_tda_change(th_dvb_adapter_t *tda);
+
 #endif /* NOTIFY_H_ */
