@@ -777,17 +777,9 @@ http_arg_set(struct http_arg_list *list, char *key, char *val)
 {
   http_arg_t *ra;
 
-  TAILQ_FOREACH(ra, list, link)
-    if(!strcasecmp(ra->key, key))
-      break;
-
-  if(ra == NULL) {
-    ra = malloc(sizeof(http_arg_t));
-    TAILQ_INSERT_TAIL(list, ra, link);
-    ra->key = strdup(key);
-  } else {
-    free(ra->val);
-  }
+  ra = malloc(sizeof(http_arg_t));
+  TAILQ_INSERT_TAIL(list, ra, link);
+  ra->key = strdup(key);
   ra->val = strdup(val);
 }
 
