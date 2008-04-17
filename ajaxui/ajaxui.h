@@ -42,12 +42,10 @@ TAILQ_HEAD(ajax_menu_entry_queue, ajax_menu_entry);
 #define AJAX_TABS              4
 
 
+void ajax_mailbox_init(void);
 void ajaxui_start(void);
 void ajax_channels_init(void);
 void ajax_config_init(void);
-void ajax_mailbox_init(void);
-int ajax_mailbox_create(char *subscriptionid);
-
 
 void ajax_menu_bar_from_array(tcp_queue_t *tq, const char *name, 
 			      const char **vec, int num, int cur);

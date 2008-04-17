@@ -37,11 +37,14 @@
 #include "psi.h"
 #include "transports.h"
 
+#include "ajaxui_mailbox.h"
 
+#if 0
 static struct strtab adapterstatus[] = {
   { "Hardware detected",    TDA_STATE_RUNNING },
   { "Hardware not found",   TDA_STATE_ZOMBIE },
 };
+#endif
 
 static void
 add_option(tcp_queue_t *tq, int bol, const char *name)
@@ -83,9 +86,9 @@ ajax_adaptersummary(http_connection_t *hc, http_reply_t *hr,
 
   ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, dispname);
 
-  tcp_qprintf(tq, "<div class=\"infoprefix\">Status:</div>"
+  tcp_qprintf(tq, "<div class=\"infoprefix\">Device:</div>"
 	      "<div>%s</div>",
-	      val2str(tda->tda_state, adapterstatus) ?: "invalid");
+	      tda->tda_rootpath);
   tcp_qprintf(tq, "<div class=\"infoprefix\">Type:</div>"
 	      "<div>%s</div>", 
 	      dvb_adaptertype_to_str(tda->tda_fe_info->type));
@@ -226,6 +229,9 @@ ajax_adaptereditor(http_connection_t *hc, http_reply_t *hr,
 	  "'/ajax/dvbadaptermuxlist/%s', {method: 'get', evalScripts: true})",
 	  tda->tda_identifier, tda->tda_identifier);
 
+  ajax_mailbox_start(tq, tda->tda_identifier);
+
+ 
   tcp_qprintf(tq, "<hr><div id=\"addmux\">");
   dvb_make_add_link(tq, tda, NULL);
   tcp_qprintf(tq, "</div>");
@@ -559,7 +565,7 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
   ajax_table_header(hc, tq,
 		    (const char *[])
 		    {"Freq", "Status", "State", "Name", "Services", NULL},
-		    (int[]){3,3,2,4,2},
+		    (int[]){4,3,2,4,2},
 		    nmuxes > displines,
 		    csize);
 
@@ -616,14 +622,11 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
     cells[5] = NULL;
 
     ajax_table_row(tq, cells, csize, &o,
-		   (const char *[]){NULL, "status", "state", "name", NULL},
+		   (const char *[]){NULL, "status", "state", "name", "nsvc"},
 		   tdmi->tdmi_identifier);
 
   }
   tcp_qprintf(tq, "</div>");
-  ajax_js(tq, "new Ajax.Request('/ajax/mailbox/%d')",
-	  ajax_mailbox_create(tda->tda_identifier));
-
   http_output_html(hc, hr);
   return 0;
 }

@@ -27,6 +27,7 @@
 #include "dispatch.h"
 #include "http.h"
 #include "ajaxui.h"
+#include "transports.h"
 
 #define MAILBOX_UNUSED_TIMEOUT      15
 #define MAILBOX_EMPTY_REPLY_TIMEOUT 10
@@ -40,7 +41,8 @@ TAILQ_HEAD(ajaxui_letter_queue, ajaxui_letter);
 
 typedef struct ajaxui_letter {
   TAILQ_ENTRY(ajaxui_letter) al_link;
-  char *al_payload;
+  char *al_payload_a;
+  char *al_payload_b;
 } ajaxui_letter_t;
 
 
@@ -66,6 +68,8 @@ static void
 al_destroy(ajaxui_mailbox_t *amb, ajaxui_letter_t *al)
 {
   TAILQ_REMOVE(&amb->amb_letters, al, al_link);
+  free(al->al_payload_a);
+  free(al->al_payload_b);
   free(al);
 }
 
@@ -119,7 +123,7 @@ ajax_mailbox_connection_lost(http_reply_t *hr, void *opaque)
  *
  */
 int
-ajax_mailbox_create(char *subscriptionid)
+ajax_mailbox_create(const char *subscriptionid)
 {
   ajaxui_mailbox_t *amb = calloc(1, sizeof(ajaxui_mailbox_t));
 
@@ -137,6 +141,28 @@ ajax_mailbox_create(char *subscriptionid)
   return amb->amb_boxid;
 }
 
+/**
+ *
+ */
+void
+ajax_mailbox_start(tcp_queue_t *tq, const char *identifier)
+{
+  int boxid = ajax_mailbox_create(identifier);
+
+  /* We need to keep a hidden element in a part of the document that
+     is directly mapped to this mailbox.
+
+     This element is updated in every reply and if it fails,
+     there will be no more updates.
+
+     This avoid getting stale updaters that keeps on going if parts
+     of the document is reloaded faster than the mailbox sees it */
+
+  tcp_qprintf(tq, "<div style=\"display: none\" id=\"mbox_%d\"></div>", boxid);
+
+  ajax_js(tq, "new Ajax.Request('/ajax/mailbox/%d')", boxid);
+}
+
 
 /**
  *
@@ -146,8 +172,14 @@ ajax_mailbox_reply(ajaxui_mailbox_t *amb, http_reply_t *hr)
 {
   ajaxui_letter_t *al;
 
+  /* Modify the hidden element (as described in ajax_mailbox_start()), 
+     if this div no longer exist, the rest of the javascript will bail
+     out and we will not be reloaded */
+
+  tcp_qprintf(&hr->hr_tq, "$('mbox_%d').innerHTML='';\r\n", amb->amb_boxid);
+
   while((al = TAILQ_FIRST(&amb->amb_letters)) != NULL) {
-    tcp_qprintf(&hr->hr_tq, "%s", al->al_payload);
+    tcp_qprintf(&hr->hr_tq, "%s%s", al->al_payload_a, al->al_payload_b ?: "");
     al_destroy(amb, al);
   }
 
@@ -157,11 +189,14 @@ ajax_mailbox_reply(ajaxui_mailbox_t *amb, http_reply_t *hr)
   http_output(hr->hr_connection, hr, "text/javascript", NULL, 0);
   amb->amb_hr = NULL;
 
+  /* Arm a timer in case the browser won't call back */
   dtimer_arm(&amb->amb_timer, ajax_mailbox_unused, amb,
 	     MAILBOX_UNUSED_TIMEOUT);
 }
 
-
+/**
+ *
+ */
 static void
 ajax_mailbox_empty_reply(void *opaque, int64_t now)
 {
@@ -226,28 +261,58 @@ ajax_mailbox_init(void)
 
 
 /**
+ * Delayed delivery of mailbox replies
+ */
+static void
+ajax_mailbox_deliver(void *opaque, int64_t now)
+{
+  ajaxui_mailbox_t *amb = opaque;
+  http_connection_t *hc;
+
+  hc = amb->amb_hr->hr_connection;
+  ajax_mailbox_reply(amb, amb->amb_hr);
+  http_continue(hc);
+}
+
+/**
  *
  */
 static void
-ajax_mailbox_add_to_subscription(const char *subscription, const char *content)
+ajax_mailbox_add_to_subscription(const char *subscription, 
+				 const char *content_a, const char *content_b)
 {
   ajaxui_mailbox_t *amb;
   ajaxui_letter_t *al;
-  http_connection_t *hc;
 
   LIST_FOREACH(amb, &mailboxes, amb_link) {
     if(strcmp(subscription, amb->amb_subscriptionid))
       continue;
 
-    al = malloc(sizeof(ajaxui_letter_t));
-    al->al_payload = strdup(content);
+    /* Avoid inserting the same message twice */
+
+    TAILQ_FOREACH(al, &amb->amb_letters, al_link) {
+      if(!strcmp(al->al_payload_a, content_a))
+	break;
+    }
+
+    if(al == NULL) {
+
+      al = malloc(sizeof(ajaxui_letter_t));
+      al->al_payload_a = strdup(content_a);
+    } else {
+      /* Already exist, just move to tail */
+
+      TAILQ_REMOVE(&amb->amb_letters, al, al_link);
+      free(al->al_payload_b);
+    }
+
+    al->al_payload_b = content_b ? strdup(content_b) : NULL;
+
     TAILQ_INSERT_TAIL(&amb->amb_letters, al, al_link);
 
-    if(amb->amb_hr != NULL) {
-      hc = amb->amb_hr->hr_connection;
-      ajax_mailbox_reply(amb, amb->amb_hr);
-      http_continue(hc);
-    }
+    if(amb->amb_hr != NULL)
+      dtimer_arm_hires(&amb->amb_timer, ajax_mailbox_deliver, amb, 
+		       getclock_hires() + 100000);
   }
 }
 
@@ -260,12 +325,13 @@ static void
 ajax_mailbox_update_div(const char *subscription, const char *prefix,
 			const char *postfix, const char *content)
 {
-  char buf[1000];
+  char buf_a[500];
+  char buf_b[500];
 
-  snprintf(buf, sizeof(buf), "$('%s_%s').innerHTML='%s';\r\n",
-	   prefix, postfix, content);
+  snprintf(buf_a, sizeof(buf_a), "$('%s_%s').innerHTML=", prefix, postfix);
+  snprintf(buf_b, sizeof(buf_b), "'%s';\n\r", content);
 
-  ajax_mailbox_add_to_subscription(subscription, buf);
+  ajax_mailbox_add_to_subscription(subscription, buf_a, buf_b);
 }
 
 
@@ -280,7 +346,7 @@ ajax_mailbox_reload_div(const char *subscription, const char *prefix,
 	   "{method: 'get', evalScripts: true});\r\n",
 	   prefix, postfix, url);
 
-  ajax_mailbox_add_to_subscription(subscription, buf);
+  ajax_mailbox_add_to_subscription(subscription, buf, NULL);
 }
 
 
@@ -318,6 +384,26 @@ ajax_mailbox_tdmi_status_change(th_dvb_mux_instance_t *tdmi)
   ajax_mailbox_update_div(tdmi->tdmi_adapter->tda_identifier,
 			  "status", tdmi->tdmi_identifier,
 			  tdmi->tdmi_last_status);
+}
+
+void
+ajax_mailbox_tdmi_services_change(th_dvb_mux_instance_t *tdmi)
+{
+  th_transport_t *t;
+  char buf[20];
+  int n, m;
+
+  n = m = 0;
+  LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
+    n++;
+    if(transport_is_available(t))
+      m++;
+  }
+  snprintf(buf, sizeof(buf), "%d / %d", m, n);
+   
+  ajax_mailbox_update_div(tdmi->tdmi_adapter->tda_identifier,
+			  "nsvc", tdmi->tdmi_identifier,
+			  buf);
 }
 
 

@@ -19,12 +19,20 @@
 #ifndef AJAXUI_MAILBOX_H_
 #define AJAXUI_MAILBOX_H_
 
+#include "tcp.h"
+
+int ajax_mailbox_create(const char *subscriptionid);
+
 void ajax_mailbox_tdmi_state_change(th_dvb_mux_instance_t *tdmi);
 
 void ajax_mailbox_tdmi_name_change(th_dvb_mux_instance_t *tdmi);
 
 void ajax_mailbox_tdmi_status_change(th_dvb_mux_instance_t *tdmi);
 
+void ajax_mailbox_tdmi_services_change(th_dvb_mux_instance_t *tdmi);
+
 void ajax_mailbox_tda_change(th_dvb_adapter_t *tda);
+
+void ajax_mailbox_start(tcp_queue_t *tq, const char *identifier);
 
 #endif /* AJAXUI_MAILBOX_H_ */
