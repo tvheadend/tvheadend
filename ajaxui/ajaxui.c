@@ -408,7 +408,7 @@ ajax_page_root(http_connection_t *hc, http_reply_t *hr,
 
   tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
 
-  tcp_qprintf(tq, "<div style=\"float: left; width: 80%\">");
+  tcp_qprintf(tq, "<div style=\"float: left; width: 100%\">");
 
   ajax_box_begin(tq, AJAX_BOX_FILLED, "topmenu", NULL, NULL);
   ajax_box_end(tq, AJAX_BOX_FILLED);
