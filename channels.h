@@ -46,4 +46,6 @@ void channel_set_teletext_rundown(th_channel_t *ch, int v);
 
 void channel_group_settings_write(void);
 
+void channel_settings_write(th_channel_t *ch);
+
 #endif /* CHANNELS_H */

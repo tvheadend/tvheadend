@@ -769,7 +769,10 @@ typedef struct th_channel {
 
   int ch_tag;
 
-  int ch_teletext_rundown;
+  enum {
+    COMMERCIAL_DETECT_NONE,
+    COMMERCIAL_DETECT_TTP192,
+  } ch_commercial_detection;
 
   struct event_queue ch_epg_events;
   struct event *ch_epg_cur_event;

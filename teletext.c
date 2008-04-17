@@ -223,8 +223,8 @@ tt_decode_line(th_transport_t *t, uint8_t *buf)
     }
 
     if(update_tt_clock(t, (char *)buf + 34)) {
-      if(ch->ch_teletext_rundown != 0) {
-	ttp = tt_get_page(ttd, ch->ch_teletext_rundown);
+      if(ch->ch_commercial_detection == COMMERCIAL_DETECT_TTP192) {
+	ttp = tt_get_page(ttd, 192);
 	teletext_rundown(t, ch, ttp);
       }
     }
@@ -255,7 +255,8 @@ tt_decode_line(th_transport_t *t, uint8_t *buf)
       break;
     }
 
-    if(ttp->ttp_page == ch->ch_teletext_rundown)
+    if(ttp->ttp_page == 192 &&
+       ch->ch_commercial_detection == COMMERCIAL_DETECT_TTP192)
       teletext_rundown(t, ch, ttp);
   }
 }

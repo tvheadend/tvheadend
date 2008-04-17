@@ -391,6 +391,11 @@ static struct strtab sourcetypetab[] = {
 };
 
 
+static struct strtab cdlongname[] = {
+  { "None",                  COMMERCIAL_DETECT_NONE },
+  { "Swedish TV4 Teletext",  COMMERCIAL_DETECT_TTP192 },
+};
+
 /**
  * Display all channels within the group
  */
@@ -402,6 +407,7 @@ ajax_cheditor(http_connection_t *hc, http_reply_t *hr,
   th_channel_t *ch;
   th_transport_t *t;
   const char *s;
+  int i;
 
   if(remain == NULL || (ch = channel_by_tag(atoi(remain))) == NULL)
     return HTTP_STATUS_BAD_REQUEST;
@@ -444,10 +450,17 @@ ajax_cheditor(http_connection_t *hc, http_reply_t *hr,
 	      "<div class=\"infoprefixwidewidefat\">"
 	      "Commercial detection:</div>"
 	      "<div>"
-	      "<select id=\"cdetect_%d\" class=\"textinput\">",
+	      "<select class=\"textinput\" "
+	      "onChange=\"new Ajax.Request('/ajax/chsetcomdetect/%d', "
+	      "{parameters: {how: this.value}});\">",
 	      ch->ch_tag);
-  tcp_qprintf(tq, "<option>None</option>");
-  tcp_qprintf(tq, "<option>TV4 Teletext, p192</option>");
+
+  for(i = 0; i < sizeof(cdlongname) / sizeof(cdlongname[0]); i++) {
+    tcp_qprintf(tq, "<option %svalue=%d>%s</option>",
+		cdlongname[i].val == ch->ch_commercial_detection ? 
+		"selected " : "",
+		cdlongname[i].val, cdlongname[i].str);
+  }
   tcp_qprintf(tq, "</select></div>");
   tcp_qprintf(tq, "</div>");
 
@@ -499,6 +512,29 @@ ajax_changegroup(http_connection_t *hc, http_reply_t *hr,
   return 0;
 }
 
+/**
+ * Change commercial detection type for channel(s)
+ */
+static int
+ajax_chsetcomdetect(http_connection_t *hc, http_reply_t *hr,
+		    const char *remain, void *opaque)
+{
+  th_channel_t *ch;
+  const char *s;
+
+  if(remain == NULL || (ch = channel_by_tag(atoi(remain))) == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+  
+  if((s = http_arg_get(&hc->hc_req_args, "how")) == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+  
+  ch->ch_commercial_detection = atoi(s);
+
+  channel_settings_write(ch);
+  http_output(hc, hr, "text/javascript; charset=UTF-8", NULL, 0);
+  return 0;
+}
+
 
 /**
  *
@@ -512,5 +548,6 @@ ajax_config_channels_init(void)
   http_path_add("/ajax/chgroup_editor",      NULL, ajax_chgroup_editor);
   http_path_add("/ajax/cheditor",            NULL, ajax_cheditor);
   http_path_add("/ajax/chop/changegroup",    NULL, ajax_changegroup);
+  http_path_add("/ajax/chsetcomdetect",      NULL, ajax_chsetcomdetect);
 
 }

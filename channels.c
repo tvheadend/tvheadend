@@ -39,8 +39,6 @@
 #include "channels.h"
 #include "transports.h"
 
-static void channel_settings_write(th_channel_t *ch);
-
 struct th_channel_list channels;
 int nchannels;
 
@@ -135,15 +133,6 @@ channel_set_group(th_channel_t *ch, th_channel_group_t *tcg)
   channel_settings_write(ch);
 }
 
-/**
- *
- */
-void
-channel_set_teletext_rundown(th_channel_t *ch, int v)
-{
-  ch->ch_teletext_rundown = v;
-  channel_settings_write(ch);
-}
 
 /**
  *
@@ -246,6 +235,13 @@ service_load(struct config_head *head)
     free(t);
 }
 
+
+static struct strtab commercial_detect_tab[] = {
+  { "none",       COMMERCIAL_DETECT_NONE   },
+  { "ttp192",     COMMERCIAL_DETECT_TTP192 },
+};
+
+
 /**
  *
  */
@@ -257,9 +253,10 @@ channels_load(void)
   char buf[PATH_MAX];
   DIR *dir;
   struct dirent *d;
-  const char *name, *grp;
+  const char *name, *grp, *x;
   th_channel_t *ch;
   th_channel_group_t *tcg;
+  int v;
 
   TAILQ_INIT(&all_channel_groups);
   TAILQ_INIT(&cl);
@@ -304,11 +301,14 @@ channels_load(void)
     if(name != NULL && grp != NULL) {
       tcg = channel_group_find(grp, 1);
       ch = channel_find(name, 1, tcg);
-      
-      ch->ch_teletext_rundown = 
-	atoi(config_get_str_sub(&cl, "teletext-rundown", "0"));
+    
+      x = config_get_str_sub(&cl, "commercial-detect", NULL);
+      if(x != NULL) {
+	v = str2val(x, commercial_detect_tab);
+	if(v > 1)
+	  ch->ch_commercial_detection = v;
+      }
     }
-
     config_free0(&cl);
   }
 
@@ -409,7 +409,7 @@ channel_group_settings_write(void)
 /**
  * Write out a config file for a channel
  */
-static void
+void
 channel_settings_write(th_channel_t *ch)
 {
   FILE *fp;
@@ -421,8 +421,9 @@ channel_settings_write(th_channel_t *ch)
 
   fprintf(fp, "name = %s\n", ch->ch_name);
   fprintf(fp, "channel-group = %s\n", ch->ch_group->tcg_name);
-  if(ch->ch_teletext_rundown)
-    fprintf(fp, "teletext-rundown = %d\n", ch->ch_teletext_rundown);
+
+  fprintf(fp, "commercial-detect = %s\n", 
+	  val2str(ch->ch_commercial_detection, commercial_detect_tab) ?: "?");
   fclose(fp);
 }
 
