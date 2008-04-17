@@ -423,8 +423,10 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       len -= dlen; ptr += dlen; dllen -= dlen;
     }
   }
-  if(change)
+  if(change) {
     dvb_tdmi_save(tdmi);
+    notify_tdmi_services_change(tdmi);
+  }
 }
 
 
@@ -684,8 +686,10 @@ dvb_pmt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   psi_parse_pmt(t, ptr, len, 1);
   v ^= t->tht_pmt_seen;
-  if(v)
+  if(v) {
     dvb_tdmi_save(tdmi);
+    notify_tdmi_services_change(tdmi);
+  }
   return;
 }
 
