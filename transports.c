@@ -275,7 +275,8 @@ transport_find(th_channel_t *ch, unsigned int weight)
 
   /* First, try all transports without stealing */
 
-  LIST_FOREACH(t, &ch->ch_transports, tht_channel_link) {
+  for(i = 0; i < cnt; i++) {
+    t = vec[i];
     if(t->tht_status == TRANSPORT_RUNNING) 
       return t;
 
@@ -286,7 +287,8 @@ transport_find(th_channel_t *ch, unsigned int weight)
   /* Ok, nothing, try again, but supply our weight and thus, try to steal
      transponders */
 
-  LIST_FOREACH(t, &ch->ch_transports, tht_channel_link) {
+  for(i = 0; i < cnt; i++) {
+    t = vec[i];
     if(!transport_start(t, weight))
       return t;
   }
