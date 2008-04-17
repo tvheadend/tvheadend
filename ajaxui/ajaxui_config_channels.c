@@ -245,7 +245,7 @@ ajax_chgroup_editor(http_connection_t *hc, http_reply_t *hr,
 {
   tcp_queue_t *tq = &hr->hr_tq;
   th_channel_t *ch;
-  th_channel_group_t *tcg;
+  th_channel_group_t *tcg, *tcg2;
   int rowcol = 1;
   int disprows;
 
@@ -283,6 +283,26 @@ ajax_chgroup_editor(http_connection_t *hc, http_reply_t *hr,
 		ch->ch_tag, ch->ch_tag);
   }
   tcp_qprintf(tq, "}\r\n");
+
+
+  /* Invoke AJAX call containing all selected elements */
+  tcp_qprintf(tq, 
+	      "select_do = function(op, arg1, arg2) {\r\n"
+	      "var h = new Hash();\r\n"
+	      "h.set('arg1', arg1);\r\n"
+	      "h.set('arg2', arg2);\r\n"
+	      );
+  
+  TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
+    tcp_qprintf(tq, 
+		"if($('sel_%d').checked) {h.set('%d', 'selected') }\r\n",
+		ch->ch_tag, ch->ch_tag);
+  }
+
+  tcp_qprintf(tq, " new Ajax.Request('/ajax/chop/' + op, "
+	      "{parameters: h});\r\n");
+  tcp_qprintf(tq, "}\r\n");
+
 
   tcp_qprintf(tq, 
 	      "\r\n//]]>\r\n"
@@ -322,15 +342,35 @@ ajax_chgroup_editor(http_connection_t *hc, http_reply_t *hr,
 
   tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
 
-  tcp_qprintf(tq, "<div class=\"infoprefix\">Select:</div><div>");
+  tcp_qprintf(tq, "<div class=\"infoprefixwide\">Select:</div><div>");
 
   ajax_a_jsfunc(tq, "All",                       "select_all();",      " / ");
   ajax_a_jsfunc(tq, "None",                      "select_none();",     " / ");
   ajax_a_jsfunc(tq, "Invert",                    "select_invert();",   "");
 
   tcp_qprintf(tq, "</div></div>\r\n");
-  
 
+
+  tcp_qprintf(tq, "<div style=\"margin-top: 5px; "
+	      "overflow: auto; width: 100%\">");
+
+  tcp_qprintf(tq,
+	      "<div class=\"infoprefixwidefat\">Move to group:</div>"
+	      "<div>"
+	      "<select id=\"movetarget\" class=\"textinput\" "
+	      "onChange=\"select_do('changegroup', "
+	      "$('movetarget').value, '%d')\">", tcg->tcg_tag);
+  tcp_qprintf(tq, "<option value="">Select group</option>");
+
+  TAILQ_FOREACH(tcg2, &all_channel_groups, tcg_global_link) {
+    if(tcg2->tcg_hidden || tcg == tcg2)
+      continue;
+    tcp_qprintf(tq, "<option value=\"%d\">%s</option>",
+		tcg2->tcg_tag, tcg2->tcg_name);
+  }
+  tcp_qprintf(tq, "</select></div>");
+  tcp_qprintf(tq, "</div>");
+  tcp_qprintf(tq, "</div>");
   ajax_box_end(tq, AJAX_BOX_SIDEBOX);
 
 
@@ -398,7 +438,8 @@ ajax_cheditor(http_connection_t *hc, http_reply_t *hr,
   tcp_qprintf(tq, "<hr>\r\n");
 
   tcp_qprintf(tq,
-	      "<div class=\"infoprefixwidefat\">Commercial detection:</div>"
+	      "<div class=\"infoprefixwidewidefat\">"
+	      "Commercial detection:</div>"
 	      "<div>"
 	      "<select id=\"cdetect_%d\" class=\"textinput\">",
 	      ch->ch_tag);
@@ -414,6 +455,49 @@ ajax_cheditor(http_connection_t *hc, http_reply_t *hr,
 }
 
 /**
+ * Change group for channel(s)
+ */
+static int
+ajax_changegroup(http_connection_t *hc, http_reply_t *hr,
+		 const char *remain, void *opaque)
+{
+  tcp_queue_t *tq = &hr->hr_tq;
+  th_channel_t *ch;
+  th_channel_group_t *tcg;
+  http_arg_t *ra;
+  const char *s;
+  const char *curgrp;
+
+  if((s = http_arg_get(&hc->hc_req_args, "arg1")) == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  if((curgrp = http_arg_get(&hc->hc_req_args, "arg2")) == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  tcg = channel_group_by_tag(atoi(s));
+  if(tcg == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  TAILQ_FOREACH(ra, &hc->hc_req_args, link) {
+    if(strcmp(ra->val, "selected"))
+      continue;
+    
+    if((ch = channel_by_tag(atoi(ra->key))) != NULL)
+      channel_set_group(ch, tcg);
+  }
+
+  tcp_qprintf(tq,
+	      "$('cheditortab').innerHTML=''; "
+	      "new Ajax.Updater('groupeditortab', "
+	      "'/ajax/chgroup_editor/%s', "
+	      "{method: 'get', evalScripts: true});", curgrp);
+  
+  http_output(hc, hr, "text/javascript; charset=UTF-8", NULL, 0);
+  return 0;
+}
+
+
+/**
  *
  */
 void
@@ -424,4 +508,6 @@ ajax_config_channels_init(void)
   http_path_add("/ajax/chgroup_updateorder", NULL, ajax_chgroup_updateorder);
   http_path_add("/ajax/chgroup_editor",      NULL, ajax_chgroup_editor);
   http_path_add("/ajax/cheditor",            NULL, ajax_cheditor);
+  http_path_add("/ajax/chop/changegroup",    NULL, ajax_changegroup);
+
 }

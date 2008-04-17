@@ -61,14 +61,23 @@ img { border: 0; }
 }
 
 .infoprefixwide {
- 	padding-right: 10px;
+ 	padding-right: 5px;
 	float: left;
 	width: 100px;
 	text-align: right;
 }
 
 .infoprefixwidefat {
- 	padding-right: 10px;
+ 	padding-right: 5px;
+	float: left;
+	width: 100px;
+	text-align: right;
+	margin-top: 4px;
+}
+
+
+.infoprefixwidewidefat {
+ 	padding-right: 5px;
 	float: left;
 	width: 130px;
 	text-align: right;
