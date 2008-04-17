@@ -392,6 +392,29 @@ ajax_transport_op(http_connection_t *hc, http_reply_t *hr,
 /**
  *
  */
+int
+ajax_transport_chdisable(http_connection_t *hc, http_reply_t *hr, 
+			 const char *remain, void *opaque)
+{
+  th_transport_t *t;
+  const char *s;
+
+  if(remain == NULL || (t = transport_find_by_identifier(remain)) == NULL)
+    return HTTP_STATUS_NOT_FOUND;
+
+  if((s = http_arg_get(&hc->hc_req_args, "enabled")) == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  t->tht_disabled = !strcasecmp(s, "false");
+  http_output(hc, hr, "text/javascript; charset=UTF8", NULL, 0);
+  t->tht_config_change(t);
+  return 0;
+}
+
+
+/**
+ *
+ */
 void
 ajax_config_transport_init(void)
 {
@@ -400,4 +423,8 @@ ajax_config_transport_init(void)
 
   http_path_add("/ajax/transport_op", NULL,
 		ajax_transport_op);
+
+  http_path_add("/ajax/transport_chdisable", NULL,
+		ajax_transport_chdisable);
+
 }

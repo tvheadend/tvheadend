@@ -402,6 +402,8 @@ typedef struct th_transport {
   avgstat_t tht_rate;
   int tht_monitor_suspend;
 
+  int tht_disabled;
+
   int tht_cc_error_log_limiter;
   int tht_rate_error_log_limiter;
 

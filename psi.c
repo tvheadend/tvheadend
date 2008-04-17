@@ -552,6 +552,9 @@ psi_save_transport(FILE *fp, th_transport_t *t)
 
   fprintf(fp, "\tpcr = %d\n", t->tht_pcr_pid);
 
+  if(t->tht_disabled)
+    fprintf(fp, "\tdisabled = 1\n");
+
   LIST_FOREACH(st, &t->tht_streams, st_link) {
     fprintf(fp, "\tstream {\n");
     fprintf(fp, "\t\tpid = %d\n", st->st_pid);
@@ -586,6 +589,8 @@ psi_load_transport(struct config_head *cl, th_transport_t *t)
 
   t->tht_pcr_pid = atoi(config_get_str_sub(cl, "pcr", "0"));
   
+  t->tht_disabled = atoi(config_get_str_sub(cl, "disabled", "0"));
+
   TAILQ_FOREACH(ce, cl, ce_link) {
     if(ce->ce_type != CFG_SUB || strcasecmp("stream", ce->ce_key))
       continue;

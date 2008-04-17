@@ -423,8 +423,11 @@ ajax_cheditor(http_connection_t *hc, http_reply_t *hr,
 
     tcp_qprintf(tq,
 		"<div style=\"float: left; width: 13%%\">"
-		"<input type=\"checkbox\" class=\"nicebox\">"
-		"</div>");
+		"<input %stype=\"checkbox\" class=\"nicebox\" "
+		"onClick=\"new Ajax.Request('/ajax/transport_chdisable/%s', "
+		"{parameters: {enabled: this.checked}});\">"
+		"</div>", t->tht_disabled ? "" : "checked ",
+		t->tht_identifier);
 
     if(s != NULL)
       tcp_qprintf(tq, "<div style=\"float: left; width: 87%%\">%s</div>",
