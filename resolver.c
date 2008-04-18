@@ -258,7 +258,7 @@ resolver_loop(void *aux)
     }
 
     write(from_thread_fd[1], buf, len);
-free(buf);
+    free(buf);
   }
   fprintf(stderr, "Internal resolver error\n");
   exit(1);
