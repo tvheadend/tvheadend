@@ -99,6 +99,8 @@ dvb_mux_store(FILE *fp, th_dvb_mux_instance_t *tdmi)
   struct dvb_frontend_parameters *f = tdmi->tdmi_fe_params;
 
   fprintf(fp, "\ttransportstreamid = %d\n", tdmi->tdmi_transport_stream_id);
+  if(tdmi->tdmi_network != NULL)
+    fprintf(fp, "\tnetwork = %s\n", tdmi->tdmi_network);
 
   fprintf(fp, "\tfrequency = %d\n", f->frequency);
   
@@ -159,6 +161,7 @@ dvb_mux_store(FILE *fp, th_dvb_mux_instance_t *tdmi)
 const char *
 dvb_mux_create_str(th_dvb_adapter_t *tda,
 		   const char *tsidstr,
+		   const char *network,
 		   const char *freqstr,
 		   const char *symratestr,
 		   const char *qamstr,
@@ -250,7 +253,8 @@ dvb_mux_create_str(th_dvb_adapter_t *tda,
     break;
   }
 
-  dvb_mux_create(tda, &f, polarisation, switchport, save, atoi(tsidstr));
+  dvb_mux_create(tda, &f, polarisation, switchport, save, atoi(tsidstr),
+		 network);
 
   return NULL;
 }

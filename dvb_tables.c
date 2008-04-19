@@ -563,7 +563,7 @@ dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   fe_param.u.qam.fec_inner = fec_tab[ptr[10] & 0x07];
 
-  dvb_mux_create(tdmi->tdmi_adapter, &fe_param, 0, 0, 1, tsid);
+  dvb_mux_create(tdmi->tdmi_adapter, &fe_param, 0, 0, 1, tsid, NULL);
 }
 
 /**
@@ -597,7 +597,7 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   pol = (ptr[6] >> 5) & 0x03;
 
   dvb_mux_create(tdmi->tdmi_adapter, &fe_param, pol, tdmi->tdmi_switchport, 1,
-		 tsid);
+		 tsid, NULL);
 }
 
 
@@ -641,6 +641,7 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	free((void *)tdmi->tdmi_network);
 	tdmi->tdmi_network = strdup(networkname);
 	notify_tdmi_name_change(tdmi);
+	dvb_tda_save(tdmi->tdmi_adapter);
       }
       break;
     }
