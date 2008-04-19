@@ -54,6 +54,16 @@ img { border: 0; }
  * Misc classes
  */
 
+.iconbackdrop {
+	background: #fff;
+	height: 64px;
+	width:  64px;
+	float: left;
+	margin: 2px;
+	text-align: center;
+	margin-right: 4px;
+}
+
 .infoprefix {
 	float: left;
 	width: 50px;

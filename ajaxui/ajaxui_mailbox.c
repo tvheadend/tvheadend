@@ -36,8 +36,8 @@
 #define MAILBOX_EMPTY_REPLY_TIMEOUT 10
 
 
-//#define mbdebug(fmt...) printf(fmt);
-#define mbdebug(fmt...)
+#define mbdebug(fmt...) printf(fmt);
+//#define mbdebug(fmt...)
 
 
 static LIST_HEAD(, ajaxui_mailbox) mailboxes;
@@ -453,13 +453,23 @@ ajax_mailbox_tda_change(th_dvb_adapter_t *tda)
 void
 ajax_mailbox_xmltv_grabber_status_change(xmltv_grabber_t *xg, int status)
 {
+  char buf[500];
+
   ajax_mailbox_update_div("xmltvgrabbers",
 			  "status", xg->xg_identifier,
 			  xmltv_grabber_status(xg));
 
-  ajax_mailbox_update_div(xg->xg_identifier,
-			  "details", xg->xg_identifier,
-			  xmltv_grabber_status_long(xg, status));
+
+  if(status == XMLTV_GRABBER_IDLE) {
+    snprintf(buf, sizeof(buf), "/ajax/xmltvgrabberlist/%s", xg->xg_identifier);
+    ajax_mailbox_reload_div("xmltvgrabbers",
+			    "details", xg->xg_identifier,
+			    buf);
+  } else {
+    ajax_mailbox_update_div(xg->xg_identifier,
+			    "details", xg->xg_identifier,
+			    xmltv_grabber_status_long(xg, status));
+  }
 }
 
 
