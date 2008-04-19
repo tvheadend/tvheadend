@@ -29,6 +29,8 @@
 #include "dispatch.h"
 #include "spawn.h"
 
+extern char **environ;
+
 static dtimer_t reaper_timer;
 
 pthread_mutex_t spawn_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -139,15 +141,22 @@ spawn_enq(const char *name, int pid)
  * *outp will point to the allocated buffer
  * The function will return the size of the buffer
  */
+
 int
-spawn_and_store_stdout(const char *prog, char **outp)
+spawn_and_store_stdout(const char *prog, char *const argv[], char **outp)
 {
   pid_t p;
   int fd[2], r, totalsize = 0;
   char *outbuf;
-
   struct spawn_output_buf_queue bufs;
   spawn_output_buf_t *b = NULL;
+  const char *local_argv[2];
+
+  if(argv == NULL) {
+    local_argv[0] = prog;
+    local_argv[1] = NULL;
+    argv = (void *)local_argv;
+  }
 
   if(pipe(fd) == -1)
     return -1;
@@ -167,7 +176,7 @@ spawn_and_store_stdout(const char *prog, char **outp)
     dup2(fd[1], 1);
     close(fd[1]);
     syslog(LOG_INFO, "spawn: Executing \"%s\"", prog);
-    execl(prog, prog, NULL);
+    execve(prog, argv, environ);
     syslog(LOG_ERR, "spawn: pid %d cannot execute %s -- %s",
 	   getpid(), prog, strerror(errno));
     close(1);
@@ -226,10 +235,6 @@ spawnv(const char *prog, char *const argv[])
 {
   pid_t p;
 
-  char *envp[1];
-
-  envp[0] = NULL;
-
   p = fork();
 
   if(p == -1) {
@@ -242,7 +247,7 @@ spawnv(const char *prog, char *const argv[])
     close(0);
     close(2);
     syslog(LOG_INFO, "spawn: Executing \"%s\"", prog);
-    execve(prog, argv, envp);
+    execve(prog, argv, environ);
     syslog(LOG_ERR, "spawn: pid %d cannot execute %s -- %s",
 	   getpid(), prog, strerror(errno));
     close(1);

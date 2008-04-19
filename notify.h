@@ -19,14 +19,21 @@
 #ifndef NOTIFY_H_
 #define NOTIFY_H_
 
-void notify_tdmi_state_change(th_dvb_mux_instance_t *tdmi);
+struct xmltv_grabber;
+struct th_dvb_mux_instance;
+struct th_dvb_adapterr;
 
-void notify_tdmi_name_change(th_dvb_mux_instance_t *tdmi);
+void notify_tdmi_state_change(struct th_dvb_mux_instance *tdmi);
 
-void notify_tdmi_status_change(th_dvb_mux_instance_t *tdmi);
+void notify_tdmi_name_change(struct th_dvb_mux_instance *tdmi);
 
-void notify_tdmi_services_change(th_dvb_mux_instance_t *tdmi);
+void notify_tdmi_status_change(struct th_dvb_mux_instance *tdmi);
 
-void notify_tda_change(th_dvb_adapter_t *tda);
+void notify_tdmi_services_change(struct th_dvb_mux_instance *tdmi);
+
+void notify_tda_change(struct th_dvb_adapter *tda);
+
+void notify_xmltv_grabber_status_change(struct xmltv_grabber *xg,
+					int status);
 
 #endif /* NOTIFY_H_ */

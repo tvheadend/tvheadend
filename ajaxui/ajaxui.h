@@ -61,6 +61,10 @@ void ajax_config_channels_init(void);
 
 int ajax_config_dvb_tab(http_connection_t *hc, http_reply_t *hr);
 void ajax_config_dvb_init(void);
+
+int ajax_config_xmltv_tab(http_connection_t *hc, http_reply_t *hr);
+void ajax_config_xmltv_init(void);
+
 void ajax_config_transport_init(void);
 
 int ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,

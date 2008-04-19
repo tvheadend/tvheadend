@@ -19,7 +19,7 @@
 #ifndef SPAWN_H
 #define SPAWN_H
 
-int spawn_and_store_stdout(const char *prog, char **outp);
+int spawn_and_store_stdout(const char *prog, char *const argv[], char **outp);
 
 void spawn_init(void);
 

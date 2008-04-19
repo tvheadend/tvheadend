@@ -31,11 +31,13 @@
 
 #define AJAX_CONFIG_TAB_CHANNELS 0
 #define AJAX_CONFIG_TAB_DVB      1
-#define AJAX_CONFIG_TABS         2
+#define AJAX_CONFIG_TAB_XMLTV    2
+#define AJAX_CONFIG_TABS         3
 
 const char *ajax_config_tabnames[] = {
   [AJAX_CONFIG_TAB_CHANNELS]      = "Channels & Groups",
   [AJAX_CONFIG_TAB_DVB]           = "DVB adapters",
+  [AJAX_CONFIG_TAB_XMLTV]         = "XML-TV",
 };
 
 
@@ -79,6 +81,8 @@ ajax_config_dispatch(http_connection_t *hc, http_reply_t *hr,
     return ajax_config_channels_tab(hc, hr);
   case AJAX_CONFIG_TAB_DVB:
     return ajax_config_dvb_tab(hc, hr);
+  case AJAX_CONFIG_TAB_XMLTV:
+    return ajax_config_xmltv_tab(hc, hr);
 
   default:
     return HTTP_STATUS_NOT_FOUND;
@@ -126,4 +130,5 @@ ajax_config_init(void)
 
   ajax_config_channels_init();
   ajax_config_dvb_init();
+  ajax_config_xmltv_init();
 }

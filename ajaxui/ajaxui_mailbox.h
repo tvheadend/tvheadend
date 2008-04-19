@@ -35,4 +35,9 @@ void ajax_mailbox_tda_change(th_dvb_adapter_t *tda);
 
 void ajax_mailbox_start(tcp_queue_t *tq, const char *identifier);
 
+struct xmltv_grabber;
+
+void ajax_mailbox_xmltv_grabber_status_change(struct xmltv_grabber *xg,
+					      int status);
+
 #endif /* AJAXUI_MAILBOX_H_ */

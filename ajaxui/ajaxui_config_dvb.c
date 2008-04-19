@@ -676,7 +676,6 @@ ajax_dvbmuxeditor(http_connection_t *hc, http_reply_t *hr,
   return 0;
 }
 
-
 /**
  *
  */

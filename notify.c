@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "tvhead.h"
+#include "notify.h"
 #include "ajaxui/ajaxui_mailbox.h"
 
 void
@@ -58,4 +59,10 @@ void
 notify_tda_change(th_dvb_adapter_t *tda)
 {
   ajax_mailbox_tda_change(tda);
+}
+
+void
+notify_xmltv_grabber_status_change(struct xmltv_grabber *xg, int status)
+{
+  ajax_mailbox_xmltv_grabber_status_change(xg, status);
 }

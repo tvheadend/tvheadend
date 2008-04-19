@@ -28,6 +28,7 @@
 #include "http.h"
 #include "ajaxui.h"
 #include "transports.h"
+#include "epg_xmltv.h"
 
 #define MAILBOX_UNUSED_TIMEOUT      15
 #define MAILBOX_EMPTY_REPLY_TIMEOUT 10
@@ -407,7 +408,6 @@ ajax_mailbox_tdmi_services_change(th_dvb_mux_instance_t *tdmi)
 }
 
 
-
 void
 ajax_mailbox_tda_change(th_dvb_adapter_t *tda)
 {
@@ -420,3 +420,18 @@ ajax_mailbox_tda_change(th_dvb_adapter_t *tda)
 			  "dvbmuxlist", tda->tda_identifier,
 			  buf);
 }
+
+
+void
+ajax_mailbox_xmltv_grabber_status_change(xmltv_grabber_t *xg, int status)
+{
+  ajax_mailbox_update_div("xmltvgrabbers",
+			  "status", xg->xg_identifier,
+			  xmltv_grabber_status(xg));
+
+  ajax_mailbox_update_div(xg->xg_identifier,
+			  "details", xg->xg_identifier,
+			  xmltv_grabber_status_long(xg, status));
+}
+
+

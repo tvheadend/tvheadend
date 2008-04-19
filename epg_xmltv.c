@@ -37,48 +37,29 @@
 #include "epg_xmltv.h"
 #include "refstr.h"
 #include "spawn.h"
+#include "intercom.h"
+#include "notify.h"
 
-extern int xmltvreload;
-
-LIST_HEAD(, xmltv_channel) xmltv_channel_list;
-
-typedef struct xmltv_map {
-  LIST_ENTRY(xmltv_map) xm_link;
-  th_channel_t *xm_channel; /* Set if we have resolved the channel */
-
-  int xm_isupdated;
-
-} xmltv_map_t;
-
-
-
-
-typedef struct xmltv_channel {
-  LIST_ENTRY(xmltv_channel) xc_link;
-  const char *xc_name;
-  const char *xc_displayname; 
-  refstr_t *xc_icon;
-
-  LIST_HEAD(, xmltv_map) xc_maps;
-
-  struct event_queue xc_events;
-
-} xmltv_channel_t;
+int xmltv_status;
+struct xmltv_grabber_list xmltv_grabbers;
+struct xmltv_grabber_queue xmltv_grabber_workq;
+static pthread_mutex_t xmltv_work_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t xmltv_work_cond = PTHREAD_COND_INITIALIZER;
 
 
 static xmltv_channel_t *
-xc_find(const char *name)
+xc_find(xmltv_grabber_t *xg, const char *name)
 {
   xmltv_channel_t *xc;
 
-  LIST_FOREACH(xc, &xmltv_channel_list, xc_link)
+  LIST_FOREACH(xc, &xg->xg_channels, xc_link)
     if(!strcmp(xc->xc_name, name))
       return xc;
 
   xc = calloc(1, sizeof(xmltv_channel_t));
   xc->xc_name = strdup(name);
   TAILQ_INIT(&xc->xc_events);
-  LIST_INSERT_HEAD(&xmltv_channel_list, xc, xc_link);
+  LIST_INSERT_HEAD(&xg->xg_channels, xc, xc_link);
   return xc;
 }
 
@@ -88,12 +69,12 @@ xc_find(const char *name)
 #define XML_FOREACH(n) for(; (n) != NULL; (n) = (n)->next)
 
 static void
-xmltv_parse_channel(xmlNode *n, char *chid)
+xmltv_parse_channel(xmltv_grabber_t *xg, xmlNode *n, char *chid)
 {
   char *t, *c;
   xmltv_channel_t *xc;
 
-  xc = xc_find(chid);
+  xc = xc_find(xg, chid);
 
   XML_FOREACH(n) {
 
@@ -107,8 +88,8 @@ xmltv_parse_channel(xmlNode *n, char *chid)
     if(!strcmp((char *)n->name, "icon")) {
       t = (char *)xmlGetProp(n, (unsigned char *)"src");
 
-      refstr_free(xc->xc_icon);
-      xc->xc_icon = refstr_alloc(t);
+      free(xc->xc_icon_url);
+      xc->xc_icon_url = strdup(t);
       xmlFree(t);
     }
     xmlFree(c);
@@ -146,7 +127,8 @@ str2time(char *str)
 
 
 static void
-xmltv_parse_programme(xmlNode *n, char *chid, char *startstr, char *stopstr)
+xmltv_parse_programme(xmltv_grabber_t *xg, xmlNode *n,
+		      char *chid, char *startstr, char *stopstr)
 {
   char *c;
   event_t *e;
@@ -154,7 +136,7 @@ xmltv_parse_programme(xmlNode *n, char *chid, char *startstr, char *stopstr)
   int duration;
   xmltv_channel_t *xc;
 
-  xc = xc_find(chid);
+  xc = xc_find(xg, chid);
   start = str2time(startstr);
   stop  = str2time(stopstr);
 
@@ -179,7 +161,7 @@ xmltv_parse_programme(xmlNode *n, char *chid, char *startstr, char *stopstr)
 
 
 static void
-xmltv_parse_tv(xmlNode *n)
+xmltv_parse_tv(xmltv_grabber_t *xg, xmlNode *n)
 {
   char *chid;
   char *start;
@@ -193,7 +175,7 @@ xmltv_parse_tv(xmlNode *n)
     if(!strcmp((char *)n->name, "channel")) {
       chid = (char *)xmlGetProp(n, (unsigned char *)"id");
       if(chid != NULL) {
-	xmltv_parse_channel(n->children, chid);
+	xmltv_parse_channel(xg, n->children, chid);
 	xmlFree(chid);
       }
     } else if(!strcmp((char *)n->name, "programme")) {
@@ -201,7 +183,7 @@ xmltv_parse_tv(xmlNode *n)
       start = (char *)xmlGetProp(n, (unsigned char *)"start");
       stop = (char *)xmlGetProp(n, (unsigned char *)"stop");
       
-      xmltv_parse_programme(n->children, chid, start, stop);
+      xmltv_parse_programme(xg, n->children, chid, start, stop);
 
       xmlFree(chid);
       xmlFree(start);
@@ -213,11 +195,11 @@ xmltv_parse_tv(xmlNode *n)
 
 
 static void
-xmltv_parse_root(xmlNode *n)
+xmltv_parse_root(xmltv_grabber_t *xg, xmlNode *n)
 {
   XML_FOREACH(n) {
     if(n->type == XML_ELEMENT_NODE && !strcmp((char *)n->name, "tv"))
-      xmltv_parse_tv(n->children);
+      xmltv_parse_tv(xg, n->children);
   }
 }
 
@@ -225,66 +207,22 @@ xmltv_parse_root(xmlNode *n)
 /*
  *
  */
-void
-xmltv_flush(void)
+static void
+xmltv_flush_events(xmltv_grabber_t *xg)
 {
   xmltv_channel_t *xc;
-  xmltv_map_t *xm;
   event_t *e;
 
-  LIST_FOREACH(xc, &xmltv_channel_list, xc_link) {
+  LIST_FOREACH(xc, &xg->xg_channels, xc_link) {
     while((e = TAILQ_FIRST(&xc->xc_events)) != NULL) {
       TAILQ_REMOVE(&xc->xc_events, e, e_link);
       epg_event_free(e);
     }
-
-    while((xm = LIST_FIRST(&xc->xc_maps)) != NULL) {
-      LIST_REMOVE(xm, xm_link);
-      free(xm);
-    }
   }
 }
 
-/*
- *
- */
-void
-xmltv_load(void)
-{
-  xmlDoc *doc = NULL;
-  xmlNode *root_element = NULL;
-  const char *prog;
-  char *outbuf;
-  int outlen;
-  prog = config_get_str("xmltvgrabber", NULL);
-  if(prog == NULL)
-    return;
 
-  syslog(LOG_INFO, "xmltv: Starting grabber \"%s\"", prog);
-  
-  outlen = spawn_and_store_stdout(prog, &outbuf);
-  if(outlen < 1) {
-    syslog(LOG_ERR, "xmltv: Cannot parse output from \"%s\"", prog);
-    return;
-  }
-
-  doc = xmlParseMemory(outbuf, outlen);
-  if(doc == NULL) {
-    syslog(LOG_ERR, "xmltv: Error while parsing output from  \"%s\"", prog);
-    free(outbuf);
-    return;
-  }
-
-  xmltv_flush();
-
-  root_element = xmlDocGetRootElement(doc);
-  xmltv_parse_root(root_element);
-  xmlFreeDoc(doc);
-  xmlCleanupParser();
-  syslog(LOG_INFO, "xmltv: EPG sucessfully loaded and parsed");
-  free(outbuf);
-}
-
+#if 0
 /*
  *
  */
@@ -381,7 +319,158 @@ xmltv_transfer(void)
     }
   }
 }
+#endif
 
+/*
+ * Execute grabber and parse result,
+ *
+ * Return nextstate
+ */
+static int
+xmltv_grab(xmltv_grabber_t *xg)
+{
+  xmlDoc *doc = NULL;
+  xmlNode *root_element;
+  const char *prog;
+  char *outbuf;
+  int outlen;
+
+  prog = xg->xg_path;
+
+  syslog(LOG_INFO, "xmltv: Starting grabber \"%s\"", prog);
+  
+  outlen = spawn_and_store_stdout(prog, NULL, &outbuf);
+  if(outlen < 1) {
+    syslog(LOG_ERR, "xmltv: No output from \"%s\"", prog);
+    return XMLTV_GRABBER_UNCONFIGURED;
+  }
+
+  doc = xmlParseMemory(outbuf, outlen);
+  if(doc == NULL) {
+    syslog(LOG_ERR, "xmltv: Error while parsing output from  \"%s\"", prog);
+    free(outbuf);
+    return XMLTV_GRABBER_DYSFUNCTIONAL;
+  }
+
+  xmltv_flush_events(xg);
+
+  root_element = xmlDocGetRootElement(doc);
+  xmltv_parse_root(xg, root_element);
+
+  xmlFreeDoc(doc);
+  xmlCleanupParser();
+  syslog(LOG_INFO, "xmltv: EPG sucessfully loaded and parsed");
+  free(outbuf);
+  return XMLTV_GRABBER_IDLE;
+}
+
+
+
+static struct strtab grabberstatustab[] = {
+  { "Disabled",              XMLTV_GRABBER_DISABLED      },
+  { "Missing configuration", XMLTV_GRABBER_UNCONFIGURED  },
+  { "Dysfunctional",         XMLTV_GRABBER_DYSFUNCTIONAL },
+  { "Waiting for execution", XMLTV_GRABBER_ENQUEUED      },
+  { "Grabbing",              XMLTV_GRABBER_GRABBING      },
+  { "Idle",                  XMLTV_GRABBER_IDLE          },
+};
+
+
+const char *
+xmltv_grabber_status(xmltv_grabber_t *xg)
+{
+  return val2str(xg->xg_status, grabberstatustab) ?: "Invalid";
+}
+
+
+/**
+ *
+ */
+static int
+grabbercmp(xmltv_grabber_t *a, xmltv_grabber_t *b)
+{
+  return strcasecmp(a->xg_title, b->xg_title);
+}
+
+
+/**
+ * Enlist all active grabbers (for user to choose among)
+ */
+static int
+xmltv_find_grabbers(const char *prog)
+{
+  char *outbuf;
+  int outlen;
+  char *s, *a, *b;
+  xmltv_grabber_t *xg;
+  int n = 0;
+  char buf[40];
+
+  outlen = spawn_and_store_stdout(prog, NULL, &outbuf);
+  if(outlen < 1) {
+    return -1;
+  }
+
+  s = outbuf;
+
+  while(1) {
+    a = s;
+
+    while(*s && *s != '|')
+      s++;
+
+    if(!*s)
+      break;
+    *s++ = 0;
+
+    b = s;
+
+    while(*s > 31)
+      s++;
+
+    if(!*s)
+      break;
+    *s++ = 0;
+    
+    while(*s < 31 && *s > 0)
+      s++;
+
+    LIST_FOREACH(xg, &xmltv_grabbers, xg_link)
+      if(!strcmp(b, xg->xg_title))
+	break;
+
+    if(xg != NULL)
+      continue;
+
+    xg = calloc(1, sizeof(xmltv_grabber_t));
+    xg->xg_path  = a;
+    xg->xg_title = b;
+
+    snprintf(buf, sizeof(buf), "xmlgrabber_%d", n++);
+    xg->xg_identifier = strdup(buf);
+
+    LIST_INSERT_SORTED(&xmltv_grabbers, xg, xg_link, grabbercmp);
+  }
+
+  return 0;
+}
+
+
+/**
+ *
+ */
+static void
+xmltv_thread_set_status(icom_t *ic, xmltv_grabber_t *xg, int s)
+{
+  htsmsg_t *m = htsmsg_create();
+
+  xg->xg_status = s;
+  
+  htsmsg_add_u32(m, "status", s);
+  htsmsg_add_str(m, "identifier", xg->xg_identifier);
+  icom_send_msg_from_thread(ic, m);
+  htsmsg_destroy(m);
+}
 
 /*
  *
@@ -389,31 +478,172 @@ xmltv_transfer(void)
 static void *
 xmltv_thread(void *aux)
 {
-  int sleeptime;
+  icom_t *ic = aux;
+  struct timespec ts;
+  xmltv_grabber_t *xg;
+  int r;
+  time_t n;
 
-  /* Default to 12 hours */
-  sleeptime = atoi(config_get_str("xmltvinterval", "43200"));
+  /* Start by finding all available grabbers, we try with a few
+     different locations */
+ 
+  if(xmltv_find_grabbers("/bin/tv_find_grabbers") &&
+     xmltv_find_grabbers("/usr/bin/tv_find_grabbers") &&
+     xmltv_find_grabbers("/usr/local/bin/tv_find_grabbers")) {
+    xmltv_status = XMLTVSTATUS_FIND_GRABBERS_NOT_FOUND;
+    return NULL;
+  }
+
+  xmltv_status = XMLTVSTATUS_RUNNING;
+  
+  pthread_mutex_lock(&xmltv_work_lock);
 
   while(1) {
-    xmltv_load();
-    xmltv_transfer();
-    sleep(sleeptime);
+    
+    xg = TAILQ_FIRST(&xmltv_grabber_workq);
+    if(xg != NULL) {
+      xmltv_thread_set_status(ic, xg, XMLTV_GRABBER_GRABBING);
+      TAILQ_REMOVE(&xmltv_grabber_workq, xg, xg_work_link);
+      pthread_mutex_unlock(&xmltv_work_lock);
+      r = xmltv_grab(xg);
+      pthread_mutex_lock(&xmltv_work_lock);
+
+      xmltv_thread_set_status(ic, xg, r);
+       
+      time(&n);
+      if(r == XMLTV_GRABBER_IDLE) {
+	/* Completed load */
+	xg->xg_nextgrab = n + 3600;
+      } else {
+	xg->xg_nextgrab = n + 60;
+      }
+      continue;
+    }
+    
+    n = INT32_MAX;
+    LIST_FOREACH(xg, &xmltv_grabbers, xg_link)
+      n = xg->xg_nextgrab ? MIN(n, xg->xg_nextgrab) : n;
+
+    ts.tv_sec = n;
+    ts.tv_nsec = 0;
+
+    pthread_cond_timedwait(&xmltv_work_cond, &xmltv_work_lock, &ts);
+    
+    time(&n);
+ 
+    LIST_FOREACH(xg, &xmltv_grabbers, xg_link) {
+      switch(xg->xg_status) {
+      case XMLTV_GRABBER_GRABBING:
+	abort();
+
+      case XMLTV_GRABBER_DISABLED:
+      case XMLTV_GRABBER_ENQUEUED:
+	break;
+
+      case XMLTV_GRABBER_UNCONFIGURED:
+      case XMLTV_GRABBER_DYSFUNCTIONAL:
+      case XMLTV_GRABBER_IDLE:
+	if(xg->xg_nextgrab <= n + 1)
+	  TAILQ_INSERT_TAIL(&xmltv_grabber_workq, xg, xg_work_link);
+	break;
+      }
+    }
   }
+  
+  sleep(100000);
+  return NULL;
+}
+
+void
+xmltv_grabber_enable(xmltv_grabber_t *xg)
+{
+  pthread_mutex_lock(&xmltv_work_lock);
+
+  if(xg->xg_status == XMLTV_GRABBER_DISABLED) {
+    xg->xg_status = XMLTV_GRABBER_ENQUEUED;
+    TAILQ_INSERT_TAIL(&xmltv_grabber_workq, xg, xg_work_link);
+    pthread_cond_signal(&xmltv_work_cond);
+  }
+
+  pthread_mutex_unlock(&xmltv_work_lock);
+}
+
+/**
+ *
+ */
+static void
+icom_cb(void *opaque, htsmsg_t *m)
+{
+  const char *s;
+  uint32_t status;
+  xmltv_grabber_t *xg;
+
+  if(!htsmsg_get_u32(m, "status", &status)) {
+    s = htsmsg_get_str(m, "identifier");
+    if(s != NULL && (xg = xmltv_grabber_find(s)) != NULL) {
+      notify_xmltv_grabber_status_change(xg, status);
+    }
+  }
+  htsmsg_destroy(m);
+}
+
+/**
+ * Locate a grabber by its id
+ */
+xmltv_grabber_t *
+xmltv_grabber_find(const char *id)
+{
+  xmltv_grabber_t *xg;
+  LIST_FOREACH(xg, &xmltv_grabbers, xg_link)
+    if(!strcmp(id, xg->xg_identifier))
+      return xg;
+  return NULL;
 }
 
 
-/*
+
+/**
  *
  */
 void
 xmltv_init(void)
 {
   pthread_t ptid;
+  icom_t *ic = icom_create(icom_cb, NULL);
 
-  if(config_get_str("xmltvgrabber", NULL) == NULL) {
-    syslog(LOG_INFO, "xmltv: No grabber configured, xmltv subsystem disabled");
-    return;
+  TAILQ_INIT(&xmltv_grabber_workq);
+
+  pthread_create(&ptid, NULL, xmltv_thread, ic);
+}
+
+/**
+ *
+ */
+const char *
+xmltv_grabber_status_long(xmltv_grabber_t *xg, int status)
+{
+  static char buf[1000];
+  switch(status) {
+  case XMLTV_GRABBER_UNCONFIGURED:
+    snprintf(buf, sizeof(buf),
+	     "This grabber is not configured, you need to configure it "
+	     "manually by running '%s --configure' in a shell",
+	     xg->xg_path);
+    return buf;
+
+  case XMLTV_GRABBER_DYSFUNCTIONAL:
+    snprintf(buf, sizeof(buf),
+	     "This grabber does not produce valid XML, please check "
+	     "manually by running '%s' in a shell",
+	     xg->xg_path);
+    return buf;
+
+  case XMLTV_GRABBER_ENQUEUED:
+  case XMLTV_GRABBER_GRABBING:
+    return "Grabbing, please wait";
+
+
+  default:
+    return "Unknown status";
   }
-
-  pthread_create(&ptid, NULL, xmltv_thread, NULL);
 }
