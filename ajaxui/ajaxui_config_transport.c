@@ -130,6 +130,9 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 		    csize);
   tcp_qprintf(tq, "<hr>");
 
+  tcp_qprintf(tq, "<div id=\"xyzxyz\" "
+	      "style=\"height: %dpx; overflow: auto\" class=\"normallist\">",
+	      MIN(numtransports, displines) * 14);
 
   LIST_FOREACH(t, tlist, tht_tmp_link) {
     tcp_qprintf(tq, "<div%s>", o ? " style=\"background: #fff\"" : "");
@@ -251,7 +254,7 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
     tcp_qprintf(tq, "</div>\r\n");
     
   }
-  tcp_qprintf(tq, "<hr>\r\n");
+  tcp_qprintf(tq, "</div><hr>\r\n");
 
   tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
 
