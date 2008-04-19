@@ -626,7 +626,7 @@ xmltv_grabber_status_long(xmltv_grabber_t *xg, int status)
   switch(status) {
   case XMLTV_GRABBER_UNCONFIGURED:
     snprintf(buf, sizeof(buf),
-	     "This grabber is not configured, you need to configure it "
+	     "This grabber is not configured.</p><p> You need to configure it "
 	     "manually by running '%s --configure' in a shell",
 	     xg->xg_path);
     return buf;
