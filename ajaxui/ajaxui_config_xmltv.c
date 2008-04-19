@@ -107,7 +107,6 @@ ajax_config_xmltv_tab(http_connection_t *hc, http_reply_t *hr)
 		   xg->xg_identifier);
  
   }
-  ajax_mailbox_start(tq, "xmltvgrabbers");
   tcp_qprintf(tq, "</div>");
 
   ajax_box_end(tq, AJAX_BOX_SIDEBOX);
@@ -165,8 +164,6 @@ ajax_xmltvgrabber(http_connection_t *hc, http_reply_t *hr,
   tcp_qprintf(tq,"</div>");
 
   ajax_box_end(tq, AJAX_BOX_SIDEBOX);
-
-  ajax_mailbox_start(tq, xg->xg_identifier);
   http_output_html(hc, hr);
   return 0;
 }

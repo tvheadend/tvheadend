@@ -229,9 +229,6 @@ ajax_adaptereditor(http_connection_t *hc, http_reply_t *hr,
 	  "'/ajax/dvbadaptermuxlist/%s', {method: 'get', evalScripts: true})",
 	  tda->tda_identifier, tda->tda_identifier);
 
-  ajax_mailbox_start(tq, tda->tda_identifier);
-
- 
   tcp_qprintf(tq, "<hr><div id=\"addmux\">");
   dvb_make_add_link(tq, tda, NULL);
   tcp_qprintf(tq, "</div>");

@@ -33,7 +33,7 @@ void ajax_mailbox_tdmi_services_change(th_dvb_mux_instance_t *tdmi);
 
 void ajax_mailbox_tda_change(th_dvb_adapter_t *tda);
 
-void ajax_mailbox_start(tcp_queue_t *tq, const char *identifier);
+void ajax_mailbox_start(tcp_queue_t *tq);
 
 struct xmltv_grabber;
 

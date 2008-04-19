@@ -79,4 +79,6 @@ void ajax_table_header(http_connection_t *hc, tcp_queue_t *tq,
 void ajax_table_row(tcp_queue_t *tq, const char *cells[], int columnsizes[],
 		    int *bgptr, const char *idprefix[], const char *idpostfix);
 
+const char *ajaxui_escape_apostrophe(const char *content);
+
 #endif /* AJAXUI_H_ */

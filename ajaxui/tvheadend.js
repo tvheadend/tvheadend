@@ -66,3 +66,12 @@ function tentative_chname(id, url, name)
 				  parameters: { newname: newname }});
 	}
 }
+
+function mailboxquery(boxid)
+{
+	new Ajax.Request('/ajax/mailbox/' + boxid,
+	{
+		onFailure: function(req) { alert(req.responseText); },
+		onException: function(t,e) { alert(e); }
+	})
+}

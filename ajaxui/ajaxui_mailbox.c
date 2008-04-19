@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <libavutil/md5.h>
+
 #include "tvhead.h"
 #include "dispatch.h"
 #include "http.h"
@@ -32,6 +34,10 @@
 
 #define MAILBOX_UNUSED_TIMEOUT      15
 #define MAILBOX_EMPTY_REPLY_TIMEOUT 10
+
+
+//#define mbdebug(fmt...) printf(fmt);
+#define mbdebug(fmt...)
 
 
 static LIST_HEAD(, ajaxui_mailbox) mailboxes;
@@ -50,8 +56,7 @@ typedef struct ajaxui_letter {
 typedef struct ajaxui_mailbox {
   LIST_ENTRY(ajaxui_mailbox) amb_link;
 
-  uint32_t amb_boxid;
-  char *amb_subscriptionid;
+  char *amb_boxid; /* an md5hash */
 
   dtimer_t amb_timer;
 
@@ -83,6 +88,8 @@ amb_destroy(ajaxui_mailbox_t *amb)
 {
   ajaxui_letter_t *al;
 
+  mbdebug("mailbox[%s]: destroyed\n", amb->amb_boxid);
+
   while((al = TAILQ_FIRST(&amb->amb_letters)) != NULL)
     al_destroy(amb, al);
 
@@ -90,7 +97,7 @@ amb_destroy(ajaxui_mailbox_t *amb)
 
   dtimer_disarm(&amb->amb_timer);
 
-  free(amb->amb_subscriptionid);
+  free(amb->amb_boxid);
   free(amb);
 }
 
@@ -123,45 +130,55 @@ ajax_mailbox_connection_lost(http_reply_t *hr, void *opaque)
 /**
  *
  */
-int
-ajax_mailbox_create(const char *subscriptionid)
+static ajaxui_mailbox_t *
+ajax_mailbox_create(const char *id)
 {
   ajaxui_mailbox_t *amb = calloc(1, sizeof(ajaxui_mailbox_t));
 
+  amb->amb_boxid = strdup(id);
+
   mailbox_tally++;
 
-  amb->amb_boxid = mailbox_tally;
-  amb->amb_subscriptionid = strdup(subscriptionid);
-  
   LIST_INSERT_HEAD(&mailboxes, amb, amb_link);
 
   TAILQ_INIT(&amb->amb_letters);
 
   dtimer_arm(&amb->amb_timer, ajax_mailbox_unused, amb,
 	     MAILBOX_UNUSED_TIMEOUT);
-  return amb->amb_boxid;
+  return amb;
 }
 
 /**
  *
  */
 void
-ajax_mailbox_start(tcp_queue_t *tq, const char *identifier)
+ajax_mailbox_start(tcp_queue_t *tq)
 {
-  int boxid = ajax_mailbox_create(identifier);
+  struct timeval tv;
+  uint8_t sum[16];
+  char id[33];
+  int i;
+  struct AVMD5 *ctx;
 
-  /* We need to keep a hidden element in a part of the document that
-     is directly mapped to this mailbox.
+  ctx = alloca(av_md5_size);
 
-     This element is updated in every reply and if it fails,
-     there will be no more updates.
+  gettimeofday(&tv, NULL);
 
-     This avoid getting stale updaters that keeps on going if parts
-     of the document is reloaded faster than the mailbox sees it */
+  av_md5_init(ctx);
+  av_md5_update(ctx, (void *)&tv, sizeof(tv));
+  av_md5_update(ctx, (void *)&mailbox_tally, sizeof(uint32_t));
+  av_md5_final(ctx, sum);
 
-  tcp_qprintf(tq, "<div style=\"display: none\" id=\"mbox_%d\"></div>", boxid);
+  for(i = 0; i < 16; i++) {
+    id[i * 2 + 0] = "0123456789abcdef"[sum[i] >> 4];
+    id[i * 2 + 1] = "0123456789abcdef"[sum[i] & 15];
+  }
+  id[32] = 0;
 
-  ajax_js(tq, "new Ajax.Request('/ajax/mailbox/%d')", boxid);
+  mbdebug("Generated mailbox %s\n", id);
+
+  ajax_mailbox_create(id);
+  ajax_js(tq, "mailboxquery('%s')", id);
 }
 
 
@@ -177,15 +194,19 @@ ajax_mailbox_reply(ajaxui_mailbox_t *amb, http_reply_t *hr)
      if this div no longer exist, the rest of the javascript will bail
      out and we will not be reloaded */
 
-  tcp_qprintf(&hr->hr_tq, "$('mbox_%d').innerHTML='';\r\n", amb->amb_boxid);
+  mbdebug("mailbox[%s]: sending reply\n", amb->amb_boxid);
 
   while((al = TAILQ_FIRST(&amb->amb_letters)) != NULL) {
+    tcp_qprintf(&hr->hr_tq, "try {\r\n");
     tcp_qprintf(&hr->hr_tq, "%s%s", al->al_payload_a, al->al_payload_b ?: "");
+    mbdebug("\t%s%s", al->al_payload_a, al->al_payload_b ?: "");
+
+    tcp_qprintf(&hr->hr_tq, "}\r\n"
+		"catch(err) {}\r\n");
     al_destroy(amb, al);
   }
 
-  tcp_qprintf(&hr->hr_tq, "new Ajax.Request('/ajax/mailbox/%d');\r\n",
-	      amb->amb_boxid);
+  tcp_qprintf(&hr->hr_tq, "mailboxquery('%s');\r\n", amb->amb_boxid);
 
   http_output(hr->hr_connection, hr, "text/javascript", NULL, 0);
   amb->amb_hr = NULL;
@@ -218,27 +239,34 @@ static int
 ajax_mailbox_poll(http_connection_t *hc, http_reply_t *hr, 
 		  const char *remain, void *opaque)
 {
-  uint32_t boxid;
   ajaxui_mailbox_t *amb;
 
   if(remain == NULL)
     return HTTP_STATUS_NOT_FOUND;
 
-  boxid = atoi(remain);
+  mbdebug("mailbox[%s]: Incomming request ... ", remain);
+
   LIST_FOREACH(amb, &mailboxes, amb_link)
-    if(amb->amb_boxid == boxid)
+    if(!strcmp(amb->amb_boxid, remain))
       break;
-  if(amb == NULL)
-    return HTTP_STATUS_NOT_FOUND;
 
-  if(amb->amb_hr != NULL)
+  if(amb == NULL) {
+    amb = ajax_mailbox_create(remain);
+    mbdebug("creating mailbox ... ");
+  }
+
+  if(amb->amb_hr != NULL) {
+    mbdebug("mailbox already processing\n");
     return 409;
-
+  }
   if(TAILQ_FIRST(&amb->amb_letters) != NULL) {
     /* Pending letters, direct reply */
+    mbdebug("direct reply\n");
     ajax_mailbox_reply(amb, hr);
     return 0;
   }
+
+  mbdebug("nothing in queue, waiting\n");
 
   amb->amb_hr = hr;
 
@@ -286,8 +314,6 @@ ajax_mailbox_add_to_subscription(const char *subscription,
   ajaxui_letter_t *al;
 
   LIST_FOREACH(amb, &mailboxes, amb_link) {
-    if(strcmp(subscription, amb->amb_subscriptionid))
-      continue;
 
     /* Avoid inserting the same message twice */
 
@@ -328,6 +354,8 @@ ajax_mailbox_update_div(const char *subscription, const char *prefix,
 {
   char buf_a[500];
   char buf_b[500];
+
+  content = ajaxui_escape_apostrophe(content);
 
   snprintf(buf_a, sizeof(buf_a), "$('%s_%s').innerHTML=", prefix, postfix);
   snprintf(buf_b, sizeof(buf_b), "'%s';\n\r", content);

@@ -26,6 +26,7 @@
 #include "tvhead.h"
 #include "http.h"
 #include "ajaxui.h"
+#include "ajaxui_mailbox.h"
 #include "dispatch.h"
 
 #include "obj/ajaxui.cssh"
@@ -56,6 +57,22 @@ const char *ajax_tabnames[] = {
   [AJAX_TAB_CONFIGURATION] = "Configuration",
   [AJAX_TAB_ABOUT]         = "About",
 };
+
+
+const char *
+ajaxui_escape_apostrophe(const char *content)
+{
+  static char buf[2000];
+  int i = 0;
+
+  while(i < sizeof(buf) - 2 && *content) {
+    if(*content == '\'')
+      buf[i++] = '\\';
+    buf[i++] = *content++;
+  }
+  buf[i] = 0;
+  return buf;
+}
 
 /**
  * AJAX table header
@@ -410,7 +427,22 @@ ajax_page_root(http_connection_t *hc, http_reply_t *hr,
 
   tcp_qprintf(tq, "<div style=\"float: left; width: 100%\">");
 
-  ajax_box_begin(tq, AJAX_BOX_FILLED, "topmenu", NULL, NULL);
+  ajax_box_begin(tq, AJAX_BOX_FILLED, NULL, NULL, NULL);
+
+  tcp_qprintf(tq,
+	      "<div style=\"width: 100%%; overflow: auto\">"
+	      "<div style=\"float: left; width: 30%%\">"
+	      "Tvheadend v1.x (r?)"
+	      "</div>"
+	      "<div style=\"float: left; width: 40%%\" id=\"topmenu\"></div>"
+	      "<div style=\"float: left; width: 30%%; text-align: right\">"
+	      "<input class=\"nicebox\" type=\"checkbox\" checked> "
+	      "Dynamic updates"
+	      "</div>"
+	      "</div>");
+
+  ajax_mailbox_start(tq);
+
   ajax_box_end(tq, AJAX_BOX_FILLED);
 
   tcp_qprintf(tq, "<div id=\"topdeck\"></div>");
