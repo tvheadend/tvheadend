@@ -156,11 +156,11 @@ xmltv_grabber_chlist(tcp_queue_t *tq, xmltv_grabber_t *xg)
 		"<div>%s (%s)</div>", xc->xc_displayname, xc->xc_name);
 
     tcp_qprintf(tq,
-		"<div class=\"infoprefixwide\">Best match:</div>"
+		"<div class=\"infoprefixwide\">Auto mapper:</div>"
 		"<div>%s</div>", xc->xc_bestmatch ?: "(no channel)");
 
     tcp_qprintf(tq,
-		"<div class=\"infoprefixwidefat\">Mapped to:</div>"
+		"<div class=\"infoprefixwidefat\">Channel:</div>"
 		"<select class=\"textinput\" "
 		"onChange=\"new Ajax.Request('/ajax/xmltvgrabberchmap/%s', "
 		"{parameters: { xmltvch: '%s', channel: this.value }})\">",

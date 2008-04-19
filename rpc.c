@@ -52,7 +52,7 @@ rpc_build_channel_msg(th_channel_t *ch)
   htsmsg_add_str(m, "name", ch->ch_name);
   htsmsg_add_u32(m, "tag", ch->ch_tag);
   if(ch->ch_icon)
-    htsmsg_add_str(m, "icon", refstr_get(ch->ch_icon));
+    htsmsg_add_str(m, "icon", ch->ch_icon);
   return m;
 }
 

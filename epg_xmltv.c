@@ -43,6 +43,7 @@
 int xmltv_status;
 struct xmltv_grabber_list xmltv_grabbers;
 struct xmltv_grabber_queue xmltv_grabber_workq;
+static pthread_mutex_t xmltv_save_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t xmltv_work_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t xmltv_work_cond = PTHREAD_COND_INITIALIZER;
 static void xmltv_config_load(void);
@@ -138,6 +139,7 @@ xmltv_parse_programme(xmltv_grabber_t *xg, xmlNode *n,
   xmltv_channel_t *xc;
 
   xc = xc_find(xg, chid);
+  xc->xc_updated = 1;
   start = str2time(startstr);
   stop  = str2time(stopstr);
 
@@ -223,29 +225,12 @@ xmltv_flush_events(xmltv_grabber_t *xg)
 }
 
 
-#if 0
-/*
- *
- */
-static int
-xmltv_map(xmltv_channel_t *xc, th_channel_t *ch)
-{
-  xmltv_map_t *xm;
-  LIST_FOREACH(xm, &xc->xc_maps, xm_link)
-    if(xm->xm_channel == ch)
-      return -1;
-
-  xm = calloc(1, sizeof(xmltv_map_t));
-  xm->xm_channel = ch;
-  LIST_INSERT_HEAD(&xc->xc_maps, xm, xm_link);
-  return 0;
-}
 
 
 /*
  *
  */
-static void
+static th_channel_t *
 xmltv_resolve_by_events(xmltv_channel_t *xc)
 {
   th_channel_t *ch;
@@ -264,63 +249,78 @@ xmltv_resolve_by_events(xmltv_channel_t *xc)
 
     LIST_FOREACH(ch, &channels, ch_global_link) {
       ec = epg_event_find_by_time0(&ch->ch_epg_events, now);
-
       cnt = 0;
       
       while(1) {
-	if((cnt >= 10 && ec == NULL) || cnt >= 30) {
-	  if(xmltv_map(xc, ch) == 0)
-	    syslog(LOG_DEBUG,
-		   "xmltv: Heuristically mapped \"%s\" (%s) to \"%s\" "
-		   "(%d consequtive events matches)",
-		   xc->xc_displayname, xc->xc_name, ch->ch_name, cnt);
-	  break;
-	}
+	if((cnt >= 15 && ec == NULL) || cnt >= 30)
+	  return ch;
 
 	if(ec == NULL || ex == NULL)
 	  break;
-	
+
 	if(ec->e_start != ex->e_start || ec->e_duration != ex->e_duration)
 	  break;
-	
+
 	ec = TAILQ_NEXT(ec, e_link);
 	ex = TAILQ_NEXT(ex, e_link);
 	cnt++;
       }
     }
   }
+  return NULL;
 }
 
 
 /*
  *
  */
-void
-xmltv_transfer(void)
+static void
+xmltv_transfer_events(xmltv_grabber_t *xg)
 {
   xmltv_channel_t *xc;
-  xmltv_map_t *xm;
   th_channel_t *ch;
+  int how;
 
-  LIST_FOREACH(xc, &xmltv_channel_list, xc_link) {
-
-    ch = channel_find(xc->xc_displayname, 0, NULL);
-    if(ch != NULL)
-      xmltv_map(xc, ch);
-
-    xmltv_resolve_by_events(xc);
-
-    LIST_FOREACH(xm, &xc->xc_maps, xm_link) {
-      if(xm->xm_isupdated)
+  TAILQ_FOREACH(xc, &xg->xg_channels, xc_link) {
+    if(xc->xc_disabled)
+      continue;
+    
+    if(xc->xc_channel != NULL) {
+      ch = channel_find(xc->xc_channel, 0, NULL);
+      if(ch == NULL)
 	continue;
 
-      epg_transfer_events(xm->xm_channel, &xc->xc_events, xc->xc_name,
-			  xc->xc_icon);
-      xm->xm_isupdated = 1;
+    } else {
+
+      how = 0;
+      ch = channel_find(xc->xc_displayname, 0, NULL);
+      if(ch == NULL) {
+	epg_lock();
+	ch = xmltv_resolve_by_events(xc);
+	epg_unlock();
+      
+	if(ch == NULL)
+	  continue;
+	how = 1;
+      }
+      if(strcmp(xc->xc_bestmatch ?: "", ch->ch_name)) {
+	syslog(LOG_DEBUG,
+	       "xmltv: mapped \"%s\" (%s) to \"%s\" by %s",
+	       xc->xc_displayname, xc->xc_name, ch->ch_name,
+	       how ? "consequtive-event-matching" : "name");
+	free(xc->xc_bestmatch);
+	xc->xc_bestmatch = strdup(ch->ch_name);
+	xmltv_config_save();
+      }
     }
+
+    if(xc->xc_updated == 0)
+      continue;
+
+    xc->xc_updated = 0;
+    epg_transfer_events(ch, &xc->xc_events, xc->xc_name, xc->xc_icon_url);
   }
 }
-#endif
 
 
 /*
@@ -493,8 +493,8 @@ xmltv_thread(void *aux)
   /* Start by finding all available grabbers, we try with a few
      different locations */
  
-  if(xmltv_find_grabbers("/bin/tv_find_grabbers") &&
-     xmltv_find_grabbers("/usr/bin/tv_find_grabbers") &&
+  if(xmltv_find_grabbers("/usr/bin/tv_find_grabbers") &&
+     xmltv_find_grabbers("/bin/tv_find_grabbers") &&
      xmltv_find_grabbers("/usr/local/bin/tv_find_grabbers")) {
     xmltv_status = XMLTVSTATUS_FIND_GRABBERS_NOT_FOUND;
     return NULL;
@@ -526,7 +526,11 @@ xmltv_thread(void *aux)
       continue;
     }
     
-    n = INT32_MAX;
+    LIST_FOREACH(xg, &xmltv_grabbers, xg_link)
+      xmltv_transfer_events(xg);
+
+    time(&n);
+    n = n + 60;
     LIST_FOREACH(xg, &xmltv_grabbers, xg_link)
       n = xg->xg_nextgrab ? MIN(n, xg->xg_nextgrab) : n;
 
@@ -546,17 +550,15 @@ xmltv_thread(void *aux)
       case XMLTV_GRABBER_ENQUEUED:
 	break;
 
+      case XMLTV_GRABBER_IDLE:
       case XMLTV_GRABBER_UNCONFIGURED:
       case XMLTV_GRABBER_DYSFUNCTIONAL:
-      case XMLTV_GRABBER_IDLE:
 	if(xg->xg_nextgrab <= n + 1)
 	  TAILQ_INSERT_TAIL(&xmltv_grabber_workq, xg, xg_work_link);
 	break;
       }
     }
   }
-  
-  sleep(100000);
   return NULL;
 }
 
@@ -667,33 +669,37 @@ xmltv_config_save(void)
   xmltv_channel_t *xc;
   FILE *fp;
 
+  pthread_mutex_lock(&xmltv_save_lock);
+
   snprintf(buf, sizeof(buf), "%s/xmltv-settings.cfg", settings_dir);
 
-  if((fp = settings_open_for_write(buf)) == NULL)
-    return;
-  
-  LIST_FOREACH(xg, &xmltv_grabbers, xg_link) {
-    if(xg->xg_status == XMLTV_GRABBER_DISABLED)
-      continue;
+  if((fp = settings_open_for_write(buf)) != NULL) {
+    LIST_FOREACH(xg, &xmltv_grabbers, xg_link) {
+      if(xg->xg_status == XMLTV_GRABBER_DISABLED)
+	continue;
 
-    fprintf(fp, "grabber {\n");
-    fprintf(fp, "\ttitle = %s\n", xg->xg_title);
+      fprintf(fp, "grabber {\n");
+      fprintf(fp, "\ttitle = %s\n", xg->xg_title);
     
-    TAILQ_FOREACH(xc, &xg->xg_channels, xc_link) {
-      fprintf(fp, "\tchannel {\n");
-      fprintf(fp, "\t\tdisplayname = %s\n", xc->xc_displayname);
-      if(xc->xc_icon_url != NULL)
-	fprintf(fp, "\t\ticon = %s\n", xc->xc_icon_url);
-      fprintf(fp, "\t\tname = %s\n", xc->xc_name);
-      if(xc->xc_disabled)
-	fprintf(fp, "\t\tmapping = disabled\n");
-      else
-	fprintf(fp, "\t\tmapping = %s\n", xc->xc_channel ?: "auto");
-      fprintf(fp, "\t}\n");
+      TAILQ_FOREACH(xc, &xg->xg_channels, xc_link) {
+	fprintf(fp, "\tchannel {\n");
+	fprintf(fp, "\t\tdisplayname = %s\n", xc->xc_displayname);
+	if(xc->xc_icon_url != NULL)
+	  fprintf(fp, "\t\ticon = %s\n", xc->xc_icon_url);
+	if(xc->xc_bestmatch != NULL)
+	  fprintf(fp, "\t\tbestmatch = %s\n", xc->xc_bestmatch);
+	fprintf(fp, "\t\tname = %s\n", xc->xc_name);
+	if(xc->xc_disabled)
+	  fprintf(fp, "\t\tmapping = disabled\n");
+	else
+	  fprintf(fp, "\t\tmapping = %s\n", xc->xc_channel ?: "auto");
+	fprintf(fp, "\t}\n");
+      }
+      fprintf(fp, "}\n");
     }
-    fprintf(fp, "}\n");
+    fclose(fp);
   }
-  fclose(fp);
+  pthread_mutex_unlock(&xmltv_save_lock);
 }
 
 /**
@@ -744,6 +750,9 @@ xmltv_config_load(void)
 
       if((s = config_get_str_sub(&ce2->ce_sub, "displayname", NULL)) != NULL)
 	xc->xc_displayname = strdup(s);
+
+      if((s = config_get_str_sub(&ce2->ce_sub, "bestmatch", NULL)) != NULL)
+	xc->xc_bestmatch = strdup(s);
 
      if((s = config_get_str_sub(&ce2->ce_sub, "icon", NULL)) != NULL)
 	xc->xc_icon_url = strdup(s);

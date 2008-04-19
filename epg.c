@@ -278,7 +278,7 @@ check_overlap(th_channel_t *ch, event_t *e)
 static void
 epg_event_create(th_channel_t *ch, time_t start, int duration, 
 		 const char *title, const char *desc, int source, 
-		 uint16_t id, refstr_t *icon, epg_content_type_t *ect)
+		 uint16_t id, epg_content_type_t *ect)
 {
   unsigned int l;
   time_t now;
@@ -312,11 +312,6 @@ epg_event_create(th_channel_t *ch, time_t start, int duration,
     l = e->e_tag % EPG_HASH_ID_WIDTH;
     LIST_INSERT_HEAD(&epg_hash[l], e, e_hash_link);
   }
-
-  if(e->e_icon == NULL)
-    e->e_icon = refstr_dup(icon);
-  else
-    refstr_free(icon);
 
   if(source > e->e_source) {
 
@@ -382,7 +377,7 @@ epg_update_event_by_id(th_channel_t *ch, uint16_t event_id,
   } else {
   
     epg_event_create(ch, start, duration, title, desc,
-		     EVENT_SRC_DVB, event_id, NULL, ect);
+		     EVENT_SRC_DVB, event_id, ect);
   }
 }
 
@@ -418,11 +413,6 @@ epg_locate_current_event(th_channel_t *ch, time_t now)
 {
   event_t *e;
   e = epg_event_find_by_time(ch, now);
-
-  if(e != NULL && e->e_icon != NULL) {
-    refstr_free(ch->ch_icon);
-    ch->ch_icon = refstr_dup(e->e_icon);
-  }
   epg_set_current_event(ch, e);
 }
 
@@ -480,20 +470,20 @@ epg_channel_maintain(void *aux, int64_t clk)
 
 void
 epg_transfer_events(th_channel_t *ch, struct event_queue *src, 
-		    const char *srcname, refstr_t *icon)
+		    const char *srcname, char *icon)
 {
   event_t *e;
   int cnt = 0;
 
   epg_lock();
 
-  if(ch->ch_icon == NULL)
-    ch->ch_icon = refstr_dup(icon);
+  free(ch->ch_icon);
+  ch->ch_icon = icon ? strdup(icon) : NULL;
 
   TAILQ_FOREACH(e, src, e_link) {
 
     epg_event_create(ch, e->e_start, e->e_duration, e->e_title,
-		     e->e_desc, EVENT_SRC_XMLTV, 0, refstr_dup(icon),
+		     e->e_desc, EVENT_SRC_XMLTV, 0,
 		     e->e_content_type);
     cnt++;
   }

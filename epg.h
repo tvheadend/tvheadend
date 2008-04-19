@@ -48,7 +48,7 @@ void epg_update_event_by_id(th_channel_t *ch, uint16_t event_id,
 			    const char *desc, epg_content_type_t *ect);
 
 void epg_transfer_events(th_channel_t *ch, struct event_queue *src, 
-			 const char *srcname, refstr_t *icon);
+			 const char *srcname, char *icon);
 
 void event_time_txt(time_t start, int duration, char *out, int outlen);
 

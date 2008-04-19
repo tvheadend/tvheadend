@@ -70,6 +70,8 @@ typedef struct xmltv_channel {
 
   struct event_queue xc_events;
 
+  int xc_updated;
+
 } xmltv_channel_t;
 
 

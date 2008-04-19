@@ -176,7 +176,10 @@ typedef struct th_dvb_mux_instance {
   uint8_t tdmi_polarisation;  /* for DVB-S */
   uint8_t tdmi_switchport;    /* for DVB-S */
 
+  uint16_t tdmi_transport_stream_id;
+
   char *tdmi_identifier;
+  
   const char *tdmi_network;     /* Name of network, from NIT table */
 
   struct th_transport_list tdmi_transports; /* via tht_mux_link */
@@ -776,7 +779,7 @@ typedef struct th_channel {
 
   struct event_queue ch_epg_events;
   struct event *ch_epg_cur_event;
-  refstr_t *ch_icon;
+  char *ch_icon;
 
 } th_channel_t;
 

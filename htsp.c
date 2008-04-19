@@ -81,7 +81,7 @@ htsp_build_channel_msg(th_channel_t *ch, const char *method)
   htsmsg_add_str(msg, "channelName", ch->ch_name);
   htsmsg_add_u32(msg, "channelTag", ch->ch_tag);
   if(ch->ch_icon != NULL)
-    htsmsg_add_str(msg, "channelIcon", refstr_get(ch->ch_icon));
+    htsmsg_add_str(msg, "channelIcon", ch->ch_icon);
   
   if((e = epg_event_get_current(ch)) != NULL)
     htsmsg_add_u32(msg, "currentEvent", e->e_tag);
