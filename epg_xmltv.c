@@ -682,7 +682,8 @@ xmltv_config_save(void)
     TAILQ_FOREACH(xc, &xg->xg_channels, xc_link) {
       fprintf(fp, "\tchannel {\n");
       fprintf(fp, "\t\tdisplayname = %s\n", xc->xc_displayname);
-      fprintf(fp, "\t\ticon = %s\n", xc->xc_icon_url);
+      if(xc->xc_icon_url != NULL)
+	fprintf(fp, "\t\ticon = %s\n", xc->xc_icon_url);
       fprintf(fp, "\t\tname = %s\n", xc->xc_name);
       if(xc->xc_disabled)
 	fprintf(fp, "\t\tmapping = disabled\n");
