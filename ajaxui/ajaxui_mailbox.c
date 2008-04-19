@@ -36,8 +36,8 @@
 #define MAILBOX_EMPTY_REPLY_TIMEOUT 10
 
 
-#define mbdebug(fmt...) printf(fmt);
-//#define mbdebug(fmt...)
+//#define mbdebug(fmt...) printf(fmt);
+#define mbdebug(fmt...)
 
 
 static LIST_HEAD(, ajaxui_mailbox) mailboxes;
