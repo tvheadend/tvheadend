@@ -202,6 +202,7 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 {
   th_transport_t *t;
   th_channel_t *ch;
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
   uint16_t serviceid;
   int version;
@@ -224,6 +225,8 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   char desc[5000];
   epg_content_type_t *ect;
 
+  //  printf("EIT!, tid = %x\n", tableid);
+
   if(tableid < 0x4e || tableid > 0x6f || len < 11)
     return;
 
@@ -239,6 +242,14 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   len -= 11;
   ptr += 11;
+
+  /* Search all muxes on adapter */
+  LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
+    if(tdmi->tdmi_transport_stream_id == transport_stream_id)
+      break;
+  
+  if(tdmi == NULL)
+    return;
 
   t = dvb_find_transport(tdmi, serviceid, 0, NULL);
   if(t == NULL)
@@ -445,6 +456,11 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   tid = (ptr[0] << 8) | ptr[1];
 
+  if(tdmi->tdmi_transport_stream_id != tid) {
+    tdmi->tdmi_transport_stream_id = tid;
+    dvb_tda_save(tdmi->tdmi_adapter);
+  }
+
   ptr += 5;
   len -= 5;
 
@@ -514,7 +530,8 @@ static const fe_modulation_t qam_tab [6] = {
  * Cable delivery descriptor
  */
 static void
-dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len)
+dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
+			 uint16_t tsid)
 {
   int freq, symrate;
   struct dvb_frontend_parameters fe_param;
@@ -546,14 +563,15 @@ dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len)
 
   fe_param.u.qam.fec_inner = fec_tab[ptr[10] & 0x07];
 
-  dvb_mux_create(tdmi->tdmi_adapter, &fe_param, 0, 0, 1);
+  dvb_mux_create(tdmi->tdmi_adapter, &fe_param, 0, 0, 1, tsid);
 }
 
 /**
  * Satellite delivery descriptor
  */
 static void
-dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len)
+dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
+		       uint16_t tsid)
 {
   int freq, symrate, pol;
   struct dvb_frontend_parameters fe_param;
@@ -578,7 +596,8 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len)
 
   pol = (ptr[6] >> 5) & 0x03;
 
-  dvb_mux_create(tdmi->tdmi_adapter, &fe_param, pol, tdmi->tdmi_switchport, 1);
+  dvb_mux_create(tdmi->tdmi_adapter, &fe_param, pol, tdmi->tdmi_switchport, 1,
+		 tsid);
 }
 
 
@@ -658,10 +677,10 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
       switch(tag) {
       case DVB_DESC_SAT:
-	dvb_table_sat_delivery(tdmi, ptr, tlen);
+	dvb_table_sat_delivery(tdmi, ptr, tlen, tsid);
 	break;
       case DVB_DESC_CABLE:
-	dvb_table_cable_delivery(tdmi, ptr, tlen);
+	dvb_table_cable_delivery(tdmi, ptr, tlen, tsid);
 	break;
       }
 

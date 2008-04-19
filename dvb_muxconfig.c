@@ -98,6 +98,8 @@ dvb_mux_store(FILE *fp, th_dvb_mux_instance_t *tdmi)
 {
   struct dvb_frontend_parameters *f = tdmi->tdmi_fe_params;
 
+  fprintf(fp, "\ttransportstreamid = %d\n", tdmi->tdmi_transport_stream_id);
+
   fprintf(fp, "\tfrequency = %d\n", f->frequency);
   
   switch(tdmi->tdmi_adapter->tda_fe_info->type) {
@@ -156,6 +158,7 @@ dvb_mux_store(FILE *fp, th_dvb_mux_instance_t *tdmi)
  */
 const char *
 dvb_mux_create_str(th_dvb_adapter_t *tda,
+		   const char *tsidstr,
 		   const char *freqstr,
 		   const char *symratestr,
 		   const char *qamstr,
@@ -173,7 +176,7 @@ dvb_mux_create_str(th_dvb_adapter_t *tda,
   struct dvb_frontend_parameters f;
   int r;
   int polarisation = 0, switchport = 0;
-
+ 
   memset(&f, 0, sizeof(f));
   
   f.inversion = INVERSION_AUTO;
@@ -247,7 +250,7 @@ dvb_mux_create_str(th_dvb_adapter_t *tda,
     break;
   }
 
-  dvb_mux_create(tda, &f, polarisation, switchport, save);
+  dvb_mux_create(tda, &f, polarisation, switchport, save, atoi(tsidstr));
 
   return NULL;
 }

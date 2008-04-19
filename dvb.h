@@ -53,8 +53,10 @@ th_transport_t *dvb_find_transport(th_dvb_mux_instance_t *tdmi,
 th_dvb_mux_instance_t *dvb_mux_create(th_dvb_adapter_t *tda,
 				      struct dvb_frontend_parameters *fe_param,
 				      int polarisation, int switchport,
-				      int save);
+				      int save, uint16_t tsid);
 
 void dvb_tdmi_save(th_dvb_mux_instance_t *tdmi);
+
+void dvb_tda_save(th_dvb_adapter_t *tda);
 
 #endif /* DVB_H_ */

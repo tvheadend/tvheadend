@@ -498,6 +498,7 @@ ajax_adaptercreatemux(http_connection_t *hc, http_reply_t *hr,
     return HTTP_STATUS_NOT_FOUND;
 
   v = dvb_mux_create_str(tda,
+			 "65535",
 			 http_arg_get(&hc->hc_req_args, "freq"),
 			 http_arg_get(&hc->hc_req_args, "symrate"),
 			 http_arg_get(&hc->hc_req_args, "const"),

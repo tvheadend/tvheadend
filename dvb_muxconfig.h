@@ -22,6 +22,7 @@
 void dvb_mux_store(FILE *fp, th_dvb_mux_instance_t *tdmi);
 
 const char *dvb_mux_create_str(th_dvb_adapter_t *tda,
+			       const char *tsidstr,
 			       const char *freqstr,
 			       const char *symratestr,
 			       const char *qamstr,
