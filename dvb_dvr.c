@@ -145,6 +145,9 @@ dvb_start_feed(th_transport_t *t, unsigned int weight, int status)
   th_dvb_adapter_t *tda = t->tht_dvb_mux_instance->tdmi_adapter;
   th_dvb_mux_instance_t *tdmi = tda->tda_mux_current;
 
+  if(tda->tda_rootpath == NULL)
+    return 1; /* hardware not present */
+
   /* Check if adapter is idle, or already tuned */
 
   if(tdmi != NULL && tdmi != t->tht_dvb_mux_instance) {

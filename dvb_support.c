@@ -219,6 +219,13 @@ static struct strtab adaptertype[] = {
   { "ATSC",   FE_ATSC },
 };
 
+
+int
+dvb_str_to_adaptertype(const char *str)
+{
+  return str2val(str, adaptertype);
+}
+
 const char *
 dvb_adaptertype_to_str(int type)
 {
@@ -264,7 +271,7 @@ dvb_adapter_find_by_identifier(const char *identifier)
 {
   th_dvb_adapter_t *tda;
 
-  LIST_FOREACH(tda, &dvb_adapters, tda_global_link)
+  TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link)
     if(!strcmp(identifier, tda->tda_identifier))
       return tda;
   return NULL;
@@ -304,7 +311,7 @@ dvb_mux_status(th_dvb_mux_instance_t *tdmi)
 void
 dvb_mux_nicename(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
 {
-  if(tdmi->tdmi_adapter->tda_fe_info->type == FE_QPSK)
+  if(tdmi->tdmi_adapter->tda_type == FE_QPSK)
     snprintf(buf, size, "%dkHz %s port %d", tdmi->tdmi_fe_params->frequency,
 	     dvb_polarisation_to_str_long(tdmi->tdmi_polarisation),
 	     tdmi->tdmi_switchport);

@@ -73,7 +73,7 @@ LIST_HEAD(th_subscription_list, th_subscription);
 LIST_HEAD(th_channel_list, th_channel);
 TAILQ_HEAD(th_channel_queue, th_channel);
 TAILQ_HEAD(th_channel_group_queue, th_channel_group);
-LIST_HEAD(th_dvb_adapter_list, th_dvb_adapter);
+TAILQ_HEAD(th_dvb_adapter_queue, th_dvb_adapter);
 LIST_HEAD(th_v4l_adapter_list, th_v4l_adapter);
 LIST_HEAD(event_list, event);
 TAILQ_HEAD(event_queue, event);
@@ -209,12 +209,7 @@ typedef struct th_dvb_table {
  */
 typedef struct th_dvb_adapter {
 
-  LIST_ENTRY(th_dvb_adapter) tda_global_link;
-
-  enum {
-    TDA_STATE_RUNNING,         /* Running */
-    TDA_STATE_ZOMBIE,          /* Configured but not found */
-  } tda_state;
+  TAILQ_ENTRY(th_dvb_adapter) tda_global_link;
 
   struct th_dvb_mux_instance_list tda_muxes;
   th_dvb_mux_instance_t *tda_mux_current;
@@ -230,6 +225,7 @@ typedef struct th_dvb_adapter {
   int tda_fe_errors;
 
   int tda_fe_fd;
+  int tda_type;
   struct dvb_frontend_info *tda_fe_info;
 
   char *tda_demux_path;

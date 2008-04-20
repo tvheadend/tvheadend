@@ -59,7 +59,7 @@ tdmi_displayname(th_dvb_mux_instance_t *tdmi, char *buf, size_t len)
 {
   int f = tdmi->tdmi_fe_params->frequency;
 
-  if(tdmi->tdmi_adapter->tda_fe_info->type == FE_QPSK) {
+  if(tdmi->tdmi_adapter->tda_type == FE_QPSK) {
     snprintf(buf, len, "%d kHz %s", f,
 	     dvb_polarisation_to_str(tdmi->tdmi_polarisation));
   } else {
@@ -88,10 +88,10 @@ ajax_adaptersummary(http_connection_t *hc, http_reply_t *hr,
 
   tcp_qprintf(tq, "<div class=\"infoprefix\">Device:</div>"
 	      "<div>%s</div>",
-	      tda->tda_rootpath);
+	      tda->tda_rootpath ?: "<b><i>Not present</i></b>");
   tcp_qprintf(tq, "<div class=\"infoprefix\">Type:</div>"
 	      "<div>%s</div>", 
-	      dvb_adaptertype_to_str(tda->tda_fe_info->type));
+	      dvb_adaptertype_to_str(tda->tda_type));
  
   tcp_qprintf(tq, "<div style=\"text-align: center\">"
 	      "<a href=\"javascript:void(0);\" "
@@ -117,7 +117,7 @@ ajax_config_dvb_tab(http_connection_t *hc, http_reply_t *hr)
 
   tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
 
-  LIST_FOREACH(tda, &dvb_adapters, tda_global_link) {
+  TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
 
     tcp_qprintf(tq, "<div id=\"summary_%s\" "
 		"style=\"float:left; width: 250px\"></div>",
@@ -135,18 +135,20 @@ ajax_config_dvb_tab(http_connection_t *hc, http_reply_t *hr)
 }
 
 /**
- * Generate the 'add new...' mux link
+ * Generate the 'add new...' mux link if the adapter has backing hardware
  *
  * if result is set we add a fade out of a result from a previous op
  */
 static void
 dvb_make_add_link(tcp_queue_t *tq, th_dvb_adapter_t *tda, const char *result)
 {
-  tcp_qprintf(tq,
-	      "<p><a href=\"javascript:void(0);\" "
-	      "onClick=\"new Ajax.Updater('addmux', "
-	      "'/ajax/dvbadapteraddmux/%s', {method: 'get'})\""
-	      ">Add new...</a></p>", tda->tda_identifier);
+  if(tda->tda_fe_info != NULL) {
+    tcp_qprintf(tq,
+		"<p><a href=\"javascript:void(0);\" "
+		"onClick=\"new Ajax.Updater('addmux', "
+		"'/ajax/dvbadapteraddmux/%s', {method: 'get'})\""
+		">Add new...</a></p>", tda->tda_identifier);
+  }
 
   if(result) {
     tcp_qprintf(tq, "<div id=\"result\">%s</div>", result);
@@ -181,42 +183,41 @@ ajax_adaptereditor(http_connection_t *hc, http_reply_t *hr,
 
   tcp_qprintf(tq, "<div class=\"infoprefixwide\">Model:</div>"
 	      "<div>%s (%s)</div>", 
-	      tda->tda_fe_info->name,
-	      dvb_adaptertype_to_str(tda->tda_fe_info->type));
+	      tda->tda_fe_info ? tda->tda_fe_info->name : "<Unknown>",
+	      dvb_adaptertype_to_str(tda->tda_type));
   
  
-  switch(tda->tda_fe_info->type) {
-  case FE_QPSK:
-    a = tda->tda_fe_info->frequency_min;
-    b = tda->tda_fe_info->frequency_max;
-    c = tda->tda_fe_info->frequency_stepsize;
-    break;
+  if(tda->tda_fe_info != NULL) {
+    switch(tda->tda_type) {
+    case FE_QPSK:
+      a = tda->tda_fe_info->frequency_min;
+      b = tda->tda_fe_info->frequency_max;
+      c = tda->tda_fe_info->frequency_stepsize;
+      break;
 
-  default:
-    a = tda->tda_fe_info->frequency_min / 1000.0f;
-    b = tda->tda_fe_info->frequency_max / 1000.0f;
-    c = tda->tda_fe_info->frequency_stepsize / 1000.0f;
-    break;
-  }
+    default:
+      a = tda->tda_fe_info->frequency_min / 1000.0f;
+      b = tda->tda_fe_info->frequency_max / 1000.0f;
+      c = tda->tda_fe_info->frequency_stepsize / 1000.0f;
+      break;
+    }
 
-  tcp_qprintf(tq, "<div class=\"infoprefixwide\">Freq. Range:</div>"
-	      "<div>%.2f - %.2f kHz, in steps of %.2f kHz</div>",
-	      a, b, c);
+    tcp_qprintf(tq, "<div class=\"infoprefixwide\">Freq. Range:</div>"
+		"<div>%.2f - %.2f kHz, in steps of %.2f kHz</div>",
+		a, b, c);
 
 
-  if(tda->tda_fe_info->symbol_rate_min) {
-    tcp_qprintf(tq, "<div class=\"infoprefixwide\">Symbolrate:</div>"
-		"<div>%d - %d BAUD</div>",
-		tda->tda_fe_info->symbol_rate_min,
-		tda->tda_fe_info->symbol_rate_max);
+    if(tda->tda_fe_info->symbol_rate_min) {
+      tcp_qprintf(tq, "<div class=\"infoprefixwide\">Symbolrate:</div>"
+		  "<div>%d - %d BAUD</div>",
+		  tda->tda_fe_info->symbol_rate_min,
+		  tda->tda_fe_info->symbol_rate_max);
+    }
+    /* Capabilities */
+    //  tcp_qprintf(tq, "<div class=\"infoprefixwide\">Capabilities:</div>");
   }
 
  
-  /* Capabilities */
-
-
-  //  tcp_qprintf(tq, "<div class=\"infoprefixwide\">Capabilities:</div>");
-
   tcp_qprintf(tq, "<div style=\"float: left; width:45%\">");
 
   ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, "Multiplexes");
@@ -262,6 +263,9 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
 
   if(remain == NULL || (tda = dvb_adapter_find_by_identifier(remain)) == NULL)
     return HTTP_STATUS_NOT_FOUND;
+
+  if(tda->tda_fe_info == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
 
   caps   = tda->tda_fe_info->caps;
   fetype = tda->tda_fe_info->type;
@@ -554,7 +558,7 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
   if(remain == NULL || (tda = dvb_adapter_find_by_identifier(remain)) == NULL)
     return HTTP_STATUS_NOT_FOUND;
 
-  fetype = tda->tda_fe_info->type;
+  fetype = tda->tda_type;
 
   /* List of muxes */
   

@@ -85,7 +85,7 @@ dvb_fe_manager(void *aux)
 
       p = *tdmi->tdmi_fe_params;
 
-      if(tda->tda_fe_info->type == FE_QPSK) {
+      if(tda->tda_type == FE_QPSK) {
 	/* DVB-S */
 	int lowfreq, hifreq, switchfreq, hiband;
 

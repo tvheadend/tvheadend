@@ -55,6 +55,7 @@ int dvb_get_string_with_len(char *dst, size_t dstlen,
 time_t dvb_convert_date(uint8_t *dvb_buf);
 
 const char *dvb_adaptertype_to_str(int type);
+int dvb_str_to_adaptertype(const char *str);
 const char *dvb_polarisation_to_str(int pol);
 th_dvb_adapter_t *dvb_adapter_find_by_identifier(const char *identifier);
 th_dvb_mux_instance_t *dvb_mux_find_by_identifier(const char *identifier);

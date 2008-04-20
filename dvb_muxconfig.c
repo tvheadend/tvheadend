@@ -104,7 +104,7 @@ dvb_mux_store(FILE *fp, th_dvb_mux_instance_t *tdmi)
 
   fprintf(fp, "\tfrequency = %d\n", f->frequency);
   
-  switch(tdmi->tdmi_adapter->tda_fe_info->type) {
+  switch(tdmi->tdmi_adapter->tda_type) {
   case FE_OFDM:
     fprintf(fp, "\tbandwidth = %s\n",     
 	    val2str(f->u.ofdm.bandwidth, bwtab));
@@ -188,7 +188,7 @@ dvb_mux_create_str(th_dvb_adapter_t *tda,
   if(f.frequency == 0)
     return "Invalid frequency";
 
-  switch(tda->tda_fe_info->type) {
+  switch(tda->tda_type) {
   case FE_OFDM:
     if(bwstr == NULL || (r = str2val(bwstr, bwtab)) < 0)
       return "Invalid bandwidth";
