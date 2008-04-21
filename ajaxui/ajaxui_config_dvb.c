@@ -39,12 +39,6 @@
 
 #include "ajaxui_mailbox.h"
 
-#if 0
-static struct strtab adapterstatus[] = {
-  { "Hardware detected",    TDA_STATE_RUNNING },
-  { "Hardware not found",   TDA_STATE_ZOMBIE },
-};
-#endif
 
 static void
 add_option(tcp_queue_t *tq, int bol, const char *name)
