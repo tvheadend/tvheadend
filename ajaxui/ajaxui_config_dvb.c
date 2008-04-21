@@ -150,6 +150,33 @@ dvb_make_add_link(tcp_queue_t *tq, th_dvb_adapter_t *tda, const char *result)
   }
 }
 
+/**
+ *
+ */
+const char *
+nicenum(unsigned int v)
+{
+  static char buf[4][30];
+  static int ptr;
+  char *x;
+  ptr = (ptr + 1) & 3;
+  x = buf[ptr];
+
+  if(v < 1000)
+    snprintf(x, 30, "%d", v);
+  else if(v < 1000000)
+    snprintf(x, 30, "%d,%03d", v / 1000, v % 1000);
+  else if(v < 1000000000)
+    snprintf(x, 30, "%d,%03d,%03d", 
+	     v / 1000000, (v % 1000000) / 1000, v % 1000);
+  else 
+    snprintf(x, 30, "%d,%03d,%03d,%03d", 
+	     v / 1000000000, (v % 1000000000) / 1000000,
+	     (v % 1000000) / 1000, v % 1000);
+  return x;
+}
+
+
 
 /**
  * DVB adapter editor pane
@@ -160,7 +187,7 @@ ajax_adaptereditor(http_connection_t *hc, http_reply_t *hr,
 {
   tcp_queue_t *tq = &hr->hr_tq;
   th_dvb_adapter_t *tda;
-  float a, b, c;
+  const char *s;
 
   if(remain == NULL || (tda = dvb_adapter_find_by_identifier(remain)) == NULL)
     return HTTP_STATUS_NOT_FOUND;
@@ -180,32 +207,25 @@ ajax_adaptereditor(http_connection_t *hc, http_reply_t *hr,
 	      tda->tda_fe_info ? tda->tda_fe_info->name : "<Unknown>",
 	      dvb_adaptertype_to_str(tda->tda_type));
   
- 
+
+
   if(tda->tda_fe_info != NULL) {
-    switch(tda->tda_type) {
-    case FE_QPSK:
-      a = tda->tda_fe_info->frequency_min;
-      b = tda->tda_fe_info->frequency_max;
-      c = tda->tda_fe_info->frequency_stepsize;
-      break;
 
-    default:
-      a = tda->tda_fe_info->frequency_min / 1000.0f;
-      b = tda->tda_fe_info->frequency_max / 1000.0f;
-      c = tda->tda_fe_info->frequency_stepsize / 1000.0f;
-      break;
-    }
-
+    s = tda->tda_type == FE_QPSK ? "kHz" : "Hz";
     tcp_qprintf(tq, "<div class=\"infoprefixwide\">Freq. Range:</div>"
-		"<div>%.2f - %.2f kHz, in steps of %.2f kHz</div>",
-		a, b, c);
+		"<div>%s - %s %s, in steps of %s %s</div>",
+		nicenum(tda->tda_fe_info->frequency_min),
+		nicenum(tda->tda_fe_info->frequency_max),
+		s,
+		nicenum(tda->tda_fe_info->frequency_stepsize),
+		s);
 
 
     if(tda->tda_fe_info->symbol_rate_min) {
       tcp_qprintf(tq, "<div class=\"infoprefixwide\">Symbolrate:</div>"
-		  "<div>%d - %d BAUD</div>",
-		  tda->tda_fe_info->symbol_rate_min,
-		  tda->tda_fe_info->symbol_rate_max);
+		  "<div>%s - %s Baud</div>",
+		  nicenum(tda->tda_fe_info->symbol_rate_min),
+		  nicenum(tda->tda_fe_info->symbol_rate_max));
     }
     /* Capabilities */
     //  tcp_qprintf(tq, "<div class=\"infoprefixwide\">Capabilities:</div>");
