@@ -232,12 +232,6 @@ iptv_configure_transport(th_transport_t *t, const char *iptv_type,
   else
     t->tht_provider = strdup("IPTV");
 
-  s = config_get_str_sub(head, "network", NULL);
-  if(s != NULL)
-    t->tht_network = strdup(s);
-  else
-    t->tht_network = strdup(inet_ntoa(t->tht_iptv_group_addr));
-
   snprintf(buf, sizeof(buf), "iptv_%s_%d",
 	   inet_ntoa(t->tht_iptv_group_addr), t->tht_iptv_port);
   t->tht_identifier = strdup(buf);

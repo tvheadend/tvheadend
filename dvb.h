@@ -60,4 +60,12 @@ void dvb_tdmi_save(th_dvb_mux_instance_t *tdmi);
 
 void dvb_tda_save(th_dvb_adapter_t *tda);
 
+void dvb_mux_unref(th_dvb_mux_instance_t *tdmi);
+
+void dvb_fe_flush(th_dvb_mux_instance_t *tdmi);
+
+void dvb_mux_destroy(th_dvb_mux_instance_t *tdmi);
+
+void tdmi_stop(th_dvb_mux_instance_t *tdmi);
+
 #endif /* DVB_H_ */

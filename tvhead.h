@@ -146,6 +146,8 @@ typedef enum {
  * DVB Mux instance
  */
 typedef struct th_dvb_mux_instance {
+  int tdmi_refcnt;
+
   LIST_ENTRY(th_dvb_mux_instance) tdmi_global_link;
   LIST_ENTRY(th_dvb_mux_instance) tdmi_adapter_link;
 
@@ -179,8 +181,7 @@ typedef struct th_dvb_mux_instance {
   uint16_t tdmi_transport_stream_id;
 
   char *tdmi_identifier;
-  
-  const char *tdmi_network;     /* Name of network, from NIT table */
+  char *tdmi_network;     /* Name of network, from NIT table */
 
   struct th_transport_list tdmi_transports; /* via tht_mux_link */
 
@@ -430,8 +431,6 @@ typedef struct th_transport {
 
   struct th_muxer_list tht_muxers; /* muxers */
 
-  struct pluginaux_list tht_plugin_aux;
-
   /*
    * Per source type structs
    */
@@ -469,11 +468,11 @@ typedef struct th_transport {
     } file_input;
  } u;
 
-  const char *tht_identifier;
-  const char *tht_servicename;
-  const char *tht_channelname;
-  const char *tht_provider;
-  const char *tht_network;
+  char *tht_identifier;
+  char *tht_servicename;
+  char *tht_channelname;
+  char *tht_provider;
+
   enum {
     /* Service types defined in EN 300 468 */
 

@@ -72,16 +72,29 @@ dvb_fe_manager(void *aux)
     pthread_mutex_lock(&tda->tda_lock);
     pthread_cond_timedwait(&tda->tda_cond, &tda->tda_lock, &ts);
     c = TAILQ_FIRST(&tda->tda_fe_cmd_queue);
-    if(c != NULL)
-      TAILQ_REMOVE(&tda->tda_fe_cmd_queue, c, link);
+    if(c != NULL) {
 
-    pthread_mutex_unlock(&tda->tda_lock);
+      if(tdmi != NULL)
+	dvb_mux_unref(tdmi);
+      
+      TAILQ_REMOVE(&tda->tda_fe_cmd_queue, c, link);
+    }
+
 
     if(c != NULL) {
 
       /* Switch to a new mux */
 
       tdmi = c->tdmi;
+
+      if(tdmi->tdmi_refcnt == 1) {
+	dvb_mux_unref(tdmi);
+	tdmi = NULL;
+	pthread_mutex_unlock(&tda->tda_lock);
+	continue;
+      }
+ 
+      pthread_mutex_unlock(&tda->tda_lock);
 
       p = *tdmi->tdmi_fe_params;
 
@@ -141,6 +154,8 @@ dvb_fe_manager(void *aux)
       ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &v);
     }
 
+    pthread_mutex_unlock(&tda->tda_lock);
+
     if(tdmi == NULL)
       continue;
 
@@ -188,10 +203,12 @@ dvb_fe_start(th_dvb_adapter_t *tda)
 /**
  * Stop the given TDMI
  */
-static void
+void
 tdmi_stop(th_dvb_mux_instance_t *tdmi)
 {
   th_dvb_table_t *tdt;
+
+  tdmi->tdmi_adapter->tda_mux_current = NULL;
 
   pthread_mutex_lock(&tdmi->tdmi_table_lock);
 
@@ -242,7 +259,31 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
   c = malloc(sizeof(dvb_fe_cmd_t));
   c->tdmi = tdmi;
   pthread_mutex_lock(&tda->tda_lock);
+  tdmi->tdmi_refcnt++;
   TAILQ_INSERT_TAIL(&tda->tda_fe_cmd_queue, c, link);
   pthread_cond_signal(&tda->tda_cond);
   pthread_mutex_unlock(&tda->tda_lock);
+}
+
+
+/**
+ * Flush pending tuning commands for frontend
+ *
+ * tda_lock must be held
+ */
+void
+dvb_fe_flush(th_dvb_mux_instance_t *tdmi)
+{
+  dvb_fe_cmd_t *c;
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+
+  TAILQ_FOREACH(c, &tda->tda_fe_cmd_queue, link) 
+    if(c->tdmi == tdmi)
+      break;
+  if(c == NULL)
+    return;
+
+  TAILQ_REMOVE(&tda->tda_fe_cmd_queue, c, link);
+  dvb_mux_unref(tdmi);
+  free(c);
 }

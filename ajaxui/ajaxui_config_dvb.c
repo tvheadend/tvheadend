@@ -142,6 +142,12 @@ dvb_make_add_link(tcp_queue_t *tq, th_dvb_adapter_t *tda, const char *result)
 		"onClick=\"new Ajax.Updater('addmux', "
 		"'/ajax/dvbadapteraddmux/%s', {method: 'get'})\""
 		">Add new...</a></p>", tda->tda_identifier);
+
+    tcp_qprintf(tq,
+		"<p><a href=\"javascript:void(0);\" "
+		"onClick=\"new Ajax.Request("
+		"'/ajax/dvbadapterdelmuxes/%s', {method: 'get'})\""
+		">Delete all muxes</a></p>", tda->tda_identifier);
   }
 
   if(result) {
@@ -641,6 +647,38 @@ ajax_dvbmuxeditor(http_connection_t *hc, http_reply_t *hr,
   return 0;
 }
 
+
+/**
+ * Delete all muxes on an adapter
+ */
+static int
+ajax_adapterdelmuxes(http_connection_t *hc, http_reply_t *hr, 
+		     const char *remain, void *opaque)
+{
+  th_dvb_adapter_t *tda;
+  th_dvb_mux_instance_t *tdmi;
+  tcp_queue_t *tq = &hr->hr_tq;
+
+  if(remain == NULL || (tda = dvb_adapter_find_by_identifier(remain)) == NULL)
+    return HTTP_STATUS_NOT_FOUND;
+
+  printf("Deleting all muxes on %s\n", tda->tda_identifier);
+  
+  while((tdmi = LIST_FIRST(&tda->tda_muxes)) != NULL) {
+    printf("\tdeleting mux %s\n", tdmi->tdmi_identifier);
+    dvb_mux_destroy(tdmi);
+  }
+ 
+  tcp_qprintf(tq,
+	      "new Ajax.Updater('dvbadaptereditor', "
+	      "'/ajax/dvbadaptereditor/%s', "
+	      "{method: 'get', evalScripts: true});",
+	      tda->tda_identifier);
+
+  http_output(hc, hr, "text/javascript; charset=UTF8", NULL, 0);
+  return 0;
+}
+
 /**
  *
  */
@@ -651,6 +689,7 @@ ajax_config_dvb_init(void)
   http_path_add("/ajax/dvbadaptersummary"   , NULL, ajax_adaptersummary);
   http_path_add("/ajax/dvbadaptereditor",     NULL, ajax_adaptereditor);
   http_path_add("/ajax/dvbadapteraddmux",     NULL, ajax_adapteraddmux);
+  http_path_add("/ajax/dvbadapterdelmuxes",   NULL, ajax_adapterdelmuxes);
   http_path_add("/ajax/dvbadaptercreatemux",  NULL, ajax_adaptercreatemux);
   http_path_add("/ajax/dvbmuxeditor",         NULL, ajax_dvbmuxeditor);
 

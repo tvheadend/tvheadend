@@ -154,7 +154,6 @@ file_input_init(void)
 
     t->tht_name = strdup(ch->ch_name);
     t->tht_provider = strdup("HTS Tvheadend");
-    t->tht_network = strdup("Internal");
     t->tht_identifier = strdup(ch->ch_name);
     t->tht_file_input = fi;
     transport_set_channel(t, ch->ch_name);

@@ -403,6 +403,37 @@ transport_monitor(void *aux, int64_t now)
 
 
 /**
+ * Destroy a transport
+ */
+void
+transport_destroy(th_transport_t *t)
+{
+  th_stream_t *st;
+
+  free((void *)t->tht_name);
+
+  if(t->tht_channel != NULL) {
+    t->tht_channel = NULL;
+    LIST_REMOVE(t, tht_channel_link);
+  }
+
+  LIST_REMOVE(t, tht_mux_link);
+
+  transport_flush_subscribers(t);
+  
+  free(t->tht_identifier);
+  free(t->tht_servicename);
+  free(t->tht_channelname);
+  free(t->tht_provider);
+
+  while((st = LIST_FIRST(&t->tht_streams)) != NULL) {
+    LIST_REMOVE(st, st_link);
+    free(st);
+  }
+}
+
+
+/**
  * Create and initialize a new transport struct
  */
 th_transport_t *
