@@ -252,8 +252,6 @@ ajax_chgroup_editor(http_connection_t *hc, http_reply_t *hr,
   if(remain == NULL || (tcg = channel_group_by_tag(atoi(remain))) == NULL)
     return HTTP_STATUS_BAD_REQUEST;
 
-
-
   tcp_qprintf(tq, "<script type=\"text/javascript\">\r\n"
 	      "//<![CDATA[\r\n");
   
@@ -337,16 +335,15 @@ ajax_chgroup_editor(http_connection_t *hc, http_reply_t *hr,
   }
 
   tcp_qprintf(tq, "</div>");
-
   tcp_qprintf(tq, "<hr>\r\n");
-
   tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
-
   tcp_qprintf(tq, "<div class=\"infoprefixwide\">Select:</div><div>");
 
-  ajax_a_jsfunc(tq, "All",                       "select_all();",      " / ");
-  ajax_a_jsfunc(tq, "None",                      "select_none();",     " / ");
-  ajax_a_jsfunc(tq, "Invert",                    "select_invert();",   "");
+  ajax_a_jsfuncf(tq, "All",    "select_all();");
+  tcp_qprintf(tq, " / ");
+  ajax_a_jsfuncf(tq, "None",   "select_none();");
+  tcp_qprintf(tq, " / ");
+  ajax_a_jsfuncf(tq, "Invert", "select_invert();");
 
   tcp_qprintf(tq, "</div></div>\r\n");
 

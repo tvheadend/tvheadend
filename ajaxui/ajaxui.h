@@ -80,9 +80,6 @@ void ajax_config_init(void);
 void ajax_menu_bar_from_array(tcp_queue_t *tq, const char *name, 
 			      const char **vec, int num, int cur);
 
-void ajax_a_jsfunc(tcp_queue_t *tq, const char *innerhtml, const char *func,
-		   const char *trailer);
-
 int ajax_channelgroup_tab(http_connection_t *hc, http_reply_t *hr);
 int ajax_config_tab(http_connection_t *hc, http_reply_t *hr);
 
@@ -102,5 +99,10 @@ int ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 			      int ntransports);
 
 const char *ajaxui_escape_apostrophe(const char *content);
+void ajax_generate_select_functions(tcp_queue_t *tq, const char *fprefix,
+				    char **selvector);
+
+void ajax_a_jsfuncf(tcp_queue_t *tq, const char *innerhtml,
+		    const char *fmt, ...);
 
 #endif /* AJAXUI_H_ */

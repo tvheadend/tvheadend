@@ -142,12 +142,6 @@ dvb_make_add_link(tcp_queue_t *tq, th_dvb_adapter_t *tda, const char *result)
 		"onClick=\"new Ajax.Updater('addmux', "
 		"'/ajax/dvbadapteraddmux/%s', {method: 'get'})\""
 		">Add new...</a></p>", tda->tda_identifier);
-
-    tcp_qprintf(tq,
-		"<p><a href=\"javascript:void(0);\" "
-		"onClick=\"new Ajax.Request("
-		"'/ajax/dvbadapterdelmuxes/%s', {method: 'get'})\""
-		">Delete all muxes</a></p>", tda->tda_identifier);
   }
 
   if(result) {
@@ -548,6 +542,7 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
   int fetype, n, m;
   th_transport_t *t;
   int nmuxes = 0;
+  char **selvector;
 
   if(remain == NULL || (tda = dvb_adapter_find_by_identifier(remain)) == NULL)
     return HTTP_STATUS_NOT_FOUND;
@@ -564,11 +559,20 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
 		"No muxes configured</div>");
   } else {
 
+
+    selvector = alloca(sizeof(char *) * (nmuxes + 1));
+    n = 0;
+    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
+      selvector[n++] = tdmi->tdmi_identifier;
+    selvector[n] = NULL;
+
+    ajax_generate_select_functions(tq, "mux", selvector);
+
     ajax_table_top(&ta, hc, tq,
 		   (const char *[])
-    {"Freq", "Status", "State", "Name", "Services", NULL},
+    {"Freq", "Status", "State", "Name", "Services", "", NULL},
 		   (int[])
-    {4,3,2,4,2});
+    {16,12,8,16,8,2});
 
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
 
@@ -586,7 +590,7 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
 
       ajax_table_cell(&ta, "status", "%s", dvb_mux_status(tdmi));
       ajax_table_cell(&ta, "state", "%s", dvb_mux_state(tdmi));
-      ajax_table_cell(&ta, "name", "%s", tdmi->tdmi_network ?: "<unknown>");
+      ajax_table_cell(&ta, "name", "%s", tdmi->tdmi_network ?: "Unknown");
 
       n = m = 0;
       LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
@@ -595,8 +599,26 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
 	  m++;
       }
       ajax_table_cell(&ta, "nsvc", "%d / %d", m, n);
+      ajax_table_cell_checkbox(&ta);
     }
     ajax_table_bottom(&ta);
+    tcp_qprintf(tq, "<hr><div style=\"overflow: auto; width: 100%\">");
+    tcp_qprintf(tq, "<div class=\"infoprefix\">Select:</div><div>");
+    ajax_a_jsfuncf(tq, "All",     "mux_sel_all();");
+    tcp_qprintf(tq, " / ");
+    ajax_a_jsfuncf(tq, "None",    "mux_sel_none();");
+    tcp_qprintf(tq, " / ");
+    ajax_a_jsfuncf(tq, "Invert",  "mux_sel_invert();");
+    tcp_qprintf(tq, "</div></div>\r\n");
+
+    tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
+    tcp_qprintf(tq, "<div class=\"infoprefix\">&nbsp</div><div>");
+    ajax_a_jsfuncf(tq, "Delete selected", 
+		   "mux_sel_do('dvbadapterdelmux/%s', '', '', true)",
+		   tda->tda_identifier);
+    tcp_qprintf(tq, "</div></div>\r\n");
+
+
   }
   http_output_html(hc, hr);
   return 0;
@@ -652,20 +674,24 @@ ajax_dvbmuxeditor(http_connection_t *hc, http_reply_t *hr,
  * Delete all muxes on an adapter
  */
 static int
-ajax_adapterdelmuxes(http_connection_t *hc, http_reply_t *hr, 
-		     const char *remain, void *opaque)
+ajax_adapterdelmux(http_connection_t *hc, http_reply_t *hr, 
+		   const char *remain, void *opaque)
 {
   th_dvb_adapter_t *tda;
   th_dvb_mux_instance_t *tdmi;
   tcp_queue_t *tq = &hr->hr_tq;
+  http_arg_t *ra;
 
   if(remain == NULL || (tda = dvb_adapter_find_by_identifier(remain)) == NULL)
     return HTTP_STATUS_NOT_FOUND;
 
-  printf("Deleting all muxes on %s\n", tda->tda_identifier);
-  
-  while((tdmi = LIST_FIRST(&tda->tda_muxes)) != NULL) {
-    printf("\tdeleting mux %s\n", tdmi->tdmi_identifier);
+  TAILQ_FOREACH(ra, &hc->hc_req_args, link) {
+    if(strcmp(ra->val, "selected"))
+      continue;
+
+    if((tdmi = dvb_mux_find_by_identifier(ra->key)) == NULL)
+      continue;
+
     dvb_mux_destroy(tdmi);
   }
  
@@ -689,7 +715,7 @@ ajax_config_dvb_init(void)
   http_path_add("/ajax/dvbadaptersummary"   , NULL, ajax_adaptersummary);
   http_path_add("/ajax/dvbadaptereditor",     NULL, ajax_adaptereditor);
   http_path_add("/ajax/dvbadapteraddmux",     NULL, ajax_adapteraddmux);
-  http_path_add("/ajax/dvbadapterdelmuxes",   NULL, ajax_adapterdelmuxes);
+  http_path_add("/ajax/dvbadapterdelmux",     NULL, ajax_adapterdelmux);
   http_path_add("/ajax/dvbadaptercreatemux",  NULL, ajax_adaptercreatemux);
   http_path_add("/ajax/dvbmuxeditor",         NULL, ajax_dvbmuxeditor);
 

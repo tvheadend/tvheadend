@@ -74,6 +74,60 @@ ajaxui_escape_apostrophe(const char *content)
   return buf;
 }
 
+
+/**
+ *
+ */
+void
+ajax_generate_select_functions(tcp_queue_t *tq, const char *fprefix,
+			       char **selvector)
+{
+  int n;
+
+  tcp_qprintf(tq, "<script type=\"text/javascript\">\r\n"
+	      "//<![CDATA[\r\n");
+  
+  /* Select all */
+  tcp_qprintf(tq, "%s_sel_all = function() {\r\n", fprefix);
+  for(n = 0; selvector[n] != NULL; n++)
+    tcp_qprintf(tq, "$('sel_%s').checked = true;\r\n", selvector[n]);
+  tcp_qprintf(tq, "}\r\n");
+
+  /* Select none */
+  tcp_qprintf(tq, "%s_sel_none = function() {\r\n", fprefix);
+  for(n = 0; selvector[n] != NULL; n++)
+    tcp_qprintf(tq, "$('sel_%s').checked = false;\r\n", selvector[n]);
+  tcp_qprintf(tq, "}\r\n");
+
+  /* Invert selection */
+  tcp_qprintf(tq, "%s_sel_invert = function() {\r\n", fprefix);
+  for(n = 0; selvector[n] != NULL; n++)
+    tcp_qprintf(tq, "$('sel_%s').checked = !$('sel_%s').checked;\r\n",
+		selvector[n], selvector[n]);
+  tcp_qprintf(tq, "}\r\n");
+
+  /* Invoke AJAX call containing all selected elements */
+  tcp_qprintf(tq, 
+	      "%s_sel_do = function(op, arg1, arg2, check) {\r\n"
+	      "if(check == true && !confirm(\"Are you sure?\")) {return;}\r\n"
+	      "var h = new Hash();\r\n"
+	      "h.set('arg1', arg1);\r\n"
+	      "h.set('arg2', arg2);\r\n", fprefix
+	      );
+  
+  for(n = 0; selvector[n] != NULL; n++)
+    tcp_qprintf(tq, 
+		"if($('sel_%s').checked) {h.set('%s', 'selected') }\r\n",
+		selvector[n], selvector[n]);
+  tcp_qprintf(tq, " new Ajax.Request('/ajax/' + op, "
+	      "{parameters: h});\r\n");
+  tcp_qprintf(tq, "}\r\n");
+  tcp_qprintf(tq, 
+	      "\r\n//]]>\r\n"
+	      "</script>\r\n");
+}
+
+
 /**
  * AJAX table
  */
@@ -372,13 +426,16 @@ ajax_menu_bar_from_array(tcp_queue_t *tq, const char *name,
  *
  */
 void
-ajax_a_jsfunc(tcp_queue_t *tq, const char *innerhtml, const char *func,
-	      const char *trailer)
+ajax_a_jsfuncf(tcp_queue_t *tq, const char *innerhtml, const char *fmt, ...)
 {
-  tcp_qprintf(tq, "<a href=\"javascript:void(0)\" "
-	      "onClick=\"javascript:%s\">%s</a>%s\r\n",
-	      func, innerhtml, trailer);
+  va_list ap;
+  va_start(ap, fmt);
+
+  tcp_qprintf(tq, "<a href=\"javascript:void(0)\" onClick=\"javascript:");
+  tcp_qvprintf(tq, fmt, ap);
+  tcp_qprintf(tq, "\">%s</a>", innerhtml);
 }
+
 
 
 /*

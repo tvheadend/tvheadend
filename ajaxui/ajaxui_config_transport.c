@@ -206,19 +206,24 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 
   tcp_qprintf(tq, "<div class=\"infoprefix\">Select:</div><div>");
 
-  ajax_a_jsfunc(tq, "All",                       "select_all();",      " / ");
-  ajax_a_jsfunc(tq, "None",                      "select_none();",     " / ");
-  ajax_a_jsfunc(tq, "Invert",                    "select_invert();",   " / ");
-  ajax_a_jsfunc(tq, "All TV-services",           "select_tv();",       " / ");
-  ajax_a_jsfunc(tq, "All uncrypted TV-services", "select_tv_nocrypt();", "");
+  ajax_a_jsfuncf(tq, "All",                       "select_all();");
+  tcp_qprintf(tq, " / ");
+  ajax_a_jsfuncf(tq, "None",                      "select_none();");
+  tcp_qprintf(tq, " / ");
+  ajax_a_jsfuncf(tq, "Invert",                    "select_invert();");
+  tcp_qprintf(tq, " / ");
+  ajax_a_jsfuncf(tq, "All TV-services",           "select_tv();");
+  tcp_qprintf(tq, " / ");
+  ajax_a_jsfuncf(tq, "All uncrypted TV-services", "select_tv_nocrypt();");
 
   tcp_qprintf(tq, "</div></div>\r\n");
   
   tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
   tcp_qprintf(tq, "<div class=\"infoprefix\">&nbsp;</div><div>");
 
-  ajax_a_jsfunc(tq, "Map selected",    "selected_do('map');",   " / ");
-  ajax_a_jsfunc(tq, "Unmap selected",  "selected_do('unmap');", "");
+  ajax_a_jsfuncf(tq, "Map selected",    "selected_do('map');");
+  tcp_qprintf(tq, " / ");
+  ajax_a_jsfuncf(tq, "Unmap selected",  "selected_do('unmap');");
 
   tcp_qprintf(tq, "</div></div>");
 
@@ -234,9 +239,8 @@ ajax_transport_rename_channel(http_connection_t *hc, http_reply_t *hr,
 			      const char *remain, void *opaque)
 {
   th_transport_t *t;
-  const char *newname, *v;
+  const char *newname;
   tcp_queue_t *tq = &hr->hr_tq;
-  char buf[1000];
 
   if(remain == NULL || (t = transport_find_by_identifier(remain)) == NULL)
     return HTTP_STATUS_NOT_FOUND;
@@ -247,15 +251,11 @@ ajax_transport_rename_channel(http_connection_t *hc, http_reply_t *hr,
   free((void *)t->tht_channelname);
   t->tht_channelname = strdup(newname);
 
-  v = newname;
-
-  snprintf(buf, sizeof(buf), 
-	   "tentative_chname('chname_%s', "
-	   "'/ajax/transport_rename_channel/%s', '%s')",
-	   t->tht_identifier, t->tht_identifier, v);
-  
-  ajax_a_jsfunc(tq, v, buf, "");
-      
+  ajax_a_jsfuncf(tq, newname,
+		 "tentative_chname('chname_%s', "
+		 "'/ajax/transport_rename_channel/%s', '%s')",
+		 t->tht_identifier, t->tht_identifier, newname);
+       
   http_output_html(hc, hr);
   t->tht_config_change(t);
   return 0;
