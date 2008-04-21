@@ -31,6 +31,7 @@
 #include "ajaxui.h"
 #include "transports.h"
 #include "epg_xmltv.h"
+#include "dvb_support.h"
 
 #define MAILBOX_UNUSED_TIMEOUT      15
 #define MAILBOX_EMPTY_REPLY_TIMEOUT 10
@@ -383,19 +384,9 @@ ajax_mailbox_reload_div(const char *subscription, const char *prefix,
 void
 ajax_mailbox_tdmi_state_change(th_dvb_mux_instance_t *tdmi)
 {
-  const char *txt;
-
-  switch(tdmi->tdmi_state) {
-  case TDMI_IDLE:      txt = "Idle";      break;
-  case TDMI_IDLESCAN:  txt = "Scanning";  break;
-  case TDMI_RUNNING:   txt = "Running";   break;
-  default:             txt = "???";       break;
-  }
-  
-  
   ajax_mailbox_update_div(tdmi->tdmi_adapter->tda_identifier,
 			  "state", tdmi->tdmi_identifier,
-			  txt);
+			  dvb_mux_state(tdmi));
 }
 
 void
