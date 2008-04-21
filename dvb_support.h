@@ -61,5 +61,6 @@ th_dvb_adapter_t *dvb_adapter_find_by_identifier(const char *identifier);
 th_dvb_mux_instance_t *dvb_mux_find_by_identifier(const char *identifier);
 const char *dvb_mux_status(th_dvb_mux_instance_t *tdmi);
 void dvb_mux_nicename(char *buf, size_t size, th_dvb_mux_instance_t *tdmi);
+const char *dvb_mux_state(th_dvb_mux_instance_t *tdmi);
 
 #endif /* DVB_SUPPORT_H */

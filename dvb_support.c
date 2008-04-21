@@ -318,3 +318,20 @@ dvb_mux_nicename(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
   else 
     snprintf(buf, size, "%dHz", tdmi->tdmi_fe_params->frequency);
 }
+
+/**
+ *
+ */
+const char *
+dvb_mux_state(th_dvb_mux_instance_t *tdmi)
+{
+  const char *txt;
+
+  switch(tdmi->tdmi_state) {
+  case TDMI_IDLE:      txt = "Idle";      break;
+  case TDMI_IDLESCAN:  txt = "Scanning";  break;
+  case TDMI_RUNNING:   txt = "Running";   break;
+  default:             txt = "???";       break;
+  }
+  return txt;
+}
