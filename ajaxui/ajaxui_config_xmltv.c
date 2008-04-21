@@ -46,11 +46,7 @@ ajax_config_xmltv_tab(http_connection_t *hc, http_reply_t *hr)
   tcp_queue_t *tq = &hr->hr_tq;
   xmltv_grabber_t *xg;
   int ngrabbers = 0;
-  int displines = 21;
-  int csize[10];
-  const char *cells[10];
-  int o = 1;
-  char buf[200];
+  ajax_table_t ta;
 
   tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
 
@@ -82,32 +78,22 @@ ajax_config_xmltv_tab(http_connection_t *hc, http_reply_t *hr)
   LIST_FOREACH(xg, &xmltv_grabbers, xg_link)
     ngrabbers++;
 
-  ajax_table_header(hc, tq,
-		    (const char *[]){"Grabber", "Status", NULL},
-		    (int[]){4,2}, ngrabbers > displines, csize);
-
-  tcp_qprintf(tq, "<hr><div "
-	      "style=\"height: %dpx; overflow: auto\" class=\"normallist\">",
-	      MAX(displines, ngrabbers) * 14);
+  ajax_table_top(&ta, hc, tq,
+		 (const char *[]){"Grabber", "Status", NULL},
+		 (int[]){4,2});
 
   LIST_FOREACH(xg, &xmltv_grabbers, xg_link) {
 
-    snprintf(buf, sizeof(buf), 
+    ajax_table_row_start(&ta, xg->xg_identifier);
+    ajax_table_cell(&ta, NULL,
 	     "<a href=\"javascript:void(0);\" "
 	     "onClick=\"new Ajax.Updater('grabberpane', "
 	     "'/ajax/xmltvgrabber/%s', {method: 'get', evalScripts: true})\""
 	     ">%s</a>", xg->xg_identifier, xg->xg_title);
 
-    cells[0] = buf;
-    cells[1] = xmltv_grabber_status(xg);
-    cells[2] = NULL;
-
-    ajax_table_row(tq, cells, csize, &o,
-		   (const char *[]){NULL, "status"},
-		   xg->xg_identifier);
- 
+    ajax_table_cell(&ta, "status", xmltv_grabber_status(xg));
   }
-  tcp_qprintf(tq, "</div>");
+  ajax_table_bottom(&ta);
 
   ajax_box_end(tq, AJAX_BOX_SIDEBOX);
 

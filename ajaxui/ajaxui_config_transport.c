@@ -42,14 +42,10 @@ int
 ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 			  struct th_transport_list *tlist, int numtransports)
 {
-  char buf[1000];
   th_transport_t *t;
-  const char *v;
-  int o = 1;
   th_stream_t *st;
   const char *extra;
-  int displines = 21;
-  int csize[10];
+  ajax_table_t ta;
 
   tcp_qprintf(tq, "<script type=\"text/javascript\">\r\n"
 	      "//<![CDATA[\r\n");
@@ -121,114 +117,67 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 
   tcp_qprintf(tq, "<form id=\"transports\">");
 
-  ajax_table_header(hc, tq,
-		    (const char *[])
-		    {"", "ServiceID", "Crypto", "Type", "Source service",
-		       "", "Target channel", "", NULL},
-		    (int[]){3,5,4,4,12,3,12,1},
-		    numtransports > displines,
-		    csize);
-  tcp_qprintf(tq, "<hr>");
-
-  tcp_qprintf(tq, "<div id=\"xyzxyz\" "
-	      "style=\"height: %dpx; overflow: auto\" class=\"normallist\">",
-	      MIN(numtransports, displines) * 14);
+  ajax_table_top(&ta, hc, tq,
+		 (const char *[]){"", "ServiceID", "Crypto",
+				    "Type", "Source service",
+				    "", "Target channel", "", NULL},
+		 (int[]){3,5,4,4,12,3,12,1});
 
   LIST_FOREACH(t, tlist, tht_tmp_link) {
-    tcp_qprintf(tq, "<div%s>", o ? " style=\"background: #fff\"" : "");
-    o = !o;
+    ajax_table_row_start(&ta, t->tht_identifier);
+    ajax_table_cell_detail_toggler(&ta);
 
-    tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
+    ajax_table_cell(&ta, NULL, "%d", t->tht_dvb_service_id);
+    ajax_table_cell(&ta, NULL, "%s", t->tht_scrambled ? "Yes" : "No");
+    ajax_table_cell(&ta, NULL, "%s", transport_servicetype_txt(t));
+    ajax_table_cell(&ta, NULL, "%s", t->tht_servicename ?: "");
 
-    tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">"
-		"<a id=\"toggle_svcinfo%s\" href=\"javascript:void(0)\" "
-		"onClick=\"showhide('svcinfo%s')\" >"
-		"More</a></div>",
-		csize[0], t->tht_identifier, t->tht_identifier);
-
-    tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%d</div>",
-		csize[1], t->tht_dvb_service_id);
-
-    tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%s</div>",
-		csize[2], t->tht_scrambled ? "CSA" : "Free");
-
-    tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%s</div>",
-		csize[3], transport_servicetype_txt(t));
-
-    tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%s</div>",
-		csize[4], t->tht_servicename ?: "");
-
-    tcp_qprintf(tq, 
-		"<div style=\"float: left; width: %d%%; text-align: center\">"
-		"<a href=\"javascript:void(0)\" "
-		"onClick=\"new "
-		"Ajax.Request('/ajax/transport_op/%s', "
-		"{parameters: {action: 'toggle'}})\">"
-		"<img id=\"map%s\" src=\"/gfx/%smapped.png\"></a></div>",
-		csize[5],
-		t->tht_identifier, t->tht_identifier,
-		t->tht_channel ? "" : "un");
-
-    tcp_qprintf(tq, "<div id=\"chname%s\" style=\"float: left; width: %d%%\">",
-		t->tht_identifier, csize[6]);
+    ajax_table_cell(&ta, NULL, 
+		    "<a href=\"javascript:void(0)\" "
+		    "onClick=\"new Ajax.Request('/ajax/transport_op/%s', "
+		    "{parameters: {action: 'toggle'}})\">"
+		    "<img id=\"map_%s\" src=\"/gfx/%smapped.png\"></a>",
+		    t->tht_identifier, t->tht_identifier,
+		    t->tht_channel ? "" : "un");
 
     if(t->tht_channel == NULL) {
       /* Unmapped */
-
-      v = t->tht_channelname;
-
-      snprintf(buf, sizeof(buf), 
-	       "tentative_chname('chname%s', "
-	       "'/ajax/transport_rename_channel/%s', '%s')",
-	       t->tht_identifier, t->tht_identifier, v);
-
-      ajax_a_jsfunc(tq, v, buf, "");
+      ajax_table_cell(&ta, "chname", 
+		      "<a href=\"javascript:void(0)\" "
+		      "onClick=\"tentative_chname('chname%s', "
+		      "'/ajax/transport_rename_channel/%s', '%s')\">"
+		      "%s</a>",
+		      t->tht_identifier, t->tht_identifier,
+		      t->tht_channelname, t->tht_channelname);
     } else {
-      /* Mapped */
-      tcp_qprintf(tq, "%s", t->tht_channel->ch_name);
+      ajax_table_cell(&ta, "chname", "%s", t->tht_channel->ch_name);
     }
-    tcp_qprintf(tq, "</div>");
 
+    ajax_table_cell_checkbox(&ta);
 
+    ajax_table_details_start(&ta);
 
-    tcp_qprintf(tq, "<div style=\"float: left; width: %d%\">"
-		"<input id=\"sel_%s\" type=\"checkbox\" class=\"nicebox\">"
-		"</div>", csize[7], t->tht_identifier);
-    
-    tcp_qprintf(tq, "</div>");
+    ajax_table_subrow_start(&ta);
 
-    /* Extra info */
-    tcp_qprintf(tq, "<div id=\"svcinfo%s\" style=\"display: none\">",
-		t->tht_identifier);
-
-    tcp_qprintf(tq, "<p>");
-      
-    tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
-
-    tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">"
-		"&nbsp;</div>", csize[0]);
-    tcp_qprintf(tq, "<div class=\"pidheader\" style=\"width: %d%%\">"
-		"PID</div>", csize[1]);
-
-    tcp_qprintf(tq, "<div class=\"pidheader\" style=\"width: %d%%\">"
-		"Payload</div>", csize[2] + csize[3]);
-
-    tcp_qprintf(tq, "<div class=\"pidheader\" style=\"width: %d%%\">Details"
-		"</div>",
-		csize[4] + csize[5] + csize[6] + csize[7]);
-    tcp_qprintf(tq, "</div>");
-
+    ajax_table_cell(&ta, NULL, NULL);
+    ajax_table_cell(&ta, NULL, "PID");
+    ajax_table_cell(&ta, NULL, NULL);
+    ajax_table_cell(&ta, NULL, NULL);
+    ajax_table_cell(&ta, NULL, "Payload");
+    ajax_table_cell(&ta, NULL, NULL);
+    ajax_table_cell(&ta, NULL, "Details");
+    ajax_table_subrow_end(&ta);
 
     LIST_FOREACH(st, &t->tht_streams, st_link) {
-      tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
-      tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">&nbsp;</div>",
-		  csize[0]);
-      tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%d</div>",
-		  csize[1], st->st_pid);
-      tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%s</div>",
-		  csize[2] + csize[3],
-		  htstvstreamtype2txt(st->st_type));
 
+      ajax_table_subrow_start(&ta);
+      
+      ajax_table_cell(&ta, NULL, NULL);
+      ajax_table_cell(&ta, NULL, "%d", st->st_pid);
+      ajax_table_cell(&ta, NULL, NULL);
+      ajax_table_cell(&ta, NULL, NULL);
+      ajax_table_cell(&ta, NULL, "%s", htstvstreamtype2txt(st->st_type));
+  
       switch(st->st_type) {
       case HTSTV_MPEG2AUDIO:
       case HTSTV_AC3:
@@ -242,19 +191,16 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 	break;
       }
 
-      if(extra != NULL)
-	tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%s</div>",
-		    csize[4] + csize[5] + csize[6] + csize[7],
-		    extra);
-      
-      tcp_qprintf(tq, "</div>");
+      ajax_table_cell(&ta, NULL, NULL);
+      ajax_table_cell(&ta, NULL, extra);
+      ajax_table_subrow_end(&ta);
     }
-    
-    tcp_qprintf(tq, "</p></div>");
-    tcp_qprintf(tq, "</div>\r\n");
-    
+    ajax_table_details_end(&ta);
   }
-  tcp_qprintf(tq, "</div><hr>\r\n");
+
+  ajax_table_bottom(&ta);
+
+  tcp_qprintf(tq, "<hr>\r\n");
 
   tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
 
@@ -304,7 +250,7 @@ ajax_transport_rename_channel(http_connection_t *hc, http_reply_t *hr,
   v = newname;
 
   snprintf(buf, sizeof(buf), 
-	   "tentative_chname('chname%s', "
+	   "tentative_chname('chname_%s', "
 	   "'/ajax/transport_rename_channel/%s', '%s')",
 	   t->tht_identifier, t->tht_identifier, v);
   
@@ -327,8 +273,8 @@ dvb_map_channel(th_transport_t *t, tcp_queue_t *tq)
 	 t->tht_servicename, t->tht_channel->ch_name);
 
   tcp_qprintf(tq, 
-	      "$('chname%s').innerHTML='%s';\n\r"
-	      "$('map%s').src='/gfx/mapped.png';\n\r",
+	      "$('chname_%s').innerHTML='%s';\n\r"
+	      "$('map_%s').src='/gfx/mapped.png';\n\r",
 	      t->tht_identifier, t->tht_channel->ch_name,
 	      t->tht_identifier);
 }
@@ -345,12 +291,12 @@ dvb_unmap_channel(th_transport_t *t, tcp_queue_t *tq)
   printf("Unmapped transport %s\n", t->tht_servicename);
 
   tcp_qprintf(tq, 
-	      "$('chname%s').innerHTML='"
+	      "$('chname_%s').innerHTML='"
 	      "<a href=\"javascript:void(0)\" "
-	      "onClick=\"javascript:tentative_chname(\\'chname%s\\', "
+	      "onClick=\"javascript:tentative_chname(\\'chname_%s\\', "
 	      "\\'/ajax/transport_rename_channel/%s\\', \\'%s\\')\">%s</a>"
 	      "';\n\r"
-	      "$('map%s').src='/gfx/unmapped.png';\n\r",
+	      "$('map_%s').src='/gfx/unmapped.png';\n\r",
 	      t->tht_identifier, t->tht_identifier, t->tht_identifier,
 	      t->tht_channelname, t->tht_channelname, t->tht_identifier);
 }

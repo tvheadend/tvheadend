@@ -540,20 +540,14 @@ static int
 ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
 		    const char *remain, void *opaque)
 {
+  ajax_table_t ta;
   th_dvb_mux_instance_t *tdmi;
   tcp_queue_t *tq = &hr->hr_tq;
   th_dvb_adapter_t *tda;
-  char buf[50], buf2[500], buf3[20];
-  const char *txt;
+  char buf[50];
   int fetype, n, m;
   th_transport_t *t;
-  int o = 1, v;
-  int csize[10];
   int nmuxes = 0;
-
-  int displines = 21;
-
-  const char *cells[10];
 
   if(remain == NULL || (tda = dvb_adapter_find_by_identifier(remain)) == NULL)
     return HTTP_STATUS_NOT_FOUND;
@@ -565,71 +559,45 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
   LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
     nmuxes++;
   
-  ajax_table_header(hc, tq,
-		    (const char *[])
-		    {"Freq", "Status", "State", "Name", "Services", NULL},
-		    (int[]){4,3,2,4,2},
-		    nmuxes > displines,
-		    csize);
-
-  tcp_qprintf(tq, "<hr>");
-
-  v = displines;
-  if(nmuxes < displines)
-    v = nmuxes;
-
-  tcp_qprintf(tq, "<div id=\"dvbmuxinnerlist%s\" "
-	      "style=\"height: %dpx; overflow: auto\" class=\"normallist\">",
-	      tda->tda_identifier, v * 14);
-
   if(nmuxes == 0) {
     tcp_qprintf(tq, "<div style=\"text-align: center\">"
 		"No muxes configured</div>");
-  } else LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+  } else {
 
-    tdmi_displayname(tdmi, buf, sizeof(buf));
+    ajax_table_top(&ta, hc, tq,
+		   (const char *[])
+    {"Freq", "Status", "State", "Name", "Services", NULL},
+		   (int[])
+    {4,3,2,4,2});
 
-    snprintf(buf2, sizeof(buf2), 
-	     "<a href=\"javascript:void(0);\" "
-	     "onClick=\"new Ajax.Updater('servicepane', "
-	     "'/ajax/dvbmuxeditor/%s', {method: 'get', evalScripts: true})\""
-	     ">%s</a>", tdmi->tdmi_identifier, buf);
+    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
 
+      tdmi_displayname(tdmi, buf, sizeof(buf));
 
-    cells[0] = buf2;
-    cells[1] = dvb_mux_status(tdmi);
+      ajax_table_row_start(&ta, tdmi->tdmi_identifier);
 
-    switch(tdmi->tdmi_state) {
-    case TDMI_IDLE:      txt = "Idle";      break;
-    case TDMI_IDLESCAN:  txt = "Scanning";  break;
-    case TDMI_RUNNING:   txt = "Running";   break;
-    default:             txt = "???";       break;
+      ajax_table_cell(&ta, NULL,
+		      "<a href=\"javascript:void(0);\" "
+		      "onClick=\"new Ajax.Updater('servicepane', "
+		      "'/ajax/dvbmuxeditor/%s', "
+		      "{method: 'get', evalScripts: true})\""
+		      ">%s</a>",
+		      tdmi->tdmi_identifier, buf);
+
+      ajax_table_cell(&ta, "status", "%s", dvb_mux_status(tdmi));
+      ajax_table_cell(&ta, "state", "%s", dvb_mux_state(tdmi));
+      ajax_table_cell(&ta, "name", "%s", tdmi->tdmi_network ?: "<unknown>");
+
+      n = m = 0;
+      LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
+	n++;
+	if(transport_is_available(t))
+	  m++;
+      }
+      ajax_table_cell(&ta, "nsvc", "%d / %d", m, n);
     }
-
-    cells[2] = txt;
-
-    txt = tdmi->tdmi_network;
-    if(txt == NULL)
-      txt = "Unknown";
-
-    cells[3] = txt;
-
-    n = m = 0;
-    LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
-      n++;
-      if(transport_is_available(t))
-	m++;
-     }
-    snprintf(buf3, sizeof(buf3), "%d / %d", m, n);
-    cells[4] = buf3;
-    cells[5] = NULL;
-
-    ajax_table_row(tq, cells, csize, &o,
-		   (const char *[]){NULL, "status", "state", "name", "nsvc"},
-		   tdmi->tdmi_identifier);
-
+    ajax_table_bottom(&ta);
   }
-  tcp_qprintf(tq, "</div>");
   http_output_html(hc, hr);
   return 0;
 }

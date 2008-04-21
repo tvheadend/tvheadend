@@ -54,6 +54,13 @@ img { border: 0; }
  * Misc classes
  */
 
+.normaltable {
+   height: 300px;
+   overflow: auto;
+   overflow-y: scroll;
+   overflow-x: hidden;
+ }
+
 .iconbackdrop {
 	background: #fff;
 	height: 64px;

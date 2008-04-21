@@ -25,10 +25,40 @@ typedef enum {
   AJAX_BOX_BORDER,
 } ajax_box_t;
 
+
 void ajax_box_begin(tcp_queue_t *tq, ajax_box_t type,
 		    const char *id, const char *style, const char *title);
 
 void ajax_box_end(tcp_queue_t *tq, ajax_box_t type);
+
+
+
+typedef struct {
+  int columns;
+  int curcol;
+  
+  int inrow;
+  const char *rowid;
+
+  int csize[20];
+  tcp_queue_t *tq;
+  int rowcol;
+} ajax_table_t;
+
+void ajax_table_top(ajax_table_t *t, http_connection_t *hc, tcp_queue_t *tq,
+		    const char *names[], int weights[]);
+void ajax_table_row_start(ajax_table_t *t, const char *id);
+void ajax_table_cell(ajax_table_t *t, const char *id, const char *fmt, ...);
+void ajax_table_bottom(ajax_table_t *t);
+void ajax_table_cell_detail_toggler(ajax_table_t *t);
+void ajax_table_cell_checkbox(ajax_table_t *t);
+void ajax_table_details_start(ajax_table_t *t);
+void ajax_table_details_end(ajax_table_t *t);
+void ajax_table_subrow_start(ajax_table_t *t);
+void ajax_table_subrow_end(ajax_table_t *t);
+
+
+
 
 void ajax_js(tcp_queue_t *tq, const char *fmt, ...);
 
@@ -70,14 +100,6 @@ void ajax_config_transport_init(void);
 int ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 			      struct th_transport_list *tlist,
 			      int ntransports);
-
-
-void ajax_table_header(http_connection_t *hc, tcp_queue_t *tq,
-		       const char *names[], int weights[],
-		       int scrollbar, int columnsizes[]);
-
-void ajax_table_row(tcp_queue_t *tq, const char *cells[], int columnsizes[],
-		    int *bgptr, const char *idprefix[], const char *idpostfix);
 
 const char *ajaxui_escape_apostrophe(const char *content);
 

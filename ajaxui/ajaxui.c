@@ -75,67 +75,160 @@ ajaxui_escape_apostrophe(const char *content)
 }
 
 /**
- * AJAX table header
+ * AJAX table
  */
 void
-ajax_table_header(http_connection_t *hc, tcp_queue_t *tq,
-		  const char *names[], int weights[],
-		  int scrollbar, int columnsizes[])
+ajax_table_top(ajax_table_t *t, http_connection_t *hc, tcp_queue_t *tq,
+	       const char *names[], int weights[])
 {
   int n = 0, i, tw = 0;
   while(names[n]) {
     tw += weights[n];
     n++;
   }
+  assert(n <= 20);
+
+  t->columns = n;
+
+  memset(t, 0, sizeof(ajax_table_t));
+
+  t->tq = tq;
 
   for(i = 0; i < n; i++)
-    columnsizes[i] = 100 * weights[i] / tw;
+    t->csize[i] = 100 * weights[i] / tw;
 
-  if(scrollbar)
-    tcp_qprintf(tq, "<div style=\"padding-right: 20px\">");
+  tcp_qprintf(tq, "<div style=\"padding-right: 20px\">");
 
-  tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
-
+  tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%%\">");
+  
   for(i = 0; i < n; i++)
     tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%s</div>",
-		columnsizes[i], *names[i] ? names[i]: "&nbsp;");
-
-  tcp_qprintf(tq, "</div>");
-  if(scrollbar)
-    tcp_qprintf(tq, "</div>");
+		t->csize[i], *names[i] ? names[i]: "&nbsp;");
+  tcp_qprintf(tq, "</div></div><hr><div class=\"normaltable\">\r\n");
 }
-		  
-		  
+
 /**
- * AJAX table row
+ * AJAX table new row
  */
 void
-ajax_table_row(tcp_queue_t *tq, const char *cells[], int columnsizes[],
-	       int *bgptr, const char *idprefix[], const char *idpostfix)
+ajax_table_row_start(ajax_table_t *t, const char *id)
 {
-  int i = 0;
+  t->rowid = id;
+  t->rowcol = !t->rowcol;
+  tcp_qprintf(t->tq, "%s<div style=\"%soverflow: auto; width: 100%\">",
+	      t->inrow ? "</div>\r\n" : "",
+	      t->rowcol ? "background: #fff; " : "");
+  t->inrow = 1;
+  t->curcol = 0;
+}
 
-  tcp_qprintf(tq, "<div style=\"%soverflow: auto; width: 100%\">",
-	      *bgptr ? "background: #fff; " : "");
-
-  *bgptr = !*bgptr;
-
-  while(cells[i]) {
-    tcp_qprintf(tq, 
-		"<div %s%s%s%s%sstyle=\"float: left; width: %d%%\">%s</div>",
-		idprefix && idprefix[i]              ? "id=\""     : "",
-		idprefix && idprefix[i]              ? idprefix[i] : "",
-		idprefix && idprefix[i] && idpostfix ? "_"         : "",
-		idprefix && idprefix[i] && idpostfix ? idpostfix   : "",
-		idprefix && idprefix[i]              ? "\" "       : "",
-		columnsizes[i], cells[i]);
-    i++;
-  }
-  tcp_qprintf(tq, "</div>\r\n");
+/**
+ * AJAX table new row
+ */
+void
+ajax_table_subrow_start(ajax_table_t *t)
+{
+  tcp_qprintf(t->tq, "<div style=\"overflow: auto; width: 100%\">");
+  t->curcol = 0;
 }
 
 
+/**
+ * AJAX table new row
+ */
+void
+ajax_table_subrow_end(ajax_table_t *t)
+{
+  tcp_qprintf(t->tq, "</div>");
+  t->curcol = 0;
+}
 
+
+/**
+ * AJAX table new row
+ */
+void
+ajax_table_details_start(ajax_table_t *t)
+{
+  assert(t->inrow == 1);
+  t->inrow = 0;
+  /* Extra info */
+  tcp_qprintf(t->tq, "</div><div id=\"details_%s\" style=\"%sdisplay: none\">",
+	      t->rowid, t->rowcol ? "background: #fff; " : "");
+}
+
+/**
+ * AJAX table new row
+ */
+void
+ajax_table_details_end(ajax_table_t *t)
+{
+  /* Extra info */
+  tcp_qprintf(t->tq, "</div>");
+}
+
+
+/**
+ * AJAX table cell
+ */
+void
+ajax_table_cell(ajax_table_t *t, const char *id, const char *fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt);
+
+  if(t->rowid && id) {
+    tcp_qprintf(t->tq, "<div id=\"%s_%s\"", id, t->rowid);
+  } else {
+    tcp_qprintf(t->tq, "<div");
+  }
+  tcp_qprintf(t->tq,
+	      " style=\"float: left; width: %d%%\">", t->csize[t->curcol]);
+  t->curcol++;
+  if(t->curcol == 20)
+    abort();
+
+  if(fmt == NULL)
+    tcp_qprintf(t->tq, "&nbsp;");
+  else
+    tcp_qvprintf(t->tq, fmt, ap);
+
+  va_end(ap);
+  tcp_qprintf(t->tq, "</div>");
+}
+
+/**
+ * AJAX table cell for toggling display of more details
+ */
+void
+ajax_table_cell_detail_toggler(ajax_table_t *t)
+{
+  ajax_table_cell(t, NULL,
+		  "<a id=\"toggle_details_%s\" href=\"javascript:void(0)\" "
+		  "onClick=\"showhide('details_%s')\" >"
+		  "More</a>",
+		  t->rowid, t->rowid);
+}
+
+/**
+ * AJAX table cell for selecting row
+ */
+void
+ajax_table_cell_checkbox(ajax_table_t *t)
+{
+  ajax_table_cell(t, NULL,
+		  "<input id=\"sel_%s\" type=\"checkbox\" class=\"nicebox\">",
+		  t->rowid);
+}
+
+/**
+ * AJAX table footer
+ */
+void
+ajax_table_bottom(ajax_table_t *t)
+{
+  tcp_qprintf(t->tq, "%s</div>", t->inrow ? "</div>" : "");
+}
 
 /**
  * AJAX box start
