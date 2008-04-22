@@ -54,6 +54,21 @@ img { border: 0; }
  * Misc classes
  */
 
+
+.cell_100_center {
+ margin-top: 2px;
+ margin-bottom: 2px;
+ width: 100%;
+ text-align: center;
+}
+
+.cell_50 {
+ margin-top: 2px;
+ margin-bottom: 2px;
+ float: left;
+ width: 50%;
+}
+
 .normaltable {
    height: 300px;
    overflow: auto;

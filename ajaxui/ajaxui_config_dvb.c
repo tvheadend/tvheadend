@@ -129,28 +129,6 @@ ajax_config_dvb_tab(http_connection_t *hc, http_reply_t *hr)
 }
 
 /**
- * Generate the 'add new...' mux link if the adapter has backing hardware
- *
- * if result is set we add a fade out of a result from a previous op
- */
-static void
-dvb_make_add_link(tcp_queue_t *tq, th_dvb_adapter_t *tda, const char *result)
-{
-  if(tda->tda_fe_info != NULL) {
-    tcp_qprintf(tq,
-		"<p><a href=\"javascript:void(0);\" "
-		"onClick=\"new Ajax.Updater('addmux', "
-		"'/ajax/dvbadapteraddmux/%s', {method: 'get'})\""
-		">Add new...</a></p>", tda->tda_identifier);
-  }
-
-  if(result) {
-    tcp_qprintf(tq, "<div id=\"result\">%s</div>", result);
-    ajax_js(tq, "Effect.Fade('result')");
-  }
-}
-
-/**
  *
  */
 const char *
@@ -259,17 +237,12 @@ ajax_adaptereditor(http_connection_t *hc, http_reply_t *hr,
 	  "'/ajax/dvbadaptermuxlist/%s', {method: 'get', evalScripts: true})",
 	  tda->tda_identifier, tda->tda_identifier);
 
-  tcp_qprintf(tq, "<hr><div id=\"addmux\">");
-  dvb_make_add_link(tq, tda, NULL);
-  tcp_qprintf(tq, "</div>");
-
   ajax_box_end(tq, AJAX_BOX_SIDEBOX);
   tcp_qprintf(tq, "</div>");
 
   /* Div for displaying services */
 
-  tcp_qprintf(tq, "<div id=\"servicepane\" "
-	      "style=\"float: left; width:55%\">");
+  tcp_qprintf(tq, "<div id=\"servicepane\" style=\"float: left; width:55%\">");
   tcp_qprintf(tq, "</div>");
 
   http_output_html(hc, hr);
@@ -289,6 +262,8 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
   int caps;
   int fetype;
   char params[400];
+  int n, type;
+  const char *networkname;
 
   if(remain == NULL || (tda = dvb_adapter_find_by_identifier(remain)) == NULL)
     return HTTP_STATUS_NOT_FOUND;
@@ -299,30 +274,39 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
   caps   = tda->tda_fe_info->caps;
   fetype = tda->tda_fe_info->type;
 
-  tcp_qprintf(tq, "<div style=\"text-align: center; font-weight: bold\">"
-	      "Add new %s mux</div>",
-	      dvb_adaptertype_to_str(tda->tda_fe_info->type));
+  snprintf(params, sizeof(params), "Add new %s mux on \"%s\"", 
+	   dvb_adaptertype_to_str(tda->tda_fe_info->type),
+	   tda->tda_displayname);
+
+  ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, params);
+
+  /* Manual configuration */
 
   tcp_qprintf(tq,
-	      "<div class=\"infoprefixwidefat\">Frequency (%s):</div>"
+	      "<div style=\"text-align: center; font-weight: bold\">"
+	      "Manual configuartion</div>");
+
+  tcp_qprintf(tq,
+	      "<div class=\"cell_50\">"
+	      "<div class=\"infoprefixwidewidefat\">Frequency (%s):</div>"
 	      "<div>"
 	      "<input class=\"textinput\" type=\"text\" id=\"freq\">"
-	      "</div>",
+	      "</div></div>",
 	      fetype == FE_QPSK ? "kHz" : "Hz");
 
   snprintf(params, sizeof(params), 
 	   "freq: $F('freq')");
-  
 
   /* Symbolrate */
 
   if(fetype == FE_QAM || fetype == FE_QPSK) {
  
     tcp_qprintf(tq,
-		"<div class=\"infoprefixwidefat\">Symbolrate:</div>"
+		"<div class=\"cell_50\">"
+		"<div class=\"infoprefixwidewidefat\">Symbolrate:</div>"
 		"<div>"
 		"<input class=\"textinput\" type=\"text\" id=\"symrate\">"
-		"</div>");
+		"</div></div>");
 
     snprintf(params + strlen(params), sizeof(params) - strlen(params), 
 	     ", symrate: $F('symrate')");
@@ -332,14 +316,15 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
 
   if(fetype == FE_OFDM) {
     tcp_qprintf(tq,
-		"<div class=\"infoprefixwidefat\">Bandwidth:</div>"
+		"<div class=\"cell_50\">"
+		"<div class=\"infoprefixwidewidefat\">Bandwidth:</div>"
 		"<div><select id=\"bw\" class=\"textinput\">");
 
     add_option(tq, caps & FE_CAN_BANDWIDTH_AUTO, "AUTO");
     add_option(tq, 1                           , "8MHz");
     add_option(tq, 1                           , "7MHz");
     add_option(tq, 1                           , "6MHz");
-    tcp_qprintf(tq, "</select></div>");
+    tcp_qprintf(tq, "</select></div></div>");
 
     snprintf(params + strlen(params), sizeof(params) - strlen(params), 
 	     ", bw: $F('bw')");
@@ -348,9 +333,11 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
 
   /* Constellation */
 
+
   if(fetype == FE_QAM || fetype == FE_OFDM) {
     tcp_qprintf(tq,
-		"<div class=\"infoprefixwidefat\">Constellation:</div>"
+		"<div class=\"cell_50\">"
+		"<div class=\"infoprefixwidewidefat\">Constellation:</div>"
 		"<div><select id=\"const\" class=\"textinput\">");
 
     add_option(tq, caps & FE_CAN_QAM_AUTO,  "AUTO");
@@ -361,7 +348,7 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
     add_option(tq, caps & FE_CAN_QAM_128,   "QAM128");
     add_option(tq, caps & FE_CAN_QAM_256,   "QAM256");
 
-    tcp_qprintf(tq, "</select></div>");
+    tcp_qprintf(tq, "</select></div></div>");
 
     snprintf(params + strlen(params), sizeof(params) - strlen(params), 
 	     ", const: $F('const')");
@@ -372,7 +359,8 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
 
   if(fetype == FE_QAM || fetype == FE_QPSK) {
     tcp_qprintf(tq,
-		"<div class=\"infoprefixwidefat\">FEC:</div>"
+		"<div class=\"cell_50\">"
+		"<div class=\"infoprefixwidewidefat\">FEC:</div>"
 		"<div><select id=\"fec\" class=\"textinput\">");
 
     add_option(tq, caps & FE_CAN_FEC_AUTO,  "AUTO");
@@ -384,7 +372,7 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
     add_option(tq, caps & FE_CAN_FEC_6_7,   "6/7");
     add_option(tq, caps & FE_CAN_FEC_7_8,   "7/8");
     add_option(tq, caps & FE_CAN_FEC_8_9,   "8/9");
-    tcp_qprintf(tq, "</select></div>");
+    tcp_qprintf(tq, "</select></div></div>");
 
     snprintf(params + strlen(params), sizeof(params) - strlen(params), 
 	     ", fec: $F('fec')");
@@ -392,12 +380,13 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
 
   if(fetype == FE_QPSK) {
     tcp_qprintf(tq,
-		"<div class=\"infoprefixwidefat\">Polarisation:</div>"
+		"<div class=\"cell_50\">"
+		"<div class=\"infoprefixwidewidefat\">Polarisation:</div>"
 		"<div><select id=\"pol\" class=\"textinput\">");
 
     add_option(tq, 1,  "Vertical");
     add_option(tq, 1,  "Horizontal");
-    tcp_qprintf(tq, "</select></div>");
+    tcp_qprintf(tq, "</select></div></div>");
 
     snprintf(params + strlen(params), sizeof(params) - strlen(params), 
 	     ", pol: $F('pol')");
@@ -408,19 +397,21 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
 
   if(fetype == FE_OFDM) {
     tcp_qprintf(tq,
-		"<div class=\"infoprefixwidefat\">Transmission mode:</div>"
+		"<div class=\"cell_50\">"
+		"<div class=\"infoprefixwidewidefat\">Transmission mode:</div>"
 		"<div><select id=\"tmode\" class=\"textinput\">");
     
     add_option(tq, caps & FE_CAN_TRANSMISSION_MODE_AUTO, "AUTO");
     add_option(tq, 1                                   , "2k");
     add_option(tq, 1                                   , "8k");
-    tcp_qprintf(tq, "</select></div>");
+    tcp_qprintf(tq, "</select></div></div>");
 
     snprintf(params + strlen(params), sizeof(params) - strlen(params), 
 	     ", tmode: $F('tmode')");
 
     tcp_qprintf(tq,
-		"<div class=\"infoprefixwidefat\">Guard interval:</div>"
+		"<div class=\"cell_50\">"
+		"<div class=\"infoprefixwidewidefat\">Guard interval:</div>"
 		"<div><select id=\"guard\" class=\"textinput\">");
     
     add_option(tq, caps & FE_CAN_GUARD_INTERVAL_AUTO, "AUTO");
@@ -428,7 +419,7 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
     add_option(tq, 1                                , "1/16");
     add_option(tq, 1                                , "1/8");
     add_option(tq, 1                                , "1/4");
-    tcp_qprintf(tq, "</select></div>");
+    tcp_qprintf(tq, "</select></div></div>");
 
     snprintf(params + strlen(params), sizeof(params) - strlen(params), 
 	     ", guard: $F('guard')");
@@ -436,7 +427,8 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
 
 
     tcp_qprintf(tq,
-		"<div class=\"infoprefixwidefat\">Hierarchy:</div>"
+		"<div class=\"cell_50\">"
+		"<div class=\"infoprefixwidewidefat\">Hierarchy:</div>"
 		"<div><select id=\"hier\" class=\"textinput\">");
     
     add_option(tq, caps & FE_CAN_HIERARCHY_AUTO, "AUTO");
@@ -444,7 +436,7 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
     add_option(tq, 1                           , "2");
     add_option(tq, 1                           , "4");
     add_option(tq, 1                           , "NONE");
-    tcp_qprintf(tq, "</select></div>");
+    tcp_qprintf(tq, "</select></div></div>");
 
 
     snprintf(params + strlen(params), sizeof(params) - strlen(params), 
@@ -453,7 +445,8 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
 
 
     tcp_qprintf(tq,
-		"<div class=\"infoprefixwidefat\">FEC Hi:</div>"
+		"<div class=\"cell_50\">"
+		"<div class=\"infoprefixwidewidefat\">FEC Hi:</div>"
 		"<div><select id=\"fechi\" class=\"textinput\">");
     
     add_option(tq, caps & FE_CAN_FEC_AUTO,  "AUTO");
@@ -465,14 +458,15 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
     add_option(tq, caps & FE_CAN_FEC_6_7,   "6/7");
     add_option(tq, caps & FE_CAN_FEC_7_8,   "7/8");
     add_option(tq, caps & FE_CAN_FEC_8_9,   "8/9");
-    tcp_qprintf(tq, "</select></div>");
+    tcp_qprintf(tq, "</select></div></div>");
 
     snprintf(params + strlen(params), sizeof(params) - strlen(params), 
 	     ", fechi: $F('fechi')");
 
 
     tcp_qprintf(tq,
-		"<div class=\"infoprefixwidefat\">FEC Low:</div>"
+		"<div class=\"cell_50\">"
+		"<div class=\"infoprefixwidewidefat\">FEC Low:</div>"
 		"<div><select id=\"feclo\" class=\"textinput\">");
     
     add_option(tq, caps & FE_CAN_FEC_AUTO,  "AUTO");
@@ -484,34 +478,64 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
     add_option(tq, caps & FE_CAN_FEC_6_7,   "6/7");
     add_option(tq, caps & FE_CAN_FEC_7_8,   "7/8");
     add_option(tq, caps & FE_CAN_FEC_8_9,   "8/9");
-    tcp_qprintf(tq, "</select></div>");
+    tcp_qprintf(tq, "</select></div></div>");
 
     snprintf(params + strlen(params), sizeof(params) - strlen(params), 
 	     ", feclo: $F('feclo')");
   }
 
   tcp_qprintf(tq,
+	      "<br>"
 	      "<div style=\"text-align: center\">"
-	      "<input type=\"button\" value=\"Create\" "
-	      "onClick=\"new Ajax.Updater('addmux', "
-	      "'/ajax/dvbadaptercreatemux/%s', "
-	      "{evalScripts: true, parameters: {%s}})"
+	      "<input type=\"button\" value=\"Add manually configured mux\" "
+	      "onClick=\"new Ajax.Request('/ajax/dvbadaptercreatemux/%s', "
+	      "{parameters: {%s}})"
 	      "\">"
 	      "</div>", tda->tda_identifier, params);
 
-  http_output_html(hc, hr);
-  return 0;
-}
+  /*
+   * Preconfigured
+   */
 
-/**
- *
- */
-static int
-ajax_adaptercreatemux_fail(http_connection_t *hc, http_reply_t *hr,
-			   th_dvb_adapter_t *tda, const char *errmsg)
-{
-  tcp_queue_t *tq = &hr->hr_tq;
-  dvb_make_add_link(tq, tda, errmsg);
+  tcp_qprintf(tq,
+	      "<hr>"
+	      "<div style=\"text-align: center; font-weight: bold\">"
+	      "Add preconfigured network</div>");
+
+  tcp_qprintf(tq,
+	      "<div style=\"text-align: center\">"
+	      "<select id=\"network\" class=\"textinput\" "
+	      "onChange=\"new Ajax.Updater('networkinfo', "
+	      "'/ajax/dvbnetworkinfo/' + this.value)\""
+	      ">");
+
+  tcp_qprintf(tq, "<option>Select a network</option>");
+
+  n = 0;
+  while((type = dvb_mux_preconf_get(n, &networkname, NULL)) >= 0) {
+ 
+    if(type == fetype)
+      tcp_qprintf(tq, "<option value=%d>%s</option>", n, networkname);
+    n++;
+  }
+  tcp_qprintf(tq, "</select></div>");
+
+  tcp_qprintf(tq,
+	      "<div class=\"cell_100_center\" id=\"networkinfo\"></div>");
+
+  tcp_qprintf(tq,
+	      "<br>"
+	      "<div style=\"text-align: center\">"
+	      "<input type=\"button\" value=\"Add preconfigured network\" "
+	      "onClick=\"new Ajax.Updater('addnetwork', "
+	      "'/ajax/dvbadapteraddnetwork/%s', "
+	      "{evalScripts: true, parameters: "
+	      "{'network': $('network').value}})"
+	      "\">"
+	      "</div>", tda->tda_identifier, params);
+
+  ajax_box_end(tq, AJAX_BOX_SIDEBOX);
+
   http_output_html(hc, hr);
   return 0;
 }
@@ -546,18 +570,22 @@ ajax_adaptercreatemux(http_connection_t *hc, http_reply_t *hr,
 			 http_arg_get(&hc->hc_req_args, "pol"),
 			 http_arg_get(&hc->hc_req_args, "port"), 1);
 
-  if(v != NULL)
-    return ajax_adaptercreatemux_fail(hc, hr, tda, v);
 
   tq = &hr->hr_tq;
-  dvb_make_add_link(tq, tda, "Successfully created");
 
-  ajax_js(tq, 
-	  "new Ajax.Updater('dvbmuxlist_%s', "
-	  "'/ajax/dvbadaptermuxlist/%s', {method: 'get', evalScripts: true})",
-	  tda->tda_identifier, tda->tda_identifier);
+  if(v != NULL)
+    tcp_qprintf(tq, "alert('%s');\r\n", v);
 
-  http_output_html(hc, hr);
+  tcp_qprintf(tq, 
+	      "$('servicepane').innerHTML='';\r\n");
+
+  tcp_qprintf(tq, 
+	      "new Ajax.Updater('dvbmuxlist_%s', "
+	      "'/ajax/dvbadaptermuxlist/%s', "
+	      "{method: 'get', evalScripts: true});\r\n",
+	      tda->tda_identifier, tda->tda_identifier);
+
+  http_output(hc, hr, "text/javascript; charset=UTF8", NULL, 0);
   return 0;
 }
 
@@ -653,7 +681,15 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
 		   tda->tda_identifier);
     tcp_qprintf(tq, "</div></div>\r\n");
 
-
+    if(tda->tda_fe_info != NULL) {
+      tcp_qprintf(tq, "<hr><div style=\"overflow: auto; width: 100%\">");
+      tcp_qprintf(tq, "<div class=\"infoprefix\">&nbsp;</div><div>");
+      ajax_a_jsfuncf(tq, "Add new...",
+		     "new Ajax.Updater('servicepane', "
+		     "'/ajax/dvbadapteraddmux/%s', "
+		     "{method: 'get', evalScripts: true})\"");
+      tcp_qprintf(tq, "</div></div>\r\n");
+    }
   }
   http_output_html(hc, hr);
   return 0;
@@ -777,6 +813,65 @@ ajax_adapterrename(http_connection_t *hc, http_reply_t *hr,
 
 
 /**
+ * Rename adapter
+ */
+static int
+ajax_dvbnetworkinfo(http_connection_t *hc, http_reply_t *hr, 
+		    const char *remain, void *opaque)
+{
+  tcp_queue_t *tq = &hr->hr_tq;
+  const char *s;
+
+  if(remain == NULL)
+    return HTTP_STATUS_NOT_FOUND;
+
+  if(dvb_mux_preconf_get(atoi(remain), NULL, &s) >= 0)
+    tcp_qprintf(tq, "%s", s);
+
+  http_output_html(hc, hr);
+  return 0;
+}
+
+
+
+
+/**
+ * Rename adapter
+ */
+static int
+ajax_dvbadapteraddnetwork(http_connection_t *hc, http_reply_t *hr, 
+			  const char *remain, void *opaque)
+{
+  tcp_queue_t *tq = &hr->hr_tq;
+  const char *s;
+  th_dvb_adapter_t *tda;
+
+
+  if(remain == NULL || (tda = dvb_adapter_find_by_identifier(remain)) == NULL)
+    return HTTP_STATUS_NOT_FOUND;
+
+  if((s = http_arg_get(&hc->hc_req_args, "network")) == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+
+
+  dvb_mux_preconf_add(tda, atoi(s));
+
+  tcp_qprintf(tq, 
+	      "$('servicepane').innerHTML='';\r\n");
+
+  tcp_qprintf(tq, 
+	      "new Ajax.Updater('dvbmuxlist_%s', "
+	      "'/ajax/dvbadaptermuxlist/%s', "
+	      "{method: 'get', evalScripts: true});\r\n",
+	      tda->tda_identifier, tda->tda_identifier);
+
+
+  http_output(hc, hr, "text/javascript; charset=UTF8", NULL, 0);
+  return 0;
+}
+
+
+/**
  *
  */
 void
@@ -790,5 +885,7 @@ ajax_config_dvb_init(void)
   http_path_add("/ajax/dvbadapterdelmux",     NULL, ajax_adapterdelmux);
   http_path_add("/ajax/dvbadaptercreatemux",  NULL, ajax_adaptercreatemux);
   http_path_add("/ajax/dvbmuxeditor",         NULL, ajax_dvbmuxeditor);
+  http_path_add("/ajax/dvbnetworkinfo",       NULL, ajax_dvbnetworkinfo);
+  http_path_add("/ajax/dvbadapteraddnetwork", NULL, ajax_dvbadapteraddnetwork);
 
 }

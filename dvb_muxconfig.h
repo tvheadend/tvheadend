@@ -38,4 +38,9 @@ const char *dvb_mux_create_str(th_dvb_adapter_t *tda,
 			       const char *switchportstr,
 			       int save);
 
+int dvb_mux_preconf_get(unsigned int n, const char **namep, 
+			const char **commentp);
+
+int dvb_mux_preconf_add(th_dvb_adapter_t *tda, unsigned int n);
+
 #endif /* DVB_MUXCONFIG_H */

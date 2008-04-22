@@ -260,164 +260,74 @@ dvb_mux_create_str(th_dvb_adapter_t *tda,
 }
 
 
-#if 0
 
+#include "linuxtv_muxes.h"
 
-
-static void
-dvb_t_config(const char *l)
+int
+dvb_mux_preconf_get(unsigned int n, const char **namep, const char **commentp)
 {
-  unsigned long freq;
-  char bw[20], fec[20], fec2[20], qam[20], mode[20], guard[20], hier[20];
-  struct dvb_frontend_parameters f;
-  int r;
+  if(n >= sizeof(networks) / sizeof(networks[0]))
+    return -1;
 
-  r = sscanf(l, "%lu %10s %10s %10s %10s %10s %10s %10s",
-	     &freq, bw, fec, fec2, qam, mode, guard, hier);
+  if(namep != NULL)
+    *namep = networks[n].name;
 
-  if(r != 8)
-    return;
+  if(commentp != NULL)
+    *commentp = networks[n].comment;
 
-  memset(&f, 0, sizeof(f));
-  
-  f.inversion                    = INVERSION_AUTO;
-  f.frequency                    = freq;
-  f.u.ofdm.bandwidth             = str2val(bw,    bwtab);
-  f.u.ofdm.constellation         = str2val(qam,   qamtab);
-  f.u.ofdm.transmission_mode     = str2val(mode,  modetab);
-  f.u.ofdm.guard_interval        = str2val(guard, guardtab);
-  f.u.ofdm.hierarchy_information = str2val(hier,  hiertab);
-
-  r = str2val(fec, fectab);
-  f.u.ofdm.code_rate_HP = r == FEC_NONE ? FEC_AUTO : r;
-
-  r = str2val(fec2, fectab);
-  f.u.ofdm.code_rate_LP = r == FEC_NONE ? FEC_AUTO : r;
-
-  dvb_add_mux(&f, FE_OFDM, 0);
+  return networks[n].type;
 }
 
-
-
-static void
-dvb_c_config(const char *l)
+int
+dvb_mux_preconf_add(th_dvb_adapter_t *tda, unsigned int n)
 {
-  unsigned long freq, symrate;
-  char fec[20], qam[20];
   struct dvb_frontend_parameters f;
-  int r;
+  struct mux *m;
+  int i;
+  int polarisation, switchport;
 
-  r = sscanf(l, "%lu %lu %s %s",
-	     &freq, &symrate, fec, qam);
+  if(n >= sizeof(networks) / sizeof(networks[0]))
+    return -1;
 
-  if(r != 4)
-    return;
+  m = networks[n].muxes;
 
-  memset(&f, 0, sizeof(f));
+  for(i = 0; i < networks[n].nmuxes; i++) {
+
+    polarisation = 0;
+    switchport = 0;
+
+    memset(&f, 0, sizeof(f));
   
-  f.inversion                    = INVERSION_AUTO;
-  f.frequency                    = freq;
-  f.u.qam.symbol_rate            = symrate;
-  f.u.qam.fec_inner              = str2val(fec, fectab);
-  f.u.qam.modulation             = str2val(qam, qamtab);
-
-  dvb_add_mux(&f, FE_QAM, 0);
-}
-
-
-
-static void
-dvb_s_config(const char *l)
-{
-  unsigned long freq, symrate;
-  char fec[20], polarisation;
-  struct dvb_frontend_parameters f;
-  int r;
-
-  r = sscanf(l, "%lu %c %lu %s",
-	     &freq, &polarisation, &symrate, fec);
-
-  if(r != 4)
-    return;
-
-  memset(&f, 0, sizeof(f));
-  
-  f.inversion                    = INVERSION_AUTO;
-  f.frequency                    = freq;
-  f.u.qpsk.symbol_rate           = symrate;
-  f.u.qpsk.fec_inner             = str2val(fec, fectab);
-
-
-  switch(toupper(polarisation)) {
-  case 'V':
-    polarisation = POLARISATION_VERTICAL;
-    break;
-  case 'H':
-    polarisation = POLARISATION_HORIZONTAL;
-    break;
-  default:
-    return;
-  }
-
-  dvb_add_mux(&f, FE_QPSK, polarisation);
-}
-
-
-
-
-static void
-dvb_muxfile_add(const char *fname)
-{
-  FILE *fp;
-  char line[200];
-
-  fp = fopen(fname, "r");
-  if(fp == NULL) {
-    syslog(LOG_ERR, "dvb: Unable to open file %s -- %s", 
-	   fname, strerror(errno));
-    return;
-  }
-
-  while(!feof(fp)) {
-    memset(line, 0, sizeof(line));
-
-    if(fgets(line, sizeof(line) - 1, fp) == NULL)
+    f.inversion = INVERSION_AUTO;
+    f.frequency = m->freq;
+    
+    switch(tda->tda_type) {
+    case FE_OFDM:
+      f.u.ofdm.bandwidth             = m->bw;
+      f.u.ofdm.constellation         = m->constellation;
+      f.u.ofdm.transmission_mode     = m->tmode;
+      f.u.ofdm.guard_interval        = m->guard;
+      f.u.ofdm.hierarchy_information = m->hierarchy;
+      f.u.ofdm.code_rate_HP          = m->fechp;
+      f.u.ofdm.code_rate_LP          = m->feclp;
+      break;
+      
+    case FE_QPSK:
+      f.u.qpsk.symbol_rate = m->symrate;
+      f.u.qpsk.fec_inner   = m->fec;
+      polarisation         = m->polarisation;
       break;
 
-    switch(line[0]) {
-    case '#':
-      break;
-
-    case 'T':
-      dvb_t_config(line + 1);
-      break;
-
-    case 'C':
-      dvb_c_config(line + 1);
-      break;
-
-    case 'S':
-      dvb_s_config(line + 1);
-      break;
-
-    default:
+    case FE_QAM:
+      f.u.qam.symbol_rate = m->symrate;
+      f.u.qam.modulation  = m->constellation;
+      f.u.qam.fec_inner   = m->fec;
       break;
     }
+      
+    dvb_mux_create(tda, &f, polarisation, switchport, 0, 0xffff, NULL);
+    m++;
   }
+  dvb_tda_save(tda);
+  return 0;
 }
-
-
-
-
-
-void
-dvb_mux_setup(void)
-{
-  config_entry_t *ce;
-  
-  TAILQ_FOREACH(ce, &config_list, ce_link)
-    if(ce->ce_type == CFG_VALUE && !strcasecmp("dvbmuxfile", ce->ce_key))
-      dvb_muxfile_add(ce->ce_value);
-}
-
-#endif
