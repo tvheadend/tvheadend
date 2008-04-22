@@ -75,3 +75,12 @@ function mailboxquery(boxid)
 		onException: function(t,e) { alert(e); }
 	})
 }
+
+function dvb_adapter_rename(id, oldname)
+{
+	newname = prompt("Enter new name for adapter", oldname);
+	if(newname != null && newname != oldname) {
+		a = new Ajax.Request('/ajax/dvbadapterrename/' + id,
+			{ parameters: { 'newname': newname}});
+	}
+}

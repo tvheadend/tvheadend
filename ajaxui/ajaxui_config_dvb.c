@@ -195,12 +195,17 @@ ajax_adaptereditor(http_connection_t *hc, http_reply_t *hr,
   ajax_box_begin(tq, AJAX_BOX_FILLED, NULL, NULL, NULL);
 
   tcp_qprintf(tq, 
-	      "<div style=\"text-align: center; font-weight: bold\">%s</div>",
-	      tda->tda_displayname);
+	      "<div id=\"adaptername_%s\" "
+	      "style=\"text-align: center; font-weight: bold\">%s</div>",
+	      tda->tda_identifier, tda->tda_displayname);
   
   ajax_box_end(tq, AJAX_BOX_FILLED);
 
   /* Type */
+
+  tcp_qprintf(tq, "<div style=\"overflow: auto; width:100%%\">");
+
+  tcp_qprintf(tq, "<div style=\"float: left; width:45%%\">");
 
   tcp_qprintf(tq, "<div class=\"infoprefixwide\">Model:</div>"
 	      "<div>%s (%s)</div>", 
@@ -231,7 +236,17 @@ ajax_adaptereditor(http_connection_t *hc, http_reply_t *hr,
     //  tcp_qprintf(tq, "<div class=\"infoprefixwide\">Capabilities:</div>");
   }
 
+  tcp_qprintf(tq, "</div>");
+
+  ajax_a_jsfuncf(tq, "Rename adapter...",
+		 "dvb_adapter_rename('%s', '%s');",
+		 tda->tda_identifier, tda->tda_displayname);
  
+  tcp_qprintf(tq, "</div>");
+
+  /* Muxes and transports */
+
+
   tcp_qprintf(tq, "<div style=\"float: left; width:45%\">");
 
   ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, "Multiplexes");
@@ -691,7 +706,7 @@ ajax_dvbmuxeditor(http_connection_t *hc, http_reply_t *hr,
 
 
 /**
- * Delete all muxes on an adapter
+ * Delete muxes on an adapter
  */
 static int
 ajax_adapterdelmux(http_connection_t *hc, http_reply_t *hr, 
@@ -726,6 +741,42 @@ ajax_adapterdelmux(http_connection_t *hc, http_reply_t *hr,
 }
 
 /**
+ * Rename adapter
+ */
+static int
+ajax_adapterrename(http_connection_t *hc, http_reply_t *hr, 
+		   const char *remain, void *opaque)
+{
+  th_dvb_adapter_t *tda;
+
+  tcp_queue_t *tq = &hr->hr_tq;
+  const char *s;
+
+  if(remain == NULL || (tda = dvb_adapter_find_by_identifier(remain)) == NULL)
+    return HTTP_STATUS_NOT_FOUND;
+
+  if((s = http_arg_get(&hc->hc_req_args, "newname")) == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  free(tda->tda_displayname);
+  tda->tda_displayname = strdup(s);
+  dvb_tda_save(tda);
+ 
+  tcp_qprintf(tq,
+	      "$('adaptername_%s').innerHTML='%s';",
+	      tda->tda_identifier, tda->tda_displayname);
+
+  tcp_qprintf(tq,
+	      "new Ajax.Updater('summary_%s', "
+	      "'/ajax/dvbadaptersummary/%s', {method: 'get'})",
+	    tda->tda_identifier, tda->tda_identifier);
+
+  http_output(hc, hr, "text/javascript; charset=UTF8", NULL, 0);
+  return 0;
+}
+
+
+/**
  *
  */
 void
@@ -733,6 +784,7 @@ ajax_config_dvb_init(void)
 {
   http_path_add("/ajax/dvbadaptermuxlist"   , NULL, ajax_adaptermuxlist);
   http_path_add("/ajax/dvbadaptersummary"   , NULL, ajax_adaptersummary);
+  http_path_add("/ajax/dvbadapterrename"    , NULL, ajax_adapterrename);
   http_path_add("/ajax/dvbadaptereditor",     NULL, ajax_adaptereditor);
   http_path_add("/ajax/dvbadapteraddmux",     NULL, ajax_adapteraddmux);
   http_path_add("/ajax/dvbadapterdelmux",     NULL, ajax_adapterdelmux);
