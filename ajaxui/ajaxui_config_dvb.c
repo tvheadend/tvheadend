@@ -680,16 +680,16 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
 		   "mux_sel_do('dvbadapterdelmux/%s', '', '', true)",
 		   tda->tda_identifier);
     tcp_qprintf(tq, "</div></div>\r\n");
-
-    if(tda->tda_fe_info != NULL) {
-      tcp_qprintf(tq, "<hr><div style=\"overflow: auto; width: 100%\">");
-      tcp_qprintf(tq, "<div class=\"infoprefix\">&nbsp;</div><div>");
-      ajax_a_jsfuncf(tq, "Add new...",
-		     "new Ajax.Updater('servicepane', "
-		     "'/ajax/dvbadapteraddmux/%s', "
-		     "{method: 'get', evalScripts: true})\"");
-      tcp_qprintf(tq, "</div></div>\r\n");
-    }
+  }
+  if(tda->tda_fe_info != NULL) {
+    tcp_qprintf(tq, "<hr><div style=\"overflow: auto; width: 100%\">");
+    tcp_qprintf(tq, "<div>");
+    ajax_a_jsfuncf(tq, "Add new...",
+		   "new Ajax.Updater('servicepane', "
+		   "'/ajax/dvbadapteraddmux/%s', "
+		   "{method: 'get', evalScripts: true})\"",
+		   tda->tda_identifier);
+    tcp_qprintf(tq, "</div></div>\r\n");
   }
   http_output_html(hc, hr);
   return 0;
