@@ -633,9 +633,9 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
 
     ajax_table_top(&ta, hc, tq,
 		   (const char *[])
-    {"Freq", "Status", "State", "Name", "Services", "", NULL},
+    {"Freq", "Status", "Quality", "State", "Name", "Services", "", NULL},
 		   (int[])
-    {16,12,8,16,8,2});
+    {16,12,7,8,16,8,2});
 
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
 
@@ -651,7 +651,8 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
 		      ">%s</a>",
 		      tdmi->tdmi_identifier, buf);
 
-      ajax_table_cell(&ta, "status", "%s", dvb_mux_status(tdmi));
+      ajax_table_cell(&ta, "status", "%s", dvb_mux_status(tdmi, 0));
+      ajax_table_cell(&ta, "qual", "%d", tdmi->tdmi_quality);
       ajax_table_cell(&ta, "state", "%s", dvb_mux_state(tdmi));
       ajax_table_cell(&ta, "name", "%s", tdmi->tdmi_network ?: "Unknown");
 

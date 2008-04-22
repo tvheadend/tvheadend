@@ -49,6 +49,13 @@ notify_tdmi_status_change(th_dvb_mux_instance_t *tdmi)
 
 
 void
+notify_tdmi_qual_change(th_dvb_mux_instance_t *tdmi)
+{
+  ajax_mailbox_tdmi_qual_change(tdmi);
+}
+
+
+void
 notify_tdmi_services_change(th_dvb_mux_instance_t *tdmi)
 {
   ajax_mailbox_tdmi_services_change(tdmi);

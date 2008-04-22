@@ -29,6 +29,8 @@ void notify_tdmi_name_change(struct th_dvb_mux_instance *tdmi);
 
 void notify_tdmi_status_change(struct th_dvb_mux_instance *tdmi);
 
+void notify_tdmi_qual_change(struct th_dvb_mux_instance *tdmi);
+
 void notify_tdmi_services_change(struct th_dvb_mux_instance *tdmi);
 
 void notify_tda_change(struct th_dvb_adapter *tda);

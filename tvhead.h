@@ -171,6 +171,8 @@ typedef struct th_dvb_mux_instance {
   const char *tdmi_status;
   const char *tdmi_last_status; /* For notification updates */
 
+  int tdmi_quality;
+
   time_t tdmi_got_adapter;
   time_t tdmi_lost_adapter;
 

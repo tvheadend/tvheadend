@@ -284,10 +284,10 @@ dvb_adapter_find_by_identifier(const char *identifier)
  * 
  */
 const char *
-dvb_mux_status(th_dvb_mux_instance_t *tdmi)
+dvb_mux_status(th_dvb_mux_instance_t *tdmi, int nullisok)
 {
   int i, v, vv;
-  const char *txt = tdmi->tdmi_status ?: "Ok";
+  const char *txt = tdmi->tdmi_status ?: (nullisok ? NULL : "Ok");
 
   v = vv = 0;
   for(i = 0; i < TDMI_FEC_ERR_HISTOGRAM_SIZE; i++) {
