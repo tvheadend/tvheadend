@@ -298,9 +298,9 @@ dvb_mux_status(th_dvb_mux_instance_t *tdmi)
   vv /= TDMI_FEC_ERR_HISTOGRAM_SIZE;
   
   if(v == TDMI_FEC_ERR_HISTOGRAM_SIZE)
-    txt = "Constant high FEC rate";
+    txt = "Constant FEC";
   else if(v > 0)
-    txt = "Bursty FEC rate";
+    txt = "Bursty FEC";
 
   return txt;
 }
