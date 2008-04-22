@@ -431,6 +431,8 @@ typedef struct th_transport {
 
   const char *(*tht_sourcename)(struct th_transport *t);
 
+  int (*tht_quality_index)(struct th_transport *t);
+
   struct th_muxer_list tht_muxers; /* muxers */
 
   /*

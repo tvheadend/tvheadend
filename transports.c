@@ -235,6 +235,22 @@ transport_get_prio(th_transport_t *t)
   }
 }
 
+/**
+ * Return quality index for given transport
+ *
+ * We invert the result (providers say that negative numbers are worse)
+ *
+ * But for sorting, we want low numbers first
+ *
+ */
+static int
+transport_get_quality(th_transport_t *t)
+{
+  return t->tht_quality_index ? -(t->tht_quality_index(t)) : 0;
+}
+
+
+
 
 /**
  *  a - b  -> lowest number first
@@ -244,6 +260,11 @@ transportcmp(const void *A, const void *B)
 {
   th_transport_t *a = *(th_transport_t **)A;
   th_transport_t *b = *(th_transport_t **)B;
+
+  int q = transport_get_quality(a) - transport_get_quality(b);
+
+  if(q != 0)
+    return q; /* Quality precedes priority */
 
   return transport_get_prio(a) - transport_get_prio(b);
 }
