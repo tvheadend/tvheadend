@@ -47,6 +47,33 @@ add_option(tcp_queue_t *tq, int bol, const char *name)
     tcp_qprintf(tq, "<option>%s</option>", name);
 }
 
+/**
+ *
+ */
+const char *
+nicenum(unsigned int v)
+{
+  static char buf[4][30];
+  static int ptr;
+  char *x;
+  ptr = (ptr + 1) & 3;
+  x = buf[ptr];
+
+  if(v < 1000)
+    snprintf(x, 30, "%d", v);
+  else if(v < 1000000)
+    snprintf(x, 30, "%d,%03d", v / 1000, v % 1000);
+  else if(v < 1000000000)
+    snprintf(x, 30, "%d,%03d,%03d", 
+	     v / 1000000, (v % 1000000) / 1000, v % 1000);
+  else 
+    snprintf(x, 30, "%d,%03d,%03d,%03d", 
+	     v / 1000000000, (v % 1000000000) / 1000000,
+	     (v % 1000000) / 1000, v % 1000);
+  return x;
+}
+
+
 
 static void
 tdmi_displayname(th_dvb_mux_instance_t *tdmi, char *buf, size_t len)
@@ -54,10 +81,10 @@ tdmi_displayname(th_dvb_mux_instance_t *tdmi, char *buf, size_t len)
   int f = tdmi->tdmi_fe_params->frequency;
 
   if(tdmi->tdmi_adapter->tda_type == FE_QPSK) {
-    snprintf(buf, len, "%d kHz %s", f,
+    snprintf(buf, len, "%s kHz %s", nicenum(f),
 	     dvb_polarisation_to_str(tdmi->tdmi_polarisation));
   } else {
-    snprintf(buf, len, "%d kHz", f / 1000);
+    snprintf(buf, len, "%s kHz", nicenum(f / 1000));
   }
 }
 
@@ -126,32 +153,6 @@ ajax_config_dvb_tab(http_connection_t *hc, http_reply_t *hr)
   tcp_qprintf(tq, "<div id=\"dvbadaptereditor\"></div>");
   http_output_html(hc, hr);
   return 0;
-}
-
-/**
- *
- */
-const char *
-nicenum(unsigned int v)
-{
-  static char buf[4][30];
-  static int ptr;
-  char *x;
-  ptr = (ptr + 1) & 3;
-  x = buf[ptr];
-
-  if(v < 1000)
-    snprintf(x, 30, "%d", v);
-  else if(v < 1000000)
-    snprintf(x, 30, "%d,%03d", v / 1000, v % 1000);
-  else if(v < 1000000000)
-    snprintf(x, 30, "%d,%03d,%03d", 
-	     v / 1000000, (v % 1000000) / 1000, v % 1000);
-  else 
-    snprintf(x, 30, "%d,%03d,%03d,%03d", 
-	     v / 1000000000, (v % 1000000000) / 1000000,
-	     (v % 1000000) / 1000, v % 1000);
-  return x;
 }
 
 
