@@ -315,7 +315,18 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, unsigned int n)
     case FE_QPSK:
       f.u.qpsk.symbol_rate = m->symrate;
       f.u.qpsk.fec_inner   = m->fec;
-      polarisation         = m->polarisation;
+
+      switch(m->polarisation) {
+      case 'V':
+	polarisation = POLARISATION_VERTICAL;
+	break;
+      case 'H':
+	polarisation = POLARISATION_HORIZONTAL;
+	break;
+      default:
+	abort();
+      }
+
       break;
 
     case FE_QAM:
