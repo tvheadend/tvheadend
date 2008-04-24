@@ -54,6 +54,22 @@ img { border: 0; }
  * Misc classes
  */
 
+.event3 {
+ height: 42px
+
+}
+
+.compact {
+ float: left;
+ height: 100%;
+ overflow: hidden;
+}
+
+.fullrow {
+ overflow: auto;
+ width: 100%;
+ height: 14px;
+}
 
 .cell_100_center {
  margin-top: 2px;

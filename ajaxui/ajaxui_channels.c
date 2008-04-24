@@ -27,7 +27,7 @@
 #include "http.h"
 #include "ajaxui.h"
 #include "channels.h"
-
+#include "epg.h"
 
 static void
 ajax_channelgroupmenu_content(tcp_queue_t *tq, int current)
@@ -72,7 +72,49 @@ ajax_channelgroup_menu(http_connection_t *hc, http_reply_t *hr,
 }
 
 
+static void
+ajax_output_event(tcp_queue_t *tq, event_t *e, int flags, int color)
+{
+  struct tm a, b;
+  time_t stop;
 
+  tcp_qprintf(tq, "<div class=\"fullrow\"%s>",
+	      color ? "style=\"background: #fff\" " : "");
+
+  localtime_r(&e->e_start, &a);
+  stop = e->e_start + e->e_duration;
+  localtime_r(&stop, &b);
+  
+  tcp_qprintf(tq, 
+	      "<div class=\"compact\" style=\"width: 35%%\">"
+	      "%02d:%02d-%02d:%02d"
+	      "</div>",
+	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
+ 
+  tcp_qprintf(tq, 
+	      "<div class=\"compact\" style=\"width: 65%%\">"
+	      "%s"
+	      "</div>",
+	      e->e_title);
+    
+  tcp_qprintf(tq, "</div>");
+}
+
+
+static void
+ajax_list_events(tcp_queue_t *tq, th_channel_t *ch, int lines)
+{
+  event_t *e;
+  int i;
+
+
+  e = epg_event_find_current_or_upcoming(ch);
+
+  for(i = 0; i < 3 && e != NULL; i++) {
+    ajax_output_event(tq, e, 0, !(i & 1));
+    e = TAILQ_NEXT(e, e_link);
+  }
+}
 
 
 /*
@@ -84,31 +126,57 @@ int
 ajax_channel_tab(http_connection_t *hc, http_reply_t *hr,
 		 const char *remain, void *opaque)
 {
-  //  tcp_queue_t *tq = &hr->hr_tq;
+  
+  tcp_queue_t *tq = &hr->hr_tq;
   th_channel_t *ch;
   th_channel_group_t *tcg;
+  char dispname[20];
 
-  if(remain == NULL)
-    return HTTP_STATUS_NOT_FOUND;
-  
-  if((tcg = channel_group_by_tag(atoi(remain))) == NULL)
+  if(remain == NULL || (tcg = channel_group_by_tag(atoi(remain))) == NULL)
     return HTTP_STATUS_NOT_FOUND;
 
   TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
     if(LIST_FIRST(&ch->ch_transports) == NULL)
       continue;
 
-#if 0
-    ajax_box_begin(&tq, "x", ch->ch_name);
+    epg_lock();
 
-    tcp_qprintf(&tq, "<div style=\"height: 100px\"></div>");
-    ajax_sidebox_end(&tq);
-#endif
+    tcp_qprintf(tq, "<div style=\"float:left; width: 25%%\">");
+
+    snprintf(dispname, sizeof(dispname), "%s", ch->ch_name);
+    strcpy(dispname + sizeof(dispname) - 4, "...");
+
+    ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, dispname);
+
+    tcp_qprintf(tq, 
+		"<div style=\"width: 100%%; overflow: hidden; height:36px\">");
+
+    tcp_qprintf(tq, 
+		"<div style=\"float: left; height:32px; width:32px; "
+		"margin: 2px\">");
+
+    if(ch->ch_icon != NULL) {
+      tcp_qprintf(tq, "<img src=\"%s\" style=\"width:32px\">",
+		  ch->ch_icon);
+    }
+
+    tcp_qprintf(tq, "</div>");
+    tcp_qprintf(tq, "</div>");
+
+
+    tcp_qprintf(tq, "<div id=\"events%d\" style=\"height:42px\">", ch->ch_tag);
+    ajax_list_events(tq, ch, 3);
+    tcp_qprintf(tq, "</div>");
+
+    ajax_box_end(tq, AJAX_BOX_SIDEBOX);
+    tcp_qprintf(tq, "</div>");
+    epg_unlock();
   }
 
   http_output_html(hc, hr);
   return 0;
 }
+
 
 
 
