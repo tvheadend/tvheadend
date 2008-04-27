@@ -17,6 +17,7 @@
  */
 
 #define _GNU_SOURCE
+#include <errno.h>
 #include <string.h>
 
 #include <sys/types.h>
@@ -548,7 +549,6 @@ static void
 regrab(void *aux, int64_t now)
 {
   xmltv_grabber_t *xg = aux;
-
   xmltv_grabber_enqueue(xg);
 }
 
@@ -559,10 +559,21 @@ static void
 xmltv_xfer(void *aux, int64_t now)
 {
   xmltv_grabber_t *xg = aux;
+  int t;
 
-  xmltv_transfer_events(xg);
+  /* We don't want to stall waiting for the xml decoding which
+     can take quite some time, instead retry in a second if we fail
+     to obtain mutex */
 
-  dtimer_arm(&xg->xg_xfer_timer, xmltv_xfer, xg, 60);
+  if(pthread_mutex_trylock(&xg->xg_mutex) == EBUSY) {
+    t = 1;
+  } else {
+    xmltv_transfer_events(xg);
+    pthread_mutex_unlock(&xg->xg_mutex);
+    t = 60;
+  }
+
+  dtimer_arm(&xg->xg_xfer_timer, xmltv_xfer, xg, t);
 }
 
 /**

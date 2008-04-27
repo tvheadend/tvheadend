@@ -477,8 +477,12 @@ epg_transfer_events(th_channel_t *ch, struct event_queue *src,
 
   epg_lock();
 
-  free(ch->ch_icon);
-  ch->ch_icon = icon ? strdup(icon) : NULL;
+
+  if(strcmp(icon ?: "", ch->ch_icon ?: "")) {
+    free(ch->ch_icon);
+    ch->ch_icon = icon ? strdup(icon) : NULL;
+    channel_settings_write(ch);
+  }
 
   TAILQ_FOREACH(e, src, e_link) {
 
