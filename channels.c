@@ -424,7 +424,8 @@ channel_settings_write(th_channel_t *ch)
 
   fprintf(fp, "name = %s\n", ch->ch_name);
   fprintf(fp, "channel-group = %s\n", ch->ch_group->tcg_name);
-  fprintf(fp, "icon = %s\n", ch->ch_icon);
+  if(ch->ch_icon != NULL)
+    fprintf(fp, "icon = %s\n", ch->ch_icon);
   fprintf(fp, "commercial-detect = %s\n", 
 	  val2str(ch->ch_commercial_detection, commercial_detect_tab) ?: "?");
   fclose(fp);
