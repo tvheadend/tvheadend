@@ -259,8 +259,6 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   if(ch == NULL)
     return;
 
-  epg_lock();
-
   while(len >= 12) {
     event_id                  = ptr[0] << 8 | ptr[1];
     start_time                = dvb_convert_date(&ptr[2]);
@@ -311,8 +309,6 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       
     }
   }
-  
-  epg_unlock();
 }
 
 

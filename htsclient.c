@@ -323,8 +323,6 @@ cr_event_info(client_t *c, char **argv, int argc)
   if(argc < 2)
     return 1;
 
-  epg_lock();
-
   if(!strcasecmp(argv[0], "tag")) 
     e = epg_event_find_by_tag(atoi(argv[1]));
   if(!strcasecmp(argv[0], "now")) 
@@ -335,7 +333,6 @@ cr_event_info(client_t *c, char **argv, int argc)
       e = epg_event_find_by_time(ch, atoi(argv[2]));
 
   if(e == NULL) {
-    epg_unlock();
     return 1;
   }
 
@@ -367,7 +364,6 @@ cr_event_info(client_t *c, char **argv, int argc)
 	  next,
 	  pvrr != NULL ? pvrr->pvrr_status : HTSTV_PVR_STATUS_NONE);
 
-  epg_unlock();
   return 0;
 }
 
@@ -383,17 +379,13 @@ cr_event_record(client_t *c, char **argv, int argc)
   if(argc < 1)
     return 1;
 
-  epg_lock();
-
   e = epg_event_find_by_tag(atoi(argv[0]));
   if(e == NULL) {
-    epg_unlock();
     return 1;
   }
 
   pvr_schedule_by_event(e, "htsclient");
 
-  epg_unlock();
   return 0;
 }
 

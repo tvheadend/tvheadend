@@ -23,10 +23,6 @@ extern epg_content_group_t *epg_content_groups[16];
 
 void epg_init(void);
 
-void epg_lock(void);
-
-void epg_unlock(void);
-
 event_t *epg_event_find_by_time0(struct event_queue *q, time_t start);
 
 event_t *epg_event_find_by_time(th_channel_t *ch, time_t start);

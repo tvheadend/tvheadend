@@ -139,8 +139,6 @@ ajax_channel_tab(http_connection_t *hc, http_reply_t *hr,
     if(LIST_FIRST(&ch->ch_transports) == NULL)
       continue;
 
-    epg_lock();
-
     tcp_qprintf(tq, "<div style=\"float:left; width: 25%%\">");
 
     snprintf(dispname, sizeof(dispname), "%s", ch->ch_name);
@@ -170,7 +168,6 @@ ajax_channel_tab(http_connection_t *hc, http_reply_t *hr,
 
     ajax_box_end(tq, AJAX_BOX_SIDEBOX);
     tcp_qprintf(tq, "</div>");
-    epg_unlock();
   }
 
   http_output_html(hc, hr);

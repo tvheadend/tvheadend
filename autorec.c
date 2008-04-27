@@ -100,8 +100,6 @@ autorec_check_new_ar(autorec_t *ar)
   event_t *e;
   th_channel_t *ch;
 
-  epg_lock();
-
   LIST_FOREACH(ch, &channels, ch_global_link) {
     e = ch->ch_epg_cur_event;
     if(e == NULL)
@@ -117,7 +115,6 @@ autorec_check_new_ar(autorec_t *ar)
     if(autorec_cmp(ar, e))
       autorec_tag(ar, e);
   }
-  epg_unlock();
 }
 
 

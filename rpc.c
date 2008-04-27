@@ -153,8 +153,6 @@ rpc_event_info(rpc_session_t *ses, htsmsg_t *in, void *opaque)
   out = htsmsg_create();
   htsmsg_add_u32(out, "seq", ses->rs_seq);
 
-  epg_lock();
-
   if(htsmsg_get_u32(in, "tag", &u32) >= 0) {
     e = epg_event_find_by_tag(u32);
   } else if((s = htsmsg_get_str(in, "channel")) != NULL) {
@@ -203,8 +201,6 @@ rpc_event_info(rpc_session_t *ses, htsmsg_t *in, void *opaque)
     if((pvrr = pvr_get_by_entry(e)) != NULL)
       htsmsg_add_u32(out, "pvrstatus", pvrr->pvrr_status);
   }
-
-  epg_unlock();
 
   return out;
 }

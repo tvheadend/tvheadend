@@ -34,24 +34,10 @@
 
 #define EPG_HASH_ID_WIDTH 256
 
-static pthread_mutex_t epg_mutex = PTHREAD_MUTEX_INITIALIZER;
 struct event_list epg_hash[EPG_HASH_ID_WIDTH];
 static dtimer_t epg_channel_maintain_timer;
 
 epg_content_group_t *epg_content_groups[16];
-
-void
-epg_lock(void)
-{
-  pthread_mutex_lock(&epg_mutex);
-}
-
-void
-epg_unlock(void)
-{
-  pthread_mutex_unlock(&epg_mutex);
-}
-
 
 void
 epg_event_set_title(event_t *e, const char *title)
@@ -429,8 +415,6 @@ epg_channel_maintain(void *aux, int64_t clk)
 
   now = dispatch_clock;
 
-  epg_lock();
-
   LIST_FOREACH(ch, &channels, ch_global_link) {
 
     /* Age out any old events */
@@ -458,9 +442,6 @@ epg_channel_maintain(void *aux, int64_t clk)
 
     epg_locate_current_event(ch, now);
   }
-
-  epg_unlock();
-
 }
 
 
@@ -475,9 +456,6 @@ epg_transfer_events(th_channel_t *ch, struct event_queue *src,
   event_t *e;
   int cnt = 0;
 
-  epg_lock();
-
-
   if(strcmp(icon ?: "", ch->ch_icon ?: "")) {
     free(ch->ch_icon);
     ch->ch_icon = icon ? strdup(icon) : NULL;
@@ -491,7 +469,6 @@ epg_transfer_events(th_channel_t *ch, struct event_queue *src,
 		     e->e_content_type);
     cnt++;
   }
-  epg_unlock();
 }
 
 static const char *groupnames[16] = {
