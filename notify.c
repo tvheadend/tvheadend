@@ -69,7 +69,7 @@ notify_tda_change(th_dvb_adapter_t *tda)
 }
 
 void
-notify_xmltv_grabber_status_change(struct xmltv_grabber *xg, int status)
+notify_xmltv_grabber_status_change(struct xmltv_grabber *xg)
 {
-  ajax_mailbox_xmltv_grabber_status_change(xg, status);
+  ajax_mailbox_xmltv_grabber_status_change(xg);
 }

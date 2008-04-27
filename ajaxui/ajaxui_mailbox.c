@@ -462,7 +462,7 @@ ajax_mailbox_xmltv_grabber_status_change(xmltv_grabber_t *xg, int status)
 			  xmltv_grabber_status(xg));
 
 
-  if(status == XMLTV_GRABBER_IDLE) {
+  if(xg->xg_status == XMLTV_GRAB_OK) {
     snprintf(buf, sizeof(buf), "/ajax/xmltvgrabberlist/%s", xg->xg_identifier);
     ajax_mailbox_reload_div("xmltvgrabbers",
 			    "details", xg->xg_identifier,
@@ -470,7 +470,7 @@ ajax_mailbox_xmltv_grabber_status_change(xmltv_grabber_t *xg, int status)
   } else {
     ajax_mailbox_update_div(xg->xg_identifier,
 			    "details", xg->xg_identifier,
-			    xmltv_grabber_status_long(xg, status));
+			    xmltv_grabber_status_long(xg));
   }
 }
 

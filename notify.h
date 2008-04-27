@@ -35,7 +35,6 @@ void notify_tdmi_services_change(struct th_dvb_mux_instance *tdmi);
 
 void notify_tda_change(struct th_dvb_adapter *tda);
 
-void notify_xmltv_grabber_status_change(struct xmltv_grabber *xg,
-					int status);
+void notify_xmltv_grabber_status_change(struct xmltv_grabber *xg);
 
 #endif /* NOTIFY_H_ */

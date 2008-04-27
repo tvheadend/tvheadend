@@ -19,6 +19,12 @@
 #ifndef XMLTV_H
 #define XMLTV_H
 
+#define XMLTV_GRAB_WORKING       0
+#define XMLTV_GRAB_UNCONFIGURED  1
+#define XMLTV_GRAB_DYSFUNCTIONAL 2
+#define XMLTV_GRAB_OK            3
+
+
 
 LIST_HEAD(xmltv_grabber_list,   xmltv_grabber);
 TAILQ_HEAD(xmltv_grabber_queue, xmltv_grabber);
@@ -31,18 +37,15 @@ typedef struct xmltv_grabber {
   char *xg_title;
   char *xg_identifier;
 
-  enum {
-    XMLTV_GRABBER_DISABLED,
-    XMLTV_GRABBER_UNCONFIGURED,
-    XMLTV_GRABBER_DYSFUNCTIONAL,
-    XMLTV_GRABBER_ENQUEUED,
-    XMLTV_GRABBER_GRABBING,
-    XMLTV_GRABBER_IDLE,
-  } xg_status;
-
   TAILQ_ENTRY(xmltv_grabber) xg_work_link;
+  int xg_on_work_link;
 
-  time_t xg_nextgrab;
+  int xg_enabled;
+
+  int xg_status;
+
+  dtimer_t xg_grab_timer;
+  dtimer_t xg_xfer_timer;
 
   struct xmltv_channel_queue xg_channels;
 
@@ -79,7 +82,7 @@ typedef struct xmltv_channel {
 #define XMLTVSTATUS_FIND_GRABBERS_NOT_FOUND 1
 #define XMLTVSTATUS_RUNNING                 2
 
-extern int xmltv_status;
+extern int xmltv_globalstatus;
 extern struct xmltv_grabber_list xmltv_grabbers;
 
 void xmltv_init(void);
@@ -90,7 +93,7 @@ void xmltv_grabber_enable(xmltv_grabber_t *xg);
 
 xmltv_grabber_t *xmltv_grabber_find(const char *id);
 
-const char *xmltv_grabber_status_long(xmltv_grabber_t *xg, int status);
+const char *xmltv_grabber_status_long(xmltv_grabber_t *xg);
 
 void xmltv_config_save(void);
 

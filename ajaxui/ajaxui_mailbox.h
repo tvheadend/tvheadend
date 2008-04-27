@@ -39,7 +39,6 @@ void ajax_mailbox_start(tcp_queue_t *tq);
 
 struct xmltv_grabber;
 
-void ajax_mailbox_xmltv_grabber_status_change(struct xmltv_grabber *xg,
-					      int status);
+void ajax_mailbox_xmltv_grabber_status_change(struct xmltv_grabber *xg);
 
 #endif /* AJAXUI_MAILBOX_H_ */

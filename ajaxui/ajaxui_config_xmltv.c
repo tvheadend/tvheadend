@@ -50,7 +50,7 @@ ajax_config_xmltv_tab(http_connection_t *hc, http_reply_t *hr)
 
   tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
 
-  switch(xmltv_status) {
+  switch(xmltv_globalstatus) {
   default:
     tcp_qprintf(tq, "<p style=\"text-align: center; font-weight: bold\">"
 		"XMLTV subsystem is not yet fully initialized, please retry "
@@ -197,29 +197,18 @@ ajax_xmltvgrabber(http_connection_t *hc, http_reply_t *hr,
   
   tcp_qprintf(tq,"<div id=\"details_%s\">", xg->xg_identifier);
 
-  switch(xg->xg_status) {
-  case XMLTV_GRABBER_DISABLED:
+  if(xg->xg_enabled == 0) {
     tcp_qprintf(tq,
 		"<p>This grabber is currently not enabled, click "
 		"<a href=\"javascript:void(0);\" "
 		"onClick=\"new Ajax.Request('/ajax/xmltvgrabbermode/%s', "
 		"{parameters: {'mode': 'enable'}})\">here</a> "
 		"to enable it</p>");
-    break;
-
-
-  case XMLTV_GRABBER_ENQUEUED:
-  case XMLTV_GRABBER_GRABBING:
-  case XMLTV_GRABBER_UNCONFIGURED:
-  case XMLTV_GRABBER_DYSFUNCTIONAL:
-    tcp_qprintf(tq, "<p>%s</p>", xmltv_grabber_status_long(xg, xg->xg_status));
-    break;
-
-  case XMLTV_GRABBER_IDLE:
+  } else if(xg->xg_status == XMLTV_GRAB_OK) {
     xmltv_grabber_chlist(tq, xg);
-    break;
+  } else {
+    tcp_qprintf(tq, "<p>%s</p>", xmltv_grabber_status_long(xg));
   }
-  
 
   tcp_qprintf(tq,"</div>");
 
