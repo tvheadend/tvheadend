@@ -388,9 +388,15 @@ settings_open_for_write(const char *name)
 {
   FILE *fp;
 
-  fp = fopen(name, "w+");
-  if(fp == NULL)
+  int fd;
+
+  if((fd = open(name, O_CREAT | O_TRUNC | O_RDWR, 0600)) < 0)
     syslog(LOG_ALERT, "Unable to open settings file \"%s\" -- %s",
 	   name, strerror(errno));
+
+  if((fp = fdopen(fd, "w+")) == NULL)
+    syslog(LOG_ALERT, "Unable to open settings file \"%s\" -- %s",
+	   name, strerror(errno));
+
   return fp;
 }
