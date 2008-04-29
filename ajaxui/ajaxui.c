@@ -617,10 +617,14 @@ ajax_page_root(http_connection_t *hc, http_reply_t *hr,
 void
 ajaxui_start(void)
 {
-  http_path_add("/ajax/index.html",           NULL, ajax_page_root);
+  http_path_add("/ajax/index.html",           NULL, ajax_page_root,
+		ACCESS_WEB_INTERFACE);
 
-  http_path_add("/ajax/topmenu",              NULL, ajax_page_titlebar);
-  http_path_add("/ajax/toptab",               NULL, ajax_page_tab);
+  http_path_add("/ajax/topmenu",              NULL, ajax_page_titlebar,
+		ACCESS_WEB_INTERFACE);
+
+  http_path_add("/ajax/toptab",               NULL, ajax_page_tab,
+		ACCESS_WEB_INTERFACE);
 
   /* Stylesheet */
   http_resource_add("/ajax/ajaxui.css", embedded_ajaxui,

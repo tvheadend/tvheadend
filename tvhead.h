@@ -889,9 +889,6 @@ FILE *settings_open_for_read(const char *name);
 extern const char *sys_warning;
 extern th_channel_group_t *defgroup;
 
-struct config_head *user_resolve_to_config(const char *username, 
-					   const char *password);
-
 extern inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 {
   unsigned int v = 5381;

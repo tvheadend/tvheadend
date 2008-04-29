@@ -286,7 +286,8 @@ ajax_mailbox_poll(http_connection_t *hc, http_reply_t *hr,
 void
 ajax_mailbox_init(void)
 {
-  http_path_add("/ajax/mailbox",  NULL, ajax_mailbox_poll);
+  http_path_add("/ajax/mailbox",  NULL, ajax_mailbox_poll,
+		ACCESS_WEB_INTERFACE);
 }
 
 

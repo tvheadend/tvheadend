@@ -35,6 +35,7 @@
 #include "dispatch.h"
 #include "xbmsp.h"
 #include "tcp.h"
+#include "access.h"
 
 #define XBMSP_FILEFORMAT "ts"
 
@@ -537,7 +538,6 @@ xbmsp_input_authenticate(xbmsp_t *xbmsp, uint32_t msgid,
 {
   char *username, *password;
   uint32_t handle;
-  int grant;
 
   if(xbmsp_extract_u32(xbmsp, &buf, &len, &handle))
     return EBADMSG;
@@ -551,21 +551,17 @@ xbmsp_input_authenticate(xbmsp_t *xbmsp, uint32_t msgid,
   snprintf(xbmsp->xbmsp_logname, sizeof(xbmsp->xbmsp_logname),
 	   "xbmsp: %s @ %s", username, tcp_logname(&xbmsp->xbmsp_tcp_session));
 
-  xbmsp->xbmsp_user_config = user_resolve_to_config(username, password);
-  if(xbmsp->xbmsp_user_config != NULL) {
-    grant = atoi(config_get_str_sub(xbmsp->xbmsp_user_config, "xbmsp", "0"));
-    if(grant == 0) {
-      xbmsp_send_err(xbmsp, msgid, XBMSP_ERROR_AUTHENTICATION_FAILED,
-		     "User \"%s\" lacks xbmsp privileges", username);
-      return 0;
-    }
-    xbmsp->xbmsp_authenticated = 1;
-    /* Auth ok */
-    xbmsp_send_msg(xbmsp, XBMSP_PACKET_OK, msgid, NULL, 0);
-  } else {
+  if(access_verify(username, password,
+		   (struct sockaddr *)&xbmsp->xbmsp_tcp_session.tcp_peer_addr,
+		   ACCESS_STREAMING) != 0) {
     xbmsp_send_err(xbmsp, msgid, XBMSP_ERROR_AUTHENTICATION_FAILED,
-		   "Invalid username / password");
+		   "Access denied");
+    return 0;
   }
+  xbmsp->xbmsp_authenticated = 1;
+  /* Auth ok */
+  xbmsp_send_msg(xbmsp, XBMSP_PACKET_OK, msgid, NULL, 0);
+
   free(username);
   free(password);
   return 0;

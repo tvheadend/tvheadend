@@ -210,6 +210,9 @@ ajax_channelgroup_tab(http_connection_t *hc, http_reply_t *hr)
 void
 ajax_channels_init(void)
 {
-  http_path_add("/ajax/channelgroupmenu",    NULL, ajax_channelgroup_menu);
-  http_path_add("/ajax/channelgrouptab",     NULL, ajax_channel_tab);
+  http_path_add("/ajax/channelgroupmenu",    NULL, ajax_channelgroup_menu,
+		ACCESS_WEB_INTERFACE);
+  http_path_add("/ajax/channelgrouptab",     NULL, ajax_channel_tab,
+		ACCESS_WEB_INTERFACE);
+
 }

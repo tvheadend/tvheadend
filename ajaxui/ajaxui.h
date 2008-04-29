@@ -19,6 +19,12 @@
 #ifndef AJAXUI_H_
 #define AJAXUI_H_
 
+#include "access.h"
+
+#define AJAX_ACCESS_CONFIG (ACCESS_WEB_INTERFACE | ACCESS_CONFIGURE)
+#define AJAX_ACCESS_ACCESSCTRL \
+ (ACCESS_WEB_INTERFACE | ACCESS_CONFIGURE | ACCESS_ACCESSCONTROL)
+
 typedef enum {
   AJAX_BOX_FILLED,
   AJAX_BOX_SIDEBOX,
@@ -91,6 +97,9 @@ void ajax_config_dvb_init(void);
 
 int ajax_config_xmltv_tab(http_connection_t *hc, http_reply_t *hr);
 void ajax_config_xmltv_init(void);
+
+int ajax_config_access_tab(http_connection_t *hc, http_reply_t *hr);
+void ajax_config_access_init(void);
 
 void ajax_config_transport_init(void);
 

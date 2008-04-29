@@ -539,12 +539,19 @@ ajax_chsetcomdetect(http_connection_t *hc, http_reply_t *hr,
 void
 ajax_config_channels_init(void)
 {
-  http_path_add("/ajax/chgroup_add"        , NULL, ajax_chgroup_add);
-  http_path_add("/ajax/chgroup_del"        , NULL, ajax_chgroup_del);
-  http_path_add("/ajax/chgroup_updateorder", NULL, ajax_chgroup_updateorder);
-  http_path_add("/ajax/chgroup_editor",      NULL, ajax_chgroup_editor);
-  http_path_add("/ajax/cheditor",            NULL, ajax_cheditor);
-  http_path_add("/ajax/chop/changegroup",    NULL, ajax_changegroup);
-  http_path_add("/ajax/chsetcomdetect",      NULL, ajax_chsetcomdetect);
+  http_path_add("/ajax/chgroup_add"        , NULL, ajax_chgroup_add,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/chgroup_del"        , NULL, ajax_chgroup_del,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/chgroup_updateorder", NULL, ajax_chgroup_updateorder,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/chgroup_editor",      NULL, ajax_chgroup_editor,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/cheditor",            NULL, ajax_cheditor,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/chop/changegroup",    NULL, ajax_changegroup,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/chsetcomdetect",      NULL, ajax_chsetcomdetect,
+		AJAX_ACCESS_CONFIG);
 
 }

@@ -40,6 +40,7 @@
 #include "tsmux.h"
 #include "tcp.h"
 #include "http.h"
+#include "access.h"
 
 #include <libavutil/random.h>
 
@@ -568,47 +569,9 @@ rtsp_cmd_teardown(http_connection_t *hc)
 static int
 rtsp_access_list(http_connection_t *hc)
 {
-  config_entry_t *ce;
-  struct config_head *head;
-  int prefixlen;
-  char *p;
-  struct sockaddr_in *si;
-  char buf[100];
-
-  uint32_t a, b, m;
-
-  ce = config_get_key(&config_list, "rtsp-access");
-  if(ce == NULL || ce->ce_type != CFG_SUB)
-    return -1;
-
-  si = (struct sockaddr_in *)&hc->hc_tcp_session.tcp_peer_addr;
-
-  b = ntohl(si->sin_addr.s_addr);
-
-  head = &ce->ce_sub;
-
-  TAILQ_FOREACH(ce, head, ce_link) {
-    if(strcasecmp("permit", ce->ce_key) || ce->ce_type != CFG_VALUE)
-      continue;
-
-    if(strlen(ce->ce_value) > 90)
-      continue;
-
-    strcpy(buf, ce->ce_value);
-    p = strchr(buf, '/');
-    if(p) {
-      *p++ = 0;
-      prefixlen = atoi(p);
-    } else {
-      prefixlen = 32;
-    }
-    
-    m = prefixlen ? 0xffffffff << (32 - prefixlen) : 0;
-    a = ntohl(inet_addr(buf));
-    if((b & m) == (a & m))
-      return 0;
-  }
-  return -1;
+  return access_verify(hc->hc_username, hc->hc_password,
+		       (struct sockaddr *)&hc->hc_tcp_session.tcp_peer_addr,
+		       ACCESS_STREAMING);
 }
 
 

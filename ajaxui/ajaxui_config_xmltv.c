@@ -322,9 +322,13 @@ ajax_xmltvgrabberchmap(http_connection_t *hc, http_reply_t *hr,
 void
 ajax_config_xmltv_init(void)
 {
-  http_path_add("/ajax/xmltvgrabber" ,      NULL, ajax_xmltvgrabber);
-  http_path_add("/ajax/xmltvgrabbermode" ,  NULL, ajax_xmltvgrabbermode);
-  http_path_add("/ajax/xmltvgrabberlist" ,  NULL, ajax_xmltvgrabberlist);
-  http_path_add("/ajax/xmltvgrabberchmap" , NULL, ajax_xmltvgrabberchmap);
+  http_path_add("/ajax/xmltvgrabber" ,      NULL, ajax_xmltvgrabber,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/xmltvgrabbermode" ,  NULL, ajax_xmltvgrabbermode,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/xmltvgrabberlist" ,  NULL, ajax_xmltvgrabberlist,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/xmltvgrabberchmap" , NULL, ajax_xmltvgrabberchmap,
+		AJAX_ACCESS_CONFIG);
 
 }

@@ -84,3 +84,16 @@ function dvb_adapter_rename(id, oldname)
 			{ parameters: { 'newname': newname}});
 	}
 }
+
+function makedivinput(id, url)
+{
+	$(id).innerHTML='<div style="width:100%; overflow:auto">' + 
+	'<div style="width:75%; float:left">' + 
+	'<input id="val' + id + '" type="password" class="textinput">' +
+	'</div>' + 
+	'<div style="width:25%; float:left">' + 
+	'<input class="textinput" type="button" value="Set" ' + 
+	'onClick="new Ajax.Request(\'' + url + '\', ' +
+	'{parameters: {value: $F(\'val' + id + '\')}})">' +
+	'</div></div>';
+}

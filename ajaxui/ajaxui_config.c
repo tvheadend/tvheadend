@@ -32,12 +32,14 @@
 #define AJAX_CONFIG_TAB_CHANNELS 0
 #define AJAX_CONFIG_TAB_DVB      1
 #define AJAX_CONFIG_TAB_XMLTV    2
-#define AJAX_CONFIG_TABS         3
+#define AJAX_CONFIG_TAB_ACCESS   3
+#define AJAX_CONFIG_TABS         4
 
 const char *ajax_config_tabnames[] = {
   [AJAX_CONFIG_TAB_CHANNELS]      = "Channels & Groups",
   [AJAX_CONFIG_TAB_DVB]           = "DVB adapters",
   [AJAX_CONFIG_TAB_XMLTV]         = "XML-TV",
+  [AJAX_CONFIG_TAB_ACCESS]        = "Access control",
 };
 
 
@@ -83,6 +85,8 @@ ajax_config_dispatch(http_connection_t *hc, http_reply_t *hr,
     return ajax_config_dvb_tab(hc, hr);
   case AJAX_CONFIG_TAB_XMLTV:
     return ajax_config_xmltv_tab(hc, hr);
+  case AJAX_CONFIG_TAB_ACCESS:
+    return ajax_config_access_tab(hc, hr);
 
   default:
     return HTTP_STATUS_NOT_FOUND;
@@ -125,10 +129,13 @@ ajax_config_tab(http_connection_t *hc, http_reply_t *hr)
 void
 ajax_config_init(void)
 {
-  http_path_add("/ajax/configmenu",          NULL, ajax_config_menu);
-  http_path_add("/ajax/configtab",           NULL, ajax_config_dispatch);
+  http_path_add("/ajax/configmenu",          NULL, ajax_config_menu,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/configtab",           NULL, ajax_config_dispatch,
+		AJAX_ACCESS_CONFIG);
 
   ajax_config_channels_init();
   ajax_config_dvb_init();
   ajax_config_xmltv_init();
+  ajax_config_access_init();
 }

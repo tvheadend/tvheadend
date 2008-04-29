@@ -879,15 +879,25 @@ ajax_dvbadapteraddnetwork(http_connection_t *hc, http_reply_t *hr,
 void
 ajax_config_dvb_init(void)
 {
-  http_path_add("/ajax/dvbadaptermuxlist"   , NULL, ajax_adaptermuxlist);
-  http_path_add("/ajax/dvbadaptersummary"   , NULL, ajax_adaptersummary);
-  http_path_add("/ajax/dvbadapterrename"    , NULL, ajax_adapterrename);
-  http_path_add("/ajax/dvbadaptereditor",     NULL, ajax_adaptereditor);
-  http_path_add("/ajax/dvbadapteraddmux",     NULL, ajax_adapteraddmux);
-  http_path_add("/ajax/dvbadapterdelmux",     NULL, ajax_adapterdelmux);
-  http_path_add("/ajax/dvbadaptercreatemux",  NULL, ajax_adaptercreatemux);
-  http_path_add("/ajax/dvbmuxeditor",         NULL, ajax_dvbmuxeditor);
-  http_path_add("/ajax/dvbnetworkinfo",       NULL, ajax_dvbnetworkinfo);
-  http_path_add("/ajax/dvbadapteraddnetwork", NULL, ajax_dvbadapteraddnetwork);
+  http_path_add("/ajax/dvbadaptermuxlist"   , NULL, ajax_adaptermuxlist,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/dvbadaptersummary"   , NULL, ajax_adaptersummary,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/dvbadapterrename"    , NULL, ajax_adapterrename,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/dvbadaptereditor",     NULL, ajax_adaptereditor,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/dvbadapteraddmux",     NULL, ajax_adapteraddmux,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/dvbadapterdelmux",     NULL, ajax_adapterdelmux,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/dvbadaptercreatemux",  NULL, ajax_adaptercreatemux,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/dvbmuxeditor",         NULL, ajax_dvbmuxeditor,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/dvbnetworkinfo",       NULL, ajax_dvbnetworkinfo,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/dvbadapteraddnetwork", NULL, ajax_dvbadapteraddnetwork,
+		AJAX_ACCESS_CONFIG);
 
 }

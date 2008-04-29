@@ -368,12 +368,15 @@ void
 ajax_config_transport_init(void)
 {
   http_path_add("/ajax/transport_rename_channel", NULL,
-		ajax_transport_rename_channel);
+		ajax_transport_rename_channel,
+		AJAX_ACCESS_CONFIG);
 
   http_path_add("/ajax/transport_op", NULL,
-		ajax_transport_op);
+		ajax_transport_op,
+		AJAX_ACCESS_CONFIG);
 
   http_path_add("/ajax/transport_chdisable", NULL,
-		ajax_transport_chdisable);
+		ajax_transport_chdisable,
+		AJAX_ACCESS_CONFIG);
 
 }

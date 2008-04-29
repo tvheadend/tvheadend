@@ -60,6 +60,7 @@
 #include "ffmuxer.h"
 #include "xbmsp.h"
 #include "ajaxui/ajaxui.h"
+#include "access.h"
 
 #include <libhts/htsparachute.h>
 
@@ -219,6 +220,8 @@ main(int argc, char **argv)
 	 settings_dir);
 
   dispatch_init();
+
+  access_init();
 
   htsparachute_init(pull_chute);
 
@@ -390,31 +393,4 @@ settings_open_for_write(const char *name)
     syslog(LOG_ALERT, "Unable to open settings file \"%s\" -- %s",
 	   name, strerror(errno));
   return fp;
-}
-
-struct config_head *
-user_resolve_to_config(const char *username, const char *password)
-{
-  config_entry_t *ce;
-  const char *name, *pass;
-
-  TAILQ_FOREACH(ce, &config_list, ce_link) {
-    if(ce->ce_type == CFG_SUB && !strcasecmp("user", ce->ce_key)) {
-      if((name = config_get_str_sub(&ce->ce_sub, "name", NULL)) == NULL)
-	continue;
-      if(!strcmp(name, username))
-	break;
-    }
-  }
-
-  if(ce == NULL)
-    return NULL;
-
-  if((pass = config_get_str_sub(&ce->ce_sub, "password", NULL)) == NULL)
-    return NULL;
-
-  if(strcmp(pass, password))
-    return NULL;
-
-  return &ce->ce_sub;
 }

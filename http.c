@@ -42,6 +42,7 @@
 #include "tsmux.h"
 #include "http.h"
 #include "rtsp.h"
+#include "access.h"
 
 int http_port;
 
@@ -355,6 +356,12 @@ http_exec(http_connection_t *hc, http_path_t *hp, char *remain, int err)
   hr->hr_version    = hc->hc_version;
   hr->hr_keep_alive = hc->hc_keep_alive;
 
+  if(!err &&
+     access_verify(hc->hc_username, hc->hc_password,
+		   (struct sockaddr *)&hc->hc_tcp_session.tcp_peer_addr,
+		   hp->hp_accessmask))
+    err = HTTP_STATUS_UNAUTHORIZED;
+
   if(!err)
     err = hp->hp_callback(hc, hr, remain, hp->hp_opaque);
 
@@ -505,18 +512,6 @@ http_process_request(http_connection_t *hc)
 }
 
 /**
- * Verify username, and if password match, set 'hc->hc_user_config'
- * to subconfig for that user
- */
-static void
-hc_user_resolve(http_connection_t *hc)
-{
-  hc->hc_user_config = user_resolve_to_config(hc->hc_username,
-					      hc->hc_password);
-}
-
-
-/**
  * Process a request, extract info from headers, dispatch command and
  * clean up
  */
@@ -564,7 +559,6 @@ process_request(http_connection_t *hc)
       if((n = http_tokenize((char *)authbuf, argv, 2, ':')) == 2) {
 	hc->hc_username = strdup(argv[0]);
 	hc->hc_password = strdup(argv[1]);
-	hc_user_resolve(hc);
       }
     }
   }
@@ -815,7 +809,8 @@ http_tokenize(char *buf, char **vec, int vecsize, int delimiter)
  * Add a callback for a given "virtual path" on our HTTP server
  */
 http_path_t *
-http_path_add(const char *path, void *opaque, http_callback_t *callback)
+http_path_add(const char *path, void *opaque, http_callback_t *callback,
+	      uint32_t accessmask)
 {
   http_path_t *hp = malloc(sizeof(http_path_t));
 
@@ -823,6 +818,7 @@ http_path_add(const char *path, void *opaque, http_callback_t *callback)
   hp->hp_path     = strdup(path);
   hp->hp_opaque   = opaque;
   hp->hp_callback = callback;
+  hp->hp_accessmask = accessmask;
   LIST_INSERT_HEAD(&http_paths, hp, hp_link);
   return hp;
 }
@@ -940,5 +936,5 @@ http_resource_add(const char *path, const void *ptr, size_t len,
   hres->content  = content;
   hres->encoding = encoding;
 
-  http_path_add(path, hres, deliver_resource);
+  http_path_add(path, hres, deliver_resource, ACCESS_WEB_INTERFACE);
 }

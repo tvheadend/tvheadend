@@ -151,10 +151,11 @@ typedef struct http_path {
   void *hp_opaque;
   http_callback_t *hp_callback;
   int hp_len;
+  uint32_t hp_accessmask;
 } http_path_t;
 
 http_path_t *http_path_add(const char *path, void *opaque,
-			   http_callback_t *callback);
+			   http_callback_t *callback, uint32_t accessmask);
 
 void http_resource_add(const char *path, const void *ptr, size_t len, 
 		       const char *content, const char *encoding);
