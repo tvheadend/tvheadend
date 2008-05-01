@@ -60,6 +60,7 @@
 #include "ffmuxer.h"
 #include "xbmsp.h"
 #include "ajaxui/ajaxui.h"
+#include "webui/webui.h"
 #include "access.h"
 
 #include <libhts/htsparachute.h>
@@ -248,6 +249,9 @@ main(int argc, char **argv)
   subscriptions_init();
 
   //  htmlui_start();
+
+  webui_start();
+
   if(doajax)
     ajaxui_start();
 

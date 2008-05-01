@@ -30,6 +30,13 @@ VPATH += ffdecsa
 SRCS += FFdecsa.c
 
 #
+# Primary web interface
+#
+
+VPATH  += webui
+SRCS   += webui.c
+
+#
 # Embedded AJAX user interface
 #
 
