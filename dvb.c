@@ -17,6 +17,7 @@
  */
 
 #include <pthread.h>
+#include <assert.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -343,8 +344,8 @@ tdmi_inssort(th_dvb_mux_instance_t *a, th_dvb_mux_instance_t *b)
  */
 th_dvb_mux_instance_t *
 dvb_mux_create(th_dvb_adapter_t *tda, struct dvb_frontend_parameters *fe_param,
-	       int polarisation, int switchport, int save, uint16_t tsid,
-	       const char *network)
+	       int polarisation, int switchport,
+	       uint16_t tsid, const char *network, int flags)
 {
   th_dvb_mux_instance_t *tdmi;
   char buf[200];
@@ -391,10 +392,10 @@ dvb_mux_create(th_dvb_adapter_t *tda, struct dvb_frontend_parameters *fe_param,
 
   tdmi->tdmi_identifier = strdup(buf);
 
-  if(save) {
+  if(flags & DVB_MUX_SAVE) {
     dvb_tda_save(tda);
     notify_tda_change(tda);
-  } else {
+  } else if(flags & DVB_MUX_LOAD) {
     dvb_tdmi_load(tdmi);
   }
 
@@ -426,6 +427,11 @@ dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   th_transport_t *t;
+  char buf[400];
+
+  snprintf(buf, sizeof(buf), "%s/dvbmuxes/%s",
+	   settings_dir, tdmi->tdmi_identifier);
+  unlink(buf);
 
   while((t = LIST_FIRST(&tdmi->tdmi_transports)) != NULL)
     transport_destroy(t);
@@ -707,13 +713,16 @@ dvb_tda_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
     dvb_mux_destroy(tdmi_dst);
 
   LIST_FOREACH(tdmi_src, &src->tda_muxes, tdmi_adapter_link) {
+
     tdmi_dst = dvb_mux_create(dst, 
 			      tdmi_src->tdmi_fe_params,
 			      tdmi_src->tdmi_polarisation, 
 			      tdmi_src->tdmi_switchport,
-			      0, 
 			      tdmi_src->tdmi_transport_stream_id,
-			      tdmi_src->tdmi_network);
+			      tdmi_src->tdmi_network,
+			      0);
+
+    assert(tdmi_dst != NULL);
 
     LIST_FOREACH(t_src, &tdmi_src->tdmi_transports, tht_mux_link) {
       t_dst = dvb_find_transport(tdmi_dst, 

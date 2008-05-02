@@ -253,8 +253,8 @@ dvb_mux_create_str(th_dvb_adapter_t *tda,
     break;
   }
 
-  dvb_mux_create(tda, &f, polarisation, switchport, save, atoi(tsidstr),
-		 network);
+  dvb_mux_create(tda, &f, polarisation, switchport, atoi(tsidstr),
+		 network, save ? DVB_MUX_SAVE : DVB_MUX_LOAD);
 
   return NULL;
 }
@@ -336,7 +336,8 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, unsigned int n)
       break;
     }
       
-    dvb_mux_create(tda, &f, polarisation, switchport, 0, 0xffff, NULL);
+    dvb_mux_create(tda, &f, polarisation, switchport, 0xffff, NULL,
+		   DVB_MUX_LOAD);
     m++;
   }
   dvb_tda_save(tda);

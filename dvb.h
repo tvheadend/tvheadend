@@ -50,11 +50,14 @@ void tdmi_check_scan_status(th_dvb_mux_instance_t *tdmi);
 th_transport_t *dvb_find_transport(th_dvb_mux_instance_t *tdmi,
 				   uint16_t sid, int pmt_pid, int *created);
 
+#define DVB_MUX_SAVE 0x1
+#define DVB_MUX_LOAD 0x2
+
 th_dvb_mux_instance_t *dvb_mux_create(th_dvb_adapter_t *tda,
 				      struct dvb_frontend_parameters *fe_param,
 				      int polarisation, int switchport,
-				      int save, uint16_t tsid, 
-				      const char *network);
+				      uint16_t tsid, const char *network,
+				      int flags);
 
 void dvb_tdmi_save(th_dvb_mux_instance_t *tdmi);
 
