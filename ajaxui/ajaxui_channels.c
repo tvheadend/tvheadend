@@ -16,12 +16,17 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include <pthread.h>
 #include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+
 
 #include "tvhead.h"
 #include "http.h"
@@ -131,6 +136,7 @@ ajax_channel_tab(http_connection_t *hc, http_reply_t *hr,
   th_channel_t *ch;
   th_channel_group_t *tcg;
   char dispname[20];
+  struct sockaddr_in *si;
 
   if(remain == NULL || (tcg = channel_group_by_tag(atoi(remain))) == NULL)
     return HTTP_STATUS_NOT_FOUND;
@@ -146,6 +152,8 @@ ajax_channel_tab(http_connection_t *hc, http_reply_t *hr,
 
     ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, dispname);
 
+    /* inner */
+
     tcp_qprintf(tq, 
 		"<div style=\"width: 100%%; overflow: hidden; height:36px\">");
 
@@ -157,6 +165,17 @@ ajax_channel_tab(http_connection_t *hc, http_reply_t *hr,
       tcp_qprintf(tq, "<img src=\"%s\" style=\"width:32px\">",
 		  ch->ch_icon);
     }
+
+    tcp_qprintf(tq, "</div>");
+
+    tcp_qprintf(tq, "<div style=\"float:left; text-align: right\">");
+
+    si = (struct sockaddr_in *)&hc->hc_tcp_session.tcp_self_addr;
+
+    tcp_qprintf(tq,
+		"<a href=\"rtsp://%s:%d/%s\">Stream</a>",
+		inet_ntoa(si->sin_addr), ntohs(si->sin_port),
+		ch->ch_sname);
 
     tcp_qprintf(tq, "</div>");
     tcp_qprintf(tq, "</div>");
