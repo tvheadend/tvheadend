@@ -36,6 +36,7 @@
 #include "dvb_muxconfig.h"
 #include "psi.h"
 #include "transports.h"
+#include "dispatch.h"
 
 #include "ajaxui_mailbox.h"
 
@@ -752,7 +753,11 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
 static int
 dvbsvccmp(th_transport_t *a, th_transport_t *b)
 {
-  return a->tht_dvb_service_id - b->tht_dvb_service_id;
+  if(a->tht_dvb_mux_instance == b->tht_dvb_mux_instance)
+    return a->tht_dvb_service_id - b->tht_dvb_service_id;
+  
+  return a->tht_dvb_mux_instance->tdmi_fe_params->frequency - 
+    b->tht_dvb_mux_instance->tdmi_fe_params->frequency;
 }
 
 /**
