@@ -90,7 +90,7 @@ sp_timeout(void *aux, int64_t now)
     errtxt = "Ok";
     break;
   case -1:
-    errtxt = "Timeout, no video seen";
+    errtxt = "Timeout, no video detected";
     break;
   case TRANSPORT_ERROR_NO_DESCRAMBLER:
     errtxt = "No descrambler for stream";
@@ -137,7 +137,7 @@ sp_err_callback(struct th_subscription *s, int errorcode, void *opaque)
   sp_t *sp = opaque;
   s->ths_err_callback = NULL;
 
-  sp->sp_error = -1;
+  sp->sp_error = errorcode;
   dtimer_arm(&sp->sp_timer, sp_timeout, sp, 0);
 }
 
@@ -160,6 +160,7 @@ serviceprobe_engage(void)
   sp = calloc(1, sizeof(sp_t));
 
   sp->sp_s = s = calloc(1, sizeof(th_subscription_t));
+  sp->sp_error     = -1;
   s->ths_title     = "probe";
   s->ths_weight    = INT32_MAX;
   s->ths_opaque    = sp;
