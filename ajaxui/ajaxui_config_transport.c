@@ -98,16 +98,19 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
   tcp_qprintf(tq, "}\r\n");
 
   /* Perform the given op on all transprots */
-  tcp_qprintf(tq, "selected_do = function(op) {\r\n");
+  tcp_qprintf(tq, "selected_do = function(op) {\r\n"
+	      "var h = new Hash();\r\n"
+	      );
+
   LIST_FOREACH(t, tlist, tht_tmp_link) {
     tcp_qprintf(tq, 
-		"if($('sel_%s').checked) {\r\n"
-		"  new Ajax.Request('/ajax/transport_op/%s', "
-		"{parameters: {action: op}});\r\n}\r\n",
+		"if($('sel_%s').checked) {h.set('%s', 'selected') }\r\n",
 		t->tht_identifier, t->tht_identifier);
   }
-  tcp_qprintf(tq, "}\r\n");
 
+  tcp_qprintf(tq, " new Ajax.Request('/ajax/transport_op/' + op, "
+	      "{parameters: h});\r\n");
+  tcp_qprintf(tq, "}\r\n");
 
   tcp_qprintf(tq, 
 	      "\r\n//]]>\r\n"
@@ -134,8 +137,8 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 
     ajax_table_cell(&ta, NULL, 
 		    "<a href=\"javascript:void(0)\" "
-		    "onClick=\"new Ajax.Request('/ajax/transport_op/%s', "
-		    "{parameters: {action: 'toggle'}})\">"
+		    "onClick=\"new Ajax.Request('/ajax/transport_op/toggle', "
+		    "{parameters: {'%s': 'selected'}})\">"
 		    "<img id=\"map_%s\" src=\"/gfx/%smapped.png\"></a>",
 		    t->tht_identifier, t->tht_identifier,
 		    t->tht_channel ? "" : "un");
@@ -312,28 +315,34 @@ ajax_transport_op(http_connection_t *hc, http_reply_t *hr,
 {
   th_transport_t *t;
   tcp_queue_t *tq = &hr->hr_tq;
-  const char *op;
+  const char *op = remain;
+  http_arg_t *ra;
 
-  if(remain == NULL || (t = transport_find_by_identifier(remain)) == NULL)
+  if(op == NULL)
     return HTTP_STATUS_NOT_FOUND;
+  
+  TAILQ_FOREACH(ra, &hc->hc_req_args, link) {
+    if(strcmp(ra->val, "selected"))
+      continue;
 
-  if((op = http_arg_get(&hc->hc_req_args, "action")) == NULL)
-    return HTTP_STATUS_BAD_REQUEST;
+    if((t = transport_find_by_identifier(ra->key)) == NULL)
+      continue;
 
-  if(!strcmp(op, "toggle")) {
-    if(t->tht_channel)
-      dvb_unmap_channel(t, tq);
-    else
+    if(!strcmp(op, "toggle")) {
+      if(t->tht_channel)
+	dvb_unmap_channel(t, tq);
+      else
+	dvb_map_channel(t, tq);
+    } else if(!strcmp(op, "map") && t->tht_channel == NULL) {
       dvb_map_channel(t, tq);
-  } else if(!strcmp(op, "map") && t->tht_channel == NULL) {
-    dvb_map_channel(t, tq);
-  } else if(!strcmp(op, "unmap") && t->tht_channel != NULL) {
-    dvb_unmap_channel(t, tq);
+    } else if(!strcmp(op, "unmap") && t->tht_channel != NULL) {
+      dvb_unmap_channel(t, tq);
+    }
+    t->tht_config_change(t);
   }
 
   http_output(hc, hr, "text/javascript; charset=UTF8", NULL, 0);
 
-  t->tht_config_change(t);
   return 0;
 }
 
