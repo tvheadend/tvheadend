@@ -499,8 +499,8 @@ cwc_dispatch_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
 
       if(ct->ct_keystate != CT_FORBIDDEN) 
 	syslog(LOG_ERR, 
-	       "Cannot descramble \"%s\" for channel \"%s\", access denied",
-	       t->tht_identifier, t->tht_channel->ch_name);
+	       "Can not descramble \"%s\" for service \"%s\", access denied",
+	       t->tht_identifier, t->tht_servicename);
 
       ct->ct_keystate = CT_FORBIDDEN;
       return 0;
@@ -508,8 +508,8 @@ cwc_dispatch_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
 
     if(ct->ct_keystate != CT_RESOLVED)
       syslog(LOG_INFO,
-	     "Obtained key for \"%s\" for channel \"%s\"",
-	     t->tht_identifier, t->tht_channel->ch_name);
+	     "Obtained key for \"%s\" for service \"%s\"",
+	     t->tht_identifier, t->tht_servicename);
 
     ct->ct_keystate = CT_RESOLVED;
     set_control_words(ct->ct_keys, msg + 3, msg + 3 + 8);
