@@ -273,7 +273,7 @@ ajax_transport_rename_channel(http_connection_t *hc, http_reply_t *hr,
 static void
 dvb_map_channel(th_transport_t *t, tcp_queue_t *tq)
 {
-  transport_set_channel(t, t->tht_channelname);
+  transport_map_channel(t);
 
   printf("Mapped transport %s to channel %s\n",
 	 t->tht_servicename, t->tht_channel->ch_name);
@@ -292,7 +292,7 @@ dvb_map_channel(th_transport_t *t, tcp_queue_t *tq)
 static void
 dvb_unmap_channel(th_transport_t *t, tcp_queue_t *tq)
 {
-  transport_unset_channel(t);
+  transport_unmap_channel(t);
 
   printf("Unmapped transport %s\n", t->tht_servicename);
 

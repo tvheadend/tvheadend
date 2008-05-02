@@ -107,7 +107,7 @@ sp_timeout(void *aux, int64_t now)
  
   if(sp->sp_error == 0) {
     if(t->tht_channel == NULL && t->tht_servicename != NULL) {
-      transport_set_channel(t, t->tht_servicename);
+      transport_map_channel(t);
       t->tht_config_change(t);
     }
   }

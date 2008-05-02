@@ -524,9 +524,9 @@ transport_add_stream(th_transport_t *t, int pid, tv_streamtype_t type)
  *
  */
 void
-transport_set_channel(th_transport_t *t, const char *chname)
+transport_map_channel(th_transport_t *t)
 {
-  th_channel_t *ch = channel_find(chname, 1, NULL);
+  th_channel_t *ch = channel_find(t->tht_servicename, 1, NULL);
 
   assert(t->tht_channel == NULL);
 
@@ -543,7 +543,7 @@ transport_set_channel(th_transport_t *t, const char *chname)
  *
  */
 void
-transport_unset_channel(th_transport_t *t)
+transport_unmap_channel(th_transport_t *t)
 {
   t->tht_channel = NULL;
   LIST_REMOVE(t, tht_channel_link);

@@ -648,7 +648,7 @@ dvb_tdmi_load(th_dvb_mux_instance_t *tdmi)
     psi_load_transport(&ce->ce_sub, t);
 
     if(atoi(config_get_str_sub(&ce->ce_sub, "mapped", "0"))) {
-      transport_set_channel(t, t->tht_channelname);
+      transport_map_channel(t);
     }
   }
   config_free0(&cl);
@@ -745,7 +745,7 @@ dvb_tda_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
 	t_dst->tht_channelname = strdup(t_src->tht_channelname);
       
       if(t_src->tht_channel != NULL)
-	transport_set_channel(t_dst, t_src->tht_channel->ch_name);
+	transport_map_channel(t_dst);
 
       
 
