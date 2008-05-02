@@ -173,6 +173,9 @@ serviceprobe_add(th_transport_t *t)
 {
   int was_first = TAILQ_FIRST(&probequeue) == NULL;
 
+  if(!transport_is_tv(t))
+    return;
+
   if(t->tht_on_probe_queue)
     return;
 
