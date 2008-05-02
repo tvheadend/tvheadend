@@ -275,9 +275,6 @@ dvb_map_channel(th_transport_t *t, tcp_queue_t *tq)
 {
   transport_map_channel(t);
 
-  printf("Mapped transport %s to channel %s\n",
-	 t->tht_servicename, t->tht_channel->ch_name);
-
   tcp_qprintf(tq, 
 	      "$('chname_%s').innerHTML='%s';\n\r"
 	      "$('map_%s').src='/gfx/mapped.png';\n\r",
@@ -293,8 +290,6 @@ static void
 dvb_unmap_channel(th_transport_t *t, tcp_queue_t *tq)
 {
   transport_unmap_channel(t);
-
-  printf("Unmapped transport %s\n", t->tht_servicename);
 
   tcp_qprintf(tq, 
 	      "$('chname_%s').innerHTML='"
