@@ -125,16 +125,12 @@ main(int argc, char **argv)
   int logfacility = LOG_DAEMON;
   int disable_dvb = 0;
   int p;
-  int doajax = 0;
   char buf[400];
 
   signal(SIGPIPE, handle_sigpipe);
 
-  while((c = getopt(argc, argv, "c:fu:g:dA")) != -1) {
+  while((c = getopt(argc, argv, "c:fu:g:d")) != -1) {
     switch(c) {
-    case 'A':
-      doajax = 1;
-      break;
     case 'd':
       disable_dvb = 1;
       break;
@@ -253,9 +249,7 @@ main(int argc, char **argv)
   //  htmlui_start();
 
   webui_start();
-
-  if(doajax)
-    ajaxui_start();
+  ajaxui_start();
 
   avgen_init();
 
