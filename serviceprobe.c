@@ -66,6 +66,8 @@ sp_done(sp_t *sp)
   TAILQ_REMOVE(&probequeue, t, tht_probe_link);
   t->tht_on_probe_queue = 0;
 
+  transport_stop(t, 0);
+
   subscription_reschedule();
 
   serviceprobe_engage();
