@@ -326,7 +326,7 @@ transport_find(th_channel_t *ch, unsigned int weight)
  * 
  */
 
-void
+static void
 transport_flush_subscribers(th_transport_t *t)
 {
   th_subscription_t *s;

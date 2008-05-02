@@ -133,12 +133,9 @@ pvr_inform_status_change(pvr_rec_t *pvrr)
 {
   event_t *e;
 
-  clients_send_ref(pvrr->pvrr_ref);
 
   e = epg_event_find_by_time(pvrr->pvrr_channel, pvrr->pvrr_start);
   
-  if(e != NULL)
-    clients_send_ref(e->e_tag);
 }
 
 
@@ -175,7 +172,6 @@ pvr_abort(pvr_rec_t *pvrr)
   pvr_fsm(pvrr);
 
   pvr_database_save(pvrr);
-  clients_send_ref(-1);
   return 0;
 }
 
@@ -223,7 +219,6 @@ pvr_link_pvrr(pvr_rec_t *pvrr)
   }
 
   pvr_inform_status_change(pvrr);
-  clients_send_ref(-1);
 }
 
 

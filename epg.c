@@ -53,7 +53,7 @@ epg_event_set_desc(event_t *e, const char *desc)
   e->e_desc = strdup(desc);
 }
 
-void
+static void
 epg_event_set_content_type(event_t *e, epg_content_type_t *ect)
 {
   if(e->e_content_type != NULL)
@@ -377,8 +377,6 @@ epg_set_current_event(th_channel_t *ch, event_t *e)
   ch->ch_epg_cur_event = e;
 
   /* Notify clients that a new programme is on */
-
-  clients_send_ref(ch->ch_tag);
 
   htsp_async_channel_update(ch);
 

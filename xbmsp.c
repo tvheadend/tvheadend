@@ -48,7 +48,7 @@ extern AVOutputFormat mpegts_muxer;
  * Function for delivery of data.
  * We try to respond to any pending read
  */
-void
+static void
 xbmsp_output_file(void *opaque)
 {
   xbmsp_subscrption_t *xs = opaque;
@@ -218,7 +218,7 @@ xbmsp_dir_add_entry(xbmsp_dirhandle_t *xdh, const char *name,
 /**
  *
  */
-th_channel_group_t *
+static th_channel_group_t *
 xbmsp_cur_channel_group(xbmsp_t *xbmsp)
 {
   th_channel_group_t *tcg;
@@ -314,7 +314,7 @@ xbmsp_close_dirhandle(xbmsp_t *xbmsp, uint32_t handle)
 /**
  * xbmsp_cdup() - Change to one directory up (cd ..)
  */
-const char *
+static const char *
 xbmsp_cdup(xbmsp_t *xbmsp)
 {
   char *wd = xbmsp->xbmsp_wd;
@@ -332,7 +332,7 @@ xbmsp_cdup(xbmsp_t *xbmsp)
 /**
  * xbmsp_cdroot() - Change to root (cd /)
  */
-const char *
+static const char *
 xbmsp_cdroot(xbmsp_t *xbmsp)
 {
   free(xbmsp->xbmsp_wd);
@@ -343,7 +343,7 @@ xbmsp_cdroot(xbmsp_t *xbmsp)
 /**
  * xbmsp_cddown() - Change to root (cd dir)
  */
-const char *
+static const char *
 xbmsp_cddown(xbmsp_t *xbmsp, const char *dir)
 {
   th_channel_group_t *tcg;

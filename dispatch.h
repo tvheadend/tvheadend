@@ -29,7 +29,7 @@ extern time_t dispatch_clock;
 #define DISPATCH_ERR   0x4
 #define DISPATCH_PRI   0x8
 
-extern inline int64_t 
+static inline int64_t 
 getclock_hires(void)
 {
   int64_t now;
@@ -54,7 +54,7 @@ void dtimer_arm_hires(dtimer_t *ti, dti_callback_t *callback,
 		      void *aux, int64_t t);
 
 
-extern inline void
+static inline void
 dtimer_disarm(dtimer_t *ti)
 {
   if(ti->dti_callback) {

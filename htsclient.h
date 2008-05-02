@@ -23,6 +23,4 @@ void client_start(void);
 
 void clients_send_ref(int ref);
 
-void client_status_update(void);
-
 #endif /* HTSCLIENT_H_ */

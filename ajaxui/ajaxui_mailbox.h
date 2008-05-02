@@ -21,8 +21,6 @@
 
 #include "tcp.h"
 
-int ajax_mailbox_create(const char *subscriptionid);
-
 void ajax_mailbox_tdmi_state_change(th_dvb_mux_instance_t *tdmi);
 
 void ajax_mailbox_tdmi_qual_change(th_dvb_mux_instance_t *tdmi);

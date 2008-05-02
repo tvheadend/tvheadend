@@ -51,7 +51,7 @@ add_option(tcp_queue_t *tq, int bol, const char *name)
 /**
  *
  */
-const char *
+static const char *
 nicenum(unsigned int v)
 {
   static char buf[4][30];

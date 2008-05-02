@@ -32,6 +32,7 @@
 #include "transports.h"
 #include "epg_xmltv.h"
 #include "dvb_support.h"
+#include "ajaxui_mailbox.h"
 
 #define MAILBOX_UNUSED_TIMEOUT      15
 #define MAILBOX_EMPTY_REPLY_TIMEOUT 10
@@ -454,7 +455,7 @@ ajax_mailbox_tda_change(th_dvb_adapter_t *tda)
 
 
 void
-ajax_mailbox_xmltv_grabber_status_change(xmltv_grabber_t *xg, int status)
+ajax_mailbox_xmltv_grabber_status_change(xmltv_grabber_t *xg)
 {
   char buf[500];
 

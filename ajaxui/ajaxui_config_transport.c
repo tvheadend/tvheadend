@@ -307,7 +307,7 @@ dvb_unmap_channel(th_transport_t *t, tcp_queue_t *tq)
 /**
  *
  */
-int
+static int
 ajax_transport_op(http_connection_t *hc, http_reply_t *hr, 
 		  const char *remain, void *opaque)
 {
@@ -351,7 +351,7 @@ ajax_transport_op(http_connection_t *hc, http_reply_t *hr,
 /**
  *
  */
-int
+static int
 ajax_transport_chdisable(http_connection_t *hc, http_reply_t *hr, 
 			 const char *remain, void *opaque)
 {

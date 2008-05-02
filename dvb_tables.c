@@ -731,7 +731,7 @@ dvb_rst_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 /**
  * Helper for preparing a section filter parameter struct
  */
-struct dmx_sct_filter_params *
+static struct dmx_sct_filter_params *
 dvb_fparams_alloc(int pid, int flags)
 {
   struct dmx_sct_filter_params *p;

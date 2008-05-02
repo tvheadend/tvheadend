@@ -60,7 +60,7 @@ typedef struct output_multicast {
 /**
  *  Output MPEG TS
  */
-void
+static void
 iptv_output_ts(void *opaque, th_subscription_t *s, uint8_t *pkt,
 	       int blocks, int64_t pcr)
 {

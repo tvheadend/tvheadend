@@ -40,6 +40,7 @@
 #include "buffer.h"
 #include "tsmux.h"
 #include "tcp.h"
+#include "htsclient.h"
 
 LIST_HEAD(client_list, client);
 
@@ -72,12 +73,12 @@ typedef struct client {
 
 
 
-static void client_status_update(void *aux, int64_t now);
+void client_status_update(void *aux, int64_t now);
 
 #define cprintf(c, fmt...) tcp_printf(&(c)->c_tcp_session, fmt)
 
 
-void
+static void
 client_output_ts(void *opaque, th_subscription_t *s, 
 		 uint8_t *pkt, int blocks, int64_t pcr)
 {
@@ -114,36 +115,6 @@ client_output_ts(void *opaque, th_subscription_t *s,
 }
 
 
-
-/*
- *
- *
- */
-
-void
-clients_send_ref(int ref)
-{
-  client_t  *c;
-  char buf[10];
-  uint32_t v = htonl(ref);
-  struct sockaddr_in sin;
-   
-  buf[0] = HTSTV_REFTAG;
-  memcpy(buf + 1, &v, sizeof(uint32_t));
-
-  LIST_FOREACH(c, &all_clients, c_global_link) {
-    if(c->c_streamfd == -1)
-      continue;
-	 
-    sin.sin_family = AF_INET;
-    sin.sin_port = htons(c->c_port);
-    sin.sin_addr = c->c_ipaddr;
-
-    sendto(c->c_streamfd, buf, 5, 0,
-	   (struct sockaddr *)&sin, sizeof(sin));
-  }
-}
-
 /*
  *
  */
@@ -175,7 +146,7 @@ cr_channel_info(client_t *c, char **argv, int argc)
  *
  */
 
-int
+static int
 cr_channel_unsubscribe(client_t *c, char **argv, int argc)
 {
   th_subscription_t *s;
@@ -228,7 +199,7 @@ client_subscription_callback(struct th_subscription *s,
 /*
  *
  */
-int
+static int
 cr_channel_subscribe(client_t *c, char **argv, int argc)
 {
   th_channel_t *ch;
@@ -272,7 +243,7 @@ cr_channel_subscribe(client_t *c, char **argv, int argc)
  *
  */
 
-int
+static int
 cr_channels_list(client_t *c, char **argv, int argc)
 {
   th_channel_t *ch;
@@ -290,7 +261,7 @@ cr_channels_list(client_t *c, char **argv, int argc)
  *
  */
 
-int
+static int
 cr_streamport(client_t *c, char **argv, int argc)
 {
   if(argc < 2)
@@ -579,7 +550,6 @@ htsclient_tcp_callback(tcpevent_t event, void *tcpsession)
     TAILQ_INIT(&c->c_refq);
     LIST_INSERT_HEAD(&all_clients, c, c_global_link);
     c->c_streamfd = -1;
-    dtimer_arm(&c->c_status_timer, client_status_update, c, 1);
     break;
 
   case TCP_DISCONNECT:
@@ -604,67 +574,3 @@ client_start(void)
 		    htsclient_tcp_callback);
 }
 
-
-
-
-
-
-
-
-
-
-/*
- *  Periodically send status updates to client (on stream 2)
- */
-static void
-csprintf(client_t *c, th_channel_t *ch, const char *fmt, ...)
-{
-  va_list ap;
-  char buf[1000];
-  struct sockaddr_in sin;
-
-  memset(&sin, 0, sizeof(sin));
-
-  buf[0] = HTSTV_STATUS;
-  buf[1] = ch->ch_index;
-
-  va_start(ap, fmt);
-  vsnprintf(buf + 2, sizeof(buf) - 2, fmt, ap);
-  va_end(ap);
-
-  sin.sin_family = AF_INET;
-  sin.sin_port = htons(c->c_port);
-  sin.sin_addr = c->c_ipaddr;
-
-  sendto(c->c_streamfd, buf, strlen(buf + 2) + 2, 0,
-	 (struct sockaddr *)&sin, sizeof(sin));
-}
-
-
-static void
-client_status_update(void *aux, int64_t now)
-{
-  client_t *c = aux;
-  th_channel_t *ch;
-  th_subscription_t *s;
-  th_transport_t *t;
-
-  dtimer_arm(&c->c_status_timer, client_status_update, c, 1);
-
-  LIST_FOREACH(s, &c->c_subscriptions, ths_subscriber_link) {
-
-    ch = s->ths_channel;
-    t = s->ths_transport;
-
-    if(t == NULL) {
-      csprintf(c, ch, 
-	       "status = 0\n"
-	       "info = No transport available");
-      continue;
-    }
-
-    csprintf(c, ch,
-	     "status = 0\n"
-	     "info = Running");
-  }
-}

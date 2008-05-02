@@ -537,11 +537,12 @@ void set_odd_control_word(void *keys, const unsigned char *pk){
 }
 
 //-----get control words
-
+#if 0
 void get_control_words(void *keys, unsigned char *even, unsigned char *odd){
   memcpy(even,&((struct csa_keys_t *)keys)->even.ck,8);
   memcpy(odd,&((struct csa_keys_t *)keys)->odd.ck,8);
 }
+#endif
 
 //----- decrypt
 

@@ -139,7 +139,7 @@ tt_construct_unix_time(char *buf)
 
 
 
-int
+static int
 str_is_tt_clock(const char *str)
 {
   return 

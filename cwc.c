@@ -18,6 +18,7 @@
 
 #include <pthread.h>
 #include <assert.h>
+#include <string.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -35,6 +36,7 @@
 #include "ffdecsa/FFdecsa.h"
 #include "dispatch.h"
 #include "transports.h"
+#include "cwc.h"
 
 #define CWC_KEEPALIVE_INTERVAL 600
 
@@ -639,7 +641,7 @@ cwc_tcp_callback(tcpevent_t event, void *tcpsession)
 /**
  *
  */
-void
+static void
 cwc_table_input(struct th_descrambler *td, struct th_transport *t,
 		struct th_stream *st, uint8_t *data, int len)
 {

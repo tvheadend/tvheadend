@@ -27,7 +27,6 @@
 #include <libhts/htscfg.h>
 #include <libhts/avg.h>
 #include <libhts/hts_strtab.h>
-#include "refstr.h"
 #include <libavcodec/avcodec.h>
 
 /*
@@ -894,8 +893,6 @@ typedef struct event {
 #define EVENT_SRC_XMLTV 1
 #define EVENT_SRC_DVB   2
 
-  refstr_t *e_icon;
-
 } event_t;
 
 config_entry_t *find_mux_config(const char *muxtype, const char *muxname);
@@ -909,7 +906,7 @@ FILE *settings_open_for_read(const char *name);
 extern const char *sys_warning;
 extern th_channel_group_t *defgroup;
 
-extern inline unsigned int tvh_strhash(const char *s, unsigned int mod)
+static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 {
   unsigned int v = 5381;
   while(*s)

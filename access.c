@@ -66,7 +66,7 @@ access_alloc(void)
 /**
  *
  */
-access_entry_t *
+static access_entry_t *
 access_add_network(const char *prefix)
 {
   access_entry_t *ae;
@@ -112,7 +112,7 @@ access_add_network(const char *prefix)
 /**
  *
  */
-access_entry_t *
+static access_entry_t *
 access_add_user(const char *username)
 {
   access_entry_t *ae;

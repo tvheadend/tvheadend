@@ -41,6 +41,7 @@
 #include "tcp.h"
 #include "http.h"
 #include "access.h"
+#include "rtsp.h"
 
 #include <libavutil/random.h>
 

@@ -436,14 +436,14 @@ static inline void trasp64_128_88cw(unsigned char *data){
 
 
 #ifdef STREAM_INIT
-void stream_cypher_group_init(
+static void stream_cypher_group_init(
   struct stream_regs *regs,
   group         iA[8][4], // [In]  iA00,iA01,...iA73 32 groups  | Derived from key.
   group         iB[8][4], // [In]  iB00,iB01,...iB73 32 groups  | Derived from key.
   unsigned char *sb)      // [In]  (SB0,SB1,...SB7)...x32 32*8 bytes | Extra input.
 #endif
 #ifdef STREAM_NORMAL
-void stream_cypher_group_normal(
+static void stream_cypher_group_normal(
   struct stream_regs *regs,
   unsigned char *cb)    // [Out] (CB0,CB1,...CB7)...x32 32*8 bytes | Output.
 #endif

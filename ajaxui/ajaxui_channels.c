@@ -127,7 +127,7 @@ ajax_list_events(tcp_queue_t *tq, th_channel_t *ch, int lines)
  *
  * Group is given by 'tag' as an ASCII string in remain
  */
-int
+static int
 ajax_channel_tab(http_connection_t *hc, http_reply_t *hr,
 		 const char *remain, void *opaque)
 {

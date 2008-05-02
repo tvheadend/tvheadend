@@ -57,7 +57,7 @@ autorec_init(void)
 /**
  * return 1 if the event 'e' is matched by the autorec rule 'ar'
  */
-int
+static int
 autorec_cmp(autorec_t *ar, event_t *e)
 {
   if(ar->ar_ch != NULL && ar->ar_ch != e->e_ch)

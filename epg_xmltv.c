@@ -38,7 +38,6 @@
 #include "channels.h"
 #include "epg.h"
 #include "epg_xmltv.h"
-#include "refstr.h"
 #include "spawn.h"
 #include "intercom.h"
 #include "notify.h"
@@ -528,7 +527,7 @@ xmltv_thread(void *aux)
 /**
  *
  */
-void
+static void
 xmltv_grabber_enqueue(xmltv_grabber_t *xg)
 {
   pthread_mutex_lock(&xmltv_work_lock);

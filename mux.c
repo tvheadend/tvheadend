@@ -41,7 +41,7 @@
 #include "subscriptions.h"
 #include "psi.h"
 #include "buffer.h"
-
+#include "mux.h"
 
 
 
@@ -132,8 +132,7 @@ mux_new_packet(th_muxer_t *tm, th_stream_t *st, th_pkt_t *pkt)
  * TS Muxer
  */
 th_muxer_t *
-muxer_init(th_subscription_t *s, th_mux_output_t *cb, void *opaque,
-	      int flags)
+muxer_init(th_subscription_t *s, th_mux_output_t *cb, void *opaque)
 {
   th_transport_t *t = s->ths_transport;
   th_stream_t *st;
