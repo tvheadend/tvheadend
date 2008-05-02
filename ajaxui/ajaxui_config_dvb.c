@@ -640,7 +640,7 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
   th_dvb_mux_instance_t *tdmi;
   tcp_queue_t *tq = &hr->hr_tq;
   th_dvb_adapter_t *tda;
-  char buf[50];
+  char buf[200];
   int fetype, n, m;
   th_transport_t *t;
   int nmuxes = 0;
@@ -704,7 +704,18 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
       ajax_table_cell(&ta, "nsvc", "%d / %d", m, n);
       ajax_table_cell_checkbox(&ta);
     }
+    
+    ajax_table_row_start(&ta, NULL);
+    
+    ajax_table_cell(&ta, NULL,
+		    "<a href=\"javascript:void(0);\" "
+		    "onClick=\"new Ajax.Updater('servicepane', "
+		    "'/ajax/dvbmuxall/%s', "
+		    "{method: 'get', evalScripts: true})\""
+		    ">All</a>", tda->tda_identifier);
+
     ajax_table_bottom(&ta);
+
     tcp_qprintf(tq, "<hr><div style=\"overflow: auto; width: 100%\">");
     tcp_qprintf(tq, "<div class=\"infoprefix\">Select:</div><div>");
     ajax_a_jsfuncf(tq, "All",     "mux_sel_all();");
@@ -769,6 +780,45 @@ ajax_dvbmuxeditor(http_connection_t *hc, http_reply_t *hr,
     if(transport_is_available(t)) {
       LIST_INSERT_SORTED(&head, t, tht_tmp_link, dvbsvccmp);
       n++;
+    }
+  }
+
+  ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, buf);
+  ajax_transport_build_list(hc, tq, &head, n);
+  ajax_box_end(tq, AJAX_BOX_SIDEBOX);
+
+  http_output_html(hc, hr);
+  return 0;
+}
+
+/**
+ * Display all transports on an adapter
+ */
+static int
+ajax_dvbmuxall(http_connection_t *hc, http_reply_t *hr, 
+	       const char *remain, void *opaque)
+{
+  th_dvb_adapter_t *tda;
+  th_dvb_mux_instance_t *tdmi;
+  tcp_queue_t *tq = &hr->hr_tq;
+  th_transport_t *t;
+  struct th_transport_list head;
+  int n = 0;
+  char buf[100];
+
+  if(remain == NULL || (tda = dvb_adapter_find_by_identifier(remain)) == NULL)
+    return HTTP_STATUS_NOT_FOUND;
+
+  snprintf(buf, sizeof(buf), "All services on %s\n", tda->tda_displayname); 
+
+  LIST_INIT(&head);
+
+  LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+    LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
+      if(transport_is_available(t)) {
+	LIST_INSERT_SORTED(&head, t, tht_tmp_link, dvbsvccmp);
+	n++;
+      }
     }
   }
 
@@ -989,6 +1039,8 @@ ajax_config_dvb_init(void)
   http_path_add("/ajax/dvbadaptercreatemux",  NULL, ajax_adaptercreatemux,
 		AJAX_ACCESS_CONFIG);
   http_path_add("/ajax/dvbmuxeditor",         NULL, ajax_dvbmuxeditor,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/dvbmuxall",            NULL, ajax_dvbmuxall,
 		AJAX_ACCESS_CONFIG);
   http_path_add("/ajax/dvbnetworkinfo",       NULL, ajax_dvbnetworkinfo,
 		AJAX_ACCESS_CONFIG);
