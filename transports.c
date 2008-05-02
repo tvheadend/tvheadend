@@ -528,6 +528,8 @@ transport_set_channel(th_transport_t *t, const char *chname)
 {
   th_channel_t *ch = channel_find(chname, 1, NULL);
 
+  assert(t->tht_channel == NULL);
+
   avgstat_init(&t->tht_cc_errors, 3600);
   avgstat_init(&t->tht_rate, 10);
 
