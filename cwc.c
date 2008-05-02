@@ -499,7 +499,6 @@ cwc_dispatch_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
     if(len < 19) {
 
       if(ct->ct_keystate != CT_FORBIDDEN) {
-	transport_signal_error(t, TRANSPORT_ERROR_NO_ACCESS);
 	syslog(LOG_ERR, 
 	       "Can not descramble \"%s\" for service \"%s\", access denied",
 	       t->tht_identifier, t->tht_servicename);
@@ -698,14 +697,17 @@ cwc_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
   unsigned char *vec[3];
   uint8_t *t0;
 
+  if(ct->ct_keystate == CT_FORBIDDEN)
+    return TRANSPORT_ERROR_NO_ACCESS;
+
   if(ct->ct_keystate != CT_RESOLVED)
-    return 0;
+    return -1;
 
   memcpy(ct->ct_tsbcluster + ct->ct_fill * 188, tsb, 188);
   ct->ct_fill++;
 
   if(ct->ct_fill != CT_CLUSTER_SIZE)
-    return 1;
+    return 0;
 
   ct->ct_fill = 0;
 
@@ -723,7 +725,7 @@ cwc_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
       t0 += 188;
     }
   }
-  return 1;
+  return 0;
 }
 
 
@@ -755,8 +757,19 @@ cwc_transport_start(th_transport_t *t)
   cwc_t *cwc;
   cwc_transport_t *ct;
   th_descrambler_t *td;
+  th_stream_t *st;
 
   LIST_FOREACH(cwc, &cwcs, cwc_link) {
+
+    LIST_FOREACH(st, &t->tht_streams, st_link)
+      if(st->st_caid == cwc->cwc_caid)
+	break;
+
+    if(st == NULL)
+      continue;
+
+    printf("Ok CWC found\n");
+
     ct = calloc(1, sizeof(cwc_transport_t));
     ct->ct_keys = get_key_struct();
     ct->ct_cwc = cwc;

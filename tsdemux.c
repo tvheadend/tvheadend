@@ -195,7 +195,7 @@ void
 ts_recv_packet1(th_transport_t *t, uint8_t *tsb)
 {
   th_stream_t *st;
-  int pid;
+  int pid, n, m, r;
   th_descrambler_t *td;
 
   pid = (tsb[1] & 0x1f) << 8 | tsb[2];
@@ -216,10 +216,24 @@ ts_recv_packet1(th_transport_t *t, uint8_t *tsb)
 
   if(tsb[3] & 0xc0) {
     /* scrambled stream */
-    LIST_FOREACH(td, &t->tht_descramblers, td_transport_link)
-      if(td->td_descramble(td, t, st, tsb))
-	break;
-    
+    n = m = 0;
+
+    LIST_FOREACH(td, &t->tht_descramblers, td_transport_link) {
+      n++;
+      
+      r = td->td_descramble(td, t, st, tsb);
+      if(r == 0)
+	return;
+      
+      if(r == TRANSPORT_ERROR_NO_ACCESS)
+	m++;
+    }
+
+    if(n == 0) {
+      transport_signal_error(t, TRANSPORT_ERROR_NO_DESCRAMBLER);
+    } else if(m == n) {
+      transport_signal_error(t, TRANSPORT_ERROR_NO_ACCESS);
+    }
     return;
   }
 
