@@ -184,6 +184,9 @@ tt_decode_line(th_transport_t *t, uint8_t *buf)
   tt_decoder_t *ttd = &ch->ch_tt;
   tt_page_t *ttp;
 
+  if(ch == NULL)
+    return; /* Not mapped to a channel, do not do anything */
+
   mpag = ham_decode(buf[0], buf[1]);
 
   magidx = mpag & 7;
