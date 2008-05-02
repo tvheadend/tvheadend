@@ -1,5 +1,5 @@
 /*
- *  tvheadend, subscription functions
+ *  Functions for transport probing
  *  Copyright (C) 2007 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,22 +16,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SUBSCRIPTIONS_H
-#define SUBSCRIPTIONS_H
+#ifndef SERVICE_PROBE_H_
+#define SERVICE_PROBE_H_
 
-void subscription_unsubscribe(th_subscription_t *s);
+void serviceprobe_setup(void);
 
-void subscription_set_weight(th_subscription_t *s, unsigned int weight);
+void serviceprobe_add(th_transport_t *t);
 
-th_subscription_t *subscription_create(th_channel_t *ch, unsigned int weight,
-				       const char *name, 
-				       subscription_callback_t *cb,
-				       void *opaque);
-
-void subscriptions_init(void);
-
-void subscription_stop(th_subscription_t *s);
-
-void subscription_reschedule(void);
-
-#endif /* SUBSCRIPTIONS_H */
+#endif /* SERVICE_PROBE_H_ */

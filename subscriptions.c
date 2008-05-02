@@ -52,7 +52,7 @@ struct th_subscription_list subscriptions;
 static dtimer_t auto_reschedule_timer;
 
 
-static void
+void
 subscription_reschedule(void)
 {
   th_subscription_t *s;
@@ -150,6 +150,7 @@ subscription_create(th_channel_t *ch, unsigned int weight, const char *name,
 
   return s;
 }
+
 
 void
 subscription_set_weight(th_subscription_t *s, unsigned int weight)

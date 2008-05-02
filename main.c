@@ -62,6 +62,7 @@
 #include "ajaxui/ajaxui.h"
 #include "webui/webui.h"
 #include "access.h"
+#include "serviceprobe.h"
 
 #include <libhts/htsparachute.h>
 
@@ -237,6 +238,7 @@ main(int argc, char **argv)
   av_log_set_level(AV_LOG_INFO);
   tffm_init();
   pkt_init();
+  serviceprobe_setup();
 
   if(!disable_dvb)
     dvb_init();

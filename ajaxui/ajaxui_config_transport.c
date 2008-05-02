@@ -33,6 +33,7 @@
 #include "channels.h"
 #include "psi.h"
 #include "transports.h"
+#include "serviceprobe.h"
 
 
 /**
@@ -227,6 +228,8 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
   ajax_a_jsfuncf(tq, "Map selected",    "selected_do('map');");
   tcp_qprintf(tq, " / ");
   ajax_a_jsfuncf(tq, "Unmap selected",  "selected_do('unmap');");
+  tcp_qprintf(tq, " / ");
+  ajax_a_jsfuncf(tq, "Test and map selected",  "selected_do('probe');");
 
   tcp_qprintf(tq, "</div></div>");
 
@@ -337,6 +340,9 @@ ajax_transport_op(http_connection_t *hc, http_reply_t *hr,
       dvb_map_channel(t, tq);
     } else if(!strcmp(op, "unmap") && t->tht_channel != NULL) {
       dvb_unmap_channel(t, tq);
+    } else if(!strcmp(op, "probe")) {
+      serviceprobe_add(t);
+      continue;
     }
     t->tht_config_change(t);
   }

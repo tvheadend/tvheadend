@@ -80,6 +80,7 @@ TAILQ_HEAD(event_queue, event);
 LIST_HEAD(pvr_rec_list, pvr_rec);
 TAILQ_HEAD(ref_update_queue, ref_update);
 LIST_HEAD(th_transport_list, th_transport);
+TAILQ_HEAD(th_transport_queue, th_transport);
 LIST_HEAD(th_dvb_mux_list, th_dvb_mux);
 LIST_HEAD(th_dvb_mux_instance_list, th_dvb_mux_instance);
 LIST_HEAD(th_stream_list, th_stream);
@@ -499,6 +500,13 @@ typedef struct th_transport {
   struct th_descrambler_list tht_descramblers;
   int tht_scrambled;
   int tht_caid;
+
+  /**
+   * Autoprobing support
+   */
+
+  TAILQ_ENTRY(th_transport) tht_probe_link;
+  int tht_on_probe_queue;
 
 } th_transport_t;
 

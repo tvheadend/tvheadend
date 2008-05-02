@@ -151,7 +151,7 @@ transport_stop(th_transport_t *t, int flush_subscriptions)
 /*
  *
  */
-static int
+int
 transport_start(th_transport_t *t, unsigned int weight)
 {
   th_stream_t *st;
