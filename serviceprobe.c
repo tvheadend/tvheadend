@@ -46,7 +46,7 @@ typedef struct sp {
   dtimer_t sp_timer;
   th_muxer_t *sp_muxer;
   th_subscription_t *sp_s;
-  int sp_ok;
+  int sp_error;
 } sp_t;
 
 
@@ -83,12 +83,29 @@ sp_timeout(void *aux, int64_t now)
 {
   sp_t *sp = aux;
   th_transport_t *t = sp->sp_s->ths_transport;
+  const char *errtxt;
 
-  syslog(LOG_INFO,
-	 "Probe %6s %s\n", 
-	 sp->sp_ok ? "Ok" : "Failed", t->tht_servicename);
+  switch(sp->sp_error) {
+  case 0:
+    errtxt = "Ok";
+    break;
+  case -1:
+    errtxt = "Timeout, no video seen";
+    break;
+  case TRANSPORT_ERROR_NO_DESCRAMBLER:
+    errtxt = "No descrambler for stream";
+    break;
+  case TRANSPORT_ERROR_NO_ACCESS:
+    errtxt = "Access denied";
+    break;
+  default:
+    errtxt = "Other error";
+    break;
+  }
+
+  syslog(LOG_INFO, "Probed \"%s\" -- %s\n", t->tht_servicename, errtxt);
  
-  if(sp->sp_ok) {
+  if(sp->sp_error == 0) {
     if(t->tht_channel == NULL && t->tht_servicename != NULL) {
       transport_set_channel(t, t->tht_servicename);
       t->tht_config_change(t);
@@ -106,7 +123,7 @@ sp_packet_input(void *opaque, th_muxstream_t *tms, th_pkt_t *pkt)
 
   if(tms->tms_stream->st_type == HTSTV_MPEG2VIDEO ||
      tms->tms_stream->st_type == HTSTV_H264) {
-    sp->sp_ok = 1;
+    sp->sp_error = 0;
     dtimer_arm(&sp->sp_timer, sp_timeout, sp, 0);
   }
 }
@@ -118,8 +135,9 @@ static void
 sp_err_callback(struct th_subscription *s, int errorcode, void *opaque)
 {
   sp_t *sp = opaque;
+  s->ths_err_callback = NULL;
 
-  sp->sp_ok = 0;
+  sp->sp_error = -1;
   dtimer_arm(&sp->sp_timer, sp_timeout, sp, 0);
 }
 
