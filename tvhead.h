@@ -809,6 +809,16 @@ typedef void (subscription_raw_input_t)(struct th_subscription *s,
 					th_stream_t *st,
 					void *opaque);
 
+
+#define TRANSPORT_ERROR_NO_DESCRAMBLER 1
+#define TRANSPORT_ERROR_NO_ACCESS      2
+#define TRANSPORT_ERROR_MUX_ERROR      3
+
+
+typedef void (subscription_err_callback_t)(struct th_subscription *s,
+					   int errorcode,
+					   void *opaque);
+
 typedef struct th_subscription {
   LIST_ENTRY(th_subscription) ths_global_link;
   int ths_weight;
@@ -833,6 +843,8 @@ typedef struct th_subscription {
   subscription_raw_input_t *ths_raw_input;
 
   th_muxer_t *ths_muxer;
+
+  subscription_err_callback_t *ths_err_callback;
 
 } th_subscription_t;
 

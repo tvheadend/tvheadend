@@ -586,3 +586,15 @@ transport_is_available(th_transport_t *t)
 {
   return transport_servicetype_txt(t) && LIST_FIRST(&t->tht_streams);
 }
+
+/**
+ *
+ */
+void
+transport_signal_error(th_transport_t *t, int errorcode)
+{
+  th_subscription_t *s;
+  LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link)
+    if(s->ths_err_callback != NULL)
+      s->ths_err_callback(s, errorcode, s->ths_opaque);
+}

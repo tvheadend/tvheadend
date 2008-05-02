@@ -34,6 +34,7 @@
 #include "tsdemux.h"
 #include "ffdecsa/FFdecsa.h"
 #include "dispatch.h"
+#include "transports.h"
 
 #define CWC_KEEPALIVE_INTERVAL 600
 
@@ -497,12 +498,14 @@ cwc_dispatch_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
 
     if(len < 19) {
 
-      if(ct->ct_keystate != CT_FORBIDDEN) 
+      if(ct->ct_keystate != CT_FORBIDDEN) {
+	transport_signal_error(t, TRANSPORT_ERROR_NO_ACCESS);
 	syslog(LOG_ERR, 
 	       "Can not descramble \"%s\" for service \"%s\", access denied",
 	       t->tht_identifier, t->tht_servicename);
+	ct->ct_keystate = CT_FORBIDDEN;
+      }
 
-      ct->ct_keystate = CT_FORBIDDEN;
       return 0;
     }
 

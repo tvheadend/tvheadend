@@ -111,6 +111,18 @@ sp_packet_input(void *opaque, th_muxstream_t *tms, th_pkt_t *pkt)
   }
 }
 
+/**
+ * Callback when transport hits an error
+ */
+static void
+sp_err_callback(struct th_subscription *s, int errorcode, void *opaque)
+{
+  sp_t *sp = opaque;
+
+  sp->sp_ok = 0;
+  dtimer_arm(&sp->sp_timer, sp_timeout, sp, 0);
+}
+
 
 /**
  * Setup IPTV (TS over UDP) output
@@ -132,7 +144,8 @@ serviceprobe_engage(void)
   sp->sp_s = s = calloc(1, sizeof(th_subscription_t));
   s->ths_title     = "probe";
   s->ths_weight    = INT32_MAX;
-  
+  s->ths_opaque    = sp;
+
   if(t->tht_status != TRANSPORT_RUNNING)
     transport_start(t, INT32_MAX);
 
@@ -141,6 +154,8 @@ serviceprobe_engage(void)
 
   sp->sp_muxer = tm = muxer_init(s, sp_packet_input, sp);
   muxer_play(tm, AV_NOPTS_VALUE);
+
+  s->ths_err_callback = sp_err_callback;
 
   dtimer_arm(&sp->sp_timer, sp_timeout, sp, 4);
 }
