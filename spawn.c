@@ -210,7 +210,7 @@ spawn_and_store_stdout(const char *prog, char *const argv[], char **outp)
     return 0;
   }
 
-  outbuf = malloc(totalsize);
+  outbuf = malloc(totalsize + 1);
   r = 0;
   while((b = TAILQ_FIRST(&bufs)) != NULL) {
     memcpy(outbuf + r, b->sob_buf, b->sob_size);
