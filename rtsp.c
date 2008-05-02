@@ -569,9 +569,18 @@ rtsp_cmd_teardown(http_connection_t *hc)
 static int
 rtsp_access_list(http_connection_t *hc)
 {
-  return access_verify(hc->hc_username, hc->hc_password,
-		       (struct sockaddr *)&hc->hc_tcp_session.tcp_peer_addr,
-		       ACCESS_STREAMING);
+  int x;
+
+  if(hc->hc_authenticated)
+    return 0;
+
+  x = access_verify(hc->hc_username, hc->hc_password,
+		    (struct sockaddr *)&hc->hc_tcp_session.tcp_peer_addr,
+		    ACCESS_STREAMING);
+  if(x == 0)
+    hc->hc_authenticated = 1;
+
+  return x;
 }
 
 
