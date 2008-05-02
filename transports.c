@@ -439,6 +439,7 @@ transport_destroy(th_transport_t *t)
   }
 
   LIST_REMOVE(t, tht_mux_link);
+  LIST_REMOVE(t, tht_hash_link);
 
   transport_flush_subscribers(t);
   
@@ -451,6 +452,7 @@ transport_destroy(th_transport_t *t)
     LIST_REMOVE(st, st_link);
     free(st);
   }
+  free(t);
 }
 
 
