@@ -85,6 +85,13 @@ function dvb_adapter_rename(id, oldname)
 	}
 }
 
+function dvb_adapter_delete(id, name)
+{
+	if(confirm("Are you sure you want to delete '" + name + "'") == true) {
+		a = new Ajax.Request('/ajax/dvbadapterdelete/' + id);
+	}
+}
+
 function makedivinput(id, url)
 {
 	$(id).innerHTML='<div style="width:100%; overflow:auto">' + 

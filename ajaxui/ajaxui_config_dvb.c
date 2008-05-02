@@ -224,6 +224,14 @@ ajax_adaptereditor(http_connection_t *hc, http_reply_t *hr,
 		 "dvb_adapter_rename('%s', '%s');",
 		 tda->tda_identifier, tda->tda_displayname);
 
+  if(tda->tda_rootpath == NULL) {
+    tcp_qprintf(tq, " / ");
+    
+    ajax_a_jsfuncf(tq, "Delete adapter...",
+		   "dvb_adapter_delete('%s', '%s');",
+		   tda->tda_identifier, tda->tda_displayname);
+  }
+
   tcp_qprintf(tq, "</div>");
 
   /* Clone adapter */
@@ -937,6 +945,30 @@ ajax_dvbadapterclone(http_connection_t *hc, http_reply_t *hr,
 
 
 /**
+ * Delete adapter
+ */
+static int
+ajax_dvbadapterdelete(http_connection_t *hc, http_reply_t *hr, 
+		      const char *remain, void *opaque)
+{
+  tcp_queue_t *tq = &hr->hr_tq;
+  th_dvb_adapter_t *tda;
+
+  if(remain == NULL || (tda = dvb_adapter_find_by_identifier(remain)) == NULL)
+    return HTTP_STATUS_NOT_FOUND;
+
+  tcp_qprintf(tq, "var o = $('summary_%s'); o.parentNode.removeChild(o);\r\n",
+	      tda->tda_identifier);
+  tcp_qprintf(tq, "$('dvbadaptereditor').innerHTML ='';\r\n");
+
+  dvb_tda_destroy(tda);
+
+  http_output(hc, hr, "text/javascript; charset=UTF8", NULL, 0);
+  return 0;
+}
+
+
+/**
  *
  */
 void
@@ -963,6 +995,8 @@ ajax_config_dvb_init(void)
   http_path_add("/ajax/dvbadapteraddnetwork", NULL, ajax_dvbadapteraddnetwork,
 		AJAX_ACCESS_CONFIG);
  http_path_add("/ajax/dvbadapterclone",       NULL, ajax_dvbadapterclone,
+		AJAX_ACCESS_CONFIG);
+ http_path_add("/ajax/dvbadapterdelete",      NULL, ajax_dvbadapterdelete,
 		AJAX_ACCESS_CONFIG);
 
 }

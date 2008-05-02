@@ -757,3 +757,34 @@ dvb_tda_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
   }
   dvb_tda_save(dst);
 }
+
+/**
+ * 
+ */
+int
+dvb_tda_destroy(th_dvb_adapter_t *tda)
+{
+  th_dvb_mux_instance_t *tdmi;
+
+  char buf[400];
+
+  if(tda->tda_rootpath != NULL)
+    return -1;
+
+  snprintf(buf, sizeof(buf), "%s/dvbadapters/%s",
+	   settings_dir, tda->tda_identifier);
+
+  unlink(buf);
+
+  while((tdmi = LIST_FIRST(&tda->tda_muxes)) != NULL)
+    dvb_mux_destroy(tdmi);
+  
+  TAILQ_REMOVE(&dvb_adapters, tda, tda_global_link);
+
+  free(tda->tda_identifier);
+  free(tda->tda_displayname);
+
+  free(tda);
+
+  return 0;
+}
