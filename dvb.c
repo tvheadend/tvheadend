@@ -692,3 +692,68 @@ dvb_source_name(th_transport_t *t)
 
   return buf;
 }
+
+/**
+ * 
+ */
+void
+dvb_tda_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
+{
+  th_dvb_mux_instance_t *tdmi_src, *tdmi_dst;
+  th_transport_t *t_src, *t_dst;
+  th_stream_t *st_src, *st_dst;
+
+  while((tdmi_dst = LIST_FIRST(&dst->tda_muxes)) != NULL)
+    dvb_mux_destroy(tdmi_dst);
+
+  LIST_FOREACH(tdmi_src, &src->tda_muxes, tdmi_adapter_link) {
+    tdmi_dst = dvb_mux_create(dst, 
+			      tdmi_src->tdmi_fe_params,
+			      tdmi_src->tdmi_polarisation, 
+			      tdmi_src->tdmi_switchport,
+			      0, 
+			      tdmi_src->tdmi_transport_stream_id,
+			      tdmi_src->tdmi_network);
+
+    LIST_FOREACH(t_src, &tdmi_src->tdmi_transports, tht_mux_link) {
+      t_dst = dvb_find_transport(tdmi_dst, 
+				 t_src->tht_dvb_service_id,
+				 t_src->tht_pmt,
+				 NULL);
+
+      t_dst->tht_pcr_pid     = t_src->tht_pcr_pid;
+      t_dst->tht_disabled    = t_src->tht_disabled;
+      t_dst->tht_servicetype = t_src->tht_servicetype;
+      t_dst->tht_scrambled   = t_src->tht_scrambled;
+
+      if(t_src->tht_provider != NULL)
+	t_dst->tht_provider    = strdup(t_src->tht_provider);
+
+      if(t_src->tht_servicename != NULL)
+	t_dst->tht_servicename = strdup(t_src->tht_servicename);
+
+      if(t_src->tht_channelname != NULL)
+	t_dst->tht_channelname = strdup(t_src->tht_channelname);
+      
+      if(t_src->tht_channel != NULL)
+	transport_set_channel(t_dst, t_src->tht_channel->ch_name);
+
+      
+
+      LIST_FOREACH(st_src, &t_src->tht_streams, st_link) {
+
+	st_dst = transport_add_stream(t_dst, 
+				      st_src->st_pid,
+				      st_src->st_type);
+	
+	st_dst->st_tb = (AVRational){1, 90000};
+	
+	memcpy(st_dst->st_lang,     st_src->st_lang, 4);
+	st_dst->st_frame_duration = st_src->st_frame_duration;
+	st_dst->st_caid           = st_src->st_caid;
+      }
+    }
+    dvb_tdmi_save(tdmi_dst);
+  }
+  dvb_tda_save(dst);
+}

@@ -68,4 +68,6 @@ void dvb_mux_destroy(th_dvb_mux_instance_t *tdmi);
 
 void tdmi_stop(th_dvb_mux_instance_t *tdmi);
 
+void dvb_tda_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src);
+
 #endif /* DVB_H_ */

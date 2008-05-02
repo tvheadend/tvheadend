@@ -165,7 +165,7 @@ ajax_adaptereditor(http_connection_t *hc, http_reply_t *hr,
 		   const char *remain, void *opaque)
 {
   tcp_queue_t *tq = &hr->hr_tq;
-  th_dvb_adapter_t *tda;
+  th_dvb_adapter_t *tda, *tda2;
   const char *s;
 
   if(remain == NULL || (tda = dvb_adapter_find_by_identifier(remain)) == NULL)
@@ -217,10 +217,40 @@ ajax_adaptereditor(http_connection_t *hc, http_reply_t *hr,
 
   tcp_qprintf(tq, "</div>");
 
+  tcp_qprintf(tq, "<div style=\"float: left; width:55%%\">");
+
+  tcp_qprintf(tq, "<div style=\"overflow: auto; width:100%%\">");
   ajax_a_jsfuncf(tq, "Rename adapter...",
 		 "dvb_adapter_rename('%s', '%s');",
 		 tda->tda_identifier, tda->tda_displayname);
- 
+
+  tcp_qprintf(tq, "</div>");
+
+  /* Clone adapter */
+
+  tcp_qprintf(tq, "<div style=\"overflow: auto; width:100%%\">");
+  tcp_qprintf(tq,
+	      "<select class=\"textinput\" "
+	      "onChange=\"new Ajax.Request('/ajax/dvbadapterclone/%s', "
+	      "{parameters: { source: this.value }})\">",
+	      tda->tda_identifier);
+  
+  tcp_qprintf(tq, "<option value=\"n\">Clone settings from adapter:</option>");
+
+  TAILQ_FOREACH(tda2, &dvb_adapters, tda_global_link) {
+    if(tda2 == tda || tda2->tda_type != tda->tda_type)
+      continue;
+
+    tcp_qprintf(tq, "<option value=\"%s\">%s (%s)</option>",
+		tda2->tda_identifier, tda2->tda_displayname,
+		tda2->tda_rootpath ?: "not present");
+  }
+  
+  tcp_qprintf(tq, "</select></div>");
+  tcp_qprintf(tq, "</div>");
+
+  tcp_qprintf(tq, "</div>");
+
   tcp_qprintf(tq, "</div>");
 
   /* Muxes and transports */
@@ -872,6 +902,39 @@ ajax_dvbadapteraddnetwork(http_connection_t *hc, http_reply_t *hr,
   return 0;
 }
 
+/**
+ * Clone adapter
+ */
+static int
+ajax_dvbadapterclone(http_connection_t *hc, http_reply_t *hr, 
+		     const char *remain, void *opaque)
+{
+  tcp_queue_t *tq = &hr->hr_tq;
+  th_dvb_adapter_t *src, *dst;
+  const char *s;
+
+  if(remain == NULL || (dst = dvb_adapter_find_by_identifier(remain)) == NULL)
+    return HTTP_STATUS_NOT_FOUND;
+  
+  if((s = http_arg_get(&hc->hc_req_args, "source")) == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  if((src = dvb_adapter_find_by_identifier(s)) == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  printf("Clone from %s to %s\n", src->tda_displayname, dst->tda_displayname);
+
+  dvb_tda_clone(dst, src);
+
+  tcp_qprintf(tq, "new Ajax.Updater('dvbadaptereditor', "
+	      "'/ajax/dvbadaptereditor/%s', "
+	      "{method: 'get', evalScripts: true});\r\n",
+	      dst->tda_identifier);
+
+  http_output(hc, hr, "text/javascript; charset=UTF8", NULL, 0);
+  return 0;
+}
+
 
 /**
  *
@@ -898,6 +961,8 @@ ajax_config_dvb_init(void)
   http_path_add("/ajax/dvbnetworkinfo",       NULL, ajax_dvbnetworkinfo,
 		AJAX_ACCESS_CONFIG);
   http_path_add("/ajax/dvbadapteraddnetwork", NULL, ajax_dvbadapteraddnetwork,
+		AJAX_ACCESS_CONFIG);
+ http_path_add("/ajax/dvbadapterclone",       NULL, ajax_dvbadapterclone,
 		AJAX_ACCESS_CONFIG);
 
 }
