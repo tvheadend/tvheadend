@@ -768,8 +768,6 @@ cwc_transport_start(th_transport_t *t)
     if(st == NULL)
       continue;
 
-    printf("Ok CWC found\n");
-
     ct = calloc(1, sizeof(cwc_transport_t));
     ct->ct_keys = get_key_struct();
     ct->ct_cwc = cwc;
