@@ -221,25 +221,26 @@ ajax_adaptereditor(http_connection_t *hc, http_reply_t *hr,
   tcp_qprintf(tq, "<div style=\"float: left; width:55%%\">");
 
   tcp_qprintf(tq, "<div style=\"overflow: auto; width:100%%\">");
-  ajax_a_jsfuncf(tq, "Rename adapter...",
-		 "dvb_adapter_rename('%s', '%s');",
-		 tda->tda_identifier, tda->tda_displayname);
+
+  tcp_qprintf(tq, 
+	      "<input type=\"button\" value=\"Rename adapter...\" "
+	      "onClick=\"dvb_adapter_rename('%s', '%s');\">",
+	      tda->tda_identifier, tda->tda_displayname);
 
   if(tda->tda_rootpath == NULL) {
-    tcp_qprintf(tq, " / ");
-    
-    ajax_a_jsfuncf(tq, "Delete adapter...",
-		   "dvb_adapter_delete('%s', '%s');",
-		   tda->tda_identifier, tda->tda_displayname);
+    tcp_qprintf(tq, 
+		"<input type=\"button\" value=\"Delete adapter...\" "
+		"onClick=\"dvb_adapter_delete('%s', '%s');\">",
+		tda->tda_identifier, tda->tda_displayname);
   }
 
-  tcp_qprintf(tq, "</div>");
+  //  tcp_qprintf(tq, "</div>");
 
   /* Clone adapter */
 
-  tcp_qprintf(tq, "<div style=\"overflow: auto; width:100%%\">");
+  //  tcp_qprintf(tq, "<div style=\"overflow: auto; width:100%%\">");
   tcp_qprintf(tq,
-	      "<select class=\"textinput\" "
+	      "<select "
 	      "onChange=\"new Ajax.Request('/ajax/dvbadapterclone/%s', "
 	      "{parameters: { source: this.value }})\">",
 	      tda->tda_identifier);

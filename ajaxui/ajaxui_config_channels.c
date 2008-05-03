@@ -208,16 +208,15 @@ ajax_config_channels_tab(http_connection_t *hc, http_reply_t *hr)
   ajax_box_begin(tq, AJAX_BOX_BORDER, NULL, NULL, NULL);
 
   tcp_qprintf(tq,
-	      "<div style=\"height: 20px\">"
+	      "<div style=\"height: 25px\">"
 	      "<div style=\"float: left\">"
-	      "<input class=\"textinput\" type=\"text\" id=\"newchgrp\">"
+	      "<input type=\"text\" id=\"newchgrp\">"
 	      "</div>"
-	      "<div style=\"padding-top:2px\" class=\"chgroupaction\">"
-	      "<a href=\"javascript:void(0)\" "
+	      "<div style=\"float: right\">"
+	      "<input type=\"button\" value=\"Add\" "
 	      "onClick=\"javascript:addlistentry_by_widget("
 	      "'channelgrouplist', 'chgroup_add', 'newchgrp');\">"
-	      "Add</a></div>"
-	      "</div>");
+	      "</div></div>");
     
   ajax_box_end(tq, AJAX_BOX_BORDER);
     
