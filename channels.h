@@ -51,4 +51,6 @@ int channel_rename(channel_t *ch, const char *newname);
 
 void channel_delete(channel_t *ch);
 
+void channel_merge(channel_t *dst, channel_t *src);
+
 #endif /* CHANNELS_H */

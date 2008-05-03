@@ -116,7 +116,15 @@ function channel_rename(tag, oldname)
 
 function channel_delete(tag, name)
 {
-	if(confirm("Are you sure you want to delete '" + name + "'") == true) {
+	if(confirm("Are you sure you want to delete '" + name + "'") == true){
 		a = new Ajax.Request('/ajax/chdelete/' + tag);
+	}
+}
+
+function channel_merge(srctag, dsttag)
+{
+	if(confirm("Are you sure") == true){
+		a = new Ajax.Request('/ajax/chmerge/' + srctag,
+					{parameters: {dst: dsttag}});
 	}
 }

@@ -400,7 +400,8 @@ ajax_cheditor(http_connection_t *hc, http_reply_t *hr,
 	      const char *remain, void *opaque)
 {
   tcp_queue_t *tq = &hr->hr_tq;
-  channel_t *ch;
+  channel_t *ch, *ch2;
+  channel_group_t *chg;
   th_transport_t *t;
   const char *s;
   int i;
@@ -454,8 +455,24 @@ ajax_cheditor(http_connection_t *hc, http_reply_t *hr,
 	      "onClick=\"channel_delete('%d', '%s')\">",
 	      ch->ch_tag, ch->ch_name);
 
-  tcp_qprintf(tq, "</div>");
+  tcp_qprintf(tq,
+	      "<select "
+	      "onChange=\"channel_merge('%d', this.value);\">",
+	      ch->ch_tag);
+  
+  tcp_qprintf(tq, "<option value=\"n\">Merge to channel:</option>");
 
+  
+  TAILQ_FOREACH(chg, &all_channel_groups, tcg_global_link) {
+    TAILQ_FOREACH(ch2, &chg->tcg_channels, ch_group_link) {
+      if(ch2 != ch)
+	tcp_qprintf(tq, "<option value=\"%d\">%s</option>",
+		    ch2->ch_tag, ch2->ch_name);
+    }
+  }
+  
+  tcp_qprintf(tq, "</select>");
+  tcp_qprintf(tq, "</div>");
   tcp_qprintf(tq, "<hr>\r\n");
 
   tcp_qprintf(tq,
@@ -616,6 +633,42 @@ ajax_chdelete(http_connection_t *hc, http_reply_t *hr,
   return 0;
 }
 
+/**
+ * Merge channel
+ */
+static int
+ajax_chmerge(http_connection_t *hc, http_reply_t *hr,
+	     const char *remain, void *opaque)
+{
+  tcp_queue_t *tq = &hr->hr_tq;
+  channel_t *src, *dst;
+  channel_group_t *tcg;
+  const char *s;
+
+  if(remain == NULL || (src = channel_by_tag(atoi(remain))) == NULL)
+    return HTTP_STATUS_NOT_FOUND;
+  
+  if((s = http_arg_get(&hc->hc_req_args, "dst")) == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+  
+  if((dst = channel_by_tag(atoi(s))) == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  tcg = src->ch_group;
+  channel_merge(dst, src);
+
+  tcp_qprintf(tq, 
+	      "new Ajax.Updater('groupeditortab', "
+	      "'/ajax/chgroup_editor/%d', "
+	      "{method: 'get', evalScripts: true});\r\n",
+	      tcg->tcg_tag);
+ 
+  tcp_qprintf(tq, "$('cheditortab').innerHTML='';\r\n");
+
+  http_output(hc, hr, "text/javascript; charset=UTF-8", NULL, 0);
+  return 0;
+}
+
 
 /**
  *
@@ -640,6 +693,8 @@ ajax_config_channels_init(void)
   http_path_add("/ajax/chrename",            NULL, ajax_chrename,
 		AJAX_ACCESS_CONFIG);
   http_path_add("/ajax/chdelete",            NULL, ajax_chdelete,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/chmerge",             NULL, ajax_chmerge,
 		AJAX_ACCESS_CONFIG);
 
 }

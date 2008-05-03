@@ -508,3 +508,28 @@ channel_delete(channel_t *ch)
   snprintf(buf, sizeof(buf), "%s/channels/%s", settings_dir, ch->ch_sname);
   unlink(buf);
 }
+
+
+
+/**
+ * Merge transports from channel 'src' to channel 'dst'
+ *
+ * Then, destroy the 'src' channel
+ */
+void
+channel_merge(channel_t *dst, channel_t *src)
+{
+  th_transport_t *t;
+
+  while((t = LIST_FIRST(&src->ch_transports)) != NULL) {
+    transport_unmap_channel(t);
+
+    free(t->tht_servicename);
+    t->tht_servicename = strdup(dst->ch_name);
+
+    transport_map_channel(t);
+    t->tht_config_change(t);
+  }
+
+  channel_delete(src);
+}
