@@ -331,7 +331,7 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
 	      "<div class=\"cell_50\">"
 	      "<div class=\"infoprefixwidewidefat\">Frequency (%s):</div>"
 	      "<div>"
-	      "<input class=\"textinput\" type=\"text\" id=\"freq\">"
+	      "<input type=\"text\" id=\"freq\">"
 	      "</div></div>",
 	      fetype == FE_QPSK ? "kHz" : "Hz");
 
@@ -346,7 +346,7 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
 		"<div class=\"cell_50\">"
 		"<div class=\"infoprefixwidewidefat\">Symbolrate:</div>"
 		"<div>"
-		"<input class=\"textinput\" type=\"text\" id=\"symrate\">"
+		"<input  type=\"text\" id=\"symrate\">"
 		"</div></div>");
 
     snprintf(params + strlen(params), sizeof(params) - strlen(params), 
@@ -359,7 +359,7 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
     tcp_qprintf(tq,
 		"<div class=\"cell_50\">"
 		"<div class=\"infoprefixwidewidefat\">Bandwidth:</div>"
-		"<div><select id=\"bw\" class=\"textinput\">");
+		"<div><select id=\"bw\">");
 
     add_option(tq, caps & FE_CAN_BANDWIDTH_AUTO, "AUTO");
     add_option(tq, 1                           , "8MHz");
@@ -379,7 +379,7 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
     tcp_qprintf(tq,
 		"<div class=\"cell_50\">"
 		"<div class=\"infoprefixwidewidefat\">Constellation:</div>"
-		"<div><select id=\"const\" class=\"textinput\">");
+		"<div><select id=\"const\">");
 
     add_option(tq, caps & FE_CAN_QAM_AUTO,  "AUTO");
     add_option(tq, caps & FE_CAN_QPSK,      "QPSK");
@@ -402,7 +402,7 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
     tcp_qprintf(tq,
 		"<div class=\"cell_50\">"
 		"<div class=\"infoprefixwidewidefat\">FEC:</div>"
-		"<div><select id=\"fec\" class=\"textinput\">");
+		"<div><select id=\"fec\">");
 
     add_option(tq, caps & FE_CAN_FEC_AUTO,  "AUTO");
     add_option(tq, caps & FE_CAN_FEC_1_2,   "1/2");
@@ -423,7 +423,7 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
     tcp_qprintf(tq,
 		"<div class=\"cell_50\">"
 		"<div class=\"infoprefixwidewidefat\">Polarisation:</div>"
-		"<div><select id=\"pol\" class=\"textinput\">");
+		"<div><select id=\"pol\">");
 
     add_option(tq, 1,  "Vertical");
     add_option(tq, 1,  "Horizontal");
@@ -440,7 +440,7 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
     tcp_qprintf(tq,
 		"<div class=\"cell_50\">"
 		"<div class=\"infoprefixwidewidefat\">Transmission mode:</div>"
-		"<div><select id=\"tmode\" class=\"textinput\">");
+		"<div><select id=\"tmode\">");
     
     add_option(tq, caps & FE_CAN_TRANSMISSION_MODE_AUTO, "AUTO");
     add_option(tq, 1                                   , "2k");
@@ -453,7 +453,7 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
     tcp_qprintf(tq,
 		"<div class=\"cell_50\">"
 		"<div class=\"infoprefixwidewidefat\">Guard interval:</div>"
-		"<div><select id=\"guard\" class=\"textinput\">");
+		"<div><select id=\"guard\">");
     
     add_option(tq, caps & FE_CAN_GUARD_INTERVAL_AUTO, "AUTO");
     add_option(tq, 1                                , "1/32");
@@ -470,7 +470,7 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
     tcp_qprintf(tq,
 		"<div class=\"cell_50\">"
 		"<div class=\"infoprefixwidewidefat\">Hierarchy:</div>"
-		"<div><select id=\"hier\" class=\"textinput\">");
+		"<div><select id=\"hier\">");
     
     add_option(tq, caps & FE_CAN_HIERARCHY_AUTO, "AUTO");
     add_option(tq, 1                           , "1");
@@ -488,7 +488,7 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
     tcp_qprintf(tq,
 		"<div class=\"cell_50\">"
 		"<div class=\"infoprefixwidewidefat\">FEC Hi:</div>"
-		"<div><select id=\"fechi\" class=\"textinput\">");
+		"<div><select id=\"fechi\">");
     
     add_option(tq, caps & FE_CAN_FEC_AUTO,  "AUTO");
     add_option(tq, caps & FE_CAN_FEC_1_2,   "1/2");
@@ -508,7 +508,7 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
     tcp_qprintf(tq,
 		"<div class=\"cell_50\">"
 		"<div class=\"infoprefixwidewidefat\">FEC Low:</div>"
-		"<div><select id=\"feclo\" class=\"textinput\">");
+		"<div><select id=\"feclo\">");
     
     add_option(tq, caps & FE_CAN_FEC_AUTO,  "AUTO");
     add_option(tq, caps & FE_CAN_FEC_1_2,   "1/2");
@@ -545,7 +545,7 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
 
   tcp_qprintf(tq,
 	      "<div style=\"text-align: center\">"
-	      "<select id=\"network\" class=\"textinput\" "
+	      "<select id=\"network\" "
 	      "onChange=\"new Ajax.Updater('networkinfo', "
 	      "'/ajax/dvbnetworkinfo/' + this.value)\""
 	      ">");

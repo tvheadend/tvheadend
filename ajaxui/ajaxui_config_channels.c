@@ -353,7 +353,7 @@ ajax_chgroup_editor(http_connection_t *hc, http_reply_t *hr,
   tcp_qprintf(tq,
 	      "<div class=\"infoprefixwidefat\">Move to group:</div>"
 	      "<div>"
-	      "<select id=\"movetarget\" class=\"textinput\" "
+	      "<select id=\"movetarget\" "
 	      "onChange=\"select_do('changegroup', "
 	      "$('movetarget').value, '%d')\">", tcg->tcg_tag);
   tcp_qprintf(tq, "<option value="">Select group</option>");
@@ -462,7 +462,7 @@ ajax_cheditor(http_connection_t *hc, http_reply_t *hr,
 	      "<div class=\"infoprefixwidewidefat\">"
 	      "Commercial detection:</div>"
 	      "<div>"
-	      "<select class=\"textinput\" "
+	      "<select "
 	      "onChange=\"new Ajax.Request('/ajax/chsetcomdetect/%d', "
 	      "{parameters: {how: this.value}});\">",
 	      ch->ch_tag);

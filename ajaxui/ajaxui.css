@@ -36,11 +36,6 @@ img { border: 0; }
  * Input classes
  */
 
-.textinput {
-  border: 1px dotted #000000;
-  background: #fff
-}
-
 .nicebox {
   margin: 1px;
   padding: 0px;
