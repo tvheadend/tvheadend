@@ -113,8 +113,8 @@ static void
 xmltv_grabber_chlist(tcp_queue_t *tq, xmltv_grabber_t *xg)
 {
   xmltv_channel_t *xc;
-  th_channel_group_t *tcg;
-  th_channel_t *ch;
+  channel_group_t *tcg;
+  channel_t *ch;
 
   tcp_qprintf(tq,
 	      "<div style=\"overflow: auto; height: 450px\">");
@@ -274,7 +274,7 @@ ajax_xmltvgrabberchmap(http_connection_t *hc, http_reply_t *hr,
   xmltv_channel_t *xc;
   const char *xmltvname;
   const char *chname;
-  th_channel_t *ch;
+  channel_t *ch;
   //  tcp_queue_t *tq = &hr->hr_tq;
   
   if(remain == NULL || (xg = xmltv_grabber_find(remain)) == NULL)

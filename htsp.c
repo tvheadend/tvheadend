@@ -71,7 +71,7 @@ htsp_send_msg(htsp_t *htsp, htsmsg_t *m, int media)
  * build a channel message
  */
 static htsmsg_t *
-htsp_build_channel_msg(th_channel_t *ch, const char *method)
+htsp_build_channel_msg(channel_t *ch, const char *method)
 {
   htsmsg_t *msg = htsmsg_create();
   event_t *e;
@@ -99,8 +99,8 @@ static void
 htsp_send_all_channels(htsp_t *htsp)
 {
   htsmsg_t *msg;
-  th_channel_group_t *tcg;
-  th_channel_t *ch;
+  channel_group_t *tcg;
+  channel_t *ch;
 
   TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
     if(tcg->tcg_hidden)
@@ -125,7 +125,7 @@ htsp_send_all_channels(htsp_t *htsp)
  * 
  */
 void
-htsp_async_channel_update(th_channel_t *ch)
+htsp_async_channel_update(channel_t *ch)
 {
   htsp_t *htsp;
   htsmsg_t *msg;

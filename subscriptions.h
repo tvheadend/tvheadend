@@ -23,7 +23,7 @@ void subscription_unsubscribe(th_subscription_t *s);
 
 void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 
-th_subscription_t *subscription_create(th_channel_t *ch, unsigned int weight,
+th_subscription_t *subscription_create(channel_t *ch, unsigned int weight,
 				       const char *name, 
 				       subscription_callback_t *cb,
 				       void *opaque);

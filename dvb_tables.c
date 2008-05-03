@@ -201,7 +201,7 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
   th_transport_t *t;
-  th_channel_t *ch;
+  channel_t *ch;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
   uint16_t serviceid;

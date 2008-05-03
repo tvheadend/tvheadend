@@ -82,7 +82,7 @@ file_input_init(void)
   config_entry_t *ce;
   th_transport_t *t;
   th_stream_t *st;
-  th_channel_t *ch;
+  channel_t *ch;
 
   TAILQ_FOREACH(ce, &config_list, ce_link) {
     if(ce->ce_type != CFG_SUB || strcasecmp("streamedfile", ce->ce_key))

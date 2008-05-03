@@ -36,7 +36,7 @@ void transport_map_channel(th_transport_t *t);
 
 void transport_unmap_channel(th_transport_t *t);
 
-th_transport_t *transport_find(th_channel_t *ch, unsigned int weight);
+th_transport_t *transport_find(channel_t *ch, unsigned int weight);
 
 th_stream_t *transport_add_stream(th_transport_t *t, int pid,
 				  tv_streamtype_t type);

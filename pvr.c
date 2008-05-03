@@ -79,11 +79,11 @@ pvr_rec_t *
 pvr_get_by_entry(event_t *e)
 {
   pvr_rec_t *pvrr;
+  channel_t *ch = e->e_channel;
 
-  LIST_FOREACH(pvrr, &pvrr_global_list, pvrr_global_link) {
+  LIST_FOREACH(pvrr, &ch->ch_pvrrs, pvrr_channel_link) {
     if(pvrr->pvrr_start   >= e->e_start &&
-       pvrr->pvrr_stop    <= e->e_start + e->e_duration &&
-       pvrr->pvrr_channel == e->e_ch) {
+       pvrr->pvrr_stop    <= e->e_start + e->e_duration) {
       return pvrr;
     }
   }
@@ -148,6 +148,7 @@ pvr_free(pvr_rec_t *pvrr)
 {
   dtimer_disarm(&pvrr->pvrr_timer);
   LIST_REMOVE(pvrr, pvrr_global_link);
+  LIST_REMOVE(pvrr, pvrr_channel_link);
   free(pvrr->pvrr_title);
   free(pvrr->pvrr_desc);
   free(pvrr->pvrr_creator);
@@ -189,6 +190,22 @@ pvr_clear(pvr_rec_t *pvrr)
   return 0;
 }
 
+/**
+ * Destroy all PVRs based on the given channel
+ */
+void
+pvr_destroy_by_channel(channel_t *ch)
+{
+  pvr_rec_t *pvrr;
+
+  while((pvrr = LIST_FIRST(&ch->ch_pvrrs)) != NULL) {
+    if(pvrr->pvrr_status == HTSTV_PVR_STATUS_RECORDING)
+      pvr_abort(pvrr);
+
+    pvr_clear(pvrr);
+    pvr_free(pvrr);
+  }
+}
 
 
 /**
@@ -252,7 +269,7 @@ pvr_clear_all_completed(void)
 pvr_rec_t *
 pvr_schedule_by_event(event_t *e, const char *creator)
 {
-  th_channel_t *ch = e->e_ch;
+  channel_t *ch = e->e_channel;
   time_t start = e->e_start;
   time_t stop  = e->e_start + e->e_duration;
   time_t now;
@@ -265,19 +282,18 @@ pvr_schedule_by_event(event_t *e, const char *creator)
 
   /* Try to see if we already have a scheduled or active recording */
 
-  LIST_FOREACH(pvrr, &pvrr_global_list, pvrr_global_link) {
-    if(pvrr->pvrr_channel == ch && pvrr->pvrr_start == start &&
-       pvrr->pvrr_stop == stop)
+  LIST_FOREACH(pvrr, &ch->ch_pvrrs, pvrr_channel_link)
+    if(pvrr->pvrr_start == start && pvrr->pvrr_stop == stop)
       break;
-  }
 
   if(pvrr != NULL)
     return NULL; /* Already exists */
 
-
   pvrr = calloc(1, sizeof(pvr_rec_t));
   pvrr->pvrr_status  = HTSTV_PVR_STATUS_SCHEDULED;
   pvrr->pvrr_channel = ch;
+  LIST_INSERT_HEAD(&ch->ch_pvrrs, pvrr, pvrr_channel_link);
+
   pvrr->pvrr_start   = start;
   pvrr->pvrr_stop    = stop;
   pvrr->pvrr_title   = e->e_title ? strdup(e->e_title) : NULL;
@@ -295,7 +311,7 @@ pvr_schedule_by_event(event_t *e, const char *creator)
  * Record based on a channel
  */
 pvr_rec_t *
-pvr_schedule_by_channel_and_time(th_channel_t *ch, int duration,
+pvr_schedule_by_channel_and_time(channel_t *ch, int duration,
 				 const char *creator)
 {
   time_t now   = dispatch_clock;
@@ -306,6 +322,8 @@ pvr_schedule_by_channel_and_time(th_channel_t *ch, int duration,
   pvrr = calloc(1, sizeof(pvr_rec_t));
   pvrr->pvrr_status  = HTSTV_PVR_STATUS_SCHEDULED;
   pvrr->pvrr_channel = ch;
+  LIST_INSERT_HEAD(&ch->ch_pvrrs, pvrr, pvrr_channel_link);
+
   pvrr->pvrr_start   = start;
   pvrr->pvrr_stop    = stop;
   pvrr->pvrr_title   = strdup("Manual recording");

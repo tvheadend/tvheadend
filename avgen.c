@@ -89,7 +89,7 @@ static void init_picture(avgen_t *avg, int w, int h);
 void
 avgen_init(void)
 {
-  th_channel_t *ch;
+  channel_t *ch;
   th_transport_t *t;
 
   if(avcodec_find_encoder(CODEC_ID_MPEG2VIDEO) == NULL)

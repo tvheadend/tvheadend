@@ -19,9 +19,9 @@
 #ifndef HTSP_MUXER_H_
 #define HTSP_MUXER_H_
 
-void htsp_muxer_subscribe(htsp_t *htsp, th_channel_t *ch, int weight);
+void htsp_muxer_subscribe(htsp_t *htsp, channel_t *ch, int weight);
 
-void htsp_muxer_unsubscribe(htsp_t *htsp, th_channel_t *ch);
+void htsp_muxer_unsubscribe(htsp_t *htsp, channel_t *ch);
 
 void htsp_muxer_cleanup(htsp_t *htsp);
 

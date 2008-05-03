@@ -32,7 +32,7 @@
 #include "tvhead.h"
 #include "teletext.h"
 
-static void teletext_rundown(th_transport_t *t, th_channel_t *ch, 
+static void teletext_rundown(th_transport_t *t, channel_t *ch, 
 			     tt_page_t *ttp);
 
 #define bitreverse(b) \
@@ -180,7 +180,7 @@ tt_decode_line(th_transport_t *t, uint8_t *buf)
   uint8_t mpag, line, s12, s34, c;
   int page, magidx, i;
   tt_mag_t *mag;
-  th_channel_t *ch = t->tht_channel;
+  channel_t *ch = t->tht_channel;
   tt_decoder_t *ttd = &ch->ch_tt;
   tt_page_t *ttp;
 
@@ -318,7 +318,7 @@ tt_time_to_len(const char *buf)
  */
 
 static void
-teletext_rundown(th_transport_t *t, th_channel_t *ch, tt_page_t *ttp)
+teletext_rundown(th_transport_t *t, channel_t *ch, tt_page_t *ttp)
 {
   char r[50];
   int i;

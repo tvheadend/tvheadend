@@ -62,6 +62,9 @@ subscription_reschedule(void)
     if(s->ths_transport != NULL)
       continue; /* Got a transport, we're happy */
 
+    if(s->ths_channel == NULL)
+      continue; /* stale entry, channel has been destroyed */
+
     t = transport_find(s->ths_channel, s->ths_weight);
 
     if(t == NULL)
@@ -96,7 +99,9 @@ subscription_unsubscribe(th_subscription_t *s)
 {
   th_transport_t *t = s->ths_transport;
   LIST_REMOVE(s, ths_global_link);
-  LIST_REMOVE(s, ths_channel_link);
+
+  if(s->ths_channel != NULL)
+    LIST_REMOVE(s, ths_channel_link);
 
   if(t != NULL) {
     subscription_stop(s);
@@ -121,7 +126,7 @@ subscription_sort(th_subscription_t *a, th_subscription_t *b)
 
 
 th_subscription_t *
-subscription_create(th_channel_t *ch, unsigned int weight, const char *name,
+subscription_create(channel_t *ch, unsigned int weight, const char *name,
 		    subscription_callback_t *cb, void *opaque)
 {
   th_subscription_t *s;

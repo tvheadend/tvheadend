@@ -21,9 +21,9 @@
 
 #include <regex.h>
 
-TAILQ_HEAD(autorec_head, autorec);
+TAILQ_HEAD(autorec_queue, autorec);
 
-extern struct autorec_head autorecs;
+extern struct autorec_queue autorecs;
 
 typedef struct autorec {
   TAILQ_ENTRY(autorec) ar_link;
@@ -38,8 +38,12 @@ typedef struct autorec {
   regex_t ar_title_preg;
   
   epg_content_group_t *ar_ecg;
-  th_channel_group_t *ar_tcg;
-  th_channel_t *ar_ch;
+
+  channel_group_t *ar_channel_group;
+  LIST_ENTRY(autorec) ar_channel_group_link;
+  
+  channel_t *ar_channel;
+  LIST_ENTRY(autorec) ar_channel_link;
 
 } autorec_t;
 
@@ -47,11 +51,13 @@ typedef struct autorec {
 void autorec_init(void);
 
 int autorec_create(const char *name, int prio, const char *title,
-		   epg_content_group_t *ecg, th_channel_group_t *tcg,
-		   th_channel_t *ch, const char *creator);
+		   epg_content_group_t *ecg, channel_group_t *tcg,
+		   channel_t *ch, const char *creator);
 
 void autorec_check_new_event(event_t *e);
 
 void autorec_delete_by_id(int id);
+
+void autorec_destroy_by_channel(channel_t *ch);
 
 #endif /* AUTOREC_H */

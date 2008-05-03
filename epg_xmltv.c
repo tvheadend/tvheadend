@@ -220,7 +220,7 @@ xmltv_flush_events(xmltv_grabber_t *xg)
 
   TAILQ_FOREACH(xc, &xg->xg_channels, xc_link) {
     while((e = TAILQ_FIRST(&xc->xc_events)) != NULL) {
-      TAILQ_REMOVE(&xc->xc_events, e, e_link);
+      TAILQ_REMOVE(&xc->xc_events, e, e_channel_link);
       epg_event_free(e);
     }
   }
@@ -232,10 +232,10 @@ xmltv_flush_events(xmltv_grabber_t *xg)
 /*
  *
  */
-static th_channel_t *
+static channel_t *
 xmltv_resolve_by_events(xmltv_channel_t *xc)
 {
-  th_channel_t *ch;
+  channel_t *ch;
   event_t *ec, *ex;
   time_t now;
   int cnt, i;
@@ -263,8 +263,8 @@ xmltv_resolve_by_events(xmltv_channel_t *xc)
 	if(ec->e_start != ex->e_start || ec->e_duration != ex->e_duration)
 	  break;
 
-	ec = TAILQ_NEXT(ec, e_link);
-	ex = TAILQ_NEXT(ex, e_link);
+	ec = TAILQ_NEXT(ec, e_channel_link);
+	ex = TAILQ_NEXT(ex, e_channel_link);
 	cnt++;
       }
     }
@@ -280,7 +280,7 @@ static void
 xmltv_transfer_events(xmltv_grabber_t *xg)
 {
   xmltv_channel_t *xc;
-  th_channel_t *ch;
+  channel_t *ch;
   int how;
 
   TAILQ_FOREACH(xc, &xg->xg_channels, xc_link) {

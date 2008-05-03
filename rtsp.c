@@ -88,10 +88,10 @@ typedef struct rtsp_session {
  * Resolve an URL into a channel
  */
 
-static th_channel_t *
+static channel_t *
 rtsp_channel_by_url(char *url)
 {
-  th_channel_t *ch;
+  channel_t *ch;
   char *c;
 
   c = strrchr(url, '/');
@@ -140,7 +140,7 @@ rtsp_subscription_callback(struct th_subscription *s,
  * Create an RTSP session
  */
 static rtsp_session_t *
-rtsp_session_create(th_channel_t *ch, struct sockaddr_in *dst)
+rtsp_session_create(channel_t *ch, struct sockaddr_in *dst)
 {
   rtsp_session_t *rs;
   uint32_t id;
@@ -275,7 +275,7 @@ rtsp_get_session(http_connection_t *hc)
   char *ses;
   int sesid;
   rtsp_session_t *rs;
-  th_channel_t *ch;
+  channel_t *ch;
 
   if((ch = rtsp_channel_by_url(hc->hc_url)) == NULL) {
     rtsp_reply_error(hc, RTSP_STATUS_SERVICE, "URL does not resolve");
@@ -329,8 +329,9 @@ rtsp_cmd_play(http_connection_t *hc)
 
   ts_muxer_play(rs->rs_muxer, start);
 
-  syslog(LOG_INFO, "rtsp: %s: Starting playback of %s",
-	 tcp_logname(&hc->hc_tcp_session), rs->rs_s->ths_channel->ch_name);
+  if(rs->rs_s->ths_channel != NULL)
+    syslog(LOG_INFO, "rtsp: %s: Starting playback of %s",
+	   tcp_logname(&hc->hc_tcp_session), rs->rs_s->ths_channel->ch_name);
 
   http_printf(hc,
 	      "RTSP/1.0 200 OK\r\n"
@@ -365,8 +366,9 @@ rtsp_cmd_pause(http_connection_t *hc)
 
   ts_muxer_pause(rs->rs_muxer);
 
-  syslog(LOG_INFO, "rtsp: %s: Pausing playback of %s",
-	 tcp_logname(&hc->hc_tcp_session), rs->rs_s->ths_channel->ch_name);
+  if(rs->rs_s->ths_channel != NULL)
+    syslog(LOG_INFO, "rtsp: %s: Pausing playback of %s",
+	   tcp_logname(&hc->hc_tcp_session), rs->rs_s->ths_channel->ch_name);
 
   http_printf(hc,
 	      "RTSP/1.0 200 OK\r\n"
@@ -394,7 +396,7 @@ rtsp_cmd_setup(http_connection_t *hc)
   int nt, i, np, j, navp, nports, ismulticast;
   int client_ports[2];
   rtsp_session_t *rs;
-  th_channel_t *ch;
+  channel_t *ch;
   struct sockaddr_in dst;
   
   if((ch = rtsp_channel_by_url(hc->hc_url)) == NULL) {
@@ -487,7 +489,7 @@ static void
 rtsp_cmd_describe(http_connection_t *hc)
 {
   char sdpreply[1000];
-  th_channel_t *ch;
+  channel_t *ch;
   char *c;
 
   if((ch = rtsp_channel_by_url(hc->hc_url)) == NULL) {

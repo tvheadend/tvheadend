@@ -34,7 +34,7 @@
  * Render a channel group widget
  */
 static void
-ajax_chgroup_build(tcp_queue_t *tq, th_channel_group_t *tcg)
+ajax_chgroup_build(tcp_queue_t *tq, channel_group_t *tcg)
 {
   tcp_qprintf(tq, "<li id=\"chgrp_%d\">", tcg->tcg_tag);
   
@@ -76,7 +76,7 @@ static int
 ajax_chgroup_updateorder(http_connection_t *hc, http_reply_t *hr, 
 			 const char *remain, void *opaque)
 {
-  th_channel_group_t *tcg;
+  channel_group_t *tcg;
   tcp_queue_t *tq = &hr->hr_tq;
   http_arg_t *ra;
 
@@ -106,7 +106,7 @@ static int
 ajax_chgroup_add(http_connection_t *hc, http_reply_t *hr, 
 		 const char *remain, void *opaque)
 {
-  th_channel_group_t *tcg;
+  channel_group_t *tcg;
   tcp_queue_t *tq = &hr->hr_tq;
   const char *name;
   
@@ -146,7 +146,7 @@ static int
 ajax_chgroup_del(http_connection_t *hc, http_reply_t *hr, 
 		 const char *remain, void *opaque)
 {
-  th_channel_group_t *tcg;
+  channel_group_t *tcg;
   tcp_queue_t *tq = &hr->hr_tq;
   const char *id;
   
@@ -172,7 +172,7 @@ int
 ajax_config_channels_tab(http_connection_t *hc, http_reply_t *hr)
 {
   tcp_queue_t *tq = &hr->hr_tq;
-  th_channel_group_t *tcg;
+  channel_group_t *tcg;
 
   tcp_qprintf(tq, "<div style=\"float: left; width: 30%\">");
 
@@ -244,8 +244,8 @@ ajax_chgroup_editor(http_connection_t *hc, http_reply_t *hr,
 		    const char *remain, void *opaque)
 {
   tcp_queue_t *tq = &hr->hr_tq;
-  th_channel_t *ch;
-  th_channel_group_t *tcg, *tcg2;
+  channel_t *ch;
+  channel_group_t *tcg, *tcg2;
   int rowcol = 1;
   int disprows;
 
@@ -401,7 +401,7 @@ ajax_cheditor(http_connection_t *hc, http_reply_t *hr,
 	      const char *remain, void *opaque)
 {
   tcp_queue_t *tq = &hr->hr_tq;
-  th_channel_t *ch;
+  channel_t *ch;
   th_transport_t *t;
   const char *s;
   int i;
@@ -490,8 +490,8 @@ ajax_changegroup(http_connection_t *hc, http_reply_t *hr,
 		 const char *remain, void *opaque)
 {
   tcp_queue_t *tq = &hr->hr_tq;
-  th_channel_t *ch;
-  th_channel_group_t *tcg;
+  channel_t *ch;
+  channel_group_t *tcg;
   http_arg_t *ra;
   const char *s;
   const char *curgrp;
@@ -531,7 +531,7 @@ static int
 ajax_chsetcomdetect(http_connection_t *hc, http_reply_t *hr,
 		    const char *remain, void *opaque)
 {
-  th_channel_t *ch;
+  channel_t *ch;
   const char *s;
 
   if(remain == NULL || (ch = channel_by_tag(atoi(remain))) == NULL)
@@ -556,7 +556,7 @@ ajax_chrename(http_connection_t *hc, http_reply_t *hr,
 	      const char *remain, void *opaque)
 {
   tcp_queue_t *tq = &hr->hr_tq;
-  th_channel_t *ch;
+  channel_t *ch;
   const char *s;
 
   if(remain == NULL || (ch = channel_by_tag(atoi(remain))) == NULL)
@@ -594,8 +594,8 @@ ajax_chdelete(http_connection_t *hc, http_reply_t *hr,
 	      const char *remain, void *opaque)
 {
   tcp_queue_t *tq = &hr->hr_tq;
-  th_channel_t *ch;
-  th_channel_group_t *tcg;
+  channel_t *ch;
+  channel_group_t *tcg;
 
   if(remain == NULL || (ch = channel_by_tag(atoi(remain))) == NULL)
     return HTTP_STATUS_BAD_REQUEST;

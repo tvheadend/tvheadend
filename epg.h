@@ -25,11 +25,11 @@ void epg_init(void);
 
 event_t *epg_event_find_by_time0(struct event_queue *q, time_t start);
 
-event_t *epg_event_find_by_time(th_channel_t *ch, time_t start);
+event_t *epg_event_find_by_time(channel_t *ch, time_t start);
 
 event_t *epg_event_find_by_tag(uint32_t id);
 
-event_t *epg_event_get_current(th_channel_t *ch);
+event_t *epg_event_get_current(channel_t *ch);
 
 event_t *epg_event_build(struct event_queue *head, time_t start, int duration);
 
@@ -39,23 +39,25 @@ void epg_event_set_title(event_t *e, const char *title);
 
 void epg_event_set_desc(event_t *e, const char *desc);
 
-void epg_update_event_by_id(th_channel_t *ch, uint16_t event_id, 
+void epg_update_event_by_id(channel_t *ch, uint16_t event_id, 
 			    time_t start, int duration, const char *title,
 			    const char *desc, epg_content_type_t *ect);
 
-void epg_transfer_events(th_channel_t *ch, struct event_queue *src, 
+void epg_transfer_events(channel_t *ch, struct event_queue *src, 
 			 const char *srcname, char *icon);
 
 void event_time_txt(time_t start, int duration, char *out, int outlen);
 
-event_t *epg_event_find_current_or_upcoming(th_channel_t *ch);
+event_t *epg_event_find_current_or_upcoming(channel_t *ch);
 
 epg_content_type_t *epg_content_type_find_by_dvbcode(uint8_t dvbcode);
 
 epg_content_group_t *epg_content_group_find_by_name(const char *name);
 
 int epg_search(struct event_list *h, const char *title,
-	       epg_content_group_t *s_ecg, th_channel_group_t *s_tcg,
-	       th_channel_t *s_ch);
+	       epg_content_group_t *s_ecg, channel_group_t *s_tcg,
+	       channel_t *s_ch);
+
+void epg_destroy_by_channel(channel_t *ch);
 
 #endif /* EPG_H */

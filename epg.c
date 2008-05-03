@@ -69,14 +69,14 @@ epg_event_find_by_time0(struct event_queue *q, time_t start)
 {
   event_t *e;
 
-  TAILQ_FOREACH(e, q, e_link)
+  TAILQ_FOREACH(e, q, e_channel_link)
     if(start >= e->e_start && start < e->e_start + e->e_duration)
       break;
   return e;
 }
 
 event_t *
-epg_event_find_by_time(th_channel_t *ch, time_t start)
+epg_event_find_by_time(channel_t *ch, time_t start)
 {
   return epg_event_find_by_time0(&ch->ch_epg_events, start);
 }
@@ -96,7 +96,7 @@ epg_event_find_by_tag(uint32_t tag)
 
 
 event_t *
-epg_event_get_current(th_channel_t *ch)
+epg_event_get_current(channel_t *ch)
 {
   event_t *e;
 
@@ -111,11 +111,11 @@ epg_event_get_current(th_channel_t *ch)
 }
 
 event_t *
-epg_event_find_current_or_upcoming(th_channel_t *ch)
+epg_event_find_current_or_upcoming(channel_t *ch)
 {
   event_t *e;
 
-  TAILQ_FOREACH(e, &ch->ch_epg_events, e_link)
+  TAILQ_FOREACH(e, &ch->ch_epg_events, e_channel_link)
     if(e->e_start + e->e_duration > dispatch_clock)
       break;
   return e;
@@ -139,7 +139,7 @@ epg_event_build(struct event_queue *head, time_t start, int duration)
   if(duration < 1 || start + duration < now - EPG_MAX_AGE)
     return NULL;
 
-  TAILQ_FOREACH(e, head, e_link)
+  TAILQ_FOREACH(e, head, e_channel_link)
     if(start == e->e_start && duration == e->e_duration)
       return e;
  
@@ -147,7 +147,7 @@ epg_event_build(struct event_queue *head, time_t start, int duration)
 
   e->e_duration = duration;
   e->e_start = start;
-  TAILQ_INSERT_SORTED(head, e, e_link, startcmp);
+  TAILQ_INSERT_SORTED(head, e, e_channel_link, startcmp);
 
   return e;
 }
@@ -168,14 +168,14 @@ epg_event_free(event_t *e)
 
 
 static void
-epg_event_destroy(th_channel_t *ch, event_t *e)
+epg_event_destroy(channel_t *ch, event_t *e)
 {
   //  printf("epg: flushed event %s\n", e->e_title);
 
   if(ch->ch_epg_cur_event == e)
     ch->ch_epg_cur_event = NULL;
 
-  TAILQ_REMOVE(&ch->ch_epg_events, e, e_link);
+  TAILQ_REMOVE(&ch->ch_epg_events, e, e_channel_link);
   LIST_REMOVE(e, e_hash_link);
 
   epg_event_free(e);
@@ -205,14 +205,14 @@ event_time_txt(time_t start, int duration, char *out, int outlen)
 
 
 static int
-check_overlap0(th_channel_t *ch, event_t *a)
+check_overlap0(channel_t *ch, event_t *a)
 {
   char atime[100];
   char btime[100];
   event_t *b;
   int overshot;
 
-  b = TAILQ_NEXT(a, e_link);
+  b = TAILQ_NEXT(a, e_channel_link);
   if(b == NULL)
     return 0;
 
@@ -245,11 +245,11 @@ check_overlap0(th_channel_t *ch, event_t *a)
 }
 
 static int
-check_overlap(th_channel_t *ch, event_t *e)
+check_overlap(channel_t *ch, event_t *e)
 {
   event_t *p;
 
-  p = TAILQ_PREV(e, event_queue, e_link);
+  p = TAILQ_PREV(e, event_queue, e_channel_link);
   if(p != NULL) {
     if(check_overlap0(ch, p))
       return 1;
@@ -262,7 +262,7 @@ check_overlap(th_channel_t *ch, event_t *e)
 
 
 static void
-epg_event_create(th_channel_t *ch, time_t start, int duration, 
+epg_event_create(channel_t *ch, time_t start, int duration, 
 		 const char *title, const char *desc, int source, 
 		 uint16_t id, epg_content_type_t *ect)
 {
@@ -275,7 +275,7 @@ epg_event_create(th_channel_t *ch, time_t start, int duration,
   if(duration < 1 || start + duration < now - EPG_MAX_AGE)
     return;
 
-  TAILQ_FOREACH(e, &ch->ch_epg_events, e_link) {
+  TAILQ_FOREACH(e, &ch->ch_epg_events, e_channel_link) {
     if(start == e->e_start && duration == e->e_duration)
       break;
 
@@ -288,9 +288,9 @@ epg_event_create(th_channel_t *ch, time_t start, int duration,
     e = calloc(1, sizeof(event_t));
 
     e->e_start = start;
-    TAILQ_INSERT_SORTED(&ch->ch_epg_events, e, e_link, startcmp);
+    TAILQ_INSERT_SORTED(&ch->ch_epg_events, e, e_channel_link, startcmp);
 
-    e->e_ch = ch;
+    e->e_channel = ch;
     e->e_event_id = id;
     e->e_duration = duration;
 
@@ -325,13 +325,13 @@ epg_event_create(th_channel_t *ch, time_t start, int duration,
 
 
 void
-epg_update_event_by_id(th_channel_t *ch, uint16_t event_id, 
+epg_update_event_by_id(channel_t *ch, uint16_t event_id, 
 		       time_t start, int duration, const char *title,
 		       const char *desc, epg_content_type_t *ect)
 {
   event_t *e;
 
-  TAILQ_FOREACH(e, &ch->ch_epg_events, e_link)
+  TAILQ_FOREACH(e, &ch->ch_epg_events, e_channel_link)
     if(e->e_event_id == event_id)
       break;
 
@@ -346,11 +346,11 @@ epg_update_event_by_id(th_channel_t *ch, uint16_t event_id,
       event_time_txt(e->e_start, e->e_duration, before, sizeof(before));
       event_time_txt(start, duration, after, sizeof(after));
        
-      TAILQ_REMOVE(&ch->ch_epg_events, e, e_link);
+      TAILQ_REMOVE(&ch->ch_epg_events, e, e_channel_link);
 
       e->e_duration = duration;
       e->e_start = start;
-      TAILQ_INSERT_SORTED(&ch->ch_epg_events, e, e_link, startcmp);
+      TAILQ_INSERT_SORTED(&ch->ch_epg_events, e, e_channel_link, startcmp);
 
       if(check_overlap(ch, e))
 	return; /* event was destroyed, return at once */
@@ -369,7 +369,7 @@ epg_update_event_by_id(th_channel_t *ch, uint16_t event_id,
 
 
 static void
-epg_set_current_event(th_channel_t *ch, event_t *e)
+epg_set_current_event(channel_t *ch, event_t *e)
 {
   if(e == ch->ch_epg_cur_event)
     return;
@@ -385,7 +385,7 @@ epg_set_current_event(th_channel_t *ch, event_t *e)
   /* Let autorecorder check this event */
   autorec_check_new_event(e);
 
-  e = TAILQ_NEXT(e, e_link);
+  e = TAILQ_NEXT(e, e_channel_link);
   /* .. and next one, to make better scheduling */
 
   if(e != NULL)
@@ -393,7 +393,7 @@ epg_set_current_event(th_channel_t *ch, event_t *e)
 }
 
 static void
-epg_locate_current_event(th_channel_t *ch, time_t now)
+epg_locate_current_event(channel_t *ch, time_t now)
 {
   event_t *e;
   e = epg_event_find_by_time(ch, now);
@@ -405,7 +405,7 @@ epg_locate_current_event(th_channel_t *ch, time_t now)
 static void
 epg_channel_maintain(void *aux, int64_t clk)
 {
-  th_channel_t *ch;
+  channel_t *ch;
   event_t *e, *cur;
   time_t now;
 
@@ -432,7 +432,7 @@ epg_channel_maintain(void *aux, int64_t clk)
     if(now >= e->e_start && now < e->e_start + e->e_duration)
       continue;
 
-    e = TAILQ_NEXT(e, e_link);
+    e = TAILQ_NEXT(e, e_channel_link);
     if(e != NULL && now >= e->e_start && now < e->e_start + e->e_duration) {
       epg_set_current_event(ch, e);
       continue;
@@ -443,12 +443,24 @@ epg_channel_maintain(void *aux, int64_t clk)
 }
 
 
-/*
+/**
  *
  */
-
 void
-epg_transfer_events(th_channel_t *ch, struct event_queue *src, 
+epg_destroy_by_channel(channel_t *ch)
+{
+  event_t *e;
+
+  while((e = TAILQ_FIRST(&ch->ch_epg_events)) != NULL)
+    epg_event_destroy(ch, e);
+}
+
+
+/**
+ *
+ */
+void
+epg_transfer_events(channel_t *ch, struct event_queue *src, 
 		    const char *srcname, char *icon)
 {
   event_t *e;
@@ -460,7 +472,7 @@ epg_transfer_events(th_channel_t *ch, struct event_queue *src,
     channel_settings_write(ch);
   }
 
-  TAILQ_FOREACH(e, src, e_link) {
+  TAILQ_FOREACH(e, src, e_channel_link) {
 
     epg_event_create(ch, e->e_start, e->e_duration, e->e_title,
 		     e->e_desc, EVENT_SRC_XMLTV, 0,
@@ -537,11 +549,12 @@ epg_content_group_find_by_name(const char *name)
  * XXX: Optimize if we know channel, group, etc
  */
 int
-epg_search(struct event_list *h, const char *title, epg_content_group_t *s_ecg,
-	   th_channel_group_t *s_tcg, th_channel_t *s_ch)
+epg_search(struct event_list *h, const char *title, 
+	   epg_content_group_t *s_ecg,
+	   channel_group_t *s_tcg, channel_t *s_ch)
 {
-  th_channel_group_t *dis;
-  th_channel_t *ch;
+  channel_group_t *dis;
+  channel_t *ch;
   event_t *e;
   int num = 0;
   regex_t preg;
@@ -565,7 +578,7 @@ epg_search(struct event_list *h, const char *title, epg_content_group_t *s_ecg,
     if(s_tcg != NULL && s_tcg != ch->ch_group)
       continue;
 
-    TAILQ_FOREACH(e, &ch->ch_epg_events, e_link) {
+    TAILQ_FOREACH(e, &ch->ch_epg_events, e_channel_link) {
 
       if(e->e_start + e->e_duration < dispatch_clock)
 	continue; /* old */

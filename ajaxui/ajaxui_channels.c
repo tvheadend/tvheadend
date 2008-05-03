@@ -37,7 +37,7 @@
 static void
 ajax_channelgroupmenu_content(tcp_queue_t *tq, int current)
 {
-  th_channel_group_t *tcg;
+  channel_group_t *tcg;
 
   tcp_qprintf(tq, "<ul class=\"menubar\">");
 
@@ -107,17 +107,16 @@ ajax_output_event(tcp_queue_t *tq, event_t *e, int flags, int color)
 
 
 static void
-ajax_list_events(tcp_queue_t *tq, th_channel_t *ch, int lines)
+ajax_list_events(tcp_queue_t *tq, channel_t *ch, int lines)
 {
   event_t *e;
   int i;
-
 
   e = epg_event_find_current_or_upcoming(ch);
 
   for(i = 0; i < 3 && e != NULL; i++) {
     ajax_output_event(tq, e, 0, !(i & 1));
-    e = TAILQ_NEXT(e, e_link);
+    e = TAILQ_NEXT(e, e_channel_link);
   }
 }
 
@@ -133,8 +132,8 @@ ajax_channel_tab(http_connection_t *hc, http_reply_t *hr,
 {
   
   tcp_queue_t *tq = &hr->hr_tq;
-  th_channel_t *ch;
-  th_channel_group_t *tcg;
+  channel_t *ch;
+  channel_group_t *tcg;
   char dispname[20];
   struct sockaddr_in *si;
 

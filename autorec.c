@@ -40,7 +40,7 @@
 #include "epg.h"
 #include "channels.h"
 
-struct autorec_head autorecs;
+struct autorec_queue autorecs;
 static int ar_id_ceil;
 
 static void autorec_save_entry(autorec_t *ar);
@@ -60,14 +60,17 @@ autorec_init(void)
 static int
 autorec_cmp(autorec_t *ar, event_t *e)
 {
-  if(ar->ar_ch != NULL && ar->ar_ch != e->e_ch)
+  if(ar->ar_channel != NULL && 
+     ar->ar_channel != e->e_channel)
     return 0;
 
-  if(ar->ar_tcg != NULL && ar->ar_tcg != e->e_ch->ch_group)
+  if(ar->ar_channel_group != NULL && 
+     ar->ar_channel_group != e->e_channel->ch_group)
     return 0;
 
   if(ar->ar_ecg != NULL) {
-    if(e->e_content_type == NULL || ar->ar_ecg != e->e_content_type->ect_group)
+    if(e->e_content_type == NULL || 
+       ar->ar_ecg != e->e_content_type->ect_group)
       return 0;
   }
   
@@ -98,7 +101,7 @@ static void
 autorec_check_new_ar(autorec_t *ar)
 {
   event_t *e;
-  th_channel_t *ch;
+  channel_t *ch;
 
   LIST_FOREACH(ch, &channels, ch_global_link) {
     e = ch->ch_epg_cur_event;
@@ -108,7 +111,7 @@ autorec_check_new_ar(autorec_t *ar)
     if(autorec_cmp(ar, e))
       autorec_tag(ar, e);
 
-    e = TAILQ_NEXT(e, e_link);
+    e = TAILQ_NEXT(e, e_channel_link);
     if(e == NULL)
       continue;
 
@@ -143,8 +146,8 @@ autorec_check_new_event(event_t *e)
  */
 static autorec_t *
 autorec_create0(const char *name, int prio, const char *title,
-		epg_content_group_t *ecg, th_channel_group_t *tcg,
-		th_channel_t *ch, int id, const char *creator)
+		epg_content_group_t *ecg, channel_group_t *tcg,
+		channel_t *ch, int id, const char *creator)
 {
   autorec_t *ar = calloc(1, sizeof(autorec_t));
   
@@ -158,8 +161,13 @@ autorec_create0(const char *name, int prio, const char *title,
   ar->ar_name     = strdup(name);
   ar->ar_rec_prio = prio;
   ar->ar_ecg      = ecg;
-  ar->ar_tcg      = tcg;
-  ar->ar_ch       = ch;
+
+  ar->ar_channel_group = tcg;
+  LIST_INSERT_HEAD(&tcg->tcg_autorecs, ar, ar_channel_group_link);
+
+  ar->ar_channel  = ch;
+  LIST_INSERT_HEAD(&ch->ch_autorecs, ar, ar_channel_link);
+
   ar->ar_creator  = strdup(creator);
 
   ar->ar_id = id;
@@ -186,6 +194,9 @@ autorec_destroy(autorec_t *ar)
   free((void *)ar->ar_creator);
   free((void *)ar->ar_name);
 
+  LIST_REMOVE(ar, ar_channel_group_link);
+  LIST_REMOVE(ar, ar_channel_link);
+
   TAILQ_REMOVE(&autorecs, ar, ar_link);
   free(ar);
 }
@@ -196,8 +207,8 @@ autorec_destroy(autorec_t *ar)
  */
 int
 autorec_create(const char *name, int prio, const char *title,
-	       epg_content_group_t *ecg, th_channel_group_t *tcg,
-	       th_channel_t *ch, const char *creator)
+	       epg_content_group_t *ecg, channel_group_t *tcg,
+	       channel_t *ch, const char *creator)
 {
   autorec_t *ar;
 
@@ -252,11 +263,11 @@ autorec_save_entry(autorec_t *ar)
   if(ar->ar_ecg != NULL)
     fprintf(fp, "event_content_group = %s\n", ar->ar_ecg->ecg_name);
 
-  if(ar->ar_tcg != NULL)
-    fprintf(fp, "channel_group = %s\n", ar->ar_tcg->tcg_name);
+  if(ar->ar_channel_group != NULL)
+    fprintf(fp, "channel_group = %s\n", ar->ar_channel_group->tcg_name);
 
-  if(ar->ar_ch != NULL)
-    fprintf(fp, "channel = %s\n", ar->ar_ch->ch_name);
+  if(ar->ar_channel != NULL)
+    fprintf(fp, "channel = %s\n", ar->ar_channel->ch_name);
   fclose(fp);
 }
 
@@ -319,3 +330,16 @@ autorec_load(void)
   }
   closedir(dir);
 }
+
+/**
+ *
+ */
+void
+autorec_destroy_by_channel(channel_t *ch)
+{
+  autorec_t *ar;
+
+  while((ar = LIST_FIRST(&ch->ch_autorecs)) != NULL)
+    autorec_destroy(ar);
+}
+

@@ -96,7 +96,7 @@ client_output_ts(void *opaque, th_subscription_t *s,
   sin.sin_addr = c->c_ipaddr;
 
   hdr[0] = HTSTV_TRANSPORT_STREAM;
-  hdr[1] = s->ths_channel->ch_index;
+  hdr[1] = s->ths_u32;
 
   vec[0].iov_base = hdr;
   vec[0].iov_len  = 2;
@@ -122,7 +122,7 @@ client_output_ts(void *opaque, th_subscription_t *s,
 static int
 cr_channel_info(client_t *c, char **argv, int argc)
 {
-  th_channel_t *ch;
+  channel_t *ch;
 
   if(argc < 1)
     return 1;
@@ -158,7 +158,7 @@ cr_channel_unsubscribe(client_t *c, char **argv, int argc)
   chindex = atoi(argv[0]);
 
   LIST_FOREACH(s, &c->c_subscriptions, ths_subscriber_link) {
-    if(s->ths_channel->ch_index == chindex)
+    if(s->ths_u32 == chindex)
       break;
   }
 
@@ -202,7 +202,7 @@ client_subscription_callback(struct th_subscription *s,
 static int
 cr_channel_subscribe(client_t *c, char **argv, int argc)
 {
-  th_channel_t *ch;
+  channel_t *ch;
   th_subscription_t *s;
   unsigned int chindex, weight;
   char tmp[100];
@@ -216,7 +216,7 @@ cr_channel_subscribe(client_t *c, char **argv, int argc)
   weight = argc > 1 ? atoi(argv[1]) : 100;
 
   LIST_FOREACH(s, &c->c_subscriptions, ths_subscriber_link) {
-    if(s->ths_channel->ch_index == chindex) {
+    if(s->ths_u32 == chindex) {
       subscription_set_weight(s, weight);
       return 0;
     }
@@ -234,6 +234,7 @@ cr_channel_subscribe(client_t *c, char **argv, int argc)
   if(s == NULL)
     return 1;
 
+  s->ths_u32 = ch->ch_index;
   LIST_INSERT_HEAD(&c->c_subscriptions, s, ths_subscriber_link);
   return 0;
 }
@@ -246,7 +247,7 @@ cr_channel_subscribe(client_t *c, char **argv, int argc)
 static int
 cr_channels_list(client_t *c, char **argv, int argc)
 {
-  th_channel_t *ch;
+  channel_t *ch;
 
   LIST_FOREACH(ch, &channels, ch_global_link) {
     if(ch->ch_group == NULL)
@@ -288,7 +289,7 @@ cr_event_info(client_t *c, char **argv, int argc)
 {
   event_t *e = NULL, *x;
   uint32_t tag, prev, next;
-  th_channel_t *ch;
+  channel_t *ch;
   pvr_rec_t *pvrr;
 
   if(argc < 2)
@@ -308,10 +309,10 @@ cr_event_info(client_t *c, char **argv, int argc)
   }
 
   tag = e->e_tag;
-  x = TAILQ_PREV(e, event_queue, e_link);
+  x = TAILQ_PREV(e, event_queue, e_channel_link);
   prev = x != NULL ? x->e_tag : 0;
 
-  x = TAILQ_NEXT(e, e_link);
+  x = TAILQ_NEXT(e, e_channel_link);
   next = x != NULL ? x->e_tag : 0;
 
   pvrr = pvr_get_by_entry(e);
@@ -369,7 +370,7 @@ cr_event_record(client_t *c, char **argv, int argc)
 static int
 cr_channel_record(client_t *c, char **argv, int argc)
 {
-  th_channel_t *ch;
+  channel_t *ch;
   int duration;
 
   if(argc < 2)

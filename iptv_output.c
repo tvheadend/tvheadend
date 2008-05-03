@@ -122,7 +122,7 @@ static void
 output_multicast_load(struct config_head *head)
 {
   const char *name, *s, *b;
-  th_channel_t *ch;
+  channel_t *ch;
   output_multicast_t *om;
   int ttl = 32;
   struct sockaddr_in sin;

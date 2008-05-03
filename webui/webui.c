@@ -297,7 +297,7 @@ page_einfo(http_connection_t *hc, http_reply_t *hr,
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
 
   tcp_qprintf(tq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
-	      e->e_ch->ch_name, e->e_title);
+	      e->e_channel->ch_name, e->e_title);
   
   pvrstatus = pvrr != NULL ? pvrr->pvrr_status : HTSTV_PVR_STATUS_NONE;
 

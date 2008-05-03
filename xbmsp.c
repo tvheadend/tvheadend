@@ -218,10 +218,10 @@ xbmsp_dir_add_entry(xbmsp_dirhandle_t *xdh, const char *name,
 /**
  *
  */
-static th_channel_group_t *
+static channel_group_t *
 xbmsp_cur_channel_group(xbmsp_t *xbmsp)
 {
-  th_channel_group_t *tcg;
+  channel_group_t *tcg;
   
   TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
     if(tcg->tcg_hidden)
@@ -240,8 +240,8 @@ xbmsp_cur_channel_group(xbmsp_t *xbmsp)
 static int
 xbmsp_dir_populate(xbmsp_t *xbmsp, xbmsp_dirhandle_t *xdh, const char *filter)
 {
-  th_channel_group_t *tcg;
-  th_channel_t *ch;
+  channel_group_t *tcg;
+  channel_t *ch;
   char name[100];
 
   if(xbmsp->xbmsp_wd[0] == 0) {
@@ -346,7 +346,7 @@ xbmsp_cdroot(xbmsp_t *xbmsp)
 static const char *
 xbmsp_cddown(xbmsp_t *xbmsp, const char *dir)
 {
-  th_channel_group_t *tcg;
+  channel_group_t *tcg;
  
   if(xbmsp->xbmsp_wd[0] == 0) {
     /* root dir */
@@ -772,8 +772,8 @@ static int
 xbmsp_input_file_open(xbmsp_t *xbmsp, uint32_t msgid, uint8_t *buf, int len)
 {
   char *fname = NULL, *tr;
-  th_channel_group_t *tcg;
-  th_channel_t *ch;
+  channel_group_t *tcg;
+  channel_t *ch;
   xbmsp_subscrption_t *xs;
 
   if((fname = xbmsp_extract_string(xbmsp, &buf, &len)) == NULL) {

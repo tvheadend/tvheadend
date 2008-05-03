@@ -274,7 +274,7 @@ transportcmp(const void *A, const void *B)
  *
  */
 th_transport_t *
-transport_find(th_channel_t *ch, unsigned int weight)
+transport_find(channel_t *ch, unsigned int weight)
 {
   th_transport_t *t, **vec;
   int cnt = 0, i;
@@ -526,7 +526,7 @@ transport_add_stream(th_transport_t *t, int pid, tv_streamtype_t type)
 void
 transport_map_channel(th_transport_t *t)
 {
-  th_channel_t *ch = channel_find(t->tht_servicename, 1, NULL);
+  channel_t *ch = channel_find(t->tht_servicename, 1, NULL);
 
   assert(t->tht_channel == NULL);
 

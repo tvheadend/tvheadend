@@ -44,6 +44,6 @@ void htsp_start(int port);
 
 int htsp_send_msg(htsp_t *htsp, htsmsg_t *m, int media);
 
-void htsp_async_channel_update(th_channel_t *ch);
+void htsp_async_channel_update(channel_t *ch);
 
 #endif /* HTSP_H_ */

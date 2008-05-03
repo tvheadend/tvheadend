@@ -34,7 +34,9 @@ typedef struct pvr_rec {
   LIST_ENTRY(pvr_rec) pvrr_global_link;
 
   int pvrr_id;               /* on-disk database id (filename) */
-  th_channel_t *pvrr_channel;
+
+  channel_t *pvrr_channel;
+  LIST_ENTRY(pvr_rec) pvrr_channel_link;
 
   time_t pvrr_start;
   time_t pvrr_stop;
@@ -91,7 +93,9 @@ pvr_rec_t *pvr_get_by_entry(event_t *e);
 
 pvr_rec_t *pvr_schedule_by_event(event_t *e, const char *creator);
 
-pvr_rec_t *pvr_schedule_by_channel_and_time(th_channel_t *ch, int duration,
+pvr_rec_t *pvr_schedule_by_channel_and_time(channel_t *ch, int duration,
 					    const char *creator);
+
+void pvr_destroy_by_channel(channel_t *ch);
 
 #endif /* PVR_H */

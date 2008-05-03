@@ -69,9 +69,9 @@ typedef struct dtimer {
  */
 
 LIST_HEAD(th_subscription_list, th_subscription);
-LIST_HEAD(th_channel_list, th_channel);
-TAILQ_HEAD(th_channel_queue, th_channel);
-TAILQ_HEAD(th_channel_group_queue, th_channel_group);
+LIST_HEAD(channel_list, channel);
+TAILQ_HEAD(channel_queue, channel);
+TAILQ_HEAD(channel_group_queue, channel_group);
 TAILQ_HEAD(th_dvb_adapter_queue, th_dvb_adapter);
 LIST_HEAD(th_v4l_adapter_list, th_v4l_adapter);
 LIST_HEAD(event_list, event);
@@ -90,12 +90,13 @@ LIST_HEAD(th_muxstream_list, th_muxstream);
 LIST_HEAD(th_descrambler_list, th_descrambler);
 TAILQ_HEAD(th_refpkt_queue, th_refpkt);
 TAILQ_HEAD(th_muxpkt_queue, th_muxpkt);
+LIST_HEAD(autorec_list, autorec);
 
 extern time_t dispatch_clock;
 extern int startupcounter;
 extern struct th_transport_list all_transports;
-extern struct th_channel_list channels;
-extern struct th_channel_group_queue all_channel_groups;
+extern struct channel_list channels;
+extern struct channel_group_queue all_channel_groups;
 extern struct pvr_rec_list pvrr_global_list;
 extern struct th_subscription_list subscriptions;
 
@@ -418,7 +419,7 @@ typedef struct th_transport {
   LIST_ENTRY(th_transport) tht_active_link;
 
   LIST_ENTRY(th_transport) tht_channel_link;
-  struct th_channel *tht_channel;
+  struct channel *tht_channel;
 
   LIST_HEAD(, th_subscription) tht_subscriptions;
 
@@ -743,27 +744,29 @@ typedef struct tt_decoder {
 /**
  * Channel groups
  */
-typedef struct th_channel_group {
-  TAILQ_ENTRY(th_channel_group) tcg_global_link;
+typedef struct channel_group {
+  TAILQ_ENTRY(channel_group) tcg_global_link;
 
   const char *tcg_name;
-  struct th_channel_queue tcg_channels;
+  struct channel_queue tcg_channels;
   int tcg_tag;
   int tcg_cant_delete_me;
   int tcg_hidden;
 
-} th_channel_group_t;
+  struct autorec_list tcg_autorecs;
+
+} channel_group_t;
 
 
 /*
  * Channel definition
  */ 
-typedef struct th_channel {
+typedef struct channel {
   
-  LIST_ENTRY(th_channel) ch_global_link;
+  LIST_ENTRY(channel) ch_global_link;
 
-  TAILQ_ENTRY(th_channel) ch_group_link;
-  th_channel_group_t *ch_group;
+  TAILQ_ENTRY(channel) ch_group_link;
+  channel_group_t *ch_group;
 
   LIST_HEAD(, th_transport) ch_transports;
   LIST_HEAD(, th_subscription) ch_subscriptions;
@@ -787,7 +790,11 @@ typedef struct th_channel {
   struct event *ch_epg_cur_event;
   char *ch_icon;
 
-} th_channel_t;
+  struct pvr_rec_list ch_pvrrs;
+  
+  struct autorec_list ch_autorecs;
+
+} channel_t;
 
 
 /*
@@ -823,7 +830,9 @@ typedef struct th_subscription {
   int ths_weight;
 
   LIST_ENTRY(th_subscription) ths_channel_link;
-  struct th_channel *ths_channel;
+  struct channel *ths_channel;          /* May be NULL if channel has been
+					   destroyed during the
+					   subscription */
 
   LIST_ENTRY(th_subscription) ths_transport_link;
   struct th_transport *ths_transport;   /* if NULL, ths_transport_link
@@ -838,6 +847,7 @@ typedef struct th_subscription {
 
   subscription_callback_t *ths_callback;
   void *ths_opaque;
+  uint32_t ths_u32;
 
   subscription_raw_input_t *ths_raw_input;
 
@@ -869,7 +879,9 @@ typedef struct epg_content_type {
  * EPG event
  */
 typedef struct event {
-  TAILQ_ENTRY(event) e_link;
+  channel_t *e_channel;
+  TAILQ_ENTRY(event) e_channel_link;
+
   LIST_ENTRY(event) e_hash_link;
   LIST_ENTRY(event) e_tmp_link;
 
@@ -885,8 +897,6 @@ typedef struct event {
   uint16_t e_event_id;  /* DVB event id */
 
   uint32_t e_tag;
-
-  th_channel_t *e_ch;
 
   int e_source; /* higer is better, and we never downgrade */
 
@@ -904,7 +914,7 @@ extern const char *settings_dir;
 FILE *settings_open_for_write(const char *name);
 FILE *settings_open_for_read(const char *name);
 extern const char *sys_warning;
-extern th_channel_group_t *defgroup;
+extern channel_group_t *defgroup;
 
 static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 {

@@ -43,7 +43,7 @@
  * Build a channel information message
  */
 static htsmsg_t *
-rpc_build_channel_msg(th_channel_t *ch)
+rpc_build_channel_msg(channel_t *ch)
 {
   htsmsg_t *m;
 
@@ -125,7 +125,7 @@ static htsmsg_t *
 rpc_channels_list(rpc_session_t *ses, htsmsg_t *in, void *opaque)
 {
   htsmsg_t *out;
-  th_channel_t *ch;
+  channel_t *ch;
 
   out = htsmsg_create();
   htsmsg_add_u32(out, "seq", ses->rs_seq);
@@ -143,7 +143,7 @@ static htsmsg_t *
 rpc_event_info(rpc_session_t *ses, htsmsg_t *in, void *opaque)
 {
   htsmsg_t *out;
-  th_channel_t *ch;
+  channel_t *ch;
   uint32_t u32;
   const char *s, *errtxt = NULL;
   event_t *e = NULL, *x;
@@ -177,10 +177,10 @@ rpc_event_info(rpc_session_t *ses, htsmsg_t *in, void *opaque)
     htsmsg_add_str(out, "_error", errtxt);
   } else {
     tag = e->e_tag;
-    x = TAILQ_PREV(e, event_queue, e_link);
+    x = TAILQ_PREV(e, event_queue, e_channel_link);
     prev = x != NULL ? x->e_tag : 0;
     
-    x = TAILQ_NEXT(e, e_link);
+    x = TAILQ_NEXT(e, e_channel_link);
     next = x != NULL ? x->e_tag : 0;
 
     htsmsg_add_u32(out, "start", e->e_start);

@@ -38,13 +38,16 @@
 #include "psi.h"
 #include "channels.h"
 #include "transports.h"
+#include "epg.h"
+#include "pvr.h"
+#include "autorec.h"
 
-struct th_channel_list channels;
+struct channel_list channels;
 int nchannels;
 
-struct th_channel_group_queue all_channel_groups;
+struct channel_group_queue all_channel_groups;
 
-th_channel_group_t *defgroup;
+channel_group_t *defgroup;
 
 
 void scanner_init(void);
@@ -82,7 +85,7 @@ chcmp(const char *s1, const char *s2)
  *
  */
 static int
-channelcmp(th_channel_t *a, th_channel_t *b)
+channelcmp(channel_t *a, channel_t *b)
 {
   return chcmp(a->ch_name, b->ch_name);
 }
@@ -91,10 +94,10 @@ channelcmp(th_channel_t *a, th_channel_t *b)
 /**
  *
  */
-th_channel_group_t *
+channel_group_t *
 channel_group_find(const char *name, int create)
 {
-  th_channel_group_t *tcg;
+  channel_group_t *tcg;
 
   TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
     if(!strcmp(name, tcg->tcg_name))
@@ -103,7 +106,7 @@ channel_group_find(const char *name, int create)
   if(!create)
     return NULL;
 
-  tcg = calloc(1, sizeof(th_channel_group_t));
+  tcg = calloc(1, sizeof(channel_group_t));
   tcg->tcg_name = strdup(name);
   tcg->tcg_tag = tag_get();
   
@@ -122,7 +125,7 @@ channel_group_find(const char *name, int create)
  *
  */
 void
-channel_set_group(th_channel_t *ch, th_channel_group_t *tcg)
+channel_set_group(channel_t *ch, channel_group_t *tcg)
 {
   if(ch->ch_group != NULL)
     TAILQ_REMOVE(&ch->ch_group->tcg_channels, ch, ch_group_link);
@@ -138,9 +141,9 @@ channel_set_group(th_channel_t *ch, th_channel_group_t *tcg)
  *
  */
 void
-channel_group_destroy(th_channel_group_t *tcg)
+channel_group_destroy(channel_group_t *tcg)
 {
-  th_channel_t *ch;
+  channel_t *ch;
 
   if(defgroup == tcg)
     return;
@@ -160,7 +163,7 @@ channel_group_destroy(th_channel_group_t *tcg)
  *
  */
 static void
-channel_set_name(th_channel_t *ch, const char *name)
+channel_set_name(channel_t *ch, const char *name)
 {
   const char *n2;
   int l, i;
@@ -193,10 +196,10 @@ channel_set_name(th_channel_t *ch, const char *name)
 /**
  *
  */
-th_channel_t *
-channel_find(const char *name, int create, th_channel_group_t *tcg)
+channel_t *
+channel_find(const char *name, int create, channel_group_t *tcg)
 {
-  th_channel_t *ch;
+  channel_t *ch;
 
   LIST_FOREACH(ch, &channels, ch_global_link)
     if(!strcasecmp(name, ch->ch_name))
@@ -205,7 +208,7 @@ channel_find(const char *name, int create, th_channel_group_t *tcg)
   if(create == 0)
     return NULL;
 
-  ch = calloc(1, sizeof(th_channel_t));
+  ch = calloc(1, sizeof(channel_t));
   ch->ch_index = nchannels;
   TAILQ_INIT(&ch->ch_epg_events);
 
@@ -267,8 +270,8 @@ channels_load(void)
   DIR *dir;
   struct dirent *d;
   const char *name, *grp, *x;
-  th_channel_t *ch;
-  th_channel_group_t *tcg;
+  channel_t *ch;
+  channel_group_t *tcg;
   int v;
 
   TAILQ_INIT(&all_channel_groups);
@@ -345,10 +348,10 @@ channels_load(void)
 /**
  * The index stuff should go away
  */
-th_channel_t *
+channel_t *
 channel_by_index(uint32_t index)
 {
-  th_channel_t *ch;
+  channel_t *ch;
 
   LIST_FOREACH(ch, &channels, ch_global_link)
     if(ch->ch_index == index)
@@ -362,10 +365,10 @@ channel_by_index(uint32_t index)
 /**
  *
  */
-th_channel_t *
+channel_t *
 channel_by_tag(uint32_t tag)
 {
-  th_channel_t *ch;
+  channel_t *ch;
 
   LIST_FOREACH(ch, &channels, ch_global_link)
     if(ch->ch_tag == tag)
@@ -379,10 +382,10 @@ channel_by_tag(uint32_t tag)
 /**
  *
  */
-th_channel_group_t *
+channel_group_t *
 channel_group_by_tag(uint32_t tag)
 {
-  th_channel_group_t *tcg;
+  channel_group_t *tcg;
 
   TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
     if(tcg->tcg_tag == tag)
@@ -404,7 +407,7 @@ void
 channel_group_settings_write(void)
 {
   FILE *fp;
-  th_channel_group_t *tcg;
+  channel_group_t *tcg;
 
   char buf[400];
   snprintf(buf, sizeof(buf), "%s/channel-group-settings.cfg", settings_dir);
@@ -426,7 +429,7 @@ channel_group_settings_write(void)
  * Write out a config file for a channel
  */
 void
-channel_settings_write(th_channel_t *ch)
+channel_settings_write(channel_t *ch)
 {
   FILE *fp;
   char buf[400];
@@ -448,7 +451,7 @@ channel_settings_write(th_channel_t *ch)
  * Rename a channel and all tied transports
  */
 int
-channel_rename(th_channel_t *ch, const char *newname)
+channel_rename(channel_t *ch, const char *newname)
 {
   th_transport_t *t;
 
@@ -472,12 +475,36 @@ channel_rename(th_channel_t *ch, const char *newname)
  * Delete channel
  */
 void
-channel_delete(th_channel_t *ch)
+channel_delete(channel_t *ch)
 {
   th_transport_t *t;
+  th_subscription_t *s;
+  char buf[400];
 
-  while((t = LIST_FIRST(&ch->ch_transports)) != NULL)
+  pvr_destroy_by_channel(ch);
+
+  while((t = LIST_FIRST(&ch->ch_transports)) != NULL) {
     transport_unmap_channel(t);
+    t->tht_config_change(t);
+  }
 
-  printf("Deleted channel %s\n", ch->ch_name);
+  while((s = LIST_FIRST(&ch->ch_subscriptions)) != NULL) {
+    LIST_REMOVE(s, ths_channel_link);
+    s->ths_channel = NULL;
+  }
+
+  epg_destroy_by_channel(ch);
+
+  autorec_destroy_by_channel(ch);
+
+  free((void *)ch->ch_name);
+  free((void *)ch->ch_sname);
+  free(ch->ch_icon);
+  
+  TAILQ_REMOVE(&ch->ch_group->tcg_channels, ch, ch_group_link);
+  LIST_REMOVE(ch, ch_global_link);
+  free(ch);
+
+  snprintf(buf, sizeof(buf), "%s/channels/%s", settings_dir, ch->ch_sname);
+  unlink(buf);
 }
