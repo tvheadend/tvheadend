@@ -444,15 +444,16 @@ ajax_cheditor(http_connection_t *hc, http_reply_t *hr,
   tcp_qprintf(tq, "<hr>\r\n");
 
   tcp_qprintf(tq, "<div style=\"overflow: auto; width:100%%\">");
-  ajax_a_jsfuncf(tq, "Rename channel...",
-		 "channel_rename('%d', '%s');",
-		 ch->ch_tag, ch->ch_name);
 
-  tcp_qprintf(tq, " / ");
+  tcp_qprintf(tq, 
+	      "<input type=\"button\" value=\"Rename...\" "
+	      "onClick=\"channel_rename('%d', '%s')\">",
+	      ch->ch_tag, ch->ch_name);
 
-  ajax_a_jsfuncf(tq, "Delete channel...",
-		 "channel_delete('%d', '%s');",
-		 ch->ch_tag, ch->ch_name);
+  tcp_qprintf(tq, 
+	      "<input type=\"button\" value=\"Delete...\" "
+	      "onClick=\"channel_delete('%d', '%s')\">",
+	      ch->ch_tag, ch->ch_name);
 
   tcp_qprintf(tq, "</div>");
 
