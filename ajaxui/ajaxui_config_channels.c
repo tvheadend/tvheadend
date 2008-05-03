@@ -284,7 +284,8 @@ ajax_chgroup_editor(http_connection_t *hc, http_reply_t *hr,
 
   /* Invoke AJAX call containing all selected elements */
   tcp_qprintf(tq, 
-	      "select_do = function(op, arg1, arg2) {\r\n"
+	      "select_do = function(op, arg1, arg2, check) {\r\n"
+	      "if(check == true && !confirm(\"Are you sure?\")) {return;}\r\n"
 	      "var h = new Hash();\r\n"
 	      "h.set('arg1', arg1);\r\n"
 	      "h.set('arg2', arg2);\r\n"
@@ -335,28 +336,33 @@ ajax_chgroup_editor(http_connection_t *hc, http_reply_t *hr,
 
   tcp_qprintf(tq, "</div>");
   tcp_qprintf(tq, "<hr>\r\n");
-  tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
-  tcp_qprintf(tq, "<div class=\"infoprefixwide\">Select:</div><div>");
-
-  ajax_a_jsfuncf(tq, "All",    "select_all();");
-  tcp_qprintf(tq, " / ");
-  ajax_a_jsfuncf(tq, "None",   "select_none();");
-  tcp_qprintf(tq, " / ");
-  ajax_a_jsfuncf(tq, "Invert", "select_invert();");
-
-  tcp_qprintf(tq, "</div></div>\r\n");
-
-
-  tcp_qprintf(tq, "<div style=\"margin-top: 5px; "
+  tcp_qprintf(tq, "<div style=\"text-align: center; "
 	      "overflow: auto; width: 100%\">");
 
+  ajax_button(tq, "Select all", "select_all()");
+  ajax_button(tq, "Select none", "select_none()");
+  tcp_qprintf(tq, "</div>\r\n");
+
+  tcp_qprintf(tq, "<hr>\r\n");
+
+  tcp_qprintf(tq, "<div style=\"text-align: center; "
+	      "overflow: auto; width: 100%\">");
+  
+  ajax_button(tq,
+	      "Delete all selected...", 
+	      "select_do('delete', '%d', 0, true);", tcg->tcg_tag);
+  
+  tcp_qprintf(tq, "<hr>\r\n");
+
+
+  tcp_qprintf(tq, "<div style=\"text-align: center; "
+	      "overflow: auto; width: 100%\">");
   tcp_qprintf(tq,
-	      "<div class=\"infoprefixwidefat\">Move to group:</div>"
-	      "<div>"
 	      "<select id=\"movetarget\" "
 	      "onChange=\"select_do('changegroup', "
-	      "$('movetarget').value, '%d')\">", tcg->tcg_tag);
-  tcp_qprintf(tq, "<option value="">Select group</option>");
+	      "$('movetarget').value, '%d', false)\">", tcg->tcg_tag);
+  tcp_qprintf(tq, 
+	      "<option value="">Move selected channels to group:</option>");
 
   TAILQ_FOREACH(tcg2, &all_channel_groups, tcg_global_link) {
     if(tcg2->tcg_hidden || tcg == tcg2)
@@ -669,6 +675,40 @@ ajax_chmerge(http_connection_t *hc, http_reply_t *hr,
   return 0;
 }
 
+/**
+ * Change group for channel(s)
+ */
+static int
+ajax_chdeletemulti(http_connection_t *hc, http_reply_t *hr,
+		   const char *remain, void *opaque)
+{
+  tcp_queue_t *tq = &hr->hr_tq;
+  channel_t *ch;
+  http_arg_t *ra;
+  const char *curgrp;
+
+  if((curgrp = http_arg_get(&hc->hc_req_args, "arg1")) == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  TAILQ_FOREACH(ra, &hc->hc_req_args, link) {
+    if(strcmp(ra->val, "selected"))
+      continue;
+    
+    if((ch = channel_by_tag(atoi(ra->key))) != NULL)
+      channel_delete(ch);
+  }
+
+  tcp_qprintf(tq,
+	      "$('cheditortab').innerHTML=''; "
+	      "new Ajax.Updater('groupeditortab', "
+	      "'/ajax/chgroup_editor/%s', "
+	      "{method: 'get', evalScripts: true});", curgrp);
+  
+  http_output(hc, hr, "text/javascript; charset=UTF-8", NULL, 0);
+  return 0;
+}
+
+
 
 /**
  *
@@ -695,6 +735,8 @@ ajax_config_channels_init(void)
   http_path_add("/ajax/chdelete",            NULL, ajax_chdelete,
 		AJAX_ACCESS_CONFIG);
   http_path_add("/ajax/chmerge",             NULL, ajax_chmerge,
+		AJAX_ACCESS_CONFIG);
+ http_path_add("/ajax/chop/delete",          NULL, ajax_chdeletemulti,
 		AJAX_ACCESS_CONFIG);
 
 }
