@@ -114,4 +114,6 @@ void ajax_generate_select_functions(tcp_queue_t *tq, const char *fprefix,
 void ajax_a_jsfuncf(tcp_queue_t *tq, const char *innerhtml,
 		    const char *fmt, ...);
 
+void ajax_button(tcp_queue_t *tq, const char *caption, const char *code, ...);
+
 #endif /* AJAXUI_H_ */

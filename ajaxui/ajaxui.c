@@ -436,6 +436,21 @@ ajax_a_jsfuncf(tcp_queue_t *tq, const char *innerhtml, const char *fmt, ...)
   tcp_qprintf(tq, "\">%s</a>", innerhtml);
 }
 
+/**
+ *
+ */
+void
+ajax_button(tcp_queue_t *tq, const char *caption, const char *code, ...)
+{
+  va_list ap;
+  va_start(ap, code);
+
+  tcp_qprintf(tq, "<input type=\"button\" value=\"%s\" onClick=\"",
+	      caption);
+  tcp_qvprintf(tq, code, ap);
+  tcp_qprintf(tq, "\">");
+}
+
 
 
 /*
