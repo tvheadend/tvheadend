@@ -413,13 +413,13 @@ ajax_cheditor(http_connection_t *hc, http_reply_t *hr,
   
   tcp_qprintf(tq, "<div>Sources:</div>");
 
-  LIST_FOREACH(t, &ch->ch_transports, tht_channel_link) {
+  LIST_FOREACH(t, &ch->ch_transports, tht_ch_link) {
     ajax_box_begin(tq, AJAX_BOX_BORDER, NULL, NULL, NULL);
     tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
     tcp_qprintf(tq, "<div style=\"float: left; width: 13%%\">%s</div>",
 		val2str(t->tht_type, sourcetypetab) ?: "???");
     tcp_qprintf(tq, "<div style=\"float: left; width: 87%%\">\"%s\"%s</div>",
-		t->tht_servicename, t->tht_scrambled ? " - (scrambled)" : "");
+		t->tht_svcname, t->tht_scrambled ? " - (scrambled)" : "");
     s = t->tht_sourcename ? t->tht_sourcename(t) : NULL;
 
     tcp_qprintf(tq, "</div><div style=\"overflow: auto; width: 100%\">");

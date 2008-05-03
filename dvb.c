@@ -581,13 +581,13 @@ dvb_tdmi_save(th_dvb_mux_instance_t *tdmi)
     if(t->tht_provider != NULL)
       fprintf(fp, "\tprovider = %s\n", t->tht_provider);
 
-    if(t->tht_servicename)
-      fprintf(fp, "\tservicename = %s\n", t->tht_servicename);
+    if(t->tht_svcname)
+      fprintf(fp, "\tservicename = %s\n", t->tht_svcname);
 
-    if(t->tht_channelname)
-      fprintf(fp, "\tchannelname = %s\n", t->tht_channelname);
+    if(t->tht_chname)
+      fprintf(fp, "\tchannelname = %s\n", t->tht_chname);
 
-    fprintf(fp, "\tmapped = %d\n", t->tht_channel ? 1 : 0);
+    fprintf(fp, "\tmapped = %d\n", t->tht_ch ? 1 : 0);
 
     psi_save_transport(fp, t);
 
@@ -634,21 +634,21 @@ dvb_tdmi_load(th_dvb_mux_instance_t *tdmi)
     t->tht_provider = strdup(v);
 
     v = config_get_str_sub(&ce->ce_sub, "servicename", "unknown");
-    free((void *)t->tht_servicename);
-    t->tht_servicename = strdup(v);
+    free((void *)t->tht_svcname);
+    t->tht_svcname = strdup(v);
 
     v = config_get_str_sub(&ce->ce_sub, "channelname", NULL);
     if(v != NULL) {
-      free((void *)t->tht_channelname);
-      t->tht_channelname = strdup(v);
+      free((void *)t->tht_chname);
+      t->tht_chname = strdup(v);
     } else {
-      t->tht_channelname = strdup(t->tht_servicename);
+      t->tht_chname = strdup(t->tht_svcname);
     }
 
     psi_load_transport(&ce->ce_sub, t);
 
     if(atoi(config_get_str_sub(&ce->ce_sub, "mapped", "0"))) {
-      transport_map_channel(t);
+      transport_map_channel(t, NULL);
     }
   }
   config_free0(&cl);
@@ -738,14 +738,14 @@ dvb_tda_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
       if(t_src->tht_provider != NULL)
 	t_dst->tht_provider    = strdup(t_src->tht_provider);
 
-      if(t_src->tht_servicename != NULL)
-	t_dst->tht_servicename = strdup(t_src->tht_servicename);
+      if(t_src->tht_svcname != NULL)
+	t_dst->tht_svcname = strdup(t_src->tht_svcname);
 
-      if(t_src->tht_channelname != NULL)
-	t_dst->tht_channelname = strdup(t_src->tht_channelname);
+      if(t_src->tht_chname != NULL)
+	t_dst->tht_chname = strdup(t_src->tht_chname);
       
-      if(t_src->tht_channel != NULL)
-	transport_map_channel(t_dst);
+      if(t_src->tht_ch != NULL)
+	transport_map_channel(t_dst, t_src->tht_ch);
 
       
 

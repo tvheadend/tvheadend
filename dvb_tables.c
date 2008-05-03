@@ -255,7 +255,7 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   if(t == NULL)
     return;
 
-  ch = t->tht_channel;
+  ch = t->tht_ch;
   if(ch == NULL)
     return;
 
@@ -410,7 +410,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	    t->tht_servicetype != stype ||
 	    t->tht_scrambled != free_ca_mode ||
 	    strcmp(t->tht_provider    ?: "", provider) ||
-	    strcmp(t->tht_servicename ?: "", chname  );
+	    strcmp(t->tht_svcname     ?: "", chname  );
 
 	  t->tht_servicetype = stype;
 	  t->tht_scrambled = free_ca_mode;
@@ -418,11 +418,11 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	  free((void *)t->tht_provider);
 	  t->tht_provider = strdup(provider);
 
-	  free((void *)t->tht_servicename);
-	  t->tht_servicename = strdup(chname);
+	  free((void *)t->tht_svcname);
+	  t->tht_svcname = strdup(chname);
 
-	  if(t->tht_channelname == NULL)
-	    t->tht_channelname = strdup(chname);
+	  if(t->tht_chname == NULL)
+	    t->tht_chname = strdup(chname);
 	}
 	break;
       }

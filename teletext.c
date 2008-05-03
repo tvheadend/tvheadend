@@ -180,7 +180,7 @@ tt_decode_line(th_transport_t *t, uint8_t *buf)
   uint8_t mpag, line, s12, s34, c;
   int page, magidx, i;
   tt_mag_t *mag;
-  channel_t *ch = t->tht_channel;
+  channel_t *ch = t->tht_ch;
   tt_decoder_t *ttd = &ch->ch_tt;
   tt_page_t *ttp;
 

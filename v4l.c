@@ -97,9 +97,9 @@ v4l_configure_transport(th_transport_t *t, const char *muxname,
   snprintf(buf, sizeof(buf), "analog_%u", t->tht_v4l_frequency);
   t->tht_identifier = strdup(buf);
 
-  t->tht_servicename = strdup(channel_name);
+  t->tht_chname = strdup(channel_name);
 
-  transport_map_channel(t);
+  transport_map_channel(t, NULL);
   return 0;
 }
 

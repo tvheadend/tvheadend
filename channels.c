@@ -461,9 +461,9 @@ channel_rename(channel_t *ch, const char *newname)
   LIST_REMOVE(ch, ch_global_link);
   channel_set_name(ch, newname);
 
-  LIST_FOREACH(t, &ch->ch_transports, tht_channel_link) {
-    free(t->tht_servicename);
-    t->tht_servicename = strdup(newname);
+  LIST_FOREACH(t, &ch->ch_transports, tht_ch_link) {
+    free(t->tht_chname);
+    t->tht_chname = strdup(newname);
     t->tht_config_change(t);
   }
 
@@ -497,6 +497,9 @@ channel_delete(channel_t *ch)
 
   autorec_destroy_by_channel(ch);
 
+  snprintf(buf, sizeof(buf), "%s/channels/%s", settings_dir, ch->ch_sname);
+  unlink(buf);
+
   free((void *)ch->ch_name);
   free((void *)ch->ch_sname);
   free(ch->ch_icon);
@@ -505,8 +508,6 @@ channel_delete(channel_t *ch)
   LIST_REMOVE(ch, ch_global_link);
   free(ch);
 
-  snprintf(buf, sizeof(buf), "%s/channels/%s", settings_dir, ch->ch_sname);
-  unlink(buf);
 }
 
 
@@ -524,10 +525,7 @@ channel_merge(channel_t *dst, channel_t *src)
   while((t = LIST_FIRST(&src->ch_transports)) != NULL) {
     transport_unmap_channel(t);
 
-    free(t->tht_servicename);
-    t->tht_servicename = strdup(dst->ch_name);
-
-    transport_map_channel(t);
+    transport_map_channel(t, dst);
     t->tht_config_change(t);
   }
 

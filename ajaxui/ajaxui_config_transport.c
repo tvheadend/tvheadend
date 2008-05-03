@@ -134,7 +134,7 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
     ajax_table_cell(&ta, NULL, "%d", t->tht_dvb_service_id);
     ajax_table_cell(&ta, NULL, "%s", t->tht_scrambled ? "Yes" : "No");
     ajax_table_cell(&ta, NULL, "%s", transport_servicetype_txt(t));
-    ajax_table_cell(&ta, NULL, "%s", t->tht_servicename ?: "");
+    ajax_table_cell(&ta, NULL, "%s", t->tht_svcname ?: "");
 
     ajax_table_cell(&ta, NULL, 
 		    "<a href=\"javascript:void(0)\" "
@@ -142,9 +142,9 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 		    "{parameters: {'%s': 'selected'}})\">"
 		    "<img id=\"map_%s\" src=\"/gfx/%smapped.png\"></a>",
 		    t->tht_identifier, t->tht_identifier,
-		    t->tht_channel ? "" : "un");
+		    t->tht_ch ? "" : "un");
 
-    if(t->tht_channel == NULL) {
+    if(t->tht_ch == NULL) {
       /* Unmapped */
       ajax_table_cell(&ta, "chname", 
 		      "<a href=\"javascript:void(0)\" "
@@ -152,9 +152,9 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 		      "'/ajax/transport_rename_channel/%s', '%s')\">"
 		      "%s</a>",
 		      t->tht_identifier, t->tht_identifier,
-		      t->tht_channelname, t->tht_channelname);
+		      t->tht_chname, t->tht_chname);
     } else {
-      ajax_table_cell(&ta, "chname", "%s", t->tht_channel->ch_name);
+      ajax_table_cell(&ta, "chname", "%s", t->tht_ch->ch_name);
     }
 
     ajax_table_cell_checkbox(&ta);
@@ -254,8 +254,8 @@ ajax_transport_rename_channel(http_connection_t *hc, http_reply_t *hr,
   if((newname = http_arg_get(&hc->hc_req_args, "newname")) == NULL)
     return HTTP_STATUS_BAD_REQUEST;
 
-  free((void *)t->tht_channelname);
-  t->tht_channelname = strdup(newname);
+  free((void *)t->tht_chname);
+  t->tht_chname = strdup(newname);
 
   ajax_a_jsfuncf(tq, newname,
 		 "tentative_chname('chname_%s', "
@@ -273,12 +273,12 @@ ajax_transport_rename_channel(http_connection_t *hc, http_reply_t *hr,
 static void
 dvb_map_channel(th_transport_t *t, tcp_queue_t *tq)
 {
-  transport_map_channel(t);
+  transport_map_channel(t, NULL);
 
   tcp_qprintf(tq, 
 	      "$('chname_%s').innerHTML='%s';\n\r"
 	      "$('map_%s').src='/gfx/mapped.png';\n\r",
-	      t->tht_identifier, t->tht_channel->ch_name,
+	      t->tht_identifier, t->tht_ch->ch_name,
 	      t->tht_identifier);
 }
 
@@ -299,7 +299,7 @@ dvb_unmap_channel(th_transport_t *t, tcp_queue_t *tq)
 	      "';\n\r"
 	      "$('map_%s').src='/gfx/unmapped.png';\n\r",
 	      t->tht_identifier, t->tht_identifier, t->tht_identifier,
-	      t->tht_channelname, t->tht_channelname, t->tht_identifier);
+	      t->tht_chname, t->tht_chname, t->tht_identifier);
 }
 
 
@@ -327,13 +327,13 @@ ajax_transport_op(http_connection_t *hc, http_reply_t *hr,
       continue;
 
     if(!strcmp(op, "toggle")) {
-      if(t->tht_channel)
+      if(t->tht_ch)
 	dvb_unmap_channel(t, tq);
       else
 	dvb_map_channel(t, tq);
-    } else if(!strcmp(op, "map") && t->tht_channel == NULL) {
+    } else if(!strcmp(op, "map") && t->tht_ch == NULL) {
       dvb_map_channel(t, tq);
-    } else if(!strcmp(op, "unmap") && t->tht_channel != NULL) {
+    } else if(!strcmp(op, "unmap") && t->tht_ch != NULL) {
       dvb_unmap_channel(t, tq);
     } else if(!strcmp(op, "probe")) {
       serviceprobe_add(t);

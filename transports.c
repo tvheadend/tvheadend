@@ -281,13 +281,13 @@ transport_find(channel_t *ch, unsigned int weight)
   
   /* First, sort all transports in order */
 
-  LIST_FOREACH(t, &ch->ch_transports, tht_channel_link)
+  LIST_FOREACH(t, &ch->ch_transports, tht_ch_link)
     if(!t->tht_disabled)
       cnt++;
 
   vec = alloca(cnt * sizeof(th_transport_t *));
   i = 0;
-  LIST_FOREACH(t, &ch->ch_transports, tht_channel_link)
+  LIST_FOREACH(t, &ch->ch_transports, tht_ch_link)
     if(!t->tht_disabled)
       vec[i++] = t;
 
@@ -433,9 +433,9 @@ transport_destroy(th_transport_t *t)
 
   free((void *)t->tht_name);
 
-  if(t->tht_channel != NULL) {
-    t->tht_channel = NULL;
-    LIST_REMOVE(t, tht_channel_link);
+  if(t->tht_ch != NULL) {
+    t->tht_ch = NULL;
+    LIST_REMOVE(t, tht_ch_link);
   }
 
   LIST_REMOVE(t, tht_mux_link);
@@ -444,8 +444,8 @@ transport_destroy(th_transport_t *t)
   transport_flush_subscribers(t);
   
   free(t->tht_identifier);
-  free(t->tht_servicename);
-  free(t->tht_channelname);
+  free(t->tht_svcname);
+  free(t->tht_chname);
   free(t->tht_provider);
 
   while((st = LIST_FIRST(&t->tht_streams)) != NULL) {
@@ -524,19 +524,26 @@ transport_add_stream(th_transport_t *t, int pid, tv_streamtype_t type)
  *
  */
 void
-transport_map_channel(th_transport_t *t)
+transport_map_channel(th_transport_t *t, channel_t *ch)
 {
-  channel_t *ch = channel_find(t->tht_servicename, 1, NULL);
+  assert(t->tht_ch == NULL);
 
-  assert(t->tht_channel == NULL);
+  if(ch == NULL) {
+    if(t->tht_chname == NULL)
+      return;
+    ch = channel_find(t->tht_chname, 1, NULL);
+  } else {
+    free(t->tht_chname);
+    t->tht_chname = strdup(ch->ch_name);
+  }
 
   avgstat_init(&t->tht_cc_errors, 3600);
   avgstat_init(&t->tht_rate, 10);
 
   assert(t->tht_identifier != NULL);
-  t->tht_channel = ch;
+  t->tht_ch = ch;
 
-  LIST_INSERT_HEAD(&ch->ch_transports, t, tht_channel_link);
+  LIST_INSERT_HEAD(&ch->ch_transports, t, tht_ch_link);
 }
 
 /**
@@ -545,8 +552,8 @@ transport_map_channel(th_transport_t *t)
 void
 transport_unmap_channel(th_transport_t *t)
 {
-  t->tht_channel = NULL;
-  LIST_REMOVE(t, tht_channel_link);
+  t->tht_ch = NULL;
+  LIST_REMOVE(t, tht_ch_link);
 }
 
 

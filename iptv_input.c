@@ -236,7 +236,7 @@ iptv_configure_transport(th_transport_t *t, const char *iptv_type,
 	   inet_ntoa(t->tht_iptv_group_addr), t->tht_iptv_port);
   t->tht_identifier = strdup(buf);
 
-  t->tht_channelname = strdup(channel_name);
+  t->tht_chname = strdup(channel_name);
 
   LIST_INSERT_HEAD(&iptv_probing_transports, t, tht_active_link);
   startupcounter++;
@@ -278,7 +278,7 @@ iptv_probe_done(th_transport_t *t, int timeout)
   iptv_stop_feed(t);
 
   if(!timeout)
-    transport_map_channel(t);
+    transport_map_channel(t, NULL);
   else
     LIST_INSERT_HEAD(&iptv_stale_transports, t, tht_active_link);
 

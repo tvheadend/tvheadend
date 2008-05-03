@@ -84,6 +84,7 @@ sp_timeout(void *aux, int64_t now)
   sp_t *sp = aux;
   th_transport_t *t = sp->sp_s->ths_transport;
   const char *errtxt;
+  channel_t *ch;
 
   switch(sp->sp_error) {
   case 0:
@@ -103,11 +104,13 @@ sp_timeout(void *aux, int64_t now)
     break;
   }
 
-  syslog(LOG_INFO, "Probed \"%s\" -- %s\n", t->tht_servicename, errtxt);
+  syslog(LOG_INFO, "Probed \"%s\" -- %s\n", t->tht_svcname, errtxt);
  
   if(sp->sp_error == 0) {
-    if(t->tht_channel == NULL && t->tht_servicename != NULL) {
-      transport_map_channel(t);
+    if(t->tht_ch == NULL && t->tht_svcname != NULL) {
+      ch = channel_find(t->tht_svcname, 1, NULL);
+      transport_map_channel(t, ch);
+
       t->tht_config_change(t);
     }
   }

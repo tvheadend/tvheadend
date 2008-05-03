@@ -32,7 +32,7 @@ th_transport_t *transport_create(const char *identifier, int type,
 
 th_transport_t *transport_find_by_identifier(const char *identifier);
 
-void transport_map_channel(th_transport_t *t);
+void transport_map_channel(th_transport_t *t, channel_t *ch);
 
 void transport_unmap_channel(th_transport_t *t);
 

@@ -418,9 +418,6 @@ typedef struct th_transport {
 
   LIST_ENTRY(th_transport) tht_active_link;
 
-  LIST_ENTRY(th_transport) tht_channel_link;
-  struct channel *tht_channel;
-
   LIST_HEAD(, th_subscription) tht_subscriptions;
 
   int (*tht_start_feed)(struct th_transport *t, unsigned int weight,
@@ -474,8 +471,7 @@ typedef struct th_transport {
  } u;
 
   char *tht_identifier;
-  char *tht_servicename;
-  char *tht_channelname;
+  char *tht_svcname;
   char *tht_provider;
 
   enum {
@@ -507,6 +503,14 @@ typedef struct th_transport {
 
   TAILQ_ENTRY(th_transport) tht_probe_link;
   int tht_on_probe_queue;
+
+  /**
+   * Channel mapping
+   */
+
+  LIST_ENTRY(th_transport) tht_ch_link;
+  struct channel *tht_ch;
+  char *tht_chname;
 
 } th_transport_t;
 
