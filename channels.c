@@ -159,22 +159,16 @@ channel_group_destroy(th_channel_group_t *tcg)
 /**
  *
  */
-th_channel_t *
-channel_find(const char *name, int create, th_channel_group_t *tcg)
+static void
+channel_set_name(th_channel_t *ch, const char *name)
 {
   const char *n2;
-  th_channel_t *ch;
   int l, i;
   char *cp, c;
 
-  LIST_FOREACH(ch, &channels, ch_global_link)
-    if(!strcasecmp(name, ch->ch_name))
-      return ch;
+  free((void *)ch->ch_name);
+  free((void *)ch->ch_sname);
 
-  if(create == 0)
-    return NULL;
-
-  ch = calloc(1, sizeof(th_channel_t));
   ch->ch_name = strdup(name);
 
   l = strlen(name);
@@ -193,10 +187,29 @@ channel_find(const char *name, int create, th_channel_group_t *tcg)
 
   free((void *)n2);
 
+  LIST_INSERT_SORTED(&channels, ch, ch_global_link, channelcmp);
+}
+
+/**
+ *
+ */
+th_channel_t *
+channel_find(const char *name, int create, th_channel_group_t *tcg)
+{
+  th_channel_t *ch;
+
+  LIST_FOREACH(ch, &channels, ch_global_link)
+    if(!strcasecmp(name, ch->ch_name))
+      return ch;
+
+  if(create == 0)
+    return NULL;
+
+  ch = calloc(1, sizeof(th_channel_t));
   ch->ch_index = nchannels;
   TAILQ_INIT(&ch->ch_epg_events);
 
-  LIST_INSERT_SORTED(&channels, ch, ch_global_link, channelcmp);
+  channel_set_name(ch, name);
 
   channel_set_group(ch, tcg ?: defgroup);
 
@@ -431,3 +444,40 @@ channel_settings_write(th_channel_t *ch)
   fclose(fp);
 }
 
+/**
+ * Rename a channel and all tied transports
+ */
+int
+channel_rename(th_channel_t *ch, const char *newname)
+{
+  th_transport_t *t;
+
+  if(channel_find(newname, 0, NULL))
+    return -1;
+
+  LIST_REMOVE(ch, ch_global_link);
+  channel_set_name(ch, newname);
+
+  LIST_FOREACH(t, &ch->ch_transports, tht_channel_link) {
+    free(t->tht_servicename);
+    t->tht_servicename = strdup(newname);
+    t->tht_config_change(t);
+  }
+
+  channel_settings_write(ch);
+  return 0;
+}
+
+/**
+ * Delete channel
+ */
+void
+channel_delete(th_channel_t *ch)
+{
+  th_transport_t *t;
+
+  while((t = LIST_FIRST(&ch->ch_transports)) != NULL)
+    transport_unmap_channel(t);
+
+  printf("Deleted channel %s\n", ch->ch_name);
+}

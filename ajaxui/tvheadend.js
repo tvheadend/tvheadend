@@ -104,3 +104,19 @@ function makedivinput(id, url)
 	'{parameters: {value: $F(\'val' + id + '\')}})">' +
 	'</div></div>';
 }
+
+function channel_rename(tag, oldname)
+{
+	newname = prompt("Enter new name", oldname);
+	if(newname != null && newname != oldname) {
+		a = new Ajax.Request('/ajax/chrename/' + tag,
+			{ parameters: { 'newname': newname}});
+	}
+}
+
+function channel_delete(tag, name)
+{
+	if(confirm("Are you sure you want to delete '" + name + "'") == true) {
+		a = new Ajax.Request('/ajax/chdelete/' + tag);
+	}
+}

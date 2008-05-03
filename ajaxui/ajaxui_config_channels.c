@@ -443,6 +443,21 @@ ajax_cheditor(http_connection_t *hc, http_reply_t *hr,
 
   tcp_qprintf(tq, "<hr>\r\n");
 
+  tcp_qprintf(tq, "<div style=\"overflow: auto; width:100%%\">");
+  ajax_a_jsfuncf(tq, "Rename channel...",
+		 "channel_rename('%d', '%s');",
+		 ch->ch_tag, ch->ch_name);
+
+  tcp_qprintf(tq, " / ");
+
+  ajax_a_jsfuncf(tq, "Delete channel...",
+		 "channel_delete('%d', '%s');",
+		 ch->ch_tag, ch->ch_name);
+
+  tcp_qprintf(tq, "</div>");
+
+  tcp_qprintf(tq, "<hr>\r\n");
+
   tcp_qprintf(tq,
 	      "<div class=\"infoprefixwidewidefat\">"
 	      "Commercial detection:</div>"
@@ -534,6 +549,75 @@ ajax_chsetcomdetect(http_connection_t *hc, http_reply_t *hr,
 
 
 /**
+ * Rename a channel
+ */
+static int
+ajax_chrename(http_connection_t *hc, http_reply_t *hr,
+	      const char *remain, void *opaque)
+{
+  tcp_queue_t *tq = &hr->hr_tq;
+  th_channel_t *ch;
+  const char *s;
+
+  if(remain == NULL || (ch = channel_by_tag(atoi(remain))) == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+  
+  if((s = http_arg_get(&hc->hc_req_args, "newname")) == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  if(channel_rename(ch, s)) {
+    tcp_qprintf(tq, "alert('Channel already exist');");
+  } else {
+    tcp_qprintf(tq, 
+		"new Ajax.Updater('groupeditortab', "
+		"'/ajax/chgroup_editor/%d', "
+		"{method: 'get', evalScripts: true});\r\n",
+		ch->ch_group->tcg_tag);
+ 
+    tcp_qprintf(tq, 
+		"new Ajax.Updater('cheditortab', "
+		"'/ajax/cheditor/%d', "
+		"{method: 'get', evalScripts: true});\r\n",
+		ch->ch_tag);
+  }
+
+  http_output(hc, hr, "text/javascript; charset=UTF-8", NULL, 0);
+  return 0;
+}
+
+
+/**
+ * Delete channel
+ */
+static int
+ajax_chdelete(http_connection_t *hc, http_reply_t *hr,
+	      const char *remain, void *opaque)
+{
+  tcp_queue_t *tq = &hr->hr_tq;
+  th_channel_t *ch;
+  th_channel_group_t *tcg;
+
+  if(remain == NULL || (ch = channel_by_tag(atoi(remain))) == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+  
+  tcg = ch->ch_group;
+  
+  channel_delete(ch);
+
+  tcp_qprintf(tq, 
+	      "new Ajax.Updater('groupeditortab', "
+	      "'/ajax/chgroup_editor/%d', "
+	      "{method: 'get', evalScripts: true});\r\n",
+	      tcg->tcg_tag);
+ 
+  tcp_qprintf(tq, "$('cheditortab').innerHTML='';\r\n");
+
+  http_output(hc, hr, "text/javascript; charset=UTF-8", NULL, 0);
+  return 0;
+}
+
+
+/**
  *
  */
 void
@@ -552,6 +636,10 @@ ajax_config_channels_init(void)
   http_path_add("/ajax/chop/changegroup",    NULL, ajax_changegroup,
 		AJAX_ACCESS_CONFIG);
   http_path_add("/ajax/chsetcomdetect",      NULL, ajax_chsetcomdetect,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/chrename",            NULL, ajax_chrename,
+		AJAX_ACCESS_CONFIG);
+  http_path_add("/ajax/chdelete",            NULL, ajax_chdelete,
 		AJAX_ACCESS_CONFIG);
 
 }

@@ -48,4 +48,8 @@ void channel_group_settings_write(void);
 
 void channel_settings_write(th_channel_t *ch);
 
+int channel_rename(th_channel_t *ch, const char *newname);
+
+void channel_delete(th_channel_t *ch);
+
 #endif /* CHANNELS_H */
