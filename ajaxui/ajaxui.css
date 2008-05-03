@@ -1,6 +1,13 @@
 body {
   font:       11px Lucida Grande, Verdana, Arial, Helvetica, sans serif;
 }
+select {
+  font:       11px Lucida Grande, Verdana, Arial, Helvetica, sans serif;
+}
+input {
+  font:       11px Lucida Grande, Verdana, Arial, Helvetica, sans serif;
+}
+
 
 a, a:hover, a:visited, a:active { 
   color: #aa6600;
