@@ -286,6 +286,11 @@ parse_mpegaudio(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   header = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]);
 
   sample_rate = mpegaudio_freq_tab[(header >> 10) & 3];
+  if(sample_rate == 0) {
+    pkt_deref(pkt);
+    return;
+  }
+
   duration = 90000 * 1152 / sample_rate;
   pkt->pkt_duration = duration;
   st->st_nextdts = pkt->pkt_dts + duration;
@@ -355,6 +360,11 @@ parse_ac3(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
     bsid = 0;
 
   sample_rate = ac3_freq_tab[src] >> bsid;
+  if(sample_rate == 0) {
+    pkt_deref(pkt);
+    return;
+  }
+
   frame_size = ac3_frame_size_tab[fsc][src] * 2;
 
   duration = 90000 * 1536 / sample_rate;
