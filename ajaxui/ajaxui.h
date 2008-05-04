@@ -116,4 +116,7 @@ void ajax_a_jsfuncf(tcp_queue_t *tq, const char *innerhtml,
 
 void ajax_button(tcp_queue_t *tq, const char *caption, const char *code, ...);
 
+void ajax_transport_build_mapper_state(char *buf, size_t siz,
+				       th_transport_t *t, int mapped);
+
 #endif /* AJAXUI_H_ */

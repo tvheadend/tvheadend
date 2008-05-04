@@ -25,8 +25,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <linux/dvb/frontend.h>
-
 #include "tvhead.h"
 #include "http.h"
 #include "ajaxui.h"
@@ -254,19 +252,31 @@ ajax_transport_rename_channel(http_connection_t *hc, http_reply_t *hr,
   return 0;
 }
 
+
 /**
  *
  */
-static void
-dvb_map_channel(th_transport_t *t, tcp_queue_t *tq)
+void
+ajax_transport_build_mapper_state(char *buf, size_t siz, th_transport_t *t,
+				  int mapped)
 {
-  transport_map_channel(t, NULL);
-
-  tcp_qprintf(tq, 
-	      "$('chname_%s').innerHTML='%s';\n\r"
-	      "$('map_%s').src='/gfx/mapped.png';\n\r",
-	      t->tht_identifier, t->tht_ch->ch_name,
-	      t->tht_identifier);
+  if(mapped) {
+    snprintf(buf, siz,
+	     "$('chname_%s').innerHTML='%s';\n\r"
+	     "$('map_%s').src='/gfx/mapped.png';\n\r",
+		t->tht_identifier, t->tht_ch->ch_name,
+		t->tht_identifier);
+  } else {
+    snprintf(buf, siz,
+	     "$('chname_%s').innerHTML='"
+	     "<a href=\"javascript:void(0)\" "
+	     "onClick=\"javascript:tentative_chname(\\'chname_%s\\', "
+	     "\\'/ajax/transport_rename_channel/%s\\', \\'%s\\')\">%s</a>"
+	     "';\n\r"
+	     "$('map_%s').src='/gfx/unmapped.png';\n\r",
+	     t->tht_identifier, t->tht_identifier, t->tht_identifier,
+	     t->tht_chname, t->tht_chname, t->tht_identifier);
+  }
 }
 
 
@@ -274,21 +284,18 @@ dvb_map_channel(th_transport_t *t, tcp_queue_t *tq)
  *
  */
 static void
-dvb_unmap_channel(th_transport_t *t, tcp_queue_t *tq)
+ajax_map_unmap_channel(th_transport_t *t, tcp_queue_t *tq, int map)
 {
-  transport_unmap_channel(t);
+  char buf[1000];
 
-  tcp_qprintf(tq, 
-	      "$('chname_%s').innerHTML='"
-	      "<a href=\"javascript:void(0)\" "
-	      "onClick=\"javascript:tentative_chname(\\'chname_%s\\', "
-	      "\\'/ajax/transport_rename_channel/%s\\', \\'%s\\')\">%s</a>"
-	      "';\n\r"
-	      "$('map_%s').src='/gfx/unmapped.png';\n\r",
-	      t->tht_identifier, t->tht_identifier, t->tht_identifier,
-	      t->tht_chname, t->tht_chname, t->tht_identifier);
+  if(map)
+    transport_map_channel(t, NULL);
+  else
+    transport_unmap_channel(t);
+
+  ajax_transport_build_mapper_state(buf, sizeof(buf), t, map);
+  tcp_qprintf(tq, "%s", buf);
 }
-
 
 
 /**
@@ -314,14 +321,11 @@ ajax_transport_op(http_connection_t *hc, http_reply_t *hr,
       continue;
 
     if(!strcmp(op, "toggle")) {
-      if(t->tht_ch)
-	dvb_unmap_channel(t, tq);
-      else
-	dvb_map_channel(t, tq);
+      ajax_map_unmap_channel(t, tq, t->tht_ch ? 0 : 1);
     } else if(!strcmp(op, "map") && t->tht_ch == NULL) {
-      dvb_map_channel(t, tq);
+      ajax_map_unmap_channel(t, tq, 1);
     } else if(!strcmp(op, "unmap") && t->tht_ch != NULL) {
-      dvb_unmap_channel(t, tq);
+      ajax_map_unmap_channel(t, tq, 0);
     } else if(!strcmp(op, "probe")) {
       serviceprobe_add(t);
       continue;
