@@ -136,6 +136,7 @@ ajax_channel_tab(http_connection_t *hc, http_reply_t *hr,
   channel_group_t *tcg;
   char dispname[20];
   struct sockaddr_in *si;
+  int nchs = 0;
 
   if(remain == NULL || (tcg = channel_group_by_tag(atoi(remain))) == NULL)
     return HTTP_STATUS_NOT_FOUND;
@@ -143,6 +144,8 @@ ajax_channel_tab(http_connection_t *hc, http_reply_t *hr,
   TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
     if(LIST_FIRST(&ch->ch_transports) == NULL)
       continue;
+
+    nchs++;
 
     tcp_qprintf(tq, "<div style=\"float:left; width: 25%%\">");
 
@@ -187,6 +190,10 @@ ajax_channel_tab(http_connection_t *hc, http_reply_t *hr,
     ajax_box_end(tq, AJAX_BOX_SIDEBOX);
     tcp_qprintf(tq, "</div>");
   }
+
+  if(nchs == 0)
+    tcp_qprintf(tq, "<div style=\"text-align: center; font-weight: bold\">"
+		"No channels in this group</div>");
 
   http_output_html(hc, hr);
   return 0;
