@@ -255,9 +255,9 @@ access_save(void)
     access_save_right(fp, ae, "streaming",    ACCESS_STREAMING);
     access_save_right(fp, ae, "rec",          ACCESS_RECORDER_VIEW);
     access_save_right(fp, ae, "recedit",      ACCESS_RECORDER_CHANGE);
-    access_save_right(fp, ae, "conf",         ACCESS_CONFIGURE);
+    access_save_right(fp, ae, "admin",        ACCESS_ADMIN);
     access_save_right(fp, ae, "webui",        ACCESS_WEB_INTERFACE);
-    access_save_right(fp, ae, "access",       ACCESS_ACCESSCONTROL);
+    access_save_right(fp, ae, "access",       ACCESS_ADMIN_ACCESS);
 
     fprintf(fp, "}\n");
   }
@@ -318,8 +318,8 @@ access_load(void)
     access_load_right(&ce->ce_sub, ae, "streaming",    ACCESS_STREAMING);
     access_load_right(&ce->ce_sub, ae, "rec",          ACCESS_RECORDER_VIEW);
     access_load_right(&ce->ce_sub, ae, "recedit",      ACCESS_RECORDER_CHANGE);
-    access_load_right(&ce->ce_sub, ae, "conf",         ACCESS_CONFIGURE);
+    access_load_right(&ce->ce_sub, ae, "admin",        ACCESS_ADMIN);
     access_load_right(&ce->ce_sub, ae, "webui",        ACCESS_WEB_INTERFACE);
-    access_load_right(&ce->ce_sub, ae, "access",       ACCESS_ACCESSCONTROL);
+    access_load_right(&ce->ce_sub, ae, "access",       ACCESS_ADMIN_ACCESS);
   }
 }

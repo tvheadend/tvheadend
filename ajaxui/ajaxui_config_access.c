@@ -39,9 +39,9 @@ static struct strtab accesstypetab[] = {
   { "stream",  ACCESS_STREAMING },
   { "rec",     ACCESS_RECORDER_VIEW },
   { "recedit", ACCESS_RECORDER_CHANGE },
-  { "conf",    ACCESS_CONFIGURE },
+  { "admin",   ACCESS_ADMIN },
   { "webui",   ACCESS_WEB_INTERFACE },
-  { "access",  ACCESS_ACCESSCONTROL },
+  { "access",  ACCESS_ADMIN_ACCESS },
 };
 
 
@@ -120,7 +120,7 @@ ajax_accesslist(http_connection_t *hc, http_reply_t *hr,
 				    "Streaming",
 				    "Recorder",
 				    "Recorder edit",
-				    "Configure",
+				    "Admin",
 				    "Web UI",
 				    "Accessedit",
 				    "",
@@ -148,9 +148,9 @@ ajax_accesslist(http_connection_t *hc, http_reply_t *hr,
     ajax_access_checkbox(&ta, ae, ACCESS_RECORDER_VIEW, "rec");
     ajax_access_checkbox(&ta, ae, ACCESS_RECORDER_CHANGE, "recedit");
 
-    ajax_access_checkbox(&ta, ae, ACCESS_CONFIGURE, "conf");
+    ajax_access_checkbox(&ta, ae, ACCESS_ADMIN, "admin");
     ajax_access_checkbox(&ta, ae, ACCESS_WEB_INTERFACE, "webui");
-    ajax_access_checkbox(&ta, ae, ACCESS_ACCESSCONTROL, "access");
+    ajax_access_checkbox(&ta, ae, ACCESS_ADMIN_ACCESS, "access");
     
 
     ajax_table_cell(&ta, NULL,
