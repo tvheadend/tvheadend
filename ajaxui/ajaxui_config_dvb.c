@@ -725,30 +725,23 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
     ajax_table_bottom(&ta);
 
     tcp_qprintf(tq, "<hr><div style=\"overflow: auto; width: 100%\">");
-    tcp_qprintf(tq, "<div class=\"infoprefix\">Select:</div><div>");
-    ajax_a_jsfuncf(tq, "All",     "mux_sel_all();");
-    tcp_qprintf(tq, " / ");
-    ajax_a_jsfuncf(tq, "None",    "mux_sel_none();");
-    tcp_qprintf(tq, " / ");
-    ajax_a_jsfuncf(tq, "Invert",  "mux_sel_invert();");
-    tcp_qprintf(tq, "</div></div>\r\n");
 
-    tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
-    tcp_qprintf(tq, "<div class=\"infoprefix\">&nbsp</div><div>");
-    ajax_a_jsfuncf(tq, "Delete selected", 
+    ajax_button(tq, "Select all",  "mux_sel_all()");
+    ajax_button(tq, "Select none", "mux_sel_none()");
+    ajax_button(tq, "Delete selected...", 
 		   "mux_sel_do('dvbadapterdelmux/%s', '', '', true)",
 		   tda->tda_identifier);
-    tcp_qprintf(tq, "</div></div>\r\n");
+    tcp_qprintf(tq, "</div>\r\n");
   }
   if(tda->tda_fe_info != NULL) {
     tcp_qprintf(tq, "<hr><div style=\"overflow: auto; width: 100%\">");
-    tcp_qprintf(tq, "<div>");
-    ajax_a_jsfuncf(tq, "Add new...",
-		   "new Ajax.Updater('servicepane', "
-		   "'/ajax/dvbadapteraddmux/%s', "
-		   "{method: 'get', evalScripts: true})\"",
-		   tda->tda_identifier);
-    tcp_qprintf(tq, "</div></div>\r\n");
+
+    ajax_button(tq, "Add new mux...",  
+		"new Ajax.Updater('servicepane', "
+		"'/ajax/dvbadapteraddmux/%s', "
+		"{method: 'get', evalScripts: true})\"",
+		tda->tda_identifier);
+    tcp_qprintf(tq, "</div>\r\n");
   }
   http_output_html(hc, hr);
   return 0;

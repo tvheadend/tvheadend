@@ -208,30 +208,16 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 
   tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
 
-  tcp_qprintf(tq, "<div class=\"infoprefix\">Select:</div><div>");
+  ajax_button(tq, "Select all",  "select_all()");
+  ajax_button(tq, "Select none",  "select_none()");
 
-  ajax_a_jsfuncf(tq, "All",                       "select_all();");
-  tcp_qprintf(tq, " / ");
-  ajax_a_jsfuncf(tq, "None",                      "select_none();");
-  tcp_qprintf(tq, " / ");
-  ajax_a_jsfuncf(tq, "Invert",                    "select_invert();");
-  tcp_qprintf(tq, " / ");
-  ajax_a_jsfuncf(tq, "All TV-services",           "select_tv();");
-  tcp_qprintf(tq, " / ");
-  ajax_a_jsfuncf(tq, "All uncrypted TV-services", "select_tv_nocrypt();");
+  //  tcp_qprintf(tq, "</div>\r\n");
+  //tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
 
-  tcp_qprintf(tq, "</div></div>\r\n");
-  
-  tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
-  tcp_qprintf(tq, "<div class=\"infoprefix\">&nbsp;</div><div>");
-
-  ajax_a_jsfuncf(tq, "Map selected",    "selected_do('map');");
-  tcp_qprintf(tq, " / ");
-  ajax_a_jsfuncf(tq, "Unmap selected",  "selected_do('unmap');");
-  tcp_qprintf(tq, " / ");
-  ajax_a_jsfuncf(tq, "Test and map selected",  "selected_do('probe');");
-
-  tcp_qprintf(tq, "</div></div>");
+  ajax_button(tq, "Map selected",   "selected_do('map');");
+  ajax_button(tq, "Unmap selected", "selected_do('unmap');");
+  ajax_button(tq, "Test and map selected", "selected_do('probe');");
+  tcp_qprintf(tq, "</div>");
 
   tcp_qprintf(tq, "</form>");
   return 0;
