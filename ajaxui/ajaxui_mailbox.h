@@ -39,4 +39,7 @@ struct xmltv_grabber;
 
 void ajax_mailbox_xmltv_grabber_status_change(struct xmltv_grabber *xg);
 
+struct th_transport;
+void ajax_mailbox_transport_status_change(struct th_transport *t);
+
 #endif /* AJAXUI_MAILBOX_H_ */

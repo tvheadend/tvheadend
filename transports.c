@@ -52,11 +52,13 @@
 #include "buffer.h"
 #include "channels.h"
 #include "cwc.h"
+#include "notify.h"
 
 #define TRANSPORT_HASH_WIDTH 101
 
 static struct th_transport_list transporthash[TRANSPORT_HASH_WIDTH];
 
+static void transport_data_timeout(void *aux, int64_t now);
 
 //static dtimer_t transport_monitor_timer;
 
@@ -78,6 +80,8 @@ transport_stop(th_transport_t *t, int flush_subscriptions)
     if(LIST_FIRST(&t->tht_subscriptions))
       return;
   }
+
+  dtimer_disarm(&t->tht_receive_timer);
 
   //  dtimer_disarm(&transport_monitor_timer, transport_monitor, t, 1);
 
@@ -204,6 +208,8 @@ transport_start(th_transport_t *t, unsigned int weight)
   }
 
   cwc_transport_start(t);
+  dtimer_arm(&t->tht_receive_timer, transport_data_timeout, t, 4);
+  transport_signal_status(t, TRANSPORT_STATUS_STARTING);
   return 0;
 }
 
@@ -424,12 +430,25 @@ transport_monitor(void *aux, int64_t now)
 
 
 /**
+ * Timer that fires if transport is not receiving any data
+ */
+static void
+transport_data_timeout(void *aux, int64_t now)
+{
+  th_transport_t *t = aux;
+  transport_signal_status(t, TRANSPORT_STATUS_NO_INPUT);
+}
+
+
+/**
  * Destroy a transport
  */
 void
 transport_destroy(th_transport_t *t)
 {
   th_stream_t *st;
+
+  dtimer_disarm(&t->tht_receive_timer);
 
   free((void *)t->tht_name);
 
@@ -604,16 +623,20 @@ transport_is_available(th_transport_t *t)
 void
 transport_signal_status(th_transport_t *t, int newstatus)
 {
-  th_subscription_t *s;
+  char buf[200];
 
-  if(t->tht_last_status != newstatus)
+  if(t->tht_last_status == newstatus)
     return;
 
-  t->tht_last_status = newstatus;
+  snprintf(buf, sizeof(buf), "\"%s\" on %s",
+	   t->tht_chname ?: t->tht_svcname, t->tht_sourcename(t));
 
-  LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link)
-    if(s->ths_status_callback != NULL)
-      s->ths_status_callback(s, newstatus, s->ths_opaque);
+  syslog(LOG_INFO, "%s -- Changed status from \"%s\" to \"%s\"",
+	 buf, transport_status_to_text(t->tht_last_status),
+	 transport_status_to_text(newstatus));
+
+  t->tht_last_status = newstatus;
+  notify_transprot_status_change(t);
 }
 
 
@@ -622,7 +645,9 @@ transport_signal_status(th_transport_t *t, int newstatus)
  */
 static struct strtab transportstatustab[] = {
   { "Unknown",        TRANSPORT_STATUS_UNKNOWN },
+  { "Starting",       TRANSPORT_STATUS_STARTING },
   { "Ok",             TRANSPORT_STATUS_OK },
+  { "No input",       TRANSPORT_STATUS_NO_INPUT },
   { "No descrambler", TRANSPORT_STATUS_NO_DESCRAMBLER },
   { "No access",      TRANSPORT_STATUS_NO_ACCESS },
   { "Mux error",      TRANSPORT_STATUS_MUX_ERROR },

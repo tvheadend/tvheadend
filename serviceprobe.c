@@ -43,21 +43,18 @@ static void serviceprobe_engage(void);
 struct th_transport_queue probequeue;
 
 typedef struct sp {
-  dtimer_t sp_timer;
   th_muxer_t *sp_muxer;
   th_subscription_t *sp_s;
-  const char *sp_error;
-
+  dtimer_t sp_timer;
 } sp_t;
 
 
 static void
-sp_done(sp_t *sp)
+sp_done_callback(void *aux, int64_t now)
 {
+  sp_t *sp = aux;
   th_subscription_t *s = sp->sp_s;
   th_transport_t *t = sp->sp_s->ths_transport;
-
-  dtimer_disarm(&sp->sp_timer);
 
   muxer_deinit(sp->sp_muxer, s);
 
@@ -75,43 +72,25 @@ sp_done(sp_t *sp)
   free(sp);
 }
 
-
 /**
- *
+ * Got a packet, map it
  */
-static void
-sp_timeout(void *aux, int64_t now)
-{
-  sp_t *sp = aux;
-  th_transport_t *t = sp->sp_s->ths_transport;
-  channel_t *ch;
-
-  syslog(LOG_INFO, "Probed \"%s\" -- %s\n", t->tht_svcname, 
-	 sp->sp_error ?: "Ok");
- 
-  if(sp->sp_error == NULL) {
-    if(t->tht_ch == NULL && t->tht_svcname != NULL) {
-      ch = channel_find(t->tht_svcname, 1, NULL);
-      transport_map_channel(t, ch);
-
-      t->tht_config_change(t);
-    }
-  }
-
-  sp_done(sp);
-}
-
-
 static void
 sp_packet_input(void *opaque, th_muxstream_t *tms, th_pkt_t *pkt)
 {
   sp_t *sp = opaque;
+  th_transport_t *t = sp->sp_s->ths_transport;
+  channel_t *ch;
 
-  if(tms->tms_stream->st_type == HTSTV_MPEG2VIDEO ||
-     tms->tms_stream->st_type == HTSTV_H264) {
-    sp->sp_error = NULL;
-    dtimer_arm(&sp->sp_timer, sp_timeout, sp, 0);
+  syslog(LOG_INFO, "Probed \"%s\" -- Ok\n", t->tht_svcname);
+
+  if(t->tht_ch == NULL && t->tht_svcname != NULL) {
+    ch = channel_find(t->tht_svcname, 1, NULL);
+    transport_map_channel(t, ch);
+    
+    t->tht_config_change(t);
   }
+  dtimer_arm(&sp->sp_timer, sp_done_callback, sp, 0);
 }
 
 /**
@@ -121,22 +100,30 @@ static void
 sp_status_callback(struct th_subscription *s, int status, void *opaque)
 {
   sp_t *sp = opaque;
+  th_transport_t *t = sp->sp_s->ths_transport;
+  char *errtxt;
+
   s->ths_status_callback = NULL;
 
   switch(status) {
   case TRANSPORT_STATUS_OK:
     return;
   case TRANSPORT_STATUS_NO_DESCRAMBLER:
-    sp->sp_error = "No descrambler for stream";
+    errtxt = "No descrambler for stream";
     break;
   case TRANSPORT_STATUS_NO_ACCESS:
-    sp->sp_error = "Access denied";
+    errtxt = "Access denied";
+    break;
+  case TRANSPORT_STATUS_NO_INPUT:
+    errtxt = "No input detected";
     break;
   default:
-    sp->sp_error = "Other error";
+    errtxt = "Other error";
     break;
   }
-  dtimer_arm(&sp->sp_timer, sp_timeout, sp, 0);
+
+  syslog(LOG_INFO, "Probed \"%s\" -- %s\n", t->tht_svcname, errtxt);
+  dtimer_arm(&sp->sp_timer, sp_done_callback, sp, 0);
 }
 
 
@@ -158,7 +145,6 @@ serviceprobe_engage(void)
   sp = calloc(1, sizeof(sp_t));
 
   sp->sp_s = s = calloc(1, sizeof(th_subscription_t));
-  sp->sp_error     = "Timeout";
   s->ths_title     = "probe";
   s->ths_weight    = INT32_MAX;
   s->ths_opaque    = sp;
@@ -173,14 +159,7 @@ serviceprobe_engage(void)
   muxer_play(tm, AV_NOPTS_VALUE);
 
   s->ths_status_callback = sp_status_callback;
-
-  dtimer_arm(&sp->sp_timer, sp_timeout, sp, 4);
 }
-
-
-
-
-
 
 /**
  *

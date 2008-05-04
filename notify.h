@@ -37,4 +37,7 @@ void notify_tda_change(struct th_dvb_adapter *tda);
 
 void notify_xmltv_grabber_status_change(struct xmltv_grabber *xg);
 
+struct th_transport;
+void notify_transprot_status_change(struct th_transport *t);
+
 #endif /* NOTIFY_H_ */

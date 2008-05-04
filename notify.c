@@ -73,3 +73,15 @@ notify_xmltv_grabber_status_change(struct xmltv_grabber *xg)
 {
   ajax_mailbox_xmltv_grabber_status_change(xg);
 }
+
+void
+notify_transprot_status_change(struct th_transport *t)
+{
+  th_subscription_t *s;
+
+  LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link)
+    if(s->ths_status_callback != NULL)
+      s->ths_status_callback(s, t->tht_last_status, s->ths_opaque);
+ 
+  ajax_mailbox_transport_status_change(t);
+}

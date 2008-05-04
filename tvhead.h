@@ -516,13 +516,17 @@ typedef struct th_transport {
    * Last known status (or error)
    */			   
 
+  dtimer_t tht_receive_timer;  /* we use this timer to trig when a transport
+				  does not receive any data at all */
   int tht_last_status;
 
 #define TRANSPORT_STATUS_UNKNOWN        0
-#define TRANSPORT_STATUS_OK             1
-#define TRANSPORT_STATUS_NO_DESCRAMBLER 2
-#define TRANSPORT_STATUS_NO_ACCESS      3
-#define TRANSPORT_STATUS_MUX_ERROR      4
+#define TRANSPORT_STATUS_STARTING       1
+#define TRANSPORT_STATUS_OK             2
+#define TRANSPORT_STATUS_NO_INPUT       3
+#define TRANSPORT_STATUS_NO_DESCRAMBLER 4
+#define TRANSPORT_STATUS_NO_ACCESS      5
+#define TRANSPORT_STATUS_MUX_ERROR      6
 
 } th_transport_t;
 

@@ -31,6 +31,7 @@
 #include "bitstream.h"
 #include "buffer.h"
 #include "dispatch.h"
+#include "transports.h"
 
 static const AVRational mpeg_tc = {1, 90000};
 
@@ -820,6 +821,17 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   pkt->pkt_stream = st;
   
   avgstat_add(&st->st_rate, pkt->pkt_payloadlen, dispatch_clock);
+
+
+  /**
+   * We've got something, disarm the transport timeout timer
+   */
+  dtimer_disarm(&t->tht_receive_timer);
+
+  /**
+   * Input is ok
+   */
+  transport_signal_status(t, TRANSPORT_STATUS_OK);
 
   /* Alert all muxers tied to us that a new packet has arrived.
      Muxers may remove themself as a direct action of receiving a packet

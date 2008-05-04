@@ -125,13 +125,14 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 		 (const char *[]){"", "Last status", "Crypto",
 				    "Type", "Source service",
 				    "", "Target channel", "", NULL},
-		 (int[]){3,6,4,4,12,3,12,1});
+		 (int[]){3,8,4,4,12,3,12,1});
 
   LIST_FOREACH(t, tlist, tht_tmp_link) {
     ajax_table_row_start(&ta, t->tht_identifier);
     ajax_table_cell_detail_toggler(&ta);
 
-    ajax_table_cell(&ta, "status", transport_status_to_text(t->tht_status));
+    ajax_table_cell(&ta, "status", 
+		    transport_status_to_text(t->tht_last_status));
     ajax_table_cell(&ta, NULL, "%s", t->tht_scrambled ? "Yes" : "No");
     ajax_table_cell(&ta, NULL, "%s", transport_servicetype_txt(t));
     ajax_table_cell(&ta, NULL, "%s", t->tht_svcname ?: "");

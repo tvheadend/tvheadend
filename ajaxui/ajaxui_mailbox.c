@@ -477,3 +477,11 @@ ajax_mailbox_xmltv_grabber_status_change(xmltv_grabber_t *xg)
 }
 
 
+
+void
+ajax_mailbox_transport_status_change(struct th_transport *t)
+{
+  ajax_mailbox_update_div("xmltvgrabbers",
+			  "status", t->tht_identifier,
+			  transport_status_to_text(t->tht_last_status));
+}
