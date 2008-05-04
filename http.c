@@ -899,7 +899,7 @@ http_parse_get_args(http_connection_t *hc, char *args)
 
     http_deescape(k);
     http_deescape(v);
-    printf("%s = %s\n", k, v);
+    //    printf("%s = %s\n", k, v);
     http_arg_set(&hc->hc_req_args, k, v);
   }
 }
