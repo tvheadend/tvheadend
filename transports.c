@@ -162,7 +162,7 @@ transport_start(th_transport_t *t, unsigned int weight)
   AVCodec *c;
   enum CodecID id;
 
-  assert(t->tht_status != TRANSPORT_RUNNING);
+  assert(t->tht_runstatus != TRANSPORT_RUNNING);
 
   if(t->tht_start_feed(t, weight, TRANSPORT_RUNNING))
     return -1;
@@ -306,7 +306,7 @@ transport_find(channel_t *ch, unsigned int weight)
 
   for(i = 0; i < cnt; i++) {
     t = vec[i];
-    if(t->tht_status == TRANSPORT_RUNNING) 
+    if(t->tht_runstatus == TRANSPORT_RUNNING) 
       return t;
 
     if(!transport_start(t, 0))

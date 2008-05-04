@@ -149,7 +149,7 @@ serviceprobe_engage(void)
   s->ths_weight    = INT32_MAX;
   s->ths_opaque    = sp;
 
-  if(t->tht_status != TRANSPORT_RUNNING)
+  if(t->tht_runstatus != TRANSPORT_RUNNING)
     transport_start(t, INT32_MAX);
 
   s->ths_transport = t;

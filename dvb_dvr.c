@@ -125,7 +125,7 @@ dvb_stop_feed(th_transport_t *t)
     close(st->st_demuxer_fd);
     st->st_demuxer_fd = -1;
   }
-  t->tht_status = TRANSPORT_IDLE;
+  t->tht_runstatus = TRANSPORT_IDLE;
 }
 
 
@@ -203,7 +203,7 @@ dvb_start_feed(th_transport_t *t, unsigned int weight, int status)
   }
 
   LIST_INSERT_HEAD(&tda->tda_transports, t, tht_active_link);
-  t->tht_status = status;
+  t->tht_runstatus = status;
   
   dvb_tune_tdmi(tdmi, 1, TDMI_RUNNING);
   return 0;

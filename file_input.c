@@ -173,7 +173,7 @@ file_input_stop_feed(th_transport_t *t)
   file_input_t *fi = t->tht_file_input;
 
   dtimer_disarm(&fi->fi_timer);
-  t->tht_status = TRANSPORT_IDLE;
+  t->tht_runstatus = TRANSPORT_IDLE;
 }
 
 
@@ -195,7 +195,7 @@ file_input_start_feed(th_transport_t *t, unsigned int weight, int status)
 {
   file_input_t *fi = t->tht_file_input;
   
-  t->tht_status = TRANSPORT_RUNNING;
+  t->tht_runstatus = TRANSPORT_RUNNING;
 
   file_input_reset(t, fi);
   fi->fi_refclock = getclock_hires();

@@ -202,7 +202,7 @@ v4l_stop_feed(th_transport_t *t)
   t->tht_v4l_adapter = NULL;
   LIST_REMOVE(t, tht_active_link);
 
-  t->tht_status = TRANSPORT_IDLE;
+  t->tht_runstatus = TRANSPORT_IDLE;
 
   if(LIST_FIRST(&tva->tva_transports) == NULL)
     v4l_stop(tva);
@@ -271,7 +271,7 @@ v4l_start_feed(th_transport_t *t, unsigned int weight, int status)
 
   LIST_INSERT_HEAD(&tva->tva_transports, t, tht_active_link);
   t->tht_v4l_adapter = tva;
-  t->tht_status = TRANSPORT_RUNNING;
+  t->tht_runstatus = TRANSPORT_RUNNING;
   
   return 0;
 }

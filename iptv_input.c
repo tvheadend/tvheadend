@@ -106,7 +106,7 @@ iptv_start_feed(th_transport_t *t, unsigned int weight, int status)
   }
 
   t->tht_iptv_fd = fd;
-  t->tht_status = status;
+  t->tht_runstatus = status;
 
   syslog(LOG_ERR, "iptv: \"%s\" joined group", t->tht_name);
 
@@ -118,10 +118,10 @@ iptv_start_feed(th_transport_t *t, unsigned int weight, int status)
 static void
 iptv_stop_feed(th_transport_t *t)
 {
-  if(t->tht_status == TRANSPORT_IDLE)
+  if(t->tht_runstatus == TRANSPORT_IDLE)
     return;
 
-  t->tht_status = TRANSPORT_IDLE;
+  t->tht_runstatus = TRANSPORT_IDLE;
   dispatch_delfd(t->tht_iptv_dispatch_handle);
   close(t->tht_iptv_fd);
 
@@ -137,7 +137,7 @@ static void
 iptv_parse_pmt(struct th_transport *t, th_stream_t *st,
 	       uint8_t *table, int table_len)
 {
-  if(table[0] != 2 || t->tht_status != TRANSPORT_PROBING)
+  if(table[0] != 2 || t->tht_runstatus != TRANSPORT_PROBING)
     return;
 
   psi_parse_pmt(t, table + 3, table_len - 3, 0);
@@ -154,7 +154,7 @@ static void
 iptv_parse_pat(struct th_transport *t, th_stream_t *st,
 	       uint8_t *table, int table_len)
 {
-  if(table[0] != 0 || t->tht_status != TRANSPORT_PROBING)
+  if(table[0] != 0 || t->tht_runstatus != TRANSPORT_PROBING)
     return;
 
   psi_parse_pat(t, table + 3, table_len - 3, iptv_parse_pmt);

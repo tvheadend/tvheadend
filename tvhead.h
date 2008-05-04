@@ -383,7 +383,7 @@ typedef struct th_transport {
     TRANSPORT_IDLE,
     TRANSPORT_RUNNING,
     TRANSPORT_PROBING,
-  } tht_status;
+  } tht_runstatus;
 
   th_commercial_advice_t tht_tt_commercial_advice;
 

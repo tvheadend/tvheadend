@@ -144,7 +144,7 @@ avgen_stop_feed(th_transport_t *t)
   av_free(avg->videoframe.data[0]);
   free(avg);
 
-  t->tht_status = TRANSPORT_IDLE;
+  t->tht_runstatus = TRANSPORT_IDLE;
 }
 
 
@@ -237,7 +237,7 @@ avgen_start_feed(th_transport_t *t, unsigned int weight, int status)
 
   t->tht_avgen = avg;
 
-  t->tht_status = TRANSPORT_RUNNING;
+  t->tht_runstatus = TRANSPORT_RUNNING;
 
   avg->refclock = getclock_hires();
   avgen_deliver(t, avg, avg->refclock);
