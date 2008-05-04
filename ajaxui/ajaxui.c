@@ -595,14 +595,13 @@ ajax_page_root(http_connection_t *hc, http_reply_t *hr,
   ajax_box_begin(tq, AJAX_BOX_FILLED, NULL, NULL, NULL);
 
   tcp_qprintf(tq,
-	      "<div style=\"width: 100%%; overflow: auto\">"
+	      "<div style=\"width: 100%%; overflow: hidden\">"
 	      "<div style=\"float: left; width: 30%%\">"
 	      "Tvheadend v1.x (r?)"
 	      "</div>"
 	      "<div style=\"float: left; width: 40%%\" id=\"topmenu\"></div>"
 	      "<div style=\"float: left; width: 30%%; text-align: right\">"
-	      "<input class=\"nicebox\" type=\"checkbox\" checked> "
-	      "Dynamic updates"
+	      "&nbsp;"
 	      "</div>"
 	      "</div>");
 
