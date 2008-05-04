@@ -139,6 +139,12 @@ ajax_config_dvb_tab(http_connection_t *hc, http_reply_t *hr)
 
   tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
 
+  if(TAILQ_FIRST(&dvb_adapters) == NULL) {
+    tcp_qprintf(tq, "<div style=\"text-align: center; font-weight: bold\">"
+		"No adapters found</div>");
+  }
+
+
   TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
 
     tcp_qprintf(tq, "<div id=\"summary_%s\" "
