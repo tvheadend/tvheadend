@@ -447,6 +447,8 @@ dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
   dvb_fe_flush(tdmi);
   dvb_mux_unref(tdmi);
   pthread_mutex_unlock(&tda->tda_lock);
+
+  dvb_tda_save(tda);
 }
 
 
