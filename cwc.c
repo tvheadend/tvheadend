@@ -700,7 +700,7 @@ cwc_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
   uint8_t *t0;
 
   if(ct->ct_keystate == CT_FORBIDDEN)
-    return TRANSPORT_ERROR_NO_ACCESS;
+    return 1;
 
   if(ct->ct_keystate != CT_RESOLVED)
     return -1;

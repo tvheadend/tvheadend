@@ -602,10 +602,16 @@ transport_is_available(th_transport_t *t)
  *
  */
 void
-transport_signal_error(th_transport_t *t, int errorcode)
+transport_signal_status(th_transport_t *t, int newstatus)
 {
   th_subscription_t *s;
+
+  if(t->tht_last_status != newstatus)
+    return;
+
+  t->tht_last_status = newstatus;
+
   LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link)
-    if(s->ths_err_callback != NULL)
-      s->ths_err_callback(s, errorcode, s->ths_opaque);
+    if(s->ths_status_callback != NULL)
+      s->ths_status_callback(s, newstatus, s->ths_opaque);
 }

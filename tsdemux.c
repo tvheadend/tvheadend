@@ -225,14 +225,14 @@ ts_recv_packet1(th_transport_t *t, uint8_t *tsb)
       if(r == 0)
 	return;
       
-      if(r == TRANSPORT_ERROR_NO_ACCESS)
+      if(r == 1)
 	m++;
     }
 
     if(n == 0) {
-      transport_signal_error(t, TRANSPORT_ERROR_NO_DESCRAMBLER);
+      transport_signal_status(t, TRANSPORT_STATUS_NO_DESCRAMBLER);
     } else if(m == n) {
-      transport_signal_error(t, TRANSPORT_ERROR_NO_ACCESS);
+      transport_signal_status(t, TRANSPORT_STATUS_NO_ACCESS);
     }
     return;
   }

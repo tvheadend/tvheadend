@@ -53,6 +53,6 @@ int transport_is_available(th_transport_t *t);
 
 void transport_destroy(th_transport_t *t);
 
-void transport_signal_error(th_transport_t *t, int errorcode);
+void transport_signal_status(th_transport_t *t, int newstatus);
 
 #endif /* TRANSPORTS_H */

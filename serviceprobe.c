@@ -46,7 +46,8 @@ typedef struct sp {
   dtimer_t sp_timer;
   th_muxer_t *sp_muxer;
   th_subscription_t *sp_s;
-  int sp_error;
+  const char *sp_error;
+
 } sp_t;
 
 
@@ -83,30 +84,12 @@ sp_timeout(void *aux, int64_t now)
 {
   sp_t *sp = aux;
   th_transport_t *t = sp->sp_s->ths_transport;
-  const char *errtxt;
   channel_t *ch;
 
-  switch(sp->sp_error) {
-  case 0:
-    errtxt = "Ok";
-    break;
-  case -1:
-    errtxt = "Timeout, no video detected";
-    break;
-  case TRANSPORT_ERROR_NO_DESCRAMBLER:
-    errtxt = "No descrambler for stream";
-    break;
-  case TRANSPORT_ERROR_NO_ACCESS:
-    errtxt = "Access denied";
-    break;
-  default:
-    errtxt = "Other error";
-    break;
-  }
-
-  syslog(LOG_INFO, "Probed \"%s\" -- %s\n", t->tht_svcname, errtxt);
+  syslog(LOG_INFO, "Probed \"%s\" -- %s\n", t->tht_svcname, 
+	 sp->sp_error ?: "Ok");
  
-  if(sp->sp_error == 0) {
+  if(sp->sp_error == NULL) {
     if(t->tht_ch == NULL && t->tht_svcname != NULL) {
       ch = channel_find(t->tht_svcname, 1, NULL);
       transport_map_channel(t, ch);
@@ -126,21 +109,33 @@ sp_packet_input(void *opaque, th_muxstream_t *tms, th_pkt_t *pkt)
 
   if(tms->tms_stream->st_type == HTSTV_MPEG2VIDEO ||
      tms->tms_stream->st_type == HTSTV_H264) {
-    sp->sp_error = 0;
+    sp->sp_error = NULL;
     dtimer_arm(&sp->sp_timer, sp_timeout, sp, 0);
   }
 }
 
 /**
- * Callback when transport hits an error
+ * Callback when transport changes status
  */
 static void
-sp_err_callback(struct th_subscription *s, int errorcode, void *opaque)
+sp_status_callback(struct th_subscription *s, int status, void *opaque)
 {
   sp_t *sp = opaque;
-  s->ths_err_callback = NULL;
+  s->ths_status_callback = NULL;
 
-  sp->sp_error = errorcode;
+  switch(status) {
+  case TRANSPORT_STATUS_OK:
+    return;
+  case TRANSPORT_STATUS_NO_DESCRAMBLER:
+    sp->sp_error = "No descrambler for stream";
+    break;
+  case TRANSPORT_STATUS_NO_ACCESS:
+    sp->sp_error = "Access denied";
+    break;
+  default:
+    sp->sp_error = "Other error";
+    break;
+  }
   dtimer_arm(&sp->sp_timer, sp_timeout, sp, 0);
 }
 
@@ -163,7 +158,7 @@ serviceprobe_engage(void)
   sp = calloc(1, sizeof(sp_t));
 
   sp->sp_s = s = calloc(1, sizeof(th_subscription_t));
-  sp->sp_error     = -1;
+  sp->sp_error     = "Timeout";
   s->ths_title     = "probe";
   s->ths_weight    = INT32_MAX;
   s->ths_opaque    = sp;
@@ -177,7 +172,7 @@ serviceprobe_engage(void)
   sp->sp_muxer = tm = muxer_init(s, sp_packet_input, sp);
   muxer_play(tm, AV_NOPTS_VALUE);
 
-  s->ths_err_callback = sp_err_callback;
+  s->ths_status_callback = sp_status_callback;
 
   dtimer_arm(&sp->sp_timer, sp_timeout, sp, 4);
 }

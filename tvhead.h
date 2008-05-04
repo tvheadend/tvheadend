@@ -512,6 +512,18 @@ typedef struct th_transport {
   struct channel *tht_ch;
   char *tht_chname;
 
+  /**
+   * Last known status (or error)
+   */			   
+
+  int tht_last_status;
+
+#define TRANSPORT_STATUS_UNKNOWN        0
+#define TRANSPORT_STATUS_OK             1
+#define TRANSPORT_STATUS_NO_DESCRAMBLER 2
+#define TRANSPORT_STATUS_NO_ACCESS      3
+#define TRANSPORT_STATUS_MUX_ERROR      4
+
 } th_transport_t;
 
 
@@ -820,14 +832,10 @@ typedef void (subscription_raw_input_t)(struct th_subscription *s,
 					void *opaque);
 
 
-#define TRANSPORT_ERROR_NO_DESCRAMBLER 1
-#define TRANSPORT_ERROR_NO_ACCESS      2
-#define TRANSPORT_ERROR_MUX_ERROR      3
 
-
-typedef void (subscription_err_callback_t)(struct th_subscription *s,
-					   int errorcode,
-					   void *opaque);
+typedef void (subscription_status_callback_t)(struct th_subscription *s,
+					      int status,
+					      void *opaque);
 
 typedef struct th_subscription {
   LIST_ENTRY(th_subscription) ths_global_link;
@@ -857,7 +865,7 @@ typedef struct th_subscription {
 
   th_muxer_t *ths_muxer;
 
-  subscription_err_callback_t *ths_err_callback;
+  subscription_status_callback_t *ths_status_callback;
 
 } th_subscription_t;
 
