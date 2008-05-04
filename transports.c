@@ -615,3 +615,22 @@ transport_signal_status(th_transport_t *t, int newstatus)
     if(s->ths_status_callback != NULL)
       s->ths_status_callback(s, newstatus, s->ths_opaque);
 }
+
+
+/**
+ * Table for status -> text conversion
+ */
+static struct strtab transportstatustab[] = {
+  { "Unknown",        TRANSPORT_STATUS_UNKNOWN },
+  { "Ok",             TRANSPORT_STATUS_OK },
+  { "No descrambler", TRANSPORT_STATUS_NO_DESCRAMBLER },
+  { "No access",      TRANSPORT_STATUS_NO_ACCESS },
+  { "Mux error",      TRANSPORT_STATUS_MUX_ERROR },
+};
+
+
+const char *
+transport_status_to_text(int status)
+{
+  return val2str(status, transportstatustab) ?: "Invalid";
+}
