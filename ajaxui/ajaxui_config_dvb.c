@@ -547,7 +547,7 @@ ajax_adapteraddmux(http_connection_t *hc, http_reply_t *hr,
   tcp_qprintf(tq,
 	      "<hr>"
 	      "<div style=\"text-align: center; font-weight: bold\">"
-	      "Add preconfigured network</div>");
+	      "Preconfigured network</div>");
 
   tcp_qprintf(tq,
 	      "<div style=\"text-align: center\">"
