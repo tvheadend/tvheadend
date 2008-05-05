@@ -178,7 +178,7 @@ http_send_reply(http_connection_t *hc, http_reply_t *hr)
   tcp_queue_t *tq = &hr->hr_tq;
   int r;
 
-  if(hr->hr_version > HTTP_VERSION_1_0) {
+  if(hr->hr_version >= HTTP_VERSION_1_0) {
     http_printf(hc, "%s %d %s\r\n", val2str(hr->hr_version, HTTP_versiontab),
 		hr->hr_rc, http_rc2str(hr->hr_rc));
 
