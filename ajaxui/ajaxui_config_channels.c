@@ -245,8 +245,10 @@ ajax_chgroup_editor(http_connection_t *hc, http_reply_t *hr,
   tcp_queue_t *tq = &hr->hr_tq;
   channel_t *ch;
   channel_group_t *tcg, *tcg2;
-  int rowcol = 1;
-  int disprows;
+  th_transport_t *t;
+  char buf[10];
+  int nsources;
+  ajax_table_t ta;
 
   if(remain == NULL || (tcg = channel_group_by_tag(atoi(remain))) == NULL)
     return HTTP_STATUS_BAD_REQUEST;
@@ -281,6 +283,16 @@ ajax_chgroup_editor(http_connection_t *hc, http_reply_t *hr,
   }
   tcp_qprintf(tq, "}\r\n");
 
+  /* Invert selection */
+  tcp_qprintf(tq, "select_sources = function() {\r\n");
+  TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
+    tcp_qprintf(tq, 
+		"$('sel_%d').checked = %s;\r\n",
+		ch->ch_tag, LIST_FIRST(&ch->ch_transports) ? "true" : "false");
+  }
+  tcp_qprintf(tq, "}\r\n");
+
+
 
   /* Invoke AJAX call containing all selected elements */
   tcp_qprintf(tq, 
@@ -309,38 +321,38 @@ ajax_chgroup_editor(http_connection_t *hc, http_reply_t *hr,
 
   ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, tcg->tcg_name);
 
-  tcp_qprintf(tq, "<div style=\"width: 100%%\">"
-	      "Channels</div><hr>");
-
-  disprows = 30;
-
-  tcp_qprintf(tq, "<div id=\"chlist\" "
-	      "style=\"height: %dpx; overflow: auto\" class=\"normallist\">",
-	      disprows * 14);
+  ajax_table_top(&ta, hc, tq, (const char *[])
+		 {"Channelname", "Sources", "", NULL},
+		 (int[]){8,2,1});
 
   TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
-    tcp_qprintf(tq,
-		"<div style=\"%swidth: 100%%; overflow: auto\">"
-		"<div style=\"float: left; width: 90%\">"
-		"<a href=\"javascript:void(0)\" "
-		"onclick=\"new Ajax.Updater('cheditortab', "
-		"'/ajax/cheditor/%d', {method: 'get'})\""
-		">%s</a>"
-		"</div>"
-		"<input id=\"sel_%d\" type=\"checkbox\" class=\"nicebox\">"
-		"</div>",
-		rowcol ? "background: #fff; " : "",
-		ch->ch_tag, ch->ch_name, ch->ch_tag);
-    rowcol = !rowcol;
-  }
+    snprintf(buf, sizeof(buf), "%d", ch->ch_tag);
+    ajax_table_row_start(&ta, buf);
 
-  tcp_qprintf(tq, "</div>");
+    nsources = 0;
+
+    LIST_FOREACH(t, &ch->ch_transports, tht_ch_link)
+      nsources++;
+
+    ajax_table_cell(&ta, NULL,
+		    "<a href=\"javascript:void(0)\" "
+		    "onclick=\"new Ajax.Updater('cheditortab', "
+		    "'/ajax/cheditor/%d', {method: 'get'})\""
+		    ">%s</a>", ch->ch_tag, ch->ch_name);
+
+    ajax_table_cell(&ta, NULL, "%d", nsources);
+    ajax_table_cell_checkbox(&ta);
+  }
+  ajax_table_bottom(&ta);
+
   tcp_qprintf(tq, "<hr>\r\n");
   tcp_qprintf(tq, "<div style=\"text-align: center; "
 	      "overflow: auto; width: 100%\">");
 
   ajax_button(tq, "Select all", "select_all()");
   ajax_button(tq, "Select none", "select_none()");
+  ajax_button(tq, "Invert selection", "select_invert()");
+  ajax_button(tq, "Select channels with sources", "select_sources()");
   tcp_qprintf(tq, "</div>\r\n");
 
   tcp_qprintf(tq, "<hr>\r\n");
@@ -352,11 +364,6 @@ ajax_chgroup_editor(http_connection_t *hc, http_reply_t *hr,
 	      "Delete all selected...", 
 	      "select_do('delete', '%d', 0, true);", tcg->tcg_tag);
   
-  tcp_qprintf(tq, "<hr>\r\n");
-
-
-  tcp_qprintf(tq, "<div style=\"text-align: center; "
-	      "overflow: auto; width: 100%\">");
   tcp_qprintf(tq,
 	      "<select id=\"movetarget\" "
 	      "onChange=\"select_do('changegroup', "
