@@ -320,7 +320,23 @@ dvb_mux_scanner(void *aux, int64_t now)
   if(transport_compute_weight(&tda->tda_transports) > 0)
     return; /* someone is here */
 
+  /* Check if we have muxes pending for quickscan, if so, choose them */
+  LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) 
+    if(tdmi->tdmi_quickscan == TDMI_QUICKSCAN_WAITING)
+      break;
+
+  if(tdmi != NULL) {
+    tdmi->tdmi_quickscan = TDMI_QUICKSCAN_RUNNING;
+    dvb_tune_tdmi(tdmi, 0, TDMI_IDLESCAN);
+    return;
+  }
+
+  /* otherwise, just rotate */
+
   tdmi = tda->tda_mux_current;
+  if(tdmi != NULL)
+    tdmi->tdmi_quickscan = TDMI_QUICKSCAN_NONE;
+
   tdmi = tdmi != NULL ? LIST_NEXT(tdmi, tdmi_adapter_link) : NULL;
   tdmi = tdmi != NULL ? tdmi : LIST_FIRST(&tda->tda_muxes);
 
@@ -359,6 +375,7 @@ dvb_mux_create(th_dvb_adapter_t *tda, struct dvb_frontend_parameters *fe_param,
   }
 
   tdmi = calloc(1, sizeof(th_dvb_mux_instance_t));
+  tdmi->tdmi_quickscan = TDMI_QUICKSCAN_WAITING;
   tdmi->tdmi_refcnt = 1;
   pthread_mutex_init(&tdmi->tdmi_table_lock, NULL);
   tdmi->tdmi_state = TDMI_IDLE;
@@ -798,4 +815,30 @@ dvb_tda_destroy(th_dvb_adapter_t *tda)
   free(tda);
 
   return 0;
+}
+
+/**
+ *
+ */
+void
+dvb_tdmi_fastswitch(th_dvb_mux_instance_t *tdmi)
+{
+  th_dvb_table_t *tdt;
+
+  if(tdmi->tdmi_quickscan == TDMI_QUICKSCAN_NONE)
+    return;
+
+  pthread_mutex_lock(&tdmi->tdmi_table_lock);
+  LIST_FOREACH(tdt, &tdmi->tdmi_tables, tdt_link) {
+    if(tdt->tdt_quickreq && tdt->tdt_count == 0)
+      break;
+  }
+  pthread_mutex_unlock(&tdmi->tdmi_table_lock);
+
+  if(tdt != NULL)
+    return; /* Still tables we've not seen */
+
+  tdmi->tdmi_quickscan = TDMI_QUICKSCAN_NONE;
+  dvb_mux_scanner(tdmi->tdmi_adapter, 0);
+
 }

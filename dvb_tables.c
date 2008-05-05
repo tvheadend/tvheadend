@@ -44,6 +44,7 @@
 #include "notify.h"
 
 #define TDT_NOW 0x1
+#define TDT_QUICKREQ 0x2
 
 /**
  *
@@ -93,7 +94,10 @@ dvb_table_recv(int events, void *opaque, int fd)
   ptr = &sec[3];
   len -= 4;   /* Strip trailing CRC */
 
+  tdt->tdt_count++;
+
   tdt->tdt_callback(tdt->tdt_tdmi, ptr, len, tableid, tdt->tdt_opaque);
+  dvb_tdmi_fastswitch(tdt->tdt_tdmi);
 }
 
 
@@ -124,6 +128,8 @@ tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
   tdt->tdt_tdmi = tdmi;
   tdt->tdt_handle = dispatch_addfd(fd, dvb_table_recv, tdt, DISPATCH_READ);
  
+  tdt->tdt_quickreq = flags & TDT_QUICKREQ ? 1 : 0;
+
   if(flags & TDT_NOW) {
     ioctl(fd, DMX_SET_FILTER, fparams);
     free(fparams);
@@ -466,8 +472,9 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
     if(service != 0) {
       t = dvb_find_transport(tdmi, service, pmt, &created);
-      if(created)  /* Add PMT to our table scanner */
+      if(created) { /* Add PMT to our table scanner */
 	dvb_table_add_transport(tdmi, t, pmt);
+      }
     }
     ptr += 4;
     len -= 4;
@@ -758,7 +765,7 @@ dvb_table_add_default(th_dvb_mux_instance_t *tdmi)
   fp = dvb_fparams_alloc(0x0, DMX_IMMEDIATE_START | DMX_CHECK_CRC);
   fp->filter.filter[0] = 0x00;
   fp->filter.mask[0] = 0xff;
-  tdt_add(tdmi, fp, dvb_pat_callback, NULL, "pat", 0);
+  tdt_add(tdmi, fp, dvb_pat_callback, NULL, "pat", TDT_QUICKREQ);
 
   /* Conditional Access Table */
 
@@ -770,14 +777,14 @@ dvb_table_add_default(th_dvb_mux_instance_t *tdmi)
   /* Network Information Table */
 
   fp = dvb_fparams_alloc(0x10, DMX_IMMEDIATE_START | DMX_CHECK_CRC);
-  tdt_add(tdmi, fp, dvb_nit_callback, NULL, "nit", 0);
+  tdt_add(tdmi, fp, dvb_nit_callback, NULL, "nit", TDT_QUICKREQ);
 
   /* Service Descriptor Table */
 
   fp = dvb_fparams_alloc(0x11, DMX_IMMEDIATE_START | DMX_CHECK_CRC);
   fp->filter.filter[0] = 0x42;
   fp->filter.mask[0] = 0xff;
-  tdt_add(tdmi, fp, dvb_sdt_callback, NULL, "sdt", 0);
+  tdt_add(tdmi, fp, dvb_sdt_callback, NULL, "sdt", TDT_QUICKREQ);
 
   /* Event Information table */
 
@@ -810,5 +817,5 @@ dvb_table_add_transport(th_dvb_mux_instance_t *tdmi, th_transport_t *t,
   fp = dvb_fparams_alloc(pmt_pid, DMX_IMMEDIATE_START | DMX_CHECK_CRC);
   fp->filter.filter[0] = 0x02;
   fp->filter.mask[0] = 0xff;
-  tdt_add(tdmi, fp, dvb_pmt_callback, t, pmtname, TDT_NOW);
+  tdt_add(tdmi, fp, dvb_pmt_callback, t, pmtname, TDT_NOW | TDT_QUICKREQ);
 }

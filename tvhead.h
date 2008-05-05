@@ -149,6 +149,12 @@ typedef enum {
 typedef struct th_dvb_mux_instance {
   int tdmi_refcnt;
 
+  enum {
+    TDMI_QUICKSCAN_NONE,
+    TDMI_QUICKSCAN_RUNNING,
+    TDMI_QUICKSCAN_WAITING,
+  } tdmi_quickscan;
+
   LIST_ENTRY(th_dvb_mux_instance) tdmi_global_link;
   LIST_ENTRY(th_dvb_mux_instance) tdmi_adapter_link;
 
@@ -205,6 +211,10 @@ typedef struct th_dvb_table {
 
   int tdt_fd;
   struct dmx_sct_filter_params *tdt_fparams;
+
+  int tdt_quickreq;
+  int tdt_count;
+
 } th_dvb_table_t;
 
 
