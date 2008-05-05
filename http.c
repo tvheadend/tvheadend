@@ -130,10 +130,11 @@ static const char *
 http_rc2str(int code)
 {
   switch(code) {
-  case HTTP_STATUS_OK:              return "OK";
+  case HTTP_STATUS_OK:              return "Ok";
   case HTTP_STATUS_NOT_FOUND:       return "Not found";
   case HTTP_STATUS_UNAUTHORIZED:    return "Unauthorized";
   case HTTP_STATUS_BAD_REQUEST:     return "Bad request";
+  case HTTP_STATUS_FOUND:           return "Found";
   default:
     return "Unknown returncode";
     break;
@@ -296,6 +297,7 @@ void
 http_output(http_connection_t *hc, http_reply_t *hr, const char *content,
 	    const char *encoding, int maxage)
 {
+  hr->hr_rc = HTTP_STATUS_OK;
   hr->hr_destroy = NULL;
   hr->hr_encoding = encoding;
   hr->hr_content = content;
@@ -308,6 +310,7 @@ http_output(http_connection_t *hc, http_reply_t *hr, const char *content,
 void
 http_output_html(http_connection_t *hc, http_reply_t *hr)
 {
+  hr->hr_rc = HTTP_STATUS_OK;
   hr->hr_destroy = NULL;
   hr->hr_content = "text/html; charset=UTF-8";
 }
@@ -332,7 +335,7 @@ http_redirect(http_connection_t *hc, http_reply_t *hr, const char *location)
 	      location, location);
 
   hr->hr_location = strdup(location);
-  hr->hr_rc = 303;
+  hr->hr_rc = HTTP_STATUS_FOUND;
   hr->hr_content = "text/html";
 }
 

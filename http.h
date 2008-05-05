@@ -24,6 +24,7 @@ extern int http_port;
 #include "tcp.h"
 
 #define HTTP_STATUS_OK           200
+#define HTTP_STATUS_FOUND        302
 #define HTTP_STATUS_BAD_REQUEST  400
 #define HTTP_STATUS_UNAUTHORIZED 401
 #define HTTP_STATUS_NOT_FOUND    404
