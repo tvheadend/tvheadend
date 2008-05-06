@@ -424,6 +424,12 @@ ajax_cheditor(http_connection_t *hc, http_reply_t *hr,
 
   ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, ch->ch_name);
   
+  if(ch->ch_icon != NULL) {
+    tcp_qprintf(tq, 
+		"<div style=\"width: 100%; text-align:center\">"
+		"<img src=\"%s\"></div>", ch->ch_icon);
+  }
+  
   tcp_qprintf(tq, "<div>Sources:</div>");
 
   LIST_FOREACH(t, &ch->ch_transports, tht_ch_link) {
