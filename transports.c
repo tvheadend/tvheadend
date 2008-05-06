@@ -248,11 +248,14 @@ transport_get_prio(th_transport_t *t)
  *
  * But for sorting, we want low numbers first
  *
+ * Also, we bias and trim with an offset of two to avoid counting any
+ * transient errors.
  */
+
 static int
 transport_get_quality(th_transport_t *t)
 {
-  return t->tht_quality_index ? -(t->tht_quality_index(t)) : 0;
+  return t->tht_quality_index ? -MIN(t->tht_quality_index(t) + 2, 0) : 0;
 }
 
 
