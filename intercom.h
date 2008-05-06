@@ -30,7 +30,7 @@ typedef struct icom {
   void *opaque;
   icom_callback_t *cb;
 
-  char *rcvbuf;
+  uint8_t *rcvbuf;
   int rcvbufptr;
   int rcvbufsize;
 } icom_t;
