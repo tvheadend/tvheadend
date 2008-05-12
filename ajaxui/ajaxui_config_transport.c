@@ -42,8 +42,6 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 			  struct th_transport_list *tlist, int numtransports)
 {
   th_transport_t *t;
-  th_stream_t *st;
-  const char *extra;
   ajax_table_t ta;
 
   tcp_qprintf(tq, "<script type=\"text/javascript\">\r\n"
@@ -120,14 +118,13 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
   tcp_qprintf(tq, "<form id=\"transports\">");
 
   ajax_table_top(&ta, hc, tq,
-		 (const char *[]){"", "Last status", "Crypto",
+		 (const char *[]){"Last status", "Crypto",
 				    "Type", "Source service",
 				    "", "Target channel", "", NULL},
-		 (int[]){3,8,4,4,12,3,12,1});
+		 (int[]){8,4,4,12,3,12,1});
 
   LIST_FOREACH(t, tlist, tht_tmp_link) {
     ajax_table_row_start(&ta, t->tht_identifier);
-    ajax_table_cell_detail_toggler(&ta);
 
     ajax_table_cell(&ta, "status", 
 		    transport_status_to_text(t->tht_last_status));
@@ -157,48 +154,6 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
     }
 
     ajax_table_cell_checkbox(&ta);
-
-    ajax_table_details_start(&ta);
-
-    ajax_table_subrow_start(&ta);
-
-    ajax_table_cell(&ta, NULL, NULL);
-    ajax_table_cell(&ta, NULL, "PID");
-    ajax_table_cell(&ta, NULL, NULL);
-    ajax_table_cell(&ta, NULL, NULL);
-    ajax_table_cell(&ta, NULL, "Payload");
-    ajax_table_cell(&ta, NULL, NULL);
-    ajax_table_cell(&ta, NULL, "Details");
-    ajax_table_subrow_end(&ta);
-
-    LIST_FOREACH(st, &t->tht_streams, st_link) {
-
-      ajax_table_subrow_start(&ta);
-      
-      ajax_table_cell(&ta, NULL, NULL);
-      ajax_table_cell(&ta, NULL, "%d", st->st_pid);
-      ajax_table_cell(&ta, NULL, NULL);
-      ajax_table_cell(&ta, NULL, NULL);
-      ajax_table_cell(&ta, NULL, "%s", htstvstreamtype2txt(st->st_type));
-  
-      switch(st->st_type) {
-      case HTSTV_MPEG2AUDIO:
-      case HTSTV_AC3:
-	extra = st->st_lang;
-	break;
-      case HTSTV_CA:
-	extra = psi_caid2name(st->st_caid);
-	break;
-      default:
-	extra = NULL;
-	break;
-      }
-
-      ajax_table_cell(&ta, NULL, NULL);
-      ajax_table_cell(&ta, NULL, extra);
-      ajax_table_subrow_end(&ta);
-    }
-    ajax_table_details_end(&ta);
   }
 
   ajax_table_bottom(&ta);
