@@ -771,7 +771,7 @@ ajax_dvbmuxeditor(http_connection_t *hc, http_reply_t *hr,
   tcp_queue_t *tq = &hr->hr_tq;
   char buf[1000];
   th_transport_t *t;
-  struct th_transport_list head;
+  struct th_transport_tree tree;
   int n = 0;
 
   if(remain == NULL || (tdmi = dvb_mux_find_by_identifier(remain)) == NULL)
@@ -779,17 +779,17 @@ ajax_dvbmuxeditor(http_connection_t *hc, http_reply_t *hr,
 
   tdmi_displayname(tdmi, buf, sizeof(buf));
 
-  LIST_INIT(&head);
+  RB_INIT(&tree);
 
   LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
     if(transport_is_available(t)) {
-      LIST_INSERT_SORTED(&head, t, tht_tmp_link, dvbsvccmp);
+      RB_INSERT_SORTED(&tree, t, tht_tmp_link, dvbsvccmp);
       n++;
     }
   }
 
   ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, buf);
-  ajax_transport_build_list(hc, tq, &head, n);
+  ajax_transport_build_list(hc, tq, &tree, n);
   ajax_box_end(tq, AJAX_BOX_SIDEBOX);
 
   http_output_html(hc, hr);
@@ -807,7 +807,7 @@ ajax_dvbmuxall(http_connection_t *hc, http_reply_t *hr,
   th_dvb_mux_instance_t *tdmi;
   tcp_queue_t *tq = &hr->hr_tq;
   th_transport_t *t;
-  struct th_transport_list head;
+  struct th_transport_tree tree;
   int n = 0;
   char buf[100];
 
@@ -816,19 +816,19 @@ ajax_dvbmuxall(http_connection_t *hc, http_reply_t *hr,
 
   snprintf(buf, sizeof(buf), "All services on %s\n", tda->tda_displayname); 
 
-  LIST_INIT(&head);
+  RB_INIT(&tree);
 
   LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
     LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
       if(transport_is_available(t)) {
-	LIST_INSERT_SORTED(&head, t, tht_tmp_link, dvbsvccmp);
+	RB_INSERT_SORTED(&tree, t, tht_tmp_link, dvbsvccmp);
 	n++;
       }
     }
   }
 
   ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, buf);
-  ajax_transport_build_list(hc, tq, &head, n);
+  ajax_transport_build_list(hc, tq, &tree, n);
   ajax_box_end(tq, AJAX_BOX_SIDEBOX);
 
   http_output_html(hc, hr);

@@ -104,7 +104,7 @@ void ajax_config_access_init(void);
 void ajax_config_transport_init(void);
 
 int ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
-			      struct th_transport_list *tlist,
+			      struct th_transport_tree *tlist,
 			      int ntransports);
 
 const char *ajaxui_escape_apostrophe(const char *content);

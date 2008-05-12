@@ -39,7 +39,7 @@
  */
 int
 ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
-			  struct th_transport_list *tlist, int numtransports)
+			  struct th_transport_tree *tlist, int numtransports)
 {
   th_transport_t *t;
   ajax_table_t ta;
@@ -49,7 +49,7 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
   
   /* Select all */
   tcp_qprintf(tq, "select_all = function() {\r\n");
-  LIST_FOREACH(t, tlist, tht_tmp_link) {
+  RB_FOREACH(t, tlist, tht_tmp_link) {
     tcp_qprintf(tq, 
 		"$('sel_%s').checked = true;\r\n",
 		t->tht_identifier);
@@ -58,7 +58,7 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 
   /* Select none */
   tcp_qprintf(tq, "select_none = function() {\r\n");
-  LIST_FOREACH(t, tlist, tht_tmp_link) {
+  RB_FOREACH(t, tlist, tht_tmp_link) {
     tcp_qprintf(tq, 
 		"$('sel_%s').checked = false;\r\n",
 		t->tht_identifier);
@@ -67,7 +67,7 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 
   /* Invert selection */
   tcp_qprintf(tq, "select_invert = function() {\r\n");
-  LIST_FOREACH(t, tlist, tht_tmp_link) {
+  RB_FOREACH(t, tlist, tht_tmp_link) {
     tcp_qprintf(tq, 
 		"$('sel_%s').checked = !$('sel_%s').checked;\r\n",
 		t->tht_identifier, t->tht_identifier);
@@ -76,7 +76,7 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 
   /* Select TV transports */
   tcp_qprintf(tq, "select_tv = function() {\r\n");
-  LIST_FOREACH(t, tlist, tht_tmp_link) {
+  RB_FOREACH(t, tlist, tht_tmp_link) {
     tcp_qprintf(tq, 
 		"$('sel_%s').checked = %s;\r\n",
 		t->tht_identifier, 
@@ -86,7 +86,7 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 
   /* Select unscrambled TV transports */
   tcp_qprintf(tq, "select_tv_nocrypt = function() {\r\n");
-  LIST_FOREACH(t, tlist, tht_tmp_link) {
+  RB_FOREACH(t, tlist, tht_tmp_link) {
     tcp_qprintf(tq, 
 		"$('sel_%s').checked = %s;\r\n",
 		t->tht_identifier, 
@@ -99,7 +99,7 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 	      "var h = new Hash();\r\n"
 	      );
 
-  LIST_FOREACH(t, tlist, tht_tmp_link) {
+  RB_FOREACH(t, tlist, tht_tmp_link) {
     tcp_qprintf(tq, 
 		"if($('sel_%s').checked) {h.set('%s', 'selected') }\r\n",
 		t->tht_identifier, t->tht_identifier);
@@ -123,7 +123,7 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 				    "", "Target channel", "", NULL},
 		 (int[]){8,4,4,12,3,12,1});
 
-  LIST_FOREACH(t, tlist, tht_tmp_link) {
+  RB_FOREACH(t, tlist, tht_tmp_link) {
     ajax_table_row_start(&ta, t->tht_identifier);
 
     ajax_table_cell(&ta, "status", 

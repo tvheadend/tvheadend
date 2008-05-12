@@ -28,6 +28,7 @@
 #include <libhts/avg.h>
 #include <libhts/hts_strtab.h>
 #include <libavcodec/avcodec.h>
+#include <libhts/redblack.h>
 
 /*
  * Commercial status
@@ -79,6 +80,7 @@ TAILQ_HEAD(event_queue, event);
 LIST_HEAD(pvr_rec_list, pvr_rec);
 TAILQ_HEAD(ref_update_queue, ref_update);
 LIST_HEAD(th_transport_list, th_transport);
+RB_HEAD(th_transport_tree, th_transport);
 TAILQ_HEAD(th_transport_queue, th_transport);
 LIST_HEAD(th_dvb_mux_list, th_dvb_mux);
 LIST_HEAD(th_dvb_mux_instance_list, th_dvb_mux_instance);
@@ -424,7 +426,7 @@ typedef struct th_transport {
   
   LIST_ENTRY(th_transport) tht_mux_link;
 
-  LIST_ENTRY(th_transport) tht_tmp_link;
+  RB_ENTRY(th_transport) tht_tmp_link;
 
   LIST_ENTRY(th_transport) tht_active_link;
 
