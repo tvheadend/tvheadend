@@ -777,6 +777,8 @@ dvb_table_add_default(th_dvb_mux_instance_t *tdmi)
   /* Network Information Table */
 
   fp = dvb_fparams_alloc(0x10, DMX_IMMEDIATE_START | DMX_CHECK_CRC);
+  fp->filter.filter[0] = 0x40;
+  fp->filter.mask[0] = 0xff;
   tdt_add(tdmi, fp, dvb_nit_callback, NULL, "nit", TDT_QUICKREQ);
 
   /* Service Descriptor Table */
