@@ -29,7 +29,7 @@ enum polarisation {
 #define DVB_FEC_ERROR_LIMIT 20
 
 extern struct th_dvb_adapter_queue dvb_adapters;
-extern struct th_dvb_mux_instance_list dvb_muxes;
+extern struct th_dvb_mux_instance_tree dvb_muxes;
 
 void dvb_init(void);
 

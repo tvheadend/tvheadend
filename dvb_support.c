@@ -253,19 +253,6 @@ dvb_polarisation_to_str_long(int pol)
 }
 
 
-th_dvb_mux_instance_t *
-dvb_mux_find_by_identifier(const char *identifier)
-{
-  th_dvb_mux_instance_t *tdmi;
-
-  LIST_FOREACH(tdmi, &dvb_muxes, tdmi_global_link)
-    if(!strcmp(identifier, tdmi->tdmi_identifier))
-      return tdmi;
-  return NULL;
-}
-
-
-
 th_dvb_adapter_t *
 dvb_adapter_find_by_identifier(const char *identifier)
 {
@@ -312,11 +299,11 @@ void
 dvb_mux_nicename(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
 {
   if(tdmi->tdmi_adapter->tda_type == FE_QPSK)
-    snprintf(buf, size, "%dkHz %s port %d", tdmi->tdmi_fe_params->frequency,
+    snprintf(buf, size, "%dkHz %s port %d", tdmi->tdmi_fe_params.frequency,
 	     dvb_polarisation_to_str_long(tdmi->tdmi_polarisation),
 	     tdmi->tdmi_switchport);
   else 
-    snprintf(buf, size, "%dHz", tdmi->tdmi_fe_params->frequency);
+    snprintf(buf, size, "%dHz", tdmi->tdmi_fe_params.frequency);
 }
 
 /**

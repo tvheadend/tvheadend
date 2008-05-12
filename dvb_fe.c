@@ -96,7 +96,7 @@ dvb_fe_manager(void *aux)
  
       pthread_mutex_unlock(&tda->tda_lock);
 
-      p = *tdmi->tdmi_fe_params;
+      p = tdmi->tdmi_fe_params;
 
       if(tda->tda_type == FE_QPSK) {
 	/* DVB-S */

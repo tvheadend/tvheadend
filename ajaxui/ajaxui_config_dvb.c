@@ -79,7 +79,7 @@ nicenum(unsigned int v)
 static void
 tdmi_displayname(th_dvb_mux_instance_t *tdmi, char *buf, size_t len)
 {
-  int f = tdmi->tdmi_fe_params->frequency;
+  int f = tdmi->tdmi_fe_params.frequency;
 
   if(tdmi->tdmi_adapter->tda_type == FE_QPSK) {
     snprintf(buf, len, "%s kHz %s", nicenum(f),
@@ -661,8 +661,7 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
 
   /* List of muxes */
   
-  LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
-    nmuxes++;
+  nmuxes = tda->tda_muxes.entries;
   
   if(nmuxes == 0) {
     tcp_qprintf(tq, "<div style=\"text-align: center\">"
@@ -672,7 +671,7 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
 
     selvector = alloca(sizeof(char *) * (nmuxes + 1));
     n = 0;
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
+    RB_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
       selvector[n++] = tdmi->tdmi_identifier;
     selvector[n] = NULL;
 
@@ -684,7 +683,7 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
 		   (int[])
     {16,12,7,8,16,8,2});
 
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+    RB_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
 
       tdmi_displayname(tdmi, buf, sizeof(buf));
 
@@ -756,8 +755,8 @@ dvbsvccmp(th_transport_t *a, th_transport_t *b)
   if(a->tht_dvb_mux_instance == b->tht_dvb_mux_instance)
     return a->tht_dvb_service_id - b->tht_dvb_service_id;
   
-  return a->tht_dvb_mux_instance->tdmi_fe_params->frequency - 
-    b->tht_dvb_mux_instance->tdmi_fe_params->frequency;
+  return a->tht_dvb_mux_instance->tdmi_fe_params.frequency - 
+    b->tht_dvb_mux_instance->tdmi_fe_params.frequency;
 }
 
 /**
@@ -818,7 +817,7 @@ ajax_dvbmuxall(http_connection_t *hc, http_reply_t *hr,
 
   RB_INIT(&tree);
 
-  LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+  RB_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
     LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
       if(transport_is_available(t)) {
 	RB_INSERT_SORTED(&tree, t, tht_tmp_link, dvbsvccmp);

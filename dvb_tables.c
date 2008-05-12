@@ -250,7 +250,7 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   ptr += 11;
 
   /* Search all muxes on adapter */
-  LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
+  RB_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
     if(tdmi->tdmi_transport_stream_id == transport_stream_id)
       break;
   

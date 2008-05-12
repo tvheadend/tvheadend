@@ -29,6 +29,7 @@
 #include <libhts/hts_strtab.h>
 #include <libavcodec/avcodec.h>
 #include <libhts/redblack.h>
+#include <linux/dvb/frontend.h>
 
 /*
  * Commercial status
@@ -82,8 +83,7 @@ TAILQ_HEAD(ref_update_queue, ref_update);
 LIST_HEAD(th_transport_list, th_transport);
 RB_HEAD(th_transport_tree, th_transport);
 TAILQ_HEAD(th_transport_queue, th_transport);
-LIST_HEAD(th_dvb_mux_list, th_dvb_mux);
-LIST_HEAD(th_dvb_mux_instance_list, th_dvb_mux_instance);
+RB_HEAD(th_dvb_mux_instance_tree, th_dvb_mux_instance);
 LIST_HEAD(th_stream_list, th_stream);
 TAILQ_HEAD(th_pkt_queue, th_pkt);
 LIST_HEAD(th_pkt_list, th_pkt);
@@ -157,8 +157,9 @@ typedef struct th_dvb_mux_instance {
     TDMI_QUICKSCAN_WAITING,
   } tdmi_quickscan;
 
-  LIST_ENTRY(th_dvb_mux_instance) tdmi_global_link;
-  LIST_ENTRY(th_dvb_mux_instance) tdmi_adapter_link;
+  RB_ENTRY(th_dvb_mux_instance) tdmi_global_link;
+  RB_ENTRY(th_dvb_mux_instance) tdmi_adapter_link;
+  RB_ENTRY(th_dvb_mux_instance) tdmi_qscan_link;
 
   struct th_dvb_adapter *tdmi_adapter;
 
@@ -185,7 +186,7 @@ typedef struct th_dvb_mux_instance {
   time_t tdmi_got_adapter;
   time_t tdmi_lost_adapter;
 
-  struct dvb_frontend_parameters *tdmi_fe_params;
+  struct dvb_frontend_parameters tdmi_fe_params;
   uint8_t tdmi_polarisation;  /* for DVB-S */
   uint8_t tdmi_switchport;    /* for DVB-S */
 
@@ -227,7 +228,9 @@ typedef struct th_dvb_adapter {
 
   TAILQ_ENTRY(th_dvb_adapter) tda_global_link;
 
-  struct th_dvb_mux_instance_list tda_muxes;
+  struct th_dvb_mux_instance_tree tda_muxes;
+  struct th_dvb_mux_instance_tree tda_muxes_qscan_waiting;
+
   th_dvb_mux_instance_t *tda_mux_current;
 
   const char *tda_rootpath;

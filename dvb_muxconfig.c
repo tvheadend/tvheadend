@@ -96,7 +96,7 @@ static struct strtab poltab[] = {
 void
 dvb_mux_store(FILE *fp, th_dvb_mux_instance_t *tdmi)
 {
-  struct dvb_frontend_parameters *f = tdmi->tdmi_fe_params;
+  struct dvb_frontend_parameters *f = &tdmi->tdmi_fe_params;
 
   fprintf(fp, "\ttransportstreamid = %d\n", tdmi->tdmi_transport_stream_id);
   if(tdmi->tdmi_network != NULL)
