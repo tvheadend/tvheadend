@@ -526,6 +526,8 @@ tcp_session_peer_resolved(void *aux, struct sockaddr *so, const char *error)
   tcp_session_t *c = aux;
   struct sockaddr_in *si;
   
+  c->tcp_resolver = NULL;
+
   if(error != NULL) {
     syslog(LOG_ERR, "%s: Unable to resolve \"%s\" -- %s",
 	   c->tcp_name, c->tcp_hostname, error);
@@ -569,7 +571,8 @@ tcp_session_peer_resolved(void *aux, struct sockaddr *so, const char *error)
 static void
 tcp_session_try_connect(tcp_session_t *c)
 {
-  async_resolve(c->tcp_hostname, tcp_session_peer_resolved, c);
+  c->tcp_resolver = 
+    async_resolve(c->tcp_hostname, tcp_session_peer_resolved, c);
 }
 
 
@@ -589,7 +592,7 @@ tcp_client_reconnect_timeout(void *aux, int64_t now)
  */
 void *
 tcp_create_client(const char *hostname, int port, size_t session_size,
-		  const char *name, tcp_callback_t *cb)
+		  const char *name, tcp_callback_t *cb, int enabled)
 {
   tcp_session_t *c = calloc(1, session_size);
 
@@ -597,8 +600,10 @@ tcp_create_client(const char *hostname, int port, size_t session_size,
   c->tcp_name = strdup(name);
   c->tcp_port = port;
   c->tcp_hostname = strdup(hostname);
+  c->tcp_enabled = enabled;
 
-  tcp_session_try_connect(c);
+  if(c->tcp_enabled)
+    tcp_session_try_connect(c);
   return c;
 }
 
@@ -689,6 +694,9 @@ tcp_create_server(int port, size_t session_size, const char *name,
 void
 tcp_destroy_client(tcp_session_t *ses)
 {
+  if(ses->tcp_resolver != NULL)
+    async_resolve_cancel(ses->tcp_resolver);
+
   if(ses->tcp_dispatch_handle != NULL)
     tcp_disconnect(ses, 0);
 
@@ -696,4 +704,30 @@ tcp_destroy_client(tcp_session_t *ses)
   free(ses->tcp_name);
   free(ses->tcp_hostname);
   free(ses);
+}
+
+/**
+ *
+ */
+void
+tcp_enable_disable(tcp_session_t *ses, int enabled)
+{
+  if(ses->tcp_enabled == enabled)
+    return;
+
+  ses->tcp_enabled = enabled;
+
+  if(enabled) {
+    tcp_session_try_connect(ses);
+  } else {
+    if(ses->tcp_resolver != NULL) {
+      async_resolve_cancel(ses->tcp_resolver);
+      ses->tcp_resolver = NULL;
+    }
+
+    if(ses->tcp_dispatch_handle != NULL)
+      tcp_disconnect(ses, 0);
+
+    dtimer_disarm(&ses->tcp_timer);
+  }
 }

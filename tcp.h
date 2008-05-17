@@ -64,11 +64,13 @@ typedef struct tcp_session {
 
   /* These are only used when we spawn as a client */
 
+  int tcp_enabled;
   dtimer_t tcp_timer;
   char *tcp_name;
   int tcp_port;
   char *tcp_hostname;
-  
+  void *tcp_resolver;
+
   /* Output queueing */
 
   int tcp_blocked;
@@ -113,8 +115,10 @@ void tcp_qput(tcp_queue_t *tq, const uint8_t *buf, size_t len);
 void tcp_output_queue(tcp_session_t *ses, tcp_queue_t *dst, tcp_queue_t *src);
 
 void *tcp_create_client(const char *hostname, int port, size_t session_size,
-			const char *name, tcp_callback_t *cb);
+			const char *name, tcp_callback_t *cb, int enabled);
 
 void tcp_destroy_client(tcp_session_t *ses);
+
+void tcp_enable_disable(tcp_session_t *ses, int enabled);
 
 #endif /* TCP_H_ */
