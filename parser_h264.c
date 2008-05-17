@@ -48,7 +48,7 @@ h264_nal_deescape(bitstream_t *bs, uint8_t *data, int size)
 
   rbsp_size = 0;
   for(i = 1; i < size; i++) {
-    if(i + 2 < size && data[i] == 0 && data[i + 1] == 0 && data[i + 1] == 3) {
+    if(i + 2 < size && data[i] == 0 && data[i + 1] == 0 && data[i + 2] == 3) {
       bs->data[rbsp_size++] = 0;
       bs->data[rbsp_size++] = 0;
       i += 2;
