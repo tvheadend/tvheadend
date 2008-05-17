@@ -516,8 +516,7 @@ typedef struct th_transport {
    * Autoprobing support
    */
 
-  TAILQ_ENTRY(th_transport) tht_probe_link;
-  int tht_on_probe_queue;
+  struct sp *tht_sp;
 
   /**
    * Channel mapping

@@ -40,12 +40,23 @@
 
 static void serviceprobe_engage(void);
 
-struct th_transport_queue probequeue;
+TAILQ_HEAD(sp_queue, sp);
+
+static struct sp_queue probequeue;
+
+static struct sp *sp_current;
+
+static dtimer_t sp_engage_timer;
 
 typedef struct sp {
+  TAILQ_ENTRY(sp) sp_link;
+
   th_muxer_t *sp_muxer;
-  th_subscription_t *sp_s;
+  th_transport_t *sp_t;
   dtimer_t sp_timer;
+
+  th_subscription_t *sp_s;
+
 } sp_t;
 
 
@@ -54,21 +65,15 @@ sp_done_callback(void *aux, int64_t now)
 {
   sp_t *sp = aux;
   th_subscription_t *s = sp->sp_s;
-  th_transport_t *t = sp->sp_s->ths_transport;
 
-  muxer_deinit(sp->sp_muxer, s);
-
-  LIST_REMOVE(s, ths_transport_link);
-  free(s);
-
-  TAILQ_REMOVE(&probequeue, t, tht_probe_link);
-  t->tht_on_probe_queue = 0;
-
-  transport_stop(t, 0);
-
-  subscription_reschedule();
+  if(s != NULL)
+    subscription_unsubscribe(s);
 
   serviceprobe_engage();
+
+  sp->sp_t->tht_sp = NULL;
+
+  TAILQ_REMOVE(&probequeue, sp, sp_link);
   free(sp);
 }
 
@@ -79,7 +84,7 @@ static void
 sp_packet_input(void *opaque, th_muxstream_t *tms, th_pkt_t *pkt)
 {
   sp_t *sp = opaque;
-  th_transport_t *t = sp->sp_s->ths_transport;
+  th_transport_t *t = sp->sp_t;
   channel_t *ch;
 
   syslog(LOG_INFO, "Probed \"%s\" -- Ok\n", t->tht_svcname);
@@ -100,7 +105,7 @@ static void
 sp_status_callback(struct th_subscription *s, int status, void *opaque)
 {
   sp_t *sp = opaque;
-  th_transport_t *t = sp->sp_s->ths_transport;
+  th_transport_t *t = sp->sp_t;
   char *errtxt;
 
   s->ths_status_callback = NULL;
@@ -127,30 +132,60 @@ sp_status_callback(struct th_subscription *s, int status, void *opaque)
 }
 
 
+
+/**
+ * Called when a subscription gets/loses access to a transport
+ */
+static void
+sp_subscription_callback(struct th_subscription *s,
+			 subscription_event_t event, void *opaque)
+{
+  sp_t *sp = opaque;
+
+  switch(event) {
+  case TRANSPORT_AVAILABLE:
+    break;
+
+  case TRANSPORT_UNAVAILABLE:
+    muxer_deinit(sp->sp_muxer, s);
+    break;
+  }
+}
+
 /**
  * Setup IPTV (TS over UDP) output
  */
 
 static void
-serviceprobe_engage(void)
+serviceprobe_start(void *aux, int64_t now)
 {
-  th_transport_t *t;
   th_subscription_t *s;
   th_muxer_t *tm;
+  th_transport_t *t;
   sp_t *sp;
 
-  if((t = TAILQ_FIRST(&probequeue)) == NULL)
+  assert(sp_current == NULL);
+
+  printf("Engage ...: ");
+
+  if((sp = TAILQ_FIRST(&probequeue)) == NULL) {
+    printf("Q empty\n");
     return;
+  }
 
-  sp = calloc(1, sizeof(sp_t));
+  s = sp->sp_s = calloc(1, sizeof(th_subscription_t));
+  t = sp->sp_t;
 
-  sp->sp_s = s = calloc(1, sizeof(th_subscription_t));
-  s->ths_title     = "probe";
+  s->ths_title     = strdup("probe");
   s->ths_weight    = INT32_MAX;
   s->ths_opaque    = sp;
+  s->ths_callback  = sp_subscription_callback;
+  LIST_INSERT_HEAD(&subscriptions, s, ths_global_link);
 
   if(t->tht_runstatus != TRANSPORT_RUNNING)
     transport_start(t, INT32_MAX);
+
+  printf("Starting %s\n", t->tht_svcname);
 
   s->ths_transport = t;
   LIST_INSERT_HEAD(&t->tht_subscriptions, s, ths_transport_link);
@@ -164,24 +199,48 @@ serviceprobe_engage(void)
 /**
  *
  */
+static void
+serviceprobe_engage(void)
+{
+  dtimer_arm(&sp_engage_timer, serviceprobe_start, NULL, 0);
+}
+
+
+/**
+ *
+ */
 void
 serviceprobe_add(th_transport_t *t)
 {
-  int was_first = TAILQ_FIRST(&probequeue) == NULL;
+  sp_t *sp;
 
   if(!transport_is_tv(t))
     return;
 
-  if(t->tht_on_probe_queue)
+  if(t->tht_sp != NULL)
     return;
 
-  TAILQ_INSERT_TAIL(&probequeue, t, tht_probe_link);
-  t->tht_on_probe_queue = 1;
+  sp = calloc(1, sizeof(sp_t));
 
-  if(was_first)
+  TAILQ_INSERT_TAIL(&probequeue, sp, sp_link);
+  t->tht_sp = sp;
+  sp->sp_t = t;
+
+  if(sp_current == NULL)
     serviceprobe_engage();
 }
 
+/**
+ *
+ */
+void
+serviceprobe_delete(th_transport_t *t)
+{
+  if(t->tht_sp == NULL)
+    return;
+
+  sp_done_callback(t->tht_sp, 0);
+}
 
 
 void 

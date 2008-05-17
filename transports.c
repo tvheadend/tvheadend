@@ -53,6 +53,7 @@
 #include "channels.h"
 #include "cwc.h"
 #include "notify.h"
+#include "serviceprobe.h"
 
 #define TRANSPORT_HASH_WIDTH 101
 
@@ -465,6 +466,10 @@ transport_destroy(th_transport_t *t)
 
   transport_flush_subscribers(t);
   
+  if(t->tht_runstatus != TRANSPORT_IDLE)
+    transport_stop(t, 0);
+
+
   free(t->tht_identifier);
   free(t->tht_svcname);
   free(t->tht_chname);
@@ -474,6 +479,9 @@ transport_destroy(th_transport_t *t)
     LIST_REMOVE(st, st_link);
     free(st);
   }
+
+  serviceprobe_delete(t);
+
   free(t);
 }
 
