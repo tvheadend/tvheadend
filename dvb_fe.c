@@ -132,9 +132,6 @@ dvb_fe_manager(void *aux)
 
       time(&tdmi->tdmi_got_adapter);
 
-      printf("%s: Tuing changed to %d\n", tda->tda_rootpath, p.frequency);
-
-
       /* Now that we have tuned, start demuxing of tables */
 
       pthread_mutex_lock(&tdmi->tdmi_table_lock);
