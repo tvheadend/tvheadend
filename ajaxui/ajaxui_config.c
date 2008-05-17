@@ -32,13 +32,15 @@
 #define AJAX_CONFIG_TAB_CHANNELS 0
 #define AJAX_CONFIG_TAB_DVB      1
 #define AJAX_CONFIG_TAB_XMLTV    2
-#define AJAX_CONFIG_TAB_ACCESS   3
-#define AJAX_CONFIG_TABS         4
+#define AJAX_CONFIG_TAB_CWC      3
+#define AJAX_CONFIG_TAB_ACCESS   4
+#define AJAX_CONFIG_TABS         5
 
 const char *ajax_config_tabnames[] = {
   [AJAX_CONFIG_TAB_CHANNELS]      = "Channels & Groups",
   [AJAX_CONFIG_TAB_DVB]           = "DVB adapters",
   [AJAX_CONFIG_TAB_XMLTV]         = "XML-TV",
+  [AJAX_CONFIG_TAB_CWC]           = "Code-word Client",
   [AJAX_CONFIG_TAB_ACCESS]        = "Access control",
 };
 
@@ -85,6 +87,8 @@ ajax_config_dispatch(http_connection_t *hc, http_reply_t *hr,
     return ajax_config_dvb_tab(hc, hr);
   case AJAX_CONFIG_TAB_XMLTV:
     return ajax_config_xmltv_tab(hc, hr);
+  case AJAX_CONFIG_TAB_CWC:
+    return ajax_config_cwc_tab(hc, hr);
   case AJAX_CONFIG_TAB_ACCESS:
     return ajax_config_access_tab(hc, hr);
 
@@ -138,4 +142,5 @@ ajax_config_init(void)
   ajax_config_dvb_init();
   ajax_config_xmltv_init();
   ajax_config_access_init();
+  ajax_config_cwc_init();
 }

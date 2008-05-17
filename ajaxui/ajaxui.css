@@ -87,6 +87,13 @@ img { border: 0; }
  width: 50%;
 }
 
+.cell_20 {
+ margin-top: 2px;
+ margin-bottom: 2px;
+ float: left;
+ width: 20%;
+}
+
 .normaltable {
    height: 300px;
    overflow: auto;

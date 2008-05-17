@@ -44,7 +44,7 @@ VPATH  += ajaxui
 SRCS   += ajaxui.c ajaxui_mailbox.c ajaxui_channels.c \
 	  ajaxui_config.c ajaxui_config_channels.c ajaxui_config_dvb.c \
 	  ajaxui_config_transport.c ajaxui_config_xmltv.c \
-	 ajaxui_config_access.c
+	  ajaxui_config_access.c ajaxui_config_cwc.c
 
 JSSRCS += tvheadend.js
 

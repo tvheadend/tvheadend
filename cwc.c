@@ -37,6 +37,9 @@
 #include "dispatch.h"
 #include "transports.h"
 #include "cwc.h"
+#include "notify.h"
+
+static int cwc_tally;
 
 #define CWC_KEEPALIVE_INTERVAL 600
 
@@ -65,6 +68,8 @@ typedef enum {
   MSG_ADMIN_COMMAND_NAK,
   MSG_KEEPALIVE = CWS_FIRSTCMDNO + 0x1d
 } net_msg_type_t;
+
+struct cwc_queue cwcs;
 
 extern char *cwc_krypt(const char *key, const char *salt);
 
@@ -104,45 +109,19 @@ typedef struct cwc_transport {
 } cwc_transport_t;
 
 
+/**
+ *
+ */
+static void
+cwc_set_state(cwc_t *cwc, int newstate, const char *errtxt)
+{
+  cwc->cwc_state = newstate;
 
+  if(newstate == CWC_STATE_IDLE)
+    cwc->cwc_errtxt = errtxt;
 
-
-typedef struct cwc {
-  tcp_session_t cwc_tcp_session; /* Must be first */
-
-  LIST_ENTRY(cwc) cwc_link;
-
-  LIST_HEAD(, cwc_transport) cwc_transports;
-
-  enum {
-    CWC_STATE_IDLE,
-    CWC_STATE_WAIT_LOGIN_KEY,
-    CWC_STATE_WAIT_LOGIN_ACK,
-    CWC_STATE_WAIT_CARD_DATA,
-    CWC_STATE_RUNNING,
-  } cwc_state;
-  
-  uint16_t cwc_caid;
-
-  uint16_t cwc_seq;
-
-  uint8_t cwc_key[16];
-
-  uint8_t cwc_buf[256];
-  int cwc_bufptr;
-
-  /* From configuration */
-
-  uint8_t cwc_confedkey[14];
-  const char *cwc_username;
-  const char *cwc_password;   /* salted version */
-
-  dtimer_t cwc_idle_timer;
-
-  dtimer_t cwc_send_ka_timer;
-} cwc_t;
-
-static LIST_HEAD(, cwc) cwcs;
+  notify_cwc_status_change(cwc);
+}
 
 
 
@@ -355,7 +334,7 @@ cwc_send_data_req(cwc_t *cwc)
 {
   uint8_t buf[CWS_NETMSGSIZE];
 
-  cwc->cwc_state = CWC_STATE_WAIT_CARD_DATA;
+  cwc_set_state(cwc, CWC_STATE_WAIT_CARD_DATA, NULL);
 
   buf[0] = MSG_CARD_DATA_REQ;
   buf[1] = 0;
@@ -407,6 +386,8 @@ cwc_dispatch_card_data_reply(cwc_t *cwc, uint8_t msgtype,
   cwc->cwc_caid = (msg[4] << 8) | msg[5];
   n = psi_caid2name(cwc->cwc_caid) ?: "Unknown";
 
+  notify_cwc_crypto_change(cwc);
+
   syslog(LOG_INFO, "cwc: %s: Connected as user 0x%02x "
 	 "to a %s-card [0x%04x : %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x] "
 	 "with %d providers", 
@@ -415,7 +396,7 @@ cwc_dispatch_card_data_reply(cwc_t *cwc, uint8_t msgtype,
 	 msg[6], msg[7], msg[8], msg[9], msg[10], msg[11], msg[12], msg[13],
 	 msg[14]);
 
-  cwc->cwc_state = CWC_STATE_RUNNING;
+  cwc_set_state(cwc, CWC_STATE_RUNNING, NULL);
 
   /* Send KA every CWC_KEEPALIVE_INTERVAL seconds */
 
@@ -436,7 +417,7 @@ cwc_send_login(cwc_t *cwc)
   int ul = strlen(cwc->cwc_username) + 1;
   int pl = strlen(cwc->cwc_password) + 1;
 
-  cwc->cwc_state = CWC_STATE_WAIT_LOGIN_ACK;
+  cwc_set_state(cwc, CWC_STATE_WAIT_LOGIN_ACK, NULL);
 
   buf[0] = MSG_CLIENT_2_SERVER_LOGIN;
   buf[1] = 0;
@@ -621,13 +602,13 @@ cwc_tcp_callback(tcpevent_t event, void *tcpsession)
   case TCP_CONNECT:
     cwc->cwc_seq = 0;
     cwc->cwc_bufptr = 0;
-    cwc->cwc_state = CWC_STATE_WAIT_LOGIN_KEY;
+    cwc_set_state(cwc, CWC_STATE_WAIT_LOGIN_KEY, NULL);
     /* We want somthing within 20 seconds */
     dtimer_arm(&cwc->cwc_idle_timer, cwc_timeout, cwc, 20); 
     break;
 
   case TCP_DISCONNECT:
-    cwc->cwc_state = CWC_STATE_IDLE;
+    cwc_set_state(cwc, CWC_STATE_IDLE, "Disconnected");
     dtimer_disarm(&cwc->cwc_send_ka_timer);
     break;
 
@@ -734,19 +715,27 @@ cwc_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
 /**
  *
  */
-static void 
-cwc_transport_stop(th_descrambler_t *td)
+static void
+cwc_transport_destroy(cwc_transport_t *ct)
 {
-  cwc_transport_t *ct = (cwc_transport_t *)td;
-
   if(ct->ct_pending)
     LIST_REMOVE(ct, ct_link);
 
   LIST_REMOVE(ct, ct_cwc_link);
 
-  LIST_REMOVE(td, td_transport_link);
   free_key_struct(ct->ct_keys);
   free(ct);
+}
+
+/**
+ *
+ */
+static void 
+cwc_transport_stop(th_descrambler_t *td)
+{
+  LIST_REMOVE(td, td_transport_link);
+
+  cwc_transport_destroy((cwc_transport_t *)td);
 }
 
 
@@ -761,7 +750,7 @@ cwc_transport_start(th_transport_t *t)
   th_descrambler_t *td;
   th_stream_t *st;
 
-  LIST_FOREACH(cwc, &cwcs, cwc_link) {
+  TAILQ_FOREACH(cwc, &cwcs, cwc_link) {
 
     LIST_FOREACH(st, &t->tht_streams, st_link)
       if(st->st_caid == cwc->cwc_caid)
@@ -788,6 +777,54 @@ cwc_transport_start(th_transport_t *t)
 /**
  *
  */
+static void
+cwc_save(void)
+{
+  cwc_t *cwc;
+
+  FILE *fp;
+  char buf[400];
+
+  snprintf(buf, sizeof(buf), "%s/cwc.cfg",  settings_dir);
+  if((fp = settings_open_for_write(buf)) == NULL)
+    return;
+
+  TAILQ_FOREACH(cwc, &cwcs, cwc_link) {
+
+    fprintf(fp, "cwc {\n");
+    fprintf(fp, "\thostname = %s\n", cwc->cwc_tcp_session.tcp_hostname);
+    fprintf(fp, "\tport = %d\n",     cwc->cwc_tcp_session.tcp_port);
+
+    fprintf(fp, "\tusername = %s\n", cwc->cwc_username);
+    fprintf(fp, "\tpassword = %s\n", cwc->cwc_password);
+    fprintf(fp, "\tdeskey = "
+	    "%02x:%02x:%02x:%02x:%02x:%02x:%02x:"
+	    "%02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
+	    cwc->cwc_confedkey[0x0],
+	    cwc->cwc_confedkey[0x1],
+	    cwc->cwc_confedkey[0x2],
+	    cwc->cwc_confedkey[0x3],
+	    cwc->cwc_confedkey[0x4],
+	    cwc->cwc_confedkey[0x5],
+	    cwc->cwc_confedkey[0x6],
+	    cwc->cwc_confedkey[0x7],
+	    cwc->cwc_confedkey[0x8],
+	    cwc->cwc_confedkey[0x9],
+	    cwc->cwc_confedkey[0xa],
+	    cwc->cwc_confedkey[0xb],
+	    cwc->cwc_confedkey[0xc],
+	    cwc->cwc_confedkey[0xd]);
+    fprintf(fp, "\tenabled = %d\n", 1);
+
+
+    fprintf(fp, "}\n");
+  }
+  fclose(fp);
+
+}
+/**
+ *
+ */
 static int
 nibble(char c)
 {
@@ -804,80 +841,195 @@ nibble(char c)
 }
 
 
+
+/**
+ *
+ */
+const char *
+cwc_add(const char *hostname, const char *porttxt, const char *username, 
+	const char *password, const char *deskey, const char *enabled,
+	int save, int salt)
+{
+  const char *k;
+  cwc_t *cwc;
+  uint8_t key[14];
+
+  int i, u, l, port;
+
+  if(hostname == NULL || strlen(hostname) < 1)
+    return "Invalid hostname";
+
+  if(porttxt == NULL)
+    return "Invalid port";
+  
+  port = atoi(porttxt);
+  if(port < 1 || port > 65535)
+    return "Invalid port";
+
+  if(username == NULL || strlen(username) < 1)
+    return "Invalid username";
+  if(password == NULL || strlen(password) < 1)
+    return "Invalid password";
+
+  if(deskey == NULL)
+    return "Invalid DES-key";
+
+  k = deskey;
+  for(i = 0; i < 14; i++) {
+    while(*k != 0 && !isxdigit(*k)) k++;
+    if(*k == 0)
+      break;
+    u = nibble(*k++);
+    while(*k != 0 && !isxdigit(*k)) k++;
+    if(*k == 0)
+      break;
+    l = nibble(*k++);
+    key[i] = (u << 4) | l;
+  }
+  
+  if(i != 14)
+    return "DES-key does not contain 14 valid hexadecimal bytes";
+    
+  if(enabled == NULL)
+    return "Enabled not set";
+
+  cwc = tcp_create_client(hostname, port, sizeof(cwc_t), 
+			  "cwc", cwc_tcp_callback);
+
+  //  cwc->cwc_enabled = atoi(enabled);
+  cwc->cwc_username = strdup(username);
+
+  if(salt) {
+    cwc->cwc_password = strdup(cwc_krypt(password, "$1$abcdefgh$"));
+  } else {
+    cwc->cwc_password = strdup(password);
+  }
+
+  cwc->cwc_id = ++cwc_tally;
+
+  memcpy(cwc->cwc_confedkey, key, 14);
+  TAILQ_INSERT_TAIL(&cwcs, cwc, cwc_link);  
+
+  if(save)
+    cwc_save();
+  return NULL;
+}
+
+/**
+ *
+ */
+cwc_t *
+cwc_find(int id)
+{
+  cwc_t *cwc;
+  TAILQ_FOREACH(cwc, &cwcs, cwc_link)
+    if(cwc->cwc_id == id)
+      break;
+  return cwc;
+}
+
+
+/**
+ *
+ */
+void
+cwc_delete(cwc_t *cwc)
+{
+  cwc_transport_t *ct;
+
+  while((ct = LIST_FIRST(&cwc->cwc_transports)) != NULL)
+    cwc_transport_destroy(ct);
+
+  TAILQ_REMOVE(&cwcs, cwc, cwc_link);  
+  free((void *)cwc->cwc_password);
+  free((void *)cwc->cwc_username);
+
+  tcp_destroy_client(&cwc->cwc_tcp_session);
+  cwc_save();
+}
+
+#if 0
+/**
+ *
+ */
+void
+cwc_set_enable(cwc_t *cwc, int enabled)
+{
+  if(cwc->enabled == enabled)
+    return;
+
+  cwc->enabled = enabled;
+
+  tcp_client_set_state(&cwc->cwc_tcp_session, enabled);
+  cwc_save();
+}
+#endif
+
+
+
 /**
  *
  */
 void
 cwc_init(void)
 {
-  cwc_t *cwc;
-  void *iterator = NULL, *head;
-  const char *username;
-  const char *password;
-  const char *deskey, *k;
-  const char *hostname;
-  int port;
-  uint8_t key[14];
-  int i, u, l;
+  struct config_head cl;
+  config_entry_t *ce;
+  char buf[400];
 
-  while((head = config_iterate_sections(&iterator, "cwc")) != NULL) {
+  TAILQ_INIT(&cwcs);
+  
+  snprintf(buf, sizeof(buf), "%s/cwc.cfg",  settings_dir);
+  
+  TAILQ_INIT(&cl);
+  config_read_file0(buf, &cl);
 
-    if((hostname = config_get_str_sub(head, "hostname", NULL)) == NULL) {
-      syslog(LOG_INFO, "cwc: config section missing 'hostname'");
-    }
-
-    if((port = atoi(config_get_str_sub(head, "port", "0"))) == 0) {
-      syslog(LOG_INFO, "cwc: config section missing 'port'");
-    }
-
-    if((username = config_get_str_sub(head, "username", NULL)) == NULL) {
-      syslog(LOG_INFO, "cwc: config section missing 'username'");
-    }
-
-    if((password = config_get_str_sub(head, "password", NULL)) == NULL) {
-      syslog(LOG_INFO, "cwc: config section missing 'password'");
-    }
-
-    if((deskey = config_get_str_sub(head, "deskey", NULL)) == NULL) {
-      syslog(LOG_INFO, "cwc: config section missing 'deskey'");
-    }
-
-
-    k = deskey;
-    for(i = 0; i < 14; i++) {
-      while(*k != 0 && !isxdigit(*k)) k++;
-      if(*k == 0)
-	break;
-      u = nibble(*k++);
-      while(*k != 0 && !isxdigit(*k)) k++;
-      if(*k == 0)
-	break;
-      l = nibble(*k++);
-      key[i] = (u << 4) | l;
-    }
-
-    if(i != 14) {
-      syslog(LOG_INFO, "cwc: 'deskey' is not 14 valid hexadecimal bytes");
+  TAILQ_FOREACH(ce, &cl, ce_link) {
+    if(ce->ce_type != CFG_SUB || strcasecmp("cwc", ce->ce_key))
       continue;
-    }
-
-    if(hostname == NULL || username == NULL || password == NULL || 
-       deskey == NULL || port == 0)
-      continue;
-
-    cwc = tcp_create_client(hostname, port, sizeof(cwc_t), 
-			    "cwc", cwc_tcp_callback);
-
-    cwc->cwc_username = strdup(username);
-
-    if(!strncmp(password, "$1$", 3)) {
-      cwc->cwc_password = strdup(password);
-    } else {
-      cwc->cwc_password = strdup(cwc_krypt(password, "$1$abcdefgh$"));
-    }
-
-    memcpy(cwc->cwc_confedkey, key, 14);
-    LIST_INSERT_HEAD(&cwcs, cwc, cwc_link);
-
+    
+    cwc_add(config_get_str_sub(&ce->ce_sub, "hostname", NULL),
+	    config_get_str_sub(&ce->ce_sub, "port",     NULL),
+	    config_get_str_sub(&ce->ce_sub, "username", NULL),
+	    config_get_str_sub(&ce->ce_sub, "password", NULL),
+	    config_get_str_sub(&ce->ce_sub, "deskey",   NULL),
+	    config_get_str_sub(&ce->ce_sub, "enabled",  NULL),
+	    0, 0);
   }
+}
+
+/**
+ *
+ */
+static struct strtab cwcstatustab[] = {
+  { "Waiting for login key",                 CWC_STATE_WAIT_LOGIN_KEY },
+  { "Waiting for login ACK",                 CWC_STATE_WAIT_LOGIN_ACK },
+  { "Waiting for card data",                 CWC_STATE_WAIT_CARD_DATA },
+  { "Running",                               CWC_STATE_RUNNING },
+};
+
+const char *
+cwc_status_to_text(struct cwc *cwc)
+{
+  if(cwc->cwc_state == CWC_STATE_IDLE)
+    return cwc->cwc_errtxt ?: "Not connected";
+
+  return val2str(cwc->cwc_state, cwcstatustab) ?: "Invalid status";
+}
+
+const char *
+cwc_crypto_to_text(struct cwc *cwc)
+{
+  const char *n;
+  static char buf[40];
+
+  if(cwc->cwc_state != CWC_STATE_RUNNING)
+    return "Unknown";
+
+  n = psi_caid2name(cwc->cwc_caid);
+  if(n != NULL)
+    return n;
+
+  snprintf(buf, sizeof(buf), "0x%x", cwc->cwc_caid);
+  return buf;
 }

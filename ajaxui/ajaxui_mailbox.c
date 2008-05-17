@@ -33,6 +33,7 @@
 #include "epg_xmltv.h"
 #include "dvb_support.h"
 #include "ajaxui_mailbox.h"
+#include "cwc.h"
 
 #define MAILBOX_UNUSED_TIMEOUT      15
 #define MAILBOX_EMPTY_REPLY_TIMEOUT 10
@@ -484,4 +485,27 @@ ajax_mailbox_transport_status_change(struct th_transport *t)
   ajax_mailbox_update_div("xmltvgrabbers",
 			  "status", t->tht_identifier,
 			  transport_status_to_text(t->tht_last_status));
+}
+
+
+
+
+void
+ajax_mailbox_cwc_status_change(struct cwc *cwc)
+{
+  char id[20];
+  snprintf(id, sizeof(id), "cwc_%d", cwc->cwc_id);
+
+  ajax_mailbox_update_div("cwc", "status", id, cwc_status_to_text(cwc));
+}
+
+
+
+void
+ajax_mailbox_cwc_crypto_change(struct cwc *cwc)
+{
+  char id[20];
+  snprintf(id, sizeof(id), "cwc_%d", cwc->cwc_id);
+
+  ajax_mailbox_update_div("cwc", "crypto", id, cwc_crypto_to_text(cwc));
 }
