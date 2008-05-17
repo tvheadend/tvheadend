@@ -137,7 +137,8 @@ dvb_stop_feed(th_transport_t *t)
  * transports that is subscribing to the adapter
  */
 int
-dvb_start_feed(th_transport_t *t, unsigned int weight, int status)
+dvb_start_feed(th_transport_t *t, unsigned int weight, int status, 
+	       int force_start)
 {
   struct dmx_pes_filter_params dmx_param;
   th_stream_t *st;
@@ -150,7 +151,7 @@ dvb_start_feed(th_transport_t *t, unsigned int weight, int status)
 
   /* Check if adapter is idle, or already tuned */
 
-  if(tdmi != NULL && tdmi != t->tht_dvb_mux_instance) {
+  if(tdmi != NULL && tdmi != t->tht_dvb_mux_instance && !force_start) {
 
     /* Nope .. */
 

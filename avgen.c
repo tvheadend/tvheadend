@@ -76,7 +76,7 @@ static void avgen_deliver(th_transport_t *t, avgen_t *avg, int64_t clk);
 static void avgen_stop_feed(th_transport_t *t);
 
 static int avgen_start_feed(th_transport_t *t, unsigned int weight,
-			    int status);
+			    int status, int force_start);
 
 static void update_video(avgen_t *avg, int vframe, int framerate);
 static void update_audio(avgen_t *avg, int vframe, int framerate);
@@ -174,7 +174,8 @@ rgb2yuv(uint8_t yuv[3], const uint8_t rgb[3])
  *
  */
 static int 
-avgen_start_feed(th_transport_t *t, unsigned int weight, int status)
+avgen_start_feed(th_transport_t *t, unsigned int weight, int status,
+		 int force_start)
 {
   avgen_t *avg;
   AVCodecContext *avctx;

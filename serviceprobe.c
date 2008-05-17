@@ -184,7 +184,7 @@ serviceprobe_start(void *aux, int64_t now)
 
 
   if(t->tht_runstatus != TRANSPORT_RUNNING)
-    transport_start(t, INT32_MAX);
+    transport_start(t, INT32_MAX, 1);
 
   s->ths_transport = t;
   LIST_INSERT_HEAD(&t->tht_subscriptions, s, ths_transport_link);

@@ -53,7 +53,8 @@ static void v4l_add_adapter(const char *path);
 
 static void v4l_stop_feed(th_transport_t *t);
 
-static int v4l_start_feed(th_transport_t *t, unsigned int weight, int status);
+static int v4l_start_feed(th_transport_t *t, unsigned int weight, int status,
+			  int force_start);
 
 /* 
  *
@@ -232,7 +233,8 @@ v4l_adapter_clean(th_v4l_adapter_t *tva)
  *
  */
 static int 
-v4l_start_feed(th_transport_t *t, unsigned int weight, int status)
+v4l_start_feed(th_transport_t *t, unsigned int weight, int status,
+	       int force_start)
 {
   th_v4l_adapter_t *tva, *cand = NULL;
   int w, fd;

@@ -21,7 +21,8 @@
 
 int dvb_dvr_init(th_dvb_adapter_t *tda);
 
-int dvb_start_feed(struct th_transport *t, unsigned int weight, int status);
+int dvb_start_feed(struct th_transport *t, unsigned int weight, int status,
+		   int force_start);
 
 void dvb_stop_feed(th_transport_t *t);
 

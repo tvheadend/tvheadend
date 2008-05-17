@@ -68,7 +68,7 @@ iptv_fd_callback(int events, void *opaque, int fd)
 }
 
 static int
-iptv_start_feed(th_transport_t *t, unsigned int weight, int status)
+iptv_start_feed(th_transport_t *t, unsigned int weight, int status, int force)
 {
   int fd;
   struct ip_mreqn m;
@@ -253,7 +253,7 @@ static void
 iptv_probe_transport(th_transport_t *t)
 {
   syslog(LOG_INFO, "iptv: Probing transport %s", t->tht_name);
-  iptv_start_feed(t, 1, TRANSPORT_PROBING);
+  iptv_start_feed(t, 1, TRANSPORT_PROBING, 1);
 }
 
 

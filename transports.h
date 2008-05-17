@@ -23,7 +23,7 @@
 
 unsigned int transport_compute_weight(struct th_transport_list *head);
 
-int transport_start(th_transport_t *t, unsigned int weight);
+int transport_start(th_transport_t *t, unsigned int weight, int force_start);
 
 void transport_stop(th_transport_t *t, int flush_subscriptions);
 

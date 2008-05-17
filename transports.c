@@ -157,7 +157,7 @@ transport_stop(th_transport_t *t, int flush_subscriptions)
  *
  */
 int
-transport_start(th_transport_t *t, unsigned int weight)
+transport_start(th_transport_t *t, unsigned int weight, int force_start)
 {
   th_stream_t *st;
   AVCodec *c;
@@ -165,7 +165,7 @@ transport_start(th_transport_t *t, unsigned int weight)
 
   assert(t->tht_runstatus != TRANSPORT_RUNNING);
 
-  if(t->tht_start_feed(t, weight, TRANSPORT_RUNNING))
+  if(t->tht_start_feed(t, weight, TRANSPORT_RUNNING, force_start))
     return -1;
 
   t->tht_monitor_suspend = 10;
@@ -313,7 +313,7 @@ transport_find(channel_t *ch, unsigned int weight)
     if(t->tht_runstatus == TRANSPORT_RUNNING) 
       return t;
 
-    if(!transport_start(t, 0))
+    if(!transport_start(t, 0, 0))
       return t;
   }
 
@@ -322,7 +322,7 @@ transport_find(channel_t *ch, unsigned int weight)
 
   for(i = 0; i < cnt; i++) {
     t = vec[i];
-    if(!transport_start(t, weight))
+    if(!transport_start(t, weight, 0))
       return t;
   }
   return NULL;

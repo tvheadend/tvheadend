@@ -61,7 +61,7 @@ typedef struct file_input {
 static void file_input_stop_feed(th_transport_t *t);
 
 static int file_input_start_feed(th_transport_t *t, unsigned int weight,
-				 int status);
+				 int status, int force_start);
 
 static void fi_deliver(void *aux, int64_t now);
 
@@ -191,7 +191,8 @@ file_input_reset(th_transport_t *t, file_input_t *fi)
  *
  */
 static int 
-file_input_start_feed(th_transport_t *t, unsigned int weight, int status)
+file_input_start_feed(th_transport_t *t, unsigned int weight, int status,
+		      int force_start)
 {
   file_input_t *fi = t->tht_file_input;
   
