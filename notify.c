@@ -92,9 +92,3 @@ notify_cwc_status_change(struct cwc *cwc)
 {
   ajax_mailbox_cwc_status_change(cwc);
 }
-
-void
-notify_cwc_crypto_change(struct cwc *cwc)
-{
-  ajax_mailbox_cwc_status_change(cwc);
-}

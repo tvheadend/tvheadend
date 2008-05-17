@@ -386,8 +386,6 @@ cwc_dispatch_card_data_reply(cwc_t *cwc, uint8_t msgtype,
   cwc->cwc_caid = (msg[4] << 8) | msg[5];
   n = psi_caid2name(cwc->cwc_caid) ?: "Unknown";
 
-  notify_cwc_crypto_change(cwc);
-
   syslog(LOG_INFO, "cwc: %s: Connected as user 0x%02x "
 	 "to a %s-card [0x%04x : %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x] "
 	 "with %d providers", 
@@ -814,7 +812,7 @@ cwc_save(void)
 	    cwc->cwc_confedkey[0xb],
 	    cwc->cwc_confedkey[0xc],
 	    cwc->cwc_confedkey[0xd]);
-    fprintf(fp, "\tenabled = %d\n", 1);
+    fprintf(fp, "\tenabled = %d\n", cwc->cwc_tcp_session.tcp_enabled);
 
 
     fprintf(fp, "}\n");
@@ -894,9 +892,7 @@ cwc_add(const char *hostname, const char *porttxt, const char *username,
     return "Enabled not set";
 
   cwc = tcp_create_client(hostname, port, sizeof(cwc_t), 
-			  "cwc", cwc_tcp_callback);
-
-  //  cwc->cwc_enabled = atoi(enabled);
+			  "cwc", cwc_tcp_callback, atoi(enabled));
   cwc->cwc_username = strdup(username);
 
   if(salt) {
@@ -948,23 +944,15 @@ cwc_delete(cwc_t *cwc)
   cwc_save();
 }
 
-#if 0
 /**
  *
  */
 void
 cwc_set_enable(cwc_t *cwc, int enabled)
 {
-  if(cwc->enabled == enabled)
-    return;
-
-  cwc->enabled = enabled;
-
-  tcp_client_set_state(&cwc->cwc_tcp_session, enabled);
+  tcp_enable_disable(&cwc->cwc_tcp_session, enabled);
   cwc_save();
 }
-#endif
-
 
 
 /**
@@ -1011,25 +999,24 @@ static struct strtab cwcstatustab[] = {
 const char *
 cwc_status_to_text(struct cwc *cwc)
 {
+  static char buf[100];
+  char buf2[30];
+  const char *n;
+
   if(cwc->cwc_state == CWC_STATE_IDLE)
     return cwc->cwc_errtxt ?: "Not connected";
 
+  if(cwc->cwc_state == CWC_STATE_RUNNING) {
+
+    n = psi_caid2name(cwc->cwc_caid);
+    if(n == NULL) {
+      snprintf(buf2, sizeof(buf2), "0x%x", cwc->cwc_caid);
+      n = buf2;
+    }
+
+    snprintf(buf, sizeof(buf), "Connected to a %s card", n);
+    return buf;
+  }
+
   return val2str(cwc->cwc_state, cwcstatustab) ?: "Invalid status";
-}
-
-const char *
-cwc_crypto_to_text(struct cwc *cwc)
-{
-  const char *n;
-  static char buf[40];
-
-  if(cwc->cwc_state != CWC_STATE_RUNNING)
-    return "Unknown";
-
-  n = psi_caid2name(cwc->cwc_caid);
-  if(n != NULL)
-    return n;
-
-  snprintf(buf, sizeof(buf), "0x%x", cwc->cwc_caid);
-  return buf;
 }

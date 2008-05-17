@@ -43,6 +43,4 @@ void notify_transprot_status_change(struct th_transport *t);
 struct cwc;
 void notify_cwc_status_change(struct cwc *cwc);
 
-void notify_cwc_crypto_change(struct cwc *cwc);
-
 #endif /* NOTIFY_H_ */

@@ -85,6 +85,4 @@ void cwc_delete(cwc_t *cwc);
 
 void cwc_set_enable(cwc_t *cwc, int enabled);
 
-const char *cwc_crypto_to_text(struct cwc *cwc);
-
 #endif /* CWC_H_ */

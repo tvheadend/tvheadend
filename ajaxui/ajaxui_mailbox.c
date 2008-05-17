@@ -498,14 +498,3 @@ ajax_mailbox_cwc_status_change(struct cwc *cwc)
 
   ajax_mailbox_update_div("cwc", "status", id, cwc_status_to_text(cwc));
 }
-
-
-
-void
-ajax_mailbox_cwc_crypto_change(struct cwc *cwc)
-{
-  char id[20];
-  snprintf(id, sizeof(id), "cwc_%d", cwc->cwc_id);
-
-  ajax_mailbox_update_div("cwc", "crypto", id, cwc_crypto_to_text(cwc));
-}

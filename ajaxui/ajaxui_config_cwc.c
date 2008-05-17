@@ -123,10 +123,9 @@ ajax_cwclist(http_connection_t *hc, http_reply_t *hr,
 				   "Username",
 		                   "Enabled",
 		                   "Status",
-		                   "Crypto",
 		                   "",
 				    NULL}, 
-		 (int[]){3, 2, 1, 6, 6, 1});
+		 (int[]){3, 2, 1, 12, 1});
 
   TAILQ_FOREACH(cwc, &cwcs, cwc_link) {
     snprintf(id, sizeof(id), "cwc_%d", cwc->cwc_id);
@@ -142,11 +141,10 @@ ajax_cwclist(http_connection_t *hc, http_reply_t *hr,
 		    "<input %stype=\"checkbox\" class=\"nicebox\" "
 		    "onChange=\"new Ajax.Request('/ajax/cwcchange', "
 		    "{parameters: {checked: this.checked, id: %d}})\">",
-		    1 ? "checked " : "", cwc->cwc_id);
+		    cwc->cwc_tcp_session.tcp_enabled
+		    ? "checked " : "", cwc->cwc_id);
 
     ajax_table_cell(&ta, "status", cwc_status_to_text(cwc));
-
-    ajax_table_cell(&ta, "crypto", cwc_crypto_to_text(cwc));
 
     ajax_table_cell(&ta, NULL,
 		    "<a href=\"javascript:void(0)\" "
@@ -243,7 +241,7 @@ ajax_cwcchange(http_connection_t *hc, http_reply_t *hr,
   if((txt = http_arg_get(&hc->hc_req_args, "checked")) == NULL)
     return HTTP_STATUS_BAD_REQUEST;
 
-  //  cwc_set_state(cwc, atoi(txt));
+  cwc_set_enable(cwc, !strcmp(txt, "true"));
   http_output(hc, hr, "text/javascript; charset=UTF8", NULL, 0);
   return 0;
 }
