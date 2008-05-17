@@ -66,8 +66,11 @@ sp_done_callback(void *aux, int64_t now)
   sp_t *sp = aux;
   th_subscription_t *s = sp->sp_s;
 
-  if(s != NULL)
+  if(s != NULL) {
+    assert(sp == sp_current);
+    sp_current = NULL;
     subscription_unsubscribe(s);
+  }
 
   serviceprobe_engage();
 
@@ -132,7 +135,6 @@ sp_status_callback(struct th_subscription *s, int status, void *opaque)
 }
 
 
-
 /**
  * Called when a subscription gets/loses access to a transport
  */
@@ -166,15 +168,13 @@ serviceprobe_start(void *aux, int64_t now)
 
   assert(sp_current == NULL);
 
-  printf("Engage ...: ");
-
-  if((sp = TAILQ_FIRST(&probequeue)) == NULL) {
-    printf("Q empty\n");
+  if((sp = TAILQ_FIRST(&probequeue)) == NULL)
     return;
-  }
 
   s = sp->sp_s = calloc(1, sizeof(th_subscription_t));
   t = sp->sp_t;
+
+  sp_current = sp;
 
   s->ths_title     = strdup("probe");
   s->ths_weight    = INT32_MAX;
@@ -182,10 +182,9 @@ serviceprobe_start(void *aux, int64_t now)
   s->ths_callback  = sp_subscription_callback;
   LIST_INSERT_HEAD(&subscriptions, s, ths_global_link);
 
+
   if(t->tht_runstatus != TRANSPORT_RUNNING)
     transport_start(t, INT32_MAX);
-
-  printf("Starting %s\n", t->tht_svcname);
 
   s->ths_transport = t;
   LIST_INSERT_HEAD(&t->tht_subscriptions, s, ths_transport_link);
