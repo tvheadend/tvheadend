@@ -101,9 +101,8 @@ typedef struct cwc_transport {
 
   void *ct_keys;
 
-#define CT_CLUSTER_SIZE 32
-
-  uint8_t ct_tsbcluster[188 * CT_CLUSTER_SIZE];
+  int ct_cluster_size;
+  uint8_t *ct_tsbcluster;
   int ct_fill;
 
 } cwc_transport_t;
@@ -687,13 +686,13 @@ cwc_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
   memcpy(ct->ct_tsbcluster + ct->ct_fill * 188, tsb, 188);
   ct->ct_fill++;
 
-  if(ct->ct_fill != CT_CLUSTER_SIZE)
+  if(ct->ct_fill != ct->ct_cluster_size)
     return 0;
 
   ct->ct_fill = 0;
 
   vec[0] = ct->ct_tsbcluster;
-  vec[1] = ct->ct_tsbcluster + CT_CLUSTER_SIZE * 188;
+  vec[1] = ct->ct_tsbcluster + ct->ct_cluster_size * 188;
   vec[2] = NULL;
 
   while(1) {
@@ -722,6 +721,7 @@ cwc_transport_destroy(cwc_transport_t *ct)
   LIST_REMOVE(ct, ct_cwc_link);
 
   free_key_struct(ct->ct_keys);
+  free(ct->ct_tsbcluster);
   free(ct);
 }
 
@@ -758,6 +758,9 @@ cwc_transport_start(th_transport_t *t)
       continue;
 
     ct = calloc(1, sizeof(cwc_transport_t));
+    ct->ct_cluster_size = get_suggested_cluster_size();
+    ct->ct_tsbcluster = malloc(ct->ct_cluster_size * 188);
+
     ct->ct_keys = get_key_struct();
     ct->ct_cwc = cwc;
     ct->ct_transport = t;
