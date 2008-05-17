@@ -277,7 +277,7 @@ main(int argc, char **argv)
       if(p)
 	http_start(p);
 
-      p = atoi(config_get_str("htsp-server-port", "0"));
+      p = atoi(config_get_str("htsp-server-port", "9910"));
       if(p)
 	htsp_start(p);
 

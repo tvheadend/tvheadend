@@ -27,11 +27,13 @@ typedef struct rpc_session {
 
   uint32_t rs_seq;
 
-  unsigned int rs_authlevel;
   unsigned int rs_maxweight;
   unsigned int rs_is_async;
 
   struct th_subscription_list rs_subscriptions;
+
+  char *rs_username;
+  char *rs_password;
 
 } rpc_session_t;
 
@@ -39,7 +41,7 @@ typedef struct rpc_session {
 typedef struct rpc_cmd {
   const char *rc_name;
   htsmsg_t *(*rc_func)(rpc_session_t *ses, htsmsg_t *in, void *opaque);
-  int rc_authlevel;
+  int rc_privmask;
 } rpc_cmd_t;
 
 
@@ -49,10 +51,11 @@ void rpc_init(rpc_session_t *ses, const char *logname);
 void rpc_deinit(rpc_session_t *ses);
 
 htsmsg_t *rpc_dispatch(rpc_session_t *ses, htsmsg_t *in, rpc_cmd_t *cmds,
-		       void *opaque);
+		       void *opaque, struct sockaddr *peer);
 
 htsmsg_t *rpc_ok(rpc_session_t *ses);
 htsmsg_t *rpc_error(rpc_session_t *ses, const char *err);
+htsmsg_t *rpc_unauthorized(rpc_session_t *ses);
 
 
 #endif /* RPC_H_ */

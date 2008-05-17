@@ -165,7 +165,8 @@ htsp_input(htsp_t *htsp, const void *buf, int len)
   printf("INPUT:\n");
   htsmsg_print(in);
 
-  out = rpc_dispatch(&htsp->htsp_rpc, in, NULL, htsp);
+  out = rpc_dispatch(&htsp->htsp_rpc, in, NULL, htsp,
+		     (struct sockaddr *)&htsp->htsp_tcp_session.tcp_peer_addr);
 
   htsmsg_destroy(in);
 
@@ -175,6 +176,7 @@ htsp_input(htsp_t *htsp, const void *buf, int len)
   htsp_send_msg(htsp, out, 0);
 
   if(!was_async && htsp->htsp_rpc.rs_is_async) {
+    printf("Session went into async mode\n");
     /* Session went into async state */
     htsp_send_all_channels(htsp);
   }

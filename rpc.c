@@ -37,6 +37,7 @@
 #include "epg.h"
 #include "pvr.h"
 #include "rpc.h"
+#include "access.h"
 
 
 /** 
@@ -89,33 +90,50 @@ rpc_error(rpc_session_t *ses, const char *err)
 
 
 
-/**
- * Login peer, set auth level and do various other stuff
+/** 
+ * Simple function to respond with an error
  */
-static htsmsg_t *
-rpc_login(rpc_session_t *ses, htsmsg_t *in, void *opaque)
+htsmsg_t *
+rpc_unauthorized(rpc_session_t *ses)
 {
-  const char *user = htsmsg_get_str(in, "username");
-  const char *pass = htsmsg_get_str(in, "password");
-
-  if(user == NULL || pass == NULL) {
-    ses->rs_authlevel = 1;
-    ses->rs_maxweight = 100;
-  } else {
-    /* FIXME: user/password database */
-    ses->rs_authlevel = 1;
-  }
-
-  if(htsmsg_get_u32(in, "async", &ses->rs_is_async) < 0)
-    ses->rs_is_async = 0;
-
-  return rpc_ok(ses);
+  htsmsg_t *r = htsmsg_create();
+  htsmsg_add_u32(r, "seq", ses->rs_seq);
+  htsmsg_add_u32(r, "_noaccess", 1);
+  return r;
 }
 
 
 
 
+/**
+ * Auth peer
+ */
+static htsmsg_t *
+rpc_auth(rpc_session_t *ses, htsmsg_t *in, void *opaque)
+{
+  const char *user = htsmsg_get_str(in, "username");
+  const char *pass = htsmsg_get_str(in, "password");
 
+  if(user != NULL && pass != NULL) {
+    free(ses->rs_username);
+    free(ses->rs_password);
+
+    ses->rs_username = strdup(user);
+    ses->rs_password = strdup(pass);
+  }
+
+  return rpc_ok(ses);
+}
+
+/**
+ * Set client in async mode
+ */
+static htsmsg_t *
+rpc_async(rpc_session_t *ses, htsmsg_t *in, void *opaque)
+{
+  ses->rs_is_async = 1;
+  return rpc_ok(ses);
+}
 
 
 /*
@@ -327,9 +345,10 @@ htsp_subscribe(htsp_connection_t *hc, htsp_msg_t *m)
  */
 
 static rpc_cmd_t common_rpc[] = {
-  { "login",        rpc_login,         0 },
-  { "channelsList", rpc_channels_list, 1 },
-  { "eventInfo",    rpc_event_info,    1 },
+  { "auth",         rpc_auth,          0 },
+  { "async",        rpc_async,         ACCESS_STREAMING },
+  { "channelsList", rpc_channels_list, ACCESS_STREAMING },
+  { "eventInfo",    rpc_event_info,    ACCESS_STREAMING },
 #if 0
   { "subscribe",    rpc_subscribe,     1 },
   { "unsubscribe",  rpc_unsubscribe,   1 },
@@ -344,13 +363,14 @@ static rpc_cmd_t common_rpc[] = {
  */
 static htsmsg_t *
 rpc_dispatch_set(rpc_session_t *ses, htsmsg_t *in, rpc_cmd_t *cmds,
-		 void *opaque, const char *method)
+		 void *opaque, const char *method, struct sockaddr *peer)
 {
   for(; cmds->rc_name; cmds++) {
     if(strcmp(cmds->rc_name, method))
       continue;
-    if(cmds->rc_authlevel < ses->rs_authlevel)
-      return rpc_error(ses, "Insufficient privileges");
+    if(access_verify(ses->rs_username, ses->rs_password, peer, 
+		     cmds->rc_privmask))
+      return rpc_unauthorized(ses);
     return cmds->rc_func(ses, in, opaque);
   }
   return NULL;
@@ -361,7 +381,8 @@ rpc_dispatch_set(rpc_session_t *ses, htsmsg_t *in, rpc_cmd_t *cmds,
  *
  */
 htsmsg_t *
-rpc_dispatch(rpc_session_t *ses, htsmsg_t *in, rpc_cmd_t *cmds, void *opaque)
+rpc_dispatch(rpc_session_t *ses, htsmsg_t *in, rpc_cmd_t *cmds, void *opaque,
+	     struct sockaddr *peer)
 {
   const char *method;
   htsmsg_t *out;
@@ -372,9 +393,9 @@ rpc_dispatch(rpc_session_t *ses, htsmsg_t *in, rpc_cmd_t *cmds, void *opaque)
   if((method = htsmsg_get_str(in, "method")) == NULL)
     return rpc_error(ses, "Method not specified");
 
-  out = rpc_dispatch_set(ses, in, common_rpc, opaque, method);
+  out = rpc_dispatch_set(ses, in, common_rpc, opaque, method, peer);
   if(out == NULL && cmds != NULL) 
-    out = rpc_dispatch_set(ses, in, cmds, opaque, method);
+    out = rpc_dispatch_set(ses, in, cmds, opaque, method, peer);
 
   return out ?: rpc_error(ses, "Method not found");
 }
@@ -396,5 +417,8 @@ rpc_init(rpc_session_t *ses, const char *logname)
 void
 rpc_deinit(rpc_session_t *ses)
 {
+  free(ses->rs_username);
+  free(ses->rs_password);
+
   free((void *)ses->rs_logname);
 }
