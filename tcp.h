@@ -115,4 +115,6 @@ void tcp_output_queue(tcp_session_t *ses, tcp_queue_t *dst, tcp_queue_t *src);
 void *tcp_create_client(const char *hostname, int port, size_t session_size,
 			const char *name, tcp_callback_t *cb);
 
+void tcp_destroy_client(tcp_session_t *ses);
+
 #endif /* TCP_H_ */

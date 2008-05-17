@@ -372,6 +372,7 @@ tcp_disconnect(tcp_session_t *ses, int err)
 	 ses->tcp_name, ses->tcp_peer_txt, strerror(err));
 
   close(dispatch_delfd(ses->tcp_dispatch_handle));
+  ses->tcp_dispatch_handle = NULL;
 
   if(ses->tcp_server != NULL) {
     free(ses->tcp_name);
@@ -680,4 +681,19 @@ tcp_create_server(int port, size_t session_size, const char *name,
   dispatch_addfd(s->tcp_fd, tcp_server_callback, s, DISPATCH_READ);
 
   s->tcp_server_name = strdup(name);
+}
+
+/**
+ *
+ */
+void
+tcp_destroy_client(tcp_session_t *ses)
+{
+  if(ses->tcp_dispatch_handle != NULL)
+    tcp_disconnect(ses, 0);
+
+  dtimer_disarm(&ses->tcp_timer);
+  free(ses->tcp_name);
+  free(ses->tcp_hostname);
+  free(ses);
 }
