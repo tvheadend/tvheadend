@@ -38,6 +38,7 @@
 #include "htsp_muxer.h"
 #include "tcp.h"
 #include "epg.h"
+#include "access.h"
 
 #include <libhts/htsmsg_binary.h>
 
@@ -140,6 +141,75 @@ htsp_async_channel_update(channel_t *ch)
 }
 
 
+/**
+ * Subscribe to channel
+ */
+static htsmsg_t *
+htsp_subscribe(rpc_session_t *ses, htsmsg_t *in, void *opaque)
+{
+  htsp_t *htsp = opaque;
+  channel_t *ch;
+  const char *txt;
+  th_subscription_t *s;
+  htsmsg_t *r;
+  uint32_t tag;
+
+  if((txt = htsmsg_get_str(in, "channel")) == NULL)
+    return rpc_error(ses, "missing argument: channel");
+
+  if((ch = channel_find(txt, 0, NULL)) == NULL)
+    return rpc_error(ses, "Channel not found");
+  
+  LIST_FOREACH(s, &htsp->htsp_subscriptions, ths_subscriber_link) {
+    if(s->ths_channel == ch) {
+      subscription_set_weight(s, 200);
+      return rpc_ok(ses);
+    }
+  }
+
+
+  tag = tag_get();
+
+  r = htsmsg_create();
+  htsmsg_add_u32(r, "seq", ses->rs_seq);
+  htsmsg_add_u32(r, "id", tag);
+  htsp_send_msg(htsp, r, 0);
+
+  htsp_muxer_subscribe(htsp, ch, 200, tag);
+  
+  return NULL;
+}
+
+
+/**
+ * Unsubscribe from channel
+ */
+static htsmsg_t *
+htsp_unsubscribe(rpc_session_t *ses, htsmsg_t *in, void *opaque)
+{
+  htsp_t *htsp = opaque;
+  uint32_t id;
+
+  if(htsmsg_get_u32(in, "id", &id))
+    return rpc_error(ses, "missing argument: id");
+  
+  htsp_muxer_unsubscribe(htsp, id);
+
+  return rpc_ok(ses);
+}
+
+
+
+/**
+ * HTSP specific methods
+ */
+static rpc_cmd_t htsp_rpc[] = {
+  { "subscribe",    htsp_subscribe,     ACCESS_STREAMING },
+  { "unsubscribe",  htsp_unsubscribe,   ACCESS_STREAMING },
+  { NULL,           NULL,               0 },
+};
+
+
 /*
  *
  */
@@ -165,15 +235,16 @@ htsp_input(htsp_t *htsp, const void *buf, int len)
   printf("INPUT:\n");
   htsmsg_print(in);
 
-  out = rpc_dispatch(&htsp->htsp_rpc, in, NULL, htsp,
+  out = rpc_dispatch(&htsp->htsp_rpc, in, htsp_rpc, htsp,
 		     (struct sockaddr *)&htsp->htsp_tcp_session.tcp_peer_addr);
 
   htsmsg_destroy(in);
 
-  printf("OUTPUT:\n");
-  htsmsg_print(out);
-
-  htsp_send_msg(htsp, out, 0);
+  if(out != NULL) {
+    printf("OUTPUT:\n");
+    htsmsg_print(out);
+    htsp_send_msg(htsp, out, 0);
+  }
 
   if(!was_async && htsp->htsp_rpc.rs_is_async) {
     printf("Session went into async mode\n");
@@ -244,6 +315,8 @@ htsp_data_input(htsp_t *htsp)
 static void
 htsp_disconnect(htsp_t *htsp)
 {
+  htsp_muxer_cleanup(htsp);
+
   LIST_REMOVE(htsp, htsp_global_link);
 
   free(htsp->htsp_buf);
@@ -279,6 +352,7 @@ htsp_tcp_callback(tcpevent_t event, void *tcpsession)
     break;
 
   case TCP_DISCONNECT:
+    htsp->htsp_zombie = 1;
     htsp_disconnect(htsp);
     break;
 

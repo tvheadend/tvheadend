@@ -230,7 +230,7 @@ cr_channel_subscribe(client_t *c, char **argv, int argc)
   snprintf(tmp, sizeof(tmp), "HTS Client @ %s",
 	   inet_ntoa(si->sin_addr));
 
-  s = subscription_create(ch, weight, tmp, client_subscription_callback, c);
+  s = subscription_create(ch, weight, tmp, client_subscription_callback, c, 0);
   if(s == NULL)
     return 1;
 

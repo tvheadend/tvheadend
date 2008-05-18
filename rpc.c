@@ -226,11 +226,11 @@ rpc_event_info(rpc_session_t *ses, htsmsg_t *in, void *opaque)
 #if 0
 
 
-/*
+/**
  * record method
  */
-static void
-htsp_record(htsp_connection_t *hc, htsp_msg_t *m)
+static htsmsg_t *
+rpc_record(rpc_session_t *ses, htsmsg_t *in, void *opaque)
 {
   htsp_msg_t *r;
   uint32_t u32;
@@ -277,103 +277,39 @@ htsp_record(htsp_connection_t *hc, htsp_msg_t *m)
 }
 #endif
 
-#if 0
-
-/*
- * subscribe
+/**
+ * Common methods and their required auth level
  */
-static void
-htsp_subscribe(htsp_connection_t *hc, htsp_msg_t *m)
-{
-  htsp_msg_t *r;
-  const char *str, *errtxt = NULL;
-  th_channel_t *ch;
-  int weight;
-
-  r = htsp_create_msg();
-  htsp_add_u32(r, "seq", hc->hc_seq);
-
-  if((str = htsp_get_string(m, "channel")) != NULL) {
-    if((ch = channel_find(str, 0)) != NULL) {
-
-      weight = htsp_get_u32(m, "weight") ?: 100;
-      if(weight > hc->hc_maxweight)
-	weight = hc->hc_maxweight;
-
-      htsp_stream_subscribe(hc, ch, weight);
-    } else {
-      errtxt = "Channel not found";
-    }
-  } else {
-    errtxt = "Missing 'channel' field";
-  }
-
-  htsp_send_msg(hc, NULL, r);
-  htsp_free_msg(r);
-}
-
-/*
- * unsubscribe
- */
-static void
-htsp_subscribe(htsp_connection_t *hc, htsp_msg_t *m)
-{
-  htsp_msg_t *r;
-  const char *str, *errtxt = NULL;
-  th_channel_t *ch;
-
-  r = htsp_create_msg();
-  htsp_add_u32(r, "seq", hc->hc_seq);
-
-  if((str = htsp_get_string(m, "channel")) != NULL) {
-    if((ch = channel_find(str, 0)) != NULL) {
-      htsp_stream_unsubscribe(hc, ch);
-    } else {
-      errtxt = "Channel not found";
-    }
-  } else {
-    errtxt = "Missing 'channel' field";
-  }
-
-  htsp_send_msg(hc, NULL, r);
-  htsp_free_msg(r);
-}
-#endif
-
-/*
- * List of all methods and their required auth level
- */
-
 static rpc_cmd_t common_rpc[] = {
   { "auth",         rpc_auth,          0 },
   { "async",        rpc_async,         ACCESS_STREAMING },
   { "channelsList", rpc_channels_list, ACCESS_STREAMING },
   { "eventInfo",    rpc_event_info,    ACCESS_STREAMING },
-#if 0
-  { "subscribe",    rpc_subscribe,     1 },
-  { "unsubscribe",  rpc_unsubscribe,   1 },
-#endif
-  //  { "record",       rpc_record,        2 },
   { NULL,           NULL,              0 },
 };
 
 
-/*
+/**
  *
  */
-static htsmsg_t *
+static int
 rpc_dispatch_set(rpc_session_t *ses, htsmsg_t *in, rpc_cmd_t *cmds,
-		 void *opaque, const char *method, struct sockaddr *peer)
+		 void *opaque, const char *method, struct sockaddr *peer,
+		 htsmsg_t **outp)
 {
   for(; cmds->rc_name; cmds++) {
     if(strcmp(cmds->rc_name, method))
       continue;
     if(access_verify(ses->rs_username, ses->rs_password, peer, 
-		     cmds->rc_privmask))
-      return rpc_unauthorized(ses);
-    return cmds->rc_func(ses, in, opaque);
+		     cmds->rc_privmask)) {
+      *outp = rpc_unauthorized(ses);
+      return 0;
+    }
+
+    *outp = cmds->rc_func(ses, in, opaque);
+    return 0;
   }
-  return NULL;
+  return -1;
 }
 
 
@@ -386,6 +322,7 @@ rpc_dispatch(rpc_session_t *ses, htsmsg_t *in, rpc_cmd_t *cmds, void *opaque,
 {
   const char *method;
   htsmsg_t *out;
+  int r;
 
   if(htsmsg_get_u32(in, "seq", &ses->rs_seq))
     ses->rs_seq = 0;
@@ -393,11 +330,14 @@ rpc_dispatch(rpc_session_t *ses, htsmsg_t *in, rpc_cmd_t *cmds, void *opaque,
   if((method = htsmsg_get_str(in, "method")) == NULL)
     return rpc_error(ses, "Method not specified");
 
-  out = rpc_dispatch_set(ses, in, common_rpc, opaque, method, peer);
-  if(out == NULL && cmds != NULL) 
-    out = rpc_dispatch_set(ses, in, cmds, opaque, method, peer);
+  r = rpc_dispatch_set(ses, in, common_rpc, opaque, method, peer, &out);
+  if(r == -1 && cmds != NULL) 
+    r = rpc_dispatch_set(ses, in, cmds, opaque, method, peer, &out);
 
-  return out ?: rpc_error(ses, "Method not found");
+  if(r == -1)
+    return rpc_error(ses, "Method not found");
+
+  return out;
 }
 
 

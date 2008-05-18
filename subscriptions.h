@@ -26,7 +26,8 @@ void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 th_subscription_t *subscription_create(channel_t *ch, unsigned int weight,
 				       const char *name, 
 				       subscription_callback_t *cb,
-				       void *opaque);
+				       void *opaque,
+				       uint32_t u32);
 
 void subscriptions_init(void);
 

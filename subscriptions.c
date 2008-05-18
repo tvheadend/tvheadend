@@ -127,7 +127,7 @@ subscription_sort(th_subscription_t *a, th_subscription_t *b)
 
 th_subscription_t *
 subscription_create(channel_t *ch, unsigned int weight, const char *name,
-		    subscription_callback_t *cb, void *opaque)
+		    subscription_callback_t *cb, void *opaque, uint32_t u32)
 {
   th_subscription_t *s;
 
@@ -137,6 +137,7 @@ subscription_create(channel_t *ch, unsigned int weight, const char *name,
   s->ths_title     = strdup(name);
   s->ths_total_err = 0;
   s->ths_weight    = weight;
+  s->ths_u32       = u32;
 
   time(&s->ths_start);
   LIST_INSERT_SORTED(&subscriptions, s, ths_global_link, subscription_sort);

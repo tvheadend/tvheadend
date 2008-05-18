@@ -28,89 +28,156 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
-#include <libhts/htsp.h>
 
 #include "tvhead.h"
 #include "channels.h"
 #include "subscriptions.h"
 #include "dispatch.h"
-#include "epg.h"
-#include "pvr.h"
+#include "htsp.h"
 #include "htsp_muxer.h"
+#include "mux.h"
 
+static void
+htsp_packet_input(void *opaque, th_muxstream_t *tms, th_pkt_t *pkt)
+{
+  htsp_t *htsp = opaque;
+  htsmsg_t *m = htsmsg_create();
+  th_muxer_t *tm = tms->tms_muxer;
+  //  th_stream_t *st = tms->tms_stream;
+  th_subscription_t *s = tm->tm_subscription;
 
+  /*
+   * Build a message for this frame
+   */
 
-/*
+  htsmsg_add_str(m, "method", "muxpkt");
+  htsmsg_add_u32(m, "id", s->ths_u32);
+
+  htsmsg_add_u64(m, "stream", tms->tms_index);
+  htsmsg_add_u64(m, "dts", pkt->pkt_dts);
+  htsmsg_add_u64(m, "pts", pkt->pkt_pts);
+  htsmsg_add_u32(m, "duration", pkt->pkt_duration);
+  htsmsg_add_u32(m, "com", pkt->pkt_commercial);
+
+  /**
+   * Since we will serialize directly we use 'binptr' which is a binary
+   * object that just points to data, thus avoiding a copy.
+   */
+  htsmsg_add_binptr(m, "payload", pkt->pkt_payload, pkt->pkt_payloadlen);
+
+  htsp_send_msg(htsp, m, 1);
+}
+
+/**
  * Called when a subscription gets/loses access to a transport
  */
 static void
-client_subscription_callback(struct th_subscription *s,
-			     subscription_event_t event, void *opaque)
+htsp_subscription_callback(struct th_subscription *s,
+			   subscription_event_t event, void *opaque)
 {
-  htsp_connection_t *hc = opaque;
+  htsp_t *htsp = opaque;
+  th_muxer_t *tm;
+  th_muxstream_t *tms;
+  int index = 0;
+  htsmsg_t *m, *sub;
+  th_stream_t *st;
 
   switch(event) {
   case TRANSPORT_AVAILABLE:
+    tm = muxer_init(s, htsp_packet_input, htsp);
+
+    m = htsmsg_create();
+
+    htsmsg_add_str(m, "method", "subscription_start");
+    htsmsg_add_u32(m, "id", s->ths_u32);
+
+    LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0) {
+      tms->tms_index = index++;
+
+      st = tms->tms_stream;
+
+      sub = htsmsg_create();
+      htsmsg_add_u32(sub, "index", tms->tms_index);
+      htsmsg_add_str(sub, "type", htstvstreamtype2txt(st->st_type));
+      htsmsg_add_str(sub, "language", st->st_lang);
+
+      htsmsg_add_msg(m, "stream", sub);
+    }
+    htsmsg_print(m);
+    htsp_send_msg(htsp, m, 0);
+
+    muxer_play(tm, AV_NOPTS_VALUE);
     break;
 
   case TRANSPORT_UNAVAILABLE:
+    if(htsp->htsp_zombie == 0) {
+      m = htsmsg_create();
+      htsmsg_add_str(m, "method", "subscription_stop");
+      htsmsg_add_u32(m, "id", s->ths_u32);
+
+      htsmsg_add_str(m, "reason", "unknown");
+      htsp_send_msg(htsp, m, 0);
+    }
+
+    muxer_deinit(s->ths_muxer, s);
     break;
   }
 }
 
-/*
+
+/**
  *
  */
 void
-htsp_muxer_subscribe(htsp_connection_t *hc, th_channel_t *ch, int weight)
+htsp_muxer_subscribe(htsp_t *htsp, channel_t *ch, int weight, uint32_t tag)
 {
   th_subscription_t *s;
-  th_muxer_t *m;
 
-  LIST_FOREACH(s, &hc->hc_subscriptions, ths_subscriber_link) {
-    if(s->ths_channel == ch) {
-      subscription_set_weight(s, weight);
-      return;
-    }
-  }
-
-  m = calloc(1, sizeof(th_muxer_t));
-
-  LIST_INSERT_HEAD(&hc->hc_subscriptions, s, ths_subscriber_link);
+  s = subscription_create(ch, weight, "HTSP", htsp_subscription_callback, htsp,
+			  tag);
+  LIST_INSERT_HEAD(&htsp->htsp_subscriptions, s, ths_subscriber_link);
 }
 
-/*
+
+/**
+ *
+ */
+static void
+htsp_subscription_destroy(th_subscription_t *s)
+{
+  LIST_REMOVE(s, ths_subscriber_link);
+  subscription_unsubscribe(s);
+}
+
+
+/**
  *
  */
 void
-htsp_muxer_unsubscribe(htsp_connection_t *hc, th_channel_t *ch)
+htsp_muxer_unsubscribe(htsp_t *htsp, uint32_t id)
 {
   th_subscription_t *s;
-  htsp_muxerer_t *htsp;
 
-  LIST_FOREACH(s, &hc->hc_subscriptions, ths_subscriber_link) {
-    if(s->ths_channel == ch)
+  LIST_FOREACH(s, &htsp->htsp_subscriptions, ths_subscriber_link) {
+    if(s->ths_u32 == id)
       break;
   }
 
-  if(s != NULL) {
-    LIST_REMOVE(s, ths_subscriber_link);
-    free(s->hs_opaque);
-    subscription_unsubscribe(s);
-  }
+  if(s != NULL)
+    htsp_subscription_destroy(s);
 }
 
-/*
+
+/**
  *
  */
 void
-htsp_muxer_cleanup(htsp_connection_t *hc)
+htsp_muxer_cleanup(htsp_t *htsp)
 {
   th_subscription_t *s;
 
-  while((s = LIST_FIRST(&hc->hc_subscriptions)) != NULL) {
-    LIST_REMOVE(s, ths_subscriber_link);
-    subscription_unsubscribe(s);
-  }
+  while((s = LIST_FIRST(&htsp->htsp_subscriptions)) != NULL)
+    htsp_subscription_destroy(s);
 }
+
 

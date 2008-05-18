@@ -187,7 +187,7 @@ output_multicast_load(struct config_head *head)
 
   snprintf(title2, sizeof(title2), "IPTV-OUT: %s", title);
 
-  subscription_create(ch, 900, title2, iptv_subscription_callback, om);
+  subscription_create(ch, 900, title2, iptv_subscription_callback, om, 0);
   return;
 
  err:

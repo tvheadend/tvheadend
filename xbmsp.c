@@ -814,7 +814,7 @@ xbmsp_input_file_open(xbmsp_t *xbmsp, uint32_t msgid, uint8_t *buf, int len)
 
   xs->xs_xbmsp = xbmsp;
   xs->xs_subscription = subscription_create(ch, 100, xbmsp->xbmsp_logname,
-					    xbmsp_subscription_callback, xs);
+					    xbmsp_subscription_callback, xs, 0);
 
   LIST_INSERT_HEAD(&xbmsp->xbmsp_subscriptions, xs, xs_link);
   xbmsp_send_handle(xbmsp, msgid, xs->xs_handle);

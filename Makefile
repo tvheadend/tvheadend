@@ -7,7 +7,7 @@ SRCS = main.c dispatch.c channels.c transports.c teletext.c psi.c \
 
 SRCS += http.c
 
-SRCS += htsp.c rpc.c
+SRCS += htsp.c htsp_muxer.c rpc.c
 
 SRCS += pvr.c autorec.c ffmuxer.c
 

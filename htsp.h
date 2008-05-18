@@ -37,6 +37,9 @@ typedef struct htsp {
   rpc_session_t htsp_rpc;
 
   int htsp_async_init_sent;
+  int htsp_zombie;
+
+  struct th_subscription_list htsp_subscriptions;
 
 } htsp_t;
 

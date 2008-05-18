@@ -605,7 +605,7 @@ pvr_fsm(pvr_rec_t *pvrr)
 
     pvrr->pvrr_s = subscription_create(pvrr->pvrr_channel, 1000, "pvr",
 				       pvr_subscription_callback,
-				       pvrr);
+				       pvrr, 0);
     pvrr->pvrr_error = HTSTV_PVR_STATUS_DONE; /* assume everything will
 						 work out ok */
     break;

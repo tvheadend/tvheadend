@@ -193,7 +193,7 @@ rtsp_session_create(channel_t *ch, struct sockaddr_in *dst)
     LIST_INSERT_HEAD(&rtsp_sessions, rs, rs_global_link);
 
     rs->rs_s = subscription_create(ch, 600, "RTSP",
-				   rtsp_subscription_callback, rs);
+				   rtsp_subscription_callback, rs, 0);
 
     /* Initialize RTP */
     
