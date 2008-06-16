@@ -276,7 +276,7 @@ page_einfo(http_connection_t *hc, http_reply_t *hr,
   pvrr = pvr_get_by_entry(e);
 
   if((http_arg_get(&hc->hc_req_args, "rec")) != NULL) {
-    pvrr = pvr_schedule_by_event(e, hc->hc_username);
+    pvrr = pvr_schedule_by_event(e, hc->hc_username ?: "anonymous");
   } else if(pvrr && (http_arg_get(&hc->hc_req_args, "clear")) != NULL) {
     pvr_clear(pvrr);
     pvrr = NULL;
