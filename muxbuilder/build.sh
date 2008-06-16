@@ -16,9 +16,9 @@ echo  char hierarchy\;
 echo  char polarisation\;
 echo }\;
 
-find $1/dvb-s -type f | xargs ./muxbuilder 1 FE_QPSK
-find $1/dvb-t -type f | xargs ./muxbuilder 1 FE_OFDM
-find $1/dvb-c -type f | xargs ./muxbuilder 1 FE_QAM
+find $1/dvb-s -type f | sort | xargs ./muxbuilder 1 FE_QPSK
+find $1/dvb-t -type f | sort | xargs ./muxbuilder 1 FE_OFDM
+find $1/dvb-c -type f | sort | xargs ./muxbuilder 1 FE_QAM
 
 
 echo struct {
@@ -28,7 +28,7 @@ echo struct mux *muxes\;
 echo int nmuxes\;
 echo const char *comment\;
 echo } networks[] = {
-find $1/dvb-s -type f | xargs ./muxbuilder 2 FE_QPSK
-find $1/dvb-t -type f | xargs ./muxbuilder 2 FE_OFDM
-find $1/dvb-c -type f | xargs ./muxbuilder 2 FE_QAM
+find $1/dvb-s -type f | sort | xargs ./muxbuilder 2 FE_QPSK
+find $1/dvb-t -type f | sort | xargs ./muxbuilder 2 FE_OFDM
+find $1/dvb-c -type f | sort | xargs ./muxbuilder 2 FE_QAM
 echo }\;
