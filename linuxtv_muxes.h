@@ -22,6 +22,60 @@ struct mux muxlist_FE_QPSK_ABS1_75_0E[] = {
 	{.freq = 12740000, .symrate = 7408000, .fec = FEC_AUTO, .polarisation = 'V'},
 };
 
+struct mux muxlist_FE_QPSK_Amazonas_61_0W[] = {
+	{.freq = 3957000, .symrate = 6666000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 3966000, .symrate = 6666000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 3975000, .symrate = 6666000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 3993000, .symrate = 6666000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 4137000, .symrate = 3409000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 3941000, .symrate = 3480000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 12092000, .symrate = 30000000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 12132000, .symrate = 30000000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 4174000, .symrate = 3330000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11128000, .symrate = 6666000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11185000, .symrate = 11800000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11049000, .symrate = 2000000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 12052000, .symrate = 27000000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 10975000, .symrate = 27000000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 3631000, .symrate = 2785000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 10975000, .symrate = 26666000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 3677000, .symrate = 4400000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 3985000, .symrate = 4444000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11810000, .symrate = 6666000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11921000, .symrate = 21740000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11943000, .symrate = 4750000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 4168000, .symrate = 7307000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 12052000, .symrate = 26667000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 12172000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 12092000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11175000, .symrate = 28880000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 4154000, .symrate = 9615000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11099000, .symrate = 7576000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11885000, .symrate = 4890000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11882000, .symrate = 11343000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11133000, .symrate = 3111000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11078000, .symrate = 1862000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11912000, .symrate = 2222000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11906000, .symrate = 2220000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11108000, .symrate = 2170000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 12132000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11135000, .symrate = 26667000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 4144000, .symrate = 4540000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11808000, .symrate = 11111000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11972000, .symrate = 26667000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 4156000, .symrate = 4540000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 4149000, .symrate = 4540000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 3948000, .symrate = 13300000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 4178000, .symrate = 3333000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11844000, .symrate = 16600000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11095000, .symrate = 30000000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11790000, .symrate = 3600000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 12172000, .symrate = 30000000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11015000, .symrate = 26666000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11055000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 12012000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+};
+
 struct mux muxlist_FE_QPSK_AMC1_103w[] = {
 	{.freq = 11942000, .symrate = 20000000, .fec = FEC_AUTO, .polarisation = 'V'},
 	{.freq = 12100000, .symrate = 20000000, .fec = FEC_AUTO, .polarisation = 'V'},
@@ -118,60 +172,6 @@ struct mux muxlist_FE_QPSK_AMC9_83w[] = {
 	{.freq = 11960000, .symrate = 5000000, .fec = FEC_AUTO, .polarisation = 'H'},
 	{.freq = 12002000, .symrate = 3979000, .fec = FEC_AUTO, .polarisation = 'H'},
 	{.freq = 12011000, .symrate = 3979000, .fec = FEC_AUTO, .polarisation = 'H'},
-};
-
-struct mux muxlist_FE_QPSK_Amazonas_61_0W[] = {
-	{.freq = 3957000, .symrate = 6666000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 3966000, .symrate = 6666000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 3975000, .symrate = 6666000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 3993000, .symrate = 6666000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 4137000, .symrate = 3409000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 3941000, .symrate = 3480000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 12092000, .symrate = 30000000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 12132000, .symrate = 30000000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 4174000, .symrate = 3330000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11128000, .symrate = 6666000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11185000, .symrate = 11800000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11049000, .symrate = 2000000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 12052000, .symrate = 27000000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 10975000, .symrate = 27000000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 3631000, .symrate = 2785000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 10975000, .symrate = 26666000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 3677000, .symrate = 4400000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 3985000, .symrate = 4444000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11810000, .symrate = 6666000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11921000, .symrate = 21740000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11943000, .symrate = 4750000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 4168000, .symrate = 7307000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 12052000, .symrate = 26667000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 12172000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 12092000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11175000, .symrate = 28880000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 4154000, .symrate = 9615000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11099000, .symrate = 7576000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11885000, .symrate = 4890000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11882000, .symrate = 11343000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11133000, .symrate = 3111000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11078000, .symrate = 1862000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11912000, .symrate = 2222000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11906000, .symrate = 2220000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11108000, .symrate = 2170000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 12132000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11135000, .symrate = 26667000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 4144000, .symrate = 4540000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11808000, .symrate = 11111000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11972000, .symrate = 26667000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 4156000, .symrate = 4540000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 4149000, .symrate = 4540000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 3948000, .symrate = 13300000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 4178000, .symrate = 3333000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11844000, .symrate = 16600000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11095000, .symrate = 30000000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11790000, .symrate = 3600000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 12172000, .symrate = 30000000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11015000, .symrate = 26666000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11055000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 12012000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
 };
 
 struct mux muxlist_FE_QPSK_Amos_4w[] = {
@@ -683,6 +683,15 @@ struct mux muxlist_FE_QPSK_ExpressAM1_40_0E[] = {
 	{.freq = 11097000, .symrate = 4000000, .fec = FEC_AUTO, .polarisation = 'H'},
 };
 
+struct mux muxlist_FE_QPSK_ExpressAM22_53_0E[] = {
+	{.freq = 11044000, .symrate = 44950000, .fec = FEC_3_4, .polarisation = 'V'},
+	{.freq = 10974000, .symrate = 8150000, .fec = FEC_3_4, .polarisation = 'H'},
+	{.freq = 11031000, .symrate = 3750000, .fec = FEC_3_4, .polarisation = 'H'},
+	{.freq = 11096000, .symrate = 6400000, .fec = FEC_3_4, .polarisation = 'V'},
+	{.freq = 11124000, .symrate = 7593000, .fec = FEC_3_4, .polarisation = 'V'},
+	{.freq = 11161000, .symrate = 5785000, .fec = FEC_3_4, .polarisation = 'V'},
+};
+
 struct mux muxlist_FE_QPSK_ExpressAM2_80_0E[] = {
 	{.freq = 10973000, .symrate = 4444000, .fec = FEC_AUTO, .polarisation = 'V'},
 	{.freq = 10991000, .symrate = 4444000, .fec = FEC_AUTO, .polarisation = 'V'},
@@ -703,15 +712,6 @@ struct mux muxlist_FE_QPSK_ExpressAM2_80_0E[] = {
 	{.freq = 3929000, .symrate = 8705000, .fec = FEC_3_4, .polarisation = 'H'},
 	{.freq = 4147000, .symrate = 27500000, .fec = FEC_3_4, .polarisation = 'V'},
 	{.freq = 4175000, .symrate = 6510000, .fec = FEC_3_4, .polarisation = 'V'},
-};
-
-struct mux muxlist_FE_QPSK_ExpressAM22_53_0E[] = {
-	{.freq = 11044000, .symrate = 44950000, .fec = FEC_3_4, .polarisation = 'V'},
-	{.freq = 10974000, .symrate = 8150000, .fec = FEC_3_4, .polarisation = 'H'},
-	{.freq = 11031000, .symrate = 3750000, .fec = FEC_3_4, .polarisation = 'H'},
-	{.freq = 11096000, .symrate = 6400000, .fec = FEC_3_4, .polarisation = 'V'},
-	{.freq = 11124000, .symrate = 7593000, .fec = FEC_3_4, .polarisation = 'V'},
-	{.freq = 11161000, .symrate = 5785000, .fec = FEC_3_4, .polarisation = 'V'},
 };
 
 struct mux muxlist_FE_QPSK_Galaxy10R_123w[] = {
@@ -1361,6 +1361,31 @@ struct mux muxlist_FE_QPSK_Intelsat_805_55_5W[] = {
 	{.freq = 4111000, .symrate = 3333000, .fec = FEC_AUTO, .polarisation = 'H'},
 };
 
+struct mux muxlist_FE_QPSK_Intelsat_903_34_5W[] = {
+	{.freq = 4178000, .symrate = 32555000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 4045000, .symrate = 4960000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 3895000, .symrate = 13021000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 4004000, .symrate = 2170000, .fec = FEC_AUTO, .polarisation = 'V'},
+};
+
+struct mux muxlist_FE_QPSK_Intelsat_905_24_5W[] = {
+	{.freq = 4171000, .symrate = 6111000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 4181000, .symrate = 6111000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 4194000, .symrate = 5193000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 4162000, .symrate = 6111000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 4060000, .symrate = 6111000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 4070000, .symrate = 6111000, .fec = FEC_AUTO, .polarisation = 'V'},
+};
+
+struct mux muxlist_FE_QPSK_Intelsat_907_27_5W[] = {
+	{.freq = 3873000, .symrate = 4687000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 3935000, .symrate = 4687000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 3743000, .symrate = 2900000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 3732000, .symrate = 14000000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 3943000, .symrate = 1808000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 3938000, .symrate = 3544000, .fec = FEC_AUTO, .polarisation = 'H'},
+};
+
 struct mux muxlist_FE_QPSK_Intelsat_9_58_0W[] = {
 	{.freq = 4122000, .symrate = 2222000, .fec = FEC_AUTO, .polarisation = 'H'},
 	{.freq = 4146000, .symrate = 6620000, .fec = FEC_AUTO, .polarisation = 'H'},
@@ -1419,29 +1444,52 @@ struct mux muxlist_FE_QPSK_Intelsat_9_58_0W[] = {
 	{.freq = 3815000, .symrate = 6250000, .fec = FEC_AUTO, .polarisation = 'H'},
 };
 
-struct mux muxlist_FE_QPSK_Intelsat_903_34_5W[] = {
-	{.freq = 4178000, .symrate = 32555000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 4045000, .symrate = 4960000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 3895000, .symrate = 13021000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 4004000, .symrate = 2170000, .fec = FEC_AUTO, .polarisation = 'V'},
+struct mux muxlist_FE_QPSK_Nahuel_1_71_8W[] = {
+	{.freq = 11673000, .symrate = 4000000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11680000, .symrate = 3335000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11654000, .symrate = 4170000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11874000, .symrate = 4000000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 12136000, .symrate = 2960000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11873000, .symrate = 8000000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 12116000, .symrate = 14396000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11997000, .symrate = 8500000, .fec = FEC_AUTO, .polarisation = 'V'},
 };
 
-struct mux muxlist_FE_QPSK_Intelsat_905_24_5W[] = {
-	{.freq = 4171000, .symrate = 6111000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 4181000, .symrate = 6111000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 4194000, .symrate = 5193000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 4162000, .symrate = 6111000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 4060000, .symrate = 6111000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 4070000, .symrate = 6111000, .fec = FEC_AUTO, .polarisation = 'V'},
-};
-
-struct mux muxlist_FE_QPSK_Intelsat_907_27_5W[] = {
-	{.freq = 3873000, .symrate = 4687000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 3935000, .symrate = 4687000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 3743000, .symrate = 2900000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 3732000, .symrate = 14000000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 3943000, .symrate = 1808000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 3938000, .symrate = 3544000, .fec = FEC_AUTO, .polarisation = 'H'},
+struct mux muxlist_FE_QPSK_Nilesat101_102_7_0W[] = {
+	{.freq = 10758000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 10796000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 10853000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 10873000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 10892000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 10911000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 10930000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11747000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11766000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11785000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11804000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11823000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11843000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11862000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11881000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11900000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11919000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11938000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11958000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 11977000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 11996000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 12015000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 12034000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 12054000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 12073000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 12130000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 12149000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 12207000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 12226000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 12284000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 12303000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 12341000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
+	{.freq = 12360000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
+	{.freq = 12399000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
 };
 
 struct mux muxlist_FE_QPSK_NSS_10_37_5W[] = {
@@ -1589,54 +1637,6 @@ struct mux muxlist_FE_QPSK_NSS_806_40_5W[] = {
 	{.freq = 3673000, .symrate = 3000000, .fec = FEC_AUTO, .polarisation = 'V'},
 };
 
-struct mux muxlist_FE_QPSK_Nahuel_1_71_8W[] = {
-	{.freq = 11673000, .symrate = 4000000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11680000, .symrate = 3335000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11654000, .symrate = 4170000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11874000, .symrate = 4000000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 12136000, .symrate = 2960000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11873000, .symrate = 8000000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 12116000, .symrate = 14396000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11997000, .symrate = 8500000, .fec = FEC_AUTO, .polarisation = 'V'},
-};
-
-struct mux muxlist_FE_QPSK_Nilesat101_102_7_0W[] = {
-	{.freq = 10758000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 10796000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 10853000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 10873000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 10892000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 10911000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 10930000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11747000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11766000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11785000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11804000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11823000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11843000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11862000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11881000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11900000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11919000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11938000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11958000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 11977000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 11996000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 12015000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 12034000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 12054000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 12073000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 12130000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 12149000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 12207000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 12226000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 12284000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 12303000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 12341000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'V'},
-	{.freq = 12360000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-	{.freq = 12399000, .symrate = 27500000, .fec = FEC_AUTO, .polarisation = 'H'},
-};
-
 struct mux muxlist_FE_QPSK_OptusC1_156E[] = {
 	{.freq = 12278000, .symrate = 30000000, .fec = FEC_2_3, .polarisation = 'H'},
 	{.freq = 12305000, .symrate = 30000000, .fec = FEC_2_3, .polarisation = 'H'},
@@ -1663,10 +1663,6 @@ struct mux muxlist_FE_QPSK_PAS_43_0W[] = {
 	{.freq = 12584000, .symrate = 27500000, .fec = FEC_3_4, .polarisation = 'V'},
 	{.freq = 12606000, .symrate = 6616000, .fec = FEC_3_4, .polarisation = 'H'},
 	{.freq = 12665000, .symrate = 19850000, .fec = FEC_7_8, .polarisation = 'H'},
-};
-
-struct mux muxlist_FE_QPSK_SBS6_74w[] = {
-	{.freq = 11744000, .symrate = 6616000, .fec = FEC_AUTO, .polarisation = 'H'},
 };
 
 struct mux muxlist_FE_QPSK_Satmex_5_116_8W[] = {
@@ -1758,6 +1754,10 @@ struct mux muxlist_FE_QPSK_Satmex_6_113_0W[] = {
 	{.freq = 3761000, .symrate = 2120000, .fec = FEC_AUTO, .polarisation = 'V'},
 	{.freq = 12107000, .symrate = 2222000, .fec = FEC_AUTO, .polarisation = 'V'},
 	{.freq = 12080000, .symrate = 25635000, .fec = FEC_AUTO, .polarisation = 'H'},
+};
+
+struct mux muxlist_FE_QPSK_SBS6_74w[] = {
+	{.freq = 11744000, .symrate = 6616000, .fec = FEC_AUTO, .polarisation = 'H'},
 };
 
 struct mux muxlist_FE_QPSK_Sirius_5_0E[] = {
@@ -1860,7 +1860,7 @@ struct mux muxlist_FE_OFDM_at_Offical[] = {
  	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 554000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 586000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
@@ -1896,6 +1896,14 @@ struct mux muxlist_FE_OFDM_au_Cairns[] = {
  	{.freq = 226500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_3_4, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
  	{.freq = 177500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
  	{.freq = 536500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_2_3, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_au_canberra[] = {
+	{.freq = 205625000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_3_4, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 177500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 191625000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 219500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 543500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_au_Canberra_Black_Mt[] = {
@@ -1985,6 +1993,14 @@ struct mux muxlist_FE_OFDM_au_Perth[] = {
  	{.freq = 536500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_au_Perth_Roleystone[] = {
+	{.freq = 704500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 725500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 746500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 767500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 788500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_au_SpencerGulf[] = {
 	{.freq = 599500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
  	{.freq = 641500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
@@ -2042,6 +2058,10 @@ struct mux muxlist_FE_OFDM_au_Townsville[] = {
  	{.freq = 585500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_au_unknown[] = {
+	{.freq = 226500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_au_WaggaWagga[] = {
 	{.freq = 655500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
  	{.freq = 669500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
@@ -2063,16 +2083,15 @@ struct mux muxlist_FE_OFDM_au_Wollongong[] = {
  	{.freq = 676500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
-struct mux muxlist_FE_OFDM_au_canberra[] = {
-	{.freq = 205625000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_3_4, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 177500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 191625000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 219500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 543500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+struct mux muxlist_FE_OFDM_be_Libramont[] = {
+	{.freq = 191500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 834000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  };
 
-struct mux muxlist_FE_OFDM_au_unknown[] = {
-	{.freq = 226500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+struct mux muxlist_FE_OFDM_be_Schoten[] = {
+	{.freq = 778000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_be_St_Pieters_Leeuw[] = {
@@ -2194,6 +2213,12 @@ struct mux muxlist_FE_OFDM_de_Brocken_Magdeburg[] = {
  	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_de_Chemnitz[] = {
+	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_de_Dresden[] = {
 	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
@@ -2213,6 +2238,12 @@ struct mux muxlist_FE_OFDM_de_Frankfurt[] = {
  	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 738000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 818000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_de_Freiburg[] = {
+	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 722000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_de_HalleSaale[] = {
@@ -2583,15 +2614,15 @@ struct mux muxlist_FE_OFDM_fi_Ahtari[] = {
  	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
-struct mux muxlist_FE_OFDM_fi_Ala_Vuokki[] = {
-	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- };
-
 struct mux muxlist_FE_OFDM_fi_Alajarvi[] = {
 	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Ala_Vuokki[] = {
+	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Ammansaari[] = {
@@ -2604,6 +2635,11 @@ struct mux muxlist_FE_OFDM_fi_Anjalankoski[] = {
  	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Enontekio_Ahovaara_Raattama[] = {
+	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Espoo[] = {
@@ -2631,6 +2667,7 @@ struct mux muxlist_FE_OFDM_fi_Haapavesi[] = {
 	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 762000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Hameenkyro_Kyroskoski[] = {
@@ -2679,10 +2716,30 @@ struct mux muxlist_FE_OFDM_fi_Houtskari[] = {
  	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_fi_Hyrynsalmi[] = {
+	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Hyrynsalmi_Kyparavaara[] = {
+	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Hyrynsalmi_Paljakka[] = {
+	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_fi_Hyvinkaa_Musta_Mannisto[] = {
 	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Ii_Raiskio[] = {
+	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 690000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Iisalmi[] = {
@@ -2743,9 +2800,19 @@ struct mux muxlist_FE_OFDM_fi_Jamsankoski[] = {
  	{.freq = 634000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_fi_Jamsa_Ouninpohja[] = {
+	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_fi_Joensuu_Vestinkallio[] = {
 	{.freq = 666000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Joroinen_Puukkola[] = {
+	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Joutsa_Lankia[] = {
@@ -2758,11 +2825,17 @@ struct mux muxlist_FE_OFDM_fi_Joutseno[] = {
 	{.freq = 682000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 586000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 762000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Juntusranta[] = {
 	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 666000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Juupajoki_Kopsamo[] = {
+	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 490000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Jyvaskyla[] = {
@@ -2772,9 +2845,24 @@ struct mux muxlist_FE_OFDM_fi_Jyvaskyla[] = {
  	{.freq = 634000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_fi_Jyvaskylan_mlk_Vaajakoski[] = {
+	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Kaavi_Sivakkavaara_Luikonlahti[] = {
+	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_fi_Kajaani_Pollyvaara[] = {
 	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 722000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Kalajoki[] = {
+	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Kangaslampi[] = {
@@ -2802,7 +2890,7 @@ struct mux muxlist_FE_OFDM_fi_Karigasniemi[] = {
 
 struct mux muxlist_FE_OFDM_fi_Karkkila[] = {
 	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 762000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
@@ -2823,10 +2911,16 @@ struct mux muxlist_FE_OFDM_fi_Kaunispaa[] = {
  	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_fi_Kemijarvi_Suomutunturi[] = {
+	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 706000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_fi_Kerimaki[] = {
 	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 770000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Keuruu[] = {
@@ -2863,10 +2957,16 @@ struct mux muxlist_FE_OFDM_fi_Kittila_Sirkka_Levitunturi[] = {
  	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_fi_Kolari_Vuolittaja[] = {
+	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_fi_Koli[] = {
 	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 682000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 714000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Korpilahti_Vaarunvuori[] = {
@@ -2884,12 +2984,13 @@ struct mux muxlist_FE_OFDM_fi_Korppoo[] = {
 struct mux muxlist_FE_OFDM_fi_Kruunupyy[] = {
 	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 634000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
-struct mux muxlist_FE_OFDM_fi_Kuhmo_Lentiira[] = {
-	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+struct mux muxlist_FE_OFDM_fi_Kuhmo_Iivantiira[] = {
+	{.freq = 490000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Kuhmoinen[] = {
@@ -2904,6 +3005,16 @@ struct mux muxlist_FE_OFDM_fi_Kuhmoinen_Harjunsalmi[] = {
  	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_fi_Kuhmoinen_Puukkoinen[] = {
+	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 610000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Kuhmo_Lentiira[] = {
+	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_fi_Kuopio[] = {
 	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 554000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
@@ -2913,13 +3024,18 @@ struct mux muxlist_FE_OFDM_fi_Kuopio[] = {
 
 struct mux muxlist_FE_OFDM_fi_Kustavi_Viherlahti[] = {
 	{.freq = 714000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 738000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Kuttanen[] = {
 	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 770000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Kyyjarvi_Noposenaho[] = {
+	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 586000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Lahti[] = {
@@ -2948,9 +3064,15 @@ struct mux muxlist_FE_OFDM_fi_Laukaa_Vihtavuori[] = {
  	{.freq = 634000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_fi_Lavia_Lavianjarvi[] = {
+	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 554000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_fi_Lieksa_Vieki[] = {
 	{.freq = 610000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Lohja[] = {
@@ -2961,7 +3083,7 @@ struct mux muxlist_FE_OFDM_fi_Lohja[] = {
  };
 
 struct mux muxlist_FE_OFDM_fi_Loimaa[] = {
-	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 682000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 722000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
@@ -2993,6 +3115,7 @@ struct mux muxlist_FE_OFDM_fi_Mikkeli[] = {
 	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 778000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 610000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Muonio_Olostunturi[] = {
@@ -3004,6 +3127,16 @@ struct mux muxlist_FE_OFDM_fi_Nilsia[] = {
 	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Nilsia_Keski_Siikajarvi[] = {
+	{.freq = 706000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Nilsia_Pisa[] = {
+	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 554000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Nokia[] = {
@@ -3030,6 +3163,11 @@ struct mux muxlist_FE_OFDM_fi_Nurmes_Porokyla[] = {
  	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_fi_Orivesi_Langelmaki_Talviainen[] = {
+	{.freq = 610000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_fi_Oulu[] = {
 	{.freq = 634000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 714000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
@@ -3047,6 +3185,11 @@ struct mux muxlist_FE_OFDM_fi_Padasjoki_Arrakoski[] = {
 	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 746000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Paltamo_Kivesvaara[] = {
+	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Parikkala[] = {
@@ -3082,9 +3225,15 @@ struct mux muxlist_FE_OFDM_fi_Pernaja[] = {
  	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_fi_Pieksamaki_Halkokumpu[] = {
+	{.freq = 714000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 762000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_fi_Pihtipudas[] = {
 	{.freq = 706000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 666000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 770000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Porvoo_Suomenkyla[] = {
@@ -3108,9 +3257,15 @@ struct mux muxlist_FE_OFDM_fi_Pudasjarvi_Iso_Syote[] = {
  	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_fi_Pudasjarvi_Kangasvaara[] = {
+	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_fi_Puolanka[] = {
 	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 666000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Pyhatunturi[] = {
@@ -3124,9 +3279,20 @@ struct mux muxlist_FE_OFDM_fi_Pyhavuori[] = {
  	{.freq = 586000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_fi_Pylkonmaki_Karankajarvi[] = {
+	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_fi_Raahe_Mestauskallio[] = {
 	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Raahe_Piehinki[] = {
+	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Ranua_Haasionmaa[] = {
@@ -3134,9 +3300,9 @@ struct mux muxlist_FE_OFDM_fi_Ranua_Haasionmaa[] = {
  	{.freq = 778000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
-struct mux muxlist_FE_OFDM_fi_Ristijarvi[] = {
-	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+struct mux muxlist_FE_OFDM_fi_Ranua_Leppiaho[] = {
+	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Rautavaara_Angervikko[] = {
@@ -3150,9 +3316,15 @@ struct mux muxlist_FE_OFDM_fi_Rautjarvi_Simpele[] = {
  	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_fi_Ristijarvi[] = {
+	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_fi_Rovaniemi[] = {
 	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Rovaniemi_Ala_Nampa_Yli_Nampa_Rantalaki[] = {
@@ -3165,9 +3337,24 @@ struct mux muxlist_FE_OFDM_fi_Rovaniemi_Kaihuanvaara[] = {
  	{.freq = 706000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_fi_Rovaniemi_Karhuvaara_Marrasjarvi[] = {
+	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Rovaniemi_Marasenkallio[] = {
+	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_fi_Rovaniemi_Meltaus_Sorviselka[] = {
 	{.freq = 714000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 770000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Rovaniemi_Sonka[] = {
+	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Ruka[] = {
@@ -3188,9 +3375,19 @@ struct mux muxlist_FE_OFDM_fi_Saarijarvi[] = {
  	{.freq = 610000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
-struct mux muxlist_FE_OFDM_fi_Salla[] = {
-	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 610000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+struct mux muxlist_FE_OFDM_fi_Saarijarvi_Kalmari[] = {
+	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Saarijarvi_Mahlu[] = {
+	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Salla_Hirvasvaara[] = {
+	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Salla_Ihistysjanka[] = {
@@ -3208,11 +3405,26 @@ struct mux muxlist_FE_OFDM_fi_Salla_Saija[] = {
  	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
-struct mux muxlist_FE_OFDM_fi_SaloIsokyla[] = {
+struct mux muxlist_FE_OFDM_fi_Salla_Sallatunturi[] = {
+	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 610000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Salo_Isokyla[] = {
 	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 666000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 682000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Savukoski_Martti_Haarahonganmaa[] = {
+	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Savukoski_Tanhua[] = {
+	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Siilinjarvi[] = {
@@ -3248,10 +3460,16 @@ struct mux muxlist_FE_OFDM_fi_Taivalkoski[] = {
  	{.freq = 610000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_fi_Taivalkoski_Taivalvaara[] = {
+	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_fi_Tammela[] = {
 	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 706000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Tammisaari[] = {
@@ -3277,12 +3495,13 @@ struct mux muxlist_FE_OFDM_fi_Tampere_Pyynikki[] = {
 struct mux muxlist_FE_OFDM_fi_Tervola[] = {
 	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Turku[] = {
 	{.freq = 714000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 738000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 762000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
@@ -3291,7 +3510,37 @@ struct mux muxlist_FE_OFDM_fi_Utsjoki[] = {
  	{.freq = 714000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
-struct mux muxlist_FE_OFDM_fi_Uusikaupunki_Ruokola[] = {
+struct mux muxlist_FE_OFDM_fi_Utsjoki_Nuorgam_Njallavaara[] = {
+	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Utsjoki_Nuorgam_raja[] = {
+	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Utsjoki_Outakoski[] = {
+	{.freq = 706000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Utsjoki_Polvarniemi[] = {
+	{.freq = 706000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Utsjoki_Rovisuvanto[] = {
+	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Utsjoki_Tenola[] = {
+	{.freq = 610000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 634000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Uusikaupunki_Orivo[] = {
 	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 554000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
@@ -3315,8 +3564,18 @@ struct mux muxlist_FE_OFDM_fi_Valtimo[] = {
 
 struct mux muxlist_FE_OFDM_fi_Vammala_Jyranvuori[] = {
 	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 746000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 690000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Vammala_Roismala[] = {
+	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Vammala_Savi[] = {
+	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Vantaa_Hakunila[] = {
@@ -3341,7 +3600,8 @@ struct mux muxlist_FE_OFDM_fi_Virrat_Lappavuori[] = {
 struct mux muxlist_FE_OFDM_fi_Vuokatti[] = {
 	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 722000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 746000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 778000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Vuotso[] = {
@@ -3352,6 +3612,12 @@ struct mux muxlist_FE_OFDM_fi_Vuotso[] = {
 struct mux muxlist_FE_OFDM_fi_Ylitornio_Ainiovaara[] = {
 	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 762000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_fi_Ylitornio_Raanujarvi[] = {
+	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_fi_Yllas[] = {
@@ -4254,6 +4520,15 @@ struct mux muxlist_FE_OFDM_is_Reykjavik[] = {
  	{.freq = 818000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_it_Aosta[] = {
+	{.freq = 226500000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 474000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 746000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 762000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 770000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_it_Bari[] = {
 	{.freq = 219500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_AUTO, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
  	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
@@ -4262,6 +4537,7 @@ struct mux muxlist_FE_OFDM_it_Bari[] = {
  	{.freq = 826000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
  	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
  	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 794000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_it_Bologna[] = {
@@ -4410,6 +4686,26 @@ struct mux muxlist_FE_OFDM_it_Roma[] = {
  	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
  };
 
+struct mux muxlist_FE_OFDM_it_Sassari[] = {
+	{.freq = 746000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 826000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 802000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 634000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 842000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 858000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 738000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 610000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 818000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 850000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 810000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 177500000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_1_2, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ };
+
 struct mux muxlist_FE_OFDM_it_Torino[] = {
 	{.freq = 834000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
@@ -4532,13 +4828,6 @@ struct mux muxlist_FE_OFDM_se_Amot[] = {
 	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
-struct mux muxlist_FE_OFDM_se_Ange_Snoberg[] = {
-	{.freq = 746000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 762000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- };
-
 struct mux muxlist_FE_OFDM_se_Angebo[] = {
 	{.freq = 802000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
@@ -4549,6 +4838,13 @@ struct mux muxlist_FE_OFDM_se_Angelholm_Vegeholm[] = {
  	{.freq = 634000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 818000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 794000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ };
+
+struct mux muxlist_FE_OFDM_se_Ange_Snoberg[] = {
+	{.freq = 746000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 762000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 struct mux muxlist_FE_OFDM_se_Arvidsjaur_Jultrask[] = {
@@ -6543,6 +6839,10 @@ struct mux muxlist_FE_QAM_be_IN_DI_Integan[] = {
 	{ .freq = 586000000, .symrate = 6875000, .fec = FEC_NONE, .constellation = QAM_256},
 };
 
+struct mux muxlist_FE_QAM_ch_unknown[] = {
+	{ .freq = 530000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+};
+
 struct mux muxlist_FE_QAM_ch_Video2000[] = {
 	{ .freq = 306000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
 };
@@ -6551,33 +6851,10 @@ struct mux muxlist_FE_QAM_ch_Zuerich_cablecom[] = {
 	{ .freq = 410000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
 };
 
-struct mux muxlist_FE_QAM_ch_unknown[] = {
-	{ .freq = 530000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
-};
-
 struct mux muxlist_FE_QAM_de_Berlin[] = {
 	{ .freq = 394000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
 	{ .freq = 113000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
 	{ .freq = 466000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
-};
-
-struct mux muxlist_FE_QAM_de_Kabel_BW[] = {
-	{ .freq = 113000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
-};
-
-struct mux muxlist_FE_QAM_de_Muenchen[] = {
-	{ .freq = 346000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
-	{ .freq = 354000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
-	{ .freq = 362000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
-	{ .freq = 370000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
-	{ .freq = 378000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
-	{ .freq = 386000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
-	{ .freq = 394000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
-	{ .freq = 402000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
-	{ .freq = 410000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
-	{ .freq = 418000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
-	{ .freq = 426000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
-	{ .freq = 434000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
 };
 
 struct mux muxlist_FE_QAM_de_iesy[] = {
@@ -6601,6 +6878,31 @@ struct mux muxlist_FE_QAM_de_iesy[] = {
 	{ .freq = 538000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
 };
 
+struct mux muxlist_FE_QAM_de_Kabel_BW[] = {
+	{ .freq = 113000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+};
+
+struct mux muxlist_FE_QAM_de_Muenchen[] = {
+	{ .freq = 113000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 121000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 346000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 354000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 362000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 370000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 378000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 386000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 394000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 402000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 410000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 418000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 426000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 434000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 442000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 450000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 466000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 458000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+};
+
 struct mux muxlist_FE_QAM_de_neftv[] = {
 	{ .freq = 346000000, .symrate = 6875000, .fec = FEC_NONE, .constellation = QAM_64},
 	{ .freq = 354000000, .symrate = 6875000, .fec = FEC_NONE, .constellation = QAM_64},
@@ -6621,6 +6923,70 @@ struct mux muxlist_FE_QAM_de_neftv[] = {
 	{ .freq = 498000000, .symrate = 6875000, .fec = FEC_NONE, .constellation = QAM_64},
 	{ .freq = 514000000, .symrate = 6875000, .fec = FEC_NONE, .constellation = QAM_64},
 	{ .freq = 546000000, .symrate = 6875000, .fec = FEC_NONE, .constellation = QAM_64},
+};
+
+struct mux muxlist_FE_QAM_de_Primacom[] = {
+	{ .freq = 306000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 314000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 322000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 330000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 338000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 346000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 354000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 362000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 370000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 378000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 386000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 394000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 402000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 410000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 418000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 426000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 434000000, .symrate = 6956000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 610000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 746000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 754000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 762000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 802000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 810000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 818000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 826000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 834000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 634000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+};
+
+struct mux muxlist_FE_QAM_de_Unitymedia[] = {
+	{ .freq = 113000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 121000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 338000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 346000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 354000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 362000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 370000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 378000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 386000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 394000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 402000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 410000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 418000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 426000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 434000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 442000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 450000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 458000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 466000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 474000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 522000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 530000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 538000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 554000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 562000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 570000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 610000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_64},
+	{ .freq = 650000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 658000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 666000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
+	{ .freq = 674000000, .symrate = 6900000, .fec = FEC_AUTO, .constellation = QAM_256},
 };
 
 struct mux muxlist_FE_QAM_dk_Odense[] = {
@@ -6677,6 +7043,17 @@ struct mux muxlist_FE_QAM_fi_HTV[] = {
 	{ .freq = 154000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
 };
 
+struct mux muxlist_FE_QAM_fi_jkl[] = {
+	{ .freq = 514000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
+	{ .freq = 426000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
+	{ .freq = 162000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
+	{ .freq = 418000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
+	{ .freq = 490000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
+	{ .freq = 498000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
+	{ .freq = 402000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
+	{ .freq = 410000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
+};
+
 struct mux muxlist_FE_QAM_fi_Joensuu_Tikka[] = {
 	{ .freq = 154000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
 	{ .freq = 162000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
@@ -6689,6 +7066,17 @@ struct mux muxlist_FE_QAM_fi_Joensuu_Tikka[] = {
 	{ .freq = 458000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
 	{ .freq = 466000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
 	{ .freq = 474000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
+};
+
+struct mux muxlist_FE_QAM_fi_sonera[] = {
+	{ .freq = 154000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
+	{ .freq = 162000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
+	{ .freq = 170000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
+	{ .freq = 314000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
+	{ .freq = 322000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
+	{ .freq = 338000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
+	{ .freq = 346000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
+	{ .freq = 354000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
 };
 
 struct mux muxlist_FE_QAM_fi_TTV[] = {
@@ -6712,28 +7100,6 @@ struct mux muxlist_FE_QAM_fi_Turku[] = {
 	{ .freq = 426000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
 	{ .freq = 442000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
 	{ .freq = 354000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
-};
-
-struct mux muxlist_FE_QAM_fi_jkl[] = {
-	{ .freq = 514000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
-	{ .freq = 426000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
-	{ .freq = 162000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
-	{ .freq = 418000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
-	{ .freq = 490000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
-	{ .freq = 498000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
-	{ .freq = 402000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
-	{ .freq = 410000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
-};
-
-struct mux muxlist_FE_QAM_fi_sonera[] = {
-	{ .freq = 154000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
-	{ .freq = 162000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
-	{ .freq = 170000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
-	{ .freq = 314000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
-	{ .freq = 322000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
-	{ .freq = 338000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
-	{ .freq = 346000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
-	{ .freq = 354000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_128},
 };
 
 struct mux muxlist_FE_QAM_fi_vaasa_oncable[] = {
@@ -6850,6 +7216,13 @@ const char *comment;
 },
 {
 	.type = FE_QPSK,
+	.name = "Amazonas-61.0W",
+	.muxes = muxlist_FE_QPSK_Amazonas_61_0W,
+	.nmuxes = sizeof(muxlist_FE_QPSK_Amazonas_61_0W) / sizeof(struct mux),
+	.comment = "Amazonas @ 61.0W"
+},
+{
+	.type = FE_QPSK,
 	.name = "AMC1-103w",
 	.muxes = muxlist_FE_QPSK_AMC1_103w,
 	.nmuxes = sizeof(muxlist_FE_QPSK_AMC1_103w) / sizeof(struct mux),
@@ -6896,13 +7269,6 @@ const char *comment;
 	.muxes = muxlist_FE_QPSK_AMC9_83w,
 	.nmuxes = sizeof(muxlist_FE_QPSK_AMC9_83w) / sizeof(struct mux),
 	.comment = "AMC 9 @ 83W"
-},
-{
-	.type = FE_QPSK,
-	.name = "Amazonas-61.0W",
-	.muxes = muxlist_FE_QPSK_Amazonas_61_0W,
-	.nmuxes = sizeof(muxlist_FE_QPSK_Amazonas_61_0W) / sizeof(struct mux),
-	.comment = "Amazonas @ 61.0W"
 },
 {
 	.type = FE_QPSK,
@@ -7011,17 +7377,17 @@ const char *comment;
 },
 {
 	.type = FE_QPSK,
-	.name = "ExpressAM2-80.0E",
-	.muxes = muxlist_FE_QPSK_ExpressAM2_80_0E,
-	.nmuxes = sizeof(muxlist_FE_QPSK_ExpressAM2_80_0E) / sizeof(struct mux),
-	.comment = "Express AM2 @ 80E"
-},
-{
-	.type = FE_QPSK,
 	.name = "ExpressAM22-53.0E",
 	.muxes = muxlist_FE_QPSK_ExpressAM22_53_0E,
 	.nmuxes = sizeof(muxlist_FE_QPSK_ExpressAM22_53_0E) / sizeof(struct mux),
 	.comment = "Express AM 22 @ 53E"
+},
+{
+	.type = FE_QPSK,
+	.name = "ExpressAM2-80.0E",
+	.muxes = muxlist_FE_QPSK_ExpressAM2_80_0E,
+	.nmuxes = sizeof(muxlist_FE_QPSK_ExpressAM2_80_0E) / sizeof(struct mux),
+	.comment = "Express AM2 @ 80E"
 },
 {
 	.type = FE_QPSK,
@@ -7186,13 +7552,6 @@ const char *comment;
 },
 {
 	.type = FE_QPSK,
-	.name = "Intelsat-9-58.0W",
-	.muxes = muxlist_FE_QPSK_Intelsat_9_58_0W,
-	.nmuxes = sizeof(muxlist_FE_QPSK_Intelsat_9_58_0W) / sizeof(struct mux),
-	.comment = "Intelsat 9 @ 58.0W"
-},
-{
-	.type = FE_QPSK,
 	.name = "Intelsat-903-34.5W",
 	.muxes = muxlist_FE_QPSK_Intelsat_903_34_5W,
 	.nmuxes = sizeof(muxlist_FE_QPSK_Intelsat_903_34_5W) / sizeof(struct mux),
@@ -7211,6 +7570,27 @@ const char *comment;
 	.muxes = muxlist_FE_QPSK_Intelsat_907_27_5W,
 	.nmuxes = sizeof(muxlist_FE_QPSK_Intelsat_907_27_5W) / sizeof(struct mux),
 	.comment = "Intelsat 907 @ 27.5W"
+},
+{
+	.type = FE_QPSK,
+	.name = "Intelsat-9-58.0W",
+	.muxes = muxlist_FE_QPSK_Intelsat_9_58_0W,
+	.nmuxes = sizeof(muxlist_FE_QPSK_Intelsat_9_58_0W) / sizeof(struct mux),
+	.comment = "Intelsat 9 @ 58.0W"
+},
+{
+	.type = FE_QPSK,
+	.name = "Nahuel-1-71.8W",
+	.muxes = muxlist_FE_QPSK_Nahuel_1_71_8W,
+	.nmuxes = sizeof(muxlist_FE_QPSK_Nahuel_1_71_8W) / sizeof(struct mux),
+	.comment = "Nahuel 1 @ 71.8W"
+},
+{
+	.type = FE_QPSK,
+	.name = "Nilesat101+102-7.0W",
+	.muxes = muxlist_FE_QPSK_Nilesat101_102_7_0W,
+	.nmuxes = sizeof(muxlist_FE_QPSK_Nilesat101_102_7_0W) / sizeof(struct mux),
+	.comment = "Nilesat 101/102 & Atlantic Bird @ 7W"
 },
 {
 	.type = FE_QPSK,
@@ -7235,20 +7615,6 @@ const char *comment;
 },
 {
 	.type = FE_QPSK,
-	.name = "Nahuel-1-71.8W",
-	.muxes = muxlist_FE_QPSK_Nahuel_1_71_8W,
-	.nmuxes = sizeof(muxlist_FE_QPSK_Nahuel_1_71_8W) / sizeof(struct mux),
-	.comment = "Nahuel 1 @ 71.8W"
-},
-{
-	.type = FE_QPSK,
-	.name = "Nilesat101+102-7.0W",
-	.muxes = muxlist_FE_QPSK_Nilesat101_102_7_0W,
-	.nmuxes = sizeof(muxlist_FE_QPSK_Nilesat101_102_7_0W) / sizeof(struct mux),
-	.comment = "Nilesat 101/102 & Atlantic Bird @ 7W"
-},
-{
-	.type = FE_QPSK,
 	.name = "OptusC1-156E",
 	.muxes = muxlist_FE_QPSK_OptusC1_156E,
 	.nmuxes = sizeof(muxlist_FE_QPSK_OptusC1_156E) / sizeof(struct mux),
@@ -7263,13 +7629,6 @@ const char *comment;
 },
 {
 	.type = FE_QPSK,
-	.name = "SBS6-74w",
-	.muxes = muxlist_FE_QPSK_SBS6_74w,
-	.nmuxes = sizeof(muxlist_FE_QPSK_SBS6_74w) / sizeof(struct mux),
-	.comment = "SBS 6 @ 74W"
-},
-{
-	.type = FE_QPSK,
 	.name = "Satmex-5-116.8W",
 	.muxes = muxlist_FE_QPSK_Satmex_5_116_8W,
 	.nmuxes = sizeof(muxlist_FE_QPSK_Satmex_5_116_8W) / sizeof(struct mux),
@@ -7281,6 +7640,13 @@ const char *comment;
 	.muxes = muxlist_FE_QPSK_Satmex_6_113_0W,
 	.nmuxes = sizeof(muxlist_FE_QPSK_Satmex_6_113_0W) / sizeof(struct mux),
 	.comment = "Satmex 6 @ 113.0W"
+},
+{
+	.type = FE_QPSK,
+	.name = "SBS6-74w",
+	.muxes = muxlist_FE_QPSK_SBS6_74w,
+	.nmuxes = sizeof(muxlist_FE_QPSK_SBS6_74w) / sizeof(struct mux),
+	.comment = "SBS 6 @ 74W"
 },
 {
 	.type = FE_QPSK,
@@ -7361,6 +7727,13 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
+	.name = "au-canberra",
+	.muxes = muxlist_FE_OFDM_au_canberra,
+	.nmuxes = sizeof(muxlist_FE_OFDM_au_canberra) / sizeof(struct mux),
+	.comment = "Australia / Canberra / Woden"
+},
+{
+	.type = FE_OFDM,
 	.name = "au-Canberra-Black-Mt",
 	.muxes = muxlist_FE_OFDM_au_Canberra_Black_Mt,
 	.nmuxes = sizeof(muxlist_FE_OFDM_au_Canberra_Black_Mt) / sizeof(struct mux),
@@ -7431,6 +7804,13 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
+	.name = "au-Perth_Roleystone",
+	.muxes = muxlist_FE_OFDM_au_Perth_Roleystone,
+	.nmuxes = sizeof(muxlist_FE_OFDM_au_Perth_Roleystone) / sizeof(struct mux),
+	.comment = "Australia / Perth (Roleystone transmitter)"
+},
+{
+	.type = FE_OFDM,
 	.name = "au-SpencerGulf",
 	.muxes = muxlist_FE_OFDM_au_SpencerGulf,
 	.nmuxes = sizeof(muxlist_FE_OFDM_au_SpencerGulf) / sizeof(struct mux),
@@ -7473,6 +7853,13 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
+	.name = "au-unknown",
+	.muxes = muxlist_FE_OFDM_au_unknown,
+	.nmuxes = sizeof(muxlist_FE_OFDM_au_unknown) / sizeof(struct mux),
+	.comment = "Australia ABC"
+},
+{
+	.type = FE_OFDM,
 	.name = "au-WaggaWagga",
 	.muxes = muxlist_FE_OFDM_au_WaggaWagga,
 	.nmuxes = sizeof(muxlist_FE_OFDM_au_WaggaWagga) / sizeof(struct mux),
@@ -7487,17 +7874,17 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
-	.name = "au-canberra",
-	.muxes = muxlist_FE_OFDM_au_canberra,
-	.nmuxes = sizeof(muxlist_FE_OFDM_au_canberra) / sizeof(struct mux),
-	.comment = "Australia / Canberra / Woden"
+	.name = "be-Libramont",
+	.muxes = muxlist_FE_OFDM_be_Libramont,
+	.nmuxes = sizeof(muxlist_FE_OFDM_be_Libramont) / sizeof(struct mux),
+	.comment = "Libramont - Belgique"
 },
 {
 	.type = FE_OFDM,
-	.name = "au-unknown",
-	.muxes = muxlist_FE_OFDM_au_unknown,
-	.nmuxes = sizeof(muxlist_FE_OFDM_au_unknown) / sizeof(struct mux),
-	.comment = "Australia ABC"
+	.name = "be-Schoten",
+	.muxes = muxlist_FE_OFDM_be_Schoten,
+	.nmuxes = sizeof(muxlist_FE_OFDM_be_Schoten) / sizeof(struct mux),
+	.comment = "Schoten-Antwerpen - Belgie"
 },
 {
 	.type = FE_OFDM,
@@ -7599,6 +7986,13 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
+	.name = "de-Chemnitz",
+	.muxes = muxlist_FE_OFDM_de_Chemnitz,
+	.nmuxes = sizeof(muxlist_FE_OFDM_de_Chemnitz) / sizeof(struct mux),
+	.comment = "DVB-T Chemnitz"
+},
+{
+	.type = FE_OFDM,
 	.name = "de-Dresden",
 	.muxes = muxlist_FE_OFDM_de_Dresden,
 	.nmuxes = sizeof(muxlist_FE_OFDM_de_Dresden) / sizeof(struct mux),
@@ -7617,6 +8011,13 @@ const char *comment;
 	.muxes = muxlist_FE_OFDM_de_Frankfurt,
 	.nmuxes = sizeof(muxlist_FE_OFDM_de_Frankfurt) / sizeof(struct mux),
 	.comment = "#########################################"
+},
+{
+	.type = FE_OFDM,
+	.name = "de-Freiburg",
+	.muxes = muxlist_FE_OFDM_de_Freiburg,
+	.nmuxes = sizeof(muxlist_FE_OFDM_de_Freiburg) / sizeof(struct mux),
+	.comment = "DVB-T Freiburg M/V"
 },
 {
 	.type = FE_OFDM,
@@ -7921,16 +8322,16 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
-	.name = "fi-Ala-Vuokki",
-	.muxes = muxlist_FE_OFDM_fi_Ala_Vuokki,
-	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Ala_Vuokki) / sizeof(struct mux),
+	.name = "fi-Alajarvi",
+	.muxes = muxlist_FE_OFDM_fi_Alajarvi,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Alajarvi) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
 	.type = FE_OFDM,
-	.name = "fi-Alajarvi",
-	.muxes = muxlist_FE_OFDM_fi_Alajarvi,
-	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Alajarvi) / sizeof(struct mux),
+	.name = "fi-Ala-Vuokki",
+	.muxes = muxlist_FE_OFDM_fi_Ala_Vuokki,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Ala_Vuokki) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -7945,6 +8346,13 @@ const char *comment;
 	.name = "fi-Anjalankoski",
 	.muxes = muxlist_FE_OFDM_fi_Anjalankoski,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Anjalankoski) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Enontekio_Ahovaara_Raattama",
+	.muxes = muxlist_FE_OFDM_fi_Enontekio_Ahovaara_Raattama,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Enontekio_Ahovaara_Raattama) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -8033,9 +8441,37 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
+	.name = "fi-Hyrynsalmi",
+	.muxes = muxlist_FE_OFDM_fi_Hyrynsalmi,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Hyrynsalmi) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Hyrynsalmi_Kyparavaara",
+	.muxes = muxlist_FE_OFDM_fi_Hyrynsalmi_Kyparavaara,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Hyrynsalmi_Kyparavaara) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Hyrynsalmi_Paljakka",
+	.muxes = muxlist_FE_OFDM_fi_Hyrynsalmi_Paljakka,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Hyrynsalmi_Paljakka) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
 	.name = "fi-Hyvinkaa_Musta-Mannisto",
 	.muxes = muxlist_FE_OFDM_fi_Hyvinkaa_Musta_Mannisto,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Hyvinkaa_Musta_Mannisto) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Ii_Raiskio",
+	.muxes = muxlist_FE_OFDM_fi_Ii_Raiskio,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Ii_Raiskio) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -8110,9 +8546,23 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
+	.name = "fi-Jamsa_Ouninpohja",
+	.muxes = muxlist_FE_OFDM_fi_Jamsa_Ouninpohja,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Jamsa_Ouninpohja) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
 	.name = "fi-Joensuu_Vestinkallio",
 	.muxes = muxlist_FE_OFDM_fi_Joensuu_Vestinkallio,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Joensuu_Vestinkallio) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Joroinen_Puukkola",
+	.muxes = muxlist_FE_OFDM_fi_Joroinen_Puukkola,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Joroinen_Puukkola) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -8138,6 +8588,13 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
+	.name = "fi-Juupajoki_Kopsamo",
+	.muxes = muxlist_FE_OFDM_fi_Juupajoki_Kopsamo,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Juupajoki_Kopsamo) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
 	.name = "fi-Jyvaskyla",
 	.muxes = muxlist_FE_OFDM_fi_Jyvaskyla,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Jyvaskyla) / sizeof(struct mux),
@@ -8145,9 +8602,30 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
+	.name = "fi-Jyvaskylan_mlk_Vaajakoski",
+	.muxes = muxlist_FE_OFDM_fi_Jyvaskylan_mlk_Vaajakoski,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Jyvaskylan_mlk_Vaajakoski) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Kaavi_Sivakkavaara_Luikonlahti",
+	.muxes = muxlist_FE_OFDM_fi_Kaavi_Sivakkavaara_Luikonlahti,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Kaavi_Sivakkavaara_Luikonlahti) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
 	.name = "fi-Kajaani_Pollyvaara",
 	.muxes = muxlist_FE_OFDM_fi_Kajaani_Pollyvaara,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Kajaani_Pollyvaara) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Kalajoki",
+	.muxes = muxlist_FE_OFDM_fi_Kalajoki,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Kalajoki) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -8208,6 +8686,13 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
+	.name = "fi-Kemijarvi_Suomutunturi",
+	.muxes = muxlist_FE_OFDM_fi_Kemijarvi_Suomutunturi,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Kemijarvi_Suomutunturi) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
 	.name = "fi-Kerimaki",
 	.muxes = muxlist_FE_OFDM_fi_Kerimaki,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Kerimaki) / sizeof(struct mux),
@@ -8257,6 +8742,13 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
+	.name = "fi-Kolari_Vuolittaja",
+	.muxes = muxlist_FE_OFDM_fi_Kolari_Vuolittaja,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Kolari_Vuolittaja) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
 	.name = "fi-Koli",
 	.muxes = muxlist_FE_OFDM_fi_Koli,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Koli) / sizeof(struct mux),
@@ -8285,9 +8777,9 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
-	.name = "fi-Kuhmo_Lentiira",
-	.muxes = muxlist_FE_OFDM_fi_Kuhmo_Lentiira,
-	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Kuhmo_Lentiira) / sizeof(struct mux),
+	.name = "fi-Kuhmo_Iivantiira",
+	.muxes = muxlist_FE_OFDM_fi_Kuhmo_Iivantiira,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Kuhmo_Iivantiira) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -8302,6 +8794,20 @@ const char *comment;
 	.name = "fi-Kuhmoinen_Harjunsalmi",
 	.muxes = muxlist_FE_OFDM_fi_Kuhmoinen_Harjunsalmi,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Kuhmoinen_Harjunsalmi) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Kuhmoinen_Puukkoinen",
+	.muxes = muxlist_FE_OFDM_fi_Kuhmoinen_Puukkoinen,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Kuhmoinen_Puukkoinen) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Kuhmo_Lentiira",
+	.muxes = muxlist_FE_OFDM_fi_Kuhmo_Lentiira,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Kuhmo_Lentiira) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -8323,6 +8829,13 @@ const char *comment;
 	.name = "fi-Kuttanen",
 	.muxes = muxlist_FE_OFDM_fi_Kuttanen,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Kuttanen) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Kyyjarvi_Noposenaho",
+	.muxes = muxlist_FE_OFDM_fi_Kyyjarvi_Noposenaho,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Kyyjarvi_Noposenaho) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -8351,6 +8864,13 @@ const char *comment;
 	.name = "fi-Laukaa_Vihtavuori",
 	.muxes = muxlist_FE_OFDM_fi_Laukaa_Vihtavuori,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Laukaa_Vihtavuori) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Lavia_Lavianjarvi",
+	.muxes = muxlist_FE_OFDM_fi_Lavia_Lavianjarvi,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Lavia_Lavianjarvi) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -8425,6 +8945,20 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
+	.name = "fi-Nilsia_Keski-Siikajarvi",
+	.muxes = muxlist_FE_OFDM_fi_Nilsia_Keski_Siikajarvi,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Nilsia_Keski_Siikajarvi) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Nilsia_Pisa",
+	.muxes = muxlist_FE_OFDM_fi_Nilsia_Pisa,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Nilsia_Pisa) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
 	.name = "fi-Nokia",
 	.muxes = muxlist_FE_OFDM_fi_Nokia,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Nokia) / sizeof(struct mux),
@@ -8453,6 +8987,13 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
+	.name = "fi-Orivesi_Langelmaki_Talviainen",
+	.muxes = muxlist_FE_OFDM_fi_Orivesi_Langelmaki_Talviainen,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Orivesi_Langelmaki_Talviainen) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
 	.name = "fi-Oulu",
 	.muxes = muxlist_FE_OFDM_fi_Oulu,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Oulu) / sizeof(struct mux),
@@ -8470,6 +9011,13 @@ const char *comment;
 	.name = "fi-Padasjoki_Arrakoski",
 	.muxes = muxlist_FE_OFDM_fi_Padasjoki_Arrakoski,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Padasjoki_Arrakoski) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Paltamo_Kivesvaara",
+	.muxes = muxlist_FE_OFDM_fi_Paltamo_Kivesvaara,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Paltamo_Kivesvaara) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -8516,6 +9064,13 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
+	.name = "fi-Pieksamaki_Halkokumpu",
+	.muxes = muxlist_FE_OFDM_fi_Pieksamaki_Halkokumpu,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Pieksamaki_Halkokumpu) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
 	.name = "fi-Pihtipudas",
 	.muxes = muxlist_FE_OFDM_fi_Pihtipudas,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Pihtipudas) / sizeof(struct mux),
@@ -8551,6 +9106,13 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
+	.name = "fi-Pudasjarvi_Kangasvaara",
+	.muxes = muxlist_FE_OFDM_fi_Pudasjarvi_Kangasvaara,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Pudasjarvi_Kangasvaara) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
 	.name = "fi-Puolanka",
 	.muxes = muxlist_FE_OFDM_fi_Puolanka,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Puolanka) / sizeof(struct mux),
@@ -8572,9 +9134,23 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
+	.name = "fi-Pylkonmaki_Karankajarvi",
+	.muxes = muxlist_FE_OFDM_fi_Pylkonmaki_Karankajarvi,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Pylkonmaki_Karankajarvi) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
 	.name = "fi-Raahe_Mestauskallio",
 	.muxes = muxlist_FE_OFDM_fi_Raahe_Mestauskallio,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Raahe_Mestauskallio) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Raahe_Piehinki",
+	.muxes = muxlist_FE_OFDM_fi_Raahe_Piehinki,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Raahe_Piehinki) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -8586,9 +9162,9 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
-	.name = "fi-Ristijarvi",
-	.muxes = muxlist_FE_OFDM_fi_Ristijarvi,
-	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Ristijarvi) / sizeof(struct mux),
+	.name = "fi-Ranua_Leppiaho",
+	.muxes = muxlist_FE_OFDM_fi_Ranua_Leppiaho,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Ranua_Leppiaho) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -8603,6 +9179,13 @@ const char *comment;
 	.name = "fi-Rautjarvi_Simpele",
 	.muxes = muxlist_FE_OFDM_fi_Rautjarvi_Simpele,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Rautjarvi_Simpele) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Ristijarvi",
+	.muxes = muxlist_FE_OFDM_fi_Ristijarvi,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Ristijarvi) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -8628,9 +9211,30 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
+	.name = "fi-Rovaniemi_Karhuvaara_Marrasjarvi",
+	.muxes = muxlist_FE_OFDM_fi_Rovaniemi_Karhuvaara_Marrasjarvi,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Rovaniemi_Karhuvaara_Marrasjarvi) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Rovaniemi_Marasenkallio",
+	.muxes = muxlist_FE_OFDM_fi_Rovaniemi_Marasenkallio,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Rovaniemi_Marasenkallio) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
 	.name = "fi-Rovaniemi_Meltaus_Sorviselka",
 	.muxes = muxlist_FE_OFDM_fi_Rovaniemi_Meltaus_Sorviselka,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Rovaniemi_Meltaus_Sorviselka) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Rovaniemi_Sonka",
+	.muxes = muxlist_FE_OFDM_fi_Rovaniemi_Sonka,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Rovaniemi_Sonka) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -8656,9 +9260,23 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
-	.name = "fi-Salla",
-	.muxes = muxlist_FE_OFDM_fi_Salla,
-	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Salla) / sizeof(struct mux),
+	.name = "fi-Saarijarvi_Kalmari",
+	.muxes = muxlist_FE_OFDM_fi_Saarijarvi_Kalmari,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Saarijarvi_Kalmari) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Saarijarvi_Mahlu",
+	.muxes = muxlist_FE_OFDM_fi_Saarijarvi_Mahlu,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Saarijarvi_Mahlu) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Salla_Hirvasvaara",
+	.muxes = muxlist_FE_OFDM_fi_Salla_Hirvasvaara,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Salla_Hirvasvaara) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -8684,9 +9302,30 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
-	.name = "fi-SaloIsokyla",
-	.muxes = muxlist_FE_OFDM_fi_SaloIsokyla,
-	.nmuxes = sizeof(muxlist_FE_OFDM_fi_SaloIsokyla) / sizeof(struct mux),
+	.name = "fi-Salla_Sallatunturi",
+	.muxes = muxlist_FE_OFDM_fi_Salla_Sallatunturi,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Salla_Sallatunturi) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Salo_Isokyla",
+	.muxes = muxlist_FE_OFDM_fi_Salo_Isokyla,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Salo_Isokyla) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Savukoski_Martti_Haarahonganmaa",
+	.muxes = muxlist_FE_OFDM_fi_Savukoski_Martti_Haarahonganmaa,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Savukoski_Martti_Haarahonganmaa) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Savukoski_Tanhua",
+	.muxes = muxlist_FE_OFDM_fi_Savukoski_Tanhua,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Savukoski_Tanhua) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -8729,6 +9368,13 @@ const char *comment;
 	.name = "fi-Taivalkoski",
 	.muxes = muxlist_FE_OFDM_fi_Taivalkoski,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Taivalkoski) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Taivalkoski_Taivalvaara",
+	.muxes = muxlist_FE_OFDM_fi_Taivalkoski_Taivalvaara,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Taivalkoski_Taivalvaara) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -8782,9 +9428,51 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
-	.name = "fi-Uusikaupunki_Ruokola",
-	.muxes = muxlist_FE_OFDM_fi_Uusikaupunki_Ruokola,
-	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Uusikaupunki_Ruokola) / sizeof(struct mux),
+	.name = "fi-Utsjoki_Nuorgam_Njallavaara",
+	.muxes = muxlist_FE_OFDM_fi_Utsjoki_Nuorgam_Njallavaara,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Utsjoki_Nuorgam_Njallavaara) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Utsjoki_Nuorgam_raja",
+	.muxes = muxlist_FE_OFDM_fi_Utsjoki_Nuorgam_raja,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Utsjoki_Nuorgam_raja) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Utsjoki_Outakoski",
+	.muxes = muxlist_FE_OFDM_fi_Utsjoki_Outakoski,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Utsjoki_Outakoski) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Utsjoki_Polvarniemi",
+	.muxes = muxlist_FE_OFDM_fi_Utsjoki_Polvarniemi,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Utsjoki_Polvarniemi) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Utsjoki_Rovisuvanto",
+	.muxes = muxlist_FE_OFDM_fi_Utsjoki_Rovisuvanto,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Utsjoki_Rovisuvanto) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Utsjoki_Tenola",
+	.muxes = muxlist_FE_OFDM_fi_Utsjoki_Tenola,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Utsjoki_Tenola) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Uusikaupunki_Orivo",
+	.muxes = muxlist_FE_OFDM_fi_Uusikaupunki_Orivo,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Uusikaupunki_Orivo) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -8813,6 +9501,20 @@ const char *comment;
 	.name = "fi-Vammala_Jyranvuori",
 	.muxes = muxlist_FE_OFDM_fi_Vammala_Jyranvuori,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Vammala_Jyranvuori) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Vammala_Roismala",
+	.muxes = muxlist_FE_OFDM_fi_Vammala_Roismala,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Vammala_Roismala) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Vammala_Savi",
+	.muxes = muxlist_FE_OFDM_fi_Vammala_Savi,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Vammala_Savi) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -8855,6 +9557,13 @@ const char *comment;
 	.name = "fi-Ylitornio_Ainiovaara",
 	.muxes = muxlist_FE_OFDM_fi_Ylitornio_Ainiovaara,
 	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Ylitornio_Ainiovaara) / sizeof(struct mux),
+	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
+},
+{
+	.type = FE_OFDM,
+	.name = "fi-Ylitornio_Raanujarvi",
+	.muxes = muxlist_FE_OFDM_fi_Ylitornio_Raanujarvi,
+	.nmuxes = sizeof(muxlist_FE_OFDM_fi_Ylitornio_Raanujarvi) / sizeof(struct mux),
 	.comment = "automatically generated from http://www.digitv.fi/sivu.asp?path=1;8224;9519"
 },
 {
@@ -9650,6 +10359,13 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
+	.name = "it-Aosta",
+	.muxes = muxlist_FE_OFDM_it_Aosta,
+	.nmuxes = sizeof(muxlist_FE_OFDM_it_Aosta) / sizeof(struct mux),
+	.comment = "Italia / Aosta (it-Aosta) -- mailto: Marco <lovebuzz@email.it>"
+},
+{
+	.type = FE_OFDM,
 	.name = "it-Bari",
 	.muxes = muxlist_FE_OFDM_it_Bari,
 	.nmuxes = sizeof(muxlist_FE_OFDM_it_Bari) / sizeof(struct mux),
@@ -9755,6 +10471,13 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
+	.name = "it-Sassari",
+	.muxes = muxlist_FE_OFDM_it_Sassari,
+	.nmuxes = sizeof(muxlist_FE_OFDM_it_Sassari) / sizeof(struct mux),
+	.comment = "DVB-T Sassari Channels List by frippertronics@alice.it ;)"
+},
+{
+	.type = FE_OFDM,
 	.name = "it-Torino",
 	.muxes = muxlist_FE_OFDM_it_Torino,
 	.nmuxes = sizeof(muxlist_FE_OFDM_it_Torino) / sizeof(struct mux),
@@ -9846,13 +10569,6 @@ const char *comment;
 },
 {
 	.type = FE_OFDM,
-	.name = "se-Ange_Snoberg",
-	.muxes = muxlist_FE_OFDM_se_Ange_Snoberg,
-	.nmuxes = sizeof(muxlist_FE_OFDM_se_Ange_Snoberg) / sizeof(struct mux),
-	.comment = "Sweden - Ånge/Snöberg"
-},
-{
-	.type = FE_OFDM,
 	.name = "se-Angebo",
 	.muxes = muxlist_FE_OFDM_se_Angebo,
 	.nmuxes = sizeof(muxlist_FE_OFDM_se_Angebo) / sizeof(struct mux),
@@ -9864,6 +10580,13 @@ const char *comment;
 	.muxes = muxlist_FE_OFDM_se_Angelholm_Vegeholm,
 	.nmuxes = sizeof(muxlist_FE_OFDM_se_Angelholm_Vegeholm) / sizeof(struct mux),
 	.comment = "Sweden - Ängelholm/Vegeholm"
+},
+{
+	.type = FE_OFDM,
+	.name = "se-Ange_Snoberg",
+	.muxes = muxlist_FE_OFDM_se_Ange_Snoberg,
+	.nmuxes = sizeof(muxlist_FE_OFDM_se_Ange_Snoberg) / sizeof(struct mux),
+	.comment = "Sweden - Ånge/Snöberg"
 },
 {
 	.type = FE_OFDM,
@@ -11995,6 +12718,13 @@ const char *comment;
 },
 {
 	.type = FE_QAM,
+	.name = "ch-unknown",
+	.muxes = muxlist_FE_QAM_ch_unknown,
+	.nmuxes = sizeof(muxlist_FE_QAM_ch_unknown) / sizeof(struct mux),
+	.comment = "Kabel Suisse"
+},
+{
+	.type = FE_QAM,
 	.name = "ch-Video2000",
 	.muxes = muxlist_FE_QAM_ch_Video2000,
 	.nmuxes = sizeof(muxlist_FE_QAM_ch_Video2000) / sizeof(struct mux),
@@ -12009,17 +12739,17 @@ const char *comment;
 },
 {
 	.type = FE_QAM,
-	.name = "ch-unknown",
-	.muxes = muxlist_FE_QAM_ch_unknown,
-	.nmuxes = sizeof(muxlist_FE_QAM_ch_unknown) / sizeof(struct mux),
-	.comment = "Kabel Suisse"
-},
-{
-	.type = FE_QAM,
 	.name = "de-Berlin",
 	.muxes = muxlist_FE_QAM_de_Berlin,
 	.nmuxes = sizeof(muxlist_FE_QAM_de_Berlin) / sizeof(struct mux),
 	.comment = "Kabel Berlin"
+},
+{
+	.type = FE_QAM,
+	.name = "de-iesy",
+	.muxes = muxlist_FE_QAM_de_iesy,
+	.nmuxes = sizeof(muxlist_FE_QAM_de_iesy) / sizeof(struct mux),
+	.comment = "Unity Media (iesy Hessen, ish Nordrhein-Westfalen)"
 },
 {
 	.type = FE_QAM,
@@ -12033,14 +12763,7 @@ const char *comment;
 	.name = "de-Muenchen",
 	.muxes = muxlist_FE_QAM_de_Muenchen,
 	.nmuxes = sizeof(muxlist_FE_QAM_de_Muenchen) / sizeof(struct mux),
-	.comment = "Kabel Muenchen"
-},
-{
-	.type = FE_QAM,
-	.name = "de-iesy",
-	.muxes = muxlist_FE_QAM_de_iesy,
-	.nmuxes = sizeof(muxlist_FE_QAM_de_iesy) / sizeof(struct mux),
-	.comment = "Unity Media (iesy Hessen, ish Nordrhein-Westfalen)"
+	.comment = "2008-04-28"
 },
 {
 	.type = FE_QAM,
@@ -12048,6 +12771,20 @@ const char *comment;
 	.muxes = muxlist_FE_QAM_de_neftv,
 	.nmuxes = sizeof(muxlist_FE_QAM_de_neftv) / sizeof(struct mux),
 	.comment = "Cable conf for NEFtv"
+},
+{
+	.type = FE_QAM,
+	.name = "de-Primacom",
+	.muxes = muxlist_FE_QAM_de_Primacom,
+	.nmuxes = sizeof(muxlist_FE_QAM_de_Primacom) / sizeof(struct mux),
+	.comment = "Primacom"
+},
+{
+	.type = FE_QAM,
+	.name = "de-Unitymedia",
+	.muxes = muxlist_FE_QAM_de_Unitymedia,
+	.nmuxes = sizeof(muxlist_FE_QAM_de_Unitymedia) / sizeof(struct mux),
+	.comment = "Unitymedia"
 },
 {
 	.type = FE_QAM,
@@ -12079,10 +12816,24 @@ const char *comment;
 },
 {
 	.type = FE_QAM,
+	.name = "fi-jkl",
+	.muxes = muxlist_FE_QAM_fi_jkl,
+	.nmuxes = sizeof(muxlist_FE_QAM_fi_jkl) / sizeof(struct mux),
+	.comment = "OnCable (Finland / Jyväskylä)"
+},
+{
+	.type = FE_QAM,
 	.name = "fi-Joensuu-Tikka",
 	.muxes = muxlist_FE_QAM_fi_Joensuu_Tikka,
 	.nmuxes = sizeof(muxlist_FE_QAM_fi_Joensuu_Tikka) / sizeof(struct mux),
 	.comment = "DVB-C, Tikka Media, Joensuu, Finland"
+},
+{
+	.type = FE_QAM,
+	.name = "fi-sonera",
+	.muxes = muxlist_FE_QAM_fi_sonera,
+	.nmuxes = sizeof(muxlist_FE_QAM_fi_sonera) / sizeof(struct mux),
+	.comment = "Sonera kaapeli-tv (Finland)"
 },
 {
 	.type = FE_QAM,
@@ -12097,20 +12848,6 @@ const char *comment;
 	.muxes = muxlist_FE_QAM_fi_Turku,
 	.nmuxes = sizeof(muxlist_FE_QAM_fi_Turku) / sizeof(struct mux),
 	.comment = "Turun Kaapelitelevisio Oy (Turku)"
-},
-{
-	.type = FE_QAM,
-	.name = "fi-jkl",
-	.muxes = muxlist_FE_QAM_fi_jkl,
-	.nmuxes = sizeof(muxlist_FE_QAM_fi_jkl) / sizeof(struct mux),
-	.comment = "OnCable (Finland / Jyväskylä)"
-},
-{
-	.type = FE_QAM,
-	.name = "fi-sonera",
-	.muxes = muxlist_FE_QAM_fi_sonera,
-	.nmuxes = sizeof(muxlist_FE_QAM_fi_sonera) / sizeof(struct mux),
-	.comment = "Sonera kaapeli-tv (Finland)"
 },
 {
 	.type = FE_QAM,
