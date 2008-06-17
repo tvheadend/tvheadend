@@ -322,3 +322,13 @@ dvb_mux_state(th_dvb_mux_instance_t *tdmi)
   }
   return txt;
 }
+
+/**
+ *
+ */
+int
+dvb_quality_to_percent(int qual)
+{
+  return (qual + 50) * 2;
+}
+

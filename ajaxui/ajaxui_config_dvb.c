@@ -698,7 +698,8 @@ ajax_adaptermuxlist(http_connection_t *hc, http_reply_t *hr,
 		      tdmi->tdmi_identifier, buf);
 
       ajax_table_cell(&ta, "status", "%s", dvb_mux_status(tdmi, 0));
-      ajax_table_cell(&ta, "qual", "%d", tdmi->tdmi_quality);
+      ajax_table_cell(&ta, "qual", "%d%%",
+		      dvb_quality_to_percent(tdmi->tdmi_quality));
       ajax_table_cell(&ta, "state", "%s", dvb_mux_state(tdmi));
       ajax_table_cell(&ta, "name", "%s", tdmi->tdmi_network ?: "Unknown");
 

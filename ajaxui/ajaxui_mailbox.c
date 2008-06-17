@@ -396,7 +396,8 @@ void
 ajax_mailbox_tdmi_qual_change(th_dvb_mux_instance_t *tdmi)
 {
   char buf[10];
-  snprintf(buf, sizeof(buf), "%d", tdmi->tdmi_quality);
+  snprintf(buf, sizeof(buf), "%d%%",
+	   dvb_quality_to_percent(tdmi->tdmi_quality));
   ajax_mailbox_update_div(tdmi->tdmi_adapter->tda_identifier,
 			  "qual", tdmi->tdmi_identifier,
 			  buf);
