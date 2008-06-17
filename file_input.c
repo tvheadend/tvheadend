@@ -68,6 +68,14 @@ static void fi_deliver(void *aux, int64_t now);
 static void file_input_get_pkt(th_transport_t *t, file_input_t *fi,
 			       int64_t now);
 
+
+
+static const char *file_input_source_name(th_transport_t *t)
+{
+  return "file input";
+}
+
+
 /* 
  *
  */
@@ -156,6 +164,7 @@ file_input_init(void)
     t->tht_provider = strdup("HTS Tvheadend");
     t->tht_identifier = strdup(ch->ch_name);
     t->tht_file_input = fi;
+    t->tht_sourcename = file_input_source_name;
     transport_map_channel(t, ch);
   }
 }
