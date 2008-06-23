@@ -149,8 +149,6 @@ main(int argc, char **argv)
     }
   }
 
-  printf("Tvheadend %s starting\n", htsversion);
-
   config_open_by_prgname("tvheadend", cfgfile);
 
   if(forkaway) {
@@ -159,8 +157,10 @@ main(int argc, char **argv)
     }
 
     pidfile = fopen("/var/run/tvhead.pid", "w+");
-    fprintf(pidfile, "%d\n", getpid());
-    fclose(pidfile);
+    if(pidfile != NULL) {
+      fprintf(pidfile, "%d\n", getpid());
+      fclose(pidfile);
+    }
 
     grp = getgrnam(groupnam ?: "video");
     if(grp != NULL) {
@@ -178,6 +178,8 @@ main(int argc, char **argv)
     }
 
     umask(0);
+  } else {
+    printf("Tvheadend %s starting\n", htsversion);
   }
 
   openlog("tvheadend", LOG_PID, logfacility);
@@ -216,8 +218,8 @@ main(int argc, char **argv)
   snprintf(buf, sizeof(buf), "%s/dvbmuxes", settings_dir);
   mkdir(buf, 0777);
 
-  syslog(LOG_NOTICE, "Started HTS TV Headend, settings located in \"%s\"",
-	 settings_dir);
+  syslog(LOG_NOTICE, "Started HTS TV Headend (%s), settings located in \"%s\"",
+	 htsversion, settings_dir);
 
   dispatch_init();
 
