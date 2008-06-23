@@ -50,6 +50,7 @@
 #include "obj/unmapped.pngh"
 
 
+extern const char *htsversion;
 
 const char *ajax_tabnames[] = {
   [AJAX_TAB_CHANNELS]      = "Channels",
@@ -597,13 +598,14 @@ ajax_page_root(http_connection_t *hc, http_reply_t *hr,
   tcp_qprintf(tq,
 	      "<div style=\"width: 100%%; overflow: hidden\">"
 	      "<div style=\"float: left; width: 30%%\">"
-	      "Tvheadend v1.x (r?)"
+	      "Tvheadend (%s)"
 	      "</div>"
 	      "<div style=\"float: left; width: 40%%\" id=\"topmenu\"></div>"
 	      "<div style=\"float: left; width: 30%%; text-align: right\">"
 	      "&nbsp;"
 	      "</div>"
-	      "</div>");
+	      "</div>",
+	      htsversion);
 
   ajax_mailbox_start(tq);
 

@@ -70,7 +70,7 @@ int running;
 int startupcounter;
 const char *settings_dir;
 const char *sys_warning;
-
+extern const char *htsversion;
 static pthread_mutex_t tag_mutex = PTHREAD_MUTEX_INITIALIZER;
 static uint32_t tag_tally;
 
@@ -148,6 +148,8 @@ main(int argc, char **argv)
       break;
     }
   }
+
+  printf("Tvheadend %s starting\n", htsversion);
 
   config_open_by_prgname("tvheadend", cfgfile);
 
