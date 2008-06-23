@@ -260,8 +260,8 @@ file_input_get_pkt(th_transport_t *t, file_input_t *fi, int64_t now)
   if(fi->fi_dts_offset == AV_NOPTS_VALUE)
     fi->fi_dts_offset = ffpkt.dts;
 
+  fi->fi_last_dts = ffpkt.dts;
   dts = ffpkt.dts + fi->fi_dts_offset;
-  fi->fi_last_dts = dts;
 
   pts = ffpkt.pts;
   if(pts != AV_NOPTS_VALUE)
