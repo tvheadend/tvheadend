@@ -107,7 +107,7 @@ pull_chute (int sig)
   char pwd[PATH_MAX];
 
   getcwd(pwd, sizeof(pwd));
-  syslog(LOG_ERR, "HTS TV Headend crashed on signal %i (pwd \"%s\")",
+  syslog(LOG_ERR, "HTS Tvheadend crashed on signal %i (pwd \"%s\")",
 	 sig, pwd);
 }
 
@@ -125,11 +125,15 @@ main(int argc, char **argv)
   int logfacility = LOG_DAEMON;
   int disable_dvb = 0;
   int p;
-  char buf[400];
+  char buf[128];
+  char buf2[128];
+  char buf3[128];
+  char *settingspath = NULL;
+  const char *homedir;
 
   signal(SIGPIPE, handle_sigpipe);
 
-  while((c = getopt(argc, argv, "c:fu:g:d")) != -1) {
+  while((c = getopt(argc, argv, "c:fu:g:ds:")) != -1) {
     switch(c) {
     case 'd':
       disable_dvb = 1;
@@ -145,6 +149,9 @@ main(int argc, char **argv)
       break;
     case 'g':
       groupnam = optarg;
+      break;
+    case 's':
+      settingspath = optarg;
       break;
     }
   }
@@ -178,24 +185,38 @@ main(int argc, char **argv)
     }
 
     umask(0);
-  } else {
-    printf("Tvheadend %s starting\n", htsversion);
   }
 
   openlog("tvheadend", LOG_PID, logfacility);
-  
-  settings_dir = config_get_str("settings-dir", NULL);
 
-  settings_dir = NULL;
-
-  if(settings_dir == NULL) {
-    settings_dir = "/tmp/tvheadend";
-    sys_warning = 
-      "All channelsetup/recording info is stored in "
-      "'/tmp/tvheadend' and may not survive a system restart. "
-      "Please see the configuration manual for how to setup this correctly.";
+  if(settingspath == NULL && (homedir = getenv("HOME")) != NULL) {
+    snprintf(buf2, sizeof(buf2), "%s/.hts", homedir);
+      
+    if(mkdir(buf2, 0777) == 0 || errno == EEXIST)
+      settingspath = buf2;
+    else
+      syslog(LOG_ERR, 
+	     "Unable to create directory for storing settings \"%s\" -- %s",
+	     buf, strerror(errno));
   }
-  mkdir(settings_dir, 0777);
+
+  if(settingspath == NULL) {
+    settingspath = "/tmp";
+    sys_warning = 
+      "All settings are stored in "
+      "'/tmp/' and may not survive a system restart. "
+      "Please see the configuration manual for how to setup this correctly.";
+    syslog(LOG_ERR, "%s", sys_warning);
+  }
+
+  snprintf(buf3, sizeof(buf3), "%s/tvheadend", settingspath);
+  settings_dir = buf3;
+
+  if(!(mkdir(settings_dir, 0777) == 0 || errno == EEXIST)) {
+    syslog(LOG_ERR, 
+	   "Unable to create directory for storing settings \"%s\" -- %s",
+	   settings_dir, strerror(errno));
+  }
 
   snprintf(buf, sizeof(buf), "%s/channels", settings_dir);
   mkdir(buf, 0777);
@@ -218,8 +239,14 @@ main(int argc, char **argv)
   snprintf(buf, sizeof(buf), "%s/dvbmuxes", settings_dir);
   mkdir(buf, 0777);
 
-  syslog(LOG_NOTICE, "Started HTS TV Headend (%s), settings located in \"%s\"",
+  syslog(LOG_NOTICE, 
+	 "Starting HTS Tvheadend (%s), settings stored in \"%s\"",
 	 htsversion, settings_dir);
+
+  if(!forkaway)
+    fprintf(stderr, 
+	    "\nStarting HTS Tvheadend (%s)\nSettings stored in \"%s\"\n",
+	    htsversion, settings_dir);
 
   dispatch_init();
 
@@ -268,9 +295,10 @@ main(int argc, char **argv)
       syslog(LOG_NOTICE, 
 	     "Initial input setup completed, starting output modules");
 
-      fprintf(stderr,
-	      "Initial input setup completed, starting output modules\n");
-
+      if(!forkaway)
+	fprintf(stderr,
+		"\nInitial input setup completed, starting output modules\n");
+      
       startupcounter = -1;
 
       pvr_init();
@@ -293,7 +321,7 @@ main(int argc, char **argv)
     dispatcher();
   }
 
-  syslog(LOG_NOTICE, "Exiting HTS TV Headend");
+  syslog(LOG_NOTICE, "Exiting HTS Tvheadend");
 
   if(forkaway)
     unlink("/var/run/tvhead.pid");
