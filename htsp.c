@@ -149,15 +149,15 @@ htsp_subscribe(rpc_session_t *ses, htsmsg_t *in, void *opaque)
 {
   htsp_t *htsp = opaque;
   channel_t *ch;
-  const char *txt;
   th_subscription_t *s;
   htsmsg_t *r;
+
   uint32_t tag;
 
-  if((txt = htsmsg_get_str(in, "channel")) == NULL)
-    return rpc_error(ses, "missing argument: channel");
+  if(htsmsg_get_u32(in, "channelTag", &tag))
+    return rpc_error(ses, "missing argument: channelTag");
 
-  if((ch = channel_find(txt, 0, NULL)) == NULL)
+  if((ch = channel_by_tag(tag)) == NULL)
     return rpc_error(ses, "Channel not found");
   
   LIST_FOREACH(s, &htsp->htsp_subscriptions, ths_subscriber_link) {
@@ -168,14 +168,10 @@ htsp_subscribe(rpc_session_t *ses, htsmsg_t *in, void *opaque)
   }
 
 
-  tag = tag_get();
-
   r = htsmsg_create();
-  htsmsg_add_u32(r, "seq", ses->rs_seq);
-  htsmsg_add_u32(r, "id", tag);
   htsp_send_msg(htsp, r, 0);
 
-  htsp_muxer_subscribe(htsp, ch, 200, tag);
+  htsp_muxer_subscribe(htsp, ch, 200);
   
   return NULL;
 }
@@ -190,8 +186,8 @@ htsp_unsubscribe(rpc_session_t *ses, htsmsg_t *in, void *opaque)
   htsp_t *htsp = opaque;
   uint32_t id;
 
-  if(htsmsg_get_u32(in, "id", &id))
-    return rpc_error(ses, "missing argument: id");
+  if(htsmsg_get_u32(in, "channelTag", &id))
+    return rpc_error(ses, "missing argument: channelTag");
   
   htsp_muxer_unsubscribe(htsp, id);
 
