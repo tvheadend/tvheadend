@@ -35,26 +35,26 @@
 int
 ajax_config_cwc_tab(http_connection_t *hc, http_reply_t *hr)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *q = &hr->hr_q;
 
-  ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, "Code-word Client");
+  ajax_box_begin(q, AJAX_BOX_SIDEBOX, NULL, NULL, "Code-word Client");
 
-  tcp_qprintf(tq, "<div id=\"cwclist\"></div>");
+  htsbuf_qprintf(q, "<div id=\"cwclist\"></div>");
   
-  ajax_js(tq,  
+  ajax_js(q,  
 	  "new Ajax.Updater('cwclist', '/ajax/cwclist', "
 	  "{method: 'get', evalScripts: true});");
 
-  tcp_qprintf(tq, "<hr><div style=\"overflow: auto; width: 100%\">");
+  htsbuf_qprintf(q, "<hr><div style=\"overflow: auto; width: 100%\">");
 
- tcp_qprintf(tq,
+ htsbuf_qprintf(q,
 	      "<div class=\"cell_100\">"
 	      "<div class=\"infoprefixwidewidefat\">Hostname:</div>"
 	      "<div>"
 	      "<input  type=\"text\" size=40 id=\"hostname\">"
 	      "</div></div>");
 
- tcp_qprintf(tq,
+ htsbuf_qprintf(q,
 	      "<div class=\"cell_100\">"
 	      "<div class=\"infoprefixwidewidefat\">Port:</div>"
 	      "<div>"
@@ -62,28 +62,28 @@ ajax_config_cwc_tab(http_connection_t *hc, http_reply_t *hr)
 	      "</div></div>");
 
 
-  tcp_qprintf(tq,
+  htsbuf_qprintf(q,
 	      "<div class=\"cell_100\">"
 	      "<div class=\"infoprefixwidewidefat\">Username:</div>"
 	      "<div>"
 	      "<input  type=\"text\" id=\"username\">"
 	      "</div></div>");
 
-  tcp_qprintf(tq,
+  htsbuf_qprintf(q,
 	      "<div class=\"cell_100\">"
 	      "<div class=\"infoprefixwidewidefat\">Password:</div>"
 	      "<div>"
 	      "<input  type=\"password\" id=\"password\">"
 	      "</div></div>");
 
-  tcp_qprintf(tq,
+  htsbuf_qprintf(q,
 	      "<div class=\"cell_100\">"
 	      "<div class=\"infoprefixwidewidefat\">DES-key:</div>"
 	      "<div>"
 	      "<input  type=\"text\" size=50 id=\"deskey\">"
 	      "</div></div>");
 
-  tcp_qprintf(tq,
+  htsbuf_qprintf(q,
 	      "<br>"
 	      "<input type=\"button\" value=\"Add new server entry\" "
 	      "onClick=\"new Ajax.Request('/ajax/cwcadd', "
@@ -96,11 +96,11 @@ ajax_config_cwc_tab(http_connection_t *hc, http_reply_t *hr)
 	      "}})"
 	      "\">");
 
-  tcp_qprintf(tq, "</div>\r\n");
+  htsbuf_qprintf(q, "</div>\r\n");
   
-  ajax_box_end(tq, AJAX_BOX_SIDEBOX);
+  ajax_box_end(q, AJAX_BOX_SIDEBOX);
   
-  tcp_qprintf(tq, "</div>");
+  htsbuf_qprintf(q, "</div>");
   http_output_html(hc, hr);
   return 0;
 }
@@ -113,12 +113,12 @@ static int
 ajax_cwclist(http_connection_t *hc, http_reply_t *hr, 
 	    const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *q = &hr->hr_q;
   ajax_table_t ta;
   cwc_t *cwc;
   char id[20];
 
-  ajax_table_top(&ta, hc, tq,
+  ajax_table_top(&ta, hc, q,
 		 (const char *[]){"Code-word Server",
 				   "Username",
 		                   "Enabled",
@@ -166,7 +166,7 @@ static int
 ajax_cwcadd(http_connection_t *hc, http_reply_t *hr, 
 	    const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *q = &hr->hr_q;
   const char *errtxt;
 
   errtxt = cwc_add(http_arg_get(&hc->hc_req_args, "hostname"),
@@ -177,15 +177,15 @@ ajax_cwcadd(http_connection_t *hc, http_reply_t *hr,
 		   "1", 1, 1);
 
   if(errtxt != NULL) {
-    tcp_qprintf(tq, "alert('%s');", errtxt);
+    htsbuf_qprintf(q, "alert('%s');", errtxt);
   } else {
     
-    tcp_qprintf(tq, "$('hostname').clear();\r\n");
-    tcp_qprintf(tq, "$('port').clear();\r\n");
-    tcp_qprintf(tq, "$('username').clear();\r\n");
-    tcp_qprintf(tq, "$('password').clear();\r\n");
-    tcp_qprintf(tq, "$('deskey').clear();\r\n");
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(q, "$('hostname').clear();\r\n");
+    htsbuf_qprintf(q, "$('port').clear();\r\n");
+    htsbuf_qprintf(q, "$('username').clear();\r\n");
+    htsbuf_qprintf(q, "$('password').clear();\r\n");
+    htsbuf_qprintf(q, "$('deskey').clear();\r\n");
+    htsbuf_qprintf(q, 
 		"new Ajax.Updater('cwclist', '/ajax/cwclist', "
 		"{method: 'get', evalScripts: true});");
   }
@@ -202,7 +202,7 @@ static int
 ajax_cwcdel(http_connection_t *hc, http_reply_t *hr, 
 	    const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *q = &hr->hr_q;
   const char *txt;
   cwc_t *cwc;
 
@@ -213,7 +213,7 @@ ajax_cwcdel(http_connection_t *hc, http_reply_t *hr,
     return HTTP_STATUS_BAD_REQUEST;
 
   cwc_delete(cwc);
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(q, 
 	      "new Ajax.Updater('cwclist', '/ajax/cwclist', "
 	      "{method: 'get', evalScripts: true});");
 
@@ -228,7 +228,7 @@ static int
 ajax_cwcchange(http_connection_t *hc, http_reply_t *hr, 
 	    const char *remain, void *opaque)
 {
-  //  tcp_queue_t *tq = &hr->hr_tq;
+  //  htsbuf_queue_t *q = &hr->hr_q;
   const char *txt;
   cwc_t *cwc;
 

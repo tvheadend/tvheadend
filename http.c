@@ -156,7 +156,7 @@ http_destroy_reply(http_connection_t *hc, http_reply_t *hr)
 
   TAILQ_REMOVE(&hc->hc_replies, hr, hr_link);
   free(hr->hr_location);
-  tcp_flush_queue(&hr->hr_tq);
+  htsbuf_queue_flush(&hr->hr_q);
   free(hr);
 }
 
@@ -170,7 +170,7 @@ http_send_reply(http_connection_t *hc, http_reply_t *hr)
 {
   struct tm tm0, *tm;
   time_t t;
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *hq = &hr->hr_q;
   int r;
 
   if(hr->hr_version >= HTTP_VERSION_1_0) {
@@ -219,11 +219,13 @@ http_send_reply(http_connection_t *hc, http_reply_t *hr)
 		"Content-Type: %s\r\n"
 		"Content-Length: %d\r\n"
 		"\r\n",
-		hr->hr_content, tq->tq_depth);
+		hr->hr_content, hq->hq_size);
   }
-  tcp_output_queue(&hc->hc_tcp_session, NULL, tq);
+
+  tcp_output_queue(&hc->hc_tcp_session, 0, hq);
 
   r = !hr->hr_keep_alive;
+
 
   http_destroy_reply(hc, hr);
   return r;
@@ -267,11 +269,11 @@ void
 http_error(http_connection_t *hc, http_reply_t *hr, int error)
 {
   const char *errtxt = http_rc2str(error);
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *hq = &hr->hr_q;
 
-  tcp_flush_queue(tq);
+  htsbuf_queue_flush(hq);
 
-  tcp_qprintf(tq,
+  htsbuf_qprintf(hq, 
 	      "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\r\n"
 	      "<HTML><HEAD>\r\n"
 	      "<TITLE>%d %s</TITLE>\r\n"
@@ -318,9 +320,9 @@ http_output_html(http_connection_t *hc, http_reply_t *hr)
 void
 http_redirect(http_connection_t *hc, http_reply_t *hr, const char *location)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *hq = &hr->hr_q;
 
-  tcp_qprintf(tq,
+  htsbuf_qprintf(hq,
 	      "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\r\n"
 	      "<HTML><HEAD>\r\n"
 	      "<TITLE>Redirect</TITLE>\r\n"
@@ -349,7 +351,7 @@ http_exec(http_connection_t *hc, http_path_t *hp, char *remain, int err)
   /* Insert reply in order */
   TAILQ_INSERT_TAIL(&hc->hc_replies, hr, hr_link);
   
-  tcp_init_queue(&hr->hr_tq, -1);
+  htsbuf_queue_init(&hr->hr_q, INT32_MAX);
   hr->hr_connection = hc;
   hr->hr_version    = hc->hc_version;
   hr->hr_keep_alive = hc->hc_keep_alive;
@@ -590,7 +592,7 @@ http_con_parse(void *aux, char *buf)
   int n, v;
   char *argv[3], *c;
 
-  //printf("HTTP INPUT: %s\n", buf);
+  //  printf("HTTP INPUT: %s\n", buf);
 
   switch(hc->hc_state) {
   case HTTP_CON_WAIT_REQUEST:
@@ -918,7 +920,7 @@ deliver_resource(http_connection_t *hc, http_reply_t *hr,
 {
   http_resource_t *hres = opaque;
 
-  tcp_qput(&hr->hr_tq, hres->data, hres->len);
+  htsbuf_append(&hr->hr_q, hres->data, hres->len);
   http_output(hc, hr, hres->content, hres->encoding, 15);
   return 0;
 }

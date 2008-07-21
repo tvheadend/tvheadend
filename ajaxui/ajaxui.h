@@ -32,10 +32,10 @@ typedef enum {
 } ajax_box_t;
 
 
-void ajax_box_begin(tcp_queue_t *tq, ajax_box_t type,
+void ajax_box_begin(htsbuf_queue_t *q, ajax_box_t type,
 		    const char *id, const char *style, const char *title);
 
-void ajax_box_end(tcp_queue_t *tq, ajax_box_t type);
+void ajax_box_end(htsbuf_queue_t *q, ajax_box_t type);
 
 
 
@@ -47,11 +47,11 @@ typedef struct {
   const char *rowid;
 
   int csize[20];
-  tcp_queue_t *tq;
+  htsbuf_queue_t *hq;
   int rowcol;
 } ajax_table_t;
 
-void ajax_table_top(ajax_table_t *t, http_connection_t *hc, tcp_queue_t *tq,
+void ajax_table_top(ajax_table_t *t, http_connection_t *hc, htsbuf_queue_t *q,
 		    const char *names[], int weights[]);
 void ajax_table_row_start(ajax_table_t *t, const char *id);
 void ajax_table_cell(ajax_table_t *t, const char *id, const char *fmt, ...);
@@ -66,7 +66,7 @@ void ajax_table_subrow_end(ajax_table_t *t);
 
 
 
-void ajax_js(tcp_queue_t *tq, const char *fmt, ...);
+void ajax_js(htsbuf_queue_t *q, const char *fmt, ...);
 
 
 TAILQ_HEAD(ajax_menu_entry_queue, ajax_menu_entry);
@@ -83,7 +83,7 @@ void ajaxui_start(void);
 void ajax_channels_init(void);
 void ajax_config_init(void);
 
-void ajax_menu_bar_from_array(tcp_queue_t *tq, const char *name, 
+void ajax_menu_bar_from_array(htsbuf_queue_t *q, const char *name, 
 			      const char **vec, int num, int cur);
 
 int ajax_channelgroup_tab(http_connection_t *hc, http_reply_t *hr);
@@ -106,18 +106,19 @@ void ajax_config_cwc_init(void);
 
 void ajax_config_transport_init(void);
 
-int ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
+int ajax_transport_build_list(http_connection_t *hc, htsbuf_queue_t *q,
 			      struct th_transport_tree *tlist,
 			      int ntransports);
 
 const char *ajaxui_escape_apostrophe(const char *content);
-void ajax_generate_select_functions(tcp_queue_t *tq, const char *fprefix,
+void ajax_generate_select_functions(htsbuf_queue_t *q, const char *fprefix,
 				    char **selvector);
 
-void ajax_a_jsfuncf(tcp_queue_t *tq, const char *innerhtml,
+void ajax_a_jsfuncf(htsbuf_queue_t *q, const char *innerhtml,
 		    const char *fmt, ...);
 
-void ajax_button(tcp_queue_t *tq, const char *caption, const char *code, ...);
+void ajax_button(htsbuf_queue_t *q, 
+		 const char *caption, const char *code, ...);
 
 void ajax_transport_build_mapper_state(char *buf, size_t siz,
 				       th_transport_t *t, int mapped);

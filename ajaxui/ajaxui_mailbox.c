@@ -155,7 +155,7 @@ ajax_mailbox_create(const char *id)
  *
  */
 void
-ajax_mailbox_start(tcp_queue_t *tq)
+ajax_mailbox_start(htsbuf_queue_t *hq)
 {
   struct timeval tv;
   uint8_t sum[16];
@@ -181,7 +181,7 @@ ajax_mailbox_start(tcp_queue_t *tq)
   mbdebug("Generated mailbox %s\n", id);
 
   ajax_mailbox_create(id);
-  ajax_js(tq, "mailboxquery('%s')", id);
+  ajax_js(hq, "mailboxquery('%s')", id);
 }
 
 
@@ -200,16 +200,17 @@ ajax_mailbox_reply(ajaxui_mailbox_t *amb, http_reply_t *hr)
   mbdebug("mailbox[%s]: sending reply\n", amb->amb_boxid);
 
   while((al = TAILQ_FIRST(&amb->amb_letters)) != NULL) {
-    tcp_qprintf(&hr->hr_tq, "try {\r\n");
-    tcp_qprintf(&hr->hr_tq, "%s%s", al->al_payload_a, al->al_payload_b ?: "");
+    htsbuf_qprintf(&hr->hr_q, "try {\r\n");
+    htsbuf_qprintf(&hr->hr_q, "%s%s",
+		   al->al_payload_a, al->al_payload_b ?: "");
     mbdebug("\t%s%s", al->al_payload_a, al->al_payload_b ?: "");
 
-    tcp_qprintf(&hr->hr_tq, "}\r\n"
+    htsbuf_qprintf(&hr->hr_q, "}\r\n"
 		"catch(err) {}\r\n");
     al_destroy(amb, al);
   }
 
-  tcp_qprintf(&hr->hr_tq, "mailboxquery('%s');\r\n", amb->amb_boxid);
+  htsbuf_qprintf(&hr->hr_q, "mailboxquery('%s');\r\n", amb->amb_boxid);
 
   http_output(hr->hr_connection, hr, "text/javascript", NULL, 0);
   amb->amb_hr = NULL;

@@ -63,7 +63,7 @@ typedef struct http_reply {
   const char *hr_encoding;
   const char *hr_content;
 
-  tcp_queue_t hr_tq;
+  htsbuf_queue_t hr_q;
 
 } http_reply_t;
 

@@ -38,84 +38,84 @@
  * 
  */
 int
-ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
+ajax_transport_build_list(http_connection_t *hc, htsbuf_queue_t *tq,
 			  struct th_transport_tree *tlist, int numtransports)
 {
   th_transport_t *t;
   ajax_table_t ta;
 
-  tcp_qprintf(tq, "<script type=\"text/javascript\">\r\n"
+  htsbuf_qprintf(tq, "<script type=\"text/javascript\">\r\n"
 	      "//<![CDATA[\r\n");
   
   /* Select all */
-  tcp_qprintf(tq, "select_all = function() {\r\n");
+  htsbuf_qprintf(tq, "select_all = function() {\r\n");
   RB_FOREACH(t, tlist, tht_tmp_link) {
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(tq, 
 		"$('sel_%s').checked = true;\r\n",
 		t->tht_identifier);
   }
-  tcp_qprintf(tq, "}\r\n");
+  htsbuf_qprintf(tq, "}\r\n");
 
   /* Select none */
-  tcp_qprintf(tq, "select_none = function() {\r\n");
+  htsbuf_qprintf(tq, "select_none = function() {\r\n");
   RB_FOREACH(t, tlist, tht_tmp_link) {
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(tq, 
 		"$('sel_%s').checked = false;\r\n",
 		t->tht_identifier);
   }
-  tcp_qprintf(tq, "}\r\n");
+  htsbuf_qprintf(tq, "}\r\n");
 
   /* Invert selection */
-  tcp_qprintf(tq, "select_invert = function() {\r\n");
+  htsbuf_qprintf(tq, "select_invert = function() {\r\n");
   RB_FOREACH(t, tlist, tht_tmp_link) {
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(tq, 
 		"$('sel_%s').checked = !$('sel_%s').checked;\r\n",
 		t->tht_identifier, t->tht_identifier);
   }
-  tcp_qprintf(tq, "}\r\n");
+  htsbuf_qprintf(tq, "}\r\n");
 
   /* Select TV transports */
-  tcp_qprintf(tq, "select_tv = function() {\r\n");
+  htsbuf_qprintf(tq, "select_tv = function() {\r\n");
   RB_FOREACH(t, tlist, tht_tmp_link) {
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(tq, 
 		"$('sel_%s').checked = %s;\r\n",
 		t->tht_identifier, 
 		transport_is_tv(t) ? "true" : "false");
   }
-  tcp_qprintf(tq, "}\r\n");
+  htsbuf_qprintf(tq, "}\r\n");
 
   /* Select unscrambled TV transports */
-  tcp_qprintf(tq, "select_tv_nocrypt = function() {\r\n");
+  htsbuf_qprintf(tq, "select_tv_nocrypt = function() {\r\n");
   RB_FOREACH(t, tlist, tht_tmp_link) {
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(tq, 
 		"$('sel_%s').checked = %s;\r\n",
 		t->tht_identifier, 
 		transport_is_tv(t) && !t->tht_scrambled ? "true" : "false");
   }
-  tcp_qprintf(tq, "}\r\n");
+  htsbuf_qprintf(tq, "}\r\n");
 
   /* Perform the given op on all transprots */
-  tcp_qprintf(tq, "selected_do = function(op) {\r\n"
+  htsbuf_qprintf(tq, "selected_do = function(op) {\r\n"
 	      "var h = new Hash();\r\n"
 	      );
 
   RB_FOREACH(t, tlist, tht_tmp_link) {
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(tq, 
 		"if($('sel_%s').checked) {h.set('%s', 'selected') }\r\n",
 		t->tht_identifier, t->tht_identifier);
   }
 
-  tcp_qprintf(tq, " new Ajax.Request('/ajax/transport_op/' + op, "
+  htsbuf_qprintf(tq, " new Ajax.Request('/ajax/transport_op/' + op, "
 	      "{parameters: h});\r\n");
-  tcp_qprintf(tq, "}\r\n");
+  htsbuf_qprintf(tq, "}\r\n");
 
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(tq, 
 	      "\r\n//]]>\r\n"
 	      "</script>\r\n");
 
   /* Top */
 
-  tcp_qprintf(tq, "<form id=\"transports\">");
+  htsbuf_qprintf(tq, "<form id=\"transports\">");
 
   ajax_table_top(&ta, hc, tq,
 		 (const char *[]){"Last status", "Crypto",
@@ -158,22 +158,22 @@ ajax_transport_build_list(http_connection_t *hc, tcp_queue_t *tq,
 
   ajax_table_bottom(&ta);
 
-  tcp_qprintf(tq, "<hr>\r\n");
+  htsbuf_qprintf(tq, "<hr>\r\n");
 
-  tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
+  htsbuf_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
 
   ajax_button(tq, "Select all",  "select_all()");
   ajax_button(tq, "Select none",  "select_none()");
 
-  //  tcp_qprintf(tq, "</div>\r\n");
-  //tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
+  //  htsbuf_qprintf(tq, "</div>\r\n");
+  //htsbuf_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
 
   ajax_button(tq, "Map selected",   "selected_do('map');");
   ajax_button(tq, "Unmap selected", "selected_do('unmap');");
   ajax_button(tq, "Test and map selected", "selected_do('probe');");
-  tcp_qprintf(tq, "</div>");
+  htsbuf_qprintf(tq, "</div>");
 
-  tcp_qprintf(tq, "</form>");
+  htsbuf_qprintf(tq, "</form>");
   return 0;
 }
 
@@ -186,7 +186,7 @@ ajax_transport_rename_channel(http_connection_t *hc, http_reply_t *hr,
 {
   th_transport_t *t;
   const char *newname;
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
 
   if(remain == NULL || (t = transport_find_by_identifier(remain)) == NULL)
     return HTTP_STATUS_NOT_FOUND;
@@ -239,7 +239,7 @@ ajax_transport_build_mapper_state(char *buf, size_t siz, th_transport_t *t,
  *
  */
 static void
-ajax_map_unmap_channel(th_transport_t *t, tcp_queue_t *tq, int map)
+ajax_map_unmap_channel(th_transport_t *t, htsbuf_queue_t *tq, int map)
 {
   char buf[1000];
 
@@ -249,7 +249,7 @@ ajax_map_unmap_channel(th_transport_t *t, tcp_queue_t *tq, int map)
     transport_unmap_channel(t);
 
   ajax_transport_build_mapper_state(buf, sizeof(buf), t, map);
-  tcp_qprintf(tq, "%s", buf);
+  htsbuf_qprintf(tq, "%s", buf);
 }
 
 
@@ -261,7 +261,7 @@ ajax_transport_op(http_connection_t *hc, http_reply_t *hr,
 		  const char *remain, void *opaque)
 {
   th_transport_t *t;
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   const char *op = remain;
   http_arg_t *ra;
 

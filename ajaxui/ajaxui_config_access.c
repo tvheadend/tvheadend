@@ -51,26 +51,26 @@ static struct strtab accesstypetab[] = {
 int
 ajax_config_access_tab(http_connection_t *hc, http_reply_t *hr)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
 
   if(access_verify(hc->hc_username, hc->hc_password,
 		(struct sockaddr *)&hc->hc_tcp_session.tcp_peer_addr,
 		   AJAX_ACCESS_ACCESSCTRL))
     return HTTP_STATUS_UNAUTHORIZED;
 
-  tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
+  htsbuf_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
 
   ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, "Access control");
 
-  tcp_qprintf(tq, "<div id=\"alist\"></div>");
+  htsbuf_qprintf(tq, "<div id=\"alist\"></div>");
   
   ajax_js(tq,  
 	  "new Ajax.Updater('alist', '/ajax/accesslist', "
 	  "{method: 'get', evalScripts: true});");
 
-  tcp_qprintf(tq, "<hr><div style=\"overflow: auto; width: 100%\">");
+  htsbuf_qprintf(tq, "<hr><div style=\"overflow: auto; width: 100%\">");
 
-  tcp_qprintf(tq,
+  htsbuf_qprintf(tq,
 	      "<div style=\"height: 20px;\">"
 	      "<div style=\"float: left; margin-right: 4px\">"
 	      "<input type=\"text\" id=\"newuser\">"
@@ -80,11 +80,11 @@ ajax_config_access_tab(http_connection_t *hc, http_reply_t *hr)
 	      "</div>"
 	      "</div>");
 
-  tcp_qprintf(tq, "</div>\r\n");
+  htsbuf_qprintf(tq, "</div>\r\n");
   
   ajax_box_end(tq, AJAX_BOX_SIDEBOX);
   
-  tcp_qprintf(tq, "</div>");
+  htsbuf_qprintf(tq, "</div>");
   http_output_html(hc, hr);
   return 0;
 }
@@ -109,7 +109,7 @@ static int
 ajax_accesslist(http_connection_t *hc, http_reply_t *hr, 
 		const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   access_entry_t *ae;
   ajax_table_t ta;
   char id[100];
@@ -173,23 +173,23 @@ static int
 ajax_accessadd(http_connection_t *hc, http_reply_t *hr, 
 	       const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   access_entry_t *ae;
   const char *t;
 
   if((t = http_arg_get(&hc->hc_req_args, "name")) == NULL)
     return HTTP_STATUS_BAD_REQUEST;
 
-  tcp_qprintf(tq, "$('newuser').clear();\r\n");
+  htsbuf_qprintf(tq, "$('newuser').clear();\r\n");
 
   if(t == NULL || strlen(t) < 1 || strchr(t, '\'') || strchr(t, '"')) {
-    tcp_qprintf(tq, "alert('Invalid username');\r\n");
+    htsbuf_qprintf(tq, "alert('Invalid username');\r\n");
   } else {
     ae = access_add(t);
     if(ae == NULL) {
-      tcp_qprintf(tq, "alert('Invalid prefix');\r\n");
+      htsbuf_qprintf(tq, "alert('Invalid prefix');\r\n");
     } else {
-      tcp_qprintf(tq, 
+      htsbuf_qprintf(tq, 
 		  "new Ajax.Updater('alist', '/ajax/accesslist', "
 		"{method: 'get', evalScripts: true});\r\n");
     }
@@ -207,7 +207,7 @@ static int
 ajax_accesschange(http_connection_t *hc, http_reply_t *hr, 
 		  const char *remain, void *opaque)
 {
-  //  tcp_queue_t *tq = &hr->hr_tq;
+  //  htsbuf_queue_t *tq = &hr->hr_tq;
   access_entry_t *ae;
   const char *e, *c;
   int bit;
@@ -246,7 +246,7 @@ static int
 ajax_accessdel(http_connection_t *hc, http_reply_t *hr, 
 		  const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   access_entry_t *ae;
   const char *e;
 
@@ -258,7 +258,7 @@ ajax_accessdel(http_connection_t *hc, http_reply_t *hr,
 
   access_delete(ae);
 
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(tq, 
 	      "new Ajax.Updater('alist', '/ajax/accesslist', "
 	      "{method: 'get', evalScripts: true});\r\n");
 
@@ -275,7 +275,7 @@ static int
 ajax_accesssetpw(http_connection_t *hc, http_reply_t *hr, 
 		  const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   access_entry_t *ae;
   const char *e;
 
@@ -290,7 +290,7 @@ ajax_accesssetpw(http_connection_t *hc, http_reply_t *hr,
 
   access_save();
   
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(tq, 
 	      "$('password_%d').innerHTML= '"
 	      "<a href=\"javascript:void(0)\" "
 	      "onClick=\"makedivinput(\\'password_%d\\', "

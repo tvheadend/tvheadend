@@ -34,15 +34,15 @@
  * Render a channel group widget
  */
 static void
-ajax_chgroup_build(tcp_queue_t *tq, channel_group_t *tcg)
+ajax_chgroup_build(htsbuf_queue_t *tq, channel_group_t *tcg)
 {
-  tcp_qprintf(tq, "<li id=\"chgrp_%d\">", tcg->tcg_tag);
+  htsbuf_qprintf(tq, "<li id=\"chgrp_%d\">", tcg->tcg_tag);
   
   ajax_box_begin(tq, AJAX_BOX_BORDER, NULL, NULL, NULL);
   
-  tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
+  htsbuf_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
   
-  tcp_qprintf(tq,
+  htsbuf_qprintf(tq,
 	      "<div style=\"float: left; width: 60%\">"
 	      "<a href=\"javascript:void(0)\" "
 	      "onClick=\"$('cheditortab').innerHTML=''; "
@@ -54,7 +54,7 @@ ajax_chgroup_build(tcp_queue_t *tq, channel_group_t *tcg)
 
 
   if(tcg != defgroup) {
-    tcp_qprintf(tq,
+    htsbuf_qprintf(tq,
 		"<div style=\"float: left; width: 40%\" "
 		"class=\"chgroupaction\">"
 		"<a href=\"javascript:void(0)\" "
@@ -64,9 +64,9 @@ ajax_chgroup_build(tcp_queue_t *tq, channel_group_t *tcg)
   }
   
 
-  tcp_qprintf(tq, "</div>");
+  htsbuf_qprintf(tq, "</div>");
   ajax_box_end(tq, AJAX_BOX_BORDER);
-  tcp_qprintf(tq, "</li>");
+  htsbuf_qprintf(tq, "</li>");
 }
 
 /**
@@ -77,7 +77,7 @@ ajax_chgroup_updateorder(http_connection_t *hc, http_reply_t *hr,
 			 const char *remain, void *opaque)
 {
   channel_group_t *tcg;
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   http_arg_t *ra;
 
   TAILQ_FOREACH(ra, &hc->hc_req_args, link) {
@@ -91,7 +91,7 @@ ajax_chgroup_updateorder(http_connection_t *hc, http_reply_t *hr,
 
   channel_group_settings_write();
 
-  tcp_qprintf(tq, "<span id=\"updatedok\">Updated on server</span>");
+  htsbuf_qprintf(tq, "<span id=\"updatedok\">Updated on server</span>");
   ajax_js(tq, "Effect.Fade('updatedok')");
   http_output_html(hc, hr);
   return 0;
@@ -107,7 +107,7 @@ ajax_chgroup_add(http_connection_t *hc, http_reply_t *hr,
 		 const char *remain, void *opaque)
 {
   channel_group_t *tcg;
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   const char *name;
   
   if((name = http_arg_get(&hc->hc_req_args, "name")) != NULL) {
@@ -147,7 +147,7 @@ ajax_chgroup_del(http_connection_t *hc, http_reply_t *hr,
 		 const char *remain, void *opaque)
 {
   channel_group_t *tcg;
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   const char *id;
   
   if((id = http_arg_get(&hc->hc_req_args, "id")) == NULL)
@@ -156,7 +156,7 @@ ajax_chgroup_del(http_connection_t *hc, http_reply_t *hr,
   if((tcg = channel_group_by_tag(atoi(id))) == NULL)
     return HTTP_STATUS_BAD_REQUEST;
 
-  tcp_qprintf(tq, "$('chgrp_%d').remove();", tcg->tcg_tag);
+  htsbuf_qprintf(tq, "$('chgrp_%d').remove();", tcg->tcg_tag);
   http_output(hc, hr, "text/javascript; charset=UTF-8", NULL, 0);
 
   channel_group_destroy(tcg);
@@ -171,18 +171,18 @@ ajax_chgroup_del(http_connection_t *hc, http_reply_t *hr,
 int
 ajax_config_channels_tab(http_connection_t *hc, http_reply_t *hr)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   channel_group_t *tcg;
 
-  tcp_qprintf(tq, "<div style=\"float: left; width: 30%\">");
+  htsbuf_qprintf(tq, "<div style=\"float: left; width: 30%\">");
 
   ajax_box_begin(tq, AJAX_BOX_SIDEBOX, "channelgroups",
 		 NULL, "Channel groups");
 
-  tcp_qprintf(tq, "<div style=\"height:15px; text-align:center\" "
+  htsbuf_qprintf(tq, "<div style=\"height:15px; text-align:center\" "
 	      "id=\"list-info\"></div>");
    
-  tcp_qprintf(tq, "<ul id=\"channelgrouplist\" class=\"draglist\">");
+  htsbuf_qprintf(tq, "<ul id=\"channelgrouplist\" class=\"draglist\">");
 
   TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
     if(tcg->tcg_hidden)
@@ -190,7 +190,7 @@ ajax_config_channels_tab(http_connection_t *hc, http_reply_t *hr)
     ajax_chgroup_build(tq, tcg);
   }
 
-  tcp_qprintf(tq, "</ul>");
+  htsbuf_qprintf(tq, "</ul>");
  
   ajax_js(tq, "Sortable.create(\"channelgrouplist\", "
 	  "{onUpdate:function(){updatelistonserver("
@@ -203,11 +203,11 @@ ajax_config_channels_tab(http_connection_t *hc, http_reply_t *hr)
    * Add new group
    */
 
-  tcp_qprintf(tq, "<hr>");
+  htsbuf_qprintf(tq, "<hr>");
 
   ajax_box_begin(tq, AJAX_BOX_BORDER, NULL, NULL, NULL);
 
-  tcp_qprintf(tq,
+  htsbuf_qprintf(tq,
 	      "<div style=\"height: 25px\">"
 	      "<div style=\"float: left\">"
 	      "<input type=\"text\" id=\"newchgrp\">"
@@ -221,13 +221,13 @@ ajax_config_channels_tab(http_connection_t *hc, http_reply_t *hr)
   ajax_box_end(tq, AJAX_BOX_BORDER);
     
   ajax_box_end(tq, AJAX_BOX_SIDEBOX);
-  tcp_qprintf(tq, "</div>");
+  htsbuf_qprintf(tq, "</div>");
 
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(tq, 
 	      "<div id=\"groupeditortab\" "
 	      "style=\"overflow: auto; float: left; width: 30%\"></div>");
 
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(tq, 
 	      "<div id=\"cheditortab\" "
 	      "style=\"overflow: auto; float: left; width: 40%\"></div>");
 
@@ -242,7 +242,7 @@ static int
 ajax_chgroup_editor(http_connection_t *hc, http_reply_t *hr,
 		    const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   channel_t *ch;
   channel_group_t *tcg, *tcg2;
   th_transport_t *t;
@@ -253,49 +253,49 @@ ajax_chgroup_editor(http_connection_t *hc, http_reply_t *hr,
   if(remain == NULL || (tcg = channel_group_by_tag(atoi(remain))) == NULL)
     return HTTP_STATUS_BAD_REQUEST;
 
-  tcp_qprintf(tq, "<script type=\"text/javascript\">\r\n"
+  htsbuf_qprintf(tq, "<script type=\"text/javascript\">\r\n"
 	      "//<![CDATA[\r\n");
   
   /* Select all */
-  tcp_qprintf(tq, "select_all = function() {\r\n");
+  htsbuf_qprintf(tq, "select_all = function() {\r\n");
   TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(tq, 
 		"$('sel_%d').checked = true;\r\n",
 		ch->ch_tag);
   }
-  tcp_qprintf(tq, "}\r\n");
+  htsbuf_qprintf(tq, "}\r\n");
 
   /* Select none */
-  tcp_qprintf(tq, "select_none = function() {\r\n");
+  htsbuf_qprintf(tq, "select_none = function() {\r\n");
   TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(tq, 
 		"$('sel_%d').checked = false;\r\n",
 		ch->ch_tag);
   }
-  tcp_qprintf(tq, "}\r\n");
+  htsbuf_qprintf(tq, "}\r\n");
 
   /* Invert selection */
-  tcp_qprintf(tq, "select_invert = function() {\r\n");
+  htsbuf_qprintf(tq, "select_invert = function() {\r\n");
   TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(tq, 
 		"$('sel_%d').checked = !$('sel_%d').checked;\r\n",
 		ch->ch_tag, ch->ch_tag);
   }
-  tcp_qprintf(tq, "}\r\n");
+  htsbuf_qprintf(tq, "}\r\n");
 
   /* Invert selection */
-  tcp_qprintf(tq, "select_sources = function() {\r\n");
+  htsbuf_qprintf(tq, "select_sources = function() {\r\n");
   TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(tq, 
 		"$('sel_%d').checked = %s;\r\n",
 		ch->ch_tag, LIST_FIRST(&ch->ch_transports) ? "true" : "false");
   }
-  tcp_qprintf(tq, "}\r\n");
+  htsbuf_qprintf(tq, "}\r\n");
 
 
 
   /* Invoke AJAX call containing all selected elements */
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(tq, 
 	      "select_do = function(op, arg1, arg2, check) {\r\n"
 	      "if(check == true && !confirm(\"Are you sure?\")) {return;}\r\n"
 	      "var h = new Hash();\r\n"
@@ -304,17 +304,17 @@ ajax_chgroup_editor(http_connection_t *hc, http_reply_t *hr,
 	      );
   
   TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(tq, 
 		"if($('sel_%d').checked) {h.set('%d', 'selected') }\r\n",
 		ch->ch_tag, ch->ch_tag);
   }
 
-  tcp_qprintf(tq, " new Ajax.Request('/ajax/chop/' + op, "
+  htsbuf_qprintf(tq, " new Ajax.Request('/ajax/chop/' + op, "
 	      "{parameters: h});\r\n");
-  tcp_qprintf(tq, "}\r\n");
+  htsbuf_qprintf(tq, "}\r\n");
 
 
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(tq, 
 	      "\r\n//]]>\r\n"
 	      "</script>\r\n");
 
@@ -345,41 +345,41 @@ ajax_chgroup_editor(http_connection_t *hc, http_reply_t *hr,
   }
   ajax_table_bottom(&ta);
 
-  tcp_qprintf(tq, "<hr>\r\n");
-  tcp_qprintf(tq, "<div style=\"text-align: center; "
+  htsbuf_qprintf(tq, "<hr>\r\n");
+  htsbuf_qprintf(tq, "<div style=\"text-align: center; "
 	      "overflow: auto; width: 100%\">");
 
   ajax_button(tq, "Select all", "select_all()");
   ajax_button(tq, "Select none", "select_none()");
   ajax_button(tq, "Invert selection", "select_invert()");
   ajax_button(tq, "Select channels with sources", "select_sources()");
-  tcp_qprintf(tq, "</div>\r\n");
+  htsbuf_qprintf(tq, "</div>\r\n");
 
-  tcp_qprintf(tq, "<hr>\r\n");
+  htsbuf_qprintf(tq, "<hr>\r\n");
 
-  tcp_qprintf(tq, "<div style=\"text-align: center; "
+  htsbuf_qprintf(tq, "<div style=\"text-align: center; "
 	      "overflow: auto; width: 100%\">");
   
   ajax_button(tq,
 	      "Delete all selected...", 
 	      "select_do('delete', '%d', 0, true);", tcg->tcg_tag);
   
-  tcp_qprintf(tq,
+  htsbuf_qprintf(tq,
 	      "<select id=\"movetarget\" "
 	      "onChange=\"select_do('changegroup', "
 	      "$('movetarget').value, '%d', false)\">", tcg->tcg_tag);
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(tq, 
 	      "<option value="">Move selected channels to group:</option>");
 
   TAILQ_FOREACH(tcg2, &all_channel_groups, tcg_global_link) {
     if(tcg2->tcg_hidden || tcg == tcg2)
       continue;
-    tcp_qprintf(tq, "<option value=\"%d\">%s</option>",
+    htsbuf_qprintf(tq, "<option value=\"%d\">%s</option>",
 		tcg2->tcg_tag, tcg2->tcg_name);
   }
-  tcp_qprintf(tq, "</select></div>");
-  tcp_qprintf(tq, "</div>");
-  tcp_qprintf(tq, "</div>");
+  htsbuf_qprintf(tq, "</select></div>");
+  htsbuf_qprintf(tq, "</div>");
+  htsbuf_qprintf(tq, "</div>");
   ajax_box_end(tq, AJAX_BOX_SIDEBOX);
 
 
@@ -412,7 +412,7 @@ static int
 ajax_cheditor(http_connection_t *hc, http_reply_t *hr,
 	      const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   channel_t *ch, *ch2;
   channel_group_t *chg;
   th_transport_t *t;
@@ -425,25 +425,25 @@ ajax_cheditor(http_connection_t *hc, http_reply_t *hr,
   ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, ch->ch_name);
   
   if(ch->ch_icon != NULL) {
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(tq, 
 		"<div style=\"width: 100%; text-align:center\">"
 		"<img src=\"%s\"></div>", ch->ch_icon);
   }
   
-  tcp_qprintf(tq, "<div>Sources:</div>");
+  htsbuf_qprintf(tq, "<div>Sources:</div>");
 
   LIST_FOREACH(t, &ch->ch_transports, tht_ch_link) {
     ajax_box_begin(tq, AJAX_BOX_BORDER, NULL, NULL, NULL);
-    tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
-    tcp_qprintf(tq, "<div style=\"float: left; width: 13%%\">%s</div>",
+    htsbuf_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
+    htsbuf_qprintf(tq, "<div style=\"float: left; width: 13%%\">%s</div>",
 		val2str(t->tht_type, sourcetypetab) ?: "???");
-    tcp_qprintf(tq, "<div style=\"float: left; width: 87%%\">\"%s\"%s</div>",
+    htsbuf_qprintf(tq, "<div style=\"float: left; width: 87%%\">\"%s\"%s</div>",
 		t->tht_svcname, t->tht_scrambled ? " - (scrambled)" : "");
     s = t->tht_sourcename ? t->tht_sourcename(t) : NULL;
 
-    tcp_qprintf(tq, "</div><div style=\"overflow: auto; width: 100%\">");
+    htsbuf_qprintf(tq, "</div><div style=\"overflow: auto; width: 100%\">");
 
-    tcp_qprintf(tq,
+    htsbuf_qprintf(tq,
 		"<div style=\"float: left; width: 13%%\">"
 		"<input %stype=\"checkbox\" class=\"nicebox\" "
 		"onClick=\"new Ajax.Request('/ajax/transport_chdisable/%s', "
@@ -452,49 +452,49 @@ ajax_cheditor(http_connection_t *hc, http_reply_t *hr,
 		t->tht_identifier);
 
     if(s != NULL)
-      tcp_qprintf(tq, "<div style=\"float: left; width: 87%%\">%s</div>",
+      htsbuf_qprintf(tq, "<div style=\"float: left; width: 87%%\">%s</div>",
 		  s);
 
-    tcp_qprintf(tq, "</div>");
+    htsbuf_qprintf(tq, "</div>");
 
     ajax_box_end(tq, AJAX_BOX_BORDER);
   }
 
-  tcp_qprintf(tq, "<hr>\r\n");
+  htsbuf_qprintf(tq, "<hr>\r\n");
 
-  tcp_qprintf(tq, "<div style=\"overflow: auto; width:100%%\">");
+  htsbuf_qprintf(tq, "<div style=\"overflow: auto; width:100%%\">");
 
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(tq, 
 	      "<input type=\"button\" value=\"Rename...\" "
 	      "onClick=\"channel_rename('%d', '%s')\">",
 	      ch->ch_tag, ch->ch_name);
 
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(tq, 
 	      "<input type=\"button\" value=\"Delete...\" "
 	      "onClick=\"channel_delete('%d', '%s')\">",
 	      ch->ch_tag, ch->ch_name);
 
-  tcp_qprintf(tq,
+  htsbuf_qprintf(tq,
 	      "<select "
 	      "onChange=\"channel_merge('%d', this.value);\">",
 	      ch->ch_tag);
   
-  tcp_qprintf(tq, "<option value=\"n\">Merge to channel:</option>");
+  htsbuf_qprintf(tq, "<option value=\"n\">Merge to channel:</option>");
 
   
   TAILQ_FOREACH(chg, &all_channel_groups, tcg_global_link) {
     TAILQ_FOREACH(ch2, &chg->tcg_channels, ch_group_link) {
       if(ch2 != ch)
-	tcp_qprintf(tq, "<option value=\"%d\">%s</option>",
+	htsbuf_qprintf(tq, "<option value=\"%d\">%s</option>",
 		    ch2->ch_tag, ch2->ch_name);
     }
   }
   
-  tcp_qprintf(tq, "</select>");
-  tcp_qprintf(tq, "</div>");
-  tcp_qprintf(tq, "<hr>\r\n");
+  htsbuf_qprintf(tq, "</select>");
+  htsbuf_qprintf(tq, "</div>");
+  htsbuf_qprintf(tq, "<hr>\r\n");
 
-  tcp_qprintf(tq,
+  htsbuf_qprintf(tq,
 	      "<div class=\"infoprefixwidewidefat\">"
 	      "Commercial detection:</div>"
 	      "<div>"
@@ -504,13 +504,13 @@ ajax_cheditor(http_connection_t *hc, http_reply_t *hr,
 	      ch->ch_tag);
 
   for(i = 0; i < sizeof(cdlongname) / sizeof(cdlongname[0]); i++) {
-    tcp_qprintf(tq, "<option %svalue=%d>%s</option>",
+    htsbuf_qprintf(tq, "<option %svalue=%d>%s</option>",
 		cdlongname[i].val == ch->ch_commercial_detection ? 
 		"selected " : "",
 		cdlongname[i].val, cdlongname[i].str);
   }
-  tcp_qprintf(tq, "</select></div>");
-  tcp_qprintf(tq, "</div>");
+  htsbuf_qprintf(tq, "</select></div>");
+  htsbuf_qprintf(tq, "</div>");
 
 
   ajax_box_end(tq, AJAX_BOX_SIDEBOX);
@@ -525,7 +525,7 @@ static int
 ajax_changegroup(http_connection_t *hc, http_reply_t *hr,
 		 const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   channel_t *ch;
   channel_group_t *tcg;
   http_arg_t *ra;
@@ -550,7 +550,7 @@ ajax_changegroup(http_connection_t *hc, http_reply_t *hr,
       channel_set_group(ch, tcg);
   }
 
-  tcp_qprintf(tq,
+  htsbuf_qprintf(tq,
 	      "$('cheditortab').innerHTML=''; "
 	      "new Ajax.Updater('groupeditortab', "
 	      "'/ajax/chgroup_editor/%s', "
@@ -591,7 +591,7 @@ static int
 ajax_chrename(http_connection_t *hc, http_reply_t *hr,
 	      const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   channel_t *ch;
   const char *s;
 
@@ -602,15 +602,15 @@ ajax_chrename(http_connection_t *hc, http_reply_t *hr,
     return HTTP_STATUS_BAD_REQUEST;
 
   if(channel_rename(ch, s)) {
-    tcp_qprintf(tq, "alert('Channel already exist');");
+    htsbuf_qprintf(tq, "alert('Channel already exist');");
   } else {
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(tq, 
 		"new Ajax.Updater('groupeditortab', "
 		"'/ajax/chgroup_editor/%d', "
 		"{method: 'get', evalScripts: true});\r\n",
 		ch->ch_group->tcg_tag);
  
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(tq, 
 		"new Ajax.Updater('cheditortab', "
 		"'/ajax/cheditor/%d', "
 		"{method: 'get', evalScripts: true});\r\n",
@@ -629,7 +629,7 @@ static int
 ajax_chdelete(http_connection_t *hc, http_reply_t *hr,
 	      const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   channel_t *ch;
   channel_group_t *tcg;
 
@@ -640,13 +640,13 @@ ajax_chdelete(http_connection_t *hc, http_reply_t *hr,
   
   channel_delete(ch);
 
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(tq, 
 	      "new Ajax.Updater('groupeditortab', "
 	      "'/ajax/chgroup_editor/%d', "
 	      "{method: 'get', evalScripts: true});\r\n",
 	      tcg->tcg_tag);
  
-  tcp_qprintf(tq, "$('cheditortab').innerHTML='';\r\n");
+  htsbuf_qprintf(tq, "$('cheditortab').innerHTML='';\r\n");
 
   http_output(hc, hr, "text/javascript; charset=UTF-8", NULL, 0);
   return 0;
@@ -659,7 +659,7 @@ static int
 ajax_chmerge(http_connection_t *hc, http_reply_t *hr,
 	     const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   channel_t *src, *dst;
   channel_group_t *tcg;
   const char *s;
@@ -676,13 +676,13 @@ ajax_chmerge(http_connection_t *hc, http_reply_t *hr,
   tcg = src->ch_group;
   channel_merge(dst, src);
 
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(tq, 
 	      "new Ajax.Updater('groupeditortab', "
 	      "'/ajax/chgroup_editor/%d', "
 	      "{method: 'get', evalScripts: true});\r\n",
 	      tcg->tcg_tag);
  
-  tcp_qprintf(tq, "$('cheditortab').innerHTML='';\r\n");
+  htsbuf_qprintf(tq, "$('cheditortab').innerHTML='';\r\n");
 
   http_output(hc, hr, "text/javascript; charset=UTF-8", NULL, 0);
   return 0;
@@ -695,7 +695,7 @@ static int
 ajax_chdeletemulti(http_connection_t *hc, http_reply_t *hr,
 		   const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   channel_t *ch;
   http_arg_t *ra;
   const char *curgrp;
@@ -711,7 +711,7 @@ ajax_chdeletemulti(http_connection_t *hc, http_reply_t *hr,
       channel_delete(ch);
   }
 
-  tcp_qprintf(tq,
+  htsbuf_qprintf(tq,
 	      "$('cheditortab').innerHTML=''; "
 	      "new Ajax.Updater('groupeditortab', "
 	      "'/ajax/chgroup_editor/%s', "

@@ -19,7 +19,7 @@
 #ifndef AJAXUI_MAILBOX_H_
 #define AJAXUI_MAILBOX_H_
 
-#include "tcp.h"
+#include <libhts/htsbuf.h>
 
 void ajax_mailbox_tdmi_state_change(th_dvb_mux_instance_t *tdmi);
 
@@ -33,7 +33,7 @@ void ajax_mailbox_tdmi_services_change(th_dvb_mux_instance_t *tdmi);
 
 void ajax_mailbox_tda_change(th_dvb_adapter_t *tda);
 
-void ajax_mailbox_start(tcp_queue_t *tq);
+void ajax_mailbox_start(htsbuf_queue_t *hq);
 
 struct xmltv_grabber;
 

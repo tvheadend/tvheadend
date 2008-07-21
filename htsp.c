@@ -51,17 +51,18 @@ int
 htsp_send_msg(htsp_t *htsp, htsmsg_t *m, int media)
 {
   tcp_session_t *tcp = &htsp->htsp_tcp_session;
-  tcp_queue_t *tq;
+  htsbuf_queue_t *hq;
   void *data;
   size_t datalen;
+  int hiprio = !media;
   int max, r = -1;
 
-  tq = media ? &tcp->tcp_q_low : &tcp->tcp_q_hi;
-
-  max = tq->tq_maxdepth - tq->tq_depth; /* max size we are able to enqueue */
+  hq = &tcp->tcp_q[hiprio];
+  
+  max = hq->hq_maxsize - hq->hq_size; /* max size we are able to enqueue */
   
   if(htsmsg_binary_serialize(m, &data, &datalen, max) == 0)
-    r = tcp_send_msg(tcp, tq, data, datalen);
+    r = tcp_send_msg(tcp, hiprio, data, datalen);
 
   htsmsg_destroy(m);
   return r;

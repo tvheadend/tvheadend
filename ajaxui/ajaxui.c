@@ -80,35 +80,35 @@ ajaxui_escape_apostrophe(const char *content)
  *
  */
 void
-ajax_generate_select_functions(tcp_queue_t *tq, const char *fprefix,
+ajax_generate_select_functions(htsbuf_queue_t *hq, const char *fprefix,
 			       char **selvector)
 {
   int n;
 
-  tcp_qprintf(tq, "<script type=\"text/javascript\">\r\n"
+  htsbuf_qprintf(hq, "<script type=\"text/javascript\">\r\n"
 	      "//<![CDATA[\r\n");
   
   /* Select all */
-  tcp_qprintf(tq, "%s_sel_all = function() {\r\n", fprefix);
+  htsbuf_qprintf(hq, "%s_sel_all = function() {\r\n", fprefix);
   for(n = 0; selvector[n] != NULL; n++)
-    tcp_qprintf(tq, "$('sel_%s').checked = true;\r\n", selvector[n]);
-  tcp_qprintf(tq, "}\r\n");
+    htsbuf_qprintf(hq, "$('sel_%s').checked = true;\r\n", selvector[n]);
+  htsbuf_qprintf(hq, "}\r\n");
 
   /* Select none */
-  tcp_qprintf(tq, "%s_sel_none = function() {\r\n", fprefix);
+  htsbuf_qprintf(hq, "%s_sel_none = function() {\r\n", fprefix);
   for(n = 0; selvector[n] != NULL; n++)
-    tcp_qprintf(tq, "$('sel_%s').checked = false;\r\n", selvector[n]);
-  tcp_qprintf(tq, "}\r\n");
+    htsbuf_qprintf(hq, "$('sel_%s').checked = false;\r\n", selvector[n]);
+  htsbuf_qprintf(hq, "}\r\n");
 
   /* Invert selection */
-  tcp_qprintf(tq, "%s_sel_invert = function() {\r\n", fprefix);
+  htsbuf_qprintf(hq, "%s_sel_invert = function() {\r\n", fprefix);
   for(n = 0; selvector[n] != NULL; n++)
-    tcp_qprintf(tq, "$('sel_%s').checked = !$('sel_%s').checked;\r\n",
+    htsbuf_qprintf(hq, "$('sel_%s').checked = !$('sel_%s').checked;\r\n",
 		selvector[n], selvector[n]);
-  tcp_qprintf(tq, "}\r\n");
+  htsbuf_qprintf(hq, "}\r\n");
 
   /* Invoke AJAX call containing all selected elements */
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(hq, 
 	      "%s_sel_do = function(op, arg1, arg2, check) {\r\n"
 	      "if(check == true && !confirm(\"Are you sure?\")) {return;}\r\n"
 	      "var h = new Hash();\r\n"
@@ -117,13 +117,13 @@ ajax_generate_select_functions(tcp_queue_t *tq, const char *fprefix,
 	      );
   
   for(n = 0; selvector[n] != NULL; n++)
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(hq, 
 		"if($('sel_%s').checked) {h.set('%s', 'selected') }\r\n",
 		selvector[n], selvector[n]);
-  tcp_qprintf(tq, " new Ajax.Request('/ajax/' + op, "
+  htsbuf_qprintf(hq, " new Ajax.Request('/ajax/' + op, "
 	      "{parameters: h});\r\n");
-  tcp_qprintf(tq, "}\r\n");
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(hq, "}\r\n");
+  htsbuf_qprintf(hq, 
 	      "\r\n//]]>\r\n"
 	      "</script>\r\n");
 }
@@ -133,7 +133,7 @@ ajax_generate_select_functions(tcp_queue_t *tq, const char *fprefix,
  * AJAX table
  */
 void
-ajax_table_top(ajax_table_t *t, http_connection_t *hc, tcp_queue_t *tq,
+ajax_table_top(ajax_table_t *t, http_connection_t *hc, htsbuf_queue_t *hq,
 	       const char *names[], int weights[])
 {
   int n = 0, i, tw = 0;
@@ -147,19 +147,19 @@ ajax_table_top(ajax_table_t *t, http_connection_t *hc, tcp_queue_t *tq,
 
   memset(t, 0, sizeof(ajax_table_t));
 
-  t->tq = tq;
+  t->hq = hq;
 
   for(i = 0; i < n; i++)
     t->csize[i] = 100 * weights[i] / tw;
 
-  tcp_qprintf(tq, "<div style=\"padding-right: 20px\">");
+  htsbuf_qprintf(hq, "<div style=\"padding-right: 20px\">");
 
-  tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%%\">");
+  htsbuf_qprintf(hq, "<div style=\"overflow: auto; width: 100%%\">");
   
   for(i = 0; i < n; i++)
-    tcp_qprintf(tq, "<div style=\"float: left; width: %d%%\">%s</div>",
+    htsbuf_qprintf(hq, "<div style=\"float: left; width: %d%%\">%s</div>",
 		t->csize[i], *names[i] ? names[i]: "&nbsp;");
-  tcp_qprintf(tq, "</div></div><hr><div class=\"normaltable\">\r\n");
+  htsbuf_qprintf(hq, "</div></div><hr><div class=\"normaltable\">\r\n");
 }
 
 /**
@@ -170,7 +170,7 @@ ajax_table_row_start(ajax_table_t *t, const char *id)
 {
   t->rowid = id;
   t->rowcol = !t->rowcol;
-  tcp_qprintf(t->tq, "%s<div style=\"%soverflow: auto; width: 100%\">",
+  htsbuf_qprintf(t->hq, "%s<div style=\"%soverflow: auto; width: 100%\">",
 	      t->inrow ? "</div>\r\n" : "",
 	      t->rowcol ? "background: #fff; " : "");
   t->inrow = 1;
@@ -183,7 +183,7 @@ ajax_table_row_start(ajax_table_t *t, const char *id)
 void
 ajax_table_subrow_start(ajax_table_t *t)
 {
-  tcp_qprintf(t->tq, "<div style=\"overflow: auto; width: 100%\">");
+  htsbuf_qprintf(t->hq, "<div style=\"overflow: auto; width: 100%\">");
   t->curcol = 0;
 }
 
@@ -194,7 +194,7 @@ ajax_table_subrow_start(ajax_table_t *t)
 void
 ajax_table_subrow_end(ajax_table_t *t)
 {
-  tcp_qprintf(t->tq, "</div>");
+  htsbuf_qprintf(t->hq, "</div>");
   t->curcol = 0;
 }
 
@@ -208,7 +208,7 @@ ajax_table_details_start(ajax_table_t *t)
   assert(t->inrow == 1);
   t->inrow = 0;
   /* Extra info */
-  tcp_qprintf(t->tq, "</div><div id=\"details_%s\" style=\"%sdisplay: none\">",
+  htsbuf_qprintf(t->hq, "</div><div id=\"details_%s\" style=\"%sdisplay: none\">",
 	      t->rowid, t->rowcol ? "background: #fff; " : "");
 }
 
@@ -219,7 +219,7 @@ void
 ajax_table_details_end(ajax_table_t *t)
 {
   /* Extra info */
-  tcp_qprintf(t->tq, "</div>");
+  htsbuf_qprintf(t->hq, "</div>");
 }
 
 
@@ -233,23 +233,23 @@ ajax_table_cell(ajax_table_t *t, const char *id, const char *fmt, ...)
   va_start(ap, fmt);
 
   if(t->rowid && id) {
-    tcp_qprintf(t->tq, "<div id=\"%s_%s\"", id, t->rowid);
+    htsbuf_qprintf(t->hq, "<div id=\"%s_%s\"", id, t->rowid);
   } else {
-    tcp_qprintf(t->tq, "<div");
+    htsbuf_qprintf(t->hq, "<div");
   }
-  tcp_qprintf(t->tq,
+  htsbuf_qprintf(t->hq,
 	      " style=\"float: left; width: %d%%\">", t->csize[t->curcol]);
   t->curcol++;
   if(t->curcol == 20)
     abort();
 
   if(fmt == NULL)
-    tcp_qprintf(t->tq, "&nbsp;");
+    htsbuf_qprintf(t->hq, "&nbsp;");
   else
-    tcp_qvprintf(t->tq, fmt, ap);
+    htsbuf_vqprintf(t->hq, fmt, ap);
 
   va_end(ap);
-  tcp_qprintf(t->tq, "</div>");
+  htsbuf_qprintf(t->hq, "</div>");
 }
 
 /**
@@ -282,14 +282,14 @@ ajax_table_cell_checkbox(ajax_table_t *t)
 void
 ajax_table_bottom(ajax_table_t *t)
 {
-  tcp_qprintf(t->tq, "%s</div>", t->inrow ? "</div>" : "");
+  htsbuf_qprintf(t->hq, "%s</div>", t->inrow ? "</div>" : "");
 }
 
 /**
  * AJAX box start
  */
 void
-ajax_box_begin(tcp_queue_t *tq, ajax_box_t type,
+ajax_box_begin(htsbuf_queue_t *hq, ajax_box_t type,
 	       const char *id, const char *style, const char *title)
 {
   char id0[100], style0[100];
@@ -307,7 +307,7 @@ ajax_box_begin(tcp_queue_t *tq, ajax_box_t type,
 
   switch(type) {
   case AJAX_BOX_SIDEBOX:
-    tcp_qprintf(tq,
+    htsbuf_qprintf(hq,
 		"<div class=\"sidebox\">"
 		"<div class=\"boxhead\"><h2>%s</h2></div>\r\n"
 		"  <div class=\"boxbody\" %s%s>",
@@ -315,7 +315,7 @@ ajax_box_begin(tcp_queue_t *tq, ajax_box_t type,
     break;
 
   case AJAX_BOX_FILLED:
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(hq, 
 		"<div style=\"margin: 3px\">"
 		"<b class=\"filledbox\">"
 		"<b class=\"filledbox1\"><b></b></b>"
@@ -328,7 +328,7 @@ ajax_box_begin(tcp_queue_t *tq, ajax_box_t type,
     break;
 
   case AJAX_BOX_BORDER:
-   tcp_qprintf(tq, 
+   htsbuf_qprintf(hq, 
 		"<div style=\"margin: 3px\">"
 		"<b class=\"borderbox\">"
 		"<b class=\"borderbox1\"><b></b></b>"
@@ -345,15 +345,15 @@ ajax_box_begin(tcp_queue_t *tq, ajax_box_t type,
  * AJAX box end
  */
 void
-ajax_box_end(tcp_queue_t *tq, ajax_box_t type)
+ajax_box_end(htsbuf_queue_t *hq, ajax_box_t type)
 {
   switch(type) {
   case AJAX_BOX_SIDEBOX:
-    tcp_qprintf(tq,"</div></div>");
+    htsbuf_qprintf(hq,"</div></div>");
     break;
     
   case AJAX_BOX_FILLED:
-    tcp_qprintf(tq,
+    htsbuf_qprintf(hq,
 		"</div>"
 		"<b class=\"filledbox\">"
 		"<b class=\"filledbox5\"></b>"
@@ -365,7 +365,7 @@ ajax_box_end(tcp_queue_t *tq, ajax_box_t type)
     break;
 
  case AJAX_BOX_BORDER:
-    tcp_qprintf(tq,
+    htsbuf_qprintf(hq,
 		"</div>"
 		"<b class=\"borderbox\">"
 		"<b class=\"borderbox3\"></b>"
@@ -381,19 +381,19 @@ ajax_box_end(tcp_queue_t *tq, ajax_box_t type)
  *
  */
 void
-ajax_js(tcp_queue_t *tq, const char *fmt, ...)
+ajax_js(htsbuf_queue_t *hq, const char *fmt, ...)
 {
   va_list ap;
 
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(hq, 
 	      "<script type=\"text/javascript\">\r\n"
 	      "//<![CDATA[\r\n");
 
   va_start(ap, fmt);
-  tcp_qvprintf(tq, fmt, ap);
+  htsbuf_vqprintf(hq, fmt, ap);
   va_end(ap);
 
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(hq, 
 	      "\r\n//]]>\r\n"
 	      "</script>\r\n");
 }
@@ -404,22 +404,22 @@ ajax_js(tcp_queue_t *tq, const char *fmt, ...)
  * Based on the given char[] array, generate a menu bar
  */
 void
-ajax_menu_bar_from_array(tcp_queue_t *tq, const char *name, 
+ajax_menu_bar_from_array(htsbuf_queue_t *hq, const char *name, 
 			 const char **vec, int num, int cur)
 {
   int i;
  
-  tcp_qprintf(tq, "<ul class=\"menubar\">");
+  htsbuf_qprintf(hq, "<ul class=\"menubar\">");
 
   for(i = 0; i < num; i++) {
-    tcp_qprintf(tq,
+    htsbuf_qprintf(hq,
 		"<li%s>"
 		"<a href=\"javascript:switchtab('%s', '%d')\">%s</a>"
 		"</li>",
 		cur == i ? " style=\"font-weight:bold;\"" : "", name,
 		i, vec[i]);
   }
-  tcp_qprintf(tq, "</ul>");
+  htsbuf_qprintf(hq, "</ul>");
 }
 
 
@@ -427,29 +427,29 @@ ajax_menu_bar_from_array(tcp_queue_t *tq, const char *name,
  *
  */
 void
-ajax_a_jsfuncf(tcp_queue_t *tq, const char *innerhtml, const char *fmt, ...)
+ajax_a_jsfuncf(htsbuf_queue_t *hq, const char *innerhtml, const char *fmt, ...)
 {
   va_list ap;
   va_start(ap, fmt);
 
-  tcp_qprintf(tq, "<a href=\"javascript:void(0)\" onClick=\"javascript:");
-  tcp_qvprintf(tq, fmt, ap);
-  tcp_qprintf(tq, "\">%s</a>", innerhtml);
+  htsbuf_qprintf(hq, "<a href=\"javascript:void(0)\" onClick=\"javascript:");
+  htsbuf_vqprintf(hq, fmt, ap);
+  htsbuf_qprintf(hq, "\">%s</a>", innerhtml);
 }
 
 /**
  *
  */
 void
-ajax_button(tcp_queue_t *tq, const char *caption, const char *code, ...)
+ajax_button(htsbuf_queue_t *hq, const char *caption, const char *code, ...)
 {
   va_list ap;
   va_start(ap, code);
 
-  tcp_qprintf(tq, "<input type=\"button\" value=\"%s\" onClick=\"",
+  htsbuf_qprintf(hq, "<input type=\"button\" value=\"%s\" onClick=\"",
 	      caption);
-  tcp_qvprintf(tq, code, ap);
-  tcp_qprintf(tq, "\">");
+  htsbuf_vqprintf(hq, code, ap);
+  htsbuf_qprintf(hq, "\">");
 }
 
 
@@ -464,7 +464,7 @@ ajax_page_titlebar(http_connection_t *hc, http_reply_t *hr,
   if(remain == NULL)
     return HTTP_STATUS_NOT_FOUND;
 
-  ajax_menu_bar_from_array(&hr->hr_tq, "top", 
+  ajax_menu_bar_from_array(&hr->hr_q, "top", 
 			   ajax_tabnames, AJAX_TABS, atoi(remain));
   http_output_html(hc, hr);
   return 0;
@@ -478,16 +478,16 @@ ajax_page_titlebar(http_connection_t *hc, http_reply_t *hr,
 static int
 ajax_about_tab(http_connection_t *hc, http_reply_t *hr)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *hq = &hr->hr_q;
   
-  tcp_qprintf(tq, "<center>");
-  tcp_qprintf(tq, "<div style=\"padding: auto; width: 400px\">");
+  htsbuf_qprintf(hq, "<center>");
+  htsbuf_qprintf(hq, "<div style=\"padding: auto; width: 400px\">");
 
-  ajax_box_begin(tq, AJAX_BOX_SIDEBOX, NULL, NULL, "About");
+  ajax_box_begin(hq, AJAX_BOX_SIDEBOX, NULL, NULL, "About");
 
-  tcp_qprintf(tq, "<div style=\"text-align: center\">");
+  htsbuf_qprintf(hq, "<div style=\"text-align: center\">");
 
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(hq, 
 	      "<p>HTS / Tvheadend</p>"
 	      "<p>(c) 2006-2008 Andreas \303\226man</p>"
 	      "<p>Latest release and information is available at:</p>"
@@ -504,10 +504,10 @@ ajax_about_tab(http_connection_t *hc, http_reply_t *hr)
 	      "<p><a href=\"http://www.ffmpeg.org/\">FFmpeg</a></p>"
 	      );
 
-  tcp_qprintf(tq, "</div>");
-  ajax_box_end(tq, AJAX_BOX_SIDEBOX);
-  tcp_qprintf(tq, "</div>");
-  tcp_qprintf(tq, "</center>");
+  htsbuf_qprintf(hq, "</div>");
+  ajax_box_end(hq, AJAX_BOX_SIDEBOX);
+  htsbuf_qprintf(hq, "</div>");
+  htsbuf_qprintf(hq, "</center>");
 
   http_output_html(hc, hr);
   return 0;
@@ -556,9 +556,9 @@ static int
 ajax_page_root(http_connection_t *hc, http_reply_t *hr, 
 	       const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *hq = &hr->hr_q;
 
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(hq, 
 	      "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\r\n"
 	      "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"
 	      /*
@@ -589,13 +589,13 @@ ajax_page_root(http_connection_t *hc, http_reply_t *hr,
 	      "<body>");
 
 
-  tcp_qprintf(tq, "<div style=\"overflow: auto; width: 100%\">");
+  htsbuf_qprintf(hq, "<div style=\"overflow: auto; width: 100%\">");
 
-  tcp_qprintf(tq, "<div style=\"float: left; width: 100%\">");
+  htsbuf_qprintf(hq, "<div style=\"float: left; width: 100%\">");
 
-  ajax_box_begin(tq, AJAX_BOX_FILLED, NULL, NULL, NULL);
+  ajax_box_begin(hq, AJAX_BOX_FILLED, NULL, NULL, NULL);
 
-  tcp_qprintf(tq,
+  htsbuf_qprintf(hq,
 	      "<div style=\"width: 100%%; overflow: hidden\">"
 	      "<div style=\"float: left; width: 30%%\">"
 	      "Tvheadend (%s)"
@@ -607,20 +607,20 @@ ajax_page_root(http_connection_t *hc, http_reply_t *hr,
 	      "</div>",
 	      htsversion);
 
-  ajax_mailbox_start(tq);
+  ajax_mailbox_start(hq);
 
-  ajax_box_end(tq, AJAX_BOX_FILLED);
+  ajax_box_end(hq, AJAX_BOX_FILLED);
 
-  tcp_qprintf(tq, "<div id=\"topdeck\"></div>");
+  htsbuf_qprintf(hq, "<div id=\"topdeck\"></div>");
   
-  ajax_js(tq, "switchtab('top', '0')");
+  ajax_js(hq, "switchtab('top', '0')");
 #if 0
-  tcp_qprintf(tq, "</div><div style=\"float: left; width: 20%\">");
+  htsbuf_qprintf(hq, "</div><div style=\"float: left; width: 20%\">");
 
-  ajax_box_begin(tq, AJAX_BOX_SIDEBOX, "statusbox", NULL, "System status");
-  ajax_box_end(tq, AJAX_BOX_SIDEBOX);
+  ajax_box_begin(hq, AJAX_BOX_SIDEBOX, "statusbox", NULL, "System status");
+  ajax_box_end(hq, AJAX_BOX_SIDEBOX);
 #endif
-  tcp_qprintf(tq, "</div></div></body></html>");
+  htsbuf_qprintf(hq, "</div></div></body></html>");
 
   http_output_html(hc, hr);
   return 0;

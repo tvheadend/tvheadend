@@ -316,7 +316,7 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid)
   buf[0] = (len - 2) >> 8;
   buf[1] =  len - 2;
 
-  tcp_send_msg(ses, &ses->tcp_q_hi, buf, len);
+  tcp_send_msg(ses, 0, buf, len);
 
   /* Expect a response within 4 seconds */
   dtimer_arm(&cwc->cwc_idle_timer, cwc_timeout, cwc, 4);

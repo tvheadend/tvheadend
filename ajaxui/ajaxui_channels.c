@@ -35,11 +35,11 @@
 #include "epg.h"
 
 static void
-ajax_channelgroupmenu_content(tcp_queue_t *tq, int current)
+ajax_channelgroupmenu_content(htsbuf_queue_t *tq, int current)
 {
   channel_group_t *tcg;
 
-  tcp_qprintf(tq, "<ul class=\"menubar\">");
+  htsbuf_qprintf(tq, "<ul class=\"menubar\">");
 
   TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
     if(tcg->tcg_hidden)
@@ -48,14 +48,14 @@ ajax_channelgroupmenu_content(tcp_queue_t *tq, int current)
     if(current < 1)
       current = tcg->tcg_tag;
 
-    tcp_qprintf(tq,
+    htsbuf_qprintf(tq,
 		"<li%s>"
 		"<a href=\"javascript:switchtab('channelgroup', '%d')\">%s</a>"
 		"</li>",
 		current == tcg->tcg_tag ? " style=\"font-weight:bold;\"" : "",
 		tcg->tcg_tag, tcg->tcg_name);
   }
-  tcp_qprintf(tq, "</ul>");  
+  htsbuf_qprintf(tq, "</ul>");  
 }
 
 
@@ -66,7 +66,7 @@ static int
 ajax_channelgroup_menu(http_connection_t *hc, http_reply_t *hr, 
 		       const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   
   if(remain == NULL)
     return HTTP_STATUS_NOT_FOUND;
@@ -78,36 +78,36 @@ ajax_channelgroup_menu(http_connection_t *hc, http_reply_t *hr,
 
 
 static void
-ajax_output_event(tcp_queue_t *tq, event_t *e, int flags, int color)
+ajax_output_event(htsbuf_queue_t *tq, event_t *e, int flags, int color)
 {
   struct tm a, b;
   time_t stop;
 
-  tcp_qprintf(tq, "<div class=\"fullrow\"%s>",
+  htsbuf_qprintf(tq, "<div class=\"fullrow\"%s>",
 	      color ? "style=\"background: #fff\" " : "");
 
   localtime_r(&e->e_start, &a);
   stop = e->e_start + e->e_duration;
   localtime_r(&stop, &b);
   
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(tq, 
 	      "<div class=\"compact\" style=\"width: 35%%\">"
 	      "%02d:%02d-%02d:%02d"
 	      "</div>",
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
  
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(tq, 
 	      "<div class=\"compact\" style=\"width: 65%%\">"
 	      "%s"
 	      "</div>",
 	      e->e_title);
     
-  tcp_qprintf(tq, "</div>");
+  htsbuf_qprintf(tq, "</div>");
 }
 
 
 static void
-ajax_list_events(tcp_queue_t *tq, channel_t *ch, int lines)
+ajax_list_events(htsbuf_queue_t *tq, channel_t *ch, int lines)
 {
   event_t *e;
   int i;
@@ -131,7 +131,7 @@ ajax_channel_tab(http_connection_t *hc, http_reply_t *hr,
 		 const char *remain, void *opaque)
 {
   
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   channel_t *ch;
   channel_group_t *tcg;
   char dispname[20];
@@ -147,7 +147,7 @@ ajax_channel_tab(http_connection_t *hc, http_reply_t *hr,
 
     nchs++;
 
-    tcp_qprintf(tq, "<div style=\"float:left; width: 25%%\">");
+    htsbuf_qprintf(tq, "<div style=\"float:left; width: 25%%\">");
 
     snprintf(dispname, sizeof(dispname), "%s", ch->ch_name);
     strcpy(dispname + sizeof(dispname) - 4, "...");
@@ -156,43 +156,43 @@ ajax_channel_tab(http_connection_t *hc, http_reply_t *hr,
 
     /* inner */
 
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(tq, 
 		"<div style=\"width: 100%%; overflow: hidden; height:36px\">");
 
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(tq, 
 		"<div style=\"float: left; height:32px; width:32px; "
 		"margin: 2px\">");
 
     if(ch->ch_icon != NULL) {
-      tcp_qprintf(tq, "<img src=\"%s\" style=\"width:32px\">",
+      htsbuf_qprintf(tq, "<img src=\"%s\" style=\"width:32px\">",
 		  ch->ch_icon);
     }
 
-    tcp_qprintf(tq, "</div>");
+    htsbuf_qprintf(tq, "</div>");
 
-    tcp_qprintf(tq, "<div style=\"float:left; text-align: right\">");
+    htsbuf_qprintf(tq, "<div style=\"float:left; text-align: right\">");
 
     si = (struct sockaddr_in *)&hc->hc_tcp_session.tcp_self_addr;
 
-    tcp_qprintf(tq,
+    htsbuf_qprintf(tq,
 		"<a href=\"rtsp://%s:%d/%s\">Stream</a>",
 		inet_ntoa(si->sin_addr), ntohs(si->sin_port),
 		ch->ch_sname);
 
-    tcp_qprintf(tq, "</div>");
-    tcp_qprintf(tq, "</div>");
+    htsbuf_qprintf(tq, "</div>");
+    htsbuf_qprintf(tq, "</div>");
 
 
-    tcp_qprintf(tq, "<div id=\"events%d\" style=\"height:42px\">", ch->ch_tag);
+    htsbuf_qprintf(tq, "<div id=\"events%d\" style=\"height:42px\">", ch->ch_tag);
     ajax_list_events(tq, ch, 3);
-    tcp_qprintf(tq, "</div>");
+    htsbuf_qprintf(tq, "</div>");
 
     ajax_box_end(tq, AJAX_BOX_SIDEBOX);
-    tcp_qprintf(tq, "</div>");
+    htsbuf_qprintf(tq, "</div>");
   }
 
   if(nchs == 0)
-    tcp_qprintf(tq, "<div style=\"text-align: center; font-weight: bold\">"
+    htsbuf_qprintf(tq, "<div style=\"text-align: center; font-weight: bold\">"
 		"No channels in this group</div>");
 
   http_output_html(hc, hr);
@@ -211,14 +211,14 @@ ajax_channel_tab(http_connection_t *hc, http_reply_t *hr,
 int
 ajax_channelgroup_tab(http_connection_t *hc, http_reply_t *hr)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
 
   ajax_box_begin(tq, AJAX_BOX_FILLED, "channelgroupmenu", NULL, NULL);
   ajax_box_end(tq, AJAX_BOX_FILLED);
 
-  tcp_qprintf(tq, "<div id=\"channelgroupdeck\"></div>");
+  htsbuf_qprintf(tq, "<div id=\"channelgroupdeck\"></div>");
 
-  tcp_qprintf(tq,
+  htsbuf_qprintf(tq,
 	      "<script type=\"text/javascript\">"
 	      "switchtab('channelgroup', '0')"
 	      "</script>");

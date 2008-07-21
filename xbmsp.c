@@ -55,7 +55,7 @@ xbmsp_output_file(void *opaque)
   tffm_fifo_t *tf = xs->xs_fifo;
   xbmsp_t *xbmsp = xs->xs_xbmsp;
   uint32_t msgid = xs->xs_pending_read_msgid;
-  tcp_queue_t tq;
+  htsbuf_queue_t hq;
   int rem, tlen, len = xs->xs_pending_read_size;
   uint8_t buf[13];
   tffm_fifo_pkt_t *pkt, *n;
@@ -79,8 +79,8 @@ xbmsp_output_file(void *opaque)
   buf[11] = len >> 8;
   buf[12] = len;
 
-  tcp_init_queue(&tq, -1);
-  tcp_qput(&tq, buf, 13);
+  htsbuf_queue_init(&hq, 0);
+  htsbuf_append(&hq, buf, 13);
 
    while(len > 0) {
     pkt = TAILQ_FIRST(&tf->tf_pktq);
@@ -88,10 +88,10 @@ xbmsp_output_file(void *opaque)
     
     if(len >= pkt->tfp_pktsize) {
       /* Consume entire packet */
-      tcp_qput(&tq, pkt->tfp_buf, pkt->tfp_pktsize);
+      htsbuf_append(&hq, pkt->tfp_buf, pkt->tfp_pktsize);
     } else {
       /* Partial, create new packet at front with remaining data */
-      tcp_qput(&tq, pkt->tfp_buf, len);
+      htsbuf_append(&hq, pkt->tfp_buf, len);
       rem = pkt->tfp_pktsize - len;
       n = malloc(sizeof(tffm_fifo_pkt_t) + rem);
       n->tfp_pktsize = rem;
@@ -108,7 +108,7 @@ xbmsp_output_file(void *opaque)
 
   xs->xs_pending_read_size = 0;
   xs->xs_pending_read_msgid = 0;
-  tcp_output_queue(&xbmsp->xbmsp_tcp_session, NULL, &tq);  
+  tcp_output_queue(&xbmsp->xbmsp_tcp_session, 0, &hq);
 }
 
 
@@ -379,7 +379,7 @@ xbmsp_send_msg(xbmsp_t *xbmsp, uint8_t type, uint32_t msgid,
 	       uint8_t *payload, int payloadlen)
 {
   uint8_t  buf[9];
-  tcp_queue_t tq;
+  htsbuf_queue_t hq;
 
   int tlen = payloadlen + 5;
 
@@ -393,16 +393,16 @@ xbmsp_send_msg(xbmsp_t *xbmsp, uint8_t type, uint32_t msgid,
   buf[7] = msgid >> 8;
   buf[8] = msgid;
 
-  tcp_init_queue(&tq, -1);
-  tcp_qput(&tq, buf, 9);
+  htsbuf_queue_init(&hq, 0);
+  htsbuf_append(&hq, buf, 9);
   if(payloadlen > 0) {
     if(payload == NULL) {
       payload = alloca(payloadlen);
       memset(payload, 0, payloadlen);
     }
-    tcp_qput(&tq, payload, payloadlen);
+    htsbuf_append(&hq, payload, payloadlen);
   }
-  tcp_output_queue(&xbmsp->xbmsp_tcp_session, NULL, &tq);
+  tcp_output_queue(&xbmsp->xbmsp_tcp_session, 0, &hq);
 }
 
 

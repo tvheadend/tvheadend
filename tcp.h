@@ -19,20 +19,7 @@
 #ifndef TCP_H_
 #define TCP_H_
 
-TAILQ_HEAD(tcp_data_queue, tcp_data);
-
-typedef struct tcp_data {
-  TAILQ_ENTRY(tcp_data) td_link;
-  const void *td_data;
-  unsigned int td_datalen;
-  int td_offset;
-} tcp_data_t;
-
-typedef struct tcp_queue {
-  struct tcp_data_queue tq_messages;
-  int tq_depth;
-  int tq_maxdepth;
-} tcp_queue_t;
+#include <libhts/htsbuf.h>
 
 typedef enum {
   TCP_CONNECT,
@@ -74,10 +61,9 @@ typedef struct tcp_session {
   /* Output queueing */
 
   int tcp_blocked;
-  tcp_queue_t tcp_q_hi;
-  tcp_queue_t tcp_q_low;
+  htsbuf_queue_t tcp_q[2];
 
-  tcp_queue_t *tcp_q_current;
+  htsbuf_queue_t *tcp_q_current;
 
   /* Input line parser */
 
@@ -85,10 +71,6 @@ typedef struct tcp_session {
   char tcp_input_buf[TCP_MAX_LINE_LEN];
 
 } tcp_session_t;
-
-void tcp_init_queue(tcp_queue_t *tq, int maxdepth);
-
-void tcp_flush_queue(tcp_queue_t *tq);
 
 void tcp_disconnect(tcp_session_t *ses, int err);
 
@@ -101,18 +83,9 @@ int tcp_line_drain(tcp_session_t *ses, void *buf, int n);
 
 #define tcp_logname(ses) ((ses)->tcp_peer_txt)
 
-int tcp_send_msg(tcp_session_t *ses, tcp_queue_t *tq, const void *data,
-		 size_t len);
-
 void tcp_printf(tcp_session_t *ses, const char *fmt, ...);
 
-void tcp_qprintf(tcp_queue_t *tq, const char *fmt, ...);
-
-void tcp_qvprintf(tcp_queue_t *tq, const char *fmt, va_list ap);
-
-void tcp_qput(tcp_queue_t *tq, const uint8_t *buf, size_t len);
-
-void tcp_output_queue(tcp_session_t *ses, tcp_queue_t *dst, tcp_queue_t *src);
+void tcp_output_queue(tcp_session_t *ses, int hiprio, htsbuf_queue_t *src);
 
 void *tcp_create_client(const char *hostname, int port, size_t session_size,
 			const char *name, tcp_callback_t *cb, int enabled);
@@ -120,5 +93,7 @@ void *tcp_create_client(const char *hostname, int port, size_t session_size,
 void tcp_destroy_client(tcp_session_t *ses);
 
 void tcp_enable_disable(tcp_session_t *ses, int enabled);
+
+int tcp_send_msg(tcp_session_t *ses, int hiprio, void *data, size_t len);
 
 #endif /* TCP_H_ */

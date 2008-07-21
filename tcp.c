@@ -35,82 +35,6 @@
 
 static void tcp_client_reconnect_timeout(void *aux, int64_t now);
 
-
-/*
- *  vprintf data on a TCP queue
- */
-void
-tcp_qvprintf(tcp_queue_t *tq, const char *fmt, va_list ap)
-{
-  char buf[5000];
-  void *out;
-  tcp_data_t *td;
-
-  td = malloc(sizeof(tcp_data_t));
-  td->td_offset = 0;
-
-  td->td_datalen = vsnprintf(buf, sizeof(buf), fmt, ap);
-  out = malloc(td->td_datalen);
-  memcpy(out, buf, td->td_datalen);
-  td->td_data = out;
-  TAILQ_INSERT_TAIL(&tq->tq_messages, td, td_link);
-  tq->tq_depth += td->td_datalen;
-}
-
-
-/*
- *  printf data on a TCP queue
- */
-void
-tcp_qprintf(tcp_queue_t *tq, const char *fmt, ...)
-{
-  va_list ap;
-  va_start(ap, fmt);
-  tcp_qvprintf(tq, fmt, ap);
-  va_end(ap);
-}
-
-/*
- *  Put data on a TCP queue
- */
-void
-tcp_qput(tcp_queue_t *tq, const uint8_t *buf, size_t len)
-{
-  tcp_data_t *td;
-  void *out;
-
-  td = malloc(sizeof(tcp_data_t));
-  td->td_offset = 0;
-  td->td_datalen = len;
-
-  out = malloc(td->td_datalen);
-  memcpy(out, buf, td->td_datalen);
-  td->td_data = out;
-  TAILQ_INSERT_TAIL(&tq->tq_messages, td, td_link);
-  tq->tq_depth += td->td_datalen;
-}
-
-/*
- *  printfs data on a TCP connection
- */
-void
-tcp_printf(tcp_session_t *ses, const char *fmt, ...)
-{
-  va_list ap;
-  char buf[5000];
-  void *out;
-  int l;
-
-  va_start(ap, fmt);
-  l = vsnprintf(buf, sizeof(buf), fmt, ap);
-  va_end(ap);
-
-  out = malloc(l);
-  memcpy(out, buf, l);
-
-  tcp_send_msg(ses, &ses->tcp_q_hi, out, l);
-}
-
 /**
  * Read max 'n' bytes of data from line parser. Used to consume binary data
  * for mixed line / binary protocols (HTTP)
@@ -186,34 +110,6 @@ tcp_line_read(tcp_session_t *ses, tcp_line_input_t *callback)
 }
 
 
-
-/**
- * Create an output queue
- */
-void
-tcp_init_queue(tcp_queue_t *tq, int maxdepth)
-{
-  TAILQ_INIT(&tq->tq_messages);
-  tq->tq_depth = 0;
-  tq->tq_maxdepth = maxdepth;
-}
-
-/**
- * Flusing all pending data from a queue
- */
-void
-tcp_flush_queue(tcp_queue_t *tq)
-{
-  tcp_data_t *td;
-
-  while((td = TAILQ_FIRST(&tq->tq_messages)) != NULL) {
-    TAILQ_REMOVE(&tq->tq_messages, td, td_link);
-    free((void *)td->td_data);
-    free(td);
-  }
-}
-
-
 /**
  * Transmit data from any of the queues
  * Select hi-pri queue first if possible, but always stick on the same
@@ -222,23 +118,23 @@ tcp_flush_queue(tcp_queue_t *tq)
 static void
 tcp_transmit(tcp_session_t *ses)
 {
-  tcp_queue_t *q = ses->tcp_q_current;
-  tcp_data_t *hd;
+  htsbuf_queue_t *hq = ses->tcp_q_current;
+  htsbuf_data_t *hd;
   int r;
 
  again:
-  if(q == NULL) {
-    if(ses->tcp_q_hi.tq_depth)
-      q = &ses->tcp_q_hi;
-    if(ses->tcp_q_low.tq_depth)
-      q = &ses->tcp_q_low;
+  if(hq == NULL) {
+    if(ses->tcp_q[1].hq_size)
+      hq = &ses->tcp_q[1];
+    else if(ses->tcp_q[0].hq_size)
+      hq = &ses->tcp_q[0];
   }
 
-  while(q != NULL) {
-    hd = TAILQ_FIRST(&q->tq_messages);
+  while(hq != NULL) {
+    hd = TAILQ_FIRST(&hq->hq_q);
     
-    r = write(ses->tcp_fd, hd->td_data + hd->td_offset,
-	      hd->td_datalen - hd->td_offset);
+    r = write(ses->tcp_fd, hd->hd_data + hd->hd_data_off,
+	      hd->hd_data_len - hd->hd_data_off);
 
     if(r == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
       r = 0;
@@ -250,19 +146,17 @@ tcp_transmit(tcp_session_t *ses)
       tcp_disconnect(ses, errno);
       return;
     }
-    q->tq_depth -= r;
-    hd->td_offset += r;
-
-    if(hd->td_offset == hd->td_datalen) {
-      TAILQ_REMOVE(&q->tq_messages, hd, td_link);
-      free((void *)hd->td_data);
-      free(hd);
-      q = NULL;
+    hq->hq_size     -= r;
+    hd->hd_data_off += r;
+    
+    if(hd->hd_data_off == hd->hd_data_len) {
+      htsbuf_data_free(hq, hd);
+      hq = NULL;
       goto again;
     }
   }
 
-  if(q == NULL) {
+  if(hq == NULL) {
     if(ses->tcp_blocked) {
       dispatch_clr(ses->tcp_dispatch_handle, DISPATCH_WRITE);
       ses->tcp_blocked = 0;
@@ -273,7 +167,7 @@ tcp_transmit(tcp_session_t *ses)
       ses->tcp_blocked = 1;
     }
   }
-  ses->tcp_q_current = q;
+  ses->tcp_q_current = hq;
 }
 
 /**
@@ -281,25 +175,22 @@ tcp_transmit(tcp_session_t *ses)
  * being sent.
  */
 int
-tcp_send_msg(tcp_session_t *ses, tcp_queue_t *tq, const void *data,
-	     size_t len)
+tcp_send_msg(tcp_session_t *ses, int hiprio, void *data, size_t len)
 {
-  tcp_data_t *td;
+  htsbuf_queue_t *hq = &ses->tcp_q[!!hiprio];
+  htsbuf_data_t *hd;
 
-  if(tq == NULL)
-    tq = &ses->tcp_q_low;
-
-  if(len > tq->tq_maxdepth - tq->tq_depth) {
-    free((void *)data);
+  if(len > hq->hq_maxsize - hq->hq_size) {
+    free(data);
     return -1;
   }
 
-  td = malloc(sizeof(tcp_data_t));
-  td->td_offset = 0;
-  td->td_datalen = len;
-  td->td_data = data;
-  TAILQ_INSERT_TAIL(&tq->tq_messages, td, td_link);
-  tq->tq_depth += td->td_datalen;
+  hd = malloc(sizeof(htsbuf_data_t));
+  hd->hd_data_off = 0;
+  hd->hd_data_len = len;
+  hd->hd_data = data;
+  TAILQ_INSERT_TAIL(&hq->hq_q, hd, hd_link);
+  hq->hq_size += len;
 
   if(!ses->tcp_blocked)
     tcp_transmit(ses);
@@ -307,6 +198,21 @@ tcp_send_msg(tcp_session_t *ses, tcp_queue_t *tq, const void *data,
   return 0;
 }
 
+/**
+ *
+ */
+void
+tcp_printf(tcp_session_t *ses, const char *fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt);
+
+  htsbuf_vqprintf(&ses->tcp_q[0], fmt, ap);
+  va_end(ap);
+
+  if(!ses->tcp_blocked)
+    tcp_transmit(ses);
+}
 
 /**
  * Move a tcp queue onto a session
@@ -314,47 +220,21 @@ tcp_send_msg(tcp_session_t *ses, tcp_queue_t *tq, const void *data,
  * Coalesce smaller chunks into bigger ones for more efficient I/O
  */
 void
-tcp_output_queue(tcp_session_t *ses, tcp_queue_t *dst, tcp_queue_t *src)
+tcp_output_queue(tcp_session_t *ses, int hiprio, htsbuf_queue_t *src)
 {
-  tcp_data_t *sd;
-  tcp_data_t *dd;
-  int l, s;
+  htsbuf_data_t *hd;
+  htsbuf_queue_t *dst = &ses->tcp_q[!!hiprio];
 
-  if(dst == NULL)
-    dst = &ses->tcp_q_low;
+  while((hd = TAILQ_FIRST(&src->hq_q)) != NULL) {
+    TAILQ_REMOVE(&src->hq_q, hd, hd_link);
+    TAILQ_INSERT_TAIL(&dst->hq_q, hd, hd_link);
 
-  while((sd = TAILQ_FIRST(&src->tq_messages)) != NULL) {
-
-    l = 4096;
-    if(sd->td_datalen > l)
-      l = sd->td_datalen;
-    
-    dd = malloc(sizeof(tcp_data_t));
-    dd->td_offset = 0;
-    dd->td_data = malloc(l);
-
-    s = 0; /* accumulated size */
-    while((sd = TAILQ_FIRST(&src->tq_messages)) != NULL) {
-
-      if(sd->td_datalen + s > l)
-	break;
-
-      memcpy((char *)dd->td_data + s, sd->td_data, sd->td_datalen);
-      s += sd->td_datalen;
-      TAILQ_REMOVE(&src->tq_messages, sd, td_link);
-      free((void *)sd->td_data);
-      free(sd);
-    }
-
-    dd->td_datalen = s;
-    TAILQ_INSERT_TAIL(&dst->tq_messages, dd, td_link);
-    dst->tq_depth += s;
+    dst->hq_size += hd->hd_data_len;
   }
+  src->hq_size = 0;
 
-  if(ses != NULL && !ses->tcp_blocked)
+  if(!ses->tcp_blocked)
     tcp_transmit(ses);
-
-  src->tq_depth = 0;
 }
 
 /**
@@ -363,8 +243,8 @@ tcp_output_queue(tcp_session_t *ses, tcp_queue_t *dst, tcp_queue_t *src)
 void
 tcp_disconnect(tcp_session_t *ses, int err)
 {
-  tcp_flush_queue(&ses->tcp_q_low);
-  tcp_flush_queue(&ses->tcp_q_hi);
+  htsbuf_queue_flush(&ses->tcp_q[0]);
+  htsbuf_queue_flush(&ses->tcp_q[1]);
 
   ses->tcp_callback(TCP_DISCONNECT, ses);
 
@@ -433,8 +313,8 @@ tcp_start_session(tcp_session_t *ses)
   val = 1;
   setsockopt(ses->tcp_fd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
 
-  tcp_init_queue(&ses->tcp_q_hi,  20 * 1000 * 1000);
-  tcp_init_queue(&ses->tcp_q_low, 20 * 1000 * 1000);
+  htsbuf_queue_init(&ses->tcp_q[0],  20 * 1000 * 1000);
+  htsbuf_queue_init(&ses->tcp_q[1],  20 * 1000 * 1000);
 
   snprintf(ses->tcp_peer_txt, sizeof(ses->tcp_peer_txt), "%s:%d",
 	   inet_ntoa(si->sin_addr), ntohs(si->sin_port));

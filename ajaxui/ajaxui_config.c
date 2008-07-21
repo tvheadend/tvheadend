@@ -52,7 +52,7 @@ static int
 ajax_config_menu(http_connection_t *hc, http_reply_t *hr, 
 		 const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
   
   if(remain == NULL)
     return HTTP_STATUS_NOT_FOUND;
@@ -109,18 +109,18 @@ ajax_config_dispatch(http_connection_t *hc, http_reply_t *hr,
 int
 ajax_config_tab(http_connection_t *hc, http_reply_t *hr)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *tq = &hr->hr_q;
 
   ajax_box_begin(tq, AJAX_BOX_FILLED, "configmenu", NULL, NULL);
   ajax_box_end(tq, AJAX_BOX_FILLED);
 
-  tcp_qprintf(tq, "<div id=\"configdeck\"></div>");
+  htsbuf_qprintf(tq, "<div id=\"configdeck\"></div>");
 
-  tcp_qprintf(tq,
+  htsbuf_qprintf(tq,
 	      "<script type=\"text/javascript\">"
 	      "switchtab('config', '0')"
 	      "</script>");
-
+  
   http_output_html(hc, hr);
   return 0;
 }

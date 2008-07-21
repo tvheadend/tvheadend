@@ -121,7 +121,7 @@ static int
 page_simple(http_connection_t *hc, http_reply_t *hr, 
 	  const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *hq = &hr->hr_q;
   const char *s = http_arg_get(&hc->hc_req_args, "s");
   struct event_list events;
   event_t *e, **ev;
@@ -131,18 +131,18 @@ page_simple(http_connection_t *hc, http_reply_t *hr,
   pvr_rec_t *pvrr, **pv;
   const char *rstatus;
 
-  tcp_qprintf(tq, "<html>");
-  tcp_qprintf(tq, "<body>");
+  htsbuf_qprintf(hq, "<html>");
+  htsbuf_qprintf(hq, "<body>");
 
-  tcp_qprintf(tq, "<form>");
-  tcp_qprintf(tq, "Event: <input type=\"text\" ");
+  htsbuf_qprintf(hq, "<form>");
+  htsbuf_qprintf(hq, "Event: <input type=\"text\" ");
   if(s != NULL)
-    tcp_qprintf(tq, "value=\"%s\" ", s);
+    htsbuf_qprintf(hq, "value=\"%s\" ", s);
   
-  tcp_qprintf(tq, "name=\"s\">");
-  tcp_qprintf(tq, "<input type=\"submit\" value=\"Search\">");
+  htsbuf_qprintf(hq, "name=\"s\">");
+  htsbuf_qprintf(hq, "<input type=\"submit\" value=\"Search\">");
   
-  tcp_qprintf(tq, "</form><hr>");
+  htsbuf_qprintf(hq, "</form><hr>");
 
   if(s != NULL) {
     
@@ -150,12 +150,12 @@ page_simple(http_connection_t *hc, http_reply_t *hr,
     c = epg_search(&events, s, NULL, NULL, NULL);
 
     if(c == -1) {
-      tcp_qprintf(tq, "<b>Event title: Regular expression syntax error</b>");
+      htsbuf_qprintf(hq, "<b>Event title: Regular expression syntax error</b>");
     } else if(c == 0) {
-      tcp_qprintf(tq, "<b>No matching entries found</b>");
+      htsbuf_qprintf(hq, "<b>No matching entries found</b>");
     } else {
 
-      tcp_qprintf(tq, "<b>%d entries found", c);
+      htsbuf_qprintf(hq, "<b>%d entries found", c);
 
       ev = alloca(c * sizeof(event_t *));
       c = 0;
@@ -166,10 +166,10 @@ page_simple(http_connection_t *hc, http_reply_t *hr,
 
       if(c > 25) {
 	c = 25;
-	tcp_qprintf(tq, ", %d entries shown", c);
+	htsbuf_qprintf(hq, ", %d entries shown", c);
       }
 
-      tcp_qprintf(tq, "</b>");
+      htsbuf_qprintf(hq, "</b>");
 
       memset(&day, -1, sizeof(struct tm));
       for(k = 0; k < c; k++) {
@@ -182,7 +182,7 @@ page_simple(http_connection_t *hc, http_reply_t *hr,
 	if(a.tm_wday != day.tm_wday || a.tm_mday != day.tm_mday  ||
 	   a.tm_mon  != day.tm_mon  || a.tm_year != day.tm_year) {
 	  memcpy(&day, &a, sizeof(struct tm));
-	  tcp_qprintf(tq, 
+	  htsbuf_qprintf(hq, 
 		      "<br><i>%s, %d/%d</i><br>",
 		      days[day.tm_wday], day.tm_mday, day.tm_mon + 1);
 	}
@@ -191,7 +191,7 @@ page_simple(http_connection_t *hc, http_reply_t *hr,
 	rstatus = pvrr != NULL ? val2str(pvrr->pvrr_status,
 					 recstatustxt) : NULL;
 
-	tcp_qprintf(tq, 
+	htsbuf_qprintf(hq, 
 		    "<a href=\"/eventinfo/%d\">"
 		    "%02d:%02d-%02d:%02d&nbsp;%s%s%s</a><br>",
 		    e->e_tag,
@@ -200,17 +200,17 @@ page_simple(http_connection_t *hc, http_reply_t *hr,
 		    rstatus ? "&nbsp;" : "", rstatus ?: "");
       }
     }
-    tcp_qprintf(tq, "<hr>");
+    htsbuf_qprintf(hq, "<hr>");
   }
 
-  tcp_qprintf(tq, "<b>Recorder log:</b><br>\n");
+  htsbuf_qprintf(hq, "<b>Recorder log:</b><br>\n");
 
   c = 0;
   LIST_FOREACH(pvrr, &pvrr_global_list, pvrr_global_link)
     c++;
 
   if(c == 0) {
-    tcp_qprintf(tq, "No entries<br>");
+    htsbuf_qprintf(hq, "No entries<br>");
   }
 
   pv = alloca(c * sizeof(pvr_rec_t *));
@@ -232,25 +232,25 @@ page_simple(http_connection_t *hc, http_reply_t *hr,
     if(a.tm_wday != day.tm_wday || a.tm_mday != day.tm_mday  ||
        a.tm_mon  != day.tm_mon  || a.tm_year != day.tm_year) {
       memcpy(&day, &a, sizeof(struct tm));
-      tcp_qprintf(tq, "<br><i>%s, %d/%d</i><br>",
+      htsbuf_qprintf(hq, "<br><i>%s, %d/%d</i><br>",
 		  days[day.tm_wday], day.tm_mday, day.tm_mon + 1);
     }
 
     rstatus = val2str(pvrr->pvrr_status, recstatustxt);
 
 
-    tcp_qprintf(tq, "<a href=\"/pvrinfo/%d\">", pvrr->pvrr_ref);
+    htsbuf_qprintf(hq, "<a href=\"/pvrinfo/%d\">", pvrr->pvrr_ref);
     
-    tcp_qprintf(tq, 
+    htsbuf_qprintf(hq, 
 		"%02d:%02d-%02d:%02d&nbsp; %s",
 		a.tm_hour, a.tm_min, b.tm_hour, b.tm_min, pvrr->pvrr_title);
 
-    tcp_qprintf(tq, "</a>");
+    htsbuf_qprintf(hq, "</a>");
 
-    tcp_qprintf(tq, "<br>(%s)<br><br>", rstatus);
+    htsbuf_qprintf(hq, "<br>(%s)<br><br>", rstatus);
   }
 
-  tcp_qprintf(tq, "</body></html>");
+  htsbuf_qprintf(hq, "</body></html>");
   http_output_html(hc, hr);
   return 0;
 }
@@ -262,7 +262,7 @@ static int
 page_einfo(http_connection_t *hc, http_reply_t *hr, 
 	   const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *hq = &hr->hr_q;
   event_t *e;
   struct tm a, b;
   time_t stop;
@@ -284,55 +284,55 @@ page_einfo(http_connection_t *hc, http_reply_t *hr,
     pvr_abort(pvrr);
   }
 
-  tcp_qprintf(tq, "<html>");
-  tcp_qprintf(tq, "<body>");
+  htsbuf_qprintf(hq, "<html>");
+  htsbuf_qprintf(hq, "<body>");
 
   localtime_r(&e->e_start, &a);
   stop = e->e_start + e->e_duration;
   localtime_r(&stop, &b);
 
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(hq, 
 	      "%s, %d/%d %02d:%02d - %02d:%02d<br>",
 	      days[a.tm_wday], a.tm_mday, a.tm_mon + 1,
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
 
-  tcp_qprintf(tq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
+  htsbuf_qprintf(hq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
 	      e->e_channel->ch_name, e->e_title);
   
   pvrstatus = pvrr != NULL ? pvrr->pvrr_status : HTSTV_PVR_STATUS_NONE;
 
   if((rstatus = val2str(pvrstatus, recstatustxt)) != NULL)
-    tcp_qprintf(tq, "Recording status: %s<br>", rstatus);
+    htsbuf_qprintf(hq, "Recording status: %s<br>", rstatus);
 
-  tcp_qprintf(tq, "<form method=\"post\" action=\"/eventinfo/%d\">", e->e_tag);
+  htsbuf_qprintf(hq, "<form method=\"post\" action=\"/eventinfo/%d\">", e->e_tag);
 
   switch(pvrstatus) {
   case HTSTV_PVR_STATUS_SCHEDULED:
-    tcp_qprintf(tq, "<input type=\"submit\" "
+    htsbuf_qprintf(hq, "<input type=\"submit\" "
 		"name=\"clear\" value=\"Remove from schedule\">");
     break;
     
   case HTSTV_PVR_STATUS_RECORDING:
-    tcp_qprintf(tq, "<input type=\"submit\" "
+    htsbuf_qprintf(hq, "<input type=\"submit\" "
 		"name=\"cancel\" value=\"Cancel recording\">");
     break;
 
   case HTSTV_PVR_STATUS_NONE:
-    tcp_qprintf(tq, "<input type=\"submit\" "
+    htsbuf_qprintf(hq, "<input type=\"submit\" "
 		"name=\"rec\" value=\"Record\">");
     break;
 
   default:
-    tcp_qprintf(tq, "<input type=\"submit\" "
+    htsbuf_qprintf(hq, "<input type=\"submit\" "
 		"name=\"clear\" value=\"Clear error status\">");
     break;
   }
 
-  tcp_qprintf(tq, "</form>");
-  tcp_qprintf(tq, "%s", e->e_desc);
+  htsbuf_qprintf(hq, "</form>");
+  htsbuf_qprintf(hq, "%s", e->e_desc);
 
-  tcp_qprintf(tq, "<hr><a href=\"/simple.html\">New search</a><br>");
-  tcp_qprintf(tq, "</body></html>");
+  htsbuf_qprintf(hq, "<hr><a href=\"/simple.html\">New search</a><br>");
+  htsbuf_qprintf(hq, "</body></html>");
   http_output_html(hc, hr);
   return 0;
 }
@@ -345,7 +345,7 @@ static int
 page_pvrinfo(http_connection_t *hc, http_reply_t *hr, 
 	     const char *remain, void *opaque)
 {
-  tcp_queue_t *tq = &hr->hr_tq;
+  htsbuf_queue_t *hq = &hr->hr_q;
   struct tm a, b;
   time_t stop;
   pvr_rec_t *pvrr = NULL;
@@ -364,56 +364,56 @@ page_pvrinfo(http_connection_t *hc, http_reply_t *hr,
     pvr_abort(pvrr);
   }
 
-  tcp_qprintf(tq, "<html>");
-  tcp_qprintf(tq, "<body>");
+  htsbuf_qprintf(hq, "<html>");
+  htsbuf_qprintf(hq, "<body>");
 
   localtime_r(&pvrr->pvrr_start, &a);
   stop = pvrr->pvrr_start + pvrr->pvrr_stop;
   localtime_r(&stop, &b);
 
-  tcp_qprintf(tq, 
+  htsbuf_qprintf(hq, 
 	      "%s, %d/%d %02d:%02d - %02d:%02d<br>",
 	      days[a.tm_wday], a.tm_mday, a.tm_mon + 1,
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
 
-  tcp_qprintf(tq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
+  htsbuf_qprintf(hq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
 	      pvrr->pvrr_channel->ch_name, pvrr->pvrr_title);
   
   pvrstatus = pvrr->pvrr_status;
 
   if((rstatus = val2str(pvrstatus, recstatustxt)) != NULL)
-    tcp_qprintf(tq, "Recording status: %s<br>", rstatus);
+    htsbuf_qprintf(hq, "Recording status: %s<br>", rstatus);
 
-  tcp_qprintf(tq, "<form method=\"post\" action=\"/pvrinfo/%d\">", 
+  htsbuf_qprintf(hq, "<form method=\"post\" action=\"/pvrinfo/%d\">", 
 	      pvrr->pvrr_ref);
 
   switch(pvrstatus) {
   case HTSTV_PVR_STATUS_SCHEDULED:
-    tcp_qprintf(tq, "<input type=\"submit\" "
+    htsbuf_qprintf(hq, "<input type=\"submit\" "
 		"name=\"clear\" value=\"Remove from schedule\">");
     break;
     
   case HTSTV_PVR_STATUS_RECORDING:
-    tcp_qprintf(tq, "<input type=\"submit\" "
+    htsbuf_qprintf(hq, "<input type=\"submit\" "
 		"name=\"cancel\" value=\"Cancel recording\">");
     break;
 
   case HTSTV_PVR_STATUS_DONE:
-    tcp_qprintf(tq, "<input type=\"submit\" "
+    htsbuf_qprintf(hq, "<input type=\"submit\" "
 		"name=\"clear\" value=\"Remove from log\">");
     break;
 
   default:
-    tcp_qprintf(tq, "<input type=\"submit\" "
+    htsbuf_qprintf(hq, "<input type=\"submit\" "
 		"name=\"clear\" value=\"Clear error status\">");
     break;
   }
 
-  tcp_qprintf(tq, "</form>");
-  tcp_qprintf(tq, "%s", pvrr->pvrr_desc);
+  htsbuf_qprintf(hq, "</form>");
+  htsbuf_qprintf(hq, "%s", pvrr->pvrr_desc);
 
-  tcp_qprintf(tq, "<hr><a href=\"/simple.html\">New search</a><br>");
-  tcp_qprintf(tq, "</body></html>");
+  htsbuf_qprintf(hq, "<hr><a href=\"/simple.html\">New search</a><br>");
+  htsbuf_qprintf(hq, "</body></html>");
   http_output_html(hc, hr);
   return 0;
 }
