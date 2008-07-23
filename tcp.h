@@ -94,6 +94,8 @@ void tcp_destroy_client(tcp_session_t *ses);
 
 void tcp_enable_disable(tcp_session_t *ses, int enabled);
 
+void tcp_set_hostname(tcp_session_t *ses, const char *hostname);
+
 int tcp_send_msg(tcp_session_t *ses, int hiprio, void *data, size_t len);
 
 #endif /* TCP_H_ */

@@ -257,7 +257,7 @@ tcp_disconnect(tcp_session_t *ses, int err)
   if(ses->tcp_server != NULL) {
     free(ses->tcp_name);
     free(ses);
-  } else {
+  } else if(ses->tcp_enabled) {
     /* Try to reconnect in 2 seconds */
     dtimer_arm(&ses->tcp_timer, tcp_client_reconnect_timeout, ses, 2);
   }
@@ -372,6 +372,7 @@ tcp_client_connect_callback(int events, void *opaque, int fd)
   tcp_session_t *c = opaque;
 
   dispatch_delfd(c->tcp_dispatch_handle);
+  c->tcp_dispatch_handle = NULL;
 
   getsockopt(fd, SOL_SOCKET, SO_ERROR, (void *)&err, &errlen);
 
@@ -381,7 +382,7 @@ tcp_client_connect_callback(int events, void *opaque, int fd)
   }
   
   close(c->tcp_fd);
-  tcp_client_connect_fail(c, errno);
+  tcp_client_connect_fail(c, err);
 }
 
 /**
@@ -479,10 +480,10 @@ tcp_create_client(const char *hostname, int port, size_t session_size,
   c->tcp_callback = cb;
   c->tcp_name = strdup(name);
   c->tcp_port = port;
-  c->tcp_hostname = strdup(hostname);
+  c->tcp_hostname = hostname ? strdup(hostname) : NULL;
   c->tcp_enabled = enabled;
 
-  if(c->tcp_enabled)
+  if(c->tcp_enabled && c->tcp_hostname)
     tcp_session_try_connect(c);
   return c;
 }
@@ -597,7 +598,7 @@ tcp_enable_disable(tcp_session_t *ses, int enabled)
 
   ses->tcp_enabled = enabled;
 
-  if(enabled) {
+  if(enabled && ses->tcp_hostname != NULL) {
     tcp_session_try_connect(ses);
   } else {
     if(ses->tcp_resolver != NULL) {
@@ -610,4 +611,17 @@ tcp_enable_disable(tcp_session_t *ses, int enabled)
 
     dtimer_disarm(&ses->tcp_timer);
   }
+}
+
+
+/**
+ *
+ */
+void
+tcp_set_hostname(tcp_session_t *ses, const char *hostname)
+{
+  if(ses->tcp_hostname != NULL)
+    free(ses->tcp_hostname);
+
+  ses->tcp_hostname = strdup(hostname);
 }
