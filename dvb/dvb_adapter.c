@@ -203,13 +203,16 @@ dvb_adapter_init(void)
       if((c = htsmsg_get_msg_by_field(f)) == NULL)
 	continue;
       
-      if(dvb_adapter_find_by_identifier(f->hmf_name) != NULL) {
+      name = htsmsg_get_str(c, "displayname");
+
+      if((tda = dvb_adapter_find_by_identifier(f->hmf_name)) != NULL) {
 	/* Already loaded */
+
+	free(tda->tda_displayname);
+	tda->tda_displayname = strdup(name);
 	continue;
       }
 
-      if((name = htsmsg_get_str(c, "displayname")) == NULL)
-	continue;
 
       if((s = htsmsg_get_str(c, "type")) == NULL ||
 	 (type = dvb_str_to_adaptertype(s)) < 0)
