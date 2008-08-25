@@ -631,17 +631,8 @@ transport_is_available(th_transport_t *t)
 void
 transport_signal_status(th_transport_t *t, int newstatus)
 {
-  char buf[200];
-
   if(t->tht_last_status == newstatus)
     return;
-
-  snprintf(buf, sizeof(buf), "\"%s\" on %s",
-	   t->tht_chname ?: t->tht_svcname, t->tht_sourcename(t));
-
-  tvhlog(LOG_INFO, "transport", "%s -- Changed status from \"%s\" to \"%s\"",
-	 buf, transport_status_to_text(t->tht_last_status),
-	 transport_status_to_text(newstatus));
 
   t->tht_last_status = newstatus;
   notify_transprot_status_change(t);
