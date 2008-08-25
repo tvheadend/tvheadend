@@ -38,15 +38,12 @@
 
 #include "tvhead.h"
 #include "dispatch.h"
-#include "dvb_dvr.h"
-#include "dvb_support.h"
 #include "teletext.h"
 #include "transports.h"
 #include "subscriptions.h"
 #include "tsdemux.h"
 
 #include "v4l.h"
-#include "dvb_dvr.h"
 #include "iptv_input.h"
 #include "psi.h"
 #include "buffer.h"

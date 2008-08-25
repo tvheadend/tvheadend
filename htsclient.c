@@ -36,7 +36,6 @@
 #include "epg.h"
 #include "teletext.h"
 #include "dispatch.h"
-#include "dvb.h"
 #include "buffer.h"
 #include "tsmux.h"
 #include "tcp.h"

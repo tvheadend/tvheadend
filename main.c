@@ -37,7 +37,7 @@
 #include <libavformat/avformat.h>
 
 #include "tvhead.h"
-#include "dvb.h"
+#include "dvb/dvb.h"
 #include "v4l.h"
 #include "channels.h"
 #include "htsclient.h"

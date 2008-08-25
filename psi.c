@@ -28,7 +28,7 @@
 #include "tvhead.h"
 #include "psi.h"
 #include "transports.h"
-#include "dvb_support.h"
+#include "dvb/dvb_support.h"
 #include "tsdemux.h"
 #include "parsers.h"
 

@@ -33,9 +33,9 @@
 #include "access.h"
 #include "dtable.h"
 
-#include "dvb.h"
-#include "dvb_support.h"
-#include "dvb_muxconfig.h"
+#include "dvb/dvb.h"
+#include "dvb/dvb_support.h"
+#include "dvb/dvb_muxconfig.h"
 #include "transports.h"
 
 extern const char *htsversion;

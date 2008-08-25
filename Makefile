@@ -13,6 +13,7 @@ SRCS += pvr.c autorec.c ffmuxer.c
 
 SRCS += epg.c epg_xmltv.c
 
+VPATH += dvb
 SRCS += dvb.c dvb_support.c dvb_dvr.c dvb_muxconfig.c dvb_fe.c dvb_tables.c \
 	diseqc.c
 
@@ -41,7 +42,7 @@ JSSRCS += tvheadend.js extensions.js acleditor.js cwceditor.js \
 
 CSSSRCS += ext.css
 
-PROGPATH = $(HTS_BUILD_ROOT)/tvheadend_newui
+PROGPATH = $(HTS_BUILD_ROOT)/tvheadend
 PROG = tvheadend
 MAN  = tvheadend.1
 CFLAGS += -g -Wall -Werror -O2 -mmmx
