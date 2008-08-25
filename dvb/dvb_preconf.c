@@ -28,7 +28,7 @@
 
 #include "tvhead.h"
 #include "dvb.h"
-#include "dvb_muxconfig.h"
+#include "dvb_preconf.h"
 
 /**
  * A big list of all known DVB networks (from linuxtv.org)

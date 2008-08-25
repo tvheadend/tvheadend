@@ -35,7 +35,7 @@
 
 #include "dvb/dvb.h"
 #include "dvb/dvb_support.h"
-#include "dvb/dvb_muxconfig.h"
+#include "dvb/dvb_preconf.h"
 #include "transports.h"
 
 extern const char *htsversion;

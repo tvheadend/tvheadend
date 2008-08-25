@@ -36,7 +36,6 @@
 #include "tvhead.h"
 #include "dispatch.h"
 #include "dvb.h"
-#include "dvb_muxconfig.h"
 #include "dvb_support.h"
 #include "epg.h"
 #include "transports.h"
