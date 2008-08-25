@@ -23,6 +23,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "tvhead.h"
 #include "access.h"
 #include "http.h"
@@ -63,6 +66,58 @@ page_root(http_connection_t *hc, http_reply_t *hr,
 }
 
 /**
+ * Root page, we direct the client to different pages depending
+ * on if it is a full blown browser or just some mobile app
+ */
+static int
+page_static(http_connection_t *hc, http_reply_t *hr, 
+	    const char *remain, void *opaque)
+{
+  int fd, r;
+  const char *rootpath = HTS_BUILD_ROOT "/tvheadend/webui/static";
+  char path[500];
+  struct stat st;
+  void *buf;
+  htsbuf_queue_t *hq = &hr->hr_q;
+  const char *content = NULL, *postfix;
+
+  if(strstr(remain, ".."))
+    return HTTP_STATUS_BAD_REQUEST;
+
+  snprintf(path, sizeof(path), "%s/%s", rootpath, remain);
+
+  if((fd = open(path, O_RDONLY)) < 0)
+    return 404;
+
+  if(fstat(fd, &st) < 0) {
+    close(fd);
+    return 404;
+  }
+
+  buf = malloc(st.st_size);
+  r = read(fd, buf, st.st_size);
+  close(fd);
+
+  if(r != st.st_size) {
+    free(buf);
+    return 404;
+  }
+
+  postfix = strrchr(remain, '.');
+  if(postfix != NULL) {
+    postfix++;
+
+    if(!strcmp(postfix, "js"))
+      content = "text/javascript; charset=UTF-8";
+  }
+
+  htsbuf_append_prealloc(hq, buf, st.st_size);
+  http_output(hc, hr, content, NULL, 0);
+  return 0;
+}
+
+
+/**
  * WEB user interface
  */
 void
@@ -70,7 +125,10 @@ webui_start(void)
 {
   http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
 
+  http_path_add("/static", NULL, page_static, ACCESS_WEB_INTERFACE);
+
   simpleui_start();
   extjs_start();
   comet_init();
+
 }

@@ -40,14 +40,6 @@
 
 extern const char *htsversion;
 
-#include "obj/tvheadend.jsh"
-#include "obj/extensions.jsh"
-#include "obj/acleditor.jsh"
-#include "obj/cwceditor.jsh"
-#include "obj/dvb.jsh"
-#include "obj/ext.cssh"
-
-
 static void
 extjs_load(htsbuf_queue_t *hq, const char *script)
 {
@@ -89,7 +81,7 @@ extjs_root(http_connection_t *hc, http_reply_t *hr,
 
   htsbuf_qprintf(hq, "<html><body>\n"
 		 "<link rel=\"stylesheet\" type=\"text/css\" href=\""EXTJSPATH"/resources/css/ext-all.css\">\n"
-		 "<link rel=\"stylesheet\" type=\"text/css\" href=\"app/extensions.css\">\n"
+		 "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/app/ext.css\">\n"
 		 "<script type=\"text/javascript\" src=\""EXTJSPATH"/adapter/ext/ext-base.js\"></script>\n"
 		 "<script type=\"text/javascript\" src=\""EXTJSPATH"/ext-all-debug.js\"></script>\n");
 
@@ -99,8 +91,7 @@ extjs_root(http_connection_t *hc, http_reply_t *hr,
   /**
    * Load extjs extensions
    */
-  extjs_load(hq, "app/extensions.js");
-  extjs_load(hq, "app/tabclosemenu.js");
+  extjs_load(hq, "static/app/extensions.js");
 
   /**
    * Create a namespace for our app
@@ -110,14 +101,14 @@ extjs_root(http_connection_t *hc, http_reply_t *hr,
   /**
    * Load all components
    */
-  extjs_load(hq, "app/acleditor.js");
-  extjs_load(hq, "app/cwceditor.js");
-  extjs_load(hq, "app/dvb.js");
+  extjs_load(hq, "static/app/acleditor.js");
+  extjs_load(hq, "static/app/cwceditor.js");
+  extjs_load(hq, "static/app/dvb.js");
 
   /**
    * Finally, the app itself
    */
-  extjs_load(hq, "app/tvheadend.js");
+  extjs_load(hq, "static/app/tvheadend.js");
   extjs_exec(hq, "Ext.onReady(tvheadend.app.init, tvheadend.app);");
   
 
@@ -401,16 +392,4 @@ extjs_start(void)
   http_path_add("/dvbtree",     NULL, extjs_dvbtree,     ACCESS_WEB_INTERFACE);
   http_path_add("/dvbadapter",  NULL, extjs_dvbadapter,  ACCESS_WEB_INTERFACE);
   http_path_add("/dvbnetworks", NULL, extjs_dvbnetworks, ACCESS_WEB_INTERFACE);
-
-#define ADD_JS_RESOURCE(path, name) \
-  http_resource_add(path, name, sizeof(name), "text/javascript", "gzip")
-
-  ADD_JS_RESOURCE("/app/extensions.js", embedded_extensions);
-  ADD_JS_RESOURCE("/app/extensions.css", embedded_ext);
-
-  ADD_JS_RESOURCE("/app/tvheadend.js", embedded_tvheadend);
-
-  ADD_JS_RESOURCE("/app/acleditor.js", embedded_acleditor);
-  ADD_JS_RESOURCE("/app/cwceditor.js", embedded_cwceditor);
-  ADD_JS_RESOURCE("/app/dvb.js", embedded_dvb);
 }
