@@ -90,7 +90,7 @@ sp_packet_input(void *opaque, th_muxstream_t *tms, th_pkt_t *pkt)
   th_transport_t *t = sp->sp_t;
   channel_t *ch;
 
-  syslog(LOG_INFO, "Probed \"%s\" -- Ok\n", t->tht_svcname);
+  tvhlog(LOG_INFO, "serviceprobe", "Probed \"%s\" -- Ok\n", t->tht_svcname);
 
   if(t->tht_ch == NULL && t->tht_svcname != NULL) {
     ch = channel_find(t->tht_svcname, 1, NULL);
@@ -130,7 +130,8 @@ sp_status_callback(struct th_subscription *s, int status, void *opaque)
     break;
   }
 
-  syslog(LOG_INFO, "Probed \"%s\" -- %s\n", t->tht_svcname, errtxt);
+  tvhlog(LOG_INFO, "serviceprobe",
+	 "Probed \"%s\" -- %s\n", t->tht_svcname, errtxt);
   dtimer_arm(&sp->sp_timer, sp_done_callback, sp, 0);
 }
 

@@ -34,7 +34,7 @@
 #include <linux/dvb/frontend.h>
 #include <linux/dvb/dmx.h>
 
-#include <libhts/htscfg.h>
+#include <libhts/htssettings.h>
 
 #include "tvhead.h"
 #include "dispatch.h"
@@ -55,11 +55,10 @@ struct th_dvb_mux_instance_tree dvb_muxes;
 static void dvb_mux_scanner(void *aux, int64_t now);
 static void dvb_fec_monitor(void *aux, int64_t now);
 
-static int dvb_tda_load(th_dvb_adapter_t *tda);
-static void dvb_tdmi_load(th_dvb_mux_instance_t *tdmi);
-static void dvb_transport_config_change(th_transport_t *t);
+static void dvb_transport_save(th_transport_t *t);
 static const char *dvb_source_name(th_transport_t *t);
 static int dvb_transport_quality(th_transport_t *t);
+
 
 static th_dvb_adapter_t *
 tda_alloc(void)
@@ -86,7 +85,8 @@ dvb_add_adapter(const char *path)
   fe = open(fname, O_RDWR | O_NONBLOCK);
   if(fe == -1) {
     if(errno != ENOENT)
-      syslog(LOG_ALERT, "Unable to open %s -- %s\n", fname, strerror(errno));
+      tvhlog(LOG_ALERT, "dvb",
+	     "Unable to open %s -- %s\n", fname, strerror(errno));
     return;
   }
 
@@ -104,7 +104,7 @@ dvb_add_adapter(const char *path)
   tda->tda_fe_info = malloc(sizeof(struct dvb_frontend_info));
 
   if(ioctl(tda->tda_fe_fd, FE_GET_INFO, tda->tda_fe_info)) {
-    syslog(LOG_ALERT, "%s: Unable to query adapter\n", fname);
+    tvhlog(LOG_ALERT, "dvb", "%s: Unable to query adapter\n", fname);
     close(fe);
     free(tda);
     return;
@@ -134,11 +134,10 @@ dvb_add_adapter(const char *path)
 
   tda->tda_displayname = strdup(tda->tda_fe_info->name);
 
-  syslog(LOG_INFO, "Found adapter %s (%s)", path, tda->tda_fe_info->name);
+  tvhlog(LOG_INFO, "dvb",
+	 "Found adapter %s (%s)", path, tda->tda_fe_info->name);
 
   TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
-  dvb_tda_load(tda);
-
   dtimer_arm(&tda->tda_fec_monitor_timer, dvb_fec_monitor, tda, 1);
   dvb_fe_start(tda);
 }
@@ -150,9 +149,10 @@ void
 dvb_init(void)
 {
   char path[200];
-  struct dirent *d;
-  DIR *dir;
-  int i;
+  htsmsg_t *l, *c;
+  htsmsg_field_t *f;
+  const char *name, *s;
+  int i, type;
   th_dvb_adapter_t *tda;
 
   TAILQ_INIT(&dvb_adapters);
@@ -162,37 +162,38 @@ dvb_init(void)
     dvb_add_adapter(path);
   }
 
-  /* Load any stale adapters */
+  l = hts_settings_load("dvbadapters");
+  if(l != NULL) {
+    HTSMSG_FOREACH(f, l) {
+      if((c = htsmsg_get_msg_by_field(f)) == NULL)
+	continue;
+      
+      if(dvb_adapter_find_by_identifier(f->hmf_name) != NULL) {
+	/* Already loaded */
+	continue;
+      }
 
-  snprintf(path, sizeof(path), "%s/dvbadapters", settings_dir);
+      if((name = htsmsg_get_str(c, "displayname")) == NULL)
+	continue;
 
-  if((dir = opendir(path)) == NULL)
-    return;
+      if((s = htsmsg_get_str(c, "type")) == NULL ||
+	 (type = dvb_str_to_adaptertype(s)) < 0)
+	continue;
 
-  while((d = readdir(dir)) != NULL) {
-    if(d->d_name[0] != '_')
-      continue;
+      tda = tda_alloc();
+      tda->tda_identifier = strdup(f->hmf_name);
+      tda->tda_displayname = strdup(name);
+      tda->tda_type = type;
 
-    if(dvb_adapter_find_by_identifier(d->d_name) != NULL) {
-      /* Already loaded */
-      printf("%s is already loaded\n", d->d_name);
-      continue;
-    }
-
-    tda = tda_alloc();
-
-    tda = calloc(1, sizeof(th_dvb_adapter_t));
-    tda->tda_identifier = strdup(d->d_name);
-    printf("Loading stale adapter %s\n", tda->tda_identifier);
-
-    if(dvb_tda_load(tda) == 0) {
       TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
-    } else {
-      printf("Error while loading adapter %s -- settings file is corrupt\n",
-	     tda->tda_identifier);
+
     }
+    htsmsg_destroy(l);
   }
-  closedir(dir);
+
+  TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link)
+    dvb_tdmi_load(tda);
+
 }
 
 
@@ -232,7 +233,7 @@ dvb_find_transport(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
 
   t->tht_start_feed = dvb_start_feed;
   t->tht_stop_feed  = dvb_stop_feed;
-  t->tht_config_change = dvb_transport_config_change;
+  t->tht_config_change = dvb_transport_save;
   t->tht_sourcename = dvb_source_name;
   t->tht_dvb_mux_instance = tdmi;
   t->tht_quality_index = dvb_transport_quality;
@@ -241,6 +242,47 @@ dvb_find_transport(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   return t;
 }
 
+
+/**
+ *
+ */
+static void
+dvb_notify_mux_quality(th_dvb_mux_instance_t *tdmi)
+{
+  htsmsg_t *m = htsmsg_create();
+  htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
+
+  htsmsg_add_u32(m, "quality", 100 + tdmi->tdmi_quality * 2);
+  notify_by_msg("dvbmux", m);
+}
+
+
+/**
+ *
+ */
+static void
+dvb_notify_mux_status(th_dvb_mux_instance_t *tdmi)
+{
+  htsmsg_t *m = htsmsg_create();
+  htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
+
+  htsmsg_add_str(m, "status", tdmi->tdmi_last_status);
+  notify_by_msg("dvbmux", m);
+}
+
+
+/**
+ *
+ */
+static void
+dvb_adapter_notify_reload(th_dvb_adapter_t *tda)
+{
+  htsmsg_t *m = htsmsg_create();
+  htsmsg_add_str(m, "id", tda->tda_identifier);
+
+  htsmsg_add_u32(m, "reload", 1);
+  notify_by_msg("dvbadapter", m);
+}
 
 
 /**
@@ -271,7 +313,7 @@ dvb_fec_monitor(void *aux, int64_t now)
 
     if(v == TDMI_FEC_ERR_HISTOGRAM_SIZE) {
       if(LIST_FIRST(&tda->tda_transports) != NULL) {
-	syslog(LOG_ERR, 
+	tvhlog(LOG_ERR, "dvb",
 	       "\"%s\": Constant rate of FEC errors (average at %d / s), "
 	       "last %d seconds, flushing subscribers\n", 
 	       tdmi->tdmi_identifier, vv,
@@ -286,13 +328,13 @@ dvb_fec_monitor(void *aux, int64_t now)
   if(dvb_mux_status(tdmi, 1) != NULL) {
     if(tdmi->tdmi_quality > -50) {
       tdmi->tdmi_quality--;
-      notify_tdmi_qual_change(tdmi);
+      dvb_notify_mux_quality(tdmi);
     }
   } else {
 
     if(tdmi->tdmi_quality < 0) {
       tdmi->tdmi_quality++;
-      notify_tdmi_qual_change(tdmi);
+      dvb_notify_mux_quality(tdmi);
     }
   }
 
@@ -300,7 +342,7 @@ dvb_fec_monitor(void *aux, int64_t now)
 
   if(s != tdmi->tdmi_last_status) {
     tdmi->tdmi_last_status = s;
-    notify_tdmi_status_change(tdmi);
+    dvb_notify_mux_status(tdmi);
   }
 }
 
@@ -374,7 +416,7 @@ tdmi_global_cmp(th_dvb_mux_instance_t *a, th_dvb_mux_instance_t *b)
 th_dvb_mux_instance_t *
 dvb_mux_create(th_dvb_adapter_t *tda, struct dvb_frontend_parameters *fe_param,
 	       int polarisation, int switchport,
-	       uint16_t tsid, const char *network, int flags)
+	       uint16_t tsid, const char *network, const char *source)
 {
   th_dvb_mux_instance_t *tdmi;
   static th_dvb_mux_instance_t *skel;
@@ -430,11 +472,12 @@ dvb_mux_create(th_dvb_adapter_t *tda, struct dvb_frontend_parameters *fe_param,
 
   RB_INSERT_SORTED(&dvb_muxes, tdmi, tdmi_global_link, tdmi_global_cmp);
 
-  if(flags & DVB_MUX_SAVE) {
-    dvb_tda_save(tda);
-    notify_tda_change(tda);
-  } else if(flags & DVB_MUX_LOAD) {
-    dvb_tdmi_load(tdmi);
+  if(source != NULL) {
+    dvb_mux_nicename(buf, sizeof(buf), tdmi);
+    tvhlog(LOG_NOTICE, "dvb", "New mux \"%s\" created by %s", buf, source);
+
+    dvb_tdmi_save(tdmi);
+    dvb_adapter_notify_reload(tda);
   }
 
   return tdmi;
@@ -483,44 +526,18 @@ dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
   if(tdmi->tdmi_quickscan == TDMI_QUICKSCAN_WAITING)
     RB_REMOVE(&tda->tda_muxes_qscan_waiting, tdmi, tdmi_qscan_link);
 
+  hts_settings_remove("dvbmuxes/%s", tdmi->tdmi_identifier);
+
   pthread_mutex_lock(&tda->tda_lock);
   dvb_fe_flush(tdmi);
   dvb_mux_unref(tdmi);
   pthread_mutex_unlock(&tda->tda_lock);
-
-  dvb_tda_save(tda);
 }
 
 
 
 
-
-/**
- * Save config for the given adapter
- */
-void
-dvb_tda_save(th_dvb_adapter_t *tda)
-{
-  th_dvb_mux_instance_t *tdmi;
-  FILE *fp;
-  char buf[400];
-
-  snprintf(buf, sizeof(buf), "%s/dvbadapters/%s",
-	   settings_dir, tda->tda_identifier);
-  if((fp = settings_open_for_write(buf)) == NULL)
-    return;
-
-  fprintf(fp, "type = %s\n", dvb_adaptertype_to_str(tda->tda_type));
-  fprintf(fp, "displayname = %s\n", tda->tda_displayname);
-
-  RB_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
-
-    fprintf(fp, "mux {\n");
-    dvb_mux_store(fp, tdmi);
-    fprintf(fp, "}\n");
-  }
-  fclose(fp);
-}
+#if 0
 
 /**
  * Load config for the given adapter
@@ -588,7 +605,8 @@ dvb_tda_load(th_dvb_adapter_t *tda)
 			   0);
 
     if(v != NULL)
-      syslog(LOG_ALERT, "Unable to init saved mux on %s -- %s\n",
+      tvhlog(LOG_ALERT, "dvb",
+	     "Unable to init saved mux on %s -- %s\n",
 	     tda->tda_identifier, v);
   }
   config_free0(&cl);
@@ -597,116 +615,35 @@ dvb_tda_load(th_dvb_adapter_t *tda)
   config_free0(&cl);
   return -1;
 }
+#endif
 
-/**
- * Save config for the given mux
- */
-void
-dvb_tdmi_save(th_dvb_mux_instance_t *tdmi)
-{
-  th_transport_t *t;
-  FILE *fp;
-  char buf[400];
-
-  snprintf(buf, sizeof(buf), "%s/dvbmuxes/%s",
-	   settings_dir, tdmi->tdmi_identifier);
-  if((fp = settings_open_for_write(buf)) == NULL)
-    return;
-
-  LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
-    fprintf(fp, "service {\n");
-    fprintf(fp, "\tservice_id = %d\n", t->tht_dvb_service_id);
-    fprintf(fp, "\tpmt = %d\n", t->tht_pmt);
-    fprintf(fp, "\tstype = %d\n", t->tht_servicetype);
-    fprintf(fp, "\tscrambled = %d\n", t->tht_scrambled);
-
-    if(t->tht_provider != NULL)
-      fprintf(fp, "\tprovider = %s\n", t->tht_provider);
-
-    if(t->tht_svcname)
-      fprintf(fp, "\tservicename = %s\n", t->tht_svcname);
-
-    if(t->tht_chname)
-      fprintf(fp, "\tchannelname = %s\n", t->tht_chname);
-
-    fprintf(fp, "\tmapped = %d\n", t->tht_ch ? 1 : 0);
-
-    psi_save_transport(fp, t);
-
-    fprintf(fp, "}\n");
-  }
-  fclose(fp);
-}
-
-/**
- * Load config for the given mux
- */
 static void
-dvb_tdmi_load(th_dvb_mux_instance_t *tdmi)
+dvb_transport_save(th_transport_t *t)
 {
-  struct config_head cl;
-  config_entry_t *ce;
-  char buf[400];
-  const char *v;
-  int sid, pmt;
-  th_transport_t *t;
+  htsmsg_t *m = htsmsg_create();
 
-  snprintf(buf, sizeof(buf), "%s/dvbmuxes/%s",
-	   settings_dir, tdmi->tdmi_identifier);
 
-  TAILQ_INIT(&cl);
-  config_read_file0(buf, &cl);
+  htsmsg_add_u32(m, "service_id", t->tht_dvb_service_id);
+  htsmsg_add_u32(m, "pmt", t->tht_pmt);
+  htsmsg_add_u32(m, "stype", t->tht_servicetype);
+  htsmsg_add_u32(m, "scrambled", t->tht_scrambled);
 
-  TAILQ_FOREACH(ce, &cl, ce_link) {
-    if(ce->ce_type != CFG_SUB || strcasecmp("service", ce->ce_key))
-      continue;
+  if(t->tht_provider != NULL)
+    htsmsg_add_str(m, "provider", t->tht_provider);
 
-    sid = atoi(config_get_str_sub(&ce->ce_sub, "service_id", "0"));
-    pmt = atoi(config_get_str_sub(&ce->ce_sub, "pmt",        "0"));
-    if(sid < 1 || pmt < 1)
-      continue;
-    
-    t = dvb_find_transport(tdmi, sid, pmt, NULL);
-    
-    t->tht_servicetype = atoi(config_get_str_sub(&ce->ce_sub, "stype", "0"));
-    t->tht_scrambled = atoi(config_get_str_sub(&ce->ce_sub, "scrambled", "0"));
+  if(t->tht_svcname != NULL)
+    htsmsg_add_str(m, "servicename", t->tht_svcname);
 
-    v = config_get_str_sub(&ce->ce_sub, "provider", "unknown");
-    free((void *)t->tht_provider);
-    t->tht_provider = strdup(v);
+  if(t->tht_chname != NULL)
+    htsmsg_add_str(m, "channelname", t->tht_chname);
 
-    v = config_get_str_sub(&ce->ce_sub, "servicename", "unknown");
-    free((void *)t->tht_svcname);
-    t->tht_svcname = strdup(v);
-
-    v = config_get_str_sub(&ce->ce_sub, "channelname", NULL);
-    if(v != NULL) {
-      free((void *)t->tht_chname);
-      t->tht_chname = strdup(v);
-    } else {
-      t->tht_chname = strdup(t->tht_svcname);
-    }
-
-    psi_load_transport(&ce->ce_sub, t);
-
-    if(atoi(config_get_str_sub(&ce->ce_sub, "mapped", "0"))) {
-      transport_map_channel(t, NULL);
-    }
-  }
-  config_free0(&cl);
+  htsmsg_add_u32(m, "mapped", !!t->tht_ch);
+  
+  psi_get_transport_settings(m, t);
+  
+  hts_settings_save(m, "dvbtransports/%s", t->tht_identifier);
+  htsmsg_destroy(m);
 }
-
-/**
- * Called when config changes for the given transport
- */
-static void
-dvb_transport_config_change(th_transport_t *t)
-{
-  th_dvb_mux_instance_t *tdmi = t->tht_dvb_mux_instance;
-
-  dvb_tdmi_save(tdmi);
-}
-
 
 
 /**
@@ -762,7 +699,8 @@ dvb_tda_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
 			      tdmi_src->tdmi_switchport,
 			      tdmi_src->tdmi_transport_stream_id,
 			      tdmi_src->tdmi_network,
-			      0);
+			      "copy operation");
+
 
     assert(tdmi_dst != NULL);
 

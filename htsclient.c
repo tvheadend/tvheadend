@@ -274,7 +274,8 @@ cr_streamport(client_t *c, char **argv, int argc)
   c->c_ipaddr.s_addr = inet_addr(argv[0]);
   c->c_port = atoi(argv[1]);
 
-  syslog(LOG_INFO, "%s registers UDP stream target %s:%d",
+  tvhlog(LOG_INFO, "htsclient",
+	 "%s registers UDP stream target %s:%d",
 	 tcp_logname(&c->c_tcp_session), inet_ntoa(c->c_ipaddr), c->c_port);
 
   return 0;

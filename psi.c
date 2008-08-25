@@ -543,38 +543,39 @@ htstvstreamtype2txt(tv_streamtype_t s)
 
 
 /**
- * Save transport info
+ * Store transport settings into message
  */
 void
-psi_save_transport(FILE *fp, th_transport_t *t)
+psi_get_transport_settings(htsmsg_t *m, th_transport_t *t)
 {
   th_stream_t *st;
+  htsmsg_t *sub;
 
-  fprintf(fp, "\tpcr = %d\n", t->tht_pcr_pid);
+  htsmsg_add_u32(m, "pcr", t->tht_pcr_pid);
 
-  if(t->tht_disabled)
-    fprintf(fp, "\tdisabled = 1\n");
+  htsmsg_add_u32(m, "disabled", !!t->tht_disabled);
 
   LIST_FOREACH(st, &t->tht_streams, st_link) {
-    fprintf(fp, "\tstream {\n");
-    fprintf(fp, "\t\tpid = %d\n", st->st_pid);
-    fprintf(fp, "\t\ttype = %s\n", val2str(st->st_type, streamtypetab) ?: "?");
+    sub = htsmsg_create();
+
+    htsmsg_add_u32(sub, "pid", st->st_pid);
+    htsmsg_add_str(sub, "type", val2str(st->st_type, streamtypetab) ?: "?");
     
     if(st->st_lang[0])
-      fprintf(fp, "\t\tlanguage = %s\n", st->st_lang);
+      htsmsg_add_str(sub, "language", st->st_lang);
 
     if(st->st_type == HTSTV_CA)
-      fprintf(fp, "\t\tcaid = %s\n", psi_caid2name(st->st_caid));
+      htsmsg_add_str(sub, "caid", psi_caid2name(st->st_caid));
 
     if(st->st_frame_duration)
-      fprintf(fp, "\t\tframeduration = %d\n", st->st_frame_duration);
+      htsmsg_add_u32(sub, "frameduration", st->st_frame_duration);
     
-    fprintf(fp, "\t}\n");
+    htsmsg_add_msg(m, "stream", sub);
   }
 }
 
 
-
+#if 0
 /**
  * Load transport info
  */
@@ -621,4 +622,4 @@ psi_load_transport(struct config_head *cl, th_transport_t *t)
   }
 }
 
-
+#endif

@@ -29,6 +29,7 @@
 #include <string.h>
 #include <errno.h>
 #include <dirent.h>
+#include <syslog.h>
 
 #include <libavformat/avformat.h>
 #include <libavutil/avstring.h>
@@ -94,7 +95,8 @@ tffm_set_state(th_ffmuxer_t *tffm, int status)
     break;
   }
 
-  syslog(LOG_INFO, "%s - Entering state \"%s\"", tffm->tffm_printname, tp);
+  syslog(LOG_INFO,
+	 "%s - Entering state \"%s\"", tffm->tffm_printname, tp);
   tffm->tffm_state = status;
 }
 
@@ -151,7 +153,7 @@ tffm_open(th_ffmuxer_t *tffm, th_transport_t *t,
 
     codec = avcodec_find_decoder(codec_id);
     if(codec == NULL) {
-      syslog(LOG_ERR, 
+      tvhlog(LOG_ERR, 
 	     "%s - Cannot find codec for %s, ignoring stream", 
 	     printname, codec_name);
       continue;

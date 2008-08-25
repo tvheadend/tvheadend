@@ -150,7 +150,8 @@ subscription_create(channel_t *ch, unsigned int weight, const char *name,
   subscription_reschedule();
 
   if(s->ths_transport == NULL)
-    syslog(LOG_NOTICE, "No transponder available for subscription \"%s\" "
+    tvhlog(LOG_NOTICE, "subscription", 
+	   "No transponder available for subscription \"%s\" "
 	   "to channel \"%s\"",
 	   s->ths_title, s->ths_channel->ch_name);
 

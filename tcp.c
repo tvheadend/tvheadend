@@ -248,7 +248,7 @@ tcp_disconnect(tcp_session_t *ses, int err)
 
   ses->tcp_callback(TCP_DISCONNECT, ses);
 
-  syslog(LOG_INFO, "%s: %s: disconnected -- %s",
+  tvhlog(LOG_INFO, "tcp", "%s: %s: disconnected -- %s",
 	 ses->tcp_name, ses->tcp_peer_txt, strerror(err));
 
   close(dispatch_delfd(ses->tcp_dispatch_handle));
@@ -319,7 +319,7 @@ tcp_start_session(tcp_session_t *ses)
   snprintf(ses->tcp_peer_txt, sizeof(ses->tcp_peer_txt), "%s:%d",
 	   inet_ntoa(si->sin_addr), ntohs(si->sin_port));
 
-  syslog(LOG_INFO, "%s: %s%sConnected to %s", ses->tcp_name,
+  tvhlog(LOG_INFO, "tcp", "%s: %s%sConnected to %s", ses->tcp_name,
 	 ses->tcp_hostname ?: "", ses->tcp_hostname ? ": " : "",
 	 ses->tcp_peer_txt);
 
@@ -351,7 +351,7 @@ tcp_client_connect_fail(tcp_session_t *c, int error)
   struct sockaddr_in *si = (struct sockaddr_in *)&c->tcp_peer_addr;
 
   
-  syslog(LOG_ERR, "%s: Unable to connect to \"%s\" (%s) : %d -- %s",
+  tvhlog(LOG_ERR, "tcp", "%s: Unable to connect to \"%s\" (%s) : %d -- %s",
 	 c->tcp_name, c->tcp_hostname, inet_ntoa(si->sin_addr),
 	 ntohs(si->sin_port), strerror(error));
 
@@ -410,7 +410,7 @@ tcp_session_peer_resolved(void *aux, struct sockaddr *so, const char *error)
   c->tcp_resolver = NULL;
 
   if(error != NULL) {
-    syslog(LOG_ERR, "%s: Unable to resolve \"%s\" -- %s",
+    tvhlog(LOG_ERR, "tcp", "%s: Unable to resolve \"%s\" -- %s",
 	   c->tcp_name, c->tcp_hostname, error);
     /* Try again in 30 seconds */
     dtimer_arm(&c->tcp_timer, tcp_client_reconnect_timeout, c, 30);
@@ -550,11 +550,11 @@ tcp_create_server(int port, size_t session_size, const char *name,
 
   fcntl(s->tcp_fd, F_SETFL, fcntl(s->tcp_fd, F_GETFL) | O_NONBLOCK);
 
-  syslog(LOG_INFO, "%s: Listening for TCP connections on %s:%d",
+  tvhlog(LOG_INFO, "tcp", "%s: Listening for TCP connections on %s:%d",
 	 name, inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
 
   if(bind(s->tcp_fd, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-    syslog(LOG_ERR, 
+    tvhlog(LOG_ERR, "tcp", 
 	   "%s: Unable to bind socket for incomming TCP connections, "
 	   "%s:%d -- %s",
 	   name,

@@ -16,19 +16,18 @@ echo  char hierarchy\;
 echo  char polarisation\;
 echo }\;
 
-find $1/dvb-s -type f | sort | xargs ./muxbuilder 1 FE_QPSK
-find $1/dvb-t -type f | sort | xargs ./muxbuilder 1 FE_OFDM
-find $1/dvb-c -type f | sort | xargs ./muxbuilder 1 FE_QAM
-
-
-echo struct {
-echo int type\;
+echo struct network {
 echo const char *name\;
-echo struct mux *muxes\;
-echo int nmuxes\;
-echo const char *comment\;
-echo } networks[] = {
-find $1/dvb-s -type f | sort | xargs ./muxbuilder 2 FE_QPSK
-find $1/dvb-t -type f | sort | xargs ./muxbuilder 2 FE_OFDM
-find $1/dvb-c -type f | sort | xargs ./muxbuilder 2 FE_QAM
+echo const struct mux *muxes\;
+echo const int nmuxes\;
 echo }\;
+
+echo struct region {
+echo const char *name\;
+echo const struct network *networks\;
+echo const int nnetworks\;
+echo }\;
+
+find $1/dvb-s -type f | sort | xargs ./muxbuilder DVBS
+find $1/dvb-t -type f | sort | xargs ./muxbuilder DVBT
+find $1/dvb-c -type f | sort | xargs ./muxbuilder DVBC

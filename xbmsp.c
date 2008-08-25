@@ -422,7 +422,7 @@ xbmsp_send_err(xbmsp_t *xbmsp, uint32_t msgid, uint8_t errcode,
   vsnprintf(errbuf, sizeof(errbuf), errfmt, ap);
   va_end(ap);
 
-  syslog(LOG_INFO, "%s: %s", xbmsp->xbmsp_logname, errbuf);
+  tvhlog(LOG_INFO, "xbmsp", "%s: %s", xbmsp->xbmsp_logname, errbuf);
 
   slen = strlen(errbuf);
 

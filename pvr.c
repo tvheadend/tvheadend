@@ -513,12 +513,12 @@ pvr_generate_filename(pvr_rec_t *pvrr)
 
   while(1) {
     if(stat(fullname, &st) == -1) {
-      syslog(LOG_DEBUG, "pvr: File \"%s\" -- %s -- Using for recording",
+      tvhlog(LOG_DEBUG, "pvr", "File \"%s\" -- %s -- Using for recording",
 	     fullname, strerror(errno));
       break;
     }
 
-    syslog(LOG_DEBUG, "pvr: Overwrite protection, file \"%s\" exists", 
+    tvhlog(LOG_DEBUG, "pvr", "Overwrite protection, file \"%s\" exists", 
 	   fullname);
 
     tally++;
@@ -581,7 +581,7 @@ pvr_fsm(pvr_rec_t *pvrr)
     delta = pvrr->pvrr_stop - now;
 
     if(delta <= 0) {
-      syslog(LOG_NOTICE, "pvr: \"%s\" - Recording skipped, "
+      tvhlog(LOG_NOTICE, "pvr", "\"%s\" - Recording skipped, "
 	     "program has already come to pass", pvrr->pvrr_printname);
       pvrr->pvrr_status = HTSTV_PVR_STATUS_DONE;
       pvr_inform_status_change(pvrr);
@@ -677,8 +677,8 @@ pvrr_transport_available(pvr_rec_t *pvrr, th_transport_t *t)
 
   fmt = guess_format(pvrr->pvrr_fmt_lavfname, NULL, NULL);
   if(fmt == NULL) {
-    syslog(LOG_ERR, 
-	   "pvr: \"%s\" - Unable to open file format \"%s\" for output",
+    tvhlog(LOG_ERR, "pvr",
+	   "\"%s\" - Unable to open file format \"%s\" for output",
 	   pvrr->pvrr_printname, pvrr->pvrr_fmt_lavfname);
     pvrr->pvrr_error = HTSTV_PVR_STATUS_FILE_ERROR;
     pvr_fsm(pvrr);
@@ -706,8 +706,8 @@ pvrr_transport_available(pvr_rec_t *pvrr, th_transport_t *t)
   snprintf(urlname, sizeof(urlname), "file:%s", pvrr->pvrr_filename);
 
   if((err = url_fopen(&fctx->pb, urlname, URL_WRONLY)) < 0) {
-    syslog(LOG_ERR, 
-	   "pvr: \"%s\" - Unable to create output file \"%s\" -- %s\n", 
+    tvhlog(LOG_ERR, "pvr",
+	   "\"%s\" - Unable to create output file \"%s\" -- %s\n", 
 	   pvrr->pvrr_printname, pvrr->pvrr_filename, 
 	   strerror(AVUNERROR(err)));
     av_free(fctx);
@@ -800,7 +800,7 @@ pvr_recorder_thread(void *aux)
   if(t != NULL)
     *t = 0;
 
-  syslog(LOG_INFO, "pvr: \"%s\" - Recording started, ends at %s",
+  tvhlog(LOG_INFO, "pvr", "\"%s\" - Recording started, ends at %s",
 	 pvrr->pvrr_printname, txt2);
   
 
@@ -845,7 +845,7 @@ pvr_recorder_thread(void *aux)
   }
   pthread_mutex_unlock(&pvrr->pvrr_pktq_mutex);
   
-  syslog(LOG_INFO, "pvr: \"%s\" - Recording completed", 
+  tvhlog(LOG_INFO, "pvr", "\"%s\" - Recording completed", 
 	 pvrr->pvrr_printname);
 
   return NULL;

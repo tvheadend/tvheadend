@@ -364,7 +364,7 @@ teletext_rundown(th_transport_t *t, channel_t *ch, tt_page_t *ttp)
 
   if(prev != t->tht_tt_commercial_advice) {
 
-    syslog(LOG_DEBUG, 
+    tvhlog(LOG_DEBUG, "teletext", 
 	   "teletext-rundown: \"%s\" on \"%s\": "
 	   "%s commercial break (chunk %ds)",
 	   ch->ch_name, t->tht_name, 

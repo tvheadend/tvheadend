@@ -24,17 +24,18 @@ TAILQ_HEAD(access_entry_queue, access_entry);
 
 extern struct access_entry_queue access_entries;
 
-#define access_is_prefix(ae) ((ae)->ae_username == NULL)
-
 typedef struct access_entry {
-  int ae_tally;
-  char *ae_title;
+  char *ae_id;
 
   TAILQ_ENTRY(access_entry) ae_link;
   char *ae_username;
   char *ae_password;
+  char *ae_comment;
   struct in_addr ae_ip;
   int ae_prefixlen;
+  int ae_enabled;
+  
+
   uint32_t ae_rights;
 
   uint32_t ae_network; /* derived from ae_ip */
@@ -43,11 +44,9 @@ typedef struct access_entry {
 
 
 #define ACCESS_STREAMING       0x1
-#define ACCESS_RECORDER_VIEW   0x2
-#define ACCESS_RECORDER_CHANGE 0x4
+#define ACCESS_WEB_INTERFACE   0x2
+#define ACCESS_RECORDER        0x4
 #define ACCESS_ADMIN           0x8
-#define ACCESS_WEB_INTERFACE   0x10
-#define ACCESS_ADMIN_ACCESS    0x20
 
 #define ACCESS_FULL 0x3f
 
@@ -62,12 +61,12 @@ int access_verify(const char *username, const char *password,
 
 void access_init(void);
 
-access_entry_t *access_add(const char *id);
+//access_entry_t *access_add(const char *id);
 
-access_entry_t *access_by_id(int id);
+//access_entry_t *access_by_id(int id);
 	      
-void access_delete(access_entry_t *ae);
+//void access_delete(access_entry_t *ae);
 
-void access_save(void);
+//void access_save(void);
 
 #endif /* ACCESS_H_ */

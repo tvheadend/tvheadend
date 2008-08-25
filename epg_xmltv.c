@@ -33,6 +33,7 @@
 #include <libxml/tree.h>
 
 #include <libhts/htscfg.h>
+#include <syslog.h>
 
 #include "tvhead.h"
 #include "channels.h"
@@ -304,7 +305,7 @@ xmltv_transfer_events(xmltv_grabber_t *xg)
 	how = 1;
       }
       if(strcmp(xc->xc_bestmatch ?: "", ch->ch_name)) {
-	syslog(LOG_DEBUG,
+	tvhlog(LOG_DEBUG, "xmltv", 
 	       "xmltv: mapped \"%s\" (%s) to \"%s\" by %s",
 	       xc->xc_displayname, xc->xc_name, ch->ch_name,
 	       how ? "consequtive-event-matching" : "name");
@@ -608,7 +609,7 @@ icom_cb(void *opaque, htsmsg_t *m)
     xg->xg_status = v;
     dtimer_arm(&xg->xg_grab_timer, regrab, xg, v == XMLTV_GRAB_OK ? 3600 : 60);
     dtimer_arm(&xg->xg_xfer_timer, xmltv_xfer, xg, 1);
-    notify_xmltv_grabber_status_change(xg);
+    //    notify_xmltv_grabber_status_change(xg);
   }
   htsmsg_destroy(m);
 }

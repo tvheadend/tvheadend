@@ -20,7 +20,6 @@
 #define TV_HEAD_H
 
 #include <pthread.h>
-#include <syslog.h>
 #include <netinet/in.h>
 #include <libhts/htsq.h>
 #include <libhts/htstv.h>
@@ -956,5 +955,16 @@ static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
+
+void tvhlog(int severity, const char *subsys, const char *fmt, ...);
+
+#define	LOG_EMERG	0	/* system is unusable */
+#define	LOG_ALERT	1	/* action must be taken immediately */
+#define	LOG_CRIT	2	/* critical conditions */
+#define	LOG_ERR		3	/* error conditions */
+#define	LOG_WARNING	4	/* warning conditions */
+#define	LOG_NOTICE	5	/* normal but significant condition */
+#define	LOG_INFO	6	/* informational */
+#define	LOG_DEBUG	7	/* debug-level messages */
 
 #endif /* TV_HEAD_H */

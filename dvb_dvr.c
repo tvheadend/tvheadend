@@ -52,7 +52,8 @@ dvb_dvr_init(th_dvb_adapter_t *tda)
 
   dvr = open(tda->tda_dvr_path, O_RDONLY | O_NONBLOCK);
   if(dvr == -1) {
-    syslog(LOG_ALERT, "%s: unable to open dvr\n", tda->tda_dvr_path);
+    tvhlog(LOG_ALERT, "dvb",
+	   "%s: unable to open dvr\n", tda->tda_dvr_path);
     return -1;
   }
 
@@ -179,7 +180,7 @@ dvb_start_feed(th_transport_t *t, unsigned int weight, int status,
 
     if(fd == -1) {
       st->st_demuxer_fd = -1;
-      syslog(LOG_ERR,
+      tvhlog(LOG_ERR, "dvb",
 	     "\"%s\" unable to open demuxer \"%s\" for pid %d -- %s",
 	     t->tht_name, tda->tda_demux_path, pid, strerror(errno));
       continue;
@@ -193,7 +194,7 @@ dvb_start_feed(th_transport_t *t, unsigned int weight, int status,
     dmx_param.flags = DMX_IMMEDIATE_START;
 
     if(ioctl(fd, DMX_SET_PES_FILTER, &dmx_param)) {
-      syslog(LOG_ERR,
+      tvhlog(LOG_ERR, "dvb",
 	     "\"%s\" unable to configure demuxer \"%s\" for pid %d -- %s",
 	     t->tht_name, tda->tda_demux_path, pid, strerror(errno));
       close(fd);

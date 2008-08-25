@@ -33,6 +33,8 @@
 
 #include <inttypes.h>
 
+#include <syslog.h>
+
 #include <libhts/htscfg.h>
 
 #include "tvhead.h"

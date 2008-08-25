@@ -28,6 +28,7 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
+#include <syslog.h>
 
 #include "tvhead.h"
 #include "iptv_output.h"

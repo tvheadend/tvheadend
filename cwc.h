@@ -54,16 +54,20 @@ typedef struct cwc {
   /* From configuration */
 
   uint8_t cwc_confedkey[14];
-  const char *cwc_username;
-  const char *cwc_password;   /* salted version */
+  char *cwc_username;
+  char *cwc_password;
+  char *cwc_password_salted;   /* salted version */
+  char *cwc_comment;
 
   dtimer_t cwc_idle_timer;
 
   dtimer_t cwc_send_ka_timer;
 
-  int cwc_id;
+  char *cwc_id;
 
   const char *cwc_errtxt;
+
+  int cwc_enabled;
 
 } cwc_t;
 

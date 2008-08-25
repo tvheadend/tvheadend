@@ -26,6 +26,7 @@
 #include <string.h>
 #include <signal.h>
 #include <errno.h>
+#include <syslog.h>
 
 #include <pwd.h>
 #include <grp.h>
@@ -59,12 +60,14 @@
 #include "spawn.h"
 #include "ffmuxer.h"
 #include "xbmsp.h"
-#include "ajaxui/ajaxui.h"
+//#include "ajaxui/ajaxui.h"
 #include "webui/webui.h"
 #include "access.h"
 #include "serviceprobe.h"
 
 #include <libhts/htsparachute.h>
+#include <libhts/htssettings.h>
+
 
 int running;
 int startupcounter;
@@ -189,6 +192,9 @@ main(int argc, char **argv)
 
   openlog("tvheadend", LOG_PID, logfacility);
 
+  hts_settings_init("tvheadend2");
+
+
   if(settingspath == NULL && (homedir = getenv("HOME")) != NULL) {
     snprintf(buf2, sizeof(buf2), "%s/.hts", homedir);
       
@@ -273,14 +279,14 @@ main(int argc, char **argv)
 
   autorec_init();
   epg_init();
-  xmltv_init();
+  //  xmltv_init();
 
   subscriptions_init();
 
   //  htmlui_start();
 
   webui_start();
-  ajaxui_start();
+  //  ajaxui_start();
 
   avgen_init();
 
@@ -305,7 +311,7 @@ main(int argc, char **argv)
       output_multicast_setup();
       client_start();
 
-      p = atoi(config_get_str("http-server-port", "9980"));
+      p = atoi(config_get_str("http-server-port", "9981"));
       if(p)
 	http_start(p);
 
@@ -432,4 +438,36 @@ settings_open_for_write(const char *name)
 	   name, strerror(errno));
 
   return fp;
+}
+
+
+
+/**
+ *
+ */
+void
+tvhlog(int severity, const char *subsys, const char *fmt, ...)
+{
+  va_list ap;
+  htsmsg_t *m;
+  char buf[512];
+  int l;
+  
+  l = snprintf(buf, sizeof(buf), "%s: ", subsys);
+
+  va_start(ap, fmt);
+  vsnprintf(buf + l, sizeof(buf) - l, fmt, ap);
+  va_end(ap);
+
+  syslog(severity, "%s", buf);
+
+  /**
+   *
+   */
+
+  m = htsmsg_create();
+  htsmsg_add_str(m, "notificationClass", "logmessage");
+  htsmsg_add_str(m, "logtxt", buf);
+  comet_mailbox_add_message(m);
+  htsmsg_destroy(m);
 }

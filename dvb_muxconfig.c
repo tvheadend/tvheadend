@@ -23,6 +23,8 @@
 #include <string.h>
 #include <ctype.h>
 
+#include <libhts/htssettings.h>
+
 #include <linux/dvb/frontend.h>
 
 #include "tvhead.h"
@@ -32,6 +34,58 @@
 #include "dvb_muxconfig.h"
 #include "dvb_support.h"
 #include "transports.h"
+#include "notify.h"
+
+
+
+/**
+ * Save config for the given adapter
+ */
+void
+dvb_tda_save(th_dvb_adapter_t *tda)
+{
+  htsmsg_t *m = htsmsg_create();
+
+  htsmsg_add_str(m, "type", dvb_adaptertype_to_str(tda->tda_type));
+  htsmsg_add_str(m, "displayname", tda->tda_displayname);
+  hts_settings_save(m, "dvbadapters/%s", tda->tda_identifier);
+  htsmsg_destroy(m);
+}
+
+
+/**
+ *
+ */
+static htsmsg_t *
+dvb_tda_createmsg(th_dvb_adapter_t *tda)
+{
+  htsmsg_t *m = htsmsg_create();
+  htsmsg_add_str(m, "id", tda->tda_identifier);
+  return m;
+}
+
+/**
+ *
+ */
+void
+dvb_tda_set_displayname(th_dvb_adapter_t *tda, const char *s)
+{
+  htsmsg_t *m = dvb_tda_createmsg(tda);
+
+  free(tda->tda_displayname);
+  tda->tda_displayname = strdup(s);
+  
+  dvb_tda_save(tda);
+
+  htsmsg_add_str(m, "name", tda->tda_displayname);
+
+  notify_by_msg("dvbadapter", m);
+}
+
+
+
+
+
 
 static struct strtab fectab[] = {
   { "NONE", FEC_NONE },
@@ -93,158 +147,165 @@ static struct strtab poltab[] = {
 };
 
 
+/**
+ *
+ */
 void
-dvb_mux_store(FILE *fp, th_dvb_mux_instance_t *tdmi)
+dvb_tdmi_save(th_dvb_mux_instance_t *tdmi)
 {
   struct dvb_frontend_parameters *f = &tdmi->tdmi_fe_params;
 
-  fprintf(fp, "\ttransportstreamid = %d\n", tdmi->tdmi_transport_stream_id);
-  if(tdmi->tdmi_network != NULL)
-    fprintf(fp, "\tnetwork = %s\n", tdmi->tdmi_network);
+  htsmsg_t *m = htsmsg_create();
 
-  fprintf(fp, "\tfrequency = %d\n", f->frequency);
-  
+  htsmsg_add_u32(m, "transportstreamid", tdmi->tdmi_transport_stream_id);
+  if(tdmi->tdmi_network != NULL)
+    htsmsg_add_str(m, "network", tdmi->tdmi_network);
+
+  htsmsg_add_u32(m, "frequency", f->frequency);
+
   switch(tdmi->tdmi_adapter->tda_type) {
   case FE_OFDM:
-    fprintf(fp, "\tbandwidth = %s\n",     
-	    val2str(f->u.ofdm.bandwidth, bwtab));
+    htsmsg_add_str(m, "bandwidth",
+		   val2str(f->u.ofdm.bandwidth, bwtab));
 
-    fprintf(fp, "\tconstellation = %s\n", 
+    htsmsg_add_str(m, "constellation", 
 	    val2str(f->u.ofdm.constellation, qamtab));
 
-    fprintf(fp, "\ttransmission_mode = %s\n", 
+    htsmsg_add_str(m, "transmission_mode", 
 	    val2str(f->u.ofdm.transmission_mode, modetab));
 
-    fprintf(fp, "\tguard_interval = %s\n", 
+    htsmsg_add_str(m, "guard_interval", 
 	    val2str(f->u.ofdm.guard_interval, guardtab));
 
-    fprintf(fp, "\thierarchy = %s\n", 
+    htsmsg_add_str(m, "hierarchy", 
 	    val2str(f->u.ofdm.hierarchy_information, hiertab));
 
-    fprintf(fp, "\tfec_hi = %s\n", 
+    htsmsg_add_str(m, "fec_hi", 
 	    val2str(f->u.ofdm.code_rate_HP, fectab));
 
-    fprintf(fp, "\tfec_lo = %s\n", 
+    htsmsg_add_str(m, "fec_lo", 
 	    val2str(f->u.ofdm.code_rate_LP, fectab));
     break;
 
   case FE_QPSK:
-    fprintf(fp, "\tsymbol_rate = %d\n", f->u.qpsk.symbol_rate);
+    htsmsg_add_u32(m, "symbol_rate", f->u.qpsk.symbol_rate);
 
-    fprintf(fp, "\tfec = %s\n", 
+    htsmsg_add_str(m, "fec", 
 	    val2str(f->u.qpsk.fec_inner, fectab));
 
-    fprintf(fp, "\tpolarisation = %s\n", 
+    htsmsg_add_str(m, "polarisation", 
 	    val2str(tdmi->tdmi_polarisation, poltab));
  
-    fprintf(fp, "\tswitchport = %d\n", tdmi->tdmi_switchport);
+    htsmsg_add_u32(m, "switchport", tdmi->tdmi_switchport);
     break;
 
   case FE_QAM:
-    fprintf(fp, "\tsymbol_rate = %d\n", f->u.qam.symbol_rate);
+    htsmsg_add_u32(m, "symbol_rate", f->u.qam.symbol_rate);
 
-    fprintf(fp, "\tfec = %s\n", 
+    htsmsg_add_str(m, "fec", 
 	    val2str(f->u.qam.fec_inner, fectab));
 
-    fprintf(fp, "\tconstellation = %s\n", 
+    htsmsg_add_str(m, "constellation", 
 	    val2str(f->u.qam.modulation, qamtab));
     break;
 
   case FE_ATSC:
     break;
   }
+
+  hts_settings_save(m, "dvbmuxes/%s/%s", 
+		    tdmi->tdmi_adapter->tda_identifier, tdmi->tdmi_identifier);
+  htsmsg_destroy(m);
 }
+
 
 /**
  *
  */
-const char *
-dvb_mux_create_str(th_dvb_adapter_t *tda,
-		   const char *tsidstr,
-		   const char *network,
-		   const char *freqstr,
-		   const char *symratestr,
-		   const char *qamstr,
-		   const char *fecstr,
-		   const char *fechistr,
-		   const char *feclostr,
-		   const char *bwstr,
-		   const char *tmodestr,
-		   const char *guardstr,
-		   const char *hierstr,
-		   const char *polstr,
-		   const char *switchportstr,
-		   int save)
+static const char *
+dvb_tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m)
 {
   struct dvb_frontend_parameters f;
+  const char *s;
   int r;
-  int polarisation = 0, switchport = 0;
- 
+  int polarisation = 0;
+  unsigned int switchport = 0;
+  unsigned int tsid;
+
   memset(&f, 0, sizeof(f));
   
   f.inversion = INVERSION_AUTO;
+  htsmsg_get_u32(m, "frequency", &f.frequency);
 
-  f.frequency = freqstr ? atoi(freqstr) : 0;
-  if(f.frequency == 0)
-    return "Invalid frequency";
 
   switch(tda->tda_type) {
   case FE_OFDM:
-    if(bwstr == NULL || (r = str2val(bwstr, bwtab)) < 0)
+    s = htsmsg_get_str(m, "bandwidth");
+    if(s == NULL || (r = str2val(s, bwtab)) < 0)
       return "Invalid bandwidth";
     f.u.ofdm.bandwidth = r;
 
-    if(qamstr == NULL || (r = str2val(qamstr, qamtab)) < 0)
+    s = htsmsg_get_str(m, "constellation");
+    if(s == NULL || (r = str2val(s, qamtab)) < 0)
       return "Invalid QAM constellation";
     f.u.ofdm.constellation = r;
 
-    if(tmodestr == NULL || (r = str2val(tmodestr, modetab)) < 0)
+    s = htsmsg_get_str(m, "transmission_mode");
+    if(s == NULL || (r = str2val(s, modetab)) < 0)
       return "Invalid transmission mode";
     f.u.ofdm.transmission_mode = r;
 
-    if(guardstr == NULL || (r = str2val(guardstr, guardtab)) < 0)
+    s = htsmsg_get_str(m, "guard_interval");
+    if(s == NULL || (r = str2val(s, guardtab)) < 0)
       return "Invalid guard interval";
     f.u.ofdm.guard_interval = r;
 
-    if(hierstr == NULL || (r = str2val(hierstr, hiertab)) < 0)
+    s = htsmsg_get_str(m, "hierarchy");
+    if(s == NULL || (r = str2val(s, hiertab)) < 0)
       return "Invalid heirarchy information";
     f.u.ofdm.hierarchy_information = r;
 
-    if(fechistr == NULL || (r = str2val(fechistr, fectab)) < 0)
-      printf("hifec = %s\n", fechistr);
+    s = htsmsg_get_str(m, "fec_hi");
+    if(s == NULL || (r = str2val(s, fectab)) < 0)
+      return "Invalid hi-FEC";
     f.u.ofdm.code_rate_HP = r;
 
-    if(feclostr == NULL || (r = str2val(feclostr, fectab)) < 0)
+    s = htsmsg_get_str(m, "fec_lo");
+    if(s == NULL || (r = str2val(s, fectab)) < 0)
       return "Invalid lo-FEC";
     f.u.ofdm.code_rate_LP = r;
     break;
 
   case FE_QPSK:
-    f.u.qpsk.symbol_rate = symratestr ? atoi(symratestr) : 0;
+    htsmsg_get_u32(m, "symbol_rate", &f.u.qpsk.symbol_rate);
     if(f.u.qpsk.symbol_rate == 0)
       return "Invalid symbol rate";
     
-    if(fecstr == NULL || (r = str2val(fecstr, fectab)) < 0)
+    s = htsmsg_get_str(m, "fec");
+    if(s == NULL || (r = str2val(s, fectab)) < 0)
       return "Invalid FEC";
     f.u.qpsk.fec_inner = r;
 
-    if(polstr == NULL || (r = str2val(polstr, poltab)) < 0)
+    s = htsmsg_get_str(m, "polarisation");
+    if(s == NULL || (r = str2val(s, poltab)) < 0)
       return "Invalid polarisation";
     polarisation = r;
     
-    switchport = atoi(switchportstr ?: "0");
+    htsmsg_get_u32(m, "switchport", &switchport);
     break;
 
   case FE_QAM:
-    f.u.qam.symbol_rate = symratestr ? atoi(symratestr) : 0;
+    htsmsg_get_u32(m, "symbol_rate", &f.u.qam.symbol_rate);
     if(f.u.qam.symbol_rate == 0)
       return "Invalid symbol rate";
     
-    if(qamstr == NULL || (r = str2val(qamstr, qamtab)) < 0)
+    s = htsmsg_get_str(m, "constellation");
+    if(s == NULL || (r = str2val(s, qamtab)) < 0)
       return "Invalid QAM constellation";
     f.u.qam.modulation = r;
 
-    if(fecstr == NULL || (r = str2val(fecstr, fectab)) < 0)
+    s = htsmsg_get_str(m, "fec");
+    if(s == NULL || (r = str2val(s, fectab)) < 0)
       return "Invalid FEC";
     f.u.qam.fec_inner = r;
     break;
@@ -253,45 +314,60 @@ dvb_mux_create_str(th_dvb_adapter_t *tda,
     break;
   }
 
-  dvb_mux_create(tda, &f, polarisation, switchport, atoi(tsidstr),
-		 network, save ? DVB_MUX_SAVE : DVB_MUX_LOAD);
+  if(htsmsg_get_u32(m, "transportstreamid", &tsid))
+    tsid = 0xffff;
 
+  dvb_mux_create(tda, &f, polarisation, switchport,
+		 tsid, htsmsg_get_str(m, "network"), NULL);
   return NULL;
 }
 
 
 
-#include "linuxtv_muxes.h"
-
-int
-dvb_mux_preconf_get(unsigned int n, const char **namep, const char **commentp)
+/**
+ *
+ */
+void
+dvb_tdmi_load(th_dvb_adapter_t *tda)
 {
-  if(n >= sizeof(networks) / sizeof(networks[0]))
-    return -1;
+  htsmsg_t *l, *c;
+  htsmsg_field_t *f;
 
-  if(namep != NULL)
-    *namep = networks[n].name;
-
-  if(commentp != NULL)
-    *commentp = networks[n].comment;
-
-  return networks[n].type;
+  if((l = hts_settings_load("dvbmuxes/%s", tda->tda_identifier)) == NULL)
+    return;
+ 
+  HTSMSG_FOREACH(f, l) {
+    if((c = htsmsg_get_msg_by_field(f)) == NULL)
+      continue;
+    
+    dvb_tdmi_create_by_msg(tda, c);
+  }
+  htsmsg_destroy(l);
 }
 
-int
-dvb_mux_preconf_add(th_dvb_adapter_t *tda, unsigned int n)
+
+
+
+/**
+ * A big list of all known DVB networks (from linuxtv.org)
+ */
+#include "linuxtv_muxes.h"
+
+/**
+ *
+ */
+static void
+dvb_mux_preconf_add(th_dvb_adapter_t *tda, const struct mux *m, int num,
+		    const char *source)
 {
   struct dvb_frontend_parameters f;
-  struct mux *m;
   int i;
-  int polarisation, switchport;
+  int polarisation;
+  int switchport;
 
-  if(n >= sizeof(networks) / sizeof(networks[0]))
-    return -1;
+  printf("m = %p, num = %d\n", m, num);
 
-  m = networks[n].muxes;
-
-  for(i = 0; i < networks[n].nmuxes; i++) {
+  for(i = 0; i < num; i++) {
 
     polarisation = 0;
     switchport = 0;
@@ -337,9 +413,114 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, unsigned int n)
     }
       
     dvb_mux_create(tda, &f, polarisation, switchport, 0xffff, NULL,
-		   DVB_MUX_LOAD);
+		   source);
     m++;
   }
-  dvb_tda_save(tda);
+}
+
+
+/**
+ *
+ */
+int
+dvb_mux_preconf_add_network(th_dvb_adapter_t *tda, const char *id)
+{
+  const struct region *r;
+  const struct network *n;
+  int nr, nn, i, j;
+  char source[100];
+
+  snprintf(source, sizeof(source), "built-in configuration from \"%s\"", id);
+
+  switch(tda->tda_type) {
+  case FE_QAM:
+    r = regions_DVBC;
+    nr = sizeof(regions_DVBC) / sizeof(regions_DVBC[0]);
+    break;
+  case FE_QPSK:
+    r = regions_DVBS;
+    nr = sizeof(regions_DVBS) / sizeof(regions_DVBS[0]);
+    break;
+  case FE_OFDM:
+    r = regions_DVBT;
+    nr = sizeof(regions_DVBT) / sizeof(regions_DVBT[0]);
+    break;
+  default:
+    return -1;
+  }
+  
+  for(i = 0; i < nr; i++) {
+    n = r[i].networks;
+    nn = r[i].nnetworks;
+
+    for(j = 0; j < nn; j++) {
+      if(!strcmp(n[j].name, id)) {
+	dvb_mux_preconf_add(tda, n[j].muxes, n[j].nmuxes, source);
+	break;
+      }
+    }
+  }
   return 0;
+}
+
+/**
+ *
+ */
+htsmsg_t *
+dvb_mux_preconf_get_node(int fetype, const char *node)
+{
+  const struct region *r;
+  const struct network *n;
+  int nr, nn, i;
+  htsmsg_t *out, *e;
+
+  switch(fetype) {
+  case FE_QAM:
+    r = regions_DVBC;
+    nr = sizeof(regions_DVBC) / sizeof(regions_DVBC[0]);
+    break;
+  case FE_QPSK:
+    r = regions_DVBS;
+    nr = sizeof(regions_DVBS) / sizeof(regions_DVBS[0]);
+    break;
+  case FE_OFDM:
+    r = regions_DVBT;
+    nr = sizeof(regions_DVBT) / sizeof(regions_DVBT[0]);
+    break;
+  default:
+    return NULL;
+  }
+  
+  out = htsmsg_create_array();
+
+  if(!strcmp(node, "root")) {
+
+    for(i = 0; i < nr; i++) {
+      e = htsmsg_create();
+      htsmsg_add_u32(e, "leaf", 0);
+      htsmsg_add_str(e, "text", r[i].name);
+      htsmsg_add_str(e, "id", r[i].name);
+      htsmsg_add_msg(out, NULL, e);
+    }
+    return out;
+  }
+
+  for(i = 0; i < nr; i++)
+    if(!strcmp(node, r[i].name))
+      break;
+
+  if(i == nr)
+    return out;
+  n = r[i].networks;
+  nn = r[i].nnetworks;
+
+  for(i = 0; i < nn; i++) {
+    e = htsmsg_create();
+    htsmsg_add_u32(e, "leaf", 1);
+    htsmsg_add_str(e, "text", n[i].name);
+    htsmsg_add_str(e, "id", n[i].name);
+    htsmsg_add_msg(out, NULL, e);
+  }
+      
+  return out;
 }

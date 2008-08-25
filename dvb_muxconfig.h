@@ -19,7 +19,13 @@
 #ifndef DVB_MUXCONFIG_H_
 #define DVB_MUXCONFIG_H_
 
-void dvb_mux_store(FILE *fp, th_dvb_mux_instance_t *tdmi);
+#include <libhts/htsmsg.h>
+
+void dvb_tda_save(th_dvb_adapter_t *tda);
+
+void dvb_tda_set_displayname(th_dvb_adapter_t *tda, const char *s);
+
+void dvb_tdmi_save(th_dvb_mux_instance_t *tdmi);
 
 const char *dvb_mux_create_str(th_dvb_adapter_t *tda,
 			       const char *tsidstr,
@@ -38,9 +44,10 @@ const char *dvb_mux_create_str(th_dvb_adapter_t *tda,
 			       const char *switchportstr,
 			       int save);
 
-int dvb_mux_preconf_get(unsigned int n, const char **namep, 
-			const char **commentp);
+htsmsg_t *dvb_mux_preconf_get_node(int fetype, const char *node);
 
-int dvb_mux_preconf_add(th_dvb_adapter_t *tda, unsigned int n);
+int dvb_mux_preconf_add_network(th_dvb_adapter_t *tda, const char *id);
+
+void dvb_tdmi_load(th_dvb_adapter_t *tda);
 
 #endif /* DVB_MUXCONFIG_H */

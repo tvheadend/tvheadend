@@ -6,7 +6,6 @@
 #include <strings.h>
 #include <ctype.h>
 
-int pass;
 char *type;
 
 struct strtab {
@@ -163,16 +162,143 @@ dvb_c_config(const char *l)
 
 
 
+/**
+ *
+ */
+typedef struct network {
+  char *structname; 
+  char *displayname;
+  char *comment;
+  struct network *next;
+} network_t;
+
+
+typedef struct region {
+  char *shortname;
+  char *longname;
+  struct network *networks;
+  struct region *next;
+} region_t;
+
+region_t *regions;
+
+
+static region_t *
+find_region(const char *name, const char *longname)
+{
+  region_t *c, *n, **p;
+
+  for(c = regions; c != NULL; c = c->next)
+    if(!strcmp(name, c->shortname))
+      return c;
+
+  n = malloc(sizeof(region_t));
+  n->shortname = strdup(name);
+  n->longname = strdup(longname);
+  n->networks = NULL;
+
+  if(regions == NULL)
+    regions = n;
+  else {
+    p = &regions;
+    while((c = *p) != NULL) {
+      if(strcmp(c->longname, longname) > 0)
+	break;
+      p = &c->next;
+    }
+    n->next = *p;
+    *p = n;
+  }
+  return n;
+}
+
+
+
+static network_t *
+add_network(region_t *x, const char *name)
+{
+  network_t *m, *n, **p;
+
+  n = calloc(1, sizeof(network_t));
+  n->structname = strdup(name);
+
+  if(x->networks == NULL)
+    x->networks = n;
+  else {
+    p = &x->networks;
+    while((m = *p) != NULL) {
+      if(strcmp(m->structname, name) > 0)
+	break;
+      p = &m->next;
+    }
+    n->next = *p;
+    *p = n;
+  }
+  return n;
+}
+
+
+static const struct {
+  const char *code;
+  const char *name;
+
+} tldlist[] = {
+  {"at", "Austria"},
+  {"au", "Australia"},
+  {"be", "Belgium"},
+  {"ch", "Switzerland"},
+  {"cz", "Czech Republic"},
+  {"de", "Germany"},
+  {"dk", "Denmark"},
+  {"es", "Spain"},
+  {"fi", "Finland"},
+  {"fr", "France"},
+  {"gr", "Greece"},
+  {"hr", "Croatia"},
+  {"is", "Iceland"},
+  {"it", "Italy"},
+  {"lu", "Luxembourg"},
+  {"lv", "Latvia"},
+  {"nl", "Netherlands"},
+  {"no", "Norway"},
+  {"nz", "New Zealand"},
+  {"pl", "Poland"},
+  {"se", "Sweden"},
+  {"sk", "Slovakia"},
+  {"tw", "Taiwan"},
+  {"uk", "United Kingdom"},
+};
+
+static const char *
+tldcode2longname(const char *tld)
+{
+  int i;
+  for(i = 0; i < sizeof(tldlist) / sizeof(tldlist[0]); i++)
+    if(!strcmp(tld, tldlist[i].code))
+      return tldlist[i].name;
+  
+  fprintf(stderr, "Unable to translate tld %s\n", tld);
+  exit(1);
+}
+
+
+
+
 static void
-convert_file(char *fname)
+scan_file(char *fname)
 {
   FILE *fp;
   char line[200];
   int l;
   char c, *s;
   char smartname[200];
-  const char *bn;
+  char *bn;
   int gotcomment = 0;
+  region_t *co;
+  network_t *ne;
+  char *name, *displayname;
+
+  char buf[100];
 
   fp = fopen(fname, "r");
   if(fp == NULL) {
@@ -188,10 +314,35 @@ convert_file(char *fname)
   }
   smartname[l] = 0;
 
-  if(pass == 1) {
-    printf("struct mux muxlist_%s_%s[] = {\n", type, smartname);
+  name = basename(fname);
+
+  if(!strcmp(type, "DVBS")) {
+    displayname = name;
+    co = find_region("geo", "Geosynchronous Orbit");
+
+  } else {
+    displayname = name + 3;
+    buf[0] = name[0];
+    buf[1] = name[1];
+    buf[2] = 0;
+    co = find_region(buf, tldcode2longname(buf));
   }
 
+  snprintf(buf, sizeof(buf), "%s_%s", type, smartname);
+
+  printf("static const struct mux muxes_%s[] = {\n", buf);
+
+  ne = add_network(co, buf);
+  bn = ne->displayname = strdup(displayname);
+
+  while(*bn) {
+    if(*bn == '_') *bn = ' ';
+    bn++;
+  }
+
+  //  ne->muxlistname = strdup(buf);
+
+#if 0
   if(pass == 2) {
     printf("{\n");
     printf("\t.type = %s,\n", type);
@@ -201,6 +352,7 @@ convert_file(char *fname)
 	   type, smartname);
     printf("\t.comment = ");
   }
+#endif
 
   while(!feof(fp)) {
     memset(line, 0, sizeof(line));
@@ -217,65 +369,116 @@ convert_file(char *fname)
       if(gotcomment)
 	break;
 
-      if(pass != 2)
-	break;
       s = line + 2;
       if(strstr(s, " freq "))
 	break;
 
-      printf("\"%s\"\n", s);
+      // ne->comment = strdup(s);
       gotcomment = 1;
       break;
 
     case 'C':
-      if(pass == 1)
-	dvb_c_config(line + 1);
+      dvb_c_config(line + 1);
       break;
 
     case 'T':
-      if(pass == 1)
-	dvb_t_config(line + 1);
+      dvb_t_config(line + 1);
       break;
 
     case 'S':
-      if(pass == 1)
-	dvb_s_config(line + 1);
+      dvb_s_config(line + 1);
       break;
 
     default:
       break;
     }
   }
-  if(pass == 2) {
-    if(gotcomment == 0)
-      printf("\"\"\n");
-    printf("},\n");
-  }
-
-  if(pass == 1) {
-    printf("};\n\n");
-  }
+  printf("};\n\n");
 
   fclose(fp);
 }
+
+
+static void
+dump_networks(region_t *c)
+{
+  network_t *n;
+
+  printf("static const struct network networks_%s_%s[] = {\n",
+	 type, c->shortname);
+
+  for(n = c->networks; n != NULL; n = n->next) {
+
+    printf("\t{\n");
+    printf("\t\t.name = \"%s\",\n", n->displayname);
+    printf("\t\t.muxes = muxes_%s,\n", n->structname);
+    printf("\t\t.nmuxes = sizeof(muxes_%s) / sizeof(struct mux),\n",
+	   n->structname);
+    if(n->comment)
+      printf("\t\t.comment = \"%s\",\n", n->comment);
+    printf("\t},\n");
+  }
+  printf("};\n\n");
+
+}
+
+
+
+static void
+dump_regions(void)
+{
+  region_t *r;
+
+  printf("static const struct region regions_%s[] = {\n", type);
+
+  for(r = regions; r != NULL; r = r->next) {
+
+    printf("\t{\n");
+    printf("\t\t.name = \"%s\",\n", r->longname);
+    printf("\t\t.networks = networks_%s_%s,\n", type, r->shortname);
+    printf("\t\t.nnetworks = sizeof(networks_%s_%s) / sizeof(struct network),\n",
+	   type, r->shortname);
+    printf("\t},\n");
+  }
+  printf("};\n\n");
+  
+}
+
+
 
 int 
 main(int argc, char **argv)
 {
   int i;
+  region_t *c;
 
-  if(argc < 3)
+  if(argc < 2)
     return 1;
 
-  pass = atoi(argv[1]);
-  if(pass < 1 || pass > 2)
-    return 2;
+  type = argv[1];
+#if 0
+  printf("struct mux {\n"
+	 "unsigned int freq;\n"
+	 "unsigned int symrate;\n"
+	 "char fec;\n"
+	 "char constellation;\n"
+	 "char bw;\n"
+	 "char fechp;\n"
+	 "char feclp;\n"
+	 "char tmode;\n"
+	 "char guard;\n"
+	 "char hierarchy;\n"
+	 "char polarisation;\n"
+	 "}\n");
+#endif
 
-  type = argv[2];
+  for(i = 2; i < argc; i++)
+    scan_file(argv[i]);
 
-  for(i = 3; i < argc; i++) {
-    convert_file(argv[i]);
+  for(c = regions; c != NULL; c = c->next) {
+    dump_networks(c);
   }
+  dump_regions();
 
   return 0;
 }

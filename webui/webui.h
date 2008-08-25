@@ -19,6 +19,15 @@
 #ifndef WEBUI_H_
 #define WEBUI_H_
 
+#include <libhts/htsmsg.h>
+
 void webui_start(void);
+
+void extjs_start(void);
+
+void comet_init(void);
+
+void comet_mailbox_add_message(htsmsg_t *m);
+
 
 #endif /* WEBUI_H_ */

@@ -255,7 +255,8 @@ rtsp_reply_error(http_connection_t *hc, int error, const char *errstr)
   if(errstr == NULL)
     errstr = rtsp_err2str(error);
 
-  syslog(LOG_INFO, "rtsp: %s: %s", tcp_logname(&hc->hc_tcp_session), errstr);
+  tvhlog(LOG_INFO, "rtsp",
+	 "%s: %s", tcp_logname(&hc->hc_tcp_session), errstr);
 
   http_printf(hc, "RTSP/1.0 %d %s\r\n", error, errstr);
   if((c = http_arg_get(&hc->hc_args, "cseq")) != NULL)
@@ -330,7 +331,8 @@ rtsp_cmd_play(http_connection_t *hc)
   ts_muxer_play(rs->rs_muxer, start);
 
   if(rs->rs_s->ths_channel != NULL)
-    syslog(LOG_INFO, "rtsp: %s: Starting playback of %s",
+    tvhlog(LOG_INFO, "rtsp",
+	   "%s: Starting playback of %s",
 	   tcp_logname(&hc->hc_tcp_session), rs->rs_s->ths_channel->ch_name);
 
   http_printf(hc,
@@ -367,7 +369,8 @@ rtsp_cmd_pause(http_connection_t *hc)
   ts_muxer_pause(rs->rs_muxer);
 
   if(rs->rs_s->ths_channel != NULL)
-    syslog(LOG_INFO, "rtsp: %s: Pausing playback of %s",
+    tvhlog(LOG_INFO, "rtsp", 
+	   "%s: Pausing playback of %s",
 	   tcp_logname(&hc->hc_tcp_session), rs->rs_s->ths_channel->ch_name);
 
   http_printf(hc,

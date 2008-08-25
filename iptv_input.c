@@ -31,6 +31,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <linux/netdevice.h>
+#include <syslog.h>
 
 #include <libhts/htscfg.h>
 

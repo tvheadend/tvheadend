@@ -24,6 +24,7 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
+#include <syslog.h>
 
 #include "tvhead.h"
 #include "dispatch.h"
@@ -99,7 +100,9 @@ reaper(void *opaque, int64_t now)
 	       "unknown status\n");
     }
 
-    syslog(LOG_INFO, "spawn: \"%s\" %s", s ? s->name : "<unknwon spawn>", txt);
+    
+    tvhlog(LOG_INFO, "spawn",
+	   "spawn: \"%s\" %s", s ? s->name : "<unknwon spawn>", txt);
     if(s != NULL) {
       LIST_REMOVE(s, link);
       free((void *)s->name);

@@ -33,6 +33,7 @@
 #include <linux/dvb/dmx.h>
 
 #include <libhts/htscfg.h>
+#include <syslog.h>
 
 #include "tvhead.h"
 #include "dispatch.h"
@@ -217,7 +218,7 @@ tdmi_stop(th_dvb_mux_instance_t *tdmi)
   pthread_mutex_unlock(&tdmi->tdmi_table_lock);
 
   tdmi->tdmi_state = TDMI_IDLE;
-  notify_tdmi_state_change(tdmi);
+//  notify_tdmi_state_change(tdmi);
   time(&tdmi->tdmi_lost_adapter);
 }
 
@@ -234,7 +235,7 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
 
   if(tdmi->tdmi_state != state) {
     tdmi->tdmi_state = state;
-    notify_tdmi_state_change(tdmi);
+//    notify_tdmi_state_change(tdmi);
   }
 
   if(tda->tda_mux_current == tdmi)
@@ -247,7 +248,8 @@ dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog, tdmi_state_t state)
 
   if(maylog) {
     dvb_mux_nicename(buf, sizeof(buf), tdmi);
-    syslog(LOG_DEBUG, "\"%s\" tuning to mux \"%s\"", tda->tda_rootpath, buf);
+    tvhlog(LOG_DEBUG, "dvb",
+	   "\"%s\" tuning to mux \"%s\"", tda->tda_rootpath, buf);
   }
   /* Add tables which will be activated once the tuning is completed */
 

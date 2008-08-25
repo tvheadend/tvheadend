@@ -3,7 +3,7 @@
 SRCS = main.c dispatch.c channels.c transports.c teletext.c psi.c \
 	subscriptions.c mux.c tsdemux.c buffer.c tcp.c \
 	resolver.c tsmux.c parsers.c bitstream.c parser_h264.c spawn.c \
-	notify.c intercom.c access.c serviceprobe.c
+	notify.c intercom.c access.c serviceprobe.c dtable.c
 
 SRCS += http.c
 
@@ -34,34 +34,14 @@ SRCS += FFdecsa.c
 #
 
 VPATH  += webui
-SRCS   += webui.c
+SRCS   += webui.c extjs.c comet.c
 
-#
-# Embedded AJAX user interface
-#
+JSSRCS += tvheadend.js extensions.js acleditor.js cwceditor.js \
+	dvb.js
 
-VPATH  += ajaxui
-SRCS   += ajaxui.c ajaxui_mailbox.c ajaxui_channels.c \
-	  ajaxui_config.c ajaxui_config_channels.c ajaxui_config_dvb.c \
-	  ajaxui_config_transport.c ajaxui_config_xmltv.c \
-	  ajaxui_config_access.c ajaxui_config_cwc.c
+CSSSRCS += ext.css
 
-JSSRCS += tvheadend.js
-
-CSSSRCS += ajaxui.css
-
-VPATH  += ajaxui/images
-GIFSRCS+= sbbody_l.gif sbbody_r.gif sbhead_l.gif sbhead_r.gif
-PNGSRCS+= mapped.png unmapped.png
-
-VPATH  += ajaxui/prototype
-JSSRCS += prototype.js
-
-
-VPATH  += ajaxui/scriptaculous
-JSSRCS += builder.js controls.js dragdrop.js effects.js scriptaculous.js \
-	  slider.js
-
+PROGPATH = $(HTS_BUILD_ROOT)/tvheadend_newui
 PROG = tvheadend
 MAN  = tvheadend.1
 CFLAGS += -g -Wall -Werror -O2 -mmmx

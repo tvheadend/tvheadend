@@ -24,56 +24,19 @@
 
 #include "tvhead.h"
 #include "notify.h"
-#include "ajaxui/ajaxui_mailbox.h"
+#include "webui/webui.h"
 
 void
-notify_tdmi_state_change(th_dvb_mux_instance_t *tdmi)
+notify_by_msg(const char *class, htsmsg_t *m)
 {
-  ajax_mailbox_tdmi_state_change(tdmi);
+  htsmsg_add_str(m, "notificationClass", class);
+  comet_mailbox_add_message(m);
+  htsmsg_destroy(m);
 }
 
-
-void
-notify_tdmi_name_change(th_dvb_mux_instance_t *tdmi)
-{
-  ajax_mailbox_tdmi_name_change(tdmi);
-}
-
-
-
-void
-notify_tdmi_status_change(th_dvb_mux_instance_t *tdmi)
-{
-  ajax_mailbox_tdmi_status_change(tdmi);
-}
-
-
-void
-notify_tdmi_qual_change(th_dvb_mux_instance_t *tdmi)
-{
-  ajax_mailbox_tdmi_qual_change(tdmi);
-}
-
-
-void
-notify_tdmi_services_change(th_dvb_mux_instance_t *tdmi)
-{
-  ajax_mailbox_tdmi_services_change(tdmi);
-}
-
-
-void
-notify_tda_change(th_dvb_adapter_t *tda)
-{
-  ajax_mailbox_tda_change(tda);
-}
-
-void
-notify_xmltv_grabber_status_change(struct xmltv_grabber *xg)
-{
-  ajax_mailbox_xmltv_grabber_status_change(xg);
-}
-
+/**
+ *
+ */
 void
 notify_transprot_status_change(struct th_transport *t)
 {
@@ -83,12 +46,5 @@ notify_transprot_status_change(struct th_transport *t)
     if(s->ths_status_callback != NULL)
       s->ths_status_callback(s, t->tht_last_status, s->ths_opaque);
  
-  ajax_mailbox_transport_status_change(t);
-}
-
-
-void
-notify_cwc_status_change(struct cwc *cwc)
-{
-  ajax_mailbox_cwc_status_change(cwc);
+  //  ajax_mailbox_transport_status_change(t);
 }

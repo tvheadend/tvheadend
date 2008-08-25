@@ -31,7 +31,7 @@
 #include "pvr.h"
 
 #define ACCESS_SIMPLE \
-(ACCESS_WEB_INTERFACE | ACCESS_RECORDER_VIEW | ACCESS_RECORDER_CHANGE)
+(ACCESS_WEB_INTERFACE | ACCESS_RECORDER)
 
 static struct strtab recstatustxt[] = {
   { "Recording scheduled", HTSTV_PVR_STATUS_SCHEDULED      },
@@ -108,7 +108,7 @@ page_root(http_connection_t *hc, http_reply_t *hr,
   if(is_client_simple(hc)) {
     http_redirect(hc, hr, "/simple.html");
   } else {
-    http_redirect(hc, hr, "/ajax/index.html");
+    http_redirect(hc, hr, "/extjs.html");
   }
   return 0;
 }
@@ -418,7 +418,6 @@ page_pvrinfo(http_connection_t *hc, http_reply_t *hr,
   return 0;
 }
 
-
 /**
  * WEB user interface
  */
@@ -430,5 +429,8 @@ webui_start(void)
   http_path_add("/simple.html", NULL, page_simple,  ACCESS_SIMPLE);
   http_path_add("/eventinfo",   NULL, page_einfo,   ACCESS_SIMPLE);
   http_path_add("/pvrinfo",     NULL, page_pvrinfo, ACCESS_SIMPLE);
-  
+
+  extjs_start();
+
+  comet_init();
 }
