@@ -45,6 +45,7 @@ int psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen, int pcrpid);
 
 const char *psi_caid2name(uint16_t caid);
 
-void psi_get_transport_settings(htsmsg_t *m, th_transport_t *t);
+void psi_load_transport_settings(htsmsg_t *m, th_transport_t *t);
+void psi_save_transport_settings(htsmsg_t *m, th_transport_t *t);
 
 #endif /* PSI_H_ */

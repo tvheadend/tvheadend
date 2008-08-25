@@ -73,6 +73,9 @@ void dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog,
 /**
  * DVB Transport (aka DVB service)
  */
+
+void dvb_transport_load(th_dvb_mux_instance_t *tdmi);
+
 th_transport_t *dvb_transport_find(th_dvb_mux_instance_t *tdmi,
 				   uint16_t sid, int pmt_pid, int *created);
 

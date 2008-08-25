@@ -343,7 +343,6 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   char chname0[256], *chname;
   uint8_t stype;
   int l;
-  int change = 0;
 
   if(len < 8)
     return;
@@ -412,33 +411,32 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	  if(t == NULL)
 	    break;
 
-	  change |=
-	    t->tht_servicetype != stype ||
-	    t->tht_scrambled != free_ca_mode ||
-	    strcmp(t->tht_provider    ?: "", provider) ||
-	    strcmp(t->tht_svcname     ?: "", chname  );
-
-	  t->tht_servicetype = stype;
-	  t->tht_scrambled = free_ca_mode;
-
-	  free((void *)t->tht_provider);
-	  t->tht_provider = strdup(provider);
-
-	  free((void *)t->tht_svcname);
-	  t->tht_svcname = strdup(chname);
-
+	  if(t->tht_servicetype != stype ||
+	     t->tht_scrambled != free_ca_mode ||
+	     strcmp(t->tht_provider    ?: "", provider) ||
+	     strcmp(t->tht_svcname     ?: "", chname  )) {
+	    
+	    t->tht_servicetype = stype;
+	    t->tht_scrambled = free_ca_mode;
+	    
+	    free((void *)t->tht_provider);
+	    t->tht_provider = strdup(provider);
+	    
+	    free((void *)t->tht_svcname);
+	    t->tht_svcname = strdup(chname);
+	    
+	    t->tht_config_change(t);
+	  }
+	  
 	  if(t->tht_chname == NULL)
 	    t->tht_chname = strdup(chname);
+	  
 	}
 	break;
       }
 
       len -= dlen; ptr += dlen; dllen -= dlen;
     }
-  }
-  if(change) {
-    dvb_mux_save(tdmi);
-    //    notify_tdmi_services_change(tdmi);
   }
 }
 
@@ -707,15 +705,7 @@ dvb_pmt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
   th_transport_t *t = opaque;
-  int v = t->tht_pmt_seen;
-
   psi_parse_pmt(t, ptr, len, 1);
-  v ^= t->tht_pmt_seen;
-  if(v) {
-    dvb_mux_save(tdmi);
-    //notify_tdmi_services_change(tdmi);
-  }
-  return;
 }
 
 

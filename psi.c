@@ -288,6 +288,9 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
     }
   }
 
+  if(t->tht_pmt_seen == 0)
+    t->tht_config_change(t);
+
   t->tht_pmt_seen = 1;
   return 0;
 }
@@ -546,7 +549,7 @@ htstvstreamtype2txt(tv_streamtype_t s)
  * Store transport settings into message
  */
 void
-psi_get_transport_settings(htsmsg_t *m, th_transport_t *t)
+psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
 {
   th_stream_t *st;
   htsmsg_t *sub;
@@ -575,51 +578,55 @@ psi_get_transport_settings(htsmsg_t *m, th_transport_t *t)
 }
 
 
-#if 0
 /**
- * Load transport info
+ * Load transport info from htsmsg
  */
 void
-psi_load_transport(struct config_head *cl, th_transport_t *t)
+psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
 {
+  htsmsg_t *c;
+  htsmsg_field_t *f;
+  uint32_t u32;
   th_stream_t *st;
-  config_entry_t *ce;
   tv_streamtype_t type;
   const char *v;
-  int pid, i;
+  uint32_t pid, i;
 
-  t->tht_pcr_pid = atoi(config_get_str_sub(cl, "pcr", "0"));
-  
-  t->tht_disabled = atoi(config_get_str_sub(cl, "disabled", "0"));
+  if(!htsmsg_get_u32(m, "pcr", &u32))
+    t->tht_pcr_pid = u32;
 
-  TAILQ_FOREACH(ce, cl, ce_link) {
-    if(ce->ce_type != CFG_SUB || strcasecmp("stream", ce->ce_key))
+  if(!htsmsg_get_u32(m, "disabled", &u32))
+    t->tht_disabled = u32;
+
+  HTSMSG_FOREACH(f, m) {
+    if(strcmp(f->hmf_name, "stream"))
       continue;
 
-    type = str2val(config_get_str_sub(&ce->ce_sub, "type", ""), streamtypetab);
+    if((c = htsmsg_get_msg_by_field(f)) == NULL)
+      continue;
+
+    if((v = htsmsg_get_str(c, "type")) == NULL)
+      continue;
+
+    type = str2val(v, streamtypetab);
     if(type == -1)
       continue;
 
-    pid = atoi(config_get_str_sub(&ce->ce_sub, "pid", "0"));
-    if(pid < 1)
+    if(htsmsg_get_u32(c, "pid", &pid))
       continue;
 
     st = transport_add_stream(t, pid, type);
     st->st_tb = (AVRational){1, 90000};
     
-    v = config_get_str_sub(&ce->ce_sub, "lang", NULL);
-    if(v != NULL)
+    if((v = htsmsg_get_str(c, "lang")) != NULL)
       av_strlcpy(st->st_lang, v, 4);
 
-    st->st_frame_duration =
-      atoi(config_get_str_sub(&ce->ce_sub, "frameduration", "0"));
+    if(!htsmsg_get_u32(c, "frameduration", &u32))
+      st->st_frame_duration = u32;
      
-    v = config_get_str_sub(&ce->ce_sub, "caid", NULL);
-    if(v != NULL) {
+    if((v = htsmsg_get_str(c, "caid")) != NULL) {
       i = str2val(v, caidnametab);
       st->st_caid = i < 0 ? strtol(v, NULL, 0) : i;
     }
   }
 }
-
-#endif

@@ -149,6 +149,8 @@ dvb_mux_create(th_dvb_adapter_t *tda, struct dvb_frontend_parameters *fe_param,
     dvb_adapter_notify_reload(tda);
   }
 
+  dvb_transport_load(tdmi);
+
   return tdmi;
 }
 
