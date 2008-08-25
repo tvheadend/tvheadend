@@ -77,7 +77,7 @@ extjs_root(http_connection_t *hc, http_reply_t *hr,
 {
   htsbuf_queue_t *hq = &hr->hr_q;
 
-#define EXTJSPATH "http://www.lonelycoder.com/ext-2.2"
+#define EXTJSPATH "static/extjs"
 
   htsbuf_qprintf(hq, "<html><body>\n"
 		 "<link rel=\"stylesheet\" type=\"text/css\" href=\""EXTJSPATH"/resources/css/ext-all.css\">\n"
