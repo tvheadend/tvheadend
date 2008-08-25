@@ -162,18 +162,7 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
  */
 tvheadend.dvb = function() {
 
-    function refresh() {
-	var sm = tree.getSelectionModel();
-	console.log(sm.getSelectedNode());
-	sm.getSelectedNode().reload();
-    }
-
-
-    function deleteNode() {
-	var sm = tree.getSelectionModel();
-	console.log(sm.getSelectedNode());
-    }
-    
+ 
     var tree = new Ext.tree.ColumnTree({
 	    region:'west',
 	    autoScroll:true,
@@ -208,14 +197,6 @@ tvheadend.dvb = function() {
 	    root: new Ext.tree.AsyncTreeNode({
 		    id:'root',
 		}),
-
-	    tbar: [{
-		    text: 'Delete selected',
-		    handler: deleteNode
-		}, '-', {
-		    text: 'Refresh all',
-		    handler: refresh
-		}],
 	});
 
 
