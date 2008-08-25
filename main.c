@@ -451,8 +451,12 @@ tvhlog(int severity, const char *subsys, const char *fmt, ...)
   va_list ap;
   htsmsg_t *m;
   char buf[512];
+  char buf2[512];
+  char t[50];
   int l;
-  
+  struct tm tm;
+  time_t now;
+
   l = snprintf(buf, sizeof(buf), "%s: ", subsys);
 
   va_start(ap, fmt);
@@ -465,9 +469,15 @@ tvhlog(int severity, const char *subsys, const char *fmt, ...)
    *
    */
 
+  time(&now);
+  localtime_r(&now, &tm);
+  strftime(t, sizeof(t), "%b %d %H:%M:%S", &tm);
+
+  snprintf(buf2, sizeof(buf2), "%s %s", t, buf);
+
   m = htsmsg_create();
   htsmsg_add_str(m, "notificationClass", "logmessage");
-  htsmsg_add_str(m, "logtxt", buf);
+  htsmsg_add_str(m, "logtxt", buf2);
   comet_mailbox_add_message(m);
   htsmsg_destroy(m);
 }
