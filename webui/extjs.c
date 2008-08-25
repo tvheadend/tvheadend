@@ -37,6 +37,7 @@
 #include "dvb/dvb_support.h"
 #include "dvb/dvb_preconf.h"
 #include "transports.h"
+#include "serviceprobe.h"
 
 extern const char *htsversion;
 
@@ -276,7 +277,8 @@ extjs_dvbtree(http_connection_t *hc, http_reply_t *hr,
       extjs_dvbtree_node(out, 1,
 			 t->tht_identifier, t->tht_svcname,
 			 transport_servicetype_txt(t),
-			 "OK", 100, "transport");
+			 t->tht_ch ? "Mapped" : "Unmapped",
+			 100, "transport");
     }
   }
  
@@ -342,6 +344,8 @@ extjs_dvbadapter(http_connection_t *hc, http_reply_t *hr,
   const char *s  = http_arg_get(&hc->hc_req_args, "adapterId");
   const char *op = http_arg_get(&hc->hc_req_args, "op");
   th_dvb_adapter_t *tda = s ? dvb_adapter_find_by_identifier(s) : NULL;
+  th_dvb_mux_instance_t *tdmi;
+  th_transport_t *t;
 
   htsmsg_t *r, *out;
 
@@ -366,6 +370,20 @@ extjs_dvbadapter(http_connection_t *hc, http_reply_t *hr,
   } else if(!strcmp(op, "addnetwork")) {
     if((s = http_arg_get(&hc->hc_req_args, "network")) != NULL)
       dvb_mux_preconf_add_network(tda, s);
+
+    out = htsmsg_create();
+    htsmsg_add_u32(out, "success", 1);
+
+  } else if(!strcmp(op, "serviceprobe")) {
+
+    tvhlog(LOG_NOTICE, "web interface",
+	   "Service probe started on \"%s\"", tda->tda_displayname);
+
+    RB_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+      LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
+	serviceprobe_add(t);
+      }
+    }
 
     out = htsmsg_create();
     htsmsg_add_u32(out, "success", 1);

@@ -142,6 +142,24 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
 	win.show();
     }
 
+    /**
+     *
+     */
+   function probeservices() {
+	Ext.MessageBox.confirm('Message',
+			       'Probe all DVB services on "' + adapterName + 
+			       '" and map to TV-channels in tvheadend',
+			       function(button) {
+				   if(button == 'no')
+				       return;
+
+				   Ext.Ajax.request({url: '/dvbadapter',
+					       params: {adapterId: adapterId, 
+						   op: 'serviceprobe'}
+				       })
+			       });
+   };
+
     
     var panel = new Ext.Panel({
 	    title: adapterName,
@@ -151,6 +169,9 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
 	    tbar:[{
 		    text: 'Add mux(es)',
 		    handler: addmux
+		},{
+		    text: 'Probe services',
+		    handler: probeservices
 		}]
 	});
     return panel;
