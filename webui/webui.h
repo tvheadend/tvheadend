@@ -23,6 +23,8 @@
 
 void webui_start(void);
 
+void simpleui_start(void);
+
 void extjs_start(void);
 
 void comet_init(void);

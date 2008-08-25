@@ -35,7 +35,7 @@ SRCS += FFdecsa.c
 #
 
 VPATH  += webui
-SRCS   += webui.c extjs.c comet.c
+SRCS   += webui.c extjs.c comet.c simpleui.c
 
 JSSRCS += tvheadend.js extensions.js acleditor.js cwceditor.js \
 	dvb.js
