@@ -98,7 +98,7 @@ dvb_table_recv(int events, void *opaque, int fd)
   tdt->tdt_count++;
 
   tdt->tdt_callback(tdt->tdt_tdmi, ptr, len, tableid, tdt->tdt_opaque);
-  dvb_tdmi_fastswitch(tdt->tdt_tdmi);
+  dvb_mux_fastswitch(tdt->tdt_tdmi);
 }
 
 
@@ -258,7 +258,7 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   if(tdmi == NULL)
     return;
 
-  t = dvb_find_transport(tdmi, serviceid, 0, NULL);
+  t = dvb_transport_find(tdmi, serviceid, 0, NULL);
   if(t == NULL)
     return;
 
@@ -409,7 +409,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	    snprintf(chname0, sizeof(chname0), "noname-sid-0x%x", service_id);
 	  }
 
-	  t = dvb_find_transport(tdmi, service_id, 0, NULL);
+	  t = dvb_transport_find(tdmi, service_id, 0, NULL);
 	  if(t == NULL)
 	    break;
 
@@ -438,7 +438,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     }
   }
   if(change) {
-    dvb_tdmi_save(tdmi);
+    dvb_mux_save(tdmi);
     //    notify_tdmi_services_change(tdmi);
   }
 }
@@ -461,7 +461,7 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   if(tdmi->tdmi_transport_stream_id != tid) {
     tdmi->tdmi_transport_stream_id = tid;
-    dvb_tda_save(tdmi->tdmi_adapter);
+    dvb_mux_save(tdmi);
   }
 
   ptr += 5;
@@ -472,7 +472,7 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     pmt     = (ptr[2] & 0x1f) << 8 | ptr[3];
 
     if(service != 0) {
-      t = dvb_find_transport(tdmi, service, pmt, &created);
+      t = dvb_transport_find(tdmi, service, pmt, &created);
       if(created) { /* Add PMT to our table scanner */
 	dvb_table_add_transport(tdmi, t, pmt);
       }
@@ -647,7 +647,7 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	free((void *)tdmi->tdmi_network);
 	tdmi->tdmi_network = strdup(networkname);
 	//notify_tdmi_name_change(tdmi);
-	dvb_tda_save(tdmi->tdmi_adapter);
+	dvb_mux_save(tdmi);
       }
       break;
     }
@@ -713,7 +713,7 @@ dvb_pmt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   psi_parse_pmt(t, ptr, len, 1);
   v ^= t->tht_pmt_seen;
   if(v) {
-    dvb_tdmi_save(tdmi);
+    dvb_mux_save(tdmi);
     //notify_tdmi_services_change(tdmi);
   }
   return;

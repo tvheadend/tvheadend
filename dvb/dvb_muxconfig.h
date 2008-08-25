@@ -21,33 +21,8 @@
 
 #include <libhts/htsmsg.h>
 
-void dvb_tda_save(th_dvb_adapter_t *tda);
-
-void dvb_tda_set_displayname(th_dvb_adapter_t *tda, const char *s);
-
-void dvb_tdmi_save(th_dvb_mux_instance_t *tdmi);
-
-const char *dvb_mux_create_str(th_dvb_adapter_t *tda,
-			       const char *tsidstr,
-			       const char *network,
-			       const char *freqstr,
-			       const char *symratestr,
-			       const char *qamstr,
-			       const char *fecstr,
-			       const char *fechistr,
-			       const char *feclostr,
-			       const char *bwstr,
-			       const char *tmodestr,
-			       const char *guardstr,
-			       const char *hierstr,
-			       const char *polstr,
-			       const char *switchportstr,
-			       int save);
-
 htsmsg_t *dvb_mux_preconf_get_node(int fetype, const char *node);
 
 int dvb_mux_preconf_add_network(th_dvb_adapter_t *tda, const char *id);
-
-void dvb_tdmi_load(th_dvb_adapter_t *tda);
 
 #endif /* DVB_MUXCONFIG_H */

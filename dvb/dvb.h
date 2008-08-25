@@ -33,22 +33,33 @@ extern struct th_dvb_mux_instance_tree dvb_muxes;
 
 void dvb_init(void);
 
-void dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog,
-		   tdmi_state_t state);
+/**
+ * DVB Adapter
+ */
+void dvb_adapter_init(void);
 
-void dvb_table_add_default(th_dvb_mux_instance_t *tdmi);
+void dvb_adapter_mux_scanner(void *aux, int64_t now);
 
-void dvb_table_add_transport(th_dvb_mux_instance_t *tdmi, th_transport_t *t,
-			     int pmt_pid);
+void dvb_adapter_notify_reload(th_dvb_adapter_t *tda);
 
-void dvb_tdt_destroy(th_dvb_table_t *tdt);
+void dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s);
 
-void dvb_fe_start(th_dvb_adapter_t *tda);
+void dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src);
 
-void tdmi_check_scan_status(th_dvb_mux_instance_t *tdmi);
+int dvb_adapter_destroy(th_dvb_adapter_t *tda);
 
-th_transport_t *dvb_find_transport(th_dvb_mux_instance_t *tdmi,
-				   uint16_t sid, int pmt_pid, int *created);
+/**
+ * DVB Multiplex
+ */
+void dvb_mux_save(th_dvb_mux_instance_t *tdmi);
+
+void dvb_mux_load(th_dvb_adapter_t *tda);
+
+void dvb_mux_unref(th_dvb_mux_instance_t *tdmi);
+
+void dvb_mux_destroy(th_dvb_mux_instance_t *tdmi);
+
+void dvb_mux_fastswitch(th_dvb_mux_instance_t *tdmi);
 
 th_dvb_mux_instance_t *dvb_mux_create(th_dvb_adapter_t *tda,
 				      struct dvb_frontend_parameters *fe_param,
@@ -56,19 +67,37 @@ th_dvb_mux_instance_t *dvb_mux_create(th_dvb_adapter_t *tda,
 				      uint16_t tsid, const char *network,
 				      const char *logprefix);
 
+void dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog,
+		   tdmi_state_t state);
 
-void dvb_mux_unref(th_dvb_mux_instance_t *tdmi);
+/**
+ * DVB Transport (aka DVB service)
+ */
+th_transport_t *dvb_transport_find(th_dvb_mux_instance_t *tdmi,
+				   uint16_t sid, int pmt_pid, int *created);
 
-void dvb_fe_flush(th_dvb_mux_instance_t *tdmi);
-
-void dvb_mux_destroy(th_dvb_mux_instance_t *tdmi);
+void tdmi_check_scan_status(th_dvb_mux_instance_t *tdmi);
 
 void tdmi_stop(th_dvb_mux_instance_t *tdmi);
 
-void dvb_tda_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src);
 
-int dvb_tda_destroy(th_dvb_adapter_t *tda);
+/**
+ * DVB Frontend
+ */
+void dvb_fe_start(th_dvb_adapter_t *tda);
 
-void dvb_tdmi_fastswitch(th_dvb_mux_instance_t *tdmi);
+void dvb_fe_flush(th_dvb_mux_instance_t *tdmi);
+
+
+/**
+ * DVB Tables
+ */
+
+void dvb_table_add_default(th_dvb_mux_instance_t *tdmi);
+
+void dvb_table_add_transport(th_dvb_mux_instance_t *tdmi, th_transport_t *t,
+			     int pmt_pid);
+
+void dvb_tdt_destroy(th_dvb_table_t *tdt);
 
 #endif /* DVB_H_ */

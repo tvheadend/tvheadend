@@ -15,7 +15,7 @@ SRCS += epg.c epg_xmltv.c
 
 VPATH += dvb
 SRCS += dvb.c dvb_support.c dvb_dvr.c dvb_muxconfig.c dvb_fe.c dvb_tables.c \
-	diseqc.c
+	diseqc.c dvb_adapter.c dvb_multiplex.c dvb_transport.c
 
 SRCS += iptv_input.c iptv_output.c
 

@@ -368,7 +368,7 @@ extjs_dvbadapter(http_connection_t *hc, http_reply_t *hr,
   } else if(!strcmp(op, "save")) {
 
     if((s = http_arg_get(&hc->hc_req_args, "name")) != NULL)
-      dvb_tda_set_displayname(tda, s);
+      dvb_adapter_set_displayname(tda, s);
 
     out = htsmsg_create();
     htsmsg_add_u32(out, "success", 1);
