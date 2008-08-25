@@ -30,6 +30,7 @@
 #include <dirent.h>
 
 #include <libhts/htscfg.h>
+#include <libhts/htssettings.h>
 
 #include "tvhead.h"
 #include "v4l.h"
@@ -41,120 +42,46 @@
 #include "pvr.h"
 #include "autorec.h"
 
-struct channel_list channels;
-int nchannels;
+struct channel_tree channel_tree;
 
-struct channel_group_queue all_channel_groups;
-
-channel_group_t *defgroup;
-
-
-/**
- *
- */
 static int
-ch_number(const char *s1)
+dictcmp(const char *a, const char *b)
 {
-  while(*s1) {
-    if(*s1 >= '0' && *s1 <= '9') {
-      return strtol(s1, NULL, 10);
+  long int da, db;
+
+  while(1) {
+    switch((*a >= '0' && *a <= '9' ? 1 : 0)|(*b >= '0' && *b <= '9' ? 2 : 0)) {
+    case 0:  /* 0: a is not a digit, nor is b */
+      if(*a != *b)
+	return *(const unsigned char *)a - *(const unsigned char *)b;
+      if(*a == 0)
+	return 0;
+      a++;
+      b++;
+      break;
+    case 1:  /* 1: a is a digit,  b is not */
+    case 2:  /* 2: a is not a digit,  b is */
+	return *(const unsigned char *)a - *(const unsigned char *)b;
+    case 3:  /* both are digits, switch to integer compare */
+      da = strtol(a, (char **)&a, 10);
+      db = strtol(b, (char **)&b, 10);
+      if(da != db)
+	return da - db;
+      break;
     }
-    s1++;
   }
-  return INT32_MAX;
-}
-
-static int
-chcmp(const char *s1, const char *s2)
-{
-  int n1, n2;
-
-  n1 = ch_number(s1);
-  n2 = ch_number(s2);
-  
-  if(n1 != n2) {
-    return n1 - n2;
-  }
-  return strcmp(s1, s2);
-}
-
-/**
- *
- */
-static int
-channelcmp(channel_t *a, channel_t *b)
-{
-  return chcmp(a->ch_name, b->ch_name);
 }
 
 
 /**
  *
  */
-channel_group_t *
-channel_group_find(const char *name, int create)
+static int
+channelcmp(const channel_t *a, const channel_t *b)
 {
-  channel_group_t *tcg;
-
-  TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
-    if(!strcmp(name, tcg->tcg_name))
-      return tcg;
-  }
-  if(!create)
-    return NULL;
-
-  tcg = calloc(1, sizeof(channel_group_t));
-  tcg->tcg_name = strdup(name);
-  tcg->tcg_tag = tag_get();
-  
-  TAILQ_INIT(&tcg->tcg_channels);
-
-  TAILQ_INSERT_TAIL(&all_channel_groups, tcg, tcg_global_link);
-
-  channel_group_settings_write();
-  return tcg;
+  return dictcmp(a->ch_name, b->ch_name);
 }
 
-
-
-
-/**
- *
- */
-void
-channel_set_group(channel_t *ch, channel_group_t *tcg)
-{
-  if(ch->ch_group != NULL)
-    TAILQ_REMOVE(&ch->ch_group->tcg_channels, ch, ch_group_link);
-
-  ch->ch_group = tcg;
-  TAILQ_INSERT_SORTED(&tcg->tcg_channels, ch, ch_group_link, channelcmp);
-
-  channel_settings_write(ch);
-}
-
-
-/**
- *
- */
-void
-channel_group_destroy(channel_group_t *tcg)
-{
-  channel_t *ch;
-
-  if(defgroup == tcg)
-    return;
-
-  while((ch = TAILQ_FIRST(&tcg->tcg_channels)) != NULL) {
-    channel_set_group(ch, defgroup);
-  }
-
-  TAILQ_REMOVE(&all_channel_groups, tcg, tcg_global_link);
-  free((void *)tcg->tcg_name);
-  free(tcg);
-
-  channel_group_settings_write();
-}
 
 /**
  *
@@ -162,6 +89,7 @@ channel_group_destroy(channel_group_t *tcg)
 static void
 channel_set_name(channel_t *ch, const char *name)
 {
+  channel_t *x;
   const char *n2;
   int l, i;
   char *cp, c;
@@ -187,65 +115,35 @@ channel_set_name(channel_t *ch, const char *name)
 
   free((void *)n2);
 
-  LIST_INSERT_SORTED(&channels, ch, ch_global_link, channelcmp);
+  x = RB_INSERT_SORTED(&channel_tree, ch, ch_global_link, channelcmp);
+  assert(x == NULL);
 }
 
 /**
  *
  */
 channel_t *
-channel_find(const char *name, int create, channel_group_t *tcg)
+channel_find(const char *name, int create)
 {
-  channel_t *ch;
+  channel_t *ch, skel;
 
-  LIST_FOREACH(ch, &channels, ch_global_link)
-    if(!strcasecmp(name, ch->ch_name))
-      return ch;
+  skel.ch_name = name;
+
+  if((ch = RB_FIND(&channel_tree, &skel,  ch_global_link, channelcmp)) != NULL)
+    return ch;
 
   if(create == 0)
     return NULL;
 
   ch = calloc(1, sizeof(channel_t));
-  ch->ch_index = nchannels;
+  ch->ch_index = channel_tree.entries;
+
   TAILQ_INIT(&ch->ch_epg_events);
 
   channel_set_name(ch, name);
 
-  channel_set_group(ch, tcg ?: defgroup);
-
   ch->ch_tag = tag_get();
-  nchannels++;
   return ch;
-}
-
-
-/**
- *
- */
-static void
-service_load(struct config_head *head)
-{
-  const char *name,  *v;
-  th_transport_t *t;
-  int r = 1;
-
-  if((name = config_get_str_sub(head, "channel", NULL)) == NULL)
-    return;
-
-  t = calloc(1, sizeof(th_transport_t));
-
-  if(0) {
-#ifdef ENABLE_INPUT_IPTV
-  } else if((v = config_get_str_sub(head, "iptv", NULL)) != NULL) {
-    r = iptv_configure_transport(t, v, head, name);
-#endif
-#ifdef ENABLE_INPUT_V4L
-  } else if((v = config_get_str_sub(head, "v4lmux", NULL)) != NULL) {
-    r = v4l_configure_transport(t, v, name);
-#endif
-  }
-  if(r)
-    free(t);
 }
 
 
@@ -261,6 +159,7 @@ static struct strtab commercial_detect_tab[] = {
 void
 channels_load(void)
 {
+#if 0
   struct config_head cl;
   config_entry_t *ce;
   char buf[PATH_MAX];
@@ -268,7 +167,6 @@ channels_load(void)
   struct dirent *d;
   const char *name, *grp, *x;
   channel_t *ch;
-  channel_group_t *tcg;
   int v;
 
   TAILQ_INIT(&all_channel_groups);
@@ -338,6 +236,7 @@ channels_load(void)
       service_load(&ce->ce_sub);
     }
   }
+#endif
 }
 
 
@@ -350,7 +249,7 @@ channel_by_index(uint32_t index)
 {
   channel_t *ch;
 
-  LIST_FOREACH(ch, &channels, ch_global_link)
+  RB_FOREACH(ch, &channel_tree, ch_global_link)
     if(ch->ch_index == index)
       return ch;
 
@@ -367,7 +266,7 @@ channel_by_tag(uint32_t tag)
 {
   channel_t *ch;
 
-  LIST_FOREACH(ch, &channels, ch_global_link)
+  RB_FOREACH(ch, &channel_tree, ch_global_link)
     if(ch->ch_tag == tag)
       return ch;
 
@@ -376,72 +275,20 @@ channel_by_tag(uint32_t tag)
 
 
 
-/**
- *
- */
-channel_group_t *
-channel_group_by_tag(uint32_t tag)
-{
-  channel_group_t *tcg;
-
-  TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
-    if(tcg->tcg_tag == tag)
-      return tcg;
-    if(tag == 0 && tcg->tcg_hidden == 0)
-      return tcg;
-  }
-
-  return NULL;
-}
-
-
-/**
- * Write out a config file with all channel groups
- *
- * We do this to maintain order of groups
- */
-void
-channel_group_settings_write(void)
-{
-  FILE *fp;
-  channel_group_t *tcg;
-
-  char buf[400];
-  snprintf(buf, sizeof(buf), "%s/channel-group-settings.cfg", settings_dir);
-
-  if((fp = settings_open_for_write(buf)) == NULL)
-    return;
-
-  TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
-    fprintf(fp, "channel-group {\n"
-	    "\tname = %s\n", tcg->tcg_name);
-    fprintf(fp, "}\n");
-  }
-  fclose(fp);
-}
-
-
 
 /**
  * Write out a config file for a channel
  */
-void
-channel_settings_write(channel_t *ch)
+static void
+channel_save(channel_t *ch)
 {
-  FILE *fp;
-  char buf[400];
-
-  snprintf(buf, sizeof(buf), "%s/channels/%s", settings_dir, ch->ch_sname);
-  if((fp = settings_open_for_write(buf)) == NULL)
-    return;
-
-  fprintf(fp, "name = %s\n", ch->ch_name);
-  fprintf(fp, "channel-group = %s\n", ch->ch_group->tcg_name);
-  if(ch->ch_icon != NULL)
-    fprintf(fp, "icon = %s\n", ch->ch_icon);
-  fprintf(fp, "commercial-detect = %s\n", 
-	  val2str(ch->ch_commercial_detection, commercial_detect_tab) ?: "?");
-  fclose(fp);
+  htsmsg_t *m = htsmsg_create();
+  htsmsg_add_str(m, "icon", ch->ch_icon);
+  htsmsg_add_str(m, "commercial_detect", 
+		 val2str(ch->ch_commercial_detection,
+			 commercial_detect_tab) ?: "?");
+  hts_settings_save(m, "channels/%s", ch->ch_name);
+  htsmsg_destroy(m);
 }
 
 /**
@@ -452,10 +299,12 @@ channel_rename(channel_t *ch, const char *newname)
 {
   th_transport_t *t;
 
-  if(channel_find(newname, 0, NULL))
+  if(channel_find(newname, 0))
     return -1;
 
-  LIST_REMOVE(ch, ch_global_link);
+  hts_settings_remove("channels/%s", ch->ch_name);
+
+  RB_REMOVE(&channel_tree, ch, ch_global_link);
   channel_set_name(ch, newname);
 
   LIST_FOREACH(t, &ch->ch_transports, tht_ch_link) {
@@ -464,7 +313,7 @@ channel_rename(channel_t *ch, const char *newname)
     t->tht_config_change(t);
   }
 
-  channel_settings_write(ch);
+  channel_save(ch);
   return 0;
 }
 
@@ -476,7 +325,6 @@ channel_delete(channel_t *ch)
 {
   th_transport_t *t;
   th_subscription_t *s;
-  char buf[400];
 
   pvr_destroy_by_channel(ch);
 
@@ -494,17 +342,14 @@ channel_delete(channel_t *ch)
 
   autorec_destroy_by_channel(ch);
 
-  snprintf(buf, sizeof(buf), "%s/channels/%s", settings_dir, ch->ch_sname);
-  unlink(buf);
+  hts_settings_remove("channels/%s", ch->ch_name);
 
   free((void *)ch->ch_name);
   free((void *)ch->ch_sname);
   free(ch->ch_icon);
   
-  TAILQ_REMOVE(&ch->ch_group->tcg_channels, ch, ch_group_link);
-  LIST_REMOVE(ch, ch_global_link);
+  RB_REMOVE(&channel_tree, ch, ch_global_link);
   free(ch);
-
 }
 
 
@@ -527,4 +372,15 @@ channel_merge(channel_t *dst, channel_t *src)
   }
 
   channel_delete(src);
+}
+
+/**
+ *
+ */
+void
+channel_set_icon(channel_t *ch, const char *icon)
+{
+  free(ch->ch_icon);
+  ch->ch_icon = icon ? strdup(icon) : NULL;
+  channel_save(ch);
 }

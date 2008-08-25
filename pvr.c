@@ -438,7 +438,7 @@ pvr_database_load(void)
     if(channel != NULL && start && stop && title && status) {
       pvrr = calloc(1, sizeof(pvr_rec_t));
 
-      pvrr->pvrr_channel  = channel_find(channel, 1, NULL);
+      pvrr->pvrr_channel  = channel_find(channel, 1);
       pvrr->pvrr_start    = start;
       pvrr->pvrr_stop     = stop;
       pvrr->pvrr_status   = *status;

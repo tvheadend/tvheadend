@@ -98,7 +98,7 @@ avgen_init(void)
   if(avcodec_find_encoder(CODEC_ID_MP2) == NULL)
     return;
 
-  ch = channel_find("Test PAL", 1, channel_group_find("Test channels", 1));
+  ch = channel_find("Test PAL", 1);
 
   t = calloc(1, sizeof(th_transport_t));
 

@@ -318,10 +318,11 @@ main(int argc, char **argv)
       p = atoi(config_get_str("htsp-server-port", "9910"));
       if(p)
 	htsp_start(p);
-
+#if 0
       p = atoi(config_get_str("xbmsp-server-port", "0"));
       if(p)
 	xbmsp_start(p);
+#endif
 
     }
     dispatcher();

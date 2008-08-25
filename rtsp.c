@@ -104,7 +104,7 @@ rtsp_channel_by_url(char *url)
     return NULL;
   c++; 
 
-  LIST_FOREACH(ch, &channels, ch_global_link)
+  RB_FOREACH(ch, &channel_tree, ch_global_link)
     if(!strcasecmp(ch->ch_sname, c))
       return ch;
 

@@ -70,9 +70,8 @@ typedef struct dtimer {
  */
 
 LIST_HEAD(th_subscription_list, th_subscription);
-LIST_HEAD(channel_list, channel);
+RB_HEAD(channel_tree, channel);
 TAILQ_HEAD(channel_queue, channel);
-TAILQ_HEAD(channel_group_queue, channel_group);
 TAILQ_HEAD(th_dvb_adapter_queue, th_dvb_adapter);
 LIST_HEAD(th_v4l_adapter_list, th_v4l_adapter);
 LIST_HEAD(event_list, event);
@@ -96,8 +95,7 @@ LIST_HEAD(autorec_list, autorec);
 extern time_t dispatch_clock;
 extern int startupcounter;
 extern struct th_transport_list all_transports;
-extern struct channel_list channels;
-extern struct channel_group_queue all_channel_groups;
+extern struct channel_tree channel_tree;
 extern struct pvr_rec_list pvrr_global_list;
 extern struct th_subscription_list subscriptions;
 
@@ -774,32 +772,14 @@ typedef struct tt_decoder {
 } tt_decoder_t;
 
 
-/**
- * Channel groups
- */
-typedef struct channel_group {
-  TAILQ_ENTRY(channel_group) tcg_global_link;
-
-  const char *tcg_name;
-  struct channel_queue tcg_channels;
-  int tcg_tag;
-  int tcg_cant_delete_me;
-  int tcg_hidden;
-
-  struct autorec_list tcg_autorecs;
-
-} channel_group_t;
-
 
 /*
  * Channel definition
  */ 
 typedef struct channel {
   
-  LIST_ENTRY(channel) ch_global_link;
+  RB_ENTRY(channel) ch_global_link;
 
-  TAILQ_ENTRY(channel) ch_group_link;
-  channel_group_t *ch_group;
 
   LIST_HEAD(, th_transport) ch_transports;
   LIST_HEAD(, th_subscription) ch_subscriptions;
@@ -943,7 +923,6 @@ extern const char *settings_dir;
 FILE *settings_open_for_write(const char *name);
 FILE *settings_open_for_read(const char *name);
 extern const char *sys_warning;
-extern channel_group_t *defgroup;
 
 static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 {

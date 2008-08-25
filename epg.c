@@ -413,7 +413,7 @@ epg_channel_maintain(void *aux, int64_t clk)
 
   now = dispatch_clock;
 
-  LIST_FOREACH(ch, &channels, ch_global_link) {
+  RB_FOREACH(ch, &channel_tree, ch_global_link) {
 
     /* Age out any old events */
 
@@ -466,11 +466,8 @@ epg_transfer_events(channel_t *ch, struct event_queue *src,
   event_t *e;
   int cnt = 0;
 
-  if(strcmp(icon ?: "", ch->ch_icon ?: "")) {
-    free(ch->ch_icon);
-    ch->ch_icon = icon ? strdup(icon) : NULL;
-    channel_settings_write(ch);
-  }
+  if(strcmp(icon ?: "", ch->ch_icon ?: ""))
+    channel_set_icon(ch, icon);
 
   TAILQ_FOREACH(e, src, e_channel_link) {
 
@@ -551,9 +548,8 @@ epg_content_group_find_by_name(const char *name)
 int
 epg_search(struct event_list *h, const char *title, 
 	   epg_content_group_t *s_ecg,
-	   channel_group_t *s_tcg, channel_t *s_ch)
+	   channel_t *s_ch)
 {
-  channel_group_t *dis;
   channel_t *ch;
   event_t *e;
   int num = 0;
@@ -563,19 +559,11 @@ epg_search(struct event_list *h, const char *title,
      regcomp(&preg, title, REG_ICASE | REG_EXTENDED | REG_NOSUB))
     return -1;
 
-  dis = channel_group_find("-disabled-", 1);
-
-  LIST_FOREACH(ch, &channels, ch_global_link) {
-    if(ch->ch_group == dis)
-      continue;
-
+  RB_FOREACH(ch, &channel_tree, ch_global_link) {
     if(LIST_FIRST(&ch->ch_transports) == NULL)
       continue;
 
     if(s_ch != NULL && s_ch != ch)
-      continue;
-
-    if(s_tcg != NULL && s_tcg != ch->ch_group)
       continue;
 
     TAILQ_FOREACH(e, &ch->ch_epg_events, e_channel_link) {

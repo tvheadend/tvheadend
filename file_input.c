@@ -159,7 +159,7 @@ file_input_init(void)
     if((s = config_get_str_sub(&ce->ce_sub, "channel", NULL)) == NULL)
       continue;
 
-    ch = channel_find(s, 1, channel_group_find("Streamed channels", 1));
+    ch = channel_find(s, 1);
 
 
     t->tht_name = strdup(ch->ch_name);

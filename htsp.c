@@ -79,7 +79,6 @@ htsp_build_channel_msg(channel_t *ch, const char *method)
   event_t *e;
 
   htsmsg_add_str(msg, "method", method);
-  htsmsg_add_str(msg, "channelGroupName", ch->ch_group->tcg_name);
   htsmsg_add_str(msg, "channelName", ch->ch_name);
   htsmsg_add_u32(msg, "channelTag", ch->ch_tag);
   if(ch->ch_icon != NULL)
@@ -101,25 +100,14 @@ static void
 htsp_send_all_channels(htsp_t *htsp)
 {
   htsmsg_t *msg;
-  channel_group_t *tcg;
   channel_t *ch;
 
-  TAILQ_FOREACH(tcg, &all_channel_groups, tcg_global_link) {
-    if(tcg->tcg_hidden)
+  RB_FOREACH(ch, &channel_tree, ch_global_link) {
+    if(LIST_FIRST(&ch->ch_transports) == NULL)
       continue;
 
-    msg = htsmsg_create();
-    htsmsg_add_str(msg, "method", "channelGroupAdd");
-    htsmsg_add_str(msg, "channelGroupName", tcg->tcg_name);
+    msg = htsp_build_channel_msg(ch, "channelAdd");
     htsp_send_msg(htsp, msg, 0);
-
-    TAILQ_FOREACH(ch, &tcg->tcg_channels, ch_group_link) {
-      if(LIST_FIRST(&ch->ch_transports) == NULL)
-	continue;
-
-      msg = htsp_build_channel_msg(ch, "channelAdd");
-      htsp_send_msg(htsp, msg, 0);
-    }
   }
 }
 

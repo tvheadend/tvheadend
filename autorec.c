@@ -64,10 +64,6 @@ autorec_cmp(autorec_t *ar, event_t *e)
      ar->ar_channel != e->e_channel)
     return 0;
 
-  if(ar->ar_channel_group != NULL && 
-     ar->ar_channel_group != e->e_channel->ch_group)
-    return 0;
-
   if(ar->ar_ecg != NULL) {
     if(e->e_content_type == NULL || 
        ar->ar_ecg != e->e_content_type->ect_group)
@@ -103,7 +99,7 @@ autorec_check_new_ar(autorec_t *ar)
   event_t *e;
   channel_t *ch;
 
-  LIST_FOREACH(ch, &channels, ch_global_link) {
+  RB_FOREACH(ch, &channel_tree, ch_global_link) {
     e = ch->ch_epg_cur_event;
     if(e == NULL)
       continue;
@@ -146,7 +142,7 @@ autorec_check_new_event(event_t *e)
  */
 static autorec_t *
 autorec_create0(const char *name, int prio, const char *title,
-		epg_content_group_t *ecg, channel_group_t *tcg,
+		epg_content_group_t *ecg,
 		channel_t *ch, int id, const char *creator)
 {
   autorec_t *ar = calloc(1, sizeof(autorec_t));
@@ -161,9 +157,6 @@ autorec_create0(const char *name, int prio, const char *title,
   ar->ar_name     = strdup(name);
   ar->ar_rec_prio = prio;
   ar->ar_ecg      = ecg;
-
-  ar->ar_channel_group = tcg;
-  LIST_INSERT_HEAD(&tcg->tcg_autorecs, ar, ar_channel_group_link);
 
   ar->ar_channel  = ch;
   LIST_INSERT_HEAD(&ch->ch_autorecs, ar, ar_channel_link);
@@ -194,7 +187,6 @@ autorec_destroy(autorec_t *ar)
   free((void *)ar->ar_creator);
   free((void *)ar->ar_name);
 
-  LIST_REMOVE(ar, ar_channel_group_link);
   LIST_REMOVE(ar, ar_channel_link);
 
   TAILQ_REMOVE(&autorecs, ar, ar_link);
@@ -207,13 +199,13 @@ autorec_destroy(autorec_t *ar)
  */
 int
 autorec_create(const char *name, int prio, const char *title,
-	       epg_content_group_t *ecg, channel_group_t *tcg,
+	       epg_content_group_t *ecg,
 	       channel_t *ch, const char *creator)
 {
   autorec_t *ar;
 
   ar_id_ceil++;
-  ar = autorec_create0(name, prio, title, ecg, tcg, ch, ar_id_ceil, creator);
+  ar = autorec_create0(name, prio, title, ecg, ch, ar_id_ceil, creator);
   if(ar == NULL)
     return -1;
 
@@ -262,9 +254,6 @@ autorec_save_entry(autorec_t *ar)
     
   if(ar->ar_ecg != NULL)
     fprintf(fp, "event_content_group = %s\n", ar->ar_ecg->ecg_name);
-
-  if(ar->ar_channel_group != NULL)
-    fprintf(fp, "channel_group = %s\n", ar->ar_channel_group->tcg_name);
 
   if(ar->ar_channel != NULL)
     fprintf(fp, "channel = %s\n", ar->ar_channel->ch_name);
@@ -317,9 +306,7 @@ autorec_load(void)
 		      contentgroup ? 
 		      epg_content_group_find_by_name(contentgroup) : NULL,
 
-		      chgroup ? channel_group_find(chgroup, 1) : NULL,
-
-		      channel ? channel_find(channel, 1, NULL) : NULL,
+		      channel ? channel_find(channel, 1) : NULL,
 		      id, creator);
 
       if(id > ar_id_ceil)

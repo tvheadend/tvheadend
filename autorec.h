@@ -39,9 +39,6 @@ typedef struct autorec {
   
   epg_content_group_t *ar_ecg;
 
-  channel_group_t *ar_channel_group;
-  LIST_ENTRY(autorec) ar_channel_group_link;
-  
   channel_t *ar_channel;
   LIST_ENTRY(autorec) ar_channel_link;
 
@@ -51,7 +48,7 @@ typedef struct autorec {
 void autorec_init(void);
 
 int autorec_create(const char *name, int prio, const char *title,
-		   epg_content_group_t *ecg, channel_group_t *tcg,
+		   epg_content_group_t *ecg,
 		   channel_t *ch, const char *creator);
 
 void autorec_check_new_event(event_t *e);

@@ -148,7 +148,7 @@ rpc_channels_list(rpc_session_t *ses, htsmsg_t *in, void *opaque)
   out = htsmsg_create();
   htsmsg_add_u32(out, "seq", ses->rs_seq);
 
-  LIST_FOREACH(ch, &channels, ch_global_link)
+  RB_FOREACH(ch, &channel_tree, ch_global_link)
     htsmsg_add_msg(out, "channel", rpc_build_channel_msg(ch));
 
   return out;
@@ -174,7 +174,7 @@ rpc_event_info(rpc_session_t *ses, htsmsg_t *in, void *opaque)
   if(htsmsg_get_u32(in, "tag", &u32) >= 0) {
     e = epg_event_find_by_tag(u32);
   } else if((s = htsmsg_get_str(in, "channel")) != NULL) {
-    if((ch = channel_find(s, 0, NULL)) == NULL) {
+    if((ch = channel_find(s, 0)) == NULL) {
       errtxt = "Channel not found";
     } else {
       if(htsmsg_get_u32(in, "time", &u32) < 0) {

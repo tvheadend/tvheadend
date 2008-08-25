@@ -113,7 +113,7 @@ page_simple(http_connection_t *hc, http_reply_t *hr,
   if(s != NULL) {
     
     LIST_INIT(&events);
-    c = epg_search(&events, s, NULL, NULL, NULL);
+    c = epg_search(&events, s, NULL, NULL);
 
     if(c == -1) {
       htsbuf_qprintf(hq, "<b>Event title: Regular expression syntax error</b>");

@@ -558,7 +558,7 @@ transport_map_channel(th_transport_t *t, channel_t *ch)
   if(ch == NULL) {
     if(t->tht_chname == NULL)
       return;
-    ch = channel_find(t->tht_chname, 1, NULL);
+    ch = channel_find(t->tht_chname, 1);
   } else {
     free(t->tht_chname);
     t->tht_chname = strdup(ch->ch_name);

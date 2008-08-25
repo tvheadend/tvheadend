@@ -55,8 +55,7 @@ epg_content_type_t *epg_content_type_find_by_dvbcode(uint8_t dvbcode);
 epg_content_group_t *epg_content_group_find_by_name(const char *name);
 
 int epg_search(struct event_list *h, const char *title,
-	       epg_content_group_t *s_ecg, channel_group_t *s_tcg,
-	       channel_t *s_ch);
+	       epg_content_group_t *s_ecg, channel_t *s_ch);
 
 void epg_destroy_by_channel(channel_t *ch);
 

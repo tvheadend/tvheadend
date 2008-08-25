@@ -250,7 +250,7 @@ xmltv_resolve_by_events(xmltv_channel_t *xc)
     if(ex == NULL)
       break;
 
-    LIST_FOREACH(ch, &channels, ch_global_link) {
+    RB_FOREACH(ch, &channel_tree, ch_global_link) {
       ec = epg_event_find_by_time0(&ch->ch_epg_events, now);
       cnt = 0;
       
@@ -289,14 +289,14 @@ xmltv_transfer_events(xmltv_grabber_t *xg)
       continue;
     
     if(xc->xc_channel != NULL) {
-      ch = channel_find(xc->xc_channel, 0, NULL);
+      ch = channel_find(xc->xc_channel, 0);
       if(ch == NULL)
 	continue;
 
     } else {
 
       how = 0;
-      ch = channel_find(xc->xc_displayname, 0, NULL);
+      ch = channel_find(xc->xc_displayname, 0);
       if(ch == NULL) {
 	ch = xmltv_resolve_by_events(xc);
       
