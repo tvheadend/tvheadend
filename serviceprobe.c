@@ -169,9 +169,10 @@ serviceprobe_start(void *aux, int64_t now)
 
   assert(sp_current == NULL);
 
-  if((sp = TAILQ_FIRST(&probequeue)) == NULL)
+  if((sp = TAILQ_FIRST(&probequeue)) == NULL) {
+    tvhlog(LOG_NOTICE, "serviceprobe", "Nothing more to probe");
     return;
-
+  }
   s = sp->sp_s = calloc(1, sizeof(th_subscription_t));
   t = sp->sp_t;
 
