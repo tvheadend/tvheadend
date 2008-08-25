@@ -119,6 +119,7 @@ dvb_mux_create(th_dvb_adapter_t *tda, struct dvb_frontend_parameters *fe_param,
   tdmi->tdmi_transport_stream_id = tsid;
   tdmi->tdmi_adapter = tda;
   tdmi->tdmi_network = network ? strdup(network) : NULL;
+  tdmi->tdmi_last_status = strdup("Initializing");
 
   if(entries_before == 0 && tda->tda_rootpath != NULL) {
     /* First mux on adapter with backing hardware, start scanner */
@@ -321,6 +322,9 @@ dvb_mux_save(th_dvb_mux_instance_t *tdmi)
 
   htsmsg_t *m = htsmsg_create();
 
+  htsmsg_add_u32(m, "quality", -tdmi->tdmi_quality);
+  htsmsg_add_str(m, "status", tdmi->tdmi_last_status);
+
   htsmsg_add_u32(m, "transportstreamid", tdmi->tdmi_transport_stream_id);
   if(tdmi->tdmi_network != NULL)
     htsmsg_add_str(m, "network", tdmi->tdmi_network);
@@ -389,12 +393,13 @@ dvb_mux_save(th_dvb_mux_instance_t *tdmi)
 static const char *
 tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m)
 {
+  th_dvb_mux_instance_t *tdmi;
   struct dvb_frontend_parameters f;
   const char *s;
   int r;
   int polarisation = 0;
   unsigned int switchport = 0;
-  unsigned int tsid;
+  unsigned int tsid, u32;
 
   memset(&f, 0, sizeof(f));
   
@@ -481,8 +486,18 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m)
   if(htsmsg_get_u32(m, "transportstreamid", &tsid))
     tsid = 0xffff;
 
-  dvb_mux_create(tda, &f, polarisation, switchport,
-		 tsid, htsmsg_get_str(m, "network"), NULL);
+  tdmi = dvb_mux_create(tda, &f, polarisation, switchport,
+			tsid, htsmsg_get_str(m, "network"), NULL);
+  if(tdmi != NULL) {
+    s = htsmsg_get_str(m, "status");
+    if(s != NULL) {
+      free((void *)tdmi->tdmi_last_status);
+      tdmi->tdmi_last_status = strdup(s);
+    }
+
+    if(!htsmsg_get_u32(m, "quality", &u32)) 
+      tdmi->tdmi_quality = -u32;
+  }
   return NULL;
 }
 

@@ -285,8 +285,9 @@ dvb_fec_monitor(void *aux, int64_t now)
 {
   th_dvb_adapter_t *tda = aux;
   th_dvb_mux_instance_t *tdmi;
-  int i, v, vv;
+  int i, v, vv, n;
   const char *s;
+  int savemux = 0;
 
   dtimer_arm(&tda->tda_fec_monitor_timer, dvb_fec_monitor, tda, 1);
 
@@ -316,26 +317,32 @@ dvb_fec_monitor(void *aux, int64_t now)
     }
   }
   
-
-  if(dvb_mux_status(tdmi, 1) != NULL) {
+  n = dvb_mux_badness(tdmi);
+  if(n > 0) {
     if(tdmi->tdmi_quality > -50) {
-      tdmi->tdmi_quality--;
+      tdmi->tdmi_quality -= n;
       dvb_notify_mux_quality(tdmi);
+      savemux = 1;
     }
   } else {
 
     if(tdmi->tdmi_quality < 0) {
       tdmi->tdmi_quality++;
       dvb_notify_mux_quality(tdmi);
+      savemux = 1;
     }
   }
 
-  s = dvb_mux_status(tdmi, 0);
-
-  if(s != tdmi->tdmi_last_status) {
-    tdmi->tdmi_last_status = s;
+  s = dvb_mux_status(tdmi);
+  if(strcmp(s, tdmi->tdmi_last_status)) {
+    free(tdmi->tdmi_last_status);
+    tdmi->tdmi_last_status = strdup(s);
     dvb_notify_mux_status(tdmi);
+    savemux = 1;
   }
+
+  if(savemux)
+    dvb_mux_save(tdmi);
 }
 
 
