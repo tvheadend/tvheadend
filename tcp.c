@@ -248,8 +248,9 @@ tcp_disconnect(tcp_session_t *ses, int err)
 
   ses->tcp_callback(TCP_DISCONNECT, ses);
 
-  tvhlog(LOG_INFO, "tcp", "%s: %s: disconnected -- %s",
-	 ses->tcp_name, ses->tcp_peer_txt, strerror(err));
+  if(ses->tcp_server == NULL)
+    tvhlog(LOG_INFO, "tcp", "%s: %s: disconnected -- %s",
+	   ses->tcp_name, ses->tcp_peer_txt, strerror(err));
 
   close(dispatch_delfd(ses->tcp_dispatch_handle));
   ses->tcp_dispatch_handle = NULL;
@@ -319,9 +320,10 @@ tcp_start_session(tcp_session_t *ses)
   snprintf(ses->tcp_peer_txt, sizeof(ses->tcp_peer_txt), "%s:%d",
 	   inet_ntoa(si->sin_addr), ntohs(si->sin_port));
 
-  tvhlog(LOG_INFO, "tcp", "%s: %s%sConnected to %s", ses->tcp_name,
-	 ses->tcp_hostname ?: "", ses->tcp_hostname ? ": " : "",
-	 ses->tcp_peer_txt);
+  if(ses->tcp_server == NULL)
+    tvhlog(LOG_INFO, "tcp", "%s: %s%sConnected to %s", ses->tcp_name,
+	   ses->tcp_hostname ?: "", ses->tcp_hostname ? ": " : "",
+	   ses->tcp_peer_txt);
 
 
   ses->tcp_dispatch_handle = dispatch_addfd(ses->tcp_fd, tcp_socket_callback,
