@@ -758,6 +758,8 @@ cwc_transport_start(th_transport_t *t)
   th_stream_t *st;
 
   TAILQ_FOREACH(cwc, &cwcs, cwc_link) {
+    if(cwc->cwc_caid == 0)
+      continue;
 
     LIST_FOREACH(st, &t->tht_streams, st_link)
       if(st->st_caid == cwc->cwc_caid)
