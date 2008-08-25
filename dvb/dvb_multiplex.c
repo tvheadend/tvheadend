@@ -120,6 +120,7 @@ dvb_mux_create(th_dvb_adapter_t *tda, struct dvb_frontend_parameters *fe_param,
   tdmi->tdmi_adapter = tda;
   tdmi->tdmi_network = network ? strdup(network) : NULL;
   tdmi->tdmi_last_status = strdup("Initializing");
+  tdmi->tdmi_quality = 100;
 
   if(entries_before == 0 && tda->tda_rootpath != NULL) {
     /* First mux on adapter with backing hardware, start scanner */
