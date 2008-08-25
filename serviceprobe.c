@@ -123,7 +123,7 @@ sp_status_callback(struct th_subscription *s, int status, void *opaque)
     errtxt = "Access denied";
     break;
   case TRANSPORT_STATUS_NO_INPUT:
-    errtxt = "No input detected";
+    errtxt = "No video detected";
     break;
   default:
     errtxt = "Other error";
