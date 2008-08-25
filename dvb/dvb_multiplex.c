@@ -322,7 +322,7 @@ dvb_mux_save(th_dvb_mux_instance_t *tdmi)
 
   htsmsg_t *m = htsmsg_create();
 
-  htsmsg_add_u32(m, "quality", -tdmi->tdmi_quality);
+  htsmsg_add_u32(m, "quality", tdmi->tdmi_quality);
   htsmsg_add_str(m, "status", tdmi->tdmi_last_status);
 
   htsmsg_add_u32(m, "transportstreamid", tdmi->tdmi_transport_stream_id);
@@ -496,7 +496,7 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m)
     }
 
     if(!htsmsg_get_u32(m, "quality", &u32)) 
-      tdmi->tdmi_quality = -u32;
+      tdmi->tdmi_quality = u32;
   }
   return NULL;
 }

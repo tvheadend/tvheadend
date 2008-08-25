@@ -264,7 +264,7 @@ extjs_dvbtree(http_connection_t *hc, http_reply_t *hr,
       extjs_dvbtree_node(out, 0,
 			 tdmi->tdmi_identifier, buf, "DVB Mux",
 			 tdmi->tdmi_last_status,
-			 100 + tdmi->tdmi_quality * 2, "mux");
+			 tdmi->tdmi_quality, "mux");
     }
   } else if((tdmi = dvb_mux_find_by_identifier(s)) != NULL) {
 

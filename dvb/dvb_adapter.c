@@ -244,7 +244,7 @@ dvb_notify_mux_quality(th_dvb_mux_instance_t *tdmi)
   htsmsg_t *m = htsmsg_create();
   htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
 
-  htsmsg_add_u32(m, "quality", 100 + tdmi->tdmi_quality * 2);
+  htsmsg_add_u32(m, "quality", tdmi->tdmi_quality);
   notify_by_msg("dvbmux", m);
 }
 
@@ -319,14 +319,15 @@ dvb_fec_monitor(void *aux, int64_t now)
   
   n = dvb_mux_badness(tdmi);
   if(n > 0) {
-    if(tdmi->tdmi_quality > -50) {
-      tdmi->tdmi_quality -= n;
+    i = MAX(tdmi->tdmi_quality - n, 0);
+    if(i != tdmi->tdmi_quality) {
+      tdmi->tdmi_quality = i;
       dvb_notify_mux_quality(tdmi);
       savemux = 1;
     }
   } else {
 
-    if(tdmi->tdmi_quality < 0) {
+    if(tdmi->tdmi_quality < 100) {
       tdmi->tdmi_quality++;
       dvb_notify_mux_quality(tdmi);
       savemux = 1;

@@ -60,7 +60,6 @@ const char *dvb_polarisation_to_str(int pol);
 th_dvb_adapter_t *dvb_adapter_find_by_identifier(const char *identifier);
 th_dvb_mux_instance_t *dvb_mux_find_by_identifier(const char *identifier);
 void dvb_mux_nicename(char *buf, size_t size, th_dvb_mux_instance_t *tdmi);
-int dvb_quality_to_percent(int qual);
 int dvb_mux_badness(th_dvb_mux_instance_t *tdmi);
 const char *dvb_mux_status(th_dvb_mux_instance_t *tdmi);
 
