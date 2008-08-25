@@ -49,8 +49,6 @@ struct channel_group_queue all_channel_groups;
 channel_group_t *defgroup;
 
 
-void scanner_init(void);
-
 /**
  *
  */
