@@ -525,3 +525,22 @@ dvb_mux_load(th_dvb_adapter_t *tda)
   htsmsg_destroy(l);
 }
 
+/**
+ *
+ */
+void
+dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *networkname)
+{
+  htsmsg_t *m = htsmsg_create();
+  char buf[100];
+
+  htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
+
+  free((void *)tdmi->tdmi_network);
+  tdmi->tdmi_network = strdup(networkname);
+  dvb_mux_save(tdmi);
+
+  dvb_mux_nicename(buf, sizeof(buf), tdmi);
+  htsmsg_add_str(m, "name", buf);
+  notify_by_msg("dvbmux", m);
+}

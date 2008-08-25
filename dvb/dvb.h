@@ -67,6 +67,8 @@ th_dvb_mux_instance_t *dvb_mux_create(th_dvb_adapter_t *tda,
 				      uint16_t tsid, const char *network,
 				      const char *logprefix);
 
+void dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *name);
+
 void dvb_tune_tdmi(th_dvb_mux_instance_t *tdmi, int maylog,
 		   tdmi_state_t state);
 

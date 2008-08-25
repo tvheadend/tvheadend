@@ -337,16 +337,17 @@ void
 dvb_mux_nicename(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
 {
   char freq[50];
-
+  const char *n = tdmi->tdmi_network;
 
   if(tdmi->tdmi_adapter->tda_type == FE_QPSK) {
     nicenum(freq, sizeof(freq), tdmi->tdmi_fe_params.frequency);
-    snprintf(buf, size, "%s kHz %s port %d", freq,
+    snprintf(buf, size, "%s%s%s kHz %s port %d", 
+	     n?:"", n ? ": ":"", freq,
 	     dvb_polarisation_to_str_long(tdmi->tdmi_polarisation),
 	     tdmi->tdmi_switchport);
   } else {
     nicenum(freq, sizeof(freq), tdmi->tdmi_fe_params.frequency / 1000);
-    snprintf(buf, size, "%s kHz", freq);
+    snprintf(buf, size, "%s%s%s kHz", n?:"", n ? ": ":"", freq);
   }
 }
 

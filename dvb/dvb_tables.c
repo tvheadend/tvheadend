@@ -640,12 +640,8 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       if(dvb_get_string(networkname, sizeof(networkname), ptr, tlen, "UTF8"))
 	return;
 
-      if(strcmp(tdmi->tdmi_network ?: "", networkname)) {
-	free((void *)tdmi->tdmi_network);
-	tdmi->tdmi_network = strdup(networkname);
-	//notify_tdmi_name_change(tdmi);
-	dvb_mux_save(tdmi);
-      }
+      if(strcmp(tdmi->tdmi_network ?: "", networkname))
+	dvb_mux_set_networkname(tdmi, networkname);
       break;
     }
 
