@@ -9,46 +9,8 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
 	    root: 'dvbadapters',
 	}, ['name', 'automux']);
 
-    var confpanel = new Ext.FormPanel({
-	    frame:true,
-	    disabled:true,
-	    region:'south',
-	    title:'Configuraton',
-	    split:true,
-	    height: 150,
-	    collapsible: true,
-	    margins:'0 0 0 0',
-	    labelAlign: 'right',
-	    labelWidth: 150,
-	    waitMsgTarget: true,
-	    reader: confreader,
-	    defaultType: 'textfield',
-	    items: [{
-		    fieldLabel: 'Adapter name',
-		    name: 'name',
-		    width: 400,
-		},
-		
-		new Ext.form.Checkbox({
-			fieldLabel: 'Autodetect muxes',
-			name: 'automux',
-		    })
-		],
-	});
+ 
     
-    confpanel.getForm().load({url:'/dvbadapter', 
-		params:{'adapterId': adapterId, 'op':'load'},
-		success:function(form, action) {
-		confpanel.enable();
-	    }});
-    
-    
-    
-    var status = {
-	region:'center',
-	html: 'Status...',
-	margins:'0 0 0 0'
-    };
     
 
     function addmux() {
@@ -143,11 +105,28 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
     };
 
     
-    var panel = new Ext.Panel({
+
+   var panel = new Ext.FormPanel({
+	    border:false,
+	    disabled:true,
 	    title: adapterName,
-	    layout:'border',
-	    border: false,
-	    items:[status, confpanel],
+	    bodyStyle:'padding:15px',
+	    labelAlign: 'right',
+	    labelWidth: 150,
+	    waitMsgTarget: true,
+	    reader: confreader,
+	    defaultType: 'textfield',
+	    items: [{
+		    fieldLabel: 'Adapter name',
+		    name: 'name',
+		    width: 400,
+		},
+		
+		new Ext.form.Checkbox({
+			fieldLabel: 'Autodetect muxes',
+			name: 'automux',
+		    })
+		],
 	    tbar:[{
 		    iconCls:'add',
 		    text: 'Add mux(es)',
@@ -162,6 +141,14 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
 		    handler: saveconfig
 		}]
 	});
+    
+    panel.getForm().load({url:'/dvbadapter', 
+		params:{'adapterId': adapterId, 'op':'load'},
+		success:function(form, action) {
+		panel.enable();
+	    }});
+    
+
     return panel;
 }
 

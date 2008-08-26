@@ -92,8 +92,9 @@ tvheadend.channeldetails = function(chid, chname) {
 	}, ['name', 'comdetect']);
 
     var confpanel = new Ext.FormPanel({
-	    frame:true,
+	    border:false,
 	    disabled:true,
+	    bodyStyle:'padding:15px',
 	    anchor: '100% 50%',
 	    labelAlign: 'right',
 	    labelWidth: 150,
@@ -103,7 +104,9 @@ tvheadend.channeldetails = function(chid, chname) {
 
 	    items: [{
 		    layout:'column',
+		    border:false,
 		    items:[{
+			    border:false,
 			    columnWidth:.5,
 			    layout: 'form',
 			    defaultType: 'textfield',
