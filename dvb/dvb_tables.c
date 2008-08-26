@@ -537,6 +537,9 @@ dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   int freq, symrate;
   struct dvb_frontend_parameters fe_param;
 
+  if(!tdmi->tdmi_adapter->tda_autodiscovery)
+    return;
+
   if(len < 11) {
     printf("Invalid CABLE DESCRIPTOR\n");
     return;
@@ -577,6 +580,9 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 {
   int freq, symrate, pol;
   struct dvb_frontend_parameters fe_param;
+
+  if(!tdmi->tdmi_adapter->tda_autodiscovery)
+    return;
 
   if(len < 11)
     return;

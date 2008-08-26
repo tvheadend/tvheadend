@@ -392,13 +392,18 @@ extjs_dvbadapter(http_connection_t *hc, http_reply_t *hr,
     htsmsg_add_str(r, "id", tda->tda_identifier);
     htsmsg_add_str(r, "device", tda->tda_rootpath ?: "No hardware attached");
     htsmsg_add_str(r, "name", tda->tda_displayname);
-    htsmsg_add_u32(r, "automux", 1);
+    htsmsg_add_u32(r, "automux", tda->tda_autodiscovery);
  
     out = json_single_record(r, "dvbadapters");
   } else if(!strcmp(op, "save")) {
 
     if((s = http_arg_get(&hc->hc_req_args, "name")) != NULL)
       dvb_adapter_set_displayname(tda, s);
+
+    if((s = http_arg_get(&hc->hc_req_args, "automux")) != NULL)
+      dvb_adapter_set_auto_discovery(tda, 1);
+    else
+      dvb_adapter_set_auto_discovery(tda, 0);
 
     out = htsmsg_create();
     htsmsg_add_u32(out, "success", 1);

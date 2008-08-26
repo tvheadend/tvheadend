@@ -232,7 +232,7 @@ typedef struct th_dvb_adapter {
 
   const char *tda_rootpath;
   char *tda_identifier;
-
+  uint32_t tda_autodiscovery;
   char *tda_displayname;
 
   pthread_mutex_t tda_lock;

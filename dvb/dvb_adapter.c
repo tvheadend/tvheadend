@@ -78,6 +78,7 @@ tda_save(th_dvb_adapter_t *tda)
 
   htsmsg_add_str(m, "type", dvb_adaptertype_to_str(tda->tda_type));
   htsmsg_add_str(m, "displayname", tda->tda_displayname);
+  htsmsg_add_u32(m, "autodiscovery", tda->tda_autodiscovery);
   hts_settings_save(m, "dvbadapters/%s", tda->tda_identifier);
   htsmsg_destroy(m);
 }
@@ -89,7 +90,15 @@ tda_save(th_dvb_adapter_t *tda)
 void
 dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s)
 {
-  htsmsg_t *m = htsmsg_create();
+  htsmsg_t *m;
+
+  if(!strcmp(s, tda->tda_displayname))
+    return;
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" renamed to \"%s\"",
+	 tda->tda_displayname, s);
+
+  m = htsmsg_create();
   htsmsg_add_str(m, "id", tda->tda_identifier);
 
   free(tda->tda_displayname);
@@ -100,6 +109,23 @@ dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s)
   htsmsg_add_str(m, "name", tda->tda_displayname);
 
   notify_by_msg("dvbadapter", m);
+}
+
+
+/**
+ *
+ */
+void
+dvb_adapter_set_auto_discovery(th_dvb_adapter_t *tda, int on)
+{
+  if(tda->tda_autodiscovery == on)
+    return;
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" mux autodiscovery set to %s",
+	 tda->tda_displayname, on ? "On" : "Off");
+
+  tda->tda_autodiscovery = on;
+  tda_save(tda);
 }
 
 
@@ -161,7 +187,8 @@ tda_add(const char *path)
       buf[i] = '_';
 
   tda->tda_identifier = strdup(buf);
-
+  
+  tda->tda_autodiscovery = tda->tda_type != FE_QPSK;
 
   /* Come up with an initial displayname, user can change it and it will
      be overridden by any stored settings later on */
@@ -205,33 +232,32 @@ dvb_adapter_init(void)
       
       name = htsmsg_get_str(c, "displayname");
 
-      if((tda = dvb_adapter_find_by_identifier(f->hmf_name)) != NULL) {
-	/* Already loaded */
-
-	free(tda->tda_displayname);
-	tda->tda_displayname = strdup(name);
-	continue;
-      }
-
-
       if((s = htsmsg_get_str(c, "type")) == NULL ||
 	 (type = dvb_str_to_adaptertype(s)) < 0)
 	continue;
 
-      tda = tda_alloc();
-      tda->tda_identifier = strdup(f->hmf_name);
+      if((tda = dvb_adapter_find_by_identifier(f->hmf_name)) == NULL) {
+	/* Not discovered by hardware, create it */
+
+	tda = tda_alloc();
+	tda->tda_identifier = strdup(f->hmf_name);
+	tda->tda_type = type;
+	TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
+      } else {
+	if(type != tda->tda_type)
+	  continue; /* Something is wrong, ignore */
+      }
+
+      free(tda->tda_displayname);
       tda->tda_displayname = strdup(name);
-      tda->tda_type = type;
 
-      TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
-
+      htsmsg_get_u32(c, "autodiscovery", &tda->tda_autodiscovery);
     }
     htsmsg_destroy(l);
   }
 
   TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link)
     dvb_mux_load(tda);
-
 }
 
 
