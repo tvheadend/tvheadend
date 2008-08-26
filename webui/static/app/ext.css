@@ -45,7 +45,7 @@
 }
 
 .x-tree-headers {
-    background: #f9f9f9 url(http://192.168.1.50/lab/extjs/resources/images/default/grid/grid3-hrow.gif) repeat-x 0 bottom;
+    background: #f9f9f9 url(../extjs/resources/images/default/grid/grid3-hrow.gif) repeat-x 0 bottom;
 	cursor:default;
     zoom:1;
 }
