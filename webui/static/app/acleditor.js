@@ -174,14 +174,18 @@ tvheadend.acleditor = function() {
 	    cm: cm,
 	    selModel: new Ext.grid.RowSelectionModel({singleSelect:false}),
 	    tbar: [{
+		    tooltip: 'Create a new access list entry on the server. ' + 
+		    'The new entry is initially disabled so it must be enabled before it start taking effect.',
 		    iconCls:'add',
 		    text: 'Add entry',
 		    handler: addRecord
 		}, '-', {
+		    tooltip: 'Delete one or more selected rows',
 		    iconCls:'remove',
 		    text: 'Delete selected',
 		    handler: delSelected
 		}, '-', {
+		    tooltip: 'Save any changes made (Changed cells have red borders).',
 		    iconCls:'save',
 		    text: "Save changes",
 		    handler: saveChanges

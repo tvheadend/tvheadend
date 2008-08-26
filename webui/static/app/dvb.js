@@ -128,14 +128,17 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
 		    })
 		],
 	    tbar:[{
+		    tooltip: 'Manually add new transport multiplexes',
 		    iconCls:'add',
 		    text: 'Add mux(es)',
 		    handler: addmux
 		}, '-', {
+		    tooltip: 'Scan all transports on this adapter and map those who has a working video stream to a channel',
 		    iconCls:'option',
 		    text: 'Probe services',
 		    handler: probeservices
 		}, '-', {
+		   tooltip: 'Save and changes made to the configuation below',
 		    iconCls:'save',
 		    text: 'Save configuration',
 		    handler: saveconfig

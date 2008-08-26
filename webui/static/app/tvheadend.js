@@ -128,7 +128,7 @@ tvheadend.app = function() {
 		});
 
 	    new tvheadend.comet_poller;
-
+	    Ext.QuickTips.init();
 	}
 
     };

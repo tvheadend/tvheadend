@@ -207,10 +207,12 @@ tvheadend.channeldetails = function(chid, chname) {
 	    title: chname,
 	    border:false,
 	    tbar: [{
+		    tooltip: 'Delete channel "' + chname + '". All mapped transports will be unmapped',
 		    iconCls:'remove',
 		    text: "Delete channel",
 		    handler: deleteChannel
 		}, '-', {
+		    tooltip: 'Save changes made to channel configuration below and the mapped transports',
 		    iconCls:'save',
 		    text: "Save configuration",
 		    handler: saveChanges
