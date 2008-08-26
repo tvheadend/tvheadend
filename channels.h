@@ -21,17 +21,11 @@
 
 void channels_load(void);
 
-channel_t *channel_by_index(uint32_t id);
+channel_t *channel_find_by_name(const char *name, int create);
 
-channel_t *channel_by_tag(uint32_t tag);
-
-int id_by_channel(channel_t *ch);
-
-int channel_get_channels(void);
+channel_t *channel_find_by_identifier(int id);
 
 void channel_unsubscribe(th_subscription_t *s);
-
-channel_t *channel_find(const char *name, int create);
 
 void channel_set_teletext_rundown(channel_t *ch, int v);
 

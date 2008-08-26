@@ -37,7 +37,6 @@
 #include "tvhead.h"
 #include "channels.h"
 #include "subscriptions.h"
-#include "htsclient.h"
 #include "pvr.h"
 #include "epg.h"
 #include "dispatch.h"
@@ -438,7 +437,7 @@ pvr_database_load(void)
     if(channel != NULL && start && stop && title && status) {
       pvrr = calloc(1, sizeof(pvr_rec_t));
 
-      pvrr->pvrr_channel  = channel_find(channel, 1);
+      pvrr->pvrr_channel  = channel_find_by_name(channel, 1);
       pvrr->pvrr_start    = start;
       pvrr->pvrr_stop     = stop;
       pvrr->pvrr_status   = *status;

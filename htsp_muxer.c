@@ -51,7 +51,7 @@ htsp_packet_input(void *opaque, th_muxstream_t *tms, th_pkt_t *pkt)
    */
 
   htsmsg_add_str(m, "method", "muxpkt");
-  htsmsg_add_u32(m, "channelTag", s->ths_channel->ch_tag);
+  htsmsg_add_u32(m, "channelId", s->ths_channel->ch_id);
 
   htsmsg_add_u64(m, "stream", tms->tms_index);
   htsmsg_add_u64(m, "dts", pkt->pkt_dts);
@@ -89,7 +89,7 @@ htsp_subscription_callback(struct th_subscription *s,
     m = htsmsg_create();
 
     htsmsg_add_str(m, "method", "subscription_start");
-    htsmsg_add_u32(m, "channelTag", s->ths_channel->ch_tag);
+    htsmsg_add_u32(m, "channelId", s->ths_channel->ch_id);
 
     LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0) {
       tms->tms_index = index++;
@@ -113,7 +113,7 @@ htsp_subscription_callback(struct th_subscription *s,
     if(htsp->htsp_zombie == 0) {
       m = htsmsg_create();
       htsmsg_add_str(m, "method", "subscription_stop");
-      htsmsg_add_u32(m, "channelTag", s->ths_channel->ch_tag);
+      htsmsg_add_u32(m, "channelId", s->ths_channel->ch_id);
 
       htsmsg_add_str(m, "reason", "unknown");
       htsp_send_msg(htsp, m, 0);
@@ -159,7 +159,7 @@ htsp_muxer_unsubscribe(htsp_t *htsp, uint32_t id)
   th_subscription_t *s;
 
   LIST_FOREACH(s, &htsp->htsp_subscriptions, ths_subscriber_link) {
-    if(s->ths_channel->ch_tag == id)
+    if(s->ths_channel->ch_id == id)
       break;
   }
 

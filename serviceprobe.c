@@ -93,7 +93,7 @@ sp_packet_input(void *opaque, th_muxstream_t *tms, th_pkt_t *pkt)
   tvhlog(LOG_INFO, "serviceprobe", "Probed \"%s\" -- Ok", t->tht_svcname);
 
   if(t->tht_ch == NULL && t->tht_svcname != NULL) {
-    ch = channel_find(t->tht_svcname, 1);
+    ch = channel_find_by_name(t->tht_svcname, 1);
     transport_map_channel(t, ch);
     
     t->tht_config_change(t);

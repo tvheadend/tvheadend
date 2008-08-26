@@ -159,7 +159,7 @@ file_input_init(void)
     if((s = config_get_str_sub(&ce->ce_sub, "channel", NULL)) == NULL)
       continue;
 
-    ch = channel_find(s, 1);
+    ch = channel_find_by_name(s, 1);
 
 
     t->tht_name = strdup(ch->ch_name);

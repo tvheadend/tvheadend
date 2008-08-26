@@ -167,6 +167,7 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
 	    border: false,
 	    items:[status, confpanel],
 	    tbar:[{
+		    iconCls:'add',
 		    text: 'Add mux(es)',
 		    handler: addmux
 		},{

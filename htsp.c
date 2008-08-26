@@ -80,7 +80,7 @@ htsp_build_channel_msg(channel_t *ch, const char *method)
 
   htsmsg_add_str(msg, "method", method);
   htsmsg_add_str(msg, "channelName", ch->ch_name);
-  htsmsg_add_u32(msg, "channelTag", ch->ch_tag);
+  htsmsg_add_u32(msg, "channelId", ch->ch_id);
   if(ch->ch_icon != NULL)
     htsmsg_add_str(msg, "channelIcon", ch->ch_icon);
   
@@ -102,7 +102,7 @@ htsp_send_all_channels(htsp_t *htsp)
   htsmsg_t *msg;
   channel_t *ch;
 
-  RB_FOREACH(ch, &channel_tree, ch_global_link) {
+  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
     if(LIST_FIRST(&ch->ch_transports) == NULL)
       continue;
 
@@ -140,13 +140,12 @@ htsp_subscribe(rpc_session_t *ses, htsmsg_t *in, void *opaque)
   channel_t *ch;
   th_subscription_t *s;
   htsmsg_t *r;
+  uint32_t u32;
 
-  uint32_t tag;
+  if(htsmsg_get_u32(in, "channelId", &u32))
+    return rpc_error(ses, "missing argument: channelId");
 
-  if(htsmsg_get_u32(in, "channelTag", &tag))
-    return rpc_error(ses, "missing argument: channelTag");
-
-  if((ch = channel_by_tag(tag)) == NULL)
+  if((ch = channel_find_by_identifier(u32)) == NULL)
     return rpc_error(ses, "Channel not found");
   
   LIST_FOREACH(s, &htsp->htsp_subscriptions, ths_subscriber_link) {

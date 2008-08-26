@@ -95,7 +95,7 @@ LIST_HEAD(autorec_list, autorec);
 extern time_t dispatch_clock;
 extern int startupcounter;
 extern struct th_transport_list all_transports;
-extern struct channel_tree channel_tree;
+extern struct channel_tree channel_name_tree;
 extern struct pvr_rec_list pvrr_global_list;
 extern struct th_subscription_list subscriptions;
 
@@ -439,6 +439,8 @@ typedef struct th_transport {
 
   void (*tht_config_change)(struct th_transport *t);
 
+  const char *(*tht_networkname)(struct th_transport *t);
+
   const char *(*tht_sourcename)(struct th_transport *t);
 
   int (*tht_quality_index)(struct th_transport *t);
@@ -778,21 +780,18 @@ typedef struct tt_decoder {
  */ 
 typedef struct channel {
   
-  RB_ENTRY(channel) ch_global_link;
+  RB_ENTRY(channel) ch_name_link;
+  char *ch_name;
+  char *ch_sname;
 
+  RB_ENTRY(channel) ch_identifier_link;
+  int ch_id;		    
 
   LIST_HEAD(, th_transport) ch_transports;
   LIST_HEAD(, th_subscription) ch_subscriptions;
 
 
-  int ch_index;
-
-  const char *ch_name;
-  const char *ch_sname;
-
   struct tt_decoder ch_tt;
-
-  int ch_tag;
 
   enum {
     COMMERCIAL_DETECT_NONE,

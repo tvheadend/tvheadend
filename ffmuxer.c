@@ -39,7 +39,6 @@
 #include "tvhead.h"
 #include "channels.h"
 #include "subscriptions.h"
-#include "htsclient.h"
 #include "ffmuxer.h"
 #include "buffer.h"
 

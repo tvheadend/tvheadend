@@ -156,18 +156,23 @@ dvb_transport_quality(th_transport_t *t)
  * Generate a descriptive name for the source
  */
 static const char *
-dvb_transport_name(th_transport_t *t)
+dvb_transport_sourcename(th_transport_t *t)
 {
-  th_dvb_mux_instance_t *tdmi;
-  static char buf[200];
+  th_dvb_mux_instance_t *tdmi = t->tht_dvb_mux_instance;
 
-  tdmi = t->tht_dvb_mux_instance;
+  return tdmi->tdmi_adapter->tda_displayname;
+}
 
-  snprintf(buf, sizeof(buf), "\"%s\" on \"%s\"",
-	   tdmi->tdmi_network ?: "Unknown network",
-	   tdmi->tdmi_adapter->tda_rootpath);
 
-  return buf;
+/**
+ * Generate a descriptive name for the source
+ */
+static const char *
+dvb_transport_networkname(th_transport_t *t)
+{
+  th_dvb_mux_instance_t *tdmi = t->tht_dvb_mux_instance;
+
+  return tdmi->tdmi_network;
 }
 
 
@@ -209,7 +214,8 @@ dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   t->tht_start_feed = dvb_start_feed;
   t->tht_stop_feed  = dvb_stop_feed;
   t->tht_config_change = dvb_transport_save;
-  t->tht_sourcename = dvb_transport_name;
+  t->tht_sourcename = dvb_transport_sourcename;
+  t->tht_networkname = dvb_transport_networkname;
   t->tht_dvb_mux_instance = tdmi;
   t->tht_quality_index = dvb_transport_quality;
 

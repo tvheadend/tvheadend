@@ -99,7 +99,7 @@ autorec_check_new_ar(autorec_t *ar)
   event_t *e;
   channel_t *ch;
 
-  RB_FOREACH(ch, &channel_tree, ch_global_link) {
+  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
     e = ch->ch_epg_cur_event;
     if(e == NULL)
       continue;
@@ -306,7 +306,7 @@ autorec_load(void)
 		      contentgroup ? 
 		      epg_content_group_find_by_name(contentgroup) : NULL,
 
-		      channel ? channel_find(channel, 1) : NULL,
+		      channel ? channel_find_by_name(channel, 1) : NULL,
 		      id, creator);
 
       if(id > ar_id_ceil)

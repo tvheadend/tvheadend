@@ -42,7 +42,8 @@
 #include "pvr.h"
 #include "autorec.h"
 
-struct channel_tree channel_tree;
+struct channel_tree channel_name_tree;
+static struct channel_tree channel_identifier_tree;
 
 static int
 dictcmp(const char *a, const char *b)
@@ -86,6 +87,16 @@ channelcmp(const channel_t *a, const channel_t *b)
 /**
  *
  */
+static int
+chidcmp(const channel_t *a, const channel_t *b)
+{
+  return a->ch_id - b->ch_id;
+}
+
+
+/**
+ *
+ */
 static void
 channel_set_name(channel_t *ch, const char *name)
 {
@@ -115,36 +126,68 @@ channel_set_name(channel_t *ch, const char *name)
 
   free((void *)n2);
 
-  x = RB_INSERT_SORTED(&channel_tree, ch, ch_global_link, channelcmp);
+  x = RB_INSERT_SORTED(&channel_name_tree, ch, ch_name_link, channelcmp);
   assert(x == NULL);
+}
+
+
+
+/**
+ *
+ */
+static channel_t *
+channel_create(const char *name)
+{
+  channel_t *ch, *x;
+  int id;
+
+  ch = RB_LAST(&channel_identifier_tree);
+  if(ch == NULL) {
+    id = 1;
+  } else {
+    id = ch->ch_id + 1;
+  }
+
+  ch = calloc(1, sizeof(channel_t));
+  TAILQ_INIT(&ch->ch_epg_events);
+
+  channel_set_name(ch, name);
+
+  ch->ch_id = id;
+  x = RB_INSERT_SORTED(&channel_identifier_tree, ch, 
+		       ch_identifier_link, chidcmp);
+  assert(x == NULL);
+  return ch;
 }
 
 /**
  *
  */
 channel_t *
-channel_find(const char *name, int create)
+channel_find_by_name(const char *name, int create)
 {
-  channel_t *ch, skel;
-
-  skel.ch_name = name;
-
-  if((ch = RB_FIND(&channel_tree, &skel,  ch_global_link, channelcmp)) != NULL)
+  channel_t skel, *ch;
+  skel.ch_name = (char *)name;
+  ch = RB_FIND(&channel_name_tree, &skel, ch_name_link, channelcmp);
+  if(ch != NULL || create == 0)
     return ch;
+  return channel_create(name);
+}
 
-  if(create == 0)
-    return NULL;
 
-  ch = calloc(1, sizeof(channel_t));
-  ch->ch_index = channel_tree.entries;
-
-  TAILQ_INIT(&ch->ch_epg_events);
-
-  channel_set_name(ch, name);
-
-  ch->ch_tag = tag_get();
+/**
+ *
+ */
+channel_t *
+channel_find_by_identifier(int id)
+{
+  channel_t skel, *ch;
+  skel.ch_id = id;
+  ch = RB_FIND(&channel_identifier_tree, &skel, ch_identifier_link, chidcmp);
   return ch;
 }
+
+
 
 
 static struct strtab commercial_detect_tab[] = {
@@ -159,120 +202,8 @@ static struct strtab commercial_detect_tab[] = {
 void
 channels_load(void)
 {
-#if 0
-  struct config_head cl;
-  config_entry_t *ce;
-  char buf[PATH_MAX];
-  DIR *dir;
-  struct dirent *d;
-  const char *name, *grp, *x;
-  channel_t *ch;
-  int v;
 
-  TAILQ_INIT(&all_channel_groups);
-  TAILQ_INIT(&cl);
-
-  snprintf(buf, sizeof(buf), "%s/channel-group-settings.cfg", settings_dir);
-  config_read_file0(buf, &cl);
-
-  TAILQ_FOREACH(ce, &cl, ce_link) {
-    if(ce->ce_type != CFG_SUB || strcasecmp("channel-group", ce->ce_key))
-      continue;
-     
-    if((name = config_get_str_sub(&ce->ce_sub, "name", NULL)) == NULL)
-      continue;
-
-    channel_group_find(name, 1);
-  }
-  config_free0(&cl);
-
-  tcg = channel_group_find("-disabled-", 1);
-  tcg->tcg_cant_delete_me = 1;
-  tcg->tcg_hidden = 1;
-  
-  defgroup = channel_group_find("Uncategorized", 1);
-  defgroup->tcg_cant_delete_me = 1;
-
-  snprintf(buf, sizeof(buf), "%s/channels", settings_dir);
-
-  if((dir = opendir(buf)) == NULL)
-    return;
-  
-  while((d = readdir(dir)) != NULL) {
-
-    if(d->d_name[0] == '.')
-      continue;
-
-    snprintf(buf, sizeof(buf), "%s/channels/%s", settings_dir, d->d_name);
-    TAILQ_INIT(&cl);
-    config_read_file0(buf, &cl);
-
-    name = config_get_str_sub(&cl, "name", NULL);
-    grp = config_get_str_sub(&cl, "channel-group", NULL);
-    if(name != NULL && grp != NULL) {
-      tcg = channel_group_find(grp, 1);
-      ch = channel_find(name, 1, tcg);
-    
-      x = config_get_str_sub(&cl, "commercial-detect", NULL);
-      if(x != NULL) {
-	v = str2val(x, commercial_detect_tab);
-	if(v > 1)
-	  ch->ch_commercial_detection = v;
-      }
-
-      if((x = config_get_str_sub(&cl, "icon", NULL)) != NULL)
-	ch->ch_icon = strdup(x);
-    }
-    config_free0(&cl);
-  }
-
-  closedir(dir);
-
-  
-  /* Static services */
-
-  TAILQ_FOREACH(ce, &config_list, ce_link) {
-    if(ce->ce_type == CFG_SUB && !strcasecmp("service", ce->ce_key)) {
-      service_load(&ce->ce_sub);
-    }
-  }
-#endif
 }
-
-
-
-/**
- * The index stuff should go away
- */
-channel_t *
-channel_by_index(uint32_t index)
-{
-  channel_t *ch;
-
-  RB_FOREACH(ch, &channel_tree, ch_global_link)
-    if(ch->ch_index == index)
-      return ch;
-
-  return NULL;
-}
-
-
-
-/**
- *
- */
-channel_t *
-channel_by_tag(uint32_t tag)
-{
-  channel_t *ch;
-
-  RB_FOREACH(ch, &channel_tree, ch_global_link)
-    if(ch->ch_tag == tag)
-      return ch;
-
-  return NULL;
-}
-
 
 
 
@@ -283,7 +214,9 @@ static void
 channel_save(channel_t *ch)
 {
   htsmsg_t *m = htsmsg_create();
-  htsmsg_add_str(m, "icon", ch->ch_icon);
+  if(ch->ch_icon != NULL)
+    htsmsg_add_str(m, "icon", ch->ch_icon);
+
   htsmsg_add_str(m, "commercial_detect", 
 		 val2str(ch->ch_commercial_detection,
 			 commercial_detect_tab) ?: "?");
@@ -299,12 +232,15 @@ channel_rename(channel_t *ch, const char *newname)
 {
   th_transport_t *t;
 
-  if(channel_find(newname, 0))
+  if(channel_find_by_name(newname, 0))
     return -1;
+
+  tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" renamed to \"%s\"",
+	 ch->ch_name, newname);
 
   hts_settings_remove("channels/%s", ch->ch_name);
 
-  RB_REMOVE(&channel_tree, ch, ch_global_link);
+  RB_REMOVE(&channel_name_tree, ch, ch_name_link);
   channel_set_name(ch, newname);
 
   LIST_FOREACH(t, &ch->ch_transports, tht_ch_link) {
@@ -326,6 +262,9 @@ channel_delete(channel_t *ch)
   th_transport_t *t;
   th_subscription_t *s;
 
+  tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" deleted",
+	 ch->ch_name);
+
   pvr_destroy_by_channel(ch);
 
   while((t = LIST_FIRST(&ch->ch_transports)) != NULL) {
@@ -344,11 +283,13 @@ channel_delete(channel_t *ch)
 
   hts_settings_remove("channels/%s", ch->ch_name);
 
-  free((void *)ch->ch_name);
-  free((void *)ch->ch_sname);
+  RB_REMOVE(&channel_name_tree, ch, ch_name_link);
+  RB_REMOVE(&channel_identifier_tree, ch, ch_identifier_link);
+
+  free(ch->ch_name);
+  free(ch->ch_sname);
   free(ch->ch_icon);
   
-  RB_REMOVE(&channel_tree, ch, ch_global_link);
   free(ch);
 }
 
@@ -363,6 +304,9 @@ void
 channel_merge(channel_t *dst, channel_t *src)
 {
   th_transport_t *t;
+  
+  tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" merged into \"%s\"",
+	 src->ch_name, dst->ch_name);
 
   while((t = LIST_FIRST(&src->ch_transports)) != NULL) {
     transport_unmap_channel(t);

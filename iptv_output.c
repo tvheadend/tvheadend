@@ -133,7 +133,7 @@ output_multicast_load(struct config_head *head)
   if((name = config_get_str_sub(head, "channel", NULL)) == NULL)
     return;
 
-  ch = channel_find(name, 1);
+  ch = channel_find_by_name(name, 1);
 
   om = calloc(1, sizeof(output_multicast_t));
   

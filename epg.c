@@ -26,7 +26,6 @@
 #include "channels.h"
 #include "epg.h"
 #include "dispatch.h"
-#include "htsclient.h"
 #include "htsp.h"
 #include "autorec.h"
 
@@ -413,7 +412,7 @@ epg_channel_maintain(void *aux, int64_t clk)
 
   now = dispatch_clock;
 
-  RB_FOREACH(ch, &channel_tree, ch_global_link) {
+  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
 
     /* Age out any old events */
 
@@ -559,7 +558,7 @@ epg_search(struct event_list *h, const char *title,
      regcomp(&preg, title, REG_ICASE | REG_EXTENDED | REG_NOSUB))
     return -1;
 
-  RB_FOREACH(ch, &channel_tree, ch_global_link) {
+  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
     if(LIST_FIRST(&ch->ch_transports) == NULL)
       continue;
 

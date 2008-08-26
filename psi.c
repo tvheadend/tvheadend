@@ -618,7 +618,7 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
     st = transport_add_stream(t, pid, type);
     st->st_tb = (AVRational){1, 90000};
     
-    if((v = htsmsg_get_str(c, "lang")) != NULL)
+    if((v = htsmsg_get_str(c, "language")) != NULL)
       av_strlcpy(st->st_lang, v, 4);
 
     if(!htsmsg_get_u32(c, "frameduration", &u32))

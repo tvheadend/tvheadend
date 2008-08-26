@@ -40,7 +40,6 @@
 #include "dvb/dvb.h"
 #include "v4l.h"
 #include "channels.h"
-#include "htsclient.h"
 #include "epg.h"
 #include "epg_xmltv.h"
 #include "pvr.h"
@@ -309,7 +308,6 @@ main(int argc, char **argv)
 
       pvr_init();
       output_multicast_setup();
-      client_start();
 
       p = atoi(config_get_str("http-server-port", "9981"));
       if(p)
