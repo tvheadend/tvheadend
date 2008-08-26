@@ -78,6 +78,7 @@ tvheadend.channeldetails = function(chid, chname) {
     var transportsgrid = new Ext.grid.EditorGridPanel({
 	    title:'Transports',
 	    anchor: '100% 50%',
+	    stripeRows:true,
 	    plugins:[enabledColumn, expander],
 	    store: transportsstore,
 	    clicksToEdit: 2,
