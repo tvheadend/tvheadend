@@ -44,18 +44,6 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
     
     
     
-    var submit = confpanel.addButton({
-	    text: 'Save changes',
-	    handler: function() {
-		confpanel.getForm().submit({url:'/dvbadapter', 
-					    params:{'adapterId': adapterId, 'op':'save'},
-					    waitMsg:'Saving Data...',
-					    success:function(form, action) {
-			}
-		    })
-	    }
-	});
-
     var status = {
 	region:'center',
 	html: 'Status...',
@@ -103,23 +91,6 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
 		}
 	    });
 
-	/*
-	var locationpanel = new Ext.FormPanel({
-	    frame:true,
-	    title:'By location',
-	    margins:'0 0 0 0',
-	    reader: confreader,
-	    defaultType: 'textfield',
-	    items: [locationlist]
-	});
-	var submit = locationpanel.addButton({
-		text: 'Submit',
-		handler: function() {
-		    alert('hej');
-		}
-	    });
-	*/
-
   
 	win = new Ext.Window({
 		title: 'Add mux(es) on ' + adapterName,
@@ -160,6 +131,17 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
 			       });
    };
 
+
+    /**
+     *
+     */
+    function saveconfig() {
+	confpanel.getForm().submit({url:'/dvbadapter', 
+		    params:{'adapterId': adapterId, 'op':'save'},
+		    waitMsg:'Saving Data...'
+		    });
+    };
+
     
     var panel = new Ext.Panel({
 	    title: adapterName,
@@ -170,9 +152,14 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
 		    iconCls:'add',
 		    text: 'Add mux(es)',
 		    handler: addmux
-		},{
+		}, '-', {
+		    iconCls:'option',
 		    text: 'Probe services',
 		    handler: probeservices
+		}, '-', {
+		    iconCls:'save',
+		    text: 'Save configuration',
+		    handler: saveconfig
 		}]
 	});
     return panel;

@@ -203,11 +203,13 @@ tvheadend.channeldetails = function(chid, chname) {
 	    title: chname,
 	    border:false,
 	    tbar: [{
-		    text: "Save changes",
-		    handler: saveChanges
-		},{
+		    iconCls:'remove',
 		    text: "Delete channel",
 		    handler: deleteChannel
+		}, '-', {
+		    iconCls:'save',
+		    text: "Save configuration",
+		    handler: saveChanges
 		}],
 	    defaults: {
 		border:false,

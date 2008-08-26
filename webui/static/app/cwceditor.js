@@ -161,12 +161,15 @@ tvheadend.cwceditor = function() {
 	    cm: cm,
 	    selModel: new Ext.grid.RowSelectionModel({singleSelect:false}),
 	    tbar: [{
+		    iconCls:'add',
 		    text: 'Add entry',
 		    handler: addRecord
 		}, '-', {
+		    iconCls:'remove',
 		    text: 'Delete selected',
 		    handler: delSelected
 		}, '-', {
+		    iconCls:'save',
 		    text: "Save changes",
 		    handler: saveChanges
 		}

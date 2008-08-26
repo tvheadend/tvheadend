@@ -56,10 +56,18 @@
     border-left:1px solid #eee;
     border-right:1px solid #d0d0d0;
 }
-/*
-.task {
-    background-image:url(../shared/icons/fam/cog.png) !important;
+
+
+.add {
+    background-image:url(../icons/add.gif) !important;
 }
-.task-folder {
-    background-image:url(../shared/icons/fam/folder_go.png) !important;
-}*/
+.option {
+    background-image:url(../icons/plugin.gif) !important;
+}
+.remove {
+    background-image:url(../icons/delete.gif) !important;
+}
+.save {
+    background-image:url(../icons/save.gif) !important;
+}
+ 
