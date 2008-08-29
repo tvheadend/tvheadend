@@ -301,7 +301,7 @@ dvb_fe_monitor(void *aux)
     } else if(v == 1) {
       status = TDMI_FE_BURSTY_FEC;
     } else {
-      status = TDMI_FE_CONTANT_FEC;
+      status = TDMI_FE_CONSTANT_FEC;
     }
   }
 

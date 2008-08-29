@@ -56,7 +56,7 @@ static struct strtab muxfestatustab[] = {
   { "No signal",    TDMI_FE_NO_SIGNAL },
   { "Faint signal", TDMI_FE_FAINT_SIGNAL },
   { "Bad signal",   TDMI_FE_BAD_SIGNAL },
-  { "Constant FEC", TDMI_FE_CONTANT_FEC },
+  { "Constant FEC", TDMI_FE_CONSTANT_FEC },
   { "Bursty FEC",   TDMI_FE_BURSTY_FEC },
   { "OK",           TDMI_FE_OK },
 };

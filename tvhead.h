@@ -176,7 +176,7 @@ typedef struct th_dvb_mux_instance {
     TDMI_FE_NO_SIGNAL,
     TDMI_FE_FAINT_SIGNAL,
     TDMI_FE_BAD_SIGNAL,
-    TDMI_FE_CONTANT_FEC,
+    TDMI_FE_CONSTANT_FEC,
     TDMI_FE_BURSTY_FEC,
     TDMI_FE_OK,
   } tdmi_fe_status;
