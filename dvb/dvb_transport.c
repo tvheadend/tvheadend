@@ -77,7 +77,7 @@ dvb_transport_start(th_transport_t *t, unsigned int weight, int status,
     /* Nope .. */
 
     if(tdmi->tdmi_fe_status > TDMI_FE_UNKNOWN &&
-       tdmi->tdmi_fe_status < TDMI_FE_CONTANT_FEC)
+       tdmi->tdmi_fe_status < TDMI_FE_BURSTY_FEC)
       return 1;  /* Not good enough signal here, can't use it */
 
     w = transport_compute_weight(&tdmi->tdmi_adapter->tda_transports);
