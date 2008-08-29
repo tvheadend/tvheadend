@@ -245,6 +245,7 @@ dvb_fe_monitor(void *aux)
   fe_status_t fe_status;
   int status, v, savemux = 0, vv, i, fec;
   th_dvb_mux_instance_t *tdmi = tda->tda_mux_current;
+  char buf[50];
 
   assert(tdmi != NULL);
 
@@ -307,14 +308,13 @@ dvb_fe_monitor(void *aux)
   if(status != tdmi->tdmi_fe_status) {
     tdmi->tdmi_fe_status = status;
     dvb_notify_mux_status(tdmi);
+
+    dvb_mux_nicename(buf, sizeof(buf), tdmi);
+
+    tvhlog(LOG_NOTICE, "dvb", "\"%s\" on adapter \"%s\", status changed to %s",
+	   buf, tda->tda_displayname, dvb_mux_status(tdmi));
     savemux = 1;
   }
-
-  
-
-
-
-
 
   if(savemux)
     dvb_mux_save(tdmi);
