@@ -385,6 +385,6 @@ tvhlog(int severity, const char *subsys, const char *fmt, ...)
   m = htsmsg_create();
   htsmsg_add_str(m, "notificationClass", "logmessage");
   htsmsg_add_str(m, "logtxt", buf2);
-  //  comet_mailbox_add_message(m);
+  comet_mailbox_add_message(m);
   htsmsg_destroy(m);
 }
