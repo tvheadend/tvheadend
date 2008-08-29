@@ -35,6 +35,9 @@
 #include "webui/webui.h"
 #include "access.h"
 
+static pthread_mutex_t comet_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t comet_cond = PTHREAD_COND_INITIALIZER;
+
 #define MAILBOX_UNUSED_TIMEOUT      20
 #define MAILBOX_EMPTY_REPLY_TIMEOUT 10
 
@@ -47,13 +50,9 @@ static LIST_HEAD(, comet_mailbox) mailboxes;
 int mailbox_tally;
 
 typedef struct comet_mailbox {
-
   char *cmb_boxid; /* an md5hash */
-  dtimer_t cmb_timer;
-  http_reply_t *cmb_hr; /* Pending request */
-
   htsmsg_t *cmb_messages; /* A vector */
-
+  time_t cmb_last_used;
   LIST_ENTRY(comet_mailbox) cmb_link;
 
 } comet_mailbox_t;
@@ -72,36 +71,29 @@ cmb_destroy(comet_mailbox_t *cmb)
 
   LIST_REMOVE(cmb, cmb_link);
 
-  dtimer_disarm(&cmb->cmb_timer);
-
   free(cmb->cmb_boxid);
   free(cmb);
 }
 
 
-
 /**
  *
  */
-static void
-comet_mailbox_unused(void *opaque, int64_t now)
+void
+comet_flush(void)
 {
-  comet_mailbox_t *cmb = opaque;
-  assert(cmb->cmb_hr == NULL);
-  cmb_destroy(cmb);
-}
+  comet_mailbox_t *cmb, *next;
 
-/**
- *
- */
-static void
-comet_mailbox_connection_lost(http_reply_t *hr, void *opaque)
-{
-  comet_mailbox_t *cmb = opaque;
-  assert(hr == cmb->cmb_hr);
-  cmb_destroy(cmb);
-}
+  pthread_mutex_lock(&comet_mutex);
 
+  for(cmb = LIST_FIRST(&mailboxes); cmb != NULL; cmb = next) {
+    next = LIST_NEXT(cmb, cmb_link);
+
+    if(cmb->cmb_last_used && cmb->cmb_last_used + 60 < dispatch_clock)
+      cmb_destroy(cmb);
+  }
+  pthread_mutex_unlock(&comet_mutex);
+}
 
 
 /**
@@ -134,66 +126,29 @@ comet_mailbox_create(void)
   id[32] = 0;
 
   cmb->cmb_boxid = strdup(id);
-
+  time(&cmb->cmb_last_used);
   mailbox_tally++;
 
   LIST_INSERT_HEAD(&mailboxes, cmb, cmb_link);
-
-  dtimer_arm(&cmb->cmb_timer, comet_mailbox_unused, cmb,
-	     MAILBOX_UNUSED_TIMEOUT);
   return cmb;
-}
-
-/**
- *
- */
-static void
-comet_mailbox_reply(comet_mailbox_t *cmb, http_reply_t *hr)
-{
-  htsmsg_t *m = htsmsg_create();
-
-  htsmsg_add_str(m, "boxid", cmb->cmb_boxid);
-
-  htsmsg_add_msg(m, "messages", cmb->cmb_messages ?: htsmsg_create_array());
-  cmb->cmb_messages = NULL;
-
-  htsmsg_json_serialize(m, &hr->hr_q, 0);
-
-  htsmsg_destroy(m);
-
-  http_output(hr->hr_connection, hr, "text/x-json; charset=UTF-8", NULL, 0);
-  cmb->cmb_hr = NULL;
-
-  /* Arm a timer in case the browser won't call back */
-  dtimer_arm(&cmb->cmb_timer, comet_mailbox_unused, cmb,
-	     MAILBOX_UNUSED_TIMEOUT);
-}
-
-/**
- *
- */
-static void
-comet_mailbox_empty_reply(void *opaque, int64_t now)
-{
-  comet_mailbox_t *cmb = opaque;
-  http_reply_t *hr = cmb->cmb_hr;
-
-  comet_mailbox_reply(cmb, hr);
-  http_continue(hr->hr_connection);
 }
 
 
 /**
  * Poll callback
- *
- * Prepare the mailbox for reply
  */
 static int
-comet_mailbox_poll(http_connection_t *hc, http_reply_t *hr, 
-		   const char *remain, void *opaque)
+comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
 {
   comet_mailbox_t *cmb = NULL; 
   const char *cometid = http_arg_get(&hc->hc_req_args, "boxid");
+  time_t reqtime;
+  struct timespec ts;
+  htsmsg_t *m;
+
+  usleep(100000); /* Always sleep 0.1 sec to avoid comet storms */
+
+  pthread_mutex_lock(&comet_mutex);
 
   if(cometid != NULL)
     LIST_FOREACH(cmb, &mailboxes, cmb_link)
@@ -203,56 +158,31 @@ comet_mailbox_poll(http_connection_t *hc, http_reply_t *hr,
   if(cmb == NULL)
     cmb = comet_mailbox_create();
 
-  if(cmb->cmb_hr != NULL) {
-    mbdebug("mailbox already processing\n");
-    return 409;
-  }
+  time(&reqtime);
 
-  if(cmb->cmb_messages != NULL) {
-    /* Pending letters, direct reply */
-    mbdebug("direct reply\n");
-    comet_mailbox_reply(cmb, hr);
-    return 0;
-  }
+  ts.tv_sec = reqtime + 10;
+  ts.tv_nsec = 0;
 
-  mbdebug("nothing in queue, waiting\n");
+  cmb->cmb_last_used = 0; /* Make sure we're not flushed out */
 
-  cmb->cmb_hr = hr;
+  if(cmb->cmb_messages == NULL)
+    pthread_cond_timedwait(&comet_cond, &comet_mutex, &ts);
 
-  hr->hr_opaque = cmb;
-  hr->hr_destroy = comet_mailbox_connection_lost;
+  m = htsmsg_create();
+  htsmsg_add_str(m, "boxid", cmb->cmb_boxid);
+  htsmsg_add_msg(m, "messages", cmb->cmb_messages ?: htsmsg_create_array());
+  cmb->cmb_messages = NULL;
+  
+  cmb->cmb_last_used = dispatch_clock;
 
-  dtimer_arm(&cmb->cmb_timer, comet_mailbox_empty_reply, cmb,
-	     MAILBOX_EMPTY_REPLY_TIMEOUT);
+  pthread_mutex_unlock(&comet_mutex);
+
+  htsmsg_json_serialize(m, &hc->hc_reply, 0);
+  htsmsg_destroy(m);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
 
-
-/**
- *
- */
-#if 0
-static dtimer_t comet_clock;
-
-static void
-comet_ticktack(void *opaque, int64_t now)
-{
-  char buf[64];
-  htsmsg_t *x;
-
-  snprintf(buf, sizeof(buf), "The clock is now %lluµs past 1970",
-	   now);
-
-  x = htsmsg_create();
-  htsmsg_add_str(x, "type", "logmessage");
-  htsmsg_add_str(x, "logtxt", buf);
-  
-  comet_mailbox_add_message(x);
-
-  htsmsg_destroy(x);
-  dtimer_arm(&comet_clock, comet_ticktack, NULL, 1);
-}
-#endif
 
 /**
  *
@@ -261,24 +191,8 @@ void
 comet_init(void)
 {
   http_path_add("/comet",  NULL, comet_mailbox_poll, ACCESS_WEB_INTERFACE);
-
-  //  dtimer_arm(&comet_clock, comet_ticktack, NULL, 1);
 }
 
-
-/**
- * Delayed delivery of mailbox replies
- */
-static void
-comet_mailbox_deliver(void *opaque, int64_t now)
-{
-  comet_mailbox_t *cmb = opaque;
-  http_connection_t *hc;
-
-  hc = cmb->cmb_hr->hr_connection;
-  comet_mailbox_reply(cmb, cmb->cmb_hr);
-  http_continue(hc);
-}
 
 /**
  *
@@ -288,14 +202,15 @@ comet_mailbox_add_message(htsmsg_t *m)
 {
   comet_mailbox_t *cmb;
 
+  pthread_mutex_lock(&comet_mutex);
+
   LIST_FOREACH(cmb, &mailboxes, cmb_link) {
 
     if(cmb->cmb_messages == NULL)
       cmb->cmb_messages = htsmsg_create_array();
     htsmsg_add_msg(cmb->cmb_messages, NULL, htsmsg_copy(m));
-
-    if(cmb->cmb_hr != NULL)
-      dtimer_arm_hires(&cmb->cmb_timer, comet_mailbox_deliver, cmb, 
-		       getclock_hires() + 100000);
   }
+
+  pthread_cond_broadcast(&comet_cond);
+  pthread_mutex_unlock(&comet_mutex);
 }

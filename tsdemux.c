@@ -35,8 +35,6 @@
 #include <linux/dvb/frontend.h>
 #include <linux/dvb/dmx.h>
 
-#include <libhts/htscfg.h>
-
 #include "tvhead.h"
 #include "dispatch.h"
 #include "teletext.h"
@@ -130,7 +128,7 @@ ts_recv_packet0(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
     break;
 
   case HTSTV_TELETEXT:
-    teletext_input(t, tsb);
+    //    teletext_input(t, tsb);
     break;
 
   default:

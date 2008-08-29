@@ -66,7 +66,7 @@ typedef struct pvr_rec {
   th_subscription_t *pvrr_s;
 
   pthread_t pvrr_ptid;
-  dtimer_t pvrr_timer;
+		      //dtimer_t pvrr_timer;
 
   th_ffmuxer_t pvrr_tffm;
 

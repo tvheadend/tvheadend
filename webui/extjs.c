@@ -75,10 +75,9 @@ extjs_exec(htsbuf_queue_t *hq, const char *fmt, ...)
  * PVR info, deliver info about the given PVR entry
  */
 static int
-extjs_root(http_connection_t *hc, http_reply_t *hr, 
-	   const char *remain, void *opaque)
+extjs_root(http_connection_t *hc, const char *remain, void *opaque)
 {
-  htsbuf_queue_t *hq = &hr->hr_q;
+  htsbuf_queue_t *hq = &hc->hc_reply;
 
 #define EXTJSPATH "static/extjs"
 
@@ -141,7 +140,7 @@ extjs_root(http_connection_t *hc, http_reply_t *hr,
 		 "<div id=\"systemlog\"></div>\n"
 		 "</body></html>\n",
 		 htsversion);
-  http_output_html(hc, hr);
+  http_output_html(hc);
   return 0;
 }
 
@@ -150,10 +149,9 @@ extjs_root(http_connection_t *hc, http_reply_t *hr,
  *
  */
 static int
-extjs_tablemgr(http_connection_t *hc, http_reply_t *hr, 
-	       const char *remain, void *opaque)
+extjs_tablemgr(http_connection_t *hc, const char *remain, void *opaque)
 {
-  htsbuf_queue_t *hq = &hr->hr_q;
+  htsbuf_queue_t *hq = &hc->hc_reply;
   dtable_t *dt;
   htsmsg_t *out = NULL, *in, *array;
 
@@ -166,6 +164,8 @@ extjs_tablemgr(http_connection_t *hc, http_reply_t *hr,
   
   in = entries != NULL ? htsmsg_json_deserialize(entries) : NULL;
 
+  pthread_mutex_lock(&global_lock);
+
   if(!strcmp(op, "create")) {
     out = dtable_record_create(dt);
 
@@ -177,19 +177,23 @@ extjs_tablemgr(http_connection_t *hc, http_reply_t *hr,
 
   } else if(!strcmp(op, "update")) {
     if(in == NULL)
-      return HTTP_STATUS_BAD_REQUEST;
+      goto bad;
 
     dtable_record_update_by_array(dt, in);
 
   } else if(!strcmp(op, "delete")) {
     if(in == NULL)
-      return HTTP_STATUS_BAD_REQUEST;
+      goto bad;
 
     dtable_record_delete_by_array(dt, in);
 
   } else {
+  bad:
+    pthread_mutex_unlock(&global_lock);
     return HTTP_STATUS_BAD_REQUEST;
   }
+
+  pthread_mutex_unlock(&global_lock);
 
   if(in != NULL)
     htsmsg_destroy(in);
@@ -198,7 +202,7 @@ extjs_tablemgr(http_connection_t *hc, http_reply_t *hr,
     htsmsg_json_serialize(out, hq, 0);
     htsmsg_destroy(out);
   }
-  http_output(hc, hr, "text/x-json; charset=UTF-8", NULL, 0);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
 
@@ -207,16 +211,17 @@ extjs_tablemgr(http_connection_t *hc, http_reply_t *hr,
  *
  */
 static int
-extjs_chlist(http_connection_t *hc, http_reply_t *hr, 
-	     const char *remain, void *opaque)
+extjs_chlist(http_connection_t *hc, const char *remain, void *opaque)
 {
-  htsbuf_queue_t *hq = &hr->hr_q;
+  htsbuf_queue_t *hq = &hc->hc_reply;
   htsmsg_t *out, *array, *c;
   channel_t *ch;
 
   out = htsmsg_create();
 
   array = htsmsg_create_array();
+
+  pthread_mutex_lock(&global_lock);
 
   RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
     c = htsmsg_create();
@@ -225,11 +230,13 @@ extjs_chlist(http_connection_t *hc, http_reply_t *hr,
     htsmsg_add_msg(array, NULL, c);
   }
 
+  pthread_mutex_unlock(&global_lock);
+
   htsmsg_add_msg(out, "entries", array);
 
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
-  http_output(hc, hr, "text/x-json; charset=UTF-8", NULL, 0);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
 
@@ -261,10 +268,9 @@ extjs_dvbtree_node(htsmsg_t *array, int leaf, const char *id, const char *name,
  *
  */
 static int
-extjs_dvbtree(http_connection_t *hc, http_reply_t *hr, 
-	      const char *remain, void *opaque)
+extjs_dvbtree(http_connection_t *hc, const char *remain, void *opaque)
 {
-  htsbuf_queue_t *hq = &hr->hr_q;
+  htsbuf_queue_t *hq = &hc->hc_reply;
   const char *s = http_arg_get(&hc->hc_req_args, "node");
   htsmsg_t *out = NULL;
   char buf[200];
@@ -276,6 +282,7 @@ extjs_dvbtree(http_connection_t *hc, http_reply_t *hr,
     return HTTP_STATUS_BAD_REQUEST;
 
   out = htsmsg_create_array();
+  pthread_mutex_lock(&global_lock);
 
   if(!strcmp(s, "root")) {
     /**
@@ -299,7 +306,7 @@ extjs_dvbtree(http_connection_t *hc, http_reply_t *hr,
      
       extjs_dvbtree_node(out, 0,
 			 tdmi->tdmi_identifier, buf, "DVB Mux",
-			 tdmi->tdmi_last_status,
+			 dvb_mux_status(tdmi),
 			 tdmi->tdmi_quality, "mux");
     }
   } else if((tdmi = dvb_mux_find_by_identifier(s)) != NULL) {
@@ -317,9 +324,10 @@ extjs_dvbtree(http_connection_t *hc, http_reply_t *hr,
     }
   }
  
+  pthread_mutex_unlock(&global_lock);
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
-  http_output(hc, hr, "text/x-json; charset=UTF-8", NULL, 0);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
 
@@ -328,10 +336,9 @@ extjs_dvbtree(http_connection_t *hc, http_reply_t *hr,
  *
  */
 static int
-extjs_dvbnetworks(http_connection_t *hc, http_reply_t *hr, 
-		  const char *remain, void *opaque)
+extjs_dvbnetworks(http_connection_t *hc, const char *remain, void *opaque)
 {
-  htsbuf_queue_t *hq = &hr->hr_q;
+  htsbuf_queue_t *hq = &hc->hc_reply;
   const char *s = http_arg_get(&hc->hc_req_args, "node");
   const char *a = http_arg_get(&hc->hc_req_args, "adapter");
   th_dvb_adapter_t *tda;
@@ -340,14 +347,20 @@ extjs_dvbnetworks(http_connection_t *hc, http_reply_t *hr,
   if(s == NULL || a == NULL)
     return HTTP_STATUS_BAD_REQUEST;
   
-  if((tda = dvb_adapter_find_by_identifier(a)) == NULL)
+  pthread_mutex_lock(&global_lock);
+
+  if((tda = dvb_adapter_find_by_identifier(a)) == NULL) {
+    pthread_mutex_unlock(&global_lock);
     return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  pthread_mutex_unlock(&global_lock);
 
   out = dvb_mux_preconf_get_node(tda->tda_type, s);
 
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
-  http_output(hc, hr, "text/x-json; charset=UTF-8", NULL, 0);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
 
@@ -372,20 +385,21 @@ json_single_record(htsmsg_t *rec, const char *root)
  *
  */
 static int
-extjs_dvbadapter(http_connection_t *hc, http_reply_t *hr, 
-		 const char *remain, void *opaque)
+extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 {
-  htsbuf_queue_t *hq = &hr->hr_q;
+  htsbuf_queue_t *hq = &hc->hc_reply;
   const char *s  = http_arg_get(&hc->hc_req_args, "adapterId");
   const char *op = http_arg_get(&hc->hc_req_args, "op");
   th_dvb_adapter_t *tda = s ? dvb_adapter_find_by_identifier(s) : NULL;
-  th_dvb_mux_instance_t *tdmi;
-  th_transport_t *t;
+  //th_dvb_mux_instance_t *tdmi;
+  //  th_transport_t *t;
 
   htsmsg_t *r, *out;
 
   if(tda == NULL)
     return HTTP_STATUS_BAD_REQUEST;
+
+  pthread_mutex_lock(&global_lock);
 
   if(!strcmp(op, "load")) {
     r = htsmsg_create();
@@ -418,24 +432,27 @@ extjs_dvbadapter(http_connection_t *hc, http_reply_t *hr,
 
     tvhlog(LOG_NOTICE, "web interface",
 	   "Service probe started on \"%s\"", tda->tda_displayname);
-
+#if 0
     RB_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
       LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
 	serviceprobe_add(t);
       }
     }
+#endif
 
     out = htsmsg_create();
     htsmsg_add_u32(out, "success", 1);
 
   } else {
+    pthread_mutex_unlock(&global_lock);
     return HTTP_STATUS_BAD_REQUEST;
   }
+  pthread_mutex_unlock(&global_lock);
 
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
 
-  http_output(hc, hr, "text/x-json; charset=UTF-8", NULL, 0);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
 
@@ -537,20 +554,24 @@ build_transport_msg(th_transport_t *t)
  *
  */
 static int
-extjs_channel(http_connection_t *hc, http_reply_t *hr, 
-		 const char *remain, void *opaque)
+extjs_channel(http_connection_t *hc, const char *remain, void *opaque)
 {
-  htsbuf_queue_t *hq = &hr->hr_q;
+  htsbuf_queue_t *hq = &hc->hc_reply;
   const char *s  = http_arg_get(&hc->hc_req_args, "chid");
   const char *op = http_arg_get(&hc->hc_req_args, "op");
-  channel_t *ch = s ? channel_find_by_identifier(atoi(s)) : NULL;
+  channel_t *ch;
   channel_t *ch2;
   th_transport_t *t;
   int reloadchlist = 0;
   htsmsg_t *out, *array, *r;
 
-  if(ch == NULL)
+  pthread_mutex_lock(&global_lock);
+
+  ch = s ? channel_find_by_identifier(atoi(s)) : NULL;
+  if(ch == NULL) {
+    pthread_mutex_unlock(&global_lock);
     return HTTP_STATUS_BAD_REQUEST;
+  }
 
   if(!strcmp(op, "load")) {
     r = htsmsg_create();
@@ -611,13 +632,17 @@ extjs_channel(http_connection_t *hc, http_reply_t *hr,
     htsmsg_add_u32(out, "success", 1);
  
   } else {
+    pthread_mutex_unlock(&global_lock);
     return HTTP_STATUS_BAD_REQUEST;
   }
+
  response:
+  pthread_mutex_unlock(&global_lock);
+
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
 
-  http_output(hc, hr, "text/x-json; charset=UTF-8", NULL, 0);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
 

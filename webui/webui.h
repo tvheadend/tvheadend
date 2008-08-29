@@ -21,15 +21,21 @@
 
 #include <libhts/htsmsg.h>
 
-void webui_start(void);
+void webui_init(void);
 
 void simpleui_start(void);
 
 void extjs_start(void);
 
+
+/**
+ *
+ */
 void comet_init(void);
 
 void comet_mailbox_add_message(htsmsg_t *m);
+
+void comet_flush(void);
 
 
 #endif /* WEBUI_H_ */

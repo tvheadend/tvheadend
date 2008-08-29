@@ -57,8 +57,8 @@ static int store_tally;
 
 
 static void storage_wipe(void);
-static void storage_mem_enq(th_pkt_t *pkt);
-static void storage_disk_enq(th_pkt_t *pkt);
+static void storage_mem_enq(th_stream_t *st, th_pkt_t *pkt);
+static void storage_disk_enq(th_stream_t *st, th_pkt_t *pkt);
 
 static void storage_deref(th_storage_t *s);
 
@@ -68,7 +68,7 @@ static void storage_deref(th_storage_t *s);
 void
 pkt_init(void)
 {
-  store_path = config_get_str("trickplay-path", "/storage/streambuffer");
+  store_path = NULL;
   
   if(store_path != NULL)
     storage_wipe();
@@ -148,11 +148,11 @@ pkt_alloc(void *data, size_t datalen, int64_t pts, int64_t dts)
  *
  */
 th_pkt_t *
-pkt_copy(th_pkt_t *orig)
+pkt_copy(th_stream_t *st, th_pkt_t *orig)
 {
   th_pkt_t *pkt;
 
-  pkt_load(orig);
+  pkt_load(st, orig);
   if(orig->pkt_payload == NULL)
     return NULL;
 
@@ -174,10 +174,8 @@ pkt_copy(th_pkt_t *orig)
  *
  */
 void
-pkt_store(th_pkt_t *pkt)
+pkt_store(th_stream_t *st, th_pkt_t *pkt)
 {
-  th_stream_t *st = pkt->pkt_stream;
-
   if(pkt->pkt_on_stream_queue)
     return;
 
@@ -187,8 +185,8 @@ pkt_store(th_pkt_t *pkt)
 
   /* Persistent buffer management */
   
-  storage_mem_enq(pkt);
-  storage_disk_enq(pkt);
+  storage_mem_enq(st, pkt);
+  storage_disk_enq(st, pkt);
 
   if(pkt->pkt_storage)
     pwrite(pkt->pkt_storage->ts_fd, pkt->pkt_payload, pkt->pkt_payloadlen,
@@ -200,10 +198,8 @@ pkt_store(th_pkt_t *pkt)
  * Force flush of a packet
  */
 void
-pkt_unstore(th_pkt_t *pkt)
+pkt_unstore(th_stream_t *st, th_pkt_t *pkt)
 {
-  th_stream_t *st = pkt->pkt_stream;
-
   assert(pkt->pkt_on_stream_queue == 1);
   TAILQ_REMOVE(&st->st_pktq, pkt, pkt_queue_link);
   pkt->pkt_on_stream_queue = 0;
@@ -227,14 +223,14 @@ pkt_unstore(th_pkt_t *pkt)
  *
  */
 int
-pkt_load(th_pkt_t *pkt)
+pkt_load(th_stream_t *st, th_pkt_t *pkt)
 {
   if(pkt->pkt_payload == NULL && pkt->pkt_storage != NULL) {
     pkt->pkt_payload = malloc(pkt->pkt_payloadlen + 
 			      FF_INPUT_BUFFER_PADDING_SIZE);
     pread(pkt->pkt_storage->ts_fd, pkt->pkt_payload, pkt->pkt_payloadlen,
 	  pkt->pkt_storage_offset);
-    storage_mem_enq(pkt);
+    storage_mem_enq(st, pkt);
   }
   return pkt->pkt_payload == NULL ? -1 : 0;
 }
@@ -267,7 +263,7 @@ storage_deref(th_storage_t *s)
  *
  */
 static void
-storage_mem_enq(th_pkt_t *pkt)
+storage_mem_enq(th_stream_t *st, th_pkt_t *pkt)
 {
   TAILQ_INSERT_TAIL(&store_mem_queue, pkt, pkt_mem_link);
   store_mem_size += pkt->pkt_payloadlen;
@@ -282,7 +278,7 @@ storage_mem_enq(th_pkt_t *pkt)
     pkt->pkt_payload = NULL;
 
     if(pkt->pkt_storage == NULL)
-      pkt_unstore(pkt);
+      pkt_unstore(st, pkt);
   }
 }
 
@@ -293,7 +289,7 @@ storage_mem_enq(th_pkt_t *pkt)
  *
  */
 static void
-storage_disk_enq(th_pkt_t *pkt)
+storage_disk_enq(th_stream_t *st, th_pkt_t *pkt)
 {
   th_storage_t *s;
   char fbuf[500];
@@ -332,7 +328,7 @@ storage_disk_enq(th_pkt_t *pkt)
     pkt = TAILQ_FIRST(&store_disk_queue);
     if(pkt->pkt_refcount > 1)
       printf("UNSTORE of reference packet %p\n", pkt);
-    pkt_unstore(pkt);
+    pkt_unstore(st, pkt);
   }
 }
 

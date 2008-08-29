@@ -48,6 +48,116 @@
 #include "notify.h"
 
 
+/*
+ * Switch the adapter (which is implicitly tied to our transport)
+ * to receive the given transport.
+ *
+ * But we only do this if 'weight' is higher than all of the current
+ * transports that is subscribing to the adapter
+ */
+static int
+dvb_transport_start(th_transport_t *t, unsigned int weight, int status, 
+		    int force_start)
+{
+  struct dmx_pes_filter_params dmx_param;
+  th_stream_t *st;
+  int w, fd, pid;
+  th_dvb_adapter_t *tda = t->tht_dvb_mux_instance->tdmi_adapter;
+  th_dvb_mux_instance_t *tdmi = tda->tda_mux_current;
+
+  lock_assert(&global_lock);
+
+  if(tda->tda_rootpath == NULL)
+    return 1; /* hardware not present */
+
+  /* Check if adapter is idle, or already tuned */
+
+  if(tdmi != NULL && tdmi != t->tht_dvb_mux_instance && !force_start) {
+
+    /* Nope .. */
+
+    if(tdmi->tdmi_fe_status > TDMI_FE_UNKNOWN &&
+       tdmi->tdmi_fe_status < TDMI_FE_CONTANT_FEC)
+      return 1;  /* Not good enough signal here, can't use it */
+
+    w = transport_compute_weight(&tdmi->tdmi_adapter->tda_transports);
+    if(w > weight)
+      return 1; /* We are outranked by weight, cant use it */
+
+    dvb_adapter_clean(tda);
+  }
+  tdmi = t->tht_dvb_mux_instance;
+
+  LIST_FOREACH(st, &t->tht_streams, st_link) {
+    
+    fd = open(tda->tda_demux_path, O_RDWR);
+    
+    pid = st->st_pid;
+    st->st_cc_valid = 0;
+
+    if(fd == -1) {
+      st->st_demuxer_fd = -1;
+      tvhlog(LOG_ERR, "dvb",
+	     "\"%s\" unable to open demuxer \"%s\" for pid %d -- %s",
+	     t->tht_name, tda->tda_demux_path, pid, strerror(errno));
+      continue;
+    }
+
+    memset(&dmx_param, 0, sizeof(dmx_param));
+    dmx_param.pid = pid;
+    dmx_param.input = DMX_IN_FRONTEND;
+    dmx_param.output = DMX_OUT_TS_TAP;
+    dmx_param.pes_type = DMX_PES_OTHER;
+    dmx_param.flags = DMX_IMMEDIATE_START;
+
+    if(ioctl(fd, DMX_SET_PES_FILTER, &dmx_param)) {
+      tvhlog(LOG_ERR, "dvb",
+	     "\"%s\" unable to configure demuxer \"%s\" for pid %d -- %s",
+	     t->tht_name, tda->tda_demux_path, pid, strerror(errno));
+      close(fd);
+      fd = -1;
+    }
+
+    st->st_demuxer_fd = fd;
+  }
+
+  pthread_mutex_lock(&tda->tda_delivery_mutex);
+
+  LIST_INSERT_HEAD(&tda->tda_transports, t, tht_active_link);
+  t->tht_runstatus = status;
+  
+
+  dvb_fe_tune(tdmi);
+
+  pthread_mutex_unlock(&tda->tda_delivery_mutex);
+
+  return 0;
+}
+
+
+/**
+ *
+ */
+static void
+dvb_transport_stop(th_transport_t *t)
+{
+  th_dvb_adapter_t *tda = t->tht_dvb_mux_instance->tdmi_adapter;
+  th_stream_t *st;
+
+  lock_assert(&global_lock);
+
+  pthread_mutex_lock(&tda->tda_delivery_mutex);
+  LIST_REMOVE(t, tht_active_link);
+  pthread_mutex_unlock(&tda->tda_delivery_mutex);
+
+  LIST_FOREACH(st, &t->tht_streams, st_link) {
+    close(st->st_demuxer_fd);
+    st->st_demuxer_fd = -1;
+  }
+  t->tht_runstatus = TRANSPORT_IDLE;
+}
+
+
 
 /**
  * Load config for the given mux
@@ -61,6 +171,8 @@ dvb_transport_load(th_dvb_mux_instance_t *tdmi)
   const char *s;
   unsigned int u32;
   th_transport_t *t;
+
+  lock_assert(&global_lock);
 
   if((l = hts_settings_load("dvbtransports/%s", tdmi->tdmi_identifier)) == NULL)
     return;
@@ -111,6 +223,7 @@ dvb_transport_save(th_transport_t *t)
 {
   htsmsg_t *m = htsmsg_create();
 
+  lock_assert(&global_lock);
 
   htsmsg_add_u32(m, "service_id", t->tht_dvb_service_id);
   htsmsg_add_u32(m, "pmt", t->tht_pmt);
@@ -148,6 +261,9 @@ static int
 dvb_transport_quality(th_transport_t *t)
 {
   th_dvb_mux_instance_t *tdmi = t->tht_dvb_mux_instance;
+
+  lock_assert(&global_lock);
+
   return tdmi->tdmi_quality;
 }
 
@@ -160,6 +276,8 @@ dvb_transport_sourcename(th_transport_t *t)
 {
   th_dvb_mux_instance_t *tdmi = t->tht_dvb_mux_instance;
 
+  lock_assert(&global_lock);
+
   return tdmi->tdmi_adapter->tda_displayname;
 }
 
@@ -171,6 +289,8 @@ static const char *
 dvb_transport_networkname(th_transport_t *t)
 {
   th_dvb_mux_instance_t *tdmi = t->tht_dvb_mux_instance;
+
+  lock_assert(&global_lock);
 
   return tdmi->tdmi_network;
 }
@@ -189,6 +309,8 @@ dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
 {
   th_transport_t *t;
   char tmp[200];
+
+  lock_assert(&global_lock);
 
   if(created != NULL)
     *created = 0;
@@ -211,8 +333,8 @@ dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   t->tht_dvb_service_id = sid;
   t->tht_pmt            = pmt_pid;
 
-  t->tht_start_feed = dvb_start_feed;
-  t->tht_stop_feed  = dvb_stop_feed;
+  t->tht_start_feed = dvb_transport_start;
+  t->tht_stop_feed  = dvb_transport_stop;
   t->tht_config_change = dvb_transport_save;
   t->tht_sourcename = dvb_transport_sourcename;
   t->tht_networkname = dvb_transport_networkname;

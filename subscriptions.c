@@ -31,30 +31,30 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <linux/dvb/frontend.h>
-#include <linux/dvb/dmx.h>
-
-#include <libhts/htscfg.h>
-
 #include "tvhead.h"
 #include "dispatch.h"
-#include "teletext.h"
 #include "transports.h"
 #include "subscriptions.h"
 
-#include "v4l.h"
-#include "iptv_input.h"
-#include "psi.h"
-
 struct th_subscription_list subscriptions;
-static dtimer_t auto_reschedule_timer;
 
 
+static int
+subscription_sort(th_subscription_t *a, th_subscription_t *b)
+{
+  return b->ths_weight - a->ths_weight;
+}
+
+/**
+ *
+ */
 void
 subscription_reschedule(void)
 {
   th_subscription_t *s;
   th_transport_t *t;
+
+  lock_assert(&global_lock);
 
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
     if(s->ths_transport != NULL)
@@ -74,37 +74,23 @@ subscription_reschedule(void)
   }
 }
 
-
-static void
-auto_reschedule(void *aux, int64_t now)
-{
-  dtimer_arm(&auto_reschedule_timer, auto_reschedule, NULL, 10);
-  subscription_reschedule();
-}
-
-void
-subscription_stop(th_subscription_t *s)
-{
-  s->ths_callback(s, TRANSPORT_UNAVAILABLE, s->ths_opaque);
-  LIST_REMOVE(s, ths_transport_link);
-  s->ths_transport = NULL;
-}
-
-
-
+/**
+ *
+ */
 void 
 subscription_unsubscribe(th_subscription_t *s)
 {
   th_transport_t *t = s->ths_transport;
+
+  lock_assert(&global_lock);
+
   LIST_REMOVE(s, ths_global_link);
 
   if(s->ths_channel != NULL)
     LIST_REMOVE(s, ths_channel_link);
 
-  if(t != NULL) {
-    subscription_stop(s);
-    transport_stop(t, 0);
-  }
+  if(t != NULL)
+    transport_remove_subscriber(t, s);
 
   free(s->ths_title);
   free(s);
@@ -113,16 +99,9 @@ subscription_unsubscribe(th_subscription_t *s)
 }
 
 
-
-
-
-static int
-subscription_sort(th_subscription_t *a, th_subscription_t *b)
-{
-  return b->ths_weight - a->ths_weight;
-}
-
-
+/**
+ *
+ */
 th_subscription_t *
 subscription_create(channel_t *ch, unsigned int weight, const char *name,
 		    subscription_callback_t *cb, void *opaque, uint32_t u32)
@@ -157,23 +136,12 @@ subscription_create(channel_t *ch, unsigned int weight, const char *name,
 }
 
 
-void
-subscription_set_weight(th_subscription_t *s, unsigned int weight)
-{
-  if(s->ths_weight == weight)
-    return;
-
-  LIST_REMOVE(s, ths_global_link);
-  s->ths_weight = weight;
-  LIST_INSERT_SORTED(&subscriptions, s, ths_global_link, subscription_sort);
-
-  subscription_reschedule();
-}
-
-
+/**
+ *
+ */
 void
 subscriptions_init(void)
 {
-  dtimer_arm(&auto_reschedule_timer, auto_reschedule, NULL, 10);
+
 }
 

@@ -779,7 +779,7 @@ parser_compute_duration(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 static void
 parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 {
-  th_muxer_t *tm, *next;
+  th_muxer_t *tm;
   int64_t dts, pts, ptsoff;
 
   assert(pkt->pkt_dts != AV_NOPTS_VALUE);
@@ -828,7 +828,6 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 	 pkt->pkt_pts,
 	 pkt->pkt_duration);
 #endif
-  pkt->pkt_stream = st;
   
   avgstat_add(&st->st_rate, pkt->pkt_payloadlen, dispatch_clock);
 
@@ -836,20 +835,19 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   /**
    * We've got something, disarm the transport timeout timer
    */
-  dtimer_disarm(&t->tht_receive_timer);
+  //  dtimer_disarm(&t->tht_receive_timer);
 
   /**
    * Input is ok
    */
   transport_signal_status(t, TRANSPORT_STATUS_OK);
 
-  /* Alert all muxers tied to us that a new packet has arrived.
-     Muxers may remove themself as a direct action of receiving a packet
-     (serviceprober), so we need to traverse in a safe manner */
-  for(tm = LIST_FIRST(&t->tht_muxers); tm != NULL; tm = next) {
-    next = LIST_NEXT(tm, tm_transport_link);
+  /* Alert all muxers tied to us that a new packet has arrived */
+
+  pthread_mutex_lock(&t->tht_delivery_mutex);
+  LIST_FOREACH(tm, &t->tht_muxers, tm_transport_link)
     tm->tm_new_pkt(tm, st, pkt);
-  }
+  pthread_mutex_unlock(&t->tht_delivery_mutex);
 
   /* Unref (and possibly free) the packet, muxers are supposed
      to increase refcount or copy packet if they need anything */

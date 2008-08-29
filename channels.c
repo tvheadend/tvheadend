@@ -29,12 +29,9 @@
 #include <string.h>
 #include <dirent.h>
 
-#include <libhts/htscfg.h>
 #include <libhts/htssettings.h>
 
 #include "tvhead.h"
-#include "v4l.h"
-#include "iptv_input.h"
 #include "psi.h"
 #include "channels.h"
 #include "transports.h"
@@ -167,6 +164,9 @@ channel_t *
 channel_find_by_name(const char *name, int create)
 {
   channel_t skel, *ch;
+
+  lock_assert(&global_lock);
+
   skel.ch_name = (char *)name;
   ch = RB_FIND(&channel_name_tree, &skel, ch_name_link, channelcmp);
   if(ch != NULL || create == 0)
@@ -182,6 +182,9 @@ channel_t *
 channel_find_by_identifier(int id)
 {
   channel_t skel, *ch;
+
+  lock_assert(&global_lock);
+
   skel.ch_id = id;
   ch = RB_FIND(&channel_identifier_tree, &skel, ch_identifier_link, chidcmp);
   return ch;
@@ -214,6 +217,9 @@ static void
 channel_save(channel_t *ch)
 {
   htsmsg_t *m = htsmsg_create();
+
+  lock_assert(&global_lock);
+
   if(ch->ch_icon != NULL)
     htsmsg_add_str(m, "icon", ch->ch_icon);
 
@@ -231,6 +237,8 @@ int
 channel_rename(channel_t *ch, const char *newname)
 {
   th_transport_t *t;
+
+  lock_assert(&global_lock);
 
   if(channel_find_by_name(newname, 0))
     return -1;
@@ -262,13 +270,15 @@ channel_delete(channel_t *ch)
   th_transport_t *t;
   th_subscription_t *s;
 
+  lock_assert(&global_lock);
+
   tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" deleted",
 	 ch->ch_name);
 
-  pvr_destroy_by_channel(ch);
+  abort();//pvr_destroy_by_channel(ch);
 
   while((t = LIST_FIRST(&ch->ch_transports)) != NULL) {
-    transport_unmap_channel(t);
+    abort();//transport_unmap_channel(t);
     t->tht_config_change(t);
   }
 
@@ -277,9 +287,9 @@ channel_delete(channel_t *ch)
     s->ths_channel = NULL;
   }
 
-  epg_destroy_by_channel(ch);
+  abort();//epg_destroy_by_channel(ch);
 
-  autorec_destroy_by_channel(ch);
+  abort();//autorec_destroy_by_channel(ch);
 
   hts_settings_remove("channels/%s", ch->ch_name);
 
@@ -304,14 +314,16 @@ void
 channel_merge(channel_t *dst, channel_t *src)
 {
   th_transport_t *t;
+
+  lock_assert(&global_lock);
   
   tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" merged into \"%s\"",
 	 src->ch_name, dst->ch_name);
 
   while((t = LIST_FIRST(&src->ch_transports)) != NULL) {
-    transport_unmap_channel(t);
+    abort();//transport_unmap_channel(t);
 
-    transport_map_channel(t, dst);
+    abort();//transport_map_channel(t, dst);
     t->tht_config_change(t);
   }
 
@@ -324,6 +336,8 @@ channel_merge(channel_t *dst, channel_t *src)
 void
 channel_set_icon(channel_t *ch, const char *icon)
 {
+  lock_assert(&global_lock);
+
   free(ch->ch_icon);
   ch->ch_icon = icon ? strdup(icon) : NULL;
   channel_save(ch);

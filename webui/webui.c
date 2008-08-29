@@ -54,13 +54,12 @@ is_client_simple(http_connection_t *hc)
  * on if it is a full blown browser or just some mobile app
  */
 static int
-page_root(http_connection_t *hc, http_reply_t *hr, 
-	  const char *remain, void *opaque)
+page_root(http_connection_t *hc, const char *remain, void *opaque)
 {
   if(is_client_simple(hc)) {
-    http_redirect(hc, hr, "/simple.html");
+    http_redirect(hc, "/simple.html");
   } else {
-    http_redirect(hc, hr, "/extjs.html");
+    http_redirect(hc, "/extjs.html");
   }
   return 0;
 }
@@ -70,15 +69,13 @@ page_root(http_connection_t *hc, http_reply_t *hr,
  * on if it is a full blown browser or just some mobile app
  */
 static int
-page_static(http_connection_t *hc, http_reply_t *hr, 
-	    const char *remain, void *opaque)
+page_static(http_connection_t *hc, const char *remain, void *opaque)
 {
   int fd, r;
   const char *rootpath = HTS_BUILD_ROOT "/tvheadend/webui/static";
   char path[500];
   struct stat st;
   void *buf;
-  htsbuf_queue_t *hq = &hr->hr_q;
   const char *content = NULL, *postfix;
 
   if(strstr(remain, ".."))
@@ -111,8 +108,8 @@ page_static(http_connection_t *hc, http_reply_t *hr,
       content = "text/javascript; charset=UTF-8";
   }
 
-  htsbuf_append_prealloc(hq, buf, st.st_size);
-  http_output(hc, hr, content, NULL, 0);
+  htsbuf_append_prealloc(&hc->hc_reply, buf, st.st_size);
+  http_output_content(hc, content);
   return 0;
 }
 
@@ -121,13 +118,13 @@ page_static(http_connection_t *hc, http_reply_t *hr,
  * WEB user interface
  */
 void
-webui_start(void)
+webui_init(void)
 {
   http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
 
   http_path_add("/static", NULL, page_static, ACCESS_WEB_INTERFACE);
 
-  simpleui_start();
+  //  simpleui_start();
   extjs_start();
   comet_init();
 

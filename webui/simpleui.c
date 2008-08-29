@@ -84,10 +84,10 @@ eventcmp(const void *A, const void *B)
  * on if it is a full blown browser or just some mobile app
  */
 static int
-page_simple(http_connection_t *hc, http_reply_t *hr, 
+page_simple(http_connection_t *hc,
 	  const char *remain, void *opaque)
 {
-  htsbuf_queue_t *hq = &hr->hr_q;
+  htsbuf_queue_t *hq = &hc->hc_reply;
   const char *s = http_arg_get(&hc->hc_req_args, "s");
   struct event_list events;
   event_t *e, **ev;
@@ -217,7 +217,7 @@ page_simple(http_connection_t *hc, http_reply_t *hr,
   }
 
   htsbuf_qprintf(hq, "</body></html>");
-  http_output_html(hc, hr);
+  http_output_html(hc);
   return 0;
 }
 
@@ -225,10 +225,9 @@ page_simple(http_connection_t *hc, http_reply_t *hr,
  * Event info, deliver info about the given event
  */
 static int
-page_einfo(http_connection_t *hc, http_reply_t *hr, 
-	   const char *remain, void *opaque)
+page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 {
-  htsbuf_queue_t *hq = &hr->hr_q;
+  htsbuf_queue_t *hq = &hc->hc_reply;
   event_t *e;
   struct tm a, b;
   time_t stop;
@@ -299,7 +298,7 @@ page_einfo(http_connection_t *hc, http_reply_t *hr,
 
   htsbuf_qprintf(hq, "<hr><a href=\"/simple.html\">New search</a><br>");
   htsbuf_qprintf(hq, "</body></html>");
-  http_output_html(hc, hr);
+  http_output_html(hc);
   return 0;
 }
 
@@ -308,10 +307,9 @@ page_einfo(http_connection_t *hc, http_reply_t *hr,
  * PVR info, deliver info about the given PVR entry
  */
 static int
-page_pvrinfo(http_connection_t *hc, http_reply_t *hr, 
-	     const char *remain, void *opaque)
+page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
 {
-  htsbuf_queue_t *hq = &hr->hr_q;
+  htsbuf_queue_t *hq = &hc->hc_reply;
   struct tm a, b;
   time_t stop;
   pvr_rec_t *pvrr = NULL;
@@ -324,7 +322,7 @@ page_pvrinfo(http_connection_t *hc, http_reply_t *hr,
   if((http_arg_get(&hc->hc_req_args, "clear")) != NULL) {
     pvr_clear(pvrr);
     pvrr = NULL;
-    http_redirect(hc, hr, "/simple.html");
+    http_redirect(hc, "/simple.html");
     return 0;
   } else if((http_arg_get(&hc->hc_req_args, "cancel")) != NULL) {
     pvr_abort(pvrr);
@@ -380,7 +378,7 @@ page_pvrinfo(http_connection_t *hc, http_reply_t *hr,
 
   htsbuf_qprintf(hq, "<hr><a href=\"/simple.html\">New search</a><br>");
   htsbuf_qprintf(hq, "</body></html>");
-  http_output_html(hc, hr);
+  http_output_html(hc);
   return 0;
 }
 

@@ -63,9 +63,14 @@ void
 muxer_play(th_muxer_t *tm, int64_t toffset)
 {
   th_subscription_t *s = tm->tm_subscription;
+  th_transport_t *t = s->ths_transport;
+
+  transport_link_muxer(t, tm);
 
   if(!tm->tm_linked) {
+    pthread_mutex_lock(&t->tht_delivery_mutex);
     LIST_INSERT_HEAD(&s->ths_transport->tht_muxers, tm, tm_transport_link);
+    pthread_mutex_unlock(&t->tht_delivery_mutex);
     tm->tm_linked = 1;
   }
 
@@ -193,11 +198,14 @@ void
 muxer_deinit(th_muxer_t *tm, th_subscription_t *s)
 {
   th_muxstream_t *tms;
+  th_transport_t *t;
 
   s->ths_raw_input = NULL;
   s->ths_muxer = NULL;
 
-  if(tm->tm_linked)
+  if(tm->tm_linked) {
+    pthread_mutex_lock(&t->tht_delivery_mutex);
+
     LIST_REMOVE(tm, tm_transport_link);
 
   while((tms = LIST_FIRST(&tm->tm_streams)) != NULL)

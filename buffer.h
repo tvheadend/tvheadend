@@ -27,13 +27,13 @@ void pkt_init(void);
 
 th_pkt_t *pkt_alloc(void *data, size_t datalen, int64_t pts, int64_t dts);
 
-th_pkt_t *pkt_copy(th_pkt_t *pkt);
+th_pkt_t *pkt_copy(th_stream_t *st, th_pkt_t *pkt);
 
-void pkt_store(th_pkt_t *pkt);
+void pkt_store(th_stream_t *st, th_pkt_t *pkt);
 
-void pkt_unstore(th_pkt_t *pkt);
+void pkt_unstore(th_stream_t *st, th_pkt_t *pkt);
 
-int pkt_load(th_pkt_t *pkt);
+int pkt_load(th_stream_t *st, th_pkt_t *pkt);
 
 void *pkt_payload(th_pkt_t *pkt);
 

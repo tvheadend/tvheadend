@@ -182,6 +182,8 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
   if(len < 9)
     return -1;
 
+  lock_assert(&global_lock);
+
   sid     = ptr[0] << 8 | ptr[1];
   pcr_pid = (ptr[5] & 0x1f) << 8 | ptr[6];
   dllen   = (ptr[7] & 0xf) << 8 | ptr[8];

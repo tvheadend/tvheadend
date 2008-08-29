@@ -31,20 +31,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <linux/dvb/frontend.h>
-#include <linux/dvb/dmx.h>
-
-#include <libhts/htscfg.h>
-
 #include "tvhead.h"
 #include "dispatch.h"
-#include "teletext.h"
 #include "transports.h"
 #include "subscriptions.h"
 #include "tsdemux.h"
 
 #include "v4l.h"
-#include "iptv_input.h"
 #include "psi.h"
 #include "buffer.h"
 #include "channels.h"
@@ -56,45 +49,40 @@
 
 static struct th_transport_list transporthash[TRANSPORT_HASH_WIDTH];
 
-static void transport_data_timeout(void *aux, int64_t now);
+//static void transport_data_timeout(void *aux, int64_t now);
 
 //static dtimer_t transport_monitor_timer;
 
 //static const char *transport_settings_path(th_transport_t *t);
 //static void transport_monitor(void *aux, int64_t now);
 
-void
-transport_stop(th_transport_t *t, int flush_subscriptions)
+
+/**
+ * Transport lock must be held
+ */
+static void
+transport_stop(th_transport_t *t)
 {
-  th_subscription_t *s;
   th_descrambler_t *td;
   th_stream_t *st;
   th_pkt_t *pkt;
-
-  if(flush_subscriptions) {
-    while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL)
-      subscription_stop(s);
-  } else {
-    if(LIST_FIRST(&t->tht_subscriptions))
-      return;
-  }
-
-  dtimer_disarm(&t->tht_receive_timer);
+ 
+  // dtimer_disarm(&t->tht_receive_timer);
 
   //  dtimer_disarm(&transport_monitor_timer, transport_monitor, t, 1);
 
   t->tht_stop_feed(t);
 
   while((td = LIST_FIRST(&t->tht_descramblers)) != NULL)
-      td->td_stop(td);
+    td->td_stop(td);
 
   t->tht_tt_commercial_advice = COMMERCIAL_UNKNOWN;
  
+  assert(LIST_FIRST(&t->tht_muxers) == NULL);
 
-  /*
+  /**
    * Clean up each stream
    */
-
   LIST_FOREACH(st, &t->tht_streams, st_link) {
 
     if(st->st_parser != NULL)
@@ -144,13 +132,87 @@ transport_stop(th_transport_t *t, int flush_subscriptions)
     /* Flush framestore */
 
     while((pkt = TAILQ_FIRST(&st->st_pktq)) != NULL)
-      pkt_unstore(pkt);
+      pkt_unstore(st, pkt);
 
   }
 }
 
+/**
+ * 
+ */
+static void
+remove_subscriber(th_subscription_t *s)
+{
+  s->ths_callback(s, TRANSPORT_UNAVAILABLE, s->ths_opaque);
+  LIST_REMOVE(s, ths_transport_link);
+  s->ths_transport = NULL;
+}
 
-/*
+/**
+ * Remove the given subscriber from the transport
+ *
+ * if s == NULL all subscribers will be removed
+ *
+ * Global lock must be held
+ */
+void
+transport_remove_subscriber(th_transport_t *t, th_subscription_t *s)
+{
+  lock_assert(&global_lock);
+
+  if(s == NULL) {
+    while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL)
+      remove_subscriber(s);
+  } else {
+    remove_subscriber(s);
+  }
+
+  if(LIST_FIRST(&t->tht_subscriptions) == NULL)
+    transport_stop(t);
+}
+
+
+/**
+ *
+ */
+void
+transport_link_muxer(th_transport_t *t, th_muxer_t *tm)
+{
+  lock_assert(&global_lock);
+
+  if(tm->tm_transport != NULL) {
+    assert(tm->tm_transport == t);
+    return;
+  }
+
+  pthread_mutex_lock(&t->tht_delivery_mutex);
+  LIST_INSERT_HEAD(&t->tht_muxers, tm, tm_transport_link);
+  pthread_mutex_unlock(&t->tht_delivery_mutex);
+  tm->tm_transport = t;
+}
+
+
+/**
+ *
+ */
+void
+transport_unlink_muxer(th_muxer_t *tm)
+{
+  th_transport_t *t = tm->tm_transport;
+
+  if(t == NULL)
+    return;
+
+  lock_assert(&global_lock);
+
+  pthread_mutex_lock(&t->tht_delivery_mutex);
+  LIST_REMOVE(tm, tm_transport_link);
+  pthread_mutex_unlock(&t->tht_delivery_mutex);
+  tm->tm_transport = NULL;
+}
+
+
+/**
  *
  */
 int
@@ -159,6 +221,8 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
   th_stream_t *st;
   AVCodec *c;
   enum CodecID id;
+
+  lock_assert(&global_lock);
 
   assert(t->tht_runstatus != TRANSPORT_RUNNING);
 
@@ -205,8 +269,8 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
     }
   }
 
-  cwc_transport_start(t);
-  dtimer_arm(&t->tht_receive_timer, transport_data_timeout, t, 4);
+  //  cwc_transport_start(t);
+  //  dtimer_arm(&t->tht_receive_timer, transport_data_timeout, t, 4);
   transport_signal_status(t, TRANSPORT_STATUS_STARTING);
   return 0;
 }
@@ -286,6 +350,8 @@ transport_find(channel_t *ch, unsigned int weight)
   th_transport_t *t, **vec;
   int cnt = 0, i;
   
+  lock_assert(&global_lock);
+
   /* First, sort all transports in order */
 
   LIST_FOREACH(t, &ch->ch_transports, tht_ch_link)
@@ -326,28 +392,17 @@ transport_find(channel_t *ch, unsigned int weight)
 }
 
 
-
-
-
-/*
- * 
+/**
+ *
  */
-
-static void
-transport_flush_subscribers(th_transport_t *t)
-{
-  th_subscription_t *s;
-  
-  while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL)
-    subscription_stop(s);
-}
-
 unsigned int 
 transport_compute_weight(struct th_transport_list *head)
 {
   th_transport_t *t;
   th_subscription_t *s;
   int w = 0;
+
+  lock_assert(&global_lock);
 
   LIST_FOREACH(t, head, tht_active_link) {
     LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link) {
@@ -360,76 +415,6 @@ transport_compute_weight(struct th_transport_list *head)
 
 
 #if 0
-
-
-static void
-transport_monitor(void *aux, int64_t now)
-{
-  th_transport_t *t = aux;
-  int v;
-
-  dtimer_arm(&transport_monitor_timer, transport_monitor, t, 1);
-
-  if(t->tht_status == TRANSPORT_IDLE)
-    return;
-
-  if(t->tht_monitor_suspend > 0) {
-    t->tht_monitor_suspend--;
-    return;
-  }
-
-  v = avgstat_read_and_expire(&t->tht_rate, dispatch_clock) * 8 / 1000 / 10;
-
-  if(v < 500) {
-    switch(t->tht_rate_error_log_limiter) {
-    case 0:
-      syslog(LOG_WARNING, "\"%s\" on \"%s\", very low bitrate: %d kb/s",
-	     t->tht_channel->ch_name, t->tht_name, v);
-      /* FALLTHRU */
-    case 1 ... 9:
-      t->tht_rate_error_log_limiter++;
-      break;
-    }
-  } else {
-    switch(t->tht_rate_error_log_limiter) {
-    case 0:
-      break;
-
-    case 1:
-      syslog(LOG_NOTICE, "\"%s\" on \"%s\", bitrate ok (%d kb/s)",
-	     t->tht_channel->ch_name, t->tht_name, v);
-      /* FALLTHRU */
-    default:
-      t->tht_rate_error_log_limiter--;
-    }
-  }
-
-
-  v = avgstat_read(&t->tht_cc_errors, 10, dispatch_clock);
-  if(v > t->tht_cc_error_log_limiter) {
-    t->tht_cc_error_log_limiter += v * 3;
-
-    syslog(LOG_WARNING, "\"%s\" on \"%s\", "
-	   "%.2f continuity errors/s (10 sec average)",
-	   t->tht_channel->ch_name, t->tht_name, (float)v / 10.);
-
-  } else if(v == 0) {
-    switch(t->tht_cc_error_log_limiter) {
-    case 0:
-      break;
-    case 1:
-      syslog(LOG_NOTICE, "\"%s\" on \"%s\", no continuity errors",
-	     t->tht_channel->ch_name, t->tht_name);
-      /* FALLTHRU */
-    default:
-      t->tht_cc_error_log_limiter--;
-    }
-  }
-}
-
-#endif
-
-
 /**
  * Timer that fires if transport is not receiving any data
  */
@@ -439,7 +424,7 @@ transport_data_timeout(void *aux, int64_t now)
   th_transport_t *t = aux;
   transport_signal_status(t, TRANSPORT_STATUS_NO_INPUT);
 }
-
+#endif
 
 /**
  * Destroy a transport
@@ -448,8 +433,14 @@ void
 transport_destroy(th_transport_t *t)
 {
   th_stream_t *st;
+  th_subscription_t *s;
+  
+  lock_assert(&global_lock);
 
-  dtimer_disarm(&t->tht_receive_timer);
+  while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL)
+    remove_subscriber(s);
+
+  //dtimer_disarm(&t->tht_receive_timer);
 
   free((void *)t->tht_name);
 
@@ -460,11 +451,9 @@ transport_destroy(th_transport_t *t)
 
   LIST_REMOVE(t, tht_mux_link);
   LIST_REMOVE(t, tht_hash_link);
-
-  transport_flush_subscribers(t);
   
   if(t->tht_runstatus != TRANSPORT_IDLE)
-    transport_stop(t, 0);
+    transport_stop(t);
 
 
   free(t->tht_identifier);
@@ -477,7 +466,7 @@ transport_destroy(th_transport_t *t)
     free(st);
   }
 
-  serviceprobe_delete(t);
+  abort();//  serviceprobe_delete(t);
 
   free(t);
 }
@@ -491,6 +480,10 @@ transport_create(const char *identifier, int type, int source_type)
 {
   unsigned int hash = tvh_strhash(identifier, TRANSPORT_HASH_WIDTH);
   th_transport_t *t = calloc(1, sizeof(th_transport_t));
+
+  lock_assert(&global_lock);
+
+  pthread_mutex_init(&t->tht_delivery_mutex, NULL);
   t->tht_identifier = strdup(identifier);
   t->tht_type = type;
   t->tht_source_type = source_type;
@@ -507,6 +500,9 @@ transport_find_by_identifier(const char *identifier)
 {
   th_transport_t *t;
   unsigned int hash = tvh_strhash(identifier, TRANSPORT_HASH_WIDTH);
+
+  lock_assert(&global_lock);
+
   LIST_FOREACH(t, &transporthash[hash], tht_hash_link)
     if(!strcmp(t->tht_identifier, identifier))
       break;
@@ -523,6 +519,8 @@ transport_add_stream(th_transport_t *t, int pid, tv_streamtype_t type)
 {
   th_stream_t *st;
   int i = 0;
+
+  lock_assert(&global_lock);
 
   LIST_FOREACH(st, &t->tht_streams, st_link) {
     i++;
@@ -553,6 +551,9 @@ transport_add_stream(th_transport_t *t, int pid, tv_streamtype_t type)
 void
 transport_map_channel(th_transport_t *t, channel_t *ch)
 {
+
+  lock_assert(&global_lock);
+
   assert(t->tht_ch == NULL);
 
   if(ch == NULL) {
@@ -579,6 +580,8 @@ transport_map_channel(th_transport_t *t, channel_t *ch)
 void
 transport_unmap_channel(th_transport_t *t)
 {
+  lock_assert(&global_lock);
+
   t->tht_ch = NULL;
   LIST_REMOVE(t, tht_ch_link);
 }
@@ -635,7 +638,7 @@ transport_signal_status(th_transport_t *t, int newstatus)
     return;
 
   t->tht_last_status = newstatus;
-  notify_transprot_status_change(t);
+  //notify_transprot_status_change(t);
 }
 
 

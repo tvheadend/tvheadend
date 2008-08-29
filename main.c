@@ -37,70 +37,34 @@
 #include <libavformat/avformat.h>
 
 #include "tvhead.h"
-#include "dvb/dvb.h"
-#include "v4l.h"
-#include "channels.h"
-#include "epg.h"
-#include "epg_xmltv.h"
-#include "pvr.h"
-#include "dispatch.h"
-#include "transports.h"
-#include "subscriptions.h"
-#include "iptv_output.h"
-#include "rtsp.h"
-#include "http.h"
-#include "htsp.h"
-#include "buffer.h"
-#include "htmlui.h"
-#include "avgen.h"
-#include "file_input.h"
-#include "cwc.h"
-#include "autorec.h"
-#include "spawn.h"
-#include "ffmuxer.h"
-#include "xbmsp.h"
-//#include "ajaxui/ajaxui.h"
-#include "webui/webui.h"
+#include "tcp.h"
 #include "access.h"
-#include "serviceprobe.h"
+#include "http.h"
+#include "webui/webui.h"
+#include "dvb/dvb.h"
 
 #include <libhts/htsparachute.h>
 #include <libhts/htssettings.h>
 
 
 int running;
-int startupcounter;
-const char *settings_dir;
-const char *sys_warning;
 extern const char *htsversion;
-static pthread_mutex_t tag_mutex = PTHREAD_MUTEX_INITIALIZER;
-static uint32_t tag_tally;
-
-uint32_t
-tag_get(void)
-{
-  uint32_t r;
-
-  pthread_mutex_lock(&tag_mutex);
-  r = ++tag_tally;
-  if(r == 0)
-    r = ++tag_tally;
-
-  pthread_mutex_unlock(&tag_mutex);
-  return r;
-}
+time_t dispatch_clock;
+static LIST_HEAD(, gtimer) gtimers;
+pthread_mutex_t global_lock;
 
 
-static void
-doexit(int x)
-{
-  running = 0;
-}
 
 static void
 handle_sigpipe(int x)
 {
   return;
+}
+
+static void
+doexit(int x)
+{
+  running = 0;
 }
 
 static void
@@ -113,6 +77,90 @@ pull_chute (int sig)
 	 sig, pwd);
 }
 
+/**
+ *
+ */
+static int
+gtimercmp(gtimer_t *a, gtimer_t *b)
+{
+  if(a->gti_expire < b->gti_expire)
+    return -1;
+  else if(a->gti_expire > b->gti_expire)
+    return 1;
+ return 0;
+}
+
+
+/**
+ *
+ */
+void
+gtimer_arm(gtimer_t *gti, gti_callback_t *callback, void *opaque, int delta)
+{
+  time_t now;
+  time(&now);
+  
+  lock_assert(&global_lock);
+
+  if(gti->gti_callback != NULL)
+    LIST_REMOVE(gti, gti_link);
+    
+  gti->gti_callback = callback;
+  gti->gti_opaque = opaque;
+  gti->gti_expire = now + delta;
+
+  LIST_INSERT_SORTED(&gtimers, gti, gti_link, gtimercmp);
+}
+
+/**
+ *
+ */
+void
+gtimer_disarm(gtimer_t *gti)
+{
+  if(gti->gti_callback) {
+    LIST_REMOVE(gti, gti_link);
+    gti->gti_callback = NULL;
+  }
+}
+
+
+/**
+ *
+ */
+static void
+mainloop(void)
+{
+  gtimer_t *gti;
+  gti_callback_t *cb;
+
+  while(running) {
+    sleep(1);
+    time(&dispatch_clock);
+
+    comet_flush(); /* Flush idle comet mailboxes */
+
+    pthread_mutex_lock(&global_lock);
+    
+    while((gti = LIST_FIRST(&gtimers)) != NULL) {
+      if(gti->gti_expire > dispatch_clock)
+	break;
+      
+      cb = gti->gti_callback;
+      LIST_REMOVE(gti, gti_link);
+      gti->gti_callback = NULL;
+
+      cb(gti->gti_opaque);
+      
+    }
+    pthread_mutex_unlock(&global_lock);
+  }
+}
+
+
+/**
+ *
+ */
 int
 main(int argc, char **argv)
 {
@@ -126,16 +174,11 @@ main(int argc, char **argv)
   char *cfgfile = NULL;
   int logfacility = LOG_DAEMON;
   int disable_dvb = 0;
-  int p;
-  char buf[128];
-  char buf2[128];
-  char buf3[128];
-  char *settingspath = NULL;
-  const char *homedir;
+  sigset_t set;
 
   signal(SIGPIPE, handle_sigpipe);
 
-  while((c = getopt(argc, argv, "c:fu:g:ds:")) != -1) {
+  while((c = getopt(argc, argv, "c:fu:g:d")) != -1) {
     switch(c) {
     case 'd':
       disable_dvb = 1;
@@ -152,13 +195,8 @@ main(int argc, char **argv)
     case 'g':
       groupnam = optarg;
       break;
-    case 's':
-      settingspath = optarg;
-      break;
     }
   }
-
-  config_open_by_prgname("tvheadend", cfgfile);
 
   if(forkaway) {
     if(daemon(0, 0)) {
@@ -189,142 +227,51 @@ main(int argc, char **argv)
     umask(0);
   }
 
+  sigfillset(&set);
+  sigprocmask(SIG_BLOCK, &set, NULL);
+
   openlog("tvheadend", LOG_PID, logfacility);
 
   hts_settings_init("tvheadend2");
 
+  pthread_mutex_init(&global_lock, NULL);
 
-  if(settingspath == NULL && (homedir = getenv("HOME")) != NULL) {
-    snprintf(buf2, sizeof(buf2), "%s/.hts", homedir);
-      
-    if(mkdir(buf2, 0777) == 0 || errno == EEXIST)
-      settingspath = buf2;
-    else
-      syslog(LOG_ERR, 
-	     "Unable to create directory for storing settings \"%s\" -- %s",
-	     buf, strerror(errno));
-  }
+  pthread_mutex_lock(&global_lock);
 
-  if(settingspath == NULL) {
-    settingspath = "/tmp";
-    sys_warning = 
-      "All settings are stored in "
-      "'/tmp/' and may not survive a system restart. "
-      "Please see the configuration manual for how to setup this correctly.";
-    syslog(LOG_ERR, "%s", sys_warning);
-  }
-
-  snprintf(buf3, sizeof(buf3), "%s/tvheadend", settingspath);
-  settings_dir = buf3;
-
-  if(!(mkdir(settings_dir, 0777) == 0 || errno == EEXIST)) {
-    syslog(LOG_ERR, 
-	   "Unable to create directory for storing settings \"%s\" -- %s",
-	   settings_dir, strerror(errno));
-  }
-
-  snprintf(buf, sizeof(buf), "%s/channels", settings_dir);
-  mkdir(buf, 0777);
-
-  snprintf(buf, sizeof(buf), "%s/transports", settings_dir);
-  mkdir(buf, 0777);
-
-  snprintf(buf, sizeof(buf), "%s/recordings", settings_dir);
-  mkdir(buf, 0777);
-
-  snprintf(buf, sizeof(buf), "%s/autorec", settings_dir);
-  mkdir(buf, 0777);
-
-  snprintf(buf, sizeof(buf), "%s/dvbadapters", settings_dir);
-  mkdir(buf, 0777);
-
-  snprintf(buf, sizeof(buf), "%s/dvbadapters", settings_dir);
-  mkdir(buf, 0777);
-
-  snprintf(buf, sizeof(buf), "%s/dvbmuxes", settings_dir);
-  mkdir(buf, 0777);
-
-  syslog(LOG_NOTICE, 
-	 "Starting HTS Tvheadend (%s), settings stored in \"%s\"",
-	 htsversion, settings_dir);
-
-  if(!forkaway)
-    fprintf(stderr, 
-	    "\nStarting HTS Tvheadend (%s)\nSettings stored in \"%s\"\n",
-	    htsversion, settings_dir);
-
-  dispatch_init();
+  htsparachute_init(pull_chute);
+  
+  //  signal(SIGTERM, doexit);
+  //  signal(SIGINT, doexit);
 
   access_init();
 
-  htsparachute_init(pull_chute);
+  tcp_server_init();
+
+  dvb_init();
+
+  http_server_init();
+
+  webui_init();
+
+  pthread_mutex_unlock(&global_lock);
+
+
+  /**
+   * Wait for SIGTERM / SIGINT, but only in this thread
+   */
+
+  running = 1;
+  sigemptyset(&set);
+  sigaddset(&set, SIGTERM);
+  sigaddset(&set, SIGINT);
 
   signal(SIGTERM, doexit);
   signal(SIGINT, doexit);
 
-  channels_load();
+  pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 
-  spawn_init();
 
-  av_register_all();
-  av_log_set_level(AV_LOG_INFO);
-  tffm_init();
-  pkt_init();
-  serviceprobe_setup();
-
-  if(!disable_dvb)
-    dvb_init();
-  v4l_init();
-
-  autorec_init();
-  epg_init();
-  //  xmltv_init();
-
-  subscriptions_init();
-
-  //  htmlui_start();
-
-  webui_start();
-  //  ajaxui_start();
-
-  avgen_init();
-
-  file_input_init();
-
-  cwc_init();
-
-  running = 1;
-  while(running) {
-
-    if(startupcounter == 0) {
-      syslog(LOG_NOTICE, 
-	     "Initial input setup completed, starting output modules");
-
-      if(!forkaway)
-	fprintf(stderr,
-		"\nInitial input setup completed, starting output modules\n");
-      
-      startupcounter = -1;
-
-      pvr_init();
-      output_multicast_setup();
-
-      p = atoi(config_get_str("http-server-port", "9981"));
-      if(p)
-	http_start(p);
-
-      p = atoi(config_get_str("htsp-server-port", "9910"));
-      if(p)
-	htsp_start(p);
-#if 0
-      p = atoi(config_get_str("xbmsp-server-port", "0"));
-      if(p)
-	xbmsp_start(p);
-#endif
-
-    }
-    dispatcher();
-  }
+  mainloop();
 
   syslog(LOG_NOTICE, "Exiting HTS Tvheadend");
 
@@ -333,26 +280,6 @@ main(int argc, char **argv)
 
   return 0;
 
-}
-
-
-config_entry_t *
-find_mux_config(const char *muxtype, const char *muxname)
-{
-  config_entry_t *ce;
-  const char *s;
-
-  TAILQ_FOREACH(ce, &config_list, ce_link) {
-    if(ce->ce_type == CFG_SUB && !strcasecmp(muxtype, ce->ce_key)) {
-
-      if((s = config_get_str_sub(&ce->ce_sub, "name", NULL)) == NULL)
-	continue;
-      
-      if(!strcmp(s, muxname))
-	break;
-    }
-  }
-  return ce;
 }
 
 
@@ -420,25 +347,6 @@ utf8tofilename(const char *in)
 }
 
 
-FILE *
-settings_open_for_write(const char *name)
-{
-  FILE *fp;
-  int fd;
-
-  if((fd = open(name, O_CREAT | O_TRUNC | O_RDWR, 0600)) < 0) {
-    syslog(LOG_ALERT, "Unable to open settings file \"%s\" -- %s",
-	   name, strerror(errno));
-    return NULL;
-  }
-
-  if((fp = fdopen(fd, "w+")) == NULL)
-    syslog(LOG_ALERT, "Unable to open settings file \"%s\" -- %s",
-	   name, strerror(errno));
-
-  return fp;
-}
-
 
 
 /**
@@ -477,6 +385,6 @@ tvhlog(int severity, const char *subsys, const char *fmt, ...)
   m = htsmsg_create();
   htsmsg_add_str(m, "notificationClass", "logmessage");
   htsmsg_add_str(m, "logtxt", buf2);
-  comet_mailbox_add_message(m);
+  //  comet_mailbox_add_message(m);
   htsmsg_destroy(m);
 }

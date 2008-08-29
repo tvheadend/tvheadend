@@ -21,6 +21,9 @@
 
 #include <libhts/htsbuf.h>
 
+#if 0
+
+
 typedef enum {
   TCP_CONNECT,
   TCP_DISCONNECT,
@@ -52,7 +55,7 @@ typedef struct tcp_session {
   /* These are only used when we spawn as a client */
 
   int tcp_enabled;
-  dtimer_t tcp_timer;
+  //  dtimer_t tcp_timer;
   char *tcp_name;
   int tcp_port;
   char *tcp_hostname;
@@ -97,5 +100,22 @@ void tcp_enable_disable(tcp_session_t *ses, int enabled);
 void tcp_set_hostname(tcp_session_t *ses, const char *hostname);
 
 int tcp_send_msg(tcp_session_t *ses, int hiprio, void *data, size_t len);
+
+#endif
+
+void tcp_server_init(void);
+
+typedef void (tcp_server_callback_t)(int fd, void *opaque,
+				     struct sockaddr_in *source);
+
+void *tcp_server_create(int port, tcp_server_callback_t *start, void *opaque);
+
+int tcp_read_line(int fd, char *buf, const size_t bufsize, 
+		  htsbuf_queue_t *spill);
+
+int tcp_read_data(int fd, char *buf, const size_t bufsize,
+		  htsbuf_queue_t *spill);
+
+int tcp_write_queue(int fd, htsbuf_queue_t *q);
 
 #endif /* TCP_H_ */

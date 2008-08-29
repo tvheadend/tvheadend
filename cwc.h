@@ -26,7 +26,7 @@ TAILQ_HEAD(cwc_queue, cwc);
 extern struct cwc_queue cwcs;
 
 typedef struct cwc {
-  tcp_session_t cwc_tcp_session; /* Must be first */
+  //  tcp_session_t cwc_tcp_session; /* Must be first */
 
   TAILQ_ENTRY(cwc) cwc_link;
 
@@ -59,9 +59,9 @@ typedef struct cwc {
   char *cwc_password_salted;   /* salted version */
   char *cwc_comment;
 
-  dtimer_t cwc_idle_timer;
+  // dtimer_t cwc_idle_timer;
 
-  dtimer_t cwc_send_ka_timer;
+  // dtimer_t cwc_send_ka_timer;
 
   char *cwc_id;
 

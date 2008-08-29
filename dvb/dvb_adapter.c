@@ -29,7 +29,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
 
 #include <linux/dvb/frontend.h>
 #include <linux/dvb/dmx.h>
@@ -38,20 +37,17 @@
 
 #include "tvhead.h"
 #include "dispatch.h"
-#include "dvb.h"
-#include "channels.h"
 #include "transports.h"
-#include "subscriptions.h"
-#include "teletext.h"
-#include "epg.h"
-#include "psi.h"
+#include "dvb.h"
 #include "dvb_support.h"
 #include "dvb_dvr.h"
+#include "tsdemux.h"
 #include "notify.h"
 
 struct th_dvb_adapter_queue dvb_adapters;
 struct th_dvb_mux_instance_tree dvb_muxes;
-static void dvb_fec_monitor(void *aux, int64_t now);
+//static void dvb_fec_monitor(void *aux, int64_t now);
+static void *dvb_adapter_input_dvr(void *aux);
 
 
 /**
@@ -61,9 +57,7 @@ static th_dvb_adapter_t *
 tda_alloc(void)
 {
   th_dvb_adapter_t *tda = calloc(1, sizeof(th_dvb_adapter_t));
-  pthread_mutex_init(&tda->tda_lock, NULL);
-  pthread_cond_init(&tda->tda_cond, NULL);
-  TAILQ_INIT(&tda->tda_fe_cmd_queue);
+  pthread_mutex_init(&tda->tda_delivery_mutex, NULL);
   return tda;
 }
 
@@ -75,6 +69,8 @@ static void
 tda_save(th_dvb_adapter_t *tda)
 {
   htsmsg_t *m = htsmsg_create();
+
+  lock_assert(&global_lock);
 
   htsmsg_add_str(m, "type", dvb_adaptertype_to_str(tda->tda_type));
   htsmsg_add_str(m, "displayname", tda->tda_displayname);
@@ -91,6 +87,8 @@ void
 dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s)
 {
   htsmsg_t *m;
+
+  lock_assert(&global_lock);
 
   if(!strcmp(s, tda->tda_displayname))
     return;
@@ -121,6 +119,8 @@ dvb_adapter_set_auto_discovery(th_dvb_adapter_t *tda, int on)
   if(tda->tda_autodiscovery == on)
     return;
 
+  lock_assert(&global_lock);
+
   tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" mux autodiscovery set to %s",
 	 tda->tda_displayname, on ? "On" : "Off");
 
@@ -139,6 +139,7 @@ tda_add(const char *path)
   int fe, i, r;
   th_dvb_adapter_t *tda;
   char buf[400];
+  pthread_t ptid;
 
   snprintf(fname, sizeof(fname), "%s/frontend0", path);
   
@@ -172,12 +173,6 @@ tda_add(const char *path)
 
   tda->tda_type = tda->tda_fe_info->type;
 
-  if(dvb_dvr_init(tda) < 0) {
-    close(fe);
-    free(tda);
-    return;
-  }
-  
   snprintf(buf, sizeof(buf), "%s_%s", tda->tda_rootpath,
 	   tda->tda_fe_info->name);
 
@@ -199,8 +194,8 @@ tda_add(const char *path)
 	 "Found adapter %s (%s)", path, tda->tda_fe_info->name);
 
   TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
-  dtimer_arm(&tda->tda_fec_monitor_timer, dvb_fec_monitor, tda, 1);
-  dvb_fe_start(tda);
+
+  pthread_create(&ptid, NULL, dvb_adapter_input_dvr, tda);
 }
 
 
@@ -264,34 +259,6 @@ dvb_adapter_init(void)
 /**
  *
  */
-static void
-dvb_notify_mux_quality(th_dvb_mux_instance_t *tdmi)
-{
-  htsmsg_t *m = htsmsg_create();
-  htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
-
-  htsmsg_add_u32(m, "quality", tdmi->tdmi_quality);
-  notify_by_msg("dvbmux", m);
-}
-
-
-/**
- *
- */
-static void
-dvb_notify_mux_status(th_dvb_mux_instance_t *tdmi)
-{
-  htsmsg_t *m = htsmsg_create();
-  htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
-
-  htsmsg_add_str(m, "status", tdmi->tdmi_last_status);
-  notify_by_msg("dvbmux", m);
-}
-
-
-/**
- *
- */
 void
 dvb_adapter_notify_reload(th_dvb_adapter_t *tda)
 {
@@ -301,6 +268,9 @@ dvb_adapter_notify_reload(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "reload", 1);
   notify_by_msg("dvbadapter", m);
 }
+
+
+#if 0
 
 
 /**
@@ -371,6 +341,7 @@ dvb_fec_monitor(void *aux, int64_t now)
   if(savemux)
     dvb_mux_save(tdmi);
 }
+#endif
 
 
 /**
@@ -378,12 +349,12 @@ dvb_fec_monitor(void *aux, int64_t now)
  * and EIT updates
  */
 void
-dvb_adapter_mux_scanner(void *aux, int64_t now)
+dvb_adapter_mux_scanner(void *aux)
 {
   th_dvb_adapter_t *tda = aux;
   th_dvb_mux_instance_t *tdmi;
 
-  dtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 10);
+  gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 10);
 
   if(transport_compute_weight(&tda->tda_transports) > 0)
     return; /* someone is here */
@@ -393,7 +364,7 @@ dvb_adapter_mux_scanner(void *aux, int64_t now)
   if((tdmi = RB_FIRST(&tda->tda_muxes_qscan_waiting)) != NULL) {
     RB_REMOVE(&tda->tda_muxes_qscan_waiting, tdmi, tdmi_qscan_link);
     tdmi->tdmi_quickscan = TDMI_QUICKSCAN_RUNNING;
-    dvb_tune_tdmi(tdmi, 0, TDMI_IDLESCAN);
+    dvb_fe_tune(tdmi);
     return;
   }
 
@@ -409,8 +380,9 @@ dvb_adapter_mux_scanner(void *aux, int64_t now)
   if(tdmi == NULL)
     return; /* no instances */
 
-  dvb_tune_tdmi(tdmi, 0, TDMI_IDLESCAN);
+  dvb_fe_tune(tdmi);
 }
+
 
 /**
  * 
@@ -421,6 +393,8 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
   th_dvb_mux_instance_t *tdmi_src, *tdmi_dst;
   th_transport_t *t_src, *t_dst;
   th_stream_t *st_src, *st_dst;
+
+  lock_assert(&global_lock);
 
   while((tdmi_dst = RB_FIRST(&dst->tda_muxes)) != NULL)
     dvb_mux_destroy(tdmi_dst);
@@ -489,15 +463,12 @@ dvb_adapter_destroy(th_dvb_adapter_t *tda)
 {
   th_dvb_mux_instance_t *tdmi;
 
-  char buf[400];
-
   if(tda->tda_rootpath != NULL)
     return -1;
 
-  snprintf(buf, sizeof(buf), "%s/dvbadapters/%s",
-	   settings_dir, tda->tda_identifier);
+  lock_assert(&global_lock);
 
-  unlink(buf);
+  hts_settings_remove("dvbadapters/%s", tda->tda_identifier);
 
   while((tdmi = RB_FIRST(&tda->tda_muxes)) != NULL)
     dvb_mux_destroy(tdmi);
@@ -512,3 +483,50 @@ dvb_adapter_destroy(th_dvb_adapter_t *tda)
   return 0;
 }
 
+
+/**
+ *
+ */
+void
+dvb_adapter_clean(th_dvb_adapter_t *tda)
+{
+  th_transport_t *t;
+  
+  lock_assert(&global_lock);
+
+  while((t = LIST_FIRST(&tda->tda_transports)) != NULL)
+    transport_remove_subscriber(t, NULL); /* Flushes all subscribers */
+}
+
+
+
+/**
+ *
+ */
+static void *
+dvb_adapter_input_dvr(void *aux)
+{
+  th_dvb_adapter_t *tda = aux;
+  int fd, i, r;
+  uint8_t tsb[188 * 10];
+  th_transport_t *t;
+
+  fd = open(tda->tda_dvr_path, O_RDONLY);
+  if(fd == -1) {
+    tvhlog(LOG_ALERT, "dvb", "%s: unable to open dvr", tda->tda_dvr_path);
+    return NULL;
+  }
+
+  while(1) {
+    r = read(fd, tsb, sizeof(tsb));
+
+    pthread_mutex_lock(&tda->tda_delivery_mutex);
+    
+    for(i = 0; i < r; i += 188)
+      LIST_FOREACH(t, &tda->tda_transports, tht_active_link)
+	if(t->tht_dvb_mux_instance == tda->tda_mux_current)
+	  ts_recv_packet1(t, tsb + i);
+
+    pthread_mutex_unlock(&tda->tda_delivery_mutex);
+  }
+}

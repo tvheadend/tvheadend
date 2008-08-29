@@ -20,15 +20,33 @@
 #define TV_HEAD_H
 
 #include <pthread.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
 #include <netinet/in.h>
+#include <sys/time.h>
 #include <libhts/htsq.h>
 #include <libhts/htstv.h>
-#include <libhts/htscfg.h>
 #include <libhts/avg.h>
 #include <libhts/hts_strtab.h>
 #include <libavcodec/avcodec.h>
 #include <libhts/redblack.h>
 #include <linux/dvb/frontend.h>
+
+extern pthread_mutex_t global_lock;
+
+static inline void
+lock_assert0(pthread_mutex_t *l, const char *file, int line)
+{
+  if(pthread_mutex_trylock(l) == EBUSY)
+    return;
+
+  fprintf(stderr, "Mutex not held at %s:%d\n", file, line);
+  abort();
+}
+
+#define lock_assert(l) lock_assert0(l, __FILE__, __LINE__)
+
 
 /*
  * Commercial status
@@ -40,35 +58,29 @@ typedef enum {
 } th_commercial_advice_t;
 
 
-/**
- * Auxiliary data for plugins
- */
-typedef struct pluginaux {
-  LIST_ENTRY(pluginaux) pa_link;
-  struct th_plugin *pa_plugin;
-} pluginaux_t;
-
-LIST_HEAD(pluginaux_list, pluginaux);
-
-
 /*
- * Dispatch timer
+ * global timer
  */
-typedef void (dti_callback_t)(void *opaque, int64_t now);
 
-typedef struct dtimer {
-  LIST_ENTRY(dtimer) dti_link;
-  dti_callback_t *dti_callback;
-  void *dti_opaque;
-  int64_t dti_expire;
-} dtimer_t;
 
+typedef void (gti_callback_t)(void *opaque);
+
+typedef struct gtimer {
+  LIST_ENTRY(gtimer) gti_link;
+  gti_callback_t *gti_callback;
+  void *gti_opaque;
+  time_t gti_expire;
+} gtimer_t;
+
+void gtimer_arm(gtimer_t *gti, gti_callback_t *callback, void *opaque,
+		int delta);
+
+void gtimer_disarm(gtimer_t *gti);
 
 
 /*
  * List / Queue header declarations
  */
-
 LIST_HEAD(th_subscription_list, th_subscription);
 RB_HEAD(channel_tree, channel);
 TAILQ_HEAD(channel_queue, channel);
@@ -132,21 +144,10 @@ typedef struct th_v4l_adapter {
 
 } th_v4l_adapter_t;
 
-
-/*
- * Mux instance modes
- */
-typedef enum {
-  TDMI_IDLE,         /* Not tuned */
-  TDMI_RUNNING,      /* Tuned with a subscriber */
-  TDMI_IDLESCAN,     /* Just scanning */
-} tdmi_state_t;
-
 /*
  * DVB Mux instance
  */
 typedef struct th_dvb_mux_instance {
-  int tdmi_refcnt;
 
   enum {
     TDMI_QUICKSCAN_NONE,
@@ -170,13 +171,15 @@ typedef struct th_dvb_mux_instance {
   time_t tdmi_time;
   LIST_HEAD(, th_dvb_table) tdmi_tables;
 
-  pthread_mutex_t tdmi_table_lock;
-
-  tdmi_state_t tdmi_state;
-
-  dtimer_t tdmi_initial_scan_timer;
-  const char *tdmi_status;
-  char *tdmi_last_status; /* For notification updates */
+  enum {
+    TDMI_FE_UNKNOWN,
+    TDMI_FE_NO_SIGNAL,
+    TDMI_FE_FAINT_SIGNAL,
+    TDMI_FE_BAD_SIGNAL,
+    TDMI_FE_CONTANT_FEC,
+    TDMI_FE_BURSTY_FEC,
+    TDMI_FE_OK,
+  } tdmi_fe_status;
 
   int tdmi_quality;
 
@@ -198,27 +201,6 @@ typedef struct th_dvb_mux_instance {
 
 
 /*
- *
- */
-typedef struct th_dvb_table {
-  LIST_ENTRY(th_dvb_table) tdt_link;
-  char *tdt_name;
-  void *tdt_handle;
-  struct th_dvb_mux_instance *tdt_tdmi;
-  void *tdt_opaque;
-  void (*tdt_callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
-		       uint8_t tableid, void *opaque);
-
-  int tdt_fd;
-  struct dmx_sct_filter_params *tdt_fparams;
-
-  int tdt_quickreq;
-  int tdt_count;
-
-} th_dvb_table_t;
-
-
-/*
  * DVB Adapter (one of these per physical adapter)
  */
 typedef struct th_dvb_adapter {
@@ -230,15 +212,12 @@ typedef struct th_dvb_adapter {
 
   th_dvb_mux_instance_t *tda_mux_current;
 
+  int tda_table_epollfd;
+
   const char *tda_rootpath;
   char *tda_identifier;
   uint32_t tda_autodiscovery;
   char *tda_displayname;
-
-  pthread_mutex_t tda_lock;
-  pthread_cond_t tda_cond;
-  TAILQ_HEAD(, dvb_fe_cmd) tda_fe_cmd_queue;
-  int tda_fe_errors;
 
   int tda_fe_fd;
   int tda_type;
@@ -248,10 +227,13 @@ typedef struct th_dvb_adapter {
 
   char *tda_dvr_path;
 
+  gtimer_t tda_mux_scanner_timer;
+
+  pthread_mutex_t tda_delivery_mutex;
   struct th_transport_list tda_transports; /* Currently bound transports */
 
-  dtimer_t tda_fec_monitor_timer;
-  dtimer_t tda_mux_scanner_timer;
+  gtimer_t tda_fe_monitor_timer;
+  int tda_fe_monitor_hold;
 
 } th_dvb_adapter_t;
 
@@ -445,6 +427,8 @@ typedef struct th_transport {
 
   int (*tht_quality_index)(struct th_transport *t);
 
+  pthread_mutex_t tht_delivery_mutex;
+
   struct th_muxer_list tht_muxers; /* muxers */
 
   /*
@@ -528,9 +512,6 @@ typedef struct th_transport {
   /**
    * Last known status (or error)
    */			   
-
-  dtimer_t tht_receive_timer;  /* we use this timer to trig when a transport
-				  does not receive any data at all */
   int tht_last_status;
 
 #define TRANSPORT_STATUS_UNKNOWN        0
@@ -587,13 +568,10 @@ typedef struct th_pkt {
   uint8_t pkt_frametype;
   uint8_t pkt_commercial;
 
-  th_stream_t *pkt_stream;
-
   int64_t pkt_dts;
   int64_t pkt_pts;
   int pkt_duration;
   int pkt_refcount;
-
 
   th_storage_t *pkt_storage;
   TAILQ_ENTRY(th_pkt) pkt_disk_link;
@@ -669,7 +647,7 @@ typedef struct th_muxstream {
   int64_t tms_delta;
   int64_t tms_mux_offset;
 
-  dtimer_t tms_mux_timer;
+			   //dtimer_t tms_mux_timer;
 
   /* MPEG TS multiplex stuff */
 
@@ -704,7 +682,7 @@ typedef struct th_muxer {
   th_mux_newpkt_t *tm_new_pkt;
 
   LIST_ENTRY(th_muxer) tm_transport_link;
-  int tm_linked;
+  th_transport_t *tm_transport;
 
   int64_t tm_offset;
 
@@ -780,6 +758,9 @@ typedef struct tt_decoder {
  */ 
 typedef struct channel {
   
+  int ch_refcount;
+  int ch_zombie;
+
   RB_ENTRY(channel) ch_name_link;
   char *ch_name;
   char *ch_sname;
@@ -913,15 +894,9 @@ typedef struct event {
 
 } event_t;
 
-config_entry_t *find_mux_config(const char *muxtype, const char *muxname);
 char *utf8toprintable(const char *in);
 char *utf8tofilename(const char *in);
 const char *htstvstreamtype2txt(tv_streamtype_t s);
-uint32_t tag_get(void);
-extern const char *settings_dir;
-FILE *settings_open_for_write(const char *name);
-FILE *settings_open_for_read(const char *name);
-extern const char *sys_warning;
 
 static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 {
@@ -944,5 +919,17 @@ void tvhlog(int severity, const char *subsys, const char *fmt, ...);
 #define	LOG_NOTICE	5	/* normal but significant condition */
 #define	LOG_INFO	6	/* informational */
 #define	LOG_DEBUG	7	/* debug-level messages */
+
+
+static inline int64_t 
+getclock_hires(void)
+{
+  int64_t now;
+  struct timeval tv;
+
+  gettimeofday(&tv, NULL);
+  now = (uint64_t)tv.tv_sec * 1000000ULL + (uint64_t)tv.tv_usec;
+  return now;
+}
 
 #endif /* TV_HEAD_H */

@@ -25,8 +25,6 @@ unsigned int transport_compute_weight(struct th_transport_list *head);
 
 int transport_start(th_transport_t *t, unsigned int weight, int force_start);
 
-void transport_stop(th_transport_t *t, int flush_subscriptions);
-
 th_transport_t *transport_create(const char *identifier, int type,
 				 int source_type);
 
@@ -56,5 +54,11 @@ void transport_destroy(th_transport_t *t);
 void transport_signal_status(th_transport_t *t, int newstatus);
 
 const char *transport_status_to_text(int status);
+
+void transport_remove_subscriber(th_transport_t *t, th_subscription_t *s);
+
+void transport_link_muxer(th_transport_t *t, th_muxer_t *tm);
+
+void transport_unlink_muxer(th_muxer_t *tm);
 
 #endif /* TRANSPORTS_H */

@@ -1,46 +1,22 @@
 -include ../config.mak
 
-SRCS = main.c dispatch.c channels.c transports.c teletext.c psi.c \
-	subscriptions.c mux.c tsdemux.c buffer.c tcp.c \
-	resolver.c tsmux.c parsers.c bitstream.c parser_h264.c spawn.c \
-	notify.c intercom.c access.c serviceprobe.c dtable.c
+SRCS = main.c access.c dtable.c tcp.c http.c notify.c
 
-SRCS += http.c
+SRCS += buffer.c channels.c subscriptions.c transports.c
 
-SRCS += htsp.c htsp_muxer.c rpc.c
-
-SRCS += pvr.c autorec.c ffmuxer.c
-
-SRCS += epg.c epg_xmltv.c
+SRCS += psi.c parsers.c parser_h264.c tsdemux.c bitstream.c
 
 VPATH += dvb
-SRCS += dvb.c dvb_support.c dvb_dvr.c dvb_preconf.c dvb_fe.c dvb_tables.c \
-	diseqc.c dvb_adapter.c dvb_multiplex.c dvb_transport.c
+SRCS += dvb.c dvb_support.c dvb_fe.c dvb_tables.c \
+	diseqc.c dvb_adapter.c dvb_multiplex.c dvb_transport.c dvb_preconf.c
 
-SRCS += iptv_input.c iptv_output.c
-
-SRCS += avgen.c file_input.c
-
-SRCS += rtsp.c rtp.c
-
-SRCS += v4l.c
-
-SRCS += cwc.c krypt.c
-
-VPATH += ffdecsa
-SRCS += FFdecsa.c
 
 #
 # Primary web interface
 #
 
 VPATH  += webui
-SRCS   += webui.c extjs.c comet.c simpleui.c
-
-JSSRCS += tvheadend.js extensions.js acleditor.js cwceditor.js \
-	dvb.js
-
-CSSSRCS += ext.css
+SRCS   += webui.c comet.c extjs.c
 
 PROGPATH = $(HTS_BUILD_ROOT)/tvheadend
 PROG = tvheadend

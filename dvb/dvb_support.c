@@ -265,51 +265,6 @@ dvb_adapter_find_by_identifier(const char *identifier)
 }
 
 
-
-
-/**
- *  Return a readable status text for the given mux
- */
-const char *
-dvb_mux_status(th_dvb_mux_instance_t *tdmi)
-{
-  int i, v = 0;
-
-  for(i = 0; i < TDMI_FEC_ERR_HISTOGRAM_SIZE; i++)
-    v += tdmi->tdmi_fec_err_histogram[i] > DVB_FEC_ERROR_LIMIT;
-  
-  if(v == TDMI_FEC_ERR_HISTOGRAM_SIZE)
-    return "Constant FEC";
-  else if(v > 0)
-    return "Bursty FEC";
-
-  return tdmi->tdmi_status ?: "OK";
-}
-
-
-/**
- * Return a badness value (0-3)
- */
-int
-dvb_mux_badness(th_dvb_mux_instance_t *tdmi)
-{
-  int i, v = 0;
-
-  if(tdmi->tdmi_status)
-    return 3;
-
-  for(i = 0; i < TDMI_FEC_ERR_HISTOGRAM_SIZE; i++)
-    v += tdmi->tdmi_fec_err_histogram[i] > DVB_FEC_ERROR_LIMIT;
-
-  if(v == TDMI_FEC_ERR_HISTOGRAM_SIZE)
-    return 2;
-  else if(v > 0)
-    return 1;
-
-  return 0;
-}
-
-
 /**
  *
  */

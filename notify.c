@@ -40,6 +40,7 @@ notify_by_msg(const char *class, htsmsg_t *m)
 void
 notify_transprot_status_change(struct th_transport *t)
 {
+#if 0
   th_subscription_t *s;
 
   LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link)
@@ -47,4 +48,5 @@ notify_transprot_status_change(struct th_transport *t)
       s->ths_status_callback(s, t->tht_last_status, s->ths_opaque);
  
   //  ajax_mailbox_transport_status_change(t);
+#endif
 }

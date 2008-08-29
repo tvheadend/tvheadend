@@ -51,6 +51,26 @@
 
 struct th_dvb_mux_instance_tree dvb_muxes;
 
+static struct strtab muxfestatustab[] = {
+  { "Unknown",      TDMI_FE_UNKNOWN },
+  { "No signal",    TDMI_FE_NO_SIGNAL },
+  { "Faint signal", TDMI_FE_FAINT_SIGNAL },
+  { "Bad signal",   TDMI_FE_BAD_SIGNAL },
+  { "Constant FEC", TDMI_FE_CONTANT_FEC },
+  { "Bursty FEC",   TDMI_FE_BURSTY_FEC },
+  { "OK",           TDMI_FE_OK },
+};
+
+
+/**
+ *  Return a readable status text for the given mux
+ */
+const char *
+dvb_mux_status(th_dvb_mux_instance_t *tdmi)
+{
+  return val2str(tdmi->tdmi_fe_status, muxfestatustab) ?: "Invalid";
+}
+
 
 
 
@@ -93,6 +113,8 @@ dvb_mux_create(th_dvb_adapter_t *tda, struct dvb_frontend_parameters *fe_param,
   char qpsktxt[20];
   int entries_before = tda->tda_muxes.entries;
 
+  lock_assert(&global_lock);
+
   if(skel == NULL)
     skel = calloc(1, sizeof(th_dvb_mux_instance_t));
 
@@ -107,24 +129,19 @@ dvb_mux_create(th_dvb_adapter_t *tda, struct dvb_frontend_parameters *fe_param,
   tdmi = skel;
   skel = NULL;
 
-  tdmi->tdmi_refcnt = 1;
-
   RB_INSERT_SORTED(&tda->tda_muxes_qscan_waiting, tdmi, tdmi_qscan_link,
 		   tdmi_cmp);
 
   tdmi->tdmi_quickscan = TDMI_QUICKSCAN_WAITING;
 
-  pthread_mutex_init(&tdmi->tdmi_table_lock, NULL);
-  tdmi->tdmi_state = TDMI_IDLE;
   tdmi->tdmi_transport_stream_id = tsid;
   tdmi->tdmi_adapter = tda;
   tdmi->tdmi_network = network ? strdup(network) : NULL;
-  tdmi->tdmi_last_status = strdup("Initializing");
   tdmi->tdmi_quality = 100;
 
   if(entries_before == 0 && tda->tda_rootpath != NULL) {
     /* First mux on adapter with backing hardware, start scanner */
-    dtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 1);
+    gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 1);
   }
 
   memcpy(&tdmi->tdmi_fe_params, fe_param, 
@@ -157,22 +174,6 @@ dvb_mux_create(th_dvb_adapter_t *tda, struct dvb_frontend_parameters *fe_param,
 }
 
 /**
- * Unref a TDMI and optionally free it
- */
-void
-dvb_mux_unref(th_dvb_mux_instance_t *tdmi)
-{
-  if(tdmi->tdmi_refcnt > 1) {
-    tdmi->tdmi_refcnt--;
-    return;
-  }
-
-  free(tdmi->tdmi_network);
-  free(tdmi->tdmi_identifier);
-  free(tdmi);
-}
-
-/**
  * Destroy a DVB mux (it might come back by itself very soon though :)
  */
 void
@@ -180,19 +181,18 @@ dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   th_transport_t *t;
-  char buf[400];
 
-  snprintf(buf, sizeof(buf), "%s/dvbmuxes/%s",
-	   settings_dir, tdmi->tdmi_identifier);
-  unlink(buf);
+  lock_assert(&global_lock);
+  
+  hts_settings_remove("dvbmuxes/%s/%s",
+		      tda->tda_identifier, tdmi->tdmi_identifier);  
 
   while((t = LIST_FIRST(&tdmi->tdmi_transports)) != NULL)
     transport_destroy(t);
 
   if(tda->tda_mux_current == tdmi)
-    tdmi_stop(tda->tda_mux_current);
+    dvb_fe_stop(tda->tda_mux_current);
 
-  dtimer_disarm(&tdmi->tdmi_initial_scan_timer);
   RB_REMOVE(&dvb_muxes, tdmi, tdmi_global_link);
   RB_REMOVE(&tda->tda_muxes, tdmi, tdmi_adapter_link);
 
@@ -201,38 +201,9 @@ dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
 
   hts_settings_remove("dvbmuxes/%s", tdmi->tdmi_identifier);
 
-  pthread_mutex_lock(&tda->tda_lock);
-  dvb_fe_flush(tdmi);
-  dvb_mux_unref(tdmi);
-  pthread_mutex_unlock(&tda->tda_lock);
-}
-
-
-
-/**
- *
- */
-void
-dvb_mux_fastswitch(th_dvb_mux_instance_t *tdmi)
-{
-  th_dvb_table_t *tdt;
-
-  if(tdmi->tdmi_quickscan == TDMI_QUICKSCAN_NONE)
-    return;
-
-  pthread_mutex_lock(&tdmi->tdmi_table_lock);
-  LIST_FOREACH(tdt, &tdmi->tdmi_tables, tdt_link) {
-    if(tdt->tdt_quickreq && tdt->tdt_count == 0)
-      break;
-  }
-  pthread_mutex_unlock(&tdmi->tdmi_table_lock);
-
-  if(tdt != NULL)
-    return; /* Still tables we've not seen */
-
-  tdmi->tdmi_quickscan = TDMI_QUICKSCAN_NONE;
-  dvb_adapter_mux_scanner(tdmi->tdmi_adapter, 0);
-
+  free(tdmi->tdmi_network);
+  free(tdmi->tdmi_identifier);
+  free(tdmi);
 }
 
 
@@ -243,6 +214,8 @@ th_dvb_mux_instance_t *
 dvb_mux_find_by_identifier(const char *identifier)
 {
   th_dvb_mux_instance_t skel;
+
+  lock_assert(&global_lock);
 
   skel.tdmi_identifier = (char *)identifier;
   return RB_FIND(&dvb_muxes, &skel, tdmi_global_link, tdmi_global_cmp);
@@ -324,7 +297,7 @@ dvb_mux_save(th_dvb_mux_instance_t *tdmi)
   htsmsg_t *m = htsmsg_create();
 
   htsmsg_add_u32(m, "quality", tdmi->tdmi_quality);
-  htsmsg_add_str(m, "status", tdmi->tdmi_last_status);
+  htsmsg_add_str(m, "status", dvb_mux_status(tdmi));
 
   htsmsg_add_u32(m, "transportstreamid", tdmi->tdmi_transport_stream_id);
   if(tdmi->tdmi_network != NULL)
@@ -490,11 +463,8 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m)
   tdmi = dvb_mux_create(tda, &f, polarisation, switchport,
 			tsid, htsmsg_get_str(m, "network"), NULL);
   if(tdmi != NULL) {
-    s = htsmsg_get_str(m, "status");
-    if(s != NULL) {
-      free((void *)tdmi->tdmi_last_status);
-      tdmi->tdmi_last_status = strdup(s);
-    }
+    if((s = htsmsg_get_str(m, "status")) != NULL)
+      tdmi->tdmi_fe_status = str2val(s, muxfestatustab);
 
     if(!htsmsg_get_u32(m, "quality", &u32)) 
       tdmi->tdmi_quality = u32;

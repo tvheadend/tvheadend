@@ -19,9 +19,15 @@
 #ifndef HTTP_H_
 #define HTTP_H_
 
-extern int http_port;
+#include <libhts/htsbuf.h>
 
-#include "tcp.h"
+TAILQ_HEAD(http_arg_list, http_arg);
+
+typedef struct http_arg {
+  TAILQ_ENTRY(http_arg) link;
+  char *key;
+  char *val;
+} http_arg_t;
 
 #define HTTP_STATUS_OK           200
 #define HTTP_STATUS_FOUND        302
@@ -32,48 +38,13 @@ extern int http_port;
 
 LIST_HEAD(rtsp_session_head, rtsp_session);
 
-#define http_printf(x, fmt...) tcp_printf(&(x)->hc_tcp_session, fmt)
-
-TAILQ_HEAD(http_arg_list, http_arg);
-
-typedef struct http_arg {
-  TAILQ_ENTRY(http_arg) link;
-  char *key;
-  char *val;
-} http_arg_t;
-
-
-TAILQ_HEAD(http_reply_queue, http_reply);
-
-typedef struct http_reply {
-  TAILQ_ENTRY(http_reply) hr_link;
-
-  void *hr_opaque;
-
-  void (*hr_destroy)(struct http_reply *hr, void *opaque);
-
-  struct http_connection *hr_connection;
-  int hr_version; /* HTTP version */
-  int hr_keep_alive;
-  
-  char *hr_location;
-
-  int hr_rc;      /* Return code */
-  int hr_maxage;
-  const char *hr_encoding;
-  const char *hr_content;
-
-  htsbuf_queue_t hr_q;
-
-} http_reply_t;
-
-
 typedef struct http_connection {
-  tcp_session_t hc_tcp_session; /* Must be first */
+  int hc_fd;
+  struct sockaddr_in *hc_peer;
   char *hc_url;
   int hc_keep_alive;
 
-  struct http_reply_queue hc_replies;
+  htsbuf_queue_t hc_reply;
 
   struct http_arg_list hc_args;
 
@@ -98,7 +69,6 @@ typedef struct http_connection {
   } hc_cmd;
 
   enum {
-    HTTP_VERSION_0_9,
     HTTP_VERSION_1_0,
     HTTP_VERSION_1_1,
     RTSP_VERSION_1_0,
@@ -107,7 +77,7 @@ typedef struct http_connection {
   char *hc_username;
   char *hc_password;
 
-  struct rtsp_session_head hc_rtsp_sessions;
+  //  struct rtsp_session_head hc_rtsp_sessions;
 
   int hc_authenticated; /* Used by RTSP, it seems VLC does not 
 			   send authentication headers for each 
@@ -120,13 +90,9 @@ typedef struct http_connection {
   
   char *hc_post_data;
   unsigned int hc_post_len;
-  unsigned int hc_post_ptr;
 
 } http_connection_t;
 
-
-
-void http_start(int port);
 
 void http_arg_flush(struct http_arg_list *list);
 
@@ -136,19 +102,15 @@ void http_arg_set(struct http_arg_list *list, char *key, char *val);
 
 int http_tokenize(char *buf, char **vec, int vecsize, int delimiter);
 
-void http_error(http_connection_t *hc, http_reply_t *hr, int error);
+void http_error(http_connection_t *hc, int error);
 
-void http_output(http_connection_t *hc, http_reply_t *hr,
-		 const char *content, const char *encoding, int maxage);
+void http_output_html(http_connection_t *hc);
 
-void http_output_html(http_connection_t *hc, http_reply_t *hr);
+void http_output_content(http_connection_t *hc, const char *content);
 
-void http_continue(http_connection_t *hc);
+void http_redirect(http_connection_t *hc, const char *location);
 
-void http_redirect(http_connection_t *hc, http_reply_t *hr, 
-		   const char *location);
-
-typedef int (http_callback_t)(http_connection_t *hc, http_reply_t *hr, 
+typedef int (http_callback_t)(http_connection_t *hc, 
 			      const char *remain, void *opaque);
 
 typedef struct http_path {
@@ -163,7 +125,8 @@ typedef struct http_path {
 http_path_t *http_path_add(const char *path, void *opaque,
 			   http_callback_t *callback, uint32_t accessmask);
 
-void http_resource_add(const char *path, const void *ptr, size_t len, 
-		       const char *content, const char *encoding);
+
+
+void http_server_init(void);
 
 #endif /* HTTP_H_ */
