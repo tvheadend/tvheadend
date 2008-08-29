@@ -16,6 +16,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE /* for splice() */
+#include <fcntl.h>
+
 #include <pthread.h>
 #include <assert.h>
 #include <stdio.h>
@@ -24,7 +27,7 @@
 #include <string.h>
 
 #include <sys/stat.h>
-#include <fcntl.h>
+#include <sys/sendfile.h>
 
 #include "tvhead.h"
 #include "access.h"
@@ -71,15 +74,21 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
 static int
 page_static(http_connection_t *hc, const char *remain, void *opaque)
 {
-  int fd, r;
+  int fd;
   const char *rootpath = HTS_BUILD_ROOT "/tvheadend/webui/static";
   char path[500];
   struct stat st;
-  void *buf;
   const char *content = NULL, *postfix;
 
   if(strstr(remain, ".."))
     return HTTP_STATUS_BAD_REQUEST;
+
+  postfix = strrchr(remain, '.');
+  if(postfix != NULL) {
+    postfix++;
+    if(!strcmp(postfix, "js"))
+      content = "text/javascript; charset=UTF-8";
+  }
 
   snprintf(path, sizeof(path), "%s/%s", rootpath, remain);
 
@@ -91,25 +100,9 @@ page_static(http_connection_t *hc, const char *remain, void *opaque)
     return 404;
   }
 
-  buf = malloc(st.st_size);
-  r = read(fd, buf, st.st_size);
+  http_send_header(hc, 200, content, st.st_size, NULL, NULL, 10);
+  sendfile(hc->hc_fd, fd, NULL, st.st_size);
   close(fd);
-
-  if(r != st.st_size) {
-    free(buf);
-    return 404;
-  }
-
-  postfix = strrchr(remain, '.');
-  if(postfix != NULL) {
-    postfix++;
-
-    if(!strcmp(postfix, "js"))
-      content = "text/javascript; charset=UTF-8";
-  }
-
-  htsbuf_append_prealloc(&hc->hc_reply, buf, st.st_size);
-  http_output_content(hc, content);
   return 0;
 }
 
