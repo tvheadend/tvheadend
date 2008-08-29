@@ -207,7 +207,6 @@ dvb_fe_start(th_dvb_adapter_t *tda)
 /**
  *
  */
-#if 0
 static void
 dvb_notify_mux_quality(th_dvb_mux_instance_t *tdmi)
 {
@@ -217,7 +216,6 @@ dvb_notify_mux_quality(th_dvb_mux_instance_t *tdmi)
   htsmsg_add_u32(m, "quality", tdmi->tdmi_quality);
   notify_by_msg("dvbmux", m);
 }
-#endif
 
 
 /**
@@ -243,7 +241,7 @@ dvb_fe_monitor(void *aux)
 {
   th_dvb_adapter_t *tda = aux;
   fe_status_t fe_status;
-  int status, v, savemux = 0, vv, i, fec;
+  int status, v, savemux = 0, vv, i, fec, q;
   th_dvb_mux_instance_t *tdmi = tda->tda_mux_current;
   char buf[50];
 
@@ -314,6 +312,16 @@ dvb_fe_monitor(void *aux)
     tvhlog(LOG_NOTICE, "dvb", "\"%s\" on adapter \"%s\", status changed to %s",
 	   buf, tda->tda_displayname, dvb_mux_status(tdmi));
     savemux = 1;
+  }
+
+  if(status != TDMI_FE_UNKNOWN) {
+    q = tdmi->tdmi_quality + (status - TDMI_FE_OK + 1);
+    q = MAX(MIN(q, 100), 0);
+    if(q != tdmi->tdmi_quality) {
+      tdmi->tdmi_quality = q;
+      dvb_notify_mux_quality(tdmi);
+      savemux = 1;
+    }
   }
 
   if(savemux)
