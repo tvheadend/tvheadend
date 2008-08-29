@@ -140,14 +140,16 @@ static const char *cachemonths[12] = {
   "Dec"
 };
 
+
 /**
  * Transmit a HTTP reply
  *
  * Return non-zero if we should disconnect (no more keep-alive)
  */
-static void
-http_send_reply(http_connection_t *hc, int rc, const char *content, 
-		const char *encoding, const char *location, int maxage)
+void
+http_send_header(http_connection_t *hc, int rc, const char *content, 
+		 int contentlen, const char *encoding, const char *location, 
+		 int maxage)
 {
   struct tm tm0, *tm;
   htsbuf_queue_t hdrs;
@@ -155,8 +157,9 @@ http_send_reply(http_connection_t *hc, int rc, const char *content,
 
   htsbuf_queue_init(&hdrs, 0);
 
-  htsbuf_qprintf(&hdrs, "%s %d %s\r\n", val2str(hc->hc_version, HTTP_versiontab),
-	      rc, http_rc2str(rc));
+  htsbuf_qprintf(&hdrs, "%s %d %s\r\n", 
+		 val2str(hc->hc_version, HTTP_versiontab),
+		 rc, http_rc2str(rc));
 
   htsbuf_qprintf(&hdrs, "Server: HTS/tvheadend\r\n");
 
@@ -196,14 +199,31 @@ http_send_reply(http_connection_t *hc, int rc, const char *content,
   if(location != NULL)
     htsbuf_qprintf(&hdrs, "Location: %s\r\n", location);
 
+  if(content != NULL)
+    htsbuf_qprintf(&hdrs, "Content-Type: %s\r\n");
+
   htsbuf_qprintf(&hdrs,
-	      "Content-Type: %s\r\n"
-	      "Content-Length: %d\r\n"
-	      "\r\n",
-	      content, hc->hc_reply.hq_size);
+		 "Content-Length: %d\r\n"
+		 "\r\n",
+		 contentlen);
 
   tcp_write_queue(hc->hc_fd, &hdrs);
+}
 
+
+
+/**
+ * Transmit a HTTP reply
+ *
+ * Return non-zero if we should disconnect (no more keep-alive)
+ */
+static void
+http_send_reply(http_connection_t *hc, int rc, const char *content, 
+		const char *encoding, const char *location, int maxage)
+{
+  http_send_header(hc, rc, content, hc->hc_reply.hq_size,
+		   encoding, location, maxage);
+  
   tcp_write_queue(hc->hc_fd, &hc->hc_reply);
 }
 
