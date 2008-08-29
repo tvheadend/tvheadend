@@ -98,7 +98,7 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
      *
      */
     function saveconfig() {
-	confpanel.getForm().submit({url:'/dvbadapter', 
+	panel.getForm().submit({url:'/dvbadapter', 
 		    params:{'adapterId': adapterId, 'op':'save'},
 		    waitMsg:'Saving Data...'
 		    });
