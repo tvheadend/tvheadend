@@ -827,7 +827,6 @@ tcp_server_loop(void *aux)
     r = epoll_wait(tcp_server_epoll_fd, ev, sizeof(ev) / sizeof(ev[0]), -1);
     if(r == -1) {
       perror("tcp_server: epoll_wait");
-      sleep(1);
       continue;
     }
 
