@@ -10,6 +10,9 @@ VPATH += dvb
 SRCS += dvb.c dvb_support.c dvb_fe.c dvb_tables.c \
 	diseqc.c dvb_adapter.c dvb_multiplex.c dvb_transport.c dvb_preconf.c
 
+SRCS += cwc.c krypt.c
+VPATH += ffdecsa
+SRCS += FFdecsa.c
 
 #
 # Primary web interface
