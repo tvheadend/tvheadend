@@ -41,6 +41,8 @@ LIST_HEAD(rtsp_session_head, rtsp_session);
 typedef struct http_connection {
   int hc_fd;
   struct sockaddr_in *hc_peer;
+  char *hc_peername;
+
   char *hc_url;
   int hc_keep_alive;
 
@@ -77,7 +79,7 @@ typedef struct http_connection {
   char *hc_username;
   char *hc_password;
 
-  //  struct rtsp_session_head hc_rtsp_sessions;
+  struct rtsp_session_head hc_rtsp_sessions;
 
   int hc_authenticated; /* Used by RTSP, it seems VLC does not 
 			   send authentication headers for each 
