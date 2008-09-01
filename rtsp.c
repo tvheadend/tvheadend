@@ -44,8 +44,6 @@
 
 #include <libavutil/random.h>
 
-#include <libhts/htscfg.h>
-
 #define RTSP_STATUS_OK           200
 #define RTSP_STATUS_UNAUTHORIZED 401
 #define RTSP_STATUS_METHOD       405
@@ -57,6 +55,8 @@
 
 
 #define rcprintf(c, fmt...) tcp_printf(&(rc)->rc_tcp_session, fmt)
+
+#define rtsp_printf(hc, fmt...) htsbuf_qprintf(&(hc)->hc_reply, fmt)
 
 static AVRandomState rtsp_rnd;
 
@@ -254,15 +254,14 @@ rtsp_reply_error(http_connection_t *hc, int error, const char *errstr)
   if(errstr == NULL)
     errstr = rtsp_err2str(error);
 
-  tvhlog(LOG_INFO, "rtsp",
-	 "%s: %s", tcp_logname(&hc->hc_tcp_session), errstr);
+  tvhlog(LOG_INFO, "rtsp", "%s", errstr);
 
-  http_printf(hc, "RTSP/1.0 %d %s\r\n", error, errstr);
+  rtsp_printf(hc, "RTSP/1.0 %d %s\r\n", error, errstr);
   if((c = http_arg_get(&hc->hc_args, "cseq")) != NULL)
-    http_printf(hc, "CSeq: %s\r\n", c);
+    rtsp_printf(hc, "CSeq: %s\r\n", c);
   if(error == HTTP_STATUS_UNAUTHORIZED)
-    http_printf(hc, "WWW-Authenticate: Basic realm=\"tvheadend\"\r\n");
-  http_printf(hc, "\r\n");
+    rtsp_printf(hc, "WWW-Authenticate: Basic realm=\"tvheadend\"\r\n");
+  rtsp_printf(hc, "\r\n");
 }
 
 
@@ -332,17 +331,17 @@ rtsp_cmd_play(http_connection_t *hc)
   if(rs->rs_s->ths_channel != NULL)
     tvhlog(LOG_INFO, "rtsp",
 	   "%s: Starting playback of %s",
-	   tcp_logname(&hc->hc_tcp_session), rs->rs_s->ths_channel->ch_name);
+	   hc->hc_peername, rs->rs_s->ths_channel->ch_name);
 
-  http_printf(hc,
+  rtsp_printf(hc,
 	      "RTSP/1.0 200 OK\r\n"
 	      "Session: %u\r\n",
 	      rs->rs_id);
 
   if((c = http_arg_get(&hc->hc_args, "cseq")) != NULL)
-    http_printf(hc, "CSeq: %s\r\n", c);
+    rtsp_printf(hc, "CSeq: %s\r\n", c);
   
-  http_printf(hc, "\r\n");
+  rtsp_printf(hc, "\r\n");
 }
 
 /*
@@ -370,17 +369,17 @@ rtsp_cmd_pause(http_connection_t *hc)
   if(rs->rs_s->ths_channel != NULL)
     tvhlog(LOG_INFO, "rtsp", 
 	   "%s: Pausing playback of %s",
-	   tcp_logname(&hc->hc_tcp_session), rs->rs_s->ths_channel->ch_name);
+	   hc->hc_peername, rs->rs_s->ths_channel->ch_name);
 
-  http_printf(hc,
+  rtsp_printf(hc,
 	      "RTSP/1.0 200 OK\r\n"
 	      "Session: %u\r\n",
 	      rs->rs_id);
 
   if((c = http_arg_get(&hc->hc_args, "cseq")) != NULL)
-    http_printf(hc, "CSeq: %s\r\n", c);
+    rtsp_printf(hc, "CSeq: %s\r\n", c);
   
-  http_printf(hc, "\r\n");
+  rtsp_printf(hc, "\r\n");
 }
 
 /*
@@ -454,7 +453,7 @@ rtsp_cmd_setup(http_connection_t *hc)
     return;
   }
 
-  memcpy(&dst, &hc->hc_tcp_session.tcp_peer_addr, sizeof(struct sockaddr_in));
+  memcpy(&dst, hc->hc_peer, sizeof(struct sockaddr_in));
   dst.sin_port = htons(client_ports[0]);
 
   if((rs = rtsp_session_create(ch, &dst)) == NULL) {
@@ -464,7 +463,7 @@ rtsp_cmd_setup(http_connection_t *hc)
 
   LIST_INSERT_HEAD(&hc->hc_rtsp_sessions, rs, rs_con_link);
 
-  http_printf(hc,
+  rtsp_printf(hc,
 	      "RTSP/1.0 200 OK\r\n"
 	      "Session: %u\r\n"
 	      "Transport: RTP/AVP/UDP;unicast;client_port=%d-%d;"
@@ -476,9 +475,9 @@ rtsp_cmd_setup(http_connection_t *hc)
 	      rs->rs_server_port[1]);
 
   if((c = http_arg_get(&hc->hc_args, "cseq")) != NULL)
-    http_printf(hc, "CSeq: %s\r\n", c);
+    rtsp_printf(hc, "CSeq: %s\r\n", c);
   
-  http_printf(hc, "\r\n");
+  rtsp_printf(hc, "\r\n");
 }
 
 
@@ -508,16 +507,16 @@ rtsp_cmd_describe(http_connection_t *hc)
 	   ch->ch_name);
 
 
-  http_printf(hc,
+  rtsp_printf(hc,
 	      "RTSP/1.0 200 OK\r\n"
 	      "Content-Type: application/sdp\r\n"
 	      "Content-Length: %d\r\n",
 	      strlen(sdpreply));
 
   if((c = http_arg_get(&hc->hc_args, "cseq")) != NULL)
-    http_printf(hc, "CSeq: %s\r\n", c);
+    rtsp_printf(hc, "CSeq: %s\r\n", c);
   
-  http_printf(hc, "\r\n%s", sdpreply);
+  rtsp_printf(hc, "\r\n%s", sdpreply);
 }
 
 
@@ -534,13 +533,13 @@ rtsp_cmd_options(http_connection_t *hc)
     return;
   }
 
-  http_printf(hc,
+  rtsp_printf(hc,
 	      "RTSP/1.0 200 OK\r\n"
 	      "Public: DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE\r\n");
 
   if((c = http_arg_get(&hc->hc_args, "cseq")) != NULL)
-    http_printf(hc, "CSeq: %s\r\n", c);
-  http_printf(hc, "\r\n");
+    rtsp_printf(hc, "CSeq: %s\r\n", c);
+  rtsp_printf(hc, "\r\n");
 }
 
 /*
@@ -555,15 +554,15 @@ rtsp_cmd_teardown(http_connection_t *hc)
   if((rs = rtsp_get_session(hc)) == NULL)
     return;
 
-  http_printf(hc,
+  rtsp_printf(hc,
 	      "RTSP/1.0 200 OK\r\n"
 	      "Session: %u\r\n",
 	      rs->rs_id);
 
   if((c = http_arg_get(&hc->hc_args, "cseq")) != NULL)
-    http_printf(hc, "CSeq: %s\r\n", c);
+    rtsp_printf(hc, "CSeq: %s\r\n", c);
   
-  http_printf(hc, "\r\n");
+  rtsp_printf(hc, "\r\n");
 
   rtsp_session_destroy(rs);
 }
@@ -580,7 +579,7 @@ rtsp_access_list(http_connection_t *hc)
     return 0;
 
   x = access_verify(hc->hc_username, hc->hc_password,
-		    (struct sockaddr *)&hc->hc_tcp_session.tcp_peer_addr,
+		    (struct sockaddr *)hc->hc_peer,
 		    ACCESS_STREAMING);
   if(x == 0)
     hc->hc_authenticated = 1;
@@ -598,32 +597,34 @@ rtsp_process_request(http_connection_t *hc)
 {
   if(rtsp_access_list(hc)) {
     rtsp_reply_error(hc, RTSP_STATUS_UNAUTHORIZED, NULL);
-    return 0;
+  } else {
+    switch(hc->hc_cmd) {
+    default:
+      rtsp_reply_error(hc, RTSP_STATUS_METHOD, NULL);
+      break;
+    case RTSP_CMD_DESCRIBE:
+      rtsp_cmd_describe(hc);
+      break;
+    case RTSP_CMD_SETUP:
+      rtsp_cmd_setup(hc);
+      break;
+    case RTSP_CMD_PLAY:
+      rtsp_cmd_play(hc);
+      break;
+    case RTSP_CMD_PAUSE:
+      rtsp_cmd_pause(hc); 
+      break;
+    case RTSP_CMD_OPTIONS:   
+      rtsp_cmd_options(hc);
+      break;
+    case RTSP_CMD_TEARDOWN: 
+      rtsp_cmd_teardown(hc);
+      break;
+    }
   }
 
-  switch(hc->hc_cmd) {
-  default:
-    rtsp_reply_error(hc, RTSP_STATUS_METHOD, NULL);
-    break;
-  case RTSP_CMD_DESCRIBE:
-    rtsp_cmd_describe(hc);
-    break;
-  case RTSP_CMD_SETUP:
-    rtsp_cmd_setup(hc);
-    break;
-  case RTSP_CMD_PLAY:
-    rtsp_cmd_play(hc);
-    break;
-  case RTSP_CMD_PAUSE:
-    rtsp_cmd_pause(hc); 
-    break;
-  case RTSP_CMD_OPTIONS:   
-    rtsp_cmd_options(hc);
-    break;
-  case RTSP_CMD_TEARDOWN: 
-    rtsp_cmd_teardown(hc);
-    break;
-  }
+  tcp_write_queue(hc->hc_fd, &hc->hc_reply);
+
   return 0;
 }
 
