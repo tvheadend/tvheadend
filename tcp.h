@@ -105,10 +105,15 @@ int tcp_send_msg(tcp_session_t *ses, int hiprio, void *data, size_t len);
 
 void tcp_server_init(void);
 
+int tcp_connect(const char *hostname, int port, char *errbuf,
+		size_t errbufsize, int timeout);
+
 typedef void (tcp_server_callback_t)(int fd, void *opaque,
 				     struct sockaddr_in *source);
 
 void *tcp_server_create(int port, tcp_server_callback_t *start, void *opaque);
+
+int tcp_read(int fd, void *buf, size_t len);
 
 int tcp_read_line(int fd, char *buf, const size_t bufsize, 
 		  htsbuf_queue_t *spill);

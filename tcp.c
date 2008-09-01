@@ -17,7 +17,9 @@
  */
 
 #include <pthread.h>
+#include <netdb.h>
 #include <sys/epoll.h>
+#include <poll.h>
 #include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -635,8 +637,147 @@ tcp_set_hostname(tcp_session_t *ses, const char *hostname)
 
 #endif
 
+/**
+ *
+ */
+int
+tcp_connect(const char *hostname, int port, char *errbuf, size_t errbufsize,
+	    int timeout)
+{
+  const char *errtxt;
+  struct hostent hostbuf, *hp;
+  char *tmphstbuf;
+  size_t hstbuflen;
+  int herr, fd, r, res, err;
+  struct sockaddr_in6 in6;
+  struct sockaddr_in in;
+  socklen_t errlen = sizeof(int);
+
+  hstbuflen = 1024;
+  tmphstbuf = malloc(hstbuflen);
+
+  while((res = gethostbyname_r(hostname, &hostbuf, tmphstbuf, hstbuflen,
+			       &hp, &herr)) == ERANGE) {
+    hstbuflen *= 2;
+    tmphstbuf = realloc(tmphstbuf, hstbuflen);
+  }
+  
+  if(res != 0) {
+    snprintf(errbuf, errbufsize, "Resolver internal error");
+    free(tmphstbuf);
+    return -1;
+  } else if(herr != 0) {
+    switch(herr) {
+    case HOST_NOT_FOUND:
+      errtxt = "The specified host is unknown";
+      break;
+    case NO_ADDRESS:
+      errtxt = "The requested name is valid but does not have an IP address";
+      break;
+      
+    case NO_RECOVERY:
+      errtxt = "A non-recoverable name server error occurred";
+      break;
+      
+    case TRY_AGAIN:
+      errtxt = "A temporary error occurred on an authoritative name server";
+      break;
+      
+    default:
+      errtxt = "Unknown error";
+      break;
+    }
+
+    snprintf(errbuf, errbufsize, "%s", errtxt);
+    free(tmphstbuf);
+    return -1;
+  } else if(hp == NULL) {
+    snprintf(errbuf, errbufsize, "Resolver internal error");
+    free(tmphstbuf);
+    return -1;
+  }
+  fd = socket(hp->h_addrtype, SOCK_STREAM, 0);
+  if(fd == -1) {
+    snprintf(errbuf, errbufsize, "Unable to create socket: %s",
+	     strerror(errno));
+    free(tmphstbuf);
+    return -1;
+  }
+
+  /**
+   * Switch to nonblocking
+   */
+  fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
+
+  switch(hp->h_addrtype) {
+  case AF_INET:
+    memset(&in, 0, sizeof(in));
+    in.sin_family = AF_INET;
+    in.sin_port = htons(port);
+    memcpy(&in.sin_addr, hp->h_addr_list[0], sizeof(struct in_addr));
+    r = connect(fd, (struct sockaddr *)&in, sizeof(struct sockaddr_in));
+    break;
+
+  case AF_INET6:
+    memset(&in6, 0, sizeof(in6));
+    in6.sin6_family = AF_INET6;
+    in6.sin6_port = htons(port);
+    memcpy(&in6.sin6_addr, hp->h_addr_list[0], sizeof(struct in6_addr));
+    r = connect(fd, (struct sockaddr *)&in, sizeof(struct sockaddr_in6));
+    break;
+
+  default:
+    snprintf(errbuf, errbufsize, "Invalid protocol family");
+    free(tmphstbuf);
+    return -1;
+  }
+
+  free(tmphstbuf);
+
+  if(r == -1) {
+    if(errno == EINPROGRESS) {
+      struct pollfd pfd;
+
+      pfd.fd = fd;
+      pfd.events = POLLOUT;
+      pfd.revents = 0;
+
+      r = poll(&pfd, 1, timeout * 1000);
+      if(r == 0) {
+	/* Timeout */
+	snprintf(errbuf, errbufsize, "Connection attempt timed out");
+	close(fd);
+	return -1;
+      }
+      
+      if(r == -1) {
+	snprintf(errbuf, errbufsize, "poll() error: %s", strerror(errno));
+	close(fd);
+	return -1;
+      }
+
+      getsockopt(fd, SOL_SOCKET, SO_ERROR, (void *)&err, &errlen);
+    } else {
+      err = errno;
+    }
+  } else {
+    err = 0;
+  }
+
+  if(err != 0) {
+    snprintf(errbuf, errbufsize, "%s", strerror(err));
+    close(fd);
+    return -1;
+  }
+  
+  fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) & ~O_NONBLOCK);
+  return fd;
+}
 
 
+/**
+ *
+ */
 int
 tcp_write_queue(int fd, htsbuf_queue_t *q)
 {
@@ -648,9 +789,6 @@ tcp_write_queue(int fd, htsbuf_queue_t *q)
 
     l = hd->hd_data_len - hd->hd_data_off;
     r = write(fd, hd->hd_data + hd->hd_data_off, l);
-    if(l != r) {
-      fprintf(stderr, "write error\n");
-    }
     free(hd->hd_data);
     free(hd);
   }
@@ -752,8 +890,21 @@ tcp_read_data(int fd, char *buf, const size_t bufsize, htsbuf_queue_t *spill)
   return 0;
 }
 
+/**
+ *
+ */
+int
+tcp_read(int fd, void *buf, size_t len)
+{
+  int x = recv(fd, buf, len, MSG_WAITALL);
 
+  if(x == -1)
+    return errno;
+  if(x != len)
+    return ECONNRESET;
+  return 0;
 
+}
 
 /**
  *
