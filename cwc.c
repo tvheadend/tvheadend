@@ -110,21 +110,6 @@ typedef struct cwc_transport {
 } cwc_transport_t;
 
 
-/**
- *
- */
-static void
-cwc_set_state(cwc_t *cwc, int newstate, const char *errtxt)
-{
-  cwc->cwc_state = newstate;
-
-  if(newstate == CWC_STATE_IDLE)
-    cwc->cwc_errtxt = errtxt;
-
-  //notify_cwc_status_change(cwc);
-}
-
-
 
 /**
  *
@@ -276,26 +261,12 @@ des_make_session_key(cwc_t *cwc)
   memcpy(cwc->cwc_key, des_key_spread(des14), 16);
 }
 
-
-/**
- *
- */
-static void
-cwc_timeout(void *aux, int64_t now)
-{
-  cwc_t *cwc = aux;
-  tcp_disconnect(&cwc->cwc_tcp_session, ETIMEDOUT);
-}
-
-
 /**
  *
  */
 static int
 cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid)
 {
-  tcp_session_t *ses = &cwc->cwc_tcp_session;
-
   uint8_t *buf = malloc(CWS_NETMSGSIZE);
 
   memset(buf, 0, 12);
@@ -318,10 +289,8 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid)
   buf[0] = (len - 2) >> 8;
   buf[1] =  len - 2;
 
-  tcp_send_msg(ses, 0, buf, len);
-
-  /* Expect a response within 4 seconds */
-  dtimer_arm(&cwc->cwc_idle_timer, cwc_timeout, cwc, 4);
+  write(cwc->cwc_fd, buf, len);
+  free(buf);
   return cwc->cwc_seq;
 }
 
@@ -330,12 +299,11 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid)
 /**
  * Card data command
  */
+
 static void
 cwc_send_data_req(cwc_t *cwc)
 {
   uint8_t buf[CWS_NETMSGSIZE];
-
-  cwc_set_state(cwc, CWC_STATE_WAIT_CARD_DATA, NULL);
 
   buf[0] = MSG_CARD_DATA_REQ;
   buf[1] = 0;
@@ -348,6 +316,7 @@ cwc_send_data_req(cwc_t *cwc)
 /**
  * Send keep alive
  */
+#if 0
 static void
 cwc_send_ka(void *aux, int64_t now)
 {
@@ -359,49 +328,44 @@ cwc_send_ka(void *aux, int64_t now)
   buf[2] = 0;
 
   cwc_send_msg(cwc, buf, 3, 0);
-  dtimer_arm(&cwc->cwc_send_ka_timer, cwc_send_ka, cwc,
-	     CWC_KEEPALIVE_INTERVAL);
 }
+#endif
 
 
 /**
  * Handle reply to card data request
  */
 static int
-cwc_dispatch_card_data_reply(cwc_t *cwc, uint8_t msgtype, 
-			     uint8_t *msg, int len)
+cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 {
   int plen;
   const char *n;
 
-  if(msgtype != MSG_CARD_DATA)
-    return EBADMSG;
-
   msg += 12;
   len -= 12;
+
+  if(len < 3) {
+    tvhlog(LOG_INFO, "cwc", "Invalid card data reply");
+    return -1;
+  }
+
   plen = (msg[1] & 0xf) << 8 | msg[2];
 
-  if(plen < 14)
-    return EBADMSG;
-  
+  if(plen < 14) {
+    tvhlog(LOG_INFO, "cwc", "Invalid card data reply");
+    return -1;
+  }
+
   cwc->cwc_caid = (msg[4] << 8) | msg[5];
   n = psi_caid2name(cwc->cwc_caid) ?: "Unknown";
 
   tvhlog(LOG_INFO, "cwc", "%s: Connected as user 0x%02x "
 	 "to a %s-card [0x%04x : %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x] "
 	 "with %d providers", 
-	 cwc->cwc_tcp_session.tcp_hostname,
+	 cwc->cwc_hostname,
 	 msg[3], n, cwc->cwc_caid, 
 	 msg[6], msg[7], msg[8], msg[9], msg[10], msg[11], msg[12], msg[13],
 	 msg[14]);
-
-  cwc_set_state(cwc, CWC_STATE_RUNNING, NULL);
-
-  /* Send KA every CWC_KEEPALIVE_INTERVAL seconds */
-
-  dtimer_arm(&cwc->cwc_send_ka_timer, cwc_send_ka, cwc,
-	     CWC_KEEPALIVE_INTERVAL);
-
   return 0;
 }
 
@@ -416,8 +380,6 @@ cwc_send_login(cwc_t *cwc)
   int ul = strlen(cwc->cwc_username) + 1;
   int pl = strlen(cwc->cwc_password_salted) + 1;
 
-  cwc_set_state(cwc, CWC_STATE_WAIT_LOGIN_ACK, NULL);
-
   buf[0] = MSG_CLIENT_2_SERVER_LOGIN;
   buf[1] = 0;
   buf[2] = ul + pl;
@@ -427,7 +389,7 @@ cwc_send_login(cwc_t *cwc)
   cwc_send_msg(cwc, buf, ul + pl + 3, 0);
 }
 
-
+#if 0
 /**
  * Handle reply to login
  */
@@ -591,37 +553,155 @@ cwc_data_input(cwc_t *cwc)
     }
   }
 }
+#endif
 
+
+/**
+ *
+ */
+static int
+cwc_read_message(cwc_t *cwc, const char *state)
+{
+  char buf[2];
+  int msglen, r;
+
+  if((r = tcp_read(cwc->cwc_fd, buf, 2))) {
+    tvhlog(LOG_INFO, "cwc", "%s: %s: Read error (header): %s",
+	   cwc->cwc_hostname, state, strerror(r));
+    return -1;
+  }
+
+  msglen = (buf[0] << 8) | buf[1];
+  if(msglen >= CWS_NETMSGSIZE) {
+    tvhlog(LOG_INFO, "cwc", "%s: %s: Invalid message size: %d",
+	   cwc->cwc_hostname, state, msglen);
+    return -1;
+  }
+
+  if((r = tcp_read(cwc->cwc_fd, cwc->cwc_buf + 2, msglen))) {
+    tvhlog(LOG_INFO, "cwc", "%s: %s: Read error: %s",
+	   cwc->cwc_hostname, state, strerror(r));
+    return -1;
+  }
+
+  if((msglen = des_decrypt(cwc->cwc_buf, msglen + 2, cwc->cwc_key)) < 15) {
+    tvhlog(LOG_INFO, "cwc", "%s: %s: Decrypt failed", state, cwc->cwc_hostname);
+    return -1;
+  }
+
+  return msglen;
+}
 
 
 /**
  *
  */
 static void
-cwc_tcp_callback(tcpevent_t event, void *tcpsession)
+cwc_session(cwc_t *cwc)
 {
-  cwc_t *cwc = tcpsession;
-
-  dtimer_disarm(&cwc->cwc_idle_timer);
-
-  switch(event) {
-  case TCP_CONNECT:
-    cwc->cwc_seq = 0;
-    cwc->cwc_bufptr = 0;
-    cwc_set_state(cwc, CWC_STATE_WAIT_LOGIN_KEY, NULL);
-    /* We want somthing within 20 seconds */
-    dtimer_arm(&cwc->cwc_idle_timer, cwc_timeout, cwc, 20); 
-    break;
-
-  case TCP_DISCONNECT:
-    cwc_set_state(cwc, CWC_STATE_IDLE, "Disconnected");
-    dtimer_disarm(&cwc->cwc_send_ka_timer);
-    break;
-
-  case TCP_INPUT:
-    cwc_data_input(cwc);
-    break;
+  int r;
+  
+  /**
+   * Get login key
+   */
+  if((r = tcp_read(cwc->cwc_fd, cwc->cwc_buf, 14))) {
+    tvhlog(LOG_INFO, "cwc", "%s: No login key received: %s",
+	   cwc->cwc_hostname, strerror(r));
+    return;
   }
+
+  des_make_login_key(cwc, cwc->cwc_buf);
+
+  /**
+   * Login
+   */
+  cwc_send_login(cwc);
+  
+  if(cwc_read_message(cwc, "Wait login response") < 0)
+    return;
+
+  if(!cwc->cwc_running || !cwc->cwc_enabled)
+    return;
+
+  if(cwc->cwc_buf[12] != MSG_CLIENT_2_SERVER_LOGIN_ACK) {
+    tvhlog(LOG_INFO, "cwc", "%s: Login failed", cwc->cwc_hostname);
+    return;
+  }
+
+  des_make_session_key(cwc);
+
+  /**
+   * Request card data
+   */
+  cwc_send_data_req(cwc);
+  if((r = cwc_read_message(cwc, "Request card data")) < 0)
+    return;
+
+  if(cwc->cwc_buf[12] != MSG_CARD_DATA) {
+    tvhlog(LOG_INFO, "cwc", "%s: Card data request failed", cwc->cwc_hostname);
+    return;
+  }
+
+  if(!cwc->cwc_running || !cwc->cwc_enabled)
+    return;
+
+  cwc_decode_card_data_reply(cwc, cwc->cwc_buf, r);
+  sleep(4);
+
+
+}
+
+
+/**
+ *
+ */
+static void *
+cwc_thread(void *aux)
+{
+  cwc_t *cwc = aux;
+  int fd;
+  char errbuf[100];
+
+  pthread_mutex_lock(&cwc->cwc_mutex);
+
+  while(cwc->cwc_running) {
+    
+    while(cwc->cwc_running && cwc->cwc_enabled == 0)
+      pthread_cond_wait(&cwc->cwc_cond, &cwc->cwc_mutex);
+
+    tvhlog(LOG_INFO, "cwc", "Attemping to connect to %s:%d",
+	   cwc->cwc_hostname, cwc->cwc_port);
+
+    fd = tcp_connect(cwc->cwc_hostname, cwc->cwc_port, errbuf,
+		     sizeof(errbuf), 10);
+
+    if(fd == -1) {
+      tvhlog(LOG_INFO, "cwc", "Connection attempt to %s:%d failed: %s",
+	     cwc->cwc_hostname, cwc->cwc_port, errbuf);
+      continue;
+    }
+
+    if(cwc->cwc_running == 0)
+      break;
+
+    tvhlog(LOG_INFO, "cwc", "Connected to %s:%d",
+	   cwc->cwc_hostname, cwc->cwc_port);
+
+    cwc->cwc_fd = fd;
+    pthread_mutex_unlock(&cwc->cwc_mutex);
+
+    cwc_session(cwc);
+
+    pthread_mutex_lock(&cwc->cwc_mutex);
+    cwc->cwc_fd = -1;
+    close(fd);
+
+    tvhlog(LOG_INFO, "cwc", "Disconnected from %s", cwc->cwc_hostname);
+    sleep(1);
+  }
+
+  pthread_mutex_unlock(&cwc->cwc_mutex);
+  return NULL;
 }
 
 
@@ -653,11 +733,14 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
     if(ct->ct_ecmsize == len && !memcmp(ct->ct_ecm, data, len))
       return; /* key already sent */
 
+    abort(); 
+    /*
     if(cwc->cwc_state != CWC_STATE_RUNNING) {
-      /* New key, but we are not connected (anymore), can not descramble */
+      // New key, but we are not connected (anymore), can not descramble
       ct->ct_keystate = CT_UNKNOWN;
       break;
     }
+*/
 
     memcpy(ct->ct_ecm, data, len);
     ct->ct_ecmsize = len;
@@ -757,6 +840,8 @@ cwc_transport_start(th_transport_t *t)
   th_descrambler_t *td;
   th_stream_t *st;
 
+  lock_assert(&global_lock);
+
   TAILQ_FOREACH(cwc, &cwcs, cwc_link) {
     if(cwc->cwc_caid == 0)
       continue;
@@ -794,6 +879,13 @@ cwc_destroy(cwc_t *cwc)
 {
   cwc_transport_t *ct;
 
+  pthread_mutex_lock(&cwc->cwc_mutex);
+  cwc->cwc_running = 0;
+  pthread_cond_signal(&cwc->cwc_cond);
+  pthread_mutex_unlock(&cwc->cwc_mutex);
+
+  pthread_join(cwc->cwc_thread_id, NULL);
+
   while((ct = LIST_FIRST(&cwc->cwc_transports)) != NULL)
     cwc_transport_destroy(ct);
 
@@ -801,8 +893,8 @@ cwc_destroy(cwc_t *cwc)
   free((void *)cwc->cwc_password);
   free((void *)cwc->cwc_password_salted);
   free((void *)cwc->cwc_username);
-
-  tcp_destroy_client(&cwc->cwc_tcp_session);
+  free((void *)cwc->cwc_hostname);
+  free(cwc);
 }
 
 
@@ -831,14 +923,12 @@ cwc_entry_find(const char *id, int create)
     cwc_tally = atoi(id);
   }
 
-  cwc = tcp_create_client(NULL, 11000, sizeof(cwc_t), 
-			  "cwc", cwc_tcp_callback, 0);
-
+  cwc = calloc(1, sizeof(cwc_t));
   cwc->cwc_id = strdup(id); 
-  cwc->cwc_username = NULL;
-  cwc->cwc_password = NULL;
-
+  cwc->cwc_running = 1;
   TAILQ_INSERT_TAIL(&cwcs, cwc, cwc_link);  
+
+  pthread_create(&cwc->cwc_thread_id, NULL, cwc_thread, cwc);
   return cwc;
 }
 
@@ -855,8 +945,8 @@ cwc_record_build(cwc_t *cwc)
   htsmsg_add_str(e, "id", cwc->cwc_id);
   htsmsg_add_u32(e, "enabled",  !!cwc->cwc_enabled);
 
-  htsmsg_add_str(e, "hostname", cwc->cwc_tcp_session.tcp_hostname ?: "");
-  htsmsg_add_u32(e, "port", cwc->cwc_tcp_session.tcp_port);
+  htsmsg_add_str(e, "hostname", cwc->cwc_hostname ?: "");
+  htsmsg_add_u32(e, "port", cwc->cwc_port);
 
   htsmsg_add_str(e, "username", cwc->cwc_username ?: "");
   htsmsg_add_str(e, "password", cwc->cwc_password ?: "");
@@ -920,8 +1010,7 @@ cwc_entry_update(void *opaque, const char *id, htsmsg_t *values, int maycreate)
   if((cwc = cwc_entry_find(id, maycreate)) == NULL)
     return NULL;
 
-  /* Disable while changing */
-  tcp_enable_disable(&cwc->cwc_tcp_session, 0);
+  pthread_mutex_lock(&cwc->cwc_mutex);
   
   if((s = htsmsg_get_str(values, "username")) != NULL) {
     free(cwc->cwc_username);
@@ -941,14 +1030,15 @@ cwc_entry_update(void *opaque, const char *id, htsmsg_t *values, int maycreate)
   }
 
   if((s = htsmsg_get_str(values, "hostname")) != NULL) {
-    tcp_set_hostname(&cwc->cwc_tcp_session, s);
+    free(cwc->cwc_hostname);
+    cwc->cwc_hostname = strdup(s);
   }
 
   if(!htsmsg_get_u32(values, "enabled", &u32))
     cwc->cwc_enabled = u32;
 
   if(!htsmsg_get_u32(values, "port", &u32))
-    cwc->cwc_tcp_session.tcp_port = u32;
+    cwc->cwc_port = u32;
 
   if((s = htsmsg_get_str(values, "deskey")) != NULL) {
     for(i = 0; i < 14; i++) {
@@ -965,8 +1055,8 @@ cwc_entry_update(void *opaque, const char *id, htsmsg_t *values, int maycreate)
     memcpy(cwc->cwc_confedkey, key, 14);
   }
 
-  if(cwc->cwc_enabled)
-    tcp_enable_disable(&cwc->cwc_tcp_session, 1);
+  pthread_cond_signal(&cwc->cwc_cond);
+  pthread_mutex_unlock(&cwc->cwc_mutex);
 
   return cwc_record_build(cwc);
 }
@@ -1057,39 +1147,4 @@ cwc_init(void)
 
   dt = dtable_create(&cwc_dtc, "cwc", NULL);
   dtable_load(dt);
-}
-
-/**
- *
- */
-static struct strtab cwcstatustab[] = {
-  { "Waiting for login key",                 CWC_STATE_WAIT_LOGIN_KEY },
-  { "Waiting for login ACK",                 CWC_STATE_WAIT_LOGIN_ACK },
-  { "Waiting for card data",                 CWC_STATE_WAIT_CARD_DATA },
-  { "Running",                               CWC_STATE_RUNNING },
-};
-
-const char *
-cwc_status_to_text(struct cwc *cwc)
-{
-  static char buf[100];
-  char buf2[30];
-  const char *n;
-
-  if(cwc->cwc_state == CWC_STATE_IDLE)
-    return cwc->cwc_errtxt ?: "Not connected";
-
-  if(cwc->cwc_state == CWC_STATE_RUNNING) {
-
-    n = psi_caid2name(cwc->cwc_caid);
-    if(n == NULL) {
-      snprintf(buf2, sizeof(buf2), "0x%x", cwc->cwc_caid);
-      n = buf2;
-    }
-
-    snprintf(buf, sizeof(buf), "Connected to a %s card", n);
-    return buf;
-  }
-
-  return val2str(cwc->cwc_state, cwcstatustab) ?: "Invalid status";
 }

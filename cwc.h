@@ -26,22 +26,16 @@ TAILQ_HEAD(cwc_queue, cwc);
 extern struct cwc_queue cwcs;
 
 typedef struct cwc {
-  //  tcp_session_t cwc_tcp_session; /* Must be first */
+  int cwc_fd;
 
-  TAILQ_ENTRY(cwc) cwc_link;
+  pthread_mutex_t cwc_mutex;
+  pthread_cond_t cwc_cond;
+  pthread_t cwc_thread_id;
+
+  TAILQ_ENTRY(cwc) cwc_link; /* Linkage protected via global_lock */
 
   LIST_HEAD(, cwc_transport) cwc_transports;
 
-  enum {
-    CWC_STATE_IDLE,
-    CWC_STATE_WAIT_LOGIN_KEY,
-    CWC_STATE_WAIT_LOGIN_ACK,
-    CWC_STATE_WAIT_CARD_DATA,
-    CWC_STATE_RUNNING,
-    CWC_STATE_HOST_ERROR,
-    CWC_STATE_ACCESS_ERROR,
-  } cwc_state;
-  
   uint16_t cwc_caid;
 
   uint16_t cwc_seq;
@@ -58,17 +52,14 @@ typedef struct cwc {
   char *cwc_password;
   char *cwc_password_salted;   /* salted version */
   char *cwc_comment;
-
-  // dtimer_t cwc_idle_timer;
-
-  // dtimer_t cwc_send_ka_timer;
-
+  char *cwc_hostname;
+  int cwc_port;
   char *cwc_id;
 
   const char *cwc_errtxt;
 
   int cwc_enabled;
-
+  int cwc_running;
 } cwc_t;
 
 
@@ -76,14 +67,9 @@ void cwc_init(void);
 
 void cwc_transport_start(th_transport_t *t);
 
-const char *cwc_add(const char *hostname, const char *porttxt,
-		    const char *username, const char *password, 
-		    const char *deskey, const char *enabled,
-		    int save, int salt);
-
 const char *cwc_status_to_text(struct cwc *cwc);
 
-cwc_t *cwc_find(int id);
+//cwc_t *cwc_find(int id);
 
 void cwc_delete(cwc_t *cwc);
 
