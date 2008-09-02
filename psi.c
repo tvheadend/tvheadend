@@ -78,6 +78,8 @@ psi_parse_pat(th_transport_t *t, uint8_t *ptr, int len,
   uint16_t pid;
   th_stream_t *st;
 
+  lock_assert(&t->tht_stream_mutex);
+
   if(len < 5)
     return -1;
 
@@ -182,7 +184,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
   if(len < 9)
     return -1;
 
-  lock_assert(&global_lock);
+  lock_assert(&t->tht_stream_mutex);
 
   sid     = ptr[0] << 8 | ptr[1];
   pcr_pid = (ptr[5] & 0x1f) << 8 | ptr[6];
@@ -560,6 +562,8 @@ psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
 
   htsmsg_add_u32(m, "disabled", !!t->tht_disabled);
 
+
+  pthread_mutex_lock(&t->tht_stream_mutex);
   LIST_FOREACH(st, &t->tht_streams, st_link) {
     sub = htsmsg_create();
 
@@ -577,6 +581,7 @@ psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
     
     htsmsg_add_msg(m, "stream", sub);
   }
+  pthread_mutex_unlock(&t->tht_stream_mutex);
 }
 
 

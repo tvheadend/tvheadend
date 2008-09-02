@@ -844,10 +844,10 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 
   /* Alert all muxers tied to us that a new packet has arrived */
 
-  pthread_mutex_lock(&t->tht_delivery_mutex);
+  lock_assert(&t->tht_stream_mutex);
+
   LIST_FOREACH(tm, &t->tht_muxers, tm_transport_link)
     tm->tm_new_pkt(tm, st, pkt);
-  pthread_mutex_unlock(&t->tht_delivery_mutex);
 
   /* Unref (and possibly free) the packet, muxers are supposed
      to increase refcount or copy packet if they need anything */

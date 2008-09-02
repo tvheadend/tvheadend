@@ -80,6 +80,8 @@ transport_stop(th_transport_t *t)
  
   assert(LIST_FIRST(&t->tht_muxers) == NULL);
 
+  pthread_mutex_lock(&t->tht_stream_mutex);
+
   /**
    * Clean up each stream
    */
@@ -135,6 +137,8 @@ transport_stop(th_transport_t *t)
       pkt_unstore(st, pkt);
 
   }
+  pthread_mutex_unlock(&t->tht_stream_mutex);
+
 }
 
 /**
@@ -185,9 +189,9 @@ transport_link_muxer(th_transport_t *t, th_muxer_t *tm)
     return;
   }
 
-  pthread_mutex_lock(&t->tht_delivery_mutex);
+  pthread_mutex_lock(&t->tht_stream_mutex);
   LIST_INSERT_HEAD(&t->tht_muxers, tm, tm_transport_link);
-  pthread_mutex_unlock(&t->tht_delivery_mutex);
+  pthread_mutex_unlock(&t->tht_stream_mutex);
   tm->tm_transport = t;
 }
 
@@ -205,9 +209,9 @@ transport_unlink_muxer(th_muxer_t *tm)
 
   lock_assert(&global_lock);
 
-  pthread_mutex_lock(&t->tht_delivery_mutex);
+  pthread_mutex_lock(&t->tht_stream_mutex);
   LIST_REMOVE(tm, tm_transport_link);
-  pthread_mutex_unlock(&t->tht_delivery_mutex);
+  pthread_mutex_unlock(&t->tht_stream_mutex);
   tm->tm_transport = NULL;
 }
 
@@ -483,7 +487,7 @@ transport_create(const char *identifier, int type, int source_type)
 
   lock_assert(&global_lock);
 
-  pthread_mutex_init(&t->tht_delivery_mutex, NULL);
+  pthread_mutex_init(&t->tht_stream_mutex, NULL);
   t->tht_identifier = strdup(identifier);
   t->tht_type = type;
   t->tht_source_type = source_type;
@@ -513,6 +517,8 @@ transport_find_by_identifier(const char *identifier)
 
 /**
  * Add a new stream to a transport
+ *
+ * 
  */
 th_stream_t *
 transport_add_stream(th_transport_t *t, int pid, tv_streamtype_t type)
@@ -520,7 +526,7 @@ transport_add_stream(th_transport_t *t, int pid, tv_streamtype_t type)
   th_stream_t *st;
   int i = 0;
 
-  lock_assert(&global_lock);
+  lock_assert(&t->tht_stream_mutex);
 
   LIST_FOREACH(st, &t->tht_streams, st_link) {
     i++;

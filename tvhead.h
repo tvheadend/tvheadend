@@ -384,6 +384,7 @@ typedef struct th_transport {
   int tht_tt_rundown_content_length;
   time_t tht_tt_clock;   /* Network clock as determined by teletext decoder */
   
+  pthread_mutex_t tht_stream_mutex;
   struct th_stream_list tht_streams;
   th_stream_t *tht_video;
   th_stream_t *tht_audio;
@@ -426,8 +427,6 @@ typedef struct th_transport {
   const char *(*tht_sourcename)(struct th_transport *t);
 
   int (*tht_quality_index)(struct th_transport *t);
-
-  pthread_mutex_t tht_delivery_mutex;
 
   struct th_muxer_list tht_muxers; /* muxers */
 

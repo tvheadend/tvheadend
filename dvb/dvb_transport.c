@@ -207,7 +207,9 @@ dvb_transport_load(th_dvb_mux_instance_t *tdmi)
       t->tht_chname = strdup(t->tht_svcname);
     }
 
+    pthread_mutex_lock(&t->tht_stream_mutex);
     psi_load_transport_settings(c, t);
+    pthread_mutex_unlock(&t->tht_stream_mutex);
 
     if(!htsmsg_get_u32(c, "mapped", &u32) && u32)
       transport_map_channel(t, NULL);

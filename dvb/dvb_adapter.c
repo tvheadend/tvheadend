@@ -435,7 +435,7 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
       if(t_src->tht_ch != NULL)
 	transport_map_channel(t_dst, t_src->tht_ch);
 
-      
+      pthread_mutex_lock(&t_src->tht_stream_mutex);
 
       LIST_FOREACH(st_src, &t_src->tht_streams, st_link) {
 
@@ -449,6 +449,9 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
 	st_dst->st_frame_duration = st_src->st_frame_duration;
 	st_dst->st_caid           = st_src->st_caid;
       }
+
+      pthread_mutex_unlock(&t_src->tht_stream_mutex);
+
     }
     dvb_mux_save(tdmi_dst);
   }
