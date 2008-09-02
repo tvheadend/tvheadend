@@ -43,7 +43,6 @@ e_ch_cmp(const event_t *a, const event_t *b)
 void
 epg_event_set_title(event_t *e, const char *title)
 {
-  printf("title=%s\n", title);
   free((void *)e->e_title);
   e->e_title = strdup(title);
 }
