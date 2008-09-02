@@ -196,6 +196,8 @@ tda_add(const char *path)
   TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
 
   pthread_create(&ptid, NULL, dvb_adapter_input_dvr, tda);
+
+  dvb_table_init(tda);
 }
 
 
