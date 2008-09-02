@@ -146,7 +146,7 @@ channel_create(const char *name)
   }
 
   ch = calloc(1, sizeof(channel_t));
-  TAILQ_INIT(&ch->ch_epg_events);
+  RB_INIT(&ch->ch_epg_events);
 
   channel_set_name(ch, name);
 

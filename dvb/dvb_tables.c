@@ -308,6 +308,10 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   char desc[5000];
   epg_content_type_t *ect;
 
+  event_t *e;
+
+  lock_assert(&global_lock);
+
   //  printf("EIT!, tid = %x\n", tableid);
 
   if(tableid < 0x4e || tableid > 0x6f || len < 11)
@@ -356,6 +360,9 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     if(dllen > len)
       break;
 
+    e = epg_event_find_by_start(ch, start_time, 1);
+    e->e_duration = duration;
+
     ect = NULL;
     *title = 0;
     *desc = 0;
@@ -370,27 +377,24 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
       switch(dtag) {
       case DVB_DESC_SHORT_EVENT:
-	if(dvb_desc_short_event(ptr, dlen,
-				title, sizeof(title),
-				desc,  sizeof(desc)) < 0)
-	  duration = 0;
+	if(!dvb_desc_short_event(ptr, dlen,
+				 title, sizeof(title),
+				 desc,  sizeof(desc))) {
+	  epg_event_set_title(e, title);
+	  epg_event_set_desc(e, desc);
+	}
 	break;
 
       case DVB_DESC_CONTENT:
 	if(dlen >= 2) {
 	  /* We only support one content type per event atm. */
-	  //	  ect = epg_content_type_find_by_dvbcode(*ptr);
+	  ect = epg_content_type_find_by_dvbcode(*ptr);
+	  epg_event_set_content_type(e, ect);
 	}
 	break;
       }
 
       len -= dlen; ptr += dlen; dllen -= dlen;
-    }
-
-    if(duration > 0) {
-      //epg_update_event_by_id(ch, event_id, start_time, duration,
-      //title, desc, ect);
-      
     }
   }
 }

@@ -25,26 +25,33 @@
 #include "tvhead.h"
 #include "channels.h"
 #include "epg.h"
-#include "dispatch.h"
-#include "htsp.h"
-#include "autorec.h"
 
 #define EPG_MAX_AGE 86400
 
-#define EPG_HASH_ID_WIDTH 256
-
-struct event_list epg_hash[EPG_HASH_ID_WIDTH];
-static dtimer_t epg_channel_maintain_timer;
-
 epg_content_group_t *epg_content_groups[16];
 
+static int
+e_ch_cmp(const event_t *a, const event_t *b)
+{
+  return a->e_start - b->e_start;
+}
+
+
+/**
+ *
+ */
 void
 epg_event_set_title(event_t *e, const char *title)
 {
+  printf("title=%s\n", title);
   free((void *)e->e_title);
   e->e_title = strdup(title);
 }
 
+
+/**
+ *
+ */
 void
 epg_event_set_desc(event_t *e, const char *desc)
 {
@@ -52,7 +59,11 @@ epg_event_set_desc(event_t *e, const char *desc)
   e->e_desc = strdup(desc);
 }
 
-static void
+
+/**
+ *
+ */
+void
 epg_event_set_content_type(event_t *e, epg_content_type_t *ect)
 {
   if(e->e_content_type != NULL)
@@ -63,99 +74,61 @@ epg_event_set_content_type(event_t *e, epg_content_type_t *ect)
     LIST_INSERT_HEAD(&ect->ect_events, e, e_content_type_link);
 }
 
-event_t *
-epg_event_find_by_time0(struct event_queue *q, time_t start)
-{
-  event_t *e;
 
-  TAILQ_FOREACH(e, q, e_channel_link)
-    if(start >= e->e_start && start < e->e_start + e->e_duration)
-      break;
+/**
+ *
+ */
+event_t *
+epg_event_find_by_start(channel_t *ch, time_t start, int create)
+{
+  static event_t *skel, *e;
+
+  lock_assert(&global_lock);
+
+  if(skel == NULL)
+    skel = calloc(1, sizeof(event_t));
+
+  skel->e_start = start;
+
+  if(!create)
+    return RB_FIND(&ch->ch_epg_events, skel, e_channel_link, e_ch_cmp);
+
+  e = RB_INSERT_SORTED(&ch->ch_epg_events, skel, e_channel_link, e_ch_cmp);
+  if(e == NULL) {
+    /* New entry was inserted */
+    e = skel;
+    skel = NULL;
+  }
   return e;
 }
 
+
+/**
+ *
+ */
 event_t *
-epg_event_find_by_time(channel_t *ch, time_t start)
+epg_event_find_by_time(channel_t *ch, time_t t)
 {
-  return epg_event_find_by_time0(&ch->ch_epg_events, start);
-}
+  event_t skel, *e;
 
-event_t *
-epg_event_find_by_tag(uint32_t tag)
-{
-  event_t *e;
-  unsigned int l = tag % EPG_HASH_ID_WIDTH;
-
-  LIST_FOREACH(e, &epg_hash[l], e_hash_link)
-    if(e->e_tag == tag)
-      break;
-
-  return e;
-}
-
-
-event_t *
-epg_event_get_current(channel_t *ch)
-{
-  event_t *e;
-
-  time_t now;
-  time(&now);
-
-  e = ch->ch_epg_cur_event;
-  if(e == NULL || now < e->e_start || now > e->e_start + e->e_duration)
+  skel.e_start = t;
+  e = RB_FIND_LE(&ch->ch_epg_events, &skel, e_channel_link, e_ch_cmp);
+  if(e == NULL || e->e_start + e->e_duration < t)
     return NULL;
-
-  return e;
-}
-
-event_t *
-epg_event_find_current_or_upcoming(channel_t *ch)
-{
-  event_t *e;
-
-  TAILQ_FOREACH(e, &ch->ch_epg_events, e_channel_link)
-    if(e->e_start + e->e_duration > dispatch_clock)
-      break;
   return e;
 }
 
 
-static int
-startcmp(event_t *a, event_t *b)
-{
-  return a->e_start - b->e_start;
-}
-
-event_t *
-epg_event_build(struct event_queue *head, time_t start, int duration)
-{
-  time_t now;
-  event_t *e;
-
-  time(&now);
-
-  if(duration < 1 || start + duration < now - EPG_MAX_AGE)
-    return NULL;
-
-  TAILQ_FOREACH(e, head, e_channel_link)
-    if(start == e->e_start && duration == e->e_duration)
-      return e;
- 
-  e = calloc(1, sizeof(event_t));
-
-  e->e_duration = duration;
-  e->e_start = start;
-  TAILQ_INSERT_SORTED(head, e, e_channel_link, startcmp);
-
-  return e;
-}
-
-
-
+/**
+ *
+ */
 void
-epg_event_free(event_t *e)
+epg_event_destroy(event_t *e)
 {
+  channel_t *ch = e->e_channel;
+
+  RB_REMOVE(&ch->ch_epg_events, e, e_channel_link);
+  
   if(e->e_content_type != NULL)
     LIST_REMOVE(e, e_content_type_link);
 
@@ -164,245 +137,12 @@ epg_event_free(event_t *e)
   free(e);
 }
 
-
-
-static void
-epg_event_destroy(channel_t *ch, event_t *e)
-{
-  //  printf("epg: flushed event %s\n", e->e_title);
-
-  if(ch->ch_epg_cur_event == e)
-    ch->ch_epg_cur_event = NULL;
-
-  TAILQ_REMOVE(&ch->ch_epg_events, e, e_channel_link);
-  LIST_REMOVE(e, e_hash_link);
-
-  epg_event_free(e);
-}
-
-
+#if 0
+/**
+ *
+ */
 void
-event_time_txt(time_t start, int duration, char *out, int outlen)
-{
-  char tmp1[40];
-  char tmp2[40];
-  char *c;
-  time_t stop = start + duration;
-
-  ctime_r(&start, tmp1);
-  c = strchr(tmp1, '\n');
-  if(c)
-    *c = 0;
-
-  ctime_r(&stop, tmp2);
-  c = strchr(tmp2, '\n');
-  if(c)
-    *c = 0;
-
-  snprintf(out, outlen, "[%s - %s]", tmp1, tmp2);
-}
-
-
-static int
-check_overlap0(channel_t *ch, event_t *a)
-{
-  char atime[100];
-  char btime[100];
-  event_t *b;
-  int overshot;
-
-  b = TAILQ_NEXT(a, e_channel_link);
-  if(b == NULL)
-    return 0;
-
-  overshot = a->e_start + a->e_duration - b->e_start;
-
-  if(overshot < 1)
-    return 0;
-
-  event_time_txt(a->e_start, a->e_duration, atime, sizeof(atime));
-  event_time_txt(b->e_start, b->e_duration, btime, sizeof(btime));
-
-  if(a->e_source > b->e_source) {
-
-    b->e_start += overshot;
-    b->e_duration -= overshot;
-    
-    if(b->e_duration < 1) {
-      epg_event_destroy(ch, b);
-      return 1;
-    }
-  } else {
-    a->e_duration -= overshot;
-
-    if(a->e_duration < 1) {
-      epg_event_destroy(ch, a);
-      return 1;
-    }
-  }
-  return 0;
-}
-
-static int
-check_overlap(channel_t *ch, event_t *e)
-{
-  event_t *p;
-
-  p = TAILQ_PREV(e, event_queue, e_channel_link);
-  if(p != NULL) {
-    if(check_overlap0(ch, p))
-      return 1;
-  }
-
-  return check_overlap0(ch, e);
-}
-
-
-
-
-static void
-epg_event_create(channel_t *ch, time_t start, int duration, 
-		 const char *title, const char *desc, int source, 
-		 uint16_t id, epg_content_type_t *ect)
-{
-  unsigned int l;
-  time_t now;
-  event_t *e;
-
-  time(&now);
-
-  if(duration < 1 || start + duration < now - EPG_MAX_AGE)
-    return;
-
-  TAILQ_FOREACH(e, &ch->ch_epg_events, e_channel_link) {
-    if(start == e->e_start && duration == e->e_duration)
-      break;
-
-    if(start == e->e_start && !strcmp(e->e_title ?: "", title))
-      break;
-  }
-
-  if(e == NULL) {
- 
-    e = calloc(1, sizeof(event_t));
-
-    e->e_start = start;
-    TAILQ_INSERT_SORTED(&ch->ch_epg_events, e, e_channel_link, startcmp);
-
-    e->e_channel = ch;
-    e->e_event_id = id;
-    e->e_duration = duration;
-
-    e->e_tag = tag_get();
-    l = e->e_tag % EPG_HASH_ID_WIDTH;
-    LIST_INSERT_HEAD(&epg_hash[l], e, e_hash_link);
-  }
-
-  if(source > e->e_source) {
-
-    e->e_source = source;
-
-    if(e->e_duration != duration) {
-      char before[100];
-      char after[100];
-
-      event_time_txt(e->e_start, e->e_duration, before, sizeof(before));
-      event_time_txt(e->e_start, duration, after, sizeof(after));
-
-      e->e_duration = duration;
-    }
-
-    if(title != NULL) epg_event_set_title(e, title);
-    if(desc  != NULL) epg_event_set_desc(e, desc);
-    if(ect   != NULL) epg_event_set_content_type(e, ect);
-  }
-  
-  check_overlap(ch, e);
-}
-
-
-
-
-void
-epg_update_event_by_id(channel_t *ch, uint16_t event_id, 
-		       time_t start, int duration, const char *title,
-		       const char *desc, epg_content_type_t *ect)
-{
-  event_t *e;
-
-  TAILQ_FOREACH(e, &ch->ch_epg_events, e_channel_link)
-    if(e->e_event_id == event_id)
-      break;
-
-  if(e != NULL) {
-    /* We already have information about this event */
-
-     if(e->e_duration != duration || e->e_start != start) {
-
-      char before[100];
-      char after[100];
-
-      event_time_txt(e->e_start, e->e_duration, before, sizeof(before));
-      event_time_txt(start, duration, after, sizeof(after));
-       
-      TAILQ_REMOVE(&ch->ch_epg_events, e, e_channel_link);
-
-      e->e_duration = duration;
-      e->e_start = start;
-      TAILQ_INSERT_SORTED(&ch->ch_epg_events, e, e_channel_link, startcmp);
-
-      if(check_overlap(ch, e))
-	return; /* event was destroyed, return at once */
-    }
-
-    epg_event_set_title(e, title);
-    epg_event_set_desc(e, desc);
-    epg_event_set_content_type(e, ect);
-
-  } else {
-  
-    epg_event_create(ch, start, duration, title, desc,
-		     EVENT_SRC_DVB, event_id, ect);
-  }
-}
-
-
-static void
-epg_set_current_event(channel_t *ch, event_t *e)
-{
-  if(e == ch->ch_epg_cur_event)
-    return;
-
-  ch->ch_epg_cur_event = e;
-
-  /* Notify clients that a new programme is on */
-
-  htsp_async_channel_update(ch);
-
-  if(e == NULL)
-    return;
-  /* Let autorecorder check this event */
-  autorec_check_new_event(e);
-
-  e = TAILQ_NEXT(e, e_channel_link);
-  /* .. and next one, to make better scheduling */
-
-  if(e != NULL)
-    autorec_check_new_event(e);
-}
-
-static void
-epg_locate_current_event(channel_t *ch, time_t now)
-{
-  event_t *e;
-  e = epg_event_find_by_time(ch, now);
-  epg_set_current_event(ch, e);
-}
-
-
-
-static void
-epg_channel_maintain(void *aux, int64_t clk)
+epg_channel_maintain()
 {
   channel_t *ch;
   event_t *e, *cur;
@@ -440,6 +180,7 @@ epg_channel_maintain(void *aux, int64_t clk)
     epg_locate_current_event(ch, now);
   }
 }
+#endif
 
 
 /**
@@ -450,33 +191,15 @@ epg_destroy_by_channel(channel_t *ch)
 {
   event_t *e;
 
-  while((e = TAILQ_FIRST(&ch->ch_epg_events)) != NULL)
-    epg_event_destroy(ch, e);
+  while((e = ch->ch_epg_events.root) != NULL)
+    epg_event_destroy(e);
 }
+
 
 
 /**
  *
  */
-void
-epg_transfer_events(channel_t *ch, struct event_queue *src, 
-		    const char *srcname, char *icon)
-{
-  event_t *e;
-  int cnt = 0;
-
-  if(strcmp(icon ?: "", ch->ch_icon ?: ""))
-    channel_set_icon(ch, icon);
-
-  TAILQ_FOREACH(e, src, e_channel_link) {
-
-    epg_event_create(ch, e->e_start, e->e_duration, e->e_title,
-		     e->e_desc, EVENT_SRC_XMLTV, 0,
-		     e->e_content_type);
-    cnt++;
-  }
-}
-
 static const char *groupnames[16] = {
   [0] = "Unclassified",
   [1] = "Movie / Drama",
@@ -544,6 +267,7 @@ epg_content_group_find_by_name(const char *name)
  *
  * XXX: Optimize if we know channel, group, etc
  */
+#if 0
 int
 epg_search(struct event_list *h, const char *title, 
 	   epg_content_group_t *s_ecg,
@@ -592,6 +316,7 @@ epg_search(struct event_list *h, const char *title,
 
   return num;
 }
+#endif
 
 /*
  *
@@ -603,7 +328,5 @@ epg_init(void)
 
   for(i = 0x0; i < 0x100; i+=16)
     epg_content_type_find_by_dvbcode(i);
-
-  dtimer_arm(&epg_channel_maintain_timer, epg_channel_maintain, NULL, 5);
 }
 

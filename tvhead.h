@@ -87,7 +87,7 @@ TAILQ_HEAD(channel_queue, channel);
 TAILQ_HEAD(th_dvb_adapter_queue, th_dvb_adapter);
 LIST_HEAD(th_v4l_adapter_list, th_v4l_adapter);
 LIST_HEAD(event_list, event);
-TAILQ_HEAD(event_queue, event);
+RB_HEAD(event_tree, event);
 LIST_HEAD(pvr_rec_list, pvr_rec);
 TAILQ_HEAD(ref_update_queue, ref_update);
 LIST_HEAD(th_transport_list, th_transport);
@@ -778,7 +778,7 @@ typedef struct channel {
     COMMERCIAL_DETECT_TTP192,
   } ch_commercial_detection;
 
-  struct event_queue ch_epg_events;
+  struct event_tree ch_epg_events;
   struct event *ch_epg_cur_event;
   char *ch_icon;
 
@@ -868,10 +868,7 @@ typedef struct epg_content_type {
  */
 typedef struct event {
   channel_t *e_channel;
-  TAILQ_ENTRY(event) e_channel_link;
-
-  LIST_ENTRY(event) e_hash_link;
-  LIST_ENTRY(event) e_tmp_link;
+  RB_ENTRY(event) e_channel_link;
 
   LIST_ENTRY(event) e_content_type_link;
   epg_content_type_t *e_content_type;
@@ -881,10 +878,6 @@ typedef struct event {
 
   const char *e_title;   /* UTF-8 encoded */
   const char *e_desc;    /* UTF-8 encoded */
-
-  uint16_t e_event_id;  /* DVB event id */
-
-  uint32_t e_tag;
 
   int e_source; /* higer is better, and we never downgrade */
 

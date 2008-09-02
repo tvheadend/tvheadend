@@ -62,7 +62,7 @@ static void postrec(pvr_rec_t *pvrr);
 
 /**
  * Initialize PVR framework
- */
+  */
 void
 pvr_init(void)
 {

@@ -1,6 +1,6 @@
 -include ../config.mak
 
-SRCS = main.c access.c dtable.c tcp.c http.c notify.c
+SRCS = main.c access.c dtable.c tcp.c http.c notify.c epg.c
 
 SRCS += buffer.c channels.c subscriptions.c transports.c
 
