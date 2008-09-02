@@ -99,17 +99,15 @@ static void *
 dvb_table_input(void *aux)
 {
   th_dvb_adapter_t *tda = aux;
-  int r, i, tid, fd, tableid, len;
+  int r, i, tid, fd, tableid, len, x;
   struct epoll_event ev[1];
   uint8_t sec[4096], *ptr;
   th_dvb_mux_instance_t *tdmi;
   th_dvb_table_t *tdt;
 
   while(1) {
-    
-    r = epoll_wait(tda->tda_table_epollfd, ev, sizeof(ev) / sizeof(ev[0]), -1);
-
-    for(i = 0; i < r; i++) {
+    x = epoll_wait(tda->tda_table_epollfd, ev, sizeof(ev) / sizeof(ev[0]), -1);
+    for(i = 0; i < x; i++) {
 
       fd  = ev[i].data.u64;
       tid = ev[i].data.u64 >> 32;
@@ -146,9 +144,12 @@ dvb_table_input(void *aux)
 	  tdt->tdt_callback(tdmi, ptr, len, tableid, tdt->tdt_opaque);
 	  dvb_table_fastswitch(tdmi);
 	}
+
+	pthread_mutex_unlock(&global_lock);
+
       } else {
-	fprintf(stderr, "DVB table thread, spurious poll event %x on fd %d\n",
-		ev[i].events, fd);
+	fprintf(stderr, "%s: spurious poll event %x on fd %d\n",
+		tda->tda_identifier, ev[i].events, fd);
       }
     }
   }
