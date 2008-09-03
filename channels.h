@@ -63,8 +63,6 @@ channel_t *channel_find_by_name(const char *name, int create);
 
 channel_t *channel_find_by_identifier(int id);
 
-void channel_unsubscribe(th_subscription_t *s);
-
 void channel_set_teletext_rundown(channel_t *ch, int v);
 
 void channel_settings_write(channel_t *ch);

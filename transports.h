@@ -20,6 +20,7 @@
 #define TRANSPORTS_H
 
 #include "channels.h"
+#include "subscriptions.h"
 
 unsigned int transport_compute_weight(struct th_transport_list *head);
 
