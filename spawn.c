@@ -32,8 +32,6 @@
 
 extern char **environ;
 
-static dtimer_t reaper_timer;
-
 pthread_mutex_t spawn_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static LIST_HEAD(, spawn) spawns;
@@ -63,15 +61,13 @@ typedef struct spawn_output_buf {
 /**
  * The reaper is called once a second to finish of any pending spawns
  */
-static void 
-reaper(void *opaque, int64_t now)
+void 
+spawn_reaper(void)
 {
   pid_t pid;
   int status;
   char txt[100];
   spawn_t *s;
-
-  dtimer_arm(&reaper_timer, reaper, NULL, 1);
 
   while(1) {
     pid = waitpid(-1, &status, WNOHANG);
@@ -85,19 +81,19 @@ reaper(void *opaque, int64_t now)
 
     if (WIFEXITED(status)) {
       snprintf(txt, sizeof(txt), 
-	       "exited, status=%d\n", WEXITSTATUS(status));
+	       "exited, status=%d", WEXITSTATUS(status));
     } else if (WIFSIGNALED(status)) {
       snprintf(txt, sizeof(txt), 
-	       "killed by signal %d\n", WTERMSIG(status));
+	       "killed by signal %d", WTERMSIG(status));
     } else if (WIFSTOPPED(status)) {
       snprintf(txt, sizeof(txt), 
-	       "stopped by signal %d\n", WSTOPSIG(status));
+	       "stopped by signal %d", WSTOPSIG(status));
     } else if (WIFCONTINUED(status)) {
       snprintf(txt, sizeof(txt), 
-	       "continued\n");
+	       "continued");
     } else {
       snprintf(txt, sizeof(txt), 
-	       "unknown status\n");
+	       "unknown status");
     }
 
     
@@ -110,13 +106,6 @@ reaper(void *opaque, int64_t now)
     }
     pthread_mutex_unlock(&spawn_mutex);
   }
-}
-
-
-void
-spawn_init(void)
-{
-  dtimer_arm(&reaper_timer, reaper, NULL, 1);
 }
 
 
@@ -223,6 +212,7 @@ spawn_and_store_stdout(const char *prog, char *const argv[], char **outp)
   }
   assert(r == totalsize);
   *outp = outbuf;
+  outbuf[totalsize] = 0;
   return totalsize;
 }
 

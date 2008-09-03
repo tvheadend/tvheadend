@@ -21,8 +21,8 @@
 
 int spawn_and_store_stdout(const char *prog, char *const argv[], char **outp);
 
-void spawn_init(void);
-
 int spawnv(const char *prog, char *const argv[]);
+
+void spawn_reaper(void);
 
 #endif /* SPAWN_H */
