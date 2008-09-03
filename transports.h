@@ -19,7 +19,7 @@
 #ifndef TRANSPORTS_H
 #define TRANSPORTS_H
 
-#include <libavcodec/avcodec.h>
+#include "channels.h"
 
 unsigned int transport_compute_weight(struct th_transport_list *head);
 

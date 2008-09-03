@@ -19,6 +19,8 @@
 #ifndef EPG_H
 #define EPG_H
 
+#include "channels.h"
+
 void epg_init(void);
 
 

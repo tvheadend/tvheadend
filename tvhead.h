@@ -752,41 +752,6 @@ typedef struct tt_decoder {
 
 
 
-/*
- * Channel definition
- */ 
-typedef struct channel {
-  
-  int ch_refcount;
-  int ch_zombie;
-
-  RB_ENTRY(channel) ch_name_link;
-  char *ch_name;
-  char *ch_sname;
-
-  RB_ENTRY(channel) ch_identifier_link;
-  int ch_id;		    
-
-  LIST_HEAD(, th_transport) ch_transports;
-  LIST_HEAD(, th_subscription) ch_subscriptions;
-
-
-  struct tt_decoder ch_tt;
-
-  enum {
-    COMMERCIAL_DETECT_NONE,
-    COMMERCIAL_DETECT_TTP192,
-  } ch_commercial_detection;
-
-  struct event_tree ch_epg_events;
-  struct event *ch_epg_cur_event;
-  char *ch_icon;
-
-  struct pvr_rec_list ch_pvrrs;
-  
-  struct autorec_list ch_autorecs;
-
-} channel_t;
 
 
 /*
@@ -867,7 +832,7 @@ typedef struct epg_content_type {
  * EPG event
  */
 typedef struct event {
-  channel_t *e_channel;
+  struct channel *e_channel;
   RB_ENTRY(event) e_channel_link;
 
   LIST_ENTRY(event) e_content_type_link;
