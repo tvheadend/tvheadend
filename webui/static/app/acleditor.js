@@ -3,9 +3,9 @@ tvheadend.acleditor = function() {
     var fm = Ext.form;
     
     var enabledColumn = new Ext.grid.CheckColumn({
-       header: "Enabled",
-       dataIndex: 'enabled',
-       width: 60
+	header: "Enabled",
+	dataIndex: 'enabled',
+	width: 60
     });
 
     var streamingColumn = new Ext.grid.CheckColumn({

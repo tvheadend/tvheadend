@@ -13,15 +13,15 @@ tvheadend.channeldetails = function(chid, chname) {
             '<div><b>Scrambling:</b>{scrambling}</div>'
         )
     });
-  
+    
     var enabledColumn = new Ext.grid.CheckColumn({
-       header: "Enabled",
-       dataIndex: 'enabled',
-       width: 60
+	header: "Enabled",
+	dataIndex: 'enabled',
+	width: 60
     });
 
     var cm = new Ext.grid.ColumnModel([expander,
-				       enabledColumn,
+	enabledColumn,
 	{
 	    width: 125,
 	    id:'name',
@@ -48,74 +48,74 @@ tvheadend.channeldetails = function(chid, chname) {
 	    header: "Source",
 	    dataIndex: 'source',
 	}
-				       ]);
+				      ]);
     
     
     var transportRecord = Ext.data.Record.create([
-    {name: 'enabled'}, 
-    {name: 'status'},
-    {name: 'name'},
-    {name: 'provider'},
-    {name: 'network'},
-    {name: 'source'},
-    {name: 'video'},
-    {name: 'audio'},
-    {name: 'scrambling'},
-    {name: 'subtitles'}
-					     ]);
+	{name: 'enabled'}, 
+	{name: 'status'},
+	{name: 'name'},
+	{name: 'provider'},
+	{name: 'network'},
+	{name: 'source'},
+	{name: 'video'},
+	{name: 'audio'},
+	{name: 'scrambling'},
+	{name: 'subtitles'}
+    ]);
     
     var transportsstore =
-    new Ext.data.JsonStore({root: 'entries',
-			    fields: transportRecord,
-			    url: "channel",
-			    autoLoad: true,
-			    id: 'id',
-			    storeid: 'id',
-			    baseParams: {chid: chid, op: "gettransports"}
-    });
+	new Ext.data.JsonStore({root: 'entries',
+				fields: transportRecord,
+				url: "channel",
+				autoLoad: true,
+				id: 'id',
+				storeid: 'id',
+				baseParams: {chid: chid, op: "gettransports"}
+			       });
     
 
     var transportsgrid = new Ext.grid.EditorGridPanel({
-	    title:'Transports',
-	    anchor: '100% 50%',
-	    stripeRows:true,
-	    plugins:[enabledColumn, expander],
-	    store: transportsstore,
-	    clicksToEdit: 2,
-	    cm: cm,
-	    selModel: new Ext.grid.RowSelectionModel({singleSelect:false})
-	});
+	title:'Transports',
+	anchor: '100% 50%',
+	stripeRows:true,
+	plugins:[enabledColumn, expander],
+	store: transportsstore,
+	clicksToEdit: 2,
+	cm: cm,
+	selModel: new Ext.grid.RowSelectionModel({singleSelect:false})
+    });
 
 
     var confreader = new Ext.data.JsonReader({
-	    root: 'channels',
-	}, ['name', 'comdetect']);
+	root: 'channels',
+    }, ['name', 'comdetect']);
 
     var confpanel = new Ext.FormPanel({
-	    border:false,
-	    disabled:true,
-	    bodyStyle:'padding:15px',
-	    anchor: '100% 50%',
-	    labelAlign: 'right',
-	    labelWidth: 150,
-	    waitMsgTarget: true,
-	    reader: confreader,
-	    //	    defaultType: 'textfield',
+	border:false,
+	disabled:true,
+	bodyStyle:'padding:15px',
+	anchor: '100% 50%',
+	labelAlign: 'right',
+	labelWidth: 150,
+	waitMsgTarget: true,
+	reader: confreader,
+	//	    defaultType: 'textfield',
 
-	    items: [{
-		    layout:'column',
-		    border:false,
-		    items:[{
-			    border:false,
-			    columnWidth:.5,
-			    layout: 'form',
-			    defaultType: 'textfield',
-			    items: [{
-			    
-				    fieldLabel: 'Channel name',
-				    name: 'name',
-				}
-				/*
+	items: [{
+	    layout:'column',
+	    border:false,
+	    items:[{
+		border:false,
+		columnWidth:.5,
+		layout: 'form',
+		defaultType: 'textfield',
+		items: [{
+		    
+		    fieldLabel: 'Channel name',
+		    name: 'name',
+		}
+			/*
 				,
 				new Ext.form.ComboBox({
 					allowBlank: false,
@@ -135,9 +135,9 @@ tvheadend.channeldetails = function(chid, chname) {
 					    })
 				    })
 				*/
-				]
-			}
-			/*
+		       ]
+	    }
+		   /*
 			,{
 			    columnWidth:.5,
 			    layout: 'form',
@@ -157,33 +157,33 @@ tvheadend.channeldetails = function(chid, chname) {
 				}
 				]
 				} */
-			]
-		}]
-	});
+		  ]
+	}]
+    });
 
-	confpanel.getForm().load({url:'/channel', 
-		    params:{'chid': chid, 'op':'load'},
-		    success:function(form, action) {
-		    confpanel.enable();
-		}});
+    confpanel.getForm().load({url:'/channel', 
+			      params:{'chid': chid, 'op':'load'},
+			      success:function(form, action) {
+				  confpanel.enable();
+			      }});
 
 
     function saveChanges() {
 	confpanel.getForm().submit({url:'/channel', 
-		    params:{'chid': chid, 'op':'save'},
-		    waitMsg:'Saving Data...',
+				    params:{'chid': chid, 'op':'save'},
+				    waitMsg:'Saving Data...',
 
-		    success: function(form, action) {
+				    success: function(form, action) {
 
-		    if(action.result.reloadchlist) {
-			tvheadend.chconfliststore.reload();
-		    }
-		},
+					if(action.result.reloadchlist) {
+					    tvheadend.chconfliststore.reload();
+					}
+				    },
 
-		    failure: function(form, action) {
-		    Ext.Msg.alert('Save failed', action.result.errormsg);
-		}
-	    });
+				    failure: function(form, action) {
+					Ext.Msg.alert('Save failed', action.result.errormsg);
+				    }
+				   });
     }
 
     function deleteChannel() {
@@ -193,77 +193,77 @@ tvheadend.channeldetails = function(chid, chname) {
 				   if(button == 'no')
 				       return;
 				   Ext.Ajax.request({url: '/channel',
-					       params:{'chid': chid, 'op':'delete'},
-					       success: function() {
-					       tvheadend.chconfliststore.reload();
-					       panel.destroy();
-					   }
-				       });
+						     params:{'chid': chid, 'op':'delete'},
+						     success: function() {
+							 tvheadend.chconfliststore.reload();
+							 panel.destroy();
+						     }
+						    });
 			       }
-			       );
+			      );
     }
 
     var panel = new Ext.Panel({
-	    title: chname,
+	title: chname,
+	border:false,
+	tbar: [{
+	    tooltip: 'Delete channel "' + chname + '". All mapped transports will be unmapped',
+	    iconCls:'remove',
+	    text: "Delete channel",
+	    handler: deleteChannel
+	}, '-', {
+	    tooltip: 'Save changes made to channel configuration below and the mapped transports',
+	    iconCls:'save',
+	    text: "Save configuration",
+	    handler: saveChanges
+	}],
+	defaults: {
 	    border:false,
-	    tbar: [{
-		    tooltip: 'Delete channel "' + chname + '". All mapped transports will be unmapped',
-		    iconCls:'remove',
-		    text: "Delete channel",
-		    handler: deleteChannel
-		}, '-', {
-		    tooltip: 'Save changes made to channel configuration below and the mapped transports',
-		    iconCls:'save',
-		    text: "Save configuration",
-		    handler: saveChanges
-		}],
-	    defaults: {
-		border:false,
-	    },
-	    layout:'anchor',
-	    items: [confpanel,transportsgrid]
-	});
+	},
+	layout:'anchor',
+	items: [confpanel,transportsgrid]
+    });
 
 
     panel.on('afterlayout', function(parent, n) {
-	    var DropTargetEl = parent.body.dom;
-    
-	    var DropTarget = new Ext.dd.DropTarget(DropTargetEl, {
-		    ddGroup     : 'chconfddgroup',
-		    notifyEnter : function(ddSource, e, data) {
-			
-			//Add some flare to invite drop.
-			parent.body.stopFx();
-			parent.body.highlight();
-		    },
-		    notifyDrop  : function(ddSource, e, data){
-			
-			// Reference the record (single selection) for readability
-			var selectedRecord = ddSource.dragData.selections[0];						
+	var DropTargetEl = parent.body.dom;
+	
+	var DropTarget = new Ext.dd.DropTarget(DropTargetEl, {
+	    ddGroup     : 'chconfddgroup',
+	    notifyEnter : function(ddSource, e, data) {
+		
+		//Add some flare to invite drop.
+		parent.body.stopFx();
+		parent.body.highlight();
+	    },
+	    notifyDrop  : function(ddSource, e, data){
+		
+		// Reference the record (single selection) for readability
+		var selectedRecord = ddSource.dragData.selections[0];						
 
-			Ext.MessageBox.confirm('Merge channels',
-					       'Copy transport configuration from "' + selectedRecord.data.name +
-					       '" to "' + chname + '". This will also remove the channel "' +
-					       selectedRecord.data.name + '"',
-					       function(button) {
-						   if(button == 'no')
-						       return;
-						   Ext.Ajax.request({url: '/channel',
-							       params:{chid: chid, 
-								   op:'mergefrom', 
-								   srcch: selectedRecord.data.chid},
-							       success: function() {
-							       transportsstore.reload();
-							       tvheadend.chconfliststore.reload();
-							   }});
-					       }
-					       );
-		    }
-		}); 	
-	});
+		Ext.MessageBox.confirm('Merge channels',
+				       'Copy transport configuration from "' + selectedRecord.data.name +
+				       '" to "' + chname + '". This will also remove the channel "' +
+				       selectedRecord.data.name + '"',
+				       function(button) {
+					   if(button == 'no')
+					       return;
+					   Ext.Ajax.request({url: '/channel',
+							     params:{chid: chid, 
+								     op:'mergefrom', 
+								     srcch: selectedRecord.data.chid},
+							     success: function() {
+								 transportsstore.reload();
+								 tvheadend.chconfliststore.reload();
+							     }});
+				       }
+				      );
+	    }
+	}); 	
+    });
     return panel;
-  }
- 
+}
+
 
 /**
  *
@@ -271,69 +271,69 @@ tvheadend.channeldetails = function(chid, chname) {
 tvheadend.chconf = function() {
 
     var ChannelRecord = Ext.data.Record.create([
-    {name: 'name'},
-    {name: 'chid'}]);
+	{name: 'name'},
+	{name: 'chid'}]);
     
     var store = new Ext.data.JsonStore({root: 'entries',
-					fields: ChannelRecord,
-					url: "chlist",
-					autoLoad: true,
-					id: 'id',
-					storeid: 'id'
+	fields: ChannelRecord,
+	url: "chlist",
+	autoLoad: true,
+	id: 'id',
+	storeid: 'id'
 	});
-  
+    
 
     var chlist = new Ext.grid.GridPanel({
-	    ddGroup: 'chconfddgroup',
-	    enableDragDrop: true,
-	    stripeRows:true,
-	    region:'west',
-	    width: 300,
-	    columns: [{id:'name',
-		       header: "Channel name",
-		       width: 260,
-		       dataIndex: 'name'}
-		      ],
-	    selModel: new Ext.grid.RowSelectionModel({singleSelect:true}),
-	    store: store,
-	});
+	ddGroup: 'chconfddgroup',
+	enableDragDrop: true,
+	stripeRows:true,
+	region:'west',
+	width: 300,
+	columns: [{id:'name',
+		   header: "Channel name",
+		   width: 260,
+		   dataIndex: 'name'}
+		 ],
+	selModel: new Ext.grid.RowSelectionModel({singleSelect:true}),
+	store: store,
+    });
 
     var details = new Ext.Panel({
-	    region:'center', layout:'fit', 
-	    items:[{border: false}]
-	});
+	region:'center', layout:'fit', 
+	items:[{border: false}]
+    });
 
 
     var panel = new Ext.Panel({
-	    listeners: {activate: handleActivate},
-	    border: false,
-	    title:'Channels',
-	    layout:'border',
-	    items: [chlist, details]
-	});
+	listeners: {activate: handleActivate},
+	border: false,
+	title:'Channels',
+	layout:'border',
+	items: [chlist, details]
+    });
 
     function handleActivate(tab){
 	store.reload();
     }
 
     chlist.on('rowclick', function(grid, n) {
-	    var rec = store.getAt(n);
+	var rec = store.getAt(n);
 	
-	    details.remove(details.getComponent(0));
-	    details.doLayout();
+	details.remove(details.getComponent(0));
+	details.doLayout();
 
-	    var newpanel = new tvheadend.channeldetails(rec.data.chid,
-							rec.data.name);
-	    
-	    details.add(newpanel);
-	    details.doLayout();
-	});
+	var newpanel = new tvheadend.channeldetails(rec.data.chid,
+	    rec.data.name);
+	
+	details.add(newpanel);
+	details.doLayout();
+    });
 
 
     /**
      * Setup Drop Targets
      */
-	
+    
     // This will make sure we only drop to the view container
 
     /*

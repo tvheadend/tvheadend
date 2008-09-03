@@ -7,7 +7,7 @@
 tvheadend.comet_poller = function() {
     
     function parse_comet_response(responsetxt) {
-
+	
 	var response = Ext.util.JSON.decode(responsetxt);
 	
 	for (var x = 0; x < response.messages.length; x++) {
@@ -18,26 +18,25 @@ tvheadend.comet_poller = function() {
 		
 		var sl = Ext.get('systemlog');
 		var e = Ext.DomHelper.append(sl,
-					     '<div>' + m.logtxt + '</div>');
+		    '<div>' + m.logtxt + '</div>');
 		e.scrollIntoView(sl);
 		break;
-
+		
 	    case 'dvbadapter':
 	    case 'dvbmux':
 	    case 'dvbtransport':
 		var n = tvheadend.dvbtree.getNodeById(m.id);
 		if(n != null) {
 
-
 		    if(m.reload != null && n.isLoaded()) {
 			n.reload();
 		    }
-
+		    
 		    if(m.name != null) {
 			n.setText(m.name);
 			n.attributes.name = m.name;
 		    }
-
+		    
 		    if(m.quality != null) {
 			n.getUI().setColText(3, m.quality);
 			n.attributes.quality = m.quality;
@@ -54,19 +53,19 @@ tvheadend.comet_poller = function() {
 	}
 	
 	Ext.Ajax.request({
-		url: '/comet',
-		    params : { boxid: response.boxid },
-		    success: function(result, request) { 
-		    parse_comet_response(result.responseText);
-		}});
+	    url: '/comet',
+	    params : { boxid: response.boxid },
+	    success: function(result, request) { 
+		parse_comet_response(result.responseText);
+	    }});
 	
     };
     
     Ext.Ajax.request({
-	    url: '/comet',
-		success: function(result, request) { 
-		parse_comet_response(result.responseText);
-	    }});
+	url: '/comet',
+	success: function(result, request) { 
+	    parse_comet_response(result.responseText);
+	}});
 }
 
 
@@ -84,53 +83,52 @@ tvheadend.app = function() {
         init: function() {
 	    
 	    var confpanel = new Ext.TabPanel({
-		    activeTab:0, 
-		    autoScroll:true, 
-		    title: 'Configuration', 
-		    items: [new tvheadend.chconf,
-			    new tvheadend.dvb,
-			    new tvheadend.acleditor, 
-			    new tvheadend.cwceditor]
-		});
+		activeTab:0, 
+		autoScroll:true, 
+		title: 'Configuration', 
+		items: [new tvheadend.chconf,
+			new tvheadend.dvb,
+			new tvheadend.acleditor, 
+			new tvheadend.cwceditor]
+	    });
 	    
 	    var pvrpanel  = new Ext.TabPanel({
-		    autoScroll:true, 
-		    title: 'Video Recorder'
-		});
+		autoScroll:true, 
+		title: 'Video Recorder'
+	    });
 	    
 	    var chpanel   = new Ext.TabPanel({
-		    autoScroll:true, 
-		    title: 'Channels'
-		});
-
+		autoScroll:true, 
+		title: 'Channels'
+	    });
+	    
 
 	    var viewport = new Ext.Viewport({
-		    layout:'border',
-		    items:[
-			       {
-			       region:'south',
-				   contentEl: 'systemlog',
-				   split:true,
-				   autoScroll:true,
-				   height: 150,
-				   minSize: 100,
-				   maxSize: 400,
-				   collapsible: true,
-				   title:'System log',
-				   margins:'0 0 0 0'
-				   },
-			   new Ext.TabPanel({region:'center', 
-					     activeTab:0, 
-					     items:[confpanel, 
-						    pvrpanel, 
-						    chpanel]})
-			   ]
-		});
-
+		layout:'border',
+		items:[{
+		    region:'south',
+		    contentEl: 'systemlog',
+		    split:true,
+		    autoScroll:true,
+		    height: 150,
+		    minSize: 100,
+		    maxSize: 400,
+		    collapsible: true,
+		    title:'System log',
+		    margins:'0 0 0 0'
+		},
+		       new Ext.TabPanel({region:'center', 
+					 activeTab:0, 
+					 items:[confpanel, 
+						pvrpanel, 
+						chpanel]})
+		      ]
+	    });
+	    
 	    new tvheadend.comet_poller;
 	    Ext.QuickTips.init();
 	}
-
+	
     };
 }(); // end of app
  
