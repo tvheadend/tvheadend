@@ -32,7 +32,6 @@
 #include "tvhead.h"
 #include "channels.h"
 #include "subscriptions.h"
-#include "epg.h"
 #include "teletext.h"
 #include "dispatch.h"
 #include "rtp.h"
