@@ -21,8 +21,53 @@
 
 #include "channels.h"
 
-void epg_init(void);
 
+/**
+ * EPG content group
+ *
+ * Based on the content types defined in EN 300 468
+ */
+
+
+typedef struct epg_content_group {
+  const char *ecg_name;
+  struct epg_content_type *ecg_types[16];
+} epg_content_group_t;
+
+typedef struct epg_content_type {
+  const char *ect_name;
+  struct event_list ect_events;
+  epg_content_group_t *ect_group;
+} epg_content_type_t;
+
+/*
+ * EPG event
+ */
+typedef struct event {
+  struct channel *e_channel;
+  RB_ENTRY(event) e_channel_link;
+
+  LIST_ENTRY(event) e_content_type_link;
+  epg_content_type_t *e_content_type;
+
+  time_t e_start;  /* UTC time */
+  int e_duration;  /* in seconds */
+
+  const char *e_title;   /* UTF-8 encoded */
+  const char *e_desc;    /* UTF-8 encoded */
+
+  int e_source; /* higer is better, and we never downgrade */
+
+#define EVENT_SRC_XMLTV 1
+#define EVENT_SRC_DVB   2
+
+} event_t;
+
+
+/**
+ * Prototypes
+ */
+void epg_init(void);
 
 void epg_event_set_title(event_t *e, const char *title);
 
