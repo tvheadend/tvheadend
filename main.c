@@ -244,9 +244,9 @@ main(int argc, char **argv)
 
   htsparachute_init(pull_chute);
   
-  //  signal(SIGTERM, doexit);
-  //  signal(SIGINT, doexit);
-
+  /**
+   * Initialize subsystems
+   */
   xmltv_init();   /* Must be initialized before channels */
 
   channels_init();
