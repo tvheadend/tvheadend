@@ -132,6 +132,8 @@ epg_event_find_by_start(channel_t *ch, time_t start, int create)
     /* New entry was inserted */
     e = skel;
     skel = NULL;
+
+    e->e_channel = ch;
     epg_event_changed(e);
   }
 
