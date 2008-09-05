@@ -357,7 +357,48 @@ typedef struct th_stream {
 
 
 
-/*
+/**
+ * Transport events, these are sent to subscribers via
+ * s->ths_event_callback
+ */
+typedef enum {
+
+  SUBSCRIPTION_EVENT_INVALID = 0, /* mbz */
+
+  /** Transport is receiving data from source */
+  SUBSCRIPTION_TRANSPORT_RUN,
+
+  /** No input is received from source */
+  SUBSCRIPTION_NO_INPUT,
+
+  /** No descrambler is able to decrypt the stream */
+  SUBSCRIPTION_NO_DESCRAMBLER,
+
+  /** Potential descrambler is available, but access is denied */
+  SUBSCRIPTION_NO_ACCESS,
+
+  /** Raw input seen but nothing has really been decoded */
+  SUBSCRIPTION_RAW_INPUT,
+
+  /** Packet are being parsed. Only signalled if at least one muxer is
+      registerd */  
+  SUBSCRIPTION_VALID_PACKETS,
+
+  /** No transport is available for delivering subscription */
+  SUBSCRIPTION_TRANSPORT_NOT_AVAILABLE,
+
+  /** Transport no longer runs, it was needed by someone with higher
+      priority */
+  SUBSCRIPTION_TRANSPORT_LOST,
+
+  /** Subscription destroyed */
+  SUBSCRIPTION_DESTROYED,
+
+} subscription_event_t;
+
+
+
+/**
  * A Transport (or in MPEG TS terms: a 'service')
  */
 typedef struct th_transport {
@@ -517,14 +558,23 @@ typedef struct th_transport {
    */			   
   int tht_last_status;
 
-#define TRANSPORT_STATUS_UNKNOWN        0
-#define TRANSPORT_STATUS_STARTING       1
-#define TRANSPORT_STATUS_OK             2
-#define TRANSPORT_STATUS_NO_INPUT       3
-#define TRANSPORT_STATUS_NO_DESCRAMBLER 4
-#define TRANSPORT_STATUS_NO_ACCESS      5
-#define TRANSPORT_STATUS_MUX_ERROR      6
+  /**
+   * Service probe, see serviceprobe.c for details
+   */
+  int tht_sp_onqueue;
+  TAILQ_ENTRY(th_transport) tht_sp_link;
 
+  /**
+   * Timer which is armed at transport start. Once it fires
+   * it will check if any packets has been parsed. If not the status
+   * will be set to SUBSCRIPTION_NO_INPUT
+   */
+  gtimer_t tht_receive_timer;
+
+  /**
+   * Set as soon as we get some kind of activity
+   */
+  int tht_packets;
 
   /*********************************************************
    *
@@ -775,8 +825,6 @@ typedef struct th_muxer {
   int64_t tm_offset;
 
   struct th_muxstream_list tm_streams;
-
-  struct th_subscription *tm_subscription;
 
   th_mux_output_t *tm_output;
   void *tm_opaque;

@@ -103,9 +103,19 @@ void
 parse_raw_mpeg(th_transport_t *t, th_stream_t *st, uint8_t *data, 
 	       int len, int start, int err)
 {
- 
-  if(LIST_FIRST(&t->tht_muxers) == NULL)
-    return; /* No muxers will take packet, so drop here */
+  th_subscription_t *s;
+
+  if(LIST_FIRST(&t->tht_muxers) == NULL) {
+    /* No muxers. However, subscriptions may force demultiplex 
+       for other reasons (serviceprobe does this) */
+    LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link)
+      if(s->ths_force_demux)
+	break;
+
+    if(s == NULL)
+      return; /* No-one is interested, so drop here */
+  }
+
 
   switch(st->st_type) {
   case HTSTV_MPEG2VIDEO:
@@ -840,7 +850,7 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   /**
    * Input is ok
    */
-  transport_signal_status(t, TRANSPORT_STATUS_OK);
+  transport_signal_status(t, SUBSCRIPTION_VALID_PACKETS);
 
   /* Alert all muxers tied to us that a new packet has arrived */
 

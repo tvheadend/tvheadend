@@ -16,13 +16,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SERVICE_PROBE_H_
-#define SERVICE_PROBE_H_
+#ifndef SERVICEPROBE_H_
+#define SERVICEPROBE_H_
 
-void serviceprobe_setup(void);
+void serviceprobe_init(void);
 
-void serviceprobe_add(th_transport_t *t);
+void serviceprobe_enqueue(th_transport_t *t);
 
-void serviceprobe_delete(th_transport_t *t);
-
-#endif /* SERVICE_PROBE_H_ */
+#endif /* SERVICEPROBE_H_ */

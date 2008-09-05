@@ -19,31 +19,14 @@
 #ifndef SUBSCRIPTIONS_H
 #define SUBSCRIPTIONS_H
 
+typedef void (ths_event_callback_t)(struct th_subscription *s,
+				    subscription_event_t event,
+				    void *opaque);
 
-
-/*
- * Subscription
- */
-
-typedef enum {
-  TRANSPORT_AVAILABLE,
-  TRANSPORT_UNAVAILABLE,
-} subscription_event_t;
-
-typedef void (subscription_callback_t)(struct th_subscription *s,
-				       subscription_event_t event,
-				       void *opaque);
-
-typedef void (subscription_raw_input_t)(struct th_subscription *s,
-					void *data, int len,
-					th_stream_t *st,
-					void *opaque);
-
-
-
-typedef void (subscription_status_callback_t)(struct th_subscription *s,
-					      int status,
-					      void *opaque);
+typedef void (ths_raw_input_t)(struct th_subscription *s,
+			       void *data, int len,
+			       th_stream_t *st,
+			       void *opaque);
 
 typedef struct th_subscription {
   LIST_ENTRY(th_subscription) ths_global_link;
@@ -61,19 +44,17 @@ typedef struct th_subscription {
   LIST_ENTRY(th_subscription) ths_subscriber_link; /* Caller is responsible
 						      for this link */
 
+  void *ths_opaque;
   char *ths_title; /* display title */
   time_t ths_start;  /* time when subscription started */
   int ths_total_err; /* total errors during entire subscription */
 
-  subscription_callback_t *ths_callback;
-  void *ths_opaque;
-  uint32_t ths_u32;
+  int ths_last_status;
 
-  subscription_raw_input_t *ths_raw_input;
+  ths_event_callback_t *ths_event_callback;
+  ths_raw_input_t *ths_raw_input;
 
-  th_muxer_t *ths_muxer;
-
-  subscription_status_callback_t *ths_status_callback;
+  int ths_force_demux;
 
 } th_subscription_t;
 
@@ -85,16 +66,22 @@ void subscription_unsubscribe(th_subscription_t *s);
 
 void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 
-th_subscription_t *subscription_create(channel_t *ch, unsigned int weight,
-				       const char *name, 
-				       subscription_callback_t *cb,
-				       void *opaque,
-				       uint32_t u32);
+th_subscription_t *subscription_create_from_channel(channel_t *ch,
+						    unsigned int weight,
+						    const char *name,
+						    ths_event_callback_t *cb,
+						    void *opaque);
+
+
+th_subscription_t *subscription_create_from_transport(th_transport_t *t,
+						      const char *name,
+						      ths_event_callback_t *cb,
+						      void *opaque);
 
 void subscriptions_init(void);
 
 void subscription_stop(th_subscription_t *s);
 
-void subscription_reschedule(void);
+void subscription_janitor_has_duty(void);
 
 #endif /* SUBSCRIPTIONS_H */

@@ -205,6 +205,10 @@ ts_recv_packet1(th_transport_t *t, uint8_t *tsb)
   if(st == NULL)
     return;
 
+  t->tht_packets = 1;
+
+  pthread_mutex_lock(&t->tht_stream_mutex);
+
   avgstat_add(&t->tht_rate, 188, dispatch_clock);
 
   /* Extract PCR */
@@ -220,22 +224,24 @@ ts_recv_packet1(th_transport_t *t, uint8_t *tsb)
       n++;
       
       r = td->td_descramble(td, t, st, tsb);
-      if(r == 0)
+      if(r == 0) {
+	pthread_mutex_unlock(&t->tht_stream_mutex);
 	return;
-      
+      }
+
       if(r == 1)
 	m++;
     }
 
     if(n == 0) {
-      transport_signal_status(t, TRANSPORT_STATUS_NO_DESCRAMBLER);
+      transport_signal_status(t, SUBSCRIPTION_NO_DESCRAMBLER);
     } else if(m == n) {
-      transport_signal_status(t, TRANSPORT_STATUS_NO_ACCESS);
+      transport_signal_status(t, SUBSCRIPTION_NO_ACCESS);
     }
-    return;
+  } else {
+    ts_recv_packet0(t, st, tsb);
   }
-
-  ts_recv_packet0(t, st, tsb);
+  pthread_mutex_unlock(&t->tht_stream_mutex);
 }
 
 

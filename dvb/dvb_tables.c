@@ -508,7 +508,9 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	    free((void *)t->tht_svcname);
 	    t->tht_svcname = strdup(chname);
 	    
+	    pthread_mutex_lock(&t->tht_stream_mutex);
 	    t->tht_config_change(t);
+	    pthread_mutex_unlock(&t->tht_stream_mutex);
 	  }
 	  
 	  if(t->tht_chname == NULL)
@@ -790,6 +792,7 @@ dvb_pmt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
   th_transport_t *t = opaque;
+  
   pthread_mutex_lock(&t->tht_stream_mutex);
   psi_parse_pmt(t, ptr, len, 1);
   pthread_mutex_unlock(&t->tht_stream_mutex);

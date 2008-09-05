@@ -49,7 +49,7 @@
 
 static struct th_transport_list transporthash[TRANSPORT_HASH_WIDTH];
 
-//static void transport_data_timeout(void *aux, int64_t now);
+static void transport_data_timeout(void *aux);
 
 //static dtimer_t transport_monitor_timer;
 
@@ -67,7 +67,7 @@ transport_stop(th_transport_t *t)
   th_stream_t *st;
   th_pkt_t *pkt;
  
-  // dtimer_disarm(&t->tht_receive_timer);
+  gtimer_disarm(&t->tht_receive_timer);
 
   //  dtimer_disarm(&transport_monitor_timer, transport_monitor, t, 1);
 
@@ -79,6 +79,7 @@ transport_stop(th_transport_t *t)
   t->tht_tt_commercial_advice = COMMERCIAL_UNKNOWN;
  
   assert(LIST_FIRST(&t->tht_muxers) == NULL);
+  assert(LIST_FIRST(&t->tht_subscriptions) == NULL);
 
   pthread_mutex_lock(&t->tht_stream_mutex);
 
@@ -145,9 +146,9 @@ transport_stop(th_transport_t *t)
  * 
  */
 static void
-remove_subscriber(th_subscription_t *s)
+remove_subscriber(th_subscription_t *s, subscription_event_t reason)
 {
-  s->ths_callback(s, TRANSPORT_UNAVAILABLE, s->ths_opaque);
+  s->ths_event_callback(s, reason, s->ths_opaque);
   LIST_REMOVE(s, ths_transport_link);
   s->ths_transport = NULL;
 }
@@ -166,9 +167,9 @@ transport_remove_subscriber(th_transport_t *t, th_subscription_t *s)
 
   if(s == NULL) {
     while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL)
-      remove_subscriber(s);
+      remove_subscriber(s, SUBSCRIPTION_TRANSPORT_LOST);
   } else {
-    remove_subscriber(s);
+    remove_subscriber(s, SUBSCRIPTION_DESTROYED);
   }
 
   if(LIST_FIRST(&t->tht_subscriptions) == NULL)
@@ -262,6 +263,7 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
     assert(st->st_ctx == NULL);
     assert(st->st_parser == NULL);
 
+
     if(id != CODEC_ID_NONE) {
       c = avcodec_find_decoder(id);
       if(c != NULL) {
@@ -273,8 +275,10 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
   }
 
   //  cwc_transport_start(t);
-  //  dtimer_arm(&t->tht_receive_timer, transport_data_timeout, t, 4);
-  transport_signal_status(t, TRANSPORT_STATUS_STARTING);
+
+  t->tht_packets = 0;
+  gtimer_arm(&t->tht_receive_timer, transport_data_timeout, t, 4);
+  t->tht_last_status = SUBSCRIPTION_EVENT_INVALID;
   return 0;
 }
 
@@ -441,7 +445,7 @@ transport_destroy(th_transport_t *t)
   lock_assert(&global_lock);
 
   while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL)
-    remove_subscriber(s);
+    remove_subscriber(s, SUBSCRIPTION_TRANSPORT_LOST);
 
   //dtimer_disarm(&t->tht_receive_timer);
 
@@ -593,11 +597,25 @@ transport_unmap_channel(th_transport_t *t)
 }
 
 
+/**
+ *
+ */
+static void
+transport_data_timeout(void *aux)
+{
+  th_transport_t *t = aux;
+
+  if(t->tht_last_status)
+    return; /* Something has happend so we don't have to update */
+    
+  transport_signal_status(t, t->tht_packets ? SUBSCRIPTION_RAW_INPUT :
+			  SUBSCRIPTION_NO_INPUT);
+}
+
 
 /**
  *
  */
-
 static struct strtab stypetab[] = {
   { "SDTV",         ST_SDTV },
   { "Radio",        ST_RADIO },
@@ -644,7 +662,7 @@ transport_signal_status(th_transport_t *t, int newstatus)
     return;
 
   t->tht_last_status = newstatus;
-  //notify_transprot_status_change(t);
+  subscription_janitor_has_duty();
 }
 
 
@@ -652,18 +670,16 @@ transport_signal_status(th_transport_t *t, int newstatus)
  * Table for status -> text conversion
  */
 static struct strtab transportstatustab[] = {
-  { "Unknown",        TRANSPORT_STATUS_UNKNOWN },
-  { "Starting",       TRANSPORT_STATUS_STARTING },
-  { "Ok",             TRANSPORT_STATUS_OK },
-  { "No input",       TRANSPORT_STATUS_NO_INPUT },
-  { "No descrambler", TRANSPORT_STATUS_NO_DESCRAMBLER },
-  { "No access",      TRANSPORT_STATUS_NO_ACCESS },
-  { "Mux error",      TRANSPORT_STATUS_MUX_ERROR },
+  { "Ok",             SUBSCRIPTION_VALID_PACKETS },
+  { "No input",       SUBSCRIPTION_NO_INPUT },
+  { "No descrambler", SUBSCRIPTION_NO_DESCRAMBLER },
+  { "No access",      SUBSCRIPTION_NO_ACCESS },
 };
 
 
 const char *
 transport_status_to_text(int status)
 {
-  return val2str(status, transportstatustab) ?: "Invalid";
+  return val2str(status, transportstatustab) ?: "Unknown";
 }
+

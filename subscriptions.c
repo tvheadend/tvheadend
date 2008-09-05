@@ -37,6 +37,10 @@
 #include "subscriptions.h"
 
 struct th_subscription_list subscriptions;
+static pthread_cond_t subscription_janitor_cond;
+static pthread_mutex_t subscription_janitor_mutex;
+static int subscription_janitor_work;
+static gtimer_t subscription_reschedule_timer;
 
 
 static int
@@ -48,13 +52,30 @@ subscription_sort(th_subscription_t *a, th_subscription_t *b)
 /**
  *
  */
-void
-subscription_reschedule(void)
+static void
+subscription_link_transport(th_subscription_t *s, th_transport_t *t)
+{
+  s->ths_transport = t;
+  LIST_INSERT_HEAD(&t->tht_subscriptions, s, ths_transport_link);
+  s->ths_event_callback(s, SUBSCRIPTION_TRANSPORT_RUN, s->ths_opaque);
+ 
+  s->ths_last_status = t->tht_last_status;
+  if(s->ths_last_status != SUBSCRIPTION_EVENT_INVALID)
+    s->ths_event_callback(s, s->ths_last_status, s->ths_opaque);
+}
+
+/**
+ *
+ */
+static void
+subscription_reschedule(void *aux)
 {
   th_subscription_t *s;
   th_transport_t *t;
 
   lock_assert(&global_lock);
+
+  gtimer_arm(&subscription_reschedule_timer, subscription_reschedule, NULL, 2);
 
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
     if(s->ths_transport != NULL)
@@ -65,12 +86,14 @@ subscription_reschedule(void)
 
     t = transport_find(s->ths_channel, s->ths_weight);
 
-    if(t == NULL)
+    if(t == NULL) {
+      /* No transport available */
+      s->ths_event_callback(s, SUBSCRIPTION_TRANSPORT_NOT_AVAILABLE,
+			    s->ths_opaque);
       continue;
+    }
 
-    s->ths_transport = t;
-    LIST_INSERT_HEAD(&t->tht_subscriptions, s, ths_transport_link);
-    s->ths_callback(s, TRANSPORT_AVAILABLE, s->ths_opaque);
+    subscription_link_transport(s, t);
   }
 }
 
@@ -95,7 +118,28 @@ subscription_unsubscribe(th_subscription_t *s)
   free(s->ths_title);
   free(s);
 
-  subscription_reschedule();
+  subscription_reschedule(NULL);
+}
+
+/**
+ *
+ */
+static th_subscription_t *
+subscription_create(int weight, const char *name,
+		    ths_event_callback_t *cb, void *opaque)
+{
+  th_subscription_t *s = calloc(1, sizeof(th_subscription_t));
+
+  s->ths_weight          = weight;
+  s->ths_event_callback  = cb;
+  s->ths_opaque          = opaque;
+  s->ths_title           = strdup(name);
+  s->ths_total_err       = 0;
+
+  time(&s->ths_start);
+  LIST_INSERT_SORTED(&subscriptions, s, ths_global_link, subscription_sort);
+
+  return s;
 }
 
 
@@ -103,28 +147,17 @@ subscription_unsubscribe(th_subscription_t *s)
  *
  */
 th_subscription_t *
-subscription_create(channel_t *ch, unsigned int weight, const char *name,
-		    subscription_callback_t *cb, void *opaque, uint32_t u32)
+subscription_create_from_channel(channel_t *ch,
+				 unsigned int weight, const char *name,
+				 ths_event_callback_t *cb, void *opaque)
 {
-  th_subscription_t *s;
-
-  s = calloc(1, sizeof(th_subscription_t));
-  s->ths_callback  = cb;
-  s->ths_opaque    = opaque;
-  s->ths_title     = strdup(name);
-  s->ths_total_err = 0;
-  s->ths_weight    = weight;
-  s->ths_u32       = u32;
-
-  time(&s->ths_start);
-  LIST_INSERT_SORTED(&subscriptions, s, ths_global_link, subscription_sort);
+  th_subscription_t *s = subscription_create(weight, name, cb, opaque);
 
   s->ths_channel = ch;
   LIST_INSERT_HEAD(&ch->ch_subscriptions, s, ths_channel_link);
-
   s->ths_transport = NULL;
 
-  subscription_reschedule();
+  subscription_reschedule(NULL);
 
   if(s->ths_transport == NULL)
     tvhlog(LOG_NOTICE, "subscription", 
@@ -139,9 +172,87 @@ subscription_create(channel_t *ch, unsigned int weight, const char *name,
 /**
  *
  */
+th_subscription_t *
+subscription_create_from_transport(th_transport_t *t, const char *name,
+				   ths_event_callback_t *cb, void *opaque)
+{
+  th_subscription_t *s = subscription_create(INT32_MAX, name, cb, opaque);
+
+  if(t->tht_runstatus != TRANSPORT_RUNNING)
+    transport_start(t, INT32_MAX, 1);
+  
+  subscription_link_transport(s, t);
+  return s;
+}
+
+
+/**
+ *
+ */
+void
+subscription_janitor_has_duty(void)
+{
+  pthread_mutex_lock(&subscription_janitor_mutex);
+  subscription_janitor_work++;
+  pthread_cond_signal(&subscription_janitor_cond);
+  pthread_mutex_unlock(&subscription_janitor_mutex);
+}
+
+
+
+/**
+ *
+ */
+static void *
+subscription_janitor(void *aux)
+{
+  int v;
+  th_subscription_t *s;
+  th_transport_t *t;
+
+  pthread_mutex_lock(&subscription_janitor_mutex);
+
+  v = subscription_janitor_work;
+
+  while(1) {
+
+    while(v == subscription_janitor_work)
+      pthread_cond_wait(&subscription_janitor_cond,
+			&subscription_janitor_mutex);
+    
+    v = subscription_janitor_work;
+    pthread_mutex_unlock(&subscription_janitor_mutex);
+
+    pthread_mutex_lock(&global_lock);
+
+    LIST_FOREACH(s, &subscriptions, ths_global_link) {
+      if((t = s->ths_transport) == NULL)
+	continue;
+      
+      if(s->ths_last_status != t->tht_last_status) {
+	s->ths_last_status = t->tht_last_status;
+	s->ths_event_callback(s, s->ths_last_status, s->ths_opaque);
+      }
+    }
+
+    pthread_mutex_unlock(&global_lock);
+  }
+}
+
+
+
+
+/**
+ *
+ */
 void
 subscriptions_init(void)
 {
+  pthread_t ptid;
 
+  pthread_cond_init(&subscription_janitor_cond, NULL);
+  pthread_mutex_init(&subscription_janitor_mutex, NULL);
+
+  pthread_create(&ptid, NULL, subscription_janitor, NULL);
 }
 

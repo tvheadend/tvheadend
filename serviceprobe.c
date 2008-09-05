@@ -22,230 +22,159 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
-#include <fcntl.h>
 #include <errno.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
+
+
+
 
 #include "tvhead.h"
-#include "iptv_output.h"
-#include "dispatch.h"
 #include "channels.h"
 #include "subscriptions.h"
 #include "serviceprobe.h"
 #include "transports.h"
 #include "mux.h"
 
-static void serviceprobe_engage(void);
 
-TAILQ_HEAD(sp_queue, sp);
-
-static struct sp_queue probequeue;
-
-static struct sp *sp_current;
-
-static dtimer_t sp_engage_timer;
-
-typedef struct sp {
-  TAILQ_ENTRY(sp) sp_link;
-
-  th_muxer_t *sp_muxer;
-  th_transport_t *sp_t;
-  dtimer_t sp_timer;
-
-  th_subscription_t *sp_s;
-
-} sp_t;
-
-
-static void
-sp_done_callback(void *aux, int64_t now)
-{
-  sp_t *sp = aux;
-  th_subscription_t *s = sp->sp_s;
-
-  if(s != NULL) {
-    assert(sp == sp_current);
-    sp_current = NULL;
-    subscription_unsubscribe(s);
-  }
-
-  serviceprobe_engage();
-
-  sp->sp_t->tht_sp = NULL;
-
-  TAILQ_REMOVE(&probequeue, sp, sp_link);
-  free(sp);
-}
+/* List of transports to be probed, protected with global_lock */
+static struct th_transport_queue serviceprobe_queue;  
+static pthread_cond_t serviceprobe_cond;
 
 /**
- * Got a packet, map it
+ *
  */
-static void
-sp_packet_input(void *opaque, th_muxstream_t *tms, th_pkt_t *pkt)
+void
+serviceprobe_enqueue(th_transport_t *t)
 {
-  sp_t *sp = opaque;
-  th_transport_t *t = sp->sp_t;
-  channel_t *ch;
+  if(!transport_is_tv(t))
+    return; /* Don't even consider non-tv channels */
 
-  tvhlog(LOG_INFO, "serviceprobe", "Probed \"%s\" -- Ok", t->tht_svcname);
-
-  if(t->tht_ch == NULL && t->tht_svcname != NULL) {
-    ch = channel_find_by_name(t->tht_svcname, 1);
-    transport_map_channel(t, ch);
-    
-    t->tht_config_change(t);
-  }
-  dtimer_arm(&sp->sp_timer, sp_done_callback, sp, 0);
-}
-
-/**
- * Callback when transport changes status
- */
-static void
-sp_status_callback(struct th_subscription *s, int status, void *opaque)
-{
-  sp_t *sp = opaque;
-  th_transport_t *t = sp->sp_t;
-  char *errtxt;
-
-  s->ths_status_callback = NULL;
-
-  switch(status) {
-  case TRANSPORT_STATUS_OK:
+  if(t->tht_sp_onqueue)
     return;
-  case TRANSPORT_STATUS_NO_DESCRAMBLER:
-    errtxt = "No descrambler for stream";
-    break;
-  case TRANSPORT_STATUS_NO_ACCESS:
-    errtxt = "Access denied";
-    break;
-  case TRANSPORT_STATUS_NO_INPUT:
-    errtxt = "No video detected";
-    break;
-  default:
-    errtxt = "Other error";
-    break;
-  }
-
-  tvhlog(LOG_INFO, "serviceprobe",
-	 "Probed \"%s\" -- %s", t->tht_svcname, errtxt);
-  dtimer_arm(&sp->sp_timer, sp_done_callback, sp, 0);
+  t->tht_sp_onqueue = 1;
+  TAILQ_INSERT_TAIL(&serviceprobe_queue, t, tht_sp_link);
+  pthread_cond_signal(&serviceprobe_cond);
 }
 
 
 /**
- * Called when a subscription gets/loses access to a transport
+ *
  */
 static void
-sp_subscription_callback(struct th_subscription *s,
-			 subscription_event_t event, void *opaque)
+serviceprobe_callback(struct th_subscription *s, subscription_event_t event,
+		      void *opaque)
 {
-  sp_t *sp = opaque;
+  th_transport_t *t = opaque;
+  channel_t *ch;
+  const char *errmsg;
 
   switch(event) {
-  case TRANSPORT_AVAILABLE:
+  case SUBSCRIPTION_TRANSPORT_RUN:
+    return;
+
+  case SUBSCRIPTION_NO_INPUT:
+    errmsg = "No input detected";
     break;
 
-  case TRANSPORT_UNAVAILABLE:
-    muxer_deinit(sp->sp_muxer, s);
+  case SUBSCRIPTION_NO_DESCRAMBLER:
+    errmsg = "No descrambler available";
     break;
+
+  case SUBSCRIPTION_NO_ACCESS:
+    errmsg = "Access denied";
+    break;
+
+  case SUBSCRIPTION_RAW_INPUT:
+    errmsg = "Unable to reassemble packets from input";
+    break;
+
+  case SUBSCRIPTION_VALID_PACKETS:
+    errmsg = NULL; /* All OK */
+    break;
+
+  case SUBSCRIPTION_TRANSPORT_NOT_AVAILABLE:
+  case SUBSCRIPTION_TRANSPORT_LOST:
+    errmsg = "Unable to probe";
+    break;
+
+  case SUBSCRIPTION_DESTROYED:
+    return; /* All done */
+
+  default:
+    abort();
   }
+
+  assert(t == TAILQ_FIRST(&serviceprobe_queue));
+
+
+  if(errmsg != NULL) {
+    tvhlog(LOG_INFO, "serviceprobe", "%20s: skipped: %s",
+	   t->tht_svcname, errmsg);
+  } else {
+    ch = channel_find_by_name(t->tht_svcname, 1);
+    transport_map_channel(t, ch);
+
+    pthread_mutex_lock(&t->tht_stream_mutex);
+    t->tht_config_change(t);
+    pthread_mutex_unlock(&t->tht_stream_mutex);
+
+    tvhlog(LOG_INFO, "serviceprobe", "\"%s\" mapped to channel \"%s\"",
+	   t->tht_svcname, t->tht_svcname);
+  }
+
+  t->tht_sp_onqueue = 0;
+  TAILQ_REMOVE(&serviceprobe_queue, t, tht_sp_link);
+  pthread_cond_signal(&serviceprobe_cond);
 }
 
 /**
- * Setup IPTV (TS over UDP) output
+ *
  */
-
-static void
-serviceprobe_start(void *aux, int64_t now)
+static void *
+serviceprobe_thread(void *aux)
 {
-  th_subscription_t *s;
-  th_muxer_t *tm;
   th_transport_t *t;
-  sp_t *sp;
+  th_subscription_t *s;
+  int was_doing_work = 0;
 
-  assert(sp_current == NULL);
+  pthread_mutex_lock(&global_lock);
 
-  if((sp = TAILQ_FIRST(&probequeue)) == NULL) {
-    tvhlog(LOG_NOTICE, "serviceprobe", "Nothing more to probe");
-    return;
+  while(1) {
+
+    while((t = TAILQ_FIRST(&serviceprobe_queue)) == NULL) {
+
+      if(was_doing_work) {
+	tvhlog(LOG_INFO, "serviceprobe", "Now idle");
+	was_doing_work = 0;
+      }
+      pthread_cond_wait(&serviceprobe_cond, &global_lock);
+    }
+
+    if(!was_doing_work) {
+      tvhlog(LOG_INFO, "serviceprobe", "Starting");
+    }
+
+    s = subscription_create_from_transport(t, "serviceprobe",
+					   serviceprobe_callback, t);
+    s->ths_force_demux = 1;
+
+    /* Wait for something to happen */
+    while(TAILQ_FIRST(&serviceprobe_queue) == t)
+      pthread_cond_wait(&serviceprobe_cond, &global_lock);
+
+    subscription_unsubscribe(s);
+    was_doing_work = 1;
   }
-  s = sp->sp_s = calloc(1, sizeof(th_subscription_t));
-  t = sp->sp_t;
-
-  sp_current = sp;
-
-  s->ths_title     = strdup("probe");
-  s->ths_weight    = INT32_MAX;
-  s->ths_opaque    = sp;
-  s->ths_callback  = sp_subscription_callback;
-  LIST_INSERT_HEAD(&subscriptions, s, ths_global_link);
-
-
-  if(t->tht_runstatus != TRANSPORT_RUNNING)
-    transport_start(t, INT32_MAX, 1);
-
-  s->ths_transport = t;
-  LIST_INSERT_HEAD(&t->tht_subscriptions, s, ths_transport_link);
-
-  sp->sp_muxer = tm = muxer_init(s, sp_packet_input, sp);
-  muxer_play(tm, AV_NOPTS_VALUE);
-
-  s->ths_status_callback = sp_status_callback;
-}
-
-/**
- *
- */
-static void
-serviceprobe_engage(void)
-{
-  dtimer_arm(&sp_engage_timer, serviceprobe_start, NULL, 0);
 }
 
 
 /**
  *
  */
-void
-serviceprobe_add(th_transport_t *t)
-{
-  sp_t *sp;
-
-  if(!transport_is_tv(t))
-    return;
-
-  if(t->tht_sp != NULL)
-    return;
-
-  sp = calloc(1, sizeof(sp_t));
-
-  TAILQ_INSERT_TAIL(&probequeue, sp, sp_link);
-  t->tht_sp = sp;
-  sp->sp_t = t;
-
-  if(sp_current == NULL)
-    serviceprobe_engage();
-}
-
-/**
- *
- */
-void
-serviceprobe_delete(th_transport_t *t)
-{
-  if(t->tht_sp == NULL)
-    return;
-
-  sp_done_callback(t->tht_sp, 0);
-}
-
-
 void 
-serviceprobe_setup(void)
+serviceprobe_init(void)
 {
-  TAILQ_INIT(&probequeue);
+  pthread_t ptid;
+  pthread_cond_init(&serviceprobe_cond, NULL);
+  TAILQ_INIT(&serviceprobe_queue);
+  pthread_create(&ptid, NULL, serviceprobe_thread, NULL);
 }

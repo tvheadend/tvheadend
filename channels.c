@@ -338,7 +338,7 @@ channel_delete(channel_t *ch)
   tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" deleted",
 	 ch->ch_name);
 
-  abort();//pvr_destroy_by_channel(ch);
+  fprintf(stderr, "!!!!!//pvr_destroy_by_channel(ch);\n");
 
   while((t = LIST_FIRST(&ch->ch_transports)) != NULL) {
     transport_unmap_channel(t);
@@ -352,7 +352,7 @@ channel_delete(channel_t *ch)
 
   epg_destroy_by_channel(ch);
 
-  abort();//autorec_destroy_by_channel(ch);
+  fprintf(stderr, "!!!!!//autorec_destroy_by_channel(ch);\n");
 
   hts_settings_remove("channels/%d", ch->ch_id);
 
@@ -388,7 +388,9 @@ channel_merge(channel_t *dst, channel_t *src)
   while((t = LIST_FIRST(&src->ch_transports)) != NULL) {
     transport_unmap_channel(t);
     transport_map_channel(t, dst);
+    pthread_mutex_lock(&t->tht_stream_mutex);
     t->tht_config_change(t);
+    pthread_mutex_unlock(&t->tht_stream_mutex);
   }
 
   channel_delete(src);

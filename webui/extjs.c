@@ -392,8 +392,8 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
   const char *s  = http_arg_get(&hc->hc_req_args, "adapterId");
   const char *op = http_arg_get(&hc->hc_req_args, "op");
   th_dvb_adapter_t *tda = s ? dvb_adapter_find_by_identifier(s) : NULL;
-  //th_dvb_mux_instance_t *tdmi;
-  //  th_transport_t *t;
+  th_dvb_mux_instance_t *tdmi;
+  th_transport_t *t;
 
   htsmsg_t *r, *out;
 
@@ -433,13 +433,13 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 
     tvhlog(LOG_NOTICE, "web interface",
 	   "Service probe started on \"%s\"", tda->tda_displayname);
-#if 0
+
     RB_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
       LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
-	serviceprobe_add(t);
+	serviceprobe_enqueue(t);
       }
     }
-#endif
+
 
     out = htsmsg_create();
     htsmsg_add_u32(out, "success", 1);
