@@ -487,6 +487,7 @@ transport_create(const char *identifier, int type, int source_type)
   lock_assert(&global_lock);
 
   pthread_mutex_init(&t->tht_stream_mutex, NULL);
+  pthread_cond_init(&t->tht_stream_cond, NULL);
   t->tht_identifier = strdup(identifier);
   t->tht_type = type;
   t->tht_source_type = source_type;

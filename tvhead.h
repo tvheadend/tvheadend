@@ -380,29 +380,35 @@ typedef struct th_transport {
     TRANSPORT_PROBING,
   } tht_runstatus;
 
-  th_commercial_advice_t tht_tt_commercial_advice;
+  /**
+   * Source type is used to determine if an output requesting
+   * MPEG-TS can shortcut all the parsing and remuxing.
+   */ 
+  enum {
+    THT_MPEG_TS,
+    THT_OTHER,
+  } tht_source_type;
 
-  int tht_tt_rundown_content_length;
-  time_t tht_tt_clock;   /* Network clock as determined by teletext decoder */
-  
-  pthread_mutex_t tht_stream_mutex;
-  struct th_stream_list tht_streams;
-  th_stream_t *tht_video;
-  th_stream_t *tht_audio;
-  
-  int64_t  tht_pcr_drift;
+ 
+  /**
+   * PID carrying the programs PCR.
+   * XXX: We don't support transports that does not carry
+   * the PCR in one of the content streams.
+   */
   uint16_t tht_pcr_pid;
-  uint16_t tht_dvb_service_id;
+
+  /**
+   * PID for the PMT of this MPEG-TS stream.
+   */
   uint16_t tht_pmt;
 
-  int tht_pmt_seen;
-
-  avgstat_t tht_cc_errors;
-  avgstat_t tht_rate;
-
+  /**
+   * Set if transport is disabled. If disabled it should not be
+   * considered when chasing for available transports during
+   * subscription scheduling.
+   */
   int tht_disabled;
 
-  int64_t tht_dts_start;
   
   LIST_ENTRY(th_transport) tht_mux_link;
 
@@ -423,7 +429,6 @@ typedef struct th_transport {
 
   int (*tht_quality_index)(struct th_transport *t);
 
-  struct th_muxer_list tht_muxers; /* muxers */
 
   /*
    * Per source type structs
@@ -462,8 +467,24 @@ typedef struct th_transport {
     } file_input;
  } u;
 
+  /**
+   * Unique identifer (used for storing on disk, etc)
+   */
   char *tht_identifier;
+
+  /**
+   * Service ID according to EN 300 468
+   */
+  uint16_t tht_dvb_service_id;
+
+  /**
+   * Service name (eg. DVB service name as specified by EN 300 468)
+   */
   char *tht_svcname;
+
+  /**
+   * Provider name (eg. DVB provider name as specified by EN 300 468)
+   */
   char *tht_provider;
 
   enum {
@@ -476,23 +497,17 @@ typedef struct th_transport {
     ST_AC_HDTV    = 0x19,   /* Advanced codec HDTV */
   } tht_servicetype;
 
-  enum {
-    THT_MPEG_TS,
-    THT_OTHER,
-  } tht_source_type;
 
-  /*
-   * (De)scrambling support
+  /**
+   * Teletext...
    */
-
-  struct th_descrambler_list tht_descramblers;
-  int tht_scrambled;
-  int tht_caid;
-
+  th_commercial_advice_t tht_tt_commercial_advice;
+  int tht_tt_rundown_content_length;
+  time_t tht_tt_clock;   /* Network clock as determined by teletext decoder */
+ 
   /**
    * Channel mapping
    */
-
   LIST_ENTRY(th_transport) tht_ch_link;
   struct channel *tht_ch;
   char *tht_chname;
@@ -509,6 +524,91 @@ typedef struct th_transport {
 #define TRANSPORT_STATUS_NO_DESCRAMBLER 4
 #define TRANSPORT_STATUS_NO_ACCESS      5
 #define TRANSPORT_STATUS_MUX_ERROR      6
+
+
+  /*********************************************************
+   *
+   * Streaming part of transport
+   *
+   * All access to fields below this must be protected with
+   * tht_stream_mutex held.
+   *
+   * Note: Code holding tht_stream_mutex should _never_ 
+   * acquire global_lock while already holding tht_stream_mutex.
+   *
+   */
+
+  /**
+   * Mutex to be held during streaming.
+   * This mutex also protects all th_stream_t instances for this
+   * transport.
+   */
+  pthread_mutex_t tht_stream_mutex;
+
+
+  /**
+   * Condition variable to wakeup transport streaming thread.
+   *
+   * Currently unused (All streaming is executed on the source
+   * thread)
+   */
+  pthread_cond_t tht_stream_cond;
+
+  /**
+   * List of all streams
+   */
+  struct th_stream_list tht_streams;
+
+  /**
+   * For simple streaming sources (such as video4linux) keeping
+   * track of the video and audio stream is convenient.
+   */
+  th_stream_t *tht_video;
+  th_stream_t *tht_audio;
+ 
+  /**
+   * Average continuity errors
+   */
+  avgstat_t tht_cc_errors;
+
+  /**
+   * Average bitrate
+   */
+  avgstat_t tht_rate;
+
+  /**
+   * Descrambling support
+   */
+
+  struct th_descrambler_list tht_descramblers;
+  int tht_scrambled;
+  int tht_caid;
+
+  /**
+   * List of muxers
+   *
+   * The parsing code will invoke each of these whene complete
+   * packets have been assembled.
+   */
+  struct th_muxer_list tht_muxers;
+
+  /**
+   * Used by parsing code to normalize timestamp to zero
+   */
+  int64_t tht_dts_start;
+
+  /**
+   * PCR drift compensation. This should really be per-packet.
+   */
+  int64_t  tht_pcr_drift;
+
+  /**
+   * Set if we've seen the PMT. Used to avoid (re)saving the transport
+   * for everytime we see a PMT. 
+   * XXX: Not very good, should be replaced with more intelligent
+   * code in psi.c
+   */
+  int tht_pmt_seen;
 
 } th_transport_t;
 
