@@ -233,7 +233,6 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
   if(t->tht_start_feed(t, weight, TRANSPORT_RUNNING, force_start))
     return -1;
 
-  t->tht_monitor_suspend = 10;
   t->tht_dts_start = AV_NOPTS_VALUE;
   t->tht_pcr_drift = 0;
   LIST_FOREACH(st, &t->tht_streams, st_link) {
