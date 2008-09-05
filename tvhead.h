@@ -400,7 +400,7 @@ typedef struct th_transport {
   /**
    * PID for the PMT of this MPEG-TS stream.
    */
-  uint16_t tht_pmt;
+  uint16_t tht_pmt_pid;
 
   /**
    * Set if transport is disabled. If disabled it should not be

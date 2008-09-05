@@ -227,7 +227,7 @@ dvb_transport_save(th_transport_t *t)
   lock_assert(&global_lock);
 
   htsmsg_add_u32(m, "service_id", t->tht_dvb_service_id);
-  htsmsg_add_u32(m, "pmt", t->tht_pmt);
+  htsmsg_add_u32(m, "pmt", t->tht_pmt_pid);
   htsmsg_add_u32(m, "stype", t->tht_servicetype);
   htsmsg_add_u32(m, "scrambled", t->tht_scrambled);
 
@@ -332,7 +332,7 @@ dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   t = transport_create(tmp, TRANSPORT_DVB, THT_MPEG_TS);
 
   t->tht_dvb_service_id = sid;
-  t->tht_pmt            = pmt_pid;
+  t->tht_pmt_pid        = pmt_pid;
 
   t->tht_start_feed = dvb_transport_start;
   t->tht_stop_feed  = dvb_transport_stop;
