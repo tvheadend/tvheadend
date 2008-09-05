@@ -89,7 +89,15 @@ tvheadend.channeldetails = function(chid, chname) {
 
     var confreader = new Ext.data.JsonReader({
 	root: 'channels',
-    }, ['name', 'comdetect']);
+    }, ['name', 'comdetect','xmltvchannel']);
+
+    
+    var xmltvChannels = new Ext.data.JsonStore({
+	root:'entries',
+	fields: [{name: 'xcTitle'}, {name: 'xcIcon'}],
+	url:'xmltv',
+	baseParams: {op: 'listChannels'}
+    });
 
     var confpanel = new Ext.FormPanel({
 	border:false,
@@ -114,7 +122,21 @@ tvheadend.channeldetails = function(chid, chname) {
 		    
 		    fieldLabel: 'Channel name',
 		    name: 'name',
-		}
+		},
+			new Ext.form.ComboBox({
+			    loadingText: 'Loading...',
+			    fieldLabel: 'XML-TV Source',
+			    name: 'xmltvchannel',
+			    width: 300,
+			    displayField:'xcTitle',
+			    valueField:'xcTitle',
+			    store: xmltvChannels,
+			    forceSelection: true,
+			    mode: 'remote',
+			    editable: false,
+			    triggerAction: 'all',
+			    emptyText: 'None'
+			})
 			/*
 				,
 				new Ext.form.ComboBox({
@@ -309,7 +331,13 @@ tvheadend.chconf = function() {
 	border: false,
 	title:'Channels',
 	layout:'border',
-	items: [chlist, details]
+	items: [chlist, details],
+	tbar: [{
+	    tooltip: 'Configure XMLTV grabber',
+	    iconCls: 'option',
+	    text: 'Setup XML-TV'
+	}]
+
     });
 
     function handleActivate(tab){

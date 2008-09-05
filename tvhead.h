@@ -84,6 +84,7 @@ void gtimer_disarm(gtimer_t *gti);
 LIST_HEAD(th_subscription_list, th_subscription);
 RB_HEAD(channel_tree, channel);
 TAILQ_HEAD(channel_queue, channel);
+LIST_HEAD(channel_list, channel);
 TAILQ_HEAD(th_dvb_adapter_queue, th_dvb_adapter);
 LIST_HEAD(th_v4l_adapter_list, th_v4l_adapter);
 LIST_HEAD(event_list, event);
@@ -768,6 +769,8 @@ static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
+void tvh_str_set(char **strp, const char *src);
+
 void tvhlog(int severity, const char *subsys, const char *fmt, ...);
 
 #define	LOG_EMERG	0	/* system is unusable */
@@ -790,5 +793,6 @@ getclock_hires(void)
   now = (uint64_t)tv.tv_sec * 1000000ULL + (uint64_t)tv.tv_usec;
   return now;
 }
+
 
 #endif /* TV_HEAD_H */

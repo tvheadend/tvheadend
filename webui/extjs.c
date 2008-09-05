@@ -40,6 +40,7 @@
 #include "dvb/dvb_preconf.h"
 #include "transports.h"
 #include "serviceprobe.h"
+#include "xmltv.h"
 
 extern const char *htsversion;
 
@@ -578,6 +579,10 @@ extjs_channel(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(r, "id", ch->ch_id);
     htsmsg_add_str(r, "name", ch->ch_name);
     htsmsg_add_str(r, "comdetect", "tt192");
+
+    if(ch->ch_xc != NULL)
+      htsmsg_add_str(r, "xmltvchannel", ch->ch_xc->xc_displayname);
+
     out = json_single_record(r, "channels");
 
   } else if(!strcmp(op, "gettransports")) {
@@ -614,6 +619,9 @@ extjs_channel(http_connection_t *hc, const char *remain, void *opaque)
 
   } else if(!strcmp(op, "save")) {
 
+    s = http_arg_get(&hc->hc_req_args, "xmltvchannel");
+    channel_set_xmltv_source(ch, s?xmltv_channel_find_by_displayname(s):NULL);
+
     if((s = http_arg_get(&hc->hc_req_args, "name")) != NULL &&
        strcmp(s, ch->ch_name)) {
       
@@ -647,6 +655,50 @@ extjs_channel(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
+ *
+ */
+static int
+extjs_xmltv(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  const char *op = http_arg_get(&hc->hc_req_args, "op");
+  xmltv_channel_t *xc;
+  htsmsg_t *out, *array, *e;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(!strcmp(op, "listChannels")) {
+
+    out = htsmsg_create();
+    array = htsmsg_create_array();
+    
+    e = htsmsg_create();
+    htsmsg_add_str(e, "xcTitle", "None");
+    htsmsg_add_msg(array, NULL, e);
+
+    LIST_FOREACH(xc, &xmltv_displaylist, xc_displayname_link) {
+      e = htsmsg_create();
+      htsmsg_add_str(e, "xcTitle", xc->xc_displayname);
+      htsmsg_add_msg(array, NULL, e);
+    }
+
+    htsmsg_add_msg(out, "entries", array);
+
+  } else {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+
+}
+
+/**
  * WEB user interface
  */
 void
@@ -659,4 +711,5 @@ extjs_start(void)
   http_path_add("/dvbnetworks", NULL, extjs_dvbnetworks, ACCESS_WEB_INTERFACE);
   http_path_add("/chlist",      NULL, extjs_chlist,      ACCESS_WEB_INTERFACE);
   http_path_add("/channel",     NULL, extjs_channel,     ACCESS_WEB_INTERFACE);
+  http_path_add("/xmltv",       NULL, extjs_xmltv,       ACCESS_WEB_INTERFACE);
 }

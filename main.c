@@ -42,6 +42,8 @@
 #include "http.h"
 #include "webui/webui.h"
 #include "dvb/dvb.h"
+#include "xmltv.h"
+#include "spawn.h"
 
 #include <libhts/htsparachute.h>
 #include <libhts/htssettings.h>
@@ -136,6 +138,8 @@ mainloop(void)
 
   while(running) {
     sleep(1);
+    spawn_reaper();
+
     time(&dispatch_clock);
 
     comet_flush(); /* Flush idle comet mailboxes */
@@ -242,6 +246,10 @@ main(int argc, char **argv)
   
   //  signal(SIGTERM, doexit);
   //  signal(SIGINT, doexit);
+
+  xmltv_init();   /* Must be initialized before channels */
+
+  channels_init();
 
   access_init();
 
@@ -388,3 +396,15 @@ tvhlog(int severity, const char *subsys, const char *fmt, ...)
   comet_mailbox_add_message(m);
   htsmsg_destroy(m);
 }
+
+
+/**
+ *
+ */
+void
+tvh_str_set(char **strp, const char *src)
+{
+  free(*strp);
+  *strp = src ? strdup(src) : NULL;
+}
+

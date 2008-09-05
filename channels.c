@@ -38,6 +38,9 @@
 #include "epg.h"
 #include "pvr.h"
 #include "autorec.h"
+#include "xmltv.h"
+
+struct channel_list channels_not_xmltv_mapped;
 
 struct channel_tree channel_name_tree;
 static struct channel_tree channel_identifier_tree;
@@ -117,7 +120,7 @@ channel_set_name(channel_t *ch, const char *name)
     if(isalnum(c))
       *cp++ = c;
     else
-      *cp++ = '-';
+      *cp++ = '_';
   }
   *cp = 0;
 
@@ -126,7 +129,6 @@ channel_set_name(channel_t *ch, const char *name)
   x = RB_INSERT_SORTED(&channel_name_tree, ch, ch_name_link, channelcmp);
   assert(x == NULL);
 }
-
 
 
 /**
@@ -147,7 +149,7 @@ channel_create(const char *name)
 
   ch = calloc(1, sizeof(channel_t));
   RB_INIT(&ch->ch_epg_events);
-
+  LIST_INSERT_HEAD(&channels_not_xmltv_mapped, ch, ch_xc_link);
   channel_set_name(ch, name);
 
   ch->ch_id = id;
@@ -202,10 +204,67 @@ static struct strtab commercial_detect_tab[] = {
 /**
  *
  */
-void
+static void
+channel_load_one(htsmsg_t *c, int id)
+{
+  channel_t *ch;
+  const char *s;
+  const char *name = htsmsg_get_str(c, "name");
+
+  if(name == NULL)
+    return;
+
+  ch = calloc(1, sizeof(channel_t));
+  ch->ch_id = id;
+  if(RB_INSERT_SORTED(&channel_identifier_tree, ch, 
+		      ch_identifier_link, chidcmp)) {
+    /* ID collision, should not happen unless there is something
+       wrong in the setting storage */
+    free(ch);
+    return;
+  }
+
+  RB_INIT(&ch->ch_epg_events);
+
+  channel_set_name(ch, name);
+
+  if((s = htsmsg_get_str(c, "icon")) != NULL)
+    ch->ch_icon = strdup(s);
+ 
+  if((s = htsmsg_get_str(c, "xmltv-channel")) != NULL &&
+     (ch->ch_xc = xmltv_channel_find(s, 0)) != NULL)
+    LIST_INSERT_HEAD(&ch->ch_xc->xc_channels, ch, ch_xc_link);
+  else
+    LIST_INSERT_HEAD(&channels_not_xmltv_mapped, ch, ch_xc_link);
+}
+
+
+/**
+ *
+ */
+static void
 channels_load(void)
 {
+  htsmsg_t *l, *c;
+  htsmsg_field_t *f;
 
+  if((l = hts_settings_load("channels")) != NULL) {
+    HTSMSG_FOREACH(f, l) {
+      if((c = htsmsg_get_msg_by_field(f)) == NULL)
+	continue;
+      channel_load_one(c, atoi(f->hmf_name));
+    }
+  }
+}
+
+
+/**
+ *
+ */
+void
+channels_init(void)
+{
+  channels_load();
 }
 
 
@@ -220,13 +279,19 @@ channel_save(channel_t *ch)
 
   lock_assert(&global_lock);
 
+  htsmsg_add_str(m, "name", ch->ch_name);
+
+  if(ch->ch_xc != NULL)
+    htsmsg_add_str(m, "xmltv-channel", ch->ch_xc->xc_identifier);
+
   if(ch->ch_icon != NULL)
     htsmsg_add_str(m, "icon", ch->ch_icon);
 
-  htsmsg_add_str(m, "commercial_detect", 
+  htsmsg_add_str(m, "commercial-detect", 
 		 val2str(ch->ch_commercial_detection,
 			 commercial_detect_tab) ?: "?");
-  hts_settings_save(m, "channels/%s", ch->ch_name);
+  
+  hts_settings_save(m, "channels/%d", ch->ch_id);
   htsmsg_destroy(m);
 }
 
@@ -245,8 +310,6 @@ channel_rename(channel_t *ch, const char *newname)
 
   tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" renamed to \"%s\"",
 	 ch->ch_name, newname);
-
-  hts_settings_remove("channels/%s", ch->ch_name);
 
   RB_REMOVE(&channel_name_tree, ch, ch_name_link);
   channel_set_name(ch, newname);
@@ -291,10 +354,12 @@ channel_delete(channel_t *ch)
 
   abort();//autorec_destroy_by_channel(ch);
 
-  hts_settings_remove("channels/%s", ch->ch_name);
+  hts_settings_remove("channels/%d", ch->ch_id);
 
   RB_REMOVE(&channel_name_tree, ch, ch_name_link);
   RB_REMOVE(&channel_identifier_tree, ch, ch_identifier_link);
+
+  LIST_REMOVE(ch, ch_xc_link);
 
   free(ch->ch_name);
   free(ch->ch_sname);
@@ -338,7 +403,33 @@ channel_set_icon(channel_t *ch, const char *icon)
 {
   lock_assert(&global_lock);
 
+  if(ch->ch_icon != NULL && !strcmp(ch->ch_icon, icon))
+    return;
+
   free(ch->ch_icon);
-  ch->ch_icon = icon ? strdup(icon) : NULL;
+  ch->ch_icon = strdup(icon);
+  channel_save(ch);
+}
+
+
+/**
+ *
+ */
+void
+channel_set_xmltv_source(channel_t *ch, xmltv_channel_t *xc)
+{
+  lock_assert(&global_lock);
+
+  if(xc == ch->ch_xc)
+    return;
+
+  LIST_REMOVE(ch, ch_xc_link);
+
+  if(xc == NULL) {
+    LIST_INSERT_HEAD(&channels_not_xmltv_mapped, ch, ch_xc_link);
+  } else {
+    LIST_INSERT_HEAD(&xc->xc_channels, ch, ch_xc_link);
+  }
+  ch->ch_xc = xc;
   channel_save(ch);
 }

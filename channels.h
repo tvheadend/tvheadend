@@ -19,6 +19,7 @@
 #ifndef CHANNELS_H
 #define CHANNELS_H
 
+
 /*
  * Channel definition
  */ 
@@ -53,11 +54,12 @@ typedef struct channel {
   
   struct autorec_list ch_autorecs;
 
+  struct xmltv_channel *ch_xc;
+  LIST_ENTRY(channel) ch_xc_link;
+
 } channel_t;
 
-
-
-void channels_load(void);
+void channels_init(void);
 
 channel_t *channel_find_by_name(const char *name, int create);
 
@@ -74,5 +76,10 @@ void channel_delete(channel_t *ch);
 void channel_merge(channel_t *dst, channel_t *src);
 
 void channel_set_icon(channel_t *ch, const char *icon);
+
+struct xmltv_channel;
+void channel_set_xmltv_source(channel_t *ch, struct xmltv_channel *xc);
+
+extern struct channel_list channels_not_xmltv_mapped;
 
 #endif /* CHANNELS_H */

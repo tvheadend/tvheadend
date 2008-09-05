@@ -1,6 +1,6 @@
 -include ../config.mak
 
-SRCS = main.c access.c dtable.c tcp.c http.c notify.c epg.c
+SRCS = main.c access.c dtable.c tcp.c http.c notify.c epg.c xmltv.c spawn.c
 
 SRCS += buffer.c channels.c subscriptions.c transports.c
 
@@ -40,13 +40,6 @@ DLIBS += ${LIBHTS_DLIBS} -lcrypt
 DLIBS  += $(FFMPEG_DLIBS)
 SLIBS  += $(FFMPEG_SLIBS)
 CFLAGS += $(FFMPEG_CFLAGS)
-
-# XML
-
-DLIBS 	+= ${LIBXML2_DLIBS}
-SLIBS 	+= ${LIBXML2_SLIBS}
-CFLAGS 	+= ${LIBXML2_CFLAGS}
-
 
 DLIBS += -lpthread
 

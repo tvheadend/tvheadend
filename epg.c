@@ -40,11 +40,24 @@ e_ch_cmp(const event_t *a, const event_t *b)
 /**
  *
  */
+static void
+epg_event_changed(event_t *e)
+{
+  /* nothing atm  */
+}
+
+
+/**
+ *
+ */
 void
 epg_event_set_title(event_t *e, const char *title)
 {
+  if(e->e_title != NULL && !strcmp(e->e_title, title))
+    return;
   free((void *)e->e_title);
   e->e_title = strdup(title);
+  epg_event_changed(e);
 }
 
 
@@ -54,8 +67,25 @@ epg_event_set_title(event_t *e, const char *title)
 void
 epg_event_set_desc(event_t *e, const char *desc)
 {
+  if(e->e_desc != NULL && !strcmp(e->e_desc, desc))
+    return;
   free((void *)e->e_desc);
   e->e_desc = strdup(desc);
+  epg_event_changed(e);
+}
+
+
+/**
+ *
+ */
+void
+epg_event_set_duration(event_t *e, int duration)
+{
+  if(e->e_duration == duration)
+    return; 
+
+  e->e_duration = duration;
+  epg_event_changed(e);
 }
 
 
@@ -65,12 +95,17 @@ epg_event_set_desc(event_t *e, const char *desc)
 void
 epg_event_set_content_type(event_t *e, epg_content_type_t *ect)
 {
+  if(e->e_content_type == ect)
+    return;
+
   if(e->e_content_type != NULL)
     LIST_REMOVE(e, e_content_type_link);
   
   e->e_content_type = ect;
   if(ect != NULL)
     LIST_INSERT_HEAD(&ect->ect_events, e, e_content_type_link);
+
+  epg_event_changed(e);
 }
 
 
@@ -97,7 +132,9 @@ epg_event_find_by_start(channel_t *ch, time_t start, int create)
     /* New entry was inserted */
     e = skel;
     skel = NULL;
+    epg_event_changed(e);
   }
+
   return e;
 }
 

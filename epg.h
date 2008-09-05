@@ -73,6 +73,8 @@ void epg_event_set_title(event_t *e, const char *title);
 
 void epg_event_set_desc(event_t *e, const char *desc);
 
+void epg_event_set_duration(event_t *e, int duration);
+
 void epg_event_set_content_type(event_t *e, epg_content_type_t *ect);
 
 event_t *epg_event_find_by_start(channel_t *ch, time_t start, int create);
