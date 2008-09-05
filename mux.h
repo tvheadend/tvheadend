@@ -19,10 +19,9 @@
 #ifndef MUX_H
 #define MUX_H
 
-th_muxer_t *muxer_init(th_subscription_t *s, th_mux_output_t *cb,
-		       void *opaque);
+th_muxer_t *muxer_create(th_transport_t *t, th_mux_output_t *cb, void *opaque);
 
-void muxer_deinit(th_muxer_t *tm, th_subscription_t *s);
+void muxer_destroy(th_muxer_t *tm);
 
 void muxer_play(th_muxer_t *tm, int64_t toffset);
 

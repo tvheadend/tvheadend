@@ -15,37 +15,22 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#define _GNU_SOURCE
-#include <stdlib.h>
 
 #include <pthread.h>
-
 #include <assert.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
 #include <errno.h>
-
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 
-#include <libhts/htscfg.h>
-
 #include "tvhead.h"
-#include "dispatch.h"
-#include "teletext.h"
 #include "transports.h"
 #include "subscriptions.h"
 #include "psi.h"
 #include "buffer.h"
 #include "mux.h"
 
-
-
-/*
+/**
  * pause playback
  */
 void
@@ -62,17 +47,9 @@ muxer_pause(th_muxer_t *tm)
 void
 muxer_play(th_muxer_t *tm, int64_t toffset)
 {
-  th_subscription_t *s = tm->tm_subscription;
-  th_transport_t *t = s->ths_transport;
+  th_transport_t *t = tm->tm_transport;
 
   transport_link_muxer(t, tm);
-
-  if(!tm->tm_linked) {
-    pthread_mutex_lock(&t->tht_delivery_mutex);
-    LIST_INSERT_HEAD(&s->ths_transport->tht_muxers, tm, tm_transport_link);
-    pthread_mutex_unlock(&t->tht_delivery_mutex);
-    tm->tm_linked = 1;
-  }
 
   if(toffset == AV_NOPTS_VALUE) {
     /* continue from last playback */
@@ -106,7 +83,7 @@ mux_new_packet(th_muxer_t *tm, th_stream_t *st, th_pkt_t *pkt)
 {
   th_muxstream_t *tms;
 
-  pkt_store(pkt);  /* need to keep packet around */
+  pkt_store(st, pkt);  /* need to keep packet around */
 
   switch(tm->tm_status) {
   case TM_IDLE:
@@ -137,15 +114,14 @@ mux_new_packet(th_muxer_t *tm, th_stream_t *st, th_pkt_t *pkt)
  * TS Muxer
  */
 th_muxer_t *
-muxer_init(th_subscription_t *s, th_mux_output_t *cb, void *opaque)
+muxer_create(th_transport_t *t, th_mux_output_t *cb, void *opaque)
 {
-  th_transport_t *t = s->ths_transport;
   th_stream_t *st;
   th_muxer_t *tm;
   th_muxstream_t *tms;
 
   tm = calloc(1, sizeof(th_muxer_t));
-  tm->tm_subscription = s;
+  tm->tm_transport = t;
 
   tm->tm_output = cb;
   tm->tm_opaque = opaque;
@@ -172,8 +148,6 @@ muxer_init(th_subscription_t *s, th_mux_output_t *cb, void *opaque)
  
     LIST_INSERT_HEAD(&tm->tm_streams, tms, tms_muxer_link0);
   }
-
-  s->ths_muxer = tm;
   return tm;
 }
 
@@ -191,22 +165,15 @@ tms_destroy(th_muxstream_t *tms)
 }
 
 
-/*
+/**
  *
  */
 void
-muxer_deinit(th_muxer_t *tm, th_subscription_t *s)
+muxer_destroy(th_muxer_t *tm)
 {
   th_muxstream_t *tms;
-  th_transport_t *t;
 
-  s->ths_raw_input = NULL;
-  s->ths_muxer = NULL;
-
-  if(tm->tm_linked) {
-    pthread_mutex_lock(&t->tht_delivery_mutex);
-
-    LIST_REMOVE(tm, tm_transport_link);
+  transport_unlink_muxer(tm);
 
   while((tms = LIST_FIRST(&tm->tm_streams)) != NULL)
     tms_destroy(tms);
