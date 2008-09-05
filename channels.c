@@ -342,7 +342,9 @@ channel_delete(channel_t *ch)
 
   while((t = LIST_FIRST(&ch->ch_transports)) != NULL) {
     transport_unmap_channel(t);
+    pthread_mutex_lock(&t->tht_stream_mutex);
     t->tht_config_change(t);
+    pthread_mutex_unlock(&t->tht_stream_mutex);
   }
 
   while((s = LIST_FIRST(&ch->ch_subscriptions)) != NULL) {
