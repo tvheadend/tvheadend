@@ -48,6 +48,8 @@ void dvb_adapter_set_auto_discovery(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src);
 
+void dvb_adapter_clean(th_dvb_adapter_t *tda);
+
 int dvb_adapter_destroy(th_dvb_adapter_t *tda);
 
 /**

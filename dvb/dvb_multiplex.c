@@ -44,7 +44,6 @@
 #include "teletext.h"
 #include "psi.h"
 #include "dvb_support.h"
-#include "dvb_dvr.h"
 #include "notify.h"
 
 struct th_dvb_mux_instance_tree dvb_muxes;

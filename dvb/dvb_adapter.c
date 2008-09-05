@@ -40,7 +40,6 @@
 #include "transports.h"
 #include "dvb.h"
 #include "dvb_support.h"
-#include "dvb_dvr.h"
 #include "tsdemux.h"
 #include "notify.h"
 
