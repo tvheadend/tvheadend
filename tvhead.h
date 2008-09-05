@@ -410,8 +410,6 @@ typedef struct th_transport {
   
   LIST_ENTRY(th_transport) tht_mux_link;
 
-  RB_ENTRY(th_transport) tht_tmp_link;
-
   LIST_ENTRY(th_transport) tht_active_link;
 
   LIST_HEAD(, th_subscription) tht_subscriptions;
