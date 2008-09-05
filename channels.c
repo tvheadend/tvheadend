@@ -341,7 +341,7 @@ channel_delete(channel_t *ch)
   abort();//pvr_destroy_by_channel(ch);
 
   while((t = LIST_FIRST(&ch->ch_transports)) != NULL) {
-    abort();//transport_unmap_channel(t);
+    transport_unmap_channel(t);
     t->tht_config_change(t);
   }
 
@@ -350,7 +350,7 @@ channel_delete(channel_t *ch)
     s->ths_channel = NULL;
   }
 
-  abort();//epg_destroy_by_channel(ch);
+  epg_destroy_by_channel(ch);
 
   abort();//autorec_destroy_by_channel(ch);
 
@@ -386,9 +386,8 @@ channel_merge(channel_t *dst, channel_t *src)
 	 src->ch_name, dst->ch_name);
 
   while((t = LIST_FIRST(&src->ch_transports)) != NULL) {
-    abort();//transport_unmap_channel(t);
-
-    abort();//transport_map_channel(t, dst);
+    transport_unmap_channel(t);
+    transport_map_channel(t, dst);
     t->tht_config_change(t);
   }
 
