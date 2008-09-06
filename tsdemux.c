@@ -36,7 +36,6 @@
 #include <linux/dvb/dmx.h>
 
 #include "tvhead.h"
-#include "dispatch.h"
 #include "teletext.h"
 #include "transports.h"
 #include "subscriptions.h"

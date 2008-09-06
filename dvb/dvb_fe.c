@@ -35,7 +35,6 @@
 #include <syslog.h>
 
 #include "tvhead.h"
-#include "dispatch.h"
 #include "dvb.h"
 #include "dvb_support.h"
 #include "diseqc.h"

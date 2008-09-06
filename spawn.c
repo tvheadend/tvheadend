@@ -27,7 +27,6 @@
 #include <syslog.h>
 
 #include "tvhead.h"
-#include "dispatch.h"
 #include "spawn.h"
 
 extern char **environ;

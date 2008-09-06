@@ -30,7 +30,6 @@
 #include <libhts/htsmsg_json.h>
 
 #include "tvhead.h"
-#include "dispatch.h"
 #include "http.h"
 #include "webui/webui.h"
 #include "access.h"

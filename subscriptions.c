@@ -32,7 +32,6 @@
 #include <string.h>
 
 #include "tvhead.h"
-#include "dispatch.h"
 #include "transports.h"
 #include "subscriptions.h"
 

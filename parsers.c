@@ -30,7 +30,6 @@
 #include "parser_h264.h"
 #include "bitstream.h"
 #include "buffer.h"
-#include "dispatch.h"
 #include "transports.h"
 
 static const AVRational mpeg_tc = {1, 90000};

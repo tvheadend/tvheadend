@@ -34,7 +34,6 @@
 #include "psi.h"
 #include "tsdemux.h"
 #include "ffdecsa/FFdecsa.h"
-#include "dispatch.h"
 #include "transports.h"
 #include "cwc.h"
 #include "notify.h"

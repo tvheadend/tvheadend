@@ -36,7 +36,6 @@
 #include <libhts/htssettings.h>
 
 #include "tvhead.h"
-#include "dispatch.h"
 #include "transports.h"
 #include "dvb.h"
 #include "dvb_support.h"
