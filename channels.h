@@ -19,6 +19,8 @@
 #ifndef CHANNELS_H
 #define CHANNELS_H
 
+LIST_HEAD(channel_tag_mapping_list, channel_tag_mapping);
+TAILQ_HEAD(channel_tag_queue, channel_tag);
 
 /*
  * Channel definition
@@ -57,7 +59,38 @@ typedef struct channel {
   struct xmltv_channel *ch_xc;
   LIST_ENTRY(channel) ch_xc_link;
 
+  struct channel_tag_mapping_list ch_ctms;
+
 } channel_t;
+
+
+/**
+ * Channel tag
+ */
+typedef struct channel_tag {
+  TAILQ_ENTRY(channel_tag) ct_link;
+  int ct_enabled;
+  int ct_internal;
+  char *ct_name;
+  char *ct_comment;
+  char *ct_identifier;
+  struct channel_tag_mapping_list ct_ctms;
+} channel_tag_t;
+
+
+/**
+ * Channel tag mapping
+ */
+typedef struct channel_tag_mapping {
+  LIST_ENTRY(channel_tag_mapping) ctm_channel_link;
+  channel_t *ctm_channel;
+  
+  LIST_ENTRY(channel_tag_mapping) ctm_tag_link;
+  channel_tag_t *ctm_tag;
+
+} channel_tag_mapping_t;
+
+
 
 void channels_init(void);
 

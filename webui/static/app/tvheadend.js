@@ -87,6 +87,7 @@ tvheadend.app = function() {
 		autoScroll:true, 
 		title: 'Configuration', 
 		items: [new tvheadend.chconf,
+			new tvheadend.cteditor,
 			new tvheadend.dvb,
 			new tvheadend.acleditor, 
 			new tvheadend.cwceditor]

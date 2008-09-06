@@ -39,11 +39,13 @@
 #include "pvr.h"
 #include "autorec.h"
 #include "xmltv.h"
+#include "dtable.h"
 
 struct channel_list channels_not_xmltv_mapped;
 
 struct channel_tree channel_name_tree;
 static struct channel_tree channel_identifier_tree;
+static struct channel_tag_queue channel_tags;
 
 static int
 dictcmp(const char *a, const char *b)
@@ -259,17 +261,6 @@ channels_load(void)
 
 
 /**
- *
- */
-void
-channels_init(void)
-{
-  channels_load();
-}
-
-
-
-/**
  * Write out a config file for a channel
  */
 static void
@@ -435,4 +426,199 @@ channel_set_xmltv_source(channel_t *ch, xmltv_channel_t *xc)
   }
   ch->ch_xc = xc;
   channel_save(ch);
+}
+
+
+
+/**
+ *
+ */
+static void
+channel_tag_mapping_destroy(channel_tag_mapping_t *ctm)
+{
+  LIST_REMOVE(ctm, ctm_channel_link);
+  LIST_REMOVE(ctm, ctm_tag_link);
+  free(ctm);
+}
+
+
+/**
+ *
+ */
+static channel_tag_t *
+channel_tag_find(const char *id, int create)
+{
+  channel_tag_t *ct;
+  char buf[20];
+  static int tally;
+
+  if(id != NULL) {
+    TAILQ_FOREACH(ct, &channel_tags, ct_link)
+      if(!strcmp(ct->ct_identifier, id))
+	return ct;
+  }
+
+  if(create == 0)
+    return NULL;
+
+  ct = calloc(1, sizeof(channel_tag_t));
+  if(id == NULL) {
+    tally++;
+    snprintf(buf, sizeof(buf), "%d", tally);
+    id = buf;
+  } else {
+    tally = atoi(id);
+  }
+
+  ct->ct_identifier = strdup(id);
+  ct->ct_name = strdup("New tag");
+  ct->ct_comment = strdup("");
+  TAILQ_INSERT_TAIL(&channel_tags, ct, ct_link);
+  return ct;
+}
+
+
+/**
+ *
+ */
+static void
+channel_tag_destroy(channel_tag_t *ct)
+{
+  channel_tag_mapping_t *ctm;
+
+  while((ctm = LIST_FIRST(&ct->ct_ctms)) != NULL)
+    channel_tag_mapping_destroy(ctm);
+
+  free(ct->ct_identifier);
+  free(ct->ct_name);
+  free(ct->ct_comment);
+  TAILQ_REMOVE(&channel_tags, ct, ct_link);
+  free(ct);
+}
+
+
+/**
+ *
+ */
+static htsmsg_t *
+channel_tag_record_build(channel_tag_t *ct)
+{
+  htsmsg_t *e = htsmsg_create();
+  htsmsg_add_u32(e, "enabled",  !!ct->ct_enabled);
+  htsmsg_add_u32(e, "internal",  !!ct->ct_internal);
+
+  htsmsg_add_str(e, "name", ct->ct_name);
+  htsmsg_add_str(e, "comment", ct->ct_comment);
+  htsmsg_add_str(e, "id", ct->ct_identifier);
+  return e;
+}
+
+
+/**
+ *
+ */
+static htsmsg_t *
+channel_tag_record_get_all(void *opaque)
+{
+  htsmsg_t *r = htsmsg_create_array();
+  channel_tag_t *ct;
+
+  TAILQ_FOREACH(ct, &channel_tags, ct_link)
+    htsmsg_add_msg(r, NULL, channel_tag_record_build(ct));
+
+  return r;
+}
+
+
+/**
+ *
+ */
+static htsmsg_t *
+channel_tag_record_get(void *opaque, const char *id)
+{
+  channel_tag_t *ct;
+
+  if((ct = channel_tag_find(id, 0)) == NULL)
+    return NULL;
+  return channel_tag_record_build(ct);
+}
+
+
+/**
+ *
+ */
+static htsmsg_t *
+channel_tag_record_create(void *opaque)
+{
+  return channel_tag_record_build(channel_tag_find(NULL, 1));
+}
+
+
+/**
+ *
+ */
+static htsmsg_t *
+channel_tag_record_update(void *opaque, const char *id, htsmsg_t *values, 
+			  int maycreate)
+{
+  channel_tag_t *ct;
+  uint32_t u32;
+
+  if((ct = channel_tag_find(id, maycreate)) == NULL)
+    return NULL;
+
+  tvh_str_update(&ct->ct_name,    htsmsg_get_str(values, "name"));
+  tvh_str_update(&ct->ct_comment, htsmsg_get_str(values, "comment"));
+
+ if(!htsmsg_get_u32(values, "enabled", &u32))
+    ct->ct_enabled = u32;
+
+ if(!htsmsg_get_u32(values, "internal", &u32))
+    ct->ct_internal = u32;
+
+ return channel_tag_record_build(ct);
+}
+
+
+/**
+ *
+ */
+static int
+channel_tag_record_delete(void *opaque, const char *id)
+{
+  channel_tag_t *ct;
+
+  if((ct = channel_tag_find(id, 0)) == NULL)
+    return -1;
+  channel_tag_destroy(ct);
+  return 0;
+}
+
+
+/**
+ *
+ */
+static const dtable_class_t channel_tags_dtc = {
+  .dtc_record_get     = channel_tag_record_get,
+  .dtc_record_get_all = channel_tag_record_get_all,
+  .dtc_record_create  = channel_tag_record_create,
+  .dtc_record_update  = channel_tag_record_update,
+  .dtc_record_delete  = channel_tag_record_delete,
+};
+
+
+/**
+ *
+ */
+void
+channels_init(void)
+{
+  dtable_t *dt;
+
+  TAILQ_INIT(&channel_tags);
+
+  dt = dtable_create(&channel_tags_dtc, "channeltags", NULL);
+  dtable_load(dt);
+
+  channels_load();
 }
