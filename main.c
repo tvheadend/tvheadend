@@ -46,6 +46,7 @@
 #include "spawn.h"
 #include "subscriptions.h"
 #include "serviceprobe.h"
+#include "cwc.h"
 
 #include <libhts/htsparachute.h>
 #include <libhts/htssettings.h>
@@ -268,6 +269,8 @@ main(int argc, char **argv)
   subscriptions_init();
 
   serviceprobe_init();
+
+  cwc_init();
 
   pthread_mutex_unlock(&global_lock);
 

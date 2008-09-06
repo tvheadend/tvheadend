@@ -73,6 +73,8 @@ transport_stop(th_transport_t *t)
 
   t->tht_stop_feed(t);
 
+  pthread_mutex_lock(&t->tht_stream_mutex);
+
   while((td = LIST_FIRST(&t->tht_descramblers)) != NULL)
     td->td_stop(td);
 
@@ -80,8 +82,6 @@ transport_stop(th_transport_t *t)
  
   assert(LIST_FIRST(&t->tht_muxers) == NULL);
   assert(LIST_FIRST(&t->tht_subscriptions) == NULL);
-
-  pthread_mutex_lock(&t->tht_stream_mutex);
 
   /**
    * Clean up each stream
@@ -274,7 +274,7 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
     }
   }
 
-  //  cwc_transport_start(t);
+  cwc_transport_start(t);
 
   t->tht_packets = 0;
   gtimer_arm(&t->tht_receive_timer, transport_data_timeout, t, 4);

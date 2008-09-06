@@ -307,6 +307,44 @@ tcp_read(int fd, void *buf, size_t len)
 /**
  *
  */
+int
+tcp_read_timeout(int fd, void *buf, size_t len, int timeout)
+{
+  int x, tot = 0;
+  struct pollfd fds;
+
+  assert(timeout > 0);
+
+  fds.fd = fd;
+  fds.events = POLLIN;
+  fds.revents = 0;
+
+  while(tot != len) {
+
+    x = poll(&fds, 1, timeout);
+    if(x == 0)
+      return ETIMEDOUT;
+
+    x = recv(fd, buf + tot, len - tot, MSG_DONTWAIT);
+    if(x == -1) {
+      if(errno == EAGAIN)
+	continue;
+      return errno;
+    }
+
+    if(x == 0)
+      return ECONNRESET;
+
+    tot += x;
+  }
+
+  return 0;
+
+}
+
+/**
+ *
+ */
 static int tcp_server_epoll_fd;
 
 typedef struct tcp_server {
