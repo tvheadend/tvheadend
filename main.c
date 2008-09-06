@@ -419,3 +419,16 @@ tvh_str_set(char **strp, const char *src)
   *strp = src ? strdup(src) : NULL;
 }
 
+
+/**
+ *
+ */
+void
+tvh_str_update(char **strp, const char *src)
+{
+  if(src == NULL)
+    return;
+  free(*strp);
+  *strp = strdup(src);
+}
+

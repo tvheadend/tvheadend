@@ -906,6 +906,7 @@ static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 void tvh_str_set(char **strp, const char *src);
+void tvh_str_update(char **strp, const char *src);
 
 void tvhlog(int severity, const char *subsys, const char *fmt, ...);
 
