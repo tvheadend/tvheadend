@@ -50,6 +50,10 @@ serviceprobe_enqueue(th_transport_t *t)
 
   if(t->tht_sp_onqueue)
     return;
+
+  if(t->tht_ch != NULL)
+    return; /* Already mapped */
+
   t->tht_sp_onqueue = 1;
   TAILQ_INSERT_TAIL(&serviceprobe_queue, t, tht_sp_link);
   pthread_cond_signal(&serviceprobe_cond);
@@ -109,16 +113,16 @@ serviceprobe_callback(struct th_subscription *s, subscription_event_t event,
   if(errmsg != NULL) {
     tvhlog(LOG_INFO, "serviceprobe", "%20s: skipped: %s",
 	   t->tht_svcname, errmsg);
-  } else {
+  } else if(t->tht_ch == NULL) {
     ch = channel_find_by_name(t->tht_svcname, 1);
     transport_map_channel(t, ch);
-
-    pthread_mutex_lock(&t->tht_stream_mutex);
-    t->tht_config_change(t);
-    pthread_mutex_unlock(&t->tht_stream_mutex);
-
-    tvhlog(LOG_INFO, "serviceprobe", "\"%s\" mapped to channel \"%s\"",
-	   t->tht_svcname, t->tht_svcname);
+    
+      pthread_mutex_lock(&t->tht_stream_mutex);
+      t->tht_config_change(t);
+      pthread_mutex_unlock(&t->tht_stream_mutex);
+      
+      tvhlog(LOG_INFO, "serviceprobe", "\"%s\" mapped to channel \"%s\"",
+	     t->tht_svcname, t->tht_svcname);
   }
 
   t->tht_sp_onqueue = 0;
