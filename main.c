@@ -239,7 +239,7 @@ main(int argc, char **argv)
 
   openlog("tvheadend", LOG_PID, logfacility);
 
-  hts_settings_init("tvheadend2");
+  hts_settings_init("tvheadend");
 
   pthread_mutex_init(&global_lock, NULL);
 
