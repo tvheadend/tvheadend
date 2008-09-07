@@ -200,7 +200,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
     htsbuf_qprintf(&hdrs, "Location: %s\r\n", location);
 
   if(content != NULL)
-    htsbuf_qprintf(&hdrs, "Content-Type: %s\r\n");
+    htsbuf_qprintf(&hdrs, "Content-Type: %s\r\n", content);
 
   htsbuf_qprintf(&hdrs,
 		 "Content-Length: %d\r\n"
