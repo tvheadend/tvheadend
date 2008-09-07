@@ -23,6 +23,4 @@
 
 void notify_by_msg(const char *class, htsmsg_t *m);
 
-void notify_transprot_status_change(struct th_transport *t);
-
 #endif /* NOTIFY_H_ */
