@@ -566,6 +566,8 @@ extjs_channel(http_connection_t *hc, const char *remain, void *opaque)
   th_transport_t *t;
   int reloadchlist = 0;
   htsmsg_t *out, *array, *r;
+  channel_tag_mapping_t *ctm;
+  char buf[200];
 
   pthread_mutex_lock(&global_lock);
 
@@ -583,6 +585,14 @@ extjs_channel(http_connection_t *hc, const char *remain, void *opaque)
 
     if(ch->ch_xc != NULL)
       htsmsg_add_str(r, "xmltvchannel", ch->ch_xc->xc_displayname);
+
+    buf[0] = 0;
+    LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
+      snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
+	       "%s%s", strlen(buf) == 0 ? "" : ",",
+	       ctm->ctm_tag->ct_identifier);
+    }
+    htsmsg_add_str(r, "tags", buf);
 
     out = json_single_record(r, "channels");
 
@@ -619,6 +629,9 @@ extjs_channel(http_connection_t *hc, const char *remain, void *opaque)
  	
 
   } else if(!strcmp(op, "save")) {
+
+    if((s = http_arg_get(&hc->hc_req_args, "tags")) != NULL)
+      channel_set_tags_from_list(ch, s);
 
     s = http_arg_get(&hc->hc_req_args, "xmltvchannel");
     channel_set_xmltv_source(ch, s?xmltv_channel_find_by_displayname(s):NULL);
@@ -699,6 +712,52 @@ extjs_xmltv(http_connection_t *hc, const char *remain, void *opaque)
 
 }
 
+
+/**
+ *
+ */
+static int
+extjs_channeltags(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  const char *op = http_arg_get(&hc->hc_req_args, "op");
+  htsmsg_t *out, *array, *e;
+  channel_tag_t *ct;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(!strcmp(op, "listTags")) {
+
+    out = htsmsg_create();
+    array = htsmsg_create_array();
+
+    TAILQ_FOREACH(ct, &channel_tags, ct_link) {
+      if(!ct->ct_enabled)
+	continue;
+
+      e = htsmsg_create();
+      htsmsg_add_str(e, "identifier", ct->ct_identifier);
+      htsmsg_add_str(e, "name", ct->ct_name);
+      htsmsg_add_msg(array, NULL, e);
+    }
+
+    htsmsg_add_msg(out, "entries", array);
+
+  } else {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+
+}
+
+
 /**
  * WEB user interface
  */
@@ -713,4 +772,5 @@ extjs_start(void)
   http_path_add("/chlist",      NULL, extjs_chlist,      ACCESS_WEB_INTERFACE);
   http_path_add("/channel",     NULL, extjs_channel,     ACCESS_WEB_INTERFACE);
   http_path_add("/xmltv",       NULL, extjs_xmltv,       ACCESS_WEB_INTERFACE);
+  http_path_add("/channeltags", NULL, extjs_channeltags, ACCESS_WEB_INTERFACE);
 }

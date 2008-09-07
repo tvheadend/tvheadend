@@ -1,3 +1,17 @@
+
+/**
+ * Channel tags
+ */
+
+tvheadend.channelTags = new Ext.data.JsonStore({
+    autoLoad:true,
+    root:'entries',
+    fields: [{name: 'identifier'}, {name: 'name'}],
+    url:'channeltags',
+    baseParams: {op: 'listTags'}
+});
+
+
 /**
  * Channel details
  */
@@ -89,7 +103,7 @@ tvheadend.channeldetails = function(chid, chname) {
 
     var confreader = new Ext.data.JsonReader({
 	root: 'channels',
-    }, ['name', 'comdetect','xmltvchannel']);
+    }, ['name','xmltvchannel','tags']);
 
     
     var xmltvChannels = new Ext.data.JsonStore({
@@ -99,6 +113,7 @@ tvheadend.channeldetails = function(chid, chname) {
 	baseParams: {op: 'listChannels'}
     });
 
+ 
     var confpanel = new Ext.FormPanel({
 	border:false,
 	disabled:true,
@@ -108,7 +123,6 @@ tvheadend.channeldetails = function(chid, chname) {
 	labelWidth: 150,
 	waitMsgTarget: true,
 	reader: confreader,
-	//	    defaultType: 'textfield',
 
 	items: [{
 	    layout:'column',
@@ -118,68 +132,40 @@ tvheadend.channeldetails = function(chid, chname) {
 		columnWidth:.5,
 		layout: 'form',
 		defaultType: 'textfield',
+		items: [
+		    {
+			fieldLabel: 'Channel name',
+			name: 'name',
+		    },new Ext.form.ComboBox({
+			loadingText: 'Loading...',
+			fieldLabel: 'XML-TV Source',
+			name: 'xmltvchannel',
+			width: 300,
+			displayField:'xcTitle',
+			valueField:'xcTitle',
+			store: xmltvChannels,
+			forceSelection: true,
+			mode: 'remote',
+			editable: false,
+			triggerAction: 'all',
+			emptyText: 'None'
+		    })
+		]
+	    },{
+		border:false,
+		columnWidth:.5,
+		layout: 'form',
 		items: [{
-		    
-		    fieldLabel: 'Channel name',
-		    name: 'name',
-		},
-			new Ext.form.ComboBox({
-			    loadingText: 'Loading...',
-			    fieldLabel: 'XML-TV Source',
-			    name: 'xmltvchannel',
-			    width: 300,
-			    displayField:'xcTitle',
-			    valueField:'xcTitle',
-			    store: xmltvChannels,
-			    forceSelection: true,
-			    mode: 'remote',
-			    editable: false,
-			    triggerAction: 'all',
-			    emptyText: 'None'
-			})
-			/*
-				,
-				new Ext.form.ComboBox({
-					allowBlank: false,
-					fieldLabel: 'Commercial detection',
-					name: 'comdetect',
-					displayField:'mode',
-					valueField:'imode',
-					mode: 'local',
-					triggerAction: 'all',
-					selectOnFocus:true,
-					editable:false,
-					store: new Ext.data.SimpleStore({
-						fields: ['imode', 'mode'],
-						data: [
-						       ['none', 'None'],
-						       ['tt192', 'Teletext page 192']]
-					    })
-				    })
-				*/
-		       ]
-	    }
-		   /*
-			,{
-			    columnWidth:.5,
-			    layout: 'form',
-			    items: [{
-				    xtype: 'checkboxgroup',
-				    fieldLabel: 'Tags',
-				    itemCls: 'x-check-group-alt',
-				    columns: 1,
-				    vertical: true,
-				    items: [{
-					    boxLabel: 'Favourites', name: 'favourite'},{
-					    boxLabel: 'Sports', name: 'sports'},{
-					    boxLabel: 'News', name: 'news'},{
-					    boxLabel: 'Movies', name: 'movies'},{
-					    boxLabel: 'Children', name: 'children'}
-					]
-				}
-				]
-				} */
-		  ]
+		    fieldLabel: 'Tags',
+		    xtype:"multiselect",
+		    name:"tags",
+		    valueField:"identifier",
+		    displayField:"name",
+		    width:250,
+		    height:200,
+		    store:tvheadend.channelTags,
+		}]
+	    }]
 	}]
     });
 

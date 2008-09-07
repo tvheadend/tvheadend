@@ -22,6 +22,9 @@
 LIST_HEAD(channel_tag_mapping_list, channel_tag_mapping);
 TAILQ_HEAD(channel_tag_queue, channel_tag);
 
+extern struct channel_tag_queue channel_tags;
+
+
 /*
  * Channel definition
  */ 
@@ -88,6 +91,8 @@ typedef struct channel_tag_mapping {
   LIST_ENTRY(channel_tag_mapping) ctm_tag_link;
   channel_tag_t *ctm_tag;
 
+  int ctm_mark;
+
 } channel_tag_mapping_t;
 
 
@@ -112,6 +117,8 @@ void channel_set_icon(channel_t *ch, const char *icon);
 
 struct xmltv_channel;
 void channel_set_xmltv_source(channel_t *ch, struct xmltv_channel *xc);
+
+void channel_set_tags_from_list(channel_t *ch, const char *maplist);
 
 extern struct channel_list channels_not_xmltv_mapped;
 

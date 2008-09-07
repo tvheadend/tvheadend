@@ -45,7 +45,11 @@ struct channel_list channels_not_xmltv_mapped;
 
 struct channel_tree channel_name_tree;
 static struct channel_tree channel_identifier_tree;
-static struct channel_tag_queue channel_tags;
+struct channel_tag_queue channel_tags;
+
+static void channel_tag_map(channel_t *ch, channel_tag_t *ct, int check);
+static channel_tag_t *channel_tag_find(const char *id, int create);
+static void channel_tag_mapping_destroy(channel_tag_mapping_t *ctm);
 
 static int
 dictcmp(const char *a, const char *b)
@@ -212,6 +216,9 @@ channel_load_one(htsmsg_t *c, int id)
   channel_t *ch;
   const char *s;
   const char *name = htsmsg_get_str(c, "name");
+  htsmsg_t *tags;
+  htsmsg_field_t *f;
+  channel_tag_t *ct;
 
   if(name == NULL)
     return;
@@ -238,6 +245,15 @@ channel_load_one(htsmsg_t *c, int id)
     LIST_INSERT_HEAD(&ch->ch_xc->xc_channels, ch, ch_xc_link);
   else
     LIST_INSERT_HEAD(&channels_not_xmltv_mapped, ch, ch_xc_link);
+
+  if((tags = htsmsg_get_array(c, "tags")) != NULL) {
+    HTSMSG_FOREACH(f, tags) {
+      if(f->hmf_type == HMF_STR && 
+	 (ct = channel_tag_find(f->hmf_str, 0)) != NULL) {
+	channel_tag_map(ch, ct, 1);
+      }
+    }
+  }
 }
 
 
@@ -267,6 +283,8 @@ static void
 channel_save(channel_t *ch)
 {
   htsmsg_t *m = htsmsg_create();
+  htsmsg_t *tags;
+  channel_tag_mapping_t *ctm;
 
   lock_assert(&global_lock);
 
@@ -282,6 +300,12 @@ channel_save(channel_t *ch)
 		 val2str(ch->ch_commercial_detection,
 			 commercial_detect_tab) ?: "?");
   
+  tags = htsmsg_create_array();
+  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
+    htsmsg_add_str(tags, NULL, ctm->ctm_tag->ct_identifier);
+
+  htsmsg_add_msg(m, "tags", tags);
+
   hts_settings_save(m, "channels/%d", ch->ch_id);
   htsmsg_destroy(m);
 }
@@ -323,8 +347,12 @@ channel_delete(channel_t *ch)
 {
   th_transport_t *t;
   th_subscription_t *s;
+  channel_tag_mapping_t *ctm;
 
   lock_assert(&global_lock);
+
+  while((ctm = LIST_FIRST(&ch->ch_ctms)) != NULL)
+    channel_tag_mapping_destroy(ctm);
 
   tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" deleted",
 	 ch->ch_name);
@@ -428,6 +456,100 @@ channel_set_xmltv_source(channel_t *ch, xmltv_channel_t *xc)
   channel_save(ch);
 }
 
+/**
+ *
+ */
+void
+channel_set_tags_from_list(channel_t *ch, const char *maplist)
+{
+  channel_tag_mapping_t *ctm, *n;
+  channel_tag_t *ct;
+  char buf[40];
+  int i, change = 0;
+
+  lock_assert(&global_lock);
+
+  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
+    ctm->ctm_mark = 1; /* Mark for delete */
+
+  while(*maplist) {
+    for(i = 0; i < sizeof(buf) - 1; i++) {
+      buf[i] = *maplist;
+      if(buf[i] == 0)
+	break;
+
+      maplist++;
+      if(buf[i] == ',') {
+	break;
+      }
+    }
+
+    buf[i] = 0;
+    if((ct = channel_tag_find(buf, 0)) == NULL)
+      continue;
+
+    LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
+      if(ctm->ctm_tag == ct) {
+	ctm->ctm_mark = 0;
+	break;
+      }
+    
+    if(ctm == NULL) {
+      /* Need to create mapping */
+      change = 1;
+      channel_tag_map(ch, ct, 0);
+    }
+  }
+
+  for(ctm = LIST_FIRST(&ch->ch_ctms); ctm != NULL; ctm = n) {
+    n = LIST_NEXT(ctm, ctm_channel_link);
+    if(ctm->ctm_mark) {
+      change = 1;
+      channel_tag_mapping_destroy(ctm);
+    }
+  }
+
+  if(change)
+    channel_save(ch);
+}
+
+
+
+
+/**
+ *
+ */
+static void
+channel_tag_map(channel_t *ch, channel_tag_t *ct, int check)
+{
+  channel_tag_mapping_t *ctm;
+
+  if(check) {
+    LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
+      if(ctm->ctm_tag == ct)
+	return;
+
+    LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
+      if(ctm->ctm_channel == ch)
+	return;
+  }
+
+  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
+    assert(ctm->ctm_tag != ct);
+
+  LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
+    assert(ctm->ctm_channel != ch);
+
+  ctm = malloc(sizeof(channel_tag_mapping_t));
+
+  ctm->ctm_channel = ch;
+  LIST_INSERT_HEAD(&ch->ch_ctms, ctm, ctm_channel_link);
+
+  ctm->ctm_tag = ct;
+  LIST_INSERT_HEAD(&ct->ct_ctms, ctm, ctm_tag_link);
+
+  ctm->ctm_mark = 0;
+}
 
 
 /**
@@ -467,7 +589,7 @@ channel_tag_find(const char *id, int create)
     snprintf(buf, sizeof(buf), "%d", tally);
     id = buf;
   } else {
-    tally = atoi(id);
+    tally = MAX(atoi(id), tally);
   }
 
   ct->ct_identifier = strdup(id);
@@ -485,9 +607,13 @@ static void
 channel_tag_destroy(channel_tag_t *ct)
 {
   channel_tag_mapping_t *ctm;
+  channel_t *ch;
 
-  while((ctm = LIST_FIRST(&ct->ct_ctms)) != NULL)
+  while((ctm = LIST_FIRST(&ct->ct_ctms)) != NULL) {
+    ch = ctm->ctm_channel;
     channel_tag_mapping_destroy(ctm);
+    channel_save(ch);
+  }
 
   free(ct->ct_identifier);
   free(ct->ct_name);

@@ -14,6 +14,12 @@ tvheadend.comet_poller = function() {
 	    var m = response.messages[x];
 	    
 	    switch(m.notificationClass) {
+	    case 'channeltags':
+		if(m.reload != null) {
+		    tvheadend.channelTags.reload();
+		}
+		break;
+
 	    case 'logmessage':
 		
 		var sl = Ext.get('systemlog');
