@@ -31,8 +31,21 @@
 
 #include "tvhead.h"
 #include "dtable.h"
+#include "notify.h"
 
 static LIST_HEAD(, dtable) dtables;
+
+/**
+ *
+ */
+static void
+dtable_store_changed(const dtable_t *dt)
+{
+  htsmsg_t *m = htsmsg_create();
+
+  htsmsg_add_u32(m, "reload", 1);
+  notify_by_msg(dt->dt_tablename, m);
+}
 
 /**
  *
@@ -104,6 +117,7 @@ dtable_record_update_by_array(dtable_t *dt, htsmsg_t *msg)
   htsmsg_t *c, *update;
   htsmsg_field_t *f;
   const char *id;
+  int changed = 0;
 
   TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
     if((c = htsmsg_get_msg_by_field(f)) == NULL)
@@ -114,10 +128,13 @@ dtable_record_update_by_array(dtable_t *dt, htsmsg_t *msg)
     if((update = dt->dt_dtc->dtc_record_update(dt->dt_opaque, id, c, 0)) 
        != NULL) {
       /* Data changed */
+      changed = 1;
       hts_settings_save(update, "%s/%s", dt->dt_tablename, id);
       htsmsg_destroy(update);
     }
   }
+  if(changed)
+    dtable_store_changed(dt);
   return 0;
 }
 
@@ -130,6 +147,7 @@ dtable_record_delete(dtable_t *dt, const char *id)
 {
   dt->dt_dtc->dtc_record_delete(dt->dt_opaque, id);
   hts_settings_remove("%s/%s", dt->dt_tablename, id);
+  dtable_store_changed(dt);
 }
 
 
@@ -141,11 +159,16 @@ dtable_record_delete_by_array(dtable_t *dt, htsmsg_t *msg)
 {
   htsmsg_field_t *f;
   const char *id;
+  int changed = 0;
 
   TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
-    if((id = htsmsg_field_get_string(f)) != NULL)
+    if((id = htsmsg_field_get_string(f)) != NULL) {
+      changed = 1;
       dtable_record_delete(dt, id);
+    }
   }
+  if(changed)
+    dtable_store_changed(dt);
   return 0;
 }
 
