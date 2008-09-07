@@ -33,7 +33,6 @@
 #include "access.h"
 #include "dtable.h"
 
-static int atally;
 struct access_entry_queue access_entries;
 
 
@@ -125,6 +124,7 @@ access_entry_find(const char *id, int create)
 {
   access_entry_t *ae;
   char buf[20];
+  static int tally;
 
   if(id != NULL) {
     TAILQ_FOREACH(ae, &access_entries, ae_link)
@@ -137,11 +137,11 @@ access_entry_find(const char *id, int create)
 
   ae = calloc(1, sizeof(access_entry_t));
   if(id == NULL) {
-    atally++;
-    snprintf(buf, sizeof(buf), "%d", atally);
+    tally++;
+    snprintf(buf, sizeof(buf), "%d", tally);
     id = buf;
   } else {
-    atally = atoi(id);
+    tally = MAX(atoi(id), tally);
   }
 
   ae->ae_id = strdup(id);

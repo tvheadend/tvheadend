@@ -43,7 +43,6 @@
 /**
  *
  */
-static int cwc_tally;
 
 #define CWC_KEEPALIVE_INTERVAL 30
 
@@ -958,6 +957,7 @@ cwc_entry_find(const char *id, int create)
   pthread_t ptid;
   char buf[20];
   cwc_t *cwc;
+  static int tally;
 
   if(id != NULL) {
     TAILQ_FOREACH(cwc, &cwcs, cwc_link)
@@ -968,11 +968,11 @@ cwc_entry_find(const char *id, int create)
     return NULL;
 
   if(id == NULL) {
-    cwc_tally++;
-    snprintf(buf, sizeof(buf), "%d", cwc_tally);
+    tally++;
+    snprintf(buf, sizeof(buf), "%d", tally);
     id = buf;
   } else {
-    cwc_tally = atoi(id);
+    tally = MAX(atoi(id), tally);
   }
 
   cwc = calloc(1, sizeof(cwc_t));
