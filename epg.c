@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <regex.h>
+#include <assert.h>
 
 #include "tvhead.h"
 #include "channels.h"
@@ -133,6 +134,7 @@ epg_event_find_by_start(channel_t *ch, time_t start, int create)
     e = skel;
     skel = NULL;
 
+    e->e_refcount = 1;
     e->e_channel = ch;
     epg_event_changed(e);
   }
@@ -160,13 +162,9 @@ epg_event_find_by_time(channel_t *ch, time_t t)
 /**
  *
  */
-void
+static void
 epg_event_destroy(event_t *e)
 {
-  channel_t *ch = e->e_channel;
-
-  RB_REMOVE(&ch->ch_epg_events, e, e_channel_link);
-  
   if(e->e_content_type != NULL)
     LIST_REMOVE(e, e_content_type_link);
 
@@ -174,6 +172,21 @@ epg_event_destroy(event_t *e)
   free((void *)e->e_desc);
   free(e);
 }
+
+/**
+ *
+ */
+static void
+epg_event_unref(event_t *e)
+{
+  if(e->e_refcount > 1) {
+    e->e_refcount--;
+    return;
+  }
+  assert(e->e_refcount == 1);
+  epg_event_destroy(e);
+}
+
 
 #if 0
 /**
@@ -225,12 +238,15 @@ epg_channel_maintain()
  *
  */
 void
-epg_destroy_by_channel(channel_t *ch)
+epg_unlink_from_channel(channel_t *ch)
 {
   event_t *e;
 
-  while((e = ch->ch_epg_events.root) != NULL)
-    epg_event_destroy(e);
+  while((e = ch->ch_epg_events.root) != NULL) {
+    RB_REMOVE(&ch->ch_epg_events, e, e_channel_link);
+    e->e_channel = NULL;
+    epg_event_unref(e);
+  }
 }
 
 

@@ -371,7 +371,7 @@ channel_delete(channel_t *ch)
     s->ths_channel = NULL;
   }
 
-  epg_destroy_by_channel(ch);
+  epg_unlink_from_channel(ch);
 
   fprintf(stderr, "!!!!!//autorec_destroy_by_channel(ch);\n");
 

@@ -47,6 +47,8 @@ typedef struct event {
   struct channel *e_channel;
   RB_ENTRY(event) e_channel_link;
 
+  int e_refcount;
+
   LIST_ENTRY(event) e_content_type_link;
   epg_content_type_t *e_content_type;
 
@@ -81,9 +83,7 @@ event_t *epg_event_find_by_start(channel_t *ch, time_t start, int create);
 
 event_t *epg_event_find_by_time(channel_t *ch, time_t t);
 
-void epg_event_destroy(event_t *e);
-
-void epg_destroy_by_channel(channel_t *ch);
+void epg_unlink_from_channel(channel_t *ch);
 
 
 /**
