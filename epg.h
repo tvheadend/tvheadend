@@ -48,6 +48,7 @@ typedef struct event {
   RB_ENTRY(event) e_channel_link;
 
   int e_refcount;
+  uint32_t e_id;
 
   LIST_ENTRY(event) e_content_type_link;
   epg_content_type_t *e_content_type;
@@ -92,5 +93,21 @@ void epg_unlink_from_channel(channel_t *ch);
 epg_content_type_t *epg_content_type_find_by_dvbcode(uint8_t dvbcode);
 
 epg_content_group_t *epg_content_group_find_by_name(const char *name);
+
+const char *epg_content_group_get_name(unsigned int id);
+
+/**
+ *
+ */
+typedef struct epg_query_result {
+  event_t **eqr_array;
+  int eqr_entries;
+  int eqr_alloced;
+} epg_query_result_t;
+
+void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
+	       const char *contentgroup, const char *title);
+void epg_query_free(epg_query_result_t *eqr);
+void epg_query_sort(epg_query_result_t *eqr);
 
 #endif /* EPG_H */

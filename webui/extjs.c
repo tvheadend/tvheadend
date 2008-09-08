@@ -41,6 +41,7 @@
 #include "transports.h"
 #include "serviceprobe.h"
 #include "xmltv.h"
+#include "epg.h"
 
 extern const char *htsversion;
 
@@ -109,6 +110,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/cwceditor.js");
   extjs_load(hq, "static/app/dvb.js");
   extjs_load(hq, "static/app/chconf.js");
+  extjs_load(hq, "static/app/epg.js");
 
   /**
    * Finally, the app itself
@@ -233,6 +235,38 @@ extjs_chlist(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   pthread_mutex_unlock(&global_lock);
+
+  htsmsg_add_msg(out, "entries", array);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+}
+
+
+/**
+ * EPG Content Groups
+ */
+static int
+extjs_ecglist(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  htsmsg_t *out, *array, *c;
+  const char *s;
+  int i;
+
+  out = htsmsg_create();
+  array = htsmsg_create_array();
+
+  for(i = 0; i < 16; i++) {
+    if((s = epg_content_group_get_name(i)) == NULL)
+      continue;
+
+    c = htsmsg_create();
+    htsmsg_add_str(c, "name", s);
+    htsmsg_add_msg(array, NULL, c);
+  }
 
   htsmsg_add_msg(out, "entries", array);
 
@@ -757,7 +791,79 @@ extjs_channeltags(http_connection_t *hc, const char *remain, void *opaque)
 
 }
 
+/**
+ *
+ */
+static int
+extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  htsmsg_t *out, *array, *m;
+  epg_query_result_t eqr;
+  event_t *e;
+  int start = 0, end, limit, i;
+  const char *s;
+  const char *channel = http_arg_get(&hc->hc_req_args, "channel");
+  const char *tag     = http_arg_get(&hc->hc_req_args, "tag");
+  const char *cgrp    = http_arg_get(&hc->hc_req_args, "contentgrp");
+  const char *title   = http_arg_get(&hc->hc_req_args, "title");
 
+  if(channel && !channel[0]) channel = NULL;
+  if(tag     && !tag[0])     tag = NULL;
+
+  if((s = http_arg_get(&hc->hc_req_args, "start")) != NULL)
+    start = atoi(s);
+
+  if((s = http_arg_get(&hc->hc_req_args, "limit")) != NULL)
+    limit = atoi(s);
+  else
+    limit = 20; /* XXX */
+
+  out = htsmsg_create();
+  array = htsmsg_create_array();
+
+  pthread_mutex_lock(&global_lock);
+
+  epg_query(&eqr, channel, tag, cgrp, title);
+
+  epg_query_sort(&eqr);
+
+  htsmsg_add_u32(out, "totalCount", eqr.eqr_entries);
+
+
+  start = MIN(start, eqr.eqr_entries);
+  end = MIN(start + limit, eqr.eqr_entries);
+
+  for(i = start; i < end; i++) {
+    e = eqr.eqr_array[i];
+
+    m = htsmsg_create();
+
+    if(e->e_channel != NULL)
+      htsmsg_add_str(m, "channel", e->e_channel->ch_name);
+    htsmsg_add_str(m, "title", e->e_title);
+    htsmsg_add_str(m, "description", e->e_desc);
+    htsmsg_add_u32(m, "id", e->e_id);
+    htsmsg_add_u32(m, "start", e->e_start);
+    htsmsg_add_u32(m, "end", e->e_start + e->e_duration);
+    htsmsg_add_u32(m, "duration", e->e_duration);
+    
+    if(e->e_content_type != NULL)
+      htsmsg_add_str(m, "contentgrp", e->e_content_type->ect_group->ecg_name);
+    htsmsg_add_msg(array, NULL, m);
+  }
+
+  epg_query_free(&eqr);
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_add_msg(out, "entries", array);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+}
 /**
  * WEB user interface
  */
@@ -773,4 +879,6 @@ extjs_start(void)
   http_path_add("/channel",     NULL, extjs_channel,     ACCESS_WEB_INTERFACE);
   http_path_add("/xmltv",       NULL, extjs_xmltv,       ACCESS_WEB_INTERFACE);
   http_path_add("/channeltags", NULL, extjs_channeltags, ACCESS_WEB_INTERFACE);
+  http_path_add("/epg",         NULL, extjs_epg,         ACCESS_WEB_INTERFACE);
+  http_path_add("/ecglist",     NULL, extjs_ecglist,     ACCESS_WEB_INTERFACE);
 }

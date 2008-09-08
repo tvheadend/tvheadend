@@ -599,6 +599,20 @@ channel_tag_find(const char *id, int create)
   return ct;
 }
 
+/**
+ *
+ */
+channel_tag_t *
+channel_tag_find_by_name(const char *name)
+{
+  channel_tag_t *ct;
+
+  TAILQ_FOREACH(ct, &channel_tags, ct_link)
+    if(!strcmp(ct->ct_name, name))
+      break;
+  return ct;
+}
+
 
 /**
  *

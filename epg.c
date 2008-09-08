@@ -117,6 +117,7 @@ event_t *
 epg_event_find_by_start(channel_t *ch, time_t start, int create)
 {
   static event_t *skel, *e;
+  static int tally;
 
   lock_assert(&global_lock);
 
@@ -134,6 +135,7 @@ epg_event_find_by_start(channel_t *ch, time_t start, int create)
     e = skel;
     skel = NULL;
 
+    e->e_id = ++tally;
     e->e_refcount = 1;
     e->e_channel = ch;
     epg_event_changed(e);
@@ -270,6 +272,15 @@ static const char *groupnames[16] = {
 };
 
 /**
+ *
+ */
+const char *
+epg_content_group_get_name(unsigned int id)
+{
+  return id < 16 ? groupnames[id] : NULL;
+}
+
+/**
  * Find a content type
  */
 epg_content_type_t *
@@ -309,7 +320,7 @@ epg_content_group_find_by_name(const char *name)
   
   for(i = 0; i < 16; i++) {
     ecg = epg_content_groups[i];
-    if(ecg->ecg_name && !strcmp(name, ecg->ecg_name))
+    if(ecg != NULL && ecg->ecg_name && !strcmp(name, ecg->ecg_name))
       return ecg;
   }
   return NULL;
@@ -384,3 +395,123 @@ epg_init(void)
     epg_content_type_find_by_dvbcode(i);
 }
 
+
+/**
+ *
+ */
+static void
+eqr_add(epg_query_result_t *eqr, event_t *e, regex_t *preg)
+{
+  if(preg != NULL && regexec(preg, e->e_title, 0, NULL, 0))
+    return;
+
+  if(eqr->eqr_entries == eqr->eqr_alloced) {
+    /* Need to alloc more space */
+
+    eqr->eqr_alloced = MAX(100, eqr->eqr_alloced * 2);
+    eqr->eqr_array = realloc(eqr->eqr_array, 
+			     eqr->eqr_alloced * sizeof(event_t *));
+  }
+  eqr->eqr_array[eqr->eqr_entries++] = e;
+  e->e_refcount++;
+}
+
+/**
+ *
+ */
+static void
+epg_query_add_channel(epg_query_result_t *eqr, channel_t *ch,
+		      epg_content_group_t *ecg, regex_t *preg)
+{
+  event_t *e;
+
+  if(ecg == NULL) {
+    RB_FOREACH(e, &ch->ch_epg_events, e_channel_link)
+      eqr_add(eqr, e, preg);
+    return;
+  }
+
+  RB_FOREACH(e, &ch->ch_epg_events, e_channel_link)
+    if(e->e_content_type != NULL && ecg == e->e_content_type->ect_group)
+      eqr_add(eqr, e, preg);
+}
+
+/**
+ *
+ */
+void
+epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
+	  const char *contentgroup, const char *title)
+{
+  channel_t *ch = channel ? channel_find_by_name(channel, 0) : NULL;
+  channel_tag_t *ct = tag ? channel_tag_find_by_name(tag)    : NULL;
+  epg_content_group_t *ecg = contentgroup ? 
+    epg_content_group_find_by_name(contentgroup) : NULL;
+  channel_tag_mapping_t *ctm;
+
+  regex_t preg0, *preg;
+
+  if(title != NULL) {
+    if(regcomp(&preg0, title, REG_ICASE | REG_EXTENDED | REG_NOSUB))
+      return;
+    preg = &preg0;
+  } else {
+    preg = NULL;
+  }
+
+  lock_assert(&global_lock);
+  memset(eqr, 0, sizeof(epg_query_result_t));
+
+  if(ch != NULL && ct == NULL) {
+    epg_query_add_channel(eqr, ch, ecg, preg);
+    return;
+  }
+  
+  if(ct != NULL) {
+    LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
+      if(ch == NULL || ctm->ctm_channel == ch)
+	epg_query_add_channel(eqr, ctm->ctm_channel, ecg, preg);
+    return;
+  }
+
+  RB_FOREACH(ch, &channel_name_tree, ch_name_link)
+    epg_query_add_channel(eqr, ch, ecg, preg);
+}
+
+
+/**
+ *
+ */
+void
+epg_query_free(epg_query_result_t *eqr)
+{
+  int i;
+
+  for(i = 0; i < eqr->eqr_entries; i++)
+    epg_event_unref(eqr->eqr_array[i]);
+  free(eqr->eqr_array);
+}
+
+/**
+ * Sorting functions
+ */
+static int
+epg_sort_start_ascending(const void *A, const void *B)
+{
+  event_t *a = *(event_t **)A;
+  event_t *b = *(event_t **)B;
+  return a->e_start - b->e_start;
+}
+
+/**
+ *
+ */
+void
+epg_query_sort(epg_query_result_t *eqr)
+{
+  int (*sf)(const void *a, const void *b);
+
+  sf = epg_sort_start_ascending;
+
+  qsort(eqr->eqr_array, eqr->eqr_entries, sizeof(event_t *), sf);
+}

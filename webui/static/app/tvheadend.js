@@ -98,38 +98,29 @@ tvheadend.app = function() {
 			new tvheadend.acleditor, 
 			new tvheadend.cwceditor]
 	    });
-	    
-	    var pvrpanel  = new Ext.TabPanel({
-		autoScroll:true, 
-		title: 'Video Recorder'
-	    });
-	    
-	    var chpanel   = new Ext.TabPanel({
-		autoScroll:true, 
-		title: 'Channels'
-	    });
-	    
+
+	    console.log(tvheadend);
 
 	    var viewport = new Ext.Viewport({
 		layout:'border',
-		items:[{
-		    region:'south',
-		    contentEl: 'systemlog',
-		    split:true,
-		    autoScroll:true,
-		    height: 150,
-		    minSize: 100,
-		    maxSize: 400,
-		    collapsible: true,
-		    title:'System log',
-		    margins:'0 0 0 0'
-		},
-		       new Ext.TabPanel({region:'center', 
-					 activeTab:0, 
-					 items:[confpanel, 
-						pvrpanel, 
-						chpanel]})
-		      ]
+		items:[
+		    {
+			region:'south',
+			contentEl: 'systemlog',
+			split:true,
+			autoScroll:true,
+			height: 150,
+			minSize: 100,
+			maxSize: 400,
+			collapsible: true,
+			title:'System log',
+			margins:'0 0 0 0'
+		    },new Ext.TabPanel({
+			region:'center',
+			activeTab:0,
+			items:[new tvheadend.epg,confpanel]
+		    })
+		]
 	    });
 	    
 	    new tvheadend.comet_poller;
