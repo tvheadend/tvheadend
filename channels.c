@@ -349,7 +349,9 @@ channel_rename(channel_t *ch, const char *newname)
   LIST_FOREACH(t, &ch->ch_transports, tht_ch_link) {
     free(t->tht_chname);
     t->tht_chname = strdup(newname);
+    pthread_mutex_lock(&t->tht_stream_mutex);
     t->tht_config_change(t);
+    pthread_mutex_unlock(&t->tht_stream_mutex);
   }
 
   channel_save(ch);
