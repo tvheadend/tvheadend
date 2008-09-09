@@ -15,9 +15,13 @@ tvheadend.comet_poller = function() {
 	    
 	    switch(m.notificationClass) {
 	    case 'channeltags':
-		if(m.reload != null) {
+		if(m.reload != null)
 		    tvheadend.channelTags.reload();
-		}
+		break;
+
+	    case 'channels':
+		if(m.reload != null)
+		    tvheadend.channels.reload();
 		break;
 
 	    case 'logmessage':

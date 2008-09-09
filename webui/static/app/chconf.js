@@ -2,7 +2,6 @@
 /**
  * Channel tags
  */
-
 tvheadend.channelTags = new Ext.data.JsonStore({
     autoLoad:true,
     root:'entries',
@@ -11,6 +10,15 @@ tvheadend.channelTags = new Ext.data.JsonStore({
     baseParams: {op: 'listTags'}
 });
 
+/**
+ * Channels
+ */
+tvheadend.channels = new Ext.data.JsonStore({
+    autoLoad: true,
+    root:'entries',
+    fields: [{name: 'name'}, {name: 'chid'}],
+    url: "chlist",
+});
 
 /**
  * Channel details
@@ -180,14 +188,6 @@ tvheadend.channeldetails = function(chid, chname) {
 	confpanel.getForm().submit({url:'/channel', 
 				    params:{'chid': chid, 'op':'save'},
 				    waitMsg:'Saving Data...',
-
-				    success: function(form, action) {
-
-					if(action.result.reloadchlist) {
-					    tvheadend.chconfliststore.reload();
-					}
-				    },
-
 				    failure: function(form, action) {
 					Ext.Msg.alert('Save failed', action.result.errormsg);
 				    }
@@ -203,7 +203,6 @@ tvheadend.channeldetails = function(chid, chname) {
 				   Ext.Ajax.request({url: '/channel',
 						     params:{'chid': chid, 'op':'delete'},
 						     success: function() {
-							 tvheadend.chconfliststore.reload();
 							 panel.destroy();
 						     }
 						    });
@@ -262,7 +261,6 @@ tvheadend.channeldetails = function(chid, chname) {
 								     srcch: selectedRecord.data.chid},
 							     success: function() {
 								 transportsstore.reload();
-								 tvheadend.chconfliststore.reload();
 							     }});
 				       }
 				      );
@@ -277,20 +275,6 @@ tvheadend.channeldetails = function(chid, chname) {
  *
  */
 tvheadend.chconf = function() {
-
-    var ChannelRecord = Ext.data.Record.create([
-	{name: 'name'},
-	{name: 'chid'}]);
-    
-    var store = new Ext.data.JsonStore({root: 'entries',
-	fields: ChannelRecord,
-	url: "chlist",
-	autoLoad: true,
-	id: 'id',
-	storeid: 'id'
-	});
-    
-
     var chlist = new Ext.grid.GridPanel({
 	ddGroup: 'chconfddgroup',
 	enableDragDrop: true,
@@ -303,7 +287,7 @@ tvheadend.chconf = function() {
 		   dataIndex: 'name'}
 		 ],
 	selModel: new Ext.grid.RowSelectionModel({singleSelect:true}),
-	store: store,
+	store: tvheadend.channels,
     });
 
     var details = new Ext.Panel({
@@ -313,7 +297,6 @@ tvheadend.chconf = function() {
 
 
     var panel = new Ext.Panel({
-	listeners: {activate: handleActivate},
 	border: false,
 	title:'Channels',
 	layout:'border',
@@ -326,12 +309,9 @@ tvheadend.chconf = function() {
 
     });
 
-    function handleActivate(tab){
-	store.reload();
-    }
 
     chlist.on('rowclick', function(grid, n) {
-	var rec = store.getAt(n);
+	var rec = tvheadend.channels.getAt(n);
 	
 	details.remove(details.getComponent(0));
 	details.doLayout();
@@ -376,8 +356,5 @@ tvheadend.chconf = function() {
 	    console.log(parent);
 	});
     */
-
-    tvheadend.chconfliststore = store;
-
     return panel;
 }

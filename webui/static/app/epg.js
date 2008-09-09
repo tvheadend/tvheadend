@@ -99,20 +99,14 @@ tvheadend.epg = function() {
     });
 
 
-    // Channels, XXX: Perhaps we should make channes a global store as well
-
-    var epgFilterChannelsStore = new Ext.data.JsonStore({
-	root:'entries',
-	fields: [{name: 'name'}],
-	url:'chlist'
-    });
+    // Channels, uses global store
 
     var epgFilterChannels = new Ext.form.ComboBox({
 	loadingText: 'Loading...',
 	width: 200,
 	displayField:'name',
-	store: epgFilterChannelsStore,
-	mode: 'remote',
+	store: tvheadend.channels,
+	mode: 'local',
 	editable: false,
 	triggerAction: 'all',
 	emptyText: 'Only include channel...'

@@ -40,6 +40,7 @@
 #include "autorec.h"
 #include "xmltv.h"
 #include "dtable.h"
+#include "notify.h"
 
 struct channel_list channels_not_xmltv_mapped;
 
@@ -50,6 +51,18 @@ struct channel_tag_queue channel_tags;
 static void channel_tag_map(channel_t *ch, channel_tag_t *ct, int check);
 static channel_tag_t *channel_tag_find(const char *id, int create);
 static void channel_tag_mapping_destroy(channel_tag_mapping_t *ctm);
+
+/**
+ *
+ */
+static void
+channel_list_changed(void)
+{
+  htsmsg_t *m = htsmsg_create();
+  htsmsg_add_u32(m, "reload", 1);
+  notify_by_msg("channels", m);
+}
+
 
 static int
 dictcmp(const char *a, const char *b)
@@ -134,6 +147,10 @@ channel_set_name(channel_t *ch, const char *name)
 
   x = RB_INSERT_SORTED(&channel_name_tree, ch, ch_name_link, channelcmp);
   assert(x == NULL);
+
+  /* Notify clients */
+  channel_list_changed();
+
 }
 
 
@@ -385,6 +402,8 @@ channel_delete(channel_t *ch)
   free(ch->ch_name);
   free(ch->ch_sname);
   free(ch->ch_icon);
+
+  channel_list_changed();
   
   free(ch);
 }
