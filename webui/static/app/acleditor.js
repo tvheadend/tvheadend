@@ -171,6 +171,7 @@ tvheadend.acleditor = function() {
 	    plugins:[enabledColumn,streamingColumn,pvrColumn,adminColumn, webuiColumn],
 	    store: store,
 	    clicksToEdit: 2,
+            viewConfig: {forceFit:true},
 	    cm: cm,
 	    selModel: new Ext.grid.RowSelectionModel({singleSelect:false}),
 	    tbar: [{

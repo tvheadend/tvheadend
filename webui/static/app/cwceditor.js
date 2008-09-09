@@ -159,6 +159,7 @@ tvheadend.cwceditor = function() {
 	    store: store,
 	    clicksToEdit: 2,
 	    cm: cm,
+            viewConfig: {forceFit:true},
 	    selModel: new Ext.grid.RowSelectionModel({singleSelect:false}),
 	    tbar: [{
 		    tooltip: 'Create a new code word connection entry on the server. ' + 

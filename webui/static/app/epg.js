@@ -213,7 +213,7 @@ tvheadend.epg = function() {
 	store: epgStore,
 	cm: epgCm,
 	plugins:[expander],
-
+        viewConfig: {forceFit:true},
 	tbar: [
 	    epgFilterTitle,
 	    '-',

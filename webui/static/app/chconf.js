@@ -104,6 +104,7 @@ tvheadend.channeldetails = function(chid, chname) {
 	plugins:[enabledColumn, expander],
 	store: transportsstore,
 	clicksToEdit: 2,
+        viewConfig: {forceFit:true},
 	cm: cm,
 	selModel: new Ext.grid.RowSelectionModel({singleSelect:false})
     });
@@ -148,7 +149,7 @@ tvheadend.channeldetails = function(chid, chname) {
 			loadingText: 'Loading...',
 			fieldLabel: 'XML-TV Source',
 			name: 'xmltvchannel',
-			width: 300,
+			width: 200,
 			displayField:'xcTitle',
 			valueField:'xcTitle',
 			store: xmltvChannels,
@@ -169,7 +170,7 @@ tvheadend.channeldetails = function(chid, chname) {
 		    name:"tags",
 		    valueField:"identifier",
 		    displayField:"name",
-		    width:250,
+		    width:200,
 		    height:200,
 		    store:tvheadend.channelTags,
 		}]
@@ -276,6 +277,7 @@ tvheadend.channeldetails = function(chid, chname) {
  */
 tvheadend.chconf = function() {
     var chlist = new Ext.grid.GridPanel({
+        viewConfig: {forceFit:true},
 	ddGroup: 'chconfddgroup',
 	enableDragDrop: true,
 	stripeRows:true,
