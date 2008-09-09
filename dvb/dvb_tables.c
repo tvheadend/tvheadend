@@ -78,17 +78,12 @@ dvb_table_fastswitch(th_dvb_mux_instance_t *tdmi)
   if(tdmi->tdmi_quickscan == TDMI_QUICKSCAN_NONE)
     return;
 
-  LIST_FOREACH(tdt, &tdmi->tdmi_tables, tdt_link) {
+  LIST_FOREACH(tdt, &tdmi->tdmi_tables, tdt_link)
     if(tdt->tdt_quickreq && tdt->tdt_count == 0)
-      break;
-  }
-
-  if(tdt != NULL)
-    return; /* Still tables we've not seen */
+      return;
 
   tdmi->tdmi_quickscan = TDMI_QUICKSCAN_NONE;
-  //  dvb_adapter_mux_scanner(tdmi->tdmi_adapter, 0);
-
+  dvb_adapter_mux_scanner(tdmi->tdmi_adapter);
 }
 
 
