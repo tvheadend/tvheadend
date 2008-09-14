@@ -98,3 +98,23 @@
 .save {
     background-image:url(../icons/save.gif) !important;
 }
+
+
+.x-epg-title {
+    margin: 5px;
+    font:normal 15px arial, tahoma, helvetica, sans-serif;
+    font-weight:bold;
+}
+
+.x-epg-desc {
+    margin: 5px;
+}
+
+.x-epg-chicon {
+    float: right;
+    margin: 5px;
+}
+
+.x-epg-cgrp {
+    margin: 5px;
+}

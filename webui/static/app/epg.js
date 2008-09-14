@@ -1,3 +1,40 @@
+
+tvheadend.epgDetails = function(event) {
+
+
+    var content = '';
+    
+    console.log(event);
+
+    if(event.chicon != null && event.chicon.length > 0)
+	content += '<img class="x-epg-chicon" src="' + event.chicon + '">';
+
+    content += '<div class="x-epg-title">' + event.title + '</div>';
+    content += '<div class="x-epg-desc">' + event.description + '</div>';
+
+    content += '<div class="x-epg-cgrp">' + event.contentgrp + '</div>';
+
+    var win = new Ext.Window({
+	title: event.title,
+        layout: 'fit',
+        width: 400,
+        height: 300,
+	constrainHeader: true,
+/*
+	buttons: [
+	    new Ext.Button({
+		text: "Record program"
+	    })
+	],
+*/
+	buttonAlign: 'center',
+	html: content,
+    });
+    win.show();
+
+}
+
+
 /**
  *
  */
@@ -10,6 +47,7 @@ tvheadend.epg = function() {
 	{name: 'channel'},
 	{name: 'title'},
 	{name: 'description'},
+	{name: 'chicon'},
         {name: 'start', type: 'date', dateFormat: 'U' /* unix time */},
         {name: 'end', type: 'date', dateFormat: 'U' /* unix time */},
         {name: 'duration'},
@@ -24,10 +62,6 @@ tvheadend.epg = function() {
 	autoLoad: true,
 	id: 'id',
 	remoteSort: true,
-    });
-
-    var expander = new xg.RowExpander({
-        tpl : new Ext.Template('<div>{description}</div>')
     });
 
     function renderDate(value){
@@ -52,7 +86,6 @@ tvheadend.epg = function() {
     } 
 
     var epgCm = new Ext.grid.ColumnModel([
-	expander,
 	{
 	    width: 250,
 	    id:'title',
@@ -197,7 +230,6 @@ tvheadend.epg = function() {
 	title: 'Electronic Program Guide',
 	store: epgStore,
 	cm: epgCm,
-	plugins:[expander],
         viewConfig: {forceFit:true},
 	tbar: [
 	    epgFilterTitle,
@@ -223,6 +255,14 @@ tvheadend.epg = function() {
         })
 
     });
+    
+    panel.on('rowclick', rowclicked);
+
+
+    function rowclicked(grid, index) {
+	new tvheadend.epgDetails(grid.getStore().getAt(index).data);
+    }
+
 
     return panel;
 }

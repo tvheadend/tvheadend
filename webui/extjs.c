@@ -839,10 +839,18 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
 
     m = htsmsg_create();
 
-    if(e->e_channel != NULL)
+    if(e->e_channel != NULL) {
       htsmsg_add_str(m, "channel", e->e_channel->ch_name);
-    htsmsg_add_str(m, "title", e->e_title);
-    htsmsg_add_str(m, "description", e->e_desc);
+      if(e->e_channel->ch_icon != NULL)
+	htsmsg_add_str(m, "chicon", e->e_channel->ch_icon);
+    }
+
+    if(e->e_title != NULL)
+      htsmsg_add_str(m, "title", e->e_title);
+
+    if(e->e_desc != NULL)
+      htsmsg_add_str(m, "description", e->e_desc);
+
     htsmsg_add_u32(m, "id", e->e_id);
     htsmsg_add_u32(m, "start", e->e_start);
     htsmsg_add_u32(m, "end", e->e_start + e->e_duration);
