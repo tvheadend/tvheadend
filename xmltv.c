@@ -297,7 +297,7 @@ xmltv_parse_programme_tags(xmltv_channel_t *xc, htsmsg_t *tags,
     epg_event_set_duration(e, stop - start);
 
     if(title != NULL) epg_event_set_title(e, title);
-    if(desc  != NULL) epg_event_set_title(e, desc);
+    if(desc  != NULL) epg_event_set_desc(e, desc);
   }
 }
 
