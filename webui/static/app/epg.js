@@ -144,16 +144,6 @@ tvheadend.epg = function() {
 	emptyText: 'Only include content...'
     });
 
-/*
-    function epgReload() {
-	epgStore.baseParams.channel    = epgFilterChannels.getValue();
-	epgStore.baseParams.tag        = epgFilterChannelTags.getValue();
-	epgStore.baseParams.contentgrp = epgFilterContentGroup.getValue();
-	epgStore.baseParams.title      = epgFilterTitle.getValue();
-	console.log(epgStore.baseParams.title);
-	epgStore.reload();
-    }
-*/
 
     function epgQueryClear() {
 	epgStore.baseParams.channel    = null;
@@ -202,11 +192,6 @@ tvheadend.epg = function() {
 	}
     });
 
-/*
-    epgFilterChannelTags.on('select', epgReload);
-    epgFilterContentGroup.on('select', epgReload);
-    epgFilterTitle.on('valid', epgReload);
-*/
     var panel = new Ext.grid.GridPanel({
         loadMask: true,
 	title: 'Electronic Program Guide',
