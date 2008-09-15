@@ -32,7 +32,6 @@
 #include "subscriptions.h"
 #include "serviceprobe.h"
 #include "transports.h"
-#include "mux.h"
 
 
 /* List of transports to be probed, protected with global_lock */
