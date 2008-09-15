@@ -400,10 +400,13 @@ epg_init(void)
  *
  */
 static void
-eqr_add(epg_query_result_t *eqr, event_t *e, regex_t *preg)
+eqr_add(epg_query_result_t *eqr, event_t *e, regex_t *preg, time_t now)
 {
   if(preg != NULL && regexec(preg, e->e_title, 0, NULL, 0))
     return;
+
+  if(e->e_start + e->e_duration < now)
+    return; /* Already passed */
 
   if(eqr->eqr_entries == eqr->eqr_alloced) {
     /* Need to alloc more space */
@@ -421,19 +424,19 @@ eqr_add(epg_query_result_t *eqr, event_t *e, regex_t *preg)
  */
 static void
 epg_query_add_channel(epg_query_result_t *eqr, channel_t *ch,
-		      epg_content_group_t *ecg, regex_t *preg)
+		      epg_content_group_t *ecg, regex_t *preg, time_t now)
 {
   event_t *e;
 
   if(ecg == NULL) {
     RB_FOREACH(e, &ch->ch_epg_events, e_channel_link)
-      eqr_add(eqr, e, preg);
+      eqr_add(eqr, e, preg, now);
     return;
   }
 
   RB_FOREACH(e, &ch->ch_epg_events, e_channel_link)
     if(e->e_content_type != NULL && ecg == e->e_content_type->ect_group)
-      eqr_add(eqr, e, preg);
+      eqr_add(eqr, e, preg, now);
 }
 
 /**
@@ -448,6 +451,9 @@ epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
   epg_content_group_t *ecg = contentgroup ? 
     epg_content_group_find_by_name(contentgroup) : NULL;
   channel_tag_mapping_t *ctm;
+  time_t now;
+
+  time(&now);
 
   regex_t preg0, *preg;
 
@@ -463,19 +469,19 @@ epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
   memset(eqr, 0, sizeof(epg_query_result_t));
 
   if(ch != NULL && ct == NULL) {
-    epg_query_add_channel(eqr, ch, ecg, preg);
+    epg_query_add_channel(eqr, ch, ecg, preg, now);
     return;
   }
   
   if(ct != NULL) {
     LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
       if(ch == NULL || ctm->ctm_channel == ch)
-	epg_query_add_channel(eqr, ctm->ctm_channel, ecg, preg);
+	epg_query_add_channel(eqr, ctm->ctm_channel, ecg, preg, now);
     return;
   }
 
   RB_FOREACH(ch, &channel_name_tree, ch_name_link)
-    epg_query_add_channel(eqr, ch, ecg, preg);
+    epg_query_add_channel(eqr, ch, ecg, preg, now);
 }
 
 
