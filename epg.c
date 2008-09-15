@@ -327,62 +327,6 @@ epg_content_group_find_by_name(const char *name)
 }
 
 
-/**
- * Given the arguments, search all EPG events and enlist them
- *
- * XXX: Optimize if we know channel, group, etc
- */
-#if 0
-int
-epg_search(struct event_list *h, const char *title, 
-	   epg_content_group_t *s_ecg,
-	   channel_t *s_ch)
-{
-  channel_t *ch;
-  event_t *e;
-  int num = 0;
-  regex_t preg;
-
-  if(title != NULL && 
-     regcomp(&preg, title, REG_ICASE | REG_EXTENDED | REG_NOSUB))
-    return -1;
-
-  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-    if(LIST_FIRST(&ch->ch_transports) == NULL)
-      continue;
-
-    if(s_ch != NULL && s_ch != ch)
-      continue;
-
-    TAILQ_FOREACH(e, &ch->ch_epg_events, e_channel_link) {
-
-      if(e->e_start + e->e_duration < dispatch_clock)
-	continue; /* old */
-
-      if(s_ecg != NULL) {
-	if(e->e_content_type == NULL)
-	  continue;
-	
-	if(e->e_content_type->ect_group != s_ecg)
-	  continue;
-      }
-
-      if(title != NULL) {
-	if(regexec(&preg, e->e_title, 0, NULL, 0))
-	  continue;
-      }
-
-      LIST_INSERT_HEAD(h, e, e_tmp_link);
-      num++;
-    }
-  }
-  if(title != NULL)
-    regfree(&preg);
-
-  return num;
-}
-#endif
-
 /*
  *
  */
