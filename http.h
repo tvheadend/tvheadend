@@ -41,7 +41,7 @@ LIST_HEAD(rtsp_session_head, rtsp_session);
 typedef struct http_connection {
   int hc_fd;
   struct sockaddr_in *hc_peer;
-  char *hc_peername;
+  char *hc_representative;
 
   char *hc_url;
   int hc_keep_alive;

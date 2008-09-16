@@ -427,7 +427,7 @@ static int
 process_request(http_connection_t *hc, htsbuf_queue_t *spill)
 {
   char *v, *argv[2];
-  int n;
+  int n, rval = -1;
   uint8_t authbuf[150];
   
   /* Set keep-alive status */
@@ -461,17 +461,30 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
     }
   }
 
+  if(hc->hc_username != NULL) {
+    hc->hc_representative = strdup(hc->hc_username);
+  } else {
+    hc->hc_representative = malloc(30);
+    /* Not threadsafe ? */
+    snprintf(hc->hc_representative, 30,
+	     "%s", inet_ntoa(hc->hc_peer->sin_addr));
+
+  }
+
   switch(hc->hc_version) {
   case RTSP_VERSION_1_0:
-    return -1;
+    rval = -1;
+    break;
     //    rtsp_process_request(hc);
     return 0;
 
   case HTTP_VERSION_1_0:
   case HTTP_VERSION_1_1:
-    return http_process_request(hc, spill);
+    rval = http_process_request(hc, spill);
+    break;
   }
-  return -1;
+  free(hc->hc_representative);
+  return rval;
 }
 
 
