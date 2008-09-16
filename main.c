@@ -47,6 +47,7 @@
 #include "subscriptions.h"
 #include "serviceprobe.h"
 #include "cwc.h"
+#include "dvr/dvr.h"
 
 #include <libhts/htsparachute.h>
 #include <libhts/htssettings.h>
@@ -100,11 +101,9 @@ gtimercmp(gtimer_t *a, gtimer_t *b)
  *
  */
 void
-gtimer_arm(gtimer_t *gti, gti_callback_t *callback, void *opaque, int delta)
+gtimer_arm_abs(gtimer_t *gti, gti_callback_t *callback, void *opaque,
+	       time_t when)
 {
-  time_t now;
-  time(&now);
-  
   lock_assert(&global_lock);
 
   if(gti->gti_callback != NULL)
@@ -112,9 +111,21 @@ gtimer_arm(gtimer_t *gti, gti_callback_t *callback, void *opaque, int delta)
     
   gti->gti_callback = callback;
   gti->gti_opaque = opaque;
-  gti->gti_expire = now + delta;
+  gti->gti_expire = when;
 
   LIST_INSERT_SORTED(&gtimers, gti, gti_link, gtimercmp);
+}
+
+/**
+ *
+ */
+void
+gtimer_arm(gtimer_t *gti, gti_callback_t *callback, void *opaque, int delta)
+{
+  time_t now;
+  time(&now);
+  
+  gtimer_arm_abs(gti, callback, opaque, now + delta);
 }
 
 /**
@@ -271,6 +282,8 @@ main(int argc, char **argv)
   serviceprobe_init();
 
   cwc_init();
+
+  dvr_init();
 
   pthread_mutex_unlock(&global_lock);
 

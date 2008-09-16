@@ -44,6 +44,8 @@ typedef struct epg_content_type {
  * EPG event
  */
 typedef struct event {
+  LIST_ENTRY(event) e_global_link;
+
   struct channel *e_channel;
   RB_ENTRY(event) e_channel_link;
 
@@ -83,6 +85,8 @@ void epg_event_set_content_type(event_t *e, epg_content_type_t *ect);
 event_t *epg_event_find_by_start(channel_t *ch, time_t start, int create);
 
 event_t *epg_event_find_by_time(channel_t *ch, time_t t);
+
+event_t *epg_event_find_by_id(int eventid);
 
 void epg_unlink_from_channel(channel_t *ch);
 

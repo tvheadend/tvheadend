@@ -12,25 +12,41 @@ tvheadend.epgDetails = function(event) {
     content += '<div class="x-epg-title">' + event.title + '</div>';
     content += '<div class="x-epg-desc">' + event.description + '</div>';
 
-    content += '<div class="x-epg-cgrp">' + event.contentgrp + '</div>';
+    content += '<div class="x-epg-meta">' + event.contentgrp + '</div>';
 
     var win = new Ext.Window({
 	title: event.title,
+	bodyStyle: 'margin: 5px',
         layout: 'fit',
         width: 400,
         height: 300,
 	constrainHeader: true,
-/*
 	buttons: [
 	    new Ext.Button({
+		handler: recordEvent,
 		text: "Record program"
 	    })
 	],
-*/
 	buttonAlign: 'center',
 	html: content,
     });
     win.show();
+
+
+    function recordEvent() {
+	Ext.Ajax.request({
+	    url: '/dvr',
+	    params: {eventId: event.id, op: 'recordEvent'},
+
+	    success:function(response, options) {
+		win.close();
+	    },
+
+	    failure:function(response, options) {
+		Ext.MessageBox.alert('DVR', response.statusText);
+	    }
+	});
+    }
 
 }
 

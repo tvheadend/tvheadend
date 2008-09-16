@@ -55,7 +55,7 @@ typedef struct channel {
   struct event *ch_epg_cur_event;
   char *ch_icon;
 
-  struct pvr_rec_list ch_pvrrs;
+  struct dvr_entry_list ch_dvrs;
   
   struct autorec_list ch_autorecs;
 

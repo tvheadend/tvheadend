@@ -29,6 +29,10 @@
 
 #define EPG_MAX_AGE 86400
 
+#define EPG_GLOBAL_HASH_WIDTH 1024
+#define EPG_GLOBAL_HASH_MASK (EPG_GLOBAL_HASH_WIDTH - 1)
+static struct event_list epg_hash[EPG_GLOBAL_HASH_WIDTH];
+
 epg_content_group_t *epg_content_groups[16];
 
 static int
@@ -136,6 +140,10 @@ epg_event_find_by_start(channel_t *ch, time_t start, int create)
     skel = NULL;
 
     e->e_id = ++tally;
+
+    LIST_INSERT_HEAD(&epg_hash[e->e_id & EPG_GLOBAL_HASH_MASK], e,
+		     e_global_link);
+
     e->e_refcount = 1;
     e->e_channel = ch;
     epg_event_changed(e);
@@ -164,6 +172,21 @@ epg_event_find_by_time(channel_t *ch, time_t t)
 /**
  *
  */
+event_t *
+epg_event_find_by_id(int eventid)
+{
+  event_t *e;
+
+  LIST_FOREACH(e, &epg_hash[eventid & EPG_GLOBAL_HASH_MASK], e_global_link)
+    if(e->e_id == eventid)
+      break;
+  return e;
+}
+
+
+/**
+ *
+ */
 static void
 epg_event_destroy(event_t *e)
 {
@@ -172,6 +195,7 @@ epg_event_destroy(event_t *e)
 
   free((void *)e->e_title);
   free((void *)e->e_desc);
+  LIST_REMOVE(e, e_global_link);
   free(e);
 }
 

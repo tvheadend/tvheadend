@@ -38,6 +38,7 @@
 #include "dvb/dvb.h"
 #include "dvb/dvb_support.h"
 #include "dvb/dvb_preconf.h"
+#include "dvr/dvr.h"
 #include "transports.h"
 #include "serviceprobe.h"
 #include "xmltv.h"
@@ -111,6 +112,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/dvb.js");
   extjs_load(hq, "static/app/chconf.js");
   extjs_load(hq, "static/app/epg.js");
+  extjs_load(hq, "static/app/dvr.js");
 
   /**
    * Finally, the app itself
@@ -872,6 +874,159 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
+
+/**
+ *
+ */
+static int
+extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  const char *op = http_arg_get(&hc->hc_req_args, "op");
+  htsmsg_t *out;
+  event_t *e;
+  dvr_entry_t *de;
+  const char *s;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(!strcmp(op, "recordEvent")) {
+    s = http_arg_get(&hc->hc_req_args, "eventId");
+
+    if((e = epg_event_find_by_id(atoi(s))) == NULL) {
+      pthread_mutex_unlock(&global_lock);
+      return HTTP_STATUS_BAD_REQUEST;
+    }
+
+    dvr_entry_create_by_event(e, hc->hc_representative);
+
+    out = htsmsg_create();
+    htsmsg_add_u32(out, "success", 1);
+  } else if(!strcmp(op, "cancelEntry")) {
+    s = http_arg_get(&hc->hc_req_args, "entryId");
+
+    if((de = dvr_entry_find_by_id(atoi(s))) == NULL) {
+      pthread_mutex_unlock(&global_lock);
+      return HTTP_STATUS_BAD_REQUEST;
+    }
+
+    dvr_entry_cancel(de);
+
+    out = htsmsg_create();
+    htsmsg_add_u32(out, "success", 1);
+  } else {
+
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+
+}
+
+
+/**
+ *
+ */
+static int
+extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  htsmsg_t *out, *array, *m;
+  dvr_query_result_t dqr;
+  dvr_entry_t *de;
+  int start = 0, end, limit, i;
+  const char *s, *t = NULL;
+
+  if((s = http_arg_get(&hc->hc_req_args, "start")) != NULL)
+    start = atoi(s);
+
+  if((s = http_arg_get(&hc->hc_req_args, "limit")) != NULL)
+    limit = atoi(s);
+  else
+    limit = 20; /* XXX */
+
+  out = htsmsg_create();
+  array = htsmsg_create_array();
+
+  pthread_mutex_lock(&global_lock);
+
+  dvr_query(&dqr);
+
+  dvr_query_sort(&dqr);
+
+  htsmsg_add_u32(out, "totalCount", dqr.dqr_entries);
+
+  start = MIN(start, dqr.dqr_entries);
+  end = MIN(start + limit, dqr.dqr_entries);
+
+  for(i = start; i < end; i++) {
+    de = dqr.dqr_array[i];
+
+    m = htsmsg_create();
+
+    if(de->de_channel != NULL) {
+      htsmsg_add_str(m, "channel", de->de_channel->ch_name);
+      if(de->de_channel->ch_icon != NULL)
+	htsmsg_add_str(m, "chicon", de->de_channel->ch_icon);
+    }
+
+    if(de->de_title != NULL)
+      htsmsg_add_str(m, "title", de->de_title);
+
+    if(de->de_desc != NULL)
+      htsmsg_add_str(m, "description", de->de_desc);
+
+    htsmsg_add_u32(m, "id", de->de_id);
+    htsmsg_add_u32(m, "start", de->de_start);
+    htsmsg_add_u32(m, "end", de->de_stop);
+    htsmsg_add_u32(m, "duration", de->de_stop - de->de_start);
+    
+    htsmsg_add_str(m, "creator", de->de_creator);
+
+    switch(de->de_sched_state) {
+    case DVR_SCHEDULED:
+      s = "Scheduled for recording";
+      t = "sched";
+      break;
+    case DVR_RECORDING:
+      s = "Recording";
+      t = "rec";
+      break;
+    case DVR_COMPLETED:
+      s = de->de_error ?: "Completed OK";
+      t = "done";
+      break;
+    default:
+      s = "Invalid";
+      break;
+    }
+    htsmsg_add_str(m, "status", s);
+    if(t != NULL) htsmsg_add_str(m, "schedstate", t);
+
+
+    htsmsg_add_msg(array, NULL, m);
+  }
+
+  dvr_query_free(&dqr);
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_add_msg(out, "entries", array);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+}
+
+
+
 /**
  * WEB user interface
  */
@@ -888,5 +1043,7 @@ extjs_start(void)
   http_path_add("/xmltv",       NULL, extjs_xmltv,       ACCESS_WEB_INTERFACE);
   http_path_add("/channeltags", NULL, extjs_channeltags, ACCESS_WEB_INTERFACE);
   http_path_add("/epg",         NULL, extjs_epg,         ACCESS_WEB_INTERFACE);
+  http_path_add("/dvr",         NULL, extjs_dvr,         ACCESS_WEB_INTERFACE);
+  http_path_add("/dvrlist",     NULL, extjs_dvrlist,     ACCESS_WEB_INTERFACE);
   http_path_add("/ecglist",     NULL, extjs_ecglist,     ACCESS_WEB_INTERFACE);
 }

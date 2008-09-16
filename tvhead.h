@@ -75,6 +75,9 @@ typedef struct gtimer {
 void gtimer_arm(gtimer_t *gti, gti_callback_t *callback, void *opaque,
 		int delta);
 
+void gtimer_arm_abs(gtimer_t *gti, gti_callback_t *callback, void *opaque,
+		    time_t when);
+
 void gtimer_disarm(gtimer_t *gti);
 
 
@@ -89,7 +92,7 @@ TAILQ_HEAD(th_dvb_adapter_queue, th_dvb_adapter);
 LIST_HEAD(th_v4l_adapter_list, th_v4l_adapter);
 LIST_HEAD(event_list, event);
 RB_HEAD(event_tree, event);
-LIST_HEAD(pvr_rec_list, pvr_rec);
+LIST_HEAD(dvr_entry_list, dvr_entry);
 TAILQ_HEAD(ref_update_queue, ref_update);
 LIST_HEAD(th_transport_list, th_transport);
 RB_HEAD(th_transport_tree, th_transport);
@@ -109,7 +112,6 @@ extern time_t dispatch_clock;
 extern int startupcounter;
 extern struct th_transport_list all_transports;
 extern struct channel_tree channel_name_tree;
-extern struct pvr_rec_list pvrr_global_list;
 extern struct th_subscription_list subscriptions;
 
 struct th_transport;

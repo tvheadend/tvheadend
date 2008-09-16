@@ -19,6 +19,11 @@ tvheadend.comet_poller = function() {
 		    tvheadend.channelTags.reload();
 		break;
 
+	    case 'dvrdb':
+		if(m.reload != null)
+		    tvheadend.dvrStore.reload();
+		break;
+
 	    case 'channels':
 		if(m.reload != null)
 		    tvheadend.channels.reload();
@@ -122,7 +127,10 @@ tvheadend.app = function() {
 		    },new Ext.TabPanel({
 			region:'center',
 			activeTab:0,
-			items:[new tvheadend.epg,confpanel]
+			items:[
+			    new tvheadend.epg,
+			    new tvheadend.dvr,
+			    confpanel]
 		    })
 		]
 	    });
