@@ -40,7 +40,6 @@
 #include "transports.h"
 #include "subscriptions.h"
 #include "psi.h"
-#include "buffer.h"
 #include "tsdemux.h"
 #include "parsers.h"
 

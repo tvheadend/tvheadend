@@ -58,8 +58,8 @@ const char *transport_status_to_text(int status);
 
 void transport_remove_subscriber(th_transport_t *t, th_subscription_t *s);
 
-void transport_link_muxer(th_transport_t *t, th_muxer_t *tm);
+//void transport_link_muxer(th_transport_t *t, th_muxer_t *tm);
 
-void transport_unlink_muxer(th_muxer_t *tm);
+//void transport_unlink_muxer(th_muxer_t *tm);
 
 #endif /* TRANSPORTS_H */

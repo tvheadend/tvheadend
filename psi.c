@@ -306,7 +306,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
 /** 
  * PAT generator
  */
-
+#if 0
 int
 psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen, int pcrpid)
 {
@@ -401,7 +401,7 @@ psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen, int pcrpid)
 
   return psi_append_crc32(buf0, tlen, maxlen);
 }
-
+#endif
 
 
 

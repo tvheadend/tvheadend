@@ -38,7 +38,7 @@
 
 #include "v4l.h"
 #include "psi.h"
-#include "buffer.h"
+#include "packet.h"
 #include "channels.h"
 #include "cwc.h"
 #include "notify.h"
@@ -64,7 +64,6 @@ transport_stop(th_transport_t *t)
 {
   th_descrambler_t *td;
   th_stream_t *st;
-  th_pkt_t *pkt;
  
   gtimer_disarm(&t->tht_receive_timer);
 
@@ -110,35 +109,21 @@ transport_stop(th_transport_t *t)
     st->st_startcode = 0;
 
     if(st->st_curpkt != NULL) {
-      pkt_deref(st->st_curpkt);
+      pkt_ref_dec(st->st_curpkt);
       st->st_curpkt = NULL;
     }
 
     /* Clear PTS queue */
 
-    while((pkt = TAILQ_FIRST(&st->st_ptsq)) != NULL) {
-      TAILQ_REMOVE(&st->st_ptsq, pkt, pkt_queue_link);
-      assert(pkt->pkt_refcount == 1);
-      pkt_deref(pkt);
-    }
+    pktref_clear_queue(&st->st_ptsq);
     st->st_ptsq_len = 0;
 
     /* Clear durationq */
 
-    while((pkt = TAILQ_FIRST(&st->st_durationq)) != NULL) {
-      TAILQ_REMOVE(&st->st_durationq, pkt, pkt_queue_link);
-      assert(pkt->pkt_refcount == 1);
-      pkt_deref(pkt);
-    }
-
-    /* Flush framestore */
-
-    while((pkt = TAILQ_FIRST(&st->st_pktq)) != NULL)
-      pkt_unstore(st, pkt);
-
+    pktref_clear_queue(&st->st_durationq);
   }
-  pthread_mutex_unlock(&t->tht_stream_mutex);
 
+  pthread_mutex_unlock(&t->tht_stream_mutex);
 }
 
 /**
@@ -175,7 +160,7 @@ transport_remove_subscriber(th_transport_t *t, th_subscription_t *s)
     transport_stop(t);
 }
 
-
+#if 0
 /**
  *
  */
@@ -214,6 +199,7 @@ transport_unlink_muxer(th_muxer_t *tm)
   pthread_mutex_unlock(&t->tht_stream_mutex);
   tm->tm_transport = NULL;
 }
+#endif
 
 
 /**
@@ -546,7 +532,6 @@ transport_add_stream(th_transport_t *t, int pid, tv_streamtype_t type)
 
   TAILQ_INIT(&st->st_ptsq);
   TAILQ_INIT(&st->st_durationq);
-  TAILQ_INIT(&st->st_pktq);
 
   avgstat_init(&st->st_rate, 10);
   avgstat_init(&st->st_cc_errors, 10);

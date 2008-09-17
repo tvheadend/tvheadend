@@ -36,7 +36,6 @@
 #include "channels.h"
 #include "transports.h"
 #include "epg.h"
-#include "pvr.h"
 #include "autorec.h"
 #include "xmltv.h"
 #include "dtable.h"

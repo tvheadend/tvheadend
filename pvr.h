@@ -68,7 +68,7 @@ typedef struct pvr_rec {
   pthread_t pvrr_ptid;
 		      //dtimer_t pvrr_timer;
 
-  th_ffmuxer_t pvrr_tffm;
+    th_ffmuxer_t pvrr_tffm;
 
   int64_t pvrr_dts_offset;
 

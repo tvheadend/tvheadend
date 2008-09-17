@@ -29,7 +29,7 @@
 #include "parsers.h"
 #include "parser_h264.h"
 #include "bitstream.h"
-#include "buffer.h"
+#include "packet.h"
 #include "transports.h"
 
 static const AVRational mpeg_tc = {1, 90000};
@@ -85,15 +85,16 @@ static void parse_mpegaudio(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
 
 static void parse_ac3(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
 
-void parse_compute_pts(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
+static void parse_compute_pts(th_transport_t *t, th_stream_t *st,
+			      th_pkt_t *pkt);
 
 static void parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
 
 static int parse_pes_header(th_transport_t *t, th_stream_t *st, uint8_t *buf,
 			    size_t len);
 
-void parser_compute_duration(th_transport_t *t, th_stream_t *st,
-			     th_pkt_t *pkt);
+static void parser_compute_duration(th_transport_t *t, th_stream_t *st,
+				    th_pktref_t *pr);
 
 /**
  * Parse raw mpeg data
@@ -296,7 +297,7 @@ parse_mpegaudio(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 
   sample_rate = mpegaudio_freq_tab[(header >> 10) & 3];
   if(sample_rate == 0) {
-    pkt_deref(pkt);
+    pkt_ref_dec(pkt);
     return;
   }
 
@@ -370,7 +371,7 @@ parse_ac3(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 
   sample_rate = ac3_freq_tab[src] >> bsid;
   if(sample_rate == 0) {
-    pkt_deref(pkt);
+    pkt_ref_dec(pkt);
     return;
   }
 
@@ -534,7 +535,7 @@ parse_mpeg2video(th_transport_t *t, th_stream_t *st, size_t len,
       return 1;
 
     if(st->st_curpkt != NULL)
-      pkt_deref(st->st_curpkt);
+      pkt_ref_dec(st->st_curpkt);
 
     st->st_curpkt = pkt_alloc(NULL, 0, st->st_curpts, st->st_curdts);
     st->st_curpkt->pkt_frametype = pkt0.pkt_frametype;
@@ -685,6 +686,7 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
     st->st_curpkt->pkt_payloadlen = st->st_buffer_ptr;
     parser_deliver(t, st, st->st_curpkt);
     
+    pkt_ref_dec(st->st_curpkt);
     st->st_curpkt = NULL;
     st->st_buffer = malloc(st->st_buffer_size);
     return 1;
@@ -700,25 +702,36 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
  * We do this by placing packets on a queue and wait for next I/P
  * frame to appear
  */
-void
+static void
 parse_compute_pts(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 {
-  th_pkt_t *p;
- 
-  if(pkt->pkt_pts != AV_NOPTS_VALUE && st->st_ptsq_len == 0) {
-    /* PTS known and no other packets in queue, deliver at once */
+  th_pktref_t *pr;
 
-    if(pkt->pkt_duration == 0)
-      parser_compute_duration(t, st, pkt);
-    else
-      parser_deliver(t, st, pkt);
-    return;
-  }
+  int validpts = pkt->pkt_pts != AV_NOPTS_VALUE && st->st_ptsq_len == 0;
 
-  TAILQ_INSERT_TAIL(&st->st_ptsq, pkt, pkt_queue_link);
+
+  /* PTS known and no other packets in queue, deliver at once */
+  if(validpts && pkt->pkt_duration)
+    return parser_deliver(t, st, pkt);
+
+
+  /* Reference count is transfered to queue */
+  pr = malloc(sizeof(th_pktref_t));
+  pr->pr_pkt = pkt;
+
+
+  if(validpts)
+    return parser_compute_duration(t, st, pr);
+
+  TAILQ_INSERT_TAIL(&st->st_ptsq, pr, pr_link);
   st->st_ptsq_len++;
 
-  while((pkt = TAILQ_FIRST(&st->st_ptsq)) != NULL) {
+  /* */
+
+  while((pr = TAILQ_FIRST(&st->st_ptsq)) != NULL) {
+    
+    pkt = pr->pr_pkt;
+
     switch(pkt->pkt_frametype) {
     case PKT_B_FRAME:
       /* B-frames have same PTS as DTS, pass them on */
@@ -729,26 +742,29 @@ parse_compute_pts(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
     case PKT_P_FRAME:
       /* Presentation occures at DTS of next I or P frame,
 	 try to find it */
-      p = TAILQ_NEXT(pkt, pkt_queue_link);
+      pr = TAILQ_NEXT(pr, pr_link);
       while(1) {
-	if(p == NULL)
+	if(pr == NULL)
 	  return; /* not arrived yet, wait */
-	if(p->pkt_frametype <= PKT_P_FRAME) {
-	  pkt->pkt_pts = p->pkt_dts;
+	if(pr->pr_pkt->pkt_frametype <= PKT_P_FRAME) {
+	  pkt->pkt_pts = pr->pr_pkt->pkt_dts;
 	  break;
 	}
-	p = TAILQ_NEXT(p, pkt_queue_link);
+	pr = TAILQ_NEXT(pr, pr_link);
       }
       break;
     }
     
-    TAILQ_REMOVE(&st->st_ptsq, pkt, pkt_queue_link);
+    pr = TAILQ_FIRST(&st->st_ptsq);
+    TAILQ_REMOVE(&st->st_ptsq, pr, pr_link);
     st->st_ptsq_len--;
 
-    if(pkt->pkt_duration == 0)
-      parser_compute_duration(t, st, pkt);
-    else
+    if(pkt->pkt_duration == 0) {
+      parser_compute_duration(t, st, pr);
+    } else {
       parser_deliver(t, st, pkt);
+      free(pr);
+    }
   }
 }
 
@@ -756,28 +772,27 @@ parse_compute_pts(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
  * Compute duration of a packet, we do this by keeping a packet
  * until the next one arrives, then we release it
  */
-void
-parser_compute_duration(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
+static void
+parser_compute_duration(th_transport_t *t, th_stream_t *st, th_pktref_t *pr)
 {
-  th_pkt_t *next;
+  th_pktref_t *next;
   int64_t d;
 
-  TAILQ_INSERT_TAIL(&st->st_durationq, pkt, pkt_queue_link);
+  TAILQ_INSERT_TAIL(&st->st_durationq, pr, pr_link);
   
-  pkt = TAILQ_FIRST(&st->st_durationq);
-  if((next = TAILQ_NEXT(pkt, pkt_queue_link)) == NULL)
+  pr = TAILQ_FIRST(&st->st_durationq);
+  if((next = TAILQ_NEXT(pr, pr_link)) == NULL)
     return;
 
-  d = next->pkt_dts - pkt->pkt_dts;
-  TAILQ_REMOVE(&st->st_durationq, pkt, pkt_queue_link);
+  d = next->pr_pkt->pkt_dts - pr->pr_pkt->pkt_dts;
+  TAILQ_REMOVE(&st->st_durationq, pr, pr_link);
   if(d < 10) {
-    pkt_deref(pkt);
-    return;
+    pkt_ref_dec(pr->pr_pkt);
+  } else {
+    pr->pr_pkt->pkt_duration = d;
+    parser_deliver(t, st, pr->pr_pkt);
   }
-
-  pkt->pkt_duration = d;
-
-  parser_deliver(t, st, pkt);
+  free(pr);
 }
 
 
@@ -788,7 +803,6 @@ parser_compute_duration(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 static void
 parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 {
-  th_muxer_t *tm;
   int64_t dts, pts, ptsoff;
 
   assert(pkt->pkt_dts != AV_NOPTS_VALUE);
@@ -796,7 +810,7 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   assert(pkt->pkt_duration > 10);
 
   if(t->tht_dts_start == AV_NOPTS_VALUE) {
-    pkt_deref(pkt);
+    pkt_ref_dec(pkt);
     return;
   }
 
@@ -812,7 +826,7 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   if(st->st_last_dts == AV_NOPTS_VALUE) {
     if(dts < 0) {
       /* Early packet with negative time stamp, drop those */
-      pkt_deref(pkt);
+      pkt_ref_dec(pkt);
       return;
     }
   } else if(dts + st->st_dts_epoch < st->st_last_dts - (1LL << 24)) {
@@ -854,14 +868,14 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   /* Alert all muxers tied to us that a new packet has arrived */
 
   lock_assert(&t->tht_stream_mutex);
-
+#if 0
   LIST_FOREACH(tm, &t->tht_muxers, tm_transport_link)
     tm->tm_new_pkt(tm, st, pkt);
-
-  /* Unref (and possibly free) the packet, muxers are supposed
+#endif
+  /* Unref (and possibly free) the packet, downstream code is supposed
      to increase refcount or copy packet if they need anything */
 
-  pkt_deref(pkt);
+  pkt_ref_dec(pkt);
 }
 
 /**
@@ -917,7 +931,7 @@ parser_enqueue_packet(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   }
 
   if(err) {
-    pkt_deref(pkt);
+    pkt_ref_dec(pkt);
     return;
   }
     

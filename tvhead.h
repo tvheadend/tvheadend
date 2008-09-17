@@ -99,14 +99,13 @@ RB_HEAD(th_transport_tree, th_transport);
 TAILQ_HEAD(th_transport_queue, th_transport);
 RB_HEAD(th_dvb_mux_instance_tree, th_dvb_mux_instance);
 LIST_HEAD(th_stream_list, th_stream);
-TAILQ_HEAD(th_pkt_queue, th_pkt);
-LIST_HEAD(th_pkt_list, th_pkt);
 LIST_HEAD(th_muxer_list, th_muxer);
 LIST_HEAD(th_muxstream_list, th_muxstream);
 LIST_HEAD(th_descrambler_list, th_descrambler);
 TAILQ_HEAD(th_refpkt_queue, th_refpkt);
 TAILQ_HEAD(th_muxpkt_queue, th_muxpkt);
 LIST_HEAD(autorec_list, autorec);
+TAILQ_HEAD(th_pktref_queue, th_pktref);
 
 extern time_t dispatch_clock;
 extern int startupcounter;
@@ -326,22 +325,14 @@ typedef struct th_stream {
   struct AVCodecContext *st_ctx;
   struct AVCodecParserContext *st_parser;
 
-  /* All packets currently hanging on to us */
-
-  struct th_pkt_list st_packets;
-
   /* Temporary frame store for calculating PTS */
 
-  struct th_pkt_queue st_ptsq;
+  struct th_pktref_queue st_ptsq;
   int st_ptsq_len;
 
   /* Temporary frame store for calculating duration */
 
-  struct th_pkt_queue st_durationq;
-
-  /* Final frame store */
-
-  struct th_pkt_queue st_pktq;
+  struct th_pktref_queue st_durationq;
 
   /* ca id for this stream */
 
@@ -683,53 +674,7 @@ typedef struct th_transport {
 
 #define tht_file_input           u.file_input.file_input
 
-/*
- * Storage
- */
-typedef struct th_storage {
-  unsigned int ts_offset;
-  unsigned int ts_refcount;
-  int ts_fd;
-  char *ts_filename;
-} th_storage_t;
-
-/*
- * A packet
- */
-
-#define PKT_I_FRAME 1
-#define PKT_P_FRAME 2
-#define PKT_B_FRAME 3
-
-
-typedef struct th_pkt {
-  TAILQ_ENTRY(th_pkt) pkt_queue_link;
-  uint8_t pkt_on_stream_queue;
-  uint8_t pkt_frametype;
-  uint8_t pkt_commercial;
-
-  int64_t pkt_dts;
-  int64_t pkt_pts;
-  int pkt_duration;
-  int pkt_refcount;
-
-  th_storage_t *pkt_storage;
-  TAILQ_ENTRY(th_pkt) pkt_disk_link;
-  int pkt_storage_offset;
-
-  uint8_t *pkt_payload;
-  int pkt_payloadlen;
-  TAILQ_ENTRY(th_pkt) pkt_mem_link;
-} th_pkt_t;
-
-/**
- * Referenced packets
- */
-typedef struct th_refpkt {
-  TAILQ_ENTRY(th_refpkt) trp_link;
-  th_pkt_t *trp_pkt;
-} th_refpkt_t;
-
+#if 0
 
 /**
  * Muxed packets
@@ -866,7 +811,7 @@ typedef struct th_ffmuxer {
   struct AVFormatContext *tffm_avfctx;
 } th_ffmuxer_t;
 
-
+#endif
 
 
 /*
