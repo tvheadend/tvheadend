@@ -686,7 +686,6 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
     st->st_curpkt->pkt_payloadlen = st->st_buffer_ptr;
     parser_deliver(t, st, st->st_curpkt);
     
-    pkt_ref_dec(st->st_curpkt);
     st->st_curpkt = NULL;
     st->st_buffer = malloc(st->st_buffer_size);
     return 1;
