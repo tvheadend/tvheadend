@@ -147,6 +147,7 @@ typedef struct streaming_component {
  */
 typedef struct streaming_pad {
   struct streaming_target_list sp_targets;
+  int sp_ntargets;
   struct streaming_component_list sp_components;
 
   pthread_mutex_t *sp_mutex; /* Mutex for protecting modification of

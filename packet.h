@@ -33,7 +33,7 @@ typedef struct th_pkt {
   int pkt_duration;
   int pkt_refcount;
 
-  uint8_t pkt_streamindex;
+  uint8_t pkt_componentindex;
   uint8_t pkt_frametype;
   uint8_t pkt_commercial;
 
@@ -58,6 +58,8 @@ typedef struct th_pktref {
 void pkt_ref_dec(th_pkt_t *pkt);
 
 void pkt_ref_inc(th_pkt_t *pkt);
+
+void pkt_ref_inc_poly(th_pkt_t *pkt, int n);
 
 void pktref_clear_queue(struct th_pktref_queue *q);
 

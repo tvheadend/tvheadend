@@ -88,6 +88,16 @@ pkt_ref_inc(th_pkt_t *pkt)
   pthread_mutex_unlock(&refmutex);
 }
 
+/**
+ *
+ */
+void
+pkt_ref_inc_poly(th_pkt_t *pkt, int n)
+{
+  pthread_mutex_lock(&refmutex);
+  pkt->pkt_refcount += n;
+  pthread_mutex_unlock(&refmutex);
+}
 
 
 /**

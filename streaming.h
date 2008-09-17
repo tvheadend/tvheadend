@@ -20,7 +20,7 @@
 #define STREAMING_H_
 
 #include "tvhead.h"
-
+#include "packet.h"
 
 /**
  *
@@ -30,5 +30,7 @@ void streaming_pad_init(streaming_pad_t *pd, pthread_mutex_t *mutex);
 void streaming_target_init(streaming_target_t *st);
 
 void streaming_target_connect(streaming_pad_t *pd, streaming_target_t *st);
+
+void streaming_pad_deliver_packet(streaming_pad_t *sp, th_pkt_t *pkt);
 
 #endif /* STREAMING_H_ */

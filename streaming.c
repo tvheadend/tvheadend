@@ -20,6 +20,7 @@
 
 #include "tvhead.h"
 #include "streaming.h"
+#include "packet.h"
 
 void
 streaming_pad_init(streaming_pad_t *sp, pthread_mutex_t *mutex)
@@ -27,4 +28,46 @@ streaming_pad_init(streaming_pad_t *sp, pthread_mutex_t *mutex)
   LIST_INIT(&sp->sp_targets);
   LIST_INIT(&sp->sp_components);
   sp->sp_mutex = mutex;
+}
+
+/**
+ *
+ */
+void
+streaming_target_connect(streaming_pad_t *sp, streaming_target_t *st)
+{
+  lock_assert(sp->sp_mutex);
+
+  sp->sp_ntargets++;
+  st->st_pad = sp;
+  LIST_INSERT_HEAD(&sp->sp_targets, st, st_link);
+}
+
+/**
+ *
+ */
+void
+streaming_pad_deliver_packet(streaming_pad_t *sp, th_pkt_t *pkt)
+{
+  streaming_target_t *st;
+  th_pktref_t *pr;
+
+  lock_assert(sp->sp_mutex);
+
+  if(sp->sp_ntargets == 0)
+    return;
+
+  /* Increase multiple refcounts at once */
+  pkt_ref_inc_poly(pkt, sp->sp_ntargets);
+
+  LIST_FOREACH(st, &sp->sp_targets, st_link) {
+
+    pr = malloc(sizeof(th_pktref_t));
+    pr->pr_pkt = pkt;
+
+    pthread_mutex_lock(&st->st_mutex);
+    TAILQ_INSERT_TAIL(&st->st_queue, pr, pr_link);
+    pthread_cond_signal(&st->st_cond);
+    pthread_mutex_unlock(&st->st_mutex);
+  }
 }

@@ -31,6 +31,7 @@
 #include "bitstream.h"
 #include "packet.h"
 #include "transports.h"
+#include "streaming.h"
 
 static const AVRational mpeg_tc = {1, 90000};
 
@@ -870,16 +871,11 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
    */
   transport_signal_status(t, SUBSCRIPTION_VALID_PACKETS);
 
-  /* Alert all muxers tied to us that a new packet has arrived */
+  /* Forward packet */
+  pkt->pkt_componentindex = st->st_sc.sc_index;
+  streaming_pad_deliver_packet(&t->tht_streaming_pad, pkt);
 
-  lock_assert(&t->tht_stream_mutex);
-#if 0
-  LIST_FOREACH(tm, &t->tht_muxers, tm_transport_link)
-    tm->tm_new_pkt(tm, st, pkt);
-#endif
-  /* Unref (and possibly free) the packet, downstream code is supposed
-     to increase refcount or copy packet if they need anything */
-
+  /* Decrease our own reference to the packet */
   pkt_ref_dec(pkt);
 }
 
