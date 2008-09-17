@@ -639,14 +639,18 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
 
   case 7:
     h264_nal_deescape(&bs, buf + 3, len - 3);
-    if(h264_decode_seq_parameter_set(st, &bs))
+    if(h264_decode_seq_parameter_set(st, &bs)) {
+      free(bs.data);
       return 1;
+    }
     break;
 
   case 8:
     h264_nal_deescape(&bs, buf + 3, len - 3);
-    if(h264_decode_pic_parameter_set(st, &bs))
+    if(h264_decode_pic_parameter_set(st, &bs)) {
+      free(bs.data);
       return 1;
+    }
     break;
 
 
@@ -661,8 +665,10 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
 
     l2 = len - 3 > 64 ? 64 : len - 3;
     h264_nal_deescape(&bs, buf + 3, len); /* we just the first stuff */
-    if(h264_decode_slice_header(st, &bs, &pkttype))
+    if(h264_decode_slice_header(st, &bs, &pkttype)) {
+      free(bs.data);
       return 1;
+    }
 
     st->st_curpkt = pkt_alloc(NULL, 0, st->st_curpts, st->st_curdts);
     st->st_curpkt->pkt_frametype = pkttype;
