@@ -33,6 +33,7 @@ typedef struct th_pkt {
   int pkt_duration;
   int pkt_refcount;
 
+  uint8_t pkt_streamindex;
   uint8_t pkt_frametype;
   uint8_t pkt_commercial;
 

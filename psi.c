@@ -92,7 +92,7 @@ psi_parse_pat(th_transport_t *t, uint8_t *ptr, int len,
     pid     = (ptr[2] & 0x1f) << 8 | ptr[3];
 
     if(prognum != 0) {
-      st = transport_add_stream(t, pid, HTSTV_PMT);
+      st = transport_add_stream(t, pid, SCT_PMT);
       st->st_section_docrc = 1;
       st->st_got_section = pmt_callback;
 
@@ -177,7 +177,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
   int dllen;
   uint8_t dtag, dlen;
   uint16_t sid;
-  tv_streamtype_t hts_stream_type;
+  streaming_component_type_t hts_stream_type;
   th_stream_t *st;
   char lang[4];
   int frameduration;
@@ -208,7 +208,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
 
     switch(dtag) {
     case DVB_DESC_CA:
-      st = transport_add_stream(t, (ptr[2] & 0x1f) << 8 | ptr[3], HTSTV_CA);
+      st = transport_add_stream(t, (ptr[2] & 0x1f) << 8 | ptr[3], SCT_CA);
       st->st_caid = (ptr[0] << 8) | ptr[1];
       break;
 
@@ -233,17 +233,17 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
     switch(estype) {
     case 0x01:
     case 0x02:
-      hts_stream_type = HTSTV_MPEG2VIDEO;
+      hts_stream_type = SCT_MPEG2VIDEO;
       break;
 
     case 0x03:
     case 0x04:
     case 0x81:
-      hts_stream_type = HTSTV_MPEG2AUDIO;
+      hts_stream_type = SCT_MPEG2AUDIO;
       break;
 
     case 0x1b:
-      hts_stream_type = HTSTV_H264;
+      hts_stream_type = SCT_H264;
       break;
     }
 
@@ -268,12 +268,12 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
 
       case DVB_DESC_TELETEXT:
 	if(estype == 0x06)
-	  hts_stream_type = HTSTV_TELETEXT;
+	  hts_stream_type = SCT_TELETEXT;
 	break;
 
       case DVB_DESC_AC3:
 	if(estype == 0x06 || estype == 0x81)
-	  hts_stream_type = HTSTV_AC3;
+	  hts_stream_type = SCT_AC3;
 	break;
 
       default:
@@ -285,7 +285,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
     if(hts_stream_type != 0) {
       st = transport_add_stream(t, pid, hts_stream_type);
       st->st_tb = (AVRational){1, 90000};
-      memcpy(st->st_lang, lang, 4);
+      memcpy(st->st_sc.sc_lang, lang, 4);
 
       if(st->st_frame_duration == 0)
 	st->st_frame_duration = frameduration;
@@ -346,19 +346,19 @@ psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen, int pcrpid)
       continue;
 
     switch(st->st_type) {
-    case HTSTV_MPEG2VIDEO:
+    case SCT_MPEG2VIDEO:
       c = 0x02;
       break;
 
-    case HTSTV_MPEG2AUDIO:
+    case SCT_MPEG2AUDIO:
       c = 0x03;
       break;
 
-    case HTSTV_H264:
+    case SCT_H264:
       c = 0x1b;
       break;
 
-    case HTSTV_AC3:
+    case SCT_AC3:
       c = 0x06;
       break;
 
@@ -377,7 +377,7 @@ psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen, int pcrpid)
     dlen = 0;
 
     switch(st->st_type) {
-    case HTSTV_AC3:
+    case SCT_AC3:
       buf[0] = DVB_DESC_AC3;
       buf[1] = 1;
       buf[2] = 0; /* XXX: generate real AC3 desc */
@@ -525,15 +525,15 @@ psi_caid2name(uint16_t caid)
  *
  */
 static struct strtab streamtypetab[] = {
-  { "MPEG2VIDEO", HTSTV_MPEG2VIDEO },
-  { "MPEG2AUDIO", HTSTV_MPEG2AUDIO },
-  { "H264",       HTSTV_H264 },
-  { "AC3",        HTSTV_AC3 },
-  { "TELETEXT",   HTSTV_TELETEXT },
-  { "SUBTITLES",  HTSTV_SUBTITLES },
-  { "CA",         HTSTV_CA },
-  { "PMT",        HTSTV_PMT },
-  { "PAT",        HTSTV_PAT },
+  { "MPEG2VIDEO", SCT_MPEG2VIDEO },
+  { "MPEG2AUDIO", SCT_MPEG2AUDIO },
+  { "H264",       SCT_H264 },
+  { "AC3",        SCT_AC3 },
+  { "TELETEXT",   SCT_TELETEXT },
+  { "SUBTITLES",  SCT_SUBTITLES },
+  { "CA",         SCT_CA },
+  { "PMT",        SCT_PMT },
+  { "PAT",        SCT_PAT },
 };
 
 
@@ -543,7 +543,7 @@ static struct strtab streamtypetab[] = {
 
 
 const char *
-htstvstreamtype2txt(tv_streamtype_t s)
+streaming_component_type2txt(streaming_component_type_t s)
 {
   return val2str(s, streamtypetab) ?: "INVALID";
 }
@@ -555,6 +555,8 @@ htstvstreamtype2txt(tv_streamtype_t s)
 void
 psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
 {
+  streaming_pad_t *sp = &t->tht_streaming_pad;
+  streaming_component_t *sc;
   th_stream_t *st;
   htsmsg_t *sub;
 
@@ -564,16 +566,18 @@ psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
 
   lock_assert(&t->tht_stream_mutex);
 
-  LIST_FOREACH(st, &t->tht_streams, st_link) {
+  LIST_FOREACH(sc, &sp->sp_components, sc_link) {
+    st = (th_stream_t *)sc;
+
     sub = htsmsg_create();
 
     htsmsg_add_u32(sub, "pid", st->st_pid);
-    htsmsg_add_str(sub, "type", val2str(st->st_type, streamtypetab) ?: "?");
+    htsmsg_add_str(sub, "type", val2str(sc->sc_type, streamtypetab) ?: "?");
     
-    if(st->st_lang[0])
-      htsmsg_add_str(sub, "language", st->st_lang);
+    if(sc->sc_lang[0])
+      htsmsg_add_str(sub, "language", sc->sc_lang);
 
-    if(st->st_type == HTSTV_CA)
+    if(sc->sc_type == SCT_CA)
       htsmsg_add_str(sub, "caid", psi_caid2name(st->st_caid));
 
     if(st->st_frame_duration)
@@ -594,7 +598,7 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
   htsmsg_field_t *f;
   uint32_t u32;
   th_stream_t *st;
-  tv_streamtype_t type;
+  streaming_component_type_t type;
   const char *v;
   uint32_t pid, i;
 
@@ -625,7 +629,7 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
     st->st_tb = (AVRational){1, 90000};
     
     if((v = htsmsg_get_str(c, "language")) != NULL)
-      av_strlcpy(st->st_lang, v, 4);
+      av_strlcpy(st->st_sc.sc_lang, v, 4);
 
     if(!htsmsg_get_u32(c, "frameduration", &u32))
       st->st_frame_duration = u32;

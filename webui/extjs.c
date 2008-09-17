@@ -500,6 +500,8 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 static htsmsg_t *
 build_transport_msg(th_transport_t *t)
 {
+  streaming_pad_t *sp = &t->tht_streaming_pad;
+  streaming_component_t *sc;
   htsmsg_t *r = htsmsg_create();
   th_stream_t *st;
 
@@ -522,15 +524,17 @@ build_transport_msg(th_transport_t *t)
   subtitles[0] = 0;
   scrambling[0] = 0;
 
-  LIST_FOREACH(st, &t->tht_streams, st_link) {
-    switch(st->st_type) {
-    case HTSTV_TELETEXT:
-    case HTSTV_SUBTITLES:
-    case HTSTV_PAT:
-    case HTSTV_PMT:
+  LIST_FOREACH(sc, &sp->sp_components, sc_link) {
+    st = (th_stream_t *)sc;
+
+    switch(sc->sc_type) {
+    case SCT_TELETEXT:
+    case SCT_SUBTITLES:
+    case SCT_PAT:
+    case SCT_PMT:
       break;
 
-    case HTSTV_MPEG2VIDEO:
+    case SCT_MPEG2VIDEO:
       snprintf(video + strlen(video), sizeof(video) - strlen(video),
 	       "%sMPEG-2 (PID:%d", strlen(video) > 0 ? ", " : "",
 	       st->st_pid);
@@ -546,33 +550,33 @@ build_transport_msg(th_transport_t *t)
 
       break;
 
-    case HTSTV_H264:
+    case SCT_H264:
       snprintf(video + strlen(video), sizeof(video) - strlen(video),
 	       "%sH.264 (PID:%d", strlen(video) > 0 ? ", " : "",
 	       st->st_pid);
       goto video;
 
-    case HTSTV_MPEG2AUDIO:
+    case SCT_MPEG2AUDIO:
       snprintf(audio + strlen(audio), sizeof(audio) - strlen(audio),
 	       "%sMPEG-2 (PID:%d", strlen(audio) > 0 ? ", " : "",
 	       st->st_pid);
     audio:
-      if(st->st_lang[0]) {
+      if(sc->sc_lang[0]) {
 	snprintf(audio + strlen(audio), sizeof(audio) - strlen(audio),
-		 ", languange: \"%s\")", st->st_lang);
+		 ", languange: \"%s\")", sc->sc_lang);
       } else {
 	snprintf(audio + strlen(audio), sizeof(audio) - strlen(audio),
 		 ")");
       }
       break;
 
-    case HTSTV_AC3:
+    case SCT_AC3:
       snprintf(audio + strlen(audio), sizeof(audio) - strlen(audio),
 	       "%sAC3 (PID:%d", strlen(audio) > 0 ? ", " : "",
 	       st->st_pid);
       goto audio;
 
-    case HTSTV_CA:
+    case SCT_CA:
       snprintf(scrambling + strlen(scrambling),
 	       sizeof(scrambling) - strlen(scrambling),
 	       "%s%s", strlen(scrambling) > 0 ? ", " : "",

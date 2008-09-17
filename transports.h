@@ -38,7 +38,7 @@ void transport_unmap_channel(th_transport_t *t);
 th_transport_t *transport_find(channel_t *ch, unsigned int weight);
 
 th_stream_t *transport_add_stream(th_transport_t *t, int pid,
-				  tv_streamtype_t type);
+				  streaming_component_type_t type);
 
 void transport_set_priority(th_transport_t *t, int prio);
 
@@ -61,5 +61,22 @@ void transport_remove_subscriber(th_transport_t *t, th_subscription_t *s);
 //void transport_link_muxer(th_transport_t *t, th_muxer_t *tm);
 
 //void transport_unlink_muxer(th_muxer_t *tm);
+
+static inline th_stream_t *
+transport_find_stream_by_pid(th_transport_t *t, int pid)
+{
+  streaming_pad_t *sp = &t->tht_streaming_pad;
+  th_stream_t *st;
+  streaming_component_t *sc;
+
+  LIST_FOREACH(sc, &sp->sp_components, sc_link) {
+    st = (th_stream_t *)sc;
+    if(st->st_pid == pid)
+      return st;
+  }
+  return NULL;
+}
+
+
 
 #endif /* TRANSPORTS_H */

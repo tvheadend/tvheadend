@@ -117,20 +117,20 @@ parse_raw_mpeg(th_transport_t *t, th_stream_t *st, uint8_t *data,
   }
 
 
-  switch(st->st_type) {
-  case HTSTV_MPEG2VIDEO:
+  switch(st->st_sc.sc_type) {
+  case SCT_MPEG2VIDEO:
     parse_video(t, st, data, len, parse_mpeg2video);
     break;
 
-  case HTSTV_H264:
+  case SCT_H264:
     parse_video(t, st, data, len, parse_h264);
     break;
 
-  case HTSTV_MPEG2AUDIO:
+  case SCT_MPEG2AUDIO:
     parse_audio(t, st, data, len, start, parse_mpegaudio);
     break;
 
-  case HTSTV_AC3:
+  case SCT_AC3:
     parse_audio(t, st, data, len, start, parse_ac3);
     break;
 
@@ -897,8 +897,8 @@ parser_enqueue_packet(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 
   /* Per stream type analysis */
   
-  switch(st->st_type) {
-  case HTSTV_MPEG2VIDEO:
+  switch(st->st_sc.sc_type) {
+  case SCT_MPEG2VIDEO:
     for(i = 0; i < pkt->pkt_payloadlen && err == 0; i++) {
       sc = (sc << 8) | buf[i];
 

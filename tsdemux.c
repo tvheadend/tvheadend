@@ -53,7 +53,7 @@ got_section(th_transport_t *t, th_stream_t *st)
 {
   th_descrambler_t *td;
 
-  if(st->st_type == HTSTV_CA) {
+  if(st->st_sc.sc_type == SCT_CA) {
     LIST_FOREACH(td, &t->tht_descramblers, td_transport_link)
       td->td_table(td, t, st, 
 		   st->st_section->ps_data, st->st_section->ps_offset);
@@ -95,11 +95,11 @@ ts_recv_packet0(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
   off = tsb[3] & 0x20 ? tsb[4] + 5 : 4;
   pusi = tsb[1] & 0x40;
 
-  switch(st->st_type) {
+  switch(st->st_sc.sc_type) {
 
-  case HTSTV_CA:
-  case HTSTV_PAT:
-  case HTSTV_PMT:
+  case SCT_CA:
+  case SCT_PAT:
+  case SCT_PMT:
     if(st->st_section == NULL)
       st->st_section = calloc(1, sizeof(struct psi_section));
 
@@ -125,7 +125,7 @@ ts_recv_packet0(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
       got_section(t, st);
     break;
 
-  case HTSTV_TELETEXT:
+  case SCT_TELETEXT:
     //    teletext_input(t, tsb);
     break;
 
@@ -195,12 +195,7 @@ ts_recv_packet1(th_transport_t *t, uint8_t *tsb)
   th_descrambler_t *td;
 
   pid = (tsb[1] & 0x1f) << 8 | tsb[2];
-
-  LIST_FOREACH(st, &t->tht_streams, st_link) 
-    if(st->st_pid == pid)
-      break;
-
-  if(st == NULL)
+  if((st = transport_find_stream_by_pid(t, pid)) == NULL)
     return;
 
   t->tht_packets = 1;
@@ -250,15 +245,8 @@ void
 ts_recv_packet2(th_transport_t *t, uint8_t *tsb)
 {
   th_stream_t *st;
-  int pid;
+  int pid = (tsb[1] & 0x1f) << 8 | tsb[2];
 
-  pid = (tsb[1] & 0x1f) << 8 | tsb[2];
-  LIST_FOREACH(st, &t->tht_streams, st_link) 
-    if(st->st_pid == pid)
-      break;
-
-  if(st == NULL)
-    return;
-
-  ts_recv_packet0(t, st, tsb);
+  if((st = transport_find_stream_by_pid(t, pid)) != NULL)
+    ts_recv_packet0(t, st, tsb);
 }

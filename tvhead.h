@@ -106,15 +106,70 @@ TAILQ_HEAD(th_refpkt_queue, th_refpkt);
 TAILQ_HEAD(th_muxpkt_queue, th_muxpkt);
 LIST_HEAD(autorec_list, autorec);
 TAILQ_HEAD(th_pktref_queue, th_pktref);
+LIST_HEAD(streaming_target_list, streaming_target);
+LIST_HEAD(streaming_component_list, streaming_component);
 
-extern time_t dispatch_clock;
-extern int startupcounter;
-extern struct th_transport_list all_transports;
-extern struct channel_tree channel_name_tree;
-extern struct th_subscription_list subscriptions;
 
-struct th_transport;
-struct th_stream;
+
+typedef enum {
+  SCT_MPEG2VIDEO = 1,
+  SCT_MPEG2AUDIO,
+  SCT_H264,
+  SCT_AC3,
+  SCT_TELETEXT,
+  SCT_SUBTITLES,
+  SCT_CA,
+  SCT_PAT,
+  SCT_PMT,
+} streaming_component_type_t;
+
+/**
+ *
+ */
+typedef struct streaming_component {
+  LIST_ENTRY(streaming_component) sc_link;
+  
+  streaming_component_type_t sc_type;
+  int sc_index;
+
+  char sc_lang[4];           /* ISO 639 3-letter language code */
+
+} streaming_component_t;
+
+
+
+
+
+/**
+ * A streaming pad generates data.
+ *
+ * It has one or more streaming_targets attached to it
+ */
+typedef struct streaming_pad {
+  struct streaming_target_list sp_targets;
+  struct streaming_component_list sp_components;
+
+  pthread_mutex_t *sp_mutex; /* Mutex for protecting modification of
+				st_targets and delivery.
+				This needs to be created elsewhere */
+} streaming_pad_t;
+
+
+/**
+ * A streaming target receives data
+ */
+typedef struct streaming_target {
+  LIST_ENTRY(streaming_target) st_link;
+  streaming_pad_t *st_pad;               /* Source we are linked to */
+
+  pthread_mutex_t st_mutex;              /* Protects sp_queue */
+  pthread_cond_t  st_cond;               /* Condvar for signalling new
+					    packets */
+  
+  struct th_pktref_queue st_queue;
+  
+} streaming_target_t;
+
 
 /*
  * Video4linux adapter
@@ -268,10 +323,14 @@ typedef void (pid_section_callback_t)(struct th_transport *t,
 				      uint8_t *section, int section_len);
 
 /*
- * Stream, one media component for a transport
+ * Stream, one media component for a transport.
+ *
+ * XXX: This should be renamed to 'elementary_stream' or something
  */
 typedef struct th_stream {
-  LIST_ENTRY(th_stream) st_link;
+
+  streaming_component_t st_sc;
+
   uint16_t st_pid;
   uint8_t st_cc;             /* Last CC */
   uint8_t st_cc_valid;       /* Is CC valid at all? */
@@ -279,9 +338,7 @@ typedef struct th_stream {
   avgstat_t st_cc_errors;
   avgstat_t st_rate;
 
-  tv_streamtype_t st_type;
   int st_demuxer_fd;
-  int st_index;
   int st_peak_presentation_delay; /* Max seen diff. of DTS and PTS */
 
   struct psi_section *st_section;
@@ -337,8 +394,6 @@ typedef struct th_stream {
   /* ca id for this stream */
 
   uint16_t st_caid;
-
-  char st_lang[4]; /* ISO 639 3-letter language code */
 
   /* Remuxing information */
   AVRational st_tb;
@@ -590,19 +645,6 @@ typedef struct th_transport {
 
 
   /**
-   * Condition variable to wakeup transport streaming thread.
-   *
-   * Currently unused (All streaming is executed on the source
-   * thread)
-   */
-  pthread_cond_t tht_stream_cond;
-
-  /**
-   * List of all streams
-   */
-  struct th_stream_list tht_streams;
-
-  /**
    * For simple streaming sources (such as video4linux) keeping
    * track of the video and audio stream is convenient.
    */
@@ -652,6 +694,14 @@ typedef struct th_transport {
    * code in psi.c
    */
   int tht_pmt_seen;
+
+
+  /**
+   * Delivery pad, this is were we finally deliver all streaming output
+   */
+
+  streaming_pad_t tht_streaming_pad;
+
 
 } th_transport_t;
 
@@ -839,7 +889,7 @@ typedef struct tt_decoder {
 
 char *utf8toprintable(const char *in);
 char *utf8tofilename(const char *in);
-const char *htstvstreamtype2txt(tv_streamtype_t s);
+const char *streaming_component_type2txt(streaming_component_type_t s);
 
 static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 {
@@ -878,5 +928,16 @@ getclock_hires(void)
   return now;
 }
 
+
+
+
+extern time_t dispatch_clock;
+extern int startupcounter;
+extern struct th_transport_list all_transports;
+extern struct channel_tree channel_name_tree;
+extern struct th_subscription_list subscriptions;
+
+struct th_transport;
+struct th_stream;
 
 #endif /* TV_HEAD_H */

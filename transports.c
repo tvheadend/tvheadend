@@ -35,7 +35,7 @@
 #include "transports.h"
 #include "subscriptions.h"
 #include "tsdemux.h"
-
+#include "streaming.h"
 #include "v4l.h"
 #include "psi.h"
 #include "packet.h"
@@ -62,6 +62,9 @@ static void transport_data_timeout(void *aux);
 static void
 transport_stop(th_transport_t *t)
 {
+  streaming_pad_t *sp = &t->tht_streaming_pad;
+  streaming_component_t *sc;
+
   th_descrambler_t *td;
   th_stream_t *st;
  
@@ -84,7 +87,8 @@ transport_stop(th_transport_t *t)
   /**
    * Clean up each stream
    */
-  LIST_FOREACH(st, &t->tht_streams, st_link) {
+  LIST_FOREACH(sc, &sp->sp_components, sc_link) {
+    st = (th_stream_t *)sc;
 
     if(st->st_parser != NULL)
       av_parser_close(st->st_parser);
@@ -208,6 +212,9 @@ transport_unlink_muxer(th_muxer_t *tm)
 int
 transport_start(th_transport_t *t, unsigned int weight, int force_start)
 {
+  streaming_pad_t *sp = &t->tht_streaming_pad;
+  streaming_component_t *sc;
+
   th_stream_t *st;
   AVCodec *c;
   enum CodecID id;
@@ -221,7 +228,12 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
 
   t->tht_dts_start = AV_NOPTS_VALUE;
   t->tht_pcr_drift = 0;
-  LIST_FOREACH(st, &t->tht_streams, st_link) {
+
+  /**
+   * Initialize stream
+   */
+  LIST_FOREACH(sc, &sp->sp_components, sc_link) {
+    st = (th_stream_t *)sc;
   
     st->st_startcond = 0xffffffff;
     st->st_curdts = AV_NOPTS_VALUE;
@@ -237,11 +249,11 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
     st->st_pcr_recovery_fails = 0;
     /* Open ffmpeg context and parser */
 
-    switch(st->st_type) {
-    case HTSTV_MPEG2VIDEO: id = CODEC_ID_MPEG2VIDEO; break;
-    case HTSTV_MPEG2AUDIO: id = CODEC_ID_MP3;        break;
-    case HTSTV_H264:       id = CODEC_ID_H264;       break;
-    case HTSTV_AC3:        id = CODEC_ID_AC3;        break;
+    switch(sc->sc_type) {
+    case SCT_MPEG2VIDEO: id = CODEC_ID_MPEG2VIDEO; break;
+    case SCT_MPEG2AUDIO: id = CODEC_ID_MP3;        break;
+    case SCT_H264:       id = CODEC_ID_H264;       break;
+    case SCT_AC3:        id = CODEC_ID_AC3;        break;
     default:               id = CODEC_ID_NONE;       break;
     }
     
@@ -424,7 +436,8 @@ transport_data_timeout(void *aux, int64_t now)
 void
 transport_destroy(th_transport_t *t)
 {
-  th_stream_t *st;
+  streaming_pad_t *sp = &t->tht_streaming_pad;
+  streaming_component_t *sc;
   th_subscription_t *s;
   
   lock_assert(&global_lock);
@@ -453,9 +466,9 @@ transport_destroy(th_transport_t *t)
   free(t->tht_chname);
   free(t->tht_provider);
 
-  while((st = LIST_FIRST(&t->tht_streams)) != NULL) {
-    LIST_REMOVE(st, st_link);
-    free(st);
+  while((sc = LIST_FIRST(&sp->sp_components)) != NULL) {
+    LIST_REMOVE(sc, sc_link);
+    free(sc);
   }
 
   abort();//  serviceprobe_delete(t);
@@ -476,10 +489,11 @@ transport_create(const char *identifier, int type, int source_type)
   lock_assert(&global_lock);
 
   pthread_mutex_init(&t->tht_stream_mutex, NULL);
-  pthread_cond_init(&t->tht_stream_cond, NULL);
   t->tht_identifier = strdup(identifier);
   t->tht_type = type;
   t->tht_source_type = source_type;
+
+  streaming_pad_init(&t->tht_streaming_pad, &t->tht_stream_mutex);
 
   LIST_INSERT_HEAD(&transporthash[hash], t, tht_hash_link);
   return t;
@@ -510,25 +524,31 @@ transport_find_by_identifier(const char *identifier)
  * 
  */
 th_stream_t *
-transport_add_stream(th_transport_t *t, int pid, tv_streamtype_t type)
+transport_add_stream(th_transport_t *t, int pid,
+		     streaming_component_type_t type)
 {
+  streaming_pad_t *sp = &t->tht_streaming_pad;
+  streaming_component_t *sc;
   th_stream_t *st;
   int i = 0;
 
   lock_assert(&t->tht_stream_mutex);
 
-  LIST_FOREACH(st, &t->tht_streams, st_link) {
+  LIST_FOREACH(sc, &sp->sp_components, sc_link) {
+    st = (th_stream_t *)sc;
     i++;
     if(pid != -1 && st->st_pid == pid)
       return st;
   }
 
   st = calloc(1, sizeof(th_stream_t));
-  st->st_index = i;
+  sc = &st->st_sc;
+  sc->sc_index = i;
+  sc->sc_type = type;
+  LIST_INSERT_HEAD(&sp->sp_components, sc, sc_link);
+
   st->st_pid = pid;
-  st->st_type = type;
   st->st_demuxer_fd = -1;
-  LIST_INSERT_HEAD(&t->tht_streams, st, st_link);
 
   TAILQ_INIT(&st->st_ptsq);
   TAILQ_INIT(&st->st_durationq);
@@ -633,7 +653,8 @@ transport_is_tv(th_transport_t *t)
 int
 transport_is_available(th_transport_t *t)
 {
-  return transport_servicetype_txt(t) && LIST_FIRST(&t->tht_streams);
+  return transport_servicetype_txt(t) &&
+    LIST_FIRST(&t->tht_streaming_pad.sp_components);
 }
 
 /**

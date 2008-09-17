@@ -888,6 +888,24 @@ cwc_transport_destroy(th_descrambler_t *td)
   free(ct);
 }
 
+/**
+ *
+ */
+static inline th_stream_t *
+cwc_find_stream_by_caid(th_transport_t *t, int caid)
+{
+  streaming_pad_t *sp = &t->tht_streaming_pad;
+  th_stream_t *st;
+  streaming_component_t *sc;
+
+  LIST_FOREACH(sc, &sp->sp_components, sc_link) {
+    st = (th_stream_t *)sc;
+    if(st->st_caid == caid)
+      return st;
+  }
+  return NULL;
+}
+
 
 /**
  * Check if our CAID's matches, and if so, link
@@ -908,11 +926,7 @@ cwc_transport_start(th_transport_t *t)
     if(cwc->cwc_caid == 0)
       continue;
 
-    LIST_FOREACH(st, &t->tht_streams, st_link)
-      if(st->st_caid == cwc->cwc_caid)
-	break;
-
-    if(st == NULL)
+    if((st = cwc_find_stream_by_caid(t, cwc->cwc_caid)) == NULL)
       continue;
 
     ct = calloc(1, sizeof(cwc_transport_t));
