@@ -243,6 +243,8 @@ tvheadend.epg = function() {
 
     var panel = new Ext.grid.GridPanel({
         loadMask: true,
+	stripeRows: true,
+	disableSelection: true,
 	title: 'Electronic Program Guide',
 	store: epgStore,
 	cm: epgCm,

@@ -161,6 +161,8 @@ tvheadend.dvr = function() {
 
     var panel = new Ext.grid.GridPanel({
         loadMask: true,
+	stripeRows: true,
+	disableSelection: true,
 	title: 'Digital Video Recorder',
 	store: tvheadend.dvrStore,
 	cm: dvrCm,
