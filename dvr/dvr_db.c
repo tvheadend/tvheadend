@@ -17,6 +17,8 @@
  */
 
 #include <pthread.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <assert.h>
 #include <string.h>
 
@@ -29,15 +31,15 @@
 char *dvr_storage;
 char *dvr_format;
 char *dvr_file_postfix;
+uint32_t dvr_retention_days;
 
 
 static int de_tally;
 
-static int dvr_retention_time = 86400 * 31;
 
 struct dvr_entry_list dvrentries;
 
-static void dvr_save(dvr_entry_t *de);
+static void dvr_entry_save(dvr_entry_t *de);
 
 static void dvr_timer_expire(void *aux);
 static void dvr_timer_start_recording(void *aux);
@@ -75,7 +77,7 @@ dvr_entry_link(dvr_entry_t *de)
   if(now >= de->de_stop || de->de_dont_reschedule) {
     de->de_sched_state = DVR_COMPLETED;
     gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de, 
-	       de->de_stop + dvr_retention_time);
+	       de->de_stop + dvr_retention_days * 86400);
 
   } else {
     de->de_sched_state = DVR_SCHEDULED;
@@ -125,7 +127,7 @@ dvr_entry_create_by_event(event_t *e, const char *creator)
 	 de->de_title, de->de_channel->ch_name, tbuf, creator);
 	 
   dvrdb_changed();
-  dvr_save(de);
+  dvr_entry_save(de);
 }
 
 
@@ -244,7 +246,7 @@ dvr_db_load(void)
  *
  */
 static void
-dvr_save(dvr_entry_t *de)
+dvr_entry_save(dvr_entry_t *de)
 {
   htsmsg_t *m = htsmsg_create();
 
@@ -304,10 +306,10 @@ dvr_stop_recording(dvr_entry_t *de, const char *errmsg)
 	 de->de_error ?: "Program ended");
 
   dvrdb_changed();
-  dvr_save(de);
+  dvr_entry_save(de);
 
   gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de, 
-		 de->de_stop + dvr_retention_time);  
+		 de->de_stop + dvr_retention_days * 86400);
 }
 
 
@@ -387,11 +389,102 @@ dvr_entry_cancel(dvr_entry_t *de)
 void
 dvr_init(void)
 {
-  dvr_storage      = strdup("/home/andoma/media/dvr");
+  htsmsg_t *m;
+  char buf[500];
+  const char *homedir;
+  struct stat st;
+
+  /* Default settings */
+
+  dvr_retention_days = 31;
   dvr_format       = strdup("matroska");
   dvr_file_postfix = strdup("mkv");
 
+  /* Override settings with config */
+
+  if((m = hts_settings_load("dvr")) != NULL) {
+    htsmsg_get_u32(m, "retention-days", &dvr_retention_days);
+    tvh_str_set(&dvr_storage, htsmsg_get_str(m, "storage"));
+
+    htsmsg_destroy(m);
+  }
+
+  if(dvr_storage == NULL) {
+    /* Try to figure out a good place to put them videos */
+
+    homedir = getenv("HOME");
+
+    if(homedir != NULL) {
+      snprintf(buf, sizeof(buf), "%s/Videos", homedir);
+      if(stat(buf, &st) == 0 && S_ISDIR(st.st_mode))
+	dvr_storage = strdup(buf);
+      
+      else if(stat(homedir, &st) == 0 && S_ISDIR(st.st_mode))
+	dvr_storage = strdup(homedir);
+      else
+	dvr_storage = strdup(getcwd(buf, sizeof(buf)));
+    }
+
+    fprintf(stderr, 
+	    "\nNotice: Digital Video Recorder\n");
+    fprintf(stderr, 
+	    "  Output directory for video recording is not yet configured.\n");
+    fprintf(stderr, 
+	    "  Defaulting to to \"%s\".\n", dvr_storage);
+    fprintf(stderr, 
+	    "  This can be changed from the web user interface.\n");
+  }
+
   dvr_db_load();
+}
+
+/**
+ *
+ */
+static void
+dvr_save(void)
+{
+  htsmsg_t *m = htsmsg_create();
+  htsmsg_add_str(m, "storage", dvr_storage);
+  htsmsg_add_u32(m, "retention-days", dvr_retention_days);
+
+  hts_settings_save(m, "dvr");
+  htsmsg_destroy(m);
+}
+
+/**
+ *
+ */
+void
+dvr_storage_set(const char *storage)
+{
+  if(!strcmp(dvr_storage, storage))
+    return;
+
+  tvh_str_set(&dvr_storage, storage);
+  dvr_save();
+}
+
+
+/**
+ *
+ */
+void
+dvr_retention_set(int days)
+{
+  dvr_entry_t *de;
+  if(days < 1 || dvr_retention_days == days)
+    return;
+
+  dvr_retention_days = days;
+
+  /* Also, rearm all timres */
+
+  LIST_FOREACH(de, &dvrentries, de_global_link)
+    if(de->de_sched_state == DVR_COMPLETED)
+      gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de, 
+		     de->de_stop + dvr_retention_days * 86400);
+  dvr_save();
 }
 
 

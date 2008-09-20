@@ -887,10 +887,13 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   const char *op = http_arg_get(&hc->hc_req_args, "op");
-  htsmsg_t *out;
+  htsmsg_t *out, *r;
   event_t *e;
   dvr_entry_t *de;
   const char *s;
+
+  if(op == NULL)
+    op = "loadSettings";
 
   pthread_mutex_lock(&global_lock);
 
@@ -918,6 +921,26 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     out = htsmsg_create();
     htsmsg_add_u32(out, "success", 1);
+
+  } else if(!strcmp(op, "loadSettings")) {
+
+    r = htsmsg_create();
+    htsmsg_add_str(r, "storage", dvr_storage);
+    htsmsg_add_u32(r, "retention", dvr_retention_days);
+    out = json_single_record(r, "dvrSettings");
+
+  } else if(!strcmp(op, "saveSettings")) {
+
+    if((s = http_arg_get(&hc->hc_req_args, "storage")) != NULL)
+      dvr_storage_set(s);
+
+    if((s = http_arg_get(&hc->hc_req_args, "retention")) != NULL)
+      dvr_retention_set(atoi(s));
+
+
+    out = htsmsg_create();
+    htsmsg_add_u32(out, "success", 1);
+
   } else {
 
     pthread_mutex_unlock(&global_lock);

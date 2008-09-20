@@ -103,6 +103,7 @@ tvheadend.app = function() {
 		title: 'Configuration', 
 		items: [new tvheadend.chconf,
 			new tvheadend.cteditor,
+			new tvheadend.dvrsettings,
 			new tvheadend.dvb,
 			new tvheadend.acleditor, 
 			new tvheadend.cwceditor]

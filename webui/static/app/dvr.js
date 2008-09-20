@@ -188,3 +188,71 @@ tvheadend.dvr = function() {
     return panel;
 }
 
+
+
+/**
+ * Configuration panel (located under configuration)
+ */
+tvheadend.dvrsettings = function() {
+
+    var confreader = new Ext.data.JsonReader({
+	root: 'dvrSettings',
+    }, ['storage','retention']);
+
+
+    var confpanel = new Ext.FormPanel({
+	title:'Digital Video Recorder',
+	border:false,
+	bodyStyle:'padding:15px',
+	anchor: '100% 50%',
+	labelAlign: 'right',
+	labelWidth: 150,
+	waitMsgTarget: true,
+	reader: confreader,
+	defaultType: 'textfield',
+	layout: 'form',
+	items: [{
+	    width: 300,
+	    fieldLabel: 'Recording system path',
+	    name: 'storage'
+	}, new Ext.form.NumberField({
+	    allowNegative: false,
+	    allowDecimals: false,
+	    minValue: 1,
+	    fieldLabel: 'Retention time (days)',
+	    name: 'retention'
+	})],
+	tbar: [{
+	    tooltip: 'Save changes made to channel configuration below',
+	    iconCls:'save',
+	    text: "Save configuration",
+	    handler: saveChanges
+	}],
+	
+    });
+
+    confpanel.on('render', function() {
+	confpanel.getForm().load({
+	    url:'/dvr', 
+	    params:{'op':'loadSettings'},
+	    success:function(form, action) {
+		confpanel.enable();
+	    }
+	});
+    });
+
+
+    function saveChanges() {
+	confpanel.getForm().submit({
+	    url:'/dvr', 
+	    params:{'op':'saveSettings'},
+	    waitMsg:'Saving Data...',
+	    failure: function(form, action) {
+		Ext.Msg.alert('Save failed', action.result.errormsg);
+	    }
+	});
+    }
+
+    return confpanel;
+}
+

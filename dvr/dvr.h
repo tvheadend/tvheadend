@@ -27,7 +27,7 @@
 extern char *dvr_storage;
 extern char *dvr_format;
 extern char *dvr_file_postfix;
-
+extern uint32_t dvr_retention_days;
 
 LIST_HEAD(dvr_rec_stream_list, dvr_rec_stream);
 
@@ -127,6 +127,9 @@ void dvr_entry_cancel(dvr_entry_t *de);
 
 void dvr_entry_dec_ref(dvr_entry_t *de);
 
+void dvr_storage_set(const char *storage);
+
+void dvr_retention_set(int days);
 
 /**
  * Query interface
