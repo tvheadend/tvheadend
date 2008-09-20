@@ -302,6 +302,7 @@ main(int argc, char **argv)
 
   pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 
+  fprintf(stderr, "\nHTS / Tvheadend version %s started\n", htsversion);
 
   mainloop();
 
