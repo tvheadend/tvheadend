@@ -405,7 +405,8 @@ dvr_thread(void *aux)
 
     pthread_mutex_unlock(&st->st_mutex);
 
-    dvr_thread_new_pkt(de, pr->pr_pkt);
+    if(dispatch_clock > de->de_start)
+      dvr_thread_new_pkt(de, pr->pr_pkt);
 
     pkt_ref_dec(pr->pr_pkt);
     free(pr);
