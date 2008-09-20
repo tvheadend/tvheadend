@@ -29,6 +29,8 @@ extern char *dvr_format;
 extern char *dvr_file_postfix;
 
 
+LIST_HEAD(dvr_rec_stream_list, dvr_rec_stream);
+
 
 typedef enum {
   DVR_SCHEDULED,         /* Scheduled for recording (in the future) */
@@ -40,11 +42,27 @@ typedef enum {
 
 
 typedef struct dvr_entry {
+
+  int de_refcnt;   /* Modification is protected under global_lock */
+
+
+  /**
+   * Upon dvr_entry_remove() this fields will be invalidated (and pointers
+   * NULLed)
+   */
+
   LIST_ENTRY(dvr_entry) de_global_link;
   int de_id;
   
   channel_t *de_channel;
   LIST_ENTRY(dvr_entry) de_channel_link;
+
+  gtimer_t de_timer;
+
+
+  /**
+   * These meta fields will stay valid as long as reference count > 0
+   */
 
   time_t de_start;
   time_t de_stop;
@@ -58,14 +76,30 @@ typedef struct dvr_entry {
   char *de_error;
 
   dvr_entry_sched_state_t de_sched_state;
-  
-  gtimer_t de_timer;
 
+  uint32_t de_dont_reschedule;
+  
   /**
    * Fields for recording
    */
-
   th_subscription_t *de_s;
+
+  
+  /**
+   * Initialized upon SUBSCRIPTION_TRANSPORT_RUN
+   */
+  struct dvr_rec_stream_list de_streams;
+  streaming_target_t de_st;
+  AVFormatContext *de_fctx;
+
+  enum {
+    DE_RS_WAIT_AUDIO_LOCK = 0,
+    DE_RS_WAIT_VIDEO_LOCK,
+    DE_RS_RUNNING,
+    DE_RS_COMMERCIAL,
+  } de_rec_state;
+
+  int de_header_written;
 
 } dvr_entry_t;
 
@@ -76,11 +110,15 @@ void dvr_entry_create_by_event(event_t *e, const char *creator);
 
 void dvr_init(void);
 
-void dvr_rec_start(dvr_entry_t *de);
+void dvr_rec_subscribe(dvr_entry_t *de);
+
+void dvr_rec_unsubscribe(dvr_entry_t *de);
 
 dvr_entry_t *dvr_entry_find_by_id(int id);
 
 void dvr_entry_cancel(dvr_entry_t *de);
+
+void dvr_entry_dec_ref(dvr_entry_t *de);
 
 
 /**

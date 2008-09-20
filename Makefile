@@ -5,7 +5,7 @@ SRCS = main.c access.c dtable.c tcp.c http.c notify.c epg.c xmltv.c spawn.c
 SRCS += packet.c streaming.c
 
 VPATH += dvr
-SRCS += dvr_db.c
+SRCS += dvr_db.c dvr_rec.c
 
 SRCS += channels.c subscriptions.c transports.c
 

@@ -64,13 +64,15 @@ dvr_entry_link(dvr_entry_t *de)
 {
   time_t now, preamble;
 
+  de->de_refcnt = 1;
+
   LIST_INSERT_HEAD(&dvrentries, de, de_global_link);
 
   time(&now);
 
   preamble = de->de_start - 30;
 
-  if(now >= de->de_stop) {
+  if(now >= de->de_stop || de->de_dont_reschedule) {
     de->de_sched_state = DVR_COMPLETED;
     gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de, 
 	       de->de_stop + dvr_retention_time);
@@ -97,7 +99,7 @@ dvr_entry_create_by_event(event_t *e, const char *creator)
     return;
 
   LIST_FOREACH(de, &e->e_channel->ch_dvrs, de_channel_link)
-    if(de->de_start == e->e_start)
+    if(de->de_start == e->e_start && de->de_sched_state != DVR_COMPLETED)
       return;
 
   de = calloc(1, sizeof(dvr_entry_t));
@@ -130,27 +132,42 @@ dvr_entry_create_by_event(event_t *e, const char *creator)
 /**
  *
  */
-static void
-dvr_entry_destroy(dvr_entry_t *de)
+void
+dvr_entry_dec_ref(dvr_entry_t *de)
 {
-  assert(de->de_s == NULL); /* Can't have any subscriptions running */
-  
-  hts_settings_remove("dvrdb/%d", de->de_id);
+  lock_assert(&global_lock);
 
-  LIST_REMOVE(de, de_channel_link);
-
-  gtimer_disarm(&de->de_timer);
-
-  LIST_REMOVE(de, de_global_link);
+  if(de->de_refcnt > 1) {
+    de->de_refcnt--;
+    return;
+  }
 
   free(de->de_creator);
   free(de->de_title);
   free(de->de_desc);
 
   free(de);
+}
+
+
+
+
+/**
+ *
+ */
+static void
+dvr_entry_remove(dvr_entry_t *de)
+{
+  hts_settings_remove("dvrdb/%d", de->de_id);
+
+  gtimer_disarm(&de->de_timer);
+
+  LIST_REMOVE(de, de_channel_link);
+  LIST_REMOVE(de, de_global_link);
 
   dvrdb_changed();
 
+  dvr_entry_dec_ref(de);
 }
 
 
@@ -197,6 +214,8 @@ dvr_db_load_one(htsmsg_t *c, int id)
   tvh_str_set(&de->de_desc,     htsmsg_get_str(c, "description"));
   tvh_str_set(&de->de_filename, htsmsg_get_str(c, "filename"));
   tvh_str_set(&de->de_error,    htsmsg_get_str(c, "error"));
+
+  htsmsg_get_u32(c, "noresched", &de->de_dont_reschedule);
   dvr_entry_link(de);
 }
 
@@ -249,6 +268,8 @@ dvr_save(dvr_entry_t *de)
   if(de->de_error != NULL)
     htsmsg_add_str(m, "error", de->de_error);
 
+  htsmsg_add_u32(m, "noresched", de->de_dont_reschedule);
+
   hts_settings_save(m, "dvrdb/%d", de->de_id);
   htsmsg_destroy(m);
 }
@@ -261,7 +282,7 @@ static void
 dvr_timer_expire(void *aux)
 {
   dvr_entry_t *de = aux;
-  dvr_entry_destroy(de);
+  dvr_entry_remove(de);
  
 }
 
@@ -272,16 +293,19 @@ dvr_timer_expire(void *aux)
 static void
 dvr_stop_recording(dvr_entry_t *de, const char *errmsg)
 {
-  //  dvr_rec_stop(de);
+  dvr_rec_unsubscribe(de);
 
   de->de_sched_state = DVR_COMPLETED;
   tvh_str_set(&de->de_error, errmsg);
-  errmsg = errmsg ?: "Recording completed OK";
 
-  tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": %s",
-	 de->de_title, de->de_channel->ch_name, errmsg);
+  tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": "
+	 "End of program: %s",
+	 de->de_title, de->de_channel->ch_name,
+	 de->de_error ?: "Program ended");
 
   dvrdb_changed();
+  dvr_save(de);
+
   gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de, 
 		 de->de_stop + dvr_retention_time);  
 }
@@ -315,7 +339,7 @@ dvr_timer_start_recording(void *aux)
 
   dvrdb_changed();
 
-  //  dvr_rec_start(de);
+  dvr_rec_subscribe(de);
 
   gtimer_arm_abs(&de->de_timer, dvr_timer_stop_recording, de, de->de_stop);
 }
@@ -342,15 +366,16 @@ dvr_entry_cancel(dvr_entry_t *de)
 {
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:
-    dvr_entry_destroy(de);
+    dvr_entry_remove(de);
     break;
 
   case DVR_RECORDING:
+    de->de_dont_reschedule = 1;
     dvr_stop_recording(de, "Aborted by user");
     break;
 
   case DVR_COMPLETED:
-    dvr_entry_destroy(de);
+    dvr_entry_remove(de);
     break;
   }
 }
@@ -362,7 +387,7 @@ dvr_entry_cancel(dvr_entry_t *de)
 void
 dvr_init(void)
 {
-  dvr_storage      = strdup("/tmp");
+  dvr_storage      = strdup("/home/andoma/media/dvr");
   dvr_format       = strdup("matroska");
   dvr_file_postfix = strdup("mkv");
 
