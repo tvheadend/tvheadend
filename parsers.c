@@ -106,7 +106,7 @@ parse_raw_mpeg(th_transport_t *t, th_stream_t *st, uint8_t *data,
 {
   th_subscription_t *s;
 
-  if(LIST_FIRST(&t->tht_muxers) == NULL) {
+  if(LIST_FIRST(&t->tht_streaming_pad.sp_targets) == NULL) {
     /* No muxers. However, subscriptions may force demultiplex 
        for other reasons (serviceprobe does this) */
     LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link)

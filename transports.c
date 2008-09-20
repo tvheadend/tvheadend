@@ -81,7 +81,7 @@ transport_stop(th_transport_t *t)
 
   t->tht_tt_commercial_advice = COMMERCIAL_UNKNOWN;
  
-  assert(LIST_FIRST(&t->tht_muxers) == NULL);
+  assert(LIST_FIRST(&t->tht_streaming_pad.sp_targets) == NULL);
   assert(LIST_FIRST(&t->tht_subscriptions) == NULL);
 
   /**

@@ -679,14 +679,6 @@ typedef struct th_transport {
   int tht_caid;
 
   /**
-   * List of muxers
-   *
-   * The parsing code will invoke each of these whene complete
-   * packets have been assembled.
-   */
-  struct th_muxer_list tht_muxers;
-
-  /**
    * Used by parsing code to normalize timestamp to zero
    */
   int64_t tht_dts_start;
@@ -812,63 +804,6 @@ typedef struct th_muxstream {
   int64_t tms_staletime;
 } th_muxstream_t;
 
-
-/*
- *
- */
-
-
-typedef void (th_mux_newpkt_t)(struct th_muxer *tm, th_stream_t *st,
-			       th_pkt_t *pkt);
-
-typedef struct th_muxer {
-
-  th_mux_newpkt_t *tm_new_pkt;
-
-  LIST_ENTRY(th_muxer) tm_transport_link;
-  th_transport_t *tm_transport;
-
-  int64_t tm_offset;
-
-  struct th_muxstream_list tm_streams;
-
-  th_mux_output_t *tm_output;
-  void *tm_opaque;
-  
-
-  enum {
-    TM_IDLE,
-    TM_WAITING_FOR_LOCK,
-    TM_PLAY,
-    TM_PAUSE,
-  } tm_status;
-
-} th_muxer_t;
-
-
-/**
- * Output muxer for usage via ffmpeg (avformat)
- */
-typedef struct th_ffmuxer {
-  th_muxer_t tffm_muxer;
-  
-  enum {
-    TFFM_STOP,
-    TFFM_WAIT_SUBSCRIPTION,
-    TFFM_WAIT_FOR_START,
-    TFFM_WAIT_AUDIO_LOCK,
-    TFFM_WAIT_VIDEO_LOCK,
-    TFFM_RUNNING,
-    TFFM_COMMERCIAL,
-
-  } tffm_state;
-
-  int tffm_header_written;
-
-  char *tffm_printname;
-
-  struct AVFormatContext *tffm_avfctx;
-} th_ffmuxer_t;
 
 #endif
 
