@@ -169,6 +169,14 @@ typedef struct streaming_target {
   
   struct th_pktref_queue st_queue;
   
+  enum {
+    ST_IDLE,
+    ST_RUNNING,
+    ST_STOP_REQ,
+    ST_ZOMBIE,
+  } st_status;
+
+
 } streaming_target_t;
 
 

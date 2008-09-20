@@ -25,11 +25,13 @@
 /**
  *
  */
-void streaming_pad_init(streaming_pad_t *pd, pthread_mutex_t *mutex);
+void streaming_pad_init(streaming_pad_t *sp, pthread_mutex_t *mutex);
 
 void streaming_target_init(streaming_target_t *st);
 
-void streaming_target_connect(streaming_pad_t *pd, streaming_target_t *st);
+void streaming_target_connect(streaming_pad_t *sp, streaming_target_t *st);
+
+void streaming_target_disconnect(streaming_target_t *st);
 
 void streaming_pad_deliver_packet(streaming_pad_t *sp, th_pkt_t *pkt);
 

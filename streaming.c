@@ -34,6 +34,18 @@ streaming_pad_init(streaming_pad_t *sp, pthread_mutex_t *mutex)
  *
  */
 void
+streaming_target_init(streaming_target_t *st)
+{
+  st->st_status = ST_IDLE;
+  pthread_mutex_init(&st->st_mutex, NULL);
+  pthread_cond_init(&st->st_cond, NULL);
+  TAILQ_INIT(&st->st_queue);
+}
+
+/**
+ *
+ */
+void
 streaming_target_connect(streaming_pad_t *sp, streaming_target_t *st)
 {
   lock_assert(sp->sp_mutex);
@@ -41,6 +53,27 @@ streaming_target_connect(streaming_pad_t *sp, streaming_target_t *st)
   sp->sp_ntargets++;
   st->st_pad = sp;
   LIST_INSERT_HEAD(&sp->sp_targets, st, st_link);
+}
+
+
+void
+streaming_target_disconnect(streaming_target_t *st)
+{
+  streaming_pad_t *sp = st->st_pad;
+
+  if(sp == NULL)
+    return; /* Already disconnected */
+
+  pthread_mutex_lock(sp->sp_mutex);
+
+  sp->sp_ntargets--;
+  st->st_pad = NULL;
+
+  LIST_REMOVE(st, st_link);
+
+  pthread_mutex_unlock(sp->sp_mutex);
+
+  pktref_clear_queue(&st->st_queue);
 }
 
 /**
