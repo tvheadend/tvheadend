@@ -339,7 +339,8 @@ dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp)
   streaming_target_init(&de->de_st);
   streaming_target_connect(sp, &de->de_st);
   de->de_st.st_status = ST_RUNNING;
-  de->de_fctx = fctx;+
+  de->de_fctx = fctx;
+  de->de_ts_offset = AV_NOPTS_VALUE;
 
   pthread_mutex_unlock(sp->sp_mutex);
 
@@ -468,6 +469,7 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
   void *buf = pkt->pkt_payload;
   size_t bufsize = pkt->pkt_payloadlen;
   char txt[100];
+  int64_t pts, dts;
 
   LIST_FOREACH(drs, &de->de_streams, drs_link)
     if(drs->drs_source_index == pkt->pkt_componentindex)
@@ -478,6 +480,9 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
 
   st = drs->drs_lavf_stream;
   ctx = st->codec;
+
+  if(de->de_ts_offset == AV_NOPTS_VALUE)
+    de->de_ts_offset = pkt->pkt_dts;
 
   switch(de->de_rec_state) {
   default:
@@ -563,16 +568,26 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
     if(de->de_header_written == 0)
       break;
 
-    if(pkt->pkt_commercial == COMMERCIAL_YES) {
+    if(pkt->pkt_commercial == COMMERCIAL_YES &&
+       st->codec->codec->type == CODEC_TYPE_VIDEO &&
+       pkt->pkt_frametype == PKT_I_FRAME) {
+      
+      de->de_ts_com_start = pkt->pkt_dts;
+
       de->de_rec_state = DE_RS_COMMERCIAL;
       break;
     }
+  outputpacket:
+    dts = pkt->pkt_dts - de->de_ts_offset - de->de_ts_com_offset;
+    pts = pkt->pkt_pts - de->de_ts_offset - de->de_ts_com_offset;
+    if(dts < 0 || pts < 0)
+      break;
 
     av_init_packet(&avpkt);
     avpkt.stream_index = st->index;
 
-    avpkt.dts = av_rescale_q(pkt->pkt_dts, AV_TIME_BASE_Q, st->time_base);
-    avpkt.pts = av_rescale_q(pkt->pkt_pts, AV_TIME_BASE_Q, st->time_base);
+    avpkt.dts = av_rescale_q(dts, AV_TIME_BASE_Q, st->time_base);
+    avpkt.pts = av_rescale_q(pts, AV_TIME_BASE_Q, st->time_base);
     avpkt.data = buf;
     avpkt.size = bufsize;
     avpkt.duration =
@@ -584,12 +599,18 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
 
   case DE_RS_COMMERCIAL:
 
-    if(pkt->pkt_commercial != COMMERCIAL_YES) {
+    if(pkt->pkt_commercial != COMMERCIAL_YES &&
+       st->codec->codec->type == CODEC_TYPE_VIDEO &&
+       pkt->pkt_frametype == PKT_I_FRAME) {
 
-      LIST_FOREACH(drs, &de->de_streams, drs_link)
-	drs->drs_decoded = 0;
+      /* Switch out of commercial mode */
       
-      de->de_rec_state = DE_RS_WAIT_AUDIO_LOCK;
+      de->de_ts_com_offset += (pkt->pkt_dts - de->de_ts_com_start);
+      de->de_rec_state = DE_RS_RUNNING;
+
+      tvhlog(LOG_ERR, "dvr", "%s - Skipped %lld seconds of commercials",
+	     de->de_title, (pkt->pkt_dts - de->de_ts_com_start) / 1000000);
+      goto outputpacket;
     }
     break;
   }

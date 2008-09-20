@@ -88,6 +88,13 @@ typedef struct dvr_entry {
   /**
    * Initialized upon SUBSCRIPTION_TRANSPORT_RUN
    */
+  int64_t de_ts_offset;     /* Offset to compensate for PTS/DTS not beeing
+			       0 at start of recording */
+
+  int64_t de_ts_com_start;  /* Starttime for last/current commercial break */
+  int64_t de_ts_com_offset; /* Offset to subtract to PTS/DTS to skip over
+			       all commercial breaks so far */
+
   struct dvr_rec_stream_list de_streams;
   streaming_target_t de_st;
   AVFormatContext *de_fctx;
