@@ -487,7 +487,6 @@ tcp_server_create(int port, tcp_server_callback_t *start, void *opaque)
   e.data.ptr = ts;
 
   epoll_ctl(tcp_server_epoll_fd, EPOLL_CTL_ADD, fd, &e);
-  printf("Adding fd %d, listening on port %d\n", fd, port);
   return ts;
 }
 
