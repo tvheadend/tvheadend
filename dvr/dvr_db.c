@@ -202,7 +202,7 @@ dvr_entry_dec_ref(dvr_entry_t *de)
 static void
 dvr_entry_remove(dvr_entry_t *de)
 {
-  hts_settings_remove("dvrdb/%d", de->de_id);
+  hts_settings_remove("dvr/log/%d", de->de_id);
 
   gtimer_disarm(&de->de_timer);
 
@@ -273,7 +273,7 @@ dvr_db_load(void)
   htsmsg_t *l, *c;
   htsmsg_field_t *f;
 
-  if((l = hts_settings_load("dvrdb")) != NULL) {
+  if((l = hts_settings_load("dvr/log")) != NULL) {
     HTSMSG_FOREACH(f, l) {
       if((c = htsmsg_get_msg_by_field(f)) == NULL)
 	continue;
@@ -314,7 +314,7 @@ dvr_entry_save(dvr_entry_t *de)
 
   htsmsg_add_u32(m, "noresched", de->de_dont_reschedule);
 
-  hts_settings_save(m, "dvrdb/%d", de->de_id);
+  hts_settings_save(m, "dvr/log/%d", de->de_id);
   htsmsg_destroy(m);
 }
 
@@ -445,7 +445,7 @@ dvr_init(void)
 
   /* Override settings with config */
 
-  if((m = hts_settings_load("dvr")) != NULL) {
+  if((m = hts_settings_load("dvr/config")) != NULL) {
     htsmsg_get_u32(m, "retention-days", &dvr_retention_days);
     tvh_str_set(&dvr_storage, htsmsg_get_str(m, "storage"));
 
@@ -511,7 +511,7 @@ dvr_save(void)
   htsmsg_add_u32(m, "date-in-title",    !!(dvr_flags & DVR_DATE_IN_TITLE));
   htsmsg_add_u32(m, "time-in-title",    !!(dvr_flags & DVR_TIME_IN_TITLE));
 
-  hts_settings_save(m, "dvr");
+  hts_settings_save(m, "dvr/config");
   htsmsg_destroy(m);
 }
 
