@@ -302,13 +302,7 @@ tvheadend.chconf = function() {
 	border: false,
 	title:'Channels',
 	layout:'border',
-	items: [chlist, details],
-	tbar: [{
-	    tooltip: 'Configure XMLTV grabber',
-	    iconCls: 'option',
-	    text: 'Setup XML-TV'
-	}]
-
+	items: [chlist, details]
     });
 
 
