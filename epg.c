@@ -35,6 +35,9 @@ static struct event_list epg_hash[EPG_GLOBAL_HASH_WIDTH];
 
 epg_content_group_t *epg_content_groups[16];
 
+static void epg_expire_event_from_channel(void *opauqe);
+
+
 static int
 e_ch_cmp(const event_t *a, const event_t *b)
 {
@@ -84,20 +87,6 @@ epg_event_set_desc(event_t *e, const char *desc)
  *
  */
 void
-epg_event_set_duration(event_t *e, int duration)
-{
-  if(e->e_duration == duration)
-    return; 
-
-  e->e_duration = duration;
-  epg_event_changed(e);
-}
-
-
-/**
- *
- */
-void
 epg_event_set_content_type(event_t *e, epg_content_type_t *ect)
 {
   if(e->e_content_type == ect)
@@ -118,7 +107,7 @@ epg_event_set_content_type(event_t *e, epg_content_type_t *ect)
  *
  */
 event_t *
-epg_event_find_by_start(channel_t *ch, time_t start, int create)
+epg_event_create(channel_t *ch, time_t start, time_t stop)
 {
   static event_t *skel, *e;
   static int tally;
@@ -129,10 +118,7 @@ epg_event_find_by_start(channel_t *ch, time_t start, int create)
     skel = calloc(1, sizeof(event_t));
 
   skel->e_start = start;
-
-  if(!create)
-    return RB_FIND(&ch->ch_epg_events, skel, e_channel_link, e_ch_cmp);
-
+  
   e = RB_INSERT_SORTED(&ch->ch_epg_events, skel, e_channel_link, e_ch_cmp);
   if(e == NULL) {
     /* New entry was inserted */
@@ -140,6 +126,7 @@ epg_event_find_by_start(channel_t *ch, time_t start, int create)
     skel = NULL;
 
     e->e_id = ++tally;
+    e->e_duration = stop - start;
 
     LIST_INSERT_HEAD(&epg_hash[e->e_id & EPG_GLOBAL_HASH_MASK], e,
 		     e_global_link);
@@ -147,6 +134,13 @@ epg_event_find_by_start(channel_t *ch, time_t start, int create)
     e->e_refcount = 1;
     e->e_channel = ch;
     epg_event_changed(e);
+
+    if(e == RB_FIRST(&ch->ch_epg_events)) {
+      /* First in temporal order, arm expiration timer */
+
+      gtimer_arm_abs(&ch->ch_epg_timer, epg_expire_event_from_channel,
+		     ch, e->e_start + e->e_duration);
+    }
   }
 
   return e;
@@ -213,6 +207,37 @@ epg_event_unref(event_t *e)
   epg_event_destroy(e);
 }
 
+/**
+ *
+ */
+static void
+epg_remove_event_from_channel(channel_t *ch, event_t *e)
+{
+  int wasfirst = e == RB_FIRST(&ch->ch_epg_events);
+  assert(e->e_channel == ch);
+
+  RB_REMOVE(&ch->ch_epg_events, e, e_channel_link);
+  e->e_channel = NULL;
+  epg_event_unref(e);
+
+  if(wasfirst && (e = RB_FIRST(&ch->ch_epg_events)) != NULL) {
+    gtimer_arm_abs(&ch->ch_epg_timer, epg_expire_event_from_channel,
+		   ch, e->e_start + e->e_duration);
+  }
+}
+
+
+/**
+ *
+ */
+static void
+epg_expire_event_from_channel(void *opaque)
+{
+  channel_t *ch = opaque;
+  event_t *e = RB_FIRST(&ch->ch_epg_events);
+  epg_remove_event_from_channel(ch, e);
+}
+
 
 #if 0
 /**
@@ -268,11 +293,10 @@ epg_unlink_from_channel(channel_t *ch)
 {
   event_t *e;
 
-  while((e = ch->ch_epg_events.root) != NULL) {
-    RB_REMOVE(&ch->ch_epg_events, e, e_channel_link);
-    e->e_channel = NULL;
-    epg_event_unref(e);
-  }
+  gtimer_disarm(&ch->ch_epg_timer);
+
+  while((e = ch->ch_epg_events.root) != NULL)
+    epg_remove_event_from_channel(ch, e);
 }
 
 

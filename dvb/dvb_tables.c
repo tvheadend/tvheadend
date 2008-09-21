@@ -294,7 +294,7 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   uint8_t last_table_id;
 
   uint16_t event_id;
-  time_t start_time;
+  time_t start_time, stop_time;
 
   int duration;
   int dllen;
@@ -355,9 +355,16 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
     if(dllen > len)
       break;
+    stop_time = start_time + duration;
 
-    e = epg_event_find_by_start(ch, start_time, 1);
-    e->e_duration = duration;
+    if(stop_time < dispatch_clock) {
+      /* Already come to pass, skip over it */
+      len -= dllen;
+      ptr += dllen;
+      continue;
+    }
+
+    e = epg_event_create(ch, start_time, start_time + duration);
 
     ect = NULL;
     *title = 0;

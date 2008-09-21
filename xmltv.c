@@ -292,9 +292,7 @@ xmltv_parse_programme_tags(xmltv_channel_t *xc, htsmsg_t *tags,
   const char *desc  = xmltv_get_cdata_by_tag(tags, "desc");
 
   LIST_FOREACH(ch, &xc->xc_channels, ch_xc_link) {
-    e = epg_event_find_by_start(ch, start, 1);
-    
-    epg_event_set_duration(e, stop - start);
+    e = epg_event_create(ch, start, stop);
 
     if(title != NULL) epg_event_set_title(e, title);
     if(desc  != NULL) epg_event_set_desc(e, desc);
@@ -333,7 +331,7 @@ xmltv_parse_programme(htsmsg_t *body)
     return;
   stop = xmltv_str2time(s);
 
-  if(stop <= start)
+  if(stop <= start || stop < dispatch_clock)
     return;
 
   if((xc = xmltv_channel_find(chid, 0)) != NULL) {
