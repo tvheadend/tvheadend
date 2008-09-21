@@ -52,7 +52,7 @@ typedef struct channel {
   } ch_commercial_detection;
 
   struct event_tree ch_epg_events;
-  struct event *ch_epg_cur_event;
+
   char *ch_icon;
 
   struct dvr_entry_list ch_dvrs;
