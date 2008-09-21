@@ -261,14 +261,16 @@ channel_load_one(htsmsg_t *c, int id)
 
   channel_set_name(ch, name);
 
-  if((s = htsmsg_get_str(c, "icon")) != NULL)
-    ch->ch_icon = strdup(s);
- 
   if((s = htsmsg_get_str(c, "xmltv-channel")) != NULL &&
-     (ch->ch_xc = xmltv_channel_find(s, 0)) != NULL)
+     (ch->ch_xc = xmltv_channel_find(s, 0)) != NULL) {
     LIST_INSERT_HEAD(&ch->ch_xc->xc_channels, ch, ch_xc_link);
-  else
+    tvh_str_update(&ch->ch_icon, ch->ch_xc->xc_icon);
+  } else {
     LIST_INSERT_HEAD(&channels_not_xmltv_mapped, ch, ch_xc_link);
+  }
+
+
+  tvh_str_update(&ch->ch_icon, htsmsg_get_str(c, "icon"));
 
   if((tags = htsmsg_get_array(c, "tags")) != NULL) {
     HTSMSG_FOREACH(f, tags) {
@@ -481,6 +483,9 @@ channel_set_xmltv_source(channel_t *ch, xmltv_channel_t *xc)
     LIST_INSERT_HEAD(&xc->xc_channels, ch, ch_xc_link);
   }
   ch->ch_xc = xc;
+
+  tvh_str_update(&ch->ch_icon, xc->xc_icon);
+
   channel_save(ch);
 }
 
