@@ -109,8 +109,6 @@ tvheadend.app = function() {
 			new tvheadend.cwceditor]
 	    });
 
-	    console.log(tvheadend);
-
 	    var viewport = new Ext.Viewport({
 		layout:'border',
 		items:[

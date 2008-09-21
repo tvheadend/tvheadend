@@ -4,8 +4,6 @@ tvheadend.epgDetails = function(event) {
 
     var content = '';
     
-    console.log(event);
-
     if(event.chicon != null && event.chicon.length > 0)
 	content += '<img class="x-epg-chicon" src="' + event.chicon + '">';
 
