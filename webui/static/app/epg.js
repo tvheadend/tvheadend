@@ -202,12 +202,15 @@ tvheadend.epg = function() {
 	epgFilterChannelTags.setValue("");
 	epgFilterContentGroup.setValue("");
 	epgFilterTitle.setValue("");
+          
+        panel.getBottomToolbar().changePage(1);
 
 	epgStore.reload();
     }
 
     epgFilterChannels.on('select', function(c, r) {
 	if(epgStore.baseParams.channel != r.data.name) {
+            panel.getBottomToolbar().changePage(1);
 	    epgStore.baseParams.channel = r.data.name;
 	    epgStore.reload();
 	}
@@ -215,6 +218,7 @@ tvheadend.epg = function() {
 
     epgFilterChannelTags.on('select', function(c, r) {
 	if(epgStore.baseParams.tag != r.data.name) {
+            panel.getBottomToolbar().changePage(1);
 	    epgStore.baseParams.tag = r.data.name;
 	    epgStore.reload();
 	}
@@ -222,6 +226,7 @@ tvheadend.epg = function() {
 
     epgFilterContentGroup.on('select', function(c, r) {
 	if(epgStore.baseParams.contentgrp != r.data.name) {
+            panel.getBottomToolbar().changePage(1);
 	    epgStore.baseParams.contentgrp = r.data.name;
 	    epgStore.reload();
 	}
@@ -234,6 +239,7 @@ tvheadend.epg = function() {
 	    value = null;
 
 	if(epgStore.baseParams.title != value) {
+            panel.getBottomToolbar().changePage(1);
 	    epgStore.baseParams.title = value;
 	    epgStore.reload();
 	}
