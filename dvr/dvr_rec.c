@@ -135,6 +135,53 @@ dvr_rec_unsubscribe(dvr_entry_t *de)
 }
 
 
+/**
+ *
+ */
+static int
+makedirs(const char *path)
+{
+  struct stat st;
+  char *p;
+  int l, r;
+
+  if(stat(path, &st) == 0 && S_ISDIR(st.st_mode)) 
+    return 0; /* Dir already there */
+
+  if(mkdir(path, 0777) == 0)
+    return 0; /* Dir created ok */
+
+  if(errno == ENOENT) {
+
+    /* Parent does not exist, try to create it */
+    /* Allocate new path buffer and strip off last directory component */
+
+    l = strlen(path);
+    p = alloca(l + 1);
+    memcpy(p, path, l);
+    p[l--] = 0;
+  
+    for(; l >= 0; l--)
+      if(p[l] == '/')
+	break;
+    if(l == 0) {
+      return ENOENT;
+    }
+    p[l] = 0;
+
+    if((r = makedirs(p)) != 0)
+      return r;
+  
+    /* Try again */
+    if(mkdir(path, 0777) == 0)
+      return 0; /* Dir created ok */
+  }
+  r = errno;
+
+  tvhlog(LOG_DEBUG, "dvr", "Unable to create directory \"%s\" -- %s",
+	 path, strerror(r));
+  return r;
+}
 
 
 /**
@@ -155,28 +202,52 @@ deslashify(char *s)
  * - avoid duplicate filenames
  *
  */
-static void
+static int
 pvr_generate_filename(dvr_entry_t *de)
 {
   char fullname[1000];
+  char path[500];
   int tally = 0;
   struct stat st;
-  char *chname;
   char *filename;
+  char *chname;
+  struct tm tm;
 
-  if(de->de_filename != NULL) {
-    free(de->de_filename);
-    de->de_filename = NULL;
-  }
-
-  filename = strdup(de->de_title);
+  filename = strdup(de->de_ititle);
   deslashify(filename);
 
-  chname = strdup(de->de_channel->ch_name);
-  deslashify(chname);
+  av_strlcpy(path, dvr_storage, sizeof(path));
 
-  snprintf(fullname, sizeof(fullname), "%s/%s-%s.%s",
-	   dvr_storage, chname, filename, dvr_file_postfix);
+  /* Append per-day directory */
+
+  if(dvr_flags & DVR_DIR_PER_DAY) {
+    localtime_r(&de->de_start, &tm);
+    strftime(fullname, sizeof(fullname), "%F", &tm);
+    deslashify(fullname);
+    snprintf(path + strlen(path), sizeof(path) - strlen(path), 
+	     "/%s", fullname);
+  }
+
+  /* Append per-channel directory */
+
+  if(dvr_flags & DVR_DIR_PER_CHANNEL) {
+
+    chname = strdup(de->de_channel->ch_name);
+    deslashify(chname);
+    snprintf(path + strlen(path), sizeof(path) - strlen(path), 
+	     "/%s", chname);
+    free(chname);
+  }
+
+  /* */
+  if(makedirs(path) != 0)
+    return -1;
+  
+
+  /* Construct final name */
+  
+  snprintf(fullname, sizeof(fullname), "%s/%s.%s",
+	   path, filename, dvr_file_postfix);
 
   while(1) {
     if(stat(fullname, &st) == -1) {
@@ -190,14 +261,14 @@ pvr_generate_filename(dvr_entry_t *de)
 
     tally++;
 
-    snprintf(fullname, sizeof(fullname), "%s/%s-%s-%d.%s",
-	     dvr_storage, chname, filename, tally,dvr_file_postfix);
+    snprintf(fullname, sizeof(fullname), "%s/%s-%d.%s",
+	     path, filename, tally, dvr_file_postfix);
   }
 
-  de->de_filename = strdup(fullname);
+  tvh_str_set(&de->de_filename, fullname);
 
   free(filename);
-  free(chname);
+  return 0;
 }
 
 /**
@@ -230,7 +301,10 @@ dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp)
   pthread_t ptid;
   pthread_attr_t attr;
 
-  pvr_generate_filename(de);
+  if(pvr_generate_filename(de) != 0) {
+    dvr_rec_fatal_error(de, "Unable to create directories");
+    return;
+  }
 
   /* Find lavf format */
 
@@ -245,7 +319,7 @@ dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp)
 
   fctx = av_alloc_format_context();
 
-  av_strlcpy(fctx->title, de->de_title ?: "", 
+  av_strlcpy(fctx->title, de->de_ititle ?: "", 
 	     sizeof(fctx->title));
 
   av_strlcpy(fctx->comment, de->de_desc ?: "", 
@@ -309,7 +383,7 @@ dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp)
     if(codec == NULL) {
       tvhlog(LOG_ERR, "dvr",
 	     "%s - Cannot find codec for %s, ignoring stream", 
-	     de->de_title, codec_name);
+	     de->de_ititle, codec_name);
       continue;
     }
 
@@ -325,7 +399,7 @@ dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp)
     if(avcodec_open(ctx, codec) < 0) {
       tvhlog(LOG_ERR, "dvr",
 	     "%s - Cannot open codec for %s, ignoring stream", 
-	     de->de_title, codec_name);
+	     de->de_ititle, codec_name);
       free(ctx);
       continue;
     }
@@ -503,7 +577,7 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
       tvhlog(LOG_DEBUG, "dvr", "%s - "
 	     "Stream #%d: \"%s\" decoded a complete audio frame: "
 	     "%d channels in %d Hz",
-	     de->de_title, st->index, ctx->codec->name,
+	     de->de_ititle, st->index, ctx->codec->name,
 	     ctx->channels, ctx->sample_rate);
 	
       drs->drs_decoded = 1;
@@ -522,7 +596,7 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
       tvhlog(LOG_DEBUG, "dvr", "%s - "
 	     "Stream #%d: \"%s\" decoded a complete video frame: "
 	     "%d x %d at %.2fHz",
-	     de->de_title, st->index,  ctx->codec->name,
+	     de->de_ititle, st->index,  ctx->codec->name,
 	     ctx->width, st->codec->height,
 	     (float)ctx->time_base.den / (float)ctx->time_base.num);
       
@@ -541,7 +615,7 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
       if(av_write_header(fctx)) {
 	tvhlog(LOG_ERR, "dvr",
 	       "%s - Unable to write header", 
-	       de->de_title);
+	       de->de_ititle);
  	break;
       }
 
@@ -549,7 +623,7 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
 
       tvhlog(LOG_ERR, "dvr",
 	     "%s - Header written to file, stream dump:", 
-	     de->de_title);
+	     de->de_ititle);
       
       for(i = 0; i < fctx->nb_streams; i++) {
 	stx = fctx->streams[i];
@@ -557,7 +631,7 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
 	avcodec_string(txt, sizeof(txt), stx->codec, 1);
 	
 	tvhlog(LOG_ERR, "dvr", "%s - Stream #%d: %s [%d/%d]",
-	       de->de_title, i, txt, 
+	       de->de_ititle, i, txt, 
 	       stx->time_base.num, stx->time_base.den);
 	
       }
@@ -610,7 +684,7 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
       de->de_rec_state = DE_RS_RUNNING;
 
       tvhlog(LOG_ERR, "dvr", "%s - Skipped %lld seconds of commercials",
-	     de->de_title, (pkt->pkt_dts - de->de_ts_com_start) / 1000000);
+	     de->de_ititle, (pkt->pkt_dts - de->de_ts_com_start) / 1000000);
       goto outputpacket;
     }
     break;

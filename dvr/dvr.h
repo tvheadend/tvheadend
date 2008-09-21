@@ -28,6 +28,13 @@ extern char *dvr_storage;
 extern char *dvr_format;
 extern char *dvr_file_postfix;
 extern uint32_t dvr_retention_days;
+extern int dvr_flags;
+
+#define DVR_DIR_PER_DAY      0x1
+#define DVR_DIR_PER_CHANNEL  0x2
+#define DVR_CHANNEL_IN_TITLE 0x4
+#define DVR_DATE_IN_TITLE    0x8
+#define DVR_TIME_IN_TITLE    0x10
 
 LIST_HEAD(dvr_rec_stream_list, dvr_rec_stream);
 
@@ -71,6 +78,8 @@ typedef struct dvr_entry {
   char *de_filename;   /* Initially null if no filename has been
 			  generated yet */
   char *de_title;      /* Title in UTF-8 (from EPG) */
+  char *de_ititle;     /* Internal title optionally with channelname
+			  date and time pre/post/fixed */
   char *de_desc;       /* Description in UTF-8 (from EPG) */
 
   char *de_error;
@@ -130,6 +139,8 @@ void dvr_entry_dec_ref(dvr_entry_t *de);
 void dvr_storage_set(const char *storage);
 
 void dvr_retention_set(int days);
+
+void dvr_flags_set(int flags);
 
 /**
  * Query interface

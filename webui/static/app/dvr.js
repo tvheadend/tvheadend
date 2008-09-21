@@ -197,8 +197,9 @@ tvheadend.dvrsettings = function() {
 
     var confreader = new Ext.data.JsonReader({
 	root: 'dvrSettings',
-    }, ['storage','retention']);
-
+    }, ['storage','retention','dayDirs',
+	'channelDirs','channelInTitle',
+	'dateInTitle','timeInTitle']);
 
     var confpanel = new Ext.FormPanel({
 	title:'Digital Video Recorder',
@@ -206,7 +207,7 @@ tvheadend.dvrsettings = function() {
 	bodyStyle:'padding:15px',
 	anchor: '100% 50%',
 	labelAlign: 'right',
-	labelWidth: 150,
+	labelWidth: 200,
 	waitMsgTarget: true,
 	reader: confreader,
 	defaultType: 'textfield',
@@ -219,8 +220,23 @@ tvheadend.dvrsettings = function() {
 	    allowNegative: false,
 	    allowDecimals: false,
 	    minValue: 1,
-	    fieldLabel: 'Retention time (days)',
+	    fieldLabel: 'DVR Log retention time (days)',
 	    name: 'retention'
+	}), new Ext.form.Checkbox({
+	    fieldLabel: 'Make subdirectories per day',
+	    name: 'dayDirs'
+	}), new Ext.form.Checkbox({
+	    fieldLabel: 'Make subdirectories per channel',
+	    name: 'channelDirs'
+	}), new Ext.form.Checkbox({
+	    fieldLabel: 'Include channel name in title',
+	    name: 'channelInTitle'
+	}), new Ext.form.Checkbox({
+	    fieldLabel: 'Include date in title',
+	    name: 'dateInTitle'
+	}), new Ext.form.Checkbox({
+	    fieldLabel: 'Include time in title',
+	    name: 'timeInTitle'
 	})],
 	tbar: [{
 	    tooltip: 'Save changes made to channel configuration below',

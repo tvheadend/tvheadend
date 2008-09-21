@@ -891,6 +891,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
   event_t *e;
   dvr_entry_t *de;
   const char *s;
+  int flags = 0;
 
   if(op == NULL)
     op = "loadSettings";
@@ -927,6 +928,12 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     r = htsmsg_create();
     htsmsg_add_str(r, "storage", dvr_storage);
     htsmsg_add_u32(r, "retention", dvr_retention_days);
+    htsmsg_add_u32(r, "dayDirs",        !!(dvr_flags & DVR_DIR_PER_DAY));
+    htsmsg_add_u32(r, "channelDirs",    !!(dvr_flags & DVR_DIR_PER_CHANNEL));
+    htsmsg_add_u32(r, "channelInTitle", !!(dvr_flags & DVR_CHANNEL_IN_TITLE));
+    htsmsg_add_u32(r, "dateInTitle",    !!(dvr_flags & DVR_DATE_IN_TITLE));
+    htsmsg_add_u32(r, "timeInTitle",    !!(dvr_flags & DVR_TIME_IN_TITLE));
+
     out = json_single_record(r, "dvrSettings");
 
   } else if(!strcmp(op, "saveSettings")) {
@@ -937,6 +944,18 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     if((s = http_arg_get(&hc->hc_req_args, "retention")) != NULL)
       dvr_retention_set(atoi(s));
 
+    if(http_arg_get(&hc->hc_req_args, "dayDirs") != NULL)
+      flags |= DVR_DIR_PER_DAY;
+    if(http_arg_get(&hc->hc_req_args, "channelDirs") != NULL)
+      flags |= DVR_DIR_PER_CHANNEL;
+    if(http_arg_get(&hc->hc_req_args, "channelInTitle") != NULL)
+      flags |= DVR_CHANNEL_IN_TITLE;
+    if(http_arg_get(&hc->hc_req_args, "dateInTitle") != NULL)
+      flags |= DVR_DATE_IN_TITLE;
+    if(http_arg_get(&hc->hc_req_args, "timeInTitle") != NULL)
+      flags |= DVR_TIME_IN_TITLE;
+
+    dvr_flags_set(flags);
 
     out = htsmsg_create();
     htsmsg_add_u32(out, "success", 1);

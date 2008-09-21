@@ -32,6 +32,7 @@ char *dvr_storage;
 char *dvr_format;
 char *dvr_file_postfix;
 uint32_t dvr_retention_days;
+int dvr_flags;
 
 
 static int de_tally;
@@ -58,6 +59,39 @@ dvrdb_changed(void)
 }
 
 
+
+/**
+ *
+ */
+static void
+dvr_make_title(char *output, size_t outlen, const char *title,
+	       const char *channel, time_t starttime)
+{
+  struct tm tm;
+  char buf[40];
+
+  if(dvr_flags & DVR_CHANNEL_IN_TITLE)
+    snprintf(output, outlen, "%s-", channel);
+  else
+    output[0] = 0;
+  
+  snprintf(output + strlen(output), outlen - strlen(output),
+	   "%s", title);
+
+  localtime_r(&starttime, &tm);
+  
+  if(dvr_flags & DVR_DATE_IN_TITLE) {
+    strftime(buf, sizeof(buf), "%F", &tm);
+    snprintf(output + strlen(output), outlen - strlen(output), "-%s", buf);
+  }
+
+  if(dvr_flags & DVR_TIME_IN_TITLE) {
+    strftime(buf, sizeof(buf), "%R", &tm);
+    snprintf(output + strlen(output), outlen - strlen(output), "-%s", buf);
+  }
+}
+
+
 /**
  *
  */
@@ -65,6 +99,12 @@ static void
 dvr_entry_link(dvr_entry_t *de)
 {
   time_t now, preamble;
+  char buf[100];
+
+  dvr_make_title(buf, sizeof(buf), de->de_title, de->de_channel->ch_name,
+		 de->de_start);
+
+  de->de_ititle = strdup(buf);
 
   de->de_refcnt = 1;
 
@@ -85,6 +125,7 @@ dvr_entry_link(dvr_entry_t *de)
     gtimer_arm_abs(&de->de_timer, dvr_timer_start_recording, de, preamble);
   }
 }
+
 
 
 /**
@@ -146,6 +187,7 @@ dvr_entry_dec_ref(dvr_entry_t *de)
 
   free(de->de_creator);
   free(de->de_title);
+  free(de->de_ititle);
   free(de->de_desc);
 
   free(de);
@@ -393,6 +435,7 @@ dvr_init(void)
   char buf[500];
   const char *homedir;
   struct stat st;
+  uint32_t u32;
 
   /* Default settings */
 
@@ -405,6 +448,21 @@ dvr_init(void)
   if((m = hts_settings_load("dvr")) != NULL) {
     htsmsg_get_u32(m, "retention-days", &dvr_retention_days);
     tvh_str_set(&dvr_storage, htsmsg_get_str(m, "storage"));
+
+    if(!htsmsg_get_u32(m, "day-dir", &u32) && u32)
+      dvr_flags |= DVR_DIR_PER_DAY;
+
+    if(!htsmsg_get_u32(m, "channel-dir", &u32) && u32)
+      dvr_flags |= DVR_DIR_PER_CHANNEL;
+
+    if(!htsmsg_get_u32(m, "channel-in-title", &u32) && u32)
+      dvr_flags |= DVR_CHANNEL_IN_TITLE;
+
+    if(!htsmsg_get_u32(m, "date-in-title", &u32) && u32)
+      dvr_flags |= DVR_DATE_IN_TITLE;
+
+    if(!htsmsg_get_u32(m, "time-in-title", &u32) && u32)
+      dvr_flags |= DVR_TIME_IN_TITLE;
 
     htsmsg_destroy(m);
   }
@@ -447,6 +505,11 @@ dvr_save(void)
   htsmsg_t *m = htsmsg_create();
   htsmsg_add_str(m, "storage", dvr_storage);
   htsmsg_add_u32(m, "retention-days", dvr_retention_days);
+  htsmsg_add_u32(m, "day-dir",          !!(dvr_flags & DVR_DIR_PER_DAY));
+  htsmsg_add_u32(m, "channel-dir",      !!(dvr_flags & DVR_DIR_PER_CHANNEL));
+  htsmsg_add_u32(m, "channel-in-title", !!(dvr_flags & DVR_CHANNEL_IN_TITLE));
+  htsmsg_add_u32(m, "date-in-title",    !!(dvr_flags & DVR_DATE_IN_TITLE));
+  htsmsg_add_u32(m, "time-in-title",    !!(dvr_flags & DVR_TIME_IN_TITLE));
 
   hts_settings_save(m, "dvr");
   htsmsg_destroy(m);
@@ -484,6 +547,20 @@ dvr_retention_set(int days)
     if(de->de_sched_state == DVR_COMPLETED)
       gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de, 
 		     de->de_stop + dvr_retention_days * 86400);
+  dvr_save();
+}
+
+
+/**
+ *
+ */
+void
+dvr_flags_set(int flags)
+{
+  if(dvr_flags == flags)
+    return;
+
+  dvr_flags = flags;
   dvr_save();
 }
 
