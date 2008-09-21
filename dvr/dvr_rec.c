@@ -444,6 +444,8 @@ dvr_rec_stop(dvr_entry_t *de)
   if(st->st_status == ST_RUNNING) {
     st->st_status = ST_STOP_REQ;
 
+    pthread_cond_signal(&st->st_cond);
+
     while(st->st_status != ST_ZOMBIE)
       pthread_cond_wait(&st->st_cond, &st->st_mutex);
   }
@@ -488,15 +490,15 @@ dvr_thread(void *aux)
     pthread_mutex_lock(&st->st_mutex);
   }
 
-  dvr_thread_epilog(de);
-
-  streaming_target_disconnect(&de->de_st);
-
   /* Signal back that we no longer is running */
   st->st_status = ST_ZOMBIE;
   pthread_cond_signal(&st->st_cond);
 
   pthread_mutex_unlock(&st->st_mutex);
+
+  dvr_thread_epilog(de);
+
+  streaming_target_disconnect(&de->de_st);
 
 
   pthread_mutex_lock(&global_lock);
