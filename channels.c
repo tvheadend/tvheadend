@@ -160,6 +160,7 @@ static channel_t *
 channel_create(const char *name)
 {
   channel_t *ch, *x;
+  xmltv_channel_t *xc;
   int id;
 
   ch = RB_LAST(&channel_identifier_tree);
@@ -177,7 +178,14 @@ channel_create(const char *name)
   ch->ch_id = id;
   x = RB_INSERT_SORTED(&channel_identifier_tree, ch, 
 		       ch_identifier_link, chidcmp);
+
   assert(x == NULL);
+
+  if((xc = xmltv_channel_find_by_displayname(name)) != NULL) {
+    channel_set_xmltv_source(ch, xc);
+    if(xc->xc_icon != NULL)
+      channel_set_icon(ch, xc->xc_icon);
+  }
   return ch;
 }
 
