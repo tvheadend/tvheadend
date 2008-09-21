@@ -194,6 +194,9 @@ ts_recv_packet1(th_transport_t *t, uint8_t *tsb)
   int pid, n, m, r;
   th_descrambler_t *td;
 
+  if(tsb[1] & 0x80)
+    return; /* Transport Error Indicator */
+
   pid = (tsb[1] & 0x1f) << 8 | tsb[2];
   if((st = transport_find_stream_by_pid(t, pid)) == NULL)
     return;
