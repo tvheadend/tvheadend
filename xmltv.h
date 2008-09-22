@@ -46,6 +46,13 @@ xmltv_channel_t *xmltv_channel_find(const char *id, int create);
 
 xmltv_channel_t *xmltv_channel_find_by_displayname(const char *name);
 
+htsmsg_t *xmltv_list_grabbers(void);
+
+const char *xmltv_get_current_grabber(void);
+void xmltv_set_current_grabber(const char *path);
+
 extern struct xmltv_channel_list xmltv_displaylist;
+extern uint32_t xmltv_grab_interval;
+extern pthread_mutex_t xmltv_mutex;
 
 #endif /* EPG_XMLTV_H__ */

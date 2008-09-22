@@ -1,0 +1,194 @@
+tvheadend.grabberStore = new Ext.data.JsonStore({
+    root:'entries',
+    fields: ['identifier','name','version','apiconfig'],
+    url:'xmltv',
+    baseParams: {op: 'listGrabbers'},
+});
+
+/*
+
+tvheadend.xmltvsetup = function() {
+
+    var deck1info = new Ext.form.Label({
+	fieldLabel: 'Version',
+	html:'',
+    });
+
+    var deck1cb = new Ext.form.ComboBox({
+	loadingText: 'Scanning for XMLTV grabbers, please wait...',
+	fieldLabel: 'XML-TV Source',
+	name: 'xmltvchannel',
+	width: 350,
+	displayField:'name',
+	valueField:'identifier',
+	store: tvheadend.grabberStore,
+	forceSelection: true,
+	editable: false,
+	triggerAction: 'all',
+	mode: 'remote',
+	emptyText: 'Select grabber'
+    });
+
+    var deck1 = new Ext.FormPanel({
+	labelAlign: 'right',
+	labelWidth: 100,
+	bodyStyle: 'padding: 5px',
+	defaultType: 'label',
+	layout: 'form',
+	border:false,
+	items: [deck1cb, deck1info]
+    });
+    
+
+
+    var win = new Ext.Window({
+	title: 'Configure XMLTV grabbers',
+	bodyStyle: 'padding: 5px',
+        layout: 'fit',
+        width: 500,
+        height: 500,
+	constrainHeader: true,
+	buttonAlign: 'center',
+	items: [deck1],
+	bbar: [
+	    {
+		id: 'move-back',
+		text: 'Back',
+		disabled: true
+	    },
+	    '->',
+	    {
+		id: 'move-next',
+		text: 'Next'
+	    }
+	]
+    });
+
+    win.show();
+
+    deck1cb.on('select', function(c,r,i) {
+	deck1info.setText(r.data.version);
+    });
+}
+*/
+
+
+
+
+tvheadend.xmltv = function() {
+
+    var confreader = new Ext.data.JsonReader({
+	root: 'xmltvSettings',
+    }, ['grabber','grabinterval']);
+
+    var grabberSelect = new Ext.form.ComboBox({
+	loadingText: 'Loading, please wait...',
+	fieldLabel: 'XML-TV Source',
+	name: 'grabber',
+	width: 350,
+	displayField:'name',
+	valueField:'identifier',
+	store: tvheadend.grabberStore,
+	forceSelection: true,
+	editable: false,
+	triggerAction: 'all',
+	mode: 'remote',
+	emptyText: 'Select grabber'
+    });
+
+    var confpanel = new Ext.FormPanel({
+	title:'XML TV',
+	border:false,
+	bodyStyle:'padding:15px',
+	labelAlign: 'right',
+	labelWidth: 200,
+	waitMsgTarget: true,
+	reader: confreader,
+	layout: 'form',
+	defaultType: 'textfield',
+	items: [
+	    grabberSelect,
+	    new Ext.form.NumberField({
+		allowNegative: false,
+		allowDecimals: false,
+		minValue: 1,
+		maxValue: 100,
+		fieldLabel: 'Grab interval (hours)',
+		name: 'grabinterval'
+	    })
+	],
+	tbar: [{
+	    tooltip: 'Save changes made to configuration below',
+	    iconCls:'save',
+	    text: "Save configuration",
+	    handler: saveChanges
+	}],
+	
+    });
+
+    confpanel.on('render', function() {
+	confpanel.getForm().load({
+	    url:'/xmltv', 
+	    params:{'op':'loadSettings'},
+	    success:function(form, action) {
+		confpanel.enable();
+	    }
+	});
+    });
+
+
+    grabberSelect.on('select', function(c,r,i) {
+	if(r.data.apiconfig) {
+
+	    Ext.MessageBox.confirm('XMLTV',
+				   'Configure grabber? ' +
+				   'If you know that the grabber is already '+
+				   'set up or if you want to configure it '+
+				   'manually you may skip this step',
+				   function(button) {
+				       Ext.MessageBox.alert('XMLTV',
+							    'oops, embedded '+
+							    'config not '+
+							    'implemeted yet');
+				   }
+				  );
+
+	} else {
+	    Ext.MessageBox.alert('XMLTV',
+				 'This grabber does not support being ' +
+				 'configured from external application ' +
+				 '(such as Tvheadend).<br>' +
+				 'Make sure that the grabber is properly ' +
+				 'configured before saving configuration.<br>'+
+				 '<br>' +
+				 'To configure manually execute the ' +
+				 'following command in a shell on the ' +
+				 'server:<br>' +
+				 '$ ' + r.data.identifier + 
+				 ' --configure<br>' +
+				 '<br>' +
+				 'Note: It is important to configure the ' +
+				 'grabber using the same userid as tvheadend '+
+				 'since most grabbers save their '+
+				 'configuration in the users home directory.'+
+				 '<br>' +
+				 '<br>' +
+				 'Grabber version: ' + r.data.version
+				);
+	}
+    });
+
+    function saveChanges() {
+	confpanel.getForm().submit({
+	    url:'/xmltv', 
+	    params:{'op':'saveSettings'},
+	    waitMsg:'Saving Data...',
+	    failure: function(form, action) {
+		Ext.Msg.alert('Save failed', action.result.errormsg);
+	    }
+	});
+    }
+
+    return confpanel;
+}
+

@@ -102,6 +102,7 @@ tvheadend.app = function() {
 		autoScroll:true, 
 		title: 'Configuration', 
 		items: [new tvheadend.chconf,
+			new tvheadend.xmltv,
 			new tvheadend.cteditor,
 			new tvheadend.dvrsettings,
 			new tvheadend.dvb,
@@ -126,10 +127,11 @@ tvheadend.app = function() {
 		    },new Ext.TabPanel({
 			region:'center',
 			activeTab:0,
-			items:[
+			items:[		    
 			    new tvheadend.epg,
 			    new tvheadend.dvr,
-			    confpanel]
+			    confpanel
+			]
 		    })
 		]
 	    });

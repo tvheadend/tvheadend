@@ -113,6 +113,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/chconf.js");
   extjs_load(hq, "static/app/epg.js");
   extjs_load(hq, "static/app/dvr.js");
+  extjs_load(hq, "static/app/xmltv.js");
 
   /**
    * Finally, the app itself
@@ -717,9 +718,8 @@ extjs_xmltv(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_queue_t *hq = &hc->hc_reply;
   const char *op = http_arg_get(&hc->hc_req_args, "op");
   xmltv_channel_t *xc;
-  htsmsg_t *out, *array, *e;
-
-  pthread_mutex_lock(&global_lock);
+  htsmsg_t *out, *array, *e, *r;
+  const char *s;
 
   if(!strcmp(op, "listChannels")) {
 
@@ -730,20 +730,54 @@ extjs_xmltv(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_str(e, "xcTitle", "None");
     htsmsg_add_msg(array, NULL, e);
 
+    pthread_mutex_lock(&global_lock);
     LIST_FOREACH(xc, &xmltv_displaylist, xc_displayname_link) {
       e = htsmsg_create();
       htsmsg_add_str(e, "xcTitle", xc->xc_displayname);
       htsmsg_add_msg(array, NULL, e);
     }
+    pthread_mutex_unlock(&global_lock);
 
     htsmsg_add_msg(out, "entries", array);
 
+  } else if(!strcmp(op, "loadSettings")) {
+
+    pthread_mutex_lock(&xmltv_mutex);
+    r = htsmsg_create();
+
+    if((s = xmltv_get_current_grabber()) != NULL)
+      htsmsg_add_str(r, "grabber", s);
+
+    htsmsg_add_u32(r, "grabinterval", xmltv_grab_interval);
+    pthread_mutex_unlock(&xmltv_mutex);
+
+    out = json_single_record(r, "xmltvSettings");
+
+  } else if(!strcmp(op, "saveSettings")) {
+
+    pthread_mutex_lock(&xmltv_mutex);
+
+    s = http_arg_get(&hc->hc_req_args, "grabber");
+    xmltv_set_current_grabber(s);
+
+    pthread_mutex_unlock(&xmltv_mutex);
+
+    out = htsmsg_create();
+    htsmsg_add_u32(out, "success", 1);
+
+  } else if(!strcmp(op, "listGrabbers")) {
+
+    out = htsmsg_create();
+
+    pthread_mutex_lock(&xmltv_mutex);
+    array = xmltv_list_grabbers();
+    pthread_mutex_unlock(&xmltv_mutex);
+    if(array != NULL)
+      htsmsg_add_msg(out, "entries", array);
+
   } else {
-    pthread_mutex_unlock(&global_lock);
     return HTTP_STATUS_BAD_REQUEST;
   }
-
-  pthread_mutex_unlock(&global_lock);
 
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
@@ -1070,7 +1104,6 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
   http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
-
 
 
 /**
