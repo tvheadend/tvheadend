@@ -95,9 +95,6 @@ spawn_reaper(void)
 	       "unknown status");
     }
 
-    
-    tvhlog(LOG_INFO, "spawn",
-	   "spawn: \"%s\" %s", s ? s->name : "<unknwon spawn>", txt);
     if(s != NULL) {
       LIST_REMOVE(s, link);
       free((void *)s->name);
@@ -166,7 +163,6 @@ spawn_and_store_stdout(const char *prog, char *const argv[], char **outp)
     close(fd[0]);
     dup2(fd[1], 1);
     close(fd[1]);
-    syslog(LOG_INFO, "spawn: Executing \"%s\"", prog);
     execve(prog, argv, environ);
     syslog(LOG_ERR, "spawn: pid %d cannot execute %s -- %s",
 	   getpid(), prog, strerror(errno));
