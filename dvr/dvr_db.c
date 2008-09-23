@@ -426,6 +426,30 @@ dvr_entry_cancel(dvr_entry_t *de)
 
 
 /**
+ * Unconditionally remove an entry
+ */
+static void
+dvr_entry_purge(dvr_entry_t *de)
+{
+  if(de->de_sched_state == DVR_RECORDING)
+    dvr_stop_recording(de, "Channel removed from system");
+
+  dvr_entry_remove(de);
+}
+
+/**
+ *
+ */
+void
+dvr_destroy_by_channel(channel_t *ch)
+{
+  dvr_entry_t *de;
+
+  while((de = LIST_FIRST(&ch->ch_dvrs)) != NULL)
+    dvr_entry_purge(de);
+}
+
+/**
  *
  */
 void

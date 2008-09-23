@@ -40,6 +40,7 @@
 #include "xmltv.h"
 #include "dtable.h"
 #include "notify.h"
+#include "dvr/dvr.h"
 
 struct channel_list channels_not_xmltv_mapped;
 
@@ -385,7 +386,7 @@ channel_delete(channel_t *ch)
   tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" deleted",
 	 ch->ch_name);
 
-  fprintf(stderr, "!!!!!//pvr_destroy_by_channel(ch);\n");
+  dvr_destroy_by_channel(ch);
 
   while((t = LIST_FIRST(&ch->ch_transports)) != NULL) {
     transport_unmap_channel(t);
