@@ -91,7 +91,7 @@ tvheadend.dvrDetails = function(entry) {
 /**
  *
  */
-tvheadend.dvr = function() {
+tvheadend.dvrlog = function() {
 
     function renderDate(value){
 	var dt = new Date(value);
@@ -163,7 +163,7 @@ tvheadend.dvr = function() {
         loadMask: true,
 	stripeRows: true,
 	disableSelection: true,
-	title: 'Digital Video Recorder',
+	title: 'Recorder log',
 	store: tvheadend.dvrStore,
 	cm: dvrCm,
         viewConfig: {forceFit:true},
@@ -183,7 +183,21 @@ tvheadend.dvr = function() {
     function rowclicked(grid, index) {
 	new tvheadend.dvrDetails(grid.getStore().getAt(index).data);
     }
+    return panel;
+}
 
+/**
+ *
+ */
+tvheadend.dvr = function() {
+
+    var panel = new Ext.TabPanel({
+	activeTab:0, 
+	autoScroll:true, 
+	title: 'Digital Video Recorder', 
+	items: [new tvheadend.dvrlog
+	       ]
+    });
 
     return panel;
 }
