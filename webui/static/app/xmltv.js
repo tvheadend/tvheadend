@@ -138,6 +138,27 @@ tvheadend.xmltv = function() {
 
 
     grabberSelect.on('select', function(c,r,i) {
+
+	    Ext.MessageBox.alert('XMLTV',
+				 'Make sure that the grabber is properly ' +
+				 'configured before saving configuration.<br>'+
+				 '<br>' +
+				 'To configure manually execute the ' +
+				 'following command in a shell on the ' +
+				 'server:<br>' +
+				 '$ ' + r.data.identifier + 
+				 ' --configure<br>' +
+				 '<br>' +
+				 'Note: It is important to configure the ' +
+				 'grabber using the same userid as tvheadend '+
+				 'since most grabbers save their '+
+				 'configuration in the users home directory.'+
+				 '<br>' +
+				 '<br>' +
+				 'Grabber version: ' + r.data.version
+				);
+
+/*
 	if(r.data.apiconfig) {
 
 	    Ext.MessageBox.confirm('XMLTV',
@@ -176,6 +197,7 @@ tvheadend.xmltv = function() {
 				 'Grabber version: ' + r.data.version
 				);
 	}
+*/
     });
 
     function saveChanges() {
