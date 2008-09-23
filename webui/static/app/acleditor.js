@@ -14,9 +14,9 @@ tvheadend.acleditor = function() {
        width: 100
     });
 
-    var pvrColumn = new Ext.grid.CheckColumn({
+    var dvrColumn = new Ext.grid.CheckColumn({
        header: "Video Recorder",
-       dataIndex: 'pvr',
+       dataIndex: 'dvr',
        width: 100
     });
 
@@ -48,7 +48,7 @@ tvheadend.acleditor = function() {
 	    editor: new fm.TextField({allowBlank: false})
 	},
 	streamingColumn,
-	pvrColumn,
+	dvrColumn,
 	webuiColumn,
 	adminColumn,
 	{
@@ -60,13 +60,13 @@ tvheadend.acleditor = function() {
     ]);
     
     var UserRecord = Ext.data.Record.create([
-	'enabled','streaming','pvr','admin','webui','username',
+	'enabled','streaming','dvr','admin','webui','username',
 	'prefix','password','comment'
     ]);
 
     return new tvheadend.tableEditor('Access control', 'accesscontrol', cm,
 				     UserRecord,
 				     [enabledColumn, streamingColumn,
-				      pvrColumn, webuiColumn,
+				      dvrColumn, webuiColumn,
 				      adminColumn]);
 }
