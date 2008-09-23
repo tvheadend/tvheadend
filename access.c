@@ -54,7 +54,6 @@ access_verify(const char *username, const char *password,
 
     if(ae->ae_username[0] != '*') {
       /* acl entry requires username to match */
-      printf("Need user access\n");
       if(username == NULL)
 	continue; /* Didn't get one */
 
