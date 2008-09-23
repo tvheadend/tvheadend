@@ -50,6 +50,7 @@ htsmsg_t *xmltv_list_grabbers(void);
 
 const char *xmltv_get_current_grabber(void);
 void xmltv_set_current_grabber(const char *path);
+void xmltv_set_grab_interval(int s);
 
 extern struct xmltv_channel_list xmltv_displaylist;
 extern uint32_t xmltv_grab_interval;

@@ -760,6 +760,9 @@ extjs_xmltv(http_connection_t *hc, const char *remain, void *opaque)
     s = http_arg_get(&hc->hc_req_args, "grabber");
     xmltv_set_current_grabber(s);
 
+    s = http_arg_get(&hc->hc_req_args, "grabinterval");
+    xmltv_set_grab_interval(atoi(s));
+
     pthread_mutex_unlock(&xmltv_mutex);
 
     out = htsmsg_create();

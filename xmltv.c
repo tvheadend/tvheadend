@@ -866,3 +866,18 @@ xmltv_set_current_grabber(const char *desc)
   pthread_cond_signal(&xmltv_cond);
   xmltv_grabbers_save();
 }
+
+/**
+ *
+ */
+void
+xmltv_set_grab_interval(int s)
+{
+  lock_assert(&xmltv_mutex);
+
+  xmltv_grab_interval = s;
+  xmltv_confver++;
+  pthread_cond_signal(&xmltv_cond);
+  xmltv_grabbers_save();
+
+}
