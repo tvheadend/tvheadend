@@ -104,7 +104,7 @@ LIST_HEAD(th_muxstream_list, th_muxstream);
 LIST_HEAD(th_descrambler_list, th_descrambler);
 TAILQ_HEAD(th_refpkt_queue, th_refpkt);
 TAILQ_HEAD(th_muxpkt_queue, th_muxpkt);
-LIST_HEAD(autorec_list, autorec);
+LIST_HEAD(dvr_autorec_entry_list, dvr_autorec_entry);
 TAILQ_HEAD(th_pktref_queue, th_pktref);
 LIST_HEAD(streaming_target_list, streaming_target);
 LIST_HEAD(streaming_component_list, streaming_component);

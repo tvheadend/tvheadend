@@ -58,7 +58,7 @@ typedef struct channel {
 
   struct dvr_entry_list ch_dvrs;
   
-  struct autorec_list ch_autorecs;
+  struct dvr_autorec_entry_list ch_autorecs;
 
   struct xmltv_channel *ch_xc;
   LIST_ENTRY(channel) ch_xc_link;
@@ -79,6 +79,8 @@ typedef struct channel_tag {
   char *ct_comment;
   char *ct_identifier;
   struct channel_tag_mapping_list ct_ctms;
+
+  struct dvr_autorec_entry_list ct_autorecs;
 } channel_tag_t;
 
 

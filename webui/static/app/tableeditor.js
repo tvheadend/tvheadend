@@ -8,6 +8,7 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins) {
 	fields: rec,
 	url: "tablemgr",
 	autoLoad: true,
+	id: 'id',
 	baseParams: {table: dtable, op: "get"}
     });
 

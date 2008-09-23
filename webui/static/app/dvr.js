@@ -185,7 +185,66 @@ tvheadend.dvrlog = function() {
     }
     return panel;
 }
+/**
+ *
+ */
+tvheadend.autoreceditor = function() {
+    var fm = Ext.form;
+    
+    var enabledColumn = new Ext.grid.CheckColumn({
+       header: "Enabled",
+       dataIndex: 'enabled',
+       width: 60
+    });
 
+    var cm = new Ext.grid.ColumnModel([
+	enabledColumn,
+	{
+	    header: "Title (Regexp)",
+	    dataIndex: 'title',
+	    width: 200,
+	    editor: new fm.TextField({allowBlank: true})
+	},{
+	    header: "Channel",
+	    dataIndex: 'channel',
+	    editor: new Ext.form.ComboBox({
+		loadingText: 'Loading...',
+		width: 200,
+		displayField:'name',
+		store: tvheadend.channels,
+		mode: 'local',
+		editable: false,
+		triggerAction: 'all',
+		emptyText: 'Only include channel...'
+	    })
+	},{
+	    header: "Channel tag",
+	    dataIndex: 'channeltag',
+	    editor: new Ext.form.ComboBox({
+		displayField:'name',
+		store: tvheadend.channelTags,
+		mode: 'local',
+		editable: false,
+		triggerAction: 'all',
+		emptyText: 'Only include tag...'
+	    })
+	},{
+	    header: "Creator",
+	    dataIndex: 'creator',
+	    editor: new fm.TextField({allowBlank: false})
+	}
+    ]);
+
+    var rec = Ext.data.Record.create([
+	'enabled','title','channel','channeltag','creator'
+    ]);
+
+    return new tvheadend.tableEditor('Automatic Recorder',
+				     'autorec', cm, rec,
+				     [enabledColumn]);
+
+
+}
 /**
  *
  */
@@ -195,7 +254,8 @@ tvheadend.dvr = function() {
 	activeTab:0, 
 	autoScroll:true, 
 	title: 'Digital Video Recorder', 
-	items: [new tvheadend.dvrlog
+	items: [new tvheadend.dvrlog,
+		new tvheadend.autoreceditor
 	       ]
     });
 
