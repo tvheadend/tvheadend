@@ -52,7 +52,10 @@ typedef struct channel {
   } ch_commercial_detection;
 
   struct event_tree ch_epg_events;
-  gtimer_t ch_epg_timer;
+  struct event *ch_epg_current;
+
+  gtimer_t ch_epg_timer_head;
+  gtimer_t ch_epg_timer_current;
 
   char *ch_icon;
 

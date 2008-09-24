@@ -36,6 +36,7 @@ static struct event_list epg_hash[EPG_GLOBAL_HASH_WIDTH];
 epg_content_group_t *epg_content_groups[16];
 
 static void epg_expire_event_from_channel(void *opauqe);
+static void epg_ch_set_current_event(void *aux);
 
 
 static int
@@ -43,6 +44,67 @@ e_ch_cmp(const event_t *a, const event_t *b)
 {
   return a->e_start - b->e_start;
 }
+
+/**
+ *
+ */
+static void
+epg_set_current(channel_t *ch, event_t *e)
+{
+  ch->ch_epg_current = e;
+}
+
+
+/**
+ *
+ */
+static void
+epg_ch_clear_current_event(void *aux)
+{
+  channel_t *ch = aux;
+  event_t *n, *e = ch->ch_epg_current;
+
+  epg_set_current(ch, NULL);
+
+  //  printf("Current event on %s is nothing\n", ch->ch_name);
+
+  if((n = RB_NEXT(e, e_channel_link)) == NULL)
+    return;
+  
+  gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_set_current_event,
+		 n, n->e_start);
+}
+
+
+/**
+ *
+ */
+static void
+epg_ch_set_current_event(void *aux)
+{
+  event_t *e = aux, *n;
+  channel_t *ch = e->e_channel;
+#if 0
+  time_t ende = e->e_start + e->e_duration;
+
+  printf("Current event on %s is %s\n", ch->ch_name, e->e_title);
+  printf("  start: %s", ctime(&e->e_start));
+  printf("   stop: %s", ctime(&ende));
+#endif
+  epg_set_current(ch, e);
+
+  n = RB_NEXT(e, e_channel_link);
+
+  if(n != NULL && e->e_start + e->e_duration == n->e_start) {
+    /* Next event is directly adjacent */
+    gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_set_current_event,
+		   n, n->e_start);
+  } else {
+    gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_clear_current_event,
+		   ch, e->e_start + e->e_duration);
+  }
+}
+
 
 
 /**
@@ -138,11 +200,27 @@ epg_event_create(channel_t *ch, time_t start, time_t stop)
     if(e == RB_FIRST(&ch->ch_epg_events)) {
       /* First in temporal order, arm expiration timer */
 
-      gtimer_arm_abs(&ch->ch_epg_timer, epg_expire_event_from_channel,
+      gtimer_arm_abs(&ch->ch_epg_timer_head, epg_expire_event_from_channel,
 		     ch, e->e_start + e->e_duration);
     }
-  }
 
+    /* Current event tracking */
+    if(start <= dispatch_clock && stop > dispatch_clock) {
+      gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_set_current_event,
+		     e, e->e_start);
+ 
+    } else if(ch->ch_epg_timer_current.gti_callback != NULL) {
+      /* Timer is armed */
+      if(start < ch->ch_epg_timer_current.gti_expire) {
+	gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_set_current_event,
+		       e, e->e_start);
+      }
+    } else {
+      gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_set_current_event,
+		     e, e->e_start);
+    }
+
+  }
   return e;
 }
 
@@ -214,14 +292,33 @@ static void
 epg_remove_event_from_channel(channel_t *ch, event_t *e)
 {
   int wasfirst = e == RB_FIRST(&ch->ch_epg_events);
+  event_t *n = RB_NEXT(e, e_channel_link);
+
   assert(e->e_channel == ch);
 
   RB_REMOVE(&ch->ch_epg_events, e, e_channel_link);
   e->e_channel = NULL;
   epg_event_unref(e);
 
+  if(ch->ch_epg_current == e) {
+    epg_set_current(ch, NULL);
+
+    if(n != NULL) {
+      gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_set_current_event,
+		     n, n->e_start);
+    }
+  }
+
+  if(ch->ch_epg_timer_current.gti_callback == epg_ch_set_current_event) {
+    if(ch->ch_epg_timer_current.gti_opaque == e) {
+      if(n != NULL)
+	gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_set_current_event,
+		       n, n->e_start);
+    }
+  }
+
   if(wasfirst && (e = RB_FIRST(&ch->ch_epg_events)) != NULL) {
-    gtimer_arm_abs(&ch->ch_epg_timer, epg_expire_event_from_channel,
+    gtimer_arm_abs(&ch->ch_epg_timer_head, epg_expire_event_from_channel,
 		   ch, e->e_start + e->e_duration);
   }
 }
@@ -293,7 +390,8 @@ epg_unlink_from_channel(channel_t *ch)
 {
   event_t *e;
 
-  gtimer_disarm(&ch->ch_epg_timer);
+  gtimer_disarm(&ch->ch_epg_timer_head);
+  gtimer_disarm(&ch->ch_epg_timer_current);
 
   while((e = ch->ch_epg_events.root) != NULL)
     epg_remove_event_from_channel(ch, e);
