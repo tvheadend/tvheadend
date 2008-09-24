@@ -59,9 +59,10 @@ typedef struct dvr_autorec_entry {
 
 } dvr_autorec_entry_t;
 
+static void dvr_autorec_check_just_enabled(dvr_autorec_entry_t *dae);
 
 
-#if 0
+
 /**
  * return 1 if the event 'e' is matched by the autorec rule 'ar'
  */
@@ -69,6 +70,9 @@ static int
 autorec_cmp(dvr_autorec_entry_t *dae, event_t *e)
 {
   channel_tag_mapping_t *ctm;
+
+  if(dae->dae_enabled == 0)
+    return 0;
 
   if(dae->dae_channel != NULL &&
      dae->dae_channel != e->e_channel)
@@ -95,7 +99,6 @@ autorec_cmp(dvr_autorec_entry_t *dae, event_t *e)
 
   return 1;
 }
-#endif
 
 
 /**
@@ -239,6 +242,7 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
   const char *s;
   channel_t *ch;
   channel_tag_t *ct;
+  uint32_t u32;
 
   if((dae = autorec_entry_find(id, maycreate)) == NULL)
     return NULL;
@@ -283,6 +287,12 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
 
   if((s = htsmsg_get_str(values, "contentgrp")) != NULL)
     dae->dae_ecg = epg_content_group_find_by_name(s);
+
+  if(!htsmsg_get_u32(values, "enabled", &u32))
+    dae->dae_enabled = u32;
+
+  if(dae->dae_enabled)
+    dvr_autorec_check_just_enabled(dae);
 
   return autorec_record_build(dae);
 }
@@ -375,4 +385,57 @@ dvr_autorec_add(const char *title, const char *channel,
   m = htsmsg_create();
   htsmsg_add_u32(m, "asyncreload", 1);
   notify_by_msg("autorec", m);
+
+  dvr_autorec_check_just_enabled(dae);
+}
+
+/**
+ *
+ */
+static void
+autorec_schedule(event_t *e, dvr_autorec_entry_t *dae)
+{
+  char buf[200];
+
+  snprintf(buf, sizeof(buf), "Auto recording by: %s", dae->dae_creator);
+  dvr_entry_create_by_event(e, buf);
+}
+
+
+/**
+ *
+ */
+void
+dvr_autorec_check(event_t *e)
+{
+  dvr_autorec_entry_t *dae;
+
+  TAILQ_FOREACH(dae, &autorec_entries, dae_link)
+    if(autorec_cmp(dae, e))
+      autorec_schedule(e, dae);
+
+  if((e = RB_NEXT(e, e_channel_link)) == NULL)
+    return;
+
+  /* Check next event too */
+  TAILQ_FOREACH(dae, &autorec_entries, dae_link)
+    if(autorec_cmp(dae, e))
+      autorec_schedule(e, dae);
+}
+
+/**
+ *
+ */
+static void
+dvr_autorec_check_just_enabled(dvr_autorec_entry_t *dae)
+{
+  channel_t *ch;
+
+  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
+    if(ch->ch_epg_current == NULL)
+      continue;
+
+    if(autorec_cmp(dae, ch->ch_epg_current))
+      autorec_schedule(ch->ch_epg_current, dae);
+  }
 }

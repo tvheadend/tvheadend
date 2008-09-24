@@ -26,6 +26,7 @@
 #include "tvhead.h"
 #include "channels.h"
 #include "epg.h"
+#include "dvr/dvr.h"
 
 #define EPG_MAX_AGE 86400
 
@@ -52,6 +53,9 @@ static void
 epg_set_current(channel_t *ch, event_t *e)
 {
   ch->ch_epg_current = e;
+  if(e != NULL)
+    dvr_autorec_check(e);
+
 }
 
 

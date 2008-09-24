@@ -166,5 +166,6 @@ void dvr_autorec_add(const char *title, const char *channel,
 		     const char *tag, const char *contentgrp,
 		     const char *creator, const char *comment);
 
+void dvr_autorec_check(event_t *e);
 
 #endif /* DVR_H  */
