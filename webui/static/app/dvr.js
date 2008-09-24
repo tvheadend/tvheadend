@@ -194,7 +194,7 @@ tvheadend.autoreceditor = function() {
     var enabledColumn = new Ext.grid.CheckColumn({
        header: "Enabled",
        dataIndex: 'enabled',
-       width: 60
+       width: 30
     });
 
     var cm = new Ext.grid.ColumnModel([
@@ -202,14 +202,12 @@ tvheadend.autoreceditor = function() {
 	{
 	    header: "Title (Regexp)",
 	    dataIndex: 'title',
-	    width: 200,
 	    editor: new fm.TextField({allowBlank: true})
 	},{
 	    header: "Channel",
 	    dataIndex: 'channel',
 	    editor: new Ext.form.ComboBox({
 		loadingText: 'Loading...',
-		width: 200,
 		displayField:'name',
 		store: tvheadend.channels,
 		mode: 'local',
@@ -219,7 +217,7 @@ tvheadend.autoreceditor = function() {
 	    })
 	},{
 	    header: "Channel tag",
-	    dataIndex: 'channeltag',
+	    dataIndex: 'tag',
 	    editor: new Ext.form.ComboBox({
 		displayField:'name',
 		store: tvheadend.channelTags,
@@ -229,14 +227,30 @@ tvheadend.autoreceditor = function() {
 		emptyText: 'Only include tag...'
 	    })
 	},{
+	    header: "Content Group",
+	    dataIndex: 'contentgrp',
+	    editor: new Ext.form.ComboBox({
+		displayField:'name',
+		store: tvheadend.ContentGroupStore,
+		mode: 'local',
+		editable: false,
+		triggerAction: 'all',
+		emptyText: 'Only include content...'
+	    })
+
+	},{
 	    header: "Creator",
 	    dataIndex: 'creator',
+	    editor: new fm.TextField({allowBlank: false})
+	},{
+	    header: "Comment",
+	    dataIndex: 'comment',
 	    editor: new fm.TextField({allowBlank: false})
 	}
     ]);
 
     var rec = Ext.data.Record.create([
-	'enabled','title','channel','channeltag','creator'
+	'enabled','title','channel','tag','creator','contentgrp','comment'
     ]);
 
     return new tvheadend.tableEditor('Automatic Recorder',

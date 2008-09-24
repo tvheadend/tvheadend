@@ -1,3 +1,10 @@
+tvheadend.ContentGroupStore = new Ext.data.JsonStore({
+    root:'entries',
+    fields: [{name: 'name'}],
+    autoLoad: true,
+    url:'ecglist',
+});
+
 
 tvheadend.epgDetails = function(event) {
 
@@ -173,19 +180,13 @@ tvheadend.epg = function() {
 
     // Content groups
 
-    var epgFilterContentGroupStore = new Ext.data.JsonStore({
-	root:'entries',
-	fields: [{name: 'name'}],
-	url:'ecglist',
-    });
-
 
     var epgFilterContentGroup = new Ext.form.ComboBox({
 	loadingText: 'Loading...',
 	width: 200,
 	displayField:'name',
-	store: epgFilterContentGroupStore,
-	mode: 'remote',
+	store: tvheadend.ContentGroupStore,
+	mode: 'local',
 	editable: false,
 	triggerAction: 'all',
 	emptyText: 'Only include content...'

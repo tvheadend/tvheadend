@@ -42,6 +42,7 @@ typedef struct dvr_autorec_entry {
 
   int dae_enabled;
   char *dae_creator;
+  char *dae_comment;
 
   char *dae_title;
   regex_t dae_title_preg;
@@ -139,6 +140,7 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae)
   free(dae->dae_id);
 
   free(dae->dae_creator);
+  free(dae->dae_comment);
 
   if(dae->dae_title != NULL) {
     free(dae->dae_title);
@@ -166,13 +168,20 @@ autorec_record_build(dvr_autorec_entry_t *dae)
 
   htsmsg_add_str(e, "id", dae->dae_id);
   htsmsg_add_u32(e, "enabled",  !!dae->dae_enabled);
-  htsmsg_add_str(e, "creator", dae->dae_creator ?: "");
-  if(dae->dae_channel)
-    htsmsg_add_str(e, "channel", 
-		   dae->dae_channel ? dae->dae_channel->ch_name : "");
-  if(dae->dae_channel_tag)
-    htsmsg_add_str(e, "channeltag",
-		   dae->dae_channel_tag ? dae->dae_channel_tag->ct_name : "");
+
+  if(dae->dae_creator != NULL)
+    htsmsg_add_str(e, "creator", dae->dae_creator);
+  if(dae->dae_comment != NULL)
+    htsmsg_add_str(e, "comment", dae->dae_comment);
+
+  htsmsg_add_str(e, "channel", 
+		 dae->dae_channel ? dae->dae_channel->ch_name : "");
+  htsmsg_add_str(e, "tag",
+		 dae->dae_channel_tag ? dae->dae_channel_tag->ct_name : "");
+
+  htsmsg_add_str(e, "contentgrp",
+		 dae->dae_ecg ? dae->dae_ecg->ecg_name : "");
+
   htsmsg_add_str(e, "title", dae->dae_title ?: "");
 
   return e;
@@ -233,6 +242,7 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
     return NULL;
   
   tvh_str_set(&dae->dae_creator, htsmsg_get_str(values, "creator"));
+  tvh_str_set(&dae->dae_comment, htsmsg_get_str(values, "comment"));
 
   if((s = htsmsg_get_str(values, "channel")) != NULL) {
     if(dae->dae_channel != NULL) {
@@ -258,7 +268,7 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
     }
   }
 
-  if((s = htsmsg_get_str(values, "channeltag")) != NULL) {
+  if((s = htsmsg_get_str(values, "tag")) != NULL) {
     if(dae->dae_channel_tag != NULL) {
       LIST_REMOVE(dae, dae_channel_tag_link);
       dae->dae_channel_tag = NULL;
@@ -268,6 +278,9 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
       dae->dae_channel_tag = ct;
     }
   }
+
+  if((s = htsmsg_get_str(values, "contentgrp")) != NULL)
+    dae->dae_ecg = epg_content_group_find_by_name(s);
 
   return autorec_record_build(dae);
 }
