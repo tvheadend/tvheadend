@@ -660,3 +660,20 @@ dvr_query_sort(dvr_query_result_t *dqr)
   qsort(dqr->dqr_array, dqr->dqr_entries, sizeof(dvr_entry_t *), sf);
 }  
 
+
+/**
+ *
+ */
+off_t
+dvr_get_filesize(dvr_entry_t *de)
+{
+  struct stat st;
+
+  if(de->de_filename == NULL)
+    return 0;
+
+  if(stat(de->de_filename, &st) != 0)
+    return 0;
+
+  return st.st_size;
+}

@@ -13,6 +13,8 @@ tvheadend.dvrStore = new Ext.data.JsonStore({
 	{name: 'schedstate'},
 	{name: 'creator'},
         {name: 'duration'},
+        {name: 'filesize'},
+        {name: 'url'},
     ],
     url: 'dvrlist',
     autoLoad: true,
@@ -38,6 +40,11 @@ tvheadend.dvrDetails = function(entry) {
     content += '<hr>'
     content += '<div class="x-epg-meta">Status: ' + entry.status + '</div>';
 
+    if(entry.url != null && entry.filesize > 0) {
+	content += '<div class="x-epg-meta">' +
+	    '<a href="' + entry.url + '" target="_blank">Download</a> '+
+	    parseInt(entry.filesize/1000000) + ' MB</div>';
+    }
 
     var win = new Ext.Window({
 	title: entry.title,

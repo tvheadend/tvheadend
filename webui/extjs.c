@@ -1037,6 +1037,7 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
   dvr_entry_t *de;
   int start = 0, end, limit, i;
   const char *s, *t = NULL;
+  off_t fsize;
 
   if((s = http_arg_get(&hc->hc_req_args, "start")) != NULL)
     start = atoi(s);
@@ -1103,6 +1104,18 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
     }
     htsmsg_add_str(m, "status", s);
     if(t != NULL) htsmsg_add_str(m, "schedstate", t);
+
+
+    if(de->de_sched_state == DVR_COMPLETED) {
+      fsize = dvr_get_filesize(de);
+      if(fsize > 0) {
+	char url[100];
+	htsmsg_add_u64(m, "filesize", fsize);
+
+	snprintf(url, sizeof(url), "/dvrfile/%d", de->de_id);
+	htsmsg_add_str(m, "url", url);
+      }
+    }
 
 
     htsmsg_add_msg(array, NULL, m);

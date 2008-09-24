@@ -69,8 +69,11 @@ http_resolve(http_connection_t *hc, char **remainp, char **argsp)
   http_path_t *hp;
   char *v;
   LIST_FOREACH(hp, &http_paths, hp_link) {
-    if(!strncmp(hc->hc_url, hp->hp_path, hp->hp_len))
-      break;
+    if(!strncmp(hc->hc_url, hp->hp_path, hp->hp_len)) {
+      if(hc->hc_url[hp->hp_len] == 0 || hc->hc_url[hp->hp_len] == '/' ||
+	 hc->hc_url[hp->hp_len] == '?')
+	break;
+    }
   }
 
   if(hp == NULL)
