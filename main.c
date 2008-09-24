@@ -283,6 +283,8 @@ main(int argc, char **argv)
 
   cwc_init();
 
+  epg_init();
+
   dvr_init();
 
   pthread_mutex_unlock(&global_lock);
