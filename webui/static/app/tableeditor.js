@@ -1,5 +1,3 @@
-console.log("hejja");
-
 tvheadend.tableEditor = function(title, dtable, cm, rec, plugins) {
     cm.defaultSortable = true;
 
