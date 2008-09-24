@@ -95,13 +95,13 @@ epg_ch_set_current_event(void *aux)
 
   n = RB_NEXT(e, e_channel_link);
 
-  if(n != NULL && e->e_start + e->e_duration == n->e_start) {
+  if(n != NULL && e->e_stop == n->e_start) {
     /* Next event is directly adjacent */
     gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_set_current_event,
 		   n, n->e_start);
   } else {
     gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_clear_current_event,
-		   ch, e->e_start + e->e_duration);
+		   ch, e->e_stop);
   }
 }
 
@@ -188,7 +188,7 @@ epg_event_create(channel_t *ch, time_t start, time_t stop)
     skel = NULL;
 
     e->e_id = ++tally;
-    e->e_duration = stop - start;
+    e->e_stop = stop;
 
     LIST_INSERT_HEAD(&epg_hash[e->e_id & EPG_GLOBAL_HASH_MASK], e,
 		     e_global_link);
@@ -201,7 +201,7 @@ epg_event_create(channel_t *ch, time_t start, time_t stop)
       /* First in temporal order, arm expiration timer */
 
       gtimer_arm_abs(&ch->ch_epg_timer_head, epg_expire_event_from_channel,
-		     ch, e->e_start + e->e_duration);
+		     ch, e->e_stop);
     }
 
     /* Current event tracking */
@@ -219,7 +219,6 @@ epg_event_create(channel_t *ch, time_t start, time_t stop)
       gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_set_current_event,
 		     e, e->e_start);
     }
-
   }
   return e;
 }
@@ -235,7 +234,7 @@ epg_event_find_by_time(channel_t *ch, time_t t)
 
   skel.e_start = t;
   e = RB_FIND_LE(&ch->ch_epg_events, &skel, e_channel_link, e_ch_cmp);
-  if(e == NULL || e->e_start + e->e_duration < t)
+  if(e == NULL || e->e_stop < t)
     return NULL;
   return e;
 }
@@ -319,7 +318,7 @@ epg_remove_event_from_channel(channel_t *ch, event_t *e)
 
   if(wasfirst && (e = RB_FIRST(&ch->ch_epg_events)) != NULL) {
     gtimer_arm_abs(&ch->ch_epg_timer_head, epg_expire_event_from_channel,
-		   ch, e->e_start + e->e_duration);
+		   ch, e->e_stop);
   }
 }
 
@@ -449,7 +448,7 @@ eqr_add(epg_query_result_t *eqr, event_t *e, regex_t *preg, time_t now)
   if(preg != NULL && regexec(preg, e->e_title, 0, NULL, 0))
     return;
 
-  if(e->e_start + e->e_duration < now)
+  if(e->e_stop < now)
     return; /* Already passed */
 
   if(eqr->eqr_entries == eqr->eqr_alloced) {

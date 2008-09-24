@@ -56,7 +56,7 @@ typedef struct event {
   epg_content_type_t *e_content_type;
 
   time_t e_start;  /* UTC time */
-  int e_duration;  /* in seconds */
+  time_t e_stop;   /* UTC time */
 
   const char *e_title;   /* UTF-8 encoded */
   const char *e_desc;    /* UTF-8 encoded */

@@ -152,7 +152,7 @@ dvr_entry_create_by_event(event_t *e, const char *creator)
   LIST_INSERT_HEAD(&de->de_channel->ch_dvrs, de, de_channel_link);
 
   de->de_start   = e->e_start;
-  de->de_stop    = e->e_start + e->e_duration;
+  de->de_stop    = e->e_stop;
 
   de->de_creator = strdup(creator);
   de->de_title   = strdup(e->e_title);

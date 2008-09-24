@@ -897,8 +897,8 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
 
     htsmsg_add_u32(m, "id", e->e_id);
     htsmsg_add_u32(m, "start", e->e_start);
-    htsmsg_add_u32(m, "end", e->e_start + e->e_duration);
-    htsmsg_add_u32(m, "duration", e->e_duration);
+    htsmsg_add_u32(m, "end", e->e_stop);
+    htsmsg_add_u32(m, "duration", e->e_stop - e->e_start);
     
     if(e->e_content_type != NULL)
       htsmsg_add_str(m, "contentgrp", e->e_content_type->ect_group->ecg_name);
