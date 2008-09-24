@@ -266,6 +266,15 @@ tvheadend.epg = function() {
 	    {
 		text: 'Reset',
 		handler: epgQueryClear
+	    },
+	    '->',
+	    {
+		text: 'Create AutoRec',
+		iconCls: 'rec',
+		tooltip: 'Create an automatic recording entry that will ' +
+		    'record all future programmes that matches ' +
+		    'the current query.',
+		handler: createAutoRec
 	    }
 	],
 	
@@ -286,6 +295,44 @@ tvheadend.epg = function() {
 	new tvheadend.epgDetails(grid.getStore().getAt(index).data);
     }
 
+    function createAutoRec() {
+
+	var title = epgStore.baseParams.title ?
+	    epgStore.baseParams.title      : "<i>Don't care</i>";
+	var channel = epgStore.baseParams.channel ?
+	    epgStore.baseParams.channel    : "<i>Don't care</i>";
+	var tag = epgStore.baseParams.tag ?
+	    epgStore.baseParams.tag        : "<i>Don't care</i>";
+	var contentgrp = epgStore.baseParams.contentgrp ?
+	    epgStore.baseParams.contentgrp : "<i>Don't care</i>";
+
+	Ext.MessageBox.confirm('Auto Recorder',
+			       'This will create an automatic rule that ' +
+			       'continously scans the EPG for programmes ' +
+			       'to recrod that matches this query: ' +
+			       '<br><br>' +
+			       '<div class="x-smallhdr">Title:</div>' + title + '<br>' +
+			       '<div class="x-smallhdr">Channel:</div>' + channel + '<br>' +
+			       '<div class="x-smallhdr">Tag:</div>' + tag + '<br>' +
+			       '<div class="x-smallhdr">Content Group:</div>' + contentgrp + '<br>' +
+			       '<br>' +
+			       'Currently this will match (and record) ' + 
+			       epgStore.getTotalCount() + ' events. ' +
+			       'Are you sure?',
+
+			       function(button) {
+				   if(button == 'no')
+				       return;
+				   createAutoRec2(epgStore.baseParams);
+			       }
+			      );
+    }
+
+    function createAutoRec2(params) {
+	/* Really do it */
+	params.op = 'createAutoRec';
+	Ext.Ajax.request({url: '/dvr', params: params});
+    }
 
     return panel;
 }

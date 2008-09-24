@@ -19,6 +19,11 @@ tvheadend.comet_poller = function() {
 		    tvheadend.channelTags.reload();
 		break;
 
+	    case 'autorec':
+		if(m.asyncreload != null)
+		    tvheadend.autorecStore.reload();
+		break;
+
 	    case 'dvrdb':
 		if(m.reload != null)
 		    tvheadend.dvrStore.reload();

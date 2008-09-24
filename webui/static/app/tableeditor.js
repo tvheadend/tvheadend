@@ -1,15 +1,16 @@
-tvheadend.tableEditor = function(title, dtable, cm, rec, plugins) {
+tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store) {
     cm.defaultSortable = true;
 
-    var store = new Ext.data.JsonStore({
-	root: 'entries',
-	fields: rec,
-	url: "tablemgr",
-	autoLoad: true,
-	id: 'id',
-	baseParams: {table: dtable, op: "get"}
-    });
-
+    if(store == null) {
+	store = new Ext.data.JsonStore({
+	    root: 'entries',
+	    fields: rec,
+	    url: "tablemgr",
+	    autoLoad: true,
+	    id: 'id',
+	    baseParams: {table: dtable, op: "get"}
+	});
+    }
 
     function addRecord() {
 	Ext.Ajax.request({

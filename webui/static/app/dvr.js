@@ -185,6 +185,25 @@ tvheadend.dvrlog = function() {
     }
     return panel;
 }
+
+/**
+ *
+ */
+tvheadend.autorecRecord = Ext.data.Record.create([
+    'enabled','title','channel','tag','creator','contentgrp','comment'
+]);
+
+
+tvheadend.autorecStore = new Ext.data.JsonStore({
+    root: 'entries',
+    fields: tvheadend.autorecRecord,
+    url: "tablemgr",
+    autoLoad: true,
+    id: 'id',
+    baseParams: {table: "autorec", op: "get"}
+});
+
+
 /**
  *
  */
@@ -239,7 +258,7 @@ tvheadend.autoreceditor = function() {
 	    })
 
 	},{
-	    header: "Creator",
+	    header: "Created by",
 	    dataIndex: 'creator',
 	    editor: new fm.TextField({allowBlank: false})
 	},{
@@ -249,15 +268,10 @@ tvheadend.autoreceditor = function() {
 	}
     ]);
 
-    var rec = Ext.data.Record.create([
-	'enabled','title','channel','tag','creator','contentgrp','comment'
-    ]);
 
     return new tvheadend.tableEditor('Automatic Recorder',
-				     'autorec', cm, rec,
-				     [enabledColumn]);
-
-
+				     'autorec', cm, tvheadend.autorecRecord,
+				     [enabledColumn], tvheadend.autorecStore);
 }
 /**
  *

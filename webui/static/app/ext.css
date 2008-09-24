@@ -98,7 +98,14 @@
 .save {
     background-image:url(../icons/save.gif) !important;
 }
+.rec {
+    background-image:url(../icons/rec.png) !important;
+}
 
+.x-smallhdr {
+    float:left;
+    width: 100px;
+}
 
 .x-epg-title {
     margin: 5px;

@@ -26,9 +26,11 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <regex.h>
+#include <libhts/htssettings.h>
 
 #include "tvhead.h"
 #include "dvr.h"
+#include "notify.h"
 #include "dtable.h"
 #include "epg.h"
 
@@ -240,7 +242,7 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
 
   if((dae = autorec_entry_find(id, maycreate)) == NULL)
     return NULL;
-  
+
   tvh_str_set(&dae->dae_creator, htsmsg_get_str(values, "creator"));
   tvh_str_set(&dae->dae_comment, htsmsg_get_str(values, "comment"));
 
@@ -249,7 +251,7 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
       LIST_REMOVE(dae, dae_channel_link);
       dae->dae_channel = NULL;
     }
-    if((ch = channel_find_by_name(s, 0)) != NULL) {
+     if((ch = channel_find_by_name(s, 0)) != NULL) {
       LIST_INSERT_HEAD(&ch->ch_autorecs, dae, dae_channel_link);
       dae->dae_channel = ch;
     }
@@ -323,4 +325,54 @@ dvr_autorec_init(void)
   TAILQ_INIT(&autorec_entries);
   dt = dtable_create(&autorec_dtc, "autorec", NULL);
   dtable_load(dt);
+}
+
+
+/**
+ *
+ */
+void
+dvr_autorec_add(const char *title, const char *channel,
+		const char *tag, const char *cgrp,
+		const char *creator, const char *comment)
+{
+  dvr_autorec_entry_t *dae;
+  htsmsg_t *m;
+  channel_t *ch;
+  channel_tag_t *ct;
+
+  if((dae = autorec_entry_find(NULL, 1)) == NULL)
+    return;
+
+  tvh_str_set(&dae->dae_creator, creator);
+  tvh_str_set(&dae->dae_comment, comment);
+
+  if(channel != NULL &&  (ch = channel_find_by_name(channel, 0)) != NULL) {
+    LIST_INSERT_HEAD(&ch->ch_autorecs, dae, dae_channel_link);
+    dae->dae_channel = ch;
+  }
+
+  if(title != NULL &&
+     !regcomp(&dae->dae_title_preg, title,
+	      REG_ICASE | REG_EXTENDED | REG_NOSUB)) {
+    dae->dae_title = strdup(title);
+  }
+
+  if(tag != NULL && (ct = channel_tag_find_by_name(tag)) != NULL) {
+    LIST_INSERT_HEAD(&ct->ct_autorecs, dae, dae_channel_tag_link);
+    dae->dae_channel_tag = ct;
+  }
+
+  dae->dae_ecg = cgrp ? epg_content_group_find_by_name(cgrp) : NULL;
+  dae->dae_enabled = 1;
+
+  m = autorec_record_build(dae);
+  hts_settings_save(m, "%s/%s", "autorec", dae->dae_id);
+  htsmsg_destroy(m);
+
+  /* Notify web clients that we have messed with the tables */
+  
+  m = htsmsg_create();
+  htsmsg_add_u32(m, "asyncreload", 1);
+  notify_by_msg("autorec", m);
 }

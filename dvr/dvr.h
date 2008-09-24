@@ -159,4 +159,12 @@ void dvr_query(dvr_query_result_t *dqr);
 void dvr_query_free(dvr_query_result_t *dqr);
 void dvr_query_sort(dvr_query_result_t *dqr);
 
+/**
+ *
+ */
+void dvr_autorec_add(const char *title, const char *channel,
+		     const char *tag, const char *contentgrp,
+		     const char *creator, const char *comment);
+
+
 #endif /* DVR_H  */
