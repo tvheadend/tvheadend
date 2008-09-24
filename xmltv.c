@@ -115,17 +115,19 @@ xmltv_load(void)
   htsmsg_field_t *f;
   xmltv_channel_t *xc;
 
-  if((l = hts_settings_load("xmltv/channels")) != NULL) {
-    HTSMSG_FOREACH(f, l) {
-      if((c = htsmsg_get_msg_by_field(f)) == NULL)
-	continue;
-      
-      xc = xmltv_channel_find(f->hmf_name, 1);
-      tvh_str_set(&xc->xc_icon, htsmsg_get_str(c, "icon"));
-      
-      xc_set_displayname(xc, htsmsg_get_str(c, "displayname"));
-    }
+  if((l = hts_settings_load("xmltv/channels")) == NULL)
+    return;
+
+  HTSMSG_FOREACH(f, l) {
+    if((c = htsmsg_get_msg_by_field(f)) == NULL)
+      continue;
+    
+    xc = xmltv_channel_find(f->hmf_name, 1);
+    tvh_str_set(&xc->xc_icon, htsmsg_get_str(c, "icon"));
+    
+    xc_set_displayname(xc, htsmsg_get_str(c, "displayname"));
   }
+  htsmsg_destroy(l);
 }
 
 
@@ -762,6 +764,8 @@ xmltv_grabbers_load(void)
     if((xg = xmltv_grabber_find_by_path(path)) != NULL)
       xg_current = xg;
   }
+
+  htsmsg_destroy(m);
 }
 
 
