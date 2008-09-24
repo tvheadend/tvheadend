@@ -171,7 +171,8 @@ epg_event_set_content_type(event_t *e, epg_content_type_t *ect)
 event_t *
 epg_event_create(channel_t *ch, time_t start, time_t stop)
 {
-  static event_t *skel, *e;
+  static event_t *skel;
+  event_t *e;
   static int tally;
 
   lock_assert(&global_lock);
@@ -218,6 +219,20 @@ epg_event_create(channel_t *ch, time_t start, time_t stop)
     } else {
       gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_set_current_event,
 		     e, e->e_start);
+    }
+  } else {
+    /* Already exist */
+
+    if(stop > e->e_stop) {
+      /* We allow the event to extend in time */
+#if 0
+      printf("Event %s on %s extended stop time\n", e->e_title,
+	     e->e_channel->ch_name);
+      printf("Previous %s", ctime(&e->e_stop));
+	printf("     New %s", ctime(&stop));
+#endif
+      e->e_stop = stop;
+      epg_event_changed(e);
     }
   }
   return e;
