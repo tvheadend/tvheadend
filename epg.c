@@ -336,52 +336,6 @@ epg_expire_event_from_channel(void *opaque)
 }
 
 
-#if 0
-/**
- *
- */
-void
-epg_channel_maintain()
-{
-  channel_t *ch;
-  event_t *e, *cur;
-  time_t now;
-
-  dtimer_arm(&epg_channel_maintain_timer, epg_channel_maintain, NULL, 5);
-
-  now = dispatch_clock;
-
-  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-
-    /* Age out any old events */
-
-    e = TAILQ_FIRST(&ch->ch_epg_events);
-    if(e != NULL && e->e_start + e->e_duration < now - EPG_MAX_AGE)
-      epg_event_destroy(ch, e);
-
-    cur = ch->ch_epg_cur_event;
-
-    e = ch->ch_epg_cur_event;
-    if(e == NULL) {
-      epg_locate_current_event(ch, now);
-      continue;
-    }
-
-    if(now >= e->e_start && now < e->e_start + e->e_duration)
-      continue;
-
-    e = TAILQ_NEXT(e, e_channel_link);
-    if(e != NULL && now >= e->e_start && now < e->e_start + e->e_duration) {
-      epg_set_current_event(ch, e);
-      continue;
-    }
-
-    epg_locate_current_event(ch, now);
-  }
-}
-#endif
-
-
 /**
  *
  */
