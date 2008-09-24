@@ -68,8 +68,7 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
- * Root page, we direct the client to different pages depending
- * on if it is a full blown browser or just some mobile app
+ * Static download of a file from the filesystem
  */
 static int
 page_static(http_connection_t *hc, const char *remain, void *opaque)
