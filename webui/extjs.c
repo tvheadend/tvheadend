@@ -170,11 +170,17 @@ extjs_tablemgr(http_connection_t *hc, const char *remain, void *opaque)
   if(tablename == NULL || (dt = dtable_find(tablename)) == NULL)
     return 404;
   
+  if(http_access_verify(hc, dt->dt_dtc->dtc_read_access))
+    return HTTP_STATUS_UNAUTHORIZED;
+
   in = entries != NULL ? htsmsg_json_deserialize(entries) : NULL;
 
   pthread_mutex_lock(&global_lock);
 
   if(!strcmp(op, "create")) {
+    if(http_access_verify(hc, dt->dt_dtc->dtc_write_access))
+      goto noaccess;
+
     out = dtable_record_create(dt);
 
   } else if(!strcmp(op, "get")) {
@@ -184,12 +190,18 @@ extjs_tablemgr(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_msg(out, "entries", array);
 
   } else if(!strcmp(op, "update")) {
+    if(http_access_verify(hc, dt->dt_dtc->dtc_write_access))
+      goto noaccess;
+
     if(in == NULL)
       goto bad;
 
     dtable_record_update_by_array(dt, in);
 
   } else if(!strcmp(op, "delete")) {
+    if(http_access_verify(hc, dt->dt_dtc->dtc_write_access))
+      goto noaccess;
+
     if(in == NULL)
       goto bad;
 
@@ -197,6 +209,10 @@ extjs_tablemgr(http_connection_t *hc, const char *remain, void *opaque)
 
   } else {
   bad:
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_BAD_REQUEST;
+
+  noaccess:
     pthread_mutex_unlock(&global_lock);
     return HTTP_STATUS_BAD_REQUEST;
   }
@@ -324,6 +340,11 @@ extjs_dvbtree(http_connection_t *hc, const char *remain, void *opaque)
   out = htsmsg_create_array();
   pthread_mutex_lock(&global_lock);
 
+  if(http_access_verify(hc, ACCESS_ADMIN)) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+
   if(!strcmp(s, "root")) {
     /**
      * List of all adapters
@@ -389,6 +410,11 @@ extjs_dvbnetworks(http_connection_t *hc, const char *remain, void *opaque)
   
   pthread_mutex_lock(&global_lock);
 
+  if(http_access_verify(hc, ACCESS_ADMIN)) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+
   if((tda = dvb_adapter_find_by_identifier(a)) == NULL) {
     pthread_mutex_unlock(&global_lock);
     return HTTP_STATUS_BAD_REQUEST;
@@ -440,6 +466,11 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_BAD_REQUEST;
 
   pthread_mutex_lock(&global_lock);
+
+  if(http_access_verify(hc, ACCESS_ADMIN)) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
 
   if(!strcmp(op, "load")) {
     r = htsmsg_create();
@@ -613,6 +644,11 @@ extjs_channel(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_lock(&global_lock);
 
+  if(http_access_verify(hc, ACCESS_ADMIN)) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+
   ch = s ? channel_find_by_identifier(atoi(s)) : NULL;
   if(ch == NULL) {
     pthread_mutex_unlock(&global_lock);
@@ -721,6 +757,15 @@ extjs_xmltv(http_connection_t *hc, const char *remain, void *opaque)
   xmltv_channel_t *xc;
   htsmsg_t *out, *array, *e, *r;
   const char *s;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(http_access_verify(hc, ACCESS_ADMIN)) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+
+  pthread_mutex_unlock(&global_lock);
 
   if(!strcmp(op, "listChannels")) {
 
@@ -936,6 +981,11 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_lock(&global_lock);
 
+  if(http_access_verify(hc, ACCESS_RECORDER)) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+
   if(!strcmp(op, "recordEvent")) {
     s = http_arg_get(&hc->hc_req_args, "eventId");
 
@@ -1047,10 +1097,16 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
   else
     limit = 20; /* XXX */
 
+  pthread_mutex_lock(&global_lock);
+
+  if(http_access_verify(hc, ACCESS_RECORDER)) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+
   out = htsmsg_create();
   array = htsmsg_create_array();
 
-  pthread_mutex_lock(&global_lock);
 
   dvr_query(&dqr);
 

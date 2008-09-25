@@ -1207,6 +1207,8 @@ static const dtable_class_t cwc_dtc = {
   .dtc_record_create  = cwc_entry_create,
   .dtc_record_update  = cwc_entry_update,
   .dtc_record_delete  = cwc_entry_delete,
+  .dtc_read_access = ACCESS_ADMIN,
+  .dtc_write_access = ACCESS_ADMIN,
 };
 
 

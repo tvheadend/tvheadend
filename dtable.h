@@ -22,6 +22,7 @@
 #include <libhts/htsmsg.h>
 #include <libhts/htsbuf.h>
 
+#include "access.h"
 
 typedef struct dtable_class {
   const char *dtc_name;
@@ -36,6 +37,9 @@ typedef struct dtable_class {
 				 htsmsg_t *values, int maycreate);
 
   int (*dtc_record_delete)(void *opaque, const char *id);
+
+  int dtc_read_access;
+  int dtc_write_access;
 
 } dtable_class_t;
 

@@ -310,6 +310,8 @@ static const dtable_class_t access_dtc = {
   .dtc_record_create  = access_record_create,
   .dtc_record_update  = access_record_update,
   .dtc_record_delete  = access_record_delete,
+  .dtc_read_access = ACCESS_ADMIN,
+  .dtc_write_access = ACCESS_ADMIN,
 };
 
 /**

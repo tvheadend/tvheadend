@@ -322,6 +322,8 @@ static const dtable_class_t autorec_dtc = {
   .dtc_record_create  = autorec_record_create,
   .dtc_record_update  = autorec_record_update,
   .dtc_record_delete  = autorec_record_delete,
+  .dtc_read_access = ACCESS_RECORDER,
+  .dtc_write_access = ACCESS_RECORDER,
 };
 
 /**

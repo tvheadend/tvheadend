@@ -123,6 +123,12 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
     return 404;
 
   pthread_mutex_lock(&global_lock);
+
+  if(http_access_verify(hc, ACCESS_RECORDER)) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+
   de = dvr_entry_find_by_id(atoi(remain));
   if(de == NULL || de->de_filename == NULL) {
     pthread_mutex_unlock(&global_lock);

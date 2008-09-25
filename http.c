@@ -295,6 +295,15 @@ http_redirect(http_connection_t *hc, const char *location)
   http_send_reply(hc, HTTP_STATUS_FOUND, "text/html", NULL, location, 0);
 }
 
+/**
+ * Return non-zero if no access
+ */
+int
+http_access_verify(http_connection_t *hc, int mask)
+{
+  return access_verify(hc->hc_username, hc->hc_password,
+		       (struct sockaddr *)hc->hc_peer, mask);
+}
 
 /**
  * Execute url callback
@@ -306,8 +315,7 @@ static void
 http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
 {
   int err;
-  if(access_verify(hc->hc_username, hc->hc_password,
-		   (struct sockaddr *)hc->hc_peer, hp->hp_accessmask)) {
+  if(http_access_verify(hc, hp->hp_accessmask)) {
     http_error(hc, HTTP_STATUS_UNAUTHORIZED);
     return;
   }

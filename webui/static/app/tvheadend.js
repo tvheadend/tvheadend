@@ -1,5 +1,40 @@
 
 
+/**
+ * This function creates top level tabs based on access so users without 
+ * access to subsystems won't see them.
+ *
+ * Obviosuly, access is verified in the server too.
+ */
+function accessUpdate(o) {
+
+
+    if(o.dvr == true && tvheadend.dvrpanel == null) {
+	tvheadend.dvrpanel = new tvheadend.dvr;
+	tvheadend.rootTabPanel.add(tvheadend.dvrpanel);
+    }
+
+    if(o.admin == true && tvheadend.confpanel == null) {
+	tvheadend.confpanel = new Ext.TabPanel({
+	    activeTab:0, 
+	    autoScroll:true, 
+	    title: 'Configuration', 
+	    items: [new tvheadend.chconf,
+		    new tvheadend.xmltv,
+		    new tvheadend.cteditor,
+		    new tvheadend.dvrsettings,
+		    new tvheadend.dvb,
+		    new tvheadend.acleditor, 
+		    new tvheadend.cwceditor]
+	});
+	tvheadend.rootTabPanel.add(tvheadend.confpanel);
+    }
+
+
+    tvheadend.rootTabPanel.doLayout();
+
+    console.log(o);
+}
 
 /**
  * Comet interfaces
@@ -14,6 +49,11 @@ tvheadend.comet_poller = function() {
 	    var m = response.messages[x];
 	    
 	    switch(m.notificationClass) {
+
+	    case 'accessUpdate':
+		accessUpdate(m);
+		break;
+
 	    case 'channeltags':
 		if(m.reload != null)
 		    tvheadend.channelTags.reload();
@@ -102,17 +142,11 @@ tvheadend.app = function() {
         // public methods
         init: function() {
 	    
-	    var confpanel = new Ext.TabPanel({
-		activeTab:0, 
-		autoScroll:true, 
-		title: 'Configuration', 
-		items: [new tvheadend.chconf,
-			new tvheadend.xmltv,
-			new tvheadend.cteditor,
-			new tvheadend.dvrsettings,
-			new tvheadend.dvb,
-			new tvheadend.acleditor, 
-			new tvheadend.cwceditor]
+
+	    tvheadend.rootTabPanel = new Ext.TabPanel({
+		region:'center',
+		activeTab:0,
+		items:[new tvheadend.epg]
 	    });
 
 	    var viewport = new Ext.Viewport({
@@ -129,18 +163,11 @@ tvheadend.app = function() {
 			collapsible: true,
 			title:'System log',
 			margins:'0 0 0 0'
-		    },new Ext.TabPanel({
-			region:'center',
-			activeTab:0,
-			items:[		    
-			    new tvheadend.epg,
-			    new tvheadend.dvr,
-			    confpanel
-			]
-		    })
+		    },tvheadend.rootTabPanel
 		]
 	    });
-	    
+
+
 	    new tvheadend.comet_poller;
 	    Ext.QuickTips.init();
 	}

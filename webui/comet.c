@@ -132,6 +132,23 @@ comet_mailbox_create(void)
   return cmb;
 }
 
+/**
+ *
+ */
+static void
+comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
+{
+  htsmsg_t *m = htsmsg_create();
+
+  htsmsg_add_str(m, "notificationClass", "accessUpdate");
+
+  htsmsg_add_u32(m, "dvr",   !http_access_verify(hc, ACCESS_RECORDER));
+  htsmsg_add_u32(m, "admin", !http_access_verify(hc, ACCESS_ADMIN));
+
+  if(cmb->cmb_messages == NULL)
+    cmb->cmb_messages = htsmsg_create_array();
+  htsmsg_add_msg(cmb->cmb_messages, NULL, htsmsg_copy(m));
+}
 
 /**
  * Poll callback
@@ -154,9 +171,10 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
       if(!strcmp(cmb->cmb_boxid, cometid))
 	break;
     
-  if(cmb == NULL)
+  if(cmb == NULL) {
     cmb = comet_mailbox_create();
-
+    comet_access_update(hc, cmb);
+  }
   time(&reqtime);
 
   ts.tv_sec = reqtime + 10;

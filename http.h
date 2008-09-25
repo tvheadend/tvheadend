@@ -135,4 +135,6 @@ http_path_t *http_path_add(const char *path, void *opaque,
 
 void http_server_init(void);
 
+int http_access_verify(http_connection_t *hc, int mask);
+
 #endif /* HTTP_H_ */

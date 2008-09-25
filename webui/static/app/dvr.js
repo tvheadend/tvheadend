@@ -1,32 +1,8 @@
-tvheadend.dvrStore = new Ext.data.JsonStore({
-    root: 'entries',
-    totalProperty: 'totalCount',
-    fields: [
-	{name: 'id'},
-	{name: 'channel'},
-	{name: 'title'},
-	{name: 'description'},
-	{name: 'chicon'},
-        {name: 'start', type: 'date', dateFormat: 'U' /* unix time */},
-        {name: 'end', type: 'date', dateFormat: 'U' /* unix time */},
-	{name: 'status'},
-	{name: 'schedstate'},
-	{name: 'creator'},
-        {name: 'duration'},
-        {name: 'filesize'},
-        {name: 'url'},
-    ],
-    url: 'dvrlist',
-    autoLoad: true,
-    id: 'id',
-    remoteSort: true,
-});
+
 
 /**
  *
  */
-
-
 tvheadend.dvrDetails = function(entry) {
 
     var content = '';
@@ -196,19 +172,6 @@ tvheadend.dvrlog = function() {
 /**
  *
  */
-tvheadend.autorecRecord = Ext.data.Record.create([
-    'enabled','title','channel','tag','creator','contentgrp','comment'
-]);
-
-
-tvheadend.autorecStore = new Ext.data.JsonStore({
-    root: 'entries',
-    fields: tvheadend.autorecRecord,
-    url: "tablemgr",
-    autoLoad: true,
-    id: 'id',
-    baseParams: {table: "autorec", op: "get"}
-});
 
 
 /**
@@ -285,6 +248,46 @@ tvheadend.autoreceditor = function() {
  */
 tvheadend.dvr = function() {
 
+
+    tvheadend.dvrStore = new Ext.data.JsonStore({
+	root: 'entries',
+	totalProperty: 'totalCount',
+	fields: [
+	    {name: 'id'},
+	    {name: 'channel'},
+	    {name: 'title'},
+	    {name: 'description'},
+	    {name: 'chicon'},
+            {name: 'start', type: 'date', dateFormat: 'U' /* unix time */},
+            {name: 'end', type: 'date', dateFormat: 'U' /* unix time */},
+	    {name: 'status'},
+	    {name: 'schedstate'},
+	    {name: 'creator'},
+            {name: 'duration'},
+            {name: 'filesize'},
+            {name: 'url'},
+	],
+	url: 'dvrlist',
+	autoLoad: true,
+	id: 'id',
+	remoteSort: true,
+    });
+    
+    
+    tvheadend.autorecRecord = Ext.data.Record.create([
+	'enabled','title','channel','tag','creator','contentgrp','comment'
+    ]);
+    
+
+    tvheadend.autorecStore = new Ext.data.JsonStore({
+	root: 'entries',
+	fields: tvheadend.autorecRecord,
+	url: "tablemgr",
+	autoLoad: true,
+	id: 'id',
+	baseParams: {table: "autorec", op: "get"}
+    });
+    
     var panel = new Ext.TabPanel({
 	activeTab:0, 
 	autoScroll:true, 
@@ -293,7 +296,6 @@ tvheadend.dvr = function() {
 		new tvheadend.autoreceditor
 	       ]
     });
-
     return panel;
 }
 
