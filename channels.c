@@ -298,6 +298,7 @@ channels_load(void)
 	continue;
       channel_load_one(c, atoi(f->hmf_name));
     }
+    htsmsg_destroy(l);
   }
 }
 

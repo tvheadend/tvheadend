@@ -89,6 +89,7 @@ dtable_load(dtable_t *dt)
 	htsmsg_destroy(m);
       }
     }
+    htsmsg_destroy(l);
   }
   return records;
 }
