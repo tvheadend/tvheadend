@@ -19,34 +19,18 @@
 #ifndef HTSP_H_
 #define HTSP_H_
 
-#include <libhts/htsmsg_binary.h>
+#include "epg.h"
 
-#include "rpc.h"
-#include "tcp.h"
+void htsp_init(void);
 
-typedef struct htsp {
-  tcp_session_t htsp_tcp_session; /* Must be first */
+void htsp_event_update(channel_t *ch, event_t *e);
 
-  LIST_ENTRY(htsp) htsp_global_link;
+void htsp_channel_add(channel_t *ch);
+void htsp_channel_update(channel_t *ch);
+void htsp_channel_delete(channel_t *ch);
 
-  int htsp_bufsize;
-  int htsp_bufptr;
-  int htsp_msglen;
-  uint8_t *htsp_buf;
-
-  rpc_session_t htsp_rpc;
-
-  int htsp_async_init_sent;
-  int htsp_zombie;
-
-  struct th_subscription_list htsp_subscriptions;
-
-} htsp_t;
-
-void htsp_start(int port);
-
-int htsp_send_msg(htsp_t *htsp, htsmsg_t *m, int media);
-
-void htsp_async_channel_update(channel_t *ch);
+void htsp_tag_add(channel_tag_t *ct);
+void htsp_tag_update(channel_tag_t *ct);
+void htsp_tag_delete(channel_tag_t *ct);
 
 #endif /* HTSP_H_ */

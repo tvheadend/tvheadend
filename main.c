@@ -48,6 +48,7 @@
 #include "serviceprobe.h"
 #include "cwc.h"
 #include "dvr/dvr.h"
+#include "htsp.h"
 
 #include <libhts/htsparachute.h>
 #include <libhts/htssettings.h>
@@ -286,6 +287,8 @@ main(int argc, char **argv)
   epg_init();
 
   dvr_init();
+
+  htsp_init();
 
   pthread_mutex_unlock(&global_lock);
 

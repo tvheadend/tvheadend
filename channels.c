@@ -40,6 +40,7 @@
 #include "dtable.h"
 #include "notify.h"
 #include "dvr/dvr.h"
+#include "htsp.h"
 
 struct channel_list channels_not_xmltv_mapped;
 
@@ -186,6 +187,8 @@ channel_create(const char *name)
     if(xc->xc_icon != NULL)
       channel_set_icon(ch, xc->xc_icon);
   }
+
+  htsp_channel_add(ch);
   return ch;
 }
 
@@ -365,6 +368,7 @@ channel_rename(channel_t *ch, const char *newname)
   }
 
   channel_save(ch);
+  htsp_channel_update(ch);
   return 0;
 }
 
@@ -379,6 +383,8 @@ channel_delete(channel_t *ch)
   channel_tag_mapping_t *ctm;
 
   lock_assert(&global_lock);
+
+  htsp_channel_delete(ch);
 
   while((ctm = LIST_FIRST(&ch->ch_ctms)) != NULL)
     channel_tag_mapping_destroy(ctm);
@@ -462,6 +468,7 @@ channel_set_icon(channel_t *ch, const char *icon)
   free(ch->ch_icon);
   ch->ch_icon = strdup(icon);
   channel_save(ch);
+  htsp_channel_update(ch);
 }
 
 
@@ -583,6 +590,9 @@ channel_tag_map(channel_t *ch, channel_tag_t *ct, int check)
   LIST_INSERT_HEAD(&ct->ct_ctms, ctm, ctm_tag_link);
 
   ctm->ctm_mark = 0;
+
+  if(ct->ct_enabled && !ct->ct_internal)
+    htsp_tag_update(ct);
 }
 
 
@@ -592,9 +602,13 @@ channel_tag_map(channel_t *ch, channel_tag_t *ct, int check)
 static void
 channel_tag_mapping_destroy(channel_tag_mapping_t *ctm)
 {
+  channel_tag_t *ct = ctm->ctm_tag;
   LIST_REMOVE(ctm, ctm_channel_link);
   LIST_REMOVE(ctm, ctm_tag_link);
   free(ctm);
+
+  if(ct->ct_enabled && !ct->ct_internal)
+    htsp_tag_update(ct);
 }
 
 
@@ -662,6 +676,9 @@ channel_tag_destroy(channel_tag_t *ct)
     channel_tag_mapping_destroy(ctm);
     channel_save(ch);
   }
+
+  if(ct->ct_enabled && !ct->ct_internal)
+    htsp_tag_delete(ct);
 
   free(ct->ct_identifier);
   free(ct->ct_name);
@@ -737,6 +754,7 @@ channel_tag_record_update(void *opaque, const char *id, htsmsg_t *values,
 {
   channel_tag_t *ct;
   uint32_t u32;
+  int was_exposed, is_exposed;
 
   if((ct = channel_tag_find(id, maycreate)) == NULL)
     return NULL;
@@ -744,13 +762,28 @@ channel_tag_record_update(void *opaque, const char *id, htsmsg_t *values,
   tvh_str_update(&ct->ct_name,    htsmsg_get_str(values, "name"));
   tvh_str_update(&ct->ct_comment, htsmsg_get_str(values, "comment"));
 
- if(!htsmsg_get_u32(values, "enabled", &u32))
+  was_exposed = ct->ct_enabled && !ct->ct_internal;
+
+  if(!htsmsg_get_u32(values, "enabled", &u32))
     ct->ct_enabled = u32;
 
- if(!htsmsg_get_u32(values, "internal", &u32))
+  if(!htsmsg_get_u32(values, "internal", &u32))
     ct->ct_internal = u32;
 
- return channel_tag_record_build(ct);
+  is_exposed = ct->ct_enabled && !ct->ct_internal;
+
+  /* We only export tags to HTSP if enabled == true and internal == false,
+     thus, it's not as simple as just sending updates here.
+     Depending on how the flags transition we add update or delete tags */
+
+  if(was_exposed == 0 && is_exposed == 1)
+    htsp_tag_add(ct);
+  else if(was_exposed == 1 && is_exposed == 1)
+    htsp_tag_update(ct);
+  else if(was_exposed == 1 && is_exposed == 0)
+    htsp_tag_delete(ct);
+
+  return channel_tag_record_build(ct);
 }
 
 

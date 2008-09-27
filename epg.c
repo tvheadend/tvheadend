@@ -27,6 +27,7 @@
 #include "channels.h"
 #include "epg.h"
 #include "dvr/dvr.h"
+#include "htsp.h"
 
 #define EPG_MAX_AGE 86400
 
@@ -56,6 +57,7 @@ epg_set_current(channel_t *ch, event_t *e)
   if(e != NULL)
     dvr_autorec_check(e);
 
+  htsp_event_update(ch, e);
 }
 
 

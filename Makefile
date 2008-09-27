@@ -7,6 +7,8 @@ SRCS += packet.c streaming.c
 VPATH += dvr
 SRCS += dvr_db.c dvr_rec.c dvr_autorec.c
 
+SRCS += htsp.c
+
 SRCS += channels.c subscriptions.c transports.c
 
 SRCS += psi.c parsers.c parser_h264.c tsdemux.c bitstream.c
