@@ -147,7 +147,7 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
 
   if(cmb->cmb_messages == NULL)
     cmb->cmb_messages = htsmsg_create_array();
-  htsmsg_add_msg(cmb->cmb_messages, NULL, htsmsg_copy(m));
+  htsmsg_add_msg(cmb->cmb_messages, NULL, m);
 }
 
 /**
