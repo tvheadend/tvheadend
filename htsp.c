@@ -216,21 +216,6 @@ htsp_send_message(htsp_connection_t *htsp, htsmsg_t *m, htsp_msg_q_t *hmq)
   htsp_send(htsp, m, NULL, hmq ?: &htsp->htsp_hmq_ctrl);
 }
 
-#if 0
-/**
- *
- */
-static void
-htsp_send_message(htsp_connection_t *htsp, htsmsg_t *m, int queue)
-{
-  htsp_msg_q_t *hm = malloc(sizeof(htsp_msg_q_t));
-
-  hm->hm_msg = m;
-  hm->hm_pktref = NULL;
-  
-
-}
-#endif
 
 /**
  *
