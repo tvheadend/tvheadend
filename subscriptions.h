@@ -56,6 +56,8 @@ typedef struct th_subscription {
 
   int ths_force_demux;
 
+  streaming_target_t *ths_st;
+
 } th_subscription_t;
 
 
