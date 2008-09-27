@@ -410,7 +410,7 @@ dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp)
 
   /* Link to the pad */
   
-  streaming_target_init(&de->de_st);
+  streaming_target_init(&de->de_st, NULL, NULL);
   streaming_target_connect(sp, &de->de_st);
   de->de_st.st_status = ST_RUNNING;
   de->de_fctx = fctx;

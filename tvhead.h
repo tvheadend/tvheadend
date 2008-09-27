@@ -142,8 +142,15 @@ typedef struct streaming_component {
 
 /**
  * A streaming pad generates data.
+ * It has one or more streaming targets attached to it.
  *
- * It has one or more streaming_targets attached to it
+ * We support two different streaming target types:
+ * One is callback driven and the other uses a queue + thread.
+ *
+ * Targets which already has a queueing intrastructure in place (such
+ * as HTSP) does not need any interim queues so it would be a waste. That
+ * is why we have the callback target.
+ *
  */
 typedef struct streaming_pad {
   struct streaming_target_list sp_targets;
@@ -152,13 +159,17 @@ typedef struct streaming_pad {
 
   pthread_mutex_t *sp_mutex; /* Mutex for protecting modification of
 				st_targets and delivery.
-				This needs to be created elsewhere */
+				This needs to be created elsewhere.
+				The mutex also protect sp_comonents */
 } streaming_pad_t;
 
 
 /**
- * A streaming target receives data
+ * A streaming target receives data.
  */
+struct th_pktref;
+typedef void (st_callback_t)(void *opauqe, struct th_pktref *pr);
+
 typedef struct streaming_target {
   LIST_ENTRY(streaming_target) st_link;
   streaming_pad_t *st_pad;               /* Source we are linked to */
@@ -176,6 +187,9 @@ typedef struct streaming_target {
     ST_ZOMBIE,
   } st_status;
 
+  /* Callback driven delivery */
+  st_callback_t *st_cb;
+  void *st_opaque;
 
 } streaming_target_t;
 
