@@ -63,6 +63,7 @@ static xmltv_grabber_t *xg_current;
 
 
 uint32_t xmltv_grab_interval;
+uint32_t xmltv_grab_enabled;
 
 /* xmltv_channels is protected by global_lock */
 static struct xmltv_channel_tree xmltv_channels;
@@ -473,13 +474,16 @@ xmltv_thread(void *aux)
 
     while(confver == xmltv_confver) {
 
-      if(xg_current == NULL) {
+      if(xg_current == NULL || !xmltv_grab_enabled) {
 	pthread_cond_wait(&xmltv_cond, &xmltv_mutex);
 	continue;
       }
       if(pthread_cond_timedwait(&xmltv_cond, &xmltv_mutex, &ts) == ETIMEDOUT)
 	break;
     }
+
+    if(xmltv_grab_enabled == 0)
+      continue;
 
     ts.tv_sec = time(NULL) + xmltv_grab_interval * 3600;
 
@@ -512,6 +516,7 @@ xmltv_init(void)
 {
   pthread_t ptid;
   xmltv_grab_interval = 12; /* Default half a day */
+  xmltv_grab_enabled  = 1;  /* Default on */
 
   /* Load all channels */
   xmltv_load();
@@ -735,6 +740,7 @@ xmltv_grabbers_load(void)
     return;
 
   htsmsg_get_u32(m, "grab-interval", &xmltv_grab_interval);
+  htsmsg_get_u32(m, "grab-enabled", &xmltv_grab_enabled);
 
   if((l = htsmsg_get_array(m, "grabbers")) != NULL) {
 
@@ -794,6 +800,7 @@ xmltv_grabbers_save(void)
   htsmsg_add_msg(m, "grabbers", array);
 
   htsmsg_add_u32(m, "grab-interval", xmltv_grab_interval);
+  htsmsg_add_u32(m, "grab-enabled", xmltv_grab_enabled);
   if(xg_current != NULL)
     htsmsg_add_str(m, "current-grabber", xg_current->xg_path);
 
@@ -884,4 +891,18 @@ xmltv_set_grab_interval(int s)
   pthread_cond_signal(&xmltv_cond);
   xmltv_grabbers_save();
 
+}
+
+/**
+ *
+ */
+void
+xmltv_set_grab_enable(int on)
+{
+  lock_assert(&xmltv_mutex);
+
+  xmltv_grab_enabled = on;
+  xmltv_confver++;
+  pthread_cond_signal(&xmltv_cond);
+  xmltv_grabbers_save();
 }

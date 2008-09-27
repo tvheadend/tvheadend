@@ -51,9 +51,11 @@ htsmsg_t *xmltv_list_grabbers(void);
 const char *xmltv_get_current_grabber(void);
 void xmltv_set_current_grabber(const char *path);
 void xmltv_set_grab_interval(int s);
+void xmltv_set_grab_enable(int on);
 
 extern struct xmltv_channel_list xmltv_displaylist;
 extern uint32_t xmltv_grab_interval;
+extern uint32_t xmltv_grab_enabled;
 extern pthread_mutex_t xmltv_mutex;
 
 #endif /* EPG_XMLTV_H__ */

@@ -795,6 +795,7 @@ extjs_xmltv(http_connection_t *hc, const char *remain, void *opaque)
       htsmsg_add_str(r, "grabber", s);
 
     htsmsg_add_u32(r, "grabinterval", xmltv_grab_interval);
+    htsmsg_add_u32(r, "grabenable", xmltv_grab_enabled);
     pthread_mutex_unlock(&xmltv_mutex);
 
     out = json_single_record(r, "xmltvSettings");
@@ -808,6 +809,9 @@ extjs_xmltv(http_connection_t *hc, const char *remain, void *opaque)
 
     s = http_arg_get(&hc->hc_req_args, "grabinterval");
     xmltv_set_grab_interval(atoi(s));
+
+    s = http_arg_get(&hc->hc_req_args, "grabenable");
+    xmltv_set_grab_enable(!!s);
 
     pthread_mutex_unlock(&xmltv_mutex);
 

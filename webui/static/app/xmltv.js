@@ -79,7 +79,7 @@ tvheadend.xmltv = function() {
 
     var confreader = new Ext.data.JsonReader({
 	root: 'xmltvSettings',
-    }, ['grabber','grabinterval']);
+    }, ['grabber','grabinterval','grabenable']);
 
     var grabberSelect = new Ext.form.ComboBox({
 	loadingText: 'Loading, please wait...',
@@ -115,6 +115,9 @@ tvheadend.xmltv = function() {
 		maxValue: 100,
 		fieldLabel: 'Grab interval (hours)',
 		name: 'grabinterval'
+	    }), new Ext.form.Checkbox({
+		fieldLabel: 'Enable grabbing',
+		name: 'grabenable'
 	    })
 	],
 	tbar: [{
