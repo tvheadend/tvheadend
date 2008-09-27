@@ -603,6 +603,8 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
 	     (float)ctx->time_base.den / (float)ctx->time_base.num);
       
       drs->drs_decoded = 1;
+      
+      st->sample_aspect_ratio = st->codec->sample_aspect_ratio;
     }
     
     if(!is_all_decoded(de, CODEC_TYPE_VIDEO))
