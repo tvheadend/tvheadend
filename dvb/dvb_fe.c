@@ -232,7 +232,6 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi)
   }
 
   tda->tda_fe_monitor_hold = 3;
-  printf("Tuned to %s\n", tdmi->tdmi_identifier);
   r = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, &p);
   if(r != 0) {
     dvb_mux_nicename(buf, sizeof(buf), tdmi);
