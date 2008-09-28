@@ -100,19 +100,17 @@ dvb_fe_monitor(void *aux)
   else
     status = TDMI_FE_NO_SIGNAL;
 
-  if(tdmi->tdmi_fe_status == TDMI_FE_UNKNOWN) {
-    /* Previously unknown */
+  if(tda->tda_fe_monitor_hold > 0) {
+    /* Post tuning threshold */
     
-    if(status == -1) /* We have a lock, don't hold off */
+    if(status == -1) { /* We have a lock, don't hold off */
       tda->tda_fe_monitor_hold = 0; 
-
-    if(tda->tda_fe_monitor_hold > 0) {
+      /* Reset FEC counter */
+      ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &fec);
+    } else {
       tda->tda_fe_monitor_hold--;
       return;
     }
-
-    /* Reset FEC counter */
-    ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &fec);
   }
 
   if(status == -1) {
@@ -232,7 +230,9 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi)
     else
       p.frequency = abs(p.frequency - lowfreq);
   }
- 
+
+  tda->tda_fe_monitor_hold = 3;
+  printf("Tuned to %s\n", tdmi->tdmi_identifier);
   r = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, &p);
   if(r != 0) {
     dvb_mux_nicename(buf, sizeof(buf), tdmi);
