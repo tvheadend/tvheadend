@@ -279,6 +279,7 @@ dvr_db_load(void)
 	continue;
       dvr_db_load_one(c, atoi(f->hmf_name));
     }
+    htsmsg_destroy(l);
   }
 }
 
