@@ -591,10 +591,11 @@ htsp_write_scheduler(void *aux)
 
     r = htsmsg_binary_serialize(hm->hm_msg, &dptr, &dlen, INT32_MAX);
 
+#if 0   
     if(hm->hm_pktref) {
       usleep(hm->hm_payloadsize * 3);
     }
-
+#endif
     htsp_msg_destroy(hm);
     
     write(htsp->htsp_fd, dptr, dlen);
