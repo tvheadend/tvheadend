@@ -211,10 +211,11 @@ htsp_send(htsp_connection_t *htsp, htsmsg_t *m, th_pktref_t *pkt,
   if(hmq->hmq_length == 0) {
     /* Activate queue */
 
-    if(hmq->hmq_strict_prio) 
+    if(hmq->hmq_strict_prio) {
       TAILQ_INSERT_HEAD(&htsp->htsp_active_output_queues, hmq, hmq_link);
-    else
+    } else {
       TAILQ_INSERT_TAIL(&htsp->htsp_active_output_queues, hmq, hmq_link);
+    }
   }
 
   hmq->hmq_length++;
@@ -581,10 +582,11 @@ htsp_write_scheduler(void *aux)
     TAILQ_REMOVE(&htsp->htsp_active_output_queues, hmq, hmq_link);
     if(hmq->hmq_length) {
       /* Still messages to be sent, put back in active queues */
-      if(hmq->hmq_strict_prio) 
+      if(hmq->hmq_strict_prio) {
 	TAILQ_INSERT_HEAD(&htsp->htsp_active_output_queues, hmq, hmq_link);
-      else
+      } else {
 	TAILQ_INSERT_TAIL(&htsp->htsp_active_output_queues, hmq, hmq_link);
+      }
     }
 
     pthread_mutex_unlock(&htsp->htsp_out_mutex);
@@ -807,6 +809,11 @@ htsp_send_subscription_status(htsp_connection_t *htsp, channel_t *ch,
   htsp_send_message(htsp, m, NULL);
 }
 
+const static char frametypearray[PKT_NTYPES] = {
+  [PKT_I_FRAME] = 'I',
+  [PKT_P_FRAME] = 'P',
+  [PKT_B_FRAME] = 'B',
+};
 
 /**
  * Build a htsmsg from a th_pkt and enqueue it on our HTSP transport
@@ -836,6 +843,7 @@ htsp_stream_deliver(void *opaque, struct th_pktref *pr)
  
   htsmsg_add_str(m, "method", "muxpkt");
   htsmsg_add_u32(m, "channelId", hs->hs_channelid);
+  htsmsg_add_u32(m, "frametype", frametypearray[pkt->pkt_frametype]);
 
   htsmsg_add_u64(m, "stream", pkt->pkt_componentindex);
   htsmsg_add_u64(m, "dts", pkt->pkt_dts);
