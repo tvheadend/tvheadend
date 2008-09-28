@@ -26,6 +26,7 @@
 #define PKT_I_FRAME 1
 #define PKT_P_FRAME 2
 #define PKT_B_FRAME 3
+#define PKT_NTYPES  4 
 
 typedef struct th_pkt {
   int64_t pkt_dts;
