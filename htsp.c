@@ -591,7 +591,7 @@ htsp_write_scheduler(void *aux)
 
     r = htsmsg_binary_serialize(hm->hm_msg, &dptr, &dlen, INT32_MAX);
 
-#if 0   
+#if 0
     if(hm->hm_pktref) {
       usleep(hm->hm_payloadsize * 3);
     }
@@ -866,9 +866,12 @@ htsp_stream_deliver(void *opaque, struct th_pktref *pr)
      */
     
     pthread_mutex_lock(&htsp->htsp_out_mutex);
-    if((hm = TAILQ_FIRST(&hs->hs_q.hmq_q)) != NULL &&
-       (n = hm->hm_msg) != NULL && !htsmsg_get_u64(n, "dts", &ts) &&
-       pkt->pkt_dts != AV_NOPTS_VALUE && ts != AV_NOPTS_VALUE) {
+
+    if(TAILQ_FIRST(&hs->hs_q.hmq_q) == NULL) {
+      htsmsg_add_u64(m, "delay", 0);
+    } else if((hm = TAILQ_FIRST(&hs->hs_q.hmq_q)) != NULL &&
+	      (n = hm->hm_msg) != NULL && !htsmsg_get_u64(n, "dts", &ts) &&
+	      pkt->pkt_dts != AV_NOPTS_VALUE && ts != AV_NOPTS_VALUE) {
       htsmsg_add_u64(m, "delay", pkt->pkt_dts - ts);
     }
     pthread_mutex_unlock(&htsp->htsp_out_mutex);
