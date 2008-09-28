@@ -252,6 +252,8 @@ htsp_build_tag(channel_tag_t *ct, const char *method)
   htsmsg_add_str(out, "tagId", ct->ct_identifier);
 
   htsmsg_add_str(out, "tagName", ct->ct_name);
+  htsmsg_add_str(out, "tagIcon", ct->ct_icon);
+  htsmsg_add_u32(out, "tagTitledIcon", ct->ct_titled_icon);
 
   LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
     htsmsg_add_u32(members, NULL, ctm->ctm_channel->ch_id);

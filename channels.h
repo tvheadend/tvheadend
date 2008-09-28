@@ -78,8 +78,10 @@ typedef struct channel_tag {
   TAILQ_ENTRY(channel_tag) ct_link;
   int ct_enabled;
   int ct_internal;
+  int ct_titled_icon;
   char *ct_name;
   char *ct_comment;
+  char *ct_icon;
   char *ct_identifier;
   struct channel_tag_mapping_list ct_ctms;
 

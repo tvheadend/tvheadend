@@ -14,6 +14,15 @@ tvheadend.cteditor = function() {
        width: 100
     });
 
+    var titledIconColumn = new Ext.grid.CheckColumn({
+       header: "Icon has title",
+       dataIndex: 'titledIcon',
+       width: 100,
+	tooltip: 'Set this if the supplied icon has a title embedded. ' +
+	    'This will tell displaying application not to superimpose title '+
+	    'on top of logo.'
+    });
+
 
     var cm = new Ext.grid.ColumnModel([
 	enabledColumn,
@@ -24,6 +33,13 @@ tvheadend.cteditor = function() {
 	},
 	internalColumn,
 	{
+	    header: "Icon (full URL)",
+	    dataIndex: 'icon',
+	    width: 400,
+	    editor: new fm.TextField({})
+	},
+	titledIconColumn,
+	{
 	    header: "Comment",
 	    dataIndex: 'comment',
 	    width: 400,
@@ -32,10 +48,11 @@ tvheadend.cteditor = function() {
     ]);
     
     var ChannelTagRecord = Ext.data.Record.create([
-	'enabled','name','internal','comment'
+	'enabled','name','internal','icon','comment','titledIcon'
     ]);
     
     return new tvheadend.tableEditor('Channel Tags', 'channeltags', cm,
 				     ChannelTagRecord,
-				     [enabledColumn, internalColumn]);
+				     [enabledColumn, internalColumn,
+				     titledIconColumn]);
 }

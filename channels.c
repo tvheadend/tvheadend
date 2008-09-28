@@ -643,6 +643,7 @@ channel_tag_find(const char *id, int create)
   ct->ct_identifier = strdup(id);
   ct->ct_name = strdup("New tag");
   ct->ct_comment = strdup("");
+  ct->ct_icon = strdup("");
   TAILQ_INSERT_TAIL(&channel_tags, ct, ct_link);
   return ct;
 }
@@ -683,6 +684,7 @@ channel_tag_destroy(channel_tag_t *ct)
   free(ct->ct_identifier);
   free(ct->ct_name);
   free(ct->ct_comment);
+  free(ct->ct_icon);
   TAILQ_REMOVE(&channel_tags, ct, ct_link);
   free(ct);
 }
@@ -697,9 +699,11 @@ channel_tag_record_build(channel_tag_t *ct)
   htsmsg_t *e = htsmsg_create();
   htsmsg_add_u32(e, "enabled",  !!ct->ct_enabled);
   htsmsg_add_u32(e, "internal",  !!ct->ct_internal);
+  htsmsg_add_u32(e, "titledIcon",  !!ct->ct_titled_icon);
 
   htsmsg_add_str(e, "name", ct->ct_name);
   htsmsg_add_str(e, "comment", ct->ct_comment);
+  htsmsg_add_str(e, "icon", ct->ct_icon);
   htsmsg_add_str(e, "id", ct->ct_identifier);
   return e;
 }
@@ -761,6 +765,10 @@ channel_tag_record_update(void *opaque, const char *id, htsmsg_t *values,
 
   tvh_str_update(&ct->ct_name,    htsmsg_get_str(values, "name"));
   tvh_str_update(&ct->ct_comment, htsmsg_get_str(values, "comment"));
+  tvh_str_update(&ct->ct_icon,    htsmsg_get_str(values, "icon"));
+
+  if(!htsmsg_get_u32(values, "titledIcon", &u32))
+    ct->ct_titled_icon = u32;
 
   was_exposed = ct->ct_enabled && !ct->ct_internal;
 
