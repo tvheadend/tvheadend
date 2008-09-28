@@ -56,6 +56,8 @@ typedef struct htsp_msg {
   TAILQ_ENTRY(htsp_msg) hm_link;
 
   htsmsg_t *hm_msg;
+  int hm_payloadsize;         /* For maintaining stats about streaming
+				 buffer depth */
 
   th_pktref_t *hm_pktref;     /* For keeping reference to packet.
 				 hm_msg can contain messages that points
@@ -72,6 +74,7 @@ typedef struct htsp_msg_q {
 
   TAILQ_ENTRY(htsp_msg_q) hmq_link;
   int hmq_length;
+  int hmq_payload;          /* Bytes of streaming payload that's enqueued */
 } htsp_msg_q_t;
 
 
@@ -186,12 +189,13 @@ htsp_destroy_queue(htsp_connection_t *htsp, htsp_msg_q_t *hmq)
  */
 static void
 htsp_send(htsp_connection_t *htsp, htsmsg_t *m, th_pktref_t *pkt,
-	  htsp_msg_q_t *hmq)
+	  htsp_msg_q_t *hmq, int payloadsize)
 {
   htsp_msg_t *hm = malloc(sizeof(htsp_msg_t));
 
   hm->hm_msg = m;
   hm->hm_pktref = pkt;
+  hm->hm_payloadsize = payloadsize;
   
   pthread_mutex_lock(&htsp->htsp_out_mutex);
 
@@ -203,6 +207,7 @@ htsp_send(htsp_connection_t *htsp, htsmsg_t *m, th_pktref_t *pkt,
   }
 
   hmq->hmq_length++;
+  hmq->hmq_payload += payloadsize;
   pthread_cond_signal(&htsp->htsp_out_cond);
   pthread_mutex_unlock(&htsp->htsp_out_mutex);
 }
@@ -213,7 +218,7 @@ htsp_send(htsp_connection_t *htsp, htsmsg_t *m, th_pktref_t *pkt,
 static void
 htsp_send_message(htsp_connection_t *htsp, htsmsg_t *m, htsp_msg_q_t *hmq)
 {
-  htsp_send(htsp, m, NULL, hmq ?: &htsp->htsp_hmq_ctrl);
+  htsp_send(htsp, m, NULL, hmq ?: &htsp->htsp_hmq_ctrl, 0);
 }
 
 
@@ -560,6 +565,7 @@ htsp_write_scheduler(void *aux)
     hm = TAILQ_FIRST(&hmq->hmq_q);
     TAILQ_REMOVE(&hmq->hmq_q, hm, hm_link);
     hmq->hmq_length--;
+    hmq->hmq_payload -= hm->hm_payloadsize;
 
     TAILQ_REMOVE(&htsp->htsp_active_output_queues, hmq, hmq_link);
     if(hmq->hmq_length) {
@@ -806,8 +812,7 @@ htsp_stream_deliver(void *opaque, struct th_pktref *pr)
    * object that just points to data, thus avoiding a copy.
    */
   htsmsg_add_binptr(m, "payload", pkt->pkt_payload, pkt->pkt_payloadlen);
-
-  htsp_send(hs->hs_htsp, m, pr, &hs->hs_q);
+  htsp_send(hs->hs_htsp, m, pr, &hs->hs_q, pkt->pkt_payloadlen);
 }
 
 
@@ -855,7 +860,7 @@ htsp_subscription_start(htsp_connection_t *htsp, th_subscription_t *s,
 
   htsmsg_add_msg(m, "streams", streams);
 
-  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q);
+  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
 
   /* Link to the pad */
   streaming_target_connect(sp, &hs->hs_st);
