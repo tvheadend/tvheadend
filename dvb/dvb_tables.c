@@ -73,6 +73,7 @@ typedef struct th_dvb_table {
 static void
 dvb_table_fastswitch(th_dvb_mux_instance_t *tdmi)
 {
+#if 0
   th_dvb_table_t *tdt;
 
   if(tdmi->tdmi_quickscan == TDMI_QUICKSCAN_NONE)
@@ -84,6 +85,7 @@ dvb_table_fastswitch(th_dvb_mux_instance_t *tdmi)
 
   tdmi->tdmi_quickscan = TDMI_QUICKSCAN_NONE;
   dvb_adapter_mux_scanner(tdmi->tdmi_adapter);
+#endif
 }
 
 

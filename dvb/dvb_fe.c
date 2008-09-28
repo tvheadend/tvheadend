@@ -102,7 +102,6 @@ dvb_fe_monitor(void *aux)
 
   if(tda->tda_fe_monitor_hold > 0) {
     /* Post tuning threshold */
-    
     if(status == -1) { /* We have a lock, don't hold off */
       tda->tda_fe_monitor_hold = 0; 
       /* Reset FEC counter */
@@ -174,9 +173,20 @@ dvb_fe_monitor(void *aux)
 void
 dvb_fe_stop(th_dvb_mux_instance_t *tdmi)
 {
-  tdmi->tdmi_adapter->tda_mux_current = NULL;
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  tda->tda_mux_current = NULL;
 
   dvb_table_flush_all(tdmi);
+
+  if(tdmi->tdmi_scan_queue != NULL)
+    TAILQ_REMOVE(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
+
+  if(tdmi->tdmi_quality == 100) {
+    tdmi->tdmi_scan_queue = &tda->tda_scan_queues[DVB_MUX_SCAN_OK];
+  } else {
+    tdmi->tdmi_scan_queue = &tda->tda_scan_queues[DVB_MUX_SCAN_BAD];
+  }
+  TAILQ_INSERT_TAIL(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
 
   time(&tdmi->tdmi_lost_adapter);
 }
@@ -231,7 +241,7 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi)
       p.frequency = abs(p.frequency - lowfreq);
   }
 
-  tda->tda_fe_monitor_hold = 3;
+  tda->tda_fe_monitor_hold = 4;
   r = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, &p);
   if(r != 0) {
     dvb_mux_nicename(buf, sizeof(buf), tdmi);

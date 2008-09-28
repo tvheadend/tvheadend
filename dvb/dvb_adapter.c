@@ -54,8 +54,12 @@ static void *dvb_adapter_input_dvr(void *aux);
 static th_dvb_adapter_t *
 tda_alloc(void)
 {
+  int i;
   th_dvb_adapter_t *tda = calloc(1, sizeof(th_dvb_adapter_t));
   pthread_mutex_init(&tda->tda_delivery_mutex, NULL);
+
+  for(i = 0; i < 3; i++)
+    TAILQ_INIT(&tda->tda_scan_queues[i]);
   return tda;
 }
 
@@ -353,6 +357,7 @@ dvb_adapter_mux_scanner(void *aux)
 {
   th_dvb_adapter_t *tda = aux;
   th_dvb_mux_instance_t *tdmi;
+  int i;
 
   gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 10);
 
@@ -360,29 +365,31 @@ dvb_adapter_mux_scanner(void *aux)
     return; /* someone is here */
 
   /* Check if we have muxes pending for quickscan, if so, choose them */
+  tdmi = TAILQ_FIRST(&tda->tda_scan_queues[DVB_MUX_SCAN_INITIAL]);
 
-  if((tdmi = RB_FIRST(&tda->tda_muxes_qscan_waiting)) != NULL) {
-    RB_REMOVE(&tda->tda_muxes_qscan_waiting, tdmi, tdmi_qscan_link);
-    tdmi->tdmi_quickscan = TDMI_QUICKSCAN_RUNNING;
-    dvb_fe_tune(tdmi);
-    return;
+  /* If not, alternate between the other two (bad and OK) */
+  if(tdmi == NULL) {
+    for(i = 0; i < 2; i++) {
+      tda->tda_scan_selector = !tda->tda_scan_selector;
+      tdmi = TAILQ_FIRST(&tda->tda_scan_queues[tda->tda_scan_selector]);
+      if(tdmi != NULL) {
+	assert(tdmi->tdmi_scan_queue == 
+	       &tda->tda_scan_queues[tda->tda_scan_selector]);
+	break;
+      }
+    }
+  } else {
+    assert(tdmi->tdmi_scan_queue == 
+	   &tda->tda_scan_queues[DVB_MUX_SCAN_INITIAL]);
   }
 
-  /* otherwise, just rotate */
-
-  tdmi = tda->tda_mux_current;
-  if(tdmi != NULL)
-    tdmi->tdmi_quickscan = TDMI_QUICKSCAN_NONE;
-
-  tdmi = tdmi != NULL ? RB_NEXT(tdmi, tdmi_adapter_link) : NULL;
-  tdmi = tdmi != NULL ? tdmi : RB_FIRST(&tda->tda_muxes);
-
-  if(tdmi == NULL)
-    return; /* no instances */
-
-  dvb_fe_tune(tdmi);
+  if(tdmi != NULL) {
+    /* Push to tail of queue */
+    TAILQ_REMOVE(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
+    TAILQ_INSERT_TAIL(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
+    dvb_fe_tune(tdmi);
+  }
 }
-
 
 /**
  * 

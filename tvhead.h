@@ -98,6 +98,7 @@ LIST_HEAD(th_transport_list, th_transport);
 RB_HEAD(th_transport_tree, th_transport);
 TAILQ_HEAD(th_transport_queue, th_transport);
 RB_HEAD(th_dvb_mux_instance_tree, th_dvb_mux_instance);
+TAILQ_HEAD(th_dvb_mux_instance_queue, th_dvb_mux_instance);
 LIST_HEAD(th_stream_list, th_stream);
 LIST_HEAD(th_muxer_list, th_muxer);
 LIST_HEAD(th_muxstream_list, th_muxstream);
@@ -229,15 +230,9 @@ typedef struct th_v4l_adapter {
  */
 typedef struct th_dvb_mux_instance {
 
-  enum {
-    TDMI_QUICKSCAN_NONE,
-    TDMI_QUICKSCAN_RUNNING,
-    TDMI_QUICKSCAN_WAITING,
-  } tdmi_quickscan;
-
   RB_ENTRY(th_dvb_mux_instance) tdmi_global_link;
   RB_ENTRY(th_dvb_mux_instance) tdmi_adapter_link;
-  RB_ENTRY(th_dvb_mux_instance) tdmi_qscan_link;
+
 
   struct th_dvb_adapter *tdmi_adapter;
 
@@ -277,8 +272,17 @@ typedef struct th_dvb_mux_instance {
 
   struct th_transport_list tdmi_transports; /* via tht_mux_link */
 
+
+  TAILQ_ENTRY(th_dvb_mux_instance) tdmi_scan_link;
+  struct th_dvb_mux_instance_queue *tdmi_scan_queue;
+
 } th_dvb_mux_instance_t;
 
+
+#define DVB_MUX_SCAN_BAD 0      /* On the bad queue */
+#define DVB_MUX_SCAN_OK  1      /* Ok, don't need to scan that often */
+#define DVB_MUX_SCAN_INITIAL 2  /* To get a scan directly when a mux
+				   is discovered */
 
 /*
  * DVB Adapter (one of these per physical adapter)
@@ -288,7 +292,13 @@ typedef struct th_dvb_adapter {
   TAILQ_ENTRY(th_dvb_adapter) tda_global_link;
 
   struct th_dvb_mux_instance_tree tda_muxes;
-  struct th_dvb_mux_instance_tree tda_muxes_qscan_waiting;
+
+  /**
+   * We keep our muxes on three queues in order to select how
+   * they are to be idle-scanned
+   */
+  struct th_dvb_mux_instance_queue tda_scan_queues[3];
+  int tda_scan_selector;  /* To alternate between bad and ok queue */
 
   th_dvb_mux_instance_t *tda_mux_current;
 

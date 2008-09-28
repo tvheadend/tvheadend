@@ -125,10 +125,8 @@ dvb_mux_create(th_dvb_adapter_t *tda, struct dvb_frontend_parameters *fe_param,
   tdmi = skel;
   skel = NULL;
 
-  RB_INSERT_SORTED(&tda->tda_muxes_qscan_waiting, tdmi, tdmi_qscan_link,
-		   tdmi_cmp);
-
-  tdmi->tdmi_quickscan = TDMI_QUICKSCAN_WAITING;
+  tdmi->tdmi_scan_queue = &tda->tda_scan_queues[DVB_MUX_SCAN_INITIAL];
+  TAILQ_INSERT_TAIL(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
 
   tdmi->tdmi_transport_stream_id = tsid;
   tdmi->tdmi_adapter = tda;
@@ -192,8 +190,8 @@ dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
   RB_REMOVE(&dvb_muxes, tdmi, tdmi_global_link);
   RB_REMOVE(&tda->tda_muxes, tdmi, tdmi_adapter_link);
 
-  if(tdmi->tdmi_quickscan == TDMI_QUICKSCAN_WAITING)
-    RB_REMOVE(&tda->tda_muxes_qscan_waiting, tdmi, tdmi_qscan_link);
+  if(tdmi->tdmi_scan_queue != NULL)
+    TAILQ_REMOVE(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
 
   hts_settings_remove("dvbmuxes/%s", tdmi->tdmi_identifier);
 
@@ -459,11 +457,24 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m)
   tdmi = dvb_mux_create(tda, &f, polarisation, switchport,
 			tsid, htsmsg_get_str(m, "network"), NULL);
   if(tdmi != NULL) {
+
     if((s = htsmsg_get_str(m, "status")) != NULL)
       tdmi->tdmi_fe_status = str2val(s, muxfestatustab);
 
-    if(!htsmsg_get_u32(m, "quality", &u32)) 
+    if(!htsmsg_get_u32(m, "quality", &u32)) {
       tdmi->tdmi_quality = u32;
+
+      if(tdmi->tdmi_scan_queue != NULL)
+	TAILQ_REMOVE(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
+
+      if(tdmi->tdmi_quality == 100) {
+	tdmi->tdmi_scan_queue = &tda->tda_scan_queues[DVB_MUX_SCAN_OK];
+      } else {
+	tdmi->tdmi_scan_queue = &tda->tda_scan_queues[DVB_MUX_SCAN_BAD];
+      }
+      TAILQ_INSERT_TAIL(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
+    }
+
   }
   return NULL;
 }
