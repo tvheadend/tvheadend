@@ -16,13 +16,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <libhts/htsatomic.h>
 
 #include "tvhead.h"
 #include "packet.h"
 #include "string.h"
-
-static pthread_mutex_t refmutex = PTHREAD_MUTEX_INITIALIZER;
-
 
 /*
  *
@@ -64,15 +62,8 @@ pkt_alloc(void *data, size_t datalen, int64_t pts, int64_t dts)
 void
 pkt_ref_dec(th_pkt_t *pkt)
 {
-  if(pkt->pkt_refcount == 1) {
+  if((atomic_add(&pkt->pkt_refcount, -1)) == 1)
     pkt_destroy(pkt);
-    return;
-  }
-
-  /* Use atomic decrease */
-  pthread_mutex_lock(&refmutex);
-  pkt->pkt_refcount--;
-  pthread_mutex_unlock(&refmutex);
 }
 
 
@@ -82,10 +73,7 @@ pkt_ref_dec(th_pkt_t *pkt)
 void
 pkt_ref_inc(th_pkt_t *pkt)
 {
-  /* Use atomic increase */
-  pthread_mutex_lock(&refmutex);
-  pkt->pkt_refcount++;
-  pthread_mutex_unlock(&refmutex);
+  atomic_add(&pkt->pkt_refcount, 1);
 }
 
 /**
@@ -94,9 +82,7 @@ pkt_ref_inc(th_pkt_t *pkt)
 void
 pkt_ref_inc_poly(th_pkt_t *pkt, int n)
 {
-  pthread_mutex_lock(&refmutex);
-  pkt->pkt_refcount += n;
-  pthread_mutex_unlock(&refmutex);
+  atomic_add(&pkt->pkt_refcount, n);
 }
 
 
