@@ -36,7 +36,6 @@
 
 #include "tvhead.h"
 #include "dispatch.h"
-#include "teletext.h"
 #include "transports.h"
 #include "subscriptions.h"
 #include "psi.h"
