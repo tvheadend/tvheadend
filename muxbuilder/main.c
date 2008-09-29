@@ -254,6 +254,7 @@ static const struct {
   {"fi", "Finland"},
   {"fr", "France"},
   {"gr", "Greece"},
+  {"hk", "Hong Kong"},
   {"hr", "Croatia"},
   {"is", "Iceland"},
   {"it", "Italy"},
