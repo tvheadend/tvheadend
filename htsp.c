@@ -502,6 +502,7 @@ htsp_read_loop(htsp_connection_t *htsp)
   const char *method, *username, *password;
 
   while(1) {
+  readmsg:
     if((r = htsp_read_message(htsp, &m, 0)) != 0)
       return r;
 
@@ -518,9 +519,18 @@ htsp_read_loop(htsp_connection_t *htsp)
 			   (struct sockaddr *)htsp->htsp_peer,
 			   htsp_methods[i].privmask)) {
 
-	    reply = htsmsg_create();
+	    pthread_mutex_unlock(&global_lock);
 
+	    /* Classic authentication failed delay */
+	    sleep(1); 
+	    
+	    reply = htsmsg_create();
 	    htsmsg_add_u32(reply, "_noaccess", 1);
+	    htsp_reply(htsp, m, reply);
+
+	    htsmsg_destroy(m);
+	    goto readmsg;
+
 	  } else {
 	    reply = htsp_methods[i].fn(htsp, m);
 	  }
