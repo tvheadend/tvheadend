@@ -38,7 +38,7 @@ static struct event_list epg_hash[EPG_GLOBAL_HASH_WIDTH];
 epg_content_group_t *epg_content_groups[16];
 
 static void epg_expire_event_from_channel(void *opauqe);
-static void epg_ch_set_current_event(void *aux);
+static void epg_ch_check_current_event(void *aux);
 
 
 static int
@@ -53,61 +53,60 @@ e_ch_cmp(const event_t *a, const event_t *b)
 static void
 epg_set_current(channel_t *ch, event_t *e)
 {
+  printf("Channel %s, event = %s\n", ch->ch_name, e ? e->e_title : "none");
+
+  if(ch->ch_epg_current == e)
+    return;
+
+
   ch->ch_epg_current = e;
-  if(e != NULL)
+  if(e != NULL) {
+    gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
+		   ch, MAX(e->e_stop, dispatch_clock + 1));
     dvr_autorec_check(e);
+   }
+
 
   htsp_event_update(ch, e);
 }
 
-
 /**
  *
  */
 static void
-epg_ch_clear_current_event(void *aux)
+epg_ch_check_current_event(void *aux)
 {
   channel_t *ch = aux;
-  event_t *n, *e = ch->ch_epg_current;
+  event_t skel, *e = ch->ch_epg_current;
+
+  if(e != NULL) {
+    if(e->e_start <= dispatch_clock && e->e_stop > dispatch_clock) {
+      epg_set_current(ch, e);
+      return;
+    }
+
+    if((e = RB_NEXT(e, e_channel_link)) != NULL) {
+
+      if(e->e_start <= dispatch_clock && e->e_stop > dispatch_clock) {
+	epg_set_current(ch, e);
+	return;
+      }
+    }
+  }
+
+  e = epg_event_find_by_time(ch, dispatch_clock);
+  if(e != NULL) {
+    epg_set_current(ch, e);
+    return;
+  }
 
   epg_set_current(ch, NULL);
 
-  //  printf("Current event on %s is nothing\n", ch->ch_name);
-
-  if((n = RB_NEXT(e, e_channel_link)) == NULL)
-    return;
-  
-  gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_set_current_event,
-		 n, n->e_start);
-}
-
-
-/**
- *
- */
-static void
-epg_ch_set_current_event(void *aux)
-{
-  event_t *e = aux, *n;
-  channel_t *ch = e->e_channel;
-#if 0
-  time_t ende = e->e_start + e->e_duration;
-
-  printf("Current event on %s is %s\n", ch->ch_name, e->e_title);
-  printf("  start: %s", ctime(&e->e_start));
-  printf("   stop: %s", ctime(&ende));
-#endif
-  epg_set_current(ch, e);
-
-  n = RB_NEXT(e, e_channel_link);
-
-  if(n != NULL && e->e_stop == n->e_start) {
-    /* Next event is directly adjacent */
-    gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_set_current_event,
-		   n, n->e_start);
-  } else {
-    gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_clear_current_event,
-		   ch, e->e_stop);
+  skel.e_start = dispatch_clock;
+  e = RB_FIND_GT(&ch->ch_epg_events, &skel, e_channel_link, e_ch_cmp);
+  if(e != NULL) {
+    gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
+		   ch, MAX(e->e_start, dispatch_clock + 1));
   }
 }
 
@@ -181,6 +180,12 @@ epg_event_create(channel_t *ch, time_t start, time_t stop)
   event_t *e;
   static int tally;
 
+  if((stop - start) > 11 * 3600)
+    return NULL;
+
+  if(stop <= start)
+    return NULL;
+
   lock_assert(&global_lock);
 
   if(skel == NULL)
@@ -211,20 +216,13 @@ epg_event_create(channel_t *ch, time_t start, time_t stop)
 		     ch, e->e_stop);
     }
 
-    /* Current event tracking */
-    if(start <= dispatch_clock && stop > dispatch_clock) {
-      gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_set_current_event,
-		     e, e->e_start);
- 
-    } else if(ch->ch_epg_timer_current.gti_callback != NULL) {
-      /* Timer is armed */
-      if(start < ch->ch_epg_timer_current.gti_expire) {
-	gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_set_current_event,
-		       e, e->e_start);
-      }
-    } else {
-      gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_set_current_event,
-		     e, e->e_start);
+
+    
+    if(ch->ch_epg_timer_current.gti_callback == NULL ||
+       start < ch->ch_epg_timer_current.gti_expire) {
+
+      gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
+		     ch, e->e_start);
     }
   } else {
     /* Already exist */
@@ -239,6 +237,11 @@ epg_event_create(channel_t *ch, time_t start, time_t stop)
 #endif
       e->e_stop = stop;
       epg_event_changed(e);
+
+      if(e == ch->ch_epg_current) {
+	gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
+		       ch, e->e_start);
+      }
     }
   }
   return e;
@@ -323,18 +326,9 @@ epg_remove_event_from_channel(channel_t *ch, event_t *e)
   if(ch->ch_epg_current == e) {
     epg_set_current(ch, NULL);
 
-    if(n != NULL) {
-      gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_set_current_event,
-		     n, n->e_start);
-    }
-  }
-
-  if(ch->ch_epg_timer_current.gti_callback == epg_ch_set_current_event) {
-    if(ch->ch_epg_timer_current.gti_opaque == e) {
-      if(n != NULL)
-	gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_set_current_event,
-		       n, n->e_start);
-    }
+    if(n != NULL)
+      gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
+		     ch, n->e_start);
   }
 
   if(wasfirst && (e = RB_FIRST(&ch->ch_epg_events)) != NULL) {

@@ -366,7 +366,11 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       continue;
     }
 
-    e = epg_event_create(ch, start_time, start_time + duration);
+    if((e = epg_event_create(ch, start_time, start_time + duration)) == NULL) {
+      len -= dllen;
+      ptr += dllen;
+      continue;
+    }
 
     ect = NULL;
     *title = 0;
