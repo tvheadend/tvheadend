@@ -78,9 +78,6 @@ streaming_target_disconnect(streaming_target_t *st)
   LIST_REMOVE(st, st_link);
 
   pthread_mutex_unlock(sp->sp_mutex);
-
-  if(st->st_cb == NULL)
-    pktref_clear_queue(&st->st_queue);
 }
 
 /**
