@@ -126,7 +126,7 @@ ts_recv_packet0(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
     break;
 
   case SCT_TELETEXT:
-    //    teletext_input(t, tsb);
+    teletext_input(t, st, tsb);
     break;
 
   default:

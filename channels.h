@@ -43,14 +43,6 @@ typedef struct channel {
   LIST_HEAD(, th_transport) ch_transports;
   LIST_HEAD(, th_subscription) ch_subscriptions;
 
-
-  struct tt_decoder ch_tt;
-
-  enum {
-    COMMERCIAL_DETECT_NONE,
-    COMMERCIAL_DETECT_TTP192,
-  } ch_commercial_detection;
-
   struct event_tree ch_epg_events;
   struct event *ch_epg_current;
 

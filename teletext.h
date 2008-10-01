@@ -19,8 +19,6 @@
 #ifndef TELETEXT_H
 #define TELETEXT_H
 
-void teletext_input(th_transport_t *t, uint8_t *tsb);
-
-tt_page_t *tt_get_page(tt_decoder_t *ttd, int page);
+void teletext_input(th_transport_t *t, th_stream_t *st, uint8_t *tsb);
 
 #endif /* TELETEXT_H */

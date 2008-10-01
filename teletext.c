@@ -32,8 +32,30 @@
 #include "tvhead.h"
 #include "teletext.h"
 
-static void teletext_rundown(th_transport_t *t, channel_t *ch, 
-			     tt_page_t *ttp);
+/**
+ *
+ */
+typedef struct tt_mag {
+  int ttm_curpage;
+  uint8_t ttm_page[23*40 + 1];
+} tt_mag_t;
+
+
+/**
+ *
+ */
+typedef struct tt_private {
+  tt_mag_t ttp_mags[8];
+
+  int ttp_rundown_valid;
+  uint8_t ttp_rundown[23*40 + 1];
+
+} tt_private_t;
+
+
+static void teletext_rundown_copy(tt_private_t *ttp, tt_mag_t *ttm);
+
+static void teletext_rundown_scan(th_transport_t *t, tt_private_t *ttp);
 
 #define bitreverse(b) \
 (((b) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
@@ -82,42 +104,22 @@ ham_decode(uint8_t a, uint8_t b)
   return (b << 4) | (a & 0xf);
 }
 
-
-tt_page_t *
-tt_get_page(tt_decoder_t *ttd, int page)
-{
-  tt_page_t *p;
-
-  if(page >= 900)
-    return NULL;
-
-  p = ttd->pages[page];
-
-  if(p == NULL) {
-    p = malloc(sizeof(tt_page_t));
-    p->ttp_page = page;
-    p->ttp_subpage = 0;
-    p->ttp_ver = 0;
-    memset(p->ttp_pagebuf, ' ', 23 * 40);
-    p->ttp_pagebuf[40*23] = 0;
-    ttd->pages[page] = p;
-  }
-  return p;
-}
-
+/**
+ *
+ */
 static time_t
-tt_construct_unix_time(char *buf)
+tt_construct_unix_time(uint8_t *buf)
 {
   time_t t, r[3], v[3];
   int i;
   struct tm tm;
 
-  time(&t);
+  t = dispatch_clock;
   localtime_r(&t, &tm);
 
-  tm.tm_hour = atoi(buf);
-  tm.tm_min = atoi(buf + 3);
-  tm.tm_sec = atoi(buf + 6);
+  tm.tm_hour = atoi((char *)buf);
+  tm.tm_min = atoi((char *)buf + 3);
+  tm.tm_sec = atoi((char *)buf + 6);
 
   r[0] = mktime(&tm);
   tm.tm_mday--;
@@ -138,9 +140,11 @@ tt_construct_unix_time(char *buf)
 }
 
 
-
+/**
+ *
+ */
 static int
-str_is_tt_clock(const char *str)
+is_tt_clock(const uint8_t *str)
 {
   return 
     isdigit(str[0]) && isdigit(str[1]) && str[2] == ':' &&
@@ -149,19 +153,21 @@ str_is_tt_clock(const char *str)
 }
 
 
+/**
+ *
+ */
 static int
-update_tt_clock(th_transport_t *t, char *buf)
+update_tt_clock(th_transport_t *t, const uint8_t *buf)
 {
-  char str[10];
+  uint8_t str[10];
   int i;
   time_t ti;
-
 
   for(i = 0; i < 8; i++)
     str[i] = buf[i] & 0x7f;
   str[8] = 0;
 
-  if(!str_is_tt_clock(str))
+  if(!is_tt_clock(str))
     return 0;
 
   ti = tt_construct_unix_time(str);
@@ -169,68 +175,104 @@ update_tt_clock(th_transport_t *t, char *buf)
     return 0;
 
   t->tht_tt_clock = ti;
+  //  printf("teletext clock is: %s", ctime(&ti));
   return 1;
 }
 
 
 
+/**
+ *
+ */
+#if 0
 static void
-tt_decode_line(th_transport_t *t, uint8_t *buf)
+dump_page(tt_mag_t *ttm)
+{
+  int i, j, v;
+  char buf[41];
+  
+  printf("------------------------------------------------\n");
+  printf("------------------------------------------------\n");
+  for(i = 0; i < 23; i++) {
+
+    for(j = 0; j < 40; j++) {
+      v = ttm->ttm_page[40 * i + j];
+      v &= 0x7f;
+      if(v < 32)
+	v = ' ';
+      buf[j] = v;
+    }
+    buf[j] = 0;
+    printf("%s   | %x %x %x\n", buf,
+	   ttm->ttm_page[40 * i + 0],
+	   ttm->ttm_page[40 * i + 1],
+	   ttm->ttm_page[40 * i + 2]);
+  }
+}
+#endif
+
+/**
+ *
+ */
+static void
+tt_decode_line(th_transport_t *t, th_stream_t *st, uint8_t *buf)
 {
   uint8_t mpag, line, s12, s34, c;
   int page, magidx, i;
-  tt_mag_t *mag;
-  channel_t *ch = t->tht_ch;
-  tt_decoder_t *ttd = &ch->ch_tt;
-  tt_page_t *ttp;
+  tt_mag_t *ttm;
+  tt_private_t *ttp;
 
-  if(ch == NULL)
-    return; /* Not mapped to a channel, do not do anything */
+  if(st->st_priv == NULL) {
+    /* Allocate privdata for reassembly */
+    ttp = st->st_priv = calloc(1, sizeof(tt_private_t));
+  } else {
+    ttp = st->st_priv;
+  }
+
 
   mpag = ham_decode(buf[0], buf[1]);
-
   magidx = mpag & 7;
-  mag = &ttd->mags[magidx];
+  ttm = &ttp->ttp_mags[magidx];
 
   line = mpag >> 3;
 
   if(line >= 30)
     return; /* Network lines, PDC, etc, dont worry about these */
 
-  if(line == 0) {
+  switch(line) {
+  case 0:
+    if(ttm->ttm_curpage != 0) {
 
-    if(mag->pageptr != NULL)
-      mag->pageptr->ttp_ver++;
+      if(ttm->ttm_curpage == 192) {
+	//	dump_page(ttm);
+	teletext_rundown_copy(ttp, ttm);
+      }
 
-    page = ham_decode(buf[2], buf[3]);
-    if(page == 0xff)
+      memset(ttm->ttm_page, ' ', 23 * 40);
+      ttm->ttm_curpage = 0;
+    }
+
+    if((page = ham_decode(buf[2], buf[3])) == 0xff)
       return;
 
     /* The page is BDC encoded, mag 0 is displayed as page 800+ */
-
     page = (magidx ?: 8) * 100 + (page >> 4) * 10 + (page & 0xf);
-    
-    mag->pageptr = tt_get_page(ttd, page);
-    if(mag->pageptr == NULL)
-      return;
+
+    ttm->ttm_curpage = page;
 
     s12 = ham_decode(buf[4], buf[5]);
     s34 = ham_decode(buf[6], buf[7]);
     c = ham_decode(buf[8], buf[9]);
 
-    ttd->magazine_serial = c & 0x10 ? 1 : 0;
+    //    ttd->magazine_serial = c & 0x10 ? 1 : 0;
 
     if(s12 & 0x80) {
       /* Erase page */
-      memset(mag->pageptr->ttp_pagebuf, ' ', 23 * 40);
+      memset(ttm->ttm_page, ' ', 23 * 40);
     }
 
-    if(update_tt_clock(t, (char *)buf + 34)) {
-      if(ch->ch_commercial_detection == COMMERCIAL_DETECT_TTP192) {
-	ttp = tt_get_page(ttd, 192);
-	teletext_rundown(t, ch, ttp);
-      }
-    }
+    if(update_tt_clock(t, buf + 34))
+      teletext_rundown_scan(t, ttp);
 
 #if 0
     printf("%02x: %s\n", s12, buf[9 - 4] & (1 << 7) ? "Erase" : "Not Erase");
@@ -243,31 +285,28 @@ tt_decode_line(th_transport_t *t, uint8_t *buf)
     printf("%s\n", buf[12 - 4] & (1 << 1) ? "Supress" : "");
 #endif
 
-  }
+    break;
 
-  if((ttp = mag->pageptr) != NULL) {
-    
-    switch(line) {
-    case 1 ... 23:
-      for(i = 0; i < 40; i++) {
-	c = buf[i + 2] & 0x7f;
-	if(c < 32)
-	  c += 0x80;
-	ttp->ttp_pagebuf[i + 40 * (line - 1)] = c;
-      }
-      break;
+  case 1 ... 23:
+    for(i = 0; i < 40; i++) {
+      c = buf[i + 2] & 0x7f;
+      if(c < 32)
+	c += 0x80;
+      ttm->ttm_page[i + 40 * (line - 1)] = c;
     }
+    break;
 
-    if(ttp->ttp_page == 192 &&
-       ch->ch_commercial_detection == COMMERCIAL_DETECT_TTP192)
-      teletext_rundown(t, ch, ttp);
+  default:
+    break;
   }
 }
 
 
-
+/**
+ *
+ */
 void
-teletext_input(th_transport_t *t, uint8_t *tsb)
+teletext_input(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
 {
   int i, j;
   uint8_t *x, buf[42];
@@ -277,7 +316,7 @@ teletext_input(th_transport_t *t, uint8_t *tsb)
     if(*x == 2) {
       for(j = 0; j < 42; j++)
 	buf[j] = bitreverse(x[4 + j]);
-      tt_decode_line(t, buf);
+      tt_decode_line(t, st, buf);
     }
     x += 46;
   }
@@ -286,22 +325,43 @@ teletext_input(th_transport_t *t, uint8_t *tsb)
 
 
 
+/**
+ * Swedish TV4 rundown dump (page 192)
+ *
 
+  Starttid Titel                L{ngd      | 20 83 53
+ ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,   | 94 2c 2c
+  23:47:05 Reklam block         00:04:15   | 8d 83 32
+                                           | 20 20 20
+ ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,   | 94 2c 2c
+  23:47:30 HV3 BENGT OCH PETRA  00:00:03   | 20 86 32
+  23:47:34 S-6/6 : Spoons I 6 ( 00:10:23   | 20 87 32
+  23:57:57 RV3 FOLK I TRAPPAN   00:00:03   | 20 86 32
+  23:59:36 Reklam block         00:02:50   | 20 83 32
+  00:00:01 LINEUP13 BENGT OCH P 00:00:13   | 20 86 30
+  00:00:14 AABILO6123           00:00:13   | 20 86 30
+  00:00:28 S-4/6 : Allo Allo IV 00:10:28   | 20 87 30
+  00:10:57 RV3 VITA RENA PRICKA 00:00:03   | 20 86 30
+  00:11:00 LOKAL REKLAM         00:01:31   | 20 81 30
+  00:16:37 Reklam block         00:04:25   | 20 83 30
+  00:16:58 HV3 BYGGLOV 2        00:00:03   | 20 86 30
+  00:17:51 Trailer block        00:01:20   | 20 82 30
+  00:18:21 S-4/6 : Allo Allo IV 00:14:14   | 20 87 30
+  00:32:36 AABILO6123           00:00:13   | 20 86 30
+ ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,   | 94 2c 2c
+ se {ven rundown.tv4.se                    | 83 73 65
+                                           | 83 20 20
+                                   23:43   | 83 20 20
 
-/*
- *06: | 21:54:44 RV3 KYLTJEJ ST[NGER  00:00:03|
-  08: | 22:10:40 RV3 KYSS             00:00:03| (0s)
- */
+*/
 
 
 static int
-tt_time_to_len(const char *buf)
+tt_time_to_len(const uint8_t *buf)
 {
   int l;
   char str[10];
 
-  if(!str_is_tt_clock(buf))
-    return 0;
 
   memcpy(str, buf, 8);
   str[2] = 0;
@@ -316,59 +376,49 @@ tt_time_to_len(const char *buf)
  * Decode the Swedish TV4 teletext rundown page to figure out if we are 
  * currently in a commercial break
  */
+static void
+teletext_rundown_copy(tt_private_t *ttp, tt_mag_t *ttm)
+{
+  /* Sanity check */
+  if(memcmp((char *)ttm->ttm_page + 2, "Starttid", strlen("Starttid")) ||
+     memcmp((char *)ttm->ttm_page + 11,"Titel", strlen("Titel")) ||
+     memcmp((char *)ttm->ttm_page + 20 * 40 + 9,
+	    "rundown.tv4.se", strlen("rundown.tv4.se")))
+    return;
+  
+  memcpy(ttp->ttp_rundown, ttm->ttm_page, 23 * 40);
+  ttp->ttp_rundown_valid = 1;
+}
+
 
 static void
-teletext_rundown(th_transport_t *t, channel_t *ch, tt_page_t *ttp)
+teletext_rundown_scan(th_transport_t *t, tt_private_t *ttp)
 {
-  char r[50];
   int i;
-  time_t ti, d, l;
-  int curlen = -1;
-  th_commercial_advice_t prev;
+  uint8_t *l;
+  time_t now = t->tht_tt_clock, start, stop, last = 0;
+  th_commercial_advice_t ca;
 
-#if 0
-  printf("%c", 0x0c);
-  printf("%-20s %s\n", 
-	 t->tht_tt_rundown_content_length > 400 ? "real stuff" : "commercial",
-	 ctime(&t->tht_tt_clock));
-#endif
-  for(i = 0; i < 22; i++) {
-    memcpy(r, &ttp->ttp_pagebuf[i * 40], 40);
-    r[40] = 0;
-
-    if(!str_is_tt_clock(r + 2)) {
-      continue;
-    }
-    ti = tt_construct_unix_time(r + 2);
-    l = tt_time_to_len(r + 32);
-    d = ti - t->tht_tt_clock;
-
-    if(d < 1) {
-      /* Currently playing show */
-      curlen = l;
-    }
-    //  printf("%02d|%s|\t(%5lds) : %ld, %d\n", i, r, l, d, curlen);
-  }
-
-  t->tht_tt_rundown_content_length = curlen;
-
-  prev = t->tht_tt_commercial_advice;
-
-  if(curlen < 0)
+  if(ttp->ttp_rundown_valid == 0)
     return;
 
-  if(curlen < 400)
-    t->tht_tt_commercial_advice = COMMERCIAL_YES;
-  else
-    t->tht_tt_commercial_advice = COMMERCIAL_NO;
+  for(i = 0; i < 23; i++) {
+    l = ttp->ttp_rundown + 40 * i;
+    if((l[1] & 0xf0) != 0x80 || !is_tt_clock(l + 32) || !is_tt_clock(l + 2))
+      continue;
+    
+    if(!memcmp(l + 11, "Nyhetspuff", strlen("Nyhetspuff")))
+      ca = COMMERCIAL_YES;
+    else
+      ca = (l[1] & 0xf) == 7 ? COMMERCIAL_NO : COMMERCIAL_YES;
 
-  if(prev != t->tht_tt_commercial_advice) {
-
-    tvhlog(LOG_DEBUG, "teletext", 
-	   "teletext-rundown: \"%s\" on \"%s\": "
-	   "%s commercial break (chunk %ds)",
-	   ch->ch_name, t->tht_name, 
-	   t->tht_tt_commercial_advice == COMMERCIAL_YES ? "In" : "Not in",
-	   curlen);
+    start = tt_construct_unix_time(l + 2);
+    stop  = start + tt_time_to_len(l + 32);
+    
+    if(start <= now && stop > now)
+      t->tht_tt_commercial_advice = ca;
+    
+    if(start > now && ca != t->tht_tt_commercial_advice && last == 0)
+      last = start;
   }
 }

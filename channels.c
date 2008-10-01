@@ -225,15 +225,6 @@ channel_find_by_identifier(int id)
   return ch;
 }
 
-
-
-
-static struct strtab commercial_detect_tab[] = {
-  { "none",       COMMERCIAL_DETECT_NONE   },
-  { "ttp192",     COMMERCIAL_DETECT_TTP192 },
-};
-
-
 /**
  *
  */
@@ -326,10 +317,6 @@ channel_save(channel_t *ch)
   if(ch->ch_icon != NULL)
     htsmsg_add_str(m, "icon", ch->ch_icon);
 
-  htsmsg_add_str(m, "commercial-detect", 
-		 val2str(ch->ch_commercial_detection,
-			 commercial_detect_tab) ?: "?");
-  
   tags = htsmsg_create_array();
   LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
     htsmsg_add_str(tags, NULL, ctm->ctm_tag->ct_identifier);

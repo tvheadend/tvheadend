@@ -832,29 +832,6 @@ typedef struct th_muxstream {
 #endif
 
 
-/*
- *  Teletext
- */
-typedef struct tt_page {
-  int ttp_page;
-  int ttp_subpage;
-  int ttp_ver;
-  unsigned char ttp_pagebuf[23*40 + 1];
-} tt_page_t;
-
-typedef struct tt_mag {
-  tt_page_t *pageptr;
-} tt_mag_t;
-
-typedef struct tt_decoder {
-  tt_mag_t mags[8];
-  tt_page_t *pages[900];
-  int magazine_serial;
-} tt_decoder_t;
-
-
-
-
 char *utf8toprintable(const char *in);
 char *utf8tofilename(const char *in);
 const char *streaming_component_type2txt(streaming_component_type_t s);

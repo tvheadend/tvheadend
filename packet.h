@@ -34,9 +34,9 @@ typedef struct th_pkt {
   int pkt_duration;
   int pkt_refcount;
 
+  uint8_t pkt_commercial;
   uint8_t pkt_componentindex;
   uint8_t pkt_frametype;
-  uint8_t pkt_commercial;
 
   uint8_t *pkt_payload;
   int pkt_payloadlen;
