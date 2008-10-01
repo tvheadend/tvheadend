@@ -439,6 +439,8 @@ dvr_rec_stop(dvr_entry_t *de)
 {
   streaming_target_t *st = &de->de_st;
   
+  streaming_target_disconnect(&de->de_st);
+
   pthread_mutex_lock(&st->st_mutex);
 
   if(st->st_status == ST_RUNNING) {
@@ -450,6 +452,7 @@ dvr_rec_stop(dvr_entry_t *de)
       pthread_cond_wait(&st->st_cond, &st->st_mutex);
   }
   
+  pktref_clear_queue(&st->st_queue);
   pthread_mutex_unlock(&st->st_mutex);
 }
 
@@ -497,9 +500,6 @@ dvr_thread(void *aux)
   pthread_mutex_unlock(&st->st_mutex);
 
   dvr_thread_epilog(de);
-
-  streaming_target_disconnect(&de->de_st);
-
 
   pthread_mutex_lock(&global_lock);
   dvr_entry_dec_ref(de);                    /* Past this we may no longer
