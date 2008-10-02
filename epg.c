@@ -53,20 +53,15 @@ e_ch_cmp(const event_t *a, const event_t *b)
 static void
 epg_set_current(channel_t *ch, event_t *e)
 {
-  printf("Channel %s, event = %s\n", ch->ch_name, e ? e->e_title : "none");
-
   if(ch->ch_epg_current == e)
     return;
-
 
   ch->ch_epg_current = e;
   if(e != NULL) {
     gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
 		   ch, MAX(e->e_stop, dispatch_clock + 1));
     dvr_autorec_check(e);
-   }
-
-
+  }
   htsp_event_update(ch, e);
 }
 
