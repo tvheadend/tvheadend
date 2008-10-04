@@ -615,8 +615,16 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
   uint8_t *buf = st->st_buffer + sc_offset;
   uint32_t sc = st->st_startcode;
   int64_t d;
-  int l2, pkttype;
+  int l2, pkttype, l;
   bitstream_t bs;
+
+  if(sc == 0x10c) {
+    /* RBSP padding, we don't want this */
+    
+    l = len - sc_offset;
+    memcpy(buf, buf + l, 4); /* Move down new start code */
+    st->st_buffer_ptr -= l;  /* Drop buffer */
+  }
 
   if(sc >= 0x000001e0 && sc <= 0x000001ef) {
     /* System start codes for video */
