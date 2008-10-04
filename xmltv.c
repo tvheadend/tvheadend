@@ -333,7 +333,8 @@ xmltv_parse_programme_tags(xmltv_channel_t *xc, htsmsg_t *tags,
   const char *desc  = xmltv_get_cdata_by_tag(tags, "desc");
 
   LIST_FOREACH(ch, &xc->xc_channels, ch_xc_link) {
-    e = epg_event_create(ch, start, stop);
+    if((e = epg_event_create(ch, start, stop)) == NULL)
+      continue;
 
     if(title != NULL) epg_event_set_title(e, title);
     if(desc  != NULL) epg_event_set_desc(e, desc);
