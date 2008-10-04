@@ -302,6 +302,9 @@ h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype)
   read_golomb_ue(bs); /* first_mb_in_slice */
   slice_type = read_golomb_ue(bs);
   
+  if(slice_type > 4)
+    slice_type -= 5;  /* Fixed slice type per frame */
+
   switch(slice_type) {
   case 0:
     *pkttype = PKT_P_FRAME;
