@@ -1171,7 +1171,7 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
       fsize = dvr_get_filesize(de);
       if(fsize > 0) {
 	char url[100];
-	htsmsg_add_u64(m, "filesize", fsize);
+	htsmsg_add_s64(m, "filesize", fsize);
 
 	snprintf(url, sizeof(url), "/dvrfile/%d", de->de_id);
 	htsmsg_add_str(m, "url", url);

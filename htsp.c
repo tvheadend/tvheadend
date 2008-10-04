@@ -836,7 +836,7 @@ htsp_stream_deliver(void *opaque, struct th_pktref *pr)
   htsmsg_t *m = htsmsg_create(), *n;
   htsp_msg_t *hm;
   htsp_connection_t *htsp = hs->hs_htsp;
-  uint64_t ts;
+  int64_t ts;
   int qlen = hs->hs_q.hmq_payload;
 
   if((qlen > 500000 && pkt->pkt_frametype == PKT_B_FRAME) ||
@@ -855,9 +855,9 @@ htsp_stream_deliver(void *opaque, struct th_pktref *pr)
   htsmsg_add_u32(m, "channelId", hs->hs_channelid);
   htsmsg_add_u32(m, "frametype", frametypearray[pkt->pkt_frametype]);
 
-  htsmsg_add_u64(m, "stream", pkt->pkt_componentindex);
-  htsmsg_add_u64(m, "dts", pkt->pkt_dts);
-  htsmsg_add_u64(m, "pts", pkt->pkt_pts);
+  htsmsg_add_u32(m, "stream", pkt->pkt_componentindex);
+  htsmsg_add_s64(m, "dts", pkt->pkt_dts);
+  htsmsg_add_s64(m, "pts", pkt->pkt_pts);
   htsmsg_add_u32(m, "duration", pkt->pkt_duration);
   htsmsg_add_u32(m, "com", pkt->pkt_commercial);
   
@@ -886,11 +886,11 @@ htsp_stream_deliver(void *opaque, struct th_pktref *pr)
     pthread_mutex_lock(&htsp->htsp_out_mutex);
 
     if(TAILQ_FIRST(&hs->hs_q.hmq_q) == NULL) {
-      htsmsg_add_u64(m, "delay", 0);
+      htsmsg_add_s64(m, "delay", 0);
     } else if((hm = TAILQ_FIRST(&hs->hs_q.hmq_q)) != NULL &&
-	      (n = hm->hm_msg) != NULL && !htsmsg_get_u64(n, "dts", &ts) &&
+	      (n = hm->hm_msg) != NULL && !htsmsg_get_s64(n, "dts", &ts) &&
 	      pkt->pkt_dts != AV_NOPTS_VALUE && ts != AV_NOPTS_VALUE) {
-      htsmsg_add_u64(m, "delay", pkt->pkt_dts - ts);
+      htsmsg_add_s64(m, "delay", pkt->pkt_dts - ts);
     }
     pthread_mutex_unlock(&htsp->htsp_out_mutex);
 
