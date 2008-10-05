@@ -944,7 +944,8 @@ htsp_subscription_start(htsp_connection_t *htsp, th_subscription_t *s,
     c = htsmsg_create();
     htsmsg_add_u32(c, "index", sc->sc_index);
     htsmsg_add_str(c, "type", streaming_component_type2txt(sc->sc_type));
-    htsmsg_add_str(c, "language", sc->sc_lang);
+    if(sc->sc_lang[0])
+      htsmsg_add_str(c, "language", sc->sc_lang);
     htsmsg_add_msg(streams, NULL, c);
   }
 
