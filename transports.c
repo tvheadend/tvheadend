@@ -365,7 +365,7 @@ transport_find(channel_t *ch, unsigned int weight)
   vec = alloca(cnt * sizeof(th_transport_t *));
   i = 0;
   LIST_FOREACH(t, &ch->ch_transports, tht_ch_link)
-    if(!t->tht_disabled)
+    if(!t->tht_disabled && t->tht_quality_index(t) > 10)
       vec[i++] = t;
 
   /* Sort transports, lower priority should come come earlier in the vector

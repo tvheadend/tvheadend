@@ -74,12 +74,6 @@ dvb_transport_start(th_transport_t *t, unsigned int weight, int status,
 
   if(tdmi != NULL && tdmi != t->tht_dvb_mux_instance && !force_start) {
 
-    /* Nope .. */
-
-    if(tdmi->tdmi_fe_status > TDMI_FE_UNKNOWN &&
-       tdmi->tdmi_fe_status < TDMI_FE_BURSTY_FEC)
-      return 1;  /* Not good enough signal here, can't use it */
-
     w = transport_compute_weight(&tdmi->tdmi_adapter->tda_transports);
     if(w >= weight)
       return 1; /* We are outranked by weight, cant use it */
