@@ -7,638 +7,72 @@ tvheadend \ - Advanced TV streaming server/relay
 .SH DESCRIPTION
 .B Tvheadend
 is a streaming server/relay supporing a variety of sources and multiple
-output formats. For more information and details please read each section
-below. This man page also describes how to configure and operate
-.B tvheadend.
+output formats. It is primarily inteded to be used in together with the
+.B Showtime
+Media player.
 .SH OPTIONS
-.TP
-\fB\-c \fR\fIconfigfile\fR
-Specify a user defined path for the \fIconfigfile
+All arguments are optional.
 .TP
 \fB\-f
-Fork and become a deamon
+Fork and become a background process (deamon). Default no.
 .TP
-\fB\-u \fR\fIuid\fR
-Run as user with \fR\fIuid\fR
+\fB\-u \fR\fIuserid\fR
+Run as user with \fR\fIuid\fR. Only applicable if daemonizing. Default is to
+use the uid of 1 (daemon on most systems).
 .TP
-\fB\-g \fR\fIgid\fR
-Run as user with \fR\fIgid\fR
+\fB\-g \fR\fIgroupid\fR
+Run as user with \fR\fIgid\fR. Only applicable if daemonizing. Default is to use the gid for the 'video' group. If the 'video' group does not exist, gid 1 (daemon) will be used.
 .TP
-\fB\-d
-Do not enable any DVB adapters
+\fB\-s \fR\fIpath\fR
+Store settings in \fR\fIpath\fR. Default values varies depending on if
+daemonizing or not. See SETUP section below for details.
 .SH "LOGGING"
 All activity inside tvheadend is logged to syslog using log facility
 \fBLOG_DAEMON\fR.
-During initial configuration and when learning tvheadend it is wise
-to tail -f /var/log/daemon.log to see what happens.
-.SH "CONFIGURATION FILE"
-.SS "Path to configuration file"
-A simple example configuration files available in the etc/ directory
-in the distribution.
+.SH "SETUP"
+.SS "Access to video adapters"
+In order for Tvheadend to control the video adapters on the system it
+must be granted access to those devices. Most systems have a 'video'
+group with write access to the video adapter devices. When Tvheadend
+is started as a daemon it will automatcially change its primary group
+to 'video' in order to access these groups. If your system is configured
+in a different way you can either change the group membership of the
+video adapters (/dev/dvb, etc) or reconfigure the Tvheadend startup
+parameters. This is most likely the behaviour if you have installed
+Tvheadend from a distribution package.
 .PP
-The default search order for configuration file is specified below.
-These paths will all be overridden if the user specifies a path on
-the command line.
-.PP
-Upon startup tvheadend will print to stderr wherefrom it read the configuration
-file.
-.TP
-\fB$HOME/tvheadend.cfg
-\fRUser home directory
-.TP
-\fB/etc/tvheadend.cfg
-.TP
-\fB/etc/hts/tvheadend.cfg
-.TP
-\fB<buildroot>/etc/tvheadend.cfg
-\fRLoad the supplied configuration file from the build directory (or distribution if it is a release build)
-.SS "Configuration file syntax"
-The configuration file consists of assignment statements and subsections.
-The assignment statements are used to set various values and subsections
-are used to configure a group of related statements.
-.PP
-The file may contain extra tabs and newlines for formatting purposes.
-Comments begin with '!' as the first non-whitespace character on a line.
-.PP
-An assignment statement looks like this:
-.PP
-.nf
-  key = value
-.fi
-.PP
-the key never contain any whitespaces. The rest of line after the
-assignment character ('=') is interpeted as the value.
-.PP
-A subsection looks like this:
-.PP
-.nf
-  sectionname {
-   ...
-   key = value
-   key = value
-   ...
-  }
-.fi
-.PP
-Subsections may also be nested.
-.PP
-Finally, you may include another file by adding:
-.PP
-.nf
-  #include otherfile.cfg
-.fi
-.PP
-This is typically used to keep parts of the configuration separated
-in different files.
-The path to the included file is relative to where the current file was loaded.
-.SS "The settings file"
-Tvheadend stores all the internal state about channels, scheduled
-recordings, runtime settings, etc in a directory. The default path of
-this directory is
-.PP
-/tmp/tvheadend/
-.PP
-\fBIMPORTANT:\fR Since the default path resides in /tmp all settings
-are likely to be lost if the host system reboots. This should be changed
-with the following configuration statement (example):
-.PP
-  settings-dir = /etc/hts/tvheadend_settings
-.PP
-If the settings-dir is not changed from the default value, there will
-also be a warning printed in the web user interface.
-.PP
-Tvheadend will create the directory if it does not exist.
-Notice that it is important that the user running tvheadend has write
-permissions in the parent directory (if the directory needs to be created).
-.SH "NOMENCLATURE AND CONCEPTS"
-For further reading is important to understand the following
-enteties. The chapters below may further specify the exact meaning of
-each of these entities if applicable.
-.SS "Adapter"
-A piece of hardware that is capable of receiving one or more muxes.
-If the adapter is only capable of receiveing one mux it will have to
-select amongst the configured ones.
-.SS "Mux"
-A stream of data carrying one or more services.
-.SS "Service"
-A stream of data representing a channel.
-.SS "Channel"
-The classic concept of a TV channel. This is a very fundamental part
-of tvheadend internally. Each channel may source data from multiple
-services (but only one at a given time). Each service can have a
-configured priority controlling the preference of how the channel will
-chose wherefrom it sources the data.  This priority is set in the web
-interface under the
-.B Manage channels
-tab. Lower priority numbers are better.
-.SS "Channel groups"
-A channel can be placed in a group to ease browsing of channels
-in the user interfaces. By default a channel ends up in the 'default'
-group. The user can administer groups using the
-.B Manage channel groups
-tab in the web interface.
-.SS "Subscription"
-When an output module requests reception of a channel a subscription
-is created. All subscriptions has a weight associated with them.
-This weight is used to control how subscriptions will be prioritized
-over each other if the subscribed channels compete amongst the same
-adapters.
-.SH "INPUT - DVB - Digital TV"
-.SS "DVB Adapters"
-TVheadend will probe all DVB it can find in /dev/dvb/adapterX.
-All adapters will be registered and probed according to the configuration
-files given (see below). Due to limited testing not all DVB standards has
-been fully confirmed to work.
-.TP
-\fB\tDVB-T \fRWorking
-.TP
-\fB\tDVB-C \fRWorking
-.TP
-\fB\tDVB-S \fRExperimental
-.TP
-\fB\tATSC  \fRNot implmented
-.PP
-Currently, only DVB-T and DVB-C adapters are supported.
-The primary reason for this is that nobody has yet has been able to test
-tvheadend with a DVB-S card.
+If Tvheadend is started without the '-f' argument it will not daemonize
+nor change its primary userid/groupid. Rather it will run with the permissions
+granted to the user executing the binary. If that's the case you must make
+sure the current user is granted with access to the video devices.
 .SS "Configuration"
-Tvheadend needs at least one configuration statement that points out a
-DVB mux file description. The format of these files are the same as
-those maintained by the linuxtv.org community, i.e the same files as
-used for the dvb-utils
-.B scan
-utility (where it is called 'initial-tuning-data-file').
-.PP
-Add this to your configuration file:
-.TP
-  \fB\tdvbmuxfile = \fR\fI/path/to/your/mux/description/file\fR
-.PP
-Multiple 'dvbmuxfile'-statements can be added if you have multiple
-adapters connected to different DVB networks. Tvheadend will make sure
-that DVB-T configuration statements is only used on DVB-T adapters,
-etc.
-.PP
-Tvheadend can not by itself scan for muxes nor can it use the
-information received in the NIT (Network Information Table) to add
-multiplexes by itself.  This might be implemented in the future if
-there is such a demand.
-.SS "LNB configuration"
-To configure the LO/HI bands of the LNB use the following configuration
-statements.
-.TP
-\fB\tlnb_lowfreq = \fR\fI<frequency in kHz>\fR
-Low band bottom frequency, defaults to 9,750,000 kHz
-.TP
-\fB\tlnb_hifreq = \fR\fI<frequency in kHz>\fR
-High band bottom frequency, defaults to 10,600,000 kHz
-.TP
-\fB\tlnb_switchfreq = \fR\fI<frequency in kHz>\fR
-If transponder frequency is higher than this, it will switch the LNB to
-the HI band. Defaults to 11,700,000 kHz.
-.PP
-Thus, the default configuration reflects a Universal LNB for Europe.
-(10800 to 11800 MHz and 11600 to 12700 Mhz)
-.SS "MPEG Transport Stream Multiplex"
-Tvheadend's internal concept of a MUX maps directly to a MPEG
-transport stream multiplex as defined in ITU-T Recommendation H.222.0.
-Tvheadend is capable of receiving and demultiplex all services (channels)
-arriving on the same multiplex simultaneously (should there be subscriptions
-requesting them). Apart from the service demultiplex, the following tables
-are parsed. All tables are checked for correct CRC before processed.
-.TP
-\fBPAT \fR\fIProgram Allocation Table\fR
-Used to detect available services on the MUX. See PMT.
-.TP
-\fBPMT \fR\fIProgram Mapping Table\fR
-Describes each service running on the MUX.
-.SS "DVB SI (Service information) Support (EN 300 468)"
-Tvheadend has been written to comply with the EN 400 468 v1.7.1
-specification for DVB service information. All tables are checked for
-correct CRC before processed.  The following tables are parsed:
-.TP
-\fBSDT \fR\fIService Descriptor Table\fR
-Used to deduce name of services and providers.
-.TP
-\fBEIT \fR\fIEvent Information Table\fR
-This table is used to feed tvheadend's EPG with data.
-The event start, stop, title and long description is feed into the EPG module.
-Also, the event content type is extracted and used to classify the event
-into the content categories as described in EN 400 468.
-.TP
-\fBRST \fR\fIRunning Status Table\fR
-This table signal delays of events and can be used to defer start of
-a recorder until the program starts. The author has not yet seen any
-RST updates and thus, this feature is not fully implemented.
-Tvheadend will just output the table on stdout. If you see such a table, don't
-hesitate to contact the author.
-.SS "Frontend monitoring and idle scanning"
-Each DVB adapter frontend is constantly monitored to get status
-updates and a 10 second average of the uncorrected block rate. If the
-adapter is unable to maintain lock or if the average uncorrected block
-rate exceeds 3 errors per second than this particular multiplex on
-this particular adapter will not be used for new subscriptions. If
-the uncorrected block rate exceeds 10 errors per second then all currently
-active subscribers will be detached from this multiplex and if any
-other service exist for this channel, those subscriptions will try to
-attach to those services instead.
-.PP
-If an adapter is currenty unused it will cycle through all its muxes
-to gather frontend statistics and DVB tables for program updates.
-Notice that most DVB networks will send EIT updates for all channels
-on all muxes so even if the adapter is tuned to a specific mux for
-service reception
-tvheadend will still receive all relevant updates for the EPG module.
-.PP
-The status of all frontends can be inspected in web interface under the
-.B System status
-tab.
-.SS "Clock drift compensation and PCR recovery"
-For input streams that contains PCR tvheadend will measure the host
-system clock drift vs. the stream PCR. This drift is used to adjust
-the frequency of the output clock generated in output modules (that
-subscribes to this service) in order to avoid any overrun or underruns
-in the internal multiplexing buffers.
-.SH "INPUT - IPTV - IP Multicasted TV"
-.SS "Streams supported"
-Tvheadend supports reception of IPTV streams as a TV source. Only RAW
-MPEG Transport Streams are supported (i.e. currently no support for
-RTP headers).
-.PP
-Tvheadend does not scan for any SI tables on IPTV streams since DVB/SI
-for IPTV is not standardized yet. Instead you need to configure
-channel name and provider manually for each channel.
-.PP
-Tvheadend does however read the PAT and PMTs to figure out PIDs of the
-elementary streams.
-.SS "Configuration"
-To configure an IPTV source service you need to add a 'service' substatement
-clause to the configuration file.
+All configuration in Tvheadend is maintained via its embedded web server running on port 9981. Just point your browser to:
 .PP
 .nf
-  service {
-.fi
-.TP
-\fB\tiptv = rawudp\fR
-Sets the mode of service to IPTV and the IPTV mode to rawudp.
-No other mode than 'rawudp' is supported at the moment.
-.TP
-\fB\tchannel = \fR\fI<string>\fR
-Set the name of the channel.
-.TP
-\fB\tgroup = \fR\fI<a.b.c.d>\fR
-IP address of group. Currently only IPv4 is supported.
-.TP
-\fB\tport = \fR\fI<1-65535>\fR
-UDP Port number.
-.TP
-\fB\tinterface = \fR\fI<string>\fR (optional)
-Specifies the interface where the group will be joined.
-If omitted the system will select one for you (if you only have one interface
-it is safe to leave this option out).
-.TP
-\fB\tprovider = \fR\fI<string>\fR (optional)
-Sets the provider of this channel. It is only used for presentation
-purposes and can be left out.
-.TP
-\fB\tnetwork = \fR\fI<string>\fR (optional)
-Sets the network for this channel. It is only used for presentation
-purposes and can be left out.
-.PP
-.nf
-  }
+   http://hostname:9981/
 .fi
 .PP
-A working example might look like this:
-.PP
-.nf
-  service {
-    iptv = rawudp
-    channel = SVT1
-    group-address = 239.16.16.1
-    interface = gig0.2
-    port = 5555
-}
-.fi
-.PP
-Upon startup tvheadend will join all configured tvheadend (in sequential order)
-and probe the streams for PAT and PMT tables.
-.SH "INPUT - Test stream generator"
-Tvheadend contains an internal audio/video generator that can produce
-test channels.  These are default always enabled and there are no way
-of disabling them.  The test channels can be used to diagnose clients,
-etc.
-.PP
-Currently only a single channel called 'Test PAL' is created, and it will
-by default be put in a channel group called 'Test channels'
-.SH "USER DATABASE"
-The web interface and some of the output modules utilizes an internal
-user database to give authorization to various actions.
-.PP
-To add an user, add a user subsection to the configuration file.
-.PP
-.nf
-  user {
-.fi
+By default \fIeveryone (also from remote hosts)\fR is allowed \fIfull\fR
+access to \fIall\fR features / settings in the web user interface. If
+this is the first time you setup Tvheadend you are most encouraged to
+enter the web user interface, selected the 'Configuration' + 'Access Control'
+tab and make reasonable changes. Futher help / documentationcan be obtained
+inside the web interface.
+.SS "Settings"
+Settings are stored in different locations depending on how Tvheadend
+was started.
 .TP
-\fB\tname = \fR\fI<string>\fR
-Sets the login name of this user.
+When started as a daemon (-f) argument:
+Settings are stored in \fI/var/lib/hts/tvheadend\fR. Tvheadend will try to
+change the permissions of the directory so it is writable after switching to
+its designated userid/groupid.
 .TP
-\fB\tpassword = \fR\fI<string>\fR
-Sets the password for this user. The password should be in clear text.
+When started as a normal executable (no arguments):
+Settings are stored in \fI$HOME/.hts/tvheadend\fR.
 .TP
-\fB\tbrowse-events = \fR\fI1 \fRor\fI 0\fR (optional, default is 0)
-Allow (1) or disallow (0) this user to browse events from the EPG.
-.TP
-\fB\trecord-events = \fR\fI1 \fRor\fI 0\fR (optional, default is 0)
-Allow (1) or disallow (0) this user to schedule and administer 
-recording of events.
-.TP
-\fB\tsystem-status = \fR\fI1 \fRor\fI 0\fR (optional, default is 0)
-Allow (1) or disallow (0) this user inspect system status
-.TP
-\fB\tadmin = \fR\fI1 \fRor\fI 0\fR (optional, default is 0)
-Allow (1) or disallow (0) this user to perform administrative tasks.
-Such as managing channel groups, moving channels, configuring transports, etc
-.TP
-\fB\txbmsp = \fR\fI1 \fRor\fI 0\fR (optional, default is 0)
-Allows the user to connect via the XBMSP protocol. For more details
-about XBMSP, see the \fBOUTPUT - XBMSP - XBMC Media Streaming Protocol\fR
-chapter.
-.PP
-.nf
-  }
-.fi
-.SH "HTTP SERVER"
-Tvheadend has an embedded HTTP server which is primarily used to
-deliver a web service for everyday management tasks. The HTTP server
-defaults to operating on TCP port \fB9980\fR. This can be changed with
-the following configuration in the root section:
-.TP
-\fB\thttp-server-port = \fR\fI<0-65535>\fR (optional)
-Sets the HTTP server TCP port. If set to 0 the HTTP server will be disabled.
-.SS "Web server"
-Pointing your web browser to \fBhttp://ip.address.of.tvheadend:9980/\fR will
-connect you to the web interface. The interface is pretty self-explanatory
-and is not discussed in detail here. In order to access the web interface
-the user is requested to login using standard HTTP authentication mechanisms.
-Notice that the user needs at least to have 'browse-events' enabled to be
-able to use the web interface. Please see the \fBUSER DATABASE\fR chapter
-for details about user configuartion.
-.SH "OUTPUT - RTSP - RealTime Streaming Protocol"
-The RTSP server uses the same TCP port as the HTTP server.
-When a clients connects to the RTSP server thay will negotiate one of
-the transports described below.
-.PP
-The URLs to use for RTSP are automatically generated by tvheadend and
-can be obtained from the web interfaces ('Watch Live') link in the 
-.B TV guide
-tab.
-.SS "Supported RTSP transports"
-.TP
-\fBRTP/AVP/UDP\fR and \fBRTP/AVP\fR \- RTP over UDP
-This transport transmits an MPEG transport stream over RTP over UDP.
-As the name suggest this transport
-uses a stream of UDP packets for media delivery. This means that the
-stream may have problems traversing NAT routers, firewalls, etc.
-.SS "Access control"
-Access control for the RTSP server is done by verifying the source IP address
-of the incomming RTSP/TCP connection. The permitted source addresses are
-listed in a subsection as follows:
-.PP
-.nf
-  rtsp-access {
-.fi
-.TP
-\fB\tpermit = \fR\fI<a.b.c.d/l>\fR
-Permits RTSP access from the given prefix.
-Multiple entries may be specified.
-.PP
-.nf
-  }
-.fi
-.PP
-Example that allows access from the 192.168.1.0/24 network and localhost:
-.PP
-.nf
-  rtsp-access {
-    permit = 192.168.1.0/24
-    permit = 127.0.0.1/32
-  }
-.fi
-.SH "OUTPUT - IPTV - IP Multicasted TV"
-This output module can be used to generate an always running IPTV
-multicasted stream. The generated output can be configured to be
-either \fBMPEG-TS/RTP/UDP\fR or \fBMPEG-TS/UDP\fR.
-.SS "Configuration"
-.PP
-.nf
-  multicast-output {
-.fi
-.TP
-\fB\tencapsulation = \fR\fIraw\fR | \fIrtp\fR
-Select encapsulation to use. Either raw UDP or RTP can be used.
-For RTP the payload type is set to 33 (M2TS) and the PCR is correctly
-updated based on the transmitted stream.
-.TP
-\fB\tchannel = \fR\fI<string>\fR
-Set the name of the channel to subscribe to.
-.TP
-\fB\tgroup-address = \fR\fI<a.b.c.d>\fR
-IP address of group. Currently only IPv4 is supported.
-.TP
-\fB\tport = \fR\fI<1-65535>\fR
-UDP Port number.
-.TP
-\fB\tttl = \fR\fI<1-255>\fR (optional)
-TTL to set in packets. Defaults to 32.
-.TP
-\fB\tinterface-address = \fR\fI<a.b.c.d>\fR (optional)
-Source IP address to use for stream. This will effectivly also control
-the output interface used. If omitted, the system will choose one
-based on the current routing table.
-.PP
-.nf
-  }
-.fi
-.PP
-.SH "OUTPUT - FILE - Personal/Digital Video Recorder"
-Recorded programs are stored in the matroska (.mkv) file format.
-All streams present in the source service is recorded.
-The program title and description is written as meta information in the file.
-No transcoding of audio or video is performed.
-The frame payload is stored exactly as received.
-.SS "Recording states"
-When the time of a recorded event is closer than 30 seconds the recorder
-with start a subscription. This 30 second period is inteded to be used
-for detecting if the show will start soon or if it is delayed. It is also
-used to determine if the channel still is in a commercial break. For
-more information about commercial break detection, please see the 
-\fBCOMMERCIAL DETECTION\fR chapter.
-.PP
-Disk write out is handled by a separate thread so tvheadend will gracefully
-handle any disk spinup time without stalling.
-.PP
-If there is a commercial break during recording, the recorder will pause
-disk write out and restart once the commercial break has passed.
-.PP
-Before the recorder starts write out it will wait for an I-frame so the
-output will start in a clean state. This also applies when resuming
-from a commercial break pause.
-.SS "Storage"
-The user should configure where the recorder store its files. Note that
-the disk write out is done in a separate thread so the system will not
-stall if any harddrives need to spin up.
-.TP
-\fB\tpvrdir = \fR\fI<directorypath>\fR (optional)
-Sets the directory where recordings will be saved. If this is omitted
-the recordings will be stored in the current directory.
-.SS "Post processing"
-Once a recording has been completed tvheadend can be configured to invoke
-an executable program (or script). The program may do any number of things
-such as move the file to a permanent location, do some tagging or even
-transcode the program.
-.PP
-The program to execute is set in the configuration:
-.TP
-\fB\tpvrpostproc = \fR\fI</path/to/program>\fR (optional)
-Points to an executable to be launched after a recording has been completed.
-.PP
-The program is invoked with arguments as follows:
-.TP
-\fB\targ1: \fR\fIfilename\fR
-Full path to the recorded file.
-.TP
-\fB\targ2: \fR\fIStatus\fR
-Status of recording. If 'ok' the recording was successful otherwise it is
-a short string describing the type of error.
-.TP
-\fB\targ3: \fR\fIClass\fR
-Could be used in the future to differentiate various recording actions.
-Currently it is always set to 'default'
-.TP
-\fB\targ4: \fR\fIChannel\fR
-Channelname of the recording.
-.TP
-\fB\targ5: \fR\fICreator\fR
-Username of the creator of the recording.
-.TP
-\fB\targ6: \fR\fITitle\fR
-EPG program title.
-.TP
-\fB\targ7: \fR\fIDescription\fR
-EPG program description.
-.PP
-The following example script would just print the various arguments passed:
-.PP
-.nf
-#!/bin/sh
-echo File.......: $1
-echo Status.....: $2
-echo Class......: $3
-echo Channel....: $4
-echo Creator....: $5
-echo Title......: $6
-echo Description: $7
-.fi
-.SH "OUTPUT - XBMSP - XBMC Media Streaming Protocol"
-Tvheadend can act as a native XBMSP server. 
-All channels are presented as virtual files. The channels are located
-in their respective channel group directory.
-Currently, the XBMSP discovery mechanism is not supported, so you need
-to explicitly configure your XBMSP client to point to the tvheadend server.
-.PP
-The XBMSP server requires that the clients authenticate themself.
-Username and Password is looked up in tvheadend's user database, and the
-\fBxbmsp\fR statement must be set to 1 in the user's sub-section
-for access to be granted.
-.SS "Configuration"
-XBMSP is disabled by default. To enable it, add the following
-configuration line:
-.TP
-\fB\txbmsp-server-port = \fR\fI<1-65535>\fR (optional)
-The default port for XBMSP is 1400, so you would probably want to set
-it to this number.
-.SH "OUTPUT - HTSP - Home Theater System Protocol (Proprietary)"
-To be described.
-.SH "XMLTV"
-Tvheadend can parse the output from an xmltv grabber. It executes
-the grabber directly and parse the information internally. It's
-important that you configure your xmltv grabber to take use of its
-cache (this should default be on) or it might cause excessive burden
-on the server if you stop and start tvheadend often.
-.SS "Channel mapping"
-Tvheadend will use the channel icon URL referred in the xmltv output
-as the channel icon. This icon is visible in the web ui, and also
-forwarded externally via the output modules where applicable.
-.PP
-Due to the fact that there may be differences between how channels are
-named in xmltv and DVB tvheadend utilizes a channel matching heuristic.
-If more than 10 consequtive events (i.e programs) matches between the
-EPG received from DVB and the xmltv EPG, the channels are said to
-match.
-.PP
-It will also match a channel from xmltv to the rest of the system if
-the channel names matches exactly.
-.SS "Transfer of event information"
-Once a channel has been matched all events will be transfered to the
-internal EPG.
-If there is any conflicting information between the DVB EPG and XMLTV EPG
-the DVB EPG will always take precedence.
-.SS "Configuration"
-Two global configuration statements are used to configure xmltv:
-.TP
-\fB\txmltvgrabber = \fR\fI<path>\fR (optional)
-Path to the xmltv grabber, e.g '/usr/bin/tv_grab_se_swedb'.
-If not specified, xmltv will be disabled.
-.TP
-\fB\txmltvinterval = \fR\fI<seconds>\fR (optional)
-Specifies the time, in seconds, between executions of the xmltv grabber.
-This defaults to 43200 (12 hours).
-.SH "COMMERCIAL DETECTION"
-Tvheadend is prepared to handle different techniques for detecting and
-removing commercial breaks from recorded shows.
-Currently, however, only one method is supported.
-.SS "Swedish TV4 teletext rundown"
-TV4 in sweden transmit their program rundown on page 192. Tvheadend can
-intercept this page and pause the recorder whenever there currently is
-a program chunk that is less than 400 seconds.
-.PP
-To configure this, use the \fBManage channels\fR web page and enter
-the number '192' in the 'teletext rundown' input field. If you are aware
-of any other channel that transmits the program rundown over teletext,
-than please contact me (Andreas).
-.SH "CSA DESCRAMBLER"
-Tvheadend contains a software based CSA descrambler.
-It is not throughly tested, but as usual, any feedback is welcome.
-Codewords are fetched from a code word server using the newcamd protocol.
-.SS "Configuration"
-To make tvheadend connect to a code word server. Add the following
-subsection to your configuration file. Multiple sections can be added
-for multiple server support.
-.PP
-.nf
-  cwc {
-.fi
-.TP
-\fB\thostname = \fR\fI<hostname>\fR
-Server hostname. This hostname will be resolved into an IP address at
-each connection attempt.
-.TP
-\fB\tport = \fR\fI<1-65535>\fR
-Port to connect to.
-.TP
-\fB\tusername = \fR\fI<string>\fR
-Username for this server.
-.TP
-\fB\tusername = \fR\fI<string>\fR
-Password for this server.
-.TP
-\fB\tdeskey = \fR\fI<xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx>\fR
-Initial 14 byte DES key for this server.
-.PP
-.nf
-  }
-.fi
+-s argument is given:
+Settings are stored where specificed. The directory must exist.
+No ownership changes are tried to be enforced on the directory.
 .SH "AUTHOR"
 .B Tvheadend
 and this man page is maintained by Andreas Oeman
@@ -647,4 +81,4 @@ and this man page is maintained by Andreas Oeman
 .PP
 You may also visit #hts at irc.freenode.net
 .SH "SEE ALSO"
-.BR http://www.lonelycoder.com/hts
+.BR http://hts.lonelycoder.com/
