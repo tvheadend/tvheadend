@@ -191,21 +191,13 @@ main(int argc, char **argv)
   struct passwd *pw;
   const char *usernam = NULL;
   const char *groupnam = NULL;
-  char *cfgfile = NULL;
   int logfacility = LOG_DAEMON;
-  int disable_dvb = 0;
   sigset_t set;
 
   signal(SIGPIPE, handle_sigpipe);
 
-  while((c = getopt(argc, argv, "c:fu:g:d")) != -1) {
+  while((c = getopt(argc, argv, "fu:g:")) != -1) {
     switch(c) {
-    case 'd':
-      disable_dvb = 1;
-      break;
-    case 'c':
-      cfgfile = optarg;
-      break;
     case 'f':
       forkaway = 1;
       break;
