@@ -193,10 +193,11 @@ main(int argc, char **argv)
   const char *groupnam = NULL;
   int logfacility = LOG_DAEMON;
   sigset_t set;
+  const char *settingspath = NULL;
 
   signal(SIGPIPE, handle_sigpipe);
 
-  while((c = getopt(argc, argv, "fu:g:")) != -1) {
+  while((c = getopt(argc, argv, "fu:g:s:")) != -1) {
     switch(c) {
     case 'f':
       forkaway = 1;
@@ -207,28 +208,38 @@ main(int argc, char **argv)
     case 'g':
       groupnam = optarg;
       break;
+    case 's':
+      settingspath = optarg;
+      break;
     }
   }
 
   if(forkaway) {
+
+    grp = getgrnam(groupnam ?: "video");
+    pw = usernam ? getpwnam(usernam) : NULL;
+
+    if(settingspath == NULL)
+      settingspath = "/var/lib/hts/tvheadend";
+    else
+      chown(settingspath, pw ? pw->pw_uid : 1, grp ? grp->gr_gid : 1);
+
     if(daemon(0, 0)) {
       exit(2);
     }
 
-    pidfile = fopen("/var/run/tvhead.pid", "w+");
+    pidfile = fopen("/var/run/tvheadend.pid", "w+");
     if(pidfile != NULL) {
       fprintf(pidfile, "%d\n", getpid());
       fclose(pidfile);
     }
 
-    grp = getgrnam(groupnam ?: "video");
-    if(grp != NULL) {
+   if(grp != NULL) {
       setgid(grp->gr_gid);
     } else {
       setgid(1);
     }
 
-    pw = usernam ? getpwnam(usernam) : NULL;
     
     if(pw != NULL) {
       setuid(pw->pw_uid);
@@ -244,7 +255,7 @@ main(int argc, char **argv)
 
   openlog("tvheadend", LOG_PID, logfacility);
 
-  hts_settings_init("tvheadend");
+  hts_settings_init("tvheadend", settingspath);
 
   pthread_mutex_init(&global_lock, NULL);
 
@@ -300,14 +311,23 @@ main(int argc, char **argv)
 
   pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 
-  fprintf(stderr, "\nHTS / Tvheadend version %s started\n", htsversion);
+  if(forkaway) {
+    syslog(LOG_NOTICE, "HTS Tvheadend version %s started, "
+	   "running as uid:%d gid:%d, settings located in '%s'",
+	   htsversion, getuid(), getgid(), hts_settings_get_root());
+
+  } else {
+    fprintf(stderr, "\nHTS Tvheadend version %s started, "
+	    "settings located in '%s'\n",
+	    htsversion, hts_settings_get_root());
+  }
 
   mainloop();
 
   syslog(LOG_NOTICE, "Exiting HTS Tvheadend");
 
   if(forkaway)
-    unlink("/var/run/tvhead.pid");
+    unlink("/var/run/tvheadend.pid");
 
   return 0;
 
