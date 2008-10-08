@@ -67,7 +67,7 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
                 deferredRender: false,
                 border: false,
 		items: [locationlist, {
-		    html: 'def',
+		    html: 'Not implemeted yet',
 		    title: 'Manual configuration'
 		}]
             })
