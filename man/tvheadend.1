@@ -16,12 +16,12 @@ All arguments are optional.
 \fB\-f
 Fork and become a background process (deamon). Default no.
 .TP
-\fB\-u \fR\fIuserid\fR
-Run as user with \fR\fIuid\fR. Only applicable if daemonizing. Default is to
+\fB\-u \fR\fIusername\fR
+Run as user \fIusername\fR. Only applicable if daemonizing. Default is to
 use the uid of 1 (daemon on most systems).
 .TP
-\fB\-g \fR\fIgroupid\fR
-Run as user with \fR\fIgid\fR. Only applicable if daemonizing. Default is to use the gid for the 'video' group. If the 'video' group does not exist, gid 1 (daemon) will be used.
+\fB\-g \fR\fIgroupname\fR
+Run as group \fR\fIgroupname\fR. Only applicable if daemonizing. Default is to use the 'video' group. If the 'video' group does not exist, gid 1 (daemon) will be used.
 .TP
 \fB\-s \fR\fIpath\fR
 Store settings in \fR\fIpath\fR. Default values varies depending on if
@@ -61,18 +61,15 @@ inside the web interface.
 .SS "Settings"
 Settings are stored in different locations depending on how Tvheadend
 was started.
-.TP
-When started as a daemon (-f) argument:
-Settings are stored in \fI/var/lib/hts/tvheadend\fR. Tvheadend will try to
-change the permissions of the directory so it is writable after switching to
-its designated userid/groupid.
-.TP
-When started as a normal executable (no arguments):
-Settings are stored in \fI$HOME/.hts/tvheadend\fR.
-.TP
--s argument is given:
-Settings are stored where specificed. The directory must exist.
-No ownership changes are tried to be enforced on the directory.
+.PP
+ If the (-s) argument is given, that path is always used.
+.PP
+Otherwise, tvheadend will try to store settings in
+\fI/var/lib/hts/tvheadend\fR.
+If this is not possible (due to access permission restriction) it will store
+it in the current users home directory under \fI.hts/tvheadend\fR.
+.PP
+If daemonizing, tvheadend will writes it pid in /var/run/tvheadend.pid
 .SH "AUTHOR"
 .B Tvheadend
 and this man page is maintained by Andreas Oeman

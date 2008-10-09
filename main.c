@@ -214,15 +214,21 @@ main(int argc, char **argv)
     }
   }
 
+
+  grp = getgrnam(groupnam ?: "video");
+  pw = usernam ? getpwnam(usernam) : NULL;
+
+  /**
+   * Select path where to store settings
+   */
+  if(settingspath == NULL) {
+    settingspath = "/var/lib/hts/tvheadend";
+    
+    if(chown(settingspath, pw ? pw->pw_uid : 1, grp ? grp->gr_gid : 1))
+      settingspath = NULL;
+  }
+
   if(forkaway) {
-
-    grp = getgrnam(groupnam ?: "video");
-    pw = usernam ? getpwnam(usernam) : NULL;
-
-    if(settingspath == NULL)
-      settingspath = "/var/lib/hts/tvheadend";
-    else
-      chown(settingspath, pw ? pw->pw_uid : 1, grp ? grp->gr_gid : 1);
 
     if(daemon(0, 0)) {
       exit(2);
@@ -311,16 +317,14 @@ main(int argc, char **argv)
 
   pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 
-  if(forkaway) {
-    syslog(LOG_NOTICE, "HTS Tvheadend version %s started, "
-	   "running as uid:%d gid:%d, settings located in '%s'",
-	   htsversion, getuid(), getgid(), hts_settings_get_root());
-
-  } else {
+  syslog(LOG_NOTICE, "HTS Tvheadend version %s started, "
+	 "running as pid:%d uid:%d gid:%d, settings located in '%s'",
+	 htsversion, getpid(), getuid(), getgid(), hts_settings_get_root());
+  
+ if(!forkaway)
     fprintf(stderr, "\nHTS Tvheadend version %s started, "
 	    "settings located in '%s'\n",
 	    htsversion, hts_settings_get_root());
-  }
 
   mainloop();
 
