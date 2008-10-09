@@ -731,8 +731,12 @@ cwc_thread(void *aux)
     pthread_mutex_lock(&global_lock);
 
     if(fd == -1) {
-      tvhlog(LOG_INFO, "cwc", "Connection attempt to %s:%d failed: %s",
+      tvhlog(LOG_INFO, "cwc", 
+	     "Connection attempt to %s:%d failed: %s, retry in 3 seconds",
 	     hostname, port, errbuf);
+      pthread_mutex_unlock(&global_lock);
+      sleep(3);
+      pthread_mutex_lock(&global_lock);
       continue;
     }
 
