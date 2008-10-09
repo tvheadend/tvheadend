@@ -1,0 +1,48 @@
+<div class="hts-doc-text">
+
+ <img src="docresources/configdvrtab.png">
+
+ <p>
+ This tab is used to configure operation of the Digital Video Recorder.
+ It is not used for scheduling or administration of individual recordings.
+
+ <p>
+ Configuration options:
+ <dl>
+  <dt>Recording system path
+  <dd>Path to where Tvheadend will write recorded events. If components of
+      the path does not exist, Tvheadend will try to create them.
+
+  <dt>DVR Log retention time (days)
+  <dd>Time that Tvheadend will keep information about the recording in
+      its internal database. Notice that the actual recorded file will not
+      be deleted when the log entry is deleted.
+
+  <dt>Make subdirectories per day
+  <dd>If checked, Tvheadend will create a new directory per day in the
+      recording system path. Only days when anything is recorded will be 
+      created. The format of the directory will be 'YYYY-MM-DD' (ISO standard)
+
+  <dt>Make subdirectories per channel
+  <dd>If checked, Tvheadend will create a directory per channel when storing
+      events. If both this and the 'directory per day' checkbox is enabled.
+      The date-directory will be parent to the per-channel directory.
+
+  <dt>Include channel name in title
+  <dd>If checked, Tvheadend will include the name of the channel in the
+      event title. This applies to both the titled stored in the file
+      and to the filename itself.
+
+  <dt>Include date in title
+  <dd>If checked, Tvheadend will include the date for the recording in the
+      event title. This applies to both the titled stored in the file
+      and to the filename itself.
+
+  <dt>Include time in title
+  <dd>If checked, Tvheadend will include the time for the recording in the
+      event title. This applies to both the titled stored in the file
+      and to the filename itself.
+ </dl>
+ Changes to any of these settings must be confirmed by pressing the
+ 'Save configuration' button before taking effect.
+</div>

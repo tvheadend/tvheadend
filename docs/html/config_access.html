@@ -1,0 +1,98 @@
+<div class="hts-doc-text">
+
+Setting upp access control is an important initial step as the system initially is
+wide open.
+
+<img src="docresources/accessconfig.png">
+
+<p>
+When Tvheadend verifies access is scan thru all the enabled access control entries.
+The permission flags are combined for all matchin access entries.
+An access entry is said to match if the username / password matches and the IP source
+address of the requesting peer is within the prefix.
+<p>
+
+The access rules are listed / edited  in a grid. 
+
+<ul>
+ <li>To edit a cell, double click on it. After a cell is changed it
+     will flags one of its corner to red to indicated that it has been
+     changed. To commit these changes back to Tvheadend press the 
+     'Save changes' button. In order to change a Checkbox cell you only
+     have to click once in it.
+
+ <li>To add a new entry, press the 'Add entry' button. The new (empty) entry
+     will be created on the server but will not be in its enabled state.
+     You can now change all the cells to the desired values, check the
+     'enable' box and then press 'Save changes' to activate the new entry.
+
+ <li>To delete one or more entries, select the lines (by clicking once on 
+     them), and press the 'Delete selected' button. A popup
+     will ask you to confirm your request.
+</ul>
+
+<p>
+The columns have the following functions:
+
+<dl>
+ <dt>Enabled
+ <dd>Make the entry participate in access control. If disabled, the entry
+     is inactive.
+
+  <dt>Username
+  <dd>
+  Name of user, if no username is needed for match it should contain a
+  single asterix (*).
+
+  <dt>Password
+  <dd>
+  Password to combine with user, if username is '*' (unused), the password
+  should be the same.
+
+  <dt>Prefix
+  <dd>
+  IPv4 prefix for matching based on source IP address.
+  If set to 0.0.0.0/0 it will match everything.
+
+  <dt>Streaming
+  <dd>
+  Enables access to streaming function. The 'streaming' access is enough to
+  make Showtime (over HTSP) work.
+
+  <dt>Video Recorder
+  <dd>
+  Enables access to all video recording functions. This also include administration
+  of the auto recordings.
+
+  <dt>Web interface
+  <dd>
+  Required for web user interface access. Also gives access to the EPG.
+
+  <dt>Admin
+  <dd>
+  Enables access to the Configuration tab.
+
+  <dt>Comment
+  <dd>
+  Allows the administrator to set a comment only visible in this editor.
+  It does not serve any active purpose.
+ </dl>
+
+<p>
+Let's also take a look at an example:
+<p>
+<img src="docresources/accessconfigexample.png">
+<p>
+First line gives clients orignating from 192.168.0.0 - 192.168.0.255 network
+access to streaming functions. Typically you would use this for your
+local media players at home (Allthough Showtime can prompt for username & password
+in its HTSP client)
+<p>
+The second line adds a user with world wide access who might want to modify
+recordings, etc, perhaps from the job, or mobile phone.
+<p>
+The third line provide admin access to the 'admin' user. As an extra precaution this
+user is only allowed to log in from the home network.
+<p>
+
+</div>

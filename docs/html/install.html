@@ -1,0 +1,107 @@
+<div class="hts-doc-text">
+Parts of this documentation is also available in the Tvheadend man page.
+<p>
+<dl>
+ <dt>Starting Tvheadend
+ <dd>
+ If you already have Tvheadend up and running you can skip this part.
+ <p>
+ Command line options:
+ <dl>
+  <dt>-f
+  <dd>
+  Fork and become a background process (deamon). Default no.
+
+  <dt>-u username
+  <dd>
+  Run as 'username'. Only applicable if daemonizing. Default is to
+  use the uid of 1 (daemon on most systems).
+
+  <dt>-g groupname
+  <dd>
+  Run as group 'groupname'. Only applicable if daemonizing. 
+  Default is to use the 'video' group. 
+  If the 'video' group does not exist, gid 1 (daemon) will be used.
+
+  <dt>-s path
+  <dd>
+  Store settings in path. Default values varies depending on if
+  daemonizing or not. See settings storage section below for details.
+ </dl>
+
+
+ <dt>Default configuration
+ <dd>
+ All configuration in Tvheadend is maintained via its embedded web
+ server running on port 9981. Just point your browser to:
+ <p>
+ http://hostname:9981/
+ <p>
+
+ By default <b>everyone (also from remote hosts)is allowed full
+ access to all features / settings</b> in the web user interface. If
+ this is the first time you setup Tvheadend you are most encouraged to
+ enter the web user interface, selected the 'Configuration' + 'Access Control'
+ tab and make reasonable changes. Futher help / documentationcan be obtained
+ inside the web interface.
+
+ <dt>Settings storage
+ <dd>
+  Settings are stored in different locations depending on how Tvheadend
+  was started.
+  <p>
+  If the (-s) argument is given, that path is always used.
+  <p>
+  Otherwise, tvheadend will try to store settings in <b>/var/lib/hts/tvheadend</b>.
+  If this is not possible (due to access permission restriction) it will store
+  it in the current user home directory under .hts/tvheadend.
+  <p>
+  If daemonizing, tvheadend will writes its running pid in /var/run/tvheadend.pid
+
+ <dt>Logging
+ <dd>
+ All activity inside tvheadend is logged to syslog using log facility.
+ Also, if logged in to the web interface you will receive the same log in the bottom
+ tab (System log).
+
+
+ <dt>Permission to access video adapters
+ <dd>
+ In order for Tvheadend to control video adapters on the system it
+ must be granted access to those devices. Most systems have a 'video'
+ group with write access to the video adapter devices. When Tvheadend
+ is started as a daemon (if Tvheadend is installed from a distibution package
+ this is most likely the way it is) it will automatcially change its primary group
+ to 'video' in order to access these groups. If your system is configured
+ in a different way you can either change the group membership of the
+ video adapters (/dev/dvb, etc) or reconfigure the Tvheadend startup
+ parameters.
+ <p>
+ If Tvheadend is started without the '-f' argument it will not daemonize
+ nor change its primary userid/groupid. Rather it will run with the permissions
+ granted to the user executing the binary. If that's the case you must make
+ sure the current user is granted with access to the video devices.
+
+
+ <dt>Open ports
+ <dd>
+ Tvheadend listens to the following TCP ports by default:
+ <ul>
+  <li>9981 - HTTP server (web interface)
+  <li>9982 - HTSP server (Showtime protocol)
+ </ul>
+ There is currently no way of disabling these TCP servers, nor bind the services to
+ specific interfaces or other ports.
+ To limit access, please read the section about 'Access Control' 
+ in the configuration chapter.
+
+
+ <dt>Building Tvheadend from source
+ <dd>
+ If you want to build tvheadend from source, visit 
+ <a href="http://trac.lonelycoder.com/hts/wiki/howtobuildhts">this</a> page.
+ Please notice that wiki development site only reflects the work
+ in HEAD (-current). The instructions should not deviate much should you want to
+ build a released version from source, but you never know.
+</dl>
+</div>

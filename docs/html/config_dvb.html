@@ -1,0 +1,96 @@
+<div class="hts-doc-text">
+
+ <img src="docresources/configdvbtab.png">
+
+ <p>
+ This tab is split in two panes. To the left is a tree which, at root level,
+ contains all DVB adapters found by Tvheadend during startup.
+
+
+ <dl>
+  <dt>Step by step configuration of DVB
+  <dd>
+  The DVB configuration is perhaps the most tricky part to configure
+  in Tvheadend. Therefore, this section begins with a step-by-step
+  guide.
+  <ul>
+   <li>Click on an adapter in the left pane.
+   <li>Click on 'Add mux(es)'. A popup window will appear:
+   <br>
+   <img src="docresources/muxbylocation.png">
+   <br>
+   For DVB-T and DVB-C adapters, expand appropriate country.
+   DVB-S adapters only have one folder to expand called 'Geosynchronous Orbit'.
+   In these folders you find a list of available networks.
+   Select the appropriate network and press the 'Add' button.
+   
+   <li>
+   Tvheadend will now immediately start to probe each mux for available
+   services. Expand the DVB adapter in the tree 
+   and wait until all muxes has been visisted
+   at least once (Status of all multiplexes should change from 'Unknown' 
+   when a mux has been visited).
+
+   <li>
+   You can now, if you want, verify that the mux scanner has found 
+   services by expanding the mux nodes.
+
+   <li>
+   Select the adapters again and press 'Probe services'.
+   A popup will ask you to confirm this action. Press 'Yes'.
+   The Service probe will scan through all services on all muxes on the
+   adapter and map them to channels with the corresponding name.
+   Progress and result for each service is displayed in the 'System Log'
+   at the bottom of the application. Wait until the probing is completed.
+   <li>
+   Done! You can click over to the 'Channels' configuration tab and 
+   inspect all working channels.
+
+
+  </ul>
+  <dt>DVB Adapters
+  <dd>
+  A DVB adapter represents a piece of hardware attached to the system.
+  DVB receivers with dual tuners will present themself as two adapters
+  to the Tvheadend application. Tvheadend support DVB-T, DVB-C and DVB-S
+  adapters.
+  <p>
+  When an adapter is selected, the right pane displays configurable items
+  for the adapter. Also available in the right toolbar is a set of operations
+  that can be performed on the adapter.
+  <p>
+  Underneath each adapter in the tree is a list of DVB muxes.
+  For more information about muxes, see further down.
+  <p>
+  There is currently no way of adding a new adapter to Tvheadend when running.
+  If a new adapter is plugged into the system Tvheadend needs to be restarted
+  in order to detect it.
+  <p>
+  If Tvheadend has configuration for an adapter and the adapter is missing
+  upon startup the configuration will be left untouched in case the adapter
+  will be back in the future. There is currently no way to remove configuration
+  for a no longer present adapter.
+  <p>
+  Warning: Unplugging an DVB adapter (USB, etc) during operation (i.e when
+  Tvheadend is running) can result in deadlocking the kernel USB subsystem,
+  most likely requiring a system restart.
+  <p>
+  Warning2: Suspending a system is (from a USB driver perspective) equivalent
+  to a unplug/insert event. Thus, suspending a system running Tvheadend
+  with USB adapters is not recommented at the moment.
+
+  <dt>DVB Multiplexes
+  <dd>
+  To put it simply, a DVB multiplex is a digital signal modulated
+  at a specific frequency that carries a number of servies (where a
+  service could be, but is not limited to, a TV channel).
+  <p>
+  There are currently no operations that can be performed on a single mux.
+
+  <dt>DVB Services
+  <dd>
+  A service is equivivalent to a TV channel.
+  <p>
+  There are currently no operations that can be performed on a single service.
+ </dl>
+</div>
