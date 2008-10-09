@@ -54,13 +54,13 @@
 #include <libhts/htsparachute.h>
 #include <libhts/htssettings.h>
 
-
 int running;
 extern const char *htsversion;
+extern const char *htsversion_full;
 time_t dispatch_clock;
 static LIST_HEAD(, gtimer) gtimers;
 pthread_mutex_t global_lock;
-
+const char *contentpath = HTS_INSTALL_PREFIX "/share/hts/tvheadend/";
 
 
 static void
@@ -197,7 +197,7 @@ main(int argc, char **argv)
 
   signal(SIGPIPE, handle_sigpipe);
 
-  while((c = getopt(argc, argv, "fu:g:s:")) != -1) {
+  while((c = getopt(argc, argv, "fu:g:s:c:")) != -1) {
     switch(c) {
     case 'f':
       forkaway = 1;
@@ -210,6 +210,9 @@ main(int argc, char **argv)
       break;
     case 's':
       settingspath = optarg;
+      break;
+    case 'c':
+      contentpath = optarg;
       break;
     }
   }
@@ -319,12 +322,13 @@ main(int argc, char **argv)
 
   syslog(LOG_NOTICE, "HTS Tvheadend version %s started, "
 	 "running as pid:%d uid:%d gid:%d, settings located in '%s'",
-	 htsversion, getpid(), getuid(), getgid(), hts_settings_get_root());
+	 htsversion_full,
+	 getpid(), getuid(), getgid(), hts_settings_get_root());
   
  if(!forkaway)
-    fprintf(stderr, "\nHTS Tvheadend version %s started, "
-	    "settings located in '%s'\n",
-	    htsversion, hts_settings_get_root());
+    fprintf(stderr, "\nHTS Tvheadend version %s started.\n"
+	    "Settings located in '%s'\n",
+	    htsversion_full, hts_settings_get_root());
 
   mainloop();
 

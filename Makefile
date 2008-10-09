@@ -50,8 +50,31 @@ DLIBS  += $(FFMPEG_DLIBS)
 SLIBS  += $(FFMPEG_SLIBS)
 CFLAGS += $(FFMPEG_CFLAGS)
 
-DLIBS += -lpthread
+DLIBS += -lpthread -lm -lz
 
 include ../build/prog.mk
 
 
+#
+# Install
+#
+prefix ?= $(INSTALLPREFIX)
+INSTBIN= $(prefix)/bin
+INSTMAN= $(prefix)/share/man1
+INSTSHARE= $(prefix)/share/hts/tvheadend
+
+install: ${PROG}
+	mkdir -p $(INSTBIN)
+	cd $(.OBJDIR) && install -s ${PROG} $(INSTBIN)
+
+	mkdir -p $(INSTMAN)
+	cd man && install ${MAN} $(INSTMAN)
+
+	mkdir -p $(INSTSHARE)/docs/html
+	cp  docs/html/*.html $(INSTSHARE)/docs/html
+
+	mkdir -p $(INSTSHARE)/docs/docresources
+	cp  docs/docresources/*.png $(INSTSHARE)/docs/docresources
+
+	find webui/static/ -type d |grep -v .svn | awk '{print "$(INSTSHARE)/"$$0}' | xargs mkdir -p 
+	find webui/static/ -type f |grep -v .svn | awk '{print $$0 " $(INSTSHARE)/"$$0}' | xargs -n2 cp
