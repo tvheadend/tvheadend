@@ -45,6 +45,7 @@
 #include "epg.h"
 
 extern const char *htsversion;
+extern const char *htsversion_full;
 
 static void
 extjs_load(htsbuf_queue_t *hq, const char *script)
@@ -148,6 +149,37 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
 		 "<div id=\"systemlog\"></div>\n"
 		 "</body></html>\n",
 		 htsversion);
+  http_output_html(hc);
+  return 0;
+}
+
+
+/**
+ * 
+ */
+static int
+page_about(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+
+  htsbuf_qprintf(hq, 
+		 "<center>"
+		 "<div class=\"about-title\">"
+		 "HTS Tvheadend %s"
+		 "</div><br>"
+		 "&copy; 2006 - 2008 Andreas \303\226man, et al.<br><br>"
+		 "<img src=\"docresources/tvheadendlogo.png\"><br>"
+		 "<a href=\"http://hts.lonelycoder.com/\">"
+		 "http://hts.lonelycoder.com/</a><br><br>"
+		 "Based on software from "
+		 "<a href=\"http://www.ffmpeg.org/\">FFmpeg</a> and "
+		 "<a href=\"http://www.extjs.org/\">ExtJS</a>.<br>"
+		 "<br>"
+		 "Build %s"
+		 "</center>",
+		 htsversion,
+		 htsversion_full);
+
   http_output_html(hc);
   return 0;
 }
@@ -1201,6 +1233,7 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
 void
 extjs_start(void)
 {
+  http_path_add("/about.html",  NULL, page_about,        ACCESS_WEB_INTERFACE);
   http_path_add("/extjs.html",  NULL, extjs_root,        ACCESS_WEB_INTERFACE);
   http_path_add("/tablemgr",    NULL, extjs_tablemgr,    ACCESS_WEB_INTERFACE);
   http_path_add("/dvbtree",     NULL, extjs_dvbtree,     ACCESS_WEB_INTERFACE);

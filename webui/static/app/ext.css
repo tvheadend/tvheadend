@@ -150,3 +150,8 @@
 .hts-doc-text img {
  padding: 10px;
 }
+
+.about-title {
+  font:normal 24px verdana;
+  font-weight: bold;
+}

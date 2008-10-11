@@ -58,10 +58,17 @@ function accessUpdate(o) {
 	tvheadend.rootTabPanel.add(tvheadend.confpanel);
     }
 
+    tvheadend.aboutPanel = new Ext.Panel({
+	border: false,
+	layout:'fit', 
+	title:'About',
+	autoLoad: '/about.html'
+    });
+
+    tvheadend.rootTabPanel.add(tvheadend.aboutPanel);
+    
 
     tvheadend.rootTabPanel.doLayout();
-
-    console.log(o);
 }
 
 /**
