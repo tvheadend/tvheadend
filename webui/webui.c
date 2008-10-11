@@ -71,17 +71,13 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
 /**
  * Static download of a file from the filesystem
  */
-extern char *contentpath;
 
 static int
 page_static(http_connection_t *hc, const char *remain, void *opaque)
 {
+  extern char *contentpath;
+
   int fd;
-#ifdef HTS_BUILD_ROOT
-  const char *rootpath = HTS_BUILD_ROOT "/tvheadend";
-#else
-  const char *rootpath = contentpath;
-#endif
   char path[500];
   struct stat st;
   const char *content = NULL, *postfix;
@@ -96,7 +92,7 @@ page_static(http_connection_t *hc, const char *remain, void *opaque)
       content = "text/javascript; charset=UTF-8";
   }
 
-  snprintf(path, sizeof(path), "%s/webui/static/%s", rootpath, remain);
+  snprintf(path, sizeof(path), "%s/webui/static/%s", contentpath, remain);
 
   if((fd = open(path, O_RDONLY)) < 0)
     return 404;

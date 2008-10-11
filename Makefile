@@ -78,3 +78,8 @@ install: ${PROG}
 
 	find webui/static/ -type d |grep -v .svn | awk '{print "$(INSTSHARE)/"$$0}' | xargs mkdir -p 
 	find webui/static/ -type f |grep -v .svn | awk '{print $$0 " $(INSTSHARE)/"$$0}' | xargs -n2 cp
+
+uninstall:
+	rm -f $(INSTBIN)/${PROG}
+	rm -f $(INSTMAN)/${MAN}
+	rm -rf $(INSTSHARE)

@@ -60,8 +60,8 @@ extern const char *htsversion_full;
 time_t dispatch_clock;
 static LIST_HEAD(, gtimer) gtimers;
 pthread_mutex_t global_lock;
-const char *contentpath = HTS_INSTALL_PREFIX "/share/hts/tvheadend/";
 
+const char *contentpath = HTS_CONTENT_PATH "/tvheadend";
 
 static void
 handle_sigpipe(int x)
