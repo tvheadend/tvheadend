@@ -215,6 +215,12 @@ tvheadend.dvb = function() {
 	border: false,
 	title:'DVB Adapters',
 	layout:'border',
+	tbar: ['->', {
+	    text: 'Help',
+	    handler: function() {
+		new tvheadend.help('DVB', 'config_dvb.html');
+	    }
+	}],
 	items: [tree, details]
     });
 

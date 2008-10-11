@@ -275,6 +275,13 @@ tvheadend.epg = function() {
 		    'record all future programmes that matches ' +
 		    'the current query.',
 		handler: createAutoRec
+	    },
+	    '-',
+	    {
+		text: 'Help',
+		handler: function() {
+		    new tvheadend.help('Electronic Program Guide', 'epg.html');
+		}
 	    }
 	],
 	

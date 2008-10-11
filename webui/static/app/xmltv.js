@@ -125,6 +125,12 @@ tvheadend.xmltv = function() {
 	    iconCls:'save',
 	    text: "Save configuration",
 	    handler: saveChanges
+	}, '->', {
+	    text: 'Help',
+	    handler: function() {
+		new tvheadend.help('XMLTV configuration', 
+				   'config_xmltv.html');
+	    }
 	}],
 	
     });

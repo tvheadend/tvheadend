@@ -68,5 +68,7 @@ tvheadend.acleditor = function() {
 				     UserRecord,
 				     [enabledColumn, streamingColumn,
 				      dvrColumn, webuiColumn,
-				      adminColumn]);
+				      adminColumn],
+				     null,
+				    'config_access.html');
 }

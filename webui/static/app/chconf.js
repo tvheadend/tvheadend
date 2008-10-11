@@ -224,6 +224,12 @@ tvheadend.channeldetails = function(chid, chname) {
 	    iconCls:'save',
 	    text: "Save configuration",
 	    handler: saveChanges
+	}, '->', {
+	    text: 'Help',
+	    handler: function() {
+		new tvheadend.help('Channel configuration', 
+				   'config_channels.html');
+	    }
 	}],
 	defaults: {
 	    border:false,

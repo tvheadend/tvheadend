@@ -125,3 +125,28 @@
 .x-epg-meta {
     margin: 5px;
 }
+
+
+
+
+.hts-doc-text {
+  font:normal 11px verdana;
+}
+
+.hts-doc-text dt {
+  padding-top: 10px;
+  font-weight: bold;
+}
+
+.hts-doc-text dl {
+  padding-bottom: 10px;
+}
+
+.hts-doc-text li {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.hts-doc-text img {
+ padding: 10px;
+}

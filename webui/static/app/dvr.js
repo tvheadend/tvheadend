@@ -150,7 +150,17 @@ tvheadend.dvrlog = function() {
 	store: tvheadend.dvrStore,
 	cm: dvrCm,
         viewConfig: {forceFit:true},
-	
+	tbar: [
+	    '->',
+	    {
+		text: 'Help',
+		handler: function() {
+		    new tvheadend.help('Digital Video Recorder',
+				       'dvrlog.html');
+		}
+	    }
+
+	],
         bbar: new Ext.PagingToolbar({
             store: tvheadend.dvrStore,
             pageSize: 20,
@@ -241,7 +251,8 @@ tvheadend.autoreceditor = function() {
 
     return new tvheadend.tableEditor('Automatic Recorder',
 				     'autorec', cm, tvheadend.autorecRecord,
-				     [enabledColumn], tvheadend.autorecStore);
+				     [enabledColumn], tvheadend.autorecStore,
+				     'autorec.html');
 }
 /**
  *
@@ -354,6 +365,12 @@ tvheadend.dvrsettings = function() {
 	    iconCls:'save',
 	    text: "Save configuration",
 	    handler: saveChanges
+	}, '->', {
+	    text: 'Help',
+	    handler: function() {
+		new tvheadend.help('DVR configuration', 
+				   'config_dvr.html');
+	    }
 	}],
 	
     });

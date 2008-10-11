@@ -75,7 +75,7 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
 static int
 page_static(http_connection_t *hc, const char *remain, void *opaque)
 {
-  extern char *contentpath;
+  const char *base = opaque;
 
   int fd;
   char path[500];
@@ -92,7 +92,7 @@ page_static(http_connection_t *hc, const char *remain, void *opaque)
       content = "text/javascript; charset=UTF-8";
   }
 
-  snprintf(path, sizeof(path), "%s/webui/static/%s", contentpath, remain);
+  snprintf(path, sizeof(path), "%s/%s", base, remain);
 
   if((fd = open(path, O_RDONLY)) < 0)
     return 404;
@@ -178,10 +178,21 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 void
 webui_init(void)
 {
+  extern char *contentpath;
+  char buf[300];
+
   http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
 
-  http_path_add("/static", NULL, page_static, ACCESS_WEB_INTERFACE);
   http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_WEB_INTERFACE);
+
+  snprintf(buf, sizeof(buf), "%s/webui/static", contentpath);
+  http_path_add("/static", strdup(buf), page_static, ACCESS_WEB_INTERFACE);
+
+  snprintf(buf, sizeof(buf), "%s/docs/html", contentpath);
+  http_path_add("/docs", strdup(buf), page_static, ACCESS_WEB_INTERFACE);
+
+  snprintf(buf, sizeof(buf), "%s/docs/docresources", contentpath);
+  http_path_add("/docresources", strdup(buf), page_static, ACCESS_WEB_INTERFACE);
 
   //  simpleui_start();
   extjs_start();

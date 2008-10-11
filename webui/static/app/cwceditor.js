@@ -45,5 +45,6 @@ tvheadend.cwceditor = function() {
     ]);
 
     return new tvheadend.tableEditor('Code Word Client', 'cwc', cm, rec,
-				     [enabledColumn]);
+				     [enabledColumn], null,
+				    'config_cwc.html');
 }

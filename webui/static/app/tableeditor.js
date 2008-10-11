@@ -1,4 +1,5 @@
-tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store) {
+tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
+				 helpContent) {
     cm.defaultSortable = true;
 
     if(store == null) {
@@ -107,6 +108,11 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store) {
 	    iconCls:'save',
 	    text: "Save changes",
 	    handler: saveChanges
+	}, '->', {
+	    text: 'Help',
+	    handler: function() {
+		new tvheadend.help(title, helpContent);
+	    }
 	}
 	      ]
     });

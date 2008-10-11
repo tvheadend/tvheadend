@@ -1,4 +1,35 @@
 
+/**
+ * This function creates top level tabs based on access so users without 
+ * access to subsystems won't see them.
+ *
+ * Obviosuly, access is verified in the server too.
+ */
+tvheadend.help = function(title, pagename) {
+    Ext.Ajax.request({
+	url: '/docs/' + pagename,
+	success: function(result, request) { 
+
+	    var content = new Ext.Panel({
+		autoScroll:true,
+		border: false,
+		layout:'fit', 
+		html: result.responseText
+	    });
+
+	    var win = new Ext.Window({
+		title: 'Help for ' + title,
+		layout: 'fit',
+		width: 900,
+		height: 400,
+		constrainHeader: true,
+		items: [content]
+	    });    
+	    win.show();
+
+	}});
+}
+
 
 /**
  * This function creates top level tabs based on access so users without 
