@@ -175,7 +175,7 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 		 "<a href=\"http://www.ffmpeg.org/\">FFmpeg</a> and "
 		 "<a href=\"http://www.extjs.org/\">ExtJS</a>.<br>"
 		 "<br>"
-		 "Build %s"
+		 "Build: %s"
 		 "</center>",
 		 htsversion,
 		 htsversion_full);
