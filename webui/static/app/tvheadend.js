@@ -1,9 +1,6 @@
 
 /**
- * This function creates top level tabs based on access so users without 
- * access to subsystems won't see them.
- *
- * Obviosuly, access is verified in the server too.
+ * Displays a help popup window
  */
 tvheadend.help = function(title, pagename) {
     Ext.Ajax.request({
