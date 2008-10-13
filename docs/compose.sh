@@ -18,8 +18,6 @@ else
     }
 fi
 
-cat header.html
-
 emit chapter 1     "Overview"                              html/tvheadend.html
 emit section 1.1   "List of features"                      html/features.html
 emit section 1.2   "Install and initial setup"             html/install.html
