@@ -132,7 +132,7 @@ channel_set_name(channel_t *ch, const char *name)
   l = strlen(name);
   ch->ch_sname = cp = malloc(l + 1);
 
-  n2 = utf8toprintable(name);
+  n2 = strdup(name);
 
   for(i = 0; i < strlen(n2); i++) {
     c = tolower(n2[i]);

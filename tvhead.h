@@ -832,8 +832,6 @@ typedef struct th_muxstream {
 #endif
 
 
-char *utf8toprintable(const char *in);
-char *utf8tofilename(const char *in);
 const char *streaming_component_type2txt(streaming_component_type_t s);
 
 static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
