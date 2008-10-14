@@ -18,7 +18,7 @@ else
     }
 fi
 
-emit chapter 1     "Overview"                              html/tvheadend.html
+emit chapter 1     "Overview"                              html/overview.html
 emit section 1.1   "List of features"                      html/features.html
 emit section 1.2   "Install and initial setup"             html/install.html
 emit section 1.3   "Frequently Asked Questions"            html/faq.html
