@@ -93,7 +93,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, event_t *e)
       return 0;
   }
   
-  if(dae->dae_title != NULL && 
+  if(dae->dae_title != NULL && e->e_title != NULL &&
      regexec(&dae->dae_title_preg, e->e_title, 0, NULL, 0))
     return 0;
 

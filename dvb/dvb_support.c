@@ -35,18 +35,48 @@
 #include "dvb_support.h"
 #include "dvb.h"
 
+/**
+ *
+ */
+static iconv_t convert_iso_8859[16];
+static iconv_t convert_utf8;
+static iconv_t convert_latin1;
+
+
+static iconv_t
+dvb_iconv_open(const char *srcencoding)
+{
+  iconv_t ic;
+  ic = iconv_open("UTF8", srcencoding);
+  return ic;
+}
+
+void
+dvb_conversion_init(void)
+{
+  char buf[50];
+  int i;
+ 
+  for(i = 1; i <= 15; i++) {
+    snprintf(buf, sizeof(buf), "ISO_8859-%d", i);
+    convert_iso_8859[i] = dvb_iconv_open(buf);
+  }
+
+  convert_utf8   = dvb_iconv_open("UTF8");
+  convert_latin1 = dvb_iconv_open("LATIN1");
+}
+
+
+
 /*
  * DVB String conversion according to EN 300 468, Annex A
  * Not all character sets are supported, but it should cover most of them
  */
 
 int
-dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, 
-	       size_t srclen, const char *target_encoding)
+dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen)
 {
   iconv_t ic;
-  const char *encoding;
-  char encbuf[20];
   int len;
   char *in, *out;
   size_t inlen, outlen;
@@ -65,8 +95,7 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src,
     return -1;
 
   case 0x01 ... 0x0b:
-    snprintf(encbuf, sizeof(encbuf), "ISO_8859-%d", src[0] + 4);
-    encoding = encbuf;
+    ic = convert_iso_8859[src[0]];
     src++; srclen--;
     break;
 
@@ -77,8 +106,7 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src,
     if(srclen < 3 || src[1] != 0 || src[2] == 0 || src[2] > 0x0f)
       return -1;
 
-    snprintf(encbuf, sizeof(encbuf), "ISO_8859-%d", src[2]);
-    encoding = encbuf;
+    ic = convert_iso_8859[src[2]];
     src+=3; srclen-=3;
     break;
     
@@ -86,14 +114,14 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src,
     return -1;
 
   case 0x15:
-    encoding = "UTF8";
+    ic = convert_utf8;
     utf8 = 1;
     break;
   case 0x16 ... 0x1f:
     return -1;
 
   default:
-    encoding = "LATIN1"; /* Default to latin-1 */
+    ic = convert_latin1;
     break;
   }
 
@@ -116,10 +144,8 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src,
     }
   }
 
-  ic = iconv_open(target_encoding, encoding);
-  if(ic == (iconv_t) -1) {
+  if(ic == (iconv_t) -1)
     return -1;
-  }
 
   inlen = srclen;
   outlen = dstlen - 1;
@@ -141,7 +167,6 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src,
     }
   }
 
-  iconv_close(ic);
   len = dstlen - outlen - 1;
   dst[len] = 0;
   return 0;
@@ -150,15 +175,14 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src,
 
 int
 dvb_get_string_with_len(char *dst, size_t dstlen, 
-			const uint8_t *buf, size_t buflen, 
-			const char *target_encoding)
+			const uint8_t *buf, size_t buflen)
 {
   int l = buf[0];
 
   if(l + 1 > buflen)
     return -1;
 
-  if(dvb_get_string(dst, dstlen, buf + 1, l, target_encoding))
+  if(dvb_get_string(dst, dstlen, buf + 1, l))
     return -1;
 
   return l + 1;

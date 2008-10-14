@@ -19,9 +19,12 @@
 
 #include "tvhead.h"
 #include "dvb.h"
+#include "dvb_support.h"
 
 void
 dvb_init(void)
 {
   dvb_adapter_init();
+  dvb_conversion_init();
+
 }

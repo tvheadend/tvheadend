@@ -44,11 +44,10 @@
 #define DVB_DESC_AC3          0x6a
 
 int dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, 
-		   const size_t srclen, const char *target_encoding);
+		   const size_t srclen);
 
 int dvb_get_string_with_len(char *dst, size_t dstlen, 
-			    const uint8_t *buf, size_t buflen, 
-			    const char *target_encoding);
+			    const uint8_t *buf, size_t buflen);
 
 #define bcdtoint(i) ((((i & 0xf0) >> 4) * 10) + (i & 0x0f))
 
@@ -62,5 +61,6 @@ th_dvb_mux_instance_t *dvb_mux_find_by_identifier(const char *identifier);
 void dvb_mux_nicename(char *buf, size_t size, th_dvb_mux_instance_t *tdmi);
 int dvb_mux_badness(th_dvb_mux_instance_t *tdmi);
 const char *dvb_mux_status(th_dvb_mux_instance_t *tdmi);
+void dvb_conversion_init(void);
 
 #endif /* DVB_SUPPORT_H */
