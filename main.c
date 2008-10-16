@@ -194,6 +194,7 @@ main(int argc, char **argv)
   int logfacility = LOG_DAEMON;
   sigset_t set;
   const char *settingspath = NULL;
+  struct stat st;
 
   signal(SIGPIPE, handle_sigpipe);
 
@@ -227,7 +228,20 @@ main(int argc, char **argv)
   if(settingspath == NULL) {
     settingspath = "/var/lib/hts/tvheadend";
     
-    if(chown(settingspath, pw ? pw->pw_uid : 1, grp ? grp->gr_gid : 1))
+    if(stat(settingspath, &st)) {
+      /* Path does not exist */
+
+      if(mkdir("/var/lib/hts", 0777) && errno != EEXIST) {
+	settingspath = NULL;
+      } else if(mkdir("/var/lib/hts/tvheadend", 0777) && errno != EEXIST) {
+	settingspath = NULL;
+      } else {
+	
+      }
+    }
+
+    if(settingspath != NULL && 
+       chown(settingspath, pw ? pw->pw_uid : 1, grp ? grp->gr_gid : 1))
       settingspath = NULL;
   }
 
