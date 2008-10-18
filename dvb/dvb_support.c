@@ -95,7 +95,7 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen)
     return -1;
 
   case 0x01 ... 0x0b:
-    ic = convert_iso_8859[src[0]];
+    ic = convert_iso_8859[src[0] + 4];
     src++; srclen--;
     break;
 
