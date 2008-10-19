@@ -33,7 +33,7 @@ char *dvr_format;
 char *dvr_file_postfix;
 uint32_t dvr_retention_days;
 int dvr_flags;
-
+char *dvr_postproc;
 
 static int de_tally;
 
@@ -488,6 +488,8 @@ dvr_init(void)
 
     if(!htsmsg_get_u32(m, "time-in-title", &u32) && u32)
       dvr_flags |= DVR_TIME_IN_TITLE;
+    
+    tvh_str_set(&dvr_postproc, htsmsg_get_str(m, "postproc"));
 
     htsmsg_destroy(m);
   }
@@ -538,6 +540,8 @@ dvr_save(void)
   htsmsg_add_u32(m, "channel-in-title", !!(dvr_flags & DVR_CHANNEL_IN_TITLE));
   htsmsg_add_u32(m, "date-in-title",    !!(dvr_flags & DVR_DATE_IN_TITLE));
   htsmsg_add_u32(m, "time-in-title",    !!(dvr_flags & DVR_TIME_IN_TITLE));
+  if(dvr_postproc != NULL)
+    htsmsg_add_str(m, "postproc", dvr_postproc);
 
   hts_settings_save(m, "dvr/config");
   htsmsg_destroy(m);
@@ -553,6 +557,19 @@ dvr_storage_set(const char *storage)
     return;
 
   tvh_str_set(&dvr_storage, storage);
+  dvr_save();
+}
+
+/**
+ *
+ */
+void
+dvr_postproc_set(const char *postproc)
+{
+  if(dvr_postproc != NULL && !strcmp(dvr_postproc, postproc))
+    return;
+
+  tvh_str_set(&dvr_postproc, !strcmp(postproc, "") ? NULL : postproc);
   dvr_save();
 }
 

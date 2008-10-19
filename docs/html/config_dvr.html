@@ -42,6 +42,27 @@
   <dd>If checked, Tvheadend will include the time for the recording in the
       event title. This applies to both the titled stored in the file
       and to the filename itself.
+  <dt>Post-processor command
+  <dd>Command to run after finishing a recording. The command will be
+      run in background and is executed even if a recording is aborted
+      or an error occurred. Use the %e error formatting string to check
+      for errors, the error string is empty if recording finished
+      successfully.
+      <br><br>
+      Support format strings:<br>
+      <table class="hts-doc-text" border="0">
+        <tr><th>Format</th><th>Description</th><th>Example value</th></tr>
+        <tr><td>%f</td><td>Full path to recoding</td><td>/home/user/Videos/News.mkv</td></tr>
+        <tr><td>%b</td><td>Basename of recoding</td><td>News.mkv</td></tr>
+        <tr><td>%c</td><td>Channel name</td><td>BBC world</td></tr>
+        <tr><td>%C</td><td>Who created this recoding</td><td>user</td></tr>
+        <tr><td>%t</td><td>Program title</td><td>News</td></tr>
+        <tr><td>%c</td><td>Program description</td><td>News and stories...</td></tr>
+        <tr><td>%S</td><td>Start timestmap of recoding, UNIX epoch</td><td>1224421200</td></tr>
+        <tr><td>%E</td><td>Stop timestamp of recoding, UNIX epoch</td><td>1224426600</td></tr>
+      </table>
+      <br>
+      Example usage: /path/to/ffmpeg -i %f -vcodec libx264 -acodec copy "/path/with white space/%b"
  </dl>
  Changes to any of these settings must be confirmed by pressing the
  'Save configuration' button before taking effect.

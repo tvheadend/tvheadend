@@ -319,7 +319,7 @@ tvheadend.dvrsettings = function() {
 
     var confreader = new Ext.data.JsonReader({
 	root: 'dvrSettings',
-    }, ['storage','retention','dayDirs',
+    }, ['storage','postproc','retention','dayDirs',
 	'channelDirs','channelInTitle',
 	'dateInTitle','timeInTitle']);
 
@@ -359,7 +359,11 @@ tvheadend.dvrsettings = function() {
 	}), new Ext.form.Checkbox({
 	    fieldLabel: 'Include time in title',
 	    name: 'timeInTitle'
-	})],
+	}), {
+	    width: 300,
+	    fieldLabel: 'Post-processor command',
+	    name: 'postproc'
+        }],
 	tbar: [{
 	    tooltip: 'Save changes made to channel configuration below',
 	    iconCls:'save',

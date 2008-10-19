@@ -29,6 +29,7 @@ extern char *dvr_format;
 extern char *dvr_file_postfix;
 extern uint32_t dvr_retention_days;
 extern int dvr_flags;
+extern char *dvr_postproc;
 
 #define DVR_DIR_PER_DAY      0x1
 #define DVR_DIR_PER_CHANNEL  0x2
@@ -143,6 +144,8 @@ void dvr_entry_cancel(dvr_entry_t *de);
 void dvr_entry_dec_ref(dvr_entry_t *de);
 
 void dvr_storage_set(const char *storage);
+
+void dvr_postproc_set(const char *postproc);
 
 void dvr_retention_set(int days);
 

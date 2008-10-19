@@ -20,13 +20,17 @@
 #include <assert.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <libgen.h> /* basename */
 
 #include <libavutil/avstring.h>
 #include <libavcodec/avcodec.h>
 
+#include <libhts/htsstr.h>
+
 #include "tvhead.h"
 #include "streaming.h"
 #include "dvr.h"
+#include "spawn.h"
 
 typedef struct dvr_rec_stream {
   LIST_ENTRY(dvr_rec_stream) drs_link;
@@ -46,6 +50,7 @@ static void dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp);
 static void dvr_rec_stop(dvr_entry_t *de);
 static void *dvr_thread(void *aux);
 static void dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt);
+static void dvr_spawn_postproc(dvr_entry_t *de);
 static void dvr_thread_epilog(dvr_entry_t *de);
 
 /**
@@ -698,6 +703,57 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
 /**
  *
  */
+static void dvr_spawn_postproc(dvr_entry_t *de)
+{
+  char *fmap[256];
+  char **args;
+  char start[16];
+  char stop[16];
+  char *fbasename; /* filename dup for basename */
+  int i;
+
+  args = htsstr_argsplit(dvr_postproc);
+  /* no arguments at all */
+  if(!args[0]) {
+    htsstr_argsplit_free(args);
+    return;
+  }
+
+  fbasename = strdup(de->de_filename); 
+  snprintf(start, sizeof(start), "%ld", de->de_start);
+  snprintf(stop, sizeof(stop), "%ld", de->de_stop);
+
+  memset(fmap, 0, sizeof(fmap));
+  fmap['f'] = de->de_filename; /* full path to recoding */
+  fmap['b'] = basename(fbasename); /* basename of recoding */
+  fmap['c'] = de->de_channel->ch_name; /* channel name */
+  fmap['C'] = de->de_creator; /* user who created this recording */
+  fmap['t'] = de->de_title; /* program title */
+  fmap['d'] = de->de_desc; /* program description */
+  fmap['e'] = de->de_error; /* error message, empty if no error (FIXME:?) */
+  fmap['S'] = start; /* start time, unix epoch */
+  fmap['E'] = stop; /* stop time, unix epoch */
+
+  printf("error=%s\n", de->de_error);
+
+  /* format arguments */
+  for(i = 0; args[i]; i++) {
+    char *s;
+
+    s = htsstr_format(args[i], fmap);
+    free(args[i]);
+    args[i] = s;
+  }
+  
+  spawnv(args[0], (void *)args);
+    
+  free(fbasename);
+  htsstr_argsplit_free(args);
+}
+
+/**
+ *
+ */
 static void
 dvr_thread_epilog(dvr_entry_t *de)
 {
@@ -731,4 +787,7 @@ dvr_thread_epilog(dvr_entry_t *de)
     LIST_REMOVE(drs, drs_link);
     free(drs);
   }
+
+  if(dvr_postproc)
+    dvr_spawn_postproc(de);
 }
