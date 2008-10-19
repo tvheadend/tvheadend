@@ -734,8 +734,6 @@ static void dvr_spawn_postproc(dvr_entry_t *de)
   fmap['S'] = start; /* start time, unix epoch */
   fmap['E'] = stop; /* stop time, unix epoch */
 
-  printf("error=%s\n", de->de_error);
-
   /* format arguments */
   for(i = 0; args[i]; i++) {
     char *s;
