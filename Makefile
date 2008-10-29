@@ -60,7 +60,7 @@ include ../build/prog.mk
 #
 prefix ?= $(INSTALLPREFIX)
 INSTBIN= $(prefix)/bin
-INSTMAN= $(prefix)/share/man1
+INSTMAN= $(prefix)/share/man/man1
 INSTSHARE= $(prefix)/share/hts/tvheadend
 
 install: ${PROG}
