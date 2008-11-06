@@ -1063,7 +1063,8 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     r = htsmsg_create();
     htsmsg_add_str(r, "storage", dvr_storage);
-    htsmsg_add_str(r, "postproc", dvr_postproc);
+    if(dvr_postproc != NULL)
+      htsmsg_add_str(r, "postproc", dvr_postproc);
     htsmsg_add_u32(r, "retention", dvr_retention_days);
     htsmsg_add_u32(r, "dayDirs",        !!(dvr_flags & DVR_DIR_PER_DAY));
     htsmsg_add_u32(r, "channelDirs",    !!(dvr_flags & DVR_DIR_PER_CHANNEL));
