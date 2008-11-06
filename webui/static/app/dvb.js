@@ -10,9 +10,6 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
     }, ['name', 'automux']);
 
     
-    
-    
-
     function addmux() {
 
 	var locationbutton = new Ext.Button({
@@ -20,9 +17,10 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
 	    disabled: true,
 	    handler: function() {
 		var n = locationlist.getSelectionModel().getSelectedNode();
-		Ext.Ajax.request({url: '/dvbadapter',
-				  params: {network: n.attributes.id,
-					   adapterId: adapterId, op: 'addnetwork'}});
+		Ext.Ajax.request({
+		    url: '/dvbadapter',
+		    params: {network: n.attributes.id,
+			     adapterId: adapterId, op: 'addnetwork'}});
 		win.close();
 	    }
 	});
@@ -79,18 +77,20 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
      *
      */
     function probeservices() {
-	Ext.MessageBox.confirm('Message',
-			       'Probe all DVB services on "' + adapterName + 
-			       '" and map to TV-channels in tvheadend',
-			       function(button) {
-				   if(button == 'no')
-				       return;
-
-				   Ext.Ajax.request({url: '/dvbadapter',
-						     params: {adapterId: adapterId, 
-							      op: 'serviceprobe'}
-						    })
-			       });
+	Ext.MessageBox.confirm(
+	    'Message',
+	    'Probe all DVB services on "' + adapterName + 
+		'" and map to TV-channels in tvheadend',
+	    function(button) {
+		if(button == 'no')
+		    return;
+		
+		Ext.Ajax.request({
+		    url: '/dvbadapter',
+		    params: {adapterId: adapterId, 
+			     op: 'serviceprobe'}
+		})
+	    });
     };
 
 
@@ -145,11 +145,12 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
 	}]
     });
     
-    panel.getForm().load({url:'/dvbadapter', 
-			  params:{'adapterId': adapterId, 'op':'load'},
-			  success:function(form, action) {
-			      panel.enable();
-			  }});
+    panel.getForm().load({
+	url:'/dvbadapter', 
+	params:{'adapterId': adapterId, 'op':'load'},
+	success:function(form, action) {
+	    panel.enable();
+	}});
     
 
     return panel;
