@@ -26,7 +26,6 @@
 #include <netinet/in.h>
 #include <sys/time.h>
 #include <libhts/htsq.h>
-#include <libhts/htstv.h>
 #include <libhts/avg.h>
 #include <libhts/hts_strtab.h>
 #include <libavcodec/avcodec.h>
