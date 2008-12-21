@@ -33,24 +33,16 @@ SRCS   += webui.c comet.c extjs.c
 PROGPATH = $(HTS_BUILD_ROOT)/tvheadend
 PROG = tvheadend
 MAN  = tvheadend.1
-CFLAGS += -g -Wall -Werror -O2 -mmmx
-CFLAGS += -I$(INCLUDES_INSTALL_BASE) $(HTS_CFLAGS) -I$(CURDIR)
+CFLAGS += -g -Wall -Werror -funsigned-char -O2 -mmmx
+CFLAGS += -I$(INCLUDES_INSTALL_BASE) -I$(CURDIR)
 CFLAGS += -Wno-deprecated-declarations -Wmissing-prototypes
-CFLAGS += -D_LARGEFILE64_SOURCE
-CFLAGS += -DENABLE_INPUT_IPTV -DENABLE_INPUT_DVB -DENABLE_INPUT_V4L
+CFLAGS += -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
+CFLAGS += -I$(CURDIR) -I$(INCLUDES_INSTALL_BASE)
 LDFLAGS += -L$(LIBS_INSTALL_BASE)
 
-SLIBS += ${LIBHTS_SLIBS}
-DLIBS += ${LIBHTS_DLIBS} -lcrypt
-
-#
-# ffmpeg
-
-DLIBS  += $(FFMPEG_DLIBS)
-SLIBS  += $(FFMPEG_SLIBS)
-CFLAGS += $(FFMPEG_CFLAGS)
-
-DLIBS += -lpthread -lm -lz
+DLIBS  += ${TVHEADEND_DLIBS}  ${HTS_DLIBS} -lcrypt
+SLIBS  += ${TVHEADEND_SLIBS}  ${HTS_SLIBS}
+CFLAGS += ${TVHEADEND_CFLAGS} ${HTS_CFLAGS}
 
 include ../build/prog.mk
 
