@@ -61,7 +61,7 @@ time_t dispatch_clock;
 static LIST_HEAD(, gtimer) gtimers;
 pthread_mutex_t global_lock;
 
-const char *contentpath = HTS_CONTENT_PATH "/tvheadend";
+const char *contentpath = TVHEADEND_CONTENT_PATH;
 
 static void
 handle_sigpipe(int x)
