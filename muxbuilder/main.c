@@ -243,6 +243,7 @@ static const struct {
   const char *name;
 
 } tldlist[] = {
+  {"ad", "Andorra"},
   {"at", "Austria"},
   {"au", "Australia"},
   {"be", "Belgium"},
