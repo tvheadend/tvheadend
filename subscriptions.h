@@ -45,6 +45,8 @@ typedef struct th_subscription {
 						      for this link */
 
   void *ths_opaque;
+  uint32_t ths_u32;
+
   char *ths_title; /* display title */
   time_t ths_start;  /* time when subscription started */
   int ths_total_err; /* total errors during entire subscription */
@@ -72,7 +74,8 @@ th_subscription_t *subscription_create_from_channel(channel_t *ch,
 						    unsigned int weight,
 						    const char *name,
 						    ths_event_callback_t *cb,
-						    void *opaque);
+						    void *opaque,
+						    uint32_t u32);
 
 
 th_subscription_t *subscription_create_from_transport(th_transport_t *t,

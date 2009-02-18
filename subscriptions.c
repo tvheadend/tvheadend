@@ -148,9 +148,12 @@ subscription_create(int weight, const char *name,
 th_subscription_t *
 subscription_create_from_channel(channel_t *ch,
 				 unsigned int weight, const char *name,
-				 ths_event_callback_t *cb, void *opaque)
+				 ths_event_callback_t *cb, void *opaque,
+				 uint32_t u32)
 {
   th_subscription_t *s = subscription_create(weight, name, cb, opaque);
+
+  s->ths_u32 = u32;
 
   s->ths_channel = ch;
   LIST_INSERT_HEAD(&ch->ch_subscriptions, s, ths_channel_link);

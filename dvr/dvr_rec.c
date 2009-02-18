@@ -121,7 +121,8 @@ dvr_rec_subscribe(dvr_entry_t *de)
     return;
 
   de->de_s = subscription_create_from_channel(de->de_channel, 1000, "pvr",
-					      dvr_subscription_callback, de);
+					      dvr_subscription_callback, de, 
+					      0);
   
   
 }
