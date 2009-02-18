@@ -2341,7 +2341,14 @@ static const struct region regions_DVBS[] = {
 	},
 };
 
-static const struct mux muxes_DVBT_at_Offical[] = {
+static const struct mux muxes_DVBT_ad_Andorra[] = {
+	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 666000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+static const struct mux muxes_DVBT_at_Official[] = {
 	{.freq = 474000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 490000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
@@ -2352,18 +2359,17 @@ static const struct mux muxes_DVBT_at_Offical[] = {
  	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 554000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 586000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 610000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 634000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 666000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 722000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 802000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 858000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  };
 
 static const struct mux muxes_DVBT_au_Adelaide[] = {
@@ -2582,6 +2588,12 @@ static const struct mux muxes_DVBT_au_Wollongong[] = {
  	{.freq = 676500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+static const struct mux muxes_DVBT_be_Brussels[] = {
+	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 746000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ };
+
 static const struct mux muxes_DVBT_be_Libramont[] = {
 	{.freq = 191500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
@@ -2602,19 +2614,18 @@ static const struct mux muxes_DVBT_be_Tournai[] = {
  };
 
 static const struct mux muxes_DVBT_ch_All[] = {
-	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 554000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 666000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 682000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
@@ -2622,12 +2633,14 @@ static const struct mux muxes_DVBT_ch_All[] = {
  	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 714000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 722000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 722000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 738000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 762000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 802000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 826000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 850000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_5_6, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  };
 
 static const struct mux muxes_DVBT_ch_Citycable[] = {
@@ -2671,21 +2684,56 @@ static const struct mux muxes_DVBT_cz_Plzen[] = {
  };
 
 static const struct mux muxes_DVBT_cz_Praha[] = {
-	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
+	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 634000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 778000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 818000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
-static const struct mux muxes_DVBT_de_Aachen_Stadt[] = {
-	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+static const struct mux muxes_DVBT_de_Baden_Wuerttemberg[] = {
+	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 634000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 706000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 722000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 738000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  };
 
-static const struct mux muxes_DVBT_de_Baden_Baden[] = {
-	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+static const struct mux muxes_DVBT_de_Bayern[] = {
+	{.freq = 184500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 191500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 212500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 490000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 586000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 666000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 682000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 690000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 722000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 746000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 770000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 834000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  };
 
 static const struct mux muxes_DVBT_de_Berlin[] = {
@@ -2697,22 +2745,13 @@ static const struct mux muxes_DVBT_de_Berlin[] = {
  	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 778000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
-static const struct mux muxes_DVBT_de_Bielefeld[] = {
-	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 554000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Braunschweig[] = {
-	{.freq = 198500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 490000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+static const struct mux muxes_DVBT_de_Brandenburg[] = {
+	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 762000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  };
 
 static const struct mux muxes_DVBT_de_Bremen[] = {
@@ -2722,209 +2761,181 @@ static const struct mux muxes_DVBT_de_Bremen[] = {
  	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 666000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 746000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Brocken_Magdeburg[] = {
-	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Chemnitz[] = {
-	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Dresden[] = {
-	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Erfurt_Weimar[] = {
-	{.freq = 474000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 706000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Frankfurt[] = {
-	{.freq = 198500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 738000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 818000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Freiburg[] = {
-	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 722000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_HalleSaale[] = {
-	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 586000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  };
 
 static const struct mux muxes_DVBT_de_Hamburg[] = {
 	{.freq = 205500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 490000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 490000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 738000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  };
 
-static const struct mux muxes_DVBT_de_Hannover[] = {
-	{.freq = 198500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 490000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Kassel[] = {
-	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 746000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Kiel[] = {
-	{.freq = 474000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 586000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 666000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 682000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 762000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Koeln_Bonn[] = {
-	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 706000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 826000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Leipzig[] = {
-	{.freq = 205500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
+static const struct mux muxes_DVBT_de_Hessen[] = {
+	{.freq = 198500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 474000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Loerrach[] = {
-	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_AUTO, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_AUTO, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_AUTO, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_AUTO, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 722000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_AUTO, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_AUTO, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Luebeck[] = {
-	{.freq = 490000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Mannheim[] = {
-	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 706000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 722000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 738000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 746000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 818000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  };
 
-static const struct mux muxes_DVBT_de_Muenchen[] = {
-	{.freq = 212500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 586000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 690000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 834000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Nuernberg[] = {
-	{.freq = 184500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+static const struct mux muxes_DVBT_de_Mecklenburg_Vorpommern[] = {
+	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 490000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 778000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 834000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 714000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 738000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  };
 
-static const struct mux muxes_DVBT_de_Osnabrueck[] = {
-	{.freq = 634000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 778000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Ostbayern[] = {
-	{.freq = 191500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+static const struct mux muxes_DVBT_de_Niedersachsen[] = {
+	{.freq = 474000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 490000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Ravensburg[] = {
-	{.freq = 474000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Rostock[] = {
-	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Ruhrgebiet[] = {
-	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 586000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 722000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 746000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 690000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 778000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Schwerin[] = {
-	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 738000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Stuttgart[] = {
-	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 706000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- };
-
-static const struct mux muxes_DVBT_de_Wuerzburg[] = {
-	{.freq = 212500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 610000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 634000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 666000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 682000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 690000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 706000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 714000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 746000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 770000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 778000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 826000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ };
+
+static const struct mux muxes_DVBT_de_Nordrhein_Westfalen[] = {
+	{.freq = 474000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 554000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 586000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 666000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 690000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 706000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 722000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 746000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 762000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 778000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ };
+
+static const struct mux muxes_DVBT_de_Rheinland_Pfalz[] = {
+	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 762000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ };
+
+static const struct mux muxes_DVBT_de_Saarland[] = {
+	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ };
+
+static const struct mux muxes_DVBT_de_Sachsen[] = {
+	{.freq = 205500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ };
+
+static const struct mux muxes_DVBT_de_Sachsen_Anhalt[] = {
+	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 554000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 586000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 610000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 634000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ };
+
+static const struct mux muxes_DVBT_de_Schleswig_Holstein[] = {
+	{.freq = 474000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 490000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 554000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 586000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 666000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 682000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 762000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 778000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ };
+
+static const struct mux muxes_DVBT_de_Thueringen[] = {
+	{.freq = 474000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 690000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 706000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  };
 
 static const struct mux muxes_DVBT_dk_All[] = {
@@ -3305,6 +3316,16 @@ static const struct mux muxes_DVBT_fi_Inari[] = {
  	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+static const struct mux muxes_DVBT_fi_Inari_Janispaa[] = {
+	{.freq = 490000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+static const struct mux muxes_DVBT_fi_Inari_Naatamo[] = {
+	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
 static const struct mux muxes_DVBT_fi_Ivalo_Saarineitamovaara[] = {
 	{.freq = 490000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
@@ -3556,6 +3577,11 @@ static const struct mux muxes_DVBT_fi_Kuhmo_Lentiira[] = {
  	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+static const struct mux muxes_DVBT_fi_Kuhmo_Tikkasenmaki[] = {
+	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
 static const struct mux muxes_DVBT_fi_Kuopio[] = {
 	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 554000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
@@ -3572,6 +3598,11 @@ static const struct mux muxes_DVBT_fi_Kustavi_Viherlahti[] = {
 static const struct mux muxes_DVBT_fi_Kuttanen[] = {
 	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 770000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+static const struct mux muxes_DVBT_fi_Kuusamo_Hamppulampi[] = {
+	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 static const struct mux muxes_DVBT_fi_Kyyjarvi_Noposenaho[] = {
@@ -3699,7 +3730,7 @@ static const struct mux muxes_DVBT_fi_Nummi_Pusula_Hyonola[] = {
  	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
-static const struct mux muxes_DVBT_fi_Nurmes_Porokyla[] = {
+static const struct mux muxes_DVBT_fi_Nurmes_Kortevaara[] = {
 	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
@@ -3736,6 +3767,7 @@ static const struct mux muxes_DVBT_fi_Paltamo_Kivesvaara[] = {
 static const struct mux muxes_DVBT_fi_Parikkala[] = {
 	{.freq = 554000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 778000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 static const struct mux muxes_DVBT_fi_Parkano[] = {
@@ -3836,6 +3868,11 @@ static const struct mux muxes_DVBT_fi_Raahe_Piehinki[] = {
  	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
+static const struct mux muxes_DVBT_fi_Rantalaki[] = {
+	{.freq = 714000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 770000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
 static const struct mux muxes_DVBT_fi_Ranua_Haasionmaa[] = {
 	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 778000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
@@ -3854,7 +3891,7 @@ static const struct mux muxes_DVBT_fi_Rautavaara_Angervikko[] = {
 
 static const struct mux muxes_DVBT_fi_Rautjarvi_Simpele[] = {
 	{.freq = 610000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 static const struct mux muxes_DVBT_fi_Ristijarvi[] = {
@@ -3974,7 +4011,7 @@ static const struct mux muxes_DVBT_fi_Siilinjarvi[] = {
  	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
-static const struct mux muxes_DVBT_fi_Sipoo_Galthagen[] = {
+static const struct mux muxes_DVBT_fi_Sipoo_Norrkulla[] = {
 	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
@@ -3988,6 +4025,11 @@ static const struct mux muxes_DVBT_fi_Sodankyla_Pittiovaara[] = {
 static const struct mux muxes_DVBT_fi_Sulkava_Vaatalanmaki[] = {
 	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 714000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+static const struct mux muxes_DVBT_fi_Suomussalmi_Myllylahti[] = {
+	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 static const struct mux muxes_DVBT_fi_Sysma_Liikola[] = {
@@ -4059,6 +4101,11 @@ static const struct mux muxes_DVBT_fi_Utsjoki_Nuorgam_Njallavaara[] = {
 static const struct mux muxes_DVBT_fi_Utsjoki_Nuorgam_raja[] = {
 	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ };
+
+static const struct mux muxes_DVBT_fi_Utsjoki_Nuvvus[] = {
+	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 static const struct mux muxes_DVBT_fi_Utsjoki_Outakoski[] = {
@@ -5122,22 +5169,27 @@ static const struct mux muxes_DVBT_it_Bolzano[] = {
  };
 
 static const struct mux muxes_DVBT_it_Cagliari[] = {
-	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 474000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 826000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+	{.freq = 205500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 530000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 842000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 858000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 658000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 610000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 562000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 594000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 674000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 682000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 722000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 730000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 746000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 762000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 786000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 818000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 850000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 810000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 177500000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
  };
 
 static const struct mux muxes_DVBT_it_Caivano[] = {
@@ -5228,6 +5280,15 @@ static const struct mux muxes_DVBT_it_Palermo[] = {
  	{.freq = 650000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
  	{.freq = 610000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
  	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ };
+
+static const struct mux muxes_DVBT_it_Pescara[] = {
+	{.freq = 186000000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 194500000, .bw = BANDWIDTH_7_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 858000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 754000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 698000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
  };
 
 static const struct mux muxes_DVBT_it_Pisa[] = {
@@ -5341,8 +5402,8 @@ static const struct mux muxes_DVBT_nl_All[] = {
  	{.freq = 482000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 490000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 498000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 514000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 554000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
@@ -5352,12 +5413,14 @@ static const struct mux muxes_DVBT_nl_All[] = {
  	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 578000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 586000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 602000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 618000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 666000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 682000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 690000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 706000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 714000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 722000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 738000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 738000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
@@ -5371,6 +5434,7 @@ static const struct mux muxes_DVBT_nl_All[] = {
  	{.freq = 826000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 834000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  	{.freq = 834000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 850000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_1_2, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_4, .hierarchy = HIERARCHY_NONE},
  };
 
 static const struct mux muxes_DVBT_no_Trondelag_Stjordal[] = {
@@ -5383,6 +5447,10 @@ static const struct mux muxes_DVBT_nz_Waiatarua[] = {
 	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
  	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
  	{.freq = 666000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_16, .hierarchy = HIERARCHY_NONE},
+ };
+
+static const struct mux muxes_DVBT_pl_Rzeszow[] = {
+	{.freq = 642000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
  };
 
 static const struct mux muxes_DVBT_pl_Wroclaw[] = {
@@ -6273,11 +6341,12 @@ static const struct mux muxes_DVBT_se_Soderkoping[] = {
  };
 
 static const struct mux muxes_DVBT_se_Sodertalje_Ragnhildsborg[] = {
-	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+	{.freq = 506000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 522000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  	{.freq = 538000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 794000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 770000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
- 	{.freq = 570000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 546000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 666000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
+ 	{.freq = 682000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_64, .fechp = FEC_2_3, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_8K, .guard = GUARD_INTERVAL_1_8, .hierarchy = HIERARCHY_NONE},
  };
 
 static const struct mux muxes_DVBT_se_Solleftea_Hallsta[] = {
@@ -7349,6 +7418,14 @@ static const struct mux muxes_DVBT_uk_WinterHill[] = {
  	{.freq = 626000000, .bw = BANDWIDTH_8_MHZ, .constellation = QAM_16, .fechp = FEC_3_4, .feclp = FEC_NONE, .tmode = TRANSMISSION_MODE_2K, .guard = GUARD_INTERVAL_1_32, .hierarchy = HIERARCHY_NONE},
  };
 
+static const struct network networks_DVBT_ad[] = {
+	{
+		.name = "Andorra",
+		.muxes = muxes_DVBT_ad_Andorra,
+		.nmuxes = sizeof(muxes_DVBT_ad_Andorra) / sizeof(struct mux),
+	},
+};
+
 static const struct network networks_DVBT_au[] = {
 	{
 		.name = "Adelaide",
@@ -7479,13 +7556,18 @@ static const struct network networks_DVBT_au[] = {
 
 static const struct network networks_DVBT_at[] = {
 	{
-		.name = "Offical",
-		.muxes = muxes_DVBT_at_Offical,
-		.nmuxes = sizeof(muxes_DVBT_at_Offical) / sizeof(struct mux),
+		.name = "Official",
+		.muxes = muxes_DVBT_at_Official,
+		.nmuxes = sizeof(muxes_DVBT_at_Official) / sizeof(struct mux),
 	},
 };
 
 static const struct network networks_DVBT_be[] = {
+	{
+		.name = "Brussels",
+		.muxes = muxes_DVBT_be_Brussels,
+		.nmuxes = sizeof(muxes_DVBT_be_Brussels) / sizeof(struct mux),
+	},
 	{
 		.name = "Libramont",
 		.muxes = muxes_DVBT_be_Libramont,
@@ -7704,6 +7786,16 @@ static const struct network networks_DVBT_fi[] = {
 		.nmuxes = sizeof(muxes_DVBT_fi_Inari) / sizeof(struct mux),
 	},
 	{
+		.name = "Inari Janispaa",
+		.muxes = muxes_DVBT_fi_Inari_Janispaa,
+		.nmuxes = sizeof(muxes_DVBT_fi_Inari_Janispaa) / sizeof(struct mux),
+	},
+	{
+		.name = "Inari Naatamo",
+		.muxes = muxes_DVBT_fi_Inari_Naatamo,
+		.nmuxes = sizeof(muxes_DVBT_fi_Inari_Naatamo) / sizeof(struct mux),
+	},
+	{
 		.name = "Ivalo Saarineitamovaara",
 		.muxes = muxes_DVBT_fi_Ivalo_Saarineitamovaara,
 		.nmuxes = sizeof(muxes_DVBT_fi_Ivalo_Saarineitamovaara) / sizeof(struct mux),
@@ -7909,6 +8001,11 @@ static const struct network networks_DVBT_fi[] = {
 		.nmuxes = sizeof(muxes_DVBT_fi_Kuhmo_Lentiira) / sizeof(struct mux),
 	},
 	{
+		.name = "Kuhmo Tikkasenmaki",
+		.muxes = muxes_DVBT_fi_Kuhmo_Tikkasenmaki,
+		.nmuxes = sizeof(muxes_DVBT_fi_Kuhmo_Tikkasenmaki) / sizeof(struct mux),
+	},
+	{
 		.name = "Kuhmoinen",
 		.muxes = muxes_DVBT_fi_Kuhmoinen,
 		.nmuxes = sizeof(muxes_DVBT_fi_Kuhmoinen) / sizeof(struct mux),
@@ -7937,6 +8034,11 @@ static const struct network networks_DVBT_fi[] = {
 		.name = "Kuttanen",
 		.muxes = muxes_DVBT_fi_Kuttanen,
 		.nmuxes = sizeof(muxes_DVBT_fi_Kuttanen) / sizeof(struct mux),
+	},
+	{
+		.name = "Kuusamo Hamppulampi",
+		.muxes = muxes_DVBT_fi_Kuusamo_Hamppulampi,
+		.nmuxes = sizeof(muxes_DVBT_fi_Kuusamo_Hamppulampi) / sizeof(struct mux),
 	},
 	{
 		.name = "Kyyjarvi Noposenaho",
@@ -8044,9 +8146,9 @@ static const struct network networks_DVBT_fi[] = {
 		.nmuxes = sizeof(muxes_DVBT_fi_Nummi_Pusula_Hyonola) / sizeof(struct mux),
 	},
 	{
-		.name = "Nurmes Porokyla",
-		.muxes = muxes_DVBT_fi_Nurmes_Porokyla,
-		.nmuxes = sizeof(muxes_DVBT_fi_Nurmes_Porokyla) / sizeof(struct mux),
+		.name = "Nurmes Kortevaara",
+		.muxes = muxes_DVBT_fi_Nurmes_Kortevaara,
+		.nmuxes = sizeof(muxes_DVBT_fi_Nurmes_Kortevaara) / sizeof(struct mux),
 	},
 	{
 		.name = "Orivesi Langelmaki Talviainen",
@@ -8167,6 +8269,11 @@ static const struct network networks_DVBT_fi[] = {
 		.name = "Raahe Piehinki",
 		.muxes = muxes_DVBT_fi_Raahe_Piehinki,
 		.nmuxes = sizeof(muxes_DVBT_fi_Raahe_Piehinki) / sizeof(struct mux),
+	},
+	{
+		.name = "Rantalaki",
+		.muxes = muxes_DVBT_fi_Rantalaki,
+		.nmuxes = sizeof(muxes_DVBT_fi_Rantalaki) / sizeof(struct mux),
 	},
 	{
 		.name = "Ranua Haasionmaa",
@@ -8299,9 +8406,9 @@ static const struct network networks_DVBT_fi[] = {
 		.nmuxes = sizeof(muxes_DVBT_fi_Siilinjarvi) / sizeof(struct mux),
 	},
 	{
-		.name = "Sipoo Galthagen",
-		.muxes = muxes_DVBT_fi_Sipoo_Galthagen,
-		.nmuxes = sizeof(muxes_DVBT_fi_Sipoo_Galthagen) / sizeof(struct mux),
+		.name = "Sipoo Norrkulla",
+		.muxes = muxes_DVBT_fi_Sipoo_Norrkulla,
+		.nmuxes = sizeof(muxes_DVBT_fi_Sipoo_Norrkulla) / sizeof(struct mux),
 	},
 	{
 		.name = "Sodankyla Pittiovaara",
@@ -8312,6 +8419,11 @@ static const struct network networks_DVBT_fi[] = {
 		.name = "Sulkava Vaatalanmaki",
 		.muxes = muxes_DVBT_fi_Sulkava_Vaatalanmaki,
 		.nmuxes = sizeof(muxes_DVBT_fi_Sulkava_Vaatalanmaki) / sizeof(struct mux),
+	},
+	{
+		.name = "Suomussalmi Myllylahti",
+		.muxes = muxes_DVBT_fi_Suomussalmi_Myllylahti,
+		.nmuxes = sizeof(muxes_DVBT_fi_Suomussalmi_Myllylahti) / sizeof(struct mux),
 	},
 	{
 		.name = "Sysma Liikola",
@@ -8372,6 +8484,11 @@ static const struct network networks_DVBT_fi[] = {
 		.name = "Utsjoki Nuorgam raja",
 		.muxes = muxes_DVBT_fi_Utsjoki_Nuorgam_raja,
 		.nmuxes = sizeof(muxes_DVBT_fi_Utsjoki_Nuorgam_raja) / sizeof(struct mux),
+	},
+	{
+		.name = "Utsjoki Nuvvus",
+		.muxes = muxes_DVBT_fi_Utsjoki_Nuvvus,
+		.nmuxes = sizeof(muxes_DVBT_fi_Utsjoki_Nuvvus) / sizeof(struct mux),
 	},
 	{
 		.name = "Utsjoki Outakoski",
@@ -9020,14 +9137,14 @@ static const struct network networks_DVBT_fr[] = {
 
 static const struct network networks_DVBT_de[] = {
 	{
-		.name = "Aachen Stadt",
-		.muxes = muxes_DVBT_de_Aachen_Stadt,
-		.nmuxes = sizeof(muxes_DVBT_de_Aachen_Stadt) / sizeof(struct mux),
+		.name = "Baden-Wuerttemberg",
+		.muxes = muxes_DVBT_de_Baden_Wuerttemberg,
+		.nmuxes = sizeof(muxes_DVBT_de_Baden_Wuerttemberg) / sizeof(struct mux),
 	},
 	{
-		.name = "Baden-Baden",
-		.muxes = muxes_DVBT_de_Baden_Baden,
-		.nmuxes = sizeof(muxes_DVBT_de_Baden_Baden) / sizeof(struct mux),
+		.name = "Bayern",
+		.muxes = muxes_DVBT_de_Bayern,
+		.nmuxes = sizeof(muxes_DVBT_de_Bayern) / sizeof(struct mux),
 	},
 	{
 		.name = "Berlin",
@@ -9035,14 +9152,9 @@ static const struct network networks_DVBT_de[] = {
 		.nmuxes = sizeof(muxes_DVBT_de_Berlin) / sizeof(struct mux),
 	},
 	{
-		.name = "Bielefeld",
-		.muxes = muxes_DVBT_de_Bielefeld,
-		.nmuxes = sizeof(muxes_DVBT_de_Bielefeld) / sizeof(struct mux),
-	},
-	{
-		.name = "Braunschweig",
-		.muxes = muxes_DVBT_de_Braunschweig,
-		.nmuxes = sizeof(muxes_DVBT_de_Braunschweig) / sizeof(struct mux),
+		.name = "Brandenburg",
+		.muxes = muxes_DVBT_de_Brandenburg,
+		.nmuxes = sizeof(muxes_DVBT_de_Brandenburg) / sizeof(struct mux),
 	},
 	{
 		.name = "Bremen",
@@ -9050,134 +9162,59 @@ static const struct network networks_DVBT_de[] = {
 		.nmuxes = sizeof(muxes_DVBT_de_Bremen) / sizeof(struct mux),
 	},
 	{
-		.name = "Brocken Magdeburg",
-		.muxes = muxes_DVBT_de_Brocken_Magdeburg,
-		.nmuxes = sizeof(muxes_DVBT_de_Brocken_Magdeburg) / sizeof(struct mux),
-	},
-	{
-		.name = "Chemnitz",
-		.muxes = muxes_DVBT_de_Chemnitz,
-		.nmuxes = sizeof(muxes_DVBT_de_Chemnitz) / sizeof(struct mux),
-	},
-	{
-		.name = "Dresden",
-		.muxes = muxes_DVBT_de_Dresden,
-		.nmuxes = sizeof(muxes_DVBT_de_Dresden) / sizeof(struct mux),
-	},
-	{
-		.name = "Erfurt-Weimar",
-		.muxes = muxes_DVBT_de_Erfurt_Weimar,
-		.nmuxes = sizeof(muxes_DVBT_de_Erfurt_Weimar) / sizeof(struct mux),
-	},
-	{
-		.name = "Frankfurt",
-		.muxes = muxes_DVBT_de_Frankfurt,
-		.nmuxes = sizeof(muxes_DVBT_de_Frankfurt) / sizeof(struct mux),
-	},
-	{
-		.name = "Freiburg",
-		.muxes = muxes_DVBT_de_Freiburg,
-		.nmuxes = sizeof(muxes_DVBT_de_Freiburg) / sizeof(struct mux),
-	},
-	{
-		.name = "HalleSaale",
-		.muxes = muxes_DVBT_de_HalleSaale,
-		.nmuxes = sizeof(muxes_DVBT_de_HalleSaale) / sizeof(struct mux),
-	},
-	{
 		.name = "Hamburg",
 		.muxes = muxes_DVBT_de_Hamburg,
 		.nmuxes = sizeof(muxes_DVBT_de_Hamburg) / sizeof(struct mux),
 	},
 	{
-		.name = "Hannover",
-		.muxes = muxes_DVBT_de_Hannover,
-		.nmuxes = sizeof(muxes_DVBT_de_Hannover) / sizeof(struct mux),
+		.name = "Hessen",
+		.muxes = muxes_DVBT_de_Hessen,
+		.nmuxes = sizeof(muxes_DVBT_de_Hessen) / sizeof(struct mux),
 	},
 	{
-		.name = "Kassel",
-		.muxes = muxes_DVBT_de_Kassel,
-		.nmuxes = sizeof(muxes_DVBT_de_Kassel) / sizeof(struct mux),
+		.name = "Mecklenburg-Vorpommern",
+		.muxes = muxes_DVBT_de_Mecklenburg_Vorpommern,
+		.nmuxes = sizeof(muxes_DVBT_de_Mecklenburg_Vorpommern) / sizeof(struct mux),
 	},
 	{
-		.name = "Kiel",
-		.muxes = muxes_DVBT_de_Kiel,
-		.nmuxes = sizeof(muxes_DVBT_de_Kiel) / sizeof(struct mux),
+		.name = "Niedersachsen",
+		.muxes = muxes_DVBT_de_Niedersachsen,
+		.nmuxes = sizeof(muxes_DVBT_de_Niedersachsen) / sizeof(struct mux),
 	},
 	{
-		.name = "Koeln-Bonn",
-		.muxes = muxes_DVBT_de_Koeln_Bonn,
-		.nmuxes = sizeof(muxes_DVBT_de_Koeln_Bonn) / sizeof(struct mux),
+		.name = "Nordrhein-Westfalen",
+		.muxes = muxes_DVBT_de_Nordrhein_Westfalen,
+		.nmuxes = sizeof(muxes_DVBT_de_Nordrhein_Westfalen) / sizeof(struct mux),
 	},
 	{
-		.name = "Leipzig",
-		.muxes = muxes_DVBT_de_Leipzig,
-		.nmuxes = sizeof(muxes_DVBT_de_Leipzig) / sizeof(struct mux),
+		.name = "Rheinland-Pfalz",
+		.muxes = muxes_DVBT_de_Rheinland_Pfalz,
+		.nmuxes = sizeof(muxes_DVBT_de_Rheinland_Pfalz) / sizeof(struct mux),
 	},
 	{
-		.name = "Loerrach",
-		.muxes = muxes_DVBT_de_Loerrach,
-		.nmuxes = sizeof(muxes_DVBT_de_Loerrach) / sizeof(struct mux),
+		.name = "Saarland",
+		.muxes = muxes_DVBT_de_Saarland,
+		.nmuxes = sizeof(muxes_DVBT_de_Saarland) / sizeof(struct mux),
 	},
 	{
-		.name = "Luebeck",
-		.muxes = muxes_DVBT_de_Luebeck,
-		.nmuxes = sizeof(muxes_DVBT_de_Luebeck) / sizeof(struct mux),
+		.name = "Sachsen",
+		.muxes = muxes_DVBT_de_Sachsen,
+		.nmuxes = sizeof(muxes_DVBT_de_Sachsen) / sizeof(struct mux),
 	},
 	{
-		.name = "Mannheim",
-		.muxes = muxes_DVBT_de_Mannheim,
-		.nmuxes = sizeof(muxes_DVBT_de_Mannheim) / sizeof(struct mux),
+		.name = "Sachsen-Anhalt",
+		.muxes = muxes_DVBT_de_Sachsen_Anhalt,
+		.nmuxes = sizeof(muxes_DVBT_de_Sachsen_Anhalt) / sizeof(struct mux),
 	},
 	{
-		.name = "Muenchen",
-		.muxes = muxes_DVBT_de_Muenchen,
-		.nmuxes = sizeof(muxes_DVBT_de_Muenchen) / sizeof(struct mux),
+		.name = "Schleswig-Holstein",
+		.muxes = muxes_DVBT_de_Schleswig_Holstein,
+		.nmuxes = sizeof(muxes_DVBT_de_Schleswig_Holstein) / sizeof(struct mux),
 	},
 	{
-		.name = "Nuernberg",
-		.muxes = muxes_DVBT_de_Nuernberg,
-		.nmuxes = sizeof(muxes_DVBT_de_Nuernberg) / sizeof(struct mux),
-	},
-	{
-		.name = "Osnabrueck",
-		.muxes = muxes_DVBT_de_Osnabrueck,
-		.nmuxes = sizeof(muxes_DVBT_de_Osnabrueck) / sizeof(struct mux),
-	},
-	{
-		.name = "Ostbayern",
-		.muxes = muxes_DVBT_de_Ostbayern,
-		.nmuxes = sizeof(muxes_DVBT_de_Ostbayern) / sizeof(struct mux),
-	},
-	{
-		.name = "Ravensburg",
-		.muxes = muxes_DVBT_de_Ravensburg,
-		.nmuxes = sizeof(muxes_DVBT_de_Ravensburg) / sizeof(struct mux),
-	},
-	{
-		.name = "Rostock",
-		.muxes = muxes_DVBT_de_Rostock,
-		.nmuxes = sizeof(muxes_DVBT_de_Rostock) / sizeof(struct mux),
-	},
-	{
-		.name = "Ruhrgebiet",
-		.muxes = muxes_DVBT_de_Ruhrgebiet,
-		.nmuxes = sizeof(muxes_DVBT_de_Ruhrgebiet) / sizeof(struct mux),
-	},
-	{
-		.name = "Schwerin",
-		.muxes = muxes_DVBT_de_Schwerin,
-		.nmuxes = sizeof(muxes_DVBT_de_Schwerin) / sizeof(struct mux),
-	},
-	{
-		.name = "Stuttgart",
-		.muxes = muxes_DVBT_de_Stuttgart,
-		.nmuxes = sizeof(muxes_DVBT_de_Stuttgart) / sizeof(struct mux),
-	},
-	{
-		.name = "Wuerzburg",
-		.muxes = muxes_DVBT_de_Wuerzburg,
-		.nmuxes = sizeof(muxes_DVBT_de_Wuerzburg) / sizeof(struct mux),
+		.name = "Thueringen",
+		.muxes = muxes_DVBT_de_Thueringen,
+		.nmuxes = sizeof(muxes_DVBT_de_Thueringen) / sizeof(struct mux),
 	},
 };
 
@@ -9277,6 +9314,11 @@ static const struct network networks_DVBT_it[] = {
 		.nmuxes = sizeof(muxes_DVBT_it_Palermo) / sizeof(struct mux),
 	},
 	{
+		.name = "Pescara",
+		.muxes = muxes_DVBT_it_Pescara,
+		.nmuxes = sizeof(muxes_DVBT_it_Pescara) / sizeof(struct mux),
+	},
+	{
 		.name = "Pisa",
 		.muxes = muxes_DVBT_it_Pisa,
 		.nmuxes = sizeof(muxes_DVBT_it_Pisa) / sizeof(struct mux),
@@ -9359,6 +9401,11 @@ static const struct network networks_DVBT_no[] = {
 };
 
 static const struct network networks_DVBT_pl[] = {
+	{
+		.name = "Rzeszow",
+		.muxes = muxes_DVBT_pl_Rzeszow,
+		.nmuxes = sizeof(muxes_DVBT_pl_Rzeszow) / sizeof(struct mux),
+	},
 	{
 		.name = "Wroclaw",
 		.muxes = muxes_DVBT_pl_Wroclaw,
@@ -11031,6 +11078,11 @@ static const struct network networks_DVBT_uk[] = {
 
 static const struct region regions_DVBT[] = {
 	{
+		.name = "Andorra",
+		.networks = networks_DVBT_ad,
+		.nnetworks = sizeof(networks_DVBT_ad) / sizeof(struct network),
+	},
+	{
 		.name = "Australia",
 		.networks = networks_DVBT_au,
 		.nnetworks = sizeof(networks_DVBT_au) / sizeof(struct network),
@@ -11166,6 +11218,24 @@ static const struct mux muxes_DVBC_at_Innsbruck[] = {
 	{ .freq = 562000000, .symrate = 6875000, .fec = FEC_NONE, .constellation = QAM_64},
 };
 
+static const struct mux muxes_DVBC_at_KarrerNet[] = {
+	{ .freq = 418000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 426000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 434000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 442000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 450000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 458000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 466000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 474000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 482000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 522000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 530000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 538000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 578000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 402000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 410000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+};
+
 static const struct mux muxes_DVBC_at_Liwest[] = {
 	{ .freq = 394000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
 	{ .freq = 402000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
@@ -11265,6 +11335,21 @@ static const struct mux muxes_DVBC_ch_Video2000[] = {
 
 static const struct mux muxes_DVBC_ch_Zuerich_cablecom[] = {
 	{ .freq = 410000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+};
+
+static const struct mux muxes_DVBC_cz_Moravianet[] = {
+	{ .freq = 218000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 226000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 234000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 242000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 250000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 258000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 266000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 274000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 282000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 290000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 298000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 306000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_64},
 };
 
 static const struct mux muxes_DVBC_de_Berlin[] = {
@@ -11400,6 +11485,17 @@ static const struct mux muxes_DVBC_de_Unitymedia[] = {
 	{ .freq = 658000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
 	{ .freq = 666000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
 	{ .freq = 674000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+};
+
+static const struct mux muxes_DVBC_dk_Copenhagen_AFDK[] = {
+	{ .freq = 386000000, .symrate = 6875000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 394000000, .symrate = 6875000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 402000000, .symrate = 6875000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 490000000, .symrate = 6875000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 602000000, .symrate = 6875000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 610000000, .symrate = 6875000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 618000000, .symrate = 6875000, .fec = FEC_NONE, .constellation = QAM_64},
+	{ .freq = 794000000, .symrate = 6875000, .fec = FEC_NONE, .constellation = QAM_64},
 };
 
 static const struct mux muxes_DVBC_dk_Odense[] = {
@@ -11609,6 +11705,30 @@ static const struct mux muxes_DVBC_no_Oslo_CanalDigital[] = {
 	{ .freq = 474000000, .symrate = 6950000, .fec = FEC_NONE, .constellation = QAM_64},
 };
 
+static const struct mux muxes_DVBC_no_Oslo_Get[] = {
+	{ .freq = 241000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 272000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 280000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 290000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 298000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 306000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 314000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 322000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 330000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 338000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 346000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 354000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 362000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 370000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 378000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 386000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 394000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 410000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 442000000, .symrate = 6952000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 482000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+	{ .freq = 498000000, .symrate = 6900000, .fec = FEC_NONE, .constellation = QAM_256},
+};
+
 static const struct mux muxes_DVBC_se_comhem[] = {
 	{ .freq = 362000000, .symrate = 6875000, .fec = FEC_NONE, .constellation = QAM_64},
 };
@@ -11637,6 +11757,11 @@ static const struct network networks_DVBC_at[] = {
 		.nmuxes = sizeof(muxes_DVBC_at_Innsbruck) / sizeof(struct mux),
 	},
 	{
+		.name = "KarrerNet",
+		.muxes = muxes_DVBC_at_KarrerNet,
+		.nmuxes = sizeof(muxes_DVBC_at_KarrerNet) / sizeof(struct mux),
+	},
+	{
 		.name = "Liwest",
 		.muxes = muxes_DVBC_at_Liwest,
 		.nmuxes = sizeof(muxes_DVBC_at_Liwest) / sizeof(struct mux),
@@ -11661,7 +11786,20 @@ static const struct network networks_DVBC_be[] = {
 	},
 };
 
+static const struct network networks_DVBC_cz[] = {
+	{
+		.name = "Moravianet",
+		.muxes = muxes_DVBC_cz_Moravianet,
+		.nmuxes = sizeof(muxes_DVBC_cz_Moravianet) / sizeof(struct mux),
+	},
+};
+
 static const struct network networks_DVBC_dk[] = {
+	{
+		.name = "Copenhagen-AFDK",
+		.muxes = muxes_DVBC_dk_Copenhagen_AFDK,
+		.nmuxes = sizeof(muxes_DVBC_dk_Copenhagen_AFDK) / sizeof(struct mux),
+	},
 	{
 		.name = "Odense",
 		.muxes = muxes_DVBC_dk_Odense,
@@ -11780,6 +11918,11 @@ static const struct network networks_DVBC_no[] = {
 		.muxes = muxes_DVBC_no_Oslo_CanalDigital,
 		.nmuxes = sizeof(muxes_DVBC_no_Oslo_CanalDigital) / sizeof(struct mux),
 	},
+	{
+		.name = "Oslo-Get",
+		.muxes = muxes_DVBC_no_Oslo_Get,
+		.nmuxes = sizeof(muxes_DVBC_no_Oslo_Get) / sizeof(struct mux),
+	},
 };
 
 static const struct network networks_DVBC_es[] = {
@@ -11836,6 +11979,11 @@ static const struct region regions_DVBC[] = {
 		.name = "Belgium",
 		.networks = networks_DVBC_be,
 		.nnetworks = sizeof(networks_DVBC_be) / sizeof(struct network),
+	},
+	{
+		.name = "Czech Republic",
+		.networks = networks_DVBC_cz,
+		.nnetworks = sizeof(networks_DVBC_cz) / sizeof(struct network),
 	},
 	{
 		.name = "Denmark",
