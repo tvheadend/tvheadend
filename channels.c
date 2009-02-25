@@ -50,7 +50,12 @@ struct channel_tag_queue channel_tags;
 
 static void channel_tag_map(channel_t *ch, channel_tag_t *ct, int check);
 static channel_tag_t *channel_tag_find(const char *id, int create);
-static void channel_tag_mapping_destroy(channel_tag_mapping_t *ctm);
+static void channel_tag_mapping_destroy(channel_tag_mapping_t *ctm, 
+					int flags);
+
+#define CTM_DESTROY_UPDATE_TAG     0x1
+#define CTM_DESTROY_UPDATE_CHANNEL 0x2
+
 
 /**
  *
@@ -371,10 +376,10 @@ channel_delete(channel_t *ch)
 
   lock_assert(&global_lock);
 
-  htsp_channel_delete(ch);
-
   while((ctm = LIST_FIRST(&ch->ch_ctms)) != NULL)
-    channel_tag_mapping_destroy(ctm);
+    channel_tag_mapping_destroy(ctm, CTM_DESTROY_UPDATE_TAG);
+
+  htsp_channel_delete(ch);
 
   tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" deleted",
 	 ch->ch_name);
@@ -533,7 +538,8 @@ channel_set_tags_from_list(channel_t *ch, const char *maplist)
     n = LIST_NEXT(ctm, ctm_channel_link);
     if(ctm->ctm_mark) {
       change = 1;
-      channel_tag_mapping_destroy(ctm);
+      channel_tag_mapping_destroy(ctm, CTM_DESTROY_UPDATE_TAG |
+				  CTM_DESTROY_UPDATE_CHANNEL);
     }
   }
 
@@ -578,8 +584,10 @@ channel_tag_map(channel_t *ch, channel_tag_t *ct, int check)
 
   ctm->ctm_mark = 0;
 
-  if(ct->ct_enabled && !ct->ct_internal)
+  if(ct->ct_enabled && !ct->ct_internal) {
     htsp_tag_update(ct);
+    htsp_channel_update(ch);
+  }
 }
 
 
@@ -587,15 +595,21 @@ channel_tag_map(channel_t *ch, channel_tag_t *ct, int check)
  *
  */
 static void
-channel_tag_mapping_destroy(channel_tag_mapping_t *ctm)
+channel_tag_mapping_destroy(channel_tag_mapping_t *ctm, int flags)
 {
   channel_tag_t *ct = ctm->ctm_tag;
+  channel_t *ch = ctm->ctm_channel;
+
   LIST_REMOVE(ctm, ctm_channel_link);
   LIST_REMOVE(ctm, ctm_tag_link);
   free(ctm);
 
-  if(ct->ct_enabled && !ct->ct_internal)
-    htsp_tag_update(ct);
+  if(ct->ct_enabled && !ct->ct_internal) {
+    if(flags & CTM_DESTROY_UPDATE_TAG)
+      htsp_tag_update(ct);
+    if(flags & CTM_DESTROY_UPDATE_CHANNEL)
+      htsp_channel_update(ch);
+  }
 }
 
 
@@ -661,7 +675,7 @@ channel_tag_destroy(channel_tag_t *ct)
 
   while((ctm = LIST_FIRST(&ct->ct_ctms)) != NULL) {
     ch = ctm->ctm_channel;
-    channel_tag_mapping_destroy(ctm);
+    channel_tag_mapping_destroy(ctm, CTM_DESTROY_UPDATE_CHANNEL);
     channel_save(ch);
   }
 
@@ -746,6 +760,7 @@ channel_tag_record_update(void *opaque, const char *id, htsmsg_t *values,
   channel_tag_t *ct;
   uint32_t u32;
   int was_exposed, is_exposed;
+  channel_tag_mapping_t *ctm;
 
   if((ct = channel_tag_find(id, maycreate)) == NULL)
     return NULL;
@@ -771,13 +786,21 @@ channel_tag_record_update(void *opaque, const char *id, htsmsg_t *values,
      thus, it's not as simple as just sending updates here.
      Depending on how the flags transition we add update or delete tags */
 
-  if(was_exposed == 0 && is_exposed == 1)
+  if(was_exposed == 0 && is_exposed == 1) {
     htsp_tag_add(ct);
-  else if(was_exposed == 1 && is_exposed == 1)
-    htsp_tag_update(ct);
-  else if(was_exposed == 1 && is_exposed == 0)
-    htsp_tag_delete(ct);
 
+    LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
+      htsp_channel_update(ctm->ctm_channel);
+
+  } else if(was_exposed == 1 && is_exposed == 1)
+    htsp_tag_update(ct);
+  else if(was_exposed == 1 && is_exposed == 0) {
+    
+    LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
+      htsp_channel_update(ctm->ctm_channel);
+
+    htsp_tag_delete(ct);
+  }
   return channel_tag_record_build(ct);
 }
 
