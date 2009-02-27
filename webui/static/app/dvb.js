@@ -6,7 +6,7 @@
 tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
 
     var confreader = new Ext.data.JsonReader({
-	root: 'dvbadapters',
+	root: 'dvbadapters'
     }, ['name', 'automux']);
 
     
@@ -31,11 +31,11 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
 	    rootVisible:false,
 	    loader: new Ext.tree.TreeLoader({
 		baseParams: {adapter: adapterId},
-		dataUrl:'/dvbnetworks',
+		dataUrl:'/dvbnetworks'
 	    }),
 	    
 	    root: new Ext.tree.AsyncTreeNode({
-		id:'root',
+		id:'root'
 	    }),
 
 	    buttons: [locationbutton],
@@ -119,12 +119,12 @@ tvheadend.dvb_adapterdetails = function(adapterId, adapterName, treenode) {
 	items: [{
 	    fieldLabel: 'Adapter name',
 	    name: 'name',
-	    width: 400,
+	    width: 400
 	},
 		
 		new Ext.form.Checkbox({
 		    fieldLabel: 'Autodetect muxes',
-		    name: 'automux',
+		    name: 'automux'
 		})
 	       ],
 	tbar:[{
@@ -195,8 +195,8 @@ tvheadend.dvb = function() {
 	}),
 
 	root: new Ext.tree.AsyncTreeNode({
-	    id:'root',
-	}),
+	    id:'root'
+	})
     });
 
 

@@ -17,7 +17,7 @@ tvheadend.channels = new Ext.data.JsonStore({
     autoLoad: true,
     root:'entries',
     fields: [{name: 'name'}, {name: 'chid'}],
-    url: "chlist",
+    url: "chlist"
 });
 
 /**
@@ -48,27 +48,27 @@ tvheadend.channeldetails = function(chid, chname) {
 	    width: 125,
 	    id:'name',
 	    header: "Original name",
-	    dataIndex: 'name',
+	    dataIndex: 'name'
 	},{
 	    width: 125,
 	    id:'status',
 	    header: "Last status",
-	    dataIndex: 'status',
+	    dataIndex: 'status'
 	},{
 	    width: 125,
 	    id:'provider',
 	    header: "Provider",
-	    dataIndex: 'provider',
+	    dataIndex: 'provider'
 	},{
 	    width: 125,
 	    id:'network',
 	    header: "Network",
-	    dataIndex: 'network',
+	    dataIndex: 'network'
 	},{
 	    width: 250,
 	    id:'source',
 	    header: "Source",
-	    dataIndex: 'source',
+	    dataIndex: 'source'
 	}
 				      ]);
     
@@ -111,7 +111,7 @@ tvheadend.channeldetails = function(chid, chname) {
 
 
     var confreader = new Ext.data.JsonReader({
-	root: 'channels',
+	root: 'channels'
     }, ['name','xmltvchannel','tags']);
 
     
@@ -144,7 +144,7 @@ tvheadend.channeldetails = function(chid, chname) {
 		items: [
 		    {
 			fieldLabel: 'Channel name',
-			name: 'name',
+			name: 'name'
 		    },new Ext.form.ComboBox({
 			loadingText: 'Loading...',
 			fieldLabel: 'XML-TV Source',
@@ -172,7 +172,7 @@ tvheadend.channeldetails = function(chid, chname) {
 		    displayField:"name",
 		    width:200,
 		    height:200,
-		    store:tvheadend.channelTags,
+		    store:tvheadend.channelTags
 		}]
 	    }]
 	}]
@@ -232,7 +232,7 @@ tvheadend.channeldetails = function(chid, chname) {
 	    }
 	}],
 	defaults: {
-	    border:false,
+	    border:false
 	},
 	layout:'anchor',
 	items: [confpanel,transportsgrid]
@@ -295,7 +295,7 @@ tvheadend.chconf = function() {
 		   dataIndex: 'name'}
 		 ],
 	selModel: new Ext.grid.RowSelectionModel({singleSelect:true}),
-	store: tvheadend.channels,
+	store: tvheadend.channels
     });
 
     var details = new Ext.Panel({

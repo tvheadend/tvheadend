@@ -2,7 +2,7 @@ tvheadend.ContentGroupStore = new Ext.data.JsonStore({
     root:'entries',
     fields: [{name: 'name'}],
     autoLoad: true,
-    url:'ecglist',
+    url:'ecglist'
 });
 
 
@@ -33,7 +33,7 @@ tvheadend.epgDetails = function(event) {
 	    })
 	],
 	buttonAlign: 'center',
-	html: content,
+	html: content
     });
     win.show();
 
@@ -82,7 +82,7 @@ tvheadend.epg = function() {
 	url: 'epg',
 	autoLoad: true,
 	id: 'id',
-	remoteSort: true,
+	remoteSort: true
     });
 
     function renderDate(value){
@@ -111,20 +111,20 @@ tvheadend.epg = function() {
 	    width: 250,
 	    id:'title',
 	    header: "Title",
-	    dataIndex: 'title',
+	    dataIndex: 'title'
 	},{
 	    width: 100,
 	    id:'start',
 	    header: "Start",
 	    dataIndex: 'start',
-	    renderer: renderDate,
+	    renderer: renderDate
 	},{
 	    width: 100,
 	    hidden:true,
 	    id:'end',
 	    header: "End",
 	    dataIndex: 'end',
-	    renderer: renderDate,
+	    renderer: renderDate
 	},{
 	    width: 100,
 	    id:'duration',
@@ -135,12 +135,12 @@ tvheadend.epg = function() {
 	    width: 250,
 	    id:'channel',
 	    header: "Channel",
-	    dataIndex: 'channel',
+	    dataIndex: 'channel'
 	},{
 	    width: 250,
 	    id:'contentgrp',
 	    header: "Content Type",
-	    dataIndex: 'contentgrp',
+	    dataIndex: 'contentgrp'
 	}
     ]);
 

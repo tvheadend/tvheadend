@@ -2,7 +2,7 @@ tvheadend.grabberStore = new Ext.data.JsonStore({
     root:'entries',
     fields: ['identifier','name','version','apiconfig'],
     url:'xmltv',
-    baseParams: {op: 'listGrabbers'},
+    baseParams: {op: 'listGrabbers'}
 });
 
 /*
@@ -78,7 +78,7 @@ tvheadend.xmltvsetup = function() {
 tvheadend.xmltv = function() {
 
     var confreader = new Ext.data.JsonReader({
-	root: 'xmltvSettings',
+	root: 'xmltvSettings'
     }, ['grabber','grabinterval','grabenable']);
 
     var grabberSelect = new Ext.form.ComboBox({
@@ -131,7 +131,7 @@ tvheadend.xmltv = function() {
 		new tvheadend.help('XMLTV configuration', 
 				   'config_xmltv.html');
 	    }
-	}],
+	}]
 	
     });
 

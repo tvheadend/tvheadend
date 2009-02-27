@@ -30,7 +30,7 @@ tvheadend.dvrDetails = function(entry) {
         height: 300,
 	constrainHeader: true,
 	buttonAlign: 'center',
-	html: content,
+	html: content
     });
 
     switch(entry.schedstate) {
@@ -102,20 +102,20 @@ tvheadend.dvrlog = function() {
 	    width: 250,
 	    id:'title',
 	    header: "Title",
-	    dataIndex: 'title',
+	    dataIndex: 'title'
 	},{
 	    width: 100,
 	    id:'start',
 	    header: "Start",
 	    dataIndex: 'start',
-	    renderer: renderDate,
+	    renderer: renderDate
 	},{
 	    width: 100,
 	    hidden:true,
 	    id:'end',
 	    header: "End",
 	    dataIndex: 'end',
-	    renderer: renderDate,
+	    renderer: renderDate
 	},{
 	    width: 100,
 	    id:'duration',
@@ -126,18 +126,18 @@ tvheadend.dvrlog = function() {
 	    width: 250,
 	    id:'channel',
 	    header: "Channel",
-	    dataIndex: 'channel',
+	    dataIndex: 'channel'
 	},{
 	    width: 200,
 	    id:'creator',
 	    header: "Created by",
 	    hidden:true,
-	    dataIndex: 'creator',
+	    dataIndex: 'creator'
 	},{
 	    width: 200,
 	    id:'status',
 	    header: "Status",
-	    dataIndex: 'status',
+	    dataIndex: 'status'
 	}
     ]);
 
@@ -276,12 +276,12 @@ tvheadend.dvr = function() {
 	    {name: 'creator'},
             {name: 'duration'},
             {name: 'filesize'},
-            {name: 'url'},
+            {name: 'url'}
 	],
 	url: 'dvrlist',
 	autoLoad: true,
 	id: 'id',
-	remoteSort: true,
+	remoteSort: true
     });
     
     
@@ -318,7 +318,7 @@ tvheadend.dvr = function() {
 tvheadend.dvrsettings = function() {
 
     var confreader = new Ext.data.JsonReader({
-	root: 'dvrSettings',
+	root: 'dvrSettings'
     }, ['storage','postproc','retention','dayDirs',
 	'channelDirs','channelInTitle',
 	'dateInTitle','timeInTitle']);
@@ -375,7 +375,7 @@ tvheadend.dvrsettings = function() {
 		new tvheadend.help('DVR configuration', 
 				   'config_dvr.html');
 	    }
-	}],
+	}]
 	
     });
 
