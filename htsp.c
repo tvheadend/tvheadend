@@ -491,7 +491,7 @@ htsp_method_get_challenge(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("Unable to generate challenge");
  
   r = htsmsg_create();
-  htsmsg_add_bin(r, "_challenge", htsp->htsp_challenge, 32);
+  htsmsg_add_bin(r, "challenge", htsp->htsp_challenge, 32);
   return r;
 }
 
