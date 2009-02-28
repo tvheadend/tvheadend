@@ -503,8 +503,6 @@ htsp_method_authenticate(htsp_connection_t *htsp, htsmsg_t *in)
   if(digestlen != 20)
     return htsp_error("Invalid digest size");
 
-  printf("hashcheck\n");
-
   access = access_get_hashed(username, digest, htsp->htsp_challenge,
 			     (struct sockaddr *)htsp->htsp_peer);
   if(access == 0) {
@@ -535,7 +533,7 @@ struct {
 } htsp_methods[] = {
   { "getChallenge", htsp_method_get_challenge, 0},
   { "authenticate", htsp_method_authenticate, 0},
-  { "async", htsp_method_async, ACCESS_STREAMING},
+  { "setAsync", htsp_method_async, ACCESS_STREAMING},
   { "getEvent", htsp_method_getEvent, ACCESS_STREAMING},
   { "subscribe", htsp_method_subscribe, ACCESS_STREAMING},
   { "unsubscribe", htsp_method_unsubscribe, ACCESS_STREAMING},
@@ -611,9 +609,6 @@ htsp_read_loop(htsp_connection_t *htsp)
     if((method = htsmsg_get_str(m, "method")) != NULL) {
       for(i = 0; i < NUM_METHODS; i++) {
 	if(!strcmp(method, htsp_methods[i].name)) {
-
-	  printf("mask for %s: %x\n", htsp_methods[i].name,
-		 htsp_methods[i].privmask);
 
 	  if(htsp_methods[i].privmask &&
 	     !(htsp->htsp_granted_access & htsp_methods[i].privmask)) {
