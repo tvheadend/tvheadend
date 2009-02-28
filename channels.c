@@ -324,7 +324,7 @@ channel_save(channel_t *ch)
 
   tags = htsmsg_create_array();
   LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
-    htsmsg_add_str(tags, NULL, ctm->ctm_tag->ct_identifier);
+    htsmsg_add_u32(tags, NULL, ctm->ctm_tag->ct_identifier);
 
   htsmsg_add_msg(m, "tags", tags);
 
@@ -622,10 +622,12 @@ channel_tag_find(const char *id, int create)
   channel_tag_t *ct;
   char buf[20];
   static int tally;
+  uint32_t u32;
 
   if(id != NULL) {
+    u32 = atoi(id);
     TAILQ_FOREACH(ct, &channel_tags, ct_link)
-      if(!strcmp(ct->ct_identifier, id))
+      if(ct->ct_identifier == u32)
 	return ct;
   }
 
@@ -641,7 +643,7 @@ channel_tag_find(const char *id, int create)
     tally = MAX(atoi(id), tally);
   }
 
-  ct->ct_identifier = strdup(id);
+  ct->ct_identifier = atoi(id);
   ct->ct_name = strdup("New tag");
   ct->ct_comment = strdup("");
   ct->ct_icon = strdup("");
@@ -682,7 +684,6 @@ channel_tag_destroy(channel_tag_t *ct)
   if(ct->ct_enabled && !ct->ct_internal)
     htsp_tag_delete(ct);
 
-  free(ct->ct_identifier);
   free(ct->ct_name);
   free(ct->ct_comment);
   free(ct->ct_icon);
@@ -705,7 +706,7 @@ channel_tag_record_build(channel_tag_t *ct)
   htsmsg_add_str(e, "name", ct->ct_name);
   htsmsg_add_str(e, "comment", ct->ct_comment);
   htsmsg_add_str(e, "icon", ct->ct_icon);
-  htsmsg_add_str(e, "id", ct->ct_identifier);
+  htsmsg_add_u32(e, "id", ct->ct_identifier);
   return e;
 }
 

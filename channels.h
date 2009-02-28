@@ -71,10 +71,10 @@ typedef struct channel_tag {
   int ct_enabled;
   int ct_internal;
   int ct_titled_icon;
+  int ct_identifier;
   char *ct_name;
   char *ct_comment;
   char *ct_icon;
-  char *ct_identifier;
   struct channel_tag_mapping_list ct_ctms;
 
   struct dvr_autorec_entry_list ct_autorecs;

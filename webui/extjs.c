@@ -699,7 +699,7 @@ extjs_channel(http_connection_t *hc, const char *remain, void *opaque)
     buf[0] = 0;
     LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
       snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
-	       "%s%s", strlen(buf) == 0 ? "" : ",",
+	       "%s%d", strlen(buf) == 0 ? "" : ",",
 	       ctm->ctm_tag->ct_identifier);
     }
     htsmsg_add_str(r, "tags", buf);
@@ -895,7 +895,7 @@ extjs_channeltags(http_connection_t *hc, const char *remain, void *opaque)
 	continue;
 
       e = htsmsg_create();
-      htsmsg_add_str(e, "identifier", ct->ct_identifier);
+      htsmsg_add_u32(e, "identifier", ct->ct_identifier);
       htsmsg_add_str(e, "name", ct->ct_name);
       htsmsg_add_msg(array, NULL, e);
     }
