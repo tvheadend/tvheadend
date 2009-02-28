@@ -414,11 +414,18 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   if((ch = channel_find_by_identifier(chid)) == NULL)
     return htsp_error("Requested channel does not exist");
 
+
+  /*
+   * We send the reply here or the user will get the 'subscriptionStart'
+   * async message before the reply to 'subscribe'.
+   */
+  htsp_reply(htsp, in, htsmsg_create());
+
   s = subscription_create_from_channel(ch, 500, "htsp",
 				       htsp_subscription_callback, htsp, sid);
 
   LIST_INSERT_HEAD(&htsp->htsp_subscriptions, s, ths_subscriber_link);
-  return htsmsg_create();
+  return NULL;
 }
 
 
@@ -438,12 +445,18 @@ htsp_method_unsubscribe(htsp_connection_t *htsp, htsmsg_t *in)
     if(s->ths_u32 == sid)
       break;
 
+  /*
+   * We send the reply here or the user will get the 'subscriptionStart'
+   * async message before the reply to 'subscribe'.
+   */
+  htsp_reply(htsp, in, htsmsg_create());
+
   if(s == NULL)
-    return htsmsg_create(); /* Just say ok */
+    return NULL; /* Subscription did not exist, but we don't really care */
 
   LIST_REMOVE(s, ths_subscriber_link);
   subscription_unsubscribe(s);
-  return htsmsg_create();
+  return NULL;
 }
 
 
