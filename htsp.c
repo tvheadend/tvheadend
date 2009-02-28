@@ -533,7 +533,7 @@ struct {
 } htsp_methods[] = {
   { "getChallenge", htsp_method_get_challenge, 0},
   { "authenticate", htsp_method_authenticate, 0},
-  { "setAsync", htsp_method_async, ACCESS_STREAMING},
+  { "enableAsyncMetadata", htsp_method_async, ACCESS_STREAMING},
   { "getEvent", htsp_method_getEvent, ACCESS_STREAMING},
   { "subscribe", htsp_method_subscribe, ACCESS_STREAMING},
   { "unsubscribe", htsp_method_unsubscribe, ACCESS_STREAMING},
