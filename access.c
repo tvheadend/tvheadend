@@ -33,6 +33,8 @@
 #include "access.h"
 #include "dtable.h"
 
+#include <libavutil/sha1.h>
+
 struct access_entry_queue access_entries;
 
 
@@ -69,6 +71,70 @@ access_verify(const char *username, const char *password,
   }
   return (mask & bits) == mask ? 0 : -1;
 }
+
+
+
+/**
+ *
+ */
+uint32_t
+access_get_hashed(const char *username, const uint8_t digest[20],
+		  const uint8_t *challenge, struct sockaddr *src)
+{
+  struct sockaddr_in *si = (struct sockaddr_in *)src;
+  uint32_t b = ntohl(si->sin_addr.s_addr);
+  access_entry_t *ae;
+  struct AVSHA1 *shactx = alloca(av_sha1_size);
+  uint8_t d[20];
+  uint32_t r = 0;
+
+  TAILQ_FOREACH(ae, &access_entries, ae_link) {
+
+    if((b & ae->ae_netmask) != ae->ae_network)
+      continue; /* IP based access mismatches */
+
+    av_sha1_init(shactx);
+    av_sha1_update(shactx, (const uint8_t *)ae->ae_password,
+		   strlen(ae->ae_password));
+    av_sha1_update(shactx, challenge, 32);
+    av_sha1_final(shactx, d);
+    
+    if(memcmp(d, digest, 20)) /* Nintendo would have use strncmp() here :) */
+      continue;
+
+    r |= ae->ae_rights;
+  }
+  return r;
+}
+
+
+
+/**
+ *
+ */
+uint32_t
+access_get_by_addr(struct sockaddr *src)
+{
+  struct sockaddr_in *si = (struct sockaddr_in *)src;
+  uint32_t b = ntohl(si->sin_addr.s_addr);
+  access_entry_t *ae;
+  uint32_t r = 0;
+
+  TAILQ_FOREACH(ae, &access_entries, ae_link) {
+
+    if(ae->ae_username[0] != '*')
+      continue;
+
+    if((b & ae->ae_netmask) != ae->ae_network)
+      continue; /* IP based access mismatches */
+
+    r |= ae->ae_rights;
+  }
+  return r;
+}
+
+
+
 
 /**
  *

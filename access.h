@@ -59,14 +59,21 @@ typedef struct access_entry {
 int access_verify(const char *username, const char *password,
 		  struct sockaddr *src, uint32_t mask);
 
+/**
+ *
+ */
+uint32_t access_get_hashed(const char *username, const uint8_t digest[20],
+			   const uint8_t *challenge, struct sockaddr *src);
+
+/**
+ *
+ */
+uint32_t access_get_by_addr(struct sockaddr *src);
+
+
+/**
+ *
+ */
 void access_init(void);
-
-//access_entry_t *access_add(const char *id);
-
-//access_entry_t *access_by_id(int id);
-	      
-//void access_delete(access_entry_t *ae);
-
-//void access_save(void);
 
 #endif /* ACCESS_H_ */

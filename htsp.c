@@ -114,6 +114,10 @@ typedef struct htsp_connection {
    */
   struct th_subscription_list htsp_subscriptions;
 
+  uint32_t htsp_granted_access;
+
+  uint8_t htsp_challenge[32];
+
 } htsp_connection_t;
 
 /**
@@ -240,7 +244,11 @@ htsp_send_message(htsp_connection_t *htsp, htsmsg_t *m, htsp_msg_q_t *hmq)
 static htsmsg_t *
 htsp_build_channel(channel_t *ch, const char *method)
 {
+  channel_tag_mapping_t *ctm;
+  channel_tag_t *ct;
+
   htsmsg_t *out = htsmsg_create();
+  htsmsg_t *tags = htsmsg_create_array();
 
   htsmsg_add_u32(out, "channelId", ch->ch_id);
 
@@ -251,6 +259,13 @@ htsp_build_channel(channel_t *ch, const char *method)
   htsmsg_add_u32(out, "eventId",
 		 ch->ch_epg_current != NULL ? ch->ch_epg_current->e_id : 0);
 
+  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
+    ct = ctm->ctm_tag;
+    if(ct->ct_enabled && !ct->ct_internal)
+      htsmsg_add_str(tags, NULL, ct->ct_identifier);
+  }
+
+  htsmsg_add_msg(out, "tags", tags);
   htsmsg_add_str(out, "method", method);
   return out;
 }
@@ -260,22 +275,24 @@ htsp_build_channel(channel_t *ch, const char *method)
  *
  */
 static htsmsg_t *
-htsp_build_tag(channel_tag_t *ct, const char *method)
+htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
 {
   channel_tag_mapping_t *ctm;
-  htsmsg_t *out = htsmsg_create();
-  htsmsg_t *members = htsmsg_create_array();
-
+   htsmsg_t *out = htsmsg_create();
+   htsmsg_t *members = include_channels ? htsmsg_create_array() : NULL;
+ 
   htsmsg_add_str(out, "tagId", ct->ct_identifier);
 
   htsmsg_add_str(out, "tagName", ct->ct_name);
   htsmsg_add_str(out, "tagIcon", ct->ct_icon);
   htsmsg_add_u32(out, "tagTitledIcon", ct->ct_titled_icon);
 
-  LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
-    htsmsg_add_u32(members, NULL, ctm->ctm_channel->ch_id);
+  if(members != NULL) {
+    LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
+      htsmsg_add_u32(members, NULL, ctm->ctm_channel->ch_id);
+    htsmsg_add_msg(out, "members", members);
+  }
 
-  htsmsg_add_msg(out, "members", members);
   htsmsg_add_str(out, "method", method);
   return out;
 }
@@ -288,7 +305,7 @@ static htsmsg_t *
 htsp_error(const char *err)
 {
   htsmsg_t *r = htsmsg_create();
-  htsmsg_add_str(r, "_error", err);
+  htsmsg_add_str(r, "error", err);
   return r;
 }
 
@@ -325,15 +342,20 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
 
   htsp->htsp_async_mode = 1;
 
+  /* Send all enabled and external tags */
+  TAILQ_FOREACH(ct, &channel_tags, ct_link)
+    if(ct->ct_enabled && !ct->ct_internal)
+      htsp_send_message(htsp, htsp_build_tag(ct, "tagAdd", 0), NULL);
+  
   /* Send all channels */
   RB_FOREACH(ch, &channel_name_tree, ch_name_link)
     htsp_send_message(htsp, htsp_build_channel(ch, "channelAdd"), NULL);
     
-  /* Send all enabled and external tags */
+  /* Send all enabled and external tags (now with channel mappings) */
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
     if(ct->ct_enabled && !ct->ct_internal)
-      htsp_send_message(htsp, htsp_build_tag(ct, "tagAdd"), NULL);
-  
+      htsp_send_message(htsp, htsp_build_tag(ct, "tagUpdate", 1), NULL);
+
   /* Insert in list so it will get all updates */
   LIST_INSERT_HEAD(&htsp_async_connections, htsp, htsp_async_link);
 
@@ -425,6 +447,83 @@ htsp_method_unsubscribe(htsp_connection_t *htsp, htsmsg_t *in)
 }
 
 
+/**
+ * Update challenge
+ */
+static int
+htsp_update_challenge(htsp_connection_t *htsp)
+{
+  int fd, n;
+
+  if((fd = open("/dev/urandom", O_RDONLY)) < 0)
+    return -1;
+  
+  n = read(fd, &htsp->htsp_challenge, 32);
+  close(fd);
+  return n != 32;
+}
+  
+
+/**
+ * Request unsubscription for a channel
+ */
+static htsmsg_t *
+htsp_method_get_challenge(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *r;
+
+  if(htsp_update_challenge(htsp)) 
+    return htsp_error("Unable to generate challenge");
+ 
+  r = htsmsg_create();
+  htsmsg_add_bin(r, "_challenge", htsp->htsp_challenge, 32);
+  return r;
+}
+
+
+
+/**
+ * Request unsubscription for a channel
+ */
+static htsmsg_t *
+htsp_method_authenticate(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *r;
+  const char *username;
+  uint32_t access;
+  const void *digest;
+  size_t digestlen;
+
+  if((username = htsmsg_get_str(in, "username")) == NULL)
+    return htsp_error("Missing argument 'username'");
+
+  if(htsmsg_get_bin(in, "digest", &digest, &digestlen))
+    return htsp_error("Missing argument 'digest'");
+
+  if(digestlen != 20)
+    return htsp_error("Invalid digest size");
+
+  printf("hashcheck\n");
+
+  access = access_get_hashed(username, digest, htsp->htsp_challenge,
+			     (struct sockaddr *)htsp->htsp_peer);
+  if(access == 0) {
+
+    if(htsp_update_challenge(htsp)) 
+      return htsp_error("Unable to generate challenge");
+    
+    r = htsmsg_create();
+    htsmsg_add_bin(r, "challenge", htsp->htsp_challenge, 32);
+    htsmsg_add_u32(r, "noaccess", 1);
+    return r;
+  }
+
+  htsp->htsp_granted_access |= access;
+  return htsmsg_create();
+}
+
+
+
 
 /**
  * HTSP methods
@@ -434,6 +533,8 @@ struct {
   htsmsg_t *(*fn)(htsp_connection_t *htsp, htsmsg_t *in);
   int privmask;
 } htsp_methods[] = {
+  { "getChallenge", htsp_method_get_challenge, 0},
+  { "authenticate", htsp_method_authenticate, 0},
   { "async", htsp_method_async, ACCESS_STREAMING},
   { "getEvent", htsp_method_getEvent, ACCESS_STREAMING},
   { "subscribe", htsp_method_subscribe, ACCESS_STREAMING},
@@ -495,15 +596,15 @@ htsp_read_loop(htsp_connection_t *htsp)
 {
   htsmsg_t *m, *reply;
   int r, i;
-  const char *method, *username, *password;
+  const char *method;
+
+  htsp->htsp_granted_access = 
+    access_get_by_addr((struct sockaddr *)htsp->htsp_peer);
 
   while(1) {
   readmsg:
     if((r = htsp_read_message(htsp, &m, 0)) != 0)
       return r;
-
-    username = htsmsg_get_str(m, "username");
-    password = htsmsg_get_str(m, "password");
 
     pthread_mutex_lock(&global_lock);
 
@@ -511,17 +612,25 @@ htsp_read_loop(htsp_connection_t *htsp)
       for(i = 0; i < NUM_METHODS; i++) {
 	if(!strcmp(method, htsp_methods[i].name)) {
 
-	  if(access_verify(username, password, 
-			   (struct sockaddr *)htsp->htsp_peer,
-			   htsp_methods[i].privmask)) {
+	  printf("mask for %s: %x\n", htsp_methods[i].name,
+		 htsp_methods[i].privmask);
+
+	  if(htsp_methods[i].privmask &&
+	     !(htsp->htsp_granted_access & htsp_methods[i].privmask)) {
 
 	    pthread_mutex_unlock(&global_lock);
 
 	    /* Classic authentication failed delay */
-	    sleep(1); 
+	    usleep(250000);
 	    
+	    if(htsp_update_challenge(htsp)) {
+	      reply = htsp_error("Unable to generate challenge");
+	      break;
+	    }
+
 	    reply = htsmsg_create();
-	    htsmsg_add_u32(reply, "_noaccess", 1);
+	    htsmsg_add_u32(reply, "noaccess", 1);
+	    htsmsg_add_bin(reply, "challenge", htsp->htsp_challenge, 32);
 	    htsp_reply(htsp, m, reply);
 
 	    htsmsg_destroy(m);
@@ -766,7 +875,7 @@ htsp_channel_delete(channel_t *ch)
 void
 htsp_tag_add(channel_tag_t *ct)
 {
-  htsp_async_send(htsp_build_tag(ct, "tagAdd"));
+  htsp_async_send(htsp_build_tag(ct, "tagAdd", 1));
 }
 
 
@@ -776,7 +885,7 @@ htsp_tag_add(channel_tag_t *ct)
 void
 htsp_tag_update(channel_tag_t *ct)
 {
-  htsp_async_send(htsp_build_tag(ct, "tagUpdate"));
+  htsp_async_send(htsp_build_tag(ct, "tagUpdate", 1));
 }
 
 
