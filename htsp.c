@@ -547,6 +547,7 @@ htsp_method_getInfo(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_t *r = htsmsg_create();
 
   htsmsg_add_u32(r, "protover", HTSP_PROTO_VERSION);
+  htsmsg_add_str(r, "appname", "HTS Tvheadend");
   htsmsg_add_str(r, "appver", htsversion);
 
   return r;
