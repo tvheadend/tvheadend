@@ -368,6 +368,8 @@ transport_find(channel_t *ch, unsigned int weight)
     if(!t->tht_disabled && t->tht_quality_index(t) > 10)
       vec[i++] = t;
 
+  assert(i == cnt);
+
   /* Sort transports, lower priority should come come earlier in the vector
      (i.e. it will be more favoured when selecting a transport */
 
