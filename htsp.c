@@ -249,8 +249,8 @@ htsp_build_channel(channel_t *ch, const char *method)
   channel_tag_mapping_t *ctm;
   channel_tag_t *ct;
 
-  htsmsg_t *out = htsmsg_create();
-  htsmsg_t *tags = htsmsg_create_array();
+  htsmsg_t *out = htsmsg_create_map();
+  htsmsg_t *tags = htsmsg_create_list();
 
   htsmsg_add_u32(out, "channelId", ch->ch_id);
 
@@ -280,8 +280,8 @@ static htsmsg_t *
 htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
 {
   channel_tag_mapping_t *ctm;
-  htsmsg_t *out = htsmsg_create();
-  htsmsg_t *members = include_channels ? htsmsg_create_array() : NULL;
+  htsmsg_t *out = htsmsg_create_map();
+  htsmsg_t *members = include_channels ? htsmsg_create_list() : NULL;
  
   htsmsg_add_u32(out, "tagId", ct->ct_identifier);
 
@@ -306,7 +306,7 @@ htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
 static htsmsg_t *
 htsp_error(const char *err)
 {
-  htsmsg_t *r = htsmsg_create();
+  htsmsg_t *r = htsmsg_create_map();
   htsmsg_add_str(r, "error", err);
   return r;
 }
@@ -337,7 +337,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   channel_tag_t *ct;
 
   /* First, just OK the async request */
-  htsp_reply(htsp, in, htsmsg_create()); 
+  htsp_reply(htsp, in, htsmsg_create_map()); 
 
   if(htsp->htsp_async_mode)
     return NULL; /* already in async mode */
@@ -381,7 +381,7 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
   if((e = epg_event_find_by_id(eventid)) == NULL)
     return htsp_error("Event does not exist");
 
-  out = htsmsg_create();
+  out = htsmsg_create_map();
 
   htsmsg_add_u32(out, "start", e->e_start);
   htsmsg_add_u32(out, "stop", e->e_stop);
@@ -421,7 +421,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
    * We send the reply here or the user will get the 'subscriptionStart'
    * async message before the reply to 'subscribe'.
    */
-  htsp_reply(htsp, in, htsmsg_create());
+  htsp_reply(htsp, in, htsmsg_create_map());
 
   s = subscription_create_from_channel(ch, 500, "htsp",
 				       htsp_subscription_callback, htsp, sid);
@@ -451,7 +451,7 @@ htsp_method_unsubscribe(htsp_connection_t *htsp, htsmsg_t *in)
    * We send the reply here or the user will get the 'subscriptionStart'
    * async message before the reply to 'subscribe'.
    */
-  htsp_reply(htsp, in, htsmsg_create());
+  htsp_reply(htsp, in, htsmsg_create_map());
 
   if(s == NULL)
     return NULL; /* Subscription did not exist, but we don't really care */
@@ -490,7 +490,7 @@ htsp_method_get_challenge(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsp_update_challenge(htsp)) 
     return htsp_error("Unable to generate challenge");
  
-  r = htsmsg_create();
+  r = htsmsg_create_map();
   htsmsg_add_bin(r, "challenge", htsp->htsp_challenge, 32);
   return r;
 }
@@ -525,14 +525,14 @@ htsp_method_authenticate(htsp_connection_t *htsp, htsmsg_t *in)
     if(htsp_update_challenge(htsp)) 
       return htsp_error("Unable to generate challenge");
     
-    r = htsmsg_create();
+    r = htsmsg_create_map();
     htsmsg_add_bin(r, "challenge", htsp->htsp_challenge, 32);
     htsmsg_add_u32(r, "noaccess", 1);
     return r;
   }
 
   htsp->htsp_granted_access |= access;
-  return htsmsg_create();
+  return htsmsg_create_map();
 }
 
 
@@ -544,7 +544,7 @@ static htsmsg_t *
 htsp_method_getInfo(htsp_connection_t *htsp, htsmsg_t *in)
 {
   extern const char *htsversion;
-  htsmsg_t *r = htsmsg_create();
+  htsmsg_t *r = htsmsg_create_map();
 
   htsmsg_add_u32(r, "protover", HTSP_PROTO_VERSION);
   htsmsg_add_str(r, "appname", "HTS Tvheadend");
@@ -655,7 +655,7 @@ htsp_read_loop(htsp_connection_t *htsp)
 	      break;
 	    }
 
-	    reply = htsmsg_create();
+	    reply = htsmsg_create_map();
 	    htsmsg_add_u32(reply, "noaccess", 1);
 	    htsmsg_add_bin(reply, "challenge", htsp->htsp_challenge, 32);
 	    htsp_reply(htsp, m, reply);
@@ -852,7 +852,7 @@ htsp_event_update(channel_t *ch, event_t *e)
   time_t now;
 
   time(&now);
-  m = htsmsg_create();
+  m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "channelUpdate");
   htsmsg_add_u32(m, "channelId", ch->ch_id);
 
@@ -889,7 +889,7 @@ htsp_channel_update(channel_t *ch)
 void
 htsp_channel_delete(channel_t *ch)
 {
-  htsmsg_t *m = htsmsg_create();
+  htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_u32(m, "channelId", ch->ch_id);
   htsmsg_add_str(m, "method", "channelDelete");
   htsp_async_send(m);
@@ -922,7 +922,7 @@ htsp_tag_update(channel_tag_t *ct)
 void
 htsp_tag_delete(channel_tag_t *ct)
 {
-  htsmsg_t *m = htsmsg_create();
+  htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_u32(m, "tagId", ct->ct_identifier);
   htsmsg_add_str(m, "method", "tagDelete");
   htsp_async_send(m);
@@ -938,7 +938,7 @@ htsp_send_subscription_status(htsp_connection_t *htsp, th_subscription_t *ths,
 {
   htsmsg_t *m;
 
-  m = htsmsg_create();
+  m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "subscriptionStatus");
   htsmsg_add_u32(m, "subscriptionId", ths->ths_u32);
 
@@ -962,7 +962,7 @@ htsp_stream_deliver(void *opaque, struct th_pktref *pr)
 {
   htsp_stream_t *hs = opaque;
   th_pkt_t *pkt = pr->pr_pkt;
-  htsmsg_t *m = htsmsg_create(), *n;
+  htsmsg_t *m = htsmsg_create_map(), *n;
   htsp_msg_t *hm;
   htsp_connection_t *htsp = hs->hs_htsp;
   int64_t ts;
@@ -1002,7 +1002,7 @@ htsp_stream_deliver(void *opaque, struct th_pktref *pr)
 
     hs->hs_last_report = dispatch_clock;
 
-    m = htsmsg_create();
+    m = htsmsg_create_map();
     htsmsg_add_str(m, "method", "queueStatus");
     htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
     htsmsg_add_u32(m, "packets", hs->hs_q.hmq_length);
@@ -1056,7 +1056,7 @@ htsp_subscription_start(htsp_connection_t *htsp, th_subscription_t *s,
   hs->hs_sid = s->ths_u32;
   htsp_init_queue(&hs->hs_q, 0);
 
-  m = htsmsg_create();
+  m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "subscriptionStart");
   htsmsg_add_u32(m, "subscriptionId", s->ths_u32);
 
@@ -1068,9 +1068,9 @@ htsp_subscription_start(htsp_connection_t *htsp, th_subscription_t *s,
   pthread_mutex_lock(sp->sp_mutex);
 
   /* Setup each stream */ 
-  streams = htsmsg_create_array();
+  streams = htsmsg_create_list();
   LIST_FOREACH(sc, &sp->sp_components, sc_link) {
-    c = htsmsg_create();
+    c = htsmsg_create_map();
     htsmsg_add_u32(c, "index", sc->sc_index);
     htsmsg_add_str(c, "type", streaming_component_type2txt(sc->sc_type));
     if(sc->sc_lang[0])
@@ -1112,7 +1112,7 @@ htsp_subscription_stop(htsp_connection_t *htsp, th_subscription_t *s,
   streaming_target_disconnect(&hs->hs_st);
 
   /* Send a stop message back */
-  m = htsmsg_create();
+  m = htsmsg_create_map();
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
   htsmsg_add_str(m, "method", "subscriptionStop");
 

@@ -239,7 +239,7 @@ access_entry_destroy(access_entry_t *ae)
 static htsmsg_t *
 access_record_build(access_entry_t *ae)
 {
-  htsmsg_t *e = htsmsg_create();
+  htsmsg_t *e = htsmsg_create_map();
   char buf[100];
 
   htsmsg_add_u32(e, "enabled",  !!ae->ae_enabled);
@@ -268,7 +268,7 @@ access_record_build(access_entry_t *ae)
 static htsmsg_t *
 access_record_get_all(void *opaque)
 {
-  htsmsg_t *r = htsmsg_create_array();
+  htsmsg_t *r = htsmsg_create_list();
   access_entry_t *ae;
 
   TAILQ_FOREACH(ae, &access_entries, ae_link)

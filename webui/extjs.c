@@ -218,7 +218,7 @@ extjs_tablemgr(http_connection_t *hc, const char *remain, void *opaque)
   } else if(!strcmp(op, "get")) {
     array = dtable_record_get_all(dt);
 
-    out = htsmsg_create();
+    out = htsmsg_create_map();
     htsmsg_add_msg(out, "entries", array);
 
   } else if(!strcmp(op, "update")) {
@@ -273,14 +273,14 @@ extjs_chlist(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_t *out, *array, *c;
   channel_t *ch;
 
-  out = htsmsg_create();
+  out = htsmsg_create_map();
 
-  array = htsmsg_create_array();
+  array = htsmsg_create_list();
 
   pthread_mutex_lock(&global_lock);
 
   RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-    c = htsmsg_create();
+    c = htsmsg_create_map();
     htsmsg_add_str(c, "name", ch->ch_name);
     htsmsg_add_u32(c, "chid", ch->ch_id);
     htsmsg_add_msg(array, NULL, c);
@@ -308,14 +308,14 @@ extjs_ecglist(http_connection_t *hc, const char *remain, void *opaque)
   const char *s;
   int i;
 
-  out = htsmsg_create();
-  array = htsmsg_create_array();
+  out = htsmsg_create_map();
+  array = htsmsg_create_list();
 
   for(i = 0; i < 16; i++) {
     if((s = epg_content_group_get_name(i)) == NULL)
       continue;
 
-    c = htsmsg_create();
+    c = htsmsg_create_map();
     htsmsg_add_str(c, "name", s);
     htsmsg_add_msg(array, NULL, c);
   }
@@ -337,7 +337,7 @@ extjs_dvbtree_node(htsmsg_t *array, int leaf, const char *id, const char *name,
 		   const char *type, const char *status, int quality,
 		   const char *itype)
 {
-  htsmsg_t *e = htsmsg_create();
+  htsmsg_t *e = htsmsg_create_map();
 
   htsmsg_add_str(e, "uiProvider", "col");
   htsmsg_add_str(e, "id", id);
@@ -369,7 +369,7 @@ extjs_dvbtree(http_connection_t *hc, const char *remain, void *opaque)
   if(s == NULL)
     return HTTP_STATUS_BAD_REQUEST;
 
-  out = htsmsg_create_array();
+  out = htsmsg_create_list();
   pthread_mutex_lock(&global_lock);
 
   if(http_access_verify(hc, ACCESS_ADMIN)) {
@@ -470,8 +470,8 @@ json_single_record(htsmsg_t *rec, const char *root)
 {
   htsmsg_t *out, *array;
   
-  out = htsmsg_create();
-  array = htsmsg_create_array();
+  out = htsmsg_create_map();
+  array = htsmsg_create_list();
 
   htsmsg_add_msg(array, NULL, rec);
   htsmsg_add_msg(out, root, array);
@@ -505,7 +505,7 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   if(!strcmp(op, "load")) {
-    r = htsmsg_create();
+    r = htsmsg_create_map();
     htsmsg_add_str(r, "id", tda->tda_identifier);
     htsmsg_add_str(r, "device", tda->tda_rootpath ?: "No hardware attached");
     htsmsg_add_str(r, "name", tda->tda_displayname);
@@ -522,13 +522,13 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     else
       dvb_adapter_set_auto_discovery(tda, 0);
 
-    out = htsmsg_create();
+    out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
   } else if(!strcmp(op, "addnetwork")) {
     if((s = http_arg_get(&hc->hc_req_args, "network")) != NULL)
       dvb_mux_preconf_add_network(tda, s);
 
-    out = htsmsg_create();
+    out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
 
   } else if(!strcmp(op, "serviceprobe")) {
@@ -543,7 +543,7 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     }
 
 
-    out = htsmsg_create();
+    out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
 
   } else {
@@ -567,7 +567,7 @@ build_transport_msg(th_transport_t *t)
 {
   streaming_pad_t *sp = &t->tht_streaming_pad;
   streaming_component_t *sc;
-  htsmsg_t *r = htsmsg_create();
+  htsmsg_t *r = htsmsg_create_map();
   th_stream_t *st;
 
   char video[200];
@@ -688,7 +688,7 @@ extjs_channel(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   if(!strcmp(op, "load")) {
-    r = htsmsg_create();
+    r = htsmsg_create_map();
     htsmsg_add_u32(r, "id", ch->ch_id);
     htsmsg_add_str(r, "name", ch->ch_name);
     htsmsg_add_str(r, "comdetect", "tt192");
@@ -707,8 +707,8 @@ extjs_channel(http_connection_t *hc, const char *remain, void *opaque)
     out = json_single_record(r, "channels");
 
   } else if(!strcmp(op, "gettransports")) {
-    out = htsmsg_create();
-    array = htsmsg_create_array();
+    out = htsmsg_create_map();
+    array = htsmsg_create_list();
     LIST_FOREACH(t, &ch->ch_transports, tht_ch_link)
       htsmsg_add_msg(array, NULL, build_transport_msg(t));
 
@@ -718,7 +718,7 @@ extjs_channel(http_connection_t *hc, const char *remain, void *opaque)
 
     channel_delete(ch);
 
-    out = htsmsg_create();
+    out = htsmsg_create_map();
     htsmsg_add_u32(out, "reloadchlist", 1);
     htsmsg_add_u32(out, "success", 1);
  
@@ -733,7 +733,7 @@ extjs_channel(http_connection_t *hc, const char *remain, void *opaque)
 
     channel_merge(ch, ch2); /* ch2 goes away here */
 
-    out = htsmsg_create();
+    out = htsmsg_create_map();
     htsmsg_add_u32(out, "reloadchlist", 1);
     htsmsg_add_u32(out, "success", 1);
  	
@@ -750,7 +750,7 @@ extjs_channel(http_connection_t *hc, const char *remain, void *opaque)
        strcmp(s, ch->ch_name)) {
       
       if(channel_rename(ch, s)) {
-	out = htsmsg_create();
+	out = htsmsg_create_map();
 	htsmsg_add_u32(out, "success", 0);
 	htsmsg_add_str(out, "errormsg", "Channel name already exist");
 	goto response;
@@ -759,7 +759,7 @@ extjs_channel(http_connection_t *hc, const char *remain, void *opaque)
       }
     }
     
-    out = htsmsg_create();
+    out = htsmsg_create_map();
     htsmsg_add_u32(out, "reloadchlist", 1);
     htsmsg_add_u32(out, "success", 1);
  
@@ -801,16 +801,16 @@ extjs_xmltv(http_connection_t *hc, const char *remain, void *opaque)
 
   if(!strcmp(op, "listChannels")) {
 
-    out = htsmsg_create();
-    array = htsmsg_create_array();
+    out = htsmsg_create_map();
+    array = htsmsg_create_list();
     
-    e = htsmsg_create();
+    e = htsmsg_create_map();
     htsmsg_add_str(e, "xcTitle", "None");
     htsmsg_add_msg(array, NULL, e);
 
     pthread_mutex_lock(&global_lock);
     LIST_FOREACH(xc, &xmltv_displaylist, xc_displayname_link) {
-      e = htsmsg_create();
+      e = htsmsg_create_map();
       htsmsg_add_str(e, "xcTitle", xc->xc_displayname);
       htsmsg_add_msg(array, NULL, e);
     }
@@ -821,7 +821,7 @@ extjs_xmltv(http_connection_t *hc, const char *remain, void *opaque)
   } else if(!strcmp(op, "loadSettings")) {
 
     pthread_mutex_lock(&xmltv_mutex);
-    r = htsmsg_create();
+    r = htsmsg_create_map();
 
     if((s = xmltv_get_current_grabber()) != NULL)
       htsmsg_add_str(r, "grabber", s);
@@ -847,12 +847,12 @@ extjs_xmltv(http_connection_t *hc, const char *remain, void *opaque)
 
     pthread_mutex_unlock(&xmltv_mutex);
 
-    out = htsmsg_create();
+    out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
 
   } else if(!strcmp(op, "listGrabbers")) {
 
-    out = htsmsg_create();
+    out = htsmsg_create_map();
 
     pthread_mutex_lock(&xmltv_mutex);
     array = xmltv_list_grabbers();
@@ -887,14 +887,14 @@ extjs_channeltags(http_connection_t *hc, const char *remain, void *opaque)
 
   if(!strcmp(op, "listTags")) {
 
-    out = htsmsg_create();
-    array = htsmsg_create_array();
+    out = htsmsg_create_map();
+    array = htsmsg_create_list();
 
     TAILQ_FOREACH(ct, &channel_tags, ct_link) {
       if(!ct->ct_enabled)
 	continue;
 
-      e = htsmsg_create();
+      e = htsmsg_create_map();
       htsmsg_add_u32(e, "identifier", ct->ct_identifier);
       htsmsg_add_str(e, "name", ct->ct_name);
       htsmsg_add_msg(array, NULL, e);
@@ -944,8 +944,8 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   else
     limit = 20; /* XXX */
 
-  out = htsmsg_create();
-  array = htsmsg_create_array();
+  out = htsmsg_create_map();
+  array = htsmsg_create_list();
 
   pthread_mutex_lock(&global_lock);
 
@@ -962,7 +962,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   for(i = start; i < end; i++) {
     e = eqr.eqr_array[i];
 
-    m = htsmsg_create();
+    m = htsmsg_create_map();
 
     if(e->e_channel != NULL) {
       htsmsg_add_str(m, "channel", e->e_channel->ch_name);
@@ -1033,7 +1033,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     dvr_entry_create_by_event(e, hc->hc_representative);
 
-    out = htsmsg_create();
+    out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
   } else if(!strcmp(op, "cancelEntry")) {
     s = http_arg_get(&hc->hc_req_args, "entryId");
@@ -1045,7 +1045,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     dvr_entry_cancel(de);
 
-    out = htsmsg_create();
+    out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
 
   } else if(!strcmp(op, "createAutoRec")) {
@@ -1056,12 +1056,12 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 		    http_arg_get(&hc->hc_req_args, "contentgrp"),
 		    hc->hc_representative, "Created from EPG query");
 
-    out = htsmsg_create();
+    out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
 
   } else if(!strcmp(op, "loadSettings")) {
 
-    r = htsmsg_create();
+    r = htsmsg_create_map();
     htsmsg_add_str(r, "storage", dvr_storage);
     if(dvr_postproc != NULL)
       htsmsg_add_str(r, "postproc", dvr_postproc);
@@ -1098,7 +1098,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     dvr_flags_set(flags);
 
-    out = htsmsg_create();
+    out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
 
   } else {
@@ -1146,8 +1146,8 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_UNAUTHORIZED;
   }
 
-  out = htsmsg_create();
-  array = htsmsg_create_array();
+  out = htsmsg_create_map();
+  array = htsmsg_create_list();
 
 
   dvr_query(&dqr);
@@ -1162,7 +1162,7 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
   for(i = start; i < end; i++) {
     de = dqr.dqr_array[i];
 
-    m = htsmsg_create();
+    m = htsmsg_create_map();
 
     if(de->de_channel != NULL) {
       htsmsg_add_str(m, "channel", de->de_channel->ch_name);

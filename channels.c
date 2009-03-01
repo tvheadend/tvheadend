@@ -63,7 +63,7 @@ static void channel_tag_mapping_destroy(channel_tag_mapping_t *ctm,
 static void
 channel_list_changed(void)
 {
-  htsmsg_t *m = htsmsg_create();
+  htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_u32(m, "reload", 1);
   notify_by_msg("channels", m);
 }
@@ -271,7 +271,7 @@ channel_load_one(htsmsg_t *c, int id)
 
   tvh_str_update(&ch->ch_icon, htsmsg_get_str(c, "icon"));
 
-  if((tags = htsmsg_get_array(c, "tags")) != NULL) {
+  if((tags = htsmsg_get_list(c, "tags")) != NULL) {
     HTSMSG_FOREACH(f, tags) {
       if(f->hmf_type == HMF_STR && 
 	 (ct = channel_tag_find(f->hmf_str, 0)) != NULL) {
@@ -293,7 +293,7 @@ channels_load(void)
 
   if((l = hts_settings_load("channels")) != NULL) {
     HTSMSG_FOREACH(f, l) {
-      if((c = htsmsg_get_msg_by_field(f)) == NULL)
+      if((c = htsmsg_get_map_by_field(f)) == NULL)
 	continue;
       channel_load_one(c, atoi(f->hmf_name));
     }
@@ -308,7 +308,7 @@ channels_load(void)
 static void
 channel_save(channel_t *ch)
 {
-  htsmsg_t *m = htsmsg_create();
+  htsmsg_t *m = htsmsg_create_map();
   htsmsg_t *tags;
   channel_tag_mapping_t *ctm;
 
@@ -322,7 +322,7 @@ channel_save(channel_t *ch)
   if(ch->ch_icon != NULL)
     htsmsg_add_str(m, "icon", ch->ch_icon);
 
-  tags = htsmsg_create_array();
+  tags = htsmsg_create_list();
   LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
     htsmsg_add_u32(tags, NULL, ctm->ctm_tag->ct_identifier);
 
@@ -698,7 +698,7 @@ channel_tag_destroy(channel_tag_t *ct)
 static htsmsg_t *
 channel_tag_record_build(channel_tag_t *ct)
 {
-  htsmsg_t *e = htsmsg_create();
+  htsmsg_t *e = htsmsg_create_map();
   htsmsg_add_u32(e, "enabled",  !!ct->ct_enabled);
   htsmsg_add_u32(e, "internal",  !!ct->ct_internal);
   htsmsg_add_u32(e, "titledIcon",  !!ct->ct_titled_icon);
@@ -717,7 +717,7 @@ channel_tag_record_build(channel_tag_t *ct)
 static htsmsg_t *
 channel_tag_record_get_all(void *opaque)
 {
-  htsmsg_t *r = htsmsg_create_array();
+  htsmsg_t *r = htsmsg_create_list();
   channel_tag_t *ct;
 
   TAILQ_FOREACH(ct, &channel_tags, ct_link)

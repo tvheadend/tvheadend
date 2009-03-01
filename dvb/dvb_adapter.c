@@ -70,7 +70,7 @@ tda_alloc(void)
 static void
 tda_save(th_dvb_adapter_t *tda)
 {
-  htsmsg_t *m = htsmsg_create();
+  htsmsg_t *m = htsmsg_create_map();
 
   lock_assert(&global_lock);
 
@@ -98,7 +98,7 @@ dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s)
   tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" renamed to \"%s\"",
 	 tda->tda_displayname, s);
 
-  m = htsmsg_create();
+  m = htsmsg_create_map();
   htsmsg_add_str(m, "id", tda->tda_identifier);
 
   free(tda->tda_displayname);
@@ -226,7 +226,7 @@ dvb_adapter_init(void)
   l = hts_settings_load("dvbadapters");
   if(l != NULL) {
     HTSMSG_FOREACH(f, l) {
-      if((c = htsmsg_get_msg_by_field(f)) == NULL)
+      if((c = htsmsg_get_map_by_field(f)) == NULL)
 	continue;
       
       name = htsmsg_get_str(c, "displayname");
@@ -266,7 +266,7 @@ dvb_adapter_init(void)
 void
 dvb_adapter_notify_reload(th_dvb_adapter_t *tda)
 {
-  htsmsg_t *m = htsmsg_create();
+  htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "id", tda->tda_identifier);
 
   htsmsg_add_u32(m, "reload", 1);

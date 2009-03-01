@@ -176,7 +176,7 @@ dvb_transport_load(th_dvb_mux_instance_t *tdmi)
     return;
   
   HTSMSG_FOREACH(f, l) {
-    if((c = htsmsg_get_msg_by_field(f)) == NULL)
+    if((c = htsmsg_get_map_by_field(f)) == NULL)
       continue;
 
     if(htsmsg_get_u32(c, "service_id", &sid))
@@ -221,7 +221,7 @@ dvb_transport_load(th_dvb_mux_instance_t *tdmi)
 static void
 dvb_transport_save(th_transport_t *t)
 {
-  htsmsg_t *m = htsmsg_create();
+  htsmsg_t *m = htsmsg_create_map();
 
   lock_assert(&global_lock);
 

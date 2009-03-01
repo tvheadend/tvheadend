@@ -41,7 +41,7 @@ static LIST_HEAD(, dtable) dtables;
 static void
 dtable_store_changed(const dtable_t *dt)
 {
-  htsmsg_t *m = htsmsg_create();
+  htsmsg_t *m = htsmsg_create_map();
 
   htsmsg_add_u32(m, "reload", 1);
   notify_by_msg(dt->dt_tablename, m);
@@ -77,7 +77,7 @@ dtable_load(dtable_t *dt)
 
   if((l = hts_settings_load("%s", dt->dt_tablename)) != NULL) {
     HTSMSG_FOREACH(f, l) {
-      if((c = htsmsg_get_msg_by_field(f)) == NULL)
+      if((c = htsmsg_get_map_by_field(f)) == NULL)
 	continue;
       
       if((id = htsmsg_get_str(c, "id")) == NULL)
@@ -121,7 +121,7 @@ dtable_record_update_by_array(dtable_t *dt, htsmsg_t *msg)
   int changed = 0;
 
   TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
-    if((c = htsmsg_get_msg_by_field(f)) == NULL)
+    if((c = htsmsg_get_map_by_field(f)) == NULL)
       continue;
     if((id = htsmsg_get_str(c, "id")) == NULL)
       continue;

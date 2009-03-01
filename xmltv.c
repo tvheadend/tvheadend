@@ -120,7 +120,7 @@ xmltv_load(void)
     return;
 
   HTSMSG_FOREACH(f, l) {
-    if((c = htsmsg_get_msg_by_field(f)) == NULL)
+    if((c = htsmsg_get_map_by_field(f)) == NULL)
       continue;
     
     xc = xmltv_channel_find(f->hmf_name, 1);
@@ -138,7 +138,7 @@ xmltv_load(void)
 static void
 xmltv_save(xmltv_channel_t *xc)
 {
-  htsmsg_t *m = htsmsg_create();
+  htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "displayname", xc->xc_displayname);
 
   if(xc->xc_icon != NULL)
@@ -260,7 +260,7 @@ static const char *
 xmltv_get_cdata_by_tag(htsmsg_t *tags, const char *name)
 {
   htsmsg_t *sub;
-  if((sub = htsmsg_get_msg(tags, name)) == NULL)
+  if((sub = htsmsg_get_map(tags, name)) == NULL)
     return NULL;
   return htsmsg_get_str(sub, "cdata");
 }
@@ -281,10 +281,10 @@ xmltv_parse_channel(htsmsg_t *body)
   if(body == NULL)
     return;
 
-  if((attribs = htsmsg_get_msg(body, "attrib")) == NULL)
+  if((attribs = htsmsg_get_map(body, "attrib")) == NULL)
     return;
 
-  tags = htsmsg_get_msg(body, "tags");
+  tags = htsmsg_get_map(body, "tags");
   
   if((id = htsmsg_get_str(attribs, "id")) == NULL)
     return;
@@ -303,8 +303,8 @@ xmltv_parse_channel(htsmsg_t *body)
     }
   }
 
-  if((subtag  = htsmsg_get_msg(tags,    "icon"))   != NULL &&
-     (attribs = htsmsg_get_msg(subtag,  "attrib")) != NULL &&
+  if((subtag  = htsmsg_get_map(tags,    "icon"))   != NULL &&
+     (attribs = htsmsg_get_map(subtag,  "attrib")) != NULL &&
      (icon    = htsmsg_get_str(attribs, "src"))    != NULL) {
     
     if(xc->xc_icon == NULL || strcmp(xc->xc_icon, icon)) {
@@ -356,10 +356,10 @@ xmltv_parse_programme(htsmsg_t *body)
   if(body == NULL)
     return;
 
-  if((attribs = htsmsg_get_msg(body, "attrib")) == NULL)
+  if((attribs = htsmsg_get_map(body, "attrib")) == NULL)
     return;
 
-  if((tags = htsmsg_get_msg(body, "tags")) == NULL)
+  if((tags = htsmsg_get_map(body, "tags")) == NULL)
     return;
 
   if((chid = htsmsg_get_str(attribs, "channel")) == NULL)
@@ -390,14 +390,14 @@ xmltv_parse_tv(htsmsg_t *body)
   htsmsg_t *tags;
   htsmsg_field_t *f;
 
-  if((tags = htsmsg_get_msg(body, "tags")) == NULL)
+  if((tags = htsmsg_get_map(body, "tags")) == NULL)
     return;
 
   HTSMSG_FOREACH(f, tags) {
     if(!strcmp(f->hmf_name, "channel")) {
-      xmltv_parse_channel(htsmsg_get_msg_by_field(f));
+      xmltv_parse_channel(htsmsg_get_map_by_field(f));
     } else if(!strcmp(f->hmf_name, "programme")) {
-      xmltv_parse_programme(htsmsg_get_msg_by_field(f));
+      xmltv_parse_programme(htsmsg_get_map_by_field(f));
     }
   }
 }
@@ -411,10 +411,10 @@ xmltv_parse(htsmsg_t *body)
 {
   htsmsg_t *tags, *tv;
 
-  if((tags = htsmsg_get_msg(body, "tags")) == NULL)
+  if((tags = htsmsg_get_map(body, "tags")) == NULL)
     return;
 
-  if((tv = htsmsg_get_msg(tags, "tv")) == NULL)
+  if((tv = htsmsg_get_map(tags, "tv")) == NULL)
     return;
 
   xmltv_parse_tv(tv);
@@ -743,10 +743,10 @@ xmltv_grabbers_load(void)
   htsmsg_get_u32(m, "grab-interval", &xmltv_grab_interval);
   htsmsg_get_u32(m, "grab-enabled", &xmltv_grab_enabled);
 
-  if((l = htsmsg_get_array(m, "grabbers")) != NULL) {
+  if((l = htsmsg_get_list(m, "grabbers")) != NULL) {
 
     HTSMSG_FOREACH(f, l) {
-      if((c = htsmsg_get_msg_by_field(f)) == NULL)
+      if((c = htsmsg_get_map_by_field(f)) == NULL)
 	continue;
 
       path = htsmsg_get_str(c, "path");
@@ -782,12 +782,12 @@ xmltv_grabbers_save(void)
   htsmsg_t *array, *e, *m;
   xmltv_grabber_t *xg;
 
-  m = htsmsg_create();
+  m = htsmsg_create_map();
 
-  array = htsmsg_create_array();
+  array = htsmsg_create_list();
 
   LIST_FOREACH(xg, &xmltv_grabbers, xg_link) {
-    e = htsmsg_create();
+    e = htsmsg_create_map();
     htsmsg_add_str(e, "path", xg->xg_path);
     htsmsg_add_str(e, "description", xg->xg_description);
     if(xg->xg_version != NULL)
@@ -823,10 +823,10 @@ xmltv_list_grabbers(void)
 
   xmltv_grabbers_index();
 
-  array = htsmsg_create_array();
+  array = htsmsg_create_list();
 
   LIST_FOREACH(xg, &xmltv_grabbers, xg_link) {
-    m = htsmsg_create();
+    m = htsmsg_create_map();
     htsmsg_add_str(m, "identifier", xg->xg_path);
     htsmsg_add_str(m, "name", xg->xg_description);
     htsmsg_add_str(m, "version", xg->xg_version ?: "Unknown version");

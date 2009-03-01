@@ -171,12 +171,12 @@ dvb_mux_preconf_get_node(int fetype, const char *node)
     return NULL;
   }
   
-  out = htsmsg_create_array();
+  out = htsmsg_create_list();
 
   if(!strcmp(node, "root")) {
 
     for(i = 0; i < nr; i++) {
-      e = htsmsg_create();
+      e = htsmsg_create_map();
       htsmsg_add_u32(e, "leaf", 0);
       htsmsg_add_str(e, "text", r[i].name);
       htsmsg_add_str(e, "id", r[i].name);
@@ -195,7 +195,7 @@ dvb_mux_preconf_get_node(int fetype, const char *node)
   nn = r[i].nnetworks;
 
   for(i = 0; i < nn; i++) {
-    e = htsmsg_create();
+    e = htsmsg_create_map();
     htsmsg_add_u32(e, "leaf", 1);
     htsmsg_add_str(e, "text", n[i].name);
     htsmsg_add_str(e, "id", n[i].name);

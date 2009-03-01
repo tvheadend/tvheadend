@@ -138,7 +138,7 @@ comet_mailbox_create(void)
 static void
 comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
 {
-  htsmsg_t *m = htsmsg_create();
+  htsmsg_t *m = htsmsg_create_map();
 
   htsmsg_add_str(m, "notificationClass", "accessUpdate");
 
@@ -146,7 +146,7 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
   htsmsg_add_u32(m, "admin", !http_access_verify(hc, ACCESS_ADMIN));
 
   if(cmb->cmb_messages == NULL)
-    cmb->cmb_messages = htsmsg_create_array();
+    cmb->cmb_messages = htsmsg_create_list();
   htsmsg_add_msg(cmb->cmb_messages, NULL, m);
 }
 
@@ -185,9 +185,9 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
   if(cmb->cmb_messages == NULL)
     pthread_cond_timedwait(&comet_cond, &comet_mutex, &ts);
 
-  m = htsmsg_create();
+  m = htsmsg_create_map();
   htsmsg_add_str(m, "boxid", cmb->cmb_boxid);
-  htsmsg_add_msg(m, "messages", cmb->cmb_messages ?: htsmsg_create_array());
+  htsmsg_add_msg(m, "messages", cmb->cmb_messages ?: htsmsg_create_list());
   cmb->cmb_messages = NULL;
   
   cmb->cmb_last_used = dispatch_clock;
@@ -224,7 +224,7 @@ comet_mailbox_add_message(htsmsg_t *m)
   LIST_FOREACH(cmb, &mailboxes, cmb_link) {
 
     if(cmb->cmb_messages == NULL)
-      cmb->cmb_messages = htsmsg_create_array();
+      cmb->cmb_messages = htsmsg_create_list();
     htsmsg_add_msg(cmb->cmb_messages, NULL, htsmsg_copy(m));
   }
 

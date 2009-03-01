@@ -288,7 +288,7 @@ dvb_mux_save(th_dvb_mux_instance_t *tdmi)
 {
   struct dvb_frontend_parameters *f = &tdmi->tdmi_fe_params;
 
-  htsmsg_t *m = htsmsg_create();
+  htsmsg_t *m = htsmsg_create_map();
 
   htsmsg_add_u32(m, "quality", tdmi->tdmi_quality);
   htsmsg_add_str(m, "status", dvb_mux_status(tdmi));
@@ -494,7 +494,7 @@ dvb_mux_load(th_dvb_adapter_t *tda)
     return;
  
   HTSMSG_FOREACH(f, l) {
-    if((c = htsmsg_get_msg_by_field(f)) == NULL)
+    if((c = htsmsg_get_map_by_field(f)) == NULL)
       continue;
     
     tdmi_create_by_msg(tda, c);
@@ -508,7 +508,7 @@ dvb_mux_load(th_dvb_adapter_t *tda)
 void
 dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *networkname)
 {
-  htsmsg_t *m = htsmsg_create();
+  htsmsg_t *m = htsmsg_create_map();
   char buf[100];
 
   htsmsg_add_str(m, "id", tdmi->tdmi_identifier);

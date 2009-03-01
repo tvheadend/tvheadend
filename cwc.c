@@ -1015,7 +1015,7 @@ cwc_entry_find(const char *id, int create)
 static htsmsg_t *
 cwc_record_build(cwc_t *cwc)
 {
-  htsmsg_t *e = htsmsg_create();
+  htsmsg_t *e = htsmsg_create_map();
   char buf[100];
 
   htsmsg_add_str(e, "id", cwc->cwc_id);
@@ -1164,7 +1164,7 @@ cwc_entry_delete(void *opaque, const char *id)
 static htsmsg_t *
 cwc_entry_get_all(void *opaque)
 {
-  htsmsg_t *r = htsmsg_create_array();
+  htsmsg_t *r = htsmsg_create_list();
   cwc_t *cwc;
 
   TAILQ_FOREACH(cwc, &cwcs, cwc_link)

@@ -569,7 +569,7 @@ psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
   LIST_FOREACH(sc, &sp->sp_components, sc_link) {
     st = (th_stream_t *)sc;
 
-    sub = htsmsg_create();
+    sub = htsmsg_create_map();
 
     htsmsg_add_u32(sub, "pid", st->st_pid);
     htsmsg_add_str(sub, "type", val2str(sc->sc_type, streamtypetab) ?: "?");
@@ -612,7 +612,7 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
     if(strcmp(f->hmf_name, "stream"))
       continue;
 
-    if((c = htsmsg_get_msg_by_field(f)) == NULL)
+    if((c = htsmsg_get_map_by_field(f)) == NULL)
       continue;
 
     if((v = htsmsg_get_str(c, "type")) == NULL)

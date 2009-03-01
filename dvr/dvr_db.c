@@ -53,7 +53,7 @@ static void dvr_timer_start_recording(void *aux);
 static void
 dvrdb_changed(void)
 {
-  htsmsg_t *m = htsmsg_create();
+  htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_u32(m, "reload", 1);
   notify_by_msg("dvrdb", m);
 }
@@ -275,7 +275,7 @@ dvr_db_load(void)
 
   if((l = hts_settings_load("dvr/log")) != NULL) {
     HTSMSG_FOREACH(f, l) {
-      if((c = htsmsg_get_msg_by_field(f)) == NULL)
+      if((c = htsmsg_get_map_by_field(f)) == NULL)
 	continue;
       dvr_db_load_one(c, atoi(f->hmf_name));
     }
@@ -291,7 +291,7 @@ dvr_db_load(void)
 static void
 dvr_entry_save(dvr_entry_t *de)
 {
-  htsmsg_t *m = htsmsg_create();
+  htsmsg_t *m = htsmsg_create_map();
 
   lock_assert(&global_lock);
 
@@ -532,7 +532,7 @@ dvr_init(void)
 static void
 dvr_save(void)
 {
-  htsmsg_t *m = htsmsg_create();
+  htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "storage", dvr_storage);
   htsmsg_add_u32(m, "retention-days", dvr_retention_days);
   htsmsg_add_u32(m, "day-dir",          !!(dvr_flags & DVR_DIR_PER_DAY));

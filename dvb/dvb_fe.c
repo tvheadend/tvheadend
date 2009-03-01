@@ -47,7 +47,7 @@
 static void
 dvb_notify_mux_quality(th_dvb_mux_instance_t *tdmi)
 {
-  htsmsg_t *m = htsmsg_create();
+  htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
 
   htsmsg_add_u32(m, "quality", tdmi->tdmi_quality);
@@ -61,7 +61,7 @@ dvb_notify_mux_quality(th_dvb_mux_instance_t *tdmi)
 static void
 dvb_notify_mux_status(th_dvb_mux_instance_t *tdmi)
 {
-  htsmsg_t *m = htsmsg_create();
+  htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
 
   htsmsg_add_str(m, "status", dvb_mux_status(tdmi));

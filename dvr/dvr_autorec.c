@@ -169,7 +169,7 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae)
 static htsmsg_t *
 autorec_record_build(dvr_autorec_entry_t *dae)
 {
-  htsmsg_t *e = htsmsg_create();
+  htsmsg_t *e = htsmsg_create_map();
 
   htsmsg_add_str(e, "id", dae->dae_id);
   htsmsg_add_u32(e, "enabled",  !!dae->dae_enabled);
@@ -198,7 +198,7 @@ autorec_record_build(dvr_autorec_entry_t *dae)
 static htsmsg_t *
 autorec_record_get_all(void *opaque)
 {
-  htsmsg_t *r = htsmsg_create_array();
+  htsmsg_t *r = htsmsg_create_list();
   dvr_autorec_entry_t *dae;
 
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
@@ -384,7 +384,7 @@ dvr_autorec_add(const char *title, const char *channel,
 
   /* Notify web clients that we have messed with the tables */
   
-  m = htsmsg_create();
+  m = htsmsg_create_map();
   htsmsg_add_u32(m, "asyncreload", 1);
   notify_by_msg("autorec", m);
 
