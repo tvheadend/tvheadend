@@ -359,7 +359,7 @@ transport_find(channel_t *ch, unsigned int weight)
   /* First, sort all transports in order */
 
   LIST_FOREACH(t, &ch->ch_transports, tht_ch_link)
-    if(!t->tht_disabled)
+    if(!t->tht_disabled && t->tht_quality_index(t) > 10)
       cnt++;
 
   vec = alloca(cnt * sizeof(th_transport_t *));
