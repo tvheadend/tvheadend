@@ -480,7 +480,7 @@ htsp_update_challenge(htsp_connection_t *htsp)
   
 
 /**
- * Request unsubscription for a channel
+ * Return a challenge
  */
 static htsmsg_t *
 htsp_method_get_challenge(htsp_connection_t *htsp, htsmsg_t *in)
@@ -498,7 +498,7 @@ htsp_method_get_challenge(htsp_connection_t *htsp, htsmsg_t *in)
 
 
 /**
- * Request unsubscription for a channel
+ * Authenticate with user + sha1 digest [password + challenge]
  */
 static htsmsg_t *
 htsp_method_authenticate(htsp_connection_t *htsp, htsmsg_t *in)
