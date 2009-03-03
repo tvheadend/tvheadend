@@ -42,6 +42,8 @@
 
 #define HTSP_PROTO_VERSION 1
 
+#define HTSP_PRIV_MASK (ACCESS_STREAMING)
+
 extern const char *htsversion;
 
 LIST_HEAD(htsp_connection_list, htsp_connection);
@@ -247,11 +249,12 @@ htsp_send_message(htsp_connection_t *htsp, htsmsg_t *m, htsp_msg_q_t *hmq)
  *
  */
 static void
-htsp_send_login_ack(htsp_connection_t *htsp, const char *error)
+htsp_send_login_ack(htsp_connection_t *htsp, const char *error, int noaccess)
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "loginAck");
   if(error) htsmsg_add_str(m, "error", error);
+  if(noaccess) htsmsg_add_u32(m, "noaccess", 1);
   htsp_send_message(htsp, m, NULL);
 }
 
@@ -632,7 +635,7 @@ htsp_read_loop(htsp_connection_t *htsp)
   if(htsp->htsp_version != HTSP_PROTO_VERSION) {
     tvhlog(LOG_ERR, "htsp", "%s: Login failure, unsupported version %d",
 	   htsp->htsp_name, htsp->htsp_version);
-    htsp_send_login_ack(htsp, "Unsupported protocol version");
+    htsp_send_login_ack(htsp, "Unsupported protocol version", 0);
     return -1;
   }
 
@@ -649,7 +652,8 @@ htsp_read_loop(htsp_connection_t *htsp)
   tvhlog(LOG_INFO, "htsp", "%s: Connected as user %s",
 	 htsp->htsp_name, htsp->htsp_username ?: "<anonymous>");
 
-  htsp_send_login_ack(htsp, NULL);
+  htsp_send_login_ack(htsp, NULL, 
+		      !(htsp->htsp_granted_access & HTSP_PRIV_MASK));
 
   /* Session main loop */
 
