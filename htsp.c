@@ -495,23 +495,6 @@ htsp_generate_challenge(htsp_connection_t *htsp)
 
 
 /**
- * Request various info about tvheadend
- */
-static htsmsg_t *
-htsp_method_getInfo(htsp_connection_t *htsp, htsmsg_t *in)
-{
-  extern const char *htsversion;
-  htsmsg_t *r = htsmsg_create_map();
-
-  htsmsg_add_u32(r, "protover", HTSP_PROTO_VERSION);
-  htsmsg_add_str(r, "appname", "HTS Tvheadend");
-  htsmsg_add_str(r, "appver", htsversion);
-
-  return r;
-}
-
-
-/**
  * HTSP methods
  */
 struct {
@@ -521,7 +504,6 @@ struct {
 } htsp_methods[] = {
   { "enableAsyncMetadata", htsp_method_async, ACCESS_STREAMING},
   { "getEvent", htsp_method_getEvent, ACCESS_STREAMING},
-  { "getInfo", htsp_method_getInfo, ACCESS_STREAMING},
   { "subscribe", htsp_method_subscribe, ACCESS_STREAMING},
   { "unsubscribe", htsp_method_unsubscribe, ACCESS_STREAMING},
 
