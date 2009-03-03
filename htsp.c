@@ -541,17 +541,28 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
   const void *digest;
   size_t digestlen;
   uint32_t access;
+  int privgain;
+  int match;
 
   if((username = htsmsg_get_str(m, "username")) == NULL)
     return;
-
-  tvh_str_update(&htsp->htsp_username, username);
 
   if(htsmsg_get_bin(m, "digest", &digest, &digestlen))
     return;
 
   access = access_get_hashed(username, digest, htsp->htsp_challenge,
-			     (struct sockaddr *)htsp->htsp_peer);
+			     (struct sockaddr *)htsp->htsp_peer, &match);
+
+  privgain = (access | htsp->htsp_granted_access) != htsp->htsp_granted_access;
+    
+  if(strcmp(htsp->htsp_username ?: "", username) || privgain) {
+    free(htsp->htsp_username);
+    tvhlog(LOG_INFO, "htsp", "%s: %suthenticated as user %s (%s)%s",
+	   htsp->htsp_name, htsp->htsp_username ? "Rea" : "A", username,
+	   privgain ? "Gained privileges" : "Did not gain privileges",
+	   match ? "" : ", no match in access-list");
+    htsp->htsp_username = strdup(username);
+  }
 
   htsp->htsp_granted_access |= access;
 }
@@ -665,8 +676,11 @@ htsp_read_loop(htsp_connection_t *htsp)
 
   htsmsg_destroy(m);
 
-  tvhlog(LOG_INFO, "htsp", "%s: Connected as user %s",
-	 htsp->htsp_name, htsp->htsp_username ?: "<anonymous>");
+
+  if(htsp->htsp_username == NULL)
+    tvhlog(LOG_INFO, "htsp", "%s: Anonymous connection",
+	   htsp->htsp_name);
+
 
   htsp_send_login_ack(htsp, NULL, 
 		      !(htsp->htsp_granted_access & HTSP_PRIV_MASK));
@@ -822,6 +836,8 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source)
    */
 
   htsp_read_loop(&htsp);
+
+  tvhlog(LOG_INFO, "htsp", "%s: Disconnected", htsp.htsp_name);
 
   /**
    * Ok, we're back, other end disconnected. Clean up stuff.

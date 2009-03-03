@@ -79,7 +79,8 @@ access_verify(const char *username, const char *password,
  */
 uint32_t
 access_get_hashed(const char *username, const uint8_t digest[20],
-		  const uint8_t *challenge, struct sockaddr *src)
+		  const uint8_t *challenge, struct sockaddr *src,
+		  int *entrymatch)
 {
   struct sockaddr_in *si = (struct sockaddr_in *)src;
   uint32_t b = ntohl(si->sin_addr.s_addr);
@@ -87,6 +88,7 @@ access_get_hashed(const char *username, const uint8_t digest[20],
   struct AVSHA1 *shactx = alloca(av_sha1_size);
   uint8_t d[20];
   uint32_t r = 0;
+  int match = 0;
 
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
 
@@ -101,9 +103,11 @@ access_get_hashed(const char *username, const uint8_t digest[20],
     
     if(memcmp(d, digest, 20)) /* Nintendo would have use strncmp() here :) */
       continue;
-
+    match = 1;
     r |= ae->ae_rights;
   }
+  if(entrymatch != NULL)
+    *entrymatch = match;
   return r;
 }
 
