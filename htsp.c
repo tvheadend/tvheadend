@@ -481,6 +481,21 @@ htsp_method_unsubscribe(htsp_connection_t *htsp, htsmsg_t *in)
 
 
 /**
+ * Try to authenticate
+ */
+static htsmsg_t *
+htsp_method_authenticate(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *r = htsmsg_create_map();
+
+  if(!(htsp->htsp_granted_access & HTSP_PRIV_MASK))
+    htsmsg_add_u32(r, "noaccess", 1);
+  
+  return r;
+}
+
+
+/**
  * Update challenge
  */
 static int
@@ -505,6 +520,7 @@ struct {
   htsmsg_t *(*fn)(htsp_connection_t *htsp, htsmsg_t *in);
   int privmask;
 } htsp_methods[] = {
+  { "authenticate", htsp_method_authenticate, 0},
   { "enableAsyncMetadata", htsp_method_async, ACCESS_STREAMING},
   { "getEvent", htsp_method_getEvent, ACCESS_STREAMING},
   { "subscribe", htsp_method_subscribe, ACCESS_STREAMING},
