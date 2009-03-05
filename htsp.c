@@ -89,10 +89,13 @@ typedef struct htsp_msg_q {
 typedef struct htsp_connection {
   int htsp_fd;
   struct sockaddr_in *htsp_peer;
-  char *htsp_name;
 
   int htsp_version;
+
+  char *htsp_logname;
+  char *htsp_peername;
   char *htsp_username;
+  char *htsp_clientname;
 
   /**
    * Async mode
@@ -145,6 +148,26 @@ typedef struct htsp_stream {
 
 } htsp_stream_t;
 
+
+
+/**
+ *
+ */
+static void
+htsp_update_logname(htsp_connection_t *htsp)
+{
+  char buf[100];
+
+  snprintf(buf, sizeof(buf), "%s%s%s%s%s%s",
+	   htsp->htsp_peername,
+	   htsp->htsp_username || htsp->htsp_clientname ? " [ " : "",
+	   htsp->htsp_username ?: "",
+	   htsp->htsp_username && htsp->htsp_clientname ? " | " : "",
+	   htsp->htsp_clientname ?: "",
+	   htsp->htsp_username || htsp->htsp_clientname ? " ]" : "");
+
+  tvh_str_update(&htsp->htsp_logname, buf);
+}
 
 
 /**
@@ -244,19 +267,6 @@ htsp_send_message(htsp_connection_t *htsp, htsmsg_t *m, htsp_msg_q_t *hmq)
   htsp_send(htsp, m, NULL, hmq ?: &htsp->htsp_hmq_ctrl, 0);
 }
 
-
-/**
- *
- */
-static void
-htsp_send_login_ack(htsp_connection_t *htsp, const char *error, int noaccess)
-{
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "method", "loginAck");
-  if(error) htsmsg_add_str(m, "error", error);
-  if(noaccess) htsmsg_add_u32(m, "noaccess", 1);
-  htsp_send_message(htsp, m, NULL);
-}
 
 /**
  *
@@ -512,6 +522,39 @@ htsp_generate_challenge(htsp_connection_t *htsp)
 }
 
 
+
+/**
+ * Hello, for protocol version negotiation
+ */
+static htsmsg_t *
+htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *r = htsmsg_create_map();
+  uint32_t v;
+  const char *name;
+
+  if(htsmsg_get_u32(in, "htspversion", &v))
+    return htsp_error("Missing argument 'htspversion'");
+
+  if((name = htsmsg_get_str(in, "clientname")) == NULL)
+    return htsp_error("Missing argument 'clientname'");
+
+  tvh_str_update(&htsp->htsp_clientname, htsmsg_get_str(in, "clientname"));
+
+  tvhlog(LOG_INFO, "htsp", "%s: Welcomed client software: %s",
+	 htsp->htsp_logname, name);
+
+  htsmsg_add_u32(r, "htspversion", HTSP_PROTO_VERSION);
+  htsmsg_add_str(r, "servername", "HTS Tvheadend");
+  htsmsg_add_str(r, "serverversion", htsversion);
+  htsmsg_add_bin(r, "challenge", htsp->htsp_challenge, 32);
+
+  htsp_update_logname(htsp);
+  return r;
+}
+
+
+
 /**
  * HTSP methods
  */
@@ -520,6 +563,7 @@ struct {
   htsmsg_t *(*fn)(htsp_connection_t *htsp, htsmsg_t *in);
   int privmask;
 } htsp_methods[] = {
+  { "hello", htsp_method_hello, 0},
   { "authenticate", htsp_method_authenticate, 0},
   { "enableAsyncMetadata", htsp_method_async, ACCESS_STREAMING},
   { "getEvent", htsp_method_getEvent, ACCESS_STREAMING},
@@ -547,6 +591,14 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
   if((username = htsmsg_get_str(m, "username")) == NULL)
     return;
 
+  if(strcmp(htsp->htsp_username ?: "", username)) {
+    tvhlog(LOG_INFO, "htsp", "%s: Identified as user %s", 
+	   htsp->htsp_logname, username);
+    tvh_str_update(&htsp->htsp_username, username);
+    htsp_update_logname(htsp);
+  }
+
+
   if(htsmsg_get_bin(m, "digest", &digest, &digestlen))
     return;
 
@@ -555,14 +607,8 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
 
   privgain = (access | htsp->htsp_granted_access) != htsp->htsp_granted_access;
     
-  if(strcmp(htsp->htsp_username ?: "", username) || privgain) {
-    free(htsp->htsp_username);
-    tvhlog(LOG_INFO, "htsp", "%s: %suthenticated as user %s (%s)%s",
-	   htsp->htsp_name, htsp->htsp_username ? "Rea" : "A", username,
-	   privgain ? "Gained privileges" : "Did not gain privileges",
-	   match ? "" : ", no match in access-list");
-    htsp->htsp_username = strdup(username);
-  }
+  if(privgain)
+    tvhlog(LOG_INFO, "htsp", "%s: Privileges raised", htsp->htsp_logname);
 
   htsp->htsp_granted_access |= access;
 }
@@ -622,68 +668,16 @@ htsp_read_loop(htsp_connection_t *htsp)
 
   if(htsp_generate_challenge(htsp)) {
     tvhlog(LOG_ERR, "htsp", "%s: Unable to generate challenge",
-	   htsp->htsp_name);
+	   htsp->htsp_logname);
     return 1;
   }
-
-  m = htsmsg_create_map();
-
-  htsmsg_add_str(m, "method", "welcome");
-  htsmsg_add_u32(m, "htspversion", HTSP_PROTO_VERSION);
-  htsmsg_add_str(m, "servername", "HTS Tvheadend");
-  htsmsg_add_str(m, "serverversion", htsversion);
-  htsmsg_add_bin(m, "challenge", htsp->htsp_challenge, 32);
-  
-  htsp_send_message(htsp, m, NULL);
-  
-  if((r = htsp_read_message(htsp, &m, 5000)) != 0) {
-    tvhlog(LOG_ERR, "htsp", "%s: Login error: %s", 
-	   htsp->htsp_name, strerror(r));
-    return r;
-  }
-
-  if((method = htsmsg_get_str(m, "method")) == NULL) {
-    tvhlog(LOG_ERR, "htsp", "%s: Login failure, no method argument",
-	   htsp->htsp_name);
-    htsmsg_destroy(m);
-    return -1;
-  }
-     
-  if(strcmp(method, "login")) {
-    tvhlog(LOG_ERR, "htsp", "%s: Login failure, expected login method",
-	   htsp->htsp_name);
-    htsmsg_destroy(m);
-    return -1;
-  }
-
-  htsp->htsp_version = htsmsg_get_u32_or_default(m, "htspversion", 1);
-
-  /* We onyl support version 1 right now */
-  if(htsp->htsp_version != HTSP_PROTO_VERSION) {
-    tvhlog(LOG_ERR, "htsp", "%s: Login failure, unsupported version %d",
-	   htsp->htsp_name, htsp->htsp_version);
-    htsp_send_login_ack(htsp, "Unsupported protocol version", 0);
-    return -1;
-  }
-
 
   pthread_mutex_lock(&global_lock);
   htsp->htsp_granted_access = 
     access_get_by_addr((struct sockaddr *)htsp->htsp_peer);
-
-  htsp_authenticate(htsp, m);
   pthread_mutex_unlock(&global_lock);
 
-  htsmsg_destroy(m);
-
-
-  if(htsp->htsp_username == NULL)
-    tvhlog(LOG_INFO, "htsp", "%s: Anonymous connection",
-	   htsp->htsp_name);
-
-
-  htsp_send_login_ack(htsp, NULL, 
-		      !(htsp->htsp_granted_access & HTSP_PRIV_MASK));
+  tvhlog(LOG_INFO, "htsp", "Got connection from %s", htsp->htsp_logname);
 
   /* Session main loop */
 
@@ -699,8 +693,8 @@ htsp_read_loop(htsp_connection_t *htsp)
       for(i = 0; i < NUM_METHODS; i++) {
 	if(!strcmp(method, htsp_methods[i].name)) {
 
-	  if(htsp_methods[i].privmask &&
-	     !(htsp->htsp_granted_access & htsp_methods[i].privmask)) {
+	  if((htsp->htsp_granted_access & htsp_methods[i].privmask) != 
+	     htsp_methods[i].privmask) {
 
 	    pthread_mutex_unlock(&global_lock);
 
@@ -823,7 +817,8 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source)
   htsp_init_queue(&htsp.htsp_hmq_qstatus, 1);
   htsp_init_queue(&htsp.htsp_hmq_epg, 0);
 
-  htsp.htsp_name = strdup(buf);
+  htsp.htsp_peername = strdup(buf);
+  htsp_update_logname(&htsp);
 
   htsp.htsp_fd = fd;
   htsp.htsp_peer = source;
@@ -837,7 +832,7 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source)
 
   htsp_read_loop(&htsp);
 
-  tvhlog(LOG_INFO, "htsp", "%s: Disconnected", htsp.htsp_name);
+  tvhlog(LOG_INFO, "htsp", "%s: Disconnected", htsp.htsp_logname);
 
   /**
    * Ok, we're back, other end disconnected. Clean up stuff.
@@ -858,8 +853,10 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source)
 
   pthread_mutex_unlock(&global_lock);
 
-  free(htsp.htsp_name);
+  free(htsp.htsp_logname);
+  free(htsp.htsp_peername);
   free(htsp.htsp_username);
+  free(htsp.htsp_clientname);
 
   pthread_mutex_lock(&htsp.htsp_out_mutex);
   htsp.htsp_writer_run = 0;
