@@ -22,7 +22,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include <libhts/htssettings.h>
+#include "settings.h"
 
 #include <linux/dvb/frontend.h>
 

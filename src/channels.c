@@ -27,9 +27,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
 
-#include <libhts/htssettings.h>
+#include "settings.h"
 
 #include "tvhead.h"
 #include "psi.h"

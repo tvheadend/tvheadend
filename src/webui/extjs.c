@@ -24,8 +24,8 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include <libhts/htsmsg.h>
-#include <libhts/htsmsg_json.h>
+#include "htsmsg.h"
+#include "htsmsg_json.h"
 
 #include "tvhead.h"
 #include "http.h"

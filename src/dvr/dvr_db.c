@@ -22,7 +22,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include <libhts/htssettings.h>
+#include "settings.h"
 
 #include "tvhead.h"
 #include "dvr.h"

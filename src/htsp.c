@@ -38,7 +38,7 @@
 #include "htsp.h"
 #include "streaming.h"
 
-#include <libhts/htsmsg_binary.h>
+#include "htsmsg_binary.h"
 
 #define HTSP_PROTO_VERSION 1
 

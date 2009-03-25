@@ -34,7 +34,7 @@
 #include <linux/dvb/frontend.h>
 #include <linux/dvb/dmx.h>
 
-#include <libhts/htssettings.h>
+#include "settings.h"
 
 #include "tvhead.h"
 #include "dvb.h"

@@ -25,7 +25,7 @@
 #include <libavutil/avstring.h>
 #include <libavcodec/avcodec.h>
 
-#include <libhts/htsstr.h>
+#include "htsstr.h"
 
 #include "tvhead.h"
 #include "streaming.h"

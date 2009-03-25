@@ -1,6 +1,6 @@
 /*
- *  tvheadend, web user interface
- *  Copyright (C) 2008 Andreas Öman
+ *  Atomic ops
+ *  Copyright (C) 2008 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,29 +13,24 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef WEBUI_H_
-#define WEBUI_H_
-
-#include "htsmsg.h"
-
-void webui_init(void);
-
-void simpleui_start(void);
-
-void extjs_start(void);
-
+#ifndef HTSATOMIC_H__
+#define HTSATOMIC_H__
 
 /**
- *
+ * Atomically add 'incr' to *ptr and return the previous value
  */
-void comet_init(void);
+#if defined(__i386__) || defined(__x86_64__)
+static inline int
+atomic_add(volatile int *ptr, int incr)
+{
+  int r;
+  asm volatile("lock; xaddl %0, %1" :
+	       "=r"(r), "=m"(*ptr) : "0" (incr), "m" (*ptr) : "memory");
+  return r;
+}
+#endif
 
-void comet_mailbox_add_message(htsmsg_t *m);
-
-void comet_flush(void);
-
-
-#endif /* WEBUI_H_ */
+#endif /* HTSATOMIC_H__ */

@@ -51,8 +51,8 @@
 #include "dvr/dvr.h"
 #include "htsp.h"
 
-#include <libhts/htsparachute.h>
-#include <libhts/htssettings.h>
+#include "parachute.h"
+#include "settings.h"
 
 int running;
 extern const char *htsversion;

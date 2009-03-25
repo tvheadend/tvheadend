@@ -19,17 +19,23 @@
 #ifndef TV_HEAD_H
 #define TV_HEAD_H
 
+#include "config.h"
+
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
 #include <netinet/in.h>
 #include <sys/time.h>
-#include <libhts/htsq.h>
-#include <libhts/avg.h>
-#include <libhts/hts_strtab.h>
+
+#include "queue.h"
+#include "avg.h"
+#include "hts_strtab.h"
+
 #include <libavcodec/avcodec.h>
-#include <libhts/redblack.h>
+
+#include "redblack.h"
+
 #include <linux/dvb/frontend.h>
 
 extern pthread_mutex_t global_lock;

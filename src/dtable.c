@@ -27,7 +27,7 @@
 #include <stdarg.h>
 #include <errno.h>
 
-#include <libhts/htssettings.h>
+#include "settings.h"
 
 #include "tvhead.h"
 #include "dtable.h"

@@ -1,6 +1,6 @@
 /*
- *  tvheadend, web user interface
- *  Copyright (C) 2008 Andreas Öman
+ *  Functions converting HTSMSGs to/from a simple binary format
+ *  Copyright (C) 2007 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,29 +13,21 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef WEBUI_H_
-#define WEBUI_H_
+#ifndef HTSMSG_BINARY_H_
+#define HTSMSG_BINARY_H_
 
 #include "htsmsg.h"
 
-void webui_init(void);
-
-void simpleui_start(void);
-
-void extjs_start(void);
-
-
 /**
- *
+ * htsmsg_binary_deserialize
  */
-void comet_init(void);
+htsmsg_t *htsmsg_binary_deserialize(const void *data, size_t len,
+				    const void *buf);
 
-void comet_mailbox_add_message(htsmsg_t *m);
+int htsmsg_binary_serialize(htsmsg_t *msg, void **datap, size_t *lenp,
+			    int maxlen);
 
-void comet_flush(void);
-
-
-#endif /* WEBUI_H_ */
+#endif /* HTSMSG_BINARY_H_ */

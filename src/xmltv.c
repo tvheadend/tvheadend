@@ -25,8 +25,8 @@
 #include <stdlib.h>
 #include <dirent.h>
 
-#include <libhts/htsmsg_xml.h>
-#include <libhts/htssettings.h>
+#include "htsmsg_xml.h"
+#include "settings.h"
 
 #include "tvhead.h"
 #include "channels.h"

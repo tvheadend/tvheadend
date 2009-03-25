@@ -1,5 +1,5 @@
 /*
- *  tvheadend, web user interface
+ *  Functions converting HTSMSGs to/from XML
  *  Copyright (C) 2008 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -13,29 +13,15 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef WEBUI_H_
-#define WEBUI_H_
+#ifndef HTSMSG_XML_H_
+#define HTSMSG_XML_H_
 
 #include "htsmsg.h"
+#include "htsbuf.h"
 
-void webui_init(void);
+htsmsg_t *htsmsg_xml_deserialize(char *src, char *errbuf, size_t errbufsize);
 
-void simpleui_start(void);
-
-void extjs_start(void);
-
-
-/**
- *
- */
-void comet_init(void);
-
-void comet_mailbox_add_message(htsmsg_t *m);
-
-void comet_flush(void);
-
-
-#endif /* WEBUI_H_ */
+#endif /* HTSMSG_XML_H_ */

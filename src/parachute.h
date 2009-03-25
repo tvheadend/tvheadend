@@ -1,6 +1,6 @@
 /*
- *  tvheadend, web user interface
- *  Copyright (C) 2008 Andreas Öman
+ *  Crash Parachute
+ *  Copyright (C) 2007-2008 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,29 +13,13 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef WEBUI_H_
-#define WEBUI_H_
+#ifndef HTSPARACHUTE_H
+#define HTSPARACHUTE_H
 
-#include "htsmsg.h"
+#include <signal.h>
 
-void webui_init(void);
-
-void simpleui_start(void);
-
-void extjs_start(void);
-
-
-/**
- *
- */
-void comet_init(void);
-
-void comet_mailbox_add_message(htsmsg_t *m);
-
-void comet_flush(void);
-
-
-#endif /* WEBUI_H_ */
+void htsparachute_init (void (*handler) (int));
+#endif /* HTSPARACHUTE_H */

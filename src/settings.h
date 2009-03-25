@@ -1,6 +1,6 @@
 /*
- *  tvheadend, web user interface
- *  Copyright (C) 2008 Andreas Öman
+ *  Functions for storing program settings
+ *  Copyright (C) 2008 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,29 +13,23 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef WEBUI_H_
-#define WEBUI_H_
+#ifndef HTSSETTINGS_H__
+#define HTSSETTINGS_H__
 
 #include "htsmsg.h"
+#include <stdarg.h>
 
-void webui_init(void);
+void hts_settings_init(const char *programname, const char *path);
 
-void simpleui_start(void);
+void hts_settings_save(htsmsg_t *record, const char *pathfmt, ...);
 
-void extjs_start(void);
+htsmsg_t *hts_settings_load(const char *pathfmt, ...);
 
+void hts_settings_remove(const char *pathfmt, ...);
 
-/**
- *
- */
-void comet_init(void);
+const char *hts_settings_get_root(void);
 
-void comet_mailbox_add_message(htsmsg_t *m);
-
-void comet_flush(void);
-
-
-#endif /* WEBUI_H_ */
+#endif /* HTSSETTINGS_H__ */ 

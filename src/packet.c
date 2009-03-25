@@ -16,11 +16,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libhts/htsatomic.h>
 
 #include "tvhead.h"
 #include "packet.h"
 #include "string.h"
+#include "atomic.h"
 
 /*
  *

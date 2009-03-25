@@ -19,7 +19,7 @@
 #ifndef DVB_MUXCONFIG_H_
 #define DVB_MUXCONFIG_H_
 
-#include <libhts/htsmsg.h>
+#include "htsmsg.h"
 
 htsmsg_t *dvb_mux_preconf_get_node(int fetype, const char *node);
 

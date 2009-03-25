@@ -26,9 +26,10 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <regex.h>
-#include <libhts/htssettings.h>
+
 
 #include "tvhead.h"
+#include "settings.h"
 #include "dvr.h"
 #include "notify.h"
 #include "dtable.h"

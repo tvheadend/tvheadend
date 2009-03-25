@@ -19,7 +19,7 @@
 #ifndef TCP_H_
 #define TCP_H_
 
-#include <libhts/htsbuf.h>
+#include "htsbuf.h"
 
 #if 0
 

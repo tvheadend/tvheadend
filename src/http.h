@@ -19,7 +19,7 @@
 #ifndef HTTP_H_
 #define HTTP_H_
 
-#include <libhts/htsbuf.h>
+#include "htsbuf.h"
 
 TAILQ_HEAD(http_arg_list, http_arg);
 

@@ -19,7 +19,7 @@
 #ifndef NOTIFY_H_
 #define NOTIFY_H_
 
-#include <libhts/htsmsg.h>
+#include "htsmsg.h"
 
 void notify_by_msg(const char *class, htsmsg_t *m);
 

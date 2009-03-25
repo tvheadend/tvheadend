@@ -19,7 +19,7 @@
 #ifndef PSI_H_
 #define PSI_H_
 
-#include <libhts/htsmsg.h>
+#include "htsmsg.h"
 
 #define PSI_SECTION_SIZE 4096
 

@@ -1,4 +1,4 @@
--include ../config.mak
+include config.mak
 
 VPATH += src
 SRCS =  main.c \
@@ -22,7 +22,16 @@ SRCS =  main.c \
 	tsdemux.c \
 	bitstream.c \
 	htsp.c \
-	serviceprobe.c
+	serviceprobe.c \
+	htsmsg.c \
+	htsmsg_binary.c \
+	htsmsg_json.c \
+	htsmsg_xml.c \
+	settings.c \
+	htsbuf.c \
+	parachute.c \
+	avg.c \
+	htsstr.c \
 
 VPATH += src/dvr
 SRCS += dvr_db.c \
@@ -56,27 +65,64 @@ SRCS += webui.c \
 	comet.c \
 	extjs.c
 
-PROGPATH = $(HTS_BUILD_ROOT)/tvheadend
+PROGPATH = $(TOPDIR)
 PROG = tvheadend
 MAN  = tvheadend.1
 CFLAGS += -g -Wall -Werror -funsigned-char -O2 -mmmx
-CFLAGS += -I$(INCLUDES_INSTALL_BASE) -I$(CURDIR)/src
+CFLAGS += -I$(TOPDIR)/src -I$(TOPDIR)
 CFLAGS += -Wno-deprecated-declarations -Wmissing-prototypes
 CFLAGS += -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
-CFLAGS += -I$(CURDIR) -I$(INCLUDES_INSTALL_BASE)
-LDFLAGS += -L$(LIBS_INSTALL_BASE)
 
-DLIBS  += ${TVHEADEND_DLIBS}  ${HTS_DLIBS} -lcrypt
-SLIBS  += ${TVHEADEND_SLIBS}  ${HTS_SLIBS}
-CFLAGS += ${TVHEADEND_CFLAGS} ${HTS_CFLAGS}
+LDFLAGS  += -lcrypt -lm -lz -lpthread
 
-include ../build/prog.mk
+SRCS += $(SRCS-yes)
+DLIBS += $(DLIBS-yes)
+SLIBS += $(SLIBS-yes)
+
+.OBJDIR= obj
+DEPFLAG= -M
+
+OBJS=    $(patsubst %.c,  %.o,   $(SRCS))
+
+DEPS= ${OBJS:%.o=%.d}
+
+SRCS += version.c
+
+PROGPATH ?= $(HTS_BUILD_ROOT)/$(PROG)
+
+all:	$(PROG)
+
+.PHONY: version.h
+
+version.h:
+	$(TOPDIR)/version.sh $(PROGPATH) $(PROGPATH)/version.h
+
+
+${PROG}: version.h $(OBJS) Makefile
+	cd $(.OBJDIR) && $(CC) -o $@ $(OBJS) $(LDFLAGS) 
+
+
+.c.o:
+	mkdir -p $(.OBJDIR) && cd $(.OBJDIR) && $(CC) -MD $(CFLAGS) -c -o $@ $(CURDIR)/$<
+
+clean:
+	rm -rf core* obj version.h
+	find . -name "*~" | xargs rm -f
+
+vpath %.o ${.OBJDIR}
+vpath %.S ${.OBJDIR}
+vpath ${PROG} ${.OBJDIR}
+vpath ${PROGBIN} ${.OBJDIR}
+
+# include dependency files if they exist
+$(addprefix ${.OBJDIR}/, ${DEPS}): ;
+-include $(addprefix ${.OBJDIR}/, ${DEPS})
+
 
 
 #
 # Install
 #
-prefix ?= $(INSTALLPREFIX)
 INSTBIN= $(prefix)/bin
 INSTMAN= $(prefix)/share/man/man1
 INSTSHARE= $(prefix)/share/hts/tvheadend
@@ -86,18 +132,21 @@ install: ${PROG}
 	cd $(.OBJDIR) && install -s ${PROG} $(INSTBIN)
 
 	mkdir -p $(INSTMAN)
-	cd man && install ${MAN} $(INSTMAN)
+	cd src/man && install ${MAN} $(INSTMAN)
 
 	mkdir -p $(INSTSHARE)/docs/html
-	cp  docs/html/*.html $(INSTSHARE)/docs/html
+	cp  src/docs/html/*.html $(INSTSHARE)/docs/html
 
 	mkdir -p $(INSTSHARE)/docs/docresources
-	cp  docs/docresources/*.png $(INSTSHARE)/docs/docresources
+	cp  src/docs/docresources/*.png $(INSTSHARE)/docs/docresources
 
-	find webui/static/ -type d |grep -v .svn | awk '{print "$(INSTSHARE)/"$$0}' | xargs mkdir -p 
-	find webui/static/ -type f |grep -v .svn | awk '{print $$0 " $(INSTSHARE)/"$$0}' | xargs -n2 cp
+	cd src && find webui/static/ -type d |grep -v .svn | awk '{print "$(INSTSHARE)/"$$0}' | xargs mkdir -p 
+	cd src && find webui/static/ -type f |grep -v .svn | awk '{print $$0 " $(INSTSHARE)/"$$0}' | xargs -n2 cp
 
 uninstall:
 	rm -f $(INSTBIN)/${PROG}
 	rm -f $(INSTMAN)/${MAN}
 	rm -rf $(INSTSHARE)
+
+distclean: clean
+	rm -rf ffmpeg config.h config.mak

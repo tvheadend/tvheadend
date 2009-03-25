@@ -19,8 +19,7 @@
 #ifndef DTABLE_H__
 #define DTABLE_H__
 
-#include <libhts/htsmsg.h>
-#include <libhts/htsbuf.h>
+#include "htsmsg.h"
 
 #include "access.h"
 
