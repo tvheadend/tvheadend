@@ -182,6 +182,7 @@ if enabled embedded_ffmpeg; then
 
     (cd ${TOPDIR}/ffmpeg/ffmpeg-0.5 && ./configure \
     --cpu=${CPU} \
+    --enable-gpl \
     --disable-encoders \
     --enable-encoder=mp2 \
     --enable-encoder=mpeg2video \
@@ -189,8 +190,10 @@ if enabled embedded_ffmpeg; then
     --enable-muxer=matroska \
     --disable-decoders \
     --enable-decoder=mp2 \
+    --enable-decoder=mp3 \
     --enable-decoder=mpeg2video \
     --enable-decoder=h264 \
+    --enable-decoder=ac3 \
     --disable-demuxers \
     --disable-protocols \
     --disable-filters \
