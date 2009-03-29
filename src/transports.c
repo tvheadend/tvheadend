@@ -267,6 +267,8 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
 	st->st_ctx = avcodec_alloc_context();
 	avcodec_open(st->st_ctx, c);
 	st->st_parser = av_parser_init(id);
+      } else {
+	abort();
       }
     }
   }
