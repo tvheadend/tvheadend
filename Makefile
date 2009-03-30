@@ -1,5 +1,5 @@
 #
-#  Tvheadend mediacenter
+#  Tvheadend streaming server.
 #  Copyright (C) 2007-2009 Andreas Öman
 #
 #  This program is free software: you can redistribute it and/or modify
