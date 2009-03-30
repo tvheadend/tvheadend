@@ -1,0 +1,89 @@
+hts (current) unstable; urgency=low
+
+  * showtime: Add new '-t' command line option used for explicitly pointing
+    out a directory path for the theme to use.
+
+  * showtime and libglw: Add support for symbolic links in the property
+    trees. This allows us to have properties such as 'global.currentmedia.'
+    which points to the current media beeing played, etc.
+
+  * tvheadend: Record post-processing added again, run command when a
+    recording is done.
+
+  * tvheadend: Fix characterset translation bug introduced in r1902.
+
+  * libglw: 'deck' widget now understands 'effect' attribute.
+
+  * showtime: Digital audio (SPDIF / iec958) was not correctly detected
+    on all soundcards, this is now fixed.
+
+ -- Andreas Öman <andreas@lonelycoder.com>  ???, ?? ??? ???? ??:??:?? ?????
+
+hts (2.0) unstable; urgency=low
+
+  * showtime: New fully customable theme markup language.
+
+  * showtime: libdvdnav / libdvdread uses the internal virtual filesystem
+    to read data. Eg. Showtime can play ISO-files directly from
+    RAR archives.
+
+  * showtime: Added a RAR archive extractor to the internal filesystem.
+
+  * showtime: Implemented a HTSP client. It can now display streaming live 
+    TV from Tvheadend.
+
+  * tvheadend: All setup and configuration is done from the web user interface.
+
+  * showtime: All setup and configuration is done from within the program
+    itself.
+
+  * tvheadend: New web user interface based on ExtJS
+
+ -- Andreas Öman <andreas@lonelycoder.com>  Thu, 16 Oct 2008 19:47:23 +0200
+
+hts (1.4) unstable; urgency=low
+
+  * tvheadend: Add support for DVB-S (still in experimenal state)
+
+ -- Andreas Öman <andreas@lonelycoder.com>  Sat, 30 Mar 2008 18:00:00 +0100
+
+hts (1.3) unstable; urgency=low
+
+  * tvheadend: Add support for executing a post processing script after
+    recording is completed.
+
+  * tvheadend: Mark I-frames as key-frames in recorder (should make seeking
+    work better).
+
+  * tvheadend: Correctly set duration of packets in recorder.
+
+ -- Andreas Öman <andreas@lonelycoder.com>  Thu, 28 Mar 2008 18:00:00 +0100
+
+hts (1.2) unstable; urgency=low
+
+  * Tvheadend has been rewritten from scratch
+
+ -- Andreas Öman <andreas@lonelycoder.com>  Thu, 28 Feb 2008 17:30:00 +0100
+
+hts (1.1) unstable; urgency=low
+
+  * Bugfix: Tvheadend: Do not crash if event name is NULL
+
+  * Bugfix: Showtime: Sometimes video stalls after seek
+
+  * Rewrite tvheadend internals to fix many serious issues
+
+  * tvheadend now correctly supports recording of h264 content
+
+  * RTSP interface added to tvheadend that supports time shifting of live tv
+
+  * Add web interface to tvheadend
+
+ -- Andreas Öman <andreas@lonelycoder.com>  Sat, 24 Nov 2007 08:11:00 +0100
+
+hts (1.0) unstable; urgency=low
+
+  * Initial release
+
+ -- Andreas Öman <andreas@lonelycoder.com>  Tue, 19 Sep 2007 19:20:00 +0200
+

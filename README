@@ -1,0 +1,22 @@
+HTS "Home Theater System" is:
+	
+* An OpenGL based media player (''Showtime'')
+* A TV distribution / recording headend (''Tvheadend'')
+* Hosted at http://www.lonelycoder.com/hts
+* A GPLed project
+* Maintained by Andreas Öman (andreas at lonelycoder.com)
+
+
+Build and Install
+=================
+The top level configure and Makefile will build both Tvheadend
+and Showtime. However, Showtime will only be built if the
+necessary dev packages for a few libs are installed.
+
+Read more here: http://trac.lonelycoder.com/hts/wiki/howtobuildhts
+
+
+
+For more information and latest versions, please visit:
+http://www.lonelycoder.com/hts/
+

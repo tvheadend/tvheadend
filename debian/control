@@ -1,0 +1,12 @@
+Source: hts
+Section: main
+Priority: extra
+Maintainer: Andreas Öman <andreas@lonelycoder.com>
+
+Package: hts-tvheadend
+Architecture: any
+Depends: ${shlibs:Depends}
+Enhances: hts-showtime
+Description: TV headend for hts-showtime
+ TV backend for use with hts-showtime
+ Based on ffmpeg 'http://www.ffmpeg.org'.
