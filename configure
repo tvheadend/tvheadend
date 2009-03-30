@@ -100,10 +100,22 @@ setup_ffmpeg --cpu=${CPU}
 # Configure paths, etc
 #
 if [ ${RELEASE} != yes ]; then
-    echo  Development build. 
-    echo  The generated binary will contained compild-in paths to
-    echo  the current build tree. If you plan to install the binary,
-    echo  please reconfigure with '--release'.
+    echo  NOTE: Development build. 
+    echo  NOTE: The generated binary will contained compild-in paths to
+    echo  NOTE: the current build tree. If you plan to install the binary,
+    echo  NOTE: please reconfigure with '--release'.
+
+    cat >> ${CONFIG_H} << EOF
+#define TVHEADEND_CONTENT_PATH "${TOPDIR}"
+EOF
+
+else
+
+    echo >>${CONFIG_MAK} "BUNDLES += docs/html docs/docresources src/webui/static"
+
+    cat >> ${CONFIG_H} << EOF
+#define TVHEADEND_CONTENT_PATH NULL
+EOF
 fi
 
 #
@@ -114,8 +126,5 @@ INSTALLPREFIX=$PREFIX
 LDFLAGS_cfg += -lpthread
 EOF
 
-cat >> ${CONFIG_H} << EOF
-#define TVHEADEND_CONTENT_PATH "${TOPDIR}/src"
-EOF
 
 finalize

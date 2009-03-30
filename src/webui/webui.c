@@ -34,7 +34,13 @@
 #include "http.h"
 #include "webui.h"
 #include "dvr/dvr.h"
+#include "filebundle.h"
 
+struct filebundle *filebundles;
+
+/**
+ *
+ */
 static int
 is_client_simple(http_connection_t *hc)
 {
@@ -71,9 +77,8 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
 /**
  * Static download of a file from the filesystem
  */
-
 static int
-page_static(http_connection_t *hc, const char *remain, void *opaque)
+page_static_file(http_connection_t *hc, const char *remain, void *opaque)
 {
   const char *base = opaque;
 
@@ -106,6 +111,36 @@ page_static(http_connection_t *hc, const char *remain, void *opaque)
   sendfile(hc->hc_fd, fd, NULL, st.st_size);
   close(fd);
   return 0;
+}
+
+
+/**
+ * Static download of a file from an embedded filebundle
+ */
+static int
+page_static_bundle(http_connection_t *hc, const char *remain, void *opaque)
+{
+  const struct filebundle *fb = opaque;
+  const struct filebundle_entry *fbe;
+  const char *content = NULL, *postfix;
+
+  postfix = strrchr(remain, '.');
+  if(postfix != NULL) {
+    postfix++;
+    if(!strcmp(postfix, "js"))
+      content = "text/javascript; charset=UTF-8";
+  }
+
+  for(fbe = fb->entries; fbe->filename != NULL; fbe++) {
+    if(!strcmp(fbe->filename, remain)) {
+
+      http_send_header(hc, 200, content, fbe->size, 
+		       fbe->original_size == -1 ? NULL : "gzip", NULL, 10);
+      write(hc->hc_fd, fbe->data, fbe->size);
+      return 0;
+    }
+  }
+  return 404;
 }
 
 
@@ -172,29 +207,56 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 
+
+/**
+ *
+ */
+static void
+webui_static_content(const char *content_path, const char *http_path,
+		     const char *source)
+{
+  char path[256];
+  struct stat st;
+  struct filebundle *fb;
+ 
+  if(content_path != NULL) {
+    snprintf(path, sizeof(path), "%s/%s", content_path, source);
+    
+    if(!stat(path, &st) && S_ISDIR(st.st_mode)) {
+
+      http_path_add(http_path, strdup(source), 
+		    page_static_file, ACCESS_WEB_INTERFACE);
+      return;
+    }
+  }
+
+  for(fb = filebundles; fb != NULL; fb = fb->next) {
+    if(!strcmp(source, fb->prefix)) {
+      http_path_add(http_path, fb, 
+		    page_static_bundle, ACCESS_WEB_INTERFACE);
+      return;
+    }
+  }
+
+  tvhlog(LOG_ERR, "webui", 
+	 "No source path providing HTTP content: %s", http_path);
+}
+
 /**
  * WEB user interface
  */
 void
-webui_init(void)
+webui_init(const char *contentpath)
 {
-  extern char *contentpath;
-  char buf[300];
-
   http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
 
   http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_WEB_INTERFACE);
 
-  snprintf(buf, sizeof(buf), "%s/webui/static", contentpath);
-  http_path_add("/static", strdup(buf), page_static, ACCESS_WEB_INTERFACE);
+  webui_static_content(contentpath, "/static",        "src/webui/static");
+  webui_static_content(contentpath, "/docs",          "docs/html");
+  webui_static_content(contentpath, "/docresources",  "docs/docresources");
 
-  snprintf(buf, sizeof(buf), "%s/docs/html", contentpath);
-  http_path_add("/docs", strdup(buf), page_static, ACCESS_WEB_INTERFACE);
-
-  snprintf(buf, sizeof(buf), "%s/docs/docresources", contentpath);
-  http_path_add("/docresources", strdup(buf), page_static, ACCESS_WEB_INTERFACE);
-
-  //  simpleui_start();
+   //  simpleui_start();
   extjs_start();
   comet_init();
 

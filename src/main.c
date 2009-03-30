@@ -61,8 +61,6 @@ time_t dispatch_clock;
 static LIST_HEAD(, gtimer) gtimers;
 pthread_mutex_t global_lock;
 
-const char *contentpath = TVHEADEND_CONTENT_PATH;
-
 static void
 handle_sigpipe(int x)
 {
@@ -195,6 +193,7 @@ main(int argc, char **argv)
   sigset_t set;
   const char *settingspath = NULL;
   struct stat st;
+  const char *contentpath = TVHEADEND_CONTENT_PATH;
 
   signal(SIGPIPE, handle_sigpipe);
 
@@ -303,7 +302,7 @@ main(int argc, char **argv)
 
   http_server_init();
 
-  webui_init();
+  webui_init(contentpath);
 
   subscriptions_init();
 

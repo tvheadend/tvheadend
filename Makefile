@@ -153,7 +153,8 @@ include support/${OSENV}.mk
 
 # Bundle files
 $(BUILDDIR)/bundles/%.o: $(BUILDDIR)/bundles/%.c
-	$(CC) -I${CURDIR}/src/fileaccess -c -o $@ $<
+	$(CC) -I${CURDIR}/src -c -o $@ $<
 
 $(BUILDDIR)/bundles/%.c: % $(CURDIR)/support/mkbundle
-	$(CURDIR)/support/mkbundle >$@ $< $(subst /,_,$<) ${BUILDDIR}/bundles/$<.d $@
+	$(CURDIR)/support/mkbundle \
+		-o $@ -s $< -d ${BUILDDIR}/bundles/$<.d -p $< -z
