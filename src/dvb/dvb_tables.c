@@ -188,7 +188,7 @@ static void
 tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
 	void (*callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
 			 uint8_t tableid, void *opaque), void *opaque,
-	char *name, int flags)
+	const char *name, int flags)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   th_dvb_table_t *tdt;
