@@ -17,7 +17,7 @@ hts (current) unstable; urgency=low
   * showtime: Digital audio (SPDIF / iec958) was not correctly detected
     on all soundcards, this is now fixed.
 
- -- Andreas Öman <andreas@lonelycoder.com>  ???, ?? ??? ???? ??:??:?? ?????
+ -- Andreas Öman <andreas@lonelycoder.com>  Thu, 16 Oct 2008 19:47:23 +0200
 
 hts (2.0) unstable; urgency=low
 
