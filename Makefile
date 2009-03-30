@@ -1,152 +1,159 @@
-include config.mak
+#
+#  Tvheadend mediacenter
+#  Copyright (C) 2007-2009 Andreas Öman
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 
-VPATH += src
-SRCS =  main.c \
-	access.c \
-	dtable.c \
-	tcp.c \
-	http.c \
-	notify.c \
-	epg.c \
-	xmltv.c \
-	spawn.c \
-	packet.c \
-	streaming.c \
-	teletext.c \
-	channels.c \
-	subscriptions.c \
-	transports.c \
-	psi.c \
-	parsers.c \
-	parser_h264.c \
-	tsdemux.c \
-	bitstream.c \
-	htsp.c \
-	serviceprobe.c \
-	htsmsg.c \
-	htsmsg_binary.c \
-	htsmsg_json.c \
-	htsmsg_xml.c \
-	settings.c \
-	htsbuf.c \
-	parachute.c \
-	avg.c \
-	htsstr.c \
+include ${CURDIR}/config.default
 
-VPATH += src/dvr
-SRCS += dvr_db.c \
-	dvr_rec.c \
-	dvr_autorec.c
+BUILDDIR = build.${PLATFORM}
 
-VPATH += src/dvb
-SRCS += dvb.c \
-	dvb_support.c \
-	dvb_fe.c \
-	dvb_tables.c \
-	diseqc.c \
-	dvb_adapter.c \
-	dvb_multiplex.c \
-	dvb_transport.c \
-	dvb_preconf.c
+include ${BUILDDIR}/config.mak
 
+PROG=${BUILDDIR}/tvheadend
+
+CFLAGS  = -Wall -Werror -Wwrite-strings -Wno-deprecated-declarations 
+CFLAGS += -Wmissing-prototypes
+
+
+#
+# Core
+#
+SRCS =  src/main.c \
+	src/version.c \
+	src/access.c \
+	src/dtable.c \
+	src/tcp.c \
+	src/http.c \
+	src/notify.c \
+	src/epg.c \
+	src/xmltv.c \
+	src/spawn.c \
+	src/packet.c \
+	src/streaming.c \
+	src/teletext.c \
+	src/channels.c \
+	src/subscriptions.c \
+	src/transports.c \
+	src/psi.c \
+	src/parsers.c \
+	src/parser_h264.c \
+	src/tsdemux.c \
+	src/bitstream.c \
+	src/htsp.c \
+	src/serviceprobe.c \
+	src/htsmsg.c \
+	src/htsmsg_binary.c \
+	src/htsmsg_json.c \
+	src/htsmsg_xml.c \
+	src/settings.c \
+	src/htsbuf.c \
+	src/parachute.c \
+	src/avg.c \
+	src/htsstr.c \
+
+SRCS += src/dvr/dvr_db.c \
+	src/dvr/dvr_rec.c \
+	src/dvr/dvr_autorec.c
+
+SRCS += src/dvb/dvb.c \
+	src/dvb/dvb_support.c \
+	src/dvb/dvb_fe.c \
+	src/dvb/dvb_tables.c \
+	src/dvb/diseqc.c \
+	src/dvb/dvb_adapter.c \
+	src/dvb/dvb_multiplex.c \
+	src/dvb/dvb_transport.c \
+	src/dvb/dvb_preconf.c
 
 #
 # cwc
 #
-SRCS  += cwc.c krypt.c
-VPATH += src/ffdecsa
-SRCS  += FFdecsa.c
+SRCS += src/cwc.c \
+	src/krypt.c \
+	src/ffdecsa/FFdecsa.c
+
+${BUILDDIR}/src/ffdecsa/FFdecsa.o : CFLAGS = -mmmx
+LDFLAGS += -lcrypt
 
 #
 # Primary web interface
 #
-VPATH += src/webui
-SRCS += webui.c \
-	comet.c \
-	extjs.c
+SRCS += src/webui/webui.c \
+	src/webui/comet.c \
+	src/webui/extjs.c
 
-PROGPATH = $(TOPDIR)
-PROG = tvheadend
-MAN  = tvheadend.1
-CFLAGS += -g -Wall -Werror -funsigned-char -O2 -mmmx
-CFLAGS += -I$(TOPDIR)/src -I$(TOPDIR)
-CFLAGS += -Wno-deprecated-declarations -Wmissing-prototypes
-CFLAGS += -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
-
-LDFLAGS  += -lcrypt -lm -lz -lpthread
-
-SRCS += $(SRCS-yes)
+# Various transformations
+SRCS  += $(SRCS-yes)
 DLIBS += $(DLIBS-yes)
 SLIBS += $(SLIBS-yes)
+OBJS=    $(SRCS:%.c=$(BUILDDIR)/%.o)
+DEPS=    ${OBJS:%.o=%.d}
+OBJDIRS= $(sort $(dir $(OBJS)))
 
-.OBJDIR= obj
-DEPFLAG= -M
+# File bundles
+BUNDLE_SRCS=$(BUNDLES:%=$(BUILDDIR)/bundles/%.c)
+BUNDLE_DEPS=$(BUNDLE_SRCS:%.c=%.d)
+BUNDLE_OBJS=$(BUNDLE_SRCS:%.c=%.o)
+OBJDIRS+= $(sort $(dir $(BUNDLE_OBJS)))
+.PRECIOUS: ${BUNDLE_SRCS}
 
-OBJS=    $(patsubst %.c,  %.o,   $(SRCS))
+# Common CFLAGS for all files
+CFLAGS_com  = -g -funsigned-char -O2 
+CFLAGS_com += -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
+CFLAGS_com += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR}
 
-DEPS= ${OBJS:%.o=%.d}
+all:	${PROG}
 
-SRCS += version.c
+.PHONY:	clean distclean ffmpeg
 
-PROGPATH ?= $(HTS_BUILD_ROOT)/$(PROG)
+${PROG}: ${BUILDDIR}/ffmpeg/install $(OBJDIRS) $(OBJS) $(BUNDLE_OBJS) Makefile
+	$(CC) -o $@ $(OBJS) $(BUNDLE_OBJS) $(LDFLAGS) ${LDFLAGS_cfg}
 
-all:	$(PROG)
+$(OBJDIRS):
+	@mkdir -p $@
 
-.PHONY: version.h
+${BUILDDIR}/%.o: %.c
+	$(CC) -MD $(CFLAGS_com) $(CFLAGS) $(CFLAGS_cfg) -c -o $@ $(CURDIR)/$<
 
-version.h:
-	$(TOPDIR)/version.sh $(PROGPATH) $(PROGPATH)/version.h
-
-
-${PROG}: version.h $(OBJS) Makefile
-	cd $(.OBJDIR) && $(CC) -o $@ $(OBJS) $(LDFLAGS) 
-
-
-.c.o:
-	mkdir -p $(.OBJDIR) && cd $(.OBJDIR) && $(CC) -MD $(CFLAGS) -c -o $@ $(CURDIR)/$<
+${BUILDDIR}/ffmpeg/install ffmpeg:
+	cd ${BUILDDIR}/ffmpeg/build && ${MAKE} all
+	cd ${BUILDDIR}/ffmpeg/build && ${MAKE} install
 
 clean:
-	rm -rf core* obj version.h
+	rm -rf ${BUILDDIR}/src ${BUILDDIR}/bundles
 	find . -name "*~" | xargs rm -f
 
-vpath %.o ${.OBJDIR}
-vpath %.S ${.OBJDIR}
-vpath ${PROG} ${.OBJDIR}
-vpath ${PROGBIN} ${.OBJDIR}
-
-# include dependency files if they exist
-$(addprefix ${.OBJDIR}/, ${DEPS}): ;
--include $(addprefix ${.OBJDIR}/, ${DEPS})
-
-
-
-#
-# Install
-#
-INSTBIN= $(prefix)/bin
-INSTMAN= $(prefix)/share/man/man1
-INSTSHARE= $(prefix)/share/hts/tvheadend
-
-install: ${PROG}
-	mkdir -p $(INSTBIN)
-	cd $(.OBJDIR) && install -s ${PROG} $(INSTBIN)
-
-	mkdir -p $(INSTMAN)
-	cd src/man && install ${MAN} $(INSTMAN)
-
-	mkdir -p $(INSTSHARE)/docs/html
-	cp  src/docs/html/*.html $(INSTSHARE)/docs/html
-
-	mkdir -p $(INSTSHARE)/docs/docresources
-	cp  src/docs/docresources/*.png $(INSTSHARE)/docs/docresources
-
-	cd src && find webui/static/ -type d |grep -v .svn | awk '{print "$(INSTSHARE)/"$$0}' | xargs mkdir -p 
-	cd src && find webui/static/ -type f |grep -v .svn | awk '{print $$0 " $(INSTSHARE)/"$$0}' | xargs -n2 cp
-
-uninstall:
-	rm -f $(INSTBIN)/${PROG}
-	rm -f $(INSTMAN)/${MAN}
-	rm -rf $(INSTSHARE)
-
 distclean: clean
-	rm -rf ffmpeg config.h config.mak
+	rm -rf build.*
+
+# Create tvheadendversion.h
+$(BUILDDIR)/tvheadendversion.h:
+	$(CURDIR)/support/version.sh $(CURDIR) $(BUILDDIR)/tvheadendversion.h
+
+src/version.c: $(BUILDDIR)/tvheadendversion.h
+
+# Include dependency files if they exist.
+-include $(DEPS) $(BUNDLE_DEPS)
+
+# Include OS specific targets
+include support/${OSENV}.mk
+
+# Bundle files
+$(BUILDDIR)/bundles/%.o: $(BUILDDIR)/bundles/%.c
+	$(CC) -I${CURDIR}/src/fileaccess -c -o $@ $<
+
+$(BUILDDIR)/bundles/%.c: % $(CURDIR)/support/mkbundle
+	$(CURDIR)/support/mkbundle >$@ $< $(subst /,_,$<) ${BUILDDIR}/bundles/$<.d $@

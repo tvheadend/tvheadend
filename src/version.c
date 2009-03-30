@@ -1,4 +1,4 @@
-#include "version.h"
+#include "tvheadendversion.h"
 #include "config.h"
 
 #ifdef HTS_RELEASE_TAG
