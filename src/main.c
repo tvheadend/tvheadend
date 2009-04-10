@@ -78,7 +78,9 @@ pull_chute (int sig)
 {
   char pwd[PATH_MAX];
 
-  getcwd(pwd, sizeof(pwd));
+  if(getcwd(pwd, sizeof(pwd)) == NULL)
+    strncpy(pwd, strerror(errno), sizeof(pwd));
+
   syslog(LOG_ERR, "HTS Tvheadend crashed on signal %i (pwd \"%s\")",
 	 sig, pwd);
 }
