@@ -149,6 +149,8 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
 
   if(ok)
     rename(fullpath, fullpath2);
+  else
+    unlink(fullpath);
 	   
   htsbuf_queue_flush(&hq);
 }
