@@ -86,7 +86,7 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
   htsbuf_queue_t hq;
   htsbuf_data_t *hd;
   char *n;
-  char ok;
+  int ok;
 
   if(settingspath == NULL)
     return;
