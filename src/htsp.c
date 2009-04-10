@@ -786,8 +786,9 @@ htsp_write_scheduler(void *aux)
     }
 #endif
     htsp_msg_destroy(hm);
-    
-    write(htsp->htsp_fd, dptr, dlen);
+   
+    /* ignore return value */ 
+    r = write(htsp->htsp_fd, dptr, dlen);
     free(dptr);
     pthread_mutex_lock(&htsp->htsp_out_mutex);
   }

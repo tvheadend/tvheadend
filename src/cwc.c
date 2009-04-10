@@ -346,6 +346,7 @@ static int
 cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid)
 {
   uint8_t *buf = malloc(CWS_NETMSGSIZE);
+  int n;
 
   pthread_mutex_lock(&cwc->cwc_send_mutex);
 
@@ -370,7 +371,8 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid)
   buf[0] = (len - 2) >> 8;
   buf[1] =  len - 2;
 
-  write(cwc->cwc_fd, buf, len);
+  /* ignore return value */
+  n = write(cwc->cwc_fd, buf, len);
   free(buf);
   pthread_mutex_unlock(&cwc->cwc_send_mutex);
   return cwc->cwc_seq;

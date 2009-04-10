@@ -123,6 +123,7 @@ page_static_bundle(http_connection_t *hc, const char *remain, void *opaque)
   const struct filebundle *fb = opaque;
   const struct filebundle_entry *fbe;
   const char *content = NULL, *postfix;
+  int n;
 
   postfix = strrchr(remain, '.');
   if(postfix != NULL) {
@@ -136,7 +137,8 @@ page_static_bundle(http_connection_t *hc, const char *remain, void *opaque)
 
       http_send_header(hc, 200, content, fbe->size, 
 		       fbe->original_size == -1 ? NULL : "gzip", NULL, 10);
-      write(hc->hc_fd, fbe->data, fbe->size);
+      /* ignore return value */
+      n = write(hc->hc_fd, fbe->data, fbe->size);
       return 0;
     }
   }

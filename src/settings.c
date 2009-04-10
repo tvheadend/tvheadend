@@ -86,6 +86,7 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
   htsbuf_queue_t hq;
   htsbuf_data_t *hd;
   char *n;
+  char ok;
 
   if(settingspath == NULL)
     return;
@@ -128,18 +129,26 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
     return;
   }
 
+  ok = 1;
+
   htsbuf_queue_init(&hq, 0);
   htsmsg_json_serialize(record, &hq, 1);
-
-  
+ 
   TAILQ_FOREACH(hd, &hq.hq_q, hd_link)
-    write(fd, hd->hd_data + hd->hd_data_off, hd->hd_data_len);
+    if(write(fd, hd->hd_data + hd->hd_data_off, hd->hd_data_len) != 
+       hd->hd_data_len) {
+      syslog(LOG_ALERT, "settings: Failed to write file \"%s\" - %s",
+	      fullpath, strerror(errno));
+      ok = 0;
+      break;
+    }
 
   close(fd);
 
   snprintf(fullpath2, sizeof(fullpath2), "%s/%s", settingspath, path);
 
-  rename(fullpath, fullpath2);
+  if(ok)
+    rename(fullpath, fullpath2);
 	   
   htsbuf_queue_flush(&hq);
 }
@@ -154,6 +163,7 @@ hts_settings_load_one(const char *filename)
   int fd;
   char *mem;
   htsmsg_t *r;
+  int n;
 
   if(stat(filename, &st) < 0)
     return NULL;
@@ -164,11 +174,15 @@ hts_settings_load_one(const char *filename)
   mem = malloc(st.st_size + 1);
   mem[st.st_size] = 0;
 
-  read(fd, mem, st.st_size);
+  n = read(fd, mem, st.st_size);
   close(fd);
+  if(n == st.st_size)
+    r = htsmsg_json_deserialize(mem);
+  else
+    r = NULL;
 
-  r = htsmsg_json_deserialize(mem);
   free(mem);
+
   return r;
 }
 
