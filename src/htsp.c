@@ -40,7 +40,7 @@
 
 #include "htsmsg_binary.h"
 
-#define HTSP_PROTO_VERSION 1
+#define HTSP_PROTO_VERSION 2
 
 #define HTSP_PRIV_MASK (ACCESS_STREAMING)
 
@@ -363,6 +363,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
 {
   channel_t *ch;
   channel_tag_t *ct;
+  htsmsg_t *m;
 
   /* First, just OK the async request */
   htsp_reply(htsp, in, htsmsg_create_map()); 
@@ -385,6 +386,11 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
     if(ct->ct_enabled && !ct->ct_internal)
       htsp_send_message(htsp, htsp_build_tag(ct, "tagUpdate", 1), NULL);
+
+  /* Notify that initial sync has been completed */
+  m = htsmsg_create_map();
+  htsmsg_add_str(m, "method", "initialSyncCompleted");
+  htsp_send_message(htsp, m, NULL);
 
   /* Insert in list so it will get all updates */
   LIST_INSERT_HEAD(&htsp_async_connections, htsp, htsp_async_link);
