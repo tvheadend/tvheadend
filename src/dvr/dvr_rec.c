@@ -283,7 +283,15 @@ pvr_generate_filename(dvr_entry_t *de)
 static void
 dvr_rec_fatal_error(dvr_entry_t *de, const char *fmt, ...)
 {
-  
+  char msgbuf[256];
+
+  va_list ap;
+  va_start(ap, fmt);
+
+  vsnprintf(msgbuf, sizeof(msgbuf), fmt, ap);
+  va_end(ap);
+
+  tvhlog(LOG_ERR, "pvr", "%s: %s", de->de_filename, msgbuf);
 }
 
 
@@ -342,8 +350,8 @@ dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp)
 
   if((err = url_fopen(&fctx->pb, urlname, URL_WRONLY)) < 0) {
     av_free(fctx);
-    dvr_rec_fatal_error(de, "Unable to create output file \"%s\"",
-			de->de_filename);
+    dvr_rec_fatal_error(de, "Unable to create output file \"%s\". "
+			"FFmpeg error %d", urlname, err);
     return;
   }
 
