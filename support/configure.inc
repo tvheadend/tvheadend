@@ -139,7 +139,6 @@ setup_ffmpeg() {
 	--enable-decoder=h264 \
 	--enable-decoder=ac3 \
 	--disable-demuxers \
-	--disable-protocols \
 	--disable-filters \
 	--disable-devices \
 	--disable-stripping \
