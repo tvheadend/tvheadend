@@ -126,7 +126,6 @@ setup_ffmpeg() {
     (cd ${BUILDDIR}/ffmpeg/build && \
 	${TOPDIR}/ext/ffmpeg/configure  \
 	$CC_FFMPEG \
-	--enable-gpl \
 	--disable-encoders \
 	--enable-encoder=mp2 \
 	--enable-encoder=mpeg2video \
