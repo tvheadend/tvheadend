@@ -560,39 +560,7 @@ typedef struct th_transport {
   /*
    * Per source type structs
    */
-
-  union {
-
-    struct {
-      struct th_dvb_mux_instance *mux_instance;
-    } dvb;
-
-    struct {
-      int frequency;
-      struct th_v4l_adapter *adapter;
-    } v4l;
-    
-    struct {
-      struct in_addr group_addr;
-      struct in_addr interface_addr;
-      int ifindex;
-
-      int port;
-      int fd;
-      void *dispatch_handle;
-      enum {
-	IPTV_MODE_RAWUDP,
-      } mode;
-    } iptv;
-
-    struct {
-      struct avgen *avgen;
-    } avgen;
-
-    struct {
-      struct file_input *file_input;
-    } file_input;
- } u;
+  struct th_dvb_mux_instance *tht_dvb_mux_instance;
 
   /**
    * Unique identifer (used for storing on disk, etc)
@@ -735,24 +703,6 @@ typedef struct th_transport {
 
 } th_transport_t;
 
-
-
-#define tht_v4l_frequency u.v4l.frequency
-#define tht_v4l_adapter   u.v4l.adapter
-
-#define tht_dvb_mux_instance u.dvb.mux_instance
-
-#define tht_iptv_group_addr      u.iptv.group_addr
-#define tht_iptv_interface_addr  u.iptv.interface_addr
-#define tht_iptv_ifindex         u.iptv.ifindex
-#define tht_iptv_port            u.iptv.port
-#define tht_iptv_dispatch_handle u.iptv.dispatch_handle
-#define tht_iptv_fd              u.iptv.fd
-#define tht_iptv_mode            u.iptv.mode
-
-#define tht_avgen                u.avgen.avgen
-
-#define tht_file_input           u.file_input.file_input
 
 #if 0
 
