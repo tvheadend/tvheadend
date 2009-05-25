@@ -1,0 +1,5 @@
+#!/bin/bash
+
+sh debian/createcopyright.sh >debian/copyright
+dpkg-buildpackage -rfakeroot -b -us -uc
+dh_clean
