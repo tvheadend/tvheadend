@@ -193,8 +193,6 @@ main(int argc, char **argv)
   const char *groupnam = NULL;
   int logfacility = LOG_DAEMON;
   sigset_t set;
-  const char *settingspath = NULL;
-  struct stat st;
   const char *contentpath = TVHEADEND_CONTENT_PATH;
 
   signal(SIGPIPE, handle_sigpipe);
@@ -210,9 +208,6 @@ main(int argc, char **argv)
     case 'g':
       groupnam = optarg;
       break;
-    case 's':
-      settingspath = optarg;
-      break;
     case 'c':
       contentpath = optarg;
       break;
@@ -223,28 +218,6 @@ main(int argc, char **argv)
   grp = getgrnam(groupnam ?: "video");
   pw = usernam ? getpwnam(usernam) : NULL;
 
-  /**
-   * Select path where to store settings
-   */
-  if(settingspath == NULL) {
-    settingspath = "/var/lib/hts/tvheadend";
-    
-    if(stat(settingspath, &st)) {
-      /* Path does not exist */
-
-      if(mkdir("/var/lib/hts", 0777) && errno != EEXIST) {
-	settingspath = NULL;
-      } else if(mkdir("/var/lib/hts/tvheadend", 0777) && errno != EEXIST) {
-	settingspath = NULL;
-      } else {
-	
-      }
-    }
-
-    if(settingspath != NULL && 
-       chown(settingspath, pw ? pw->pw_uid : 1, grp ? grp->gr_gid : 1))
-      settingspath = NULL;
-  }
 
   if(forkaway) {
 
@@ -264,8 +237,7 @@ main(int argc, char **argv)
       setgid(1);
     }
 
-    
-    if(pw != NULL) {
+   if(pw != NULL) {
       setuid(pw->pw_uid);
     } else {
       setuid(1);
@@ -279,7 +251,7 @@ main(int argc, char **argv)
 
   openlog("tvheadend", LOG_PID, logfacility);
 
-  hts_settings_init("tvheadend", settingspath);
+  hts_settings_init("tvheadend", pw ? pw->pw_dir : NULL);
 
   pthread_mutex_init(&global_lock, NULL);
 

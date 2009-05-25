@@ -47,17 +47,14 @@ hts_settings_get_root(void)
  *
  */
 void
-hts_settings_init(const char *programname, const char *path)
+hts_settings_init(const char *programname, const char *homedir)
 {
-  const char *homedir = getenv("HOME");
   char buf[256];
   struct stat st;
-
-  if(path != NULL) {
-    settingspath = strdup(path);
-    return;
-  }
-
+  
+  if(homedir == NULL)
+    homedir = getenv("HOME");
+  
   if(homedir == NULL)
     return;
 
