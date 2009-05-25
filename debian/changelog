@@ -1,21 +1,13 @@
-hts (current) unstable; urgency=low
+hts-tvheadend (2.1) unstable; urgency=low
 
-  * showtime: Add new '-t' command line option used for explicitly pointing
-    out a directory path for the theme to use.
-
-  * showtime and libglw: Add support for symbolic links in the property
-    trees. This allows us to have properties such as 'global.currentmedia.'
-    which points to the current media beeing played, etc.
-
+  * HTSP server slightly modified. Now also supports the XBMC HTSP client.
+	
+  * tvheadend and showtime went separate ways.
+	
   * tvheadend: Record post-processing added again, run command when a
     recording is done.
 
   * tvheadend: Fix characterset translation bug introduced in r1902.
-
-  * libglw: 'deck' widget now understands 'effect' attribute.
-
-  * showtime: Digital audio (SPDIF / iec958) was not correctly detected
-    on all soundcards, this is now fixed.
 
  -- Andreas Öman <andreas@lonelycoder.com>  Thu, 16 Oct 2008 19:47:23 +0200
 
