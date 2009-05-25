@@ -16,7 +16,7 @@ PATH=/usr/sbin:/usr/bin:/sbin:/bin
 DESC="HTS Tvheadend"
 NAME=tvheadend
 DAEMON=/usr/bin/$NAME
-DAEMON_ARGS="-f"
+DAEMON_ARGS="-f -u hts -g video"
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
