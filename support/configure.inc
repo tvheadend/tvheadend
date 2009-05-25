@@ -170,7 +170,7 @@ fi
 
 cat >> ${CONFIG_MAK} << EOF 
 OSENV=${OSENV}
-LDFLAGS_cfg += -lz -lm
+LDFLAGS_cfg += -lm
 EOF
 
     print_config CONFIG_ ${CONFIG_H} ${CONFIG_MAK} $CONFIG_LIST
