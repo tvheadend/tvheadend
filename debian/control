@@ -1,7 +1,7 @@
 Source: hts-tvheadend
 Section: main
 Priority: extra
-Maintainer: Andreas Öman <andreas@lonelycoder.com>
+Maintainer: Andreas Ã–man <andreas@lonelycoder.com>
 
 Package: hts-tvheadend
 Architecture: any

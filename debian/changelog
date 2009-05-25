@@ -9,7 +9,7 @@ hts-tvheadend (2.1) unstable; urgency=low
 
   * tvheadend: Fix characterset translation bug introduced in r1902.
 
- -- Andreas Öman <andreas@lonelycoder.com>  Thu, 16 Oct 2008 19:47:23 +0200
+ -- Andreas Ã–man <andreas@lonelycoder.com>  Thu, 16 Oct 2008 19:47:23 +0200
 
 hts (2.0) unstable; urgency=low
 
@@ -31,13 +31,13 @@ hts (2.0) unstable; urgency=low
 
   * tvheadend: New web user interface based on ExtJS
 
- -- Andreas Öman <andreas@lonelycoder.com>  Thu, 16 Oct 2008 19:47:23 +0200
+ -- Andreas Ã–man <andreas@lonelycoder.com>  Thu, 16 Oct 2008 19:47:23 +0200
 
 hts (1.4) unstable; urgency=low
 
   * tvheadend: Add support for DVB-S (still in experimenal state)
 
- -- Andreas Öman <andreas@lonelycoder.com>  Sat, 30 Mar 2008 18:00:00 +0100
+ -- Andreas Ã–man <andreas@lonelycoder.com>  Sat, 30 Mar 2008 18:00:00 +0100
 
 hts (1.3) unstable; urgency=low
 
@@ -49,13 +49,13 @@ hts (1.3) unstable; urgency=low
 
   * tvheadend: Correctly set duration of packets in recorder.
 
- -- Andreas Öman <andreas@lonelycoder.com>  Thu, 28 Mar 2008 18:00:00 +0100
+ -- Andreas Ã–man <andreas@lonelycoder.com>  Thu, 28 Mar 2008 18:00:00 +0100
 
 hts (1.2) unstable; urgency=low
 
   * Tvheadend has been rewritten from scratch
 
- -- Andreas Öman <andreas@lonelycoder.com>  Thu, 28 Feb 2008 17:30:00 +0100
+ -- Andreas Ã–man <andreas@lonelycoder.com>  Thu, 28 Feb 2008 17:30:00 +0100
 
 hts (1.1) unstable; urgency=low
 
@@ -71,11 +71,11 @@ hts (1.1) unstable; urgency=low
 
   * Add web interface to tvheadend
 
- -- Andreas Öman <andreas@lonelycoder.com>  Sat, 24 Nov 2007 08:11:00 +0100
+ -- Andreas Ã–man <andreas@lonelycoder.com>  Sat, 24 Nov 2007 08:11:00 +0100
 
 hts (1.0) unstable; urgency=low
 
   * Initial release
 
- -- Andreas Öman <andreas@lonelycoder.com>  Tue, 19 Sep 2007 19:20:00 +0200
+ -- Andreas Ã–man <andreas@lonelycoder.com>  Tue, 19 Sep 2007 19:20:00 +0200
 
