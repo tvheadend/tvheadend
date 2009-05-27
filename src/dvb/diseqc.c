@@ -1,6 +1,6 @@
+#include <time.h>
 #include <linux/dvb/frontend.h>
 #include <sys/ioctl.h>
-#include <time.h>
 
 //#include "scan.h"
 #include "diseqc.h"
