@@ -2,11 +2,13 @@ Source: hts-tvheadend
 Section: main
 Priority: extra
 Maintainer: Andreas Öman <andreas@lonelycoder.com>
+Build-Depends: debhelper (>= 5)
+Standards-Version: 3.7.3
 
 Package: hts-tvheadend
 Architecture: any
 Depends: ${shlibs:Depends}
 Enhances: hts-showtime
-Description: TV headend for hts-showtime
- TV backend for use with hts-showtime
- Based on ffmpeg 'http://www.ffmpeg.org'.
+Description: HTS TVheadend
+ TV backend for use with hts-showtime and various other clients.
+ Based on ffmpeg 'http://www.ffmpeg.org/' and ExtJS 'http://www.extjs.org/'

@@ -1,4 +1,4 @@
-hts-tvheadend (2.1) unstable; urgency=low
+hts-tvheadend (current) hts; urgency=low
 
   * HTSP server slightly modified. Now also supports the XBMC HTSP client.
 	
@@ -9,7 +9,7 @@ hts-tvheadend (2.1) unstable; urgency=low
 
   * tvheadend: Fix characterset translation bug introduced in r1902.
 
- -- Andreas Öman <andreas@lonelycoder.com>  Thu, 16 Oct 2008 19:47:23 +0200
+ -- Andreas Öman <andreas@lonelycoder.com>  xxx, xx xxx xxxx xx:xx:xx +xxxx
 
 hts (2.0) unstable; urgency=low
 
