@@ -15,21 +15,7 @@ hts-tvheadend (2.1) hts; urgency=low
 
 hts-tvheadend (2.0) unstable; urgency=low
 
-  * showtime: New fully customable theme markup language.
-
-  * showtime: libdvdnav / libdvdread uses the internal virtual filesystem
-    to read data. Eg. Showtime can play ISO-files directly from
-    RAR archives.
-
-  * showtime: Added a RAR archive extractor to the internal filesystem.
-
-  * showtime: Implemented a HTSP client. It can now display streaming live 
-    TV from Tvheadend.
-
   * tvheadend: All setup and configuration is done from the web user interface.
-
-  * showtime: All setup and configuration is done from within the program
-    itself.
 
   * tvheadend: New web user interface based on ExtJS
 
@@ -62,8 +48,6 @@ hts-tvheadend (1.2) unstable; urgency=low
 hts-tvheadend (1.1) unstable; urgency=low
 
   * Bugfix: Tvheadend: Do not crash if event name is NULL
-
-  * Bugfix: Showtime: Sometimes video stalls after seek
 
   * Rewrite tvheadend internals to fix many serious issues
 
