@@ -32,12 +32,14 @@
 #include "tvhead.h"
 #include "access.h"
 #include "dtable.h"
+#include "settings.h"
 
 #include <libavutil/sha1.h>
 
 struct access_entry_queue access_entries;
 
-
+const char *superuser_username;
+const char *superuser_password;
 
 
 /**
@@ -52,7 +54,16 @@ access_verify(const char *username, const char *password,
   uint32_t b = ntohl(si->sin_addr.s_addr);
   access_entry_t *ae;
 
+  if(username != NULL && superuser_username != NULL && 
+     password != NULL && superuser_password != NULL && 
+     !strcmp(username, superuser_username) &&
+     !strcmp(password, superuser_password))
+    return 0;
+
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
+
+    if(!ae->ae_enabled)
+      continue;
 
     if(ae->ae_username[0] != '*') {
       /* acl entry requires username to match */
@@ -90,7 +101,23 @@ access_get_hashed(const char *username, const uint8_t digest[20],
   uint32_t r = 0;
   int match = 0;
 
+  if(superuser_username != NULL && superuser_password != NULL) {
+
+    av_sha1_init(shactx);
+    av_sha1_update(shactx, (const uint8_t *)superuser_password,
+		   strlen(superuser_password));
+    av_sha1_update(shactx, challenge, 32);
+    av_sha1_final(shactx, d);
+
+    if(!strcmp(superuser_username, username) && !memcmp(d, digest, 20))
+      return 0xffffffff;
+  }
+
+
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
+
+    if(!ae->ae_enabled)
+      continue;
 
     if((b & ae->ae_netmask) != ae->ae_network)
       continue; /* IP based access mismatches */
@@ -101,7 +128,7 @@ access_get_hashed(const char *username, const uint8_t digest[20],
     av_sha1_update(shactx, challenge, 32);
     av_sha1_final(shactx, d);
     
-    if(memcmp(d, digest, 20)) /* Nintendo would have use strncmp() here :) */
+    if(strcmp(ae->ae_username, username) || memcmp(d, digest, 20))
       continue;
     match = 1;
     r |= ae->ae_rights;
@@ -388,17 +415,17 @@ static const dtable_class_t access_dtc = {
  *
  */
 void
-access_init(void)
+access_init(int createdefault)
 {
   dtable_t *dt;
-  htsmsg_t *r;
+  htsmsg_t *r, *m;
   access_entry_t *ae;
-
+  
   TAILQ_INIT(&access_entries);
 
   dt = dtable_create(&access_dtc, "accesscontrol", NULL);
 
-  if(dtable_load(dt) == 0) {
+  if(dtable_load(dt) == 0 && createdefault) {
     /* No records available */
     ae = access_entry_find(NULL, 1);
 
@@ -414,5 +441,13 @@ access_init(void)
 
     fprintf(stderr, "Notice: Created default access controle entry\n");
 
+  }
+
+  /* Load superuser account */
+
+  if((m = hts_settings_load("superuser")) != NULL) {
+    superuser_username = htsmsg_get_str(m, "username");
+    superuser_password = htsmsg_get_str(m, "password");
+    // Keep 'm' in memory
   }
 }

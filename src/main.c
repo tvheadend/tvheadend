@@ -192,12 +192,11 @@ main(int argc, char **argv)
   const char *usernam = NULL;
   const char *groupnam = NULL;
   int logfacility = LOG_DAEMON;
+  int createdefault = 0;
   sigset_t set;
   const char *contentpath = TVHEADEND_CONTENT_PATH;
 
-  signal(SIGPIPE, handle_sigpipe);
-
-  while((c = getopt(argc, argv, "fu:g:s:c:")) != -1) {
+  while((c = getopt(argc, argv, "fu:g:s:c:C")) != -1) {
     switch(c) {
     case 'f':
       forkaway = 1;
@@ -211,9 +210,13 @@ main(int argc, char **argv)
     case 'c':
       contentpath = optarg;
       break;
+    case 'C':
+      createdefault = 1;
+      break;
     }
   }
 
+  signal(SIGPIPE, handle_sigpipe);
 
   grp = getgrnam(groupnam ?: "video");
   pw = usernam ? getpwnam(usernam) : NULL;
@@ -268,7 +271,7 @@ main(int argc, char **argv)
 
   channels_init();
 
-  access_init();
+  access_init(createdefault);
 
   tcp_server_init();
 
