@@ -14,7 +14,7 @@ clean:
 
 
 build: config.mak
-	make
+	$(MAKE)
 
 binary:
 	dh_testdir
@@ -25,6 +25,7 @@ binary:
 	dh_installchangelogs 
 	dh_installinit --name tvheadend
 	dh_installdocs
+	dh_installdebconf
 	dh_link
 	dh_strip
 	dh_compress 
