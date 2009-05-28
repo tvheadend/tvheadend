@@ -21,6 +21,7 @@ configure)
    rm -f "${HTS_SUPERUSERCONF}"
    touch "${HTS_SUPERUSERCONF}"
    chmod 600 "${HTS_SUPERUSERCONF}"
+   chown ${HTS_USER}:${HTS_USER} "${HTS_SUPERUSERCONF}"
 
    echo >>"${HTS_SUPERUSERCONF}" "{"
 
