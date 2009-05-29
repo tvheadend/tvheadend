@@ -12,6 +12,11 @@ if ! test $revision; then
     test $revision && revision=git-$revision
 fi
 
+# check for debian changelog
+if ! test $revision; then
+    revision=`cd "$1" && cat debian/changelog |head -1|cut -f2 -d' '|sed s/\(//|sed s/\)//`
+fi
+
 # no version number found
 test $revision || revision=UNKNOWN
 
