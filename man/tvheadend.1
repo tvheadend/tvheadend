@@ -23,9 +23,11 @@ use the uid of 1 (daemon on most systems).
 \fB\-g \fR\fIgroupname\fR
 Run as group \fR\fIgroupname\fR. Only applicable if daemonizing. Default is to use the 'video' group. If the 'video' group does not exist, gid 1 (daemon) will be used.
 .TP
-\fB\-s \fR\fIpath\fR
-Store settings in \fR\fIpath\fR. Default values varies depending on if
-daemonizing or not. See SETUP section below for details.
+\fB\-C 
+If no useraccount exist then create one with no username and no
+password. Use with care as it will allow world-wide administrative
+access to your Tvheadend installation until you edit the
+access-control from within the Tvheadend UI.
 .SH "LOGGING"
 All activity inside tvheadend is logged to syslog using log facility
 \fBLOG_DAEMON\fR.
@@ -59,15 +61,10 @@ enter the web user interface, selected the 'Configuration' + 'Access Control'
 tab and make reasonable changes. Futher help / documentationcan be obtained
 inside the web interface.
 .SS "Settings"
-Settings are stored in different locations depending on how Tvheadend
-was started.
-.PP
- If the (-s) argument is given, that path is always used.
-.PP
-Otherwise, tvheadend will try to store settings in
-\fI/var/lib/hts/tvheadend\fR.
-If this is not possible (due to access permission restriction) it will store
-it in the current users home directory under \fI.hts/tvheadend\fR.
+Settings are stored in the current users home directory. Thus, if Tvheadend
+is run as a system daemon a dedicated user needs to be created and Tvheadend
+should be launched with the '-u' argument. Also notice that XMLTV will read
+store cache and configuration from the user home directory.
 .PP
 If daemonizing, tvheadend will writes it pid in /var/run/tvheadend.pid
 .SH "AUTHOR"
