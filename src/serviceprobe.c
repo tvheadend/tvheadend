@@ -167,6 +167,7 @@ serviceprobe_thread(void *aux)
     subscription_unsubscribe(s);
     was_doing_work = 1;
   }
+  return NULL;
 }
 
 

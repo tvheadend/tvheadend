@@ -445,6 +445,7 @@ tcp_server_loop(void *aux)
       }
     }
   }
+  return NULL;
 }
 
 /**

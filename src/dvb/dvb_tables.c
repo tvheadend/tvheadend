@@ -150,6 +150,7 @@ dvb_table_input(void *aux)
       }
     }
   }
+  return NULL;
 }
 
 

@@ -506,6 +506,7 @@ xmltv_thread(void *aux)
       free(p);
     }
   }
+  return NULL;
 }
 
 

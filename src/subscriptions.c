@@ -239,6 +239,7 @@ subscription_janitor(void *aux)
 
     pthread_mutex_unlock(&global_lock);
   }
+  return NULL;
 }
 
 
