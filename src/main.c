@@ -142,6 +142,32 @@ gtimer_disarm(gtimer_t *gti)
   }
 }
 
+/**
+ *
+ */
+static void
+usage(const char *argv0)
+{
+  printf("HTS Tvheadend %s\n", htsversion_full);
+  printf("usage: %s [options]\n", argv0);
+  printf("\n");
+  printf(" -f              Fork and daemonize\n");
+  printf(" -u <username>   Run as user <username>, only works with -f\n");
+  printf(" -g <groupname>  Run as group <groupname>, only works with -f\n");
+  printf(" -C              If no useraccount exist then create one with\n"
+	 "                 no username and no password. Use with care as\n"
+	 "                 it will allow world-wide administrative access\n"
+	 "                 to your Tvheadend installation until you edit\n"
+	 "                 the access-control from within the Tvheadend UI\n");
+  printf("\n");
+  printf("For more information read the man page or visit\n");
+  printf(" http://www.lonelycoder.com/hts/\n");
+  printf("\n");
+  exit(0);
+ 
+}
+
+
 
 /**
  *
@@ -196,7 +222,7 @@ main(int argc, char **argv)
   sigset_t set;
   const char *contentpath = TVHEADEND_CONTENT_PATH;
 
-  while((c = getopt(argc, argv, "fu:g:s:c:C")) != -1) {
+  while((c = getopt(argc, argv, "fu:g:c:Ch")) != -1) {
     switch(c) {
     case 'f':
       forkaway = 1;
@@ -213,6 +239,8 @@ main(int argc, char **argv)
     case 'C':
       createdefault = 1;
       break;
+    default:
+      usage(argv[0]);
     }
   }
 
