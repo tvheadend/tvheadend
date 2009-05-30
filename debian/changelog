@@ -1,3 +1,13 @@
+hts-tvheadend (2.2) hts; urgency=low
+
+  * Set $HOME so forked processes (XMLTV) will have correct environment.
+
+  * Update built-in DVB muxes to dvb-apps:1275:9655c8cfeed8
+
+  * Add -h option to display usage.
+
+ -- Andreas Öman <andreas@lonelycoder.com>  Thu, 28 May 2009 21:07:44 +0200
+
 hts-tvheadend (2.1) hts; urgency=low
 
   * Add debconf setup scripts to create a superuser account.
