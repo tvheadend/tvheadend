@@ -221,6 +221,7 @@ main(int argc, char **argv)
   int createdefault = 0;
   sigset_t set;
   const char *contentpath = TVHEADEND_CONTENT_PATH;
+  const char *homedir = NULL;
 
   while((c = getopt(argc, argv, "fu:g:c:Ch")) != -1) {
     switch(c) {
@@ -274,6 +275,11 @@ main(int argc, char **argv)
       setuid(1);
     }
 
+   if(pw != NULL) {
+     homedir = pw->pw_dir;
+     setenv("HOME", homedir, 1);
+   }
+
     umask(0);
   }
 
@@ -282,7 +288,7 @@ main(int argc, char **argv)
 
   openlog("tvheadend", LOG_PID, logfacility);
 
-  hts_settings_init("tvheadend", pw ? pw->pw_dir : NULL);
+  hts_settings_init("tvheadend", homedir);
 
   pthread_mutex_init(&global_lock, NULL);
 
