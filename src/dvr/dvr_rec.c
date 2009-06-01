@@ -301,7 +301,7 @@ dvr_rec_fatal_error(dvr_entry_t *de, const char *fmt, ...)
 static void
 dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp)
 {
-  streaming_component_t *sc;
+  th_stream_t *st;
   dvr_rec_stream_t *drs;
   AVOutputFormat *fmt;
   AVFormatContext *fctx;
@@ -363,9 +363,9 @@ dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp)
   /**
    * Setup each stream
    */ 
-  LIST_FOREACH(sc, &sp->sp_components, sc_link) {
+  LIST_FOREACH(st, &sp->sp_components, st_link) {
 
-    switch(sc->sc_type) {
+    switch(st->st_type) {
     default:
       continue;
     case SCT_MPEG2VIDEO:
@@ -402,7 +402,7 @@ dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp)
     }
 
     drs = calloc(1, sizeof(dvr_rec_stream_t));
-    drs->drs_source_index = sc->sc_index;
+    drs->drs_source_index = st->st_index;
 
     drs->drs_lavf_stream = av_new_stream(fctx, fctx->nb_streams);
 
@@ -418,7 +418,7 @@ dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp)
       continue;
     }
 
-    memcpy(drs->drs_lavf_stream->language, sc->sc_lang, 4);
+    memcpy(drs->drs_lavf_stream->language, st->st_lang, 4);
     LIST_INSERT_HEAD(&de->de_streams, drs, drs_link);
   }
 

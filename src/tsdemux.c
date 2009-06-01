@@ -53,7 +53,7 @@ got_section(th_transport_t *t, th_stream_t *st)
 {
   th_descrambler_t *td;
 
-  if(st->st_sc.sc_type == SCT_CA) {
+  if(st->st_type == SCT_CA) {
     LIST_FOREACH(td, &t->tht_descramblers, td_transport_link)
       td->td_table(td, t, st, 
 		   st->st_section->ps_data, st->st_section->ps_offset);
@@ -95,7 +95,7 @@ ts_recv_packet0(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
   off = tsb[3] & 0x20 ? tsb[4] + 5 : 4;
   pusi = tsb[1] & 0x40;
 
-  switch(st->st_sc.sc_type) {
+  switch(st->st_type) {
 
   case SCT_CA:
   case SCT_PAT:

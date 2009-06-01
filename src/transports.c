@@ -63,8 +63,6 @@ static void
 transport_stop(th_transport_t *t)
 {
   streaming_pad_t *sp = &t->tht_streaming_pad;
-  streaming_component_t *sc;
-
   th_descrambler_t *td;
   th_stream_t *st;
  
@@ -87,8 +85,7 @@ transport_stop(th_transport_t *t)
   /**
    * Clean up each stream
    */
-  LIST_FOREACH(sc, &sp->sp_components, sc_link) {
-    st = (th_stream_t *)sc;
+  LIST_FOREACH(st, &sp->sp_components, st_link) {
 
     if(st->st_parser != NULL)
       av_parser_close(st->st_parser);
@@ -213,8 +210,6 @@ int
 transport_start(th_transport_t *t, unsigned int weight, int force_start)
 {
   streaming_pad_t *sp = &t->tht_streaming_pad;
-  streaming_component_t *sc;
-
   th_stream_t *st;
   AVCodec *c;
   enum CodecID id;
@@ -232,9 +227,7 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
   /**
    * Initialize stream
    */
-  LIST_FOREACH(sc, &sp->sp_components, sc_link) {
-    st = (th_stream_t *)sc;
-  
+  LIST_FOREACH(st, &sp->sp_components, st_link) {
     st->st_startcond = 0xffffffff;
     st->st_curdts = AV_NOPTS_VALUE;
     st->st_curpts = AV_NOPTS_VALUE;
@@ -249,7 +242,7 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
     st->st_pcr_recovery_fails = 0;
     /* Open ffmpeg context and parser */
 
-    switch(sc->sc_type) {
+    switch(st->st_type) {
     case SCT_MPEG2VIDEO: id = CODEC_ID_MPEG2VIDEO; break;
     case SCT_MPEG2AUDIO: id = CODEC_ID_MP3;        break;
     case SCT_H264:       id = CODEC_ID_H264;       break;
@@ -441,7 +434,7 @@ void
 transport_destroy(th_transport_t *t)
 {
   streaming_pad_t *sp = &t->tht_streaming_pad;
-  streaming_component_t *sc;
+  th_stream_t *st;
   th_subscription_t *s;
   
   lock_assert(&global_lock);
@@ -470,9 +463,9 @@ transport_destroy(th_transport_t *t)
   free(t->tht_chname);
   free(t->tht_provider);
 
-  while((sc = LIST_FIRST(&sp->sp_components)) != NULL) {
-    LIST_REMOVE(sc, sc_link);
-    free(sc);
+  while((st = LIST_FIRST(&sp->sp_components)) != NULL) {
+    LIST_REMOVE(st, st_link);
+    free(st);
   }
 
   abort();//  serviceprobe_delete(t);
@@ -532,24 +525,21 @@ transport_add_stream(th_transport_t *t, int pid,
 		     streaming_component_type_t type)
 {
   streaming_pad_t *sp = &t->tht_streaming_pad;
-  streaming_component_t *sc;
   th_stream_t *st;
   int i = 0;
 
   lock_assert(&t->tht_stream_mutex);
 
-  LIST_FOREACH(sc, &sp->sp_components, sc_link) {
-    st = (th_stream_t *)sc;
+  LIST_FOREACH(st, &sp->sp_components, st_link) {
     i++;
     if(pid != -1 && st->st_pid == pid)
       return st;
   }
 
   st = calloc(1, sizeof(th_stream_t));
-  sc = &st->st_sc;
-  sc->sc_index = i;
-  sc->sc_type = type;
-  LIST_INSERT_HEAD(&sp->sp_components, sc, sc_link);
+  st->st_index = i;
+  st->st_type = type;
+  LIST_INSERT_HEAD(&sp->sp_components, st, st_link);
 
   st->st_pid = pid;
   st->st_demuxer_fd = -1;

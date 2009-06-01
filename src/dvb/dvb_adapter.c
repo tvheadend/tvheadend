@@ -400,7 +400,6 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
   th_dvb_mux_instance_t *tdmi_src, *tdmi_dst;
   th_transport_t *t_src, *t_dst;
   th_stream_t *st_src, *st_dst;
-  streaming_component_t *sc_src;
 
   lock_assert(&global_lock);
 
@@ -445,16 +444,15 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
 
       pthread_mutex_lock(&t_src->tht_stream_mutex);
 
-      LIST_FOREACH(sc_src, &t_src->tht_streaming_pad.sp_components, sc_link) {
-      st_src = (th_stream_t *)sc_src;
+      LIST_FOREACH(st_src, &t_src->tht_streaming_pad.sp_components, st_link) {
 
 	st_dst = transport_add_stream(t_dst, 
 				      st_src->st_pid,
-				      st_src->st_sc.sc_type);
+				      st_src->st_type);
 	
 	st_dst->st_tb = (AVRational){1, 90000};
 	
-	memcpy(st_dst->st_sc.sc_lang, st_src->st_sc.sc_lang, 4);
+	memcpy(st_dst->st_lang, st_src->st_lang, 4);
 	st_dst->st_frame_duration = st_src->st_frame_duration;
 	st_dst->st_caid           = st_src->st_caid;
       }

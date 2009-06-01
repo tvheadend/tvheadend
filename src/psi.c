@@ -285,7 +285,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
     if(hts_stream_type != 0) {
       st = transport_add_stream(t, pid, hts_stream_type);
       st->st_tb = (AVRational){1, 90000};
-      memcpy(st->st_sc.sc_lang, lang, 4);
+      memcpy(st->st_lang, lang, 4);
 
       if(st->st_frame_duration == 0)
 	st->st_frame_duration = frameduration;
@@ -556,7 +556,6 @@ void
 psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
 {
   streaming_pad_t *sp = &t->tht_streaming_pad;
-  streaming_component_t *sc;
   th_stream_t *st;
   htsmsg_t *sub;
 
@@ -566,18 +565,16 @@ psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
 
   lock_assert(&t->tht_stream_mutex);
 
-  LIST_FOREACH(sc, &sp->sp_components, sc_link) {
-    st = (th_stream_t *)sc;
-
+  LIST_FOREACH(st, &sp->sp_components, st_link) {
     sub = htsmsg_create_map();
 
     htsmsg_add_u32(sub, "pid", st->st_pid);
-    htsmsg_add_str(sub, "type", val2str(sc->sc_type, streamtypetab) ?: "?");
+    htsmsg_add_str(sub, "type", val2str(st->st_type, streamtypetab) ?: "?");
     
-    if(sc->sc_lang[0])
-      htsmsg_add_str(sub, "language", sc->sc_lang);
+    if(st->st_lang[0])
+      htsmsg_add_str(sub, "language", st->st_lang);
 
-    if(sc->sc_type == SCT_CA)
+    if(st->st_type == SCT_CA)
       htsmsg_add_str(sub, "caid", psi_caid2name(st->st_caid));
 
     if(st->st_frame_duration)
@@ -629,7 +626,7 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
     st->st_tb = (AVRational){1, 90000};
     
     if((v = htsmsg_get_str(c, "language")) != NULL)
-      av_strlcpy(st->st_sc.sc_lang, v, 4);
+      av_strlcpy(st->st_lang, v, 4);
 
     if(!htsmsg_get_u32(c, "frameduration", &u32))
       st->st_frame_duration = u32;

@@ -1103,9 +1103,9 @@ static void
 htsp_subscription_start(htsp_connection_t *htsp, th_subscription_t *s,
 			streaming_pad_t *sp)
 {
-  streaming_component_t *sc;
   htsp_stream_t *hs;
   htsmsg_t *m, *streams, *c;
+  th_stream_t *st;
 
   assert(s->ths_st == NULL);
 
@@ -1127,12 +1127,12 @@ htsp_subscription_start(htsp_connection_t *htsp, th_subscription_t *s,
 
   /* Setup each stream */ 
   streams = htsmsg_create_list();
-  LIST_FOREACH(sc, &sp->sp_components, sc_link) {
+  LIST_FOREACH(st, &sp->sp_components, st_link) {
     c = htsmsg_create_map();
-    htsmsg_add_u32(c, "index", sc->sc_index);
-    htsmsg_add_str(c, "type", streaming_component_type2txt(sc->sc_type));
-    if(sc->sc_lang[0])
-      htsmsg_add_str(c, "language", sc->sc_lang);
+    htsmsg_add_u32(c, "index", st->st_index);
+    htsmsg_add_str(c, "type", streaming_component_type2txt(st->st_type));
+    if(st->st_lang[0])
+      htsmsg_add_str(c, "language", st->st_lang);
     htsmsg_add_msg(streams, NULL, c);
   }
 

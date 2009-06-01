@@ -902,10 +902,8 @@ cwc_find_stream_by_caid(th_transport_t *t, int caid)
 {
   streaming_pad_t *sp = &t->tht_streaming_pad;
   th_stream_t *st;
-  streaming_component_t *sc;
 
-  LIST_FOREACH(sc, &sp->sp_components, sc_link) {
-    st = (th_stream_t *)sc;
+  LIST_FOREACH(st, &sp->sp_components, st_link) {
     if(st->st_caid == caid)
       return st;
   }

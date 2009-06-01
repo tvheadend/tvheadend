@@ -118,7 +118,7 @@ parse_raw_mpeg(th_transport_t *t, th_stream_t *st, uint8_t *data,
   }
 
 
-  switch(st->st_sc.sc_type) {
+  switch(st->st_type) {
   case SCT_MPEG2VIDEO:
     parse_video(t, st, data, len, parse_mpeg2video);
     break;
@@ -880,7 +880,7 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   transport_signal_status(t, SUBSCRIPTION_VALID_PACKETS);
 
   /* Forward packet */
-  pkt->pkt_componentindex = st->st_sc.sc_index;
+  pkt->pkt_componentindex = st->st_index;
   streaming_pad_deliver_packet(&t->tht_streaming_pad, pkt);
 
   /* Decrease our own reference to the packet */
@@ -906,7 +906,7 @@ parser_enqueue_packet(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 
   /* Per stream type analysis */
   
-  switch(st->st_sc.sc_type) {
+  switch(st->st_type) {
   case SCT_MPEG2VIDEO:
     for(i = 0; i < pkt->pkt_payloadlen && err == 0; i++) {
       sc = (sc << 8) | buf[i];

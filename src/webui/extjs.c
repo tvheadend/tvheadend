@@ -566,7 +566,6 @@ static htsmsg_t *
 build_transport_msg(th_transport_t *t)
 {
   streaming_pad_t *sp = &t->tht_streaming_pad;
-  streaming_component_t *sc;
   htsmsg_t *r = htsmsg_create_map();
   th_stream_t *st;
 
@@ -589,10 +588,9 @@ build_transport_msg(th_transport_t *t)
   subtitles[0] = 0;
   scrambling[0] = 0;
 
-  LIST_FOREACH(sc, &sp->sp_components, sc_link) {
-    st = (th_stream_t *)sc;
+  LIST_FOREACH(st, &sp->sp_components, st_link) {
 
-    switch(sc->sc_type) {
+    switch(st->st_type) {
     case SCT_TELETEXT:
     case SCT_SUBTITLES:
     case SCT_PAT:
@@ -626,9 +624,9 @@ build_transport_msg(th_transport_t *t)
 	       "%sMPEG-2 (PID:%d", strlen(audio) > 0 ? ", " : "",
 	       st->st_pid);
     audio:
-      if(sc->sc_lang[0]) {
+      if(st->st_lang[0]) {
 	snprintf(audio + strlen(audio), sizeof(audio) - strlen(audio),
-		 ", languange: \"%s\")", sc->sc_lang);
+		 ", languange: \"%s\")", st->st_lang);
       } else {
 	snprintf(audio + strlen(audio), sizeof(audio) - strlen(audio),
 		 ")");

@@ -113,8 +113,6 @@ TAILQ_HEAD(th_muxpkt_queue, th_muxpkt);
 LIST_HEAD(dvr_autorec_entry_list, dvr_autorec_entry);
 TAILQ_HEAD(th_pktref_queue, th_pktref);
 LIST_HEAD(streaming_target_list, streaming_target);
-LIST_HEAD(streaming_component_list, streaming_component);
-
 
 
 typedef enum {
@@ -128,22 +126,6 @@ typedef enum {
   SCT_PAT,
   SCT_PMT,
 } streaming_component_type_t;
-
-/**
- *
- */
-typedef struct streaming_component {
-  LIST_ENTRY(streaming_component) sc_link;
-  
-  streaming_component_type_t sc_type;
-  int sc_index;
-
-  char sc_lang[4];           /* ISO 639 3-letter language code */
-
-} streaming_component_t;
-
-
-
 
 
 /**
@@ -161,7 +143,7 @@ typedef struct streaming_component {
 typedef struct streaming_pad {
   struct streaming_target_list sp_targets;
   int sp_ntargets;
-  struct streaming_component_list sp_components;
+  struct th_stream_list sp_components;
 
   pthread_mutex_t *sp_mutex; /* Mutex for protecting modification of
 				st_targets and delivery.
@@ -367,7 +349,12 @@ typedef void (pid_section_callback_t)(struct th_transport *t,
  */
 typedef struct th_stream {
 
-  streaming_component_t st_sc;
+  LIST_ENTRY(th_stream) st_link;
+  
+  streaming_component_type_t st_type;
+  int st_index;
+
+  char st_lang[4];           /* ISO 639 3-letter language code */
 
   uint16_t st_pid;
   uint8_t st_cc;             /* Last CC */

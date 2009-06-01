@@ -58,7 +58,6 @@ dvb_transport_start(th_transport_t *t, unsigned int weight, int status,
 		    int force_start)
 {
   streaming_pad_t *sp = &t->tht_streaming_pad;
-  streaming_component_t *sc;
   struct dmx_pes_filter_params dmx_param;
   th_stream_t *st;
   int w, fd, pid;
@@ -82,9 +81,7 @@ dvb_transport_start(th_transport_t *t, unsigned int weight, int status,
   }
   tdmi = t->tht_dvb_mux_instance;
 
-  LIST_FOREACH(sc, &sp->sp_components, sc_link) {
-    st = (th_stream_t *)sc;
-    
+  LIST_FOREACH(st, &sp->sp_components, st_link) {
     fd = open(tda->tda_demux_path, O_RDWR);
     
     pid = st->st_pid;
@@ -137,7 +134,6 @@ static void
 dvb_transport_stop(th_transport_t *t)
 {
   streaming_pad_t *sp = &t->tht_streaming_pad;
-  streaming_component_t *sc;
   th_dvb_adapter_t *tda = t->tht_dvb_mux_instance->tdmi_adapter;
   th_stream_t *st;
 
@@ -147,8 +143,7 @@ dvb_transport_stop(th_transport_t *t)
   LIST_REMOVE(t, tht_active_link);
   pthread_mutex_unlock(&tda->tda_delivery_mutex);
 
-  LIST_FOREACH(sc, &sp->sp_components, sc_link) {
-    st = (th_stream_t *)sc;
+  LIST_FOREACH(st, &sp->sp_components, st_link) {
     close(st->st_demuxer_fd);
     st->st_demuxer_fd = -1;
   }
