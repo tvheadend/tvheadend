@@ -94,7 +94,6 @@ RB_HEAD(channel_tree, channel);
 TAILQ_HEAD(channel_queue, channel);
 LIST_HEAD(channel_list, channel);
 TAILQ_HEAD(th_dvb_adapter_queue, th_dvb_adapter);
-LIST_HEAD(th_v4l_adapter_list, th_v4l_adapter);
 LIST_HEAD(event_list, event);
 RB_HEAD(event_tree, event);
 LIST_HEAD(dvr_entry_list, dvr_entry);
@@ -181,36 +180,6 @@ typedef struct streaming_target {
 
 } streaming_target_t;
 
-
-/*
- * Video4linux adapter
- */
-typedef struct th_v4l_adapter {
-
-  const char *tva_name;
-
-  LIST_ENTRY(th_v4l_adapter) tva_link;
-
-  const char *tva_path;
-
-  pthread_t tva_ptid;
-
-  struct th_transport_list tva_transports;
-
-  int tva_frequency;
-
-  pthread_cond_t tva_run_cond;
-
-  int tva_fd;
-
-  void *tva_dispatch_handle;
-
-
-  uint32_t tva_startcode;
-  uint16_t tva_packet_len;
-  int tva_lenlock;
-
-} th_v4l_adapter_t;
 
 /*
  * DVB Mux instance
@@ -691,87 +660,6 @@ typedef struct th_transport {
 } th_transport_t;
 
 
-#if 0
-
-/**
- * Muxed packets
- */
-typedef struct th_muxpkt {
-  TAILQ_ENTRY(th_muxpkt) tm_link;
-  int64_t tm_pcr;
-  int64_t tm_dts;
-
-  int tm_contentsize;
-  int64_t tm_deadline;   /* Packet transmission deadline */
-
-  uint8_t tm_pkt[0];
-} th_muxpkt_t;
-
-
-/*
- * A mux stream reader
- */
-
-
-struct th_subscription;
-struct th_muxstream;
-
-typedef void (th_mux_output_t)(void *opaque, struct th_muxstream *tms,
-			       th_pkt_t *pkt);
-
-
-typedef struct th_muxfifo {
-  struct th_muxpkt_queue tmf_queue;
-  uint32_t tmf_len;
-  int tmf_contentsize;
-
-} th_muxfifo_t;
-
-
-
-typedef struct th_muxstream {
-
-  LIST_ENTRY(th_muxstream) tms_muxer_link0;
-  struct th_muxer *tms_muxer;
-  th_stream_t *tms_stream;
-  int tms_index; /* Used as PID or whatever */
-
-  struct th_refpkt_queue tms_lookahead;
-
-  int tms_lookahead_depth;  /* bytes in lookahead queue */
-  int tms_lookahead_packets;
-
-  th_muxfifo_t tms_cbr_fifo;
-  th_muxfifo_t tms_delivery_fifo;
-
-  int64_t tms_deadline;
-  int64_t tms_delay;
-  int64_t tms_delta;
-  int64_t tms_mux_offset;
-
-			   //dtimer_t tms_mux_timer;
-
-  /* MPEG TS multiplex stuff */
-
-  int tms_sc; /* start code */
-  int tms_cc;
-
-  int64_t tms_corruption_interval;
-  int64_t tms_corruption_last;
-  int tms_corruption_counter;
-
-  /* Memebers used when running with ffmpeg */
-  
-  struct AVStream *tms_avstream;
-  int tms_decoded;
-
-  int tms_blockcnt;
-  int64_t tms_dl;
-  int64_t tms_staletime;
-} th_muxstream_t;
-
-
-#endif
 
 
 const char *streaming_component_type2txt(streaming_component_type_t s);
