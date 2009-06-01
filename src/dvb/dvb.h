@@ -19,6 +19,13 @@
 #ifndef DVB_H_
 #define DVB_H_
 
+#include <linux/dvb/frontend.h>
+
+TAILQ_HEAD(th_dvb_adapter_queue, th_dvb_adapter);
+RB_HEAD(th_dvb_mux_instance_tree, th_dvb_mux_instance);
+TAILQ_HEAD(th_dvb_mux_instance_queue, th_dvb_mux_instance);
+
+
 enum polarisation {
 	POLARISATION_HORIZONTAL     = 0x00,
 	POLARISATION_VERTICAL       = 0x01,
@@ -27,6 +34,111 @@ enum polarisation {
 };
 
 #define DVB_FEC_ERROR_LIMIT 20
+
+
+/**
+ * DVB Mux instance
+ */
+typedef struct th_dvb_mux_instance {
+
+  RB_ENTRY(th_dvb_mux_instance) tdmi_global_link;
+  RB_ENTRY(th_dvb_mux_instance) tdmi_adapter_link;
+
+
+  struct th_dvb_adapter *tdmi_adapter;
+
+  uint16_t tdmi_snr, tdmi_signal;
+  uint32_t tdmi_ber, tdmi_uncorrected_blocks;
+
+#define TDMI_FEC_ERR_HISTOGRAM_SIZE 10
+  uint32_t tdmi_fec_err_histogram[TDMI_FEC_ERR_HISTOGRAM_SIZE];
+  int      tdmi_fec_err_ptr;
+
+  time_t tdmi_time;
+  LIST_HEAD(, th_dvb_table) tdmi_tables;
+
+  enum {
+    TDMI_FE_UNKNOWN,
+    TDMI_FE_NO_SIGNAL,
+    TDMI_FE_FAINT_SIGNAL,
+    TDMI_FE_BAD_SIGNAL,
+    TDMI_FE_CONSTANT_FEC,
+    TDMI_FE_BURSTY_FEC,
+    TDMI_FE_OK,
+  } tdmi_fe_status;
+
+  int tdmi_quality;
+
+  time_t tdmi_got_adapter;
+  time_t tdmi_lost_adapter;
+
+  struct dvb_frontend_parameters tdmi_fe_params;
+  uint8_t tdmi_polarisation;  /* for DVB-S */
+  uint8_t tdmi_switchport;    /* for DVB-S */
+
+  uint16_t tdmi_transport_stream_id;
+
+  char *tdmi_identifier;
+  char *tdmi_network;     /* Name of network, from NIT table */
+
+  struct th_transport_list tdmi_transports; /* via tht_mux_link */
+
+
+  TAILQ_ENTRY(th_dvb_mux_instance) tdmi_scan_link;
+  struct th_dvb_mux_instance_queue *tdmi_scan_queue;
+
+} th_dvb_mux_instance_t;
+
+
+#define DVB_MUX_SCAN_BAD 0      /* On the bad queue */
+#define DVB_MUX_SCAN_OK  1      /* Ok, don't need to scan that often */
+#define DVB_MUX_SCAN_INITIAL 2  /* To get a scan directly when a mux
+				   is discovered */
+
+/**
+ * DVB Adapter (one of these per physical adapter)
+ */
+typedef struct th_dvb_adapter {
+
+  TAILQ_ENTRY(th_dvb_adapter) tda_global_link;
+
+  struct th_dvb_mux_instance_tree tda_muxes;
+
+  /**
+   * We keep our muxes on three queues in order to select how
+   * they are to be idle-scanned
+   */
+  struct th_dvb_mux_instance_queue tda_scan_queues[3];
+  int tda_scan_selector;  /* To alternate between bad and ok queue */
+
+  th_dvb_mux_instance_t *tda_mux_current;
+
+  int tda_table_epollfd;
+
+  const char *tda_rootpath;
+  char *tda_identifier;
+  uint32_t tda_autodiscovery;
+  char *tda_displayname;
+
+  int tda_fe_fd;
+  int tda_type;
+  struct dvb_frontend_info *tda_fe_info;
+
+  char *tda_demux_path;
+
+  char *tda_dvr_path;
+
+  gtimer_t tda_mux_scanner_timer;
+
+  pthread_mutex_t tda_delivery_mutex;
+  struct th_transport_list tda_transports; /* Currently bound transports */
+
+  gtimer_t tda_fe_monitor_timer;
+  int tda_fe_monitor_hold;
+
+} th_dvb_adapter_t;
+
+
 
 extern struct th_dvb_adapter_queue dvb_adapters;
 extern struct th_dvb_mux_instance_tree dvb_muxes;
