@@ -23,7 +23,7 @@ Thus, to start it, just type:
 
 $ build.Linux/tvheadend
 
-Settings are stored in ~andoma/.hts/tvheadend
+Settings are stored in $HOME/.hts/tvheadend
 
 For more information and latest versions, please visit:
 http://www.lonelycoder.com/hts/
