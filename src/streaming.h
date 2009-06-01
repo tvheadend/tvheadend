@@ -27,8 +27,10 @@
  */
 void streaming_pad_init(streaming_pad_t *sp, pthread_mutex_t *mutex);
 
-void streaming_target_init(streaming_target_t *st,
-			   st_callback_t *cb, void *opaque);
+void streaming_target_init2(streaming_target_t *st,
+			    st_callback_t *cb, void *opaque);
+
+void streaming_queue_init(streaming_queue_t *st);
 
 void streaming_target_connect(streaming_pad_t *sp, streaming_target_t *st);
 

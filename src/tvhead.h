@@ -156,24 +156,34 @@ typedef struct streaming_target {
   LIST_ENTRY(streaming_target) st_link;
   streaming_pad_t *st_pad;               /* Source we are linked to */
 
-  pthread_mutex_t st_mutex;              /* Protects sp_queue */
-  pthread_cond_t  st_cond;               /* Condvar for signalling new
-					    packets */
-  
-  struct th_pktref_queue st_queue;
-  
-  enum {
-    ST_IDLE,
-    ST_RUNNING,
-    ST_STOP_REQ,
-    ST_ZOMBIE,
-  } st_status;
-
-  /* Callback driven delivery */
   st_callback_t *st_cb;
   void *st_opaque;
-
 } streaming_target_t;
+
+
+/**
+ *
+ */
+typedef struct streaming_queue {
+  
+  streaming_target_t sq_st;
+
+  pthread_mutex_t sq_mutex;              /* Protects sp_queue */
+  pthread_cond_t  sq_cond;               /* Condvar for signalling new
+					    packets */
+  
+  struct th_pktref_queue sq_queue;
+  
+  enum {
+    SQ_IDLE,
+    SQ_RUNNING,
+    SQ_STOP_REQ,
+    SQ_ZOMBIE,
+  } sq_status;
+
+} streaming_queue_t;
+
+
 
 /**
  * Descrambler superclass

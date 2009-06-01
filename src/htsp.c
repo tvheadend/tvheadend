@@ -1118,7 +1118,7 @@ htsp_subscription_start(htsp_connection_t *htsp, th_subscription_t *s,
   htsmsg_add_str(m, "method", "subscriptionStart");
   htsmsg_add_u32(m, "subscriptionId", s->ths_u32);
 
-  streaming_target_init(&hs->hs_st, htsp_stream_deliver, hs);
+  streaming_target_init2(&hs->hs_st, htsp_stream_deliver, hs);
 
   /**
    * Lock streming pad delivery so we can hook us up.

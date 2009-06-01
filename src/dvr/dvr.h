@@ -106,7 +106,7 @@ typedef struct dvr_entry {
 			       all commercial breaks so far */
 
   struct dvr_rec_stream_list de_streams;
-  streaming_target_t de_st;
+  streaming_queue_t de_sq;
   AVFormatContext *de_fctx;
 
   enum {

@@ -34,19 +34,43 @@ streaming_pad_init(streaming_pad_t *sp, pthread_mutex_t *mutex)
  *
  */
 void
-streaming_target_init(streaming_target_t *st, st_callback_t *cb, void *opaque)
+streaming_target_init2(streaming_target_t *st, st_callback_t *cb, void *opaque)
 {
-  st->st_status = ST_IDLE;
   st->st_cb = cb;
   st->st_opaque = opaque;
-
-  if(cb != NULL)
-    return;
-
-  pthread_mutex_init(&st->st_mutex, NULL);
-  pthread_cond_init(&st->st_cond, NULL);
-  TAILQ_INIT(&st->st_queue);
 }
+
+
+/**
+ *
+ */
+static void 
+streaming_queue_deliver(void *opauqe, struct th_pktref *pr)
+{
+  streaming_queue_t *sq = opauqe;
+
+  pthread_mutex_lock(&sq->sq_mutex);
+  TAILQ_INSERT_TAIL(&sq->sq_queue, pr, pr_link);
+  pthread_cond_signal(&sq->sq_cond);
+  pthread_mutex_unlock(&sq->sq_mutex);
+}
+
+
+/**
+ *
+ */
+void
+streaming_queue_init(streaming_queue_t *sq)
+{
+  sq->sq_status = SQ_IDLE;
+
+  streaming_target_init2(&sq->sq_st, streaming_queue_deliver, sq);
+
+  pthread_mutex_init(&sq->sq_mutex, NULL);
+  pthread_cond_init(&sq->sq_cond, NULL);
+  TAILQ_INIT(&sq->sq_queue);
+}
+
 
 /**
  *
@@ -101,15 +125,6 @@ streaming_pad_deliver_packet(streaming_pad_t *sp, th_pkt_t *pkt)
 
     pr = malloc(sizeof(th_pktref_t));
     pr->pr_pkt = pkt;
-
-    if(st->st_cb != NULL) {
-      st->st_cb(st->st_opaque, pr);
-    } else {
- 
-      pthread_mutex_lock(&st->st_mutex);
-      TAILQ_INSERT_TAIL(&st->st_queue, pr, pr_link);
-      pthread_cond_signal(&st->st_cond);
-      pthread_mutex_unlock(&st->st_mutex);
-    }
+    st->st_cb(st->st_opaque, pr);
   }
 }

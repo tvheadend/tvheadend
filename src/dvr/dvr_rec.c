@@ -424,9 +424,9 @@ dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp)
 
   /* Link to the pad */
   
-  streaming_target_init(&de->de_st, NULL, NULL);
-  streaming_target_connect(sp, &de->de_st);
-  de->de_st.st_status = ST_RUNNING;
+  streaming_queue_init(&de->de_sq);
+  streaming_target_connect(sp, &de->de_sq.sq_st);
+  de->de_sq.sq_status = SQ_RUNNING;
   de->de_fctx = fctx;
   de->de_ts_offset = AV_NOPTS_VALUE;
 
@@ -451,23 +451,23 @@ dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp)
 static void
 dvr_rec_stop(dvr_entry_t *de)
 {
-  streaming_target_t *st = &de->de_st;
+  streaming_queue_t *sq = &de->de_sq;
   
-  streaming_target_disconnect(&de->de_st);
+  streaming_target_disconnect(&sq->sq_st);
 
-  pthread_mutex_lock(&st->st_mutex);
+  pthread_mutex_lock(&sq->sq_mutex);
 
-  if(st->st_status == ST_RUNNING) {
-    st->st_status = ST_STOP_REQ;
+  if(sq->sq_status == SQ_RUNNING) {
+    sq->sq_status = SQ_STOP_REQ;
 
-    pthread_cond_signal(&st->st_cond);
+    pthread_cond_signal(&sq->sq_cond);
 
-    while(st->st_status != ST_ZOMBIE)
-      pthread_cond_wait(&st->st_cond, &st->st_mutex);
+    while(sq->sq_status != SQ_ZOMBIE)
+      pthread_cond_wait(&sq->sq_cond, &sq->sq_mutex);
   }
   
-  pktref_clear_queue(&st->st_queue);
-  pthread_mutex_unlock(&st->st_mutex);
+  pktref_clear_queue(&sq->sq_queue);
+  pthread_mutex_unlock(&sq->sq_mutex);
 }
 
 
@@ -478,25 +478,25 @@ static void *
 dvr_thread(void *aux)
 {
   dvr_entry_t *de = aux;
-  streaming_target_t *st = &de->de_st;
+  streaming_queue_t *sq = &de->de_sq;
   th_pktref_t *pr;
 
-  pthread_mutex_lock(&st->st_mutex);
+  pthread_mutex_lock(&sq->sq_mutex);
 
   de->de_header_written = 0;
   de->de_rec_state = DE_RS_WAIT_AUDIO_LOCK;
 
-  while(st->st_status == ST_RUNNING) {
+  while(sq->sq_status == SQ_RUNNING) {
 
-    pr = TAILQ_FIRST(&st->st_queue);
+    pr = TAILQ_FIRST(&sq->sq_queue);
     if(pr == NULL) {
-      pthread_cond_wait(&st->st_cond, &st->st_mutex);
+      pthread_cond_wait(&sq->sq_cond, &sq->sq_mutex);
       continue;
     }
     
-    TAILQ_REMOVE(&st->st_queue, pr, pr_link);
+    TAILQ_REMOVE(&sq->sq_queue, pr, pr_link);
 
-    pthread_mutex_unlock(&st->st_mutex);
+    pthread_mutex_unlock(&sq->sq_mutex);
 
     if(dispatch_clock > de->de_start)
       dvr_thread_new_pkt(de, pr->pr_pkt);
@@ -504,14 +504,14 @@ dvr_thread(void *aux)
     pkt_ref_dec(pr->pr_pkt);
     free(pr);
 
-    pthread_mutex_lock(&st->st_mutex);
+    pthread_mutex_lock(&sq->sq_mutex);
   }
 
   /* Signal back that we no longer is running */
-  st->st_status = ST_ZOMBIE;
-  pthread_cond_signal(&st->st_cond);
+  sq->sq_status = SQ_ZOMBIE;
+  pthread_cond_signal(&sq->sq_cond);
 
-  pthread_mutex_unlock(&st->st_mutex);
+  pthread_mutex_unlock(&sq->sq_mutex);
 
   dvr_thread_epilog(de);
 
