@@ -45,12 +45,12 @@ streaming_target_init2(streaming_target_t *st, st_callback_t *cb, void *opaque)
  *
  */
 static void 
-streaming_queue_deliver(void *opauqe, struct th_pktref *pr)
+streaming_queue_deliver(void *opauqe, streaming_message_t *sm)
 {
   streaming_queue_t *sq = opauqe;
 
   pthread_mutex_lock(&sq->sq_mutex);
-  TAILQ_INSERT_TAIL(&sq->sq_queue, pr, pr_link);
+  TAILQ_INSERT_TAIL(&sq->sq_queue, sm, sm_link);
   pthread_cond_signal(&sq->sq_cond);
   pthread_mutex_unlock(&sq->sq_mutex);
 }
@@ -111,7 +111,7 @@ void
 streaming_pad_deliver_packet(streaming_pad_t *sp, th_pkt_t *pkt)
 {
   streaming_target_t *st;
-  th_pktref_t *pr;
+  streaming_message_t *sm;
 
   lock_assert(sp->sp_mutex);
 
@@ -123,8 +123,43 @@ streaming_pad_deliver_packet(streaming_pad_t *sp, th_pkt_t *pkt)
 
   LIST_FOREACH(st, &sp->sp_targets, st_link) {
 
-    pr = malloc(sizeof(th_pktref_t));
-    pr->pr_pkt = pkt;
-    st->st_cb(st->st_opaque, pr);
+    sm = malloc(sizeof(streaming_message_t));
+    sm->sm_type = SMT_PACKET;
+    sm->sm_data = pkt;
+    st->st_cb(st->st_opaque, sm);
+  }
+}
+
+
+/**
+ *
+ */
+void
+streaming_message_free(streaming_message_t *sm)
+{
+  switch(sm->sm_type) {
+  case SMT_PACKET:
+    pkt_ref_dec(sm->sm_data);
+    break;
+
+  default:
+    abort();
+  }
+  free(sm);
+}
+
+
+
+/**
+ *
+ */
+void
+streaming_queue_clear(struct streaming_message_queue *q)
+{
+  streaming_message_t *sm;
+
+  while((sm = TAILQ_FIRST(q)) != NULL) {
+    TAILQ_REMOVE(q, sm, sm_link);
+    streaming_message_free(sm);
   }
 }

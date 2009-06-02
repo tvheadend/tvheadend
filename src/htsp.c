@@ -63,10 +63,10 @@ typedef struct htsp_msg {
   int hm_payloadsize;         /* For maintaining stats about streaming
 				 buffer depth */
 
-  th_pktref_t *hm_pktref;     /* For keeping reference to packet.
-				 hm_msg can contain messages that points
-				 to packet payload so to avoid copy we
-				 keep a reference here */
+  th_pkt_t *hm_pkt;     /* For keeping reference to packet.
+			   hm_msg can contain messages that points
+			   to packet payload so to avoid copy we
+			   keep a reference here */
 } htsp_msg_t;
 
 
@@ -187,10 +187,8 @@ static void
 htsp_msg_destroy(htsp_msg_t *hm)
 {
   htsmsg_destroy(hm->hm_msg);
-  if(hm->hm_pktref != NULL) {
-    pkt_ref_dec(hm->hm_pktref->pr_pkt);
-    free(hm->hm_pktref);
-  }
+  if(hm->hm_pkt != NULL)
+    pkt_ref_dec(hm->hm_pkt);
   free(hm);
 }
 
@@ -229,13 +227,13 @@ htsp_destroy_queue(htsp_connection_t *htsp, htsp_msg_q_t *hmq)
  *
  */
 static void
-htsp_send(htsp_connection_t *htsp, htsmsg_t *m, th_pktref_t *pkt,
+htsp_send(htsp_connection_t *htsp, htsmsg_t *m, th_pkt_t *pkt,
 	  htsp_msg_q_t *hmq, int payloadsize)
 {
   htsp_msg_t *hm = malloc(sizeof(htsp_msg_t));
 
   hm->hm_msg = m;
-  hm->hm_pktref = pkt;
+  hm->hm_pkt = pkt;
   hm->hm_payloadsize = payloadsize;
   
   pthread_mutex_lock(&htsp->htsp_out_mutex);
@@ -1016,15 +1014,17 @@ const static char frametypearray[PKT_NTYPES] = {
  * Build a htsmsg from a th_pkt and enqueue it on our HTSP transport
  */
 static void
-htsp_stream_deliver(void *opaque, struct th_pktref *pr)
+htsp_stream_deliver(void *opaque, streaming_message_t *sm)
 {
   htsp_stream_t *hs = opaque;
-  th_pkt_t *pkt = pr->pr_pkt;
+  th_pkt_t *pkt = sm->sm_data;
   htsmsg_t *m = htsmsg_create_map(), *n;
   htsp_msg_t *hm;
   htsp_connection_t *htsp = hs->hs_htsp;
   int64_t ts;
   int qlen = hs->hs_q.hmq_payload;
+
+  free(sm);
 
   if((qlen > 500000 && pkt->pkt_frametype == PKT_B_FRAME) ||
      (qlen > 750000 && pkt->pkt_frametype == PKT_P_FRAME) || 
@@ -1033,8 +1033,7 @@ htsp_stream_deliver(void *opaque, struct th_pktref *pr)
     hs->hs_dropstats[pkt->pkt_frametype]++;
 
     /* Queue size protection */
-    pkt_ref_dec(pr->pr_pkt);
-    free(pr);
+    pkt_ref_dec(pkt);
     return;
   }
  
@@ -1053,7 +1052,7 @@ htsp_stream_deliver(void *opaque, struct th_pktref *pr)
    * object that just points to data, thus avoiding a copy.
    */
   htsmsg_add_binptr(m, "payload", pkt->pkt_payload, pkt->pkt_payloadlen);
-  htsp_send(htsp, m, pr, &hs->hs_q, pkt->pkt_payloadlen);
+  htsp_send(htsp, m, pkt, &hs->hs_q, pkt->pkt_payloadlen);
 
   if(hs->hs_last_report != dispatch_clock) {
     /* Send a queue status report every second */

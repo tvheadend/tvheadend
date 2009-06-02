@@ -466,7 +466,7 @@ dvr_rec_stop(dvr_entry_t *de)
       pthread_cond_wait(&sq->sq_cond, &sq->sq_mutex);
   }
   
-  pktref_clear_queue(&sq->sq_queue);
+  streaming_queue_clear(&sq->sq_queue);
   pthread_mutex_unlock(&sq->sq_mutex);
 }
 
@@ -479,7 +479,7 @@ dvr_thread(void *aux)
 {
   dvr_entry_t *de = aux;
   streaming_queue_t *sq = &de->de_sq;
-  th_pktref_t *pr;
+  streaming_message_t *sm;
 
   pthread_mutex_lock(&sq->sq_mutex);
 
@@ -488,22 +488,25 @@ dvr_thread(void *aux)
 
   while(sq->sq_status == SQ_RUNNING) {
 
-    pr = TAILQ_FIRST(&sq->sq_queue);
-    if(pr == NULL) {
+    sm = TAILQ_FIRST(&sq->sq_queue);
+    if(sm == NULL) {
       pthread_cond_wait(&sq->sq_cond, &sq->sq_mutex);
       continue;
     }
     
-    TAILQ_REMOVE(&sq->sq_queue, pr, pr_link);
+    TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
 
     pthread_mutex_unlock(&sq->sq_mutex);
 
-    if(dispatch_clock > de->de_start)
-      dvr_thread_new_pkt(de, pr->pr_pkt);
+    switch(sm->sm_type) {
+    case SMT_PACKET:
+      if(dispatch_clock > de->de_start)
+	dvr_thread_new_pkt(de, sm->sm_data);
+      pkt_ref_dec(sm->sm_data);
+      break;
+    }
 
-    pkt_ref_dec(pr->pr_pkt);
-    free(pr);
-
+    free(sm);
     pthread_mutex_lock(&sq->sq_mutex);
   }
 

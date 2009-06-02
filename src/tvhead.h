@@ -146,11 +146,32 @@ typedef struct streaming_pad {
 } streaming_pad_t;
 
 
+TAILQ_HEAD(streaming_message_queue, streaming_message);
+
+/**
+ * Streaming messages types
+ */
+
+typedef enum {
+  SMT_PACKET,
+} streaming_message_type_t;
+
+
+/**
+ * Streaming messages are sent from the pad to its receivers
+ */
+typedef struct streaming_message {
+  TAILQ_ENTRY(streaming_message) sm_link;
+  streaming_message_type_t sm_type;
+  void *sm_data;
+
+} streaming_message_t;
+
 /**
  * A streaming target receives data.
  */
-struct th_pktref;
-typedef void (st_callback_t)(void *opauqe, struct th_pktref *pr);
+
+typedef void (st_callback_t)(void *opauqe, streaming_message_t *sm);
 
 typedef struct streaming_target {
   LIST_ENTRY(streaming_target) st_link;
@@ -172,7 +193,7 @@ typedef struct streaming_queue {
   pthread_cond_t  sq_cond;               /* Condvar for signalling new
 					    packets */
   
-  struct th_pktref_queue sq_queue;
+  struct streaming_message_queue sq_queue;
   
   enum {
     SQ_IDLE,

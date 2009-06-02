@@ -38,4 +38,8 @@ void streaming_target_disconnect(streaming_target_t *st);
 
 void streaming_pad_deliver_packet(streaming_pad_t *sp, th_pkt_t *pkt);
 
+void streaming_message_free(streaming_message_t *sm);
+
+void streaming_queue_clear(struct streaming_message_queue *q);
+
 #endif /* STREAMING_H_ */
