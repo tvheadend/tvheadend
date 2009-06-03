@@ -1134,6 +1134,65 @@ htsp_subscription_stop(htsp_subscription_t *hs, htsmsg_t *m)
 
 
 /**
+ * Send a 'subscriptionStatus' message
+ */
+static void
+htsp_subscription_status(htsp_subscription_t *hs, const char *err)
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "method", "subscriptionStatus");
+  htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
+
+  if(err != NULL)
+    htsmsg_add_str(m, "status", err);
+
+  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+}
+
+
+/**
+ *
+ */
+static void
+htsp_subscription_transport_status(htsp_subscription_t *hs,
+				   transport_feed_status_t status)
+{
+  const char *err = NULL;
+
+  switch(status) {
+  case TRANSPORT_FEED_UNKNOWN:
+    return;
+
+  case TRANSPORT_FEED_NO_INPUT:
+    err = "No data input from adapter detected";
+    break;
+
+  case TRANSPORT_FEED_NO_DEMUXED_INPUT:
+    err = "No mux packets for this service";
+    break;
+
+  case TRANSPORT_FEED_RAW_INPUT:
+    err = "Data received for service, "
+      "but no packets could be reassembled";
+    break;
+
+  case TRANSPORT_FEED_NO_DESCRAMBLER:
+    err = "No descrambler available for service";
+    break;
+
+  case TRANSPORT_FEED_NO_ACCESS:
+    err = "Access denied";
+    break;
+
+  case TRANSPORT_FEED_VALID_PACKETS:
+    err = NULL;
+    break;  
+  }
+  htsp_subscription_status(hs, err);
+}
+ 
+
+/**
  *
  */
 static void
@@ -1155,9 +1214,11 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
     break;
 
   case SMT_TRANSPORT_STATUS:
+    htsp_subscription_transport_status(hs, sm->sm_code);
     break;
 
   case SMT_NOSOURCE:
+    htsp_subscription_status(hs, "No available sources");
     break;
 
   case SMT_EXIT:
