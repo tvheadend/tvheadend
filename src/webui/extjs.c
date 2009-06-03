@@ -565,7 +565,6 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 static htsmsg_t *
 build_transport_msg(th_transport_t *t)
 {
-  streaming_pad_t *sp = &t->tht_streaming_pad;
   htsmsg_t *r = htsmsg_create_map();
   th_stream_t *st;
 
@@ -581,14 +580,14 @@ build_transport_msg(th_transport_t *t)
   htsmsg_add_str(r, "network", t->tht_networkname(t));
   htsmsg_add_str(r, "source", t->tht_sourcename(t));
 
-  htsmsg_add_str(r, "status", transport_status_to_text(t->tht_last_status));
+  htsmsg_add_str(r, "status", transport_status_to_text(t->tht_feed_status));
 
   video[0] = 0;
   audio[0] = 0;
   subtitles[0] = 0;
   scrambling[0] = 0;
 
-  LIST_FOREACH(st, &sp->sp_components, st_link) {
+  LIST_FOREACH(st, &t->tht_components, st_link) {
 
     switch(st->st_type) {
     case SCT_TELETEXT:

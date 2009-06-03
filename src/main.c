@@ -315,8 +315,6 @@ main(int argc, char **argv)
 
   webui_init(contentpath);
 
-  subscriptions_init();
-
   serviceprobe_init();
 
   cwc_init();

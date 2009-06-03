@@ -23,18 +23,16 @@
 #include "packet.h"
 
 void
-streaming_pad_init(streaming_pad_t *sp, pthread_mutex_t *mutex)
+streaming_pad_init(streaming_pad_t *sp)
 {
   LIST_INIT(&sp->sp_targets);
-  LIST_INIT(&sp->sp_components);
-  sp->sp_mutex = mutex;
 }
 
 /**
  *
  */
 void
-streaming_target_init2(streaming_target_t *st, st_callback_t *cb, void *opaque)
+streaming_target_init(streaming_target_t *st, st_callback_t *cb, void *opaque)
 {
   st->st_cb = cb;
   st->st_opaque = opaque;
@@ -62,9 +60,7 @@ streaming_queue_deliver(void *opauqe, streaming_message_t *sm)
 void
 streaming_queue_init(streaming_queue_t *sq)
 {
-  sq->sq_status = SQ_IDLE;
-
-  streaming_target_init2(&sq->sq_st, streaming_queue_deliver, sq);
+  streaming_target_init(&sq->sq_st, streaming_queue_deliver, sq);
 
   pthread_mutex_init(&sq->sq_mutex, NULL);
   pthread_cond_init(&sq->sq_cond, NULL);
@@ -78,56 +74,104 @@ streaming_queue_init(streaming_queue_t *sq)
 void
 streaming_target_connect(streaming_pad_t *sp, streaming_target_t *st)
 {
-  lock_assert(sp->sp_mutex);
-
   sp->sp_ntargets++;
   st->st_pad = sp;
   LIST_INSERT_HEAD(&sp->sp_targets, st, st_link);
 }
 
 
+/**
+ *
+ */
 void
-streaming_target_disconnect(streaming_target_t *st)
+streaming_target_disconnect(streaming_pad_t *sp, streaming_target_t *st)
 {
-  streaming_pad_t *sp = st->st_pad;
-
-  if(sp == NULL)
-    return; /* Already disconnected */
-
-  pthread_mutex_lock(sp->sp_mutex);
-
   sp->sp_ntargets--;
   st->st_pad = NULL;
 
   LIST_REMOVE(st, st_link);
-
-  pthread_mutex_unlock(sp->sp_mutex);
 }
+
 
 /**
  *
  */
-void
-streaming_pad_deliver_packet(streaming_pad_t *sp, th_pkt_t *pkt)
+streaming_message_t *
+streaming_msg_create(streaming_message_type_t type)
 {
-  streaming_target_t *st;
-  streaming_message_t *sm;
+  streaming_message_t *sm = malloc(sizeof(streaming_message_t));
+  sm->sm_type = type;
+  return sm;
+}
 
-  lock_assert(sp->sp_mutex);
 
-  if(sp->sp_ntargets == 0)
-    return;
+/**
+ *
+ */
+streaming_message_t *
+streaming_msg_create_pkt(th_pkt_t *pkt)
+{
+  streaming_message_t *sm = streaming_msg_create(SMT_PACKET);
+  sm->sm_data = pkt;
+  pkt_ref_inc(pkt);
+  return sm;
+}
 
-  /* Increase multiple refcounts at once */
-  pkt_ref_inc_poly(pkt, sp->sp_ntargets);
 
-  LIST_FOREACH(st, &sp->sp_targets, st_link) {
+/**
+ *
+ */
+streaming_message_t *
+streaming_msg_create_msg(streaming_message_type_t type, htsmsg_t *msg)
+{
+  streaming_message_t *sm = streaming_msg_create(type);
+  sm->sm_data = msg;
+  return sm;
+}
 
-    sm = malloc(sizeof(streaming_message_t));
-    sm->sm_type = SMT_PACKET;
-    sm->sm_data = pkt;
-    st->st_cb(st->st_opaque, sm);
+
+/**
+ *
+ */
+streaming_message_t *
+streaming_msg_create_code(streaming_message_type_t type, int code)
+{
+  streaming_message_t *sm = streaming_msg_create(type);
+  sm->sm_code = code;
+  return sm;
+}
+
+
+
+/**
+ *
+ */
+streaming_message_t *
+streaming_msg_clone(streaming_message_t *src)
+{
+  streaming_message_t *dst = malloc(sizeof(streaming_message_t));
+
+  dst->sm_type = src->sm_type;
+
+  switch(src->sm_type) {
+
+  case SMT_PACKET:
+    pkt_ref_inc(src->sm_data);
+    dst->sm_data = src->sm_data;
+    break;
+
+  case SMT_START:
+  case SMT_STOP:
+    dst->sm_data = htsmsg_copy(src->sm_data);
+    break;
+
+  case SMT_EXIT:
+    break;
+
+  default:
+    abort();
   }
+  return dst;
 }
 
 
@@ -135,11 +179,22 @@ streaming_pad_deliver_packet(streaming_pad_t *sp, th_pkt_t *pkt)
  *
  */
 void
-streaming_message_free(streaming_message_t *sm)
+streaming_msg_free(streaming_message_t *sm)
 {
   switch(sm->sm_type) {
   case SMT_PACKET:
     pkt_ref_dec(sm->sm_data);
+    break;
+
+  case SMT_START:
+  case SMT_STOP:
+    htsmsg_destroy(sm->sm_data);
+    break;
+
+  case SMT_EXIT:
+    break;
+
+  case SMT_TRANSPORT_STATUS:
     break;
 
   default:
@@ -148,6 +203,27 @@ streaming_message_free(streaming_message_t *sm)
   free(sm);
 }
 
+
+/**
+ *
+ */
+void
+streaming_pad_deliver(streaming_pad_t *sp, streaming_message_t *sm)
+{
+  streaming_target_t *st, *next;
+
+  if(sp->sp_ntargets == 0)
+    return;
+
+  for(st = LIST_FIRST(&sp->sp_targets);; st = next) {
+
+    if((next = LIST_NEXT(st, st_link)) == NULL)
+      break;
+    
+    st->st_cb(st->st_opaque, streaming_msg_clone(sm));
+  }
+  st->st_cb(st->st_opaque, sm);
+}
 
 
 /**
@@ -160,6 +236,6 @@ streaming_queue_clear(struct streaming_message_queue *q)
 
   while((sm = TAILQ_FIRST(q)) != NULL) {
     TAILQ_REMOVE(q, sm, sm_link);
-    streaming_message_free(sm);
+    streaming_msg_free(sm);
   }
 }

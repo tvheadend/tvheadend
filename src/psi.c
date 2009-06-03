@@ -555,7 +555,6 @@ streaming_component_type2txt(streaming_component_type_t s)
 void
 psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
 {
-  streaming_pad_t *sp = &t->tht_streaming_pad;
   th_stream_t *st;
   htsmsg_t *sub;
 
@@ -565,7 +564,7 @@ psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
 
   lock_assert(&t->tht_stream_mutex);
 
-  LIST_FOREACH(st, &sp->sp_components, st_link) {
+  LIST_FOREACH(st, &t->tht_components, st_link) {
     sub = htsmsg_create_map();
 
     htsmsg_add_u32(sub, "pid", st->st_pid);

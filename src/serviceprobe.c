@@ -32,6 +32,7 @@
 #include "subscriptions.h"
 #include "serviceprobe.h"
 #include "transports.h"
+#include "streaming.h"
 
 
 /* List of transports to be probed, protected with global_lock */
@@ -58,77 +59,6 @@ serviceprobe_enqueue(th_transport_t *t)
   pthread_cond_signal(&serviceprobe_cond);
 }
 
-
-/**
- *
- */
-static void
-serviceprobe_callback(struct th_subscription *s, subscription_event_t event,
-		      void *opaque)
-{
-  th_transport_t *t = opaque;
-  channel_t *ch;
-  const char *errmsg;
-
-  switch(event) {
-  case SUBSCRIPTION_TRANSPORT_RUN:
-    return;
-
-  case SUBSCRIPTION_NO_INPUT:
-    errmsg = "No input detected";
-    break;
-
-  case SUBSCRIPTION_NO_DESCRAMBLER:
-    errmsg = "No descrambler available";
-    break;
-
-  case SUBSCRIPTION_NO_ACCESS:
-    errmsg = "Access denied";
-    break;
-
-  case SUBSCRIPTION_RAW_INPUT:
-    errmsg = "Unable to reassemble packets from input";
-    break;
-
-  case SUBSCRIPTION_VALID_PACKETS:
-    errmsg = NULL; /* All OK */
-    break;
-
-  case SUBSCRIPTION_TRANSPORT_NOT_AVAILABLE:
-  case SUBSCRIPTION_TRANSPORT_LOST:
-    errmsg = "Unable to probe";
-    break;
-
-  case SUBSCRIPTION_DESTROYED:
-    return; /* All done */
-
-  default:
-    abort();
-  }
-
-  assert(t == TAILQ_FIRST(&serviceprobe_queue));
-
-
-  if(errmsg != NULL) {
-    tvhlog(LOG_INFO, "serviceprobe", "%20s: skipped: %s",
-	   t->tht_svcname, errmsg);
-  } else if(t->tht_ch == NULL) {
-    ch = channel_find_by_name(t->tht_svcname, 1);
-    transport_map_channel(t, ch);
-    
-      pthread_mutex_lock(&t->tht_stream_mutex);
-      t->tht_config_change(t);
-      pthread_mutex_unlock(&t->tht_stream_mutex);
-      
-      tvhlog(LOG_INFO, "serviceprobe", "\"%s\" mapped to channel \"%s\"",
-	     t->tht_svcname, t->tht_svcname);
-  }
-
-  t->tht_sp_onqueue = 0;
-  TAILQ_REMOVE(&serviceprobe_queue, t, tht_sp_link);
-  pthread_cond_signal(&serviceprobe_cond);
-}
-
 /**
  *
  */
@@ -138,8 +68,16 @@ serviceprobe_thread(void *aux)
   th_transport_t *t;
   th_subscription_t *s;
   int was_doing_work = 0;
+  streaming_queue_t sq;
+  streaming_message_t *sm;
+  transport_feed_status_t status;
+  int run;
+  const char *err;
+  channel_t *ch;
 
   pthread_mutex_lock(&global_lock);
+
+  streaming_queue_init(&sq);
 
   while(1) {
 
@@ -154,18 +92,96 @@ serviceprobe_thread(void *aux)
 
     if(!was_doing_work) {
       tvhlog(LOG_INFO, "serviceprobe", "Starting");
+      was_doing_work = 1;
     }
 
-    s = subscription_create_from_transport(t, "serviceprobe",
-					   serviceprobe_callback, t);
-    s->ths_force_demux = 1;
+    s = subscription_create_from_transport(t, "serviceprobe", &sq.sq_st);
 
-    /* Wait for something to happen */
-    while(TAILQ_FIRST(&serviceprobe_queue) == t)
-      pthread_cond_wait(&serviceprobe_cond, &global_lock);
+    transport_ref(t);
+    pthread_mutex_unlock(&global_lock);
 
+    run = 1;
+    pthread_mutex_lock(&sq.sq_mutex);
+
+    while(run) {
+
+      while((sm = TAILQ_FIRST(&sq.sq_queue)) == NULL)
+	pthread_cond_wait(&sq.sq_cond, &sq.sq_mutex);
+      TAILQ_REMOVE(&sq.sq_queue, sm, sm_link);
+
+      pthread_mutex_unlock(&sq.sq_mutex);
+
+      if(sm->sm_type == SMT_TRANSPORT_STATUS) {
+	status = sm->sm_code;
+
+	switch(status) {
+	case TRANSPORT_FEED_UNKNOWN:
+	  break;
+
+	case TRANSPORT_FEED_NO_INPUT:
+	  err = "No data input from adapter detected";
+	  run = 0;
+	  break;
+
+	case TRANSPORT_FEED_NO_DEMUXED_INPUT:
+	  err = "No mux packets for this service";
+	  run = 0;
+	  break;
+
+	case TRANSPORT_FEED_RAW_INPUT:
+	  err = "Data received for service, "
+	    "but no packets could be reassembled";
+	  run = 0;
+	  break;
+
+	case TRANSPORT_FEED_NO_DESCRAMBLER:
+	  err = "No descrambler available for service";
+	  run = 0;
+	  break;
+
+	case TRANSPORT_FEED_NO_ACCESS:
+	  err = "Access denied";
+	  run = 0;
+	  break;
+
+	case TRANSPORT_FEED_VALID_PACKETS:
+	  err = NULL;
+	  run = 0;
+	  break;
+	}
+      }
+
+      streaming_msg_free(sm);
+      pthread_mutex_lock(&sq.sq_mutex);
+    }
+
+    streaming_queue_clear(&sq.sq_queue);
+    pthread_mutex_unlock(&sq.sq_mutex);
+
+    pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
-    was_doing_work = 1;
+
+    if(t->tht_status != TRANSPORT_ZOMBIE) {
+
+      if(err != NULL) {
+	tvhlog(LOG_INFO, "serviceprobe", "%20s: skipped: %s",
+	       t->tht_svcname, err);
+      } else if(t->tht_ch == NULL) {
+	ch = channel_find_by_name(t->tht_svcname, 1);
+	transport_map_channel(t, ch);
+    
+	pthread_mutex_lock(&t->tht_stream_mutex);
+	t->tht_config_change(t);
+	pthread_mutex_unlock(&t->tht_stream_mutex);
+      
+	tvhlog(LOG_INFO, "serviceprobe", "\"%s\" mapped to channel \"%s\"",
+	       t->tht_svcname, t->tht_svcname);
+      }
+
+      t->tht_sp_onqueue = 0;
+      TAILQ_REMOVE(&serviceprobe_queue, t, tht_sp_link);
+    }
+    transport_unref(t);
   }
   return NULL;
 }

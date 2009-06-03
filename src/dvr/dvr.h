@@ -92,7 +92,10 @@ typedef struct dvr_entry {
   /**
    * Fields for recording
    */
+  pthread_t de_thread;
+
   th_subscription_t *de_s;
+  streaming_queue_t de_sq;
 
   
   /**
@@ -106,7 +109,6 @@ typedef struct dvr_entry {
 			       all commercial breaks so far */
 
   struct dvr_rec_stream_list de_streams;
-  streaming_queue_t de_sq;
   AVFormatContext *de_fctx;
 
   enum {

@@ -34,11 +34,9 @@
 #include "tvhead.h"
 #include "transports.h"
 #include "subscriptions.h"
+#include "streaming.h"
 
 struct th_subscription_list subscriptions;
-static pthread_cond_t subscription_janitor_cond;
-static pthread_mutex_t subscription_janitor_mutex;
-static int subscription_janitor_work;
 static gtimer_t subscription_reschedule_timer;
 
 
@@ -48,20 +46,61 @@ subscription_sort(th_subscription_t *a, th_subscription_t *b)
   return b->ths_weight - a->ths_weight;
 }
 
+
 /**
- *
+ * The transport is producing output. Thus, we may link our subscription
+ * to it.
  */
 static void
 subscription_link_transport(th_subscription_t *s, th_transport_t *t)
 {
+  streaming_message_t *sm;
+
   s->ths_transport = t;
   LIST_INSERT_HEAD(&t->tht_subscriptions, s, ths_transport_link);
-  s->ths_event_callback(s, SUBSCRIPTION_TRANSPORT_RUN, s->ths_opaque);
- 
-  s->ths_last_status = t->tht_last_status;
-  if(s->ths_last_status != SUBSCRIPTION_EVENT_INVALID)
-    s->ths_event_callback(s, s->ths_last_status, s->ths_opaque);
+
+
+  pthread_mutex_lock(&t->tht_stream_mutex);
+
+  // Link to transport output
+  streaming_target_connect(&t->tht_streaming_pad, &s->ths_input);
+
+  // Send a START message to the subscription client
+  sm = streaming_msg_create_msg(SMT_START, transport_build_stream_msg(t));
+  streaming_target_deliver(s->ths_output, sm);
+
+  // Send a TRANSPORT_STATUS message to the subscription client
+  sm = streaming_msg_create_code(SMT_TRANSPORT_STATUS, t->tht_feed_status);
+  streaming_target_deliver(s->ths_output, sm);
+
+  pthread_mutex_unlock(&t->tht_stream_mutex);
 }
+
+
+/**
+ * Called from transport code
+ */
+void
+subscription_unlink_transport(th_subscription_t *s)
+{
+  streaming_message_t *sm;
+  th_transport_t *t = s->ths_transport;
+
+  pthread_mutex_lock(&t->tht_stream_mutex);
+
+  // Unlink from transport output
+  streaming_target_disconnect(&t->tht_streaming_pad, &s->ths_input);
+
+  // Send a STOP message to the subscription client
+  sm = streaming_msg_create_msg(SMT_STOP, htsmsg_create_map());
+  streaming_target_deliver(s->ths_output, sm);
+    
+  pthread_mutex_unlock(&t->tht_stream_mutex);
+
+  LIST_REMOVE(s, ths_transport_link);
+  s->ths_transport = NULL;
+}
+
 
 /**
  *
@@ -71,6 +110,7 @@ subscription_reschedule(void *aux)
 {
   th_subscription_t *s;
   th_transport_t *t;
+  streaming_message_t *sm;
 
   lock_assert(&global_lock);
 
@@ -87,8 +127,9 @@ subscription_reschedule(void *aux)
 
     if(t == NULL) {
       /* No transport available */
-      s->ths_event_callback(s, SUBSCRIPTION_TRANSPORT_NOT_AVAILABLE,
-			    s->ths_opaque);
+
+      sm = streaming_msg_create(SMT_NOSOURCE);
+      streaming_target_deliver(s->ths_output, sm);
       continue;
     }
 
@@ -120,20 +161,35 @@ subscription_unsubscribe(th_subscription_t *s)
   subscription_reschedule(NULL);
 }
 
+
+/**
+ * This callback is invoked when we receive data and status updates from
+ * the currently bound transport
+ */
+static void
+subscription_input(void *opauqe, streaming_message_t *sm)
+{
+  th_subscription_t *s = opauqe;
+
+  streaming_target_deliver(s->ths_output, sm);
+}
+
+
+
 /**
  *
  */
 static th_subscription_t *
-subscription_create(int weight, const char *name,
-		    ths_event_callback_t *cb, void *opaque)
+subscription_create(int weight, const char *name, streaming_target_t *st)
 {
   th_subscription_t *s = calloc(1, sizeof(th_subscription_t));
 
-  s->ths_weight          = weight;
-  s->ths_event_callback  = cb;
-  s->ths_opaque          = opaque;
-  s->ths_title           = strdup(name);
-  s->ths_total_err       = 0;
+  streaming_target_init(&s->ths_input, subscription_input, s);
+
+  s->ths_weight            = weight;
+  s->ths_title             = strdup(name);
+  s->ths_total_err         = 0;
+  s->ths_output            = st;
 
   time(&s->ths_start);
   LIST_INSERT_SORTED(&subscriptions, s, ths_global_link, subscription_sort);
@@ -146,14 +202,10 @@ subscription_create(int weight, const char *name,
  *
  */
 th_subscription_t *
-subscription_create_from_channel(channel_t *ch,
-				 unsigned int weight, const char *name,
-				 ths_event_callback_t *cb, void *opaque,
-				 uint32_t u32)
+subscription_create_from_channel(channel_t *ch, unsigned int weight, 
+				 const char *name, streaming_target_t *st)
 {
-  th_subscription_t *s = subscription_create(weight, name, cb, opaque);
-
-  s->ths_u32 = u32;
+  th_subscription_t *s = subscription_create(weight, name, st);
 
   s->ths_channel = ch;
   LIST_INSERT_HEAD(&ch->ch_subscriptions, s, ths_channel_link);
@@ -176,86 +228,13 @@ subscription_create_from_channel(channel_t *ch,
  */
 th_subscription_t *
 subscription_create_from_transport(th_transport_t *t, const char *name,
-				   ths_event_callback_t *cb, void *opaque)
+				   streaming_target_t *st)
 {
-  th_subscription_t *s = subscription_create(INT32_MAX, name, cb, opaque);
+  th_subscription_t *s = subscription_create(INT32_MAX, name, st);
 
-  if(t->tht_runstatus != TRANSPORT_RUNNING)
+  if(t->tht_status != TRANSPORT_RUNNING)
     transport_start(t, INT32_MAX, 1);
   
   subscription_link_transport(s, t);
   return s;
 }
-
-
-/**
- *
- */
-void
-subscription_janitor_has_duty(void)
-{
-  pthread_mutex_lock(&subscription_janitor_mutex);
-  subscription_janitor_work++;
-  pthread_cond_signal(&subscription_janitor_cond);
-  pthread_mutex_unlock(&subscription_janitor_mutex);
-}
-
-
-
-/**
- *
- */
-static void *
-subscription_janitor(void *aux)
-{
-  int v;
-  th_subscription_t *s;
-  th_transport_t *t;
-
-  pthread_mutex_lock(&subscription_janitor_mutex);
-
-  v = subscription_janitor_work;
-
-  while(1) {
-
-    while(v == subscription_janitor_work)
-      pthread_cond_wait(&subscription_janitor_cond,
-			&subscription_janitor_mutex);
-    
-    v = subscription_janitor_work;
-    pthread_mutex_unlock(&subscription_janitor_mutex);
-
-    pthread_mutex_lock(&global_lock);
-
-    LIST_FOREACH(s, &subscriptions, ths_global_link) {
-      if((t = s->ths_transport) == NULL)
-	continue;
-      
-      if(s->ths_last_status != t->tht_last_status) {
-	s->ths_last_status = t->tht_last_status;
-	s->ths_event_callback(s, s->ths_last_status, s->ths_opaque);
-      }
-    }
-
-    pthread_mutex_unlock(&global_lock);
-  }
-  return NULL;
-}
-
-
-
-
-/**
- *
- */
-void
-subscriptions_init(void)
-{
-  pthread_t ptid;
-
-  pthread_cond_init(&subscription_janitor_cond, NULL);
-  pthread_mutex_init(&subscription_janitor_mutex, NULL);
-
-  pthread_create(&ptid, NULL, subscription_janitor, NULL);
-}
-

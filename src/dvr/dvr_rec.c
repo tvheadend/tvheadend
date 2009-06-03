@@ -46,8 +46,6 @@ typedef struct dvr_rec_stream {
 /**
  *
  */
-static void dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp);
-static void dvr_rec_stop(dvr_entry_t *de);
 static void *dvr_thread(void *aux);
 static void dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt);
 static void dvr_spawn_postproc(dvr_entry_t *de);
@@ -56,75 +54,17 @@ static void dvr_thread_epilog(dvr_entry_t *de);
 /**
  *
  */
-static void
-dvr_subscription_callback(struct th_subscription *s,
-			  subscription_event_t event, void *opaque)
-{
-  dvr_entry_t *de = opaque;
-  const char *notifymsg = NULL;
-  th_transport_t *t;
-
-  switch(event) {
-  case SUBSCRIPTION_EVENT_INVALID:
-    abort();
-
-  case SUBSCRIPTION_TRANSPORT_RUN:
-    t = s->ths_transport;
-    dvr_rec_start(de, &t->tht_streaming_pad);
-    return;
-
-  case SUBSCRIPTION_NO_INPUT:
-    notifymsg = "No input detected";
-    break;
-
-  case SUBSCRIPTION_NO_DESCRAMBLER:
-    notifymsg = "No descrambler available";
-    break;
-
-  case SUBSCRIPTION_NO_ACCESS:
-    notifymsg = "Access denied";
-    break;
-
-  case SUBSCRIPTION_RAW_INPUT:
-    notifymsg = "Unable to reassemble packets from input";
-    break;
-
-  case SUBSCRIPTION_VALID_PACKETS:
-    return;
-
-  case SUBSCRIPTION_TRANSPORT_NOT_AVAILABLE:
-    notifymsg = "No transport available at the moment, automatic retry";
-    break;
-
-  case SUBSCRIPTION_TRANSPORT_LOST:
-    dvr_rec_stop(de);
-    notifymsg = "Lost transport";
-    break;
-
-  case SUBSCRIPTION_DESTROYED:
-    dvr_rec_stop(de); /* Recording completed */
-    return;
-  }
-  if(notifymsg != NULL)
-    tvhlog(LOG_WARNING, "dvr", "\"%s\" on \"%s\": %s",
-	   de->de_title, de->de_channel->ch_name, notifymsg);
-}
-
-
-/**
- *
- */
 void
 dvr_rec_subscribe(dvr_entry_t *de)
 {
-  if(de->de_s != NULL)
-    return;
+  assert(de->de_s == NULL);
+
+  streaming_queue_init(&de->de_sq);
+
+  pthread_create(&de->de_thread, NULL, dvr_thread, de);
 
   de->de_s = subscription_create_from_channel(de->de_channel, 1000, "pvr",
-					      dvr_subscription_callback, de, 
-					      0);
-  
-  
+					      &de->de_sq.sq_st);
 }
 
 /**
@@ -133,10 +73,13 @@ dvr_rec_subscribe(dvr_entry_t *de)
 void
 dvr_rec_unsubscribe(dvr_entry_t *de)
 {
-  if(de->de_s == NULL)
-    return;
+  assert(de->de_s != NULL);
 
   subscription_unsubscribe(de->de_s);
+
+  streaming_target_deliver(&de->de_sq.sq_st, streaming_msg_create(SMT_EXIT));
+  
+  pthread_join(de->de_thread, NULL);
   de->de_s = NULL;
 }
 
@@ -299,9 +242,8 @@ dvr_rec_fatal_error(dvr_entry_t *de, const char *fmt, ...)
  *
  */
 static void
-dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp)
+dvr_rec_start(dvr_entry_t *de, htsmsg_t *streams)
 {
-  th_stream_t *st;
   dvr_rec_stream_t *drs;
   AVOutputFormat *fmt;
   AVFormatContext *fctx;
@@ -312,8 +254,10 @@ dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp)
   const char *codec_name;
   char urlname[512];
   int err;
-  pthread_t ptid;
-  pthread_attr_t attr;
+  htsmsg_field_t *f;
+  htsmsg_t *sub;
+  const char *type, *lang;
+  uint32_t idx;
 
   if(pvr_generate_filename(de) != 0) {
     dvr_rec_fatal_error(de, "Unable to create directories");
@@ -357,40 +301,38 @@ dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp)
 
   av_set_parameters(fctx, NULL);
 
-
-  pthread_mutex_lock(sp->sp_mutex);
-
   /**
    * Setup each stream
    */ 
-  LIST_FOREACH(st, &sp->sp_components, st_link) {
-
-    switch(st->st_type) {
-    default:
+  HTSMSG_FOREACH(f, streams) {
+    if(f->hmf_type != HMF_MAP)
       continue;
-    case SCT_MPEG2VIDEO:
-      codec_id   = CODEC_ID_MPEG2VIDEO;
-      codec_type = CODEC_TYPE_VIDEO;
-      codec_name = "mpeg2 video";
-      break;
+    sub = &f->hmf_msg;
 
-    case SCT_MPEG2AUDIO:
-      codec_id   = CODEC_ID_MP2;
+    if((type = htsmsg_get_str(sub, "type")) == NULL)
+      continue;
+    
+    if(htsmsg_get_u32(sub, "index", &idx))
+      continue;
+
+    if(!strcmp(type, "AC3")) {
+      codec_id = CODEC_ID_AC3;
       codec_type = CODEC_TYPE_AUDIO;
-      codec_name = "mpeg2 audio";
-      break;
-
-    case SCT_AC3:
-      codec_id   = CODEC_ID_AC3;
+      codec_name = "AC-3";
+    } else if(!strcmp(type, "MPEG2AUDIO")) {
+      codec_id = CODEC_ID_MP2;
       codec_type = CODEC_TYPE_AUDIO;
-      codec_name = "AC3 audio";
-      break;
-
-    case SCT_H264:
-      codec_id   = CODEC_ID_H264;
+      codec_name = "MPEG";
+    } else if(!strcmp(type, "MPEG2VIDEO")) {
+      codec_id = CODEC_ID_MPEG2VIDEO;
       codec_type = CODEC_TYPE_VIDEO;
-      codec_name = "h.264 video";
-      break;
+      codec_name = "MPEG-2";
+    } else if(!strcmp(type, "H264")) {
+      codec_id = CODEC_ID_H264;
+      codec_type = CODEC_TYPE_VIDEO;
+      codec_name = "H264";
+    } else {
+      continue;
     }
 
     codec = avcodec_find_decoder(codec_id);
@@ -402,7 +344,7 @@ dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp)
     }
 
     drs = calloc(1, sizeof(dvr_rec_stream_t));
-    drs->drs_source_index = st->st_index;
+    drs->drs_source_index = idx;
 
     drs->drs_lavf_stream = av_new_stream(fctx, fctx->nb_streams);
 
@@ -418,56 +360,14 @@ dvr_rec_start(dvr_entry_t *de, streaming_pad_t *sp)
       continue;
     }
 
-    memcpy(drs->drs_lavf_stream->language, st->st_lang, 4);
+    if((lang = htsmsg_get_str(sub, "language")) != NULL)
+      memcpy(drs->drs_lavf_stream->language, lang, 4);
+
     LIST_INSERT_HEAD(&de->de_streams, drs, drs_link);
   }
 
-  /* Link to the pad */
-  
-  streaming_queue_init(&de->de_sq);
-  streaming_target_connect(sp, &de->de_sq.sq_st);
-  de->de_sq.sq_status = SQ_RUNNING;
   de->de_fctx = fctx;
   de->de_ts_offset = AV_NOPTS_VALUE;
-
-  pthread_mutex_unlock(sp->sp_mutex);
-
-  de->de_refcnt++;
-  
-  /* Start the recorder thread */
-  
-  pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-
-  pthread_create(&ptid, &attr, dvr_thread, de);
-
-}
-
-
-/**
- * Called from subscription callback when we no longer have
- * access to stream
- */
-static void
-dvr_rec_stop(dvr_entry_t *de)
-{
-  streaming_queue_t *sq = &de->de_sq;
-  
-  streaming_target_disconnect(&sq->sq_st);
-
-  pthread_mutex_lock(&sq->sq_mutex);
-
-  if(sq->sq_status == SQ_RUNNING) {
-    sq->sq_status = SQ_STOP_REQ;
-
-    pthread_cond_signal(&sq->sq_cond);
-
-    while(sq->sq_status != SQ_ZOMBIE)
-      pthread_cond_wait(&sq->sq_cond, &sq->sq_mutex);
-  }
-  
-  streaming_queue_clear(&sq->sq_queue);
-  pthread_mutex_unlock(&sq->sq_mutex);
 }
 
 
@@ -480,14 +380,11 @@ dvr_thread(void *aux)
   dvr_entry_t *de = aux;
   streaming_queue_t *sq = &de->de_sq;
   streaming_message_t *sm;
+  int run = 1;
 
   pthread_mutex_lock(&sq->sq_mutex);
 
-  de->de_header_written = 0;
-  de->de_rec_state = DE_RS_WAIT_AUDIO_LOCK;
-
-  while(sq->sq_status == SQ_RUNNING) {
-
+  while(run) {
     sm = TAILQ_FIRST(&sq->sq_queue);
     if(sm == NULL) {
       pthread_cond_wait(&sq->sq_cond, &sq->sq_mutex);
@@ -504,26 +401,38 @@ dvr_thread(void *aux)
 	dvr_thread_new_pkt(de, sm->sm_data);
       pkt_ref_dec(sm->sm_data);
       break;
+
+    case SMT_START:
+      assert(de->de_fctx == NULL);
+
+      pthread_mutex_lock(&global_lock);
+      dvr_rec_start(de, sm->sm_data);
+      de->de_header_written = 0;
+      de->de_rec_state = DE_RS_WAIT_AUDIO_LOCK;
+      pthread_mutex_unlock(&global_lock);
+      break;
+
+    case SMT_STOP:
+      dvr_thread_epilog(de);
+      break;
+
+    case SMT_TRANSPORT_STATUS:
+      break;
+
+    case SMT_NOSOURCE:
+      dvr_rec_fatal_error(de, 
+			  "No source transport available, automatic retry");
+      break;
+
+    case SMT_EXIT:
+      run = 0;
+      break;
     }
 
     free(sm);
     pthread_mutex_lock(&sq->sq_mutex);
   }
-
-  /* Signal back that we no longer is running */
-  sq->sq_status = SQ_ZOMBIE;
-  pthread_cond_signal(&sq->sq_cond);
-
   pthread_mutex_unlock(&sq->sq_mutex);
-
-  dvr_thread_epilog(de);
-
-  pthread_mutex_lock(&global_lock);
-  dvr_entry_dec_ref(de);                    /* Past this we may no longer
-					       dereference de */
-  pthread_mutex_unlock(&global_lock);
-
-  /* Fade out ... */
   return NULL;
 }
 
@@ -772,7 +681,8 @@ dvr_thread_epilog(dvr_entry_t *de)
   AVStream *st;
   int i;
 
-  assert(fctx != NULL);
+  if(fctx == NULL)
+    return;
 
   /* Write trailer if we've written anything at all */
     

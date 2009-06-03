@@ -137,12 +137,6 @@ typedef enum {
 typedef struct streaming_pad {
   struct streaming_target_list sp_targets;
   int sp_ntargets;
-  struct th_stream_list sp_components;
-
-  pthread_mutex_t *sp_mutex; /* Mutex for protecting modification of
-				st_targets and delivery.
-				This needs to be created elsewhere.
-				The mutex also protect sp_comonents */
 } streaming_pad_t;
 
 
@@ -151,9 +145,13 @@ TAILQ_HEAD(streaming_message_queue, streaming_message);
 /**
  * Streaming messages types
  */
-
 typedef enum {
-  SMT_PACKET,
+  SMT_PACKET,       // sm_data is a th_pkt. Unref when destroying msg
+  SMT_START,        // sm_data is a htsmsg, see transport_build_stream_msg()
+  SMT_STOP,         // sm_data is a htsmsg
+  SMT_TRANSPORT_STATUS, // sm_code is TRANSPORT_STATUS_
+  SMT_EXIT,             // Used to signal exit to threads
+  SMT_NOSOURCE,
 } streaming_message_type_t;
 
 
@@ -163,8 +161,10 @@ typedef enum {
 typedef struct streaming_message {
   TAILQ_ENTRY(streaming_message) sm_link;
   streaming_message_type_t sm_type;
-  void *sm_data;
-
+  union {
+    void *sm_data;
+    int sm_code;
+  };
 } streaming_message_t;
 
 /**
@@ -194,13 +194,6 @@ typedef struct streaming_queue {
 					    packets */
   
   struct streaming_message_queue sq_queue;
-  
-  enum {
-    SQ_IDLE,
-    SQ_RUNNING,
-    SQ_STOP_REQ,
-    SQ_ZOMBIE,
-  } sq_status;
 
 } streaming_queue_t;
 
@@ -320,46 +313,33 @@ typedef struct th_stream {
 } th_stream_t;
 
 
-
 /**
- * Transport events, these are sent to subscribers via
- * s->ths_event_callback
+ *
  */
 typedef enum {
 
-  SUBSCRIPTION_EVENT_INVALID = 0, /* mbz */
+  /** No status known */
+  TRANSPORT_FEED_UNKNOWN,
 
-  /** Transport is receiving data from source */
-  SUBSCRIPTION_TRANSPORT_RUN,
+  /** No input is received from source at all */
+  TRANSPORT_FEED_NO_INPUT,
 
-  /** No input is received from source */
-  SUBSCRIPTION_NO_INPUT,
-
-  /** No descrambler is able to decrypt the stream */
-  SUBSCRIPTION_NO_DESCRAMBLER,
-
-  /** Potential descrambler is available, but access is denied */
-  SUBSCRIPTION_NO_ACCESS,
+  /** No input is received from source destined for this transport */
+  TRANSPORT_FEED_NO_DEMUXED_INPUT,
 
   /** Raw input seen but nothing has really been decoded */
-  SUBSCRIPTION_RAW_INPUT,
+  TRANSPORT_FEED_RAW_INPUT,
 
-  /** Packet are being parsed. Only signalled if at least one muxer is
-      registerd */  
-  SUBSCRIPTION_VALID_PACKETS,
+  /** No descrambler is able to decrypt the stream */
+  TRANSPORT_FEED_NO_DESCRAMBLER,
 
-  /** No transport is available for delivering subscription */
-  SUBSCRIPTION_TRANSPORT_NOT_AVAILABLE,
+  /** Potential descrambler is available, but access is denied */
+  TRANSPORT_FEED_NO_ACCESS,
 
-  /** Transport no longer runs, it was needed by someone with higher
-      priority */
-  SUBSCRIPTION_TRANSPORT_LOST,
+  /** Packet are being parsed. */
+  TRANSPORT_FEED_VALID_PACKETS,
 
-  /** Subscription destroyed */
-  SUBSCRIPTION_DESTROYED,
-
-} subscription_event_t;
-
+} transport_feed_status_t;
 
 
 /**
@@ -380,10 +360,37 @@ typedef struct th_transport {
   } tht_type;
 
   enum {
+    /**
+     * Transport is idle.
+     */
     TRANSPORT_IDLE,
+
+    /**
+     * Transport producing output
+     */
     TRANSPORT_RUNNING,
-    TRANSPORT_PROBING,
-  } tht_runstatus;
+
+    /**
+     * Destroyed, but pointer is till valid. 
+     * This would be the case if transport_destroy() did not actually free 
+     * the transport because there are references held to it.
+     *
+     * Reference counts can be used so that code can hold a pointer to 
+     * a transport without having the global lock.
+     *
+     * Note: No fields in the transport may be accessed without the
+     * global lock held. Thus, the global_lock must be reaquired and
+     * then tht_status must be checked. If it is ZOMBIE the code must
+     * just drop the refcount and pretend that the transport never
+     * was there in the first place.
+     */
+    TRANSPORT_ZOMBIE, 
+  } tht_status;
+
+  /**
+   * Refcount, operated using atomic.h ops.
+   */ 
+  int tht_refcount;
 
   /**
    * Source type is used to determine if an output requesting
@@ -486,11 +493,6 @@ typedef struct th_transport {
   char *tht_chname;
 
   /**
-   * Last known status (or error)
-   */			   
-  int tht_last_status;
-
-  /**
    * Service probe, see serviceprobe.c for details
    */
   int tht_sp_onqueue;
@@ -499,14 +501,9 @@ typedef struct th_transport {
   /**
    * Timer which is armed at transport start. Once it fires
    * it will check if any packets has been parsed. If not the status
-   * will be set to SUBSCRIPTION_NO_INPUT
+   * will be set to TRANSPORT_STATUS_NO_INPUT
    */
   gtimer_t tht_receive_timer;
-
-  /**
-   * Set as soon as we get some kind of activity
-   */
-  int tht_packets;
 
   /*********************************************************
    *
@@ -526,6 +523,16 @@ typedef struct th_transport {
    * transport.
    */
   pthread_mutex_t tht_stream_mutex;
+
+  /**
+   * Last known data status (or error)
+   */			   
+  transport_feed_status_t tht_feed_status;
+
+  /**
+   * Set as soon as we get some kind of activity
+   */
+  transport_feed_status_t tht_input_status;
 
 
   /**
@@ -572,10 +579,12 @@ typedef struct th_transport {
   int tht_pmt_seen;
 
 
+  struct th_stream_list tht_components;
+
+
   /**
    * Delivery pad, this is were we finally deliver all streaming output
    */
-
   streaming_pad_t tht_streaming_pad;
 
 

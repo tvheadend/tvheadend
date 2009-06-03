@@ -43,17 +43,14 @@
 #include "cwc.h"
 #include "notify.h"
 #include "serviceprobe.h"
+#include "atomic.h"
+
 
 #define TRANSPORT_HASH_WIDTH 101
 
 static struct th_transport_list transporthash[TRANSPORT_HASH_WIDTH];
 
 static void transport_data_timeout(void *aux);
-
-//static dtimer_t transport_monitor_timer;
-
-//static const char *transport_settings_path(th_transport_t *t);
-//static void transport_monitor(void *aux, int64_t now);
 
 
 /**
@@ -62,7 +59,6 @@ static void transport_data_timeout(void *aux);
 static void
 transport_stop(th_transport_t *t)
 {
-  streaming_pad_t *sp = &t->tht_streaming_pad;
   th_descrambler_t *td;
   th_stream_t *st;
  
@@ -85,7 +81,7 @@ transport_stop(th_transport_t *t)
   /**
    * Clean up each stream
    */
-  LIST_FOREACH(st, &sp->sp_components, st_link) {
+  LIST_FOREACH(st, &t->tht_components, st_link) {
 
     if(st->st_parser != NULL)
       av_parser_close(st->st_parser);
@@ -127,16 +123,6 @@ transport_stop(th_transport_t *t)
   pthread_mutex_unlock(&t->tht_stream_mutex);
 }
 
-/**
- * 
- */
-static void
-remove_subscriber(th_subscription_t *s, subscription_event_t reason)
-{
-  s->ths_event_callback(s, reason, s->ths_opaque);
-  LIST_REMOVE(s, ths_transport_link);
-  s->ths_transport = NULL;
-}
 
 /**
  * Remove the given subscriber from the transport
@@ -151,10 +137,11 @@ transport_remove_subscriber(th_transport_t *t, th_subscription_t *s)
   lock_assert(&global_lock);
 
   if(s == NULL) {
-    while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL)
-      remove_subscriber(s, SUBSCRIPTION_TRANSPORT_LOST);
+    while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL) {
+      subscription_unlink_transport(s);
+    }
   } else {
-    remove_subscriber(s, SUBSCRIPTION_DESTROYED);
+    subscription_unlink_transport(s);
   }
 
   if(LIST_FIRST(&t->tht_subscriptions) == NULL)
@@ -209,14 +196,13 @@ transport_unlink_muxer(th_muxer_t *tm)
 int
 transport_start(th_transport_t *t, unsigned int weight, int force_start)
 {
-  streaming_pad_t *sp = &t->tht_streaming_pad;
   th_stream_t *st;
   AVCodec *c;
   enum CodecID id;
 
   lock_assert(&global_lock);
 
-  assert(t->tht_runstatus != TRANSPORT_RUNNING);
+  assert(t->tht_status != TRANSPORT_RUNNING);
 
   if(t->tht_start_feed(t, weight, TRANSPORT_RUNNING, force_start))
     return -1;
@@ -227,7 +213,7 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
   /**
    * Initialize stream
    */
-  LIST_FOREACH(st, &sp->sp_components, st_link) {
+  LIST_FOREACH(st, &t->tht_components, st_link) {
     st->st_startcond = 0xffffffff;
     st->st_curdts = AV_NOPTS_VALUE;
     st->st_curpts = AV_NOPTS_VALUE;
@@ -268,9 +254,9 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
 
   cwc_transport_start(t);
 
-  t->tht_packets = 0;
   gtimer_arm(&t->tht_receive_timer, transport_data_timeout, t, 4);
-  t->tht_last_status = SUBSCRIPTION_EVENT_INVALID;
+  t->tht_feed_status = TRANSPORT_FEED_UNKNOWN;
+  t->tht_input_status = TRANSPORT_FEED_NO_INPUT;
   return 0;
 }
 
@@ -374,7 +360,7 @@ transport_find(channel_t *ch, unsigned int weight)
 
   for(i = 0; i < cnt; i++) {
     t = vec[i];
-    if(t->tht_runstatus == TRANSPORT_RUNNING) 
+    if(t->tht_status == TRANSPORT_RUNNING) 
       return t;
 
     if(!transport_start(t, 0, 0))
@@ -415,17 +401,27 @@ transport_compute_weight(struct th_transport_list *head)
 }
 
 
-#if 0
 /**
- * Timer that fires if transport is not receiving any data
+ *
  */
-static void
-transport_data_timeout(void *aux, int64_t now)
+void
+transport_unref(th_transport_t *t)
 {
-  th_transport_t *t = aux;
-  transport_signal_status(t, TRANSPORT_STATUS_NO_INPUT);
+  if((atomic_add(&t->tht_refcount, -1)) == 1)
+    free(t);
 }
-#endif
+
+
+/**
+ *
+ */
+void
+transport_ref(th_transport_t *t)
+{
+  atomic_add(&t->tht_refcount, 1);
+}
+
+
 
 /**
  * Destroy a transport
@@ -433,14 +429,14 @@ transport_data_timeout(void *aux, int64_t now)
 void
 transport_destroy(th_transport_t *t)
 {
-  streaming_pad_t *sp = &t->tht_streaming_pad;
   th_stream_t *st;
   th_subscription_t *s;
   
   lock_assert(&global_lock);
 
-  while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL)
-    remove_subscriber(s, SUBSCRIPTION_TRANSPORT_LOST);
+  while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL) {
+    subscription_unlink_transport(s);
+  }
 
   //dtimer_disarm(&t->tht_receive_timer);
 
@@ -454,23 +450,23 @@ transport_destroy(th_transport_t *t)
   LIST_REMOVE(t, tht_mux_link);
   LIST_REMOVE(t, tht_hash_link);
   
-  if(t->tht_runstatus != TRANSPORT_IDLE)
+  if(t->tht_status != TRANSPORT_IDLE)
     transport_stop(t);
 
+  t->tht_status = TRANSPORT_ZOMBIE;
 
   free(t->tht_identifier);
   free(t->tht_svcname);
   free(t->tht_chname);
   free(t->tht_provider);
 
-  while((st = LIST_FIRST(&sp->sp_components)) != NULL) {
+  while((st = LIST_FIRST(&t->tht_components)) != NULL) {
     LIST_REMOVE(st, st_link);
     free(st);
   }
 
   abort();//  serviceprobe_delete(t);
-
-  free(t);
+  transport_unref(t);
 }
 
 
@@ -489,8 +485,9 @@ transport_create(const char *identifier, int type, int source_type)
   t->tht_identifier = strdup(identifier);
   t->tht_type = type;
   t->tht_source_type = source_type;
+  t->tht_refcount = 1;
 
-  streaming_pad_init(&t->tht_streaming_pad, &t->tht_stream_mutex);
+  streaming_pad_init(&t->tht_streaming_pad);
 
   LIST_INSERT_HEAD(&transporthash[hash], t, tht_hash_link);
   return t;
@@ -524,13 +521,12 @@ th_stream_t *
 transport_add_stream(th_transport_t *t, int pid,
 		     streaming_component_type_t type)
 {
-  streaming_pad_t *sp = &t->tht_streaming_pad;
   th_stream_t *st;
   int i = 0;
 
   lock_assert(&t->tht_stream_mutex);
 
-  LIST_FOREACH(st, &sp->sp_components, st_link) {
+  LIST_FOREACH(st, &t->tht_components, st_link) {
     i++;
     if(pid != -1 && st->st_pid == pid)
       return st;
@@ -539,7 +535,7 @@ transport_add_stream(th_transport_t *t, int pid,
   st = calloc(1, sizeof(th_stream_t));
   st->st_index = i;
   st->st_type = type;
-  LIST_INSERT_HEAD(&sp->sp_components, st, st_link);
+  LIST_INSERT_HEAD(&t->tht_components, st, st_link);
 
   st->st_pid = pid;
   st->st_demuxer_fd = -1;
@@ -603,11 +599,12 @@ transport_data_timeout(void *aux)
 {
   th_transport_t *t = aux;
 
-  if(t->tht_last_status)
-    return; /* Something has happend so we don't have to update */
-    
-  transport_signal_status(t, t->tht_packets ? SUBSCRIPTION_RAW_INPUT :
-			  SUBSCRIPTION_NO_INPUT);
+  pthread_mutex_lock(&t->tht_stream_mutex);
+
+  if(t->tht_feed_status == TRANSPORT_FEED_UNKNOWN)
+    transport_set_feed_status(t, t->tht_input_status);
+
+  pthread_mutex_unlock(&t->tht_stream_mutex);
 }
 
 
@@ -647,21 +644,25 @@ transport_is_tv(th_transport_t *t)
 int
 transport_is_available(th_transport_t *t)
 {
-  return transport_servicetype_txt(t) &&
-    LIST_FIRST(&t->tht_streaming_pad.sp_components);
+  return transport_servicetype_txt(t) && LIST_FIRST(&t->tht_components);
 }
 
 /**
  *
  */
 void
-transport_signal_status(th_transport_t *t, int newstatus)
+transport_set_feed_status(th_transport_t *t, transport_feed_status_t newstatus)
 {
-  if(t->tht_last_status == newstatus)
+  lock_assert(&t->tht_stream_mutex);
+
+  if(t->tht_feed_status == newstatus)
     return;
 
-  t->tht_last_status = newstatus;
-  subscription_janitor_has_duty();
+  t->tht_feed_status = newstatus;
+
+  streaming_pad_deliver(&t->tht_streaming_pad, 
+			streaming_msg_create_code(SMT_TRANSPORT_STATUS,
+						  newstatus));
 }
 
 
@@ -669,10 +670,10 @@ transport_signal_status(th_transport_t *t, int newstatus)
  * Table for status -> text conversion
  */
 static struct strtab transportstatustab[] = {
-  { "Ok",             SUBSCRIPTION_VALID_PACKETS },
-  { "No input",       SUBSCRIPTION_NO_INPUT },
-  { "No descrambler", SUBSCRIPTION_NO_DESCRAMBLER },
-  { "No access",      SUBSCRIPTION_NO_ACCESS },
+  { "Ok",             TRANSPORT_FEED_VALID_PACKETS },
+  { "No input",       TRANSPORT_FEED_NO_INPUT },
+  { "No descrambler", TRANSPORT_FEED_NO_DESCRAMBLER },
+  { "No access",      TRANSPORT_FEED_NO_ACCESS },
 };
 
 
@@ -681,4 +682,33 @@ transport_status_to_text(int status)
 {
   return val2str(status, transportstatustab) ?: "Unknown";
 }
+
+
+/**
+ * Generate a message containing info about all components
+ *
+ * Note: This is the same as the one in HTSP.subscriptionStart so take
+ * great care if you change anying. (Just adding is fine)
+ */
+htsmsg_t *
+transport_build_stream_msg(th_transport_t *t)
+{
+  htsmsg_t *streams, *c;
+  th_stream_t *st;
+
+  lock_assert(&t->tht_stream_mutex);
+  
+  /* Setup each stream */ 
+  streams = htsmsg_create_list();
+  LIST_FOREACH(st, &t->tht_components, st_link) {
+    c = htsmsg_create_map();
+    htsmsg_add_u32(c, "index", st->st_index);
+    htsmsg_add_str(c, "type", streaming_component_type2txt(st->st_type));
+    if(st->st_lang[0])
+      htsmsg_add_str(c, "language", st->st_lang);
+    htsmsg_add_msg(streams, NULL, c);
+  }
+  return streams;
+}
+
 

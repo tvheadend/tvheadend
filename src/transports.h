@@ -20,6 +20,7 @@
 #define TRANSPORTS_H
 
 #include "channels.h"
+#include "htsmsg.h"
 #include "subscriptions.h"
 
 unsigned int transport_compute_weight(struct th_transport_list *head);
@@ -28,6 +29,10 @@ int transport_start(th_transport_t *t, unsigned int weight, int force_start);
 
 th_transport_t *transport_create(const char *identifier, int type,
 				 int source_type);
+
+void transport_unref(th_transport_t *t);
+
+void transport_ref(th_transport_t *t);
 
 th_transport_t *transport_find_by_identifier(const char *identifier);
 
@@ -52,7 +57,8 @@ int transport_is_available(th_transport_t *t);
 
 void transport_destroy(th_transport_t *t);
 
-void transport_signal_status(th_transport_t *t, int newstatus);
+void transport_set_feed_status(th_transport_t *t, 
+			       transport_feed_status_t newstatus);
 
 const char *transport_status_to_text(int status);
 
@@ -65,16 +71,16 @@ void transport_remove_subscriber(th_transport_t *t, th_subscription_t *s);
 static inline th_stream_t *
 transport_find_stream_by_pid(th_transport_t *t, int pid)
 {
-  streaming_pad_t *sp = &t->tht_streaming_pad;
   th_stream_t *st;
 
-  LIST_FOREACH(st, &sp->sp_components, st_link) {
+  LIST_FOREACH(st, &t->tht_components, st_link) {
     if(st->st_pid == pid)
       return st;
   }
   return NULL;
 }
 
+htsmsg_t *transport_build_stream_msg(th_transport_t *t);
 
 
 #endif /* TRANSPORTS_H */

@@ -47,11 +47,15 @@
 extern const char *htsversion;
 
 LIST_HEAD(htsp_connection_list, htsp_connection);
+LIST_HEAD(htsp_subscription_list, htsp_subscription);
 
 TAILQ_HEAD(htsp_msg_queue, htsp_msg);
 TAILQ_HEAD(htsp_msg_q_queue, htsp_msg_q);
 
 static struct htsp_connection_list htsp_async_connections;
+
+static void htsp_streaming_input(void *opaque, streaming_message_t *sm);
+
 
 /**
  *
@@ -122,7 +126,7 @@ typedef struct htsp_connection {
   /**
    *
    */
-  struct th_subscription_list htsp_subscriptions;
+  struct htsp_subscription_list htsp_subscriptions;
 
   uint32_t htsp_granted_access;
 
@@ -130,15 +134,20 @@ typedef struct htsp_connection {
 
 } htsp_connection_t;
 
+
 /**
  *
  */
-typedef struct htsp_stream {
-  streaming_target_t hs_st;
-
-  int hs_sid;  /* Subscription ID */
-
+typedef struct htsp_subscription {
   htsp_connection_t *hs_htsp;
+
+  LIST_ENTRY(htsp_subscription) hs_link;
+
+  int hs_sid;  /* Subscription ID (set by client) */
+
+  th_subscription_t *hs_s; // Temporary
+
+  streaming_target_t hs_input;
 
   htsp_msg_q_t hs_q;
 
@@ -146,7 +155,7 @@ typedef struct htsp_stream {
 
   int hs_dropstats[PKT_NTYPES];
 
-} htsp_stream_t;
+} htsp_subscription_t;
 
 
 
@@ -168,16 +177,6 @@ htsp_update_logname(htsp_connection_t *htsp)
 
   tvh_str_update(&htsp->htsp_logname, buf);
 }
-
-
-/**
- *
- */
-static void htsp_subscription_callback(struct th_subscription *s,
-				       subscription_event_t event,
-				       void *opaque);
-
-
 
 
 /**
@@ -209,7 +208,7 @@ htsp_init_queue(htsp_msg_q_t *hmq, int strict_prio)
  *
  */
 static void
-htsp_destroy_queue(htsp_connection_t *htsp, htsp_msg_q_t *hmq)
+htsp_flush_queue(htsp_connection_t *htsp, htsp_msg_q_t *hmq)
 {
   htsp_msg_t *hm;
 
@@ -220,6 +219,19 @@ htsp_destroy_queue(htsp_connection_t *htsp, htsp_msg_q_t *hmq)
     TAILQ_REMOVE(&hmq->hmq_q, hm, hm_link);
     htsp_msg_destroy(hm);
   }
+}
+
+
+/**
+ *
+ */
+static void
+htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
+{
+  LIST_REMOVE(hs, hs_link);
+  subscription_unsubscribe(hs->hs_s);
+  htsp_flush_queue(htsp, &hs->hs_q);
+  free(hs);
 }
 
 
@@ -435,9 +447,9 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  th_subscription_t *s;
   uint32_t chid, sid;
   channel_t *ch;
+  htsp_subscription_t *hs;
 
   if(htsmsg_get_u32(in, "channelId", &chid))
     return htsp_error("Missing argument 'channeId'");
@@ -450,15 +462,24 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 
 
   /*
-   * We send the reply here or the user will get the 'subscriptionStart'
+   * We send the reply now to avoid the user getting the 'subscriptionStart'
    * async message before the reply to 'subscribe'.
    */
   htsp_reply(htsp, in, htsmsg_create_map());
 
-  s = subscription_create_from_channel(ch, 500, "htsp",
-				       htsp_subscription_callback, htsp, sid);
+  /* Initialize the HTSP subscription structure */
 
-  LIST_INSERT_HEAD(&htsp->htsp_subscriptions, s, ths_subscriber_link);
+  hs = calloc(1, sizeof(htsp_subscription_t));
+
+  hs->hs_htsp = htsp;
+  htsp_init_queue(&hs->hs_q, 0);
+
+  hs->hs_sid = sid;
+  LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
+  streaming_target_init(&hs->hs_input, htsp_streaming_input, hs);
+
+  hs->hs_s = subscription_create_from_channel(ch, 500, "htsp", &hs->hs_input);
+
   return NULL;
 }
 
@@ -469,27 +490,26 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_unsubscribe(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  th_subscription_t *s;
+  htsp_subscription_t *s;
   uint32_t sid;
 
   if(htsmsg_get_u32(in, "subscriptionId", &sid))
     return htsp_error("Missing argument 'subscriptionId'");
 
-  LIST_FOREACH(s, &htsp->htsp_subscriptions, ths_subscriber_link)
-    if(s->ths_u32 == sid)
+  LIST_FOREACH(s, &htsp->htsp_subscriptions, hs_link)
+    if(s->hs_sid == sid)
       break;
-
+  
   /*
-   * We send the reply here or the user will get the 'subscriptionStart'
-   * async message before the reply to 'subscribe'.
+   * We send the reply here or the user will get the 'subscriptionStop'
+   * async message before the reply to 'unsubscribe'.
    */
   htsp_reply(htsp, in, htsmsg_create_map());
 
   if(s == NULL)
     return NULL; /* Subscription did not exist, but we don't really care */
 
-  LIST_REMOVE(s, ths_subscriber_link);
-  subscription_unsubscribe(s);
+  htsp_subscription_destroy(htsp, s);
   return NULL;
 }
 
@@ -810,7 +830,7 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source)
 {
   htsp_connection_t htsp;
   char buf[30];
-  th_subscription_t *s;
+  htsp_subscription_t *s;
 
   snprintf(buf, sizeof(buf), "%s", inet_ntoa(source->sin_addr));
 
@@ -849,8 +869,7 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source)
      down in the streaming code. So we do this as early as possible
      to avoid any weird lockups */
   while((s = LIST_FIRST(&htsp.htsp_subscriptions)) != NULL) {
-    LIST_REMOVE(s, ths_subscriber_link);
-    subscription_unsubscribe(s);
+    htsp_subscription_destroy(&htsp, s);
   }
 
   if(htsp.htsp_async_mode)
@@ -984,7 +1003,7 @@ htsp_tag_delete(channel_tag_t *ct)
   htsp_async_send(m);
 }
 
-
+#if 0
 /**
  *
  */
@@ -996,13 +1015,14 @@ htsp_send_subscription_status(htsp_connection_t *htsp, th_subscription_t *ths,
 
   m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "subscriptionStatus");
-  htsmsg_add_u32(m, "subscriptionId", ths->ths_u32);
+  abort(); //htsmsg_add_u32(m, "subscriptionId", ths->ths_u32);
 
   if(txt != NULL)
     htsmsg_add_str(m, "status", txt);
 
   htsp_send_message(htsp, m, NULL);
 }
+#endif
 
 const static char frametypearray[PKT_NTYPES] = {
   [PKT_I_FRAME] = 'I',
@@ -1014,17 +1034,13 @@ const static char frametypearray[PKT_NTYPES] = {
  * Build a htsmsg from a th_pkt and enqueue it on our HTSP transport
  */
 static void
-htsp_stream_deliver(void *opaque, streaming_message_t *sm)
+htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 {
-  htsp_stream_t *hs = opaque;
-  th_pkt_t *pkt = sm->sm_data;
   htsmsg_t *m = htsmsg_create_map(), *n;
   htsp_msg_t *hm;
   htsp_connection_t *htsp = hs->hs_htsp;
   int64_t ts;
   int qlen = hs->hs_q.hmq_payload;
-
-  free(sm);
 
   if((qlen > 500000 && pkt->pkt_frametype == PKT_B_FRAME) ||
      (qlen > 750000 && pkt->pkt_frametype == PKT_P_FRAME) || 
@@ -1095,154 +1111,60 @@ htsp_stream_deliver(void *opaque, streaming_message_t *sm)
 /**
  * Send a 'subscriptionStart' message to client informing about
  * delivery start and all components.
- *
- * Setup a streaming target that will deliver packets to the HTSP transport.
  */
 static void
-htsp_subscription_start(htsp_connection_t *htsp, th_subscription_t *s,
-			streaming_pad_t *sp)
+htsp_subscription_start(htsp_subscription_t *hs, htsmsg_t *streams)
 {
-  htsp_stream_t *hs;
-  htsmsg_t *m, *streams, *c;
-  th_stream_t *st;
-
-  assert(s->ths_st == NULL);
-
-  hs = calloc(1, sizeof(htsp_stream_t));
-  hs->hs_htsp = htsp;
-  hs->hs_sid = s->ths_u32;
-  htsp_init_queue(&hs->hs_q, 0);
-
-  m = htsmsg_create_map();
+  htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "subscriptionStart");
-  htsmsg_add_u32(m, "subscriptionId", s->ths_u32);
-
-  streaming_target_init2(&hs->hs_st, htsp_stream_deliver, hs);
-
-  /**
-   * Lock streming pad delivery so we can hook us up.
-   */
-  pthread_mutex_lock(sp->sp_mutex);
-
-  /* Setup each stream */ 
-  streams = htsmsg_create_list();
-  LIST_FOREACH(st, &sp->sp_components, st_link) {
-    c = htsmsg_create_map();
-    htsmsg_add_u32(c, "index", st->st_index);
-    htsmsg_add_str(c, "type", streaming_component_type2txt(st->st_type));
-    if(st->st_lang[0])
-      htsmsg_add_str(c, "language", st->st_lang);
-    htsmsg_add_msg(streams, NULL, c);
-  }
-
+  htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
   htsmsg_add_msg(m, "streams", streams);
-
   htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
-
-  /* Link to the pad */
-  streaming_target_connect(sp, &hs->hs_st);
-
-  s->ths_st = &hs->hs_st;
-
-  /* Once we unlock here we will start getting the callback */
-  pthread_mutex_unlock(sp->sp_mutex);
 }
 
 
 /**
  * Send a 'subscriptionStart' stop
- *
- * Tear down all streaming related stuff.
  */
 static void
-htsp_subscription_stop(htsp_connection_t *htsp, th_subscription_t *s,
-		       const char *reason)
+htsp_subscription_stop(htsp_subscription_t *hs, htsmsg_t *m)
 {
-  htsp_stream_t *hs;
-  htsmsg_t *m;
-
-  assert(s->ths_st != NULL);
-
-  hs = (htsp_stream_t *)s->ths_st;
-
-  /* Unlink from pad */
-  streaming_target_disconnect(&hs->hs_st);
-
-  /* Send a stop message back */
-  m = htsmsg_create_map();
-  htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
   htsmsg_add_str(m, "method", "subscriptionStop");
-
-  if(reason)
-    htsmsg_add_str(m, "reason", reason);
-
-  /* Send on normal control queue cause we are about do destroy
-     the per-subscription queue */
-  htsp_send_message(hs->hs_htsp, m, NULL);
-
-  htsp_destroy_queue(htsp, &hs->hs_q);
-
-  free(hs);
-
-  s->ths_st = NULL;
+  htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
+  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
 }
-
-
 
 
 /**
  *
  */
 static void
-htsp_subscription_callback(struct th_subscription *s,
-			   subscription_event_t event, void *opaque)
+htsp_streaming_input(void *opaque, streaming_message_t *sm)
 {
-  htsp_connection_t *htsp = opaque;
-  th_transport_t *t;
+  htsp_subscription_t *hs = opaque;
 
-  switch(event) {
-  case SUBSCRIPTION_EVENT_INVALID:
+  switch(sm->sm_type) {
+  case SMT_PACKET:
+    htsp_stream_deliver(hs, sm->sm_data); // reference is transfered
+    break;
+
+  case SMT_START:
+    htsp_subscription_start(hs, sm->sm_data);
+    break;
+
+  case SMT_STOP:
+    htsp_subscription_stop(hs, sm->sm_data);
+    break;
+
+  case SMT_TRANSPORT_STATUS:
+    break;
+
+  case SMT_NOSOURCE:
+    break;
+
+  case SMT_EXIT:
     abort();
-
-  case SUBSCRIPTION_TRANSPORT_RUN:
-    htsp_send_subscription_status(htsp, s, NULL);
-
-    t = s->ths_transport;
-    htsp_subscription_start(htsp, s, &t->tht_streaming_pad);
-    return;
-
-  case SUBSCRIPTION_NO_INPUT:
-    htsp_send_subscription_status(htsp, s, "No input detected");
-    break;
-
-  case SUBSCRIPTION_NO_DESCRAMBLER:
-    htsp_send_subscription_status(htsp, s, "No descrambler available");
-    break;
-
-  case SUBSCRIPTION_NO_ACCESS:
-    htsp_send_subscription_status(htsp, s, "Access denied");
-    break;
-
-  case SUBSCRIPTION_RAW_INPUT:
-    htsp_send_subscription_status(htsp, s,
-				  "Unable to reassemble packets from input");
-    break;
-
-  case SUBSCRIPTION_VALID_PACKETS:
-    htsp_send_subscription_status(htsp, s, NULL);
-    break;
-
-  case SUBSCRIPTION_TRANSPORT_NOT_AVAILABLE:
-    htsp_send_subscription_status(htsp, s,
-				  "No transport available, retrying...");
-    break;
-    
-  case SUBSCRIPTION_TRANSPORT_LOST:
-    htsp_subscription_stop(htsp, s, "Transport destroyed");
-    break;
-    
-  case SUBSCRIPTION_DESTROYED:
-    htsp_subscription_stop(htsp, s, NULL);
-    return;
   }
+
+  free(sm);
 }

@@ -71,12 +71,7 @@ got_section(th_transport_t *t, th_stream_t *st)
 static void
 ts_recv_packet0(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
 {
-  th_subscription_t *s;
   int off, len, pusi, cc, err = 0;
-
-  LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link)
-    if(s->ths_raw_input != NULL)
-      s->ths_raw_input(s, tsb, 188, st, s->ths_opaque);
 
   /* Check CC */
 
@@ -194,6 +189,8 @@ ts_recv_packet1(th_transport_t *t, uint8_t *tsb)
   int pid, n, m, r;
   th_descrambler_t *td;
 
+  t->tht_input_status = TRANSPORT_FEED_NO_DEMUXED_INPUT;
+
   if(tsb[1] & 0x80)
     return; /* Transport Error Indicator */
 
@@ -201,7 +198,7 @@ ts_recv_packet1(th_transport_t *t, uint8_t *tsb)
   if((st = transport_find_stream_by_pid(t, pid)) == NULL)
     return;
 
-  t->tht_packets = 1;
+  t->tht_input_status = TRANSPORT_FEED_RAW_INPUT;
 
   pthread_mutex_lock(&t->tht_stream_mutex);
 
@@ -230,9 +227,9 @@ ts_recv_packet1(th_transport_t *t, uint8_t *tsb)
     }
 
     if(n == 0) {
-      transport_signal_status(t, SUBSCRIPTION_NO_DESCRAMBLER);
+      transport_set_feed_status(t, TRANSPORT_FEED_NO_DESCRAMBLER);
     } else if(m == n) {
-      transport_signal_status(t, SUBSCRIPTION_NO_ACCESS);
+      transport_set_feed_status(t, TRANSPORT_FEED_NO_ACCESS);
     }
   } else {
     ts_recv_packet0(t, st, tsb);

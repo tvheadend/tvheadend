@@ -877,11 +877,12 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   /**
    * Input is ok
    */
-  transport_signal_status(t, SUBSCRIPTION_VALID_PACKETS);
+  transport_set_feed_status(t, TRANSPORT_FEED_VALID_PACKETS);
 
   /* Forward packet */
   pkt->pkt_componentindex = st->st_index;
-  streaming_pad_deliver_packet(&t->tht_streaming_pad, pkt);
+  streaming_pad_deliver(&t->tht_streaming_pad, 
+			streaming_msg_create_pkt(pkt));
 
   /* Decrease our own reference to the packet */
   pkt_ref_dec(pkt);

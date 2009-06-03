@@ -900,10 +900,9 @@ cwc_transport_destroy(th_descrambler_t *td)
 static inline th_stream_t *
 cwc_find_stream_by_caid(th_transport_t *t, int caid)
 {
-  streaming_pad_t *sp = &t->tht_streaming_pad;
   th_stream_t *st;
 
-  LIST_FOREACH(st, &sp->sp_components, st_link) {
+  LIST_FOREACH(st, &t->tht_components, st_link) {
     if(st->st_caid == caid)
       return st;
   }

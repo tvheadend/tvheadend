@@ -444,7 +444,7 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
 
       pthread_mutex_lock(&t_src->tht_stream_mutex);
 
-      LIST_FOREACH(st_src, &t_src->tht_streaming_pad.sp_components, st_link) {
+      LIST_FOREACH(st_src, &t_src->tht_components, st_link) {
 
 	st_dst = transport_add_stream(t_dst, 
 				      st_src->st_pid,

@@ -19,15 +19,6 @@
 #ifndef SUBSCRIPTIONS_H
 #define SUBSCRIPTIONS_H
 
-typedef void (ths_event_callback_t)(struct th_subscription *s,
-				    subscription_event_t event,
-				    void *opaque);
-
-typedef void (ths_raw_input_t)(struct th_subscription *s,
-			       void *data, int len,
-			       th_stream_t *st,
-			       void *opaque);
-
 typedef struct th_subscription {
   LIST_ENTRY(th_subscription) ths_global_link;
   int ths_weight;
@@ -41,24 +32,15 @@ typedef struct th_subscription {
   struct th_transport *ths_transport;   /* if NULL, ths_transport_link
 					   is not linked */
 
-  LIST_ENTRY(th_subscription) ths_subscriber_link; /* Caller is responsible
-						      for this link */
-
-  void *ths_opaque;
-  uint32_t ths_u32;
-
   char *ths_title; /* display title */
   time_t ths_start;  /* time when subscription started */
   int ths_total_err; /* total errors during entire subscription */
 
-  int ths_last_status;
-
-  ths_event_callback_t *ths_event_callback;
-  ths_raw_input_t *ths_raw_input;
-
   int ths_force_demux;
 
-  streaming_target_t *ths_st;
+  streaming_target_t ths_input;
+
+  streaming_target_t *ths_output;
 
 } th_subscription_t;
 
@@ -73,20 +55,15 @@ void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 th_subscription_t *subscription_create_from_channel(channel_t *ch,
 						    unsigned int weight,
 						    const char *name,
-						    ths_event_callback_t *cb,
-						    void *opaque,
-						    uint32_t u32);
+						    streaming_target_t *st);
 
 
 th_subscription_t *subscription_create_from_transport(th_transport_t *t,
 						      const char *name,
-						      ths_event_callback_t *cb,
-						      void *opaque);
-
-void subscriptions_init(void);
+						      streaming_target_t *st);
 
 void subscription_stop(th_subscription_t *s);
 
-void subscription_janitor_has_duty(void);
+void subscription_unlink_transport(th_subscription_t *s);
 
 #endif /* SUBSCRIPTIONS_H */
