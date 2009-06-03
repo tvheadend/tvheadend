@@ -21,7 +21,6 @@ fi
 emit chapter 1     "Overview"                              html/overview.html
 emit section 1.1   "List of features"                      html/features.html
 emit section 1.2   "Install and initial setup"             html/install.html
-emit section 1.3   "Frequently Asked Questions"            html/faq.html
 emit chapter 2     "Electronic Program Guide"              html/epg.html
 emit chapter 3     "Digital Video Recorder"                html/dvr.html
 emit section 3.1   "DVR Log"                               html/dvrlog.html
