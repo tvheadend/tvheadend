@@ -16,6 +16,8 @@ configure)
    HTS_HOME=`getent passwd $HTS_USER | cut -d':' -f6`
 
    mkdir -p "${HTS_HOME}/.hts/tvheadend"
+   chown ${HTS_USER}:${HTS_USER} "${HTS_HOME}/.hts"
+   chown ${HTS_USER}:${HTS_USER} "${HTS_HOME}/.hts/tvheadend"
 
    HTS_SUPERUSERCONF="${HTS_HOME}/.hts/tvheadend/superuser"
    rm -f "${HTS_SUPERUSERCONF}"
