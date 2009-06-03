@@ -253,7 +253,7 @@ dvr_rec_start(dvr_entry_t *de, htsmsg_t *m)
   enum CodecType codec_type;
   const char *codec_name;
   char urlname[512];
-  int err;
+  int err, r;
   htsmsg_field_t *f;
   htsmsg_t *sub, *streams;
   const char *type, *lang;
@@ -356,7 +356,11 @@ dvr_rec_start(dvr_entry_t *de, htsmsg_t *m)
     ctx->codec_id   = codec_id;
     ctx->codec_type = codec_type;
 
-    if(avcodec_open(ctx, codec) < 0) {
+    pthread_mutex_lock(&ffmpeg_lock);
+    r = avcodec_open(ctx, codec);
+    pthread_mutex_unlock(&ffmpeg_lock);
+
+    if(r < 0) {
       tvhlog(LOG_ERR, "dvr",
 	     "%s - Cannot open codec for %s, ignoring stream", 
 	     de->de_ititle, codec_name);
@@ -703,7 +707,9 @@ dvr_thread_epilog(dvr_entry_t *de)
   
   for(i = 0; i < fctx->nb_streams; i++) {
     st = fctx->streams[i];
+    pthread_mutex_lock(&ffmpeg_lock);
     avcodec_close(st->codec);
+    pthread_mutex_unlock(&ffmpeg_lock);
     free(st->codec);
     free(st);
   }

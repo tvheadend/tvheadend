@@ -37,6 +37,7 @@
 #include "redblack.h"
 
 extern pthread_mutex_t global_lock;
+extern pthread_mutex_t ffmpeg_lock;
 
 static inline void
 lock_assert0(pthread_mutex_t *l, const char *file, int line)

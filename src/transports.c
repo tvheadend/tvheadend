@@ -86,8 +86,11 @@ transport_stop(th_transport_t *t)
     if(st->st_parser != NULL)
       av_parser_close(st->st_parser);
     
-    if(st->st_ctx != NULL)
+    if(st->st_ctx != NULL) {
+      pthread_mutex_lock(&ffmpeg_lock);
       avcodec_close(st->st_ctx);
+      pthread_mutex_unlock(&ffmpeg_lock);
+    }
 
     av_free(st->st_ctx);
 
@@ -244,8 +247,10 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
       c = avcodec_find_decoder(id);
       if(c != NULL) {
 	st->st_ctx = avcodec_alloc_context();
+	pthread_mutex_lock(&ffmpeg_lock);
 	avcodec_open(st->st_ctx, c);
-	st->st_parser = av_parser_init(id);
+	pthread_mutex_unlock(&ffmpeg_lock);
+      st->st_parser = av_parser_init(id);
       } else {
 	abort();
       }

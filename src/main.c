@@ -60,6 +60,7 @@ extern const char *htsversion_full;
 time_t dispatch_clock;
 static LIST_HEAD(, gtimer) gtimers;
 pthread_mutex_t global_lock;
+pthread_mutex_t ffmpeg_lock;
 
 static void
 handle_sigpipe(int x)
@@ -289,6 +290,8 @@ main(int argc, char **argv)
   openlog("tvheadend", LOG_PID, logfacility);
 
   hts_settings_init("tvheadend", homedir);
+
+  pthread_mutex_init(&ffmpeg_lock, NULL);
 
   pthread_mutex_init(&global_lock, NULL);
 
