@@ -72,8 +72,10 @@ subscription_link_transport(th_subscription_t *s, th_transport_t *t)
   streaming_target_deliver(s->ths_output, sm);
 
   // Send a TRANSPORT_STATUS message to the subscription client
-  sm = streaming_msg_create_code(SMT_TRANSPORT_STATUS, t->tht_feed_status);
-  streaming_target_deliver(s->ths_output, sm);
+  if(t->tht_feed_status != TRANSPORT_FEED_UNKNOWN) {
+    sm = streaming_msg_create_code(SMT_TRANSPORT_STATUS, t->tht_feed_status);
+    streaming_target_deliver(s->ths_output, sm);
+  }
 
   pthread_mutex_unlock(&t->tht_stream_mutex);
 }

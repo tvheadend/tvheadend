@@ -322,7 +322,7 @@ typedef enum {
   /** No status known */
   TRANSPORT_FEED_UNKNOWN,
 
-  /** No input is received from source at all */
+  /** No packets are received from source at all */
   TRANSPORT_FEED_NO_INPUT,
 
   /** No input is received from source destined for this transport */

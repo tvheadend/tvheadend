@@ -37,6 +37,7 @@
 #include "access.h"
 #include "htsp.h"
 #include "streaming.h"
+#include "transports.h"
 
 #include "htsmsg_binary.h"
 
@@ -1159,35 +1160,9 @@ htsp_subscription_transport_status(htsp_subscription_t *hs,
 {
   const char *err = NULL;
 
-  switch(status) {
-  case TRANSPORT_FEED_UNKNOWN:
-    return;
+  if(status != TRANSPORT_FEED_VALID_PACKETS)
+    err = transport_feed_status_to_text(status);
 
-  case TRANSPORT_FEED_NO_INPUT:
-    err = "No data input from adapter detected";
-    break;
-
-  case TRANSPORT_FEED_NO_DEMUXED_INPUT:
-    err = "No mux packets for this service";
-    break;
-
-  case TRANSPORT_FEED_RAW_INPUT:
-    err = "Data received for service, "
-      "but no packets could be reassembled";
-    break;
-
-  case TRANSPORT_FEED_NO_DESCRAMBLER:
-    err = "No descrambler available for service";
-    break;
-
-  case TRANSPORT_FEED_NO_ACCESS:
-    err = "Access denied";
-    break;
-
-  case TRANSPORT_FEED_VALID_PACKETS:
-    err = NULL;
-    break;  
-  }
   htsp_subscription_status(hs, err);
 }
  

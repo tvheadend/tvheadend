@@ -114,40 +114,12 @@ serviceprobe_thread(void *aux)
       if(sm->sm_type == SMT_TRANSPORT_STATUS) {
 	status = sm->sm_code;
 
-	switch(status) {
-	case TRANSPORT_FEED_UNKNOWN:
-	  break;
+	run = 0;
 
-	case TRANSPORT_FEED_NO_INPUT:
-	  err = "No data input from adapter detected";
-	  run = 0;
-	  break;
-
-	case TRANSPORT_FEED_NO_DEMUXED_INPUT:
-	  err = "No mux packets for this service";
-	  run = 0;
-	  break;
-
-	case TRANSPORT_FEED_RAW_INPUT:
-	  err = "Data received for service, "
-	    "but no packets could be reassembled";
-	  run = 0;
-	  break;
-
-	case TRANSPORT_FEED_NO_DESCRAMBLER:
-	  err = "No descrambler available for service";
-	  run = 0;
-	  break;
-
-	case TRANSPORT_FEED_NO_ACCESS:
-	  err = "Access denied";
-	  run = 0;
-	  break;
-
-	case TRANSPORT_FEED_VALID_PACKETS:
+	if(status == TRANSPORT_FEED_VALID_PACKETS) {
 	  err = NULL;
-	  run = 0;
-	  break;
+	} else {
+	  err = transport_feed_status_to_text(status);
 	}
       }
 

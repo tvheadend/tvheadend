@@ -31,6 +31,7 @@
 #include "streaming.h"
 #include "dvr.h"
 #include "spawn.h"
+#include "transports.h"
 
 typedef struct dvr_rec_stream {
   LIST_ENTRY(dvr_rec_stream) drs_link;
@@ -431,6 +432,9 @@ dvr_thread(void *aux)
       break;
 
     case SMT_TRANSPORT_STATUS:
+      if(sm->sm_code != TRANSPORT_FEED_VALID_PACKETS)
+	dvr_rec_fatal_error(de, "Source problems: %s", 
+			    transport_feed_status_to_text(sm->sm_code));
       break;
 
     case SMT_NOSOURCE:

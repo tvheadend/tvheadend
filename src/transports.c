@@ -666,25 +666,6 @@ transport_set_feed_status(th_transport_t *t, transport_feed_status_t newstatus)
 						  newstatus));
 }
 
-
-/**
- * Table for status -> text conversion
- */
-static struct strtab transportstatustab[] = {
-  { "Ok",             TRANSPORT_FEED_VALID_PACKETS },
-  { "No input",       TRANSPORT_FEED_NO_INPUT },
-  { "No descrambler", TRANSPORT_FEED_NO_DESCRAMBLER },
-  { "No access",      TRANSPORT_FEED_NO_ACCESS },
-};
-
-
-const char *
-transport_status_to_text(int status)
-{
-  return val2str(status, transportstatustab) ?: "Unknown";
-}
-
-
 /**
  * Generate a message containing info about all components
  *
@@ -717,6 +698,42 @@ transport_build_stream_start_msg(th_transport_t *t)
   htsmsg_add_str(m, "network", t->tht_networkname(t));
   htsmsg_add_str(m, "source", t->tht_sourcename(t));
   return m;
+}
+
+
+
+
+/**
+ * Table for status -> text conversion
+ */
+static struct strtab transportstatustab[] = {
+  { "Unknown",
+    TRANSPORT_FEED_UNKNOWN },
+
+  { "No data input from adapter detected",  
+    TRANSPORT_FEED_NO_INPUT},
+
+  {"No mux packets for this service",
+   TRANSPORT_FEED_NO_DEMUXED_INPUT},
+
+  {"Data received for service, but no packets could be reassembled",
+   TRANSPORT_FEED_RAW_INPUT},
+
+  {"No descrambler available for service",
+   TRANSPORT_FEED_NO_DESCRAMBLER},
+
+  {"Access denied",
+   TRANSPORT_FEED_NO_ACCESS},
+
+  {"OK",
+   TRANSPORT_FEED_VALID_PACKETS},
+};
+
+
+const char *
+transport_feed_status_to_text(transport_feed_status_t status)
+{
+  return val2str(status, transportstatustab) ?: "Unknown";
 }
 
 

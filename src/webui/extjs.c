@@ -580,7 +580,7 @@ build_transport_msg(th_transport_t *t)
   htsmsg_add_str(r, "network", t->tht_networkname(t));
   htsmsg_add_str(r, "source", t->tht_sourcename(t));
 
-  htsmsg_add_str(r, "status", transport_status_to_text(t->tht_feed_status));
+  htsmsg_add_str(r, "status", "");
 
   video[0] = 0;
   audio[0] = 0;

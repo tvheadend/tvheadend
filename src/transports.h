@@ -60,7 +60,7 @@ void transport_destroy(th_transport_t *t);
 void transport_set_feed_status(th_transport_t *t, 
 			       transport_feed_status_t newstatus);
 
-const char *transport_status_to_text(int status);
+const char *transport_feed_status_to_text(transport_feed_status_t status);
 
 void transport_remove_subscriber(th_transport_t *t, th_subscription_t *s);
 
