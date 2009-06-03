@@ -80,7 +80,7 @@ transport_find_stream_by_pid(th_transport_t *t, int pid)
   return NULL;
 }
 
-htsmsg_t *transport_build_stream_msg(th_transport_t *t);
+htsmsg_t *transport_build_stream_start_msg(th_transport_t *t);
 
 
 #endif /* TRANSPORTS_H */

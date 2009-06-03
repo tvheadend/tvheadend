@@ -1113,12 +1113,10 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
  * delivery start and all components.
  */
 static void
-htsp_subscription_start(htsp_subscription_t *hs, htsmsg_t *streams)
+htsp_subscription_start(htsp_subscription_t *hs, htsmsg_t *m)
 {
-  htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "subscriptionStart");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
-  htsmsg_add_msg(m, "streams", streams);
   htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
 }
 

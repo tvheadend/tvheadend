@@ -687,15 +687,18 @@ transport_status_to_text(int status)
  * great care if you change anying. (Just adding is fine)
  */
 htsmsg_t *
-transport_build_stream_msg(th_transport_t *t)
+transport_build_stream_start_msg(th_transport_t *t)
 {
-  htsmsg_t *streams, *c;
+  htsmsg_t *m, *streams, *c;
   th_stream_t *st;
 
   lock_assert(&t->tht_stream_mutex);
   
+  m = htsmsg_create_map();
+
   /* Setup each stream */ 
   streams = htsmsg_create_list();
+
   LIST_FOREACH(st, &t->tht_components, st_link) {
     c = htsmsg_create_map();
     htsmsg_add_u32(c, "index", st->st_index);
@@ -704,7 +707,11 @@ transport_build_stream_msg(th_transport_t *t)
       htsmsg_add_str(c, "language", st->st_lang);
     htsmsg_add_msg(streams, NULL, c);
   }
-  return streams;
+
+  htsmsg_add_msg(m, "streams", streams);
+  htsmsg_add_str(m, "network", t->tht_networkname(t));
+  htsmsg_add_str(m, "source", t->tht_sourcename(t));
+  return m;
 }
 
 

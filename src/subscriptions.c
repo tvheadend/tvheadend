@@ -66,7 +66,9 @@ subscription_link_transport(th_subscription_t *s, th_transport_t *t)
   streaming_target_connect(&t->tht_streaming_pad, &s->ths_input);
 
   // Send a START message to the subscription client
-  sm = streaming_msg_create_msg(SMT_START, transport_build_stream_msg(t));
+  sm = streaming_msg_create_msg(SMT_START, 
+				transport_build_stream_start_msg(t));
+
   streaming_target_deliver(s->ths_output, sm);
 
   // Send a TRANSPORT_STATUS message to the subscription client

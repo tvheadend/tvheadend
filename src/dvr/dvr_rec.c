@@ -242,7 +242,7 @@ dvr_rec_fatal_error(dvr_entry_t *de, const char *fmt, ...)
  *
  */
 static void
-dvr_rec_start(dvr_entry_t *de, htsmsg_t *streams)
+dvr_rec_start(dvr_entry_t *de, htsmsg_t *m)
 {
   dvr_rec_stream_t *drs;
   AVOutputFormat *fmt;
@@ -255,9 +255,12 @@ dvr_rec_start(dvr_entry_t *de, htsmsg_t *streams)
   char urlname[512];
   int err;
   htsmsg_field_t *f;
-  htsmsg_t *sub;
+  htsmsg_t *sub, *streams;
   const char *type, *lang;
   uint32_t idx;
+
+  if((streams = htsmsg_get_list(m, "streams")) == NULL)
+    abort();
 
   if(pvr_generate_filename(de) != 0) {
     dvr_rec_fatal_error(de, "Unable to create directories");
@@ -300,6 +303,7 @@ dvr_rec_start(dvr_entry_t *de, htsmsg_t *streams)
   }
 
   av_set_parameters(fctx, NULL);
+
 
   /**
    * Setup each stream
@@ -368,6 +372,12 @@ dvr_rec_start(dvr_entry_t *de, htsmsg_t *streams)
 
   de->de_fctx = fctx;
   de->de_ts_offset = AV_NOPTS_VALUE;
+
+  tvhlog(LOG_INFO, "dvr",
+	 "%s - Recording from %s (%s)",
+	 de->de_ititle,
+	 htsmsg_get_str(m, "source"), htsmsg_get_str(m, "network"));
+
 }
 
 
