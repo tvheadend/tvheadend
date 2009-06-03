@@ -8,7 +8,14 @@ hts-tvheadend (2.2) hts; urgency=low
 
   * Add -h option to display usage.
 
- -- Andreas Öman <andreas@lonelycoder.com>  Thu, 28 May 2009 21:07:44 +0200
+  * Rewrite the internal streaming pipeline.
+    This is not externally visible, but needed for a future timeshifter.
+
+  * Make it compile on gcc 4.4
+
+  * Send 'source' and 'network' information in HTSP.subscriptionStart message.
+
+-- Andreas Öman <andreas@lonelycoder.com>  Wed, 03 Jun 2009 23:11:30 +0200
 
 hts-tvheadend (2.1) hts; urgency=low
 
