@@ -355,8 +355,6 @@ typedef struct th_transport {
     TRANSPORT_DVB,
     TRANSPORT_IPTV,
     TRANSPORT_V4L,
-    TRANSPORT_AVGEN,
-    TRANSPORT_STREAMEDFILE,
   } tht_type;
 
   enum {

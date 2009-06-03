@@ -268,10 +268,6 @@ static int
 transport_get_prio(th_transport_t *t)
 {
   switch(t->tht_type) {
-  case TRANSPORT_AVGEN:
-  case TRANSPORT_STREAMEDFILE:
-    return 0;
-    
   case TRANSPORT_DVB:
     if(t->tht_scrambled)
       return 3;
