@@ -1,6 +1,8 @@
 hts-tvheadend (2.2) hts; urgency=low
 
-  * Set $HOME so forked processes (XMLTV) will have correct environment.
+  * Set $HOME so forked processes (XMLTV) will have correct environment
+    and to make the default storage of recorded videos to end up in the
+    correct place.
 
   * Update built-in DVB muxes to dvb-apps:1275:9655c8cfeed8
 
