@@ -44,7 +44,6 @@
 
 struct th_dvb_adapter_queue dvb_adapters;
 struct th_dvb_mux_instance_tree dvb_muxes;
-//static void dvb_fec_monitor(void *aux, int64_t now);
 static void *dvb_adapter_input_dvr(void *aux);
 
 
@@ -272,80 +271,6 @@ dvb_adapter_notify_reload(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "reload", 1);
   notify_by_msg("dvbadapter", m);
 }
-
-
-#if 0
-
-
-/**
- *
- */
-static void
-dvb_fec_monitor(void *aux, int64_t now)
-{
-  th_dvb_adapter_t *tda = aux;
-  th_dvb_mux_instance_t *tdmi;
-  int i, v, vv, n;
-  const char *s;
-  int savemux = 0;
-
-  dtimer_arm(&tda->tda_fec_monitor_timer, dvb_fec_monitor, tda, 1);
-
-  tdmi = tda->tda_mux_current;
-  if(tdmi == NULL)
-    return;
-  if(tdmi->tdmi_status == NULL) {
-
-    v = vv = 0;
-    for(i = 0; i < TDMI_FEC_ERR_HISTOGRAM_SIZE; i++) {
-      if(tdmi->tdmi_fec_err_histogram[i] > DVB_FEC_ERROR_LIMIT)
-	v++;
-      vv += tdmi->tdmi_fec_err_histogram[i];
-    }
-    vv /= TDMI_FEC_ERR_HISTOGRAM_SIZE;
-
-    if(v == TDMI_FEC_ERR_HISTOGRAM_SIZE) {
-      if(LIST_FIRST(&tda->tda_transports) != NULL) {
-	tvhlog(LOG_ERR, "dvb",
-	       "\"%s\": Constant rate of FEC errors (average at %d / s), "
-	       "last %d seconds, flushing subscribers\n", 
-	       tdmi->tdmi_identifier, vv,
-	       TDMI_FEC_ERR_HISTOGRAM_SIZE);
-
-	dvb_adapter_clean(tdmi->tdmi_adapter);
-      }
-    }
-  }
-  
-  n = dvb_mux_badness(tdmi);
-  if(n > 0) {
-    i = MAX(tdmi->tdmi_quality - n, 0);
-    if(i != tdmi->tdmi_quality) {
-      tdmi->tdmi_quality = i;
-      dvb_notify_mux_quality(tdmi);
-      savemux = 1;
-    }
-  } else {
-
-    if(tdmi->tdmi_quality < 100) {
-      tdmi->tdmi_quality++;
-      dvb_notify_mux_quality(tdmi);
-      savemux = 1;
-    }
-  }
-
-  s = dvb_mux_status(tdmi);
-  if(strcmp(s, tdmi->tdmi_last_status)) {
-    free(tdmi->tdmi_last_status);
-    tdmi->tdmi_last_status = strdup(s);
-    dvb_notify_mux_status(tdmi);
-    savemux = 1;
-  }
-
-  if(savemux)
-    dvb_mux_save(tdmi);
-}
-#endif
 
 
 /**
