@@ -392,6 +392,8 @@ transport_destroy(th_transport_t *t)
   
   lock_assert(&global_lock);
 
+  serviceprobe_delete(t);
+
   while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL) {
     subscription_unlink_transport(s);
   }
@@ -421,7 +423,6 @@ transport_destroy(th_transport_t *t)
     free(st);
   }
 
-  abort();//  serviceprobe_delete(t);
   transport_unref(t);
 }
 

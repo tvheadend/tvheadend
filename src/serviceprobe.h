@@ -23,4 +23,6 @@ void serviceprobe_init(void);
 
 void serviceprobe_enqueue(th_transport_t *t);
 
+void serviceprobe_delete(th_transport_t *t);
+
 #endif /* SERVICEPROBE_H_ */

@@ -59,6 +59,20 @@ serviceprobe_enqueue(th_transport_t *t)
   pthread_cond_signal(&serviceprobe_cond);
 }
 
+
+/**
+ *
+ */
+void
+serviceprobe_delete(th_transport_t *t)
+{
+  if(!t->tht_sp_onqueue)
+    return;
+  TAILQ_REMOVE(&serviceprobe_queue, t, tht_sp_link);
+  t->tht_sp_onqueue = 0;
+}
+
+
 /**
  *
  */
