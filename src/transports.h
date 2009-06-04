@@ -64,10 +64,6 @@ const char *transport_feed_status_to_text(transport_feed_status_t status);
 
 void transport_remove_subscriber(th_transport_t *t, th_subscription_t *s);
 
-//void transport_link_muxer(th_transport_t *t, th_muxer_t *tm);
-
-//void transport_unlink_muxer(th_muxer_t *tm);
-
 static inline th_stream_t *
 transport_find_stream_by_pid(th_transport_t *t, int pid)
 {

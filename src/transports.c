@@ -64,8 +64,6 @@ transport_stop(th_transport_t *t)
  
   gtimer_disarm(&t->tht_receive_timer);
 
-  //  dtimer_disarm(&transport_monitor_timer, transport_monitor, t, 1);
-
   t->tht_stop_feed(t);
 
   pthread_mutex_lock(&t->tht_stream_mutex);
@@ -150,47 +148,6 @@ transport_remove_subscriber(th_transport_t *t, th_subscription_t *s)
   if(LIST_FIRST(&t->tht_subscriptions) == NULL)
     transport_stop(t);
 }
-
-#if 0
-/**
- *
- */
-void
-transport_link_muxer(th_transport_t *t, th_muxer_t *tm)
-{
-  lock_assert(&global_lock);
-
-  if(tm->tm_transport != NULL) {
-    assert(tm->tm_transport == t);
-    return;
-  }
-
-  pthread_mutex_lock(&t->tht_stream_mutex);
-  LIST_INSERT_HEAD(&t->tht_muxers, tm, tm_transport_link);
-  pthread_mutex_unlock(&t->tht_stream_mutex);
-  tm->tm_transport = t;
-}
-
-
-/**
- *
- */
-void
-transport_unlink_muxer(th_muxer_t *tm)
-{
-  th_transport_t *t = tm->tm_transport;
-
-  if(t == NULL)
-    return;
-
-  lock_assert(&global_lock);
-
-  pthread_mutex_lock(&t->tht_stream_mutex);
-  LIST_REMOVE(tm, tm_transport_link);
-  pthread_mutex_unlock(&t->tht_stream_mutex);
-  tm->tm_transport = NULL;
-}
-#endif
 
 
 /**
@@ -438,8 +395,6 @@ transport_destroy(th_transport_t *t)
   while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL) {
     subscription_unlink_transport(s);
   }
-
-  //dtimer_disarm(&t->tht_receive_timer);
 
   free((void *)t->tht_name);
 
