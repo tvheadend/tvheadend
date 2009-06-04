@@ -35,6 +35,8 @@
 #include "dtable.h"
 #include "epg.h"
 
+dtable_t *autorec_dt;
+
 TAILQ_HEAD(dvr_autorec_entry_queue, dvr_autorec_entry);
 
 struct dvr_autorec_entry_queue autorec_entries;
@@ -256,7 +258,7 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
       LIST_REMOVE(dae, dae_channel_link);
       dae->dae_channel = NULL;
     }
-     if((ch = channel_find_by_name(s, 0)) != NULL) {
+    if((ch = channel_find_by_name(s, 0)) != NULL) {
       LIST_INSERT_HEAD(&ch->ch_autorecs, dae, dae_channel_link);
       dae->dae_channel = ch;
     }
@@ -333,11 +335,9 @@ static const dtable_class_t autorec_dtc = {
 void
 dvr_autorec_init(void)
 {
-  dtable_t *dt;
-
   TAILQ_INIT(&autorec_entries);
-  dt = dtable_create(&autorec_dtc, "autorec", NULL);
-  dtable_load(dt);
+  autorec_dt = dtable_create(&autorec_dtc, "autorec", NULL);
+  dtable_load(autorec_dt);
 }
 
 
@@ -441,4 +441,25 @@ dvr_autorec_check_just_enabled(dvr_autorec_entry_t *dae)
     if(autorec_cmp(dae, ch->ch_epg_current))
       autorec_schedule(ch->ch_epg_current, dae);
   }
+}
+
+
+/**
+ *
+ */
+void
+autorec_destroy_by_channel(channel_t *ch)
+{
+  dvr_autorec_entry_t *dae;
+  htsmsg_t *m;
+
+  while((dae = LIST_FIRST(&ch->ch_autorecs)) != NULL) {
+    dtable_record_erase(autorec_dt, dae->dae_id);
+    autorec_entry_destroy(dae);
+  }
+
+  /* Notify web clients that we have messed with the tables */
+  m = htsmsg_create_map();
+  htsmsg_add_u32(m, "asyncreload", 1);
+  notify_by_msg("autorec", m);
 }

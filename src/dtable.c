@@ -214,3 +214,13 @@ dtable_record_store(dtable_t *dt, const char *id, htsmsg_t *r)
 {
   hts_settings_save(r, "%s/%s", dt->dt_tablename, id);
 }
+
+
+/**
+ *
+ */
+void
+dtable_record_erase(dtable_t *dt, const char *id)
+{
+  hts_settings_remove("%s/%s", dt->dt_tablename, id);
+}

@@ -383,6 +383,8 @@ channel_delete(channel_t *ch)
   tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" deleted",
 	 ch->ch_name);
 
+  autorec_destroy_by_channel(ch);
+
   dvr_destroy_by_channel(ch);
 
   while((t = LIST_FIRST(&ch->ch_transports)) != NULL) {
@@ -398,8 +400,6 @@ channel_delete(channel_t *ch)
   }
 
   epg_unlink_from_channel(ch);
-
-  fprintf(stderr, "!!!!!//autorec_destroy_by_channel(ch);\n");
 
   hts_settings_remove("channels/%d", ch->ch_id);
 

@@ -175,4 +175,6 @@ void dvr_autorec_add(const char *title, const char *channel,
 
 void dvr_autorec_check(event_t *e);
 
+void autorec_destroy_by_channel(channel_t *ch);
+
 #endif /* DVR_H  */

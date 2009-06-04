@@ -72,4 +72,6 @@ htsmsg_t *dtable_record_get_all(dtable_t *dt);
 
 void dtable_record_store(dtable_t *dt, const char *id, htsmsg_t *r);
 
+void dtable_record_erase(dtable_t *dt, const char *id);
+
 #endif /* DTABLE_H__ */
