@@ -61,6 +61,8 @@ time_t dispatch_clock;
 static LIST_HEAD(, gtimer) gtimers;
 pthread_mutex_t global_lock;
 pthread_mutex_t ffmpeg_lock;
+static int log_stderr;
+static int log_decorate;
 
 static void
 handle_sigpipe(int x)
@@ -82,8 +84,9 @@ pull_chute (int sig)
   if(getcwd(pwd, sizeof(pwd)) == NULL)
     strncpy(pwd, strerror(errno), sizeof(pwd));
 
-  syslog(LOG_ERR, "HTS Tvheadend crashed on signal %i (pwd \"%s\")",
-	 sig, pwd);
+  tvhlog_spawn(LOG_ERR, "CRASH", 
+	       "HTS Tvheadend crashed on signal %i (pwd \"%s\")",
+	       sig, pwd);
 }
 
 /**
@@ -284,6 +287,9 @@ main(int argc, char **argv)
     umask(0);
   }
 
+  log_stderr = !forkaway;
+  log_decorate = isatty(2);
+
   sigfillset(&set);
   sigprocmask(SIG_BLOCK, &set, NULL);
 
@@ -345,19 +351,14 @@ main(int argc, char **argv)
 
   pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 
-  syslog(LOG_NOTICE, "HTS Tvheadend version %s started, "
+  tvhlog(LOG_NOTICE, "START", "HTS Tvheadend version %s started, "
 	 "running as pid:%d uid:%d gid:%d, settings located in '%s'",
 	 htsversion_full,
 	 getpid(), getuid(), getgid(), hts_settings_get_root());
   
- if(!forkaway)
-    fprintf(stderr, "\nHTS Tvheadend version %s started.\n"
-	    "Settings located in '%s'\n",
-	    htsversion_full, hts_settings_get_root());
-
   mainloop();
 
-  syslog(LOG_NOTICE, "Exiting HTS Tvheadend");
+  tvhlog(LOG_NOTICE, "STOP", "Exiting HTS Tvheadend");
 
   if(forkaway)
     unlink("/var/run/tvheadend.pid");
@@ -366,14 +367,27 @@ main(int argc, char **argv)
 
 }
 
+
+static const char *logtxtmeta[8][2] = {
+  {"EMERGENCY", "\033[31m"},
+  {"ALERT",     "\033[31m"},
+  {"CRITICAL",  "\033[31m"},
+  {"ERROR",     "\033[31m"},
+  {"WARNING",   "\033[33m"},
+  {"NOTICE",    "\033[36m"},
+  {"INFO",      "\033[32m"},
+  {"DEBUG",     "\033[32m"},
+};
+
+
+
 /**
- *
+ * Internal log function
  */
-void
-tvhlog(int severity, const char *subsys, const char *fmt, ...)
+static void
+tvhlogv(int notify, int severity, const char *subsys, const char *fmt, 
+	va_list ap)
 {
-  va_list ap;
-  htsmsg_t *m;
   char buf[512];
   char buf2[512];
   char t[50];
@@ -383,27 +397,74 @@ tvhlog(int severity, const char *subsys, const char *fmt, ...)
 
   l = snprintf(buf, sizeof(buf), "%s: ", subsys);
 
-  va_start(ap, fmt);
   vsnprintf(buf + l, sizeof(buf) - l, fmt, ap);
-  va_end(ap);
 
   syslog(severity, "%s", buf);
 
   /**
-   *
+   * Send notification to Comet (Push interface to web-clients)
    */
+  if(notify) {
+    htsmsg_t *m;
 
-  time(&now);
-  localtime_r(&now, &tm);
-  strftime(t, sizeof(t), "%b %d %H:%M:%S", &tm);
+    time(&now);
+    localtime_r(&now, &tm);
+    strftime(t, sizeof(t), "%b %d %H:%M:%S", &tm);
 
-  snprintf(buf2, sizeof(buf2), "%s %s", t, buf);
+    snprintf(buf2, sizeof(buf2), "%s %s", t, buf);
+    m = htsmsg_create_map();
+    htsmsg_add_str(m, "notificationClass", "logmessage");
+    htsmsg_add_str(m, "logtxt", buf2);
+    comet_mailbox_add_message(m);
+    htsmsg_destroy(m);
+  }
 
-  m = htsmsg_create_map();
-  htsmsg_add_str(m, "notificationClass", "logmessage");
-  htsmsg_add_str(m, "logtxt", buf2);
-  comet_mailbox_add_message(m);
-  htsmsg_destroy(m);
+  /**
+   * Write to stderr
+   */
+  
+  if(log_stderr) {
+    const char *leveltxt = logtxtmeta[severity][0];
+    const char *sgr      = logtxtmeta[severity][1];
+    const char *sgroff;
+
+    if(!log_decorate) {
+      sgr = "";
+      sgroff = "";
+    } else {
+      sgroff = "\033[0m";
+    }
+    fprintf(stderr, "%s[%s]:%s%s\n", sgr, leveltxt, buf, sgroff);
+  }
+}
+
+
+/**
+ *
+ */
+void
+tvhlog(int severity, const char *subsys, const char *fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt);
+  tvhlogv(1, severity, subsys, fmt, ap);
+  va_end(ap);
+}
+
+
+/**
+ * May be invoked from a forked process so we can't do any notification
+ * to comet directly.
+ *
+ * @todo Perhaps do it via a pipe?
+ */
+void
+tvhlog_spawn(int severity, const char *subsys, const char *fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt);
+  tvhlogv(0, severity, subsys, fmt, ap);
+  va_end(ap);
 }
 
 

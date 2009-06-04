@@ -610,6 +610,8 @@ void tvh_str_update(char **strp, const char *src);
 
 void tvhlog(int severity, const char *subsys, const char *fmt, ...);
 
+void tvhlog_spawn(int severity, const char *subsys, const char *fmt, ...);
+
 #define	LOG_EMERG	0	/* system is unusable */
 #define	LOG_ALERT	1	/* action must be taken immediately */
 #define	LOG_CRIT	2	/* critical conditions */
