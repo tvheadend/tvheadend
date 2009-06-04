@@ -32,8 +32,6 @@
 #include <linux/dvb/frontend.h>
 #include <linux/dvb/dmx.h>
 
-#include <syslog.h>
-
 #include "tvhead.h"
 #include "dvb.h"
 #include "dvb_support.h"

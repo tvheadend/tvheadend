@@ -25,12 +25,12 @@
 #include <stdarg.h>
 #include <string.h>
 #include <unistd.h>
-#include <syslog.h>
 #include <dirent.h>
 
 #include "htsmsg.h"
 #include "htsmsg_json.h"
 #include "settings.h"
+#include "tvhead.h"
 
 static char *settingspath;
 
@@ -110,7 +110,7 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
       snprintf(fullpath, sizeof(fullpath), "%s/%s", settingspath, path);
 
       if(stat(fullpath, &st) && mkdir(fullpath, 0700)) {
-	syslog(LOG_ALERT, "settings: Unable to create dir \"%s\": %s",
+	tvhlog(LOG_ALERT, "settings", "Unable to create dir \"%s\": %s",
 	       fullpath, strerror(errno));
 	return;
       }
@@ -121,7 +121,7 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
   snprintf(fullpath, sizeof(fullpath), "%s/%s.tmp", settingspath, path);
 
   if((fd = open(fullpath, O_CREAT | O_TRUNC | O_RDWR, 0700)) < 0) {
-    syslog(LOG_ALERT, "settings: Unable to create \"%s\" - %s",
+    tvhlog(LOG_ALERT, "settings", "Unable to create \"%s\" - %s",
 	    fullpath, strerror(errno));
     return;
   }
@@ -134,7 +134,7 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
   TAILQ_FOREACH(hd, &hq.hq_q, hd_link)
     if(write(fd, hd->hd_data + hd->hd_data_off, hd->hd_data_len) != 
        hd->hd_data_len) {
-      syslog(LOG_ALERT, "settings: Failed to write file \"%s\" - %s",
+      tvhlog(LOG_ALERT, "settings", "Failed to write file \"%s\" - %s",
 	      fullpath, strerror(errno));
       ok = 0;
       break;
