@@ -4,7 +4,7 @@ hts-tvheadend (2.2) hts; urgency=low
     and to make the default storage of recorded videos to end up in the
     correct place.
 
-  * Update built-in DVB muxes to dvb-apps:1275:9655c8cfeed8
+  * Update built-in DVB mux presets to dvb-apps:1275:9655c8cfeed8
 
   * Add -h option to display usage.
 
@@ -14,6 +14,9 @@ hts-tvheadend (2.2) hts; urgency=low
   * Make it compile on gcc 4.4
 
   * Send 'source' and 'network' information in HTSP.subscriptionStart message.
+
+  * When deleting a channel any channel-bound autorecording would stay in
+    memory and, sooner or later, cause a crash. This has now been fixed.
 
 -- Andreas Öman <andreas@lonelycoder.com>  Wed, 03 Jun 2009 23:11:30 +0200
 
