@@ -637,12 +637,7 @@ getclock_hires(void)
 
 
 extern time_t dispatch_clock;
-extern int startupcounter;
 extern struct th_transport_list all_transports;
 extern struct channel_tree channel_name_tree;
-extern struct th_subscription_list subscriptions;
-
-struct th_transport;
-struct th_stream;
 
 #endif /* TV_HEAD_H */
