@@ -479,8 +479,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
   streaming_target_init(&hs->hs_input, htsp_streaming_input, hs);
 
-  hs->hs_s = subscription_create_from_channel(ch, 500, "htsp", &hs->hs_input);
-
+  hs->hs_s = subscription_create_from_channel(ch, 500, htsp->htsp_logname,
+					      &hs->hs_input);
   return NULL;
 }
 
