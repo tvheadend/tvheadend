@@ -63,6 +63,7 @@ pthread_mutex_t global_lock;
 pthread_mutex_t ffmpeg_lock;
 static int log_stderr;
 static int log_decorate;
+int log_debug;
 
 static void
 handle_sigpipe(int x)
@@ -163,6 +164,7 @@ usage(const char *argv0)
 	 "                 it will allow world-wide administrative access\n"
 	 "                 to your Tvheadend installation until you edit\n"
 	 "                 the access-control from within the Tvheadend UI\n");
+  printf(" -d              Debug logging");
   printf("\n");
   printf("For more information read the man page or visit\n");
   printf(" http://www.lonelycoder.com/hts/\n");
@@ -227,7 +229,7 @@ main(int argc, char **argv)
   const char *contentpath = TVHEADEND_CONTENT_PATH;
   const char *homedir = NULL;
 
-  while((c = getopt(argc, argv, "fu:g:c:Ch")) != -1) {
+  while((c = getopt(argc, argv, "fu:g:c:Chd")) != -1) {
     switch(c) {
     case 'f':
       forkaway = 1;
@@ -240,6 +242,9 @@ main(int argc, char **argv)
       break;
     case 'c':
       contentpath = optarg;
+      break;
+    case 'd':
+      log_debug = 1;
       break;
     case 'C':
       createdefault = 1;

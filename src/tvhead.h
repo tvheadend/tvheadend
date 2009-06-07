@@ -621,6 +621,13 @@ void tvhlog_spawn(int severity, const char *subsys, const char *fmt, ...);
 #define	LOG_INFO	6	/* informational */
 #define	LOG_DEBUG	7	/* debug-level messages */
 
+extern int log_debug;
+
+#define DEBUGLOG(subsys, fmt...) do { \
+ if(log_debug) \
+  tvhlog(LOG_DEBUG, subsys, fmt); \
+} while(0)
+
 
 static inline int64_t 
 getclock_hires(void)
