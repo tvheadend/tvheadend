@@ -510,14 +510,11 @@ dvr_init(void)
 	dvr_storage = strdup(getcwd(buf, sizeof(buf)));
     }
 
-    fprintf(stderr, 
-	    "\nNotice: Digital Video Recorder\n");
-    fprintf(stderr, 
-	    "  Output directory for video recording is not yet configured.\n");
-    fprintf(stderr, 
-	    "  Defaulting to to \"%s\".\n", dvr_storage);
-    fprintf(stderr, 
-	    "  This can be changed from the web user interface.\n");
+    tvhlog(LOG_WARNING, "dvr",
+	   "Output directory for video recording is not yet configured. "
+	   "Defaulting to to \"%s\". "
+	   "This can be changed from the web user interface.",
+	   dvr_storage);
   }
 
   dvr_db_load();
