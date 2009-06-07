@@ -153,8 +153,11 @@ subscription_unsubscribe(th_subscription_t *s)
 
   LIST_REMOVE(s, ths_global_link);
 
-  if(s->ths_channel != NULL)
+  if(s->ths_channel != NULL) {
     LIST_REMOVE(s, ths_channel_link);
+    tvhlog(LOG_INFO, "subscription", "\"%s\" unsubscribing from \"%s\"",
+	   s->ths_title, s->ths_channel->ch_name);
+  }
 
   if(t != NULL)
     transport_remove_subscriber(t, s);
@@ -221,8 +224,15 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
     tvhlog(LOG_NOTICE, "subscription", 
 	   "No transponder available for subscription \"%s\" "
 	   "to channel \"%s\"",
-	   s->ths_title, s->ths_channel->ch_name);
-
+	   s->ths_title, ch->ch_name);
+  else
+    tvhlog(LOG_INFO, "subscription", 
+	   "\"%s\" subscribing on \"%s\", weight: %d, network: \"%s\", "
+	   "source: \"%s\", quality: %d",
+	   s->ths_title, ch->ch_name, weight,
+	   s->ths_transport->tht_networkname(s->ths_transport),
+	   s->ths_transport->tht_sourcename(s->ths_transport),
+	   s->ths_transport->tht_quality_index(s->ths_transport));
   return s;
 }
 
