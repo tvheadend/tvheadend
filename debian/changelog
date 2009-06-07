@@ -21,6 +21,8 @@ hts-tvheadend (2.2) hts; urgency=low
   * Add extra scan for XMLTV grabbers in $PATH. Apart from $PATH we also
     scan in /bin, /usr/bin, /usr/local/bin
 
+  * Search for XMLTV grabbers in /usr/bin/perlbin/vendor (archlinux)
+
 -- Andreas Öman <andreas@lonelycoder.com>  Wed, 03 Jun 2009 23:11:30 +0200
 
 hts-tvheadend (2.1) hts; urgency=low

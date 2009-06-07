@@ -714,6 +714,8 @@ xmltv_grabbers_index(void)
   change =  xmltv_scan_grabbers("/bin");
   change |= xmltv_scan_grabbers("/usr/bin");
   change |= xmltv_scan_grabbers("/usr/local/bin");
+  // Arch linux puts xmltv grabbers in /usr/bin/perlbin/vendor
+  change |= xmltv_scan_grabbers("/usr/bin/perlbin/vendor"); 
 
   if((path = getenv("PATH")) != NULL) {
     p = path = strdup(path);
