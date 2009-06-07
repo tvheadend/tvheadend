@@ -87,7 +87,8 @@ dvb_fe_monitor(void *aux)
   /**
    * Read out front end status
    */
-  ioctl(tda->tda_fe_fd, FE_READ_STATUS, &fe_status);
+  if(ioctl(tda->tda_fe_fd, FE_READ_STATUS, &fe_status))
+    fe_status = 0;
 
   if(fe_status & FE_HAS_LOCK)
     status = -1;
@@ -112,7 +113,9 @@ dvb_fe_monitor(void *aux)
 
   if(status == -1) {
     /* Read FEC counter (delta) */
-    ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &fec);
+
+    if(ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &fec))
+      fec = 0;
     
     tdmi->tdmi_fec_err_histogram[tdmi->tdmi_fec_err_ptr++] = fec;
     if(tdmi->tdmi_fec_err_ptr == TDMI_FEC_ERR_HISTOGRAM_SIZE)
