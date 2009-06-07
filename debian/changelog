@@ -27,7 +27,7 @@ hts-tvheadend (2.2) hts; urgency=low
     FE_READ_UNCORRECTED_BLOCKS operation to report insane amount of
     forward correction errors.
 
--- Andreas Öman <andreas@lonelycoder.com>  Wed, 03 Jun 2009 23:11:30 +0200
+-- Andreas Öman <andreas@lonelycoder.com>  Sun, 07 Jun 2009 19:22:49 +0200
 
 hts-tvheadend (2.1) hts; urgency=low
 
