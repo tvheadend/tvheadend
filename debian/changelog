@@ -23,6 +23,10 @@ hts-tvheadend (2.2) hts; urgency=low
 
   * Search for XMLTV grabbers in /usr/bin/perlbin/vendor (archlinux)
 
+  * Fix a bug causing DVB card which does not implement the 
+    FE_READ_UNCORRECTED_BLOCKS operation to report insane amount of
+    forward correction errors.
+
 -- Andreas Öman <andreas@lonelycoder.com>  Wed, 03 Jun 2009 23:11:30 +0200
 
 hts-tvheadend (2.1) hts; urgency=low
