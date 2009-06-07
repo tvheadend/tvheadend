@@ -118,7 +118,7 @@ dvb_transport_start(th_transport_t *t, unsigned int weight, int status,
   t->tht_status = status;
   
 
-  dvb_fe_tune(tdmi);
+  dvb_fe_tune(tdmi, "Transport start");
 
   pthread_mutex_unlock(&tda->tda_delivery_mutex);
 

@@ -312,7 +312,7 @@ dvb_adapter_mux_scanner(void *aux)
     /* Push to tail of queue */
     TAILQ_REMOVE(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
     TAILQ_INSERT_TAIL(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
-    dvb_fe_tune(tdmi);
+    dvb_fe_tune(tdmi, "Autoscan");
   }
 }
 

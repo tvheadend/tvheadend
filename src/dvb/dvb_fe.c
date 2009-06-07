@@ -141,7 +141,7 @@ dvb_fe_monitor(void *aux)
 
     dvb_mux_nicename(buf, sizeof(buf), tdmi);
 
-    tvhlog(LOG_NOTICE, "dvb", "\"%s\" on adapter \"%s\", status changed to %s",
+    DEBUGLOG("dvb", "\"%s\" on adapter \"%s\", status changed to %s",
 	   buf, tda->tda_displayname, dvb_mux_status(tdmi));
     savemux = 1;
   }
@@ -195,7 +195,7 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi)
  *
  */
 void
-dvb_fe_tune(th_dvb_mux_instance_t *tdmi)
+dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   struct dvb_frontend_parameters p = tdmi->tdmi_fe_params;
@@ -239,10 +239,15 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi)
       p.frequency = abs(p.frequency - lowfreq);
   }
 
+  dvb_mux_nicename(buf, sizeof(buf), tdmi);
+
   tda->tda_fe_monitor_hold = 4;
+
+  DEBUGLOG("dvb", "\"%s\" tuning to \"%s\" (%s)", tda->tda_rootpath, buf,
+	   reason);
+
   r = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, &p);
   if(r != 0) {
-    dvb_mux_nicename(buf, sizeof(buf), tdmi);
     tvhlog(LOG_ERR, "dvb", "\"%s\" tuning to \"%s\""
 	   " -- Front configuration failed -- %s",
 	   tda->tda_rootpath, buf, strerror(errno));
