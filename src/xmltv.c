@@ -706,6 +706,7 @@ xmltv_grabbers_index(void)
 {
   xmltv_grabber_t *xg, *next;
   int change;
+  char *path, *p, *s;
 
   LIST_FOREACH(xg, &xmltv_grabbers, xg_link)
     xg->xg_dirty = 1;
@@ -713,6 +714,14 @@ xmltv_grabbers_index(void)
   change =  xmltv_scan_grabbers("/bin");
   change |= xmltv_scan_grabbers("/usr/bin");
   change |= xmltv_scan_grabbers("/usr/local/bin");
+
+  if((path = getenv("PATH")) != NULL) {
+    p = path = strdup(path);
+ 
+    while((s = strsep(&p, ":")) != NULL)
+      change |= xmltv_scan_grabbers(s);
+    free(path);
+  }
 
   for(xg = LIST_FIRST(&xmltv_grabbers); xg != NULL; xg = next) {
     next = LIST_NEXT(xg, xg_link);
