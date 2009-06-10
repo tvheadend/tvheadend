@@ -420,7 +420,8 @@ access_init(int createdefault)
   dtable_t *dt;
   htsmsg_t *r, *m;
   access_entry_t *ae;
-  
+  const char *s;
+
   TAILQ_INIT(&access_entries);
 
   dt = dtable_create(&access_dtc, "accesscontrol", NULL);
@@ -446,8 +447,10 @@ access_init(int createdefault)
   /* Load superuser account */
 
   if((m = hts_settings_load("superuser")) != NULL) {
-    superuser_username = htsmsg_get_str(m, "username");
-    superuser_password = htsmsg_get_str(m, "password");
-    // Keep 'm' in memory
+    s = htsmsg_get_str(m, "username");
+    superuser_username = s ? strdup(s) : NULL;
+    s = htsmsg_get_str(m, "password");
+    superuser_password =s ? strdup(s) : NULL;
+    htsmsg_destroy(m);
   }
 }
