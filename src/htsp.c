@@ -41,6 +41,8 @@
 
 #include "htsmsg_binary.h"
 
+static void *htsp_server;
+
 #define HTSP_PROTO_VERSION 2
 
 #define HTSP_PRIV_MASK (ACCESS_STREAMING)
@@ -898,7 +900,7 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source)
 void
 htsp_init(void)
 {
-  tcp_server_create(9982, htsp_serve, NULL);
+  htsp_server = tcp_server_create(9982, htsp_serve, NULL);
 }
 
 /**

@@ -34,7 +34,6 @@
 #include "xmltv.h"
 #include "spawn.h"
 
-
 /**
  *
  */
@@ -517,13 +516,18 @@ void
 xmltv_init(void)
 {
   pthread_t ptid;
+
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+
   xmltv_grab_interval = 12; /* Default half a day */
   xmltv_grab_enabled  = 1;  /* Default on */
 
   /* Load all channels */
   xmltv_load();
  
-  pthread_create(&ptid, NULL, xmltv_thread, NULL);
+  pthread_create(&ptid, &attr, xmltv_thread, NULL);
 }
 
 
