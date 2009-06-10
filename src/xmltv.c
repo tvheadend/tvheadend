@@ -138,7 +138,9 @@ static void
 xmltv_save(xmltv_channel_t *xc)
 {
   htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "displayname", xc->xc_displayname);
+
+  if(xc->xc_displayname != NULL)
+    htsmsg_add_str(m, "displayname", xc->xc_displayname);
 
   if(xc->xc_icon != NULL)
     htsmsg_add_str(m, "icon", xc->xc_icon);
@@ -246,7 +248,7 @@ xmltv_channel_find_by_displayname(const char *name)
   lock_assert(&global_lock);
 
   LIST_FOREACH(xc, &xmltv_displaylist, xc_displayname_link)
-    if(xc->xc_displayname && !strcmp(xc->xc_displayname, name))
+    if(!strcmp(xc->xc_displayname, name))
       break;
   return xc;
 }
