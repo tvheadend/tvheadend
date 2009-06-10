@@ -238,14 +238,13 @@ hts_settings_load(const char *pathfmt, ...)
 
     for(i = 0; i < n; i++) {
       d = namelist[i];
-      if(d->d_name[0] == '.')
-	continue;
-      
-      snprintf(child, sizeof(child), "%s/%s", fullpath, d->d_name);
-      c = hts_settings_load_one(child);
-      if(c != NULL)
-	htsmsg_add_msg(r, d->d_name, c);
-
+      if(d->d_name[0] != '.') {
+	snprintf(child, sizeof(child), "%s/%s", fullpath, d->d_name);
+	c = hts_settings_load_one(child);
+	if(c != NULL)
+	  htsmsg_add_msg(r, d->d_name, c);
+      }
+      free(d);
     }
     free(namelist);
 
