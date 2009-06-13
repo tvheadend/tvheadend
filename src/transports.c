@@ -633,6 +633,7 @@ transport_build_stream_start_msg(th_transport_t *t)
 {
   htsmsg_t *m, *streams, *c;
   th_stream_t *st;
+  const char *n;
 
   lock_assert(&t->tht_stream_mutex);
   
@@ -651,7 +652,9 @@ transport_build_stream_start_msg(th_transport_t *t)
   }
 
   htsmsg_add_msg(m, "streams", streams);
-  htsmsg_add_str(m, "network", t->tht_networkname(t));
+  if((n = t->tht_networkname(t)) != NULL)
+      htsmsg_add_str(m, "network", n);
+
   htsmsg_add_str(m, "source", t->tht_sourcename(t));
   return m;
 }

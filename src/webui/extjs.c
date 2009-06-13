@@ -567,7 +567,7 @@ build_transport_msg(th_transport_t *t)
 {
   htsmsg_t *r = htsmsg_create_map();
   th_stream_t *st;
-
+  const char *n;
   char video[200];
   char audio[200];
   char subtitles[200];
@@ -577,7 +577,8 @@ build_transport_msg(th_transport_t *t)
   htsmsg_add_str(r, "name", t->tht_svcname);
 
   htsmsg_add_str(r, "provider", t->tht_provider ?: "");
-  htsmsg_add_str(r, "network", t->tht_networkname(t));
+  if((n = t->tht_networkname(t)) != NULL)
+    htsmsg_add_str(r, "network", n);
   htsmsg_add_str(r, "source", t->tht_sourcename(t));
 
   htsmsg_add_str(r, "status", "");

@@ -220,19 +220,22 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
 
   subscription_reschedule(NULL);
 
-  if(s->ths_transport == NULL)
+  if(s->ths_transport == NULL) {
     tvhlog(LOG_NOTICE, "subscription", 
 	   "No transponder available for subscription \"%s\" "
 	   "to channel \"%s\"",
 	   s->ths_title, ch->ch_name);
-  else
+  } else {
+    const char *n;
+    n = s->ths_transport->tht_networkname(s->ths_transport);
     tvhlog(LOG_INFO, "subscription", 
 	   "\"%s\" subscribing on \"%s\", weight: %d, network: \"%s\", "
 	   "source: \"%s\", quality: %d",
 	   s->ths_title, ch->ch_name, weight,
-	   s->ths_transport->tht_networkname(s->ths_transport),
+	   n ?: "<N/A>",
 	   s->ths_transport->tht_sourcename(s->ths_transport),
 	   s->ths_transport->tht_quality_index(s->ths_transport));
+  }
   return s;
 }
 
