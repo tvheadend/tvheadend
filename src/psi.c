@@ -258,6 +258,11 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
 	break;
 
       switch(dtag) {
+      case DVB_DESC_CA:
+	st = transport_add_stream(t, (ptr[2] & 0x1f) << 8 | ptr[3], SCT_CA);
+	st->st_caid = (ptr[0] << 8) | ptr[1];
+	break;
+
       case DVB_DESC_VIDEO_STREAM:
 	frameduration = mpeg2video_framedurations[(ptr[0] >> 3) & 0xf];
 	break;
