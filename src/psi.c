@@ -245,6 +245,9 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
     case 0x1b:
       hts_stream_type = SCT_H264;
       break;
+
+    default:
+      break;
     }
 
     memset(lang, 0, 4);
@@ -279,6 +282,11 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
       case DVB_DESC_AC3:
 	if(estype == 0x06 || estype == 0x81)
 	  hts_stream_type = SCT_AC3;
+	break;
+
+      case DVB_DESC_AAC:
+	if(estype == 0x11)
+	  hts_stream_type = SCT_AAC;
 	break;
 
       default:
@@ -539,6 +547,7 @@ static struct strtab streamtypetab[] = {
   { "CA",         SCT_CA },
   { "PMT",        SCT_PMT },
   { "PAT",        SCT_PAT },
+  { "AAC",        SCT_AAC },
 };
 
 

@@ -639,6 +639,12 @@ build_transport_msg(th_transport_t *t)
 	       st->st_pid);
       goto audio;
 
+    case SCT_AAC:
+      snprintf(audio + strlen(audio), sizeof(audio) - strlen(audio),
+	       "%sAAC (PID:%d", strlen(audio) > 0 ? ", " : "",
+	       st->st_pid);
+      goto audio;
+
     case SCT_CA:
       snprintf(scrambling + strlen(scrambling),
 	       sizeof(scrambling) - strlen(scrambling),

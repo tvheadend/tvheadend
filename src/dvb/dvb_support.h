@@ -44,6 +44,7 @@
 #define DVB_DESC_TELETEXT     0x56
 #define DVB_DESC_SUBTITLE     0x59
 #define DVB_DESC_AC3          0x6a
+#define DVB_DESC_AAC          0x7c
 
 int dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, 
 		   const size_t srclen);

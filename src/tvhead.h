@@ -120,6 +120,7 @@ typedef enum {
   SCT_CA,
   SCT_PAT,
   SCT_PMT,
+  SCT_AAC,
 } streaming_component_type_t;
 
 
@@ -390,6 +391,13 @@ typedef struct th_transport {
    * Refcount, operated using atomic.h ops.
    */ 
   int tht_refcount;
+
+  /**
+   *
+   */
+  int tht_flags;
+
+#define THT_DEBUG 0x1
 
   /**
    * Source type is used to determine if an output requesting
