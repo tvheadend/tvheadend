@@ -489,6 +489,10 @@ transport_add_stream(th_transport_t *t, int pid,
       return st;
   }
 
+  if(t->tht_flags & THT_DEBUG)
+      tvhlog(LOG_DEBUG, "transport", "%s: Add stream \"%s\", pid: %d",
+	     t->tht_identifier, streaming_component_type2txt(type), pid);
+
   st = calloc(1, sizeof(th_stream_t));
   st->st_index = i;
   st->st_type = type;
