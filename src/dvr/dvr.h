@@ -43,9 +43,9 @@ LIST_HEAD(dvr_rec_stream_list, dvr_rec_stream);
 typedef enum {
   DVR_SCHEDULED,         /* Scheduled for recording (in the future) */
   DVR_RECORDING,
-  DVR_COMPLETED          /* If recording failed, de->de_error is set to
+  DVR_COMPLETED,         /* If recording failed, de->de_error is set to
 			    a string */
-
+  DVR_NOSTATE,
 } dvr_entry_sched_state_t;
 
 
@@ -125,7 +125,7 @@ typedef struct dvr_entry {
 /**
  * Prototypes
  */
-void dvr_entry_create_by_event(event_t *e, const char *creator);
+dvr_entry_t *dvr_entry_create_by_event(event_t *e, const char *creator);
 
 void dvr_init(void);
 
@@ -139,9 +139,11 @@ void dvr_rec_unsubscribe(dvr_entry_t *de);
 
 dvr_entry_t *dvr_entry_find_by_id(int id);
 
+dvr_entry_t *dvr_entry_find_by_event(event_t *e);
+
 off_t dvr_get_filesize(dvr_entry_t *de);
 
-void dvr_entry_cancel(dvr_entry_t *de);
+dvr_entry_t *dvr_entry_cancel(dvr_entry_t *de);
 
 void dvr_entry_dec_ref(dvr_entry_t *de);
 

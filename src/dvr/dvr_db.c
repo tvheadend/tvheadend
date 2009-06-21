@@ -131,7 +131,7 @@ dvr_entry_link(dvr_entry_t *de)
 /**
  *
  */
-void
+dvr_entry_t *
 dvr_entry_create_by_event(event_t *e, const char *creator)
 {
   dvr_entry_t *de;
@@ -139,11 +139,11 @@ dvr_entry_create_by_event(event_t *e, const char *creator)
   struct tm tm;
 
   if(e->e_channel == NULL || e->e_title == NULL)
-    return;
+    return NULL;
 
   LIST_FOREACH(de, &e->e_channel->ch_dvrs, de_channel_link)
     if(de->de_start == e->e_start && de->de_sched_state != DVR_COMPLETED)
-      return;
+      return NULL;
 
   de = calloc(1, sizeof(dvr_entry_t));
   de->de_id = ++de_tally;
@@ -169,6 +169,7 @@ dvr_entry_create_by_event(event_t *e, const char *creator)
 	 
   dvrdb_changed();
   dvr_entry_save(de);
+  return de;
 }
 
 
@@ -403,25 +404,44 @@ dvr_entry_find_by_id(int id)
   return de;  
 }
 
+
 /**
  *
  */
-void
+dvr_entry_t *
+dvr_entry_find_by_event(event_t *e)
+{
+  dvr_entry_t *de;
+
+  LIST_FOREACH(de, &e->e_channel->ch_dvrs, de_channel_link)
+    if(de->de_start == e->e_start &&
+       de->de_stop  == e->e_stop)
+      return de;
+  return NULL;
+}
+
+/**
+ *
+ */
+dvr_entry_t *
 dvr_entry_cancel(dvr_entry_t *de)
 {
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:
     dvr_entry_remove(de);
-    break;
+    return NULL;
 
   case DVR_RECORDING:
     de->de_dont_reschedule = 1;
     dvr_stop_recording(de, "Aborted by user");
-    break;
+    return de;
 
   case DVR_COMPLETED:
     dvr_entry_remove(de);
-    break;
+    return NULL;
+
+  default:
+    abort();
   }
 }
 
