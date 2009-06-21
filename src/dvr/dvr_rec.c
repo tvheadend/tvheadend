@@ -569,7 +569,7 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
 
       de->de_header_written = 1;
 
-      tvhlog(LOG_ERR, "dvr",
+      tvhlog(LOG_INFO, "dvr",
 	     "%s - Header written to file, stream dump:", 
 	     de->de_ititle);
       
@@ -578,7 +578,7 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
 	
 	avcodec_string(txt, sizeof(txt), stx->codec, 1);
 	
-	tvhlog(LOG_ERR, "dvr", "%s - Stream #%d: %s [%d/%d]",
+	tvhlog(LOG_INFO, "dvr", "%s - Stream #%d: %s [%d/%d]",
 	       de->de_ititle, i, txt, 
 	       stx->time_base.num, stx->time_base.den);
 	
@@ -631,7 +631,7 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
       de->de_ts_com_offset += (pkt->pkt_dts - de->de_ts_com_start);
       de->de_rec_state = DE_RS_RUNNING;
 
-      tvhlog(LOG_ERR, "dvr", "%s - Skipped %lld seconds of commercials",
+      tvhlog(LOG_INFO, "dvr", "%s - Skipped %lld seconds of commercials",
 	     de->de_ititle, (pkt->pkt_dts - de->de_ts_com_start) / 1000000);
       goto outputpacket;
     }
