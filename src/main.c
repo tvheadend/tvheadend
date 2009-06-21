@@ -50,6 +50,7 @@
 #include "cwc.h"
 #include "dvr/dvr.h"
 #include "htsp.h"
+#include "rawtsinput.h"
 
 #include "parachute.h"
 #include "settings.h"
@@ -228,8 +229,9 @@ main(int argc, char **argv)
   sigset_t set;
   const char *contentpath = TVHEADEND_CONTENT_PATH;
   const char *homedir = NULL;
+  const char *rawts_input = NULL;
 
-  while((c = getopt(argc, argv, "fu:g:c:Chd")) != -1) {
+  while((c = getopt(argc, argv, "fu:g:c:Chdr:")) != -1) {
     switch(c) {
     case 'f':
       forkaway = 1;
@@ -248,6 +250,9 @@ main(int argc, char **argv)
       break;
     case 'C':
       createdefault = 1;
+      break;
+    case 'r':
+      rawts_input = optarg;
       break;
     default:
       usage(argv[0]);
@@ -338,6 +343,9 @@ main(int argc, char **argv)
   dvr_init();
 
   htsp_init();
+  
+  if(rawts_input != NULL)
+    rawts_init(rawts_input);
 
   pthread_mutex_unlock(&global_lock);
 

@@ -63,6 +63,7 @@ SRCS =  src/main.c \
 	src/parachute.c \
 	src/avg.c \
 	src/htsstr.c \
+	src/rawtsinput.c \
 
 SRCS += src/dvr/dvr_db.c \
 	src/dvr/dvr_rec.c \
