@@ -93,7 +93,8 @@ LDFLAGS += -lcrypt
 #
 SRCS += src/webui/webui.c \
 	src/webui/comet.c \
-	src/webui/extjs.c
+	src/webui/extjs.c \
+	src/webui/simpleui.c \
 
 # Various transformations
 SRCS  += $(SRCS-yes)

@@ -258,7 +258,7 @@ webui_init(const char *contentpath)
   webui_static_content(contentpath, "/docs",          "docs/html");
   webui_static_content(contentpath, "/docresources",  "docs/docresources");
 
-   //  simpleui_start();
+  simpleui_start();
   extjs_start();
   comet_init();
 

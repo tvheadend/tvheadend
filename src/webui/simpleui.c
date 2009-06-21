@@ -28,20 +28,15 @@
 #include "webui.h"
 #include "access.h"
 #include "epg.h"
-#include "pvr.h"
+#include "dvr/dvr.h"
 
 #define ACCESS_SIMPLE \
 (ACCESS_WEB_INTERFACE | ACCESS_RECORDER)
 
 static struct strtab recstatustxt[] = {
-  { "Recording scheduled", HTSTV_PVR_STATUS_SCHEDULED      },
-  { "Recording",           HTSTV_PVR_STATUS_RECORDING      },
-  { "Recording completed", HTSTV_PVR_STATUS_DONE           },
-  { "Recording aborted",   HTSTV_PVR_STATUS_ABORTED        },
-  { "No transponder",      HTSTV_PVR_STATUS_NO_TRANSPONDER },
-  { "File error",          HTSTV_PVR_STATUS_FILE_ERROR     },
-  { "Disk full",           HTSTV_PVR_STATUS_DISK_FULL      },
-  { "Buffer error",        HTSTV_PVR_STATUS_BUFFER_ERROR   },
+  { "Recording scheduled", DVR_SCHEDULED  },
+  { "Recording",           DVR_RECORDING, },
+  { "Recording completed", DVR_COMPLETED, },
 };
 
 const char *days[7] = {
@@ -52,32 +47,7 @@ const char *days[7] = {
   "Thursday",
   "Friday",
   "Saturday",
-  };
-
-
-static int
-pvrcmp(const void *A, const void *B)
-{
-  const pvr_rec_t *a = *(const pvr_rec_t **)A;
-  const pvr_rec_t *b = *(const pvr_rec_t **)B;
-
-  return a->pvrr_start - b->pvrr_start;
-}
-
-/**
- * Compare start for two events, used as argument to qsort(3)
- */
-static int
-eventcmp(const void *A, const void *B)
-{
-  const event_t *a = *(const event_t **)A;
-  const event_t *b = *(const event_t **)B;
-
-  return a->e_start - b->e_start;
-}
-
-
-
+};
 
 /**
  * Root page, we direct the client to different pages depending
@@ -89,13 +59,13 @@ page_simple(http_connection_t *hc,
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   const char *s = http_arg_get(&hc->hc_req_args, "s");
-  struct event_list events;
-  event_t *e, **ev;
+  event_t *e;
   int c, k, i;
   struct tm a, b, day;
-  time_t stop;
-  pvr_rec_t *pvrr, **pv;
+  dvr_entry_t *de;
+  dvr_query_result_t dqr;
   const char *rstatus;
+  epg_query_result_t eqr;
 
   htsbuf_qprintf(hq, "<html>");
   htsbuf_qprintf(hq, "<body>");
@@ -110,25 +80,21 @@ page_simple(http_connection_t *hc,
   
   htsbuf_qprintf(hq, "</form><hr>");
 
+  pthread_mutex_lock(&global_lock);
+
+
   if(s != NULL) {
     
-    LIST_INIT(&events);
-    c = epg_search(&events, s, NULL, NULL);
+    epg_query(&eqr, NULL, NULL, NULL, s);
+    epg_query_sort(&eqr);
 
-    if(c == -1) {
-      htsbuf_qprintf(hq, "<b>Event title: Regular expression syntax error</b>");
-    } else if(c == 0) {
+    c = eqr.eqr_entries;
+
+    if(eqr.eqr_entries == 0) {
       htsbuf_qprintf(hq, "<b>No matching entries found</b>");
     } else {
 
       htsbuf_qprintf(hq, "<b>%d entries found", c);
-
-      ev = alloca(c * sizeof(event_t *));
-      c = 0;
-      LIST_FOREACH(e, &events, e_tmp_link)
-	ev[c++] = e;
-
-      qsort(ev, c, sizeof(event_t *), eventcmp);
 
       if(c > 25) {
 	c = 25;
@@ -139,11 +105,10 @@ page_simple(http_connection_t *hc,
 
       memset(&day, -1, sizeof(struct tm));
       for(k = 0; k < c; k++) {
-	e = ev[k];
+	e = eqr.eqr_array[k];
       
 	localtime_r(&e->e_start, &a);
-        stop = e->e_start + e->e_duration;
-	localtime_r(&stop, &b);
+	localtime_r(&e->e_stop, &b);
 
 	if(a.tm_wday != day.tm_wday || a.tm_mday != day.tm_mday  ||
 	   a.tm_mon  != day.tm_mon  || a.tm_year != day.tm_year) {
@@ -153,46 +118,42 @@ page_simple(http_connection_t *hc,
 		      days[day.tm_wday], day.tm_mday, day.tm_mon + 1);
 	}
 
-	pvrr = pvr_get_by_entry(e);
-	rstatus = pvrr != NULL ? val2str(pvrr->pvrr_status,
-					 recstatustxt) : NULL;
+	de = dvr_entry_find_by_event(e);
+	rstatus = de != NULL ? val2str(de->de_sched_state,
+				       recstatustxt) : NULL;
 
 	htsbuf_qprintf(hq, 
 		    "<a href=\"/eventinfo/%d\">"
 		    "%02d:%02d-%02d:%02d&nbsp;%s%s%s</a><br>",
-		    e->e_tag,
+		    e->e_id,
 		    a.tm_hour, a.tm_min, b.tm_hour, b.tm_min,
 		    e->e_title,
 		    rstatus ? "&nbsp;" : "", rstatus ?: "");
       }
     }
     htsbuf_qprintf(hq, "<hr>");
+    epg_query_free(&eqr);
   }
+
 
   htsbuf_qprintf(hq, "<b>Recorder log:</b><br>\n");
 
-  c = 0;
-  LIST_FOREACH(pvrr, &pvrr_global_list, pvrr_global_link)
-    c++;
+  dvr_query(&dqr);
+  dvr_query_sort(&dqr);
+
+  c = dqr.dqr_entries;
 
   if(c == 0) {
     htsbuf_qprintf(hq, "No entries<br>");
   }
-
-  pv = alloca(c * sizeof(pvr_rec_t *));
-
-  i = 0;
-  LIST_FOREACH(pvrr, &pvrr_global_list, pvrr_global_link)
-    pv[i++] = pvrr;
-
-  qsort(pv, i, sizeof(pvr_rec_t *), pvrcmp);
+  
   memset(&day, -1, sizeof(struct tm));
 
   for(i = 0; i < c; i++) {
-    pvrr = pv[i];
+    de = dqr.dqr_array[i];
 
-    localtime_r(&pvrr->pvrr_start, &a);
-    localtime_r(&pvrr->pvrr_stop, &b);
+    localtime_r(&de->de_start, &a);
+    localtime_r(&de->de_stop, &b);
 
 
     if(a.tm_wday != day.tm_wday || a.tm_mday != day.tm_mday  ||
@@ -202,19 +163,23 @@ page_simple(http_connection_t *hc,
 		  days[day.tm_wday], day.tm_mday, day.tm_mon + 1);
     }
 
-    rstatus = val2str(pvrr->pvrr_status, recstatustxt);
+    rstatus = val2str(de->de_sched_state, recstatustxt);
 
 
-    htsbuf_qprintf(hq, "<a href=\"/pvrinfo/%d\">", pvrr->pvrr_ref);
+    htsbuf_qprintf(hq, "<a href=\"/pvrinfo/%d\">", de->de_id);
     
     htsbuf_qprintf(hq, 
 		"%02d:%02d-%02d:%02d&nbsp; %s",
-		a.tm_hour, a.tm_min, b.tm_hour, b.tm_min, pvrr->pvrr_title);
+		a.tm_hour, a.tm_min, b.tm_hour, b.tm_min, de->de_title);
 
     htsbuf_qprintf(hq, "</a>");
 
-    htsbuf_qprintf(hq, "<br>(%s)<br><br>", rstatus);
+    htsbuf_qprintf(hq, "&nbsp; (%s)<br><br>", rstatus);
   }
+
+  dvr_query_free(&dqr);
+
+  pthread_mutex_unlock(&global_lock);
 
   htsbuf_qprintf(hq, "</body></html>");
   http_output_html(hc);
@@ -230,31 +195,30 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_queue_t *hq = &hc->hc_reply;
   event_t *e;
   struct tm a, b;
-  time_t stop;
-  pvr_rec_t *pvrr = NULL;
-  tv_pvr_status_t pvrstatus;
+  dvr_entry_t *de;
   const char *rstatus;
+  dvr_entry_sched_state_t dvr_status;
 
-  if(remain == NULL || (e = epg_event_find_by_tag(atoi(remain))) == NULL)
+  pthread_mutex_lock(&global_lock);
+
+  if(remain == NULL || (e = epg_event_find_by_id(atoi(remain))) == NULL) {
+    pthread_mutex_unlock(&global_lock);
     return 404;
+  }
 
-  pvrr = pvr_get_by_entry(e);
+  de = dvr_entry_find_by_event(e);
 
   if((http_arg_get(&hc->hc_req_args, "rec")) != NULL) {
-    pvrr = pvr_schedule_by_event(e, hc->hc_username ?: "anonymous");
-  } else if(pvrr && (http_arg_get(&hc->hc_req_args, "clear")) != NULL) {
-    pvr_clear(pvrr);
-    pvrr = NULL;
-  } else if(pvrr && (http_arg_get(&hc->hc_req_args, "cancel")) != NULL) {
-    pvr_abort(pvrr);
+    de = dvr_entry_create_by_event(e, hc->hc_username ?: "anonymous");
+  } else if(de != NULL && (http_arg_get(&hc->hc_req_args, "cancel")) != NULL) {
+    de = dvr_entry_cancel(de);
   }
 
   htsbuf_qprintf(hq, "<html>");
   htsbuf_qprintf(hq, "<body>");
 
   localtime_r(&e->e_start, &a);
-  stop = e->e_start + e->e_duration;
-  localtime_r(&stop, &b);
+  localtime_r(&e->e_stop, &b);
 
   htsbuf_qprintf(hq, 
 	      "%s, %d/%d %02d:%02d - %02d:%02d<br>",
@@ -264,44 +228,44 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_qprintf(hq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
 	      e->e_channel->ch_name, e->e_title);
   
-  pvrstatus = pvrr != NULL ? pvrr->pvrr_status : HTSTV_PVR_STATUS_NONE;
+  dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
 
-  if((rstatus = val2str(pvrstatus, recstatustxt)) != NULL)
+  if((rstatus = val2str(dvr_status, recstatustxt)) != NULL)
     htsbuf_qprintf(hq, "Recording status: %s<br>", rstatus);
 
-  htsbuf_qprintf(hq, "<form method=\"post\" action=\"/eventinfo/%d\">", e->e_tag);
+  htsbuf_qprintf(hq, "<form method=\"post\" action=\"/eventinfo/%d\">", 
+		 e->e_id);
 
-  switch(pvrstatus) {
-  case HTSTV_PVR_STATUS_SCHEDULED:
+  switch(dvr_status) {
+  case DVR_SCHEDULED:
     htsbuf_qprintf(hq, "<input type=\"submit\" "
-		"name=\"clear\" value=\"Remove from schedule\">");
+		"name=\"cancel\" value=\"Remove from schedule\">");
     break;
     
-  case HTSTV_PVR_STATUS_RECORDING:
+  case DVR_RECORDING:
     htsbuf_qprintf(hq, "<input type=\"submit\" "
 		"name=\"cancel\" value=\"Cancel recording\">");
     break;
 
-  case HTSTV_PVR_STATUS_NONE:
+  case DVR_NOSTATE:
     htsbuf_qprintf(hq, "<input type=\"submit\" "
 		"name=\"rec\" value=\"Record\">");
     break;
 
-  default:
-    htsbuf_qprintf(hq, "<input type=\"submit\" "
-		"name=\"clear\" value=\"Clear error status\">");
+  case DVR_COMPLETED:
     break;
   }
 
   htsbuf_qprintf(hq, "</form>");
   htsbuf_qprintf(hq, "%s", e->e_desc);
 
-  htsbuf_qprintf(hq, "<hr><a href=\"/simple.html\">New search</a><br>");
+  pthread_mutex_unlock(&global_lock);
+
+  htsbuf_qprintf(hq, "<hr><a href=\"/simple.html\">To main page</a><br>");
   htsbuf_qprintf(hq, "</body></html>");
   http_output_html(hc);
   return 0;
 }
-
 
 /**
  * PVR info, deliver info about the given PVR entry
@@ -311,29 +275,32 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   struct tm a, b;
-  time_t stop;
-  pvr_rec_t *pvrr = NULL;
-  tv_pvr_status_t pvrstatus;
+  dvr_entry_t *de;
   const char *rstatus;
 
-  if(remain == NULL || (pvrr = pvr_get_tag_entry(atoi(remain))) == NULL)
-    return 404;
+  pthread_mutex_lock(&global_lock);
 
+  if(remain == NULL || (de = dvr_entry_find_by_id(atoi(remain))) == NULL) {
+    pthread_mutex_unlock(&global_lock);
+    return 404;
+  }
   if((http_arg_get(&hc->hc_req_args, "clear")) != NULL) {
-    pvr_clear(pvrr);
-    pvrr = NULL;
+    de = dvr_entry_cancel(de);
+  } else if((http_arg_get(&hc->hc_req_args, "cancel")) != NULL) {
+    de = dvr_entry_cancel(de);
+  }
+
+  if(de == NULL) {
+    pthread_mutex_unlock(&global_lock);
     http_redirect(hc, "/simple.html");
     return 0;
-  } else if((http_arg_get(&hc->hc_req_args, "cancel")) != NULL) {
-    pvr_abort(pvrr);
   }
 
   htsbuf_qprintf(hq, "<html>");
   htsbuf_qprintf(hq, "<body>");
 
-  localtime_r(&pvrr->pvrr_start, &a);
-  stop = pvrr->pvrr_start + pvrr->pvrr_stop;
-  localtime_r(&stop, &b);
+  localtime_r(&de->de_start, &a);
+  localtime_r(&de->de_stop, &b);
 
   htsbuf_qprintf(hq, 
 	      "%s, %d/%d %02d:%02d - %02d:%02d<br>",
@@ -341,49 +308,44 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
 
   htsbuf_qprintf(hq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
-	      pvrr->pvrr_channel->ch_name, pvrr->pvrr_title);
+	      de->de_channel->ch_name, de->de_title);
   
-  pvrstatus = pvrr->pvrr_status;
-
-  if((rstatus = val2str(pvrstatus, recstatustxt)) != NULL)
+  if((rstatus = val2str(de->de_sched_state, recstatustxt)) != NULL)
     htsbuf_qprintf(hq, "Recording status: %s<br>", rstatus);
 
   htsbuf_qprintf(hq, "<form method=\"post\" action=\"/pvrinfo/%d\">", 
-	      pvrr->pvrr_ref);
+	      de->de_id);
 
-  switch(pvrstatus) {
-  case HTSTV_PVR_STATUS_SCHEDULED:
+  switch(de->de_sched_state) {
+  case DVR_SCHEDULED:
     htsbuf_qprintf(hq, "<input type=\"submit\" "
 		"name=\"clear\" value=\"Remove from schedule\">");
     break;
     
-  case HTSTV_PVR_STATUS_RECORDING:
+  case DVR_RECORDING:
     htsbuf_qprintf(hq, "<input type=\"submit\" "
 		"name=\"cancel\" value=\"Cancel recording\">");
     break;
 
-  case HTSTV_PVR_STATUS_DONE:
-    htsbuf_qprintf(hq, "<input type=\"submit\" "
-		"name=\"clear\" value=\"Remove from log\">");
-    break;
-
-  default:
-    htsbuf_qprintf(hq, "<input type=\"submit\" "
-		"name=\"clear\" value=\"Clear error status\">");
+  case DVR_COMPLETED:
+  case DVR_NOSTATE:
     break;
   }
 
   htsbuf_qprintf(hq, "</form>");
-  htsbuf_qprintf(hq, "%s", pvrr->pvrr_desc);
+  htsbuf_qprintf(hq, "%s", de->de_desc);
 
-  htsbuf_qprintf(hq, "<hr><a href=\"/simple.html\">New search</a><br>");
+  pthread_mutex_unlock(&global_lock);
+
+  htsbuf_qprintf(hq, "<hr><a href=\"/simple.html\">To main page</a><br>");
   htsbuf_qprintf(hq, "</body></html>");
   http_output_html(hc);
   return 0;
 }
 
+
 /**
- * WEB user interface
+ * Simple web ui
  */
 void
 simpleui_start(void)
