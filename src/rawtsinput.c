@@ -195,9 +195,12 @@ got_pat(rawts_t *rt)
 
       if(t != NULL) {
 	pthread_mutex_lock(&t->tht_stream_mutex);
-	st = transport_add_stream(t, pid, SCT_PMT);
-	st->st_section_docrc = 1;
-	st->st_got_section = got_pmt;
+
+	if(transport_stream_find(t, pid) == NULL) {
+	  st = transport_stream_create(t, pid, SCT_PMT);
+	  st->st_section_docrc = 1;
+	  st->st_got_section = got_pmt;
+	}
 	pthread_mutex_unlock(&t->tht_stream_mutex);
       }
     }

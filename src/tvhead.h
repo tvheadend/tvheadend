@@ -578,14 +578,8 @@ typedef struct th_transport {
   int64_t  tht_pcr_drift;
 
   /**
-   * Set if we've seen the PMT. Used to avoid (re)saving the transport
-   * for everytime we see a PMT. 
-   * XXX: Not very good, should be replaced with more intelligent
-   * code in psi.c
+   * List of all components.
    */
-  int tht_pmt_seen;
-
-
   struct th_stream_list tht_components;
 
 

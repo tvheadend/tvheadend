@@ -371,9 +371,9 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
 
       LIST_FOREACH(st_src, &t_src->tht_components, st_link) {
 
-	st_dst = transport_add_stream(t_dst, 
-				      st_src->st_pid,
-				      st_src->st_type);
+	st_dst = transport_stream_create(t_dst, 
+					 st_src->st_pid,
+					 st_src->st_type);
 	
 	st_dst->st_tb = (AVRational){1, 90000};
 	

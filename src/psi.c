@@ -92,10 +92,11 @@ psi_parse_pat(th_transport_t *t, uint8_t *ptr, int len,
     pid     = (ptr[2] & 0x1f) << 8 | ptr[3];
 
     if(prognum != 0) {
-      st = transport_add_stream(t, pid, SCT_PMT);
-      st->st_section_docrc = 1;
-      st->st_got_section = pmt_callback;
-
+      if(transport_stream_find(t, pid) == NULL) {
+	st = transport_stream_create(t, pid, SCT_PMT);
+	st->st_section_docrc = 1;
+	st->st_got_section = pmt_callback;
+      }
     }
     ptr += 4;
     len -= 4;
@@ -164,11 +165,32 @@ psi_build_pat(th_transport_t *t, uint8_t *buf, int maxlen, int pmtpid)
 
 
 
+/**
+ * Parser for CA descriptor
+ */
+static int
+psi_desc_ca(th_transport_t *t, uint8_t *ptr)
+{
+  uint16_t pid = (ptr[2] & 0x1f) << 8 | ptr[3];
+  th_stream_t *st;
+  int r = 0;
+  uint16_t caid = (ptr[0] << 8) | ptr[1];
+
+  if((st = transport_stream_find(t, pid)) == NULL) {
+    st = transport_stream_create(t, pid, SCT_CA);
+    r = 1;
+  }
+
+  if(st->st_caid != caid) {
+    st->st_caid = caid;
+    r = 1;
+  }
+  return r;
+}
 
 /** 
  * PMT parser, from ISO 13818-1 and ETSI EN 300 468
  */
-
 int
 psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
 {
@@ -181,6 +203,8 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
   th_stream_t *st;
   char lang[4];
   int frameduration;
+  int need_save = 0;
+
   if(len < 9)
     return -1;
 
@@ -190,13 +214,16 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
   pcr_pid = (ptr[5] & 0x1f) << 8 | ptr[6];
   dllen   = (ptr[7] & 0xf) << 8 | ptr[8];
   
-  t->tht_pcr_pid = pcr_pid;
+  if(chksvcid && sid != t->tht_dvb_service_id)
+    return -1;
+
+  if(t->tht_pcr_pid != pcr_pid) {
+    t->tht_pcr_pid = pcr_pid;
+    need_save = 1;
+  }
 
   ptr += 9;
   len -= 9;
-
-  if(chksvcid && sid != t->tht_dvb_service_id)
-    return -1;
 
   while(dllen > 1) {
     dtag = ptr[0];
@@ -208,8 +235,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
 
     switch(dtag) {
     case DVB_DESC_CA:
-      st = transport_add_stream(t, (ptr[2] & 0x1f) << 8 | ptr[3], SCT_CA);
-      st->st_caid = (ptr[0] << 8) | ptr[1];
+      need_save |= psi_desc_ca(t, ptr);
       break;
 
     default:
@@ -262,8 +288,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
 
       switch(dtag) {
       case DVB_DESC_CA:
-	st = transport_add_stream(t, (ptr[2] & 0x1f) << 8 | ptr[3], SCT_CA);
-	st->st_caid = (ptr[0] << 8) | ptr[1];
+	need_save |= psi_desc_ca(t, ptr);
 	break;
 
       case DVB_DESC_VIDEO_STREAM:
@@ -296,19 +321,29 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
     }
 
     if(hts_stream_type != 0) {
-      st = transport_add_stream(t, pid, hts_stream_type);
-      st->st_tb = (AVRational){1, 90000};
-      memcpy(st->st_lang, lang, 4);
 
-      if(st->st_frame_duration == 0)
+      if((st = transport_stream_find(t, pid)) == NULL) {
+	need_save = 1;
+	st = transport_stream_create(t, pid, hts_stream_type);
+      }
+
+      st->st_tb = (AVRational){1, 90000};
+
+      if(memcmp(st->st_lang, lang, 4)) {
+	need_save = 1;
+	memcpy(st->st_lang, lang, 4);
+      }
+
+      if(st->st_frame_duration == 0 && frameduration != 0) {
 	st->st_frame_duration = frameduration;
+	need_save = 1;
+      }
     }
   }
 
-  if(t->tht_pmt_seen == 0)
+  if(need_save)
     t->tht_config_change(t);
 
-  t->tht_pmt_seen = 1;
   return 0;
 }
 
@@ -635,7 +670,7 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
     if(htsmsg_get_u32(c, "pid", &pid))
       continue;
 
-    st = transport_add_stream(t, pid, type);
+    st = transport_stream_create(t, pid, type);
     st->st_tb = (AVRational){1, 90000};
     
     if((v = htsmsg_get_str(c, "language")) != NULL)

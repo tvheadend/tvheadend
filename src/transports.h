@@ -42,8 +42,10 @@ void transport_unmap_channel(th_transport_t *t);
 
 th_transport_t *transport_find(channel_t *ch, unsigned int weight);
 
-th_stream_t *transport_add_stream(th_transport_t *t, int pid,
-				  streaming_component_type_t type);
+th_stream_t *transport_stream_find(th_transport_t *t, int pid);
+
+th_stream_t *transport_stream_create(th_transport_t *t, int pid,
+				     streaming_component_type_t type);
 
 void transport_set_priority(th_transport_t *t, int prio);
 

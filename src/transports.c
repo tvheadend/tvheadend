@@ -471,16 +471,14 @@ transport_find_by_identifier(const char *identifier)
 
 /**
  * Add a new stream to a transport
- *
- * 
  */
 th_stream_t *
-transport_add_stream(th_transport_t *t, int pid,
-		     streaming_component_type_t type)
+transport_stream_create(th_transport_t *t, int pid,
+			streaming_component_type_t type)
 {
   th_stream_t *st;
   int i = 0;
-
+ 
   lock_assert(&t->tht_stream_mutex);
 
   LIST_FOREACH(st, &t->tht_components, st_link) {
@@ -490,8 +488,8 @@ transport_add_stream(th_transport_t *t, int pid,
   }
 
   if(t->tht_flags & THT_DEBUG)
-      tvhlog(LOG_DEBUG, "transport", "%s: Add stream \"%s\", pid: %d",
-	     t->tht_identifier, streaming_component_type2txt(type), pid);
+    tvhlog(LOG_DEBUG, "transport", "%s: Add stream \"%s\", pid: %d",
+	   t->tht_identifier, streaming_component_type2txt(type), pid);
 
   st = calloc(1, sizeof(th_stream_t));
   st->st_index = i;
@@ -506,8 +504,29 @@ transport_add_stream(th_transport_t *t, int pid,
 
   avgstat_init(&st->st_rate, 10);
   avgstat_init(&st->st_cc_errors, 10);
+
   return st;
 }
+
+
+
+/**
+ * Add a new stream to a transport
+ */
+th_stream_t *
+transport_stream_find(th_transport_t *t, int pid)
+{
+  th_stream_t *st;
+ 
+  lock_assert(&t->tht_stream_mutex);
+
+  LIST_FOREACH(st, &t->tht_components, st_link) {
+    if(st->st_pid == pid)
+      return st;
+  }
+  return NULL;
+}
+
 
 
 /**
