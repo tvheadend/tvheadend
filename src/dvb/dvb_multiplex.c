@@ -128,6 +128,8 @@ dvb_mux_create(th_dvb_adapter_t *tda, struct dvb_frontend_parameters *fe_param,
   tdmi->tdmi_scan_queue = &tda->tda_scan_queues[DVB_MUX_SCAN_INITIAL];
   TAILQ_INSERT_TAIL(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
 
+  TAILQ_INIT(&tdmi->tdmi_table_queue);
+
   tdmi->tdmi_transport_stream_id = tsid;
   tdmi->tdmi_adapter = tda;
   tdmi->tdmi_network = network ? strdup(network) : NULL;

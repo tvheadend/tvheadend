@@ -56,6 +56,7 @@ typedef struct th_dvb_mux_instance {
 
   time_t tdmi_time;
   LIST_HEAD(, th_dvb_table) tdmi_tables;
+  TAILQ_HEAD(, th_dvb_table) tdmi_table_queue;
 
   enum {
     TDMI_FE_UNKNOWN,
