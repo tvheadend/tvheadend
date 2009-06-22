@@ -178,7 +178,7 @@ dvb_transport_load(th_dvb_mux_instance_t *tdmi)
     if(htsmsg_get_u32(c, "pmt", &pmt))
       continue;
     
-    t = dvb_transport_find(tdmi, sid, pmt, NULL);
+    t = dvb_transport_find(tdmi, sid, pmt);
 
     htsmsg_get_u32(c, "stype", &t->tht_servicetype);
     if(htsmsg_get_u32(c, "scrambled", &u32))
@@ -297,16 +297,12 @@ dvb_transport_networkname(th_transport_t *t)
  * If it cannot be found we create it if 'pmt_pid' is also set
  */
 th_transport_t *
-dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
-		   int *created)
+dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid)
 {
   th_transport_t *t;
   char tmp[200];
 
   lock_assert(&global_lock);
-
-  if(created != NULL)
-    *created = 0;
 
   LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
     if(t->tht_dvb_service_id == sid)
@@ -315,9 +311,6 @@ dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   
   if(pmt_pid == 0)
     return NULL;
-
-  if(created != NULL)
-    *created = 1;
 
   snprintf(tmp, sizeof(tmp), "%s_%04x", tdmi->tdmi_identifier, sid);
 

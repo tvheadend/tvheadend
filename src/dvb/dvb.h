@@ -188,7 +188,7 @@ void dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *name);
 void dvb_transport_load(th_dvb_mux_instance_t *tdmi);
 
 th_transport_t *dvb_transport_find(th_dvb_mux_instance_t *tdmi,
-				   uint16_t sid, int pmt_pid, int *created);
+				   uint16_t sid, int pmt_pid);
 
 
 /**

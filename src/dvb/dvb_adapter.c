@@ -347,8 +347,7 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
     LIST_FOREACH(t_src, &tdmi_src->tdmi_transports, tht_mux_link) {
       t_dst = dvb_transport_find(tdmi_dst, 
 				 t_src->tht_dvb_service_id,
-				 t_src->tht_pmt_pid,
-				 NULL);
+				 t_src->tht_pmt_pid);
 
       t_dst->tht_pcr_pid     = t_src->tht_pcr_pid;
       t_dst->tht_disabled    = t_src->tht_disabled;
