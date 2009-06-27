@@ -101,8 +101,6 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
 	} else {
 	    delButton.disable();
 	}
-
-	console.log('tut');
     });
 
     var grid = new Ext.grid.EditorGridPanel({
