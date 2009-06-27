@@ -83,6 +83,28 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
 	});
     }
        
+    var selModel = new Ext.grid.RowSelectionModel({
+	singleSelect:false
+    });
+
+    var delButton = new Ext.Toolbar.Button({
+	tooltip: 'Delete one or more selected rows',
+	iconCls:'remove',
+	text: 'Delete selected',
+	handler: delSelected,
+	disabled: true
+    });
+
+    selModel.on('selectionchange', function(self) {
+	if(self.getCount() > 0) {
+	    delButton.enable();
+	} else {
+	    delButton.disable();
+	}
+
+	console.log('tut');
+    });
+
     var grid = new Ext.grid.EditorGridPanel({
 	title: title,
 	plugins: plugins,
@@ -90,7 +112,7 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
 	clicksToEdit: 2,
 	cm: cm,
         viewConfig: {forceFit:true},
-	selModel: new Ext.grid.RowSelectionModel({singleSelect:false}),
+	selModel: selModel,
 	tbar: [{
 	    tooltip: 'Create a new entry on the server. '+
 		'The new entry is initially disabled so it must be enabled '+
@@ -98,12 +120,7 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
 	    iconCls:'add',
 	    text: 'Add entry',
 	    handler: addRecord
-	}, '-', {
-	    tooltip: 'Delete one or more selected rows',
-	    iconCls:'remove',
-	    text: 'Delete selected',
-	    handler: delSelected
-	}, '-', {
+	}, '-', delButton, '-', {
 	    tooltip: 'Save any changes made (Changed cells have red borders).',
 	    iconCls:'save',
 	    text: "Save changes",
