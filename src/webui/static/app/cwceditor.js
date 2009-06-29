@@ -26,11 +26,17 @@ tvheadend.cwceditor = function() {
 	},{
 	    header: "Password",
 	    dataIndex: 'password',
+	    renderer: function(value, metadata, record, row, col, store) {
+		return '<i>hidden</i>'
+	    },
 	    editor: new fm.TextField({allowBlank: false})
 	},{
 	    header: "DES Key",
 	    dataIndex: 'deskey',
 	    width: 300,
+	    renderer: function(value, metadata, record, row, col, store) {
+		return '<i>hidden</i>'
+	    },
 	    editor: new fm.TextField({allowBlank: false})
 	},{
 	    header: "Comment",
