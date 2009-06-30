@@ -111,6 +111,7 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
 	cm: cm,
         viewConfig: {forceFit:true},
 	selModel: selModel,
+	stripeRows: true,
 	tbar: [{
 	    tooltip: 'Create a new entry on the server. '+
 		'The new entry is initially disabled so it must be enabled '+
