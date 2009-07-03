@@ -890,8 +890,6 @@ tvheadend.showTransportDetails = function(data)
 {
     html = '';
 
-    console.log(data);
-    
     html += '<div style="display:block;font-weight:bold;margin-bottom:4px">';
     html += '<span style="float:left;width:100px">PID </span>';
     html += '<span style="float:left;width:100px">Type</span>';
