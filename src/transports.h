@@ -36,9 +36,7 @@ void transport_ref(th_transport_t *t);
 
 th_transport_t *transport_find_by_identifier(const char *identifier);
 
-void transport_map_channel(th_transport_t *t, channel_t *ch);
-
-void transport_unmap_channel(th_transport_t *t);
+void transport_map_channel(th_transport_t *t, channel_t *ch, int save);
 
 th_transport_t *transport_find(channel_t *ch, unsigned int weight);
 
@@ -54,8 +52,6 @@ void transport_settings_write(th_transport_t *t);
 const char *transport_servicetype_txt(th_transport_t *t);
 
 int transport_is_tv(th_transport_t *t);
-
-int transport_is_available(th_transport_t *t);
 
 void transport_destroy(th_transport_t *t);
 
@@ -80,5 +76,6 @@ transport_find_stream_by_pid(th_transport_t *t, int pid)
 
 htsmsg_t *transport_build_stream_start_msg(th_transport_t *t);
 
+void transport_set_enable(th_transport_t *t, int enabled);
 
 #endif /* TRANSPORTS_H */

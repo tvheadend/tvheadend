@@ -40,17 +40,17 @@
  */
 static void
 dvb_mux_preconf_add(th_dvb_adapter_t *tda, const struct mux *m, int num,
-		    const char *source)
+		    const char *source, const char *satconf)
 {
   struct dvb_frontend_parameters f;
-  int i;
-  int polarisation;
-  int switchport;
+  int i, polarisation;
+  dvb_satconf_t *sc;
+
+  sc = dvb_satconf_entry_find(tda, satconf, 0);
 
   for(i = 0; i < num; i++) {
 
     polarisation = 0;
-    switchport = 0;
 
     memset(&f, 0, sizeof(f));
   
@@ -92,8 +92,7 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, const struct mux *m, int num,
       break;
     }
       
-    dvb_mux_create(tda, &f, polarisation, switchport, 0xffff, NULL,
-		   source);
+    dvb_mux_create(tda, &f, polarisation, sc, 0xffff, NULL, source, 1, NULL);
     m++;
   }
 }
@@ -103,7 +102,8 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, const struct mux *m, int num,
  *
  */
 int
-dvb_mux_preconf_add_network(th_dvb_adapter_t *tda, const char *id)
+dvb_mux_preconf_add_network(th_dvb_adapter_t *tda, const char *id,
+			    const char *satconf)
 {
   const struct region *r;
   const struct network *n;
@@ -135,7 +135,7 @@ dvb_mux_preconf_add_network(th_dvb_adapter_t *tda, const char *id)
 
     for(j = 0; j < nn; j++) {
       if(!strcmp(n[j].name, id)) {
-	dvb_mux_preconf_add(tda, n[j].muxes, n[j].nmuxes, source);
+	dvb_mux_preconf_add(tda, n[j].muxes, n[j].nmuxes, source, satconf);
 	break;
       }
     }

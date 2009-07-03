@@ -7,27 +7,6 @@
  */
 
 
-.x-column-tree .x-tree-node {
-    zoom:1;
-}
-.x-column-tree .x-tree-node-el {
-    /*border-bottom:1px solid #eee; borders? */
-    zoom:1;
-}
-.x-column-tree .x-tree-selected {
-    background: #d9e8fb;
-}
-.x-column-tree  .x-tree-node a {
-    line-height:18px;
-    vertical-align:middle;
-}
-.x-column-tree  .x-tree-node a span{
-	
-}
-.x-column-tree  .x-tree-node .x-tree-selected a span{
-	background:transparent;
-	color:#000;
-}
 .x-tree-col {
     float:left;
     overflow:hidden;
@@ -85,6 +64,56 @@
 } 
 
 
+.x-grid3-progresscol .x-grid3-cell-inner {
+  padding: 0px 0px 0px 5px;
+}
+
+.x-grid3-progresscol .x-progress-bar {
+  height: 16px;
+}
+
+.x-grid3-progresscol .x-progress-inner {
+  height: 16px;
+}
+
+.x-grid3-progresscol .x-progress-text-front-ie6 {
+  padding: 2.5px 5px;
+}
+
+.x-grid3-progresscol .x-progress-text-front {
+  padding: 2px 5px;
+}
+
+.x-progress-bar-red,.x-progress-bar-orange,.x-progress-bar-green {
+  border-bottom: 1px solid #7fa9e4;
+  float: left;
+  height: 16px;
+}
+
+.x-progress-bar-red {
+  background: #ff0000 url(../icons/progress-bg-red.gif) repeat-x scroll left
+    center;
+  border-top: 1px solid #ecb7ad;
+}
+
+.x-progress-bar-orange {
+  background: #9cbfee url(../icons/progress-bg-orange.gif) repeat-x scroll
+    left center;
+  border-right: 1px solid #deab7e;
+  border-top: 1px solid #d7b290;
+}
+
+.x-progress-bar-green {
+  background: #00ff00 url(../icons/progress-bg-green.gif) repeat-x scroll
+    left center;
+  border-right: 1px solid #5bd976;
+  border-top: 1px solid #79e18f;
+}
+
+.tvh-grid-unset {
+  color: #888;
+  font-style:italic;
+}
 
 .add {
     background-image:url(../icons/add.gif) !important;
@@ -100,6 +129,12 @@
 }
 .rec {
     background-image:url(../icons/rec.png) !important;
+}
+.info {
+    background-image:url(../icons/information.png) !important;
+}
+.undo {
+    background-image:url(../icons/undo.png) !important;
 }
 
 .x-smallhdr {
@@ -126,6 +161,11 @@
     margin: 5px;
 }
 
+
+.hts-t-info  {
+    float:left;
+    width:100px;
+}
 
 
 
@@ -155,3 +195,82 @@
   font:normal 24px verdana;
   font-weight: bold;
 }
+
+
+/** vim: ts=4:sw=4:nu:fdc=4:nospell 
+ *
+ * Ext.ux.grid.RowActions.css 
+ *
+ * Style sheets for Grid RowActions Plugin
+ *
+ * @author   Ing. Jozef Sakáloš
+ * @date     27. March 2008
+ * @verson   $Id: Ext.ux.grid.RowActions.css 140 2008-04-06 01:24:10Z jozo $
+ *
+ * @license Ext.ux.grid.RowActions.css is licensed under the terms of
+ * the Open Source LGPL 3.0 license.  Commercial use is permitted to the extent
+ * that the code/component(s) do NOT become part of another Open Source or Commercially
+ * licensed development library or toolkit without explicit permission.
+ * 
+ * License details: http://www.gnu.org/licenses/lgpl.html
+ */
+
+/* styles for rows */
+.ux-row-action-cell .x-grid3-cell-inner {
+	padding:1px 0 0 0;
+}
+.ux-row-action-item {
+	float:left;
+	min-width:16px;
+	height:16px;
+	background-repeat:no-repeat;
+	margin: 0 5px 0 0;
+	cursor:pointer;
+	overflow:hidden;
+}
+.ext-ie .ux-row-action-item {
+	width:16px;
+}
+.ext-ie .ux-row-action-text {
+	width:auto;
+}
+.ux-row-action-item span {
+	vertical-align:middle;
+	padding:0 0 0 20px;
+	line-height:18px;
+}
+.ext-ie .ux-row-action-item span {
+	width:auto;
+}
+
+/* styles for groups */
+.x-grid-group-hd div {
+	position:relative;
+	height:16px;
+}
+.ux-grow-action-item {
+	min-width:16px;
+	height:16px;
+	background-repeat:no-repeat;
+	background-position: 0 50% ! important;
+	margin: 0 0 0 4px;
+	padding: 0 ! important;
+	cursor:pointer;
+	float:left;
+}
+.ext-ie .ux-grow-action-item {
+	width:16px;
+}
+.ux-action-right {
+	float:right;
+	margin: 0 3px 0 2px;
+	padding: 0 ! important;
+}
+.ux-grow-action-text {
+	padding: 0 ! important;
+	margin:0 ! important;
+	background:transparent none ! important;
+	float:left;
+}
+
+/* eof */ 

@@ -348,7 +348,7 @@ typedef enum {
  * A Transport (or in MPEG TS terms: a 'service')
  */
 typedef struct th_transport {
-  
+
   const char *tht_name;
 
   LIST_ENTRY(th_transport) tht_hash_link;
@@ -422,11 +422,11 @@ typedef struct th_transport {
   uint16_t tht_pmt_pid;
 
   /**
-   * Set if transport is disabled. If disabled it should not be
-   * considered when chasing for available transports during
+   * Set if transport is enabled (the default).  If disabled it should
+   * not be considered when chasing for available transports during
    * subscription scheduling.
    */
-  int tht_disabled;
+  int tht_enabled;
 
   
   LIST_ENTRY(th_transport) tht_mux_link;
@@ -497,7 +497,6 @@ typedef struct th_transport {
    */
   LIST_ENTRY(th_transport) tht_ch_link;
   struct channel *tht_ch;
-  char *tht_chname;
 
   /**
    * Service probe, see serviceprobe.c for details

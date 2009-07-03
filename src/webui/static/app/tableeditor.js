@@ -95,6 +95,30 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
 	disabled: true
     });
 
+    var saveBtn = new Ext.Toolbar.Button({
+	tooltip: 'Save any changes made (Changed cells have red borders)',
+	iconCls:'save',
+	text: "Save changes",
+	handler: saveChanges,
+	disabled: true
+    });
+
+    var rejectBtn = new Ext.Toolbar.Button({
+	tooltip: 'Revert any changes made (Changed cells have red borders)',
+	iconCls:'undo',
+	text: "Revert changes",
+	handler: function() {
+	    store.rejectChanges();
+	},
+	disabled: true
+    });
+
+    store.on('update', function(s, r, o) {
+	d = s.getModifiedRecords().length == 0
+	saveBtn.setDisabled(d);
+	rejectBtn.setDisabled(d);
+    });
+
     selModel.on('selectionchange', function(self) {
 	if(self.getCount() > 0) {
 	    delButton.enable();
@@ -119,12 +143,7 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
 	    iconCls:'add',
 	    text: 'Add entry',
 	    handler: addRecord
-	}, '-', delButton, '-', {
-	    tooltip: 'Save any changes made (Changed cells have red borders).',
-	    iconCls:'save',
-	    text: "Save changes",
-	    handler: saveChanges
-	}, '->', {
+	}, '-', delButton, '-', saveBtn, rejectBtn, '->', {
 	    text: 'Help',
 	    handler: function() {
 		new tvheadend.help(title, helpContent);

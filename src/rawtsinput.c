@@ -141,7 +141,7 @@ rawts_transport_add(rawts_t *rt, uint16_t sid, int pmt_pid)
 
   ch = channel_find_by_name(tmp, 1);
 
-  transport_map_channel(t, ch);
+  transport_map_channel(t, ch, 0);
   return t;
 }
 

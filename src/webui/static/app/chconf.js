@@ -5,10 +5,17 @@
 tvheadend.channelTags = new Ext.data.JsonStore({
     autoLoad:true,
     root:'entries',
-    fields: [{name: 'identifier'}, {name: 'name'}],
+    fields: ['identifier', 'name'],
+    id: 'identifier',
     url:'channeltags',
     baseParams: {op: 'listTags'}
 });
+
+tvheadend.comet.on('channeltags', function(m) {
+    if(m.reload != null)
+        tvheadend.channelTags.reload();
+});
+
 
 /**
  * Channels
@@ -16,9 +23,16 @@ tvheadend.channelTags = new Ext.data.JsonStore({
 tvheadend.channels = new Ext.data.JsonStore({
     autoLoad: true,
     root:'entries',
-    fields: [{name: 'name'}, {name: 'chid'}],
+    fields: ['name', 'chid'],
+    id: 'chid',
     url: "chlist"
 });
+
+tvheadend.comet.on('channels', function(m) {
+    if(m.reload != null)
+        tvheadend.channels.reload();
+});
+
 
 /**
  * Channel details

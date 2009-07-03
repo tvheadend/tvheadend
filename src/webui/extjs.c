@@ -107,6 +107,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   /**
    * Load all components
    */
+  extjs_load(hq, "static/app/comet.js");
   extjs_load(hq, "static/app/tableeditor.js");
   extjs_load(hq, "static/app/cteditor.js");
   extjs_load(hq, "static/app/acleditor.js");
@@ -167,13 +168,13 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 		 "<div class=\"about-title\">"
 		 "HTS Tvheadend %s"
 		 "</div><br>"
-		 "&copy; 2006 - 2008 Andreas \303\226man, et al.<br><br>"
+		 "&copy; 2006 - 2009 Andreas \303\226man, et al.<br><br>"
 		 "<img src=\"docresources/tvheadendlogo.png\"><br>"
 		 "<a href=\"http://hts.lonelycoder.com/\">"
 		 "http://hts.lonelycoder.com/</a><br><br>"
 		 "Based on software from "
 		 "<a href=\"http://www.ffmpeg.org/\">FFmpeg</a> and "
-		 "<a href=\"http://www.extjs.org/\">ExtJS</a>.<br>"
+		 "<a href=\"http://www.extjs.com/\">ExtJS</a>.<br>"
 		 "<br>"
 		 "Build: %s"
 		 "</center>",
@@ -332,102 +333,6 @@ extjs_ecglist(http_connection_t *hc, const char *remain, void *opaque)
 /**
  *
  */
-static void
-extjs_dvbtree_node(htsmsg_t *array, int leaf, const char *id, const char *name,
-		   const char *type, const char *status, int quality,
-		   const char *itype)
-{
-  htsmsg_t *e = htsmsg_create_map();
-
-  htsmsg_add_str(e, "uiProvider", "col");
-  htsmsg_add_str(e, "id", id);
-  htsmsg_add_u32(e, "leaf", leaf);
-  htsmsg_add_str(e, "itype", itype);
-
-  htsmsg_add_str(e, "name", name);
-  htsmsg_add_str(e, "type", type);
-  htsmsg_add_str(e, "status", status);
-  htsmsg_add_u32(e, "quality", quality);
-
-  htsmsg_add_msg(array, NULL, e);
-}
-
-/**
- *
- */
-static int
-extjs_dvbtree(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  const char *s = http_arg_get(&hc->hc_req_args, "node");
-  htsmsg_t *out = NULL;
-  char buf[200];
-  th_dvb_adapter_t *tda;
-  th_dvb_mux_instance_t *tdmi;
-  th_transport_t *t;
-
-  if(s == NULL)
-    return HTTP_STATUS_BAD_REQUEST;
-
-  out = htsmsg_create_list();
-  pthread_mutex_lock(&global_lock);
-
-  if(http_access_verify(hc, ACCESS_ADMIN)) {
-    pthread_mutex_unlock(&global_lock);
-    return HTTP_STATUS_UNAUTHORIZED;
-  }
-
-  if(!strcmp(s, "root")) {
-    /**
-     * List of all adapters
-     */
-
-    TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
-
-      snprintf(buf, sizeof(buf), "%s adapter",
-	       dvb_adaptertype_to_str(tda->tda_type));
-
-      extjs_dvbtree_node(out, 0,
-			 tda->tda_identifier, tda->tda_displayname,
-			 buf, tda->tda_rootpath != NULL ? "OK" : "No H/W",
-			 100, "adapter");
-    }
-  } else if((tda = dvb_adapter_find_by_identifier(s)) != NULL) {
-
-    RB_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
-      dvb_mux_nicename(buf, sizeof(buf), tdmi);
-     
-      extjs_dvbtree_node(out, 0,
-			 tdmi->tdmi_identifier, buf, "DVB Mux",
-			 dvb_mux_status(tdmi),
-			 tdmi->tdmi_quality, "mux");
-    }
-  } else if((tdmi = dvb_mux_find_by_identifier(s)) != NULL) {
-
-    LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
-
-      if(transport_servicetype_txt(t) == NULL)
-	continue;
-
-      extjs_dvbtree_node(out, 1,
-			 t->tht_identifier, t->tht_svcname,
-			 transport_servicetype_txt(t),
-			 t->tht_ch ? "Mapped" : "Unmapped",
-			 100, "transport");
-    }
-  }
- 
-  pthread_mutex_unlock(&global_lock);
-  htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;
-}
-
-
-/**
- *
- */
 static int
 extjs_dvbnetworks(http_connection_t *hc, const char *remain, void *opaque)
 {
@@ -479,85 +384,6 @@ json_single_record(htsmsg_t *rec, const char *root)
 
 }
 
-/**
- *
- */
-static int
-extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  const char *s  = http_arg_get(&hc->hc_req_args, "adapterId");
-  const char *op = http_arg_get(&hc->hc_req_args, "op");
-  th_dvb_adapter_t *tda = s ? dvb_adapter_find_by_identifier(s) : NULL;
-  th_dvb_mux_instance_t *tdmi;
-  th_transport_t *t;
-
-  htsmsg_t *r, *out;
-
-  if(tda == NULL)
-    return HTTP_STATUS_BAD_REQUEST;
-
-  pthread_mutex_lock(&global_lock);
-
-  if(http_access_verify(hc, ACCESS_ADMIN)) {
-    pthread_mutex_unlock(&global_lock);
-    return HTTP_STATUS_UNAUTHORIZED;
-  }
-
-  if(!strcmp(op, "load")) {
-    r = htsmsg_create_map();
-    htsmsg_add_str(r, "id", tda->tda_identifier);
-    htsmsg_add_str(r, "device", tda->tda_rootpath ?: "No hardware attached");
-    htsmsg_add_str(r, "name", tda->tda_displayname);
-    htsmsg_add_u32(r, "automux", tda->tda_autodiscovery);
- 
-    out = json_single_record(r, "dvbadapters");
-  } else if(!strcmp(op, "save")) {
-
-    if((s = http_arg_get(&hc->hc_req_args, "name")) != NULL)
-      dvb_adapter_set_displayname(tda, s);
-
-    if((s = http_arg_get(&hc->hc_req_args, "automux")) != NULL)
-      dvb_adapter_set_auto_discovery(tda, 1);
-    else
-      dvb_adapter_set_auto_discovery(tda, 0);
-
-    out = htsmsg_create_map();
-    htsmsg_add_u32(out, "success", 1);
-  } else if(!strcmp(op, "addnetwork")) {
-    if((s = http_arg_get(&hc->hc_req_args, "network")) != NULL)
-      dvb_mux_preconf_add_network(tda, s);
-
-    out = htsmsg_create_map();
-    htsmsg_add_u32(out, "success", 1);
-
-  } else if(!strcmp(op, "serviceprobe")) {
-
-    tvhlog(LOG_NOTICE, "web interface",
-	   "Service probe started on \"%s\"", tda->tda_displayname);
-
-    RB_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
-      LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
-	serviceprobe_enqueue(t);
-      }
-    }
-
-
-    out = htsmsg_create_map();
-    htsmsg_add_u32(out, "success", 1);
-
-  } else {
-    pthread_mutex_unlock(&global_lock);
-    return HTTP_STATUS_BAD_REQUEST;
-  }
-  pthread_mutex_unlock(&global_lock);
-
-  htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
-
-  http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;
-}
 
 /**
  *
@@ -573,7 +399,7 @@ build_transport_msg(th_transport_t *t)
   char subtitles[200];
   char scrambling[200];
 
-  htsmsg_add_u32(r, "enabled", !t->tht_disabled);
+  htsmsg_add_u32(r, "enabled", t->tht_enabled);
   htsmsg_add_str(r, "name", t->tht_svcname);
 
   htsmsg_add_str(r, "provider", t->tht_provider ?: "");
@@ -1237,6 +1063,459 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
 
 
 /**
+ *
+ */
+static int
+extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  th_dvb_adapter_t *tda;
+  htsmsg_t *out, *array, *r;
+  const char *op = http_arg_get(&hc->hc_req_args, "op");
+  const char *s, *sc;
+  th_dvb_mux_instance_t *tdmi;
+  th_transport_t *t;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(remain == NULL) {
+    /* Just list all adapters */
+
+    array = htsmsg_create_list();
+
+    TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link)
+      htsmsg_add_msg(array, NULL, dvb_adapter_build_msg(tda));
+
+    pthread_mutex_unlock(&global_lock);
+    out = htsmsg_create_map();
+    htsmsg_add_msg(out, "entries", array);
+
+    htsmsg_json_serialize(out, hq, 0);
+    htsmsg_destroy(out);
+    http_output_content(hc, "text/x-json; charset=UTF-8");
+    return 0;
+  }
+
+  if((tda = dvb_adapter_find_by_identifier(remain)) == NULL) {
+    pthread_mutex_unlock(&global_lock);
+    return 404;
+  }
+
+  if(!strcmp(op, "load")) {
+    r = htsmsg_create_map();
+    htsmsg_add_str(r, "id", tda->tda_identifier);
+    htsmsg_add_str(r, "device", tda->tda_rootpath ?: "No hardware attached");
+    htsmsg_add_str(r, "name", tda->tda_displayname);
+    htsmsg_add_u32(r, "automux", tda->tda_autodiscovery);
+    htsmsg_add_u32(r, "idlescan", tda->tda_idlescan);
+    htsmsg_add_u32(r, "logging", tda->tda_logging);
+ 
+    out = json_single_record(r, "dvbadapters");
+  } else if(!strcmp(op, "save")) {
+
+    if((s = http_arg_get(&hc->hc_req_args, "name")) != NULL)
+      dvb_adapter_set_displayname(tda, s);
+
+    s = http_arg_get(&hc->hc_req_args, "automux");
+    dvb_adapter_set_auto_discovery(tda, !!s);
+
+    s = http_arg_get(&hc->hc_req_args, "idlescan");
+    dvb_adapter_set_idlescan(tda, !!s);
+
+    s = http_arg_get(&hc->hc_req_args, "logging");
+    dvb_adapter_set_logging(tda, !!s);
+
+    out = htsmsg_create_map();
+    htsmsg_add_u32(out, "success", 1);
+  } else if(!strcmp(op, "addnetwork")) {
+
+    sc = http_arg_get(&hc->hc_req_args, "satconf");
+
+    if((s = http_arg_get(&hc->hc_req_args, "network")) != NULL)
+      dvb_mux_preconf_add_network(tda, s, sc);
+
+    out = htsmsg_create_map();
+    htsmsg_add_u32(out, "success", 1);
+
+  } else if(!strcmp(op, "serviceprobe")) {
+
+    tvhlog(LOG_NOTICE, "web interface",
+	   "Service probe started on \"%s\"", tda->tda_displayname);
+
+    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+      LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
+	if(t->tht_enabled)
+	  serviceprobe_enqueue(t);
+      }
+    }
+
+
+    out = htsmsg_create_map();
+    htsmsg_add_u32(out, "success", 1);
+
+  } else {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;  
+}
+
+
+/**
+ *
+ */
+static void
+mux_update(htsmsg_t *in)
+{
+  htsmsg_field_t *f;
+  htsmsg_t *c;
+  th_dvb_mux_instance_t *tdmi;
+  uint32_t u32;
+  const char *id;
+
+  TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
+    if((c = htsmsg_get_map_by_field(f)) == NULL ||
+       (id = htsmsg_get_str(c, "id")) == NULL)
+      continue;
+    
+    if((tdmi = dvb_mux_find_by_identifier(id)) == NULL)
+      continue;
+
+    if(!htsmsg_get_u32(c, "enabled", &u32))
+      dvb_mux_set_enable(tdmi, u32);
+  }
+}
+
+
+/**
+ *
+ */
+static void
+mux_delete(htsmsg_t *in)
+{
+  htsmsg_field_t *f;
+  th_dvb_mux_instance_t *tdmi;
+  const char *id;
+
+  TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
+    if((id = htsmsg_field_get_string(f)) != NULL &&
+       (tdmi = dvb_mux_find_by_identifier(id)) != NULL)
+      dvb_mux_destroy(tdmi);
+  }
+}
+
+
+/**
+ *
+ */
+static int
+extjs_dvbmuxes(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  th_dvb_adapter_t *tda;
+  htsmsg_t *out, *array, *in;
+  const char *op        = http_arg_get(&hc->hc_req_args, "op");
+  const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
+  th_dvb_mux_instance_t *tdmi;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(remain == NULL ||
+     (tda = dvb_adapter_find_by_identifier(remain)) == NULL) {
+    pthread_mutex_unlock(&global_lock);
+    return 404;
+  }
+
+  in = entries != NULL ? htsmsg_json_deserialize(entries) : NULL;
+
+  out = htsmsg_create_map();
+
+  if(!strcmp(op, "get")) {
+    array = htsmsg_create_list();
+
+    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
+      htsmsg_add_msg(array, NULL, dvb_mux_build_msg(tdmi));
+
+    htsmsg_add_msg(out, "entries", array);
+  } else if(!strcmp(op, "update")) {
+    if(in != NULL)
+      mux_update(in);
+
+    out = htsmsg_create_map();
+
+  } else if(!strcmp(op, "delete")) {
+    if(in != NULL)
+      mux_delete(in);
+    
+    out = htsmsg_create_map();
+
+  } else {
+    pthread_mutex_unlock(&global_lock);
+    if(in != NULL)
+      htsmsg_destroy(in);
+    htsmsg_destroy(out);
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  pthread_mutex_unlock(&global_lock);
+ 
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+
+  if(in != NULL)
+    htsmsg_destroy(in);
+
+  return 0;
+}
+
+
+/**
+ *
+ */
+static void
+transport_update(htsmsg_t *in)
+{
+  htsmsg_field_t *f;
+  htsmsg_t *c;
+  th_transport_t *t;
+  uint32_t u32;
+  const char *id;
+  const char *chname;
+
+  TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
+    if((c = htsmsg_get_map_by_field(f)) == NULL ||
+       (id = htsmsg_get_str(c, "id")) == NULL)
+      continue;
+    
+    if((t = transport_find_by_identifier(id)) == NULL)
+      continue;
+
+    if(!htsmsg_get_u32(c, "enabled", &u32))
+      transport_set_enable(t, u32);
+
+    if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
+      transport_map_channel(t, channel_find_by_name(chname, 1), 0);
+  }
+}
+
+
+/**
+ *
+ */
+static int
+transportcmp(const void *A, const void *B)
+{
+  th_transport_t *a = *(th_transport_t **)A;
+  th_transport_t *b = *(th_transport_t **)B;
+
+  return strcasecmp(a->tht_svcname ?: "\0377", b->tht_svcname ?: "\0377");
+}
+
+/**
+ *
+ */
+static int
+extjs_dvbservices(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  th_dvb_adapter_t *tda;
+  htsmsg_t *out, *array, *in;
+  const char *op        = http_arg_get(&hc->hc_req_args, "op");
+  const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
+  th_dvb_mux_instance_t *tdmi;
+  th_transport_t *t, **tvec;
+  int count = 0, i = 0;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(remain == NULL ||
+     (tda = dvb_adapter_find_by_identifier(remain)) == NULL) {
+    pthread_mutex_unlock(&global_lock);
+    return 404;
+  }
+
+  in = entries != NULL ? htsmsg_json_deserialize(entries) : NULL;
+
+  if(!strcmp(op, "get")) {
+
+    out = htsmsg_create_map();
+    array = htsmsg_create_list();
+
+    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+      LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
+	count++;
+      }
+    }
+
+    tvec = alloca(sizeof(th_transport_t *) * count);
+
+    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+      LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
+	tvec[i++] = t;
+      }
+    }
+
+    qsort(tvec, count, sizeof(th_transport_t *), transportcmp);
+
+    for(i = 0; i < count; i++)
+      htsmsg_add_msg(array, NULL, dvb_transport_build_msg(tvec[i]));
+
+    htsmsg_add_msg(out, "entries", array);
+
+  } else if(!strcmp(op, "update")) {
+    if(in != NULL)
+      transport_update(in);
+
+    out = htsmsg_create_map();
+
+  } else {
+    pthread_mutex_unlock(&global_lock);
+    htsmsg_destroy(in);
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  htsmsg_destroy(in);
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+}
+
+/**
+ *
+ */
+static int
+extjs_lnbtypes(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  htsmsg_t *out;
+
+  out = htsmsg_create_map();
+
+  htsmsg_add_msg(out, "entries", dvb_lnblist_get());
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+}  
+
+
+
+
+/**
+ *
+ */
+static int
+extjs_dvbsatconf(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  th_dvb_adapter_t *tda;
+  htsmsg_t *out;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(remain == NULL ||
+     (tda = dvb_adapter_find_by_identifier(remain)) == NULL) {
+    pthread_mutex_unlock(&global_lock);
+    return 404;
+  }
+
+  out = htsmsg_create_map();
+  htsmsg_add_msg(out, "entries", dvb_satconf_list(tda));
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;  
+}
+
+
+/**
+ *
+ */
+static int
+extjs_dvbservicedetails(http_connection_t *hc, 
+			const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  htsmsg_t *out, *streams, *c;
+  th_transport_t *t;
+  th_stream_t *st;
+  char buf[20];
+
+  pthread_mutex_lock(&global_lock);
+
+  if(remain == NULL || (t = transport_find_by_identifier(remain)) == NULL) {
+    pthread_mutex_unlock(&global_lock);
+    return 404;
+  }
+
+  streams = htsmsg_create_list();
+
+  LIST_FOREACH(st, &t->tht_components, st_link) {
+    c = htsmsg_create_map();
+
+    htsmsg_add_u32(c, "pid", st->st_pid);
+
+    htsmsg_add_str(c, "type", streaming_component_type2txt(st->st_type));
+
+    switch(st->st_type) {
+    default:
+      htsmsg_add_str(c, "details", "");
+      break;
+
+    case SCT_CA:
+      htsmsg_add_str(c, "details", psi_caid2name(st->st_caid));
+      break;
+
+    case SCT_AC3:
+    case SCT_AAC:
+    case SCT_MPEG2AUDIO:
+      htsmsg_add_str(c, "details", st->st_lang);
+      break;
+
+    case SCT_MPEG2VIDEO:
+    case SCT_H264:
+      buf[0] = 0;
+      if(st->st_frame_duration)
+	snprintf(buf, sizeof(buf), "%2.2f Hz",
+		 90000.0 / st->st_frame_duration);
+      htsmsg_add_str(c, "details", buf);
+      break;
+    }
+
+    htsmsg_add_msg(streams, NULL, c);
+  }
+
+  out = htsmsg_create_map();
+  htsmsg_add_str(out, "title", t->tht_svcname ?: "unnamed transport");
+
+  htsmsg_add_msg(out, "streams", streams);
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+}
+
+
+/**
  * WEB user interface
  */
 void
@@ -1245,8 +1524,6 @@ extjs_start(void)
   http_path_add("/about.html",  NULL, page_about,        ACCESS_WEB_INTERFACE);
   http_path_add("/extjs.html",  NULL, extjs_root,        ACCESS_WEB_INTERFACE);
   http_path_add("/tablemgr",    NULL, extjs_tablemgr,    ACCESS_WEB_INTERFACE);
-  http_path_add("/dvbtree",     NULL, extjs_dvbtree,     ACCESS_WEB_INTERFACE);
-  http_path_add("/dvbadapter",  NULL, extjs_dvbadapter,  ACCESS_WEB_INTERFACE);
   http_path_add("/dvbnetworks", NULL, extjs_dvbnetworks, ACCESS_WEB_INTERFACE);
   http_path_add("/chlist",      NULL, extjs_chlist,      ACCESS_WEB_INTERFACE);
   http_path_add("/channel",     NULL, extjs_channel,     ACCESS_WEB_INTERFACE);
@@ -1256,4 +1533,22 @@ extjs_start(void)
   http_path_add("/dvr",         NULL, extjs_dvr,         ACCESS_WEB_INTERFACE);
   http_path_add("/dvrlist",     NULL, extjs_dvrlist,     ACCESS_WEB_INTERFACE);
   http_path_add("/ecglist",     NULL, extjs_ecglist,     ACCESS_WEB_INTERFACE);
+
+  http_path_add("/dvb/adapter", 
+		NULL, extjs_dvbadapter, ACCESS_ADMIN);
+
+  http_path_add("/dvb/muxes", 
+		NULL, extjs_dvbmuxes, ACCESS_ADMIN);
+
+  http_path_add("/dvb/services", 
+		NULL, extjs_dvbservices, ACCESS_ADMIN);
+
+  http_path_add("/dvb/lnbtypes", 
+		NULL, extjs_lnbtypes, ACCESS_ADMIN);
+
+  http_path_add("/dvb/satconf", 
+		NULL, extjs_dvbsatconf, ACCESS_ADMIN);
+
+  http_path_add("/dvb/servicedetails", 
+		NULL, extjs_dvbservicedetails, ACCESS_ADMIN);
 }

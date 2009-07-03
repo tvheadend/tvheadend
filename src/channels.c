@@ -351,8 +351,6 @@ channel_rename(channel_t *ch, const char *newname)
   channel_set_name(ch, newname);
 
   LIST_FOREACH(t, &ch->ch_transports, tht_ch_link) {
-    free(t->tht_chname);
-    t->tht_chname = strdup(newname);
     pthread_mutex_lock(&t->tht_stream_mutex);
     t->tht_config_change(t);
     pthread_mutex_unlock(&t->tht_stream_mutex);
@@ -387,12 +385,8 @@ channel_delete(channel_t *ch)
 
   dvr_destroy_by_channel(ch);
 
-  while((t = LIST_FIRST(&ch->ch_transports)) != NULL) {
-    transport_unmap_channel(t);
-    pthread_mutex_lock(&t->tht_stream_mutex);
-    t->tht_config_change(t);
-    pthread_mutex_unlock(&t->tht_stream_mutex);
-  }
+  while((t = LIST_FIRST(&ch->ch_transports)) != NULL)
+    transport_map_channel(t, NULL, 1);
 
   while((s = LIST_FIRST(&ch->ch_subscriptions)) != NULL) {
     LIST_REMOVE(s, ths_channel_link);
@@ -434,13 +428,8 @@ channel_merge(channel_t *dst, channel_t *src)
   tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" merged into \"%s\"",
 	 src->ch_name, dst->ch_name);
 
-  while((t = LIST_FIRST(&src->ch_transports)) != NULL) {
-    transport_unmap_channel(t);
-    transport_map_channel(t, dst);
-    pthread_mutex_lock(&t->tht_stream_mutex);
-    t->tht_config_change(t);
-    pthread_mutex_unlock(&t->tht_stream_mutex);
-  }
+  while((t = LIST_FIRST(&src->ch_transports)) != NULL)
+    transport_map_channel(t, dst, 1);
 
   channel_delete(src);
 }

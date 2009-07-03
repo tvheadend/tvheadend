@@ -20,10 +20,32 @@
 #define DVB_H_
 
 #include <linux/dvb/frontend.h>
+#include "htsmsg.h"
 
 TAILQ_HEAD(th_dvb_adapter_queue, th_dvb_adapter);
 RB_HEAD(th_dvb_mux_instance_tree, th_dvb_mux_instance);
 TAILQ_HEAD(th_dvb_mux_instance_queue, th_dvb_mux_instance);
+LIST_HEAD(th_dvb_mux_instance_list, th_dvb_mux_instance);
+TAILQ_HEAD(dvb_satconf_queue, dvb_satconf);
+
+
+/**
+ * Satconf
+ */
+
+typedef struct dvb_satconf {
+  char *sc_id;
+  TAILQ_ENTRY(dvb_satconf) sc_adapter_link;
+  int sc_port;                   // diseqc switchport (0 - 15)
+
+  char *sc_name;
+  char *sc_comment;
+  char *sc_lnb;
+
+  struct th_dvb_mux_instance_list sc_tdmis;
+
+} dvb_satconf_t;
+
 
 
 enum polarisation {
@@ -42,8 +64,9 @@ enum polarisation {
 typedef struct th_dvb_mux_instance {
 
   RB_ENTRY(th_dvb_mux_instance) tdmi_global_link;
-  RB_ENTRY(th_dvb_mux_instance) tdmi_adapter_link;
 
+  LIST_ENTRY(th_dvb_mux_instance) tdmi_adapter_link;
+  LIST_ENTRY(th_dvb_mux_instance) tdmi_adapter_hash_link;
 
   struct th_dvb_adapter *tdmi_adapter;
 
@@ -55,8 +78,12 @@ typedef struct th_dvb_mux_instance {
   int      tdmi_fec_err_ptr;
 
   time_t tdmi_time;
+
+
   LIST_HEAD(, th_dvb_table) tdmi_tables;
   TAILQ_HEAD(, th_dvb_table) tdmi_table_queue;
+  int64_t tdmi_table_start;
+  int tdmi_table_initial;
 
   enum {
     TDMI_FE_UNKNOWN,
@@ -70,12 +97,13 @@ typedef struct th_dvb_mux_instance {
 
   int tdmi_quality;
 
+  int tdmi_enabled;
+
   time_t tdmi_got_adapter;
   time_t tdmi_lost_adapter;
 
   struct dvb_frontend_parameters tdmi_fe_params;
   uint8_t tdmi_polarisation;  /* for DVB-S */
-  uint8_t tdmi_switchport;    /* for DVB-S */
 
   uint16_t tdmi_transport_stream_id;
 
@@ -88,29 +116,28 @@ typedef struct th_dvb_mux_instance {
   TAILQ_ENTRY(th_dvb_mux_instance) tdmi_scan_link;
   struct th_dvb_mux_instance_queue *tdmi_scan_queue;
 
+  LIST_ENTRY(th_dvb_mux_instance) tdmi_satconf_link;
+  dvb_satconf_t *tdmi_satconf;
+
 } th_dvb_mux_instance_t;
 
-
-#define DVB_MUX_SCAN_BAD 0      /* On the bad queue */
-#define DVB_MUX_SCAN_OK  1      /* Ok, don't need to scan that often */
-#define DVB_MUX_SCAN_INITIAL 2  /* To get a scan directly when a mux
-				   is discovered */
 
 /**
  * DVB Adapter (one of these per physical adapter)
  */
+#define TDA_MUX_HASH_WIDTH 101
+
 typedef struct th_dvb_adapter {
 
   TAILQ_ENTRY(th_dvb_adapter) tda_global_link;
 
-  struct th_dvb_mux_instance_tree tda_muxes;
+  struct th_dvb_mux_instance_list tda_muxes;
 
-  /**
-   * We keep our muxes on three queues in order to select how
-   * they are to be idle-scanned
-   */
-  struct th_dvb_mux_instance_queue tda_scan_queues[3];
-  int tda_scan_selector;  /* To alternate between bad and ok queue */
+  struct th_dvb_mux_instance_queue tda_scan_queues[2];
+  int tda_scan_selector;
+
+  struct th_dvb_mux_instance_queue tda_initial_scan_queue;
+  int tda_initial_num_mux;
 
   th_dvb_mux_instance_t *tda_mux_current;
 
@@ -119,6 +146,9 @@ typedef struct th_dvb_adapter {
   const char *tda_rootpath;
   char *tda_identifier;
   uint32_t tda_autodiscovery;
+  uint32_t tda_idlescan;
+  uint32_t tda_logging;
+
   char *tda_displayname;
 
   int tda_fe_fd;
@@ -137,6 +167,13 @@ typedef struct th_dvb_adapter {
   gtimer_t tda_fe_monitor_timer;
   int tda_fe_monitor_hold;
 
+  int tda_sat; // Set if this adapter is a satellite receiver (DVB-S, etc) 
+
+  struct dvb_satconf_queue tda_satconfs;
+
+
+  struct th_dvb_mux_instance_list tda_mux_hash[TDA_MUX_HASH_WIDTH];
+
 } th_dvb_adapter_t;
 
 
@@ -153,17 +190,23 @@ void dvb_adapter_init(void);
 
 void dvb_adapter_mux_scanner(void *aux);
 
-void dvb_adapter_notify_reload(th_dvb_adapter_t *tda);
-
 void dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s);
 
 void dvb_adapter_set_auto_discovery(th_dvb_adapter_t *tda, int on);
+
+void dvb_adapter_set_idlescan(th_dvb_adapter_t *tda, int on);
+
+void dvb_adapter_set_logging(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src);
 
 void dvb_adapter_clean(th_dvb_adapter_t *tda);
 
 int dvb_adapter_destroy(th_dvb_adapter_t *tda);
+
+void dvb_adapter_notify(th_dvb_adapter_t *tda);
+
+htsmsg_t *dvb_adapter_build_msg(th_dvb_adapter_t *tda);
 
 /**
  * DVB Multiplex
@@ -176,11 +219,23 @@ void dvb_mux_destroy(th_dvb_mux_instance_t *tdmi);
 
 th_dvb_mux_instance_t *dvb_mux_create(th_dvb_adapter_t *tda,
 				      struct dvb_frontend_parameters *fe_param,
-				      int polarisation, int switchport,
+				      int polarisation, dvb_satconf_t *sc,
 				      uint16_t tsid, const char *network,
-				      const char *logprefix);
+				      const char *logprefix, int enabled,
+				      const char *identifier);
 
 void dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *name);
+
+void dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid);
+
+void dvb_mux_set_enable(th_dvb_mux_instance_t *tdmi, int enabled);
+
+void dvb_mux_set_satconf(th_dvb_mux_instance_t *tdmi, const char *scid,
+			 int save);
+
+htsmsg_t *dvb_mux_build_msg(th_dvb_mux_instance_t *tdmi);
+
+void dvb_mux_notify(th_dvb_mux_instance_t *tdmi);
 
 /**
  * DVB Transport (aka DVB service)
@@ -188,7 +243,14 @@ void dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *name);
 void dvb_transport_load(th_dvb_mux_instance_t *tdmi);
 
 th_transport_t *dvb_transport_find(th_dvb_mux_instance_t *tdmi,
-				   uint16_t sid, int pmt_pid);
+				   uint16_t sid, int pmt_pid,
+				   const char *identifier);
+
+void dvb_transport_notify(th_transport_t *t);
+
+void dvb_transport_notify_by_adapter(th_dvb_adapter_t *tda);
+
+htsmsg_t *dvb_transport_build_msg(th_transport_t *t);
 
 
 /**
@@ -210,5 +272,20 @@ void dvb_table_add_transport(th_dvb_mux_instance_t *tdmi, th_transport_t *t,
 			     int pmt_pid);
 
 void dvb_table_flush_all(th_dvb_mux_instance_t *tdmi);
+
+/**
+ * Satellite configuration
+ */
+void dvb_satconf_init(th_dvb_adapter_t *tda);
+
+htsmsg_t *dvb_satconf_list(th_dvb_adapter_t *tda);
+
+htsmsg_t *dvb_lnblist_get(void);
+
+dvb_satconf_t *dvb_satconf_entry_find(th_dvb_adapter_t *tda, 
+				      const char *id, int create);
+
+void dvb_lnb_get_frequencies(const char *id, 
+			     int *f_low, int *f_hi, int *f_switch);
 
 #endif /* DVB_H_ */

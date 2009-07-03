@@ -77,7 +77,8 @@ SRCS += src/dvb/dvb.c \
 	src/dvb/dvb_adapter.c \
 	src/dvb/dvb_multiplex.c \
 	src/dvb/dvb_transport.c \
-	src/dvb/dvb_preconf.c
+	src/dvb/dvb_preconf.c \
+	src/dvb/dvb_satconf.c \
 
 #
 # cwc

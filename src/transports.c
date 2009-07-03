@@ -298,13 +298,13 @@ transport_find(channel_t *ch, unsigned int weight)
   /* First, sort all transports in order */
 
   LIST_FOREACH(t, &ch->ch_transports, tht_ch_link)
-    if(!t->tht_disabled && t->tht_quality_index(t) > 10)
+      if(t->tht_enabled && t->tht_quality_index(t) > 10)
       cnt++;
 
   vec = alloca(cnt * sizeof(th_transport_t *));
   i = 0;
   LIST_FOREACH(t, &ch->ch_transports, tht_ch_link)
-    if(!t->tht_disabled && t->tht_quality_index(t) > 10)
+    if(t->tht_enabled && t->tht_quality_index(t) > 10)
       vec[i++] = t;
 
   assert(i == cnt);
@@ -415,7 +415,6 @@ transport_destroy(th_transport_t *t)
 
   free(t->tht_identifier);
   free(t->tht_svcname);
-  free(t->tht_chname);
   free(t->tht_provider);
 
   while((st = LIST_FIRST(&t->tht_components)) != NULL) {
@@ -443,6 +442,7 @@ transport_create(const char *identifier, int type, int source_type)
   t->tht_type = type;
   t->tht_source_type = source_type;
   t->tht_refcount = 1;
+  t->tht_enabled = 1;
 
   streaming_pad_init(&t->tht_streaming_pad);
 
@@ -533,41 +533,31 @@ transport_stream_find(th_transport_t *t, int pid)
  *
  */
 void
-transport_map_channel(th_transport_t *t, channel_t *ch)
+transport_map_channel(th_transport_t *t, channel_t *ch, int save)
 {
-
   lock_assert(&global_lock);
 
-  assert(t->tht_ch == NULL);
-
-  if(ch == NULL) {
-    if(t->tht_chname == NULL)
-      return;
-    ch = channel_find_by_name(t->tht_chname, 1);
-  } else {
-    free(t->tht_chname);
-    t->tht_chname = strdup(ch->ch_name);
+  if(t->tht_ch != NULL) {
+    t->tht_ch = NULL;
+    LIST_REMOVE(t, tht_ch_link);
   }
 
-  avgstat_init(&t->tht_cc_errors, 3600);
-  avgstat_init(&t->tht_rate, 10);
 
-  assert(t->tht_identifier != NULL);
-  t->tht_ch = ch;
+  if(ch != NULL) {
 
-  LIST_INSERT_HEAD(&ch->ch_transports, t, tht_ch_link);
-}
+    avgstat_init(&t->tht_cc_errors, 3600);
+    avgstat_init(&t->tht_rate, 10);
 
-/**
- *
- */
-void
-transport_unmap_channel(th_transport_t *t)
-{
-  lock_assert(&global_lock);
+    t->tht_ch = ch;
+    LIST_INSERT_HEAD(&ch->ch_transports, t, tht_ch_link);
+  }
 
-  t->tht_ch = NULL;
-  LIST_REMOVE(t, tht_ch_link);
+  if(!save)
+    return;
+
+  pthread_mutex_lock(&t->tht_stream_mutex);
+  t->tht_config_change(t); // Save config
+  pthread_mutex_unlock(&t->tht_stream_mutex);
 }
 
 
@@ -602,7 +592,7 @@ static struct strtab stypetab[] = {
 const char *
 transport_servicetype_txt(th_transport_t *t)
 {
-  return val2str(t->tht_servicetype, stypetab);
+  return val2str(t->tht_servicetype, stypetab) ?: "Other";
 }
 
 /**
@@ -618,14 +608,6 @@ transport_is_tv(th_transport_t *t)
     t->tht_servicetype == ST_AC_HDTV;
 }
 
-/**
- *
- */
-int
-transport_is_available(th_transport_t *t)
-{
-  return transport_servicetype_txt(t) && LIST_FIRST(&t->tht_components);
-}
 
 /**
  *
@@ -719,3 +701,18 @@ transport_feed_status_to_text(transport_feed_status_t status)
 }
 
 
+/**
+ *
+ */
+void
+transport_set_enable(th_transport_t *t, int enabled)
+{
+  if(t->tht_enabled == enabled)
+    return;
+
+  t->tht_enabled = enabled;
+
+  pthread_mutex_lock(&t->tht_stream_mutex);
+  t->tht_config_change(t); // Save config
+  pthread_mutex_unlock(&t->tht_stream_mutex);
+}

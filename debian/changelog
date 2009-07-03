@@ -1,3 +1,33 @@
+hts-tvheadend (2.3) hts; urgency=low
+
+  * Redesigned the DVB configuration tab in the web userinterface:
+    - Each adapter have three (or four) tabs
+      o General setup and information
+      o Grid of multiplexes
+      o Grid of services
+      o For sattelite adapters, a sattelite configuration tab.
+
+  * Add support for disabling / enabling an entire DVB multiplex
+
+  * Add support for multiple DiSEqC switchports on a single adapter
+
+  * Add support for different sattelite LNBs
+
+  * Graceful handling of DVB adapters that does not support many
+    table filters in hardware. Tvheadend will rotate among the available
+    ones.
+
+  * Add support for enabling / disabling transports from the DVB configuration
+
+  * Make it possible to remove DVB multiplexes from the web ui
+
+  * Add 'Revert changes' button to all editable grids in the web ui
+
+  * Make it possible to disable the idle scan on per-DVB adapter basis.
+    The idle scan is a process to cycles through all multiplex to check
+    the quality for each mux continously.
+
+
 hts-tvheadend (2.2) hts; urgency=low
 
   * Set $HOME so forked processes (XMLTV) will have correct environment

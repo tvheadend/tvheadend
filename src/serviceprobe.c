@@ -109,6 +109,9 @@ serviceprobe_thread(void *aux)
       was_doing_work = 1;
     }
 
+    tvhlog(LOG_INFO, "serviceprobe", "%20s: checking...",
+	   t->tht_svcname);
+
     s = subscription_create_from_transport(t, "serviceprobe", &sq.sq_st);
 
     transport_ref(t);
@@ -154,13 +157,9 @@ serviceprobe_thread(void *aux)
 	       t->tht_svcname, err);
       } else if(t->tht_ch == NULL) {
 	ch = channel_find_by_name(t->tht_svcname, 1);
-	transport_map_channel(t, ch);
-    
-	pthread_mutex_lock(&t->tht_stream_mutex);
-	t->tht_config_change(t);
-	pthread_mutex_unlock(&t->tht_stream_mutex);
+	transport_map_channel(t, ch, 1);
       
-	tvhlog(LOG_INFO, "serviceprobe", "\"%s\" mapped to channel \"%s\"",
+	tvhlog(LOG_INFO, "serviceprobe", "%20s: mapped to channel \"%s\"",
 	       t->tht_svcname, t->tht_svcname);
       }
 

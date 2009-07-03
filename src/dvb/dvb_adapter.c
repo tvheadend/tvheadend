@@ -53,12 +53,13 @@ static void *dvb_adapter_input_dvr(void *aux);
 static th_dvb_adapter_t *
 tda_alloc(void)
 {
-  int i;
   th_dvb_adapter_t *tda = calloc(1, sizeof(th_dvb_adapter_t));
   pthread_mutex_init(&tda->tda_delivery_mutex, NULL);
 
-  for(i = 0; i < 3; i++)
-    TAILQ_INIT(&tda->tda_scan_queues[i]);
+  TAILQ_INIT(&tda->tda_scan_queues[0]);
+  TAILQ_INIT(&tda->tda_scan_queues[1]);
+  TAILQ_INIT(&tda->tda_initial_scan_queue);
+  TAILQ_INIT(&tda->tda_satconfs);
   return tda;
 }
 
@@ -76,6 +77,8 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_str(m, "type", dvb_adaptertype_to_str(tda->tda_type));
   htsmsg_add_str(m, "displayname", tda->tda_displayname);
   htsmsg_add_u32(m, "autodiscovery", tda->tda_autodiscovery);
+  htsmsg_add_u32(m, "idlescan", tda->tda_idlescan);
+  htsmsg_add_u32(m, "logging", tda->tda_logging);
   hts_settings_save(m, "dvbadapters/%s", tda->tda_identifier);
   htsmsg_destroy(m);
 }
@@ -87,8 +90,6 @@ tda_save(th_dvb_adapter_t *tda)
 void
 dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s)
 {
-  htsmsg_t *m;
-
   lock_assert(&global_lock);
 
   if(!strcmp(s, tda->tda_displayname))
@@ -97,17 +98,12 @@ dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s)
   tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" renamed to \"%s\"",
 	 tda->tda_displayname, s);
 
-  m = htsmsg_create_map();
-  htsmsg_add_str(m, "id", tda->tda_identifier);
-
   free(tda->tda_displayname);
   tda->tda_displayname = strdup(s);
   
   tda_save(tda);
 
-  htsmsg_add_str(m, "name", tda->tda_displayname);
-
-  notify_by_msg("dvbadapter", m);
+  dvb_adapter_notify(tda);
 }
 
 
@@ -122,10 +118,48 @@ dvb_adapter_set_auto_discovery(th_dvb_adapter_t *tda, int on)
 
   lock_assert(&global_lock);
 
-  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" mux autodiscovery set to %s",
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" mux autodiscovery set to: %s",
 	 tda->tda_displayname, on ? "On" : "Off");
 
   tda->tda_autodiscovery = on;
+  tda_save(tda);
+}
+
+
+/**
+ *
+ */
+void
+dvb_adapter_set_idlescan(th_dvb_adapter_t *tda, int on)
+{
+  if(tda->tda_idlescan == on)
+    return;
+
+  lock_assert(&global_lock);
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" idle mux scanning set to: %s",
+	 tda->tda_displayname, on ? "On" : "Off");
+
+  tda->tda_idlescan = on;
+  tda_save(tda);
+}
+
+
+/**
+ *
+ */
+void
+dvb_adapter_set_logging(th_dvb_adapter_t *tda, int on)
+{
+  if(tda->tda_logging == on)
+    return;
+
+  lock_assert(&global_lock);
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" detailed logging set to: %s",
+	 tda->tda_displayname, on ? "On" : "Off");
+
+  tda->tda_logging = on;
   tda_save(tda);
 }
 
@@ -185,6 +219,9 @@ tda_add(const char *path)
   tda->tda_identifier = strdup(buf);
   
   tda->tda_autodiscovery = tda->tda_type != FE_QPSK;
+  tda->tda_idlescan = 1;
+
+  tda->tda_sat = tda->tda_type == FE_QPSK;
 
   /* Come up with an initial displayname, user can change it and it will
      be overridden by any stored settings later on */
@@ -199,6 +236,11 @@ tda_add(const char *path)
   pthread_create(&ptid, NULL, dvb_adapter_input_dvr, tda);
 
   dvb_table_init(tda);
+
+  if(tda->tda_sat)
+    dvb_satconf_init(tda);
+
+  gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 1);
 }
 
 
@@ -250,26 +292,14 @@ dvb_adapter_init(void)
       tda->tda_displayname = strdup(name);
 
       htsmsg_get_u32(c, "autodiscovery", &tda->tda_autodiscovery);
+      htsmsg_get_u32(c, "idlescan", &tda->tda_idlescan);
+      htsmsg_get_u32(c, "logging", &tda->tda_logging);
     }
     htsmsg_destroy(l);
   }
 
   TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link)
     dvb_mux_load(tda);
-}
-
-
-/**
- *
- */
-void
-dvb_adapter_notify_reload(th_dvb_adapter_t *tda)
-{
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "id", tda->tda_identifier);
-
-  htsmsg_add_u32(m, "reload", 1);
-  notify_by_msg("dvbadapter", m);
 }
 
 
@@ -284,35 +314,38 @@ dvb_adapter_mux_scanner(void *aux)
   th_dvb_mux_instance_t *tdmi;
   int i;
 
-  gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 10);
+  gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 20);
+
+  if(LIST_FIRST(&tda->tda_muxes) == NULL)
+    return; // No muxes configured
 
   if(transport_compute_weight(&tda->tda_transports) > 0)
     return; /* someone is here */
 
   /* Check if we have muxes pending for quickscan, if so, choose them */
-  tdmi = TAILQ_FIRST(&tda->tda_scan_queues[DVB_MUX_SCAN_INITIAL]);
-
-  /* If not, alternate between the other two (bad and OK) */
-  if(tdmi == NULL) {
-    for(i = 0; i < 2; i++) {
-      tda->tda_scan_selector = !tda->tda_scan_selector;
-      tdmi = TAILQ_FIRST(&tda->tda_scan_queues[tda->tda_scan_selector]);
-      if(tdmi != NULL) {
-	assert(tdmi->tdmi_scan_queue == 
-	       &tda->tda_scan_queues[tda->tda_scan_selector]);
-	break;
-      }
-    }
-  } else {
-    assert(tdmi->tdmi_scan_queue == 
-	   &tda->tda_scan_queues[DVB_MUX_SCAN_INITIAL]);
+  if((tdmi = TAILQ_FIRST(&tda->tda_initial_scan_queue)) != NULL) {
+    dvb_fe_tune(tdmi, "Initial autoscan");
+    return;
   }
 
-  if(tdmi != NULL) {
-    /* Push to tail of queue */
-    TAILQ_REMOVE(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
-    TAILQ_INSERT_TAIL(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
-    dvb_fe_tune(tdmi, "Autoscan");
+  if(!tda->tda_idlescan && TAILQ_FIRST(&tda->tda_scan_queues[0]) == NULL) {
+    /* Idlescan is disabled and no muxes are bad.
+       If the currently tuned mux is ok, we can stick to it */
+    
+    tdmi = tda->tda_mux_current;
+
+    if(tdmi != NULL && tdmi->tdmi_quality > 90)
+      return;
+  }
+
+  /* Alternate between the other two (bad and OK) */
+  for(i = 0; i < 2; i++) {
+    tda->tda_scan_selector = !tda->tda_scan_selector;
+    tdmi = TAILQ_FIRST(&tda->tda_scan_queues[tda->tda_scan_selector]);
+    if(tdmi != NULL) {
+      dvb_fe_tune(tdmi, "Autoscan");
+      return;
+    }
   }
 }
 
@@ -328,18 +361,19 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
 
   lock_assert(&global_lock);
 
-  while((tdmi_dst = RB_FIRST(&dst->tda_muxes)) != NULL)
+  while((tdmi_dst = LIST_FIRST(&dst->tda_muxes)) != NULL)
     dvb_mux_destroy(tdmi_dst);
 
-  RB_FOREACH(tdmi_src, &src->tda_muxes, tdmi_adapter_link) {
+  LIST_FOREACH(tdmi_src, &src->tda_muxes, tdmi_adapter_link) {
 
     tdmi_dst = dvb_mux_create(dst, 
 			      &tdmi_src->tdmi_fe_params,
 			      tdmi_src->tdmi_polarisation, 
-			      tdmi_src->tdmi_switchport,
+			      tdmi_src->tdmi_satconf,
 			      tdmi_src->tdmi_transport_stream_id,
 			      tdmi_src->tdmi_network,
-			      "copy operation");
+			      "copy operation", tdmi_src->tdmi_enabled,
+			      NULL);
 
 
     assert(tdmi_dst != NULL);
@@ -347,10 +381,10 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
     LIST_FOREACH(t_src, &tdmi_src->tdmi_transports, tht_mux_link) {
       t_dst = dvb_transport_find(tdmi_dst, 
 				 t_src->tht_dvb_service_id,
-				 t_src->tht_pmt_pid);
+				 t_src->tht_pmt_pid, NULL);
 
       t_dst->tht_pcr_pid     = t_src->tht_pcr_pid;
-      t_dst->tht_disabled    = t_src->tht_disabled;
+      t_dst->tht_enabled     = t_src->tht_enabled;
       t_dst->tht_servicetype = t_src->tht_servicetype;
       t_dst->tht_scrambled   = t_src->tht_scrambled;
 
@@ -360,11 +394,8 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
       if(t_src->tht_svcname != NULL)
 	t_dst->tht_svcname = strdup(t_src->tht_svcname);
 
-      if(t_src->tht_chname != NULL)
-	t_dst->tht_chname = strdup(t_src->tht_chname);
-      
       if(t_src->tht_ch != NULL)
-	transport_map_channel(t_dst, t_src->tht_ch);
+	transport_map_channel(t_dst, t_src->tht_ch, 0);
 
       pthread_mutex_lock(&t_src->tht_stream_mutex);
 
@@ -381,6 +412,7 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
 	st_dst->st_caid           = st_src->st_caid;
       }
 
+      t_dst->tht_config_change(t_dst); // Save config
       pthread_mutex_unlock(&t_src->tht_stream_mutex);
 
     }
@@ -404,7 +436,7 @@ dvb_adapter_destroy(th_dvb_adapter_t *tda)
 
   hts_settings_remove("dvbadapters/%s", tda->tda_identifier);
 
-  while((tdmi = RB_FIRST(&tda->tda_muxes)) != NULL)
+  while((tdmi = LIST_FIRST(&tda->tda_muxes)) != NULL)
     dvb_mux_destroy(tdmi);
   
   TAILQ_REMOVE(&dvb_adapters, tda, tda_global_link);
@@ -463,4 +495,54 @@ dvb_adapter_input_dvr(void *aux)
 
     pthread_mutex_unlock(&tda->tda_delivery_mutex);
   }
+}
+
+/**
+ *
+ */
+htsmsg_t *
+dvb_adapter_build_msg(th_dvb_adapter_t *tda)
+{
+  char buf[100];
+  htsmsg_t *m = htsmsg_create_map();
+  th_dvb_mux_instance_t *tdmi;
+  th_transport_t *t;
+
+  int nummux = 0;
+  int numsvc = 0;
+
+  htsmsg_add_str(m, "identifier", tda->tda_identifier);
+  htsmsg_add_str(m, "name", tda->tda_displayname);
+  htsmsg_add_str(m, "path", tda->tda_rootpath);
+  htsmsg_add_str(m, "devicename", tda->tda_fe_info->name);
+
+  // XXX: bad bad bad slow slow slow
+  LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+    nummux++;
+    LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
+      numsvc++;
+    }
+  }
+
+  htsmsg_add_u32(m, "services", numsvc);
+  htsmsg_add_u32(m, "muxes", nummux);
+  htsmsg_add_u32(m, "initialMuxes", tda->tda_initial_num_mux);
+
+  if(tda->tda_mux_current != NULL) {
+    dvb_mux_nicename(buf, sizeof(buf), tda->tda_mux_current);
+    htsmsg_add_str(m, "currentMux", buf);
+  }
+
+  htsmsg_add_u32(m, "satConf", tda->tda_sat);
+  return m;
+}
+
+
+/**
+ *
+ */
+void
+dvb_adapter_notify(th_dvb_adapter_t *tda)
+{
+  notify_by_msg("dvbAdapter", dvb_adapter_build_msg(tda));
 }

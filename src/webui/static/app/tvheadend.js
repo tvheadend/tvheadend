@@ -36,7 +36,6 @@ tvheadend.help = function(title, pagename) {
  */
 function accessUpdate(o) {
 
-
     if(o.dvr == true && tvheadend.dvrpanel == null) {
 	tvheadend.dvrpanel = new tvheadend.dvr;
 	tvheadend.rootTabPanel.add(tvheadend.dvrpanel);
@@ -71,103 +70,23 @@ function accessUpdate(o) {
     tvheadend.rootTabPanel.doLayout();
 }
 
+
 /**
- * Comet interfaces
- */
-tvheadend.comet_poller = function() {
-    
-    function parse_comet_response(responsetxt) {
-	
-	var response = Ext.util.JSON.decode(responsetxt);
-	
-	for (var x = 0; x < response.messages.length; x++) {
-	    var m = response.messages[x];
-	    
-	    switch(m.notificationClass) {
+*
+*/
+tvheadend.log = function(msg, style) {
+    s = style ? '<div style="' + style + '">' : '<div>'
 
-	    case 'accessUpdate':
-		accessUpdate(m);
-		break;
-
-	    case 'channeltags':
-		if(m.reload != null)
-		    tvheadend.channelTags.reload();
-		break;
-
-	    case 'autorec':
-		if(m.asyncreload != null)
-		    tvheadend.autorecStore.reload();
-		break;
-
-	    case 'dvrdb':
-		if(m.reload != null)
-		    tvheadend.dvrStore.reload();
-		break;
-
-	    case 'channels':
-		if(m.reload != null)
-		    tvheadend.channels.reload();
-		break;
-
-	    case 'logmessage':
-		
-		var sl = Ext.get('systemlog');
-		var e = Ext.DomHelper.append(sl,
-		    '<div>' + m.logtxt + '</div>');
-		e.scrollIntoView(sl);
-		break;
-		
-	    case 'dvbadapter':
-	    case 'dvbmux':
-	    case 'dvbtransport':
-		var n = tvheadend.dvbtree.getNodeById(m.id);
-		if(n != null) {
-
-		    if(m.reload != null && n.isLoaded()) {
-			n.reload();
-		    }
-		    
-		    if(m.name != null) {
-			n.setText(m.name);
-			n.attributes.name = m.name;
-		    }
-		    
-		    if(m.quality != null) {
-			n.getUI().setColText(3, m.quality);
-			n.attributes.quality = m.quality;
-		    }
-
-		    if(m.status != null) {
-			n.getUI().setColText(2, m.status);
-			n.attributes.status = m.status;
-		    }
-		}
-		break;
-		
-	    }
-	}
-	
-	Ext.Ajax.request({
-	    url: '/comet',
-	    params : { boxid: response.boxid },
-	    success: function(result, request) { 
-		parse_comet_response(result.responseText);
-	    }});
-	
-    };
-    
-    Ext.Ajax.request({
-	url: '/comet',
-	success: function(result, request) { 
-	    parse_comet_response(result.responseText);
-	}});
+    sl = Ext.get('systemlog');
+    e = Ext.DomHelper.append(sl, s + '<pre>' + msg + '</pre></div>');
+    e.scrollIntoView('systemlog');
 }
+
 
 
 /**
  *
  */
-
 // create application
 tvheadend.app = function() {
  
@@ -176,7 +95,6 @@ tvheadend.app = function() {
  
         // public methods
         init: function() {
-	    
 
 	    tvheadend.rootTabPanel = new Ext.TabPanel({
 		region:'center',
@@ -202,8 +120,14 @@ tvheadend.app = function() {
 		]
 	    });
 
+	    tvheadend.comet.on('accessUpdate', accessUpdate);
 
-	    new tvheadend.comet_poller;
+	    tvheadend.comet.on('logmessage', function(m) {
+		tvheadend.log(m.logtxt);
+	    });
+
+	    new tvheadend.cometPoller;
+
 	    Ext.QuickTips.init();
 	}
 	

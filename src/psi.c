@@ -211,6 +211,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
   lock_assert(&t->tht_stream_mutex);
 
   sid     = ptr[0] << 8 | ptr[1];
+  
   pcr_pid = (ptr[5] & 0x1f) << 8 | ptr[6];
   dllen   = (ptr[7] & 0xf) << 8 | ptr[8];
   
@@ -609,7 +610,7 @@ psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
 
   htsmsg_add_u32(m, "pcr", t->tht_pcr_pid);
 
-  htsmsg_add_u32(m, "disabled", !!t->tht_disabled);
+  htsmsg_add_u32(m, "disabled", !t->tht_enabled);
 
   lock_assert(&t->tht_stream_mutex);
 
@@ -651,7 +652,9 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
     t->tht_pcr_pid = u32;
 
   if(!htsmsg_get_u32(m, "disabled", &u32))
-    t->tht_disabled = u32;
+    t->tht_enabled = !u32;
+  else
+    t->tht_enabled = 1;
 
   HTSMSG_FOREACH(f, m) {
     if(strcmp(f->hmf_name, "stream"))

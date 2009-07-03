@@ -284,6 +284,11 @@ tvheadend.dvr = function() {
 	remoteSort: true
     });
     
+    tvheadend.comet.on('dvrdb', function(m) {
+	if(m.reload != null)
+            tvheadend.dvrStore.reload();
+    });
+
     
     tvheadend.autorecRecord = Ext.data.Record.create([
 	'enabled','title','channel','tag','creator','contentgrp','comment'
@@ -299,6 +304,12 @@ tvheadend.dvr = function() {
 	baseParams: {table: "autorec", op: "get"}
     });
     
+    tvheadend.comet.on('autorec', function(m) {
+	if(m.reload != null)
+            tvheadend.autorecStore.reload();
+    });
+
+
     var panel = new Ext.TabPanel({
 	activeTab:0, 
 	autoScroll:true, 
