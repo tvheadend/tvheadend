@@ -91,11 +91,11 @@ tvheadend.epg = function() {
     } 
 
    function renderDuration(value){
-       value = value / 60; /* Nevermind the seconds */
-       
+       value = Math.floor(value / 60);
+
        if(value >= 60) {
 	   var min = value % 60;
-	   var hours = parseInt(value / 60);
+	   var hours = Math.floor(value / 60);
 
 	   if(min == 0) {
 	       return hours + ' hrs';
