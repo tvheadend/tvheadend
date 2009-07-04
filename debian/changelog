@@ -27,6 +27,7 @@ hts-tvheadend (2.3) hts; urgency=low
     The idle scan is a process to cycles through all multiplex to check
     the quality for each mux continously.
 
+  * Hopefully fix some rounding errors in the EPG display. Ticket #69
 
 hts-tvheadend (2.2) hts; urgency=low
 
