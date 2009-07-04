@@ -181,6 +181,8 @@ psi_desc_ca(th_transport_t *t, uint8_t *ptr)
     r = 1;
   }
 
+  st->st_delete_me = 0;
+
   if(st->st_caid != caid) {
     st->st_caid = caid;
     r = 1;
@@ -200,10 +202,10 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
   uint8_t dtag, dlen;
   uint16_t sid;
   streaming_component_type_t hts_stream_type;
-  th_stream_t *st;
+  th_stream_t *st, *next;
   char lang[4];
   int frameduration;
-  int need_save = 0;
+  int update = 0;
 
   if(len < 9)
     return -1;
@@ -225,11 +227,15 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
 
   if(t->tht_pcr_pid != pcr_pid) {
     t->tht_pcr_pid = pcr_pid;
-    need_save = 1;
+    update = 1;
   }
 
   ptr += 9;
   len -= 9;
+
+  /* Mark all streams for deletion */
+  LIST_FOREACH(st, &t->tht_components, st_link)
+    st->st_delete_me = 1;
 
   while(dllen > 1) {
     dtag = ptr[0];
@@ -241,7 +247,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
 
     switch(dtag) {
     case DVB_DESC_CA:
-      need_save |= psi_desc_ca(t, ptr);
+      update |= psi_desc_ca(t, ptr);
       break;
 
     default:
@@ -294,7 +300,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
 
       switch(dtag) {
       case DVB_DESC_CA:
-	need_save |= psi_desc_ca(t, ptr);
+	update |= psi_desc_ca(t, ptr);
 	break;
 
       case DVB_DESC_VIDEO_STREAM:
@@ -329,27 +335,40 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
     if(hts_stream_type != 0) {
 
       if((st = transport_stream_find(t, pid)) == NULL) {
-	need_save = 1;
+	update = 1;
 	st = transport_stream_create(t, pid, hts_stream_type);
       }
+
+      st->st_delete_me = 0;
 
       st->st_tb = (AVRational){1, 90000};
 
       if(memcmp(st->st_lang, lang, 4)) {
-	need_save = 1;
+	update = 1;
 	memcpy(st->st_lang, lang, 4);
       }
 
       if(st->st_frame_duration == 0 && frameduration != 0) {
 	st->st_frame_duration = frameduration;
-	need_save = 1;
+	update = 1;
       }
     }
   }
 
-  if(need_save)
-    t->tht_config_change(t);
+  /* Scan again to see if any streams should be deleted */
+  for(st = LIST_FIRST(&t->tht_components); st != NULL; st = next) {
+    next = LIST_NEXT(st, st_link);
+    if(st->st_delete_me) {
+      transport_stream_destroy(t, st);
+      update = 1;
+    }
+  }
 
+  if(update) {
+    t->tht_config_change(t);
+    if(t->tht_status == TRANSPORT_RUNNING)
+      transport_restart(t);
+  }
   return 0;
 }
 

@@ -78,4 +78,8 @@ htsmsg_t *transport_build_stream_start_msg(th_transport_t *t);
 
 void transport_set_enable(th_transport_t *t, int enabled);
 
+void transport_restart(th_transport_t *t);
+
+void transport_stream_destroy(th_transport_t *t, th_stream_t *st);
+
 #endif /* TRANSPORTS_H */

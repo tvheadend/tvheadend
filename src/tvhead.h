@@ -312,6 +312,10 @@ typedef struct th_stream {
   int st_vbv_size;        /* Video buffer size (in bytes) */
   int st_vbv_delay;       /* -1 if CBR */
 
+  /* */
+
+  int st_delete_me;      /* Temporary flag for deleting streams */
+
 } th_stream_t;
 
 
@@ -437,6 +441,8 @@ typedef struct th_transport {
 
   int (*tht_start_feed)(struct th_transport *t, unsigned int weight,
 			int status, int force_start);
+
+  void (*tht_refresh_feed)(struct th_transport *t);
 
   void (*tht_stop_feed)(struct th_transport *t);
 

@@ -45,8 +45,53 @@
 #include "dvb_support.h"
 #include "notify.h"
 
+/**
+ *
+ */
+static void
+dvb_transport_open_demuxers(th_dvb_adapter_t *tda, th_transport_t *t)
+{
+  struct dmx_pes_filter_params dmx_param;
+  int fd;
+  th_stream_t *st;
 
-/*
+  LIST_FOREACH(st, &t->tht_components, st_link) {
+    if(st->st_demuxer_fd != -1)
+      continue;
+
+    fd = open(tda->tda_demux_path, O_RDWR);
+    st->st_cc_valid = 0;
+
+    if(fd == -1) {
+      st->st_demuxer_fd = -1;
+      tvhlog(LOG_ERR, "dvb",
+	     "\"%s\" unable to open demuxer \"%s\" for pid %d -- %s",
+	     t->tht_name, tda->tda_demux_path, st->st_pid, strerror(errno));
+      continue;
+    }
+
+    memset(&dmx_param, 0, sizeof(dmx_param));
+    dmx_param.pid = st->st_pid;
+    dmx_param.input = DMX_IN_FRONTEND;
+    dmx_param.output = DMX_OUT_TS_TAP;
+    dmx_param.pes_type = DMX_PES_OTHER;
+    dmx_param.flags = DMX_IMMEDIATE_START;
+
+    if(ioctl(fd, DMX_SET_PES_FILTER, &dmx_param)) {
+      tvhlog(LOG_ERR, "dvb",
+	     "\"%s\" unable to configure demuxer \"%s\" for pid %d -- %s",
+	     t->tht_name, tda->tda_demux_path, st->st_pid, strerror(errno));
+      close(fd);
+      fd = -1;
+    }
+
+    st->st_demuxer_fd = fd;
+  }
+}
+
+
+
+/**
  * Switch the adapter (which is implicitly tied to our transport)
  * to receive the given transport.
  *
@@ -57,9 +102,7 @@ static int
 dvb_transport_start(th_transport_t *t, unsigned int weight, int status, 
 		    int force_start)
 {
-  struct dmx_pes_filter_params dmx_param;
-  th_stream_t *st;
-  int w, fd, pid;
+  int w;
   th_dvb_adapter_t *tda = t->tht_dvb_mux_instance->tdmi_adapter;
   th_dvb_mux_instance_t *tdmi = tda->tda_mux_current;
 
@@ -81,50 +124,16 @@ dvb_transport_start(th_transport_t *t, unsigned int weight, int status,
 
     dvb_adapter_clean(tda);
   }
-  tdmi = t->tht_dvb_mux_instance;
 
-  LIST_FOREACH(st, &t->tht_components, st_link) {
-    fd = open(tda->tda_demux_path, O_RDWR);
-    
-    pid = st->st_pid;
-    st->st_cc_valid = 0;
-
-    if(fd == -1) {
-      st->st_demuxer_fd = -1;
-      tvhlog(LOG_ERR, "dvb",
-	     "\"%s\" unable to open demuxer \"%s\" for pid %d -- %s",
-	     t->tht_name, tda->tda_demux_path, pid, strerror(errno));
-      continue;
-    }
-
-    memset(&dmx_param, 0, sizeof(dmx_param));
-    dmx_param.pid = pid;
-    dmx_param.input = DMX_IN_FRONTEND;
-    dmx_param.output = DMX_OUT_TS_TAP;
-    dmx_param.pes_type = DMX_PES_OTHER;
-    dmx_param.flags = DMX_IMMEDIATE_START;
-
-    if(ioctl(fd, DMX_SET_PES_FILTER, &dmx_param)) {
-      tvhlog(LOG_ERR, "dvb",
-	     "\"%s\" unable to configure demuxer \"%s\" for pid %d -- %s",
-	     t->tht_name, tda->tda_demux_path, pid, strerror(errno));
-      close(fd);
-      fd = -1;
-    }
-
-    st->st_demuxer_fd = fd;
-  }
+  dvb_transport_open_demuxers(tda, t);
 
   pthread_mutex_lock(&tda->tda_delivery_mutex);
 
   LIST_INSERT_HEAD(&tda->tda_transports, t, tht_active_link);
   t->tht_status = status;
-  
-
-  dvb_fe_tune(tdmi, "Transport start");
+  dvb_fe_tune(t->tht_dvb_mux_instance, "Transport start");
 
   pthread_mutex_unlock(&tda->tda_delivery_mutex);
-
   return 0;
 }
 
@@ -145,10 +154,25 @@ dvb_transport_stop(th_transport_t *t)
   pthread_mutex_unlock(&tda->tda_delivery_mutex);
 
   LIST_FOREACH(st, &t->tht_components, st_link) {
-    close(st->st_demuxer_fd);
-    st->st_demuxer_fd = -1;
+    if(st->st_demuxer_fd != -1) {
+      close(st->st_demuxer_fd);
+      st->st_demuxer_fd = -1;
+    }
   }
   t->tht_status = TRANSPORT_IDLE;
+}
+
+
+/**
+ *
+ */
+static void
+dvb_transport_refresh(th_transport_t *t)
+{
+  th_dvb_adapter_t *tda = t->tht_dvb_mux_instance->tdmi_adapter;
+
+  lock_assert(&global_lock);
+  dvb_transport_open_demuxers(tda, t);
 }
 
 
@@ -330,6 +354,7 @@ dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   t->tht_pmt_pid        = pmt_pid;
 
   t->tht_start_feed = dvb_transport_start;
+  t->tht_refresh_feed = dvb_transport_refresh;
   t->tht_stop_feed  = dvb_transport_stop;
   t->tht_config_change = dvb_transport_save;
   t->tht_sourcename = dvb_transport_sourcename;

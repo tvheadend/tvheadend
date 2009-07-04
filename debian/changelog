@@ -46,6 +46,13 @@ hts-tvheadend (2.3) hts; urgency=low
   * Remove configuration and settings (/home/hts/.hts/tvheadend) on a 
     deb package purge operation. Ticket #73
 
+  * If the Program Stream Information changes during a subscription,
+    react and send a subscriptionStop + subscriptionStart.
+    This happens on SVT (in sweden) when the transmission switches
+    from local to nationwide broadcast (AC3 audio is only present
+    in nationwide broadcast)
+    Ticket #78
+	
 hts-tvheadend (2.2) hts; urgency=low
 
   * Set $HOME so forked processes (XMLTV) will have correct environment

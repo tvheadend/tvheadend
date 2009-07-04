@@ -54,6 +54,121 @@ static void transport_data_timeout(void *aux);
 
 
 /**
+ *
+ */
+static void
+stream_init(th_stream_t *st)
+{
+  AVCodec *c;
+  enum CodecID id;
+
+  st->st_startcond = 0xffffffff;
+  st->st_curdts = AV_NOPTS_VALUE;
+  st->st_curpts = AV_NOPTS_VALUE;
+  st->st_prevdts = AV_NOPTS_VALUE;
+
+  st->st_last_dts = AV_NOPTS_VALUE;
+  st->st_dts_epoch = 0; 
+ 
+  st->st_pcr_real_last = AV_NOPTS_VALUE;
+  st->st_pcr_last      = AV_NOPTS_VALUE;
+  st->st_pcr_drift     = 0;
+  st->st_pcr_recovery_fails = 0;
+  /* Open ffmpeg context and parser */
+
+  switch(st->st_type) {
+  case SCT_MPEG2VIDEO: id = CODEC_ID_MPEG2VIDEO; break;
+  case SCT_MPEG2AUDIO: id = CODEC_ID_MP3;        break;
+  case SCT_H264:       id = CODEC_ID_H264;       break;
+  case SCT_AC3:        id = CODEC_ID_AC3;        break;
+  default:             id = CODEC_ID_NONE;       break;
+  }
+    
+  assert(st->st_ctx == NULL);
+  assert(st->st_parser == NULL);
+
+
+  if(id == CODEC_ID_NONE)
+    return;
+  c = avcodec_find_decoder(id);
+  if(c != NULL) {
+    st->st_ctx = avcodec_alloc_context();
+    pthread_mutex_lock(&ffmpeg_lock);
+    avcodec_open(st->st_ctx, c);
+    pthread_mutex_unlock(&ffmpeg_lock);
+    st->st_parser = av_parser_init(id);
+  } else {
+    abort();
+  }
+}
+
+
+/**
+ *
+ */
+static void
+stream_clean(th_stream_t *st)
+{
+  if(st->st_demuxer_fd != -1) {
+    // XXX: Should be in DVB-code perhaps
+    close(st->st_demuxer_fd);
+    st->st_demuxer_fd = -1;
+  }
+
+  if(st->st_parser != NULL)
+    av_parser_close(st->st_parser);
+    
+  if(st->st_ctx != NULL) {
+    pthread_mutex_lock(&ffmpeg_lock);
+    avcodec_close(st->st_ctx);
+    pthread_mutex_unlock(&ffmpeg_lock);
+  }
+
+  av_free(st->st_ctx);
+
+  st->st_parser = NULL;
+  st->st_ctx = NULL;
+
+  free(st->st_priv);
+  st->st_priv = NULL;
+
+  /* Clear reassembly buffer */
+    
+  free(st->st_buffer);
+  st->st_buffer = NULL;
+  st->st_buffer_size = 0;
+  st->st_buffer_ptr = 0;
+  st->st_startcode = 0;
+
+  if(st->st_curpkt != NULL) {
+    pkt_ref_dec(st->st_curpkt);
+    st->st_curpkt = NULL;
+  }
+
+  /* Clear PTS queue */
+
+  pktref_clear_queue(&st->st_ptsq);
+  st->st_ptsq_len = 0;
+
+  /* Clear durationq */
+
+  pktref_clear_queue(&st->st_durationq);
+}
+
+
+/**
+ *
+ */
+void
+transport_stream_destroy(th_transport_t *t, th_stream_t *st)
+{
+  if(t->tht_status == TRANSPORT_RUNNING)
+    stream_clean(st);
+  LIST_REMOVE(st, st_link);
+  free(st);
+}
+
+/**
  * Transport lock must be held
  */
 static void
@@ -79,47 +194,8 @@ transport_stop(th_transport_t *t)
   /**
    * Clean up each stream
    */
-  LIST_FOREACH(st, &t->tht_components, st_link) {
-
-    if(st->st_parser != NULL)
-      av_parser_close(st->st_parser);
-    
-    if(st->st_ctx != NULL) {
-      pthread_mutex_lock(&ffmpeg_lock);
-      avcodec_close(st->st_ctx);
-      pthread_mutex_unlock(&ffmpeg_lock);
-    }
-
-    av_free(st->st_ctx);
-
-    st->st_parser = NULL;
-    st->st_ctx = NULL;
-
-    free(st->st_priv);
-    st->st_priv = NULL;
-
-    /* Clear reassembly buffer */
-    
-    free(st->st_buffer);
-    st->st_buffer = NULL;
-    st->st_buffer_size = 0;
-    st->st_buffer_ptr = 0;
-    st->st_startcode = 0;
-
-    if(st->st_curpkt != NULL) {
-      pkt_ref_dec(st->st_curpkt);
-      st->st_curpkt = NULL;
-    }
-
-    /* Clear PTS queue */
-
-    pktref_clear_queue(&st->st_ptsq);
-    st->st_ptsq_len = 0;
-
-    /* Clear durationq */
-
-    pktref_clear_queue(&st->st_durationq);
-  }
+  LIST_FOREACH(st, &t->tht_components, st_link)
+    stream_clean(st);
 
   pthread_mutex_unlock(&t->tht_stream_mutex);
 }
@@ -157,8 +233,6 @@ int
 transport_start(th_transport_t *t, unsigned int weight, int force_start)
 {
   th_stream_t *st;
-  AVCodec *c;
-  enum CodecID id;
 
   lock_assert(&global_lock);
 
@@ -173,46 +247,8 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
   /**
    * Initialize stream
    */
-  LIST_FOREACH(st, &t->tht_components, st_link) {
-    st->st_startcond = 0xffffffff;
-    st->st_curdts = AV_NOPTS_VALUE;
-    st->st_curpts = AV_NOPTS_VALUE;
-    st->st_prevdts = AV_NOPTS_VALUE;
-
-    st->st_last_dts = AV_NOPTS_VALUE;
-    st->st_dts_epoch = 0; 
- 
-    st->st_pcr_real_last = AV_NOPTS_VALUE;
-    st->st_pcr_last      = AV_NOPTS_VALUE;
-    st->st_pcr_drift     = 0;
-    st->st_pcr_recovery_fails = 0;
-    /* Open ffmpeg context and parser */
-
-    switch(st->st_type) {
-    case SCT_MPEG2VIDEO: id = CODEC_ID_MPEG2VIDEO; break;
-    case SCT_MPEG2AUDIO: id = CODEC_ID_MP3;        break;
-    case SCT_H264:       id = CODEC_ID_H264;       break;
-    case SCT_AC3:        id = CODEC_ID_AC3;        break;
-    default:               id = CODEC_ID_NONE;       break;
-    }
-    
-    assert(st->st_ctx == NULL);
-    assert(st->st_parser == NULL);
-
-
-    if(id != CODEC_ID_NONE) {
-      c = avcodec_find_decoder(id);
-      if(c != NULL) {
-	st->st_ctx = avcodec_alloc_context();
-	pthread_mutex_lock(&ffmpeg_lock);
-	avcodec_open(st->st_ctx, c);
-	pthread_mutex_unlock(&ffmpeg_lock);
-      st->st_parser = av_parser_init(id);
-      } else {
-	abort();
-      }
-    }
-  }
+  LIST_FOREACH(st, &t->tht_components, st_link)
+    stream_init(st);
 
   cwc_transport_start(t);
 
@@ -478,10 +514,12 @@ transport_stream_create(th_transport_t *t, int pid,
 {
   th_stream_t *st;
   int i = 0;
- 
+  int idx = 0;
   lock_assert(&t->tht_stream_mutex);
 
   LIST_FOREACH(st, &t->tht_components, st_link) {
+    if(st->st_index > idx)
+      idx = st->st_index;
     i++;
     if(pid != -1 && st->st_pid == pid)
       return st;
@@ -492,7 +530,7 @@ transport_stream_create(th_transport_t *t, int pid,
 	   t->tht_identifier, streaming_component_type2txt(type), pid);
 
   st = calloc(1, sizeof(th_stream_t));
-  st->st_index = i;
+  st->st_index = idx + 1;
   st->st_type = type;
   LIST_INSERT_HEAD(&t->tht_components, st, st_link);
 
@@ -504,6 +542,9 @@ transport_stream_create(th_transport_t *t, int pid,
 
   avgstat_init(&st->st_rate, 10);
   avgstat_init(&st->st_cc_errors, 10);
+
+  if(t->tht_status == TRANSPORT_RUNNING)
+    stream_init(st);
 
   return st;
 }
@@ -626,6 +667,29 @@ transport_set_feed_status(th_transport_t *t, transport_feed_status_t newstatus)
 			streaming_msg_create_code(SMT_TRANSPORT_STATUS,
 						  newstatus));
 }
+
+
+/**
+ * Restart output on a transport.
+ * Happens if the stream composition changes. 
+ * (i.e. an AC3 stream disappears, etc)
+ */
+void
+transport_restart(th_transport_t *t)
+{
+  streaming_message_t *sm;
+  lock_assert(&t->tht_stream_mutex);
+
+  sm = streaming_msg_create_msg(SMT_STOP, htsmsg_create_map());
+  streaming_pad_deliver(&t->tht_streaming_pad, sm);
+
+  t->tht_refresh_feed(t);
+
+  sm = streaming_msg_create_msg(SMT_START, 
+				transport_build_stream_start_msg(t));
+  streaming_pad_deliver(&t->tht_streaming_pad, sm);
+}
+
 
 /**
  * Generate a message containing info about all components
