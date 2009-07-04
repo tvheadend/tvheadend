@@ -440,7 +440,6 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   uint16_t serviceid;
   int version;
-  int current_next_indicator;
   uint8_t section_number;
   uint8_t last_section_number;
   uint16_t transport_stream_id;
@@ -470,13 +469,17 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   serviceid                   = ptr[0] << 8 | ptr[1];
   version                     = ptr[2] >> 1 & 0x1f;
-  current_next_indicator      = ptr[2] & 1;
   section_number              = ptr[3];
   last_section_number         = ptr[4];
   transport_stream_id         = ptr[5] << 8 | ptr[6];
   original_network_id         = ptr[7] << 8 | ptr[8];
   segment_last_section_number = ptr[9];
   last_table_id               = ptr[10];
+
+  if((ptr[2] & 1) == 0) {
+    /* current_next_indicator == next, skip this */
+    return -1;
+  }
 
   len -= 11;
   ptr += 11;
@@ -572,7 +575,6 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 {
   th_transport_t *t;
   int version;
-  int current_next_indicator;
   uint8_t section_number;
   uint8_t last_section_number;
   uint16_t service_id;
@@ -594,11 +596,15 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   transport_stream_id         = ptr[0] << 8 | ptr[1];
   version                     = ptr[2] >> 1 & 0x1f;
-  current_next_indicator      = ptr[2] & 1;
   section_number              = ptr[3];
   last_section_number         = ptr[4];
   original_network_id         = ptr[5] << 8 | ptr[6];
   reserved                    = ptr[7];
+
+  if((ptr[2] & 1) == 0) {
+    /* current_next_indicator == next, skip this */
+    return -1;
+  }
 
   len -= 8;
   ptr += 8;
@@ -698,6 +704,11 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   if(len < 5)
     return -1;
 
+  if((ptr[2] & 1) == 0) {
+    /* current_next_indicator == next, skip this */
+    return -1;
+  }
+
   tsid = (ptr[0] << 8) | ptr[1];
 
   if(tdmi->tdmi_transport_stream_id != tsid)
@@ -749,6 +760,11 @@ dvb_cat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   uint16_t caid;
   uint16_t pid;
   ca_stream_t *cs;
+
+  if((ptr[2] & 1) == 0) {
+    /* current_next_indicator == next, skip this */
+    return -1;
+  }
 
   ptr += 5;
   len -= 5;
@@ -893,11 +909,16 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   char networkname[256];
   uint16_t tsid;
 
-  ptr += 5;
-  len -= 5;
-
   if(tableid != 0x40)
     return -1;
+
+  if((ptr[2] & 1) == 0) {
+    /* current_next_indicator == next, skip this */
+    return -1;
+  }
+
+  ptr += 5;
+  len -= 5;
 
   ntl = ((ptr[0] & 0xf) << 8) | ptr[1];
   ptr += 2;

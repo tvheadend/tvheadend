@@ -212,6 +212,11 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
 
   sid     = ptr[0] << 8 | ptr[1];
   
+  if((ptr[2] & 1) == 0) {
+    /* current_next_indicator == next, skip this */
+    return -1;
+  }
+
   pcr_pid = (ptr[5] & 0x1f) << 8 | ptr[6];
   dllen   = (ptr[7] & 0xf) << 8 | ptr[8];
   
