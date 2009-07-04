@@ -31,6 +31,9 @@ hts-tvheadend (2.3) hts; urgency=low
 
   * Use a ''livegrid'' (http://www.ext-livegrid.com/) for displaying EPG.
 
+  * Remove configuration and settings (/home/hts/.hts/tvheadend) on a 
+    deb package purge operation. Ticket #73
+
 hts-tvheadend (2.2) hts; urgency=low
 
   * Set $HOME so forked processes (XMLTV) will have correct environment
