@@ -89,6 +89,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
 		 "<script type=\"text/javascript\" src=\""EXTJSPATH"/adapter/ext/ext-base.js\"></script>\n"
 		 "<script type=\"text/javascript\" src=\""EXTJSPATH"/ext-all-debug.js\"></script>\n"
 		 "<link rel=\"stylesheet\" type=\"text/css\" href=\""EXTJSPATH"/resources/css/ext-all.css\">\n"
+		 "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/livegrid/resources/css/ext-ux-livegrid.css\">\n"
 		 "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/app/ext.css\">\n");
 
   extjs_exec(hq, "Ext.BLANK_IMAGE_URL = "
@@ -98,6 +99,8 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
    * Load extjs extensions
    */
   extjs_load(hq, "static/app/extensions.js");
+  extjs_load(hq, "static/livegrid/livegrid-all.js");
+  
 
   /**
    * Create a namespace for our app

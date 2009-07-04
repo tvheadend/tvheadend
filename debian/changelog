@@ -29,6 +29,8 @@ hts-tvheadend (2.3) hts; urgency=low
 
   * Hopefully fix some rounding errors in the EPG display. Ticket #69
 
+  * Use a ''livegrid'' (http://www.ext-livegrid.com/) for displaying EPG.
+
 hts-tvheadend (2.2) hts; urgency=low
 
   * Set $HOME so forked processes (XMLTV) will have correct environment

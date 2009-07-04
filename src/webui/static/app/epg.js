@@ -63,27 +63,26 @@ tvheadend.epgDetails = function(event) {
 tvheadend.epg = function() {
     var xg = Ext.grid;
 
-    var epgRecord = Ext.data.Record.create([
-	{name: 'id'},
-	{name: 'channel'},
-	{name: 'title'},
-	{name: 'description'},
-	{name: 'chicon'},
-        {name: 'start', type: 'date', dateFormat: 'U' /* unix time */},
-        {name: 'end', type: 'date', dateFormat: 'U' /* unix time */},
-        {name: 'duration'},
-	{name: 'contentgrp'}
-    ]);
-		    
-    var epgStore = new Ext.data.JsonStore({
-	root: 'entries',
-        totalProperty: 'totalCount',
-	fields: epgRecord,
-	url: 'epg',
+    var epgStore = new Ext.ux.grid.livegrid.Store({
 	autoLoad: true,
-	id: 'id',
-	remoteSort: true
-    });
+	url: 'epg',
+	bufferSize: 300,
+	reader: new Ext.ux.grid.livegrid.JsonReader({
+	    root: 'entries',
+	    totalProperty: 'totalCount',
+	    id: 'id'
+	},[
+	    {name: 'id'},
+	    {name: 'channel'},
+	    {name: 'title'},
+	    {name: 'description'},
+	    {name: 'chicon'},
+            {name: 'start', type: 'date', dateFormat: 'U' /* unix time */},
+            {name: 'end', type: 'date', dateFormat: 'U' /* unix time */},
+            {name: 'duration'},
+	    {name: 'contentgrp'}
+	])
+   });
 
     function renderDate(value){
 	var dt = new Date(value);
@@ -204,14 +203,11 @@ tvheadend.epg = function() {
 	epgFilterContentGroup.setValue("");
 	epgFilterTitle.setValue("");
           
-        panel.getBottomToolbar().changePage(1);
-
 	epgStore.reload();
     }
 
     epgFilterChannels.on('select', function(c, r) {
 	if(epgStore.baseParams.channel != r.data.name) {
-            panel.getBottomToolbar().changePage(1);
 	    epgStore.baseParams.channel = r.data.name;
 	    epgStore.reload();
 	}
@@ -219,7 +215,6 @@ tvheadend.epg = function() {
 
     epgFilterChannelTags.on('select', function(c, r) {
 	if(epgStore.baseParams.tag != r.data.name) {
-            panel.getBottomToolbar().changePage(1);
 	    epgStore.baseParams.tag = r.data.name;
 	    epgStore.reload();
 	}
@@ -227,7 +222,6 @@ tvheadend.epg = function() {
 
     epgFilterContentGroup.on('select', function(c, r) {
 	if(epgStore.baseParams.contentgrp != r.data.name) {
-            panel.getBottomToolbar().changePage(1);
 	    epgStore.baseParams.contentgrp = r.data.name;
 	    epgStore.reload();
 	}
@@ -240,20 +234,25 @@ tvheadend.epg = function() {
 	    value = null;
 
 	if(epgStore.baseParams.title != value) {
-            panel.getBottomToolbar().changePage(1);
 	    epgStore.baseParams.title = value;
 	    epgStore.reload();
 	}
     });
 
-    var panel = new Ext.grid.GridPanel({
-        loadMask: true,
-	stripeRows: true,
-	disableSelection: true,
-	title: 'Electronic Program Guide',
-	store: epgStore,
+    var epgView = new Ext.ux.grid.livegrid.GridView({
+	nearLimit : 100,
+	loadMask  : {
+	    msg :  'Buffering. Please wait...'
+	}
+    });
+
+    var panel = new Ext.ux.grid.livegrid.GridPanel({
+	enableDragDrop : false,
 	cm: epgCm,
-        viewConfig: {forceFit:true},
+	title: 'Electronic Program Guide',
+        store : epgStore,
+	selModel : new Ext.ux.grid.livegrid.RowSelectionModel(),
+	view : epgView,
 	tbar: [
 	    epgFilterTitle,
 	    '-',
@@ -284,17 +283,13 @@ tvheadend.epg = function() {
 		}
 	    }
 	],
-	
-        bbar: new Ext.PagingToolbar({
-            store: epgStore,
-            pageSize: 20,
-            displayInfo: true,
-            displayMsg: 'Programs {0} - {1} of {2}',
-            emptyMsg: "No programs to display"
-        })
 
+	bbar : new Ext.ux.grid.livegrid.Toolbar({
+	    view : epgView,
+	    displayInfo : true
+	})
     });
-    
+
     panel.on('rowclick', rowclicked);
 
 
