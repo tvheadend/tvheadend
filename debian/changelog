@@ -1,5 +1,17 @@
 hts-tvheadend (2.3) hts; urgency=low
 
+  * A simple web interface has been added. To access it, visit
+
+    http://host:9981/simple.html
+
+    This web interface is designed to be really tiny with only
+    a simple search field and options to record found shows.
+    Preferably used from handheld devices.
+
+  * All sensitive information (passwords, etc) are hidden from display
+    in the web ui. The text will still be displayed in cleartext when
+    editing.
+
   * Redesigned the DVB configuration tab in the web userinterface:
     - Each adapter have three (or four) tabs
       o General setup and information
