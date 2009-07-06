@@ -455,6 +455,9 @@ epg_init(void)
 static void
 eqr_add(epg_query_result_t *eqr, event_t *e, regex_t *preg, time_t now)
 {
+  if(e->e_title == NULL)
+    return;
+
   if(preg != NULL && regexec(preg, e->e_title, 0, NULL, 0))
     return;
 
