@@ -42,7 +42,7 @@ tvheadend.acleditor = function() {
 	    header: "Password",
 	    dataIndex: 'password',
 	    renderer: function(value, metadata, record, row, col, store) {
-		return '<i>hidden</i>'
+		return '<span class="tvh-grid-unset">Hidden</span>';
 	    },
 	    editor: new fm.TextField({allowBlank: false})
 	},{

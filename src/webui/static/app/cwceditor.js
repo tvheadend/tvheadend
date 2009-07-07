@@ -27,7 +27,7 @@ tvheadend.cwceditor = function() {
 	    header: "Password",
 	    dataIndex: 'password',
 	    renderer: function(value, metadata, record, row, col, store) {
-		return '<i>hidden</i>'
+		return '<span class="tvh-grid-unset">Hidden</span>';
 	    },
 	    editor: new fm.TextField({allowBlank: false})
 	},{
@@ -35,7 +35,7 @@ tvheadend.cwceditor = function() {
 	    dataIndex: 'deskey',
 	    width: 300,
 	    renderer: function(value, metadata, record, row, col, store) {
-		return '<i>hidden</i>'
+		return '<span class="tvh-grid-unset">Hidden</span>';
 	    },
 	    editor: new fm.TextField({allowBlank: false})
 	},{
