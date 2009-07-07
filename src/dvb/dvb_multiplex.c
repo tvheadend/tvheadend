@@ -632,9 +632,9 @@ dvb_mux_modulation(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
 
   switch(tdmi->tdmi_adapter->tda_type) {
   case FE_OFDM:
-    snprintf(buf, size, "%s in %s, mode: %s",
-	     val2str(f->u.ofdm.bandwidth, bwtab),
+    snprintf(buf, size, "%s, %s, %s-mode",
 	     val2str(f->u.ofdm.constellation, qamtab),
+	     val2str(f->u.ofdm.bandwidth, bwtab),
 	     val2str(f->u.ofdm.transmission_mode, modetab));
     break;
 
@@ -643,9 +643,9 @@ dvb_mux_modulation(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
     break;
 	     
   case FE_QAM:
-   snprintf(buf, size, "%d kBaud in %s", 
-	    f->u.qpsk.symbol_rate / 1000,
-	    val2str(f->u.qam.modulation, qamtab));
+   snprintf(buf, size, "%s, %d kBaud",
+	    val2str(f->u.qam.modulation, qamtab),
+	    f->u.qpsk.symbol_rate / 1000);
    break;
   default:
     snprintf(buf, size, "Unknown");
