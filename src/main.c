@@ -230,8 +230,9 @@ main(int argc, char **argv)
   const char *contentpath = TVHEADEND_CONTENT_PATH;
   const char *homedir = NULL;
   const char *rawts_input = NULL;
+  const char *join_transport = NULL;
 
-  while((c = getopt(argc, argv, "fu:g:c:Chdr:")) != -1) {
+  while((c = getopt(argc, argv, "fu:g:c:Chdr:j:")) != -1) {
     switch(c) {
     case 'f':
       forkaway = 1;
@@ -253,6 +254,9 @@ main(int argc, char **argv)
       break;
     case 'r':
       rawts_input = optarg;
+      break;
+    case 'j':
+      join_transport = optarg;
       break;
     default:
       usage(argv[0]);
@@ -346,6 +350,9 @@ main(int argc, char **argv)
   
   if(rawts_input != NULL)
     rawts_init(rawts_input);
+
+  if(join_transport != NULL)
+    subscription_dummy_join(join_transport);
 
   pthread_mutex_unlock(&global_lock);
 

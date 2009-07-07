@@ -255,3 +255,35 @@ subscription_create_from_transport(th_transport_t *t, const char *name,
   subscription_link_transport(s, t);
   return s;
 }
+
+
+/**
+ *
+ */
+static void
+dummy_callback(void *opauqe, streaming_message_t *sm)
+{
+  streaming_msg_free(sm);
+}
+
+
+/**
+ *
+ */
+void
+subscription_dummy_join(const char *id)
+{
+  th_transport_t *t = transport_find_by_identifier(id);
+  streaming_target_t *st;
+
+  if(t == NULL) {
+    tvhlog(LOG_ERR, "subscription", 
+	   "Unable to dummy join %s, transport not found", id);
+    return;
+  }
+
+  st = calloc(1, sizeof(streaming_target_t));
+  streaming_target_init(st, dummy_callback, NULL);
+  subscription_create_from_transport(t, "dummy", st);
+
+}

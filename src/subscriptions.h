@@ -66,4 +66,6 @@ void subscription_stop(th_subscription_t *s);
 
 void subscription_unlink_transport(th_subscription_t *s);
 
+void subscription_dummy_join(const char *id);
+
 #endif /* SUBSCRIPTIONS_H */
