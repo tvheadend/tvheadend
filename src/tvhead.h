@@ -287,6 +287,7 @@ typedef struct th_stream {
 
   int64_t st_dts_epoch;  /* upper bits (auto generated) */
   int64_t st_last_dts;
+  int st_bad_dts;
 
   /* Codec */
 

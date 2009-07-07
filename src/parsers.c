@@ -33,6 +33,9 @@
 #include "transports.h"
 #include "streaming.h"
 
+#define PTS_MASK 0x1ffffffffLL
+//#define PTS_MASK 0x7ffffLL
+
 static const AVRational mpeg_tc = {1, 90000};
 
 #define getu32(b, l) ({						\
@@ -420,8 +423,8 @@ parse_pes_header(th_transport_t *t, th_stream_t *st, uint8_t *buf, size_t len)
   } else
     return hlen + 3;
 
-  st->st_curdts = dts;
-  st->st_curpts = pts;
+  st->st_curdts = dts & PTS_MASK;
+  st->st_curpts = pts & PTS_MASK;
   return hlen + 3;
 } 
 
@@ -817,7 +820,7 @@ parser_compute_duration(th_transport_t *t, th_stream_t *st, th_pktref_t *pr)
 static void
 parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 {
-  int64_t dts, pts, ptsoff;
+  int64_t dts, pts, ptsoff, d;
 
   assert(pkt->pkt_dts != AV_NOPTS_VALUE);
   assert(pkt->pkt_pts != AV_NOPTS_VALUE);
@@ -832,7 +835,7 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   pts = pkt->pkt_pts;
 
   /* Compute delta between PTS and DTS (and watch out for 33 bit wrap) */
-  ptsoff = (pts - dts) & 0x1ffffffffLL;
+  ptsoff = (pts - dts) & PTS_MASK;
 
   /* Subtract the transport wide start offset */
   dts -= t->tht_dts_start;
@@ -843,10 +846,34 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
       pkt_ref_dec(pkt);
       return;
     }
-  } else if(dts + st->st_dts_epoch < st->st_last_dts - (1LL << 24)) {
-    /* DTS wrapped, increase upper bits */
-    st->st_dts_epoch += 1ULL << 33;
+  } else {
+    d = dts + st->st_dts_epoch - st->st_last_dts;
+
+    if(d < 0 || d > 90000) {
+
+      if(d < -PTS_MASK || d > -PTS_MASK + 180000) {
+
+	st->st_bad_dts++;
+
+	if(st->st_bad_dts < 5) {
+	  tvhlog(LOG_ERR, "parser", 
+		 "transport %s stream %s, DTS discontinuity. "
+		 "DTS = %lld, last = %lld",
+		 t->tht_identifier, streaming_component_type2txt(st->st_type),
+		 dts, st->st_last_dts);
+	}
+      } else {
+	/* DTS wrapped, increase upper bits */
+	printf("Wrap detected\n");
+	st->st_dts_epoch += PTS_MASK + 1;
+	st->st_bad_dts = 0;
+      }
+    } else {
+      st->st_bad_dts = 0;
+    }
   }
+
+  st->st_bad_dts++;
 
   dts += st->st_dts_epoch;
   st->st_last_dts = dts;
@@ -859,7 +886,7 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   pkt->pkt_duration=av_rescale_q(pkt->pkt_duration, st->st_tb, AV_TIME_BASE_Q);
 #if 0
   printf("%-12s %d %10lld %10lld %d\n",
-	 htstvstreamtype2txt(st->st_type),
+	 streaming_component_type2txt(st->st_type),
 	 pkt->pkt_frametype,
 	 pkt->pkt_dts,
 	 pkt->pkt_pts,
