@@ -65,6 +65,11 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 	    header: "Frequency",
 	    dataIndex: 'freq',
 	    width: 50
+	},
+	{
+	    header: "Modulation",
+	    dataIndex: 'mod',
+	    width: 100
 	});
 
     if(adapterData.satConf) {
@@ -115,7 +120,8 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
     cm.defaultSortable = true;
 
     var rec = Ext.data.Record.create([
-	'id', 'enabled','network', 'freq', 'pol', 'satconf', 'muxid', 'quality'
+	'id', 'enabled','network', 'freq', 'pol', 'satconf', 
+	'muxid', 'quality', 'mod'
     ]);
 
     var store = new Ext.data.JsonStore({

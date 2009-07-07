@@ -625,6 +625,38 @@ dvb_mux_set_enable(th_dvb_mux_instance_t *tdmi, int enabled)
 /**
  *
  */
+static void
+dvb_mux_modulation(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
+{
+  struct dvb_frontend_parameters *f = &tdmi->tdmi_fe_params;
+
+  switch(tdmi->tdmi_adapter->tda_type) {
+  case FE_OFDM:
+    snprintf(buf, size, "%s in %s, mode: %s",
+	     val2str(f->u.ofdm.bandwidth, bwtab),
+	     val2str(f->u.ofdm.constellation, qamtab),
+	     val2str(f->u.ofdm.transmission_mode, modetab));
+    break;
+
+  case FE_QPSK:
+    snprintf(buf, size, "%d kBaud", f->u.qpsk.symbol_rate / 1000);
+    break;
+	     
+  case FE_QAM:
+   snprintf(buf, size, "%d kBaud in %s", 
+	    f->u.qpsk.symbol_rate / 1000,
+	    val2str(f->u.qam.modulation, qamtab));
+   break;
+  default:
+    snprintf(buf, size, "Unknown");
+    break;
+  }
+}
+
+
+/**
+ *
+ */
 htsmsg_t *
 dvb_mux_build_msg(th_dvb_mux_instance_t *tdmi)
 {
@@ -636,9 +668,13 @@ dvb_mux_build_msg(th_dvb_mux_instance_t *tdmi)
   htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
   htsmsg_add_u32(m, "enabled",  tdmi->tdmi_enabled);
   htsmsg_add_str(m, "network", tdmi->tdmi_network ?: "");
-  dvb_mux_nicefreq(buf, sizeof(buf), tdmi);
 
+  dvb_mux_nicefreq(buf, sizeof(buf), tdmi);
   htsmsg_add_str(m, "freq",  buf);
+
+  dvb_mux_modulation(buf, sizeof(buf), tdmi);
+  htsmsg_add_str(m, "mod",  buf);
+
   htsmsg_add_str(m, "pol", 
 		 dvb_polarisation_to_str_long(tdmi->tdmi_polarisation));
 
