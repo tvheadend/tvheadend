@@ -868,12 +868,6 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   
   avgstat_add(&st->st_rate, pkt->pkt_payloadlen, dispatch_clock);
 
-
-  /**
-   * We've got something, disarm the transport timeout timer
-   */
-  //  dtimer_disarm(&t->tht_receive_timer);
-
   /**
    * Input is ok
    */
