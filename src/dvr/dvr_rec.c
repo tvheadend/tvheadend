@@ -279,7 +279,7 @@ dvr_rec_start(dvr_entry_t *de, htsmsg_t *m)
 
   /* Init format context */
 
-  fctx = av_alloc_format_context();
+  fctx = avformat_alloc_context();
 
   av_strlcpy(fctx->title, de->de_ititle ?: "", 
 	     sizeof(fctx->title));
