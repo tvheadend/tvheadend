@@ -192,7 +192,7 @@ tvheadend.channeldetails = function(chid, chname) {
 	}]
     });
 
-    confpanel.getForm().load({url:'/channel', 
+    confpanel.getForm().load({url:'channel', 
 			      params:{'chid': chid, 'op':'load'},
 			      success:function(form, action) {
 				  confpanel.enable();
@@ -200,7 +200,7 @@ tvheadend.channeldetails = function(chid, chname) {
 
 
     function saveChanges() {
-	confpanel.getForm().submit({url:'/channel', 
+	confpanel.getForm().submit({url:'channel', 
 				    params:{'chid': chid, 'op':'save'},
 				    waitMsg:'Saving Data...',
 				    failure: function(form, action) {
@@ -215,7 +215,7 @@ tvheadend.channeldetails = function(chid, chname) {
 			       function(button) {
 				   if(button == 'no')
 				       return;
-				   Ext.Ajax.request({url: '/channel',
+				   Ext.Ajax.request({url: 'channel',
 						     params:{'chid': chid, 'op':'delete'},
 						     success: function() {
 							 panel.destroy();
@@ -276,7 +276,7 @@ tvheadend.channeldetails = function(chid, chname) {
 				       function(button) {
 					   if(button == 'no')
 					       return;
-					   Ext.Ajax.request({url: '/channel',
+					   Ext.Ajax.request({url: 'channel',
 							     params:{chid: chid, 
 								     op:'mergefrom', 
 								     srcch: selectedRecord.data.chid},

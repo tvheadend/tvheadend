@@ -56,7 +56,7 @@ tvheadend.dvrDetails = function(entry) {
 
     function cancelEvent() {
 	Ext.Ajax.request({
-	    url: '/dvr',
+	    url: 'dvr',
 	    params: {entryId: entry.id, op: 'cancelEntry'},
 
 	    success:function(response, options) {
@@ -392,7 +392,7 @@ tvheadend.dvrsettings = function() {
 
     confpanel.on('render', function() {
 	confpanel.getForm().load({
-	    url:'/dvr', 
+	    url:'dvr', 
 	    params:{'op':'loadSettings'},
 	    success:function(form, action) {
 		confpanel.enable();
@@ -403,7 +403,7 @@ tvheadend.dvrsettings = function() {
 
     function saveChanges() {
 	confpanel.getForm().submit({
-	    url:'/dvr', 
+	    url:'dvr', 
 	    params:{'op':'saveSettings'},
 	    waitMsg:'Saving Data...',
 	    failure: function(form, action) {

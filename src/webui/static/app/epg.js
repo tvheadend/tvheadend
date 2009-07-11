@@ -40,7 +40,7 @@ tvheadend.epgDetails = function(event) {
 
     function recordEvent() {
 	Ext.Ajax.request({
-	    url: '/dvr',
+	    url: 'dvr',
 	    params: {eventId: event.id, op: 'recordEvent'},
 
 	    success:function(response, options) {
@@ -333,7 +333,7 @@ tvheadend.epg = function() {
     function createAutoRec2(params) {
 	/* Really do it */
 	params.op = 'createAutoRec';
-	Ext.Ajax.request({url: '/dvr', params: params});
+	Ext.Ajax.request({url: 'dvr', params: params});
     }
 
     return panel;

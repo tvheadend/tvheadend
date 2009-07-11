@@ -137,7 +137,7 @@ tvheadend.xmltv = function() {
 
     confpanel.on('render', function() {
 	confpanel.getForm().load({
-	    url:'/xmltv', 
+	    url:'xmltv', 
 	    params:{'op':'loadSettings'},
 	    success:function(form, action) {
 		confpanel.enable();
@@ -211,7 +211,7 @@ tvheadend.xmltv = function() {
 
     function saveChanges() {
 	confpanel.getForm().submit({
-	    url:'/xmltv', 
+	    url:'xmltv', 
 	    params:{'op':'saveSettings'},
 	    waitMsg:'Saving Data...',
 	    failure: function(form, action) {

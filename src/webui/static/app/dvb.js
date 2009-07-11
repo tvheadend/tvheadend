@@ -13,7 +13,7 @@ tvheadend.dvbAdapterStore = new Ext.data.JsonStore({
 	     'muxes',
 	     'initialMuxes',
 	     'satConf'],
-    url:'/dvb/adapter'
+    url:'dvb/adapter'
 });
 
 tvheadend.comet.on('dvbAdapter', function(m) {
@@ -489,7 +489,7 @@ tvheadend.addMuxByLocation = function(adapterData, satConfStore) {
 	handler: function() {
 	    var n = locationList.getSelectionModel().getSelectedNode();
 	    Ext.Ajax.request({
-		url: '/dvb/adapter/' + adapterData.identifier,
+		url: 'dvb/adapter/' + adapterData.identifier,
 		params: {
 		    network: n.attributes.id,
 		    satconf: satConfCombo ? satConfCombo.getValue() : null,
@@ -522,7 +522,7 @@ tvheadend.addMuxByLocation = function(adapterData, satConfStore) {
 	rootVisible:false,
 	loader: new Ext.tree.TreeLoader({
 	    baseParams: {adapter: adapterData.identifier},
-	    dataUrl:'/dvbnetworks'
+	    dataUrl:'dvbnetworks'
 	}),
 	
 	root: new Ext.tree.AsyncTreeNode({
@@ -587,7 +587,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	disabled: adapterData.services == 0 || adapterData.initialMuxes,
 	handler:function() {
 	    Ext.Ajax.request({
-		url:'/dvb/adapter/' + adapterId, 
+		url:'dvb/adapter/' + adapterId, 
 		params: {
 		    op: 'serviceprobe'
 		}
@@ -623,7 +623,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
     
     function saveConfForm () {
 	confform.getForm().submit({
-	    url:'/dvb/adapter/' + adapterId, 
+	    url:'dvb/adapter/' + adapterId, 
 	    params:{'op':'save'},
 	    waitMsg:'Saving Data...'
 	});
@@ -668,7 +668,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
     });
     
     confform.getForm().load({
-	url:'/dvb/adapter/' + adapterId, 
+	url:'dvb/adapter/' + adapterId, 
 	params:{'op':'load'},
 	success:function(form, action) {
 	    confform.enable();
@@ -805,7 +805,7 @@ tvheadend.dvb_adapter = function(data)
 	    root:'entries',
 	    autoload:true,
 	    fields: ['identifier'],
-	    url:'/dvb/lnbtypes'
+	    url:'dvb/lnbtypes'
 	});
 
 	var satConfStore = new Ext.data.JsonStore({
@@ -813,7 +813,7 @@ tvheadend.dvb_adapter = function(data)
 	    autoLoad: true,
 	    id: 'identifier',
 	    fields: ['identifier', 'name'],
-	    url:'/dvb/satconf/' + data.identifier
+	    url:'dvb/satconf/' + data.identifier
 	});
     } else {
 	satConfStore = false;

@@ -4,7 +4,7 @@
  */
 tvheadend.help = function(title, pagename) {
     Ext.Ajax.request({
-	url: '/docs/' + pagename,
+	url: 'docs/' + pagename,
 	success: function(result, request) { 
 
 	    var content = new Ext.Panel({
@@ -61,7 +61,7 @@ function accessUpdate(o) {
 	border: false,
 	layout:'fit', 
 	title:'About',
-	autoLoad: '/about.html'
+	autoLoad: 'about.html'
     });
 
     tvheadend.rootTabPanel.add(tvheadend.aboutPanel);
