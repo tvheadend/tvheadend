@@ -87,6 +87,9 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
   struct stat st;
   const char *content = NULL, *postfix;
 
+  if(remain == NULL)
+    return 404;
+
   if(strstr(remain, ".."))
     return HTTP_STATUS_BAD_REQUEST;
 
