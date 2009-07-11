@@ -128,6 +128,9 @@ page_static_bundle(http_connection_t *hc, const char *remain, void *opaque)
   const char *content = NULL, *postfix;
   int n;
 
+  if(remain == NULL)
+    return 404;
+
   postfix = strrchr(remain, '.');
   if(postfix != NULL) {
     postfix++;
