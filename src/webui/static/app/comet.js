@@ -29,19 +29,22 @@ tvheadend.cometPoller = function() {
 
 	Ext.Ajax.request({
 	    url: 'comet',
-	    params : boxid ? { boxid: boxid } : null,
+	    params : { 
+		boxid: (boxid ? boxid : null),
+		immediate: failures > 0 ? 1 : 0
+	    },
 	    success: function(result, request) { 
 		parse_comet_response(result.responseText);
 
-		if(failures > 2) {
+		if(failures > 1) {
 		    tvheadend.log('Reconnected to Tvheadend',
 				  'font-weight: bold; color: #080');
 		}
 		failures = 0;
 	    },
 	    failure: function(result, request) { 
-		cometRequest.delay(failures > 10 ? 5000 : failures * 500);
-		if(failures > 2) {
+		cometRequest.delay(failures ? 1000 : 1);
+		if(failures == 1) {
 		    tvheadend.log('There seems to be a problem with the ' + 
 				  'live update feed from Tvheadend. ' +
 				  'Trying to reconnect...',

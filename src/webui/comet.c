@@ -158,11 +158,14 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
 {
   comet_mailbox_t *cmb = NULL; 
   const char *cometid = http_arg_get(&hc->hc_req_args, "boxid");
+  const char *immediate = http_arg_get(&hc->hc_req_args, "immediate");
+  int im = immediate ? atoi(immediate) : 0;
   time_t reqtime;
   struct timespec ts;
   htsmsg_t *m;
 
-  usleep(100000); /* Always sleep 0.1 sec to avoid comet storms */
+  if(!im)
+    usleep(100000); /* Always sleep 0.1 sec to avoid comet storms */
 
   pthread_mutex_lock(&comet_mutex);
 
@@ -182,7 +185,7 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
 
   cmb->cmb_last_used = 0; /* Make sure we're not flushed out */
 
-  if(cmb->cmb_messages == NULL)
+  if(!im && cmb->cmb_messages == NULL)
     pthread_cond_timedwait(&comet_cond, &comet_mutex, &ts);
 
   m = htsmsg_create_map();
