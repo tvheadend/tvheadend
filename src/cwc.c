@@ -162,6 +162,11 @@ typedef struct cwc {
   uint8_t cwc_buf[256];
   int cwc_bufptr;
 
+  /* Provder IDs */
+
+  uint32_t cwc_provider_ids[256];
+  int cwc_num_providers;
+
   /* From configuration */
 
   uint8_t cwc_confedkey[14];
@@ -419,7 +424,9 @@ cwc_send_ka(cwc_t *cwc)
 static int
 cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 {
-  int plen;
+  int plen, i;
+  unsigned int nprov;
+  uint32_t id;
   const char *n;
 
   msg += 12;
@@ -433,7 +440,14 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
   plen = (msg[1] & 0xf) << 8 | msg[2];
 
   if(plen < 14) {
-    tvhlog(LOG_INFO, "cwc", "Invalid card data reply");
+    tvhlog(LOG_INFO, "cwc", "Invalid card data reply (message)");
+    return -1;
+  }
+
+  nprov = msg[14];
+
+  if(plen < nprov * 11) {
+    tvhlog(LOG_INFO, "cwc", "Invalid card data reply (provider list)");
     return -1;
   }
 
@@ -446,7 +460,20 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 	 cwc->cwc_hostname,
 	 msg[3], n, cwc->cwc_caid, 
 	 msg[6], msg[7], msg[8], msg[9], msg[10], msg[11], msg[12], msg[13],
-	 msg[14]);
+	 nprov);
+
+  msg  += 15;
+  plen -= 12;
+
+  cwc->cwc_num_providers = nprov;
+
+  for(i = 0; i < nprov; i++) {
+    id = (msg[0] << 16) | (msg[1] << 8) | msg[2];
+    tvhlog(LOG_INFO, "cwc", "%s: Provider ID #%d: 0x%06x",
+	   cwc->cwc_hostname, i + 1 , id);
+    cwc->cwc_provider_ids[i] = id;
+    msg += 11;
+  }
   return 0;
 }
 
@@ -513,6 +540,7 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
     if(ct->ct_keystate != CT_RESOLVED)
       tvhlog(LOG_INFO, "cwc",
 	     "Obtained key for for service \"%s\"",t->tht_svcname);
+    
     ct->ct_keystate = CT_RESOLVED;
     pthread_mutex_lock(&t->tht_stream_mutex);
     set_control_words(ct->ct_keys, msg + 3, msg + 3 + 8);
@@ -787,6 +815,24 @@ cwc_thread(void *aux)
 /**
  *
  */
+static int
+verify_provider(cwc_t *cwc, uint32_t providerid)
+{
+  int i;
+
+  if(providerid == 0)
+    return 1;
+  
+  for(i = 0; i < cwc->cwc_num_providers; i++) 
+    if(providerid == cwc->cwc_provider_ids[i])
+      return 1;
+  return 0;
+}
+
+
+/**
+ *
+ */
 static void
 cwc_table_input(struct th_descrambler *td, struct th_transport *t,
 		struct th_stream *st, uint8_t *data, int len)
@@ -796,6 +842,9 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
   cwc_t *cwc = ct->ct_cwc;
 
   if(cwc->cwc_caid != st->st_caid)
+    return;
+
+  if(!verify_provider(cwc, st->st_providerid))
     return;
 
   if((data[0] & 0xf0) != 0x80)

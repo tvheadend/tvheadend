@@ -306,6 +306,7 @@ typedef struct th_stream {
   /* ca id for this stream */
 
   uint16_t st_caid;
+  uint32_t st_providerid;
 
   /* Remuxing information */
   AVRational st_tb;

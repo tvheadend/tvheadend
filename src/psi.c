@@ -161,7 +161,39 @@ psi_build_pat(th_transport_t *t, uint8_t *buf, int maxlen, int pmtpid)
 }
 
 
+/**
+ * Parser for CA descriptor, viaccess
+ */
+static int
+psi_desc_ca_viaccess(th_transport_t *t, th_stream_t *st, uint8_t *ptr, int len)
+{
+  uint8_t tag, tlen;
+  uint32_t id;
 
+  while(len > 2) {
+    tag = ptr[0];
+    tlen = ptr[1];
+
+    ptr += 2;
+    len -= 2;
+
+    if(len < tlen)
+      return 0;
+
+    switch(tag) {
+    case 0x14:
+      id = (ptr[0] << 16) | (ptr[1] << 8) | (ptr[2] & 0xf0);
+
+      if(id != st->st_providerid) {
+	st->st_providerid = id;
+	return 1;
+      }
+    }
+    len -= tlen;
+    ptr += tlen;
+  }
+  return 0;
+}
 
 
 
@@ -169,7 +201,7 @@ psi_build_pat(th_transport_t *t, uint8_t *buf, int maxlen, int pmtpid)
  * Parser for CA descriptor
  */
 static int
-psi_desc_ca(th_transport_t *t, uint8_t *ptr)
+psi_desc_ca(th_transport_t *t, uint8_t *ptr, int len)
 {
   uint16_t pid = (ptr[2] & 0x1f) << 8 | ptr[3];
   th_stream_t *st;
@@ -187,6 +219,16 @@ psi_desc_ca(th_transport_t *t, uint8_t *ptr)
     st->st_caid = caid;
     r = 1;
   }
+
+  len -= 4;
+  ptr += 4;
+
+  switch(caid >> 8) {
+  case 5:
+    r |= psi_desc_ca_viaccess(t, st, ptr, len);
+    break;
+  }
+
   return r;
 }
 
@@ -247,7 +289,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
 
     switch(dtag) {
     case DVB_DESC_CA:
-      update |= psi_desc_ca(t, ptr);
+      update |= psi_desc_ca(t, ptr, dlen);
       break;
 
     default:
@@ -300,7 +342,7 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
 
       switch(dtag) {
       case DVB_DESC_CA:
-	update |= psi_desc_ca(t, ptr);
+	update |= psi_desc_ca(t, ptr, dlen);
 	break;
 
       case DVB_DESC_VIDEO_STREAM:
@@ -647,8 +689,12 @@ psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
     if(st->st_lang[0])
       htsmsg_add_str(sub, "language", st->st_lang);
 
-    if(st->st_type == SCT_CA)
+    if(st->st_type == SCT_CA) {
       htsmsg_add_str(sub, "caid", psi_caid2name(st->st_caid));
+
+      if(st->st_providerid)
+	htsmsg_add_u32(sub, "caproviderid", st->st_providerid);
+    }
 
     if(st->st_frame_duration)
       htsmsg_add_u32(sub, "frameduration", st->st_frame_duration);
@@ -710,5 +756,7 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
       i = str2val(v, caidnametab);
       st->st_caid = i < 0 ? strtol(v, NULL, 0) : i;
     }
+
+    htsmsg_get_u32(c, "caproviderid", &st->st_providerid);
   }
 }
