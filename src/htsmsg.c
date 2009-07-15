@@ -570,3 +570,14 @@ htsmsg_copy(htsmsg_t *src)
   htsmsg_copy_i(src, dst);
   return dst;
 }
+
+
+/**
+ *
+ */
+void
+htsmsg_dtor(htsmsg_t **mp)
+{
+  if(*mp != NULL)
+    htsmsg_destroy(*mp);
+}

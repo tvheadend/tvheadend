@@ -511,3 +511,12 @@ tvh_str_update(char **strp, const char *src)
   *strp = strdup(src);
 }
 
+
+/**
+ *
+ */
+void
+scopedunlock(pthread_mutex_t **mtxp)
+{
+  pthread_mutex_unlock(*mtxp);
+}

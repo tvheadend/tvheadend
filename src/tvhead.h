@@ -656,4 +656,13 @@ extern time_t dispatch_clock;
 extern struct th_transport_list all_transports;
 extern struct channel_tree channel_name_tree;
 
+extern void scopedunlock(pthread_mutex_t **mtxp);
+
+#define scopedlock(mtx) \
+ pthread_mutex_t *scopedlock ## __LINE__ \
+ __attribute__((cleanup(scopedunlock))) = mtx; \
+ pthread_mutex_lock(mtx);
+
+#define scopedgloballock() scopedlock(&global_lock)
+
 #endif /* TV_HEAD_H */

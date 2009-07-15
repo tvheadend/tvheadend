@@ -259,4 +259,9 @@ htsmsg_t *htsmsg_copy(htsmsg_t *src);
 
 #define HTSMSG_FOREACH(f, msg) TAILQ_FOREACH(f, &(msg)->hm_fields, hmf_link)
 
+
+extern void htsmsg_dtor(htsmsg_t **mp);
+
+#define htsmsg_autodtor(n) htsmsg_t *n __attribute__((cleanup(htsmsg_dtor)))
+
 #endif /* HTSMSG_H_ */
