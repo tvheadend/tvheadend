@@ -3,58 +3,44 @@
  <img src="docresources/channeltab.png">
 
  <div>
-  The channel tab is divided in three parts:
-  <dl>
-   <dt>The channel list (to the left)
-   <dd>Use this list to select the channel you wish to work with.
-       You can also drag a channel from this list onto the right side of
-       the view to merge the dragged channel with the currently selected one.
+ The channels are listed / edited  in a grid. 
 
-   <dt>Channel details (right top)
+ <ul>
+  <li>To edit a cell, double-click on it. After a cell is changed it
+      will flags one of its corner to red to indicated that it has been
+      changed. To commit these changes back to Tvheadend press the 
+      'Save changes' button. In order to change a Checkbox cell you only
+      have to click once in it.
 
-       <dl>
-        <dt>Channel name
-	<dd>Name of the channel as presented in EPG and external interfaces.
-            Changing name of a channel does not interfere with scheduled
-            recordings etc.
+  <li>To delete one or more entries, select the lines (by clicking once on 
+      them), and press the 'Delete selected' button. A popup
+      will ask you to confirm your request.
+ </ul>
 
-        <dt>XML-TV Source
-        <dd>Name of the XML-TV channel. If you have XML-TV enabled you can 
-            select which XML-TV channel to obtain data from. By default 
-            Tvheadend tries to match the name itself, but sometimes it might
-	    not match between the XML-TV source and the TV provider so in
-	    such cases you can change it yourself.
+ <p>
+ The columns have the following functions:
 
-        <dt>Tags
-	<dd>Each channel can be bound to a zero, one or many tags.
-	    The tags are used for multiple things and it's up to you how
-	    you wish to use and name them. Tags can be used to aid searching
-	    in the EPG if you have many channels. The tags are also presented
-	    in the Showtime Media player.
-	    To (de-)select multiple tags, just hold the CTRL-button as with
-	    any multi-selection list.
+ <dl>
+  <dt>Name
+  <dd>Name of the channel as presented in EPG and external interfaces.
+      Changing name of a channel does not interfere with scheduled
+      recordings etc.
 
-        <dt>Delete channel
-	<dd>This button will delete the channel (and any scheduled recordings
-	    tied to it). You will be asked to confirm before the actual
-	    delete is executed, but after that, there is no way to recover.
-       </dl>
-   <dd>Changes to any of these settings must be confirmed by pressing the
-       'Save configuration' button before taking effect. If you select
-       a different channel any unsaved changes will be lost. It is, however,
-       perfectly fine to switch Tab (if you want to check anything, create
-       a new tag, etc) and come back without any changes being lost.
+  <dt>XML-TV Source
+  <dd>Name of the XML-TV channel. If you have XML-TV enabled you can 
+      select which XML-TV channel to obtain data from. By default 
+      Tvheadend tries to match the name itself, but sometimes it might
+      not match between the XML-TV source and the TV provider so in
+      such cases you can change it yourself.
 
-
-   <dt>Transports bound to channel (right bottom)
-   <dd>In this view you can examine and enable/disable each of the transports
-       bound to the channel. You may wish to disable a transport if it
-       temporary out of service or in other terms problematic.
-       The status of the enable checkbox is saved when the 'Save configuration'
-       button is pressed.
+  <dt>Tags
+  <dd>Each channel can be bound to a zero, one or many tags.
+      The tags are used for multiple things and it's up to you how
+      you wish to use and name them. Tags can be used to aid searching
+      in the EPG if you have many channels. The tags are also presented
+      in a Media player.
 
 
   </dl>
  </div>
-
  </div>

@@ -215,7 +215,7 @@ tvheadend.chconf = function()
 	    delBtn, '-', saveBtn, rejectBtn, '->', {
 	    text: 'Help',
 	    handler: function() {
-		new tvheadend.help(title, helpContent);
+		new tvheadend.help('Channels', 'config_channels.html');
 	    }
 	}
 	]
