@@ -393,6 +393,7 @@ htsmsg_field_get_string(htsmsg_field_t *f)
     snprintf(buf, sizeof(buf), "%"PRId64, f->hmf_s64);
     f->hmf_str = strdup(buf);
     f->hmf_type = HMF_STR;
+    f->hmf_flags |= HMF_ALLOCED;
     break;
   }
   return f->hmf_str;
