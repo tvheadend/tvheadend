@@ -52,7 +52,12 @@ hts-tvheadend (2.3) hts; urgency=low
     from local to nationwide broadcast (AC3 audio is only present
     in nationwide broadcast)
     Ticket #78
-	
+
+  * Channel editor has been reworked a bit. It uses an editorGrid, similar
+    to how other grids work in Tvheadend. Tags are mapped inline using
+    a list-of-values combobox (http://lovcombo.extjs.eu/)
+
+
 hts-tvheadend (2.2) hts; urgency=low
 
   * Set $HOME so forked processes (XMLTV) will have correct environment

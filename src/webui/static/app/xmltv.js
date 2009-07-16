@@ -2,78 +2,10 @@ tvheadend.grabberStore = new Ext.data.JsonStore({
     root:'entries',
     fields: ['identifier','name','version','apiconfig'],
     url:'xmltv',
-    baseParams: {op: 'listGrabbers'}
+    baseParams: {
+	op: 'listGrabbers'
+    }
 });
-
-/*
-
-tvheadend.xmltvsetup = function() {
-
-    var deck1info = new Ext.form.Label({
-	fieldLabel: 'Version',
-	html:'',
-    });
-
-    var deck1cb = new Ext.form.ComboBox({
-	loadingText: 'Scanning for XMLTV grabbers, please wait...',
-	fieldLabel: 'XML-TV Source',
-	name: 'xmltvchannel',
-	width: 350,
-	displayField:'name',
-	valueField:'identifier',
-	store: tvheadend.grabberStore,
-	forceSelection: true,
-	editable: false,
-	triggerAction: 'all',
-	mode: 'remote',
-	emptyText: 'Select grabber'
-    });
-
-    var deck1 = new Ext.FormPanel({
-	labelAlign: 'right',
-	labelWidth: 100,
-	bodyStyle: 'padding: 5px',
-	defaultType: 'label',
-	layout: 'form',
-	border:false,
-	items: [deck1cb, deck1info]
-    });
-    
-
-
-    var win = new Ext.Window({
-	title: 'Configure XMLTV grabbers',
-	bodyStyle: 'padding: 5px',
-        layout: 'fit',
-        width: 500,
-        height: 500,
-	constrainHeader: true,
-	buttonAlign: 'center',
-	items: [deck1],
-	bbar: [
-	    {
-		id: 'move-back',
-		text: 'Back',
-		disabled: true
-	    },
-	    '->',
-	    {
-		id: 'move-next',
-		text: 'Next'
-	    }
-	]
-    });
-
-    win.show();
-
-    deck1cb.on('select', function(c,r,i) {
-	deck1info.setText(r.data.version);
-    });
-}
-*/
-
-
-
 
 tvheadend.xmltv = function() {
 

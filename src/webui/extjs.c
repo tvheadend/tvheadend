@@ -270,32 +270,106 @@ extjs_tablemgr(http_connection_t *hc, const char *remain, void *opaque)
 /**
  *
  */
-static int
-extjs_chlist(http_connection_t *hc, const char *remain, void *opaque)
+static void
+extjs_channels_delete(htsmsg_t *in)
 {
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  htsmsg_t *out, *array, *c;
+  htsmsg_field_t *f;
   channel_t *ch;
 
-  out = htsmsg_create_map();
+  TAILQ_FOREACH(f, &in->hm_fields, hmf_link)
+    if(f->hmf_type == HMF_S64 &&
+       (ch = channel_find_by_identifier(f->hmf_s64)) != NULL)
+      channel_delete(ch);
+}
 
-  array = htsmsg_create_list();
 
-  pthread_mutex_lock(&global_lock);
+/**
+ *
+ */
+static void
+extjs_channels_update(htsmsg_t *in)
+{
+  htsmsg_field_t *f;
+  channel_t *ch;
+  htsmsg_t *c;
+  uint32_t id;
+  const char *s;
 
-  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-    c = htsmsg_create_map();
-    htsmsg_add_str(c, "name", ch->ch_name);
-    htsmsg_add_u32(c, "chid", ch->ch_id);
-    htsmsg_add_msg(array, NULL, c);
+  TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
+    if((c = htsmsg_get_map_by_field(f)) == NULL ||
+       htsmsg_get_u32(c, "id", &id))
+      continue;
+
+    if((ch = channel_find_by_identifier(id)) == NULL)
+      continue;
+
+    if((s = htsmsg_get_str(c, "name")) != NULL)
+      channel_rename(ch, s);
+
+    if((s = htsmsg_get_str(c, "xmltvsrc")) != NULL)
+      channel_set_xmltv_source(ch, xmltv_channel_find_by_displayname(s));
+
+    if((s = htsmsg_get_str(c, "tags")) != NULL)
+      channel_set_tags_from_list(ch, s);
+  }
+}
+
+/**
+ *
+ */
+static int
+extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  htsmsg_t *array, *c;
+  channel_t *ch;
+  char buf[1024];
+  channel_tag_mapping_t *ctm;
+  const char *op        = http_arg_get(&hc->hc_req_args, "op");
+  const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
+
+  htsmsg_autodtor(in) =
+    entries != NULL ? htsmsg_json_deserialize(entries) : NULL;
+
+  htsmsg_autodtor(out) = htsmsg_create_map();
+
+  scopedgloballock();
+
+  if(!strcmp(op, "list")) {
+    array = htsmsg_create_list();
+
+    RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
+      c = htsmsg_create_map();
+      htsmsg_add_str(c, "name", ch->ch_name);
+      htsmsg_add_u32(c, "chid", ch->ch_id);
+      
+      if(ch->ch_xc != NULL)
+	htsmsg_add_str(c, "xmltvsrc", ch->ch_xc->xc_displayname);
+
+      buf[0] = 0;
+      LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
+	snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
+		 "%s%d", strlen(buf) == 0 ? "" : ",",
+		 ctm->ctm_tag->ct_identifier);
+      }
+      htsmsg_add_str(c, "tags", buf);
+
+      htsmsg_add_msg(array, NULL, c);
+    }
+    
+    htsmsg_add_msg(out, "entries", array);
+
+  } else if(!strcmp(op, "delete") && in != NULL) {
+    extjs_channels_delete(in);
+
+  } else if(!strcmp(op, "update") && in != NULL) {
+    extjs_channels_update(in);
+     
+  } else {
+    return 400;
   }
 
-  pthread_mutex_unlock(&global_lock);
-
-  htsmsg_add_msg(out, "entries", array);
-
   htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
@@ -387,229 +461,6 @@ json_single_record(htsmsg_t *rec, const char *root)
 
 }
 
-
-/**
- *
- */
-static htsmsg_t *
-build_transport_msg(th_transport_t *t)
-{
-  htsmsg_t *r = htsmsg_create_map();
-  th_stream_t *st;
-  const char *n;
-  char video[200];
-  char audio[200];
-  char subtitles[200];
-  char scrambling[200];
-
-  htsmsg_add_u32(r, "enabled", t->tht_enabled);
-  htsmsg_add_str(r, "name", t->tht_svcname);
-
-  htsmsg_add_str(r, "provider", t->tht_provider ?: "");
-  if((n = t->tht_networkname(t)) != NULL)
-    htsmsg_add_str(r, "network", n);
-  htsmsg_add_str(r, "source", t->tht_sourcename(t));
-
-  htsmsg_add_str(r, "status", "");
-
-  video[0] = 0;
-  audio[0] = 0;
-  subtitles[0] = 0;
-  scrambling[0] = 0;
-
-  LIST_FOREACH(st, &t->tht_components, st_link) {
-
-    switch(st->st_type) {
-    case SCT_TELETEXT:
-    case SCT_SUBTITLES:
-    case SCT_PAT:
-    case SCT_PMT:
-      break;
-
-    case SCT_MPEG2VIDEO:
-      snprintf(video + strlen(video), sizeof(video) - strlen(video),
-	       "%sMPEG-2 (PID:%d", strlen(video) > 0 ? ", " : "",
-	       st->st_pid);
-
-    video:
-      if(st->st_frame_duration) {
-	snprintf(video + strlen(video), sizeof(video) - strlen(video),
-		 ", %d Hz)", 90000 / st->st_frame_duration);
-      } else {
-	snprintf(video + strlen(video), sizeof(video) - strlen(video),
-		 ")");
-      }
-
-      break;
-
-    case SCT_H264:
-      snprintf(video + strlen(video), sizeof(video) - strlen(video),
-	       "%sH.264 (PID:%d", strlen(video) > 0 ? ", " : "",
-	       st->st_pid);
-      goto video;
-
-    case SCT_MPEG2AUDIO:
-      snprintf(audio + strlen(audio), sizeof(audio) - strlen(audio),
-	       "%sMPEG-2 (PID:%d", strlen(audio) > 0 ? ", " : "",
-	       st->st_pid);
-    audio:
-      if(st->st_lang[0]) {
-	snprintf(audio + strlen(audio), sizeof(audio) - strlen(audio),
-		 ", languange: \"%s\")", st->st_lang);
-      } else {
-	snprintf(audio + strlen(audio), sizeof(audio) - strlen(audio),
-		 ")");
-      }
-      break;
-
-    case SCT_AC3:
-      snprintf(audio + strlen(audio), sizeof(audio) - strlen(audio),
-	       "%sAC3 (PID:%d", strlen(audio) > 0 ? ", " : "",
-	       st->st_pid);
-      goto audio;
-
-    case SCT_AAC:
-      snprintf(audio + strlen(audio), sizeof(audio) - strlen(audio),
-	       "%sAAC (PID:%d", strlen(audio) > 0 ? ", " : "",
-	       st->st_pid);
-      goto audio;
-
-    case SCT_CA:
-      snprintf(scrambling + strlen(scrambling),
-	       sizeof(scrambling) - strlen(scrambling),
-	       "%s%s", strlen(scrambling) > 0 ? ", " : "",
-	       psi_caid2name(st->st_caid));
-      break;
-    }
-  }
-   
-  htsmsg_add_str(r, "video", video);
-  htsmsg_add_str(r, "audio", audio);
-  htsmsg_add_str(r, "scrambling", scrambling[0] ? scrambling : "none");
-  return r;
-}
-
-
-/**
- *
- */
-static int
-extjs_channel(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  const char *s  = http_arg_get(&hc->hc_req_args, "chid");
-  const char *op = http_arg_get(&hc->hc_req_args, "op");
-  channel_t *ch;
-  channel_t *ch2;
-  th_transport_t *t;
-  int reloadchlist = 0;
-  htsmsg_t *out, *array, *r;
-  channel_tag_mapping_t *ctm;
-  char buf[200];
-
-  pthread_mutex_lock(&global_lock);
-
-  if(http_access_verify(hc, ACCESS_ADMIN)) {
-    pthread_mutex_unlock(&global_lock);
-    return HTTP_STATUS_UNAUTHORIZED;
-  }
-
-  ch = s ? channel_find_by_identifier(atoi(s)) : NULL;
-  if(ch == NULL) {
-    pthread_mutex_unlock(&global_lock);
-    return HTTP_STATUS_BAD_REQUEST;
-  }
-
-  if(!strcmp(op, "load")) {
-    r = htsmsg_create_map();
-    htsmsg_add_u32(r, "id", ch->ch_id);
-    htsmsg_add_str(r, "name", ch->ch_name);
-    htsmsg_add_str(r, "comdetect", "tt192");
-
-    if(ch->ch_xc != NULL)
-      htsmsg_add_str(r, "xmltvchannel", ch->ch_xc->xc_displayname);
-
-    buf[0] = 0;
-    LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
-      snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
-	       "%s%d", strlen(buf) == 0 ? "" : ",",
-	       ctm->ctm_tag->ct_identifier);
-    }
-    htsmsg_add_str(r, "tags", buf);
-
-    out = json_single_record(r, "channels");
-
-  } else if(!strcmp(op, "gettransports")) {
-    out = htsmsg_create_map();
-    array = htsmsg_create_list();
-    LIST_FOREACH(t, &ch->ch_transports, tht_ch_link)
-      htsmsg_add_msg(array, NULL, build_transport_msg(t));
-
-    htsmsg_add_msg(out, "entries", array);
-
-  } else if(!strcmp(op, "delete")) {
-
-    channel_delete(ch);
-
-    out = htsmsg_create_map();
-    htsmsg_add_u32(out, "reloadchlist", 1);
-    htsmsg_add_u32(out, "success", 1);
- 
-  } else if(!strcmp(op, "mergefrom")) {
-    
-    if((s = http_arg_get(&hc->hc_req_args, "srcch")) == NULL)
-      return HTTP_STATUS_BAD_REQUEST;
-    
-    ch2 = channel_find_by_identifier(atoi(s));
-    if(ch2 == NULL || ch2 == ch)
-      return HTTP_STATUS_BAD_REQUEST;
-
-    channel_merge(ch, ch2); /* ch2 goes away here */
-
-    out = htsmsg_create_map();
-    htsmsg_add_u32(out, "reloadchlist", 1);
-    htsmsg_add_u32(out, "success", 1);
- 	
-
-  } else if(!strcmp(op, "save")) {
-
-    if((s = http_arg_get(&hc->hc_req_args, "tags")) != NULL)
-      channel_set_tags_from_list(ch, s);
-
-    s = http_arg_get(&hc->hc_req_args, "xmltvchannel");
-    channel_set_xmltv_source(ch, s?xmltv_channel_find_by_displayname(s):NULL);
-
-    if((s = http_arg_get(&hc->hc_req_args, "name")) != NULL &&
-       strcmp(s, ch->ch_name)) {
-      
-      if(channel_rename(ch, s)) {
-	out = htsmsg_create_map();
-	htsmsg_add_u32(out, "success", 0);
-	htsmsg_add_str(out, "errormsg", "Channel name already exist");
-	goto response;
-      } else {
-	reloadchlist = 1;
-      }
-    }
-    
-    out = htsmsg_create_map();
-    htsmsg_add_u32(out, "reloadchlist", 1);
-    htsmsg_add_u32(out, "success", 1);
- 
-  } else {
-    pthread_mutex_unlock(&global_lock);
-    return HTTP_STATUS_BAD_REQUEST;
-  }
-
- response:
-  pthread_mutex_unlock(&global_lock);
-
-  htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
-
-  http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;
-}
 
 /**
  *
@@ -1528,8 +1379,7 @@ extjs_start(void)
   http_path_add("/extjs.html",  NULL, extjs_root,        ACCESS_WEB_INTERFACE);
   http_path_add("/tablemgr",    NULL, extjs_tablemgr,    ACCESS_WEB_INTERFACE);
   http_path_add("/dvbnetworks", NULL, extjs_dvbnetworks, ACCESS_WEB_INTERFACE);
-  http_path_add("/chlist",      NULL, extjs_chlist,      ACCESS_WEB_INTERFACE);
-  http_path_add("/channel",     NULL, extjs_channel,     ACCESS_WEB_INTERFACE);
+  http_path_add("/channels",    NULL, extjs_channels,    ACCESS_WEB_INTERFACE);
   http_path_add("/xmltv",       NULL, extjs_xmltv,       ACCESS_WEB_INTERFACE);
   http_path_add("/channeltags", NULL, extjs_channeltags, ACCESS_WEB_INTERFACE);
   http_path_add("/epg",         NULL, extjs_epg,         ACCESS_WEB_INTERFACE);
