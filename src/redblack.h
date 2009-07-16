@@ -300,18 +300,18 @@ do {									 \
   typeof(e) x, y, z = e, x_parent, w;					 \
 									 \
   y = z;								 \
+  if (y == (head)->first) {						 \
+    (head)->first = RB_NEXT(y, field);				         \
+  }									 \
+  if (y == (head)->last) {						 \
+    (head)->last = RB_PREV(y, field);				         \
+  }									 \
   if (y->field.left == NULL) {						 \
     x = y->field.right;							 \
-    if (y == (head)->first) {						 \
-      (head)->first = RB_NEXT(y, field);				 \
-    }									 \
   }									 \
   else {								 \
     if (y->field.right == NULL) {					 \
       x = y->field.left;						 \
-      if (y == (head)->last) {						 \
-	(head)->last = RB_PREV(y, field);				 \
-      }									 \
     }									 \
     else {								 \
       y = y->field.right;						 \
