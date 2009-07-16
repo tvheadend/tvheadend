@@ -663,8 +663,6 @@ dvb_mux_build_msg(th_dvb_mux_instance_t *tdmi)
   htsmsg_t *m = htsmsg_create_map();
   char buf[100];
 
-  m = htsmsg_create_map();
-
   htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
   htsmsg_add_u32(m, "enabled",  tdmi->tdmi_enabled);
   htsmsg_add_str(m, "network", tdmi->tdmi_network ?: "");
