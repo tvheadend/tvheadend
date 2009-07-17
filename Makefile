@@ -128,7 +128,7 @@ ${PROG}: ${BUILDDIR}/ffmpeg/install $(OBJDIRS) $(OBJS) $(BUNDLE_OBJS) Makefile
 $(OBJDIRS):
 	@mkdir -p $@
 
-${BUILDDIR}/%.o: %.c
+${BUILDDIR}/%.o: %.c  ${BUILDDIR}/ffmpeg/install
 	$(CC) -MD $(CFLAGS_com) $(CFLAGS) $(CFLAGS_cfg) -c -o $@ $(CURDIR)/$<
 
 ${BUILDDIR}/ffmpeg/install ffmpeg:
