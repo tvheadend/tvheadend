@@ -57,6 +57,8 @@ hts-tvheadend (2.3) hts; urgency=low
     to how other grids work in Tvheadend. Tags are mapped inline using
     a list-of-values combobox (http://lovcombo.extjs.eu/)
 
+  * Added a search IMDB direct link in the EPG window popup.
+    Ticket #79
 
 hts-tvheadend (2.2) hts; urgency=low
 
