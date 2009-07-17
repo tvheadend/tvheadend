@@ -14,73 +14,75 @@ struct strtab {
 };
 
 static struct strtab fectab[] = {
-  { "NONE", "FEC_NONE" },
-  { "1/1",  "FEC_AUTO" },
-  { "1/2",  "FEC_1_2" },
-  { "2/3",  "FEC_2_3" },
-  { "3/4",  "FEC_3_4" },
-  { "4/5",  "FEC_4_5" },
-  { "5/6",  "FEC_5_6" },
-  { "6/7",  "FEC_6_7" },
-  { "7/8",  "FEC_7_8" },
-  { "8/9",  "FEC_8_9" },
-  { "AUTO", "FEC_AUTO" }
+  { "NONE", "0" },
+  { "1/2",  "1" },
+  { "2/3",  "2" },
+  { "3/4",  "3" },
+  { "4/5",  "4" },
+  { "5/6",  "5" },
+  { "6/7",  "6" },
+  { "7/8",  "7" },
+  { "8/9",  "8" },
+  { "AUTO", "9" },
+  { "1/1",  "9" },
+  { "3/5",  "10" },
+  { "9/10", "11" },
 };
 
 static struct strtab qamtab[] = {
-  { "QPSK",   "QPSK" },
-  { "QAM16",  "QAM_16" },
-  { "QAM32",  "QAM_32" },
-  { "QAM64",  "QAM_64" },
-  { "QAM128", "QAM_128" },
-  { "QAM256", "QAM_256" },
-  { "AUTO",   "QAM_AUTO" },
-  { "8VSB",   "VSB_8" },
-  { "16VSB",  "VSB_16" }
+  { "QPSK",   "0" },
+  { "QAM16",  "1" },
+  { "QAM32",  "2" },
+  { "QAM64",  "3" },
+  { "QAM128", "4" },
+  { "QAM256", "5" },
+  { "AUTO",   "6" },
+  { "8VSB",   "7" },
+  { "16VSB",  "8" }
 };
 
 static struct strtab bwtab[] = {
-  { "8MHz", "BANDWIDTH_8_MHZ" },
-  { "7MHz", "BANDWIDTH_7_MHZ" },
-  { "6MHz", "BANDWIDTH_6_MHZ" },
-  { "AUTO", "BANDWIDTH_AUTO" }
+  { "8MHz", "0" },
+  { "7MHz", "1" },
+  { "6MHz", "2" },
+  { "AUTO", "3" }
 };
 
 static struct strtab modetab[] = {
-  { "2k",   "TRANSMISSION_MODE_2K" },
-  { "8k",   "TRANSMISSION_MODE_8K" },
-  { "AUTO", "TRANSMISSION_MODE_AUTO" }
+  { "2k",   "0" },
+  { "8k",   "1" },
+  { "AUTO", "2" }
 };
 
 static struct strtab guardtab[] = {
-  { "1/32", "GUARD_INTERVAL_1_32" },
-  { "1/16", "GUARD_INTERVAL_1_16" },
-  { "1/8",  "GUARD_INTERVAL_1_8" },
-  { "1/4",  "GUARD_INTERVAL_1_4" },
-  { "AUTO", "GUARD_INTERVAL_AUTO" },
+  { "1/32", "0" },
+  { "1/16", "1" },
+  { "1/8",  "2" },
+  { "1/4",  "3" },
+  { "AUTO", "4" },
 };
 
 static struct strtab hiertab[] = {
-  { "NONE", "HIERARCHY_NONE" },
-  { "1",    "HIERARCHY_1" },
-  { "2",    "HIERARCHY_2" },
-  { "4",    "HIERARCHY_4" },
-  { "AUTO", "HIERARCHY_AUTO" }
+  { "NONE", "0" },
+  { "1",    "1" },
+  { "2",    "2" },
+  { "4",    "3" },
+  { "AUTO", "4" }
 };
 
 
 static const char *
-str2str0(const char *str, struct strtab tab[], int l)
+str2str0(const char *str, struct strtab tab[], int l, const char *what)
 {
   int i;
   for(i = 0; i < l; i++)
     if(!strcasecmp(str, tab[i].v1))
       return tab[i].v2;
-  fprintf(stderr, "Warning, cannot translate %s\n", str);
+  fprintf(stderr, "Warning, cannot translate %s (%s)\n", str, what);
   return "#error";
 }
 
-#define str2str(str, tab) str2str0(str, tab, sizeof(tab) / sizeof(tab[0]))
+#define str2str(str, tab,what) str2str0(str, tab, sizeof(tab) / sizeof(tab[0]),what)
 
 
 
@@ -108,13 +110,13 @@ dvb_t_config(const char *l)
 	 ".hierarchy = %s},\n "
 	 ,
 	 freq, 
-	 str2str(bw, bwtab), 
-	 str2str(qam, qamtab),
-	 str2str(fec, fectab),
-	 str2str(fec2, fectab),
-	 str2str(mode, modetab),
-	 str2str(guard, guardtab),
-	 str2str(hier, hiertab));
+	 str2str(bw, bwtab, "bandwidth"), 
+	 str2str(qam, qamtab, "constellation"),
+	 str2str(fec, fectab, "fec"),
+	 str2str(fec2, fectab, "fec2"),
+	 str2str(mode, modetab, "mode"),
+	 str2str(guard, guardtab, "guard"),
+	 str2str(hier, hiertab, "hierarchy"));
 }
 
 
@@ -135,7 +137,7 @@ dvb_s_config(const char *l)
 
   printf("\t{"
 	 ".freq = %lu, .symrate = %lu, .fec = %s, .polarisation = '%c'},\n",
-	 freq, symrate, str2str(fec, fectab), polarisation);
+	 freq, symrate, str2str(fec, fectab, "fec"), polarisation);
 }
 
 
@@ -156,7 +158,7 @@ dvb_c_config(const char *l)
 
   printf("\t{ "
 	 ".freq = %lu, .symrate = %lu, .fec = %s, .constellation = %s},\n",
-	 freq, symrate, str2str(fec, fectab), str2str(qam, qamtab));
+	 freq, symrate, str2str(fec, fectab, "fec"), str2str(qam, qamtab, "constellations"));
 }
 
 
@@ -269,6 +271,7 @@ static const struct {
   {"sk", "Slovakia"},
   {"tw", "Taiwan"},
   {"uk", "United Kingdom"},
+  {"vn", "Vietnam"},
 };
 
 static const char *

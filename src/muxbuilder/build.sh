@@ -2,31 +2,36 @@
 
 gcc -O2 -Wall main.c -o muxbuilder
 
-echo struct mux {
-echo  unsigned int freq\;
-echo  unsigned int symrate\;
-echo  char fec\;
-echo  char constellation\;
-echo  char bw\;
-echo  char fechp\;
-echo  char feclp\;
-echo  char tmode\;
-echo  char guard\;
-echo  char hierarchy\;
-echo  char polarisation\;
-echo }\;
+cat <<EOF
 
-echo struct network {
-echo const char *name\;
-echo const struct mux *muxes\;
-echo const int nmuxes\;
-echo }\;
+struct mux {
+ unsigned int freq;
+ unsigned int symrate;
+ char fec;
+ char constellation;
+ char bw;
+ char fechp;
+ char feclp;
+ char tmode;
+ char guard;
+ char hierarchy;
+ char polarisation;
+};
 
-echo struct region {
-echo const char *name\;
-echo const struct network *networks\;
-echo const int nnetworks\;
-echo }\;
+struct network {
+const char *name;
+const struct mux *muxes;
+const int nmuxes;
+};
+
+struct region {
+const char *name;
+const struct network *networks;
+const int nnetworks;
+};
+
+EOF
+
 
 find $1/dvb-s -type f | sort | xargs ./muxbuilder DVBS
 find $1/dvb-t -type f | sort | xargs ./muxbuilder DVBT
