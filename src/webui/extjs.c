@@ -95,6 +95,13 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_exec(hq, "Ext.BLANK_IMAGE_URL = "
 	     "'"EXTJSPATH"/resources/images/default/s.gif';");
 
+#if 0
+  htsbuf_qprintf(hq, 
+		 "<script type='text/javascript' "
+		 "src='http://getfirebug.com/releases/lite/1.2/firebug-lite-compressed.js'></script>");
+#endif
+
+
   /**
    * Load extjs extensions
    */
