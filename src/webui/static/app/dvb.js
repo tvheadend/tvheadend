@@ -584,16 +584,19 @@ tvheadend.addMuxManually = function(adapterData, satConfStore) {
     var adId = adapterData.identifier;
 
 
-    var items = [
-	new Ext.form.NumberField({
-	    fieldLabel: 'Frequency (kHz)',
-	    name: 'frequency',
-	    allowNegative: false
-	})
-    ];
+    var items = [];
 
     switch(adapterData.deliverySystem) {
     case 'DVB-T':
+
+	items.push(new Ext.form.NumberField({
+	    fieldLabel: 'Frequency (kHz)',
+	    name: 'frequency',
+	    allowNegative: false,
+	    minValue: adapterData.freqMin,
+	    maxValue: adapterData.freqMax
+	}));
+
 	items.push(new Ext.form.ComboBox({
 	    fieldLabel: 'Bandwidth',
 	    name: 'bandwidth',
@@ -716,9 +719,19 @@ tvheadend.addMuxManually = function(adapterData, satConfStore) {
 
     case 'DVB-C':
 	items.push(new Ext.form.NumberField({
+	    fieldLabel: 'Frequency (kHz)',
+	    name: 'frequency',
+	    allowNegative: false,
+	    minValue: adapterData.freqMin,
+	    maxValue: adapterData.freqMax
+	}));
+
+	items.push(new Ext.form.NumberField({
 	    fieldLabel: 'Symbolrate (baud)',
 	    name: 'symbolrate',
-	    allowNegative: false
+	    allowNegative: false,
+	    minValue: adapterData.symrateMin,
+	    maxValue: adapterData.symrateMax
 	}));
  
 	items.push(new Ext.form.ComboBox({
@@ -758,9 +771,17 @@ tvheadend.addMuxManually = function(adapterData, satConfStore) {
 
     case 'DVB-S':
 	items.push(new Ext.form.NumberField({
+	    fieldLabel: 'Frequency (kHz)',
+	    name: 'frequency',
+	    allowNegative: false
+	}));
+
+	items.push(new Ext.form.NumberField({
 	    fieldLabel: 'Symbolrate (baud)',
 	    name: 'symbolrate',
-	    allowNegative: false
+	    allowNegative: false,
+	    minValue: adapterData.symrateMin,
+	    maxValue: adapterData.symrateMax
 	}));
  
 	items.push(new Ext.form.ComboBox({
