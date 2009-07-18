@@ -13,7 +13,13 @@ tvheadend.dvbAdapterStore = new Ext.data.JsonStore({
 	     'muxes',
 	     'initialMuxes',
 	     'satConf',
-	     'deliverySystem'],
+	     'deliverySystem',
+	     'freqMin',
+	     'freqMax',
+	     'freqStep',
+	     'symrateMin',
+	     'symrateMax'
+	    ],
     url:'dvb/adapter'
 });
 
@@ -957,10 +963,15 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
      * Information / capabilities panel 
      */
     
-    var infoTemplate = new Ext.Template(
+    var infoTemplate = new Ext.XTemplate(
 	'<h2 style="font-size: 150%">Hardware</h2>' +
 	    '<h3>Device path:</h3>{path}' +
 	    '<h3>Device name:</h3>{devicename}' +
+	    '<h3><tpl if="satConf != 0">Intermediate </tpl>Frequency range:</h3>{freqMin} kHz - {freqMax} kHz' +
+	    ', in steps of {freqStep} kHz' +
+	    '<tpl if="symrateMin != 0">' +
+	    '<h3>Symbolrate range:</h3>' + 
+	    '{symrateMin} kBaud/s - {symrateMax} kBaud/s</tpl>' +
 	    '<h2 style="font-size: 150%">Status</h2>' +
 	    '<h3>Currently tuned to:</h3>{currentMux}&nbsp' +
 	    '<h3>Services:</h3>{services}' +

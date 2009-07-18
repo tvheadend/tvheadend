@@ -516,6 +516,7 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
   th_transport_t *t;
   int nummux = 0;
   int numsvc = 0;
+  int fdiv;
 
   htsmsg_add_str(m, "identifier", tda->tda_identifier);
   htsmsg_add_str(m, "name", tda->tda_displayname);
@@ -543,6 +544,16 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
 		 val2str(tda->tda_type, deliverysystemtab) ?: "");
 
   htsmsg_add_u32(m, "satConf", tda->tda_sat);
+
+  fdiv = tda->tda_type == FE_QPSK ? 1 : 1000;
+
+  htsmsg_add_u32(m, "freqMin", tda->tda_fe_info->frequency_min / fdiv);
+  htsmsg_add_u32(m, "freqMax", tda->tda_fe_info->frequency_max / fdiv);
+  htsmsg_add_u32(m, "freqStep", tda->tda_fe_info->frequency_stepsize / fdiv);
+
+  htsmsg_add_u32(m, "symrateMin", tda->tda_fe_info->symbol_rate_min);
+  htsmsg_add_u32(m, "symrateMax", tda->tda_fe_info->symbol_rate_max);
+
   return m;
 }
 
