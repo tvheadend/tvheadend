@@ -971,7 +971,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	    ', in steps of {freqStep} kHz' +
 	    '<tpl if="symrateMin != 0">' +
 	    '<h3>Symbolrate range:</h3>' + 
-	    '{symrateMin} kBaud/s - {symrateMax} kBaud/s</tpl>' +
+	    '{symrateMin} Baud - {symrateMax} Baud</tpl>' +
 	    '<h2 style="font-size: 150%">Status</h2>' +
 	    '<h3>Currently tuned to:</h3>{currentMux}&nbsp' +
 	    '<h3>Services:</h3>{services}' +
