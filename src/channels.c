@@ -241,6 +241,7 @@ channel_load_one(htsmsg_t *c, int id)
   htsmsg_t *tags;
   htsmsg_field_t *f;
   channel_tag_t *ct;
+  char buf[32];
 
   if(name == NULL)
     return;
@@ -272,9 +273,11 @@ channel_load_one(htsmsg_t *c, int id)
 
   if((tags = htsmsg_get_list(c, "tags")) != NULL) {
     HTSMSG_FOREACH(f, tags) {
-      if(f->hmf_type == HMF_STR && 
-	 (ct = channel_tag_find(f->hmf_str, 0)) != NULL) {
-	channel_tag_map(ch, ct, 1);
+      if(f->hmf_type == HMF_S64) {
+	snprintf(buf, sizeof(buf), "%lld", f->hmf_s64);
+
+	if((ct = channel_tag_find(buf, 0)) != NULL) 
+	  channel_tag_map(ch, ct, 1);
       }
     }
   }

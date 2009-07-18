@@ -64,6 +64,8 @@ hts-tvheadend (2.3) hts; urgency=low
     all tuning parameters manually
     Ticket #37
 
+  * Fix a bug causing channel <> tags mapping not to be restored on load.
+
 hts-tvheadend (2.2) hts; urgency=low
 
   * Set $HOME so forked processes (XMLTV) will have correct environment
