@@ -46,6 +46,7 @@ function accessUpdate(o) {
 	    activeTab:0, 
 	    autoScroll:true, 
 	    title: 'Configuration', 
+	    iconCls: 'wrench',
 	    items: [new tvheadend.chconf,
 		    new tvheadend.xmltv,
 		    new tvheadend.cteditor,
@@ -62,6 +63,7 @@ function accessUpdate(o) {
 	    border: false,
 	    layout:'fit', 
 	    title:'About',
+	    iconCls:'info',
 	    autoLoad: 'about.html'
 	});
 	tvheadend.rootTabPanel.add(tvheadend.aboutPanel);

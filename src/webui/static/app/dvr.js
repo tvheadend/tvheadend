@@ -147,6 +147,7 @@ tvheadend.dvrlog = function() {
 	stripeRows: true,
 	disableSelection: true,
 	title: 'Recorder log',
+	iconCls: 'clock',
 	store: tvheadend.dvrStore,
 	cm: dvrCm,
         viewConfig: {forceFit:true},
@@ -252,7 +253,7 @@ tvheadend.autoreceditor = function() {
     return new tvheadend.tableEditor('Automatic Recorder',
 				     'autorec', cm, tvheadend.autorecRecord,
 				     [enabledColumn], tvheadend.autorecStore,
-				     'autorec.html');
+				     'autorec.html', 'wand');
 }
 /**
  *
@@ -314,6 +315,7 @@ tvheadend.dvr = function() {
 	activeTab:0, 
 	autoScroll:true, 
 	title: 'Digital Video Recorder', 
+	iconCls: 'drive',
 	items: [new tvheadend.dvrlog,
 		new tvheadend.autoreceditor
 	       ]
@@ -336,6 +338,7 @@ tvheadend.dvrsettings = function() {
 
     var confpanel = new Ext.FormPanel({
 	title:'Digital Video Recorder',
+	iconCls: 'drive',
 	border:false,
 	bodyStyle:'padding:15px',
 	anchor: '100% 50%',

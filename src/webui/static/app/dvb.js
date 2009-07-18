@@ -1142,6 +1142,7 @@ tvheadend.dvb = function()
 
     var panel = new Ext.Panel({
 	title: 'DVB Adapters',
+	iconCls: 'hardware',
 	layout:'fit',
 	tbar: [
 	    adapterSelection

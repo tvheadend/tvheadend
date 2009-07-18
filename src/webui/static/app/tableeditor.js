@@ -1,5 +1,5 @@
 tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
-				 helpContent) {
+				 helpContent, icon) {
     cm.defaultSortable = true;
 
     if(store == null) {
@@ -129,6 +129,7 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
 
     var grid = new Ext.grid.EditorGridPanel({
 	title: title,
+	iconCls: icon,
 	plugins: plugins,
 	store: store,
 	clicksToEdit: 2,

@@ -73,5 +73,5 @@ tvheadend.acleditor = function() {
 				      dvrColumn, webuiColumn,
 				      adminColumn],
 				     null,
-				    'config_access.html');
+				     'config_access.html', 'group');
 }

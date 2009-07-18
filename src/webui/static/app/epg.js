@@ -254,6 +254,7 @@ tvheadend.epg = function() {
 	enableDragDrop : false,
 	cm: epgCm,
 	title: 'Electronic Program Guide',
+	iconCls: 'newspaper',
         store : epgStore,
 	selModel : new Ext.ux.grid.livegrid.RowSelectionModel(),
 	view : epgView,
@@ -273,7 +274,7 @@ tvheadend.epg = function() {
 	    '->',
 	    {
 		text: 'Create AutoRec',
-		iconCls: 'rec',
+		iconCls: 'wand',
 		tooltip: 'Create an automatic recording entry that will ' +
 		    'record all future programmes that matches ' +
 		    'the current query.',

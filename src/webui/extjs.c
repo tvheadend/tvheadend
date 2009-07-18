@@ -176,9 +176,12 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 		 "<a href=\"http://hts.lonelycoder.com/\">"
 		 "http://hts.lonelycoder.com/</a><br><br>"
 		 "Based on software from "
-		 "<a href=\"http://www.ffmpeg.org/\">FFmpeg</a> and "
-		 "<a href=\"http://www.extjs.com/\">ExtJS</a>.<br>"
-		 "<br>"
+		 "<a target=\"_blank\" href=\"http://www.ffmpeg.org/\">FFmpeg</a> and "
+		 "<a target=\"_blank\" href=\"http://www.extjs.com/\">ExtJS</a>. "
+		 "Icons from "
+		 "<a target=\"_blank\" href=\"http://www.famfamfam.com/lab/icons/silk/\">"
+		 "FamFamFam</a>"
+		 "<br><br>"
 		 "Build: %s"
 		 "</center>",
 		 htsversion,

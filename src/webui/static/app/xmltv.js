@@ -30,6 +30,7 @@ tvheadend.xmltv = function() {
 
     var confpanel = new Ext.FormPanel({
 	title:'XML TV',
+	iconCls: 'xml',
 	border:false,
 	bodyStyle:'padding:15px',
 	labelAlign: 'right',

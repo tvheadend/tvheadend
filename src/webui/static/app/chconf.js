@@ -204,6 +204,7 @@ tvheadend.chconf = function()
     var grid = new Ext.grid.EditorGridPanel({
 	stripeRows: true,
 	title: 'Channels',
+	iconCls: 'television',
 	store: tvheadend.channels,
 	clicksToEdit: 2,
 	cm: cm,

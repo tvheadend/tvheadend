@@ -137,6 +137,51 @@
     background-image:url(../icons/undo.png) !important;
 }
 
+.key {
+    background-image:url(../icons/key.png) !important;
+}
+
+.tags {
+    background-image:url(../icons/tag_blue.png) !important;
+}
+
+.xml {
+    background-image:url(../icons/tag.png) !important;
+}
+
+.drive {
+    background-image:url(../icons/drive.png) !important;
+}
+
+.group {
+    background-image:url(../icons/group.png) !important;
+}
+
+.hardware {
+    background-image:url(../icons/pci.png) !important;
+}
+
+.television {
+    background-image:url(../icons/television.png) !important;
+}
+
+.newspaper {
+    background-image:url(../icons/newspaper.png) !important;
+}
+
+.clock {
+    background-image:url(../icons/clock.png) !important;
+}
+
+.wrench {
+    background-image:url(../icons/wrench.png) !important;
+}
+
+.wand {
+    background-image:url(../icons/wand.png) !important;
+}
+
+
 .x-smallhdr {
     float:left;
     width: 100px;
