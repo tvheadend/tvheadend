@@ -141,6 +141,8 @@ typedef struct cwc_transport {
 typedef struct cwc {
   int cwc_fd;
 
+  int cwc_retry_delay;
+
   pthread_mutex_t cwc_send_mutex;
 
   pthread_cond_t cwc_cond;
@@ -697,6 +699,10 @@ cwc_session(cwc_t *cwc)
   if(cwc_decode_card_data_reply(cwc, cwc->cwc_buf, r) < 0)
     return;
 
+  /**
+   * Ok, connection good, reset retry delay to zero
+   */
+  cwc->cwc_retry_delay = 0;
 
   /**
    * We do all requests from now on in a separate thread
@@ -785,11 +791,16 @@ cwc_thread(void *aux)
     cwc->cwc_fd = -1;
     close(fd);
     cwc->cwc_caid = 0;
-    tvhlog(LOG_INFO, "cwc", "Disconnected from %s", cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "Disconnected from %s, retry in %d seconds",
+	   cwc->cwc_hostname, cwc->cwc_retry_delay);
 
     pthread_mutex_unlock(&global_lock);
-    sleep(1);
+    sleep(cwc->cwc_retry_delay);
     pthread_mutex_lock(&global_lock);
+
+    cwc->cwc_retry_delay = cwc->cwc_retry_delay * 2 + 1;
+    if(cwc->cwc_retry_delay > 120)
+      cwc->cwc_retry_delay = 120;
   }
 
   tvhlog(LOG_INFO, "cwc", "%s destroyed", cwc->cwc_hostname);

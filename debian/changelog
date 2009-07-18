@@ -66,6 +66,9 @@ hts-tvheadend (2.3) hts; urgency=low
 
   * Fix a bug causing channel <> tags mapping not to be restored on load.
 
+  * Add exponential backoff for reconnect attempt in code word client.
+    Ticket #80
+
 hts-tvheadend (2.2) hts; urgency=low
 
   * Set $HOME so forked processes (XMLTV) will have correct environment
