@@ -216,6 +216,7 @@
 
 .hts-doc-text {
   font:normal 11px verdana;
+  padding: 5px;
 }
 
 .hts-doc-text dt {
@@ -224,6 +225,7 @@
 }
 
 .hts-doc-text dl {
+  padding-left: 10px;
   padding-bottom: 10px;
 }
 
