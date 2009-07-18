@@ -432,7 +432,8 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
 
   htsmsg_add_u32(out, "start", e->e_start);
   htsmsg_add_u32(out, "stop", e->e_stop);
-  htsmsg_add_str(out, "title", e->e_title);
+  if(e->e_title != NULL)
+    htsmsg_add_str(out, "title", e->e_title);
   if(e->e_desc != NULL)
     htsmsg_add_str(out, "description", e->e_desc);
 
