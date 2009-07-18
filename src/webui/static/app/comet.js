@@ -1,8 +1,7 @@
-
 /**
  * Comet interfaces
  */
-Ext.extend(Comet = function() {
+Ext.extend(tvheadend.Comet = function() {
     this.addEvents({
 	accessUpdate: true,
 	dvbAdapter: true,
@@ -13,12 +12,11 @@ Ext.extend(Comet = function() {
 	channeltags: true,
 	autorec: true,
 	dvrdb: true,
-	channels: true,
-    })
+	channels: true
+    });
 }, Ext.util.Observable);
 
-tvheadend.comet = new Comet();
-
+tvheadend.comet = new tvheadend.Comet();
 
 tvheadend.cometPoller = function() {
 

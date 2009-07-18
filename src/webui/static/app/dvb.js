@@ -803,7 +803,7 @@ tvheadend.addMuxManually = function(adapterData, satConfStore) {
 	    triggerAction: 'all',
 	    mode: 'remote',
 	    displayField:'name',
-	    valueField:'identifier',
+	    valueField:'identifier'
 	}));
     }
 
