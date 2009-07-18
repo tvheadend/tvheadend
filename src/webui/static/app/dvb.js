@@ -593,6 +593,7 @@ tvheadend.addMuxManually = function(adapterData, satConfStore) {
 	    fieldLabel: 'Frequency (kHz)',
 	    name: 'frequency',
 	    allowNegative: false,
+	    allowBlank: false,
 	    minValue: adapterData.freqMin,
 	    maxValue: adapterData.freqMax
 	}));
@@ -722,6 +723,7 @@ tvheadend.addMuxManually = function(adapterData, satConfStore) {
 	    fieldLabel: 'Frequency (kHz)',
 	    name: 'frequency',
 	    allowNegative: false,
+	    allowBlank: false,
 	    minValue: adapterData.freqMin,
 	    maxValue: adapterData.freqMax
 	}));
@@ -730,6 +732,7 @@ tvheadend.addMuxManually = function(adapterData, satConfStore) {
 	    fieldLabel: 'Symbolrate (baud)',
 	    name: 'symbolrate',
 	    allowNegative: false,
+	    allowBlank: false,
 	    minValue: adapterData.symrateMin,
 	    maxValue: adapterData.symrateMax
 	}));
@@ -773,6 +776,7 @@ tvheadend.addMuxManually = function(adapterData, satConfStore) {
 	items.push(new Ext.form.NumberField({
 	    fieldLabel: 'Frequency (kHz)',
 	    name: 'frequency',
+	    allowBlank: false,
 	    allowNegative: false
 	}));
 
@@ -780,6 +784,7 @@ tvheadend.addMuxManually = function(adapterData, satConfStore) {
 	    fieldLabel: 'Symbolrate (baud)',
 	    name: 'symbolrate',
 	    allowNegative: false,
+	    allowBlank: false,
 	    minValue: adapterData.symrateMin,
 	    maxValue: adapterData.symrateMax
 	}));
