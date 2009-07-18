@@ -75,6 +75,7 @@ hts-tvheadend (2.3) hts; urgency=low
     equal, the prvious (old) entry will be removed in favor of the new one.
     Reason for not blindingly trusting the event id is that some networks
     seem to (incorrectly) reuse IDs.
+    Ticket #65
 
 hts-tvheadend (2.2) hts; urgency=low
 
