@@ -497,6 +497,13 @@ dvb_adapter_input_dvr(void *aux)
   }
 }
 
+static struct strtab deliverysystemtab[] = {
+  {"DVB-S", FE_QPSK},
+  {"DVB-T", FE_OFDM},
+  {"DVB-C", FE_QAM},
+};
+  
+
 /**
  *
  */
@@ -507,7 +514,6 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
   htsmsg_t *m = htsmsg_create_map();
   th_dvb_mux_instance_t *tdmi;
   th_transport_t *t;
-
   int nummux = 0;
   int numsvc = 0;
 
@@ -533,6 +539,9 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
     htsmsg_add_str(m, "currentMux", buf);
   }
 
+  htsmsg_add_str(m, "deliverySystem", 
+		 val2str(tda->tda_type, deliverysystemtab) ?: "");
+
   htsmsg_add_u32(m, "satConf", tda->tda_sat);
   return m;
 }
@@ -545,4 +554,107 @@ void
 dvb_adapter_notify(th_dvb_adapter_t *tda)
 {
   notify_by_msg("dvbAdapter", dvb_adapter_build_msg(tda));
+}
+
+
+/**
+ *
+ */
+static void
+fe_opts_add(htsmsg_t *a, const char *title, int value)
+{
+  htsmsg_t *v = htsmsg_create_map();
+
+  htsmsg_add_str(v, "title", title);
+  htsmsg_add_u32(v, "id", value);
+  htsmsg_add_msg(a, NULL, v);
+}
+
+/**
+ *
+ */
+htsmsg_t *
+dvb_fe_opts(th_dvb_adapter_t *tda, const char *which)
+{
+  htsmsg_t *a = htsmsg_create_list();
+  fe_caps_t c = tda->tda_fe_info->caps;
+
+  if(!strcmp(which, "constellations")) {
+    if(c & FE_CAN_QAM_AUTO)    fe_opts_add(a, "Auto", QAM_AUTO);
+    if(c & FE_CAN_QPSK)        fe_opts_add(a, "QPSK",     QPSK);
+    if(c & FE_CAN_QAM_16)      fe_opts_add(a, "QAM-16",   QAM_16);
+    if(c & FE_CAN_QAM_32)      fe_opts_add(a, "QAM-32",   QAM_32);
+    if(c & FE_CAN_QAM_64)      fe_opts_add(a, "QAM-64",   QAM_64);
+    if(c & FE_CAN_QAM_128)     fe_opts_add(a, "QAM-128",  QAM_128);
+    if(c & FE_CAN_QAM_256)     fe_opts_add(a, "QAM-256",  QAM_256);
+    return a;
+  }
+
+  if(!strcmp(which, "transmissionmodes")) {
+    if(c & FE_CAN_TRANSMISSION_MODE_AUTO) 
+      fe_opts_add(a, "Auto", TRANSMISSION_MODE_AUTO);
+
+    fe_opts_add(a, "2k", TRANSMISSION_MODE_2K);
+    fe_opts_add(a, "8k", TRANSMISSION_MODE_8K);
+    return a;
+  }
+
+  if(!strcmp(which, "bandwidths")) {
+    if(c & FE_CAN_BANDWIDTH_AUTO) 
+      fe_opts_add(a, "Auto", BANDWIDTH_AUTO);
+
+    fe_opts_add(a, "8 MHz", BANDWIDTH_8_MHZ);
+    fe_opts_add(a, "7 MHz", BANDWIDTH_7_MHZ);
+    fe_opts_add(a, "6 MHz", BANDWIDTH_6_MHZ);
+    return a;
+  }
+
+  if(!strcmp(which, "guardintervals")) {
+    if(c & FE_CAN_GUARD_INTERVAL_AUTO)
+      fe_opts_add(a, "Auto", GUARD_INTERVAL_AUTO);
+
+    fe_opts_add(a, "1/32", GUARD_INTERVAL_1_32);
+    fe_opts_add(a, "1/16", GUARD_INTERVAL_1_16);
+    fe_opts_add(a, "1/8",  GUARD_INTERVAL_1_8);
+    fe_opts_add(a, "1/4",  GUARD_INTERVAL_1_4);
+    return a;
+  }
+
+  if(!strcmp(which, "hierarchies")) {
+    if(c & FE_CAN_HIERARCHY_AUTO)
+      fe_opts_add(a, "Auto", HIERARCHY_AUTO);
+
+    fe_opts_add(a, "None", HIERARCHY_NONE);
+    fe_opts_add(a, "1", HIERARCHY_1);
+    fe_opts_add(a, "2", HIERARCHY_2);
+    fe_opts_add(a, "4", HIERARCHY_4);
+    return a;
+  }
+
+  if(!strcmp(which, "fec")) {
+    if(c & FE_CAN_FEC_AUTO)
+      fe_opts_add(a, "Auto", FEC_AUTO);
+
+    fe_opts_add(a, "None", FEC_NONE);
+
+    fe_opts_add(a, "1/2", FEC_1_2);
+    fe_opts_add(a, "2/3", FEC_2_3);
+    fe_opts_add(a, "3/4", FEC_3_4);
+    fe_opts_add(a, "4/5", FEC_4_5);
+    fe_opts_add(a, "5/6", FEC_5_6);
+    fe_opts_add(a, "6/7", FEC_6_7);
+    fe_opts_add(a, "7/8", FEC_7_8);
+    fe_opts_add(a, "8/9", FEC_8_9);
+    return a;
+  }
+
+
+  if(!strcmp(which, "polarisations")) {
+    fe_opts_add(a, "Horizontal", POLARISATION_HORIZONTAL);
+    fe_opts_add(a, "Vertical",   POLARISATION_VERTICAL);
+    return a;
+  }
+
+  htsmsg_destroy(a);
+  return NULL;
 }

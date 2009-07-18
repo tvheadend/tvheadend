@@ -1370,6 +1370,99 @@ extjs_dvbservicedetails(http_connection_t *hc,
 
 
 /**
+ *
+ */
+static int
+extjs_dvb_feopts(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  char *a, *r;
+  th_dvb_adapter_t *tda;
+  htsmsg_t *e, *out;
+
+  if(remain == NULL)
+    return 400;
+
+  r = tvh_strdupa(remain);
+  if((a = strchr(r, '/')) == NULL)
+    return 400;
+  *a++ = 0;
+
+  pthread_mutex_lock(&global_lock);
+
+  if((tda = dvb_adapter_find_by_identifier(a)) == NULL) {
+    pthread_mutex_unlock(&global_lock);
+    return 404;
+  }
+
+  e = dvb_fe_opts(tda, r);
+
+  if(e == NULL) {
+    pthread_mutex_unlock(&global_lock);
+    return 400;
+  }
+
+  out = htsmsg_create_map();
+  htsmsg_add_msg(out, "entries", e);
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_json_serialize(out, hq, 0);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  htsmsg_destroy(out);
+  return 0;
+}
+
+/**
+ *
+ */
+static int
+extjs_dvb_addmux(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsmsg_t *out;
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  struct http_arg_list *args = &hc->hc_req_args;
+  th_dvb_adapter_t *tda;
+  const char *err;
+  pthread_mutex_lock(&global_lock);
+ 
+  if(remain == NULL ||
+     (tda = dvb_adapter_find_by_identifier(remain)) == NULL) {
+    pthread_mutex_unlock(&global_lock);
+    return 404;
+  }
+
+  err =
+    dvb_mux_add_by_params(tda,
+			  atoi(http_arg_get(args, "frequency")?:"-1"),
+			  atoi(http_arg_get(args, "symbolrateID")?: "-1"),
+			  atoi(http_arg_get(args, "bandwidthID")?: "-1"),
+			  atoi(http_arg_get(args, "constellationID")?: "-1"),
+			  atoi(http_arg_get(args, "tmodeID")?: "-1"),
+			  atoi(http_arg_get(args, "guardintervalID")?: "-1"),
+			  atoi(http_arg_get(args, "hierarchyID")?: "-1"),
+			  atoi(http_arg_get(args, "fechiID")?: "-1"),
+			  atoi(http_arg_get(args, "fecloID")?: "-1"),
+			  atoi(http_arg_get(args, "fecID")?: "-1"),
+			  atoi(http_arg_get(args, "polarisationID")?: "-1"),
+			  http_arg_get(args, "satconfID") ?: NULL);
+			
+  if(err != NULL)
+    tvhlog(LOG_ERR, "web interface",
+	   "Unable to create mux on %s: %s",
+	   tda->tda_displayname, err);
+
+  pthread_mutex_unlock(&global_lock);
+
+  out = htsmsg_create_map();
+  htsmsg_json_serialize(out, hq, 0);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  htsmsg_destroy(out);
+
+  return 0;
+}
+
+/**
  * WEB user interface
  */
 void
@@ -1404,4 +1497,10 @@ extjs_start(void)
 
   http_path_add("/dvb/servicedetails", 
 		NULL, extjs_dvbservicedetails, ACCESS_ADMIN);
+
+  http_path_add("/dvb/feopts", 
+		NULL, extjs_dvb_feopts, ACCESS_ADMIN);
+
+  http_path_add("/dvb/addmux", 
+		NULL, extjs_dvb_addmux, ACCESS_ADMIN);
 }

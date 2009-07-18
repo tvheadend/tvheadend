@@ -208,6 +208,8 @@ void dvb_adapter_notify(th_dvb_adapter_t *tda);
 
 htsmsg_t *dvb_adapter_build_msg(th_dvb_adapter_t *tda);
 
+htsmsg_t *dvb_fe_opts(th_dvb_adapter_t *tda, const char *which);
+
 /**
  * DVB Multiplex
  */
@@ -236,6 +238,20 @@ void dvb_mux_set_satconf(th_dvb_mux_instance_t *tdmi, const char *scid,
 htsmsg_t *dvb_mux_build_msg(th_dvb_mux_instance_t *tdmi);
 
 void dvb_mux_notify(th_dvb_mux_instance_t *tdmi);
+
+const char *dvb_mux_add_by_params(th_dvb_adapter_t *tda,
+				  int freq,
+				  int symrate,
+				  int bw,
+				  int constellation,
+				  int tmode,
+				  int guard,
+				  int hier,
+				  int fechi,
+				  int feclo,
+				  int fec,
+				  int polarisation,
+				  const char *satconf);
 
 /**
  * DVB Transport (aka DVB service)

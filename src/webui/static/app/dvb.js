@@ -12,7 +12,8 @@ tvheadend.dvbAdapterStore = new Ext.data.JsonStore({
 	     'services',
 	     'muxes',
 	     'initialMuxes',
-	     'satConf'],
+	     'satConf',
+	     'deliverySystem'],
     url:'dvb/adapter'
 });
 
@@ -256,7 +257,13 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
         viewConfig: {forceFit:true},
 	selModel: selModel,
 	tbar: [
-	    delBtn, '-', saveBtn, rejectBtn, '->', {
+	    delBtn, '-', saveBtn, rejectBtn, '-', {
+		text: 'Add mux(es) manually',
+		iconCls:'add',
+		handler: function() {
+		    tvheadend.addMuxManually(adapterData, satConfStore)
+		}
+	    }, '->', {
 	    text: 'Help',
 	    handler: function() {
 		new tvheadend.help(title, helpContent);
@@ -563,6 +570,277 @@ tvheadend.addMuxByLocation = function(adapterData, satConfStore) {
 }
 
 
+/**
+ * Add mux by manual configuration
+ */
+tvheadend.addMuxManually = function(adapterData, satConfStore) {
+    
+    var adId = adapterData.identifier;
+
+
+    var items = [
+	new Ext.form.NumberField({
+	    fieldLabel: 'Frequency (kHz)',
+	    name: 'frequency',
+	    allowNegative: false
+	})
+    ];
+
+    switch(adapterData.deliverySystem) {
+    case 'DVB-T':
+	items.push(new Ext.form.ComboBox({
+	    fieldLabel: 'Bandwidth',
+	    name: 'bandwidth',
+	    hiddenName: 'bandwidthID',
+	    editable: false,
+	    allowBlank: false,
+	    displayField: 'title',
+	    valueField:'id',
+	    mode:'remote',
+	    triggerAction: 'all',
+	    store: new Ext.data.JsonStore({
+		root:'entries',
+		fields: ['title', 'id'],
+		url: 'dvb/feopts/bandwidths/' + adId
+	    })
+	}));
+
+	items.push(new Ext.form.ComboBox({
+	    fieldLabel: 'Constellation',
+	    name: 'constellation',
+	    hiddenName: 'constellationID',
+	    editable: false,
+	    allowBlank: false,
+	    displayField: 'title',
+	    valueField:'id',
+	    mode:'remote',
+	    triggerAction: 'all',
+	    store: new Ext.data.JsonStore({
+		root:'entries',
+		fields: ['title', 'id'],
+		url: 'dvb/feopts/constellations/' + adId
+	    })
+	}));
+
+	items.push(new Ext.form.ComboBox({
+	    fieldLabel: 'Transmission mode',
+	    name: 'tmode',
+	    hiddenName: 'tmodeID',
+	    editable: false,
+	    allowBlank: false,
+	    displayField: 'title',
+	    valueField:'id',
+	    mode:'remote',
+	    triggerAction: 'all',
+	    store: new Ext.data.JsonStore({
+		root:'entries',
+		fields: ['title', 'id'],
+		url: 'dvb/feopts/transmissionmodes/' + adId
+	    })
+	}));
+
+	items.push(new Ext.form.ComboBox({
+	    fieldLabel: 'Guard interval',
+	    name: 'guardinterval',
+	    hiddenName: 'guardintervalID',
+	    editable: false,
+	    allowBlank: false,
+	    displayField: 'title',
+	    valueField:'id',
+	    mode:'remote',
+	    triggerAction: 'all',
+	    store: new Ext.data.JsonStore({
+		root:'entries',
+		fields: ['title', 'id'],
+		url: 'dvb/feopts/guardintervals/' + adId
+	    })
+	}));
+
+	items.push(new Ext.form.ComboBox({
+	    fieldLabel: 'Hierarchy',
+	    name: 'hierarchy',
+	    hiddenName: 'hierarchyID',
+	    editable: false,
+	    allowBlank: false,
+	    displayField: 'title',
+	    valueField:'id',
+	    mode:'remote',
+	    triggerAction: 'all',
+	    store: new Ext.data.JsonStore({
+		root:'entries',
+		fields: ['title', 'id'],
+		url: 'dvb/feopts/hierarchies/' + adId
+	    })
+	}));
+
+	items.push(new Ext.form.ComboBox({
+	    fieldLabel: 'FEC Hi',
+	    name: 'fechi',
+	    hiddenName: 'fechiID',
+	    editable: false,
+	    allowBlank: false,
+	    displayField: 'title',
+	    valueField:'id',
+	    mode:'remote',
+	    triggerAction: 'all',
+	    store: new Ext.data.JsonStore({
+		root:'entries',
+		fields: ['title', 'id'],
+		url: 'dvb/feopts/fec/' + adId
+	    })
+	}));
+
+	items.push(new Ext.form.ComboBox({
+	    fieldLabel: 'FEC Lo',
+	    name: 'feclo',
+	    hiddenName: 'fecloID',
+	    editable: false,
+	    allowBlank: false,
+	    displayField: 'title',
+	    valueField:'id',
+	    mode:'remote',
+	    triggerAction: 'all',
+	    store: new Ext.data.JsonStore({
+		root:'entries',
+		fields: ['title', 'id'],
+		url: 'dvb/feopts/fec/' + adId
+	    })
+	}));
+	break;
+
+    case 'DVB-C':
+	items.push(new Ext.form.NumberField({
+	    fieldLabel: 'Symbolrate (baud)',
+	    name: 'symbolrate',
+	    allowNegative: false
+	}));
+ 
+	items.push(new Ext.form.ComboBox({
+	    fieldLabel: 'Constellation',
+	    name: 'constellation',
+	    hiddenName: 'constellationID',
+	    editable: false,
+	    allowBlank: false,
+	    displayField: 'title',
+	    valueField:'id',
+	    mode:'remote',
+	    triggerAction: 'all',
+	    store: new Ext.data.JsonStore({
+		root:'entries',
+		fields: ['title', 'id'],
+		url: 'dvb/feopts/constellations/' + adId
+	    })
+	}));
+	
+	items.push(new Ext.form.ComboBox({
+	    fieldLabel: 'FEC',
+	    name: 'fec',
+	    hiddenName: 'fecID',
+	    editable: false,
+	    allowBlank: false,
+	    displayField: 'title',
+	    valueField:'id',
+	    mode:'remote',
+	    triggerAction: 'all',
+	    store: new Ext.data.JsonStore({
+		root:'entries',
+		fields: ['title', 'id'],
+		url: 'dvb/feopts/fec/' + adId
+	    })
+	}));
+	break;
+
+    case 'DVB-S':
+	items.push(new Ext.form.NumberField({
+	    fieldLabel: 'Symbolrate (baud)',
+	    name: 'symbolrate',
+	    allowNegative: false
+	}));
+ 
+	items.push(new Ext.form.ComboBox({
+	    fieldLabel: 'FEC',
+	    name: 'fec',
+	    hiddenName: 'fecID',
+	    editable: false,
+	    allowBlank: false,
+	    displayField: 'title',
+	    valueField:'id',
+	    mode:'remote',
+	    triggerAction: 'all',
+	    store: new Ext.data.JsonStore({
+		root:'entries',
+		fields: ['title', 'id'],
+		url: 'dvb/feopts/fec/' + adId
+	    })
+	}));
+
+	items.push(new Ext.form.ComboBox({
+	    fieldLabel: 'Polarisation',
+	    name: 'polarisation',
+	    hiddenName: 'polarisationID',
+	    editable: false,
+	    allowBlank: false,
+	    displayField: 'title',
+	    valueField:'id',
+	    mode:'remote',
+	    triggerAction: 'all',
+	    store: new Ext.data.JsonStore({
+		root:'entries',
+		fields: ['title', 'id'],
+		url: 'dvb/feopts/polarisations/' + adId
+	    })
+	}));
+    }
+    
+    if(satConfStore) {
+	items.push(new Ext.form.ComboBox({
+	    store: satConfStore,
+	    fieldLabel: 'Satellite config',
+	    name: 'satconf',
+	    hiddenName: 'satconfID',
+	    editable: false,
+	    allowBlank: false,
+	    triggerAction: 'all',
+	    mode: 'remote',
+	    displayField:'name',
+	    valueField:'identifier',
+	}));
+    }
+
+    function addMux() {
+	panel.getForm().submit({
+	    url:'dvb/addmux/' + adapterId, 
+	    waitMsg:'Creating mux...'
+	});
+    }
+ 
+
+    var panel = new Ext.FormPanel({
+	frame:true,
+	border:true,
+	bodyStyle:'padding:5px',
+	labelAlign: 'right',
+	labelWidth: 110,
+	defaultType: 'textfield',
+	items: items,
+	buttons: [{
+	    text: 'Add',
+	    handler: addMux
+        }]
+	
+    });
+
+    win = new Ext.Window({
+	title: 'Add muxes on ' + adapterData.name,
+        layout: 'fit',
+        width: 500,
+        height: 500,
+        plain: true,
+        items: panel
+    });
+    win.show();
+
+}
 
 /**
  * DVB adapter details

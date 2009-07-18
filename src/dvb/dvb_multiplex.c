@@ -413,7 +413,6 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
   const char *s;
   int r;
   int polarisation = 0;
-  unsigned int switchport = 0;
   unsigned int tsid, u32, enabled;
   dvb_satconf_t *sc;
 
@@ -475,8 +474,6 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
     if(s == NULL || (r = str2val(s, poltab)) < 0)
       return "Invalid polarisation";
     polarisation = r;
-    
-    htsmsg_get_u32(m, "switchport", &switchport);
     break;
 
   case FE_QAM:
@@ -695,3 +692,111 @@ dvb_mux_notify(th_dvb_mux_instance_t *tdmi)
 {
   notify_by_msg("dvbMux", dvb_mux_build_msg(tdmi));
 }
+
+
+/**
+ *
+ */
+const char *
+dvb_mux_add_by_params(th_dvb_adapter_t *tda,
+		      int freq,
+		      int symrate,
+		      int bw,
+		      int constellation,
+		      int tmode,
+		      int guard,
+		      int hier,
+		      int fechi,
+		      int feclo,
+		      int fec,
+		      int polarisation,
+		      const char *satconf)
+{
+  dvb_satconf_t *sc;
+  struct dvb_frontend_parameters f;
+  th_dvb_mux_instance_t *tdmi;
+
+  memset(&f, 0, sizeof(f));
+  
+  f.inversion = INVERSION_AUTO;
+   
+  switch(tda->tda_type) {
+  case FE_OFDM:
+    f.frequency = freq * 1000;
+    if(!val2str(bw,            bwtab))
+      return "Invalid bandwidth";
+
+    if(!val2str(constellation, qamtab))
+      return "Invalid QAM constellation";
+
+    if(!val2str(tmode,         modetab))
+      return "Invalid transmission mode";
+
+    if(!val2str(guard,         guardtab))
+      return "Invalid guard interval";
+
+    if(!val2str(hier,          hiertab))
+      return "Invalid hierarchy";
+
+    if(!val2str(fechi,         fectab))
+      return "Invalid FEC Hi";
+
+    if(!val2str(feclo,         fectab))
+      return "Invalid FEC Lo";
+
+    f.u.ofdm.bandwidth             = bw;
+    f.u.ofdm.constellation         = constellation;
+    f.u.ofdm.transmission_mode     = tmode;
+    f.u.ofdm.guard_interval        = guard;
+    f.u.ofdm.hierarchy_information = hier;
+    f.u.ofdm.code_rate_HP          = fechi;
+    f.u.ofdm.code_rate_LP          = feclo;
+    polarisation = 0;
+    break;
+
+  case FE_QAM:
+    f.frequency = freq * 1000;
+
+    if(!val2str(constellation, qamtab))
+      return "Invalid QAM constellation";
+
+    if(!val2str(fec,           fectab))
+      return "Invalid FEC";
+
+    f.u.qam.symbol_rate = symrate;
+    f.u.qam.modulation  = constellation;
+    f.u.qam.fec_inner   = fec;
+    polarisation = 0;
+    break;
+
+  case FE_QPSK:
+    f.frequency = freq;
+
+    if(!val2str(fec,          fectab))
+      return "Invalid FEC";
+
+    if(!val2str(polarisation, poltab))
+      return "Invalid polarisation";
+
+    f.u.qpsk.symbol_rate = symrate;
+    f.u.qpsk.fec_inner   = fec;
+    break;
+  }
+
+  if(satconf != NULL) {
+    sc = dvb_satconf_entry_find(tda, satconf, 0);
+    if(sc == NULL)
+      return "Satellite configuration not found";
+  } else {
+    sc = NULL;
+  }
+
+  tdmi = dvb_mux_create(tda, &f, polarisation, sc, 
+			0xffff, NULL, NULL, 1, NULL);
+
+  if(tdmi == NULL)
+    return "Mux already exist";
+
+  return NULL;
+}
+			

@@ -665,4 +665,8 @@ extern void scopedunlock(pthread_mutex_t **mtxp);
 
 #define scopedgloballock() scopedlock(&global_lock)
 
+#define tvh_strdupa(n) ({ int tvh_l = strlen(n); \
+ char *tvh_b = alloca(tvh_l + 1); \
+ memcpy(tvh_b, n, tvh_l + 1); })
+
 #endif /* TV_HEAD_H */
