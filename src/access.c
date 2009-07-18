@@ -440,8 +440,8 @@ access_init(int createdefault)
     dtable_record_store(dt, ae->ae_id, r);
     htsmsg_destroy(r);
 
-    fprintf(stderr, "Notice: Created default access controle entry\n");
-
+    tvhlog(LOG_WARNING, "accesscontrol",
+	   "Created default wide open access controle entry");
   }
 
   /* Load superuser account */
