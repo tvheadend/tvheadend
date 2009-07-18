@@ -60,6 +60,10 @@ hts-tvheadend (2.3) hts; urgency=low
   * Added a search IMDB direct link in the EPG window popup.
     Ticket #79
 
+  * Add support for configuring DVB multiplexes by entering
+    all tuning parameters manually
+    Ticket #37
+
 hts-tvheadend (2.2) hts; urgency=low
 
   * Set $HOME so forked processes (XMLTV) will have correct environment
