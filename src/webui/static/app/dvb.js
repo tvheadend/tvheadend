@@ -1182,7 +1182,12 @@ tvheadend.dvb = function()
 	iconCls: 'hardware',
 	layout:'fit',
 	tbar: [
-	    adapterSelection
+	    adapterSelection, '->', {
+		text: 'Help',
+		handler: function() {
+		    new tvheadend.help('DVB', 'config_dvb.html');
+		}
+	    }
 	],
 
 	items: [
