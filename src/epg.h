@@ -61,10 +61,7 @@ typedef struct event {
   const char *e_title;   /* UTF-8 encoded */
   const char *e_desc;    /* UTF-8 encoded */
 
-  int e_source; /* higer is better, and we never downgrade */
-
-#define EVENT_SRC_XMLTV 1
-#define EVENT_SRC_DVB   2
+  int e_dvb_id;
 
 } event_t;
 
@@ -80,7 +77,8 @@ void epg_event_set_desc(event_t *e, const char *desc);
 
 void epg_event_set_content_type(event_t *e, epg_content_type_t *ect);
 
-event_t *epg_event_create(channel_t *ch, time_t start, time_t stop);
+event_t *epg_event_create(channel_t *ch, time_t start, time_t stop,
+			  int dvb_id);
 
 event_t *epg_event_find_by_time(channel_t *ch, time_t t);
 

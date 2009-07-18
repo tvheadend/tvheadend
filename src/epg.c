@@ -165,114 +165,6 @@ epg_event_set_content_type(event_t *e, epg_content_type_t *ect)
 }
 
 
-/**
- *
- */
-event_t *
-epg_event_create(channel_t *ch, time_t start, time_t stop)
-{
-  static event_t *skel;
-  event_t *e;
-  static int tally;
-
-  if((stop - start) > 11 * 3600)
-    return NULL;
-
-  if(stop <= start)
-    return NULL;
-
-  lock_assert(&global_lock);
-
-  if(skel == NULL)
-    skel = calloc(1, sizeof(event_t));
-
-  skel->e_start = start;
-  
-  e = RB_INSERT_SORTED(&ch->ch_epg_events, skel, e_channel_link, e_ch_cmp);
-  if(e == NULL) {
-    /* New entry was inserted */
-    e = skel;
-    skel = NULL;
-
-    e->e_id = ++tally;
-    e->e_stop = stop;
-
-    LIST_INSERT_HEAD(&epg_hash[e->e_id & EPG_GLOBAL_HASH_MASK], e,
-		     e_global_link);
-
-    e->e_refcount = 1;
-    e->e_channel = ch;
-    epg_event_changed(e);
-
-    if(e == RB_FIRST(&ch->ch_epg_events)) {
-      /* First in temporal order, arm expiration timer */
-
-      gtimer_arm_abs(&ch->ch_epg_timer_head, epg_expire_event_from_channel,
-		     ch, e->e_stop);
-    }
-
-
-    
-    if(ch->ch_epg_timer_current.gti_callback == NULL ||
-       start < ch->ch_epg_timer_current.gti_expire) {
-
-      gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
-		     ch, e->e_start);
-    }
-  } else {
-    /* Already exist */
-
-    if(stop > e->e_stop) {
-      /* We allow the event to extend in time */
-#if 0
-      printf("Event %s on %s extended stop time\n", e->e_title,
-	     e->e_channel->ch_name);
-      printf("Previous %s", ctime(&e->e_stop));
-	printf("     New %s", ctime(&stop));
-#endif
-      e->e_stop = stop;
-      epg_event_changed(e);
-
-      if(e == ch->ch_epg_current) {
-	gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
-		       ch, e->e_start);
-      }
-    }
-  }
-  return e;
-}
-
-
-/**
- *
- */
-event_t *
-epg_event_find_by_time(channel_t *ch, time_t t)
-{
-  event_t skel, *e;
-
-  skel.e_start = t;
-  e = RB_FIND_LE(&ch->ch_epg_events, &skel, e_channel_link, e_ch_cmp);
-  if(e == NULL || e->e_stop < t)
-    return NULL;
-  return e;
-}
-
-
-/**
- *
- */
-event_t *
-epg_event_find_by_id(int eventid)
-{
-  event_t *e;
-
-  LIST_FOREACH(e, &epg_hash[eventid & EPG_GLOBAL_HASH_MASK], e_global_link)
-    if(e->e_id == eventid)
-      break;
-  return e;
-}
-
 
 /**
  *
@@ -331,6 +223,140 @@ epg_remove_event_from_channel(channel_t *ch, event_t *e)
 		   ch, e->e_stop);
   }
 }
+
+
+/**
+ *
+ */
+event_t *
+epg_event_create(channel_t *ch, time_t start, time_t stop, int dvb_id)
+{
+  static event_t *skel;
+  event_t *e, *p, *n;
+  static int tally;
+
+  if((stop - start) > 11 * 3600)
+    return NULL;
+
+  if(stop <= start)
+    return NULL;
+
+  lock_assert(&global_lock);
+
+  if(skel == NULL)
+    skel = calloc(1, sizeof(event_t));
+
+  skel->e_start = start;
+  
+  e = RB_INSERT_SORTED(&ch->ch_epg_events, skel, e_channel_link, e_ch_cmp);
+  if(e == NULL) {
+    /* New entry was inserted */
+    e = skel;
+    skel = NULL;
+
+    e->e_id = ++tally;
+    e->e_stop = stop;
+    e->e_dvb_id = dvb_id;
+
+    LIST_INSERT_HEAD(&epg_hash[e->e_id & EPG_GLOBAL_HASH_MASK], e,
+		     e_global_link);
+
+    e->e_refcount = 1;
+    e->e_channel = ch;
+    epg_event_changed(e);
+
+    if(e == RB_FIRST(&ch->ch_epg_events)) {
+      /* First in temporal order, arm expiration timer */
+
+      gtimer_arm_abs(&ch->ch_epg_timer_head, epg_expire_event_from_channel,
+		     ch, e->e_stop);
+    }
+
+
+    
+    if(ch->ch_epg_timer_current.gti_callback == NULL ||
+       start < ch->ch_epg_timer_current.gti_expire) {
+
+      gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
+		     ch, e->e_start);
+    }
+  } else {
+    /* Already exist */
+
+    if(stop > e->e_stop) {
+      /* We allow the event to extend in time */
+#if 0
+      printf("Event %s on %s extended stop time\n", e->e_title,
+	     e->e_channel->ch_name);
+      printf("Previous %s", ctime(&e->e_stop));
+      printf("     New %s", ctime(&stop));
+#endif
+      e->e_stop = stop;
+      epg_event_changed(e);
+
+      if(e == ch->ch_epg_current) {
+	gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
+		       ch, e->e_start);
+      }
+    }
+  }
+
+
+  if(dvb_id != -1) {
+    /* Erase any close events with the same DVB event id */
+
+    if((p = RB_PREV(e, e_channel_link)) != NULL) {
+      if(p->e_dvb_id == dvb_id) {
+	epg_remove_event_from_channel(ch, p);
+      } else if((p = RB_PREV(p, e_channel_link)) != NULL) {
+	if(p->e_dvb_id == dvb_id)
+	  epg_remove_event_from_channel(ch, p);
+      }
+    }
+
+    if((n = RB_NEXT(e, e_channel_link)) != NULL) {
+      if(n->e_dvb_id == dvb_id) {
+	epg_remove_event_from_channel(ch, n);
+      } else if((n = RB_NEXT(n, e_channel_link)) != NULL) {
+	if(n->e_dvb_id == dvb_id)
+	  epg_remove_event_from_channel(ch, n);
+      }
+    }
+  }
+  return e;
+}
+
+
+/**
+ *
+ */
+event_t *
+epg_event_find_by_time(channel_t *ch, time_t t)
+{
+  event_t skel, *e;
+
+  skel.e_start = t;
+  e = RB_FIND_LE(&ch->ch_epg_events, &skel, e_channel_link, e_ch_cmp);
+  if(e == NULL || e->e_stop < t)
+    return NULL;
+  return e;
+}
+
+
+/**
+ *
+ */
+event_t *
+epg_event_find_by_id(int eventid)
+{
+  event_t *e;
+
+  LIST_FOREACH(e, &epg_hash[eventid & EPG_GLOBAL_HASH_MASK], e_global_link)
+    if(e->e_id == eventid)
+      break;
+  return e;
+}
+
 
 
 /**

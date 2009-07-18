@@ -69,6 +69,13 @@ hts-tvheadend (2.3) hts; urgency=low
   * Add exponential backoff for reconnect attempt in code word client.
     Ticket #80
 
+  * Try to detect duplicate EPG entries from the DVB feed and adjust
+    EPG accordingly. The EPG code will search for events with the same
+    DVB event ID +- 2 events from the current one. If the event id is
+    equal, the prvious (old) entry will be removed in favor of the new one.
+    Reason for not blindingly trusting the event id is that some networks
+    seem to (incorrectly) reuse IDs.
+
 hts-tvheadend (2.2) hts; urgency=low
 
   * Set $HOME so forked processes (XMLTV) will have correct environment
