@@ -1435,7 +1435,7 @@ extjs_dvb_addmux(http_connection_t *hc, const char *remain, void *opaque)
   err =
     dvb_mux_add_by_params(tda,
 			  atoi(http_arg_get(args, "frequency")?:"-1"),
-			  atoi(http_arg_get(args, "symbolrateID")?: "-1"),
+			  atoi(http_arg_get(args, "symbolrate")?: "-1"),
 			  atoi(http_arg_get(args, "bandwidthID")?: "-1"),
 			  atoi(http_arg_get(args, "constellationID")?: "-1"),
 			  atoi(http_arg_get(args, "tmodeID")?: "-1"),
