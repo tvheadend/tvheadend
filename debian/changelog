@@ -5,6 +5,9 @@ hts-tvheadend (2.4) hts; urgency=low
 
   * Fix compilation on 64bit systems
 
+  * Make sure channel <> service mappings are saved when edited from
+    DVB service grid
+
 hts-tvheadend (2.3) hts; urgency=low
 
   * A simple web interface has been added. To access it, visit

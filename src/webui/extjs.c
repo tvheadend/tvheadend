@@ -1165,7 +1165,7 @@ transport_update(htsmsg_t *in)
       transport_set_enable(t, u32);
 
     if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
-      transport_map_channel(t, channel_find_by_name(chname, 1), 0);
+      transport_map_channel(t, channel_find_by_name(chname, 1), 1);
   }
 }
 
