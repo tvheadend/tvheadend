@@ -168,6 +168,7 @@ dvb_mux_create(th_dvb_adapter_t *tda, struct dvb_frontend_parameters *fe_param,
 
   memcpy(&tdmi->tdmi_fe_params, fe_param, 
 	 sizeof(struct dvb_frontend_parameters));
+  tdmi->tdmi_polarisation = polarisation;
 
   if(sc != NULL) {
     tdmi->tdmi_satconf = sc;
