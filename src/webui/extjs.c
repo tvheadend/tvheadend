@@ -1472,6 +1472,53 @@ extjs_dvb_addmux(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+
+/**
+ *
+ */
+static int
+extjs_mergechannel(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  const char *target = http_arg_get(&hc->hc_req_args, "targetID");
+  htsmsg_t *out;
+  channel_t *src, *dst;
+
+  if(remain == NULL || target == NULL)
+    return 400;
+
+  pthread_mutex_lock(&global_lock);
+
+  src = channel_find_by_identifier(atoi(remain));
+  dst = channel_find_by_identifier(atoi(target));
+
+  if(src == NULL || dst == NULL) {
+    pthread_mutex_unlock(&global_lock);
+    return 404;
+  }
+
+  out = htsmsg_create_map();
+
+  if(src != dst) {
+    channel_merge(dst, src);
+    htsmsg_add_u32(out, "success", 1);
+  } else {
+
+    htsmsg_add_u32(out, "success", 0);
+    htsmsg_add_str(out, "msg", "Target same as source");
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+
+
+}
+
+
 /**
  * WEB user interface
  */
@@ -1489,6 +1536,9 @@ extjs_start(void)
   http_path_add("/dvr",         NULL, extjs_dvr,         ACCESS_WEB_INTERFACE);
   http_path_add("/dvrlist",     NULL, extjs_dvrlist,     ACCESS_WEB_INTERFACE);
   http_path_add("/ecglist",     NULL, extjs_ecglist,     ACCESS_WEB_INTERFACE);
+
+  http_path_add("/mergechannel",
+		NULL, extjs_mergechannel, ACCESS_ADMIN);
 
   http_path_add("/dvb/adapter", 
 		NULL, extjs_dvbadapter, ACCESS_ADMIN);

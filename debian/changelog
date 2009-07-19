@@ -8,6 +8,10 @@ hts-tvheadend (2.4) hts; urgency=low
   * Make sure channel <> service mappings are saved when edited from
     DVB service grid
 
+  * Add support for merging one channel into another. 
+    Useful if you have multiple providers offering the same DVB service
+    but with different names.
+
 hts-tvheadend (2.3) hts; urgency=low
 
   * A simple web interface has been added. To access it, visit

@@ -39,6 +39,61 @@ tvheadend.comet.on('channels', function(m) {
 });
 
 
+/**
+*
+*/
+tvheadend.mergeChannel = function(chan) {
+
+   function doMerge() {
+	panel.getForm().submit({
+	    url:'mergechannel/' + chan.chid,
+	    success: function() {
+		win.close();
+	    }
+	});
+    }
+
+    var panel = new Ext.FormPanel({
+	frame:true,
+	border:true,
+	bodyStyle:'padding:5px',
+	labelAlign: 'right',
+	labelWidth: 110,
+	defaultType: 'textfield',
+	items: [
+	    new Ext.form.ComboBox({
+		store: tvheadend.channels,
+		fieldLabel: 'Target channel',
+		name: 'targetchannel',
+		hiddenName: 'targetID',
+		editable: false,
+		allowBlank: false,
+		triggerAction: 'all',
+		mode: 'remote',
+		displayField:'name',
+		valueField:'chid',
+		emptyText: 'Select a channel...'
+	    })
+	],
+	buttons: [{
+	    text: 'Merge',
+	    handler: doMerge
+        }]
+    });
+
+    win = new Ext.Window({
+	title: 'Merge channel ' + chan.name + ' into...',
+        layout: 'fit',
+        width: 500,
+        height: 120,
+	modal: true,
+        plain: true,
+        items: panel
+    });
+    win.show();
+
+}
+
 
 /**
  *
@@ -56,6 +111,22 @@ tvheadend.chconf = function()
 
 
     var fm = Ext.form;
+
+    var actions = new Ext.ux.grid.RowActions({
+	header:'',
+	dataIndex: 'actions',
+	width: 45,
+	actions: [
+	    {
+		iconCls:'merge',
+		qtip:'Merge this channel with another channel',
+		cb: function(grid, record, action, row, col) {
+		    tvheadend.mergeChannel(record.data);
+		}
+	    }
+	]
+    });
+
 
     var cm = new Ext.grid.ColumnModel([
 	{
@@ -108,7 +179,7 @@ tvheadend.chconf = function()
 		valueField: 'identifier',
 		displayField: 'name'
 	    })
-	}
+	}, actions
     ]);
 
 
@@ -206,6 +277,7 @@ tvheadend.chconf = function()
 	title: 'Channels',
 	iconCls: 'television',
 	store: tvheadend.channels,
+	plugins: [actions],
 	clicksToEdit: 2,
 	cm: cm,
         viewConfig: {
