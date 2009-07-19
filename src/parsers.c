@@ -858,7 +858,7 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 	if(st->st_bad_dts < 5) {
 	  tvhlog(LOG_ERR, "parser", 
 		 "transport %s stream %s, DTS discontinuity. "
-		 "DTS = %lld, last = %lld",
+		 "DTS = %" PRId64 ", last = %" PRId64,
 		 t->tht_identifier, streaming_component_type2txt(st->st_type),
 		 dts, st->st_last_dts);
 	}
@@ -885,7 +885,7 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   pkt->pkt_pts     =av_rescale_q(pts,               st->st_tb, AV_TIME_BASE_Q);
   pkt->pkt_duration=av_rescale_q(pkt->pkt_duration, st->st_tb, AV_TIME_BASE_Q);
 #if 0
-  printf("%-12s %d %10lld %10lld %d\n",
+  printf("%-12s %d %10"PRId64" %10"PRId64" %d\n",
 	 streaming_component_type2txt(st->st_type),
 	 pkt->pkt_frametype,
 	 pkt->pkt_dts,

@@ -274,7 +274,7 @@ channel_load_one(htsmsg_t *c, int id)
   if((tags = htsmsg_get_list(c, "tags")) != NULL) {
     HTSMSG_FOREACH(f, tags) {
       if(f->hmf_type == HMF_S64) {
-	snprintf(buf, sizeof(buf), "%lld", f->hmf_s64);
+	snprintf(buf, sizeof(buf), "%" PRId64 , f->hmf_s64);
 
 	if((ct = channel_tag_find(buf, 0)) != NULL) 
 	  channel_tag_map(ch, ct, 1);
