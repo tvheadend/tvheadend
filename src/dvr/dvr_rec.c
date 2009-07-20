@@ -58,13 +58,17 @@ static void dvr_thread_epilog(dvr_entry_t *de);
 void
 dvr_rec_subscribe(dvr_entry_t *de)
 {
+  char buf[100];
+
   assert(de->de_s == NULL);
+
+  snprintf(buf, sizeof(buf), "DVR: %s", de->de_title);
 
   streaming_queue_init(&de->de_sq);
 
   pthread_create(&de->de_thread, NULL, dvr_thread, de);
 
-  de->de_s = subscription_create_from_channel(de->de_channel, 1000, "pvr",
+  de->de_s = subscription_create_from_channel(de->de_channel, 1000, buf,
 					      &de->de_sq.sq_st);
 }
 
