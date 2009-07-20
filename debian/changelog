@@ -12,6 +12,8 @@ hts-tvheadend (2.4) hts; urgency=low
     Useful if you have multiple providers offering the same DVB service
     but with different names.
 
+  * The embedded HTTP server now logs failed requests
+
 hts-tvheadend (2.3) hts; urgency=low
 
   * A simple web interface has been added. To access it, visit
