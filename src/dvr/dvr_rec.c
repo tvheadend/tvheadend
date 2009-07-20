@@ -256,7 +256,7 @@ dvr_rec_start(dvr_entry_t *de, htsmsg_t *m)
   char urlname[512];
   int err, r;
   htsmsg_field_t *f;
-  htsmsg_t *sub, *streams;
+  htsmsg_t *sub, *streams, *srcinfo;
   const char *type, *lang;
   uint32_t idx;
 
@@ -378,11 +378,13 @@ dvr_rec_start(dvr_entry_t *de, htsmsg_t *m)
   de->de_fctx = fctx;
   de->de_ts_offset = AV_NOPTS_VALUE;
 
-  tvhlog(LOG_INFO, "dvr",
-	 "%s - Recording from %s (%s)",
-	 de->de_ititle,
-	 htsmsg_get_str(m, "source"), htsmsg_get_str(m, "network"));
-
+  if((srcinfo = htsmsg_get_map(m, "sourceinfo")) != NULL) {
+    HTSMSG_FOREACH(f, srcinfo) {
+      if(f->hmf_type == HMF_STR)
+	tvhlog(LOG_INFO, "dvr", "%s - Source %s: %s",
+	       de->de_ititle, f->hmf_name, f->hmf_str);
+    }
+  }
 }
 
 

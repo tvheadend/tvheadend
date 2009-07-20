@@ -450,9 +450,7 @@ typedef struct th_transport {
 
   void (*tht_config_change)(struct th_transport *t);
 
-  const char *(*tht_networkname)(struct th_transport *t);
-
-  const char *(*tht_sourcename)(struct th_transport *t);
+  struct htsmsg *(*tht_sourceinfo)(struct th_transport *t);
 
   int (*tht_quality_index)(struct th_transport *t);
 

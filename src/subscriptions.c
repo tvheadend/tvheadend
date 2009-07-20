@@ -226,15 +226,21 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
 	   "to channel \"%s\"",
 	   s->ths_title, ch->ch_name);
   } else {
-    const char *n;
-    n = s->ths_transport->tht_networkname(s->ths_transport);
+    htsmsg_t *m = s->ths_transport->tht_sourceinfo(s->ths_transport);
+
     tvhlog(LOG_INFO, "subscription", 
-	   "\"%s\" subscribing on \"%s\", weight: %d, network: \"%s\", "
-	   "source: \"%s\", quality: %d",
+	   "\"%s\" subscribing on \"%s\", weight: %d, adapter: \"%s\", "
+	   "network: \"%s\", mux: \"%s\", provider: \"%s\", "
+	   "service: \"%s\", quality: %d",
 	   s->ths_title, ch->ch_name, weight,
-	   n ?: "<N/A>",
-	   s->ths_transport->tht_sourcename(s->ths_transport),
+	   htsmsg_get_str(m, "adapter")  ?: "<N/A>",
+	   htsmsg_get_str(m, "network")  ?: "<N/A>",
+	   htsmsg_get_str(m, "mux")      ?: "<N/A>",
+	   htsmsg_get_str(m, "provider") ?: "<N/A>",
+	   htsmsg_get_str(m, "service")  ?: "<N/A>",
 	   s->ths_transport->tht_quality_index(s->ths_transport));
+
+    htsmsg_destroy(m);
   }
   return s;
 }

@@ -289,31 +289,33 @@ dvb_transport_quality(th_transport_t *t)
 /**
  * Generate a descriptive name for the source
  */
-static const char *
-dvb_transport_sourcename(th_transport_t *t)
+static htsmsg_t *
+dvb_transport_sourceinfo(th_transport_t *t)
 {
+  htsmsg_t *m = htsmsg_create_map();
   th_dvb_mux_instance_t *tdmi = t->tht_dvb_mux_instance;
+  char buf[100];
 
   lock_assert(&global_lock);
 
-  return tdmi->tdmi_adapter->tda_displayname;
+  htsmsg_add_str(m, "device", tdmi->tdmi_adapter->tda_rootpath);
+
+  htsmsg_add_str(m, "adapter", tdmi->tdmi_adapter->tda_displayname);
+  
+  if(tdmi->tdmi_network != NULL)
+    htsmsg_add_str(m, "network", tdmi->tdmi_network);
+  
+  dvb_mux_nicename(buf, sizeof(buf), tdmi);
+  htsmsg_add_str(m, "mux", buf);
+
+  if(t->tht_provider != NULL)
+    htsmsg_add_str(m, "provider", t->tht_provider);
+
+  if(t->tht_svcname != NULL)
+    htsmsg_add_str(m, "service", t->tht_svcname);
+
+  return m;
 }
-
-
-/**
- * Generate a descriptive name for the source
- */
-static const char *
-dvb_transport_networkname(th_transport_t *t)
-{
-  th_dvb_mux_instance_t *tdmi = t->tht_dvb_mux_instance;
-
-  lock_assert(&global_lock);
-
-  return tdmi->tdmi_network;
-}
-
-
 
 
 /**
@@ -357,8 +359,7 @@ dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   t->tht_refresh_feed = dvb_transport_refresh;
   t->tht_stop_feed  = dvb_transport_stop;
   t->tht_config_change = dvb_transport_save;
-  t->tht_sourcename = dvb_transport_sourcename;
-  t->tht_networkname = dvb_transport_networkname;
+  t->tht_sourceinfo = dvb_transport_sourceinfo;
   t->tht_dvb_mux_instance = tdmi;
   t->tht_quality_index = dvb_transport_quality;
 

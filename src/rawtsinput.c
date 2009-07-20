@@ -84,20 +84,10 @@ rawts_transport_quality(th_transport_t *t)
 /**
  * Generate a descriptive name for the source
  */
-static const char *
-rawts_transport_sourcename(th_transport_t *t)
+static htsmsg_t *
+rawts_transport_sourceinfo(th_transport_t *t)
 {
-  return "rawts";
-}
-
-
-/**
- * Generate a descriptive name for the source
- */
-static const char *
-rawts_transport_networkname(th_transport_t *t)
-{
-  return "rawts";
+  return htsmsg_create_map();
 }
 
 
@@ -129,8 +119,7 @@ rawts_transport_add(rawts_t *rt, uint16_t sid, int pmt_pid)
   t->tht_start_feed = rawts_transport_start;
   t->tht_stop_feed  = rawts_transport_stop;
   t->tht_config_change = rawts_transport_save;
-  t->tht_sourcename = rawts_transport_sourcename;
-  t->tht_networkname = rawts_transport_networkname;
+  t->tht_sourceinfo = rawts_transport_sourceinfo;
   t->tht_quality_index = rawts_transport_quality;
 
   t->tht_svcname = strdup(tmp);
