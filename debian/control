@@ -9,6 +9,6 @@ Package: hts-tvheadend
 Architecture: any
 Depends: ${shlibs:Depends}
 Enhances: hts-showtime
-Description: HTS TVheadend
+Description: HTS Tvheadend
  TV backend for use with hts-showtime and various other clients.
  Based on ffmpeg 'http://www.ffmpeg.org/' and ExtJS 'http://www.extjs.org/'
