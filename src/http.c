@@ -240,6 +240,9 @@ http_error(http_connection_t *hc, int error)
 {
   const char *errtxt = http_rc2str(error);
 
+  tvhlog(LOG_ERR, "HTTP", "%s: %s -- %d", 
+	 inet_ntoa(hc->hc_peer->sin_addr), hc->hc_url, error);
+
   htsbuf_queue_flush(&hc->hc_reply);
 
   htsbuf_qprintf(&hc->hc_reply, 
@@ -316,12 +319,13 @@ static void
 http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
 {
   int err;
-  if(http_access_verify(hc, hp->hp_accessmask)) {
-    http_error(hc, HTTP_STATUS_UNAUTHORIZED);
-    return;
-  }
 
-  if((err = hp->hp_callback(hc, remain, hp->hp_opaque)) != 0)
+  if(http_access_verify(hc, hp->hp_accessmask))
+    err = HTTP_STATUS_UNAUTHORIZED;
+  else
+    err = hp->hp_callback(hc, remain, hp->hp_opaque);
+
+  if(err)
     http_error(hc, err);
 }
 
