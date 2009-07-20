@@ -14,6 +14,9 @@ hts-tvheadend (2.4) hts; urgency=low
 
   * The embedded HTTP server now logs failed requests
 
+  * Use absolute paths when serving static content (the web app itself)
+    This was only a problem when fork()ing a development build
+
 hts-tvheadend (2.3) hts; urgency=low
 
   * A simple web interface has been added. To access it, visit

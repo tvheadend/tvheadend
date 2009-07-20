@@ -102,10 +102,14 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
 
   snprintf(path, sizeof(path), "%s/%s", base, remain);
 
-  if((fd = open(path, O_RDONLY)) < 0)
+  if((fd = open(path, O_RDONLY)) < 0) {
+    tvhlog(LOG_ERR, "webui", 
+	   "Unable to open file %s -- %s", path, strerror(errno));
     return 404;
-
+  }
   if(fstat(fd, &st) < 0) {
+    tvhlog(LOG_ERR, "webui", 
+	   "Unable to stat file %s -- %s", path, strerror(errno));
     close(fd);
     return 404;
   }
@@ -232,7 +236,7 @@ webui_static_content(const char *content_path, const char *http_path,
     
     if(!stat(path, &st) && S_ISDIR(st.st_mode)) {
 
-      http_path_add(http_path, strdup(source), 
+      http_path_add(http_path, strdup(path), 
 		    page_static_file, ACCESS_WEB_INTERFACE);
       return;
     }
