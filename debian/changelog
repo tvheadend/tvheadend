@@ -96,7 +96,7 @@ hts-tvheadend (2.3) hts; urgency=low
     seem to (incorrectly) reuse IDs.
     Ticket #65
 
--- Andreas Öman <andreas@lonelycoder.com>  Sat, 18 Jul 2009 23:19:18 +0200
+ -- Andreas Öman <andreas@lonelycoder.com>  Sat, 18 Jul 2009 23:19:18 +0200
 
 hts-tvheadend (2.2) hts; urgency=low
 
