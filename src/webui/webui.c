@@ -254,6 +254,19 @@ webui_static_content(const char *content_path, const char *http_path,
 	 "No source path providing HTTP content: %s", http_path);
 }
 
+
+/**
+ *
+ */
+static int
+favicon(http_connection_t *hc, const char *remain, void *opaque)
+{
+  http_redirect(hc, "static/htslogo.png");
+  return 0;
+}
+
+
+
 /**
  * WEB user interface
  */
@@ -263,6 +276,7 @@ webui_init(const char *contentpath)
   http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
 
   http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_WEB_INTERFACE);
+  http_path_add("/favicon.ico", NULL, favicon, ACCESS_WEB_INTERFACE);
 
   webui_static_content(contentpath, "/static",        "src/webui/static");
   webui_static_content(contentpath, "/docs",          "docs/html");
