@@ -58,8 +58,8 @@ typedef struct event {
   time_t e_start;  /* UTC time */
   time_t e_stop;   /* UTC time */
 
-  const char *e_title;   /* UTF-8 encoded */
-  const char *e_desc;    /* UTF-8 encoded */
+  char *e_title;   /* UTF-8 encoded */
+  char *e_desc;    /* UTF-8 encoded */
 
   int e_dvb_id;
 

@@ -125,7 +125,7 @@ epg_event_set_title(event_t *e, const char *title)
 {
   if(e->e_title != NULL && !strcmp(e->e_title, title))
     return;
-  free((void *)e->e_title);
+  free(e->e_title);
   e->e_title = strdup(title);
   epg_event_changed(e);
 }
@@ -139,7 +139,7 @@ epg_event_set_desc(event_t *e, const char *desc)
 {
   if(e->e_desc != NULL && !strcmp(e->e_desc, desc))
     return;
-  free((void *)e->e_desc);
+  free(e->e_desc);
   e->e_desc = strdup(desc);
   epg_event_changed(e);
 }
@@ -175,8 +175,8 @@ epg_event_destroy(event_t *e)
   if(e->e_content_type != NULL)
     LIST_REMOVE(e, e_content_type_link);
 
-  free((void *)e->e_title);
-  free((void *)e->e_desc);
+  free(e->e_title);
+  free(e->e_desc);
   LIST_REMOVE(e, e_global_link);
   free(e);
 }
