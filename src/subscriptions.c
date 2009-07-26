@@ -39,7 +39,20 @@
 struct th_subscription_list subscriptions;
 static gtimer_t subscription_reschedule_timer;
 
+/**
+ *
+ */
+int
+subscriptions_active(void)
+{
+  return LIST_FIRST(&subscriptions) != NULL;
+}
 
+
+
+/**
+ *
+ */
 static int
 subscription_sort(th_subscription_t *a, th_subscription_t *b)
 {

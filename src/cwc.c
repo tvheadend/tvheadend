@@ -79,6 +79,7 @@ typedef enum {
 TAILQ_HEAD(cwc_queue, cwc);
 LIST_HEAD(cwc_transport_list, cwc_transport);
 static struct cwc_queue cwcs;
+static pthread_cond_t cwc_config_changed;
 
 
 /**
@@ -741,12 +742,13 @@ cwc_thread(void *aux)
 {
   cwc_transport_t *ct;
   cwc_t *cwc = aux;
-  int fd;
+  int fd, d;
   char errbuf[100];
   th_transport_t *t;
-
   char hostname[256];
   int port;
+  struct timespec ts;
+  int attempts = 0;
 
   pthread_mutex_lock(&global_lock);
 
@@ -767,40 +769,48 @@ cwc_thread(void *aux)
     pthread_mutex_lock(&global_lock);
 
     if(fd == -1) {
+      attempts++;
       tvhlog(LOG_INFO, "cwc", 
-	     "Connection attempt to %s:%d failed: %s, retry in 3 seconds",
+	     "Connection attempt to %s:%d failed: %s",
 	     hostname, port, errbuf);
-      pthread_mutex_unlock(&global_lock);
-      sleep(3);
-      pthread_mutex_lock(&global_lock);
-      continue;
-    }
+    } else {
 
-    if(cwc->cwc_running == 0) {
+      if(cwc->cwc_running == 0) {
+	close(fd);
+	break;
+      }
+
+      tvhlog(LOG_INFO, "cwc", "Connected to %s:%d", hostname, port);
+      attempts = 0;
+
+      cwc->cwc_fd = fd;
+      cwc->cwc_reconfigure = 0;
+
+      cwc_session(cwc);
+
+      cwc->cwc_fd = -1;
       close(fd);
-      break;
+      cwc->cwc_caid = 0;
+      
+      tvhlog(LOG_INFO, "cwc", "Disconnected from %s",  cwc->cwc_hostname);
     }
 
-    tvhlog(LOG_INFO, "cwc", "Connected to %s:%d", hostname, port);
+    if(subscriptions_active()) {
+      if(attempts == 1)
+	continue; // Retry immediately
+      d = 3;
+    } else {
+      d = 60;
+    }
 
-    cwc->cwc_fd = fd;
-    cwc->cwc_reconfigure = 0;
+    ts.tv_sec = time(NULL) + d;
+    ts.tv_nsec = 0;
 
-    cwc_session(cwc);
+    tvhlog(LOG_INFO, "cwc", 
+	   "%s: Automatic connection attempt in in %d seconds",
+	   cwc->cwc_hostname, d);
 
-    cwc->cwc_fd = -1;
-    close(fd);
-    cwc->cwc_caid = 0;
-    tvhlog(LOG_INFO, "cwc", "Disconnected from %s, retry in %d seconds",
-	   cwc->cwc_hostname, cwc->cwc_retry_delay);
-
-    pthread_mutex_unlock(&global_lock);
-    sleep(cwc->cwc_retry_delay);
-    pthread_mutex_lock(&global_lock);
-
-    cwc->cwc_retry_delay = cwc->cwc_retry_delay * 2 + 1;
-    if(cwc->cwc_retry_delay > 120)
-      cwc->cwc_retry_delay = 120;
+    pthread_cond_timedwait(&cwc_config_changed, &global_lock, &ts);
   }
 
   tvhlog(LOG_INFO, "cwc", "%s destroyed", cwc->cwc_hostname);
@@ -1197,6 +1207,8 @@ cwc_entry_update(void *opaque, const char *id, htsmsg_t *values, int maycreate)
 
   pthread_cond_signal(&cwc->cwc_cond);
 
+  pthread_cond_broadcast(&cwc_config_changed);
+
   return cwc_record_build(cwc);
 }
   
@@ -1209,6 +1221,8 @@ static int
 cwc_entry_delete(void *opaque, const char *id)
 {
   cwc_t *cwc;
+
+  pthread_cond_broadcast(&cwc_config_changed);
 
   if((cwc = cwc_entry_find(id, 0)) == NULL)
     return -1;
@@ -1255,6 +1269,7 @@ cwc_entry_get(void *opaque, const char *id)
 static htsmsg_t *
 cwc_entry_create(void *opaque)
 {
+  pthread_cond_broadcast(&cwc_config_changed);
   return cwc_record_build(cwc_entry_find(NULL, 1));
 }
 
@@ -1285,6 +1300,8 @@ cwc_init(void)
   dtable_t *dt;
 
   TAILQ_INIT(&cwcs);
+
+  pthread_cond_init(&cwc_config_changed, NULL);
 
   dt = dtable_create(&cwc_dtc, "cwc", NULL);
   dtable_load(dt);
