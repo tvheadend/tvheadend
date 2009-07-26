@@ -17,14 +17,20 @@ hts-tvheadend (2.4) hts; urgency=low
   * Use absolute paths when serving static content (the web app itself)
     This was only a problem when fork()ing a development build
 
-  * Rewrork the CWC reconnection strategy.
+  * Rework the CWC reconnection strategy.
     If there are active subscription, Tvheadend will attempt to reconnect
     immediately and then retry every three seconds.
     If no subscription is active a reconnection attempt is performed
     every minute.
     Also, if any CWC configuration changes are made from the UI, Tvheadend
     will try to reconnect directly.
-	
+
+  * If the EPG receives an updated description for an even that is shorter
+    than the current description it will be ignored.
+    This typically happens if the XMLTV and DVB EIT (Event Information Table)
+    differs. In other words, we assume that a longer description of an
+    event is better than a short.
+
 hts-tvheadend (2.3) hts; urgency=low
 
   * A simple web interface has been added. To access it, visit

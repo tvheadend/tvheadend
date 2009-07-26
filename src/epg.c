@@ -137,8 +137,14 @@ epg_event_set_title(event_t *e, const char *title)
 void
 epg_event_set_desc(event_t *e, const char *desc)
 {
-  if(e->e_desc != NULL && !strcmp(e->e_desc, desc))
+  if(e->e_desc != NULL && strlen(e->e_desc) >= strlen(desc)) {
+    /* The current description is longer than the one we try to set.
+     * We assume that a longer description is better than a shorter
+     * so we just bail out.
+     * Typically happens when the XMLTV and DVB EPG feed differs.
+     */
     return;
+  }
   free(e->e_desc);
   e->e_desc = strdup(desc);
   epg_event_changed(e);
