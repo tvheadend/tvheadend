@@ -31,6 +31,8 @@ hts-tvheadend (2.4) hts; urgency=low
     differs. In other words, we assume that a longer description of an
     event is better than a short.
 
+ -- Andreas Öman <andreas@lonelycoder.com>  Sun, 26 Jul 2009 13:27:32 +0200
+
 hts-tvheadend (2.3) hts; urgency=low
 
   * A simple web interface has been added. To access it, visit
