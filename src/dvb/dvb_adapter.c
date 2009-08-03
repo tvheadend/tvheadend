@@ -520,7 +520,8 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
 
   htsmsg_add_str(m, "identifier", tda->tda_identifier);
   htsmsg_add_str(m, "name", tda->tda_displayname);
-  htsmsg_add_str(m, "path", tda->tda_rootpath);
+  if(tda->tda_rootpath != NULL)
+    htsmsg_add_str(m, "path", tda->tda_rootpath);
   htsmsg_add_str(m, "devicename", tda->tda_fe_info->name);
 
   // XXX: bad bad bad slow slow slow

@@ -298,7 +298,8 @@ dvb_transport_sourceinfo(th_transport_t *t)
 
   lock_assert(&global_lock);
 
-  htsmsg_add_str(m, "device", tdmi->tdmi_adapter->tda_rootpath);
+  if(tdmi->tdmi_adapter->tda_rootpath  != NULL)
+    htsmsg_add_str(m, "device", tdmi->tdmi_adapter->tda_rootpath);
 
   htsmsg_add_str(m, "adapter", tdmi->tdmi_adapter->tda_displayname);
   
