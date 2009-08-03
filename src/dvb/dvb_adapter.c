@@ -314,6 +314,9 @@ dvb_adapter_mux_scanner(void *aux)
   th_dvb_mux_instance_t *tdmi;
   int i;
 
+  if(tda->tda_rootpath == NULL)
+    return; // No hardware
+
   gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 20);
 
   if(LIST_FIRST(&tda->tda_muxes) == NULL)
@@ -520,9 +523,6 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
 
   htsmsg_add_str(m, "identifier", tda->tda_identifier);
   htsmsg_add_str(m, "name", tda->tda_displayname);
-  if(tda->tda_rootpath != NULL)
-    htsmsg_add_str(m, "path", tda->tda_rootpath);
-  htsmsg_add_str(m, "devicename", tda->tda_fe_info->name);
 
   // XXX: bad bad bad slow slow slow
   LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
@@ -540,6 +540,12 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
     dvb_mux_nicename(buf, sizeof(buf), tda->tda_mux_current);
     htsmsg_add_str(m, "currentMux", buf);
   }
+
+  if(tda->tda_rootpath == NULL)
+    return m;
+
+  htsmsg_add_str(m, "path", tda->tda_rootpath);
+  htsmsg_add_str(m, "devicename", tda->tda_fe_info->name);
 
   htsmsg_add_str(m, "deliverySystem", 
 		 val2str(tda->tda_type, deliverysystemtab) ?: "");
