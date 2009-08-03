@@ -147,7 +147,7 @@ got_pmt(struct th_transport *t, th_stream_t *st,
     return;
 
   pthread_mutex_lock(&global_lock);
-  psi_parse_pmt(t, table + 3, table_len - 3, 1);
+  psi_parse_pmt(t, table + 3, table_len - 3, 1, 0);
   pthread_mutex_unlock(&global_lock);
 }
 

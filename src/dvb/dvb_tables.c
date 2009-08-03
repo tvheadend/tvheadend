@@ -1002,7 +1002,7 @@ dvb_pmt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   th_transport_t *t = opaque;
   
   pthread_mutex_lock(&t->tht_stream_mutex);
-  psi_parse_pmt(t, ptr, len, 1);
+  psi_parse_pmt(t, ptr, len, 1, 1);
   pthread_mutex_unlock(&t->tht_stream_mutex);
   return 0;
 }

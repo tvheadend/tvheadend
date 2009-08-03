@@ -236,7 +236,8 @@ psi_desc_ca(th_transport_t *t, uint8_t *ptr, int len)
  * PMT parser, from ISO 13818-1 and ETSI EN 300 468
  */
 int
-psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
+psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid,
+	      int delete)
 {
   uint16_t pcr_pid, pid;
   uint8_t estype;
@@ -276,8 +277,9 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid)
   len -= 9;
 
   /* Mark all streams for deletion */
-  LIST_FOREACH(st, &t->tht_components, st_link)
-    st->st_delete_me = 1;
+  if(delete)
+    LIST_FOREACH(st, &t->tht_components, st_link)
+      st->st_delete_me = 1;
 
   while(dllen > 1) {
     dtag = ptr[0];
