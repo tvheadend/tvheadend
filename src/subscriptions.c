@@ -285,6 +285,17 @@ dummy_callback(void *opauqe, streaming_message_t *sm)
   streaming_msg_free(sm);
 }
 
+static gtimer_t dummy_sub_timer;
+
+/**
+ *
+ */
+static void
+dummy_retry(void *opaque)
+{
+  subscription_dummy_join(opaque);
+  free(opaque);
+}
 
 /**
  *
@@ -297,7 +308,9 @@ subscription_dummy_join(const char *id)
 
   if(t == NULL) {
     tvhlog(LOG_ERR, "subscription", 
-	   "Unable to dummy join %s, transport not found", id);
+	   "Unable to dummy join %s, transport not found, retrying...", id);
+
+    gtimer_arm(&dummy_sub_timer, dummy_retry, strdup(id), 1);
     return;
   }
 
@@ -305,4 +318,6 @@ subscription_dummy_join(const char *id)
   streaming_target_init(st, dummy_callback, NULL);
   subscription_create_from_transport(t, "dummy", st);
 
+  tvhlog(LOG_NOTICE, "subscription", 
+	 "Dummy join %s ok", id);
 }
