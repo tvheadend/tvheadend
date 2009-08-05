@@ -484,12 +484,12 @@ xmltv_thread(void *aux)
 	break;
     }
 
+    confver = xmltv_confver;
+
     if(xmltv_grab_enabled == 0)
       continue;
 
     ts.tv_sec = time(NULL) + xmltv_grab_interval * 3600;
-
-    confver = xmltv_confver;
 
     if(xg_current != NULL) {
       tvhlog(LOG_INFO, "xmltv",
