@@ -28,6 +28,7 @@
 #include "tvhead.h"
 #include "parsers.h"
 #include "parser_h264.h"
+#include "parser_latm.h"
 #include "bitstream.h"
 #include "packet.h"
 #include "transports.h"
@@ -85,6 +86,9 @@ static void parse_video(th_transport_t *t, th_stream_t *st, uint8_t *data,
 static void parse_audio(th_transport_t *t, th_stream_t *st, uint8_t *data,
 			int len, int start, aparser_t *vp);
 
+static void parse_aac(th_transport_t *t, th_stream_t *st, uint8_t *data,
+		      int len, int start);
+
 static void parse_mpegaudio(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
 
 static void parse_ac3(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
@@ -137,11 +141,105 @@ parse_raw_mpeg(th_transport_t *t, th_stream_t *st, uint8_t *data,
   case SCT_AC3:
     parse_audio(t, st, data, len, start, parse_ac3);
     break;
+    
+  case SCT_AAC:
+    if(0) // not yet
+      parse_aac(t, st, data, len, start);
+    break;
 
   default:
     break;
   }
 }
+
+
+
+
+
+/**
+ * Parse AAC LATM
+ */
+static void 
+parse_aac(th_transport_t *t, th_stream_t *st, uint8_t *data,
+	  int len, int start)
+{
+  int l, muxlen, p;
+
+
+
+  if(start) {
+    int i;
+
+    if(0)for(i = 0; i < st->st_buffer_ptr - 2; i++) {
+      if(st->st_buffer[i] == 0x56 && (st->st_buffer[i + 1] & 0xe0) == 0xe0) {
+	muxlen = (st->st_buffer[i + 1] & 0x1f) << 8 |
+	  st->st_buffer[i + 2];
+
+	printf("AAC Sync at %8d: %8d bytes, next at %d\n", i, muxlen + 3,
+	       i + muxlen + 3);
+      }
+    }
+
+    /* Payload unit start */
+    st->st_parser_state = 1;
+    st->st_buffer_ptr = 0;
+    st->st_parser_ptr = 0;
+  }
+
+  if(st->st_parser_state == 0)
+    return;
+
+  if(st->st_buffer == NULL) {
+    st->st_buffer_size = 4000;
+    st->st_buffer = malloc(st->st_buffer_size);
+  }
+
+  if(st->st_buffer_ptr + len >= st->st_buffer_size) {
+    st->st_buffer_size += len * 4;
+    st->st_buffer = realloc(st->st_buffer, st->st_buffer_size);
+  }
+  
+  memcpy(st->st_buffer + st->st_buffer_ptr, data, len);
+  st->st_buffer_ptr += len;
+
+
+  if(st->st_parser_ptr == 0) {
+    int hlen;
+
+    if(st->st_buffer_ptr < 9)
+      return;
+
+    hlen = parse_pes_header(t, st, st->st_buffer + 6, st->st_buffer_ptr - 6);
+    if(hlen < 0)
+      return;
+
+    st->st_parser_ptr += 6 + hlen;
+  }
+
+
+  p = st->st_parser_ptr;
+
+  while((l = st->st_buffer_ptr - p) > 3) {
+    if(st->st_buffer[p] == 0x56 && (st->st_buffer[p + 1] & 0xe0) == 0xe0) {
+      muxlen = (st->st_buffer[p + 1] & 0x1f) << 8 |
+	st->st_buffer[p + 2];
+
+      if(l < muxlen + 3)
+	break;
+
+      parse_latm_audio_mux_element(t, st, st->st_buffer + p + 3, muxlen);
+
+      p += muxlen + 3;
+    } else {
+      printf("skip\n");
+      p++;
+    }
+  }
+  st->st_parser_ptr = p;
+}
+
+
+
 
 
 /**

@@ -50,6 +50,7 @@ SRCS =  src/main.c \
 	src/psi.c \
 	src/parsers.c \
 	src/parser_h264.c \
+	src/parser_latm.c \
 	src/tsdemux.c \
 	src/bitstream.c \
 	src/htsp.c \
