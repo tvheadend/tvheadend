@@ -35,6 +35,7 @@ show_help(){
 }
 
 enable cwc
+enable avahi
 
 for opt do
   optval="${opt#*=}"
@@ -90,6 +91,21 @@ else
 fi
 
 echo >>${CONFIG_MAK} $CC_CONFIG_MAK 
+
+#
+# AVAHI
+#
+if enabled avahi; then
+    if pkg-config avahi-client; then
+	# CFLAGS are included by Makefile
+	echo >>${CONFIG_MAK} "LDFLAGS_cfg += " `pkg-config --libs avahi-client`
+	echo "Using AVAHI client:    `pkg-config --modversion avahi-client`"
+    else
+	echo "avahi-client not found. Unable to build with AVAHI support."
+	echo "To compile without it, configure with: --disable-avahi"
+	die
+    fi
+fi
 
 #
 # configure ffmpeg

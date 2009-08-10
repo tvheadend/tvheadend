@@ -51,6 +51,7 @@
 #include "dvr/dvr.h"
 #include "htsp.h"
 #include "rawtsinput.h"
+#include "avahi.h"
 
 #include "parachute.h"
 #include "settings.h"
@@ -353,6 +354,10 @@ main(int argc, char **argv)
 
   if(join_transport != NULL)
     subscription_dummy_join(join_transport);
+
+#ifdef CONFIG_AVAHI
+  avahi_init();
+#endif
 
   pthread_mutex_unlock(&global_lock);
 

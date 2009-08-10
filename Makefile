@@ -99,6 +99,15 @@ SRCS += src/webui/webui.c \
 	src/webui/extjs.c \
 	src/webui/simpleui.c \
 
+#
+# AVAHI interface
+# 
+
+SRCS-$(CONFIG_AVAHI) += src/avahi.c
+
+${BUILDDIR}/src/avahi.o : CFLAGS = \
+                      $(shell pkg-config --cflags avahi-client) -Wall -Werror
+
 # Various transformations
 SRCS  += $(SRCS-yes)
 DLIBS += $(DLIBS-yes)

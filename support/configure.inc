@@ -21,6 +21,7 @@ RELEASENAME=`head -n1 ${TOPDIR}/ChangeLog | awk '{print $2}' | sed s/\(// | sed 
 
 CONFIG_LIST="
  cwc
+ avahi
 "
 
 die() {

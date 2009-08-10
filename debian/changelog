@@ -6,6 +6,8 @@ hts-tvheadend (2.5) hts; urgency=low
   * If XMLTV grabbing was disabled tvheadend would spin in a 100% CPU loop.
     This is now fixed.
 
+  * The HTSP service is now announced via AVAHI (mDNS service discovery)
+
 hts-tvheadend (2.4) hts; urgency=low
 
   * Due to a bug, the polarisation of DVB-S muxes was not correctly
