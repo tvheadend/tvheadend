@@ -269,12 +269,7 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 		handler: function() {
 		    tvheadend.addMuxManually(adapterData, satConfStore)
 		}
-	    }, '->', {
-	    text: 'Help',
-	    handler: function() {
-		new tvheadend.help(title, helpContent);
 	    }
-	}
 	]
     });
 
@@ -480,13 +475,7 @@ tvheadend.dvb_services = function(adapterId) {
 	cm: cm,
         viewConfig: {forceFit:true},
 	selModel: selModel,
-	tbar: [saveBtn,  rejectBtn, '->', {
-	    text: 'Help',
-	    handler: function() {
-		new tvheadend.help(title, helpContent);
-	    }
-	}
-	      ]
+	tbar: [saveBtn,  rejectBtn]
     });
     return grid;
 }
