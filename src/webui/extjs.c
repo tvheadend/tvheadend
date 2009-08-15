@@ -1335,8 +1335,8 @@ extjs_dvbsatconf(http_connection_t *hc, const char *remain, void *opaque)
  *
  */
 static int
-extjs_dvbservicedetails(http_connection_t *hc, 
-			const char *remain, void *opaque)
+extjs_servicedetails(http_connection_t *hc, 
+		     const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   htsmsg_t *out, *streams, *c;
@@ -1723,9 +1723,6 @@ extjs_start(void)
   http_path_add("/dvb/satconf", 
 		NULL, extjs_dvbsatconf, ACCESS_ADMIN);
 
-  http_path_add("/dvb/servicedetails", 
-		NULL, extjs_dvbservicedetails, ACCESS_ADMIN);
-
   http_path_add("/dvb/feopts", 
 		NULL, extjs_dvb_feopts, ACCESS_ADMIN);
 
@@ -1734,5 +1731,8 @@ extjs_start(void)
 
   http_path_add("/iptv/services", 
 		NULL, extjs_iptvservices, ACCESS_ADMIN);
+
+  http_path_add("/servicedetails", 
+		NULL, extjs_servicedetails, ACCESS_ADMIN);
 
 }

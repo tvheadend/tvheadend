@@ -300,7 +300,7 @@ tvheadend.dvb_services = function(adapterId) {
 		qtip:'Detailed information about service',
 		cb: function(grid, record, action, row, col) {
 		    Ext.Ajax.request({
-			url: "dvb/servicedetails/" + record.id,
+			url: "servicedetails/" + record.id,
 			success:function(response, options) {
 			    r = Ext.util.JSON.decode(response.responseText);
 			    tvheadend.showTransportDetails(r);
