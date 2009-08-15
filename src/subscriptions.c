@@ -282,6 +282,23 @@ subscription_create_from_transport(th_transport_t *t, const char *name,
 static void
 dummy_callback(void *opauqe, streaming_message_t *sm)
 {
+  switch(sm->sm_type) {
+  case SMT_START:
+    fprintf(stderr, "dummysubscription START, message follows\n");
+    htsmsg_print(sm->sm_data);
+    fprintf(stderr, "\n");
+    break;
+  case SMT_STOP:
+    fprintf(stderr, "dummysubscription STOP\n");
+    break;
+
+  case SMT_TRANSPORT_STATUS:
+    fprintf(stderr, "dummsubscription: %s\n", transport_feed_status_to_text(sm->sm_code));
+    break;
+  default:
+    break;
+  }
+
   streaming_msg_free(sm);
 }
 
