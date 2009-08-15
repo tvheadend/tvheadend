@@ -62,14 +62,40 @@ psi_section_reassemble(psi_section_t *ps, uint8_t *data, int len,
 }
 
 
+/**
+ * TS table parser
+ */
+void
+psi_rawts_table_parser(psi_section_t *section, uint8_t *tsb,
+		       void (*gotsection)(const uint8_t *data, int len, 
+					  void *opauqe), void *opaque)
+{
+  int off  = tsb[3] & 0x20 ? tsb[4] + 5 : 4;
+  int pusi = tsb[1] & 0x40;
+  int len;
 
+  if(off >= 188)
+    return;
 
+  if(pusi) {
+    len = tsb[off++];
+    if(len > 0) {
+      if(len > 188 - off)
+	return;
+      if(!psi_section_reassemble(section, tsb + off, len, 0, 1))
+	gotsection(section->ps_data, section->ps_offset, opaque);
+      off += len;
+    }
+  }
+    
+  if(!psi_section_reassemble(section, tsb + off, 188 - off, pusi, 1))
+    gotsection(section->ps_data, section->ps_offset, opaque);
+}
 
 
 /** 
  * PAT parser, from ISO 13818-1
  */
-
 int
 psi_parse_pat(th_transport_t *t, uint8_t *ptr, int len,
 	      pid_section_callback_t *pmt_callback)

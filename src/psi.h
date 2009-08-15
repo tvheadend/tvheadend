@@ -49,4 +49,8 @@ const char *psi_caid2name(uint16_t caid);
 void psi_load_transport_settings(htsmsg_t *m, th_transport_t *t);
 void psi_save_transport_settings(htsmsg_t *m, th_transport_t *t);
 
+void psi_rawts_table_parser(psi_section_t *section, uint8_t *tsb,
+			    void (*gotsection)(const uint8_t *data, int len,
+					       void *opauqe), void *opaque);
+
 #endif /* PSI_H_ */
