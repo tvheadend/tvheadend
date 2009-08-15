@@ -237,7 +237,7 @@ process_ts_packet(rawts_t *rt, uint8_t *tsb)
   uint16_t pid;
   th_transport_t *t;
 
-  pid = ((tsb[1] & 0xf) << 8) | tsb[2];
+  pid = ((tsb[1] & 0x1f) << 8) | tsb[2];
 
   if(pid == 0) {
     /* PAT */
