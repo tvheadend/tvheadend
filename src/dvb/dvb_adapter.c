@@ -182,7 +182,7 @@ tda_add(const char *path)
   if(fe == -1) {
     if(errno != ENOENT)
       tvhlog(LOG_ALERT, "dvb",
-	     "Unable to open %s -- %s\n", fname, strerror(errno));
+	     "Unable to open %s -- %s", fname, strerror(errno));
     return;
   }
 
@@ -200,7 +200,7 @@ tda_add(const char *path)
   tda->tda_fe_info = malloc(sizeof(struct dvb_frontend_info));
 
   if(ioctl(tda->tda_fe_fd, FE_GET_INFO, tda->tda_fe_info)) {
-    tvhlog(LOG_ALERT, "dvb", "%s: Unable to query adapter\n", fname);
+    tvhlog(LOG_ALERT, "dvb", "%s: Unable to query adapter", fname);
     close(fe);
     free(tda);
     return;
