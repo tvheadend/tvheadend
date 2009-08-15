@@ -347,6 +347,12 @@ psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid,
 	update |= psi_desc_ca(t, ptr, dlen);
 	break;
 
+      case DVB_DESC_REGISTRATION:
+	if(dlen == 4 && 
+	   ptr[0] == 'A' && ptr[1] == 'C' && ptr[2] == '-' &&  ptr[3] == '3')
+	  hts_stream_type = SCT_AC3;
+	break;
+
       case DVB_DESC_VIDEO_STREAM:
 	frameduration = mpeg2video_framedurations[(ptr[0] >> 3) & 0xf];
 	break;
