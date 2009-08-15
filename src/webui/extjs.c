@@ -24,6 +24,9 @@
 #include <string.h>
 #include <stdarg.h>
 
+#include <arpa/inet.h>
+#include <libavutil/avstring.h>
+
 #include "htsmsg.h"
 #include "htsmsg_json.h"
 
@@ -43,6 +46,7 @@
 #include "serviceprobe.h"
 #include "xmltv.h"
 #include "epg.h"
+#include "iptv_input.h"
 
 extern const char *htsversion;
 extern const char *htsversion_full;
@@ -123,6 +127,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/acleditor.js");
   extjs_load(hq, "static/app/cwceditor.js");
   extjs_load(hq, "static/app/dvb.js");
+  extjs_load(hq, "static/app/iptv.js");
   extjs_load(hq, "static/app/chconf.js");
   extjs_load(hq, "static/app/epg.js");
   extjs_load(hq, "static/app/dvr.js");
@@ -1007,7 +1012,7 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 	   "Service probe started on \"%s\"", tda->tda_displayname);
 
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
-      LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
+      LIST_FOREACH(t, &tdmi->tdmi_transports, tht_group_link) {
 	if(t->tht_enabled)
 	  serviceprobe_enqueue(t);
       }
@@ -1144,6 +1149,24 @@ extjs_dvbmuxes(http_connection_t *hc, const char *remain, void *opaque)
  *
  */
 static void
+transport_delete(htsmsg_t *in)
+{
+  htsmsg_field_t *f;
+  th_transport_t *t;
+  const char *id;
+
+  TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
+    if((id = htsmsg_field_get_string(f)) != NULL &&
+       (t = transport_find_by_identifier(id)) != NULL)
+      transport_destroy(t);
+  }
+}
+
+
+/**
+ *
+ */
+static void
 transport_update(htsmsg_t *in)
 {
   htsmsg_field_t *f;
@@ -1213,7 +1236,7 @@ extjs_dvbservices(http_connection_t *hc, const char *remain, void *opaque)
     array = htsmsg_create_list();
 
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
-      LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
+      LIST_FOREACH(t, &tdmi->tdmi_transports, tht_group_link) {
 	count++;
       }
     }
@@ -1221,7 +1244,7 @@ extjs_dvbservices(http_connection_t *hc, const char *remain, void *opaque)
     tvec = alloca(sizeof(th_transport_t *) * count);
 
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
-      LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
+      LIST_FOREACH(t, &tdmi->tdmi_transports, tht_group_link) {
 	tvec[i++] = t;
       }
     }
@@ -1514,8 +1537,153 @@ extjs_mergechannel(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
+}
 
 
+
+/**
+ *
+ */
+static void
+transport_update_iptv(htsmsg_t *in)
+{
+  htsmsg_field_t *f;
+  htsmsg_t *c;
+  th_transport_t *t;
+  uint32_t u32;
+  const char *id, *s;
+  int save;
+
+  TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
+    if((c = htsmsg_get_map_by_field(f)) == NULL ||
+       (id = htsmsg_get_str(c, "id")) == NULL)
+      continue;
+    
+    if((t = transport_find_by_identifier(id)) == NULL)
+      continue;
+
+    save = 0;
+
+    if(!htsmsg_get_u32(c, "port", &u32)) {
+      t->tht_iptv_port = u32;
+      save = 1;
+    }
+
+    if((s = htsmsg_get_str(c, "group")) != NULL) {
+      inet_pton(AF_INET, s, &t->tht_iptv_group.s_addr);
+      save = 1;
+    }
+    
+
+    save |= tvh_str_update(&t->tht_iptv_iface, htsmsg_get_str(c, "interface"));
+    if(save)
+      t->tht_config_save(t); // Save config
+  }
+}
+
+
+
+/**
+ *
+ */
+static htsmsg_t *
+build_record_iptv(th_transport_t *t)
+{
+  htsmsg_t *r = htsmsg_create_map();
+  char abuf[INET_ADDRSTRLEN];
+
+  htsmsg_add_str(r, "id", t->tht_identifier);
+
+  htsmsg_add_str(r, "channelname", t->tht_ch ? t->tht_ch->ch_name : "");
+  htsmsg_add_str(r, "interface", t->tht_iptv_iface ?: "");
+
+  inet_ntop(AF_INET, &t->tht_iptv_group, abuf, sizeof(abuf));
+  htsmsg_add_str(r, "group", t->tht_iptv_group.s_addr ? abuf : "");
+
+  htsmsg_add_u32(r, "port", t->tht_iptv_port);
+  htsmsg_add_u32(r, "enabled", t->tht_enabled);
+  return r;
+}
+
+/**
+ *
+ */
+static int
+iptv_transportcmp(const void *A, const void *B)
+{
+  th_transport_t *a = *(th_transport_t **)A;
+  th_transport_t *b = *(th_transport_t **)B;
+
+  return memcmp(&a->tht_iptv_group, &b->tht_iptv_group, 4);
+}
+
+/**
+ *
+ */
+static int
+extjs_iptvservices(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  htsmsg_t *out, *in, *array;
+  const char *op        = http_arg_get(&hc->hc_req_args, "op");
+  const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
+  th_transport_t *t, **tvec;
+  int count = 0, i = 0;
+
+  pthread_mutex_lock(&global_lock);
+
+  in = entries != NULL ? htsmsg_json_deserialize(entries) : NULL;
+
+  if(!strcmp(op, "get")) {
+
+    LIST_FOREACH(t, &iptv_all_transports, tht_group_link)
+      count++;
+    tvec = alloca(sizeof(th_transport_t *) * count);
+    LIST_FOREACH(t, &iptv_all_transports, tht_group_link)
+      tvec[i++] = t;
+
+    out = htsmsg_create_map();
+    array = htsmsg_create_list();
+
+    qsort(tvec, count, sizeof(th_transport_t *), iptv_transportcmp);
+
+    for(i = 0; i < count; i++)
+      htsmsg_add_msg(array, NULL, build_record_iptv(tvec[i]));
+
+    htsmsg_add_msg(out, "entries", array);
+
+  } else if(!strcmp(op, "update")) {
+    if(in != NULL) {
+      transport_update(in);      // Generic transport parameters
+      transport_update_iptv(in); // IPTV speicifc
+    }
+
+    out = htsmsg_create_map();
+
+  } else if(!strcmp(op, "create")) {
+
+    out = build_record_iptv(iptv_transport_find(NULL, 1));
+
+  } else if(!strcmp(op, "delete")) {
+    if(in != NULL)
+      transport_delete(in);
+
+    out = htsmsg_create_map();
+
+  } else {
+    pthread_mutex_unlock(&global_lock);
+    htsmsg_destroy(in);
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  htsmsg_destroy(in);
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
 }
 
 
@@ -1563,4 +1731,8 @@ extjs_start(void)
 
   http_path_add("/dvb/addmux", 
 		NULL, extjs_dvb_addmux, ACCESS_ADMIN);
+
+  http_path_add("/iptv/services", 
+		NULL, extjs_iptvservices, ACCESS_ADMIN);
+
 }

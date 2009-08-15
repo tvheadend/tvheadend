@@ -78,18 +78,20 @@ subscription_link_transport(th_subscription_t *s, th_transport_t *t)
   // Link to transport output
   streaming_target_connect(&t->tht_streaming_pad, &s->ths_input);
 
-  // Send a START message to the subscription client
-  sm = streaming_msg_create_msg(SMT_START, 
-				transport_build_stream_start_msg(t));
+  if(LIST_FIRST(&t->tht_components) != NULL) {
 
-  streaming_target_deliver(s->ths_output, sm);
+    // Send a START message to the subscription client
+    sm = streaming_msg_create_msg(SMT_START, 
+				  transport_build_stream_start_msg(t));
 
-  // Send a TRANSPORT_STATUS message to the subscription client
-  if(t->tht_feed_status != TRANSPORT_FEED_UNKNOWN) {
-    sm = streaming_msg_create_code(SMT_TRANSPORT_STATUS, t->tht_feed_status);
     streaming_target_deliver(s->ths_output, sm);
-  }
 
+    // Send a TRANSPORT_STATUS message to the subscription client
+    if(t->tht_feed_status != TRANSPORT_FEED_UNKNOWN) {
+      sm = streaming_msg_create_code(SMT_TRANSPORT_STATUS, t->tht_feed_status);
+      streaming_target_deliver(s->ths_output, sm);
+    }
+  }
   pthread_mutex_unlock(&t->tht_stream_mutex);
 }
 
@@ -108,10 +110,12 @@ subscription_unlink_transport(th_subscription_t *s)
   // Unlink from transport output
   streaming_target_disconnect(&t->tht_streaming_pad, &s->ths_input);
 
-  // Send a STOP message to the subscription client
-  sm = streaming_msg_create_msg(SMT_STOP, htsmsg_create_map());
-  streaming_target_deliver(s->ths_output, sm);
-    
+  if(LIST_FIRST(&t->tht_components) != NULL) {
+    // Send a STOP message to the subscription client
+    sm = streaming_msg_create_msg(SMT_STOP, htsmsg_create_map());
+    streaming_target_deliver(s->ths_output, sm);
+  }
+
   pthread_mutex_unlock(&t->tht_stream_mutex);
 
   LIST_REMOVE(s, ths_transport_link);

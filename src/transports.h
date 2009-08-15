@@ -23,6 +23,8 @@
 #include "htsmsg.h"
 #include "subscriptions.h"
 
+void transport_init(void);
+
 unsigned int transport_compute_weight(struct th_transport_list *head);
 
 int transport_start(th_transport_t *t, unsigned int weight, int force_start);
@@ -78,8 +80,10 @@ htsmsg_t *transport_build_stream_start_msg(th_transport_t *t);
 
 void transport_set_enable(th_transport_t *t, int enabled);
 
-void transport_restart(th_transport_t *t);
+void transport_restart(th_transport_t *t, int had_components);
 
 void transport_stream_destroy(th_transport_t *t, th_stream_t *st);
+
+void transport_request_save(th_transport_t *t);
 
 #endif /* TRANSPORTS_H */

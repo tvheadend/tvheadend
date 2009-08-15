@@ -276,11 +276,14 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
   char lang[4];
   int frameduration;
   int update = 0;
+  int had_components;
 
   if(len < 9)
     return -1;
 
   lock_assert(&t->tht_stream_mutex);
+
+  had_components = !!LIST_FIRST(&t->tht_components);
 
   sid     = ptr[0] << 8 | ptr[1];
   
@@ -442,9 +445,9 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
   }
 
   if(update) {
-    t->tht_config_change(t);
+    transport_request_save(t);
     if(t->tht_status == TRANSPORT_RUNNING)
-      transport_restart(t);
+      transport_restart(t, had_components);
   }
   return 0;
 }

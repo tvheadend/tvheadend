@@ -52,6 +52,7 @@ function accessUpdate(o) {
 		    new tvheadend.cteditor,
 		    new tvheadend.dvrsettings,
 		    new tvheadend.dvb,
+		    new tvheadend.iptv,
 		    new tvheadend.acleditor, 
 		    new tvheadend.cwceditor]
 	});

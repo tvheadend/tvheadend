@@ -353,11 +353,8 @@ channel_rename(channel_t *ch, const char *newname)
   RB_REMOVE(&channel_name_tree, ch, ch_name_link);
   channel_set_name(ch, newname);
 
-  LIST_FOREACH(t, &ch->ch_transports, tht_ch_link) {
-    pthread_mutex_lock(&t->tht_stream_mutex);
-    t->tht_config_change(t);
-    pthread_mutex_unlock(&t->tht_stream_mutex);
-  }
+  LIST_FOREACH(t, &ch->ch_transports, tht_ch_link)
+    t->tht_config_save(t);
 
   channel_save(ch);
   htsp_channel_update(ch);

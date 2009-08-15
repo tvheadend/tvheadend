@@ -103,7 +103,7 @@ rawts_transport_add(rawts_t *rt, uint16_t sid, int pmt_pid)
 
   char tmp[200];
 
-  LIST_FOREACH(t, &rt->rt_transports, tht_mux_link) {
+  LIST_FOREACH(t, &rt->rt_transports, tht_group_link) {
     if(t->tht_dvb_service_id == sid)
       return t;
   }
@@ -118,7 +118,7 @@ rawts_transport_add(rawts_t *rt, uint16_t sid, int pmt_pid)
 
   t->tht_start_feed = rawts_transport_start;
   t->tht_stop_feed  = rawts_transport_stop;
-  t->tht_config_change = rawts_transport_save;
+  t->tht_config_save = rawts_transport_save;
   t->tht_sourceinfo = rawts_transport_sourceinfo;
   t->tht_quality_index = rawts_transport_quality;
 
@@ -126,7 +126,7 @@ rawts_transport_add(rawts_t *rt, uint16_t sid, int pmt_pid)
 
   tvhlog(LOG_NOTICE, "rawts", "Added service %d (pmt: %d)", sid, pmt_pid);
 
-  LIST_INSERT_HEAD(&rt->rt_transports, t, tht_mux_link);
+  LIST_INSERT_HEAD(&rt->rt_transports, t, tht_group_link);
 
   ch = channel_find_by_name(tmp, 1);
 
@@ -245,7 +245,7 @@ process_ts_packet(rawts_t *rt, uint8_t *tsb)
     return;
   }
   
-  LIST_FOREACH(t, &rt->rt_transports, tht_mux_link)
+  LIST_FOREACH(t, &rt->rt_transports, tht_group_link)
     ts_recv_packet1(t, tsb);
 }
 

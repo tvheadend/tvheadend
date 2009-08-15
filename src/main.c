@@ -52,6 +52,8 @@
 #include "htsp.h"
 #include "rawtsinput.h"
 #include "avahi.h"
+#include "iptv_input.h"
+#include "transports.h"
 
 #include "parachute.h"
 #include "settings.h"
@@ -327,6 +329,8 @@ main(int argc, char **argv)
 
   xmltv_init();   /* Must be initialized before channels */
 
+  transport_init();
+
   channels_init();
 
   access_init(createdefault);
@@ -334,6 +338,8 @@ main(int argc, char **argv)
   tcp_server_init();
 
   dvb_init();
+
+  iptv_input_init();
 
   http_server_init();
 
@@ -507,13 +513,14 @@ tvh_str_set(char **strp, const char *src)
 /**
  *
  */
-void
+int
 tvh_str_update(char **strp, const char *src)
 {
   if(src == NULL)
-    return;
+    return 0;
   free(*strp);
   *strp = strdup(src);
+  return 1;
 }
 
 

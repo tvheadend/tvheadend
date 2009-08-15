@@ -66,7 +66,8 @@ dvb_transport_open_demuxers(th_dvb_adapter_t *tda, th_transport_t *t)
       st->st_demuxer_fd = -1;
       tvhlog(LOG_ERR, "dvb",
 	     "\"%s\" unable to open demuxer \"%s\" for pid %d -- %s",
-	     t->tht_name, tda->tda_demux_path, st->st_pid, strerror(errno));
+	     t->tht_identifier, tda->tda_demux_path, 
+	     st->st_pid, strerror(errno));
       continue;
     }
 
@@ -80,7 +81,8 @@ dvb_transport_open_demuxers(th_dvb_adapter_t *tda, th_transport_t *t)
     if(ioctl(fd, DMX_SET_PES_FILTER, &dmx_param)) {
       tvhlog(LOG_ERR, "dvb",
 	     "\"%s\" unable to configure demuxer \"%s\" for pid %d -- %s",
-	     t->tht_name, tda->tda_demux_path, st->st_pid, strerror(errno));
+	     t->tht_identifier, tda->tda_demux_path, 
+	     st->st_pid, strerror(errno));
       close(fd);
       fd = -1;
     }
@@ -258,7 +260,9 @@ dvb_transport_save(th_transport_t *t)
     htsmsg_add_u32(m, "mapped", 1);
   }
   
+  pthread_mutex_lock(&t->tht_stream_mutex);
   psi_save_transport_settings(m, t);
+  pthread_mutex_unlock(&t->tht_stream_mutex);
   
   hts_settings_save(m, "dvbtransports/%s/%s",
 		    t->tht_dvb_mux_instance->tdmi_identifier,
@@ -334,7 +338,7 @@ dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
 
   lock_assert(&global_lock);
 
-  LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
+  LIST_FOREACH(t, &tdmi->tdmi_transports, tht_group_link) {
     if(t->tht_dvb_service_id == sid)
       return t;
   }
@@ -359,12 +363,12 @@ dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   t->tht_start_feed = dvb_transport_start;
   t->tht_refresh_feed = dvb_transport_refresh;
   t->tht_stop_feed  = dvb_transport_stop;
-  t->tht_config_change = dvb_transport_save;
+  t->tht_config_save = dvb_transport_save;
   t->tht_sourceinfo = dvb_transport_sourceinfo;
   t->tht_dvb_mux_instance = tdmi;
   t->tht_quality_index = dvb_transport_quality;
 
-  LIST_INSERT_HEAD(&tdmi->tdmi_transports, t, tht_mux_link);
+  LIST_INSERT_HEAD(&tdmi->tdmi_transports, t, tht_group_link);
 
   dvb_adapter_notify(tdmi->tdmi_adapter);
   return t;

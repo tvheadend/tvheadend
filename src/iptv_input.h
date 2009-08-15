@@ -19,11 +19,10 @@
 #ifndef IPTV_INPUT_H_
 #define IPTV_INPUT_H_
 
-int iptv_configure_transport(th_transport_t *t, const char *muxname,
-			     struct config_head *head, 
-			     const char *channel_name);
+void iptv_input_init(void);
 
-extern struct th_transport_list iptv_probing_transports;
-extern struct th_transport_list iptv_stale_transports;
+th_transport_t *iptv_transport_find(const char *id, int create);
+
+extern struct th_transport_list iptv_all_transports;
 
 #endif /* IPTV_INPUT_H_ */

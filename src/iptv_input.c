@@ -19,9 +19,10 @@
 #include <pthread.h>
 
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <sys/epoll.h>
 #include <fcntl.h>
+#include <assert.h>
 
 #include <stdio.h>
 #include <unistd.h>
@@ -31,271 +32,427 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <linux/netdevice.h>
-#include <syslog.h>
 
-#include <libhts/htscfg.h>
+#include <libavutil/avstring.h>
 
 #include "tvhead.h"
-#include "iptv_input.h"
+#include "htsmsg.h"
 #include "channels.h"
 #include "transports.h"
-#include "dispatch.h"
-#include "psi.h"
+#include "iptv_input.h"
 #include "tsdemux.h"
+#include "psi.h"
+#include "settings.h"
 
-struct th_transport_list iptv_probing_transports;
-struct th_transport_list iptv_stale_transports;
-static dtimer_t iptv_probe_timer;
+static int iptv_thread_running;
+static int iptv_epollfd;
+static pthread_mutex_t iptv_recvmutex;
 
-static void iptv_probe_transport(th_transport_t *t);
-static void iptv_probe_callback(void *aux, int64_t now);
-static void iptv_probe_done(th_transport_t *t, int timeout);
+struct th_transport_list iptv_all_transports; /* All IPTV transports */
+static struct th_transport_list iptv_active_transports; /* Currently enabled */
 
+/**
+ * PAT parser. We only parse a single program. CRC has already been verified
+ */
 static void
-iptv_fd_callback(int events, void *opaque, int fd)
+iptv_got_pat(const uint8_t *ptr, int len, void *aux)
 {
-  th_transport_t *t = opaque;
-  uint8_t buf[2000];
-  int r;
-  uint8_t *tsb = buf;
+  th_transport_t *t = aux;
+  uint16_t prognum, pmt;
 
-  r = read(fd, buf, sizeof(buf));
+  len -= 8;
+  ptr += 8;
 
-  while(r >= 188) {
+  if(len < 4)
+    return;
+
+  prognum =  ptr[0]         << 8 | ptr[1];
+  pmt     = (ptr[2] & 0x1f) << 8 | ptr[3];
+
+  t->tht_pmt_pid = pmt;
+}
+
+
+/**
+ * PMT parser. CRC has already been verified
+ */
+static void
+iptv_got_pmt(const uint8_t *ptr, int len, void *aux)
+{
+  th_transport_t *t = aux;
+
+  if(len < 3 || ptr[0] != 2)
+    return;
+
+  pthread_mutex_lock(&t->tht_stream_mutex);
+  psi_parse_pmt(t, ptr + 3, len - 3, 0, 1);
+  pthread_mutex_unlock(&t->tht_stream_mutex);
+}
+
+
+/**
+ * Handle a single TS packet for the given IPTV transport
+ */
+static void
+iptv_ts_input(th_transport_t *t, uint8_t *tsb)
+{
+  uint16_t pid = ((tsb[1] & 0x1f) << 8) | tsb[2];
+
+  if(pid == 0) {
+
+    if(t->tht_pat_section == NULL)
+      t->tht_pat_section = calloc(1, sizeof(psi_section_t));
+    psi_rawts_table_parser(t->tht_pat_section, tsb, iptv_got_pat, t);
+
+  } else if(pid == t->tht_pmt_pid) {
+
+    if(t->tht_pmt_section == NULL)
+      t->tht_pmt_section = calloc(1, sizeof(psi_section_t));
+    psi_rawts_table_parser(t->tht_pmt_section, tsb, iptv_got_pmt, t);
+
+  } else {
     ts_recv_packet1(t, tsb);
-    r -= 188;
-    tsb += 188;
+  } 
+}
+
+
+/**
+ * Main epoll() based input thread for IPTV
+ */
+static void *
+iptv_thread(void *aux)
+{
+  int nfds, fd, r, j;
+  uint8_t tsb[2048];
+  th_transport_t *t;
+  struct epoll_event ev;
+
+  while(1) {
+    nfds = epoll_wait(iptv_epollfd, &ev, 1, -1);
+    if(nfds == -1) {
+      tvhlog(LOG_ERR, "IPTV", "epoll() error -- %s, sleeping 1 second",
+	     strerror(errno));
+      sleep(1);
+      continue;
+    }
+
+    if(nfds < 1)
+      continue;
+
+    fd = ev.data.fd;
+    r = read(fd, tsb, 2048);
+
+    // Add RTP support here
+    
+    if((r % 188) != 0)
+      continue; // We expect multiples of a TS packet
+    
+    pthread_mutex_lock(&iptv_recvmutex);
+    
+    LIST_FOREACH(t, &iptv_active_transports, tht_active_link) {
+      if(t->tht_iptv_fd != fd)
+	continue;
+      
+      for(j = 0; j < r; j += 188)
+	iptv_ts_input(t, tsb + j);
+    }
+    pthread_mutex_unlock(&iptv_recvmutex);
   }
 }
 
+
+/**
+ *
+ */
 static int
-iptv_start_feed(th_transport_t *t, unsigned int weight, int status, int force)
+iptv_transport_start(th_transport_t *t, unsigned int weight, int status, 
+		     int force_start)
 {
+  pthread_t tid;
   int fd;
   struct ip_mreqn m;
   struct sockaddr_in sin;
+  struct ifreq ifr;
+  struct epoll_event ev;
+
+  assert(t->tht_iptv_fd == -1);
+
+  if(iptv_thread_running == 0) {
+    iptv_thread_running = 1;
+    iptv_epollfd = epoll_create(10);
+    pthread_create(&tid, NULL, iptv_thread, NULL);
+  }
+
+  /* Now, open the real socket for UDP */
 
   fd = socket(AF_INET, SOCK_DGRAM, 0);
-  if(fd == -1)
+  if(fd == -1) {
+    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot open socket", t->tht_identifier);
     return -1;
+  }
 
+  /* First, resolve interface name */
+  memset(&ifr, 0, sizeof(ifr));
+  av_strlcpy(ifr.ifr_name, t->tht_iptv_iface, IFNAMSIZ);
+  ifr.ifr_name[IFNAMSIZ - 1] = 0;
+  if(ioctl(fd, SIOCGIFINDEX, &ifr)) {
+    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot find interface %s", 
+	   t->tht_identifier, t->tht_iptv_iface);
+    close(fd);
+    return -1;
+  }
+
+  /* Bind to multicast group */
   memset(&sin, 0, sizeof(sin));
   sin.sin_family = AF_INET;
   sin.sin_port = htons(t->tht_iptv_port);
-  sin.sin_addr.s_addr = t->tht_iptv_group_addr.s_addr;
+  sin.sin_addr.s_addr = t->tht_iptv_group.s_addr;
 
   if(bind(fd, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
-    syslog(LOG_ERR, "iptv: \"%s\" cannot bind %s:%d -- %s", 
-	   t->tht_name, inet_ntoa(sin.sin_addr), t->tht_iptv_port,
+    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot bind %s:%d -- %s", 
+	   t->tht_identifier, inet_ntoa(sin.sin_addr), t->tht_iptv_port,
 	   strerror(errno));
     close(fd);
     return -1;
   }
 
+  /* Join group */
   memset(&m, 0, sizeof(m));
-  m.imr_multiaddr.s_addr = t->tht_iptv_group_addr.s_addr;
-  m.imr_address.s_addr = t->tht_iptv_interface_addr.s_addr;
-  m.imr_ifindex = t->tht_iptv_ifindex;
+  m.imr_multiaddr.s_addr = t->tht_iptv_group.s_addr;
+  m.imr_address.s_addr = 0;
+  m.imr_ifindex = ifr.ifr_ifindex;
 
   if(setsockopt(fd, SOL_IP, IP_ADD_MEMBERSHIP, &m, 
 		sizeof(struct ip_mreqn)) == -1) {
-    syslog(LOG_ERR, "iptv: \"%s\" cannot join %s -- %s", 
-	   t->tht_name, inet_ntoa(m.imr_multiaddr),
-	   strerror(errno));
+    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot join %s -- %s", 
+	   t->tht_identifier, inet_ntoa(m.imr_multiaddr), strerror(errno));
+    close(fd);
+    return -1;
+  }
+
+  memset(&ev, 0, sizeof(ev));
+  ev.events = EPOLLIN;
+  ev.data.fd = fd;
+  if(epoll_ctl(iptv_epollfd, EPOLL_CTL_ADD, fd, &ev) == -1) {
+    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot add to epoll set -- %s", 
+	   t->tht_identifier, strerror(errno));
     close(fd);
     return -1;
   }
 
   t->tht_iptv_fd = fd;
-  t->tht_runstatus = status;
+  t->tht_status = status;
 
-  syslog(LOG_ERR, "iptv: \"%s\" joined group", t->tht_name);
-
-  t->tht_iptv_dispatch_handle = dispatch_addfd(fd, iptv_fd_callback, t,
-					       DISPATCH_READ);
+  pthread_mutex_lock(&iptv_recvmutex);
+  LIST_INSERT_HEAD(&iptv_active_transports, t, tht_active_link);
+  pthread_mutex_unlock(&iptv_recvmutex);
   return 0;
 }
 
-static void
-iptv_stop_feed(th_transport_t *t)
-{
-  if(t->tht_runstatus == TRANSPORT_IDLE)
-    return;
 
-  t->tht_runstatus = TRANSPORT_IDLE;
-  dispatch_delfd(t->tht_iptv_dispatch_handle);
-  close(t->tht_iptv_fd);
-
-  syslog(LOG_ERR, "iptv: \"%s\" left group", t->tht_name);
-}
-
-
-/*
+/**
  *
  */
-
 static void
-iptv_parse_pmt(struct th_transport *t, th_stream_t *st,
-	       uint8_t *table, int table_len)
+iptv_transport_refresh(th_transport_t *t)
 {
-  if(table[0] != 2 || t->tht_runstatus != TRANSPORT_PROBING)
-    return;
 
-  psi_parse_pmt(t, table + 3, table_len - 3, 0);
-
-  iptv_probe_done(t, 0);
 }
 
 
-/*
+/**
  *
  */
-
 static void
-iptv_parse_pat(struct th_transport *t, th_stream_t *st,
-	       uint8_t *table, int table_len)
+iptv_transport_stop(th_transport_t *t)
 {
-  if(table[0] != 0 || t->tht_runstatus != TRANSPORT_PROBING)
-    return;
-
-  psi_parse_pat(t, table + 3, table_len - 3, iptv_parse_pmt);
-}
-
-/*
- *
- */
-
-int
-iptv_configure_transport(th_transport_t *t, const char *iptv_type,
-			 struct config_head *head, const char *channel_name)
-{
-  const char *s;
-  int fd;
-  char buf[100];
-  char ifname[100];
-  struct ifreq ifr;
-  th_stream_t *st;
-  
-  if(!strcasecmp(iptv_type, "rawudp"))
-    t->tht_iptv_mode = IPTV_MODE_RAWUDP;
-  else
-    return -1;
-
-  t->tht_type = TRANSPORT_IPTV;
-  t->tht_start_feed = iptv_start_feed;
-  t->tht_stop_feed  = iptv_stop_feed;
-
-  if((s = config_get_str_sub(head, "group-address", NULL)) == NULL)
-    return -1;
-  t->tht_iptv_group_addr.s_addr = inet_addr(s);
-
-  t->tht_iptv_ifindex = 0;
-
-  if((s = config_get_str_sub(head, "interface-address", NULL)) != NULL)
-    t->tht_iptv_interface_addr.s_addr = inet_addr(s);
-  else
-    t->tht_iptv_interface_addr.s_addr = INADDR_ANY; 
-  
-  snprintf(ifname, sizeof(ifname), "%s",
-	   inet_ntoa(t->tht_iptv_interface_addr));
-
-  if((s = config_get_str_sub(head, "interface", NULL)) != NULL) {
-
-    memset(&ifr, 0, sizeof(ifr));
-    strncpy(ifr.ifr_name, s, IFNAMSIZ - 1);
-    ifr.ifr_name[IFNAMSIZ - 1] = 0;
-    
-    fd = socket(PF_INET,SOCK_STREAM,0);
-    if(fd != -1) {
-      if(ioctl(fd, SIOCGIFINDEX, &ifr) == 0) {
-	t->tht_iptv_ifindex = ifr.ifr_ifindex;
-	snprintf(ifname, sizeof(ifname), "%s", s);
-      }
-      close(fd);
-    }
-  }
-
-  if((s = config_get_str_sub(head, "port", NULL)) == NULL)
-    return -1;
-  t->tht_iptv_port = atoi(s);
-
-  snprintf(buf, sizeof(buf), "IPTV: %s (%s:%s:%d)", channel_name,
-	   ifname, inet_ntoa(t->tht_iptv_group_addr), t->tht_iptv_port);
-  t->tht_name = strdup(buf);
-
-  st = transport_add_stream(t, 0, HTSTV_PAT);
-  st->st_got_section = iptv_parse_pat;
-  st->st_section_docrc = 1;
-
-  s = config_get_str_sub(head, "provider", NULL);
-  if(s != NULL)
-    t->tht_provider = strdup(s);
-  else
-    t->tht_provider = strdup("IPTV");
-
-  snprintf(buf, sizeof(buf), "iptv_%s_%d",
-	   inet_ntoa(t->tht_iptv_group_addr), t->tht_iptv_port);
-  t->tht_identifier = strdup(buf);
-
-  t->tht_chname = strdup(channel_name);
-
-  LIST_INSERT_HEAD(&iptv_probing_transports, t, tht_active_link);
-  startupcounter++;
-
-  if(!dtimer_isarmed(&iptv_probe_timer)) {
-    iptv_probe_transport(t);
-    dtimer_arm(&iptv_probe_timer, iptv_probe_callback, t, 5);
-  }
-
-  return 0;
-}
-
-static void
-iptv_probe_transport(th_transport_t *t)
-{
-  syslog(LOG_INFO, "iptv: Probing transport %s", t->tht_name);
-  iptv_start_feed(t, 1, TRANSPORT_PROBING, 1);
-}
-
-
-static void
-iptv_probe_done(th_transport_t *t, int timeout)
-{
-  int pidcnt = 0;
-  th_stream_t *st;
-
-  startupcounter--;
-
-  dtimer_disarm(&iptv_probe_timer);
-
-  LIST_FOREACH(st, &t->tht_streams, st_link)
-    pidcnt++;
-  
+  t->tht_status = TRANSPORT_IDLE;
+  pthread_mutex_lock(&iptv_recvmutex);
   LIST_REMOVE(t, tht_active_link);
+  pthread_mutex_unlock(&iptv_recvmutex);
 
-  syslog(LOG_INFO, "iptv: Transport %s probed, %d pids found%s", 
-	 t->tht_name, pidcnt, timeout ? ", but probe timeouted" : "");
+  assert(t->tht_iptv_fd >= 0);
 
-  iptv_stop_feed(t);
+  close(t->tht_iptv_fd); // Automatically removes fd from epoll set
 
-  if(!timeout)
-    transport_map_channel(t, NULL);
-  else
-    LIST_INSERT_HEAD(&iptv_stale_transports, t, tht_active_link);
-
-  t = LIST_FIRST(&iptv_probing_transports);
-  if(t == NULL)
-    return;
-
-  iptv_probe_transport(t);
-  dtimer_arm(&iptv_probe_timer, iptv_probe_callback, t, 5);
+  t->tht_iptv_fd = -1;
 }
 
 
-
+/**
+ *
+ */
 static void
-iptv_probe_callback(void *aux, int64_t now)
+iptv_transport_save(th_transport_t *t)
 {
-  th_transport_t *t = aux;
-  iptv_probe_done(t, 1);
+  htsmsg_t *m = htsmsg_create_map();
+  char abuf[INET_ADDRSTRLEN];
+
+  lock_assert(&global_lock);
+
+  htsmsg_add_u32(m, "pmt", t->tht_pmt_pid);
+
+  if(t->tht_iptv_port)
+    htsmsg_add_u32(m, "port", t->tht_iptv_port);
+
+  if(t->tht_iptv_iface)
+    htsmsg_add_str(m, "interface", t->tht_iptv_iface);
+
+  if(t->tht_iptv_group.s_addr) {
+    inet_ntop(AF_INET, &t->tht_iptv_group, abuf, sizeof(abuf));
+    htsmsg_add_str(m, "group", abuf);
+  }
+
+  if(t->tht_ch != NULL) {
+    htsmsg_add_str(m, "channelname", t->tht_ch->ch_name);
+    htsmsg_add_u32(m, "mapped", 1);
+  }
+  
+  pthread_mutex_lock(&t->tht_stream_mutex);
+  psi_save_transport_settings(m, t);
+  pthread_mutex_unlock(&t->tht_stream_mutex);
+  
+  hts_settings_save(m, "iptvtransports/%s",
+		    t->tht_identifier);
+
+  htsmsg_destroy(m);
+}
+
+
+/**
+ *
+ */
+static int
+iptv_transport_quality(th_transport_t *t)
+{
+  if(t->tht_iptv_iface == NULL || 
+     t->tht_iptv_group.s_addr == 0 ||
+     t->tht_iptv_port == 0)
+    return 0;
+
+  return 100;
+}
+
+
+/**
+ * Generate a descriptive name for the source
+ */
+static htsmsg_t *
+iptv_transport_sourceinfo(th_transport_t *t)
+{
+  htsmsg_t *m = htsmsg_create_map();
+
+  if(t->tht_iptv_iface != NULL)
+    htsmsg_add_str(m, "adapter", t->tht_iptv_iface);
+  htsmsg_add_str(m, "mux", inet_ntoa(t->tht_iptv_group));
+  return m;
+}
+
+
+/**
+ *
+ */
+th_transport_t *
+iptv_transport_find(const char *id, int create)
+{
+  static int tally;
+  th_transport_t *t;
+  char buf[20];
+
+  if(id != NULL) {
+
+    if(strncmp(id, "iptv_", 5))
+      return NULL;
+
+    LIST_FOREACH(t, &iptv_all_transports, tht_group_link)
+      if(!strcmp(t->tht_identifier, id))
+	return t;
+  }
+
+  if(create == 0)
+    return NULL;
+  
+  if(id == NULL) {
+    tally++;
+    snprintf(buf, sizeof(buf), "iptv_%d", tally);
+    id = buf;
+  } else {
+    tally = MAX(atoi(id + 5), tally);
+  }
+
+  t = transport_create(id, TRANSPORT_IPTV, THT_MPEG_TS);
+
+  t->tht_start_feed    = iptv_transport_start;
+  t->tht_refresh_feed  = iptv_transport_refresh;
+  t->tht_stop_feed     = iptv_transport_stop;
+  t->tht_config_save   = iptv_transport_save;
+  t->tht_sourceinfo    = iptv_transport_sourceinfo;
+  t->tht_quality_index = iptv_transport_quality;
+  t->tht_iptv_fd = -1;
+
+  LIST_INSERT_HEAD(&iptv_all_transports, t, tht_group_link);
+
+  return t;
+}
+
+
+/**
+ * Load config for the given mux
+ */
+static void
+iptv_transport_load(void)
+{
+  htsmsg_t *l, *c;
+  htsmsg_field_t *f;
+  uint32_t pmt;
+  const char *s;
+  unsigned int u32;
+  th_transport_t *t;
+
+  lock_assert(&global_lock);
+
+  if((l = hts_settings_load("iptvtransports")) == NULL)
+    return;
+  
+  HTSMSG_FOREACH(f, l) {
+    if((c = htsmsg_get_map_by_field(f)) == NULL)
+      continue;
+
+    if(htsmsg_get_u32(c, "pmt", &pmt))
+      continue;
+    
+    t = iptv_transport_find(f->hmf_name, 1);
+    t->tht_pmt_pid = pmt;
+
+    tvh_str_update(&t->tht_iptv_iface, htsmsg_get_str(c, "interface"));
+
+    if((s = htsmsg_get_str(c, "group")) != NULL)
+      inet_pton(AF_INET, s, &t->tht_iptv_group.s_addr);
+    
+    if(!htsmsg_get_u32(c, "port", &u32))
+      t->tht_iptv_port = u32;
+
+    pthread_mutex_lock(&t->tht_stream_mutex);
+    psi_load_transport_settings(c, t);
+    pthread_mutex_unlock(&t->tht_stream_mutex);
+    
+    s = htsmsg_get_str(c, "channelname");
+    if(htsmsg_get_u32(c, "mapped", &u32))
+      u32 = 0;
+    
+    if(s && u32)
+      transport_map_channel(t, channel_find_by_name(s, 1), 0);
+  }
+  htsmsg_destroy(l);
+}
+
+
+/**
+ *
+ */
+void
+iptv_input_init(void)
+{
+  pthread_mutex_init(&iptv_recvmutex, NULL);
+  iptv_transport_load();
 }

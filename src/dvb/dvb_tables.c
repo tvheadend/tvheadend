@@ -677,9 +677,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	    free((void *)t->tht_svcname);
 	    t->tht_svcname = strdup(chname);
 	    
-	    pthread_mutex_lock(&t->tht_stream_mutex);
-	    t->tht_config_change(t);
-	    pthread_mutex_unlock(&t->tht_stream_mutex);
+	    t->tht_config_save(t);
 	  }
 	}
 	break;

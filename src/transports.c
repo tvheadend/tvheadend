@@ -434,14 +434,12 @@ transport_destroy(th_transport_t *t)
     subscription_unlink_transport(s);
   }
 
-  free((void *)t->tht_name);
-
   if(t->tht_ch != NULL) {
     t->tht_ch = NULL;
     LIST_REMOVE(t, tht_ch_link);
   }
 
-  LIST_REMOVE(t, tht_mux_link);
+  LIST_REMOVE(t, tht_group_link);
   LIST_REMOVE(t, tht_hash_link);
   
   if(t->tht_status != TRANSPORT_IDLE)
@@ -457,6 +455,9 @@ transport_destroy(th_transport_t *t)
     LIST_REMOVE(st, st_link);
     free(st);
   }
+
+  free(t->tht_pat_section);
+  free(t->tht_pmt_section);
 
   transport_unref(t);
 }
@@ -536,6 +537,7 @@ transport_stream_create(th_transport_t *t, int pid,
 
   st->st_pid = pid;
   st->st_demuxer_fd = -1;
+  st->st_tb = (AVRational){1, 90000};
 
   TAILQ_INIT(&st->st_ptsq);
   TAILQ_INIT(&st->st_durationq);
@@ -593,12 +595,8 @@ transport_map_channel(th_transport_t *t, channel_t *ch, int save)
     LIST_INSERT_HEAD(&ch->ch_transports, t, tht_ch_link);
   }
 
-  if(!save)
-    return;
-
-  pthread_mutex_lock(&t->tht_stream_mutex);
-  t->tht_config_change(t); // Save config
-  pthread_mutex_unlock(&t->tht_stream_mutex);
+  if(save)
+    t->tht_config_save(t);
 }
 
 
@@ -675,19 +673,24 @@ transport_set_feed_status(th_transport_t *t, transport_feed_status_t newstatus)
  * (i.e. an AC3 stream disappears, etc)
  */
 void
-transport_restart(th_transport_t *t)
+transport_restart(th_transport_t *t, int had_components)
 {
   streaming_message_t *sm;
   lock_assert(&t->tht_stream_mutex);
 
-  sm = streaming_msg_create_msg(SMT_STOP, htsmsg_create_map());
-  streaming_pad_deliver(&t->tht_streaming_pad, sm);
+  if(had_components) {
+    sm = streaming_msg_create_msg(SMT_STOP, htsmsg_create_map());
+    streaming_pad_deliver(&t->tht_streaming_pad, sm);
+  }
 
   t->tht_refresh_feed(t);
 
-  sm = streaming_msg_create_msg(SMT_START, 
-				transport_build_stream_start_msg(t));
-  streaming_pad_deliver(&t->tht_streaming_pad, sm);
+  if(LIST_FIRST(&t->tht_components) != NULL) {
+
+    sm = streaming_msg_create_msg(SMT_START, 
+				  transport_build_stream_start_msg(t));
+    streaming_pad_deliver(&t->tht_streaming_pad, sm);
+  }
 }
 
 
@@ -771,8 +774,76 @@ transport_set_enable(th_transport_t *t, int enabled)
     return;
 
   t->tht_enabled = enabled;
+  t->tht_config_save(t);
+}
 
-  pthread_mutex_lock(&t->tht_stream_mutex);
-  t->tht_config_change(t); // Save config
-  pthread_mutex_unlock(&t->tht_stream_mutex);
+
+static pthread_mutex_t pending_save_mutex;
+static pthread_cond_t pending_save_cond;
+static struct th_transport_queue pending_save_queue;
+
+/**
+ *
+ */
+void
+transport_request_save(th_transport_t *t)
+{
+  pthread_mutex_lock(&pending_save_mutex);
+
+  if(!t->tht_ps_onqueue) {
+    t->tht_ps_onqueue = 1;
+    TAILQ_INSERT_TAIL(&pending_save_queue, t, tht_ps_link);
+    transport_ref(t);
+    pthread_cond_signal(&pending_save_cond);
+  }
+
+  pthread_mutex_unlock(&pending_save_mutex);
+}
+
+
+/**
+ *
+ */
+static void *
+transport_saver(void *aux)
+{
+  th_transport_t *t;
+
+  pthread_mutex_lock(&pending_save_mutex);
+
+  while(1) {
+
+    if((t = TAILQ_FIRST(&pending_save_queue)) == NULL) {
+      pthread_cond_wait(&pending_save_cond, &pending_save_mutex);
+      continue;
+    }
+
+    TAILQ_REMOVE(&pending_save_queue, t, tht_ps_link);
+    t->tht_ps_onqueue = 0;
+
+    pthread_mutex_unlock(&pending_save_mutex);
+    pthread_mutex_lock(&global_lock);
+
+    if(t->tht_status != TRANSPORT_ZOMBIE)
+      t->tht_config_save(t);
+
+    transport_unref(t);
+
+    pthread_mutex_unlock(&global_lock);
+    pthread_mutex_lock(&pending_save_mutex);
+  }
+}
+
+
+/**
+ *
+ */
+void
+transport_init(void)
+{
+  pthread_t tid;
+  TAILQ_INIT(&pending_save_queue);
+  pthread_mutex_init(&pending_save_mutex, NULL);
+  pthread_cond_init(&pending_save_cond, NULL);
+  pthread_create(&tid, NULL, transport_saver, NULL);
 }

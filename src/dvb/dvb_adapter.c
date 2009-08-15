@@ -381,7 +381,7 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
 
     assert(tdmi_dst != NULL);
 
-    LIST_FOREACH(t_src, &tdmi_src->tdmi_transports, tht_mux_link) {
+    LIST_FOREACH(t_src, &tdmi_src->tdmi_transports, tht_group_link) {
       t_dst = dvb_transport_find(tdmi_dst, 
 				 t_src->tht_dvb_service_id,
 				 t_src->tht_pmt_pid, NULL);
@@ -415,8 +415,8 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
 	st_dst->st_caid           = st_src->st_caid;
       }
 
-      t_dst->tht_config_change(t_dst); // Save config
       pthread_mutex_unlock(&t_src->tht_stream_mutex);
+      t_dst->tht_config_save(t_dst); // Save config
 
     }
     dvb_mux_save(tdmi_dst);
@@ -527,7 +527,7 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
   // XXX: bad bad bad slow slow slow
   LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
     nummux++;
-    LIST_FOREACH(t, &tdmi->tdmi_transports, tht_mux_link) {
+    LIST_FOREACH(t, &tdmi->tdmi_transports, tht_group_link) {
       numsvc++;
     }
   }

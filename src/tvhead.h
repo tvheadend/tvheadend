@@ -356,8 +356,6 @@ typedef enum {
  */
 typedef struct th_transport {
 
-  const char *tht_name;
-
   LIST_ENTRY(th_transport) tht_hash_link;
 
   enum {
@@ -436,7 +434,7 @@ typedef struct th_transport {
   int tht_enabled;
 
   
-  LIST_ENTRY(th_transport) tht_mux_link;
+  LIST_ENTRY(th_transport) tht_group_link;
 
   LIST_ENTRY(th_transport) tht_active_link;
 
@@ -449,7 +447,7 @@ typedef struct th_transport {
 
   void (*tht_stop_feed)(struct th_transport *t);
 
-  void (*tht_config_change)(struct th_transport *t);
+  void (*tht_config_save)(struct th_transport *t);
 
   struct htsmsg *(*tht_sourceinfo)(struct th_transport *t);
 
@@ -512,11 +510,39 @@ typedef struct th_transport {
   TAILQ_ENTRY(th_transport) tht_sp_link;
 
   /**
+   * Pending save.
+   *
+   * transport_request_save() will enqueue the transport here.
+   * We need to do this if we don't hold the global lock.
+   * This happens when we update PMT from within the TS stream itself.
+   * Then we hold the stream mutex, and thus, can not obtain the global lock
+   * as it would cause lock inversion.
+   */
+  int tht_ps_onqueue;
+  TAILQ_ENTRY(th_transport) tht_ps_link;
+
+  /**
    * Timer which is armed at transport start. Once it fires
    * it will check if any packets has been parsed. If not the status
    * will be set to TRANSPORT_STATUS_NO_INPUT
    */
   gtimer_t tht_receive_timer;
+
+  /**
+   * IPTV members
+   */
+  char *tht_iptv_iface;
+  struct in_addr tht_iptv_group;
+  uint16_t tht_iptv_port;
+  int tht_iptv_fd;
+
+  /**
+   * For per-transport PAT/PMT parsers, allocated on demand
+   * Free'd by transport_destroy
+   */
+  struct psi_section *tht_pat_section;
+  struct psi_section *tht_pmt_section;
+  
 
   /*********************************************************
    *
@@ -614,7 +640,7 @@ static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 void tvh_str_set(char **strp, const char *src);
-void tvh_str_update(char **strp, const char *src);
+int tvh_str_update(char **strp, const char *src);
 
 void tvhlog(int severity, const char *subsys, const char *fmt, ...);
 
