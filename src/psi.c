@@ -754,7 +754,7 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
   th_stream_t *st;
   streaming_component_type_t type;
   const char *v;
-  uint32_t pid, i;
+  uint32_t pid;
 
   if(!htsmsg_get_u32(m, "pcr", &u32))
     t->tht_pcr_pid = u32;
@@ -791,7 +791,7 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
       st->st_frame_duration = u32;
      
     if((v = htsmsg_get_str(c, "caid")) != NULL) {
-      i = str2val(v, caidnametab);
+      int i = str2val(v, caidnametab);
       st->st_caid = i < 0 ? strtol(v, NULL, 0) : i;
     }
 
