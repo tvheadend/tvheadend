@@ -191,7 +191,8 @@ psi_build_pat(th_transport_t *t, uint8_t *buf, int maxlen, int pmtpid)
  * Parser for CA descriptor, viaccess
  */
 static int
-psi_desc_ca_viaccess(th_transport_t *t, th_stream_t *st, uint8_t *ptr, int len)
+psi_desc_ca_viaccess(th_transport_t *t, th_stream_t *st, 
+		     const uint8_t *ptr, int len)
 {
   uint8_t tag, tlen;
   uint32_t id;
@@ -227,7 +228,7 @@ psi_desc_ca_viaccess(th_transport_t *t, th_stream_t *st, uint8_t *ptr, int len)
  * Parser for CA descriptor
  */
 static int
-psi_desc_ca(th_transport_t *t, uint8_t *ptr, int len)
+psi_desc_ca(th_transport_t *t, const uint8_t *ptr, int len)
 {
   uint16_t pid = (ptr[2] & 0x1f) << 8 | ptr[3];
   th_stream_t *st;
@@ -262,7 +263,7 @@ psi_desc_ca(th_transport_t *t, uint8_t *ptr, int len)
  * PMT parser, from ISO 13818-1 and ETSI EN 300 468
  */
 int
-psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid,
+psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 	      int delete)
 {
   uint16_t pcr_pid, pid;

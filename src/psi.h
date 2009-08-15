@@ -35,7 +35,7 @@ int psi_section_reassemble(psi_section_t *ps, uint8_t *data, int len,
 int psi_parse_pat(th_transport_t *t, uint8_t *ptr, int len,
 		  pid_section_callback_t *pmt_callback);
 
-int psi_parse_pmt(th_transport_t *t, uint8_t *ptr, int len, int chksvcid,
+int psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 		  int delete);
 
 uint32_t psi_crc32(uint8_t *data, size_t datalen);
