@@ -29,6 +29,7 @@
 #include "dvb.h"
 
 #define DVB_DESC_VIDEO_STREAM 0x02
+#define DVB_DESC_REGISTRATION 0x05
 #define DVB_DESC_CA           0x09
 #define DVB_DESC_LANGUAGE     0x0a
 
