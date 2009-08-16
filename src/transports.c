@@ -832,6 +832,7 @@ transport_saver(void *aux)
     pthread_mutex_unlock(&global_lock);
     pthread_mutex_lock(&pending_save_mutex);
   }
+  return NULL;
 }
 
 

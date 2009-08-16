@@ -158,6 +158,7 @@ iptv_thread(void *aux)
     }
     pthread_mutex_unlock(&iptv_recvmutex);
   }
+  return NULL;
 }
 
 
