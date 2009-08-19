@@ -1,6 +1,6 @@
 hts-tvheadend (2.5) hts; urgency=low
 
-  * If a previosly detected DVB adapters was not present during startup,
+  * If a previosly detected DVB adapter was not present during startup,
     Tvheadend would crash. This is now fixed.
 
   * If XMLTV grabbing was disabled tvheadend would spin in a 100% CPU loop.
