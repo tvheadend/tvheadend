@@ -17,6 +17,8 @@ hts-tvheadend (2.5) hts; urgency=low
   * Use FFmpeg's av_interleaved_write_frame() or some players can't
     play the recorded content (vlc is one)
 
+ -- Andreas Öman <andreas@lonelycoder.com>  Wed, 19 Aug 2009 22:28:02 +0200
+
 hts-tvheadend (2.4) hts; urgency=low
 
   * Due to a bug, the polarisation of DVB-S muxes was not correctly
