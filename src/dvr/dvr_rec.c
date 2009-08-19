@@ -622,7 +622,7 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
     avpkt.duration =
       av_rescale_q(pkt->pkt_duration, AV_TIME_BASE_Q, st->time_base);
     avpkt.flags = pkt->pkt_frametype >= PKT_P_FRAME ? 0 : PKT_FLAG_KEY;
-    r = av_write_frame(fctx, &avpkt);
+    r = av_interleaved_write_frame(fctx, &avpkt);
     break;
 
 
