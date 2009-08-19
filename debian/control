@@ -7,7 +7,7 @@ Standards-Version: 3.7.3
 
 Package: hts-tvheadend
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, libavahi-client3
 Enhances: hts-showtime
 Description: HTS Tvheadend
  TV backend for use with hts-showtime and various other clients.
