@@ -30,6 +30,8 @@ extern char *dvr_file_postfix;
 extern uint32_t dvr_retention_days;
 extern int dvr_flags;
 extern char *dvr_postproc;
+extern int dvr_extra_time_pre;
+extern int dvr_extra_time_post;
 
 #define DVR_DIR_PER_DAY      0x1
 #define DVR_DIR_PER_CHANNEL  0x2
@@ -74,6 +76,9 @@ typedef struct dvr_entry {
 
   time_t de_start;
   time_t de_stop;
+
+  time_t de_start_extra;
+  time_t de_stop_extra;
 
   char *de_creator;
   char *de_filename;   /* Initially null if no filename has been
@@ -154,6 +159,10 @@ void dvr_postproc_set(const char *postproc);
 void dvr_retention_set(int days);
 
 void dvr_flags_set(int flags);
+
+void dvr_extra_time_pre_set(int d);
+
+void dvr_extra_time_post_set(int d);
 
 /**
  * Query interface

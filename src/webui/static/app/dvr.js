@@ -334,7 +334,8 @@ tvheadend.dvrsettings = function() {
 	root: 'dvrSettings'
     }, ['storage','postproc','retention','dayDirs',
 	'channelDirs','channelInTitle',
-	'dateInTitle','timeInTitle']);
+	'dateInTitle','timeInTitle',
+	'preExtraTime', 'postExtraTime']);
 
     var confpanel = new Ext.FormPanel({
 	title:'Digital Video Recorder',
@@ -343,7 +344,7 @@ tvheadend.dvrsettings = function() {
 	bodyStyle:'padding:15px',
 	anchor: '100% 50%',
 	labelAlign: 'right',
-	labelWidth: 200,
+	labelWidth: 250,
 	waitMsgTarget: true,
 	reader: confreader,
 	defaultType: 'textfield',
@@ -358,6 +359,14 @@ tvheadend.dvrsettings = function() {
 	    minValue: 1,
 	    fieldLabel: 'DVR Log retention time (days)',
 	    name: 'retention'
+	}), new Ext.form.NumberField({
+	    allowDecimals: false,
+	    fieldLabel: 'Extra time before recordings (minutes)',
+	    name: 'preExtraTime'
+	}), new Ext.form.NumberField({
+	    allowDecimals: false,
+	    fieldLabel: 'Extra time after recordings (minutes)',
+	    name: 'postExtraTime'
 	}), new Ext.form.Checkbox({
 	    fieldLabel: 'Make subdirectories per day',
 	    name: 'dayDirs'

@@ -418,7 +418,7 @@ dvr_thread(void *aux)
 
     switch(sm->sm_type) {
     case SMT_PACKET:
-      if(dispatch_clock > de->de_start)
+      if(dispatch_clock > de->de_start - (60 * de->de_start_extra))
 	dvr_thread_new_pkt(de, sm->sm_data);
       pkt_ref_dec(sm->sm_data);
       break;
@@ -649,7 +649,8 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
 /**
  *
  */
-static void dvr_spawn_postproc(dvr_entry_t *de)
+static void
+dvr_spawn_postproc(dvr_entry_t *de)
 {
   char *fmap[256];
   char **args;
@@ -666,8 +667,8 @@ static void dvr_spawn_postproc(dvr_entry_t *de)
   }
 
   fbasename = strdup(de->de_filename); 
-  snprintf(start, sizeof(start), "%ld", de->de_start);
-  snprintf(stop, sizeof(stop), "%ld", de->de_stop);
+  snprintf(start, sizeof(start), "%ld", de->de_start - de->de_start_extra);
+  snprintf(stop, sizeof(stop),   "%ld", de->de_stop  + de->de_stop_extra);
 
   memset(fmap, 0, sizeof(fmap));
   fmap['f'] = de->de_filename; /* full path to recoding */

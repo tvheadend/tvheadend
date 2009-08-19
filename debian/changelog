@@ -8,7 +8,11 @@ hts-tvheadend (2.5) hts; urgency=low
 
   * The HTSP service is now announced via AVAHI (mDNS service discovery)
 
-  * Support for IPTV has been added.
+  * Support for IPTV has been added. Only RAW TS in UDP is supported 
+    at the moment.
+
+  * Add support for setting default extra times to add before and after
+    a recording. Useful if your TV shows never start on time.
 
 hts-tvheadend (2.4) hts; urgency=low
 

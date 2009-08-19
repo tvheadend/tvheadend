@@ -765,6 +765,8 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     if(dvr_postproc != NULL)
       htsmsg_add_str(r, "postproc", dvr_postproc);
     htsmsg_add_u32(r, "retention", dvr_retention_days);
+    htsmsg_add_u32(r, "preExtraTime", dvr_extra_time_pre);
+    htsmsg_add_u32(r, "postExtraTime", dvr_extra_time_post);
     htsmsg_add_u32(r, "dayDirs",        !!(dvr_flags & DVR_DIR_PER_DAY));
     htsmsg_add_u32(r, "channelDirs",    !!(dvr_flags & DVR_DIR_PER_CHANNEL));
     htsmsg_add_u32(r, "channelInTitle", !!(dvr_flags & DVR_CHANNEL_IN_TITLE));
@@ -783,6 +785,12 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     if((s = http_arg_get(&hc->hc_req_args, "retention")) != NULL)
       dvr_retention_set(atoi(s));
+
+   if((s = http_arg_get(&hc->hc_req_args, "preExtraTime")) != NULL)
+     dvr_extra_time_pre_set(atoi(s));
+
+   if((s = http_arg_get(&hc->hc_req_args, "postExtraTime")) != NULL)
+     dvr_extra_time_post_set(atoi(s));
 
     if(http_arg_get(&hc->hc_req_args, "dayDirs") != NULL)
       flags |= DVR_DIR_PER_DAY;
