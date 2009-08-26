@@ -90,6 +90,10 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, const struct mux *m, int num,
       f.u.qam.modulation  = m->constellation;
       f.u.qam.fec_inner   = m->fec;
       break;
+
+    case FE_ATSC:
+      f.u.vsb.modulation  = m->constellation;
+      break;
     }
       
     dvb_mux_create(tda, &f, polarisation, sc, 0xffff, NULL, source, 1, NULL);
@@ -124,6 +128,10 @@ dvb_mux_preconf_add_network(th_dvb_adapter_t *tda, const char *id,
   case FE_OFDM:
     r = regions_DVBT;
     nr = sizeof(regions_DVBT) / sizeof(regions_DVBT[0]);
+    break;
+  case FE_ATSC:
+    r = regions_ATSC;
+    nr = sizeof(regions_ATSC) / sizeof(regions_ATSC[0]);
     break;
   default:
     return -1;
@@ -166,6 +174,10 @@ dvb_mux_preconf_get_node(int fetype, const char *node)
   case FE_OFDM:
     r = regions_DVBT;
     nr = sizeof(regions_DVBT) / sizeof(regions_DVBT[0]);
+    break;
+  case FE_ATSC:
+    r = regions_ATSC;
+    nr = sizeof(regions_ATSC) / sizeof(regions_ATSC[0]);
     break;
   default:
     return NULL;

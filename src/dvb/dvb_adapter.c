@@ -500,12 +500,6 @@ dvb_adapter_input_dvr(void *aux)
   }
 }
 
-static struct strtab deliverysystemtab[] = {
-  {"DVB-S", FE_QPSK},
-  {"DVB-T", FE_OFDM},
-  {"DVB-C", FE_QAM},
-};
-  
 
 /**
  *
@@ -548,7 +542,7 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
   htsmsg_add_str(m, "devicename", tda->tda_fe_info->name);
 
   htsmsg_add_str(m, "deliverySystem", 
-		 val2str(tda->tda_type, deliverysystemtab) ?: "");
+		 dvb_adaptertype_to_str(tda->tda_type) ?: "");
 
   htsmsg_add_u32(m, "satConf", tda->tda_sat);
 

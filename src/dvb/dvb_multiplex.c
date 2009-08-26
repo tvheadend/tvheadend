@@ -391,6 +391,10 @@ dvb_mux_save(th_dvb_mux_instance_t *tdmi)
     break;
 
   case FE_ATSC:
+    htsmsg_add_u32(m, "symbol_rate", f->u.qam.symbol_rate);
+
+    htsmsg_add_str(m, "constellation", 
+	    val2str(f->u.vsb.modulation, qamtab));
     break;
   }
 
@@ -494,6 +498,15 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
     break;
 
   case FE_ATSC:
+    htsmsg_get_u32(m, "symbol_rate", &f.u.qam.symbol_rate);
+    if(f.u.qam.symbol_rate == 0)
+      return "Invalid symbol rate";
+
+    s = htsmsg_get_str(m, "constellation");
+    if(s == NULL || (r = str2val(s, qamtab)) < 0)
+      return "Invalid VSB constellation";
+    f.u.vsb.modulation = r;
+
     break;
   }
 
@@ -645,6 +658,10 @@ dvb_mux_modulation(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
 	    val2str(f->u.qam.modulation, qamtab),
 	    f->u.qpsk.symbol_rate / 1000);
    break;
+   
+  case FE_ATSC:
+    snprintf(buf, size, "%s", val2str(f->u.vsb.modulation, qamtab));
+    break;
   default:
     snprintf(buf, size, "Unknown");
     break;
@@ -782,6 +799,16 @@ dvb_mux_add_by_params(th_dvb_adapter_t *tda,
     f.u.qpsk.symbol_rate = symrate;
     f.u.qpsk.fec_inner   = fec;
     break;
+
+  case FE_ATSC:
+    f.frequency = freq;
+
+    if(!val2str(constellation, qamtab))
+      return "Invalid VSB constellation";
+
+    f.u.vsb.modulation = constellation;
+    break;
+
   }
 
   if(satconf != NULL) {
