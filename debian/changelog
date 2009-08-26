@@ -1,3 +1,8 @@
+hts-tvheadend (2.6) hts; urgency=low
+
+  * Tvheadend's DVB service probe will now let the channel join tags based
+    on the service type and DVB provider name.
+
 hts-tvheadend (2.5) hts; urgency=low
 
   * If a previosly detected DVB adapter was not present during startup,

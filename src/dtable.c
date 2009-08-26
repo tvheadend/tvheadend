@@ -38,7 +38,7 @@ static LIST_HEAD(, dtable) dtables;
 /**
  *
  */
-static void
+void
 dtable_store_changed(const dtable_t *dt)
 {
   htsmsg_t *m = htsmsg_create_map();

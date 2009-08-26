@@ -46,8 +46,8 @@ struct channel_list channels_not_xmltv_mapped;
 struct channel_tree channel_name_tree;
 static struct channel_tree channel_identifier_tree;
 struct channel_tag_queue channel_tags;
+static dtable_t *channeltags_dtable;
 
-static void channel_tag_map(channel_t *ch, channel_tag_t *ct, int check);
 static channel_tag_t *channel_tag_find(const char *id, int create);
 static void channel_tag_mapping_destroy(channel_tag_mapping_t *ctm, 
 					int flags);
@@ -307,7 +307,7 @@ channels_load(void)
 /**
  * Write out a config file for a channel
  */
-static void
+void
 channel_save(channel_t *ch)
 {
   htsmsg_t *m = htsmsg_create_map();
@@ -477,6 +477,7 @@ channel_set_xmltv_source(channel_t *ch, xmltv_channel_t *xc)
   channel_save(ch);
 }
 
+
 /**
  *
  */
@@ -541,7 +542,7 @@ channel_set_tags_from_list(channel_t *ch, const char *maplist)
 /**
  *
  */
-static void
+int
 channel_tag_map(channel_t *ch, channel_tag_t *ct, int check)
 {
   channel_tag_mapping_t *ctm;
@@ -549,11 +550,11 @@ channel_tag_map(channel_t *ch, channel_tag_t *ct, int check)
   if(check) {
     LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
       if(ctm->ctm_tag == ct)
-	return;
+	return 0;
 
     LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
       if(ctm->ctm_channel == ch)
-	return;
+	return 0;
   }
 
   LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link)
@@ -576,6 +577,7 @@ channel_tag_map(channel_t *ch, channel_tag_t *ct, int check)
     htsp_tag_update(ct);
     htsp_channel_update(ch);
   }
+  return 0;
 }
 
 
@@ -638,21 +640,6 @@ channel_tag_find(const char *id, int create)
   TAILQ_INSERT_TAIL(&channel_tags, ct, ct_link);
   return ct;
 }
-
-/**
- *
- */
-channel_tag_t *
-channel_tag_find_by_name(const char *name)
-{
-  channel_tag_t *ct;
-
-  TAILQ_FOREACH(ct, &channel_tags, ct_link)
-    if(!strcmp(ct->ct_name, name))
-      break;
-  return ct;
-}
-
 
 /**
  *
@@ -823,18 +810,46 @@ static const dtable_class_t channel_tags_dtc = {
 };
 
 
+
+/**
+ *
+ */
+channel_tag_t *
+channel_tag_find_by_name(const char *name, int create)
+{
+  channel_tag_t *ct;
+  char str[50];
+
+  TAILQ_FOREACH(ct, &channel_tags, ct_link)
+    if(!strcmp(ct->ct_name, name))
+      return ct;
+
+  if(!create)
+    return NULL;
+
+  ct = channel_tag_find(NULL, 1);
+  ct->ct_enabled = 1;
+  tvh_str_update(&ct->ct_name, name);
+
+  snprintf(str, sizeof(str), "%d", ct->ct_identifier);
+  dtable_record_store(channeltags_dtable, str, channel_tag_record_build(ct));
+
+  dtable_store_changed(channeltags_dtable);
+  return ct;
+}
+
+
+
 /**
  *
  */
 void
 channels_init(void)
 {
-  dtable_t *dt;
-
   TAILQ_INIT(&channel_tags);
 
-  dt = dtable_create(&channel_tags_dtc, "channeltags", NULL);
-  dtable_load(dt);
+  channeltags_dtable = dtable_create(&channel_tags_dtc, "channeltags", NULL);
+  dtable_load(channeltags_dtable);
 
   channels_load();
 }

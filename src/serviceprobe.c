@@ -156,11 +156,43 @@ serviceprobe_thread(void *aux)
 	tvhlog(LOG_INFO, "serviceprobe", "%20s: skipped: %s",
 	       t->tht_svcname, err);
       } else if(t->tht_ch == NULL) {
+	const char *str;
+
 	ch = channel_find_by_name(t->tht_svcname, 1);
 	transport_map_channel(t, ch, 1);
       
 	tvhlog(LOG_INFO, "serviceprobe", "%20s: mapped to channel \"%s\"",
 	       t->tht_svcname, t->tht_svcname);
+
+	channel_tag_map(ch, channel_tag_find_by_name("TV channels", 1), 1);
+	tvhlog(LOG_INFO, "serviceprobe", "%20s: joined tag \"%s\"",
+	       t->tht_svcname, "TV channels");
+
+	switch(t->tht_servicetype) {
+	case ST_SDTV:
+	case ST_AC_SDTV:
+	  str = "SDTV";
+	  break;
+	case ST_HDTV:
+	case ST_AC_HDTV:
+	  str = "HDTV";
+	  break;
+	default:
+	  str = NULL;
+	}
+
+	if(str != NULL) {
+	  channel_tag_map(ch, channel_tag_find_by_name(str, 1), 1);
+	  tvhlog(LOG_INFO, "serviceprobe", "%20s: joined tag \"%s\"",
+		 t->tht_svcname, str);
+	}
+
+	if(t->tht_provider != NULL) {
+	  channel_tag_map(ch, channel_tag_find_by_name(t->tht_provider, 1), 1);
+	  tvhlog(LOG_INFO, "serviceprobe", "%20s: joined tag \"%s\"",
+		 t->tht_svcname, t->tht_provider);
+	}
+	channel_save(ch);
       }
 
       t->tht_sp_onqueue = 0;

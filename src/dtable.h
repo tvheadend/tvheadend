@@ -74,4 +74,6 @@ void dtable_record_store(dtable_t *dt, const char *id, htsmsg_t *r);
 
 void dtable_record_erase(dtable_t *dt, const char *id);
 
+void dtable_store_changed(const dtable_t *dt);
+
 #endif /* DTABLE_H__ */

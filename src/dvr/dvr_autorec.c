@@ -282,7 +282,7 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
       LIST_REMOVE(dae, dae_channel_tag_link);
       dae->dae_channel_tag = NULL;
     }
-    if((ct = channel_tag_find_by_name(s)) != NULL) {
+    if((ct = channel_tag_find_by_name(s, 0)) != NULL) {
       LIST_INSERT_HEAD(&ct->ct_autorecs, dae, dae_channel_tag_link);
       dae->dae_channel_tag = ct;
     }
@@ -371,7 +371,7 @@ dvr_autorec_add(const char *title, const char *channel,
     dae->dae_title = strdup(title);
   }
 
-  if(tag != NULL && (ct = channel_tag_find_by_name(tag)) != NULL) {
+  if(tag != NULL && (ct = channel_tag_find_by_name(tag, 0)) != NULL) {
     LIST_INSERT_HEAD(&ct->ct_autorecs, dae, dae_channel_tag_link);
     dae->dae_channel_tag = ct;
   }

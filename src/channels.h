@@ -120,7 +120,11 @@ void channel_set_xmltv_source(channel_t *ch, struct xmltv_channel *xc);
 
 void channel_set_tags_from_list(channel_t *ch, const char *maplist);
 
-channel_tag_t *channel_tag_find_by_name(const char *name);
+channel_tag_t *channel_tag_find_by_name(const char *name, int create);
+
+int channel_tag_map(channel_t *ch, channel_tag_t *ct, int check);
+
+void channel_save(channel_t *ch);
 
 extern struct channel_list channels_not_xmltv_mapped;
 
