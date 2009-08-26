@@ -162,6 +162,25 @@ dvb_c_config(const char *l)
 }
 
 
+static void
+atsc_config(const char *l)
+{
+  unsigned long freq;
+  char modulation[20];
+  int r;
+
+  r = sscanf(l, "%lu %s",
+	     &freq, modulation);
+
+  if(r != 2)
+    return;
+
+  printf("\t{ "
+	 ".freq = %lu, .constellation = %s},\n",
+	 freq, str2str(modulation, qamtab, "constellations"));
+}
+
+
 
 
 /**
@@ -259,6 +278,7 @@ static const struct {
   {"gr", "Greece"},
   {"hk", "Hong Kong"},
   {"hr", "Croatia"},
+  {"hu", "Hungary"},
   {"is", "Iceland"},
   {"it", "Italy"},
   {"lu", "Luxembourg"},
@@ -271,6 +291,7 @@ static const struct {
   {"sk", "Slovakia"},
   {"tw", "Taiwan"},
   {"uk", "United Kingdom"},
+  {"us", "United States"},
   {"vn", "Vietnam"},
 };
 
@@ -283,6 +304,7 @@ tldcode2longname(const char *tld)
       return tldlist[i].name;
   
   fprintf(stderr, "Unable to translate tld %s\n", tld);
+  fprintf(stderr, "Exiting. Output is incomplete\n");
   exit(1);
 }
 
@@ -380,6 +402,10 @@ scan_file(char *fname)
 
       // ne->comment = strdup(s);
       gotcomment = 1;
+      break;
+
+    case 'A':
+      atsc_config(line + 1);
       break;
 
     case 'C':

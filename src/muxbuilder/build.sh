@@ -36,3 +36,4 @@ EOF
 find $1/dvb-s -type f | sort | xargs ./muxbuilder DVBS
 find $1/dvb-t -type f | sort | xargs ./muxbuilder DVBT
 find $1/dvb-c -type f | sort | xargs ./muxbuilder DVBC
+find $1/atsc  -type f | sort | xargs ./muxbuilder ATSC
