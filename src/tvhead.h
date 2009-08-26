@@ -277,6 +277,11 @@ typedef struct th_stream {
   int st_parser_ptr;
   void *st_priv;          /* Parser private data */
 
+  uint8_t *st_buffer2;
+  int st_buffer2_ptr;
+  int st_buffer2_size;
+
+
   struct th_pkt *st_curpkt;
   int64_t st_curpts;
   int64_t st_curdts;
@@ -542,6 +547,13 @@ typedef struct th_transport {
    */
   struct psi_section *tht_pat_section;
   struct psi_section *tht_pmt_section;
+
+  /**
+   * V4l members
+   */
+
+  struct v4l_adapter *tht_v4l_adapter;
+
   
 
   /*********************************************************

@@ -128,7 +128,7 @@ ts_recv_packet0(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
     if(off > 188)
       break;
 
-    parse_raw_mpeg(t, st, tsb + off, 188 - off, pusi, err);
+    parse_mpeg_ts(t, st, tsb + off, 188 - off, pusi, err);
     break;
   }
 }

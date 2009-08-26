@@ -21,8 +21,10 @@
 
 #include "packet.h"
 
-void parse_raw_mpeg(th_transport_t *t, th_stream_t *st, uint8_t *data, 
-		    int len, int start, int err);
+void parse_mpeg_ts(th_transport_t *t, th_stream_t *st, uint8_t *data, 
+		   int len, int start, int err);
+
+void parse_mpeg_ps(th_transport_t *t, th_stream_t *st, uint8_t *data, int len);
 
 void parser_enqueue_packet(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
 

@@ -140,6 +140,12 @@ stream_clean(th_stream_t *st)
   st->st_buffer_ptr = 0;
   st->st_startcode = 0;
 
+  free(st->st_buffer2);
+  st->st_buffer2 = NULL;
+  st->st_buffer2_size = 0;
+  st->st_buffer2_ptr = 0;
+
+
   if(st->st_curpkt != NULL) {
     pkt_ref_dec(st->st_curpkt);
     st->st_curpkt = NULL;

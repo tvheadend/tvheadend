@@ -83,6 +83,9 @@ typedef void (aparser_t)(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
 static void parse_video(th_transport_t *t, th_stream_t *st, uint8_t *data,
 			int len, vparser_t *vp);
 
+static void  parse_audio_with_lavc(th_transport_t *t, th_stream_t *st, 
+				   uint8_t *data, int len, aparser_t *ap);
+
 static void parse_audio(th_transport_t *t, th_stream_t *st, uint8_t *data,
 			int len, int start, aparser_t *vp);
 
@@ -108,8 +111,8 @@ static void parser_compute_duration(th_transport_t *t, th_stream_t *st,
  * Parse raw mpeg data
  */
 void
-parse_raw_mpeg(th_transport_t *t, th_stream_t *st, uint8_t *data, 
-	       int len, int start, int err)
+parse_mpeg_ts(th_transport_t *t, th_stream_t *st, uint8_t *data, 
+	      int len, int start, int err)
 {
   th_subscription_t *s;
 
@@ -153,7 +156,42 @@ parse_raw_mpeg(th_transport_t *t, th_stream_t *st, uint8_t *data,
 }
 
 
+/**
+ * Parse program stream, as from V4L2, etc.
+ *
+ * Note: data does not include startcode and packet length
+ */
+void
+parse_mpeg_ps(th_transport_t *t, th_stream_t *st, uint8_t *data, int len)
+{
+  int hlen;
 
+  hlen = parse_pes_header(t, st, data, len);
+#if 0  
+  int i;
+  for(i = 0; i < 16; i++)
+    printf("%02x.", data[i]);
+  printf(" %d\n", hlen);
+#endif
+  data += hlen;
+  len  -= hlen;
+
+  if(len < 1)
+    return;
+
+  switch(st->st_type) {
+  case SCT_MPEG2AUDIO:
+    parse_audio_with_lavc(t, st, data, len, parse_mpegaudio);
+    break;
+
+  case SCT_MPEG2VIDEO:
+    parse_video(t, st, data, len, parse_mpeg2video);
+    break;
+
+  default:
+    break;
+  }
+}
 
 
 /**
@@ -293,7 +331,6 @@ parse_video(th_transport_t *t, th_stream_t *st, uint8_t *data, int len,
     }
     st->st_startcode = sc;
     st->st_startcode_offset = st->st_buffer_ptr - 4;
-
   }
   st->st_startcond = sc;  
 
@@ -314,11 +351,7 @@ static void
 parse_audio(th_transport_t *t, th_stream_t *st, uint8_t *data,
 	    int len, int start, aparser_t *ap)
 {
-  int hlen, rlen;
-  uint8_t *outbuf;
-  int outlen;
-  th_pkt_t *pkt;
-  int64_t dts;
+  int hlen;
 
   if(start) {
     /* Payload unit start */
@@ -356,6 +389,21 @@ parse_audio(th_transport_t *t, th_stream_t *st, uint8_t *data,
     if(len == 0)
       return;
   }
+  parse_audio_with_lavc(t, st, data, len, ap);
+}
+
+
+/**
+ * Use libavcodec's parsers for audio parsing
+ */
+static void 
+parse_audio_with_lavc(th_transport_t *t, th_stream_t *st, uint8_t *data,
+		      int len, aparser_t *ap)
+{
+  uint8_t *outbuf;
+  int outlen, rlen;
+  th_pkt_t *pkt;
+  int64_t dts;
 
   while(len > 0) {
 
@@ -643,7 +691,6 @@ parse_mpeg2video(th_transport_t *t, th_stream_t *st, size_t len,
     st->st_curpkt->pkt_frametype = pkt0.pkt_frametype;
     st->st_curpkt->pkt_duration = st->st_frame_duration;
     st->st_curpkt->pkt_commercial = t->tht_tt_commercial_advice;
-
     break;
 
   case 0x000001b3:
@@ -983,12 +1030,13 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   pkt->pkt_pts     =av_rescale_q(pts,               st->st_tb, AV_TIME_BASE_Q);
   pkt->pkt_duration=av_rescale_q(pkt->pkt_duration, st->st_tb, AV_TIME_BASE_Q);
 #if 0
-  printf("%-12s %d %10"PRId64" %10"PRId64" %d\n",
+  printf("%-12s %d %10"PRId64" %10"PRId64" %10d %10d\n",
 	 streaming_component_type2txt(st->st_type),
 	 pkt->pkt_frametype,
 	 pkt->pkt_dts,
 	 pkt->pkt_pts,
-	 pkt->pkt_duration);
+	 pkt->pkt_duration,
+	 pkt->pkt_payloadlen);
 #endif
   
   avgstat_add(&st->st_rate, pkt->pkt_payloadlen, dispatch_clock);

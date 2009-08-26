@@ -23,296 +23,78 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
-
+#include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <poll.h>
 #include <inttypes.h>
 
 #define __user
 #include <linux/videodev2.h>
 
-#include <libhts/htscfg.h>
-
 #include "tvhead.h"
-#include "v4l.h"
-#include "channels.h"
-#include "dispatch.h"
 #include "transports.h"
+#include "v4l.h"
+#include "parsers.h"
 
-struct th_v4l_adapter_list v4l_adapters;
+LIST_HEAD(v4l_adapter_list, v4l_adapter);
 
-static void v4l_fd_callback(int events, void *opaque, int fd);
+struct v4l_adapter_list v4l_adapters;
 
-static int v4l_setfreq(th_v4l_adapter_t *tva, int frequency);
+typedef struct v4l_adapter {
 
-static void v4l_add_adapter(const char *path);
+  LIST_ENTRY(v4l_adapter) va_global_link;
 
+  char *va_path;
 
-static void v4l_stop_feed(th_transport_t *t);
+  char *va_identifier;
 
-static int v4l_start_feed(th_transport_t *t, unsigned int weight, int status,
-			  int force_start);
+  struct v4l2_capability va_caps;
 
-/* 
- *
- */
-void
-v4l_init(void)
-{
-  v4l_add_adapter("/dev/video0");
-}
+  struct th_transport *va_current_transport;
 
 
+  int va_fd;
 
-/* 
- *
- */
-int
-v4l_configure_transport(th_transport_t *t, const char *muxname,
-			const char *channel_name)
-{
-  config_entry_t *ce;
-  char buf[100];
+  pthread_t va_thread;
 
-  if((ce = find_mux_config("v4lmux", muxname)) == NULL)
-    return -1;
+  int va_pipe[2];
 
-  t->tht_type = TRANSPORT_V4L;
-  t->tht_start_feed = v4l_start_feed;
-  t->tht_stop_feed  = v4l_stop_feed;
+  /** Mpeg stream parsing */
+  uint32_t va_startcode;
+  int va_lenlock;
 
-  t->tht_v4l_frequency = 
-    atoi(config_get_str_sub(&ce->ce_sub, "frequency", "0"));
-
-  t->tht_video = transport_add_stream(t, -1, HTSTV_MPEG2VIDEO);
-  t->tht_audio = transport_add_stream(t, -1, HTSTV_MPEG2AUDIO);
-
-  snprintf(buf, sizeof(buf), "Analog: %s (%.2f MHz)", muxname, 
-	   (float)t->tht_v4l_frequency / 1000000.0f);
-  t->tht_name = strdup(buf);
-
-  t->tht_provider = strdup("Analog TV");
-  snprintf(buf, sizeof(buf), "analog_%u", t->tht_v4l_frequency);
-  t->tht_identifier = strdup(buf);
-
-  t->tht_chname = strdup(channel_name);
-
-  transport_map_channel(t, NULL);
-  return 0;
-}
+} v4l_adapter_t;
 
 
-/*
+/**
  *
  */
 static void
-v4l_add_adapter(const char *path)
+v4l_input(v4l_adapter_t *va)
 {
-  int fd, r;
-  th_v4l_adapter_t *tva;
-  struct v4l2_capability caps;
-
-  fd = open(path, O_RDWR);
-  if(fd == -1)
-    return;
-
-  r = ioctl(fd, VIDIOC_QUERYCAP, &caps);
-
-  close(fd);
-  if(r < 0)
-    return;
-
-
-  tva = calloc(1, sizeof(th_v4l_adapter_t));
-
-  pthread_cond_init(&tva->tva_run_cond, NULL);
-
-  tva->tva_path = strdup(path);
-  LIST_INSERT_HEAD(&v4l_adapters, tva, tva_link);
-
-  tva->tva_name = strdup((char *)caps.card);
-}
-
-
-
-
-/* 
- *
- */
-static int 
-v4l_setfreq(th_v4l_adapter_t *tva, int frequency)
-{
-  struct v4l2_frequency vf;
-  struct v4l2_tuner vt;
-  int result;
-
-  memset(&vf, 0, sizeof(vf));
-  memset(&vt, 0, sizeof(vt));
-
-  vf.tuner = 0;
-  vf.type = V4L2_TUNER_ANALOG_TV;
-  vf.frequency = (frequency * 16) / 1000000;
-  result = ioctl(tva->tva_fd, VIDIOC_S_FREQUENCY, &vf);
-  if(result < 0) {
-    tvhlog(LOG_ERR, "v4l",
-	   "%s: Unable to tune to %dHz\n", tva->tva_path, frequency);
-    return 1;
-  }
-
-  vt.index = 0;
-  result = ioctl(tva->tva_fd, VIDIOC_G_TUNER, &vt);
-
-  if(result < 0) {
-    tvhlog(LOG_ERR, "v4l", "%s: Unable read tuner status\n", tva->tva_path);
-    return 1;
-  }
-	
-  tvhlog(LOG_DEBUG, "v4l", "%s: Tuned to %.3f MHz%s",
-	 tva->tva_path, (float)frequency/1000000.0,
-	 vt.signal ? "  (Signal Detected)" : "");
-
-  return 0;
-}
-
-
-/* 
- *
- */
-static void
-v4l_stop(th_v4l_adapter_t *tva)
-{
-  if(tva->tva_dispatch_handle != NULL) {
-    close(dispatch_delfd(tva->tva_dispatch_handle));
-    tva->tva_dispatch_handle = NULL;
-  }
-  tva->tva_startcode = 0;
-}
-
-
-
-/* 
- *
- */
-static void
-v4l_stop_feed(th_transport_t *t)
-{
-  th_v4l_adapter_t *tva = t->tht_v4l_adapter;
-
-  t->tht_v4l_adapter = NULL;
-  LIST_REMOVE(t, tht_active_link);
-
-  t->tht_runstatus = TRANSPORT_IDLE;
-
-  if(LIST_FIRST(&tva->tva_transports) == NULL)
-    v4l_stop(tva);
-}
-
-
-
-/* 
- *
- */
-static void
-v4l_adapter_clean(th_v4l_adapter_t *tva)
-{
-  th_transport_t *t;
-  
-  while((t = LIST_FIRST(&tva->tva_transports)) != NULL)
-    v4l_stop_feed(t);
-
-  v4l_stop(tva);
-}
-
-
-
-
-
-/* 
- *
- */
-static int 
-v4l_start_feed(th_transport_t *t, unsigned int weight, int status,
-	       int force_start)
-{
-  th_v4l_adapter_t *tva, *cand = NULL;
-  int w, fd;
-
-  LIST_FOREACH(tva, &v4l_adapters, tva_link) {
-    w = transport_compute_weight(&tva->tva_transports);
-    if(w < weight)
-      cand = tva;
-
-    if(tva->tva_frequency == t->tht_v4l_frequency)
-      break;
-  }
-
-  if(tva == NULL) {
-    if(cand == NULL)
-      return 1;
-
-    v4l_adapter_clean(cand);
-    tva = cand;
-  }
-
-  if(tva->tva_dispatch_handle == NULL) {
-    fd = open(tva->tva_path, O_RDWR);
-    if(fd == -1)
-      return 1;
-
-    tva->tva_dispatch_handle = 
-      dispatch_addfd(fd, v4l_fd_callback, tva, DISPATCH_READ);
-    tva->tva_fd = fd;
-  }
-
-  tva->tva_frequency = t->tht_v4l_frequency;
-
-  if(v4l_setfreq(tva, tva->tva_frequency))
-    return 1;
-
-  LIST_INSERT_HEAD(&tva->tva_transports, t, tht_active_link);
-  t->tht_v4l_adapter = tva;
-  t->tht_runstatus = TRANSPORT_RUNNING;
-  
-  return 0;
-}
-
-
-
-
-
-
-static void
-v4l_fd_callback(int events, void *opaque, int fd)
-{
-  th_v4l_adapter_t *tva = opaque;
-  th_transport_t *t;
+  th_transport_t *t = va->va_current_transport;
   th_stream_t *st;
   uint8_t buf[4000];
   uint8_t *ptr, *pkt;
   int len, l, r;
 
-  if(!(events & DISPATCH_READ))
-    return;
-
-  len = read(fd, buf, 4000);
+  len = read(va->va_fd, buf, 4000);
   if(len < 1)
-    return;
-
-  t = LIST_FIRST(&tva->tva_transports);
-  if(t == NULL)
     return;
 
   ptr = buf;
 
+  pthread_mutex_lock(&t->tht_stream_mutex);
+
   while(len > 0) {
 
-    switch(tva->tva_startcode) {
+    switch(va->va_startcode) {
     default:
-      tva->tva_startcode = tva->tva_startcode << 8 | *ptr;
-      tva->tva_lenlock = 0;
+      va->va_startcode = va->va_startcode << 8 | *ptr;
+      va->va_lenlock = 0;
       ptr++; len--;
       continue;
 
@@ -324,32 +106,390 @@ v4l_fd_callback(int events, void *opaque, int fd)
       break;
     }
 
-    if(tva->tva_lenlock == 2) {
-      l = st->st_buffer_size;
-      st->st_buffer = pkt = realloc(st->st_buffer, l);
+    if(va->va_lenlock == 2) {
+      l = st->st_buffer2_size;
+      st->st_buffer2 = pkt = realloc(st->st_buffer2, l);
       
-      r = l - st->st_buffer_ptr;
+      r = l - st->st_buffer2_ptr;
       if(r > len)
 	r = len;
-      memcpy(pkt + st->st_buffer_ptr, ptr, r);
+      memcpy(pkt + st->st_buffer2_ptr, ptr, r);
       
       ptr += r;
       len -= r;
 
-      st->st_buffer_ptr += r;
-      if(st->st_buffer_ptr == l) {
-	//	pes_packet_input(t, st, pkt, l);
-	st->st_buffer_size = 0;
-	tva->tva_startcode = 0;
+      st->st_buffer2_ptr += r;
+      if(st->st_buffer2_ptr == l) {
+	parse_mpeg_ps(t, st, pkt + 6, l - 6);
+
+	st->st_buffer2_size = 0;
+	va->va_startcode = 0;
+      } else {
+	assert(st->st_buffer2_ptr < l);
       }
       
     } else {
-      st->st_buffer_size = st->st_buffer_size << 8 | *ptr;
-      tva->tva_lenlock++;
-      if(tva->tva_lenlock == 2) {
-	st->st_buffer_ptr = 0;
+      st->st_buffer2_size = st->st_buffer2_size << 8 | *ptr;
+      va->va_lenlock++;
+      if(va->va_lenlock == 2) {
+	st->st_buffer2_size += 6;
+	st->st_buffer2_ptr = 6;
       }
       ptr++; len--;
     }
+  }
+  pthread_mutex_unlock(&t->tht_stream_mutex);
+}
+
+
+/**
+ *
+ */
+static void *
+v4l_thread(void *aux)
+{
+  v4l_adapter_t *va = aux;
+  struct pollfd pfd[2];
+  int r;
+
+  pfd[0].fd = va->va_pipe[0];
+  pfd[0].events = POLLIN;
+  pfd[1].fd = va->va_fd;
+  pfd[1].events = POLLIN;
+
+  while(1) {
+
+    r = poll(pfd, 2, -1);
+    if(r < 0) {
+      tvhlog(LOG_ALERT, "v4l", "%s: poll() error %s, sleeping one second",
+	     va->va_path, strerror(errno));
+      sleep(1);
+      continue;
+    }
+
+    if(pfd[0].revents & POLLIN) {
+      // Message on control pipe, used to exit thread, do so
+      break;
+    }
+
+    if(pfd[1].revents & POLLIN) {
+      v4l_input(va);
+    }
+  }
+
+  close(va->va_pipe[0]);
+  return NULL;
+}
+
+
+
+/**
+ *
+ */
+static int
+v4l_transport_start(th_transport_t *t, unsigned int weight, int status, 
+		    int force_start)
+{
+  v4l_adapter_t *va = t->tht_v4l_adapter;
+  int fd;
+
+  fd = open(va->va_path, O_RDWR | O_NONBLOCK);
+  if(fd == -1) {
+    tvhlog(LOG_ERR, "v4l",
+	   "%s: Unable to open device: %s\n", va->va_path, 
+	   strerror(errno));
+    return -1;
+  }
+
+  int frequency = 182250000;
+  struct v4l2_frequency vf;
+  //  struct v4l2_tuner vt;
+  int result;
+
+
+  v4l2_std_id std = 0xff;
+
+  result = ioctl(fd, VIDIOC_S_STD, &std);
+  if(result < 0) {
+    tvhlog(LOG_ERR, "v4l",
+	   "%s: Unable to set PAL -- %s", va->va_path, strerror(errno));
+    close(fd);
+    return -1;
+  }
+
+  memset(&vf, 0, sizeof(vf));
+
+  vf.tuner = 0;
+  vf.type = V4L2_TUNER_ANALOG_TV;
+  vf.frequency = (frequency * 16) / 1000000;
+  result = ioctl(fd, VIDIOC_S_FREQUENCY, &vf);
+  if(result < 0) {
+    tvhlog(LOG_ERR, "v4l",
+	   "%s: Unable to tune to %dHz", va->va_path, frequency);
+    close(fd);
+    return -1;
+  }
+
+  tvhlog(LOG_DEBUG, "v4l",
+	 "%s: Tuned to %dHz", va->va_path, frequency);
+
+  if(pipe(va->va_pipe)) {
+    tvhlog(LOG_ERR, "v4l",
+	   "%s: Unable to create control pipe", va->va_path, strerror(errno));
+    close(fd);
+    return -1;
+  }
+
+
+  va->va_fd = fd;
+  va->va_current_transport = t;
+  t->tht_status = status;
+  pthread_create(&va->va_thread, NULL, v4l_thread, va);
+  return 0;
+}
+
+
+/**
+ *
+ */
+static void
+v4l_transport_refresh(th_transport_t *t)
+{
+
+}
+
+
+/**
+ *
+ */
+static void
+v4l_transport_stop(th_transport_t *t)
+{
+  char c = 'q';
+  v4l_adapter_t *va = t->tht_v4l_adapter;
+
+  assert(va->va_current_transport != NULL);
+
+  if(write(va->va_pipe[1], &c, 1) != 1)
+    tvhlog(LOG_ERR, "v4l", "Unable to close video thread -- %s",
+	   strerror(errno));
+  
+  pthread_join(va->va_thread, NULL);
+
+  close(va->va_pipe[1]);
+  close(va->va_fd);
+
+  va->va_current_transport = NULL;
+  t->tht_status = TRANSPORT_IDLE;
+}
+
+
+/**
+ *
+ */
+static void
+v4l_transport_save(th_transport_t *t)
+{
+
+}
+
+
+/**
+ *
+ */
+static int
+v4l_transport_quality(th_transport_t *t)
+{
+  return 100;
+}
+
+
+/**
+ * Generate a descriptive name for the source
+ */
+static htsmsg_t *
+v4l_transport_sourceinfo(th_transport_t *t)
+{
+  htsmsg_t *m = htsmsg_create_map();
+#if 0
+  if(t->tht_v4l_iface != NULL)
+    htsmsg_add_str(m, "adapter", t->tht_v4l_iface);
+  htsmsg_add_str(m, "mux", inet_ntoa(t->tht_v4l_group));
+#endif
+  return m;
+}
+
+
+/**
+ *
+ */
+static th_transport_t *
+v4l_add_transport(v4l_adapter_t *va)
+{
+  th_transport_t *t;
+
+  char id[256];
+
+  snprintf(id, sizeof(id), "%s_%s", va->va_identifier, "foo"); 
+  printf("Adding transport %s\n", id);
+
+  t = transport_create(id, TRANSPORT_V4L, 0);
+  t->tht_flags |= THT_DEBUG;
+
+  t->tht_start_feed    = v4l_transport_start;
+  t->tht_refresh_feed  = v4l_transport_refresh;
+  t->tht_stop_feed     = v4l_transport_stop;
+  t->tht_config_save   = v4l_transport_save;
+  t->tht_sourceinfo    = v4l_transport_sourceinfo;
+  t->tht_quality_index = v4l_transport_quality;
+
+  t->tht_v4l_adapter = va;
+
+  pthread_mutex_lock(&t->tht_stream_mutex);
+
+  t->tht_video = transport_stream_create(t, -1, SCT_MPEG2VIDEO);
+  t->tht_audio = transport_stream_create(t, -1, SCT_MPEG2AUDIO);
+
+  pthread_mutex_unlock(&t->tht_stream_mutex);
+
+  transport_map_channel(t, channel_find_by_name("alpha", 1), 0);
+
+  //XXX  LIST_INSERT_HEAD(&v4l_all_transports, t, tht_group_link);
+  
+  return t;
+}
+
+
+
+
+
+/**
+ *
+ */
+static void
+v4l_adapter_check(const char *path, int fd)
+{
+  int r, i;
+
+  v4l_adapter_t *va;
+  struct v4l2_capability caps;
+
+  r = ioctl(fd, VIDIOC_QUERYCAP, &caps);
+
+  if(r) {
+    tvhlog(LOG_DEBUG, "v4l", 
+	   "Can not query capabilities on %s, device skipped", path);
+    return;
+  }
+
+  if(!(caps.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
+    tvhlog(LOG_DEBUG, "v4l", 
+	   "Device %s not a video capture device, device skipped", path);
+    return;
+  }
+
+  if(!(caps.capabilities & V4L2_CAP_TUNER)) {
+    tvhlog(LOG_DEBUG, "v4l", 
+	   "Device %s does not have a built-in tuner, device skipped", path);
+    return;
+  }
+
+  /* Enum video standards */
+
+  for(i = 0;; i++) {
+    struct v4l2_standard standard;
+    memset(&standard, 0, sizeof(standard));
+    standard.index = i;
+
+    if(ioctl(fd, VIDIOC_ENUMSTD, &standard))
+      break;
+
+    printf("%3d: %016llx %24s %d/%d %d lines\n",
+	   standard.index, 
+	   standard.id,
+	   standard.name,
+	   standard.frameperiod.numerator,
+	   standard.frameperiod.denominator,
+	   standard.framelines);
+  }
+
+
+  /* Enum formats */
+  for(i = 0;; i++) {
+
+    struct v4l2_fmtdesc fmtdesc;
+    memset(&fmtdesc, 0, sizeof(fmtdesc));
+    fmtdesc.index = i;
+    fmtdesc.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+    if(ioctl(fd, VIDIOC_ENUM_FMT, &fmtdesc)) {
+      tvhlog(LOG_DEBUG, "v4l", 
+	     "Device %s has no suitable formats, device skipped", path);
+      return; 
+    }
+
+    if(fmtdesc.pixelformat == V4L2_PIX_FMT_MPEG)
+      break;
+  }
+
+
+
+  va = calloc(1, sizeof(v4l_adapter_t));
+
+  va->va_identifier = strdup(path);
+
+  r = strlen(va->va_identifier);
+  for(i = 0; i < r; i++)
+    if(!isalnum((int)va->va_identifier[i]))
+      va->va_identifier[i] = '_';
+
+  va->va_path = strdup(path);
+  va->va_caps = caps;
+
+  LIST_INSERT_HEAD(&v4l_adapters, va, va_global_link);
+
+  tvhlog(LOG_INFO, "v4l", "Adding adapter %s: %s (%s) @ %s", 
+	 path, caps.card, caps.driver, caps.bus_info, caps.bus_info);
+
+  v4l_add_transport(va);
+}
+
+
+/**
+ *
+ */
+static void 
+v4l_adapter_probe(const char *path)
+{
+  int fd;
+
+  fd = open(path, O_RDWR | O_NONBLOCK);
+
+  if(fd == -1) {
+    if(errno != ENOENT)
+      tvhlog(LOG_ALERT, "v4l",
+	     "Unable to open %s -- %s", path, strerror(errno));
+    return;
+  }
+
+  v4l_adapter_check(path, fd);
+
+  close(fd);
+}
+
+
+
+
+
+
+void
+v4l_init(void)
+{
+  char buf[256];
+  int i;
+
+  for(i = 0; i < 1; i++) {
+    snprintf(buf, sizeof(buf), "/dev/video%d", i);
+    v4l_adapter_probe(buf);
   }
 }
