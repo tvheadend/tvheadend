@@ -1004,8 +1004,10 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   uint8_t stype;
   uint16_t service_id;
   uint16_t transport_stream_id;
+  int dlen, dl;
+  uint8_t *dptr;
 
-  if(tableid != 0xc8 || tableid != 0xc9)
+  if(tableid != 0xc8 && tableid != 0xc9)
     return -1; // Fail
 
   ptr += 5; // Skip generic header 
@@ -1018,8 +1020,13 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   ptr += 2;
   len -= 2;
 
-  for(; numch > 0 && len >= 32; len -= 32, ptr += 32) {
+  for(; numch > 0 && len >= 32; ptr += 32 + dlen, len -= 32 + dlen, numch--) {
     
+    dl = dlen = ((ptr[30] & 3) << 8) | ptr[31];
+
+    if(dlen + 32 > len)
+      return -1; // Corrupt table
+
     transport_stream_id = (ptr[22] << 8) | ptr[23];
     
     /* Search all muxes on adapter */
@@ -1031,18 +1038,24 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       continue;
 
     service_id = (ptr[24] << 8) | ptr[25];
-    t = dvb_transport_find(tdmi, service_id, 0, NULL);
-    if(t == NULL)
+    if((t = dvb_transport_find(tdmi, service_id, 0, NULL)) == NULL)
       continue;
 
     atsc_stype = ptr[27] & 0x3f;
     if(atsc_stype != 0x02) {
-      /* Not TV */
+      /* Not ATSC TV */
       continue;
     }
-    
+
     stype = ST_SDTV;
     atsc_utf16_to_utf8(ptr, 7, chname, sizeof(chname));
+
+    dptr = ptr + 32;
+    while(dl > 1) {
+      //      int desclen = dptr[1];
+      dl   -= dptr[1] + 2;
+      dptr += dptr[1] + 2;
+    }
 
     if(t->tht_servicetype != stype ||
        strcmp(t->tht_svcname ?: "", chname)) {
@@ -1053,6 +1066,7 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       t->tht_config_save(t);
     }
   }
+  return 0;
 }
 
 
