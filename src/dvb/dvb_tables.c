@@ -989,6 +989,74 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 }
 
 
+/**
+ * VCT - ATSC Virtual Channel Table
+ */
+static int
+atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
+		  uint8_t tableid, void *opaque)
+{
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  th_transport_t *t;
+  int numch;
+  char chname[256];
+  uint8_t atsc_stype;
+  uint8_t stype;
+  uint16_t service_id;
+  uint16_t transport_stream_id;
+
+  if(tableid != 0xc8 || tableid != 0xc9)
+    return -1; // Fail
+
+  ptr += 5; // Skip generic header 
+  len -= 5; 
+
+  if(len < 2)
+    return -1;
+
+  numch = ptr[1];
+  ptr += 2;
+  len -= 2;
+
+  for(; numch > 0 && len >= 32; len -= 32, ptr += 32) {
+    
+    transport_stream_id = (ptr[22] << 8) | ptr[23];
+    
+    /* Search all muxes on adapter */
+    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
+      if(tdmi->tdmi_transport_stream_id == transport_stream_id)
+	break;
+    
+    if(tdmi == NULL)
+      continue;
+
+    service_id = (ptr[24] << 8) | ptr[25];
+    t = dvb_transport_find(tdmi, service_id, 0, NULL);
+    if(t == NULL)
+      continue;
+
+    atsc_stype = ptr[27] & 0x3f;
+    if(atsc_stype != 0x02) {
+      /* Not TV */
+      continue;
+    }
+    
+    stype = ST_SDTV;
+    atsc_utf16_to_utf8(ptr, 7, chname, sizeof(chname));
+
+    if(t->tht_servicetype != stype ||
+       strcmp(t->tht_svcname ?: "", chname)) {
+
+      t->tht_servicetype = stype;
+      tvh_str_set(&t->tht_svcname, chname);
+      
+      t->tht_config_save(t);
+    }
+  }
+}
+
+
+
 
 /**
  * PMT - Program Mapping Table
@@ -1007,7 +1075,65 @@ dvb_pmt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
 
 /**
- * Setup FD + demux for default DVB tables that we want
+ * Demux for default DVB tables that we want
+ */
+static void
+dvb_table_add_default_dvb(th_dvb_mux_instance_t *tdmi)
+{
+  struct dmx_sct_filter_params *fp;
+
+  /* Network Information Table */
+
+  fp = dvb_fparams_alloc();
+  fp->filter.filter[0] = 0x40;
+  fp->filter.mask[0] = 0xff;
+  tdt_add(tdmi, fp, dvb_nit_callback, NULL, "nit", 
+	  TDT_QUICKREQ | TDT_CRC, 0x10, NULL);
+
+  /* Service Descriptor Table */
+
+  fp = dvb_fparams_alloc();
+  fp->filter.filter[0] = 0x42;
+  fp->filter.mask[0] = 0xff;
+  tdt_add(tdmi, fp, dvb_sdt_callback, NULL, "sdt", 
+	  TDT_QUICKREQ | TDT_CRC, 0x11, NULL);
+
+  /* Event Information table */
+
+  fp = dvb_fparams_alloc();
+  tdt_add(tdmi, fp, dvb_eit_callback, NULL, "eit", 
+	  TDT_CRC, 0x12, NULL);
+}
+
+
+/**
+ * Demux for default ATSC tables that we want
+ */
+static void
+dvb_table_add_default_atsc(th_dvb_mux_instance_t *tdmi)
+{
+  struct dmx_sct_filter_params *fp;
+  int tableid;
+
+  if(tdmi->tdmi_fe_params.u.vsb.modulation == VSB_8) {
+    tableid = 0xc8; // Terrestrial
+  } else {
+    tableid = 0xc9; // Cable
+  }
+
+  /* Virtual Channel Table */
+  fp = dvb_fparams_alloc();
+  fp->filter.filter[0] = tableid;
+  fp->filter.mask[0] = 0xff;
+  tdt_add(tdmi, fp, atsc_vct_callback, NULL, "vct",
+	  TDT_QUICKREQ | TDT_CRC, 0x1ffb, NULL);
+}
+
+
+
+
+/**
+ * Setup FD + demux for default tables that we want
  */
 void
 dvb_table_add_default(th_dvb_mux_instance_t *tdmi)
@@ -1032,27 +1158,20 @@ dvb_table_add_default(th_dvb_mux_instance_t *tdmi)
   tdt_add(tdmi, fp, dvb_cat_callback, NULL, "cat", 
 	  TDT_CRC, 1, NULL);
 
-  /* Network Information Table */
 
-  fp = dvb_fparams_alloc();
-  fp->filter.filter[0] = 0x40;
-  fp->filter.mask[0] = 0xff;
-  tdt_add(tdmi, fp, dvb_nit_callback, NULL, "nit", 
-	  TDT_QUICKREQ | TDT_CRC, 0x10, NULL);
+  switch(tdmi->tdmi_adapter->tda_type) {
+  case FE_QPSK:
+  case FE_OFDM:
+  case FE_QAM:
+    dvb_table_add_default_dvb(tdmi);
+    break;
 
-  /* Service Descriptor Table */
+  case FE_ATSC:
+    dvb_table_add_default_atsc(tdmi);
 
-  fp = dvb_fparams_alloc();
-  fp->filter.filter[0] = 0x42;
-  fp->filter.mask[0] = 0xff;
-  tdt_add(tdmi, fp, dvb_sdt_callback, NULL, "sdt", 
-	  TDT_QUICKREQ | TDT_CRC, 0x11, NULL);
 
-  /* Event Information table */
+  }
 
-  fp = dvb_fparams_alloc();
-  tdt_add(tdmi, fp, dvb_eit_callback, NULL, "eit", 
-	  TDT_CRC, 0x12, NULL);
 }
 
 

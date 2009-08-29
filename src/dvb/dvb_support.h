@@ -69,4 +69,6 @@ const char *dvb_mux_status(th_dvb_mux_instance_t *tdmi);
 void dvb_conversion_init(void);
 void dvb_mux_nicefreq(char *buf, size_t size, th_dvb_mux_instance_t *tdmi);
 
+void atsc_utf16_to_utf8(uint8_t *src, int len, char *buf, int buflen);
+
 #endif /* DVB_SUPPORT_H */
