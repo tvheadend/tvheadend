@@ -5,6 +5,8 @@ hts-tvheadend (2.6) hts; urgency=low
 
   * Add support for tuning on ATSC adapters
 
+  * Add support for sattelite beams with circular polarisation
+
 hts-tvheadend (2.5) hts; urgency=low
 
   * If a previosly detected DVB adapter was not present during startup,

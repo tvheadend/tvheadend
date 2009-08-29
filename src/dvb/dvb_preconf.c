@@ -79,6 +79,12 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, const struct mux *m, int num,
       case 'H':
 	polarisation = POLARISATION_HORIZONTAL;
 	break;
+      case 'L':
+	polarisation = POLARISATION_CIRCULAR_LEFT;
+	break;
+      case 'R':
+	polarisation = POLARISATION_CIRCULAR_RIGHT;
+	break;
       default:
 	abort();
       }

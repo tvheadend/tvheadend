@@ -323,6 +323,8 @@ static struct strtab hiertab[] = {
 static struct strtab poltab[] = {
   { "Vertical",      POLARISATION_VERTICAL },
   { "Horizontal",    POLARISATION_HORIZONTAL },
+  { "Left",          POLARISATION_CIRCULAR_LEFT },
+  { "Right",         POLARISATION_CIRCULAR_RIGHT },
 };
 
 

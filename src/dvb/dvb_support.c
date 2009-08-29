@@ -260,9 +260,11 @@ const char *
 dvb_polarisation_to_str(int pol)
 {
   switch(pol) {
-  case POLARISATION_VERTICAL:   return "V";
-  case POLARISATION_HORIZONTAL: return "H";
-  default:                      return "X";
+  case POLARISATION_VERTICAL:       return "V";
+  case POLARISATION_HORIZONTAL:     return "H";
+  case POLARISATION_CIRCULAR_LEFT:  return "L";
+  case POLARISATION_CIRCULAR_RIGHT: return "R";
+  default:                          return "X";
   }
 }
 
@@ -270,9 +272,11 @@ const char *
 dvb_polarisation_to_str_long(int pol)
 {
   switch(pol) {
-  case POLARISATION_VERTICAL:   return "Vertical";
-  case POLARISATION_HORIZONTAL: return "Horizontal";
-  default:                      return "??";
+  case POLARISATION_VERTICAL:        return "Vertical";
+  case POLARISATION_HORIZONTAL:      return "Horizontal";
+  case POLARISATION_CIRCULAR_LEFT:   return "Left";
+  case POLARISATION_CIRCULAR_RIGHT:  return "Right";
+  default:                           return "??";
   }
 }
 

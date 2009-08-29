@@ -223,7 +223,8 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 	
     diseqc_setup(tda->tda_fe_fd,
 		 port,
-		 tdmi->tdmi_polarisation == POLARISATION_HORIZONTAL,
+		 tdmi->tdmi_polarisation == POLARISATION_HORIZONTAL ||
+		 tdmi->tdmi_polarisation == POLARISATION_CIRCULAR_LEFT,
 		 hiband);
       
     usleep(50000);

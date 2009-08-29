@@ -662,8 +662,10 @@ dvb_fe_opts(th_dvb_adapter_t *tda, const char *which)
 
 
   if(!strcmp(which, "polarisations")) {
-    fe_opts_add(a, "Horizontal", POLARISATION_HORIZONTAL);
-    fe_opts_add(a, "Vertical",   POLARISATION_VERTICAL);
+    fe_opts_add(a, "Horizontal",     POLARISATION_HORIZONTAL);
+    fe_opts_add(a, "Vertical",       POLARISATION_VERTICAL);
+    fe_opts_add(a, "Circular left",  POLARISATION_CIRCULAR_LEFT);
+    fe_opts_add(a, "Circular right", POLARISATION_CIRCULAR_RIGHT);
     return a;
   }
 
