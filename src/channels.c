@@ -472,7 +472,8 @@ channel_set_xmltv_source(channel_t *ch, xmltv_channel_t *xc)
   }
   ch->ch_xc = xc;
 
-  tvh_str_update(&ch->ch_icon, xc->xc_icon);
+  if(xc != NULL)
+    tvh_str_update(&ch->ch_icon, xc->xc_icon);
 
   channel_save(ch);
 }

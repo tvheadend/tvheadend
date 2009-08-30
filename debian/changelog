@@ -7,6 +7,9 @@ hts-tvheadend (2.6) hts; urgency=low
 
   * Add support for sattelite beams with circular polarisation
 
+  * If a user changed the XMLTV source for a channel to 'None', tvheadend
+    would crash. This is now fixed.
+
 hts-tvheadend (2.5) hts; urgency=low
 
   * If a previosly detected DVB adapter was not present during startup,
