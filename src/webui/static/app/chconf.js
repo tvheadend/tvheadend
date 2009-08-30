@@ -13,6 +13,8 @@ tvheadend.channelTags = new Ext.data.JsonStore({
     }
 });
 
+tvheadend.channelTags.setDefaultSort('name', 'ASC');
+
 tvheadend.comet.on('channeltags', function(m) {
     if(m.reload != null)
         tvheadend.channelTags.reload();
