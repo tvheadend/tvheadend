@@ -90,7 +90,7 @@ satconf_destroy(th_dvb_adapter_t *tda, dvb_satconf_t *sc)
   th_dvb_mux_instance_t *tdmi;
 
   while((tdmi = LIST_FIRST(&sc->sc_tdmis)) != NULL) {
-    tdmi->tdmi_satconf = NULL;
+    tdmi->tdmi_conf.dmc_satconf = NULL;
     LIST_REMOVE(tdmi, tdmi_satconf_link);
   }
 

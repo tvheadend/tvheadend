@@ -32,7 +32,6 @@ TAILQ_HEAD(dvb_satconf_queue, dvb_satconf);
 /**
  * Satconf
  */
-
 typedef struct dvb_satconf {
   char *sc_id;
   TAILQ_ENTRY(dvb_satconf) sc_adapter_link;
@@ -56,6 +55,17 @@ enum polarisation {
 };
 
 #define DVB_FEC_ERROR_LIMIT 20
+
+
+/**
+ *
+ */
+typedef struct dvb_mux_conf {
+  struct dvb_frontend_parameters dmc_fe_params;
+  int dmc_polarisation;
+  dvb_satconf_t *dmc_satconf;
+
+} dvb_mux_conf_t;
 
 
 /**
@@ -102,8 +112,10 @@ typedef struct th_dvb_mux_instance {
   time_t tdmi_got_adapter;
   time_t tdmi_lost_adapter;
 
-  struct dvb_frontend_parameters tdmi_fe_params;
-  uint8_t tdmi_polarisation;  /* for DVB-S */
+  dvb_mux_conf_t tdmi_conf;
+
+  /* Linked if tdmi_conf.tmc_sc != NULL */
+  LIST_ENTRY(th_dvb_mux_instance) tdmi_satconf_link;
 
   uint16_t tdmi_transport_stream_id;
 
@@ -116,8 +128,6 @@ typedef struct th_dvb_mux_instance {
   TAILQ_ENTRY(th_dvb_mux_instance) tdmi_scan_link;
   struct th_dvb_mux_instance_queue *tdmi_scan_queue;
 
-  LIST_ENTRY(th_dvb_mux_instance) tdmi_satconf_link;
-  dvb_satconf_t *tdmi_satconf;
 
 } th_dvb_mux_instance_t;
 
@@ -220,8 +230,7 @@ void dvb_mux_load(th_dvb_adapter_t *tda);
 void dvb_mux_destroy(th_dvb_mux_instance_t *tdmi);
 
 th_dvb_mux_instance_t *dvb_mux_create(th_dvb_adapter_t *tda,
-				      struct dvb_frontend_parameters *fe_param,
-				      int polarisation, dvb_satconf_t *sc,
+				      const struct dvb_mux_conf *dmc,
 				      uint16_t tsid, const char *network,
 				      const char *logprefix, int enabled,
 				      const char *identifier);

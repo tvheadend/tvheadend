@@ -182,7 +182,7 @@ void
 dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-  struct dvb_frontend_parameters p = tdmi->tdmi_fe_params;
+  struct dvb_frontend_parameters p = tdmi->tdmi_conf.dmc_fe_params;
   char buf[256];
   int r;
   
@@ -205,14 +205,14 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 	
     /* DVB-S */
     dvb_satconf_t *sc;
-    int port, lowfreq, hifreq, switchfreq, hiband;
+    int port, lowfreq, hifreq, switchfreq, hiband, pol;
 
     lowfreq = 9750000;
     hifreq = 10600000;
     switchfreq = 11700000;
     port = 0;
 
-    if((sc = tdmi->tdmi_satconf) != NULL) {
+    if((sc = tdmi->tdmi_conf.dmc_satconf) != NULL) {
       port = sc->sc_port;
 
       if(sc->sc_lnb != NULL)
@@ -220,11 +220,12 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
     }
 
     hiband = switchfreq && p.frequency > switchfreq;
-	
+
+    pol = tdmi->tdmi_conf.dmc_polarisation;
     diseqc_setup(tda->tda_fe_fd,
 		 port,
-		 tdmi->tdmi_polarisation == POLARISATION_HORIZONTAL ||
-		 tdmi->tdmi_polarisation == POLARISATION_CIRCULAR_LEFT,
+		 pol == POLARISATION_HORIZONTAL ||
+		 pol == POLARISATION_CIRCULAR_LEFT,
 		 hiband);
       
     usleep(50000);

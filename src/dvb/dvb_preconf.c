@@ -42,48 +42,43 @@ static void
 dvb_mux_preconf_add(th_dvb_adapter_t *tda, const struct mux *m, int num,
 		    const char *source, const char *satconf)
 {
-  struct dvb_frontend_parameters f;
-  int i, polarisation;
-  dvb_satconf_t *sc;
-
-  sc = dvb_satconf_entry_find(tda, satconf, 0);
+  struct dvb_mux_conf dmc;
+  int i;
 
   for(i = 0; i < num; i++) {
 
-    polarisation = 0;
-
-    memset(&f, 0, sizeof(f));
+    memset(&dmc, 0, sizeof(dmc));
   
-    f.inversion = INVERSION_AUTO;
-    f.frequency = m->freq;
+    dmc.dmc_fe_params.inversion = INVERSION_AUTO;
+    dmc.dmc_fe_params.frequency = m->freq;
     
     switch(tda->tda_type) {
     case FE_OFDM:
-      f.u.ofdm.bandwidth             = m->bw;
-      f.u.ofdm.constellation         = m->constellation;
-      f.u.ofdm.transmission_mode     = m->tmode;
-      f.u.ofdm.guard_interval        = m->guard;
-      f.u.ofdm.hierarchy_information = m->hierarchy;
-      f.u.ofdm.code_rate_HP          = m->fechp;
-      f.u.ofdm.code_rate_LP          = m->feclp;
+      dmc.dmc_fe_params.u.ofdm.bandwidth             = m->bw;
+      dmc.dmc_fe_params.u.ofdm.constellation         = m->constellation;
+      dmc.dmc_fe_params.u.ofdm.transmission_mode     = m->tmode;
+      dmc.dmc_fe_params.u.ofdm.guard_interval        = m->guard;
+      dmc.dmc_fe_params.u.ofdm.hierarchy_information = m->hierarchy;
+      dmc.dmc_fe_params.u.ofdm.code_rate_HP          = m->fechp;
+      dmc.dmc_fe_params.u.ofdm.code_rate_LP          = m->feclp;
       break;
       
     case FE_QPSK:
-      f.u.qpsk.symbol_rate = m->symrate;
-      f.u.qpsk.fec_inner   = m->fec;
+      dmc.dmc_fe_params.u.qpsk.symbol_rate = m->symrate;
+      dmc.dmc_fe_params.u.qpsk.fec_inner   = m->fec;
 
       switch(m->polarisation) {
       case 'V':
-	polarisation = POLARISATION_VERTICAL;
+	dmc.dmc_polarisation = POLARISATION_VERTICAL;
 	break;
       case 'H':
-	polarisation = POLARISATION_HORIZONTAL;
+	dmc.dmc_polarisation = POLARISATION_HORIZONTAL;
 	break;
       case 'L':
-	polarisation = POLARISATION_CIRCULAR_LEFT;
+	dmc.dmc_polarisation = POLARISATION_CIRCULAR_LEFT;
 	break;
       case 'R':
-	polarisation = POLARISATION_CIRCULAR_RIGHT;
+	dmc.dmc_polarisation = POLARISATION_CIRCULAR_RIGHT;
 	break;
       default:
 	abort();
@@ -92,17 +87,19 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, const struct mux *m, int num,
       break;
 
     case FE_QAM:
-      f.u.qam.symbol_rate = m->symrate;
-      f.u.qam.modulation  = m->constellation;
-      f.u.qam.fec_inner   = m->fec;
+      dmc.dmc_fe_params.u.qam.symbol_rate = m->symrate;
+      dmc.dmc_fe_params.u.qam.modulation  = m->constellation;
+      dmc.dmc_fe_params.u.qam.fec_inner   = m->fec;
       break;
 
     case FE_ATSC:
-      f.u.vsb.modulation  = m->constellation;
+      dmc.dmc_fe_params.u.vsb.modulation  = m->constellation;
       break;
     }
+
+    dmc.dmc_satconf = dvb_satconf_entry_find(tda, satconf, 0);
       
-    dvb_mux_create(tda, &f, polarisation, sc, 0xffff, NULL, source, 1, NULL);
+    dvb_mux_create(tda, &dmc, 0xffff, NULL, source, 1, NULL);
     m++;
   }
 }

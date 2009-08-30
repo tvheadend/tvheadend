@@ -97,11 +97,52 @@ tdmi_global_cmp(th_dvb_mux_instance_t *a, th_dvb_mux_instance_t *b)
 
 
 /**
+ *
+ */
+static int
+tdmi_compare_key(const struct dvb_mux_conf *a,
+		 const struct dvb_mux_conf *b)
+{
+  return a->dmc_fe_params.frequency == b->dmc_fe_params.frequency &&
+    a->dmc_polarisation             == b->dmc_polarisation &&
+    a->dmc_satconf                  == b->dmc_satconf;
+}
+
+
+/**
+ * Return 0 if configuration does not differ. return 1 if it does
+ */
+static int
+tdmi_compare_conf(int adapter_type,
+		  const struct dvb_mux_conf *a,
+		  const struct dvb_mux_conf *b)
+{
+  switch(adapter_type) {
+  case FE_OFDM:
+    return memcmp(&a->dmc_fe_params.u.ofdm,
+		  &b->dmc_fe_params.u.ofdm,
+		  sizeof(a->dmc_fe_params.u.ofdm));
+  case FE_QAM:
+    return memcmp(&a->dmc_fe_params.u.qam,
+		  &b->dmc_fe_params.u.qam,
+		  sizeof(a->dmc_fe_params.u.qam));
+  case FE_ATSC:
+    return memcmp(&a->dmc_fe_params.u.vsb,
+		  &b->dmc_fe_params.u.vsb,
+		  sizeof(a->dmc_fe_params.u.vsb));
+  case FE_QPSK:
+    return memcmp(&a->dmc_fe_params.u.qpsk,
+		  &b->dmc_fe_params.u.qpsk,
+		  sizeof(a->dmc_fe_params.u.qpsk));
+  }
+  return 0;
+}
+
+/**
  * Create a new mux on the given adapter, return NULL if it already exists
  */
 th_dvb_mux_instance_t *
-dvb_mux_create(th_dvb_adapter_t *tda, struct dvb_frontend_parameters *fe_param,
-	       int polarisation, dvb_satconf_t *sc,
+dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
 	       uint16_t tsid, const char *network, const char *source,
 	       int enabled, const char *identifier)
 {
@@ -111,14 +152,26 @@ dvb_mux_create(th_dvb_adapter_t *tda, struct dvb_frontend_parameters *fe_param,
 
   lock_assert(&global_lock);
 
-  hash = (fe_param->frequency + polarisation) % TDA_MUX_HASH_WIDTH;
+  hash = (dmc->dmc_fe_params.frequency + 
+	  dmc->dmc_polarisation) % TDA_MUX_HASH_WIDTH;
   
   LIST_FOREACH(tdmi, &tda->tda_mux_hash[hash], tdmi_adapter_hash_link) {
-    if(tdmi->tdmi_fe_params.frequency == fe_param->frequency &&
-       tdmi->tdmi_polarisation        == polarisation &&
-       tdmi->tdmi_satconf             == sc)
-    /* Mux already exist */
-      return NULL;
+    if(tdmi_compare_key(&tdmi->tdmi_conf, dmc))
+      break; /* Mux already exist */
+  }
+
+  if(tdmi != NULL) {
+    /* Update stuff ... */
+
+    if(!tdmi_compare_conf(tda->tda_type, &tdmi->tdmi_conf, dmc))
+      return NULL; // Nothings changed
+
+    dvb_mux_save(tdmi);
+
+    dvb_mux_nicename(buf, sizeof(buf), tdmi);
+    tvhlog(LOG_NOTICE, "dvb", "Mux \"%s\" updated by %s", buf, source);
+    dvb_mux_notify(tdmi);
+    return NULL;
   }
 
   tdmi = calloc(1, sizeof(th_dvb_mux_instance_t));
@@ -128,13 +181,14 @@ dvb_mux_create(th_dvb_adapter_t *tda, struct dvb_frontend_parameters *fe_param,
     
     if(tda->tda_sat)
       snprintf(qpsktxt, sizeof(qpsktxt), "_%s",
-	       dvb_polarisation_to_str(polarisation));
+	       dvb_polarisation_to_str(dmc->dmc_polarisation));
     else
       qpsktxt[0] = 0;
     
     snprintf(buf, sizeof(buf), "%s%d%s%s%s", 
-	     tda->tda_identifier,fe_param->frequency, qpsktxt,
-	     sc ? "_satconf_" : "", sc ? sc->sc_id : "");
+	     tda->tda_identifier, dmc->dmc_fe_params.frequency, qpsktxt,
+	     dmc->dmc_satconf ? "_satconf_" : "", 
+	     dmc->dmc_satconf ? dmc->dmc_satconf->sc_id : "");
     
     tdmi->tdmi_identifier = strdup(buf);
   } else {
@@ -166,13 +220,10 @@ dvb_mux_create(th_dvb_adapter_t *tda, struct dvb_frontend_parameters *fe_param,
   tdmi->tdmi_quality = 100;
 
 
-  memcpy(&tdmi->tdmi_fe_params, fe_param, 
-	 sizeof(struct dvb_frontend_parameters));
-  tdmi->tdmi_polarisation = polarisation;
-
-  if(sc != NULL) {
-    tdmi->tdmi_satconf = sc;
-    LIST_INSERT_HEAD(&sc->sc_tdmis, tdmi, tdmi_satconf_link);
+  memcpy(&tdmi->tdmi_conf, dmc, sizeof(struct dvb_mux_conf));
+  if(tdmi->tdmi_conf.dmc_satconf != NULL) {
+    LIST_INSERT_HEAD(&tdmi->tdmi_conf.dmc_satconf->sc_tdmis, 
+		     tdmi, tdmi_satconf_link);
   }
 
   LIST_INSERT_HEAD(&tda->tda_mux_hash[hash], tdmi, tdmi_adapter_hash_link);
@@ -224,7 +275,7 @@ dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
   if(tda->tda_mux_current == tdmi)
     dvb_fe_stop(tda->tda_mux_current);
 
-  if(tdmi->tdmi_satconf != NULL)
+  if(tdmi->tdmi_conf.dmc_satconf != NULL)
     LIST_REMOVE(tdmi, tdmi_satconf_link);
 
   RB_REMOVE(&dvb_muxes, tdmi, tdmi_global_link);
@@ -334,7 +385,7 @@ static struct strtab poltab[] = {
 void
 dvb_mux_save(th_dvb_mux_instance_t *tdmi)
 {
-  struct dvb_frontend_parameters *f = &tdmi->tdmi_fe_params;
+  struct dvb_frontend_parameters *f = &tdmi->tdmi_conf.dmc_fe_params;
 
   htsmsg_t *m = htsmsg_create_map();
 
@@ -354,52 +405,52 @@ dvb_mux_save(th_dvb_mux_instance_t *tdmi)
 		   val2str(f->u.ofdm.bandwidth, bwtab));
 
     htsmsg_add_str(m, "constellation", 
-	    val2str(f->u.ofdm.constellation, qamtab));
+		   val2str(f->u.ofdm.constellation, qamtab));
 
     htsmsg_add_str(m, "transmission_mode", 
-	    val2str(f->u.ofdm.transmission_mode, modetab));
+		   val2str(f->u.ofdm.transmission_mode, modetab));
 
     htsmsg_add_str(m, "guard_interval", 
-	    val2str(f->u.ofdm.guard_interval, guardtab));
+		   val2str(f->u.ofdm.guard_interval, guardtab));
 
     htsmsg_add_str(m, "hierarchy", 
-	    val2str(f->u.ofdm.hierarchy_information, hiertab));
+		   val2str(f->u.ofdm.hierarchy_information, hiertab));
 
     htsmsg_add_str(m, "fec_hi", 
-	    val2str(f->u.ofdm.code_rate_HP, fectab));
+		   val2str(f->u.ofdm.code_rate_HP, fectab));
 
     htsmsg_add_str(m, "fec_lo", 
-	    val2str(f->u.ofdm.code_rate_LP, fectab));
+		   val2str(f->u.ofdm.code_rate_LP, fectab));
     break;
 
   case FE_QPSK:
     htsmsg_add_u32(m, "symbol_rate", f->u.qpsk.symbol_rate);
 
     htsmsg_add_str(m, "fec", 
-	    val2str(f->u.qpsk.fec_inner, fectab));
+		   val2str(f->u.qpsk.fec_inner, fectab));
 
     htsmsg_add_str(m, "polarisation", 
-	    val2str(tdmi->tdmi_polarisation, poltab));
-     break;
+		   val2str(tdmi->tdmi_conf.dmc_polarisation, poltab));
+    break;
 
   case FE_QAM:
     htsmsg_add_u32(m, "symbol_rate", f->u.qam.symbol_rate);
 
     htsmsg_add_str(m, "fec", 
-	    val2str(f->u.qam.fec_inner, fectab));
+		   val2str(f->u.qam.fec_inner, fectab));
 
     htsmsg_add_str(m, "constellation", 
-	    val2str(f->u.qam.modulation, qamtab));
+		   val2str(f->u.qam.modulation, qamtab));
     break;
 
   case FE_ATSC:
     htsmsg_add_str(m, "constellation", 
-	    val2str(f->u.vsb.modulation, qamtab));
+		   val2str(f->u.vsb.modulation, qamtab));
     break;
   }
 
-  if(tdmi->tdmi_satconf != NULL)
-    htsmsg_add_str(m, "satconf", tdmi->tdmi_satconf->sc_id);
+  if(tdmi->tdmi_conf.dmc_satconf != NULL)
+    htsmsg_add_str(m, "satconf", tdmi->tdmi_conf.dmc_satconf->sc_id);
 
   hts_settings_save(m, "dvbmuxes/%s/%s", 
 		    tdmi->tdmi_adapter->tda_identifier, tdmi->tdmi_identifier);
@@ -414,17 +465,17 @@ static const char *
 tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
 {
   th_dvb_mux_instance_t *tdmi;
-  struct dvb_frontend_parameters f;
+  struct dvb_mux_conf dmc;
   const char *s;
   int r;
   int polarisation = 0;
   unsigned int tsid, u32, enabled;
   dvb_satconf_t *sc;
 
-  memset(&f, 0, sizeof(f));
+  memset(&dmc, 0, sizeof(dmc));
   
-  f.inversion = INVERSION_AUTO;
-  htsmsg_get_u32(m, "frequency", &f.frequency);
+  dmc.dmc_fe_params.inversion = INVERSION_AUTO;
+  htsmsg_get_u32(m, "frequency", &dmc.dmc_fe_params.frequency);
 
 
   switch(tda->tda_type) {
@@ -432,48 +483,48 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
     s = htsmsg_get_str(m, "bandwidth");
     if(s == NULL || (r = str2val(s, bwtab)) < 0)
       return "Invalid bandwidth";
-    f.u.ofdm.bandwidth = r;
+    dmc.dmc_fe_params.u.ofdm.bandwidth = r;
 
     s = htsmsg_get_str(m, "constellation");
     if(s == NULL || (r = str2val(s, qamtab)) < 0)
       return "Invalid QAM constellation";
-    f.u.ofdm.constellation = r;
+    dmc.dmc_fe_params.u.ofdm.constellation = r;
 
     s = htsmsg_get_str(m, "transmission_mode");
     if(s == NULL || (r = str2val(s, modetab)) < 0)
       return "Invalid transmission mode";
-    f.u.ofdm.transmission_mode = r;
+    dmc.dmc_fe_params.u.ofdm.transmission_mode = r;
 
     s = htsmsg_get_str(m, "guard_interval");
     if(s == NULL || (r = str2val(s, guardtab)) < 0)
       return "Invalid guard interval";
-    f.u.ofdm.guard_interval = r;
+    dmc.dmc_fe_params.u.ofdm.guard_interval = r;
 
     s = htsmsg_get_str(m, "hierarchy");
     if(s == NULL || (r = str2val(s, hiertab)) < 0)
       return "Invalid heirarchy information";
-    f.u.ofdm.hierarchy_information = r;
+    dmc.dmc_fe_params.u.ofdm.hierarchy_information = r;
 
     s = htsmsg_get_str(m, "fec_hi");
     if(s == NULL || (r = str2val(s, fectab)) < 0)
       return "Invalid hi-FEC";
-    f.u.ofdm.code_rate_HP = r;
+    dmc.dmc_fe_params.u.ofdm.code_rate_HP = r;
 
     s = htsmsg_get_str(m, "fec_lo");
     if(s == NULL || (r = str2val(s, fectab)) < 0)
       return "Invalid lo-FEC";
-    f.u.ofdm.code_rate_LP = r;
+    dmc.dmc_fe_params.u.ofdm.code_rate_LP = r;
     break;
 
   case FE_QPSK:
-    htsmsg_get_u32(m, "symbol_rate", &f.u.qpsk.symbol_rate);
-    if(f.u.qpsk.symbol_rate == 0)
+    htsmsg_get_u32(m, "symbol_rate", &dmc.dmc_fe_params.u.qpsk.symbol_rate);
+    if(dmc.dmc_fe_params.u.qpsk.symbol_rate == 0)
       return "Invalid symbol rate";
     
     s = htsmsg_get_str(m, "fec");
     if(s == NULL || (r = str2val(s, fectab)) < 0)
       return "Invalid FEC";
-    f.u.qpsk.fec_inner = r;
+    dmc.dmc_fe_params.u.qpsk.fec_inner = r;
 
     s = htsmsg_get_str(m, "polarisation");
     if(s == NULL || (r = str2val(s, poltab)) < 0)
@@ -482,26 +533,26 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
     break;
 
   case FE_QAM:
-    htsmsg_get_u32(m, "symbol_rate", &f.u.qam.symbol_rate);
-    if(f.u.qam.symbol_rate == 0)
+    htsmsg_get_u32(m, "symbol_rate", &dmc.dmc_fe_params.u.qam.symbol_rate);
+    if(dmc.dmc_fe_params.u.qam.symbol_rate == 0)
       return "Invalid symbol rate";
     
     s = htsmsg_get_str(m, "constellation");
     if(s == NULL || (r = str2val(s, qamtab)) < 0)
       return "Invalid QAM constellation";
-    f.u.qam.modulation = r;
+    dmc.dmc_fe_params.u.qam.modulation = r;
 
     s = htsmsg_get_str(m, "fec");
     if(s == NULL || (r = str2val(s, fectab)) < 0)
       return "Invalid FEC";
-    f.u.qam.fec_inner = r;
+    dmc.dmc_fe_params.u.qam.fec_inner = r;
     break;
 
   case FE_ATSC:
     s = htsmsg_get_str(m, "constellation");
     if(s == NULL || (r = str2val(s, qamtab)) < 0)
       return "Invalid VSB constellation";
-    f.u.vsb.modulation = r;
+    dmc.dmc_fe_params.u.vsb.modulation = r;
 
     break;
   }
@@ -517,7 +568,7 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
   else
     sc = NULL;
 
-  tdmi = dvb_mux_create(tda, &f, polarisation, sc,
+  tdmi = dvb_mux_create(tda, &dmc,
 			tsid, htsmsg_get_str(m, "network"), NULL, enabled,
 			identifier);
   if(tdmi != NULL) {
@@ -635,7 +686,7 @@ dvb_mux_set_enable(th_dvb_mux_instance_t *tdmi, int enabled)
 static void
 dvb_mux_modulation(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
 {
-  struct dvb_frontend_parameters *f = &tdmi->tdmi_fe_params;
+  struct dvb_frontend_parameters *f = &tdmi->tdmi_conf.dmc_fe_params;
 
   switch(tdmi->tdmi_adapter->tda_type) {
   case FE_OFDM:
@@ -685,10 +736,10 @@ dvb_mux_build_msg(th_dvb_mux_instance_t *tdmi)
   htsmsg_add_str(m, "mod",  buf);
 
   htsmsg_add_str(m, "pol", 
-		 dvb_polarisation_to_str_long(tdmi->tdmi_polarisation));
+		 dvb_polarisation_to_str_long(tdmi->tdmi_conf.dmc_polarisation));
 
-  if(tdmi->tdmi_satconf != NULL)
-    htsmsg_add_str(m, "satconf", tdmi->tdmi_satconf->sc_id);
+  if(tdmi->tdmi_conf.dmc_satconf != NULL)
+    htsmsg_add_str(m, "satconf", tdmi->tdmi_conf.dmc_satconf->sc_id);
 
   if(tdmi->tdmi_transport_stream_id != 0xffff)
     htsmsg_add_u32(m, "muxid", tdmi->tdmi_transport_stream_id);
@@ -726,17 +777,15 @@ dvb_mux_add_by_params(th_dvb_adapter_t *tda,
 		      int polarisation,
 		      const char *satconf)
 {
-  dvb_satconf_t *sc;
-  struct dvb_frontend_parameters f;
   th_dvb_mux_instance_t *tdmi;
+  struct dvb_mux_conf dmc;
 
-  memset(&f, 0, sizeof(f));
-  
-  f.inversion = INVERSION_AUTO;
+  memset(&dmc, 0, sizeof(dmc));
+  dmc.dmc_fe_params.inversion = INVERSION_AUTO;
    
   switch(tda->tda_type) {
   case FE_OFDM:
-    f.frequency = freq * 1000;
+    dmc.dmc_fe_params.frequency = freq * 1000;
     if(!val2str(bw,            bwtab))
       return "Invalid bandwidth";
 
@@ -758,18 +807,18 @@ dvb_mux_add_by_params(th_dvb_adapter_t *tda,
     if(!val2str(feclo,         fectab))
       return "Invalid FEC Lo";
 
-    f.u.ofdm.bandwidth             = bw;
-    f.u.ofdm.constellation         = constellation;
-    f.u.ofdm.transmission_mode     = tmode;
-    f.u.ofdm.guard_interval        = guard;
-    f.u.ofdm.hierarchy_information = hier;
-    f.u.ofdm.code_rate_HP          = fechi;
-    f.u.ofdm.code_rate_LP          = feclo;
+    dmc.dmc_fe_params.u.ofdm.bandwidth             = bw;
+    dmc.dmc_fe_params.u.ofdm.constellation         = constellation;
+    dmc.dmc_fe_params.u.ofdm.transmission_mode     = tmode;
+    dmc.dmc_fe_params.u.ofdm.guard_interval        = guard;
+    dmc.dmc_fe_params.u.ofdm.hierarchy_information = hier;
+    dmc.dmc_fe_params.u.ofdm.code_rate_HP          = fechi;
+    dmc.dmc_fe_params.u.ofdm.code_rate_LP          = feclo;
     polarisation = 0;
     break;
 
   case FE_QAM:
-    f.frequency = freq * 1000;
+    dmc.dmc_fe_params.frequency = freq * 1000;
 
     if(!val2str(constellation, qamtab))
       return "Invalid QAM constellation";
@@ -777,14 +826,14 @@ dvb_mux_add_by_params(th_dvb_adapter_t *tda,
     if(!val2str(fec,           fectab))
       return "Invalid FEC";
 
-    f.u.qam.symbol_rate = symrate;
-    f.u.qam.modulation  = constellation;
-    f.u.qam.fec_inner   = fec;
+    dmc.dmc_fe_params.u.qam.symbol_rate = symrate;
+    dmc.dmc_fe_params.u.qam.modulation  = constellation;
+    dmc.dmc_fe_params.u.qam.fec_inner   = fec;
     polarisation = 0;
     break;
 
   case FE_QPSK:
-    f.frequency = freq;
+    dmc.dmc_fe_params.frequency = freq;
 
     if(!val2str(fec,          fectab))
       return "Invalid FEC";
@@ -792,31 +841,31 @@ dvb_mux_add_by_params(th_dvb_adapter_t *tda,
     if(!val2str(polarisation, poltab))
       return "Invalid polarisation";
 
-    f.u.qpsk.symbol_rate = symrate;
-    f.u.qpsk.fec_inner   = fec;
+    dmc.dmc_fe_params.u.qpsk.symbol_rate = symrate;
+    dmc.dmc_fe_params.u.qpsk.fec_inner   = fec;
     break;
 
   case FE_ATSC:
-    f.frequency = freq;
+    dmc.dmc_fe_params.frequency = freq;
 
     if(!val2str(constellation, qamtab))
       return "Invalid VSB constellation";
 
-    f.u.vsb.modulation = constellation;
+    dmc.dmc_fe_params.u.vsb.modulation = constellation;
     break;
 
   }
 
   if(satconf != NULL) {
-    sc = dvb_satconf_entry_find(tda, satconf, 0);
-    if(sc == NULL)
+    dmc.dmc_satconf = dvb_satconf_entry_find(tda, satconf, 0);
+    if(dmc.dmc_satconf == NULL)
       return "Satellite configuration not found";
   } else {
-    sc = NULL;
+    dmc.dmc_satconf = NULL;
   }
+  dmc.dmc_polarisation = polarisation;
 
-  tdmi = dvb_mux_create(tda, &f, polarisation, sc, 
-			0xffff, NULL, NULL, 1, NULL);
+  tdmi = dvb_mux_create(tda, &dmc, 0xffff, NULL, NULL, 1, NULL);
 
   if(tdmi == NULL)
     return "Mux already exist";

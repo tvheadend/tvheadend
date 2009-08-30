@@ -370,9 +370,7 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
   LIST_FOREACH(tdmi_src, &src->tda_muxes, tdmi_adapter_link) {
 
     tdmi_dst = dvb_mux_create(dst, 
-			      &tdmi_src->tdmi_fe_params,
-			      tdmi_src->tdmi_polarisation, 
-			      tdmi_src->tdmi_satconf,
+			      &tdmi_src->tdmi_conf,
 			      tdmi_src->tdmi_transport_stream_id,
 			      tdmi_src->tdmi_network,
 			      "copy operation", tdmi_src->tdmi_enabled,
