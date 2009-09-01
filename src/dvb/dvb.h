@@ -262,6 +262,8 @@ const char *dvb_mux_add_by_params(th_dvb_adapter_t *tda,
 				  int polarisation,
 				  const char *satconf);
 
+int dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src);
+
 /**
  * DVB Transport (aka DVB service)
  */

@@ -194,6 +194,78 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 	    })
 	}
     }
+
+
+     function copySelected() {
+
+	 function doCopy() {
+	     var selectedKeys = grid.selModel.selections.keys;
+	     var target = panel.getForm().getValues('targetID').targetID;
+
+	     Ext.Ajax.request({
+		 url: "dvb/copymux/" + target,
+		 params: {
+		     entries:Ext.encode(selectedKeys)
+		 },
+		failure:function(response,options) {
+		    Ext.MessageBox.alert('Server Error','Unable to copy');
+		},
+		 success: function() {
+		     win.close();
+		 }
+	     });
+	 }
+
+	 targetStore = new Ext.data.JsonStore({
+	     root:'entries',
+	     id: 'identifier',
+	     url:'dvb/adapter',
+	     fields: ['identifier', 
+		      'name'],
+	     baseParams: {sibling: adapterId}
+	 });
+
+	 var panel = new Ext.FormPanel({
+	     frame:true,
+	     border:true,
+	     bodyStyle:'padding:5px',
+	     labelAlign: 'right',
+	     labelWidth: 110,
+	     defaultType: 'textfield',
+	     items: [
+
+		 new Ext.form.ComboBox({
+		     store: targetStore,
+		     fieldLabel: 'Target adapter',
+		     name: 'targetadapter',
+		     hiddenName: 'targetID',
+		     editable: false,
+		     allowBlank: false,
+		     triggerAction: 'all',
+		     mode: 'remote',
+		     displayField:'name',
+		     valueField:'identifier',
+		     emptyText: 'Select target adapter...'
+		 })
+	     ],
+	     buttons: [{
+		 text: 'Copy',
+		 handler: doCopy
+             }]
+	 });
+
+	 win = new Ext.Window({
+	     title: 'Copy multiplex configuration',
+             layout: 'fit',
+             width: 500,
+             height: 120,
+	     modal: true,
+             plain: true,
+             items: panel
+	 });
+	 win.show();
+     }
+ 
  
     function saveChanges() {
 	var mr = store.getModifiedRecords();
@@ -226,13 +298,22 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
     var delBtn = new Ext.Toolbar.Button({
 	tooltip: 'Delete one or more selected muxes',
 	iconCls:'remove',
-	text: 'Delete selected',
+	text: 'Delete selected...',
 	handler: delSelected,
+	disabled: true
+    });
+
+    var copyBtn = new Ext.Toolbar.Button({
+	tooltip: 'Copy selected multiplexes to other adapter',
+	iconCls:'clone',
+	text: 'Copy to other adapter...',
+	handler: copySelected,
 	disabled: true
     });
 
     selModel.on('selectionchange', function(s) {
 	delBtn.setDisabled(s.getCount() == 0);
+	copyBtn.setDisabled(s.getCount() == 0);
     });
 
     var saveBtn = new Ext.Toolbar.Button({
@@ -263,8 +344,8 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
         viewConfig: {forceFit:true},
 	selModel: selModel,
 	tbar: [
-	    delBtn, '-', saveBtn, rejectBtn, '-', {
-		text: 'Add mux(es) manually',
+	    delBtn, copyBtn, '-', saveBtn, rejectBtn, '-', {
+		text: 'Add mux(es) manually...',
 		iconCls:'add',
 		handler: function() {
 		    tvheadend.addMuxManually(adapterData, satConfStore)

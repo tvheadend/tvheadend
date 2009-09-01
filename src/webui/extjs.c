@@ -946,9 +946,10 @@ static int
 extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
-  th_dvb_adapter_t *tda;
+  th_dvb_adapter_t *tda, *ref;
   htsmsg_t *out, *array, *r;
   const char *op = http_arg_get(&hc->hc_req_args, "op");
+  const char *sibling = http_arg_get(&hc->hc_req_args, "sibling");
   const char *s, *sc;
   th_dvb_mux_instance_t *tdmi;
   th_transport_t *t;
@@ -958,11 +959,14 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
   if(remain == NULL) {
     /* Just list all adapters */
 
+    ref = sibling != NULL ? dvb_adapter_find_by_identifier(sibling) : NULL;
+
     array = htsmsg_create_list();
 
-    TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link)
-      htsmsg_add_msg(array, NULL, dvb_adapter_build_msg(tda));
-
+    TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
+      if(ref == NULL || (ref != tda && ref->tda_type == tda->tda_type))
+	htsmsg_add_msg(array, NULL, dvb_adapter_build_msg(tda));
+    }
     pthread_mutex_unlock(&global_lock);
     out = htsmsg_create_map();
     htsmsg_add_msg(out, "entries", array);
@@ -1508,6 +1512,62 @@ extjs_dvb_addmux(http_connection_t *hc, const char *remain, void *opaque)
  *
  */
 static int
+extjs_dvb_copymux(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsmsg_t *out;
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  th_dvb_adapter_t *tda;
+  htsmsg_t *in;
+  const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
+  const char *id;
+  htsmsg_field_t *f;
+  th_dvb_mux_instance_t *tdmi;
+
+  in = entries != NULL ? htsmsg_json_deserialize(entries) : NULL;
+
+  if(in == NULL)
+    return 400;
+
+  pthread_mutex_lock(&global_lock);
+ 
+  if(remain == NULL ||
+     (tda = dvb_adapter_find_by_identifier(remain)) == NULL) {
+    pthread_mutex_unlock(&global_lock);
+    return 404;
+  }
+
+
+  TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
+    if((id = htsmsg_field_get_string(f)) != NULL &&
+       (tdmi = dvb_mux_find_by_identifier(id)) != NULL &&
+       tda != tdmi->tdmi_adapter) {
+
+      if(dvb_mux_copy(tda, tdmi)) {
+	char buf[100];
+	dvb_mux_nicename(buf, sizeof(buf), tdmi);
+
+	tvhlog(LOG_NOTICE, "DVB", 
+	       "Skipped copy of mux %s to adapter %s, mux already exist",
+	       buf, tda->tda_displayname);
+      }
+    }
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  out = htsmsg_create_map();
+  htsmsg_json_serialize(out, hq, 0);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  htsmsg_destroy(out);
+
+  return 0;
+}
+
+
+/**
+ *
+ */
+static int
 extjs_mergechannel(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
@@ -1736,6 +1796,9 @@ extjs_start(void)
 
   http_path_add("/dvb/addmux", 
 		NULL, extjs_dvb_addmux, ACCESS_ADMIN);
+
+  http_path_add("/dvb/copymux", 
+		NULL, extjs_dvb_copymux, ACCESS_ADMIN);
 
   http_path_add("/iptv/services", 
 		NULL, extjs_iptvservices, ACCESS_ADMIN);

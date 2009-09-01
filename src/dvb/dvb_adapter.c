@@ -359,68 +359,18 @@ void
 dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
 {
   th_dvb_mux_instance_t *tdmi_src, *tdmi_dst;
-  th_transport_t *t_src, *t_dst;
-  th_stream_t *st_src, *st_dst;
 
   lock_assert(&global_lock);
 
   while((tdmi_dst = LIST_FIRST(&dst->tda_muxes)) != NULL)
     dvb_mux_destroy(tdmi_dst);
 
-  LIST_FOREACH(tdmi_src, &src->tda_muxes, tdmi_adapter_link) {
+  LIST_FOREACH(tdmi_src, &src->tda_muxes, tdmi_adapter_link)
+    dvb_mux_copy(dst, tdmi_src);
 
-    tdmi_dst = dvb_mux_create(dst, 
-			      &tdmi_src->tdmi_conf,
-			      tdmi_src->tdmi_transport_stream_id,
-			      tdmi_src->tdmi_network,
-			      "copy operation", tdmi_src->tdmi_enabled,
-			      NULL);
-
-
-    assert(tdmi_dst != NULL);
-
-    LIST_FOREACH(t_src, &tdmi_src->tdmi_transports, tht_group_link) {
-      t_dst = dvb_transport_find(tdmi_dst, 
-				 t_src->tht_dvb_service_id,
-				 t_src->tht_pmt_pid, NULL);
-
-      t_dst->tht_pcr_pid     = t_src->tht_pcr_pid;
-      t_dst->tht_enabled     = t_src->tht_enabled;
-      t_dst->tht_servicetype = t_src->tht_servicetype;
-      t_dst->tht_scrambled   = t_src->tht_scrambled;
-
-      if(t_src->tht_provider != NULL)
-	t_dst->tht_provider    = strdup(t_src->tht_provider);
-
-      if(t_src->tht_svcname != NULL)
-	t_dst->tht_svcname = strdup(t_src->tht_svcname);
-
-      if(t_src->tht_ch != NULL)
-	transport_map_channel(t_dst, t_src->tht_ch, 0);
-
-      pthread_mutex_lock(&t_src->tht_stream_mutex);
-
-      LIST_FOREACH(st_src, &t_src->tht_components, st_link) {
-
-	st_dst = transport_stream_create(t_dst, 
-					 st_src->st_pid,
-					 st_src->st_type);
-	
-	st_dst->st_tb = (AVRational){1, 90000};
-	
-	memcpy(st_dst->st_lang, st_src->st_lang, 4);
-	st_dst->st_frame_duration = st_src->st_frame_duration;
-	st_dst->st_caid           = st_src->st_caid;
-      }
-
-      pthread_mutex_unlock(&t_src->tht_stream_mutex);
-      t_dst->tht_config_save(t_dst); // Save config
-
-    }
-    dvb_mux_save(tdmi_dst);
-  }
   tda_save(dst);
 }
+
 
 /**
  * 
