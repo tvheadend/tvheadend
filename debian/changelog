@@ -10,6 +10,9 @@ hts-tvheadend (2.6) hts; urgency=low
   * If a user changed the XMLTV source for a channel to 'None', tvheadend
     would crash. This is now fixed.
 
+  * Add support for copying a selection of muxes from one DVB adapter to
+    another in the web UI.
+
 hts-tvheadend (2.5) hts; urgency=low
 
   * If a previosly detected DVB adapter was not present during startup,
