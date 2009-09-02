@@ -13,6 +13,8 @@ hts-tvheadend (2.6) hts; urgency=low
   * Add support for copying a selection of muxes from one DVB adapter to
     another in the web UI.
 
+  * Support for DVB-S2 has been added
+
 hts-tvheadend (2.5) hts; urgency=low
 
   * If a previosly detected DVB adapter was not present during startup,
