@@ -109,12 +109,23 @@ tvheadend.epg = function() {
        }
     } 
 
+    function renderTitle(value, meta, record, rowIndex, colIndex, store){
+        var now = new Date;
+        var start = record.get('start');
+
+        if(now.getTime() > start.getTime()){
+            meta.attr = 'style="font-weight:bold;"';
+        }
+        return value;
+    }
+
     var epgCm = new Ext.grid.ColumnModel([
 	{
 	    width: 250,
 	    id:'title',
 	    header: "Title",
-	    dataIndex: 'title'
+	    dataIndex: 'title',
+	    renderer: renderTitle
 	},{
 	    width: 100,
 	    id:'start',
