@@ -174,6 +174,48 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi)
 }
 
 
+static int check_frontend (int fe_fd, int dvr, int human_readable) {
+  (void)dvr;
+  fe_status_t status;
+  uint16_t snr, signal;
+  uint32_t ber, uncorrected_blocks;
+  int timeout = 0;
+
+  do {
+    if (ioctl(fe_fd, FE_READ_STATUS, &status) == -1)
+      perror("FE_READ_STATUS failed");
+    /* some frontends might not support all these ioctls, thus we
+     * avoid printing errors
+     */
+    if (ioctl(fe_fd, FE_READ_SIGNAL_STRENGTH, &signal) == -1)
+      signal = -2;
+    if (ioctl(fe_fd, FE_READ_SNR, &snr) == -1)
+      snr = -2;
+    if (ioctl(fe_fd, FE_READ_BER, &ber) == -1)
+      ber = -2;
+    if (ioctl(fe_fd, FE_READ_UNCORRECTED_BLOCKS, &uncorrected_blocks) == -1)
+      uncorrected_blocks = -2;
+
+    if (human_readable) {
+      printf ("status %02x | signal %3u%% | snr %3u%% | ber %d | unc %d | ",
+          status, (signal * 100) / 0xffff, (snr * 100) / 0xffff, ber, uncorrected_blocks);
+    } else {
+      printf ("status %02x | signal %04x | snr %04x | ber %08x | unc %08x | ",
+          status, signal, snr, ber, uncorrected_blocks);
+    }
+    if (status & FE_HAS_LOCK)
+      printf("FE_HAS_LOCK");
+    printf("\n");
+
+    if ((status & FE_HAS_LOCK) || (++timeout >= 10))
+      break;
+
+    usleep(1000000);
+  } while (1);
+
+  return 0;
+}
+
 
 /**
  *
@@ -245,12 +287,62 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 	     "dvb", "\"%s\" tuning to \"%s\" (%s)", tda->tda_rootpath, buf,
 	     reason);
 
-  r = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, &p);
+  if (tda->tda_type == FE_QPSK) {
+    struct dtv_property clear_p[] = {
+      { .cmd = DTV_CLEAR },
+    };
+
+    struct dtv_properties clear_cmdseq = {
+      .num = 1,
+      .props = clear_p
+    };
+
+    if ((ioctl(tda->tda_fe_fd, FE_SET_PROPERTY, &clear_cmdseq)) != 0) {
+      perror("FE_SET_PROPERTY DTV_CLEAR failed");
+      return;
+    }
+    struct dvb_frontend_event ev;
+
+    /* Support for legacy satellite tune, with the new API. */
+    struct dtv_property _dvbs_cmdargs[] = {
+      { .cmd = DTV_DELIVERY_SYSTEM, .u.data = tdmi->tdmi_conf.dmc_fe_delsys },
+      { .cmd = DTV_FREQUENCY,       .u.data = p.frequency },
+      { .cmd = DTV_MODULATION,      .u.data = tdmi->tdmi_conf.dmc_fe_modulation },
+      { .cmd = DTV_SYMBOL_RATE,     .u.data = p.u.qpsk.symbol_rate },
+      { .cmd = DTV_INNER_FEC,       .u.data = p.u.qpsk.fec_inner },
+      { .cmd = DTV_INVERSION,       .u.data = INVERSION_AUTO },
+      { .cmd = DTV_ROLLOFF,         .u.data = tdmi->tdmi_conf.dmc_fe_rolloff },
+      { .cmd = DTV_PILOT,           .u.data = PILOT_AUTO },
+      { .cmd = DTV_TUNE },
+    };
+
+    struct dtv_properties _dvbs_cmdseq = {
+      .num = 9,
+      .props = _dvbs_cmdargs
+    };
+
+    /* discard stale QPSK events */
+    while (1) {
+      if (ioctl(tda->tda_fe_fd, FE_GET_EVENT, &ev) == -1)
+      break;
+    }
+
+    tvhlog(LOG_INFO, 
+        "dvb", "tuning via s2api to %s, freq %d, symbolrate %d, fec %d, sys %d, mod %d",
+        buf, p.frequency, p.u.qpsk.symbol_rate, p.u.qpsk.fec_inner, tdmi->tdmi_conf.dmc_fe_delsys, 
+        tdmi->tdmi_conf.dmc_fe_modulation);
+    r = ioctl(tda->tda_fe_fd, FE_SET_PROPERTY, &_dvbs_cmdseq);
+
+    if(0)
+      check_frontend (tda->tda_fe_fd, 0, 1);
+  } else 
+    r = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, &p);
+
   if(r != 0) {
     tvhlog(LOG_ERR, "dvb", "\"%s\" tuning to \"%s\""
-	   " -- Front configuration failed -- %s",
-	   tda->tda_rootpath, buf, strerror(errno));
-  }
+     " -- Front configuration failed -- %s",
+     tda->tda_rootpath, buf, strerror(errno));
+  }   
 
   tda->tda_mux_current = tdmi;
 

@@ -601,10 +601,12 @@ dvb_fe_opts(th_dvb_adapter_t *tda, const char *which)
     fe_opts_add(a, "2/3", FEC_2_3);
     fe_opts_add(a, "3/4", FEC_3_4);
     fe_opts_add(a, "4/5", FEC_4_5);
+    fe_opts_add(a, "3/5", FEC_3_5);
     fe_opts_add(a, "5/6", FEC_5_6);
     fe_opts_add(a, "6/7", FEC_6_7);
     fe_opts_add(a, "7/8", FEC_7_8);
     fe_opts_add(a, "8/9", FEC_8_9);
+    fe_opts_add(a, "9/10", FEC_9_10);
     return a;
   }
 

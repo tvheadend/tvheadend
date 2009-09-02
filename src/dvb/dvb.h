@@ -64,7 +64,9 @@ typedef struct dvb_mux_conf {
   struct dvb_frontend_parameters dmc_fe_params;
   int dmc_polarisation;
   dvb_satconf_t *dmc_satconf;
-
+  fe_modulation_t dmc_fe_modulation;  
+  fe_delivery_system_t dmc_fe_delsys;
+  fe_rolloff_t dmc_fe_rolloff;
 } dvb_mux_conf_t;
 
 

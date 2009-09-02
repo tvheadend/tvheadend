@@ -800,9 +800,11 @@ dvb_cat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 /**
  * Tables for delivery descriptor parsing
  */
-static const fe_code_rate_t fec_tab [8] = {
+static const fe_code_rate_t fec_tab [16] = {
   FEC_AUTO, FEC_1_2, FEC_2_3, FEC_3_4,
-  FEC_5_6, FEC_7_8, FEC_NONE, FEC_NONE
+  FEC_5_6, FEC_7_8, FEC_8_9, FEC_3_5,
+  FEC_4_5, FEC_9_10, FEC_NONE, FEC_NONE,
+  FEC_NONE, FEC_NONE, FEC_NONE, FEC_NONE
 };
 
 
@@ -862,7 +864,7 @@ static int
 dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		       uint16_t tsid)
 {
-  int freq, symrate;
+  int freq, symrate, modulation;
   struct dvb_mux_conf dmc;
 
   if(!tdmi->tdmi_adapter->tda_autodiscovery)
@@ -884,14 +886,50 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     bcdtoint(ptr[9]) * 10     + (ptr[10] >> 4);
   dmc.dmc_fe_params.u.qam.symbol_rate = symrate * 100;
 
-  dmc.dmc_fe_params.u.qam.fec_inner = fec_tab[ptr[10] & 0x07];
+  dmc.dmc_fe_params.u.qam.fec_inner = fec_tab[ptr[10] & 0x0f];
 
   dmc.dmc_polarisation = (ptr[6] >> 5) & 0x03;
    // Same satconf (lnb, switch, etc)
   dmc.dmc_satconf = tdmi->tdmi_conf.dmc_satconf;
 
+  modulation = (ptr[6] & 0x03);
+
+  if (modulation == 0x01)
+    dmc.dmc_fe_modulation = QPSK;
+  else if (modulation == 0x02)
+    dmc.dmc_fe_modulation = PSK_8;
+  else if (modulation == 0x03)
+    dmc.dmc_fe_modulation = QAM_16;
+  else 
+    dmc.dmc_fe_modulation = 0;
+
+  if (ptr[6] & 0x04) { 
+    dmc.dmc_fe_delsys = SYS_DVBS2;
+
+    switch ((ptr[6] >> 3) & 0x03) {
+      case 0x00:
+        dmc.dmc_fe_rolloff = ROLLOFF_35;
+        break;
+      case 0x01:
+        dmc.dmc_fe_rolloff = ROLLOFF_25;
+        break;
+      case 0x02:
+        dmc.dmc_fe_rolloff = ROLLOFF_20;
+        break;
+      default:
+      case 0x03:
+        dmc.dmc_fe_rolloff = ROLLOFF_AUTO;
+        break;
+    }
+  }
+  else {
+    dmc.dmc_fe_delsys = SYS_DVBS;
+    dmc.dmc_fe_rolloff = ROLLOFF_35;
+  }
+
   dvb_mux_create(tdmi->tdmi_adapter, &dmc, tsid, NULL,
 		 "automatic mux discovery", 1, NULL);
+  
   return 0;
 }
 

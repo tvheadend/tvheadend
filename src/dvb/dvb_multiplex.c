@@ -133,7 +133,10 @@ tdmi_compare_conf(int adapter_type,
   case FE_QPSK:
     return memcmp(&a->dmc_fe_params.u.qpsk,
 		  &b->dmc_fe_params.u.qpsk,
-		  sizeof(a->dmc_fe_params.u.qpsk));
+		  sizeof(a->dmc_fe_params.u.qpsk)) ||
+      a->dmc_fe_modulation != b->dmc_fe_modulation ||
+      a->dmc_fe_delsys != b->dmc_fe_delsys ||
+      a->dmc_fe_rolloff != b->dmc_fe_rolloff;
   }
   return 0;
 }
@@ -165,6 +168,8 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
 
     if(!tdmi_compare_conf(tda->tda_type, &tdmi->tdmi_conf, dmc))
       return NULL; // Nothings changed
+
+    memcpy(&tdmi->tdmi_conf, dmc, sizeof(struct dvb_mux_conf));
 
     dvb_mux_save(tdmi);
 
@@ -315,9 +320,12 @@ dvb_mux_find_by_identifier(const char *identifier)
 }
 
 
-
-
-
+static struct strtab rollofftab[] = {
+  { "ROLLOFF_35",   ROLLOFF_35 },
+  { "ROLLOFF_20",   ROLLOFF_20 },
+  { "ROLLOFF_25",   ROLLOFF_25 },
+  { "ROLLOFF_AUTO", ROLLOFF_AUTO }
+};
 
 static struct strtab fectab[] = {
   { "NONE", FEC_NONE },
@@ -329,19 +337,44 @@ static struct strtab fectab[] = {
   { "6/7",  FEC_6_7 },
   { "7/8",  FEC_7_8 },
   { "8/9",  FEC_8_9 },
-  { "AUTO", FEC_AUTO }
+  { "AUTO", FEC_AUTO },
+  { "3/5",  FEC_3_4 },
+  { "9/10", FEC_9_10 }
 };
 
 static struct strtab qamtab[] = {
-  { "QPSK",   QPSK },
-  { "QAM16",  QAM_16 },
-  { "QAM32",  QAM_32 },
-  { "QAM64",  QAM_64 },
-  { "QAM128", QAM_128 },
-  { "QAM256", QAM_256 },
-  { "AUTO",   QAM_AUTO },
-  { "8VSB",   VSB_8 },
-  { "16VSB",  VSB_16 }
+  { "QPSK",    QPSK },
+  { "QAM16",   QAM_16 },
+  { "QAM32",   QAM_32 },
+  { "QAM64",   QAM_64 },
+  { "QAM128",  QAM_128 },
+  { "QAM256",  QAM_256 },
+  { "AUTO",    QAM_AUTO },
+  { "8VSB",    VSB_8 },
+  { "16VSB",   VSB_16 },
+  { "PSK_8",   PSK_8 },
+  { "APSK_16", APSK_16 },
+  { "APSK_32", APSK_32 },
+  { "DQPSK",   DQPSK }
+};
+
+static struct strtab delsystab[] = {
+  { "SYS_UNDEFINED",        SYS_UNDEFINED },
+  { "SYS_DVBC_ANNEX_AC",    SYS_DVBC_ANNEX_AC },
+  { "SYS_DVBC_ANNEX_B",     SYS_DVBC_ANNEX_B },
+  { "SYS_DVBT",             SYS_DVBT },
+  { "SYS_DSS",              SYS_DSS },
+  { "SYS_DVBS",             SYS_DVBS },
+  { "SYS_DVBS2",            SYS_DVBS2 },
+  { "SYS_DVBH",             SYS_DVBH },
+  { "SYS_ISDBT",            SYS_ISDBT },
+  { "SYS_ISDBS",            SYS_ISDBS },
+  { "SYS_ISDBC",            SYS_ISDBC },
+  { "SYS_ATSC",             SYS_ATSC },
+  { "SYS_ATSCMH",           SYS_ATSCMH },
+  { "SYS_DMBTH",            SYS_DMBTH },
+  { "SYS_CMMB",             SYS_CMMB },
+  { "SYS_DAB",              SYS_DAB }
 };
 
 static struct strtab bwtab[] = {
@@ -429,10 +462,19 @@ dvb_mux_save(th_dvb_mux_instance_t *tdmi)
     htsmsg_add_u32(m, "symbol_rate", f->u.qpsk.symbol_rate);
 
     htsmsg_add_str(m, "fec", 
-		   val2str(f->u.qpsk.fec_inner, fectab));
+      val2str(f->u.qpsk.fec_inner, fectab));
 
     htsmsg_add_str(m, "polarisation", 
-		   val2str(tdmi->tdmi_conf.dmc_polarisation, poltab));
+      val2str(tdmi->tdmi_conf.dmc_polarisation, poltab));
+
+    htsmsg_add_str(m, "modulation",
+      val2str(tdmi->tdmi_conf.dmc_fe_modulation, qamtab));
+
+    htsmsg_add_str(m, "delivery_system",
+      val2str(tdmi->tdmi_conf.dmc_fe_delsys, delsystab));
+
+    htsmsg_add_str(m, "rolloff",
+      val2str(tdmi->tdmi_conf.dmc_fe_rolloff, rollofftab));
     break;
 
   case FE_QAM:
@@ -470,7 +512,6 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
   struct dvb_mux_conf dmc;
   const char *s;
   int r;
-  int polarisation = 0;
   unsigned int tsid, u32, enabled;
   dvb_satconf_t *sc;
 
@@ -531,7 +572,31 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
     s = htsmsg_get_str(m, "polarisation");
     if(s == NULL || (r = str2val(s, poltab)) < 0)
       return "Invalid polarisation";
-    polarisation = r;
+    dmc.dmc_polarisation = r;
+
+    s = htsmsg_get_str(m, "modulation");
+    if(s == NULL || (r = str2val(s, qamtab)) < 0) {
+      r = str2val("QPSK", qamtab);
+      tvhlog(LOG_INFO,
+          "dvb", "no modulation for mux found, defaulting to QPSK");
+    } 
+    dmc.dmc_fe_modulation = r;
+
+    s = htsmsg_get_str(m, "delivery_system");
+    if(s == NULL || (r = str2val(s, delsystab)) < 0) {
+      r = str2val("SYS_DVBS", delsystab);
+      tvhlog(LOG_INFO,
+          "dvb", "no delivery system for mux found, defaulting to SYS_DVBS");
+    }
+    dmc.dmc_fe_delsys = r;
+
+    s = htsmsg_get_str(m, "rolloff");
+    if(s == NULL || (r = str2val(s, rollofftab)) < 0) {
+      r = str2val("ROLLOFF_35", rollofftab);
+      tvhlog(LOG_INFO,
+          "dvb", "no rolloff for mux found, defaulting to ROLLOFF_35");
+    }
+    dmc.dmc_fe_rolloff = r;
     break;
 
   case FE_QAM:
