@@ -802,8 +802,19 @@ dvb_cat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
  */
 static const fe_code_rate_t fec_tab [16] = {
   FEC_AUTO, FEC_1_2, FEC_2_3, FEC_3_4,
-  FEC_5_6, FEC_7_8, FEC_8_9, FEC_3_5,
-  FEC_4_5, FEC_9_10, FEC_NONE, FEC_NONE,
+  FEC_5_6, FEC_7_8, FEC_8_9, 
+#if DVB_API_VERSION >= 5
+  FEC_3_5,
+#else
+  FEC_NONE,
+#endif
+  FEC_4_5, 
+#if DVB_API_VERSION >= 5
+  FEC_9_10,
+#else
+  FEC_NONE,
+#endif
+  FEC_NONE, FEC_NONE,
   FEC_NONE, FEC_NONE, FEC_NONE, FEC_NONE
 };
 
@@ -864,7 +875,7 @@ static int
 dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		       uint16_t tsid)
 {
-  int freq, symrate, modulation;
+  int freq, symrate;
   struct dvb_mux_conf dmc;
 
   if(!tdmi->tdmi_adapter->tda_autodiscovery)
@@ -892,7 +903,8 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
    // Same satconf (lnb, switch, etc)
   dmc.dmc_satconf = tdmi->tdmi_conf.dmc_satconf;
 
-  modulation = (ptr[6] & 0x03);
+#if DVB_API_VERSION >= 5
+  int modulation = (ptr[6] & 0x03);
 
   if (modulation == 0x01)
     dmc.dmc_fe_modulation = QPSK;
@@ -926,7 +938,7 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     dmc.dmc_fe_delsys = SYS_DVBS;
     dmc.dmc_fe_rolloff = ROLLOFF_35;
   }
-
+#endif
   dvb_mux_create(tdmi->tdmi_adapter, &dmc, tsid, NULL,
 		 "automatic mux discovery", 1, NULL);
   

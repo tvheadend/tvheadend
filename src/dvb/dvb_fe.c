@@ -174,6 +174,8 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi)
 }
 
 
+#if DVB_API_VERSION >= 5
+
 static int check_frontend (int fe_fd, int dvr, int human_readable) {
   (void)dvr;
   fe_status_t status;
@@ -282,6 +284,7 @@ dvb_fe_tune_s2(th_dvb_mux_instance_t *tdmi, const char *name)
 
 }
 
+#endif
 
 /**
  *
@@ -353,9 +356,11 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 	     "dvb", "\"%s\" tuning to \"%s\" (%s)", tda->tda_rootpath, buf,
 	     reason);
 
+#if DVB_API_VERSION >= 5
   if (tda->tda_type == FE_QPSK)
     r = dvb_fe_tune_s2(tdmi, buf);
   else
+#endif
     r = 0;
 
   if(r)

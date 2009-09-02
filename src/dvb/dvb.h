@@ -19,8 +19,10 @@
 #ifndef DVB_H_
 #define DVB_H_
 
+#include <linux/dvb/version.h>
 #include <linux/dvb/frontend.h>
 #include "htsmsg.h"
+
 
 TAILQ_HEAD(th_dvb_adapter_queue, th_dvb_adapter);
 RB_HEAD(th_dvb_mux_instance_tree, th_dvb_mux_instance);
@@ -64,9 +66,11 @@ typedef struct dvb_mux_conf {
   struct dvb_frontend_parameters dmc_fe_params;
   int dmc_polarisation;
   dvb_satconf_t *dmc_satconf;
-  fe_modulation_t dmc_fe_modulation;  
+#if DVB_API_VERSION >= 5
+  fe_modulation_t dmc_fe_modulation;
   fe_delivery_system_t dmc_fe_delsys;
   fe_rolloff_t dmc_fe_rolloff;
+#endif
 } dvb_mux_conf_t;
 
 
