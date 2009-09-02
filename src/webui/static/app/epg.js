@@ -5,6 +5,7 @@ tvheadend.ContentGroupStore = new Ext.data.JsonStore({
     url:'ecglist'
 });
 
+tvheadend.ContentGroupStore.setDefaultSort('name', 'ASC');
 
 tvheadend.epgDetails = function(event) {
 
