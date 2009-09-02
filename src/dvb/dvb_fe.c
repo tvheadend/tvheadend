@@ -216,6 +216,72 @@ static int check_frontend (int fe_fd, int dvr, int human_readable) {
   return 0;
 }
 
+static struct dtv_property clear_p[] = {
+  { .cmd = DTV_CLEAR },
+};
+
+static struct dtv_properties clear_cmdseq = {
+  .num = 1,
+  .props = clear_p
+};
+
+
+/**
+ *
+ */
+static int
+dvb_fe_tune_s2(th_dvb_mux_instance_t *tdmi, const char *name)
+{
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  dvb_mux_conf_t *dmc = &tdmi->tdmi_conf;
+  struct dvb_frontend_parameters *p = &dmc->dmc_fe_params;
+  int r;
+  
+  if ((ioctl(tda->tda_fe_fd, FE_SET_PROPERTY, &clear_cmdseq)) != 0)
+    return -1;
+  
+  struct dvb_frontend_event ev;
+  
+  /* Support for legacy satellite tune, with the new API. */
+  struct dtv_property _dvbs_cmdargs[] = {
+    { .cmd = DTV_DELIVERY_SYSTEM, .u.data = dmc->dmc_fe_delsys },
+    { .cmd = DTV_FREQUENCY,       .u.data = p->frequency },
+    { .cmd = DTV_MODULATION,      .u.data = dmc->dmc_fe_modulation },
+    { .cmd = DTV_SYMBOL_RATE,     .u.data = p->u.qpsk.symbol_rate },
+    { .cmd = DTV_INNER_FEC,       .u.data = p->u.qpsk.fec_inner },
+    { .cmd = DTV_INVERSION,       .u.data = INVERSION_AUTO },
+    { .cmd = DTV_ROLLOFF,         .u.data = dmc->dmc_fe_rolloff },
+    { .cmd = DTV_PILOT,           .u.data = PILOT_AUTO },
+    { .cmd = DTV_TUNE },
+  };
+
+  struct dtv_properties _dvbs_cmdseq = {
+    .num = 9,
+    .props = _dvbs_cmdargs
+  };
+
+  /* discard stale QPSK events */
+  while (1) {
+    if (ioctl(tda->tda_fe_fd, FE_GET_EVENT, &ev) == -1)
+      break;
+  }
+
+  if(tda->tda_logging)
+    tvhlog(LOG_INFO, 
+	   "dvb", 
+	   "tuning via s2api to %s, freq %d, symbolrate %d, "
+	   "fec %d, sys %d, mod %d",
+	   name, p->frequency, p->u.qpsk.symbol_rate, p->u.qpsk.fec_inner, 
+	   dmc->dmc_fe_delsys, 
+	   dmc->dmc_fe_modulation);
+  r = ioctl(tda->tda_fe_fd, FE_SET_PROPERTY, &_dvbs_cmdseq);
+  
+  if(0)
+    check_frontend (tda->tda_fe_fd, 0, 1);
+  return r;
+
+}
+
 
 /**
  *
@@ -224,10 +290,10 @@ void
 dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-  struct dvb_frontend_parameters p = tdmi->tdmi_conf.dmc_fe_params;
+  struct dvb_frontend_parameters *p = &tdmi->tdmi_conf.dmc_fe_params;
   char buf[256];
   int r;
-  
+ 
 
   lock_assert(&global_lock);
 
@@ -261,7 +327,7 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 	dvb_lnb_get_frequencies(sc->sc_lnb, &lowfreq, &hifreq, &switchfreq);
     }
 
-    hiband = switchfreq && p.frequency > switchfreq;
+    hiband = switchfreq && p->frequency > switchfreq;
 
     pol = tdmi->tdmi_conf.dmc_polarisation;
     diseqc_setup(tda->tda_fe_fd,
@@ -273,9 +339,9 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
     usleep(50000);
       
     if(hiband)
-      p.frequency = abs(p.frequency - hifreq);
+      p->frequency = abs(p->frequency - hifreq);
     else
-      p.frequency = abs(p.frequency - lowfreq);
+      p->frequency = abs(p->frequency - lowfreq);
   }
 
   dvb_mux_nicename(buf, sizeof(buf), tdmi);
@@ -287,56 +353,13 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 	     "dvb", "\"%s\" tuning to \"%s\" (%s)", tda->tda_rootpath, buf,
 	     reason);
 
-  if (tda->tda_type == FE_QPSK) {
-    struct dtv_property clear_p[] = {
-      { .cmd = DTV_CLEAR },
-    };
+  if (tda->tda_type == FE_QPSK)
+    r = dvb_fe_tune_s2(tdmi, buf);
+  else
+    r = 0;
 
-    struct dtv_properties clear_cmdseq = {
-      .num = 1,
-      .props = clear_p
-    };
-
-    if ((ioctl(tda->tda_fe_fd, FE_SET_PROPERTY, &clear_cmdseq)) != 0) {
-      perror("FE_SET_PROPERTY DTV_CLEAR failed");
-      return;
-    }
-    struct dvb_frontend_event ev;
-
-    /* Support for legacy satellite tune, with the new API. */
-    struct dtv_property _dvbs_cmdargs[] = {
-      { .cmd = DTV_DELIVERY_SYSTEM, .u.data = tdmi->tdmi_conf.dmc_fe_delsys },
-      { .cmd = DTV_FREQUENCY,       .u.data = p.frequency },
-      { .cmd = DTV_MODULATION,      .u.data = tdmi->tdmi_conf.dmc_fe_modulation },
-      { .cmd = DTV_SYMBOL_RATE,     .u.data = p.u.qpsk.symbol_rate },
-      { .cmd = DTV_INNER_FEC,       .u.data = p.u.qpsk.fec_inner },
-      { .cmd = DTV_INVERSION,       .u.data = INVERSION_AUTO },
-      { .cmd = DTV_ROLLOFF,         .u.data = tdmi->tdmi_conf.dmc_fe_rolloff },
-      { .cmd = DTV_PILOT,           .u.data = PILOT_AUTO },
-      { .cmd = DTV_TUNE },
-    };
-
-    struct dtv_properties _dvbs_cmdseq = {
-      .num = 9,
-      .props = _dvbs_cmdargs
-    };
-
-    /* discard stale QPSK events */
-    while (1) {
-      if (ioctl(tda->tda_fe_fd, FE_GET_EVENT, &ev) == -1)
-      break;
-    }
-
-    tvhlog(LOG_INFO, 
-        "dvb", "tuning via s2api to %s, freq %d, symbolrate %d, fec %d, sys %d, mod %d",
-        buf, p.frequency, p.u.qpsk.symbol_rate, p.u.qpsk.fec_inner, tdmi->tdmi_conf.dmc_fe_delsys, 
-        tdmi->tdmi_conf.dmc_fe_modulation);
-    r = ioctl(tda->tda_fe_fd, FE_SET_PROPERTY, &_dvbs_cmdseq);
-
-    if(0)
-      check_frontend (tda->tda_fe_fd, 0, 1);
-  } else 
-    r = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, &p);
+  if(r)
+    r = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, p);
 
   if(r != 0) {
     tvhlog(LOG_ERR, "dvb", "\"%s\" tuning to \"%s\""
