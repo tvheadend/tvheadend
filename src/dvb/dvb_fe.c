@@ -361,7 +361,7 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
     r = dvb_fe_tune_s2(tdmi, buf);
   else
 #endif
-    r = 0;
+    r = 1; // Make it tune via old API
 
   if(r)
     r = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, p);
