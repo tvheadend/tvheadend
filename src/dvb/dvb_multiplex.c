@@ -136,8 +136,8 @@ tdmi_compare_conf(int adapter_type,
 		  sizeof(a->dmc_fe_params.u.qpsk))
 #if DVB_API_VERSION >= 5
       || a->dmc_fe_modulation != b->dmc_fe_modulation
-      a->dmc_fe_delsys != b->dmc_fe_delsys ||
-      a->dmc_fe_rolloff != b->dmc_fe_rolloff
+      || a->dmc_fe_delsys != b->dmc_fe_delsys
+      || a->dmc_fe_rolloff != b->dmc_fe_rolloff
 #endif
 ;
   }
