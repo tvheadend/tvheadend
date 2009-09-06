@@ -526,7 +526,6 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
   const char *s;
   int r;
   unsigned int tsid, u32, enabled;
-  dvb_satconf_t *sc;
 
   memset(&dmc, 0, sizeof(dmc));
   
@@ -646,9 +645,9 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
     enabled = 1;
 
   if((s = htsmsg_get_str(m, "satconf")) != NULL)
-    sc = dvb_satconf_entry_find(tda, s, 0);
+    dmc.dmc_satconf = dvb_satconf_entry_find(tda, s, 0);
   else
-    sc = NULL;
+    dmc.dmc_satconf = NULL;
 
   tdmi = dvb_mux_create(tda, &dmc,
 			tsid, htsmsg_get_str(m, "network"), NULL, enabled,
