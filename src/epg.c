@@ -445,6 +445,7 @@ epg_content_type_find_by_dvbcode(uint8_t dvbcode)
     ect->ect_group = ecg;
     snprintf(buf, sizeof(buf), "type%d", type);
     ect->ect_name = strdup(buf);
+    ect->ect_dvbcode = dvbcode;
   }
 
   return ect;

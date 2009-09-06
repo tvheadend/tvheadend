@@ -38,6 +38,7 @@ typedef struct epg_content_type {
   const char *ect_name;
   struct event_list ect_events;
   epg_content_group_t *ect_group;
+  uint8_t ect_dvbcode;
 } epg_content_type_t;
 
 /*

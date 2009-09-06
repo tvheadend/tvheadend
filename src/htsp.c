@@ -437,6 +437,9 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
   if(e->e_desc != NULL)
     htsmsg_add_str(out, "description", e->e_desc);
 
+  if(e->e_content_type != NULL)
+    htsmsg_add_u32(out, "contentType", e->e_content_type->ect_dvbcode);
+
   n = RB_NEXT(e, e_channel_link);
   if(n != NULL)
     htsmsg_add_u32(out, "nextEventId", n->e_id);
