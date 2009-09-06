@@ -58,12 +58,13 @@ enum polarisation {
 
 #define DVB_FEC_ERROR_LIMIT 20
 
+typedef struct dvb_frontend_parameters dvb_frontend_parameters_t;
 
 /**
  *
  */
 typedef struct dvb_mux_conf {
-  struct dvb_frontend_parameters dmc_fe_params;
+  dvb_frontend_parameters_t dmc_fe_params;
   int dmc_polarisation;
   dvb_satconf_t *dmc_satconf;
 #if DVB_API_VERSION >= 5

@@ -232,10 +232,9 @@ static struct dtv_properties clear_cmdseq = {
  *
  */
 static int
-dvb_fe_tune_s2(th_dvb_mux_instance_t *tdmi, const char *name)
+dvb_fe_tune_s2(th_dvb_mux_instance_t *tdmi, dvb_mux_conf_t *dmc, const char *name)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-  dvb_mux_conf_t *dmc = &tdmi->tdmi_conf;
   struct dvb_frontend_parameters *p = &dmc->dmc_fe_params;
   int r;
   
@@ -293,7 +292,11 @@ void
 dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-  struct dvb_frontend_parameters *p = &tdmi->tdmi_conf.dmc_fe_params;
+
+  // copy dmc, cause frequency may be change with FE_QPSK
+  dvb_mux_conf_t dmc = tdmi->tdmi_conf;
+  dvb_frontend_parameters_t* p = &dmc.dmc_fe_params;
+  
   char buf[256];
   int r;
  
@@ -358,7 +361,7 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 
 #if DVB_API_VERSION >= 5
   if (tda->tda_type == FE_QPSK)
-    r = dvb_fe_tune_s2(tdmi, buf);
+    r = dvb_fe_tune_s2(tdmi, &dmc, buf);
   else
 #endif
     r = 1; // Make it tune via old API
