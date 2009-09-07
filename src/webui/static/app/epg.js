@@ -89,12 +89,25 @@ tvheadend.epg = function() {
 	])
    });
 
-    function renderDate(value){
+    function setMetaAttr(meta, record){
+        var now = new Date;
+        var start = record.get('start');
+
+        if(now.getTime() > start.getTime()){
+            meta.attr = 'style="font-weight:bold;"';
+        }
+    }
+
+    function renderDate(value, meta, record, rowIndex, colIndex, store){
+        setMetaAttr(meta, record);
+
 	var dt = new Date(value);
 	return dt.format('l H:i');
     } 
 
-   function renderDuration(value){
+   function renderDuration(value, meta, record, rowIndex, colIndex, store){
+       setMetaAttr(meta, record);
+
        value = Math.floor(value / 60);
 
        if(value >= 60) {
@@ -110,13 +123,9 @@ tvheadend.epg = function() {
        }
     } 
 
-    function renderTitle(value, meta, record, rowIndex, colIndex, store){
-        var now = new Date;
-        var start = record.get('start');
+    function renderText(value, meta, record, rowIndex, colIndex, store){
+        setMetaAttr(meta, record);
 
-        if(now.getTime() > start.getTime()){
-            meta.attr = 'style="font-weight:bold;"';
-        }
         return value;
     }
 
@@ -126,7 +135,7 @@ tvheadend.epg = function() {
 	    id:'title',
 	    header: "Title",
 	    dataIndex: 'title',
-	    renderer: renderTitle
+	    renderer: renderText
 	},{
 	    width: 100,
 	    id:'start',
@@ -150,12 +159,14 @@ tvheadend.epg = function() {
 	    width: 250,
 	    id:'channel',
 	    header: "Channel",
-	    dataIndex: 'channel'
+	    dataIndex: 'channel',
+	    renderer: renderText
 	},{
 	    width: 250,
 	    id:'contentgrp',
 	    header: "Content Type",
-	    dataIndex: 'contentgrp'
+	    dataIndex: 'contentgrp',
+	    renderer: renderText
 	}
     ]);
 
