@@ -340,7 +340,7 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 		 port,
 		 pol == POLARISATION_HORIZONTAL ||
 		 pol == POLARISATION_CIRCULAR_LEFT,
-		 hiband);
+		 hiband, tda->tda_diseqc_version);
       
     usleep(50000);
       

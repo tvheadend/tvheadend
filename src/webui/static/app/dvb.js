@@ -998,7 +998,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 
     var confreader = new Ext.data.JsonReader({
 	root: 'dvbadapters'
-    }, ['name', 'automux', 'idlescan', 'logging']);
+    }, ['name', 'automux', 'idlescan', 'logging', 'diseqcversion']);
 
     
     function saveConfForm () {
@@ -1007,6 +1007,39 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	    params:{'op':'save'},
 	    waitMsg:'Saving Data...'
 	});
+    }
+
+    var items = [
+	{
+	    fieldLabel: 'Adapter name',
+	    name: 'name',
+	    width: 250
+	},
+	new Ext.form.Checkbox({
+	    fieldLabel: 'Autodetect muxes',
+	    name: 'automux'
+	}),
+	new Ext.form.Checkbox({
+	    fieldLabel: 'Idle scanning',
+	    name: 'idlescan'
+	}),
+	new Ext.form.Checkbox({
+	    fieldLabel: 'Detailed logging',
+	    name: 'logging'
+	})
+    ];
+
+    if(satConfStore) { 
+	v = new Ext.form.ComboBox({
+	    name: 'diseqcversion',
+	    fieldLabel: 'DiSEqC version',
+	    editable: false,
+	    allowBlank: false,
+	    mode: 'remote',
+	    triggerAction: 'all',
+	    store: ['DiSEqC 1.0 / 2.0', 'DiSEqC 1.1 / 2.1']
+	});
+	items.push(v);
     }
     
     var confform = new Ext.FormPanel({
@@ -1022,25 +1055,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	waitMsgTarget: true,
 	reader: confreader,
 	defaultType: 'textfield',
-	items: [
-	    {
-		fieldLabel: 'Adapter name',
-		name: 'name',
-		width: 250
-	    },
-	    new Ext.form.Checkbox({
-		fieldLabel: 'Autodetect muxes',
-		name: 'automux'
-	    }),
-	    new Ext.form.Checkbox({
-		fieldLabel: 'Idle scanning',
-		name: 'idlescan'
-	    }),
-	    new Ext.form.Checkbox({
-		fieldLabel: 'Detailed logging',
-		name: 'logging'
-	    })
-	],
+	items: items,
 	buttons: [{
 	    text: 'Save',
 	    handler: saveConfForm
@@ -1051,6 +1066,8 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	url:'dvb/adapter/' + adapterId, 
 	params:{'op':'load'},
 	success:function(form, action) {
+	    console.log(form);
+	    console.log(action);
 	    confform.enable();
 	}
     });

@@ -165,7 +165,7 @@ typedef struct th_dvb_adapter {
   uint32_t tda_autodiscovery;
   uint32_t tda_idlescan;
   uint32_t tda_logging;
-
+  uint32_t tda_diseqc_version;
   char *tda_displayname;
 
   int tda_fe_fd;
@@ -214,6 +214,8 @@ void dvb_adapter_set_auto_discovery(th_dvb_adapter_t *tda, int on);
 void dvb_adapter_set_idlescan(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_logging(th_dvb_adapter_t *tda, int on);
+
+void dvb_adapter_set_diseqc_version(th_dvb_adapter_t *tda, unsigned int v);
 
 void dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src);
 

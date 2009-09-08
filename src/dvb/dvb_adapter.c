@@ -79,6 +79,7 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "autodiscovery", tda->tda_autodiscovery);
   htsmsg_add_u32(m, "idlescan", tda->tda_idlescan);
   htsmsg_add_u32(m, "logging", tda->tda_logging);
+  htsmsg_add_u32(m, "diseqc_version", tda->tda_diseqc_version);
   hts_settings_save(m, "dvbadapters/%s", tda->tda_identifier);
   htsmsg_destroy(m);
 }
@@ -162,6 +163,29 @@ dvb_adapter_set_logging(th_dvb_adapter_t *tda, int on)
   tda->tda_logging = on;
   tda_save(tda);
 }
+
+
+/**
+ *
+ */
+void
+dvb_adapter_set_diseqc_version(th_dvb_adapter_t *tda, unsigned int v)
+{
+  if(v > 1)
+    v = 1;
+
+  if(tda->tda_diseqc_version == v)
+    return;
+
+  lock_assert(&global_lock);
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" DiSEqC version set to: %s",
+	 tda->tda_displayname, v ? "1.1 / 2.1" : "1.0 / 2.0" );
+
+  tda->tda_diseqc_version = v;
+  tda_save(tda);
+}
+
 
 
 /**
@@ -294,6 +318,7 @@ dvb_adapter_init(void)
       htsmsg_get_u32(c, "autodiscovery", &tda->tda_autodiscovery);
       htsmsg_get_u32(c, "idlescan", &tda->tda_idlescan);
       htsmsg_get_u32(c, "logging", &tda->tda_logging);
+      htsmsg_get_u32(c, "diseqc_version", &tda->tda_diseqc_version);
     }
     htsmsg_destroy(l);
   }

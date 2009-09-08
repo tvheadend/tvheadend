@@ -17,6 +17,9 @@ hts-tvheadend (2.6) hts; urgency=low
 
   * Default character encoding in DVB is ISO6937, not Latin-1. Ticket #96
 
+  * Add support for DiSEqC 1.1 / 2.1, configured on per-adapter basis.
+    Ticket #99
+
 hts-tvheadend (2.5) hts; urgency=low
 
   * If a previosly detected DVB adapter was not present during startup,
