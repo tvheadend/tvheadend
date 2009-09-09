@@ -4,7 +4,7 @@
 Ext.extend(tvheadend.Comet = function() {
     this.addEvents({
 	accessUpdate: true,
-	dvbAdapter: true,
+	tvAdapter: true,
 	dvbMux: true,
 	dvbStore: true,
 	dvbSatConf: true,

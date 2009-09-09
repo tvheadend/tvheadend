@@ -51,7 +51,7 @@ function accessUpdate(o) {
 		    new tvheadend.xmltv,
 		    new tvheadend.cteditor,
 		    new tvheadend.dvrsettings,
-		    new tvheadend.dvb,
+		    new tvheadend.tvadapters,
 		    new tvheadend.iptv,
 		    new tvheadend.acleditor, 
 		    new tvheadend.cwceditor]

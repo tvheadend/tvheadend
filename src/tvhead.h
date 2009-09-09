@@ -553,7 +553,7 @@ typedef struct th_transport {
    */
 
   struct v4l_adapter *tht_v4l_adapter;
-
+  int tht_v4l_frequency; // In Hz
   
 
   /*********************************************************

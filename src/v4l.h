@@ -19,6 +19,62 @@
 #ifndef V4L_H_
 #define V4L_H_
 
+#define __user
+#include <linux/videodev2.h>
+
+LIST_HEAD(v4l_adapter_list, v4l_adapter);
+TAILQ_HEAD(v4l_adapter_queue, v4l_adapter);
+
+
+extern struct v4l_adapter_queue v4l_adapters;
+
+typedef struct v4l_adapter {
+
+  TAILQ_ENTRY(v4l_adapter) va_global_link;
+
+  char *va_path;
+
+  char *va_identifier;
+
+  char *va_displayname;
+
+  char *va_devicename;
+
+  uint32_t va_logging;
+
+  //  struct v4l2_capability va_caps;
+
+  struct th_transport *va_current_transport;
+
+  struct th_transport_list va_transports;
+  int va_tally;
+
+  /** Receiver thread stuff */
+
+  int va_fd;
+
+  pthread_t va_thread;
+
+  int va_pipe[2];
+
+  /** Mpeg stream parsing */
+  uint32_t va_startcode;
+  int va_lenlock;
+
+} v4l_adapter_t;
+
+
+v4l_adapter_t *v4l_adapter_find_by_identifier(const char *identifier);
+
+void v4l_adapter_set_displayname(v4l_adapter_t *va, const char *name);
+
+void v4l_adapter_set_logging(v4l_adapter_t *va, int on);
+
+htsmsg_t *v4l_adapter_build_msg(v4l_adapter_t *va);
+
+th_transport_t *v4l_transport_find(v4l_adapter_t *va, const char *id, 
+				   int create);
+
 void v4l_init(void);
 
 #endif /* V4L_H */

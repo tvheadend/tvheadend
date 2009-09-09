@@ -1,40 +1,3 @@
-/**
- * Datastore for adapters
- */
-tvheadend.dvbAdapterStore = new Ext.data.JsonStore({
-    root:'entries',
-    id: 'identifier',
-    fields: ['identifier', 
-	     'name', 
-	     'path', 
-	     'devicename', 
-	     'currentMux',
-	     'services',
-	     'muxes',
-	     'initialMuxes',
-	     'satConf',
-	     'deliverySystem',
-	     'freqMin',
-	     'freqMax',
-	     'freqStep',
-	     'symrateMin',
-	     'symrateMax'
-	    ],
-    url:'dvb/adapter'
-});
-
-tvheadend.comet.on('dvbAdapter', function(m) {
-    idx = tvheadend.dvbAdapterStore.find('identifier', m.identifier);
-    if(idx == -1)
-	return;
-    r = tvheadend.dvbAdapterStore.getAt(idx);
-    
-    r.beginEdit();
-    for (key in m)
-	r.set(key, m[key]);
-    r.endEdit();
-    tvheadend.dvbAdapterStore.commitChanges();
-});
 
 
 /**
@@ -1116,7 +1079,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
     /**
      * Subscribe and react on updates for this adapter
      */
-    tvheadend.dvbAdapterStore.on('update', function(s, r, o) {
+    tvheadend.tvAdapterStore.on('update', function(s, r, o) {
 	if(r.data.identifier != adapterId)
 	    return;
 	infoTemplate.overwrite(infoPanel.body, r.data);
@@ -1239,95 +1202,4 @@ tvheadend.dvb_adapter = function(data)
     
     return panel;
 
-}
-
-/**
- *
- */
-tvheadend.dvb = function() 
-{
-
-   var adapterSelection = new Ext.form.ComboBox({
-	loadingText: 'Loading...',
-	width: 300,
-	displayField:'name',
-	store: tvheadend.dvbAdapterStore,
-	mode: 'remote',
-	editable: false,
-	triggerAction: 'all',
-	emptyText: 'Select DVB adapter...'
-    });
-
-    var dummyadapter = new Ext.Panel({
-	region:'center', layout:'fit', 
-	items:[{border: false}]
-    });
-
-
-    var panel = new Ext.Panel({
-	title: 'DVB Adapters',
-	iconCls: 'hardware',
-	layout:'fit',
-	tbar: [
-	    adapterSelection, '->', {
-		text: 'Help',
-		handler: function() {
-		    new tvheadend.help('DVB', 'config_dvb.html');
-		}
-	    }
-	],
-
-	items: [
-	    dummyadapter
-	]
-    });
-
-
-    adapterSelection.on('select', function(c, r) {
-
-	panel.remove(panel.getComponent(0));
-	panel.doLayout();
-
-	var newPanel = new tvheadend.dvb_adapter(r.data)
-	panel.add(newPanel);
-	panel.doLayout();
-    });
-
-    return panel;
-}
-
-
-/**
- *
- */
-tvheadend.showTransportDetails = function(data) 
-{
-    html = '';
-
-    html += '<div style="display:block;font-weight:bold;margin-bottom:4px">';
-    html += '<span style="float:left;width:100px">PID </span>';
-    html += '<span style="float:left;width:100px">Type</span>';
-    html += '<span>Details</span>';
-    html += '</div>';
-
-    for(i = 0; i < data.streams.length; i++) {
-	s = data.streams[i];
-	
-	html += '<div style="display:block">';
-	html += '<span style="float:left;width:100px">' + s.pid  + '</span>';
-	html += '<span style="float:left;width:100px">' + s.type  + '</span>';
-	html += '<span>' + (s.details.length > 0 ? s.details : '&nbsp') + '</span>';
-	html += '</div>';
-    }
-
-    win = new Ext.Window({
-	title: 'Service details for ' + data.title,
-        layout: 'fit',
-        width: 400,
-        height: 400,
-        plain: true,
-	bodyStyle: 'padding: 5px',
-	html: html
-    });
-    win.show();
 }

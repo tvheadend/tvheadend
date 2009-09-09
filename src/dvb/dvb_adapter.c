@@ -499,6 +499,8 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
     }
   }
 
+  htsmsg_add_str(m, "type", "dvb");
+
   htsmsg_add_u32(m, "services", numsvc);
   htsmsg_add_u32(m, "muxes", nummux);
   htsmsg_add_u32(m, "initialMuxes", tda->tda_initial_num_mux);
@@ -538,7 +540,7 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
 void
 dvb_adapter_notify(th_dvb_adapter_t *tda)
 {
-  notify_by_msg("dvbAdapter", dvb_adapter_build_msg(tda));
+  notify_by_msg("tvAdapter", dvb_adapter_build_msg(tda));
 }
 
 

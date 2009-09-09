@@ -54,7 +54,7 @@
 #include "avahi.h"
 #include "iptv_input.h"
 #include "transports.h"
-
+#include "v4l.h"
 #include "parachute.h"
 #include "settings.h"
 
@@ -340,6 +340,8 @@ main(int argc, char **argv)
   dvb_init();
 
   iptv_input_init();
+
+  v4l_init();
 
   http_server_init();
 

@@ -31,42 +31,17 @@
 #include <poll.h>
 #include <inttypes.h>
 
-#define __user
-#include <linux/videodev2.h>
+#include "settings.h"
 
 #include "tvhead.h"
 #include "transports.h"
 #include "v4l.h"
 #include "parsers.h"
-
-LIST_HEAD(v4l_adapter_list, v4l_adapter);
-
-struct v4l_adapter_list v4l_adapters;
-
-typedef struct v4l_adapter {
-
-  LIST_ENTRY(v4l_adapter) va_global_link;
-
-  char *va_path;
-
-  char *va_identifier;
-
-  struct v4l2_capability va_caps;
-
-  struct th_transport *va_current_transport;
+#include "notify.h"
+#include "psi.h"
 
 
-  int va_fd;
-
-  pthread_t va_thread;
-
-  int va_pipe[2];
-
-  /** Mpeg stream parsing */
-  uint32_t va_startcode;
-  int va_lenlock;
-
-} v4l_adapter_t;
+struct v4l_adapter_queue v4l_adapters;
 
 
 /**
@@ -290,7 +265,25 @@ v4l_transport_stop(th_transport_t *t)
 static void
 v4l_transport_save(th_transport_t *t)
 {
+  v4l_adapter_t *va = t->tht_v4l_adapter;
+  htsmsg_t *m = htsmsg_create_map();
 
+  htsmsg_add_u32(m, "frequency", t->tht_v4l_frequency);
+  
+  if(t->tht_ch != NULL) {
+    htsmsg_add_str(m, "channelname", t->tht_ch->ch_name);
+    htsmsg_add_u32(m, "mapped", 1);
+  }
+  
+
+  pthread_mutex_lock(&t->tht_stream_mutex);
+  psi_save_transport_settings(m, t);
+  pthread_mutex_unlock(&t->tht_stream_mutex);
+  
+  hts_settings_save(m, "v4lservices/%s/%s",
+		    va->va_identifier, t->tht_identifier);
+
+  htsmsg_destroy(m);
 }
 
 
@@ -323,18 +316,36 @@ v4l_transport_sourceinfo(th_transport_t *t)
 /**
  *
  */
-static th_transport_t *
-v4l_add_transport(v4l_adapter_t *va)
+th_transport_t *
+v4l_transport_find(v4l_adapter_t *va, const char *id, int create)
 {
   th_transport_t *t;
+  char buf[200];
 
-  char id[256];
+  int vaidlen = strlen(va->va_identifier);
 
-  snprintf(id, sizeof(id), "%s_%s", va->va_identifier, "foo"); 
-  printf("Adding transport %s\n", id);
+  if(id != NULL) {
+
+    if(strncmp(id, va->va_identifier, vaidlen))
+      return NULL;
+
+    LIST_FOREACH(t, &va->va_transports, tht_group_link)
+      if(!strcmp(t->tht_identifier, id))
+	return t;
+  }
+
+  if(create == 0)
+    return NULL;
+  
+  if(id == NULL) {
+    va->va_tally++;
+    snprintf(buf, sizeof(buf), "%s_%d", va->va_identifier, va->va_tally);
+    id = buf;
+  } else {
+    va->va_tally = MAX(atoi(id + vaidlen), va->va_tally);
+  }
 
   t = transport_create(id, TRANSPORT_V4L, 0);
-  t->tht_flags |= THT_DEBUG;
 
   t->tht_start_feed    = v4l_transport_start;
   t->tht_refresh_feed  = v4l_transport_refresh;
@@ -342,25 +353,50 @@ v4l_add_transport(v4l_adapter_t *va)
   t->tht_config_save   = v4l_transport_save;
   t->tht_sourceinfo    = v4l_transport_sourceinfo;
   t->tht_quality_index = v4l_transport_quality;
+  t->tht_iptv_fd = -1;
 
   t->tht_v4l_adapter = va;
 
-  pthread_mutex_lock(&t->tht_stream_mutex);
+  LIST_INSERT_HEAD(&va->va_transports, t, tht_group_link);
 
-  t->tht_video = transport_stream_create(t, -1, SCT_MPEG2VIDEO);
-  t->tht_audio = transport_stream_create(t, -1, SCT_MPEG2AUDIO);
-
-  pthread_mutex_unlock(&t->tht_stream_mutex);
-
-  transport_map_channel(t, channel_find_by_name("alpha", 1), 0);
-
-  //XXX  LIST_INSERT_HEAD(&v4l_all_transports, t, tht_group_link);
-  
   return t;
 }
 
 
+/**
+ *
+ */
+static void
+v4l_adapter_add(const char *path, const char *displayname, 
+		const char *devicename )
+{
+  v4l_adapter_t *va;
+  int i, r;
 
+  va = calloc(1, sizeof(v4l_adapter_t));
+
+  va->va_identifier = strdup(path);
+
+  r = strlen(va->va_identifier);
+  for(i = 0; i < r; i++)
+    if(!isalnum((int)va->va_identifier[i]))
+      va->va_identifier[i] = '_';
+
+  va->va_displayname = strdup(displayname);
+  va->va_path = path ? strdup(path) : NULL;
+  va->va_devicename = devicename ? strdup(devicename) : NULL;
+
+  //  va->va_caps = caps;
+
+  TAILQ_INSERT_TAIL(&v4l_adapters, va, va_global_link);
+
+#if 0
+  tvhlog(LOG_INFO, "v4l", "Adding adapter %s: %s (%s) @ %s", 
+	 path, caps.card, caps.driver, caps.bus_info, caps.bus_info);
+#endif
+
+  //  v4l_add_transport(va);
+}
 
 
 /**
@@ -371,7 +407,6 @@ v4l_adapter_check(const char *path, int fd)
 {
   int r, i;
 
-  v4l_adapter_t *va;
   struct v4l2_capability caps;
 
   r = ioctl(fd, VIDIOC_QUERYCAP, &caps);
@@ -432,26 +467,7 @@ v4l_adapter_check(const char *path, int fd)
       break;
   }
 
-
-
-  va = calloc(1, sizeof(v4l_adapter_t));
-
-  va->va_identifier = strdup(path);
-
-  r = strlen(va->va_identifier);
-  for(i = 0; i < r; i++)
-    if(!isalnum((int)va->va_identifier[i]))
-      va->va_identifier[i] = '_';
-
-  va->va_path = strdup(path);
-  va->va_caps = caps;
-
-  LIST_INSERT_HEAD(&v4l_adapters, va, va_global_link);
-
-  tvhlog(LOG_INFO, "v4l", "Adding adapter %s: %s (%s) @ %s", 
-	 path, caps.card, caps.driver, caps.bus_info, caps.bus_info);
-
-  v4l_add_transport(va);
+  v4l_adapter_add(path, "fiktiv adapter", "andomas hw");
 }
 
 
@@ -481,15 +497,196 @@ v4l_adapter_probe(const char *path)
 
 
 
+/**
+ * Save config for the given adapter
+ */
+static void
+v4l_adapter_save(v4l_adapter_t *va)
+{
+  htsmsg_t *m = htsmsg_create_map();
 
+  lock_assert(&global_lock);
+
+  htsmsg_add_str(m, "displayname", va->va_displayname);
+  htsmsg_add_u32(m, "logging", va->va_logging);
+  hts_settings_save(m, "v4ladapters/%s", va->va_identifier);
+  htsmsg_destroy(m);
+}
+
+
+/**
+ *
+ */
+htsmsg_t *
+v4l_adapter_build_msg(v4l_adapter_t *va)
+{
+  htsmsg_t *m = htsmsg_create_map();
+
+  htsmsg_add_str(m, "identifier", va->va_identifier);
+  htsmsg_add_str(m, "name", va->va_displayname);
+  htsmsg_add_str(m, "type", "v4l");
+
+  if(va->va_path)
+    htsmsg_add_str(m, "path", va->va_path);
+
+  if(va->va_devicename)
+    htsmsg_add_str(m, "devicename", va->va_devicename);
+  return m;
+}
+
+
+/**
+ *
+ */
+static void
+v4l_adapter_notify(v4l_adapter_t *va)
+{
+  notify_by_msg("tvAdapter", v4l_adapter_build_msg(va));
+}
+
+
+/**
+ *
+ */
+v4l_adapter_t *
+v4l_adapter_find_by_identifier(const char *identifier)
+{
+  v4l_adapter_t *va;
+  
+  TAILQ_FOREACH(va, &v4l_adapters, va_global_link)
+    if(!strcmp(identifier, va->va_identifier))
+      return va;
+  return NULL;
+}
+
+
+/**
+ *
+ */
+void
+v4l_adapter_set_displayname(v4l_adapter_t *va, const char *name)
+{
+  lock_assert(&global_lock);
+
+  if(!strcmp(name, va->va_displayname))
+    return;
+
+  tvhlog(LOG_NOTICE, "v4l", "Adapter \"%s\" renamed to \"%s\"",
+	 va->va_displayname, name);
+
+  tvh_str_set(&va->va_displayname, name);
+  v4l_adapter_save(va);
+  v4l_adapter_notify(va);
+}
+
+
+/**
+ *
+ */
+void
+v4l_adapter_set_logging(v4l_adapter_t *va, int on)
+{
+  if(va->va_logging == on)
+    return;
+
+  lock_assert(&global_lock);
+
+  tvhlog(LOG_NOTICE, "v4l", "Adapter \"%s\" detailed logging set to: %s",
+	 va->va_displayname, on ? "On" : "Off");
+
+  va->va_logging = on;
+  v4l_adapter_save(va);
+  v4l_adapter_notify(va);
+}
+
+
+
+/**
+ *
+ */
+static void
+v4l_service_create_by_msg(v4l_adapter_t *va, htsmsg_t *c, const char *name)
+{
+  const char *s;
+  unsigned int u32;
+
+  th_transport_t *t = v4l_transport_find(va, name, 1);
+
+  if(t == NULL)
+    return;
+
+  s = htsmsg_get_str(c, "channelname");
+  if(htsmsg_get_u32(c, "mapped", &u32))
+    u32 = 0;
+  
+  if(!htsmsg_get_u32(c, "frequency", &u32))
+    t->tht_v4l_frequency = u32;
+
+  if(s && u32)
+    transport_map_channel(t, channel_find_by_name(s, 1), 0);
+}
+
+/**
+ *
+ */
+static void
+v4l_service_load(v4l_adapter_t *va)
+{
+  htsmsg_t *l, *c;
+  htsmsg_field_t *f;
+
+  if((l = hts_settings_load("v4lservices/%s", va->va_identifier)) == NULL)
+    return;
+ 
+  HTSMSG_FOREACH(f, l) {
+    if((c = htsmsg_get_map_by_field(f)) == NULL)
+      continue;
+    
+    v4l_service_create_by_msg(va, c, f->hmf_name);
+  }
+  htsmsg_destroy(l);
+}
+
+/**
+ *
+ */
 void
 v4l_init(void)
 {
+  htsmsg_t *l, *c;
+  htsmsg_field_t *f;
   char buf[256];
   int i;
+  v4l_adapter_t *va;
 
+  TAILQ_INIT(&v4l_adapters);
+  
   for(i = 0; i < 1; i++) {
     snprintf(buf, sizeof(buf), "/dev/video%d", i);
     v4l_adapter_probe(buf);
   }
+
+  l = hts_settings_load("v4ladapters");
+  if(l != NULL) {
+    HTSMSG_FOREACH(f, l) {
+      if((c = htsmsg_get_map_by_field(f)) == NULL)
+	continue;
+
+      if((va = v4l_adapter_find_by_identifier(f->hmf_name)) == NULL) {
+	/* Not discovered by hardware, create it */
+
+	va = calloc(1, sizeof(v4l_adapter_t));
+	va->va_identifier = strdup(f->hmf_name);
+	va->va_path = NULL;
+	va->va_devicename = NULL;
+      }
+
+      tvh_str_update(&va->va_displayname, htsmsg_get_str(c, "displayname"));
+      htsmsg_get_u32(c, "logging", &va->va_logging);
+    }
+    htsmsg_destroy(l);
+  }
+
+  TAILQ_FOREACH(va, &v4l_adapters, va_global_link)
+    v4l_service_load(va);
 }
