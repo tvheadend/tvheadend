@@ -43,6 +43,8 @@
 
 struct v4l_adapter_queue v4l_adapters;
 
+static void v4l_adapter_notify(v4l_adapter_t *va);
+
 
 /**
  *
@@ -166,6 +168,10 @@ v4l_transport_start(th_transport_t *t, unsigned int weight, int status,
 		    int force_start)
 {
   v4l_adapter_t *va = t->tht_v4l_adapter;
+  int frequency = t->tht_v4l_frequency;
+  struct v4l2_frequency vf;
+  int result;
+  v4l2_std_id std = 0xff;
   int fd;
 
   fd = open(va->va_path, O_RDWR | O_NONBLOCK);
@@ -175,14 +181,6 @@ v4l_transport_start(th_transport_t *t, unsigned int weight, int status,
 	   strerror(errno));
     return -1;
   }
-
-  int frequency = 182250000;
-  struct v4l2_frequency vf;
-  //  struct v4l2_tuner vt;
-  int result;
-
-
-  v4l2_std_id std = 0xff;
 
   result = ioctl(fd, VIDIOC_S_STD, &std);
   if(result < 0) {
@@ -220,6 +218,7 @@ v4l_transport_start(th_transport_t *t, unsigned int weight, int status,
   va->va_current_transport = t;
   t->tht_status = status;
   pthread_create(&va->va_thread, NULL, v4l_thread, va);
+  v4l_adapter_notify(va);
   return 0;
 }
 
@@ -256,6 +255,7 @@ v4l_transport_stop(th_transport_t *t)
 
   va->va_current_transport = NULL;
   t->tht_status = TRANSPORT_IDLE;
+  v4l_adapter_notify(va);
 }
 
 
@@ -304,11 +304,13 @@ static htsmsg_t *
 v4l_transport_sourceinfo(th_transport_t *t)
 {
   htsmsg_t *m = htsmsg_create_map();
-#if 0
-  if(t->tht_v4l_iface != NULL)
-    htsmsg_add_str(m, "adapter", t->tht_v4l_iface);
-  htsmsg_add_str(m, "mux", inet_ntoa(t->tht_v4l_group));
-#endif
+  char buf[30];
+
+  htsmsg_add_str(m, "adapter", t->tht_v4l_adapter->va_displayname);
+
+  snprintf(buf, sizeof(buf), "%d Hz", t->tht_v4l_frequency);
+  htsmsg_add_str(m, "mux", buf);
+
   return m;
 }
 
@@ -342,7 +344,7 @@ v4l_transport_find(v4l_adapter_t *va, const char *id, int create)
     snprintf(buf, sizeof(buf), "%s_%d", va->va_identifier, va->va_tally);
     id = buf;
   } else {
-    va->va_tally = MAX(atoi(id + vaidlen), va->va_tally);
+    va->va_tally = MAX(atoi(id + vaidlen + 1), va->va_tally);
   }
 
   t = transport_create(id, TRANSPORT_V4L, 0);
@@ -354,6 +356,11 @@ v4l_transport_find(v4l_adapter_t *va, const char *id, int create)
   t->tht_sourceinfo    = v4l_transport_sourceinfo;
   t->tht_quality_index = v4l_transport_quality;
   t->tht_iptv_fd = -1;
+
+  pthread_mutex_lock(&t->tht_stream_mutex); 
+  t->tht_video = transport_stream_create(t, -1, SCT_MPEG2VIDEO); 
+  t->tht_audio = transport_stream_create(t, -1, SCT_MPEG2AUDIO); 
+  pthread_mutex_unlock(&t->tht_stream_mutex); 
 
   t->tht_v4l_adapter = va;
 
@@ -368,7 +375,7 @@ v4l_transport_find(v4l_adapter_t *va, const char *id, int create)
  */
 static void
 v4l_adapter_add(const char *path, const char *displayname, 
-		const char *devicename )
+		const char *devicename)
 {
   v4l_adapter_t *va;
   int i, r;
@@ -386,16 +393,7 @@ v4l_adapter_add(const char *path, const char *displayname,
   va->va_path = path ? strdup(path) : NULL;
   va->va_devicename = devicename ? strdup(devicename) : NULL;
 
-  //  va->va_caps = caps;
-
   TAILQ_INSERT_TAIL(&v4l_adapters, va, va_global_link);
-
-#if 0
-  tvhlog(LOG_INFO, "v4l", "Adding adapter %s: %s (%s) @ %s", 
-	 path, caps.card, caps.driver, caps.bus_info, caps.bus_info);
-#endif
-
-  //  v4l_add_transport(va);
 }
 
 
@@ -406,6 +404,8 @@ static void
 v4l_adapter_check(const char *path, int fd)
 {
   int r, i;
+
+  char devicename[100];
 
   struct v4l2_capability caps;
 
@@ -438,7 +438,7 @@ v4l_adapter_check(const char *path, int fd)
 
     if(ioctl(fd, VIDIOC_ENUMSTD, &standard))
       break;
-
+#if 0
     printf("%3d: %016llx %24s %d/%d %d lines\n",
 	   standard.index, 
 	   standard.id,
@@ -446,6 +446,7 @@ v4l_adapter_check(const char *path, int fd)
 	   standard.frameperiod.numerator,
 	   standard.frameperiod.denominator,
 	   standard.framelines);
+#endif
   }
 
 
@@ -467,7 +468,13 @@ v4l_adapter_check(const char *path, int fd)
       break;
   }
 
-  v4l_adapter_add(path, "fiktiv adapter", "andomas hw");
+  snprintf(devicename, sizeof(devicename), "%s %s %s",
+	   caps.card, caps.driver, caps.bus_info);
+
+  tvhlog(LOG_INFO, "v4l",
+	 "Found adapter %s (%s)", path, devicename);
+
+  v4l_adapter_add(path, devicename, devicename);
 }
 
 
@@ -531,6 +538,16 @@ v4l_adapter_build_msg(v4l_adapter_t *va)
 
   if(va->va_devicename)
     htsmsg_add_str(m, "devicename", va->va_devicename);
+
+  if(va->va_current_transport != NULL) {
+    char buf[100];
+    snprintf(buf, sizeof(buf), "%d Hz", 
+	     va->va_current_transport->tht_v4l_frequency);
+    htsmsg_add_str(m, "currentMux", buf);
+  } else {
+    htsmsg_add_str(m, "currentMux", "");
+  }
+
   return m;
 }
 
@@ -661,7 +678,7 @@ v4l_init(void)
 
   TAILQ_INIT(&v4l_adapters);
   
-  for(i = 0; i < 1; i++) {
+  for(i = 0; i < 8; i++) {
     snprintf(buf, sizeof(buf), "/dev/video%d", i);
     v4l_adapter_probe(buf);
   }

@@ -70,7 +70,7 @@ tvheadend.v4l_adapter_general = function(adapterData) {
 	    '<h3>Device path:</h3>{path}' +
 	    '<h3>Device name:</h3>{devicename}' +
 	    '<h2 style="font-size: 150%">Status</h2>' +
-	    '<h3>Currently tuned to:</h3>{currentFrequency}&nbsp'
+	    '<h3>Currently tuned to:</h3>{currentMux}&nbsp'
     );
    
 
