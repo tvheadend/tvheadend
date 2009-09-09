@@ -41,13 +41,19 @@
 
 #include "htsmsg_binary.h"
 
+#include <sys/statvfs.h>
+#include "settings.h"
+#include <sys/time.h>
+
+
 static void *htsp_server;
 
-#define HTSP_PROTO_VERSION 2
+#define HTSP_PROTO_VERSION 3
 
 #define HTSP_PRIV_MASK (ACCESS_STREAMING)
 
 extern const char *htsversion;
+extern char *dvr_storage;
 
 LIST_HEAD(htsp_connection_list, htsp_connection);
 LIST_HEAD(htsp_subscription_list, htsp_subscription);
@@ -447,6 +453,44 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
   return out;
 }
 
+/**
+ * Get total and free disk space on configured path
+ */
+static htsmsg_t *
+htsp_method_getDiskSpace(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *out = htsmsg_create_map();
+  struct statvfs diskdata;
+
+  if(statvfs(dvr_storage,&diskdata) == -1)
+    return htsp_error("Unable to stat path");
+  
+  htsmsg_add_s64(out, "freediskspace",
+		 diskdata.f_bsize * (int64_t)diskdata.f_bavail);
+  htsmsg_add_s64(out, "totaldiskspace",
+		 diskdata.f_bsize * (int64_t)diskdata.f_blocks);
+  return out;
+}
+
+
+/**
+ * Get system time and diff to GMT
+ */
+static htsmsg_t *
+htsp_method_getSysTime(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *out = htsmsg_create_map();
+  struct timeval tv;
+  struct timezone tz;
+
+  if(gettimeofday(&tv, &tz) == -1)
+    return htsp_error("Unable to get system time"); 
+
+  htsmsg_add_s32(out, "time", tv.tv_sec);
+  htsmsg_add_s32(out, "timezone", tz.tz_minuteswest);
+  return out;
+}
+
 
 /**
  * Request subscription for a channel
@@ -598,6 +642,8 @@ struct {
   { "authenticate", htsp_method_authenticate, 0},
   { "enableAsyncMetadata", htsp_method_async, ACCESS_STREAMING},
   { "getEvent", htsp_method_getEvent, ACCESS_STREAMING},
+  { "getDiskSpace", htsp_method_getDiskSpace, ACCESS_STREAMING},
+  { "getSysTime", htsp_method_getSysTime, ACCESS_STREAMING},
   { "subscribe", htsp_method_subscribe, ACCESS_STREAMING},
   { "unsubscribe", htsp_method_unsubscribe, ACCESS_STREAMING},
 
