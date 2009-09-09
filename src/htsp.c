@@ -1058,26 +1058,6 @@ htsp_tag_delete(channel_tag_t *ct)
   htsp_async_send(m);
 }
 
-#if 0
-/**
- *
- */
-static void
-htsp_send_subscription_status(htsp_connection_t *htsp, th_subscription_t *ths,
-			      const char *txt)
-{
-  htsmsg_t *m;
-
-  m = htsmsg_create_map();
-  htsmsg_add_str(m, "method", "subscriptionStatus");
-  abort(); //htsmsg_add_u32(m, "subscriptionId", ths->ths_u32);
-
-  if(txt != NULL)
-    htsmsg_add_str(m, "status", txt);
-
-  htsp_send_message(htsp, m, NULL);
-}
-#endif
 
 const static char frametypearray[PKT_NTYPES] = {
   [PKT_I_FRAME] = 'I',
