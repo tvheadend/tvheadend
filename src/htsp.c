@@ -480,7 +480,7 @@ htsp_method_getDiskSpace(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_getSysTime(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  htsmsg_t *out = htsmsg_create_map();
+  htsmsg_t *out;
   struct timeval tv;
   struct timezone tz;
 
