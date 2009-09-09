@@ -347,6 +347,45 @@ htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
 }
 
 
+/**
+ *
+ */
+static htsmsg_t *
+htsp_build_dvrentry(dvr_entry_t *de, const char *method)
+{
+  htsmsg_t *out = htsmsg_create_map();
+  const char *s = NULL;
+
+  htsmsg_add_u32(out, "id", de->de_id);
+  htsmsg_add_u32(out, "channel", de->de_channel->ch_id);
+
+  htsmsg_add_s32(out, "start", de->de_start);
+  htsmsg_add_s32(out, "stop", de->de_stop);
+
+  htsmsg_add_str(out, "title", de->de_title);
+  htsmsg_add_str(out, "description", de->de_desc);
+
+  switch(de->de_sched_state) {
+  case DVR_SCHEDULED:
+    s = "scheduled";
+    break;
+  case DVR_RECORDING:
+    s = "recording";
+    break;
+  case DVR_COMPLETED:
+    s = "completed";
+    break;
+  case DVR_NOSTATE:
+    s = "invalid";
+    break;
+  }
+
+  htsmsg_add_str(out, "state", s);
+  htsmsg_add_str(out, "method", method);
+  return out;
+}
+
+
 /** 
  * Simple function to respond with an error
  */
@@ -382,6 +421,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
 {
   channel_t *ch;
   channel_tag_t *ct;
+  dvr_entry_t *de;
   htsmsg_t *m;
 
   /* First, just OK the async request */
@@ -405,6 +445,10 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
     if(ct->ct_enabled && !ct->ct_internal)
       htsp_send_message(htsp, htsp_build_tag(ct, "tagUpdate", 1), NULL);
+
+  /* Send all DVR entries */
+  LIST_FOREACH(de, &dvrentries, de_global_link)
+    htsp_send_message(htsp, htsp_build_dvrentry(de, "dvrEntryAdd"), NULL);
 
   /* Notify that initial sync has been completed */
   m = htsmsg_create_map();
@@ -1055,6 +1099,39 @@ htsp_tag_delete(channel_tag_t *ct)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_u32(m, "tagId", ct->ct_identifier);
   htsmsg_add_str(m, "method", "tagDelete");
+  htsp_async_send(m);
+}
+
+
+/**
+ * Called from dvr_db.c when a DVR entry is created
+ */
+void
+htsp_dvr_entry_add(dvr_entry_t *de)
+{
+  htsp_async_send(htsp_build_dvrentry(de, "dvrEntryAdd"));
+}
+
+
+/**
+ * Called from dvr_db.c when a DVR entry is updated
+ */
+void
+htsp_dvr_entry_update(dvr_entry_t *de)
+{
+  htsp_async_send(htsp_build_dvrentry(de, "dvrEntryUpdate"));
+}
+
+
+/**
+ * Called from dvr_db.c when a DVR entry is deleted
+ */
+void
+htsp_dvr_entry_delete(dvr_entry_t *de)
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_u32(m, "id", de->de_id);
+  htsmsg_add_str(m, "method", "dvrEntryDelete");
   htsp_async_send(m);
 }
 

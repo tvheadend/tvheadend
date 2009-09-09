@@ -27,6 +27,7 @@
 #include "tvhead.h"
 #include "dvr.h"
 #include "notify.h"
+#include "htsp.h"
 
 char *dvr_storage;
 char *dvr_format;
@@ -126,6 +127,7 @@ dvr_entry_link(dvr_entry_t *de)
 
     gtimer_arm_abs(&de->de_timer, dvr_timer_start_recording, de, preamble);
   }
+  htsp_dvr_entry_add(de);
 }
 
 
@@ -209,6 +211,8 @@ static void
 dvr_entry_remove(dvr_entry_t *de)
 {
   hts_settings_remove("dvr/log/%d", de->de_id);
+
+  htsp_dvr_entry_delete(de);
 
   gtimer_disarm(&de->de_timer);
 
@@ -372,6 +376,7 @@ dvr_stop_recording(dvr_entry_t *de, const char *errmsg)
 
   dvrdb_changed();
   dvr_entry_save(de);
+  htsp_dvr_entry_update(de);
 
   gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de, 
 		 de->de_stop + dvr_retention_days * 86400);
@@ -405,6 +410,7 @@ dvr_timer_start_recording(void *aux)
 	 de->de_title, de->de_channel->ch_name);
 
   dvrdb_changed();
+  htsp_dvr_entry_update(de);
 
   dvr_rec_subscribe(de);
 

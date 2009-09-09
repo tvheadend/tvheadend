@@ -32,6 +32,7 @@ extern int dvr_flags;
 extern char *dvr_postproc;
 extern int dvr_extra_time_pre;
 extern int dvr_extra_time_post;
+extern struct dvr_entry_list dvrentries;
 
 #define DVR_DIR_PER_DAY      0x1
 #define DVR_DIR_PER_CHANNEL  0x2

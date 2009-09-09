@@ -20,6 +20,7 @@
 #define HTSP_H_
 
 #include "epg.h"
+#include "dvr/dvr.h"
 
 void htsp_init(void);
 
@@ -32,5 +33,9 @@ void htsp_channel_delete(channel_t *ch);
 void htsp_tag_add(channel_tag_t *ct);
 void htsp_tag_update(channel_tag_t *ct);
 void htsp_tag_delete(channel_tag_t *ct);
+
+void htsp_dvr_entry_add(dvr_entry_t *de);
+void htsp_dvr_entry_update(dvr_entry_t *de);
+void htsp_dvr_entry_delete(dvr_entry_t *de);
 
 #endif /* HTSP_H_ */
