@@ -459,12 +459,13 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_getDiskSpace(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  htsmsg_t *out = htsmsg_create_map();
+  htsmsg_t *out;
   struct statvfs diskdata;
 
   if(statvfs(dvr_storage,&diskdata) == -1)
     return htsp_error("Unable to stat path");
   
+  out = htsmsg_create_map();
   htsmsg_add_s64(out, "freediskspace",
 		 diskdata.f_bsize * (int64_t)diskdata.f_bavail);
   htsmsg_add_s64(out, "totaldiskspace",
@@ -486,6 +487,7 @@ htsp_method_getSysTime(htsp_connection_t *htsp, htsmsg_t *in)
   if(gettimeofday(&tv, &tz) == -1)
     return htsp_error("Unable to get system time"); 
 
+  out = htsmsg_create_map();
   htsmsg_add_s32(out, "time", tv.tv_sec);
   htsmsg_add_s32(out, "timezone", tz.tz_minuteswest);
   return out;
