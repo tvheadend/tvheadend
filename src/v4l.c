@@ -545,7 +545,7 @@ v4l_adapter_build_msg(v4l_adapter_t *va)
 	     va->va_current_transport->tht_v4l_frequency);
     htsmsg_add_str(m, "currentMux", buf);
   } else {
-    htsmsg_add_str(m, "currentMux", "");
+    htsmsg_add_str(m, "currentMux", "- inactive -");
   }
 
   return m;
