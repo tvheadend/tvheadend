@@ -90,7 +90,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
 
 #define EXTJSPATH "static/extjs"
 
-  htsbuf_qprintf(hq, "<html><body>\n"
+  htsbuf_qprintf(hq, "<html>\n"
 		 "<script type=\"text/javascript\" src=\""EXTJSPATH"/adapter/ext/ext-base.js\"></script>\n"
 		 "<script type=\"text/javascript\" src=\""EXTJSPATH"/ext-all-debug.js\"></script>\n"
 		 "<link rel=\"stylesheet\" type=\"text/css\" href=\""EXTJSPATH"/resources/css/ext-all.css\">\n"
