@@ -1029,8 +1029,6 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	url:'dvb/adapter/' + adapterId, 
 	params:{'op':'load'},
 	success:function(form, action) {
-	    console.log(form);
-	    console.log(action);
 	    confform.enable();
 	}
     });
