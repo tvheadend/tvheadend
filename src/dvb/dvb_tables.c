@@ -836,10 +836,9 @@ dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   if(!tdmi->tdmi_adapter->tda_autodiscovery)
     return -1;
 
-  if(len < 11) {
-    printf("Invalid CABLE DESCRIPTOR\n");
+  if(len < 11)
     return -1;
-  }
+
   memset(&dmc, 0, sizeof(dmc));
   dmc.dmc_fe_params.inversion = INVERSION_AUTO;
 
