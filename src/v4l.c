@@ -174,6 +174,9 @@ v4l_transport_start(th_transport_t *t, unsigned int weight, int status,
   v4l2_std_id std = 0xff;
   int fd;
 
+  if(va->va_current_transport != NULL)
+    return 1; // Adapter busy
+
   fd = open(va->va_path, O_RDWR | O_NONBLOCK);
   if(fd == -1) {
     tvhlog(LOG_ERR, "v4l",
