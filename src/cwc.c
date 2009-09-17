@@ -510,6 +510,7 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
   cwc_transport_t *ct;
   uint16_t seq = (msg[2] << 8) | msg[3];
   th_transport_t *t;
+  int j;
 
   len -= 12;
   msg += 12;
@@ -546,7 +547,20 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
     
     ct->ct_keystate = CT_RESOLVED;
     pthread_mutex_lock(&t->tht_stream_mutex);
-    set_control_words(ct->ct_keys, msg + 3, msg + 3 + 8);
+
+
+    for(j = 0; j < 8; j++)
+      if(msg[3 + j]) {
+	set_even_control_word(ct->ct_keys, msg + 3);
+	break;
+      }
+
+    for(j = 0; j < 8; j++)
+      if(msg[3 + 8 +j]) {
+	set_odd_control_word(ct->ct_keys, msg + 3 + 8);
+	break;
+      }
+
     pthread_mutex_unlock(&t->tht_stream_mutex);
     break;
   }
