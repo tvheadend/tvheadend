@@ -116,10 +116,12 @@ setup_ffmpeg --cpu=${CPU}
 # Configure paths, etc
 #
 if [ ${RELEASE} != yes ]; then
+    echo  NOTE:
     echo  NOTE: Development build. 
     echo  NOTE: The generated binary will contained compild-in paths to
-    echo  NOTE: the current build tree. If you plan to install the binary,
-    echo  NOTE: please reconfigure with '--release'.
+    echo  NOTE: the current build tree. If you plan to install or move 
+    echo  NOTE: the binary, please reconfigure with '--release'.
+    echo  NOTE:
 
     cat >> ${CONFIG_H} << EOF
 #define TVHEADEND_CONTENT_PATH "${TOPDIR}"

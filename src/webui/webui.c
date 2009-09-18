@@ -251,7 +251,11 @@ webui_static_content(const char *content_path, const char *http_path,
   }
 
   tvhlog(LOG_ERR, "webui", 
-	 "No source path providing HTTP content: %s", http_path);
+	 "No source path providing HTTP content: \"%s\"."
+	 "Checked in \"%s\" and in the binary's embedded file system. "
+	 "If you need to move or install the binary, "
+	 "reconfigure with --release", http_path, content_path);
+
 }
 
 
