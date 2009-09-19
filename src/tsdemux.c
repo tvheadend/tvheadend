@@ -209,7 +209,10 @@ ts_recv_packet1(th_transport_t *t, uint8_t *tsb)
     ts_extract_pcr(t, st, tsb);
 
 
-  if(tsb[3] & 0xc0) {
+  if((tsb[3] & 0xc0) ||
+      (t->tht_scrambled && st->st_type != SCT_CA &&
+       st->st_type != SCT_PAT && st->st_type != SCT_PMT)) {
+
     /* scrambled stream */
     n = m = 0;
 
