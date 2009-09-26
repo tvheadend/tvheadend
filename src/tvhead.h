@@ -609,6 +609,7 @@ typedef struct th_transport {
 
   struct th_descrambler_list tht_descramblers;
   int tht_scrambled;
+  int tht_scrambled_seen;
   int tht_caid;
 
   /**
