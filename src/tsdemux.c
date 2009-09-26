@@ -213,7 +213,7 @@ ts_recv_packet1(th_transport_t *t, uint8_t *tsb)
       (t->tht_scrambled_seen && st->st_type != SCT_CA &&
        st->st_type != SCT_PAT && st->st_type != SCT_PMT)) {
 
-    t->tht_scrambled_seen = 1;
+    t->tht_scrambled_seen = tht_scrambled;
 
     /* scrambled stream */
     n = m = 0;
