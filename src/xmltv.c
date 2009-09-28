@@ -176,25 +176,29 @@ xmltv_map_to_channel_by_name(xmltv_channel_t *xc)
 static time_t
 xmltv_str2time(const char *str)
 {
-  char str0[30];
-  struct tm tim;
+  struct tm tm;
+  int tz, r;
 
-  snprintf(str0, sizeof(str0), "%s", str);
+  memset(&tm, 0, sizeof(tm));
 
-  tim.tm_sec = atoi(str0 + 0xc);
-  str0[0xc] = 0;
-  tim.tm_min = atoi(str0 + 0xa);
-  str0[0xa] = 0;
-  tim.tm_hour = atoi(str0 + 0x8);
-  str0[0x8] = 0;
-  tim.tm_mday = atoi(str0 + 0x6);
-  str0[0x6] = 0;
-  tim.tm_mon = atoi(str0 + 0x4) - 1;
-  str0[0x4] = 0;
-  tim.tm_year = atoi(str0) - 1900;
+  r = sscanf(str, "%04d%02d%02d%02d%02d%02d %d",
+	     &tm.tm_year, &tm.tm_mon, &tm.tm_mday,
+	     &tm.tm_hour, &tm.tm_min, &tm.tm_sec,
+	     &tz);
 
-  tim.tm_isdst = -1;
-  return mktime(&tim);
+  tm.tm_mon  -= 1;
+  tm.tm_year -= 1900;
+  tm.tm_isdst = -1;
+
+  tz = (tz % 100) + (tz / 100) * 60; // Convert from HHMM to minutes
+
+  if(r == 6) {
+    return mktime(&tm);
+  } else if(r == 7) {
+    return timegm(&tm) - tz * 60;
+  } else {
+    return 0;
+  }
 }
 
 
