@@ -198,12 +198,12 @@ typedef struct th_dvb_adapter {
 extern struct th_dvb_adapter_queue dvb_adapters;
 extern struct th_dvb_mux_instance_tree dvb_muxes;
 
-void dvb_init(void);
+void dvb_init(uint32_t adapter_mask);
 
 /**
  * DVB Adapter
  */
-void dvb_adapter_init(void);
+void dvb_adapter_init(uint32_t adapter_mask);
 
 void dvb_adapter_mux_scanner(void *aux);
 

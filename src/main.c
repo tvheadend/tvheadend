@@ -160,6 +160,7 @@ usage(const char *argv0)
   printf("HTS Tvheadend %s\n", htsversion_full);
   printf("usage: %s [options]\n", argv0);
   printf("\n");
+  printf(" -a <adapters>   Use only DVB adapters specified (csv)\n");
   printf(" -f              Fork and daemonize\n");
   printf(" -u <username>   Run as user <username>, only works with -f\n");
   printf(" -g <groupname>  Run as group <groupname>, only works with -f\n");
@@ -234,9 +235,31 @@ main(int argc, char **argv)
   const char *homedir = NULL;
   const char *rawts_input = NULL;
   const char *join_transport = NULL;
+  char *p, *endp;
+  uint32_t adapter_mask = 0xffffffff;
 
-  while((c = getopt(argc, argv, "fu:g:c:Chdr:j:")) != -1) {
+  while((c = getopt(argc, argv, "a:fu:g:c:Chdr:j:")) != -1) {
     switch(c) {
+    case 'a':
+      adapter_mask = 0x0;
+      p = strtok(optarg, ",");
+      if (p != NULL) {
+        do {
+          int adapter = strtol(p, &endp, 10);
+          if (*endp != 0 || adapter < 0 || adapter > 31) {
+              fprintf(stderr, "Invalid adapter number '%s'\n", p);
+              return 1;
+          }
+          adapter_mask |= (1 << adapter);
+        } while ((p = strtok(NULL, ",")) != NULL);
+        if (adapter_mask == 0x0) {
+          fprintf(stderr, "No adapters specified!\n");
+          return 1;
+        }
+      } else {
+        usage(argv[0]);
+      }
+      break;
     case 'f':
       forkaway = 1;
       break;
@@ -337,7 +360,7 @@ main(int argc, char **argv)
 
   tcp_server_init();
 
-  dvb_init();
+  dvb_init(adapter_mask);
 
   iptv_input_init();
 

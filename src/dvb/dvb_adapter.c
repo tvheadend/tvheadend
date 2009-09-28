@@ -272,7 +272,7 @@ tda_add(const char *path)
  *
  */
 void
-dvb_adapter_init(void)
+dvb_adapter_init(uint32_t adapter_mask)
 {
   char path[200];
   htsmsg_t *l, *c;
@@ -284,8 +284,10 @@ dvb_adapter_init(void)
   TAILQ_INIT(&dvb_adapters);
 
   for(i = 0; i < 32; i++) {
+    if ((1 << i) & adapter_mask) {
     snprintf(path, sizeof(path), "/dev/dvb/adapter%d", i);
     tda_add(path);
+  }
   }
 
   l = hts_settings_load("dvbadapters");
