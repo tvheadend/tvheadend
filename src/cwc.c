@@ -542,7 +542,7 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
     }
 
     tvhlog(LOG_DEBUG, "cwc",
-	   "Received ECM reply for srevice \"%s\" "
+	   "Received ECM reply for service \"%s\" "
 	   "even: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
 	   " odd: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x ",
 	   t->tht_svcname,
