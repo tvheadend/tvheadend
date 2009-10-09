@@ -992,7 +992,6 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_str(r, "name", tda->tda_displayname);
     htsmsg_add_u32(r, "automux", tda->tda_autodiscovery);
     htsmsg_add_u32(r, "idlescan", tda->tda_idlescan);
-    htsmsg_add_u32(r, "logging", tda->tda_logging);
     htsmsg_add_str(r, "diseqcversion", 
 		   ((const char *[]){"DiSEqC 1.0 / 2.0",
 				       "DiSEqC 1.1 / 2.1"})
@@ -1009,9 +1008,6 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 
     s = http_arg_get(&hc->hc_req_args, "idlescan");
     dvb_adapter_set_idlescan(tda, !!s);
-
-    s = http_arg_get(&hc->hc_req_args, "logging");
-    dvb_adapter_set_logging(tda, !!s);
 
     if((s = http_arg_get(&hc->hc_req_args, "diseqcversion")) != NULL) {
       if(!strcmp(s, "DiSEqC 1.0 / 2.0"))

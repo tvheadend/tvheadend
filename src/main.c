@@ -67,7 +67,11 @@ pthread_mutex_t global_lock;
 pthread_mutex_t ffmpeg_lock;
 static int log_stderr;
 static int log_decorate;
-int log_debug;
+
+int log_debug_to_syslog;
+int log_debug_to_comet;
+int log_debug_to_console;
+
 
 static void
 handle_sigpipe(int x)
@@ -273,7 +277,7 @@ main(int argc, char **argv)
       contentpath = optarg;
       break;
     case 'd':
-      log_debug = 1;
+      log_debug_to_console = 1;
       break;
     case 'C':
       createdefault = 1;
@@ -435,8 +439,6 @@ static const char *logtxtmeta[8][2] = {
   {"DEBUG",     "\033[32m"},
 };
 
-
-
 /**
  * Internal log function
  */
@@ -455,12 +457,13 @@ tvhlogv(int notify, int severity, const char *subsys, const char *fmt,
 
   vsnprintf(buf + l, sizeof(buf) - l, fmt, ap);
 
-  syslog(severity, "%s", buf);
+  if(log_debug_to_syslog || severity < LOG_DEBUG)
+    syslog(severity, "%s", buf);
 
   /**
    * Send notification to Comet (Push interface to web-clients)
    */
-  if(notify) {
+  if(notify && (log_debug_to_comet || severity < LOG_DEBUG)) {
     htsmsg_t *m;
 
     time(&now);
@@ -479,7 +482,7 @@ tvhlogv(int notify, int severity, const char *subsys, const char *fmt,
    * Write to stderr
    */
   
-  if(log_stderr) {
+  if(log_stderr && (log_debug_to_console || severity < LOG_DEBUG)) {
     const char *leveltxt = logtxtmeta[severity][0];
     const char *sgr      = logtxtmeta[severity][1];
     const char *sgroff;

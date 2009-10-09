@@ -177,9 +177,8 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
     dvb_mux_save(tdmi);
 
     dvb_mux_nicename(buf, sizeof(buf), tdmi);
-    if(tda->tda_logging)
-      tvhlog(LOG_INFO, "dvb", 
-	     "Configuration for mux \"%s\" updated by %s", buf, source);
+    tvhlog(LOG_DEBUG, "dvb", 
+	   "Configuration for mux \"%s\" updated by %s", buf, source);
     dvb_mux_notify(tdmi);
     return NULL;
   }

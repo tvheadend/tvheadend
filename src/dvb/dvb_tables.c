@@ -123,11 +123,9 @@ dvb_table_fastswitch(th_dvb_mux_instance_t *tdmi)
   tda->tda_initial_num_mux--;
 
 
-  if(tda->tda_logging) {
-    dvb_mux_nicename(buf, sizeof(buf), tdmi);
-    tvhlog(LOG_INFO, "dvb", "\"%s\" initial scan completed for \"%s\"",
-	     tda->tda_rootpath, buf);
-  }
+  dvb_mux_nicename(buf, sizeof(buf), tdmi);
+  tvhlog(LOG_DEBUG, "dvb", "\"%s\" initial scan completed for \"%s\"",
+	 tda->tda_rootpath, buf);
   dvb_adapter_mux_scanner(tda);
 }
 

@@ -961,7 +961,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 
     var confreader = new Ext.data.JsonReader({
 	root: 'dvbadapters'
-    }, ['name', 'automux', 'idlescan', 'logging', 'diseqcversion']);
+    }, ['name', 'automux', 'idlescan', 'diseqcversion']);
 
     
     function saveConfForm () {
@@ -985,10 +985,6 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	new Ext.form.Checkbox({
 	    fieldLabel: 'Idle scanning',
 	    name: 'idlescan'
-	}),
-	new Ext.form.Checkbox({
-	    fieldLabel: 'Detailed logging',
-	    name: 'logging'
 	})
     ];
 

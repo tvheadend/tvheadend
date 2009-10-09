@@ -115,12 +115,10 @@ dvb_fe_monitor(void *aux)
   if(status != tdmi->tdmi_fe_status) {
     tdmi->tdmi_fe_status = status;
 
-    if(tda->tda_logging) {
-	dvb_mux_nicename(buf, sizeof(buf), tdmi);
-	tvhlog(LOG_INFO, 
-	       "dvb", "\"%s\" on adapter \"%s\", status changed to %s",
-	       buf, tda->tda_displayname, dvb_mux_status(tdmi));
-    }
+    dvb_mux_nicename(buf, sizeof(buf), tdmi);
+    tvhlog(LOG_DEBUG, 
+	   "dvb", "\"%s\" on adapter \"%s\", status changed to %s",
+	   buf, tda->tda_displayname, dvb_mux_status(tdmi));
     update = 1;
   }
 
@@ -267,14 +265,13 @@ dvb_fe_tune_s2(th_dvb_mux_instance_t *tdmi, dvb_mux_conf_t *dmc, const char *nam
       break;
   }
 
-  if(tda->tda_logging)
-    tvhlog(LOG_INFO, 
-	   "dvb", 
-	   "tuning via s2api to %s, freq %d, symbolrate %d, "
-	   "fec %d, sys %d, mod %d",
-	   name, p->frequency, p->u.qpsk.symbol_rate, p->u.qpsk.fec_inner, 
-	   dmc->dmc_fe_delsys, 
-	   dmc->dmc_fe_modulation);
+  tvhlog(LOG_DEBUG,
+	 "dvb", 
+	 "tuning via s2api to %s, freq %d, symbolrate %d, "
+	 "fec %d, sys %d, mod %d",
+	 name, p->frequency, p->u.qpsk.symbol_rate, p->u.qpsk.fec_inner, 
+	 dmc->dmc_fe_delsys, 
+	 dmc->dmc_fe_modulation);
   r = ioctl(tda->tda_fe_fd, FE_SET_PROPERTY, &_dvbs_cmdseq);
   
   if(0)
@@ -354,10 +351,9 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 
   tda->tda_fe_monitor_hold = 4;
 
-  if(tda->tda_logging)
-      tvhlog(LOG_INFO,
-	     "dvb", "\"%s\" tuning to \"%s\" (%s)", tda->tda_rootpath, buf,
-	     reason);
+  tvhlog(LOG_DEBUG,
+	 "dvb", "\"%s\" tuning to \"%s\" (%s)", tda->tda_rootpath, buf,
+	 reason);
 
 #if DVB_API_VERSION >= 5
   if (tda->tda_type == FE_QPSK)

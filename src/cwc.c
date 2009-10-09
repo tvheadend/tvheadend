@@ -541,13 +541,22 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
       return 0;
     }
 
+    tvhlog(LOG_DEBUG, "cwc",
+	   "Received ECM reply for srevice \"%s\" "
+	   "even: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
+	   " odd: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x ",
+	   t->tht_svcname,
+	   msg[3 + 0], msg[3 + 1], msg[3 + 2], msg[3 + 3], msg[3 + 4],
+	   msg[3 + 5], msg[3 + 6], msg[3 + 7], msg[3 + 8], msg[3 + 9],
+	   msg[3 + 10],msg[3 + 11],msg[3 + 12],msg[3 + 13],msg[3 + 14],
+	   msg[3 + 15]);
+
     if(ct->ct_keystate != CT_RESOLVED)
       tvhlog(LOG_INFO, "cwc",
 	     "Obtained key for for service \"%s\"",t->tht_svcname);
     
     ct->ct_keystate = CT_RESOLVED;
     pthread_mutex_lock(&t->tht_stream_mutex);
-
 
     for(j = 0; j < 8; j++)
       if(msg[3 + j]) {
@@ -902,6 +911,8 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
       ct->ct_keystate = CT_UNKNOWN;
       break;
     }
+
+    tvhlog(LOG_DEBUG, "cwc", "Sending ECM for service %s", t->tht_svcname);
 
     memcpy(ct->ct_ecm, data, len);
     ct->ct_ecmsize = len;

@@ -78,7 +78,6 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_str(m, "displayname", tda->tda_displayname);
   htsmsg_add_u32(m, "autodiscovery", tda->tda_autodiscovery);
   htsmsg_add_u32(m, "idlescan", tda->tda_idlescan);
-  htsmsg_add_u32(m, "logging", tda->tda_logging);
   htsmsg_add_u32(m, "diseqc_version", tda->tda_diseqc_version);
   hts_settings_save(m, "dvbadapters/%s", tda->tda_identifier);
   htsmsg_destroy(m);
@@ -142,25 +141,6 @@ dvb_adapter_set_idlescan(th_dvb_adapter_t *tda, int on)
 	 tda->tda_displayname, on ? "On" : "Off");
 
   tda->tda_idlescan = on;
-  tda_save(tda);
-}
-
-
-/**
- *
- */
-void
-dvb_adapter_set_logging(th_dvb_adapter_t *tda, int on)
-{
-  if(tda->tda_logging == on)
-    return;
-
-  lock_assert(&global_lock);
-
-  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" detailed logging set to: %s",
-	 tda->tda_displayname, on ? "On" : "Off");
-
-  tda->tda_logging = on;
   tda_save(tda);
 }
 
@@ -319,7 +299,6 @@ dvb_adapter_init(uint32_t adapter_mask)
 
       htsmsg_get_u32(c, "autodiscovery", &tda->tda_autodiscovery);
       htsmsg_get_u32(c, "idlescan", &tda->tda_idlescan);
-      htsmsg_get_u32(c, "logging", &tda->tda_logging);
       htsmsg_get_u32(c, "diseqc_version", &tda->tda_diseqc_version);
     }
     htsmsg_destroy(l);

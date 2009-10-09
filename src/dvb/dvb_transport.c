@@ -352,8 +352,7 @@ dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   }
 
   dvb_mux_nicename(buf, sizeof(buf), tdmi);
-  if(tdmi->tdmi_adapter->tda_logging)
-    tvhlog(LOG_INFO, "dvb", "Add service \"%s\" on \"%s\"", identifier, buf);
+  tvhlog(LOG_DEBUG, "dvb", "Add service \"%s\" on \"%s\"", identifier, buf);
 
   t = transport_create(identifier, TRANSPORT_DVB, THT_MPEG_TS);
 
