@@ -822,7 +822,7 @@ channel_tag_find_by_name(const char *name, int create)
   char str[50];
 
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
-    if(!strcmp(ct->ct_name, name))
+    if(!strcasecmp(ct->ct_name, name))
       return ct;
 
   if(!create)
