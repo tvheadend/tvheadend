@@ -367,7 +367,7 @@ _strntod(const char *s, char decimal_point_char, char **ep)
   
   d = strtod(buf, ep);
   
-  /* figure out offset in orignal string */
+  /* figure out offset in original string */
   if(ep != NULL)
     *ep = (char *)s + (*ep - buf);
   
