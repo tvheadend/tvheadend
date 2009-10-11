@@ -357,7 +357,6 @@ _strntod(const char *s, char decimal_point_char, char **ep)
   
   strncpy(buf, s, c - s); 
   buf[c - s] = '\0';
-  printf("s='%s' buf=%s\n", s, buf);
   
   /* replace if specified char is not same as current locale */
   if(decimal_point_char != locale_decimal_point_char) {
