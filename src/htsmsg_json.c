@@ -1,6 +1,6 @@
 /*
  *  Functions converting HTSMSGs to/from JSON
- *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2008 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -58,7 +58,10 @@ htsmsg_json_encode_string(const char *str, htsbuf_queue_t *hq)
 
 
 /*
- *
+ * Note to future:
+ * If your about to add support for numbers with decimal point,
+ * remember to always serialize them with '.' as decimal point character
+ * no matter what current locale says. This is according to the JSON spec.
  */
 static void
 htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
@@ -327,6 +330,50 @@ htsmsg_json_parse_array(const char *s, const char **endp)
   return r;
 }
 
+/* 
+ * locale independent strtod.
+ * does not support hex floats as the standard strtod
+ */
+static double
+_strntod(const char *s, char decimal_point_char, char **ep)
+{
+  static char locale_decimal_point_char = 0;
+  char buf[64];
+  const char *c;
+  double d;
+  
+  /* ugly but very portable way to get decimal point char */ 
+  if(locale_decimal_point_char == 0) {
+    snprintf(buf, sizeof(buf), "%f", 0.0);
+    locale_decimal_point_char = buf[1];
+    assert(locale_decimal_point_char != 0);
+  }
+  
+  for(c = s; 
+      *c != '\0' &&
+      ((*c > 0 && *c < 33) || /* skip whitespace */
+       (*c == decimal_point_char || strchr("+-0123456789", *c) != NULL)); c++)
+    ;
+  
+  strncpy(buf, s, c - s); 
+  buf[c - s] = '\0';
+  printf("s='%s' buf=%s\n", s, buf);
+  
+  /* replace if specified char is not same as current locale */
+  if(decimal_point_char != locale_decimal_point_char) {
+    char *r = strchr(buf, decimal_point_char);
+    if(r != NULL)
+      *r = locale_decimal_point_char;
+  }
+  
+  d = strtod(buf, ep);
+  
+  /* figure out offset in orignal string */
+  if(ep != NULL)
+    *ep = (char *)s + (*ep - buf);
+  
+  return d;
+}
 
 /**
  *
@@ -335,7 +382,7 @@ static char *
 htsmsg_json_parse_number(const char *s, double *dp)
 {
   char *ep;
-  double d = strtod(s, &ep);
+  double d = _strntod(s, '.', &ep);
 
   if(ep == s)
     return NULL;
@@ -352,7 +399,7 @@ htsmsg_json_parse_value(const char *s, htsmsg_t *parent, char *name)
 {
   const char *s2;
   char *str;
-  double d;
+  double d = 0;
   htsmsg_t *c;
 
   if((c = htsmsg_json_parse_object(s, &s2)) != NULL) {
