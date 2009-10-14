@@ -521,7 +521,7 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     }
 
     if((e = epg_event_create(ch, start_time, start_time + duration,
-			     event_id)) == NULL) {
+			     event_id, NULL)) == NULL) {
       len -= dllen;
       ptr += dllen;
       continue;

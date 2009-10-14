@@ -20,6 +20,8 @@ hts-tvheadend (2.6) hts; urgency=low
   * Add support for DiSEqC 1.1 / 2.1, configured on per-adapter basis.
     Ticket #99
 
+  * Increase logging and include various stats to XMLTV grab
+	
 hts-tvheadend (2.5) hts; urgency=low
 
   * If a previosly detected DVB adapter was not present during startup,

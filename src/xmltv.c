@@ -58,6 +58,17 @@ typedef struct xmltv_grabber {
 
 } xmltv_grabber_t;
 
+
+typedef struct parse_stats {
+  int ps_channels;
+  int ps_programmes;
+  int ps_events_created;
+
+} parse_stats_t;
+
+
+
+
 static xmltv_grabber_t *xg_current;
 
 
@@ -330,16 +341,20 @@ xmltv_parse_channel(htsmsg_t *body)
  */
 static void
 xmltv_parse_programme_tags(xmltv_channel_t *xc, htsmsg_t *tags, 
-			   time_t start, time_t stop)
+			   time_t start, time_t stop, parse_stats_t *ps)
 {
   event_t *e;
   channel_t *ch;
   const char *title = xmltv_get_cdata_by_tag(tags, "title");
   const char *desc  = xmltv_get_cdata_by_tag(tags, "desc");
+  int created;
 
   LIST_FOREACH(ch, &xc->xc_channels, ch_xc_link) {
-    if((e = epg_event_create(ch, start, stop, -1)) == NULL)
+    if((e = epg_event_create(ch, start, stop, -1, &created)) == NULL)
       continue;
+
+    if(created)
+      ps->ps_events_created++;
 
     if(title != NULL) epg_event_set_title(e, title);
     if(desc  != NULL) epg_event_set_desc(e, desc);
@@ -351,7 +366,7 @@ xmltv_parse_programme_tags(xmltv_channel_t *xc, htsmsg_t *tags,
  * Parse a <programme> tag from xmltv
  */
 static void
-xmltv_parse_programme(htsmsg_t *body)
+xmltv_parse_programme(htsmsg_t *body, parse_stats_t *ps)
 {
   htsmsg_t *attribs, *tags;
   const char *s, *chid;
@@ -382,7 +397,7 @@ xmltv_parse_programme(htsmsg_t *body)
     return;
 
   if((xc = xmltv_channel_find(chid, 0)) != NULL) {
-    xmltv_parse_programme_tags(xc, tags, start, stop);
+    xmltv_parse_programme_tags(xc, tags, start, stop, ps);
   }
 }
 
@@ -390,7 +405,7 @@ xmltv_parse_programme(htsmsg_t *body)
  *
  */
 static void
-xmltv_parse_tv(htsmsg_t *body)
+xmltv_parse_tv(htsmsg_t *body, parse_stats_t *ps)
 {
   htsmsg_t *tags;
   htsmsg_field_t *f;
@@ -401,8 +416,10 @@ xmltv_parse_tv(htsmsg_t *body)
   HTSMSG_FOREACH(f, tags) {
     if(!strcmp(f->hmf_name, "channel")) {
       xmltv_parse_channel(htsmsg_get_map_by_field(f));
+      ps->ps_channels++;
     } else if(!strcmp(f->hmf_name, "programme")) {
-      xmltv_parse_programme(htsmsg_get_map_by_field(f));
+      xmltv_parse_programme(htsmsg_get_map_by_field(f), ps);
+      ps->ps_programmes++;
     }
   }
 }
@@ -412,7 +429,7 @@ xmltv_parse_tv(htsmsg_t *body)
  *
  */
 static void
-xmltv_parse(htsmsg_t *body)
+xmltv_parse(htsmsg_t *body, parse_stats_t *ps)
 {
   htsmsg_t *tags, *tv;
 
@@ -422,7 +439,7 @@ xmltv_parse(htsmsg_t *body)
   if((tv = htsmsg_get_map(tags, "tv")) == NULL)
     return;
 
-  xmltv_parse_tv(tv);
+  xmltv_parse_tv(tv, ps);
 }
 
 /**
@@ -435,12 +452,21 @@ xmltv_grab(const char *prog)
   char *outbuf;
   htsmsg_t *body;
   char errbuf[100];
+  time_t t1, t2;
+  parse_stats_t ps = {0};
 
+  time(&t1);
   outlen = spawn_and_store_stdout(prog, NULL, &outbuf);
   if(outlen < 1) {
     tvhlog(LOG_ERR, "xmltv", "No output from \"%s\"", prog);
     return;
   }
+
+  time(&t2);
+
+  tvhlog(LOG_DEBUG, "xmltv",
+	 "%s: completed, took %ld seconds",
+	 prog, t2 - t1);
 
   body = htsmsg_xml_deserialize(outbuf, errbuf, sizeof(errbuf));
   if(body == NULL) {
@@ -449,9 +475,18 @@ xmltv_grab(const char *prog)
     return;
   }
 
+
   pthread_mutex_lock(&global_lock);
-  xmltv_parse(body);
+  xmltv_parse(body, &ps);
   pthread_mutex_unlock(&global_lock);
+
+  tvhlog(LOG_INFO, "xmltv",
+	 "%s: Parsing completed. XML contained %d channels, %d events, "
+	 "%d new events injected in EPG",
+	 prog, 
+	 ps.ps_channels,
+	 ps.ps_programmes,
+	 ps.ps_events_created);
 
   htsmsg_destroy(body);
 }
