@@ -27,7 +27,8 @@ tvheadend.comet.on('channeltags', function(m) {
 tvheadend.channels = new Ext.data.JsonStore({
     autoLoad: true,
     root:'entries',
-    fields: ['name', 'chid', 'xmltvsrc', 'tags'],
+    fields: ['name', 'chid', 'xmltvsrc', 'tags', 
+	     'epg_pre_start', 'epg_post_end'],
     id: 'chid',
     url: "channels",
     baseParams: {
@@ -181,7 +182,42 @@ tvheadend.chconf = function()
 		valueField: 'identifier',
 		displayField: 'name'
 	    })
-	}, actions
+	},
+    {
+        header: "DVR Pre-Start",
+        dataIndex: 'epg_pre_start',
+        width: 100,
+
+	renderer: function(value, metadata, record, row, col, store) {
+	    if (!value) {
+		return '<span class="tvh-grid-unset">Not set</span>';
+	    } else {
+		return value + ' min';
+	    }
+	},
+	    
+	editor: new fm.NumberField({
+	    minValue: 0,
+	    maxValue: 1440
+	})
+    },
+    {
+        header: "DVR Post-End",
+        dataIndex: 'epg_post_end',
+        width: 100,
+	renderer: function(value, metadata, record, row, col, store) {
+	    if (!value) {
+		return '<span class="tvh-grid-unset">Not set</span>';
+	    } else {
+		return value + ' min';
+	    }
+	},
+
+	editor: new fm.NumberField({
+	    minValue: 0,
+	    maxValue: 1440
+	})
+    }, actions
     ]);
 
 

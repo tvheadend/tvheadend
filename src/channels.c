@@ -271,6 +271,9 @@ channel_load_one(htsmsg_t *c, int id)
 
   tvh_str_update(&ch->ch_icon, htsmsg_get_str(c, "icon"));
 
+  htsmsg_get_s32(c, "dvr_extra_time_pre",  &ch->ch_dvr_extra_time_pre);
+  htsmsg_get_s32(c, "dvr_extra_time_post", &ch->ch_dvr_extra_time_post);
+
   if((tags = htsmsg_get_list(c, "tags")) != NULL) {
     HTSMSG_FOREACH(f, tags) {
       if(f->hmf_type == HMF_S64) {
@@ -329,6 +332,9 @@ channel_save(channel_t *ch)
     htsmsg_add_u32(tags, NULL, ctm->ctm_tag->ct_identifier);
 
   htsmsg_add_msg(m, "tags", tags);
+
+  htsmsg_add_u32(m, "dvr_extra_time_pre",  ch->ch_dvr_extra_time_pre);
+  htsmsg_add_u32(m, "dvr_extra_time_post", ch->ch_dvr_extra_time_post);
 
   hts_settings_save(m, "channels/%d", ch->ch_id);
   htsmsg_destroy(m);
@@ -451,6 +457,36 @@ channel_set_icon(channel_t *ch, const char *icon)
   htsp_channel_update(ch);
 }
 
+/**
+ *  Set the amount of minutes to start before / end after recording on a channel
+ */
+
+void
+channel_set_epg_postpre_time(channel_t *ch, int pre, int mins)
+{
+  if (mins < -10000 || mins > 10000)
+    mins = 0;
+
+  lock_assert(&global_lock);
+
+  tvhlog(LOG_NOTICE, "channels", 
+	 "Channel \"%s\" epg %s-time set to %d minutes",
+	 ch->ch_name, pre ? "pre":"post", mins);
+
+  if (pre) {
+    if (ch->ch_dvr_extra_time_pre == mins)
+      return;
+    else
+      ch->ch_dvr_extra_time_pre = mins;
+  } else {
+    if (ch->ch_dvr_extra_time_post == mins)
+      return;
+    else
+       ch->ch_dvr_extra_time_post = mins;
+  }
+  channel_save(ch);
+  htsp_channel_update(ch);
+}
 
 /**
  *

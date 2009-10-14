@@ -21,7 +21,10 @@ hts-tvheadend (2.6) hts; urgency=low
     Ticket #99
 
   * Increase logging and include various stats to XMLTV grab
-	
+
+  * Add support for configuring a per-channel pre/post extra time for 
+    scheduled recordings. Ticket #104
+
 hts-tvheadend (2.5) hts; urgency=low
 
   * If a previosly detected DVB adapter was not present during startup,

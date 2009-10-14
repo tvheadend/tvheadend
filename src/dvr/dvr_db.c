@@ -142,6 +142,7 @@ dvr_entry_create_by_event(event_t *e, const char *creator)
   char tbuf[30];
   struct tm tm;
   time_t t;
+  channel_t *ch;
 
   if(e->e_channel == NULL || e->e_title == NULL)
     return NULL;
@@ -153,13 +154,13 @@ dvr_entry_create_by_event(event_t *e, const char *creator)
   de = calloc(1, sizeof(dvr_entry_t));
   de->de_id = ++de_tally;
 
-  de->de_channel = e->e_channel;
+  ch = de->de_channel = e->e_channel;
   LIST_INSERT_HEAD(&de->de_channel->ch_dvrs, de, de_channel_link);
 
   de->de_start   = e->e_start;
   de->de_stop    = e->e_stop;
-  de->de_start_extra = dvr_extra_time_pre;
-  de->de_stop_extra  = dvr_extra_time_post;
+  de->de_start_extra = dvr_extra_time_pre  + ch->ch_dvr_extra_time_pre;
+  de->de_stop_extra  = dvr_extra_time_post + ch->ch_dvr_extra_time_post;
   de->de_creator = strdup(creator);
   de->de_title   = strdup(e->e_title);
   de->de_desc    = e->e_desc  ? strdup(e->e_desc)  : NULL;

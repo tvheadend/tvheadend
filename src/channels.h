@@ -48,6 +48,8 @@ typedef struct channel {
 
   gtimer_t ch_epg_timer_head;
   gtimer_t ch_epg_timer_current;
+  int ch_dvr_extra_time_pre;
+  int ch_dvr_extra_time_post;
 
   char *ch_icon;
 
@@ -112,6 +114,8 @@ int channel_rename(channel_t *ch, const char *newname);
 void channel_delete(channel_t *ch);
 
 void channel_merge(channel_t *dst, channel_t *src);
+
+void channel_set_epg_postpre_time(channel_t *ch, int pre, int mins);
 
 void channel_set_icon(channel_t *ch, const char *icon);
 
