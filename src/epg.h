@@ -79,7 +79,7 @@ void epg_event_set_desc(event_t *e, const char *desc);
 void epg_event_set_content_type(event_t *e, epg_content_type_t *ect);
 
 event_t *epg_event_create(channel_t *ch, time_t start, time_t stop,
-			  int dvb_id);
+			  int dvb_id, int *created);
 
 event_t *epg_event_find_by_time(channel_t *ch, time_t t);
 

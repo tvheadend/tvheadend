@@ -235,11 +235,15 @@ epg_remove_event_from_channel(channel_t *ch, event_t *e)
  *
  */
 event_t *
-epg_event_create(channel_t *ch, time_t start, time_t stop, int dvb_id)
+epg_event_create(channel_t *ch, time_t start, time_t stop, int dvb_id,
+		 int *created)
 {
   static event_t *skel;
   event_t *e, *p, *n;
   static int tally;
+
+  if(created != NULL)
+    *created = 0;
 
   if((stop - start) > 11 * 3600)
     return NULL;
@@ -257,6 +261,10 @@ epg_event_create(channel_t *ch, time_t start, time_t stop, int dvb_id)
   e = RB_INSERT_SORTED(&ch->ch_epg_events, skel, e_channel_link, e_ch_cmp);
   if(e == NULL) {
     /* New entry was inserted */
+
+    if(created != NULL)
+      *created = 1;
+
     e = skel;
     skel = NULL;
 
