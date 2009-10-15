@@ -737,6 +737,7 @@ xmltv_scan_grabbers(const char *path)
     snprintf(fname, sizeof(fname), "%s/%s", path, namelist[n]->d_name);
     if(!stat(fname, &st))
       change |= xmltv_grabber_add(fname, st.st_mtime);
+    free(namelist[n]);
   }
   free(namelist);
   return change;
