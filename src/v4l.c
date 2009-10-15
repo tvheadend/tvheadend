@@ -303,18 +303,16 @@ v4l_transport_quality(th_transport_t *t)
 /**
  * Generate a descriptive name for the source
  */
-static htsmsg_t *
-v4l_transport_sourceinfo(th_transport_t *t)
+static void
+v4l_transport_setsourceinfo(th_transport_t *t, struct source_info *si)
 {
-  htsmsg_t *m = htsmsg_create_map();
-  char buf[30];
+  char buf[64];
+  memset(si, 0, sizeof(struct source_info));
 
-  htsmsg_add_str(m, "adapter", t->tht_v4l_adapter->va_displayname);
+  si->si_adapter = strdup(t->tht_v4l_adapter->va_displayname);
 
   snprintf(buf, sizeof(buf), "%d Hz", t->tht_v4l_frequency);
-  htsmsg_add_str(m, "mux", buf);
-
-  return m;
+  si->si_mux = strdup(buf);
 }
 
 
@@ -356,7 +354,7 @@ v4l_transport_find(v4l_adapter_t *va, const char *id, int create)
   t->tht_refresh_feed  = v4l_transport_refresh;
   t->tht_stop_feed     = v4l_transport_stop;
   t->tht_config_save   = v4l_transport_save;
-  t->tht_sourceinfo    = v4l_transport_sourceinfo;
+  t->tht_setsourceinfo = v4l_transport_setsourceinfo;
   t->tht_quality_index = v4l_transport_quality;
   t->tht_iptv_fd = -1;
 

@@ -338,15 +338,13 @@ iptv_transport_quality(th_transport_t *t)
 /**
  * Generate a descriptive name for the source
  */
-static htsmsg_t *
-iptv_transport_sourceinfo(th_transport_t *t)
+static void
+iptv_transport_setsourceinfo(th_transport_t *t, struct source_info *si)
 {
-  htsmsg_t *m = htsmsg_create_map();
+  memset(si, 0, sizeof(struct source_info));
 
-  if(t->tht_iptv_iface != NULL)
-    htsmsg_add_str(m, "adapter", t->tht_iptv_iface);
-  htsmsg_add_str(m, "mux", inet_ntoa(t->tht_iptv_group));
-  return m;
+  si->si_adapter = t->tht_iptv_iface ? strdup(t->tht_iptv_iface) : NULL;
+  si->si_mux = strdup(inet_ntoa(t->tht_iptv_group));
 }
 
 
@@ -387,7 +385,7 @@ iptv_transport_find(const char *id, int create)
   t->tht_refresh_feed  = iptv_transport_refresh;
   t->tht_stop_feed     = iptv_transport_stop;
   t->tht_config_save   = iptv_transport_save;
-  t->tht_sourceinfo    = iptv_transport_sourceinfo;
+  t->tht_setsourceinfo = iptv_transport_setsourceinfo;
   t->tht_quality_index = iptv_transport_quality;
   t->tht_iptv_fd = -1;
 

@@ -39,6 +39,15 @@
 extern pthread_mutex_t global_lock;
 extern pthread_mutex_t ffmpeg_lock;
 
+typedef struct source_info {
+  char *si_device;
+  char *si_adapter;
+  char *si_network;
+  char *si_mux;
+  char *si_provider;
+  char *si_service;
+} source_info_t;
+
 static inline void
 lock_assert0(pthread_mutex_t *l, const char *file, int line)
 {
@@ -149,8 +158,9 @@ TAILQ_HEAD(streaming_message_queue, streaming_message);
  */
 typedef enum {
   SMT_PACKET,       // sm_data is a th_pkt. Unref when destroying msg
-  SMT_START,        // sm_data is a htsmsg, see transport_build_stream_msg()
-  SMT_STOP,         // sm_data is a htsmsg
+  SMT_START,        // sm_data is a stream_start,
+                    // see transport_build_stream_start()
+  SMT_STOP ,        // no extra payload right now
   SMT_TRANSPORT_STATUS, // sm_code is TRANSPORT_STATUS_
   SMT_EXIT,             // Used to signal exit to threads
   SMT_NOSOURCE,
@@ -454,7 +464,7 @@ typedef struct th_transport {
 
   void (*tht_config_save)(struct th_transport *t);
 
-  struct htsmsg *(*tht_sourceinfo)(struct th_transport *t);
+  void (*tht_setsourceinfo)(struct th_transport *t, struct source_info *si);
 
   int (*tht_quality_index)(struct th_transport *t);
 

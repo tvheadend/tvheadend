@@ -293,33 +293,32 @@ dvb_transport_quality(th_transport_t *t)
 /**
  * Generate a descriptive name for the source
  */
-static htsmsg_t *
-dvb_transport_sourceinfo(th_transport_t *t)
+static void
+dvb_transport_setsourceinfo(th_transport_t *t, struct source_info *si)
 {
-  htsmsg_t *m = htsmsg_create_map();
   th_dvb_mux_instance_t *tdmi = t->tht_dvb_mux_instance;
   char buf[100];
+
+  memset(si, 0, sizeof(struct source_info));
 
   lock_assert(&global_lock);
 
   if(tdmi->tdmi_adapter->tda_rootpath  != NULL)
-    htsmsg_add_str(m, "device", tdmi->tdmi_adapter->tda_rootpath);
+    si->si_device = strdup(tdmi->tdmi_adapter->tda_rootpath);
 
-  htsmsg_add_str(m, "adapter", tdmi->tdmi_adapter->tda_displayname);
+  si->si_adapter = strdup(tdmi->tdmi_adapter->tda_displayname);
   
   if(tdmi->tdmi_network != NULL)
-    htsmsg_add_str(m, "network", tdmi->tdmi_network);
+    si->si_network = strdup(tdmi->tdmi_network);
   
   dvb_mux_nicename(buf, sizeof(buf), tdmi);
-  htsmsg_add_str(m, "mux", buf);
+  si->si_mux = strdup(buf);
 
   if(t->tht_provider != NULL)
-    htsmsg_add_str(m, "provider", t->tht_provider);
+    si->si_provider = strdup(t->tht_provider);
 
   if(t->tht_svcname != NULL)
-    htsmsg_add_str(m, "service", t->tht_svcname);
-
-  return m;
+    si->si_service = strdup(t->tht_svcname);
 }
 
 
@@ -363,7 +362,7 @@ dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   t->tht_refresh_feed = dvb_transport_refresh;
   t->tht_stop_feed  = dvb_transport_stop;
   t->tht_config_save = dvb_transport_save;
-  t->tht_sourceinfo = dvb_transport_sourceinfo;
+  t->tht_setsourceinfo = dvb_transport_setsourceinfo;
   t->tht_dvb_mux_instance = tdmi;
   t->tht_quality_index = dvb_transport_quality;
 

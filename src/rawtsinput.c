@@ -84,10 +84,10 @@ rawts_transport_quality(th_transport_t *t)
 /**
  * Generate a descriptive name for the source
  */
-static htsmsg_t *
-rawts_transport_sourceinfo(th_transport_t *t)
+static void
+rawts_transport_setsourceinfo(th_transport_t *t, struct source_info *si)
 {
-  return htsmsg_create_map();
+  memset(si, 0, sizeof(struct source_info));
 }
 
 
@@ -119,7 +119,7 @@ rawts_transport_add(rawts_t *rt, uint16_t sid, int pmt_pid)
   t->tht_start_feed = rawts_transport_start;
   t->tht_stop_feed  = rawts_transport_stop;
   t->tht_config_save = rawts_transport_save;
-  t->tht_sourceinfo = rawts_transport_sourceinfo;
+  t->tht_setsourceinfo = rawts_transport_setsourceinfo;
   t->tht_quality_index = rawts_transport_quality;
 
   t->tht_svcname = strdup(tmp);

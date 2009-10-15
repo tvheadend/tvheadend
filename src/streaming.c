@@ -21,6 +21,8 @@
 #include "tvhead.h"
 #include "streaming.h"
 #include "packet.h"
+#include "atomic.h"
+#include "transports.h"
 
 void
 streaming_pad_init(streaming_pad_t *sp)
@@ -122,10 +124,10 @@ streaming_msg_create_pkt(th_pkt_t *pkt)
  *
  */
 streaming_message_t *
-streaming_msg_create_msg(streaming_message_type_t type, htsmsg_t *msg)
+streaming_msg_create_data(streaming_message_type_t type, void *data)
 {
   streaming_message_t *sm = streaming_msg_create(type);
-  sm->sm_data = msg;
+  sm->sm_data = data;
   return sm;
 }
 
@@ -150,6 +152,7 @@ streaming_message_t *
 streaming_msg_clone(streaming_message_t *src)
 {
   streaming_message_t *dst = malloc(sizeof(streaming_message_t));
+  streaming_start_t *ss;
 
   dst->sm_type = src->sm_type;
 
@@ -161,8 +164,13 @@ streaming_msg_clone(streaming_message_t *src)
     break;
 
   case SMT_START:
+    ss = dst->sm_data = src->sm_data;
+    atomic_add(&ss->ss_refcount, 1);
+    break;
+
   case SMT_STOP:
-    dst->sm_data = htsmsg_copy(src->sm_data);
+  case SMT_TRANSPORT_STATUS:
+    dst->sm_code = src->sm_code;
     break;
 
   case SMT_EXIT:
@@ -178,17 +186,33 @@ streaming_msg_clone(streaming_message_t *src)
 /**
  *
  */
+static void
+streaming_start_deref(streaming_start_t *ss)
+{
+  if((atomic_add(&ss->ss_refcount, -1)) != 1)
+    return;
+
+  transport_source_info_free(&ss->ss_si);
+  free(ss);
+}
+
+/**
+ *
+ */
 void
 streaming_msg_free(streaming_message_t *sm)
 {
   switch(sm->sm_type) {
   case SMT_PACKET:
-    pkt_ref_dec(sm->sm_data);
+    if(sm->sm_data)
+      pkt_ref_dec(sm->sm_data);
     break;
 
   case SMT_START:
+    streaming_start_deref(sm->sm_data);
+    break;
+
   case SMT_STOP:
-    htsmsg_destroy(sm->sm_data);
     break;
 
   case SMT_EXIT:

@@ -1225,8 +1225,36 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
  * delivery start and all components.
  */
 static void
-htsp_subscription_start(htsp_subscription_t *hs, htsmsg_t *m)
+htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
 {
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_t *streams = htsmsg_create_list();
+  htsmsg_t *c;
+  htsmsg_t *sourceinfo = htsmsg_create_map();
+  int i;
+  const source_info_t *si = &ss->ss_si;
+
+  for(i = 0; i < ss->ss_num_components; i++) {
+    const streaming_start_component_t *ssc = &ss->ss_components[i];
+
+    c = htsmsg_create_map();
+    htsmsg_add_u32(c, "index", ssc->ssc_index);
+    htsmsg_add_str(c, "type", streaming_component_type2txt(ssc->ssc_type));
+    if(ssc->ssc_lang[0])
+      htsmsg_add_str(c, "language", ssc->ssc_lang);
+    htsmsg_add_msg(streams, NULL, c);
+  }
+  
+  htsmsg_add_msg(m, "streams", streams);
+
+  if(si->si_adapter ) htsmsg_add_str(sourceinfo, "adapter",  si->si_adapter );
+  if(si->si_mux     ) htsmsg_add_str(sourceinfo, "mux"    ,  si->si_mux     );
+  if(si->si_network ) htsmsg_add_str(sourceinfo, "network",  si->si_network );
+  if(si->si_provider) htsmsg_add_str(sourceinfo, "provider", si->si_provider);
+  if(si->si_service ) htsmsg_add_str(sourceinfo, "serivce",  si->si_service );
+  
+  htsmsg_add_msg(m, "sourceinfo", sourceinfo);
+ 
   htsmsg_add_str(m, "method", "subscriptionStart");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
   htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
@@ -1237,8 +1265,9 @@ htsp_subscription_start(htsp_subscription_t *hs, htsmsg_t *m)
  * Send a 'subscriptionStart' stop
  */
 static void
-htsp_subscription_stop(htsp_subscription_t *hs, htsmsg_t *m)
+htsp_subscription_stop(htsp_subscription_t *hs)
 {
+  htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "subscriptionStop");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
   htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
@@ -1289,6 +1318,7 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
   switch(sm->sm_type) {
   case SMT_PACKET:
     htsp_stream_deliver(hs, sm->sm_data); // reference is transfered
+    sm->sm_data = NULL;
     break;
 
   case SMT_START:
@@ -1296,7 +1326,7 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
     break;
 
   case SMT_STOP:
-    htsp_subscription_stop(hs, sm->sm_data);
+    htsp_subscription_stop(hs);
     break;
 
   case SMT_TRANSPORT_STATUS:
@@ -1310,6 +1340,5 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
   case SMT_EXIT:
     abort();
   }
-
-  free(sm);
+  streaming_msg_free(sm);
 }

@@ -81,8 +81,8 @@ subscription_link_transport(th_subscription_t *s, th_transport_t *t)
   if(LIST_FIRST(&t->tht_components) != NULL) {
 
     // Send a START message to the subscription client
-    sm = streaming_msg_create_msg(SMT_START, 
-				  transport_build_stream_start_msg(t));
+    sm = streaming_msg_create_data(SMT_START,
+				   transport_build_stream_start(t));
 
     streaming_target_deliver(s->ths_output, sm);
 
@@ -112,7 +112,7 @@ subscription_unlink_transport(th_subscription_t *s)
 
   if(LIST_FIRST(&t->tht_components) != NULL) {
     // Send a STOP message to the subscription client
-    sm = streaming_msg_create_msg(SMT_STOP, htsmsg_create_map());
+    sm = streaming_msg_create_code(SMT_STOP, 0);
     streaming_target_deliver(s->ths_output, sm);
   }
 
@@ -243,21 +243,23 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
 	   "to channel \"%s\"",
 	   s->ths_title, ch->ch_name);
   } else {
-    htsmsg_t *m = s->ths_transport->tht_sourceinfo(s->ths_transport);
+    source_info_t si;
+
+    s->ths_transport->tht_setsourceinfo(s->ths_transport, &si);
 
     tvhlog(LOG_INFO, "subscription", 
 	   "\"%s\" subscribing on \"%s\", weight: %d, adapter: \"%s\", "
 	   "network: \"%s\", mux: \"%s\", provider: \"%s\", "
 	   "service: \"%s\", quality: %d",
 	   s->ths_title, ch->ch_name, weight,
-	   htsmsg_get_str(m, "adapter")  ?: "<N/A>",
-	   htsmsg_get_str(m, "network")  ?: "<N/A>",
-	   htsmsg_get_str(m, "mux")      ?: "<N/A>",
-	   htsmsg_get_str(m, "provider") ?: "<N/A>",
-	   htsmsg_get_str(m, "service")  ?: "<N/A>",
+	   si.si_adapter  ?: "<N/A>",
+	   si.si_network  ?: "<N/A>",
+	   si.si_mux      ?: "<N/A>",
+	   si.si_provider ?: "<N/A>",
+	   si.si_service  ?: "<N/A>",
 	   s->ths_transport->tht_quality_index(s->ths_transport));
 
-    htsmsg_destroy(m);
+    transport_source_info_free(&si);
   }
   return s;
 }
@@ -288,9 +290,7 @@ dummy_callback(void *opauqe, streaming_message_t *sm)
 {
   switch(sm->sm_type) {
   case SMT_START:
-    fprintf(stderr, "dummysubscription START, message follows\n");
-    htsmsg_print(sm->sm_data);
-    fprintf(stderr, "\n");
+    fprintf(stderr, "dummysubscription START\n");
     break;
   case SMT_STOP:
     fprintf(stderr, "dummysubscription STOP\n");

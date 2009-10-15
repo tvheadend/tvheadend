@@ -247,8 +247,9 @@ dvr_rec_fatal_error(dvr_entry_t *de, const char *fmt, ...)
  *
  */
 static void
-dvr_rec_start(dvr_entry_t *de, htsmsg_t *m)
+dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 {
+  const source_info_t *si = &ss->ss_si;
   dvr_rec_stream_t *drs;
   AVOutputFormat *fmt;
   AVFormatContext *fctx;
@@ -259,13 +260,7 @@ dvr_rec_start(dvr_entry_t *de, htsmsg_t *m)
   const char *codec_name;
   char urlname[512];
   int err, r;
-  htsmsg_field_t *f;
-  htsmsg_t *sub, *streams, *srcinfo;
-  const char *type, *lang;
-  uint32_t idx;
-
-  if((streams = htsmsg_get_list(m, "streams")) == NULL)
-    abort();
+  int i;
 
   if(pvr_generate_filename(de) != 0) {
     dvr_rec_fatal_error(de, "Unable to create directories");
@@ -313,34 +308,31 @@ dvr_rec_start(dvr_entry_t *de, htsmsg_t *m)
   /**
    * Setup each stream
    */ 
-  HTSMSG_FOREACH(f, streams) {
-    if(f->hmf_type != HMF_MAP)
-      continue;
-    sub = &f->hmf_msg;
+  for(i = 0; i < ss->ss_num_components; i++) {
+    const streaming_start_component_t *ssc = &ss->ss_components[i];
 
-    if((type = htsmsg_get_str(sub, "type")) == NULL)
-      continue;
-    
-    if(htsmsg_get_u32(sub, "index", &idx))
-      continue;
-
-    if(!strcmp(type, "AC3")) {
+    switch(ssc->ssc_type) {
+    case SCT_AC3:
       codec_id = CODEC_ID_AC3;
       codec_type = CODEC_TYPE_AUDIO;
       codec_name = "AC-3";
-    } else if(!strcmp(type, "MPEG2AUDIO")) {
+      break;
+    case SCT_MPEG2AUDIO:
       codec_id = CODEC_ID_MP2;
       codec_type = CODEC_TYPE_AUDIO;
       codec_name = "MPEG";
-    } else if(!strcmp(type, "MPEG2VIDEO")) {
+      break;
+    case SCT_MPEG2VIDEO:
       codec_id = CODEC_ID_MPEG2VIDEO;
       codec_type = CODEC_TYPE_VIDEO;
       codec_name = "MPEG-2";
-    } else if(!strcmp(type, "H264")) {
+      break;
+    case SCT_H264:
       codec_id = CODEC_ID_H264;
       codec_type = CODEC_TYPE_VIDEO;
       codec_name = "H264";
-    } else {
+      break;
+    default:
       continue;
     }
 
@@ -353,7 +345,7 @@ dvr_rec_start(dvr_entry_t *de, htsmsg_t *m)
     }
 
     drs = calloc(1, sizeof(dvr_rec_stream_t));
-    drs->drs_source_index = idx;
+    drs->drs_source_index = ssc->ssc_index;
 
     drs->drs_lavf_stream = av_new_stream(fctx, fctx->nb_streams);
 
@@ -373,8 +365,7 @@ dvr_rec_start(dvr_entry_t *de, htsmsg_t *m)
       continue;
     }
 
-    if((lang = htsmsg_get_str(sub, "language")) != NULL)
-      memcpy(drs->drs_lavf_stream->language, lang, 4);
+    memcpy(drs->drs_lavf_stream->language, ssc->ssc_lang, 4);
 
     LIST_INSERT_HEAD(&de->de_streams, drs, drs_link);
   }
@@ -382,13 +373,17 @@ dvr_rec_start(dvr_entry_t *de, htsmsg_t *m)
   de->de_fctx = fctx;
   de->de_ts_offset = AV_NOPTS_VALUE;
 
-  if((srcinfo = htsmsg_get_map(m, "sourceinfo")) != NULL) {
-    HTSMSG_FOREACH(f, srcinfo) {
-      if(f->hmf_type == HMF_STR)
-	tvhlog(LOG_INFO, "dvr", "%s - Source %s: %s",
-	       de->de_ititle, f->hmf_name, f->hmf_str);
-    }
-  }
+
+  tvhlog(LOG_INFO, "dvr", "%s from "
+	 "adapter: \"%s\", "
+	 "network: \"%s\", mux: \"%s\", provider: \"%s\", "
+	 "service: \"%s\", quality: %d",
+	 de->de_ititle,
+	 si->si_adapter  ?: "<N/A>",
+	 si->si_network  ?: "<N/A>",
+	 si->si_mux      ?: "<N/A>",
+	 si->si_provider ?: "<N/A>",
+	 si->si_service  ?: "<N/A>");
 }
 
 

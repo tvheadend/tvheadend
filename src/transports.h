@@ -76,7 +76,8 @@ transport_find_stream_by_pid(th_transport_t *t, int pid)
   return NULL;
 }
 
-htsmsg_t *transport_build_stream_start_msg(th_transport_t *t);
+struct streaming_start;
+struct streaming_start *transport_build_stream_start(th_transport_t *t);
 
 void transport_set_enable(th_transport_t *t, int enabled);
 
@@ -85,5 +86,7 @@ void transport_restart(th_transport_t *t, int had_components);
 void transport_stream_destroy(th_transport_t *t, th_stream_t *st);
 
 void transport_request_save(th_transport_t *t);
+
+void transport_source_info_free(source_info_t *si);
 
 #endif /* TRANSPORTS_H */

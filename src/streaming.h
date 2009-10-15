@@ -23,6 +23,28 @@
 #include "packet.h"
 #include "htsmsg.h"
 
+
+typedef struct streaming_start_component {
+  int ssc_index;
+  int ssc_type;
+  char ssc_lang[4];
+
+} streaming_start_component_t;
+
+
+
+typedef struct streaming_start {
+  int ss_refcount;
+
+  int ss_num_components;
+
+  source_info_t ss_si;
+
+  streaming_start_component_t ss_components[0];
+
+} streaming_start_t;
+
+
 /**
  *
  */
@@ -47,8 +69,8 @@ streaming_message_t *streaming_msg_clone(streaming_message_t *src);
 
 streaming_message_t *streaming_msg_create(streaming_message_type_t type);
 
-streaming_message_t *streaming_msg_create_msg(streaming_message_type_t type, 
-					      htsmsg_t *msg);
+streaming_message_t *streaming_msg_create_data(streaming_message_type_t type, 
+					       void *data);
 
 streaming_message_t *streaming_msg_create_code(streaming_message_type_t type, 
 					       int code);

@@ -685,7 +685,7 @@ transport_restart(th_transport_t *t, int had_components)
   lock_assert(&t->tht_stream_mutex);
 
   if(had_components) {
-    sm = streaming_msg_create_msg(SMT_STOP, htsmsg_create_map());
+    sm = streaming_msg_create_code(SMT_STOP, 0);
     streaming_pad_deliver(&t->tht_streaming_pad, sm);
   }
 
@@ -693,8 +693,8 @@ transport_restart(th_transport_t *t, int had_components)
 
   if(LIST_FIRST(&t->tht_components) != NULL) {
 
-    sm = streaming_msg_create_msg(SMT_START, 
-				  transport_build_stream_start_msg(t));
+    sm = streaming_msg_create_data(SMT_START, 
+				   transport_build_stream_start(t));
     streaming_pad_deliver(&t->tht_streaming_pad, sm);
   }
 }
@@ -706,31 +706,35 @@ transport_restart(th_transport_t *t, int had_components)
  * Note: This is the same as the one in HTSP.subscriptionStart so take
  * great care if you change anying. (Just adding is fine)
  */
-htsmsg_t *
-transport_build_stream_start_msg(th_transport_t *t)
+streaming_start_t *
+transport_build_stream_start(th_transport_t *t)
 {
-  htsmsg_t *m, *streams, *c;
   th_stream_t *st;
+  int n = 0;
+  streaming_start_t *ss;
 
   lock_assert(&t->tht_stream_mutex);
   
-  m = htsmsg_create_map();
+  LIST_FOREACH(st, &t->tht_components, st_link)
+    n++;
 
-  /* Setup each stream */ 
-  streams = htsmsg_create_list();
+  ss = calloc(1, sizeof(streaming_start_t) + 
+	      sizeof(streaming_start_component_t) * n);
 
+  ss->ss_num_components = n;
+  
+  n = 0;
   LIST_FOREACH(st, &t->tht_components, st_link) {
-    c = htsmsg_create_map();
-    htsmsg_add_u32(c, "index", st->st_index);
-    htsmsg_add_str(c, "type", streaming_component_type2txt(st->st_type));
-    if(st->st_lang[0])
-      htsmsg_add_str(c, "language", st->st_lang);
-    htsmsg_add_msg(streams, NULL, c);
+    streaming_start_component_t *ssc = &ss->ss_components[n++];
+    ssc->ssc_index = st->st_index;
+    ssc->ssc_type  = st->st_type;
+    memcpy(ssc->ssc_lang, st->st_lang, 4);
   }
 
-  htsmsg_add_msg(m, "streams", streams);
-  htsmsg_add_msg(m, "sourceinfo", t->tht_sourceinfo(t));
-  return m;
+  t->tht_setsourceinfo(t, &ss->ss_si);
+
+  ss->ss_refcount = 1;
+  return ss;
 }
 
 
@@ -853,4 +857,19 @@ transport_init(void)
   pthread_mutex_init(&pending_save_mutex, NULL);
   pthread_cond_init(&pending_save_cond, NULL);
   pthread_create(&tid, NULL, transport_saver, NULL);
+}
+
+
+/**
+ *
+ */
+void
+transport_source_info_free(struct source_info *si)
+{
+  free(si->si_device);
+  free(si->si_adapter);
+  free(si->si_network);
+  free(si->si_mux);
+  free(si->si_provider);
+  free(si->si_service);
 }
