@@ -382,8 +382,6 @@ channel_delete(channel_t *ch)
   while((ctm = LIST_FIRST(&ch->ch_ctms)) != NULL)
     channel_tag_mapping_destroy(ctm, CTM_DESTROY_UPDATE_TAG);
 
-  htsp_channel_delete(ch);
-
   tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" deleted",
 	 ch->ch_name);
 
@@ -402,6 +400,8 @@ channel_delete(channel_t *ch)
   epg_unlink_from_channel(ch);
 
   hts_settings_remove("channels/%d", ch->ch_id);
+
+  htsp_channel_delete(ch);
 
   RB_REMOVE(&channel_name_tree, ch, ch_name_link);
   RB_REMOVE(&channel_identifier_tree, ch, ch_identifier_link);
