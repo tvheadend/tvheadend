@@ -345,6 +345,97 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
 
 
 /**
+ * 
+ */
+static int
+page_status(http_connection_t *hc,
+	    const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  int c, i, cc, timeleft, timelefttemp;
+  struct tm a, b;
+  dvr_entry_t *de;
+  dvr_query_result_t dqr;
+  const char *rstatus;
+  time_t     now;
+
+  htsbuf_qprintf(hq, "<?xml version=\"1.0\"?>\n"
+		 "<currentload>\n"
+		 "<recordings>\n");
+
+  pthread_mutex_lock(&global_lock);
+
+  dvr_query(&dqr);
+  dvr_query_sort(&dqr);
+
+  c = dqr.dqr_entries;
+  cc = 0;
+  timeleft = INT_MAX;
+
+  now = time(NULL);
+
+  for(i = 0; i < c; i++) {
+    de = dqr.dqr_array[i];
+
+    if (DVR_SCHEDULED == de->de_sched_state)
+    {
+      timelefttemp = (int) (de->de_start - now) / 60; // output minutes
+      if (timelefttemp < timeleft)
+        timeleft = timelefttemp;
+    }
+    else if (DVR_RECORDING == de->de_sched_state)
+    {
+      localtime_r(&de->de_start, &a);
+      localtime_r(&de->de_stop, &b);
+
+      htsbuf_qprintf(hq, 
+		    "<recording>"
+		     "<start>"
+		     "<date>%02d/%02d/%02d</date>"
+		     "<time>%02d:%02d</time>"
+		     "<unixtime>%d</unixtime>"
+		     "</start>"
+		     "<stop>"
+		     "<date>%02d/%02d/%02d</date>"
+		     "<time>%02d:%02d</time>"
+		     "<unixtime>%d</unixtime>"
+		     "</stop>"
+		     "<title>%s</title>",
+		     a.tm_year + 1900, a.tm_mon, a.tm_mday, 
+		     a.tm_hour, a.tm_min, 
+		     de->de_start, 
+		     b.tm_year+1900, b.tm_mon, b.tm_mday, 
+		     b.tm_hour, b.tm_min, 
+		     de->de_stop, 
+		     de->de_title);
+
+      rstatus = val2str(de->de_sched_state, recstatustxt);
+      htsbuf_qprintf(hq, "<status>%s</status></recording>\n", rstatus);
+      cc++;
+      timeleft = -1;
+    }
+  }
+
+  if ((cc==0) && (timeleft < INT_MAX)) {
+    htsbuf_qprintf(hq, "<recording><next>%d</next></recording>\n",timeleft);
+  }
+
+  dvr_query_free(&dqr);
+
+  htsbuf_qprintf(hq, "</recordings>\n<subscriptions>");
+  htsbuf_qprintf(hq, "%d</subscriptions>\n",subscriptions_active());
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsbuf_qprintf(hq, "</currentload>");
+  http_output_content(hc, "text/xml");
+
+  return 0;
+}
+
+
+
+/**
  * Simple web ui
  */
 void
@@ -353,4 +444,7 @@ simpleui_start(void)
   http_path_add("/simple.html", NULL, page_simple,  ACCESS_SIMPLE);
   http_path_add("/eventinfo",   NULL, page_einfo,   ACCESS_SIMPLE);
   http_path_add("/pvrinfo",     NULL, page_pvrinfo, ACCESS_SIMPLE);
+  http_path_add("/status.xml",  NULL, page_status,  ACCESS_SIMPLE);  
 }
+
+
