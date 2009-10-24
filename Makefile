@@ -88,6 +88,7 @@ SRCS += src/dvb/dvb.c \
 # cwc
 #
 SRCS += src/cwc.c \
+	src/capmt.c \
 	src/krypt.c \
 	src/ffdecsa/FFdecsa.c
 
