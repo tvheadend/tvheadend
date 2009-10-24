@@ -56,7 +56,7 @@
 
 //////// our choice //////////////// our choice //////////////// our choice //////////////// our choice ////////
 #ifndef PARALLEL_MODE
-#define PARALLEL_MODE PARALLEL_128_SSE2
+#define PARALLEL_MODE PARALLEL_64_MMX
 #endif
 //////// our choice //////////////// our choice //////////////// our choice //////////////// our choice ////////
 
