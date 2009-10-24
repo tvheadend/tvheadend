@@ -221,6 +221,9 @@ streaming_msg_free(streaming_message_t *sm)
   case SMT_TRANSPORT_STATUS:
     break;
 
+  case SMT_NOSOURCE:
+    break;
+
   default:
     abort();
   }
