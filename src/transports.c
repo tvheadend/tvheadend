@@ -41,6 +41,7 @@
 #include "packet.h"
 #include "channels.h"
 #include "cwc.h"
+#include "capmt.h"
 #include "notify.h"
 #include "serviceprobe.h"
 #include "atomic.h"
@@ -257,6 +258,7 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
     stream_init(st);
 
   cwc_transport_start(t);
+  capmt_transport_start(t);
 
   gtimer_arm(&t->tht_receive_timer, transport_data_timeout, t, 4);
   t->tht_feed_status = TRANSPORT_FEED_UNKNOWN;

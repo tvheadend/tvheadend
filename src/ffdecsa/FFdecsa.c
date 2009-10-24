@@ -56,7 +56,7 @@
 
 //////// our choice //////////////// our choice //////////////// our choice //////////////// our choice ////////
 #ifndef PARALLEL_MODE
-#define PARALLEL_MODE PARALLEL_64_MMX
+#define PARALLEL_MODE PARALLEL_128_SSE2
 #endif
 //////// our choice //////////////// our choice //////////////// our choice //////////////// our choice ////////
 
@@ -571,8 +571,8 @@ int decrypt_packets(void *keys, unsigned char **cluster){
   int alive[24];
 //icc craziness  int pad1=0; //////////align! FIXME
   unsigned char *encp[GROUP_PARALLELISM];
-  unsigned char stream_in[GROUP_PARALLELISM*8];
-  unsigned char stream_out[GROUP_PARALLELISM*8];
+  MEMALIGN unsigned char stream_in[GROUP_PARALLELISM*8];
+  MEMALIGN unsigned char stream_out[GROUP_PARALLELISM*8];
   MEMALIGN unsigned char ib[GROUP_PARALLELISM*8];
   MEMALIGN unsigned char block_out[GROUP_PARALLELISM*8];
   struct stream_regs regs;

@@ -48,6 +48,7 @@
 #include "subscriptions.h"
 #include "serviceprobe.h"
 #include "cwc.h"
+#include "capmt.h"
 #include "dvr/dvr.h"
 #include "htsp.h"
 #include "rawtsinput.h"
@@ -377,6 +378,8 @@ main(int argc, char **argv)
   serviceprobe_init();
 
   cwc_init();
+
+  capmt_init();
 
   epg_init();
 
