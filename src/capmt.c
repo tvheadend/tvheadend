@@ -379,16 +379,21 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
         /* ECM */
         uint16_t caid = st->st_caid;
 
+        /* search ecmpid in list */
         capmt_caid_ecm_t *cce, *cce2;
         LIST_FOREACH(cce, &ct->ct_caid_ecm, cce_link)
           if (cce->cce_caid == caid)
             break;
 
-        if (cce == NULL) {
+        if (!cce) {
+          /* ecmpid not already seen, add it to list */
           cce = calloc(1, sizeof(capmt_caid_ecm_t));
           cce->cce_caid = caid;
           cce->cce_ecmpid = st->st_pid;
           LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
+
+          /* do not send now, wait for more ecmpid's */
+          break;
         }
 
         if ((cce->cce_ecmsize == len) && !memcmp(cce->cce_ecm, data, len))
