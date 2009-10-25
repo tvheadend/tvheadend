@@ -141,6 +141,7 @@ typedef struct cwc_transport {
  */
 typedef struct cwc {
   int cwc_fd;
+  int cwc_connected;
 
   int cwc_retry_delay;
 
@@ -420,6 +421,13 @@ cwc_send_ka(cwc_t *cwc)
   cwc_send_msg(cwc, buf, 3, 0);
 }
 
+static void cwc_comet_status_update(cwc_t *cwc){
+  htsmsg_t *m = htsmsg_create_map();
+
+  htsmsg_add_str(m, "id", cwc->cwc_id);
+  htsmsg_add_u32(m, "connected", !!cwc->cwc_connected);
+  notify_by_msg("cwcStatus", m);
+}
 
 /**
  * Handle reply to card data request
@@ -454,6 +462,8 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
     return -1;
   }
 
+  cwc->cwc_connected = 1;
+  cwc_comet_status_update(cwc);
   cwc->cwc_caid = (msg[4] << 8) | msg[5];
   n = psi_caid2name(cwc->cwc_caid) ?: "Unknown";
 
@@ -814,7 +824,8 @@ cwc_thread(void *aux)
       cwc->cwc_fd = -1;
       close(fd);
       cwc->cwc_caid = 0;
-      
+      cwc->cwc_connected = 0;
+      cwc_comet_status_update(cwc);
       tvhlog(LOG_INFO, "cwc", "Disconnected from %s",  cwc->cwc_hostname);
     }
 
@@ -1114,6 +1125,7 @@ cwc_record_build(cwc_t *cwc)
 
   htsmsg_add_str(e, "id", cwc->cwc_id);
   htsmsg_add_u32(e, "enabled",  !!cwc->cwc_enabled);
+  htsmsg_add_u32(e, "connected", !!cwc->cwc_connected);
 
   htsmsg_add_str(e, "hostname", cwc->cwc_hostname ?: "");
   htsmsg_add_u32(e, "port", cwc->cwc_port);
