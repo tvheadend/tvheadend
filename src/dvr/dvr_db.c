@@ -159,8 +159,14 @@ dvr_entry_create_by_event(event_t *e, const char *creator)
 
   de->de_start   = e->e_start;
   de->de_stop    = e->e_stop;
-  de->de_start_extra = dvr_extra_time_pre  + ch->ch_dvr_extra_time_pre;
-  de->de_stop_extra  = dvr_extra_time_post + ch->ch_dvr_extra_time_post;
+  if (ch->ch_dvr_extra_time_pre)
+    de->de_start_extra = ch->ch_dvr_extra_time_pre;
+  else
+    de->de_start_extra = dvr_extra_time_pre;
+  if (ch->ch_dvr_extra_time_post)
+    de->de_stop_extra  = ch->ch_dvr_extra_time_post;
+  else
+    de->de_stop_extra  = dvr_extra_time_post;
   de->de_creator = strdup(creator);
   de->de_title   = strdup(e->e_title);
   de->de_desc    = e->e_desc  ? strdup(e->e_desc)  : NULL;
