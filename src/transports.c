@@ -260,7 +260,7 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
   cwc_transport_start(t);
   capmt_transport_start(t);
 
-  gtimer_arm(&t->tht_receive_timer, transport_data_timeout, t, 4);
+  gtimer_arm(&t->tht_receive_timer, transport_data_timeout, t, 10);
   t->tht_feed_status = TRANSPORT_FEED_UNKNOWN;
   t->tht_input_status = TRANSPORT_FEED_NO_INPUT;
   return 0;
