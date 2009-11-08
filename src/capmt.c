@@ -333,6 +333,7 @@ capmt_thread(void *aux)
   while (capmt->capmt_running) {
     capmt->capmt_sock = -1;
     capmt->capmt_sock_ca0 = -1;
+    capmt->capmt_connected = 0;
     
     pthread_mutex_lock(&global_lock);
 
@@ -350,6 +351,8 @@ capmt_thread(void *aux)
     snprintf(serv_addr_un.sun_path, sizeof(serv_addr_un.sun_path), "%s", capmt->capmt_sockfile);
 
     if (connect(capmt->capmt_sock, (const struct sockaddr*)&serv_addr_un, sizeof(serv_addr_un)) == 0) {
+      capmt->capmt_connected = 1;
+
       /* open connection to emulated ca0 device */
       capmt->capmt_sock_ca0 = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
@@ -365,6 +368,8 @@ capmt_thread(void *aux)
     } else 
       tvhlog(LOG_ERR, "capmt", "Error connecting to %s: %s", capmt->capmt_sockfile, strerror(errno));
   
+    capmt->capmt_connected = 0;
+
     /* close opened sockets */
     if (capmt->capmt_sock > 0)
       close(capmt->capmt_sock);
