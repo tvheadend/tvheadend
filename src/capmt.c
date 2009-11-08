@@ -264,71 +264,115 @@ capmt_transport_destroy(th_descrambler_t *td)
   free(ct);
 }
 
+static void 
+handle_ca0(capmt_t* capmt) {
+  capmt_transport_t *ct;
+  th_transport_t *t;
+  int ret;
+
+  uint8_t invalid[8], buffer[20];
+  memset(invalid, 0, 8);
+
+  tvhlog(LOG_INFO, "capmt", "running handle_ca0");
+
+  while (capmt->capmt_running) {
+
+    ret = recv(capmt->capmt_sock_ca0, buffer, 18, MSG_WAITALL);
+
+    ct = capmt->ct;
+
+    if (ct == NULL)
+      continue;
+
+    t = ct->ct_transport;
+
+    if (ret < 0) {
+      tvhlog(LOG_ERR, "capmt", "error receiving over socket");
+      // TODO reaction
+    } else if (ret == 0) {
+      // normal socket shutdown
+      tvhlog(LOG_INFO, "capmt", "normal socket shutdown");
+      break;
+    } else if(ret < 18) {
+      if(ct->ct_keystate != CT_FORBIDDEN) {
+        tvhlog(LOG_ERR, "capmt", "Can not descramble service \"%s\", access denied", t->tht_svcname);
+
+        ct->ct_keystate = CT_FORBIDDEN;
+      }
+
+      continue;
+    }
+
+    /* get control words */
+    uint8_t *even = &buffer[2], *odd = &buffer[10];
+
+    if (memcmp(even, invalid, 8))
+      set_even_control_word(ct->ct_keys, even);
+    if (memcmp(odd, invalid, 8))
+      set_odd_control_word(ct->ct_keys, odd);
+
+    if(ct->ct_keystate != CT_RESOLVED)
+      tvhlog(LOG_INFO, "capmt", "Obtained key for service \"%s\"",t->tht_svcname);
+
+    ct->ct_keystate = CT_RESOLVED;
+  }
+
+  tvhlog(LOG_INFO, "capmt", "exiting handle_ca0");
+}
+
 /**
  *
  */
-/*
 static void *
-capmt_thread(void *aux)
+capmt_thread(void *aux) 
 {
-  capmt_transport_t *ct;
   capmt_t *capmt = aux;
-  int fd, d;
-  char errbuf[100];
-  th_transport_t *t;
-  char hostname[256];
-  int port;
   struct timespec ts;
-  int attempts = 0;
+  int d;
 
-  pthread_mutex_lock(&global_lock);
-
-  while(capmt->capmt_running) {
+  while (capmt->capmt_running) {
+    capmt->capmt_sock = -1;
+    capmt->capmt_sock_ca0 = -1;
     
+    pthread_mutex_lock(&global_lock);
+
     while(capmt->capmt_running && capmt->capmt_enabled == 0)
       pthread_cond_wait(&capmt->capmt_cond, &global_lock);
 
-    snprintf(hostname, sizeof(hostname), "%s", capmt->capmt_hostname);
-    port = capmt->capmt_port;
-
-    tvhlog(LOG_INFO, "capmt", "Attemping to connect to %s:%d", hostname, port);
-
     pthread_mutex_unlock(&global_lock);
 
-    fd = tcp_connect(hostname, port, errbuf, sizeof(errbuf), 10);
+    /* open connection to camd.socket */
+    capmt->capmt_sock = socket(AF_LOCAL, SOCK_STREAM, 0);
 
-    pthread_mutex_lock(&global_lock);
+    struct sockaddr_un serv_addr_un;
+    memset(&serv_addr_un, 0, sizeof(serv_addr_un));
+    serv_addr_un.sun_family = AF_LOCAL;
+    snprintf(serv_addr_un.sun_path, sizeof(serv_addr_un.sun_path), "%s", capmt->capmt_sockfile);
 
-    if(fd == -1) {
-      attempts++;
-      tvhlog(LOG_INFO, "capmt", 
-	     "Connection attempt to %s:%d failed: %s",
-	     hostname, port, errbuf);
-    } else {
+    if (connect(capmt->capmt_sock, (const struct sockaddr*)&serv_addr_un, sizeof(serv_addr_un)) == 0) {
+      /* open connection to emulated ca0 device */
+      capmt->capmt_sock_ca0 = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
-      if(capmt->capmt_running == 0) {
-	close(fd);
-	break;
-      }
+      struct sockaddr_in serv_addr;
+      serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+      serv_addr.sin_port = htons( (unsigned short int)capmt->capmt_port);
+      serv_addr.sin_family = AF_INET;
 
-      tvhlog(LOG_INFO, "capmt", "Connected to %s:%d", hostname, port);
-      attempts = 0;
+      if (bind(capmt->capmt_sock_ca0, (const struct sockaddr*)&serv_addr, sizeof(serv_addr)) != 0) 
+        perror("[CapmtServer] ERROR binding to ca0");
+      else 
+        handle_ca0(capmt);
+    } else 
+      tvhlog(LOG_ERR, "capmt", "Error connecting to %s: %s", capmt->capmt_sockfile, strerror(errno));
+  
+    /* close opened sockets */
+    if (capmt->capmt_sock > 0)
+      close(capmt->capmt_sock);
+    if (capmt->capmt_sock_ca0 > 0)
+      close(capmt->capmt_sock_ca0);
 
-      capmt->capmt_fd = fd;
-      capmt->capmt_reconfigure = 0;
-
-      //capmt_session(capmt);
-
-      capmt->capmt_fd = -1;
-      close(fd);
-      capmt->capmt_caid = 0;
-      
-      tvhlog(LOG_INFO, "capmt", "Disconnected from %s",  capmt->capmt_hostname);
-    }
-
+    /* schedule reconnection */
     if(subscriptions_active()) {
-      if(attempts == 1)
-	continue; // Retry immediately
       d = 3;
     } else {
       d = 60;
@@ -337,32 +381,15 @@ capmt_thread(void *aux)
     ts.tv_sec = time(NULL) + d;
     ts.tv_nsec = 0;
 
-    tvhlog(LOG_INFO, "capmt", 
-	   "%s: Automatic connection attempt in in %d seconds",
-	   capmt->capmt_hostname, d);
+    tvhlog(LOG_INFO, "capmt", "Automatic reconnection attempt in in %d seconds", d);
 
+    pthread_mutex_lock(&global_lock);
     pthread_cond_timedwait(&capmt_config_changed, &global_lock, &ts);
+    pthread_mutex_unlock(&global_lock);
   }
 
-  tvhlog(LOG_INFO, "capmt", "%s destroyed", capmt->capmt_hostname);
-
-  while((ct = LIST_FIRST(&capmt->capmt_transports)) != NULL) {
-    t = ct->ct_transport;
-    pthread_mutex_lock(&t->tht_stream_mutex);
-    capmt_transport_destroy(&ct->ct_head);
-    pthread_mutex_unlock(&t->tht_stream_mutex);
-  }
-
-  free((void *)capmt->capmt_password);
-  free((void *)capmt->capmt_password_salted);
-  free((void *)capmt->capmt_username);
-  free((void *)capmt->capmt_hostname);
-  free(capmt);
-
-  pthread_mutex_unlock(&global_lock);
   return NULL;
 }
-*/
 
 /**
  *
@@ -604,67 +631,14 @@ capmt_destroy(capmt_t *capmt)
   pthread_cond_signal(&capmt->capmt_cond);
 }
 
-static void* ca0Thread(void* pArg) {
-  capmt_t *capmt = (capmt_t*)pArg;
-  capmt_transport_t *ct;
-  th_transport_t *t;
-  int ret;
-
-  uint8_t invalid[8], buffer[20];
-  memset(invalid, 0, 8);
-
-  while (capmt->capmt_running) {
-    ret = recv(capmt->capmt_sock_ca0, buffer, 18, MSG_WAITALL);
-
-    ct = capmt->ct;
-
-    if (ct == NULL)
-      continue;
-
-    t = ct->ct_transport;
-
-    if (ret < 0) {
-      tvhlog(LOG_ERR, "capmt", "error receiving over socket");
-      // TODO reaction
-    } else if (ret == 0) {
-      // normal socket shutdown
-      tvhlog(LOG_INFO, "capmt", "normal socket shutdown");
-      break;
-    } else if(ret < 18) {
-      if(ct->ct_keystate != CT_FORBIDDEN) {
-        tvhlog(LOG_ERR, "capmt",
-          "Can not descramble service \"%s\", access denied", t->tht_svcname);
-
-        ct->ct_keystate = CT_FORBIDDEN;
-      }
-
-      continue;
-    }
-
-    /* get control words */
-    uint8_t *even = &buffer[2], *odd = &buffer[10];
-
-    if (memcmp(even, invalid, 8))
-      set_even_control_word(ct->ct_keys, even);
-    if (memcmp(odd, invalid, 8))
-      set_odd_control_word(ct->ct_keys, odd);
-
-    if(ct->ct_keystate != CT_RESOLVED)
-      tvhlog(LOG_INFO, "capmt",
-        "Obtained key for service \"%s\"",t->tht_svcname);
-
-    ct->ct_keystate = CT_RESOLVED;
-  }
-
-  return NULL;
-}
-
 /**
  *
  */
 static capmt_t *
 capmt_entry_find(const char *id, int create)
 {
+  pthread_attr_t attr;
+  pthread_t ptid;
   char buf[20];
   capmt_t *capmt;
   static int tally;
@@ -691,32 +665,12 @@ capmt_entry_find(const char *id, int create)
   capmt->capmt_id = strdup(id); 
   capmt->capmt_running = 1; 
 
-  /* open connection to camd.socket */
-  capmt->capmt_sock = socket(AF_LOCAL, SOCK_STREAM, 0);
-
-  struct sockaddr_un serv_addr_un;
-  memset(&serv_addr_un, 0, sizeof(serv_addr_un));
-  serv_addr_un.sun_family = AF_LOCAL;
-  snprintf(serv_addr_un.sun_path, sizeof(serv_addr_un.sun_path), "/tmp/camd.socket");
-  
-  if (connect(capmt->capmt_sock, (const struct sockaddr*)&serv_addr_un, sizeof(serv_addr_un)) != 0)
-    perror("[CWCServer] ERROR connecting to camd.socket");
-
-  /* open connection to emulated ca0 device */
-  capmt->capmt_sock_ca0 = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
-  struct sockaddr_in serv_addr;
-  serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	serv_addr.sin_port = htons( (unsigned short int)9000);
-	serv_addr.sin_family = AF_INET;
-
-  if (bind(capmt->capmt_sock_ca0, (const struct sockaddr*)&serv_addr, sizeof(serv_addr)) != 0) 
-		perror("[CWCServer] ERROR binding to ca0");
-    
-  pthread_t tCa0;
-  pthread_create(&tCa0, NULL, ca0Thread, (void*)capmt);
-
   TAILQ_INSERT_TAIL(&capmts, capmt, capmt_link);  
+
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+  pthread_create(&ptid, &attr, capmt_thread, capmt);
+  pthread_attr_destroy(&attr);
 
   return capmt;
 }
@@ -747,7 +701,6 @@ capmt_record_build(capmt_t *capmt)
 static htsmsg_t *
 capmt_entry_update(void *opaque, const char *id, htsmsg_t *values, int maycreate)
 {
-  printf("capmt entry update\n");
   capmt_t *capmt;
   const char *s;
   uint32_t u32;
@@ -760,28 +713,28 @@ capmt_entry_update(void *opaque, const char *id, htsmsg_t *values, int maycreate
   if((s = htsmsg_get_str(values, "camdfilename")) != NULL) {
     free(capmt->capmt_sockfile);
     capmt->capmt_sockfile = strdup(s);
-    printf("capmt sockfile %s\n", s);
   }
   
-  if(!htsmsg_get_u32(values, "port", &u32)) {
+  if(!htsmsg_get_u32(values, "port", &u32))
     capmt->capmt_port = u32;
-    printf("capmt listen port %d\n", u32);
-  }
   
   if((s = htsmsg_get_str(values, "comment")) != NULL) {
     free(capmt->capmt_comment);
     capmt->capmt_comment = strdup(s);
   }
 
-/*
+  if(!htsmsg_get_u32(values, "enabled", &u32)) 
+    capmt->capmt_enabled = u32;
+
+
   capmt->capmt_reconfigure = 1;
 
-  if(capmt->capmt_fd != -1)
-    shutdown(capmt->capmt_fd, SHUT_RDWR);
+/*  if(capmt->capmt_fd != -1)
+    shutdown(capmt->capmt_fd, SHUT_RDWR);*/
 
   pthread_cond_signal(&capmt->capmt_cond);
 
-  pthread_cond_broadcast(&capmt_config_changed);*/
+  pthread_cond_broadcast(&capmt_config_changed);
 
   return capmt_record_build(capmt);
 }
