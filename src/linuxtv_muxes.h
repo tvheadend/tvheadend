@@ -2906,6 +2906,35 @@ static const struct mux muxes_DVBT_au_AdelaideFoothills[] = {
  	{.freq = 760500000, .bw = 1, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 2, .hierarchy = 0},
  };
 
+static const struct mux muxes_DVBT_au_Bendigo[] = {
+	{.freq = 669500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 620500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 572500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 690500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 655500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 555250000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 576250000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 592500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 618250000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 529500000, .bw = 1, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 2, .hierarchy = 0},
+ 	{.freq = 634500000, .bw = 1, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 2, .hierarchy = 0},
+ 	{.freq = 534250000, .bw = 1, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 2, .hierarchy = 0},
+ 	{.freq = 676500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 571500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 536625000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 585625000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 564500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 543500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 536500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 529500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 205500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 564500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 536625000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 690500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 711500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 550500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ };
+
 static const struct mux muxes_DVBT_au_Brisbane[] = {
 	{.freq = 226500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
  	{.freq = 177500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
@@ -2952,6 +2981,16 @@ static const struct mux muxes_DVBT_au_Darwin[] = {
  	{.freq = 557625000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
  };
 
+static const struct mux muxes_DVBT_au_Devonport[] = {
+	{.freq = 730250000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 648500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 709250000, .bw = 1, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 2, .hierarchy = 0},
+ 	{.freq = 606500000, .bw = 1, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 2, .hierarchy = 0},
+ 	{.freq = 613498000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 627498000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 2, .hierarchy = 0},
+ 	{.freq = 585498000, .bw = 1, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 2, .hierarchy = 0},
+ };
+
 static const struct mux muxes_DVBT_au_FraserCoast_Bundaberg[] = {
 	{.freq = 205625000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
  	{.freq = 529500000, .bw = 1, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 2, .hierarchy = 0},
@@ -2969,6 +3008,14 @@ static const struct mux muxes_DVBT_au_GoldCoast[] = {
  	{.freq = 634500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
  	{.freq = 746500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
  	{.freq = 725500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ };
+
+static const struct mux muxes_DVBT_au_Goulburn_Rocky_Hill[] = {
+	{.freq = 725625000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 746625000, .bw = 1, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 2, .hierarchy = 0},
+ 	{.freq = 767625000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 788625000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
+ 	{.freq = 809500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
  };
 
 static const struct mux muxes_DVBT_au_Hervey_Bay_Ghost_Hill[] = {
@@ -3057,7 +3104,7 @@ static const struct mux muxes_DVBT_au_SpencerGulf[] = {
 
 static const struct mux muxes_DVBT_au_SunshineCoast[] = {
 	{.freq = 585625000, .bw = 1, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 2, .hierarchy = 0},
- 	{.freq = 662625000, .bw = 1, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 2, .hierarchy = 0},
+ 	{.freq = 662625000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 2, .hierarchy = 0},
  	{.freq = 767625000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
  	{.freq = 788625000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
  	{.freq = 809500000, .bw = 1, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 1, .hierarchy = 0},
@@ -3139,9 +3186,9 @@ static const struct mux muxes_DVBT_au_Wollongong[] = {
  };
 
 static const struct mux muxes_DVBT_be_Brussels[] = {
-	{.freq = 754000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 0, .hierarchy = 0},
- 	{.freq = 746000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 0, .hierarchy = 0},
- 	{.freq = 482000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 0, .hierarchy = 0},
+	{.freq = 754000000, .bw = 0, .constellation = 3, .fechp = 1, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
+ 	{.freq = 746000000, .bw = 0, .constellation = 3, .fechp = 1, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
+ 	{.freq = 482000000, .bw = 0, .constellation = 3, .fechp = 1, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
  };
 
 static const struct mux muxes_DVBT_be_Libramont[] = {
@@ -3360,7 +3407,7 @@ static const struct mux muxes_DVBT_de_Mecklenburg_Vorpommern[] = {
  	{.freq = 626000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
  	{.freq = 674000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
  	{.freq = 714000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
- 	{.freq = 730000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
+ 	{.freq = 738000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
  };
 
 static const struct mux muxes_DVBT_de_Niedersachsen[] = {
@@ -3368,9 +3415,11 @@ static const struct mux muxes_DVBT_de_Niedersachsen[] = {
  	{.freq = 482000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
  	{.freq = 490000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
  	{.freq = 498000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
+ 	{.freq = 514000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
  	{.freq = 522000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
  	{.freq = 530000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
  	{.freq = 538000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
+ 	{.freq = 554000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
  	{.freq = 562000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
  	{.freq = 570000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
  	{.freq = 586000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
@@ -3468,6 +3517,7 @@ static const struct mux muxes_DVBT_de_Sachsen_Anhalt[] = {
 static const struct mux muxes_DVBT_de_Schleswig_Holstein[] = {
 	{.freq = 474000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
  	{.freq = 490000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
+ 	{.freq = 498000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
  	{.freq = 514000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
  	{.freq = 530000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
  	{.freq = 546000000, .bw = 0, .constellation = 1, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
@@ -3619,6 +3669,15 @@ static const struct mux muxes_DVBT_es_Donostia[] = {
  	{.freq = 826000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 0, .hierarchy = 0},
  	{.freq = 834000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
  	{.freq = 850000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
+ };
+
+static const struct mux muxes_DVBT_es_Granada[] = {
+	{.freq = 762000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
+ 	{.freq = 770000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
+ 	{.freq = 834000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
+ 	{.freq = 842000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
+ 	{.freq = 850000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
+ 	{.freq = 858000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 3, .hierarchy = 0},
  };
 
 static const struct mux muxes_DVBT_es_Huesca[] = {
@@ -8006,12 +8065,12 @@ static const struct mux muxes_DVBT_uk_StocklandHill[] = {
  };
 
 static const struct mux muxes_DVBT_uk_Storeton[] = {
-	{.freq = 546167000, .bw = 0, .constellation = 1, .fechp = 3, .feclp = 0, .tmode = 0, .guard = 0, .hierarchy = 0},
- 	{.freq = 578167000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 0, .guard = 0, .hierarchy = 0},
- 	{.freq = 490167000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 0, .guard = 0, .hierarchy = 0},
+	{.freq = 490167000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 0, .guard = 0, .hierarchy = 0},
  	{.freq = 514167000, .bw = 0, .constellation = 1, .fechp = 3, .feclp = 0, .tmode = 0, .guard = 0, .hierarchy = 0},
+ 	{.freq = 530000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 0, .hierarchy = 0},
  	{.freq = 538167000, .bw = 0, .constellation = 1, .fechp = 3, .feclp = 0, .tmode = 0, .guard = 0, .hierarchy = 0},
  	{.freq = 570167000, .bw = 0, .constellation = 1, .fechp = 3, .feclp = 0, .tmode = 0, .guard = 0, .hierarchy = 0},
+ 	{.freq = 578167000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 0, .guard = 0, .hierarchy = 0},
  };
 
 static const struct mux muxes_DVBT_uk_Sudbury[] = {
@@ -8141,6 +8200,11 @@ static const struct network networks_DVBT_au[] = {
 		.nmuxes = sizeof(muxes_DVBT_au_AdelaideFoothills) / sizeof(struct mux),
 	},
 	{
+		.name = "Bendigo",
+		.muxes = muxes_DVBT_au_Bendigo,
+		.nmuxes = sizeof(muxes_DVBT_au_Bendigo) / sizeof(struct mux),
+	},
+	{
 		.name = "Brisbane",
 		.muxes = muxes_DVBT_au_Brisbane,
 		.nmuxes = sizeof(muxes_DVBT_au_Brisbane) / sizeof(struct mux),
@@ -8166,6 +8230,11 @@ static const struct network networks_DVBT_au[] = {
 		.nmuxes = sizeof(muxes_DVBT_au_Darwin) / sizeof(struct mux),
 	},
 	{
+		.name = "Devonport",
+		.muxes = muxes_DVBT_au_Devonport,
+		.nmuxes = sizeof(muxes_DVBT_au_Devonport) / sizeof(struct mux),
+	},
+	{
 		.name = "FraserCoast-Bundaberg",
 		.muxes = muxes_DVBT_au_FraserCoast_Bundaberg,
 		.nmuxes = sizeof(muxes_DVBT_au_FraserCoast_Bundaberg) / sizeof(struct mux),
@@ -8174,6 +8243,11 @@ static const struct network networks_DVBT_au[] = {
 		.name = "GoldCoast",
 		.muxes = muxes_DVBT_au_GoldCoast,
 		.nmuxes = sizeof(muxes_DVBT_au_GoldCoast) / sizeof(struct mux),
+	},
+	{
+		.name = "Goulburn-Rocky Hill",
+		.muxes = muxes_DVBT_au_Goulburn_Rocky_Hill,
+		.nmuxes = sizeof(muxes_DVBT_au_Goulburn_Rocky_Hill) / sizeof(struct mux),
 	},
 	{
 		.name = "Hervey Bay-Ghost Hill",
@@ -10254,6 +10328,11 @@ static const struct network networks_DVBT_es[] = {
 		.nmuxes = sizeof(muxes_DVBT_es_Donostia) / sizeof(struct mux),
 	},
 	{
+		.name = "Granada",
+		.muxes = muxes_DVBT_es_Granada,
+		.nmuxes = sizeof(muxes_DVBT_es_Granada) / sizeof(struct mux),
+	},
+	{
 		.name = "Huesca",
 		.muxes = muxes_DVBT_es_Huesca,
 		.nmuxes = sizeof(muxes_DVBT_es_Huesca) / sizeof(struct mux),
@@ -12037,6 +12116,72 @@ static const struct mux muxes_DVBC_at_Innsbruck[] = {
 	{ .freq = 562000000, .symrate = 6875000, .fec = 0, .constellation = 3},
 };
 
+static const struct mux muxes_DVBC_at_Kabel_Braunau[] = {
+	{ .freq = 386000000, .symrate = 6900000, .fec = 0, .constellation = 3},
+	{ .freq = 394000000, .symrate = 6875000, .fec = 0, .constellation = 3},
+	{ .freq = 402000000, .symrate = 6875000, .fec = 0, .constellation = 3},
+	{ .freq = 410000000, .symrate = 6875000, .fec = 0, .constellation = 3},
+	{ .freq = 418000000, .symrate = 6875000, .fec = 0, .constellation = 3},
+	{ .freq = 426000000, .symrate = 6875000, .fec = 0, .constellation = 3},
+	{ .freq = 434000000, .symrate = 6875000, .fec = 0, .constellation = 3},
+	{ .freq = 458000000, .symrate = 6875000, .fec = 0, .constellation = 3},
+	{ .freq = 466000000, .symrate = 6900000, .fec = 0, .constellation = 3},
+	{ .freq = 474000000, .symrate = 6900000, .fec = 0, .constellation = 3},
+	{ .freq = 482000000, .symrate = 6111000, .fec = 0, .constellation = 3},
+	{ .freq = 490000000, .symrate = 6111000, .fec = 0, .constellation = 3},
+	{ .freq = 498000000, .symrate = 6875000, .fec = 0, .constellation = 3},
+	{ .freq = 506000000, .symrate = 6111000, .fec = 0, .constellation = 3},
+	{ .freq = 514000000, .symrate = 6111000, .fec = 0, .constellation = 3},
+	{ .freq = 522000000, .symrate = 6428000, .fec = 0, .constellation = 4},
+	{ .freq = 530000000, .symrate = 6428000, .fec = 0, .constellation = 4},
+	{ .freq = 546000000, .symrate = 6875000, .fec = 0, .constellation = 3},
+	{ .freq = 554000000, .symrate = 6875000, .fec = 0, .constellation = 3},
+	{ .freq = 562000000, .symrate = 6875000, .fec = 0, .constellation = 3},
+	{ .freq = 570000000, .symrate = 6111000, .fec = 0, .constellation = 3},
+	{ .freq = 578000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 586000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 594000000, .symrate = 6875000, .fec = 0, .constellation = 3},
+};
+
+static const struct mux muxes_DVBC_at_Kabelsignal[] = {
+	{ .freq = 314000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 322000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 330000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 338000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 346000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 354000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 362000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 370000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 378000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 386000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 394000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 402000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 410000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 418000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 426000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 434000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 442000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 450000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 666000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 674000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 682000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 690000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 698000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 706000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 714000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 722000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 730000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 738000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 746000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 762000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 770000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 778000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 786000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 794000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 802000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 810000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+};
+
 static const struct mux muxes_DVBC_at_KarrerNet[] = {
 	{ .freq = 418000000, .symrate = 6900000, .fec = 0, .constellation = 3},
 	{ .freq = 426000000, .symrate = 6900000, .fec = 0, .constellation = 3},
@@ -12628,6 +12773,16 @@ static const struct network networks_DVBC_at[] = {
 		.name = "Innsbruck",
 		.muxes = muxes_DVBC_at_Innsbruck,
 		.nmuxes = sizeof(muxes_DVBC_at_Innsbruck) / sizeof(struct mux),
+	},
+	{
+		.name = "Kabel-Braunau",
+		.muxes = muxes_DVBC_at_Kabel_Braunau,
+		.nmuxes = sizeof(muxes_DVBC_at_Kabel_Braunau) / sizeof(struct mux),
+	},
+	{
+		.name = "Kabelsignal",
+		.muxes = muxes_DVBC_at_Kabelsignal,
+		.nmuxes = sizeof(muxes_DVBC_at_Kabelsignal) / sizeof(struct mux),
 	},
 	{
 		.name = "KarrerNet",
