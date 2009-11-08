@@ -99,7 +99,6 @@ typedef struct th_dvb_mux_instance {
 
   LIST_HEAD(, th_dvb_table) tdmi_tables;
   TAILQ_HEAD(, th_dvb_table) tdmi_table_queue;
-  int64_t tdmi_table_start;
   int tdmi_table_initial;
 
   enum {

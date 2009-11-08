@@ -323,7 +323,7 @@ dvb_adapter_mux_scanner(void *aux)
   if(tda->tda_rootpath == NULL)
     return; // No hardware
 
-  gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 20);
+  gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 3);
 
   if(LIST_FIRST(&tda->tda_muxes) == NULL)
     return; // No muxes configured

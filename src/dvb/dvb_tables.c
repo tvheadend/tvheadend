@@ -236,7 +236,6 @@ dvb_table_input(void *aux)
   uint8_t sec[4096];
   th_dvb_mux_instance_t *tdmi;
   th_dvb_table_t *tdt;
-  int64_t t;
 
   while(1) {
     x = epoll_wait(tda->tda_table_epollfd, ev, sizeof(ev) / sizeof(ev[0]), -1);
@@ -254,32 +253,21 @@ dvb_table_input(void *aux)
 
       pthread_mutex_lock(&global_lock);
       if((tdmi = tda->tda_mux_current) != NULL) {
-	t = getclock_hires();
-	/*
-	 * Supress first 250ms of table info. It seems that sometimes
-	 * the tuners not have actually tuned once they have returned
-	 * from the ioctl(). So we will wait some time before we start
-	 * accepting tables. 
-	 * Not a perfect tix...
-	 */
-	if(t - tdmi->tdmi_table_start >= 250000) {
-      
-	  LIST_FOREACH(tdt, &tdmi->tdmi_tables, tdt_link)
-	    if(tdt->tdt_id == tid)
-	      break;
+	LIST_FOREACH(tdt, &tdmi->tdmi_tables, tdt_link)
+	  if(tdt->tdt_id == tid)
+	    break;
 
-	  if(tdt != NULL) {
-	    dvb_proc_table(tdmi, tdt, sec, r);
+	if(tdt != NULL) {
+	  dvb_proc_table(tdmi, tdt, sec, r);
 
-	    /* Any tables pending (that wants a filter/fd) */
-	    if(TAILQ_FIRST(&tdmi->tdmi_table_queue) != NULL) {
-	      tdt_close_fd(tdmi, tdt);
+	  /* Any tables pending (that wants a filter/fd) */
+	  if(TAILQ_FIRST(&tdmi->tdmi_table_queue) != NULL) {
+	    tdt_close_fd(tdmi, tdt);
 
-	      tdt = TAILQ_FIRST(&tdmi->tdmi_table_queue);
-	      assert(tdt != NULL);
+	    tdt = TAILQ_FIRST(&tdmi->tdmi_table_queue);
+	    assert(tdt != NULL);
 
-	      tdt_open_fd(tdmi, tdt);
-	    }
+	    tdt_open_fd(tdmi, tdt);
 	  }
 	}
       }
@@ -594,6 +582,10 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     return -1;
 
   transport_stream_id         = ptr[0] << 8 | ptr[1];
+
+  if(tdmi->tdmi_transport_stream_id != transport_stream_id)
+    return -1;
+
   version                     = ptr[2] >> 1 & 0x1f;
   section_number              = ptr[3];
   last_section_number         = ptr[4];
@@ -695,6 +687,8 @@ static int
 dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
+  th_dvb_mux_instance_t *other;
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   uint16_t service, pmt, tsid;
   th_transport_t *t;
 
@@ -708,8 +702,18 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   tsid = (ptr[0] << 8) | ptr[1];
 
-  if(tdmi->tdmi_transport_stream_id != tsid)
-    dvb_mux_set_tsid(tdmi, tsid);
+  // Make sure this TSID is not already known on another mux
+  // That might indicate that we have accedentally received a PAT
+  // from another mux
+  LIST_FOREACH(other, &tda->tda_muxes, tdmi_adapter_link)
+    if(other != tdmi && other->tdmi_transport_stream_id == tsid)
+      return -1;
+
+  if(tdmi->tdmi_transport_stream_id == 0xffff)
+      dvb_mux_set_tsid(tdmi, tsid);
+  else if(tdmi->tdmi_transport_stream_id != tsid) {
+    return -1; // TSID mismatches, skip packet, may be from another mux
+  }
 
   ptr += 5;
   len -= 5;
@@ -1201,8 +1205,6 @@ void
 dvb_table_add_default(th_dvb_mux_instance_t *tdmi)
 {
   struct dmx_sct_filter_params *fp;
-
-  tdmi->tdmi_table_start = getclock_hires();
 
   /* Program Allocation Table */
 
