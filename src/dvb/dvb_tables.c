@@ -1230,10 +1230,8 @@ dvb_table_add_default(th_dvb_mux_instance_t *tdmi)
 
   case FE_ATSC:
     dvb_table_add_default_atsc(tdmi);
-
-
+    break;
   }
-
 }
 
 
