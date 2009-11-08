@@ -133,6 +133,16 @@ tvheadend.chconf = function()
 
     var cm = new Ext.grid.ColumnModel([
 	{
+	    header: "ChannelID",
+	    dataIndex: 'chid',
+	    width: 50,
+
+	    editor: new fm.NumberField({
+	        minValue: 0,
+	        maxValue: 9999
+	    })
+	},
+	{
 	    header: "Name",
 	    dataIndex: 'name',
 	    width: 150,
