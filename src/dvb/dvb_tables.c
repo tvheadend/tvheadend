@@ -655,16 +655,16 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
 	  if(t->tht_servicetype != stype ||
 	     t->tht_scrambled != free_ca_mode ||
-	     strcmp(t->tht_provider    ?: "", provider) ||
-	     strcmp(t->tht_svcname     ?: "", chname  )) {
+	     strcmp(t->tht_provider ?: "", provider) ||
+	     strcmp(t->tht_svcname  ?: "", chname)) {
 	    
 	    t->tht_servicetype = stype;
 	    t->tht_scrambled = free_ca_mode;
 	    
-	    free((void *)t->tht_provider);
+	    free(t->tht_provider);
 	    t->tht_provider = strdup(provider);
 	    
-	    free((void *)t->tht_svcname);
+	    free(t->tht_svcname);
 	    t->tht_svcname = strdup(chname);
 	    
 	    t->tht_config_save(t);

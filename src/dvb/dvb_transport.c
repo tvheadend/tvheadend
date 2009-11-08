@@ -214,11 +214,11 @@ dvb_transport_load(th_dvb_mux_instance_t *tdmi)
       u32 = 0;
     t->tht_scrambled = u32;
 
-    s = htsmsg_get_str(c, "provider") ?: "unknown";
-    t->tht_provider = strdup(s);
+    s = htsmsg_get_str(c, "provider");
+    t->tht_provider = s ? strdup(s) : NULL;
 
-    s = htsmsg_get_str(c, "servicename") ?: "unknown";
-    t->tht_svcname = strdup(s);
+    s = htsmsg_get_str(c, "servicename");
+    t->tht_svcname = s ? strdup(s) : NULL;
 
     pthread_mutex_lock(&t->tht_stream_mutex);
     psi_load_transport_settings(c, t);
