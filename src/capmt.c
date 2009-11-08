@@ -162,6 +162,7 @@ typedef struct capmt_transport {
  */
 typedef struct capmt {
   int capmt_fd;
+  int capmt_connected;
 
 	int capmt_sock_ca0;
 	int capmt_sock;
@@ -204,6 +205,7 @@ typedef struct capmt {
   char *capmt_sockfile;
   char *capmt_hostname;
   int capmt_port;
+  char *capmt_comment;
   char *capmt_id;
 
 //  const char *capmt_errtxt;
@@ -729,10 +731,12 @@ capmt_record_build(capmt_t *capmt)
   htsmsg_t *e = htsmsg_create_map();
 
   htsmsg_add_str(e, "id", capmt->capmt_id);
+  htsmsg_add_u32(e, "enabled",  !!capmt->capmt_enabled);
+  htsmsg_add_u32(e, "connected", !!capmt->capmt_connected);
 
-  htsmsg_add_str(e, "sockfile", capmt->capmt_sockfile ?: "");
-  htsmsg_add_str(e, "hostname", capmt->capmt_hostname ?: "");
+  htsmsg_add_str(e, "camdfilename", capmt->capmt_sockfile ?: "");
   htsmsg_add_u32(e, "port", capmt->capmt_port);
+  htsmsg_add_str(e, "comment", capmt->capmt_comment ?: "");
   
   return e;
 }
@@ -753,18 +757,22 @@ capmt_entry_update(void *opaque, const char *id, htsmsg_t *values, int maycreate
 
   lock_assert(&global_lock);
   
-  if((s = htsmsg_get_str(values, "sockfile")) != NULL) {
+  if((s = htsmsg_get_str(values, "camdfilename")) != NULL) {
     free(capmt->capmt_sockfile);
     capmt->capmt_sockfile = strdup(s);
+    printf("capmt sockfile %s\n", s);
   }
   
-  if((s = htsmsg_get_str(values, "hostname")) != NULL) {
-    free(capmt->capmt_hostname);
-    capmt->capmt_hostname = strdup(s);
-  }
-  
-  if(!htsmsg_get_u32(values, "port", &u32))
+  if(!htsmsg_get_u32(values, "port", &u32)) {
     capmt->capmt_port = u32;
+    printf("capmt listen port %d\n", u32);
+  }
+  
+  if((s = htsmsg_get_str(values, "comment")) != NULL) {
+    free(capmt->capmt_comment);
+    capmt->capmt_comment = strdup(s);
+  }
+
 /*
   capmt->capmt_reconfigure = 1;
 
@@ -863,8 +871,5 @@ capmt_init(void)
 
   dt = dtable_create(&capmt_dtc, "capmt", NULL);
   dtable_load(dt);
-
-  /* create initial entry */
-  capmt_entry_find(NULL, 1);
 }
 

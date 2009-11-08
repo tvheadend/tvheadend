@@ -54,7 +54,8 @@ function accessUpdate(o) {
 		    new tvheadend.tvadapters,
 		    new tvheadend.iptv,
 		    new tvheadend.acleditor, 
-		    new tvheadend.cwceditor]
+		    new tvheadend.cwceditor,
+                    new tvheadend.capmteditor]
 	});
 	tvheadend.rootTabPanel.add(tvheadend.confpanel);
     }
