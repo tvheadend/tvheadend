@@ -168,18 +168,26 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
 
   if(tdmi != NULL) {
     /* Update stuff ... */
+    int save = 0;
 
-    if(!tdmi_compare_conf(tda->tda_type, &tdmi->tdmi_conf, dmc))
-      return NULL; // Nothings changed
+    if(tdmi_compare_conf(tda->tda_type, &tdmi->tdmi_conf, dmc)) {
+      memcpy(&tdmi->tdmi_conf, dmc, sizeof(struct dvb_mux_conf));
+      save = 1;
+    }
 
-    memcpy(&tdmi->tdmi_conf, dmc, sizeof(struct dvb_mux_conf));
+    if(tdmi->tdmi_transport_stream_id != tsid) {
+      tdmi->tdmi_transport_stream_id = tsid;
+      save = 1;
+    }
 
-    dvb_mux_save(tdmi);
+    if(save) {
+      dvb_mux_save(tdmi);
+      dvb_mux_nicename(buf, sizeof(buf), tdmi);
+      tvhlog(LOG_DEBUG, "dvb", 
+	     "Configuration for mux \"%s\" updated by %s", buf, source);
+      dvb_mux_notify(tdmi);
+    }
 
-    dvb_mux_nicename(buf, sizeof(buf), tdmi);
-    tvhlog(LOG_DEBUG, "dvb", 
-	   "Configuration for mux \"%s\" updated by %s", buf, source);
-    dvb_mux_notify(tdmi);
     return NULL;
   }
 
