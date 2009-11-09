@@ -355,7 +355,7 @@ static htsmsg_t *
 htsp_build_dvrentry(dvr_entry_t *de, const char *method)
 {
   htsmsg_t *out = htsmsg_create_map();
-  const char *s = NULL;
+  const char *s = NULL, *error = NULL;
 
   htsmsg_add_u32(out, "id", de->de_id);
   htsmsg_add_u32(out, "channel", de->de_channel->ch_id);
@@ -375,6 +375,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
     break;
   case DVR_COMPLETED:
     s = "completed";
+    if(de->de_error)
+      error = de->de_error;
     break;
   case DVR_NOSTATE:
     s = "invalid";
@@ -382,6 +384,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   }
 
   htsmsg_add_str(out, "state", s);
+  if(error)
+    htsmsg_add_str(out, "error", error);
   htsmsg_add_str(out, "method", method);
   return out;
 }
