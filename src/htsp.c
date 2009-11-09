@@ -300,6 +300,7 @@ htsp_build_channel(channel_t *ch, const char *method)
   htsmsg_t *tags = htsmsg_create_list();
 
   htsmsg_add_u32(out, "channelId", ch->ch_id);
+  htsmsg_add_u32(out, "channelNumber", ch->ch_number);
 
   htsmsg_add_str(out, "channelName", ch->ch_name);
   if(ch->ch_icon != NULL)

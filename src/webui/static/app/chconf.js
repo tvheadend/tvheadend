@@ -28,7 +28,7 @@ tvheadend.channels = new Ext.data.JsonStore({
     autoLoad: true,
     root:'entries',
     fields: ['name', 'chid', 'xmltvsrc', 'tags', 
-	     'epg_pre_start', 'epg_post_end'],
+	     'epg_pre_start', 'epg_post_end', 'number'],
     id: 'chid',
     url: "channels",
     baseParams: {
@@ -133,9 +133,16 @@ tvheadend.chconf = function()
 
     var cm = new Ext.grid.ColumnModel([
 	{
-	    header: "ChannelID",
-	    dataIndex: 'chid',
+	    header: "Number",
+	    dataIndex: 'number',
 	    width: 50,
+	    renderer: function(value, metadata, record, row, col, store) {
+		if (!value) {
+		    return '<span class="tvh-grid-unset">Not set</span>';
+		} else {
+		    return value;
+		}
+	    },
 
 	    editor: new fm.NumberField({
 	        minValue: 0,

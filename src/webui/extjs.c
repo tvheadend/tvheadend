@@ -336,6 +336,9 @@ extjs_channels_update(htsmsg_t *in)
 
     if((s = htsmsg_get_str(c, "epg_post_end")) != NULL)
       channel_set_epg_postpre_time(ch, 0, atoi(s));
+
+    if((s = htsmsg_get_str(c, "number")) != NULL)
+      channel_set_number(ch, atoi(s));
   }
 }
 
@@ -381,6 +384,7 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
 
       htsmsg_add_s32(c, "epg_pre_start", ch->ch_dvr_extra_time_pre);
       htsmsg_add_s32(c, "epg_post_end",  ch->ch_dvr_extra_time_post);
+      htsmsg_add_s32(c, "number",        ch->ch_number);
 
       htsmsg_add_msg(array, NULL, c);
     }

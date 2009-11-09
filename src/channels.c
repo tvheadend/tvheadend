@@ -273,6 +273,7 @@ channel_load_one(htsmsg_t *c, int id)
 
   htsmsg_get_s32(c, "dvr_extra_time_pre",  &ch->ch_dvr_extra_time_pre);
   htsmsg_get_s32(c, "dvr_extra_time_post", &ch->ch_dvr_extra_time_post);
+  htsmsg_get_s32(c, "channel_number", &ch->ch_number);
 
   if((tags = htsmsg_get_list(c, "tags")) != NULL) {
     HTSMSG_FOREACH(f, tags) {
@@ -335,6 +336,7 @@ channel_save(channel_t *ch)
 
   htsmsg_add_u32(m, "dvr_extra_time_pre",  ch->ch_dvr_extra_time_pre);
   htsmsg_add_u32(m, "dvr_extra_time_post", ch->ch_dvr_extra_time_post);
+  htsmsg_add_s32(m, "channel_number", ch->ch_number);
 
   hts_settings_save(m, "channels/%d", ch->ch_id);
   htsmsg_destroy(m);
@@ -460,7 +462,6 @@ channel_set_icon(channel_t *ch, const char *icon)
 /**
  *  Set the amount of minutes to start before / end after recording on a channel
  */
-
 void
 channel_set_epg_postpre_time(channel_t *ch, int pre, int mins)
 {
@@ -484,6 +485,19 @@ channel_set_epg_postpre_time(channel_t *ch, int pre, int mins)
     else
        ch->ch_dvr_extra_time_post = mins;
   }
+  channel_save(ch);
+  htsp_channel_update(ch);
+}
+
+/**
+ * Set the channel number
+ */
+void
+channel_set_number(channel_t *ch, int number)
+{
+  if(ch->ch_number == number)
+    return;
+  ch->ch_number = number;
   channel_save(ch);
   htsp_channel_update(ch);
 }
