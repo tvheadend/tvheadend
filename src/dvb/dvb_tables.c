@@ -710,7 +710,7 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       return -1;
 
   if(tdmi->tdmi_transport_stream_id == 0xffff)
-      dvb_mux_set_tsid(tdmi, tsid);
+    dvb_mux_set_tsid(tdmi, tsid);
   else if(tdmi->tdmi_transport_stream_id != tsid) {
     return -1; // TSID mismatches, skip packet, may be from another mux
   }
