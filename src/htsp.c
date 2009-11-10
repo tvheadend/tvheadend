@@ -466,6 +466,71 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   return NULL;
 }
 
+/**
+ * add a Dvrentry
+ */
+static htsmsg_t * 
+htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *out;
+  uint32_t eventid;
+  event_t *e;
+  dvr_entry_t *de;
+  dvr_entry_sched_state_t dvr_status;
+    
+  if(htsmsg_get_u32(in, "eventId", &eventid))
+    return htsp_error("Missing argument 'eventId'");
+  
+  if((e = epg_event_find_by_id(eventid)) == NULL)
+    return htsp_error("Event does not exist");
+  
+  //create the dvr entry
+  de = dvr_entry_create_by_event(e, (htsp->htsp_username) ? htsp->htsp_username:"anonymous");
+
+  dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
+  
+  //create response
+  out = htsmsg_create_map();
+  
+  switch(dvr_status) {
+  case DVR_SCHEDULED:
+  case DVR_RECORDING:
+  case DVR_COMPLETED:
+    htsmsg_add_u32(out, "id", de->de_id);
+    htsmsg_add_u32(out, "success", 1);
+    break;  
+  case DVR_NOSTATE:
+    htsmsg_add_str(out, "error", "Could not add dvrEntry");
+    htsmsg_add_u32(out, "success", 0);
+    break;
+  }
+  return out;
+}
+
+/**
+ * delete a Dvrentry
+ */
+static htsmsg_t * 
+htsp_method_deleteDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *out;
+  uint32_t dvrEntryId;
+  dvr_entry_t *de;
+    
+  if(htsmsg_get_u32(in, "id", &dvrEntryId))
+    return htsp_error("Missing argument 'id'");
+
+  if( (de = dvr_entry_find_by_id(dvrEntryId)) == NULL)
+    return htsp_error("id not found");
+
+  dvr_entry_cancel(de);
+
+  //create response
+  out = htsmsg_create_map();
+  htsmsg_add_u32(out, "success", 1);
+  
+  return out;
+}
 
 /**
  * Get information about the given event
@@ -697,6 +762,8 @@ struct {
   { "getSysTime", htsp_method_getSysTime, ACCESS_STREAMING},
   { "subscribe", htsp_method_subscribe, ACCESS_STREAMING},
   { "unsubscribe", htsp_method_unsubscribe, ACCESS_STREAMING},
+  { "addDvrEntry", htsp_method_addDvrEntry, ACCESS_RECORDER},
+  { "deleteDvrEntry", htsp_method_deleteDvrEntry, ACCESS_RECORDER},
 
 };
 
