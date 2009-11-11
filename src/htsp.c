@@ -550,6 +550,7 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
 
   out = htsmsg_create_map();
 
+  htsmsg_add_u32(out, "channelId", e->e_channel->ch_id);
   htsmsg_add_u32(out, "start", e->e_start);
   htsmsg_add_u32(out, "stop", e->e_stop);
   if(e->e_title != NULL)
