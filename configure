@@ -19,7 +19,11 @@ CPU=generic
 ARCH=`uname -m`
 OSENV="posix"
 PREFIX=/usr/local
-PARALLEL_MODE=PARALLEL_64_MMX
+if [ "$ARCH" = "ppc" ] ; then
+  PARALLEL_MODE=PARALLEL_32_INT
+else
+  PARALLEL_MODE=PARALLEL_64_MMX
+fi
 
 show_help(){
   echo "Usage: configure [options]"
@@ -151,6 +155,7 @@ fi
 # Finalize
 #
 cat >> ${CONFIG_MAK} << EOF 
+ARCH=$ARCH
 INSTALLPREFIX=$PREFIX
 LDFLAGS_cfg += -lpthread
 EOF

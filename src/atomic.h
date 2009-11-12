@@ -31,6 +31,24 @@ atomic_add(volatile int *ptr, int incr)
 	       "=r"(r), "=m"(*ptr) : "0" (incr), "m" (*ptr) : "memory");
   return r;
 }
-#endif
+#elif defined(__ppc__) || defined(__PPC__)
+
+/* somewhat based on code from darwin gcc  */
+static inline int
+atomic_add (volatile int *ptr, int incr)
+{
+  int tmp, res;
+  asm volatile("0:\n"
+               "lwarx  %1,0,%2\n"
+               "add%I3 %0,%1,%3\n"
+               "stwcx. %0,0,%2\n"
+               "bne-   0b\n"
+               : "=&r"(tmp), "=&b"(res)
+               : "r" (ptr), "Ir"(incr)
+               : "cr0", "memory");
+  
+  return res;
+}
+#endif 
 
 #endif /* HTSATOMIC_H__ */

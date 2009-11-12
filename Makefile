@@ -92,7 +92,9 @@ SRCS += src/cwc.c \
 	src/krypt.c \
 	src/ffdecsa/FFdecsa.c
 
+ifneq ($(ARCH), ppc)
 ${BUILDDIR}/src/ffdecsa/FFdecsa.o : CFLAGS = -mmmx
+endif
 LDFLAGS += -lcrypt
 
 #
