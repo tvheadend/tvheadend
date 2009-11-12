@@ -456,7 +456,6 @@ rtsp_streaming_input(void *opaque, streaming_message_t *sm)
   case SMT_PACKET:
     if(rtsp->rtsp_running)
       rtsp_streaming_send(rtsp, sm->sm_data);
-    pkt_ref_dec(sm->sm_data);
     break;
 
   case SMT_TRANSPORT_STATUS:
