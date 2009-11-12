@@ -7061,6 +7061,7 @@ static const struct mux muxes_DVBT_se_Skelleftea[] = {
  	{.freq = 514000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 2, .hierarchy = 0},
  	{.freq = 778000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 2, .hierarchy = 0},
  	{.freq = 650000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 2, .hierarchy = 0},
+ 	{.freq = 698000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 2, .hierarchy = 0},
  };
 
 static const struct mux muxes_DVBT_se_Skene_Nycklarberget[] = {
@@ -12631,6 +12632,25 @@ static const struct mux muxes_DVBC_fr_noos_numericable[] = {
 	{ .freq = 850000000, .symrate = 6875000, .fec = 0, .constellation = 3},
 };
 
+static const struct mux muxes_DVBC_hu_Digikabel[] = {
+	{ .freq = 354000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 362000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 370000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 378000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 386000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 394000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 402000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 410000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 770000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 778000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 786000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 794000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 834000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 842000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 850000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 858000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+};
+
 static const struct mux muxes_DVBC_lu_Ettelbruck_ACE[] = {
 	{ .freq = 634000000, .symrate = 6900000, .fec = 0, .constellation = 3},
 	{ .freq = 642000000, .symrate = 6900000, .fec = 0, .constellation = 3},
@@ -12924,6 +12944,14 @@ static const struct network networks_DVBC_de[] = {
 	},
 };
 
+static const struct network networks_DVBC_hu[] = {
+	{
+		.name = "Digikabel",
+		.muxes = muxes_DVBC_hu_Digikabel,
+		.nmuxes = sizeof(muxes_DVBC_hu_Digikabel) / sizeof(struct mux),
+	},
+};
+
 static const struct network networks_DVBC_lu[] = {
 	{
 		.name = "Ettelbruck-ACE",
@@ -13037,6 +13065,11 @@ static const struct region regions_DVBC[] = {
 		.name = "Germany",
 		.networks = networks_DVBC_de,
 		.nnetworks = sizeof(networks_DVBC_de) / sizeof(struct network),
+	},
+	{
+		.name = "Hungary",
+		.networks = networks_DVBC_hu,
+		.nnetworks = sizeof(networks_DVBC_hu) / sizeof(struct network),
 	},
 	{
 		.name = "Luxembourg",
