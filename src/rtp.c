@@ -17,12 +17,10 @@
  */
 
 #include <assert.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <netinet/in.h>
@@ -30,74 +28,64 @@
 #include <arpa/inet.h>
 
 #include "tvhead.h"
-#include "channels.h"
 #include "rtp.h"
-#include "dispatch.h"
 
-int
-rtp_sendmsg(uint8_t *pkt, int blocks, int64_t pcr,
-	    int fd, struct sockaddr *dst, socklen_t dstlen,
-	    uint16_t seq)
-{
-  struct msghdr msg;
-  struct iovec vec[2];
-  AVRational mpeg_tc = {1, 90000};
-  char hdr[12];
-
-  pcr = av_rescale_q(pcr, AV_TIME_BASE_Q, mpeg_tc);
-
-  hdr[0]  = 0x80;
-  hdr[1]  = 33; /* M2TS */
-  hdr[2]  = seq >> 8;
-  hdr[3]  = seq;
-
-  hdr[4]  = pcr >> 24;
-  hdr[5]  = pcr >> 16;
-  hdr[6]  = pcr >>  8;
-  hdr[7]  = pcr;
-
-  hdr[8]  = 0;
-  hdr[9]  = 0;
-  hdr[10] = 0;
-  hdr[11] = 0;
-
-
-  vec[0].iov_base = hdr;
-  vec[0].iov_len  = 12;
-  vec[1].iov_base = pkt;
-  vec[1].iov_len  = blocks * 188;
-
-  memset(&msg, 0, sizeof(msg));
-  msg.msg_name    = dst;
-  msg.msg_namelen = dstlen;
-  msg.msg_iov     = vec;
-  msg.msg_iovlen  = 2;
-
-  return sendmsg(fd, &msg, 0);
-}
-
-
+static const AVRational mpeg_tc = {1, 90000};
 
 void
-rtp_output_ts(void *opaque, th_subscription_t *s, 
-	      uint8_t *pkt, int blocks, int64_t pcr)
+rtp_send_mpv(rtp_send_t *sender, void *opaque, rtp_stream_t *rs, 
+	     const uint8_t *data, size_t len,
+	     int64_t pts)
 {
-  th_rtp_streamer_t *trs = opaque;
+  uint32_t flags = 0;
+  int s;
+  int payloadsize = RTP_MAX_PACKET_SIZE - (4 + 4 + 4 + 4);
+  uint8_t *buf;
+    
+  if(data[0] != 0x00 || data[1] != 0x00 || data[2] != 0x01)
+    return; // Not a startcode, something is fishy
 
-  rtp_sendmsg(pkt, blocks, pcr, trs->trs_fd, 
-	      (struct sockaddr *)&trs->trs_dest, sizeof(struct sockaddr_in),
-	      trs->trs_seq);
+  pts = av_rescale_q(pts, AV_TIME_BASE_Q, mpeg_tc);
 
-  trs->trs_seq++;
-}
+  if(data[3] == 0xb3) {
+    // Sequence Start code, set Begin-Of-Sequence
+    flags |= 1 << 13;
+  }
+  while(len > 0) {
 
+    s = len > payloadsize ? payloadsize : len;
 
+    buf = rs->rs_buf;
+    buf[0] = 0x80;
+    buf[1] = 32 | (len == payloadsize ? 0x80 : 0);
+    buf[2] = rs->rs_seq >> 8;
+    buf[3] = rs->rs_seq;
 
+    buf[4] = pts >> 24;
+    buf[5] = pts >> 16;
+    buf[6] = pts >> 8;
+    buf[7] = pts;
+    
+    buf[8] = 0;
+    buf[9] = 0;
+    buf[10] = 0;
+    buf[11] = 0;
 
-void
-rtp_streamer_init(th_rtp_streamer_t *trs, int fd, struct sockaddr_in *dst)
-{
-  trs->trs_fd = fd;
-  trs->trs_dest = *dst;
-  trs->trs_seq = 0;
+    buf[12] = flags >> 24;
+    buf[13] = flags >> 16;
+    buf[14] = flags >> 8;
+    buf[15] = flags;
+    
+    memcpy(buf + 16, data, s);
+
+    len  -= s;
+    data += s;
+
+    sender(opaque, buf, s + 16);
+    rs->rs_seq++;
+
+    flags = 0;
+
+  }
+  assert(len == 0);
 }

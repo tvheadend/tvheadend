@@ -26,7 +26,7 @@ PROG=${BUILDDIR}/tvheadend
 
 CFLAGS  = -Wall -Werror -Wwrite-strings -Wno-deprecated-declarations 
 CFLAGS += -Wmissing-prototypes
-
+LDFLAGS += -lrt
 
 #
 # Core
@@ -53,6 +53,8 @@ SRCS =  src/main.c \
 	src/parser_latm.c \
 	src/tsdemux.c \
 	src/bitstream.c \
+	src/rtsp.c \
+	src/rtp.c \
 	src/htsp.c \
 	src/serviceprobe.c \
 	src/htsmsg.c \

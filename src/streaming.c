@@ -186,8 +186,8 @@ streaming_msg_clone(streaming_message_t *src)
 /**
  *
  */
-static void
-streaming_start_deref(streaming_start_t *ss)
+void
+streaming_start_unref(streaming_start_t *ss)
 {
   if((atomic_add(&ss->ss_refcount, -1)) != 1)
     return;
@@ -209,7 +209,8 @@ streaming_msg_free(streaming_message_t *sm)
     break;
 
   case SMT_START:
-    streaming_start_deref(sm->sm_data);
+    if(sm->sm_data)
+      streaming_start_unref(sm->sm_data);
     break;
 
   case SMT_STOP:

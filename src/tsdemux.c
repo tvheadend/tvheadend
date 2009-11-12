@@ -143,7 +143,7 @@ ts_recv_packet0(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
 static void
 ts_extract_pcr(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
 {
-  int64_t real = getclock_hires();
+  int64_t real = getmonoclock();
   int64_t pcr, d;
 
   pcr  = tsb[6] << 25;

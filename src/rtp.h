@@ -1,6 +1,6 @@
 /*
- *  tvheadend, RTP interface
- *  Copyright (C) 2007 Andreas Öman
+ *  Tvheadend, RTP streamer
+ *  Copyright (C) 2007, 2009 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,21 +19,18 @@
 #ifndef RTP_H_
 #define RTP_H_
 
-typedef struct th_rtp_streamer {
-  int trs_fd;
-  struct sockaddr_in trs_dest;
-  int16_t trs_seq;
+typedef void (rtp_send_t)(void *opaque, void *buf, size_t len);
 
-} th_rtp_streamer_t;
+#define RTP_MAX_PACKET_SIZE 1472
 
-void rtp_streamer_init(th_rtp_streamer_t *trs, int fd,
-		       struct sockaddr_in *dst);
+typedef struct rtp_stream {
+  uint16_t rs_seq;
+  
+  int rs_ptr;
+  uint8_t rs_buf[RTP_MAX_PACKET_SIZE];
+} rtp_stream_t;
 
-void rtp_output_ts(void *opaque, th_subscription_t *s, 
-		   uint8_t *pkt, int blocks, int64_t pcr);
-
-int rtp_sendmsg(uint8_t *pkt, int blocks, int64_t pcr,
-		int fd, struct sockaddr *dst, socklen_t dstlen,
-		uint16_t seq);
+void rtp_send_mpv(rtp_send_t *sender, void *opaque, rtp_stream_t *rs, 
+		  const uint8_t *data, size_t len, int64_t pts);
 
 #endif /* RTP_H_ */

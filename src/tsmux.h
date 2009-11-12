@@ -1,6 +1,6 @@
 /*
  *  tvheadend, MPEG transport stream muxer
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2008 - 2009 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,6 +18,11 @@
 
 #ifndef TSMUX_H
 #define TSMUX_H
+
+void tsm_init(void);
+
+
+#if 0
 
 typedef void (ts_mux_output_t)(void *opaque, th_subscription_t *s, 
 			       uint8_t *pkt, int npackets, int64_t pcr_ref);
@@ -64,5 +69,7 @@ void ts_muxer_deinit(ts_muxer_t *ts, th_subscription_t *s);
 void ts_muxer_play(ts_muxer_t *ts, int64_t toffset);
 
 void ts_muxer_pause(ts_muxer_t *ts);
+#endif
+
 
 #endif /* TSMUX_H */

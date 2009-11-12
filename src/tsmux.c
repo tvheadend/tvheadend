@@ -1,6 +1,6 @@
 /*
  *  tvheadend, MPEG Transport stream muxer
- *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2008 - 2009 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,642 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <assert.h>
+
+#include "tvhead.h"
+#include "streaming.h"
+#include "tsmux.h"
+
+
+#define PID_PMT     1000
+#define PID_ES_BASE 2000
+
+static const AVRational mpeg_tc = {1, 90000};
+static const AVRational mpeg_tc_27M = {1, 27000000};
+
+LIST_HEAD(tsmuxer_es_list, tsmuxer_es);
+TAILQ_HEAD(tsmuxer_pkt_queue, tsmuxer_pkt);
+
+/**
+ *
+ */
+typedef struct tsmuxer_pkt {
+  TAILQ_ENTRY(tsmuxer_pkt) tsp_link;
+  int64_t tsp_deadline;
+  int64_t tsp_dts;
+  int64_t tsp_pcr;
+  int tsp_contentsize;
+
+  uint8_t tsp_payload[188];
+
+} tsmuxer_pkt_t;
+
+/**
+ *
+ */
+typedef struct tsmuxer_fifo {
+  struct tsmuxer_pkt_queue tsf_queue;
+  int tsf_contentsize;
+  int tsf_len;
+
+} tsmuxer_fifo_t;
+
+
+
+/**
+ * TS Elementary stream
+ */
+typedef struct tsmuxer_es {
+  LIST_ENTRY(tsmuxer_es) te_link;
+  
+  int te_type;
+
+  int te_input_index;
+
+  char te_lang[4];
+
+  int te_pid;
+  int te_cc;
+
+  int te_startcode;               // Startcode to use for PES packetization
+
+  struct streaming_message_queue te_smq;
+  int te_lookahead_depth;         // bytes in te_smq
+  int te_lookahead_packets;       // packets in te_smq
+
+  int64_t te_mux_offset;
+
+  int te_vbv_delay;
+
+  tsmuxer_fifo_t te_delivery_fifo;
+
+} tsmuxer_es_t;
+
+
+
+
+/**
+ * TS Multiplexer
+ */
+typedef struct tsmuxer {
+
+  int tsm_run;
+
+  struct tsmuxer_es_list tsm_eslist;
+
+  int64_t tsm_pcr_start;
+  int64_t tsm_pcr_ref;
+  int64_t tsm_pcr_last;
+
+  tsmuxer_es_t *tsm_pcr_stream;
+
+  streaming_queue_t tsm_input;
+
+  streaming_target_t *tsm_output;
+
+  pthread_t tsm_thread;
+
+} tsmuxer_t;
+
+
+/**
+ *
+ */
+static void
+tmf_enq(tsmuxer_fifo_t *tsf, tsmuxer_pkt_t *tsp)
+{
+  /* record real content size */
+  tsf->tsf_contentsize += tsp->tsp_contentsize;
+
+  /* Enqueue packet */
+  TAILQ_INSERT_TAIL(&tsf->tsf_queue, tsp, tsp_link);
+  tsf->tsf_len++;
+}
+
+#if 0
+/**
+ *
+ */
+static void
+tsf_remove(tsmuxer_fifo_t *tsf, tsmuxer_pkt_t *tsp)
+{
+  tsf->tsf_contentsize -= tsp->tsp_contentsize;
+  TAILQ_REMOVE(&tsf->tsf_queue, tsp, tsp_link);
+  tsf->tsf_len--;
+}
+
+/**
+ *
+ */
+static tsmuxer_pkt_t *
+tsf_deq(tsmuxer_fifo_t *tsf)
+{
+  tsmuxer_pkt_t *tm;
+
+  tm = TAILQ_FIRST(&tsf->tsf_queue);
+  if(tm != NULL)
+    tsf_remove(tsf, tm);
+  return tm;
+}
+#endif
+
+
+/**
+ *
+ */
+static void
+tsf_init(tsmuxer_fifo_t *tsf)
+{
+  TAILQ_INIT(&tsf->tsf_queue);
+}
+
+
+
+#if 0
+/**
+ * Check if we need to start delivery timer for the given stream
+ * 
+ * Also, if it is the PCR stream and we're not yet runnig, figure out
+ * PCR and start generating packets
+ */
+static void
+ts_check_deliver(tsmuxer_t *tsm, tsmuxer_es_t *te)
+{
+  int64_t now;
+  tsmuxer_fifo_t *tsf = &te->te_delivery_fifo;
+  int64_t next;
+
+  if(dtimer_isarmed(&tms->tms_mux_timer))
+    return; /* timer already running, we're fine */
+
+  assert(tms->tms_delivery_fifo.tmf_len != 0);
+
+  now = getclock_hires();
+
+  if(ts->ts_pcr_ref == AV_NOPTS_VALUE) {
+
+    if(ts->ts_pcr_start == AV_NOPTS_VALUE)
+      return; /* dont know anything yet */
+
+    ts->ts_pcr_ref = now - ts->ts_pcr_start + t->tht_pcr_drift;
+  }
+
+  f = TAILQ_FIRST(&tmf->tmf_queue);  /* next packet we are going to send */
+  next = f->tm_deadline + ts->ts_pcr_ref - t->tht_pcr_drift;
+
+  if(next < now + 100)
+    next = now + 100;
+ 
+  dtimer_arm_hires(&tms->tms_mux_timer, ts_deliver, tms, next - 500);
+}
+#endif
+
+
+
+/**
+ * Generate TS packet, see comments inline
+ */
+static void
+lookahead_dequeue(tsmuxer_t *tsm, tsmuxer_es_t *te)
+{
+  streaming_message_t *sm;
+  th_pkt_t *pkt;
+  tsmuxer_pkt_t *tsp;
+  uint8_t *tsb;
+  uint16_t u16;
+  int frrem, pad, tsrem, len, off, cc, hlen, flags;
+  int64_t t, tdur, toff, tlen, dts, pcr, basedelivery;
+
+
+  tlen = 0;
+  TAILQ_FOREACH(sm, &te->te_smq, sm_link) {
+    pkt = sm->sm_data;
+    tlen += pkt->pkt_payloadlen;
+
+    if(pkt->pkt_pts != pkt->pkt_dts) {
+      tlen += 19; /* pes header with DTS and PTS */
+    } else {
+      tlen += 14; /* pes header with PTS only */
+    }
+  }
+
+  if(tlen == 0)
+    return;
+
+  sm = TAILQ_FIRST(&te->te_smq);
+  pkt = sm->sm_data;
+  toff = 0;
+
+  /* XXX: assumes duration is linear, but it's probably ok */
+  tdur = pkt->pkt_duration * te->te_lookahead_packets;
+  
+  if(te->te_mux_offset == AV_NOPTS_VALUE) {
+    if(te->te_vbv_delay == -1)
+      te->te_mux_offset = tdur / 2 - pkt->pkt_duration;
+    else
+      te->te_mux_offset = te->te_vbv_delay;
+  }
+
+  if(tsm->tsm_pcr_start == AV_NOPTS_VALUE && tsm->tsm_pcr_stream == te)
+    tsm->tsm_pcr_start = pkt->pkt_dts - te->te_mux_offset;
+
+  basedelivery = pkt->pkt_dts - te->te_mux_offset;
+
+  while((sm = TAILQ_FIRST(&te->te_smq)) != NULL) {
+
+    off = 0;
+    pkt = sm->sm_data;
+
+    if(pkt->pkt_dts == pkt->pkt_pts) {
+      hlen = 8;
+      flags = 0x80;
+    } else {
+      hlen = 13;
+      flags = 0xc0;
+    }
+
+    while(off < pkt->pkt_payloadlen) {
+      
+      tsp = malloc(sizeof(tsmuxer_pkt_t));
+      tsp->tsp_deadline = basedelivery + tdur * toff / tlen;
+
+      dts = (int64_t)pkt->pkt_duration * 
+	(int64_t)off / (int64_t)pkt->pkt_payloadlen;
+      dts += pkt->pkt_dts;
+
+      tsp->tsp_dts = dts;
+      tsb = tsp->tsp_payload;
+      
+      /* TS marker */
+      *tsb++ = 0x47;
+    
+      /* Write PID and optionally payload unit start indicator */
+      *tsb++ = te->te_pid >> 8 | (off ? 0 : 0x40);
+      *tsb++ = te->te_pid;
+
+      cc = te->te_cc & 0xf;
+      te->te_cc++;
+
+      /* Remaing bytes after 4 bytes of TS header */
+      tsrem = 184;
+
+      if(off == 0) {
+	/* When writing the packet header, shave of a bit of available 
+	   payload size */
+	tsrem -= hlen + 6;
+      }
+      
+      /* Remaining length of frame */
+      frrem = pkt->pkt_payloadlen - off;
+
+      /* Compute amout of padding needed */
+      pad = tsrem - frrem;
+
+      pcr = tsp->tsp_deadline;
+      tsp->tsp_pcr = AV_NOPTS_VALUE;
+
+      if(tsm->tsm_pcr_stream == te && tsm->tsm_pcr_last + 20000 < pcr) {
+	 
+	tsp->tsp_pcr = pcr;
+	/* Insert PCR */
+    
+	tlen  += 8; /* compensate total length */
+	tsrem -= 8;
+	pad   -= 8;
+	if(pad < 0)
+	  pad = 0;
+	
+	*tsb++ = 0x30 | cc;
+	*tsb++ = 7 + pad;
+	*tsb++ = 0x10;   /* PCR flag */
+	
+	t = av_rescale_q(pcr, AV_TIME_BASE_Q, mpeg_tc);
+	*tsb++ =  t >> 25;
+	*tsb++ =  t >> 17;
+	*tsb++ =  t >> 9;
+	*tsb++ =  t >> 1;
+	*tsb++ = (t & 1) << 7;
+	*tsb++ = 0;
+	
+	memset(tsb, 0xff, pad);
+	tsb   += pad;
+	tsrem -= pad;
+	
+	tsm->tsm_pcr_last = pcr + 20000;
+
+      } else if(pad > 0) {
+	/* Must pad TS packet */
+	
+	*tsb++ = 0x30 | cc;
+	tsrem -= pad;
+	*tsb++ = --pad;
+
+	memset(tsb, 0x00, pad);
+	tsb += pad;
+      } else {
+	*tsb++ = 0x10 | cc;
+      }
+
+
+      if(off == 0) {
+	/* Insert PES header */
+      
+	/* Write startcode */
+	*tsb++ = 0;
+	*tsb++ = 0;
+	*tsb++ = te->te_startcode >> 8;
+	*tsb++ = te->te_startcode;
+
+	/* Write total frame length (without accounting for startcode and
+	   length field itself */
+	len = pkt->pkt_payloadlen + hlen;
+
+	if(te->te_type == SCT_MPEG2VIDEO) {
+	  /* It's okay to write len as 0 in transport streams,
+	     but only for video frames, and i dont expect any of the
+	     audio frames to exceed 64k 
+	  */
+	  len = 0;
+	}
+
+	*tsb++ = len >> 8;
+	*tsb++ = len;
+
+	*tsb++ = 0x80;      /* MPEG2 */
+	*tsb++ = flags;
+	*tsb++ = hlen - 3;  /* length of rest of header (pts & dts) */
+
+	/* Write PTS */
+	
+	if(flags == 0xc0) {
+	  t = av_rescale_q(pkt->pkt_pts, AV_TIME_BASE_Q, mpeg_tc);
+	  *tsb++ = (((t >> 30) & 7) << 1) | 1;
+	  u16 = (((t >> 15) & 0x7fff) << 1) | 1;
+	  *tsb++ = u16 >> 8;
+	  *tsb++ = u16;
+	  u16 = ((t & 0x7fff) << 1) | 1;
+	  *tsb++ = u16 >> 8;
+	  *tsb++ = u16;
+	}
+
+	/* Write DTS */
+
+	t = av_rescale_q(pkt->pkt_dts, AV_TIME_BASE_Q, mpeg_tc);
+	*tsb++ = (((t >> 30) & 7) << 1) | 1;
+	u16 = (((t >> 15) & 0x7fff) << 1) | 1;
+	*tsb++ = u16 >> 8;
+	*tsb++ = u16;
+	u16 = ((t & 0x7fff) << 1) | 1;
+	*tsb++ = u16 >> 8;
+	*tsb++ = u16;
+      }
+
+      memcpy(tsb, pkt->pkt_payload + off, tsrem);
+
+      tsp->tsp_contentsize = tsrem;
+      
+      tmf_enq(&te->te_delivery_fifo, tsp);
+
+      toff += tsrem;
+      off += tsrem;
+
+     }
+
+    te->te_lookahead_depth -= pkt->pkt_payloadlen;
+    te->te_lookahead_packets--;
+    pkt_ref_dec(pkt);
+    TAILQ_REMOVE(&te->te_smq, sm, sm_link);
+
+    free(sm);
+  }
+  //  ts_check_deliver(ts, tms);
+}
+
+
+
+/**
+ * Packet input.
+ *
+ * We get the entire streaming message cause we might need to hold and
+ * enqueue the packet. So we can just reuse that allocation from now
+ * on
+ */
+static void
+tsm_packet_input(tsmuxer_t *tsm, streaming_message_t *sm)
+{
+  tsmuxer_es_t *te;
+  th_pkt_t *pkt = sm->sm_data;
+
+  LIST_FOREACH(te, &tsm->tsm_eslist, te_link)
+    if(te->te_input_index == pkt->pkt_componentindex)
+      break;
+
+  if(te == NULL) {
+    // Stream not in use
+    streaming_msg_free(sm);
+    return;
+  }
+
+  lookahead_dequeue(tsm, te);
+
+  te->te_lookahead_depth += pkt->pkt_payloadlen;
+  te->te_lookahead_packets++;
+
+  TAILQ_INSERT_TAIL(&te->te_smq, sm, sm_link);
+}
+
+
+
+/**
+ *
+ */
+static void
+te_destroy(tsmuxer_es_t *te)
+{
+  streaming_queue_clear(&te->te_smq);
+  LIST_REMOVE(te, te_link);
+  free(te);
+}
+
+
+/**
+ *
+ */
+static void
+tsm_start(tsmuxer_t *tsm, const streaming_start_t *ss)
+{
+  int i, sc;
+
+  tsmuxer_es_t *te;
+
+  tsm->tsm_pcr_start = AV_NOPTS_VALUE;
+  tsm->tsm_pcr_ref   = AV_NOPTS_VALUE;
+  tsm->tsm_pcr_last  = INT64_MIN;
+
+
+  for(i = 0; i < ss->ss_num_components; i++) {
+    const streaming_start_component_t *ssc = &ss->ss_components[i];
+    int dopcr = 0;
+
+    switch(ssc->ssc_type) {
+
+    case SCT_MPEG2VIDEO:
+      sc = 0x1e0;
+      dopcr = 1;
+      break;
+
+    case SCT_MPEG2AUDIO:
+      sc = 0x1c0;
+      break;
+
+    case SCT_AC3:
+      sc = 0x1bd;
+      break;
+
+    case SCT_H264:
+      sc = 0x1e0;
+      dopcr = 1;
+      break;
+    default:
+      continue;
+    }
+
+    te = calloc(1, sizeof(tsmuxer_es_t));
+    tsf_init(&te->te_delivery_fifo);
+    memcpy(te->te_lang, ssc->ssc_lang, 4);
+    te->te_input_index = ssc->ssc_index;
+    te->te_type = ssc->ssc_type;
+    te->te_pid = PID_ES_BASE + i;
+    te->te_startcode = sc;
+    te->te_mux_offset = AV_NOPTS_VALUE;
+
+    TAILQ_INIT(&te->te_smq);
+
+    LIST_INSERT_HEAD(&tsm->tsm_eslist, te, te_link);
+  }
+}
+
+
+/**
+ *
+ */
+static void
+tsm_stop(tsmuxer_t *tsm)
+{
+  tsmuxer_es_t *te;
+
+  while((te = LIST_FIRST(&tsm->tsm_eslist)) != NULL)
+    te_destroy(te);
+}
+
+/**
+ *
+ */
+static void
+tsm_handle_input(tsmuxer_t *tsm, streaming_message_t *sm)
+{
+  switch(sm->sm_type) {
+  case SMT_PACKET:
+    tsm_packet_input(tsm, sm); 
+    sm = NULL;
+    break;
+      
+  case SMT_START:
+    assert(LIST_FIRST(&tsm->tsm_eslist) == NULL);
+    tsm_start(tsm, sm->sm_data);
+    break;
+
+  case SMT_STOP:
+    tsm_stop(tsm);
+    break;
+      
+  case SMT_TRANSPORT_STATUS:
+    //    htsp_subscription_transport_status(hs, sm->sm_code);
+    break;
+      
+  case SMT_NOSOURCE:
+    //    htsp_subscription_status(hs, "No available sources");
+    break;
+      
+  case SMT_EXIT:
+    tsm->tsm_run = 0;
+    break;
+  }
+
+  if(sm != NULL)
+    streaming_msg_free(sm);
+}
+ 
+
+/**
+ *
+ */
+static void *
+tsm_thread(void *aux)
+{
+  tsmuxer_t *tsm = aux;
+  streaming_queue_t *sq = &tsm->tsm_input;
+  streaming_message_t *sm;
+  int64_t now, next = 0;
+
+  tsm->tsm_run = 1;
+  
+  while(tsm->tsm_run) {
+
+    pthread_mutex_lock(&sq->sq_mutex);
+  
+    sm = TAILQ_FIRST(&sq->sq_queue);
+    if(sm == NULL) {
+
+      if(next == 0) {
+	pthread_cond_wait(&sq->sq_cond, &sq->sq_mutex);
+      } else {
+	struct timespec ts;
+
+	ts.tv_sec  =  next / 1000000;
+	ts.tv_nsec = (next % 1000000) * 1000;
+	pthread_cond_timedwait(&sq->sq_cond, &sq->sq_mutex, &ts);
+      }
+    }
+    
+    sm = TAILQ_FIRST(&sq->sq_queue);
+
+    if(sm != NULL)
+      TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
+
+    pthread_mutex_unlock(&sq->sq_mutex);
+
+    now = getmonoclock();
+
+    if(sm != NULL)
+      tsm_handle_input(tsm, sm);
+      
+  }
+  return NULL;
+}
+
+
+/**
+ *
+ */
+void
+tsm_init(void)
+{
+  tsmuxer_t *tsm = calloc(1, sizeof(tsmuxer_t));
+
+  streaming_queue_init(&tsm->tsm_input);
+
+  pthread_create(&tsm->tsm_thread, NULL, tsm_thread, tsm);
+}
+
+
+
+
+
+
+#if 0
+
 #define _GNU_SOURCE
 #include <stdlib.h>
 
@@ -45,11 +681,6 @@
 
 static void lookahead_dequeue(ts_muxer_t *ts, th_muxstream_t *tms);
 
-static const AVRational mpeg_tc = {1, 90000};
-static const AVRational mpeg_tc_27M = {1, 27000000};
-
-#define PID_PMT     1000
-#define PID_ES_BASE 2000
 
 /**
  * Send current packet
@@ -769,3 +1400,4 @@ ts_muxer_pause(ts_muxer_t *ts)
   dtimer_disarm(&ts->ts_patpmt_timer);
   muxer_pause(ts->ts_muxer);
 }
+#endif

@@ -78,5 +78,7 @@ streaming_message_t *streaming_msg_create_code(streaming_message_type_t type,
 streaming_message_t *streaming_msg_create_pkt(th_pkt_t *pkt);
 
 #define streaming_target_deliver(st, sm) ((st)->st_cb((st)->st_opaque, (sm)))
+
+void streaming_start_unref(streaming_start_t *ss);
      
 #endif /* STREAMING_H_ */

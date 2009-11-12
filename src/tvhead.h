@@ -687,14 +687,13 @@ extern int log_debug;
 
 
 static inline int64_t 
-getclock_hires(void)
+getmonoclock(void)
 {
-  int64_t now;
-  struct timeval tv;
+  struct timespec tp;
 
-  gettimeofday(&tv, NULL);
-  now = (uint64_t)tv.tv_sec * 1000000ULL + (uint64_t)tv.tv_usec;
-  return now;
+  clock_gettime(CLOCK_MONOTONIC, &tp);
+
+  return tp.tv_sec * 1000000ULL + (tp.tv_nsec / 1000);
 }
 
 
@@ -716,5 +715,8 @@ extern void scopedunlock(pthread_mutex_t **mtxp);
 #define tvh_strdupa(n) ({ int tvh_l = strlen(n); \
  char *tvh_b = alloca(tvh_l + 1); \
  memcpy(tvh_b, n, tvh_l + 1); })
+
+#define tvh_strlcatf(buf, size, fmt...) \
+ snprintf((buf) + strlen(buf), (size) - strlen(buf), fmt)
 
 #endif /* TV_HEAD_H */

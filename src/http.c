@@ -34,6 +34,7 @@
 #include "tvhead.h"
 #include "tcp.h"
 #include "http.h"
+#include "rtsp.h"
 #include "access.h"
 
 static void *http_server;
@@ -446,6 +447,8 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   int n, rval = -1;
   uint8_t authbuf[150];
   
+  hc->hc_url_orig = tvh_strdupa(hc->hc_url);
+
   /* Set keep-alive status */
   v = http_arg_get(&hc->hc_args, "connection");
 
@@ -489,10 +492,8 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
 
   switch(hc->hc_version) {
   case RTSP_VERSION_1_0:
-    rval = -1;
+    rval = rtsp_process_request(hc);
     break;
-    //    rtsp_process_request(hc);
-    return 0;
 
   case HTTP_VERSION_1_0:
   case HTTP_VERSION_1_1:
@@ -600,7 +601,7 @@ http_path_add(const char *path, void *opaque, http_callback_t *callback,
 /**
  * De-escape HTTP URL
  */
-static void
+void
 http_deescape(char *s)
 {
   char v, *d = s;
@@ -768,7 +769,7 @@ http_serve(int fd, void *opaque, struct sockaddr_in *source)
   free(hc.hc_username);
   free(hc.hc_password);
 
-  //  rtsp_disconncet(hc);
+  rtsp_disconncet(&hc);
   http_arg_flush(&hc.hc_args);
   http_arg_flush(&hc.hc_req_args);
 

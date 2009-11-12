@@ -36,14 +36,13 @@ typedef struct http_arg {
 #define HTTP_STATUS_NOT_FOUND    404
 
 
-LIST_HEAD(rtsp_session_head, rtsp_session);
-
 typedef struct http_connection {
   int hc_fd;
   struct sockaddr_in *hc_peer;
   char *hc_representative;
 
   char *hc_url;
+  char *hc_url_orig;
   int hc_keep_alive;
 
   htsbuf_queue_t hc_reply;
@@ -79,8 +78,6 @@ typedef struct http_connection {
   char *hc_username;
   char *hc_password;
 
-  struct rtsp_session_head hc_rtsp_sessions;
-
   int hc_authenticated; /* Used by RTSP, it seems VLC does not 
 			   send authentication headers for each 
 			   command, so we just say that it's ok
@@ -92,6 +89,8 @@ typedef struct http_connection {
   
   char *hc_post_data;
   unsigned int hc_post_len;
+
+  struct rtsp *hc_rtsp_session;
 
 } http_connection_t;
 
@@ -136,5 +135,7 @@ http_path_t *http_path_add(const char *path, void *opaque,
 void http_server_init(void);
 
 int http_access_verify(http_connection_t *hc, int mask);
+
+void http_deescape(char *s);
 
 #endif /* HTTP_H_ */
