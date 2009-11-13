@@ -549,7 +549,12 @@ dvb_fe_opts(th_dvb_adapter_t *tda, const char *which)
 
   if(!strcmp(which, "constellations")) {
     if(c & FE_CAN_QAM_AUTO)    fe_opts_add(a, "Auto", QAM_AUTO);
-    if(c & FE_CAN_QPSK)        fe_opts_add(a, "QPSK",     QPSK);
+    if(c & FE_CAN_QPSK) {
+      fe_opts_add(a, "QPSK",     QPSK);
+      fe_opts_add(a, "PSK_8",    PSK_8);
+      fe_opts_add(a, "APSK_16",  APSK_16);
+      fe_opts_add(a, "APSK_32",  APSK_32);
+    }
     if(c & FE_CAN_QAM_16)      fe_opts_add(a, "QAM-16",   QAM_16);
     if(c & FE_CAN_QAM_32)      fe_opts_add(a, "QAM-32",   QAM_32);
     if(c & FE_CAN_QAM_64)      fe_opts_add(a, "QAM-64",   QAM_64);

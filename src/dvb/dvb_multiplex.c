@@ -785,7 +785,9 @@ dvb_mux_modulation(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
     break;
 
   case FE_QPSK:
-    snprintf(buf, size, "%d kBaud", f->u.qpsk.symbol_rate / 1000);
+    snprintf(buf, size, "%d kBaud, %s, %s", f->u.qpsk.symbol_rate / 1000,
+      val2str(tdmi->tdmi_conf.dmc_fe_delsys, delsystab),
+      val2str(tdmi->tdmi_conf.dmc_fe_modulation, qamtab));
     break;
 	     
   case FE_QAM:
