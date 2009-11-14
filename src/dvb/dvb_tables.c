@@ -776,8 +776,8 @@ dvb_cat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     len -= 2;
     switch(tag) {
     case DVB_DESC_CA:
-      caid =  (ptr[0]        << 8)  | ptr[1];
-      pid  = ((ptr[2] & 0x1f << 8)) | ptr[3];
+      caid = ( ptr[0]         << 8) | ptr[1];
+      pid  = ((ptr[2] & 0x1f) << 8) | ptr[3];
 
       if(pid == 0)
 	break;
