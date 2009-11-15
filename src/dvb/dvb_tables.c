@@ -41,6 +41,7 @@
 #include "channels.h"
 #include "psi.h"
 #include "notify.h"
+#include "cwc.h"
 
 #define TDT_CRC           0x1
 #define TDT_QUICKREQ      0x2
@@ -747,6 +748,7 @@ static int
 dvb_ca_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		uint8_t tableid, void *opaque)
 {
+  cwc_emm(ptr, len);
   return 0;
 }
 
