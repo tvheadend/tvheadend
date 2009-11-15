@@ -840,6 +840,23 @@ tvheadend.addMuxManually = function(adapterData, satConfStore) {
 	}));
 
 	items.push(new Ext.form.ComboBox({
+	    fieldLabel: 'Delivery System',
+	    name: 'delsys',
+	    hiddenName: 'delsysID',
+	    editable: false,
+	    allowBlank: false,
+	    displayField: 'title',
+	    valueField:'id',
+	    mode:'remote',
+	    triggerAction: 'all',
+	    store: new Ext.data.JsonStore({
+		root:'entries',
+		fields: ['title', 'id'],
+		url: 'dvb/feopts/delsys/' + adId
+	    })
+	}));
+
+	items.push(new Ext.form.ComboBox({
 	    fieldLabel: 'Constellation',
 	    name: 'constellation',
 	    hiddenName: 'constellationID',

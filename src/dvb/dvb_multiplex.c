@@ -858,6 +858,7 @@ dvb_mux_add_by_params(th_dvb_adapter_t *tda,
 		      int symrate,
 		      int bw,
 		      int constellation,
+		      int delsys,
 		      int tmode,
 		      int guard,
 		      int hier,
@@ -931,8 +932,16 @@ dvb_mux_add_by_params(th_dvb_adapter_t *tda,
     if(!val2str(polarisation, poltab))
       return "Invalid polarisation";
 
+    if(!val2str(constellation, qamtab))
+      return "Invalid QPSK constellation";
+
+    if(!val2str(delsys, delsystab))
+      return "Invalid delivery system";
+
     dmc.dmc_fe_params.u.qpsk.symbol_rate = symrate;
     dmc.dmc_fe_params.u.qpsk.fec_inner   = fec;
+    dmc.dmc_fe_delsys                    = delsys;
+    dmc.dmc_fe_modulation                = constellation;
     break;
 
   case FE_ATSC:

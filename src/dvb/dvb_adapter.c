@@ -563,6 +563,15 @@ dvb_fe_opts(th_dvb_adapter_t *tda, const char *which)
     return a;
   }
 
+  if(!strcmp(which, "delsys")) {
+    if(c & FE_CAN_QPSK) {
+      fe_opts_add(a, "SYS_DVBS",     SYS_DVBS);
+      fe_opts_add(a, "SYS_DVBS2",    SYS_DVBS2);
+    } else
+      fe_opts_add(a, "SYS_UNDEFINED",    SYS_UNDEFINED);
+    return a;
+  }
+
   if(!strcmp(which, "transmissionmodes")) {
     if(c & FE_CAN_TRANSMISSION_MODE_AUTO) 
       fe_opts_add(a, "Auto", TRANSMISSION_MODE_AUTO);

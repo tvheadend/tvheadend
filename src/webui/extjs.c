@@ -1507,6 +1507,7 @@ extjs_dvb_addmux(http_connection_t *hc, const char *remain, void *opaque)
 			  atoi(http_arg_get(args, "symbolrate")?: "-1"),
 			  atoi(http_arg_get(args, "bandwidthID")?: "-1"),
 			  atoi(http_arg_get(args, "constellationID")?: "-1"),
+			  atoi(http_arg_get(args, "delsysID")?: "-1"),
 			  atoi(http_arg_get(args, "tmodeID")?: "-1"),
 			  atoi(http_arg_get(args, "guardintervalID")?: "-1"),
 			  atoi(http_arg_get(args, "hierarchyID")?: "-1"),
