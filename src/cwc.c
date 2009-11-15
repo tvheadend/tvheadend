@@ -181,6 +181,7 @@ typedef struct cwc {
   char *cwc_hostname;
   int cwc_port;
   char *cwc_id;
+  int cwc_emm;
 
   const char *cwc_errtxt;
 
@@ -487,6 +488,11 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
     cwc->cwc_provider_ids[i] = id;
     msg += 11;
   }
+
+  tvhlog(LOG_INFO, "cwc", "%s: Will %sforward EMMs",
+	 cwc->cwc_hostname,
+	 cwc->cwc_emm ? "" : "not "); 
+
   return 0;
 }
 
@@ -932,8 +938,10 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
     break;
 
   default:
-    /* EMM */
-    cwc_send_msg(cwc, data, len, sid);
+    if (cwc->cwc_emm) {
+      /* EMM */
+      cwc_send_msg(cwc, data, len, sid);
+    }
     break;
   }
 }
@@ -1151,7 +1159,7 @@ cwc_record_build(cwc_t *cwc)
 	   cwc->cwc_confedkey[0xd]);	   
   
   htsmsg_add_str(e, "deskey", buf);
-
+  htsmsg_add_u32(e, "emm", cwc->cwc_emm);
   htsmsg_add_str(e, "comment", cwc->cwc_comment ?: "");
 
   return e;
@@ -1236,6 +1244,9 @@ cwc_entry_update(void *opaque, const char *id, htsmsg_t *values, int maycreate)
     }
     memcpy(cwc->cwc_confedkey, key, 14);
   }
+
+  if(!htsmsg_get_u32(values, "emm", &u32))
+    cwc->cwc_emm = u32;
 
   cwc->cwc_reconfigure = 1;
 

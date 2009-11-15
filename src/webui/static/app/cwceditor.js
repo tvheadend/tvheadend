@@ -8,6 +8,12 @@ tvheadend.cwceditor = function() {
        width: 60
     });
 
+    var emmColumn = new Ext.grid.CheckColumn({
+       header: "Update Card",
+       dataIndex: 'emm',
+       width: 100
+    });
+
     function setMetaAttr(meta, record){
         var enabled = record.get('enabled');
         if(!enabled) return;
@@ -64,7 +70,9 @@ tvheadend.cwceditor = function() {
 		return '<span class="tvh-grid-unset">Hidden</span>';
 	    },
 	    editor: new fm.TextField({allowBlank: false})
-	},{
+	},
+	emmColumn,
+	{
 	    header: "Comment",
 	    dataIndex: 'comment',
 	    width: 400,
@@ -77,7 +85,7 @@ tvheadend.cwceditor = function() {
     ]);
 
     var rec = Ext.data.Record.create([
-	'enabled','connected','hostname','port','username','password','deskey','comment'
+       'enabled','connected','hostname','port','username','password','deskey','emm','comment'
     ]);
 
     store = new Ext.data.JsonStore({
