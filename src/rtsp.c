@@ -1039,10 +1039,8 @@ rtsp_process_request(http_connection_t *hc)
 void
 rtsp_disconncet(http_connection_t *hc)
 {
-  printf("Disconnect..\n");
   pthread_mutex_lock(&global_lock);
   if(hc->hc_rtsp_session != NULL)
     rtsp_destroy_unref(hc->hc_rtsp_session);
   pthread_mutex_unlock(&global_lock);
-  printf("Disconnect.. done\n");
 }
