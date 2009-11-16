@@ -143,6 +143,13 @@ typedef struct cwc_message {
 } cwc_message_t;
 
 
+/**
+ *
+ */
+typedef struct cwc_provider {
+  uint32_t id;
+  uint8_t sa[8];
+} cwc_provider_t;
 
 /**
  *
@@ -173,9 +180,11 @@ typedef struct cwc {
   uint8_t cwc_buf[256];
   int cwc_bufptr;
 
-  /* Provder IDs */
+  /* Card Unique Address */
+  uint8_t cwc_ua[8];
 
-  uint32_t cwc_provider_ids[256];
+  /* Provider IDs */
+  cwc_provider_t cwc_providers[256];
   int cwc_num_providers;
 
   /* From configuration */
@@ -455,7 +464,6 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 {
   int plen, i;
   unsigned int nprov;
-  uint32_t id;
   const char *n;
 
   msg += 12;
@@ -485,12 +493,14 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
   cwc->cwc_caid = (msg[4] << 8) | msg[5];
   n = psi_caid2name(cwc->cwc_caid) ?: "Unknown";
 
+  memcpy(cwc->cwc_ua, &msg[6], 8);
+
   tvhlog(LOG_INFO, "cwc", "%s: Connected as user 0x%02x "
 	 "to a %s-card [0x%04x : %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x] "
 	 "with %d providers", 
 	 cwc->cwc_hostname,
 	 msg[3], n, cwc->cwc_caid, 
-	 msg[6], msg[7], msg[8], msg[9], msg[10], msg[11], msg[12], msg[13],
+	 cwc->cwc_ua[0], cwc->cwc_ua[1], cwc->cwc_ua[2], cwc->cwc_ua[3], cwc->cwc_ua[4], cwc->cwc_ua[5], cwc->cwc_ua[6], cwc->cwc_ua[7],
 	 nprov);
 
   msg  += 15;
@@ -499,10 +509,28 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
   cwc->cwc_num_providers = nprov;
 
   for(i = 0; i < nprov; i++) {
-    id = (msg[0] << 16) | (msg[1] << 8) | msg[2];
-    tvhlog(LOG_INFO, "cwc", "%s: Provider ID #%d: 0x%06x",
-	   cwc->cwc_hostname, i + 1 , id);
-    cwc->cwc_provider_ids[i] = id;
+    cwc->cwc_providers[i].id = (msg[0] << 16) | (msg[1] << 8) | msg[2];
+    cwc->cwc_providers[i].sa[0] = msg[3];
+    cwc->cwc_providers[i].sa[1] = msg[4];
+    cwc->cwc_providers[i].sa[2] = msg[5];
+    cwc->cwc_providers[i].sa[3] = msg[6];
+    cwc->cwc_providers[i].sa[4] = msg[7];
+    cwc->cwc_providers[i].sa[5] = msg[8];
+    cwc->cwc_providers[i].sa[6] = msg[9];
+    cwc->cwc_providers[i].sa[7] = msg[10];
+
+    tvhlog(LOG_INFO, "cwc", "%s: Provider ID #%d: 0x%06x %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x",
+	   cwc->cwc_hostname, i + 1,
+	   cwc->cwc_providers[i].id,
+	   cwc->cwc_providers[i].sa[0],
+	   cwc->cwc_providers[i].sa[1],
+	   cwc->cwc_providers[i].sa[2],
+	   cwc->cwc_providers[i].sa[3],
+	   cwc->cwc_providers[i].sa[4],
+	   cwc->cwc_providers[i].sa[5],
+	   cwc->cwc_providers[i].sa[6],
+	   cwc->cwc_providers[i].sa[7]);
+
     msg += 11;
   }
 
@@ -921,7 +949,7 @@ verify_provider(cwc_t *cwc, uint32_t providerid)
     return 1;
   
   for(i = 0; i < cwc->cwc_num_providers; i++) 
-    if(providerid == cwc->cwc_provider_ids[i])
+    if(providerid == cwc->cwc_providers[i].id)
       return 1;
   return 0;
 }
@@ -938,8 +966,13 @@ cwc_emm(uint8_t *data, int len)
   lock_assert(&global_lock);
 
   TAILQ_FOREACH(cwc, &cwcs, cwc_link)
-    if(cwc->cwc_emm && cwc->cwc_writer_running)
-      cwc_send_msg(cwc, data, len, 0, 1);
+    if(cwc->cwc_emm && cwc->cwc_writer_running &&
+       cwc->cwc_caid == 0x0b00 && data[0] == 0x82 /* Conax */ ) {
+      int i;
+      for (i=0; i < cwc->cwc_num_providers; i++)
+	if (memcmp(&data[3], &cwc->cwc_providers[i].sa[1], 7) == 0)
+	  cwc_send_msg(cwc, data, len, 0, 1);
+    }
 }
 
 
