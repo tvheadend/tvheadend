@@ -1061,16 +1061,24 @@ cwc_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
   vec[1] = ct->ct_tsbcluster + ct->ct_cluster_size * 188;
   vec[2] = NULL;
 
-  while(1) {
-    t0 = vec[0];
-    r = decrypt_packets(ct->ct_keys, vec);
-    if(r == 0)
-      break;
-    for(i = 0; i < r; i++) {
-      ts_recv_packet2(t, t0);
-      t0 += 188;
-    }
+  r = decrypt_packets(ct->ct_keys, vec);
+  if(r == 0)
+    return 0;
+
+  t0 = ct->ct_tsbcluster;
+  for(i = 0; i < r; i++) {
+    ts_recv_packet2(t, t0);
+    t0 += 188;
   }
+
+  i = ct->ct_cluster_size - r;
+  assert(i >= 0);
+
+  if(i > 0) {
+    memmove(ct->ct_tsbcluster, t0, i * 188);
+    ct->ct_fill = i;
+  }
+
   return 0;
 }
 
