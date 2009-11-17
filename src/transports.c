@@ -704,9 +704,6 @@ transport_restart(th_transport_t *t, int had_components)
 
 /**
  * Generate a message containing info about all components
- *
- * Note: This is the same as the one in HTSP.subscriptionStart so take
- * great care if you change anying. (Just adding is fine)
  */
 streaming_start_t *
 transport_build_stream_start(th_transport_t *t)
