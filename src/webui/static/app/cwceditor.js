@@ -105,6 +105,6 @@ tvheadend.cwceditor = function() {
     });
 
     return new tvheadend.tableEditor('Code Word Client', 'cwc', cm, rec,
-				     [enabledColumn], store,
+				     [enabledColumn, emmColumn], store,
 				     'config_cwc.html', 'key');
 }
