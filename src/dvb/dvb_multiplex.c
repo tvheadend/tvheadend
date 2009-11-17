@@ -785,9 +785,13 @@ dvb_mux_modulation(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
     break;
 
   case FE_QPSK:
+#if DVB_API_VERSION >= 5
     snprintf(buf, size, "%d kBaud, %s, %s", f->u.qpsk.symbol_rate / 1000,
       val2str(tdmi->tdmi_conf.dmc_fe_delsys, delsystab),
       val2str(tdmi->tdmi_conf.dmc_fe_modulation, qamtab));
+#else
+    snprintf(buf, size, "%d kBaud", f->u.qpsk.symbol_rate / 1000);
+#endif
     break;
 	     
   case FE_QAM:
@@ -932,16 +936,19 @@ dvb_mux_add_by_params(th_dvb_adapter_t *tda,
     if(!val2str(polarisation, poltab))
       return "Invalid polarisation";
 
+    dmc.dmc_fe_params.u.qpsk.symbol_rate = symrate;
+    dmc.dmc_fe_params.u.qpsk.fec_inner   = fec;
+
+#if DVB_API_VERSION >= 5
     if(!val2str(constellation, qamtab))
       return "Invalid QPSK constellation";
 
     if(!val2str(delsys, delsystab))
       return "Invalid delivery system";
 
-    dmc.dmc_fe_params.u.qpsk.symbol_rate = symrate;
-    dmc.dmc_fe_params.u.qpsk.fec_inner   = fec;
     dmc.dmc_fe_delsys                    = delsys;
     dmc.dmc_fe_modulation                = constellation;
+#endif
     break;
 
   case FE_ATSC:
