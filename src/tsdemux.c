@@ -79,6 +79,13 @@ ts_recv_packet0(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
     cc = tsb[3] & 0xf;
     if(st->st_cc_valid && cc != st->st_cc) {
       /* Incorrect CC */
+
+      tvhlog(LOG_DEBUG, "TS", 
+	     "Continuity counter error on %s : %s PID #%d (%s)",
+	     t->tht_svcname ?: "???",
+	     streaming_component_type2txt(st->st_type),
+	     st->st_pid, t->tht_identifier);
+
       avgstat_add(&t->tht_cc_errors, 1, dispatch_clock);
       avgstat_add(&st->st_cc_errors, 1, dispatch_clock);
       err = 1;
@@ -146,11 +153,11 @@ ts_extract_pcr(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
   int64_t real = getmonoclock();
   int64_t pcr, d;
 
-  pcr  = tsb[6] << 25;
-  pcr |= tsb[7] << 17;
-  pcr |= tsb[8] << 9;
-  pcr |= tsb[9] << 1;
-  pcr |= (tsb[10] >> 7) & 0x01;
+  pcr  = (uint64_t)tsb[6] << 25;
+  pcr |= (uint64_t)tsb[7] << 17;
+  pcr |= (uint64_t)tsb[8] << 9;
+  pcr |= (uint64_t)tsb[9] << 1;
+  pcr |= ((uint64_t)tsb[10] >> 7) & 0x01;
   
   pcr = av_rescale_q(pcr, st->st_tb, AV_TIME_BASE_Q);
 
