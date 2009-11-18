@@ -306,7 +306,8 @@ dummy_callback(void *opauqe, streaming_message_t *sm)
     break;
 
   case SMT_TRANSPORT_STATUS:
-    fprintf(stderr, "dummsubscription: %s\n", transport_feed_status_to_text(sm->sm_code));
+    fprintf(stderr, "dummsubscription: %s\n", 
+	    transport_feed_status_to_text(sm->sm_code));
     break;
   default:
     break;
