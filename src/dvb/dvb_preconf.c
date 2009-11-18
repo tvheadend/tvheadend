@@ -183,6 +183,7 @@ dvb_mux_preconf_get_node(int fetype, const char *node)
     nr = sizeof(regions_ATSC) / sizeof(regions_ATSC[0]);
     break;
   default:
+    tvhlog(LOG_ERR, "DVB", "No built-in config for fetype %d", fetype);
     return NULL;
   }
   

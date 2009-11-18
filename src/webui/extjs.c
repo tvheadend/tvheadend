@@ -468,7 +468,8 @@ extjs_dvbnetworks(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_unlock(&global_lock);
 
-  out = dvb_mux_preconf_get_node(tda->tda_type, s);
+  if((out = dvb_mux_preconf_get_node(tda->tda_type, s)) == NULL)
+    return 404;
 
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
