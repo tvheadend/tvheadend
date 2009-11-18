@@ -1005,6 +1005,35 @@ rtsp_cmd_play(http_connection_t *hc, rtsp_t *rtsp)
   return 0;
 }
   
+/**
+ * RTSP TEARDOWN
+ */
+static int
+rtsp_cmd_teardown(http_connection_t *hc, rtsp_t *rtsp)
+{
+  char *c;
+
+  if(rtsp_check_session(hc, rtsp, 0))
+    return rtsp_error(hc, RTSP_STATUS_SERVICE, "Invalid session ID");
+
+  assert(hc->hc_rtsp_session == rtsp);
+
+  rtsp_printf(hc,
+	      "RTSP/1.0 200 OK\r\n");
+
+  if((c = http_arg_get(&hc->hc_args, "cseq")) != NULL)
+    rtsp_printf(hc, "CSeq: %s\r\n", c);
+  
+  rtsp_printf(hc, "\r\n");
+
+  pthread_mutex_lock(&global_lock);
+  rtsp_destroy_unref(hc->hc_rtsp_session);
+  hc->hc_rtsp_session = NULL;
+  pthread_mutex_unlock(&global_lock);
+  return 0;
+}
+  
+
 
 /*
  * RTSP connection state machine & parser
@@ -1020,10 +1049,6 @@ rtsp_process_request(http_connection_t *hc)
     rtsp_t *rtsp = rtsp_get_session(hc);
 
     switch(hc->hc_cmd) {
-    default:
-      rtsp_error(hc, RTSP_STATUS_METHOD, NULL);
-      r = 0;
-      break;
     case RTSP_CMD_OPTIONS:   
       r = rtsp_cmd_options(hc);
       break;
@@ -1036,14 +1061,15 @@ rtsp_process_request(http_connection_t *hc)
     case RTSP_CMD_PLAY:
       rtsp_cmd_play(hc, rtsp);
       break;
-#if 0
-    case RTSP_CMD_PAUSE:
-      rtsp_cmd_pause(hc); 
-      break;
     case RTSP_CMD_TEARDOWN: 
-      rtsp_cmd_teardown(hc);
+      rtsp_cmd_teardown(hc, rtsp);
       break;
-#endif
+    case RTSP_CMD_PAUSE:
+      rtsp_error(hc, RTSP_STATUS_METHOD, "Pause is not supported");
+      break;
+    default:
+      rtsp_error(hc, RTSP_STATUS_METHOD, NULL);
+      break;
     }
   }
 
