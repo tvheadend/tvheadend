@@ -187,6 +187,9 @@ typedef struct cwc {
   cwc_provider_t cwc_providers[256];
   int cwc_num_providers;
 
+  /* Emm forwarding */
+  int cwc_forward_emm;
+
   /* From configuration */
 
   uint8_t cwc_confedkey[14];
@@ -534,9 +537,25 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
     msg += 11;
   }
 
-  tvhlog(LOG_INFO, "cwc", "%s: Will %sforward EMMs",
-	 cwc->cwc_hostname,
-	 cwc->cwc_emm ? "" : "not "); 
+  cwc->cwc_forward_emm = 0;
+  if (cwc->cwc_emm) {
+    int emm_allowed = (cwc->cwc_ua[0] || cwc->cwc_ua[1] ||
+		       cwc->cwc_ua[2] || cwc->cwc_ua[3] ||
+		       cwc->cwc_ua[4] || cwc->cwc_ua[5] ||
+		       cwc->cwc_ua[6] || cwc->cwc_ua[7]);
+
+    if (!emm_allowed)
+      tvhlog(LOG_INFO, "cwc", "%s: Will not forward EMMs (not allowed by server)",
+	     cwc->cwc_hostname);
+    else if (cwc->cwc_caid != 0x0b00)
+      tvhlog(LOG_INFO, "cwc", "%s: Will not forward EMMs (unsupported ca system)",
+	     cwc->cwc_hostname);
+    else {
+      tvhlog(LOG_INFO, "cwc", "%s: Will forward EMMs",
+	     cwc->cwc_hostname);
+      cwc->cwc_forward_emm = 1;
+    }
+  }
 
   return 0;
 }
@@ -966,8 +985,8 @@ cwc_emm(uint8_t *data, int len)
   lock_assert(&global_lock);
 
   TAILQ_FOREACH(cwc, &cwcs, cwc_link)
-    if(cwc->cwc_emm && cwc->cwc_writer_running &&
-       cwc->cwc_caid == 0x0b00 && data[0] == 0x82 /* Conax */ ) {
+    if(cwc->cwc_forward_emm && cwc->cwc_writer_running &&
+       data[0] == 0x82 /* Conax */ ) {
       int i;
       for (i=0; i < cwc->cwc_num_providers; i++)
 	if (memcmp(&data[3], &cwc->cwc_providers[i].sa[1], 7) == 0) {
@@ -1026,7 +1045,7 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
 
   default:
     /* EMM */
-    if (cwc->cwc_emm)
+    if (cwc->cwc_forward_emm)
       cwc_send_msg(cwc, data, len, sid, 1);
     break;
   }
