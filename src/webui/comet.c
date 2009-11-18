@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <arpa/inet.h>
 
 #include <libavutil/md5.h>
 
@@ -151,6 +152,29 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
 }
 
 /**
+ *
+ */
+static void
+comet_serverIpPort(http_connection_t *hc, comet_mailbox_t *cmb)
+{
+  char buf[INET_ADDRSTRLEN + 1];
+
+  inet_ntop(AF_INET, &hc->hc_self->sin_addr, buf, sizeof(buf));
+
+  htsmsg_t *m = htsmsg_create_map();
+
+  htsmsg_add_str(m, "notificationClass", "setServerIpPort");
+
+  htsmsg_add_str(m, "ip", buf);
+  htsmsg_add_u32(m, "port", ntohs(hc->hc_self->sin_port));
+
+  if(cmb->cmb_messages == NULL)
+    cmb->cmb_messages = htsmsg_create_list();
+  htsmsg_add_msg(cmb->cmb_messages, NULL, m);
+}
+
+
+/**
  * Poll callback
  */
 static int
@@ -177,6 +201,7 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
   if(cmb == NULL) {
     cmb = comet_mailbox_create();
     comet_access_update(hc, cmb);
+    comet_serverIpPort(hc, cmb);
   }
   time(&reqtime);
 
