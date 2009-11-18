@@ -970,8 +970,10 @@ cwc_emm(uint8_t *data, int len)
        cwc->cwc_caid == 0x0b00 && data[0] == 0x82 /* Conax */ ) {
       int i;
       for (i=0; i < cwc->cwc_num_providers; i++)
-	if (memcmp(&data[3], &cwc->cwc_providers[i].sa[1], 7) == 0)
+	if (memcmp(&data[3], &cwc->cwc_providers[i].sa[1], 7) == 0) {
 	  cwc_send_msg(cwc, data, len, 0, 1);
+	  break;
+	}
     }
 }
 
