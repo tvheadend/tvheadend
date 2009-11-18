@@ -174,6 +174,9 @@ subscription_unsubscribe(th_subscription_t *s)
     LIST_REMOVE(s, ths_channel_link);
     tvhlog(LOG_INFO, "subscription", "\"%s\" unsubscribing from \"%s\"",
 	   s->ths_title, s->ths_channel->ch_name);
+  } else {
+    tvhlog(LOG_INFO, "subscription", "\"%s\" unsubscribing",
+	   s->ths_title);
   }
 
   if(t != NULL)
@@ -282,10 +285,26 @@ subscription_create_from_transport(th_transport_t *t, const char *name,
 				   streaming_target_t *st, int flags)
 {
   th_subscription_t *s = subscription_create(INT32_MAX, name, st, flags);
+  source_info_t si;
 
   if(t->tht_status != TRANSPORT_RUNNING)
     transport_start(t, INT32_MAX, 1);
-  
+
+  t->tht_setsourceinfo(t, &si);
+
+  tvhlog(LOG_INFO, "subscription", 
+	 "\"%s\" direct subscription to adapter: \"%s\", "
+	 "network: \"%s\", mux: \"%s\", provider: \"%s\", "
+	 "service: \"%s\", quality: %d",
+	 s->ths_title,
+	 si.si_adapter  ?: "<N/A>",
+	 si.si_network  ?: "<N/A>",
+	 si.si_mux      ?: "<N/A>",
+	 si.si_provider ?: "<N/A>",
+	 si.si_service  ?: "<N/A>",
+	 t->tht_quality_index(t));
+  transport_source_info_free(&si);
+
   subscription_link_transport(s, t);
   return s;
 }
