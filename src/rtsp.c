@@ -1013,7 +1013,7 @@ int
 rtsp_process_request(http_connection_t *hc)
 {
   int r;
-  if(0 /* rtsp_access_list(hc) */) {
+  if(http_access_verify(hc, ACCESS_STREAMING)) {
     rtsp_error(hc, RTSP_STATUS_UNAUTHORIZED, NULL);
     r = 0;
   } else {
@@ -1021,8 +1021,6 @@ rtsp_process_request(http_connection_t *hc)
 
     switch(hc->hc_cmd) {
     default:
-      printf("COMMAND: %d\n", hc->hc_cmd);
-
       rtsp_error(hc, RTSP_STATUS_METHOD, NULL);
       r = 0;
       break;
