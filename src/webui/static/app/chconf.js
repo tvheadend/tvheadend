@@ -158,6 +158,15 @@ tvheadend.chconf = function()
 	    })
 	},
 	{
+	    header: "Play",
+	    dataIndex: 'chid',
+	    width: 50,
+	    renderer: function(value, metadata, record, row, col, store) {
+		url = makeRTSPprefix() + 'channelid/' + value
+		return '<a href="'+url+'">Play</a>'
+	    }
+	},
+	{
 	    header: "XMLTV source",
 	    dataIndex: 'xmltvsrc',
 	    width: 150,

@@ -77,6 +77,18 @@ function accessUpdate(o) {
 
 /**
 *
+ */
+function setServerIpPort(o) {
+    tvheadend.serverIp = o.ip;
+    tvheadend.serverPort = o.port;
+}
+
+function makeRTSPprefix() {
+    return 'rtsp://' + tvheadend.serverIp + ':' + tvheadend.serverPort + '/';
+}
+
+/**
+*
 */
 tvheadend.log = function(msg, style) {
     s = style ? '<div style="' + style + '">' : '<div>'
@@ -125,6 +137,8 @@ tvheadend.app = function() {
 	    });
 
 	    tvheadend.comet.on('accessUpdate', accessUpdate);
+
+	    tvheadend.comet.on('setServerIpPort', setServerIpPort);
 
 	    tvheadend.comet.on('logmessage', function(m) {
 		tvheadend.log(m.logtxt);

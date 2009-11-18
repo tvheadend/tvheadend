@@ -363,6 +363,15 @@ tvheadend.dvb_services = function(adapterId) {
 	    width: 150
 	},
 	{
+	    header: "Play",
+	    dataIndex: 'id',
+	    width: 50,
+	    renderer: function(value, metadata, record, row, col, store) {
+		url = makeRTSPprefix() + 'service/' + value
+		return '<a href="'+url+'">Play</a>'
+	    }
+	},
+	{
 	    header: "Channel name",
 	    dataIndex: 'channelname',
 	    width: 150,
