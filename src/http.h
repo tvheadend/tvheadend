@@ -39,6 +39,7 @@ typedef struct http_arg {
 typedef struct http_connection {
   int hc_fd;
   struct sockaddr_in *hc_peer;
+  struct sockaddr_in *hc_self;
   char *hc_representative;
 
   char *hc_url;

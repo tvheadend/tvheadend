@@ -357,7 +357,8 @@ typedef struct tcp_server_launch_t {
   tcp_server_callback_t *start;
   void *opaque;
   int fd;
-  struct sockaddr_in source;
+  struct sockaddr_in peer;
+  struct sockaddr_in self;
 } tcp_server_launch_t;
 
 
@@ -386,7 +387,7 @@ tcp_server_start(void *aux)
   setsockopt(tsl->fd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
 
 
-  tsl->start(tsl->fd, tsl->opaque, &tsl->source);
+  tsl->start(tsl->fd, tsl->opaque, &tsl->peer, &tsl->self);
   free(tsl);
 
   return NULL;
@@ -433,12 +434,20 @@ tcp_server_loop(void *aux)
 	slen = sizeof(struct sockaddr_in);
 
 	tsl->fd = accept(ts->serverfd, 
-			 (struct sockaddr *)&tsl->source, &slen);
+			 (struct sockaddr *)&tsl->peer, &slen);
 	if(tsl->fd == -1) {
 	  perror("accept");
 	  free(tsl);
 	  sleep(1);
 	  continue;
+	}
+
+
+	slen = sizeof(struct sockaddr_in);
+	if(getsockname(tsl->fd, (struct sockaddr *)&tsl->self, &slen)) {
+	    close(tsl->fd);
+	    free(tsl);
+	    continue;
 	}
 
 	pthread_create(&tid, &attr, tcp_server_start, tsl);

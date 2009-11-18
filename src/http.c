@@ -748,7 +748,8 @@ http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
  *
  */
 static void
-http_serve(int fd, void *opaque, struct sockaddr_in *source)
+http_serve(int fd, void *opaque, struct sockaddr_in *peer, 
+	   struct sockaddr_in *self)
 {
   htsbuf_queue_t spill;
   http_connection_t hc;
@@ -759,7 +760,8 @@ http_serve(int fd, void *opaque, struct sockaddr_in *source)
   TAILQ_INIT(&hc.hc_req_args);
 
   hc.hc_fd = fd;
-  hc.hc_peer = source;
+  hc.hc_peer = peer;
+  hc.hc_self = self;
 
   htsbuf_queue_init(&spill, 0);
 

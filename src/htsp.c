@@ -998,7 +998,8 @@ htsp_write_scheduler(void *aux)
  *
  */
 static void
-htsp_serve(int fd, void *opaque, struct sockaddr_in *source)
+htsp_serve(int fd, void *opaque, struct sockaddr_in *source,
+	   struct sockaddr_in *self)
 {
   htsp_connection_t htsp;
   char buf[30];
