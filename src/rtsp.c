@@ -51,6 +51,8 @@ typedef struct rtsp_resource {
     RTSP_RESOURCE_SERVICE
   } rr_type;
 
+  int rr_mpegts;
+
   union {
     struct channel *rr_channel;
     struct th_transport *rr_service;
@@ -464,6 +466,9 @@ rtsp_streaming_input(void *opaque, streaming_message_t *sm)
   case SMT_NOSOURCE:
     break;
 
+  case SMT_MPEGTS:
+    break;
+
   default:
     abort();
   }
@@ -496,16 +501,18 @@ rtsp_subscribe(rtsp_t *rtsp, rtsp_resource_t *rr)
   
 
 
-  streaming_target_init(&rtsp->rtsp_input, rtsp_streaming_input, rtsp);
+  streaming_target_init(&rtsp->rtsp_input, rtsp_streaming_input, rtsp, 0);
+
+  int flags = rr->rr_mpegts ? SUBSCRIPTION_RAW_MPEGTS : 0;
 
   switch(rr->rr_type) {
   case RTSP_RESOURCE_CHANNEL:
     s = subscription_create_from_channel(rr->rr_channel, 500, "RTSP", 
-					 &rtsp->rtsp_input);
+					 &rtsp->rtsp_input, flags);
     break;
   case RTSP_RESOURCE_SERVICE:
     s = subscription_create_from_transport(rr->rr_service, "RTSP", 
-					   &rtsp->rtsp_input);
+					   &rtsp->rtsp_input, flags);
     break;
   }
 
@@ -517,11 +524,12 @@ rtsp_subscribe(rtsp_t *rtsp, rtsp_resource_t *rr)
  * Resolve an URL into a resource
  */
 static int
-rtsp_resolve_url(char *url, rtsp_resource_t *rr, char **remainp)
+rtsp_resolve_url(http_connection_t *hc, rtsp_resource_t *rr, char **remainp)
 {
   char *components[5];
   void *r;
   int nc;
+  char *url = hc->hc_url;
 
   if(!strncasecmp(url, "rtsp://", strlen("rtsp://"))) {
     url += strlen("rtsp://");
@@ -537,7 +545,7 @@ rtsp_resolve_url(char *url, rtsp_resource_t *rr, char **remainp)
     return -1;
 
   http_deescape(components[1]);
-  
+
   if(!strcmp(components[0], "channel")) {
     rr->rr_type = RTSP_RESOURCE_CHANNEL;
     r = channel_find_by_name(components[1], 0);
@@ -582,7 +590,7 @@ rtsp_cmd_options(http_connection_t *hc)
 
   pthread_mutex_lock(&global_lock);
 
-  if(strcmp(hc->hc_url, "*") && rtsp_resolve_url(hc->hc_url, &rr, NULL)) {
+  if(strcmp(hc->hc_url, "*") && rtsp_resolve_url(hc, &rr, NULL)) {
     rtsp_error(hc, RTSP_STATUS_SERVICE, "URL does not resolve");
     pthread_mutex_unlock(&global_lock);
     return 0;
@@ -635,7 +643,7 @@ rtsp_cmd_describe(http_connection_t *hc, rtsp_t *rtsp)
 
   pthread_mutex_lock(&global_lock);
 
-  if(rtsp_resolve_url(hc->hc_url, &rr, NULL)) {
+  if(rtsp_resolve_url(hc, &rr, NULL)) {
     rtsp_error(hc, RTSP_STATUS_SERVICE, "URL does not resolve");
     pthread_mutex_unlock(&global_lock);
     return 0;
@@ -865,6 +873,11 @@ rtsp_setup_udp(http_connection_t *hc, rtsp_t *rtsp,
 
   LIST_INSERT_HEAD(&rtsp->rtsp_streams, rs, rs_link);
 
+  tvhlog(LOG_DEBUG, "RTSP", "%s: %s -- Stream %s to UDP port %d", 
+	 inet_ntoa(hc->hc_peer->sin_addr), hc->hc_url_orig,
+	 streaming_component_type2txt(ssc->ssc_type),
+	 client_ports[0]);
+
   rtsp_printf(hc,
 	      "RTSP/1.0 200 OK\r\n"
 	      "Session: %s\r\n"
@@ -903,7 +916,7 @@ rtsp_cmd_setup(http_connection_t *hc, rtsp_t *rtsp)
    
   pthread_mutex_lock(&global_lock);
 
-  if(rtsp_resolve_url(hc->hc_url, &rr, &remain)) {
+  if(rtsp_resolve_url(hc, &rr, &remain)) {
     rtsp_error(hc, RTSP_STATUS_SERVICE, "URL does not resolve");
     pthread_mutex_unlock(&global_lock);
     return 0;

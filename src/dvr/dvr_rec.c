@@ -69,7 +69,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
   pthread_create(&de->de_thread, NULL, dvr_thread, de);
 
   de->de_s = subscription_create_from_channel(de->de_channel, 1000, buf,
-					      &de->de_sq.sq_st);
+					      &de->de_sq.sq_st, 0);
 }
 
 /**
@@ -441,6 +441,9 @@ dvr_thread(void *aux)
     case SMT_NOSOURCE:
       dvr_rec_fatal_error(de, 
 			  "No source transport available, automatic retry");
+      break;
+
+    case SMT_MPEGTS:
       break;
 
     case SMT_EXIT:

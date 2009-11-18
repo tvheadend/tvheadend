@@ -114,20 +114,6 @@ void
 parse_mpeg_ts(th_transport_t *t, th_stream_t *st, uint8_t *data, 
 	      int len, int start, int err)
 {
-  th_subscription_t *s;
-
-  if(LIST_FIRST(&t->tht_streaming_pad.sp_targets) == NULL) {
-    /* No muxers. However, subscriptions may force demultiplex 
-       for other reasons (serviceprobe does this) */
-    LIST_FOREACH(s, &t->tht_subscriptions, ths_transport_link)
-      if(s->ths_force_demux)
-	break;
-
-    if(s == NULL)
-      return; /* No-one is interested, so drop here */
-  }
-
-
   switch(st->st_type) {
   case SCT_MPEG2VIDEO:
     parse_video(t, st, data, len, parse_mpeg2video);
@@ -1048,11 +1034,15 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 
   /* Forward packet */
   pkt->pkt_componentindex = st->st_index;
-  streaming_pad_deliver(&t->tht_streaming_pad, 
-			streaming_msg_create_pkt(pkt));
+
+  streaming_message_t *sm = streaming_msg_create_pkt(pkt);
+
+  streaming_pad_deliver(&t->tht_streaming_pad, sm);
+  streaming_msg_free(sm);
 
   /* Decrease our own reference to the packet */
   pkt_ref_dec(pkt);
+
 }
 
 /**

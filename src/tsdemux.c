@@ -42,12 +42,13 @@
 #include "psi.h"
 #include "tsdemux.h"
 #include "parsers.h"
+#include "streaming.h"
 
+static void ts_remux(th_transport_t *t, const uint8_t *tsb);
 
 /**
  * Code for dealing with a complete section
  */
-
 static void
 got_section(th_transport_t *t, th_stream_t *st)
 {
@@ -64,7 +65,6 @@ got_section(th_transport_t *t, th_stream_t *st)
 }
 
 
-
 /**
  * Continue processing of transport stream packets
  */
@@ -72,6 +72,9 @@ static void
 ts_recv_packet0(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
 {
   int off, len, pusi, cc, err = 0;
+
+  if(streaming_pad_probe_type(&t->tht_streaming_pad, SMT_MPEGTS))
+    ts_remux(t, tsb);
 
   /* Check CC */
 
@@ -261,4 +264,20 @@ ts_recv_packet2(th_transport_t *t, uint8_t *tsb)
 
   if((st = transport_find_stream_by_pid(t, pid)) != NULL)
     ts_recv_packet0(t, st, tsb);
+}
+
+
+/**
+ *
+ */
+static void
+ts_remux(th_transport_t *t, const uint8_t *src)
+{
+  uint8_t tsb[188];
+  memcpy(tsb, src, 188);
+
+  streaming_message_t sm;
+  sm.sm_type = SMT_MPEGTS;
+  sm.sm_data = tsb;
+  streaming_pad_deliver(&t->tht_streaming_pad, &sm);
 }

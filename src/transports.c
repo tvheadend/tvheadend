@@ -669,9 +669,10 @@ transport_set_feed_status(th_transport_t *t, transport_feed_status_t newstatus)
 
   t->tht_feed_status = newstatus;
 
-  streaming_pad_deliver(&t->tht_streaming_pad, 
-			streaming_msg_create_code(SMT_TRANSPORT_STATUS,
-						  newstatus));
+  streaming_message_t *sm = streaming_msg_create_code(SMT_TRANSPORT_STATUS,
+						      newstatus);
+  streaming_pad_deliver(&t->tht_streaming_pad, sm);
+  streaming_msg_free(sm);
 }
 
 
@@ -689,6 +690,7 @@ transport_restart(th_transport_t *t, int had_components)
   if(had_components) {
     sm = streaming_msg_create_code(SMT_STOP, 0);
     streaming_pad_deliver(&t->tht_streaming_pad, sm);
+    streaming_msg_free(sm);
   }
 
   t->tht_refresh_feed(t);
@@ -698,6 +700,7 @@ transport_restart(th_transport_t *t, int had_components)
     sm = streaming_msg_create_data(SMT_START, 
 				   transport_build_stream_start(t));
     streaming_pad_deliver(&t->tht_streaming_pad, sm);
+    streaming_msg_free(sm);
   }
 }
 
@@ -871,4 +874,18 @@ transport_source_info_free(struct source_info *si)
   free(si->si_mux);
   free(si->si_provider);
   free(si->si_service);
+}
+
+
+void
+transport_source_info_copy(source_info_t *dst, source_info_t *src)
+{
+#define COPY(x) dst->si_##x = src->si_##x ? strdup(src->si_##x) : NULL
+  COPY(device);
+  COPY(adapter);
+  COPY(network);
+  COPY(mux);
+  COPY(provider);
+  COPY(service);
+#undef COPY
 }

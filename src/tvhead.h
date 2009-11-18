@@ -130,6 +130,7 @@ typedef enum {
   SCT_PAT,
   SCT_PMT,
   SCT_AAC,
+  SCT_MPEGTS,
 } streaming_component_type_t;
 
 
@@ -164,7 +165,10 @@ typedef enum {
   SMT_TRANSPORT_STATUS, // sm_code is TRANSPORT_STATUS_
   SMT_EXIT,             // Used to signal exit to threads
   SMT_NOSOURCE,
+  SMT_MPEGTS,      // sm_data is raw MPEG TS
 } streaming_message_type_t;
+
+#define SMT_TO_MASK(x) (1 << ((unsigned int)x))
 
 
 /**
@@ -191,6 +195,7 @@ typedef struct streaming_target {
 
   st_callback_t *st_cb;
   void *st_opaque;
+  int st_reject_filter;
 } streaming_target_t;
 
 

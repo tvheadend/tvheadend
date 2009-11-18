@@ -89,4 +89,6 @@ void transport_request_save(th_transport_t *t);
 
 void transport_source_info_free(source_info_t *si);
 
+void transport_source_info_copy(source_info_t *dst, source_info_t *src);
+
 #endif /* TRANSPORTS_H */

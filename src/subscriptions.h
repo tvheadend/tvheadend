@@ -19,6 +19,8 @@
 #ifndef SUBSCRIPTIONS_H
 #define SUBSCRIPTIONS_H
 
+#define SUBSCRIPTION_RAW_MPEGTS 0x1
+
 typedef struct th_subscription {
   LIST_ENTRY(th_subscription) ths_global_link;
   int ths_weight;
@@ -36,11 +38,11 @@ typedef struct th_subscription {
   time_t ths_start;  /* time when subscription started */
   int ths_total_err; /* total errors during entire subscription */
 
-  int ths_force_demux;
-
   streaming_target_t ths_input;
 
   streaming_target_t *ths_output;
+
+  int ths_flags;
 
 } th_subscription_t;
 
@@ -55,12 +57,14 @@ void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 th_subscription_t *subscription_create_from_channel(channel_t *ch,
 						    unsigned int weight,
 						    const char *name,
-						    streaming_target_t *st);
+						    streaming_target_t *st,
+						    int flags);
 
 
 th_subscription_t *subscription_create_from_transport(th_transport_t *t,
 						      const char *name,
-						      streaming_target_t *st);
+						      streaming_target_t *st,
+						      int flags);
 
 void subscription_stop(th_subscription_t *s);
 

@@ -34,10 +34,12 @@ streaming_pad_init(streaming_pad_t *sp)
  *
  */
 void
-streaming_target_init(streaming_target_t *st, st_callback_t *cb, void *opaque)
+streaming_target_init(streaming_target_t *st, st_callback_t *cb, void *opaque,
+		      int reject_filter)
 {
   st->st_cb = cb;
   st->st_opaque = opaque;
+  st->st_reject_filter = reject_filter;
 }
 
 
@@ -62,7 +64,7 @@ streaming_queue_deliver(void *opauqe, streaming_message_t *sm)
 void
 streaming_queue_init(streaming_queue_t *sq)
 {
-  streaming_target_init(&sq->sq_st, streaming_queue_deliver, sq);
+  streaming_target_init(&sq->sq_st, streaming_queue_deliver, sq, 0);
 
   pthread_mutex_init(&sq->sq_mutex, NULL);
   pthread_cond_init(&sq->sq_cond, NULL);
@@ -176,6 +178,11 @@ streaming_msg_clone(streaming_message_t *src)
   case SMT_EXIT:
     break;
 
+  case SMT_MPEGTS:
+    dst->sm_data = malloc(188);
+    memcpy(dst->sm_data, src->sm_data, 188);
+    break;
+
   default:
     abort();
   }
@@ -225,6 +232,10 @@ streaming_msg_free(streaming_message_t *sm)
   case SMT_NOSOURCE:
     break;
 
+  case SMT_MPEGTS:
+    free(sm->sm_data);
+    break;
+
   default:
     abort();
   }
@@ -240,17 +251,29 @@ streaming_pad_deliver(streaming_pad_t *sp, streaming_message_t *sm)
 {
   streaming_target_t *st, *next;
 
-  if(sp->sp_ntargets == 0)
-    return;
+  for(st = LIST_FIRST(&sp->sp_targets);st; st = next) {
 
-  for(st = LIST_FIRST(&sp->sp_targets);; st = next) {
-
-    if((next = LIST_NEXT(st, st_link)) == NULL)
-      break;
-    
+    next = LIST_NEXT(st, st_link);
+    if(st->st_reject_filter & SMT_TO_MASK(sm->sm_type))
+      continue;
     st->st_cb(st->st_opaque, streaming_msg_clone(sm));
   }
-  st->st_cb(st->st_opaque, sm);
+}
+
+
+/**
+ *
+ */
+int
+streaming_pad_probe_type(streaming_pad_t *sp, streaming_message_type_t smt)
+{
+  streaming_target_t *st;
+
+  LIST_FOREACH(st, &sp->sp_targets, st_link) {
+    if(!(st->st_reject_filter & SMT_TO_MASK(smt)))
+      return 1;
+  }
+  return 0;
 }
 
 

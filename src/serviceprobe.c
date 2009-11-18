@@ -112,7 +112,7 @@ serviceprobe_thread(void *aux)
     tvhlog(LOG_INFO, "serviceprobe", "%20s: checking...",
 	   t->tht_svcname);
 
-    s = subscription_create_from_transport(t, "serviceprobe", &sq.sq_st);
+    s = subscription_create_from_transport(t, "serviceprobe", &sq.sq_st, 0);
 
     transport_ref(t);
     pthread_mutex_unlock(&global_lock);

@@ -644,10 +644,10 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 
   hs->hs_sid = sid;
   LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
-  streaming_target_init(&hs->hs_input, htsp_streaming_input, hs);
+  streaming_target_init(&hs->hs_input, htsp_streaming_input, hs, 0);
 
   hs->hs_s = subscription_create_from_channel(ch, 500, htsp->htsp_logname,
-					      &hs->hs_input);
+					      &hs->hs_input, 0);
   return NULL;
 }
 
@@ -1408,6 +1408,9 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
 
   case SMT_NOSOURCE:
     htsp_subscription_status(hs, "No available sources");
+    break;
+
+  case SMT_MPEGTS:
     break;
 
   case SMT_EXIT:

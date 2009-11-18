@@ -453,21 +453,14 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 }
 
 
-
-
-
 /** 
- * PAT generator
+ * PMT generator
  */
-#if 0
 int
-psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen, int pcrpid)
+psi_build_pmt(streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid)
 {
-  th_stream_t *st;
-  th_muxstream_t *tms;
-  int c, tlen, dlen, l;
+  int c, tlen, dlen, l, i, pid;
   uint8_t *buf, *buf1;
-  
 
   buf = buf0;
 
@@ -492,13 +485,12 @@ psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen, int pcrpid)
   buf += 12;
   tlen = 12;
 
-  LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0) {
-    st = tms->tms_stream;
+  for(i = 0; i < ss->ss_num_components; i++) {
+    streaming_start_component_t *ssc = &ss->ss_components[i];
 
-    if(tms->tms_index == 0)
-      continue;
+    pid = 200 + i;
 
-    switch(st->st_type) {
+    switch(ssc->ssc_type) {
     case SCT_MPEG2VIDEO:
       c = 0x02;
       break;
@@ -521,15 +513,15 @@ psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen, int pcrpid)
 
 
     buf[0] = c;
-    buf[1] = 0xe0 | (tms->tms_index >> 8);
-    buf[2] =         tms->tms_index;
+    buf[1] = 0xe0 | (pid >> 8);
+    buf[2] =         pid;
 
     buf1 = &buf[3];
     tlen += 5;
     buf  += 5;
     dlen = 0;
 
-    switch(st->st_type) {
+    switch(ssc->ssc_type) {
     case SCT_AC3:
       buf[0] = DVB_DESC_AC3;
       buf[1] = 1;
@@ -554,10 +546,6 @@ psi_build_pmt(th_muxer_t *tm, uint8_t *buf0, int maxlen, int pcrpid)
 
   return psi_append_crc32(buf0, tlen, maxlen);
 }
-#endif
-
-
-
 
 /*
  * CRC32 
@@ -688,14 +676,13 @@ static struct strtab streamtypetab[] = {
   { "PMT",        SCT_PMT },
   { "PAT",        SCT_PAT },
   { "AAC",        SCT_AAC },
+  { "MPEGTS",     SCT_MPEGTS },
 };
 
 
-
-
-
-
-
+/**
+ *
+ */
 const char *
 streaming_component_type2txt(streaming_component_type_t s)
 {

@@ -194,8 +194,7 @@ static void
 subscription_input(void *opauqe, streaming_message_t *sm)
 {
   th_subscription_t *s = opauqe;
-
-  streaming_target_deliver(s->ths_output, sm);
+ streaming_target_deliver(s->ths_output, sm);
 }
 
 
@@ -204,16 +203,25 @@ subscription_input(void *opauqe, streaming_message_t *sm)
  *
  */
 static th_subscription_t *
-subscription_create(int weight, const char *name, streaming_target_t *st)
+subscription_create(int weight, const char *name, streaming_target_t *st,
+		    int flags)
 {
   th_subscription_t *s = calloc(1, sizeof(th_subscription_t));
+  int reject = 0;
 
-  streaming_target_init(&s->ths_input, subscription_input, s);
+  if(flags & SUBSCRIPTION_RAW_MPEGTS)
+    reject |= SMT_TO_MASK(SMT_PACKET);  // Reject parsed frames
+  else
+    reject |= SMT_TO_MASK(SMT_MPEGTS);  // Reject raw mpegts
+
+
+  streaming_target_init(&s->ths_input, subscription_input, s, reject);
 
   s->ths_weight            = weight;
   s->ths_title             = strdup(name);
   s->ths_total_err         = 0;
   s->ths_output            = st;
+  s->ths_flags             = flags;
 
   time(&s->ths_start);
   LIST_INSERT_SORTED(&subscriptions, s, ths_global_link, subscription_sort);
@@ -227,9 +235,10 @@ subscription_create(int weight, const char *name, streaming_target_t *st)
  */
 th_subscription_t *
 subscription_create_from_channel(channel_t *ch, unsigned int weight, 
-				 const char *name, streaming_target_t *st)
+				 const char *name, streaming_target_t *st,
+				 int flags)
 {
-  th_subscription_t *s = subscription_create(weight, name, st);
+  th_subscription_t *s = subscription_create(weight, name, st, flags);
 
   s->ths_channel = ch;
   LIST_INSERT_HEAD(&ch->ch_subscriptions, s, ths_channel_link);
@@ -270,9 +279,9 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
  */
 th_subscription_t *
 subscription_create_from_transport(th_transport_t *t, const char *name,
-				   streaming_target_t *st)
+				   streaming_target_t *st, int flags)
 {
-  th_subscription_t *s = subscription_create(INT32_MAX, name, st);
+  th_subscription_t *s = subscription_create(INT32_MAX, name, st, flags);
 
   if(t->tht_status != TRANSPORT_RUNNING)
     transport_start(t, INT32_MAX, 1);
@@ -336,8 +345,8 @@ subscription_dummy_join(const char *id)
   }
 
   st = calloc(1, sizeof(streaming_target_t));
-  streaming_target_init(st, dummy_callback, NULL);
-  subscription_create_from_transport(t, "dummy", st);
+  streaming_target_init(st, dummy_callback, NULL, 0);
+  subscription_create_from_transport(t, "dummy", st, 0);
 
   tvhlog(LOG_NOTICE, "subscription", 
 	 "Dummy join %s ok", id);

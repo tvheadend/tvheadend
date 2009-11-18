@@ -51,7 +51,8 @@ typedef struct streaming_start {
 void streaming_pad_init(streaming_pad_t *sp);
 
 void streaming_target_init(streaming_target_t *st,
-			   st_callback_t *cb, void *opaque);
+			   st_callback_t *cb, void *opaque,
+			   int reject_filter);
 
 void streaming_queue_init(streaming_queue_t *sq);
 
@@ -80,5 +81,8 @@ streaming_message_t *streaming_msg_create_pkt(th_pkt_t *pkt);
 #define streaming_target_deliver(st, sm) ((st)->st_cb((st)->st_opaque, (sm)))
 
 void streaming_start_unref(streaming_start_t *ss);
+
+int streaming_pad_probe_type(streaming_pad_t *sp, 
+			     streaming_message_type_t smt);
      
 #endif /* STREAMING_H_ */
