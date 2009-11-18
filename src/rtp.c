@@ -89,3 +89,54 @@ rtp_send_mpv(rtp_send_t *sender, void *opaque, rtp_stream_t *rs,
   }
   assert(len == 0);
 }
+
+
+void
+rtp_send_mpa(rtp_send_t *sender, void *opaque, rtp_stream_t *rs, 
+	     const uint8_t *data, size_t len,
+	     int64_t pts)
+{
+  int payloadsize = RTP_MAX_PACKET_SIZE - (4 + 4 + 4 + 4);
+  int offset = 0, s;
+  uint8_t *buf;
+
+  pts = av_rescale_q(pts, AV_TIME_BASE_Q, mpeg_tc);
+
+  while(len > 0) {
+
+    s = len > payloadsize ? payloadsize : len;
+
+    buf = rs->rs_buf;
+    buf[0] = 0x80;
+    buf[1] = 14;
+    buf[2] = rs->rs_seq >> 8;
+    buf[3] = rs->rs_seq;
+
+    buf[4] = pts >> 24;
+    buf[5] = pts >> 16;
+    buf[6] = pts >> 8;
+    buf[7] = pts;
+    
+    buf[8] = 0;
+    buf[9] = 0;
+    buf[10] = 0;
+    buf[11] = 0;
+
+    buf[12] = 0;
+    buf[13] = 0;
+    buf[14] = offset >> 8;
+    buf[15] = offset;
+    
+    memcpy(buf + 16, data, s);
+
+    len  -= s;
+    data += s;
+
+    sender(opaque, buf, s + 16);
+    rs->rs_seq++;
+
+    offset += s;
+
+  }
+  assert(len == 0);
+}

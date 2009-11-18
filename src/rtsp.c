@@ -428,6 +428,10 @@ rtsp_streaming_send(rtsp_t *rtsp, th_pkt_t *pkt)
     rtp_send_mpv(rs->rs_sender, rs, &rs->rs_rtp, pkt->pkt_payload,
 		 pkt->pkt_payloadlen, pkt->pkt_pts);
     break;
+  case SCT_MPEG2AUDIO:
+    rtp_send_mpa(rs->rs_sender, rs, &rs->rs_rtp, pkt->pkt_payload,
+		 pkt->pkt_payloadlen, pkt->pkt_pts);
+    break;
   }
 }
 
@@ -679,6 +683,11 @@ rtsp_cmd_describe(http_connection_t *hc, rtsp_t *rtsp)
     case SCT_MPEG2VIDEO:
       tvh_strlcatf(sdp, sizeof(sdp), 
 		   "m=video 0 RTP/AVP 32\r\n"
+		   "a=control:streamid=%d\r\n", ssc->ssc_index);
+      break;
+    case SCT_MPEG2AUDIO:
+      tvh_strlcatf(sdp, sizeof(sdp), 
+		   "m=audio 0 RTP/AVP 14\r\n"
 		   "a=control:streamid=%d\r\n", ssc->ssc_index);
       break;
     }

@@ -33,4 +33,7 @@ typedef struct rtp_stream {
 void rtp_send_mpv(rtp_send_t *sender, void *opaque, rtp_stream_t *rs, 
 		  const uint8_t *data, size_t len, int64_t pts);
 
+void rtp_send_mpa(rtp_send_t *sender, void *opaque, rtp_stream_t *rs, 
+		  const uint8_t *data, size_t len, int64_t pts);
+
 #endif /* RTP_H_ */
