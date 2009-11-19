@@ -120,6 +120,34 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+/**
+ * Playlist (.pls format) for the rtsp streams
+ */
+static int
+page_rtsp_playlist(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  channel_t *ch = NULL;
+  int i = 0;
+  const char *host = http_arg_get(&hc->hc_args, "Host");
+
+  htsbuf_qprintf(hq, "[playlist]\n");
+
+  scopedgloballock();
+
+  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
+    i++;
+    htsbuf_qprintf(hq, "File%d=rtsp://%s/channelid/%d\n", i, host, ch->ch_id);
+    htsbuf_qprintf(hq, "Title%d=%s\n",  i, ch->ch_name);
+    htsbuf_qprintf(hq, "Length%d=%d\n\n",  i, -1);
+  }
+
+  htsbuf_qprintf(hq, "NumberOfEntries=%d\n\n", i);
+  htsbuf_qprintf(hq, "Version=2");
+
+  http_output_content(hc, "audio/x-scpls; charset=UTF-8");
+  return 0;
+}
 
 /**
  * Static download of a file from an embedded filebundle
@@ -281,6 +309,7 @@ webui_init(const char *contentpath)
 
   http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_WEB_INTERFACE);
   http_path_add("/favicon.ico", NULL, favicon, ACCESS_WEB_INTERFACE);
+  http_path_add("/channels.pls", NULL, page_rtsp_playlist, ACCESS_WEB_INTERFACE);
 
   webui_static_content(contentpath, "/static",        "src/webui/static");
   webui_static_content(contentpath, "/docs",          "docs/html");
