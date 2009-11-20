@@ -363,8 +363,10 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   htsmsg_add_s32(out, "start", de->de_start);
   htsmsg_add_s32(out, "stop", de->de_stop);
 
-  htsmsg_add_str(out, "title", de->de_title);
-  htsmsg_add_str(out, "description", de->de_desc);
+  if( de->de_title != NULL )
+    htsmsg_add_str(out, "title", de->de_title);
+  if( de->de_desc != NULL )
+    htsmsg_add_str(out, "description", de->de_desc);
 
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:
