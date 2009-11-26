@@ -23,8 +23,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "FFdecsa.h"
-
 #ifndef NULL
 #define NULL 0
 #endif
@@ -54,12 +52,6 @@
 #define PARALLEL_128_SSE     1285
 #define PARALLEL_128_SSE2    1286
 
-//////// our choice //////////////// our choice //////////////// our choice //////////////// our choice ////////
-#ifndef PARALLEL_MODE
-#define PARALLEL_MODE PARALLEL_64_MMX
-#endif
-//////// our choice //////////////// our choice //////////////// our choice //////////////// our choice ////////
-
 #include "parallel_generic.h"
 //// conditionals
 #if PARALLEL_MODE==PARALLEL_32_4CHAR
@@ -68,6 +60,7 @@
 #include "parallel_032_4charA.h"
 #elif PARALLEL_MODE==PARALLEL_32_INT
 #include "parallel_032_int.h"
+#define FUNC(x) (x ## _32int)
 #elif PARALLEL_MODE==PARALLEL_64_8CHAR
 #include "parallel_064_8char.h"
 #elif PARALLEL_MODE==PARALLEL_64_8CHARA
@@ -78,6 +71,7 @@
 #include "parallel_064_long.h"
 #elif PARALLEL_MODE==PARALLEL_64_MMX
 #include "parallel_064_mmx.h"
+#define FUNC(x) (x ## _64mmx)
 #elif PARALLEL_MODE==PARALLEL_128_16CHAR
 #include "parallel_128_16char.h"
 #elif PARALLEL_MODE==PARALLEL_128_16CHARA
@@ -92,9 +86,11 @@
 #include "parallel_128_sse.h"
 #elif PARALLEL_MODE==PARALLEL_128_SSE2
 #include "parallel_128_sse2.h"
+#define FUNC(x) (x ## _128sse2)
 #else
 #error "unknown/undefined parallel mode"
 #endif
+
 
 // stuff depending on conditionals
 
@@ -333,7 +329,7 @@ static inline __attribute__((always_inline)) void trasp_8_N (unsigned char *in,u
 //-----block main function
 
 // block group
-static void block_decypher_group(
+static void block_decypher_group (
   batch *kkmulti,       // [In]  kkmulti[0]-kkmulti[55] 56 batches | Key schedule (each batch has repeated equal bytes).
   unsigned char *ib,    // [In]  (ib0,ib1,...ib7)...x32 32*8 bytes | Initialization vector.
   unsigned char *bd,    // [Out] (bd0,bd1,...bd7)...x32 32*8 bytes | Block decipher.
@@ -463,35 +459,6 @@ static void block_decypher_group(
 
 //-----------------------------------EXTERNAL INTERFACE
 
-//-----get internal parallelism
-
-int get_internal_parallelism(void){
-  return GROUP_PARALLELISM;
-}
-
-//-----get suggested cluster size
-
-int get_suggested_cluster_size(void){
-  int r;
-  r=GROUP_PARALLELISM+GROUP_PARALLELISM/10;
-  if(r<GROUP_PARALLELISM+5) r=GROUP_PARALLELISM+5;
-  return r;
-}
-
-//-----key structure
-
-void *get_key_struct(void){
-  struct csa_keys_t *keys=(struct csa_keys_t *)MALLOC(sizeof(struct csa_keys_t));
-  if(keys) {
-    static const unsigned char pk[8] = { 0,0,0,0,0,0,0,0 };
-    set_control_words(keys,pk,pk);
-    }
-  return keys;
-}
-
-void free_key_struct(void *keys){
-  return FREE(keys);
-}
 
 //-----set control words
 
@@ -523,18 +490,68 @@ static void schedule_key(struct csa_key_t *key, const unsigned char *pk){
   }
 }
 
-void set_control_words(void *keys, const unsigned char *ev, const unsigned char *od){
+extern void FUNC(set_control_words)(void *keys, const unsigned char *ev, const unsigned char *od);
+
+void FUNC(set_control_words)(void *keys, const unsigned char *ev, const unsigned char *od)
+{
   schedule_key(&((struct csa_keys_t *)keys)->even,ev);
   schedule_key(&((struct csa_keys_t *)keys)->odd,od);
 }
 
-void set_even_control_word(void *keys, const unsigned char *pk){
+extern void FUNC(set_even_control_word)(void *keys, const unsigned char *pk);
+
+void FUNC(set_even_control_word)(void *keys, const unsigned char *pk)
+{
   schedule_key(&((struct csa_keys_t *)keys)->even,pk);
 }
 
-void set_odd_control_word(void *keys, const unsigned char *pk){
+extern void FUNC(set_odd_control_word)(void *keys, const unsigned char *pk);
+
+void FUNC(set_odd_control_word)(void *keys, const unsigned char *pk){
   schedule_key(&((struct csa_keys_t *)keys)->odd,pk);
 }
+
+//-----get internal parallelism
+
+extern int FUNC(get_internal_parallelism)(void);
+
+int FUNC(get_internal_parallelism)(void)
+{
+  return GROUP_PARALLELISM;
+}
+
+//-----get suggested cluster size
+
+extern int FUNC(get_suggested_cluster_size)(void);
+
+int FUNC(get_suggested_cluster_size)(void)
+{
+  int r;
+  r=GROUP_PARALLELISM+GROUP_PARALLELISM/10;
+  if(r<GROUP_PARALLELISM+5) r=GROUP_PARALLELISM+5;
+  return r;
+}
+
+//-----key structure
+
+extern void *FUNC(get_key_struct)(void);
+void *FUNC(get_key_struct)(void)
+{
+  struct csa_keys_t *keys=(struct csa_keys_t *)MALLOC(sizeof(struct csa_keys_t));
+  if(keys) {
+    static const unsigned char pk[8] = { 0,0,0,0,0,0,0,0 };
+    FUNC(set_control_words)(keys,pk,pk);
+    }
+  return keys;
+}
+
+extern void FUNC(free_key_struct)(void *keys);
+void FUNC(free_key_struct)(void *keys)
+{
+  return FREE(keys);
+}
+
+
 
 //-----get control words
 #if 0
@@ -546,7 +563,9 @@ void get_control_words(void *keys, unsigned char *even, unsigned char *odd){
 
 //----- decrypt
 
-int decrypt_packets(void *keys, unsigned char **cluster){
+extern int FUNC(decrypt_packets)(void *keys, unsigned char **cluster);
+int FUNC(decrypt_packets)(void *keys, unsigned char **cluster)
+{
   // statistics, currently unused
   int stat_no_scramble=0;
   int stat_reserved=0;

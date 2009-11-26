@@ -19,11 +19,6 @@ CPU=generic
 ARCH=`uname -m`
 OSENV="posix"
 PREFIX=/usr/local
-if [ "$ARCH" = "ppc" ] ; then
-  PARALLEL_MODE=PARALLEL_32_INT
-else
-  PARALLEL_MODE=PARALLEL_64_MMX
-fi
 
 show_help(){
   echo "Usage: configure [options]"
@@ -35,9 +30,6 @@ show_help(){
   echo "  --arch=arch              Build for this architecture [$ARCH]"
   echo "  --cpu=cpu                Build and optimize for specific CPU"
   echo "  --cc=CC                  Build using the given compiler"
-  echo "  --ffdecsa-mode=MODE      Select Mode for ffdecsa"
-  echo "                           PARALLEL_64_MMX (default)"
-  echo "                           PARALLEL_128_SSE2"
   echo "  --release                Stage for release"
   exit 1
 }
@@ -58,8 +50,6 @@ for opt do
 	  RELEASE=yes
   ;;
   --cc=*) CC="$optval"
-  ;;
-  --ffdecsa-mode=*) PARALLEL_MODE="$optval"
   ;;
   --enable-?*|--disable-?*)
   eval $(echo "$opt" | sed 's/--/action=/;s/-/ option=/;s/-/_/g')
@@ -116,11 +106,6 @@ if enabled avahi; then
 	die
     fi
 fi
-
-#
-# ffdecsa mode
-# 
-echo >>${CONFIG_MAK} "CFLAGS_ffdecsa = -DPARALLEL_MODE=${PARALLEL_MODE}" 
 
 #
 # configure ffmpeg

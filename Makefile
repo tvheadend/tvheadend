@@ -93,12 +93,15 @@ SRCS += src/dvb/dvb.c \
 SRCS += src/cwc.c \
 	src/capmt.c \
 	src/krypt.c \
-	src/ffdecsa/FFdecsa.c
+	src/ffdecsa/ffdecsa_interface.c \
+	src/ffdecsa/ffdecsa_int.c \
+	src/ffdecsa/ffdecsa_mmx.c \
+	src/ffdecsa/ffdecsa_sse2.c \
 
-ifneq ($(ARCH), ppc)
-${BUILDDIR}/src/ffdecsa/FFdecsa.o : CFLAGS = -mmmx
-endif
 LDFLAGS += -lcrypt
+
+${BUILDDIR}/src/ffdecsa/ffdecsa_mmx.o  : CFLAGS = -mmmx
+${BUILDDIR}/src/ffdecsa/ffdecsa_sse2.o : CFLAGS = -msse2
 
 #
 # Primary web interface
@@ -135,7 +138,7 @@ OBJDIRS+= $(sort $(dir $(BUNDLE_OBJS)))
 # Common CFLAGS for all files
 CFLAGS_com  = -g -funsigned-char -O2 
 CFLAGS_com += -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
-CFLAGS_com += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR} $(CFLAGS_ffdecsa)
+CFLAGS_com += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR}
 
 all:	${PROG}
 

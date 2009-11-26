@@ -59,4 +59,6 @@ void set_odd_control_word(void *keys, const unsigned char *odd);
 // Please read doc/how_to_use.txt.
 int decrypt_packets(void *keys, unsigned char **cluster);
 
+void ffdecsa_init(void);
+
 #endif

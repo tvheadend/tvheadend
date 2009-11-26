@@ -58,6 +58,7 @@
 #include "v4l.h"
 #include "parachute.h"
 #include "settings.h"
+#include "ffdecsa/FFdecsa.h"
 
 int running;
 extern const char *htsversion;
@@ -386,6 +387,8 @@ main(int argc, char **argv)
   dvr_init();
 
   htsp_init();
+
+  ffdecsa_init();
   
   if(rawts_input != NULL)
     rawts_init(rawts_input);
