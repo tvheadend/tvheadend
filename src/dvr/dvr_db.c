@@ -173,7 +173,7 @@ dvr_entry_create_by_event(event_t *e, const char *creator)
 
   dvr_entry_link(de);
 
-  t = de->de_start - de->de_start_extra;
+  t = de->de_start - de->de_start_extra * 60;
   localtime_r(&t, &tm);
   strftime(tbuf, sizeof(tbuf), "%c", &tm);
 
