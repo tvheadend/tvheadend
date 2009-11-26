@@ -7,7 +7,7 @@
 
  <dt>Input sources
   <dl>
-   <dt>DVB-T, DVB-C and DVB-S.
+   <dt>DVB-T, DVB-C, DVB-S, DVB-S2 and ATSC.
    <dd>
    Multiple adapters are supported.
    Each adapter can receive all programs available on the currently
@@ -18,12 +18,16 @@
    Supports raw transport streams sent directly in UDP.
    No RTP support at the moment.
    </dd>
+   <dt>Analog TV
+   <dd>
+   Using the Video4Linux2 API. Currently, only PAL is supported.
+   </dd>
   </dl>
 
  <dt>Output targets
   <dl>
-   <dt> HTSP (Home TV Streaming Protocol), supported by Showtime Mediaplayer and <a href="http://www.xbmc.org/">XBMC</a>
-   <dt> Built-in Digital Video Recorder
+   <dt>HTSP (Home TV Streaming Protocol), supported by Showtime Mediaplayer and <a href="http://www.xbmc.org/">XBMC</a>
+   <dt>Built-in Digital Video Recorder
   </dl>
 
  <dt>Built in modern web user interface
@@ -74,7 +78,7 @@
 
  <dt>Software based CSA descrambling
  <dd>
- Requires a card server.
+ Requires a card server (newcamd and capmt protocol is supported).
 
  <dt>Internationalization
  <dd>
