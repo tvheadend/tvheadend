@@ -18,12 +18,12 @@
       its internal database. Notice that the actual recorded file will not
       be deleted when the log entry is deleted.
 
-  <dt>Make subdirectories per day
+  <dt>Make sub-directories per day
   <dd>If checked, Tvheadend will create a new directory per day in the
       recording system path. Only days when anything is recorded will be 
       created. The format of the directory will be 'YYYY-MM-DD' (ISO standard)
 
-  <dt>Make subdirectories per channel
+  <dt>Make sub-directories per channel
   <dd>If checked, Tvheadend will create a directory per channel when storing
       events. If both this and the 'directory per day' checkbox is enabled.
       The date-directory will be parent to the per-channel directory.
@@ -31,17 +31,17 @@
   <dt>Include channel name in title
   <dd>If checked, Tvheadend will include the name of the channel in the
       event title. This applies to both the titled stored in the file
-      and to the filename itself.
+      and to the file name itself.
 
   <dt>Include date in title
   <dd>If checked, Tvheadend will include the date for the recording in the
       event title. This applies to both the titled stored in the file
-      and to the filename itself.
+      and to the file name itself.
 
   <dt>Include time in title
   <dd>If checked, Tvheadend will include the time for the recording in the
       event title. This applies to both the titled stored in the file
-      and to the filename itself.
+      and to the file name itself.
   <dt>Post-processor command
   <dd>Command to run after finishing a recording. The command will be
       run in background and is executed even if a recording is aborted
@@ -58,8 +58,8 @@
         <tr><td>%C</td><td>Who created this recording</td><td>user</td></tr>
         <tr><td>%t</td><td>Program title</td><td>News</td></tr>
         <tr><td>%c</td><td>Program description</td><td>News and stories...</td></tr>
-        <tr><td>%S</td><td>Start timestmap of recording, UNIX epoch</td><td>1224421200</td></tr>
-        <tr><td>%E</td><td>Stop timestamp of recording, UNIX epoch</td><td>1224426600</td></tr>
+        <tr><td>%S</td><td>Start time stamp of recording, UNIX epoch</td><td>1224421200</td></tr>
+        <tr><td>%E</td><td>Stop time stamp of recording, UNIX epoch</td><td>1224426600</td></tr>
       </table>
       <br>
       Example usage: /path/to/ffmpeg -i %f -vcodec libx264 -acodec copy "/path/with white space/%b"<br>

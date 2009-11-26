@@ -14,14 +14,14 @@ Parts of this documentation is also available in the Tvheadend man page.
 
   <dt>-u username
   <dd>
-  Run as 'username'. Only applicable if daemonizing. Default is to
-  use the uid of 1 (daemon on most systems).
+  Run as 'username'. Only applicable if demonizing. Default is to
+  use the UID of 1 (daemon on most systems).
 
   <dt>-g groupname
   <dd>
   Run as group 'groupname'. Only applicable if daemonizing. 
   Default is to use the 'video' group. 
-  If the 'video' group does not exist, gid 1 (daemon) will be used.
+  If the 'video' group does not exist, GID 1 (daemon) will be used.
 
  </dl>
 
@@ -38,7 +38,7 @@ Parts of this documentation is also available in the Tvheadend man page.
  access to all features / settings</b> in the web user interface. If
  this is the first time you setup Tvheadend you are most encouraged to
  enter the web user interface, selected the 'Configuration' + 'Access Control'
- tab and make reasonable changes. Futher help / documentationcan be obtained
+ tab and make reasonable changes. Futher help / documentation can be obtained
  inside the web interface.
 
  <dt>Settings storage
@@ -57,15 +57,15 @@ Parts of this documentation is also available in the Tvheadend man page.
  In order for Tvheadend to control video adapters on the system it
  must be granted access to those devices. Most systems have a 'video'
  group with write access to the video adapter devices. When Tvheadend
- is started as a daemon (if Tvheadend is installed from a distibution package
+ is started as a daemon (if Tvheadend is installed from a distribution package
  this is most likely the way it is) it will change its primary group
  to 'video' in order to access these groups. If your system is configured
  in a different way you can either change the group membership of the
- video adapters (/dev/dvb, etc) or reconfigure the Tvheadend startup
+ video adapters (/dev/dvb, etc) or reconfigure the Tvheadend start up
  parameters.
  <p>
- If Tvheadend is started without the '-f' argument it will not daemonize
- nor change its primary userid/groupid. Rather it will run with the permissions
+ If Tvheadend is started without the '-f' argument it will not demonize
+ nor change its primary UID/GID. Rather it will run with the permissions
  granted to the user executing the binary. If that's the case you must make
  sure the current user is granted with access to the video devices.
 
