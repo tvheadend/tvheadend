@@ -724,4 +724,6 @@ extern void scopedunlock(pthread_mutex_t **mtxp);
 #define tvh_strlcatf(buf, size, fmt...) \
  snprintf((buf) + strlen(buf), (size) - strlen(buf), fmt)
 
+int tvh_open(const char *pathname, int flags, mode_t mode);
+
 #endif /* TV_HEAD_H */

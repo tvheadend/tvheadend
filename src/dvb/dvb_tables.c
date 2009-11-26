@@ -143,7 +143,7 @@ tdt_open_fd(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
   assert(tdt->tdt_fd == -1);
   TAILQ_REMOVE(&tdmi->tdmi_table_queue, tdt, tdt_pending_link);
 
-  tdt->tdt_fd = open(tda->tda_demux_path, O_RDWR);
+  tdt->tdt_fd = tvh_open(tda->tda_demux_path, O_RDWR, 0);
 
   if(tdt->tdt_fd != -1) {
 

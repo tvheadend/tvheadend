@@ -177,7 +177,7 @@ v4l_transport_start(th_transport_t *t, unsigned int weight, int status,
   if(va->va_current_transport != NULL)
     return 1; // Adapter busy
 
-  fd = open(va->va_path, O_RDWR | O_NONBLOCK);
+  fd = tvh_open(va->va_path, O_RDWR | O_NONBLOCK, 0);
   if(fd == -1) {
     tvhlog(LOG_ERR, "v4l",
 	   "%s: Unable to open device: %s\n", va->va_path, 
@@ -487,7 +487,7 @@ v4l_adapter_probe(const char *path)
 {
   int fd;
 
-  fd = open(path, O_RDWR | O_NONBLOCK);
+  fd = tvh_open(path, O_RDWR | O_NONBLOCK, 0);
 
   if(fd == -1) {
     if(errno != ENOENT)

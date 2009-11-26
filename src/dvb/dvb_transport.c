@@ -59,7 +59,7 @@ dvb_transport_open_demuxers(th_dvb_adapter_t *tda, th_transport_t *t)
     if(st->st_demuxer_fd != -1)
       continue;
 
-    fd = open(tda->tda_demux_path, O_RDWR);
+    fd = tvh_open(tda->tda_demux_path, O_RDWR, 0);
     st->st_cc_valid = 0;
 
     if(fd == -1) {

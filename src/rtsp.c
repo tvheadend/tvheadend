@@ -306,7 +306,7 @@ genrand32(uint8_t *r)
 {
   int fd, n;
 
-  if((fd = open("/dev/urandom", O_RDONLY)) < 0)
+  if((fd = tvh_open("/dev/urandom", O_RDONLY, 0)) < 0)
     return -1;
   
   n = read(fd, r, 32);

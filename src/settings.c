@@ -120,7 +120,7 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
 
   snprintf(fullpath, sizeof(fullpath), "%s/%s.tmp", settingspath, path);
 
-  if((fd = open(fullpath, O_CREAT | O_TRUNC | O_RDWR, 0700)) < 0) {
+  if((fd = tvh_open(fullpath, O_CREAT | O_TRUNC | O_RDWR, 0700)) < 0) {
     tvhlog(LOG_ALERT, "settings", "Unable to create \"%s\" - %s",
 	    fullpath, strerror(errno));
     return;
@@ -167,7 +167,7 @@ hts_settings_load_one(const char *filename)
   if(stat(filename, &st) < 0)
     return NULL;
 
-  if((fd = open(filename, O_RDONLY)) < 0)
+  if((fd = tvh_open(filename, O_RDONLY, 0)) < 0)
     return NULL;
 
   mem = malloc(st.st_size + 1);

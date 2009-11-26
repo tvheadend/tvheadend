@@ -102,7 +102,7 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
 
   snprintf(path, sizeof(path), "%s/%s", base, remain);
 
-  if((fd = open(path, O_RDONLY)) < 0) {
+  if((fd = open(path, O_RDONLY | O_CLOEXEC)) < 0) {
     tvhlog(LOG_ERR, "webui", 
 	   "Unable to open file %s -- %s", path, strerror(errno));
     return 404;
@@ -222,7 +222,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
       content = "video/x-matroska";
   }
 
-  fd = open(fname, O_RDONLY);
+  fd = open(fname, O_RDONLY | O_CLOEXEC);
   free(fname);
   if(fd < 0)
     return 404;

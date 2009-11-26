@@ -286,7 +286,7 @@ rawts_init(const char *filename)
 {
   pthread_t ptid;
   rawts_t *rt;
-  int fd = open(filename, O_RDONLY);
+  int fd = tvh_open(filename, O_RDONLY, 0);
 
   if(fd == -1) {
     fprintf(stderr, "Unable to open %s -- %s\n", filename, strerror(errno));

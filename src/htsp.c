@@ -707,7 +707,7 @@ htsp_generate_challenge(htsp_connection_t *htsp)
 {
   int fd, n;
 
-  if((fd = open("/dev/urandom", O_RDONLY)) < 0)
+  if((fd = tvh_open("/dev/urandom", O_RDONLY, 0)) < 0)
     return -1;
   
   n = read(fd, &htsp->htsp_challenge, 32);

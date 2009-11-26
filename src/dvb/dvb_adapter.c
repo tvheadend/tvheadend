@@ -182,7 +182,7 @@ tda_add(const char *path)
 
   snprintf(fname, sizeof(fname), "%s/frontend0", path);
   
-  fe = open(fname, O_RDWR | O_NONBLOCK);
+  fe = tvh_open(fname, O_RDWR | O_NONBLOCK, 0);
   if(fe == -1) {
     if(errno != ENOENT)
       tvhlog(LOG_ALERT, "dvb",
@@ -434,7 +434,7 @@ dvb_adapter_input_dvr(void *aux)
   uint8_t tsb[188 * 10];
   th_transport_t *t;
 
-  fd = open(tda->tda_dvr_path, O_RDONLY);
+  fd = tvh_open(tda->tda_dvr_path, O_RDONLY, 0);
   if(fd == -1) {
     tvhlog(LOG_ALERT, "dvb", "%s: unable to open dvr", tda->tda_dvr_path);
     return NULL;
