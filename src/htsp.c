@@ -535,20 +535,13 @@ htsp_method_deleteDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 }
 
 /**
- * Get information about the given event
+ *
  */
 static htsmsg_t *
-htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
+htsp_build_event(event_t *e)
 {
   htsmsg_t *out;
-  uint32_t eventid;
-  event_t *e, *n;
-
-  if(htsmsg_get_u32(in, "eventId", &eventid))
-    return htsp_error("Missing argument 'eventId'");
-
-  if((e = epg_event_find_by_id(eventid)) == NULL)
-    return htsp_error("Event does not exist");
+  event_t *n;
 
   out = htsmsg_create_map();
 
@@ -567,6 +560,62 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
   if(n != NULL)
     htsmsg_add_u32(out, "nextEventId", n->e_id);
 
+  return out;
+}
+
+/**
+ * Get information about the given event + 
+ * n following events
+ */
+static htsmsg_t *
+htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  uint32_t eventid, numFollowing;
+  htsmsg_t *out, *events;
+  event_t *e;
+
+  if(htsmsg_get_u32(in, "eventId", &eventid))
+    return htsp_error("Missing argument 'eventId'");
+
+  if(htsmsg_get_u32(in, "numFollowing", &numFollowing))
+    return htsp_error("Missing argument 'numFollowing'");
+
+  if((e = epg_event_find_by_id(eventid)) == NULL) {
+    return htsp_error("Event does not exist");
+  }
+
+  out = htsmsg_create_map();
+  events = htsmsg_create_list();
+  
+  while( numFollowing-- > 0 ) {
+    e = RB_NEXT(e, e_channel_link);
+    if( e == NULL ) 
+      break;
+    htsmsg_add_msg(events, NULL, htsp_build_event(e));
+  }
+  
+  htsmsg_add_msg(out, "events", events);
+  return out;
+}
+
+
+/**
+ * Get information about the given event
+ */
+static htsmsg_t *
+htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  uint32_t eventid;
+  event_t *e;
+  htsmsg_t *out;
+  
+  if(htsmsg_get_u32(in, "eventId", &eventid))
+    return htsp_error("Missing argument 'eventId'");
+
+  if((e = epg_event_find_by_id(eventid)) == NULL)
+    return htsp_error("Event does not exist");
+
+  out = htsp_build_event(e);  
   return out;
 }
 
@@ -761,6 +810,7 @@ struct {
   { "authenticate", htsp_method_authenticate, 0},
   { "enableAsyncMetadata", htsp_method_async, ACCESS_STREAMING},
   { "getEvent", htsp_method_getEvent, ACCESS_STREAMING},
+  { "getEvents", htsp_method_getEvents, ACCESS_STREAMING},
   { "getDiskSpace", htsp_method_getDiskSpace, ACCESS_STREAMING},
   { "getSysTime", htsp_method_getSysTime, ACCESS_STREAMING},
   { "subscribe", htsp_method_subscribe, ACCESS_STREAMING},
