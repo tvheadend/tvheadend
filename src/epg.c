@@ -540,13 +540,9 @@ epg_query_add_channel(epg_query_result_t *eqr, channel_t *ch,
  *
  */
 void
-epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
-	  const char *contentgroup, const char *title)
+epg_query0(epg_query_result_t *eqr, channel_t *ch, channel_tag_t *ct,
+           epg_content_group_t *ecg, const char *title)
 {
-  channel_t *ch = channel ? channel_find_by_name(channel, 0) : NULL;
-  channel_tag_t *ct = tag ? channel_tag_find_by_name(tag, 0) : NULL;
-  epg_content_group_t *ecg = contentgroup ? 
-    epg_content_group_find_by_name(contentgroup) : NULL;
   channel_tag_mapping_t *ctm;
   time_t now;
 
@@ -581,6 +577,19 @@ epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
     epg_query_add_channel(eqr, ch, ecg, preg, now);
 }
 
+/**
+ *
+ */
+void
+epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
+	  const char *contentgroup, const char *title)
+{
+  channel_t *ch = channel ? channel_find_by_name(channel, 0) : NULL;
+  channel_tag_t *ct = tag ? channel_tag_find_by_name(tag, 0) : NULL;
+  epg_content_group_t *ecg = contentgroup ? 
+    epg_content_group_find_by_name(contentgroup) : NULL;
+  epg_query0(eqr, ch, ct, ecg, title);
+}
 
 /**
  *
