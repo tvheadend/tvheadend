@@ -536,6 +536,55 @@ htsp_method_deleteDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
 /**
  *
+ * do an epg query
+ */
+static htsmsg_t *
+htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *out, *eventIds;
+  const char *query;
+  int c, i;
+  uint32_t channelid, tagid, epg_content_dvbcode;
+  channel_t *ch = NULL;
+  channel_tag_t *ct = NULL;
+  epg_content_type_t *ect = NULL;
+  epg_query_result_t eqr;
+  
+  //only mandatory parameter is the query
+  if( (query = htsmsg_get_str(in, "query")) == NULL )
+    return htsp_error("Missing argument 'query'");
+  
+  if( !(htsmsg_get_u32(in, "channelId", &channelid)) )
+    ch = channel_find_by_identifier(channelid);
+
+  if( !(htsmsg_get_u32(in, "tagId", &tagid)) )
+    ct = channel_tag_find_by_identifier(tagid);
+
+  if( !(htsmsg_get_u32(in, "contentType", &epg_content_dvbcode)) )
+    ect = epg_content_type_find_by_dvbcode(epg_content_dvbcode);
+    
+
+  //do the query
+  epg_query0(&eqr, ch, ct, ect ? ect->ect_group : NULL, query);
+  c = eqr.eqr_entries;
+
+  // create reply
+  out = htsmsg_create_map();
+  if( c ) {
+    eventIds = htsmsg_create_list();
+    for(i = 0; i < c; ++i) {
+        htsmsg_add_u32(eventIds, NULL, eqr.eqr_array[i]->e_id);
+    }
+    htsmsg_add_msg(out, "eventIds", eventIds);
+  }
+  
+  epg_query_free(&eqr);
+  
+  return out;
+}
+
+/**
+ *
  */
 static htsmsg_t *
 htsp_build_event(event_t *e)
@@ -817,6 +866,7 @@ struct {
   { "unsubscribe", htsp_method_unsubscribe, ACCESS_STREAMING},
   { "addDvrEntry", htsp_method_addDvrEntry, ACCESS_RECORDER},
   { "deleteDvrEntry", htsp_method_deleteDvrEntry, ACCESS_RECORDER},
+  { "epgQuery", htsp_method_epgQuery, ACCESS_STREAMING},
 
 };
 
