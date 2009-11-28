@@ -128,6 +128,8 @@ void channel_set_tags_from_list(channel_t *ch, const char *maplist);
 
 channel_tag_t *channel_tag_find_by_name(const char *name, int create);
 
+channel_tag_t *channel_tag_find_by_identifier(uint32_t id);
+
 int channel_tag_map(channel_t *ch, channel_tag_t *ct, int check);
 
 void channel_save(channel_t *ch);
