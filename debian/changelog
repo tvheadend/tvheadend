@@ -28,6 +28,8 @@ hts-tvheadend (2.6) hts; urgency=low
   * Autodetect CPU capabilities and choose best mode for CSA descrambler.
     Ticket #122
 
+ -- Andreas Öman <andreas@lonelycoder.com>  Sun, 29 Nov 2009 14:02:36 +0100
+
 hts-tvheadend (2.5) hts; urgency=low
 
   * If a previosly detected DVB adapter was not present during startup,
