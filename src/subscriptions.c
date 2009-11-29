@@ -343,7 +343,7 @@ static gtimer_t dummy_sub_timer;
 static void
 dummy_retry(void *opaque)
 {
-  subscription_dummy_join(opaque);
+  subscription_dummy_join(opaque, 0);
   free(opaque);
 }
 
@@ -351,10 +351,15 @@ dummy_retry(void *opaque)
  *
  */
 void
-subscription_dummy_join(const char *id)
+subscription_dummy_join(const char *id, int first)
 {
   th_transport_t *t = transport_find_by_identifier(id);
   streaming_target_t *st;
+
+  if(first) {
+    gtimer_arm(&dummy_sub_timer, dummy_retry, strdup(id), 2);
+    return;
+  }
 
   if(t == NULL) {
     tvhlog(LOG_ERR, "subscription", 

@@ -394,7 +394,7 @@ main(int argc, char **argv)
     rawts_init(rawts_input);
 
   if(join_transport != NULL)
-    subscription_dummy_join(join_transport);
+    subscription_dummy_join(join_transport, 1);
 
 #ifdef CONFIG_AVAHI
   avahi_init();
