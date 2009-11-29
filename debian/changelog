@@ -1,6 +1,6 @@
 hts-tvheadend (2.6) hts; urgency=low
 
-  * Tvheadend's DVB service probe will now let the channel join tags based
+  * Tvheadend's DVB service probe will now make the channel join tags based
     on the service type and DVB provider name.
 
   * Add support for tuning on ATSC adapters
@@ -22,7 +22,7 @@ hts-tvheadend (2.6) hts; urgency=low
 
   * Increase logging and include various stats to XMLTV grab
 
-  * Add support for configuring a per-channel pre/post extra time for 
+  * Add support for configuring a per-channel pre/post extra time for
     scheduled recordings. Ticket #104
 
   * Autodetect CPU capabilities and choose best mode for CSA descrambler.
@@ -38,7 +38,7 @@ hts-tvheadend (2.5) hts; urgency=low
 
   * The HTSP service is now announced via AVAHI (mDNS service discovery)
 
-  * Support for IPTV has been added. Only RAW TS in UDP is supported 
+  * Support for IPTV has been added. Only RAW TS in UDP is supported
     at the moment.
 
   * Add support for setting default extra times to add before and after
@@ -59,7 +59,7 @@ hts-tvheadend (2.4) hts; urgency=low
   * Make sure channel <> service mappings are saved when edited from
     DVB service grid
 
-  * Add support for merging one channel into another. 
+  * Add support for merging one channel into another.
     Useful if you have multiple providers offering the same DVB service
     but with different names.
 
@@ -129,7 +129,7 @@ hts-tvheadend (2.3) hts; urgency=low
 
   * Use a ''livegrid'' (http://www.ext-livegrid.com/) for displaying EPG.
 
-  * Remove configuration and settings (/home/hts/.hts/tvheadend) on a 
+  * Remove configuration and settings (/home/hts/.hts/tvheadend) on a
     deb package purge operation. Ticket #73
 
   * If the Program Stream Information changes during a subscription,
@@ -190,7 +190,7 @@ hts-tvheadend (2.2) hts; urgency=low
 
   * Search for XMLTV grabbers in /usr/bin/perlbin/vendor (archlinux)
 
-  * Fix a bug causing DVB card which does not implement the 
+  * Fix a bug causing DVB card which does not implement the
     FE_READ_UNCORRECTED_BLOCKS operation to report insane amount of
     forward correction errors.
 
@@ -199,11 +199,11 @@ hts-tvheadend (2.2) hts; urgency=low
 hts-tvheadend (2.1) hts; urgency=low
 
   * Add debconf setup scripts to create a superuser account.
-	
+
   * HTSP server slightly modified. Now also supports the XBMC HTSP client.
-	
+
   * tvheadend and showtime went separate ways.
-	
+
   * tvheadend: Record post-processing added again, run command when a
     recording is done.
 
