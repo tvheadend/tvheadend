@@ -256,6 +256,9 @@ typedef struct th_stream {
   int st_index;
 
   char st_lang[4];           /* ISO 639 3-letter language code */
+  uint16_t st_composition_id;
+  uint16_t st_ancillary_id;
+
 
   uint16_t st_pid;
   uint8_t st_cc;             /* Last CC */
@@ -285,6 +288,7 @@ typedef struct th_stream {
   int st_buffer_ptr;
   int st_buffer_size;
   int st_buffer_errors;   /* Errors accumulated for this packet */
+
   uint32_t st_startcond;
   uint32_t st_startcode;
   uint32_t st_startcode_offset;

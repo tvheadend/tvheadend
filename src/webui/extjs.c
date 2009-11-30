@@ -1379,7 +1379,7 @@ extjs_servicedetails(http_connection_t *hc,
   htsmsg_t *out, *streams, *c;
   th_transport_t *t;
   th_stream_t *st;
-  char buf[20];
+  char buf[40];
 
   pthread_mutex_lock(&global_lock);
 
@@ -1410,6 +1410,12 @@ extjs_servicedetails(http_connection_t *hc,
     case SCT_AAC:
     case SCT_MPEG2AUDIO:
       htsmsg_add_str(c, "details", st->st_lang);
+      break;
+
+    case SCT_SUBTITLES:
+      snprintf(buf, sizeof(buf), "%s (%04x %04x)",
+	       st->st_lang, st->st_composition_id, st->st_ancillary_id);
+      htsmsg_add_str(c, "details", buf);
       break;
 
     case SCT_MPEG2VIDEO:

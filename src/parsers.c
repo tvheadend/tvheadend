@@ -92,6 +92,9 @@ static void parse_audio(th_transport_t *t, th_stream_t *st, uint8_t *data,
 static void parse_aac(th_transport_t *t, th_stream_t *st, uint8_t *data,
 		      int len, int start);
 
+static void parse_subtitles(th_transport_t *t, th_stream_t *st, uint8_t *data,
+			    int len, int start);
+
 static void parse_mpegaudio(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
 
 static void parse_ac3(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
@@ -99,7 +102,8 @@ static void parse_ac3(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
 static void parse_compute_pts(th_transport_t *t, th_stream_t *st,
 			      th_pkt_t *pkt);
 
-static void parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
+static void parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt,
+			   int checkts);
 
 static int parse_pes_header(th_transport_t *t, th_stream_t *st, uint8_t *buf,
 			    size_t len);
@@ -129,6 +133,10 @@ parse_mpeg_ts(th_transport_t *t, th_stream_t *st, uint8_t *data,
 
   case SCT_AC3:
     parse_audio(t, st, data, len, start, parse_ac3);
+    break;
+
+  case SCT_SUBTITLES:
+    parse_subtitles(t, st, data, len, start);
     break;
     
   case SCT_AAC:
@@ -441,7 +449,7 @@ parse_mpegaudio(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   pkt->pkt_duration = duration;
   st->st_nextdts = pkt->pkt_dts + duration;
 
-  parser_deliver(t, st, pkt);
+  parser_deliver(t, st, pkt, 1);
 }
 
 
@@ -517,7 +525,7 @@ parse_ac3(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 
   pkt->pkt_duration = duration;
   st->st_nextdts = pkt->pkt_dts + duration;
-  parser_deliver(t, st, pkt);
+  parser_deliver(t, st, pkt, 1);
 }
 
 
@@ -833,7 +841,7 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
 
     st->st_curpkt->pkt_payload = st->st_buffer;
     st->st_curpkt->pkt_payloadlen = st->st_buffer_ptr;
-    parser_deliver(t, st, st->st_curpkt);
+    parser_deliver(t, st, st->st_curpkt, 1);
     
     st->st_curpkt = NULL;
     st->st_buffer = malloc(st->st_buffer_size);
@@ -842,6 +850,68 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
   return 0;
 }
 
+/**
+ * http://broadcasting.ru/pdf-standard-specifications/subtitling/dvb-sub/en300743.v1.2.1.pdf
+ */
+static void
+parse_subtitles(th_transport_t *t, th_stream_t *st, uint8_t *data,
+		int len, int start)
+{
+  th_pkt_t *pkt;
+  int psize, hlen;
+  uint8_t *buf;
+
+  if(start) {
+    /* Payload unit start */
+    st->st_parser_state = 1;
+    st->st_buffer_ptr = 0;
+  }
+
+  if(st->st_parser_state == 0)
+    return;
+
+  if(st->st_buffer == NULL) {
+    st->st_buffer_size = 4000;
+    st->st_buffer = malloc(st->st_buffer_size);
+  }
+
+  if(st->st_buffer_ptr + len >= st->st_buffer_size) {
+    st->st_buffer_size += len * 4;
+    st->st_buffer = realloc(st->st_buffer, st->st_buffer_size);
+  }
+
+  memcpy(st->st_buffer + st->st_buffer_ptr, data, len);
+  st->st_buffer_ptr += len;
+
+  if(st->st_buffer_ptr < 6)
+    return;
+
+  psize = st->st_buffer[4] << 8 | st->st_buffer[5];
+
+  if(st->st_buffer_ptr != psize + 6)
+    return;
+
+  st->st_parser_state = 0;
+
+  hlen = parse_pes_header(t, st, st->st_buffer + 6, st->st_buffer_ptr - 6);
+  if(hlen < 0)
+    return;
+
+  psize -= 6 + hlen;
+  buf = st->st_buffer + 6 + hlen;
+  
+  if(psize < 2 || buf[0] != 0x20 || buf[1] != 0x00)
+    return;
+
+  psize -= 2;
+  buf += 2;
+
+  if(psize >= 6) {
+    pkt = pkt_alloc(buf, psize, st->st_curpts, st->st_curdts);
+    pkt->pkt_commercial = t->tht_tt_commercial_advice;
+    parser_deliver(t, st, pkt, 0);
+  }
+}
 
 
 /**
@@ -860,7 +930,7 @@ parse_compute_pts(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 
   /* PTS known and no other packets in queue, deliver at once */
   if(validpts && pkt->pkt_duration)
-    return parser_deliver(t, st, pkt);
+    return parser_deliver(t, st, pkt, 1);
 
 
   /* Reference count is transfered to queue */
@@ -910,7 +980,7 @@ parse_compute_pts(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
     if(pkt->pkt_duration == 0) {
       parser_compute_duration(t, st, pr);
     } else {
-      parser_deliver(t, st, pkt);
+      parser_deliver(t, st, pkt, 1);
       free(pr);
     }
   }
@@ -938,7 +1008,7 @@ parser_compute_duration(th_transport_t *t, th_stream_t *st, th_pktref_t *pr)
     pkt_ref_dec(pr->pr_pkt);
   } else {
     pr->pr_pkt->pkt_duration = d;
-    parser_deliver(t, st, pr->pr_pkt);
+    parser_deliver(t, st, pr->pr_pkt, 1);
   }
   free(pr);
 }
@@ -949,13 +1019,13 @@ parser_compute_duration(th_transport_t *t, th_stream_t *st, th_pktref_t *pr)
  * De-wrap and normalize PTS/DTS to 1MHz clock domain
  */
 static void
-parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
+parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt,
+	       int checkts)
 {
   int64_t dts, pts, ptsoff, d;
 
   assert(pkt->pkt_dts != AV_NOPTS_VALUE);
   assert(pkt->pkt_pts != AV_NOPTS_VALUE);
-  assert(pkt->pkt_duration > 10);
 
   if(t->tht_dts_start == AV_NOPTS_VALUE) {
     pkt_ref_dec(pkt);
@@ -977,7 +1047,7 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
       pkt_ref_dec(pkt);
       return;
     }
-  } else {
+  } else if(checkts) {
     d = dts + st->st_dts_epoch - st->st_last_dts;
 
     if(d < 0 || d > 90000) {

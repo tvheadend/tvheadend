@@ -1,3 +1,7 @@
+hts-tvheadend (2.7) hts; urgency=low
+
+  * Added support for DVB subtitles. Currently only forwarded over HTSP
+
 hts-tvheadend (2.6) hts; urgency=low
 
   * Tvheadend's DVB service probe will now make the channel join tags based

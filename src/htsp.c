@@ -1418,6 +1418,12 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
     htsmsg_add_str(c, "type", streaming_component_type2txt(ssc->ssc_type));
     if(ssc->ssc_lang[0])
       htsmsg_add_str(c, "language", ssc->ssc_lang);
+    
+    if(ssc->ssc_type == SCT_SUBTITLES) {
+      htsmsg_add_u32(c, "composition_id", ssc->ssc_composition_id);
+      htsmsg_add_u32(c, "ancillary_id", ssc->ssc_ancillary_id);
+    }
+
     htsmsg_add_msg(streams, NULL, c);
   }
   

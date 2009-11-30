@@ -731,6 +731,8 @@ transport_build_stream_start(th_transport_t *t)
     ssc->ssc_index = st->st_index;
     ssc->ssc_type  = st->st_type;
     memcpy(ssc->ssc_lang, st->st_lang, 4);
+    ssc->ssc_composition_id = st->st_composition_id;
+    ssc->ssc_ancillary_id = st->st_ancillary_id;
   }
 
   t->tht_setsourceinfo(t, &ss->ss_si);

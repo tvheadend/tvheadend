@@ -277,6 +277,8 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
   int frameduration;
   int update = 0;
   int had_components;
+  int composition_id;
+  int ancillary_id;
 
   if(len < 9)
     return -1;
@@ -339,8 +341,12 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 
     ptr += 5;
     len -= 5;
+
     frameduration = 0;
     hts_stream_type = 0;
+    memset(lang, 0, 4);
+    composition_id = -1;
+    ancillary_id = -1;
 
     switch(estype) {
     case 0x01:
@@ -361,8 +367,6 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
     default:
       break;
     }
-
-    memset(lang, 0, 4);
 
     while(dllen > 1) {
       dtag = ptr[0];
@@ -406,6 +410,16 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 	  hts_stream_type = SCT_AAC;
 	break;
 
+      case DVB_DESC_SUBTITLE:
+	if(dlen < 8)
+	  break;
+
+	memcpy(lang, ptr, 3);
+	composition_id = ptr[4] << 8 | ptr[5];
+	ancillary_id   = ptr[6] << 8 | ptr[7];
+	hts_stream_type = SCT_SUBTITLES;
+	break;
+
       default:
 	break;
       }
@@ -432,6 +446,16 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 	st->st_frame_duration = frameduration;
 	update = 1;
       }
+
+      if(composition_id != -1 && st->st_composition_id != composition_id) {
+	st->st_composition_id = composition_id;
+	update = 1;
+      }
+
+      if(ancillary_id != -1 && st->st_ancillary_id != ancillary_id) {
+	st->st_ancillary_id = ancillary_id;
+	update = 1;
+      }
     }
   }
 
@@ -445,6 +469,9 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
   }
 
   if(update) {
+    tvhlog(LOG_DEBUG, "PSI", "Transport %s (%s) updated due to PMT change",
+	   t->tht_svcname, t->tht_identifier);
+
     transport_request_save(t);
     if(t->tht_status == TRANSPORT_RUNNING)
       transport_restart(t, had_components);
@@ -721,6 +748,11 @@ psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
 	htsmsg_add_u32(sub, "caproviderid", st->st_providerid);
     }
 
+    if(st->st_type == SCT_SUBTITLES) {
+      htsmsg_add_u32(sub, "compositionid", st->st_composition_id);
+      htsmsg_add_u32(sub, "ancillartyid", st->st_ancillary_id);
+    }
+
     if(st->st_frame_duration)
       htsmsg_add_u32(sub, "frameduration", st->st_frame_duration);
     
@@ -783,5 +815,13 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
     }
 
     htsmsg_get_u32(c, "caproviderid", &st->st_providerid);
+
+    if(type == SCT_SUBTITLES) {
+      if(!htsmsg_get_u32(c, "compositionid", &u32))
+	st->st_composition_id = u32;
+
+      if(!htsmsg_get_u32(c, "ancillartyid", &u32))
+	st->st_ancillary_id = u32;
+    }
   }
 }
