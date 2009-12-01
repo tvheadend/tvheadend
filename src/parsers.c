@@ -907,9 +907,13 @@ parse_subtitles(th_transport_t *t, th_stream_t *st, uint8_t *data,
   buf += 2;
 
   if(psize >= 6) {
-    pkt = pkt_alloc(buf, psize, st->st_curpts, st->st_curdts);
-    pkt->pkt_commercial = t->tht_tt_commercial_advice;
-    parser_deliver(t, st, pkt, 0);
+
+    // end_of_PES_data_field_marker
+    if(buf[psize - 1] == 0xff) {
+      pkt = pkt_alloc(buf, psize - 1, st->st_curpts, st->st_curdts);
+      pkt->pkt_commercial = t->tht_tt_commercial_advice;
+      parser_deliver(t, st, pkt, 0);
+    }
   }
 }
 
