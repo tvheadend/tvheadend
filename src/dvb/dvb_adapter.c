@@ -265,9 +265,9 @@ dvb_adapter_init(uint32_t adapter_mask)
 
   for(i = 0; i < 32; i++) {
     if ((1 << i) & adapter_mask) {
-    snprintf(path, sizeof(path), "/dev/dvb/adapter%d", i);
-    tda_add(path);
-  }
+      snprintf(path, sizeof(path), "/dev/dvb/adapter%d", i);
+      tda_add(path);
+    }
   }
 
   l = hts_settings_load("dvbadapters");
