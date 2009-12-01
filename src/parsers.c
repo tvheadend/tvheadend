@@ -897,7 +897,7 @@ parse_subtitles(th_transport_t *t, th_stream_t *st, uint8_t *data,
   if(hlen < 0)
     return;
 
-  psize -= 6 + hlen;
+  psize -= hlen;
   buf = st->st_buffer + 6 + hlen;
   
   if(psize < 2 || buf[0] != 0x20 || buf[1] != 0x00)
