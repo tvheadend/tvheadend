@@ -135,7 +135,7 @@ parse_mpeg_ts(th_transport_t *t, th_stream_t *st, uint8_t *data,
     parse_audio(t, st, data, len, start, parse_ac3);
     break;
 
-  case SCT_SUBTITLES:
+  case SCT_DVBSUB:
     parse_subtitles(t, st, data, len, start);
     break;
     

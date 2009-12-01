@@ -125,7 +125,7 @@ typedef enum {
   SCT_H264,
   SCT_AC3,
   SCT_TELETEXT,
-  SCT_SUBTITLES,
+  SCT_DVBSUB,
   SCT_CA,
   SCT_PAT,
   SCT_PMT,

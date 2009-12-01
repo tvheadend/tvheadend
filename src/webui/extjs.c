@@ -1412,7 +1412,7 @@ extjs_servicedetails(http_connection_t *hc,
       htsmsg_add_str(c, "details", st->st_lang);
       break;
 
-    case SCT_SUBTITLES:
+    case SCT_DVBSUB:
       snprintf(buf, sizeof(buf), "%s (%04x %04x)",
 	       st->st_lang, st->st_composition_id, st->st_ancillary_id);
       htsmsg_add_str(c, "details", buf);

@@ -417,7 +417,7 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 	memcpy(lang, ptr, 3);
 	composition_id = ptr[4] << 8 | ptr[5];
 	ancillary_id   = ptr[6] << 8 | ptr[7];
-	hts_stream_type = SCT_SUBTITLES;
+	hts_stream_type = SCT_DVBSUB;
 	break;
 
       default:
@@ -698,7 +698,7 @@ static struct strtab streamtypetab[] = {
   { "H264",       SCT_H264 },
   { "AC3",        SCT_AC3 },
   { "TELETEXT",   SCT_TELETEXT },
-  { "SUBTITLES",  SCT_SUBTITLES },
+  { "DVBSUB",     SCT_DVBSUB },
   { "CA",         SCT_CA },
   { "PMT",        SCT_PMT },
   { "PAT",        SCT_PAT },
@@ -748,7 +748,7 @@ psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
 	htsmsg_add_u32(sub, "caproviderid", st->st_providerid);
     }
 
-    if(st->st_type == SCT_SUBTITLES) {
+    if(st->st_type == SCT_DVBSUB) {
       htsmsg_add_u32(sub, "compositionid", st->st_composition_id);
       htsmsg_add_u32(sub, "ancillartyid", st->st_ancillary_id);
     }
@@ -816,7 +816,7 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
 
     htsmsg_get_u32(c, "caproviderid", &st->st_providerid);
 
-    if(type == SCT_SUBTITLES) {
+    if(type == SCT_DVBSUB) {
       if(!htsmsg_get_u32(c, "compositionid", &u32))
 	st->st_composition_id = u32;
 
