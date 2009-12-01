@@ -470,7 +470,7 @@ typedef struct th_transport {
   LIST_HEAD(, th_subscription) tht_subscriptions;
 
   int (*tht_start_feed)(struct th_transport *t, unsigned int weight,
-			int status, int force_start);
+			int force_start);
 
   void (*tht_refresh_feed)(struct th_transport *t);
 

@@ -101,8 +101,7 @@ dvb_transport_open_demuxers(th_dvb_adapter_t *tda, th_transport_t *t)
  * transports that is subscribing to the adapter
  */
 static int
-dvb_transport_start(th_transport_t *t, unsigned int weight, int status, 
-		    int force_start)
+dvb_transport_start(th_transport_t *t, unsigned int weight, int force_start)
 {
   int w;
   th_dvb_adapter_t *tda = t->tht_dvb_mux_instance->tdmi_adapter;
@@ -132,7 +131,6 @@ dvb_transport_start(th_transport_t *t, unsigned int weight, int status,
   pthread_mutex_lock(&tda->tda_delivery_mutex);
 
   LIST_INSERT_HEAD(&tda->tda_transports, t, tht_active_link);
-  t->tht_status = status;
   dvb_fe_tune(t->tht_dvb_mux_instance, "Transport start");
 
   pthread_mutex_unlock(&tda->tda_delivery_mutex);

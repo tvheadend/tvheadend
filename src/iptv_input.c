@@ -166,8 +166,7 @@ iptv_thread(void *aux)
  *
  */
 static int
-iptv_transport_start(th_transport_t *t, unsigned int weight, int status, 
-		     int force_start)
+iptv_transport_start(th_transport_t *t, unsigned int weight, int force_start)
 {
   pthread_t tid;
   int fd;
@@ -242,7 +241,6 @@ iptv_transport_start(th_transport_t *t, unsigned int weight, int status,
   }
 
   t->tht_iptv_fd = fd;
-  t->tht_status = status;
 
   pthread_mutex_lock(&iptv_recvmutex);
   LIST_INSERT_HEAD(&iptv_active_transports, t, tht_active_link);
@@ -267,7 +265,6 @@ iptv_transport_refresh(th_transport_t *t)
 static void
 iptv_transport_stop(th_transport_t *t)
 {
-  t->tht_status = TRANSPORT_IDLE;
   pthread_mutex_lock(&iptv_recvmutex);
   LIST_REMOVE(t, tht_active_link);
   pthread_mutex_unlock(&iptv_recvmutex);

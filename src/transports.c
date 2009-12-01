@@ -204,6 +204,8 @@ transport_stop(th_transport_t *t)
   LIST_FOREACH(st, &t->tht_components, st_link)
     stream_clean(st);
 
+  t->tht_status = TRANSPORT_IDLE;
+
   pthread_mutex_unlock(&t->tht_stream_mutex);
 }
 
@@ -245,11 +247,17 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
 
   assert(t->tht_status != TRANSPORT_RUNNING);
 
-  if(t->tht_start_feed(t, weight, TRANSPORT_RUNNING, force_start))
-    return -1;
-
+  t->tht_feed_status = TRANSPORT_FEED_UNKNOWN;
+  t->tht_input_status = TRANSPORT_FEED_NO_INPUT;
   t->tht_dts_start = AV_NOPTS_VALUE;
   t->tht_pcr_drift = 0;
+
+  if(t->tht_start_feed(t, weight, force_start))
+    return -1;
+
+  pthread_mutex_lock(&t->tht_stream_mutex);
+
+  t->tht_status = TRANSPORT_RUNNING;
 
   /**
    * Initialize stream
@@ -257,12 +265,12 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
   LIST_FOREACH(st, &t->tht_components, st_link)
     stream_init(st);
 
+  pthread_mutex_unlock(&t->tht_stream_mutex);
+
   cwc_transport_start(t);
   capmt_transport_start(t);
 
   gtimer_arm(&t->tht_receive_timer, transport_data_timeout, t, 10);
-  t->tht_feed_status = TRANSPORT_FEED_UNKNOWN;
-  t->tht_input_status = TRANSPORT_FEED_NO_INPUT;
   return 0;
 }
 

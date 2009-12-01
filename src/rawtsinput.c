@@ -47,10 +47,8 @@ typedef struct rawts {
  *
  */
 static int
-rawts_transport_start(th_transport_t *t, unsigned int weight, int status, 
-		      int force_start)
+rawts_transport_start(th_transport_t *t, unsigned int weight, int force_start)
 {
-  t->tht_status = TRANSPORT_RUNNING;
   return 0; // Always ok
 }
 
@@ -60,7 +58,6 @@ rawts_transport_start(th_transport_t *t, unsigned int weight, int status,
 static void
 rawts_transport_stop(th_transport_t *t)
 {
-  t->tht_status = TRANSPORT_IDLE;
 }
 
 /**

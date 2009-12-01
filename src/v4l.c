@@ -164,8 +164,7 @@ v4l_thread(void *aux)
  *
  */
 static int
-v4l_transport_start(th_transport_t *t, unsigned int weight, int status, 
-		    int force_start)
+v4l_transport_start(th_transport_t *t, unsigned int weight, int force_start)
 {
   v4l_adapter_t *va = t->tht_v4l_adapter;
   int frequency = t->tht_v4l_frequency;
@@ -219,7 +218,6 @@ v4l_transport_start(th_transport_t *t, unsigned int weight, int status,
 
   va->va_fd = fd;
   va->va_current_transport = t;
-  t->tht_status = status;
   pthread_create(&va->va_thread, NULL, v4l_thread, va);
   v4l_adapter_notify(va);
   return 0;
@@ -257,7 +255,6 @@ v4l_transport_stop(th_transport_t *t)
   close(va->va_fd);
 
   va->va_current_transport = NULL;
-  t->tht_status = TRANSPORT_IDLE;
   v4l_adapter_notify(va);
 }
 
