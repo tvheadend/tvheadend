@@ -64,7 +64,7 @@ SRCS =  src/main.c \
 	src/htsmsg_xml.c \
 	src/settings.c \
 	src/htsbuf.c \
-	src/parachute.c \
+	src/trap.c \
 	src/avg.c \
 	src/htsstr.c \
 	src/rawtsinput.c \

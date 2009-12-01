@@ -56,7 +56,7 @@
 #include "iptv_input.h"
 #include "transports.h"
 #include "v4l.h"
-#include "parachute.h"
+#include "trap.h"
 #include "settings.h"
 #include "ffdecsa/FFdecsa.h"
 
@@ -87,18 +87,6 @@ doexit(int x)
   running = 0;
 }
 
-static void
-pull_chute (int sig)
-{
-  char pwd[PATH_MAX];
-
-  if(getcwd(pwd, sizeof(pwd)) == NULL)
-    strncpy(pwd, strerror(errno), sizeof(pwd));
-
-  tvhlog_spawn(LOG_ERR, "CRASH", 
-	       "HTS Tvheadend crashed on signal %i (pwd \"%s\")",
-	       sig, pwd);
-}
 
 /**
  *
@@ -349,7 +337,7 @@ main(int argc, char **argv)
 
   pthread_mutex_lock(&global_lock);
 
-  htsparachute_init(pull_chute);
+  trap_init(argv[0]);
   
   /**
    * Initialize subsystems
@@ -452,8 +440,8 @@ static void
 tvhlogv(int notify, int severity, const char *subsys, const char *fmt, 
 	va_list ap)
 {
-  char buf[512];
-  char buf2[512];
+  char buf[2048];
+  char buf2[2048];
   char t[50];
   int l;
   struct tm tm;

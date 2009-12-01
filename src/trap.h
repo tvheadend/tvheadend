@@ -1,6 +1,6 @@
-/*
- *  Crash Parachute
- *  Copyright (C) 2007-2008 Andreas Öman
+/**
+ *  Crash handling
+ *  Copyright (C) 2009 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,10 +16,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HTSPARACHUTE_H
-#define HTSPARACHUTE_H
+#ifndef TRAP_H__
+#define TRAP_H__
 
-#include <signal.h>
+void trap_init(const char *swname);
 
-void htsparachute_init (void (*handler) (int));
-#endif /* HTSPARACHUTE_H */
+#endif /* TRAP_H__ */
+
