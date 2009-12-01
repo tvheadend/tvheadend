@@ -488,6 +488,7 @@ transport_create(const char *identifier, int type, int source_type)
   t->tht_source_type = source_type;
   t->tht_refcount = 1;
   t->tht_enabled = 1;
+  t->tht_pcr_last = AV_NOPTS_VALUE;
 
   streaming_pad_init(&t->tht_streaming_pad);
 

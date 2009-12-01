@@ -457,6 +457,11 @@ typedef struct th_transport {
    */
   int tht_enabled;
 
+  /**
+   * Last PCR seen, we use it for a simple clock for rawtsinput.c
+   */
+  int64_t tht_pcr_last;
+  int64_t tht_pcr_last_realtime;
   
   LIST_ENTRY(th_transport) tht_group_link;
 

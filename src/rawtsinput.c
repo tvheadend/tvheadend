@@ -50,6 +50,7 @@ static int
 rawts_transport_start(th_transport_t *t, unsigned int weight, int status, 
 		      int force_start)
 {
+  t->tht_status = TRANSPORT_RUNNING;
   return 0; // Always ok
 }
 
@@ -59,7 +60,7 @@ rawts_transport_start(th_transport_t *t, unsigned int weight, int status,
 static void
 rawts_transport_stop(th_transport_t *t)
 {
-  
+  t->tht_status = TRANSPORT_IDLE;
 }
 
 /**
@@ -236,6 +237,7 @@ process_ts_packet(rawts_t *rt, uint8_t *tsb)
 {
   uint16_t pid;
   th_transport_t *t;
+  int64_t pcr, d;
 
   pid = ((tsb[1] & 0x1f) << 8) | tsb[2];
 
@@ -245,8 +247,27 @@ process_ts_packet(rawts_t *rt, uint8_t *tsb)
     return;
   }
   
-  LIST_FOREACH(t, &rt->rt_transports, tht_group_link)
-    ts_recv_packet1(t, tsb);
+  LIST_FOREACH(t, &rt->rt_transports, tht_group_link) {
+    pcr = AV_NOPTS_VALUE;
+
+    ts_recv_packet1(t, tsb, &pcr);
+
+    if(pcr != AV_NOPTS_VALUE) {
+      
+      if(t->tht_pcr_last != AV_NOPTS_VALUE) {
+	struct timespec slp;
+
+	d = pcr - t->tht_pcr_last + t->tht_pcr_last_realtime;
+
+	slp.tv_sec  =  d / 1000000;
+	slp.tv_nsec = (d % 1000000) * 1000;
+	
+	clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &slp, NULL);
+      }
+      t->tht_pcr_last = pcr;
+      t->tht_pcr_last_realtime = getmonoclock();
+    }
+  }
 }
 
 
@@ -271,7 +292,6 @@ raw_ts_reader(void *aux)
       c++;
       process_ts_packet(rt, tsblock);
     }
-    usleep(1000);
   }
 
   return NULL;

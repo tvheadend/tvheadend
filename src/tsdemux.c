@@ -138,11 +138,13 @@ ts_recv_packet0(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
     if(off > 188)
       break;
 
-    parse_mpeg_ts(t, st, tsb + off, 188 - off, pusi, err);
+    if(t->tht_status == TRANSPORT_RUNNING)
+      parse_mpeg_ts(t, st, tsb + off, 188 - off, pusi, err);
     break;
   }
 }
 
+static const AVRational mpeg_tc = {1, 90000};
 
 /**
  * Recover PCR
@@ -151,10 +153,10 @@ ts_recv_packet0(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
  * than the stream PCR
  */
 static void
-ts_extract_pcr(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
+ts_extract_pcr(th_transport_t *t, th_stream_t *st, uint8_t *tsb, 
+	       int64_t *pcrp)
 {
-  int64_t real = getmonoclock();
-  int64_t pcr, d;
+  int64_t real, pcr, d;
 
   pcr  = (uint64_t)tsb[6] << 25;
   pcr |= (uint64_t)tsb[7] << 17;
@@ -162,7 +164,15 @@ ts_extract_pcr(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
   pcr |= (uint64_t)tsb[9] << 1;
   pcr |= ((uint64_t)tsb[10] >> 7) & 0x01;
   
-  pcr = av_rescale_q(pcr, st->st_tb, AV_TIME_BASE_Q);
+  pcr = av_rescale_q(pcr, mpeg_tc, AV_TIME_BASE_Q);
+
+  if(pcrp != NULL)
+    *pcrp = pcr;
+
+  if(st == NULL)
+    return;
+
+  real = getmonoclock();
 
   if(st->st_pcr_real_last != AV_NOPTS_VALUE) {
     d = (real - st->st_pcr_real_last) - (pcr - st->st_pcr_last);
@@ -193,7 +203,7 @@ ts_extract_pcr(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
  * Process transport stream packets, extract PCR and optionally descramble
  */
 void
-ts_recv_packet1(th_transport_t *t, uint8_t *tsb)
+ts_recv_packet1(th_transport_t *t, uint8_t *tsb, int64_t *pcrp)
 {
   th_stream_t *st;
   int pid, n, m, r;
@@ -207,20 +217,20 @@ ts_recv_packet1(th_transport_t *t, uint8_t *tsb)
   t->tht_input_status = TRANSPORT_FEED_RAW_INPUT;
 
   pid = (tsb[1] & 0x1f) << 8 | tsb[2];
-  if((st = transport_find_stream_by_pid(t, pid)) == NULL)
-    return;
-
-  if(t->tht_status != TRANSPORT_RUNNING)
-    return;
 
   pthread_mutex_lock(&t->tht_stream_mutex);
-
-  avgstat_add(&t->tht_rate, 188, dispatch_clock);
+  st = transport_find_stream_by_pid(t, pid);
 
   /* Extract PCR */
   if(tsb[3] & 0x20 && tsb[4] > 0 && tsb[5] & 0x10)
-    ts_extract_pcr(t, st, tsb);
+    ts_extract_pcr(t, st, tsb, pcrp);
 
+  if(st == NULL) {
+    pthread_mutex_unlock(&t->tht_stream_mutex);
+    return;
+  }
+
+  avgstat_add(&t->tht_rate, 188, dispatch_clock);
 
   if((tsb[3] & 0xc0) ||
       (t->tht_scrambled_seen && st->st_type != SCT_CA &&

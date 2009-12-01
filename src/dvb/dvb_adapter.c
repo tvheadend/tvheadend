@@ -448,7 +448,7 @@ dvb_adapter_input_dvr(void *aux)
     for(i = 0; i < r; i += 188)
       LIST_FOREACH(t, &tda->tda_transports, tht_active_link)
 	if(t->tht_dvb_mux_instance == tda->tda_mux_current)
-	  ts_recv_packet1(t, tsb + i);
+	  ts_recv_packet1(t, tsb + i, NULL);
 
     pthread_mutex_unlock(&tda->tda_delivery_mutex);
   }
