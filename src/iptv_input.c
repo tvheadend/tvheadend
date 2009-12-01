@@ -123,7 +123,7 @@ static void *
 iptv_thread(void *aux)
 {
   int nfds, fd, r, j;
-  uint8_t tsb[2048];
+  uint8_t tsb[65536];
   th_transport_t *t;
   struct epoll_event ev;
 
@@ -140,7 +140,7 @@ iptv_thread(void *aux)
       continue;
 
     fd = ev.data.fd;
-    r = read(fd, tsb, 2048);
+    r = read(fd, tsb, sizeof(tsb));
 
     // Add RTP support here
     
