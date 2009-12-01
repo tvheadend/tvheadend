@@ -204,11 +204,14 @@ ts_recv_packet1(th_transport_t *t, uint8_t *tsb)
   if(tsb[1] & 0x80)
     return; /* Transport Error Indicator */
 
+  t->tht_input_status = TRANSPORT_FEED_RAW_INPUT;
+
   pid = (tsb[1] & 0x1f) << 8 | tsb[2];
   if((st = transport_find_stream_by_pid(t, pid)) == NULL)
     return;
 
-  t->tht_input_status = TRANSPORT_FEED_RAW_INPUT;
+  if(t->tht_status != TRANSPORT_RUNNING)
+    return;
 
   pthread_mutex_lock(&t->tht_stream_mutex);
 
