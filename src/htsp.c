@@ -636,6 +636,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
   out = htsmsg_create_map();
   events = htsmsg_create_list();
   
+  htsmsg_add_msg(events, NULL, htsp_build_event(e));
   while( numFollowing-- > 0 ) {
     e = RB_NEXT(e, e_channel_link);
     if( e == NULL ) 
