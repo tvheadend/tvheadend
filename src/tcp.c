@@ -33,6 +33,7 @@
 #include <arpa/inet.h>
 
 #include "tcp.h"
+#include "tvhead.h"
 
 
 /**
@@ -94,7 +95,7 @@ tcp_connect(const char *hostname, int port, char *errbuf, size_t errbufsize,
     free(tmphstbuf);
     return -1;
   }
-  fd = socket(hp->h_addrtype, SOCK_STREAM, 0);
+  fd = tvh_socket(hp->h_addrtype, SOCK_STREAM, 0);
   if(fd == -1) {
     snprintf(errbuf, errbufsize, "Unable to create socket: %s",
 	     strerror(errno));
@@ -469,7 +470,7 @@ tcp_server_create(int port, tcp_server_callback_t *start, void *opaque)
   struct sockaddr_in s;
   int one = 1;
   memset(&e, 0, sizeof(e));
-  fd = socket(AF_INET, SOCK_STREAM, 0);
+  fd = tvh_socket(AF_INET, SOCK_STREAM, 0);
   if(fd == -1)
     return NULL;
 

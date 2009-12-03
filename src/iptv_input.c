@@ -185,7 +185,7 @@ iptv_transport_start(th_transport_t *t, unsigned int weight, int force_start)
 
   /* Now, open the real socket for UDP */
 
-  fd = socket(AF_INET, SOCK_DGRAM, 0);
+  fd = tvh_socket(AF_INET, SOCK_DGRAM, 0);
   if(fd == -1) {
     tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot open socket", t->tht_identifier);
     return -1;

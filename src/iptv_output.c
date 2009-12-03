@@ -137,7 +137,7 @@ output_multicast_load(struct config_head *head)
 
   om = calloc(1, sizeof(output_multicast_t));
   
-  om->om_fd = socket(AF_INET, SOCK_DGRAM, 0);
+  om->om_fd = tvh_socket(AF_INET, SOCK_DGRAM, 0);
 
   if((b = config_get_str_sub(head, "interface-address", NULL)) != NULL) {
     memset(&sin, 0, sizeof(sin));

@@ -146,12 +146,17 @@ spawn_and_store_stdout(const char *prog, char *const argv[], char **outp)
     argv = (void *)local_argv;
   }
 
-  if(pipe(fd) == -1)
+  pthread_mutex_lock(&fork_lock);
+
+  if(pipe(fd) == -1) {
+    pthread_mutex_unlock(&fork_lock);
     return -1;
+  }
 
   p = fork();
 
   if(p == -1) {
+    pthread_mutex_unlock(&fork_lock);
     syslog(LOG_ERR, "spawn: Unable to fork() for \"%s\" -- %s",
 	   prog, strerror(errno));
     return -1;
@@ -169,6 +174,8 @@ spawn_and_store_stdout(const char *prog, char *const argv[], char **outp)
     close(1);
     exit(1);
   }
+
+  pthread_mutex_unlock(&fork_lock);
 
   spawn_enq(prog, p);
 

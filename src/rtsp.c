@@ -832,7 +832,7 @@ rtsp_setup_udp(http_connection_t *hc, rtsp_t *rtsp,
  
 
  retry:
-  fd[0] = socket(AF_INET, SOCK_DGRAM, 0);
+  fd[0] = tvh_socket(AF_INET, SOCK_DGRAM, 0);
 
   memset(&sin, 0, sizeof(struct sockaddr_in));
   sin.sin_family = AF_INET;
@@ -851,7 +851,7 @@ rtsp_setup_udp(http_connection_t *hc, rtsp_t *rtsp,
     
   sin.sin_port = htons(server_ports[1]);
 
-  fd[1] = socket(AF_INET, SOCK_DGRAM, 0);
+  fd[1] = tvh_socket(AF_INET, SOCK_DGRAM, 0);
     
   if(bind(fd[1], (struct sockaddr *)&sin, sizeof(sin)) == -1) {
     close(fd[0]);

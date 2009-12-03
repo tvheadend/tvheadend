@@ -343,7 +343,7 @@ capmt_thread(void *aux)
     pthread_mutex_unlock(&global_lock);
 
     /* open connection to camd.socket */
-    capmt->capmt_sock = socket(AF_LOCAL, SOCK_STREAM, 0);
+    capmt->capmt_sock = tvh_socket(AF_LOCAL, SOCK_STREAM, 0);
 
     struct sockaddr_un serv_addr_un;
     memset(&serv_addr_un, 0, sizeof(serv_addr_un));
@@ -354,7 +354,7 @@ capmt_thread(void *aux)
       capmt->capmt_connected = 1;
 
       /* open connection to emulated ca0 device */
-      capmt->capmt_sock_ca0 = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+      capmt->capmt_sock_ca0 = tvh_socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
       struct sockaddr_in serv_addr;
       serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");

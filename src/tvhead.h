@@ -38,6 +38,7 @@
 
 extern pthread_mutex_t global_lock;
 extern pthread_mutex_t ffmpeg_lock;
+extern pthread_mutex_t fork_lock;
 
 typedef struct source_info {
   char *si_device;
@@ -734,5 +735,7 @@ extern void scopedunlock(pthread_mutex_t **mtxp);
  snprintf((buf) + strlen(buf), (size) - strlen(buf), fmt)
 
 int tvh_open(const char *pathname, int flags, mode_t mode);
+
+int tvh_socket(int domain, int type, int protocol);
 
 #endif /* TV_HEAD_H */

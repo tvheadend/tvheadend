@@ -67,6 +67,7 @@ time_t dispatch_clock;
 static LIST_HEAD(, gtimer) gtimers;
 pthread_mutex_t global_lock;
 pthread_mutex_t ffmpeg_lock;
+pthread_mutex_t fork_lock;
 static int log_stderr;
 static int log_decorate;
 
@@ -332,7 +333,7 @@ main(int argc, char **argv)
   hts_settings_init("tvheadend", homedir);
 
   pthread_mutex_init(&ffmpeg_lock, NULL);
-
+  pthread_mutex_init(&fork_lock, NULL);
   pthread_mutex_init(&global_lock, NULL);
 
   pthread_mutex_lock(&global_lock);
