@@ -589,7 +589,7 @@ const unsigned int mpeg2video_framedurations[16] = {
  * Parse mpeg2video picture start
  */
 static int
-parse_mpeg2video_pic_start(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt,
+parse_mpeg2video_pic_start(th_transport_t *t, th_stream_t *st, int *frametype,
 			   bitstream_t *bs)
 {
   int v, pct;
@@ -603,7 +603,7 @@ parse_mpeg2video_pic_start(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt,
   if(pct < PKT_I_FRAME || pct > PKT_B_FRAME)
     return 1; /* Illegal picture_coding_type */
 
-  pkt->pkt_frametype = pct;
+  *frametype = pct;
 
   /* If this is the first I-frame seen, set dts_start as a reference
      offset */
@@ -659,7 +659,7 @@ parse_mpeg2video(th_transport_t *t, th_stream_t *st, size_t len,
 {
   uint8_t *buf = st->st_buffer + sc_offset;
   bitstream_t bs;
-  th_pkt_t pkt0;  /* Fake temporary packet */
+  int frametype;
 
   init_bits(&bs, buf + 4, (len - 4) * 8);
 
@@ -675,14 +675,14 @@ parse_mpeg2video(th_transport_t *t, th_stream_t *st, size_t len,
     if(st->st_frame_duration == 0 || st->st_curdts == AV_NOPTS_VALUE)
       return 1;
 
-    if(parse_mpeg2video_pic_start(t, st, &pkt0, &bs))
+    if(parse_mpeg2video_pic_start(t, st, &frametype, &bs))
       return 1;
 
     if(st->st_curpkt != NULL)
       pkt_ref_dec(st->st_curpkt);
 
     st->st_curpkt = pkt_alloc(NULL, 0, st->st_curpts, st->st_curdts);
-    st->st_curpkt->pkt_frametype = pkt0.pkt_frametype;
+    st->st_curpkt->pkt_frametype = frametype;
     st->st_curpkt->pkt_duration = st->st_frame_duration;
     st->st_curpkt->pkt_commercial = t->tht_tt_commercial_advice;
     break;
@@ -1117,65 +1117,4 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt,
   /* Decrease our own reference to the packet */
   pkt_ref_dec(pkt);
 
-}
-
-/**
- * Receive whole frames
- *
- * Analyze them as much as we need to and patch up PTS and duration
- * if needed
- */
-void
-parser_enqueue_packet(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
-{
-  uint8_t *buf = pkt->pkt_payload;
-  uint32_t sc = 0xffffffff;
-  int i, err = 0, rem;
-  bitstream_t bs;
-
-  assert(pkt->pkt_dts != AV_NOPTS_VALUE); /* We require DTS to be set */
-  pkt->pkt_duration = 0;
-
-  /* Per stream type analysis */
-  
-  switch(st->st_type) {
-  case SCT_MPEG2VIDEO:
-    for(i = 0; i < pkt->pkt_payloadlen && err == 0; i++) {
-      sc = (sc << 8) | buf[i];
-
-      if((sc & 0xffffff00) != 0x00000100)
-	continue;
-
-      if(sc >= 0x101 && sc <= 0x1af)
-	break; /* slices, dont scan further */
-
-      rem = pkt->pkt_payloadlen - i - 1;
-      init_bits(&bs, buf + i + 1, rem);
-
-      switch(sc) {
-      case 0x00000100: /* Picture start code */
-	err = parse_mpeg2video_pic_start(t, st, pkt, &bs);
-	break;
-
-      case 0x000001b3: /* Sequence start code */
-	if(t->tht_dts_start == AV_NOPTS_VALUE)
-	  t->tht_dts_start = pkt->pkt_dts;
-	err = parse_mpeg2video_seq_start(t, st, &bs);
-	break;
-      }
-    }
-    break;
-
-  default:
-    pkt->pkt_pts = pkt->pkt_dts;
-    break;
-  }
-
-  if(err) {
-    pkt_ref_dec(pkt);
-    return;
-  }
-    
-
-  parse_compute_pts(t, st, pkt);
 }
