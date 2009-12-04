@@ -48,7 +48,7 @@
 
 static void *htsp_server;
 
-#define HTSP_PROTO_VERSION 4
+#define HTSP_PROTO_VERSION 5
 
 #define HTSP_PRIV_MASK (ACCESS_STREAMING)
 
