@@ -123,9 +123,9 @@ static void *
 iptv_thread(void *aux)
 {
   int nfds, fd, r, j;
-  uint8_t tsb[65536];
-  th_transport_t *t;
+  uint8_t tsb[65536], *buf;
   struct epoll_event ev;
+  th_transport_t *t;
 
   while(1) {
     nfds = epoll_wait(iptv_epollfd, &ev, 1, -1);
@@ -142,11 +142,29 @@ iptv_thread(void *aux)
     fd = ev.data.fd;
     r = read(fd, tsb, sizeof(tsb));
 
-    // Add RTP support here
-    
-    if((r % 188) != 0)
-      continue; // We expect multiples of a TS packet
-    
+    if(r > 1 && tsb[0] == 0x47 && (r % 188) == 0) {
+      /* Looks like raw TS in UDP */
+      buf = tsb;
+    } else {
+      /* Check for valid RTP packets */
+      if(r < 12)
+	continue;
+
+      if((tsb[0] & 0xc0) != 0x80)
+	continue;
+
+      if((tsb[1] & 0x7f) != 33)
+	continue;
+      
+      int hlen = (tsb[0] & 0xf) * 4 + 12;
+
+      if(r < hlen || (r - hlen) % 188 != 0)
+	continue;
+
+      buf = tsb + hlen;
+      r -= hlen;
+    }
+
     pthread_mutex_lock(&iptv_recvmutex);
     
     LIST_FOREACH(t, &iptv_active_transports, tht_active_link) {
