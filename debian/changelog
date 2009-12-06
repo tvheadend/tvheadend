@@ -4,6 +4,12 @@ hts-tvheadend (2.7) hts; urgency=low
 
   * Add support for reception of RTP encapsulated IPTV
 
+  * Fixed a crash caused by a race condition when starting a subscription
+
+  * Increase maximum packet size for IPTV to 65536 bytes
+
+ -- Andreas Öman <andreas@lonelycoder.com>  Sun, 06 Dec 2009 20:40:41 +0100
+
 hts-tvheadend (2.6) hts; urgency=low
 
   * Tvheadend's DVB service probe will now make the channel join tags based
