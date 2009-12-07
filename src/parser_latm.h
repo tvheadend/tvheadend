@@ -19,8 +19,7 @@
 #ifndef PARSER_LATM_H_
 #define PARSER_LATM_H_
 
-void
-parse_latm_audio_mux_element(th_transport_t *t, th_stream_t *st, uint8_t *data,
-			     int len);
+th_pkt_t *parse_latm_audio_mux_element(th_transport_t *t, th_stream_t *st,
+				       uint8_t *data, int len);
 
 #endif /* PARSER_LATM_H_ */

@@ -140,8 +140,7 @@ parse_mpeg_ts(th_transport_t *t, th_stream_t *st, uint8_t *data,
     break;
     
   case SCT_AAC:
-    if(0) // not yet
-      parse_aac(t, st, data, len, start);
+    parse_aac(t, st, data, len, start);
     break;
 
   default:
@@ -196,8 +195,7 @@ parse_aac(th_transport_t *t, th_stream_t *st, uint8_t *data,
 	  int len, int start)
 {
   int l, muxlen, p;
-
-
+  th_pkt_t *pkt;
 
   if(start) {
     int i;
@@ -244,8 +242,9 @@ parse_aac(th_transport_t *t, th_stream_t *st, uint8_t *data,
     hlen = parse_pes_header(t, st, st->st_buffer + 6, st->st_buffer_ptr - 6);
     if(hlen < 0)
       return;
-
     st->st_parser_ptr += 6 + hlen;
+    printf("%lld\n", st->st_curdts);
+
   }
 
 
@@ -259,11 +258,13 @@ parse_aac(th_transport_t *t, th_stream_t *st, uint8_t *data,
       if(l < muxlen + 3)
 	break;
 
-      parse_latm_audio_mux_element(t, st, st->st_buffer + p + 3, muxlen);
+      pkt = parse_latm_audio_mux_element(t, st, st->st_buffer + p + 3, muxlen);
+
+      if(pkt != NULL)
+	parser_deliver(t, st, pkt, 1);
 
       p += muxlen + 3;
     } else {
-      printf("skip\n");
       p++;
     }
   }
@@ -1089,7 +1090,7 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt,
   pkt->pkt_dts     =av_rescale_q(dts,               st->st_tb, AV_TIME_BASE_Q);
   pkt->pkt_pts     =av_rescale_q(pts,               st->st_tb, AV_TIME_BASE_Q);
   pkt->pkt_duration=av_rescale_q(pkt->pkt_duration, st->st_tb, AV_TIME_BASE_Q);
-#if 0
+#if 1
   printf("%-12s %d %10"PRId64" %10"PRId64" %10d %10d\n",
 	 streaming_component_type2txt(st->st_type),
 	 pkt->pkt_frametype,

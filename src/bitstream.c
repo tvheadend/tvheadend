@@ -84,3 +84,29 @@ read_golomb_se(bitstream_t *bs)
   v = (v + 1) >> 1;
   return neg ? -v : v;
 }
+
+
+unsigned int
+remaining_bits(bitstream_t *bs)
+{
+  return bs->len - bs->offset;
+}
+
+
+void
+put_bits(bitstream_t *bs, int val, int num)
+{
+  while(num > 0) {
+    if(bs->offset >= bs->len)
+      return;
+
+    num--;
+
+    if(val & (1 << num))
+      bs->data[bs->offset / 8] |= 1 << (7 - (bs->offset & 7));
+    else
+      bs->data[bs->offset / 8] &= ~(1 << (7 - (bs->offset & 7)));
+
+    bs->offset++;
+  }
+}

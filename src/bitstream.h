@@ -37,4 +37,8 @@ unsigned int read_golomb_ue(bitstream_t *gb);
 
 signed int read_golomb_se(bitstream_t *gb);
 
+unsigned int remaining_bits(bitstream_t *gb);
+
+void put_bits(bitstream_t *bs, int val, int num);
+
 #endif /* BITSTREAM_H_ */
