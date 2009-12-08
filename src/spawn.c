@@ -198,6 +198,8 @@ spawn_and_store_stdout(const char *prog, char *const argv[], char **outp)
       b = NULL;
   } 
 
+  close(fd[0]);
+
   if(totalsize == 0) {
     free(b);
     *outp = NULL;
