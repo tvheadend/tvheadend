@@ -547,7 +547,7 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
     if (!emm_allowed)
       tvhlog(LOG_INFO, "cwc", "%s: Will not forward EMMs (not allowed by server)",
 	     cwc->cwc_hostname);
-    else if (cwc->cwc_caid != 0x0b00)
+    else if ((cwc->cwc_caid>>8) != 0x0b)
       tvhlog(LOG_INFO, "cwc", "%s: Will not forward EMMs (unsupported ca system)",
 	     cwc->cwc_hostname);
     else {
