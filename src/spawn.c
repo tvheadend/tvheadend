@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <syslog.h>
+#include <fcntl.h>
 
 #include "tvhead.h"
 #include "spawn.h"
@@ -134,7 +135,7 @@ int
 spawn_and_store_stdout(const char *prog, char *const argv[], char **outp)
 {
   pid_t p;
-  int fd[2], r, totalsize = 0;
+  int fd[2], r, totalsize = 0, f;
   char *outbuf;
   struct spawn_output_buf_queue bufs;
   spawn_output_buf_t *b = NULL;
@@ -168,10 +169,22 @@ spawn_and_store_stdout(const char *prog, char *const argv[], char **outp)
     close(fd[0]);
     dup2(fd[1], 1);
     close(fd[1]);
+
+    f = open("/dev/null", O_RDWR);
+    if(f == -1) {
+      syslog(LOG_ERR, 
+	     "spawn: pid %d cannot open /dev/null for redirect %s -- %s",
+	     getpid(), prog, strerror(errno));
+      exit(1);
+    }
+
+    dup2(f, 0);
+    dup2(f, 2);
+    close(f);
+
     execve(prog, argv, environ);
     syslog(LOG_ERR, "spawn: pid %d cannot execute %s -- %s",
 	   getpid(), prog, strerror(errno));
-    close(1);
     exit(1);
   }
 
