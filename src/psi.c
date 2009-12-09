@@ -360,6 +360,10 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
       hts_stream_type = SCT_MPEG2AUDIO;
       break;
 
+    case 0x11:
+      hts_stream_type = SCT_AAC;
+      break;
+
     case 0x1b:
       hts_stream_type = SCT_H264;
       break;
