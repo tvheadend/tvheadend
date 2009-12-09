@@ -232,8 +232,9 @@ main(int argc, char **argv)
   const char *join_transport = NULL;
   char *p, *endp;
   uint32_t adapter_mask = 0xffffffff;
+  int crash = 0;
 
-  while((c = getopt(argc, argv, "a:fu:g:c:Chdr:j:")) != -1) {
+  while((c = getopt(argc, argv, "Aa:fu:g:c:Chdr:j:")) != -1) {
     switch(c) {
     case 'a':
       adapter_mask = 0x0;
@@ -254,6 +255,9 @@ main(int argc, char **argv)
       } else {
         usage(argv[0]);
       }
+      break;
+    case 'A':
+      crash = 1;
       break;
     case 'f':
       forkaway = 1;
@@ -410,7 +414,10 @@ main(int argc, char **argv)
 	 "running as pid:%d uid:%d gid:%d, settings located in '%s'",
 	 htsversion_full,
 	 getpid(), getuid(), getgid(), hts_settings_get_root());
-  
+
+  if(crash)
+    abort();
+
   mainloop();
 
   tvhlog(LOG_NOTICE, "STOP", "Exiting HTS Tvheadend");
