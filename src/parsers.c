@@ -198,18 +198,6 @@ parse_aac(th_transport_t *t, th_stream_t *st, uint8_t *data,
   th_pkt_t *pkt;
 
   if(start) {
-    int i;
-
-    if(0)for(i = 0; i < st->st_buffer_ptr - 2; i++) {
-      if(st->st_buffer[i] == 0x56 && (st->st_buffer[i + 1] & 0xe0) == 0xe0) {
-	muxlen = (st->st_buffer[i + 1] & 0x1f) << 8 |
-	  st->st_buffer[i + 2];
-
-	printf("AAC Sync at %8d: %8d bytes, next at %d\n", i, muxlen + 3,
-	       i + muxlen + 3);
-      }
-    }
-
     /* Payload unit start */
     st->st_parser_state = 1;
     st->st_buffer_ptr = 0;
@@ -243,8 +231,6 @@ parse_aac(th_transport_t *t, th_stream_t *st, uint8_t *data,
     if(hlen < 0)
       return;
     st->st_parser_ptr += 6 + hlen;
-    printf("%lld\n", st->st_curdts);
-
   }
 
 
@@ -1090,7 +1076,7 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt,
   pkt->pkt_dts     =av_rescale_q(dts,               st->st_tb, AV_TIME_BASE_Q);
   pkt->pkt_pts     =av_rescale_q(pts,               st->st_tb, AV_TIME_BASE_Q);
   pkt->pkt_duration=av_rescale_q(pkt->pkt_duration, st->st_tb, AV_TIME_BASE_Q);
-#if 1
+#if 0
   printf("%-12s %d %10"PRId64" %10"PRId64" %10d %10d\n",
 	 streaming_component_type2txt(st->st_type),
 	 pkt->pkt_frametype,
