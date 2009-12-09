@@ -569,6 +569,7 @@ rtsp_resolve_url(http_connection_t *hc, rtsp_resource_t *rr, char **remainp)
   if(r == NULL)
     return -1;
   rr->rr_r = r;
+  rr->rr_mpegts = 0;
 
   if(remainp == NULL)
     return 0;
@@ -638,12 +639,19 @@ static int
 rtsp_cmd_describe(http_connection_t *hc, rtsp_t *rtsp)
 {
   char sdp[1000];
+  char urlprefix[128];
   char *c;
   const char *str;
   rtsp_resource_t rr;
   extern const char *htsversion;
   const streaming_start_t *ss;
   int i;
+
+  char buf[INET_ADDRSTRLEN + 1];
+  inet_ntop(AF_INET, &hc->hc_self->sin_addr, buf, sizeof(buf));
+
+  snprintf(urlprefix, sizeof(urlprefix),
+	   "rtsp://%s:%d", buf, ntohs(hc->hc_self->sin_port));
 
   pthread_mutex_lock(&global_lock);
 
@@ -679,16 +687,31 @@ rtsp_cmd_describe(http_connection_t *hc, rtsp_t *rtsp)
   for(i = 0; i < ss->ss_num_components; i++) {
     const streaming_start_component_t *ssc = &ss->ss_components[i];
     
+    char controlurl[256];
+
+    switch(rr.rr_type) {
+    case RTSP_RESOURCE_CHANNEL:
+      snprintf(controlurl, sizeof(controlurl), "%s/channelid/%d/streamid=%d",
+	       urlprefix, rr.rr_channel->ch_id, ssc->ssc_index);
+      break;
+
+    case RTSP_RESOURCE_SERVICE:
+      snprintf(controlurl, sizeof(controlurl), "%s/service/%s/streamid=%d",
+	       urlprefix, rr.rr_service->tht_identifier, ssc->ssc_index);
+      break;
+
+    }
+
     switch(ssc->ssc_type) {
     case SCT_MPEG2VIDEO:
       tvh_strlcatf(sdp, sizeof(sdp), 
 		   "m=video 0 RTP/AVP 32\r\n"
-		   "a=control:streamid=%d\r\n", ssc->ssc_index);
+		   "a=control:%s\r\n", controlurl);
       break;
     case SCT_MPEG2AUDIO:
       tvh_strlcatf(sdp, sizeof(sdp), 
 		   "m=audio 0 RTP/AVP 14\r\n"
-		   "a=control:streamid=%d\r\n", ssc->ssc_index);
+		   "a=control:%s\r\n", controlurl);
       break;
     }
   }
