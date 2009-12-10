@@ -205,7 +205,7 @@ v4l_transport_start(th_transport_t *t, unsigned int weight, int force_start)
     return -1;
   }
 
-  tvhlog(LOG_DEBUG, "v4l",
+  tvhlog(LOG_INFO, "v4l",
 	 "%s: Tuned to %dHz", va->va_path, frequency);
 
   if(pipe(va->va_pipe)) {
@@ -410,20 +410,20 @@ v4l_adapter_check(const char *path, int fd)
   r = ioctl(fd, VIDIOC_QUERYCAP, &caps);
 
   if(r) {
-    tvhlog(LOG_DEBUG, "v4l", 
-	   "Can not query capabilities on %s, device skipped", path);
+    tvhlog(LOG_WARNING, "v4l", 
+	   "%s: Can not query capabilities, device skipped", path);
     return;
   }
 
   if(!(caps.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
-    tvhlog(LOG_DEBUG, "v4l", 
-	   "Device %s not a video capture device, device skipped", path);
+    tvhlog(LOG_WARNING, "v4l", 
+	   "%s: Device is not a video capture device, device skipped", path);
     return;
   }
 
   if(!(caps.capabilities & V4L2_CAP_TUNER)) {
-    tvhlog(LOG_DEBUG, "v4l", 
-	   "Device %s does not have a built-in tuner, device skipped", path);
+    tvhlog(LOG_WARNING, "v4l", 
+	   "%s: Device does not have a tuner, device skipped", path);
     return;
   }
 
@@ -436,17 +436,20 @@ v4l_adapter_check(const char *path, int fd)
 
     if(ioctl(fd, VIDIOC_ENUMSTD, &standard))
       break;
-#if 0
-    printf("%3d: %016llx %24s %d/%d %d lines\n",
+
+    tvhlog(LOG_INFO, "v4l", 
+	   "%s: Standard #%d: %016llx %s, frameperiod: %d/%d, %d lines",
+	   path,
 	   standard.index, 
 	   standard.id,
 	   standard.name,
 	   standard.frameperiod.numerator,
 	   standard.frameperiod.denominator,
 	   standard.framelines);
-#endif
   }
 
+
+  int can_mpeg = 0;
 
   /* Enum formats */
   for(i = 0;; i++) {
@@ -456,16 +459,29 @@ v4l_adapter_check(const char *path, int fd)
     fmtdesc.index = i;
     fmtdesc.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-    if(ioctl(fd, VIDIOC_ENUM_FMT, &fmtdesc)) {
-      tvhlog(LOG_DEBUG, "v4l", 
-	     "Device %s has no suitable formats, device skipped", path);
-      return; 
-    }
+    if(ioctl(fd, VIDIOC_ENUM_FMT, &fmtdesc))
+      break;
+
+    tvhlog(LOG_INFO, "v4l", 
+	   "%s: Format #%d: %s %c%c%c%c %s",
+	   path,
+	   fmtdesc.index,
+	   fmtdesc.description,
+	   fmtdesc.pixelformat >> 24,
+	   fmtdesc.pixelformat >> 16,
+	   fmtdesc.pixelformat >> 8,
+	   fmtdesc.pixelformat,
+	   fmtdesc.flags & V4L2_FMT_FLAG_COMPRESSED ? "(compressed)" : "");
 
     if(fmtdesc.pixelformat == V4L2_PIX_FMT_MPEG)
-      break;
+      can_mpeg = 1;
   }
 
+  if(!can_mpeg) {
+    tvhlog(LOG_WARNING, "v4l", 
+	   "%s: Device lacks MPEG encoder, device skipped", path);
+    return;
+  }
   snprintf(devicename, sizeof(devicename), "%s %s %s",
 	   caps.card, caps.driver, caps.bus_info);
 
