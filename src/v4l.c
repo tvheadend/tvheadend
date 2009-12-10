@@ -500,14 +500,11 @@ v4l_adapter_check(const char *path, int fd)
       break;
 
     tvhlog(LOG_INFO, "v4l", 
-	   "%s: Format #%d: %s %c%c%c%c %s",
+	   "%s: Format #%d: %s [%.4s] %s",
 	   path,
 	   fmtdesc.index,
 	   fmtdesc.description,
-	   fmtdesc.pixelformat >> 24,
-	   fmtdesc.pixelformat >> 16,
-	   fmtdesc.pixelformat >> 8,
-	   fmtdesc.pixelformat,
+	   &fmtdesc.pixelformat,
 	   fmtdesc.flags & V4L2_FMT_FLAG_COMPRESSED ? "(compressed)" : "");
 
     if(fmtdesc.pixelformat == V4L2_PIX_FMT_MPEG)
