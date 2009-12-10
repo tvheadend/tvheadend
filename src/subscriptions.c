@@ -292,7 +292,7 @@ subscription_create_from_transport(th_transport_t *t, const char *name,
       subscription_unsubscribe(s);
 
       tvhlog(LOG_INFO, "subscription", 
-	     "\"%s\" direct subscription failed");
+	     "\"%s\" direct subscription failed", name);
       return NULL;
     }
   }
