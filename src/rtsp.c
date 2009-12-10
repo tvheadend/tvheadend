@@ -483,7 +483,7 @@ rtsp_streaming_input(void *opaque, streaming_message_t *sm)
 /**
  *
  */
-static void
+static int
 rtsp_subscribe(rtsp_t *rtsp, rtsp_resource_t *rr)
 {
   th_subscription_t *s = NULL;
@@ -493,11 +493,11 @@ rtsp_subscribe(rtsp_t *rtsp, rtsp_resource_t *rr)
     switch(rr->rr_type) {
     case RTSP_RESOURCE_CHANNEL:
       if(rtsp->rtsp_sub->ths_channel == rr->rr_channel)
-	return;
+	return 0;
       break;
     case RTSP_RESOURCE_SERVICE:
       if(rtsp->rtsp_sub->ths_transport == rr->rr_service)
-	return;
+	return 0;
     }
     subscription_unsubscribe(rtsp->rtsp_sub);
   }
@@ -521,6 +521,7 @@ rtsp_subscribe(rtsp_t *rtsp, rtsp_resource_t *rr)
   }
 
   rtsp->rtsp_sub = s;
+  return s == NULL;
 }
 
 

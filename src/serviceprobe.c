@@ -113,6 +113,13 @@ serviceprobe_thread(void *aux)
 	   t->tht_svcname);
 
     s = subscription_create_from_transport(t, "serviceprobe", &sq.sq_st, 0);
+    if(s == NULL) {
+      t->tht_sp_onqueue = 0;
+      TAILQ_REMOVE(&serviceprobe_queue, t, tht_sp_link);
+      tvhlog(LOG_INFO, "serviceprobe", "%20s: could not subscribe",
+	     t->tht_svcname);
+      continue;
+    }
 
     transport_ref(t);
     pthread_mutex_unlock(&global_lock);
