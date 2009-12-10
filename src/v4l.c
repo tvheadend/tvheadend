@@ -415,15 +415,12 @@ v4l_adapter_check(const char *path, int fd)
     return;
   }
 
+  tvhlog(LOG_INFO, "v4l", "%s: %s %s %s capabilities: 0x%08x",
+	 path, caps.driver, caps.card, caps.bus_info, caps.capabilities);
+
   if(!(caps.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
     tvhlog(LOG_WARNING, "v4l", 
 	   "%s: Device is not a video capture device, device skipped", path);
-    return;
-  }
-
-  if(!(caps.capabilities & V4L2_CAP_TUNER)) {
-    tvhlog(LOG_WARNING, "v4l", 
-	   "%s: Device does not have a tuner, device skipped", path);
     return;
   }
 
@@ -446,6 +443,46 @@ v4l_adapter_check(const char *path, int fd)
 	   standard.frameperiod.numerator,
 	   standard.frameperiod.denominator,
 	   standard.framelines);
+  }
+
+  /* Enum video inputs */
+
+  for(i = 0;; i++) {
+    struct v4l2_input input;
+    memset(&input, 0, sizeof(input));
+    input.index = i;
+    
+    if(ioctl(fd, VIDIOC_ENUMINPUT, &input))
+      break;
+
+    const char *type;
+    switch(input.type) {
+    case V4L2_INPUT_TYPE_TUNER:
+      type = "Tuner";
+      break;
+    case V4L2_INPUT_TYPE_CAMERA:
+      type = "Camera";
+      break;
+    default:
+      type = "Unknown";
+      break;
+    }
+
+    int f = input.status;
+
+    tvhlog(LOG_INFO, "v4l", 
+	   "%s: Input #%d: %s (%s), audio:0x%x, tuner:%d, standard:%016llx, "
+	   "%s%s%s",
+	   path,
+	   input.index,
+	   input.name,
+	   type,
+	   input.audioset,
+	   input.tuner,
+	   input.std,
+	   f & V4L2_IN_ST_NO_POWER  ? "[No power] " : "",
+	   f & V4L2_IN_ST_NO_SIGNAL ? "[No signal] " : "",
+	   f & V4L2_IN_ST_NO_COLOR  ? "[No color] " : "");
   }
 
 
@@ -477,6 +514,13 @@ v4l_adapter_check(const char *path, int fd)
       can_mpeg = 1;
   }
 
+
+  if(!(caps.capabilities & V4L2_CAP_TUNER)) {
+    tvhlog(LOG_WARNING, "v4l", 
+	   "%s: Device does not have a tuner, device skipped", path);
+    return;
+  }
+
   if(!can_mpeg) {
     tvhlog(LOG_WARNING, "v4l", 
 	   "%s: Device lacks MPEG encoder, device skipped", path);
@@ -486,7 +530,7 @@ v4l_adapter_check(const char *path, int fd)
 	   caps.card, caps.driver, caps.bus_info);
 
   tvhlog(LOG_INFO, "v4l",
-	 "Found adapter %s (%s)", path, devicename);
+	 "%s: Using adapter", devicename);
 
   v4l_adapter_add(path, devicename, devicename);
 }
