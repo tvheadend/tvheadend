@@ -230,7 +230,7 @@ static struct dtv_properties clear_cmdseq = {
  *
  */
 static int
-dvb_fe_tune_s2(th_dvb_mux_instance_t *tdmi, dvb_mux_conf_t *dmc, const char *name)
+dvb_fe_tune_s2(th_dvb_mux_instance_t *tdmi, dvb_mux_conf_t *dmc)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   struct dvb_frontend_parameters *p = &dmc->dmc_fe_params;
@@ -265,15 +265,9 @@ dvb_fe_tune_s2(th_dvb_mux_instance_t *tdmi, dvb_mux_conf_t *dmc, const char *nam
       break;
   }
 
-  tvhlog(LOG_DEBUG,
-	 "dvb", 
-	 "tuning via s2api to %s, freq %d, symbolrate %d, "
-	 "fec %d, sys %d, mod %d",
-	 name, p->frequency, p->u.qpsk.symbol_rate, p->u.qpsk.fec_inner, 
-	 dmc->dmc_fe_delsys, 
-	 dmc->dmc_fe_modulation);
+  /* do tuning now */
   r = ioctl(tda->tda_fe_fd, FE_SET_PROPERTY, &_dvbs_cmdseq);
-  
+
   if(0)
     check_frontend (tda->tda_fe_fd, 0, 1);
   return r;
@@ -327,7 +321,7 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
       port = sc->sc_port;
 
       if(sc->sc_lnb != NULL)
-	dvb_lnb_get_frequencies(sc->sc_lnb, &lowfreq, &hifreq, &switchfreq);
+      	dvb_lnb_get_frequencies(sc->sc_lnb, &lowfreq, &hifreq, &switchfreq);
     }
 
     hiband = switchfreq && p->frequency > switchfreq;
@@ -339,8 +333,6 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 		 pol == POLARISATION_CIRCULAR_LEFT,
 		 hiband, tda->tda_diseqc_version);
       
-    usleep(50000);
-      
     if(hiband)
       p->frequency = abs(p->frequency - hifreq);
     else
@@ -351,19 +343,21 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 
   tda->tda_fe_monitor_hold = 4;
 
-  tvhlog(LOG_DEBUG,
-	 "dvb", "\"%s\" tuning to \"%s\" (%s)", tda->tda_rootpath, buf,
-	 reason);
 
 #if DVB_API_VERSION >= 5
-  if (tda->tda_type == FE_QPSK)
-    r = dvb_fe_tune_s2(tdmi, &dmc, buf);
-  else
+  if (tda->tda_type == FE_QPSK) {
+    tvhlog(LOG_DEBUG, "dvb", "\"%s\" tuning via s2api to \"%s\" (%d, %d Baud, "
+	    "%s, %s, %s)", tda->tda_rootpath, buf, p->frequency, p->u.qpsk.symbol_rate, 
+      dvb_mux_fec2str(p->u.qpsk.fec_inner), dvb_mux_delsys2str(dmc.dmc_fe_delsys), 
+      dvb_mux_qam2str(dmc.dmc_fe_modulation));
+  
+    r = dvb_fe_tune_s2(tdmi, &dmc);
+  } else
 #endif
-    r = 1; // Make it tune via old API
-
-  if(r)
+  {
+    tvhlog(LOG_DEBUG, "dvb", "\"%s\" tuning to \"%s\" (%s)", tda->tda_rootpath, buf, reason);
     r = ioctl(tda->tda_fe_fd, FE_SET_FRONTEND, p);
+  }
 
   if(r != 0) {
     tvhlog(LOG_ERR, "dvb", "\"%s\" tuning to \"%s\""

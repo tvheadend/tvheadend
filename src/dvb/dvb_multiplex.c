@@ -431,6 +431,26 @@ static struct strtab poltab[] = {
   { "Right",         POLARISATION_CIRCULAR_RIGHT },
 };
 
+/**
+ * for external use
+ */
+const char* dvb_mux_fec2str(int fec) {
+  return val2str(fec, fectab);
+}
+
+/**
+ * for external use
+ */
+const char* dvb_mux_delsys2str(int delsys) {
+  return val2str(delsys, delsystab);
+}
+
+/**
+ * for external use
+ */
+const char* dvb_mux_qam2str(int qam) {
+  return val2str(qam, qamtab);
+}
 
 /**
  *
