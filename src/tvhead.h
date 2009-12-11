@@ -120,6 +120,10 @@ TAILQ_HEAD(th_pktref_queue, th_pktref);
 LIST_HEAD(streaming_target_list, streaming_target);
 
 
+
+/**
+ * Stream component types
+ */
 typedef enum {
   SCT_MPEG2VIDEO = 1,
   SCT_MPEG2AUDIO,
