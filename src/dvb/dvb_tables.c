@@ -850,6 +850,9 @@ dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     bcdtoint(ptr[0]) * 1000000 + bcdtoint(ptr[1]) * 10000 + 
     bcdtoint(ptr[2]) * 100     + bcdtoint(ptr[3]);
 
+  if(!freq)
+    return -1;
+
   dmc.dmc_fe_params.frequency = freq * 100;
 
   symrate =
@@ -894,6 +897,9 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     bcdtoint(ptr[0]) * 1000000 + bcdtoint(ptr[1]) * 10000 + 
     bcdtoint(ptr[2]) * 100     + bcdtoint(ptr[3]);
   dmc.dmc_fe_params.frequency = freq * 10;
+
+  if(!freq)
+    return -1;
 
   symrate =
     bcdtoint(ptr[7]) * 100000 + bcdtoint(ptr[8]) * 1000 + 
