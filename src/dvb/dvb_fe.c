@@ -327,11 +327,12 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
     hiband = switchfreq && p->frequency > switchfreq;
 
     pol = tdmi->tdmi_conf.dmc_polarisation;
-    diseqc_setup(tda->tda_fe_fd,
+    if ((r = diseqc_setup(tda->tda_fe_fd,
 		 port,
 		 pol == POLARISATION_HORIZONTAL ||
 		 pol == POLARISATION_CIRCULAR_LEFT,
-		 hiband, tda->tda_diseqc_version);
+		 hiband, tda->tda_diseqc_version)) != 0)
+      tvhlog(LOG_ERR, "dvb", "diseqc setup failed %d\n", r);
       
     if(hiband)
       p->frequency = abs(p->frequency - hifreq);

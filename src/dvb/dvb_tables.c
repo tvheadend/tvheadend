@@ -882,6 +882,7 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		       uint16_t tsid)
 {
   int freq, symrate;
+  uint16_t orbital_pos;
   struct dvb_mux_conf dmc;
 
   if(!tdmi->tdmi_adapter->tda_autodiscovery)
@@ -900,6 +901,8 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   if(!freq)
     return -1;
+
+  orbital_pos = bcdtoint(ptr[4]) * 100 + bcdtoint(ptr[5]);
 
   symrate =
     bcdtoint(ptr[7]) * 100000 + bcdtoint(ptr[8]) * 1000 + 
@@ -924,29 +927,32 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   else 
     dmc.dmc_fe_modulation = 0;
 
-  if (ptr[6] & 0x04) { 
+  if (ptr[6] & 0x04)  
     dmc.dmc_fe_delsys = SYS_DVBS2;
-
-    switch ((ptr[6] >> 3) & 0x03) {
-      case 0x00:
-        dmc.dmc_fe_rolloff = ROLLOFF_35;
-        break;
-      case 0x01:
-        dmc.dmc_fe_rolloff = ROLLOFF_25;
-        break;
-      case 0x02:
-        dmc.dmc_fe_rolloff = ROLLOFF_20;
-        break;
-      default:
-      case 0x03:
-        dmc.dmc_fe_rolloff = ROLLOFF_AUTO;
-        break;
-    }
-  }
-  else {
+  else 
     dmc.dmc_fe_delsys = SYS_DVBS;
-    dmc.dmc_fe_rolloff = ROLLOFF_35;
+
+  switch ((ptr[6] >> 3) & 0x03) {
+    case 0x00:
+      dmc.dmc_fe_rolloff = ROLLOFF_35;
+      break;
+    case 0x01:
+      dmc.dmc_fe_rolloff = ROLLOFF_25;
+      break;
+    case 0x02:
+      dmc.dmc_fe_rolloff = ROLLOFF_20;
+      break;
+    default:
+    case 0x03:
+      dmc.dmc_fe_rolloff = ROLLOFF_AUTO;
+      break;
   }
+
+  if (dmc.dmc_fe_delsys == SYS_DVBS && dmc.dmc_fe_rolloff != ROLLOFF_35) {
+    printf ("error descriptor\n");
+    return -1;
+  }
+
 #endif
   dvb_mux_create(tdmi->tdmi_adapter, &dmc, tsid, NULL,
 		 "automatic mux discovery", 1, NULL);
