@@ -231,6 +231,7 @@ htsmsg_t *dvb_fe_opts(th_dvb_adapter_t *tda, const char *which);
 const char* dvb_mux_fec2str(int fec);
 const char* dvb_mux_delsys2str(int delsys);
 const char* dvb_mux_qam2str(int qam);
+const char* dvb_mux_rolloff2str(int rolloff);
 
 void dvb_mux_save(th_dvb_mux_instance_t *tdmi);
 

@@ -74,7 +74,11 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 		    '<span class="tvh-grid-unset">Unset</span>'
 		    : r.data.name;
 	    }
-	});
+	}, {
+      header: "Frontend status",
+      dataIndex: 'fe_status',
+      width: 30
+  });
     }
 
     cmlist.push(
@@ -91,7 +95,7 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 
     var rec = Ext.data.Record.create([
 	'id', 'enabled','network', 'freq', 'pol', 'satconf', 
-	'muxid', 'quality', 'mod'
+	'muxid', 'quality', 'fe_status', 'mod'
     ]);
 
     var store = new Ext.data.JsonStore({

@@ -169,8 +169,31 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
   if(tdmi != NULL) {
     /* Update stuff ... */
     int save = 0;
+    char buf2[1024];
 
     if(tdmi_compare_conf(tda->tda_type, &tdmi->tdmi_conf, dmc)) {
+      if (tdmi->tdmi_fe_status == TDMI_FE_OK) {
+        dvb_mux_nicename(buf, sizeof(buf), tdmi);
+        tvhlog(LOG_DEBUG, "dvb", "Configuration for mux \"%s\" not updated because signal is OK", buf);
+
+        return NULL;
+      }
+
+      sprintf(buf2, "(");
+      if (tdmi->tdmi_conf.dmc_fe_modulation != dmc->dmc_fe_modulation)
+        sprintf(buf2, "%s %s->%s, ", buf2, 
+            dvb_mux_qam2str(tdmi->tdmi_conf.dmc_fe_modulation), 
+            dvb_mux_qam2str(dmc->dmc_fe_modulation));
+      if (tdmi->tdmi_conf.dmc_fe_delsys != dmc->dmc_fe_delsys)
+        sprintf(buf2, "%s %s->%s, ", buf2, 
+            dvb_mux_delsys2str(tdmi->tdmi_conf.dmc_fe_delsys), 
+            dvb_mux_delsys2str(dmc->dmc_fe_delsys));
+      if (tdmi->tdmi_conf.dmc_fe_rolloff != dmc->dmc_fe_rolloff)
+        sprintf(buf2, "%s %s->%s, ", buf2, 
+            dvb_mux_rolloff2str(tdmi->tdmi_conf.dmc_fe_rolloff), 
+            dvb_mux_rolloff2str(dmc->dmc_fe_rolloff));
+      sprintf(buf2, "%s )", buf2);
+
       memcpy(&tdmi->tdmi_conf, dmc, sizeof(struct dvb_mux_conf));
       save = 1;
     }
@@ -184,7 +207,7 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
       dvb_mux_save(tdmi);
       dvb_mux_nicename(buf, sizeof(buf), tdmi);
       tvhlog(LOG_DEBUG, "dvb", 
-	     "Configuration for mux \"%s\" updated by %s", buf, source);
+	     "Configuration for mux \"%s\" updated by %s %s", buf, source, buf2);
       dvb_mux_notify(tdmi);
     }
 
@@ -450,6 +473,13 @@ const char* dvb_mux_delsys2str(int delsys) {
  */
 const char* dvb_mux_qam2str(int qam) {
   return val2str(qam, qamtab);
+}
+
+/**
+ * for external use
+ */
+const char* dvb_mux_rolloff2str(int rolloff) {
+  return val2str(rolloff, rollofftab);
 }
 
 /**
@@ -792,6 +822,38 @@ dvb_mux_set_enable(th_dvb_mux_instance_t *tdmi, int enabled)
  *
  */
 static void
+dvb_mux_fe_status(char *buf, size_t size, th_dvb_mux_instance_t *tdmi) 
+{
+  switch (tdmi->tdmi_fe_status) {
+    case TDMI_FE_UNKNOWN:
+    default:
+      snprintf(buf, size, "Unknown");
+      break;
+    case TDMI_FE_NO_SIGNAL:
+      snprintf(buf, size, "No Signal");
+      break;
+    case TDMI_FE_FAINT_SIGNAL:
+      snprintf(buf, size, "Faint Signal");
+      break;
+    case TDMI_FE_BAD_SIGNAL:
+      snprintf(buf, size, "Bad Signal");
+      break;
+    case TDMI_FE_CONSTANT_FEC:
+      snprintf(buf, size, "Constant FEC");
+      break;
+    case TDMI_FE_BURSTY_FEC:
+      snprintf(buf, size, "Bursty FEC");
+      break;
+    case TDMI_FE_OK:
+      snprintf(buf, size, "Ok");
+      break;
+  }
+}
+
+/**
+ *
+ */
+static void
 dvb_mux_modulation(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
 {
   struct dvb_frontend_parameters *f = &tdmi->tdmi_conf.dmc_fe_params;
@@ -848,6 +910,9 @@ dvb_mux_build_msg(th_dvb_mux_instance_t *tdmi)
 
   dvb_mux_modulation(buf, sizeof(buf), tdmi);
   htsmsg_add_str(m, "mod",  buf);
+
+  dvb_mux_fe_status(buf, sizeof(buf), tdmi);
+  htsmsg_add_str(m, "fe_status", buf);
 
   htsmsg_add_str(m, "pol", 
 		 dvb_polarisation_to_str_long(tdmi->tdmi_conf.dmc_polarisation));
