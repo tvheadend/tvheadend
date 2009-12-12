@@ -172,13 +172,6 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
     char buf2[1024];
 
     if(tdmi_compare_conf(tda->tda_type, &tdmi->tdmi_conf, dmc)) {
-      if (tdmi->tdmi_fe_status == TDMI_FE_OK) {
-        dvb_mux_nicename(buf, sizeof(buf), tdmi);
-        tvhlog(LOG_DEBUG, "dvb", "Configuration for mux \"%s\" not updated because signal is OK", buf);
-
-        return NULL;
-      }
-
       sprintf(buf2, "(");
       if (tdmi->tdmi_conf.dmc_fe_modulation != dmc->dmc_fe_modulation)
         sprintf(buf2, "%s %s->%s, ", buf2, 
