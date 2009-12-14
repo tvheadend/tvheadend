@@ -16,6 +16,12 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "trap.h"
+
+#if defined(__i386__) || defined(__x86_64__)
+
+// Only do this on x86 for now
+
 #define _GNU_SOURCE
 #include <link.h>
 #include <unistd.h>
@@ -28,7 +34,6 @@
 
 #include <libavutil/sha1.h>
 
-#include "trap.h"
 #include "tvhead.h"
 
 
@@ -174,3 +179,11 @@ trap_init(const char *ver)
   free(binsum);
 }
 
+#else
+
+void
+trap_init(const char *ver)
+{
+
+}
+#endif
