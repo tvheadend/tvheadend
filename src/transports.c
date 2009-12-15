@@ -570,9 +570,6 @@ transport_make_nicename(th_transport_t *t)
   free(t->tht_nicename);
   t->tht_nicename = strdup(buf);
 
-  printf("%s -> %s\n", t->tht_identifier, t->tht_nicename);
-
-
   LIST_FOREACH(st, &t->tht_components, st_link)
     transport_stream_make_nicename(t, st);
 }
