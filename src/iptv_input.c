@@ -406,6 +406,10 @@ iptv_transport_find(const char *id, int create)
 
   LIST_INSERT_HEAD(&iptv_all_transports, t, tht_group_link);
 
+  pthread_mutex_lock(&t->tht_stream_mutex); 
+  transport_make_nicename(t);
+  pthread_mutex_unlock(&t->tht_stream_mutex); 
+
   return t;
 }
 

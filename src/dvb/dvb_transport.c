@@ -219,6 +219,7 @@ dvb_transport_load(th_dvb_mux_instance_t *tdmi)
     t->tht_svcname = s ? strdup(s) : NULL;
 
     pthread_mutex_lock(&t->tht_stream_mutex);
+    transport_make_nicename(t);
     psi_load_transport_settings(c, t);
     pthread_mutex_unlock(&t->tht_stream_mutex);
     
@@ -365,6 +366,10 @@ dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   t->tht_quality_index = dvb_transport_quality;
 
   LIST_INSERT_HEAD(&tdmi->tdmi_transports, t, tht_group_link);
+
+  pthread_mutex_lock(&t->tht_stream_mutex); 
+  transport_make_nicename(t);
+  pthread_mutex_unlock(&t->tht_stream_mutex); 
 
   dvb_adapter_notify(tdmi->tdmi_adapter);
   return t;

@@ -356,6 +356,7 @@ v4l_transport_find(v4l_adapter_t *va, const char *id, int create)
   t->tht_iptv_fd = -1;
 
   pthread_mutex_lock(&t->tht_stream_mutex); 
+  transport_make_nicename(t);
   t->tht_video = transport_stream_create(t, -1, SCT_MPEG2VIDEO); 
   t->tht_audio = transport_stream_create(t, -1, SCT_MPEG2AUDIO); 
   pthread_mutex_unlock(&t->tht_stream_mutex); 

@@ -82,13 +82,8 @@ ts_recv_packet0(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
     cc = tsb[3] & 0xf;
     if(st->st_cc_valid && cc != st->st_cc) {
       /* Incorrect CC */
-
-      tvhlog(LOG_DEBUG, "TS", 
-	     "Continuity counter error on %s : %s PID #%d (%s)",
-	     t->tht_svcname ?: "???",
-	     streaming_component_type2txt(st->st_type),
-	     st->st_pid, t->tht_identifier);
-
+      limitedlog(&st->st_loglimit_cc, "TS", transport_component_nicename(st),
+		 "Continuity counter error");
       avgstat_add(&t->tht_cc_errors, 1, dispatch_clock);
       avgstat_add(&st->st_cc_errors, 1, dispatch_clock);
       err = 1;
@@ -211,9 +206,12 @@ ts_recv_packet1(th_transport_t *t, uint8_t *tsb, int64_t *pcrp)
 
   t->tht_input_status = TRANSPORT_FEED_NO_DEMUXED_INPUT;
 
-  if(tsb[1] & 0x80)
-    return; /* Transport Error Indicator */
-
+  if(tsb[1] & 0x80) {
+    /* Transport Error Indicator */
+    limitedlog(&t->tht_loglimit_tei, "TS", transport_nicename(t),
+	       "Transport error indicator");
+    return;
+  }
   t->tht_input_status = TRANSPORT_FEED_RAW_INPUT;
 
   pid = (tsb[1] & 0x1f) << 8 | tsb[2];

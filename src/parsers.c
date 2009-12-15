@@ -533,18 +533,18 @@ parse_pes_header(th_transport_t *t, th_stream_t *st, uint8_t *buf, size_t len)
   hlen  = getu8(buf, len);
 
   if(len < hlen || (hdr & 0xc0) != 0x80)
-    return -1;
+    goto err;
 
   if((flags & 0xc0) == 0xc0) {
     if(hlen < 10) 
-      return -1;
+      goto err;
 
     pts = getpts(buf, len);
     dts = getpts(buf, len);
 
   } else if((flags & 0xc0) == 0x80) {
     if(hlen < 5)
-      return -1;
+      goto err;
 
     dts = pts = getpts(buf, len);
   } else
@@ -553,6 +553,11 @@ parse_pes_header(th_transport_t *t, th_stream_t *st, uint8_t *buf, size_t len)
   st->st_curdts = dts & PTS_MASK;
   st->st_curpts = pts & PTS_MASK;
   return hlen + 3;
+
+ err:
+    limitedlog(&st->st_loglimit_pes, "TS", transport_component_nicename(st),
+	       "Corrupted PES header");
+  return -1;
 } 
 
 
@@ -1056,7 +1061,6 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt,
 	}
       } else {
 	/* DTS wrapped, increase upper bits */
-	printf("Wrap detected\n");
 	st->st_dts_epoch += PTS_MASK + 1;
 	st->st_bad_dts = 0;
       }

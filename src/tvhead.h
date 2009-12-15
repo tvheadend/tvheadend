@@ -119,7 +119,16 @@ LIST_HEAD(dvr_autorec_entry_list, dvr_autorec_entry);
 TAILQ_HEAD(th_pktref_queue, th_pktref);
 LIST_HEAD(streaming_target_list, streaming_target);
 
+/**
+ * Log limiter
+ */
+typedef struct loglimter {
+  time_t last;
+  int events;
+} loglimiter_t;
 
+void limitedlog(loglimiter_t *ll, const char *sys, 
+		const char *o, const char *event);
 
 /**
  * Stream component types
@@ -348,6 +357,13 @@ typedef struct th_stream {
 
   int st_delete_me;      /* Temporary flag for deleting streams */
 
+  /* Error log limiters */
+
+  loglimiter_t st_loglimit_cc;
+  loglimiter_t st_loglimit_pes;
+  
+  char *st_nicename;
+
 } th_stream_t;
 
 
@@ -497,6 +513,11 @@ typedef struct th_transport {
    * Unique identifer (used for storing on disk, etc)
    */
   char *tht_identifier;
+
+  /**
+   * Name usable for displaying to user
+   */
+  char *tht_nicename;
 
   /**
    * Service ID according to EN 300 468
@@ -662,6 +683,8 @@ typedef struct th_transport {
    */
   streaming_pad_t tht_streaming_pad;
 
+
+  loglimiter_t tht_loglimit_tei;
 
 } th_transport_t;
 

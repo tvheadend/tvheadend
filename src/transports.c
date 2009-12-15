@@ -172,6 +172,7 @@ transport_stream_destroy(th_transport_t *t, th_stream_t *st)
   if(t->tht_status == TRANSPORT_RUNNING)
     stream_clean(st);
   LIST_REMOVE(st, st_link);
+  free(st->st_nicename);
   free(st);
 }
 
@@ -469,6 +470,7 @@ transport_destroy(th_transport_t *t)
 
   while((st = LIST_FIRST(&t->tht_components)) != NULL) {
     LIST_REMOVE(st, st_link);
+    free(st->st_nicename);
     free(st);
   }
 
@@ -522,6 +524,59 @@ transport_find_by_identifier(const char *identifier)
 }
 
 
+/**
+ *
+ */
+static void 
+transport_stream_make_nicename(th_transport_t *t, th_stream_t *st)
+{
+  char buf[100];
+  if(st->st_pid != -1)
+    snprintf(buf, sizeof(buf), "%s: %s @ #%d", 
+	     transport_nicename(t),
+	     streaming_component_type2txt(st->st_type), st->st_pid);
+  else
+    snprintf(buf, sizeof(buf), "%s: %s", 
+	     transport_nicename(t),
+	     streaming_component_type2txt(st->st_type));
+
+  free(st->st_nicename);
+  st->st_nicename = strdup(buf);
+}
+
+
+/**
+ *
+ */
+void 
+transport_make_nicename(th_transport_t *t)
+{
+  char buf[100];
+  source_info_t si;
+  th_stream_t *st;
+
+  lock_assert(&t->tht_stream_mutex);
+
+  t->tht_setsourceinfo(t, &si);
+
+  snprintf(buf, sizeof(buf), 
+	   "%s%s%s%s%s",
+	   si.si_adapter ?: "", si.si_adapter ? "/" : "",
+	   si.si_mux     ?: "", si.si_mux     ? "/" : "",
+	   si.si_service ?: "");
+
+  transport_source_info_free(&si);
+
+  free(t->tht_nicename);
+  t->tht_nicename = strdup(buf);
+
+  printf("%s -> %s\n", t->tht_identifier, t->tht_nicename);
+
+
+  LIST_FOREACH(st, &t->tht_components, st_link)
+    transport_stream_make_nicename(t, st);
+}
+
 
 /**
  * Add a new stream to a transport
@@ -543,13 +598,10 @@ transport_stream_create(th_transport_t *t, int pid,
       return st;
   }
 
-  if(t->tht_flags & THT_DEBUG)
-    tvhlog(LOG_DEBUG, "transport", "%s: Add stream \"%s\", pid: %d",
-	   t->tht_identifier, streaming_component_type2txt(type), pid);
-
   st = calloc(1, sizeof(th_stream_t));
   st->st_index = idx + 1;
   st->st_type = type;
+
   LIST_INSERT_HEAD(&t->tht_components, st, st_link);
 
   st->st_pid = pid;
@@ -561,6 +613,11 @@ transport_stream_create(th_transport_t *t, int pid,
 
   avgstat_init(&st->st_rate, 10);
   avgstat_init(&st->st_cc_errors, 10);
+
+  transport_stream_make_nicename(t, st);
+
+  if(t->tht_flags & THT_DEBUG)
+    tvhlog(LOG_DEBUG, "transport", "Add stream %s", st->st_nicename);
 
   if(t->tht_status == TRANSPORT_RUNNING)
     stream_init(st);
@@ -899,4 +956,20 @@ transport_source_info_copy(source_info_t *dst, source_info_t *src)
   COPY(provider);
   COPY(service);
 #undef COPY
+}
+
+
+/**
+ *
+ */
+const char *
+transport_nicename(th_transport_t *t)
+{
+  return t->tht_nicename;
+}
+
+const char *
+transport_component_nicename(th_stream_t *st)
+{
+  return st->st_nicename;
 }

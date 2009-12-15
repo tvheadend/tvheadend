@@ -122,6 +122,10 @@ rawts_transport_add(rawts_t *rt, uint16_t sid, int pmt_pid)
 
   t->tht_svcname = strdup(tmp);
 
+  pthread_mutex_lock(&t->tht_stream_mutex); 
+  transport_make_nicename(t);
+  pthread_mutex_unlock(&t->tht_stream_mutex); 
+
   tvhlog(LOG_NOTICE, "rawts", "Added service %d (pmt: %d)", sid, pmt_pid);
 
   LIST_INSERT_HEAD(&rt->rt_transports, t, tht_group_link);
