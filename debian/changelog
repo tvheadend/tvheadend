@@ -1,3 +1,10 @@
+hts-tvheadend (2.8) hts; urgency=low
+
+  * Added support for AAC audio
+
+  * Added support for manual creation of DVR entries. Prior to this it
+    was only possible to schedule a recording based on EPG entries.
+
 hts-tvheadend (2.7) hts; urgency=low
 
   * Added support for DVB subtitles. Currently only forwarded over HTSP
