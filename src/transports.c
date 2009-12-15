@@ -530,7 +530,7 @@ transport_find_by_identifier(const char *identifier)
 static void 
 transport_stream_make_nicename(th_transport_t *t, th_stream_t *st)
 {
-  char buf[100];
+  char buf[200];
   if(st->st_pid != -1)
     snprintf(buf, sizeof(buf), "%s: %s @ #%d", 
 	     transport_nicename(t),
@@ -551,7 +551,7 @@ transport_stream_make_nicename(th_transport_t *t, th_stream_t *st)
 void 
 transport_make_nicename(th_transport_t *t)
 {
-  char buf[100];
+  char buf[200];
   source_info_t si;
   th_stream_t *st;
 
