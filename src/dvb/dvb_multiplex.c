@@ -172,7 +172,8 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
     char buf2[1024];
 
     if(tdmi_compare_conf(tda->tda_type, &tdmi->tdmi_conf, dmc)) {
-      sprintf(buf2, "(");
+#if DVB_API_VERSION >= 5
+      snprintf(buf2, sizeof(buf2), " (");
       if (tdmi->tdmi_conf.dmc_fe_modulation != dmc->dmc_fe_modulation)
         sprintf(buf2, "%s %s->%s, ", buf2, 
             dvb_mux_qam2str(tdmi->tdmi_conf.dmc_fe_modulation), 
@@ -185,7 +186,10 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
         sprintf(buf2, "%s %s->%s, ", buf2, 
             dvb_mux_rolloff2str(tdmi->tdmi_conf.dmc_fe_rolloff), 
             dvb_mux_rolloff2str(dmc->dmc_fe_rolloff));
-      sprintf(buf2, "%s )", buf2);
+      sprintf(buf2, "%s)", buf2);
+#else
+      buf2[0] = 0;
+#endif
 
       memcpy(&tdmi->tdmi_conf, dmc, sizeof(struct dvb_mux_conf));
       save = 1;
@@ -200,7 +204,8 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
       dvb_mux_save(tdmi);
       dvb_mux_nicename(buf, sizeof(buf), tdmi);
       tvhlog(LOG_DEBUG, "dvb", 
-	     "Configuration for mux \"%s\" updated by %s %s", buf, source, buf2);
+	     "Configuration for mux \"%s\" updated by %s%s", 
+	     buf, source, buf2);
       dvb_mux_notify(tdmi);
     }
 
@@ -454,6 +459,7 @@ const char* dvb_mux_fec2str(int fec) {
   return val2str(fec, fectab);
 }
 
+#if DVB_API_VERSION >= 5
 /**
  * for external use
  */
@@ -474,6 +480,7 @@ const char* dvb_mux_qam2str(int qam) {
 const char* dvb_mux_rolloff2str(int rolloff) {
   return val2str(rolloff, rollofftab);
 }
+#endif
 
 /**
  *
