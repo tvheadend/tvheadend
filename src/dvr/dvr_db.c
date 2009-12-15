@@ -131,34 +131,31 @@ dvr_entry_link(dvr_entry_t *de)
 }
 
 
-
 /**
  *
  */
 dvr_entry_t *
-dvr_entry_create_by_event(event_t *e, const char *creator)
+dvr_entry_create(channel_t *ch, time_t start, time_t stop, 
+		 const char *title, const char *description,
+		 const char *creator)
 {
   dvr_entry_t *de;
   char tbuf[30];
   struct tm tm;
   time_t t;
-  channel_t *ch;
 
-  if(e->e_channel == NULL || e->e_title == NULL)
-    return NULL;
-
-  LIST_FOREACH(de, &e->e_channel->ch_dvrs, de_channel_link)
-    if(de->de_start == e->e_start && de->de_sched_state != DVR_COMPLETED)
+  LIST_FOREACH(de, &ch->ch_dvrs, de_channel_link)
+    if(de->de_start == start && de->de_sched_state != DVR_COMPLETED)
       return NULL;
 
   de = calloc(1, sizeof(dvr_entry_t));
   de->de_id = ++de_tally;
 
-  ch = de->de_channel = e->e_channel;
+  ch = de->de_channel = ch;
   LIST_INSERT_HEAD(&de->de_channel->ch_dvrs, de, de_channel_link);
 
-  de->de_start   = e->e_start;
-  de->de_stop    = e->e_stop;
+  de->de_start   = start;
+  de->de_stop    = stop;
   if (ch->ch_dvr_extra_time_pre)
     de->de_start_extra = ch->ch_dvr_extra_time_pre;
   else
@@ -168,8 +165,8 @@ dvr_entry_create_by_event(event_t *e, const char *creator)
   else
     de->de_stop_extra  = dvr_extra_time_post;
   de->de_creator = strdup(creator);
-  de->de_title   = strdup(e->e_title);
-  de->de_desc    = e->e_desc  ? strdup(e->e_desc)  : NULL;
+  de->de_title   = strdup(title);
+  de->de_desc    = description ? strdup(description) : NULL;
 
   dvr_entry_link(de);
 
@@ -184,6 +181,20 @@ dvr_entry_create_by_event(event_t *e, const char *creator)
   dvrdb_changed();
   dvr_entry_save(de);
   return de;
+}
+
+
+/**
+ *
+ */
+dvr_entry_t *
+dvr_entry_create_by_event(event_t *e, const char *creator)
+{
+  if(e->e_channel == NULL || e->e_title == NULL)
+    return NULL;
+
+  return dvr_entry_create(e->e_channel, e->e_start, e->e_stop, 
+			  e->e_title, e->e_desc, creator);
 }
 
 

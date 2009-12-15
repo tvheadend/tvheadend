@@ -74,7 +74,7 @@ tvheadend.dvrDetails = function(entry) {
 /**
  *
  */
-tvheadend.dvrlog = function() {
+tvheadend.dvrschedule = function() {
 
     function renderDate(value){
 	var dt = new Date(value);
@@ -141,26 +141,109 @@ tvheadend.dvrlog = function() {
 	}
     ]);
 
+    function addEntry() {
+
+	function createRecording() {
+	    panel.getForm().submit({
+		params:{'op':'createEntry'},
+		url:'dvr/addentry',
+		waitMsg:'Creating entry...',
+		failure:function(response, options) {
+		    Ext.MessageBox.alert('Server Error',
+					 'Unable to create entry');
+		},
+		success: function() {
+		    win.close();
+		}
+	    });
+	}
+ 
+	var panel = new Ext.FormPanel({
+	    frame:true,
+	    border:true,
+	    bodyStyle:'padding:5px',
+	    labelAlign: 'right',
+	    labelWidth: 110,
+	    defaultType: 'textfield',
+	    items: [
+		new Ext.form.ComboBox({
+		    fieldLabel: 'Channel',
+		    name: 'channel',
+		    hiddenName: 'channelid',
+		    editable: false,
+		    allowBlank: false,
+		    displayField: 'name',
+		    valueField:'chid',
+		    mode:'remote',
+		    triggerAction: 'all',
+		    store: tvheadend.channels
+		}),
+		new Ext.form.DateField({
+		    allowBlank: false,
+		    fieldLabel: 'Date',
+		    name: 'date'
+		}),
+		new Ext.form.TimeField({
+		    allowBlank: false,
+		    fieldLabel: 'Start time',
+		    name: 'starttime',
+		    increment: 10,
+		    format: 'H:i'
+		}),
+		new Ext.form.TimeField({
+		    allowBlank: false,
+		    fieldLabel: 'Stop time',
+		    name: 'stoptime',
+		    increment: 10,
+		    format: 'H:i'
+		}),
+		{
+		    allowBlank: false,
+		    fieldLabel: 'Title',
+		    name: 'title'
+		}
+	    ],
+	    buttons: [{
+		text: 'Create',
+		handler: createRecording
+            }]
+	    
+	});
+	
+	win = new Ext.Window({
+	    title: 'Add single recording',
+            layout: 'fit',
+            width: 500,
+            height: 300,
+            plain: true,
+            items: panel
+	});
+	win.show();	
+    };
+
 
     var panel = new Ext.grid.GridPanel({
         loadMask: true,
 	stripeRows: true,
 	disableSelection: true,
-	title: 'Recorder log',
+	title: 'Recorder schedule',
 	iconCls: 'clock',
 	store: tvheadend.dvrStore,
 	cm: dvrCm,
         viewConfig: {forceFit:true},
 	tbar: [
-	    '->',
 	    {
+		tooltip: 'Schedule a new recording session on the server.',
+		iconCls:'add',
+		text: 'Add entry',
+		handler: addEntry
+	    },'->',{
 		text: 'Help',
 		handler: function() {
 		    new tvheadend.help('Digital Video Recorder',
 				       'dvrlog.html');
 		}
 	    }
-
 	],
         bbar: new Ext.PagingToolbar({
             store: tvheadend.dvrStore,
@@ -316,7 +399,7 @@ tvheadend.dvr = function() {
 	autoScroll:true, 
 	title: 'Digital Video Recorder', 
 	iconCls: 'drive',
-	items: [new tvheadend.dvrlog,
+	items: [new tvheadend.dvrschedule,
 		new tvheadend.autoreceditor
 	       ]
     });

@@ -765,6 +765,47 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
 
+  } else if(!strcmp(op, "createEntry")) {
+
+    const char *title    = http_arg_get(&hc->hc_req_args, "title");
+    const char *datestr  = http_arg_get(&hc->hc_req_args, "date");
+    const char *startstr = http_arg_get(&hc->hc_req_args, "starttime");
+    const char *stopstr  = http_arg_get(&hc->hc_req_args, "stoptime");
+    const char *channel  = http_arg_get(&hc->hc_req_args, "channelid");
+
+    channel_t *ch = channel ? channel_find_by_identifier(atoi(channel)) : NULL;
+
+    if(ch == NULL || title == NULL || 
+       datestr  == NULL || strlen(datestr)  != 10 ||
+       startstr == NULL || strlen(startstr) != 5  ||
+       stopstr  == NULL || strlen(stopstr)  != 5) {
+      pthread_mutex_unlock(&global_lock);
+      return HTTP_STATUS_BAD_REQUEST;
+    }
+
+    struct tm t = {0};
+    t.tm_year = atoi(datestr + 6) - 1900;
+    t.tm_mon = atoi(datestr) - 1;
+    t.tm_mday = atoi(datestr + 3);
+    
+    t.tm_hour = atoi(startstr);
+    t.tm_min = atoi(startstr + 3);
+    
+    time_t start = timelocal(&t);
+
+    t.tm_hour = atoi(stopstr);
+    t.tm_min = atoi(stopstr + 3);
+    
+    time_t stop = timelocal(&t);
+
+    if(stop < start)
+      stop += 86400;
+
+    dvr_entry_create(ch, start, stop, title, NULL, hc->hc_representative);
+
+    out = htsmsg_create_map();
+    htsmsg_add_u32(out, "success", 1);
+
   } else if(!strcmp(op, "createAutoRec")) {
 
     dvr_autorec_add(http_arg_get(&hc->hc_req_args, "title"),
