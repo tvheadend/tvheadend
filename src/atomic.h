@@ -19,44 +19,10 @@
 #ifndef HTSATOMIC_H__
 #define HTSATOMIC_H__
 
-/**
- * Atomically add 'incr' to *ptr and return the previous value
- */
-#if defined(__i386__) || defined(__x86_64__)
-static inline int
-atomic_add(volatile int *ptr, int incr)
-{
-  int r;
-  asm volatile("lock; xaddl %0, %1" :
-	       "=r"(r), "=m"(*ptr) : "0" (incr), "m" (*ptr) : "memory");
-  return r;
-}
-#elif defined(__ppc__) || defined(__PPC__)
-
-/* somewhat based on code from darwin gcc  */
-static inline int
-atomic_add (volatile int *ptr, int incr)
-{
-  int tmp, res;
-  asm volatile("0:\n"
-               "lwarx  %1,0,%2\n"
-               "add%I3 %0,%1,%3\n"
-               "stwcx. %0,0,%2\n"
-               "bne-   0b\n"
-               : "=&r"(tmp), "=&b"(res)
-               : "r" (ptr), "Ir"(incr)
-               : "cr0", "memory");
-  
-  return res;
-}
-#else
-
 static inline int 
 atomic_add(volatile int *ptr, int incr)
 {
   return __sync_fetch_and_add(ptr, incr);
 }
-
-#endif
 
 #endif /* HTSATOMIC_H__ */
