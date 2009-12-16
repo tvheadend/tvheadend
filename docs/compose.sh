@@ -33,3 +33,4 @@ emit section 4.4   "Tags configuration"                    html/config_tags.html
 emit section 4.5   "Digital Video Recorder configuration"  html/config_dvr.html
 emit section 4.6   "DVB configuration"                     html/config_dvb.html
 emit section 4.7   "CWC configuration"                     html/config_cwc.html
+emit section 4.8   "Capmt Connections"                     html/config_capmt.html
