@@ -112,6 +112,11 @@ SRCS += src/webui/webui.c \
 	src/webui/simpleui.c \
 
 #
+# Extra modules
+#
+SRCS_EXTRA = src/extra/capmt_ca.c
+
+#
 # AVAHI interface
 # 
 
@@ -125,8 +130,9 @@ SRCS  += $(SRCS-yes)
 DLIBS += $(DLIBS-yes)
 SLIBS += $(SLIBS-yes)
 OBJS=    $(SRCS:%.c=$(BUILDDIR)/%.o)
+OBJS_EXTRA = $(SRCS_EXTRA:%.c=$(BUILDDIR)/%.so)
 DEPS=    ${OBJS:%.o=%.d}
-OBJDIRS= $(sort $(dir $(OBJS)))
+OBJDIRS= $(sort $(dir $(OBJS))) $(sort $(dir $(OBJS_EXTRA)))
 
 # File bundles
 BUNDLE_SRCS=$(BUNDLES:%=$(BUILDDIR)/bundles/%.c)
@@ -140,11 +146,11 @@ CFLAGS_com  = -g -funsigned-char -O2
 CFLAGS_com += -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
 CFLAGS_com += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR}
 
-all:	${PROG}
+all: ${PROG}
 
 .PHONY:	clean distclean ffmpeg
 
-${PROG}: ${BUILDDIR}/ffmpeg/install $(OBJDIRS) $(OBJS) $(BUNDLE_OBJS) Makefile
+${PROG}: ${BUILDDIR}/ffmpeg/install $(OBJDIRS) $(OBJS) $(BUNDLE_OBJS) ${OBJS_EXTRA} Makefile
 	$(CC) -o $@ $(OBJS) $(BUNDLE_OBJS) $(LDFLAGS) ${LDFLAGS_cfg}
 
 $(OBJDIRS):
@@ -156,6 +162,9 @@ ${BUILDDIR}/%.o: %.c  ${BUILDDIR}/ffmpeg/install
 ${BUILDDIR}/ffmpeg/install ffmpeg:
 	cd ${BUILDDIR}/ffmpeg/build && ${MAKE} all
 	cd ${BUILDDIR}/ffmpeg/build && ${MAKE} install
+
+${BUILDDIR}/%.so: ${SRCS_EXTRA}
+	${CC} -O -fbuiltin -fomit-frame-pointer -fPIC -shared -o $@ $< -ldl
 
 clean:
 	rm -rf ${BUILDDIR}/src ${BUILDDIR}/bundles
