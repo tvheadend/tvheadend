@@ -172,7 +172,7 @@ iptv_thread(void *aux)
 	continue;
       
       for(j = 0; j < r; j += 188)
-	iptv_ts_input(t, tsb + j);
+	iptv_ts_input(t, buf + j);
     }
     pthread_mutex_unlock(&iptv_recvmutex);
   }
