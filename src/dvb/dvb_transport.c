@@ -112,7 +112,7 @@ dvb_transport_start(th_transport_t *t, unsigned int weight, int force_start)
   if(tda->tda_rootpath == NULL)
     return 1; /* hardware not present */
 
-  if(!tdmi->tdmi_enabled)
+  if(tdmi && !tdmi->tdmi_enabled)
     return 1; /* Mux is disabled */
 
   /* Check if adapter is idle, or already tuned */
