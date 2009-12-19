@@ -135,6 +135,7 @@ tvheadend.chconf = function()
 	{
 	    header: "Number",
 	    dataIndex: 'number',
+	    sortable: true,
 	    width: 50,
 	    renderer: function(value, metadata, record, row, col, store) {
 		if (!value) {
