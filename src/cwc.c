@@ -603,8 +603,10 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
 	break;
     }
 
-    if(ct == NULL)
+    if(ct == NULL) {
+      tvhlog(LOG_ERR, "cwc", "Got unexpected ECM reply");
       return 0;
+    }
 
     t = ct->ct_transport;
     ct->ct_ecm_reply_pending = 0;
