@@ -107,7 +107,7 @@ typedef struct cwc_transport {
   /**
    * Current ECM
    */
-  uint8_t ct_ecm[256];
+  uint8_t ct_ecm[4096];
   int ct_ecmsize;
 
   int ct_ecm_reply_pending; /* Waiting for a ECM reply */
@@ -1007,6 +1007,9 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
   cwc_transport_t *ct = (cwc_transport_t *)td;
   uint16_t sid = t->tht_dvb_service_id;
   cwc_t *cwc = ct->ct_cwc;
+
+  if(len > 4096)
+    return;
 
   if(cwc->cwc_caid != st->st_caid)
     return;

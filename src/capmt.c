@@ -112,7 +112,7 @@ typedef struct capmt_caid_ecm {
   /** last ecm size */
   uint32_t cce_ecmsize;
   /** last ecm buffer */
-  uint8_t  cce_ecm[256];
+  uint8_t  cce_ecm[4096];
   
   LIST_ENTRY(capmt_caid_ecm) cce_link;
 } capmt_caid_ecm_t;
@@ -410,6 +410,9 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
 {
   capmt_transport_t *ct = (capmt_transport_t *)td;
   capmt_t *capmt = ct->ct_capmt;
+
+  if(len > 4096)
+    return;
 
   switch(data[0]) {
     case 0x80:
