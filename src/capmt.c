@@ -54,11 +54,16 @@
 #define CAPMT_LIST_ADD    0x04    // append an 'ADD' CAPMT object to the current list and start working with the updated list
 #define CAPMT_LIST_UPDATE 0x05    // replace an entry in the list with an 'UPDATE' CAPMT object, and start working with the updated list
 
-//ca_pmt_cmd_id values:
+// ca_pmt_cmd_id values:
 #define CAPMT_CMD_OK_DESCRAMBLING   0x01  // start descrambling the service in this CAPMT object as soon as the list of CAPMT objects is complete
 #define CAPMT_CMD_OK_MMI            0x02  //
 #define CAPMT_CMD_QUERY             0x03  //
 #define CAPMT_CMD_NOT_SELECTED      0x04
+
+// ca_pmt_descriptor types
+#define CAPMT_DESC_PRIVATE 0x81
+#define CAPMT_DESC_DEMUX   0x82
+#define CAPMT_DESC_PID     0x84
 
 #define CW_DUMP(buf, len, format, ...) \
   printf(format, __VA_ARGS__); int j; for (j = 0; j < len; ++j) printf("%02X ", buf[j]); printf("\n");
@@ -86,13 +91,13 @@ typedef struct capmt_descriptor {
  */
 typedef struct capmt_header {
   uint8_t capmt_indicator[6];
-	uint8_t capmt_list_management;
-	uint16_t program_number;
-	unsigned reserved1			          : 2;
-	unsigned version_number		        : 5;
-	unsigned current_next_indicator	  : 1;
-	unsigned reserved2			          : 4;
-	unsigned program_info_length	    : 12;
+  uint8_t capmt_list_management;
+  uint16_t program_number;
+  unsigned reserved1                : 2;
+  unsigned version_number           : 5;
+  unsigned current_next_indicator   : 1;
+  unsigned reserved2                : 4;
+  unsigned program_info_length      : 12;
   uint8_t capmt_cmd_id;
 } __attribute__((packed)) capmt_header_t;
 
@@ -466,7 +471,7 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
         pos += sizeof(head);
 
         capmt_descriptor_t prd = { 
-          .cad_type = 0x81, 
+          .cad_type = CAPMT_DESC_PRIVATE, 
           .cad_length = 0x08,
           .cad_data = { 0x00, 0x00, 0x00, 0x00, 
             sid >> 8, sid & 0xFF,
@@ -476,14 +481,14 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
         pos += prd.cad_length + 2;
 
         capmt_descriptor_t dmd = { 
-          .cad_type = 0x82, 
+          .cad_type = CAPMT_DESC_DEMUX, 
           .cad_length = 0x02,
           .cad_data = { 0x01, 0x00 }};
         memcpy(&buf[pos], &dmd, dmd.cad_length + 2);
         pos += dmd.cad_length + 2;
 
         capmt_descriptor_t ecd = { 
-          .cad_type = 0x84, 
+          .cad_type = CAPMT_DESC_PID, 
           .cad_length = 0x02,
           .cad_data = { 
             ecmpid >> 8, ecmpid & 0xFF }};
