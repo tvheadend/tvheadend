@@ -170,6 +170,8 @@ typedef struct th_dvb_adapter {
   int tda_type;
   struct dvb_frontend_info *tda_fe_info;
 
+  int tda_adapter_num;
+
   char *tda_demux_path;
 
   char *tda_dvr_path;

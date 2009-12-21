@@ -172,14 +172,16 @@ dvb_adapter_set_diseqc_version(th_dvb_adapter_t *tda, unsigned int v)
  *
  */
 static void
-tda_add(const char *path)
+tda_add(int adapter_num)
 {
+  char path[200];
   char fname[256];
   int fe, i, r;
   th_dvb_adapter_t *tda;
   char buf[400];
   pthread_t ptid;
 
+  snprintf(path, sizeof(path), "/dev/dvb/adapter%d", adapter_num);
   snprintf(fname, sizeof(fname), "%s/frontend0", path);
   
   fe = tvh_open(fname, O_RDWR | O_NONBLOCK, 0);
@@ -192,6 +194,7 @@ tda_add(const char *path)
 
   tda = tda_alloc();
 
+  tda->tda_adapter_num = adapter_num;
   tda->tda_rootpath = strdup(path);
   tda->tda_demux_path = malloc(256);
   snprintf(tda->tda_demux_path, 256, "%s/demux0", path);
@@ -254,7 +257,6 @@ tda_add(const char *path)
 void
 dvb_adapter_init(uint32_t adapter_mask)
 {
-  char path[200];
   htsmsg_t *l, *c;
   htsmsg_field_t *f;
   const char *name, *s;
@@ -263,12 +265,9 @@ dvb_adapter_init(uint32_t adapter_mask)
 
   TAILQ_INIT(&dvb_adapters);
 
-  for(i = 0; i < 32; i++) {
-    if ((1 << i) & adapter_mask) {
-      snprintf(path, sizeof(path), "/dev/dvb/adapter%d", i);
-      tda_add(path);
-    }
-  }
+  for(i = 0; i < 32; i++) 
+    if ((1 << i) & adapter_mask) 
+      tda_add(i);
 
   l = hts_settings_load("dvbadapters");
   if(l != NULL) {

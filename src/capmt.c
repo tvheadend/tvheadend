@@ -36,6 +36,7 @@
 #include <netinet/in.h>
 
 #include "tvhead.h"
+#include "dvb/dvb.h"
 #include "tcp.h"
 #include "psi.h"
 #include "tsdemux.h"
@@ -410,6 +411,7 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
 {
   capmt_transport_t *ct = (capmt_transport_t *)td;
   capmt_t *capmt = ct->ct_capmt;
+  int adapter_num = t->tht_dvb_mux_instance->tdmi_adapter->tda_adapter_num;
 
   if(len > 4096)
     return;
@@ -486,7 +488,8 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
         capmt_descriptor_t dmd = { 
           .cad_type = CAPMT_DESC_DEMUX, 
           .cad_length = 0x02,
-          .cad_data = { 0x01, 0x00 }};
+          .cad_data = { 
+            1 << adapter_num, adapter_num }};
         memcpy(&buf[pos], &dmd, dmd.cad_length + 2);
         pos += dmd.cad_length + 2;
 
@@ -611,7 +614,9 @@ capmt_transport_start(th_transport_t *t)
 
   TAILQ_FOREACH(capmt, &capmts, capmt_link) {
     tvhlog(LOG_INFO, "capmt",
-      "Starting capmt server for service \"%s\"", t->tht_svcname);
+      "Starting capmt server for service \"%s\" on tuner %d", 
+      t->tht_svcname,
+      t->tht_dvb_mux_instance->tdmi_adapter->tda_adapter_num);
 
     ct = calloc(1, sizeof(capmt_transport_t));
     ct->ct_cluster_size = get_suggested_cluster_size();
