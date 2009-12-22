@@ -153,6 +153,9 @@ typedef struct capmt_transport {
 
   void *ct_keys;
 
+  int ct_caid_count;
+  int ct_caid_last;
+
   /**
    * CSA
    */
@@ -430,21 +433,31 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
             break;
 
         if (!cce) {
+          tvhlog(LOG_DEBUG, "capmt",
+            "New caid 0x%04X for service \"%s\"",caid, t->tht_svcname);
+
           /* ecmpid not already seen, add it to list */
           cce = calloc(1, sizeof(capmt_caid_ecm_t));
           cce->cce_caid = caid;
           cce->cce_ecmpid = st->st_pid;
           LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
 
-          /* do not send now, wait for more ecmpid's */
-          break;
+          int caid_count = 0;
+          LIST_FOREACH(cce2, &ct->ct_caid_ecm, cce_link)
+            caid_count++;
+
+          if (caid_count < ct->ct_caid_count) 
+            /* do not send now, wait for more ecmpid's */
+            break;
+
+          ct->ct_caid_last = caid;
         }
 
         if ((cce->cce_ecmsize == len) && !memcmp(cce->cce_ecm, data, len))
           break; /* key already sent */
 
         if(capmt->capmt_sock == -1) {
-          // New key, but we are not connected (anymore), can not descramble
+          /* New key, but we are not connected (anymore), can not descramble */
           ct->ct_keystate = CT_UNKNOWN;
           break;
         }
@@ -453,8 +466,8 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
         uint16_t ecmpid = st->st_pid;
         uint16_t transponder = 0;
 
-        cce2 = LIST_FIRST(&ct->ct_caid_ecm);
-        if (caid != cce2->cce_caid)
+        /* don't do too much requests */
+        if (caid != ct->ct_caid_last)
           return;
 
         static uint8_t pmtversion = 1;
@@ -531,7 +544,6 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
         if(ct->ct_keystate != CT_RESOLVED)
           tvhlog(LOG_INFO, "capmt",
             "Trying to obtain key for service \"%s\"",t->tht_svcname);
-        //printf("sending capmt\n");
 
         buf[9] = pmtversion;
         pmtversion = (pmtversion + 1) & 0x1F;
@@ -618,9 +630,20 @@ capmt_transport_start(th_transport_t *t)
       t->tht_svcname,
       t->tht_dvb_mux_instance->tdmi_adapter->tda_adapter_num);
 
+    th_stream_t *st;
+
     ct = calloc(1, sizeof(capmt_transport_t));
     ct->ct_cluster_size = get_suggested_cluster_size();
     ct->ct_tsbcluster = malloc(ct->ct_cluster_size * 188);
+    ct->ct_caid_count = 0;
+
+    LIST_FOREACH(st, &t->tht_components, st_link) {
+      if (st->st_caid != 0) {
+        tvhlog(LOG_DEBUG, "capmt",
+          "Found caid 0x%04X", st->st_caid);
+        ct->ct_caid_count++;
+      }
+    }
 
     ct->ct_keys = get_key_struct();
     ct->ct_capmt = capmt;
