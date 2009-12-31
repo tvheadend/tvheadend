@@ -188,6 +188,22 @@ psi_build_pat(th_transport_t *t, uint8_t *buf, int maxlen, int pmtpid)
 
 
 /**
+ * PMT update reason flags
+ */
+#define PMT_UPDATE_PCR                0x1
+#define PMT_UPDATE_NEW_STREAM         0x2
+#define PMT_UPDATE_LANGUAGE           0x4
+#define PMT_UPDATE_FRAME_DURATION     0x8
+#define PMT_UPDATE_COMPOSITION_ID     0x10
+#define PMT_UPDATE_ANCILLARY_ID       0x20
+#define PMT_UPDATE_STREAM_DELETED     0x40
+#define PMT_UPDATE_NEW_CA_STREAM      0x80
+#define PMT_UPDATE_NEW_CAID           0x100
+#define PMT_UPDATE_CA_PROVIDER_CHANGE 0x200
+
+
+
+/**
  * Parser for CA descriptor, viaccess
  */
 static int
@@ -213,7 +229,7 @@ psi_desc_ca_viaccess(th_transport_t *t, th_stream_t *st,
 
       if(id != st->st_providerid) {
 	st->st_providerid = id;
-	return 1;
+	return PMT_UPDATE_CA_PROVIDER_CHANGE;
       }
     }
     len -= tlen;
@@ -237,14 +253,14 @@ psi_desc_ca(th_transport_t *t, const uint8_t *ptr, int len)
 
   if((st = transport_stream_find(t, pid)) == NULL) {
     st = transport_stream_create(t, pid, SCT_CA);
-    r = 1;
+    r |= PMT_UPDATE_NEW_CA_STREAM;
   }
 
   st->st_delete_me = 0;
 
   if(st->st_caid != caid) {
     st->st_caid = caid;
-    r = 1;
+    r |= PMT_UPDATE_NEW_CAID;
   }
 
   len -= 4;
@@ -279,6 +295,7 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
   int had_components;
   int composition_id;
   int ancillary_id;
+  int version;
 
   if(len < 9)
     return -1;
@@ -288,6 +305,7 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
   had_components = !!LIST_FIRST(&t->tht_components);
 
   sid     = ptr[0] << 8 | ptr[1];
+  version = ptr[2] >> 1 & 0x1f;
   
   if((ptr[2] & 1) == 0) {
     /* current_next_indicator == next, skip this */
@@ -302,7 +320,7 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 
   if(t->tht_pcr_pid != pcr_pid) {
     t->tht_pcr_pid = pcr_pid;
-    update = 1;
+    update |= PMT_UPDATE_PCR;
   }
 
   ptr += 9;
@@ -433,7 +451,7 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
     if(hts_stream_type != 0) {
 
       if((st = transport_stream_find(t, pid)) == NULL) {
-	update = 1;
+	update |= PMT_UPDATE_NEW_STREAM;
 	st = transport_stream_create(t, pid, hts_stream_type);
       }
 
@@ -442,23 +460,23 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
       st->st_tb = (AVRational){1, 90000};
 
       if(memcmp(st->st_lang, lang, 4)) {
-	update = 1;
+	update |= PMT_UPDATE_LANGUAGE;
 	memcpy(st->st_lang, lang, 4);
       }
 
       if(st->st_frame_duration == 0 && frameduration != 0) {
 	st->st_frame_duration = frameduration;
-	update = 1;
+	update |= PMT_UPDATE_FRAME_DURATION;
       }
 
       if(composition_id != -1 && st->st_composition_id != composition_id) {
 	st->st_composition_id = composition_id;
-	update = 1;
+	update |= PMT_UPDATE_COMPOSITION_ID;
       }
 
       if(ancillary_id != -1 && st->st_ancillary_id != ancillary_id) {
 	st->st_ancillary_id = ancillary_id;
-	update = 1;
+	update |= PMT_UPDATE_ANCILLARY_ID;
       }
     }
   }
@@ -468,14 +486,25 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
     next = LIST_NEXT(st, st_link);
     if(st->st_delete_me) {
       transport_stream_destroy(t, st);
-      update = 1;
+      update |= PMT_UPDATE_STREAM_DELETED;
     }
   }
 
   if(update) {
-    tvhlog(LOG_DEBUG, "PSI", "Transport %s (%s) updated due to PMT change",
-	   t->tht_svcname, t->tht_identifier);
-
+    tvhlog(LOG_INFO, "PSI", "Transport \"%s\" PMT (version %d) updated"
+	   "%s%s%s%s%s%s%s%s%s%s",
+	   transport_nicename(t), version,
+	   update&PMT_UPDATE_PCR               ? ", PCR PID changed":"",
+	   update&PMT_UPDATE_NEW_STREAM        ? ", New elementary stream":"",
+	   update&PMT_UPDATE_LANGUAGE          ? ", Language changed":"",
+	   update&PMT_UPDATE_FRAME_DURATION    ? ", Frame duration changed":"",
+	   update&PMT_UPDATE_COMPOSITION_ID    ? ", Composition ID changed":"",
+	   update&PMT_UPDATE_ANCILLARY_ID      ? ", Ancillary ID changed":"",
+	   update&PMT_UPDATE_STREAM_DELETED    ? ", Stream deleted":"",
+	   update&PMT_UPDATE_NEW_CA_STREAM     ? ", New CA stream":"",
+	   update&PMT_UPDATE_NEW_CAID          ? ", New CAID":"",
+	   update&PMT_UPDATE_CA_PROVIDER_CHANGE? ", CA provider changed":"");
+    
     transport_request_save(t);
     if(t->tht_status == TRANSPORT_RUNNING)
       transport_restart(t, had_components);
