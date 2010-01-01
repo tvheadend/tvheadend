@@ -187,7 +187,7 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 		 "<div class=\"about-title\">"
 		 "HTS Tvheadend %s"
 		 "</div><br>"
-		 "&copy; 2006 - 2009 Andreas \303\226man, et al.<br><br>"
+		 "&copy; 2006 - 2010 Andreas \303\226man, et al.<br><br>"
 		 "<img src=\"docresources/tvheadendlogo.png\"><br>"
 		 "<a href=\"http://www.lonelycoder.com/hts\">"
 		 "http://www.lonelycoder.com/hts</a><br><br>"
