@@ -274,7 +274,7 @@ typedef struct th_stream {
   uint16_t st_ancillary_id;
 
 
-  uint16_t st_pid;
+  int16_t st_pid;
   uint8_t st_cc;             /* Last CC */
   uint8_t st_cc_valid;       /* Is CC valid at all? */
 
