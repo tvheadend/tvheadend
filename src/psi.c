@@ -204,52 +204,13 @@ psi_build_pat(th_transport_t *t, uint8_t *buf, int maxlen, int pmtpid)
 
 
 /**
- * Parser for CA descriptor, viaccess
+ * Add a CA descriptor
  */
 static int
-psi_desc_ca_viaccess(th_transport_t *t, th_stream_t *st, 
-		     const uint8_t *ptr, int len)
+psi_desc_add_ca(th_transport_t *t, uint16_t caid, uint32_t provid, uint16_t pid)
 {
-  uint8_t tag, tlen;
-  uint32_t id;
-
-  while(len > 2) {
-    tag = ptr[0];
-    tlen = ptr[1];
-
-    ptr += 2;
-    len -= 2;
-
-    if(len < tlen)
-      return 0;
-
-    switch(tag) {
-    case 0x14:
-      id = (ptr[0] << 16) | (ptr[1] << 8) | (ptr[2] & 0xf0);
-
-      if(id != st->st_providerid) {
-	st->st_providerid = id;
-	return PMT_UPDATE_CA_PROVIDER_CHANGE;
-      }
-    }
-    len -= tlen;
-    ptr += tlen;
-  }
-  return 0;
-}
-
-
-
-/**
- * Parser for CA descriptor
- */
-static int
-psi_desc_ca(th_transport_t *t, const uint8_t *ptr, int len)
-{
-  uint16_t pid = (ptr[2] & 0x1f) << 8 | ptr[3];
   th_stream_t *st;
   int r = 0;
-  uint16_t caid = (ptr[0] << 8) | ptr[1];
 
   if((st = transport_stream_find(t, pid)) == NULL) {
     st = transport_stream_create(t, pid, SCT_CA);
@@ -263,14 +224,76 @@ psi_desc_ca(th_transport_t *t, const uint8_t *ptr, int len)
     r |= PMT_UPDATE_NEW_CAID;
   }
 
-  len -= 4;
-  ptr += 4;
+  if(st->st_providerid != provid) {
+    st->st_providerid = provid;
+    r |= PMT_UPDATE_CA_PROVIDER_CHANGE;
+  }
 
-  switch(caid >> 8) {
-  case 5:
-    r |= psi_desc_ca_viaccess(t, st, ptr, len);
+  return r;
+}
+
+/**
+ * Parser for CA descriptors
+ */
+static int 
+psi_desc_ca(th_transport_t *t, const uint8_t *buffer, int size)
+{
+  int r = 0;
+  int i = 0;    
+  uint32_t provid = 0;
+  uint16_t caid = (buffer[0] << 8) | buffer[1];
+  uint16_t pid = ((buffer[2]&0x1F) << 8) | buffer[3];
+
+  switch (caid & 0xFF00) {
+  case 0x0100: // SECA/Mediaguard
+    provid = (buffer[4] << 8) | buffer[5];
+
+    //Add extra providers, if any
+    for (i = 17; i < size; i += 15){
+      uint16_t _pid = ((buffer[i]&0x1F) << 8) | buffer[i + 1];
+      uint16_t _provid = (buffer[i + 2] << 8) | buffer[i + 3];
+
+      r |= psi_desc_add_ca(t, caid, _provid, _pid);
+    }
+    break;
+  case 0x0500:// Viaccess
+    for (i = 4; i < size;) {
+      unsigned char nano = buffer[i++];
+      unsigned char nanolen = buffer[i++];
+
+      if (nano == 0x14) {
+        provid = (buffer[i] << 16) | (buffer[i + 1] << 8) | (buffer[i + 2] & 0xf0);
+        break;
+      }
+
+      i += nanolen;
+    }
+  case 0x0D00:// Cryptoworks
+    for (i = 8; i < size;) {
+      unsigned char nano = buffer[i++];
+      unsigned char nanolen = buffer[i++];
+
+      if (nano == 0x83) {
+        provid = buffer[i] & 0xFC;
+        break;
+      }
+
+      i += nanolen;
+    }
+    break;
+  case 0x0600:// Irdeto
+  case 0x1700:// Betacrypt
+    provid = buffer[6] << 8 | buffer[7];
+    break;
+  case 0x1800:// Nagravision
+    provid = buffer[5] << 8 | buffer[6];
+    break;
+  default:
+    provid = 0;
     break;
   }
+
+  r |= psi_desc_add_ca(t, caid, provid, pid);
 
   return r;
 }
