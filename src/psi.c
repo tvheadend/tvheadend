@@ -268,6 +268,7 @@ psi_desc_ca(th_transport_t *t, const uint8_t *buffer, int size)
 
       i += nanolen;
     }
+    break;
   case 0x0D00:// Cryptoworks
     for (i = 8; i < size;) {
       unsigned char nano = buffer[i++];
@@ -443,6 +444,7 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
       case DVB_DESC_TELETEXT:
 	if(estype == 0x06)
 	  hts_stream_type = SCT_TELETEXT;
+	  memcpy(lang, ptr, 3);
 	break;
 
       case DVB_DESC_AC3:
