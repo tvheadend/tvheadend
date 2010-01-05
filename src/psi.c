@@ -269,26 +269,6 @@ psi_desc_ca(th_transport_t *t, const uint8_t *buffer, int size)
       i += nanolen;
     }
     break;
-  case 0x0D00:// Cryptoworks
-    for (i = 8; i < size;) {
-      unsigned char nano = buffer[i++];
-      unsigned char nanolen = buffer[i++];
-
-      if (nano == 0x83) {
-        provid = buffer[i] & 0xFC;
-        break;
-      }
-
-      i += nanolen;
-    }
-    break;
-  case 0x0600:// Irdeto
-  case 0x1700:// Betacrypt
-    provid = buffer[6] << 8 | buffer[7];
-    break;
-  case 0x1800:// Nagravision
-    provid = buffer[5] << 8 | buffer[6];
-    break;
   default:
     provid = 0;
     break;
