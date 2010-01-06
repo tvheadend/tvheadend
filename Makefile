@@ -94,9 +94,10 @@ SRCS += src/cwc.c \
 	src/capmt.c \
 	src/krypt.c \
 	src/ffdecsa/ffdecsa_interface.c \
-	src/ffdecsa/ffdecsa_int.c \
-	src/ffdecsa/ffdecsa_mmx.c \
-	src/ffdecsa/ffdecsa_sse2.c \
+	src/ffdecsa/ffdecsa_int.c
+
+SRCS-${CONFIG_MMX}  += src/ffdecsa/ffdecsa_mmx.c
+SRCS-${CONFIG_SSE2} += src/ffdecsa/ffdecsa_sse2.c
 
 LDFLAGS += -lcrypt
 

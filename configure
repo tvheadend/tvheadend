@@ -74,6 +74,16 @@ int main() {
 EOF
     $CC 2>/dev/null $TMPDIR/1.c -o $TMPDIR/1.bin 
 }
+
+
+checkccarg() {
+    cat >$TMPDIR/1.c <<EOF
+int main() {
+ return 0;
+}
+EOF
+    $CC 2>/dev/null $TMPDIR/1.c -o $TMPDIR/1.bin $1
+}
     
 
 if [ "x$CC" != "x" ]; then
@@ -88,6 +98,15 @@ if checkcc; then
 else
     echo "C compiler ($CC) is not working"
     die
+fi
+
+
+if checkccarg "-mmmx"; then
+   enable mmx
+fi
+
+if checkccarg "-msse2"; then
+   enable sse2
 fi
 
 echo >>${CONFIG_MAK} $CC_CONFIG_MAK 

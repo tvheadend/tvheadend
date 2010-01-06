@@ -18,7 +18,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#include "config.h"
 #include "tvhead.h"
 #include "FFdecsa.h"
 
@@ -59,8 +59,11 @@ static csafuncs_t funcs_##x = { \
 };
 
 MAKEFUNCS(32int);
-#if defined(__i386__) || defined(__x86_64__)
+#ifdef CONFIG_MMX
 MAKEFUNCS(64mmx);
+#endif
+
+#ifdef CONFIG_SSE2
 MAKEFUNCS(128sse2);
 #endif
 
@@ -167,17 +170,21 @@ ffdecsa_init(void)
     if(max_std_level >= 1){
       cpuid(1, eax, ebx, ecx, std_caps);
 
+#ifdef CONFIG_SSE2
       if (std_caps & (1<<26)) {
 	current = funcs_128sse2;
 	tvhlog(LOG_INFO, "CSA", "Using SSE2 128bit parallel descrambling");
 	return;
       }
+#endif
 
+#ifdef CONFIG_MMX
       if (std_caps & (1<<23)) {
 	current = funcs_64mmx;
 	tvhlog(LOG_INFO, "CSA", "Using MMX 64bit parallel descrambling");
 	return;
       }
+#endif
     }
 #if defined(__i386__)
   }
