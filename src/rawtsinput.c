@@ -16,6 +16,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _XOPEN_SOURCE 600 // for clock_nanosleep()
+
 #include <pthread.h>
 #include <stdint.h>
 #include <sys/types.h>
