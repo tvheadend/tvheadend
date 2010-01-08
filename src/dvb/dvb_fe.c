@@ -123,13 +123,17 @@ dvb_fe_monitor(void *aux)
   }
 
   if(status != TDMI_FE_UNKNOWN) {
-    q = tdmi->tdmi_quality + (status - TDMI_FE_OK + 1);
-    q = MAX(MIN(q, 100), 0);
+    if(tda->tda_qmon) {
+      q = tdmi->tdmi_quality + (status - TDMI_FE_OK + 1);
+      q = MAX(MIN(q, 100), 0);
+    } else {
+      q = 100;
+    }
     if(q != tdmi->tdmi_quality) {
       tdmi->tdmi_quality = q;
       update = 1;
     }
-  }
+  } 
 
   if(update) {
     htsmsg_t *m = htsmsg_create_map();

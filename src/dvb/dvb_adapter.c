@@ -78,6 +78,7 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_str(m, "displayname", tda->tda_displayname);
   htsmsg_add_u32(m, "autodiscovery", tda->tda_autodiscovery);
   htsmsg_add_u32(m, "idlescan", tda->tda_idlescan);
+  htsmsg_add_u32(m, "qmon", tda->tda_qmon);
   htsmsg_add_u32(m, "diseqc_version", tda->tda_diseqc_version);
   hts_settings_save(m, "dvbadapters/%s", tda->tda_identifier);
   htsmsg_destroy(m);
@@ -141,6 +142,25 @@ dvb_adapter_set_idlescan(th_dvb_adapter_t *tda, int on)
 	 tda->tda_displayname, on ? "On" : "Off");
 
   tda->tda_idlescan = on;
+  tda_save(tda);
+}
+
+
+/**
+ *
+ */
+void
+dvb_adapter_set_qmon(th_dvb_adapter_t *tda, int on)
+{
+  if(tda->tda_qmon == on)
+    return;
+
+  lock_assert(&global_lock);
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" quality monitoring set to: %s",
+	 tda->tda_displayname, on ? "On" : "Off");
+
+  tda->tda_qmon = on;
   tda_save(tda);
 }
 
@@ -298,6 +318,7 @@ dvb_adapter_init(uint32_t adapter_mask)
 
       htsmsg_get_u32(c, "autodiscovery", &tda->tda_autodiscovery);
       htsmsg_get_u32(c, "idlescan", &tda->tda_idlescan);
+      htsmsg_get_u32(c, "qmon", &tda->tda_qmon);
       htsmsg_get_u32(c, "diseqc_version", &tda->tda_diseqc_version);
     }
     htsmsg_destroy(l);
@@ -337,11 +358,14 @@ dvb_adapter_mux_scanner(void *aux)
   }
 
   if(!tda->tda_idlescan && TAILQ_FIRST(&tda->tda_scan_queues[0]) == NULL) {
-    /* Idlescan is disabled and no muxes are bad.
-       If the currently tuned mux is ok, we can stick to it */
+    /* Idlescan is disabled and no muxes are bad */
+
+    if(!tda->tda_qmon)
+      return; // Quality monitoring is disabled
+
+    /* If the currently tuned mux is ok, we can stick to it */
     
     tdmi = tda->tda_mux_current;
-
     if(tdmi != NULL && tdmi->tdmi_quality > 90)
       return;
   }
