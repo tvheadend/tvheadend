@@ -1517,7 +1517,7 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
     break;
 
   case SMT_NOSOURCE:
-    htsp_subscription_status(hs, "No available sources");
+    htsp_subscription_status(hs, transport_nostart2txt(sm->sm_code));
     break;
 
   case SMT_MPEGTS:

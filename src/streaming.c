@@ -172,6 +172,7 @@ streaming_msg_clone(streaming_message_t *src)
 
   case SMT_STOP:
   case SMT_TRANSPORT_STATUS:
+  case SMT_NOSOURCE:
     dst->sm_code = src->sm_code;
     break;
 

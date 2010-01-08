@@ -132,7 +132,8 @@ subscription_reschedule(void *aux)
   th_subscription_t *s;
   th_transport_t *t;
   streaming_message_t *sm;
-
+  char buf[128];
+  int errorcode;
   lock_assert(&global_lock);
 
   gtimer_arm(&subscription_reschedule_timer, subscription_reschedule, NULL, 2);
@@ -144,12 +145,13 @@ subscription_reschedule(void *aux)
     if(s->ths_channel == NULL)
       continue; /* stale entry, channel has been destroyed */
 
-    t = transport_find(s->ths_channel, s->ths_weight);
+    snprintf(buf, sizeof(buf), "Subscription \"%s\"", s->ths_title);
+    t = transport_find(s->ths_channel, s->ths_weight, buf, &errorcode);
 
     if(t == NULL) {
       /* No transport available */
 
-      sm = streaming_msg_create(SMT_NOSOURCE);
+      sm = streaming_msg_create_code(SMT_NOSOURCE, errorcode);
       streaming_target_deliver(s->ths_output, sm);
       continue;
     }

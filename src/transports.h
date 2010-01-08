@@ -23,6 +23,13 @@
 #include "htsmsg.h"
 #include "subscriptions.h"
 
+#define TRANSPORT_NOSTART_NO_HARDWARE     1
+#define TRANSPORT_NOSTART_MUX_NOT_ENABLED 2
+#define TRANSPORT_NOSTART_NOT_FREE        3
+#define TRANSPORT_NOSTART_TUNING_FAILED   4
+#define TRANSPORT_NOSTART_SVC_NOT_ENABLED 5
+#define TRANSPORT_NOSTART_BAD_SIGNAL      6
+
 void transport_init(void);
 
 unsigned int transport_compute_weight(struct th_transport_list *head);
@@ -40,7 +47,8 @@ th_transport_t *transport_find_by_identifier(const char *identifier);
 
 void transport_map_channel(th_transport_t *t, channel_t *ch, int save);
 
-th_transport_t *transport_find(channel_t *ch, unsigned int weight);
+th_transport_t *transport_find(channel_t *ch, unsigned int weight,
+			       const char *loginfo, int *errorp);
 
 th_stream_t *transport_stream_find(th_transport_t *t, int pid);
 
@@ -96,5 +104,7 @@ void transport_make_nicename(th_transport_t *t);
 const char *transport_nicename(th_transport_t *t);
 
 const char *transport_component_nicename(th_stream_t *st);
+
+const char *transport_nostart2txt(int code);
 
 #endif /* TRANSPORTS_H */

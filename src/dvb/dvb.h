@@ -299,7 +299,7 @@ htsmsg_t *dvb_transport_build_msg(th_transport_t *t);
 /**
  * DVB Frontend
  */
-void dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason);
+int dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason);
 
 void dvb_fe_stop(th_dvb_mux_instance_t *tdmi);
 

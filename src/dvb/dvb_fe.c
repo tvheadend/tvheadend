@@ -37,6 +37,7 @@
 #include "dvb_support.h"
 #include "diseqc.h"
 #include "notify.h"
+#include "transports.h"
 
 
 /**
@@ -283,7 +284,7 @@ dvb_fe_tune_s2(th_dvb_mux_instance_t *tdmi, dvb_mux_conf_t *dmc)
 /**
  *
  */
-void
+int
 dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
@@ -299,7 +300,7 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
   lock_assert(&global_lock);
 
   if(tda->tda_mux_current == tdmi)
-    return;
+    return 0;
   
   if(tdmi->tdmi_scan_queue != NULL) {
     TAILQ_REMOVE(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
@@ -368,6 +369,7 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
     tvhlog(LOG_ERR, "dvb", "\"%s\" tuning to \"%s\""
      " -- Front configuration failed -- %s, frequency: %ld",
      tda->tda_rootpath, buf, strerror(errno), p->frequency);
+    return TRANSPORT_NOSTART_TUNING_FAILED;
   }   
 
   tda->tda_mux_current = tdmi;
@@ -377,4 +379,5 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
   dvb_table_add_default(tdmi);
 
   dvb_adapter_notify(tda);
+  return 0;
 }

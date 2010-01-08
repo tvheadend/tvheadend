@@ -239,7 +239,9 @@ dvr_rec_fatal_error(dvr_entry_t *de, const char *fmt, ...)
   vsnprintf(msgbuf, sizeof(msgbuf), fmt, ap);
   va_end(ap);
 
-  tvhlog(LOG_ERR, "pvr", "%s: %s", de->de_filename, msgbuf);
+  tvhlog(LOG_ERR, "pvr", 
+	 "Recording error: \"%s\": %s",
+	 de->de_filename ?: de->de_title, msgbuf);
 }
 
 
@@ -440,7 +442,8 @@ dvr_thread(void *aux)
 
     case SMT_NOSOURCE:
       dvr_rec_fatal_error(de, 
-			  "No source transport available, automatic retry");
+			  "Unable to start -- %s",
+			  transport_nostart2txt(sm->sm_code));
       break;
 
     case SMT_MPEGTS:

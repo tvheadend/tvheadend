@@ -53,6 +53,23 @@ static struct th_transport_list transporthash[TRANSPORT_HASH_WIDTH];
 
 static void transport_data_timeout(void *aux);
 
+/**
+ *
+ */
+const char *
+transport_nostart2txt(int code)
+{
+  switch(code) {
+  case TRANSPORT_NOSTART_NO_HARDWARE:     return "No hardware present";
+  case TRANSPORT_NOSTART_MUX_NOT_ENABLED: return "No mux enabled";
+  case TRANSPORT_NOSTART_NOT_FREE:        return "Adapter in use by other subscription";
+  case TRANSPORT_NOSTART_TUNING_FAILED:   return "Tuning failed";
+  case TRANSPORT_NOSTART_SVC_NOT_ENABLED: return "No service enabled";
+  case TRANSPORT_NOSTART_BAD_SIGNAL:      return "Too bad signal quality";
+  }
+  return "Unknown error";
+}
+
 
 /**
  *
@@ -243,6 +260,7 @@ int
 transport_start(th_transport_t *t, unsigned int weight, int force_start)
 {
   th_stream_t *st;
+  int r;
 
   lock_assert(&global_lock);
 
@@ -253,8 +271,8 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
   t->tht_dts_start = AV_NOPTS_VALUE;
   t->tht_pcr_drift = 0;
 
-  if(t->tht_start_feed(t, weight, force_start))
-    return -1;
+  if((r = t->tht_start_feed(t, weight, force_start)))
+    return r;
 
   pthread_mutex_lock(&t->tht_stream_mutex);
 
@@ -341,26 +359,44 @@ transportcmp(const void *A, const void *B)
  *
  */
 th_transport_t *
-transport_find(channel_t *ch, unsigned int weight)
+transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
+	       int *errorp)
 {
   th_transport_t *t, **vec;
-  int cnt = 0, i;
-  
+  int cnt = 0, i, r;
+  int error = 0;
+
   lock_assert(&global_lock);
 
   /* First, sort all transports in order */
 
   LIST_FOREACH(t, &ch->ch_transports, tht_ch_link)
-      if(t->tht_enabled && t->tht_quality_index(t) > 10)
-      cnt++;
+    cnt++;
 
   vec = alloca(cnt * sizeof(th_transport_t *));
-  i = 0;
-  LIST_FOREACH(t, &ch->ch_transports, tht_ch_link)
-    if(t->tht_enabled && t->tht_quality_index(t) > 10)
-      vec[i++] = t;
+  cnt = 0;
+  LIST_FOREACH(t, &ch->ch_transports, tht_ch_link) {
 
-  assert(i == cnt);
+    if(!t->tht_enabled) {
+      error = TRANSPORT_NOSTART_SVC_NOT_ENABLED;
+      if(loginfo != NULL) {
+	tvhlog(LOG_NOTICE, "Transport", "%s: Skipping \"%s\" -- not enabled",
+	       loginfo, transport_nicename(t));
+      }
+      continue;
+    }
+
+    if(t->tht_quality_index(t) < 10) {
+      error = TRANSPORT_NOSTART_BAD_SIGNAL;
+      if(loginfo != NULL) {
+	tvhlog(LOG_NOTICE, "Transport", 
+	       "%s: Skipping \"%s\" -- Quality below 10%",
+	       loginfo, transport_nicename(t));
+      }
+      continue;
+    }
+    vec[cnt++] = t;
+  }
 
   /* Sort transports, lower priority should come come earlier in the vector
      (i.e. it will be more favoured when selecting a transport */
@@ -383,9 +419,16 @@ transport_find(channel_t *ch, unsigned int weight)
 
   for(i = 0; i < cnt; i++) {
     t = vec[i];
-    if(!transport_start(t, weight, 0))
+    if((r = transport_start(t, weight, 0)) == 0)
       return t;
+    error = r;
+    if(loginfo != NULL)
+      tvhlog(LOG_NOTICE, "Transport", 
+	     "%s: Skipping \"%s\" -- %s",
+	     loginfo, transport_nicename(t), transport_nostart2txt(r));
   }
+  if(errorp != NULL)
+    *errorp = error;
   return NULL;
 }
 

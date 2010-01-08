@@ -103,17 +103,17 @@ dvb_transport_open_demuxers(th_dvb_adapter_t *tda, th_transport_t *t)
 static int
 dvb_transport_start(th_transport_t *t, unsigned int weight, int force_start)
 {
-  int w;
+  int w, r;
   th_dvb_adapter_t *tda = t->tht_dvb_mux_instance->tdmi_adapter;
   th_dvb_mux_instance_t *tdmi = tda->tda_mux_current;
 
   lock_assert(&global_lock);
 
   if(tda->tda_rootpath == NULL)
-    return 1; /* hardware not present */
+    return TRANSPORT_NOSTART_NO_HARDWARE;
 
-  if(tdmi && !tdmi->tdmi_enabled)
-    return 1; /* Mux is disabled */
+  if(t->tht_dvb_mux_instance && !t->tht_dvb_mux_instance->tdmi_enabled)
+    return TRANSPORT_NOSTART_MUX_NOT_ENABLED; /* Mux is disabled */
 
   /* Check if adapter is idle, or already tuned */
 
@@ -121,20 +121,24 @@ dvb_transport_start(th_transport_t *t, unsigned int weight, int force_start)
 
     w = transport_compute_weight(&tdmi->tdmi_adapter->tda_transports);
     if(w >= weight)
-      return 1; /* We are outranked by weight, cant use it */
+      /* We are outranked by weight, cant use it */
+      return TRANSPORT_NOSTART_NOT_FREE;
 
     dvb_adapter_clean(tda);
   }
 
-  dvb_transport_open_demuxers(tda, t);
-
   pthread_mutex_lock(&tda->tda_delivery_mutex);
 
-  LIST_INSERT_HEAD(&tda->tda_transports, t, tht_active_link);
-  dvb_fe_tune(t->tht_dvb_mux_instance, "Transport start");
+  r = dvb_fe_tune(t->tht_dvb_mux_instance, "Transport start");
+  if(!r)
+    LIST_INSERT_HEAD(&tda->tda_transports, t, tht_active_link);
 
   pthread_mutex_unlock(&tda->tda_delivery_mutex);
-  return 0;
+
+  if(!r)
+    dvb_transport_open_demuxers(tda, t);
+
+  return r;
 }
 
 
@@ -285,7 +289,7 @@ dvb_transport_quality(th_transport_t *t)
 
   lock_assert(&global_lock);
 
-  return tdmi->tdmi_enabled ? tdmi->tdmi_quality : 0;
+  return tdmi->tdmi_adapter->tda_qmon ? tdmi->tdmi_quality : 100;
 }
 
 

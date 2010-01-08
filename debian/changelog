@@ -10,6 +10,8 @@ hts-tvheadend (2.8) hts; urgency=low
     for people and it's only useful if you have complex setups with
     multiple adapters, etc.
 
+  * Improve logging when subscriptions fail to start
+
 hts-tvheadend (2.7) hts; urgency=low
 
   * Added support for DVB subtitles. Currently only forwarded over HTSP
