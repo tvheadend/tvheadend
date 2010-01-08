@@ -707,7 +707,7 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
     dmc.dmc_satconf = NULL;
 
   tdmi = dvb_mux_create(tda, &dmc,
-			tsid, htsmsg_get_str(m, "network"), NULL, enabled, 0,
+			tsid, htsmsg_get_str(m, "network"), NULL, enabled, 1,
 			identifier);
   if(tdmi != NULL) {
 
