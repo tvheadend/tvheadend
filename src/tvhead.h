@@ -475,6 +475,7 @@ typedef struct th_transport {
 
   int (*tht_quality_index)(struct th_transport *t);
 
+  int (*tht_grace_period)(struct th_transport *t);
 
   /*
    * Per source type structs

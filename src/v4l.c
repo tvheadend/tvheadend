@@ -304,6 +304,16 @@ v4l_transport_quality(th_transport_t *t)
 
 
 /**
+ *
+ */
+static int
+v4l_grace_period(th_transport_t *t)
+{
+  return 2;
+}
+
+
+/**
  * Generate a descriptive name for the source
  */
 static void
@@ -359,6 +369,7 @@ v4l_transport_find(v4l_adapter_t *va, const char *id, int create)
   t->tht_config_save   = v4l_transport_save;
   t->tht_setsourceinfo = v4l_transport_setsourceinfo;
   t->tht_quality_index = v4l_transport_quality;
+  t->tht_grace_period  = v4l_grace_period;
   t->tht_iptv_fd = -1;
 
   pthread_mutex_lock(&t->tht_stream_mutex); 

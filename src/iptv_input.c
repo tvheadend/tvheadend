@@ -366,6 +366,16 @@ iptv_transport_setsourceinfo(th_transport_t *t, struct source_info *si)
 /**
  *
  */
+static int
+iptv_grace_period(th_transport_t *t)
+{
+  return 3;
+}
+
+
+/**
+ *
+ */
 th_transport_t *
 iptv_transport_find(const char *id, int create)
 {
@@ -402,6 +412,7 @@ iptv_transport_find(const char *id, int create)
   t->tht_config_save   = iptv_transport_save;
   t->tht_setsourceinfo = iptv_transport_setsourceinfo;
   t->tht_quality_index = iptv_transport_quality;
+  t->tht_grace_period  = iptv_grace_period;
   t->tht_iptv_fd = -1;
 
   LIST_INSERT_HEAD(&iptv_all_transports, t, tht_group_link);

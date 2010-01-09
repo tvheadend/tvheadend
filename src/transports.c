@@ -267,6 +267,8 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start,
 {
   th_stream_t *st;
   int r, err;
+  int timeout = 2;
+  struct timespec to;
 
   lock_assert(&global_lock);
 
@@ -293,7 +295,9 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start,
   cwc_transport_start(t);
   capmt_transport_start(t);
 
-  int timeout = 10;
+  if(t->tht_grace_period != NULL)
+    timeout = t->tht_grace_period(t);
+
 
   gtimer_arm(&t->tht_receive_timer, transport_data_timeout, t, timeout);
 
@@ -304,8 +308,6 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start,
 	 transport_nicename(t));
 
   pthread_mutex_lock(&t->tht_stream_mutex);
-
-  struct timespec to;
 
   to.tv_sec = time(NULL) + timeout;
   to.tv_nsec = 0;

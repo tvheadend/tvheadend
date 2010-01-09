@@ -326,6 +326,16 @@ dvb_transport_setsourceinfo(th_transport_t *t, struct source_info *si)
 
 
 /**
+ *
+ */
+static int
+dvb_grace_period(th_transport_t *t)
+{
+  return 10;
+}
+
+
+/**
  * Find a transport based on 'serviceid' on the given mux
  *
  * If it cannot be found we create it if 'pmt_pid' is also set
@@ -361,14 +371,15 @@ dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   t->tht_dvb_service_id = sid;
   t->tht_pmt_pid        = pmt_pid;
 
-  t->tht_start_feed = dvb_transport_start;
-  t->tht_refresh_feed = dvb_transport_refresh;
-  t->tht_stop_feed  = dvb_transport_stop;
-  t->tht_config_save = dvb_transport_save;
+  t->tht_start_feed    = dvb_transport_start;
+  t->tht_refresh_feed  = dvb_transport_refresh;
+  t->tht_stop_feed     = dvb_transport_stop;
+  t->tht_config_save   = dvb_transport_save;
   t->tht_setsourceinfo = dvb_transport_setsourceinfo;
-  t->tht_dvb_mux_instance = tdmi;
   t->tht_quality_index = dvb_transport_quality;
+  t->tht_grace_period  = dvb_grace_period;
 
+  t->tht_dvb_mux_instance = tdmi;
   LIST_INSERT_HEAD(&tdmi->tdmi_transports, t, tht_group_link);
 
   pthread_mutex_lock(&t->tht_stream_mutex); 
