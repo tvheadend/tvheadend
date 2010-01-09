@@ -117,13 +117,15 @@ dvb_transport_start(th_transport_t *t, unsigned int weight, int force_start)
 
   /* Check if adapter is idle, or already tuned */
 
-  if(tdmi != NULL && tdmi != t->tht_dvb_mux_instance && !force_start) {
+  if(tdmi != NULL && 
+     (tdmi != t->tht_dvb_mux_instance ||
+      tda->tda_hostconnection == HOSTCONNECTION_USB12)) {
 
-    w = transport_compute_weight(&tdmi->tdmi_adapter->tda_transports);
-    if(w >= weight)
+    w = transport_compute_weight(&tda->tda_transports);
+    if(w >= weight && !force_start)
       /* We are outranked by weight, cant use it */
       return TRANSPORT_NOSTART_NOT_FREE;
-
+    
     dvb_adapter_clean(tda);
   }
 
