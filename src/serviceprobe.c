@@ -84,7 +84,7 @@ serviceprobe_thread(void *aux)
   int was_doing_work = 0;
   streaming_queue_t sq;
   streaming_message_t *sm;
-  transport_feed_status_t status;
+  //  transport_feed_status_t status;
   int run;
   const char *err;
   channel_t *ch;
@@ -136,14 +136,14 @@ serviceprobe_thread(void *aux)
       pthread_mutex_unlock(&sq.sq_mutex);
 
       if(sm->sm_type == SMT_TRANSPORT_STATUS) {
-	status = sm->sm_code;
+	int status = sm->sm_code;
 
-	run = 0;
-
-	if(status == TRANSPORT_FEED_VALID_PACKETS) {
+	if(status & TSS_PACKETS) {
+	  run = 0;
 	  err = NULL;
-	} else {
-	  err = transport_feed_status_to_text(status);
+	} else if(status & (TSS_GRACEPERIOD | TSS_ERRORS)) {
+	  run = 0;
+	  err = transport_tss2text(status);
 	}
       }
 

@@ -65,12 +65,9 @@ int transport_is_tv(th_transport_t *t);
 
 void transport_destroy(th_transport_t *t);
 
-void transport_set_feed_status(th_transport_t *t, 
-			       transport_feed_status_t newstatus);
-
-const char *transport_feed_status_to_text(transport_feed_status_t status);
-
 void transport_remove_subscriber(th_transport_t *t, th_subscription_t *s);
+
+void transport_set_streaming_status_flags(th_transport_t *t, int flag);
 
 static inline th_stream_t *
 transport_find_stream_by_pid(th_transport_t *t, int pid)
@@ -106,5 +103,12 @@ const char *transport_nicename(th_transport_t *t);
 const char *transport_component_nicename(th_stream_t *st);
 
 const char *transport_nostart2txt(int code);
+
+const char *transport_tss2text(int flags);
+
+static inline int transport_tss_is_error(int flags)
+{
+  return flags & TSS_ERRORS ? 1 : 0;
+}
 
 #endif /* TRANSPORTS_H */

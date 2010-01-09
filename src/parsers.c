@@ -1095,7 +1095,7 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt,
   /**
    * Input is ok
    */
-  transport_set_feed_status(t, TRANSPORT_FEED_VALID_PACKETS);
+  transport_set_streaming_status_flags(t, TSS_PACKETS);
 
   /* Forward packet */
   pkt->pkt_componentindex = st->st_index;

@@ -265,9 +265,7 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
   lock_assert(&global_lock);
 
   assert(t->tht_status != TRANSPORT_RUNNING);
-
-  t->tht_feed_status = TRANSPORT_FEED_UNKNOWN;
-  t->tht_input_status = TRANSPORT_FEED_NO_INPUT;
+  t->tht_streaming_status = 0;
   t->tht_dts_start = AV_NOPTS_VALUE;
   t->tht_pcr_drift = 0;
 
@@ -713,7 +711,6 @@ transport_map_channel(th_transport_t *t, channel_t *ch, int save)
     t->tht_config_save(t);
 }
 
-
 /**
  *
  */
@@ -724,12 +721,10 @@ transport_data_timeout(void *aux)
 
   pthread_mutex_lock(&t->tht_stream_mutex);
 
-  if(t->tht_feed_status == TRANSPORT_FEED_UNKNOWN)
-    transport_set_feed_status(t, t->tht_input_status);
+  transport_set_streaming_status_flags(t, TSS_GRACEPERIOD);
 
   pthread_mutex_unlock(&t->tht_stream_mutex);
 }
-
 
 /**
  *
@@ -766,17 +761,33 @@ transport_is_tv(th_transport_t *t)
  *
  */
 void
-transport_set_feed_status(th_transport_t *t, transport_feed_status_t newstatus)
+transport_set_streaming_status_flags(th_transport_t *t, int set)
 {
+  int n;
+  streaming_message_t *sm;
   lock_assert(&t->tht_stream_mutex);
+  
+  n = t->tht_streaming_status;
+  
+  n |= set;
 
-  if(t->tht_feed_status == newstatus)
-    return;
+  if(n == t->tht_streaming_status)
+    return; // Already set
 
-  t->tht_feed_status = newstatus;
+  t->tht_streaming_status = n;
 
-  streaming_message_t *sm = streaming_msg_create_code(SMT_TRANSPORT_STATUS,
-						      newstatus);
+  tvhlog(LOG_DEBUG, "Transport", "%s: Status changed to %s%s%s%s%s%s%s",
+	 transport_nicename(t),
+	 n & TSS_INPUT_HARDWARE ? "[Hardware input] " : "",
+	 n & TSS_INPUT_SERVICE  ? "[Input on service] " : "",
+	 n & TSS_MUX_PACKETS    ? "[Demuxed packets] " : "",
+	 n & TSS_PACKETS        ? "[Reassembled packets] " : "",
+	 n & TSS_NO_DESCRAMBLER ? "[No available descrambler] " : "",
+	 n & TSS_NO_ACCESS      ? "[No access] " : "",
+	 n & TSS_GRACEPERIOD    ? "[Graceperiod expired] " : "");
+
+  sm = streaming_msg_create_code(SMT_TRANSPORT_STATUS,
+				 t->tht_streaming_status);
   streaming_pad_deliver(&t->tht_streaming_pad, sm);
   streaming_msg_free(sm);
 }
@@ -845,42 +856,6 @@ transport_build_stream_start(th_transport_t *t)
 
   ss->ss_refcount = 1;
   return ss;
-}
-
-
-
-
-/**
- * Table for status -> text conversion
- */
-static struct strtab transportstatustab[] = {
-  { "Unknown",
-    TRANSPORT_FEED_UNKNOWN },
-
-  { "No data input from adapter detected",  
-    TRANSPORT_FEED_NO_INPUT},
-
-  {"No mux packets for this service",
-   TRANSPORT_FEED_NO_DEMUXED_INPUT},
-
-  {"Data received for service, but no packets could be reassembled",
-   TRANSPORT_FEED_RAW_INPUT},
-
-  {"No descrambler available for service",
-   TRANSPORT_FEED_NO_DESCRAMBLER},
-
-  {"Access denied",
-   TRANSPORT_FEED_NO_ACCESS},
-
-  {"OK",
-   TRANSPORT_FEED_VALID_PACKETS},
-};
-
-
-const char *
-transport_feed_status_to_text(transport_feed_status_t status)
-{
-  return val2str(status, transportstatustab) ?: "Unknown";
 }
 
 
@@ -1012,4 +987,31 @@ const char *
 transport_component_nicename(th_stream_t *st)
 {
   return st->st_nicename;
+}
+
+const char *
+transport_tss2text(int flags)
+{
+  if(flags & TSS_NO_ACCESS)
+    return "No access";
+
+  if(flags & TSS_NO_DESCRAMBLER)
+    return "No descrambler";
+
+  if(flags & TSS_PACKETS)
+    return "Got valid packets";
+
+  if(flags & TSS_MUX_PACKETS)
+    return "Got multiplexed packets but could not decode further";
+
+  if(flags & TSS_INPUT_SERVICE)
+    return "Got packets for this service but could not decode further";
+
+  if(flags & TSS_INPUT_HARDWARE)
+    return "Sensed input from hardware but nothing for the service";
+
+  if(flags & TSS_GRACEPERIOD)
+    return "No input detected";
+
+  return "No status";
 }

@@ -1478,17 +1478,14 @@ htsp_subscription_status(htsp_subscription_t *hs, const char *err)
  *
  */
 static void
-htsp_subscription_transport_status(htsp_subscription_t *hs,
-				   transport_feed_status_t status)
+htsp_subscription_transport_status(htsp_subscription_t *hs, int status)
 {
-  const char *err = NULL;
-
-  if(status != TRANSPORT_FEED_VALID_PACKETS)
-    err = transport_feed_status_to_text(status);
-
-  htsp_subscription_status(hs, err);
+  if(status & TSS_PACKETS) {
+    htsp_subscription_status(hs, NULL);
+  } else if(status & (TSS_GRACEPERIOD | TSS_ERRORS)) {
+    htsp_subscription_status(hs, transport_tss2text(status));
+  }
 }
- 
 
 /**
  *

@@ -68,10 +68,9 @@ static void
 subscription_link_transport(th_subscription_t *s, th_transport_t *t)
 {
   streaming_message_t *sm;
-
+ 
   s->ths_transport = t;
   LIST_INSERT_HEAD(&t->tht_subscriptions, s, ths_transport_link);
-
 
   pthread_mutex_lock(&t->tht_stream_mutex);
 
@@ -87,10 +86,12 @@ subscription_link_transport(th_subscription_t *s, th_transport_t *t)
     streaming_target_deliver(s->ths_output, sm);
 
     // Send a TRANSPORT_STATUS message to the subscription client
-    if(t->tht_feed_status != TRANSPORT_FEED_UNKNOWN) {
-      sm = streaming_msg_create_code(SMT_TRANSPORT_STATUS, t->tht_feed_status);
+    if(t->tht_streaming_status) {
+      sm = streaming_msg_create_code(SMT_TRANSPORT_STATUS,
+				     t->tht_streaming_status);
       streaming_target_deliver(s->ths_output, sm);
     }
+
   }
   pthread_mutex_unlock(&t->tht_stream_mutex);
 }
@@ -334,8 +335,7 @@ dummy_callback(void *opauqe, streaming_message_t *sm)
     break;
 
   case SMT_TRANSPORT_STATUS:
-    fprintf(stderr, "dummsubscription: %s\n", 
-	    transport_feed_status_to_text(sm->sm_code));
+    fprintf(stderr, "dummsubscription: %x\n", sm->sm_code);
     break;
   default:
     break;

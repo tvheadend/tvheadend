@@ -435,9 +435,12 @@ dvr_thread(void *aux)
       break;
 
     case SMT_TRANSPORT_STATUS:
-      if(sm->sm_code != TRANSPORT_FEED_VALID_PACKETS)
+      if(sm->sm_code & TSS_PACKETS) {
+	
+      } else if(sm->sm_code & (TSS_GRACEPERIOD | TSS_ERRORS)) {
 	dvr_rec_fatal_error(de, "Source problems: %s", 
-			    transport_feed_status_to_text(sm->sm_code));
+			    transport_tss2text(sm->sm_code));
+      }
       break;
 
     case SMT_NOSOURCE:

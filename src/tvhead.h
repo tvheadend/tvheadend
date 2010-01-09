@@ -134,6 +134,7 @@ void limitedlog(loglimiter_t *ll, const char *sys,
  * Stream component types
  */
 typedef enum {
+  SCT_UNKNOWN = 0,
   SCT_MPEG2VIDEO = 1,
   SCT_MPEG2AUDIO,
   SCT_H264,
@@ -176,7 +177,7 @@ typedef enum {
   SMT_START,        // sm_data is a stream_start,
                     // see transport_build_stream_start()
   SMT_STOP ,        // no extra payload right now
-  SMT_TRANSPORT_STATUS, // sm_code is TRANSPORT_STATUS_
+  SMT_TRANSPORT_STATUS, // sm_code is TSS_ ...something
   SMT_EXIT,             // Used to signal exit to threads
   SMT_NOSOURCE,
   SMT_MPEGTS,      // sm_data is raw MPEG TS
@@ -365,35 +366,6 @@ typedef struct th_stream {
   char *st_nicename;
 
 } th_stream_t;
-
-
-/**
- *
- */
-typedef enum {
-
-  /** No status known */
-  TRANSPORT_FEED_UNKNOWN,
-
-  /** No packets are received from source at all */
-  TRANSPORT_FEED_NO_INPUT,
-
-  /** No input is received from source destined for this transport */
-  TRANSPORT_FEED_NO_DEMUXED_INPUT,
-
-  /** Raw input seen but nothing has really been decoded */
-  TRANSPORT_FEED_RAW_INPUT,
-
-  /** No descrambler is able to decrypt the stream */
-  TRANSPORT_FEED_NO_DESCRAMBLER,
-
-  /** Potential descrambler is available, but access is denied */
-  TRANSPORT_FEED_NO_ACCESS,
-
-  /** Packet are being parsed. */
-  TRANSPORT_FEED_VALID_PACKETS,
-
-} transport_feed_status_t;
 
 
 /**
@@ -626,14 +598,23 @@ typedef struct th_transport {
   pthread_mutex_t tht_stream_mutex;
 
   /**
-   * Last known data status (or error)
+   *
    */			   
-  transport_feed_status_t tht_feed_status;
+  int tht_streaming_status;
 
-  /**
-   * Set as soon as we get some kind of activity
-   */
-  transport_feed_status_t tht_input_status;
+  // Progress
+#define TSS_INPUT_HARDWARE   0x1
+#define TSS_INPUT_SERVICE    0x2
+#define TSS_MUX_PACKETS      0x4
+#define TSS_PACKETS          0x8
+
+#define TSS_GRACEPERIOD      0x8000
+
+  // Errors
+#define TSS_NO_DESCRAMBLER   0x10000
+#define TSS_NO_ACCESS        0x20000
+
+#define TSS_ERRORS           0xffff0000
 
 
   /**

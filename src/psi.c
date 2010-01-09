@@ -365,7 +365,7 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
     len -= 5;
 
     frameduration = 0;
-    hts_stream_type = 0;
+    hts_stream_type = SCT_UNKNOWN;
     memset(lang, 0, 4);
     composition_id = -1;
     ancillary_id = -1;
@@ -452,7 +452,7 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
       len -= dlen; ptr += dlen; dllen -= dlen;
     }
 
-    if(hts_stream_type != 0) {
+    if(hts_stream_type != SCT_UNKNOWN) {
 
       if((st = transport_stream_find(t, pid)) == NULL) {
 	update |= PMT_UPDATE_NEW_STREAM;
