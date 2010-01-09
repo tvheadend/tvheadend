@@ -590,3 +590,69 @@ limitedlog(loglimiter_t *ll, const char *sys, const char *o, const char *event)
   tvhlog(LOG_WARNING, sys, "%s: %s%s", o, event, buf);
   ll->last = now;
 }
+
+
+/**
+ *
+ */  
+const char *
+hostconnection2str(int type)
+{
+  switch(type) {
+  case HOSTCONNECTION_USB12:
+    return "USB (12 Mbit/s)";
+    
+  case HOSTCONNECTION_USB480:
+    return "USB (480 Mbit/s)";
+
+  case HOSTCONNECTION_PCI:
+    return "PCI";
+  }
+  return "Unknown";
+
+}
+
+
+/**
+ *
+ */
+static int
+readlinefromfile(const char *path, char *buf, size_t buflen)
+{
+  int fd = open(path, O_RDONLY);
+  ssize_t r;
+
+  if(fd == -1)
+    return -1;
+
+  r = read(fd, buf, buflen - 1);
+  close(fd);
+  if(r < 0)
+    return -1;
+
+  buf[buflen] = 0;
+  return 0;
+}
+
+
+/**
+ *
+ */  
+int
+get_device_connection(const char *dev)
+{
+  char path[200];
+  char l[64];
+  int speed;
+
+  snprintf(path, sizeof(path),  "/sys/class/%s/device/speed", dev);
+
+  if(readlinefromfile(path, l, sizeof(l))) {
+    // Unable to read speed, assume it's PCI
+    return HOSTCONNECTION_PCI;
+  } else {
+    speed = atoi(l);
+   
+    return speed >= 480 ? HOSTCONNECTION_USB480 : HOSTCONNECTION_USB12;
+  }
+}

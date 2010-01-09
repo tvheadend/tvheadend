@@ -1088,6 +1088,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	'<h2 style="font-size: 150%">Hardware</h2>' +
 	    '<h3>Device path:</h3>{path}' +
 	    '<h3>Device name:</h3>{devicename}' +
+	    '<h3>Host connection:</h3>{hostconnection}' +
 	    '<h3><tpl if="satConf != 0">Intermediate </tpl>Frequency range:</h3>{freqMin} kHz - {freqMax} kHz' +
 	    ', in steps of {freqStep} kHz' +
 	    '<tpl if="symrateMin != 0">' +

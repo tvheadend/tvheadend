@@ -130,6 +130,19 @@ typedef struct loglimter {
 void limitedlog(loglimiter_t *ll, const char *sys, 
 		const char *o, const char *event);
 
+
+/**
+ * Device connection types
+ */
+#define HOSTCONNECTION_UNKNOWN    0
+#define HOSTCONNECTION_USB12      1
+#define HOSTCONNECTION_USB480     2
+#define HOSTCONNECTION_PCI        3
+
+const char *hostconnection2str(int type);
+int get_device_connection(const char *dev);
+
+
 /**
  * Stream component types
  */
@@ -675,9 +688,6 @@ typedef struct th_transport {
   loglimiter_t tht_loglimit_tei;
 
 } th_transport_t;
-
-
-
 
 const char *streaming_component_type2txt(streaming_component_type_t s);
 

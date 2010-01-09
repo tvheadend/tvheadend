@@ -187,6 +187,18 @@ dvb_adapter_set_diseqc_version(th_dvb_adapter_t *tda, unsigned int v)
 }
 
 
+/**
+ *
+ */
+static void
+dvb_adapter_checkspeed(th_dvb_adapter_t *tda)
+{
+  char dev[64];
+
+  snprintf(dev, sizeof(dev), "dvb/dvb%d.dvr0", tda->tda_adapter_num);
+  tda->tda_hostconnection = get_device_connection(dev);
+ }
+
 
 /**
  *
@@ -255,8 +267,11 @@ tda_add(int adapter_num)
 
   tda->tda_displayname = strdup(tda->tda_fe_info->name);
 
+  dvb_adapter_checkspeed(tda);
+
   tvhlog(LOG_INFO, "dvb",
-	 "Found adapter %s (%s)", path, tda->tda_fe_info->name);
+	 "Found adapter %s (%s) via %s", path, tda->tda_fe_info->name,
+	 hostconnection2str(tda->tda_hostconnection));
 
   TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
 
@@ -518,6 +533,8 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
     return m;
 
   htsmsg_add_str(m, "path", tda->tda_rootpath);
+  htsmsg_add_str(m, "hostconnection", 
+		 hostconnection2str(tda->tda_hostconnection));
   htsmsg_add_str(m, "devicename", tda->tda_fe_info->name);
 
   htsmsg_add_str(m, "deliverySystem", 
@@ -533,7 +550,6 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
 
   htsmsg_add_u32(m, "symrateMin", tda->tda_fe_info->symbol_rate_min);
   htsmsg_add_u32(m, "symrateMax", tda->tda_fe_info->symbol_rate_max);
-
   return m;
 }
 
