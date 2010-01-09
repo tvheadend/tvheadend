@@ -234,7 +234,7 @@ main(int argc, char **argv)
   uint32_t adapter_mask = 0xffffffff;
   int crash = 0;
 
-  while((c = getopt(argc, argv, "Aa:fu:g:c:Chdr:j:")) != -1) {
+  while((c = getopt(argc, argv, "Aa:fu:g:c:Chdr:j:s")) != -1) {
     switch(c) {
     case 'a':
       adapter_mask = 0x0;
@@ -273,6 +273,9 @@ main(int argc, char **argv)
       break;
     case 'd':
       log_debug_to_console = 1;
+      break;
+    case 's':
+      log_debug_to_syslog = 1;
       break;
     case 'C':
       createdefault = 1;
