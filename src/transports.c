@@ -66,6 +66,11 @@ transport_nostart2txt(int code)
   case TRANSPORT_NOSTART_TUNING_FAILED:   return "Tuning failed";
   case TRANSPORT_NOSTART_SVC_NOT_ENABLED: return "No service enabled";
   case TRANSPORT_NOSTART_BAD_SIGNAL:      return "Too bad signal quality";
+  case TRANSPORT_NOSTART_NO_ACCESS:       return "No access";
+  case TRANSPORT_NOSTART_NO_DESCRAMBLER:  return "No descrambler available";
+  case TRANSPORT_NOSTART_NO_INPUT:        return "No input detected";
+  case TRANSPORT_NOSTART_NO_SIGNAL:       return "No signal";
+
   }
   return "Unknown error";
 }
@@ -257,10 +262,11 @@ transport_remove_subscriber(th_transport_t *t, th_subscription_t *s)
  *
  */
 int
-transport_start(th_transport_t *t, unsigned int weight, int force_start)
+transport_start(th_transport_t *t, unsigned int weight, int force_start,
+		int wait_for_ok)
 {
   th_stream_t *st;
-  int r;
+  int r, err;
 
   lock_assert(&global_lock);
 
@@ -287,8 +293,56 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
   cwc_transport_start(t);
   capmt_transport_start(t);
 
-  gtimer_arm(&t->tht_receive_timer, transport_data_timeout, t, 10);
-  return 0;
+  int timeout = 10;
+
+  gtimer_arm(&t->tht_receive_timer, transport_data_timeout, t, timeout);
+
+  if(!wait_for_ok)
+    return 0;
+
+  tvhlog(LOG_DEBUG, "Transport", "%s: Waiting for input before start",
+	 transport_nicename(t));
+
+  pthread_mutex_lock(&t->tht_stream_mutex);
+
+  struct timespec to;
+
+  to.tv_sec = time(NULL) + timeout;
+  to.tv_nsec = 0;
+
+  do {
+    if(t->tht_streaming_status & TSS_MUX_PACKETS) {
+      tvhlog(LOG_DEBUG, "Transport", "%s: Got demultiplexable packets",
+	     transport_nicename(t));
+      pthread_mutex_unlock(&t->tht_stream_mutex);
+      return 0; 
+    }
+
+  } while(pthread_cond_timedwait(&t->tht_tss_cond, &t->tht_stream_mutex, 
+				 &to) != ETIMEDOUT);
+
+  err = t->tht_streaming_status;
+
+  // Startup timed out
+
+  pthread_mutex_unlock(&t->tht_stream_mutex);
+
+  transport_stop(t);
+
+  // Translate streaming status flags to NOSTART errorcode
+  if(err & TSS_NO_DESCRAMBLER)
+    return TRANSPORT_NOSTART_NO_DESCRAMBLER;
+
+  if(err & TSS_NO_ACCESS)
+    return TRANSPORT_NOSTART_NO_ACCESS;
+
+  if(err & TSS_NO_ACCESS)
+    return TRANSPORT_NOSTART_NO_ACCESS;
+
+  if(err & TSS_INPUT_SERVICE)
+    return TRANSPORT_NOSTART_NO_INPUT;
+
+  return TRANSPORT_NOSTART_NO_SIGNAL;
 }
 
 
@@ -408,7 +462,7 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
     if(t->tht_status == TRANSPORT_RUNNING) 
       return t;
 
-    if(!transport_start(t, 0, 0))
+    if(!transport_start(t, 0, 0, 1))
       return t;
   }
 
@@ -417,7 +471,7 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
 
   for(i = 0; i < cnt; i++) {
     t = vec[i];
-    if((r = transport_start(t, weight, 0)) == 0)
+    if((r = transport_start(t, weight, 0, 1)) == 0)
       return t;
     error = r;
     if(loginfo != NULL)
@@ -534,6 +588,7 @@ transport_create(const char *identifier, int type, int source_type)
   lock_assert(&global_lock);
 
   pthread_mutex_init(&t->tht_stream_mutex, NULL);
+  pthread_cond_init(&t->tht_tss_cond, NULL);
   t->tht_identifier = strdup(identifier);
   t->tht_type = type;
   t->tht_source_type = source_type;
@@ -790,6 +845,8 @@ transport_set_streaming_status_flags(th_transport_t *t, int set)
 				 t->tht_streaming_status);
   streaming_pad_deliver(&t->tht_streaming_pad, sm);
   streaming_msg_free(sm);
+
+  pthread_cond_broadcast(&t->tht_tss_cond);
 }
 
 

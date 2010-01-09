@@ -291,7 +291,7 @@ subscription_create_from_transport(th_transport_t *t, const char *name,
   source_info_t si;
 
   if(t->tht_status != TRANSPORT_RUNNING) {
-    if(transport_start(t, INT32_MAX, 1)) {
+    if(transport_start(t, INT32_MAX, 1, 0)) {
       subscription_unsubscribe(s);
 
       tvhlog(LOG_INFO, "subscription", 

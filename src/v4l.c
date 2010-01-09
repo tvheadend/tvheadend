@@ -66,6 +66,9 @@ v4l_input(v4l_adapter_t *va)
 
   pthread_mutex_lock(&t->tht_stream_mutex);
 
+  transport_set_streaming_status_flags(t, 
+				       TSS_INPUT_HARDWARE | TSS_INPUT_SERVICE);
+
   while(len > 0) {
 
     switch(va->va_startcode) {
@@ -97,6 +100,9 @@ v4l_input(v4l_adapter_t *va)
 
       st->st_buffer2_ptr += r;
       if(st->st_buffer2_ptr == l) {
+
+	transport_set_streaming_status_flags(t, TSS_MUX_PACKETS);
+
 	parse_mpeg_ps(t, st, pkt + 6, l - 6);
 
 	st->st_buffer2_size = 0;

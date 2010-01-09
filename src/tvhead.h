@@ -597,6 +597,12 @@ typedef struct th_transport {
    */
   pthread_mutex_t tht_stream_mutex;
 
+
+  /**
+   * Condition variable to singal when streaming_status changes
+   * interlocked with tht_stream_mutex
+   */
+  pthread_cond_t tht_tss_cond;
   /**
    *
    */			   

@@ -12,6 +12,11 @@ hts-tvheadend (2.8) hts; urgency=low
 
   * Improve logging when subscriptions fail to start
 
+  * More intelligent arbitration amongst all sources when a subscription
+    is about to start for a channel. If we cannot descramble or if no
+    input is detected, skip to next source.
+    Fixes ticket #89 
+
 hts-tvheadend (2.7) hts; urgency=low
 
   * Added support for DVB subtitles. Currently only forwarded over HTSP
