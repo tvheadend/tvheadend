@@ -1448,7 +1448,9 @@ extjs_servicedetails(http_connection_t *hc,
       break;
 
     case SCT_CA:
-      htsmsg_add_str(c, "details", psi_caid2name(st->st_caid));
+      snprintf(buf, sizeof(buf), "%s (0x%04x)",
+	       psi_caid2name(st->st_caid), st->st_caid);
+      htsmsg_add_str(c, "details", buf);
       break;
 
     case SCT_AC3:
