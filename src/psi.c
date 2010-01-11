@@ -780,6 +780,7 @@ psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
 
     if(st->st_type == SCT_CA) {
       htsmsg_add_str(sub, "caid", psi_caid2name(st->st_caid));
+      htsmsg_add_u32(sub, "caidnum", st->st_caid);
 
       if(st->st_providerid)
 	htsmsg_add_u32(sub, "caproviderid", st->st_providerid);
@@ -845,8 +846,10 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
 
     if(!htsmsg_get_u32(c, "frameduration", &u32))
       st->st_frame_duration = u32;
-     
-    if((v = htsmsg_get_str(c, "caid")) != NULL) {
+
+    if(!htsmsg_get_u32(c, "caidnum", &u32)) {
+      st->st_caid = u32;
+    } else if((v = htsmsg_get_str(c, "caid")) != NULL) {
       int i = str2val(v, caidnametab);
       st->st_caid = i < 0 ? strtol(v, NULL, 0) : i;
     }
