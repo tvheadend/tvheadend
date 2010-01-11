@@ -79,8 +79,24 @@ typedef enum {
 TAILQ_HEAD(cwc_queue, cwc);
 LIST_HEAD(cwc_transport_list, cwc_transport);
 TAILQ_HEAD(cwc_message_queue, cwc_message);
+LIST_HEAD(ecm_channel_list, ecm_channel);
 static struct cwc_queue cwcs;
 static pthread_cond_t cwc_config_changed;
+
+/**
+ *
+ */
+typedef struct ecm_channel {
+  LIST_ENTRY(ecm_channel) ec_link;
+  int ec_failures;
+  int ec_channel;
+
+  uint16_t ec_seq;
+  
+  size_t ec_ecmsize;
+  uint8_t ec_ecm[4096];
+
+} ecm_channel_t;
 
 
 /**
@@ -95,22 +111,8 @@ typedef struct cwc_transport {
 
   LIST_ENTRY(cwc_transport) ct_link;
 
-
-  /**
-   * Sequence number generated on write (based on cwc_seq), 
-   * used to pair reply message (i.e when i CT_STATE_WAIT_REPLY)
-   * with cwc_transport
-   */
-  uint16_t ct_seq;
-
-
-  /**
-   * Current ECM
-   */
-  uint8_t ct_ecm[4096];
-  int ct_ecmsize;
-
-  int ct_ecm_reply_pending; /* Waiting for a ECM reply */
+  struct ecm_channel_list ct_ecmchannels; // Status per ECM channel
+  int ct_okchannel;
 
   /**
    * Status of the key(s) in ct_keys
@@ -562,6 +564,21 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 
 
 /**
+ *
+ */
+static int
+channel_nok(cwc_transport_t *ct, ecm_channel_t *ec)
+{
+  ec->ec_failures++;
+
+  LIST_FOREACH(ec, &ct->ct_ecmchannels, ec_link)
+    if(ec->ec_failures < 2)
+      return 0;
+  return 1;
+}
+
+
+/**
  * Login command
  */
 static void
@@ -591,6 +608,7 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
   uint16_t seq = (msg[2] << 8) | msg[3];
   th_transport_t *t;
   int j;
+  ecm_channel_t *ec = NULL;
 
   len -= 12;
   msg += 12;
@@ -599,61 +617,84 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
   case 0x80:
   case 0x81:
     LIST_FOREACH(ct, &cwc->cwc_transports, ct_link) {
-      if(ct->ct_seq == seq && ct->ct_ecm_reply_pending)
-	break;
+      LIST_FOREACH(ec, &ct->ct_ecmchannels, ec_link) {
+	if(ec->ec_seq == seq) 
+	  goto gotch;
+      }
     }
+    tvhlog(LOG_ERR, "cwc", "Got unexpected ECM reply (seqno: %d)", seq);
+    return 0;
 
-    if(ct == NULL) {
-      tvhlog(LOG_ERR, "cwc", "Got unexpected ECM reply");
-      return 0;
-    }
-
+  gotch:
     t = ct->ct_transport;
-    ct->ct_ecm_reply_pending = 0;
 
     if(len < 19) {
 
+      if(ct->ct_okchannel == ec->ec_channel)
+	ct->ct_okchannel = -1;
+
       if(ct->ct_keystate != CT_FORBIDDEN) {
+
+	if(ec->ec_channel != -1)
+	  tvhlog(LOG_DEBUG, "cwc", "Received NOK on channel %d (seqno: %d)", 
+		 ec->ec_channel, seq);
+
+	if(ec->ec_channel != -1 && !channel_nok(ct, ec))
+	  break;
+	
 	tvhlog(LOG_ERR, "cwc",
-	       "Can not descramble service \"%s\", access denied",
-	       t->tht_svcname);
+	       "Can not descramble service \"%s\", access denied (seqno: %d)",
+	       t->tht_svcname, seq);
 	ct->ct_keystate = CT_FORBIDDEN;
       }
 
-      return 0;
+    } else {
+
+      ct->ct_okchannel = ec->ec_channel;
+
+      char chbuf[32];
+
+      if(ec->ec_channel != -1) {
+	snprintf(chbuf, sizeof(chbuf), " on channel %d", ec->ec_channel);
+      } else {
+	chbuf[0] = 0;
+      }
+
+      tvhlog(LOG_DEBUG, "cwc",
+	     "Received ECM reply%s for service \"%s\" "
+	     "even: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
+	     " odd: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x (seqno: %d)",
+	     chbuf,
+	     t->tht_svcname,
+	     msg[3 + 0], msg[3 + 1], msg[3 + 2], msg[3 + 3], msg[3 + 4],
+	     msg[3 + 5], msg[3 + 6], msg[3 + 7], msg[3 + 8], msg[3 + 9],
+	     msg[3 + 10],msg[3 + 11],msg[3 + 12],msg[3 + 13],msg[3 + 14],
+	     msg[3 + 15], seq);
+
+      if(ct->ct_keystate != CT_RESOLVED)
+	tvhlog(LOG_INFO, "cwc",
+	       "Obtained key for for service \"%s\"",t->tht_svcname);
+    
+      ct->ct_keystate = CT_RESOLVED;
+      pthread_mutex_lock(&t->tht_stream_mutex);
+
+      for(j = 0; j < 8; j++)
+	if(msg[3 + j]) {
+	  set_even_control_word(ct->ct_keys, msg + 3);
+	  break;
+	}
+
+      for(j = 0; j < 8; j++)
+	if(msg[3 + 8 +j]) {
+	  set_odd_control_word(ct->ct_keys, msg + 3 + 8);
+	  break;
+	}
+
+      pthread_mutex_unlock(&t->tht_stream_mutex);
     }
 
-    tvhlog(LOG_DEBUG, "cwc",
-	   "Received ECM reply for service \"%s\" "
-	   "even: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
-	   " odd: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x ",
-	   t->tht_svcname,
-	   msg[3 + 0], msg[3 + 1], msg[3 + 2], msg[3 + 3], msg[3 + 4],
-	   msg[3 + 5], msg[3 + 6], msg[3 + 7], msg[3 + 8], msg[3 + 9],
-	   msg[3 + 10],msg[3 + 11],msg[3 + 12],msg[3 + 13],msg[3 + 14],
-	   msg[3 + 15]);
-
-    if(ct->ct_keystate != CT_RESOLVED)
-      tvhlog(LOG_INFO, "cwc",
-	     "Obtained key for for service \"%s\"",t->tht_svcname);
-    
-    ct->ct_keystate = CT_RESOLVED;
-    pthread_mutex_lock(&t->tht_stream_mutex);
-
-    for(j = 0; j < 8; j++)
-      if(msg[3 + j]) {
-	set_even_control_word(ct->ct_keys, msg + 3);
-	break;
-      }
-
-    for(j = 0; j < 8; j++)
-      if(msg[3 + 8 +j]) {
-	set_odd_control_word(ct->ct_keys, msg + 3 + 8);
-	break;
-      }
-
-    pthread_mutex_unlock(&t->tht_stream_mutex);
     break;
+
   default:
     // EMM
     break;
@@ -1009,6 +1050,8 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
   cwc_transport_t *ct = (cwc_transport_t *)td;
   uint16_t sid = t->tht_dvb_service_id;
   cwc_t *cwc = ct->ct_cwc;
+  int channel;
+  ecm_channel_t *ec;
 
   if(len > 4096)
     return;
@@ -1027,12 +1070,24 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
   case 0x81:
     /* ECM */
 
-    if(ct->ct_ecm_reply_pending)
-      break;
+    if(cwc->cwc_caid >> 8 == 6) {
+      channel = data[6] << 8 | data[7];
+    } else {
+      channel = -1;
+    }
 
-    if(ct->ct_ecmsize == len && !memcmp(ct->ct_ecm, data, len))
+    LIST_FOREACH(ec, &ct->ct_ecmchannels, ec_link)
+      if(ec->ec_channel == channel)
+	break;
+
+    if(ec == NULL) {
+      ec = calloc(1, sizeof(ecm_channel_t));
+      LIST_INSERT_HEAD(&ct->ct_ecmchannels, ec, ec_link);
+      ec->ec_channel = channel;
+    }
+
+    if(ec->ec_ecmsize == len && !memcmp(ec->ec_ecm, data, len))
       break; /* key already sent */
-
 
     if(cwc->cwc_fd == -1) {
       // New key, but we are not connected (anymore), can not descramble
@@ -1040,12 +1095,25 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
       break;
     }
 
-    tvhlog(LOG_DEBUG, "cwc", "Sending ECM for service %s", t->tht_svcname);
+    memcpy(ec->ec_ecm, data, len);
+    ec->ec_ecmsize = len;
 
-    memcpy(ct->ct_ecm, data, len);
-    ct->ct_ecmsize = len;
-    ct->ct_seq = cwc_send_msg(cwc, data, len, sid, 1);
-    ct->ct_ecm_reply_pending = 1;
+    if(ct->ct_okchannel != -1 && channel != -1 && 
+       ct->ct_okchannel != channel) {
+      tvhlog(LOG_DEBUG, "cwc", "Filtering ECM channel %d", channel);
+      return;
+    }
+
+    ec->ec_seq = cwc_send_msg(cwc, data, len, sid, 1);
+
+    if(channel != -1) {
+      tvhlog(LOG_DEBUG, "cwc", 
+	     "Sending ECM (channel %d) for service %s (seqno: %d)", 
+	     channel, t->tht_svcname, ec->ec_seq);
+    } else {
+      tvhlog(LOG_DEBUG, "cwc", "Sending ECM for service %s (seqno: %d)", 
+	     t->tht_svcname, ec->ec_seq);
+    }
     break;
 
   default:
@@ -1116,6 +1184,12 @@ static void
 cwc_transport_destroy(th_descrambler_t *td)
 {
   cwc_transport_t *ct = (cwc_transport_t *)td;
+  ecm_channel_t *ec;
+
+  while((ec = LIST_FIRST(&ct->ct_ecmchannels)) != NULL) {
+    LIST_REMOVE(ec, ec_link);
+    free(ec);
+  }
 
   LIST_REMOVE(td, td_transport_link);
 
@@ -1156,7 +1230,6 @@ cwc_transport_start(th_transport_t *t)
   th_stream_t *st;
 
   lock_assert(&global_lock);
-
   TAILQ_FOREACH(cwc, &cwcs, cwc_link) {
     if(cwc->cwc_caid == 0)
       continue;
@@ -1171,7 +1244,8 @@ cwc_transport_start(th_transport_t *t)
     ct->ct_keys = get_key_struct();
     ct->ct_cwc = cwc;
     ct->ct_transport = t;
-     
+    ct->ct_okchannel = -1;
+
     td = &ct->ct_head;
     td->td_stop       = cwc_transport_destroy;
     td->td_table      = cwc_table_input;
