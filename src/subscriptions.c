@@ -289,13 +289,15 @@ subscription_create_from_transport(th_transport_t *t, const char *name,
 {
   th_subscription_t *s = subscription_create(INT32_MAX, name, st, flags);
   source_info_t si;
+  int r;
 
   if(t->tht_status != TRANSPORT_RUNNING) {
-    if(transport_start(t, INT32_MAX, 1, 0)) {
+    if((r = transport_start(t, INT32_MAX, 1, 0)) != 0) {
       subscription_unsubscribe(s);
 
       tvhlog(LOG_INFO, "subscription", 
-	     "\"%s\" direct subscription failed", name);
+	     "\"%s\" direct subscription failed -- %s", name,
+	     transport_nostart2txt(r));
       return NULL;
     }
   }
