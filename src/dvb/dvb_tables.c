@@ -977,9 +977,19 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   int ntl;
   char networkname[256];
   uint16_t tsid;
+  uint16_t network_id = (ptr[0] << 8) | ptr[1];
 
-  if(tableid != 0x40)
-    return -1;
+  if(tdmi->tdmi_adapter->tda_nitoid) {
+    if(tableid != 0x41)
+      return -1;
+    
+    if(network_id != tdmi->tdmi_adapter->tda_nitoid)
+      return -1;
+
+  } else {
+    if(tableid != 0x40)
+      return -1;
+  }
 
   if((ptr[2] & 1) == 0) {
     /* current_next_indicator == next, skip this */
@@ -1169,7 +1179,12 @@ dvb_table_add_default_dvb(th_dvb_mux_instance_t *tdmi)
   /* Network Information Table */
 
   fp = dvb_fparams_alloc();
-  fp->filter.filter[0] = 0x40;
+
+  if(tdmi->tdmi_adapter->tda_nitoid) {
+    fp->filter.filter[0] = 0x41;
+  } else {
+    fp->filter.filter[0] = 0x40;
+  }
   fp->filter.mask[0] = 0xff;
   tdt_add(tdmi, fp, dvb_nit_callback, NULL, "nit", 
 	  TDT_QUICKREQ | TDT_CRC, 0x10, NULL);

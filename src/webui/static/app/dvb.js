@@ -1008,7 +1008,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 
     var confreader = new Ext.data.JsonReader({
 	root: 'dvbadapters'
-    }, ['name', 'automux', 'idlescan', 'diseqcversion', 'qmon']);
+    }, ['name', 'automux', 'idlescan', 'diseqcversion', 'qmon', 'nitoid']);
 
     
     function saveConfForm () {
@@ -1036,7 +1036,13 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	new Ext.form.Checkbox({
 	    fieldLabel: 'Monitor signal quality',
 	    name: 'qmon'
-	})
+	}),
+	{
+	    fieldLabel: 'NIT-o Network ID',
+	    name: 'nitoid',
+	    width: 50
+	},
+
     ];
 
     if(satConfStore) { 

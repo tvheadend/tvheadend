@@ -1049,6 +1049,7 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(r, "automux", tda->tda_autodiscovery);
     htsmsg_add_u32(r, "idlescan", tda->tda_idlescan);
     htsmsg_add_u32(r, "qmon", tda->tda_qmon);
+    htsmsg_add_u32(r, "nitoid", tda->tda_nitoid);
     htsmsg_add_str(r, "diseqcversion", 
 		   ((const char *[]){"DiSEqC 1.0 / 2.0",
 				       "DiSEqC 1.1 / 2.1"})
@@ -1068,6 +1069,9 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 
     s = http_arg_get(&hc->hc_req_args, "qmon");
     dvb_adapter_set_qmon(tda, !!s);
+
+    if((s = http_arg_get(&hc->hc_req_args, "nitoid")) != NULL)
+      dvb_adapter_set_nitoid(tda, atoi(s));
 
     if((s = http_arg_get(&hc->hc_req_args, "diseqcversion")) != NULL) {
       if(!strcmp(s, "DiSEqC 1.0 / 2.0"))
