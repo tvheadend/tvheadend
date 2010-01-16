@@ -42,6 +42,8 @@ typedef struct rawts {
 
   struct th_transport_list rt_transports;
 
+  int rt_pcr_pid;
+
 } rawts_t;
 
 
@@ -241,9 +243,9 @@ process_ts_packet(rawts_t *rt, uint8_t *tsb)
   uint16_t pid;
   th_transport_t *t;
   int64_t pcr, d;
+  int didsleep = 0;
 
   pid = ((tsb[1] & 0x1f) << 8) | tsb[2];
-
   if(pid == 0) {
     /* PAT */
     rawts_pat(rt, tsb);
@@ -257,18 +259,26 @@ process_ts_packet(rawts_t *rt, uint8_t *tsb)
 
     if(pcr != AV_NOPTS_VALUE) {
       
-      if(t->tht_pcr_last != AV_NOPTS_VALUE) {
-	struct timespec slp;
+      if(rt->rt_pcr_pid == 0)
+	rt->rt_pcr_pid = pid;
 
-	d = pcr - t->tht_pcr_last + t->tht_pcr_last_realtime;
+      if(rt->rt_pcr_pid == pid) {
+	if(t->tht_pcr_last != AV_NOPTS_VALUE && didsleep == 0) {
+	  struct timespec slp;
+	  int64_t delta = pcr - t->tht_pcr_last;
 
-	slp.tv_sec  =  d / 1000000;
-	slp.tv_nsec = (d % 1000000) * 1000;
+	  if(delta > 100000)
+	    delta = 100000;
+	  d = delta + t->tht_pcr_last_realtime;
+	  slp.tv_sec  =  d / 1000000;
+	  slp.tv_nsec = (d % 1000000) * 1000;
 	
-	clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &slp, NULL);
+	  clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &slp, NULL);
+	  didsleep = 1;
+	}
+	t->tht_pcr_last = pcr;
+	t->tht_pcr_last_realtime = getmonoclock();
       }
-      t->tht_pcr_last = pcr;
-      t->tht_pcr_last_realtime = getmonoclock();
     }
   }
 }
