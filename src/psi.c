@@ -37,7 +37,7 @@ psi_section_reassemble0(psi_section_t *ps, const uint8_t *data,
 			int len, int start, int crc,
 			section_handler_t *cb, void *opaque)
 {
-  int excess, tsize, s;
+  int excess, tsize;
 
   if(start) {
     // Payload unit start indicator
@@ -66,9 +66,8 @@ psi_section_reassemble0(psi_section_t *ps, const uint8_t *data,
   if(crc && psi_crc32(ps->ps_data, tsize))
     return -1;
 
-  s = tsize - (crc ? 4 : 0);
-
-  cb(ps->ps_data, s, opaque);
+  cb(ps->ps_data, tsize - (crc ? 4 : 0), opaque);
+  ps->ps_offset = 0;
   return len - excess;
 }
 
