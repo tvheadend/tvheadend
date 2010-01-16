@@ -1076,15 +1076,16 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
   case 0x81:
     /* ECM */
     
-    ct->ct_last_section = data[5]; 
-    section = data[4];
-
     if(cwc->cwc_caid >> 8 == 6) {
       channel = data[6] << 8 | data[7];
       snprintf(chaninfo, sizeof(chaninfo), " (channel %d)", channel);
+      ct->ct_last_section = data[5]; 
+      section = data[4];
     } else {
       channel = -1;
       chaninfo[0] = 0;
+      ct->ct_last_section = 0; 
+      section = 0;
     }
 
     if(ct->ct_sections[section] == NULL)
