@@ -410,7 +410,7 @@ capmt_thread(void *aux)
  */
 static void
 capmt_table_input(struct th_descrambler *td, struct th_transport *t,
-		struct th_stream *st, uint8_t *data, int len)
+		struct th_stream *st, const uint8_t *data, int len)
 {
   capmt_transport_t *ct = (capmt_transport_t *)td;
   capmt_t *capmt = ct->ct_capmt;
@@ -572,7 +572,8 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
  *
  */
 static int
-capmt_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st, uint8_t *tsb)
+capmt_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
+		 const uint8_t *tsb)
 {
   capmt_transport_t *ct = (capmt_transport_t *)td;
   int r, i;

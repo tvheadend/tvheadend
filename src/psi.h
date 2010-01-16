@@ -22,16 +22,19 @@
 #include "htsmsg.h"
 #include "streaming.h"
 
-#define PSI_SECTION_SIZE 4096
+#define PSI_SECTION_SIZE 5000
+
+typedef void (section_handler_t)(const uint8_t *data, size_t len, void *opaque);
 
 typedef struct psi_section {
   int ps_offset;
+  int ps_lock;
   uint8_t ps_data[PSI_SECTION_SIZE];
 } psi_section_t;
 
 
-int psi_section_reassemble(psi_section_t *ps, uint8_t *data, int len,
-			   int pusi, int chkcrc);
+void psi_section_reassemble(psi_section_t *ps, const uint8_t *tsb, int crc,
+			    section_handler_t *cb, void *opaque);
 
 int psi_parse_pat(th_transport_t *t, uint8_t *ptr, int len,
 		  pid_section_callback_t *pmt_callback);
@@ -49,9 +52,5 @@ const char *psi_caid2name(uint16_t caid);
 
 void psi_load_transport_settings(htsmsg_t *m, th_transport_t *t);
 void psi_save_transport_settings(htsmsg_t *m, th_transport_t *t);
-
-void psi_rawts_table_parser(psi_section_t *section, uint8_t *tsb,
-			    void (*gotsection)(const uint8_t *data, int len,
-					       void *opauqe), void *opaque);
 
 #endif /* PSI_H_ */

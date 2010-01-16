@@ -55,7 +55,7 @@ static struct th_transport_list iptv_active_transports; /* Currently enabled */
  * PAT parser. We only parse a single program. CRC has already been verified
  */
 static void
-iptv_got_pat(const uint8_t *ptr, int len, void *aux)
+iptv_got_pat(const uint8_t *ptr, size_t len, void *aux)
 {
   th_transport_t *t = aux;
   uint16_t prognum, pmt;
@@ -77,7 +77,7 @@ iptv_got_pat(const uint8_t *ptr, int len, void *aux)
  * PMT parser. CRC has already been verified
  */
 static void
-iptv_got_pmt(const uint8_t *ptr, int len, void *aux)
+iptv_got_pmt(const uint8_t *ptr, size_t len, void *aux)
 {
   th_transport_t *t = aux;
 
@@ -94,7 +94,7 @@ iptv_got_pmt(const uint8_t *ptr, int len, void *aux)
  * Handle a single TS packet for the given IPTV transport
  */
 static void
-iptv_ts_input(th_transport_t *t, uint8_t *tsb)
+iptv_ts_input(th_transport_t *t, const uint8_t *tsb)
 {
   uint16_t pid = ((tsb[1] & 0x1f) << 8) | tsb[2];
 
@@ -102,13 +102,13 @@ iptv_ts_input(th_transport_t *t, uint8_t *tsb)
 
     if(t->tht_pat_section == NULL)
       t->tht_pat_section = calloc(1, sizeof(psi_section_t));
-    psi_rawts_table_parser(t->tht_pat_section, tsb, iptv_got_pat, t);
+    psi_section_reassemble(t->tht_pat_section, tsb, 1, iptv_got_pat, t);
 
   } else if(pid == t->tht_pmt_pid) {
 
     if(t->tht_pmt_section == NULL)
       t->tht_pmt_section = calloc(1, sizeof(psi_section_t));
-    psi_rawts_table_parser(t->tht_pmt_section, tsb, iptv_got_pmt, t);
+    psi_section_reassemble(t->tht_pmt_section, tsb, 1, iptv_got_pmt, t);
 
   } else {
     ts_recv_packet1(t, tsb, NULL);

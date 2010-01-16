@@ -80,20 +80,20 @@ typedef int (vparser_t)(th_transport_t *t, th_stream_t *st, size_t len,
 
 typedef void (aparser_t)(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
 
-static void parse_video(th_transport_t *t, th_stream_t *st, uint8_t *data,
+static void parse_video(th_transport_t *t, th_stream_t *st, const uint8_t *data,
 			int len, vparser_t *vp);
 
 static void  parse_audio_with_lavc(th_transport_t *t, th_stream_t *st, 
-				   uint8_t *data, int len, aparser_t *ap);
+				   const uint8_t *data, int len, aparser_t *ap);
 
-static void parse_audio(th_transport_t *t, th_stream_t *st, uint8_t *data,
+static void parse_audio(th_transport_t *t, th_stream_t *st, const uint8_t *data,
 			int len, int start, aparser_t *vp);
 
-static void parse_aac(th_transport_t *t, th_stream_t *st, uint8_t *data,
+static void parse_aac(th_transport_t *t, th_stream_t *st, const uint8_t *data,
 		      int len, int start);
 
-static void parse_subtitles(th_transport_t *t, th_stream_t *st, uint8_t *data,
-			    int len, int start);
+static void parse_subtitles(th_transport_t *t, th_stream_t *st, 
+			    const uint8_t *data, int len, int start);
 
 static void parse_mpegaudio(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
 
@@ -115,7 +115,7 @@ static void parser_compute_duration(th_transport_t *t, th_stream_t *st,
  * Parse raw mpeg data
  */
 void
-parse_mpeg_ts(th_transport_t *t, th_stream_t *st, uint8_t *data, 
+parse_mpeg_ts(th_transport_t *t, th_stream_t *st, const uint8_t *data, 
 	      int len, int start, int err)
 {
   switch(st->st_type) {
@@ -191,7 +191,7 @@ parse_mpeg_ps(th_transport_t *t, th_stream_t *st, uint8_t *data, int len)
  * Parse AAC LATM
  */
 static void 
-parse_aac(th_transport_t *t, th_stream_t *st, uint8_t *data,
+parse_aac(th_transport_t *t, th_stream_t *st, const uint8_t *data,
 	  int len, int start)
 {
   int l, muxlen, p;
@@ -268,7 +268,7 @@ parse_aac(th_transport_t *t, th_stream_t *st, uint8_t *data,
  * derive further information.
  */
 static void
-parse_video(th_transport_t *t, th_stream_t *st, uint8_t *data, int len,
+parse_video(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
 	    vparser_t *vp)
 {
   uint32_t sc;
@@ -329,7 +329,7 @@ parse_video(th_transport_t *t, th_stream_t *st, uint8_t *data, int len,
  * We then trust ffmpeg to parse and extract packets for use
  */
 static void 
-parse_audio(th_transport_t *t, th_stream_t *st, uint8_t *data,
+parse_audio(th_transport_t *t, th_stream_t *st, const uint8_t *data,
 	    int len, int start, aparser_t *ap)
 {
   int hlen;
@@ -378,7 +378,7 @@ parse_audio(th_transport_t *t, th_stream_t *st, uint8_t *data,
  * Use libavcodec's parsers for audio parsing
  */
 static void 
-parse_audio_with_lavc(th_transport_t *t, th_stream_t *st, uint8_t *data,
+parse_audio_with_lavc(th_transport_t *t, th_stream_t *st, const uint8_t *data,
 		      int len, aparser_t *ap)
 {
   uint8_t *outbuf;
@@ -846,7 +846,7 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
  * http://broadcasting.ru/pdf-standard-specifications/subtitling/dvb-sub/en300743.v1.2.1.pdf
  */
 static void
-parse_subtitles(th_transport_t *t, th_stream_t *st, uint8_t *data,
+parse_subtitles(th_transport_t *t, th_stream_t *st, const uint8_t *data,
 		int len, int start)
 {
   th_pkt_t *pkt;

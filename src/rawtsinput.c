@@ -147,7 +147,7 @@ rawts_transport_add(rawts_t *rt, uint16_t sid, int pmt_pid)
 
 static void
 got_pmt(struct th_transport *t, th_stream_t *st,
-	uint8_t *table, int table_len)
+	const uint8_t *table, int table_len)
 {
   if(table[0] != 2)
     return;
@@ -163,12 +163,11 @@ got_pmt(struct th_transport *t, th_stream_t *st,
  *
  */
 static void
-got_pat(rawts_t *rt)
+got_pat(const uint8_t *ptr, size_t len, void *opaque)
 {
+  rawts_t *rt = opaque;
   th_transport_t *t;
   th_stream_t *st;
-  int len = rt->rt_pat.ps_offset;
-  uint8_t *ptr = rt->rt_pat.ps_data;
   uint16_t prognum;
   uint16_t pid;
 
@@ -209,28 +208,9 @@ got_pat(rawts_t *rt)
  *
  */
 static void
-rawts_pat(rawts_t *rt, uint8_t *tsb)
+rawts_pat(rawts_t *rt, const uint8_t *tsb)
 {
-  int off  = tsb[3] & 0x20 ? tsb[4] + 5 : 4;
-  int pusi = tsb[1] & 0x40;
-  int len;
-
-  if(off >= 188)
-    return;
-
-  if(pusi) {
-    len = tsb[off++];
-    if(len > 0) {
-      if(len > 188 - off)
-	return;
-      if(!psi_section_reassemble(&rt->rt_pat, tsb + off, len, 0, 1))
-	got_pat(rt);
-      off += len;
-    }
-  }
-    
-  if(!psi_section_reassemble(&rt->rt_pat, tsb + off, 188 - off, pusi, 1))
-    got_pat(rt);
+  psi_section_reassemble(&rt->rt_pat, tsb, 1, got_pat, rt);
 }
 
 

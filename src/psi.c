@@ -32,64 +32,85 @@
 #include "tsdemux.h"
 #include "parsers.h"
 
-int
-psi_section_reassemble(psi_section_t *ps, uint8_t *data, int len, 
-		       int start, int chkcrc)
+static int
+psi_section_reassemble0(psi_section_t *ps, const uint8_t *data, 
+			int len, int start, int crc,
+			section_handler_t *cb, void *opaque)
 {
-  int remain, a, tsize;
+  int excess, tsize, s;
 
-  if(start)
+  if(start) {
+    // Payload unit start indicator
     ps->ps_offset = 0;
+    ps->ps_lock = 1;
+  }
 
-  if(ps->ps_offset < 0)
+  if(!ps->ps_lock)
     return -1;
 
-  remain = PSI_SECTION_SIZE - ps->ps_offset;
+  memcpy(ps->ps_data + ps->ps_offset, data, len);
+  ps->ps_offset += len;
 
-  a = FFMAX(0, FFMIN(remain, len));
+  if(ps->ps_offset < 3) {
+    /* We don't know the total length yet */
+    return len;
+  }
 
-  memcpy(ps->ps_data + ps->ps_offset, data, a);
-  ps->ps_offset += a;
   tsize = 3 + (((ps->ps_data[1] & 0xf) << 8) | ps->ps_data[2]);
+ 
   if(ps->ps_offset < tsize)
+    return len; // Not there yet
+  
+  excess = ps->ps_offset - tsize;
+
+  if(crc && psi_crc32(ps->ps_data, tsize))
     return -1;
 
-  if(chkcrc && psi_crc32(ps->ps_data, tsize))
-    return -1;
+  s = tsize - (crc ? 4 : 0);
 
-  ps->ps_offset = tsize - (chkcrc ? 4 : 0);
-  return 0;
+  cb(ps->ps_data, s, opaque);
+  return len - excess;
 }
 
 
 /**
- * TS table parser
+ *
  */
 void
-psi_rawts_table_parser(psi_section_t *section, uint8_t *tsb,
-		       void (*gotsection)(const uint8_t *data, int len, 
-					  void *opauqe), void *opaque)
+psi_section_reassemble(psi_section_t *ps, const uint8_t *tsb, int crc,
+		       section_handler_t *cb, void *opaque)
 {
-  int off  = tsb[3] & 0x20 ? tsb[4] + 5 : 4;
+  int off = tsb[3] & 0x20 ? tsb[4] + 5 : 4;
   int pusi = tsb[1] & 0x40;
-  int len;
+  int r;
 
-  if(off >= 188)
+  if(off >= 188) {
+    ps->ps_lock = 0;
     return;
-
+  }
+  
   if(pusi) {
-    len = tsb[off++];
+    int len = tsb[off++];
     if(len > 0) {
-      if(len > 188 - off)
+      if(len > 188 - off) {
+	ps->ps_lock = 0;
 	return;
-      if(!psi_section_reassemble(section, tsb + off, len, 0, 1))
-	gotsection(section->ps_data, section->ps_offset, opaque);
+      }
+      psi_section_reassemble0(ps, tsb + off, len, 0, crc, cb, opaque);
       off += len;
     }
   }
-    
-  if(!psi_section_reassemble(section, tsb + off, 188 - off, pusi, 1))
-    gotsection(section->ps_data, section->ps_offset, opaque);
+
+  while(off < 188 && tsb[off] != 0xff) {
+    r = psi_section_reassemble0(ps, tsb + off, 188 - off, pusi, crc,
+				cb, opaque);
+    if(r < 0) {
+      ps->ps_lock = 0;
+      break;
+    }
+    off += r;
+    pusi = 0;
+  }
 }
 
 

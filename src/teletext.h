@@ -19,6 +19,6 @@
 #ifndef TELETEXT_H
 #define TELETEXT_H
 
-void teletext_input(th_transport_t *t, th_stream_t *st, uint8_t *tsb);
+void teletext_input(th_transport_t *t, th_stream_t *st, const uint8_t *tsb);
 
 #endif /* TELETEXT_H */

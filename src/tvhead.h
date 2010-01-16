@@ -253,10 +253,11 @@ typedef struct th_descrambler {
   LIST_ENTRY(th_descrambler) td_transport_link;
 
   void (*td_table)(struct th_descrambler *d, struct th_transport *t,
-		   struct th_stream *st, uint8_t *section, int section_len);
+		   struct th_stream *st, 
+		   const uint8_t *section, int section_len);
 
   int (*td_descramble)(struct th_descrambler *d, struct th_transport *t,
-		       struct th_stream *st, uint8_t *tsb);
+		       struct th_stream *st, const uint8_t *tsb);
 
   void (*td_stop)(struct th_descrambler *d);
 
@@ -269,7 +270,7 @@ typedef struct th_descrambler {
  */
 typedef void (pid_section_callback_t)(struct th_transport *t,
 				      struct th_stream *pi,
-				      uint8_t *section, int section_len);
+				      const uint8_t *section, int section_len);
 
 /*
  * Stream, one media component for a transport.
@@ -279,7 +280,8 @@ typedef void (pid_section_callback_t)(struct th_transport *t,
 typedef struct th_stream {
 
   LIST_ENTRY(th_stream) st_link;
-  
+  struct th_transport *st_transport;
+
   streaming_component_type_t st_type;
   int st_index;
 

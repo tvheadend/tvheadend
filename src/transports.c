@@ -698,6 +698,7 @@ transport_stream_create(th_transport_t *t, int pid,
   st->st_type = type;
 
   LIST_INSERT_HEAD(&t->tht_components, st, st_link);
+  st->st_transport = t;
 
   st->st_pid = pid;
   st->st_demuxer_fd = -1;

@@ -306,10 +306,11 @@ tt_decode_line(th_transport_t *t, th_stream_t *st, uint8_t *buf)
  *
  */
 void
-teletext_input(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
+teletext_input(th_transport_t *t, th_stream_t *st, const uint8_t *tsb)
 {
   int i, j;
-  uint8_t *x, buf[42];
+  const uint8_t *x;
+  uint8_t buf[42];
 
   x = tsb + 4;
   for(i = 0; i < 4; i++) {

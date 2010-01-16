@@ -1045,7 +1045,7 @@ cwc_emm(uint8_t *data, int len)
  */
 static void
 cwc_table_input(struct th_descrambler *td, struct th_transport *t,
-		struct th_stream *st, uint8_t *data, int len)
+		struct th_stream *st, const uint8_t *data, int len)
 {
   cwc_transport_t *ct = (cwc_transport_t *)td;
   uint16_t sid = t->tht_dvb_service_id;
@@ -1130,7 +1130,7 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
  */
 static int
 cwc_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
-	       uint8_t *tsb)
+	       const uint8_t *tsb)
 {
   cwc_transport_t *ct = (cwc_transport_t *)td;
   int r, i;

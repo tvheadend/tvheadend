@@ -50,17 +50,17 @@ static void ts_remux(th_transport_t *t, const uint8_t *tsb);
  * Code for dealing with a complete section
  */
 static void
-got_section(th_transport_t *t, th_stream_t *st)
+got_section(const uint8_t *data, size_t len, void *opaque)
 {
   th_descrambler_t *td;
+  th_stream_t *st = opaque;
+  th_transport_t *t = st->st_transport;
 
   if(st->st_type == SCT_CA) {
     LIST_FOREACH(td, &t->tht_descramblers, td_transport_link)
-      td->td_table(td, t, st, 
-		   st->st_section->ps_data, st->st_section->ps_offset);
+      td->td_table(td, t, st, data, len);
   } else if(st->st_got_section != NULL) {
-    st->st_got_section(t, st, st->st_section->ps_data,
-		       st->st_section->ps_offset);
+    st->st_got_section(t, st, data, len);
   }
 }
 
@@ -69,9 +69,9 @@ got_section(th_transport_t *t, th_stream_t *st)
  * Continue processing of transport stream packets
  */
 static void
-ts_recv_packet0(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
+ts_recv_packet0(th_transport_t *t, th_stream_t *st, const uint8_t *tsb)
 {
-  int off, len, pusi, cc, err = 0;
+  int off, pusi, cc, err = 0;
 
   transport_set_streaming_status_flags(t, TSS_MUX_PACKETS);
 
@@ -105,26 +105,8 @@ ts_recv_packet0(th_transport_t *t, th_stream_t *st, uint8_t *tsb)
     if(st->st_section == NULL)
       st->st_section = calloc(1, sizeof(struct psi_section));
 
-    if(err || off >= 188) {
-      st->st_section->ps_offset = -1; /* hold parser until next pusi */
-      break;
-    }
-
-    if(pusi) {
-      len = tsb[off++];
-      if(len > 0) {
-	if(len > 188 - off)
-	  break;
-	if(!psi_section_reassemble(st->st_section, tsb + off, len, 0,
-				   st->st_section_docrc))
-	  got_section(t, st);
-	off += len;
-      }
-    }
-    
-    if(!psi_section_reassemble(st->st_section, tsb + off, 188 - off, pusi,
-			       st->st_section_docrc))
-      got_section(t, st);
+    psi_section_reassemble(st->st_section, tsb, st->st_section_docrc,
+			   got_section, st);
     break;
 
   case SCT_TELETEXT:
@@ -150,7 +132,7 @@ static const AVRational mpeg_tc = {1, 90000};
  * than the stream PCR
  */
 static void
-ts_extract_pcr(th_transport_t *t, th_stream_t *st, uint8_t *tsb, 
+ts_extract_pcr(th_transport_t *t, th_stream_t *st, const uint8_t *tsb, 
 	       int64_t *pcrp)
 {
   int64_t real, pcr, d;
@@ -200,7 +182,7 @@ ts_extract_pcr(th_transport_t *t, th_stream_t *st, uint8_t *tsb,
  * Process transport stream packets, extract PCR and optionally descramble
  */
 void
-ts_recv_packet1(th_transport_t *t, uint8_t *tsb, int64_t *pcrp)
+ts_recv_packet1(th_transport_t *t, const uint8_t *tsb, int64_t *pcrp)
 {
   th_stream_t *st;
   int pid, n, m, r;
@@ -273,7 +255,7 @@ ts_recv_packet1(th_transport_t *t, uint8_t *tsb, int64_t *pcrp)
  * Process transport stream packets, simple version
  */
 void
-ts_recv_packet2(th_transport_t *t, uint8_t *tsb)
+ts_recv_packet2(th_transport_t *t, const uint8_t *tsb)
 {
   th_stream_t *st;
   int pid = (tsb[1] & 0x1f) << 8 | tsb[2];
