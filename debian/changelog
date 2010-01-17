@@ -17,6 +17,21 @@ hts-tvheadend (2.8) hts; urgency=low
     input is detected, skip to next source.
     Fixes ticket #89 
 
+  * Add option for editing channel icon URL in the channel config tab.
+
+  * Fix support for Irdeto ECM
+
+  * Automatically detect if a connected USB DVB adapter is only Full speed
+    (ie 12Mbit/s), and if so, limit so Tvheadend only can stream one service
+    at the time from the tuned frequency.
+
+  * Add support for extracting provider in the PMT for SECA/Mediaguard
+
+  * Add support for NIT-other tables. 
+    In particular useful for Ziggo DVB-C networks in the Netherlands.
+
+  * Fix various bugs related to RTP encapsulated IPTV
+
 hts-tvheadend (2.7) hts; urgency=low
 
   * Added support for DVB subtitles. Currently only forwarded over HTSP
