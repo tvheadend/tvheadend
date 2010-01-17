@@ -371,14 +371,13 @@ v4l_transport_find(v4l_adapter_t *va, const char *id, int create)
   t->tht_quality_index = v4l_transport_quality;
   t->tht_grace_period  = v4l_grace_period;
   t->tht_iptv_fd = -1;
+  t->tht_v4l_adapter = va;
 
   pthread_mutex_lock(&t->tht_stream_mutex); 
   transport_make_nicename(t);
   t->tht_video = transport_stream_create(t, -1, SCT_MPEG2VIDEO); 
   t->tht_audio = transport_stream_create(t, -1, SCT_MPEG2AUDIO); 
   pthread_mutex_unlock(&t->tht_stream_mutex); 
-
-  t->tht_v4l_adapter = va;
 
   LIST_INSERT_HEAD(&va->va_transports, t, tht_group_link);
 
