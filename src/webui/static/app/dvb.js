@@ -1041,8 +1041,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	    fieldLabel: 'NIT-o Network ID',
 	    name: 'nitoid',
 	    width: 50
-	},
-
+	}
     ];
 
     if(satConfStore) { 
