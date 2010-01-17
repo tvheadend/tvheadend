@@ -27,7 +27,7 @@ tvheadend.comet.on('channeltags', function(m) {
 tvheadend.channels = new Ext.data.JsonStore({
     autoLoad: true,
     root:'entries',
-    fields: ['name', 'chid', 'xmltvsrc', 'tags', 
+    fields: ['name', 'chid', 'xmltvsrc', 'tags', 'ch_icon',
 	     'epg_pre_start', 'epg_post_end', 'number'],
     id: 'chid',
     url: "channels",
@@ -209,6 +209,12 @@ tvheadend.chconf = function()
 		valueField: 'identifier',
 		displayField: 'name'
 	    })
+	},
+	{
+	    header: "Icon (full URL)",
+	    dataIndex: 'ch_icon',
+	    width: 200,
+	    editor: new fm.TextField()
 	},
     {
         header: "DVR Pre-Start",

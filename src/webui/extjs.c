@@ -328,6 +328,9 @@ extjs_channels_update(htsmsg_t *in)
     if((s = htsmsg_get_str(c, "xmltvsrc")) != NULL)
       channel_set_xmltv_source(ch, xmltv_channel_find_by_displayname(s));
 
+    if((s = htsmsg_get_str(c, "ch_icon")) != NULL)
+      channel_set_icon(ch, s);
+
     if((s = htsmsg_get_str(c, "tags")) != NULL)
       channel_set_tags_from_list(ch, s);
 
@@ -373,6 +376,9 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
       
       if(ch->ch_xc != NULL)
 	htsmsg_add_str(c, "xmltvsrc", ch->ch_xc->xc_displayname);
+
+      if(ch->ch_icon != NULL)
+        htsmsg_add_str(c, "ch_icon", ch->ch_icon);
 
       buf[0] = 0;
       LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
