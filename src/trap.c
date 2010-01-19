@@ -18,6 +18,8 @@
 
 #include "trap.h"
 
+char tvh_binshasum[20];
+
 #if defined(__i386__) || defined(__x86_64__)
 
 // Only do this on x86 for now
@@ -175,6 +177,8 @@ trap_init(const char *ver)
 	      digest[17],
 	      digest[18],
 	      digest[19]);
+
+  memcpy(tvh_binshasum, digest, 20);
 
   free(binsum);
 }

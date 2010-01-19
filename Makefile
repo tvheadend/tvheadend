@@ -111,6 +111,7 @@ SRCS += src/webui/webui.c \
 	src/webui/comet.c \
 	src/webui/extjs.c \
 	src/webui/simpleui.c \
+	src/webui/statedump.c \
 
 #
 # Extra modules

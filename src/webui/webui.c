@@ -297,7 +297,7 @@ favicon(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
-
+int page_statedump(http_connection_t *hc, const char *remain, void *opaque);
 
 /**
  * WEB user interface
@@ -310,6 +310,9 @@ webui_init(const char *contentpath)
   http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_WEB_INTERFACE);
   http_path_add("/favicon.ico", NULL, favicon, ACCESS_WEB_INTERFACE);
   http_path_add("/channels.pls", NULL, page_rtsp_playlist, ACCESS_WEB_INTERFACE);
+
+  http_path_add("/state", NULL, page_statedump, ACCESS_ADMIN);
+
 
   webui_static_content(contentpath, "/static",        "src/webui/static");
   webui_static_content(contentpath, "/docs",          "docs/html");
