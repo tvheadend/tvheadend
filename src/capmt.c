@@ -82,24 +82,24 @@ static pthread_cond_t capmt_config_changed;
  * capmt descriptor
  */
 typedef struct capmt_descriptor {
-	uint8_t cad_type;
-	uint8_t cad_length;
-	uint8_t cad_data[16];
+  uint8_t cad_type;
+  uint8_t cad_length;
+  uint8_t cad_data[16];
 } __attribute__((packed)) capmt_descriptor_t;
 
 /**
  * capmt header structure 
  */
 typedef struct capmt_header {
-  uint8_t capmt_indicator[6];
-  uint8_t capmt_list_management;
+  uint8_t  capmt_indicator[6];
+  uint8_t  capmt_list_management;
   uint16_t program_number;
   unsigned reserved1                : 2;
   unsigned version_number           : 5;
   unsigned current_next_indicator   : 1;
   unsigned reserved2                : 4;
   unsigned program_info_length      : 12;
-  uint8_t capmt_cmd_id;
+  uint8_t  capmt_cmd_id;
 } __attribute__((packed)) capmt_header_t;
 
 /**
@@ -130,16 +130,7 @@ typedef struct capmt_transport {
 
   LIST_ENTRY(capmt_transport) ct_link;
 
-  /**
-   * Sequence number generated on write (based on capmt_seq), 
-   * used to pair reply message (i.e when i CT_STATE_WAIT_REPLY)
-   * with capmt_transport
-   */
-  uint16_t ct_seq;
-
-  /**
-   * list of used ca-systems with ids and last ecm
-   */
+  /* list of used ca-systems with ids and last ecm */
   struct capmt_caid_ecm_list ct_caid_ecm;
 
   /**
@@ -151,18 +142,19 @@ typedef struct capmt_transport {
     CT_FORBIDDEN
   } ct_keystate;
 
-  void *ct_keys;
+  /* buffer for keystruct */
+  void    *ct_keys;
 
-  int ct_caid_count;
-  int ct_caid_last;
-
-  /**
-   * CSA
-   */
-  int ct_cluster_size;
+  /* CSA */
+  int      ct_cluster_size;
   uint8_t *ct_tsbcluster;
-  int ct_fill;
+  int      ct_fill;
 
+  /* current sequence number */
+  uint16_t ct_seq;
+
+  /* sending requests will be based on this caid */
+  int      ct_caid_last;
 } capmt_transport_t;
 
 
@@ -170,60 +162,31 @@ typedef struct capmt_transport {
  *
  */
 typedef struct capmt {
-  int capmt_fd;
-  int capmt_connected;
-
-	int capmt_sock_ca0;
-	int capmt_sock;
-
-  int capmt_retry_delay;
-
-  pthread_mutex_t capmt_send_mutex;
-
   pthread_cond_t capmt_cond;
-
-  pthread_cond_t capmt_writer_cond; /* Used to wakeup writer */
-  int capmt_writer_running;
-
 
   TAILQ_ENTRY(capmt) capmt_link; /* Linkage protected via global_lock */
 
   struct capmt_transport_list capmt_transports;
 
-  uint16_t capmt_caid;
-
-  uint16_t capmt_seq;
-
-  uint8_t capmt_key[16];
-
-  uint8_t capmt_buf[256];
-  int capmt_bufptr;
-
-  /* Provder IDs */
-
-//  uint32_t capmt_provider_ids[256];
-//  int capmt_num_providers;
-
-  /* From configuration */
-
-//  uint8_t capmt_confedkey[14];
-//  char *capmt_username;
-//  char *capmt_password;
-//  char *capmt_password_salted;   /* salted version */
-//  char *capmt_comment;
+  /* from capmt configuration */
   char *capmt_sockfile;
   char *capmt_hostname;
-  int capmt_port;
+  int   capmt_port;
   char *capmt_comment;
   char *capmt_id;
 
-//  const char *capmt_errtxt;
+  /* capmt sockets */
+  int   capmt_sock;
+  int   capmt_sock_ca0;
 
-  int capmt_enabled;
-  int capmt_running;
-  int capmt_reconfigure;
+  /* thread flags */
+  int   capmt_connected;
+  int   capmt_enabled;
+  int   capmt_running;
+  int   capmt_reconfigure;
 
-  capmt_transport_t *ct;
+  /* next sequence number */
+  uint16_t capmt_seq;
 } capmt_t;
 
 /**
@@ -232,13 +195,7 @@ typedef struct capmt {
 static int
 capmt_send_msg(capmt_t *capmt, const uint8_t *buf, size_t len)
 {
-  int n;
-
-  pthread_mutex_lock(&capmt->capmt_send_mutex);
-  n = write(capmt->capmt_sock, buf, len);
-  pthread_mutex_unlock(&capmt->capmt_send_mutex);
-
-  return n;
+  return write(capmt->capmt_sock, buf, len);
 }
 
 /**
@@ -252,13 +209,10 @@ capmt_transport_destroy(th_descrambler_t *td)
 
   capmt_transport_t *ct = (capmt_transport_t *)td;
 
-  capmt_t *capmt;
-  TAILQ_FOREACH(capmt, &capmts, capmt_link)
-    if (capmt->ct == ct)
-      capmt->ct = NULL;
-
   capmt_caid_ecm_t *cce;
-  while (!LIST_EMPTY(&ct->ct_caid_ecm)) { /* List Deletion. */
+  while (!LIST_EMPTY(&ct->ct_caid_ecm)) 
+  { 
+    /* List Deletion. */
     cce = LIST_FIRST(&ct->ct_caid_ecm);
     LIST_REMOVE(cce, cce_link);
     free(cce);
@@ -279,54 +233,58 @@ handle_ca0(capmt_t* capmt) {
   th_transport_t *t;
   int ret;
 
-  uint8_t invalid[8], buffer[20];
+  uint8_t invalid[8], buffer[20], *even, *odd;
+  uint16_t seq;
   memset(invalid, 0, 8);
 
-  tvhlog(LOG_INFO, "capmt", "running handle_ca0");
+  tvhlog(LOG_INFO, "capmt", "got connection from client ...");
 
   while (capmt->capmt_running) {
 
     ret = recv(capmt->capmt_sock_ca0, buffer, 18, MSG_WAITALL);
 
-    ct = capmt->ct;
-
-    if (ct == NULL)
-      continue;
-
-    t = ct->ct_transport;
-
-    if (ret < 0) {
+    if (ret < 0)
       tvhlog(LOG_ERR, "capmt", "error receiving over socket");
-      // TODO reaction
-    } else if (ret == 0) {
+    else if (ret == 0) {
       // normal socket shutdown
       tvhlog(LOG_INFO, "capmt", "normal socket shutdown");
       break;
-    } else if(ret < 18) {
-      if(ct->ct_keystate != CT_FORBIDDEN) {
-        tvhlog(LOG_ERR, "capmt", "Can not descramble service \"%s\", access denied", t->tht_svcname);
+    } 
+      
+    /* get control words */
+    seq  = buffer[0] | ((uint16_t)buffer[1] << 8);
+    even = &buffer[2];
+    odd  = &buffer[10];
 
-        ct->ct_keystate = CT_FORBIDDEN;
+    LIST_FOREACH(ct, &capmt->capmt_transports, ct_link) {
+      t = ct->ct_transport;
+
+      if(ret < 18) {
+        if(ct->ct_keystate != CT_FORBIDDEN) {
+          tvhlog(LOG_ERR, "capmt", "Can not descramble service \"%s\", access denied", t->tht_svcname);
+
+          ct->ct_keystate = CT_FORBIDDEN;
+        }
+
+        continue;
       }
 
-      continue;
+      if(seq != ct->ct_seq)
+        continue;
+
+      if (memcmp(even, invalid, 8))
+        set_even_control_word(ct->ct_keys, even);
+      if (memcmp(odd, invalid, 8))
+        set_odd_control_word(ct->ct_keys, odd);
+
+      if(ct->ct_keystate != CT_RESOLVED)
+        tvhlog(LOG_INFO, "capmt", "Obtained key for service \"%s\"",t->tht_svcname);
+
+      ct->ct_keystate = CT_RESOLVED;
     }
-
-    /* get control words */
-    uint8_t *even = &buffer[2], *odd = &buffer[10];
-
-    if (memcmp(even, invalid, 8))
-      set_even_control_word(ct->ct_keys, even);
-    if (memcmp(odd, invalid, 8))
-      set_odd_control_word(ct->ct_keys, odd);
-
-    if(ct->ct_keystate != CT_RESOLVED)
-      tvhlog(LOG_INFO, "capmt", "Obtained key for service \"%s\"",t->tht_svcname);
-
-    ct->ct_keystate = CT_RESOLVED;
   }
 
-  tvhlog(LOG_INFO, "capmt", "exiting handle_ca0");
+  tvhlog(LOG_INFO, "capmt", "connection from client closed ...");
 }
 
 /**
@@ -410,7 +368,7 @@ capmt_thread(void *aux)
  */
 static void
 capmt_table_input(struct th_descrambler *td, struct th_transport *t,
-		struct th_stream *st, const uint8_t *data, int len)
+    struct th_stream *st, const uint8_t *data, int len)
 {
   capmt_transport_t *ct = (capmt_transport_t *)td;
   capmt_t *capmt = ct->ct_capmt;
@@ -422,35 +380,28 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
   switch(data[0]) {
     case 0x80:
     case 0x81: 
-      {
+      {        
         /* ECM */
+        if (ct->ct_caid_last == -1)
+          ct->ct_caid_last = st->st_caid;
+        
         uint16_t caid = st->st_caid;
-
         /* search ecmpid in list */
         capmt_caid_ecm_t *cce, *cce2;
         LIST_FOREACH(cce, &ct->ct_caid_ecm, cce_link)
           if (cce->cce_caid == caid)
             break;
 
-        if (!cce) {
+        if (!cce) 
+        {
           tvhlog(LOG_DEBUG, "capmt",
-            "New caid 0x%04X for service \"%s\"",caid, t->tht_svcname);
+            "New caid 0x%04X for service \"%s\"", st->st_caid, t->tht_svcname);
 
           /* ecmpid not already seen, add it to list */
-          cce = calloc(1, sizeof(capmt_caid_ecm_t));
-          cce->cce_caid = caid;
+          cce             = calloc(1, sizeof(capmt_caid_ecm_t));
+          cce->cce_caid   = st->st_caid;
           cce->cce_ecmpid = st->st_pid;
           LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
-
-          int caid_count = 0;
-          LIST_FOREACH(cce2, &ct->ct_caid_ecm, cce_link)
-            caid_count++;
-
-          if (caid_count < ct->ct_caid_count) 
-            /* do not send now, wait for more ecmpid's */
-            break;
-
-          ct->ct_caid_last = caid;
         }
 
         if ((cce->cce_ecmsize == len) && !memcmp(cce->cce_ecm, data, len))
@@ -526,17 +477,17 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
         }
 
         uint8_t end[] = { 
-          0x01, 0x0F, 0x00, 0x00, 0x06 };
+          0x01, (ct->ct_seq >> 8) & 0xFF, ct->ct_seq & 0xFF, 0x00, 0x06 };
         memcpy(&buf[pos], end, sizeof(end));
         pos += sizeof(end);
         buf[10] = ((pos - 5 - 12) & 0xF00) >> 8;
         buf[11] = ((pos - 5 - 12) & 0xFF);
-        buf[4] = ((pos - 6) >> 8);
-        buf[5] = ((pos - 6) & 0xFF);
+        buf[4]  = ((pos - 6) >> 8);
+        buf[5]  = ((pos - 6) & 0xFF);
 
 
-        buf[7] = sid >> 8;
-        buf[8] = sid & 0xFF;
+        buf[7]  = sid >> 8;
+        buf[8]  = sid & 0xFF;
 
         memcpy(cce->cce_ecm, data, len);
         cce->cce_ecmsize = len;
@@ -548,22 +499,12 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
         buf[9] = pmtversion;
         pmtversion = (pmtversion + 1) & 0x1F;
 
-        /*int j, l;
-        for(j = 0; j < pos;) {
-          printf("%04x:",j);
-          for( l=0 ; l<16 && j<pos ; l++) 
-            printf(" %02x", buf[j++]);
-          printf("\n");
-        }*/
-
-        capmt->ct = ct;
-
-        ct->ct_seq = capmt_send_msg(capmt, buf, pos);
+        capmt_send_msg(capmt, buf, pos);
         break;
       }
-	  default:
-		  /* EMM */
-	    break;
+    default:
+      /* EMM */
+      break;
   }
 }
 
@@ -573,7 +514,7 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
  */
 static int
 capmt_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
-		 const uint8_t *tsb)
+     const uint8_t *tsb)
 {
   capmt_transport_t *ct = (capmt_transport_t *)td;
   int r, i;
@@ -621,6 +562,7 @@ capmt_transport_start(th_transport_t *t)
 {
   capmt_t *capmt;
   capmt_transport_t *ct;
+  capmt_caid_ecm_t *cce;
   th_descrambler_t *td;
   
   lock_assert(&global_lock);
@@ -633,22 +575,32 @@ capmt_transport_start(th_transport_t *t)
 
     th_stream_t *st;
 
-    ct = calloc(1, sizeof(capmt_transport_t));
+    /* create new capmt transport */
+    ct                  = calloc(1, sizeof(capmt_transport_t));
     ct->ct_cluster_size = get_suggested_cluster_size();
-    ct->ct_tsbcluster = malloc(ct->ct_cluster_size * 188);
-    ct->ct_caid_count = 0;
+    ct->ct_tsbcluster   = malloc(ct->ct_cluster_size * 188);
+    ct->ct_seq          = capmt->capmt_seq++;
 
     LIST_FOREACH(st, &t->tht_components, st_link) {
-      if (st->st_caid != 0) {
-        tvhlog(LOG_DEBUG, "capmt",
-          "Found caid 0x%04X", st->st_caid);
-        ct->ct_caid_count++;
-      }
+      if (st->st_caid == 0) 
+        continue;
+
+      tvhlog(LOG_DEBUG, "capmt",
+        "New caid 0x%04X for service \"%s\"", st->st_caid, t->tht_svcname);
+
+      /* add it to list */
+      cce             = calloc(1, sizeof(capmt_caid_ecm_t));
+      cce->cce_caid   = st->st_caid;
+      cce->cce_ecmpid = st->st_pid;
+      LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
+
+      /* sending request will be based on first seen caid */
+      ct->ct_caid_last = -1;
     }
 
-    ct->ct_keys = get_key_struct();
-    ct->ct_capmt = capmt;
-    ct->ct_transport = t;
+    ct->ct_keys       = get_key_struct();
+    ct->ct_capmt      = capmt;
+    ct->ct_transport  = t;
 
     td = &ct->ct_head;
     td->td_stop       = capmt_transport_destroy;
@@ -688,7 +640,7 @@ capmt_entry_find(const char *id, int create)
   if(id != NULL) {
     TAILQ_FOREACH(capmt, &capmts, capmt_link)
       if(!strcmp(capmt->capmt_id, id))
-	return capmt;
+  return capmt;
   }
   if(create == 0)
     return NULL;
@@ -703,9 +655,9 @@ capmt_entry_find(const char *id, int create)
 
   capmt = calloc(1, sizeof(capmt_t));
   pthread_cond_init(&capmt->capmt_cond, NULL);
-  pthread_mutex_init(&capmt->capmt_send_mutex, NULL);
-  capmt->capmt_id = strdup(id); 
+  capmt->capmt_id      = strdup(id); 
   capmt->capmt_running = 1; 
+  capmt->capmt_seq     = 0;
 
   TAILQ_INSERT_TAIL(&capmts, capmt, capmt_link);  
 
@@ -770,9 +722,6 @@ capmt_entry_update(void *opaque, const char *id, htsmsg_t *values, int maycreate
 
 
   capmt->capmt_reconfigure = 1;
-
-/*  if(capmt->capmt_fd != -1)
-    shutdown(capmt->capmt_fd, SHUT_RDWR);*/
 
   pthread_cond_signal(&capmt->capmt_cond);
 
