@@ -379,7 +379,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   tvhlog(LOG_INFO, "dvr", "%s from "
 	 "adapter: \"%s\", "
 	 "network: \"%s\", mux: \"%s\", provider: \"%s\", "
-	 "service: \"%s\", quality: %d",
+	 "service: \"%s\"",
 	 de->de_ititle,
 	 si->si_adapter  ?: "<N/A>",
 	 si->si_network  ?: "<N/A>",
