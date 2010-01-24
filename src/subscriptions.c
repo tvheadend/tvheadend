@@ -61,38 +61,41 @@ subscription_sort(th_subscription_t *a, th_subscription_t *b)
 
 
 /**
- * The transport is producing output. Thus, we may link our subscription
- * to it.
+ * The transport is producing output.
  */
 static void
 subscription_link_transport(th_subscription_t *s, th_transport_t *t)
 {
   streaming_message_t *sm;
+  s->ths_state = SUBSCRIPTION_TESTING_TRANSPORT;
  
   s->ths_transport = t;
   LIST_INSERT_HEAD(&t->tht_subscriptions, s, ths_transport_link);
 
   pthread_mutex_lock(&t->tht_stream_mutex);
 
+  if(LIST_FIRST(&t->tht_components) != NULL)
+    s->ths_start_message =
+      streaming_msg_create_data(SMT_START, transport_build_stream_start(t));
+
   // Link to transport output
   streaming_target_connect(&t->tht_streaming_pad, &s->ths_input);
 
-  if(LIST_FIRST(&t->tht_components) != NULL) {
+
+  if(s->ths_start_message != NULL && t->tht_streaming_status & TSS_PACKETS) {
+
+    s->ths_state = SUBSCRIPTION_GOT_TRANSPORT;
 
     // Send a START message to the subscription client
-    sm = streaming_msg_create_data(SMT_START,
-				   transport_build_stream_start(t));
+    streaming_target_deliver(s->ths_output, s->ths_start_message);
+    s->ths_start_message = NULL;
 
+    // Send status report
+    sm = streaming_msg_create_code(SMT_TRANSPORT_STATUS, 
+				   t->tht_streaming_status);
     streaming_target_deliver(s->ths_output, sm);
-
-    // Send a TRANSPORT_STATUS message to the subscription client
-    if(t->tht_streaming_status) {
-      sm = streaming_msg_create_code(SMT_TRANSPORT_STATUS,
-				     t->tht_streaming_status);
-      streaming_target_deliver(s->ths_output, sm);
-    }
-
   }
+
   pthread_mutex_unlock(&t->tht_stream_mutex);
 }
 
@@ -131,7 +134,7 @@ static void
 subscription_reschedule(void *aux)
 {
   th_subscription_t *s;
-  th_transport_t *t;
+  th_transport_t *t, *skip;
   streaming_message_t *sm;
   char buf[128];
   int errorcode;
@@ -140,14 +143,22 @@ subscription_reschedule(void *aux)
   gtimer_arm(&subscription_reschedule_timer, subscription_reschedule, NULL, 2);
 
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
-    if(s->ths_transport != NULL)
-      continue; /* Got a transport, we're happy */
-
     if(s->ths_channel == NULL)
       continue; /* stale entry, channel has been destroyed */
 
+    if(s->ths_transport != NULL) {
+      /* Already got a transport */
+
+      if(s->ths_state != SUBSCRIPTION_BAD_TRANSPORT)
+	continue; /* And it seems to work ok, so we're happy */
+      skip = s->ths_transport;
+      transport_remove_subscriber(s->ths_transport, s);
+    } else {
+      skip = NULL;
+    }
+
     snprintf(buf, sizeof(buf), "Subscription \"%s\"", s->ths_title);
-    t = transport_find(s->ths_channel, s->ths_weight, buf, &errorcode);
+    t = transport_find(s->ths_channel, s->ths_weight, buf, &errorcode, skip);
 
     if(t == NULL) {
       /* No transport available */
@@ -185,6 +196,9 @@ subscription_unsubscribe(th_subscription_t *s)
   if(t != NULL)
     transport_remove_subscriber(t, s);
 
+  if(s->ths_start_message != NULL) 
+    streaming_msg_free(s->ths_start_message);
+ 
   free(s->ths_title);
   free(s);
 
@@ -200,7 +214,52 @@ static void
 subscription_input(void *opauqe, streaming_message_t *sm)
 {
   th_subscription_t *s = opauqe;
- streaming_target_deliver(s->ths_output, sm);
+
+  if(s->ths_state == SUBSCRIPTION_TESTING_TRANSPORT) {
+    // We are just testing if this transport is good
+
+    if(sm->sm_type == SMT_START) {
+      if(s->ths_start_message != NULL) 
+	streaming_msg_free(s->ths_start_message);
+      s->ths_start_message = sm;
+      return;
+    }
+
+    if(sm->sm_type == SMT_TRANSPORT_STATUS &&
+       sm->sm_code & (TSS_GRACEPERIOD | TSS_ERRORS)) {
+      // No, mark our subscription as bad_transport
+      // the scheduler will take care of things
+      s->ths_state = SUBSCRIPTION_BAD_TRANSPORT;
+      streaming_msg_free(sm);
+      return;
+    }
+
+    if(sm->sm_type == SMT_TRANSPORT_STATUS &&
+       sm->sm_code & TSS_PACKETS) {
+      if(s->ths_start_message != NULL) {
+	streaming_target_deliver(s->ths_output, s->ths_start_message);
+	s->ths_start_message = NULL;
+      }
+      s->ths_state = SUBSCRIPTION_GOT_TRANSPORT;
+    }
+  }
+
+  if(s->ths_state != SUBSCRIPTION_GOT_TRANSPORT) {
+    streaming_msg_free(sm);
+    return;
+  }
+  streaming_target_deliver(s->ths_output, sm);
+}
+
+
+/**
+ *
+ */
+static void
+subscription_input_direct(void *opauqe, streaming_message_t *sm)
+{
+  th_subscription_t *s = opauqe;
+  streaming_target_deliver(s->ths_output, sm);
 }
 
 
@@ -210,7 +269,7 @@ subscription_input(void *opauqe, streaming_message_t *sm)
  */
 static th_subscription_t *
 subscription_create(int weight, const char *name, streaming_target_t *st,
-		    int flags)
+		    int flags, int direct)
 {
   th_subscription_t *s = calloc(1, sizeof(th_subscription_t));
   int reject = 0;
@@ -221,7 +280,8 @@ subscription_create(int weight, const char *name, streaming_target_t *st,
     reject |= SMT_TO_MASK(SMT_MPEGTS);  // Reject raw mpegts
 
 
-  streaming_target_init(&s->ths_input, subscription_input, s, reject);
+  streaming_target_init(&s->ths_input, direct ? subscription_input_direct : 
+			subscription_input, s, reject);
 
   s->ths_weight            = weight;
   s->ths_title             = strdup(name);
@@ -244,7 +304,7 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
 				 const char *name, streaming_target_t *st,
 				 int flags)
 {
-  th_subscription_t *s = subscription_create(weight, name, st, flags);
+  th_subscription_t *s = subscription_create(weight, name, st, flags, 0);
 
   s->ths_channel = ch;
   LIST_INSERT_HEAD(&ch->ch_subscriptions, s, ths_channel_link);
@@ -287,12 +347,12 @@ th_subscription_t *
 subscription_create_from_transport(th_transport_t *t, const char *name,
 				   streaming_target_t *st, int flags)
 {
-  th_subscription_t *s = subscription_create(INT32_MAX, name, st, flags);
+  th_subscription_t *s = subscription_create(INT32_MAX, name, st, flags, 1);
   source_info_t si;
   int r;
 
   if(t->tht_status != TRANSPORT_RUNNING) {
-    if((r = transport_start(t, INT32_MAX, 1, 0)) != 0) {
+    if((r = transport_start(t, INT32_MAX, 1)) != 0) {
       subscription_unsubscribe(s);
 
       tvhlog(LOG_INFO, "subscription", 

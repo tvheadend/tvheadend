@@ -29,17 +29,12 @@
 #define TRANSPORT_NOSTART_TUNING_FAILED   4
 #define TRANSPORT_NOSTART_SVC_NOT_ENABLED 5
 #define TRANSPORT_NOSTART_BAD_SIGNAL      6
-#define TRANSPORT_NOSTART_NO_ACCESS       7
-#define TRANSPORT_NOSTART_NO_DESCRAMBLER  8
-#define TRANSPORT_NOSTART_NO_INPUT        9
-#define TRANSPORT_NOSTART_NO_SIGNAL       10
 
 void transport_init(void);
 
 unsigned int transport_compute_weight(struct th_transport_list *head);
 
-int transport_start(th_transport_t *t, unsigned int weight, int force_start,
-		    int wait_for_ok);
+int transport_start(th_transport_t *t, unsigned int weight, int force_start);
 
 th_transport_t *transport_create(const char *identifier, int type,
 				 int source_type);
@@ -53,7 +48,8 @@ th_transport_t *transport_find_by_identifier(const char *identifier);
 void transport_map_channel(th_transport_t *t, channel_t *ch, int save);
 
 th_transport_t *transport_find(channel_t *ch, unsigned int weight,
-			       const char *loginfo, int *errorp);
+			       const char *loginfo, int *errorp,
+			       th_transport_t *skip);
 
 th_stream_t *transport_stream_find(th_transport_t *t, int pid);
 

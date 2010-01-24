@@ -25,6 +25,13 @@ typedef struct th_subscription {
   LIST_ENTRY(th_subscription) ths_global_link;
   int ths_weight;
 
+  enum {
+    SUBSCRIPTION_IDLE,
+    SUBSCRIPTION_TESTING_TRANSPORT,
+    SUBSCRIPTION_GOT_TRANSPORT,
+    SUBSCRIPTION_BAD_TRANSPORT,
+  } ths_state;
+
   LIST_ENTRY(th_subscription) ths_channel_link;
   struct channel *ths_channel;          /* May be NULL if channel has been
 					   destroyed during the
@@ -43,6 +50,8 @@ typedef struct th_subscription {
   streaming_target_t *ths_output;
 
   int ths_flags;
+
+  streaming_message_t *ths_start_message;
 
 } th_subscription_t;
 

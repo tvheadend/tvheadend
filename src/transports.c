@@ -45,7 +45,7 @@
 #include "notify.h"
 #include "serviceprobe.h"
 #include "atomic.h"
-
+#include "dvb/dvb.h"
 
 #define TRANSPORT_HASH_WIDTH 101
 
@@ -61,16 +61,11 @@ transport_nostart2txt(int code)
 {
   switch(code) {
   case TRANSPORT_NOSTART_NO_HARDWARE:     return "No hardware present";
-  case TRANSPORT_NOSTART_MUX_NOT_ENABLED: return "No mux enabled";
+  case TRANSPORT_NOSTART_MUX_NOT_ENABLED: return "Mux not enabled";
   case TRANSPORT_NOSTART_NOT_FREE:        return "Adapter in use by other subscription";
   case TRANSPORT_NOSTART_TUNING_FAILED:   return "Tuning failed";
   case TRANSPORT_NOSTART_SVC_NOT_ENABLED: return "No service enabled";
   case TRANSPORT_NOSTART_BAD_SIGNAL:      return "Too bad signal quality";
-  case TRANSPORT_NOSTART_NO_ACCESS:       return "No access";
-  case TRANSPORT_NOSTART_NO_DESCRAMBLER:  return "No descrambler available";
-  case TRANSPORT_NOSTART_NO_INPUT:        return "No input detected";
-  case TRANSPORT_NOSTART_NO_SIGNAL:       return "No signal";
-
   }
   return "Unknown error";
 }
@@ -262,13 +257,10 @@ transport_remove_subscriber(th_transport_t *t, th_subscription_t *s)
  *
  */
 int
-transport_start(th_transport_t *t, unsigned int weight, int force_start,
-		int wait_for_ok)
+transport_start(th_transport_t *t, unsigned int weight, int force_start)
 {
   th_stream_t *st;
-  int r, err;
-  int timeout = 2;
-  struct timespec to;
+  int r, timeout = 2;
 
   lock_assert(&global_lock);
 
@@ -279,6 +271,9 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start,
 
   if((r = t->tht_start_feed(t, weight, force_start)))
     return r;
+
+  cwc_transport_start(t);
+  capmt_transport_start(t);
 
   pthread_mutex_lock(&t->tht_stream_mutex);
 
@@ -292,61 +287,21 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start,
 
   pthread_mutex_unlock(&t->tht_stream_mutex);
 
-  cwc_transport_start(t);
-  capmt_transport_start(t);
-
   if(t->tht_grace_period != NULL)
     timeout = t->tht_grace_period(t);
 
-
   gtimer_arm(&t->tht_receive_timer, transport_data_timeout, t, timeout);
-
-  if(!wait_for_ok)
-    return 0;
-
-  tvhlog(LOG_DEBUG, "Transport", "%s: Waiting for input before start",
-	 transport_nicename(t));
-
-  pthread_mutex_lock(&t->tht_stream_mutex);
-
-  to.tv_sec = time(NULL) + timeout;
-  to.tv_nsec = 0;
-
-  do {
-    if(t->tht_streaming_status & TSS_MUX_PACKETS) {
-      tvhlog(LOG_DEBUG, "Transport", "%s: Got demultiplexable packets",
-	     transport_nicename(t));
-      pthread_mutex_unlock(&t->tht_stream_mutex);
-      return 0; 
-    }
-
-  } while(pthread_cond_timedwait(&t->tht_tss_cond, &t->tht_stream_mutex, 
-				 &to) != ETIMEDOUT);
-
-  err = t->tht_streaming_status;
-
-  // Startup timed out
-
-  pthread_mutex_unlock(&t->tht_stream_mutex);
-
-  transport_stop(t);
-
-  // Translate streaming status flags to NOSTART errorcode
-  if(err & TSS_NO_DESCRAMBLER)
-    return TRANSPORT_NOSTART_NO_DESCRAMBLER;
-
-  if(err & TSS_NO_ACCESS)
-    return TRANSPORT_NOSTART_NO_ACCESS;
-
-  if(err & TSS_NO_ACCESS)
-    return TRANSPORT_NOSTART_NO_ACCESS;
-
-  if(err & TSS_INPUT_SERVICE)
-    return TRANSPORT_NOSTART_NO_INPUT;
-
-  return TRANSPORT_NOSTART_NO_SIGNAL;
+  return 0;
 }
 
+/**
+ *
+ */
+static int
+dvb_extra_prio(th_dvb_adapter_t *tda)
+{
+  return tda->tda_hostconnection * 10;
+}
 
 /**
  * Return prio for the given transport
@@ -356,18 +311,17 @@ transport_get_prio(th_transport_t *t)
 {
   switch(t->tht_type) {
   case TRANSPORT_DVB:
-    if(t->tht_scrambled)
-      return 3;
-    return 1;
+    return (t->tht_scrambled ? 300 : 100) + 
+      dvb_extra_prio(t->tht_dvb_mux_instance->tdmi_adapter);
 
   case TRANSPORT_IPTV:
-    return 2;
+    return 200;
 
   case TRANSPORT_V4L:
-    return 4;
+    return 400;
 
   default:
-    return 5;
+    return 500;
   }
 }
 
@@ -414,10 +368,10 @@ transportcmp(const void *A, const void *B)
  */
 th_transport_t *
 transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
-	       int *errorp)
+	       int *errorp, th_transport_t *skip)
 {
   th_transport_t *t, **vec;
-  int cnt = 0, i, r;
+  int cnt = 0, i, r, off;
   int error = 0;
 
   lock_assert(&global_lock);
@@ -457,23 +411,38 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
 
   qsort(vec, cnt, sizeof(th_transport_t *), transportcmp);
 
-  /* First, try all transports without stealing */
+  // Skip up to the transport that the caller didn't want
+  // If the sorting above is not stable that might mess up things
+  // temporary. But it should resolve itself eventually
+  if(skip != NULL) {
+    for(i = 0; i < cnt; i++) {
+      if(skip == t)
+	break;
+    }
+    off = i + 1;
+  } else {
+    off = 0;
+  }
 
-  for(i = 0; i < cnt; i++) {
+  error = TRANSPORT_NOSTART_NO_HARDWARE;
+
+  /* First, try all transports without stealing */
+  for(i = off; i < cnt; i++) {
     t = vec[i];
     if(t->tht_status == TRANSPORT_RUNNING) 
       return t;
-
-    if(!transport_start(t, 0, 0, 1))
+    if((r = transport_start(t, 0, 0)) == 0)
       return t;
+    tvhlog(LOG_DEBUG, "Transport", "%s: Unable to use \"%s\" -- %s",
+	     loginfo, transport_nicename(t), transport_nostart2txt(r));
   }
 
   /* Ok, nothing, try again, but supply our weight and thus, try to steal
      transponders */
 
-  for(i = 0; i < cnt; i++) {
+  for(i = off; i < cnt; i++) {
     t = vec[i];
-    if((r = transport_start(t, weight, 0, 1)) == 0)
+    if((r = transport_start(t, weight, 0)) == 0)
       return t;
     error = r;
     if(loginfo != NULL)
@@ -779,7 +748,8 @@ transport_data_timeout(void *aux)
 
   pthread_mutex_lock(&t->tht_stream_mutex);
 
-  transport_set_streaming_status_flags(t, TSS_GRACEPERIOD);
+  if(!t->tht_streaming_status & TSS_PACKETS)
+    transport_set_streaming_status_flags(t, TSS_GRACEPERIOD);
 
   pthread_mutex_unlock(&t->tht_stream_mutex);
 }
