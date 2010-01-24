@@ -188,6 +188,9 @@ ts_recv_packet1(th_transport_t *t, const uint8_t *tsb, int64_t *pcrp)
   int pid, n, m, r;
   th_descrambler_t *td;
 
+  if(t->tht_status != TRANSPORT_RUNNING)
+    return;
+
   pthread_mutex_lock(&t->tht_stream_mutex);
 
   transport_set_streaming_status_flags(t, TSS_INPUT_HARDWARE);
