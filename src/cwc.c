@@ -1257,6 +1257,10 @@ cwc_transport_start(th_transport_t *t)
     LIST_INSERT_HEAD(&t->tht_descramblers, td, td_transport_link);
 
     LIST_INSERT_HEAD(&cwc->cwc_transports, ct, ct_link);
+
+    tvhlog(LOG_DEBUG, "cwc", "%s using CWC %s:%d",
+	   transport_nicename(t), cwc->cwc_hostname, cwc->cwc_port);
+
   }
 }
 
