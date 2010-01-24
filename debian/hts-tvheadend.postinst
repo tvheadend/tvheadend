@@ -13,6 +13,8 @@ configure)
         adduser --quiet --system --group --shell /bin/bash $HTS_USER
    fi
 
+   adduser 2>/dev/null $HTS_USER video
+
    HTS_HOME=`getent passwd $HTS_USER | cut -d':' -f6`
 
    mkdir -p "${HTS_HOME}/.hts/tvheadend"
