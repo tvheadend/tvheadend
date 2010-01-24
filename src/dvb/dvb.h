@@ -138,10 +138,6 @@ typedef struct th_dvb_mux_instance {
 } th_dvb_mux_instance_t;
 
 
-
-#define DVB_DEVICE_SLOW 1  // Can only handle one service at a time 
-#define DVB_DEVICE_FAST 2  // Can handle full mux
-
 /**
  * DVB Adapter (one of these per physical adapter)
  */
