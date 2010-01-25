@@ -164,7 +164,16 @@ usage(const char *argv0)
 	 "                 it will allow world-wide administrative access\n"
 	 "                 to your Tvheadend installation until you edit\n"
 	 "                 the access-control from within the Tvheadend UI\n");
-  printf(" -d              Debug logging");
+  printf(" -s              Log debug to syslog\n");
+  printf("\n");
+  printf("Development options\n");
+  printf("\n");
+  printf(" -d              Log debug to console\n");
+  printf(" -j <id>         Statically join the given transport id\n");
+  printf(" -r <tsfile>     Read the given transport stream file and present\n"
+	 "                 found services as channels\n");
+  printf(" -A              Immediately call abort()\n");
+	 
   printf("\n");
   printf("For more information read the man page or visit\n");
   printf(" http://www.lonelycoder.com/hts/\n");
