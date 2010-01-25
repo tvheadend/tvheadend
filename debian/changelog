@@ -32,13 +32,15 @@ hts-tvheadend (2.8) hts; urgency=low
 
   * Fix various bugs related to RTP encapsulated IPTV
 
-  * Tvheadend now support placement of configurations and settings at any path. 
+  * Tvheadend now support placement of configurations and settings at any path.
     Use the '-c' command line option for this. By default Tvheadend puts
     configuration at $HOME/.hts/tvheadend
 
   * Make it possible to enable debug level log in the web interface.
     Press the small top-right gear icon in the log console to enable/disable
     debug log.
+
+ -- Andreas Öman <andreas@lonelycoder.com>  Mon, 25 Jan 2010 21:23:47 +0100
 
 hts-tvheadend (2.7) hts; urgency=low
 
