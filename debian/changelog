@@ -1,3 +1,11 @@
+hts-tvheadend (2.9) hts; urgency=high
+
+  * A last minute bug slipped in the 2.8 release, causing Tvheadend to read 
+    settings and configuration from incorrect path when also switching user
+    during startup. This has now been fixed.
+
+ -- Andreas Öman <andreas@lonelycoder.com>  Mon, 25 Jan 2010 21:23:47 +0100
+
 hts-tvheadend (2.8) hts; urgency=low
 
   * Added support for AAC audio
