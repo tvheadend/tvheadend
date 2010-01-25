@@ -50,8 +50,38 @@ hts_settings_get_root(void)
 void
 hts_settings_init(const char *confpath)
 {
-  settingspath = confpath ? strdup(confpath) : NULL;
+  char buf[256];
+  const char *homedir = getenv("HOME");
+  struct stat st;
+
+  if(confpath != NULL) {
+    settingspath = strdup(confpath);
+  } else {
+
+    if(homedir != NULL) {
+      snprintf(buf, sizeof(buf), "%s/.hts", homedir);
+      if(stat(buf, &st) == 0 || mkdir(buf, 0700) == 0) {
+      
+	snprintf(buf, sizeof(buf), "%s/.hts/tvheadend", homedir);
+      
+	if(stat(buf, &st) == 0 || mkdir(buf, 0700) == 0)
+	  settingspath = strdup(buf);
+      }
+    }
+  }
+  if(settingspath == NULL) {
+    tvhlog(LOG_ALERT, "START", 
+	   "No configuration path set, "
+	   "settings and configuration will not be saved");
+  } else if(access(settingspath, R_OK | W_OK)) {
+    tvhlog(LOG_ALERT, "START", 
+	   "Configuration path %s is not read/write:able "
+	   "by user (UID:%d, GID:%d) -- %s",
+	   settingspath, getuid(), getgid(), strerror(errno));
+    settingspath = NULL;
+  }
 }
+
 
 /**
  *

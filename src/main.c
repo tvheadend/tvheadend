@@ -74,28 +74,6 @@ static int log_decorate;
 int log_debug_to_syslog;
 int log_debug_to_console;
 
-static char confpath[256];
-
-
-static void
-set_confpath(void)
-{
-  char buf[256];
-  const char *homedir = getenv("HOME");
-  struct stat st;
-
-  if(homedir != NULL) {
-    snprintf(buf, sizeof(buf), "%s/.hts", homedir);
-    if(stat(buf, &st) == 0 || mkdir(buf, 0700) == 0) {
-      
-      snprintf(buf, sizeof(buf), "%s/.hts/tvheadend", homedir);
-      
-      if(stat(buf, &st) == 0 || mkdir(buf, 0700) == 0)
-	snprintf(confpath, sizeof(confpath), "%s", buf);
-    }
-  }
-}
-
 
 static void
 handle_sigpipe(int x)
@@ -178,9 +156,7 @@ usage(const char *argv0)
   printf("\n");
   printf(" -a <adapters>   Use only DVB adapters specified (csv)\n");
   printf(" -c <directory>  Alternate configuration path.\n"
-	 "                 Defaults to [%s]\n",
-	 *confpath ? confpath : "<unset>");
-
+	 "                 Defaults to [$HOME/.hts/tvheadend]\n");
   printf(" -f              Fork and daemonize\n");
   printf(" -u <username>   Run as user <username>, only works with -f\n");
   printf(" -g <groupname>  Run as group <groupname>, only works with -f\n");
@@ -263,11 +239,10 @@ main(int argc, char **argv)
   const char *homedir;
   const char *rawts_input = NULL;
   const char *join_transport = NULL;
+  const char *confpath = NULL;
   char *p, *endp;
   uint32_t adapter_mask = 0xffffffff;
   int crash = 0;
-
-  set_confpath();
 
   while((c = getopt(argc, argv, "Aa:fu:g:c:Chdr:j:s")) != -1) {
     switch(c) {
@@ -304,7 +279,7 @@ main(int argc, char **argv)
       groupnam = optarg;
       break;
     case 'c':
-      snprintf(confpath, sizeof(confpath), "%s", optarg);
+      confpath = optarg;
       break;
     case 'd':
       log_debug_to_console = 1;
@@ -372,7 +347,7 @@ main(int argc, char **argv)
 
   openlog("tvheadend", LOG_PID, logfacility);
 
-  hts_settings_init(*confpath ? confpath : NULL);
+  hts_settings_init(confpath);
 
   pthread_mutex_init(&ffmpeg_lock, NULL);
   pthread_mutex_init(&fork_lock, NULL);
@@ -449,7 +424,7 @@ main(int argc, char **argv)
   pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 
   tvhlog(LOG_NOTICE, "START", "HTS Tvheadend version %s started, "
-	 "running as pid:%d uid:%d gid:%d, settings located in '%s'",
+	 "running as PID:%d UID:%d GID:%d, settings located in '%s'",
 	 htsversion_full,
 	 getpid(), getuid(), getgid(), hts_settings_get_root());
 
