@@ -748,7 +748,7 @@ transport_data_timeout(void *aux)
 
   pthread_mutex_lock(&t->tht_stream_mutex);
 
-  if(!t->tht_streaming_status & TSS_PACKETS)
+  if(!(t->tht_streaming_status & TSS_PACKETS))
     transport_set_streaming_status_flags(t, TSS_GRACEPERIOD);
 
   pthread_mutex_unlock(&t->tht_stream_mutex);
