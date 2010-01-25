@@ -36,6 +36,10 @@ hts-tvheadend (2.8) hts; urgency=low
     Use the '-c' command line option for this. By default Tvheadend puts
     configuration at $HOME/.hts/tvheadend
 
+  * Make it possible to enable debug level log in the web interface.
+    Press the small top-right gear icon in the log console to enable/disable
+    debug log.
+
 hts-tvheadend (2.7) hts; urgency=low
 
   * Added support for DVB subtitles. Currently only forwarded over HTSP

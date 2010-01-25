@@ -33,7 +33,7 @@ void extjs_start(void);
  */
 void comet_init(void);
 
-void comet_mailbox_add_message(htsmsg_t *m);
+void comet_mailbox_add_message(htsmsg_t *m, int isdebug);
 
 void comet_flush(void);
 

@@ -131,7 +131,19 @@ tvheadend.app = function() {
 			maxSize: 400,
 			collapsible: true,
 			title:'System log',
-			margins:'0 0 0 0'
+			margins:'0 0 0 0',
+			tools:[{
+			    id:'gear',
+			    qtip: 'Enable debug output',
+			    handler: function(event, toolEl, panel){
+				Ext.Ajax.request({
+				    url: 'comet/debug',
+				    params : { 
+					boxid: tvheadend.boxid
+				    }
+				});
+			    }
+			}]
 		    },tvheadend.rootTabPanel
 		]
 	    });

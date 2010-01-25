@@ -17,18 +17,18 @@ Ext.extend(tvheadend.Comet = function() {
 }, Ext.util.Observable);
 
 tvheadend.comet = new tvheadend.Comet();
+tvheadend.boxid = null;
 
 tvheadend.cometPoller = function() {
 
     var failures = 0;
-    var boxid = null;
 
     var cometRequest = new Ext.util.DelayedTask(function() {
 
 	Ext.Ajax.request({
-	    url: 'comet',
+	    url: 'comet/poll',
 	    params : { 
-		boxid: (boxid ? boxid : null),
+		boxid: (tvheadend.boxid ? tvheadend.boxid : null),
 		immediate: failures > 0 ? 1 : 0
 	    },
 	    success: function(result, request) { 
@@ -55,7 +55,7 @@ tvheadend.cometPoller = function() {
 
     function parse_comet_response(responsetxt) {
 	response = Ext.util.JSON.decode(responsetxt);
-	boxid = response.boxid
+	tvheadend.boxid = response.boxid
 	for(x = 0; x < response.messages.length; x++) {
             m = response.messages[x];
 	    tvheadend.comet.fireEvent(m.notificationClass, m);

@@ -72,7 +72,6 @@ static int log_stderr;
 static int log_decorate;
 
 int log_debug_to_syslog;
-int log_debug_to_comet;
 int log_debug_to_console;
 
 static char confpath[256];
@@ -504,7 +503,7 @@ tvhlogv(int notify, int severity, const char *subsys, const char *fmt,
   /**
    * Send notification to Comet (Push interface to web-clients)
    */
-  if(notify && (log_debug_to_comet || severity < LOG_DEBUG)) {
+  if(notify) {
     htsmsg_t *m;
 
     time(&now);
@@ -515,7 +514,7 @@ tvhlogv(int notify, int severity, const char *subsys, const char *fmt,
     m = htsmsg_create_map();
     htsmsg_add_str(m, "notificationClass", "logmessage");
     htsmsg_add_str(m, "logtxt", buf2);
-    comet_mailbox_add_message(m);
+    comet_mailbox_add_message(m, severity == LOG_DEBUG);
     htsmsg_destroy(m);
   }
 
