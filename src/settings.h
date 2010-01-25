@@ -22,7 +22,7 @@
 #include "htsmsg.h"
 #include <stdarg.h>
 
-void hts_settings_init(const char *programname, const char *path);
+void hts_settings_init(const char *confpath);
 
 void hts_settings_save(htsmsg_t *record, const char *pathfmt, ...);
 

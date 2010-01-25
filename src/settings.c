@@ -43,29 +43,14 @@ hts_settings_get_root(void)
   return settingspath ?: "No settings dir";
 }
 
+
 /**
  *
  */
 void
-hts_settings_init(const char *programname, const char *homedir)
+hts_settings_init(const char *confpath)
 {
-  char buf[256];
-  struct stat st;
-  
-  if(homedir == NULL)
-    homedir = getenv("HOME");
-  
-  if(homedir == NULL)
-    return;
-
-  snprintf(buf, sizeof(buf), "%s/.hts", homedir);
-  if(stat(buf, &st) == 0 || mkdir(buf, 0700) == 0) {
-
-    snprintf(buf, sizeof(buf), "%s/.hts/%s", homedir, programname);
-
-    if(stat(buf, &st) == 0 || mkdir(buf, 0700) == 0)
-      settingspath = strdup(buf);
-  }
+  settingspath = confpath ? strdup(confpath) : NULL;
 }
 
 /**

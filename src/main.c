@@ -75,6 +75,28 @@ int log_debug_to_syslog;
 int log_debug_to_comet;
 int log_debug_to_console;
 
+static char confpath[256];
+
+
+static void
+set_confpath(void)
+{
+  char buf[256];
+  const char *homedir = getenv("HOME");
+  struct stat st;
+
+  if(homedir != NULL) {
+    snprintf(buf, sizeof(buf), "%s/.hts", homedir);
+    if(stat(buf, &st) == 0 || mkdir(buf, 0700) == 0) {
+      
+      snprintf(buf, sizeof(buf), "%s/.hts/tvheadend", homedir);
+      
+      if(stat(buf, &st) == 0 || mkdir(buf, 0700) == 0)
+	snprintf(confpath, sizeof(confpath), "%s", buf);
+    }
+  }
+}
+
 
 static void
 handle_sigpipe(int x)
@@ -156,6 +178,10 @@ usage(const char *argv0)
   printf("usage: %s [options]\n", argv0);
   printf("\n");
   printf(" -a <adapters>   Use only DVB adapters specified (csv)\n");
+  printf(" -c <directory>  Alternate configuration path.\n"
+	 "                 Defaults to [%s]\n",
+	 *confpath ? confpath : "<unset>");
+
   printf(" -f              Fork and daemonize\n");
   printf(" -u <username>   Run as user <username>, only works with -f\n");
   printf(" -g <groupname>  Run as group <groupname>, only works with -f\n");
@@ -235,13 +261,14 @@ main(int argc, char **argv)
   int logfacility = LOG_DAEMON;
   int createdefault = 0;
   sigset_t set;
-  const char *contentpath = TVHEADEND_CONTENT_PATH;
-  const char *homedir = NULL;
+  const char *homedir;
   const char *rawts_input = NULL;
   const char *join_transport = NULL;
   char *p, *endp;
   uint32_t adapter_mask = 0xffffffff;
   int crash = 0;
+
+  set_confpath();
 
   while((c = getopt(argc, argv, "Aa:fu:g:c:Chdr:j:s")) != -1) {
     switch(c) {
@@ -278,7 +305,7 @@ main(int argc, char **argv)
       groupnam = optarg;
       break;
     case 'c':
-      contentpath = optarg;
+      snprintf(confpath, sizeof(confpath), "%s", optarg);
       break;
     case 'd':
       log_debug_to_console = 1;
@@ -346,7 +373,7 @@ main(int argc, char **argv)
 
   openlog("tvheadend", LOG_PID, logfacility);
 
-  hts_settings_init("tvheadend", homedir);
+  hts_settings_init(*confpath ? confpath : NULL);
 
   pthread_mutex_init(&ffmpeg_lock, NULL);
   pthread_mutex_init(&fork_lock, NULL);
@@ -379,7 +406,7 @@ main(int argc, char **argv)
 
   http_server_init();
 
-  webui_init(contentpath);
+  webui_init(TVHEADEND_CONTENT_PATH);
 
   serviceprobe_init();
 

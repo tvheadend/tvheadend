@@ -15,7 +15,7 @@ hts-tvheadend (2.8) hts; urgency=low
   * More intelligent arbitration amongst all sources when a subscription
     is about to start for a channel. If we cannot descramble or if no
     input is detected, skip to next source.
-    Fixes ticket #89 
+    Fixes ticket #89
 
   * Add option for editing channel icon URL in the channel config tab.
 
@@ -27,10 +27,14 @@ hts-tvheadend (2.8) hts; urgency=low
 
   * Add support for extracting provider in the PMT for SECA/Mediaguard
 
-  * Add support for NIT-other tables. 
+  * Add support for NIT-other tables.
     In particular useful for Ziggo DVB-C networks in the Netherlands.
 
   * Fix various bugs related to RTP encapsulated IPTV
+
+  * Tvheadend now support placement of configurations and settings at any path. 
+    Use the '-c' command line option for this. By default Tvheadend puts
+    configuration at $HOME/.hts/tvheadend
 
 hts-tvheadend (2.7) hts; urgency=low
 
