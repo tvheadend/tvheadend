@@ -114,7 +114,8 @@ subscription_unlink_transport(th_subscription_t *s)
   // Unlink from transport output
   streaming_target_disconnect(&t->tht_streaming_pad, &s->ths_input);
 
-  if(LIST_FIRST(&t->tht_components) != NULL) {
+  if(LIST_FIRST(&t->tht_components) != NULL && 
+     s->ths_state == SUBSCRIPTION_GOT_TRANSPORT) {
     // Send a STOP message to the subscription client
     sm = streaming_msg_create_code(SMT_STOP, 0);
     streaming_target_deliver(s->ths_output, sm);
