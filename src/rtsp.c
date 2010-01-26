@@ -45,26 +45,6 @@ TAILQ_HEAD(rtsp_packet_queue, rtsp_packet);
 /**
  *
  */
-typedef struct rtsp_resource {
-  enum {
-    RTSP_RESOURCE_CHANNEL,
-    RTSP_RESOURCE_SERVICE
-  } rr_type;
-
-  int rr_mpegts;
-
-  union {
-    struct channel *rr_channel;
-    struct th_transport *rr_service;
-    void *rr_r;
- };
-
-} rtsp_resource_t;
-
-
-/**
- *
- */
 typedef struct rtsp_packet {
   TAILQ_ENTRY(rtsp_packet) rp_link;
   
@@ -80,11 +60,16 @@ typedef struct rtsp_packet {
 typedef struct rtsp {
   int rtsp_refcount; // Should only be modified with global_lock held
 
-  /* Streaming */
-
   struct th_subscription *rtsp_sub;
 
+
+  /* Startup */
+  const char *rtsp_start_error;
   struct streaming_start *rtsp_ss;
+  pthread_mutex_t rtsp_start_mutex;
+  pthread_cond_t rtsp_start_cond;
+
+
 
   streaming_target_t rtsp_input;
 
@@ -339,6 +324,9 @@ rtsp_get_session(http_connection_t *hc)
   TAILQ_INIT(&rtsp->rtsp_pqueue);
   pthread_cond_init(&rtsp->rtsp_cond, NULL);
   pthread_mutex_init(&rtsp->rtsp_mutex, NULL);
+
+  pthread_cond_init(&rtsp->rtsp_start_cond, NULL);
+  pthread_mutex_init(&rtsp->rtsp_start_mutex, NULL);
   return rtsp;
 }
 
@@ -355,19 +343,6 @@ rtsp_check_session(http_connection_t *hc, rtsp_t *rtsp, int none_is_ok)
 
   return ses == NULL || strcmp(rtsp->rtsp_session_id, ses);
 }
-
-/**
- *
- */
-static void
-rtsp_unsubscribe(rtsp_t *rtsp)
-{
-  if(rtsp->rtsp_sub != NULL) {
-    subscription_unsubscribe(rtsp->rtsp_sub);
-    rtsp->rtsp_sub = NULL;
-  }
-}
-
 
 /**
  *
@@ -448,15 +423,27 @@ rtsp_streaming_input(void *opaque, streaming_message_t *sm)
 
   switch(sm->sm_type) {
   case SMT_START:
+
+    pthread_mutex_lock(&rtsp->rtsp_start_mutex);
+
     assert(rtsp->rtsp_ss == NULL);
     rtsp->rtsp_ss = sm->sm_data;
+
+    pthread_cond_signal(&rtsp->rtsp_start_cond);
+    pthread_mutex_unlock(&rtsp->rtsp_start_mutex);
+
     sm->sm_data = NULL; // steal reference
     break;
 
   case SMT_STOP:
+    pthread_mutex_lock(&rtsp->rtsp_start_mutex);
+
     assert(rtsp->rtsp_ss != NULL);
     streaming_start_unref(rtsp->rtsp_ss);
     rtsp->rtsp_ss = NULL;
+
+    pthread_cond_signal(&rtsp->rtsp_start_cond);
+    pthread_mutex_unlock(&rtsp->rtsp_start_mutex);
     break;
 
   case SMT_PACKET:
@@ -465,9 +452,22 @@ rtsp_streaming_input(void *opaque, streaming_message_t *sm)
     break;
 
   case SMT_TRANSPORT_STATUS:
+     if(sm->sm_code & TSS_PACKETS) {
+	
+     } else if(sm->sm_code & (TSS_GRACEPERIOD | TSS_ERRORS)) {
+
+       pthread_mutex_lock(&rtsp->rtsp_start_mutex);
+       rtsp->rtsp_start_error = transport_tss2text(sm->sm_code);
+       pthread_cond_signal(&rtsp->rtsp_start_cond);
+       pthread_mutex_unlock(&rtsp->rtsp_start_mutex);
+     }
     break;
 
   case SMT_NOSOURCE:
+    pthread_mutex_lock(&rtsp->rtsp_start_mutex);
+    rtsp->rtsp_start_error = transport_nostart2txt(sm->sm_code);
+    pthread_cond_signal(&rtsp->rtsp_start_cond);
+    pthread_mutex_unlock(&rtsp->rtsp_start_mutex);
     break;
 
   case SMT_MPEGTS:
@@ -479,68 +479,39 @@ rtsp_streaming_input(void *opaque, streaming_message_t *sm)
   streaming_msg_free(sm);
 }
 
-
 /**
- *
+ * Attach the url to an internal resource (channel or transport)
  */
 static int
-rtsp_subscribe(rtsp_t *rtsp, rtsp_resource_t *rr)
-{
-  th_subscription_t *s = NULL;
-
-  if(rtsp->rtsp_sub != NULL) {
-    
-    switch(rr->rr_type) {
-    case RTSP_RESOURCE_CHANNEL:
-      if(rtsp->rtsp_sub->ths_channel == rr->rr_channel)
-	return 0;
-      break;
-    case RTSP_RESOURCE_SERVICE:
-      if(rtsp->rtsp_sub->ths_transport == rr->rr_service)
-	return 0;
-    }
-    subscription_unsubscribe(rtsp->rtsp_sub);
-  }
-
-  
-
-
-  streaming_target_init(&rtsp->rtsp_input, rtsp_streaming_input, rtsp, 0);
-
-  int flags = rr->rr_mpegts ? SUBSCRIPTION_RAW_MPEGTS : 0;
-
-  switch(rr->rr_type) {
-  case RTSP_RESOURCE_CHANNEL:
-    s = subscription_create_from_channel(rr->rr_channel, 500, "RTSP", 
-					 &rtsp->rtsp_input, flags);
-    break;
-  case RTSP_RESOURCE_SERVICE:
-    s = subscription_create_from_transport(rr->rr_service, "RTSP", 
-					   &rtsp->rtsp_input, flags);
-    break;
-  }
-
-  rtsp->rtsp_sub = s;
-  return s == NULL;
-}
-
-
-/**
- * Resolve an URL into a resource
- */
-static int
-rtsp_resolve_url(http_connection_t *hc, rtsp_resource_t *rr, char **remainp)
+rtsp_subscribe(http_connection_t *hc, rtsp_t *rtsp,
+	       char *title, size_t titlelen,
+	       char *baseurl, size_t baseurllen)
 {
   char *components[5];
-  void *r;
   int nc;
   char *url = hc->hc_url;
+  int pri = 500;
+  int subflags = 0;
+  th_subscription_t *s;
+  char urlprefix[128];
+  char buf[INET_ADDRSTRLEN + 1];
+
+  inet_ntop(AF_INET, &hc->hc_self->sin_addr, buf, sizeof(buf));
+  snprintf(urlprefix, sizeof(urlprefix),
+	   "rtsp://%s:%d", buf, ntohs(hc->hc_self->sin_port));
+
+  if(rtsp->rtsp_sub != NULL) {
+    rtsp_error(hc, 400, "Please teardown first");
+    return -1;
+  }
 
   if(!strncasecmp(url, "rtsp://", strlen("rtsp://"))) {
     url += strlen("rtsp://");
     url = strchr(url, '/');
-    if(url == NULL)
+    if(url == NULL) {
+      rtsp_error(hc, RTSP_STATUS_SERVICE, "Invalid URL");
       return -1;
+    }
     url++;
   }
   
@@ -551,36 +522,79 @@ rtsp_resolve_url(http_connection_t *hc, rtsp_resource_t *rr, char **remainp)
 
   http_deescape(components[1]);
 
+  rtsp->rtsp_start_error = NULL;
+  rtsp->rtsp_ss = NULL;
+  streaming_target_init(&rtsp->rtsp_input, rtsp_streaming_input, rtsp, 0);
+
+
   if(!strcmp(components[0], "channel")) {
-    rr->rr_type = RTSP_RESOURCE_CHANNEL;
-    r = channel_find_by_name(components[1], 0);
+    channel_t *ch;
+    scopedgloballock();
+  
+    if((ch = channel_find_by_name(components[1], 0)) == NULL) {
+      rtsp_error(hc, RTSP_STATUS_SERVICE, "Channel name not found");
+      return -1;
+    }
+
+    s = subscription_create_from_channel(ch, pri, "RTSP", &rtsp->rtsp_input,
+					 subflags);
+
+    snprintf(baseurl, baseurllen, "channel/%s", ch->ch_name);
+    snprintf(title, titlelen, "%s", ch->ch_name);
 
   } else if(!strcmp(components[0], "channelid")) {
-    rr->rr_type = RTSP_RESOURCE_CHANNEL;
-    r = channel_find_by_identifier(atoi(components[1]));
-    
-  } else if(!strcmp(components[0], "service")) {
-    rr->rr_type = RTSP_RESOURCE_SERVICE;
-    r = transport_find_by_identifier(components[1]);
-    
-  } else {
-    return -1;
-  }
+    channel_t *ch;
+    scopedgloballock();
   
-  if(r == NULL)
-    return -1;
-  rr->rr_r = r;
-  rr->rr_mpegts = 0;
+    if((ch = channel_find_by_identifier(atoi(components[1]))) == NULL) {
+      rtsp_error(hc, RTSP_STATUS_SERVICE, "Channel ID not found");
+      return -1;
+    }
 
-  if(remainp == NULL)
-    return 0;
+    s = subscription_create_from_channel(ch, pri, "RTSP", &rtsp->rtsp_input,
+					 subflags);
 
-  if(nc == 3) {
-    http_deescape(components[2]);
-    *remainp = components[2];
+    snprintf(baseurl, baseurllen, "channel/%s", ch->ch_name);
+    snprintf(title, titlelen, "%s", ch->ch_name);
+
+  } else if(!strcmp(components[0], "service")) {
+    th_transport_t *t;
+    scopedgloballock();
+
+    if((t = transport_find_by_identifier(components[1])) == NULL) {
+      rtsp_error(hc, RTSP_STATUS_SERVICE, "Transport ID not found");
+      return -1;
+    }
+    s = subscription_create_from_transport(t, "RTSP", &rtsp->rtsp_input,
+					   subflags);
+
+    snprintf(baseurl, baseurllen, "service/%s", t->tht_identifier);
+    snprintf(title, titlelen, "%s", t->tht_identifier);
+
   } else {
-    *remainp = NULL;
+    rtsp_error(hc, RTSP_STATUS_SERVICE, "Invalid URL");
+    return -1;
   }
+
+  pthread_mutex_lock(&rtsp->rtsp_start_mutex);
+  while(rtsp->rtsp_start_error == NULL && rtsp->rtsp_ss == NULL)
+    pthread_cond_wait(&rtsp->rtsp_start_cond, &rtsp->rtsp_start_mutex);
+
+  if(rtsp->rtsp_start_error != NULL) {
+    pthread_mutex_unlock(&rtsp->rtsp_start_mutex);
+
+
+    pthread_mutex_lock(&global_lock);
+    subscription_unsubscribe(s);
+    pthread_mutex_unlock(&global_lock);
+
+    rtsp_error(hc, RTSP_STATUS_SERVICE, rtsp->rtsp_start_error);
+    return -1;
+  }
+
+  pthread_mutex_unlock(&rtsp->rtsp_start_mutex);
+
+  rtsp->rtsp_sub = s;
   return 0;
 }
 
@@ -592,20 +606,10 @@ static int
 rtsp_cmd_options(http_connection_t *hc)
 {
   char *c;
-  rtsp_resource_t rr;
-
-  pthread_mutex_lock(&global_lock);
-
-  if(strcmp(hc->hc_url, "*") && rtsp_resolve_url(hc, &rr, NULL)) {
-    rtsp_error(hc, RTSP_STATUS_SERVICE, "URL does not resolve");
-    pthread_mutex_unlock(&global_lock);
-    return 0;
-  }
-  pthread_mutex_unlock(&global_lock);
 
   rtsp_printf(hc,
 	      "RTSP/1.0 200 OK\r\n"
-	      "Public: DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE\r\n");
+	      "Public: DESCRIBE, SETUP, TEARDOWN, PLAY\r\n");
 
   if((c = http_arg_get(&hc->hc_args, "cseq")) != NULL)
     rtsp_printf(hc, "CSeq: %s\r\n", c);
@@ -640,68 +644,31 @@ static int
 rtsp_cmd_describe(http_connection_t *hc, rtsp_t *rtsp)
 {
   char sdp[1000];
-  char urlprefix[128];
+  char baseurl[128];
   char *c;
-  const char *str;
-  rtsp_resource_t rr;
   extern const char *htsversion;
   const streaming_start_t *ss;
   int i;
+  char title[128];
 
-  char buf[INET_ADDRSTRLEN + 1];
-  inet_ntop(AF_INET, &hc->hc_self->sin_addr, buf, sizeof(buf));
-
-  snprintf(urlprefix, sizeof(urlprefix),
-	   "rtsp://%s:%d", buf, ntohs(hc->hc_self->sin_port));
-
-  pthread_mutex_lock(&global_lock);
-
-  if(rtsp_resolve_url(hc, &rr, NULL)) {
-    rtsp_error(hc, RTSP_STATUS_SERVICE, "URL does not resolve");
-    pthread_mutex_unlock(&global_lock);
+  if(rtsp_subscribe(hc, rtsp, title, sizeof(title), baseurl, sizeof(baseurl)))
     return 0;
-  }
-
-  rtsp_subscribe(rtsp, &rr);
-
-  if((ss = rtsp->rtsp_ss) == NULL) {
-    rtsp_error(hc, RTSP_STATUS_SERVICE, "No source available");
-    rtsp_unsubscribe(rtsp);
-    pthread_mutex_unlock(&global_lock);
-    return 0;
-  }
-
-  pthread_mutex_unlock(&global_lock);
-
-  if(rr.rr_type == RTSP_RESOURCE_CHANNEL)
-    str = rr.rr_channel->ch_name;
-  else
-    str = rr.rr_service->tht_identifier;
 
   snprintf(sdp, sizeof(sdp),
 	   "v=0\r\n"
 	   "o=- 0 0 IN IPV4 127.0.0.1\r\n"
 	   "s=%s\r\n"
 	   "a=tool:HTS Tvheadend %s\r\n",
-	   str, htsversion);
+	   title, htsversion);
+
+  ss = rtsp->rtsp_ss;
 
   for(i = 0; i < ss->ss_num_components; i++) {
     const streaming_start_component_t *ssc = &ss->ss_components[i];
     
     char controlurl[256];
-
-    switch(rr.rr_type) {
-    case RTSP_RESOURCE_CHANNEL:
-      snprintf(controlurl, sizeof(controlurl), "%s/channelid/%d/streamid=%d",
-	       urlprefix, rr.rr_channel->ch_id, ssc->ssc_index);
-      break;
-
-    case RTSP_RESOURCE_SERVICE:
-      snprintf(controlurl, sizeof(controlurl), "%s/service/%s/streamid=%d",
-	       urlprefix, rr.rr_service->tht_identifier, ssc->ssc_index);
-      break;
-
-    }
+    snprintf(controlurl, sizeof(controlurl), "%s/streamid=%d",
+	     baseurl, ssc->ssc_index);
 
     switch(ssc->ssc_type) {
     case SCT_MPEG2VIDEO:
@@ -935,7 +902,6 @@ rtsp_setup_udp(http_connection_t *hc, rtsp_t *rtsp,
 static int
 rtsp_cmd_setup(http_connection_t *hc, rtsp_t *rtsp)
 {
-  rtsp_resource_t rr;
   char *transports[10];
   char *params[10];
   char *t;
@@ -943,38 +909,21 @@ rtsp_cmd_setup(http_connection_t *hc, rtsp_t *rtsp)
   int streamid;
   char *remain;
   const streaming_start_component_t *ssc;
-
-  if(rtsp_check_session(hc, rtsp, 1))
-    return rtsp_error(hc, 459, NULL);
-   
-  pthread_mutex_lock(&global_lock);
-
-  if(rtsp_resolve_url(hc, &rr, &remain)) {
+  
+  remain = strstr(hc->hc_url, "streamid=");
+  if(remain == NULL) {
     rtsp_error(hc, RTSP_STATUS_SERVICE, "URL does not resolve");
-    pthread_mutex_unlock(&global_lock);
     return 0;
   }
 
-  if(remain == NULL || strncmp(remain, "streamid=", strlen("streamid="))) {
-    rtsp_error(hc, RTSP_STATUS_SERVICE, "No streamid component in URL");
-    pthread_mutex_unlock(&global_lock);
+  if(rtsp->rtsp_ss == NULL) {
+    rtsp_error(hc, RTSP_STATUS_SERVICE, "Not described");
     return 0;
   }
-
 
   streamid = atoi(remain + strlen("streamid="));
   if((ssc = get_ssc_by_index(rtsp, streamid)) == NULL) {
-    pthread_mutex_unlock(&global_lock);
     return rtsp_error(hc, RTSP_STATUS_SERVICE, "Stream not found");
-  }
-
-  rtsp_subscribe(rtsp, &rr);
-  pthread_mutex_unlock(&global_lock);
-
-  if(rtsp->rtsp_ss == NULL) {
-    rtsp_error(hc, RTSP_STATUS_SERVICE, "No source available");
-    rtsp_unsubscribe(rtsp);
-    return 0;
   }
 
   if((t = http_arg_get(&hc->hc_args, "transport")) == NULL) {
