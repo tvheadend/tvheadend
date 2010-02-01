@@ -120,7 +120,7 @@ typedef struct th_dvb_mux_instance {
 
   dvb_mux_conf_t tdmi_conf;
 
-  /* Linked if tdmi_conf.tmc_sc != NULL */
+  /* Linked if tdmi_conf.dmc_satconf != NULL */
   LIST_ENTRY(th_dvb_mux_instance) tdmi_satconf_link;
 
   uint16_t tdmi_transport_stream_id;
