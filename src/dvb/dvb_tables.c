@@ -711,7 +711,9 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   // That might indicate that we have accedentally received a PAT
   // from another mux
   LIST_FOREACH(other, &tda->tda_muxes, tdmi_adapter_link)
-    if(other != tdmi && other->tdmi_transport_stream_id == tsid)
+    if(other != tdmi && 
+       other->tdmi_conf.dmc_satconf == tdmi->tdmi_conf.dmc_satconf &&
+       other->tdmi_transport_stream_id == tsid)
       return -1;
 
   if(tdmi->tdmi_transport_stream_id == 0xffff)
