@@ -139,14 +139,15 @@ makedirs(const char *path)
 
 
 /**
- * Replace any slash chars in a string with dash
+ * Replace various chars with a dash
  */
 static void
-deslashify(char *s)
+cleanupfilename(char *s)
 {
   int i, len = strlen(s);
   for(i = 0; i < len; i++) 
-    if(s[i]  == '/' || s[i] == ':')
+    if(s[i] == '/' || s[i] == ':' || s[i] == '\\' || s[i] == '<' ||
+       s[i] == '>' || s[i] == '|' || s[i] == '*' || s[i] == '?')
       s[i] = '-';
 }
 
@@ -169,7 +170,7 @@ pvr_generate_filename(dvr_entry_t *de)
   struct tm tm;
 
   filename = strdup(de->de_ititle);
-  deslashify(filename);
+  cleanupfilename(filename);
 
   av_strlcpy(path, dvr_storage, sizeof(path));
 
@@ -178,7 +179,7 @@ pvr_generate_filename(dvr_entry_t *de)
   if(dvr_flags & DVR_DIR_PER_DAY) {
     localtime_r(&de->de_start, &tm);
     strftime(fullname, sizeof(fullname), "%F", &tm);
-    deslashify(fullname);
+    cleanupfilename(fullname);
     snprintf(path + strlen(path), sizeof(path) - strlen(path), 
 	     "/%s", fullname);
   }
@@ -188,7 +189,7 @@ pvr_generate_filename(dvr_entry_t *de)
   if(dvr_flags & DVR_DIR_PER_CHANNEL) {
 
     chname = strdup(de->de_channel->ch_name);
-    deslashify(chname);
+    cleanupfilename(chname);
     snprintf(path + strlen(path), sizeof(path) - strlen(path), 
 	     "/%s", chname);
     free(chname);
