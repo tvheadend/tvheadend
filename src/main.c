@@ -640,7 +640,7 @@ readlinefromfile(const char *path, char *buf, size_t buflen)
   if(r < 0)
     return -1;
 
-  buf[buflen] = 0;
+  buf[buflen - 1] = 0;
   return 0;
 }
 
