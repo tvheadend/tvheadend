@@ -295,9 +295,11 @@ htsp_build_channel(channel_t *ch, const char *method)
 {
   channel_tag_mapping_t *ctm;
   channel_tag_t *ct;
+  th_transport_t *t;
 
   htsmsg_t *out = htsmsg_create_map();
   htsmsg_t *tags = htsmsg_create_list();
+  htsmsg_t *servicetypes = htsmsg_create_list();
 
   htsmsg_add_u32(out, "channelId", ch->ch_id);
   htsmsg_add_u32(out, "channelNumber", ch->ch_number);
@@ -315,6 +317,11 @@ htsp_build_channel(channel_t *ch, const char *method)
       htsmsg_add_u32(tags, NULL, ct->ct_identifier);
   }
 
+  LIST_FOREACH(t, &ch->ch_transports, tht_ch_link) {
+    htsmsg_add_u32(servicetypes, NULL, t->tht_servicetype);
+  }
+
+  htsmsg_add_msg(out, "servicetypes", servicetypes);
   htsmsg_add_msg(out, "tags", tags);
   htsmsg_add_str(out, "method", method);
   return out;
