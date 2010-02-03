@@ -112,4 +112,6 @@ static inline int transport_tss_is_error(int flags)
   return flags & TSS_ERRORS ? 1 : 0;
 }
 
+void transport_refresh_channel(th_transport_t *t);
+
 #endif /* TRANSPORTS_H */

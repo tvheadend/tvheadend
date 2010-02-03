@@ -720,8 +720,9 @@ transport_map_channel(th_transport_t *t, channel_t *ch, int save)
   lock_assert(&global_lock);
 
   if(t->tht_ch != NULL) {
-    t->tht_ch = NULL;
     LIST_REMOVE(t, tht_ch_link);
+    htsp_channel_update(t->tht_ch);
+    t->tht_ch = NULL;
   }
 
 
@@ -732,6 +733,7 @@ transport_map_channel(th_transport_t *t, channel_t *ch, int save)
 
     t->tht_ch = ch;
     LIST_INSERT_HEAD(&ch->ch_transports, t, tht_ch_link);
+    htsp_channel_update(t->tht_ch);
   }
 
   if(save)
@@ -1044,4 +1046,14 @@ transport_tss2text(int flags)
     return "No input detected";
 
   return "No status";
+}
+
+/**
+ *
+ */
+void
+transport_refresh_channel(th_transport_t *t)
+{
+  if(t->tht_channel != NULL)
+    htsp_channel_update(t->tht_channel);
 }

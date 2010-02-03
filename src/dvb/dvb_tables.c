@@ -673,6 +673,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	    pthread_mutex_unlock(&t->tht_stream_mutex); 
 	    
 	    t->tht_config_save(t);
+	    transport_refresh_channel(t);
 	  }
 	}
 	break;
