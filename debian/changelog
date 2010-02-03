@@ -1,3 +1,7 @@
+hts-tvheadend (2.10-WIP) hts; urgency=high
+
+  * Fix a crash in HTSP server.
+
 hts-tvheadend (2.9) hts; urgency=high
 
   * A last minute bug slipped in the 2.8 release, causing Tvheadend to read 
