@@ -539,7 +539,7 @@ rtsp_subscribe(http_connection_t *hc, rtsp_t *rtsp,
     s = subscription_create_from_channel(ch, pri, "RTSP", &rtsp->rtsp_input,
 					 subflags);
 
-    snprintf(baseurl, baseurllen, "channel/%s", ch->ch_name);
+    snprintf(baseurl, baseurllen, "%s/channelid/%d", urlprefix, ch->ch_id);
     snprintf(title, titlelen, "%s", ch->ch_name);
 
   } else if(!strcmp(components[0], "channelid")) {
@@ -554,7 +554,7 @@ rtsp_subscribe(http_connection_t *hc, rtsp_t *rtsp,
     s = subscription_create_from_channel(ch, pri, "RTSP", &rtsp->rtsp_input,
 					 subflags);
 
-    snprintf(baseurl, baseurllen, "channel/%s", ch->ch_name);
+    snprintf(baseurl, baseurllen, "%s/channelid/%d", urlprefix, ch->ch_id);
     snprintf(title, titlelen, "%s", ch->ch_name);
 
   } else if(!strcmp(components[0], "service")) {
@@ -568,7 +568,8 @@ rtsp_subscribe(http_connection_t *hc, rtsp_t *rtsp,
     s = subscription_create_from_transport(t, "RTSP", &rtsp->rtsp_input,
 					   subflags);
 
-    snprintf(baseurl, baseurllen, "service/%s", t->tht_identifier);
+    snprintf(baseurl, baseurllen, "%s/service/%s", 
+	     urlprefix, t->tht_identifier);
     snprintf(title, titlelen, "%s", t->tht_identifier);
 
   } else {
@@ -909,10 +910,10 @@ rtsp_cmd_setup(http_connection_t *hc, rtsp_t *rtsp)
   int streamid;
   char *remain;
   const streaming_start_component_t *ssc;
-  
+
   remain = strstr(hc->hc_url, "streamid=");
   if(remain == NULL) {
-    rtsp_error(hc, RTSP_STATUS_SERVICE, "URL does not resolve");
+    rtsp_error(hc, RTSP_STATUS_SERVICE, "SETUP: URL does not resolve");
     return 0;
   }
 
