@@ -1,10 +1,12 @@
-hts-tvheadend (2.10-WIP) hts; urgency=high
+hts-tvheadend (2.10) hts; urgency=high
 
   * Fix a crash in HTSP server.
 
+ -- Andreas Öman <andreas@lonelycoder.com>  Thu, 04 Feb 2010 22:21:22 +0100
+
 hts-tvheadend (2.9) hts; urgency=high
 
-  * A last minute bug slipped in the 2.8 release, causing Tvheadend to read 
+  * A last minute bug slipped in the 2.8 release, causing Tvheadend to read
     settings and configuration from incorrect path when also switching user
     during startup. This has now been fixed.
 
