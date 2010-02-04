@@ -1,3 +1,7 @@
+hts-tvheadend (2.11-WIP) hts; urgency=low
+
+  * Add support for filtering autorecordings based on weekdays.
+
 hts-tvheadend (2.10) hts; urgency=high
 
   * Fix a crash in HTSP server.

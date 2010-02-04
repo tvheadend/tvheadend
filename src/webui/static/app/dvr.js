@@ -1,4 +1,17 @@
 
+tvheadend.weekdays = new Ext.data.SimpleStore({
+    fields: ['identifier', 'name'],
+    id: 0,
+    data: [
+	['1', 'Mon'],
+	['2', 'Tue'],
+	['3', 'Wed'],
+	['4', 'Thu'],
+	['5', 'Fri'],
+	['6', 'Sat'],
+	['7', 'Sun']
+    ]
+});
 
 /**
  *
@@ -320,7 +333,31 @@ tvheadend.autoreceditor = function() {
 		triggerAction: 'all',
 		emptyText: 'Only include content...'
 	    })
+	}, {
+	    header: "Weekdays",
+	    dataIndex: 'weekdays',
+	    renderer: function(value, metadata, record, row, col, store) {
+		if (typeof value === 'undefined' || value.length < 1)
+		    return 'No days';
 
+		if (value == '1,2,3,4,5,6,7')
+		    return 'All days';
+
+		ret = [];
+		tags = value.split(',');
+		for (var i = 0; i < tags.length; i++) {
+		    var tag = tvheadend.weekdays.getById(tags[i]);
+		    if (typeof tag !== 'undefined')
+			ret.push(tag.data.name);
+		}
+		return ret.join(', ');
+	    },
+	    editor: new Ext.ux.form.LovCombo({
+		store: tvheadend.weekdays,
+		mode:'local',
+		valueField: 'identifier',
+		displayField: 'name'
+	    })
 	},{
 	    header: "Created by",
 	    dataIndex: 'creator',
@@ -375,7 +412,8 @@ tvheadend.dvr = function() {
 
     
     tvheadend.autorecRecord = Ext.data.Record.create([
-	'enabled','title','channel','tag','creator','contentgrp','comment'
+	'enabled','title','channel','tag','creator','contentgrp','comment',
+	'weekdays'
     ]);
     
 

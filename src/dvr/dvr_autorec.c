@@ -54,6 +54,8 @@ typedef struct dvr_autorec_entry {
   
   epg_content_group_t *dae_ecg;
 
+  int dae_weekdays;
+
   channel_t *dae_channel;
   LIST_ENTRY(dvr_autorec_entry) dae_channel_link;
 
@@ -67,14 +69,14 @@ static void dvr_autorec_check_just_enabled(dvr_autorec_entry_t *dae);
 
 
 /**
- * return 1 if the event 'e' is matched by the autorec rule 'ar'
+ * return 1 if the event 'e' is matched by the autorec rule 'dae'
  */
 static int
 autorec_cmp(dvr_autorec_entry_t *dae, event_t *e)
 {
   channel_tag_mapping_t *ctm;
 
-  if(dae->dae_enabled == 0)
+  if(dae->dae_enabled == 0 || dae->dae_weekdays == 0)
     return 0;
 
   if(dae->dae_channel != NULL &&
@@ -100,6 +102,12 @@ autorec_cmp(dvr_autorec_entry_t *dae, event_t *e)
      regexec(&dae->dae_title_preg, e->e_title, 0, NULL, 0))
     return 0;
 
+  if(dae->dae_weekdays != 0x7f) {
+    struct tm tm;
+    localtime_r(&e->e_start, &tm);
+    if(!((1 << ((tm.tm_wday ?: 7) - 1)) & dae->dae_weekdays))
+      return 0;
+  }
   return 1;
 }
 
@@ -131,6 +139,7 @@ autorec_entry_find(const char *id, int create)
   } else {
     tally = MAX(atoi(id), tally);
   }
+  dae->dae_weekdays = 0x7f;
 
   dae->dae_id = strdup(id);
   TAILQ_INSERT_TAIL(&autorec_entries, dae, dae_link);
@@ -165,6 +174,36 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae)
   free(dae);
 }
 
+/**
+ *
+ */
+static void
+build_weekday_tags(char *buf, size_t buflen, int mask)
+{
+  int i, p = 0;
+  for(i = 0; i < 7; i++) {
+    if(mask & (1 << i) && p < buflen - 3) {
+      if(p != 0)
+	buf[p++] = ',';
+      buf[p++] = '1' + i;
+    }
+  }
+  buf[p] = 0;
+}
+
+/**
+ *
+ */
+static int
+build_weekday_mask(const char *str)
+{
+  int r = 0;
+  for(; *str; str++) 
+    if(*str >= '1' && *str <= '7')
+      r |= 1 << (*str - '1');
+  return r;
+}
+
 
 /**
  *
@@ -172,6 +211,7 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae)
 static htsmsg_t *
 autorec_record_build(dvr_autorec_entry_t *dae)
 {
+  char str[30];
   htsmsg_t *e = htsmsg_create_map();
 
   htsmsg_add_str(e, "id", dae->dae_id);
@@ -191,6 +231,9 @@ autorec_record_build(dvr_autorec_entry_t *dae)
 		 dae->dae_ecg ? dae->dae_ecg->ecg_name : "");
 
   htsmsg_add_str(e, "title", dae->dae_title ?: "");
+
+  build_weekday_tags(str, sizeof(str), dae->dae_weekdays);
+  htsmsg_add_str(e, "weekdays", str);
 
   return e;
 }
@@ -290,6 +333,9 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
 
   if((s = htsmsg_get_str(values, "contentgrp")) != NULL)
     dae->dae_ecg = epg_content_group_find_by_name(s);
+
+  if((s = htsmsg_get_str(values, "weekdays")) != NULL)
+    dae->dae_weekdays = build_weekday_mask(s);
 
   if(!htsmsg_get_u32(values, "enabled", &u32))
     dae->dae_enabled = u32;
