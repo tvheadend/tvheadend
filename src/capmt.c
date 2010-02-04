@@ -198,6 +198,40 @@ capmt_send_msg(capmt_t *capmt, const uint8_t *buf, size_t len)
   return write(capmt->capmt_sock, buf, len);
 }
 
+static void 
+capmt_send_stop(capmt_transport_t *t)
+{
+  /* buffer for capmt */
+  int pos = 0;
+  uint8_t buf[4094];
+
+  capmt_header_t head = {
+    .capmt_indicator        = { 0x9F, 0x80, 0x32, 0x82, 0x00, 0x00 },
+    .capmt_list_management  = CAPMT_LIST_ONLY,
+    .program_number         = t->ct_transport->tht_dvb_service_id,
+    .version_number         = 0, 
+    .current_next_indicator = 0,
+    .program_info_length    = 0,
+    .capmt_cmd_id           = CAPMT_CMD_NOT_SELECTED,
+  };
+  memcpy(&buf[pos], &head, sizeof(head));
+  pos    += sizeof(head);
+
+  uint8_t end[] = { 
+    0x01, (t->ct_seq >> 8) & 0xFF, t->ct_seq & 0xFF, 0x00, 0x06 };
+  memcpy(&buf[pos], end, sizeof(end));
+  pos    += sizeof(end);
+  buf[4]  = ((pos - 6) >> 8);
+  buf[5]  = ((pos - 6) & 0xFF);
+  buf[7]  = t->ct_transport->tht_dvb_service_id >> 8;
+  buf[8]  = t->ct_transport->tht_dvb_service_id & 0xFF;
+  buf[9]  = 1;
+  buf[10] = ((pos - 5 - 12) & 0xF00) >> 8;
+  buf[11] = ((pos - 5 - 12) & 0xFF);
+  
+  capmt_send_msg(t->ct_capmt, buf, pos);
+}
+
 /**
  * global_lock is held
  * tht_stream_mutex is held
@@ -208,6 +242,9 @@ capmt_transport_destroy(th_descrambler_t *td)
   tvhlog(LOG_INFO, "capmt", "Removing CAPMT Server from service");
 
   capmt_transport_t *ct = (capmt_transport_t *)td;
+
+  /* send stop to client */
+  capmt_send_stop(ct);
 
   capmt_caid_ecm_t *cce;
   while (!LIST_EMPTY(&ct->ct_caid_ecm)) 
