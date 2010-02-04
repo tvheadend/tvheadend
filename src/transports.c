@@ -46,6 +46,7 @@
 #include "serviceprobe.h"
 #include "atomic.h"
 #include "dvb/dvb.h"
+#include "htsp.h"
 
 #define TRANSPORT_HASH_WIDTH 101
 
@@ -1054,6 +1055,6 @@ transport_tss2text(int flags)
 void
 transport_refresh_channel(th_transport_t *t)
 {
-  if(t->tht_channel != NULL)
-    htsp_channel_update(t->tht_channel);
+  if(t->tht_ch != NULL)
+    htsp_channel_update(t->tht_ch);
 }
