@@ -384,6 +384,43 @@ dvb_desc_short_event(uint8_t *ptr, int len,
   return 0;
 }
 
+/**
+ * DVB Descriptor; Extended Event
+ */
+static int
+dvb_desc_extended_event(uint8_t *ptr, int len, 
+		     char *desc, size_t desclen,
+		     char *item, size_t itemlen,
+                     char *text, size_t textlen)
+{
+  int count = ptr[4];
+  uint8_t *localptr = ptr + 5, *items = localptr; 
+
+  while (items < (localptr + count))
+  {
+    /* get description -> TODO has to be appendend not just copied */
+    strncpy(desc, (char*)(items+1), items[0]);
+    desc[items[0]] = '\0';
+
+    /* get item -> TODO has to be appendend not just copied */
+    items += 1 + len;
+    strncpy(item, (char*)(items+1), items[0]);
+    item[items[0]] = '\0';
+
+    /* go to next item */
+    items += 1 + len;
+  }
+
+  localptr += count;
+  count = localptr[0];
+
+  /* get text */
+  strncpy(text, (char*)(&localptr[1]), localptr[0]);
+  text[localptr[0]] = '\0';
+
+  return 0;
+}
+
 
 /**
  * DVB Descriptor; Service
@@ -443,6 +480,9 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   char title[256];
   char desc[5000];
+  char extdesc[5000];
+  char extitem[5000];
+  char exttext[5000];
   epg_content_type_t *ect;
 
   event_t *e;
@@ -545,6 +585,23 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	  epg_event_set_content_type(e, ect);
 	}
 	break;
+      case DVB_DESC_EXT_EVENT:
+        if(!dvb_desc_extended_event(ptr, dlen,
+              extdesc, sizeof(extdesc),
+              extitem, sizeof(extitem),
+              exttext, sizeof(exttext))) {
+          
+          char language[4];
+          memcpy(language, &ptr[1], 3);
+          language[3] = '\0';
+          int desc_number = (ptr[0] & 0xF0) >> 4;
+          //int desc_last   = (ptr[0] & 0x0F);
+          
+          epg_event_set_ext_text(e, desc_number, exttext);
+        }
+        break;
+      default: 
+        break;
       }
 
       len -= dlen; ptr += dlen; dllen -= dlen;

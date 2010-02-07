@@ -699,6 +699,12 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     if(e->e_desc != NULL)
       htsmsg_add_str(m, "description", e->e_desc);
 
+    if(e->e_ext_desc != NULL)
+      htsmsg_add_str(m, "ext_desc", e->e_ext_desc);
+
+    if(e->e_ext_text != NULL)
+      htsmsg_add_str(m, "ext_text", e->e_ext_text);
+
     htsmsg_add_u32(m, "id", e->e_id);
     htsmsg_add_u32(m, "start", e->e_start);
     htsmsg_add_u32(m, "end", e->e_stop);

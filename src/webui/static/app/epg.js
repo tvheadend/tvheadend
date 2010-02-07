@@ -20,6 +20,12 @@ tvheadend.epgDetails = function(event) {
 
     content += '<div class="x-epg-meta">' + event.contentgrp + '</div>';
 
+    if(event.ext_desc != null)
+      content += '<div class="x-epg-meta">' + event.ext_desc + '</div>';
+
+    if(event.ext_text != null)
+      content += '<div class="x-epg-meta">' + event.ext_text + '</div>';
+
     content += '<div class="x-epg-meta"><a target="_blank" href="' + 
 	'http://www.imdb.org/find?q=' + event.title + '">Search IMDB</a></div>'
 	
@@ -81,6 +87,8 @@ tvheadend.epg = function() {
 	    {name: 'channel'},
 	    {name: 'title'},
 	    {name: 'description'},
+	    {name: 'ext_desc'},
+	    {name: 'ext_text'},
 	    {name: 'chicon'},
             {name: 'start', type: 'date', dateFormat: 'U' /* unix time */},
             {name: 'end', type: 'date', dateFormat: 'U' /* unix time */},

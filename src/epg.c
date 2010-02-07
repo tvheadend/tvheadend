@@ -150,6 +150,43 @@ epg_event_set_desc(event_t *e, const char *desc)
   epg_event_changed(e);
 }
 
+/**
+ *
+ */
+void epg_event_set_ext_desc(event_t *e, const char *desc)
+{
+  if(e->e_ext_desc != NULL && !strcmp(e->e_ext_desc, desc))
+    return;
+  free(e->e_ext_desc);
+  e->e_ext_desc = strdup(desc);
+  epg_event_changed(e);
+}
+
+/**
+ *
+ */
+void epg_event_set_ext_text(event_t *e, int ext_dn, const char *text)
+{
+  if (e->e_ext_text == NULL && ext_dn != 0)
+    return;
+  if (e->e_ext_text != NULL && strstr(e->e_ext_text, text))
+    return;
+
+  int len = strlen(text) + ( e->e_ext_text ? strlen(e->e_ext_text) : 0) + 1;
+  char *tmp = (char*)malloc(len);
+
+  if (e->e_ext_text)
+  {
+    strcpy(tmp, e->e_ext_text);
+    strcat(tmp, text);
+    free(e->e_ext_text);
+  }
+  else
+    strcpy(tmp, text);
+
+  e->e_ext_text = tmp;
+  epg_event_changed(e);
+}
 
 /**
  *

@@ -40,6 +40,7 @@
 #define DVB_DESC_SAT          0x43
 #define DVB_DESC_CABLE        0x44
 #define DVB_DESC_SHORT_EVENT  0x4d
+#define DVB_DESC_EXT_EVENT    0x4e
 #define DVB_DESC_SERVICE      0x48
 #define DVB_DESC_CONTENT      0x54
 #define DVB_DESC_TELETEXT     0x56
