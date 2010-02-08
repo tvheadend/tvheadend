@@ -702,6 +702,9 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     if(e->e_ext_desc != NULL)
       htsmsg_add_str(m, "ext_desc", e->e_ext_desc);
 
+    if(e->e_ext_item != NULL)
+      htsmsg_add_str(m, "ext_item", e->e_ext_item);
+
     if(e->e_ext_text != NULL)
       htsmsg_add_str(m, "ext_text", e->e_ext_text);
 

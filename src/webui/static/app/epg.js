@@ -23,6 +23,9 @@ tvheadend.epgDetails = function(event) {
     if(event.ext_desc != null)
       content += '<div class="x-epg-meta">' + event.ext_desc + '</div>';
 
+    if(event.ext_item != null)
+      content += '<div class="x-epg-meta">' + event.ext_item + '</div>';
+
     if(event.ext_text != null)
       content += '<div class="x-epg-meta">' + event.ext_text + '</div>';
 
@@ -88,6 +91,7 @@ tvheadend.epg = function() {
 	    {name: 'title'},
 	    {name: 'description'},
 	    {name: 'ext_desc'},
+	    {name: 'ext_item'},
 	    {name: 'ext_text'},
 	    {name: 'chicon'},
             {name: 'start', type: 'date', dateFormat: 'U' /* unix time */},
