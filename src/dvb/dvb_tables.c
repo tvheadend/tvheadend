@@ -396,16 +396,30 @@ dvb_desc_extended_event(uint8_t *ptr, int len,
   int count = ptr[4];
   uint8_t *localptr = ptr + 5, *items = localptr; 
 
+  /* terminate buffers */
+  desc[0] = '\0'; item[0] = '\0'; text[0] = '\0';
+
   while (items < (localptr + count))
   {
-    /* get description -> TODO has to be appendend not just copied */
-    strncpy(desc, (char*)(items+1), items[0]);
-    desc[items[0]] = '\0';
+    /* this only makes sense if we have 2 or more character left in buffer */
+    if ((desclen - strlen(desc)) > 2)
+    {
+      /* get description -> append to desc if space left */
+      strncat(desc, "\n", 1);
+      strncat(desc, (char*)(items+1), 
+          items[0] > (desclen - strlen(desc)) ? (desclen - strlen(desc)) : items[0]);
+    }
 
-    /* get item -> TODO has to be appendend not just copied */
     items += 1 + len;
-    strncpy(item, (char*)(items+1), items[0]);
-    item[items[0]] = '\0';
+
+    /* this only makes sense if we have 2 or more character left in buffer */
+    if ((itemlen - strlen(item)) > 2)
+    {
+      /* get item -> append to item if space left */
+      strncat(item, "\n", 1);
+      strncat(item, (char*)(items+1), 
+          items[0] > (itemlen - strlen(item)) ? (itemlen - strlen(item)) : items[0]);
+    }
 
     /* go to next item */
     items += 1 + len;
