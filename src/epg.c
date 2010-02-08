@@ -153,12 +153,52 @@ epg_event_set_desc(event_t *e, const char *desc)
 /**
  *
  */
-void epg_event_set_ext_desc(event_t *e, const char *desc)
+void epg_event_set_ext_desc(event_t *e, int ext_dn, const char *desc)
 {
-  if(e->e_ext_desc != NULL && !strcmp(e->e_ext_desc, desc))
+  if (e->e_ext_desc == NULL && ext_dn != 0)
     return;
-  free(e->e_ext_desc);
-  e->e_ext_desc = strdup(desc);
+  if (e->e_ext_desc != NULL && strstr(e->e_ext_desc, desc))
+    return;
+
+  int len = strlen(desc) + ( e->e_ext_desc ? strlen(e->e_ext_desc) : 0) + 1;
+  char *tmp = (char*)malloc(len);
+
+  if (e->e_ext_desc)
+  {
+    strcpy(tmp, e->e_ext_desc);
+    strcat(tmp, desc);
+    free(e->e_ext_desc);
+  }
+  else
+    strcpy(tmp, desc);
+
+  e->e_ext_desc = tmp;
+  epg_event_changed(e);
+}
+
+/**
+ *
+ */
+void epg_event_set_ext_item(event_t *e, int ext_dn, const char *item)
+{
+  if (e->e_ext_item == NULL && ext_dn != 0)
+    return;
+  if (e->e_ext_item != NULL && strstr(e->e_ext_item, item))
+    return;
+
+  int len = strlen(item) + ( e->e_ext_item ? strlen(e->e_ext_item) : 0) + 1;
+  char *tmp = (char*)malloc(len);
+
+  if (e->e_ext_item)
+  {
+    strcpy(tmp, e->e_ext_item);
+    strcat(tmp, item);
+    free(e->e_ext_item);
+  }
+  else
+    strcpy(tmp, item);
+
+  e->e_ext_item = tmp;
   epg_event_changed(e);
 }
 

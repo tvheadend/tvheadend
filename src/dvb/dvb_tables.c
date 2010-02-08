@@ -611,7 +611,12 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
           int desc_number = (ptr[0] & 0xF0) >> 4;
           //int desc_last   = (ptr[0] & 0x0F);
           
-          epg_event_set_ext_text(e, desc_number, exttext);
+          if (strlen(extdesc))
+            epg_event_set_ext_desc(e, desc_number, extdesc);
+          if (strlen(extitem))
+            epg_event_set_ext_item(e, desc_number, extitem);
+          if (strlen(exttext))
+            epg_event_set_ext_text(e, desc_number, exttext);
         }
         break;
       default: 

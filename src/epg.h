@@ -62,6 +62,7 @@ typedef struct event {
   char *e_title;   /* UTF-8 encoded */
   char *e_desc;    /* UTF-8 encoded */
   char *e_ext_desc;/* UTF-8 encoded (from extended descriptor) */
+  char *e_ext_item;/* UTF-8 encoded (from extended descriptor) */
   char *e_ext_text;/* UTF-8 encoded (from extended descriptor) */
 
   int e_dvb_id;
@@ -78,7 +79,9 @@ void epg_event_set_title(event_t *e, const char *title);
 
 void epg_event_set_desc(event_t *e, const char *desc);
 
-void epg_event_set_ext_desc(event_t *e, const char *desc);
+void epg_event_set_ext_desc(event_t *e, int ext_dn, const char *desc);
+
+void epg_event_set_ext_item(event_t *e, int ext_dn, const char *item);
 
 void epg_event_set_ext_text(event_t *e, int ext_dn, const char *text);
 
