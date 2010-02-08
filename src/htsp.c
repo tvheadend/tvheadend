@@ -611,6 +611,12 @@ htsp_build_event(event_t *e)
     htsmsg_add_str(out, "title", e->e_title);
   if(e->e_desc != NULL)
     htsmsg_add_str(out, "description", e->e_desc);
+  if(e->e_ext_desc != NULL)
+    htsmsg_add_str(out, "ext_desc", e->e_ext_desc);
+  if(e->e_ext_item != NULL)
+    htsmsg_add_str(out, "ext_item", e->e_ext_item);
+  if(e->e_ext_text != NULL)
+    htsmsg_add_str(out, "ext_text", e->e_ext_text);
 
   if(e->e_content_type != NULL)
     htsmsg_add_u32(out, "contentType", e->e_content_type->ect_dvbcode);
