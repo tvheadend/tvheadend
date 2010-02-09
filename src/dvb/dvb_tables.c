@@ -393,8 +393,9 @@ dvb_desc_extended_event(uint8_t *ptr, int len,
 		     char *item, size_t itemlen,
                      char *text, size_t textlen)
 {
-  int count = ptr[4];
+  int count = ptr[4], r;
   uint8_t *localptr = ptr + 5, *items = localptr; 
+  int locallen = len - 5;
 
   /* terminate buffers */
   desc[0] = '\0'; item[0] = '\0'; text[0] = '\0';
@@ -410,7 +411,7 @@ dvb_desc_extended_event(uint8_t *ptr, int len,
           items[0] > (desclen - strlen(desc)) ? (desclen - strlen(desc)) : items[0]);
     }
 
-    items += 1 + len;
+    items += 1 + items[0];
 
     /* this only makes sense if we have 2 or more character left in buffer */
     if ((itemlen - strlen(item)) > 2)
@@ -422,15 +423,16 @@ dvb_desc_extended_event(uint8_t *ptr, int len,
     }
 
     /* go to next item */
-    items += 1 + len;
+    items += 1 + items[0];
   }
 
   localptr += count;
+  locallen -= count;
   count = localptr[0];
 
   /* get text */
-  strncpy(text, (char*)(&localptr[1]), localptr[0]);
-  text[localptr[0]] = '\0';
+  if((r = dvb_get_string_with_len(text, textlen, localptr, locallen)) < 0)
+    return -1;
 
   return 0;
 }
