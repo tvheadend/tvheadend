@@ -46,7 +46,7 @@
 
 #define CWC_KEEPALIVE_INTERVAL 30
 
-#define CWS_NETMSGSIZE 240
+#define CWS_NETMSGSIZE 256
 #define CWS_FIRSTCMDNO 0xe0
 
 typedef enum {
