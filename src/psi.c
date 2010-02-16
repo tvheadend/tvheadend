@@ -515,7 +515,7 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
   }
 
   if(update) {
-    tvhlog(LOG_INFO, "PSI", "Transport \"%s\" PMT (version %d) updated"
+    tvhlog(LOG_DEBUG, "PSI", "Transport \"%s\" PMT (version %d) updated"
 	   "%s%s%s%s%s%s%s%s%s%s",
 	   transport_nicename(t), version,
 	   update&PMT_UPDATE_PCR               ? ", PCR PID changed":"",
