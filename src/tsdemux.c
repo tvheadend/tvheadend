@@ -32,9 +32,6 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <linux/dvb/frontend.h>
-#include <linux/dvb/dmx.h>
-
 #include "tvhead.h"
 #include "teletext.h"
 #include "transports.h"
