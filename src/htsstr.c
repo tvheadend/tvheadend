@@ -17,8 +17,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define _GNU_SOURCE /* strndup */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,6 +25,14 @@
 
 static void htsstr_argsplit_add(char ***argv, int *argc, char *s);
 static int htsstr_format0(const char *str, char *out, char **map);
+
+static char *
+mystrndup(const char *src, size_t len)
+{
+  char *r = malloc(len + 1);
+  r[len] = 0;
+  return memcpy(r, src, len);
+}
 
 
 char *
@@ -79,7 +85,7 @@ htsstr_argsplit(const char *str) {
   for(s = str; *s; s++) {
     if(start && stop) {
       htsstr_argsplit_add(&argv, &argc,
-                          htsstr_unescape(strndup(start, stop - start)));
+                          htsstr_unescape(mystrndup(start, stop - start)));
       start = stop = NULL;
     }
     
@@ -125,7 +131,7 @@ htsstr_argsplit(const char *str) {
     if(!stop)
       stop = str + strlen(str);
     htsstr_argsplit_add(&argv, &argc,
-                        htsstr_unescape(strndup(start, stop - start)));
+                        htsstr_unescape(mystrndup(start, stop - start)));
   }
 
   htsstr_argsplit_add(&argv, &argc, NULL);
