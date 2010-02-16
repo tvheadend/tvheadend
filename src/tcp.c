@@ -375,17 +375,23 @@ tcp_server_start(void *aux)
   val = 1;
   setsockopt(tsl->fd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val));
   
+#ifdef TCP_KEEPIDLE
   val = 30;
-  setsockopt(tsl->fd, SOL_TCP, TCP_KEEPIDLE, &val, sizeof(val));
+  setsockopt(tsl->fd, IPPROTO_TCP, TCP_KEEPIDLE, &val, sizeof(val));
+#endif
 
+#ifdef TCP_KEEPINVL
   val = 15;
-  setsockopt(tsl->fd, SOL_TCP, TCP_KEEPINTVL, &val, sizeof(val));
+  setsockopt(tsl->fd, IPPROTO_TCP, TCP_KEEPINTVL, &val, sizeof(val));
+#endif
 
+#ifdef TCP_KEEPCNT
   val = 5;
-  setsockopt(tsl->fd, SOL_TCP, TCP_KEEPCNT, &val, sizeof(val));
+  setsockopt(tsl->fd, IPPROTO_TCP, TCP_KEEPCNT, &val, sizeof(val));
+#endif
 
   val = 1;
-  setsockopt(tsl->fd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
+  setsockopt(tsl->fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
 
 
   tsl->start(tsl->fd, tsl->opaque, &tsl->peer, &tsl->self);
