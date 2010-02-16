@@ -24,6 +24,8 @@ CONFIG_LIST="
  avahi
  mmx
  sse2
+ linuxdvb
+ v4l
 "
 
 die() {

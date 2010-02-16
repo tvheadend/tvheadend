@@ -371,13 +371,13 @@ main(int argc, char **argv)
   access_init(createdefault);
 
   tcp_server_init();
-
+#if ENABLE_LINUXDVB
   dvb_init(adapter_mask);
-
+#endif
   iptv_input_init();
-
+#if ENABLE_V4L
   v4l_init();
-
+#endif
   http_server_init();
 
   webui_init(TVHEADEND_CONTENT_PATH);

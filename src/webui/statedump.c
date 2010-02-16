@@ -28,10 +28,13 @@
 #include "webui.h"
 #include "access.h"
 #include "epg.h"
-#include "dvr/dvr.h"
 #include "xmltv.h"
+#if ENABLE_LINUXDVB
+#include "dvr/dvr.h"
 #include "dvb/dvb.h"
 #include "dvb/dvb_support.h"
+#endif
+
 #include "transports.h"
 
 extern char tvh_binshasum[20];
@@ -77,6 +80,7 @@ dumpchannels(htsbuf_queue_t *hq)
   }
 }
 
+#if ENABLE_LINUXDVB
 static void
 dumptransports(htsbuf_queue_t *hq, struct th_transport_list *l, int indent)
 {
@@ -141,7 +145,7 @@ dumpdvbadapters(htsbuf_queue_t *hq)
     }
   }
 }
-
+#endif
 
 int
 page_statedump(http_connection_t *hc, const char *remain, void *opaque)
@@ -178,8 +182,9 @@ page_statedump(http_connection_t *hc, const char *remain, void *opaque)
 
   dumpchannels(hq);
   
+#if ENABLE_LINUXDVB
   dumpdvbadapters(hq);
- 
+#endif 
 
   http_output_content(hc, "text/plain; charset=UTF-8");
   return 0;

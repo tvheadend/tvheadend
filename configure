@@ -36,6 +36,8 @@ show_help(){
 
 enable cwc
 enable avahi
+enable linuxdvb
+enable v4l
 
 for opt do
   optval="${opt#*=}"

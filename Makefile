@@ -69,14 +69,13 @@ SRCS =  src/main.c \
 	src/htsstr.c \
 	src/rawtsinput.c \
 	src/iptv_input.c \
-	src/v4l.c
-
 
 SRCS += src/dvr/dvr_db.c \
 	src/dvr/dvr_rec.c \
 	src/dvr/dvr_autorec.c
 
-SRCS += src/dvb/dvb.c \
+SRCS-${CONFIG_LINUXDVB} += \
+	src/dvb/dvb.c \
 	src/dvb/dvb_support.c \
 	src/dvb/dvb_fe.c \
 	src/dvb/dvb_tables.c \
@@ -86,6 +85,12 @@ SRCS += src/dvb/dvb.c \
 	src/dvb/dvb_transport.c \
 	src/dvb/dvb_preconf.c \
 	src/dvb/dvb_satconf.c \
+	src/webui/extjs_dvb.c \
+
+SRCS-${CONFIG_V4L} += \
+	src/v4l.c \
+	src/webui/extjs_v4l.c \
+
 
 #
 # cwc

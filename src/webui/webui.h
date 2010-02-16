@@ -27,6 +27,20 @@ void simpleui_start(void);
 
 void extjs_start(void);
 
+#if ENABLE_LINUXDVB
+void extjs_list_dvb_adapters(htsmsg_t *array);
+void extjs_start_dvb(void);
+#endif
+
+#if ENABLE_V4L
+void extjs_list_v4l_adapters(htsmsg_t *array);
+void extjs_start_v4l(void);
+#endif
+
+void extjs_transport_update(htsmsg_t *in);
+
+void extjs_transport_delete(htsmsg_t *in);
+
 
 /**
  *
