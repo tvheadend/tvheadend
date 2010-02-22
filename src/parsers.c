@@ -807,7 +807,7 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
       t->tht_dts_start = st->st_curdts;
 
     l2 = len - 3 > 64 ? 64 : len - 3;
-    h264_nal_deescape(&bs, buf + 3, len); /* we just the first stuff */
+    h264_nal_deescape(&bs, buf + 3, l2); /* we just the first stuff */
     if(h264_decode_slice_header(st, &bs, &pkttype)) {
       free(bs.data);
       return 1;
