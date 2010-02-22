@@ -237,6 +237,7 @@ dvb_table_input(void *aux)
   uint8_t sec[4096];
   th_dvb_mux_instance_t *tdmi;
   th_dvb_table_t *tdt;
+  int64_t cycle_barrier = 0; 
 
   while(1) {
     x = epoll_wait(tda->tda_table_epollfd, ev, sizeof(ev) / sizeof(ev[0]), -1);
@@ -261,10 +262,11 @@ dvb_table_input(void *aux)
 	if(tdt != NULL) {
 	  dvb_proc_table(tdmi, tdt, sec, r);
 
-	  /* Any tables pending (that wants a filter/fd) */
-	  if(TAILQ_FIRST(&tdmi->tdmi_table_queue) != NULL) {
+	  /* Any tables pending (that wants a filter/fd), close this one */
+	  if(TAILQ_FIRST(&tdmi->tdmi_table_queue) != NULL &&
+	     cycle_barrier < getmonoclock()) {
 	    tdt_close_fd(tdmi, tdt);
-
+	    cycle_barrier = getmonoclock() + 100000;
 	    tdt = TAILQ_FIRST(&tdmi->tdmi_table_queue);
 	    assert(tdt != NULL);
 
