@@ -56,6 +56,9 @@ dvb_transport_open_demuxers(th_dvb_adapter_t *tda, th_transport_t *t)
   th_stream_t *st;
 
   LIST_FOREACH(st, &t->tht_components, st_link) {
+    if(st->st_pid >= 0x2000)
+      continue;
+
     if(st->st_demuxer_fd != -1)
       continue;
 

@@ -220,7 +220,7 @@ psi_build_pat(th_transport_t *t, uint8_t *buf, int maxlen, int pmtpid)
 #define PMT_UPDATE_NEW_CA_STREAM      0x80
 #define PMT_UPDATE_NEW_CAID           0x100
 #define PMT_UPDATE_CA_PROVIDER_CHANGE 0x200
-
+#define PMT_UPDATE_PARENT_PID         0x400
 
 
 /**
@@ -298,6 +298,51 @@ psi_desc_ca(th_transport_t *t, const uint8_t *buffer, int size)
 
   return r;
 }
+
+/**
+ * Parser for teletext descriptor
+ */
+static int
+psi_desc_teletext(th_transport_t *t, const uint8_t *ptr, int size,
+		  int parent_pid)
+{
+  int r = 0;
+  th_stream_t *st;
+
+  while(size >= 5) {
+    int page = (ptr[3] & 0x7 ?: 8) * 100 + (ptr[4] >> 4) * 10 + (ptr[4] & 0xf);
+    int type = ptr[3] >> 3;
+
+    if(type == 2 || type == 5) {
+      // 2 = subtitle page, 5 = subtitle page [hearing impaired]
+
+      // We put the teletext subtitle driven streams on a list of pids
+      // higher than normal MPEG TS (0x2000 ++)
+      int pid = PID_TELETEXT_BASE + page;
+    
+      if((st = transport_stream_find(t, pid)) == NULL) {
+	r |= PMT_UPDATE_NEW_STREAM;
+	st = transport_stream_create(t, pid, SCT_TEXTSUB);
+      }
+
+      st->st_delete_me = 0;
+
+      if(memcmp(st->st_lang, ptr, 3)) {
+	r |= PMT_UPDATE_LANGUAGE;
+	memcpy(st->st_lang, ptr, 3);
+      }
+
+      if(st->st_parent_pid != parent_pid) {
+	r |= PMT_UPDATE_PARENT_PID;
+	st->st_parent_pid = parent_pid;
+      }
+    }
+    ptr += 5;
+    size -= 5;
+  }
+  return r;
+}
+
 
 /** 
  * PMT parser, from ISO 13818-1 and ETSI EN 300 468
@@ -444,6 +489,8 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
       case DVB_DESC_TELETEXT:
 	if(estype == 0x06)
 	  hts_stream_type = SCT_TELETEXT;
+	
+	update |= psi_desc_teletext(t, ptr, dlen, pid);
 	break;
 
       case DVB_DESC_AC3:
@@ -516,7 +563,7 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 
   if(update) {
     tvhlog(LOG_DEBUG, "PSI", "Transport \"%s\" PMT (version %d) updated"
-	   "%s%s%s%s%s%s%s%s%s%s",
+	   "%s%s%s%s%s%s%s%s%s%s%s",
 	   transport_nicename(t), version,
 	   update&PMT_UPDATE_PCR               ? ", PCR PID changed":"",
 	   update&PMT_UPDATE_NEW_STREAM        ? ", New elementary stream":"",
@@ -527,7 +574,8 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 	   update&PMT_UPDATE_STREAM_DELETED    ? ", Stream deleted":"",
 	   update&PMT_UPDATE_NEW_CA_STREAM     ? ", New CA stream":"",
 	   update&PMT_UPDATE_NEW_CAID          ? ", New CAID":"",
-	   update&PMT_UPDATE_CA_PROVIDER_CHANGE? ", CA provider changed":"");
+	   update&PMT_UPDATE_CA_PROVIDER_CHANGE? ", CA provider changed":"",
+	   update&PMT_UPDATE_PARENT_PID        ? ", Parent PID changed":"");
     
     transport_request_save(t);
     if(t->tht_status == TRANSPORT_RUNNING)
@@ -761,6 +809,7 @@ static struct strtab streamtypetab[] = {
   { "PAT",        SCT_PAT },
   { "AAC",        SCT_AAC },
   { "MPEGTS",     SCT_MPEGTS },
+  { "TEXTSUB",    SCT_TEXTSUB },
 };
 
 
@@ -810,6 +859,9 @@ psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
       htsmsg_add_u32(sub, "compositionid", st->st_composition_id);
       htsmsg_add_u32(sub, "ancillartyid", st->st_ancillary_id);
     }
+
+    if(st->st_type == SCT_TEXTSUB)
+      htsmsg_add_u32(sub, "parentpid", st->st_parent_pid);
 
     if(st->st_frame_duration)
       htsmsg_add_u32(sub, "frameduration", st->st_frame_duration);
@@ -882,6 +934,11 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
 
       if(!htsmsg_get_u32(c, "ancillartyid", &u32))
 	st->st_ancillary_id = u32;
+    }
+
+    if(type == SCT_TEXTSUB) {
+      if(!htsmsg_get_u32(c, "parentpid", &u32))
+	st->st_parent_pid = u32;
     }
   }
 }

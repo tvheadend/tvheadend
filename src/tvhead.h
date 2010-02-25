@@ -159,6 +159,7 @@ typedef enum {
   SCT_PMT,
   SCT_AAC,
   SCT_MPEGTS,
+  SCT_TEXTSUB,
 } streaming_component_type_t;
 
 
@@ -289,8 +290,11 @@ typedef struct th_stream {
   uint16_t st_composition_id;
   uint16_t st_ancillary_id;
 
-
   int16_t st_pid;
+  uint16_t st_parent_pid;    /* For subtitle streams originating from 
+				a teletext stream. this is the pid
+				of the teletext stream */
+
   uint8_t st_cc;             /* Last CC */
   uint8_t st_cc_valid;       /* Is CC valid at all? */
 

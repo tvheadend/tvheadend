@@ -19,6 +19,8 @@
 #ifndef TRANSPORTS_H
 #define TRANSPORTS_H
 
+#define PID_TELETEXT_BASE 0x2000
+
 #include "channels.h"
 #include "htsmsg.h"
 #include "subscriptions.h"
