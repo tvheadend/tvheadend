@@ -622,10 +622,11 @@ epg_query0(epg_query_result_t *eqr, channel_t *ch, channel_tag_t *ct,
 {
   channel_tag_mapping_t *ctm;
   time_t now;
-
-  time(&now);
-
   regex_t preg0, *preg;
+
+  lock_assert(&global_lock);
+  memset(eqr, 0, sizeof(epg_query_result_t));
+  time(&now);
 
   if(title != NULL) {
     if(regcomp(&preg0, title, REG_ICASE | REG_EXTENDED | REG_NOSUB))
@@ -634,9 +635,6 @@ epg_query0(epg_query_result_t *eqr, channel_t *ch, channel_tag_t *ct,
   } else {
     preg = NULL;
   }
-
-  lock_assert(&global_lock);
-  memset(eqr, 0, sizeof(epg_query_result_t));
 
   if(ch != NULL && ct == NULL) {
     epg_query_add_channel(eqr, ch, ecg, preg, now);
