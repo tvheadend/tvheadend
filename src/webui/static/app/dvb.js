@@ -1040,7 +1040,14 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	}),
 	new Ext.form.Checkbox({
 	    fieldLabel: 'Write full DVB MUX to disk',
-	    name: 'dumpmux'
+	    name: 'dumpmux',
+	    handler: function(s, v) {
+		if(v)
+		    Ext.MessageBox.alert('DVB Mux dump',
+					 'Please note that keeping this ' +
+					 'option enabled can consume a lot ' +
+					 'of diskspace. You have been warned');
+	    }
 	}),
 	{
 	    fieldLabel: 'NIT-o Network ID',
