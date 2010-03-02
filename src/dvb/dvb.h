@@ -195,6 +195,11 @@ typedef struct th_dvb_adapter {
 
   struct th_dvb_mux_instance_list tda_mux_hash[TDA_MUX_HASH_WIDTH];
 
+  uint32_t tda_dump_muxes;
+
+  int tda_allpids_dmx_fd;
+  int tda_dump_fd;
+
 } th_dvb_adapter_t;
 
 
@@ -218,6 +223,8 @@ void dvb_adapter_set_auto_discovery(th_dvb_adapter_t *tda, int on);
 void dvb_adapter_set_idlescan(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_qmon(th_dvb_adapter_t *tda, int on);
+
+void dvb_adapter_set_dump_muxes(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_nitoid(th_dvb_adapter_t *tda, int nitoid);
 

@@ -1008,7 +1008,8 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 
     var confreader = new Ext.data.JsonReader({
 	root: 'dvbadapters'
-    }, ['name', 'automux', 'idlescan', 'diseqcversion', 'qmon', 'nitoid']);
+    }, ['name', 'automux', 'idlescan', 'diseqcversion', 'qmon',
+	'dumpmux', 'nitoid']);
 
     
     function saveConfForm () {
@@ -1036,6 +1037,10 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	new Ext.form.Checkbox({
 	    fieldLabel: 'Monitor signal quality',
 	    name: 'qmon'
+	}),
+	new Ext.form.Checkbox({
+	    fieldLabel: 'Write full DVB MUX to disk',
+	    name: 'dumpmux'
 	}),
 	{
 	    fieldLabel: 'NIT-o Network ID',
@@ -1066,7 +1071,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	style:'margin:10px',
 	bodyStyle:'padding:5px',
 	labelAlign: 'right',
-	labelWidth: 130,
+	labelWidth: 160,
 	waitMsgTarget: true,
 	reader: confreader,
 	defaultType: 'textfield',

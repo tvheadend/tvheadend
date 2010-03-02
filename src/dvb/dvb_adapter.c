@@ -60,6 +60,10 @@ tda_alloc(void)
   TAILQ_INIT(&tda->tda_scan_queues[1]);
   TAILQ_INIT(&tda->tda_initial_scan_queue);
   TAILQ_INIT(&tda->tda_satconfs);
+
+  tda->tda_allpids_dmx_fd = -1;
+  tda->tda_dump_fd = -1;
+
   return tda;
 }
 
@@ -79,6 +83,7 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "autodiscovery", tda->tda_autodiscovery);
   htsmsg_add_u32(m, "idlescan", tda->tda_idlescan);
   htsmsg_add_u32(m, "qmon", tda->tda_qmon);
+  htsmsg_add_u32(m, "dump_muxes", tda->tda_dump_muxes);
   htsmsg_add_u32(m, "nitoid", tda->tda_nitoid);
   htsmsg_add_u32(m, "diseqc_version", tda->tda_diseqc_version);
   hts_settings_save(m, "dvbadapters/%s", tda->tda_identifier);
@@ -162,6 +167,25 @@ dvb_adapter_set_qmon(th_dvb_adapter_t *tda, int on)
 	 tda->tda_displayname, on ? "On" : "Off");
 
   tda->tda_qmon = on;
+  tda_save(tda);
+}
+
+
+/**
+ *
+ */
+void
+dvb_adapter_set_dump_muxes(th_dvb_adapter_t *tda, int on)
+{
+  if(tda->tda_dump_muxes == on)
+    return;
+
+  lock_assert(&global_lock);
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" dump of DVB mux input set to: %s",
+	 tda->tda_displayname, on ? "On" : "Off");
+
+  tda->tda_dump_muxes = on;
   tda_save(tda);
 }
 
@@ -356,6 +380,7 @@ dvb_adapter_init(uint32_t adapter_mask)
       htsmsg_get_u32(c, "autodiscovery", &tda->tda_autodiscovery);
       htsmsg_get_u32(c, "idlescan", &tda->tda_idlescan);
       htsmsg_get_u32(c, "qmon", &tda->tda_qmon);
+      htsmsg_get_u32(c, "dump_muxes", &tda->tda_dump_muxes);
       htsmsg_get_u32(c, "nitoid", &tda->tda_nitoid);
       htsmsg_get_u32(c, "diseqc_version", &tda->tda_diseqc_version);
     }
@@ -484,6 +509,7 @@ dvb_adapter_clean(th_dvb_adapter_t *tda)
 
 
 
+
 /**
  *
  */
@@ -501,15 +527,28 @@ dvb_adapter_input_dvr(void *aux)
     return NULL;
   }
 
+
   while(1) {
     r = read(fd, tsb, sizeof(tsb));
 
     pthread_mutex_lock(&tda->tda_delivery_mutex);
     
-    for(i = 0; i < r; i += 188)
+    for(i = 0; i < r; i += 188) {
       LIST_FOREACH(t, &tda->tda_transports, tht_active_link)
 	if(t->tht_dvb_mux_instance == tda->tda_mux_current)
 	  ts_recv_packet1(t, tsb + i, NULL);
+    }
+
+    if(tda->tda_dump_fd != -1) {
+      if(write(tda->tda_dump_fd, tsb, r) != r) {
+	tvhlog(LOG_ERR, "dvb",
+	       "\"%s\" unable to write to mux dump file -- %s",
+	       tda->tda_identifier, strerror(errno));
+
+	close(tda->tda_dump_fd);
+	tda->tda_dump_fd = -1;
+       }
+    }
 
     pthread_mutex_unlock(&tda->tda_delivery_mutex);
   }

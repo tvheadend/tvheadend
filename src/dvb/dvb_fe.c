@@ -21,6 +21,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <assert.h>
 
@@ -159,6 +160,16 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi)
   assert(tdmi == tda->tda_mux_current);
   tda->tda_mux_current = NULL;
 
+  if(tda->tda_allpids_dmx_fd != -1) {
+    close(tda->tda_allpids_dmx_fd);
+    tda->tda_allpids_dmx_fd = -1;
+  }
+
+  if(tda->tda_dump_fd != -1) {
+    close(tda->tda_dump_fd);
+    tda->tda_dump_fd = -1;
+  }
+
   if(tdmi->tdmi_table_initial) {
     tdmi->tdmi_table_initial = 0;
     tda->tda_initial_num_mux--;
@@ -175,6 +186,78 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi)
 
   time(&tdmi->tdmi_lost_adapter);
 }
+
+
+/**
+ * Open a dump file which we write the entire mux output to
+ */
+static void
+dvb_adapter_open_dump_file(th_dvb_adapter_t *tda)
+{
+  struct dmx_pes_filter_params dmx_param;
+  char fullname[1000];
+  char path[500];
+  extern char *dvr_storage;
+  const char *fname = tda->tda_mux_current->tdmi_identifier;
+
+  int fd = tvh_open(tda->tda_demux_path, O_RDWR, 0);
+  if(fd == -1)
+    return;
+
+  memset(&dmx_param, 0, sizeof(dmx_param));
+  dmx_param.pid = 0x2000;
+  dmx_param.input = DMX_IN_FRONTEND;
+  dmx_param.output = DMX_OUT_TS_TAP;
+  dmx_param.pes_type = DMX_PES_OTHER;
+  dmx_param.flags = DMX_IMMEDIATE_START;
+  
+  if(ioctl(fd, DMX_SET_PES_FILTER, &dmx_param)) {
+    tvhlog(LOG_ERR, "dvb",
+	   "\"%s\" unable to configure demuxer \"%s\" for all PIDs -- %s",
+	   fname, tda->tda_demux_path, 
+	   strerror(errno));
+    close(fd);
+    return;
+  }
+
+  snprintf(path, sizeof(path), "%s/muxdumps", dvr_storage);
+
+  if(mkdir(path, 0777) && errno != EEXIST) {
+    tvhlog(LOG_ERR, "dvb", "\"%s\" unable to create mux dump dir %s -- %s",
+	   fname, path, strerror(errno));
+    close(fd);
+    return;
+  }
+
+  int attempt = 1;
+
+  while(1) {
+    struct stat st;
+    snprintf(fullname, sizeof(fullname), "%s/%s.dump%d.ts",
+	     path, fname, attempt);
+
+    if(stat(fullname, &st) == -1)
+      break;
+    
+    attempt++;
+  }
+  
+  int f = open(fullname, O_CREAT | O_TRUNC | O_WRONLY, 0777);
+
+  if(f == -1) {
+    tvhlog(LOG_ERR, "dvb", "\"%s\" unable to create mux dump file %s -- %s",
+	   fname, fullname, strerror(errno));
+    close(fd);
+    return;
+  }
+	   
+  tvhlog(LOG_WARNING, "dvb", "\"%s\" writing to mux dump file %s",
+	 fname, fullname);
+
+  tda->tda_allpids_dmx_fd = fd;
+  tda->tda_dump_fd = f;
+}
+
 
 
 #if DVB_API_VERSION >= 5
@@ -373,6 +456,9 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
   }   
 
   tda->tda_mux_current = tdmi;
+
+  if(tda->tda_dump_muxes)
+    dvb_adapter_open_dump_file(tda);
 
   gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 1);
 

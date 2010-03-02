@@ -4,6 +4,10 @@ hts-tvheadend (2.11-WIP) hts; urgency=low
 
   * Add circular 10.75 GHz LNB
 
+  * Add a new DVB adapter option that allows the entire DVB Mux to be
+    written to disk as Tvheadend tunes to it. This should aid a lot when
+    it comes to debugging
+
 hts-tvheadend (2.10) hts; urgency=high
 
   * Fix a crash in HTSP server.
