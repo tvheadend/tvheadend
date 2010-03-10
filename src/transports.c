@@ -843,7 +843,8 @@ transport_restart(th_transport_t *t, int had_components)
     streaming_msg_free(sm);
   }
 
-  t->tht_refresh_feed(t);
+  if(t->tht_refresh_feed != NULL)
+    t->tht_refresh_feed(t);
 
   if(LIST_FIRST(&t->tht_components) != NULL) {
 
