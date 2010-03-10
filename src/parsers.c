@@ -878,6 +878,17 @@ parse_subtitles(th_transport_t *t, th_stream_t *st, const uint8_t *data,
   if(st->st_buffer_ptr < 6)
     return;
 
+  uint32_t startcode =
+    (st->st_buffer[0] << 24) |
+    (st->st_buffer[1] << 16) |
+    (st->st_buffer[2] << 8) |
+    (st->st_buffer[3]);
+
+  if(startcode == 0x1be) {
+    st->st_parser_state = 0;
+    return;
+  }
+
   psize = st->st_buffer[4] << 8 | st->st_buffer[5];
 
   if(st->st_buffer_ptr != psize + 6)
