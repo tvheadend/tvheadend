@@ -81,6 +81,8 @@ stream_init(th_stream_t *st)
   AVCodec *c;
   enum CodecID id;
 
+  st->st_cc_valid = 0;
+
   st->st_startcond = 0xffffffff;
   st->st_curdts = AV_NOPTS_VALUE;
   st->st_curpts = AV_NOPTS_VALUE;
