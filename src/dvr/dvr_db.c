@@ -557,7 +557,10 @@ dvr_init(void)
 
     if(!htsmsg_get_u32(m, "time-in-title", &u32) && u32)
       dvr_flags |= DVR_TIME_IN_TITLE;
-    
+ 
+    if(!htsmsg_get_u32(m, "whitespace-in-title", &u32) && u32)
+      dvr_flags |= DVR_WHITESPACE_IN_TITLE;
+   
     tvh_str_set(&dvr_postproc, htsmsg_get_str(m, "postproc"));
 
     htsmsg_destroy(m);
@@ -608,6 +611,7 @@ dvr_save(void)
   htsmsg_add_u32(m, "channel-in-title", !!(dvr_flags & DVR_CHANNEL_IN_TITLE));
   htsmsg_add_u32(m, "date-in-title",    !!(dvr_flags & DVR_DATE_IN_TITLE));
   htsmsg_add_u32(m, "time-in-title",    !!(dvr_flags & DVR_TIME_IN_TITLE));
+  htsmsg_add_u32(m, "whitespace-in-title",    !!(dvr_flags & DVR_WHITESPACE_IN_TITLE));
   if(dvr_postproc != NULL)
     htsmsg_add_str(m, "postproc", dvr_postproc);
 

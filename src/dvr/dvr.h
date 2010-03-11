@@ -34,11 +34,12 @@ extern int dvr_extra_time_pre;
 extern int dvr_extra_time_post;
 extern struct dvr_entry_list dvrentries;
 
-#define DVR_DIR_PER_DAY      0x1
-#define DVR_DIR_PER_CHANNEL  0x2
-#define DVR_CHANNEL_IN_TITLE 0x4
-#define DVR_DATE_IN_TITLE    0x8
-#define DVR_TIME_IN_TITLE    0x10
+#define DVR_DIR_PER_DAY		0x1
+#define DVR_DIR_PER_CHANNEL	0x2
+#define DVR_CHANNEL_IN_TITLE	0x4
+#define DVR_DATE_IN_TITLE	0x8
+#define DVR_TIME_IN_TITLE	0x10
+#define DVR_WHITESPACE_IN_TITLE	0x20
 
 LIST_HEAD(dvr_rec_stream_list, dvr_rec_stream);
 

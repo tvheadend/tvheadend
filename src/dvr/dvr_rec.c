@@ -145,10 +145,14 @@ static void
 cleanupfilename(char *s)
 {
   int i, len = strlen(s);
-  for(i = 0; i < len; i++) 
+  for(i = 0; i < len; i++) { 
     if(s[i] == '/' || s[i] == ':' || s[i] == '\\' || s[i] == '<' ||
        s[i] == '>' || s[i] == '|' || s[i] == '*' || s[i] == '?')
       s[i] = '-';
+
+    if((dvr_flags & DVR_WHITESPACE_IN_TITLE) && s[i] == ' ')
+      s[i] = '-';	
+  }
 }
 
 /**

@@ -456,7 +456,7 @@ tvheadend.dvrsettings = function() {
     }, ['storage','postproc','retention','dayDirs',
 	'channelDirs','channelInTitle',
 	'dateInTitle','timeInTitle',
-	'preExtraTime', 'postExtraTime']);
+	'preExtraTime', 'postExtraTime', 'whitespaceInTitle']);
 
     var confpanel = new Ext.FormPanel({
 	title:'Digital Video Recorder',
@@ -503,6 +503,9 @@ tvheadend.dvrsettings = function() {
 	}), new Ext.form.Checkbox({
 	    fieldLabel: 'Include time in title',
 	    name: 'timeInTitle'
+	}), new Ext.form.Checkbox({
+	    fieldLabel: 'Replace whitespace in title with \'-\'',
+	    name: 'whitespaceInTitle'
 	}), {
 	    width: 300,
 	    fieldLabel: 'Post-processor command',

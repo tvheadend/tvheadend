@@ -807,6 +807,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(r, "channelInTitle", !!(dvr_flags & DVR_CHANNEL_IN_TITLE));
     htsmsg_add_u32(r, "dateInTitle",    !!(dvr_flags & DVR_DATE_IN_TITLE));
     htsmsg_add_u32(r, "timeInTitle",    !!(dvr_flags & DVR_TIME_IN_TITLE));
+    htsmsg_add_u32(r, "whitespaceInTitle",    !!(dvr_flags & DVR_WHITESPACE_IN_TITLE));
 
     out = json_single_record(r, "dvrSettings");
 
@@ -837,6 +838,8 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
       flags |= DVR_DATE_IN_TITLE;
     if(http_arg_get(&hc->hc_req_args, "timeInTitle") != NULL)
       flags |= DVR_TIME_IN_TITLE;
+    if(http_arg_get(&hc->hc_req_args, "whitespaceInTitle") != NULL)
+      flags |= DVR_WHITESPACE_IN_TITLE;
 
     dvr_flags_set(flags);
 
