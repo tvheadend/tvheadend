@@ -30,7 +30,7 @@ tvheadend.epgDetails = function(event) {
       content += '<div class="x-epg-meta">' + event.ext_text + '</div>';
 
     content += '<div class="x-epg-meta"><a target="_blank" href="' + 
-	'http://www.imdb.org/find?q=' + event.title + '">Search IMDB</a></div>'
+	'http://akas.imdb.org/find?q=' + event.title + '">Search IMDB</a></div>'
 	
 
     var win = new Ext.Window({
