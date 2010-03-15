@@ -810,7 +810,7 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     service =  ptr[0]         << 8 | ptr[1];
     pmt     = (ptr[2] & 0x1f) << 8 | ptr[3];
 
-    if(service != 0) {
+    if(service != 0 && pmt != 0) {
       t = dvb_transport_find(tdmi, service, pmt, NULL);
       dvb_table_add_transport(tdmi, t, pmt);
     }
