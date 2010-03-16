@@ -242,6 +242,19 @@ epg_event_set_content_type(event_t *e, epg_content_type_t *ect)
 }
 
 
+/**
+ *
+ */
+void
+epg_event_set_episode(event_t *e, epg_episode_t *ee)
+{
+  e->e_episode.ee_season  = ee->ee_season;
+  e->e_episode.ee_episode = ee->ee_episode;
+  e->e_episode.ee_part    = ee->ee_part;
+
+  tvh_str_set(&e->e_episode.ee_onscreen, ee->ee_onscreen);
+}
+
 
 /**
  *
@@ -254,6 +267,7 @@ epg_event_destroy(event_t *e)
 
   free(e->e_title);
   free(e->e_desc);
+  free(e->e_episode.ee_onscreen);
   LIST_REMOVE(e, e_global_link);
   free(e);
 }

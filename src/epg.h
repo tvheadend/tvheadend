@@ -41,6 +41,16 @@ typedef struct epg_content_type {
   uint8_t ect_dvbcode;
 } epg_content_type_t;
 
+typedef struct epg_episode {
+
+  uint16_t ee_season;
+  uint16_t ee_episode;
+  uint16_t ee_part;
+
+  char *ee_onscreen;
+} epg_episode_t;
+
+
 /*
  * EPG event
  */
@@ -67,6 +77,8 @@ typedef struct event {
 
   int e_dvb_id;
 
+  epg_episode_t e_episode;
+
 } event_t;
 
 
@@ -86,6 +98,8 @@ void epg_event_set_ext_item(event_t *e, int ext_dn, const char *item);
 void epg_event_set_ext_text(event_t *e, int ext_dn, const char *text);
 
 void epg_event_set_content_type(event_t *e, epg_content_type_t *ect);
+
+void epg_event_set_episode(event_t *e, epg_episode_t *ee);
 
 event_t *epg_event_create(channel_t *ch, time_t start, time_t stop,
 			  int dvb_id, int *created);

@@ -660,6 +660,9 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     if(e->e_desc != NULL)
       htsmsg_add_str(m, "description", e->e_desc);
 
+    if(e->e_episode.ee_onscreen != NULL)
+      htsmsg_add_str(m, "episode", e->e_episode.ee_onscreen);
+
     if(e->e_ext_desc != NULL)
       htsmsg_add_str(m, "ext_desc", e->e_ext_desc);
 

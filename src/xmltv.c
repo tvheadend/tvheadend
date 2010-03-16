@@ -336,6 +336,141 @@ xmltv_parse_channel(htsmsg_t *body)
     xmltv_save(xc);
 }
 
+
+/**
+ * This is probably the most obscure formating there is. From xmltv.dtd:
+ *
+ *
+ * xmltv_ns: This is intended to be a general way to number episodes and
+ * parts of multi-part episodes.  It is three numbers separated by dots,
+ * the first is the series or season, the second the episode number
+ * within that series, and the third the part number, if the programme is
+ * part of a two-parter.  All these numbers are indexed from zero, and
+ * they can be given in the form 'X/Y' to show series X out of Y series
+ * made, or episode X out of Y episodes in this series, or part X of a
+ * Y-part episode.  If any of these aren't known they can be omitted.
+ * You can put spaces whereever you like to make things easier to read.
+ * 
+ * (NB 'part number' is not used when a whole programme is split in two
+ * for purely scheduling reasons; it's intended for cases where there
+ * really is a 'Part One' and 'Part Two'.  The format doesn't currently
+ * have a way to represent a whole programme that happens to be split
+ * across two or more timeslots.)
+ * 
+ * Some examples will make things clearer.  The first episode of the
+ * second series is '1.0.0/1' .  If it were a two-part episode, then the
+ * first half would be '1.0.0/2' and the second half '1.0.1/2'.  If you
+ * know that an episode is from the first season, but you don't know
+ * which episode it is or whether it is part of a multiparter, you could
+ * give the episode-num as '0..'.  Here the second and third numbers have
+ * been omitted.  If you know that this is the first part of a three-part
+ * episode, which is the last episode of the first series of thirteen,
+ * its number would be '0 . 12/13 . 0/3'.  The series number is just '0'
+ * because you don't know how many series there are in total - perhaps
+ * the show is still being made!
+ *
+ */
+
+static const char *
+xmltv_ns_get_parse_num(const char *s, int *ap, int *bp)
+{
+  int a = -1, b = -1;
+
+  while(1) {
+    if(!*s)
+      goto out;
+
+    if(*s == '.') {
+      s++;
+      goto out;
+    }
+
+    if(*s == '/')
+      break;
+
+    if(*s >= '0' && *s <= '9') {
+      if(a == -1)
+	a = 0;
+      a = a * 10 + *s - '0';
+    }
+    s++;
+  }
+
+  s++; // slash
+
+  while(1) {
+    if(!*s)
+      break;
+
+    if(*s == '.') {
+      s++;
+      break;
+    }
+
+    if(*s >= '0' && *s <= '9') {
+      if(b == -1)
+	b = 0;
+      b = b * 10 + *s - '0';
+    }
+    s++;
+  }
+
+
+ out:
+  if(ap) *ap = a;
+  if(bp) *bp = b;
+  return s;
+}
+
+
+
+
+static void
+parse_xmltv_ns_episode(const char *s, epg_episode_t *ee)
+{
+  int season;
+  int episode;
+  int part;
+
+  s = xmltv_ns_get_parse_num(s, &season, NULL);
+  s = xmltv_ns_get_parse_num(s, &episode, NULL);
+  xmltv_ns_get_parse_num(s, &part, NULL);
+
+  if(season != -1)
+    ee->ee_season = season + 1;
+  if(episode != -1)
+    ee->ee_episode = episode + 1;
+  if(part != -1)
+    ee->ee_part = part + 1;
+}
+
+/**
+ *
+ */
+static void
+get_episode_info(htsmsg_t *tags, epg_episode_t *ee)
+{
+  htsmsg_field_t *f;
+  htsmsg_t *c, *a;
+  const char *sys, *cdata;
+
+  memset(ee, 0, sizeof(epg_episode_t));
+
+  HTSMSG_FOREACH(f, tags) {
+    if((c = htsmsg_get_map_by_field(f)) == NULL ||
+       strcmp(f->hmf_name, "episode-num") ||
+       (a = htsmsg_get_map(c, "attrib")) == NULL ||
+       (cdata = htsmsg_get_str(c, "cdata")) == NULL ||
+       (sys = htsmsg_get_str(a, "system")) == NULL)
+      continue;
+    
+    if(!strcmp(sys, "onscreen"))
+      tvh_str_set(&ee->ee_onscreen, cdata);
+    else if(!strcmp(sys, "xmltv_ns"))
+      parse_xmltv_ns_episode(cdata, ee);
+  }
+}
+
 /**
  * Parse tags inside of a programme
  */
@@ -348,6 +483,9 @@ xmltv_parse_programme_tags(xmltv_channel_t *xc, htsmsg_t *tags,
   const char *title = xmltv_get_cdata_by_tag(tags, "title");
   const char *desc  = xmltv_get_cdata_by_tag(tags, "desc");
   int created;
+  epg_episode_t episode;
+
+  get_episode_info(tags, &episode);
 
   LIST_FOREACH(ch, &xc->xc_channels, ch_xc_link) {
     if((e = epg_event_create(ch, start, stop, -1, &created)) == NULL)
@@ -358,7 +496,10 @@ xmltv_parse_programme_tags(xmltv_channel_t *xc, htsmsg_t *tags,
 
     if(title != NULL) epg_event_set_title(e, title);
     if(desc  != NULL) epg_event_set_desc(e, desc);
+    epg_event_set_episode(e, &episode);
   }
+
+  free(episode.ee_onscreen);
 }
 
 

@@ -15,6 +15,9 @@ hts-tvheadend (2.11-WIP) hts; urgency=low
     to understand what is happening. It also makes (more) correct
     wakeup from suspend hard to do.
 
+  * Add parsing of episode information from XMLTV and display it in the
+    WebUI EPG
+
 hts-tvheadend (2.10) hts; urgency=high
 
   * Fix a crash in HTSP server.

@@ -16,6 +16,7 @@ tvheadend.epgDetails = function(event) {
 	content += '<img class="x-epg-chicon" src="' + event.chicon + '">';
 
     content += '<div class="x-epg-title">' + event.title + '</div>';
+    content += '<div class="x-epg-desc">' + event.episode + '</div>';
     content += '<div class="x-epg-desc">' + event.description + '</div>';
 
     content += '<div class="x-epg-meta">' + event.contentgrp + '</div>';
@@ -89,6 +90,7 @@ tvheadend.epg = function() {
 	    {name: 'id'},
 	    {name: 'channel'},
 	    {name: 'title'},
+	    {name: 'episode'},
 	    {name: 'description'},
 	    {name: 'ext_desc'},
 	    {name: 'ext_item'},
@@ -147,6 +149,12 @@ tvheadend.epg = function() {
 	    id:'title',
 	    header: "Title",
 	    dataIndex: 'title',
+	    renderer: renderText
+	},{
+	    width: 250,
+	    id:'episode',
+	    header: "Episode",
+	    dataIndex: 'episode',
 	    renderer: renderText
 	},{
 	    width: 100,
