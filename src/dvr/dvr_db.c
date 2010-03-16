@@ -84,12 +84,12 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
   
   if(dvr_flags & DVR_DATE_IN_TITLE) {
     strftime(buf, sizeof(buf), "%F", &tm);
-    snprintf(output + strlen(output), outlen - strlen(output), "-%s", buf);
+    snprintf(output + strlen(output), outlen - strlen(output), ".%s", buf);
   }
 
   if(dvr_flags & DVR_TIME_IN_TITLE) {
     strftime(buf, sizeof(buf), "%H-%M", &tm);
-    snprintf(output + strlen(output), outlen - strlen(output), "-%s", buf);
+    snprintf(output + strlen(output), outlen - strlen(output), ".%s", buf);
   }
 
   if(dvr_flags & DVR_EPISODE_IN_TITLE) {
