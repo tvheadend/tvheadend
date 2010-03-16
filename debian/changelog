@@ -8,6 +8,13 @@ hts-tvheadend (2.11-WIP) hts; urgency=low
     written to disk as Tvheadend tunes to it. This should aid a lot when
     it comes to debugging
 
+  * Inject entries in DVR schedule as soon as we know about an EPG
+    entry that matches an autorecording rule. Previously Tvheadend
+    would scan the EPG continously and just grab shows as they neared
+    air time.  The drawbacks of this approach was that it's a bit hard
+    to understand what is happening. It also makes (more) correct
+    wakeup from suspend hard to do.
+
 hts-tvheadend (2.10) hts; urgency=high
 
   * Fix a crash in HTSP server.

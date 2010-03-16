@@ -20,6 +20,7 @@
 #define DVR_H
 
 #include <libavformat/avformat.h>
+#include <regex.h>
 #include "epg.h"
 #include "channels.h"
 #include "subscriptions.h"
@@ -97,6 +98,12 @@ typedef struct dvr_entry {
   uint32_t de_dont_reschedule;
   
   /**
+   * Autorec linkage
+   */
+  LIST_ENTRY(dvr_entry) de_autorec_link;
+  struct dvr_autorec_entry *de_autorec;
+
+  /**
    * Fields for recording
    */
   pthread_t de_thread;
@@ -129,14 +136,47 @@ typedef struct dvr_entry {
 
 } dvr_entry_t;
 
+
+/**
+ * Autorec entry
+ */
+typedef struct dvr_autorec_entry {
+  TAILQ_ENTRY(dvr_autorec_entry) dae_link;
+  char *dae_id;
+
+  int dae_enabled;
+  char *dae_creator;
+  char *dae_comment;
+
+  char *dae_title;
+  regex_t dae_title_preg;
+  
+  epg_content_group_t *dae_ecg;
+
+  int dae_weekdays;
+
+  channel_t *dae_channel;
+  LIST_ENTRY(dvr_autorec_entry) dae_channel_link;
+
+  channel_tag_t *dae_channel_tag;
+  LIST_ENTRY(dvr_autorec_entry) dae_channel_tag_link;
+
+  struct dvr_entry_list dae_spawns;
+
+} dvr_autorec_entry_t;
+
+
 /**
  * Prototypes
  */
-dvr_entry_t *dvr_entry_create_by_event(event_t *e, const char *creator);
+void dvr_entry_create_by_autorec(event_t *e, dvr_autorec_entry_t *dae);
+
+dvr_entry_t *dvr_entry_create_by_event(event_t *e, const char *creator,
+				       dvr_autorec_entry_t *dae);
 
 dvr_entry_t *dvr_entry_create(channel_t *ch, time_t start, time_t stop, 
 			      const char *title, const char *description,
-			      const char *creator);
+			      const char *creator, dvr_autorec_entry_t *dae);
 
 void dvr_init(void);
 
@@ -190,8 +230,10 @@ void dvr_autorec_add(const char *title, const char *channel,
 		     const char *tag, const char *contentgrp,
 		     const char *creator, const char *comment);
 
-void dvr_autorec_check(event_t *e);
+void dvr_autorec_check_event(event_t *e);
 
 void autorec_destroy_by_channel(channel_t *ch);
+
+dvr_autorec_entry_t *autorec_entry_find(const char *id, int create);
 
 #endif /* DVR_H  */

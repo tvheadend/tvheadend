@@ -25,8 +25,6 @@
 #include <string.h>
 #include <stdarg.h>
 #include <errno.h>
-#include <regex.h>
-
 
 #include "tvhead.h"
 #include "settings.h"
@@ -41,31 +39,22 @@ TAILQ_HEAD(dvr_autorec_entry_queue, dvr_autorec_entry);
 
 struct dvr_autorec_entry_queue autorec_entries;
 
-typedef struct dvr_autorec_entry {
-  TAILQ_ENTRY(dvr_autorec_entry) dae_link;
-  char *dae_id;
+static void dvr_autorec_changed(dvr_autorec_entry_t *dae);
 
-  int dae_enabled;
-  char *dae_creator;
-  char *dae_comment;
+/**
+ *
+ */
+static void
+dvr_autorec_purge_spawns(dvr_autorec_entry_t *dae)
+{
+  dvr_entry_t *de;
 
-  char *dae_title;
-  regex_t dae_title_preg;
-  
-  epg_content_group_t *dae_ecg;
-
-  int dae_weekdays;
-
-  channel_t *dae_channel;
-  LIST_ENTRY(dvr_autorec_entry) dae_channel_link;
-
-  channel_tag_t *dae_channel_tag;
-  LIST_ENTRY(dvr_autorec_entry) dae_channel_tag_link;
-
-} dvr_autorec_entry_t;
-
-static void dvr_autorec_check_just_enabled(dvr_autorec_entry_t *dae);
-
+  while((de = LIST_FIRST(&dae->dae_spawns)) != NULL) {
+    LIST_REMOVE(de, de_autorec_link);
+    de->de_autorec = NULL;
+    dvr_entry_cancel(de);
+  }
+}
 
 
 /**
@@ -98,9 +87,11 @@ autorec_cmp(dvr_autorec_entry_t *dae, event_t *e)
       return 0;
   }
   
-  if(dae->dae_title != NULL && e->e_title != NULL &&
-     regexec(&dae->dae_title_preg, e->e_title, 0, NULL, 0))
+  if(dae->dae_title != NULL) {
+    if(e->e_title == NULL ||
+       regexec(&dae->dae_title_preg, e->e_title, 0, NULL, 0))
     return 0;
+  }
 
   if(dae->dae_weekdays != 0x7f) {
     struct tm tm;
@@ -115,7 +106,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, event_t *e)
 /**
  *
  */
-static dvr_autorec_entry_t *
+dvr_autorec_entry_t *
 autorec_entry_find(const char *id, int create)
 {
   dvr_autorec_entry_t *dae;
@@ -154,6 +145,8 @@ autorec_entry_find(const char *id, int create)
 static void
 autorec_entry_destroy(dvr_autorec_entry_t *dae)
 {
+  dvr_autorec_purge_spawns(dae);
+
   free(dae->dae_id);
 
   free(dae->dae_creator);
@@ -293,8 +286,11 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
   if((dae = autorec_entry_find(id, maycreate)) == NULL)
     return NULL;
 
-  tvh_str_set(&dae->dae_creator, htsmsg_get_str(values, "creator"));
-  tvh_str_set(&dae->dae_comment, htsmsg_get_str(values, "comment"));
+  printf("autorec_record_update\n");
+  htsmsg_print(values);
+
+  tvh_str_update(&dae->dae_creator, htsmsg_get_str(values, "creator"));
+  tvh_str_update(&dae->dae_comment, htsmsg_get_str(values, "comment"));
 
   if((s = htsmsg_get_str(values, "channel")) != NULL) {
     if(dae->dae_channel != NULL) {
@@ -340,8 +336,7 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
   if(!htsmsg_get_u32(values, "enabled", &u32))
     dae->dae_enabled = u32;
 
-  if(dae->dae_enabled)
-    dvr_autorec_check_just_enabled(dae);
+  dvr_autorec_changed(dae);
 
   return autorec_record_build(dae);
 }
@@ -435,19 +430,7 @@ dvr_autorec_add(const char *title, const char *channel,
   htsmsg_add_u32(m, "asyncreload", 1);
   notify_by_msg("autorec", m);
 
-  dvr_autorec_check_just_enabled(dae);
-}
-
-/**
- *
- */
-static void
-autorec_schedule(event_t *e, dvr_autorec_entry_t *dae)
-{
-  char buf[200];
-
-  snprintf(buf, sizeof(buf), "Auto recording by: %s", dae->dae_creator);
-  dvr_entry_create_by_event(e, buf);
+  dvr_autorec_changed(dae);
 }
 
 
@@ -455,37 +438,31 @@ autorec_schedule(event_t *e, dvr_autorec_entry_t *dae)
  *
  */
 void
-dvr_autorec_check(event_t *e)
+dvr_autorec_check_event(event_t *e)
 {
   dvr_autorec_entry_t *dae;
 
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
     if(autorec_cmp(dae, e))
-      autorec_schedule(e, dae);
-
-  if((e = RB_NEXT(e, e_channel_link)) == NULL)
-    return;
-
-  /* Check next event too */
-  TAILQ_FOREACH(dae, &autorec_entries, dae_link)
-    if(autorec_cmp(dae, e))
-      autorec_schedule(e, dae);
+      dvr_entry_create_by_autorec(e, dae);
 }
 
 /**
  *
  */
 static void
-dvr_autorec_check_just_enabled(dvr_autorec_entry_t *dae)
+dvr_autorec_changed(dvr_autorec_entry_t *dae)
 {
   channel_t *ch;
+  event_t *e;
+
+  dvr_autorec_purge_spawns(dae);
 
   RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-    if(ch->ch_epg_current == NULL)
-      continue;
-
-    if(autorec_cmp(dae, ch->ch_epg_current))
-      autorec_schedule(ch->ch_epg_current, dae);
+    RB_FOREACH(e, &ch->ch_epg_events, e_channel_link) {
+      if(autorec_cmp(dae, e))
+	dvr_entry_create_by_autorec(e, dae);
+    }
   }
 }
 

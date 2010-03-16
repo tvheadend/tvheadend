@@ -497,7 +497,10 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("Event does not exist");
   
   //create the dvr entry
-  de = dvr_entry_create_by_event(e, (htsp->htsp_username) ? htsp->htsp_username:"anonymous");
+  de = dvr_entry_create_by_event(e, 
+				 htsp->htsp_username ? 
+				 htsp->htsp_username : "anonymous",
+				 NULL);
 
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
   

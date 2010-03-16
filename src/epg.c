@@ -57,11 +57,9 @@ epg_set_current(channel_t *ch, event_t *e)
     return;
 
   ch->ch_epg_current = e;
-  if(e != NULL) {
+  if(e != NULL)
     gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
 		   ch, MAX(e->e_stop, dispatch_clock + 1));
-    dvr_autorec_check(e);
-  }
   htsp_event_update(ch, e);
 }
 
@@ -113,7 +111,7 @@ epg_ch_check_current_event(void *aux)
 static void
 epg_event_changed(event_t *e)
 {
-  /* nothing atm  */
+  dvr_autorec_check_event(e);
 }
 
 

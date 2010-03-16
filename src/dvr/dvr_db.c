@@ -137,7 +137,7 @@ dvr_entry_link(dvr_entry_t *de)
 dvr_entry_t *
 dvr_entry_create(channel_t *ch, time_t start, time_t stop, 
 		 const char *title, const char *description,
-		 const char *creator)
+		 const char *creator, dvr_autorec_entry_t *dae)
 {
   dvr_entry_t *de;
   char tbuf[30];
@@ -174,6 +174,9 @@ dvr_entry_create(channel_t *ch, time_t start, time_t stop,
   localtime_r(&t, &tm);
   strftime(tbuf, sizeof(tbuf), "%c", &tm);
 
+  de->de_autorec = dae;
+  LIST_INSERT_HEAD(&dae->dae_spawns, de, de_autorec_link);
+
   tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\" starting at %s, "
 	 "scheduled for recording by \"%s\"",
 	 de->de_title, de->de_channel->ch_name, tbuf, creator);
@@ -188,13 +191,27 @@ dvr_entry_create(channel_t *ch, time_t start, time_t stop,
  *
  */
 dvr_entry_t *
-dvr_entry_create_by_event(event_t *e, const char *creator)
+dvr_entry_create_by_event(event_t *e, const char *creator, 
+			  dvr_autorec_entry_t *dae)
 {
   if(e->e_channel == NULL || e->e_title == NULL)
     return NULL;
 
   return dvr_entry_create(e->e_channel, e->e_start, e->e_stop, 
-			  e->e_title, e->e_desc, creator);
+			  e->e_title, e->e_desc, creator, dae);
+}
+
+
+/**
+ *
+ */
+void
+dvr_entry_create_by_autorec(event_t *e, dvr_autorec_entry_t *dae)
+{
+  char buf[200];
+
+  snprintf(buf, sizeof(buf), "Auto recording by: %s", dae->dae_creator);
+  dvr_entry_create_by_event(e, buf, dae);
 }
 
 
@@ -210,6 +227,9 @@ dvr_entry_dec_ref(dvr_entry_t *de)
     de->de_refcnt--;
     return;
   }
+
+  if(de->de_autorec != NULL)
+    LIST_REMOVE(de, de_autorec_link);
 
   free(de->de_creator);
   free(de->de_title);
@@ -301,6 +321,17 @@ dvr_db_load_one(htsmsg_t *c, int id)
   tvh_str_set(&de->de_error,    htsmsg_get_str(c, "error"));
 
   htsmsg_get_u32(c, "noresched", &de->de_dont_reschedule);
+
+  s = htsmsg_get_str(c, "autorec");
+  if(s != NULL) {
+    dvr_autorec_entry_t *dae = autorec_entry_find(s, 0);
+
+    if(dae != NULL) {
+      de->de_autorec = dae;
+      LIST_INSERT_HEAD(&dae->dae_spawns, de, de_autorec_link);
+    }
+  }
+
   dvr_entry_link(de);
 }
 
@@ -358,6 +389,9 @@ dvr_entry_save(dvr_entry_t *de)
     htsmsg_add_str(m, "error", de->de_error);
 
   htsmsg_add_u32(m, "noresched", de->de_dont_reschedule);
+
+  if(de->de_autorec != NULL)
+    htsmsg_add_str(m, "autorec", de->de_autorec->dae_id);
 
   hts_settings_save(m, "dvr/log/%d", de->de_id);
   htsmsg_destroy(m);
@@ -589,10 +623,9 @@ dvr_init(void)
 	   dvr_storage);
   }
 
-  dvr_db_load();
-
   dvr_autorec_init();
 
+  dvr_db_load();
 }
 
 /**
@@ -611,7 +644,7 @@ dvr_save(void)
   htsmsg_add_u32(m, "channel-in-title", !!(dvr_flags & DVR_CHANNEL_IN_TITLE));
   htsmsg_add_u32(m, "date-in-title",    !!(dvr_flags & DVR_DATE_IN_TITLE));
   htsmsg_add_u32(m, "time-in-title",    !!(dvr_flags & DVR_TIME_IN_TITLE));
-  htsmsg_add_u32(m, "whitespace-in-title",    !!(dvr_flags & DVR_WHITESPACE_IN_TITLE));
+  htsmsg_add_u32(m, "whitespace-in-title", !!(dvr_flags & DVR_WHITESPACE_IN_TITLE));
   if(dvr_postproc != NULL)
     htsmsg_add_str(m, "postproc", dvr_postproc);
 
