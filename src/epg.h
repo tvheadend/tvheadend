@@ -87,19 +87,39 @@ typedef struct event {
  */
 void epg_init(void);
 
-void epg_event_set_title(event_t *e, const char *title);
+/**
+ * All the epg_event_set_ function return 1 if it actually changed
+ * the EPG records. otherwise it returns 0.
+ *
+ * If the caller detects that something has changed, it should call
+ * epg_event_updated().
+ *
+ * There reason to put the burden on the caller is that the caller
+ * can combine multiple set()'s into one update
+ *
+ */
+int epg_event_set_title(event_t *e, const char *title)
+       __attribute__ ((warn_unused_result));
 
-void epg_event_set_desc(event_t *e, const char *desc);
+int epg_event_set_desc(event_t *e, const char *desc)
+       __attribute__ ((warn_unused_result));
 
-void epg_event_set_ext_desc(event_t *e, int ext_dn, const char *desc);
+int epg_event_set_ext_desc(event_t *e, int ext_dn, const char *desc)
+       __attribute__ ((warn_unused_result));
 
-void epg_event_set_ext_item(event_t *e, int ext_dn, const char *item);
+int epg_event_set_ext_item(event_t *e, int ext_dn, const char *item)
+       __attribute__ ((warn_unused_result));
 
-void epg_event_set_ext_text(event_t *e, int ext_dn, const char *text);
+int epg_event_set_ext_text(event_t *e, int ext_dn, const char *text)
+       __attribute__ ((warn_unused_result));
 
-void epg_event_set_content_type(event_t *e, epg_content_type_t *ect);
+int epg_event_set_content_type(event_t *e, epg_content_type_t *ect)
+       __attribute__ ((warn_unused_result));
 
-void epg_event_set_episode(event_t *e, epg_episode_t *ee);
+int epg_event_set_episode(event_t *e, epg_episode_t *ee)
+       __attribute__ ((warn_unused_result));
+
+void epg_event_updated(event_t *e);
 
 event_t *epg_event_create(channel_t *ch, time_t start, time_t stop,
 			  int dvb_id, int *created);

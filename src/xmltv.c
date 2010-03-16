@@ -494,9 +494,18 @@ xmltv_parse_programme_tags(xmltv_channel_t *xc, htsmsg_t *tags,
     if(created)
       ps->ps_events_created++;
 
-    if(title != NULL) epg_event_set_title(e, title);
-    if(desc  != NULL) epg_event_set_desc(e, desc);
-    epg_event_set_episode(e, &episode);
+    int changed = 0;
+
+    if(title != NULL)
+      changed |= epg_event_set_title(e, title);
+
+    if(desc  != NULL)
+      changed |= epg_event_set_desc(e, desc);
+    
+    changed |= epg_event_set_episode(e, &episode);
+
+    if(changed)
+      epg_event_updated(e);
   }
 
   free(episode.ee_onscreen);

@@ -108,8 +108,8 @@ epg_ch_check_current_event(void *aux)
 /**
  *
  */
-static void
-epg_event_changed(event_t *e)
+void
+epg_event_updated(event_t *e)
 {
   dvr_autorec_check_event(e);
 }
@@ -118,21 +118,21 @@ epg_event_changed(event_t *e)
 /**
  *
  */
-void
+int
 epg_event_set_title(event_t *e, const char *title)
 {
   if(e->e_title != NULL && !strcmp(e->e_title, title))
-    return;
+    return 0;
   free(e->e_title);
   e->e_title = strdup(title);
-  epg_event_changed(e);
+  return 1;
 }
 
 
 /**
  *
  */
-void
+int
 epg_event_set_desc(event_t *e, const char *desc)
 {
   if(e->e_desc != NULL && strlen(e->e_desc) >= strlen(desc)) {
@@ -141,48 +141,48 @@ epg_event_set_desc(event_t *e, const char *desc)
      * so we just bail out.
      * Typically happens when the XMLTV and DVB EPG feed differs.
      */
-    return;
+    return 0;
   }
   free(e->e_desc);
   e->e_desc = strdup(desc);
-  epg_event_changed(e);
+  return 1;
 }
 
 /**
  *
  */
-void epg_event_set_ext_desc(event_t *e, int ext_dn, const char *desc)
+int
+epg_event_set_ext_desc(event_t *e, int ext_dn, const char *desc)
 {
   if(e->e_ext_desc == NULL && ext_dn != 0)
-    return;
+    return 0;
   if(e->e_ext_desc != NULL && strstr(e->e_ext_desc, desc))
-    return;
+    return 0;
 
   int len = strlen(desc) + ( e->e_ext_desc ? strlen(e->e_ext_desc) : 0) + 1;
   char *tmp = (char*)malloc(len);
 
-  if(e->e_ext_desc)
-  {
+  if(e->e_ext_desc) {
     strcpy(tmp, e->e_ext_desc);
     strcat(tmp, desc);
     free(e->e_ext_desc);
-  }
-  else
+  } else
     strcpy(tmp, desc);
 
   e->e_ext_desc = tmp;
-  epg_event_changed(e);
+  return 1;
 }
 
 /**
  *
  */
-void epg_event_set_ext_item(event_t *e, int ext_dn, const char *item)
+int
+epg_event_set_ext_item(event_t *e, int ext_dn, const char *item)
 {
   if(e->e_ext_item == NULL && ext_dn != 0)
-    return;
+    return 0;
   if(e->e_ext_item != NULL && strstr(e->e_ext_item, item))
-    return;
+    return 0;
 
   int len = strlen(item) + ( e->e_ext_item ? strlen(e->e_ext_item) : 0) + 1;
   char *tmp = (char*)malloc(len);
@@ -195,18 +195,19 @@ void epg_event_set_ext_item(event_t *e, int ext_dn, const char *item)
     strcpy(tmp, item);
 
   e->e_ext_item = tmp;
-  epg_event_changed(e);
+  return 1;
 }
 
 /**
  *
  */
-void epg_event_set_ext_text(event_t *e, int ext_dn, const char *text)
+int
+epg_event_set_ext_text(event_t *e, int ext_dn, const char *text)
 {
   if(e->e_ext_text == NULL && ext_dn != 0)
-    return;
+    return 0;
   if(e->e_ext_text != NULL && strstr(e->e_ext_text, text))
-    return;
+    return 0;
 
   int len = strlen(text) + ( e->e_ext_text ? strlen(e->e_ext_text) : 0) + 1;
   char *tmp = (char*)malloc(len);
@@ -219,17 +220,17 @@ void epg_event_set_ext_text(event_t *e, int ext_dn, const char *text)
     strcpy(tmp, text);
 
   e->e_ext_text = tmp;
-  epg_event_changed(e);
+  return 1;
 }
 
 /**
  *
  */
-void
+int
 epg_event_set_content_type(event_t *e, epg_content_type_t *ect)
 {
   if(e->e_content_type == ect)
-    return;
+    return 0;
 
   if(e->e_content_type != NULL)
     LIST_REMOVE(e, e_content_type_link);
@@ -237,22 +238,28 @@ epg_event_set_content_type(event_t *e, epg_content_type_t *ect)
   e->e_content_type = ect;
   if(ect != NULL)
     LIST_INSERT_HEAD(&ect->ect_events, e, e_content_type_link);
-
-  epg_event_changed(e);
+  return 1;
 }
 
 
 /**
  *
  */
-void
+int
 epg_event_set_episode(event_t *e, epg_episode_t *ee)
 {
+  if(e->e_episode.ee_season  == ee->ee_season &&
+     e->e_episode.ee_episode == ee->ee_episode && 
+     e->e_episode.ee_part    == ee->ee_part && 
+     !strcmp(e->e_episode.ee_onscreen ?: "", ee->ee_onscreen ?: ""))
+    return 0;
+
   e->e_episode.ee_season  = ee->ee_season;
   e->e_episode.ee_episode = ee->ee_episode;
   e->e_episode.ee_part    = ee->ee_part;
 
   tvh_str_set(&e->e_episode.ee_onscreen, ee->ee_onscreen);
+  return 1;
 }
 
 
@@ -362,7 +369,6 @@ epg_event_create(channel_t *ch, time_t start, time_t stop, int dvb_id,
 
     e->e_refcount = 1;
     e->e_channel = ch;
-    epg_event_changed(e);
 
     if(e == RB_FIRST(&ch->ch_epg_events)) {
       /* First in temporal order, arm expiration timer */
@@ -391,7 +397,6 @@ epg_event_create(channel_t *ch, time_t start, time_t stop, int dvb_id,
       printf("     New %s", ctime(&stop));
 #endif
       e->e_stop = stop;
-      epg_event_changed(e);
 
       if(e == ch->ch_epg_current) {
 	gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
