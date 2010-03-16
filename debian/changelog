@@ -18,6 +18,11 @@ hts-tvheadend (2.11-WIP) hts; urgency=low
   * Add parsing of episode information from XMLTV and display it in the
     WebUI EPG
 
+  * A bug caused the 'Automatic Recorder' tab grid not to reload
+    entries upon external change (Such as when a channel got deleted
+    or when a new auto recording was created from the EPG view). This
+    is now fixed.
+
 hts-tvheadend (2.10) hts; urgency=high
 
   * Fix a crash in HTSP server.

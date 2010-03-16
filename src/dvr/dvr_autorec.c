@@ -425,7 +425,7 @@ dvr_autorec_add(const char *title, const char *channel,
   /* Notify web clients that we have messed with the tables */
   
   m = htsmsg_create_map();
-  htsmsg_add_u32(m, "asyncreload", 1);
+  htsmsg_add_u32(m, "reload", 1);
   notify_by_msg("autorec", m);
 
   dvr_autorec_changed(dae);
@@ -481,6 +481,6 @@ autorec_destroy_by_channel(channel_t *ch)
 
   /* Notify web clients that we have messed with the tables */
   m = htsmsg_create_map();
-  htsmsg_add_u32(m, "asyncreload", 1);
+  htsmsg_add_u32(m, "reload", 1);
   notify_by_msg("autorec", m);
 }
