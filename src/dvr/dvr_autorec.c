@@ -286,9 +286,6 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
   if((dae = autorec_entry_find(id, maycreate)) == NULL)
     return NULL;
 
-  printf("autorec_record_update\n");
-  htsmsg_print(values);
-
   tvh_str_update(&dae->dae_creator, htsmsg_get_str(values, "creator"));
   tvh_str_update(&dae->dae_comment, htsmsg_get_str(values, "comment"));
 
