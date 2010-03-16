@@ -780,7 +780,8 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     if(stop < start)
       stop += 86400;
 
-    dvr_entry_create(ch, start, stop, title, NULL, hc->hc_representative, NULL);
+    dvr_entry_create(ch, start, stop, title, NULL, hc->hc_representative, 
+		     NULL, NULL);
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
@@ -810,7 +811,9 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(r, "channelInTitle", !!(dvr_flags & DVR_CHANNEL_IN_TITLE));
     htsmsg_add_u32(r, "dateInTitle",    !!(dvr_flags & DVR_DATE_IN_TITLE));
     htsmsg_add_u32(r, "timeInTitle",    !!(dvr_flags & DVR_TIME_IN_TITLE));
-    htsmsg_add_u32(r, "whitespaceInTitle",    !!(dvr_flags & DVR_WHITESPACE_IN_TITLE));
+    htsmsg_add_u32(r, "whitespaceInTitle", !!(dvr_flags & DVR_WHITESPACE_IN_TITLE));
+    htsmsg_add_u32(r, "titleDirs", !!(dvr_flags & DVR_DIR_PER_TITLE));
+    htsmsg_add_u32(r, "episodeInTitle", !!(dvr_flags & DVR_EPISODE_IN_TITLE));
 
     out = json_single_record(r, "dvrSettings");
 
@@ -843,6 +846,10 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
       flags |= DVR_TIME_IN_TITLE;
     if(http_arg_get(&hc->hc_req_args, "whitespaceInTitle") != NULL)
       flags |= DVR_WHITESPACE_IN_TITLE;
+    if(http_arg_get(&hc->hc_req_args, "titleDirs") != NULL)
+      flags |= DVR_DIR_PER_TITLE;
+    if(http_arg_get(&hc->hc_req_args, "episodeInTitle") != NULL)
+      flags |= DVR_EPISODE_IN_TITLE;
 
     dvr_flags_set(flags);
 
@@ -923,6 +930,9 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
 
     if(de->de_desc != NULL)
       htsmsg_add_str(m, "description", de->de_desc);
+
+    if(de->de_episode.ee_onscreen)
+      htsmsg_add_str(m, "episode", de->de_episode.ee_onscreen);
 
     htsmsg_add_u32(m, "id", de->de_id);
     htsmsg_add_u32(m, "start", de->de_start);

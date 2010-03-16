@@ -117,6 +117,11 @@ tvheadend.dvrschedule = function() {
 	    header: "Title",
 	    dataIndex: 'title'
 	},{
+	    width: 250,
+	    id:'episode',
+	    header: "Episode",
+	    dataIndex: 'episode'
+	},{
 	    width: 100,
 	    id:'start',
 	    header: "Start",
@@ -388,6 +393,7 @@ tvheadend.dvr = function() {
 	    {name: 'id'},
 	    {name: 'channel'},
 	    {name: 'title'},
+	    {name: 'episode'},
 	    {name: 'description'},
 	    {name: 'chicon'},
             {name: 'start', type: 'date', dateFormat: 'U' /* unix time */},
@@ -456,7 +462,8 @@ tvheadend.dvrsettings = function() {
     }, ['storage','postproc','retention','dayDirs',
 	'channelDirs','channelInTitle',
 	'dateInTitle','timeInTitle',
-	'preExtraTime', 'postExtraTime', 'whitespaceInTitle']);
+	'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 
+	'titleDirs', 'episodeInTitle']);
 
     var confpanel = new Ext.FormPanel({
 	title:'Digital Video Recorder',
@@ -495,14 +502,20 @@ tvheadend.dvrsettings = function() {
 	    fieldLabel: 'Make subdirectories per channel',
 	    name: 'channelDirs'
 	}), new Ext.form.Checkbox({
-	    fieldLabel: 'Include channel name in title',
+	    fieldLabel: 'Make subdirectories per title',
+	    name: 'titleDirs'
+	}), new Ext.form.Checkbox({
+	    fieldLabel: 'Include channel name in filename',
 	    name: 'channelInTitle'
 	}), new Ext.form.Checkbox({
-	    fieldLabel: 'Include date in title',
+	    fieldLabel: 'Include date in filename',
 	    name: 'dateInTitle'
 	}), new Ext.form.Checkbox({
-	    fieldLabel: 'Include time in title',
+	    fieldLabel: 'Include time in filename',
 	    name: 'timeInTitle'
+	}), new Ext.form.Checkbox({
+	    fieldLabel: 'Include episode in filename',
+	    name: 'episodeInTitle'
 	}), new Ext.form.Checkbox({
 	    fieldLabel: 'Replace whitespace in title with \'-\'',
 	    name: 'whitespaceInTitle'

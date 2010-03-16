@@ -23,6 +23,12 @@ hts-tvheadend (2.11-WIP) hts; urgency=low
     or when a new auto recording was created from the EPG view). This
     is now fixed.
 
+  * Add support for storing recorded events in a directory named after
+    the event. Ticket #150
+
+  * Add support for appending season and episode numbers to filenames
+    during recording.
+
 hts-tvheadend (2.10) hts; urgency=high
 
   * Fix a crash in HTSP server.

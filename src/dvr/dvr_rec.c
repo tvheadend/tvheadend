@@ -170,7 +170,6 @@ pvr_generate_filename(dvr_entry_t *de)
   int tally = 0;
   struct stat st;
   char *filename;
-  char *chname;
   struct tm tm;
 
   filename = strdup(de->de_ititle);
@@ -192,12 +191,24 @@ pvr_generate_filename(dvr_entry_t *de)
 
   if(dvr_flags & DVR_DIR_PER_CHANNEL) {
 
-    chname = strdup(de->de_channel->ch_name);
+    char *chname = strdup(de->de_channel->ch_name);
     cleanupfilename(chname);
     snprintf(path + strlen(path), sizeof(path) - strlen(path), 
 	     "/%s", chname);
     free(chname);
   }
+
+  /* Append per-title directory */
+
+  if(dvr_flags & DVR_DIR_PER_TITLE) {
+
+    char *title = strdup(de->de_title);
+    cleanupfilename(title);
+    snprintf(path + strlen(path), sizeof(path) - strlen(path), 
+	     "/%s", title);
+    free(title);
+  }
+
 
   /* */
   if(makedirs(path) != 0)

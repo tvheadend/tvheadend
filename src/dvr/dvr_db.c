@@ -67,21 +67,20 @@ dvrdb_changed(void)
  *
  */
 static void
-dvr_make_title(char *output, size_t outlen, const char *title,
-	       const char *channel, time_t starttime)
+dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
 {
   struct tm tm;
   char buf[40];
 
   if(dvr_flags & DVR_CHANNEL_IN_TITLE)
-    snprintf(output, outlen, "%s-", channel);
+    snprintf(output, outlen, "%s-", de->de_channel->ch_name);
   else
     output[0] = 0;
   
   snprintf(output + strlen(output), outlen - strlen(output),
-	   "%s", title);
+	   "%s", de->de_title);
 
-  localtime_r(&starttime, &tm);
+  localtime_r(&de->de_start, &tm);
   
   if(dvr_flags & DVR_DATE_IN_TITLE) {
     strftime(buf, sizeof(buf), "%F", &tm);
@@ -91,6 +90,19 @@ dvr_make_title(char *output, size_t outlen, const char *title,
   if(dvr_flags & DVR_TIME_IN_TITLE) {
     strftime(buf, sizeof(buf), "%H-%M", &tm);
     snprintf(output + strlen(output), outlen - strlen(output), "-%s", buf);
+  }
+
+  if(dvr_flags & DVR_EPISODE_IN_TITLE) {
+
+    if(de->de_episode.ee_season && de->de_episode.ee_episode)
+      snprintf(output + strlen(output), outlen - strlen(output), 
+	       ".S%02dE%02d",
+	       de->de_episode.ee_season, de->de_episode.ee_episode);
+
+    else if(de->de_episode.ee_episode)
+      snprintf(output + strlen(output), outlen - strlen(output), 
+	       ".E%02d",
+	       de->de_episode.ee_episode);
   }
 }
 
@@ -104,8 +116,7 @@ dvr_entry_link(dvr_entry_t *de)
   time_t now, preamble;
   char buf[100];
 
-  dvr_make_title(buf, sizeof(buf), de->de_title, de->de_channel->ch_name,
-		 de->de_start);
+  dvr_make_title(buf, sizeof(buf), de);
 
   de->de_ititle = strdup(buf);
 
@@ -137,7 +148,8 @@ dvr_entry_link(dvr_entry_t *de)
 dvr_entry_t *
 dvr_entry_create(channel_t *ch, time_t start, time_t stop, 
 		 const char *title, const char *description,
-		 const char *creator, dvr_autorec_entry_t *dae)
+		 const char *creator, dvr_autorec_entry_t *dae,
+		 epg_episode_t *ee)
 {
   dvr_entry_t *de;
   char tbuf[30];
@@ -168,14 +180,23 @@ dvr_entry_create(channel_t *ch, time_t start, time_t stop,
   de->de_title   = strdup(title);
   de->de_desc    = description ? strdup(description) : NULL;
 
+  if(ee != NULL) {
+    de->de_episode.ee_season  = ee->ee_season;
+    de->de_episode.ee_episode = ee->ee_episode;
+    de->de_episode.ee_part    = ee->ee_part;
+    tvh_str_set(&de->de_episode.ee_onscreen, ee->ee_onscreen);
+  }
+
   dvr_entry_link(de);
 
   t = de->de_start - de->de_start_extra * 60;
   localtime_r(&t, &tm);
   strftime(tbuf, sizeof(tbuf), "%c", &tm);
 
-  de->de_autorec = dae;
-  LIST_INSERT_HEAD(&dae->dae_spawns, de, de_autorec_link);
+  if(dae != NULL) {
+    de->de_autorec = dae;
+    LIST_INSERT_HEAD(&dae->dae_spawns, de, de_autorec_link);
+  }
 
   tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\" starting at %s, "
 	 "scheduled for recording by \"%s\"",
@@ -198,7 +219,7 @@ dvr_entry_create_by_event(event_t *e, const char *creator,
     return NULL;
 
   return dvr_entry_create(e->e_channel, e->e_start, e->e_stop, 
-			  e->e_title, e->e_desc, creator, dae);
+			  e->e_title, e->e_desc, creator, dae, &e->e_episode);
 }
 
 
@@ -235,6 +256,8 @@ dvr_entry_dec_ref(dvr_entry_t *de)
   free(de->de_title);
   free(de->de_ititle);
   free(de->de_desc);
+
+  free(de->de_episode.ee_onscreen);
 
   free(de);
 }
@@ -332,6 +355,15 @@ dvr_db_load_one(htsmsg_t *c, int id)
     }
   }
 
+  if(!htsmsg_get_s32(c, "season", &d))
+    de->de_episode.ee_season = d;
+  if(!htsmsg_get_s32(c, "episode", &d))
+    de->de_episode.ee_episode = d;
+  if(!htsmsg_get_s32(c, "part", &d))
+    de->de_episode.ee_part = d;
+
+  tvh_str_set(&de->de_episode.ee_onscreen, htsmsg_get_str(c, "episodename"));
+
   dvr_entry_link(de);
 }
 
@@ -392,6 +424,15 @@ dvr_entry_save(dvr_entry_t *de)
 
   if(de->de_autorec != NULL)
     htsmsg_add_str(m, "autorec", de->de_autorec->dae_id);
+
+  if(de->de_episode.ee_season)
+    htsmsg_add_u32(m, "season", de->de_episode.ee_season);
+  if(de->de_episode.ee_episode)
+    htsmsg_add_u32(m, "episode", de->de_episode.ee_episode);
+  if(de->de_episode.ee_part)
+    htsmsg_add_u32(m, "part", de->de_episode.ee_part);
+  if(de->de_episode.ee_onscreen)
+    htsmsg_add_str(m, "episodename", de->de_episode.ee_onscreen);
 
   hts_settings_save(m, "dvr/log/%d", de->de_id);
   htsmsg_destroy(m);
@@ -594,6 +635,12 @@ dvr_init(void)
  
     if(!htsmsg_get_u32(m, "whitespace-in-title", &u32) && u32)
       dvr_flags |= DVR_WHITESPACE_IN_TITLE;
+
+    if(!htsmsg_get_u32(m, "title-dir", &u32) && u32)
+      dvr_flags |= DVR_DIR_PER_TITLE;
+
+    if(!htsmsg_get_u32(m, "episode-in-title", &u32) && u32)
+      dvr_flags |= DVR_EPISODE_IN_TITLE;
    
     tvh_str_set(&dvr_postproc, htsmsg_get_str(m, "postproc"));
 
@@ -645,6 +692,8 @@ dvr_save(void)
   htsmsg_add_u32(m, "date-in-title",    !!(dvr_flags & DVR_DATE_IN_TITLE));
   htsmsg_add_u32(m, "time-in-title",    !!(dvr_flags & DVR_TIME_IN_TITLE));
   htsmsg_add_u32(m, "whitespace-in-title", !!(dvr_flags & DVR_WHITESPACE_IN_TITLE));
+  htsmsg_add_u32(m, "title-dir", !!(dvr_flags & DVR_DIR_PER_TITLE));
+  htsmsg_add_u32(m, "episode-in-title", !!(dvr_flags & DVR_EPISODE_IN_TITLE));
   if(dvr_postproc != NULL)
     htsmsg_add_str(m, "postproc", dvr_postproc);
 

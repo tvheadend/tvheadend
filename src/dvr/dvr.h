@@ -41,6 +41,8 @@ extern struct dvr_entry_list dvrentries;
 #define DVR_DATE_IN_TITLE	0x8
 #define DVR_TIME_IN_TITLE	0x10
 #define DVR_WHITESPACE_IN_TITLE	0x20
+#define DVR_DIR_PER_TITLE	0x40
+#define DVR_EPISODE_IN_TITLE	0x80
 
 LIST_HEAD(dvr_rec_stream_list, dvr_rec_stream);
 
@@ -90,6 +92,8 @@ typedef struct dvr_entry {
   char *de_ititle;     /* Internal title optionally with channelname
 			  date and time pre/post/fixed */
   char *de_desc;       /* Description in UTF-8 (from EPG) */
+
+  epg_episode_t de_episode;
 
   char *de_error;
 
@@ -176,7 +180,8 @@ dvr_entry_t *dvr_entry_create_by_event(event_t *e, const char *creator,
 
 dvr_entry_t *dvr_entry_create(channel_t *ch, time_t start, time_t stop, 
 			      const char *title, const char *description,
-			      const char *creator, dvr_autorec_entry_t *dae);
+			      const char *creator, dvr_autorec_entry_t *dae,
+			      epg_episode_t *ee);
 
 void dvr_init(void);
 
