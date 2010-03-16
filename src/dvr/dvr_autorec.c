@@ -215,13 +215,14 @@ autorec_record_build(dvr_autorec_entry_t *dae)
   if(dae->dae_comment != NULL)
     htsmsg_add_str(e, "comment", dae->dae_comment);
 
-  htsmsg_add_str(e, "channel", 
-		 dae->dae_channel ? dae->dae_channel->ch_name : "");
-  htsmsg_add_str(e, "tag",
-		 dae->dae_channel_tag ? dae->dae_channel_tag->ct_name : "");
+  if(dae->dae_channel != NULL)
+    htsmsg_add_str(e, "channel", dae->dae_channel->ch_name);
 
-  htsmsg_add_str(e, "contentgrp",
-		 dae->dae_ecg ? dae->dae_ecg->ecg_name : "");
+  if(dae->dae_channel_tag != NULL)
+    htsmsg_add_str(e, "tag", dae->dae_channel_tag->ct_name);
+
+  if(dae->dae_ecg != NULL)
+    htsmsg_add_str(e, "contentgrp",dae->dae_ecg->ecg_name);
 
   htsmsg_add_str(e, "title", dae->dae_title ?: "");
 
