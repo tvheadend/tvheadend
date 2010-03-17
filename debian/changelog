@@ -29,6 +29,10 @@ hts-tvheadend (2.11-WIP) hts; urgency=low
   * Add support for appending season and episode numbers to filenames
     during recording.
 
+  * Prior to this release the color (i.e. connection status) of the
+    CWC entries were not correctly updated when a connection was established
+    or lost. This is now fixed. Ticket #144
+
 hts-tvheadend (2.10) hts; urgency=high
 
   * Fix a crash in HTSP server.

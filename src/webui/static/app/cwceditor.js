@@ -85,26 +85,30 @@ tvheadend.cwceditor = function() {
     ]);
 
     var rec = Ext.data.Record.create([
-       'enabled','connected','hostname','port','username','password','deskey','emm','comment'
+	'enabled', 'connected', 'hostname', 'port', 'username',
+	'password', 'deskey', 'emm', 'comment'
     ]);
 
-    store = new Ext.data.JsonStore({
-       root: 'entries',
-       fields: rec,
-       url: "tablemgr",
-       autoLoad: true,
-       id: 'id',
-       baseParams: {table: 'cwc', op: "get"}
+    var store = new Ext.data.JsonStore({
+	root: 'entries',
+	fields: rec,
+	url: "tablemgr",
+	autoLoad: true,
+	id: 'id',
+	baseParams: {table: 'cwc', op: "get"}
     });
 
-    tvheadend.comet.on('cwcStatus', function(server) {
-        var rec = store.getById(server.id);
-        if(rec){
-            rec.set('connected', server.connected);
+    var grid = new tvheadend.tableEditor('Code Word Client', 'cwc', cm, rec,
+	[enabledColumn, emmColumn], store,
+	'config_cwc.html', 'key');
+    
+    tvheadend.comet.on('cwcStatus', function(msg) {
+        var rec = store.getById(msg.id);
+        if(rec) {
+            rec.set('connected', msg.connected);
+	    grid.getView().refresh();
         }
     });
 
-    return new tvheadend.tableEditor('Code Word Client', 'cwc', cm, rec,
-				     [enabledColumn, emmColumn], store,
-				     'config_cwc.html', 'key');
+    return grid;
 }
