@@ -456,7 +456,12 @@ cwc_send_ka(cwc_t *cwc)
   cwc_send_msg(cwc, buf, 3, 0, 0);
 }
 
-static void cwc_comet_status_update(cwc_t *cwc){
+/**
+ *
+ */
+static void 
+cwc_comet_status_update(cwc_t *cwc)
+{
   htsmsg_t *m = htsmsg_create_map();
 
   htsmsg_add_str(m, "id", cwc->cwc_id);
