@@ -189,7 +189,8 @@ typedef struct dvr_autorec_entry {
 void dvr_entry_create_by_autorec(event_t *e, dvr_autorec_entry_t *dae);
 
 dvr_entry_t *dvr_entry_create_by_event(event_t *e, const char *creator,
-				       dvr_autorec_entry_t *dae);
+				       dvr_autorec_entry_t *dae,
+				       dvr_prio_t pri);
 
 dvr_entry_t *dvr_entry_create(channel_t *ch, time_t start, time_t stop, 
 			      const char *title, const char *description,

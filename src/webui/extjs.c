@@ -727,7 +727,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
       return HTTP_STATUS_BAD_REQUEST;
     }
 
-    dvr_entry_create_by_event(e, hc->hc_representative, NULL);
+    dvr_entry_create_by_event(e, hc->hc_representative, NULL, DVR_PRIO_NORMAL);
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);

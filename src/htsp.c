@@ -500,7 +500,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   de = dvr_entry_create_by_event(e, 
 				 htsp->htsp_username ? 
 				 htsp->htsp_username : "anonymous",
-				 NULL);
+				 NULL, DVR_PRIO_NORMAL);
 
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
   

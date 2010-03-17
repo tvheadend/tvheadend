@@ -209,7 +209,8 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   de = dvr_entry_find_by_event(e);
 
   if((http_arg_get(&hc->hc_req_args, "rec")) != NULL) {
-    de = dvr_entry_create_by_event(e, hc->hc_username ?: "anonymous", NULL);
+    de = dvr_entry_create_by_event(e, hc->hc_username ?: "anonymous", NULL,
+				   DVR_PRIO_NORMAL);
   } else if(de != NULL && (http_arg_get(&hc->hc_req_args, "cancel")) != NULL) {
     de = dvr_entry_cancel(de);
   }

@@ -213,14 +213,14 @@ dvr_entry_create(channel_t *ch, time_t start, time_t stop,
  */
 dvr_entry_t *
 dvr_entry_create_by_event(event_t *e, const char *creator, 
-			  dvr_autorec_entry_t *dae)
+			  dvr_autorec_entry_t *dae, dvr_prio_t pri)
 {
   if(e->e_channel == NULL || e->e_title == NULL)
     return NULL;
 
   return dvr_entry_create(e->e_channel, e->e_start, e->e_stop, 
 			  e->e_title, e->e_desc, creator, dae, &e->e_episode,
-			  dae->dae_pri);
+			  pri);
 }
 
 
@@ -233,7 +233,7 @@ dvr_entry_create_by_autorec(event_t *e, dvr_autorec_entry_t *dae)
   char buf[200];
 
   snprintf(buf, sizeof(buf), "Auto recording by: %s", dae->dae_creator);
-  dvr_entry_create_by_event(e, buf, dae);
+  dvr_entry_create_by_event(e, buf, dae, dae->dae_pri);
 }
 
 
