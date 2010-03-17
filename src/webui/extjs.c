@@ -751,6 +751,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     const char *startstr = http_arg_get(&hc->hc_req_args, "starttime");
     const char *stopstr  = http_arg_get(&hc->hc_req_args, "stoptime");
     const char *channel  = http_arg_get(&hc->hc_req_args, "channelid");
+    const char *pri      = http_arg_get(&hc->hc_req_args, "pri");
 
     channel_t *ch = channel ? channel_find_by_identifier(atoi(channel)) : NULL;
 
@@ -781,7 +782,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
       stop += 86400;
 
     dvr_entry_create(ch, start, stop, title, NULL, hc->hc_representative, 
-		     NULL, NULL);
+		     NULL, NULL, dvr_pri2val(pri));
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
@@ -940,6 +941,8 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(m, "duration", de->de_stop - de->de_start);
     
     htsmsg_add_str(m, "creator", de->de_creator);
+
+    htsmsg_add_str(m, "pri", dvr_val2pri(de->de_pri));
 
     switch(de->de_sched_state) {
     case DVR_SCHEDULED:

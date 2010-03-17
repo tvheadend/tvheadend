@@ -44,6 +44,15 @@ extern struct dvr_entry_list dvrentries;
 #define DVR_DIR_PER_TITLE	0x40
 #define DVR_EPISODE_IN_TITLE	0x80
 
+typedef enum {
+  DVR_PRIO_IMPORTANT,
+  DVR_PRIO_HIGH,
+  DVR_PRIO_NORMAL,
+  DVR_PRIO_LOW,
+  DVR_PRIO_UNIMPORTANT,
+} dvr_prio_t;
+
+
 LIST_HEAD(dvr_rec_stream_list, dvr_rec_stream);
 
 
@@ -92,6 +101,8 @@ typedef struct dvr_entry {
   char *de_ititle;     /* Internal title optionally with channelname
 			  date and time pre/post/fixed */
   char *de_desc;       /* Description in UTF-8 (from EPG) */
+
+  dvr_prio_t de_pri;
 
   epg_episode_t de_episode;
 
@@ -165,6 +176,8 @@ typedef struct dvr_autorec_entry {
   channel_tag_t *dae_channel_tag;
   LIST_ENTRY(dvr_autorec_entry) dae_channel_tag_link;
 
+  dvr_prio_t dae_pri;
+
   struct dvr_entry_list dae_spawns;
 
 } dvr_autorec_entry_t;
@@ -181,7 +194,7 @@ dvr_entry_t *dvr_entry_create_by_event(event_t *e, const char *creator,
 dvr_entry_t *dvr_entry_create(channel_t *ch, time_t start, time_t stop, 
 			      const char *title, const char *description,
 			      const char *creator, dvr_autorec_entry_t *dae,
-			      epg_episode_t *ee);
+			      epg_episode_t *ee, dvr_prio_t pri);
 
 void dvr_init(void);
 
@@ -240,5 +253,12 @@ void dvr_autorec_check_event(event_t *e);
 void autorec_destroy_by_channel(channel_t *ch);
 
 dvr_autorec_entry_t *autorec_entry_find(const char *id, int create);
+
+/**
+ *
+ */
+dvr_prio_t dvr_pri2val(const char *s);
+
+const char *dvr_val2pri(dvr_prio_t v);
 
 #endif /* DVR_H  */

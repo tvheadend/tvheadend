@@ -52,6 +52,15 @@ static void dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt);
 static void dvr_spawn_postproc(dvr_entry_t *de);
 static void dvr_thread_epilog(dvr_entry_t *de);
 
+
+const static int prio2weight[5] = {
+  [DVR_PRIO_IMPORTANT]   = 500,
+  [DVR_PRIO_HIGH]        = 400,
+  [DVR_PRIO_NORMAL]      = 300,
+  [DVR_PRIO_LOW]         = 200,
+  [DVR_PRIO_UNIMPORTANT] = 100,
+};
+
 /**
  *
  */
@@ -59,6 +68,7 @@ void
 dvr_rec_subscribe(dvr_entry_t *de)
 {
   char buf[100];
+  int weight;
 
   assert(de->de_s == NULL);
 
@@ -68,8 +78,13 @@ dvr_rec_subscribe(dvr_entry_t *de)
 
   pthread_create(&de->de_thread, NULL, dvr_thread, de);
 
-  de->de_s = subscription_create_from_channel(de->de_channel, 1000, buf,
-					      &de->de_sq.sq_st, 0);
+  if(de->de_pri)
+    weight = prio2weight[de->de_pri];
+  else
+    weight = 300;
+
+  de->de_s = subscription_create_from_channel(de->de_channel, weight,
+					      buf, &de->de_sq.sq_st, 0);
 }
 
 /**

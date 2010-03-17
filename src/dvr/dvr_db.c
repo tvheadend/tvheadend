@@ -49,7 +49,6 @@ static void dvr_timer_expire(void *aux);
 static void dvr_timer_start_recording(void *aux);
 
 
-
 /**
  *
  */
@@ -149,7 +148,7 @@ dvr_entry_t *
 dvr_entry_create(channel_t *ch, time_t start, time_t stop, 
 		 const char *title, const char *description,
 		 const char *creator, dvr_autorec_entry_t *dae,
-		 epg_episode_t *ee)
+		 epg_episode_t *ee, dvr_prio_t pri)
 {
   dvr_entry_t *de;
   char tbuf[30];
@@ -168,6 +167,7 @@ dvr_entry_create(channel_t *ch, time_t start, time_t stop,
 
   de->de_start   = start;
   de->de_stop    = stop;
+  de->de_pri     = pri;
   if (ch->ch_dvr_extra_time_pre)
     de->de_start_extra = ch->ch_dvr_extra_time_pre;
   else
@@ -219,7 +219,8 @@ dvr_entry_create_by_event(event_t *e, const char *creator,
     return NULL;
 
   return dvr_entry_create(e->e_channel, e->e_start, e->e_stop, 
-			  e->e_title, e->e_desc, creator, dae, &e->e_episode);
+			  e->e_title, e->e_desc, creator, dae, &e->e_episode,
+			  dae->dae_pri);
 }
 
 
@@ -326,8 +327,7 @@ dvr_db_load_one(htsmsg_t *c, int id)
   de->de_stop    = stop;
   de->de_creator = strdup(creator);
   de->de_title   = strdup(title);
-  
-
+  de->de_pri     = dvr_pri2val(htsmsg_get_str(c, "pri"));
   
   if(htsmsg_get_s32(c, "start_extra", &d))
     de->de_start_extra = dvr_extra_time_pre;
@@ -338,6 +338,7 @@ dvr_db_load_one(htsmsg_t *c, int id)
     de->de_stop_extra = dvr_extra_time_post;
   else
     de->de_stop_extra = d;
+
 
   tvh_str_set(&de->de_desc,     htsmsg_get_str(c, "description"));
   tvh_str_set(&de->de_filename, htsmsg_get_str(c, "filename"));
@@ -416,6 +417,7 @@ dvr_entry_save(dvr_entry_t *de)
   if(de->de_desc != NULL)
     htsmsg_add_str(m, "description", de->de_desc);
 
+  htsmsg_add_str(m, "pri", dvr_val2pri(de->de_pri));
 
   if(de->de_error != NULL)
     htsmsg_add_str(m, "error", de->de_error);
@@ -874,4 +876,29 @@ dvr_get_filesize(dvr_entry_t *de)
     return 0;
 
   return st.st_size;
+}
+
+
+
+/**
+ *
+ */
+static struct strtab priotab[] = {
+  { "important",   DVR_PRIO_IMPORTANT },
+  { "high",        DVR_PRIO_HIGH },
+  { "normal",      DVR_PRIO_NORMAL },
+  { "low",         DVR_PRIO_LOW },
+  { "unimportant", DVR_PRIO_UNIMPORTANT },
+};
+
+dvr_prio_t
+dvr_pri2val(const char *s)
+{
+  return str2val_def(s, priotab, DVR_PRIO_NORMAL);
+}
+
+const char *
+dvr_val2pri(dvr_prio_t v)
+{
+  return val2str(v, priotab) ?: "invalid";
 }

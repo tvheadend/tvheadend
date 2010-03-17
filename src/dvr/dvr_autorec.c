@@ -137,6 +137,7 @@ autorec_entry_find(const char *id, int create)
     tally = MAX(atoi(id), tally);
   }
   dae->dae_weekdays = 0x7f;
+  dae->dae_pri = DVR_PRIO_NORMAL;
 
   dae->dae_id = strdup(id);
   TAILQ_INSERT_TAIL(&autorec_entries, dae, dae_link);
@@ -234,6 +235,8 @@ autorec_record_build(dvr_autorec_entry_t *dae)
 
   build_weekday_tags(str, sizeof(str), dae->dae_weekdays);
   htsmsg_add_str(e, "weekdays", str);
+
+  htsmsg_add_str(e, "pri", dvr_val2pri(dae->dae_pri));
 
   return e;
 }
@@ -339,6 +342,9 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
 
   if(!htsmsg_get_u32(values, "enabled", &u32))
     dae->dae_enabled = u32;
+
+  if((s = htsmsg_get_str(values, "pri")) != NULL)
+    dae->dae_pri = dvr_pri2val(s);
 
   dvr_autorec_changed(dae);
 

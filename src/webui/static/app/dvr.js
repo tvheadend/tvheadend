@@ -13,6 +13,20 @@ tvheadend.weekdays = new Ext.data.SimpleStore({
     ]
 });
 
+
+// This should be loaded from tvheadend
+tvheadend.dvrprio = new Ext.data.SimpleStore({
+    fields: ['identifier', 'name'],
+    id: 0,
+    data: [
+	['important',   'Important'],
+	['high',        'High'],
+	['normal',      'Normal'],
+	['low',         'Low'],
+	['unimportant', 'Unimportant'],
+    ]
+});
+
 /**
  *
  */
@@ -110,6 +124,10 @@ tvheadend.dvrschedule = function() {
        }
     } 
 
+   function renderPri(value) {
+       return tvheadend.dvrprio.getById(value).data.name;
+   }
+
     var dvrCm = new Ext.grid.ColumnModel([
 	{
 	    width: 250,
@@ -117,10 +135,16 @@ tvheadend.dvrschedule = function() {
 	    header: "Title",
 	    dataIndex: 'title'
 	},{
-	    width: 250,
+	    width: 100,
 	    id:'episode',
 	    header: "Episode",
 	    dataIndex: 'episode'
+	},{
+	    width: 100,
+	    id:'pri',
+	    header: "Priority",
+	    dataIndex: 'pri',
+	    renderer: renderPri
 	},{
 	    width: 100,
 	    id:'start',
@@ -214,6 +238,16 @@ tvheadend.dvrschedule = function() {
 		    name: 'stoptime',
 		    increment: 10,
 		    format: 'H:i'
+		}),
+		new Ext.form.ComboBox({
+		    store: tvheadend.dvrprio,
+		    value: "normal",
+		    triggerAction: 'all',
+		    mode: 'local',
+		    fieldLabel: 'Priority',
+                    valueField: 'identifier',
+                    displayField: 'name',
+		    name: 'pri'
 		}),
 		{
 		    allowBlank: false,
@@ -363,6 +397,20 @@ tvheadend.autoreceditor = function() {
 		valueField: 'identifier',
 		displayField: 'name'
 	    })
+	}, {
+	    header: "Priority",
+	    dataIndex: 'pri',
+	    width: 100,
+	    renderer: function(value, metadata, record, row, col, store) {
+		return tvheadend.dvrprio.getById(value).data.name;
+	    },
+	    editor: new fm.ComboBox({
+		store: tvheadend.dvrprio,
+		triggerAction: 'all',
+		mode: 'local',
+                valueField: 'identifier',
+                displayField: 'name'
+	    })
 	},{
 	    header: "Created by",
 	    dataIndex: 'creator',
@@ -394,6 +442,7 @@ tvheadend.dvr = function() {
 	    {name: 'channel'},
 	    {name: 'title'},
 	    {name: 'episode'},
+	    {name: 'pri'},
 	    {name: 'description'},
 	    {name: 'chicon'},
             {name: 'start', type: 'date', dateFormat: 'U' /* unix time */},
@@ -419,7 +468,7 @@ tvheadend.dvr = function() {
     
     tvheadend.autorecRecord = Ext.data.Record.create([
 	'enabled','title','channel','tag','creator','contentgrp','comment',
-	'weekdays'
+	'weekdays', 'pri'
     ]);
     
 

@@ -33,6 +33,9 @@ hts-tvheadend (2.11-WIP) hts; urgency=low
     CWC entries were not correctly updated when a connection was established
     or lost. This is now fixed. Ticket #144
 
+  * Add support for prioritized recordings. The user can chose among five
+    different priorities.
+
 hts-tvheadend (2.10) hts; urgency=high
 
   * Fix a crash in HTSP server.

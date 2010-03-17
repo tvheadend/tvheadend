@@ -490,7 +490,7 @@ rtsp_subscribe(http_connection_t *hc, rtsp_t *rtsp,
   char *components[5];
   int nc;
   char *url = hc->hc_url;
-  int pri = 500;
+  int pri = 150;
   int subflags = 0;
   th_subscription_t *s;
   char urlprefix[128];

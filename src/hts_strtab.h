@@ -42,6 +42,26 @@ str2val0(const char *str, struct strtab tab[], int l)
 
 #define str2val(str, tab) str2val0(str, tab, sizeof(tab) / sizeof(tab[0]))
 
+
+
+static int str2val0_def(const char *str, struct strtab tab[], int l, int def)
+     __attribute((unused));
+
+static int
+str2val0_def(const char *str, struct strtab tab[], int l, int def)
+{
+  int i;
+  if(str) 
+    for(i = 0; i < l; i++)
+      if(!strcasecmp(str, tab[i].str))
+	return tab[i].val;
+  return def;
+}
+
+#define str2val_def(str, tab, def) \
+ str2val0_def(str, tab, sizeof(tab) / sizeof(tab[0]), def)
+
+
 static const char * val2str0(int val, struct strtab tab[], int l)
      __attribute__((unused));
 
