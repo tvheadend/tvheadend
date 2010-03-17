@@ -68,6 +68,12 @@ autorec_cmp(dvr_autorec_entry_t *dae, event_t *e)
   if(dae->dae_enabled == 0 || dae->dae_weekdays == 0)
     return 0;
 
+  if(dae->dae_channel == NULL &&
+     dae->dae_channel_tag == NULL &&
+     dae->dae_ecg == NULL &&
+     dae->dae_title == NULL)
+    return 0; // Avoid super wildcard match
+
   if(dae->dae_channel != NULL &&
      dae->dae_channel != e->e_channel)
     return 0;
