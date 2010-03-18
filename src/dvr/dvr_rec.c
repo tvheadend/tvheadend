@@ -78,7 +78,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
 
   pthread_create(&de->de_thread, NULL, dvr_thread, de);
 
-  if(de->de_pri)
+  if(de->de_pri < 5)
     weight = prio2weight[de->de_pri];
   else
     weight = 300;
