@@ -128,11 +128,17 @@ subscription_unlink_transport(th_subscription_t *s, int reason)
 }
 
 
+static void
+subscription_reschedule_cb(void *aux)
+{
+  subscription_reschedule();
+}
+
 /**
  *
  */
-static void
-subscription_reschedule(void *aux)
+void
+subscription_reschedule(void)
 {
   th_subscription_t *s;
   th_transport_t *t, *skip;
@@ -141,7 +147,8 @@ subscription_reschedule(void *aux)
   int errorcode;
   lock_assert(&global_lock);
 
-  gtimer_arm(&subscription_reschedule_timer, subscription_reschedule, NULL, 2);
+  gtimer_arm(&subscription_reschedule_timer, 
+	     subscription_reschedule_cb, NULL, 60);
 
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
     if(s->ths_channel == NULL)
@@ -203,7 +210,7 @@ subscription_unsubscribe(th_subscription_t *s)
   free(s->ths_title);
   free(s);
 
-  subscription_reschedule(NULL);
+  subscription_reschedule();
 }
 
 
@@ -311,7 +318,7 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
   LIST_INSERT_HEAD(&ch->ch_subscriptions, s, ths_channel_link);
   s->ths_transport = NULL;
 
-  subscription_reschedule(NULL);
+  subscription_reschedule();
 
   if(s->ths_transport == NULL) {
     tvhlog(LOG_NOTICE, "subscription", 

@@ -889,6 +889,7 @@ transport_set_enable(th_transport_t *t, int enabled)
 
   t->tht_enabled = enabled;
   t->tht_config_save(t);
+  subscription_reschedule();
 }
 
 

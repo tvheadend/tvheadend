@@ -63,6 +63,8 @@ void subscription_unsubscribe(th_subscription_t *s);
 
 void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 
+void subscription_reschedule(void);
+
 th_subscription_t *subscription_create_from_channel(channel_t *ch,
 						    unsigned int weight,
 						    const char *name,

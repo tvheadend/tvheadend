@@ -805,6 +805,8 @@ tdmi_set_enable(th_dvb_mux_instance_t *tdmi, int enabled)
 
   if(enabled)
     mux_link_initial(tda, tdmi);
+
+  subscription_reschedule();
 }
 
 /**
