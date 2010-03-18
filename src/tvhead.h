@@ -187,18 +187,75 @@ TAILQ_HEAD(streaming_message_queue, streaming_message);
  * Streaming messages types
  */
 typedef enum {
-  SMT_PACKET,       // sm_data is a th_pkt. Unref when destroying msg
-  SMT_START,        // sm_data is a stream_start,
-                    // see transport_build_stream_start()
-  SMT_STOP ,        // no extra payload right now
-  SMT_TRANSPORT_STATUS, // sm_code is TSS_ ...something
-  SMT_EXIT,             // Used to signal exit to threads
-  SMT_NOSOURCE,
-  SMT_MPEGTS,      // sm_data is raw MPEG TS
+  /**
+   * Packet with data.
+   *
+   * sm_data points to a th_pkt. th_pkt will be unref'ed when 
+   * the message is destroyed
+   */
+  SMT_PACKET,
+
+  /**
+   * Stream start
+   *
+   * sm_data points to a stream_start struct.
+   * See transport_build_stream_start()
+   */
+
+  SMT_START,
+
+  /**
+   * Transport status
+   *
+   * Notification about status of source, see TSS_ flags
+   */
+  SMT_TRANSPORT_STATUS,
+
+  /**
+   * Streaming stop.
+   *
+   * End of streaming. If sm_code is 0 this was a result to an
+   * unsubscription. Otherwise the reason was external and the
+   * subscription scheduler will attempt to start a new streaming 
+   * session.
+   */
+  SMT_STOP,
+
+  /**
+   * Streaming unable to start.
+   *
+   * sm_code indicates reason. Scheduler will try to restart
+   */
+  SMT_NOSTART,
+
+  /**
+   * Raw MPEG TS data
+   */
+  SMT_MPEGTS,
+
+  /**
+   * Internal message to exit receiver
+   */
+  SMT_EXIT,
 } streaming_message_type_t;
 
 #define SMT_TO_MASK(x) (1 << ((unsigned int)x))
 
+
+#define SM_CODE_OK                        0
+
+#define SM_CODE_SOURCE_RECONFIGURED       100
+#define SM_CODE_BAD_SOURCE                101
+#define SM_CODE_SOURCE_DELETED            102
+#define SM_CODE_SUBSCRIPTION_OVERRIDDEN   103
+
+#define SM_CODE_NO_HW_ATTACHED            200
+#define SM_CODE_MUX_NOT_ENABLED           201
+#define SM_CODE_NOT_FREE                  202
+#define SM_CODE_TUNING_FAILED             203
+#define SM_CODE_SVC_NOT_ENABLED           204
+#define SM_CODE_BAD_SIGNAL                205
+#define SM_CODE_NO_SOURCE                 206
 
 /**
  * Streaming messages are sent from the pad to its receivers

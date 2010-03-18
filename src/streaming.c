@@ -172,7 +172,7 @@ streaming_msg_clone(streaming_message_t *src)
 
   case SMT_STOP:
   case SMT_TRANSPORT_STATUS:
-  case SMT_NOSOURCE:
+  case SMT_NOSTART:
     dst->sm_code = src->sm_code;
     break;
 
@@ -230,7 +230,7 @@ streaming_msg_free(streaming_message_t *sm)
   case SMT_TRANSPORT_STATUS:
     break;
 
-  case SMT_NOSOURCE:
+  case SMT_NOSTART:
     break;
 
   case SMT_MPEGTS:
@@ -289,5 +289,44 @@ streaming_queue_clear(struct streaming_message_queue *q)
   while((sm = TAILQ_FIRST(q)) != NULL) {
     TAILQ_REMOVE(q, sm, sm_link);
     streaming_msg_free(sm);
+  }
+}
+
+
+/**
+ *
+ */
+const char *
+streaming_code2txt(int code)
+{
+  switch(code) {
+  case SM_CODE_OK: return "OK";
+    
+  case SM_CODE_SOURCE_RECONFIGURED:
+    return "Soruce reconfigured";
+  case SM_CODE_BAD_SOURCE:
+    return "Source quality is bad";
+  case SM_CODE_SOURCE_DELETED:
+    return "Source deleted";
+  case SM_CODE_SUBSCRIPTION_OVERRIDDEN:
+    return "Subscription overridden";
+
+  case SM_CODE_NO_HW_ATTACHED:
+    return "No hardware present";
+  case SM_CODE_MUX_NOT_ENABLED:
+    return "Mux not enabled";
+  case SM_CODE_NOT_FREE:
+    return "Adapter in use by other subscription";
+  case SM_CODE_TUNING_FAILED:
+    return "Tuning failed";
+  case SM_CODE_SVC_NOT_ENABLED:
+    return "No service enabled";
+  case SM_CODE_BAD_SIGNAL:
+    return "Too bad signal quality";
+  case SM_CODE_NO_SOURCE:
+    return "No source available";
+
+  default:
+    return "Unknown reason";
   }
 }

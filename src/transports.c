@@ -61,12 +61,6 @@ const char *
 transport_nostart2txt(int code)
 {
   switch(code) {
-  case TRANSPORT_NOSTART_NO_HARDWARE:     return "No hardware present";
-  case TRANSPORT_NOSTART_MUX_NOT_ENABLED: return "Mux not enabled";
-  case TRANSPORT_NOSTART_NOT_FREE:        return "Adapter in use by other subscription";
-  case TRANSPORT_NOSTART_TUNING_FAILED:   return "Tuning failed";
-  case TRANSPORT_NOSTART_SVC_NOT_ENABLED: return "No service enabled";
-  case TRANSPORT_NOSTART_BAD_SIGNAL:      return "Too bad signal quality";
   }
   return "Unknown error";
 }
@@ -239,16 +233,17 @@ transport_stop(th_transport_t *t)
  * Global lock must be held
  */
 void
-transport_remove_subscriber(th_transport_t *t, th_subscription_t *s)
+transport_remove_subscriber(th_transport_t *t, th_subscription_t *s,
+			    int reason)
 {
   lock_assert(&global_lock);
 
   if(s == NULL) {
     while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL) {
-      subscription_unlink_transport(s);
+      subscription_unlink_transport(s, reason);
     }
   } else {
-    subscription_unlink_transport(s);
+    subscription_unlink_transport(s, reason);
   }
 
   if(LIST_FIRST(&t->tht_subscriptions) == NULL)
@@ -389,7 +384,7 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
   LIST_FOREACH(t, &ch->ch_transports, tht_ch_link) {
 
     if(!t->tht_enabled) {
-      error = TRANSPORT_NOSTART_SVC_NOT_ENABLED;
+      error = SM_CODE_SVC_NOT_ENABLED;
       if(loginfo != NULL) {
 	tvhlog(LOG_NOTICE, "Transport", "%s: Skipping \"%s\" -- not enabled",
 	       loginfo, transport_nicename(t));
@@ -398,7 +393,7 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
     }
 
     if(t->tht_quality_index(t) < 10) {
-      error = TRANSPORT_NOSTART_BAD_SIGNAL;
+      error = SM_CODE_BAD_SIGNAL;
       if(loginfo != NULL) {
 	tvhlog(LOG_NOTICE, "Transport", 
 	       "%s: Skipping \"%s\" -- Quality below 10%",
@@ -427,7 +422,7 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
     off = 0;
   }
 
-  error = TRANSPORT_NOSTART_NO_HARDWARE;
+  error = SM_CODE_NO_SOURCE;
 
   /* First, try all transports without stealing */
   for(i = off; i < cnt; i++) {
@@ -517,7 +512,7 @@ transport_destroy(th_transport_t *t)
   serviceprobe_delete(t);
 
   while((s = LIST_FIRST(&t->tht_subscriptions)) != NULL) {
-    subscription_unlink_transport(s);
+    subscription_unlink_transport(s, SM_CODE_SOURCE_DELETED);
   }
 
   if(t->tht_ch != NULL) {
@@ -840,7 +835,7 @@ transport_restart(th_transport_t *t, int had_components)
   lock_assert(&t->tht_stream_mutex);
 
   if(had_components) {
-    sm = streaming_msg_create_code(SMT_STOP, 0);
+    sm = streaming_msg_create_code(SMT_STOP, SM_CODE_SOURCE_RECONFIGURED);
     streaming_pad_deliver(&t->tht_streaming_pad, sm);
     streaming_msg_free(sm);
   }

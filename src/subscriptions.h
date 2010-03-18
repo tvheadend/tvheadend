@@ -77,7 +77,7 @@ th_subscription_t *subscription_create_from_transport(th_transport_t *t,
 
 void subscription_stop(th_subscription_t *s);
 
-void subscription_unlink_transport(th_subscription_t *s);
+void subscription_unlink_transport(th_subscription_t *s, int reason);
 
 void subscription_dummy_join(const char *id, int first);
 

@@ -85,5 +85,7 @@ void streaming_start_unref(streaming_start_t *ss);
 
 int streaming_pad_probe_type(streaming_pad_t *sp, 
 			     streaming_message_type_t smt);
+
+const char *streaming_code2txt(int code);
      
 #endif /* STREAMING_H_ */

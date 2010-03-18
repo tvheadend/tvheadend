@@ -113,10 +113,10 @@ dvb_transport_start(th_transport_t *t, unsigned int weight, int force_start)
   lock_assert(&global_lock);
 
   if(tda->tda_rootpath == NULL)
-    return TRANSPORT_NOSTART_NO_HARDWARE;
+    return SM_CODE_NO_HW_ATTACHED;
 
   if(t->tht_dvb_mux_instance && !t->tht_dvb_mux_instance->tdmi_enabled)
-    return TRANSPORT_NOSTART_MUX_NOT_ENABLED; /* Mux is disabled */
+    return SM_CODE_MUX_NOT_ENABLED; /* Mux is disabled */
 
   /* Check if adapter is idle, or already tuned */
 
@@ -127,7 +127,7 @@ dvb_transport_start(th_transport_t *t, unsigned int weight, int force_start)
     w = transport_compute_weight(&tda->tda_transports);
     if(w >= weight && !force_start)
       /* We are outranked by weight, cant use it */
-      return TRANSPORT_NOSTART_NOT_FREE;
+      return SM_CODE_NOT_FREE;
     
     dvb_adapter_clean(tda);
   }

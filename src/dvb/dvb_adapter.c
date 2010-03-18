@@ -504,7 +504,8 @@ dvb_adapter_clean(th_dvb_adapter_t *tda)
   lock_assert(&global_lock);
 
   while((t = LIST_FIRST(&tda->tda_transports)) != NULL)
-    transport_remove_subscriber(t, NULL); /* Flushes all subscribers */
+    /* Flush all subscribers */
+    transport_remove_subscriber(t, NULL, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
 }
 
 

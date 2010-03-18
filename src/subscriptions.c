@@ -104,7 +104,7 @@ subscription_link_transport(th_subscription_t *s, th_transport_t *t)
  * Called from transport code
  */
 void
-subscription_unlink_transport(th_subscription_t *s)
+subscription_unlink_transport(th_subscription_t *s, int reason)
 {
   streaming_message_t *sm;
   th_transport_t *t = s->ths_transport;
@@ -117,7 +117,7 @@ subscription_unlink_transport(th_subscription_t *s)
   if(LIST_FIRST(&t->tht_components) != NULL && 
      s->ths_state == SUBSCRIPTION_GOT_TRANSPORT) {
     // Send a STOP message to the subscription client
-    sm = streaming_msg_create_code(SMT_STOP, 0);
+    sm = streaming_msg_create_code(SMT_STOP, reason);
     streaming_target_deliver(s->ths_output, sm);
   }
 
@@ -153,7 +153,7 @@ subscription_reschedule(void *aux)
       if(s->ths_state != SUBSCRIPTION_BAD_TRANSPORT)
 	continue; /* And it seems to work ok, so we're happy */
       skip = s->ths_transport;
-      transport_remove_subscriber(s->ths_transport, s);
+      transport_remove_subscriber(s->ths_transport, s, SM_CODE_BAD_SOURCE);
     } else {
       skip = NULL;
     }
@@ -164,7 +164,7 @@ subscription_reschedule(void *aux)
     if(t == NULL) {
       /* No transport available */
 
-      sm = streaming_msg_create_code(SMT_NOSOURCE, errorcode);
+      sm = streaming_msg_create_code(SMT_NOSTART, errorcode);
       streaming_target_deliver(s->ths_output, sm);
       continue;
     }
@@ -195,7 +195,7 @@ subscription_unsubscribe(th_subscription_t *s)
   }
 
   if(t != NULL)
-    transport_remove_subscriber(t, s);
+    transport_remove_subscriber(t, s, SM_CODE_OK);
 
   if(s->ths_start_message != NULL) 
     streaming_msg_free(s->ths_start_message);

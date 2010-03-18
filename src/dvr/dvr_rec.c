@@ -463,6 +463,10 @@ dvr_thread(void *aux)
       break;
 
     case SMT_STOP:
+      tvhlog(sm->sm_code ? LOG_ERR : LOG_INFO, 
+	     "pvr", "Recording stopped: \"%s\": %s",
+	     de->de_filename ?: de->de_title,
+	     streaming_code2txt(sm->sm_code));
       dvr_thread_epilog(de);
       break;
 
@@ -475,10 +479,9 @@ dvr_thread(void *aux)
       }
       break;
 
-    case SMT_NOSOURCE:
-      dvr_rec_fatal_error(de, 
-			  "Unable to start -- %s",
-			  transport_nostart2txt(sm->sm_code));
+    case SMT_NOSTART:
+      dvr_rec_fatal_error(de, "Unable to start -- %s",
+			  streaming_code2txt(sm->sm_code));
       break;
 
     case SMT_MPEGTS:

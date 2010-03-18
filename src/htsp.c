@@ -1467,11 +1467,15 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
  * Send a 'subscriptionStart' stop
  */
 static void
-htsp_subscription_stop(htsp_subscription_t *hs)
+htsp_subscription_stop(htsp_subscription_t *hs, const char *err)
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "subscriptionStop");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
+
+  if(err != NULL)
+    htsmsg_add_str(m, "status", err);
+
   htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
 }
 
@@ -1525,15 +1529,15 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
     break;
 
   case SMT_STOP:
-    htsp_subscription_stop(hs);
+    htsp_subscription_stop(hs, streaming_code2txt(sm->sm_code));
     break;
 
   case SMT_TRANSPORT_STATUS:
     htsp_subscription_transport_status(hs, sm->sm_code);
     break;
 
-  case SMT_NOSOURCE:
-    htsp_subscription_status(hs, transport_nostart2txt(sm->sm_code));
+  case SMT_NOSTART:
+    htsp_subscription_status(hs,  streaming_code2txt(sm->sm_code));
     break;
 
   case SMT_MPEGTS:
