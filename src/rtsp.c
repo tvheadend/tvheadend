@@ -465,7 +465,7 @@ rtsp_streaming_input(void *opaque, streaming_message_t *sm)
 
   case SMT_NOSTART:
     pthread_mutex_lock(&rtsp->rtsp_start_mutex);
-    rtsp->rtsp_start_error = transport_nostart2txt(sm->sm_code);
+    rtsp->rtsp_start_error = streaming_code2txt(sm->sm_code);
     pthread_cond_signal(&rtsp->rtsp_start_cond);
     pthread_mutex_unlock(&rtsp->rtsp_start_mutex);
     break;

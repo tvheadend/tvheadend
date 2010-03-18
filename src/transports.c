@@ -57,18 +57,6 @@ static void transport_data_timeout(void *aux);
 /**
  *
  */
-const char *
-transport_nostart2txt(int code)
-{
-  switch(code) {
-  }
-  return "Unknown error";
-}
-
-
-/**
- *
- */
 static void
 stream_init(th_stream_t *st)
 {
@@ -432,7 +420,7 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
     if((r = transport_start(t, 0, 0)) == 0)
       return t;
     tvhlog(LOG_DEBUG, "Transport", "%s: Unable to use \"%s\" -- %s",
-	     loginfo, transport_nicename(t), transport_nostart2txt(r));
+	     loginfo, transport_nicename(t), streaming_code2txt(r));
   }
 
   /* Ok, nothing, try again, but supply our weight and thus, try to steal
@@ -446,7 +434,7 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
     if(loginfo != NULL)
       tvhlog(LOG_NOTICE, "Transport", 
 	     "%s: Skipping \"%s\" -- %s",
-	     loginfo, transport_nicename(t), transport_nostart2txt(r));
+	     loginfo, transport_nicename(t), streaming_code2txt(r));
   }
   if(errorp != NULL)
     *errorp = error;

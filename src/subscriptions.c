@@ -358,7 +358,7 @@ subscription_create_from_transport(th_transport_t *t, const char *name,
 
       tvhlog(LOG_INFO, "subscription", 
 	     "\"%s\" direct subscription failed -- %s", name,
-	     transport_nostart2txt(r));
+	     streaming_code2txt(r));
       return NULL;
     }
   }

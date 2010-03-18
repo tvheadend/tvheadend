@@ -99,8 +99,6 @@ const char *transport_nicename(th_transport_t *t);
 
 const char *transport_component_nicename(th_stream_t *st);
 
-const char *transport_nostart2txt(int code);
-
 const char *transport_tss2text(int flags);
 
 static inline int transport_tss_is_error(int flags)
