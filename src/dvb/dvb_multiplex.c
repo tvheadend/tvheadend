@@ -1076,6 +1076,7 @@ dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src)
   th_dvb_mux_instance_t *tdmi_dst;
   th_transport_t *t_src, *t_dst;
   th_stream_t *st_src, *st_dst;
+  caid_t *caid_src, *caid_dst;
 
   tdmi_dst = dvb_mux_create(dst, 
 			    &tdmi_src->tdmi_conf,
@@ -1120,7 +1121,15 @@ dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src)
 	
       memcpy(st_dst->st_lang, st_src->st_lang, 4);
       st_dst->st_frame_duration = st_src->st_frame_duration;
-      st_dst->st_caid           = st_src->st_caid;
+
+      LIST_FOREACH(caid_src, &st_src->st_caids, link) {
+	caid_dst = malloc(sizeof(caid_t));
+
+	caid_dst->caid       = caid_src->caid;
+	caid_dst->providerid = caid_src->providerid;
+	caid_dst->delete_me  = 0;
+	LIST_INSERT_HEAD(&st_dst->st_caids, caid_dst, link);
+      }
     }
 
     pthread_mutex_unlock(&t_dst->tht_stream_mutex);

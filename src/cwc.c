@@ -1063,17 +1063,23 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
   int section;
   ecm_section_t *es;
   char chaninfo[32];
+  caid_t *c;
 
   if(len > 4096)
     return;
 
-  if(cwc->cwc_caid != st->st_caid)
-    return;
-
-  if(!verify_provider(cwc, st->st_providerid))
-    return;
-
   if((data[0] & 0xf0) != 0x80)
+    return;
+
+  LIST_FOREACH(c, &st->st_caids, link) {
+    if(cwc->cwc_caid != c->caid)
+      break;
+  }
+
+  if(c == NULL)
+    return;
+
+  if(!verify_provider(cwc, c->providerid))
     return;
 
   switch(data[0]) {
@@ -1216,10 +1222,13 @@ static inline th_stream_t *
 cwc_find_stream_by_caid(th_transport_t *t, int caid)
 {
   th_stream_t *st;
+  caid_t *c;
 
   LIST_FOREACH(st, &t->tht_components, st_link) {
-    if(st->st_caid == caid)
-      return st;
+    LIST_FOREACH(c, &st->st_caids, link) {
+      if(c->caid == caid)
+	return st;
+    }
   }
   return NULL;
 }

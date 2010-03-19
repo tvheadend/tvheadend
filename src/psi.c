@@ -221,7 +221,7 @@ psi_build_pat(th_transport_t *t, uint8_t *buf, int maxlen, int pmtpid)
 #define PMT_UPDATE_NEW_CAID           0x100
 #define PMT_UPDATE_CA_PROVIDER_CHANGE 0x200
 #define PMT_UPDATE_PARENT_PID         0x400
-
+#define PMT_UPDATE_CAID_DELETED       0x800
 
 /**
  * Add a CA descriptor
@@ -230,6 +230,7 @@ static int
 psi_desc_add_ca(th_transport_t *t, uint16_t caid, uint32_t provid, uint16_t pid)
 {
   th_stream_t *st;
+  caid_t *c;
   int r = 0;
 
   if((st = transport_stream_find(t, pid)) == NULL) {
@@ -239,16 +240,26 @@ psi_desc_add_ca(th_transport_t *t, uint16_t caid, uint32_t provid, uint16_t pid)
 
   st->st_delete_me = 0;
 
-  if(st->st_caid != caid) {
-    st->st_caid = caid;
-    r |= PMT_UPDATE_NEW_CAID;
+  LIST_FOREACH(c, &st->st_caids, link) {
+    if(c->caid == caid) {
+      c->delete_me = 0;
+
+      if(c->providerid != provid) {
+	c->providerid = provid;
+	r |= PMT_UPDATE_CA_PROVIDER_CHANGE;
+      }
+      return r;
+    }
   }
 
-  if(st->st_providerid != provid) {
-    st->st_providerid = provid;
-    r |= PMT_UPDATE_CA_PROVIDER_CHANGE;
-  }
+  c = malloc(sizeof(caid_t));
 
+  c->caid = caid;
+  c->providerid = provid;
+  
+  c->delete_me = 0;
+  LIST_INSERT_HEAD(&st->st_caids, c, link);
+  r |= PMT_UPDATE_NEW_CAID;
   return r;
 }
 
@@ -259,10 +270,17 @@ static int
 psi_desc_ca(th_transport_t *t, const uint8_t *buffer, int size)
 {
   int r = 0;
-  int i = 0;    
+  int i;
   uint32_t provid = 0;
   uint16_t caid = (buffer[0] << 8) | buffer[1];
   uint16_t pid = ((buffer[2]&0x1F) << 8) | buffer[3];
+
+#if 0
+  printf("CA_DESC: ");
+  for(i = 0; i < size; i++)
+    printf("%02x.", buffer[i]);
+  printf("\n");
+#endif
 
   switch (caid & 0xFF00) {
   case 0x0100: // SECA/Mediaguard
@@ -365,6 +383,7 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
   int composition_id;
   int ancillary_id;
   int version;
+  caid_t *c, *cn;
 
   if(len < 9)
     return -1;
@@ -396,9 +415,15 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
   len -= 9;
 
   /* Mark all streams for deletion */
-  if(delete)
-    LIST_FOREACH(st, &t->tht_components, st_link)
+  if(delete) {
+    LIST_FOREACH(st, &t->tht_components, st_link) {
       st->st_delete_me = 1;
+
+      LIST_FOREACH(c, &st->st_caids, link)
+	c->delete_me = 1;
+
+    }
+  }
 
   while(dllen > 1) {
     dtag = ptr[0];
@@ -555,6 +580,17 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
   /* Scan again to see if any streams should be deleted */
   for(st = LIST_FIRST(&t->tht_components); st != NULL; st = next) {
     next = LIST_NEXT(st, st_link);
+
+    for(c = LIST_FIRST(&st->st_caids); c != NULL; c = cn) {
+      cn = LIST_NEXT(c, link);
+      if(c->delete_me) {
+	LIST_REMOVE(c, link);
+	free(c);
+	update |= PMT_UPDATE_CAID_DELETED;
+      }
+    }
+
+
     if(st->st_delete_me) {
       transport_stream_destroy(t, st);
       update |= PMT_UPDATE_STREAM_DELETED;
@@ -563,7 +599,7 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 
   if(update) {
     tvhlog(LOG_DEBUG, "PSI", "Transport \"%s\" PMT (version %d) updated"
-	   "%s%s%s%s%s%s%s%s%s%s%s",
+	   "%s%s%s%s%s%s%s%s%s%s%s%s",
 	   transport_nicename(t), version,
 	   update&PMT_UPDATE_PCR               ? ", PCR PID changed":"",
 	   update&PMT_UPDATE_NEW_STREAM        ? ", New elementary stream":"",
@@ -575,11 +611,19 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 	   update&PMT_UPDATE_NEW_CA_STREAM     ? ", New CA stream":"",
 	   update&PMT_UPDATE_NEW_CAID          ? ", New CAID":"",
 	   update&PMT_UPDATE_CA_PROVIDER_CHANGE? ", CA provider changed":"",
-	   update&PMT_UPDATE_PARENT_PID        ? ", Parent PID changed":"");
+	   update&PMT_UPDATE_PARENT_PID        ? ", Parent PID changed":"",
+	   update&PMT_UPDATE_CAID_DELETED      ? ", CAID deleted":"");
     
     transport_request_save(t);
-    if(t->tht_status == TRANSPORT_RUNNING)
-      transport_restart(t, had_components);
+
+    // Only restart if something that our clients worry about did change
+    if(update & !(PMT_UPDATE_NEW_CA_STREAM |
+		  PMT_UPDATE_NEW_CAID |
+		  PMT_UPDATE_CA_PROVIDER_CHANGE | 
+		  PMT_UPDATE_CAID_DELETED)) {
+      if(t->tht_status == TRANSPORT_RUNNING)
+	transport_restart(t, had_components);
+    }
   }
   return 0;
 }
@@ -848,11 +892,20 @@ psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
       htsmsg_add_str(sub, "language", st->st_lang);
 
     if(st->st_type == SCT_CA) {
-      htsmsg_add_str(sub, "caid", psi_caid2name(st->st_caid));
-      htsmsg_add_u32(sub, "caidnum", st->st_caid);
 
-      if(st->st_providerid)
-	htsmsg_add_u32(sub, "caproviderid", st->st_providerid);
+      caid_t *c;
+      htsmsg_t *v = htsmsg_create_list();
+
+      LIST_FOREACH(c, &st->st_caids, link) {
+	htsmsg_t *caid = htsmsg_create_map();
+
+	htsmsg_add_u32(caid, "caid", c->caid);
+	if(c->providerid)
+	  htsmsg_add_u32(caid, "providerid", c->providerid);
+	htsmsg_add_msg(v, NULL, caid);
+      }
+
+      htsmsg_add_msg(sub, "caidlist", v);
     }
 
     if(st->st_type == SCT_DVBSUB) {
@@ -872,6 +925,74 @@ psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
 
 
 /**
+ *
+ */
+static void
+add_caid(th_stream_t *st, uint16_t caid, uint32_t providerid)
+{
+  caid_t *c = malloc(sizeof(caid_t));
+  c->caid = caid;
+  c->providerid = providerid;
+  c->delete_me = 0;
+  LIST_INSERT_HEAD(&st->st_caids, c, link);
+}
+
+
+/**
+ *
+ */
+static void
+load_legacy_caid(htsmsg_t *c, th_stream_t *st)
+{
+  uint32_t a, b;
+  const char *v;
+
+  if(htsmsg_get_u32(c, "caproviderid", &b))
+    b = 0;
+
+  if(htsmsg_get_u32(c, "caidnum", &a)) {
+    if((v = htsmsg_get_str(c, "caid")) != NULL) {
+      int i = str2val(v, caidnametab);
+      a = i < 0 ? strtol(v, NULL, 0) : i;
+    } else {
+      return;
+    }
+  }
+
+  add_caid(st, a, b);
+}
+
+
+/**
+ *
+ */
+static void 
+load_caid(htsmsg_t *m, th_stream_t *st)
+{
+  htsmsg_field_t *f;
+  htsmsg_t *c, *v = htsmsg_get_list(m, "caidlist");
+  uint32_t a, b;
+
+  if(v == NULL)
+    return;
+
+  HTSMSG_FOREACH(f, v) {
+    if((c = htsmsg_get_map_by_field(f)) == NULL)
+      continue;
+    
+    if(htsmsg_get_u32(c, "caid", &a))
+      continue;
+
+    if(htsmsg_get_u32(c, "providerid", &b))
+      b = 0;
+
+    add_caid(st, a, b);
+  }
+}
+
+
+
+/**
  * Load transport info from htsmsg
  */
 void
@@ -879,11 +1000,10 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
 {
   htsmsg_t *c;
   htsmsg_field_t *f;
-  uint32_t u32;
+  uint32_t u32, pid;
   th_stream_t *st;
   streaming_component_type_t type;
   const char *v;
-  uint32_t pid;
 
   if(!htsmsg_get_u32(m, "pcr", &u32))
     t->tht_pcr_pid = u32;
@@ -919,14 +1039,9 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
     if(!htsmsg_get_u32(c, "frameduration", &u32))
       st->st_frame_duration = u32;
 
-    if(!htsmsg_get_u32(c, "caidnum", &u32)) {
-      st->st_caid = u32;
-    } else if((v = htsmsg_get_str(c, "caid")) != NULL) {
-      int i = str2val(v, caidnametab);
-      st->st_caid = i < 0 ? strtol(v, NULL, 0) : i;
-    }
-
-    htsmsg_get_u32(c, "caproviderid", &st->st_providerid);
+   
+    load_legacy_caid(c, st);
+    load_caid(c, st);
 
     if(type == SCT_DVBSUB) {
       if(!htsmsg_get_u32(c, "compositionid", &u32))

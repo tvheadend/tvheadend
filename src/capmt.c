@@ -411,6 +411,12 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
   capmt_t *capmt = ct->ct_capmt;
   int adapter_num = t->tht_dvb_mux_instance->tdmi_adapter->tda_adapter_num;
 
+  caid_t *c;
+
+  c = LIST_FIRST(&st->st_caids);
+  if(c == NULL)
+    return;
+
   if(len > 4096)
     return;
 
@@ -420,9 +426,9 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
       {        
         /* ECM */
         if (ct->ct_caid_last == -1)
-          ct->ct_caid_last = st->st_caid;
+          ct->ct_caid_last = c->caid;
         
-        uint16_t caid = st->st_caid;
+        uint16_t caid = c->caid;
         /* search ecmpid in list */
         capmt_caid_ecm_t *cce, *cce2;
         LIST_FOREACH(cce, &ct->ct_caid_ecm, cce_link)
@@ -432,11 +438,11 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
         if (!cce) 
         {
           tvhlog(LOG_DEBUG, "capmt",
-            "New caid 0x%04X for service \"%s\"", st->st_caid, t->tht_svcname);
+            "New caid 0x%04X for service \"%s\"", c->caid, t->tht_svcname);
 
           /* ecmpid not already seen, add it to list */
           cce             = calloc(1, sizeof(capmt_caid_ecm_t));
-          cce->cce_caid   = st->st_caid;
+          cce->cce_caid   = c->caid;
           cce->cce_ecmpid = st->st_pid;
           LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
         }
@@ -619,15 +625,16 @@ capmt_transport_start(th_transport_t *t)
     ct->ct_seq          = capmt->capmt_seq++;
 
     LIST_FOREACH(st, &t->tht_components, st_link) {
-      if (st->st_caid == 0) 
-        continue;
+      caid_t *c = LIST_FIRST(&st->st_caids);
+      if(c == NULL)
+	continue;
 
       tvhlog(LOG_DEBUG, "capmt",
-        "New caid 0x%04X for service \"%s\"", st->st_caid, t->tht_svcname);
+        "New caid 0x%04X for service \"%s\"", c->caid, t->tht_svcname);
 
       /* add it to list */
       cce             = calloc(1, sizeof(capmt_caid_ecm_t));
-      cce->cce_caid   = st->st_caid;
+      cce->cce_caid   = c->caid;
       cce->cce_ecmpid = st->st_pid;
       LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
 

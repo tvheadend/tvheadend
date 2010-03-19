@@ -29,6 +29,7 @@
 #include "access.h"
 #include "epg.h"
 #include "xmltv.h"
+#include "psi.h"
 #if ENABLE_LINUXDVB
 #include "dvr/dvr.h"
 #include "dvb/dvb.h"
@@ -106,13 +107,18 @@ dumptransports(htsbuf_queue_t *hq, struct th_transport_list *l, int indent)
 		   indent + 4, "");
 
     LIST_FOREACH(st, &t->tht_components, st_link) {
-      htsbuf_qprintf(hq, "%*.s%-16s %-5d %-5d %-5s %04x %08x\n", indent + 4, "",
+      caid_t *caid;
+      htsbuf_qprintf(hq, "%*.s%-16s %-5d %-5d %-5s\n", indent + 4, "",
 		     streaming_component_type2txt(st->st_type),
 		     st->st_index,
 		     st->st_pid,
-		     st->st_lang[0] ? st->st_lang : "",
-		     st->st_caid,
-		     st->st_providerid);
+		     st->st_lang[0] ? st->st_lang : "");
+      LIST_FOREACH(caid, &st->st_caids, link) {
+	htsbuf_qprintf(hq, "%*.sCAID %04x (%s) %08x\n", indent + 6, "",
+		       caid->caid,
+		       psi_caid2name(caid->caid),
+		       caid->providerid);
+      }
     }
 
     htsbuf_qprintf(hq, "\n");

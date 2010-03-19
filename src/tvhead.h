@@ -330,6 +330,19 @@ typedef void (pid_section_callback_t)(struct th_transport *t,
 				      struct th_stream *pi,
 				      const uint8_t *section, int section_len);
 
+LIST_HEAD(caid_list, caid);
+/**
+ *
+ */
+typedef struct caid {
+  LIST_ENTRY(caid) link;
+
+  uint8_t delete_me;
+  uint16_t caid;
+  uint32_t providerid;
+
+} caid_t;
+
 /*
  * Stream, one media component for a transport.
  *
@@ -419,10 +432,8 @@ typedef struct th_stream {
 
   struct th_pktref_queue st_durationq;
 
-  /* ca id for this stream */
-
-  uint16_t st_caid;
-  uint32_t st_providerid;
+  /* CA ID's on this stream */
+  struct caid_list st_caids;
 
   /* Remuxing information */
   AVRational st_tb;
