@@ -120,7 +120,7 @@ tvheadend.dvrschedule = function() {
 	   }
 	   return hours + ' hrs, ' + min + ' min';
        } else {
-	   return parsInt(value) + ' min';
+	   return parseInt(value) + ' min';
        }
     } 
 
