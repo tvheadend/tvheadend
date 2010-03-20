@@ -112,7 +112,7 @@ tvheadend.dvrschedule = function() {
        value = value / 60; /* Nevermind the seconds */
        
        if(value >= 60) {
-	   var min = value % 60;
+	   var min = parseInt(value % 60);
 	   var hours = parseInt(value / 60);
 
 	   if(min == 0) {
@@ -120,7 +120,7 @@ tvheadend.dvrschedule = function() {
 	   }
 	   return hours + ' hrs, ' + min + ' min';
        } else {
-	   return value + ' min';
+	   return parsInt(value) + ' min';
        }
     } 
 
