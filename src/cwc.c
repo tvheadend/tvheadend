@@ -49,6 +49,15 @@
 #define CWS_NETMSGSIZE 256
 #define CWS_FIRSTCMDNO 0xe0
 
+/**
+ * cards for which emm updates are handled
+ */
+typedef enum {
+  CARD_IRDETO,
+  CARD_CONAX,
+  CARD_UNKNOWN
+} card_type_t;
+
 typedef enum {
   MSG_CLIENT_2_SERVER_LOGIN = CWS_FIRSTCMDNO,
   MSG_CLIENT_2_SERVER_LOGIN_ACK,
@@ -195,6 +204,9 @@ typedef struct cwc {
   /* Emm forwarding */
   int cwc_forward_emm;
 
+  /* Card type */
+  card_type_t cwc_card_type;
+  
   /* From configuration */
 
   uint8_t cwc_confedkey[14];
@@ -221,7 +233,9 @@ typedef struct cwc {
 
 static void cwc_transport_destroy(th_descrambler_t *td);
 extern char *cwc_krypt(const char *key, const char *salt);
-
+static void cwc_detect_card_type(cwc_t *cwc);
+void cwc_emm_conax(cwc_t *cwc, uint8_t *data, int len);
+void cwc_emm_irdeto(cwc_t *cwc, uint8_t *data, int len);
 
 /**
  *
@@ -516,6 +530,8 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 	 cwc->cwc_ua[0], cwc->cwc_ua[1], cwc->cwc_ua[2], cwc->cwc_ua[3], cwc->cwc_ua[4], cwc->cwc_ua[5], cwc->cwc_ua[6], cwc->cwc_ua[7],
 	 nprov);
 
+  cwc_detect_card_type(cwc);
+
   msg  += 15;
   plen -= 12;
 
@@ -554,22 +570,54 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 		       cwc->cwc_ua[4] || cwc->cwc_ua[5] ||
 		       cwc->cwc_ua[6] || cwc->cwc_ua[7]);
 
-    if (!emm_allowed)
-      tvhlog(LOG_INFO, "cwc", "%s: Will not forward EMMs (not allowed by server)",
+    if (!emm_allowed) {
+      tvhlog(LOG_INFO, "cwc", 
+	     "%s: Will not forward EMMs (not allowed by server)",
 	     cwc->cwc_hostname);
-    else if ((cwc->cwc_caid>>8) != 0x0b)
-      tvhlog(LOG_INFO, "cwc", "%s: Will not forward EMMs (unsupported ca system)",
-	     cwc->cwc_hostname);
-    else {
+    } else if (cwc->cwc_card_type != CARD_UNKNOWN) {
       tvhlog(LOG_INFO, "cwc", "%s: Will forward EMMs",
 	     cwc->cwc_hostname);
       cwc->cwc_forward_emm = 1;
+    } else {
+      tvhlog(LOG_INFO, "cwc", 
+	     "%s: Will not forward EMMs (unsupported CA system)",
+	     cwc->cwc_hostname);
     }
   }
 
   return 0;
 }
 
+/**
+ * Detects the cam card type
+ * If you want to add another card, have a look at
+ * http://www.dvbservices.com/identifiers/ca_system_id?page=3
+ * 
+ * based on the equivalent in sasc-ng
+ */
+static void
+cwc_detect_card_type(cwc_t *cwc)
+{
+  uint8_t c_sys = cwc->cwc_caid >> 8;
+		
+  switch(c_sys) {
+  case 0x17:
+  case 0x06: 
+    cwc->cwc_card_type = CARD_IRDETO;
+    tvhlog(LOG_INFO, "cwc", "%s: irdeto card",
+	   cwc->cwc_hostname);
+    break;
+  case 0x0b:
+    cwc->cwc_card_type = CARD_CONAX;
+    tvhlog(LOG_INFO, "cwc", "%s: conax card",
+	   cwc->cwc_hostname);
+    break;
+  default:
+    cwc->cwc_card_type = CARD_UNKNOWN;
+    tvhlog(LOG_INFO, "cwc", "%s: unknown card",
+	   cwc->cwc_hostname);
+  }
+}
 
 /**
  * Login command
@@ -1036,16 +1084,71 @@ cwc_emm(uint8_t *data, int len)
 
   lock_assert(&global_lock);
 
-  TAILQ_FOREACH(cwc, &cwcs, cwc_link)
-    if(cwc->cwc_forward_emm && cwc->cwc_writer_running &&
-       data[0] == 0x82 /* Conax */ ) {
-      int i;
-      for (i=0; i < cwc->cwc_num_providers; i++)
-	if (memcmp(&data[3], &cwc->cwc_providers[i].sa[1], 7) == 0) {
-	  cwc_send_msg(cwc, data, len, 0, 1);
-	  break;
-	}
+  TAILQ_FOREACH(cwc, &cwcs, cwc_link) {
+    if(cwc->cwc_forward_emm && cwc->cwc_writer_running) {
+      switch (cwc->cwc_card_type) {
+      case CARD_CONAX:
+	cwc_emm_conax(cwc, data, len);
+	break;
+      case CARD_IRDETO:
+	cwc_emm_irdeto(cwc, data, len);
+	break;
+      case CARD_UNKNOWN:
+	break;
+      }
     }
+  }
+}
+
+
+/**
+ * conax emm handler
+ */
+void
+cwc_emm_conax(cwc_t *cwc, uint8_t *data, int len)
+{
+  if (data[0] == 0x82) {
+    int i;
+    for (i=0; i < cwc->cwc_num_providers; i++) {
+      if (memcmp(&data[3], &cwc->cwc_providers[i].sa[1], 7) == 0) {
+        cwc_send_msg(cwc, data, len, 0, 1);
+        break;
+      }
+    }
+  }
+}
+
+
+/**
+ * irdeto emm handler
+ * inspired by opensasc-ng, https://opensvn.csie.org/traccgi/opensascng/
+ */
+void
+cwc_emm_irdeto(cwc_t *cwc, uint8_t *data, int len)
+{
+  int emm_mode = data[3] >> 3;
+  int emm_len = data[3] & 0x07;
+  int match = 0;
+  
+  if (emm_mode & 0x10){
+    // try to match card
+    match = (emm_mode == cwc->cwc_ua[4] && 
+	     (!emm_len || // zero length
+	      !memcmp(&data[4], &cwc->cwc_ua[5], emm_len))); // exact match
+  } else {
+    // try to match provider
+    int i;
+    for(i=0; i < cwc->cwc_num_providers; i++) {
+      match = (emm_mode == cwc->cwc_providers[i].sa[4] && 
+	       (!emm_len || // zero length
+		!memcmp(&data[4], &cwc->cwc_providers[i].sa[5], emm_len)));
+      // exact match
+      if (match) break;
+    }
+  }
+  
+  if (match)
+    cwc_send_msg(cwc, data, len, 0, 1);
 }
 
 
