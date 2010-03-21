@@ -188,6 +188,8 @@ typedef struct dvr_autorec_entry {
   
   epg_content_group_t *dae_ecg;
 
+  int dae_approx_time; /* Minutes from midnight */
+
   int dae_weekdays;
 
   channel_t *dae_channel;

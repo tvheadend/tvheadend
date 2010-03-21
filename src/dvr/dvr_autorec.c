@@ -25,6 +25,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <math.h>
 
 #include "tvhead.h"
 #include "settings.h"
@@ -97,6 +98,17 @@ autorec_cmp(dvr_autorec_entry_t *dae, event_t *e)
     if(e->e_title == NULL ||
        regexec(&dae->dae_title_preg, e->e_title, 0, NULL, 0))
     return 0;
+  }
+
+  if(dae->dae_approx_time != 0) {
+    struct tm a_time;
+    struct tm ev_time;
+    localtime_r(&e->e_start, &a_time);
+    localtime_r(&e->e_start, &ev_time);
+    a_time.tm_min = dae->dae_approx_time % 60;
+    a_time.tm_hour = dae->dae_approx_time / 60;
+    if(abs(mktime(&a_time) - mktime(&ev_time)) > 900)
+      return 0;
   }
 
   if(dae->dae_weekdays != 0x7f) {
@@ -233,6 +245,8 @@ autorec_record_build(dvr_autorec_entry_t *dae)
 
   htsmsg_add_str(e, "title", dae->dae_title ?: "");
 
+  htsmsg_add_u32(e, "approx_time", dae->dae_approx_time);
+
   build_weekday_tags(str, sizeof(str), dae->dae_weekdays);
   htsmsg_add_str(e, "weekdays", str);
 
@@ -336,6 +350,17 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
 
   if((s = htsmsg_get_str(values, "contentgrp")) != NULL)
     dae->dae_ecg = epg_content_group_find_by_name(s);
+
+  if((s = htsmsg_get_str(values, "approx_time")) != NULL) {
+    if(strchr(s, ':') != NULL) {
+      // formatted time string - convert
+      dae->dae_approx_time = (atoi(s) * 60) + atoi(s + 3);
+    } else if(strlen(s) == 0) {
+      dae->dae_approx_time = 0;
+    } else {
+      dae->dae_approx_time = atoi(s);
+    }
+  }
 
   if((s = htsmsg_get_str(values, "weekdays")) != NULL)
     dae->dae_weekdays = build_weekday_mask(s);

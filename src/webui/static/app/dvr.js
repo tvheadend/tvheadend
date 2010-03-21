@@ -412,6 +412,28 @@ tvheadend.autoreceditor = function() {
 		displayField: 'name'
 	    })
 	}, {
+        header: "Starting Around",
+        dataIndex: 'approx_time',
+        renderer: function(value, metadata, record, row, col, store) {
+            if (typeof value === 'string')
+                return value;
+
+            if (value === 0)
+                return '';
+
+            var hours = Math.floor(value / 60);
+            var mins = value % 60;
+            var dt = new Date();
+            dt.setHours(hours);
+            dt.setMinutes(mins);
+            return dt.format('H:i');
+        },
+        editor: new Ext.form.TimeField({
+            allowBlank: true,
+            increment: 10,
+            format: 'H:i'
+        })
+	}, {
 	    header: "Priority",
 	    dataIndex: 'pri',
 	    width: 100,
@@ -505,7 +527,7 @@ tvheadend.dvr = function() {
     
     tvheadend.autorecRecord = Ext.data.Record.create([
 	'enabled','title','channel','tag','creator','contentgrp','comment',
-	'weekdays', 'pri'
+	'weekdays', 'pri', 'approx_time'
     ]);
     
 
