@@ -1072,7 +1072,7 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
     return;
 
   LIST_FOREACH(c, &st->st_caids, link) {
-    if(cwc->cwc_caid != c->caid)
+    if(cwc->cwc_caid == c->caid)
       break;
   }
 
