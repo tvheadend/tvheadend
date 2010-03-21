@@ -117,7 +117,7 @@ tvheadend.dvrschedule = function() {
 
     function renderDate(value){
 	var dt = new Date(value);
-	return dt.format('l H:i');
+	return dt.format('D j M H:i');
     } 
 
    function renderDuration(value){
