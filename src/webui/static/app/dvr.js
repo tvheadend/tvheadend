@@ -61,14 +61,15 @@ tvheadend.dvrDetails = function(entry) {
     });
 
     switch(entry.schedstate) {
-    case 'sched':
+    case 'scheduled':
 	win.addButton({
 	    handler: cancelEvent,
 	    text: "Remove from schedule"
 	});
 	break;
 
-    case 'rec':
+    case 'recording':
+    case 'recordingError':
 	win.addButton({
 	    handler: cancelEvent, 
 	    text: "Abort recording"
@@ -103,6 +104,17 @@ tvheadend.dvrDetails = function(entry) {
  */
 tvheadend.dvrschedule = function() {
 
+    var actions = new Ext.ux.grid.RowActions({
+	header:'',
+	dataIndex: 'actions',
+	width: 45,
+	actions: [
+	    {
+		iconIndex:'schedstate'
+	    }
+	]
+    });
+
     function renderDate(value){
 	var dt = new Date(value);
 	return dt.format('l H:i');
@@ -129,6 +141,7 @@ tvheadend.dvrschedule = function() {
    }
 
     var dvrCm = new Ext.grid.ColumnModel([
+	actions,
 	{
 	    width: 250,
 	    id:'title',
@@ -282,6 +295,7 @@ tvheadend.dvrschedule = function() {
 	iconCls: 'clock',
 	store: tvheadend.dvrStore,
 	cm: dvrCm,
+	plugins: [actions],
         viewConfig: {forceFit:true},
 	tbar: [
 	    {
@@ -461,8 +475,31 @@ tvheadend.dvr = function() {
     });
     
     tvheadend.comet.on('dvrdb', function(m) {
+
+	console.log(m);
+
 	if(m.reload != null)
             tvheadend.dvrStore.reload();
+
+	if(m.updateEntry != null) {
+	    r = tvheadend.dvrStore.getById(m.id)
+	    if(typeof r === 'undefined') {
+		tvheadend.dvrStore.reload();
+		return;
+	    }
+
+	    console.log(r);
+
+	    r.data.status = m.status;
+	    r.data.schedstate = m.schedstate;
+
+	    console.log(r);
+
+	    tvheadend.dvrStore.afterEdit(r);
+	    tvheadend.dvrStore.fireEvent('updated', 
+					 tvheadend.dvrStore, r, 
+					 Ext.data.Record.COMMIT);
+	}
     });
 
     

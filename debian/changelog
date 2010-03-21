@@ -36,6 +36,11 @@ hts-tvheadend (2.11-WIP) hts; urgency=low
   * Add support for prioritized recordings. The user can chose among five
     different priorities.
 
+  * Fix various issues realted to the Recording Schedule user interface.
+    The UI now includes better visual feedback on what's going on and if
+    there are errors. Also recordings that do not complete successfully
+    are correctly reported as failed entries. Ticket #131
+
 hts-tvheadend (2.10) hts; urgency=high
 
   * Fix a crash in HTSP server.

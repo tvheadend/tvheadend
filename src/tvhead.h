@@ -244,6 +244,8 @@ typedef enum {
 
 #define SM_CODE_OK                        0
 
+#define SM_CODE_UNDEFINED_ERROR           1
+
 #define SM_CODE_SOURCE_RECONFIGURED       100
 #define SM_CODE_BAD_SOURCE                101
 #define SM_CODE_SOURCE_DELETED            102
@@ -256,6 +258,12 @@ typedef enum {
 #define SM_CODE_SVC_NOT_ENABLED           204
 #define SM_CODE_BAD_SIGNAL                205
 #define SM_CODE_NO_SOURCE                 206
+
+#define SM_CODE_ABORTED                   300
+
+#define SM_CODE_NO_DESCRAMBLER            400
+#define SM_CODE_NO_ACCESS                 401
+#define SM_CODE_NO_INPUT                  402
 
 /**
  * Streaming messages are sent from the pad to its receivers

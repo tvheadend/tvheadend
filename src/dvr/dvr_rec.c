@@ -91,7 +91,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
  *
  */
 void
-dvr_rec_unsubscribe(dvr_entry_t *de)
+dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
 {
   assert(de->de_s != NULL);
 
@@ -101,6 +101,8 @@ dvr_rec_unsubscribe(dvr_entry_t *de)
   
   pthread_join(de->de_thread, NULL);
   de->de_s = NULL;
+
+  de->de_last_error = stopcode;
 }
 
 
@@ -276,6 +278,19 @@ dvr_rec_fatal_error(dvr_entry_t *de, const char *fmt, ...)
 	 de->de_filename ?: de->de_title, msgbuf);
 }
 
+
+/**
+ *
+ */
+static void
+dvr_rec_set_state(dvr_entry_t *de, dvr_rs_state_t newstate, int error)
+{
+  de->de_rec_state = newstate;
+  de->de_last_error = error;
+  if(error)
+    de->de_errors++;
+  dvr_entry_notify(de);
+}
 
 /**
  *
@@ -458,30 +473,71 @@ dvr_thread(void *aux)
       pthread_mutex_lock(&global_lock);
       dvr_rec_start(de, sm->sm_data);
       de->de_header_written = 0;
-      de->de_rec_state = DE_RS_WAIT_AUDIO_LOCK;
+      dvr_rec_set_state(de, DVR_RS_WAIT_AUDIO_LOCK, 0);
       pthread_mutex_unlock(&global_lock);
       break;
 
     case SMT_STOP:
-      tvhlog(sm->sm_code ? LOG_ERR : LOG_INFO, 
-	     "pvr", "Recording stopped: \"%s\": %s",
-	     de->de_filename ?: de->de_title,
-	     streaming_code2txt(sm->sm_code));
+
+      if(sm->sm_code == 0) {
+	/* Completed */
+
+	de->de_last_error = 0;
+
+	tvhlog(LOG_INFO, 
+	       "pvr", "Recording completed: \"%s\"",
+	       de->de_filename ?: de->de_title);
+
+      } else {
+
+	if(de->de_last_error != sm->sm_code) {
+	  dvr_rec_set_state(de, DVR_RS_ERROR, sm->sm_code);
+
+	  tvhlog(LOG_ERR,
+		 "pvr", "Recording stopped: \"%s\": %s",
+		 de->de_filename ?: de->de_title,
+		 streaming_code2txt(sm->sm_code));
+	}
+      }
+
       dvr_thread_epilog(de);
       break;
 
     case SMT_TRANSPORT_STATUS:
+      printf("TSS: %x\n", sm->sm_code);
       if(sm->sm_code & TSS_PACKETS) {
 	
       } else if(sm->sm_code & (TSS_GRACEPERIOD | TSS_ERRORS)) {
-	dvr_rec_fatal_error(de, "Source problems: %s", 
-			    transport_tss2text(sm->sm_code));
+
+	int code = SM_CODE_UNDEFINED_ERROR;
+
+
+	if(sm->sm_code & TSS_NO_DESCRAMBLER)
+	  code = SM_CODE_NO_DESCRAMBLER;
+
+	if(sm->sm_code & TSS_NO_ACCESS)
+	  code = SM_CODE_NO_ACCESS;
+
+	if(de->de_last_error != code) {
+	  dvr_rec_set_state(de, DVR_RS_ERROR, code);
+	  tvhlog(LOG_ERR,
+		 "pvr", "Streaming error: \"%s\": %s",
+		 de->de_filename ?: de->de_title,
+		 streaming_code2txt(code));
+	}
       }
       break;
 
     case SMT_NOSTART:
-      dvr_rec_fatal_error(de, "Unable to start -- %s",
-			  streaming_code2txt(sm->sm_code));
+
+      if(de->de_last_error != sm->sm_code) {
+	dvr_rec_set_state(de, DVR_RS_ERROR, sm->sm_code);
+
+	tvhlog(LOG_ERR,
+	       "pvr", "Recording unable to start: \"%s\": %s",
+	       de->de_filename ?: de->de_title,
+	       streaming_code2txt(sm->sm_code));
+      }
       break;
 
     case SMT_MPEGTS:
@@ -554,7 +610,7 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
   default:
     break;
 
-  case DE_RS_WAIT_AUDIO_LOCK:
+  case DVR_RS_WAIT_AUDIO_LOCK:
     if(ctx->codec_type != CODEC_TYPE_AUDIO || drs->drs_decoded)
       break;
 
@@ -575,10 +631,10 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
     }
 
     if(is_all_decoded(de, CODEC_TYPE_AUDIO))
-      de->de_rec_state = DE_RS_WAIT_VIDEO_LOCK;
+      dvr_rec_set_state(de, DVR_RS_WAIT_VIDEO_LOCK, 0);
     break;
     
-  case DE_RS_WAIT_VIDEO_LOCK:
+  case DVR_RS_WAIT_VIDEO_LOCK:
     if(ctx->codec_type != CODEC_TYPE_VIDEO || drs->drs_decoded)
       break;
 
@@ -601,7 +657,7 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
 
     /* All Audio & Video decoded, start recording */
 
-    de->de_rec_state = DE_RS_RUNNING;
+    dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
 
     if(!de->de_header_written) {
 
@@ -631,7 +687,7 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
     }
     /* FALLTHRU */
       
-  case DE_RS_RUNNING:
+  case DVR_RS_RUNNING:
      
     if(de->de_header_written == 0)
       break;
@@ -642,7 +698,7 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
       
       de->de_ts_com_start = pkt->pkt_dts;
 
-      de->de_rec_state = DE_RS_COMMERCIAL;
+      dvr_rec_set_state(de, DVR_RS_COMMERCIAL, 0);
       break;
     }
   outputpacket:
@@ -665,7 +721,7 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
     break;
 
 
-  case DE_RS_COMMERCIAL:
+  case DVR_RS_COMMERCIAL:
 
     if(pkt->pkt_commercial != COMMERCIAL_YES &&
        st->codec->codec->type == CODEC_TYPE_VIDEO &&
@@ -674,7 +730,7 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
       /* Switch out of commercial mode */
       
       de->de_ts_com_offset += (pkt->pkt_dts - de->de_ts_com_start);
-      de->de_rec_state = DE_RS_RUNNING;
+      dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
 
       tvhlog(LOG_INFO, "dvr", 
 	     "%s - Skipped %" PRId64 " seconds of commercials",
@@ -716,7 +772,8 @@ dvr_spawn_postproc(dvr_entry_t *de)
   fmap['C'] = de->de_creator; /* user who created this recording */
   fmap['t'] = de->de_title; /* program title */
   fmap['d'] = de->de_desc; /* program description */
-  fmap['e'] = de->de_error; /* error message, empty if no error (FIXME:?) */
+  /* error message, empty if no error (FIXME:?) */
+  fmap['e'] = tvh_strdupa(streaming_code2txt(de->de_last_error));
   fmap['S'] = start; /* start time, unix epoch */
   fmap['E'] = stop; /* stop time, unix epoch */
 

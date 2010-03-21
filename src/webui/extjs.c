@@ -884,7 +884,7 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
   dvr_query_result_t dqr;
   dvr_entry_t *de;
   int start = 0, end, limit, i;
-  const char *s, *t = NULL;
+  const char *s;
   off_t fsize;
 
   if((s = http_arg_get(&hc->hc_req_args, "start")) != NULL)
@@ -944,25 +944,8 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
 
     htsmsg_add_str(m, "pri", dvr_val2pri(de->de_pri));
 
-    switch(de->de_sched_state) {
-    case DVR_SCHEDULED:
-      s = "Scheduled for recording";
-      t = "sched";
-      break;
-    case DVR_RECORDING:
-      s = "Recording";
-      t = "rec";
-      break;
-    case DVR_COMPLETED:
-      s = de->de_error ?: "Completed OK";
-      t = "done";
-      break;
-    default:
-      s = "Invalid";
-      break;
-    }
-    htsmsg_add_str(m, "status", s);
-    if(t != NULL) htsmsg_add_str(m, "schedstate", t);
+    htsmsg_add_str(m, "status", dvr_entry_status(de));
+    htsmsg_add_str(m, "schedstate", dvr_entry_schedstatus(de));
 
 
     if(de->de_sched_state == DVR_COMPLETED) {

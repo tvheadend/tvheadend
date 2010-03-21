@@ -28,6 +28,7 @@
 #include "dvr.h"
 #include "notify.h"
 #include "htsp.h"
+#include "streaming.h"
 
 char *dvr_storage;
 char *dvr_format;
@@ -48,6 +49,71 @@ static void dvr_entry_save(dvr_entry_t *de);
 static void dvr_timer_expire(void *aux);
 static void dvr_timer_start_recording(void *aux);
 
+/**
+ * Return printable status for a dvr entry
+ */
+const char *
+dvr_entry_status(dvr_entry_t *de)
+{
+  switch(de->de_sched_state) {
+  case DVR_SCHEDULED:
+    return "Scheduled for recording";
+    
+  case DVR_RECORDING:
+
+    switch(de->de_rec_state) {
+    case DVR_RS_PENDING:
+      return "Pending start";
+    case DVR_RS_WAIT_AUDIO_LOCK:
+      return "Waiting for audio lock";
+    case DVR_RS_WAIT_VIDEO_LOCK:
+      return "Waiting for video lock";
+    case DVR_RS_RUNNING:
+      return "Running";
+    case DVR_RS_COMMERCIAL:
+      return "Commercial break";
+    case DVR_RS_ERROR:
+      return streaming_code2txt(de->de_last_error);
+    default:
+      return "Invalid";
+    }
+
+  case DVR_COMPLETED:
+    if(de->de_last_error)
+      return streaming_code2txt(de->de_last_error);
+    else
+      return "Completed OK";
+    
+  default:
+    return "Invalid";
+  }
+}
+
+
+/**
+ *
+ */
+const char *
+dvr_entry_schedstatus(dvr_entry_t *de)
+{
+  switch(de->de_sched_state) {
+  case DVR_SCHEDULED:
+    return "scheduled";
+  case DVR_RECORDING:
+    if(de->de_last_error)
+      return "recordingError";
+    else
+      return "recording";
+  case DVR_COMPLETED:
+    if(de->de_last_error)
+      return "completedError";
+    else
+      return "completed";
+  default:
+    return "unknown";
+  }
+}
+
 
 /**
  *
@@ -60,6 +126,21 @@ dvrdb_changed(void)
   notify_by_msg("dvrdb", m);
 }
 
+
+/**
+ *
+ */
+void
+dvr_entry_notify(dvr_entry_t *de)
+{
+  htsmsg_t *m = htsmsg_create_map();
+
+  htsmsg_add_u32(m, "updateEntry", 1);
+  htsmsg_add_u32(m, "id", de->de_id);
+  htsmsg_add_str(m, "status", dvr_entry_status(de));
+  htsmsg_add_str(m, "schedstate", dvr_entry_schedstatus(de));
+  notify_by_msg("dvrdb", m);
+}
 
 
 /**
@@ -342,7 +423,9 @@ dvr_db_load_one(htsmsg_t *c, int id)
 
   tvh_str_set(&de->de_desc,     htsmsg_get_str(c, "description"));
   tvh_str_set(&de->de_filename, htsmsg_get_str(c, "filename"));
-  tvh_str_set(&de->de_error,    htsmsg_get_str(c, "error"));
+
+  htsmsg_get_u32(c, "errorcode", &de->de_last_error);
+  htsmsg_get_u32(c, "errors", &de->de_errors);
 
   htsmsg_get_u32(c, "noresched", &de->de_dont_reschedule);
 
@@ -419,8 +502,11 @@ dvr_entry_save(dvr_entry_t *de)
 
   htsmsg_add_str(m, "pri", dvr_val2pri(de->de_pri));
 
-  if(de->de_error != NULL)
-    htsmsg_add_str(m, "error", de->de_error);
+  if(de->de_last_error)
+    htsmsg_add_u32(m, "errorcode", de->de_last_error);
+
+  if(de->de_errors)
+    htsmsg_add_u32(m, "errors", de->de_errors);
 
   htsmsg_add_u32(m, "noresched", de->de_dont_reschedule);
 
@@ -457,21 +543,20 @@ dvr_timer_expire(void *aux)
  *
  */
 static void
-dvr_stop_recording(dvr_entry_t *de, const char *errmsg)
+dvr_stop_recording(dvr_entry_t *de, int stopcode)
 {
-  dvr_rec_unsubscribe(de);
+  dvr_rec_unsubscribe(de, stopcode);
 
   de->de_sched_state = DVR_COMPLETED;
-  tvh_str_set(&de->de_error, errmsg);
 
   tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": "
 	 "End of program: %s",
 	 de->de_title, de->de_channel->ch_name,
-	 de->de_error ?: "Program ended");
+	 streaming_code2txt(de->de_last_error) ?: "Program ended");
 
-  dvrdb_changed();
   dvr_entry_save(de);
   htsp_dvr_entry_update(de);
+  dvr_entry_notify(de);
 
   gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de, 
 		 de->de_stop + dvr_retention_days * 86400);
@@ -485,8 +570,7 @@ dvr_stop_recording(dvr_entry_t *de, const char *errmsg)
 static void
 dvr_timer_stop_recording(void *aux)
 {
-  dvr_entry_t *de = aux;
-  dvr_stop_recording(de, NULL);
+  dvr_stop_recording(aux, 0);
 }
 
 
@@ -500,13 +584,13 @@ dvr_timer_start_recording(void *aux)
   dvr_entry_t *de = aux;
 
   de->de_sched_state = DVR_RECORDING;
+  de->de_rec_state = DVR_RS_PENDING;
 
   tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\" recorder starting",
 	 de->de_title, de->de_channel->ch_name);
 
-  dvrdb_changed();
+  dvr_entry_notify(de);
   htsp_dvr_entry_update(de);
-
   dvr_rec_subscribe(de);
 
   gtimer_arm_abs(&de->de_timer, dvr_timer_stop_recording, de, 
@@ -556,7 +640,7 @@ dvr_entry_cancel(dvr_entry_t *de)
 
   case DVR_RECORDING:
     de->de_dont_reschedule = 1;
-    dvr_stop_recording(de, "Aborted by user");
+    dvr_stop_recording(de, SM_CODE_ABORTED);
     return de;
 
   case DVR_COMPLETED:
@@ -576,7 +660,7 @@ static void
 dvr_entry_purge(dvr_entry_t *de)
 {
   if(de->de_sched_state == DVR_RECORDING)
-    dvr_stop_recording(de, "Channel removed from system");
+    dvr_stop_recording(de, SM_CODE_SOURCE_DELETED);
 
   dvr_entry_remove(de);
 }

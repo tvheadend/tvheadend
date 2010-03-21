@@ -193,6 +193,26 @@
     background-image:url(../icons/layers.png) !important;
 }
 
+.scheduled {
+    background-image:url(../icons/clock.png) !important;
+}
+
+.recordingError {
+    background-image:url(../icons/exclamation.png) !important;
+}
+
+.completed {
+    background-image:url(../icons/tick.png) !important;
+}
+
+.completedError {
+    background-image:url(../icons/exclamation.png) !important;
+}
+
+.recording {
+    background-image:url(../icons/rec.png) !important;
+}
+
 
 
 .x-smallhdr {

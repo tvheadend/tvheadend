@@ -108,4 +108,6 @@ static inline int transport_tss_is_error(int flags)
 
 void transport_refresh_channel(th_transport_t *t);
 
+int tss2errcode(int tss);
+
 #endif /* TRANSPORTS_H */

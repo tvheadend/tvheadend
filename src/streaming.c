@@ -326,6 +326,16 @@ streaming_code2txt(int code)
   case SM_CODE_NO_SOURCE:
     return "No source available";
 
+  case SM_CODE_ABORTED:
+    return "Aborted by user";
+
+  case SM_CODE_NO_DESCRAMBLER:
+    return "No descrambler";
+
+  case SM_CODE_NO_ACCESS:
+    return "No access";
+
+
   default:
     return "Unknown reason";
   }

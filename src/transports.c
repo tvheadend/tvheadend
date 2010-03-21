@@ -358,7 +358,6 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
 {
   th_transport_t *t, **vec;
   int cnt = 0, i, r, off;
-  int error = 0;
 
   lock_assert(&global_lock);
 
@@ -372,7 +371,6 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
   LIST_FOREACH(t, &ch->ch_transports, tht_ch_link) {
 
     if(!t->tht_enabled) {
-      error = SM_CODE_SVC_NOT_ENABLED;
       if(loginfo != NULL) {
 	tvhlog(LOG_NOTICE, "Transport", "%s: Skipping \"%s\" -- not enabled",
 	       loginfo, transport_nicename(t));
@@ -381,7 +379,6 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
     }
 
     if(t->tht_quality_index(t) < 10) {
-      error = SM_CODE_BAD_SIGNAL;
       if(loginfo != NULL) {
 	tvhlog(LOG_NOTICE, "Transport", 
 	       "%s: Skipping \"%s\" -- Quality below 10%",
@@ -410,8 +407,6 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
     off = 0;
   }
 
-  error = SM_CODE_NO_SOURCE;
-
   /* First, try all transports without stealing */
   for(i = off; i < cnt; i++) {
     t = vec[i];
@@ -419,7 +414,8 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
       return t;
     if((r = transport_start(t, 0, 0)) == 0)
       return t;
-    tvhlog(LOG_DEBUG, "Transport", "%s: Unable to use \"%s\" -- %s",
+    if(loginfo != NULL)
+      tvhlog(LOG_DEBUG, "Transport", "%s: Unable to use \"%s\" -- %s",
 	     loginfo, transport_nicename(t), streaming_code2txt(r));
   }
 
@@ -430,14 +426,8 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
     t = vec[i];
     if((r = transport_start(t, weight, 0)) == 0)
       return t;
-    error = r;
-    if(loginfo != NULL)
-      tvhlog(LOG_NOTICE, "Transport", 
-	     "%s: Skipping \"%s\" -- %s",
-	     loginfo, transport_nicename(t), streaming_code2txt(r));
+    *errorp = r;
   }
-  if(errorp != NULL)
-    *errorp = error;
   return NULL;
 }
 
@@ -1035,6 +1025,26 @@ transport_tss2text(int flags)
 
   return "No status";
 }
+
+
+/**
+ *
+ */
+int
+tss2errcode(int tss)
+{
+  if(tss & TSS_NO_ACCESS)
+    return SM_CODE_NO_ACCESS;
+
+  if(tss & TSS_NO_DESCRAMBLER)
+    return SM_CODE_NO_DESCRAMBLER;
+
+  if(tss & TSS_GRACEPERIOD)
+    return SM_CODE_NO_INPUT;
+
+  return SM_CODE_OK;
+}
+
 
 /**
  *

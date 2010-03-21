@@ -144,11 +144,12 @@ subscription_reschedule(void)
   th_transport_t *t, *skip;
   streaming_message_t *sm;
   char buf[128];
-  int errorcode;
+  int error;
+
   lock_assert(&global_lock);
 
   gtimer_arm(&subscription_reschedule_timer, 
-	     subscription_reschedule_cb, NULL, 60);
+	     subscription_reschedule_cb, NULL, 2);
 
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
     if(s->ths_channel == NULL)
@@ -160,18 +161,20 @@ subscription_reschedule(void)
       if(s->ths_state != SUBSCRIPTION_BAD_TRANSPORT)
 	continue; /* And it seems to work ok, so we're happy */
       skip = s->ths_transport;
-      transport_remove_subscriber(s->ths_transport, s, SM_CODE_BAD_SOURCE);
+      error = s->ths_testing_error;
+      transport_remove_subscriber(s->ths_transport, s, s->ths_testing_error);
     } else {
+      error = 0;
       skip = NULL;
     }
 
     snprintf(buf, sizeof(buf), "Subscription \"%s\"", s->ths_title);
-    t = transport_find(s->ths_channel, s->ths_weight, buf, &errorcode, skip);
+    t = transport_find(s->ths_channel, s->ths_weight, buf, &error, skip);
 
     if(t == NULL) {
       /* No transport available */
 
-      sm = streaming_msg_create_code(SMT_NOSTART, errorcode);
+      sm = streaming_msg_create_code(SMT_NOSTART, error);
       streaming_target_deliver(s->ths_output, sm);
       continue;
     }
@@ -237,6 +240,7 @@ subscription_input(void *opauqe, streaming_message_t *sm)
        sm->sm_code & (TSS_GRACEPERIOD | TSS_ERRORS)) {
       // No, mark our subscription as bad_transport
       // the scheduler will take care of things
+      s->ths_testing_error = tss2errcode(sm->sm_code);
       s->ths_state = SUBSCRIPTION_BAD_TRANSPORT;
       streaming_msg_free(sm);
       return;

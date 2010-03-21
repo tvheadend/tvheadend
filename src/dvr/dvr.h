@@ -65,6 +65,16 @@ typedef enum {
 } dvr_entry_sched_state_t;
 
 
+typedef enum {
+  DVR_RS_PENDING,
+  DVR_RS_WAIT_AUDIO_LOCK,
+  DVR_RS_WAIT_VIDEO_LOCK,
+  DVR_RS_RUNNING,
+  DVR_RS_COMMERCIAL,
+  DVR_RS_ERROR,
+} dvr_rs_state_t;
+  
+
 typedef struct dvr_entry {
 
   int de_refcnt;   /* Modification is protected under global_lock */
@@ -106,12 +116,29 @@ typedef struct dvr_entry {
 
   epg_episode_t de_episode;
 
-  char *de_error;
+  uint32_t de_dont_reschedule;
 
+  /**
+   * Major State
+   */
   dvr_entry_sched_state_t de_sched_state;
 
-  uint32_t de_dont_reschedule;
+  /**
+   * Recording state (onyl valid if de_sched_state == DVR_RECORDING)
+   */
+  dvr_rs_state_t de_rec_state;
+
+  /**
+   * Number of errors (only to be modified by the recording thread)
+   */
+  uint32_t de_errors;
+
+  /**
+   * Last error, see SM_CODE_ defines
+   */
+  uint32_t de_last_error;
   
+
   /**
    * Autorec linkage
    */
@@ -139,13 +166,6 @@ typedef struct dvr_entry {
 
   struct dvr_rec_stream_list de_streams;
   AVFormatContext *de_fctx;
-
-  enum {
-    DE_RS_WAIT_AUDIO_LOCK = 0,
-    DE_RS_WAIT_VIDEO_LOCK,
-    DE_RS_RUNNING,
-    DE_RS_COMMERCIAL,
-  } de_rec_state;
 
   int de_header_written;
 
@@ -186,6 +206,13 @@ typedef struct dvr_autorec_entry {
 /**
  * Prototypes
  */
+
+void dvr_entry_notify(dvr_entry_t *de);
+
+const char *dvr_entry_status(dvr_entry_t *de);
+
+const char *dvr_entry_schedstatus(dvr_entry_t *de);
+
 void dvr_entry_create_by_autorec(event_t *e, dvr_autorec_entry_t *dae);
 
 dvr_entry_t *dvr_entry_create_by_event(event_t *e, const char *creator,
@@ -205,7 +232,7 @@ void dvr_destroy_by_channel(channel_t *ch);
 
 void dvr_rec_subscribe(dvr_entry_t *de);
 
-void dvr_rec_unsubscribe(dvr_entry_t *de);
+void dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode);
 
 dvr_entry_t *dvr_entry_find_by_id(int id);
 

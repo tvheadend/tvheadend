@@ -387,8 +387,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
     break;
   case DVR_COMPLETED:
     s = "completed";
-    if(de->de_error)
-      error = de->de_error;
+    if(de->de_last_error)
+      error = streaming_code2txt(de->de_last_error);
     break;
   case DVR_NOSTATE:
     s = "invalid";

@@ -32,6 +32,8 @@ typedef struct th_subscription {
     SUBSCRIPTION_BAD_TRANSPORT,
   } ths_state;
 
+  int ths_testing_error;
+
   LIST_ENTRY(th_subscription) ths_channel_link;
   struct channel *ths_channel;          /* May be NULL if channel has been
 					   destroyed during the
