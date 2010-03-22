@@ -498,8 +498,6 @@ tvheadend.dvr = function() {
     
     tvheadend.comet.on('dvrdb', function(m) {
 
-	console.log(m);
-
 	if(m.reload != null)
             tvheadend.dvrStore.reload();
 
@@ -510,12 +508,8 @@ tvheadend.dvr = function() {
 		return;
 	    }
 
-	    console.log(r);
-
 	    r.data.status = m.status;
 	    r.data.schedstate = m.schedstate;
-
-	    console.log(r);
 
 	    tvheadend.dvrStore.afterEdit(r);
 	    tvheadend.dvrStore.fireEvent('updated', 
