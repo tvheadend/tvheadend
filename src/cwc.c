@@ -55,6 +55,7 @@
 typedef enum {
   CARD_IRDETO,
   CARD_CONAX,
+  CARD_SECA,
   CARD_UNKNOWN
 } card_type_t;
 
@@ -236,6 +237,7 @@ extern char *cwc_krypt(const char *key, const char *salt);
 static void cwc_detect_card_type(cwc_t *cwc);
 void cwc_emm_conax(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_irdeto(cwc_t *cwc, uint8_t *data, int len);
+void cwc_emm_seca(cwc_t *cwc, uint8_t *data, int len);
 
 /**
  *
@@ -610,6 +612,11 @@ cwc_detect_card_type(cwc_t *cwc)
   case 0x0b:
     cwc->cwc_card_type = CARD_CONAX;
     tvhlog(LOG_INFO, "cwc", "%s: conax card",
+	   cwc->cwc_hostname);
+    break;
+  case 0x01:
+    cwc->cwc_card_type = CARD_SECA;
+    tvhlog(LOG_INFO, "cwc", "%s: seca card",
 	   cwc->cwc_hostname);
     break;
   default:
@@ -1093,6 +1100,9 @@ cwc_emm(uint8_t *data, int len)
       case CARD_IRDETO:
 	cwc_emm_irdeto(cwc, data, len);
 	break;
+      case CARD_SECA:
+	cwc_emm_seca(cwc, data, len);
+	break;
       case CARD_UNKNOWN:
 	break;
       }
@@ -1147,6 +1157,36 @@ cwc_emm_irdeto(cwc_t *cwc, uint8_t *data, int len)
     }
   }
   
+  if (match)
+    cwc_send_msg(cwc, data, len, 0, 1);
+}
+
+
+/**
+ * seca emm handler
+ * inspired by opensasc-ng, https://opensvn.csie.org/traccgi/opensascng/
+ */
+void
+cwc_emm_seca(cwc_t *cwc, uint8_t *data, int len)
+{
+  int match = 0;
+
+  if (data[0] == 0x82) {
+    if (memcmp(&data[3], &cwc->cwc_ua[2], 6) == 0) {
+      match = 1;
+    }
+  } 
+  else if (data[0] == 0x84) {
+    /* XXX this part is untested but should do no harm */
+    int i;
+    for (i=0; i < cwc->cwc_num_providers; i++) {
+      if (memcmp(&data[5], &cwc->cwc_providers[i].sa[5], 3) == 0) {
+        match = 1;
+        break;
+      }
+    }
+  }
+
   if (match)
     cwc_send_msg(cwc, data, len, 0, 1);
 }
