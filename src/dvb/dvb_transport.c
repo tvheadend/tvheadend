@@ -125,7 +125,7 @@ dvb_transport_start(th_transport_t *t, unsigned int weight, int force_start)
       tda->tda_hostconnection == HOSTCONNECTION_USB12)) {
 
     w = transport_compute_weight(&tda->tda_transports);
-    if(w >= weight && !force_start)
+    if(w && w >= weight && !force_start)
       /* We are outranked by weight, cant use it */
       return SM_CODE_NOT_FREE;
     
