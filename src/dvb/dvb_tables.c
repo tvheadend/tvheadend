@@ -47,6 +47,8 @@
 #define TDT_QUICKREQ      0x2
 #define TDT_INC_TABLE_HDR 0x4
 
+static void dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid);
+
 static int tdt_id_tally;
 
 /**
@@ -780,7 +782,6 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   th_dvb_mux_instance_t *other;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   uint16_t service, pmt, tsid;
-  th_transport_t *t;
 
   if(len < 5)
     return -1;
@@ -815,7 +816,7 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     pmt     = (ptr[2] & 0x1f) << 8 | ptr[3];
 
     if(service != 0 && pmt != 0) {
-      t = dvb_transport_find(tdmi, service, pmt, NULL);
+      dvb_transport_find(tdmi, service, pmt, NULL);
       dvb_table_add_pmt(tdmi, pmt);
     }
     ptr += 4;
@@ -1362,7 +1363,7 @@ dvb_table_add_default(th_dvb_mux_instance_t *tdmi)
 /**
  * Setup FD + demux for a services PMT
  */
-void
+static void
 dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid)
 {
   struct dmx_sct_filter_params *fp;
@@ -1372,7 +1373,7 @@ dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid)
   fp = dvb_fparams_alloc();
   fp->filter.filter[0] = 0x02;
   fp->filter.mask[0] = 0xff;
-  tdt_add(tdmi, fp, dvb_pmt_callback, tdmi, pmtname, 
+  tdt_add(tdmi, fp, dvb_pmt_callback, NULL, pmtname, 
 	  TDT_CRC | TDT_QUICKREQ, pmt_pid, NULL);
 }
 

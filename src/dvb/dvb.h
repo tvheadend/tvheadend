@@ -323,8 +323,6 @@ void dvb_table_init(th_dvb_adapter_t *tda);
 
 void dvb_table_add_default(th_dvb_mux_instance_t *tdmi);
 
-void dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid);
-
 void dvb_table_flush_all(th_dvb_mux_instance_t *tdmi);
 
 /**
