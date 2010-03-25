@@ -540,11 +540,7 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     return -1;
 
   t = dvb_transport_find(tdmi, serviceid, 0, NULL);
-  if(t == NULL)
-    return 0;
-
-  ch = t->tht_ch;
-  if(ch == NULL)
+  if(t == NULL || !t->tht_enabled || (ch = t->tht_ch) == NULL)
     return 0;
 
   while(len >= 12) {
