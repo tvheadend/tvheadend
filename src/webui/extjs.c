@@ -767,16 +767,17 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     t.tm_year = atoi(datestr + 6) - 1900;
     t.tm_mon = atoi(datestr) - 1;
     t.tm_mday = atoi(datestr + 3);
-    
+    t.tm_isdst = -1;
+
     t.tm_hour = atoi(startstr);
     t.tm_min = atoi(startstr + 3);
     
-    time_t start = timelocal(&t);
+    time_t start = mktime(&t);
 
     t.tm_hour = atoi(stopstr);
     t.tm_min = atoi(stopstr + 3);
     
-    time_t stop = timelocal(&t);
+    time_t stop = mktime(&t);
 
     if(stop < start)
       stop += 86400;
