@@ -816,7 +816,7 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
     if(service != 0 && pmt != 0) {
       t = dvb_transport_find(tdmi, service, pmt, NULL);
-      dvb_table_add_transport(tdmi, t, pmt);
+      dvb_table_add_pmt(tdmi, pmt);
     }
     ptr += 4;
     len -= 4;
@@ -1246,11 +1246,13 @@ static int
 dvb_pmt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
-  th_transport_t *t = opaque;
-  
-  pthread_mutex_lock(&t->tht_stream_mutex);
-  psi_parse_pmt(t, ptr, len, 1, 1);
-  pthread_mutex_unlock(&t->tht_stream_mutex);
+  th_transport_t *t;
+
+  LIST_FOREACH(t, &tdmi->tdmi_transports, tht_group_link) {
+    pthread_mutex_lock(&t->tht_stream_mutex);
+    psi_parse_pmt(t, ptr, len, 1, 1);
+    pthread_mutex_unlock(&t->tht_stream_mutex);
+  }
   return 0;
 }
 
@@ -1361,18 +1363,16 @@ dvb_table_add_default(th_dvb_mux_instance_t *tdmi)
  * Setup FD + demux for a services PMT
  */
 void
-dvb_table_add_transport(th_dvb_mux_instance_t *tdmi, th_transport_t *t,
-			int pmt_pid)
+dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid)
 {
   struct dmx_sct_filter_params *fp;
   char pmtname[100];
 
-  snprintf(pmtname, sizeof(pmtname), "PMT(%d), service:%d", 
-	   pmt_pid, t->tht_dvb_service_id);
+  snprintf(pmtname, sizeof(pmtname), "PMT(%d)", pmt_pid);
   fp = dvb_fparams_alloc();
   fp->filter.filter[0] = 0x02;
   fp->filter.mask[0] = 0xff;
-  tdt_add(tdmi, fp, dvb_pmt_callback, t, pmtname, 
+  tdt_add(tdmi, fp, dvb_pmt_callback, tdmi, pmtname, 
 	  TDT_CRC | TDT_QUICKREQ, pmt_pid, NULL);
 }
 
