@@ -826,13 +826,6 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 }
 
 
-typedef struct ca_stream {
-  th_dvb_table_t tdt;
-  int cs_caid;
-} ca_stream_t;
-
-
-
 /**
  * CA - Conditional Access
  */
@@ -854,7 +847,6 @@ dvb_cat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   int tag, tlen;
   uint16_t caid;
   uint16_t pid;
-  ca_stream_t *cs;
 
   if((ptr[2] & 1) == 0) {
     /* current_next_indicator == next, skip this */
@@ -876,10 +868,8 @@ dvb_cat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       if(pid == 0)
 	break;
 
-      cs = calloc(1, sizeof(ca_stream_t));
-      cs->cs_caid = caid;
-      tdt_add(tdmi, NULL, dvb_ca_callback, cs, "CA", 
-	      TDT_INC_TABLE_HDR, pid, &cs->tdt);
+      tdt_add(tdmi, NULL, dvb_ca_callback, NULL, "CA", 
+	      TDT_INC_TABLE_HDR, pid, NULL);
       break;
 
     default:
