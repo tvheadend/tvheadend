@@ -680,6 +680,11 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     if(e->e_content_type != NULL && 
        e->e_content_type->ect_group->ecg_name != NULL)
       htsmsg_add_str(m, "contentgrp", e->e_content_type->ect_group->ecg_name);
+
+    dvr_entry_t *de;
+    if((de = dvr_entry_find_by_event(e)) != NULL)
+      htsmsg_add_str(m, "schedstate", dvr_entry_schedstatus(de));
+
     htsmsg_add_msg(array, NULL, m);
   }
 

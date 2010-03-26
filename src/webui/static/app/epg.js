@@ -78,6 +78,17 @@ tvheadend.epgDetails = function(event) {
 tvheadend.epg = function() {
     var xg = Ext.grid;
 
+    var actions = new Ext.ux.grid.RowActions({
+        header:'',
+	width:20,
+        dataIndex: 'actions',
+        actions: [
+            {
+                iconIndex:'schedstate'
+            }
+        ]
+    });
+
     var epgStore = new Ext.ux.grid.livegrid.Store({
 	autoLoad: true,
 	url: 'epg',
@@ -99,7 +110,8 @@ tvheadend.epg = function() {
             {name: 'start', type: 'date', dateFormat: 'U' /* unix time */},
             {name: 'end', type: 'date', dateFormat: 'U' /* unix time */},
             {name: 'duration'},
-	    {name: 'contentgrp'}
+	    {name: 'contentgrp'},
+	    {name: 'schedstate'}
 	])
    });
 
@@ -144,6 +156,7 @@ tvheadend.epg = function() {
     }
 
     var epgCm = new Ext.grid.ColumnModel([
+	actions,
 	{
 	    width: 250,
 	    id:'title',
@@ -151,7 +164,7 @@ tvheadend.epg = function() {
 	    dataIndex: 'title',
 	    renderer: renderText
 	},{
-	    width: 250,
+	    width: 100,
 	    id:'episode',
 	    header: "Episode",
 	    dataIndex: 'episode',
@@ -296,6 +309,7 @@ tvheadend.epg = function() {
     var panel = new Ext.ux.grid.livegrid.GridPanel({
 	enableDragDrop : false,
 	cm: epgCm,
+	plugins: [actions],
 	title: 'Electronic Program Guide',
 	iconCls: 'newspaper',
         store : epgStore,
