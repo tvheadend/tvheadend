@@ -854,7 +854,7 @@ htsmsg_xml_deserialize(char *src, char *errbuf, size_t errbufsize)
   return m;
 
  err:
-  free(src);
+  free(src0);
   snprintf(errbuf, errbufsize, "%s", xp.xp_errmsg);
   
   /* Remove any odd chars inside of errmsg */
