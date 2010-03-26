@@ -20,10 +20,4 @@ fi
 # no version number found
 test $revision || revision=UNKNOWN
 
-NEW_REVISION="#define HTS_VERSION \"$revision\""
-OLD_REVISION=`cat version.h 2> /dev/null`
-
-# Update version.h only on revision changes to avoid spurious rebuilds
-if test "$NEW_REVISION" != "$OLD_REVISION"; then
-    echo "$NEW_REVISION" > "$2"
-fi
+echo $revision
