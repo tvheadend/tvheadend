@@ -281,6 +281,7 @@ static const struct {
   {"hu", "Hungary"},
   {"is", "Iceland"},
   {"it", "Italy"},
+  {"lt", "Lithuania"},
   {"lu", "Luxembourg"},
   {"lv", "Latvia"},
   {"nl", "Netherlands"},
