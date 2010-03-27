@@ -140,7 +140,7 @@ dvb_s_config(const char *l)
 	 ".freq = %lu, "
 	 ".symrate = %lu, "
 	 ".fec = %s, "
-	 ".polarisation = '%c', "
+	 ".polarisation = '%c'"
 	 "},\n",
 	 freq, 
 	 symrate, 
