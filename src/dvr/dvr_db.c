@@ -313,7 +313,11 @@ dvr_entry_create_by_autorec(event_t *e, dvr_autorec_entry_t *dae)
 {
   char buf[200];
 
-  snprintf(buf, sizeof(buf), "Auto recording by: %s", dae->dae_creator);
+  if(dae->dae_creator) {
+    snprintf(buf, sizeof(buf), "Auto recording by: %s", dae->dae_creator);
+  } else {
+    snprintf(buf, sizeof(buf), "Auto recording");
+  }
   dvr_entry_create_by_event(e, buf, dae, dae->dae_pri);
 }
 
