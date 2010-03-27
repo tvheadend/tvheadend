@@ -25,8 +25,13 @@
 
   <dt>Make sub-directories per channel
   <dd>If checked, Tvheadend will create a directory per channel when storing
-      events. If both this and the 'directory per day' checkbox is enabled.
-      The date-directory will be parent to the per-channel directory.
+      events. If both this and the 'directory per day' checkbox is enabled,
+      the date-directory will be parent to the per-channel directory.
+
+  <dt>Make sub-directories per title
+  <dd>If checked, Tvheadend will create a directory per title when storing
+      events. If the day/channel directory checkboxes are also enabled, those
+      directories will be parents of this directory.
 
   <dt>Include channel name in title
   <dd>If checked, Tvheadend will include the name of the channel in the
@@ -42,6 +47,11 @@
   <dd>If checked, Tvheadend will include the time for the recording in the
       event title. This applies to both the titled stored in the file
       and to the file name itself.
+
+  <dt>Include episode in title
+  <dd>If checked, Tvheadend will include the season and episode in the
+      title (if such info is available).
+
   <dt>Post-processor command
   <dd>Command to run after finishing a recording. The command will be
       run in background and is executed even if a recording is aborted
