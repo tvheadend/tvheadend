@@ -1,4 +1,4 @@
-hts-tvheadend (2.11-WIP) hts; urgency=low
+hts-tvheadend (2.11) hts; urgency=low
 
   * Add support for filtering autorecordings based on weekdays.
 
@@ -42,6 +42,8 @@ hts-tvheadend (2.11-WIP) hts; urgency=low
     are correctly reported as failed entries. Ticket #131
 
   * Add support for Irdeto and Seca EMM
+
+ -- Andreas Öman <andreas@lonelycoder.com>  Sat, 27 Mar 2010 10:03:40 +0100
 
 hts-tvheadend (2.10) hts; urgency=high
 
