@@ -23,7 +23,7 @@ tvheadend.dvrprio = new Ext.data.SimpleStore({
 	['high',        'High'],
 	['normal',      'Normal'],
 	['low',         'Low'],
-	['unimportant', 'Unimportant'],
+	['unimportant', 'Unimportant']
     ]
 });
 
@@ -51,7 +51,6 @@ tvheadend.dvrDetails = function(entry) {
 
     var win = new Ext.Window({
 	title: entry.title,
-	bodyStyle: 'margin: 5px',
         layout: 'fit',
         width: 400,
         height: 300,
