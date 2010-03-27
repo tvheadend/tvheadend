@@ -38,7 +38,8 @@ static struct strtab qamtab[] = {
   { "QAM256", "5" },
   { "AUTO",   "6" },
   { "8VSB",   "7" },
-  { "16VSB",  "8" }
+  { "16VSB",  "8" },
+  { "8PSK",   "9" }
 };
 
 static struct strtab bwtab[] = {
@@ -136,8 +137,22 @@ dvb_s_config(const char *l)
     return;
 
   printf("\t{"
-	 ".freq = %lu, .symrate = %lu, .fec = %s, .polarisation = '%c'},\n",
-	 freq, symrate, str2str(fec, fectab, "fec"), polarisation);
+	 ".freq = %lu, "
+	 ".symrate = %lu, "
+	 ".fec = %s, "
+	 ".polarisation = '%c', "
+	 "},\n",
+	 freq, 
+	 symrate, 
+	 str2str(fec, fectab, "fec"), 
+	 polarisation);
+}
+
+
+static void
+dvb_s2_config(const char *l)
+{
+
 }
 
 
@@ -288,6 +303,7 @@ static const struct {
   {"no", "Norway"},
   {"nz", "New Zealand"},
   {"pl", "Poland"},
+  {"ro", "Romania"},
   {"se", "Sweden"},
   {"sk", "Slovakia"},
   {"tw", "Taiwan"},
@@ -418,7 +434,10 @@ scan_file(char *fname)
       break;
 
     case 'S':
-      dvb_s_config(line + 1);
+      if(line[1] == '2')
+	dvb_s2_config(line + 2);
+      else
+	dvb_s_config(line + 1);
       break;
 
     default:
