@@ -331,10 +331,10 @@ streaming_code2txt(int code)
 
   case SM_CODE_NO_DESCRAMBLER:
     return "No descrambler";
-
   case SM_CODE_NO_ACCESS:
     return "No access";
-
+  case SM_CODE_NO_INPUT:
+    return "No input detected";
 
   default:
     return "Unknown reason";
