@@ -83,7 +83,10 @@ dvr_entry_status(dvr_entry_t *de)
       return streaming_code2txt(de->de_last_error);
     else
       return "Completed OK";
-    
+
+  case DVR_MISSED_TIME:
+    return "Time missed";
+
   default:
     return "Invalid";
   }
@@ -109,6 +112,8 @@ dvr_entry_schedstatus(dvr_entry_t *de)
       return "completedError";
     else
       return "completed";
+  case DVR_MISSED_TIME:
+    return "completedError";
   default:
     return "unknown";
   }
@@ -209,7 +214,10 @@ dvr_entry_link(dvr_entry_t *de)
   preamble = de->de_start - (60 * de->de_start_extra) - 30;
 
   if(now >= de->de_stop || de->de_dont_reschedule) {
-    de->de_sched_state = DVR_COMPLETED;
+    if(de->de_filename == NULL)
+      de->de_sched_state = DVR_MISSED_TIME;
+    else
+      de->de_sched_state = DVR_COMPLETED;
     gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de, 
 	       de->de_stop + dvr_retention_days * 86400);
 

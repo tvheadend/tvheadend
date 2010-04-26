@@ -390,6 +390,9 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
     if(de->de_last_error)
       error = streaming_code2txt(de->de_last_error);
     break;
+  case DVR_MISSED_TIME:
+    s = "missed";
+    break;
   case DVR_NOSTATE:
     s = "invalid";
     break;
@@ -510,6 +513,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   switch(dvr_status) {
   case DVR_SCHEDULED:
   case DVR_RECORDING:
+  case DVR_MISSED_TIME:
   case DVR_COMPLETED:
     htsmsg_add_u32(out, "id", de->de_id);
     htsmsg_add_u32(out, "success", 1);

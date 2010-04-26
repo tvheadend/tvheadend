@@ -253,6 +253,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 		"name=\"rec\" value=\"Record\">");
     break;
 
+  case DVR_MISSED_TIME:
   case DVR_COMPLETED:
     break;
   }
@@ -329,6 +330,7 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
     break;
 
   case DVR_COMPLETED:
+  case DVR_MISSED_TIME:
   case DVR_NOSTATE:
     break;
   }

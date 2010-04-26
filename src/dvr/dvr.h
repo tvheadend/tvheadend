@@ -62,6 +62,7 @@ typedef enum {
   DVR_COMPLETED,         /* If recording failed, de->de_error is set to
 			    a string */
   DVR_NOSTATE,
+  DVR_MISSED_TIME,
 } dvr_entry_sched_state_t;
 
 
