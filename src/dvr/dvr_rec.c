@@ -149,7 +149,7 @@ makedirs(const char *path)
   }
   r = errno;
 
-  tvhlog(LOG_DEBUG, "dvr", "Unable to create directory \"%s\" -- %s",
+  tvhlog(LOG_ERR, "dvr", "Unable to create directory \"%s\" -- %s",
 	 path, strerror(r));
   return r;
 }
