@@ -358,6 +358,7 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
 {
   th_transport_t *t, **vec;
   int cnt = 0, i, r, off;
+  int err = 0;
 
   lock_assert(&global_lock);
 
@@ -374,6 +375,7 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
       if(loginfo != NULL) {
 	tvhlog(LOG_NOTICE, "Transport", "%s: Skipping \"%s\" -- not enabled",
 	       loginfo, transport_nicename(t));
+	err = SM_CODE_SVC_NOT_ENABLED;
       }
       continue;
     }
@@ -383,6 +385,7 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
 	tvhlog(LOG_NOTICE, "Transport", 
 	       "%s: Skipping \"%s\" -- Quality below 10%",
 	       loginfo, transport_nicename(t));
+	err = SM_CODE_BAD_SIGNAL;
       }
       continue;
     }
@@ -428,6 +431,7 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
       return t;
     *errorp = r;
   }
+  *errorp = err ?: SM_CODE_NO_TRANSPORT;
   return NULL;
 }
 
