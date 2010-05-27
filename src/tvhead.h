@@ -258,6 +258,7 @@ typedef enum {
 #define SM_CODE_SVC_NOT_ENABLED           204
 #define SM_CODE_BAD_SIGNAL                205
 #define SM_CODE_NO_SOURCE                 206
+#define SM_CODE_NO_TRANSPORT              207
 
 #define SM_CODE_ABORTED                   300
 

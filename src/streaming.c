@@ -325,6 +325,8 @@ streaming_code2txt(int code)
     return "Too bad signal quality";
   case SM_CODE_NO_SOURCE:
     return "No source available";
+  case SM_CODE_NO_TRANSPORT:
+    return "No transport assigned to channel";
 
   case SM_CODE_ABORTED:
     return "Aborted by user";
