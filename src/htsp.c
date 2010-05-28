@@ -739,7 +739,7 @@ htsp_method_getSysTime(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  uint32_t chid, sid;
+  uint32_t chid, sid, weight;
   channel_t *ch;
   htsp_subscription_t *hs;
 
@@ -752,6 +752,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   if((ch = channel_find_by_identifier(chid)) == NULL)
     return htsp_error("Requested channel does not exist");
 
+  weight = htsmsg_get_u32_or_default(in, "weight", 150);
 
   /*
    * We send the reply now to avoid the user getting the 'subscriptionStart'
@@ -770,7 +771,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
   streaming_target_init(&hs->hs_input, htsp_streaming_input, hs, 0);
 
-  hs->hs_s = subscription_create_from_channel(ch, 150, htsp->htsp_logname,
+  hs->hs_s = subscription_create_from_channel(ch, weight,
+					      htsp->htsp_logname,
 					      &hs->hs_input, 0);
   return NULL;
 }
@@ -802,6 +804,34 @@ htsp_method_unsubscribe(htsp_connection_t *htsp, htsmsg_t *in)
     return NULL; /* Subscription did not exist, but we don't really care */
 
   htsp_subscription_destroy(htsp, s);
+  return NULL;
+}
+
+
+/**
+ * Change weight for a subscription
+ */
+static htsmsg_t *
+htsp_method_change_weight(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsp_subscription_t *hs;
+  uint32_t sid, weight;
+
+  if(htsmsg_get_u32(in, "subscriptionId", &sid))
+    return htsp_error("Missing argument 'subscriptionId'");
+
+ weight = htsmsg_get_u32_or_default(in, "weight", 150);
+
+  LIST_FOREACH(hs, &htsp->htsp_subscriptions, hs_link)
+    if(hs->hs_sid == sid)
+      break;
+  
+  if(hs == NULL)
+    return htsp_error("Requested subscription does not exist");
+
+  htsp_reply(htsp, in, htsmsg_create_map());
+
+  subscription_change_weight(hs->hs_s, weight);
   return NULL;
 }
 
@@ -888,6 +918,7 @@ struct {
   { "getSysTime", htsp_method_getSysTime, ACCESS_STREAMING},
   { "subscribe", htsp_method_subscribe, ACCESS_STREAMING},
   { "unsubscribe", htsp_method_unsubscribe, ACCESS_STREAMING},
+  { "subscriptionChangeWeight", htsp_method_change_weight, ACCESS_STREAMING},
   { "addDvrEntry", htsp_method_addDvrEntry, ACCESS_RECORDER},
   { "deleteDvrEntry", htsp_method_deleteDvrEntry, ACCESS_RECORDER},
   { "epgQuery", htsp_method_epgQuery, ACCESS_STREAMING},

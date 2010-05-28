@@ -397,6 +397,24 @@ subscription_create_from_transport(th_transport_t *t, const char *name,
 /**
  *
  */
+void
+subscription_change_weight(th_subscription_t *s, int weight)
+{
+  if(s->ths_weight == weight)
+    return;
+
+  LIST_REMOVE(s, ths_global_link);
+
+  s->ths_weight = weight;
+  LIST_INSERT_SORTED(&subscriptions, s, ths_global_link, subscription_sort);
+
+  subscription_reschedule();
+}
+
+
+/**
+ *
+ */
 static void
 dummy_callback(void *opauqe, streaming_message_t *sm)
 {

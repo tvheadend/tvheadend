@@ -79,6 +79,8 @@ th_subscription_t *subscription_create_from_transport(th_transport_t *t,
 						      streaming_target_t *st,
 						      int flags);
 
+void subscription_change_weight(th_subscription_t *s, int weight);
+
 void subscription_stop(th_subscription_t *s);
 
 void subscription_unlink_transport(th_subscription_t *s, int reason);
