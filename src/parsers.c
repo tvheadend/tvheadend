@@ -366,6 +366,10 @@ parse_audio(th_transport_t *t, th_stream_t *st, const uint8_t *data,
 
     st->st_parser_state = 2;
 
+    //There is no video pid, start the stream right away
+    if(t->tht_dts_start == AV_NOPTS_VALUE && t->tht_servicetype == ST_RADIO)
+      t->tht_dts_start = st->st_curdts;
+    
     assert(len >= 0);
     if(len == 0)
       return;
