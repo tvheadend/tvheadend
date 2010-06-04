@@ -1367,7 +1367,7 @@ cwc_find_stream_by_caid(th_transport_t *t, int caid)
   th_stream_t *st;
   caid_t *c;
 
-  LIST_FOREACH(st, &t->tht_components, st_link) {
+  TAILQ_FOREACH(st, &t->tht_components, st_link) {
     LIST_FOREACH(c, &st->st_caids, link) {
       if(c->caid == caid)
 	return st;

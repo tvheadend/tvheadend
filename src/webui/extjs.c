@@ -1054,7 +1054,7 @@ extjs_servicedetails(http_connection_t *hc,
 
   streams = htsmsg_create_list();
 
-  LIST_FOREACH(st, &t->tht_components, st_link) {
+  TAILQ_FOREACH(st, &t->tht_components, st_link) {
     c = htsmsg_create_map();
 
     htsmsg_add_u32(c, "pid", st->st_pid);

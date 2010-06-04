@@ -110,6 +110,7 @@ LIST_HEAD(th_transport_list, th_transport);
 RB_HEAD(th_transport_tree, th_transport);
 TAILQ_HEAD(th_transport_queue, th_transport);
 LIST_HEAD(th_stream_list, th_stream);
+TAILQ_HEAD(th_stream_queue, th_stream);
 LIST_HEAD(th_muxer_list, th_muxer);
 LIST_HEAD(th_muxstream_list, th_muxstream);
 LIST_HEAD(th_descrambler_list, th_descrambler);
@@ -359,7 +360,8 @@ typedef struct caid {
  */
 typedef struct th_stream {
 
-  LIST_ENTRY(th_stream) st_link;
+  TAILQ_ENTRY(th_stream) st_link;
+  int st_position;
   struct th_transport *st_transport;
 
   streaming_component_type_t st_type;
@@ -759,7 +761,7 @@ typedef struct th_transport {
   /**
    * List of all components.
    */
-  struct th_stream_list tht_components;
+  struct th_stream_queue tht_components;
 
 
   /**

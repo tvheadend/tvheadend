@@ -1110,7 +1110,7 @@ dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src)
     pthread_mutex_lock(&t_src->tht_stream_mutex);
     pthread_mutex_lock(&t_dst->tht_stream_mutex);
 
-    LIST_FOREACH(st_src, &t_src->tht_components, st_link) {
+    TAILQ_FOREACH(st_src, &t_src->tht_components, st_link) {
 
 
       st_dst = transport_stream_create(t_dst, 

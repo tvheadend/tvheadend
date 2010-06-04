@@ -66,18 +66,6 @@ void transport_remove_subscriber(th_transport_t *t, th_subscription_t *s,
 
 void transport_set_streaming_status_flags(th_transport_t *t, int flag);
 
-static inline th_stream_t *
-transport_find_stream_by_pid(th_transport_t *t, int pid)
-{
-  th_stream_t *st;
-
-  LIST_FOREACH(st, &t->tht_components, st_link) {
-    if(st->st_pid == pid)
-      return st;
-  }
-  return NULL;
-}
-
 struct streaming_start;
 struct streaming_start *transport_build_stream_start(th_transport_t *t);
 

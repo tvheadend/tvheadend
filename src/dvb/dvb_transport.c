@@ -55,7 +55,7 @@ dvb_transport_open_demuxers(th_dvb_adapter_t *tda, th_transport_t *t)
   int fd;
   th_stream_t *st;
 
-  LIST_FOREACH(st, &t->tht_components, st_link) {
+  TAILQ_FOREACH(st, &t->tht_components, st_link) {
     if(st->st_pid >= 0x2000)
       continue;
 
@@ -162,7 +162,7 @@ dvb_transport_stop(th_transport_t *t)
   LIST_REMOVE(t, tht_active_link);
   pthread_mutex_unlock(&tda->tda_delivery_mutex);
 
-  LIST_FOREACH(st, &t->tht_components, st_link) {
+  TAILQ_FOREACH(st, &t->tht_components, st_link) {
     if(st->st_demuxer_fd != -1) {
       close(st->st_demuxer_fd);
       st->st_demuxer_fd = -1;

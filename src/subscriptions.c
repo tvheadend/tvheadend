@@ -74,7 +74,7 @@ subscription_link_transport(th_subscription_t *s, th_transport_t *t)
 
   pthread_mutex_lock(&t->tht_stream_mutex);
 
-  if(LIST_FIRST(&t->tht_components) != NULL)
+  if(TAILQ_FIRST(&t->tht_components) != NULL)
     s->ths_start_message =
       streaming_msg_create_data(SMT_START, transport_build_stream_start(t));
 
@@ -114,7 +114,7 @@ subscription_unlink_transport(th_subscription_t *s, int reason)
   // Unlink from transport output
   streaming_target_disconnect(&t->tht_streaming_pad, &s->ths_input);
 
-  if(LIST_FIRST(&t->tht_components) != NULL && 
+  if(TAILQ_FIRST(&t->tht_components) != NULL && 
      s->ths_state == SUBSCRIPTION_GOT_TRANSPORT) {
     // Send a STOP message to the subscription client
     sm = streaming_msg_create_code(SMT_STOP, reason);

@@ -173,7 +173,7 @@ transport_stream_destroy(th_transport_t *t, th_stream_t *st)
 {
   if(t->tht_status == TRANSPORT_RUNNING)
     stream_clean(st);
-  LIST_REMOVE(st, st_link);
+  TAILQ_REMOVE(&t->tht_components, st, st_link);
   free(st->st_nicename);
   free(st);
 }
@@ -204,7 +204,7 @@ transport_stop(th_transport_t *t)
   /**
    * Clean up each stream
    */
-  LIST_FOREACH(st, &t->tht_components, st_link)
+  TAILQ_FOREACH(st, &t->tht_components, st_link)
     stream_clean(st);
 
   t->tht_status = TRANSPORT_IDLE;
@@ -268,7 +268,7 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
   /**
    * Initialize stream
    */
-  LIST_FOREACH(st, &t->tht_components, st_link)
+  TAILQ_FOREACH(st, &t->tht_components, st_link)
     stream_init(st);
 
   pthread_mutex_unlock(&t->tht_stream_mutex);
@@ -514,8 +514,8 @@ transport_destroy(th_transport_t *t)
   free(t->tht_svcname);
   free(t->tht_provider);
 
-  while((st = LIST_FIRST(&t->tht_components)) != NULL) {
-    LIST_REMOVE(st, st_link);
+  while((st = TAILQ_FIRST(&t->tht_components)) != NULL) {
+    TAILQ_REMOVE(&t->tht_components, st, st_link);
     free(st->st_nicename);
     free(st);
   }
@@ -546,6 +546,7 @@ transport_create(const char *identifier, int type, int source_type)
   t->tht_refcount = 1;
   t->tht_enabled = 1;
   t->tht_pcr_last = AV_NOPTS_VALUE;
+  TAILQ_INIT(&t->tht_components);
 
   streaming_pad_init(&t->tht_streaming_pad);
 
@@ -617,7 +618,7 @@ transport_make_nicename(th_transport_t *t)
   free(t->tht_nicename);
   t->tht_nicename = strdup(buf);
 
-  LIST_FOREACH(st, &t->tht_components, st_link)
+  TAILQ_FOREACH(st, &t->tht_components, st_link)
     transport_stream_make_nicename(t, st);
 }
 
@@ -634,7 +635,7 @@ transport_stream_create(th_transport_t *t, int pid,
   int idx = 0;
   lock_assert(&t->tht_stream_mutex);
 
-  LIST_FOREACH(st, &t->tht_components, st_link) {
+  TAILQ_FOREACH(st, &t->tht_components, st_link) {
     if(st->st_index > idx)
       idx = st->st_index;
     i++;
@@ -646,7 +647,7 @@ transport_stream_create(th_transport_t *t, int pid,
   st->st_index = idx + 1;
   st->st_type = type;
 
-  LIST_INSERT_HEAD(&t->tht_components, st, st_link);
+  TAILQ_INSERT_TAIL(&t->tht_components, st, st_link);
   st->st_transport = t;
 
   st->st_pid = pid;
@@ -682,7 +683,7 @@ transport_stream_find(th_transport_t *t, int pid)
  
   lock_assert(&t->tht_stream_mutex);
 
-  LIST_FOREACH(st, &t->tht_components, st_link) {
+  TAILQ_FOREACH(st, &t->tht_components, st_link) {
     if(st->st_pid == pid)
       return st;
   }
@@ -825,7 +826,7 @@ transport_restart(th_transport_t *t, int had_components)
   if(t->tht_refresh_feed != NULL)
     t->tht_refresh_feed(t);
 
-  if(LIST_FIRST(&t->tht_components) != NULL) {
+  if(TAILQ_FIRST(&t->tht_components) != NULL) {
 
     sm = streaming_msg_create_data(SMT_START, 
 				   transport_build_stream_start(t));
@@ -847,7 +848,7 @@ transport_build_stream_start(th_transport_t *t)
 
   lock_assert(&t->tht_stream_mutex);
   
-  LIST_FOREACH(st, &t->tht_components, st_link)
+  TAILQ_FOREACH(st, &t->tht_components, st_link)
     n++;
 
   ss = calloc(1, sizeof(streaming_start_t) + 
@@ -856,7 +857,7 @@ transport_build_stream_start(th_transport_t *t)
   ss->ss_num_components = n;
   
   n = 0;
-  LIST_FOREACH(st, &t->tht_components, st_link) {
+  TAILQ_FOREACH(st, &t->tht_components, st_link) {
     streaming_start_component_t *ssc = &ss->ss_components[n++];
     ssc->ssc_index = st->st_index;
     ssc->ssc_type  = st->st_type;

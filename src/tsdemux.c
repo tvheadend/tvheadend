@@ -202,7 +202,7 @@ ts_recv_packet1(th_transport_t *t, const uint8_t *tsb, int64_t *pcrp)
 
   pid = (tsb[1] & 0x1f) << 8 | tsb[2];
 
-  st = transport_find_stream_by_pid(t, pid);
+  st = transport_stream_find(t, pid);
 
   /* Extract PCR */
   if(tsb[3] & 0x20 && tsb[4] > 0 && tsb[5] & 0x10)
@@ -260,7 +260,7 @@ ts_recv_packet2(th_transport_t *t, const uint8_t *tsb)
   th_stream_t *st;
   int pid = (tsb[1] & 0x1f) << 8 | tsb[2];
 
-  if((st = transport_find_stream_by_pid(t, pid)) != NULL)
+  if((st = transport_stream_find(t, pid)) != NULL)
     ts_recv_packet0(t, st, tsb);
 }
 

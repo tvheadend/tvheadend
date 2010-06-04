@@ -106,7 +106,7 @@ dumptransports(htsbuf_queue_t *hq, struct th_transport_list *l, int indent)
     htsbuf_qprintf(hq, "%*.s-------------------------------------------\n",
 		   indent + 4, "");
 
-    LIST_FOREACH(st, &t->tht_components, st_link) {
+    TAILQ_FOREACH(st, &t->tht_components, st_link) {
       caid_t *caid;
       htsbuf_qprintf(hq, "%*.s%-16s %-5d %-5d %-5s\n", indent + 4, "",
 		     streaming_component_type2txt(st->st_type),

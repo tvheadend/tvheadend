@@ -624,7 +624,7 @@ capmt_transport_start(th_transport_t *t)
     ct->ct_tsbcluster   = malloc(ct->ct_cluster_size * 188);
     ct->ct_seq          = capmt->capmt_seq++;
 
-    LIST_FOREACH(st, &t->tht_components, st_link) {
+    TAILQ_FOREACH(st, &t->tht_components, st_link) {
       caid_t *c = LIST_FIRST(&st->st_caids);
       if(c == NULL)
 	continue;
