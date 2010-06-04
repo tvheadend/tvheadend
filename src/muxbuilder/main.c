@@ -294,6 +294,8 @@ static const struct {
   {"hk", "Hong Kong"},
   {"hr", "Croatia"},
   {"hu", "Hungary"},
+  {"il", "Israel"},
+  {"ir", "Iran"},
   {"is", "Iceland"},
   {"it", "Italy"},
   {"lt", "Lithuania"},
