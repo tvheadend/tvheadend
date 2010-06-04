@@ -712,7 +712,7 @@ v4l_service_create_by_msg(v4l_adapter_t *va, htsmsg_t *c, const char *name)
     t->tht_v4l_frequency = u32;
 
   if(s && u32)
-    transport_map_channel(t, channel_find_by_name(s, 1), 0);
+    transport_map_channel(t, channel_find_by_name(s, 1, 0), 0);
 }
 
 /**

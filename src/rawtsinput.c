@@ -134,7 +134,7 @@ rawts_transport_add(rawts_t *rt, uint16_t sid, int pmt_pid)
 
   LIST_INSERT_HEAD(&rt->rt_transports, t, tht_group_link);
 
-  ch = channel_find_by_name(tmp, 1);
+  ch = channel_find_by_name(tmp, 1, 0);
 
   transport_map_channel(t, ch, 0);
   return t;

@@ -470,7 +470,7 @@ iptv_transport_load(void)
       u32 = 0;
     
     if(s && u32)
-      transport_map_channel(t, channel_find_by_name(s, 1), 0);
+      transport_map_channel(t, channel_find_by_name(s, 1, 0), 0);
   }
   htsmsg_destroy(l);
 }

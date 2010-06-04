@@ -595,6 +595,8 @@ typedef struct th_transport {
    */
   uint16_t tht_dvb_service_id;
 
+  uint16_t tht_channel_number;
+
   /**
    * Service name (eg. DVB service name as specified by EN 300 468)
    */

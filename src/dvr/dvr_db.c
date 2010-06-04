@@ -399,7 +399,7 @@ dvr_db_load_one(htsmsg_t *c, int id)
 
   if((s = htsmsg_get_str(c, "channel")) == NULL)
     return;
-  if((ch = channel_find_by_name(s, 0)) == NULL)
+  if((ch = channel_find_by_name(s, 0, 0)) == NULL)
     return;
 
   if((title = htsmsg_get_str(c, "title")) == NULL)

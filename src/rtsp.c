@@ -531,7 +531,7 @@ rtsp_subscribe(http_connection_t *hc, rtsp_t *rtsp,
     channel_t *ch;
     scopedgloballock();
   
-    if((ch = channel_find_by_name(components[1], 0)) == NULL) {
+    if((ch = channel_find_by_name(components[1], 0, 0)) == NULL) {
       rtsp_error(hc, RTSP_STATUS_SERVICE, "Channel name not found");
       return -1;
     }

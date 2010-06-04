@@ -672,7 +672,7 @@ void
 epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
 	  const char *contentgroup, const char *title)
 {
-  channel_t *ch = channel ? channel_find_by_name(channel, 0) : NULL;
+  channel_t *ch = channel ? channel_find_by_name(channel, 0, 0) : NULL;
   channel_tag_t *ct = tag ? channel_tag_find_by_name(tag, 0) : NULL;
   epg_content_group_t *ecg = contentgroup ? 
     epg_content_group_find_by_name(contentgroup) : NULL;

@@ -162,7 +162,7 @@ channel_set_name(channel_t *ch, const char *name)
  *
  */
 static channel_t *
-channel_create(const char *name)
+channel_create(const char *name, int number)
 {
   channel_t *ch, *x;
   xmltv_channel_t *xc;
@@ -179,6 +179,7 @@ channel_create(const char *name)
   RB_INIT(&ch->ch_epg_events);
   LIST_INSERT_HEAD(&channels_not_xmltv_mapped, ch, ch_xc_link);
   channel_set_name(ch, name);
+  ch->ch_number = number;
 
   ch->ch_id = id;
   x = RB_INSERT_SORTED(&channel_identifier_tree, ch, 
@@ -200,7 +201,7 @@ channel_create(const char *name)
  *
  */
 channel_t *
-channel_find_by_name(const char *name, int create)
+channel_find_by_name(const char *name, int create, int channel_number)
 {
   channel_t skel, *ch;
 
@@ -210,7 +211,7 @@ channel_find_by_name(const char *name, int create)
   ch = RB_FIND(&channel_name_tree, &skel, ch_name_link, channelcmp);
   if(ch != NULL || create == 0)
     return ch;
-  return channel_create(name);
+  return channel_create(name, channel_number);
 }
 
 
@@ -352,7 +353,7 @@ channel_rename(channel_t *ch, const char *newname)
 
   lock_assert(&global_lock);
 
-  if(channel_find_by_name(newname, 0))
+  if(channel_find_by_name(newname, 0, 0))
     return -1;
 
   tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" renamed to \"%s\"",

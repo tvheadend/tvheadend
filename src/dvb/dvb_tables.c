@@ -1039,6 +1039,46 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 }
 
 
+/**
+ *
+ */
+static void
+dvb_table_local_channel(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
+			uint16_t tsid)
+{
+  uint16_t sid, chan;
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  th_transport_t *t;
+
+  LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
+    if(tdmi->tdmi_transport_stream_id == tsid)
+      break;
+
+  if(tdmi == NULL)
+    return;
+
+  while(len > 4) {
+    sid = (ptr[0] << 8) | ptr[1];
+    chan = ((ptr[2] & 3) << 8) | ptr[3];
+
+    if(chan != 0) {
+      t = dvb_transport_find(tdmi, sid, 0, NULL);
+      if(t != NULL) {
+
+	if(t->tht_channel_number != chan) {
+	  t->tht_channel_number = chan;
+	  t->tht_config_save(t);
+	  transport_refresh_channel(t);
+	  printf("%s channel %d\n", transport_nicename(t), chan);
+	}
+      }
+    }
+    ptr += 4;
+    len -= 4;
+  }
+}
+
+
 
 /**
  * NIT - Network Information Table
@@ -1131,6 +1171,9 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	break;
       case DVB_DESC_CABLE:
 	dvb_table_cable_delivery(tdmi, ptr, tlen, tsid);
+	break;
+      case DVB_DESC_LOCAL_CHAN:
+	dvb_table_local_channel(tdmi, ptr, tlen, tsid);
 	break;
       }
 

@@ -221,6 +221,10 @@ dvb_transport_load(th_dvb_mux_instance_t *tdmi)
       u32 = 0;
     t->tht_scrambled = u32;
 
+    if(htsmsg_get_u32(c, "channel", &u32))
+      u32 = 0;
+    t->tht_channel_number = u32;
+
     s = htsmsg_get_str(c, "provider");
     t->tht_provider = s ? strdup(s) : NULL;
 
@@ -237,7 +241,7 @@ dvb_transport_load(th_dvb_mux_instance_t *tdmi)
       u32 = 0;
     
     if(s && u32)
-      transport_map_channel(t, channel_find_by_name(s, 1), 0);
+      transport_map_channel(t, channel_find_by_name(s, 1, 0), 0);
   }
   htsmsg_destroy(l);
 }
@@ -256,6 +260,7 @@ dvb_transport_save(th_transport_t *t)
   htsmsg_add_u32(m, "pmt", t->tht_pmt_pid);
   htsmsg_add_u32(m, "stype", t->tht_servicetype);
   htsmsg_add_u32(m, "scrambled", t->tht_scrambled);
+  htsmsg_add_u32(m, "channel", t->tht_channel_number);
 
   if(t->tht_provider != NULL)
     htsmsg_add_str(m, "provider", t->tht_provider);
@@ -408,6 +413,7 @@ dvb_transport_build_msg(th_transport_t *t)
  
   htsmsg_add_str(m, "id", t->tht_identifier);
   htsmsg_add_u32(m, "enabled", t->tht_enabled);
+  htsmsg_add_u32(m, "channel", t->tht_channel_number);
 
   htsmsg_add_u32(m, "sid", t->tht_dvb_service_id);
   htsmsg_add_u32(m, "pmt", t->tht_pmt_pid);

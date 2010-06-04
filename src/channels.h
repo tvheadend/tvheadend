@@ -101,7 +101,7 @@ typedef struct channel_tag_mapping {
 
 void channels_init(void);
 
-channel_t *channel_find_by_name(const char *name, int create);
+channel_t *channel_find_by_name(const char *name, int create, int number);
 
 channel_t *channel_find_by_identifier(int id);
 

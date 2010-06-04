@@ -165,7 +165,7 @@ serviceprobe_thread(void *aux)
       } else if(t->tht_ch == NULL) {
 	const char *str;
 
-	ch = channel_find_by_name(t->tht_svcname, 1);
+	ch = channel_find_by_name(t->tht_svcname, 1, t->tht_channel_number);
 	transport_map_channel(t, ch, 1);
       
 	tvhlog(LOG_INFO, "serviceprobe", "%20s: mapped to channel \"%s\"",
