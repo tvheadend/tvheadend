@@ -70,6 +70,16 @@ rawts_transport_stop(th_transport_t *t)
 static void
 rawts_transport_save(th_transport_t *t)
 {
+  htsmsg_t *m = htsmsg_create_map();
+  printf("SAVE %s\n", transport_nicename(t));
+  
+  pthread_mutex_lock(&t->tht_stream_mutex); 
+  psi_save_transport_settings(m, t);
+  pthread_mutex_unlock(&t->tht_stream_mutex); 
+  
+  htsmsg_print(m);
+  htsmsg_destroy(m);
+
 }
 
 
