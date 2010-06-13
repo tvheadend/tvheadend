@@ -1117,8 +1117,6 @@ dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src)
 				       st_src->st_pid,
 				       st_src->st_type);
 	
-      st_dst->st_tb = (AVRational){1, 90000};
-	
       memcpy(st_dst->st_lang, st_src->st_lang, 4);
       st_dst->st_frame_duration = st_src->st_frame_duration;
 

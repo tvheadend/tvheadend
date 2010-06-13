@@ -30,8 +30,6 @@
 #include "tvhead.h"
 #include "rtp.h"
 
-static const AVRational mpeg_tc = {1, 90000};
-
 void
 rtp_send_mpv(rtp_send_t *sender, void *opaque, rtp_stream_t *rs, 
 	     const uint8_t *data, size_t len,
@@ -44,8 +42,6 @@ rtp_send_mpv(rtp_send_t *sender, void *opaque, rtp_stream_t *rs,
     
   if(data[0] != 0x00 || data[1] != 0x00 || data[2] != 0x01)
     return; // Not a startcode, something is fishy
-
-  pts = av_rescale_q(pts, AV_TIME_BASE_Q, mpeg_tc);
 
   if(data[3] == 0xb3) {
     // Sequence Start code, set Begin-Of-Sequence
@@ -99,8 +95,6 @@ rtp_send_mpa(rtp_send_t *sender, void *opaque, rtp_stream_t *rs,
   int payloadsize = RTP_MAX_PACKET_SIZE - (4 + 4 + 4 + 4);
   int offset = 0, s;
   uint8_t *buf;
-
-  pts = av_rescale_q(pts, AV_TIME_BASE_Q, mpeg_tc);
 
   while(len > 0) {
 

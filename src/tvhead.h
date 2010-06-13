@@ -450,9 +450,6 @@ typedef struct th_stream {
   /* CA ID's on this stream */
   struct caid_list st_caids;
 
-  /* Remuxing information */
-  AVRational st_tb;
-
   int st_vbv_size;        /* Video buffer size (in bytes) */
   int st_vbv_delay;       /* -1 if CBR */
 

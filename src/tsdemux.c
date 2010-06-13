@@ -140,7 +140,7 @@ ts_extract_pcr(th_transport_t *t, th_stream_t *st, const uint8_t *tsb,
   pcr |= (uint64_t)tsb[9] << 1;
   pcr |= ((uint64_t)tsb[10] >> 7) & 0x01;
   
-  pcr = av_rescale_q(pcr, mpeg_tc, AV_TIME_BASE_Q);
+  pcr = pcr;
 
   if(pcrp != NULL)
     *pcrp = pcr;
@@ -153,7 +153,7 @@ ts_extract_pcr(th_transport_t *t, th_stream_t *st, const uint8_t *tsb,
   if(st->st_pcr_real_last != AV_NOPTS_VALUE) {
     d = (real - st->st_pcr_real_last) - (pcr - st->st_pcr_last);
     
-    if(d < -1000000LL || d > 1000000LL) {
+    if(d < -90000LL || d > 90000LL) {
       st->st_pcr_recovery_fails++;
       if(st->st_pcr_recovery_fails > 10) {
 	st->st_pcr_recovery_fails = 0;

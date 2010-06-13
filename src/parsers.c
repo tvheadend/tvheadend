@@ -610,7 +610,7 @@ parse_mpeg2video_pic_start(th_transport_t *t, th_stream_t *st, int *frametype,
   if(v == 0xffff)
     st->st_vbv_delay = -1;
   else
-    st->st_vbv_delay = av_rescale_q(v, st->st_tb, AV_TIME_BASE_Q);
+    st->st_vbv_delay = v;
   return 0;
 }
 
@@ -1129,9 +1129,9 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt,
   pts = dts + ptsoff;
 
   /* Rescale to tvheadned internal 1MHz clock */
-  pkt->pkt_dts     =av_rescale_q(dts,               st->st_tb, AV_TIME_BASE_Q);
-  pkt->pkt_pts     =av_rescale_q(pts,               st->st_tb, AV_TIME_BASE_Q);
-  pkt->pkt_duration=av_rescale_q(pkt->pkt_duration, st->st_tb, AV_TIME_BASE_Q);
+  pkt->pkt_dts = dts;
+  pkt->pkt_pts = pts;
+
 #if 0
   printf("%-12s %d %10"PRId64" %10"PRId64" %10d %10d\n",
 	 streaming_component_type2txt(st->st_type),

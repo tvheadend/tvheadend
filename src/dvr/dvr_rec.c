@@ -33,6 +33,8 @@
 #include "spawn.h"
 #include "transports.h"
 
+static const AVRational mpeg_tc = {1, 90000};
+
 typedef struct dvr_rec_stream {
   LIST_ENTRY(dvr_rec_stream) drs_link;
 
@@ -710,12 +712,11 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
     av_init_packet(&avpkt);
     avpkt.stream_index = st->index;
 
-    avpkt.dts = av_rescale_q(dts, AV_TIME_BASE_Q, st->time_base);
-    avpkt.pts = av_rescale_q(pts, AV_TIME_BASE_Q, st->time_base);
+    avpkt.dts = av_rescale_q(dts, mpeg_tc, st->time_base);
+    avpkt.pts = av_rescale_q(pts, mpeg_tc, st->time_base);
     avpkt.data = buf;
     avpkt.size = bufsize;
-    avpkt.duration =
-      av_rescale_q(pkt->pkt_duration, AV_TIME_BASE_Q, st->time_base);
+    avpkt.duration = av_rescale_q(pkt->pkt_duration, mpeg_tc, st->time_base);
     avpkt.flags = pkt->pkt_frametype >= PKT_P_FRAME ? 0 : PKT_FLAG_KEY;
     r = av_interleaved_write_frame(fctx, &avpkt);
     break;
@@ -734,7 +735,7 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
 
       tvhlog(LOG_INFO, "dvr", 
 	     "%s - Skipped %" PRId64 " seconds of commercials",
-	     de->de_ititle, (pkt->pkt_dts - de->de_ts_com_start) / 1000000);
+	     de->de_ititle, (pkt->pkt_dts - de->de_ts_com_start) / 90000);
       goto outputpacket;
     }
     break;

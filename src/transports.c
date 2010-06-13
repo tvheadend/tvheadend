@@ -652,7 +652,6 @@ transport_stream_create(th_transport_t *t, int pid,
 
   st->st_pid = pid;
   st->st_demuxer_fd = -1;
-  st->st_tb = (AVRational){1, 90000};
 
   TAILQ_INIT(&st->st_ptsq);
   TAILQ_INIT(&st->st_durationq);

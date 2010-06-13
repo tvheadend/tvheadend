@@ -613,8 +613,6 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 	st->st_position = position;
       }
 
-      st->st_tb = (AVRational){1, 90000};
-
       if(memcmp(st->st_lang, lang, 4)) {
 	update |= PMT_UPDATE_LANGUAGE;
 	memcpy(st->st_lang, lang, 4);
@@ -1104,7 +1102,6 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
       continue;
 
     st = transport_stream_create(t, pid, type);
-    st->st_tb = (AVRational){1, 90000};
     
     if((v = htsmsg_get_str(c, "language")) != NULL)
       av_strlcpy(st->st_lang, v, 4);
