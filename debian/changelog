@@ -4,7 +4,8 @@ hts-tvheadend (2.12) hts; urgency=low
     Ticket #215
 
   * Keep track of video width and height and send it over HTSP in
-    subscriptionStart. Ticket #208
+    subscriptionStart.
+    Ticket #208
 
   * Add support for Logical Channel Number descriptor (0x83)
     Ticket #138
