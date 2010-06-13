@@ -1,3 +1,23 @@
+hts-tvheadend (2.12) hts; urgency=low
+
+  * Workaround for ITV HD (which has incorrect PMT)
+    Ticket #215
+
+  * Keep track of video width and height and send it over HTSP in
+    subscriptionStart. Ticket #208
+
+  * Add support for Logical Channel Number descriptor (0x83)
+    Ticket #138
+
+  * Maintain the order of PIDs as they appear in the PMT.
+    Ticket #218
+
+  * When there is no video pid (service type is Radio), 
+    start the audio stream right away. 
+    Ticket #59
+
+  * Add subscriptionChangeWeight HTSP method.
+
 hts-tvheadend (2.11) hts; urgency=low
 
   * Add support for filtering autorecordings based on weekdays.
