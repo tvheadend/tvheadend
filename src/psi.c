@@ -592,6 +592,13 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
       len -= dlen; ptr += dlen; dllen -= dlen;
     }
 
+    
+    if(hts_stream_type == SCT_UNKNOWN && estype == 0x06 &&
+       pid == 3401 && t->tht_dvb_service_id == 10510) {
+      // Workaround for ITV HD
+      hts_stream_type = SCT_H264;
+    }
+
     if(hts_stream_type != SCT_UNKNOWN) {
 
       if((st = transport_stream_find(t, pid)) == NULL) {
