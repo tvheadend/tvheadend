@@ -864,6 +864,8 @@ transport_build_stream_start(th_transport_t *t)
     memcpy(ssc->ssc_lang, st->st_lang, 4);
     ssc->ssc_composition_id = st->st_composition_id;
     ssc->ssc_ancillary_id = st->st_ancillary_id;
+    ssc->ssc_width = st->st_width;
+    ssc->ssc_height = st->st_height;
   }
 
   t->tht_setsourceinfo(t, &ss->ss_si);
@@ -896,15 +898,17 @@ static struct th_transport_queue pending_save_queue;
  *
  */
 void
-transport_request_save(th_transport_t *t)
+transport_request_save(th_transport_t *t, int restart)
 {
   pthread_mutex_lock(&pending_save_mutex);
 
   if(!t->tht_ps_onqueue) {
-    t->tht_ps_onqueue = 1;
+    t->tht_ps_onqueue = 1 + !!restart;
     TAILQ_INSERT_TAIL(&pending_save_queue, t, tht_ps_link);
     transport_ref(t);
     pthread_cond_signal(&pending_save_cond);
+  } else if(restart) {
+    t->tht_ps_onqueue = 2; // upgrade to restart too
   }
 
   pthread_mutex_unlock(&pending_save_mutex);
@@ -918,7 +922,7 @@ static void *
 transport_saver(void *aux)
 {
   th_transport_t *t;
-
+  int restart;
   pthread_mutex_lock(&pending_save_mutex);
 
   while(1) {
@@ -927,6 +931,8 @@ transport_saver(void *aux)
       pthread_cond_wait(&pending_save_cond, &pending_save_mutex);
       continue;
     }
+    assert(t->tht_ps_onqueue != 0);
+    restart = t->tht_ps_onqueue == 2;
 
     TAILQ_REMOVE(&pending_save_queue, t, tht_ps_link);
     t->tht_ps_onqueue = 0;
@@ -936,7 +942,11 @@ transport_saver(void *aux)
 
     if(t->tht_status != TRANSPORT_ZOMBIE)
       t->tht_config_save(t);
-
+    if(t->tht_status == TRANSPORT_RUNNING && restart) {
+      pthread_mutex_lock(&t->tht_stream_mutex);
+      transport_restart(t, 1);
+      pthread_mutex_unlock(&t->tht_stream_mutex);
+    }
     transport_unref(t);
 
     pthread_mutex_unlock(&global_lock);

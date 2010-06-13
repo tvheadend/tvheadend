@@ -615,26 +615,63 @@ parse_mpeg2video_pic_start(th_transport_t *t, th_stream_t *st, int *frametype,
 }
 
 /**
+ *
+ */
+void
+parser_set_stream_meta(th_stream_t *st, int width, int height, int d)
+{
+  int need_save = 0;
+
+  if(st->st_frame_duration == 0 && st->st_width == 0 && st->st_height == 0) {
+    need_save = 1;
+    st->st_meta_change = 0;
+
+  } else if((d && st->st_frame_duration != d) ||
+	    st->st_width != width ||
+	    st->st_height != height) {
+    
+    st->st_meta_change++;
+    if(st->st_meta_change == 2)
+      need_save = 1;
+
+  } else {
+    st->st_meta_change = 0;
+  }
+
+  if(need_save) {
+    if(d)
+      st->st_frame_duration = d;
+    st->st_width = width;
+    st->st_height = height;
+    transport_request_save(st->st_transport, 1);
+  }
+}
+
+
+/**
  * Parse mpeg2video sequence start
  */
 static int
 parse_mpeg2video_seq_start(th_transport_t *t, th_stream_t *st,
 			   bitstream_t *bs)
 {
-  int v;
+  int v, width, height, d;
 
   if(bs->len < 61)
     return 1;
   
-  skip_bits(bs, 12);
-  skip_bits(bs, 12);
+  width = read_bits(bs, 12);
+  height = read_bits(bs, 12);
   skip_bits(bs, 4);
-  st->st_frame_duration = mpeg2video_framedurations[read_bits(bs, 4)];
+  d = mpeg2video_framedurations[read_bits(bs, 4)];
+
   v = read_bits(bs, 18) * 400;
   skip_bits(bs, 1);
   
   v = read_bits(bs, 10) * 16 * 1024 / 8;
   st->st_vbv_size = v;
+
+  parser_set_stream_meta(st, width, height, d);
   return 0;
 }
 

@@ -75,7 +75,7 @@ void transport_restart(th_transport_t *t, int had_components);
 
 void transport_stream_destroy(th_transport_t *t, th_stream_t *st);
 
-void transport_request_save(th_transport_t *t);
+void transport_request_save(th_transport_t *t, int restart);
 
 void transport_source_info_free(source_info_t *si);
 

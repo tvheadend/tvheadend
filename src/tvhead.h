@@ -422,6 +422,10 @@ typedef struct th_stream {
   int64_t st_prevdts;
   int64_t st_nextdts;
   int st_frame_duration;
+  int st_width;
+  int st_height;
+
+  int st_meta_change;
 
   /* DTS generator */
 

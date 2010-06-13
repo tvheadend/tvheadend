@@ -672,7 +672,7 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 	   update&PMT_UPDATE_CAID_DELETED      ? ", CAID deleted":"",
 	   update&PMT_REORDERED                ? ", PIDs reordered":"");
     
-    transport_request_save(t);
+    transport_request_save(t, 0);
 
     // Only restart if something that our clients worry about did change
     if(update & !(PMT_UPDATE_NEW_CA_STREAM |
@@ -977,6 +977,13 @@ psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
 
     if(st->st_frame_duration)
       htsmsg_add_u32(sub, "frameduration", st->st_frame_duration);
+
+    if(st->st_type == SCT_MPEG2VIDEO || st->st_type == SCT_H264) {
+      if(st->st_width && st->st_height) {
+	htsmsg_add_u32(sub, "width", st->st_width);
+	htsmsg_add_u32(sub, "height", st->st_height);
+      }
+    }
     
     htsmsg_add_msg(m, "stream", sub);
   }
@@ -1116,6 +1123,15 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
       if(!htsmsg_get_u32(c, "parentpid", &u32))
 	st->st_parent_pid = u32;
     }
+
+    if(type == SCT_MPEG2VIDEO || type == SCT_H264) {
+      if(!htsmsg_get_u32(c, "width", &u32))
+	st->st_width = u32;
+
+      if(!htsmsg_get_u32(c, "height", &u32))
+	st->st_height = u32;
+    }
+
   }
   sort_pids(t);
 }

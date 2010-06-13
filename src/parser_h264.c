@@ -92,6 +92,8 @@ typedef struct h264_private {
   struct {
     int frame_duration;
     int cbpsize;
+    int16_t width;
+    int16_t height;
   } sps[256];
   
   struct {
@@ -174,7 +176,7 @@ int
 h264_decode_seq_parameter_set(th_stream_t *st, bitstream_t *bs)
 {
   int profile_idc, level_idc, poc_type;
-  unsigned int sps_id, tmp, i;
+  unsigned int sps_id, tmp, i, width, height;
   int cbpsize = -1;
   h264_private_t *p;
 
@@ -249,8 +251,11 @@ h264_decode_seq_parameter_set(th_stream_t *st, bitstream_t *bs)
 
   read_bits1(bs);
 
-  tmp = read_golomb_ue(bs) + 1; /* mb width */
-  tmp = read_golomb_ue(bs) + 1; /* mb height */
+  width = read_golomb_ue(bs) + 1; /* mb width */
+  height = read_golomb_ue(bs) + 1; /* mb height */
+
+  p->sps[sps_id].width = width * 16;
+  p->sps[sps_id].height = height * 16;
 
   if(!read_bits1(bs))
     read_bits1(bs);
@@ -326,5 +331,6 @@ h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype)
 
   st->st_vbv_size = p->sps[sps_id].cbpsize;
   st->st_vbv_delay = -1;
+  parser_set_stream_meta(st, p->sps[sps_id].width, p->sps[sps_id].height, 0);
   return 0;
 }

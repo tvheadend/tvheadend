@@ -1479,6 +1479,13 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
       htsmsg_add_u32(c, "ancillary_id", ssc->ssc_ancillary_id);
     }
 
+    if(ssc->ssc_type == SCT_MPEG2VIDEO || ssc->ssc_type == SCT_H264) {
+      if(ssc->ssc_width)
+	htsmsg_add_u32(c, "width", ssc->ssc_width);
+      if(ssc->ssc_height)
+	htsmsg_add_u32(c, "height", ssc->ssc_height);
+    }
+
     htsmsg_add_msg(streams, NULL, c);
   }
   
