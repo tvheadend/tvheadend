@@ -1,4 +1,4 @@
-hts-tvheadend (2.12) hts; urgency=low
+hts-tvheadend (2.11.99) hts; urgency=low
 
   * Workaround for ITV HD (which has incorrect PMT)
     Ticket #215
@@ -18,6 +18,8 @@ hts-tvheadend (2.12) hts; urgency=low
     Ticket #59
 
   * Add subscriptionChangeWeight HTSP method.
+
+ -- Andreas Öman <andreas@lonelycoder.com>  Mon, 14 Jun 2010 20:54:40 +0200
 
 hts-tvheadend (2.11) hts; urgency=low
 
