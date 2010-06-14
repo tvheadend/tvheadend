@@ -448,6 +448,7 @@ dvr_thread(void *aux)
   streaming_queue_t *sq = &de->de_sq;
   streaming_message_t *sm;
   int run = 1;
+  th_pkt_t *pkt;
 
   pthread_mutex_lock(&sq->sq_mutex);
 
@@ -464,9 +465,12 @@ dvr_thread(void *aux)
 
     switch(sm->sm_type) {
     case SMT_PACKET:
-      if(dispatch_clock > de->de_start - (60 * de->de_start_extra))
-	dvr_thread_new_pkt(de, sm->sm_data);
-      pkt_ref_dec(sm->sm_data);
+      pkt = sm->sm_data;
+      if(dispatch_clock > de->de_start - (60 * de->de_start_extra)) {
+	pkt = pkt_merge_global(pkt);
+	dvr_thread_new_pkt(de, pkt);
+      }
+      pkt_ref_dec(pkt);
       break;
 
     case SMT_START:
@@ -593,8 +597,6 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
   size_t bufsize;
   char txt[100];
   int64_t pts, dts;
-
-  pkt = pkt_merge_global(pkt);
 
   buf = pkt->pkt_payload;
   bufsize = pkt->pkt_payloadlen;
