@@ -506,7 +506,6 @@ dvr_thread(void *aux)
       break;
 
     case SMT_TRANSPORT_STATUS:
-      printf("TSS: %x\n", sm->sm_code);
       if(sm->sm_code & TSS_PACKETS) {
 	
       } else if(sm->sm_code & (TSS_GRACEPERIOD | TSS_ERRORS)) {

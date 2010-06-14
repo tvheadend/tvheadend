@@ -1069,7 +1069,6 @@ dvb_table_local_channel(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	  t->tht_channel_number = chan;
 	  t->tht_config_save(t);
 	  transport_refresh_channel(t);
-	  printf("%s channel %d\n", transport_nicename(t), chan);
 	}
       }
     }
