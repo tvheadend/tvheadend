@@ -1413,6 +1413,8 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   htsmsg_add_s64(m, "pts",      pts);
   htsmsg_add_u32(m, "duration", dur);
   
+  pkt = pkt_merge_global(pkt);
+
   /**
    * Since we will serialize directly we use 'binptr' which is a binary
    * object that just points to data, thus avoiding a copy.

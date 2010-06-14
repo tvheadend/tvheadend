@@ -391,6 +391,8 @@ rtsp_streaming_send(rtsp_t *rtsp, th_pkt_t *pkt)
 {
   rtsp_stream_t *rs;
 
+  pkt = pkt_merge_global(pkt);
+
   LIST_FOREACH(rs, &rtsp->rtsp_streams, rs_link)
     if(rs->rs_index == pkt->pkt_componentindex)
       break;

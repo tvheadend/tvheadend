@@ -154,6 +154,10 @@ stream_clean(th_stream_t *st)
     st->st_curpkt = NULL;
   }
 
+  free(st->st_global_data);
+  st->st_global_data = NULL;
+  st->st_global_data_len = 0;
+
   /* Clear PTS queue */
 
   pktref_clear_queue(&st->st_ptsq);

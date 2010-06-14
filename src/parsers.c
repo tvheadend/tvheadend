@@ -293,7 +293,7 @@ parse_video(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
     if((sc & 0xffffff00) != 0x00000100)
       continue;
 
-    r = st->st_buffer_ptr - 4;
+    r = st->st_buffer_ptr - st->st_startcode_offset - 4;
 
     if(r > 0 && st->st_startcode != 0) {
       r = vp(t, st, r, sc, st->st_startcode_offset);
@@ -301,17 +301,29 @@ parse_video(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
       r = 1;
     }
 
-    if(r) {
-      /* Reset packet parser upon length error or if parser
-	 tells us so */
-      st->st_buffer_ptr = 0;
+    if(r == 2) {
+      // Drop packet
+      st->st_buffer_ptr = st->st_startcode_offset;
+
       st->st_buffer[st->st_buffer_ptr++] = sc >> 24;
       st->st_buffer[st->st_buffer_ptr++] = sc >> 16;
       st->st_buffer[st->st_buffer_ptr++] = sc >> 8;
-      st->st_buffer[st->st_buffer_ptr++] = sc >> 0;
+      st->st_buffer[st->st_buffer_ptr++] = sc;
+      st->st_startcode = sc;
+
+    } else {
+      if(r == 1) {
+	/* Reset packet parser upon length error or if parser
+	   tells us so */
+	st->st_buffer_ptr = 0;
+	st->st_buffer[st->st_buffer_ptr++] = sc >> 24;
+	st->st_buffer[st->st_buffer_ptr++] = sc >> 16;
+	st->st_buffer[st->st_buffer_ptr++] = sc >> 8;
+	st->st_buffer[st->st_buffer_ptr++] = sc;
+      }
+      st->st_startcode = sc;
+      st->st_startcode_offset = st->st_buffer_ptr - 4;
     }
-    st->st_startcode = sc;
-    st->st_startcode_offset = st->st_buffer_ptr - 4;
   }
   st->st_startcond = sc;  
 
@@ -677,6 +689,23 @@ parse_mpeg2video_seq_start(th_transport_t *t, th_stream_t *st,
 
 
 /**
+ *
+ */
+static void
+parser_global_data_move(th_stream_t *st, const uint8_t *data, size_t len)
+{
+  st->st_global_data = realloc(st->st_global_data,
+			       st->st_global_data_len + len + 
+			       FF_INPUT_BUFFER_PADDING_SIZE);
+  
+  memcpy(st->st_global_data + st->st_global_data_len, data, len);
+  st->st_global_data_len += len;
+
+  st->st_buffer_ptr -= len;
+}
+
+
+/**
  * MPEG2VIDEO specific reassembly
  *
  * Process all startcodes (also the system ones)
@@ -724,41 +753,48 @@ parse_mpeg2video(th_transport_t *t, th_stream_t *st, size_t len,
     /* Sequence start code */
     if(parse_mpeg2video_seq_start(t, st, &bs))
       return 1;
-
-    break;
+    parser_global_data_move(st, buf, len);
+    return 2;
 
   case 0x000001b5:
     if(len < 5)
       return 1;
     switch(buf[4] >> 4) {
     case 0x1:
-      /* sequence extension */
-      //      printf("Sequence extension, len = %d\n", len);
-      if(len < 10)
-	return 1;
-      //      printf("Profile = %d\n", buf[4] & 0x7);
-      //      printf("  Level = %d\n", buf[5] >> 4);
-      break;
+      // Sequence Extension
+      parser_global_data_move(st, buf, len);
+      return 2;
+    case 0x2:
+      // Sequence Display Extension
+      parser_global_data_move(st, buf, len);
+      return 2;
     }
     break;
-
 
   case 0x00000101 ... 0x000001af:
     /* Slices */
 
     if(next_startcode == 0x100 || next_startcode > 0x1af) {
       /* Last picture slice (because next not a slice) */
-
-      if(st->st_curpkt == NULL) {
+      th_pkt_t *pkt = st->st_curpkt;
+      if(pkt == NULL) {
 	/* no packet, may've been discarded by sanity checks here */
 	return 1; 
       }
 
-      st->st_curpkt->pkt_payload = st->st_buffer;
-      st->st_curpkt->pkt_payloadlen = st->st_buffer_ptr - 4;
-      st->st_curpkt->pkt_duration = st->st_frame_duration;
+      if(st->st_global_data) {
+	pkt->pkt_globaldata = st->st_global_data;
+	pkt->pkt_globaldata_len = st->st_global_data_len;
+	
+	st->st_global_data = NULL;
+	st->st_global_data_len = 0;
+      }
 
-      parse_compute_pts(t, st, st->st_curpkt);
+      pkt->pkt_payload = st->st_buffer;
+      pkt->pkt_payloadlen = st->st_buffer_ptr - 4;
+      pkt->pkt_duration = st->st_frame_duration;
+
+      parse_compute_pts(t, st, pkt);
       st->st_curpkt = NULL;
 
       st->st_buffer = malloc(st->st_buffer_size);
@@ -770,6 +806,15 @@ parse_mpeg2video(th_transport_t *t, th_stream_t *st, size_t len,
       st->st_curpts = AV_NOPTS_VALUE; 
       return 1;
     }
+    break;
+
+  case 0x000001b8:
+    // GOP header
+    parser_global_data_move(st, buf, len);
+    return 2;
+
+  case 0x000001b2:
+    // User data
     break;
 
   default:
@@ -790,20 +835,12 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
   uint8_t *buf = st->st_buffer + sc_offset;
   uint32_t sc = st->st_startcode;
   int64_t d;
-  int l2, pkttype, l;
+  int l2, pkttype;
   bitstream_t bs;
-
-  if(sc == 0x10c) {
-    /* RBSP padding, we don't want this */
-    
-    l = len - sc_offset;
-    memcpy(buf, buf + l, 4); /* Move down new start code */
-    st->st_buffer_ptr -= l;  /* Drop buffer */
-  }
+  int ret = 0;
 
   if(sc >= 0x000001e0 && sc <= 0x000001ef) {
     /* System start codes for video */
-
     if(len >= 9)
       parse_pes_header(t, st, buf + 6, len - 6);
 
@@ -819,68 +856,84 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
   
   bs.data = NULL;
 
-  switch(sc & 0x1f) {
+  if(sc == 0x10c) {
+    // Padding
 
-  case 7:
-    h264_nal_deescape(&bs, buf + 3, len - 3);
-    if(h264_decode_seq_parameter_set(st, &bs)) {
-      free(bs.data);
-      return 1;
-    }
-    break;
+    st->st_buffer_ptr -= len;
+    ret = 2;
 
-  case 8:
-    h264_nal_deescape(&bs, buf + 3, len - 3);
-    if(h264_decode_pic_parameter_set(st, &bs)) {
-      free(bs.data);
-      return 1;
-    }
-    break;
+  } else {
 
+    switch(sc & 0x1f) {
 
-  case 5: /* IDR+SLICE */
-  case 1:
-    if(st->st_curpkt != NULL || st->st_frame_duration == 0 ||
-       st->st_curdts == AV_NOPTS_VALUE)
+    case 7:
+      h264_nal_deescape(&bs, buf + 3, len - 3);
+      h264_decode_seq_parameter_set(st, &bs);
+      parser_global_data_move(st, buf, len);
+      ret = 2;
       break;
 
-    if(t->tht_dts_start == AV_NOPTS_VALUE)
-      t->tht_dts_start = st->st_curdts;
+    case 8:
 
-    l2 = len - 3 > 64 ? 64 : len - 3;
-    h264_nal_deescape(&bs, buf + 3, l2); /* we just the first stuff */
-    if(h264_decode_slice_header(st, &bs, &pkttype)) {
-      free(bs.data);
-      return 1;
+      h264_nal_deescape(&bs, buf + 3, len - 3);
+      h264_decode_pic_parameter_set(st, &bs);
+      parser_global_data_move(st, buf, len);
+      ret = 2;
+      break;
+
+    case 5: /* IDR+SLICE */
+    case 1:
+      if(st->st_curpkt != NULL || st->st_frame_duration == 0 ||
+	 st->st_curdts == AV_NOPTS_VALUE)
+	break;
+
+      if(t->tht_dts_start == AV_NOPTS_VALUE)
+	t->tht_dts_start = st->st_curdts;
+
+      l2 = len - 3 > 64 ? 64 : len - 3;
+      h264_nal_deescape(&bs, buf + 3, l2); /* we just want the first stuff */
+      if(h264_decode_slice_header(st, &bs, &pkttype)) {
+	free(bs.data);
+	return 1;
+      }
+
+      st->st_curpkt = pkt_alloc(NULL, 0, st->st_curpts, st->st_curdts);
+      st->st_curpkt->pkt_frametype = pkttype;
+      st->st_curpkt->pkt_duration = st->st_frame_duration;
+      st->st_curpkt->pkt_commercial = t->tht_tt_commercial_advice;
+      break;
+
+    default:
+      break;
     }
-
-    st->st_curpkt = pkt_alloc(NULL, 0, st->st_curpts, st->st_curdts);
-    st->st_curpkt->pkt_frametype = pkttype;
-    st->st_curpkt->pkt_duration = st->st_frame_duration;
-    st->st_curpkt->pkt_commercial = t->tht_tt_commercial_advice;
-    break;
-
-  default:
-    break;
   }
-
   free(bs.data);
 
   if(next_startcode >= 0x000001e0 && next_startcode <= 0x000001ef) {
     /* Complete frame */
-    
-    if(st->st_curpkt == NULL)
-      return 1;
 
-    st->st_curpkt->pkt_payload = st->st_buffer;
-    st->st_curpkt->pkt_payloadlen = st->st_buffer_ptr;
-    parser_deliver(t, st, st->st_curpkt, 1);
+    th_pkt_t *pkt = st->st_curpkt;
     
-    st->st_curpkt = NULL;
-    st->st_buffer = malloc(st->st_buffer_size);
+    if(pkt != NULL) {
+      
+      if(st->st_global_data) {
+	pkt->pkt_globaldata = st->st_global_data;
+	pkt->pkt_globaldata_len = st->st_global_data_len;
+	st->st_global_data = NULL;
+	st->st_global_data_len = 0;
+      }
+    
+      pkt->pkt_payload = st->st_buffer;
+      pkt->pkt_payloadlen = st->st_buffer_ptr - 4;
+      parser_deliver(t, st, pkt, 1);
+      
+      st->st_curpkt = NULL;
+      st->st_buffer = malloc(st->st_buffer_size);
+    }
     return 1;
   }
-  return 0;
+
+  return ret;
 }
 
 /**

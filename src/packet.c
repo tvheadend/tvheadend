@@ -29,6 +29,7 @@ static void
 pkt_destroy(th_pkt_t *pkt)
 {
   free(pkt->pkt_payload);
+  free(pkt->pkt_globaldata);
   free(pkt);
 }
 
@@ -99,4 +100,35 @@ pktref_clear_queue(struct th_pktref_queue *q)
     pkt_ref_dec(pr->pr_pkt);
     free(pr);
   }
+}
+
+
+/**
+ *
+ */
+th_pkt_t *
+pkt_merge_global(th_pkt_t *pkt)
+{
+  th_pkt_t *n;
+
+  if(pkt->pkt_globaldata == NULL)
+    return pkt;
+
+  n = malloc(sizeof(th_pkt_t));
+  *n = *pkt;
+
+  n->pkt_refcount = 1;
+  n->pkt_globaldata = NULL;
+  n->pkt_globaldata_len = 0;
+  
+  n->pkt_payloadlen = pkt->pkt_globaldata_len + pkt->pkt_payloadlen;
+
+  n->pkt_payload = malloc(n->pkt_payloadlen + FF_INPUT_BUFFER_PADDING_SIZE);
+  memcpy(n->pkt_payload, pkt->pkt_globaldata, pkt->pkt_globaldata_len);
+  memcpy(n->pkt_payload + pkt->pkt_globaldata_len, pkt->pkt_payload,
+	 pkt->pkt_payloadlen);
+
+  pkt_ref_dec(pkt);
+  
+  return n;
 }

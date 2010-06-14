@@ -415,6 +415,8 @@ typedef struct th_stream {
   int st_buffer2_ptr;
   int st_buffer2_size;
 
+  uint8_t *st_global_data;
+  int st_global_data_len;
 
   struct th_pkt *st_curpkt;
   int64_t st_curpts;
@@ -426,7 +428,7 @@ typedef struct th_stream {
   int st_height;
 
   int st_meta_change;
-
+  
   /* DTS generator */
 
   int64_t st_dts_epoch;  /* upper bits (auto generated) */
