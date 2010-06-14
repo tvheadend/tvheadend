@@ -589,13 +589,15 @@ dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
   void *abuf;
   AVFrame pic;
   int r, data_size, i;
-  void *buf = pkt->pkt_payload;
-  size_t bufsize = pkt->pkt_payloadlen;
+  void *buf;
+  size_t bufsize;
   char txt[100];
   int64_t pts, dts;
 
   pkt = pkt_merge_global(pkt);
 
+  buf = pkt->pkt_payload;
+  bufsize = pkt->pkt_payloadlen;
   LIST_FOREACH(drs, &de->de_streams, drs_link)
     if(drs->drs_source_index == pkt->pkt_componentindex)
       break;
