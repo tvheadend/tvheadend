@@ -472,6 +472,7 @@ dvr_thread(void *aux)
     switch(sm->sm_type) {
     case SMT_PACKET:
       pkt = sm->sm_data;
+      sm->sm_data = NULL;
       if(dispatch_clock > de->de_start - (60 * de->de_start_extra)) {
 	pkt = pkt_merge_global(pkt);
 	dvr_thread_new_pkt(de, pkt);
@@ -559,7 +560,7 @@ dvr_thread(void *aux)
       break;
     }
 
-    free(sm);
+    streaming_msg_free(sm);
     pthread_mutex_lock(&sq->sq_mutex);
   }
   pthread_mutex_unlock(&sq->sq_mutex);
