@@ -27,6 +27,7 @@ int h264_decode_seq_parameter_set(th_stream_t *st, bitstream_t *bs);
 
 int h264_decode_pic_parameter_set(th_stream_t *st, bitstream_t *bs);
 
-int h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype);
+int h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype,
+			     int *duration);
 
 #endif /* PARSER_H264_H_ */

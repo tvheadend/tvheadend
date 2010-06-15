@@ -422,7 +422,6 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
   streaming_component_type_t hts_stream_type;
   th_stream_t *st, *next;
   char lang[4];
-  int frameduration;
   int update = 0;
   int had_components;
   int composition_id;
@@ -502,7 +501,6 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
     ptr += 5;
     len -= 5;
 
-    frameduration = 0;
     hts_stream_type = SCT_UNKNOWN;
     memset(lang, 0, 4);
     composition_id = -1;
@@ -549,10 +547,6 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 	if(dlen == 4 && 
 	   ptr[0] == 'A' && ptr[1] == 'C' && ptr[2] == '-' &&  ptr[3] == '3')
 	  hts_stream_type = SCT_AC3;
-	break;
-
-      case DVB_DESC_VIDEO_STREAM:
-	frameduration = mpeg2video_framedurations[(ptr[0] >> 3) & 0xf];
 	break;
 
       case DVB_DESC_LANGUAGE:
@@ -616,11 +610,6 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
       if(memcmp(st->st_lang, lang, 4)) {
 	update |= PMT_UPDATE_LANGUAGE;
 	memcpy(st->st_lang, lang, 4);
-      }
-
-      if(st->st_frame_duration == 0 && frameduration != 0) {
-	st->st_frame_duration = frameduration;
-	update |= PMT_UPDATE_FRAME_DURATION;
       }
 
       if(composition_id != -1 && st->st_composition_id != composition_id) {
@@ -980,9 +969,6 @@ psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
     if(st->st_type == SCT_TEXTSUB)
       htsmsg_add_u32(sub, "parentpid", st->st_parent_pid);
 
-    if(st->st_frame_duration)
-      htsmsg_add_u32(sub, "frameduration", st->st_frame_duration);
-
     if(st->st_type == SCT_MPEG2VIDEO || st->st_type == SCT_H264) {
       if(st->st_width && st->st_height) {
 	htsmsg_add_u32(sub, "width", st->st_width);
@@ -1105,9 +1091,6 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
     
     if((v = htsmsg_get_str(c, "language")) != NULL)
       av_strlcpy(st->st_lang, v, 4);
-
-    if(!htsmsg_get_u32(c, "frameduration", &u32))
-      st->st_frame_duration = u32;
 
     if(!htsmsg_get_u32(c, "position", &u32))
       st->st_position = u32;

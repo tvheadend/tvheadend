@@ -90,10 +90,15 @@ static const int h264_lev2cpbsize[][2] = {
 typedef struct h264_private {
 
   struct {
-    int frame_duration;
     int cbpsize;
     int16_t width;
     int16_t height;
+    int16_t max_frame_num_bits;
+    char mbs_only_flag;
+    char aff;
+    char fixed_rate;
+    int units_in_tick;
+    int time_scale;
   } sps[256];
   
   struct {
@@ -106,13 +111,8 @@ typedef struct h264_private {
 
 
 static int 
-decode_vui(th_stream_t *st, bitstream_t *bs, int spsid)
+decode_vui(h264_private_t *p, bitstream_t *bs, int sps_id)
 {
-  int units_in_tick;
-  int time_scale;
-  int fixed_rate;
-  return 0;
-
   if(read_bits1(bs)) {
     if(read_bits(bs, 8) == 255) {
       read_bits(bs, 16);
@@ -140,16 +140,12 @@ decode_vui(th_stream_t *st, bitstream_t *bs, int spsid)
   }
 
   if(!read_bits1(bs)) /* We need timing info */
-    return -1;
+    return 0;
     
-  units_in_tick = read_bits(bs, 32);
-  time_scale    = read_bits(bs, 32);
-  fixed_rate    = read_bits1(bs);
-#if 0
-  printf("units_in_tick = %d\n", units_in_tick);
-  printf("time_scale = %d\n", time_scale);
-  printf("fixed_rate = %d\n", fixed_rate);
-#endif
+
+  p->sps[sps_id].units_in_tick = read_bits(bs, 32);
+  p->sps[sps_id].time_scale    = read_bits(bs, 32);
+  p->sps[sps_id].fixed_rate    = read_bits1(bs);
   return 0;
 }
 
@@ -229,7 +225,7 @@ h264_decode_seq_parameter_set(th_stream_t *st, bitstream_t *bs)
     }
   }
 
-  tmp = read_golomb_ue(bs); /* max frame num */
+  p->sps[sps_id].max_frame_num_bits = read_golomb_ue(bs) + 4;
   poc_type= read_golomb_ue(bs);
  
   if(poc_type == 0){ //FIXME #define
@@ -257,8 +253,9 @@ h264_decode_seq_parameter_set(th_stream_t *st, bitstream_t *bs)
   p->sps[sps_id].width = width * 16;
   p->sps[sps_id].height = height * 16;
 
-  if(!read_bits1(bs))
-    read_bits1(bs);
+  p->sps[sps_id].mbs_only_flag = read_bits1(bs);
+  if(!p->sps[sps_id].mbs_only_flag)
+    p->sps[sps_id].aff = read_bits1(bs);
 
   read_bits1(bs);
 
@@ -271,7 +268,7 @@ h264_decode_seq_parameter_set(th_stream_t *st, bitstream_t *bs)
   }
 
   if(read_bits1(bs)) {
-    decode_vui(st, bs, sps_id);
+    decode_vui(p, bs, sps_id);
     return 0;
   } else {
     return -1;
@@ -296,10 +293,11 @@ h264_decode_pic_parameter_set(th_stream_t *st, bitstream_t *bs)
 
 
 int
-h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype)
+h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype,
+			 int *duration)
 {
   h264_private_t *p;
-  int slice_type, pps_id, sps_id;
+  int slice_type, pps_id, sps_id, fnum;
 
   if((p = st->st_priv) == NULL)
     return -1;
@@ -326,11 +324,39 @@ h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype)
 
   pps_id = read_golomb_ue(bs);
   sps_id = p->pps[pps_id].sps;
-  if(p->sps[sps_id].cbpsize == 0)
+  if(p->sps[sps_id].max_frame_num_bits == 0)
     return -1;
 
-  st->st_vbv_size = p->sps[sps_id].cbpsize;
+  fnum = read_bits(bs, p->sps[sps_id].max_frame_num_bits);
+
+  int structure;
+
+  int timebase = 180000;
+
+  if(p->sps[sps_id].mbs_only_flag) {
+    structure = 0;
+  } else {
+    if(read_bits1(bs)) {
+      read_bits1(bs); // bottom field
+      structure = 1;
+    } else {
+      structure = 2;
+    }
+  }
+
+  if(p->sps[sps_id].time_scale != 0) {
+    int d = timebase * p->sps[sps_id].units_in_tick / p->sps[sps_id].time_scale;
+    *duration = d;
+  } else {
+    *duration = 0;
+  }
+
+  if(p->sps[sps_id].cbpsize != 0)
+    st->st_vbv_size = p->sps[sps_id].cbpsize;
+
   st->st_vbv_delay = -1;
-  parser_set_stream_meta(st, p->sps[sps_id].width, p->sps[sps_id].height, 0);
+
+  if(p->sps[sps_id].width && p->sps[sps_id].height)
+    parser_set_stream_vsize(st, p->sps[sps_id].width, p->sps[sps_id].height);
   return 0;
 }
