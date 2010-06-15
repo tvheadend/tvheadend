@@ -70,6 +70,8 @@ SRCS =  src/main.c \
 	src/rawtsinput.c \
 	src/iptv_input.c \
 
+SRCS += src/plumbing/tsfix.c \
+
 SRCS += src/dvr/dvr_db.c \
 	src/dvr/dvr_rec.c \
 	src/dvr/dvr_autorec.c

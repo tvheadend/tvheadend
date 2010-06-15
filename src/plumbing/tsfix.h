@@ -1,6 +1,6 @@
-/*
- *  Packet parsing functions
- *  Copyright (C) 2007 Andreas Öman
+/**
+ *  Timestamp fixup
+ *  Copyright (C) 2010 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,18 +16,14 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PARSER_H264_H_
-#define PARSER_H264_H_
+#ifndef TSFIX_H__
+#define TSFIX_H__
 
-#include "bitstream.h"
+#include "tvhead.h"
 
-int h264_nal_deescape(bitstream_t *bs, uint8_t *data, int size);
+streaming_target_t *tsfix_create(streaming_target_t *output);
 
-int h264_decode_seq_parameter_set(th_stream_t *st, bitstream_t *bs);
+void tsfix_destroy(streaming_target_t *gh);
 
-int h264_decode_pic_parameter_set(th_stream_t *st, bitstream_t *bs);
 
-int h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype,
-			     int *duration, int *isfield);
-
-#endif /* PARSER_H264_H_ */
+#endif // TSFIX_H__

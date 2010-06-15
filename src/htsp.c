@@ -1405,12 +1405,18 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   htsmsg_add_u32(m, "stream", pkt->pkt_componentindex);
   htsmsg_add_u32(m, "com", pkt->pkt_commercial);
 
-  int64_t  pts = av_rescale_q(pkt->pkt_pts,      mpeg_tc, AV_TIME_BASE_Q);
-  int64_t  dts = av_rescale_q(pkt->pkt_dts,      mpeg_tc, AV_TIME_BASE_Q);
-  uint32_t dur = av_rescale_q(pkt->pkt_duration, mpeg_tc, AV_TIME_BASE_Q);
 
-  htsmsg_add_s64(m, "dts",      dts);
-  htsmsg_add_s64(m, "pts",      pts);
+  if(pkt->pkt_pts != AV_NOPTS_VALUE) {
+    int64_t pts = av_rescale_q(pkt->pkt_pts, mpeg_tc, AV_TIME_BASE_Q);
+    htsmsg_add_s64(m, "pts", pts);
+  }
+
+  if(pkt->pkt_dts != AV_NOPTS_VALUE) {
+    int64_t dts = av_rescale_q(pkt->pkt_dts, mpeg_tc, AV_TIME_BASE_Q);
+    htsmsg_add_s64(m, "dts", dts);
+  }
+
+  uint32_t dur = av_rescale_q(pkt->pkt_duration, mpeg_tc, AV_TIME_BASE_Q);
   htsmsg_add_u32(m, "duration", dur);
   
   pkt = pkt_merge_global(pkt);

@@ -70,9 +70,6 @@ stream_init(th_stream_t *st)
   st->st_curpts = AV_NOPTS_VALUE;
   st->st_prevdts = AV_NOPTS_VALUE;
 
-  st->st_last_dts = AV_NOPTS_VALUE;
-  st->st_dts_epoch = 0; 
- 
   st->st_pcr_real_last = AV_NOPTS_VALUE;
   st->st_pcr_last      = AV_NOPTS_VALUE;
   st->st_pcr_drift     = 0;
@@ -157,15 +154,6 @@ stream_clean(th_stream_t *st)
   free(st->st_global_data);
   st->st_global_data = NULL;
   st->st_global_data_len = 0;
-
-  /* Clear PTS queue */
-
-  pktref_clear_queue(&st->st_ptsq);
-  st->st_ptsq_len = 0;
-
-  /* Clear durationq */
-
-  pktref_clear_queue(&st->st_durationq);
 }
 
 
@@ -256,7 +244,6 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
 
   assert(t->tht_status != TRANSPORT_RUNNING);
   t->tht_streaming_status = 0;
-  t->tht_dts_start = AV_NOPTS_VALUE;
   t->tht_pcr_drift = 0;
 
   if((r = t->tht_start_feed(t, weight, force_start)))
@@ -656,9 +643,6 @@ transport_stream_create(th_transport_t *t, int pid,
 
   st->st_pid = pid;
   st->st_demuxer_fd = -1;
-
-  TAILQ_INIT(&st->st_ptsq);
-  TAILQ_INIT(&st->st_durationq);
 
   avgstat_init(&st->st_rate, 10);
   avgstat_init(&st->st_cc_errors, 10);

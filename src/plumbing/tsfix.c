@@ -1,0 +1,409 @@
+/**
+ *  Timestamp fixup
+ *  Copyright (C) 2010 Andreas Öman
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "tvhead.h"
+#include "streaming.h"
+#include "tsfix.h"
+
+LIST_HEAD(tfstream_list, tfstream);
+
+#define tsfixprintf(fmt...) // printf(fmt)
+
+/**
+ *
+ */
+typedef struct tfstream {
+
+  LIST_ENTRY(tfstream) tfs_link;
+
+  int tfs_index;
+
+  struct th_pktref_queue tfs_ptsq;
+  int tfs_ptsq_len;
+
+  streaming_component_type_t tfs_type;
+
+  int tfs_bad_dts;
+  int64_t tfs_last_dts_norm;
+  int64_t tfs_dts_epoch;
+
+  int64_t tfs_last_dts_in;
+
+} tfstream_t;
+
+
+/**
+ *
+ */
+typedef struct tsfix {
+  streaming_target_t tf_input;
+
+  streaming_target_t *tf_output;
+
+  struct tfstream_list tf_streams;
+  int tf_hasvideo;
+  int64_t tf_tsref;
+} tsfix_t;
+
+
+/**
+ *
+ */
+static void
+tsfix_destroy_stream(tfstream_t *tfs)
+{
+  LIST_REMOVE(tfs, tfs_link);
+  pktref_clear_queue(&tfs->tfs_ptsq);
+  free(tfs);
+}
+
+
+/**
+ *
+ */
+static void
+tsfix_destroy_streams(tsfix_t *tf)
+{
+  tfstream_t *tfs;
+  while((tfs = LIST_FIRST(&tf->tf_streams)) != NULL)
+    tsfix_destroy_stream(tfs);
+}
+
+
+/**
+ *
+ */
+static void
+tsfix_add_stream(tsfix_t *tf, int index, streaming_component_type_t type)
+{
+  tfstream_t *tfs = calloc(1, sizeof(tfstream_t));
+
+  tfs->tfs_type = type;
+  tfs->tfs_index = index;
+  tfs->tfs_last_dts_norm = AV_NOPTS_VALUE;
+  tfs->tfs_last_dts_in = AV_NOPTS_VALUE;
+  tfs->tfs_dts_epoch = 0; 
+
+  TAILQ_INIT(&tfs->tfs_ptsq);
+
+  LIST_INSERT_HEAD(&tf->tf_streams, tfs, tfs_link);
+}
+
+
+/**
+ *
+ */
+static void
+tsfix_start(tsfix_t *tf, streaming_start_t *ss)
+{
+  int i;
+  int hasvideo = 0;
+
+  for(i = 0; i < ss->ss_num_components; i++) {
+    const streaming_start_component_t *ssc = &ss->ss_components[i];
+    tsfix_add_stream(tf, ssc->ssc_index, ssc->ssc_type);
+    hasvideo |= SCT_ISVIDEO(ssc->ssc_type);
+  }
+
+  tf->tf_tsref = AV_NOPTS_VALUE;
+  tf->tf_hasvideo = hasvideo;
+}
+
+
+/**
+ *
+ */
+static void
+tsfix_stop(tsfix_t *tf)
+{
+  tsfix_destroy_streams(tf);
+}
+
+
+#define PTS_MASK 0x1ffffffffLL
+
+/**
+ *
+ */
+static void
+normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
+{
+  int64_t dts, d;
+
+  int checkts = SCT_ISAUDIO(tfs->tfs_type) || SCT_ISVIDEO(tfs->tfs_type);
+
+  if(tf->tf_tsref == AV_NOPTS_VALUE) {
+    pkt_ref_dec(pkt);
+    return;
+  }
+
+  /* Subtract the transport wide start offset */
+  dts = pkt->pkt_dts - tf->tf_tsref;
+
+  if(tfs->tfs_last_dts_norm == AV_NOPTS_VALUE) {
+    if(dts < 0) {
+      /* Early packet with negative time stamp, drop those */
+      pkt_ref_dec(pkt);
+      return;
+    }
+  } else if(checkts) {
+    d = dts + tfs->tfs_dts_epoch - tfs->tfs_last_dts_norm;
+
+    if(d < 0 || d > 90000) {
+
+      if(d < -PTS_MASK || d > -PTS_MASK + 180000) {
+
+	tfs->tfs_bad_dts++;
+
+	if(tfs->tfs_bad_dts < 5) {
+	  tvhlog(LOG_ERR, "parser", 
+		 "transport stream %s, DTS discontinuity. "
+		 "DTS = %" PRId64 ", last = %" PRId64,
+		 streaming_component_type2txt(tfs->tfs_type),
+		 dts, tfs->tfs_last_dts_norm);
+	}
+      } else {
+	/* DTS wrapped, increase upper bits */
+	tfs->tfs_dts_epoch += PTS_MASK + 1;
+	tfs->tfs_bad_dts = 0;
+      }
+    } else {
+      tfs->tfs_bad_dts = 0;
+    }
+  }
+
+  dts += tfs->tfs_dts_epoch;
+  tfs->tfs_last_dts_norm = dts;
+
+  if(pkt->pkt_pts != AV_NOPTS_VALUE) {
+    /* Compute delta between PTS and DTS (and watch out for 33 bit wrap) */
+    int64_t ptsoff = (pkt->pkt_pts - pkt->pkt_dts) & PTS_MASK;
+    
+    pkt->pkt_pts = dts + ptsoff;
+  }
+
+  pkt->pkt_dts = dts;
+
+  tsfixprintf("TSFIX: %-12s %d %10"PRId64" %10"PRId64" %10d %10d\n",
+	      streaming_component_type2txt(tfs->tfs_type),
+	      pkt->pkt_frametype,
+	      pkt->pkt_dts,
+	      pkt->pkt_pts,
+	      pkt->pkt_duration,
+	      pkt->pkt_payloadlen);
+
+  streaming_message_t *sm = streaming_msg_create_pkt(pkt);
+  streaming_target_deliver2(tf->tf_output, sm);
+}
+
+
+
+
+static void
+recover_pts_mpeg2video(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
+{
+  th_pktref_t *pr, *srch;
+
+  /* Reference count is transfered to queue */
+  pr = malloc(sizeof(th_pktref_t));
+  pr->pr_pkt = pkt;
+  TAILQ_INSERT_TAIL(&tfs->tfs_ptsq, pr, pr_link);
+  tfs->tfs_ptsq_len++;
+
+  /* */
+
+  while((pr = TAILQ_FIRST(&tfs->tfs_ptsq)) != NULL) {
+    
+    pkt = pr->pr_pkt;
+
+    switch(pkt->pkt_frametype) {
+    case PKT_B_FRAME:
+      /* B-frames have same PTS as DTS, pass them on */
+      pkt->pkt_pts = pkt->pkt_dts;
+      tsfixprintf("TSFIX: %-12s PTS b-frame set to %lld\n",
+		  streaming_component_type2txt(tfs->tfs_type),
+		  pkt->pkt_dts);
+      break;
+      
+    case PKT_I_FRAME:
+    case PKT_P_FRAME:
+      /* Presentation occures at DTS of next I or P frame,
+	 try to find it */
+      srch = TAILQ_NEXT(pr, pr_link);
+      while(1) {
+	if(srch == NULL)
+	  return; /* not arrived yet, wait */
+	if(srch->pr_pkt->pkt_frametype <= PKT_P_FRAME) {
+	  pkt->pkt_pts = srch->pr_pkt->pkt_dts;
+	  tsfixprintf("TSFIX: %-12s PTS *-frame set to %lld\n",
+		      streaming_component_type2txt(tfs->tfs_type),
+		      pkt->pkt_pts);
+   	  break;
+	}
+	srch = TAILQ_NEXT(srch, pr_link);
+      }
+      break;
+    }
+    
+    TAILQ_REMOVE(&tfs->tfs_ptsq, pr, pr_link);
+    tfs->tfs_ptsq_len--;
+
+    normalize_ts(tf, tfs, pkt);
+    free(pr);
+  }
+}
+
+
+/**
+ * Compute PTS (if not known)
+ *
+ * We do this by placing packets on a queue and wait for next I/P
+ * frame to appear
+ */
+static void
+compute_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
+{
+  int validpts;
+
+  // If PTS is missing, set it to DTS is not video
+  if(pkt->pkt_pts == AV_NOPTS_VALUE && !SCT_ISVIDEO(tfs->tfs_type)) {
+    pkt->pkt_pts = pkt->pkt_dts;
+    tsfixprintf("TSFIX: %-12s PTS set to %lld\n",
+		streaming_component_type2txt(tfs->tfs_type),
+		pkt->pkt_pts);
+  }
+  validpts = pkt->pkt_pts != AV_NOPTS_VALUE && tfs->tfs_ptsq_len == 0;
+
+  /* PTS known and no other packets in queue, deliver at once */
+  if(validpts)
+    return normalize_ts(tf, tfs, pkt);
+
+  if(tfs->tfs_type == SCT_MPEG2VIDEO)
+    return recover_pts_mpeg2video(tf, tfs, pkt);
+  else
+    return normalize_ts(tf, tfs, pkt);
+}
+
+
+/**
+ *
+ */
+static void
+tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
+{
+  tfstream_t *tfs;
+  th_pkt_t *pkt = pkt_copy(sm->sm_data);
+
+  streaming_msg_free(sm);
+
+  LIST_FOREACH(tfs, &tf->tf_streams, tfs_link)
+    if(pkt->pkt_componentindex == tfs->tfs_index)
+      break;
+  
+  if(tfs == NULL) {
+    pkt_ref_dec(pkt);
+    return;
+  }
+
+
+  if(tf->tf_tsref == AV_NOPTS_VALUE &&
+     (!tf->tf_hasvideo ||
+      (SCT_ISVIDEO(tfs->tfs_type) && pkt->pkt_frametype == PKT_I_FRAME))) {
+      tf->tf_tsref = pkt->pkt_dts;
+      tsfixprintf("reference clock set to %lld\n", tf->tf_tsref);
+  }
+
+  if(pkt->pkt_dts == AV_NOPTS_VALUE) {
+
+    int pdur = pkt->pkt_duration >> pkt->pkt_field;
+
+    if(tfs->tfs_last_dts_in == AV_NOPTS_VALUE) {
+      pkt_ref_dec(pkt);
+      return;
+    }
+
+    pkt->pkt_dts = (tfs->tfs_last_dts_in + pdur) & PTS_MASK;
+
+    tsfixprintf("TSFIX: %-12s DTS set to last %lld +%d == %lld\n",
+		streaming_component_type2txt(tfs->tfs_type),
+		tfs->tfs_last_dts_in, pdur, pkt->pkt_dts);
+  }
+  tfs->tfs_last_dts_in = pkt->pkt_dts;
+
+  compute_pts(tf, tfs, pkt);
+}
+
+
+/**
+ *
+ */
+static void
+tsfix_input(void *opaque, streaming_message_t *sm)
+{
+  tsfix_t *tf = opaque;
+
+  switch(sm->sm_type) {
+  case SMT_PACKET:
+    tsfix_input_packet(tf, sm);
+    return;
+
+  case SMT_START:
+    tsfix_start(tf, sm->sm_data);
+    break;
+
+  case SMT_STOP:
+    tsfix_stop(tf);
+    break;
+
+  case SMT_EXIT:
+  case SMT_TRANSPORT_STATUS:
+  case SMT_NOSTART:
+  case SMT_MPEGTS:
+    break;
+  }
+
+  streaming_target_deliver2(tf->tf_output, sm);
+}
+
+
+/**
+ *
+ */
+streaming_target_t *
+tsfix_create(streaming_target_t *output)
+{
+  tsfix_t *tf = calloc(1, sizeof(tsfix_t));
+
+  tf->tf_output = output;
+  streaming_target_init(&tf->tf_input, tsfix_input, tf, 0);
+  return &tf->tf_input;
+}
+
+
+/**
+ *
+ */
+void
+tsfix_destroy(streaming_target_t *pad)
+{
+  tsfix_t *tf = (tsfix_t *)pad;
+
+  tsfix_destroy_streams(tf);
+  free(tf);
+}
+

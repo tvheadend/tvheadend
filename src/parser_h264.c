@@ -294,7 +294,7 @@ h264_decode_pic_parameter_set(th_stream_t *st, bitstream_t *bs)
 
 int
 h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype,
-			 int *duration)
+			 int *duration, int *isfield)
 {
   h264_private_t *p;
   int slice_type, pps_id, sps_id, fnum;
@@ -329,20 +329,17 @@ h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype,
 
   fnum = read_bits(bs, p->sps[sps_id].max_frame_num_bits);
 
-  int structure;
-
+  int field = 0;
   int timebase = 180000;
 
-  if(p->sps[sps_id].mbs_only_flag) {
-    structure = 0;
-  } else {
+  if(!p->sps[sps_id].mbs_only_flag) {
     if(read_bits1(bs)) {
       read_bits1(bs); // bottom field
-      structure = 1;
-    } else {
-      structure = 2;
+      field = 1;
     }
   }
+
+  *isfield = field;
 
   if(p->sps[sps_id].time_scale != 0) {
     int d = timebase * p->sps[sps_id].units_in_tick / p->sps[sps_id].time_scale;
@@ -356,7 +353,7 @@ h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype,
 
   st->st_vbv_delay = -1;
 
-  if(p->sps[sps_id].width && p->sps[sps_id].height)
+  if(p->sps[sps_id].width && p->sps[sps_id].height && !st->st_buffer_errors)
     parser_set_stream_vsize(st, p->sps[sps_id].width, p->sps[sps_id].height);
   return 0;
 }

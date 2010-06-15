@@ -132,3 +132,31 @@ pkt_merge_global(th_pkt_t *pkt)
   
   return n;
 }
+
+
+
+/**
+ *
+ */
+th_pkt_t *
+pkt_copy(th_pkt_t *pkt)
+{
+  th_pkt_t *n = malloc(sizeof(th_pkt_t));
+  *n = *pkt;
+
+  n->pkt_refcount = 1;
+
+  if(pkt->pkt_globaldata_len) {
+    n->pkt_globaldata = malloc(pkt->pkt_globaldata_len + 
+			       FF_INPUT_BUFFER_PADDING_SIZE);
+    memcpy(n->pkt_globaldata, pkt->pkt_globaldata, pkt->pkt_globaldata_len);
+  }
+
+  if(pkt->pkt_payloadlen) {
+    n->pkt_payload = malloc(pkt->pkt_payloadlen + 
+			       FF_INPUT_BUFFER_PADDING_SIZE);
+    memcpy(n->pkt_payload, pkt->pkt_payload, pkt->pkt_payloadlen);
+  }
+
+  return n;
+}

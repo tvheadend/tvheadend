@@ -163,7 +163,9 @@ typedef enum {
   SCT_TEXTSUB,
 } streaming_component_type_t;
 
-
+#define SCT_ISVIDEO(t) ((t) == SCT_MPEG2VIDEO || (t) == SCT_H264)
+#define SCT_ISAUDIO(t) ((t) == SCT_MPEG2AUDIO || (t) == SCT_AC3 || \
+                        (t) == SCT_AAC)
 /**
  * A streaming pad generates data.
  * It has one or more streaming targets attached to it.
@@ -428,26 +430,13 @@ typedef struct th_stream {
   int st_height;
 
   int st_meta_change;
-  
-  /* DTS generator */
-
-  int64_t st_dts_epoch;  /* upper bits (auto generated) */
-  int64_t st_last_dts;
-  int st_bad_dts;
 
   /* Codec */
 
   struct AVCodecContext *st_ctx;
   struct AVCodecParserContext *st_parser;
 
-  /* Temporary frame store for calculating PTS */
 
-  struct th_pktref_queue st_ptsq;
-  int st_ptsq_len;
-
-  /* Temporary frame store for calculating duration */
-
-  struct th_pktref_queue st_durationq;
 
   /* CA ID's on this stream */
   struct caid_list st_caids;
@@ -752,11 +741,6 @@ typedef struct th_transport {
   int tht_scrambled;
   int tht_scrambled_seen;
   int tht_caid;
-
-  /**
-   * Used by parsing code to normalize timestamp to zero
-   */
-  int64_t tht_dts_start;
 
   /**
    * PCR drift compensation. This should really be per-packet.

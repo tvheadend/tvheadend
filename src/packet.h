@@ -37,6 +37,7 @@ typedef struct th_pkt {
   uint8_t pkt_commercial;
   uint8_t pkt_componentindex;
   uint8_t pkt_frametype;
+  uint8_t pkt_field;  // Set if packet is only a half frame (a field)
 
   uint8_t *pkt_payload;
   int pkt_payloadlen;
@@ -70,5 +71,7 @@ void pktref_clear_queue(struct th_pktref_queue *q);
 th_pkt_t *pkt_alloc(void *data, size_t datalen, int64_t pts, int64_t dts);
 
 th_pkt_t *pkt_merge_global(th_pkt_t *pkt);
+
+th_pkt_t *pkt_copy(th_pkt_t *pkt);
 
 #endif /* PACKET_H_ */

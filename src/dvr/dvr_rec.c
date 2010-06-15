@@ -33,6 +33,8 @@
 #include "spawn.h"
 #include "transports.h"
 
+#include "plumbing/tsfix.h"
+
 static const AVRational mpeg_tc = {1, 90000};
 
 typedef struct dvr_rec_stream {
@@ -85,8 +87,10 @@ dvr_rec_subscribe(dvr_entry_t *de)
   else
     weight = 300;
 
+  de->de_tsfix = tsfix_create(&de->de_sq.sq_st);
+
   de->de_s = subscription_create_from_channel(de->de_channel, weight,
-					      buf, &de->de_sq.sq_st, 0);
+					      buf, de->de_tsfix, 0);
 }
 
 /**
@@ -103,6 +107,8 @@ dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
   
   pthread_join(de->de_thread, NULL);
   de->de_s = NULL;
+
+  tsfix_destroy(de->de_tsfix);
 
   de->de_last_error = stopcode;
 }

@@ -153,7 +153,7 @@ typedef struct dvr_entry {
 
   th_subscription_t *de_s;
   streaming_queue_t de_sq;
-
+  streaming_target_t *de_tsfix;
   
   /**
    * Initialized upon SUBSCRIPTION_TRANSPORT_RUN
