@@ -68,12 +68,15 @@ got_section(const uint8_t *data, size_t len, void *opaque)
 static void
 ts_recv_packet0(th_transport_t *t, th_stream_t *st, const uint8_t *tsb)
 {
-  int off, pusi, cc, err = 0;
+  int off, pusi, cc, error;
 
   transport_set_streaming_status_flags(t, TSS_MUX_PACKETS);
 
   if(streaming_pad_probe_type(&t->tht_streaming_pad, SMT_MPEGTS))
     ts_remux(t, tsb);
+
+  error = !!(tsb[1] & 0x80);
+  pusi  = !!(tsb[1] & 0x40);
 
   /* Check CC */
 
@@ -85,14 +88,16 @@ ts_recv_packet0(th_transport_t *t, th_stream_t *st, const uint8_t *tsb)
 		 "Continuity counter error");
       avgstat_add(&t->tht_cc_errors, 1, dispatch_clock);
       avgstat_add(&st->st_cc_errors, 1, dispatch_clock);
-      err = 1;
+
+      // Mark as error if this is not the first packet of a payload
+      if(!pusi)
+	error |= 0x2;
     }
     st->st_cc_valid = 1;
     st->st_cc = (cc + 1) & 0xf;
   }
 
   off = tsb[3] & 0x20 ? tsb[4] + 5 : 4;
-  pusi = tsb[1] & 0x40;
 
   switch(st->st_type) {
 
@@ -115,7 +120,7 @@ ts_recv_packet0(th_transport_t *t, th_stream_t *st, const uint8_t *tsb)
       break;
 
     if(t->tht_status == TRANSPORT_RUNNING)
-      parse_mpeg_ts(t, st, tsb + off, 188 - off, pusi, err);
+      parse_mpeg_ts(t, st, tsb + off, 188 - off, pusi, error);
     break;
   }
 }
@@ -184,6 +189,7 @@ ts_recv_packet1(th_transport_t *t, const uint8_t *tsb, int64_t *pcrp)
   th_stream_t *st;
   int pid, n, m, r;
   th_descrambler_t *td;
+  int error = 0;
 
   if(t->tht_status != TRANSPORT_RUNNING)
     return;
@@ -196,8 +202,7 @@ ts_recv_packet1(th_transport_t *t, const uint8_t *tsb, int64_t *pcrp)
     /* Transport Error Indicator */
     limitedlog(&t->tht_loglimit_tei, "TS", transport_nicename(t),
 	       "Transport error indicator");
-    pthread_mutex_unlock(&t->tht_stream_mutex);
-    return;
+    error = 1;
   }
 
   pid = (tsb[1] & 0x1f) << 8 | tsb[2];
@@ -205,7 +210,7 @@ ts_recv_packet1(th_transport_t *t, const uint8_t *tsb, int64_t *pcrp)
   st = transport_stream_find(t, pid);
 
   /* Extract PCR */
-  if(tsb[3] & 0x20 && tsb[4] > 0 && tsb[5] & 0x10)
+  if(tsb[3] & 0x20 && tsb[4] > 0 && tsb[5] & 0x10 && !error)
     ts_extract_pcr(t, st, tsb, pcrp);
 
   if(st == NULL) {
@@ -213,7 +218,8 @@ ts_recv_packet1(th_transport_t *t, const uint8_t *tsb, int64_t *pcrp)
     return;
   }
 
-  transport_set_streaming_status_flags(t, TSS_INPUT_SERVICE);
+  if(!error)
+    transport_set_streaming_status_flags(t, TSS_INPUT_SERVICE);
 
   avgstat_add(&t->tht_rate, 188, dispatch_clock);
 
@@ -221,7 +227,11 @@ ts_recv_packet1(th_transport_t *t, const uint8_t *tsb, int64_t *pcrp)
       (t->tht_scrambled_seen && st->st_type != SCT_CA &&
        st->st_type != SCT_PAT && st->st_type != SCT_PMT)) {
 
-    t->tht_scrambled_seen = t->tht_scrambled;
+    /**
+     * Lock for descrambling, but only if packet was not in error
+     */
+    if(!error)
+      t->tht_scrambled_seen = t->tht_scrambled;
 
     /* scrambled stream */
     n = m = 0;
