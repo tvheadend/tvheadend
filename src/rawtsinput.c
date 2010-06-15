@@ -257,8 +257,11 @@ process_ts_packet(rawts_t *rt, uint8_t *tsb)
 	  struct timespec slp;
 	  int64_t delta = pcr - t->tht_pcr_last;
 
-	  if(delta > 100000)
-	    delta = 100000;
+	  
+
+	  if(delta > 90000)
+	    delta = 90000;
+	  delta *= 11;
 	  d = delta + t->tht_pcr_last_realtime;
 	  slp.tv_sec  =  d / 1000000;
 	  slp.tv_nsec = (d % 1000000) * 1000;
