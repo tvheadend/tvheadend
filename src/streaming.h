@@ -32,6 +32,10 @@ typedef struct streaming_start_component {
   uint16_t ssc_ancillary_id;
   int16_t ssc_width;
   int16_t ssc_height;
+
+  uint8_t *ssc_global_header;
+  int ssc_global_header_len;
+
 } streaming_start_component_t;
 
 
@@ -82,6 +86,8 @@ streaming_message_t *streaming_msg_create_code(streaming_message_type_t type,
 streaming_message_t *streaming_msg_create_pkt(th_pkt_t *pkt);
 
 #define streaming_target_deliver(st, sm) ((st)->st_cb((st)->st_opaque, (sm)))
+
+void streaming_target_deliver2(streaming_target_t *st, streaming_message_t *sm);
 
 void streaming_start_unref(streaming_start_t *ss);
 

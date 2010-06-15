@@ -197,10 +197,15 @@ streaming_msg_clone(streaming_message_t *src)
 void
 streaming_start_unref(streaming_start_t *ss)
 {
+  int i;
+
   if((atomic_add(&ss->ss_refcount, -1)) != 1)
     return;
 
   transport_source_info_free(&ss->ss_si);
+  for(i = 0; i < ss->ss_num_components; i++)
+    free(ss->ss_components[i].ssc_global_header);
+
   free(ss);
 }
 
@@ -243,6 +248,17 @@ streaming_msg_free(streaming_message_t *sm)
   free(sm);
 }
 
+/**
+ *
+ */
+void
+streaming_target_deliver2(streaming_target_t *st, streaming_message_t *sm)
+{
+  if(st->st_reject_filter & SMT_TO_MASK(sm->sm_type))
+    streaming_msg_free(sm);
+  else
+    st->st_cb(st->st_opaque, sm);
+}
 
 /**
  *
