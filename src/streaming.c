@@ -358,3 +358,47 @@ streaming_code2txt(int code)
     return "Unknown reason";
   }
 }
+
+
+/**
+ *
+ */
+streaming_start_t *
+streaming_start_copy(const streaming_start_t *src)
+{
+  int i;
+  size_t siz = sizeof(streaming_start_t) + 
+    sizeof(streaming_start_component_t) * src->ss_num_components;
+  
+  streaming_start_t *dst = malloc(siz);
+  
+  memcpy(dst, src, siz);
+  transport_source_info_copy(&dst->ss_si, &src->ss_si);
+
+  for(i = 0; i < dst->ss_num_components; i++) {
+    streaming_start_component_t *ssc = &dst->ss_components[i];
+    if(ssc->ssc_global_header != NULL)
+      ssc->ssc_global_header = memcpy(malloc(ssc->ssc_global_header_len),
+				      ssc->ssc_global_header,
+				      ssc->ssc_global_header_len);
+  }
+
+  dst->ss_refcount = 1;
+  return dst;
+}
+
+
+/**
+ *
+ */
+streaming_start_component_t *
+streaming_start_component_find_by_index(streaming_start_t *ss, int idx)
+{
+  int i;
+  for(i = 0; i < ss->ss_num_components; i++) {
+    streaming_start_component_t *ssc = &ss->ss_components[i];
+    if(ssc->ssc_index == idx)
+      return ssc;
+  }
+  return NULL;
+}

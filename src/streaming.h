@@ -36,6 +36,8 @@ typedef struct streaming_start_component {
   uint8_t *ssc_global_header;
   int ssc_global_header_len;
 
+  int ssc_frameduration;
+
 } streaming_start_component_t;
 
 
@@ -91,9 +93,15 @@ void streaming_target_deliver2(streaming_target_t *st, streaming_message_t *sm);
 
 void streaming_start_unref(streaming_start_t *ss);
 
+streaming_start_t *streaming_start_copy(const streaming_start_t *src);
+
 int streaming_pad_probe_type(streaming_pad_t *sp, 
 			     streaming_message_type_t smt);
 
 const char *streaming_code2txt(int code);
+
+streaming_start_component_t *streaming_start_component_find_by_index(streaming_start_t *ss, int idx);
+
+
 
 #endif /* STREAMING_H_ */
