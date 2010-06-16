@@ -160,3 +160,15 @@ pkt_copy(th_pkt_t *pkt)
 
   return n;
 }
+
+
+/**
+ *
+ */
+th_pktref_t *
+pktref_create(th_pkt_t *pkt)
+{
+  th_pktref_t *pr = malloc(sizeof(th_pktref_t));
+  pr->pr_pkt = pkt;
+  return pr;
+}

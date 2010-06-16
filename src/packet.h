@@ -74,4 +74,6 @@ th_pkt_t *pkt_merge_global(th_pkt_t *pkt);
 
 th_pkt_t *pkt_copy(th_pkt_t *pkt);
 
+th_pktref_t *pktref_create(th_pkt_t *pkt);
+
 #endif /* PACKET_H_ */
