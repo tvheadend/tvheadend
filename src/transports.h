@@ -79,7 +79,7 @@ void transport_request_save(th_transport_t *t, int restart);
 
 void transport_source_info_free(source_info_t *si);
 
-void transport_source_info_copy(source_info_t *dst, source_info_t *src);
+void transport_source_info_copy(source_info_t *dst, const source_info_t *src);
 
 void transport_make_nicename(th_transport_t *t);
 

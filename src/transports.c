@@ -973,7 +973,7 @@ transport_source_info_free(struct source_info *si)
 
 
 void
-transport_source_info_copy(source_info_t *dst, source_info_t *src)
+transport_source_info_copy(source_info_t *dst, const source_info_t *src)
 {
 #define COPY(x) dst->si_##x = src->si_##x ? strdup(src->si_##x) : NULL
   COPY(device);
