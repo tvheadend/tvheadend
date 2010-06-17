@@ -249,11 +249,14 @@ ts_recv_packet1(th_transport_t *t, const uint8_t *tsb, int64_t *pcrp)
 	m++;
     }
 
-    if(n == 0) {
-      transport_set_streaming_status_flags(t, TSS_NO_DESCRAMBLER);
-    } else if(m == n) {
-      transport_set_streaming_status_flags(t, TSS_NO_ACCESS);
+    if(!error) {
+      if(n == 0) {
+	transport_set_streaming_status_flags(t, TSS_NO_DESCRAMBLER);
+      } else if(m == n) {
+	transport_set_streaming_status_flags(t, TSS_NO_ACCESS);
+      }
     }
+
   } else {
     ts_recv_packet0(t, st, tsb);
   }
