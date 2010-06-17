@@ -35,11 +35,6 @@
 #include "parser_latm.h"
 #include "bitstream.h"
 
-static const int mpeg4audio_sample_rates[16] = {
-    96000, 88200, 64000, 48000, 44100, 32000,
-    24000, 22050, 16000, 12000, 11025, 8000, 7350
-};
-
 
 typedef struct latm_private {
 
@@ -52,12 +47,6 @@ typedef struct latm_private {
 
 } latm_private_t;
 
-
-
-static int aac_sample_rates[16] = {
-  96000, 88200, 64000, 48000, 44100, 32000,
-  24000, 22050, 16000, 12000, 11025, 8000, 7350
-};
 
 
 static uint32_t
@@ -82,7 +71,7 @@ read_audio_specific_config(th_stream_t *st, latm_private_t *latm,
   if(latm->sample_rate_index == 0xf)
     return;
 
-  sr = aac_sample_rates[latm->sample_rate_index];
+  sr = sri_to_rate(latm->sample_rate_index);
   st->st_frame_duration = 1024 * 90000 / sr;
 
   latm->channel_config = read_bits(bs, 4);
@@ -211,6 +200,8 @@ parse_latm_audio_mux_element(th_transport_t *t, th_stream_t *st, uint8_t *data,
   pkt->pkt_payloadlen = slot_len + 7;
   pkt->pkt_payload = malloc(pkt->pkt_payloadlen);
   pkt->pkt_duration = st->st_frame_duration;
+  pkt->pkt_sri = latm->sample_rate_index;
+  pkt->pkt_channels = latm->channel_config;
 
   /* 7 bytes of ADTS header */
   init_bits(&out, pkt->pkt_payload, 56);

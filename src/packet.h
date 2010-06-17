@@ -39,6 +39,9 @@ typedef struct th_pkt {
   uint8_t pkt_frametype;
   uint8_t pkt_field;  // Set if packet is only a half frame (a field)
 
+  uint8_t pkt_channels;
+  uint8_t pkt_sri;
+
   uint8_t *pkt_payload;
   int pkt_payloadlen;
 

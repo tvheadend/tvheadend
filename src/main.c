@@ -666,3 +666,22 @@ get_device_connection(const char *dev)
     return speed >= 480 ? HOSTCONNECTION_USB480 : HOSTCONNECTION_USB12;
   }
 }
+
+
+
+/**
+ *
+ */
+static const int sample_rates[16] = {
+    96000, 88200, 64000, 48000, 44100, 32000,
+    24000, 22050, 16000, 12000, 11025, 8000, 7350
+};
+
+/**
+ *
+ */
+int
+sri_to_rate(int sri)
+{
+  return sample_rates[sri & 0xf];
+}

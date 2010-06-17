@@ -810,7 +810,7 @@ getmonoclock(void)
   return tp.tv_sec * 1000000ULL + (tp.tv_nsec / 1000);
 }
 
-
+int sri_to_rate(int sri);
 
 
 extern time_t dispatch_clock;
