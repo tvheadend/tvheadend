@@ -422,7 +422,10 @@ transport_find(channel_t *ch, unsigned int weight, const char *loginfo,
       return t;
     *errorp = r;
   }
-  *errorp = err ?: SM_CODE_NO_TRANSPORT;
+  if(err)
+    *errorp = err;
+  else if(*errorp == 0)
+    *errorp = SM_CODE_NO_TRANSPORT;
   return NULL;
 }
 
