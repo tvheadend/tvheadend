@@ -837,4 +837,6 @@ int tvh_open(const char *pathname, int flags, mode_t mode);
 
 int tvh_socket(int domain, int type, int protocol);
 
+void hexdump(const char *pfx, const uint8_t *data, int len);
+
 #endif /* TV_HEAD_H */

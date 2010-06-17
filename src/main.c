@@ -685,3 +685,17 @@ sri_to_rate(int sri)
 {
   return sample_rates[sri & 0xf];
 }
+
+
+/**
+ *
+ */
+void
+hexdump(const char *pfx, const uint8_t *data, int len)
+{
+  int i;
+  printf("%s: ", pfx);
+  for(i = 0; i < len; i++)
+    printf("%02x.", data[i]);
+  printf("\n");
+}
