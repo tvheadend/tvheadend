@@ -705,15 +705,29 @@ parse_mpeg2video_seq_start(th_transport_t *t, th_stream_t *st,
 /**
  *
  */
+static int
+drop_trailing_zeroes(const uint8_t *buf, size_t len)
+{
+  while(len > 3 && (buf[len - 3] | buf[len - 2] | buf[len - 1]) == 0)
+    len--;
+  return len;
+}
+
+
+/**
+ *
+ */
 static void
 parser_global_data_move(th_stream_t *st, const uint8_t *data, size_t len)
 {
+  int len2 = drop_trailing_zeroes(data, len);
+
   st->st_global_data = realloc(st->st_global_data,
-			       st->st_global_data_len + len + 
+			       st->st_global_data_len + len2 +
 			       FF_INPUT_BUFFER_PADDING_SIZE);
   
-  memcpy(st->st_global_data + st->st_global_data_len, data, len);
-  st->st_global_data_len += len;
+  memcpy(st->st_global_data + st->st_global_data_len, data, len2);
+  st->st_global_data_len += len2;
 
   st->st_buffer_ptr -= len;
 }
