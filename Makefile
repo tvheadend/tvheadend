@@ -69,12 +69,16 @@ SRCS =  src/main.c \
 	src/htsstr.c \
 	src/rawtsinput.c \
 	src/iptv_input.c \
+	src/avc.c \
 
 SRCS += src/plumbing/tsfix.c \
+	src/plumbing/globalheaders.c \
 
 SRCS += src/dvr/dvr_db.c \
 	src/dvr/dvr_rec.c \
-	src/dvr/dvr_autorec.c
+	src/dvr/dvr_autorec.c \
+	src/dvr/ebml.c \
+	src/dvr/mkmux.c \
 
 SRCS-${CONFIG_LINUXDVB} += \
 	src/dvb/dvb.c \
@@ -155,7 +159,7 @@ CURVERSION=$(shell cat ${BUILDDIR}/ver || echo "0")
 
 # Common CFLAGS for all files
 CFLAGS_com  = -g -funsigned-char -O2 
-CFLAGS_com += -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
+CFLAGS_com += -D_FILE_OFFSET_BITS=64
 CFLAGS_com += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR}
 CFLAGS_com += -DHTS_VERSION=\"$(VERSION)\"
 

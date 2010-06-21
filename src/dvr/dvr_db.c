@@ -63,11 +63,9 @@ dvr_entry_status(dvr_entry_t *de)
 
     switch(de->de_rec_state) {
     case DVR_RS_PENDING:
-      return "Pending start";
-    case DVR_RS_WAIT_AUDIO_LOCK:
-      return "Waiting for audio lock";
-    case DVR_RS_WAIT_VIDEO_LOCK:
-      return "Waiting for video lock";
+      return "Waiting for stream";
+    case DVR_RS_WAIT_PROGRAM_START:
+      return "Waiting for program start";
     case DVR_RS_RUNNING:
       return "Running";
     case DVR_RS_COMMERCIAL:
@@ -373,6 +371,7 @@ dvr_entry_remove(dvr_entry_t *de)
 
   LIST_REMOVE(de, de_channel_link);
   LIST_REMOVE(de, de_global_link);
+  de->de_channel = NULL;
 
   dvrdb_changed();
 

@@ -34,25 +34,14 @@
 #include "transports.h"
 
 #include "plumbing/tsfix.h"
+#include "plumbing/globalheaders.h"
 
-static const AVRational mpeg_tc = {1, 90000};
-
-typedef struct dvr_rec_stream {
-  LIST_ENTRY(dvr_rec_stream) drs_link;
-
-  int drs_source_index;
-  AVStream *drs_lavf_stream;
-  
-  int drs_decoded;
-
-} dvr_rec_stream_t;
-
+#include "mkmux.h"
 
 /**
  *
  */
 static void *dvr_thread(void *aux);
-static void dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt);
 static void dvr_spawn_postproc(dvr_entry_t *de);
 static void dvr_thread_epilog(dvr_entry_t *de);
 
@@ -87,7 +76,9 @@ dvr_rec_subscribe(dvr_entry_t *de)
   else
     weight = 300;
 
-  de->de_tsfix = tsfix_create(&de->de_sq.sq_st);
+  de->de_gh = globalheaders_create(&de->de_sq.sq_st);
+
+  de->de_tsfix = tsfix_create(de->de_gh);
 
   de->de_s = subscription_create_from_channel(de->de_channel, weight,
 					      buf, de->de_tsfix, 0);
@@ -109,6 +100,7 @@ dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
   de->de_s = NULL;
 
   tsfix_destroy(de->de_tsfix);
+  globalheaders_destroy(de->de_gh);
 
   de->de_last_error = stopcode;
 }
@@ -247,12 +239,12 @@ pvr_generate_filename(dvr_entry_t *de)
 
   while(1) {
     if(stat(fullname, &st) == -1) {
-      tvhlog(LOG_DEBUG, "pvr", "File \"%s\" -- %s -- Using for recording",
+      tvhlog(LOG_DEBUG, "dvr", "File \"%s\" -- %s -- Using for recording",
 	     fullname, strerror(errno));
       break;
     }
 
-    tvhlog(LOG_DEBUG, "pvr", "Overwrite protection, file \"%s\" exists", 
+    tvhlog(LOG_DEBUG, "dvr", "Overwrite protection, file \"%s\" exists", 
 	   fullname);
 
     tally++;
@@ -281,7 +273,7 @@ dvr_rec_fatal_error(dvr_entry_t *de, const char *fmt, ...)
   vsnprintf(msgbuf, sizeof(msgbuf), fmt, ap);
   va_end(ap);
 
-  tvhlog(LOG_ERR, "pvr", 
+  tvhlog(LOG_ERR, "dvr", 
 	 "Recording error: \"%s\": %s",
 	 de->de_filename ?: de->de_title, msgbuf);
 }
@@ -293,6 +285,8 @@ dvr_rec_fatal_error(dvr_entry_t *de, const char *fmt, ...)
 static void
 dvr_rec_set_state(dvr_entry_t *de, dvr_rs_state_t newstate, int error)
 {
+  if(de->de_rec_state == newstate)
+    return;
   de->de_rec_state = newstate;
   de->de_last_error = error;
   if(error)
@@ -307,16 +301,7 @@ static void
 dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 {
   const source_info_t *si = &ss->ss_si;
-  dvr_rec_stream_t *drs;
-  AVOutputFormat *fmt;
-  AVFormatContext *fctx;
-  AVCodecContext *ctx;
-  AVCodec *codec;
-  enum CodecID codec_id;
-  enum CodecType codec_type;
-  const char *codec_name;
-  char urlname[512];
-  int err, r;
+  const streaming_start_component_t *ssc;
   int i;
 
   if(pvr_generate_filename(de) != 0) {
@@ -324,112 +309,12 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     return;
   }
 
-  /* Find lavf format */
+  de->de_mkmux = mk_mux_create(de->de_filename, ss, de);
 
-  fmt = guess_format(dvr_format, NULL, NULL);
-  if(fmt == NULL) {
-    dvr_rec_fatal_error(de, "Unable to open file format \"%s\" for output",
-			dvr_format);
+  if(de->de_mkmux == NULL) {
+    dvr_rec_fatal_error(de, "Unable to open file");
     return;
   }
-
-  /* Init format context */
-
-  fctx = avformat_alloc_context();
-
-  av_strlcpy(fctx->title, de->de_ititle ?: "", 
-	     sizeof(fctx->title));
-
-  av_strlcpy(fctx->comment, de->de_desc ?: "", 
-	     sizeof(fctx->comment));
-
-  av_strlcpy(fctx->copyright, de->de_channel->ch_name, 
-	     sizeof(fctx->copyright));
-
-  fctx->oformat = fmt;
-
-  /* Open output file */
-
-  snprintf(urlname, sizeof(urlname), "file:%s", de->de_filename);
-
-  if((err = url_fopen(&fctx->pb, urlname, URL_WRONLY)) < 0) {
-    av_free(fctx);
-    dvr_rec_fatal_error(de, "Unable to create output file \"%s\". "
-			"FFmpeg error %d", urlname, err);
-    return;
-  }
-
-  av_set_parameters(fctx, NULL);
-
-
-  /**
-   * Setup each stream
-   */ 
-  for(i = 0; i < ss->ss_num_components; i++) {
-    const streaming_start_component_t *ssc = &ss->ss_components[i];
-
-    switch(ssc->ssc_type) {
-    case SCT_AC3:
-      codec_id = CODEC_ID_AC3;
-      codec_type = CODEC_TYPE_AUDIO;
-      codec_name = "AC-3";
-      break;
-    case SCT_MPEG2AUDIO:
-      codec_id = CODEC_ID_MP2;
-      codec_type = CODEC_TYPE_AUDIO;
-      codec_name = "MPEG";
-      break;
-    case SCT_MPEG2VIDEO:
-      codec_id = CODEC_ID_MPEG2VIDEO;
-      codec_type = CODEC_TYPE_VIDEO;
-      codec_name = "MPEG-2";
-      break;
-    case SCT_H264:
-      codec_id = CODEC_ID_H264;
-      codec_type = CODEC_TYPE_VIDEO;
-      codec_name = "H264";
-      break;
-    default:
-      continue;
-    }
-
-    codec = avcodec_find_decoder(codec_id);
-    if(codec == NULL) {
-      tvhlog(LOG_ERR, "dvr",
-	     "%s - Cannot find codec for %s, ignoring stream", 
-	     de->de_ititle, codec_name);
-      continue;
-    }
-
-    drs = calloc(1, sizeof(dvr_rec_stream_t));
-    drs->drs_source_index = ssc->ssc_index;
-
-    drs->drs_lavf_stream = av_new_stream(fctx, fctx->nb_streams);
-
-    ctx = drs->drs_lavf_stream->codec;
-    ctx->codec_id   = codec_id;
-    ctx->codec_type = codec_type;
-
-    pthread_mutex_lock(&ffmpeg_lock);
-    r = avcodec_open(ctx, codec);
-    pthread_mutex_unlock(&ffmpeg_lock);
-
-    if(r < 0) {
-      tvhlog(LOG_ERR, "dvr",
-	     "%s - Cannot open codec for %s, ignoring stream", 
-	     de->de_ititle, codec_name);
-      free(ctx);
-      continue;
-    }
-
-    memcpy(drs->drs_lavf_stream->language, ssc->ssc_lang, 4);
-
-    LIST_INSERT_HEAD(&de->de_streams, drs, drs_link);
-  }
-
-  de->de_fctx = fctx;
-  de->de_ts_offset = AV_NOPTS_VALUE;
-
 
   tvhlog(LOG_INFO, "dvr", "%s from "
 	 "adapter: \"%s\", "
@@ -441,6 +326,20 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 	 si->si_mux      ?: "<N/A>",
 	 si->si_provider ?: "<N/A>",
 	 si->si_service  ?: "<N/A>");
+
+
+  for(i = 0; i < ss->ss_num_components; i++) {
+    ssc = &ss->ss_components[i];
+
+    tvhlog(LOG_INFO, "dvr",
+	   "%2d %-20s %-4s %5d x %-5d %-5d",
+	   ssc->ssc_index,
+	   streaming_component_type2txt(ssc->ssc_type),
+	   ssc->ssc_lang,
+	   ssc->ssc_width,
+	   ssc->ssc_height,
+	   ssc->ssc_frameduration);
+  }
 }
 
 
@@ -454,7 +353,6 @@ dvr_thread(void *aux)
   streaming_queue_t *sq = &de->de_sq;
   streaming_message_t *sm;
   int run = 1;
-  th_pkt_t *pkt;
 
   pthread_mutex_lock(&sq->sq_mutex);
 
@@ -471,22 +369,17 @@ dvr_thread(void *aux)
 
     switch(sm->sm_type) {
     case SMT_PACKET:
-      pkt = sm->sm_data;
-      sm->sm_data = NULL;
       if(dispatch_clock > de->de_start - (60 * de->de_start_extra)) {
-	pkt = pkt_merge_global(pkt);
-	dvr_thread_new_pkt(de, pkt);
+	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
+	mk_mux_write_pkt(de->de_mkmux, sm->sm_data);
+	sm->sm_data = NULL;
       }
-      pkt_ref_dec(pkt);
       break;
 
     case SMT_START:
-      assert(de->de_fctx == NULL);
-
       pthread_mutex_lock(&global_lock);
+      dvr_rec_set_state(de, DVR_RS_WAIT_PROGRAM_START, 0);
       dvr_rec_start(de, sm->sm_data);
-      de->de_header_written = 0;
-      dvr_rec_set_state(de, DVR_RS_WAIT_AUDIO_LOCK, 0);
       pthread_mutex_unlock(&global_lock);
       break;
 
@@ -498,7 +391,7 @@ dvr_thread(void *aux)
 	de->de_last_error = 0;
 
 	tvhlog(LOG_INFO, 
-	       "pvr", "Recording completed: \"%s\"",
+	       "dvr", "Recording completed: \"%s\"",
 	       de->de_filename ?: de->de_title);
 
       } else {
@@ -507,7 +400,7 @@ dvr_thread(void *aux)
 	  dvr_rec_set_state(de, DVR_RS_ERROR, sm->sm_code);
 
 	  tvhlog(LOG_ERR,
-		 "pvr", "Recording stopped: \"%s\": %s",
+		 "dvr", "Recording stopped: \"%s\": %s",
 		 de->de_filename ?: de->de_title,
 		 streaming_code2txt(sm->sm_code));
 	}
@@ -533,7 +426,7 @@ dvr_thread(void *aux)
 	if(de->de_last_error != code) {
 	  dvr_rec_set_state(de, DVR_RS_ERROR, code);
 	  tvhlog(LOG_ERR,
-		 "pvr", "Streaming error: \"%s\": %s",
+		 "dvr", "Streaming error: \"%s\": %s",
 		 de->de_filename ?: de->de_title,
 		 streaming_code2txt(code));
 	}
@@ -546,7 +439,7 @@ dvr_thread(void *aux)
 	dvr_rec_set_state(de, DVR_RS_ERROR, sm->sm_code);
 
 	tvhlog(LOG_ERR,
-	       "pvr", "Recording unable to start: \"%s\": %s",
+	       "dvr", "Recording unable to start: \"%s\": %s",
 	       de->de_filename ?: de->de_title,
 	       streaming_code2txt(sm->sm_code));
       }
@@ -567,192 +460,6 @@ dvr_thread(void *aux)
   return NULL;
 }
 
-
-/** 
- * Check if all streams of the given type has been decoded
- */
-static int
-is_all_decoded(dvr_entry_t *de, enum CodecType type)
-{
-  dvr_rec_stream_t *drs;
-  AVStream *st;
-
-  LIST_FOREACH(drs, &de->de_streams, drs_link) {
-    st = drs->drs_lavf_stream;
-    if(st->codec->codec->type == type && drs->drs_decoded == 0)
-      return 0;
-  }
-  return 1;
-}
-
-
-/**
- *
- */
-static void
-dvr_thread_new_pkt(dvr_entry_t *de, th_pkt_t *pkt)
-{
-  AVFormatContext *fctx = de->de_fctx;
-  dvr_rec_stream_t *drs;
-  AVStream *st, *stx;
-  AVCodecContext *ctx;
-  AVPacket avpkt;
-  void *abuf;
-  AVFrame pic;
-  int r, data_size, i;
-  void *buf;
-  size_t bufsize;
-  char txt[100];
-  int64_t pts, dts;
-
-  buf = pkt->pkt_payload;
-  bufsize = pkt->pkt_payloadlen;
-  LIST_FOREACH(drs, &de->de_streams, drs_link)
-    if(drs->drs_source_index == pkt->pkt_componentindex)
-      break;
-
-  if(drs == NULL)
-    return;
-
-  st = drs->drs_lavf_stream;
-  ctx = st->codec;
-
-  if(de->de_ts_offset == AV_NOPTS_VALUE)
-    de->de_ts_offset = pkt->pkt_dts;
-
-  switch(de->de_rec_state) {
-  default:
-    break;
-
-  case DVR_RS_WAIT_AUDIO_LOCK:
-    if(ctx->codec_type != CODEC_TYPE_AUDIO || drs->drs_decoded)
-      break;
-
-    data_size = AVCODEC_MAX_AUDIO_FRAME_SIZE;
-    abuf = av_malloc(data_size);
-
-    r = avcodec_decode_audio2(ctx, abuf, &data_size, buf, bufsize);
-    av_free(abuf);
-
-    if(r != 0 && data_size) {
-      tvhlog(LOG_DEBUG, "dvr", "%s - "
-	     "Stream #%d: \"%s\" decoded a complete audio frame: "
-	     "%d channels in %d Hz",
-	     de->de_ititle, st->index, ctx->codec->name,
-	     ctx->channels, ctx->sample_rate);
-	
-      drs->drs_decoded = 1;
-    }
-
-    if(is_all_decoded(de, CODEC_TYPE_AUDIO))
-      dvr_rec_set_state(de, DVR_RS_WAIT_VIDEO_LOCK, 0);
-    break;
-    
-  case DVR_RS_WAIT_VIDEO_LOCK:
-    if(ctx->codec_type != CODEC_TYPE_VIDEO || drs->drs_decoded)
-      break;
-
-    r = avcodec_decode_video(st->codec, &pic, &data_size, buf, bufsize);
-    if(r != 0 && data_size) {
-      tvhlog(LOG_DEBUG, "dvr", "%s - "
-	     "Stream #%d: \"%s\" decoded a complete video frame: "
-	     "%d x %d at %.2fHz",
-	     de->de_ititle, st->index,  ctx->codec->name,
-	     ctx->width, st->codec->height,
-	     (float)ctx->time_base.den / (float)ctx->time_base.num);
-      
-      drs->drs_decoded = 1;
-      
-      st->sample_aspect_ratio = st->codec->sample_aspect_ratio;
-    }
-    
-    if(!is_all_decoded(de, CODEC_TYPE_VIDEO))
-      break;
-
-    /* All Audio & Video decoded, start recording */
-
-    dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
-
-    if(!de->de_header_written) {
-
-      if(av_write_header(fctx)) {
-	tvhlog(LOG_ERR, "dvr",
-	       "%s - Unable to write header", 
-	       de->de_ititle);
- 	break;
-      }
-
-      de->de_header_written = 1;
-
-      tvhlog(LOG_INFO, "dvr",
-	     "%s - Header written to file, stream dump:", 
-	     de->de_ititle);
-      
-      for(i = 0; i < fctx->nb_streams; i++) {
-	stx = fctx->streams[i];
-	
-	avcodec_string(txt, sizeof(txt), stx->codec, 1);
-	
-	tvhlog(LOG_INFO, "dvr", "%s - Stream #%d: %s [%d/%d]",
-	       de->de_ititle, i, txt, 
-	       stx->time_base.num, stx->time_base.den);
-	
-      }
-    }
-    /* FALLTHRU */
-      
-  case DVR_RS_RUNNING:
-     
-    if(de->de_header_written == 0)
-      break;
-
-    if(pkt->pkt_commercial == COMMERCIAL_YES &&
-       st->codec->codec->type == CODEC_TYPE_VIDEO &&
-       pkt->pkt_frametype == PKT_I_FRAME) {
-      
-      de->de_ts_com_start = pkt->pkt_dts;
-
-      dvr_rec_set_state(de, DVR_RS_COMMERCIAL, 0);
-      break;
-    }
-  outputpacket:
-    dts = pkt->pkt_dts - de->de_ts_offset - de->de_ts_com_offset;
-    pts = pkt->pkt_pts - de->de_ts_offset - de->de_ts_com_offset;
-    if(dts < 0 || pts < 0)
-      break;
-
-    av_init_packet(&avpkt);
-    avpkt.stream_index = st->index;
-
-    avpkt.dts = av_rescale_q(dts, mpeg_tc, st->time_base);
-    avpkt.pts = av_rescale_q(pts, mpeg_tc, st->time_base);
-    avpkt.data = buf;
-    avpkt.size = bufsize;
-    avpkt.duration = av_rescale_q(pkt->pkt_duration, mpeg_tc, st->time_base);
-    avpkt.flags = pkt->pkt_frametype >= PKT_P_FRAME ? 0 : PKT_FLAG_KEY;
-    r = av_interleaved_write_frame(fctx, &avpkt);
-    break;
-
-
-  case DVR_RS_COMMERCIAL:
-
-    if(pkt->pkt_commercial != COMMERCIAL_YES &&
-       st->codec->codec->type == CODEC_TYPE_VIDEO &&
-       pkt->pkt_frametype == PKT_I_FRAME) {
-
-      /* Switch out of commercial mode */
-      
-      de->de_ts_com_offset += (pkt->pkt_dts - de->de_ts_com_start);
-      dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
-
-      tvhlog(LOG_INFO, "dvr", 
-	     "%s - Skipped %" PRId64 " seconds of commercials",
-	     de->de_ititle, (pkt->pkt_dts - de->de_ts_com_start) / 90000);
-      goto outputpacket;
-    }
-    break;
-  }
-}
 
 /**
  *
@@ -811,39 +518,8 @@ dvr_spawn_postproc(dvr_entry_t *de)
 static void
 dvr_thread_epilog(dvr_entry_t *de)
 {
-  AVFormatContext *fctx = de->de_fctx;
-  dvr_rec_stream_t *drs;
-  AVStream *st;
-  int i;
-
-  if(fctx == NULL)
-    return;
-
-  /* Write trailer if we've written anything at all */
-    
-  if(de->de_header_written)
-    av_write_trailer(fctx);
-
-  /* Close lavf streams and format */
-  
-  for(i = 0; i < fctx->nb_streams; i++) {
-    st = fctx->streams[i];
-    pthread_mutex_lock(&ffmpeg_lock);
-    avcodec_close(st->codec);
-    pthread_mutex_unlock(&ffmpeg_lock);
-    free(st->codec);
-    free(st);
-  }
-  
-  url_fclose(fctx->pb);
-  free(fctx);
-
-  de->de_fctx = NULL;
-
-  while((drs = LIST_FIRST(&de->de_streams)) != NULL) {
-    LIST_REMOVE(drs, drs_link);
-    free(drs);
-  }
+  mk_mux_close(de->de_mkmux);
+  de->de_mkmux = NULL;
 
   if(dvr_postproc)
     dvr_spawn_postproc(de);

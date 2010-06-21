@@ -1,0 +1,283 @@
+/**
+ *  Global header modification
+ *  Copyright (C) 2010 Andreas Öman
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <assert.h>
+#include "tvhead.h"
+#include "streaming.h"
+#include "globalheaders.h"
+#include "avc.h"
+
+typedef struct globalheaders {
+  streaming_target_t gh_input;
+
+  streaming_target_t *gh_output;
+
+  struct th_pktref_queue gh_holdq;
+
+  streaming_start_t *gh_ss;
+
+  int gh_passthru;
+
+} globalheaders_t;
+
+
+/**
+ *
+ */
+static void
+gh_flush(globalheaders_t *gh)
+{
+  if(gh->gh_ss != NULL)
+    streaming_start_unref(gh->gh_ss);
+  gh->gh_ss = NULL;
+
+  pktref_clear_queue(&gh->gh_holdq);
+}
+
+
+
+/**
+ *
+ */
+static void
+apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
+{
+  uint8_t *d;
+  if(ssc->ssc_frameduration == 0 && pkt->pkt_duration != 0)
+    ssc->ssc_frameduration = pkt->pkt_duration;
+
+  if(ssc->ssc_global_header != NULL)
+    return;
+
+  switch(ssc->ssc_type) {
+  case SCT_AAC:
+    d = ssc->ssc_global_header = malloc(2);
+    ssc->ssc_global_header_len = 2;
+
+    const int profile = 2;
+    d[0] = (profile << 3) | ((pkt->pkt_sri & 0xe) >> 1);
+    d[1] = ((pkt->pkt_sri & 0x1) << 7) | (pkt->pkt_channels << 3);
+    break;
+
+  case SCT_H264:
+  case SCT_MPEG2VIDEO:
+    if(pkt->pkt_globaldata != NULL) {
+      ssc->ssc_global_header = malloc(pkt->pkt_globaldata_len + 
+				      FF_INPUT_BUFFER_PADDING_SIZE);
+      
+      memcpy(ssc->ssc_global_header, pkt->pkt_globaldata,
+	     pkt->pkt_globaldata_len);
+      ssc->ssc_global_header_len = pkt->pkt_globaldata_len;
+    }
+    break;
+
+  }
+
+}
+
+
+/**
+ *
+ */
+static int
+headers_complete(globalheaders_t *gh)
+{
+  streaming_start_t *ss = gh->gh_ss;
+  streaming_start_component_t *ssc;
+  int i;
+
+  assert(ss != NULL);
+ 
+  for(i = 0; i < ss->ss_num_components; i++) {
+    ssc = &ss->ss_components[i];
+
+    if((SCT_ISAUDIO(ssc->ssc_type) || SCT_ISVIDEO(ssc->ssc_type)) &&
+       ssc->ssc_frameduration == 0)
+      return 0;
+  
+    if(ssc->ssc_global_header == NULL &&
+       (ssc->ssc_type == SCT_H264 ||
+	ssc->ssc_type == SCT_MPEG2VIDEO ||
+	ssc->ssc_type == SCT_AAC))
+      return 0;
+  }
+
+  return 1;
+}
+
+
+
+/**
+ *
+ */
+static th_pkt_t *
+convertpkt(streaming_start_component_t *ssc, th_pkt_t *pkt)
+{
+  switch(ssc->ssc_type) {
+  case SCT_H264:
+    //    return avc_convert_pkt(pkt);
+
+  default:
+    return pkt;
+  }
+}
+
+
+/**
+ *
+ */
+static void
+gh_hold(globalheaders_t *gh, streaming_message_t *sm)
+{
+  th_pkt_t *pkt;
+  th_pktref_t *pr;
+  streaming_start_component_t *ssc;
+
+  switch(sm->sm_type) {
+  case SMT_PACKET:
+    pkt = sm->sm_data;
+    ssc = streaming_start_component_find_by_index(gh->gh_ss, 
+						  pkt->pkt_componentindex);
+    assert(ssc != NULL);
+
+    pkt = convertpkt(ssc, pkt);
+
+    apply_header(ssc, pkt);
+
+    pr = pktref_create(pkt);
+    TAILQ_INSERT_TAIL(&gh->gh_holdq, pr, pr_link);
+
+    free(sm);
+
+    if(!headers_complete(gh)) 
+      break;
+
+    // Send our modified start
+    sm = streaming_msg_create_data(SMT_START, 
+				   streaming_start_copy(gh->gh_ss));
+    streaming_target_deliver2(gh->gh_output, sm);
+   
+    // Send all pending packets
+    while((pr = TAILQ_FIRST(&gh->gh_holdq)) != NULL) {
+      TAILQ_REMOVE(&gh->gh_holdq, pr, pr_link);
+      sm = streaming_msg_create_pkt(pr->pr_pkt);
+      streaming_target_deliver2(gh->gh_output, sm);
+      pkt_ref_dec(pr->pr_pkt);
+      free(pr);
+    }
+    gh->gh_passthru = 1;
+    break;
+
+  case SMT_START:
+    assert(gh->gh_ss == NULL);
+    gh->gh_ss = streaming_start_copy(sm->sm_data);
+    streaming_msg_free(sm);
+    break;
+
+  case SMT_STOP:
+    gh_flush(gh);
+    streaming_msg_free(sm);
+    break;
+
+  case SMT_EXIT:
+  case SMT_TRANSPORT_STATUS:
+  case SMT_NOSTART:
+  case SMT_MPEGTS:
+    streaming_target_deliver2(gh->gh_output, sm);
+    break;
+  }
+}
+
+
+/**
+ *
+ */
+static void
+gh_pass(globalheaders_t *gh, streaming_message_t *sm)
+{
+  th_pkt_t *pkt;
+  streaming_start_component_t *ssc;
+
+  switch(sm->sm_type) {
+  case SMT_START:
+    abort(); // Should not happen
+    
+  case SMT_STOP:
+    gh->gh_passthru = 0;
+    gh_flush(gh);
+    // FALLTHRU
+  case SMT_EXIT:
+  case SMT_TRANSPORT_STATUS:
+  case SMT_NOSTART:
+  case SMT_MPEGTS:
+    streaming_target_deliver2(gh->gh_output, sm);
+    break;
+
+  case SMT_PACKET:
+    pkt = sm->sm_data;
+    ssc = streaming_start_component_find_by_index(gh->gh_ss, 
+						  pkt->pkt_componentindex);
+    sm->sm_data = convertpkt(ssc, pkt);
+    streaming_target_deliver2(gh->gh_output, sm);
+    break;
+  }
+}
+
+
+/**
+ *
+ */
+static void
+globalheaders_input(void *opaque, streaming_message_t *sm)
+{
+  globalheaders_t *gh = opaque;
+
+  if(gh->gh_passthru)
+    gh_pass(gh, sm);
+  else
+    gh_hold(gh, sm);
+}
+
+
+/**
+ *
+ */
+streaming_target_t *
+globalheaders_create(streaming_target_t *output)
+{
+  globalheaders_t *gh = calloc(1, sizeof(globalheaders_t));
+
+  TAILQ_INIT(&gh->gh_holdq);
+
+  gh->gh_output = output;
+  streaming_target_init(&gh->gh_input, globalheaders_input, gh, 0);
+  return &gh->gh_input;
+}
+
+
+/**
+ *
+ */
+void
+globalheaders_destroy(streaming_target_t *pad)
+{
+  globalheaders_t *gh = (globalheaders_t *)pad;
+  gh_flush(gh);
+  free(gh);
+}
+

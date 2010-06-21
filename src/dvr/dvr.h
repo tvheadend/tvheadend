@@ -68,8 +68,7 @@ typedef enum {
 
 typedef enum {
   DVR_RS_PENDING,
-  DVR_RS_WAIT_AUDIO_LOCK,
-  DVR_RS_WAIT_VIDEO_LOCK,
+  DVR_RS_WAIT_PROGRAM_START,
   DVR_RS_RUNNING,
   DVR_RS_COMMERCIAL,
   DVR_RS_ERROR,
@@ -154,21 +153,13 @@ typedef struct dvr_entry {
   th_subscription_t *de_s;
   streaming_queue_t de_sq;
   streaming_target_t *de_tsfix;
+  streaming_target_t *de_gh;
   
   /**
    * Initialized upon SUBSCRIPTION_TRANSPORT_RUN
    */
-  int64_t de_ts_offset;     /* Offset to compensate for PTS/DTS not beeing
-			       0 at start of recording */
 
-  int64_t de_ts_com_start;  /* Starttime for last/current commercial break */
-  int64_t de_ts_com_offset; /* Offset to subtract to PTS/DTS to skip over
-			       all commercial breaks so far */
-
-  struct dvr_rec_stream_list de_streams;
-  AVFormatContext *de_fctx;
-
-  int de_header_written;
+  struct mk_mux *de_mkmux;
 
 } dvr_entry_t;
 
