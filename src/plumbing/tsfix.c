@@ -65,23 +65,14 @@ typedef struct tsfix {
  *
  */
 static void
-tsfix_destroy_stream(tfstream_t *tfs)
-{
-  LIST_REMOVE(tfs, tfs_link);
-  free(tfs);
-}
-
-
-/**
- *
- */
-static void
 tsfix_destroy_streams(tsfix_t *tf)
 {
   tfstream_t *tfs;
-  while((tfs = LIST_FIRST(&tf->tf_streams)) != NULL)
-    tsfix_destroy_stream(tfs);
   pktref_clear_queue(&tf->tf_ptsq);
+  while((tfs = LIST_FIRST(&tf->tf_streams)) != NULL) {
+    LIST_REMOVE(tfs, tfs_link);
+    free(tfs);
+  }
 }
 
 
@@ -290,9 +281,6 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 
 /**
  * Compute PTS (if not known)
- *
- * We do this by placing packets on a queue and wait for next I/P
- * frame to appear
  */
 static void
 compute_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
@@ -321,7 +309,6 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
 {
   th_pkt_t *pkt = pkt_copy(sm->sm_data);
   tfstream_t *tfs = tfs_find(tf, pkt);
-
   streaming_msg_free(sm);
   
   if(tfs == NULL) {
@@ -397,6 +384,8 @@ streaming_target_t *
 tsfix_create(streaming_target_t *output)
 {
   tsfix_t *tf = calloc(1, sizeof(tsfix_t));
+
+  TAILQ_INIT(&tf->tf_ptsq);
 
   tf->tf_output = output;
   streaming_target_init(&tf->tf_input, tsfix_input, tf, 0);
