@@ -20,6 +20,7 @@
 #define HTSBUF_H__
 
 #include <stdarg.h>
+#include <stddef.h>
 #include "queue.h"
 #include <inttypes.h>
 
@@ -41,6 +42,8 @@ typedef struct htsbuf_queue {
 
 void htsbuf_queue_init(htsbuf_queue_t *hq, unsigned int maxsize);
 
+htsbuf_queue_t *htsbuf_queue_alloc(unsigned int maxsize);
+
 void htsbuf_queue_flush(htsbuf_queue_t *hq);
 
 void htsbuf_vqprintf(htsbuf_queue_t *hq, const char *fmt, va_list ap);
@@ -50,6 +53,8 @@ void htsbuf_qprintf(htsbuf_queue_t *hq, const char *fmt, ...);
 void htsbuf_append(htsbuf_queue_t *hq, const void *buf, size_t len);
 
 void htsbuf_append_prealloc(htsbuf_queue_t *hq, const void *buf, size_t len);
+
+void htsbuf_appendq(htsbuf_queue_t *hq, htsbuf_queue_t *src);
 
 void htsbuf_data_free(htsbuf_queue_t *hq, htsbuf_data_t *hd);
 
