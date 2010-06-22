@@ -32,6 +32,7 @@ LDFLAGS += -lrt
 # Core
 #
 SRCS =  src/main.c \
+	src/utils.c \
 	src/wrappers.c \
 	src/version.c \
 	src/access.c \

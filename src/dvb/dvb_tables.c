@@ -202,7 +202,7 @@ dvb_proc_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt, uint8_t *sec,
 
   /* It seems some hardware (or is it the dvb API?) does not
      honour the DMX_CHECK_CRC flag, so we check it again */
-  if(chkcrc && psi_crc32(sec, r))
+  if(chkcrc && crc32(sec, r))
     return;
       
   r -= 3;
