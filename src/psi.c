@@ -63,7 +63,7 @@ psi_section_reassemble0(psi_section_t *ps, const uint8_t *data,
   
   excess = ps->ps_offset - tsize;
 
-  if(crc && crc32(ps->ps_data, tsize))
+  if(crc && crc32(ps->ps_data, tsize, 0xffffffff))
     return -1;
 
   cb(ps->ps_data, tsize - (crc ? 4 : 0), opaque);
@@ -163,14 +163,14 @@ psi_append_crc32(uint8_t *buf, int offset, int maxlen)
   if(offset + 4 > maxlen)
     return -1;
 
-  crc = crc32(buf, offset);
+  crc = crc32(buf, offset, 0xffffffff);
 
   buf[offset + 0] = crc >> 24;
   buf[offset + 1] = crc >> 16;
   buf[offset + 2] = crc >> 8;
   buf[offset + 3] = crc;
 
-  assert(crc32(buf, offset + 4) == 0);
+  assert(crc32(buf, offset + 4, 0xffffffff) == 0);
 
   return offset + 4;
 }

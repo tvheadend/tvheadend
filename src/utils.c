@@ -51,10 +51,8 @@ static uint32_t crc_tab[256] = {
 };
 
 uint32_t
-crc32(uint8_t *data, size_t datalen)
+crc32(uint8_t *data, size_t datalen, uint32_t crc)
 {
-  uint32_t crc = 0xffffffff;
-
   while(datalen--)
     crc = (crc << 8) ^ crc_tab[((crc >> 24) ^ *data++) & 0xff];
 
