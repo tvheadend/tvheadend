@@ -66,4 +66,6 @@ size_t htsbuf_drop(htsbuf_queue_t *hq, size_t len);
 
 size_t htsbuf_find(htsbuf_queue_t *hq, uint8_t v);
 
+uint32_t htsbuf_crc32(htsbuf_queue_t *q, uint32_t crc);
+
 #endif /* HTSBUF_H__ */

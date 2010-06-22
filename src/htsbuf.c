@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include "htsbuf.h"
+#include "tvhead.h"
 
 #ifndef MIN
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -117,6 +118,7 @@ htsbuf_append(htsbuf_queue_t *hq, const void *buf, size_t len)
   hd->hd_data_off = 0;
   memcpy(hd->hd_data, buf, len);
 }
+
 
 /**
  *
@@ -275,3 +277,21 @@ htsbuf_appendq(htsbuf_queue_t *hq, htsbuf_queue_t *src)
     TAILQ_INSERT_TAIL(&hq->hq_q, hd, hd_link);
   }
 }
+
+
+/**
+ *
+ */
+uint32_t
+htsbuf_crc32(htsbuf_queue_t *hq, uint32_t crc)
+{
+  htsbuf_data_t *hd;
+  
+  TAILQ_FOREACH(hd, &hq->hq_q, hd_link)
+    crc = crc32(hd->hd_data     + hd->hd_data_off,
+		hd->hd_data_len - hd->hd_data_off,
+		crc);
+  return crc;
+}
+
+
