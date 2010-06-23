@@ -417,6 +417,10 @@ typedef struct th_stream {
   int st_buffer2_ptr;
   int st_buffer2_size;
 
+  uint8_t *st_buffer3;
+  int st_buffer3_ptr;
+  int st_buffer3_size;
+
   uint8_t *st_global_data;
   int st_global_data_len;
 

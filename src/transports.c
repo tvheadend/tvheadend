@@ -132,18 +132,24 @@ stream_clean(th_stream_t *st)
   free(st->st_priv);
   st->st_priv = NULL;
 
-  /* Clear reassembly buffer */
+  /* Clear reassembly buffers */
+
+  st->st_startcode = 0;
     
   free(st->st_buffer);
   st->st_buffer = NULL;
   st->st_buffer_size = 0;
   st->st_buffer_ptr = 0;
-  st->st_startcode = 0;
 
   free(st->st_buffer2);
   st->st_buffer2 = NULL;
   st->st_buffer2_size = 0;
   st->st_buffer2_ptr = 0;
+
+  free(st->st_buffer3);
+  st->st_buffer3 = NULL;
+  st->st_buffer3_size = 0;
+  st->st_buffer3_ptr = 0;
 
 
   if(st->st_curpkt != NULL) {
