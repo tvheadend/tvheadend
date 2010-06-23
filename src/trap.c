@@ -34,10 +34,8 @@ char tvh_binshasum[20];
 #include <stdio.h>
 #include <stdarg.h>
 
-#include <libavutil/sha1.h>
-
 #include "tvhead.h"
-
+#include "sha1.h"
 
 static char traceline[4096];
 static int tracepos = 0;
@@ -87,7 +85,7 @@ traphandler(int sig, siginfo_t *si, void *UC)
   tvhlog_spawn(LOG_ALERT, "CRASH", "%s", traceline);
 }
 
-static struct AVSHA1 *binsum;
+static struct SHA1Context binsum;
 
 
 static int
@@ -112,10 +110,10 @@ callback(struct dl_phdr_info *info, size_t size, void *data)
 
     if(info->dlpi_phdr[j].p_memsz < 65536)
       continue;
-
-    av_sha1_update(binsum, 
-		   (void *)(info->dlpi_addr + info->dlpi_phdr[j].p_vaddr),
-		   info->dlpi_phdr[j].p_memsz);
+    
+    SHA1Input(&binsum, 
+	      (void *)(info->dlpi_addr + info->dlpi_phdr[j].p_vaddr),
+	      info->dlpi_phdr[j].p_memsz);
   }
   return 0;
 }
@@ -148,12 +146,11 @@ trap_init(const char *ver)
  
 
   traceappend("OBJS: ");
-  binsum = malloc(av_sha1_size);
 
-  av_sha1_init(binsum);
+  SHA1Reset(&binsum);
   dl_iterate_phdr(callback, NULL);
 
-  av_sha1_final(binsum, digest);
+  SHA1Result(&binsum, digest);
 
   traceappend("SHA1: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 	      "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x ",
@@ -179,8 +176,6 @@ trap_init(const char *ver)
 	      digest[19]);
 
   memcpy(tvh_binshasum, digest, 20);
-
-  free(binsum);
 }
 
 #else
