@@ -71,7 +71,7 @@ void pkt_ref_inc_poly(th_pkt_t *pkt, int n);
 
 void pktref_clear_queue(struct th_pktref_queue *q);
 
-th_pkt_t *pkt_alloc(void *data, size_t datalen, int64_t pts, int64_t dts);
+th_pkt_t *pkt_alloc(const void *data, size_t datalen, int64_t pts, int64_t dts);
 
 th_pkt_t *pkt_merge_global(th_pkt_t *pkt);
 
