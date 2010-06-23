@@ -60,9 +60,6 @@ static void transport_data_timeout(void *aux);
 static void
 stream_init(th_stream_t *st)
 {
-  AVCodec *c;
-  enum CodecID id;
-
   st->st_cc_valid = 0;
 
   st->st_startcond = 0xffffffff;
@@ -74,32 +71,6 @@ stream_init(th_stream_t *st)
   st->st_pcr_last      = AV_NOPTS_VALUE;
   st->st_pcr_drift     = 0;
   st->st_pcr_recovery_fails = 0;
-  /* Open ffmpeg context and parser */
-
-  switch(st->st_type) {
-  case SCT_MPEG2VIDEO: id = CODEC_ID_MPEG2VIDEO; break;
-  case SCT_MPEG2AUDIO: id = CODEC_ID_MP3;        break;
-  case SCT_H264:       id = CODEC_ID_H264;       break;
-  case SCT_AC3:        id = CODEC_ID_AC3;        break;
-  default:             id = CODEC_ID_NONE;       break;
-  }
-    
-  assert(st->st_ctx == NULL);
-  assert(st->st_parser == NULL);
-
-
-  if(id == CODEC_ID_NONE)
-    return;
-  c = avcodec_find_decoder(id);
-  if(c != NULL) {
-    st->st_ctx = avcodec_alloc_context();
-    pthread_mutex_lock(&ffmpeg_lock);
-    avcodec_open(st->st_ctx, c);
-    pthread_mutex_unlock(&ffmpeg_lock);
-    st->st_parser = av_parser_init(id);
-  } else {
-    abort();
-  }
 }
 
 
@@ -114,20 +85,6 @@ stream_clean(th_stream_t *st)
     close(st->st_demuxer_fd);
     st->st_demuxer_fd = -1;
   }
-
-  if(st->st_parser != NULL)
-    av_parser_close(st->st_parser);
-    
-  if(st->st_ctx != NULL) {
-    pthread_mutex_lock(&ffmpeg_lock);
-    avcodec_close(st->st_ctx);
-    pthread_mutex_unlock(&ffmpeg_lock);
-  }
-
-  av_free(st->st_ctx);
-
-  st->st_parser = NULL;
-  st->st_ctx = NULL;
 
   free(st->st_priv);
   st->st_priv = NULL;

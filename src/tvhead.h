@@ -435,13 +435,6 @@ typedef struct th_stream {
 
   int st_meta_change;
 
-  /* Codec */
-
-  struct AVCodecContext *st_ctx;
-  struct AVCodecParserContext *st_parser;
-
-
-
   /* CA ID's on this stream */
   struct caid_list st_caids;
 
