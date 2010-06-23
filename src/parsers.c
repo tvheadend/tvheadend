@@ -37,8 +37,6 @@
 #define PTS_MASK 0x1ffffffffLL
 //#define PTS_MASK 0x7ffffLL
 
-static const AVRational mpeg_tc = {1, 90000};
-
 #define getu32(b, l) ({						\
   uint32_t x = (b[0] << 24 | b[1] << 16 | b[2] << 8 | b[3]);	\
   b+=4;								\
