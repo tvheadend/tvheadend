@@ -60,7 +60,7 @@
 
 
 static int64_t 
-getpts(uint8_t *p)
+getpts(const uint8_t *p)
 {
   int a =  p[0];
   int b = (p[1] << 8) | p[2];
@@ -87,19 +87,14 @@ static int parse_mpeg2video(th_transport_t *t, th_stream_t *st, size_t len,
 static int parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
 		      uint32_t next_startcode, int sc_offset);
 
-typedef int (vparser_t)(th_transport_t *t, th_stream_t *st, size_t len,
-			uint32_t next_startcode, int sc_offset);
+typedef int (packet_parser_t)(th_transport_t *t, th_stream_t *st, size_t len,
+			      uint32_t next_startcode, int sc_offset);
 
 typedef void (aparser_t)(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
 
-static void parse_video(th_transport_t *t, th_stream_t *st, const uint8_t *data,
-			int len, vparser_t *vp);
+static void parse_sc(th_transport_t *t, th_stream_t *st, const uint8_t *data,
+		     int len, packet_parser_t *vp);
 
-static void  parse_audio_with_lavc(th_transport_t *t, th_stream_t *st, 
-				   const uint8_t *data, int len, aparser_t *ap);
-
-static void parse_audio(th_transport_t *t, th_stream_t *st, const uint8_t *data,
-			int len, int start, aparser_t *vp);
 
 static void parse_aac(th_transport_t *t, th_stream_t *st, const uint8_t *data,
 		      int len, int start);
@@ -107,15 +102,16 @@ static void parse_aac(th_transport_t *t, th_stream_t *st, const uint8_t *data,
 static void parse_subtitles(th_transport_t *t, th_stream_t *st, 
 			    const uint8_t *data, int len, int start);
 
-static void parse_mpegaudio(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
+static int parse_mpa(th_transport_t *t, th_stream_t *st, size_t len,
+		     uint32_t next_startcode, int sc_offset);
 
-static void parse_ac3(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
-
+static int parse_ac3(th_transport_t *t, th_stream_t *st, size_t len,
+		     uint32_t next_startcode, int sc_offset);
 
 static void parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
 
-static int parse_pes_header(th_transport_t *t, th_stream_t *st, uint8_t *buf,
-			    size_t len);
+static int parse_pes_header(th_transport_t *t, th_stream_t *st,
+			    const uint8_t *buf, size_t len);
 
 /**
  * Parse raw mpeg data
@@ -132,19 +128,19 @@ parse_mpeg_ts(th_transport_t *t, th_stream_t *st, const uint8_t *data,
 
   switch(st->st_type) {
   case SCT_MPEG2VIDEO:
-    parse_video(t, st, data, len, parse_mpeg2video);
+    parse_sc(t, st, data, len, parse_mpeg2video);
     break;
 
   case SCT_H264:
-    parse_video(t, st, data, len, parse_h264);
+    parse_sc(t, st, data, len, parse_h264);
     break;
 
   case SCT_MPEG2AUDIO:
-    parse_audio(t, st, data, len, start, parse_mpegaudio);
+    parse_sc(t, st, data, len, parse_mpa);
     break;
 
   case SCT_AC3:
-    parse_audio(t, st, data, len, start, parse_ac3);
+    parse_sc(t, st, data, len, parse_ac3);
     break;
 
   case SCT_DVBSUB:
@@ -186,17 +182,90 @@ parse_mpeg_ps(th_transport_t *t, th_stream_t *st, uint8_t *data, int len)
 
   switch(st->st_type) {
   case SCT_MPEG2AUDIO:
-    parse_audio_with_lavc(t, st, data, len, parse_mpegaudio);
+    parse_sc(t, st, data, len, parse_mpa);
     break;
 
   case SCT_MPEG2VIDEO:
-    parse_video(t, st, data, len, parse_mpeg2video);
+    parse_sc(t, st, data, len, parse_mpeg2video);
     break;
 
   default:
     break;
   }
 }
+
+
+/**
+ *
+ */
+static void 
+buffer_alloc(th_stream_t *st, int len)
+{
+  if(st->st_buffer == NULL) {
+    st->st_buffer_size = 4000;
+    st->st_buffer = malloc(st->st_buffer_size);
+  }
+
+  if(st->st_buffer_ptr + len >= st->st_buffer_size) {
+    st->st_buffer_size += len * 4;
+    st->st_buffer = realloc(st->st_buffer, st->st_buffer_size);
+  }
+}
+
+
+/**
+ *
+ */
+static void
+buffer_append(th_stream_t *st, const uint8_t *data, int len)
+{
+  buffer_alloc(st, len);
+  memcpy(st->st_buffer + st->st_buffer_ptr, data, len);
+  st->st_buffer_ptr += len;
+}
+
+
+/**
+ *
+ */
+static void 
+buffer3_alloc(th_stream_t *st, int len)
+{
+  if(st->st_buffer3 == NULL) {
+    st->st_buffer3_size = 4000;
+    st->st_buffer3 = malloc(st->st_buffer3_size);
+  }
+
+  if(st->st_buffer3_ptr + len >= st->st_buffer3_size) {
+    st->st_buffer3_size += len * 4;
+    st->st_buffer3 = realloc(st->st_buffer3, st->st_buffer3_size);
+  }
+}
+
+
+/**
+ *
+ */
+static void
+buffer3_append(th_stream_t *st, const uint8_t *data, int len)
+{
+  buffer3_alloc(st, len);
+  memcpy(st->st_buffer3 + st->st_buffer3_ptr, data, len);
+  st->st_buffer3_ptr += len;
+}
+
+
+/**
+ *
+ */
+static void
+buffer3_cut(th_stream_t *st, int p)
+{
+  assert(p <= st->st_buffer3_ptr);
+  st->st_buffer3_ptr = st->st_buffer3_ptr - p;
+  memmove(st->st_buffer3, st->st_buffer3 + p, st->st_buffer3_ptr);
+}
+
 
 
 /**
@@ -280,23 +349,13 @@ parse_aac(th_transport_t *t, th_stream_t *st, const uint8_t *data,
  * derive further information.
  */
 static void
-parse_video(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
-	    vparser_t *vp)
+parse_sc(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
+	 packet_parser_t *vp)
 {
-  uint32_t sc;
+  uint32_t sc = st->st_startcond;
   int i, r;
 
-  sc = st->st_startcond;
-
-  if(st->st_buffer == NULL) {
-    st->st_buffer_size = 4000;
-    st->st_buffer = malloc(st->st_buffer_size);
-  }
-
-  if(st->st_buffer_ptr + len + 4 >= st->st_buffer_size) {
-    st->st_buffer_size += len * 4;
-    st->st_buffer = realloc(st->st_buffer, st->st_buffer_size);
-  }
+  buffer_alloc(st, len);
 
   for(i = 0; i < len; i++) {
     st->st_buffer[st->st_buffer_ptr++] = data[i];
@@ -309,6 +368,8 @@ parse_video(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
 
     if(r > 0 && st->st_startcode != 0) {
       r = vp(t, st, r, sc, st->st_startcode_offset);
+      if(r == 3)
+	continue;
     } else {
       r = 1;
     }
@@ -339,131 +400,128 @@ parse_video(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
     }
   }
   st->st_startcond = sc;  
-
-
 }
 
 
-
 /**
- * Generic audio parser
  *
- * We trust 'start' to be set where a new frame starts, thats where we
- * can expect to find the system start code.
+ */
+static int
+depacketize(th_transport_t *t, th_stream_t *st, size_t len, 
+	    uint32_t next_startcode, int sc_offset)
+{
+  const uint8_t *buf = st->st_buffer + sc_offset;
+  uint32_t sc = st->st_startcode;
+  int hlen, plen;
+
+  if((sc != 0x1bd && sc != 0x1c0) || len < 9)
+    return 1;
+
+  plen = (buf[4] << 8) | buf[5];
+
+  if(plen + 6 > len || next_startcode != sc)
+    return 3;
+
+  if(plen + 6 < len)
+    return 1;
+
+  buf += 6;
+  len -= 6;
+
+  hlen = parse_pes_header(t, st, buf, len);
+
+  if(hlen < 0)
+    return 1;
+
+  buf += hlen;
+  len -= hlen;
+
+  buffer3_append(st, buf, len);
+  return 0;
+}
+
+
+
+
+/**
  *
- * We then trust ffmpeg to parse and extract packets for use
  */
-static void 
-parse_audio(th_transport_t *t, th_stream_t *st, const uint8_t *data,
-	    int len, int start, aparser_t *ap)
-{
-  int hlen;
-
-  if(start) {
-    /* Payload unit start */
-    st->st_parser_state = 1;
-    st->st_buffer_ptr = 0;
-  }
-
-  if(st->st_parser_state == 0)
-    return;
-
-  if(st->st_parser_state == 1) {
-
-    if(st->st_buffer == NULL)
-      st->st_buffer = malloc(1000); 
-
-    if(st->st_buffer_ptr + len >= 1000)
-      return;
-
-    memcpy(st->st_buffer + st->st_buffer_ptr, data, len);
-    st->st_buffer_ptr += len;
-
-    if(st->st_buffer_ptr < 9)
-      return; 
-
-    if((hlen = parse_pes_header(t, st, st->st_buffer + 6,
-				st->st_buffer_ptr - 6)) < 0)
-      return;
-
-    data = st->st_buffer     + hlen + 6;
-    len  = st->st_buffer_ptr - hlen - 6;
-
-    st->st_parser_state = 2;
-
-    assert(len >= 0);
-    if(len == 0)
-      return;
-  }
-  parse_audio_with_lavc(t, st, data, len, ap);
-}
-
-
-/**
- * Use libavcodec's parsers for audio parsing
- */
-static void 
-parse_audio_with_lavc(th_transport_t *t, th_stream_t *st, const uint8_t *data,
-		      int len, aparser_t *ap)
-{
-  uint8_t *outbuf;
-  int outlen, rlen;
-  th_pkt_t *pkt;
-  int64_t dts;
-
-  while(len > 0) {
-
-    rlen = av_parser_parse(st->st_parser, st->st_ctx,
-			   &outbuf, &outlen, data, len, 
-			   st->st_curpts, st->st_curdts);
-
-    st->st_curdts = AV_NOPTS_VALUE;
-    st->st_curpts = AV_NOPTS_VALUE;
-
-    if(outlen) {
-      dts = st->st_parser->dts;
-      if(dts == AV_NOPTS_VALUE)
-	dts = st->st_nextdts;
-
-      pkt = pkt_alloc(outbuf, outlen, dts, dts);
-      pkt->pkt_commercial = t->tht_tt_commercial_advice;
-
-      ap(t, st, pkt);
-
-    }
-    data += rlen;
-    len  -= rlen;
-  }
-}
-
-
-/**
- * Mpeg audio parser
- */
-const static int mpegaudio_freq_tab[4] = {44100, 48000, 32000, 0};
-
 static void
-parse_mpegaudio(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
+makeapkt(th_transport_t *t, th_stream_t *st, const void *buf,
+	 int len, int64_t dts, int duration)
 {
-  uint8_t *buf = pkt->pkt_payload;
-  uint32_t header;
-  int sample_rate, duration;
 
-  header = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]);
-
-  sample_rate = mpegaudio_freq_tab[(header >> 10) & 3];
-  if(sample_rate == 0) {
-    pkt_ref_dec(pkt);
-    return;
-  }
-
-  duration = 90000 * 1152 / sample_rate;
+  th_pkt_t *pkt = pkt_alloc(buf, len, dts, dts);
+	  
+  pkt->pkt_commercial = t->tht_tt_commercial_advice;
   pkt->pkt_duration = duration;
-  st->st_nextdts = pkt->pkt_dts + duration;
-
+	  
   parser_deliver(t, st, pkt);
+	  
+  st->st_curdts = AV_NOPTS_VALUE;
+  st->st_nextdts = dts + duration;
+}
+	  
+
+
+const static int mpa_br[16] = {
+    0,  32,  48,  56,
+   64,  80,  96, 112, 
+  128, 160, 192, 224,
+  256, 320, 384, 0
+};
+
+const static int mpa_sr[4] = {44100, 48000, 32000, 0};
+
+
+static int
+mpa_valid_frame(const uint8_t *buf)
+{
+  return buf[0] == 0xff && (buf[1] & 0xfe) == 0xfc;
 }
 
+
+static int 
+parse_mpa(th_transport_t *t, th_stream_t *st, size_t ilen,
+	  uint32_t next_startcode, int sc_offset)
+{
+  int i, len;
+  const uint8_t *buf;
+
+  if((i = depacketize(t, st, ilen, next_startcode, sc_offset)) != 0)
+    return i;
+
+ again:
+  buf = st->st_buffer3;
+  len = st->st_buffer3_ptr;
+
+  for(i = 0; i < len - 4; i++) {
+    if(mpa_valid_frame(buf + i)) {
+      int br = mpa_br[ buf[i+2] >> 4     ];
+      int sr = mpa_sr[(buf[i+2] >> 2) & 3];
+      int pad = buf[i+2] & 1;
+      
+      if(br && sr) {
+	int fsize = 144000 * br / sr + pad;
+	int duration = 90000 * 1152 / sr;
+	int64_t dts = st->st_curdts;
+
+	if(dts == AV_NOPTS_VALUE)
+	  dts = st->st_nextdts;
+
+	if(dts != AV_NOPTS_VALUE && 
+	   len >= i + fsize + 4 &&
+	   mpa_valid_frame(buf + i + fsize)) {
+	  
+	  makeapkt(t, st, buf + i, fsize, dts, duration);
+	  buffer3_cut(st, i + fsize);
+	  goto again;
+	}
+      }
+    }
+  }
+  return 1;
+}
 
 
 /**
@@ -512,32 +570,87 @@ const static uint16_t ac3_frame_size_tab[38][3] = {
     { 1280, 1394, 1920 },
 };
 
-static void
-parse_ac3(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
+/**
+ * Inspect 6 bytes AC3 header
+ */
+static int
+ac3_valid_frame(const uint8_t *buf)
 {
-  uint8_t *buf = pkt->pkt_payload;
-  uint32_t src, fsc;
-  int sample_rate, frame_size, duration, bsid;
+  if(buf[0] != 0x0b || buf[1] != 0x77)
+    return 0;
 
-  src = buf[4] >> 6;
-  fsc = buf[4] & 0x3f;
-  bsid = (buf[5] & 0xf) - 8;
-  if(bsid < 0)
-    bsid = 0;
+  int bsid = buf[5] & 0xf;
 
-  sample_rate = ac3_freq_tab[src] >> bsid;
-  if(sample_rate == 0) {
-    pkt_ref_dec(pkt);
-    return;
+  if(bsid <= 10) {
+    // Normal AC3
+    return (buf[4] & 0xc0) != 0xc0 && (buf[4] & 0x3f) < 0x26;
+  } else {
+    // E-AC3
+    return (buf[2] & 0xc0) != 0xc0;
   }
+}
 
-  frame_size = ac3_frame_size_tab[fsc][src] * 2;
 
-  duration = 90000 * 1536 / sample_rate;
+static int 
+parse_ac3(th_transport_t *t, th_stream_t *st, size_t ilen,
+	  uint32_t next_startcode, int sc_offset)
+{
+  int i, len;
+  const uint8_t *buf;
 
-  pkt->pkt_duration = duration;
-  st->st_nextdts = pkt->pkt_dts + duration;
-  parser_deliver(t, st, pkt);
+  if((i = depacketize(t, st, ilen, next_startcode, sc_offset)) != 0)
+    return i;
+
+ again:
+  buf = st->st_buffer3;
+  len = st->st_buffer3_ptr;
+
+  for(i = 0; i < len - 6; i++) {
+    if(ac3_valid_frame(buf + i)) {
+      int bsid      = buf[5] & 0xf;
+      int fsize, sr;
+
+      if(bsid <= 10) {
+	int fscod     = buf[4] >> 6;
+	int frmsizcod = buf[4] & 0x3f;
+
+	fsize  = ac3_frame_size_tab[frmsizcod][fscod] * 2;
+
+	bsid -= 8;
+	if(bsid < 0)
+	  bsid = 0;
+	sr = ac3_freq_tab[fscod] >> bsid;
+	
+      } else {
+
+	fsize = ((((buf[2] & 0x7) << 8) | buf[3]) + 1) * 2;
+	
+	
+	if((buf[4] & 0xc0) == 0xc0) {
+	  sr = ac3_freq_tab[(buf[4] >> 4) & 3] / 2;
+	} else {
+	  sr = ac3_freq_tab[(buf[4] >> 6) & 3];
+	}
+      }
+
+      if(sr) {
+	int duration = 90000 * 1536 / sr;
+	int64_t dts = st->st_curdts;
+
+	if(dts == AV_NOPTS_VALUE)
+	  dts = st->st_nextdts;
+
+	if(dts != AV_NOPTS_VALUE && 
+	   len >= i + fsize + 6 &&
+	   ac3_valid_frame(buf + i + fsize)) {
+	  makeapkt(t, st, buf + i, fsize, dts, duration);
+	  buffer3_cut(st, i + fsize);
+	  goto again;
+	}
+      }
+    }
+  }
+  return 1;
 }
 
 
@@ -548,7 +661,8 @@ parse_ac3(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
  * Extract DTS and PTS and update current values in stream
  */
 static int
-parse_pes_header(th_transport_t *t, th_stream_t *st, uint8_t *buf, size_t len)
+parse_pes_header(th_transport_t *t, th_stream_t *st, 
+		 const uint8_t *buf, size_t len)
 {
   int64_t dts, pts, d;
   int hdr, flags, hlen;
@@ -992,18 +1106,7 @@ parse_subtitles(th_transport_t *t, th_stream_t *st, const uint8_t *data,
   if(st->st_parser_state == 0)
     return;
 
-  if(st->st_buffer == NULL) {
-    st->st_buffer_size = 4000;
-    st->st_buffer = malloc(st->st_buffer_size);
-  }
-
-  if(st->st_buffer_ptr + len >= st->st_buffer_size) {
-    st->st_buffer_size += len * 4;
-    st->st_buffer = realloc(st->st_buffer, st->st_buffer_size);
-  }
-
-  memcpy(st->st_buffer + st->st_buffer_ptr, data, len);
-  st->st_buffer_ptr += len;
+  buffer_append(st, data, len);
 
   if(st->st_buffer_ptr < 6)
     return;
