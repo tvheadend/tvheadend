@@ -45,8 +45,6 @@
 #include "settings.h"
 #include <sys/time.h>
 
-#include "libavcodec/avcodec.h"
-
 static void *htsp_server;
 
 #define HTSP_PROTO_VERSION 5
@@ -1374,7 +1372,8 @@ const static char frametypearray[PKT_NTYPES] = {
   [PKT_B_FRAME] = 'B',
 };
 
-const static AVRational mpeg_tc = {1, 90000};
+const static Rational mpeg_tc = {1, 90000};
+const static Rational htsp_tc = {1, 1000000};
 
 /**
  * Build a htsmsg from a th_pkt and enqueue it on our HTSP transport
@@ -1408,16 +1407,16 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 
 
   if(pkt->pkt_pts != PTS_UNSET) {
-    int64_t pts = av_rescale_q(pkt->pkt_pts, mpeg_tc, AV_TIME_BASE_Q);
+    int64_t pts = rescale_q(pkt->pkt_pts, mpeg_tc, htsp_tc);
     htsmsg_add_s64(m, "pts", pts);
   }
 
   if(pkt->pkt_dts != PTS_UNSET) {
-    int64_t dts = av_rescale_q(pkt->pkt_dts, mpeg_tc, AV_TIME_BASE_Q);
+    int64_t dts = rescale_q(pkt->pkt_dts, mpeg_tc, htsp_tc);
     htsmsg_add_s64(m, "dts", dts);
   }
 
-  uint32_t dur = av_rescale_q(pkt->pkt_duration, mpeg_tc, AV_TIME_BASE_Q);
+  uint32_t dur = rescale_q(pkt->pkt_duration, mpeg_tc, htsp_tc);
   htsmsg_add_u32(m, "duration", dur);
   
   pkt = pkt_merge_global(pkt);
