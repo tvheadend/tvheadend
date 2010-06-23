@@ -24,9 +24,6 @@
 #include <string.h>
 #include <arpa/inet.h>
 
-#include <libavutil/md5.h>
-
-
 #include "htsmsg.h"
 #include "htsmsg_json.h"
 
@@ -34,6 +31,7 @@
 #include "http.h"
 #include "webui/webui.h"
 #include "access.h"
+#include "sha1.h"
 
 static pthread_mutex_t comet_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t comet_cond = PTHREAD_COND_INITIALIZER;
@@ -50,7 +48,7 @@ static LIST_HEAD(, comet_mailbox) mailboxes;
 int mailbox_tally;
 
 typedef struct comet_mailbox {
-  char *cmb_boxid; /* an md5hash */
+  char *cmb_boxid; /* SHA-1 hash */
   htsmsg_t *cmb_messages; /* A vector */
   time_t cmb_last_used;
   LIST_ENTRY(comet_mailbox) cmb_link;
@@ -105,25 +103,23 @@ comet_mailbox_create(void)
   comet_mailbox_t *cmb = calloc(1, sizeof(comet_mailbox_t));
 
   struct timeval tv;
-  uint8_t sum[16];
-  char id[33];
+  uint8_t sum[20];
+  char id[20 * 2 + 1];
   int i;
-  struct AVMD5 *ctx;
-
-  ctx = alloca(av_md5_size);
+  struct SHA1Context sha1;
 
   gettimeofday(&tv, NULL);
 
-  av_md5_init(ctx);
-  av_md5_update(ctx, (void *)&tv, sizeof(tv));
-  av_md5_update(ctx, (void *)&mailbox_tally, sizeof(uint32_t));
-  av_md5_final(ctx, sum);
+  SHA1Reset(&sha1);
+  SHA1Input(&sha1, (void *)&tv, sizeof(tv));
+  SHA1Input(&sha1, (void *)&mailbox_tally, sizeof(uint32_t));
+  SHA1Result(&sha1, sum);
 
-  for(i = 0; i < 16; i++) {
+  for(i = 0; i < sizeof(sum); i++) {
     id[i * 2 + 0] = "0123456789abcdef"[sum[i] >> 4];
     id[i * 2 + 1] = "0123456789abcdef"[sum[i] & 15];
   }
-  id[32] = 0;
+  id[40] = 0;
 
   cmb->cmb_boxid = strdup(id);
   time(&cmb->cmb_last_used);
