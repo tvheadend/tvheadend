@@ -90,7 +90,6 @@ EOF
 
 if [ "x$CC" != "x" ]; then
     echo >${CONFIG_MAK} "CC=$CC"
-    CC_FFMPEG="--cc=$CC"
 else
     CC=cc
 fi
@@ -127,11 +126,6 @@ if enabled avahi; then
 	die
     fi
 fi
-
-#
-# configure ffmpeg
-#
-setup_ffmpeg --cpu=${CPU}
 
 #
 # Configure paths, etc

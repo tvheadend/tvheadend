@@ -122,49 +122,6 @@ EOF
 
 }
 
-
-setup_ffmpeg() {
-    echo "Configuring FFmpeg"
-    mkdir -p ${BUILDDIR}/ffmpeg/build
-    rm -rf ${BUILDDIR}/ffmpeg/install
-
-    (cd ${BUILDDIR}/ffmpeg/build && \
-	${TOPDIR}/ext/ffmpeg/configure  \
-	$CC_FFMPEG \
-	--disable-encoders \
-	--enable-encoder=mp2 \
-	--enable-encoder=mpeg2video \
-	--disable-muxers \
-	--enable-muxer=matroska \
-	--disable-decoders \
-	--enable-decoder=mp2 \
-	--enable-decoder=mp3 \
-	--enable-decoder=mpeg2video \
-	--enable-decoder=h264 \
-	--enable-decoder=ac3 \
-	--disable-demuxers \
-	--disable-filters \
-	--disable-devices \
-	--disable-stripping \
-	--enable-static \
-	--disable-shared \
-	--enable-pthreads \
-	--prefix=${BUILDDIR}/ffmpeg/install \
-	--disable-ffserver \
-	--disable-ffmpeg \
-	--disable-ffplay \
-	$@
-	)
-
-cat >> ${CONFIG_MAK} << EOF 
-CFLAGS_cfg  += -I${BUILDDIR}/ffmpeg/install/include
-LDFLAGS_cfg += -L${BUILDDIR}/ffmpeg/install/lib
-LDFLAGS_cfg += -lavformat -lavcodec -lavutil
-EOF
-}
-
-
-
 finalize() {
 
 if [ ${RELEASE} = yes ]; then

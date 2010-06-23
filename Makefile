@@ -167,20 +167,16 @@ CFLAGS_com += -DHTS_VERSION=\"$(VERSION)\"
 
 all: ${PROG}
 
-.PHONY:	clean distclean ffmpeg
+.PHONY:	clean distclean
 
-${PROG}: ${BUILDDIR}/ffmpeg/install $(OBJDIRS) $(OBJS) $(BUNDLE_OBJS) ${OBJS_EXTRA} Makefile
+${PROG}: $(OBJDIRS) $(OBJS) $(BUNDLE_OBJS) ${OBJS_EXTRA} Makefile
 	$(CC) -o $@ $(OBJS) $(BUNDLE_OBJS) $(LDFLAGS) ${LDFLAGS_cfg}
 
 $(OBJDIRS):
 	@mkdir -p $@
 
-${BUILDDIR}/%.o: %.c  ${BUILDDIR}/ffmpeg/install
+${BUILDDIR}/%.o: %.c
 	$(CC) -MD $(CFLAGS_com) $(CFLAGS) $(CFLAGS_cfg) -c -o $@ $(CURDIR)/$<
-
-${BUILDDIR}/ffmpeg/install ffmpeg:
-	cd ${BUILDDIR}/ffmpeg/build && ${MAKE} all
-	cd ${BUILDDIR}/ffmpeg/build && ${MAKE} install
 
 ${BUILDDIR}/%.so: ${SRCS_EXTRA}
 	${CC} -O -fbuiltin -fomit-frame-pointer -fPIC -shared -o $@ $< -ldl
