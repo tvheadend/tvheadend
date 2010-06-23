@@ -722,7 +722,7 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
 
       case XML_ENCODING_8859_1:
 	for(x = cc->cc_start; x < cc->cc_end; x++)
-	  body += put_utf8(body, *x);
+	  c += put_utf8(body + c, *x);
 	break;
       }
       
