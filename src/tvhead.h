@@ -840,4 +840,6 @@ uint32_t crc32(uint8_t *data, size_t datalen, uint32_t crc);
 
 int base64_decode(uint8_t *out, const char *in, int out_size);
 
+int put_utf8(char *out, int c);
+
 #endif /* TV_HEAD_H */

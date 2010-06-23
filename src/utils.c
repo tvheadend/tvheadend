@@ -136,3 +136,57 @@ base64_decode(uint8_t *out, const char *in, int out_size)
 
     return dst - out;
 }
+
+
+/**
+ *
+ */
+int
+put_utf8(char *out, int c)
+{
+  if(c == 0xfffe || c == 0xffff || (c >= 0xD800 && c < 0xE000))
+    return 0;
+  
+  if (c < 0x80) {
+    *out = c;
+    return 1;
+  }
+
+  if(c < 0x800) {
+    *out++ = 0xc0 | (0x1f & (c >>  6));
+    *out   = 0x80 | (0x3f &  c);
+    return 2;
+  }
+
+  if(c < 0x10000) {
+    *out++ = 0xe0 | (0x0f & (c >> 12));
+    *out++ = 0x80 | (0x3f & (c >> 6));
+    *out   = 0x80 | (0x3f &  c);
+    return 3;
+  }
+
+  if(c < 0x200000) {
+    *out++ = 0xf0 | (0x07 & (c >> 18));
+    *out++ = 0x80 | (0x3f & (c >> 12));
+    *out++ = 0x80 | (0x3f & (c >> 6));
+    *out   = 0x80 | (0x3f &  c);
+    return 4;
+  }
+  
+  if(c < 0x4000000) {
+    *out++ = 0xf8 | (0x03 & (c >> 24));
+    *out++ = 0x80 | (0x3f & (c >> 18));
+    *out++ = 0x80 | (0x3f & (c >> 12));
+    *out++ = 0x80 | (0x3f & (c >>  6));
+    *out++ = 0x80 | (0x3f &  c);
+    return 5;
+  }
+
+  *out++ = 0xfc | (0x01 & (c >> 30));
+  *out++ = 0x80 | (0x3f & (c >> 24));
+  *out++ = 0x80 | (0x3f & (c >> 18));
+  *out++ = 0x80 | (0x3f & (c >> 12));
+  *out++ = 0x80 | (0x3f & (c >>  6));
+  *out++ = 0x80 | (0x3f &  c);
+  return 6;
+}

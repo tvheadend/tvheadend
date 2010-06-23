@@ -29,8 +29,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <libavutil/common.h>
-
 #include <linux/dvb/frontend.h>
 
 #include "tvhead.h"
@@ -197,16 +195,18 @@ dvb_get_string_with_len(char *dst, size_t dstlen,
 void
 atsc_utf16_to_utf8(uint8_t *src, int len, char *buf, int buflen)
 {
-  int i, c;
-  char *q = buf;
+  int i, c, r;
 
   for(i = 0; i < len; i++) {
-    uint8_t tmp;
     c = (src[i * 2 + 0] << 8) | src[i * 2 + 1];
 
-    PUT_UTF8(c, tmp, if (q - buf < buflen - 1) *q++ = tmp;)
+    if(buflen >= 7) {
+      r = put_utf8(buf, c);
+      buf += r;
+      buflen -= r;
+    }
   }
-  *q = 0;
+  *buf = 0;
 }
 
 
