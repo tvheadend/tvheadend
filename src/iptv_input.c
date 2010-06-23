@@ -33,7 +33,7 @@
 #include <errno.h>
 #include <linux/netdevice.h>
 
-#include <libavutil/avstring.h>
+//#include <libavutil/avstring.h>
 
 #include "tvhead.h"
 #include "htsmsg.h"
@@ -211,7 +211,7 @@ iptv_transport_start(th_transport_t *t, unsigned int weight, int force_start)
 
   /* First, resolve interface name */
   memset(&ifr, 0, sizeof(ifr));
-  av_strlcpy(ifr.ifr_name, t->tht_iptv_iface, IFNAMSIZ);
+  snprintf(ifr.ifr_name, IFNAMSIZ, "%s", t->tht_iptv_iface);
   ifr.ifr_name[IFNAMSIZ - 1] = 0;
   if(ioctl(fd, SIOCGIFINDEX, &ifr)) {
     tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot find interface %s", 
