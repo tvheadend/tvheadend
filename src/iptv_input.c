@@ -33,8 +33,6 @@
 #include <errno.h>
 #include <linux/netdevice.h>
 
-//#include <libavutil/avstring.h>
-
 #include "tvhead.h"
 #include "htsmsg.h"
 #include "channels.h"

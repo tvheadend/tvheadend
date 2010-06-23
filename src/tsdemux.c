@@ -125,8 +125,6 @@ ts_recv_packet0(th_transport_t *t, th_stream_t *st, const uint8_t *tsb)
   }
 }
 
-static const AVRational mpeg_tc = {1, 90000};
-
 /**
  * Recover PCR
  *
@@ -155,14 +153,14 @@ ts_extract_pcr(th_transport_t *t, th_stream_t *st, const uint8_t *tsb,
 
   real = getmonoclock();
 
-  if(st->st_pcr_real_last != AV_NOPTS_VALUE) {
+  if(st->st_pcr_real_last != PTS_UNSET) {
     d = (real - st->st_pcr_real_last) - (pcr - st->st_pcr_last);
     
     if(d < -90000LL || d > 90000LL) {
       st->st_pcr_recovery_fails++;
       if(st->st_pcr_recovery_fails > 10) {
 	st->st_pcr_recovery_fails = 0;
-	st->st_pcr_real_last = AV_NOPTS_VALUE;
+	st->st_pcr_real_last = PTS_UNSET;
       }
       return;
     }

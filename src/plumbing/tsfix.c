@@ -96,8 +96,8 @@ tsfix_add_stream(tsfix_t *tf, int index, streaming_component_type_t type)
 
   tfs->tfs_type = type;
   tfs->tfs_index = index;
-  tfs->tfs_last_dts_norm = AV_NOPTS_VALUE;
-  tfs->tfs_last_dts_in = AV_NOPTS_VALUE;
+  tfs->tfs_last_dts_norm = PTS_UNSET;
+  tfs->tfs_last_dts_in = PTS_UNSET;
   tfs->tfs_dts_epoch = 0; 
 
   LIST_INSERT_HEAD(&tf->tf_streams, tfs, tfs_link);
@@ -121,7 +121,7 @@ tsfix_start(tsfix_t *tf, streaming_start_t *ss)
 
   TAILQ_INIT(&tf->tf_ptsq);
 
-  tf->tf_tsref = AV_NOPTS_VALUE;
+  tf->tf_tsref = PTS_UNSET;
   tf->tf_hasvideo = hasvideo;
 }
 
@@ -148,7 +148,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 
   int checkts = SCT_ISAUDIO(tfs->tfs_type) || SCT_ISVIDEO(tfs->tfs_type);
 
-  if(tf->tf_tsref == AV_NOPTS_VALUE) {
+  if(tf->tf_tsref == PTS_UNSET) {
     pkt_ref_dec(pkt);
     return;
   }
@@ -156,7 +156,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
   /* Subtract the transport wide start offset */
   dts = pkt->pkt_dts - tf->tf_tsref;
 
-  if(tfs->tfs_last_dts_norm == AV_NOPTS_VALUE) {
+  if(tfs->tfs_last_dts_norm == PTS_UNSET) {
     if(dts < 0) {
       /* Early packet with negative time stamp, drop those */
       pkt_ref_dec(pkt);
@@ -191,7 +191,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
   dts += tfs->tfs_dts_epoch;
   tfs->tfs_last_dts_norm = dts;
 
-  if(pkt->pkt_pts != AV_NOPTS_VALUE) {
+  if(pkt->pkt_pts != PTS_UNSET) {
     /* Compute delta between PTS and DTS (and watch out for 33 bit wrap) */
     int64_t ptsoff = (pkt->pkt_pts - pkt->pkt_dts) & PTS_MASK;
     
@@ -286,7 +286,7 @@ static void
 compute_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 {
   // If PTS is missing, set it to DTS if not video
-  if(pkt->pkt_pts == AV_NOPTS_VALUE && !SCT_ISVIDEO(tfs->tfs_type)) {
+  if(pkt->pkt_pts == PTS_UNSET && !SCT_ISVIDEO(tfs->tfs_type)) {
     pkt->pkt_pts = pkt->pkt_dts;
     tsfixprintf("TSFIX: %-12s PTS set to %lld\n",
 		streaming_component_type2txt(tfs->tfs_type),
@@ -294,7 +294,7 @@ compute_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
   }
 
   /* PTS known and no other packets in queue, deliver at once */
-  if(pkt->pkt_pts != AV_NOPTS_VALUE && TAILQ_FIRST(&tf->tf_ptsq) == NULL)
+  if(pkt->pkt_pts != PTS_UNSET && TAILQ_FIRST(&tf->tf_ptsq) == NULL)
     normalize_ts(tf, tfs, pkt);
   else
     recover_pts(tf, tfs, pkt);
@@ -317,18 +317,18 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
   }
 
 
-  if(tf->tf_tsref == AV_NOPTS_VALUE &&
+  if(tf->tf_tsref == PTS_UNSET &&
      (!tf->tf_hasvideo ||
       (SCT_ISVIDEO(tfs->tfs_type) && pkt->pkt_frametype == PKT_I_FRAME))) {
       tf->tf_tsref = pkt->pkt_dts;
       tsfixprintf("reference clock set to %lld\n", tf->tf_tsref);
   }
 
-  if(pkt->pkt_dts == AV_NOPTS_VALUE) {
+  if(pkt->pkt_dts == PTS_UNSET) {
 
     int pdur = pkt->pkt_duration >> pkt->pkt_field;
 
-    if(tfs->tfs_last_dts_in == AV_NOPTS_VALUE) {
+    if(tfs->tfs_last_dts_in == PTS_UNSET) {
       pkt_ref_dec(pkt);
       return;
     }

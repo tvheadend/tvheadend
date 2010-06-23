@@ -22,9 +22,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <libavutil/common.h>
-#include <libavutil/avstring.h>
-
 #include "tvhead.h"
 #include "psi.h"
 #include "transports.h"
@@ -1031,7 +1028,7 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
     st = transport_stream_create(t, pid, type);
     
     if((v = htsmsg_get_str(c, "language")) != NULL)
-      av_strlcpy(st->st_lang, v, 4);
+      snprintf(st->st_lang, 4, "%s", v);
 
     if(!htsmsg_get_u32(c, "position", &u32))
       st->st_position = u32;

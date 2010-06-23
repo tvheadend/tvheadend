@@ -76,7 +76,7 @@ getpts(const uint8_t *p)
 
   } else {
     // Marker bits not present
-    return AV_NOPTS_VALUE;
+    return PTS_UNSET;
   }
 }
 
@@ -458,7 +458,7 @@ makeapkt(th_transport_t *t, th_stream_t *st, const void *buf,
 	  
   parser_deliver(t, st, pkt);
 	  
-  st->st_curdts = AV_NOPTS_VALUE;
+  st->st_curdts = PTS_UNSET;
   st->st_nextdts = dts + duration;
 }
 	  
@@ -506,10 +506,10 @@ parse_mpa(th_transport_t *t, th_stream_t *st, size_t ilen,
 	int duration = 90000 * 1152 / sr;
 	int64_t dts = st->st_curdts;
 
-	if(dts == AV_NOPTS_VALUE)
+	if(dts == PTS_UNSET)
 	  dts = st->st_nextdts;
 
-	if(dts != AV_NOPTS_VALUE && 
+	if(dts != PTS_UNSET && 
 	   len >= i + fsize + 4 &&
 	   mpa_valid_frame(buf + i + fsize)) {
 	  
@@ -637,10 +637,10 @@ parse_ac3(th_transport_t *t, th_stream_t *st, size_t ilen,
 	int duration = 90000 * 1536 / sr;
 	int64_t dts = st->st_curdts;
 
-	if(dts == AV_NOPTS_VALUE)
+	if(dts == PTS_UNSET)
 	  dts = st->st_nextdts;
 
-	if(dts != AV_NOPTS_VALUE && 
+	if(dts != PTS_UNSET && 
 	   len >= i + fsize + 6 &&
 	   ac3_valid_frame(buf + i + fsize)) {
 	  makeapkt(t, st, buf + i, fsize, dts, duration);
@@ -684,7 +684,7 @@ parse_pes_header(th_transport_t *t, th_stream_t *st,
 
     d = (pts - dts) & PTS_MASK;
     if(d > 180000) // More than two seconds of PTS/DTS delta, probably corrupt
-      pts = dts = AV_NOPTS_VALUE;
+      pts = dts = PTS_UNSET;
 
   } else if((flags & 0xc0) == 0x80) {
     if(hlen < 5)
@@ -695,8 +695,8 @@ parse_pes_header(th_transport_t *t, th_stream_t *st,
     return hlen + 3;
 
   if(st->st_buffer_errors) {
-    st->st_curdts = AV_NOPTS_VALUE;
-    st->st_curpts = AV_NOPTS_VALUE;
+    st->st_curdts = PTS_UNSET;
+    st->st_curpts = PTS_UNSET;
   } else {
     st->st_curdts = dts;
     st->st_curpts = pts;
@@ -704,8 +704,8 @@ parse_pes_header(th_transport_t *t, th_stream_t *st,
   return hlen + 3;
 
  err:
-  st->st_curdts = AV_NOPTS_VALUE;
-  st->st_curpts = AV_NOPTS_VALUE;
+  st->st_curdts = PTS_UNSET;
+  st->st_curpts = PTS_UNSET;
   limitedlog(&st->st_loglimit_pes, "TS", transport_component_nicename(st),
 	     "Corrupted PES header");
   return -1;
@@ -835,9 +835,7 @@ parser_global_data_move(th_stream_t *st, const uint8_t *data, size_t len)
   int len2 = drop_trailing_zeroes(data, len);
 
   st->st_global_data = realloc(st->st_global_data,
-			       st->st_global_data_len + len2 +
-			       FF_INPUT_BUFFER_PADDING_SIZE);
-  
+			       st->st_global_data_len + len2);
   memcpy(st->st_global_data + st->st_global_data_len, data, len2);
   st->st_global_data_len += len2;
 
@@ -944,11 +942,11 @@ parse_mpeg2video(th_transport_t *t, th_stream_t *st, size_t len,
       st->st_buffer = malloc(st->st_buffer_size);
       
       /* If we know the frame duration, increase DTS accordingly */
-      if(st->st_curdts != AV_NOPTS_VALUE)
+      if(st->st_curdts != PTS_UNSET)
 	st->st_curdts += st->st_frame_duration;
 
       /* PTS cannot be extrapolated (it's not linear) */
-      st->st_curpts = AV_NOPTS_VALUE; 
+      st->st_curpts = PTS_UNSET; 
       return 1;
     }
     break;
@@ -990,7 +988,7 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
     if(len >= 9)
       parse_pes_header(t, st, buf + 6, len - 6);
 
-    if(st->st_prevdts != AV_NOPTS_VALUE && st->st_curdts != AV_NOPTS_VALUE) {
+    if(st->st_prevdts != PTS_UNSET && st->st_curdts != PTS_UNSET) {
       d = (st->st_curdts - st->st_prevdts) & 0x1ffffffffLL;
 
       if(d < 90000)
@@ -1077,8 +1075,8 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
       st->st_curpkt = NULL;
       st->st_buffer = malloc(st->st_buffer_size);
 
-      st->st_curdts = AV_NOPTS_VALUE;
-      st->st_curpts = AV_NOPTS_VALUE;
+      st->st_curdts = PTS_UNSET;
+      st->st_curpts = PTS_UNSET;
     }
     return 1;
   }

@@ -23,12 +23,14 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <assert.h>
+#include <string.h>
 
 #include "tvhead.h"
 #include "streaming.h"
 #include "dvr.h"
 #include "mkmux.h"
 #include "ebml.h"
+#include "libavcodec/avcodec.h"
 
 TAILQ_HEAD(mk_cue_queue, mk_cue);
 
@@ -176,7 +178,7 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
 
     mkm->tracks[i].index = ssc->ssc_index;
     mkm->tracks[i].type  = ssc->ssc_type;
-    mkm->tracks[i].nextpts = AV_NOPTS_VALUE;
+    mkm->tracks[i].nextpts = PTS_UNSET;
 
     switch(ssc->ssc_type) {
     case SCT_MPEG2VIDEO:
@@ -572,11 +574,11 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track *t, th_pkt_t *pkt)
   size_t len;
   const int clusersizemax = 2000000;
 
-  if(pts == AV_NOPTS_VALUE)
+  if(pts == PTS_UNSET)
     // This is our best guess, it might be wrong but... oh well
     pts = t->nextpts;
 
-  if(pts != AV_NOPTS_VALUE) {
+  if(pts != PTS_UNSET) {
     t->nextpts = pts + (pkt->pkt_duration >> pkt->pkt_field);
 	
     nxt = av_rescale_q(t->nextpts, mpeg_tc, mkv_tc);

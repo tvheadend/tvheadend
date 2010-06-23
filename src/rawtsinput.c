@@ -243,17 +243,17 @@ process_ts_packet(rawts_t *rt, uint8_t *tsb)
   }
   
   LIST_FOREACH(t, &rt->rt_transports, tht_group_link) {
-    pcr = AV_NOPTS_VALUE;
+    pcr = PTS_UNSET;
 
     ts_recv_packet1(t, tsb, &pcr);
 
-    if(pcr != AV_NOPTS_VALUE) {
+    if(pcr != PTS_UNSET) {
       
       if(rt->rt_pcr_pid == 0)
 	rt->rt_pcr_pid = pid;
 
       if(rt->rt_pcr_pid == pid) {
-	if(t->tht_pcr_last != AV_NOPTS_VALUE && didsleep == 0) {
+	if(t->tht_pcr_last != PTS_UNSET && didsleep == 0) {
 	  struct timespec slp;
 	  int64_t delta = pcr - t->tht_pcr_last;
 

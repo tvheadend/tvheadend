@@ -63,12 +63,12 @@ stream_init(th_stream_t *st)
   st->st_cc_valid = 0;
 
   st->st_startcond = 0xffffffff;
-  st->st_curdts = AV_NOPTS_VALUE;
-  st->st_curpts = AV_NOPTS_VALUE;
-  st->st_prevdts = AV_NOPTS_VALUE;
+  st->st_curdts = PTS_UNSET;
+  st->st_curpts = PTS_UNSET;
+  st->st_prevdts = PTS_UNSET;
 
-  st->st_pcr_real_last = AV_NOPTS_VALUE;
-  st->st_pcr_last      = AV_NOPTS_VALUE;
+  st->st_pcr_real_last = PTS_UNSET;
+  st->st_pcr_last      = PTS_UNSET;
   st->st_pcr_drift     = 0;
   st->st_pcr_recovery_fails = 0;
 }
@@ -502,7 +502,7 @@ transport_create(const char *identifier, int type, int source_type)
   t->tht_source_type = source_type;
   t->tht_refcount = 1;
   t->tht_enabled = 1;
-  t->tht_pcr_last = AV_NOPTS_VALUE;
+  t->tht_pcr_last = PTS_UNSET;
   TAILQ_INIT(&t->tht_components);
 
   streaming_pad_init(&t->tht_streaming_pad);

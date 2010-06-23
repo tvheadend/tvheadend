@@ -191,7 +191,7 @@ parse_latm_audio_mux_element(th_transport_t *t, th_stream_t *st, uint8_t *data,
   if(slot_len * 8 > remaining_bits(&bs))
     return NULL;
 
-  if(st->st_curdts == AV_NOPTS_VALUE)
+  if(st->st_curdts == PTS_UNSET)
     return NULL;
 
   th_pkt_t *pkt = pkt_alloc(NULL, 0, st->st_curdts, st->st_curdts);

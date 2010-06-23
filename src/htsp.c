@@ -45,6 +45,7 @@
 #include "settings.h"
 #include <sys/time.h>
 
+#include "libavcodec/avcodec.h"
 
 static void *htsp_server;
 
@@ -1406,12 +1407,12 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   htsmsg_add_u32(m, "com", pkt->pkt_commercial);
 
 
-  if(pkt->pkt_pts != AV_NOPTS_VALUE) {
+  if(pkt->pkt_pts != PTS_UNSET) {
     int64_t pts = av_rescale_q(pkt->pkt_pts, mpeg_tc, AV_TIME_BASE_Q);
     htsmsg_add_s64(m, "pts", pts);
   }
 
-  if(pkt->pkt_dts != AV_NOPTS_VALUE) {
+  if(pkt->pkt_dts != PTS_UNSET) {
     int64_t dts = av_rescale_q(pkt->pkt_dts, mpeg_tc, AV_TIME_BASE_Q);
     htsmsg_add_s64(m, "dts", dts);
   }
@@ -1449,7 +1450,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
       htsmsg_add_s64(m, "delay", 0);
     } else if((hm = TAILQ_FIRST(&hs->hs_q.hmq_q)) != NULL &&
 	      (n = hm->hm_msg) != NULL && !htsmsg_get_s64(n, "dts", &ts) &&
-	      pkt->pkt_dts != AV_NOPTS_VALUE && ts != AV_NOPTS_VALUE) {
+	      pkt->pkt_dts != PTS_UNSET && ts != PTS_UNSET) {
       htsmsg_add_s64(m, "delay", pkt->pkt_dts - ts);
     }
     pthread_mutex_unlock(&htsp->htsp_out_mutex);

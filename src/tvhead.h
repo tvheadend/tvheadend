@@ -32,9 +32,9 @@
 #include "avg.h"
 #include "hts_strtab.h"
 
-#include <libavcodec/avcodec.h>
-
 #include "redblack.h"
+
+#define PTS_UNSET INT64_C(0x8000000000000000)
 
 extern pthread_mutex_t global_lock;
 extern pthread_mutex_t ffmpeg_lock;

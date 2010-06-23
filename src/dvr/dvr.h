@@ -19,7 +19,6 @@
 #ifndef DVR_H
 #define DVR_H
 
-#include <libavformat/avformat.h>
 #include <regex.h>
 #include "epg.h"
 #include "channels.h"

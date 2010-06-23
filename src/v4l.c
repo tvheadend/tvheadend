@@ -18,7 +18,7 @@
 
 #include <assert.h>
 #include <pthread.h>
-
+#include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>

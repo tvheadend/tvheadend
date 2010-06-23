@@ -16,14 +16,12 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdarg.h>
 #include <pthread.h>
 #include <assert.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <libgen.h> /* basename */
-
-#include <libavutil/avstring.h>
-#include <libavcodec/avcodec.h>
 
 #include "htsstr.h"
 
@@ -192,7 +190,7 @@ pvr_generate_filename(dvr_entry_t *de)
   filename = strdup(de->de_ititle);
   cleanupfilename(filename);
 
-  av_strlcpy(path, dvr_storage, sizeof(path));
+  snprintf(path, sizeof(path), "%s", dvr_storage);
 
   /* Append per-day directory */
 

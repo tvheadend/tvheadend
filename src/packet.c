@@ -46,7 +46,7 @@ pkt_alloc(const void *data, size_t datalen, int64_t pts, int64_t dts)
   pkt = calloc(1, sizeof(th_pkt_t));
   pkt->pkt_payloadlen = datalen;
   if(datalen > 0) {
-    pkt->pkt_payload = malloc(datalen + FF_INPUT_BUFFER_PADDING_SIZE);
+    pkt->pkt_payload = malloc(datalen);
     if(data != NULL)
       memcpy(pkt->pkt_payload, data, datalen);
   }
@@ -123,7 +123,7 @@ pkt_merge_global(th_pkt_t *pkt)
   
   n->pkt_payloadlen = pkt->pkt_globaldata_len + pkt->pkt_payloadlen;
 
-  n->pkt_payload = malloc(n->pkt_payloadlen + FF_INPUT_BUFFER_PADDING_SIZE);
+  n->pkt_payload = malloc(n->pkt_payloadlen);
   memcpy(n->pkt_payload, pkt->pkt_globaldata, pkt->pkt_globaldata_len);
   memcpy(n->pkt_payload + pkt->pkt_globaldata_len, pkt->pkt_payload,
 	 pkt->pkt_payloadlen);
@@ -147,14 +147,12 @@ pkt_copy(th_pkt_t *pkt)
   n->pkt_refcount = 1;
 
   if(pkt->pkt_globaldata_len) {
-    n->pkt_globaldata = malloc(pkt->pkt_globaldata_len + 
-			       FF_INPUT_BUFFER_PADDING_SIZE);
+    n->pkt_globaldata = malloc(pkt->pkt_globaldata_len);
     memcpy(n->pkt_globaldata, pkt->pkt_globaldata, pkt->pkt_globaldata_len);
   }
 
   if(pkt->pkt_payloadlen) {
-    n->pkt_payload = malloc(pkt->pkt_payloadlen + 
-			       FF_INPUT_BUFFER_PADDING_SIZE);
+    n->pkt_payload = malloc(pkt->pkt_payloadlen);
     memcpy(n->pkt_payload, pkt->pkt_payload, pkt->pkt_payloadlen);
   }
 
