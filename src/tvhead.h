@@ -838,4 +838,6 @@ void hexdump(const char *pfx, const uint8_t *data, int len);
 
 uint32_t crc32(uint8_t *data, size_t datalen, uint32_t crc);
 
+int base64_decode(uint8_t *out, const char *in, int out_size);
+
 #endif /* TV_HEAD_H */
