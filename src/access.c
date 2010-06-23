@@ -33,8 +33,7 @@
 #include "access.h"
 #include "dtable.h"
 #include "settings.h"
-
-#include <libavutil/sha1.h>
+#include "sha1.h"
 
 struct access_entry_queue access_entries;
 
@@ -96,18 +95,18 @@ access_get_hashed(const char *username, const uint8_t digest[20],
   struct sockaddr_in *si = (struct sockaddr_in *)src;
   uint32_t b = ntohl(si->sin_addr.s_addr);
   access_entry_t *ae;
-  struct AVSHA1 *shactx = alloca(av_sha1_size);
+  SHA1Context shactx;
   uint8_t d[20];
   uint32_t r = 0;
   int match = 0;
 
   if(superuser_username != NULL && superuser_password != NULL) {
 
-    av_sha1_init(shactx);
-    av_sha1_update(shactx, (const uint8_t *)superuser_password,
-		   strlen(superuser_password));
-    av_sha1_update(shactx, challenge, 32);
-    av_sha1_final(shactx, d);
+    SHA1Reset(&shactx);
+    SHA1Input(&shactx, (const uint8_t *)superuser_password,
+	      strlen(superuser_password));
+    SHA1Input(&shactx, challenge, 32);
+    SHA1Result(&shactx, d);
 
     if(!strcmp(superuser_username, username) && !memcmp(d, digest, 20))
       return 0xffffffff;
@@ -122,12 +121,12 @@ access_get_hashed(const char *username, const uint8_t digest[20],
     if((b & ae->ae_netmask) != ae->ae_network)
       continue; /* IP based access mismatches */
 
-    av_sha1_init(shactx);
-    av_sha1_update(shactx, (const uint8_t *)ae->ae_password,
-		   strlen(ae->ae_password));
-    av_sha1_update(shactx, challenge, 32);
-    av_sha1_final(shactx, d);
-    
+    SHA1Reset(&shactx);
+    SHA1Input(&shactx, (const uint8_t *)ae->ae_password,
+	      strlen(ae->ae_password));
+    SHA1Input(&shactx, challenge, 32);
+    SHA1Result(&shactx, d);
+
     if(strcmp(ae->ae_username, username) || memcmp(d, digest, 20))
       continue;
     match = 1;
