@@ -842,11 +842,10 @@ int base64_decode(uint8_t *out, const char *in, int out_size);
 
 int put_utf8(char *out, int c);
 
-typedef struct Rational{
-    int num; ///< numerator
-    int den; ///< denominator
-} Rational;
-
-int64_t rescale_q(int64_t a, Rational bq, Rational cq);
+static inline int64_t ts_rescale(int64_t ts, int tb)
+{
+  //  return (ts * tb + (tb / 2)) / 90000LL;
+  return (ts * tb ) / 90000LL;
+}
 
 #endif /* TV_HEAD_H */

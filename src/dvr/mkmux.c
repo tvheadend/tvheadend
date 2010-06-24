@@ -36,10 +36,6 @@ TAILQ_HEAD(mk_cue_queue, mk_cue);
 #define MATROSKA_TIMESCALE 1000000 // in nS
 
 
-static const Rational mpeg_tc = {1, 90000};
-static const Rational mkv_tc  = {1, 1000};
-static const Rational ns_tc  = {1, 1000000000};
-
 /**
  *
  */
@@ -237,7 +233,7 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
     }
 
     if(ssc->ssc_frameduration) {
-      int d = rescale_q(ssc->ssc_frameduration, mpeg_tc, ns_tc);
+      int d = ts_rescale(ssc->ssc_frameduration, 1000000000);
       ebml_append_uint(t, 0x23e383, d);
     }
     
@@ -580,8 +576,8 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track *t, th_pkt_t *pkt)
   if(pts != PTS_UNSET) {
     t->nextpts = pts + (pkt->pkt_duration >> pkt->pkt_field);
 	
-    nxt = rescale_q(t->nextpts, mpeg_tc, mkv_tc);
-    pts = rescale_q(pts,        mpeg_tc, mkv_tc);
+    nxt = ts_rescale(t->nextpts, 1000000000 / MATROSKA_TIMESCALE);
+    pts = ts_rescale(pts,        1000000000 / MATROSKA_TIMESCALE);
 
     if(mkm->totduration < nxt)
       mkm->totduration = nxt;
