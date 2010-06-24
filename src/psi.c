@@ -511,8 +511,11 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 
     case 0x03:
     case 0x04:
-    case 0x81:
       hts_stream_type = SCT_MPEG2AUDIO;
+      break;
+
+    case 0x81:
+      hts_stream_type = SCT_AC3;
       break;
 
     case 0x11:
