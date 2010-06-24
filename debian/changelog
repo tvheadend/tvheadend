@@ -13,8 +13,8 @@ hts-tvheadend (2.11.99) hts; urgency=low
   * Maintain the order of PIDs as they appear in the PMT.
     Ticket #218
 
-  * When there is no video pid (service type is Radio), 
-    start the audio stream right away. 
+  * When there is no video pid (service type is Radio),
+    start the audio stream right away.
     Ticket #59
 
   * Add subscriptionChangeWeight HTSP method.
