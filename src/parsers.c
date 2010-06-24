@@ -1162,7 +1162,7 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 	 pkt->pkt_dts,
 	 pkt->pkt_pts,
 	 pkt->pkt_duration,
-	 pkt->pkt_payloadlen);
+	 pktbuf_len(pkt->pkt_payload));
 #endif
 
   //  avgstat_add(&st->st_rate, pkt->pkt_payloadlen, dispatch_clock);
