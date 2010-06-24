@@ -621,8 +621,7 @@ cwc_detect_card_type(cwc_t *cwc)
     break;
   default:
     cwc->cwc_card_type = CARD_UNKNOWN;
-    tvhlog(LOG_INFO, "cwc", "%s: unknown card",
-	   cwc->cwc_hostname);
+    break;
   }
 }
 
