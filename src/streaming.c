@@ -204,8 +204,8 @@ streaming_start_unref(streaming_start_t *ss)
 
   transport_source_info_free(&ss->ss_si);
   for(i = 0; i < ss->ss_num_components; i++)
-    free(ss->ss_components[i].ssc_global_header);
-
+    if(ss->ss_components[i].ssc_gh)
+      pktbuf_ref_dec(ss->ss_components[i].ssc_gh);
   free(ss);
 }
 
@@ -377,10 +377,8 @@ streaming_start_copy(const streaming_start_t *src)
 
   for(i = 0; i < dst->ss_num_components; i++) {
     streaming_start_component_t *ssc = &dst->ss_components[i];
-    if(ssc->ssc_global_header != NULL)
-      ssc->ssc_global_header = memcpy(malloc(ssc->ssc_global_header_len),
-				      ssc->ssc_global_header,
-				      ssc->ssc_global_header_len);
+    if(ssc->ssc_gh != NULL)
+      pktbuf_ref_inc(ssc->ssc_gh);
   }
 
   dst->ss_refcount = 1;

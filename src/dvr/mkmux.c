@@ -221,13 +221,14 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
     if(ssc->ssc_lang[0])
       ebml_append_string(t, 0x22b59c, ssc->ssc_lang);
     
-    if(ssc->ssc_global_header_len) {
+    if(ssc->ssc_gh) {
       switch(ssc->ssc_type) {
       case SCT_H264:
       case SCT_MPEG2VIDEO:
       case SCT_AAC:
-	ebml_append_bin(t, 0x63a2, ssc->ssc_global_header,
-		       ssc->ssc_global_header_len);
+	ebml_append_bin(t, 0x63a2, 
+			pktbuf_ptr(ssc->ssc_gh),
+			pktbuf_len(ssc->ssc_gh));
 	break;
       }
     }
@@ -616,8 +617,8 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track *t, th_pkt_t *pkt)
   }
 
 
-  data = pkt->pkt_payload;
-  len  = pkt->pkt_payloadlen;
+  data = pktbuf_ptr(pkt->pkt_payload);
+  len  = pktbuf_len(pkt->pkt_payload);
 
   if(t->type == SCT_AAC) {
     // Skip ADTS header
@@ -659,7 +660,7 @@ mk_mux_write_pkt(mk_mux_t *mkm, struct th_pkt *pkt)
   
   if(t != NULL) {
     if(t->merge)
-      pkt = pkt_merge_global(pkt);
+      pkt = pkt_merge_header(pkt);
     mk_write_frame_i(mkm, t, pkt);
   }
   

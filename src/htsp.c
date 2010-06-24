@@ -75,7 +75,7 @@ typedef struct htsp_msg {
   int hm_payloadsize;         /* For maintaining stats about streaming
 				 buffer depth */
 
-  th_pkt_t *hm_pkt;     /* For keeping reference to packet.
+  pktbuf_t *hm_pb;      /* For keeping reference to packet payload.
 			   hm_msg can contain messages that points
 			   to packet payload so to avoid copy we
 			   keep a reference here */
@@ -194,8 +194,8 @@ static void
 htsp_msg_destroy(htsp_msg_t *hm)
 {
   htsmsg_destroy(hm->hm_msg);
-  if(hm->hm_pkt != NULL)
-    pkt_ref_dec(hm->hm_pkt);
+  if(hm->hm_pb != NULL)
+    pktbuf_ref_dec(hm->hm_pb);
   free(hm);
 }
 
@@ -247,13 +247,15 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
  *
  */
 static void
-htsp_send(htsp_connection_t *htsp, htsmsg_t *m, th_pkt_t *pkt,
+htsp_send(htsp_connection_t *htsp, htsmsg_t *m, pktbuf_t *pb,
 	  htsp_msg_q_t *hmq, int payloadsize)
 {
   htsp_msg_t *hm = malloc(sizeof(htsp_msg_t));
 
   hm->hm_msg = m;
-  hm->hm_pkt = pkt;
+  hm->hm_pb = pb;
+  if(pb != NULL)
+    pktbuf_ref_inc(pb);
   hm->hm_payloadsize = payloadsize;
   
   pthread_mutex_lock(&htsp->htsp_out_mutex);
@@ -1416,14 +1418,15 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   uint32_t dur = ts_rescale(pkt->pkt_duration, 1000000);
   htsmsg_add_u32(m, "duration", dur);
   
-  pkt = pkt_merge_global(pkt);
+  pkt = pkt_merge_header(pkt);
 
   /**
    * Since we will serialize directly we use 'binptr' which is a binary
    * object that just points to data, thus avoiding a copy.
    */
-  htsmsg_add_binptr(m, "payload", pkt->pkt_payload, pkt->pkt_payloadlen);
-  htsp_send(htsp, m, pkt, &hs->hs_q, pkt->pkt_payloadlen);
+  htsmsg_add_binptr(m, "payload", pktbuf_ptr(pkt->pkt_payload),
+		    pktbuf_len(pkt->pkt_payload));
+  htsp_send(htsp, m, pkt->pkt_payload, &hs->hs_q, pktbuf_len(pkt->pkt_payload));
 
   if(hs->hs_last_report != dispatch_clock) {
     /* Send a queue status report every second */
@@ -1460,6 +1463,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 
     htsp_send_message(hs->hs_htsp, m, &hs->hs_htsp->htsp_hmq_qstatus);
   }
+  pkt_ref_dec(pkt);
 }
 
 

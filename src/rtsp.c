@@ -391,7 +391,7 @@ rtsp_streaming_send(rtsp_t *rtsp, th_pkt_t *pkt)
 {
   rtsp_stream_t *rs;
 
-  pkt = pkt_merge_global(pkt);
+  pkt = pkt_merge_header(pkt);
 
   LIST_FOREACH(rs, &rtsp->rtsp_streams, rs_link)
     if(rs->rs_index == pkt->pkt_componentindex)
@@ -402,12 +402,16 @@ rtsp_streaming_send(rtsp_t *rtsp, th_pkt_t *pkt)
 
   switch(rs->rs_type) {
   case SCT_MPEG2VIDEO:
-    rtp_send_mpv(rs->rs_sender, rs, &rs->rs_rtp, pkt->pkt_payload,
-		 pkt->pkt_payloadlen, pkt->pkt_pts);
+    rtp_send_mpv(rs->rs_sender, rs, &rs->rs_rtp,
+		 pktbuf_ptr(pkt->pkt_payload),
+		 pktbuf_len(pkt->pkt_payload),
+		 pkt->pkt_pts);
     break;
   case SCT_MPEG2AUDIO:
-    rtp_send_mpa(rs->rs_sender, rs, &rs->rs_rtp, pkt->pkt_payload,
-		 pkt->pkt_payloadlen, pkt->pkt_pts);
+    rtp_send_mpa(rs->rs_sender, rs, &rs->rs_rtp,
+		 pktbuf_ptr(pkt->pkt_payload),
+		 pktbuf_len(pkt->pkt_payload),
+		 pkt->pkt_pts);
     break;
   }
 }

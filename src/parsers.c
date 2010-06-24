@@ -925,15 +925,13 @@ parse_mpeg2video(th_transport_t *t, th_stream_t *st, size_t len,
       }
 
       if(st->st_global_data) {
-	pkt->pkt_globaldata = st->st_global_data;
-	pkt->pkt_globaldata_len = st->st_global_data_len;
-	
+	pkt->pkt_header = pktbuf_make(st->st_global_data,
+				      st->st_global_data_len);
 	st->st_global_data = NULL;
 	st->st_global_data_len = 0;
       }
 
-      pkt->pkt_payload = st->st_buffer;
-      pkt->pkt_payloadlen = st->st_buffer_ptr - 4;
+      pkt->pkt_payload = pktbuf_make(st->st_buffer, st->st_buffer_ptr - 4);
       pkt->pkt_duration = st->st_frame_duration;
 
       parser_deliver(t, st, pkt);
@@ -1062,14 +1060,13 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
     if(pkt != NULL) {
       
       if(st->st_global_data) {
-	pkt->pkt_globaldata = st->st_global_data;
-	pkt->pkt_globaldata_len = st->st_global_data_len;
+	pkt->pkt_header = pktbuf_make(st->st_global_data,
+				      st->st_global_data_len);
 	st->st_global_data = NULL;
 	st->st_global_data_len = 0;
       }
     
-      pkt->pkt_payload = st->st_buffer;
-      pkt->pkt_payloadlen = st->st_buffer_ptr - 4;
+      pkt->pkt_payload = pktbuf_make(st->st_buffer, st->st_buffer_ptr - 4);
       parser_deliver(t, st, pkt);
       
       st->st_curpkt = NULL;
@@ -1168,7 +1165,7 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 	 pkt->pkt_payloadlen);
 #endif
 
-  avgstat_add(&st->st_rate, pkt->pkt_payloadlen, dispatch_clock);
+  //  avgstat_add(&st->st_rate, pkt->pkt_payloadlen, dispatch_clock);
 
   /**
    * Input is ok

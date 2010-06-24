@@ -194,17 +194,15 @@ parse_latm_audio_mux_element(th_transport_t *t, th_stream_t *st, uint8_t *data,
   if(st->st_curdts == PTS_UNSET)
     return NULL;
 
-  th_pkt_t *pkt = pkt_alloc(NULL, 0, st->st_curdts, st->st_curdts);
+  th_pkt_t *pkt = pkt_alloc(NULL, slot_len + 7, st->st_curdts, st->st_curdts);
 
   pkt->pkt_commercial = t->tht_tt_commercial_advice;
-  pkt->pkt_payloadlen = slot_len + 7;
-  pkt->pkt_payload = malloc(pkt->pkt_payloadlen);
   pkt->pkt_duration = st->st_frame_duration;
   pkt->pkt_sri = latm->sample_rate_index;
   pkt->pkt_channels = latm->channel_config;
 
   /* 7 bytes of ADTS header */
-  init_bits(&out, pkt->pkt_payload, 56);
+  init_bits(&out, pktbuf_ptr(pkt->pkt_payload), 56);
 
   put_bits(&out, 0xfff, 12); // Sync marker
   put_bits(&out, 0, 1);      // ID 0 = MPEG 4
@@ -226,7 +224,7 @@ parse_latm_audio_mux_element(th_transport_t *t, th_stream_t *st, uint8_t *data,
   assert(remaining_bits(&out) == 0);
 
   /* AAC RDB */
-  buf = pkt->pkt_payload + 7;
+  buf = pktbuf_ptr(pkt->pkt_payload) + 7;
   for(i = 0; i < slot_len; i++)
     *buf++ = read_bits(&bs, 8);
 

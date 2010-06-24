@@ -20,7 +20,6 @@
 #include "tvhead.h"
 #include "streaming.h"
 #include "globalheaders.h"
-#include "avc.h"
 
 typedef struct globalheaders {
   streaming_target_t gh_input;
@@ -61,13 +60,13 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
   if(ssc->ssc_frameduration == 0 && pkt->pkt_duration != 0)
     ssc->ssc_frameduration = pkt->pkt_duration;
 
-  if(ssc->ssc_global_header != NULL)
+  if(ssc->ssc_gh != NULL)
     return;
 
   switch(ssc->ssc_type) {
   case SCT_AAC:
-    d = ssc->ssc_global_header = malloc(2);
-    ssc->ssc_global_header_len = 2;
+    ssc->ssc_gh = pktbuf_alloc(NULL, 2);
+    d = pktbuf_ptr(ssc->ssc_gh);
 
     const int profile = 2;
     d[0] = (profile << 3) | ((pkt->pkt_sri & 0xe) >> 1);
@@ -76,13 +75,9 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
 
   case SCT_H264:
   case SCT_MPEG2VIDEO:
-    if(pkt->pkt_globaldata != NULL) {
-      ssc->ssc_global_header = malloc(pkt->pkt_globaldata_len + 
-				      FF_INPUT_BUFFER_PADDING_SIZE);
-      
-      memcpy(ssc->ssc_global_header, pkt->pkt_globaldata,
-	     pkt->pkt_globaldata_len);
-      ssc->ssc_global_header_len = pkt->pkt_globaldata_len;
+    if(pkt->pkt_header != NULL) {
+      ssc->ssc_gh = pkt->pkt_header;
+      pktbuf_ref_inc(ssc->ssc_gh);
     }
     break;
 
@@ -110,7 +105,7 @@ headers_complete(globalheaders_t *gh)
        ssc->ssc_frameduration == 0)
       return 0;
   
-    if(ssc->ssc_global_header == NULL &&
+    if(ssc->ssc_gh == NULL &&
        (ssc->ssc_type == SCT_H264 ||
 	ssc->ssc_type == SCT_MPEG2VIDEO ||
 	ssc->ssc_type == SCT_AAC))

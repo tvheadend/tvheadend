@@ -20,6 +20,14 @@
 #define PACKET_H_
 
 
+typedef struct pktbuf {
+  int pb_refcount;
+  uint8_t *pb_data;
+  size_t pb_size;
+} pktbuf_t;
+
+
+
 /**
  * Packets
  */
@@ -42,11 +50,8 @@ typedef struct th_pkt {
   uint8_t pkt_channels;
   uint8_t pkt_sri;
 
-  uint8_t *pkt_payload;
-  int pkt_payloadlen;
-
-  uint8_t *pkt_globaldata;
-  int pkt_globaldata_len;
+  pktbuf_t *pkt_payload;
+  pktbuf_t *pkt_header;
 
 } th_pkt_t;
 
@@ -73,10 +78,21 @@ void pktref_clear_queue(struct th_pktref_queue *q);
 
 th_pkt_t *pkt_alloc(const void *data, size_t datalen, int64_t pts, int64_t dts);
 
-th_pkt_t *pkt_merge_global(th_pkt_t *pkt);
+th_pkt_t *pkt_merge_header(th_pkt_t *pkt);
 
-th_pkt_t *pkt_copy(th_pkt_t *pkt);
+th_pkt_t *pkt_copy_shallow(th_pkt_t *pkt);
 
 th_pktref_t *pktref_create(th_pkt_t *pkt);
+
+void pktbuf_ref_dec(pktbuf_t *pb);
+
+void pktbuf_ref_inc(pktbuf_t *pb);
+
+pktbuf_t *pktbuf_alloc(const void *data, size_t size);
+
+pktbuf_t *pktbuf_make(void *data, size_t size);
+
+#define pktbuf_len(pb) ((pb)->pb_size)
+#define pktbuf_ptr(pb) ((pb)->pb_data)
 
 #endif /* PACKET_H_ */

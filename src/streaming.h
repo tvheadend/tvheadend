@@ -33,8 +33,7 @@ typedef struct streaming_start_component {
   int16_t ssc_width;
   int16_t ssc_height;
 
-  uint8_t *ssc_global_header;
-  int ssc_global_header_len;
+  pktbuf_t *ssc_gh;
 
   int ssc_frameduration;
 

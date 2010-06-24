@@ -206,7 +206,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 	      pkt->pkt_dts,
 	      pkt->pkt_pts,
 	      pkt->pkt_duration,
-	      pkt->pkt_payloadlen);
+	      pktbuf_len(pkt->pkt_payload));
 
   streaming_message_t *sm = streaming_msg_create_pkt(pkt);
   streaming_target_deliver2(tf->tf_output, sm);
@@ -307,7 +307,7 @@ compute_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 static void
 tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
 {
-  th_pkt_t *pkt = pkt_copy(sm->sm_data);
+  th_pkt_t *pkt = pkt_copy_shallow(sm->sm_data);
   tfstream_t *tfs = tfs_find(tf, pkt);
   streaming_msg_free(sm);
   
