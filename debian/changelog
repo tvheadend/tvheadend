@@ -31,14 +31,15 @@ hts-tvheadend (2.11.99) hts; urgency=low
     Add support for recording AAC audio. Ticket #160
     Improves metadata written to files.
 
-  * Tvheadend no longer tries to fixup lack of PTS/DTS for packets before
-    sending them over HTSP. Rather, those fields will be left out in the
-    message. Currently, all HTSP clients known to mankind handles this.
+  * Tvheadend no longer tries to fixup lack of PTS/DTS for packets
+    before sending them over HTSP. Rather, those fields will be left
+    out in the message. Currently, all HTSP clients known to mankind
+    handles this.
 
-  * Make error detection in timestamp parsing much more robust.
-    Avoid extracting persistent data (such as video width*height) from 
-    received data if we suspect that an error has occured (MPEG-TS TEI or
-    continuity counter errors).
+  * Make error detection in timestamp parsing much more robust.  Avoid
+    extracting persistent data (such as video width*height) from
+    received data if we suspect that an error has occured (MPEG-TS TEI
+    or continuity counter errors).
 
  -- Andreas Öman <andreas@lonelycoder.com>  Mon, 14 Jun 2010 20:54:40 +0200
 
