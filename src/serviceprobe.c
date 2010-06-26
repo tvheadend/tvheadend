@@ -91,7 +91,7 @@ serviceprobe_thread(void *aux)
 
   pthread_mutex_lock(&global_lock);
 
-  streaming_queue_init(&sq);
+  streaming_queue_init(&sq, 0);
 
   while(1) {
 

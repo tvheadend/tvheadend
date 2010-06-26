@@ -62,13 +62,25 @@ streaming_queue_deliver(void *opauqe, streaming_message_t *sm)
  *
  */
 void
-streaming_queue_init(streaming_queue_t *sq)
+streaming_queue_init(streaming_queue_t *sq, int reject_filter)
 {
-  streaming_target_init(&sq->sq_st, streaming_queue_deliver, sq, 0);
+  streaming_target_init(&sq->sq_st, streaming_queue_deliver, sq, reject_filter);
 
   pthread_mutex_init(&sq->sq_mutex, NULL);
   pthread_cond_init(&sq->sq_cond, NULL);
   TAILQ_INIT(&sq->sq_queue);
+}
+
+
+/**
+ *
+ */
+void
+streaming_queue_deinit(streaming_queue_t *sq)
+{
+  streaming_queue_clear(&sq->sq_queue);
+  pthread_mutex_destroy(&sq->sq_mutex);
+  pthread_cond_destroy(&sq->sq_cond);
 }
 
 

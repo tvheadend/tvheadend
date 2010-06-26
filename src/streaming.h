@@ -62,9 +62,11 @@ void streaming_target_init(streaming_target_t *st,
 			   st_callback_t *cb, void *opaque,
 			   int reject_filter);
 
-void streaming_queue_init(streaming_queue_t *sq);
+void streaming_queue_init(streaming_queue_t *sq, int reject_filter);
 
 void streaming_queue_clear(struct streaming_message_queue *q);
+
+void streaming_queue_deinit(streaming_queue_t *sq);
 
 void streaming_target_connect(streaming_pad_t *sp, streaming_target_t *st);
 

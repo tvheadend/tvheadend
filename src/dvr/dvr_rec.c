@@ -65,7 +65,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
 
   snprintf(buf, sizeof(buf), "DVR: %s", de->de_title);
 
-  streaming_queue_init(&de->de_sq);
+  streaming_queue_init(&de->de_sq, 0);
 
   pthread_create(&de->de_thread, NULL, dvr_thread, de);
 
