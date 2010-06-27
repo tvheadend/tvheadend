@@ -1041,7 +1041,7 @@ extjs_servicedetails(http_connection_t *hc,
   htsmsg_t *out, *streams, *c;
   th_transport_t *t;
   th_stream_t *st;
-  caid_t *caid;
+  caid_t *ca;
   char buf[128];
 
   pthread_mutex_lock(&global_lock);
@@ -1068,10 +1068,10 @@ extjs_servicedetails(http_connection_t *hc,
     case SCT_CA:
       buf[0] = 0;
 
-      LIST_FOREACH(caid, &st->st_caids, link) {
+      LIST_FOREACH(ca, &st->st_caids, link) {
 	snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), 
-		 "%s (0x%04x) ",
-		 psi_caid2name(caid->caid), caid->caid);
+		 "%s (0x%04x) [0x%08x]",
+		 psi_caid2name(ca->caid), ca->caid, ca->providerid);
       }
 
       htsmsg_add_str(c, "details", buf);
