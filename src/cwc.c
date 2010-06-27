@@ -1387,14 +1387,13 @@ cwc_transport_start(th_transport_t *t)
   cwc_t *cwc;
   cwc_transport_t *ct;
   th_descrambler_t *td;
-  th_stream_t *st;
 
   lock_assert(&global_lock);
   TAILQ_FOREACH(cwc, &cwcs, cwc_link) {
     if(cwc->cwc_caid == 0)
       continue;
 
-    if((st = cwc_find_stream_by_caid(t, cwc->cwc_caid)) == NULL)
+    if(cwc_find_stream_by_caid(t, cwc->cwc_caid) == NULL)
       continue;
 
     ct = calloc(1, sizeof(cwc_transport_t));
