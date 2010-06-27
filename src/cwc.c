@@ -99,7 +99,7 @@ static pthread_cond_t cwc_config_changed;
 typedef struct ecm_section {
   int es_section;
   int es_channel;
-  
+
   uint16_t es_seq;
   char es_nok;
   char es_pending;
@@ -108,6 +108,19 @@ typedef struct ecm_section {
   uint8_t es_ecm[4070];
 
 } ecm_section_t;
+
+
+/**
+ *
+ */
+typedef struct ecm_pid {
+  LIST_ENTRY(ecm_pid) ep_link;
+  
+  uint16_t ep_pid;
+
+  int ep_last_section;
+  struct ecm_section *ep_sections[256];
+} ecm_pid_t;
 
 
 /**
@@ -142,8 +155,7 @@ typedef struct cwc_transport {
   uint8_t *ct_tsbcluster;
   int ct_fill;
 
-  int ct_last_section;
-  struct ecm_section *ct_sections[256];
+  LIST_HEAD(, ecm_pid) ct_pids;
 
 } cwc_transport_t;
 
@@ -651,6 +663,7 @@ handle_ecm_reply(cwc_transport_t *ct, ecm_section_t *es, uint8_t *msg,
 		 int len, int seq)
 {
   th_transport_t *t = ct->ct_transport;
+  ecm_pid_t *ep;
   char chaninfo[32];
   int i;
 
@@ -677,12 +690,13 @@ handle_ecm_reply(cwc_transport_t *ct, ecm_section_t *es, uint8_t *msg,
     tvhlog(LOG_DEBUG, "cwc", "Received NOK for service \"%s\"%s (seqno: %d)", 
 	   t->tht_svcname, chaninfo, seq);
 
-    for(i = 0; i <= ct->ct_last_section; i++)
-      if(ct->ct_sections[i] == NULL || 
-	 ct->ct_sections[i]->es_pending ||
-	 ct->ct_sections[i]->es_nok == 0)
-	return;
-	
+    LIST_FOREACH(ep, &ct->ct_pids, ep_link) {
+      for(i = 0; i <= ep->ep_last_section; i++)
+	if(ep->ep_sections[i] == NULL || 
+	   ep->ep_sections[i]->es_pending ||
+	   ep->ep_sections[i]->es_nok == 0)
+	  return;
+    }
     tvhlog(LOG_ERR, "cwc",
 	   "Can not descramble service \"%s\", access denied (seqno: %d)",
 	   t->tht_svcname, seq);
@@ -737,6 +751,7 @@ static int
 cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
 {
   cwc_transport_t *ct;
+  ecm_pid_t *ep;
   ecm_section_t *es;
   uint16_t seq = (msg[2] << 8) | msg[3];
   int i;
@@ -748,12 +763,14 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
   case 0x80:
   case 0x81:
     LIST_FOREACH(ct, &cwc->cwc_transports, ct_link) {
-      for(i = 0; i <= ct->ct_last_section; i++) {
-	es = ct->ct_sections[i];
-	if(es != NULL) {
-	  if(es->es_seq == seq && es->es_pending) {
-	    handle_ecm_reply(ct, es, msg, len, seq);
-	    return 0;
+      LIST_FOREACH(ep, &ct->ct_pids, ep_link) {
+	for(i = 0; i <= ep->ep_last_section; i++) {
+	  es = ep->ep_sections[i];
+	  if(es != NULL) {
+	    if(es->es_seq == seq && es->es_pending) {
+	      handle_ecm_reply(ct, es, msg, len, seq);
+	      return 0;
+	    }
 	  }
 	}
       }
@@ -1203,6 +1220,7 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
   cwc_t *cwc = ct->ct_cwc;
   int channel;
   int section;
+  ecm_pid_t *ep;
   ecm_section_t *es;
   char chaninfo[32];
   caid_t *c;
@@ -1212,6 +1230,18 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
 
   if((data[0] & 0xf0) != 0x80)
     return;
+
+  LIST_FOREACH(ep, &ct->ct_pids, ep_link) {
+    if(ep->ep_pid == st->st_pid)
+      break;
+  }
+
+  if(ep == NULL) {
+    ep = calloc(1, sizeof(ecm_pid_t));
+    ep->ep_pid = st->st_pid;
+    LIST_INSERT_HEAD(&ct->ct_pids, ep, ep_link);
+  }
+
 
   LIST_FOREACH(c, &st->st_caids, link) {
     if(cwc->cwc_caid == c->caid)
@@ -1232,19 +1262,19 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
     if(cwc->cwc_caid >> 8 == 6) {
       channel = data[6] << 8 | data[7];
       snprintf(chaninfo, sizeof(chaninfo), " (channel %d)", channel);
-      ct->ct_last_section = data[5]; 
+      ep->ep_last_section = data[5]; 
       section = data[4];
     } else {
       channel = -1;
       chaninfo[0] = 0;
-      ct->ct_last_section = 0; 
+      ep->ep_last_section = 0; 
       section = 0;
     }
 
-    if(ct->ct_sections[section] == NULL)
-      ct->ct_sections[section] = calloc(1, sizeof(ecm_section_t));
+    if(ep->ep_sections[section] == NULL)
+      ep->ep_sections[section] = calloc(1, sizeof(ecm_section_t));
 
-    es = ct->ct_sections[section];
+    es = ep->ep_sections[section];
 
     if(es->es_ecmsize == len && !memcmp(es->es_ecm, data, len))
       break; /* key already sent */
@@ -1271,8 +1301,9 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
     es->es_seq = cwc_send_msg(cwc, data, len, sid, 1);
 
     tvhlog(LOG_DEBUG, "cwc", 
-	   "Sending ECM%s section=%d/%d, for service %s (seqno: %d)", 
-	   chaninfo, section, ct->ct_last_section, t->tht_svcname, es->es_seq);
+	   "Sending ECM%s section=%d/%d, for service %s (seqno: %d) PID %d", 
+	   chaninfo, section, ep->ep_last_section, t->tht_svcname, es->es_seq,
+	   st->st_pid);
     break;
 
   default:
@@ -1343,10 +1374,15 @@ static void
 cwc_transport_destroy(th_descrambler_t *td)
 {
   cwc_transport_t *ct = (cwc_transport_t *)td;
+  ecm_pid_t *ep;
   int i;
 
-  for(i = 0; i < 256; i++)
-    free(ct->ct_sections[i]);
+  while((ep = LIST_FIRST(&ct->ct_pids)) != NULL) {
+    for(i = 0; i < 256; i++)
+      free(ep->ep_sections[i]);
+    LIST_REMOVE(ep, ep_link);
+    free(ep);
+  }
 
   LIST_REMOVE(td, td_transport_link);
 
