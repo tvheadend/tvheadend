@@ -130,7 +130,7 @@ create_services(AvahiClient *c)
   if (avahi_entry_group_is_empty(group)) {
      tvhlog(LOG_DEBUG, "AVAHI", "Adding service '%s'", name);
 
-    /* Add the service for IPP */
+    /* Add the service for HTSP */
     if ((ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC, 
 					     AVAHI_PROTO_UNSPEC, 0, name, 
 					     "_htsp._tcp", NULL, NULL, 9982,
@@ -141,6 +141,23 @@ create_services(AvahiClient *c)
 
       tvhlog(LOG_ERR, "AVAHI",
 	     "Failed to add _htsp._tcp service: %s", 
+	     avahi_strerror(ret));
+      goto fail;
+    }
+
+
+    /* Add the service for HTTP */
+    if ((ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC, 
+					     AVAHI_PROTO_UNSPEC, 0, name, 
+					     "_http._tcp", NULL, NULL, 9981,
+					     "path=/",
+					     NULL)) < 0) {
+
+      if (ret == AVAHI_ERR_COLLISION)
+	goto collision;
+
+      tvhlog(LOG_ERR, "AVAHI",
+	     "Failed to add _http._tcp service: %s", 
 	     avahi_strerror(ret));
       goto fail;
     }
