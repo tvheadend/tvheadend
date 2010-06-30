@@ -606,14 +606,14 @@ parse_ac3(th_transport_t *t, th_stream_t *st, size_t ilen,
   len = st->st_buffer3_ptr;
 
   for(i = 0; i < len - 6; i++) {
-    if(ac3_valid_frame(buf + i)) {
-      int bsid      = buf[5] & 0xf;
+    const uint8_t *p = buf + i;
+    if(ac3_valid_frame(p)) {
+      int bsid      = p[5] & 0xf;
       int fsize, sr;
 
       if(bsid <= 10) {
-	int fscod     = buf[4] >> 6;
-	int frmsizcod = buf[4] & 0x3f;
-
+	int fscod     = p[4] >> 6;
+	int frmsizcod = p[4] & 0x3f;
 	fsize  = ac3_frame_size_tab[frmsizcod][fscod] * 2;
 
 	bsid -= 8;
@@ -623,13 +623,13 @@ parse_ac3(th_transport_t *t, th_stream_t *st, size_t ilen,
 	
       } else {
 
-	fsize = ((((buf[2] & 0x7) << 8) | buf[3]) + 1) * 2;
+	fsize = ((((p[2] & 0x7) << 8) | p[3]) + 1) * 2;
 	
 	
-	if((buf[4] & 0xc0) == 0xc0) {
-	  sr = ac3_freq_tab[(buf[4] >> 4) & 3] / 2;
+	if((p[4] & 0xc0) == 0xc0) {
+	  sr = ac3_freq_tab[(p[4] >> 4) & 3] / 2;
 	} else {
-	  sr = ac3_freq_tab[(buf[4] >> 6) & 3];
+	  sr = ac3_freq_tab[(p[4] >> 6) & 3];
 	}
       }
 
@@ -640,10 +640,9 @@ parse_ac3(th_transport_t *t, th_stream_t *st, size_t ilen,
 	if(dts == PTS_UNSET)
 	  dts = st->st_nextdts;
 
-	if(dts != PTS_UNSET && 
-	   len >= i + fsize + 6 &&
-	   ac3_valid_frame(buf + i + fsize)) {
-	  makeapkt(t, st, buf + i, fsize, dts, duration);
+	if(dts != PTS_UNSET && len >= i + fsize + 6 &&
+	   ac3_valid_frame(p + fsize)) {
+	  makeapkt(t, st, p, fsize, dts, duration);
 	  buffer3_cut(st, i + fsize);
 	  goto again;
 	}
