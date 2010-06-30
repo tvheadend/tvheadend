@@ -499,7 +499,7 @@ parse_mpa(th_transport_t *t, th_stream_t *st, size_t ilen,
     if(mpa_valid_frame(buf + i)) {
       int br = mpa_br[ buf[i+2] >> 4     ];
       int sr = mpa_sr[(buf[i+2] >> 2) & 3];
-      int pad = buf[i+2] & 1;
+      int pad =       (buf[i+2] >> 1) & 1;
       
       if(br && sr) {
 	int fsize = 144000 * br / sr + pad;
