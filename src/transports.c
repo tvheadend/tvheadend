@@ -566,8 +566,8 @@ transport_make_nicename(th_transport_t *t)
 
   snprintf(buf, sizeof(buf), 
 	   "%s%s%s%s%s",
-	   si.si_adapter ?: "", si.si_adapter ? "/" : "",
-	   si.si_mux     ?: "", si.si_mux     ? "/" : "",
+	   si.si_adapter ?: "", si.si_adapter && si.si_mux     ? "/" : "",
+	   si.si_mux     ?: "", si.si_mux     && si.si_service ? "/" : "",
 	   si.si_service ?: "");
 
   transport_source_info_free(&si);

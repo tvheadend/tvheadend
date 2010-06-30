@@ -460,6 +460,7 @@ iptv_transport_load(void)
       t->tht_iptv_port = u32;
 
     pthread_mutex_lock(&t->tht_stream_mutex);
+    transport_make_nicename(t);
     psi_load_transport_settings(c, t);
     pthread_mutex_unlock(&t->tht_stream_mutex);
     
