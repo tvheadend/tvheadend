@@ -61,6 +61,7 @@ typedef struct http_connection {
 
   enum {
     HTTP_CMD_GET,
+    HTTP_CMD_HEAD,
     HTTP_CMD_POST,
     RTSP_CMD_DESCRIBE,
     RTSP_CMD_OPTIONS,
@@ -85,6 +86,8 @@ typedef struct http_connection {
 			   if it has authenticated at least once */
 
   struct config_head *hc_user_config;
+
+  int hc_no_output;
 
   /* Support for HTTP POST */
   

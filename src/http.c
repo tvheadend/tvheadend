@@ -41,6 +41,7 @@ static LIST_HEAD(, http_path) http_paths;
 
 static struct strtab HTTP_cmdtab[] = {
   { "GET",        HTTP_CMD_GET },
+  { "HEAD",       HTTP_CMD_HEAD },
   { "POST",       HTTP_CMD_POST },
   { "DESCRIBE",   RTSP_CMD_DESCRIBE },
   { "OPTIONS",    RTSP_CMD_OPTIONS },
@@ -146,8 +147,6 @@ static const char *cachemonths[12] = {
 
 /**
  * Transmit a HTTP reply
- *
- * Return non-zero if we should disconnect (no more keep-alive)
  */
 void
 http_send_header(http_connection_t *hc, int rc, const char *content, 
@@ -217,8 +216,6 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 
 /**
  * Transmit a HTTP reply
- *
- * Return non-zero if we should disconnect (no more keep-alive)
  */
 static void
 http_send_reply(http_connection_t *hc, int rc, const char *content, 
@@ -227,6 +224,9 @@ http_send_reply(http_connection_t *hc, int rc, const char *content,
   http_send_header(hc, rc, content, hc->hc_reply.hq_size,
 		   encoding, location, maxage);
   
+  if(hc->hc_no_output)
+    return;
+
   tcp_write_queue(hc->hc_fd, &hc->hc_reply);
 }
 
@@ -428,7 +428,10 @@ http_process_request(http_connection_t *hc, htsbuf_queue_t *spill)
     http_error(hc, HTTP_STATUS_BAD_REQUEST);
     return 0;
   case HTTP_CMD_GET:
-    return http_cmd_get(hc); 
+    return http_cmd_get(hc);
+  case HTTP_CMD_HEAD:
+    hc->hc_no_output = 1;
+    return http_cmd_get(hc);
   case HTTP_CMD_POST:
     return http_cmd_post(hc, spill);
   }
@@ -687,10 +690,12 @@ http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
   char hdrline[1024];
   char *argv[3], *c;
   int n;
-  
+
   htsbuf_queue_init(&hc->hc_reply, 0);
 
   do {
+    hc->hc_no_output  = 0;
+
     if(tcp_read_line(hc->hc_fd, cmdline, sizeof(cmdline), spill) < 0)
       return;
 
@@ -707,6 +712,7 @@ http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
     while(1) {
       if(tcp_read_line(hc->hc_fd, hdrline, sizeof(hdrline), spill) < 0)
 	return;
+
       if(hdrline[0] == 0)
 	break; /* header complete */
 
