@@ -247,6 +247,17 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
 
       ebml_append_master(t, 0xe0, vi);
     }
+
+    if(SCT_ISAUDIO(ssc->ssc_type)) {
+      htsbuf_queue_t *au = htsbuf_queue_alloc(0);
+
+      ebml_append_float(au, 0xb5, sri_to_rate(ssc->ssc_sri));
+      ebml_append_uint(au, 0x9f, ssc->ssc_channels);
+
+      ebml_append_master(t, 0xe1, au);
+    }
+
+
     ebml_append_master(q, 0xae, t);
   }
   return q;
