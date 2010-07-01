@@ -358,6 +358,26 @@ parse_sc(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
   buffer_alloc(st, len);
 
   for(i = 0; i < len; i++) {
+
+    if(st->st_ssc_intercept == 1) {
+
+      if(st->st_ssc_ptr < sizeof(st->st_ssc_buf))
+	st->st_ssc_buf[st->st_ssc_ptr] = data[i];
+      st->st_ssc_ptr++;
+
+      if(st->st_ssc_ptr < 5)
+	continue;
+
+      int hlen = st->st_ssc_buf[4];
+
+      if(st->st_ssc_ptr < hlen + 5)
+	continue;
+      
+      parse_pes_header(t, st, st->st_ssc_buf + 2, hlen + 3);
+      st->st_ssc_intercept = 0;
+      continue;
+    }
+
     st->st_buffer[st->st_buffer_ptr++] = data[i];
     sc = sc << 8 | data[i];
 
@@ -370,6 +390,13 @@ parse_sc(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
       r = vp(t, st, r, sc, st->st_startcode_offset);
       if(r == 3)
 	continue;
+      if(r == 4) {
+	st->st_buffer_ptr -= 4;
+	st->st_ssc_intercept = 1;
+	st->st_ssc_ptr = 0;
+	sc = -1;
+	continue;
+      }
     } else {
       r = 1;
     }
@@ -860,13 +887,18 @@ parse_mpeg2video(th_transport_t *t, th_stream_t *st, size_t len,
   bitstream_t bs;
   int frametype;
 
+  if(next_startcode == 0x1e0)
+    return 4;
+
   init_bits(&bs, buf + 4, (len - 4) * 8);
 
   switch(st->st_startcode) {
   case 0x000001e0 ... 0x000001ef:
     /* System start codes for video */
-    if(len >= 9)
-      parse_pes_header(t, st, buf + 6, len - 6);
+    if(len < 9)
+      return 1;
+
+    parse_pes_header(t, st, buf + 6, len - 6);
     return 1;
 
   case 0x00000100:
