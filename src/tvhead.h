@@ -812,6 +812,7 @@ getmonoclock(void)
 }
 
 int sri_to_rate(int sri);
+int rate_to_sri(int rate);
 
 
 extern time_t dispatch_clock;

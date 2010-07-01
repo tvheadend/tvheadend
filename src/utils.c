@@ -101,6 +101,20 @@ sri_to_rate(int sri)
 /**
  *
  */
+int
+rate_to_sri(int rate)
+{
+  int i;
+  for(i = 0; i < 16; i++)
+    if(sample_rates[i] == rate)
+      return i;
+  return -1;
+}
+
+
+/**
+ *
+ */
 void
 hexdump(const char *pfx, const uint8_t *data, int len)
 {
