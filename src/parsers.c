@@ -475,14 +475,16 @@ depacketize(th_transport_t *t, th_stream_t *st, size_t len,
  */
 static void
 makeapkt(th_transport_t *t, th_stream_t *st, const void *buf,
-	 int len, int64_t dts, int duration)
+	 int len, int64_t dts, int duration, int channels, int sri)
 {
 
   th_pkt_t *pkt = pkt_alloc(buf, len, dts, dts);
 	  
   pkt->pkt_commercial = t->tht_tt_commercial_advice;
   pkt->pkt_duration = duration;
-	  
+  pkt->pkt_channels = channels;
+  pkt->pkt_sri = sri;
+
   parser_deliver(t, st, pkt);
 	  
   st->st_curdts = PTS_UNSET;
@@ -498,8 +500,8 @@ const static int mpa_br[16] = {
   256, 320, 384, 0
 };
 
-const static int mpa_sr[4] = {44100, 48000, 32000, 0};
-
+const static int mpa_sr[4]  = {44100, 48000, 32000, 0};
+const static int mpa_sri[4] = {4,     3,     5,     0};
 
 static int
 mpa_valid_frame(const uint8_t *buf)
@@ -527,12 +529,12 @@ parse_mpa(th_transport_t *t, th_stream_t *st, size_t ilen,
       int br = mpa_br[ buf[i+2] >> 4     ];
       int sr = mpa_sr[(buf[i+2] >> 2) & 3];
       int pad =       (buf[i+2] >> 1) & 1;
-      
+
       if(br && sr) {
 	int fsize = 144000 * br / sr + pad;
 	int duration = 90000 * 1152 / sr;
 	int64_t dts = st->st_curdts;
-
+	int channels = (buf[i + 3] & 0xc0) == 0xc0 ? 1 : 2;
 	if(dts == PTS_UNSET)
 	  dts = st->st_nextdts;
 
@@ -540,7 +542,8 @@ parse_mpa(th_transport_t *t, th_stream_t *st, size_t ilen,
 	   len >= i + fsize + 4 &&
 	   mpa_valid_frame(buf + i + fsize)) {
 	  
-	  makeapkt(t, st, buf + i, fsize, dts, duration);
+	  makeapkt(t, st, buf + i, fsize, dts, duration,
+		   channels, mpa_sri[(buf[i+2] >> 2) & 3]);
 	  buffer3_cut(st, i + fsize);
 	  goto again;
 	}
@@ -617,6 +620,8 @@ ac3_valid_frame(const uint8_t *buf)
   }
 }
 
+static const char acmodtab[8] = {2,1,2,3,3,4,4,5};
+
 
 static int 
 parse_ac3(th_transport_t *t, th_stream_t *st, size_t ilen,
@@ -663,13 +668,32 @@ parse_ac3(th_transport_t *t, th_stream_t *st, size_t ilen,
       if(sr) {
 	int duration = 90000 * 1536 / sr;
 	int64_t dts = st->st_curdts;
+	int sri = rate_to_sri(sr);
 
 	if(dts == PTS_UNSET)
 	  dts = st->st_nextdts;
 
 	if(dts != PTS_UNSET && len >= i + fsize + 6 &&
 	   ac3_valid_frame(p + fsize)) {
-	  makeapkt(t, st, p, fsize, dts, duration);
+
+	  bitstream_t bs;
+	  init_bits(&bs, (uint8_t *)p + 5, (fsize - 5) * 8);
+	  
+	  read_bits(&bs, 5); // bsid
+	  read_bits(&bs, 3); // bsmod
+	  int acmod = read_bits(&bs, 3);
+
+	  if((acmod & 0x1) && (acmod != 0x1))
+	    read_bits(&bs, 2); // cmixlen
+	  if(acmod & 0x4)
+	    read_bits(&bs, 2); // surmixlev
+	  if(acmod == 0x2)
+	    read_bits(&bs, 2); // dsurmod
+
+	  int lfeon = read_bits(&bs, 1);
+	  int channels = acmodtab[acmod] + lfeon;
+
+	  makeapkt(t, st, p, fsize, dts, duration, channels, sri);
 	  buffer3_cut(st, i + fsize);
 	  goto again;
 	}
