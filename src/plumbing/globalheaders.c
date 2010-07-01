@@ -60,6 +60,11 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
   if(ssc->ssc_frameduration == 0 && pkt->pkt_duration != 0)
     ssc->ssc_frameduration = pkt->pkt_duration;
 
+  if(SCT_ISAUDIO(ssc->ssc_type) && !ssc->ssc_channels && !ssc->ssc_sri) {
+    ssc->ssc_channels = pkt->pkt_channels;
+    ssc->ssc_sri      = pkt->pkt_sri;
+  }
+
   if(ssc->ssc_gh != NULL)
     return;
 
@@ -103,6 +108,10 @@ headers_complete(globalheaders_t *gh)
 
     if((SCT_ISAUDIO(ssc->ssc_type) || SCT_ISVIDEO(ssc->ssc_type)) &&
        ssc->ssc_frameduration == 0)
+      return 0;
+
+    if(SCT_ISAUDIO(ssc->ssc_type) &&
+       (ssc->ssc_sri == 0 || ssc->ssc_channels == 0))
       return 0;
   
     if(ssc->ssc_gh == NULL &&

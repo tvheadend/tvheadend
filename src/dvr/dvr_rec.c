@@ -326,17 +326,49 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 	 si->si_service  ?: "<N/A>");
 
 
+  tvhlog(LOG_INFO, "dvr",
+	 " # %-20s %-4s %-16s %-10s %-10s",
+	 "type",
+	 "lang",
+	 "resolution",
+	 "samplerate",
+	 "channels");
+
   for(i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
 
+    char res[16];
+    char sr[6];
+    char ch[7];
+
+    if(SCT_ISAUDIO(ssc->ssc_type)) {
+      snprintf(sr, sizeof(sr), "%d", sri_to_rate(ssc->ssc_sri));
+
+      if(ssc->ssc_channels == 6)
+	snprintf(ch, sizeof(ch), "5.1");
+      else
+	snprintf(ch, sizeof(ch), "%d", ssc->ssc_channels);
+    } else {
+      sr[0] = 0;
+      ch[0] = 0;
+    }
+
+
+    if(SCT_ISVIDEO(ssc->ssc_type)) {
+      snprintf(res, sizeof(res), "%d x %d", 
+	       ssc->ssc_width, ssc->ssc_height);
+    } else {
+      res[0] = 0;
+    }
+
     tvhlog(LOG_INFO, "dvr",
-	   "%2d %-20s %-4s %5d x %-5d %-5d",
+	   "%2d %-20s %-4s %-16s %-10s %-10s",
 	   ssc->ssc_index,
 	   streaming_component_type2txt(ssc->ssc_type),
 	   ssc->ssc_lang,
-	   ssc->ssc_width,
-	   ssc->ssc_height,
-	   ssc->ssc_frameduration);
+	   res,
+	   sr,
+	   ch);
   }
 }
 

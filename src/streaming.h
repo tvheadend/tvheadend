@@ -32,6 +32,8 @@ typedef struct streaming_start_component {
   uint16_t ssc_ancillary_id;
   int16_t ssc_width;
   int16_t ssc_height;
+  uint8_t ssc_sri;
+  uint8_t ssc_channels;
 
   pktbuf_t *ssc_gh;
 
