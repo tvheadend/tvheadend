@@ -207,8 +207,8 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
     }
 
     mkm->tracks[i].enabled = 1;
-    mkm->tracks[i].tracknum = tracknum;
     tracknum++;
+    mkm->tracks[i].tracknum = tracknum;
 
     t = htsbuf_queue_alloc(0);
 
