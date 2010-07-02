@@ -148,6 +148,10 @@ typedef struct cwc_transport {
 
   void *ct_keys;
 
+
+  uint8_t ct_cw[16];
+  int ct_pending_cw_update;
+
   /**
    * CSA
    */
@@ -727,21 +731,10 @@ handle_ecm_reply(cwc_transport_t *ct, ecm_section_t *es, uint8_t *msg,
 	     "Obtained key for for service \"%s\" in %lld ms",
 	     t->tht_svcname, delay);
     
-    ct->ct_keystate = CT_RESOLVED;
     pthread_mutex_lock(&t->tht_stream_mutex);
-
-    for(i = 0; i < 8; i++)
-      if(msg[3 + i]) {
-	set_even_control_word(ct->ct_keys, msg + 3);
-	break;
-      }
-    
-    for(i = 0; i < 8; i++)
-      if(msg[3 + 8 + i]) {
-	set_odd_control_word(ct->ct_keys, msg + 3 + 8);
-	break;
-      }
-    
+    ct->ct_keystate = CT_RESOLVED;
+    memcpy(ct->ct_cw, msg + 3, 16);
+    ct->ct_pending_cw_update = 1;
     pthread_mutex_unlock(&t->tht_stream_mutex);
   }
 }
@@ -1323,6 +1316,29 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
 /**
  *
  */
+static void
+update_keys(cwc_transport_t *ct)
+{
+  int i;
+  ct->ct_pending_cw_update = 0;
+
+  for(i = 0; i < 8; i++)
+    if(ct->ct_cw[i]) {
+      set_even_control_word(ct->ct_keys, ct->ct_cw);
+      break;
+    }
+  
+  for(i = 0; i < 8; i++)
+    if(ct->ct_cw[8 + i]) {
+      set_odd_control_word(ct->ct_keys, ct->ct_cw + 8);
+      break;
+    }
+}
+
+
+/**
+ *
+ */
 static int
 cwc_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
 	       const uint8_t *tsb)
@@ -1337,6 +1353,9 @@ cwc_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
 
   if(ct->ct_keystate != CT_RESOLVED)
     return -1;
+
+  if(ct->ct_fill == 0 && ct->ct_pending_cw_update)
+    update_keys(ct);
 
   memcpy(ct->ct_tsbcluster + ct->ct_fill * 188, tsb, 188);
   ct->ct_fill++;
@@ -1367,6 +1386,9 @@ cwc_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
     memmove(ct->ct_tsbcluster, t0, i * 188);
     ct->ct_fill = i;
   }
+
+  if(ct->ct_pending_cw_update)
+    update_keys(ct);
 
   return 0;
 }
