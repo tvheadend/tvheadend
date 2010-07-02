@@ -103,7 +103,7 @@ typedef struct ecm_section {
   uint16_t es_seq;
   char es_nok;
   char es_pending;
-  
+  int64_t es_time;  // time request was sent
   size_t es_ecmsize;
   uint8_t es_ecm[4070];
 
@@ -666,6 +666,7 @@ handle_ecm_reply(cwc_transport_t *ct, ecm_section_t *es, uint8_t *msg,
   ecm_pid_t *ep;
   char chaninfo[32];
   int i;
+  int64_t delay = (getmonoclock() - es->es_time) / 1000LL; // in ms
 
   if(es->es_channel != -1) {
     snprintf(chaninfo, sizeof(chaninfo), " (channel %d)", es->es_channel);
@@ -687,8 +688,8 @@ handle_ecm_reply(cwc_transport_t *ct, ecm_section_t *es, uint8_t *msg,
 
     es->es_nok = 1;
 
-    tvhlog(LOG_DEBUG, "cwc", "Received NOK for service \"%s\"%s (seqno: %d)", 
-	   t->tht_svcname, chaninfo, seq);
+    tvhlog(LOG_DEBUG, "cwc", "Received NOK for service \"%s\"%s (seqno: %d "
+	   "Req delay: %lld ms)", t->tht_svcname, chaninfo, seq, delay);
 
     LIST_FOREACH(ep, &ct->ct_pids, ep_link) {
       for(i = 0; i <= ep->ep_last_section; i++)
@@ -698,8 +699,9 @@ handle_ecm_reply(cwc_transport_t *ct, ecm_section_t *es, uint8_t *msg,
 	  return;
     }
     tvhlog(LOG_ERR, "cwc",
-	   "Can not descramble service \"%s\", access denied (seqno: %d)",
-	   t->tht_svcname, seq);
+	   "Can not descramble service \"%s\", access denied (seqno: %d "
+	   "Req delay: %lld ms)",
+	   t->tht_svcname, seq, delay);
     ct->ct_keystate = CT_FORBIDDEN;
     return;
 
@@ -711,17 +713,19 @@ handle_ecm_reply(cwc_transport_t *ct, ecm_section_t *es, uint8_t *msg,
     tvhlog(LOG_DEBUG, "cwc",
 	   "Received ECM reply%s for service \"%s\" "
 	   "even: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
-	   " odd: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x (seqno: %d)",
+	   " odd: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x (seqno: %d "
+	   "Req delay: %lld ms)",
 	   chaninfo,
 	   t->tht_svcname,
 	   msg[3 + 0], msg[3 + 1], msg[3 + 2], msg[3 + 3], msg[3 + 4],
 	   msg[3 + 5], msg[3 + 6], msg[3 + 7], msg[3 + 8], msg[3 + 9],
 	   msg[3 + 10],msg[3 + 11],msg[3 + 12],msg[3 + 13],msg[3 + 14],
-	   msg[3 + 15], seq);
+	   msg[3 + 15], seq, delay);
     
     if(ct->ct_keystate != CT_RESOLVED)
       tvhlog(LOG_INFO, "cwc",
-	     "Obtained key for for service \"%s\"",t->tht_svcname);
+	     "Obtained key for for service \"%s\" in %lld ms",
+	     t->tht_svcname, delay);
     
     ct->ct_keystate = CT_RESOLVED;
     pthread_mutex_lock(&t->tht_stream_mutex);
@@ -1304,6 +1308,7 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
 	   "Sending ECM%s section=%d/%d, for service %s (seqno: %d) PID %d", 
 	   chaninfo, section, ep->ep_last_section, t->tht_svcname, es->es_seq,
 	   st->st_pid);
+    es->es_time = getmonoclock();
     break;
 
   default:
