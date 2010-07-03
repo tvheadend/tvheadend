@@ -1321,7 +1321,6 @@ update_keys(cwc_transport_t *ct)
 {
   int i;
   ct->ct_pending_cw_update = 0;
-
   for(i = 0; i < 8; i++)
     if(ct->ct_cw[i]) {
       set_even_control_word(ct->ct_keys, ct->ct_cw);
@@ -1344,9 +1343,8 @@ cwc_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
 	       const uint8_t *tsb)
 {
   cwc_transport_t *ct = (cwc_transport_t *)td;
-  int r, i;
+  int r;
   unsigned char *vec[3];
-  uint8_t *t0;
 
   if(ct->ct_keystate == CT_FORBIDDEN)
     return 1;
@@ -1363,30 +1361,36 @@ cwc_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
   if(ct->ct_fill != ct->ct_cluster_size)
     return 0;
 
-  ct->ct_fill = 0;
+  while(1) {
 
-  vec[0] = ct->ct_tsbcluster;
-  vec[1] = ct->ct_tsbcluster + ct->ct_cluster_size * 188;
-  vec[2] = NULL;
+    vec[0] = ct->ct_tsbcluster;
+    vec[1] = ct->ct_tsbcluster + ct->ct_fill * 188;
+    vec[2] = NULL;
+    
+    r = decrypt_packets(ct->ct_keys, vec);
+    if(r > 0) {
+      int i;
+      const uint8_t *t0 = ct->ct_tsbcluster;
 
-  r = decrypt_packets(ct->ct_keys, vec);
-  if(r == 0)
-    return 0;
+      for(i = 0; i < r; i++) {
+	ts_recv_packet2(t, t0);
+	t0 += 188;
+      }
 
-  t0 = ct->ct_tsbcluster;
-  for(i = 0; i < r; i++) {
-    ts_recv_packet2(t, t0);
-    t0 += 188;
+      r = ct->ct_fill - r;
+      assert(r >= 0);
+
+      if(r > 0)
+	memmove(ct->ct_tsbcluster, t0, r * 188);
+      ct->ct_fill = r;
+
+      if(ct->ct_pending_cw_update && r > 0)
+	continue;
+    } else {
+      ct->ct_fill = 0;
+    }
+    break;
   }
-
-  i = ct->ct_cluster_size - r;
-  assert(i >= 0);
-
-  if(i > 0) {
-    memmove(ct->ct_tsbcluster, t0, i * 188);
-    ct->ct_fill = i;
-  }
-
   if(ct->ct_pending_cw_update)
     update_keys(ct);
 
