@@ -159,15 +159,15 @@ read_stream_mux_config(th_stream_t *st, latm_private_t *latm, bitstream_t *bs)
  * Parse AAC LATM
  */
 th_pkt_t *
-parse_latm_audio_mux_element(th_transport_t *t, th_stream_t *st, uint8_t *data,
-			     int len)
+parse_latm_audio_mux_element(th_transport_t *t, th_stream_t *st, 
+			     const uint8_t *data, int len)
 {
   latm_private_t *latm;
   bitstream_t bs, out;
   int slot_len, tmp, i;
   uint8_t *buf;
 
-  init_bits(&bs, data, len * 8);
+  init_rbits(&bs, data, len * 8);
 
   if((latm = st->st_priv) == NULL)
     latm = st->st_priv = calloc(1, sizeof(latm_private_t));
@@ -202,7 +202,7 @@ parse_latm_audio_mux_element(th_transport_t *t, th_stream_t *st, uint8_t *data,
   pkt->pkt_channels = latm->channel_config;
 
   /* 7 bytes of ADTS header */
-  init_bits(&out, pktbuf_ptr(pkt->pkt_payload), 56);
+  init_wbits(&out, pktbuf_ptr(pkt->pkt_payload), 56);
 
   put_bits(&out, 0xfff, 12); // Sync marker
   put_bits(&out, 0, 1);      // ID 0 = MPEG 4

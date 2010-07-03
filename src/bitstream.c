@@ -22,9 +22,20 @@
 
 
 void
-init_bits(bitstream_t *bs, uint8_t *data, int bits)
+init_rbits(bitstream_t *bs, const uint8_t *data, int bits)
 {
-  bs->data = data;
+  bs->wdata = NULL;
+  bs->rdata = data;
+  bs->offset = 0;
+  bs->len = bits;
+}
+
+
+void
+init_wbits(bitstream_t *bs, uint8_t *data, int bits)
+{
+  bs->wdata = data;
+  bs->rdata = NULL;
   bs->offset = 0;
   bs->len = bits;
 }
@@ -46,7 +57,7 @@ read_bits(bitstream_t *bs, int num)
 
     num--;
 
-    if(bs->data[bs->offset / 8] & (1 << (7 - (bs->offset & 7))))
+    if(bs->rdata[bs->offset / 8] & (1 << (7 - (bs->offset & 7))))
       r |= 1 << num;
 
     bs->offset++;
@@ -103,9 +114,9 @@ put_bits(bitstream_t *bs, int val, int num)
     num--;
 
     if(val & (1 << num))
-      bs->data[bs->offset / 8] |= 1 << (7 - (bs->offset & 7));
+      bs->wdata[bs->offset / 8] |= 1 << (7 - (bs->offset & 7));
     else
-      bs->data[bs->offset / 8] &= ~(1 << (7 - (bs->offset & 7)));
+      bs->wdata[bs->offset / 8] &= ~(1 << (7 - (bs->offset & 7)));
 
     bs->offset++;
   }

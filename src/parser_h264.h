@@ -21,7 +21,7 @@
 
 #include "bitstream.h"
 
-int h264_nal_deescape(bitstream_t *bs, uint8_t *data, int size);
+void *h264_nal_deescape(bitstream_t *bs, const uint8_t *data, int size);
 
 int h264_decode_seq_parameter_set(th_stream_t *st, bitstream_t *bs);
 

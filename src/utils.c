@@ -18,6 +18,7 @@
  */
 
 #include <limits.h>
+#include <string.h>
 #include <assert.h>
 #include "tvhead.h"
 
@@ -223,4 +224,56 @@ put_utf8(char *out, int c)
   *out++ = 0x80 | (0x3f & (c >>  6));
   *out++ = 0x80 | (0x3f &  c);
   return 6;
+}
+
+
+
+void
+sbuf_free(sbuf_t *sb)
+{
+  free(sb->sb_data);
+  sb->sb_size = sb->sb_ptr = sb->sb_err = 0;
+}
+
+void
+sbuf_reset(sbuf_t *sb)
+{
+  sb->sb_ptr = 0;
+  sb->sb_err = 0;
+}
+
+void
+sbuf_err(sbuf_t *sb)
+{
+  sb->sb_err = 1;
+}
+
+void
+sbuf_alloc(sbuf_t *sb, int len)
+{
+  if(sb->sb_data == NULL) {
+    sb->sb_size = 4000;
+    sb->sb_data = malloc(sb->sb_size);
+  }
+
+  if(sb->sb_ptr + len >= sb->sb_size) {
+    sb->sb_size += len * 4;
+    sb->sb_data = realloc(sb->sb_data, sb->sb_size);
+  }
+}
+
+void
+sbuf_append(sbuf_t *sb, const uint8_t *data, int len)
+{
+  sbuf_alloc(sb, len);
+  memcpy(sb->sb_data + sb->sb_ptr, data, len);
+  sb->sb_ptr += len;
+}
+
+void 
+sbuf_cut(sbuf_t *sb, int off)
+{
+  assert(off <= sb->sb_ptr);
+  sb->sb_ptr = sb->sb_ptr - off;
+  memmove(sb->sb_data, sb->sb_data + off, sb->sb_ptr);
 }

@@ -313,6 +313,17 @@ typedef struct streaming_queue {
 } streaming_queue_t;
 
 
+/**
+ * Simple dynamically growing buffer
+ */
+typedef struct sbuf {
+  uint8_t *sb_data;
+  int sb_ptr;
+  int sb_size;
+  int sb_err;
+} sbuf_t;
+
+
 
 /**
  * Descrambler superclass
@@ -401,10 +412,7 @@ typedef struct th_stream {
 
   /* For transport stream packet reassembly */
 
-  uint8_t *st_buffer;
-  int st_buffer_ptr;
-  int st_buffer_size;
-  int st_buffer_errors;   /* Errors accumulated for this packet */
+  sbuf_t st_buf;
 
   uint32_t st_startcond;
   uint32_t st_startcode;
@@ -413,13 +421,8 @@ typedef struct th_stream {
   int st_parser_ptr;
   void *st_priv;          /* Parser private data */
 
-  uint8_t *st_buffer2;
-  int st_buffer2_ptr;
-  int st_buffer2_size;
-
-  uint8_t *st_buffer3;
-  int st_buffer3_ptr;
-  int st_buffer3_size;
+  sbuf_t st_buf_ps;       // program stream reassembly (analogue adapters)
+  sbuf_t st_buf_a;        // Audio packet reassembly
 
   uint8_t *st_global_data;
   int st_global_data_len;
@@ -852,5 +855,17 @@ static inline int64_t ts_rescale(int64_t ts, int tb)
   //  return (ts * tb + (tb / 2)) / 90000LL;
   return (ts * tb ) / 90000LL;
 }
+
+void sbuf_free(sbuf_t *sb);
+
+void sbuf_reset(sbuf_t *sb);
+
+void sbuf_err(sbuf_t *sb);
+
+void sbuf_alloc(sbuf_t *sb, int len);
+
+void sbuf_append(sbuf_t *sb, const uint8_t *data, int len);
+
+void sbuf_cut(sbuf_t *sb, int off);
 
 #endif /* TV_HEAD_H */

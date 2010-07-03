@@ -20,14 +20,17 @@
 #define BITSTREAM_H_
 
 typedef struct bitstream {
-  uint8_t *data;
+  const uint8_t *rdata;
+  uint8_t *wdata;
   int offset;
   int len;
 } bitstream_t;
 
 void skip_bits(bitstream_t *bs, int num);
 
-void init_bits(bitstream_t *bs, uint8_t *data, int bits);
+void init_rbits(bitstream_t *bs, const uint8_t *data, int bits);
+
+void init_wbits(bitstream_t *bs, uint8_t *data, int bits);
 
 unsigned int read_bits(bitstream_t *gb, int num);
 

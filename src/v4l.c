@@ -87,36 +87,36 @@ v4l_input(v4l_adapter_t *va)
     }
 
     if(va->va_lenlock == 2) {
-      l = st->st_buffer2_size;
-      st->st_buffer2 = pkt = realloc(st->st_buffer2, l);
+      l = st->st_buf_ps.sb_size;
+      st->st_buf_ps.sb_data = pkt = realloc(st->st_buf_ps.sb_data, l);
       
-      r = l - st->st_buffer2_ptr;
+      r = l - st->st_buf_ps.sb_ptr;
       if(r > len)
 	r = len;
-      memcpy(pkt + st->st_buffer2_ptr, ptr, r);
+      memcpy(pkt + st->st_buf_ps.sb_ptr, ptr, r);
       
       ptr += r;
       len -= r;
 
-      st->st_buffer2_ptr += r;
-      if(st->st_buffer2_ptr == l) {
+      st->st_buf_ps.sb_ptr += r;
+      if(st->st_buf_ps.sb_ptr == l) {
 
 	transport_set_streaming_status_flags(t, TSS_MUX_PACKETS);
 
 	parse_mpeg_ps(t, st, pkt + 6, l - 6);
 
-	st->st_buffer2_size = 0;
+	st->st_buf_ps.sb_size = 0;
 	va->va_startcode = 0;
       } else {
-	assert(st->st_buffer2_ptr < l);
+	assert(st->st_buf_ps.sb_ptr < l);
       }
       
     } else {
-      st->st_buffer2_size = st->st_buffer2_size << 8 | *ptr;
+      st->st_buf_ps.sb_size = st->st_buf_ps.sb_size << 8 | *ptr;
       va->va_lenlock++;
       if(va->va_lenlock == 2) {
-	st->st_buffer2_size += 6;
-	st->st_buffer2_ptr = 6;
+	st->st_buf_ps.sb_size += 6;
+	st->st_buf_ps.sb_ptr = 6;
       }
       ptr++; len--;
     }

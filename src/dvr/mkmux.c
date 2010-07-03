@@ -145,6 +145,7 @@ mk_build_segment_info(mk_mux_t *mkm)
   ebml_append_string(q, 0x4d80, "HTS Tvheadend Matroska muxer");
   ebml_append_string(q, 0x5741, app);
   ebml_append_uint(q, 0x2ad7b1, MATROSKA_TIMESCALE);
+  printf("Writing total duration %f\n", (float)mkm->totduration);
   if(mkm->totduration)
     ebml_append_float(q, 0x4489, (float)mkm->totduration);
   else

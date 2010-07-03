@@ -36,29 +36,29 @@
 /**
  * H.264 parser, nal escaper
  */
-int
-h264_nal_deescape(bitstream_t *bs, uint8_t *data, int size)
+void *
+h264_nal_deescape(bitstream_t *bs, const uint8_t *data, int size)
 {
   int rbsp_size, i;
-  
-  bs->data = malloc(size);
+  uint8_t *d = malloc(size);
+  bs->rdata = d;
 
   /* Escape 0x000003 into 0x0000 */
 
   rbsp_size = 0;
   for(i = 1; i < size; i++) {
     if(i + 2 < size && data[i] == 0 && data[i + 1] == 0 && data[i + 2] == 3) {
-      bs->data[rbsp_size++] = 0;
-      bs->data[rbsp_size++] = 0;
+      d[rbsp_size++] = 0;
+      d[rbsp_size++] = 0;
       i += 2;
     } else {
-      bs->data[rbsp_size++] = data[i];
+      d[rbsp_size++] = data[i];
     }
   }
 
   bs->offset = 0;
   bs->len = rbsp_size * 8;
-  return 0;
+  return d;
 }
 
 
@@ -353,7 +353,7 @@ h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype,
 
   st->st_vbv_delay = -1;
 
-  if(p->sps[sps_id].width && p->sps[sps_id].height && !st->st_buffer_errors)
+  if(p->sps[sps_id].width && p->sps[sps_id].height && !st->st_buf.sb_err)
     parser_set_stream_vsize(st, p->sps[sps_id].width, p->sps[sps_id].height);
   return 0;
 }
