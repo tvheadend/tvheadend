@@ -805,6 +805,7 @@ transport_build_stream_start(th_transport_t *t)
     memcpy(ssc->ssc_lang, st->st_lang, 4);
     ssc->ssc_composition_id = st->st_composition_id;
     ssc->ssc_ancillary_id = st->st_ancillary_id;
+    ssc->ssc_pid = st->st_pid;
     ssc->ssc_width = st->st_width;
     ssc->ssc_height = st->st_height;
   }
