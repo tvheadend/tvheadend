@@ -34,6 +34,7 @@
 #include "http.h"
 #include "rtsp.h"
 #include "access.h"
+#include "channels.h"
 
 static void *http_server;
 
@@ -783,6 +784,54 @@ http_serve(int fd, void *opaque, struct sockaddr_in *peer,
   close(fd);
 }
 
+static void
+http_stream_playlist(http_connection_t *hc)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  channel_t *ch = NULL;
+  const char *host = http_arg_get(&hc->hc_args, "Host");
+
+  pthread_mutex_lock(&global_lock);
+
+  htsbuf_qprintf(hq, "#EXTM3U\n");
+  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
+    htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ch->ch_name);
+    htsbuf_qprintf(hq, "http://%s/stream/channelid/%d\n", host, ch->ch_id);
+  }
+
+  http_output_content(hc, "application/x-mpegURL");
+
+  pthread_mutex_unlock(&global_lock);
+}
+
+
+static int
+http_stream_channel(http_connection_t *hc, int chid)
+{
+  return 0;
+}
+
+
+/**
+ * Handle the http request. http://tvheadend/stream/channelid/<chid>
+ */
+static int
+http_stream(http_connection_t *hc, const char *remain, void *opaque)
+{  
+  if(http_access_verify(hc, ACCESS_STREAMING)) {
+    http_error(hc, HTTP_STATUS_UNAUTHORIZED);
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+  
+  hc->hc_keep_alive = 0;
+  
+  if(remain == NULL) {
+    http_stream_playlist(hc);
+    return 0;
+  }
+
+  return http_stream_channel(hc, atoi(remain));
+}
 
 
 /**
@@ -792,4 +841,5 @@ void
 http_server_init(void)
 {
   http_server = tcp_server_create(9981, http_serve, NULL);
+  http_path_add("/stream/channelid",  NULL, http_stream,  ACCESS_STREAMING);
 }
