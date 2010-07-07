@@ -35,6 +35,8 @@
 #include "rtsp.h"
 #include "access.h"
 #include "channels.h"
+#include "subscriptions.h"
+#include "streaming.h"
 
 static void *http_server;
 
@@ -785,6 +787,13 @@ http_serve(int fd, void *opaque, struct sockaddr_in *peer,
 }
 
 static void
+http_stream_run(http_connection_t *hc, streaming_queue_t *sq)
+{
+        http_output_content(hc, "audio/mp2t");
+}
+
+
+static void
 http_stream_playlist(http_connection_t *hc)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
@@ -808,6 +817,35 @@ http_stream_playlist(http_connection_t *hc)
 static int
 http_stream_channel(http_connection_t *hc, int chid)
 {
+  channel_t *ch;
+  streaming_queue_t sq;
+  th_subscription_t *s;
+  int priority = 150; //Default value, Compute this somehow
+
+  pthread_mutex_lock(&global_lock);
+
+  if((ch = channel_find_by_identifier(chid)) == NULL) {
+    pthread_mutex_unlock(&global_lock);
+    http_error(hc, HTTP_STATUS_BAD_REQUEST);
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  streaming_queue_init(&sq, ~SMT_TO_MASK(SUBSCRIPTION_RAW_MPEGTS));
+
+  s = subscription_create_from_channel(ch, priority, 
+                                       "HTTP", &sq.sq_st,
+                                       SUBSCRIPTION_RAW_MPEGTS);
+
+
+  pthread_mutex_unlock(&global_lock);
+
+  http_stream_run(hc, &sq);
+
+  pthread_mutex_lock(&global_lock);
+  subscription_unsubscribe(s);
+  pthread_mutex_unlock(&global_lock);
+  streaming_queue_deinit(&sq);
+
   return 0;
 }
 
