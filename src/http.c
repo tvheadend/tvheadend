@@ -204,10 +204,10 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   if(content != NULL)
     htsbuf_qprintf(&hdrs, "Content-Type: %s\r\n", content);
 
-  htsbuf_qprintf(&hdrs,
-		 "Content-Length: %d\r\n"
-		 "\r\n",
-		 contentlen);
+  if(contentlen > 0)
+    htsbuf_qprintf(&hdrs, "Content-Length: %d\r\n", contentlen);
+
+  htsbuf_qprintf(&hdrs, "\r\n");
 
   tcp_write_queue(hc->hc_fd, &hdrs);
 }
