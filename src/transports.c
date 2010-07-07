@@ -813,6 +813,7 @@ transport_build_stream_start(th_transport_t *t)
   t->tht_setsourceinfo(t, &ss->ss_si);
 
   ss->ss_refcount = 1;
+  ss->ss_pcr_pid = t->tht_pcr_pid;
   return ss;
 }
 
