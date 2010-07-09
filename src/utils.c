@@ -231,8 +231,10 @@ put_utf8(char *out, int c)
 void
 sbuf_free(sbuf_t *sb)
 {
-  free(sb->sb_data);
+  if(sb->sb_data)
+    free(sb->sb_data);
   sb->sb_size = sb->sb_ptr = sb->sb_err = 0;
+  sb->sb_data = NULL;
 }
 
 void
