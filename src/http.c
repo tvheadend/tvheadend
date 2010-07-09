@@ -155,7 +155,7 @@ static const char *cachemonths[12] = {
 void
 http_send_header(http_connection_t *hc, int rc, const char *content, 
 		 int contentlen, const char *encoding, const char *location, 
-		 int maxage)
+		 int maxage, const char *range)
 {
   struct tm tm0, *tm;
   htsbuf_queue_t hdrs;
@@ -211,6 +211,11 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   if(contentlen > 0)
     htsbuf_qprintf(&hdrs, "Content-Length: %d\r\n", contentlen);
 
+  if(range) {
+    htsbuf_qprintf(&hdrs, "Accept-Ranges: %s\r\n", "bytes");
+    htsbuf_qprintf(&hdrs, "Content-Range: %s\r\n", range);
+  }
+  
   htsbuf_qprintf(&hdrs, "\r\n");
 
   tcp_write_queue(hc->hc_fd, &hdrs);
@@ -226,7 +231,7 @@ http_send_reply(http_connection_t *hc, int rc, const char *content,
 		const char *encoding, const char *location, int maxage)
 {
   http_send_header(hc, rc, content, hc->hc_reply.hq_size,
-		   encoding, location, maxage);
+		   encoding, location, maxage, 0);
   
   if(hc->hc_no_output)
     return;
@@ -841,7 +846,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq)
         int pcrpid = ss->ss_pcr_pid;
         int pmtpid = 0x0fff;
 
-        http_output_content(hc, "audio/mp2t");
+        http_output_content(hc, "video/mp2t");
         
         //Send PAT
         memset(pat_ts, 0xff, 188);

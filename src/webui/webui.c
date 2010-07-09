@@ -114,7 +114,7 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
     return 404;
   }
 
-  http_send_header(hc, 200, content, st.st_size, NULL, NULL, 10);
+  http_send_header(hc, 200, content, st.st_size, NULL, NULL, 10, 0);
   sendfile(hc->hc_fd, fd, NULL, st.st_size);
   close(fd);
   return 0;
@@ -174,7 +174,7 @@ page_static_bundle(http_connection_t *hc, const char *remain, void *opaque)
     if(!strcmp(fbe->filename, remain)) {
 
       http_send_header(hc, 200, content, fbe->size, 
-		       fbe->original_size == -1 ? NULL : "gzip", NULL, 10);
+		       fbe->original_size == -1 ? NULL : "gzip", NULL, 10, 0);
       /* ignore return value */
       n = write(hc->hc_fd, fbe->data, fbe->size);
       return 0;
@@ -195,7 +195,9 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   const char *content = NULL, *postfix, *range;
   dvr_entry_t *de;
   char *fname;
-
+  char range_buf[255];
+  off_t content_len, file_start, file_end;
+  
   if(remain == NULL)
     return 404;
 
@@ -232,18 +234,28 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
     return 404;
   }
 
+  file_start = 0;
+  file_end = st.st_size-1;
   
   range = http_arg_get(&hc->hc_args, "Range");
-#if 0
-  if(range != NULL) {
-    printf("Range req: %s\n", range);
-  }
-#endif
+  if(range != NULL)
+    sscanf(range, "bytes=%"PRId64"-%"PRId64"", &file_start, &file_end);
 
-  http_send_header(hc, 200, content, st.st_size, NULL, NULL, 10);
-  sendfile(hc->hc_fd, fd, NULL, st.st_size);
+  content_len = file_end - file_start+1;
+  
+  sprintf(range_buf, "bytes %"PRId64"-%"PRId64"/%"PRId64"", file_start, file_end, st.st_size);
+
+  if(file_start > 0)
+    lseek(fd, file_start, SEEK_SET);
+
+  http_send_header(hc, 200, content, content_len, NULL, NULL, 10, range_buf);
+  sendfile(hc->hc_fd, fd, NULL, content_len);
   close(fd);
-  return 0;
+
+  if(range)
+    return 206;
+  else
+    return 0;
 }
 
 
