@@ -241,6 +241,16 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   if(range != NULL)
     sscanf(range, "bytes=%"PRId64"-%"PRId64"", &file_start, &file_end);
 
+  //Sanity checks
+  if(file_start < 0 || file_start >= st.st_size)
+    return 200;
+
+  if(file_end < 0 || file_end >= st.st_size)
+    return 200;
+
+  if(file_start > 0 || file_end)
+    return 200;
+
   content_len = file_end - file_start+1;
   
   sprintf(range_buf, "bytes %"PRId64"-%"PRId64"/%"PRId64"", file_start, file_end, st.st_size);
