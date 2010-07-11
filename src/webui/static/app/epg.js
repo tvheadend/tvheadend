@@ -330,6 +330,14 @@ tvheadend.epg = function() {
 	    },
 	    '->',
 	    {
+		text: 'Watch TV',
+		iconCls: 'eye',
+		handler: function() {
+		    new tvheadend.VLC();
+		}
+	    },
+	    '-',
+	    {
 		text: 'Create AutoRec',
 		iconCls: 'wand',
 		tooltip: 'Create an automatic recording entry that will ' +
