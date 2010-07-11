@@ -444,7 +444,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   if(file_end < 0 || file_end >= st.st_size)
     return 200;
 
-  if(file_start > 0 || file_end)
+  if(file_start > file_end)
     return 200;
 
   content_len = file_end - file_start+1;
