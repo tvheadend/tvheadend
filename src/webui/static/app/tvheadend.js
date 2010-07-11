@@ -27,6 +27,138 @@ tvheadend.help = function(title, pagename) {
 	}});
 }
 
+/**
+ * Displays a mediaplayer using VLC plugin
+ */
+tvheadend.VLC = function(url) {
+  var vlc = document.createElement('embed');
+  vlc.setAttribute('type', 'application/x-vlc-plugin');
+  vlc.setAttribute('pluginspage', 'http://www.videolan.org');
+  vlc.setAttribute('version', 'version="VideoLAN.VLCPlugin.2');
+  vlc.setAttribute('width', '507');
+  vlc.setAttribute('height', '384');
+  vlc.setAttribute('autoplay', 'yes');
+  vlc.setAttribute('id', 'vlc');
+  if(url) {
+    vlc.setAttribute('src', url);
+  }
+
+  var selectChannel = new Ext.form.ComboBox({
+    loadingText: 'Loading...',
+    width: 200,
+    displayField:'name',
+    store: tvheadend.channels,
+    mode: 'local',
+    editable: false,
+    triggerAction: 'all',
+    emptyText: 'Select channel...'
+  });
+  
+  selectChannel.on('select', function(c, r) {
+      var url = makeStreamPrefix() + r.data.chid;
+      var chName = r.data.name;
+	    
+	    if(vlc.playlist.isPlaying) {
+	      vlc.playlist.stop();
+	    }
+	    if(vlc.playlist.items.count) {
+        vlc.playlist.items.clear();
+      }
+      
+      vlc.playlist.add(url, chName, "");
+      vlc.playlist.play();
+      vlc.audio.volume = slider.getValue();
+    }
+  );
+  
+  var slider = new Ext.Slider({
+    width: 135,
+    height: 20,
+    value: 90,
+    increment: 1,
+    minValue: 0,
+    maxValue: 100,
+  });
+  
+  var sliderLabel = new Ext.form.Label();
+  sliderLabel.setText("90%");
+  slider.addListener('change', function() {
+    if(vlc.playlist.isPlaying) {
+      vlc.audio.volume = slider.getValue();
+      sliderLabel.setText(vlc.audio.volume + '%');
+    } else {
+      sliderLabel.setText(slider.getValue() + '%');
+    }
+  });
+  
+  var win = new Ext.Window({
+    title: 'VLC Player',
+    layout:'fit',
+    width: 507 + 14,
+    height: 384 + 56,
+    constrainHeader: true,
+    iconCls: 'eye',
+    resizable: false,
+    tbar: [
+      selectChannel,
+      '-',
+      {
+        iconCls: 'control_play',
+        tooltip: 'Play',
+        handler: function() {
+          if(vlc.playlist.items.count && !vlc.playlist.isPlaying) {
+            vlc.playlist.play();
+          }
+        }
+      },
+      {
+        iconCls: 'control_pause',
+        tooltip: 'Pause',
+        handler: function() {
+          if(vlc.playlist.items.count) {
+            vlc.playlist.togglePause();
+          }
+        }
+      },
+      {
+        iconCls: 'control_stop',
+        tooltip: 'Stop',
+        handler: function() {
+          if(vlc.playlist.items.count) {
+            vlc.playlist.stop();
+          }
+        }
+      },
+      '-',
+      {
+        iconCls: 'control_fullscreen',
+        tooltip: 'Fullscreen',
+        handler: function() {
+          if(vlc.playlist.isPlaying) {
+            vlc.video.toggleFullscreen();
+          }
+        }
+      },
+      '-',
+      {
+        iconCls: 'control_volume',
+        tooltip: 'Volume',
+        disabled: true
+      },
+    ],
+    items: [vlc]
+	});
+	  
+	win.on('render', function() {
+	  win.getTopToolbar().add(slider);
+	  win.getTopToolbar().add(new Ext.Toolbar.Spacer());
+	  win.getTopToolbar().add(new Ext.Toolbar.Spacer());
+	  win.getTopToolbar().add(new Ext.Toolbar.Spacer());
+	  win.getTopToolbar().add(sliderLabel);
+  });
+
+  win.show();
+};
 
 /**
  * This function creates top level tabs based on access so users without 
