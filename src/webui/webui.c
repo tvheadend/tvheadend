@@ -288,20 +288,13 @@ http_stream_playlist(http_connection_t *hc)
  * Subscribes to a channel and starts the streaming loop
  */
 static int
-http_stream_channel(http_connection_t *hc, int chid)
+http_stream_channel(http_connection_t *hc, channel_t *ch)
 {
-  channel_t *ch;
   streaming_queue_t sq;
   th_subscription_t *s;
   int priority = 150; //Default value, Compute this somehow
 
   pthread_mutex_lock(&global_lock);
-
-  if((ch = channel_find_by_identifier(chid)) == NULL) {
-    pthread_mutex_unlock(&global_lock);
-    http_error(hc, HTTP_STATUS_BAD_REQUEST);
-    return HTTP_STATUS_BAD_REQUEST;
-  }
 
   streaming_queue_init(&sq, ~SMT_TO_MASK(SUBSCRIPTION_RAW_MPEGTS));
 
@@ -325,23 +318,49 @@ http_stream_channel(http_connection_t *hc, int chid)
 
 /**
  * Handle the http request. http://tvheadend/stream/channelid/<chid>
+ *                          http://tvheadend/stream/channel/<chname>
  */
 static int
 http_stream(http_connection_t *hc, const char *remain, void *opaque)
-{  
+{
+  char *components[2];
+  channel_t *ch = NULL;
+
   if(http_access_verify(hc, ACCESS_STREAMING)) {
     http_error(hc, HTTP_STATUS_UNAUTHORIZED);
     return HTTP_STATUS_UNAUTHORIZED;
   }
-  
+
   hc->hc_keep_alive = 0;
-  
+
   if(remain == NULL) {
     http_stream_playlist(hc);
     return 0;
   }
 
-  return http_stream_channel(hc, atoi(remain));
+  if(http_tokenize((char *)remain, components, 2, '/') != 2) {
+    http_error(hc, HTTP_STATUS_BAD_REQUEST);
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  http_deescape(components[1]);
+
+  pthread_mutex_lock(&global_lock);
+
+  if(!strcmp(components[0], "channelid")) {
+    ch = channel_find_by_identifier(atoi(components[1]));
+  } else if(!strcmp(components[0], "channel")) {
+    ch = channel_find_by_name(components[1], 0, 0);
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  if(ch == NULL) {
+    http_error(hc, HTTP_STATUS_BAD_REQUEST);
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  return http_stream_channel(hc, ch);
 }
 
 
@@ -531,7 +550,7 @@ webui_init(const char *contentpath)
 
   http_path_add("/state", NULL, page_statedump, ACCESS_ADMIN);
 
-  http_path_add("/stream/channelid",  NULL, http_stream,  ACCESS_STREAMING);
+  http_path_add("/stream",  NULL, http_stream,  ACCESS_STREAMING);
 
   webui_static_content(contentpath, "/static",        "src/webui/static");
   webui_static_content(contentpath, "/docs",          "docs/html");
