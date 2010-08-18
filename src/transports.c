@@ -433,7 +433,8 @@ transport_destroy(th_transport_t *t)
 {
   th_stream_t *st;
   th_subscription_t *s;
-  
+  channel_t *ch = t->tht_ch;
+
   lock_assert(&global_lock);
 
   serviceprobe_delete(t);
@@ -469,6 +470,11 @@ transport_destroy(th_transport_t *t)
   free(t->tht_pmt_section);
 
   transport_unref(t);
+
+  if(ch != NULL) {
+    if(LIST_FIRST(&ch->ch_transports) == NULL) 
+      channel_delete(ch);
+  }
 }
 
 
