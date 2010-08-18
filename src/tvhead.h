@@ -571,6 +571,8 @@ typedef struct th_transport {
 
   int (*tht_grace_period)(struct th_transport *t);
 
+  void (*tht_dtor)(struct th_transport *t);
+
   /*
    * Per source type structs
    */

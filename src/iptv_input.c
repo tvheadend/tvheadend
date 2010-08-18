@@ -374,6 +374,16 @@ iptv_grace_period(th_transport_t *t)
 /**
  *
  */
+static void
+iptv_transport_dtor(th_transport_t *t)
+{
+  hts_settings_remove("iptvtransports/%s", t->tht_identifier); 
+}
+
+
+/**
+ *
+ */
 th_transport_t *
 iptv_transport_find(const char *id, int create)
 {
@@ -411,6 +421,7 @@ iptv_transport_find(const char *id, int create)
   t->tht_setsourceinfo = iptv_transport_setsourceinfo;
   t->tht_quality_index = iptv_transport_quality;
   t->tht_grace_period  = iptv_grace_period;
+  t->tht_dtor          = iptv_transport_dtor;
   t->tht_iptv_fd = -1;
 
   LIST_INSERT_HEAD(&iptv_all_transports, t, tht_group_link);

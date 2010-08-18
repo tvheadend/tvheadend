@@ -435,6 +435,9 @@ transport_destroy(th_transport_t *t)
   th_subscription_t *s;
   channel_t *ch = t->tht_ch;
 
+  if(t->tht_dtor != NULL)
+    t->tht_dtor(t);
+
   lock_assert(&global_lock);
 
   serviceprobe_delete(t);
