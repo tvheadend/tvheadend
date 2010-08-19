@@ -722,14 +722,13 @@ htsp_method_getSysTime(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out;
   struct timeval tv;
-  struct timezone tz;
 
-  if(gettimeofday(&tv, &tz) == -1)
+  if(gettimeofday(&tv, NULL) == -1)
     return htsp_error("Unable to get system time"); 
 
   out = htsmsg_create_map();
   htsmsg_add_s32(out, "time", tv.tv_sec);
-  htsmsg_add_s32(out, "timezone", tz.tz_minuteswest);
+  htsmsg_add_s32(out, "timezone", timezone / 60);
   return out;
 }
 

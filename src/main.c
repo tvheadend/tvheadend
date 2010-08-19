@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <syslog.h>
 #include <limits.h>
+#include <time.h>
 
 #include <pwd.h>
 #include <grp.h>
@@ -241,6 +242,9 @@ main(int argc, char **argv)
   char *p, *endp;
   uint32_t adapter_mask = 0xffffffff;
   int crash = 0;
+
+  // make sure the timezone is set
+  tzset();
 
   while((c = getopt(argc, argv, "Aa:fu:g:c:Chdr:j:s")) != -1) {
     switch(c) {
