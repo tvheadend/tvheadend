@@ -566,7 +566,7 @@ tvheadend.dvrsettings = function() {
 	'channelDirs','channelInTitle',
 	'dateInTitle','timeInTitle',
 	'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 
-	'titleDirs', 'episodeInTitle']);
+	'titleDirs', 'episodeInTitle','cleanTitle']);
 
     var confpanel = new Ext.FormPanel({
 	title:'Digital Video Recorder',
@@ -610,6 +610,9 @@ tvheadend.dvrsettings = function() {
 	}), new Ext.form.Checkbox({
 	    fieldLabel: 'Include channel name in filename',
 	    name: 'channelInTitle'
+	}), new Ext.form.Checkbox({
+	    fieldLabel: 'Remove all unsafe characters from filename',
+	    name: 'cleanTitle'
 	}), new Ext.form.Checkbox({
 	    fieldLabel: 'Include date in filename',
 	    name: 'dateInTitle'

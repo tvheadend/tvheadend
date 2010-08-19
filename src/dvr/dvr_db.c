@@ -154,6 +154,7 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
 {
   struct tm tm;
   char buf[40];
+  int i;
 
   if(dvr_flags & DVR_CHANNEL_IN_TITLE)
     snprintf(output, outlen, "%s-", de->de_channel->ch_name);
@@ -186,6 +187,19 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
       snprintf(output + strlen(output), outlen - strlen(output), 
 	       ".E%02d",
 	       de->de_episode.ee_episode);
+  }
+
+  if(dvr_flags & DVR_CLEAN_TITLE) {
+        for (i=0;i<strlen(output);i++) {
+                if (
+                        output[i]<32 ||
+                        output[i]>122 ||
+                        output[i]==34 ||
+                        output[i]==39 ||
+                        output[i]==92 ||
+                        output[i]==58
+                        ) output[i]='_';
+        }
   }
 }
 
