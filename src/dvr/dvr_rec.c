@@ -362,13 +362,14 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     }
 
     tvhlog(LOG_INFO, "dvr",
-	   "%2d %-20s %-4s %-16s %-10s %-10s",
+	   "%2d %-20s %-4s %-16s %-10s %-10s %s",
 	   ssc->ssc_index,
 	   streaming_component_type2txt(ssc->ssc_type),
 	   ssc->ssc_lang,
 	   res,
 	   sr,
-	   ch);
+	   ch,
+	   ssc->ssc_disabled ? "<disabled, no valid input>" : "");
   }
 }
 

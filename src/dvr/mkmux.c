@@ -45,6 +45,7 @@ typedef struct mk_track {
   int merge;
   int type;
   int tracknum;
+  int disabled;
   int64_t nextpts;
 } mk_track;
 
@@ -171,6 +172,11 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
   
   for(i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
+
+    mkm->tracks[i].disabled = ssc->ssc_disabled;
+
+    if(ssc->ssc_disabled)
+      continue;
 
     mkm->tracks[i].index = ssc->ssc_index;
     mkm->tracks[i].type  = ssc->ssc_type;
@@ -670,7 +676,7 @@ mk_mux_write_pkt(mk_mux_t *mkm, struct th_pkt *pkt)
     }
   }
   
-  if(t != NULL) {
+  if(t != NULL && !t->disabled) {
     if(t->merge)
       pkt = pkt_merge_header(pkt);
     mk_write_frame_i(mkm, t, pkt);

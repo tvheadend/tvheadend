@@ -34,6 +34,8 @@ typedef struct globalheaders {
 
 } globalheaders_t;
 
+#define MAX_SCAN_TIME 5000  // in ms
+
 
 /**
  *
@@ -85,9 +87,7 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
       pktbuf_ref_inc(ssc->ssc_gh);
     }
     break;
-
   }
-
 }
 
 
@@ -95,7 +95,29 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
  *
  */
 static int
-headers_complete(globalheaders_t *gh)
+header_complete(streaming_start_component_t *ssc)
+{
+  if((SCT_ISAUDIO(ssc->ssc_type) || SCT_ISVIDEO(ssc->ssc_type)) &&
+     ssc->ssc_frameduration == 0)
+    return 0;
+
+  if(SCT_ISAUDIO(ssc->ssc_type) &&
+     (ssc->ssc_sri == 0 || ssc->ssc_channels == 0))
+    return 0;
+  
+  if(ssc->ssc_gh == NULL &&
+     (ssc->ssc_type == SCT_H264 ||
+      ssc->ssc_type == SCT_MPEG2VIDEO ||
+      ssc->ssc_type == SCT_AAC))
+    return 0;
+  return 1;
+}
+
+/**
+ *
+ */
+static int
+headers_complete(globalheaders_t *gh, int64_t qd)
 {
   streaming_start_t *ss = gh->gh_ss;
   streaming_start_component_t *ssc;
@@ -106,19 +128,14 @@ headers_complete(globalheaders_t *gh)
   for(i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
 
-    if((SCT_ISAUDIO(ssc->ssc_type) || SCT_ISVIDEO(ssc->ssc_type)) &&
-       ssc->ssc_frameduration == 0)
-      return 0;
+    if(!header_complete(ssc)) {
 
-    if(SCT_ISAUDIO(ssc->ssc_type) &&
-       (ssc->ssc_sri == 0 || ssc->ssc_channels == 0))
-      return 0;
-  
-    if(ssc->ssc_gh == NULL &&
-       (ssc->ssc_type == SCT_H264 ||
-	ssc->ssc_type == SCT_MPEG2VIDEO ||
-	ssc->ssc_type == SCT_AAC))
-      return 0;
+      if(qd > (MAX_SCAN_TIME * 90)) {
+	ssc->ssc_disabled = 1;
+      } else {
+	return 0;
+      }
+    }
   }
 
   return 1;
@@ -139,6 +156,19 @@ convertpkt(streaming_start_component_t *ssc, th_pkt_t *pkt)
   default:
     return pkt;
   }
+}
+
+
+/**
+ *
+ */
+static int64_t 
+gh_queue_delay(globalheaders_t *gh)
+{
+  th_pktref_t *f = TAILQ_FIRST(&gh->gh_holdq);
+  th_pktref_t *l = TAILQ_LAST(&gh->gh_holdq, th_pktref_queue);
+
+  return l->pr_pkt->pkt_dts - f->pr_pkt->pkt_dts;
 }
 
 
@@ -168,7 +198,7 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
 
     free(sm);
 
-    if(!headers_complete(gh)) 
+    if(!headers_complete(gh, gh_queue_delay(gh))) 
       break;
 
     // Send our modified start

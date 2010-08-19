@@ -35,6 +35,7 @@ typedef struct streaming_start_component {
   int16_t ssc_height;
   uint8_t ssc_sri;
   uint8_t ssc_channels;
+  uint8_t ssc_disabled;
 
   pktbuf_t *ssc_gh;
 
