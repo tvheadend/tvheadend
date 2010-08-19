@@ -280,7 +280,9 @@ parse_sc(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
 
       if(st->st_ssc_ptr < 5)
 	continue;
-
+      uint16_t plen = st->st_ssc_buf[0] << 8 | st->st_ssc_buf[1];
+      if(plen >= 0xffdf)st->st_incomplete=1;
+      else st->st_incomplete=0;
       int hlen = st->st_ssc_buf[4];
 
       if(st->st_ssc_ptr < hlen + 5)
@@ -288,6 +290,8 @@ parse_sc(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
       
       parse_pes_header(t, st, st->st_ssc_buf + 2, hlen + 3);
       st->st_ssc_intercept = 0;
+      if(st->st_buf.sb_ptr > 2) sc = st->st_buf.sb_data[st->st_buf.sb_ptr-3] << 16 | st->st_buf.sb_data[st->st_buf.sb_ptr-2] << 8 | st->st_buf.sb_data[st->st_buf.sb_ptr-1];
+
       continue;
     }
 
@@ -296,6 +300,11 @@ parse_sc(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
 
     if((sc & 0xffffff00) != 0x00000100)
       continue;
+    if(sc == 0x100 && (len-i)>3) {
+
+        uint32_t tempsc = data[i+1]<< 16 | data [i+2] << 8 | data [i+3];
+        if(tempsc == 0x1e0)continue;
+    }
 
     r = st->st_buf.sb_ptr - st->st_startcode_offset - 4;
 
@@ -951,9 +960,11 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
 
   if(sc >= 0x000001e0 && sc <= 0x000001ef) {
     /* System start codes for video */
-    if(len >= 9)
+    if(len >= 9){
+      uint16_t plen = buf[4] << 8 | buf[5];
+      if(plen >= 0xffe9) st->st_incomplete =1;
       parse_pes_header(t, st, buf + 6, len - 6);
-
+    }
     if(st->st_prevdts != PTS_UNSET && st->st_curdts != PTS_UNSET) {
       d = (st->st_curdts - st->st_prevdts) & 0x1ffffffffLL;
 
@@ -1023,7 +1034,7 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
 
   if(next_startcode >= 0x000001e0 && next_startcode <= 0x000001ef) {
     /* Complete frame */
-
+    if (st->st_incomplete) return 4;
     th_pkt_t *pkt = st->st_curpkt;
     
     if(pkt != NULL) {

@@ -426,7 +426,7 @@ typedef struct th_stream {
 
   uint8_t *st_global_data;
   int st_global_data_len;
-
+  int st_incomplete;
   int st_ssc_intercept;
   int st_ssc_ptr;
   uint8_t st_ssc_buf[32];
