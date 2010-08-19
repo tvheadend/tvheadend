@@ -34,27 +34,27 @@ char tvh_binshasum[20];
 #include <stdio.h>
 #include <stdarg.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "tvhead.h"
 #include "sha1.h"
 
-static char traceline[4096];
-static int tracepos = 0;
-
 #define MAXFRAMES 100
 
+static char line1[200];
+static char tmpbuf[1024];
+static char libs[1024];
+
 static void
-traceappend(const char *fmt, ...)
+sappend(char *buf, size_t l, const char *fmt, ...)
 {
   va_list ap;
-  int n;
 
   va_start(ap, fmt);
-  n = vsnprintf(traceline + tracepos, sizeof(traceline) - tracepos, fmt, ap);
+  vsnprintf(buf + strlen(buf), l - strlen(buf), fmt, ap);
   va_end(ap);
-
-  if(n < 1)
-    return;
-  tracepos += n;
 }
 
 
@@ -65,56 +65,77 @@ traphandler(int sig, siginfo_t *si, void *UC)
   ucontext_t *uc = UC;
   static void *frames[MAXFRAMES];
   int nframes = backtrace(frames, MAXFRAMES);
-
+  Dl_info dli;
   int i;
+  const char *reason = NULL;
 
-  traceappend("SIGNAL: %d ", sig); 
-  traceappend("REGDUMP[%d]: ", NGREG);
-  for(i = 0; i < NGREG; i++) {
-#if __WORDSIZE == 64
-    traceappend("%016llx ", uc->uc_mcontext.gregs[i]);
-#else
-    traceappend("%08x ", uc->uc_mcontext.gregs[i]);
-#endif
+  tvhlog_spawn(LOG_ALERT, "CRASH", "Signal: %d in %s ", sig, line1);
+
+  switch(sig) {
+  case SIGSEGV:
+    switch(si->si_code) {
+    case SEGV_MAPERR:  reason = "Address not mapped"; break;
+    case SEGV_ACCERR:  reason = "Access error"; break;
+    }
+    break;
+
+  case SIGFPE:
+    switch(si->si_code) {
+    case FPE_INTDIV:  reason = "Integer division by zero"; break;
+    }
+    break;
   }
 
-  traceappend("STACKTRACE[%d]: ", nframes);
-  for(i = 0; i < nframes; i++)
-    traceappend("%p ", frames[i]);
+  tvhlog_spawn(LOG_ALERT, "CRASH", "Fault address %p (%s)",
+	       si->si_addr, reason ?: "N/A");
 
-  tvhlog_spawn(LOG_ALERT, "CRASH", "%s", traceline);
+  tvhlog_spawn(LOG_ALERT, "CRASH", "Loaded libraries: %s ", libs);
+  snprintf(tmpbuf, sizeof(tmpbuf), "Register dump [%d]: ", NGREG);
+
+  for(i = 0; i < NGREG; i++) {
+#if __WORDSIZE == 64
+    sappend(tmpbuf, sizeof(tmpbuf), "%016llx ", uc->uc_mcontext.gregs[i]);
+#else
+    sappend(tmpbuf, sizeof(tmpbuf), "%08x ", uc->uc_mcontext.gregs[i]);
+#endif
+  }
+  tvhlog_spawn(LOG_ALERT, "CRASH", "%s", tmpbuf);
+
+  tvhlog_spawn(LOG_ALERT, "CRASH", "STACKTRACE");
+
+  for(i = 0; i < nframes; i++) {
+
+    
+    if(dladdr(frames[i], &dli)) {
+
+      if(dli.dli_sname != NULL && dli.dli_saddr != NULL) {
+      	tvhlog_spawn(LOG_ALERT, "CRASH", "%s+0x%tx  (%s)",
+		     dli.dli_sname,
+		     frames[i] - dli.dli_saddr,
+		     dli.dli_fname);
+	continue;
+      }
+
+      if(dli.dli_fname != NULL && dli.dli_fbase != NULL) {
+      	tvhlog_spawn(LOG_ALERT, "CRASH", "%s %p",
+ 		     dli.dli_fname,
+		     frames[i]);
+	continue;
+      }
+
+
+      tvhlog_spawn(LOG_ALERT, "CRASH", "%p", frames[i]);
+    }
+  }
 }
 
-static struct SHA1Context binsum;
 
 
 static int
 callback(struct dl_phdr_info *info, size_t size, void *data)
 {
-  int j;
-
-  // Other lib, just record its presence
-  if(info->dlpi_name[0]) {
-    traceappend("%s ", info->dlpi_name);
-    return 0;
-  }
-
-  // Our self, hash huge R-X segments which in practice is the main text seg.
-
-  for(j = 0; j < info->dlpi_phnum; j++) {
-    if(info->dlpi_phdr[j].p_flags & PF_W)
-      continue;
-
-    if(!(info->dlpi_phdr[j].p_flags & PF_X))
-      continue;
-
-    if(info->dlpi_phdr[j].p_memsz < 65536)
-      continue;
-    
-    SHA1Input(&binsum, 
-	      (void *)(info->dlpi_addr + info->dlpi_phdr[j].p_vaddr),
-	      info->dlpi_phdr[j].p_memsz);
-  }
+  if(info->dlpi_name[0])
+    sappend(libs, sizeof(libs), "%s ", info->dlpi_name);
   return 0;
 }
 
@@ -129,53 +150,76 @@ trap_init(const char *ver)
   struct sigaction sa, old;
   char path[256];
 
-  traceappend("PRG: %s [%s] CWD: %s ", ver, htsversion_full,
-	      getcwd(path, sizeof(path)));
-   
+  struct SHA1Context binsum;
+  int fd;
+
+  
+  if((fd = open("/proc/self/exe", O_RDONLY)) != -1) {
+    struct stat st;
+    if(!fstat(fd, &st)) {
+      char *m = malloc(st.st_size);
+      if(m != NULL) {
+	if(read(fd, m, st.st_size) == st.st_size) {
+	  SHA1Reset(&binsum);
+	  SHA1Input(&binsum, (void *)m, st.st_size);
+	  SHA1Result(&binsum, digest);
+	}
+	free(m);
+      }
+    }
+  }
+  
+  snprintf(line1, sizeof(line1),
+	   "PRG: %s (%s) "
+	   "[%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
+	   "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x] "
+	   "CWD: %s ", ver, htsversion_full,
+	   digest[0],
+	   digest[1],
+	   digest[2],
+	   digest[3],
+	   digest[4],
+	   digest[5],
+	   digest[6],
+	   digest[7],
+	   digest[8],
+	   digest[9],
+	   digest[10],
+	   digest[11],
+	   digest[12],
+	   digest[13],
+	   digest[14],
+	   digest[15],
+	   digest[16],
+	   digest[17],
+	   digest[18],
+	   digest[19],
+	   getcwd(path, sizeof(path)));
+
+  memcpy(tvh_binshasum, digest, 20);
+
+  dl_iterate_phdr(callback, NULL);
+  
 
   memset(&sa, 0, sizeof(sa));
 
+  sigset_t m;
+  sigemptyset(&m);
+  sigaddset(&m, SIGSEGV);
+  sigaddset(&m, SIGBUS);
+  sigaddset(&m, SIGILL);
+  sigaddset(&m, SIGABRT);
+  sigaddset(&m, SIGFPE);
+
   sa.sa_sigaction = traphandler;
   sa.sa_flags = SA_SIGINFO | SA_RESETHAND;
-
   sigaction(SIGSEGV, &sa, &old);
   sigaction(SIGBUS,  &sa, &old);
   sigaction(SIGILL,  &sa, &old);
   sigaction(SIGABRT, &sa, &old);
   sigaction(SIGFPE,  &sa, &old);
- 
 
-  traceappend("OBJS: ");
-
-  SHA1Reset(&binsum);
-  dl_iterate_phdr(callback, NULL);
-
-  SHA1Result(&binsum, digest);
-
-  traceappend("SHA1: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
-	      "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x ",
-	      digest[0],
-	      digest[1],
-	      digest[2],
-	      digest[3],
-	      digest[4],
-	      digest[5],
-	      digest[6],
-	      digest[7],
-	      digest[8],
-	      digest[9],
-	      digest[10],
-	      digest[11],
-	      digest[12],
-	      digest[13],
-	      digest[14],
-	      digest[15],
-	      digest[16],
-	      digest[17],
-	      digest[18],
-	      digest[19]);
-
-  memcpy(tvh_binshasum, digest, 20);
+  sigprocmask(SIG_UNBLOCK, &m, NULL);
 }
 
 #else
