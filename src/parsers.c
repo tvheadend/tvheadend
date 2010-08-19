@@ -1066,6 +1066,7 @@ parse_subtitles(th_transport_t *t, th_stream_t *st, const uint8_t *data,
     /* Payload unit start */
     st->st_parser_state = 1;
     st->st_buf.sb_err = 0;
+    st->st_buf.sb_ptr = 0;
   }
 
   if(st->st_parser_state == 0)
