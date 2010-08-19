@@ -166,6 +166,7 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
   int i, tracktype;
   htsbuf_queue_t *q = htsbuf_queue_alloc(0), *t;
   int tracknum = 0;
+  uint8_t buf4[4];
 
   mkm->tracks = calloc(1, sizeof(mk_track) * ss->ss_num_components);
   mkm->ntracks = ss->ss_num_components;
@@ -209,6 +210,11 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
       codec_id = "A_AAC";
       break;
 
+    case SCT_DVBSUB:
+      tracktype = 0x11;
+      codec_id = "S_DVBSUB";
+      break;
+
     default:
       continue;
     }
@@ -228,16 +234,23 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
     if(ssc->ssc_lang[0])
       ebml_append_string(t, 0x22b59c, ssc->ssc_lang);
     
-    if(ssc->ssc_gh) {
-      switch(ssc->ssc_type) {
-      case SCT_H264:
-      case SCT_MPEG2VIDEO:
-      case SCT_AAC:
+    switch(ssc->ssc_type) {
+    case SCT_H264:
+    case SCT_MPEG2VIDEO:
+    case SCT_AAC:
+      if(ssc->ssc_gh)
 	ebml_append_bin(t, 0x63a2, 
 			pktbuf_ptr(ssc->ssc_gh),
 			pktbuf_len(ssc->ssc_gh));
-	break;
-      }
+      break;
+      
+    case SCT_DVBSUB:
+      buf4[0] = ssc->ssc_composition_id >> 8;
+      buf4[1] = ssc->ssc_composition_id;
+      buf4[2] = ssc->ssc_ancillary_id >> 8;
+      buf4[3] = ssc->ssc_ancillary_id;
+      ebml_append_bin(t, 0x63a2, buf4, 4);
+      break;
     }
 
     if(ssc->ssc_frameduration) {
