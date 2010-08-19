@@ -77,7 +77,7 @@ tvheadend.VLC = function(url) {
     value: 90,
     increment: 1,
     minValue: 0,
-    maxValue: 100,
+    maxValue: 100
   });
   
   var sliderLabel = new Ext.form.Label();
