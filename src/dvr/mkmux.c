@@ -31,6 +31,8 @@
 #include "mkmux.h"
 #include "ebml.h"
 
+#define TAGS_AT_END
+
 TAILQ_HEAD(mk_cue_queue, mk_cue);
 
 #define MATROSKA_TIMESCALE 1000000 // in nS
@@ -90,6 +92,8 @@ struct mk_mux {
 
   char uuid[16];
   char *title;
+
+  htsbuf_queue_t *tags;
 };
 
 
@@ -265,6 +269,9 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
       ebml_append_uint(vi, 0xb0, ssc->ssc_width);
       ebml_append_uint(vi, 0xba, ssc->ssc_height);
 
+      ebml_append_uint(vi, 0x54b0, ssc->ssc_width);
+      ebml_append_uint(vi, 0x54ba, ssc->ssc_height);
+
       ebml_append_master(t, 0xe0, vi);
     }
 
@@ -363,21 +370,20 @@ build_tag_string(const char *name, const char *value,
 		 int targettype, const char *targettypename)
 {
   htsbuf_queue_t *q = htsbuf_queue_alloc(0);
-  htsbuf_queue_t *t = htsbuf_queue_alloc(0);
   htsbuf_queue_t *st = htsbuf_queue_alloc(0);
 
-  if(targettype == 0 && targettypename == NULL) {
-    ebml_append_void(t);
-  } else {
-    if(targettype)
-      ebml_append_uint(t, 0x68ca, targettype);
-    if(targettypename)
-      ebml_append_string(t, 0x63ca, targettypename);
-  }
+  htsbuf_queue_t *t = htsbuf_queue_alloc(0);
+  ebml_append_uint(t, 0x68ca, targettype ?: 50);
+
+  if(targettypename)
+    ebml_append_string(t, 0x63ca, targettypename);
   ebml_append_master(q, 0x63c0, t);
 
   ebml_append_string(st, 0x45a3, name);
   ebml_append_string(st, 0x4487, value);
+  ebml_append_uint(st, 0x4484, 1);
+  ebml_append_string(st, 0x447a, "und");
+
   ebml_append_master(q, 0x67c8, st);
   return q;
 }
@@ -549,8 +555,12 @@ mk_mux_create(const char *filename,
   mkm->trackinfo_pos = mkm->fdpos;
   mk_write_master(mkm, 0x1654ae6b, mk_build_tracks(mkm, ss));
 
+  mkm->tags = mk_build_metadata(de);
+
+#ifndef TAGS_AT_END
   mkm->metadata_pos = mkm->fdpos;
-  mk_write_master(mkm, 0x1254c367, mk_build_metadata(de));
+  mk_write_master(mkm, 0x1254c367, mkm->tags);
+#endif
 
   mk_write_metaseek(mkm, 0);
 
@@ -741,6 +751,12 @@ mk_mux_close(mk_mux_t *mkm)
 {
   mk_close_cluster(mkm);
   mk_write_cues(mkm);
+
+#ifdef TAGS_AT_END
+  mkm->metadata_pos = mkm->fdpos;
+  mk_write_master(mkm, 0x1254c367, mkm->tags);
+#endif
+
   mk_write_metaseek(mkm, 0);
 
   // Rewrite segment info to update duration
