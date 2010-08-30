@@ -643,6 +643,8 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   end = MIN(start + limit, eqr.eqr_entries);
 
   for(i = start; i < end; i++) {
+    const char *s;
+
     e = eqr.eqr_array[i];
 
     m = htsmsg_create_map();
@@ -676,9 +678,8 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(m, "end", e->e_stop);
     htsmsg_add_u32(m, "duration", e->e_stop - e->e_start);
     
-    if(e->e_content_type != NULL && 
-       e->e_content_type->ect_group->ecg_name != NULL)
-      htsmsg_add_str(m, "contentgrp", e->e_content_type->ect_group->ecg_name);
+    if((s = epg_content_group_get_name(e->e_content_type)) != NULL)
+      htsmsg_add_str(m, "contentgrp", s);
 
     dvr_entry_t *de;
     if((de = dvr_entry_find_by_event(e)) != NULL)
@@ -793,11 +794,14 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(out, "success", 1);
 
   } else if(!strcmp(op, "createAutoRec")) {
+    const char *cgrp = http_arg_get(&hc->hc_req_args, "contentgrp");
+
+    
 
     dvr_autorec_add(http_arg_get(&hc->hc_req_args, "title"),
 		    http_arg_get(&hc->hc_req_args, "channel"),
 		    http_arg_get(&hc->hc_req_args, "tag"),
-		    http_arg_get(&hc->hc_req_args, "contentgrp"),
+		    cgrp ? epg_content_group_find_by_name(cgrp) : 0,
 		    hc->hc_representative, "Created from EPG query");
 
     out = htsmsg_create_map();

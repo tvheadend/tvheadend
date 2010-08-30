@@ -35,8 +35,6 @@
 #define EPG_GLOBAL_HASH_MASK (EPG_GLOBAL_HASH_WIDTH - 1)
 static struct event_list epg_hash[EPG_GLOBAL_HASH_WIDTH];
 
-epg_content_group_t *epg_content_groups[16];
-
 static void epg_expire_event_from_channel(void *opauqe);
 static void epg_ch_check_current_event(void *aux);
 
@@ -227,17 +225,12 @@ epg_event_set_ext_text(event_t *e, int ext_dn, const char *text)
  *
  */
 int
-epg_event_set_content_type(event_t *e, epg_content_type_t *ect)
+epg_event_set_content_type(event_t *e, uint8_t type)
 {
-  if(e->e_content_type == ect)
+  if(e->e_content_type == type)
     return 0;
 
-  if(e->e_content_type != NULL)
-    LIST_REMOVE(e, e_content_type_link);
-  
-  e->e_content_type = ect;
-  if(ect != NULL)
-    LIST_INSERT_HEAD(&ect->ect_events, e, e_content_type_link);
+  e->e_content_type = type;
   return 1;
 }
 
@@ -269,9 +262,6 @@ epg_event_set_episode(event_t *e, epg_episode_t *ee)
 static void
 epg_event_destroy(event_t *e)
 {
-  if(e->e_content_type != NULL)
-    LIST_REMOVE(e, e_content_type_link);
-
   free(e->e_title);
   free(e->e_desc);
   free(e->e_episode.ee_onscreen);
@@ -493,77 +483,47 @@ epg_unlink_from_channel(channel_t *ch)
 
 
 /**
+ * EPG content group
  *
+ * Based on the content types defined in EN 300 468
  */
 static const char *groupnames[16] = {
-  [0] = "Unclassified",
   [1] = "Movie / Drama",
   [2] = "News / Current affairs",
   [3] = "Show / Games",
   [4] = "Sports",
-  [5] = "Children's/Youth",
+  [5] = "Children's / Youth",
   [6] = "Music",
-  [7] = "Art/Culture",
-  [8] = "Social/Political issues/Economics",
-  [9] = "Education/Science/Factual topics",
+  [7] = "Art / Culture",
+  [8] = "Social / Political issues / Economics",
+  [9] = "Education / Science / Factual topics",
   [10] = "Leisure hobbies",
   [11] = "Special characteristics",
 };
+
 
 /**
  *
  */
 const char *
-epg_content_group_get_name(unsigned int id)
+epg_content_group_get_name(uint8_t id)
 {
   return id < 16 ? groupnames[id] : NULL;
 }
 
 /**
- * Find a content type
- */
-epg_content_type_t *
-epg_content_type_find_by_dvbcode(uint8_t dvbcode)
-{
-  epg_content_group_t *ecg;
-  epg_content_type_t *ect;
-  int group = dvbcode >> 4;
-  int type  = dvbcode & 0xf;
-  char buf[20];
-
-  ecg = epg_content_groups[group];
-  if(ecg == NULL) {
-    ecg = epg_content_groups[group] = calloc(1, sizeof(epg_content_group_t));
-    ecg->ecg_name = groupnames[group];
-  }
-
-  ect = ecg->ecg_types[type];
-  if(ect == NULL) {
-    ect = ecg->ecg_types[type] = calloc(1, sizeof(epg_content_type_t));
-    ect->ect_group = ecg;
-    snprintf(buf, sizeof(buf), "type%d", type);
-    ect->ect_name = strdup(buf);
-    ect->ect_dvbcode = dvbcode;
-  }
-
-  return ect;
-}
-
-/**
  *
  */
-epg_content_group_t *
+uint8_t
 epg_content_group_find_by_name(const char *name)
 {
-  epg_content_group_t *ecg;
   int i;
   
   for(i = 0; i < 16; i++) {
-    ecg = epg_content_groups[i];
-    if(ecg != NULL && ecg->ecg_name && !strcmp(name, ecg->ecg_name))
-      return ecg;
+    if(groupnames[i] != NULL && !strcmp(name, groupnames[i]))
+      return i;
   }
-  return NULL;
+  return 0;
 }
 
 
@@ -573,10 +533,6 @@ epg_content_group_find_by_name(const char *name)
 void
 epg_init(void)
 {
-  int i;
-
-  for(i = 0x0; i < 0x100; i+=16)
-    epg_content_type_find_by_dvbcode(i);
 }
 
 
@@ -611,19 +567,18 @@ eqr_add(epg_query_result_t *eqr, event_t *e, regex_t *preg, time_t now)
  */
 static void
 epg_query_add_channel(epg_query_result_t *eqr, channel_t *ch,
-		      epg_content_group_t *ecg, regex_t *preg, time_t now)
+		      uint8_t content_type, regex_t *preg, time_t now)
 {
   event_t *e;
 
-  if(ecg == NULL) {
+  if(content_type == 0) {
     RB_FOREACH(e, &ch->ch_epg_events, e_channel_link)
       eqr_add(eqr, e, preg, now);
-    return;
+  } else {
+    RB_FOREACH(e, &ch->ch_epg_events, e_channel_link)
+      if(content_type == e->e_content_type)
+	eqr_add(eqr, e, preg, now);
   }
-
-  RB_FOREACH(e, &ch->ch_epg_events, e_channel_link)
-    if(e->e_content_type != NULL && ecg == e->e_content_type->ect_group)
-      eqr_add(eqr, e, preg, now);
 }
 
 /**
@@ -631,7 +586,7 @@ epg_query_add_channel(epg_query_result_t *eqr, channel_t *ch,
  */
 void
 epg_query0(epg_query_result_t *eqr, channel_t *ch, channel_tag_t *ct,
-           epg_content_group_t *ecg, const char *title)
+           uint8_t content_type, const char *title)
 {
   channel_tag_mapping_t *ctm;
   time_t now;
@@ -650,19 +605,19 @@ epg_query0(epg_query_result_t *eqr, channel_t *ch, channel_tag_t *ct,
   }
 
   if(ch != NULL && ct == NULL) {
-    epg_query_add_channel(eqr, ch, ecg, preg, now);
+    epg_query_add_channel(eqr, ch, content_type, preg, now);
     return;
   }
   
   if(ct != NULL) {
     LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
       if(ch == NULL || ctm->ctm_channel == ch)
-	epg_query_add_channel(eqr, ctm->ctm_channel, ecg, preg, now);
+	epg_query_add_channel(eqr, ctm->ctm_channel, content_type, preg, now);
     return;
   }
 
   RB_FOREACH(ch, &channel_name_tree, ch_name_link)
-    epg_query_add_channel(eqr, ch, ecg, preg, now);
+    epg_query_add_channel(eqr, ch, content_type, preg, now);
 }
 
 /**
@@ -674,9 +629,9 @@ epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
 {
   channel_t *ch = channel ? channel_find_by_name(channel, 0, 0) : NULL;
   channel_tag_t *ct = tag ? channel_tag_find_by_name(tag, 0) : NULL;
-  epg_content_group_t *ecg = contentgroup ? 
-    epg_content_group_find_by_name(contentgroup) : NULL;
-  epg_query0(eqr, ch, ct, ecg, title);
+  uint8_t content_type = contentgroup ? 
+    epg_content_group_find_by_name(contentgroup) : 0;
+  epg_query0(eqr, ch, ct, content_type, title);
 }
 
 /**

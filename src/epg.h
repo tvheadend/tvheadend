@@ -22,24 +22,6 @@
 #include "channels.h"
 
 
-/**
- * EPG content group
- *
- * Based on the content types defined in EN 300 468
- */
-
-
-typedef struct epg_content_group {
-  const char *ecg_name;
-  struct epg_content_type *ecg_types[16];
-} epg_content_group_t;
-
-typedef struct epg_content_type {
-  const char *ect_name;
-  struct event_list ect_events;
-  epg_content_group_t *ect_group;
-  uint8_t ect_dvbcode;
-} epg_content_type_t;
 
 typedef struct epg_episode {
 
@@ -63,8 +45,7 @@ typedef struct event {
   int e_refcount;
   uint32_t e_id;
 
-  LIST_ENTRY(event) e_content_type_link;
-  epg_content_type_t *e_content_type;
+  uint8_t e_content_type;
 
   time_t e_start;  /* UTC time */
   time_t e_stop;   /* UTC time */
@@ -113,7 +94,7 @@ int epg_event_set_ext_item(event_t *e, int ext_dn, const char *item)
 int epg_event_set_ext_text(event_t *e, int ext_dn, const char *text)
        __attribute__ ((warn_unused_result));
 
-int epg_event_set_content_type(event_t *e, epg_content_type_t *ect)
+int epg_event_set_content_type(event_t *e, uint8_t type)
        __attribute__ ((warn_unused_result));
 
 int epg_event_set_episode(event_t *e, epg_episode_t *ee)
@@ -134,11 +115,9 @@ void epg_unlink_from_channel(channel_t *ch);
 /**
  *
  */
-epg_content_type_t *epg_content_type_find_by_dvbcode(uint8_t dvbcode);
+uint8_t epg_content_group_find_by_name(const char *name);
 
-epg_content_group_t *epg_content_group_find_by_name(const char *name);
-
-const char *epg_content_group_get_name(unsigned int id);
+const char *epg_content_group_get_name(uint8_t type);
 
 /**
  *
@@ -150,7 +129,7 @@ typedef struct epg_query_result {
 } epg_query_result_t;
 
 void epg_query0(epg_query_result_t *eqr, channel_t *ch, channel_tag_t *ct,
-                epg_content_group_t *ecg, const char *title);
+                uint8_t type, const char *title);
 void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
 	       const char *contentgroup, const char *title);
 void epg_query_free(epg_query_result_t *eqr);

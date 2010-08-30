@@ -178,7 +178,7 @@ typedef struct dvr_autorec_entry {
   char *dae_title;
   regex_t dae_title_preg;
   
-  epg_content_group_t *dae_ecg;
+  uint8_t dae_content_type;
 
   int dae_approx_time; /* Minutes from midnight */
 
@@ -267,7 +267,7 @@ void dvr_query_sort(dvr_query_result_t *dqr);
  *
  */
 void dvr_autorec_add(const char *title, const char *channel,
-		     const char *tag, const char *contentgrp,
+		     const char *tag, uint8_t content_type,
 		     const char *creator, const char *comment);
 
 void dvr_autorec_check_event(event_t *e);

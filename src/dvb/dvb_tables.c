@@ -503,7 +503,6 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   char extdesc[5000];
   char extitem[5000];
   char exttext[5000];
-  epg_content_type_t *ect;
 
   event_t *e;
 
@@ -573,7 +572,6 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     }
     int changed = 0;
 
-    ect = NULL;
     *title = 0;
     *desc = 0;
     while(dllen > 0) {
@@ -598,8 +596,7 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       case DVB_DESC_CONTENT:
 	if(dlen >= 2) {
 	  /* We only support one content type per event atm. */
-	  ect = epg_content_type_find_by_dvbcode(*ptr);
-	  changed |= epg_event_set_content_type(e, ect);
+	  changed |= epg_event_set_content_type(e, (*ptr) >> 4);
 	}
 	break;
       case DVB_DESC_EXT_EVENT:

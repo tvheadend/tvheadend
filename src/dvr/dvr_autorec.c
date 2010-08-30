@@ -71,7 +71,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, event_t *e)
 
   if(dae->dae_channel == NULL &&
      dae->dae_channel_tag == NULL &&
-     dae->dae_ecg == NULL &&
+     dae->dae_content_type == 0 &&
      dae->dae_title == NULL)
     return 0; // Avoid super wildcard match
 
@@ -88,11 +88,9 @@ autorec_cmp(dvr_autorec_entry_t *dae, event_t *e)
   }
 
 
-  if(dae->dae_ecg != NULL) {
-    if(e->e_content_type == NULL || 
-       dae->dae_ecg != e->e_content_type->ect_group)
-      return 0;
-  }
+  if(dae->dae_content_type != 0 &&
+     dae->dae_content_type != e->e_content_type)
+    return 0;
   
   if(dae->dae_title != NULL) {
     if(e->e_title == NULL ||
@@ -240,8 +238,7 @@ autorec_record_build(dvr_autorec_entry_t *dae)
   if(dae->dae_channel_tag != NULL)
     htsmsg_add_str(e, "tag", dae->dae_channel_tag->ct_name);
 
-  if(dae->dae_ecg != NULL)
-    htsmsg_add_str(e, "contentgrp",dae->dae_ecg->ecg_name);
+  htsmsg_add_u32(e, "contenttype",dae->dae_content_type);
 
   htsmsg_add_str(e, "title", dae->dae_title ?: "");
 
@@ -348,8 +345,7 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
     }
   }
 
-  if((s = htsmsg_get_str(values, "contentgrp")) != NULL)
-    dae->dae_ecg = epg_content_group_find_by_name(s);
+  dae->dae_content_type = htsmsg_get_u32_or_default(values, "contenttype", 0);
 
   if((s = htsmsg_get_str(values, "approx_time")) != NULL) {
     if(strchr(s, ':') != NULL) {
@@ -422,7 +418,7 @@ dvr_autorec_init(void)
  */
 void
 dvr_autorec_add(const char *title, const char *channel,
-		const char *tag, const char *cgrp,
+		const char *tag, uint8_t content_type,
 		const char *creator, const char *comment)
 {
   dvr_autorec_entry_t *dae;
@@ -452,8 +448,8 @@ dvr_autorec_add(const char *title, const char *channel,
     dae->dae_channel_tag = ct;
   }
 
-  dae->dae_ecg = cgrp ? epg_content_group_find_by_name(cgrp) : NULL;
   dae->dae_enabled = 1;
+  dae->dae_content_type = content_type;
 
   m = autorec_record_build(dae);
   hts_settings_save(m, "%s/%s", "autorec", dae->dae_id);

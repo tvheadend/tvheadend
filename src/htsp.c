@@ -562,10 +562,9 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_t *out, *eventIds;
   const char *query;
   int c, i;
-  uint32_t channelid, tagid, epg_content_dvbcode;
+  uint32_t channelid, tagid, epg_content_dvbcode = 0;
   channel_t *ch = NULL;
   channel_tag_t *ct = NULL;
-  epg_content_type_t *ect = NULL;
   epg_query_result_t eqr;
   
   //only mandatory parameter is the query
@@ -578,12 +577,10 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   if( !(htsmsg_get_u32(in, "tagId", &tagid)) )
     ct = channel_tag_find_by_identifier(tagid);
 
-  if( !(htsmsg_get_u32(in, "contentType", &epg_content_dvbcode)) )
-    ect = epg_content_type_find_by_dvbcode(epg_content_dvbcode);
-    
+  htsmsg_get_u32(in, "contentType", &epg_content_dvbcode);
 
   //do the query
-  epg_query0(&eqr, ch, ct, ect ? ect->ect_group : NULL, query);
+  epg_query0(&eqr, ch, ct, epg_content_dvbcode, query);
   c = eqr.eqr_entries;
 
   // create reply
@@ -626,8 +623,8 @@ htsp_build_event(event_t *e)
   if(e->e_ext_text != NULL)
     htsmsg_add_str(out, "ext_text", e->e_ext_text);
 
-  if(e->e_content_type != NULL)
-    htsmsg_add_u32(out, "contentType", e->e_content_type->ect_dvbcode);
+  if(e->e_content_type)
+    htsmsg_add_u32(out, "contentType", e->e_content_type);
 
   n = RB_NEXT(e, e_channel_link);
   if(n != NULL)

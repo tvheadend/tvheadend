@@ -420,6 +420,8 @@ mk_build_metadata(const dvr_entry_t *de)
 {
   htsbuf_queue_t *q = htsbuf_queue_alloc(0);
 
+  addtag(q, build_tag_string("ORIGINAL_MEDIA_TYPE", "TV", 0, NULL));
+
   if(de->de_channel != NULL)
     addtag(q, build_tag_string("TVCHANNEL", de->de_channel->ch_name, 0, NULL));
 
@@ -427,8 +429,8 @@ mk_build_metadata(const dvr_entry_t *de)
     addtag(q, build_tag_string("SYNOPSIS", 
 			       de->de_episode.ee_onscreen, 0, NULL));
 
-  if(de->de_title != NULL)
-    addtag(q, build_tag_string("SUMMARY", de->de_title, 0, NULL));
+  if(de->de_desc != NULL)
+    addtag(q, build_tag_string("SUMMARY", de->de_desc, 0, NULL));
 
   if(de->de_episode.ee_season)
     addtag(q, build_tag_int("PART_NUMBER", de->de_episode.ee_season,
