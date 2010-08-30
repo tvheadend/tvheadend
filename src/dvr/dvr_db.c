@@ -249,7 +249,7 @@ dvr_entry_t *
 dvr_entry_create(channel_t *ch, time_t start, time_t stop, 
 		 const char *title, const char *description,
 		 const char *creator, dvr_autorec_entry_t *dae,
-		 epg_episode_t *ee, dvr_prio_t pri)
+		 epg_episode_t *ee, uint8_t content_type, dvr_prio_t pri)
 {
   dvr_entry_t *de;
   char tbuf[30];
@@ -288,6 +288,8 @@ dvr_entry_create(channel_t *ch, time_t start, time_t stop,
     tvh_str_set(&de->de_episode.ee_onscreen, ee->ee_onscreen);
   }
 
+  de->de_content_type = content_type;
+
   dvr_entry_link(de);
 
   t = de->de_start - de->de_start_extra * 60;
@@ -321,7 +323,7 @@ dvr_entry_create_by_event(event_t *e, const char *creator,
 
   return dvr_entry_create(e->e_channel, e->e_start, e->e_stop, 
 			  e->e_title, e->e_desc, creator, dae, &e->e_episode,
-			  pri);
+			  e->e_content_type, pri);
 }
 
 
@@ -471,6 +473,8 @@ dvr_db_load_one(htsmsg_t *c, int id)
   if(!htsmsg_get_s32(c, "part", &d))
     de->de_episode.ee_part = d;
 
+  de->de_content_type = htsmsg_get_u32_or_default(c, "contenttype", 0);
+
   tvh_str_set(&de->de_episode.ee_onscreen, htsmsg_get_str(c, "episodename"));
 
   dvr_entry_link(de);
@@ -546,6 +550,9 @@ dvr_entry_save(dvr_entry_t *de)
     htsmsg_add_u32(m, "part", de->de_episode.ee_part);
   if(de->de_episode.ee_onscreen)
     htsmsg_add_str(m, "episodename", de->de_episode.ee_onscreen);
+
+  if(de->de_content_type)
+    htsmsg_add_u32(m, "contenttype", de->de_content_type);
 
   hts_settings_save(m, "dvr/log/%d", de->de_id);
   htsmsg_destroy(m);

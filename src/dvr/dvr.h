@@ -93,7 +93,6 @@ typedef struct dvr_entry {
 
   gtimer_t de_timer;
 
-
   /**
    * These meta fields will stay valid as long as reference count > 0
    */
@@ -115,6 +114,7 @@ typedef struct dvr_entry {
   dvr_prio_t de_pri;
 
   epg_episode_t de_episode;
+  uint8_t de_content_type;
 
   uint32_t de_dont_reschedule;
 
@@ -216,7 +216,8 @@ dvr_entry_t *dvr_entry_create_by_event(event_t *e, const char *creator,
 dvr_entry_t *dvr_entry_create(channel_t *ch, time_t start, time_t stop, 
 			      const char *title, const char *description,
 			      const char *creator, dvr_autorec_entry_t *dae,
-			      epg_episode_t *ee, dvr_prio_t pri);
+			      epg_episode_t *ee, uint8_t content_type,
+			      dvr_prio_t pri);
 
 void dvr_init(void);
 

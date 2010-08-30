@@ -419,8 +419,28 @@ static htsbuf_queue_t *
 mk_build_metadata(const dvr_entry_t *de)
 {
   htsbuf_queue_t *q = htsbuf_queue_alloc(0);
+  char datestr[64];
+  struct tm tm;
+
+  localtime_r(&de->de_start, &tm);
+
+  snprintf(datestr, sizeof(datestr),
+	   "%04d-%02d-%02d %02d:%02d:%02d",
+	   tm.tm_year + 1900,
+	   tm.tm_mon + 1,
+	   tm.tm_mday,
+	   tm.tm_hour,
+	   tm.tm_min,
+	   tm.tm_sec);
+
+  addtag(q, build_tag_string("DATE_BROADCASTED", datestr, 0, NULL));
 
   addtag(q, build_tag_string("ORIGINAL_MEDIA_TYPE", "TV", 0, NULL));
+
+  if(de->de_content_type)
+    addtag(q, build_tag_string("CONTENT_TYPE", 
+			       epg_content_group_get_name(de->de_content_type),
+			       0, NULL));
 
   if(de->de_channel != NULL)
     addtag(q, build_tag_string("TVCHANNEL", de->de_channel->ch_name, 0, NULL));

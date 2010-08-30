@@ -788,7 +788,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
       stop += 86400;
 
     dvr_entry_create(ch, start, stop, title, NULL, hc->hc_representative, 
-		     NULL, NULL, dvr_pri2val(pri));
+		     NULL, NULL, 0, dvr_pri2val(pri));
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
