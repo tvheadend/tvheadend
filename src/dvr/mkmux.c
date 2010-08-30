@@ -269,9 +269,6 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
       ebml_append_uint(vi, 0xb0, ssc->ssc_width);
       ebml_append_uint(vi, 0xba, ssc->ssc_height);
 
-      ebml_append_uint(vi, 0x54b0, ssc->ssc_width);
-      ebml_append_uint(vi, 0x54ba, ssc->ssc_height);
-
       ebml_append_master(t, 0xe0, vi);
     }
 
