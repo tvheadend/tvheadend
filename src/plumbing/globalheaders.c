@@ -67,6 +67,13 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
     ssc->ssc_sri      = pkt->pkt_sri;
   }
 
+  if(SCT_ISVIDEO(ssc->ssc_type)) {
+    if(pkt->pkt_aspect_num && pkt->pkt_aspect_den) {
+      ssc->ssc_aspect_num = pkt->pkt_aspect_num;
+      ssc->ssc_aspect_den = pkt->pkt_aspect_den;
+    }
+  }
+
   if(ssc->ssc_gh != NULL)
     return;
 
@@ -82,6 +89,7 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
 
   case SCT_H264:
   case SCT_MPEG2VIDEO:
+
     if(pkt->pkt_header != NULL) {
       ssc->ssc_gh = pkt->pkt_header;
       pktbuf_ref_inc(ssc->ssc_gh);
@@ -95,11 +103,16 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
  *
  */
 static int
-header_complete(streaming_start_component_t *ssc)
+header_complete(streaming_start_component_t *ssc, int not_so_picky)
 {
   if((SCT_ISAUDIO(ssc->ssc_type) || SCT_ISVIDEO(ssc->ssc_type)) &&
      ssc->ssc_frameduration == 0)
     return 0;
+
+  if(SCT_ISVIDEO(ssc->ssc_type)) {
+    if(!not_so_picky && (ssc->ssc_aspect_num == 0 || ssc->ssc_aspect_den == 0))
+      return 0;
+  }
 
   if(SCT_ISAUDIO(ssc->ssc_type) &&
      (ssc->ssc_sri == 0 || ssc->ssc_channels == 0))
@@ -121,16 +134,16 @@ headers_complete(globalheaders_t *gh, int64_t qd)
 {
   streaming_start_t *ss = gh->gh_ss;
   streaming_start_component_t *ssc;
-  int i;
+  int i, threshold = qd > (MAX_SCAN_TIME * 90);
 
   assert(ss != NULL);
  
   for(i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
 
-    if(!header_complete(ssc)) {
+    if(!header_complete(ssc, threshold)) {
 
-      if(qd > (MAX_SCAN_TIME * 90)) {
+      if(threshold) {
 	ssc->ssc_disabled = 1;
       } else {
 	return 0;

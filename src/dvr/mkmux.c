@@ -269,6 +269,13 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
       ebml_append_uint(vi, 0xb0, ssc->ssc_width);
       ebml_append_uint(vi, 0xba, ssc->ssc_height);
 
+      if(ssc->ssc_aspect_num && ssc->ssc_aspect_den) {
+	ebml_append_uint(vi, 0x54b2, 3); // Display width/height is in DAR
+	ebml_append_uint(vi, 0x54b0, ssc->ssc_aspect_num);
+	ebml_append_uint(vi, 0x54ba, ssc->ssc_aspect_den);
+
+      }
+
       ebml_append_master(t, 0xe0, vi);
     }
 

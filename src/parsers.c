@@ -757,6 +757,26 @@ parser_set_stream_vsize(th_stream_t *st, int width, int height)
 }
 
 
+static const uint8_t mpeg2_aspect[16][2]={
+    {0,1},
+    {1,1},
+    {4,3},
+    {16,9},
+    {221,100},
+    {0,1},
+    {0,1},
+    {0,1},
+    {0,1},
+    {0,1},
+    {0,1},
+    {0,1},
+    {0,1},
+    {0,1},
+    {0,1},
+    {0,1},
+};
+
+
 /**
  * Parse mpeg2video sequence start
  */
@@ -764,14 +784,18 @@ static int
 parse_mpeg2video_seq_start(th_transport_t *t, th_stream_t *st,
 			   bitstream_t *bs)
 {
-  int v, width, height;
+  int v, width, height, aspect;
 
   if(bs->len < 61)
     return 1;
   
   width = read_bits(bs, 12);
   height = read_bits(bs, 12);
-  skip_bits(bs, 4);
+  aspect = read_bits(bs, 4);
+
+  st->st_aspect_num = mpeg2_aspect[aspect][0];
+  st->st_aspect_den = mpeg2_aspect[aspect][1];
+
   st->st_frame_duration = mpeg2video_framedurations[read_bits(bs, 4)];
 
   v = read_bits(bs, 18) * 400;
@@ -1142,6 +1166,9 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 	 pkt->pkt_duration,
 	 pktbuf_len(pkt->pkt_payload));
 #endif
+
+  pkt->pkt_aspect_num = st->st_aspect_num;
+  pkt->pkt_aspect_den = st->st_aspect_den;
 
   //  avgstat_add(&st->st_rate, pkt->pkt_payloadlen, dispatch_clock);
 

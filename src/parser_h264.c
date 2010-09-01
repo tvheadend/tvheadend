@@ -99,6 +99,8 @@ typedef struct h264_private {
     char fixed_rate;
     int units_in_tick;
     int time_scale;
+    uint16_t aspect_num;
+    uint16_t aspect_den;
   } sps[256];
   
   struct {
@@ -109,14 +111,44 @@ typedef struct h264_private {
 
 
 
+static const uint16_t h264_aspect[17][2] = {
+ {0, 1},
+ {1, 1},
+ {12, 11},
+ {10, 11},
+ {16, 11},
+ {40, 33},
+ {24, 11},
+ {20, 11},
+ {32, 11},
+ {80, 33},
+ {18, 11},
+ {15, 11},
+ {64, 33},
+ {160,99},
+ {4, 3},
+ {3, 2},
+ {2, 1},
+};
+
 
 static int 
 decode_vui(h264_private_t *p, bitstream_t *bs, int sps_id)
 {
+  p->sps[sps_id].aspect_num = 0;
+  p->sps[sps_id].aspect_den = 1;
+
   if(read_bits1(bs)) {
-    if(read_bits(bs, 8) == 255) {
-      read_bits(bs, 16);
-      read_bits(bs, 16);
+    int aspect = read_bits(bs, 8);
+
+    if(aspect == 255) {
+      uint16_t num = read_bits(bs, 16);
+      uint16_t den = read_bits(bs, 16);
+      p->sps[sps_id].aspect_num = num;
+      p->sps[sps_id].aspect_den = den;
+    } else if(aspect < 17) {
+      p->sps[sps_id].aspect_num =  h264_aspect[aspect][0];
+      p->sps[sps_id].aspect_den =  h264_aspect[aspect][1];
     }
   }
 
@@ -357,5 +389,9 @@ h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype,
     parser_set_stream_vsize(st, p->sps[sps_id].width, 
 			    p->sps[sps_id].height *
 			    (2 - p->sps[sps_id].mbs_only_flag));
+
+  st->st_aspect_num = p->sps[sps_id].aspect_num;
+  st->st_aspect_den = p->sps[sps_id].aspect_den;
+
   return 0;
 }

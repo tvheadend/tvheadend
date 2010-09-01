@@ -50,6 +50,9 @@ typedef struct th_pkt {
   uint8_t pkt_channels;
   uint8_t pkt_sri;
 
+  uint16_t pkt_aspect_num;
+  uint16_t pkt_aspect_den;
+
   pktbuf_t *pkt_payload;
   pktbuf_t *pkt_header;
 

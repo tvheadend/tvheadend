@@ -380,6 +380,9 @@ typedef struct th_stream {
   streaming_component_type_t st_type;
   int st_index;
 
+  uint16_t st_aspect_num;
+  uint16_t st_aspect_den;
+
   char st_lang[4];           /* ISO 639 3-letter language code */
   uint16_t st_composition_id;
   uint16_t st_ancillary_id;
