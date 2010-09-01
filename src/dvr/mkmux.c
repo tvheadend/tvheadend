@@ -31,8 +31,6 @@
 #include "mkmux.h"
 #include "ebml.h"
 
-#define TAGS_AT_END
-
 TAILQ_HEAD(mk_cue_queue, mk_cue);
 
 #define MATROSKA_TIMESCALE 1000000 // in nS
@@ -92,8 +90,6 @@ struct mk_mux {
 
   char uuid[16];
   char *title;
-
-  htsbuf_queue_t *tags;
 };
 
 
@@ -553,7 +549,8 @@ mk_write_metaseek(mk_mux_t *mkm, int first)
 mk_mux_t *
 mk_mux_create(const char *filename,
 	      const struct streaming_start *ss,
-	      const struct dvr_entry *de)
+	      const struct dvr_entry *de,
+	      int write_tags)
 {
   mk_mux_t *mkm;
   int fd;
@@ -581,12 +578,10 @@ mk_mux_create(const char *filename,
   mkm->trackinfo_pos = mkm->fdpos;
   mk_write_master(mkm, 0x1654ae6b, mk_build_tracks(mkm, ss));
 
-  mkm->tags = mk_build_metadata(de);
-
-#ifndef TAGS_AT_END
-  mkm->metadata_pos = mkm->fdpos;
-  mk_write_master(mkm, 0x1254c367, mkm->tags);
-#endif
+  if(write_tags) {
+    mkm->metadata_pos = mkm->fdpos;
+    mk_write_master(mkm, 0x1254c367, mk_build_metadata(de));
+  }
 
   mk_write_metaseek(mkm, 0);
 
@@ -777,11 +772,6 @@ mk_mux_close(mk_mux_t *mkm)
 {
   mk_close_cluster(mkm);
   mk_write_cues(mkm);
-
-#ifdef TAGS_AT_END
-  mkm->metadata_pos = mkm->fdpos;
-  mk_write_master(mkm, 0x1254c367, mkm->tags);
-#endif
 
   mk_write_metaseek(mkm, 0);
 

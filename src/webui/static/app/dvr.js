@@ -566,7 +566,7 @@ tvheadend.dvrsettings = function() {
 	'channelDirs','channelInTitle',
 	'dateInTitle','timeInTitle',
 	'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 
-	'titleDirs', 'episodeInTitle','cleanTitle']);
+	'titleDirs', 'episodeInTitle', 'cleanTitle', 'tagFiles']);
 
     var confpanel = new Ext.FormPanel({
 	title:'Digital Video Recorder',
@@ -625,6 +625,9 @@ tvheadend.dvrsettings = function() {
 	}), new Ext.form.Checkbox({
 	    fieldLabel: 'Replace whitespace in title with \'-\'',
 	    name: 'whitespaceInTitle'
+	}), new Ext.form.Checkbox({
+	    fieldLabel: 'Tag files with metadata',
+	    name: 'tagFiles'
 	}), {
 	    width: 300,
 	    fieldLabel: 'Post-processor command',

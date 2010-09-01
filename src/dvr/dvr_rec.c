@@ -307,7 +307,8 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     return;
   }
 
-  de->de_mkmux = mk_mux_create(de->de_filename, ss, de);
+  de->de_mkmux = mk_mux_create(de->de_filename, ss, de, 
+			       !!(dvr_flags & DVR_TAG_FILES));
 
   if(de->de_mkmux == NULL) {
     dvr_rec_fatal_error(de, "Unable to open file");

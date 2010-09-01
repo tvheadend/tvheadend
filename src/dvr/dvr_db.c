@@ -729,6 +729,8 @@ dvr_init(void)
 
   /* Override settings with config */
 
+  dvr_flags = DVR_TAG_FILES;
+
   if((m = hts_settings_load("dvr/config")) != NULL) {
 
     htsmsg_get_s32(m, "pre-extra-time", &dvr_extra_time_pre);
@@ -759,6 +761,9 @@ dvr_init(void)
 
     if(!htsmsg_get_u32(m, "episode-in-title", &u32) && u32)
       dvr_flags |= DVR_EPISODE_IN_TITLE;
+
+    if(!htsmsg_get_u32(m, "tag-files", &u32) && !u32)
+      dvr_flags &= ~DVR_TAG_FILES;
    
     tvh_str_set(&dvr_postproc, htsmsg_get_str(m, "postproc"));
 
@@ -812,6 +817,7 @@ dvr_save(void)
   htsmsg_add_u32(m, "whitespace-in-title", !!(dvr_flags & DVR_WHITESPACE_IN_TITLE));
   htsmsg_add_u32(m, "title-dir", !!(dvr_flags & DVR_DIR_PER_TITLE));
   htsmsg_add_u32(m, "episode-in-title", !!(dvr_flags & DVR_EPISODE_IN_TITLE));
+  htsmsg_add_u32(m, "tag-files", !!(dvr_flags & DVR_TAG_FILES));
   if(dvr_postproc != NULL)
     htsmsg_add_str(m, "postproc", dvr_postproc);
 

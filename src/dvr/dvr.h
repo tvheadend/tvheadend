@@ -42,7 +42,8 @@ extern struct dvr_entry_list dvrentries;
 #define DVR_WHITESPACE_IN_TITLE	0x20
 #define DVR_DIR_PER_TITLE	0x40
 #define DVR_EPISODE_IN_TITLE	0x80
-#define DVR_CLEAN_TITLE	0x100
+#define DVR_CLEAN_TITLE	        0x100
+#define DVR_TAG_FILES           0x200
 
 typedef enum {
   DVR_PRIO_IMPORTANT,

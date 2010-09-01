@@ -825,6 +825,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(r, "titleDirs", !!(dvr_flags & DVR_DIR_PER_TITLE));
     htsmsg_add_u32(r, "episodeInTitle", !!(dvr_flags & DVR_EPISODE_IN_TITLE));
     htsmsg_add_u32(r, "cleanTitle", !!(dvr_flags & DVR_CLEAN_TITLE));
+    htsmsg_add_u32(r, "tagFiles", !!(dvr_flags & DVR_TAG_FILES));
 
     out = json_single_record(r, "dvrSettings");
 
@@ -863,6 +864,8 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
       flags |= DVR_DIR_PER_TITLE;
     if(http_arg_get(&hc->hc_req_args, "episodeInTitle") != NULL)
       flags |= DVR_EPISODE_IN_TITLE;
+    if(http_arg_get(&hc->hc_req_args, "tagFiles") != NULL)
+      flags |= DVR_TAG_FILES;
 
     dvr_flags_set(flags);
 
