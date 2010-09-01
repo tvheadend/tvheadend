@@ -482,6 +482,7 @@ xmltv_parse_programme_tags(xmltv_channel_t *xc, htsmsg_t *tags,
   channel_t *ch;
   const char *title = xmltv_get_cdata_by_tag(tags, "title");
   const char *desc  = xmltv_get_cdata_by_tag(tags, "desc");
+  const char *category = xmltv_get_cdata_by_tag(tags, "category");
   int created;
   epg_episode_t episode;
 
@@ -501,7 +502,13 @@ xmltv_parse_programme_tags(xmltv_channel_t *xc, htsmsg_t *tags,
 
     if(desc  != NULL)
       changed |= epg_event_set_desc(e, desc);
-    
+
+    if(category != NULL) {
+      uint8_t type = epg_content_group_find_by_name(category);
+      if(type)
+	changed |= epg_event_set_content_type(e, type);
+    }
+
     changed |= epg_event_set_episode(e, &episode);
 
     if(changed)
