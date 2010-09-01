@@ -354,6 +354,8 @@ h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype,
   st->st_vbv_delay = -1;
 
   if(p->sps[sps_id].width && p->sps[sps_id].height && !st->st_buf.sb_err)
-    parser_set_stream_vsize(st, p->sps[sps_id].width, p->sps[sps_id].height);
+    parser_set_stream_vsize(st, p->sps[sps_id].width, 
+			    p->sps[sps_id].height *
+			    (2 - p->sps[sps_id].mbs_only_flag));
   return 0;
 }
