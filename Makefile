@@ -26,7 +26,7 @@ PROG=${BUILDDIR}/tvheadend
 
 CFLAGS  = -Wall -Werror -Wwrite-strings -Wno-deprecated-declarations 
 CFLAGS += -Wmissing-prototypes
-LDFLAGS += -lrt
+LDFLAGS += -lrt -ldl
 
 #
 # Core
