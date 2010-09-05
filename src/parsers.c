@@ -105,6 +105,8 @@ static void parse_subtitles(th_transport_t *t, th_stream_t *st,
 static int parse_mpa(th_transport_t *t, th_stream_t *st, size_t len,
 		     uint32_t next_startcode, int sc_offset);
 
+static int parse_mpa2(th_transport_t *t, th_stream_t *st);
+
 static int parse_ac3(th_transport_t *t, th_stream_t *st, size_t len,
 		     uint32_t next_startcode, int sc_offset);
 
@@ -166,7 +168,7 @@ parse_mpeg_ps(th_transport_t *t, th_stream_t *st, uint8_t *data, int len)
   int hlen;
 
   hlen = parse_pes_header(t, st, data, len);
-#if 0  
+#if 0
   int i;
   for(i = 0; i < 16; i++)
     printf("%02x.", data[i]);
@@ -180,7 +182,8 @@ parse_mpeg_ps(th_transport_t *t, th_stream_t *st, uint8_t *data, int len)
 
   switch(st->st_type) {
   case SCT_MPEG2AUDIO:
-    parse_sc(t, st, data, len, parse_mpa);
+    sbuf_append(&st->st_buf_a, data, len);
+    parse_mpa2(t, st);
     break;
 
   case SCT_MPEG2VIDEO:
@@ -300,6 +303,7 @@ parse_sc(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
 
     if((sc & 0xffffff00) != 0x00000100)
       continue;
+
     if(sc == 0x100 && (len-i)>3) {
 
         uint32_t tempsc = data[i+1]<< 16 | data [i+2] << 8 | data [i+3];
@@ -431,15 +435,14 @@ mpa_valid_frame(const uint8_t *buf)
 }
 
 
-static int 
-parse_mpa(th_transport_t *t, th_stream_t *st, size_t ilen,
-	  uint32_t next_startcode, int sc_offset)
+/**
+ *
+ */
+static int
+parse_mpa2(th_transport_t *t, th_stream_t *st)
 {
   int i, len;
   const uint8_t *buf;
-
-  if((i = depacketize(t, st, ilen, next_startcode, sc_offset)) != 0)
-    return i;
 
  again:
   buf = st->st_buf_a.sb_data;
@@ -472,6 +475,20 @@ parse_mpa(th_transport_t *t, th_stream_t *st, size_t ilen,
     }
   }
   return 1;
+}
+
+/**
+ *
+ */
+static int 
+parse_mpa(th_transport_t *t, th_stream_t *st, size_t ilen,
+	  uint32_t next_startcode, int sc_offset)
+{
+  int r;
+  
+  if((r = depacketize(t, st, ilen, next_startcode, sc_offset)) != 0)
+    return r;
+  return parse_mpa2(t, st);
 }
 
 
