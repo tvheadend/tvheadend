@@ -1201,7 +1201,9 @@ transport_update_iptv(htsmsg_t *in)
     }
 
     if((s = htsmsg_get_str(c, "group")) != NULL) {
-      inet_pton(AF_INET, s, &t->tht_iptv_group.s_addr);
+      if(!inet_pton(AF_INET, s, &t->tht_iptv_group.s_addr)){
+      	inet_pton(AF_INET6, s, &t->tht_iptv_group6.s6_addr);
+      }
       save = 1;
     }
     
@@ -1222,14 +1224,20 @@ build_record_iptv(th_transport_t *t)
 {
   htsmsg_t *r = htsmsg_create_map();
   char abuf[INET_ADDRSTRLEN];
-
+  char abuf6[INET6_ADDRSTRLEN];
   htsmsg_add_str(r, "id", t->tht_identifier);
 
   htsmsg_add_str(r, "channelname", t->tht_ch ? t->tht_ch->ch_name : "");
   htsmsg_add_str(r, "interface", t->tht_iptv_iface ?: "");
 
-  inet_ntop(AF_INET, &t->tht_iptv_group, abuf, sizeof(abuf));
-  htsmsg_add_str(r, "group", t->tht_iptv_group.s_addr ? abuf : "");
+  if(t->tht_iptv_group.s_addr != 0){
+    inet_ntop(AF_INET, &t->tht_iptv_group, abuf, sizeof(abuf));
+    htsmsg_add_str(r, "group", t->tht_iptv_group.s_addr ? abuf : "");
+  }
+  else {
+    inet_ntop(AF_INET6, &t->tht_iptv_group6, abuf6, sizeof(abuf6));
+    htsmsg_add_str(r, "group", t->tht_iptv_group6.s6_addr ? abuf6 : "");
+  }
 
   htsmsg_add_u32(r, "port", t->tht_iptv_port);
   htsmsg_add_u32(r, "enabled", t->tht_enabled);
@@ -1266,7 +1274,6 @@ extjs_iptvservices(http_connection_t *hc, const char *remain, void *opaque)
   in = entries != NULL ? htsmsg_json_deserialize(entries) : NULL;
 
   if(!strcmp(op, "get")) {
-
     LIST_FOREACH(t, &iptv_all_transports, tht_group_link)
       count++;
     tvec = alloca(sizeof(th_transport_t *) * count);
@@ -1298,7 +1305,7 @@ extjs_iptvservices(http_connection_t *hc, const char *remain, void *opaque)
   } else if(!strcmp(op, "delete")) {
     if(in != NULL)
       extjs_transport_delete(in);
-
+    
     out = htsmsg_create_map();
 
   } else {

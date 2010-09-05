@@ -662,6 +662,7 @@ typedef struct th_transport {
    */
   char *tht_iptv_iface;
   struct in_addr tht_iptv_group;
+  struct in6_addr tht_iptv_group6;
   uint16_t tht_iptv_port;
   int tht_iptv_fd;
 

@@ -186,8 +186,11 @@ iptv_transport_start(th_transport_t *t, unsigned int weight, int force_start)
 {
   pthread_t tid;
   int fd;
+  char straddr[INET6_ADDRSTRLEN];
   struct ip_mreqn m;
+  struct ipv6_mreq m6;
   struct sockaddr_in sin;
+  struct sockaddr_in6 sin6;
   struct ifreq ifr;
   struct epoll_event ev;
 
@@ -200,8 +203,13 @@ iptv_transport_start(th_transport_t *t, unsigned int weight, int force_start)
   }
 
   /* Now, open the real socket for UDP */
-
-  fd = tvh_socket(AF_INET, SOCK_DGRAM, 0);
+  if(t->tht_iptv_group.s_addr!=0) {
+    fd = tvh_socket(AF_INET, SOCK_DGRAM, 0);
+  
+  }
+  else {
+    fd = tvh_socket(AF_INET6, SOCK_DGRAM, 0);
+  }
   if(fd == -1) {
     tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot open socket", t->tht_identifier);
     return -1;
@@ -218,33 +226,63 @@ iptv_transport_start(th_transport_t *t, unsigned int weight, int force_start)
     return -1;
   }
 
-  /* Bind to multicast group */
-  memset(&sin, 0, sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_port = htons(t->tht_iptv_port);
-  sin.sin_addr.s_addr = t->tht_iptv_group.s_addr;
+  /* Bind to IPv4 multicast group */
+  if(t->tht_iptv_group.s_addr!=0) {
+    memset(&sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;
+    sin.sin_port = htons(t->tht_iptv_port);
+    sin.sin_addr.s_addr = t->tht_iptv_group.s_addr;
+    if(bind(fd, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
+      tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot bind %s:%d -- %s",
+           t->tht_identifier, inet_ntoa(sin.sin_addr), t->tht_iptv_port,
+           strerror(errno));
+      close(fd);
+      return -1;
+    }
+    /* Join IPv4 group */
+    memset(&m, 0, sizeof(m));
+    m.imr_multiaddr.s_addr = t->tht_iptv_group.s_addr;
+    m.imr_address.s_addr = 0;
+    m.imr_ifindex = ifr.ifr_ifindex;
 
-  if(bind(fd, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
-    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot bind %s:%d -- %s", 
-	   t->tht_identifier, inet_ntoa(sin.sin_addr), t->tht_iptv_port,
-	   strerror(errno));
-    close(fd);
-    return -1;
+      if(setsockopt(fd, SOL_IP, IP_ADD_MEMBERSHIP, &m,
+                sizeof(struct ip_mreqn)) == -1) {
+      tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot join %s -- %s",
+           t->tht_identifier, inet_ntoa(m.imr_multiaddr), strerror(errno));
+      close(fd);
+      return -1;
+    }
+
+  }
+  else {
+    /* Bind to IPv6 multicast group */
+    memset(&sin6, 0, sizeof(sin6));
+    sin6.sin6_family = AF_INET6;
+    sin6.sin6_port = htons(t->tht_iptv_port);
+    sin6.sin6_addr = t->tht_iptv_group6;
+    if(bind(fd, (struct sockaddr *)&sin6, sizeof(sin6)) == -1) {
+      inet_ntop(AF_INET6, &sin6.sin6_addr, straddr, sizeof(straddr));
+      tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot bind %s:%d -- %s",
+           t->tht_identifier, straddr, t->tht_iptv_port,
+           strerror(errno));
+      close(fd);
+      return -1;
+    }
+    /* Join IPv6 group */
+    memset(&m6, 0, sizeof(m6));
+    m6.ipv6mr_multiaddr = t->tht_iptv_group6;
+    m6.ipv6mr_interface = ifr.ifr_ifindex;
+
+    if(setsockopt(fd, SOL_IPV6, IPV6_ADD_MEMBERSHIP, &m6,
+                sizeof(struct ipv6_mreq)) == -1) {
+      inet_ntop(AF_INET6, m6.ipv6mr_multiaddr.s6_addr, straddr, sizeof(straddr));
+      tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot join %s -- %s",
+           t->tht_identifier, straddr, strerror(errno));
+      close(fd);
+      return -1;
+    }
   }
 
-  /* Join group */
-  memset(&m, 0, sizeof(m));
-  m.imr_multiaddr.s_addr = t->tht_iptv_group.s_addr;
-  m.imr_address.s_addr = 0;
-  m.imr_ifindex = ifr.ifr_ifindex;
-
-  if(setsockopt(fd, SOL_IP, IP_ADD_MEMBERSHIP, &m, 
-		sizeof(struct ip_mreqn)) == -1) {
-    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot join %s -- %s", 
-	   t->tht_identifier, inet_ntoa(m.imr_multiaddr), strerror(errno));
-    close(fd);
-    return -1;
-  }
 
   memset(&ev, 0, sizeof(ev));
   ev.events = EPOLLIN;
@@ -301,6 +339,7 @@ iptv_transport_save(th_transport_t *t)
 {
   htsmsg_t *m = htsmsg_create_map();
   char abuf[INET_ADDRSTRLEN];
+  char abuf6[INET6_ADDRSTRLEN];
 
   lock_assert(&global_lock);
 
@@ -312,11 +351,14 @@ iptv_transport_save(th_transport_t *t)
   if(t->tht_iptv_iface)
     htsmsg_add_str(m, "interface", t->tht_iptv_iface);
 
-  if(t->tht_iptv_group.s_addr) {
+  if(t->tht_iptv_group.s_addr!= 0) {
     inet_ntop(AF_INET, &t->tht_iptv_group, abuf, sizeof(abuf));
     htsmsg_add_str(m, "group", abuf);
   }
-
+  if(IN6_IS_ADDR_MULTICAST(t->tht_iptv_group6.s6_addr) ) {
+    inet_ntop(AF_INET6, &t->tht_iptv_group6, abuf6, sizeof(abuf6));
+    htsmsg_add_str(m, "group", abuf6);
+  }
   if(t->tht_ch != NULL) {
     htsmsg_add_str(m, "channelname", t->tht_ch->ch_name);
     htsmsg_add_u32(m, "mapped", 1);
@@ -340,7 +382,7 @@ static int
 iptv_transport_quality(th_transport_t *t)
 {
   if(t->tht_iptv_iface == NULL || 
-     t->tht_iptv_group.s_addr == 0 ||
+     (t->tht_iptv_group.s_addr == 0 && t->tht_iptv_group6.s6_addr == 0) ||
      t->tht_iptv_port == 0)
     return 0;
 
@@ -354,10 +396,17 @@ iptv_transport_quality(th_transport_t *t)
 static void
 iptv_transport_setsourceinfo(th_transport_t *t, struct source_info *si)
 {
+  char straddr[INET6_ADDRSTRLEN];
   memset(si, 0, sizeof(struct source_info));
 
   si->si_adapter = t->tht_iptv_iface ? strdup(t->tht_iptv_iface) : NULL;
-  si->si_mux = strdup(inet_ntoa(t->tht_iptv_group));
+  if(t->tht_iptv_group.s_addr != 0) {
+    si->si_mux = strdup(inet_ntoa(t->tht_iptv_group));
+  }
+  else {
+    inet_ntop(AF_INET6, &t->tht_iptv_group6, straddr, sizeof(straddr));
+    si->si_mux = strdup(straddr);
+  }
 }
 
 
@@ -464,8 +513,11 @@ iptv_transport_load(void)
 
     tvh_str_update(&t->tht_iptv_iface, htsmsg_get_str(c, "interface"));
 
-    if((s = htsmsg_get_str(c, "group")) != NULL)
-      inet_pton(AF_INET, s, &t->tht_iptv_group.s_addr);
+    if((s = htsmsg_get_str(c, "group")) != NULL){
+      if (!inet_pton(AF_INET, s, &t->tht_iptv_group.s_addr)) {
+         inet_pton(AF_INET6, s, &t->tht_iptv_group6.s6_addr);
+      }
+    }
     
     if(!htsmsg_get_u32(c, "port", &u32))
       t->tht_iptv_port = u32;
