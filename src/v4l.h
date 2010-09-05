@@ -40,6 +40,8 @@ typedef struct v4l_adapter {
 
   char *va_devicename;
 
+  int va_file;
+
   uint32_t va_logging;
 
   //  struct v4l2_capability va_caps;

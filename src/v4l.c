@@ -59,6 +59,7 @@ v4l_input(v4l_adapter_t *va)
   int len, l, r;
 
   len = read(va->va_fd, buf, 4000);
+  usleep(10000);
   if(len < 1)
     return;
 
@@ -190,30 +191,32 @@ v4l_transport_start(th_transport_t *t, unsigned int weight, int force_start)
     return -1;
   }
 
-  result = ioctl(fd, VIDIOC_S_STD, &std);
-  if(result < 0) {
-    tvhlog(LOG_ERR, "v4l",
-	   "%s: Unable to set PAL -- %s", va->va_path, strerror(errno));
-    close(fd);
-    return -1;
+  if(!va->va_file) {
+
+    result = ioctl(fd, VIDIOC_S_STD, &std);
+    if(result < 0) {
+      tvhlog(LOG_ERR, "v4l",
+	     "%s: Unable to set PAL -- %s", va->va_path, strerror(errno));
+      close(fd);
+      return -1;
+    }
+
+    memset(&vf, 0, sizeof(vf));
+
+    vf.tuner = 0;
+    vf.type = V4L2_TUNER_ANALOG_TV;
+    vf.frequency = (frequency * 16) / 1000000;
+    result = ioctl(fd, VIDIOC_S_FREQUENCY, &vf);
+    if(result < 0) {
+      tvhlog(LOG_ERR, "v4l",
+	     "%s: Unable to tune to %dHz", va->va_path, frequency);
+      close(fd);
+      return -1;
+    }
+
+    tvhlog(LOG_INFO, "v4l",
+	   "%s: Tuned to %dHz", va->va_path, frequency);
   }
-
-  memset(&vf, 0, sizeof(vf));
-
-  vf.tuner = 0;
-  vf.type = V4L2_TUNER_ANALOG_TV;
-  vf.frequency = (frequency * 16) / 1000000;
-  result = ioctl(fd, VIDIOC_S_FREQUENCY, &vf);
-  if(result < 0) {
-    tvhlog(LOG_ERR, "v4l",
-	   "%s: Unable to tune to %dHz", va->va_path, frequency);
-    close(fd);
-    return -1;
-  }
-
-  tvhlog(LOG_INFO, "v4l",
-	 "%s: Tuned to %dHz", va->va_path, frequency);
-
   if(pipe(va->va_pipe)) {
     tvhlog(LOG_ERR, "v4l",
 	   "%s: Unable to create control pipe", va->va_path, strerror(errno));
@@ -390,7 +393,7 @@ v4l_transport_find(v4l_adapter_t *va, const char *id, int create)
  */
 static void
 v4l_adapter_add(const char *path, const char *displayname, 
-		const char *devicename)
+		const char *devicename, int file)
 {
   v4l_adapter_t *va;
   int i, r;
@@ -407,6 +410,7 @@ v4l_adapter_add(const char *path, const char *displayname,
   va->va_displayname = strdup(displayname);
   va->va_path = path ? strdup(path) : NULL;
   va->va_devicename = devicename ? strdup(devicename) : NULL;
+  va->va_file = file;
 
   TAILQ_INSERT_TAIL(&v4l_adapters, va, va_global_link);
 }
@@ -546,7 +550,7 @@ v4l_adapter_check(const char *path, int fd)
   tvhlog(LOG_INFO, "v4l",
 	 "%s: Using adapter", devicename);
 
-  v4l_adapter_add(path, devicename, devicename);
+  v4l_adapter_add(path, devicename, devicename, 0);
 }
 
 
