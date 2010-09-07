@@ -64,6 +64,7 @@ struct mk_cue {
  */
 struct mk_mux {
   int fd;
+  char *filename;
   int error;
   off_t fdpos; // Current position in file
 
@@ -313,6 +314,8 @@ mk_write_to_fd(mk_mux_t *mkm, htsbuf_queue_t *hq)
   
   if(writev(mkm->fd, iov, i) != hq->hq_size) {
     mkm->error = errno;
+    tvhlog(LOG_ERR, "MKV", "%s: Unable to write -- %s",
+	   mkm->filename, strerror(errno));
   } else {
     mkm->fdpos += hq->hq_size;
   }
@@ -561,6 +564,7 @@ mk_mux_create(const char *filename,
 
   mkm = calloc(1, sizeof(struct mk_mux));
   getuuid(mkm->uuid);
+  mkm->filename = strdup(filename);
   mkm->fd = fd;
   mkm->title = strdup(de->de_title);
   TAILQ_INIT(&mkm->cues);
@@ -778,8 +782,12 @@ mk_mux_close(mk_mux_t *mkm)
   // Rewrite segment info to update duration
   if(lseek(mkm->fd, mkm->segmentinfo_pos, SEEK_SET) == mkm->segmentinfo_pos)
     mk_write_master(mkm, 0x1549a966, mk_build_segment_info(mkm));
+  else
+    tvhlog(LOG_ERR, "MKV", "%s: Unable to write duration, seek failed -- %s",
+	   mkm->filename, strerror(errno));
 
   close(mkm->fd);
+  free(mkm->filename);
   free(mkm->tracks);
   free(mkm->title);
   free(mkm);
