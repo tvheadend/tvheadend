@@ -38,9 +38,9 @@ int dvr_flags;
 int dvr_extra_time_pre;
 int dvr_extra_time_post;
 char *dvr_postproc;
+int dvr_iov_max;
 
 static int de_tally;
-
 
 struct dvr_entry_list dvrentries;
 
@@ -720,6 +720,8 @@ dvr_init(void)
   const char *homedir;
   struct stat st;
   uint32_t u32;
+
+  dvr_iov_max = sysconf(_SC_IOV_MAX);
 
   /* Default settings */
 

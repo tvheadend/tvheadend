@@ -31,6 +31,8 @@
 #include "mkmux.h"
 #include "ebml.h"
 
+extern int dvr_iov_max;
+
 TAILQ_HEAD(mk_cue_queue, mk_cue);
 
 #define MATROSKA_TIMESCALE 1000000 // in nS
@@ -311,14 +313,20 @@ mk_write_to_fd(mk_mux_t *mkm, htsbuf_queue_t *hq)
     iov[i  ].iov_base = hd->hd_data     + hd->hd_data_off;
     iov[i++].iov_len  = hd->hd_data_len - hd->hd_data_off;
   }
-  
-  if(writev(mkm->fd, iov, i) != hq->hq_size) {
-    mkm->error = errno;
-    tvhlog(LOG_ERR, "MKV", "%s: Unable to write -- %s",
-	   mkm->filename, strerror(errno));
-  } else {
-    mkm->fdpos += hq->hq_size;
-  }
+
+  do {
+    ssize_t r;
+    int iovcnt = i < dvr_iov_max ? i : dvr_iov_max;
+    if((r = writev(mkm->fd, iov, iovcnt)) == -1) {
+      mkm->error = errno;
+      tvhlog(LOG_ERR, "MKV", "%s: Unable to write -- %s",
+	     mkm->filename, strerror(errno));
+      return;
+    }
+    mkm->fdpos += r;
+    i -= iovcnt;
+    iov += iovcnt;
+  } while(i);
 }
 
 
