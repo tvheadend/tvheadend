@@ -327,6 +327,8 @@ streaming_queue_clear(struct streaming_message_queue *q)
 const char *
 streaming_code2txt(int code)
 {
+  static __thread char ret[64];
+
   switch(code) {
   case SM_CODE_OK: return "OK";
     
@@ -367,7 +369,8 @@ streaming_code2txt(int code)
     return "No input detected";
 
   default:
-    return "Unknown reason";
+    snprintf(ret, sizeof(ret), "Unknown reason (%i)", code);
+    return ret;
   }
 }
 
