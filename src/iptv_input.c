@@ -284,6 +284,12 @@ iptv_transport_start(th_transport_t *t, unsigned int weight, int force_start)
   }
 
 
+  int resize = 262142;
+  if(setsockopt(fd,SOL_SOCKET,SO_RCVBUF, &resize, sizeof(resize)) == -1)
+    tvhlog(LOG_WARNING, "IPTV",
+	   "Can not icrease UDP receive buffer size to %d -- %s",
+	   resize, strerror(errno));
+
   memset(&ev, 0, sizeof(ev));
   ev.events = EPOLLIN;
   ev.data.fd = fd;
