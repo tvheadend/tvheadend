@@ -380,8 +380,8 @@ tvheadend.epg = function() {
 
 	Ext.MessageBox.confirm('Auto Recorder',
 			       'This will create an automatic rule that ' +
-			       'continously scans the EPG for programmes ' +
-			       'to recrod that matches this query: ' +
+			       'continuously scans the EPG for programmes ' +
+			       'to record that matches this query: ' +
 			       '<br><br>' +
 			       '<div class="x-smallhdr">Title:</div>' + title + '<br>' +
 			       '<div class="x-smallhdr">Channel:</div>' + channel + '<br>' +
