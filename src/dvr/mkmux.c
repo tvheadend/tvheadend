@@ -432,7 +432,7 @@ mk_build_metadata(const dvr_entry_t *de)
   htsbuf_queue_t *q = htsbuf_queue_alloc(0);
   char datestr[64];
   struct tm tm;
-
+  const char *ctype;
   localtime_r(&de->de_start, &tm);
 
   snprintf(datestr, sizeof(datestr),
@@ -448,10 +448,12 @@ mk_build_metadata(const dvr_entry_t *de)
 
   addtag(q, build_tag_string("ORIGINAL_MEDIA_TYPE", "TV", 0, NULL));
 
-  if(de->de_content_type)
-    addtag(q, build_tag_string("CONTENT_TYPE", 
-			       epg_content_group_get_name(de->de_content_type),
-			       0, NULL));
+  
+  if(de->de_content_type) {
+    ctype = epg_content_group_get_name(de->de_content_type);
+    if(ctype != NULL)
+      addtag(q, build_tag_string("CONTENT_TYPE", ctype, 0, NULL));
+  }
 
   if(de->de_channel != NULL)
     addtag(q, build_tag_string("TVCHANNEL", de->de_channel->ch_name, 0, NULL));
