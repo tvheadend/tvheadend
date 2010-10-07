@@ -1480,6 +1480,9 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
   for(i = 0; i < ss->ss_num_components; i++) {
     const streaming_start_component_t *ssc = &ss->ss_components[i];
 
+    if(ssc->ssc_type == SCT_TEXTSUB)
+      continue;
+
     c = htsmsg_create_map();
     htsmsg_add_u32(c, "index", ssc->ssc_index);
     htsmsg_add_str(c, "type", streaming_component_type2txt(ssc->ssc_type));
