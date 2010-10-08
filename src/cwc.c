@@ -728,8 +728,8 @@ handle_ecm_reply(cwc_transport_t *ct, ecm_section_t *es, uint8_t *msg,
     
     if(ct->ct_keystate != CT_RESOLVED)
       tvhlog(LOG_INFO, "cwc",
-	     "Obtained key for for service \"%s\" in %lld ms",
-	     t->tht_svcname, delay);
+	     "Obtained key for for service \"%s\" in %lld ms, from %",
+	     t->tht_svcname, delay, ct->ct_cwc->cwc_hostname);
     
     pthread_mutex_lock(&t->tht_stream_mutex);
     ct->ct_keystate = CT_RESOLVED;
