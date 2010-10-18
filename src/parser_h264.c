@@ -132,6 +132,24 @@ static const uint16_t h264_aspect[17][2] = {
 };
 
 
+static uint32_t
+gcd(uint32_t a, uint32_t b)
+{
+  uint32_t r;
+  if(a < b) {
+    r = a;
+    a = b;
+    b = r;
+  }
+
+  while((r = a % b) != 0) {
+    a = b;
+    b = r;
+  }
+  return b;
+}
+
+
 static int 
 decode_vui(h264_private_t *p, bitstream_t *bs, int sps_id)
 {
@@ -390,8 +408,19 @@ h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype,
 			    p->sps[sps_id].height *
 			    (2 - p->sps[sps_id].mbs_only_flag));
 
-  st->st_aspect_num = p->sps[sps_id].aspect_num;
-  st->st_aspect_den = p->sps[sps_id].aspect_den;
+  if(p->sps[sps_id].aspect_num && p->sps[sps_id].aspect_den) {
+
+    int w = p->sps[sps_id].aspect_num * p->sps[sps_id].width;
+    int h = p->sps[sps_id].aspect_den * p->sps[sps_id].height;
+    int d = gcd(w, h);
+
+    st->st_aspect_num = w / d;
+    st->st_aspect_den = h / d;
+
+  } else {
+    st->st_aspect_num = 0;
+    st->st_aspect_den = 1;
+  }
 
   return 0;
 }
