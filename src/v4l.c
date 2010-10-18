@@ -59,7 +59,6 @@ v4l_input(v4l_adapter_t *va)
   int len, l, r;
 
   len = read(va->va_fd, buf, 4000);
-  usleep(10000);
   if(len < 1)
     return;
 
