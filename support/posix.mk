@@ -5,12 +5,12 @@ INSTMAN= $(prefix)/share/man1
 MAN=man/tvheadend.1
 
 install: ${PROG} ${MAN}
-	mkdir -p $(INSTBIN)
-	install -s ${PROG} $(INSTBIN)
+	mkdir -p ${DESTDIR}$(INSTBIN)
+	install -s ${PROG} ${DESTDIR}$(INSTBIN)
 
-	mkdir -p $(INSTMAN)
-	install ${MAN} $(INSTMAN)
+	mkdir -p ${DESTDIR}$(INSTMAN)
+	install ${MAN} ${DESTDIR}$(INSTMAN)
 
 uninstall:
-	rm -f $(INSTBIN)/${PROG}
-	rm -f $(INSTMAN)/${MAN}
+	rm -f ${DESTDIR}$(INSTBIN)/${PROG}
+	rm -f ${DESTDIR}$(INSTMAN)/${MAN}
