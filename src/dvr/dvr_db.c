@@ -679,6 +679,10 @@ dvr_entry_cancel(dvr_entry_t *de)
     dvr_entry_remove(de);
     return NULL;
 
+  case DVR_MISSED_TIME:
+    dvr_entry_remove(de);
+    return NULL;
+
   default:
     abort();
   }
