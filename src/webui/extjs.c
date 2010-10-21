@@ -568,7 +568,7 @@ extjs_channeltags(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_lock(&global_lock);
 
-  if(!strcmp(op, "listTags")) {
+  if(op != NULL && !strcmp(op, "listTags")) {
 
     out = htsmsg_create_map();
     array = htsmsg_create_list();
@@ -580,6 +580,50 @@ extjs_channeltags(http_connection_t *hc, const char *remain, void *opaque)
       e = htsmsg_create_map();
       htsmsg_add_u32(e, "identifier", ct->ct_identifier);
       htsmsg_add_str(e, "name", ct->ct_name);
+      htsmsg_add_msg(array, NULL, e);
+    }
+
+    htsmsg_add_msg(out, "entries", array);
+
+  } else {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+
+}
+
+/**
+ *
+ */
+static int
+extjs_confignames(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  const char *op = http_arg_get(&hc->hc_req_args, "op");
+  htsmsg_t *out, *array, *e;
+  dvr_config_t *cfg;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(op != NULL && !strcmp(op, "list")) {
+
+    out = htsmsg_create_map();
+    array = htsmsg_create_list();
+
+    LIST_FOREACH(cfg, &dvrconfigs, config_link) {
+      e = htsmsg_create_map();
+      htsmsg_add_str(e, "identifier", cfg->dvr_config_name);
+      if (strlen(cfg->dvr_config_name) == 0)
+        htsmsg_add_str(e, "name", "(default)");
+      else
+        htsmsg_add_str(e, "name", cfg->dvr_config_name);
       htsmsg_add_msg(array, NULL, e);
     }
 
@@ -713,6 +757,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
   dvr_entry_t *de;
   const char *s;
   int flags = 0;
+  dvr_config_t *cfg;
 
   if(op == NULL)
     op = "loadSettings";
@@ -725,14 +770,17 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   if(!strcmp(op, "recordEvent")) {
-    s = http_arg_get(&hc->hc_req_args, "eventId");
 
+    const char *config_name = http_arg_get(&hc->hc_req_args, "config_name");
+
+    s = http_arg_get(&hc->hc_req_args, "eventId");
     if((e = epg_event_find_by_id(atoi(s))) == NULL) {
       pthread_mutex_unlock(&global_lock);
       return HTTP_STATUS_BAD_REQUEST;
     }
 
-    dvr_entry_create_by_event(e, hc->hc_representative, NULL, DVR_PRIO_NORMAL);
+    dvr_entry_create_by_event(config_name,
+                              e, hc->hc_representative, NULL, DVR_PRIO_NORMAL);
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
@@ -751,6 +799,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
   } else if(!strcmp(op, "createEntry")) {
 
+    const char *config_name = http_arg_get(&hc->hc_req_args, "config_name");
     const char *title    = http_arg_get(&hc->hc_req_args, "title");
     const char *datestr  = http_arg_get(&hc->hc_req_args, "date");
     const char *startstr = http_arg_get(&hc->hc_req_args, "starttime");
@@ -787,7 +836,8 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     if(stop < start)
       stop += 86400;
 
-    dvr_entry_create(ch, start, stop, title, NULL, hc->hc_representative, 
+    dvr_entry_create(config_name,
+                     ch, start, stop, title, NULL, hc->hc_representative, 
 		     NULL, NULL, 0, dvr_pri2val(pri));
 
     out = htsmsg_create_map();
@@ -798,7 +848,8 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     
 
-    dvr_autorec_add(http_arg_get(&hc->hc_req_args, "title"),
+    dvr_autorec_add(http_arg_get(&hc->hc_req_args, "config_name"),
+                    http_arg_get(&hc->hc_req_args, "title"),
 		    http_arg_get(&hc->hc_req_args, "channel"),
 		    http_arg_get(&hc->hc_req_args, "tag"),
 		    cgrp ? epg_content_group_find_by_name(cgrp) : 0,
@@ -809,42 +860,54 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
   } else if(!strcmp(op, "loadSettings")) {
 
+    s = http_arg_get(&hc->hc_req_args, "config_name");
+    if (s == NULL)
+      s = "";
+    cfg = dvr_config_find_by_name_default(s);
+
     r = htsmsg_create_map();
-    htsmsg_add_str(r, "storage", dvr_storage);
-    if(dvr_postproc != NULL)
-      htsmsg_add_str(r, "postproc", dvr_postproc);
-    htsmsg_add_u32(r, "retention", dvr_retention_days);
-    htsmsg_add_u32(r, "preExtraTime", dvr_extra_time_pre);
-    htsmsg_add_u32(r, "postExtraTime", dvr_extra_time_post);
-    htsmsg_add_u32(r, "dayDirs",        !!(dvr_flags & DVR_DIR_PER_DAY));
-    htsmsg_add_u32(r, "channelDirs",    !!(dvr_flags & DVR_DIR_PER_CHANNEL));
-    htsmsg_add_u32(r, "channelInTitle", !!(dvr_flags & DVR_CHANNEL_IN_TITLE));
-    htsmsg_add_u32(r, "dateInTitle",    !!(dvr_flags & DVR_DATE_IN_TITLE));
-    htsmsg_add_u32(r, "timeInTitle",    !!(dvr_flags & DVR_TIME_IN_TITLE));
-    htsmsg_add_u32(r, "whitespaceInTitle", !!(dvr_flags & DVR_WHITESPACE_IN_TITLE));
-    htsmsg_add_u32(r, "titleDirs", !!(dvr_flags & DVR_DIR_PER_TITLE));
-    htsmsg_add_u32(r, "episodeInTitle", !!(dvr_flags & DVR_EPISODE_IN_TITLE));
-    htsmsg_add_u32(r, "cleanTitle", !!(dvr_flags & DVR_CLEAN_TITLE));
-    htsmsg_add_u32(r, "tagFiles", !!(dvr_flags & DVR_TAG_FILES));
+    htsmsg_add_str(r, "storage", cfg->dvr_storage);
+    if(cfg->dvr_postproc != NULL)
+      htsmsg_add_str(r, "postproc", cfg->dvr_postproc);
+    htsmsg_add_u32(r, "retention", cfg->dvr_retention_days);
+    htsmsg_add_u32(r, "preExtraTime", cfg->dvr_extra_time_pre);
+    htsmsg_add_u32(r, "postExtraTime", cfg->dvr_extra_time_post);
+    htsmsg_add_u32(r, "dayDirs",        !!(cfg->dvr_flags & DVR_DIR_PER_DAY));
+    htsmsg_add_u32(r, "channelDirs",    !!(cfg->dvr_flags & DVR_DIR_PER_CHANNEL));
+    htsmsg_add_u32(r, "channelInTitle", !!(cfg->dvr_flags & DVR_CHANNEL_IN_TITLE));
+    htsmsg_add_u32(r, "dateInTitle",    !!(cfg->dvr_flags & DVR_DATE_IN_TITLE));
+    htsmsg_add_u32(r, "timeInTitle",    !!(cfg->dvr_flags & DVR_TIME_IN_TITLE));
+    htsmsg_add_u32(r, "whitespaceInTitle", !!(cfg->dvr_flags & DVR_WHITESPACE_IN_TITLE));
+    htsmsg_add_u32(r, "titleDirs", !!(cfg->dvr_flags & DVR_DIR_PER_TITLE));
+    htsmsg_add_u32(r, "episodeInTitle", !!(cfg->dvr_flags & DVR_EPISODE_IN_TITLE));
+    htsmsg_add_u32(r, "cleanTitle", !!(cfg->dvr_flags & DVR_CLEAN_TITLE));
+    htsmsg_add_u32(r, "tagFiles", !!(cfg->dvr_flags & DVR_TAG_FILES));
 
     out = json_single_record(r, "dvrSettings");
 
   } else if(!strcmp(op, "saveSettings")) {
 
+    s = http_arg_get(&hc->hc_req_args, "config_name");
+    cfg = dvr_config_find_by_name(s);
+    if (cfg == NULL)
+      cfg = dvr_config_create(s);
+
+    tvhlog(LOG_INFO,"dvr","Saving configuration '%s'", cfg->dvr_config_name);
+
     if((s = http_arg_get(&hc->hc_req_args, "storage")) != NULL)
-      dvr_storage_set(s);
+      dvr_storage_set(cfg,s);
     
     if((s = http_arg_get(&hc->hc_req_args, "postproc")) != NULL)
-      dvr_postproc_set(s);
+      dvr_postproc_set(cfg,s);
 
     if((s = http_arg_get(&hc->hc_req_args, "retention")) != NULL)
-      dvr_retention_set(atoi(s));
+      dvr_retention_set(cfg,atoi(s));
 
    if((s = http_arg_get(&hc->hc_req_args, "preExtraTime")) != NULL)
-     dvr_extra_time_pre_set(atoi(s));
+     dvr_extra_time_pre_set(cfg,atoi(s));
 
    if((s = http_arg_get(&hc->hc_req_args, "postExtraTime")) != NULL)
-     dvr_extra_time_post_set(atoi(s));
+     dvr_extra_time_post_set(cfg,atoi(s));
 
     if(http_arg_get(&hc->hc_req_args, "dayDirs") != NULL)
       flags |= DVR_DIR_PER_DAY;
@@ -867,7 +930,15 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     if(http_arg_get(&hc->hc_req_args, "tagFiles") != NULL)
       flags |= DVR_TAG_FILES;
 
-    dvr_flags_set(flags);
+    dvr_flags_set(cfg,flags);
+
+    out = htsmsg_create_map();
+    htsmsg_add_u32(out, "success", 1);
+
+  } else if(!strcmp(op, "deleteSettings")) {
+
+    s = http_arg_get(&hc->hc_req_args, "config_name");
+    dvr_config_delete(s);
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
@@ -940,6 +1011,8 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
       if(de->de_channel->ch_icon != NULL)
 	htsmsg_add_str(m, "chicon", de->de_channel->ch_icon);
     }
+
+    htsmsg_add_str(m, "config_name", de->de_config_name);
 
     if(de->de_title != NULL)
       htsmsg_add_str(m, "title", de->de_title);
@@ -1401,6 +1474,7 @@ extjs_start(void)
   http_path_add("/channels",    NULL, extjs_channels,    ACCESS_WEB_INTERFACE);
   http_path_add("/xmltv",       NULL, extjs_xmltv,       ACCESS_WEB_INTERFACE);
   http_path_add("/channeltags", NULL, extjs_channeltags, ACCESS_WEB_INTERFACE);
+  http_path_add("/confignames", NULL, extjs_confignames, ACCESS_WEB_INTERFACE);
   http_path_add("/epg",         NULL, extjs_epg,         ACCESS_WEB_INTERFACE);
   http_path_add("/dvr",         NULL, extjs_dvr,         ACCESS_WEB_INTERFACE);
   http_path_add("/dvrlist",     NULL, extjs_dvrlist,     ACCESS_WEB_INTERFACE);

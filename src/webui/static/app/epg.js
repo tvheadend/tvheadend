@@ -34,6 +34,18 @@ tvheadend.epgDetails = function(event) {
 	'http://akas.imdb.org/find?q=' + event.title + '">Search IMDB</a></div>'
 	
 
+    var confcombo = new Ext.form.ComboBox({
+        store: tvheadend.configNames,
+        triggerAction: 'all',
+        mode: 'local',
+        valueField: 'identifier',
+        displayField: 'name',
+        name: 'config_name',
+        emptyText: '(default)',
+        value: '',
+        editable: false
+    });
+
     var win = new Ext.Window({
 	title: event.title,
 	bodyStyle: 'margin: 5px',
@@ -42,6 +54,7 @@ tvheadend.epgDetails = function(event) {
         height: 300,
 	constrainHeader: true,
 	buttons: [
+            confcombo,
 	    new Ext.Button({
 		handler: recordEvent,
 		text: "Record program"
@@ -56,7 +69,11 @@ tvheadend.epgDetails = function(event) {
     function recordEvent() {
 	Ext.Ajax.request({
 	    url: 'dvr',
-	    params: {eventId: event.id, op: 'recordEvent'},
+	    params: {
+                eventId: event.id, 
+                op: 'recordEvent', 
+                config_name: confcombo.getValue()
+            },
 
 	    success:function(response, options) {
 		win.close();

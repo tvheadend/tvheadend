@@ -28,6 +28,28 @@ tvheadend.dvrprio = new Ext.data.SimpleStore({
 });
 
 /**
+ * Configuration names
+ */
+tvheadend.configNames = new Ext.data.JsonStore({
+    autoLoad:true,
+    root:'entries',
+    fields: ['identifier','name'],
+    id: 'identifier',
+    url:'confignames',
+    baseParams: {
+	op: 'list'
+    }
+});
+
+tvheadend.configNames.setDefaultSort('name', 'ASC');
+
+tvheadend.comet.on('dvrconfig', function(m) {
+    if(m.reload != null)
+        tvheadend.configNames.reload();
+});
+
+
+/**
  *
  */
 tvheadend.dvrDetails = function(entry) {
@@ -190,6 +212,18 @@ tvheadend.dvrschedule = function() {
 	    hidden:true,
 	    dataIndex: 'creator'
 	},{
+            width: 200,
+            id:'config_name',
+            header: "DVR Configuration",
+            renderer: function(value, metadata, record, row, col, store) {
+		if (!value) {
+		    return '<span class="tvh-grid-unset">(default)</span>';
+		} else {
+		    return value;
+		}
+	    },
+            dataIndex: 'config_name'
+        },{
 	    width: 200,
 	    id:'status',
 	    header: "Status",
@@ -267,7 +301,19 @@ tvheadend.dvrschedule = function() {
 		    allowBlank: false,
 		    fieldLabel: 'Title',
 		    name: 'title'
-		}
+		},
+		new Ext.form.ComboBox({
+		    store: tvheadend.configNames,
+		    triggerAction: 'all',
+		    mode: 'local',
+		    fieldLabel: 'DVR Configuration',
+                    valueField: 'identifier',
+                    displayField: 'name',
+		    name: 'config_name',
+                    emptyText: '(default)',
+                    value: '',
+                    editable: false
+		})
 	    ],
 	    buttons: [{
 		text: 'Create',
@@ -285,6 +331,18 @@ tvheadend.dvrschedule = function() {
             items: panel
 	});
 	win.show();	
+		new Ext.form.ComboBox({
+		    store: tvheadend.configNames,
+		    triggerAction: 'all',
+		    mode: 'local',
+		    fieldLabel: 'DVR Configuration',
+                    valueField: 'identifier',
+                    displayField: 'name',
+		    name: 'config_name',
+                    emptyText: '(default)',
+                    value: '',
+                    editable: false
+		})
     };
 
 
@@ -448,6 +506,26 @@ tvheadend.autoreceditor = function() {
                 valueField: 'identifier',
                 displayField: 'name'
 	    })
+        },{
+	    header: "DVR Configuration",
+	    dataIndex: 'config_name',
+            renderer: function(value, metadata, record, row, col, store) {
+		if (!value) {
+		    return '<span class="tvh-grid-unset">(default)</span>';
+		} else {
+		    return value;
+		}
+	    },
+            editor: new Ext.form.ComboBox({
+                store: tvheadend.configNames,
+                triggerAction: 'all',
+                mode: 'local',
+                valueField: 'identifier',
+                displayField: 'name',
+                name: 'config_name',
+                emptyText: '(default)',
+                editable: false
+            })
 	},{
 	    header: "Created by",
 	    dataIndex: 'creator',
@@ -484,6 +562,7 @@ tvheadend.dvr = function() {
 	    {name: 'chicon'},
             {name: 'start', type: 'date', dateFormat: 'U' /* unix time */},
             {name: 'end', type: 'date', dateFormat: 'U' /* unix time */},
+            {name: 'config_name'},
 	    {name: 'status'},
 	    {name: 'schedstate'},
 	    {name: 'creator'},
@@ -522,7 +601,7 @@ tvheadend.dvr = function() {
     
     tvheadend.autorecRecord = Ext.data.Record.create([
 	'enabled','title','channel','tag','creator','contentgrp','comment',
-	'weekdays', 'pri', 'approx_time'
+	'weekdays', 'pri', 'approx_time', 'config_name'
     ]);
     
 
@@ -567,6 +646,25 @@ tvheadend.dvrsettings = function() {
 	'dateInTitle','timeInTitle',
 	'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 
 	'titleDirs', 'episodeInTitle', 'cleanTitle', 'tagFiles']);
+
+    var confcombo = new Ext.form.ComboBox({
+        store: tvheadend.configNames,
+        triggerAction: 'all',
+        mode: 'local',
+        displayField: 'name',
+        name: 'config_name',
+        emptyText: '(default)',
+        value: '',
+        editable: true
+    });
+
+    var delButton = new Ext.Toolbar.Button({
+        tooltip: 'Delete named configuration',
+        iconCls:'remove',
+        text: "Delete configuration",
+        handler: deleteConfiguration,
+        disabled: true
+    });
 
     var confpanel = new Ext.FormPanel({
 	title:'Digital Video Recorder',
@@ -633,41 +731,83 @@ tvheadend.dvrsettings = function() {
 	    fieldLabel: 'Post-processor command',
 	    name: 'postproc'
         }],
-	tbar: [{
-	    tooltip: 'Save changes made to channel configuration below',
+	tbar: [confcombo, {
+	    tooltip: 'Save changes made to dvr configuration below',
 	    iconCls:'save',
 	    text: "Save configuration",
 	    handler: saveChanges
-	}, '->', {
+	}, delButton, '->', {
 	    text: 'Help',
 	    handler: function() {
 		new tvheadend.help('DVR configuration', 
 				   'config_dvr.html');
 	    }
 	}]
-	
     });
-
-    confpanel.on('render', function() {
+    
+    function loadConfig() {
 	confpanel.getForm().load({
 	    url:'dvr', 
-	    params:{'op':'loadSettings'},
+	    params:{'op':'loadSettings','config_name':confcombo.getValue()},
 	    success:function(form, action) {
 		confpanel.enable();
 	    }
 	});
+    }
+
+    confcombo.on('select', function() {
+        if (confcombo.getValue() == '')
+            delButton.disable();
+        else
+            delButton.enable();
+        loadConfig();
+    });
+
+    confpanel.on('render', function() {
+        loadConfig();
     });
 
 
     function saveChanges() {
+        var config_name = confcombo.getValue();
 	confpanel.getForm().submit({
 	    url:'dvr', 
-	    params:{'op':'saveSettings'},
+	    params:{'op':'saveSettings','config_name':config_name},
 	    waitMsg:'Saving Data...',
+            success: function(form, action) {
+                confcombo.setValue(config_name);
+                confcombo.fireEvent('select');
+            },
 	    failure: function(form, action) {
 		Ext.Msg.alert('Save failed', action.result.errormsg);
 	    }
 	});
+    }
+
+    function deleteConfiguration() {
+        if (confcombo.getValue() != "") {
+            Ext.MessageBox.confirm('Message',
+                         'Do you really want to delete DVR configuration \'' + 
+                                confcombo.getValue() + '\'?', 
+                          deleteAction);
+        }
+    }
+    
+    function deleteAction(btn) {
+      if (btn == 'yes') {
+	confpanel.getForm().submit({
+	    url:'dvr', 
+	    params:{'op':'deleteSettings','config_name':confcombo.getValue()},
+	    waitMsg:'Deleting Data...',
+            success: function(form, action) {
+                confcombo.setValue('');
+                confcombo.fireEvent('select');
+            },
+	    failure: function(form, action) {
+		Ext.Msg.alert('Delete failed', action.result.errormsg);
+	    }
+	});
+      }
     }
 
     return confpanel;

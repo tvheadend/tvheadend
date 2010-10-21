@@ -493,15 +493,19 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   event_t *e;
   dvr_entry_t *de;
   dvr_entry_sched_state_t dvr_status;
+  const char *dvr_config_name;
     
   if(htsmsg_get_u32(in, "eventId", &eventid))
     return htsp_error("Missing argument 'eventId'");
   
   if((e = epg_event_find_by_id(eventid)) == NULL)
     return htsp_error("Event does not exist");
+
+  if((dvr_config_name = htsmsg_get_str(in, "configName")) == NULL)
+    dvr_config_name = "";
   
   //create the dvr entry
-  de = dvr_entry_create_by_event(e, 
+  de = dvr_entry_create_by_event(dvr_config_name,e, 
 				 htsp->htsp_username ? 
 				 htsp->htsp_username : "anonymous",
 				 NULL, DVR_PRIO_NORMAL);
@@ -698,8 +702,9 @@ htsp_method_getDiskSpace(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out;
   struct statvfs diskdata;
+  dvr_config_t *cfg = dvr_config_find_by_name_default("");
 
-  if(statvfs(dvr_storage,&diskdata) == -1)
+  if(statvfs(cfg->dvr_storage,&diskdata) == -1)
     return htsp_error("Unable to stat path");
   
   out = htsmsg_create_map();

@@ -24,14 +24,22 @@
 #include "channels.h"
 #include "subscriptions.h"
 
-extern char *dvr_storage;
-extern char *dvr_format;
-extern char *dvr_file_postfix;
-extern uint32_t dvr_retention_days;
-extern int dvr_flags;
-extern char *dvr_postproc;
-extern int dvr_extra_time_pre;
-extern int dvr_extra_time_post;
+typedef struct dvr_config {
+  char *dvr_config_name;
+  char *dvr_storage;
+  char *dvr_format;
+  char *dvr_file_postfix;
+  uint32_t dvr_retention_days;
+  int dvr_flags;
+  char *dvr_postproc;
+  int dvr_extra_time_pre;
+  int dvr_extra_time_post;
+
+  LIST_ENTRY(dvr_config) config_link;
+} dvr_config_t;
+
+extern struct dvr_config_list dvrconfigs;
+
 extern struct dvr_entry_list dvrentries;
 
 #define DVR_DIR_PER_DAY		0x1
@@ -97,6 +105,8 @@ typedef struct dvr_entry {
   /**
    * These meta fields will stay valid as long as reference count > 0
    */
+
+  char *de_config_name;
 
   time_t de_start;
   time_t de_stop;
@@ -172,6 +182,8 @@ typedef struct dvr_autorec_entry {
   TAILQ_ENTRY(dvr_autorec_entry) dae_link;
   char *dae_id;
 
+  char *dae_config_name;
+
   int dae_enabled;
   char *dae_creator;
   char *dae_comment;
@@ -202,6 +214,14 @@ typedef struct dvr_autorec_entry {
  * Prototypes
  */
 
+dvr_config_t *dvr_config_find_by_name(const char *name);
+
+dvr_config_t *dvr_config_find_by_name_default(const char *name);
+
+dvr_config_t *dvr_config_create(const char *name);
+
+void dvr_config_delete(const char *name);
+
 void dvr_entry_notify(dvr_entry_t *de);
 
 const char *dvr_entry_status(dvr_entry_t *de);
@@ -210,11 +230,13 @@ const char *dvr_entry_schedstatus(dvr_entry_t *de);
 
 void dvr_entry_create_by_autorec(event_t *e, dvr_autorec_entry_t *dae);
 
-dvr_entry_t *dvr_entry_create_by_event(event_t *e, const char *creator,
+dvr_entry_t *dvr_entry_create_by_event(const char *dvr_config_name,
+                                       event_t *e, const char *creator,
 				       dvr_autorec_entry_t *dae,
 				       dvr_prio_t pri);
 
-dvr_entry_t *dvr_entry_create(channel_t *ch, time_t start, time_t stop, 
+dvr_entry_t *dvr_entry_create(const char *dvr_config_name,
+                              channel_t *ch, time_t start, time_t stop, 
 			      const char *title, const char *description,
 			      const char *creator, dvr_autorec_entry_t *dae,
 			      epg_episode_t *ee, uint8_t content_type,
@@ -240,17 +262,17 @@ dvr_entry_t *dvr_entry_cancel(dvr_entry_t *de);
 
 void dvr_entry_dec_ref(dvr_entry_t *de);
 
-void dvr_storage_set(const char *storage);
+void dvr_storage_set(dvr_config_t *cfg, const char *storage);
 
-void dvr_postproc_set(const char *postproc);
+void dvr_postproc_set(dvr_config_t *cfg, const char *postproc);
 
-void dvr_retention_set(int days);
+void dvr_retention_set(dvr_config_t *cfg, int days);
 
-void dvr_flags_set(int flags);
+void dvr_flags_set(dvr_config_t *cfg, int flags);
 
-void dvr_extra_time_pre_set(int d);
+void dvr_extra_time_pre_set(dvr_config_t *cfg, int d);
 
-void dvr_extra_time_post_set(int d);
+void dvr_extra_time_post_set(dvr_config_t *cfg, int d);
 
 /**
  * Query interface
@@ -268,7 +290,8 @@ void dvr_query_sort(dvr_query_result_t *dqr);
 /**
  *
  */
-void dvr_autorec_add(const char *title, const char *channel,
+void dvr_autorec_add(const char *dvr_config_name,
+                     const char *title, const char *channel,
 		     const char *tag, uint8_t content_type,
 		     const char *creator, const char *comment);
 

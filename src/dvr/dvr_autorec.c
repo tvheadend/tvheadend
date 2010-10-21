@@ -166,6 +166,7 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae)
 
   free(dae->dae_id);
 
+  free(dae->dae_config_name);
   free(dae->dae_creator);
   free(dae->dae_comment);
 
@@ -227,6 +228,8 @@ autorec_record_build(dvr_autorec_entry_t *dae)
   htsmsg_add_str(e, "id", dae->dae_id);
   htsmsg_add_u32(e, "enabled",  !!dae->dae_enabled);
 
+  if (dae->dae_config_name != NULL)
+    htsmsg_add_str(e, "config_name", dae->dae_config_name);
   if(dae->dae_creator != NULL)
     htsmsg_add_str(e, "creator", dae->dae_creator);
   if(dae->dae_comment != NULL)
@@ -307,6 +310,7 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
   if((dae = autorec_entry_find(id, maycreate)) == NULL)
     return NULL;
 
+  tvh_str_update(&dae->dae_config_name, htsmsg_get_str(values, "config_name"));
   tvh_str_update(&dae->dae_creator, htsmsg_get_str(values, "creator"));
   tvh_str_update(&dae->dae_comment, htsmsg_get_str(values, "comment"));
 
@@ -417,7 +421,8 @@ dvr_autorec_init(void)
  *
  */
 void
-dvr_autorec_add(const char *title, const char *channel,
+dvr_autorec_add(const char *config_name,
+                const char *title, const char *channel,
 		const char *tag, uint8_t content_type,
 		const char *creator, const char *comment)
 {
@@ -429,6 +434,7 @@ dvr_autorec_add(const char *title, const char *channel,
   if((dae = autorec_entry_find(NULL, 1)) == NULL)
     return;
 
+  tvh_str_set(&dae->dae_config_name, config_name);
   tvh_str_set(&dae->dae_creator, creator);
   tvh_str_set(&dae->dae_comment, comment);
 

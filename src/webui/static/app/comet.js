@@ -12,6 +12,7 @@ Ext.extend(tvheadend.Comet = function() {
 	channeltags: true,
 	autorec: true,
 	dvrdb: true,
+        dvrconfig: true,
 	channels: true
     });
 }, Ext.util.Observable);

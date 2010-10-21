@@ -40,7 +40,7 @@
  *
  */
 static void *dvr_thread(void *aux);
-static void dvr_spawn_postproc(dvr_entry_t *de);
+static void dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc);
 static void dvr_thread_epilog(dvr_entry_t *de);
 
 
@@ -157,7 +157,7 @@ makedirs(const char *path)
  * Replace various chars with a dash
  */
 static void
-cleanupfilename(char *s)
+cleanupfilename(char *s, int dvr_flags)
 {
   int i, len = strlen(s);
   for(i = 0; i < len; i++) { 
@@ -186,28 +186,29 @@ pvr_generate_filename(dvr_entry_t *de)
   struct stat st;
   char *filename;
   struct tm tm;
+  dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
 
   filename = strdup(de->de_ititle);
-  cleanupfilename(filename);
+  cleanupfilename(filename,cfg->dvr_flags);
 
-  snprintf(path, sizeof(path), "%s", dvr_storage);
+  snprintf(path, sizeof(path), "%s", cfg->dvr_storage);
 
   /* Append per-day directory */
 
-  if(dvr_flags & DVR_DIR_PER_DAY) {
+  if(cfg->dvr_flags & DVR_DIR_PER_DAY) {
     localtime_r(&de->de_start, &tm);
     strftime(fullname, sizeof(fullname), "%F", &tm);
-    cleanupfilename(fullname);
+    cleanupfilename(fullname,cfg->dvr_flags);
     snprintf(path + strlen(path), sizeof(path) - strlen(path), 
 	     "/%s", fullname);
   }
 
   /* Append per-channel directory */
 
-  if(dvr_flags & DVR_DIR_PER_CHANNEL) {
+  if(cfg->dvr_flags & DVR_DIR_PER_CHANNEL) {
 
     char *chname = strdup(de->de_channel->ch_name);
-    cleanupfilename(chname);
+    cleanupfilename(chname,cfg->dvr_flags);
     snprintf(path + strlen(path), sizeof(path) - strlen(path), 
 	     "/%s", chname);
     free(chname);
@@ -215,10 +216,10 @@ pvr_generate_filename(dvr_entry_t *de)
 
   /* Append per-title directory */
 
-  if(dvr_flags & DVR_DIR_PER_TITLE) {
+  if(cfg->dvr_flags & DVR_DIR_PER_TITLE) {
 
     char *title = strdup(de->de_title);
-    cleanupfilename(title);
+    cleanupfilename(title,cfg->dvr_flags);
     snprintf(path + strlen(path), sizeof(path) - strlen(path), 
 	     "/%s", title);
     free(title);
@@ -233,7 +234,7 @@ pvr_generate_filename(dvr_entry_t *de)
   /* Construct final name */
   
   snprintf(fullname, sizeof(fullname), "%s/%s.%s",
-	   path, filename, dvr_file_postfix);
+	   path, filename, cfg->dvr_file_postfix);
 
   while(1) {
     if(stat(fullname, &st) == -1) {
@@ -248,7 +249,7 @@ pvr_generate_filename(dvr_entry_t *de)
     tally++;
 
     snprintf(fullname, sizeof(fullname), "%s/%s-%d.%s",
-	     path, filename, tally, dvr_file_postfix);
+	     path, filename, tally, cfg->dvr_file_postfix);
   }
 
   tvh_str_set(&de->de_filename, fullname);
@@ -301,6 +302,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   const source_info_t *si = &ss->ss_si;
   const streaming_start_component_t *ssc;
   int i;
+  dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
 
   if(pvr_generate_filename(de) != 0) {
     dvr_rec_fatal_error(de, "Unable to create directories");
@@ -308,7 +310,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   }
 
   de->de_mkmux = mk_mux_create(de->de_filename, ss, de, 
-			       !!(dvr_flags & DVR_TAG_FILES));
+			       !!(cfg->dvr_flags & DVR_TAG_FILES));
 
   if(de->de_mkmux == NULL) {
     dvr_rec_fatal_error(de, "Unable to open file");
@@ -497,7 +499,7 @@ dvr_thread(void *aux)
  *
  */
 static void
-dvr_spawn_postproc(dvr_entry_t *de)
+dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
 {
   char *fmap[256];
   char **args;
@@ -553,6 +555,7 @@ dvr_thread_epilog(dvr_entry_t *de)
   mk_mux_close(de->de_mkmux);
   de->de_mkmux = NULL;
 
-  if(dvr_postproc)
-    dvr_spawn_postproc(de);
+  dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
+  if(cfg->dvr_postproc)
+    dvr_spawn_postproc(de,cfg->dvr_postproc);
 }

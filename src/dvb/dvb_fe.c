@@ -39,7 +39,7 @@
 #include "diseqc.h"
 #include "notify.h"
 #include "transports.h"
-
+#include "dvr/dvr.h"
 
 /**
  * Front end monitor
@@ -197,7 +197,6 @@ dvb_adapter_open_dump_file(th_dvb_adapter_t *tda)
   struct dmx_pes_filter_params dmx_param;
   char fullname[1000];
   char path[500];
-  extern char *dvr_storage;
   const char *fname = tda->tda_mux_current->tdmi_identifier;
 
   int fd = tvh_open(tda->tda_demux_path, O_RDWR, 0);
@@ -220,7 +219,8 @@ dvb_adapter_open_dump_file(th_dvb_adapter_t *tda)
     return;
   }
 
-  snprintf(path, sizeof(path), "%s/muxdumps", dvr_storage);
+  snprintf(path, sizeof(path), "%s/muxdumps", 
+      dvr_config_find_by_name_default("")->dvr_storage);
 
   if(mkdir(path, 0777) && errno != EEXIST) {
     tvhlog(LOG_ERR, "dvb", "\"%s\" unable to create mux dump dir %s -- %s",
