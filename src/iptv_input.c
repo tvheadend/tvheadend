@@ -252,9 +252,7 @@ iptv_transport_start(th_transport_t *t, unsigned int weight, int force_start)
       close(fd);
       return -1;
     }
-
-  }
-  else {
+  } else {
     /* Bind to IPv6 multicast group */
     memset(&sin6, 0, sizeof(sin6));
     sin6.sin6_family = AF_INET6;
@@ -275,7 +273,8 @@ iptv_transport_start(th_transport_t *t, unsigned int weight, int force_start)
 
     if(setsockopt(fd, SOL_IPV6, IPV6_ADD_MEMBERSHIP, &m6,
                 sizeof(struct ipv6_mreq)) == -1) {
-      inet_ntop(AF_INET6, m6.ipv6mr_multiaddr.s6_addr, straddr, sizeof(straddr));
+      inet_ntop(AF_INET6, m6.ipv6mr_multiaddr.s6_addr,
+		straddr, sizeof(straddr));
       tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot join %s -- %s",
            t->tht_identifier, straddr, strerror(errno));
       close(fd);
@@ -325,12 +324,58 @@ iptv_transport_refresh(th_transport_t *t)
 static void
 iptv_transport_stop(th_transport_t *t)
 {
+  struct ifreq ifr;
+
   pthread_mutex_lock(&iptv_recvmutex);
   LIST_REMOVE(t, tht_active_link);
   pthread_mutex_unlock(&iptv_recvmutex);
 
   assert(t->tht_iptv_fd >= 0);
 
+  /* First, resolve interface name */
+  memset(&ifr, 0, sizeof(ifr));
+  snprintf(ifr.ifr_name, IFNAMSIZ, "%s", t->tht_iptv_iface);
+  ifr.ifr_name[IFNAMSIZ - 1] = 0;
+  if(ioctl(t->tht_iptv_fd, SIOCGIFINDEX, &ifr)) {
+    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot find interface %s",
+	   t->tht_identifier, t->tht_iptv_iface);
+  }
+
+  if(t->tht_iptv_group.s_addr != 0) {
+
+    struct ip_mreqn m;
+    memset(&m, 0, sizeof(m));
+    /* Leave multicast group */
+    m.imr_multiaddr.s_addr = t->tht_iptv_group.s_addr;
+    m.imr_address.s_addr = 0;
+    m.imr_ifindex = ifr.ifr_ifindex;
+    
+    if(setsockopt(t->tht_iptv_fd, SOL_IP, IP_DROP_MEMBERSHIP, &m,
+		  sizeof(struct ip_mreqn)) == -1) {
+      tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot leave %s -- %s",
+	     t->tht_identifier, inet_ntoa(m.imr_multiaddr), strerror(errno));
+    }
+  } else {
+    char straddr[INET6_ADDRSTRLEN];
+
+    struct ipv6_mreq m6;
+    memset(&m6, 0, sizeof(m6));
+
+    m6.ipv6mr_multiaddr = t->tht_iptv_group6;
+    m6.ipv6mr_interface = ifr.ifr_ifindex;
+
+    if(setsockopt(t->tht_iptv_fd, SOL_IPV6, IPV6_DROP_MEMBERSHIP, &m6,
+		  sizeof(struct ipv6_mreq)) == -1) {
+      inet_ntop(AF_INET6, m6.ipv6mr_multiaddr.s6_addr,
+		straddr, sizeof(straddr));
+
+      tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot leave %s -- %s",
+	     t->tht_identifier, straddr, strerror(errno));
+    }
+
+
+
+  }
   close(t->tht_iptv_fd); // Automatically removes fd from epoll set
 
   t->tht_iptv_fd = -1;
