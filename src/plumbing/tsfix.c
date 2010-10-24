@@ -200,7 +200,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 
   pkt->pkt_dts = dts;
 
-  tsfixprintf("TSFIX: %-12s %d %10"PRId64" %10"PRId64" %10d %10d\n",
+  tsfixprintf("TSFIX: %-12s %d %10"PRId64" %10"PRId64" %10d %zd\n",
 	      streaming_component_type2txt(tfs->tfs_type),
 	      pkt->pkt_frametype,
 	      pkt->pkt_dts,
