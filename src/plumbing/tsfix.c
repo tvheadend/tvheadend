@@ -241,7 +241,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
       case PKT_B_FRAME:
 	/* B-frames have same PTS as DTS, pass them on */
 	pkt->pkt_pts = pkt->pkt_dts;
-	tsfixprintf("TSFIX: %-12s PTS b-frame set to %lld\n",
+	tsfixprintf("TSFIX: %-12s PTS b-frame set to %"PRId64"\n",
 		    streaming_component_type2txt(tfs->tfs_type),
 		    pkt->pkt_dts);
 	break;
@@ -257,7 +257,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 	  if(tfs_find(tf, srch->pr_pkt) == tfs && 
 	     srch->pr_pkt->pkt_frametype <= PKT_P_FRAME) {
 	    pkt->pkt_pts = srch->pr_pkt->pkt_dts;
-	    tsfixprintf("TSFIX: %-12s PTS *-frame set to %lld\n",
+	    tsfixprintf("TSFIX: %-12s PTS *-frame set to %"PRId64"\n",
 			streaming_component_type2txt(tfs->tfs_type),
 			pkt->pkt_pts);
 	    break;
@@ -288,7 +288,7 @@ compute_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
   // If PTS is missing, set it to DTS if not video
   if(pkt->pkt_pts == PTS_UNSET && !SCT_ISVIDEO(tfs->tfs_type)) {
     pkt->pkt_pts = pkt->pkt_dts;
-    tsfixprintf("TSFIX: %-12s PTS set to %lld\n",
+    tsfixprintf("TSFIX: %-12s PTS set to %"PRId64"\n",
 		streaming_component_type2txt(tfs->tfs_type),
 		pkt->pkt_pts);
   }
@@ -321,7 +321,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
      (!tf->tf_hasvideo ||
       (SCT_ISVIDEO(tfs->tfs_type) && pkt->pkt_frametype == PKT_I_FRAME))) {
       tf->tf_tsref = pkt->pkt_dts;
-      tsfixprintf("reference clock set to %lld\n", tf->tf_tsref);
+      tsfixprintf("reference clock set to %"PRId64"\n", tf->tf_tsref);
   }
 
   if(pkt->pkt_dts == PTS_UNSET) {
@@ -335,7 +335,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
 
     pkt->pkt_dts = (tfs->tfs_last_dts_in + pdur) & PTS_MASK;
 
-    tsfixprintf("TSFIX: %-12s DTS set to last %lld +%d == %lld\n",
+    tsfixprintf("TSFIX: %-12s DTS set to last %"PRId64" +%d == %"PRId64"\n",
 		streaming_component_type2txt(tfs->tfs_type),
 		tfs->tfs_last_dts_in, pdur, pkt->pkt_dts);
   }
