@@ -371,7 +371,7 @@ depacketize(th_transport_t *t, th_stream_t *st, size_t len,
   uint32_t sc = st->st_startcode;
   int hlen, plen;
 
-  if((sc != 0x1bd && sc != 0x1c0) || len < 9)
+  if((sc != 0x1bd && (sc & ~0x1f) != 0x1c0) || len < 9)
     return 1;
 
   plen = (buf[4] << 8) | buf[5];
