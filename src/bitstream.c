@@ -86,14 +86,14 @@ read_golomb_ue(bitstream_t *bs)
 signed int
 read_golomb_se(bitstream_t *bs)
 {
-  int v, neg;
+  int v, pos;
   v = read_golomb_ue(bs);
   if(v == 0)
     return 0;
 
-  neg = v & 1;
+  pos = v & 1;
   v = (v + 1) >> 1;
-  return neg ? -v : v;
+  return pos ? v : -v;
 }
 
 
