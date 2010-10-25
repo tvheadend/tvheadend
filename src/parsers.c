@@ -283,9 +283,10 @@ parse_sc(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
 
       if(st->st_ssc_ptr < 5)
 	continue;
+
       uint16_t plen = st->st_ssc_buf[0] << 8 | st->st_ssc_buf[1];
-      if(plen >= 0xffdf)st->st_incomplete=1;
-      else st->st_incomplete=0;
+      st->st_incomplete = plen >= 0xffdf;
+
       int hlen = st->st_ssc_buf[4];
 
       if(st->st_ssc_ptr < hlen + 5)
@@ -293,7 +294,10 @@ parse_sc(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
       
       parse_pes_header(t, st, st->st_ssc_buf + 2, hlen + 3);
       st->st_ssc_intercept = 0;
-      if(st->st_buf.sb_ptr > 2) sc = st->st_buf.sb_data[st->st_buf.sb_ptr-3] << 16 | st->st_buf.sb_data[st->st_buf.sb_ptr-2] << 8 | st->st_buf.sb_data[st->st_buf.sb_ptr-1];
+      if(st->st_buf.sb_ptr > 2)
+	sc = st->st_buf.sb_data[st->st_buf.sb_ptr-3] << 16 |
+	  st->st_buf.sb_data[st->st_buf.sb_ptr-2] << 8 |
+	  st->st_buf.sb_data[st->st_buf.sb_ptr-1];
 
       continue;
     }
@@ -305,9 +309,10 @@ parse_sc(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
       continue;
 
     if(sc == 0x100 && (len-i)>3) {
+        uint32_t tempsc = data[i+1] << 16 | data[i+2] << 8 | data[i+3];
 
-        uint32_t tempsc = data[i+1]<< 16 | data [i+2] << 8 | data [i+3];
-        if(tempsc == 0x1e0)continue;
+        if(tempsc == 0x1e0)
+	  continue;
     }
 
     r = st->st_buf.sb_ptr - st->st_startcode_offset - 4;
