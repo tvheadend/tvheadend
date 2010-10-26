@@ -102,6 +102,30 @@ pktref_clear_queue(struct th_pktref_queue *q)
 
 
 /**
+ * Reference count is transfered to queue
+ */
+void
+pktref_enqueue(struct th_pktref_queue *q, th_pkt_t *pkt)
+{
+  th_pktref_t *pr = malloc(sizeof(th_pktref_t));
+  pr->pr_pkt = pkt;
+  TAILQ_INSERT_TAIL(q, pr, pr_link);
+}
+
+
+/**
+ *
+ */
+void
+pktref_remove(struct th_pktref_queue *q, th_pktref_t *pr)
+{
+  TAILQ_REMOVE(q, pr, pr_link);
+  pkt_ref_dec(pr->pr_pkt);
+  free(pr);
+}
+
+
+/**
  *
  */
 th_pkt_t *
