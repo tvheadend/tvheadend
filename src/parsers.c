@@ -332,6 +332,8 @@ parse_sc(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
       r = 1;
     }
 
+    assert(st->st_buf.sb_data != NULL);
+
     if(r == 2) {
       // Drop packet
       st->st_buf.sb_ptr = st->st_startcode_offset;
