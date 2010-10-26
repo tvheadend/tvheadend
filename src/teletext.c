@@ -40,6 +40,8 @@
  */
 typedef struct tt_mag {
   int ttm_curpage;
+  int ttm_inactive;
+  int64_t ttm_current_pts;
   uint8_t ttm_lang;
   uint8_t ttm_page[23*40 + 1];
 } tt_mag_t;
@@ -266,8 +268,8 @@ extract_subtitle(th_transport_t *t, th_stream_t *st,
   int is_box = 0;
 
   for (i = 0; i < 23; i++) {
-    int anything = 0;
-       
+    int start = off;
+
     for (j = 0; j < 40; j++) {
       char ch = ttm->ttm_page[40 * i + j];
 
@@ -284,17 +286,16 @@ extract_subtitle(th_transport_t *t, th_stream_t *st,
 	break;
 
       default:
-	if (ch >= 0x20 && is_box) {
+	if (ch >= 0x20 && is_box && (start != off || ch > 0x20)) {
 	  uint16_t code = tt_convert_char(0, ttm->ttm_lang, ch);
 
 	  if(code & 0xff00)
 	    sub[off++] = (code & 0xff00) >> 8;
 	  sub[off++] = code;
-	  anything |= ch != 0x20;
 	}
       }
     }
-    if(anything)
+    if(start != off)
       sub[off++] = '\n';
   }
 
@@ -357,13 +358,13 @@ tt_subtitle_deliver(th_transport_t *t, th_stream_t *parent, tt_mag_t *ttm)
 {
   th_stream_t *st;
 
-  if(t->tht_current_pts == PTS_UNSET)
+  if(ttm->ttm_current_pts == PTS_UNSET)
     return;
 
   TAILQ_FOREACH(st, &t->tht_components, st_link) {
      if(parent->st_pid == st->st_parent_pid &&
 	ttm->ttm_curpage == st->st_pid -  PID_TELETEXT_BASE) {
-       extract_subtitle(t, st, ttm, t->tht_current_pts);
+       extract_subtitle(t, st, ttm, ttm->ttm_current_pts);
      }
   }
 }
@@ -386,25 +387,21 @@ tt_decode_line(th_transport_t *t, th_stream_t *st, uint8_t *buf)
     ttp = st->st_priv;
   }
 
-
   mpag = ham_decode(buf[0], buf[1]);
   magidx = mpag & 7;
   ttm = &ttp->ttp_mags[magidx];
 
   line = mpag >> 3;
 
-  if(line >= 30)
-    return; /* Network lines, PDC, etc, dont worry about these */
-
   switch(line) {
   case 0:
     if(ttm->ttm_curpage != 0) {
-      tt_subtitle_deliver(t, st, ttm);
 
-      if(ttm->ttm_curpage == 192) {
-	//	dump_page(ttm);
+      if(ttm->ttm_inactive == 0)
+	tt_subtitle_deliver(t, st, ttm);
+
+      if(ttm->ttm_curpage == 192)
 	teletext_rundown_copy(ttp, ttm);
-      }
 
       memset(ttm->ttm_page, ' ', 23 * 40);
       ttm->ttm_curpage = 0;
@@ -432,20 +429,12 @@ tt_decode_line(th_transport_t *t, th_stream_t *st, uint8_t *buf)
     if(update_tt_clock(t, buf + 34))
       teletext_rundown_scan(t, ttp);
 
-#if 0
-    printf("%02x: %s\n", s12, buf[9 - 4] & (1 << 7) ? "Erase" : "Not Erase");
-    printf("Page %d: Control = %x\n", mag->page, c);
-    printf("%s\n", buf[13 - 4] & (1 << 1) ? "Magser" : "");
-
-    printf("%s\n", buf[12 - 4] & (1 << 7) ? "Inhibit" : "");
-    printf("%s\n", buf[12 - 4] & (1 << 5) ? "Intr" : "");
-    printf("%s\n", buf[12 - 4] & (1 << 3) ? "Update" : "");
-    printf("%s\n", buf[12 - 4] & (1 << 1) ? "Supress" : "");
-#endif
-
+    ttm->ttm_current_pts = t->tht_current_pts;
+    ttm->ttm_inactive = 0;
     break;
 
   case 1 ... 23:
+    ttm->ttm_inactive = 0;
     for(i = 0; i < 40; i++) {
       c = buf[i + 2] & 0x7f;
       ttm->ttm_page[i + 40 * (line - 1)] = c;
@@ -454,6 +443,30 @@ tt_decode_line(th_transport_t *t, th_stream_t *st, uint8_t *buf)
 
   default:
     break;
+  }
+}
+
+
+
+
+/**
+ *
+ */
+static void
+teletext_scan_stream(th_transport_t *t, th_stream_t *st)
+{
+  tt_private_t *ttp = st->st_priv;
+  tt_mag_t *ttm;
+  int i;
+
+  if(ttp == NULL)
+    return;
+  for(i = 0; i < 8; i++) {
+    ttm = &ttp->ttp_mags[i];
+    ttm->ttm_inactive++;
+    if(ttm->ttm_inactive == 2) {
+      tt_subtitle_deliver(t, st, ttm);
+    }
   }
 }
 
@@ -477,8 +490,8 @@ teletext_input(th_transport_t *t, th_stream_t *st, const uint8_t *tsb)
     }
     x += 46;
   }
+  teletext_scan_stream(t, st);
 }
-
 
 
 
