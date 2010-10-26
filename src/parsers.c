@@ -1182,6 +1182,12 @@ parse_subtitles(th_transport_t *t, th_stream_t *st, const uint8_t *data,
 static void
 parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
 {
+  if(SCT_ISAUDIO(st->st_type) && pkt->pkt_pts != PTS_UNSET &&
+     (t->tht_current_pts == PTS_UNSET ||
+      pkt->pkt_pts > t->tht_current_pts ||
+      pkt->pkt_pts < t->tht_current_pts - 180000))
+    t->tht_current_pts = pkt->pkt_pts;
+
 #if 0
   printf("PARSE: %-12s %d %10"PRId64" %10"PRId64" %10d %10d\n",
 	 streaming_component_type2txt(st->st_type),

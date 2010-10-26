@@ -463,6 +463,10 @@ typedef struct th_stream {
   
   char *st_nicename;
 
+  /* Teletext subtitle */ 
+  char st_blank; // Last subtitle was blank
+
+
 } th_stream_t;
 
 
@@ -771,6 +775,9 @@ typedef struct th_transport {
 
 
   loglimiter_t tht_loglimit_tei;
+
+
+  int64_t tht_current_pts;
 
 } th_transport_t;
 

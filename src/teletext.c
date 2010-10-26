@@ -31,12 +31,16 @@
 
 #include "tvhead.h"
 #include "teletext.h"
+#include "transports.h"
+#include "packet.h"
+#include "streaming.h"
 
 /**
  *
  */
 typedef struct tt_mag {
   int ttm_curpage;
+  uint8_t ttm_lang;
   uint8_t ttm_page[23*40 + 1];
 } tt_mag_t;
 
@@ -94,6 +98,79 @@ static const uint8_t hamtable[] = {
   0x08, 0xff, 0xff, 0x05, 0xff, 0x0e, 0x0d, 0xff, 
   0xff, 0x0e, 0x0f, 0xff, 0x0e, 0x8e, 0xff, 0x0e, 
 };
+
+static const uint8_t laG0_nat_opts_lookup[16][8] = {
+  {1, 4, 11, 5, 3, 8, 0, 1},
+  {7, 4, 11, 5, 3, 1, 0, 1},
+  {1, 4, 11, 5, 3, 8, 12, 1},
+  {1, 1, 1, 1, 1, 10, 1, 9},
+  {1, 4, 2, 6, 1, 1, 0, 1},
+  {1, 1, 1, 1, 1, 1, 1, 1}, // 5 - reserved
+  {1, 1, 1, 1, 1, 1, 12, 1},
+  {1, 1, 1, 1, 1, 1, 1, 1}, // 7 - reserved
+  {1, 1, 1, 1, 3, 1, 1, 1},
+  {1, 1, 1, 1, 1, 1, 1, 1}, // 9 - reserved
+  {1, 1, 1, 1, 1, 1, 1, 1},
+  {1, 1, 1, 1, 1, 1, 1, 1}, // 11 - reserved
+  {1, 1, 1, 1, 1, 1, 1, 1}, // 12 - reserved
+  {1, 1, 1, 1, 1, 1, 1, 1}, // 13 - reserved
+  {1, 1, 1, 1, 1, 1, 1, 1}, // 14 - reserved
+  {1, 1, 1, 1, 1, 1, 1, 1}  // 15 - reserved
+};
+
+
+static const uint8_t laG0_nat_replace_map[128] = {
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 5, 6, 7, 8,
+9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 11, 12, 13, 0
+};
+
+
+/*
+ * Latin National Option Sub-Sets
+ * ETSI EN 300 706 Table 36
+ */
+static const uint16_t laG0_nat_opts16[13][14] = {
+{0, '#',    'u',    'c',    't',    'z',    0xc3bd, 0xc3ad, 'r',    0xc3a9, 0xc3a1, 'e',    0xc3ba, 's'   }, // 0 - Czech/Slovak
+{0, 0xc2a3, '$',    '@',    '-',    0xc2bd, '-',    '|',    '#',    '-',    0xc2bc, '#',    0xc2be, 0xc3b7}, // 1 - English
+{0, '#',    0xc3b5, 'S',    0xc384, 0xc396, 'Z',    0xc39c, 0xc395, 's',    0xc3a4, 0xc3b6, 'z',    0xc3bc}, // 2 - Estonian
+{0, 0xc3a9, 0xc3af, 0xc3a0, 0xc3ab, 0xc3aa, 0xc3b9, 0xc3ae, '#',    0xc3a8, 0xc3a2, 0xc3b4, 0xc3bb, 0xc3a7}, // 3 - French
+{0, '#',    '$',    0xc2a7, 0xc384, 0xc396, 0xc39c, '^',    '_',    0xc2ba, 0xc3a4, 0xc3b6, 0xc3bc, 0xc39f}, // 4 - German
+{0, 0xc2a3, '$',    0xc3a9, 0xc2ba, 0xc3a7, '-',    '|',    '#',    0xc3b9, 0xc3a0, 0xc3b2, 0xc3a8, 0xc3ac}, // 5 - Italian
+{0, '#',    '$',    'S',    'e',    'e',    'Z',    'c',    'u',    's',    'a',    'u',    'z',    'i'   }, // 6 - Lettish/Lithuanian
+{0, '#',    'n',    'a',    'Z',    'S',    'L',    'c',    0xc3b3, 'e',    'z',    's',    'l',    'z'   }, // 7 - Polish
+{0, 0xc3a7, '$',    'i',    0xc3a1, 0xc3a9, 0xc3ad, 0xc3b3, 0xc3ba, 0xc2bf, 0xc3bc, 0xc3b1, 0xc3a8, 0xc3a0}, // 8 - Portuguese/Spanish
+{0, '#',    0xc2a4, 'T',    0xc382, 'S',    'A',    0xc38e, 'i',    't',    0xc3a2, 's',    'a',    0xc3ae}, // 9 - Rumanian
+{0, '#',    0xc38b, 'C',    'C',    'Z',    'D',    'S',    0xc3ab, 'c',    'c',    'z',    'd',    's'   }, // 10 - Serbian/Croation/Slovenian
+{0, '#',    0xc2a4, 0xc389, 0xc384, 0xc396, 0xc385, 0xc39c, '_',    0xc3a9, 0xc3a4, 0xc3b6, 0xc3a5, 0xc3bc}, // 11 - Swedish/Finnish/Hungarian
+{0, 'T',    'g',    'I',    'S',    0xc396, 0xc387, 0xc39c, 'G',    'i',    's',    0xc3b6, 0xc3a7, 0xc3bc}  // 12 - Turkish
+};
+
+/*
+ * Map Latin G0 teletext characters into a ISO-8859-1 approximation.
+ * Trying to use similar looking or similar meaning characters.
+ * Gtriplet - 4 bits = triplet-1 bits 14-11 (14-8) of a X/28 or M/29 packet, if unknown - use 0
+ * natopts - 3 bits = national_options field of a Y/0 packet (or triplet-1 bits 10-8 as above?)
+ * inchar - 7 bits = characted to remap
+ * Also strips parity
+ */
+
+static uint16_t
+tt_convert_char(int Gtriplet, int natopts, uint8_t inchar)
+{
+  int no = laG0_nat_opts_lookup[Gtriplet & 0xf][natopts & 0x7];
+  uint8_t c = inchar & 0x7f;
+
+  if(!laG0_nat_replace_map[c])
+    return c;
+  else
+    return laG0_nat_opts16[no][laG0_nat_replace_map[c]];
+}
 
 static uint8_t
 ham_decode(uint8_t a, uint8_t b)
@@ -180,6 +257,69 @@ update_tt_clock(th_transport_t *t, const uint8_t *buf)
 }
 
 
+static void
+extract_subtitle(th_transport_t *t, th_stream_t *st,
+		 tt_mag_t *ttm, int64_t pts)
+{
+  int i, j, off = 0;
+  uint8_t sub[2000];
+  int is_box = 0;
+
+  for (i = 0; i < 23; i++) {
+    int anything = 0;
+       
+    for (j = 0; j < 40; j++) {
+      char ch = ttm->ttm_page[40 * i + j];
+
+      switch(ch) {
+      case 0 ... 7:
+	break;
+
+      case 0x0a:
+	is_box = 0;
+	break;
+
+      case 0x0b:
+	is_box = 1;
+	break;
+
+      default:
+	if (ch >= 0x20 && is_box) {
+	  uint16_t code = tt_convert_char(0, ttm->ttm_lang, ch);
+
+	  if(code & 0xff00)
+	    sub[off++] = (code & 0xff00) >> 8;
+	  sub[off++] = code;
+	  anything |= ch != 0x20;
+	}
+      }
+    }
+    if(anything)
+      sub[off++] = '\n';
+  }
+
+  if(off == 0 && st->st_blank)
+    return; // Avoid multiple blank subtitles
+
+  st->st_blank = !off;
+
+  if(st->st_curpts == pts)
+    pts++; // Avoid non-monotonic PTS
+
+  st->st_curpts = pts;
+
+  sub[off++] = 0;
+  
+  th_pkt_t *pkt = pkt_alloc(sub, off, pts, pts);
+  pkt->pkt_componentindex = st->st_index;
+
+  streaming_message_t *sm = streaming_msg_create_pkt(pkt);
+  streaming_pad_deliver(&t->tht_streaming_pad, sm);
+  streaming_msg_free(sm);
+
+  /* Decrease our own reference to the packet */
+  pkt_ref_dec(pkt);
+}
 
 /**
  *
@@ -210,6 +350,23 @@ dump_page(tt_mag_t *ttm)
   }
 }
 #endif
+
+
+static void
+tt_subtitle_deliver(th_transport_t *t, th_stream_t *parent, tt_mag_t *ttm)
+{
+  th_stream_t *st;
+
+  if(t->tht_current_pts == PTS_UNSET)
+    return;
+
+  TAILQ_FOREACH(st, &t->tht_components, st_link) {
+     if(parent->st_pid == st->st_parent_pid &&
+	ttm->ttm_curpage == st->st_pid -  PID_TELETEXT_BASE) {
+       extract_subtitle(t, st, ttm, t->tht_current_pts);
+     }
+  }
+}
 
 /**
  *
@@ -242,6 +399,7 @@ tt_decode_line(th_transport_t *t, th_stream_t *st, uint8_t *buf)
   switch(line) {
   case 0:
     if(ttm->ttm_curpage != 0) {
+      tt_subtitle_deliver(t, st, ttm);
 
       if(ttm->ttm_curpage == 192) {
 	//	dump_page(ttm);
@@ -264,7 +422,7 @@ tt_decode_line(th_transport_t *t, th_stream_t *st, uint8_t *buf)
     s34 = ham_decode(buf[6], buf[7]);
     c = ham_decode(buf[8], buf[9]);
 
-    //    ttd->magazine_serial = c & 0x10 ? 1 : 0;
+    ttm->ttm_lang = c >> 5;
 
     if(s12 & 0x80) {
       /* Erase page */
@@ -290,8 +448,6 @@ tt_decode_line(th_transport_t *t, th_stream_t *st, uint8_t *buf)
   case 1 ... 23:
     for(i = 0; i < 40; i++) {
       c = buf[i + 2] & 0x7f;
-      if(c < 32)
-	c += 0x80;
       ttm->ttm_page[i + 40 * (line - 1)] = c;
     }
     break;
@@ -314,7 +470,7 @@ teletext_input(th_transport_t *t, th_stream_t *st, const uint8_t *tsb)
 
   x = tsb + 4;
   for(i = 0; i < 4; i++) {
-    if(*x == 2) {
+    if(*x == 2 || *x == 3) {
       for(j = 0; j < 42; j++)
 	buf[j] = bitreverse(x[4 + j]);
       tt_decode_line(t, st, buf);

@@ -66,11 +66,13 @@ stream_init(th_stream_t *st)
   st->st_curdts = PTS_UNSET;
   st->st_curpts = PTS_UNSET;
   st->st_prevdts = PTS_UNSET;
-
+  
   st->st_pcr_real_last = PTS_UNSET;
   st->st_pcr_last      = PTS_UNSET;
   st->st_pcr_drift     = 0;
   st->st_pcr_recovery_fails = 0;
+
+  st->st_blank = 0;
 }
 
 
@@ -206,6 +208,7 @@ transport_start(th_transport_t *t, unsigned int weight, int force_start)
   pthread_mutex_lock(&t->tht_stream_mutex);
 
   t->tht_status = TRANSPORT_RUNNING;
+  t->tht_current_pts = PTS_UNSET;
 
   /**
    * Initialize stream
