@@ -963,7 +963,8 @@ parse_mpeg2video(th_transport_t *t, th_stream_t *st, size_t len,
       st->st_curpkt = NULL;
 
       st->st_buf.sb_data = malloc(st->st_buf.sb_size);
-      
+      assert(st->st_buf.sb_data != NULL);
+
       /* If we know the frame duration, increase DTS accordingly */
       if(st->st_curdts != PTS_UNSET)
 	st->st_curdts += st->st_frame_duration;
