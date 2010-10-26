@@ -218,6 +218,11 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
       codec_id = "S_DVBSUB";
       break;
 
+    case SCT_TEXTSUB:
+      tracktype = 0x11;
+      codec_id = "S_TEXT/UTF8";
+      break;
+
     default:
       continue;
     }
