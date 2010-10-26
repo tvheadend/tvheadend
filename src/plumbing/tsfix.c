@@ -221,12 +221,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 {
   th_pktref_t *pr, *srch;
 
-  /* Reference count is transfered to queue */
-  pr = malloc(sizeof(th_pktref_t));
-  pr->pr_pkt = pkt;
-  TAILQ_INSERT_TAIL(&tf->tf_ptsq, pr, pr_link);
-
-  /* */
+  pktref_enqueue(&tf->tf_ptsq, pkt);
 
   while((pr = TAILQ_FIRST(&tf->tf_ptsq)) != NULL) {
     
