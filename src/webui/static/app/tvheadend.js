@@ -42,6 +42,8 @@ tvheadend.VLC = function(url) {
   if(url) {
     vlc.setAttribute('src', url);
   }
+  
+  vlc.style.display = 'none';
 
   var selectChannel = new Ext.form.ComboBox({
     loadingText: 'Loading...',
@@ -57,11 +59,12 @@ tvheadend.VLC = function(url) {
   selectChannel.on('select', function(c, r) {
       var url = 'stream/channelid/' + r.data.chid;
       var chName = r.data.name;
+      vlc.style.display = 'block';
 	    
-	    if(vlc.playlist.isPlaying) {
-	      vlc.playlist.stop();
-	    }
-	    if(vlc.playlist.items.count) {
+      if(vlc.playlist.isPlaying) {
+        vlc.playlist.stop();
+      }
+      if(vlc.playlist.items.count) {
         vlc.playlist.items.clear();
       }
       
@@ -126,6 +129,7 @@ tvheadend.VLC = function(url) {
         handler: function() {
           if(vlc.playlist.items.count) {
             vlc.playlist.stop();
+            vlc.style.display = 'none';
           }
         }
       },
