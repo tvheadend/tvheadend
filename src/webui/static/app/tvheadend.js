@@ -41,10 +41,10 @@ tvheadend.VLC = function(url) {
   vlc.setAttribute('id', 'vlc');
   if(url) {
     vlc.setAttribute('src', url);
+  } else {
+    vlc.style.display = 'none';
   }
   
-  vlc.style.display = 'none';
-
   var selectChannel = new Ext.form.ComboBox({
     loadingText: 'Loading...',
     width: 200,
@@ -60,11 +60,11 @@ tvheadend.VLC = function(url) {
       var url = 'stream/channelid/' + r.data.chid;
       var chName = r.data.name;
       vlc.style.display = 'block';
-	    
-      if(vlc.playlist.isPlaying) {
+      
+      if(vlc.playlist && vlc.playlist.isPlaying) {
         vlc.playlist.stop();
       }
-      if(vlc.playlist.items.count) {
+      if(vlc.playlist && vlc.playlist.items.count) {
         vlc.playlist.items.clear();
       }
       
@@ -86,7 +86,7 @@ tvheadend.VLC = function(url) {
   var sliderLabel = new Ext.form.Label();
   sliderLabel.setText("90%");
   slider.addListener('change', function() {
-    if(vlc.playlist.isPlaying) {
+    if(vlc.playlist && vlc.playlist.isPlaying) {
       vlc.audio.volume = slider.getValue();
       sliderLabel.setText(vlc.audio.volume + '%');
     } else {
@@ -109,7 +109,7 @@ tvheadend.VLC = function(url) {
         iconCls: 'control_play',
         tooltip: 'Play',
         handler: function() {
-          if(vlc.playlist.items.count && !vlc.playlist.isPlaying) {
+          if(vlc.playlist && vlc.playlist.items.count && !vlc.playlist.isPlaying) {
             vlc.playlist.play();
           }
         }
@@ -118,7 +118,7 @@ tvheadend.VLC = function(url) {
         iconCls: 'control_pause',
         tooltip: 'Pause',
         handler: function() {
-          if(vlc.playlist.items.count) {
+          if(vlc.playlist && vlc.playlist.items.count) {
             vlc.playlist.togglePause();
           }
         }
@@ -127,7 +127,7 @@ tvheadend.VLC = function(url) {
         iconCls: 'control_stop',
         tooltip: 'Stop',
         handler: function() {
-          if(vlc.playlist.items.count) {
+          if(vlc.playlist && vlc.playlist.items.count) {
             vlc.playlist.stop();
             vlc.style.display = 'none';
           }
@@ -138,7 +138,7 @@ tvheadend.VLC = function(url) {
         iconCls: 'control_fullscreen',
         tooltip: 'Fullscreen',
         handler: function() {
-          if(vlc.playlist.isPlaying) {
+          if(vlc.playlist && vlc.playlist.isPlaying) {
             vlc.video.toggleFullscreen();
           }
         }
@@ -151,14 +151,14 @@ tvheadend.VLC = function(url) {
       },
     ],
     items: [vlc]
-	});
+  });
 	  
-	win.on('render', function() {
-	  win.getTopToolbar().add(slider);
-	  win.getTopToolbar().add(new Ext.Toolbar.Spacer());
-	  win.getTopToolbar().add(new Ext.Toolbar.Spacer());
-	  win.getTopToolbar().add(new Ext.Toolbar.Spacer());
-	  win.getTopToolbar().add(sliderLabel);
+  win.on('render', function() {
+    win.getTopToolbar().add(slider);
+    win.getTopToolbar().add(new Ext.Toolbar.Spacer());
+    win.getTopToolbar().add(new Ext.Toolbar.Spacer());
+    win.getTopToolbar().add(new Ext.Toolbar.Spacer());
+    win.getTopToolbar().add(sliderLabel);
   });
 
   win.show();
