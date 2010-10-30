@@ -695,6 +695,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
 
     if(e->e_channel != NULL) {
       htsmsg_add_str(m, "channel", e->e_channel->ch_name);
+      htsmsg_add_u32(m, "channelid", e->e_channel->ch_id);
       if(e->e_channel->ch_icon != NULL)
 	htsmsg_add_str(m, "chicon", e->e_channel->ch_icon);
     }
