@@ -585,31 +585,20 @@ parse_ac3(th_transport_t *t, th_stream_t *st, size_t ilen,
   for(i = 0; i < len - 6; i++) {
     const uint8_t *p = buf + i;
     if(ac3_valid_frame(p)) {
-      int bsid      = p[5] & 0xf;
-      int fsize, sr;
+      int bsid = p[5] >> 3;
 
-      if(bsid <= 10) {
-	int fscod     = p[4] >> 6;
-	int frmsizcod = p[4] & 0x3f;
-	fsize  = ac3_frame_size_tab[frmsizcod][fscod] * 2;
+      if(bsid > 10)
+	continue;
 
-	bsid -= 8;
-	if(bsid < 0)
-	  bsid = 0;
-	sr = ac3_freq_tab[fscod] >> bsid;
-	
-      } else {
-
-	fsize = ((((p[2] & 0x7) << 8) | p[3]) + 1) * 2;
-	
-	
-	if((p[4] & 0xc0) == 0xc0) {
-	  sr = ac3_freq_tab[(p[4] >> 4) & 3] / 2;
-	} else {
-	  sr = ac3_freq_tab[(p[4] >> 6) & 3];
-	}
-      }
-
+      int fscod     = p[4] >> 6;
+      int frmsizcod = p[4] & 0x3f;
+      int fsize  = ac3_frame_size_tab[frmsizcod][fscod] * 2;
+      
+      bsid -= 8;
+      if(bsid < 0)
+	bsid = 0;
+      int sr = ac3_freq_tab[fscod] >> bsid;
+      
       if(sr) {
 	int duration = 90000 * 1536 / sr;
 	int64_t dts = st->st_curdts;
