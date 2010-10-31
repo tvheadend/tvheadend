@@ -580,6 +580,11 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 	hts_stream_type = SCT_DVBSUB;
 	break;
 
+      case DVB_DESC_EAC3:
+	if(estype == 0x06 || estype == 0x81)
+	  hts_stream_type = SCT_EAC3;
+	break;
+
       default:
 	break;
       }
@@ -845,6 +850,7 @@ static struct strtab streamtypetab[] = {
   { "AAC",        SCT_AAC },
   { "MPEGTS",     SCT_MPEGTS },
   { "TEXTSUB",    SCT_TEXTSUB },
+  { "EAC3",       SCT_EAC3 },
 };
 
 

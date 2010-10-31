@@ -46,6 +46,7 @@
 #define DVB_DESC_TELETEXT     0x56
 #define DVB_DESC_SUBTITLE     0x59
 #define DVB_DESC_AC3          0x6a
+#define DVB_DESC_EAC3         0x7a
 #define DVB_DESC_AAC          0x7c
 #define DVB_DESC_LOCAL_CHAN   0x83
 

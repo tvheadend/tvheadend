@@ -110,6 +110,9 @@ static int parse_mpa2(th_transport_t *t, th_stream_t *st);
 static int parse_ac3(th_transport_t *t, th_stream_t *st, size_t len,
 		     uint32_t next_startcode, int sc_offset);
 
+static int parse_eac3(th_transport_t *t, th_stream_t *st, size_t len,
+		      uint32_t next_startcode, int sc_offset);
+
 static void parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
 
 static int parse_pes_header(th_transport_t *t, th_stream_t *st,
@@ -141,6 +144,10 @@ parse_mpeg_ts(th_transport_t *t, th_stream_t *st, const uint8_t *data,
 
   case SCT_AC3:
     parse_sc(t, st, data, len, parse_ac3);
+    break;
+
+  case SCT_EAC3:
+    parse_sc(t, st, data, len, parse_eac3);
     break;
 
   case SCT_DVBSUB:
@@ -623,6 +630,76 @@ parse_ac3(th_transport_t *t, th_stream_t *st, size_t ilen,
   }
   return 1;
 }
+
+
+/**
+ * EAC3 audio parser
+ */
+
+
+static int
+eac3_valid_frame(const uint8_t *buf)
+{
+  if(buf[0] != 0x0b || buf[1] != 0x77 || buf[5] >> 3 <= 10)
+    return 0;
+  return (buf[4] & 0xc0) != 0xc0;
+}
+
+static int 
+parse_eac3(th_transport_t *t, th_stream_t *st, size_t ilen,
+	   uint32_t next_startcode, int sc_offset)
+{
+  int i, len;
+  const uint8_t *buf;
+
+  if((i = depacketize(t, st, ilen, next_startcode, sc_offset)) != 0)
+    return i;
+
+ again:
+  buf = st->st_buf_a.sb_data;
+  len = st->st_buf_a.sb_ptr;
+
+  for(i = 0; i < len - 6; i++) {
+    const uint8_t *p = buf + i;
+    if(eac3_valid_frame(p)) {
+
+      int fsize = ((((p[2] & 0x7) << 8) + p[3]) + 1) * 2;
+
+      int sr = p[4] >> 6;
+      int rate;
+      if(sr == 3) {
+	int sr2 = (p[4] >> 4) & 0x3;
+	if(sr2 == 3)
+	  continue;
+	rate = ac3_freq_tab[sr2] / 2;
+      } else {
+	rate = ac3_freq_tab[sr];
+      }
+
+
+      int64_t dts = st->st_curdts;
+      int sri = rate_to_sri(rate);
+	
+      int acmod = (p[4] >> 1) & 0x7;
+      int lfeon = p[4] & 1;
+
+      int channels = acmodtab[acmod] + lfeon;
+      int duration = 90000 * 1536 / rate;
+
+      if(dts == PTS_UNSET)
+	dts = st->st_nextdts;
+
+      if(dts != PTS_UNSET && len >= i + fsize + 6 &&
+	 eac3_valid_frame(p + fsize)) {
+	makeapkt(t, st, p, fsize, dts, duration, channels, sri);
+	sbuf_cut(&st->st_buf_a, i + fsize);
+	goto again;
+      }
+    }
+  }
+  return 1;
+}
+
 
 
 

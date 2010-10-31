@@ -162,6 +162,7 @@ typedef enum {
   SCT_AAC,
   SCT_MPEGTS,
   SCT_TEXTSUB,
+  SCT_EAC3,
 } streaming_component_type_t;
 
 #define SCT_ISVIDEO(t) ((t) == SCT_MPEG2VIDEO || (t) == SCT_H264)
