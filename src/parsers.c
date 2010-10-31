@@ -551,18 +551,9 @@ const static uint16_t ac3_frame_size_tab[38][3] = {
 static int
 ac3_valid_frame(const uint8_t *buf)
 {
-  if(buf[0] != 0x0b || buf[1] != 0x77)
+  if(buf[0] != 0x0b || buf[1] != 0x77 || buf[5] >> 3 > 10)
     return 0;
-
-  int bsid = buf[5] & 0xf;
-
-  if(bsid <= 10) {
-    // Normal AC3
-    return (buf[4] & 0xc0) != 0xc0 && (buf[4] & 0x3f) < 0x26;
-  } else {
-    // E-AC3
-    return (buf[2] & 0xc0) != 0xc0;
-  }
+  return (buf[4] & 0xc0) != 0xc0 && (buf[4] & 0x3f) < 0x26;
 }
 
 static const char acmodtab[8] = {2,1,2,3,3,4,4,5};
@@ -585,14 +576,10 @@ parse_ac3(th_transport_t *t, th_stream_t *st, size_t ilen,
   for(i = 0; i < len - 6; i++) {
     const uint8_t *p = buf + i;
     if(ac3_valid_frame(p)) {
-      int bsid = p[5] >> 3;
-
-      if(bsid > 10)
-	continue;
-
+      int bsid      = p[5] >> 3;
       int fscod     = p[4] >> 6;
       int frmsizcod = p[4] & 0x3f;
-      int fsize  = ac3_frame_size_tab[frmsizcod][fscod] * 2;
+      int fsize     = ac3_frame_size_tab[frmsizcod][fscod] * 2;
       
       bsid -= 8;
       if(bsid < 0)
