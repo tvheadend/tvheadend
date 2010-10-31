@@ -80,6 +80,8 @@ struct mk_mux {
   off_t cluster_pos;
 
 
+  off_t segment_header_pos;
+
   off_t segment_pos;
 
   off_t segmentinfo_pos;
@@ -370,14 +372,27 @@ mk_write_master(mk_mux_t *mkm, uint32_t id, htsbuf_queue_t *p)
  *
  */
 static void
-mk_write_segment(mk_mux_t *mkm)
+mk_write_segment_header(mk_mux_t *mkm, int64_t size)
 {
   htsbuf_queue_t q;
-  char ff = 0xff;
+  uint8_t u8[8];
   htsbuf_queue_init(&q, 0);
 
   ebml_append_id(&q, 0x18538067);
-  htsbuf_append(&q, &ff, 1);
+  
+  u8[0] = 1;
+  if(size == 0) {
+    memset(u8+1, 0xff, 7);
+  } else {
+    u8[1] = size >> 56;
+    u8[2] = size >> 48;
+    u8[3] = size >> 32;
+    u8[4] = size >> 24;
+    u8[5] = size >> 16;
+    u8[6] = size >> 8;
+    u8[7] = size;
+  }
+  htsbuf_append(&q, &u8, 8);
   
   mk_write_queue(mkm, &q);
 }
@@ -590,7 +605,9 @@ mk_mux_create(const char *filename,
   TAILQ_INIT(&mkm->cues);
 
   mk_write_master(mkm, 0x1a45dfa3, mk_build_ebmlheader());
-  mk_write_segment(mkm);
+
+  mkm->segment_header_pos = mkm->fdpos;
+  mk_write_segment_header(mkm, 0);
 
   mkm->segment_pos = mkm->fdpos;
   mk_write_metaseek(mkm, 1); // Must be first in segment
@@ -794,16 +811,25 @@ mk_write_cues(mk_mux_t *mkm)
 void
 mk_mux_close(mk_mux_t *mkm)
 {
+  int64_t totsize;
   mk_close_cluster(mkm);
   mk_write_cues(mkm);
 
   mk_write_metaseek(mkm, 0);
+  totsize = mkm->fdpos;
 
   // Rewrite segment info to update duration
   if(lseek(mkm->fd, mkm->segmentinfo_pos, SEEK_SET) == mkm->segmentinfo_pos)
     mk_write_master(mkm, 0x1549a966, mk_build_segment_info(mkm));
   else
     tvhlog(LOG_ERR, "MKV", "%s: Unable to write duration, seek failed -- %s",
+	   mkm->filename, strerror(errno));
+
+  // Rewrite segment header to update total size
+  if(lseek(mkm->fd, mkm->segment_header_pos, SEEK_SET) == mkm->segment_header_pos) {
+    mk_write_segment_header(mkm, totsize - mkm->segment_header_pos - 12);
+  } else
+    tvhlog(LOG_ERR, "MKV", "%s: Unable to write total size, seek failed -- %s",
 	   mkm->filename, strerror(errno));
 
   close(mkm->fd);
