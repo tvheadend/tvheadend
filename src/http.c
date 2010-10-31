@@ -722,7 +722,7 @@ http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
 	break; /* header complete */
 
       if((n = http_tokenize(hdrline, argv, 2, -1)) < 2)
-	return;
+	continue;
 
       if((c = strrchr(argv[0], ':')) == NULL)
 	return;
