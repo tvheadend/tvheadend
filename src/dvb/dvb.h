@@ -307,6 +307,8 @@ void dvb_transport_notify_by_adapter(th_dvb_adapter_t *tda);
 
 htsmsg_t *dvb_transport_build_msg(th_transport_t *t);
 
+int dvb_transport_get_signal_status(th_transport_t *t,
+				    signal_status_t *status);
 
 /**
  * DVB Frontend

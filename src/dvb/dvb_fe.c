@@ -112,6 +112,18 @@ dvb_fe_monitor(void *aux)
     } else {
       status = TDMI_FE_CONSTANT_FEC;
     }
+
+    /* bit error rate */
+    if(ioctl(tda->tda_fe_fd, FE_READ_BER, &tdmi->tdmi_ber) == -1)
+      tdmi->tdmi_ber = -2;
+
+    /* signal strength */
+    if(ioctl(tda->tda_fe_fd, FE_READ_SIGNAL_STRENGTH, &tdmi->tdmi_signal) == -1)
+      tdmi->tdmi_signal = -2;
+
+    /* signal/noise ratio */
+    if(ioctl(tda->tda_fe_fd, FE_READ_SNR, &tdmi->tdmi_snr) == -1)
+      tdmi->tdmi_snr = -2;
   }
 
   if(status != tdmi->tdmi_fe_status) {

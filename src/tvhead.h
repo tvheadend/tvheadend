@@ -168,6 +168,18 @@ typedef enum {
 #define SCT_ISVIDEO(t) ((t) == SCT_MPEG2VIDEO || (t) == SCT_H264)
 #define SCT_ISAUDIO(t) ((t) == SCT_MPEG2AUDIO || (t) == SCT_AC3 || \
                         (t) == SCT_AAC)
+
+/**
+ * The signal status of a tuner
+ */
+typedef struct signal_status {
+  const char *status_text; /* adapter status text */
+  int snr;      /* signal/noise ratio */
+  int signal;   /* signal strength */
+  int ber;      /* bit error rate */
+  int unc;      /* uncorrected blocks */
+} signal_status_t;
+
 /**
  * A streaming pad generates data.
  * It has one or more streaming targets attached to it.

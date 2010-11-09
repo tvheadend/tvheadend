@@ -1025,3 +1025,21 @@ transport_refresh_channel(th_transport_t *t)
   if(t->tht_ch != NULL)
     htsp_channel_update(t->tht_ch);
 }
+
+
+
+/**
+ * Get the signal status from a transport
+ */
+int
+transport_get_signal_status(th_transport_t *t, signal_status_t *status)
+{
+  // get signal status from the transport
+  switch(t->tht_type) {
+  case TRANSPORT_DVB:
+    return dvb_transport_get_signal_status(t, status);
+  default:
+    return -1;
+  }
+}
+
