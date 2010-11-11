@@ -57,6 +57,7 @@ typedef enum {
   CARD_IRDETO,
   CARD_CONAX,
   CARD_SECA,
+  CARD_VIACCESS,
   CARD_UNKNOWN
 } card_type_t;
 
@@ -223,6 +224,22 @@ typedef struct cwc {
   /* Emm forwarding */
   int cwc_forward_emm;
 
+  /* Emm duplicate cache */
+  struct {
+#define EMM_CACHE_SIZE (1<<5)
+#define EMM_CACHE_MASK (EMM_CACHE_SIZE-1)
+    uint32_t cache[EMM_CACHE_SIZE];
+    uint32_t w;
+    uint32_t n;
+  } cwc_emm_cache;
+
+  /* Viaccess EMM assemble state */
+  struct {
+    int shared_toggle;
+    int shared_len;
+    uint8_t * shared_emm;
+  } cwc_viaccess_emm;
+
   /* Card type */
   card_type_t cwc_card_type;
   
@@ -255,6 +272,8 @@ static void cwc_detecs_card_type(cwc_t *cwc);
 void cwc_emm_conax(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_irdeto(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_seca(cwc_t *cwc, uint8_t *data, int len);
+void cwc_emm_viaccess(cwc_t *cwc, uint8_t *data, int len);
+
 
 /**
  *
@@ -632,6 +651,11 @@ cwc_detecs_card_type(cwc_t *cwc)
   case 0x06: 
     cwc->cwc_card_type = CARD_IRDETO;
     tvhlog(LOG_INFO, "cwc", "%s: irdeto card",
+	   cwc->cwc_hostname);
+    break;
+  case 0x05:
+    cwc->cwc_card_type = CARD_VIACCESS;
+    tvhlog(LOG_INFO, "cwc", "%s: viaccess card",
 	   cwc->cwc_hostname);
     break;
   case 0x0b:
@@ -1102,6 +1126,29 @@ verify_provider(cwc_t *cwc, uint32_t providerid)
   return 0;
 }
 
+/**
+ *
+ */
+static void
+cwc_emm_cache_insert(cwc_t *cwc, uint32_t crc)
+{
+  /* evict the oldest entry */
+  cwc->cwc_emm_cache.cache[cwc->cwc_emm_cache.w] = crc;
+  cwc->cwc_emm_cache.w = (cwc->cwc_emm_cache.w+1)&EMM_CACHE_MASK;
+  if (cwc->cwc_emm_cache.n < EMM_CACHE_SIZE)
+    cwc->cwc_emm_cache.n++;
+}
+
+static int
+cwc_emm_cache_lookup(cwc_t *cwc, uint32_t crc)
+{
+  int i;
+  for (i=0; i<cwc->cwc_emm_cache.n; i++)
+    if (cwc->cwc_emm_cache.cache[i] == crc)
+      return 1;
+  return 0;
+}
+
 
 /**
  *
@@ -1124,6 +1171,9 @@ cwc_emm(uint8_t *data, int len)
 	break;
       case CARD_SECA:
 	cwc_emm_seca(cwc, data, len);
+	break;
+      case CARD_VIACCESS:
+	cwc_emm_viaccess(cwc, data, len);
 	break;
       case CARD_UNKNOWN:
 	break;
@@ -1213,6 +1263,179 @@ cwc_emm_seca(cwc_t *cwc, uint8_t *data, int len)
     cwc_send_msg(cwc, data, len, 0, 1);
 }
 
+/**
+ * viaccess emm handler
+ * inspired by opensasc-ng, https://opensvn.csie.org/traccgi/opensascng/
+ */
+static
+uint8_t * nano_start(uint8_t * data)
+{
+  switch(data[0]) {
+  case 0x88: return &data[8];
+  case 0x8e: return &data[7];
+  case 0x8c:
+  case 0x8d: return &data[3];
+  case 0x80:
+  case 0x81: return &data[4];
+  }
+  return NULL;
+}
+
+static
+uint8_t * nano_checknano90fromnano(uint8_t * data)
+{
+  if(data && data[0]==0x90 && data[1]==0x03) return data;
+  return 0;
+}
+
+static
+uint8_t * nano_checknano90(uint8_t * data)
+{
+  return nano_checknano90fromnano(nano_start(data));
+}
+
+static
+int sort_nanos(uint8_t *dest, const uint8_t *src, int len)
+{
+  int w = 0, c = -1;
+
+  while (1) {
+    int j, n;
+    n = 0x100;
+    for (j = 0; j < len;) {
+      int l = src[j + 1] + 2;
+      if (src[j] == c) {
+	if (w + l > len) {
+	  return -1;
+	}
+	memcpy(dest + w, src + j, l);
+	w += l;
+      }
+      else if (src[j] > c && src[j] < n) {
+	n = src[j];
+      }
+      j += l;
+    }
+    if (n == 0x100) {
+      break;
+    }
+    c = n;
+  }
+  return 0;
+}
+
+static int via_provider_id(uint8_t * data)
+{
+  const uint8_t * tmp;
+  tmp = nano_checknano90(data);
+  if (!tmp) return 0;
+  return (tmp[2] << 16) | (tmp[3] << 8) | (tmp[4]&0xf0);
+}
+
+
+void
+cwc_emm_viaccess(cwc_t *cwc, uint8_t *data, int mlen)
+{
+  /* Get SCT len */
+  int len = 3 + ((data[1] & 0x0f) << 8) + data[2];
+
+  switch (data[0])
+    {
+    case 0x8c:
+    case 0x8d:
+      {
+	int match = 0;
+	int i;
+	uint32_t id;
+
+	/* Match provider id */
+	id = via_provider_id(data);
+	if (!id) break;
+
+	for(i = 0; i < cwc->cwc_num_providers; i++)
+	  if(cwc->cwc_providers[i].id == id) {
+	    match = 1;
+	    break;
+	  }
+	if (!match) break;
+
+	if (data[0] != cwc->cwc_viaccess_emm.shared_toggle) {
+	  cwc->cwc_viaccess_emm.shared_len = 0;
+	  free(cwc->cwc_viaccess_emm.shared_emm);
+	  cwc->cwc_viaccess_emm.shared_emm = (uint8_t*)malloc(len);
+	  if (cwc->cwc_viaccess_emm.shared_emm) {
+	    cwc->cwc_viaccess_emm.shared_len = len;
+	    memcpy(cwc->cwc_viaccess_emm.shared_emm, data, len);
+	  }
+	  cwc->cwc_viaccess_emm.shared_toggle = data[0];
+	}
+      }
+      break;
+    case 0x8e:
+      if (cwc->cwc_viaccess_emm.shared_emm) {
+	int match = 0;
+	int i;
+	/* Match SA and provider in shared */
+	for(i = 0; i < cwc->cwc_num_providers; i++) {
+	  if(memcmp(&data[3],&cwc->cwc_providers[i].sa[4], 3)) continue;
+	  if((data[6]&2)) continue;
+	  if(via_provider_id(cwc->cwc_viaccess_emm.shared_emm) != cwc->cwc_providers[i].id) continue;
+	  match = 1;
+	  break;
+	}
+	if (!match) break;
+
+	uint8_t * tmp = alloca(len + cwc->cwc_viaccess_emm.shared_len);
+	uint8_t * ass = nano_start(data);
+	len -= (ass - data);
+	if((data[6] & 2) == 0)  {
+	  int addrlen = len - 8;
+	  len=0;
+	  tmp[len++] = 0x9e;
+	  tmp[len++] = addrlen;
+	  memcpy(&tmp[len], &ass[0], addrlen); len += addrlen;
+	  tmp[len++] = 0xf0;
+	  tmp[len++] = 0x08;
+	  memcpy(&tmp[len],&ass[addrlen],8); len += 8;
+	} else {
+	  memcpy(tmp, ass, len);
+	}
+	ass = nano_start(cwc->cwc_viaccess_emm.shared_emm);
+	int l = cwc->cwc_viaccess_emm.shared_len - (ass - cwc->cwc_viaccess_emm.shared_emm);
+	memcpy(&tmp[len], ass, l); len += l;
+
+	ass = (uint8_t*) alloca(len+7);
+	if(ass) {
+	  uint32_t crc;
+
+	  memcpy(ass, data, 7);
+	  if (sort_nanos(ass + 7, tmp, len)) {
+	    return;
+	  }
+
+	  /* Set SCT len */
+	  len += 4;
+	  ass[1] = (len>>8) | 0x70;
+	  ass[2] = len & 0xff;
+	  len += 3;
+
+	  crc = crc32(ass, len, 0xffffffff);
+	  if (!cwc_emm_cache_lookup(cwc, crc)) {
+	    tvhlog(LOG_DEBUG, "cwc",
+		   "Send EMM "
+		   "%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
+		   "...%02x.%02x.%02x.%02x",
+		   ass[0], ass[1], ass[2], ass[3],
+		   ass[4], ass[5], ass[6], ass[7],
+		   ass[len-4], ass[len-3], ass[len-2], ass[len-1]);
+	    cwc_send_msg(cwc, ass, len, 0, 1);
+	    cwc_emm_cache_insert(cwc, crc);
+	  }
+	}
+      }
+      break;
+    }
+}
 
 /**
  *
