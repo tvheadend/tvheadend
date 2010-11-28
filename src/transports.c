@@ -1027,6 +1027,30 @@ transport_refresh_channel(th_transport_t *t)
 }
 
 
+/**
+ * Get the encryption CAID from a transport
+ * only the first CA stream in a transport is returned
+ */
+uint16_t
+transport_get_encryption(th_transport_t *t)
+{
+  th_stream_t *st;
+  caid_t *c;
+
+  TAILQ_FOREACH(st, &t->tht_components, st_link) {
+    switch(st->st_type) {
+    case SCT_CA:
+      LIST_FOREACH(c, &st->st_caids, link)
+	if(c->caid != 0)
+	  return c->caid;
+      break;
+    default:
+      break;
+    }
+  }
+  return 0;
+}
+
 
 /**
  * Get the signal status from a transport

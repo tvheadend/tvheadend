@@ -98,6 +98,8 @@ void transport_refresh_channel(th_transport_t *t);
 
 int tss2errcode(int tss);
 
+uint16_t transport_get_encryption(th_transport_t *t);
+
 int transport_get_signal_status(th_transport_t *t, signal_status_t *status);
 
 #endif /* TRANSPORTS_H */
