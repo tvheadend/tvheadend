@@ -405,8 +405,10 @@ dvr_thread(void *aux)
     case SMT_PACKET:
       if(dispatch_clock > de->de_start - (60 * de->de_start_extra)) {
 	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
-	mk_mux_write_pkt(de->de_mkmux, sm->sm_data);
-	sm->sm_data = NULL;
+	if(de->de_mkmux != NULL) {
+	  mk_mux_write_pkt(de->de_mkmux, sm->sm_data);
+	  sm->sm_data = NULL;
+	}
       }
       break;
 
