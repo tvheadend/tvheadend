@@ -1,5 +1,15 @@
 hts-tvheadend (2.11.99) hts; urgency=low
 
+  * Add support for IPTV over IPv6
+
+  * Use a native matroska mutiplixer to get better support for metadata, etc
+
+  * Add support for multiple DVR configurations (can be set per recording)
+
+  * Add suport for teletext subtitles
+
+  * Add support for E-AC3
+
   * Workaround for ITV HD (which has incorrect PMT)
     Ticket #215
 
