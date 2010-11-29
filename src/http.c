@@ -32,7 +32,6 @@
 #include "tvheadend.h"
 #include "tcp.h"
 #include "http.h"
-#include "rtsp.h"
 #include "access.h"
 
 static void *http_server;
@@ -498,7 +497,6 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
 
   switch(hc->hc_version) {
   case RTSP_VERSION_1_0:
-    rval = rtsp_process_request(hc);
     break;
 
   case HTTP_VERSION_1_0:
@@ -780,7 +778,6 @@ http_serve(int fd, void *opaque, struct sockaddr_in *peer,
   free(hc.hc_username);
   free(hc.hc_password);
 
-  rtsp_disconncet(&hc);
   http_arg_flush(&hc.hc_args);
   http_arg_flush(&hc.hc_req_args);
 

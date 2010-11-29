@@ -55,8 +55,6 @@ SRCS =  src/main.c \
 	src/parser_latm.c \
 	src/tsdemux.c \
 	src/bitstream.c \
-	src/rtsp.c \
-	src/rtp.c \
 	src/htsp.c \
 	src/serviceprobe.c \
 	src/htsmsg.c \
