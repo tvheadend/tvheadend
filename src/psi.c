@@ -24,7 +24,6 @@
 
 #include "tvheadend.h"
 #include "psi.h"
-#include "transports.h"
 #include "dvb/dvb_support.h"
 #include "tsdemux.h"
 #include "parsers.h"
@@ -114,14 +113,14 @@ psi_section_reassemble(psi_section_t *ps, const uint8_t *tsb, int crc,
  * PAT parser, from ISO 13818-1
  */
 int
-psi_parse_pat(th_transport_t *t, uint8_t *ptr, int len,
+psi_parse_pat(service_t *t, uint8_t *ptr, int len,
 	      pid_section_callback_t *pmt_callback)
 {
   uint16_t prognum;
   uint16_t pid;
   th_stream_t *st;
 
-  lock_assert(&t->tht_stream_mutex);
+  lock_assert(&t->s_stream_mutex);
 
   if(len < 5)
     return -1;
@@ -135,8 +134,8 @@ psi_parse_pat(th_transport_t *t, uint8_t *ptr, int len,
     pid     = (ptr[2] & 0x1f) << 8 | ptr[3];
 
     if(prognum != 0) {
-      if(transport_stream_find(t, pid) == NULL) {
-	st = transport_stream_create(t, pid, SCT_PMT);
+      if(service_stream_find(t, pid) == NULL) {
+	st = service_stream_create(t, pid, SCT_PMT);
 	st->st_section_docrc = 1;
 	st->st_got_section = pmt_callback;
       }
@@ -178,7 +177,7 @@ psi_append_crc32(uint8_t *buf, int offset, int maxlen)
  */
 
 int
-psi_build_pat(th_transport_t *t, uint8_t *buf, int maxlen, int pmtpid)
+psi_build_pat(service_t *t, uint8_t *buf, int maxlen, int pmtpid)
 {
   if(maxlen < 12)
     return -1;
@@ -225,14 +224,14 @@ psi_build_pat(th_transport_t *t, uint8_t *buf, int maxlen, int pmtpid)
  * Add a CA descriptor
  */
 static int
-psi_desc_add_ca(th_transport_t *t, uint16_t caid, uint32_t provid, uint16_t pid)
+psi_desc_add_ca(service_t *t, uint16_t caid, uint32_t provid, uint16_t pid)
 {
   th_stream_t *st;
   caid_t *c;
   int r = 0;
 
-  if((st = transport_stream_find(t, pid)) == NULL) {
-    st = transport_stream_create(t, pid, SCT_CA);
+  if((st = service_stream_find(t, pid)) == NULL) {
+    st = service_stream_create(t, pid, SCT_CA);
     r |= PMT_UPDATE_NEW_CA_STREAM;
   }
 
@@ -267,7 +266,7 @@ psi_desc_add_ca(th_transport_t *t, uint16_t caid, uint32_t provid, uint16_t pid)
  * Parser for CA descriptors
  */
 static int 
-psi_desc_ca(th_transport_t *t, const uint8_t *buffer, int size)
+psi_desc_ca(service_t *t, const uint8_t *buffer, int size)
 {
   int r = 0;
   int i;
@@ -321,7 +320,7 @@ psi_desc_ca(th_transport_t *t, const uint8_t *buffer, int size)
  * Parser for teletext descriptor
  */
 static int
-psi_desc_teletext(th_transport_t *t, const uint8_t *ptr, int size,
+psi_desc_teletext(service_t *t, const uint8_t *ptr, int size,
 		  int parent_pid, int *position)
 {
   int r = 0;
@@ -338,9 +337,9 @@ psi_desc_teletext(th_transport_t *t, const uint8_t *ptr, int size,
       // higher than normal MPEG TS (0x2000 ++)
       int pid = PID_TELETEXT_BASE + page;
     
-      if((st = transport_stream_find(t, pid)) == NULL) {
+      if((st = service_stream_find(t, pid)) == NULL) {
 	r |= PMT_UPDATE_NEW_STREAM;
-	st = transport_stream_create(t, pid, SCT_TEXTSUB);
+	st = service_stream_create(t, pid, SCT_TEXTSUB);
       }
 
       st->st_delete_me = 0;
@@ -384,23 +383,23 @@ pidcmp(const void *A, const void *B)
  *
  */
 static void
-sort_pids(th_transport_t *t)
+sort_pids(service_t *t)
 {
   th_stream_t *st, **v;
   int num = 0, i = 0;
 
-  TAILQ_FOREACH(st, &t->tht_components, st_link)
+  TAILQ_FOREACH(st, &t->s_components, st_link)
     num++;
 
   v = alloca(num * sizeof(th_stream_t *));
-  TAILQ_FOREACH(st, &t->tht_components, st_link)
+  TAILQ_FOREACH(st, &t->s_components, st_link)
     v[i++] = st;
 
   qsort(v, num, sizeof(th_stream_t *), pidcmp);
 
-  TAILQ_INIT(&t->tht_components);
+  TAILQ_INIT(&t->s_components);
   for(i = 0; i < num; i++)
-    TAILQ_INSERT_TAIL(&t->tht_components, v[i], st_link);
+    TAILQ_INSERT_TAIL(&t->s_components, v[i], st_link);
 }
 
 
@@ -408,7 +407,7 @@ sort_pids(th_transport_t *t)
  * PMT parser, from ISO 13818-1 and ETSI EN 300 468
  */
 int
-psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
+psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 	      int delete)
 {
   uint16_t pcr_pid, pid;
@@ -432,9 +431,9 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
   if(len < 9)
     return -1;
 
-  lock_assert(&t->tht_stream_mutex);
+  lock_assert(&t->s_stream_mutex);
 
-  had_components = !!TAILQ_FIRST(&t->tht_components);
+  had_components = !!TAILQ_FIRST(&t->s_components);
 
   sid     = ptr[0] << 8 | ptr[1];
   version = ptr[2] >> 1 & 0x1f;
@@ -447,11 +446,11 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
   pcr_pid = (ptr[5] & 0x1f) << 8 | ptr[6];
   dllen   = (ptr[7] & 0xf) << 8 | ptr[8];
   
-  if(chksvcid && sid != t->tht_dvb_service_id)
+  if(chksvcid && sid != t->s_dvb_service_id)
     return -1;
 
-  if(t->tht_pcr_pid != pcr_pid) {
-    t->tht_pcr_pid = pcr_pid;
+  if(t->s_pcr_pid != pcr_pid) {
+    t->s_pcr_pid = pcr_pid;
     update |= PMT_UPDATE_PCR;
   }
 
@@ -460,7 +459,7 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 
   /* Mark all streams for deletion */
   if(delete) {
-    TAILQ_FOREACH(st, &t->tht_components, st_link) {
+    TAILQ_FOREACH(st, &t->s_components, st_link) {
       st->st_delete_me = 1;
 
       LIST_FOREACH(c, &st->st_caids, link)
@@ -593,16 +592,16 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 
     
     if(hts_stream_type == SCT_UNKNOWN && estype == 0x06 &&
-       pid == 3401 && t->tht_dvb_service_id == 10510) {
+       pid == 3401 && t->s_dvb_service_id == 10510) {
       // Workaround for ITV HD
       hts_stream_type = SCT_H264;
     }
 
     if(hts_stream_type != SCT_UNKNOWN) {
 
-      if((st = transport_stream_find(t, pid)) == NULL) {
+      if((st = service_stream_find(t, pid)) == NULL) {
 	update |= PMT_UPDATE_NEW_STREAM;
-	st = transport_stream_create(t, pid, hts_stream_type);
+	st = service_stream_create(t, pid, hts_stream_type);
       }
 
       st->st_delete_me = 0;
@@ -631,7 +630,7 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
   }
 
   /* Scan again to see if any streams should be deleted */
-  for(st = TAILQ_FIRST(&t->tht_components); st != NULL; st = next) {
+  for(st = TAILQ_FIRST(&t->s_components); st != NULL; st = next) {
     next = TAILQ_NEXT(st, st_link);
 
     for(c = LIST_FIRST(&st->st_caids); c != NULL; c = cn) {
@@ -645,7 +644,7 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 
 
     if(st->st_delete_me) {
-      transport_stream_destroy(t, st);
+      service_stream_destroy(t, st);
       update |= PMT_UPDATE_STREAM_DELETED;
     }
   }
@@ -654,9 +653,9 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
     sort_pids(t);
 
   if(update) {
-    tvhlog(LOG_DEBUG, "PSI", "Transport \"%s\" PMT (version %d) updated"
+    tvhlog(LOG_DEBUG, "PSI", "Service \"%s\" PMT (version %d) updated"
 	   "%s%s%s%s%s%s%s%s%s%s%s%s%s",
-	   transport_nicename(t), version,
+	   service_nicename(t), version,
 	   update&PMT_UPDATE_PCR               ? ", PCR PID changed":"",
 	   update&PMT_UPDATE_NEW_STREAM        ? ", New elementary stream":"",
 	   update&PMT_UPDATE_LANGUAGE          ? ", Language changed":"",
@@ -671,15 +670,15 @@ psi_parse_pmt(th_transport_t *t, const uint8_t *ptr, int len, int chksvcid,
 	   update&PMT_UPDATE_CAID_DELETED      ? ", CAID deleted":"",
 	   update&PMT_REORDERED                ? ", PIDs reordered":"");
     
-    transport_request_save(t, 0);
+    service_request_save(t, 0);
 
     // Only restart if something that our clients worry about did change
     if(update & !(PMT_UPDATE_NEW_CA_STREAM |
 		  PMT_UPDATE_NEW_CAID |
 		  PMT_UPDATE_CA_PROVIDER_CHANGE | 
 		  PMT_UPDATE_CAID_DELETED)) {
-      if(t->tht_status == TRANSPORT_RUNNING)
-	transport_restart(t, had_components);
+      if(t->s_status == SERVICE_RUNNING)
+	service_restart(t, had_components);
     }
   }
   return 0;
@@ -865,21 +864,21 @@ streaming_component_type2txt(streaming_component_type_t s)
 
 
 /**
- * Store transport settings into message
+ * Store service settings into message
  */
 void
-psi_save_transport_settings(htsmsg_t *m, th_transport_t *t)
+psi_save_service_settings(htsmsg_t *m, service_t *t)
 {
   th_stream_t *st;
   htsmsg_t *sub;
 
-  htsmsg_add_u32(m, "pcr", t->tht_pcr_pid);
+  htsmsg_add_u32(m, "pcr", t->s_pcr_pid);
 
-  htsmsg_add_u32(m, "disabled", !t->tht_enabled);
+  htsmsg_add_u32(m, "disabled", !t->s_enabled);
 
-  lock_assert(&t->tht_stream_mutex);
+  lock_assert(&t->s_stream_mutex);
 
-  TAILQ_FOREACH(st, &t->tht_components, st_link) {
+  TAILQ_FOREACH(st, &t->s_components, st_link) {
     sub = htsmsg_create_map();
 
     htsmsg_add_u32(sub, "pid", st->st_pid);
@@ -995,10 +994,10 @@ load_caid(htsmsg_t *m, th_stream_t *st)
 
 
 /**
- * Load transport info from htsmsg
+ * Load service info from htsmsg
  */
 void
-psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
+psi_load_service_settings(htsmsg_t *m, service_t *t)
 {
   htsmsg_t *c;
   htsmsg_field_t *f;
@@ -1008,12 +1007,12 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
   const char *v;
 
   if(!htsmsg_get_u32(m, "pcr", &u32))
-    t->tht_pcr_pid = u32;
+    t->s_pcr_pid = u32;
 
   if(!htsmsg_get_u32(m, "disabled", &u32))
-    t->tht_enabled = !u32;
+    t->s_enabled = !u32;
   else
-    t->tht_enabled = 1;
+    t->s_enabled = 1;
 
   HTSMSG_FOREACH(f, m) {
     if(strcmp(f->hmf_name, "stream"))
@@ -1032,7 +1031,7 @@ psi_load_transport_settings(htsmsg_t *m, th_transport_t *t)
     if(htsmsg_get_u32(c, "pid", &pid))
       continue;
 
-    st = transport_stream_create(t, pid, type);
+    st = service_stream_create(t, pid, type);
     
     if((v = htsmsg_get_str(c, "language")) != NULL)
       snprintf(st->st_lang, 4, "%s", v);

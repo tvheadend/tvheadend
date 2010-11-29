@@ -37,7 +37,6 @@
 #include "access.h"
 #include "htsp.h"
 #include "streaming.h"
-#include "transports.h"
 #include "psi.h"
 #include "htsmsg_binary.h"
 
@@ -295,7 +294,7 @@ htsp_build_channel(channel_t *ch, const char *method)
 {
   channel_tag_mapping_t *ctm;
   channel_tag_t *ct;
-  th_transport_t *t;
+  service_t *t;
 
   htsmsg_t *out = htsmsg_create_map();
   htsmsg_t *tags = htsmsg_create_list();
@@ -317,12 +316,12 @@ htsp_build_channel(channel_t *ch, const char *method)
       htsmsg_add_u32(tags, NULL, ct->ct_identifier);
   }
 
-  LIST_FOREACH(t, &ch->ch_transports, tht_ch_link) {
+  LIST_FOREACH(t, &ch->ch_services, s_ch_link) {
     htsmsg_t *svcmsg = htsmsg_create_map();
     uint16_t caid;
-    htsmsg_add_str(svcmsg, "name", transport_nicename(t));
-    htsmsg_add_str(svcmsg, "type", transport_servicetype_txt(t));
-    if((caid = transport_get_encryption(t)) != 0) {
+    htsmsg_add_str(svcmsg, "name", service_nicename(t));
+    htsmsg_add_str(svcmsg, "type", service_servicetype_txt(t));
+    if((caid = service_get_encryption(t)) != 0) {
       htsmsg_add_u32(svcmsg, "caid", caid);
       htsmsg_add_str(svcmsg, "caname", psi_caid2name(caid));
     }
@@ -1380,7 +1379,7 @@ const static char frametypearray[PKT_NTYPES] = {
 };
 
 /**
- * Build a htsmsg from a th_pkt and enqueue it on our HTSP transport
+ * Build a htsmsg from a th_pkt and enqueue it on our HTSP service
  */
 static void
 htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
@@ -1470,7 +1469,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
     htsp_send_message(hs->hs_htsp, m, &hs->hs_htsp->htsp_hmq_qstatus);
 
 
-    if(!transport_get_signal_status(hs->hs_s->ths_transport, &status)) {
+    if(!service_get_signal_status(hs->hs_s->ths_service, &status)) {
 
       m = htsmsg_create_map();
       htsmsg_add_str(m, "method", "signalStatus");
@@ -1585,12 +1584,12 @@ htsp_subscription_status(htsp_subscription_t *hs, const char *err)
  *
  */
 static void
-htsp_subscription_transport_status(htsp_subscription_t *hs, int status)
+htsp_subscription_service_status(htsp_subscription_t *hs, int status)
 {
   if(status & TSS_PACKETS) {
     htsp_subscription_status(hs, NULL);
   } else if(status & (TSS_GRACEPERIOD | TSS_ERRORS)) {
-    htsp_subscription_status(hs, transport_tss2text(status));
+    htsp_subscription_status(hs, service_tss2text(status));
   }
 }
 
@@ -1616,8 +1615,8 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
     htsp_subscription_stop(hs, streaming_code2txt(sm->sm_code));
     break;
 
-  case SMT_TRANSPORT_STATUS:
-    htsp_subscription_transport_status(hs, sm->sm_code);
+  case SMT_SERVICE_STATUS:
+    htsp_subscription_service_status(hs, sm->sm_code);
     break;
 
   case SMT_NOSTART:

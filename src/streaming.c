@@ -22,7 +22,7 @@
 #include "streaming.h"
 #include "packet.h"
 #include "atomic.h"
-#include "transports.h"
+#include "service.h"
 
 void
 streaming_pad_init(streaming_pad_t *sp)
@@ -183,7 +183,7 @@ streaming_msg_clone(streaming_message_t *src)
     break;
 
   case SMT_STOP:
-  case SMT_TRANSPORT_STATUS:
+  case SMT_SERVICE_STATUS:
   case SMT_NOSTART:
     dst->sm_code = src->sm_code;
     break;
@@ -214,7 +214,7 @@ streaming_start_unref(streaming_start_t *ss)
   if((atomic_add(&ss->ss_refcount, -1)) != 1)
     return;
 
-  transport_source_info_free(&ss->ss_si);
+  service_source_info_free(&ss->ss_si);
   for(i = 0; i < ss->ss_num_components; i++)
     if(ss->ss_components[i].ssc_gh)
       pktbuf_ref_dec(ss->ss_components[i].ssc_gh);
@@ -244,7 +244,7 @@ streaming_msg_free(streaming_message_t *sm)
   case SMT_EXIT:
     break;
 
-  case SMT_TRANSPORT_STATUS:
+  case SMT_SERVICE_STATUS:
     break;
 
   case SMT_NOSTART:
@@ -355,8 +355,8 @@ streaming_code2txt(int code)
     return "Too bad signal quality";
   case SM_CODE_NO_SOURCE:
     return "No source available";
-  case SM_CODE_NO_TRANSPORT:
-    return "No transport assigned to channel";
+  case SM_CODE_NO_SERVICE:
+    return "No service assigned to channel";
 
   case SM_CODE_ABORTED:
     return "Aborted by user";
@@ -388,7 +388,7 @@ streaming_start_copy(const streaming_start_t *src)
   streaming_start_t *dst = malloc(siz);
   
   memcpy(dst, src, siz);
-  transport_source_info_copy(&dst->ss_si, &src->ss_si);
+  service_source_info_copy(&dst->ss_si, &src->ss_si);
 
   for(i = 0; i < dst->ss_num_components; i++) {
     streaming_start_component_t *ssc = &dst->ss_components[i];

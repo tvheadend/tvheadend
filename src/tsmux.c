@@ -193,11 +193,11 @@ ts_check_deliver(tsmuxer_t *tsm, tsmuxer_es_t *te)
     if(ts->ts_pcr_start == AV_NOPTS_VALUE)
       return; /* dont know anything yet */
 
-    ts->ts_pcr_ref = now - ts->ts_pcr_start + t->tht_pcr_drift;
+    ts->ts_pcr_ref = now - ts->ts_pcr_start + t->s_pcr_drift;
   }
 
   f = TAILQ_FIRST(&tmf->tmf_queue);  /* next packet we are going to send */
-  next = f->tm_deadline + ts->ts_pcr_ref - t->tht_pcr_drift;
+  next = f->tm_deadline + ts->ts_pcr_ref - t->s_pcr_drift;
 
   if(next < now + 100)
     next = now + 100;
@@ -691,7 +691,7 @@ ts_muxer_send_packet(ts_muxer_t *ts)
   int i;
   int64_t t, tlow, pcr;
   uint8_t *d;
-  th_transport_t *tr;
+  service_t *tr;
 
   if(ts->ts_block == 0)
     return;
@@ -706,7 +706,7 @@ ts_muxer_send_packet(ts_muxer_t *ts)
       if((d[3] & 0xf0) == 0x30 && d[4] >= 7 && d[5] & 0x10) {
 	tr = ts->ts_muxer->tm_subscription->ths_transport;
 
-	pcr = getclock_hires() - ts->ts_pcr_ref - tr->tht_pcr_drift;
+	pcr = getclock_hires() - ts->ts_pcr_ref - tr->s_pcr_drift;
 	t = av_rescale_q(pcr, AV_TIME_BASE_Q, mpeg_tc_27M);
 	tlow = t % 300LL;
 	t =    t / 300LL;
@@ -802,7 +802,7 @@ ts_muxer_generate_tables(void *aux, int64_t now)
 {
   ts_muxer_t *ts = aux;
   th_muxer_t *tm = ts->ts_muxer;
-  th_transport_t *t;
+  service_t *t;
   th_muxstream_t *tms;
   uint8_t table[180];
   int l, pcrpid;
@@ -824,7 +824,7 @@ ts_muxer_generate_tables(void *aux, int64_t now)
     t = tm->tm_subscription->ths_transport;
 
     LIST_FOREACH(tms, &tm->tm_streams, tms_muxer_link0)
-      if(tms->tms_stream->st_pid == t->tht_pcr_pid)
+      if(tms->tms_stream->st_pid == t->s_pcr_pid)
 	break;
 
     pcrpid = tms ? tms->tms_index : 0x1fff;
@@ -905,11 +905,11 @@ ts_deliver(void *opaque, int64_t now)
 {
   th_muxstream_t *tms = opaque;
   th_muxer_t *tm = tms->tms_muxer;
-  th_transport_t *t = tm->tm_subscription->ths_transport;
+  service_t *t = tm->tm_subscription->ths_transport;
   ts_muxer_t *ts = tm->tm_opaque;
   th_muxpkt_t *f;
   th_muxfifo_t *tmf = &tms->tms_delivery_fifo;
-  int64_t pcr = now - ts->ts_pcr_ref - t->tht_pcr_drift;
+  int64_t pcr = now - ts->ts_pcr_ref - t->s_pcr_drift;
   int64_t dl, next, delta;
 
   f = tmf_deq(tmf);
@@ -928,7 +928,7 @@ ts_deliver(void *opaque, int64_t now)
       return;
   }
 
-  next = f->tm_deadline + ts->ts_pcr_ref - t->tht_pcr_drift;
+  next = f->tm_deadline + ts->ts_pcr_ref - t->s_pcr_drift;
   if(next < now + 100)
     next = now + 100;
 
@@ -949,7 +949,7 @@ ts_check_deliver(ts_muxer_t *ts, th_muxstream_t *tms)
   int64_t now;
   th_muxpkt_t *f;
   th_muxfifo_t *tmf = &tms->tms_delivery_fifo;
-  th_transport_t *t = ts->ts_muxer->tm_subscription->ths_transport;
+  service_t *t = ts->ts_muxer->tm_subscription->ths_transport;
   int64_t next;
 
   if(dtimer_isarmed(&tms->tms_mux_timer))
@@ -964,11 +964,11 @@ ts_check_deliver(ts_muxer_t *ts, th_muxstream_t *tms)
     if(ts->ts_pcr_start == AV_NOPTS_VALUE)
       return; /* dont know anything yet */
 
-    ts->ts_pcr_ref = now - ts->ts_pcr_start + t->tht_pcr_drift;
+    ts->ts_pcr_ref = now - ts->ts_pcr_start + t->s_pcr_drift;
   }
 
   f = TAILQ_FIRST(&tmf->tmf_queue);  /* next packet we are going to send */
-  next = f->tm_deadline + ts->ts_pcr_ref - t->tht_pcr_drift;
+  next = f->tm_deadline + ts->ts_pcr_ref - t->s_pcr_drift;
 
   if(next < now + 100)
     next = now + 100;
@@ -1367,7 +1367,7 @@ ts_muxer_play(ts_muxer_t *ts, int64_t toffset)
   th_subscription_t *s = ts->ts_muxer->tm_subscription;
 
   if(!(ts->ts_flags & TS_SEEK) &&
-     s->ths_transport->tht_source_type == THT_MPEG_TS) {
+     s->ths_transport->s_source_type == S_MPEG_TS) {
    /* We dont need to seek and source is MPEG TS, we can use a 
        shortcut to avoid remuxing stream */
 

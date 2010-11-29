@@ -36,11 +36,11 @@
 #include "settings.h"
 
 #include "tvheadend.h"
-#include "transports.h"
 #include "dvb.h"
 #include "dvb_support.h"
 #include "tsdemux.h"
 #include "notify.h"
+#include "service.h"
 
 struct th_dvb_adapter_queue dvb_adapters;
 struct th_dvb_mux_instance_tree dvb_muxes;
@@ -411,7 +411,7 @@ dvb_adapter_mux_scanner(void *aux)
   if(LIST_FIRST(&tda->tda_muxes) == NULL)
     return; // No muxes configured
 
-  if(transport_compute_weight(&tda->tda_transports) > 0)
+  if(service_compute_weight(&tda->tda_transports) > 0)
     return; /* someone is here */
 
   /* Check if we have muxes pending for quickscan, if so, choose them */
@@ -499,13 +499,13 @@ dvb_adapter_destroy(th_dvb_adapter_t *tda)
 void
 dvb_adapter_clean(th_dvb_adapter_t *tda)
 {
-  th_transport_t *t;
+  service_t *t;
   
   lock_assert(&global_lock);
 
   while((t = LIST_FIRST(&tda->tda_transports)) != NULL)
     /* Flush all subscribers */
-    transport_remove_subscriber(t, NULL, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
+    service_remove_subscriber(t, NULL, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
 }
 
 
@@ -520,7 +520,7 @@ dvb_adapter_input_dvr(void *aux)
   th_dvb_adapter_t *tda = aux;
   int fd, i, r;
   uint8_t tsb[188 * 10];
-  th_transport_t *t;
+  service_t *t;
 
   fd = tvh_open(tda->tda_dvr_path, O_RDONLY, 0);
   if(fd == -1) {
@@ -535,8 +535,8 @@ dvb_adapter_input_dvr(void *aux)
     pthread_mutex_lock(&tda->tda_delivery_mutex);
     
     for(i = 0; i < r; i += 188) {
-      LIST_FOREACH(t, &tda->tda_transports, tht_active_link)
-	if(t->tht_dvb_mux_instance == tda->tda_mux_current)
+      LIST_FOREACH(t, &tda->tda_transports, s_active_link)
+	if(t->s_dvb_mux_instance == tda->tda_mux_current)
 	  ts_recv_packet1(t, tsb + i, NULL);
     }
 
@@ -565,7 +565,7 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
   char buf[100];
   htsmsg_t *m = htsmsg_create_map();
   th_dvb_mux_instance_t *tdmi;
-  th_transport_t *t;
+  service_t *t;
   int nummux = 0;
   int numsvc = 0;
   int fdiv;
@@ -576,7 +576,7 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
   // XXX: bad bad bad slow slow slow
   LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
     nummux++;
-    LIST_FOREACH(t, &tdmi->tdmi_transports, tht_group_link) {
+    LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
       numsvc++;
     }
   }

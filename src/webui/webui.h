@@ -37,9 +37,9 @@ void extjs_list_v4l_adapters(htsmsg_t *array);
 void extjs_start_v4l(void);
 #endif
 
-void extjs_transport_update(htsmsg_t *in);
+void extjs_service_update(htsmsg_t *in);
 
-void extjs_transport_delete(htsmsg_t *in);
+void extjs_service_delete(htsmsg_t *in);
 
 
 /**

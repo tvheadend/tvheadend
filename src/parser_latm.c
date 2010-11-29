@@ -34,7 +34,7 @@
 #include "parsers.h"
 #include "parser_latm.h"
 #include "bitstream.h"
-
+#include "service.h"
 
 typedef struct latm_private {
 
@@ -159,7 +159,7 @@ read_stream_mux_config(th_stream_t *st, latm_private_t *latm, bitstream_t *bs)
  * Parse AAC LATM
  */
 th_pkt_t *
-parse_latm_audio_mux_element(th_transport_t *t, th_stream_t *st, 
+parse_latm_audio_mux_element(service_t *t, th_stream_t *st, 
 			     const uint8_t *data, int len)
 {
   latm_private_t *latm;
@@ -196,7 +196,7 @@ parse_latm_audio_mux_element(th_transport_t *t, th_stream_t *st,
 
   th_pkt_t *pkt = pkt_alloc(NULL, slot_len + 7, st->st_curdts, st->st_curdts);
 
-  pkt->pkt_commercial = t->tht_tt_commercial_advice;
+  pkt->pkt_commercial = t->s_tt_commercial_advice;
   pkt->pkt_duration = st->st_frame_duration;
   pkt->pkt_sri = latm->sample_rate_index;
   pkt->pkt_channels = latm->channel_config;

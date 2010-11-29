@@ -48,7 +48,7 @@ SRCS =  src/main.c \
 	src/teletext.c \
 	src/channels.c \
 	src/subscriptions.c \
-	src/transports.c \
+	src/service.c \
 	src/psi.c \
 	src/parsers.c \
 	src/parser_h264.c \

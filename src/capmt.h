@@ -21,6 +21,6 @@
 
 void capmt_init(void);
 
-void capmt_transport_start(th_transport_t *t);
+void capmt_service_start(struct service *t);
 
 #endif /* CAPMT_H_ */

@@ -32,6 +32,7 @@
 #include "parsers.h"
 #include "parser_h264.h"
 #include "bitstream.h"
+#include "service.h"
 
 /**
  * H.264 parser, nal escaper

@@ -29,8 +29,7 @@
 #include "streaming.h"
 #include "dvr.h"
 #include "spawn.h"
-#include "transports.h"
-
+#include "service.h"
 #include "plumbing/tsfix.h"
 #include "plumbing/globalheaders.h"
 
@@ -445,7 +444,7 @@ dvr_thread(void *aux)
       dvr_thread_epilog(de);
       break;
 
-    case SMT_TRANSPORT_STATUS:
+    case SMT_SERVICE_STATUS:
       if(sm->sm_code & TSS_PACKETS) {
 	
       } else if(sm->sm_code & (TSS_GRACEPERIOD | TSS_ERRORS)) {

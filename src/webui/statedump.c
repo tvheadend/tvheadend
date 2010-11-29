@@ -36,8 +36,6 @@
 #include "dvb/dvb_support.h"
 #endif
 
-#include "transports.h"
-
 extern char tvh_binshasum[20];
 extern char *htsversion_full;
 
@@ -83,16 +81,16 @@ dumpchannels(htsbuf_queue_t *hq)
 
 #if ENABLE_LINUXDVB
 static void
-dumptransports(htsbuf_queue_t *hq, struct th_transport_list *l, int indent)
+dumptransports(htsbuf_queue_t *hq, struct service_list *l, int indent)
 {
-  th_transport_t *t;
+  service_t *t;
   th_stream_t *st;
 
   outputtitle(hq, indent, "Transports (or services)");
-  LIST_FOREACH(t, l, tht_group_link) {
+  LIST_FOREACH(t, l, s_group_link) {
 
     htsbuf_qprintf(hq, "%*.s%s (%s)\n", indent + 2, "",
-		   transport_nicename(t), t->tht_identifier);
+		   service_nicename(t), t->s_identifier);
 	
     
     htsbuf_qprintf(hq, "%*.s%-16s %-5s %-5s %-5s %-5s %-10s\n", indent + 4, "",
@@ -106,7 +104,7 @@ dumptransports(htsbuf_queue_t *hq, struct th_transport_list *l, int indent)
     htsbuf_qprintf(hq, "%*.s-------------------------------------------\n",
 		   indent + 4, "");
 
-    TAILQ_FOREACH(st, &t->tht_components, st_link) {
+    TAILQ_FOREACH(st, &t->s_components, st_link) {
       caid_t *caid;
       htsbuf_qprintf(hq, "%*.s%-16s %-5d %-5d %-5s\n", indent + 4, "",
 		     streaming_component_type2txt(st->st_type),

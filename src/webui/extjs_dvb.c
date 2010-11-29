@@ -36,7 +36,6 @@
 #include "dtable.h"
 #include "channels.h"
 #include "psi.h"
-#include "transports.h"
 #include "serviceprobe.h"
 
 #include "dvb/dvb.h"
@@ -113,7 +112,7 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
   const char *sibling = http_arg_get(&hc->hc_req_args, "sibling");
   const char *s, *sc;
   th_dvb_mux_instance_t *tdmi;
-  th_transport_t *t;
+  service_t *t;
 
   pthread_mutex_lock(&global_lock);
 
@@ -204,8 +203,8 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 	   "Service probe started on \"%s\"", tda->tda_displayname);
 
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
-      LIST_FOREACH(t, &tdmi->tdmi_transports, tht_group_link) {
-	if(t->tht_enabled)
+      LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
+	if(t->s_enabled)
 	  serviceprobe_enqueue(t);
       }
     }
@@ -345,10 +344,10 @@ extjs_dvbmuxes(http_connection_t *hc, const char *remain, void *opaque)
 static int
 transportcmp(const void *A, const void *B)
 {
-  th_transport_t *a = *(th_transport_t **)A;
-  th_transport_t *b = *(th_transport_t **)B;
+  service_t *a = *(service_t **)A;
+  service_t *b = *(service_t **)B;
 
-  return strcasecmp(a->tht_svcname ?: "\0377", b->tht_svcname ?: "\0377");
+  return strcasecmp(a->s_svcname ?: "\0377", b->s_svcname ?: "\0377");
 }
 
 /**
@@ -363,7 +362,7 @@ extjs_dvbservices(http_connection_t *hc, const char *remain, void *opaque)
   const char *op        = http_arg_get(&hc->hc_req_args, "op");
   const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
   th_dvb_mux_instance_t *tdmi;
-  th_transport_t *t, **tvec;
+  service_t *t, **tvec;
   int count = 0, i = 0;
 
   pthread_mutex_lock(&global_lock);
@@ -382,20 +381,20 @@ extjs_dvbservices(http_connection_t *hc, const char *remain, void *opaque)
     array = htsmsg_create_list();
 
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
-      LIST_FOREACH(t, &tdmi->tdmi_transports, tht_group_link) {
+      LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
 	count++;
       }
     }
 
-    tvec = alloca(sizeof(th_transport_t *) * count);
+    tvec = alloca(sizeof(service_t *) * count);
 
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
-      LIST_FOREACH(t, &tdmi->tdmi_transports, tht_group_link) {
+      LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
 	tvec[i++] = t;
       }
     }
 
-    qsort(tvec, count, sizeof(th_transport_t *), transportcmp);
+    qsort(tvec, count, sizeof(service_t *), transportcmp);
 
     for(i = 0; i < count; i++)
       htsmsg_add_msg(array, NULL, dvb_transport_build_msg(tvec[i]));
@@ -404,7 +403,7 @@ extjs_dvbservices(http_connection_t *hc, const char *remain, void *opaque)
 
   } else if(!strcmp(op, "update")) {
     if(in != NULL)
-      extjs_transport_update(in);
+      extjs_service_update(in);
 
     out = htsmsg_create_map();
 

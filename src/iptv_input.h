@@ -21,8 +21,8 @@
 
 void iptv_input_init(void);
 
-th_transport_t *iptv_transport_find(const char *id, int create);
+struct service *iptv_service_find(const char *id, int create);
 
-extern struct th_transport_list iptv_all_transports;
+extern struct service_list iptv_all_services;
 
 #endif /* IPTV_INPUT_H_ */

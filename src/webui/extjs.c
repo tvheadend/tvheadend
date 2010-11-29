@@ -38,7 +38,6 @@
 #include "psi.h"
 
 #include "dvr/dvr.h"
-#include "transports.h"
 #include "serviceprobe.h"
 #include "xmltv.h"
 #include "epg.h"
@@ -1069,16 +1068,16 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
  *
  */
 void
-extjs_transport_delete(htsmsg_t *in)
+extjs_service_delete(htsmsg_t *in)
 {
   htsmsg_field_t *f;
-  th_transport_t *t;
+  service_t *t;
   const char *id;
 
   TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
     if((id = htsmsg_field_get_string(f)) != NULL &&
-       (t = transport_find_by_identifier(id)) != NULL)
-      transport_destroy(t);
+       (t = service_find_by_identifier(id)) != NULL)
+      service_destroy(t);
   }
 }
 
@@ -1087,11 +1086,11 @@ extjs_transport_delete(htsmsg_t *in)
  *
  */
 static void
-transport_update(htsmsg_t *in)
+service_update(htsmsg_t *in)
 {
   htsmsg_field_t *f;
   htsmsg_t *c;
-  th_transport_t *t;
+  service_t *t;
   uint32_t u32;
   const char *id;
   const char *chname;
@@ -1101,14 +1100,14 @@ transport_update(htsmsg_t *in)
        (id = htsmsg_get_str(c, "id")) == NULL)
       continue;
     
-    if((t = transport_find_by_identifier(id)) == NULL)
+    if((t = service_find_by_identifier(id)) == NULL)
       continue;
 
     if(!htsmsg_get_u32(c, "enabled", &u32))
-      transport_set_enable(t, u32);
+      service_set_enable(t, u32);
 
     if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
-      transport_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
+      service_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
   }
 }
 
@@ -1122,21 +1121,21 @@ extjs_servicedetails(http_connection_t *hc,
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   htsmsg_t *out, *streams, *c;
-  th_transport_t *t;
+  service_t *t;
   th_stream_t *st;
   caid_t *ca;
   char buf[128];
 
   pthread_mutex_lock(&global_lock);
 
-  if(remain == NULL || (t = transport_find_by_identifier(remain)) == NULL) {
+  if(remain == NULL || (t = service_find_by_identifier(remain)) == NULL) {
     pthread_mutex_unlock(&global_lock);
     return 404;
   }
 
   streams = htsmsg_create_list();
 
-  TAILQ_FOREACH(st, &t->tht_components, st_link) {
+  TAILQ_FOREACH(st, &t->s_components, st_link) {
     c = htsmsg_create_map();
 
     htsmsg_add_u32(c, "pid", st->st_pid);
@@ -1186,7 +1185,7 @@ extjs_servicedetails(http_connection_t *hc,
   }
 
   out = htsmsg_create_map();
-  htsmsg_add_str(out, "title", t->tht_svcname ?: "unnamed transport");
+  htsmsg_add_str(out, "title", t->s_svcname ?: "unnamed service");
 
   htsmsg_add_msg(out, "streams", streams);
 
@@ -1249,11 +1248,11 @@ extjs_mergechannel(http_connection_t *hc, const char *remain, void *opaque)
  *
  */
 static void
-transport_update_iptv(htsmsg_t *in)
+service_update_iptv(htsmsg_t *in)
 {
   htsmsg_field_t *f;
   htsmsg_t *c;
-  th_transport_t *t;
+  service_t *t;
   uint32_t u32;
   const char *id, *s;
   int save;
@@ -1263,27 +1262,27 @@ transport_update_iptv(htsmsg_t *in)
        (id = htsmsg_get_str(c, "id")) == NULL)
       continue;
     
-    if((t = transport_find_by_identifier(id)) == NULL)
+    if((t = service_find_by_identifier(id)) == NULL)
       continue;
 
     save = 0;
 
     if(!htsmsg_get_u32(c, "port", &u32)) {
-      t->tht_iptv_port = u32;
+      t->s_iptv_port = u32;
       save = 1;
     }
 
     if((s = htsmsg_get_str(c, "group")) != NULL) {
-      if(!inet_pton(AF_INET, s, &t->tht_iptv_group.s_addr)){
-      	inet_pton(AF_INET6, s, &t->tht_iptv_group6.s6_addr);
+      if(!inet_pton(AF_INET, s, &t->s_iptv_group.s_addr)){
+      	inet_pton(AF_INET6, s, &t->s_iptv_group6.s6_addr);
       }
       save = 1;
     }
     
 
-    save |= tvh_str_update(&t->tht_iptv_iface, htsmsg_get_str(c, "interface"));
+    save |= tvh_str_update(&t->s_iptv_iface, htsmsg_get_str(c, "interface"));
     if(save)
-      t->tht_config_save(t); // Save config
+      t->s_config_save(t); // Save config
   }
 }
 
@@ -1293,27 +1292,27 @@ transport_update_iptv(htsmsg_t *in)
  *
  */
 static htsmsg_t *
-build_record_iptv(th_transport_t *t)
+build_record_iptv(service_t *t)
 {
   htsmsg_t *r = htsmsg_create_map();
   char abuf[INET_ADDRSTRLEN];
   char abuf6[INET6_ADDRSTRLEN];
-  htsmsg_add_str(r, "id", t->tht_identifier);
+  htsmsg_add_str(r, "id", t->s_identifier);
 
-  htsmsg_add_str(r, "channelname", t->tht_ch ? t->tht_ch->ch_name : "");
-  htsmsg_add_str(r, "interface", t->tht_iptv_iface ?: "");
+  htsmsg_add_str(r, "channelname", t->s_ch ? t->s_ch->ch_name : "");
+  htsmsg_add_str(r, "interface", t->s_iptv_iface ?: "");
 
-  if(t->tht_iptv_group.s_addr != 0){
-    inet_ntop(AF_INET, &t->tht_iptv_group, abuf, sizeof(abuf));
-    htsmsg_add_str(r, "group", t->tht_iptv_group.s_addr ? abuf : "");
+  if(t->s_iptv_group.s_addr != 0){
+    inet_ntop(AF_INET, &t->s_iptv_group, abuf, sizeof(abuf));
+    htsmsg_add_str(r, "group", t->s_iptv_group.s_addr ? abuf : "");
   }
   else {
-    inet_ntop(AF_INET6, &t->tht_iptv_group6, abuf6, sizeof(abuf6));
-    htsmsg_add_str(r, "group", t->tht_iptv_group6.s6_addr ? abuf6 : "");
+    inet_ntop(AF_INET6, &t->s_iptv_group6, abuf6, sizeof(abuf6));
+    htsmsg_add_str(r, "group", t->s_iptv_group6.s6_addr ? abuf6 : "");
   }
 
-  htsmsg_add_u32(r, "port", t->tht_iptv_port);
-  htsmsg_add_u32(r, "enabled", t->tht_enabled);
+  htsmsg_add_u32(r, "port", t->s_iptv_port);
+  htsmsg_add_u32(r, "enabled", t->s_enabled);
   return r;
 }
 
@@ -1321,12 +1320,12 @@ build_record_iptv(th_transport_t *t)
  *
  */
 static int
-iptv_transportcmp(const void *A, const void *B)
+iptv_servicecmp(const void *A, const void *B)
 {
-  th_transport_t *a = *(th_transport_t **)A;
-  th_transport_t *b = *(th_transport_t **)B;
+  service_t *a = *(service_t **)A;
+  service_t *b = *(service_t **)B;
 
-  return memcmp(&a->tht_iptv_group, &b->tht_iptv_group, 4);
+  return memcmp(&a->s_iptv_group, &b->s_iptv_group, 4);
 }
 
 /**
@@ -1339,7 +1338,7 @@ extjs_iptvservices(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_t *out, *in, *array;
   const char *op        = http_arg_get(&hc->hc_req_args, "op");
   const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
-  th_transport_t *t, **tvec;
+  service_t *t, **tvec;
   int count = 0, i = 0;
 
   pthread_mutex_lock(&global_lock);
@@ -1347,16 +1346,16 @@ extjs_iptvservices(http_connection_t *hc, const char *remain, void *opaque)
   in = entries != NULL ? htsmsg_json_deserialize(entries) : NULL;
 
   if(!strcmp(op, "get")) {
-    LIST_FOREACH(t, &iptv_all_transports, tht_group_link)
+    LIST_FOREACH(t, &iptv_all_services, s_group_link)
       count++;
-    tvec = alloca(sizeof(th_transport_t *) * count);
-    LIST_FOREACH(t, &iptv_all_transports, tht_group_link)
+    tvec = alloca(sizeof(service_t *) * count);
+    LIST_FOREACH(t, &iptv_all_services, s_group_link)
       tvec[i++] = t;
 
     out = htsmsg_create_map();
     array = htsmsg_create_list();
 
-    qsort(tvec, count, sizeof(th_transport_t *), iptv_transportcmp);
+    qsort(tvec, count, sizeof(service_t *), iptv_servicecmp);
 
     for(i = 0; i < count; i++)
       htsmsg_add_msg(array, NULL, build_record_iptv(tvec[i]));
@@ -1365,19 +1364,19 @@ extjs_iptvservices(http_connection_t *hc, const char *remain, void *opaque)
 
   } else if(!strcmp(op, "update")) {
     if(in != NULL) {
-      transport_update(in);      // Generic transport parameters
-      transport_update_iptv(in); // IPTV speicifc
+      service_update(in);      // Generic service parameters
+      service_update_iptv(in); // IPTV speicifc
     }
 
     out = htsmsg_create_map();
 
   } else if(!strcmp(op, "create")) {
 
-    out = build_record_iptv(iptv_transport_find(NULL, 1));
+    out = build_record_iptv(iptv_service_find(NULL, 1));
 
   } else if(!strcmp(op, "delete")) {
     if(in != NULL)
-      extjs_transport_delete(in);
+      extjs_service_delete(in);
     
     out = htsmsg_create_map();
 
@@ -1403,11 +1402,11 @@ extjs_iptvservices(http_connection_t *hc, const char *remain, void *opaque)
  *
  */
 void
-extjs_transport_update(htsmsg_t *in)
+extjs_service_update(htsmsg_t *in)
 {
   htsmsg_field_t *f;
   htsmsg_t *c;
-  th_transport_t *t;
+  service_t *t;
   uint32_t u32;
   const char *id;
   const char *chname;
@@ -1417,14 +1416,14 @@ extjs_transport_update(htsmsg_t *in)
        (id = htsmsg_get_str(c, "id")) == NULL)
       continue;
     
-    if((t = transport_find_by_identifier(id)) == NULL)
+    if((t = service_find_by_identifier(id)) == NULL)
       continue;
 
     if(!htsmsg_get_u32(c, "enabled", &u32))
-      transport_set_enable(t, u32);
+      service_set_enable(t, u32);
 
     if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
-      transport_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
+      service_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
   }
 }
 

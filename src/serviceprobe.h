@@ -21,8 +21,8 @@
 
 void serviceprobe_init(void);
 
-void serviceprobe_enqueue(th_transport_t *t);
+void serviceprobe_enqueue(struct service *t);
 
-void serviceprobe_delete(th_transport_t *t);
+void serviceprobe_delete(struct service *t);
 
 #endif /* SERVICEPROBE_H_ */

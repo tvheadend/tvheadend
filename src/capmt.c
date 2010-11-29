@@ -41,10 +41,9 @@
 #include "psi.h"
 #include "tsdemux.h"
 #include "ffdecsa/FFdecsa.h"
-#include "transports.h"
 #include "capmt.h"
 #include "notify.h"
-
+#include "subscriptions.h"
 #include "dtable.h"
 
 // ca_pmt_list_management values:
@@ -73,7 +72,7 @@
  *
  */
 TAILQ_HEAD(capmt_queue, capmt);
-LIST_HEAD(capmt_transport_list, capmt_transport);
+LIST_HEAD(capmt_service_list, capmt_service);
 LIST_HEAD(capmt_caid_ecm_list, capmt_caid_ecm);
 static struct capmt_queue capmts;
 static pthread_cond_t capmt_config_changed;
@@ -121,14 +120,14 @@ typedef struct capmt_caid_ecm {
 /**
  *
  */
-typedef struct capmt_transport {
+typedef struct capmt_service {
   th_descrambler_t ct_head;
 
-  th_transport_t *ct_transport;
+  service_t *ct_service;
 
   struct capmt *ct_capmt;
 
-  LIST_ENTRY(capmt_transport) ct_link;
+  LIST_ENTRY(capmt_service) ct_link;
 
   /* list of used ca-systems with ids and last ecm */
   struct capmt_caid_ecm_list ct_caid_ecm;
@@ -155,7 +154,7 @@ typedef struct capmt_transport {
 
   /* sending requests will be based on this caid */
   int      ct_caid_last;
-} capmt_transport_t;
+} capmt_service_t;
 
 
 /**
@@ -166,7 +165,7 @@ typedef struct capmt {
 
   TAILQ_ENTRY(capmt) capmt_link; /* Linkage protected via global_lock */
 
-  struct capmt_transport_list capmt_transports;
+  struct capmt_service_list capmt_services;
 
   /* from capmt configuration */
   char *capmt_sockfile;
@@ -199,7 +198,7 @@ capmt_send_msg(capmt_t *capmt, const uint8_t *buf, size_t len)
 }
 
 static void 
-capmt_send_stop(capmt_transport_t *t)
+capmt_send_stop(capmt_service_t *t)
 {
   /* buffer for capmt */
   int pos = 0;
@@ -208,7 +207,7 @@ capmt_send_stop(capmt_transport_t *t)
   capmt_header_t head = {
     .capmt_indicator        = { 0x9F, 0x80, 0x32, 0x82, 0x00, 0x00 },
     .capmt_list_management  = CAPMT_LIST_ONLY,
-    .program_number         = t->ct_transport->tht_dvb_service_id,
+    .program_number         = t->ct_service->s_dvb_service_id,
     .version_number         = 0, 
     .current_next_indicator = 0,
     .program_info_length    = 0,
@@ -223,8 +222,8 @@ capmt_send_stop(capmt_transport_t *t)
   pos    += sizeof(end);
   buf[4]  = ((pos - 6) >> 8);
   buf[5]  = ((pos - 6) & 0xFF);
-  buf[7]  = t->ct_transport->tht_dvb_service_id >> 8;
-  buf[8]  = t->ct_transport->tht_dvb_service_id & 0xFF;
+  buf[7]  = t->ct_service->s_dvb_service_id >> 8;
+  buf[8]  = t->ct_service->s_dvb_service_id & 0xFF;
   buf[9]  = 1;
   buf[10] = ((pos - 5 - 12) & 0xF00) >> 8;
   buf[11] = ((pos - 5 - 12) & 0xFF);
@@ -234,14 +233,14 @@ capmt_send_stop(capmt_transport_t *t)
 
 /**
  * global_lock is held
- * tht_stream_mutex is held
+ * s_stream_mutex is held
  */
 static void 
-capmt_transport_destroy(th_descrambler_t *td)
+capmt_service_destroy(th_descrambler_t *td)
 {
   tvhlog(LOG_INFO, "capmt", "Removing CAPMT Server from service");
 
-  capmt_transport_t *ct = (capmt_transport_t *)td;
+  capmt_service_t *ct = (capmt_service_t *)td;
 
   /* send stop to client */
   capmt_send_stop(ct);
@@ -255,7 +254,7 @@ capmt_transport_destroy(th_descrambler_t *td)
     free(cce);
   }
 
-  LIST_REMOVE(td, td_transport_link);
+  LIST_REMOVE(td, td_service_link);
 
   LIST_REMOVE(ct, ct_link);
 
@@ -266,8 +265,8 @@ capmt_transport_destroy(th_descrambler_t *td)
 
 static void 
 handle_ca0(capmt_t* capmt) {
-  capmt_transport_t *ct;
-  th_transport_t *t;
+  capmt_service_t *ct;
+  service_t *t;
   int ret;
 
   uint8_t invalid[8], buffer[20], *even, *odd;
@@ -293,12 +292,12 @@ handle_ca0(capmt_t* capmt) {
     even = &buffer[2];
     odd  = &buffer[10];
 
-    LIST_FOREACH(ct, &capmt->capmt_transports, ct_link) {
-      t = ct->ct_transport;
+    LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
+      t = ct->ct_service;
 
       if(ret < 18) {
         if(ct->ct_keystate != CT_FORBIDDEN) {
-          tvhlog(LOG_ERR, "capmt", "Can not descramble service \"%s\", access denied", t->tht_svcname);
+          tvhlog(LOG_ERR, "capmt", "Can not descramble service \"%s\", access denied", t->s_svcname);
 
           ct->ct_keystate = CT_FORBIDDEN;
         }
@@ -315,7 +314,7 @@ handle_ca0(capmt_t* capmt) {
         set_odd_control_word(ct->ct_keys, odd);
 
       if(ct->ct_keystate != CT_RESOLVED)
-        tvhlog(LOG_INFO, "capmt", "Obtained key for service \"%s\"",t->tht_svcname);
+        tvhlog(LOG_INFO, "capmt", "Obtained key for service \"%s\"",t->s_svcname);
 
       ct->ct_keystate = CT_RESOLVED;
     }
@@ -404,12 +403,12 @@ capmt_thread(void *aux)
  *
  */
 static void
-capmt_table_input(struct th_descrambler *td, struct th_transport *t,
+capmt_table_input(struct th_descrambler *td, struct service *t,
     struct th_stream *st, const uint8_t *data, int len)
 {
-  capmt_transport_t *ct = (capmt_transport_t *)td;
+  capmt_service_t *ct = (capmt_service_t *)td;
   capmt_t *capmt = ct->ct_capmt;
-  int adapter_num = t->tht_dvb_mux_instance->tdmi_adapter->tda_adapter_num;
+  int adapter_num = t->s_dvb_mux_instance->tdmi_adapter->tda_adapter_num;
 
   caid_t *c;
 
@@ -438,7 +437,7 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
         if (!cce) 
         {
           tvhlog(LOG_DEBUG, "capmt",
-            "New caid 0x%04X for service \"%s\"", c->caid, t->tht_svcname);
+            "New caid 0x%04X for service \"%s\"", c->caid, t->s_svcname);
 
           /* ecmpid not already seen, add it to list */
           cce             = calloc(1, sizeof(capmt_caid_ecm_t));
@@ -456,7 +455,7 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
           break;
         }
 
-        uint16_t sid = t->tht_dvb_service_id;
+        uint16_t sid = t->s_dvb_service_id;
         uint16_t ecmpid = st->st_pid;
         uint16_t transponder = 0;
 
@@ -537,7 +536,7 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
       
         if(ct->ct_keystate != CT_RESOLVED)
           tvhlog(LOG_INFO, "capmt",
-            "Trying to obtain key for service \"%s\"",t->tht_svcname);
+            "Trying to obtain key for service \"%s\"",t->s_svcname);
 
         buf[9] = pmtversion;
         pmtversion = (pmtversion + 1) & 0x1F;
@@ -556,10 +555,10 @@ capmt_table_input(struct th_descrambler *td, struct th_transport *t,
  *
  */
 static int
-capmt_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
+capmt_descramble(th_descrambler_t *td, service_t *t, struct th_stream *st,
      const uint8_t *tsb)
 {
-  capmt_transport_t *ct = (capmt_transport_t *)td;
+  capmt_service_t *ct = (capmt_service_t *)td;
   int r, i;
   unsigned char *vec[3];
   uint8_t *t0;
@@ -601,10 +600,10 @@ capmt_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
  * global_lock is held
  */
 void
-capmt_transport_start(th_transport_t *t)
+capmt_service_start(service_t *t)
 {
   capmt_t *capmt;
-  capmt_transport_t *ct;
+  capmt_service_t *ct;
   capmt_caid_ecm_t *cce;
   th_descrambler_t *td;
   
@@ -613,24 +612,24 @@ capmt_transport_start(th_transport_t *t)
   TAILQ_FOREACH(capmt, &capmts, capmt_link) {
     tvhlog(LOG_INFO, "capmt",
       "Starting capmt server for service \"%s\" on tuner %d", 
-      t->tht_svcname,
-      t->tht_dvb_mux_instance->tdmi_adapter->tda_adapter_num);
+      t->s_svcname,
+      t->s_dvb_mux_instance->tdmi_adapter->tda_adapter_num);
 
     th_stream_t *st;
 
-    /* create new capmt transport */
-    ct                  = calloc(1, sizeof(capmt_transport_t));
+    /* create new capmt service */
+    ct                  = calloc(1, sizeof(capmt_service_t));
     ct->ct_cluster_size = get_suggested_cluster_size();
     ct->ct_tsbcluster   = malloc(ct->ct_cluster_size * 188);
     ct->ct_seq          = capmt->capmt_seq++;
 
-    TAILQ_FOREACH(st, &t->tht_components, st_link) {
+    TAILQ_FOREACH(st, &t->s_components, st_link) {
       caid_t *c = LIST_FIRST(&st->st_caids);
       if(c == NULL)
 	continue;
 
       tvhlog(LOG_DEBUG, "capmt",
-        "New caid 0x%04X for service \"%s\"", c->caid, t->tht_svcname);
+        "New caid 0x%04X for service \"%s\"", c->caid, t->s_svcname);
 
       /* add it to list */
       cce             = calloc(1, sizeof(capmt_caid_ecm_t));
@@ -644,15 +643,15 @@ capmt_transport_start(th_transport_t *t)
 
     ct->ct_keys       = get_key_struct();
     ct->ct_capmt      = capmt;
-    ct->ct_transport  = t;
+    ct->ct_service  = t;
 
     td = &ct->ct_head;
-    td->td_stop       = capmt_transport_destroy;
+    td->td_stop       = capmt_service_destroy;
     td->td_table      = capmt_table_input;
     td->td_descramble = capmt_descramble;
-    LIST_INSERT_HEAD(&t->tht_descramblers, td, td_transport_link);
+    LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
 
-    LIST_INSERT_HEAD(&capmt->capmt_transports, ct, ct_link);
+    LIST_INSERT_HEAD(&capmt->capmt_services, ct, ct_link);
   }
 }
 

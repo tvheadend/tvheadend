@@ -362,7 +362,7 @@ tsfix_input(void *opaque, streaming_message_t *sm)
     break;
 
   case SMT_EXIT:
-  case SMT_TRANSPORT_STATUS:
+  case SMT_SERVICE_STATUS:
   case SMT_NOSTART:
   case SMT_MPEGTS:
     break;

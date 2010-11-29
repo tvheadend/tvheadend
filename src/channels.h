@@ -40,7 +40,7 @@ typedef struct channel {
   RB_ENTRY(channel) ch_identifier_link;
   int ch_id;		    
 
-  LIST_HEAD(, th_transport) ch_transports;
+  LIST_HEAD(, service) ch_services;
   LIST_HEAD(, th_subscription) ch_subscriptions;
 
   struct event_tree ch_epg_events;

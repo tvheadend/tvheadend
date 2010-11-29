@@ -37,7 +37,6 @@
 #include "psi.h"
 
 #include "v4l.h"
-#include "transports.h"
 #include "serviceprobe.h"
 
 
@@ -133,11 +132,11 @@ extjs_v4ladapter(http_connection_t *hc, const char *remain, void *opaque)
  *
  */
 static void
-transport_update_v4l(htsmsg_t *in)
+service_update_v4l(htsmsg_t *in)
 {
   htsmsg_field_t *f;
   htsmsg_t *c;
-  th_transport_t *t;
+  service_t *t;
   uint32_t u32;
   const char *id;
   int save;
@@ -147,17 +146,17 @@ transport_update_v4l(htsmsg_t *in)
        (id = htsmsg_get_str(c, "id")) == NULL)
       continue;
     
-    if((t = transport_find_by_identifier(id)) == NULL)
+    if((t = service_find_by_identifier(id)) == NULL)
       continue;
 
     save = 0;
 
     if(!htsmsg_get_u32(c, "frequency", &u32)) {
-      t->tht_v4l_frequency = u32;
+      t->s_v4l_frequency = u32;
       save = 1;
     }
     if(save)
-      t->tht_config_save(t); // Save config
+      t->s_config_save(t); // Save config
   }
 }
 
@@ -167,15 +166,15 @@ transport_update_v4l(htsmsg_t *in)
  *
  */
 static htsmsg_t *
-build_record_v4l(th_transport_t *t)
+build_record_v4l(service_t *t)
 {
   htsmsg_t *r = htsmsg_create_map();
 
-  htsmsg_add_str(r, "id", t->tht_identifier);
+  htsmsg_add_str(r, "id", t->s_identifier);
 
-  htsmsg_add_str(r, "channelname", t->tht_ch ? t->tht_ch->ch_name : "");
-  htsmsg_add_u32(r, "frequency", t->tht_v4l_frequency);
-  htsmsg_add_u32(r, "enabled", t->tht_enabled);
+  htsmsg_add_str(r, "channelname", t->s_ch ? t->s_ch->ch_name : "");
+  htsmsg_add_u32(r, "frequency", t->s_v4l_frequency);
+  htsmsg_add_u32(r, "enabled", t->s_enabled);
   return r;
 }
 
@@ -183,12 +182,12 @@ build_record_v4l(th_transport_t *t)
  *
  */
 static int
-v4l_transportcmp(const void *A, const void *B)
+v4l_servicecmp(const void *A, const void *B)
 {
-  th_transport_t *a = *(th_transport_t **)A;
-  th_transport_t *b = *(th_transport_t **)B;
+  service_t *a = *(service_t **)A;
+  service_t *b = *(service_t **)B;
 
-  return (int)a->tht_v4l_frequency - (int)b->tht_v4l_frequency;
+  return (int)a->s_v4l_frequency - (int)b->s_v4l_frequency;
 }
 
 /**
@@ -202,7 +201,7 @@ extjs_v4lservices(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_t *out, *in, *array;
   const char *op        = http_arg_get(&hc->hc_req_args, "op");
   const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
-  th_transport_t *t, **tvec;
+  service_t *t, **tvec;
   int count = 0, i = 0;
 
   pthread_mutex_lock(&global_lock);
@@ -216,16 +215,16 @@ extjs_v4lservices(http_connection_t *hc, const char *remain, void *opaque)
 
   if(!strcmp(op, "get")) {
 
-    LIST_FOREACH(t, &va->va_transports, tht_group_link)
+    LIST_FOREACH(t, &va->va_services, s_group_link)
       count++;
-    tvec = alloca(sizeof(th_transport_t *) * count);
-    LIST_FOREACH(t, &va->va_transports, tht_group_link)
+    tvec = alloca(sizeof(service_t *) * count);
+    LIST_FOREACH(t, &va->va_services, s_group_link)
       tvec[i++] = t;
 
     out = htsmsg_create_map();
     array = htsmsg_create_list();
 
-    qsort(tvec, count, sizeof(th_transport_t *), v4l_transportcmp);
+    qsort(tvec, count, sizeof(service_t *), v4l_servicecmp);
 
     for(i = 0; i < count; i++)
       htsmsg_add_msg(array, NULL, build_record_v4l(tvec[i]));
@@ -234,19 +233,19 @@ extjs_v4lservices(http_connection_t *hc, const char *remain, void *opaque)
 
   } else if(!strcmp(op, "update")) {
     if(in != NULL) {
-      extjs_transport_update(in);      // Generic transport parameters
-      transport_update_v4l(in);  // V4L speicifc
+      extjs_service_update(in);      // Generic service parameters
+      service_update_v4l(in);  // V4L speicifc
     }
 
     out = htsmsg_create_map();
 
   } else if(!strcmp(op, "create")) {
 
-    out = build_record_v4l(v4l_transport_find(va, NULL, 1));
+    out = build_record_v4l(v4l_service_find(va, NULL, 1));
 
   } else if(!strcmp(op, "delete")) {
     if(in != NULL)
-      extjs_transport_delete(in);
+      extjs_service_delete(in);
 
     out = htsmsg_create_map();
 

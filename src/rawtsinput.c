@@ -29,10 +29,10 @@
 #include <errno.h>
 
 #include "tvheadend.h"
-#include "transports.h"
 #include "rawtsinput.h"
 #include "psi.h"
 #include "tsdemux.h"
+#include "channels.h"
 
 typedef struct rawts {
   int rt_fd;
@@ -40,7 +40,7 @@ typedef struct rawts {
   char *rt_identifier;
   psi_section_t rt_pat;
 
-  struct th_transport_list rt_transports;
+  struct service_list rt_services;
 
   int rt_pcr_pid;
 
@@ -51,7 +51,7 @@ typedef struct rawts {
  *
  */
 static int
-rawts_transport_start(th_transport_t *t, unsigned int weight, int force_start)
+rawts_service_start(service_t *t, unsigned int weight, int force_start)
 {
   return 0; // Always ok
 }
@@ -60,7 +60,7 @@ rawts_transport_start(th_transport_t *t, unsigned int weight, int force_start)
  *
  */
 static void
-rawts_transport_stop(th_transport_t *t)
+rawts_service_stop(service_t *t)
 {
 }
 
@@ -68,14 +68,14 @@ rawts_transport_stop(th_transport_t *t)
  *
  */
 static void
-rawts_transport_save(th_transport_t *t)
+rawts_service_save(service_t *t)
 {
   htsmsg_t *m = htsmsg_create_map();
-  printf("SAVE %s\n", transport_nicename(t));
+  printf("SAVE %s\n", service_nicename(t));
   
-  pthread_mutex_lock(&t->tht_stream_mutex); 
-  psi_save_transport_settings(m, t);
-  pthread_mutex_unlock(&t->tht_stream_mutex); 
+  pthread_mutex_lock(&t->s_stream_mutex); 
+  psi_save_service_settings(m, t);
+  pthread_mutex_unlock(&t->s_stream_mutex); 
   
   htsmsg_print(m);
   htsmsg_destroy(m);
@@ -87,7 +87,7 @@ rawts_transport_save(th_transport_t *t)
  *
  */
 static int
-rawts_transport_quality(th_transport_t *t)
+rawts_service_quality(service_t *t)
 {
   return 100;
 }
@@ -97,7 +97,7 @@ rawts_transport_quality(th_transport_t *t)
  * Generate a descriptive name for the source
  */
 static void
-rawts_transport_setsourceinfo(th_transport_t *t, struct source_info *si)
+rawts_service_setsourceinfo(service_t *t, struct source_info *si)
 {
   memset(si, 0, sizeof(struct source_info));
 }
@@ -107,46 +107,46 @@ rawts_transport_setsourceinfo(th_transport_t *t, struct source_info *si)
 /**
  *
  */
-static th_transport_t *
-rawts_transport_add(rawts_t *rt, uint16_t sid, int pmt_pid)
+static service_t *
+rawts_service_add(rawts_t *rt, uint16_t sid, int pmt_pid)
 {
-  th_transport_t *t;
-  channel_t *ch;
+  service_t *t;
+  struct channel *ch;
 
   char tmp[200];
 
-  LIST_FOREACH(t, &rt->rt_transports, tht_group_link) {
-    if(t->tht_dvb_service_id == sid)
+  LIST_FOREACH(t, &rt->rt_services, s_group_link) {
+    if(t->s_dvb_service_id == sid)
       return t;
   }
   
   snprintf(tmp, sizeof(tmp), "%s_%04x", rt->rt_identifier, sid);
 
-  t = transport_create(tmp, TRANSPORT_DVB, THT_MPEG_TS);
-  t->tht_flags |= THT_DEBUG;
+  t = service_create(tmp, SERVICE_TYPE_DVB, S_MPEG_TS);
+  t->s_flags |= S_DEBUG;
 
-  t->tht_dvb_service_id = sid;
-  t->tht_pmt_pid        = pmt_pid;
+  t->s_dvb_service_id = sid;
+  t->s_pmt_pid        = pmt_pid;
 
-  t->tht_start_feed = rawts_transport_start;
-  t->tht_stop_feed  = rawts_transport_stop;
-  t->tht_config_save = rawts_transport_save;
-  t->tht_setsourceinfo = rawts_transport_setsourceinfo;
-  t->tht_quality_index = rawts_transport_quality;
+  t->s_start_feed = rawts_service_start;
+  t->s_stop_feed  = rawts_service_stop;
+  t->s_config_save = rawts_service_save;
+  t->s_setsourceinfo = rawts_service_setsourceinfo;
+  t->s_quality_index = rawts_service_quality;
 
-  t->tht_svcname = strdup(tmp);
+  t->s_svcname = strdup(tmp);
 
-  pthread_mutex_lock(&t->tht_stream_mutex); 
-  transport_make_nicename(t);
-  pthread_mutex_unlock(&t->tht_stream_mutex); 
+  pthread_mutex_lock(&t->s_stream_mutex); 
+  service_make_nicename(t);
+  pthread_mutex_unlock(&t->s_stream_mutex); 
 
   tvhlog(LOG_NOTICE, "rawts", "Added service %d (pmt: %d)", sid, pmt_pid);
 
-  LIST_INSERT_HEAD(&rt->rt_transports, t, tht_group_link);
+  LIST_INSERT_HEAD(&rt->rt_services, t, s_group_link);
 
   ch = channel_find_by_name(tmp, 1, 0);
 
-  transport_map_channel(t, ch, 0);
+  service_map_channel(t, ch, 0);
   return t;
 }
 
@@ -156,7 +156,7 @@ rawts_transport_add(rawts_t *rt, uint16_t sid, int pmt_pid)
  */
 
 static void
-got_pmt(struct th_transport *t, th_stream_t *st,
+got_pmt(struct service *t, th_stream_t *st,
 	const uint8_t *table, int table_len)
 {
   if(table[0] != 2)
@@ -176,7 +176,7 @@ static void
 got_pat(const uint8_t *ptr, size_t len, void *opaque)
 {
   rawts_t *rt = opaque;
-  th_transport_t *t;
+  service_t *t;
   th_stream_t *st;
   uint16_t prognum;
   uint16_t pid;
@@ -195,17 +195,17 @@ got_pat(const uint8_t *ptr, size_t len, void *opaque)
     pid     = (ptr[2] & 0x1f) << 8 | ptr[3];
 
     if(prognum != 0) {
-      t = rawts_transport_add(rt, prognum, pid);
+      t = rawts_service_add(rt, prognum, pid);
 
       if(t != NULL) {
-	pthread_mutex_lock(&t->tht_stream_mutex);
+	pthread_mutex_lock(&t->s_stream_mutex);
 
-	if(transport_stream_find(t, pid) == NULL) {
-	  st = transport_stream_create(t, pid, SCT_PMT);
+	if(service_stream_find(t, pid) == NULL) {
+	  st = service_stream_create(t, pid, SCT_PMT);
 	  st->st_section_docrc = 1;
 	  st->st_got_section = got_pmt;
 	}
-	pthread_mutex_unlock(&t->tht_stream_mutex);
+	pthread_mutex_unlock(&t->s_stream_mutex);
       }
     }
     ptr += 4;
@@ -231,7 +231,7 @@ static void
 process_ts_packet(rawts_t *rt, uint8_t *tsb)
 {
   uint16_t pid;
-  th_transport_t *t;
+  service_t *t;
   int64_t pcr, d;
   int didsleep = 0;
 
@@ -242,7 +242,7 @@ process_ts_packet(rawts_t *rt, uint8_t *tsb)
     return;
   }
   
-  LIST_FOREACH(t, &rt->rt_transports, tht_group_link) {
+  LIST_FOREACH(t, &rt->rt_services, s_group_link) {
     pcr = PTS_UNSET;
 
     ts_recv_packet1(t, tsb, &pcr);
@@ -253,24 +253,24 @@ process_ts_packet(rawts_t *rt, uint8_t *tsb)
 	rt->rt_pcr_pid = pid;
 
       if(rt->rt_pcr_pid == pid) {
-	if(t->tht_pcr_last != PTS_UNSET && didsleep == 0) {
+	if(t->s_pcr_last != PTS_UNSET && didsleep == 0) {
 	  struct timespec slp;
-	  int64_t delta = pcr - t->tht_pcr_last;
+	  int64_t delta = pcr - t->s_pcr_last;
 
 	  
 
 	  if(delta > 90000)
 	    delta = 90000;
 	  delta *= 11;
-	  d = delta + t->tht_pcr_last_realtime;
+	  d = delta + t->s_pcr_last_realtime;
 	  slp.tv_sec  =  d / 1000000;
 	  slp.tv_nsec = (d % 1000000) * 1000;
 	
 	  clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &slp, NULL);
 	  didsleep = 1;
 	}
-	t->tht_pcr_last = pcr;
-	t->tht_pcr_last_realtime = getmonoclock();
+	t->s_pcr_last = pcr;
+	t->s_pcr_last_realtime = getmonoclock();
       }
     }
   }

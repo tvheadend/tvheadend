@@ -53,7 +53,7 @@
 #include "rawtsinput.h"
 #include "avahi.h"
 #include "iptv_input.h"
-#include "transports.h"
+#include "service.h"
 #include "v4l.h"
 #include "trap.h"
 #include "settings.h"
@@ -364,7 +364,7 @@ main(int argc, char **argv)
    */
   xmltv_init();   /* Must be initialized before channels */
 
-  transport_init();
+  service_init();
 
   channels_init();
 

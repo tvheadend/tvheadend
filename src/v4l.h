@@ -46,9 +46,9 @@ typedef struct v4l_adapter {
 
   //  struct v4l2_capability va_caps;
 
-  struct th_transport *va_current_transport;
+  struct service *va_current_service;
 
-  struct th_transport_list va_transports;
+  struct service_list va_services;
   int va_tally;
 
   /** Receiver thread stuff */
@@ -74,8 +74,8 @@ void v4l_adapter_set_logging(v4l_adapter_t *va, int on);
 
 htsmsg_t *v4l_adapter_build_msg(v4l_adapter_t *va);
 
-th_transport_t *v4l_transport_find(v4l_adapter_t *va, const char *id, 
-				   int create);
+service_t *v4l_service_find(v4l_adapter_t *va, const char *id, 
+			    int create);
 
 void v4l_init(void);
 

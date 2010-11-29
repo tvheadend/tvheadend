@@ -27,9 +27,9 @@ typedef struct th_subscription {
 
   enum {
     SUBSCRIPTION_IDLE,
-    SUBSCRIPTION_TESTING_TRANSPORT,
-    SUBSCRIPTION_GOT_TRANSPORT,
-    SUBSCRIPTION_BAD_TRANSPORT,
+    SUBSCRIPTION_TESTING_SERVICE,
+    SUBSCRIPTION_GOT_SERVICE,
+    SUBSCRIPTION_BAD_SERVICE,
   } ths_state;
 
   int ths_testing_error;
@@ -39,8 +39,8 @@ typedef struct th_subscription {
 					   destroyed during the
 					   subscription */
 
-  LIST_ENTRY(th_subscription) ths_transport_link;
-  struct th_transport *ths_transport;   /* if NULL, ths_transport_link
+  LIST_ENTRY(th_subscription) ths_service_link;
+  struct service *ths_service;   /* if NULL, ths_service_link
 					   is not linked */
 
   char *ths_title; /* display title */
@@ -67,23 +67,23 @@ void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 
 void subscription_reschedule(void);
 
-th_subscription_t *subscription_create_from_channel(channel_t *ch,
+th_subscription_t *subscription_create_from_channel(struct channel *ch,
 						    unsigned int weight,
 						    const char *name,
 						    streaming_target_t *st,
 						    int flags);
 
 
-th_subscription_t *subscription_create_from_transport(th_transport_t *t,
-						      const char *name,
-						      streaming_target_t *st,
-						      int flags);
+th_subscription_t *subscription_create_from_service(struct service *t,
+						    const char *name,
+						    streaming_target_t *st,
+						    int flags);
 
 void subscription_change_weight(th_subscription_t *s, int weight);
 
 void subscription_stop(th_subscription_t *s);
 
-void subscription_unlink_transport(th_subscription_t *s, int reason);
+void subscription_unlink_service(th_subscription_t *s, int reason);
 
 void subscription_dummy_join(const char *id, int first);
 

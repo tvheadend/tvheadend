@@ -38,7 +38,6 @@
 #include "dvb_support.h"
 #include "diseqc.h"
 #include "notify.h"
-#include "transports.h"
 #include "dvr/dvr.h"
 
 /**

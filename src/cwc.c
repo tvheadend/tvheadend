@@ -34,11 +34,11 @@
 #include "psi.h"
 #include "tsdemux.h"
 #include "ffdecsa/FFdecsa.h"
-#include "transports.h"
 #include "cwc.h"
 #include "notify.h"
 #include "atomic.h"
 #include "dtable.h"
+#include "subscriptions.h"
 
 /**
  *
@@ -87,7 +87,7 @@ typedef enum {
  *
  */
 TAILQ_HEAD(cwc_queue, cwc);
-LIST_HEAD(cwc_transport_list, cwc_transport);
+LIST_HEAD(cwc_service_list, cwc_service);
 TAILQ_HEAD(cwc_message_queue, cwc_message);
 LIST_HEAD(ecm_section_list, ecm_section);
 static struct cwc_queue cwcs;
@@ -126,42 +126,42 @@ typedef struct ecm_pid {
 /**
  *
  */
-typedef struct cwc_transport {
-  th_descrambler_t ct_head;
+typedef struct cwc_service {
+  th_descrambler_t cs_head;
 
-  th_transport_t *ct_transport;
+  service_t *cs_service;
 
-  struct cwc *ct_cwc;
+  struct cwc *cs_cwc;
 
-  LIST_ENTRY(cwc_transport) ct_link;
+  LIST_ENTRY(cwc_service) cs_link;
 
-  int ct_okchannel;
+  int cs_okchannel;
 
   /**
-   * Status of the key(s) in ct_keys
+   * Status of the key(s) in cs_keys
    */
   enum {
-    CT_UNKNOWN,
-    CT_RESOLVED,
-    CT_FORBIDDEN
-  } ct_keystate;
+    CS_UNKNOWN,
+    CS_RESOLVED,
+    CS_FORBIDDEN
+  } cs_keystate;
 
-  void *ct_keys;
+  void *cs_keys;
 
 
-  uint8_t ct_cw[16];
-  int ct_pending_cw_update;
+  uint8_t cs_cw[16];
+  int cs_pending_cw_update;
 
   /**
    * CSA
    */
-  int ct_cluster_size;
-  uint8_t *ct_tsbcluster;
-  int ct_fill;
+  int cs_cluster_size;
+  uint8_t *cs_tsbcluster;
+  int cs_fill;
 
-  LIST_HEAD(, ecm_pid) ct_pids;
+  LIST_HEAD(, ecm_pid) cs_pids;
 
-} cwc_transport_t;
+} cwc_service_t;
 
 
 /**
@@ -200,7 +200,7 @@ typedef struct cwc {
 
   TAILQ_ENTRY(cwc) cwc_link; /* Linkage protected via global_lock */
 
-  struct cwc_transport_list cwc_transports;
+  struct cwc_service_list cwc_services;
 
   uint16_t cwc_caid;
 
@@ -248,9 +248,9 @@ typedef struct cwc {
  *
  */
 
-static void cwc_transport_destroy(th_descrambler_t *td);
+static void cwc_service_destroy(th_descrambler_t *td);
 extern char *cwc_krypt(const char *key, const char *salt);
-static void cwc_detect_card_type(cwc_t *cwc);
+static void cwc_detecs_card_type(cwc_t *cwc);
 void cwc_emm_conax(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_irdeto(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_seca(cwc_t *cwc, uint8_t *data, int len);
@@ -548,7 +548,7 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 	 cwc->cwc_ua[0], cwc->cwc_ua[1], cwc->cwc_ua[2], cwc->cwc_ua[3], cwc->cwc_ua[4], cwc->cwc_ua[5], cwc->cwc_ua[6], cwc->cwc_ua[7],
 	 nprov);
 
-  cwc_detect_card_type(cwc);
+  cwc_detecs_card_type(cwc);
 
   msg  += 15;
   plen -= 12;
@@ -614,7 +614,7 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
  * based on the equivalent in sasc-ng
  */
 static void
-cwc_detect_card_type(cwc_t *cwc)
+cwc_detecs_card_type(cwc_t *cwc)
 {
   uint8_t c_sys = cwc->cwc_caid >> 8;
 		
@@ -663,10 +663,10 @@ cwc_send_login(cwc_t *cwc)
 
 
 static void
-handle_ecm_reply(cwc_transport_t *ct, ecm_section_t *es, uint8_t *msg,
+handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
 		 int len, int seq)
 {
-  th_transport_t *t = ct->ct_transport;
+  service_t *t = ct->cs_service;
   ecm_pid_t *ep;
   char chaninfo[32];
   int i;
@@ -684,18 +684,18 @@ handle_ecm_reply(cwc_transport_t *ct, ecm_section_t *es, uint8_t *msg,
     
     /* ERROR */
 
-    if(ct->ct_okchannel == es->es_channel)
-      ct->ct_okchannel = -1;
+    if(ct->cs_okchannel == es->es_channel)
+      ct->cs_okchannel = -1;
 
-    if(ct->ct_keystate == CT_FORBIDDEN)
+    if(ct->cs_keystate == CS_FORBIDDEN)
       return; // We already know it's bad
 
     es->es_nok = 1;
 
     tvhlog(LOG_DEBUG, "cwc", "Received NOK for service \"%s\"%s (seqno: %d "
-	   "Req delay: %lld ms)", t->tht_svcname, chaninfo, seq, delay);
+	   "Req delay: %lld ms)", t->s_svcname, chaninfo, seq, delay);
 
-    LIST_FOREACH(ep, &ct->ct_pids, ep_link) {
+    LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
       for(i = 0; i <= ep->ep_last_section; i++)
 	if(ep->ep_sections[i] == NULL || 
 	   ep->ep_sections[i]->es_pending ||
@@ -705,13 +705,13 @@ handle_ecm_reply(cwc_transport_t *ct, ecm_section_t *es, uint8_t *msg,
     tvhlog(LOG_ERR, "cwc",
 	   "Can not descramble service \"%s\", access denied (seqno: %d "
 	   "Req delay: %lld ms)",
-	   t->tht_svcname, seq, delay);
-    ct->ct_keystate = CT_FORBIDDEN;
+	   t->s_svcname, seq, delay);
+    ct->cs_keystate = CS_FORBIDDEN;
     return;
 
   } else {
 
-    ct->ct_okchannel = es->es_channel;
+    ct->cs_okchannel = es->es_channel;
     es->es_nok = 0;
 
     tvhlog(LOG_DEBUG, "cwc",
@@ -720,22 +720,22 @@ handle_ecm_reply(cwc_transport_t *ct, ecm_section_t *es, uint8_t *msg,
 	   " odd: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x (seqno: %d "
 	   "Req delay: %lld ms)",
 	   chaninfo,
-	   t->tht_svcname,
+	   t->s_svcname,
 	   msg[3 + 0], msg[3 + 1], msg[3 + 2], msg[3 + 3], msg[3 + 4],
 	   msg[3 + 5], msg[3 + 6], msg[3 + 7], msg[3 + 8], msg[3 + 9],
 	   msg[3 + 10],msg[3 + 11],msg[3 + 12],msg[3 + 13],msg[3 + 14],
 	   msg[3 + 15], seq, delay);
     
-    if(ct->ct_keystate != CT_RESOLVED)
+    if(ct->cs_keystate != CS_RESOLVED)
       tvhlog(LOG_INFO, "cwc",
 	     "Obtained key for for service \"%s\" in %lld ms, from %s",
-	     t->tht_svcname, delay, ct->ct_cwc->cwc_hostname);
+	     t->s_svcname, delay, ct->cs_cwc->cwc_hostname);
     
-    pthread_mutex_lock(&t->tht_stream_mutex);
-    ct->ct_keystate = CT_RESOLVED;
-    memcpy(ct->ct_cw, msg + 3, 16);
-    ct->ct_pending_cw_update = 1;
-    pthread_mutex_unlock(&t->tht_stream_mutex);
+    pthread_mutex_lock(&t->s_stream_mutex);
+    ct->cs_keystate = CS_RESOLVED;
+    memcpy(ct->cs_cw, msg + 3, 16);
+    ct->cs_pending_cw_update = 1;
+    pthread_mutex_unlock(&t->s_stream_mutex);
   }
 }
 
@@ -747,7 +747,7 @@ handle_ecm_reply(cwc_transport_t *ct, ecm_section_t *es, uint8_t *msg,
 static int
 cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
 {
-  cwc_transport_t *ct;
+  cwc_service_t *ct;
   ecm_pid_t *ep;
   ecm_section_t *es;
   uint16_t seq = (msg[2] << 8) | msg[3];
@@ -759,8 +759,8 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
   switch(msgtype) {
   case 0x80:
   case 0x81:
-    LIST_FOREACH(ct, &cwc->cwc_transports, ct_link) {
-      LIST_FOREACH(ep, &ct->ct_pids, ep_link) {
+    LIST_FOREACH(ct, &cwc->cwc_services, cs_link) {
+      LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
 	for(i = 0; i <= ep->ep_last_section; i++) {
 	  es = ep->ep_sections[i];
 	  if(es != NULL) {
@@ -982,11 +982,11 @@ cwc_session(cwc_t *cwc)
 static void *
 cwc_thread(void *aux)
 {
-  cwc_transport_t *ct;
+  cwc_service_t *ct;
   cwc_t *cwc = aux;
   int fd, d;
   char errbuf[100];
-  th_transport_t *t;
+  service_t *t;
   char hostname[256];
   int port;
   struct timespec ts;
@@ -1058,11 +1058,11 @@ cwc_thread(void *aux)
 
   tvhlog(LOG_INFO, "cwc", "%s destroyed", cwc->cwc_hostname);
 
-  while((ct = LIST_FIRST(&cwc->cwc_transports)) != NULL) {
-    t = ct->ct_transport;
-    pthread_mutex_lock(&t->tht_stream_mutex);
-    cwc_transport_destroy(&ct->ct_head);
-    pthread_mutex_unlock(&t->tht_stream_mutex);
+  while((ct = LIST_FIRST(&cwc->cwc_services)) != NULL) {
+    t = ct->cs_service;
+    pthread_mutex_lock(&t->s_stream_mutex);
+    cwc_service_destroy(&ct->cs_head);
+    pthread_mutex_unlock(&t->s_stream_mutex);
   }
 
   free((void *)cwc->cwc_password);
@@ -1209,12 +1209,12 @@ cwc_emm_seca(cwc_t *cwc, uint8_t *data, int len)
  *
  */
 static void
-cwc_table_input(struct th_descrambler *td, struct th_transport *t,
+cwc_table_input(struct th_descrambler *td, struct service *t,
 		struct th_stream *st, const uint8_t *data, int len)
 {
-  cwc_transport_t *ct = (cwc_transport_t *)td;
-  uint16_t sid = t->tht_dvb_service_id;
-  cwc_t *cwc = ct->ct_cwc;
+  cwc_service_t *ct = (cwc_service_t *)td;
+  uint16_t sid = t->s_dvb_service_id;
+  cwc_t *cwc = ct->cs_cwc;
   int channel;
   int section;
   ecm_pid_t *ep;
@@ -1228,7 +1228,7 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
   if((data[0] & 0xf0) != 0x80)
     return;
 
-  LIST_FOREACH(ep, &ct->ct_pids, ep_link) {
+  LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
     if(ep->ep_pid == st->st_pid)
       break;
   }
@@ -1236,7 +1236,7 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
   if(ep == NULL) {
     ep = calloc(1, sizeof(ecm_pid_t));
     ep->ep_pid = st->st_pid;
-    LIST_INSERT_HEAD(&ct->ct_pids, ep, ep_link);
+    LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
   }
 
 
@@ -1278,7 +1278,7 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
 
     if(cwc->cwc_fd == -1) {
       // New key, but we are not connected (anymore), can not descramble
-      ct->ct_keystate = CT_UNKNOWN;
+      ct->cs_keystate = CS_UNKNOWN;
       break;
     }
 
@@ -1289,8 +1289,8 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
     memcpy(es->es_ecm, data, len);
     es->es_ecmsize = len;
 
-    if(ct->ct_okchannel != -1 && channel != -1 && 
-       ct->ct_okchannel != channel) {
+    if(ct->cs_okchannel != -1 && channel != -1 && 
+       ct->cs_okchannel != channel) {
       tvhlog(LOG_DEBUG, "cwc", "Filtering ECM channel %d", channel);
       return;
     }
@@ -1299,7 +1299,7 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
 
     tvhlog(LOG_DEBUG, "cwc", 
 	   "Sending ECM%s section=%d/%d, for service %s (seqno: %d) PID %d", 
-	   chaninfo, section, ep->ep_last_section, t->tht_svcname, es->es_seq,
+	   chaninfo, section, ep->ep_last_section, t->s_svcname, es->es_seq,
 	   st->st_pid);
     es->es_time = getmonoclock();
     break;
@@ -1317,19 +1317,19 @@ cwc_table_input(struct th_descrambler *td, struct th_transport *t,
  *
  */
 static void
-update_keys(cwc_transport_t *ct)
+update_keys(cwc_service_t *ct)
 {
   int i;
-  ct->ct_pending_cw_update = 0;
+  ct->cs_pending_cw_update = 0;
   for(i = 0; i < 8; i++)
-    if(ct->ct_cw[i]) {
-      set_even_control_word(ct->ct_keys, ct->ct_cw);
+    if(ct->cs_cw[i]) {
+      set_even_control_word(ct->cs_keys, ct->cs_cw);
       break;
     }
   
   for(i = 0; i < 8; i++)
-    if(ct->ct_cw[8 + i]) {
-      set_odd_control_word(ct->ct_keys, ct->ct_cw + 8);
+    if(ct->cs_cw[8 + i]) {
+      set_odd_control_word(ct->cs_keys, ct->cs_cw + 8);
       break;
     }
 }
@@ -1339,59 +1339,59 @@ update_keys(cwc_transport_t *ct)
  *
  */
 static int
-cwc_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
+cwc_descramble(th_descrambler_t *td, service_t *t, struct th_stream *st,
 	       const uint8_t *tsb)
 {
-  cwc_transport_t *ct = (cwc_transport_t *)td;
+  cwc_service_t *ct = (cwc_service_t *)td;
   int r;
   unsigned char *vec[3];
 
-  if(ct->ct_keystate == CT_FORBIDDEN)
+  if(ct->cs_keystate == CS_FORBIDDEN)
     return 1;
 
-  if(ct->ct_keystate != CT_RESOLVED)
+  if(ct->cs_keystate != CS_RESOLVED)
     return -1;
 
-  if(ct->ct_fill == 0 && ct->ct_pending_cw_update)
+  if(ct->cs_fill == 0 && ct->cs_pending_cw_update)
     update_keys(ct);
 
-  memcpy(ct->ct_tsbcluster + ct->ct_fill * 188, tsb, 188);
-  ct->ct_fill++;
+  memcpy(ct->cs_tsbcluster + ct->cs_fill * 188, tsb, 188);
+  ct->cs_fill++;
 
-  if(ct->ct_fill != ct->ct_cluster_size)
+  if(ct->cs_fill != ct->cs_cluster_size)
     return 0;
 
   while(1) {
 
-    vec[0] = ct->ct_tsbcluster;
-    vec[1] = ct->ct_tsbcluster + ct->ct_fill * 188;
+    vec[0] = ct->cs_tsbcluster;
+    vec[1] = ct->cs_tsbcluster + ct->cs_fill * 188;
     vec[2] = NULL;
     
-    r = decrypt_packets(ct->ct_keys, vec);
+    r = decrypt_packets(ct->cs_keys, vec);
     if(r > 0) {
       int i;
-      const uint8_t *t0 = ct->ct_tsbcluster;
+      const uint8_t *t0 = ct->cs_tsbcluster;
 
       for(i = 0; i < r; i++) {
 	ts_recv_packet2(t, t0);
 	t0 += 188;
       }
 
-      r = ct->ct_fill - r;
+      r = ct->cs_fill - r;
       assert(r >= 0);
 
       if(r > 0)
-	memmove(ct->ct_tsbcluster, t0, r * 188);
-      ct->ct_fill = r;
+	memmove(ct->cs_tsbcluster, t0, r * 188);
+      ct->cs_fill = r;
 
-      if(ct->ct_pending_cw_update && r > 0)
+      if(ct->cs_pending_cw_update && r > 0)
 	continue;
     } else {
-      ct->ct_fill = 0;
+      ct->cs_fill = 0;
     }
     break;
   }
-  if(ct->ct_pending_cw_update)
+  if(ct->cs_pending_cw_update)
     update_keys(ct);
 
   return 0;
@@ -1399,28 +1399,28 @@ cwc_descramble(th_descrambler_t *td, th_transport_t *t, struct th_stream *st,
 
 /**
  * global_lock is held
- * tht_stream_mutex is held
+ * s_stream_mutex is held
  */
 static void 
-cwc_transport_destroy(th_descrambler_t *td)
+cwc_service_destroy(th_descrambler_t *td)
 {
-  cwc_transport_t *ct = (cwc_transport_t *)td;
+  cwc_service_t *ct = (cwc_service_t *)td;
   ecm_pid_t *ep;
   int i;
 
-  while((ep = LIST_FIRST(&ct->ct_pids)) != NULL) {
+  while((ep = LIST_FIRST(&ct->cs_pids)) != NULL) {
     for(i = 0; i < 256; i++)
       free(ep->ep_sections[i]);
     LIST_REMOVE(ep, ep_link);
     free(ep);
   }
 
-  LIST_REMOVE(td, td_transport_link);
+  LIST_REMOVE(td, td_service_link);
 
-  LIST_REMOVE(ct, ct_link);
+  LIST_REMOVE(ct, cs_link);
 
-  free_key_struct(ct->ct_keys);
-  free(ct->ct_tsbcluster);
+  free_key_struct(ct->cs_keys);
+  free(ct->cs_tsbcluster);
   free(ct);
 }
 
@@ -1428,12 +1428,12 @@ cwc_transport_destroy(th_descrambler_t *td)
  *
  */
 static inline th_stream_t *
-cwc_find_stream_by_caid(th_transport_t *t, int caid)
+cwc_find_stream_by_caid(service_t *t, int caid)
 {
   th_stream_t *st;
   caid_t *c;
 
-  TAILQ_FOREACH(st, &t->tht_components, st_link) {
+  TAILQ_FOREACH(st, &t->s_components, st_link) {
     LIST_FOREACH(c, &st->st_caids, link) {
       if(c->caid == caid)
 	return st;
@@ -1449,10 +1449,10 @@ cwc_find_stream_by_caid(th_transport_t *t, int caid)
  * global_lock is held
  */
 void
-cwc_transport_start(th_transport_t *t)
+cwc_service_start(service_t *t)
 {
   cwc_t *cwc;
-  cwc_transport_t *ct;
+  cwc_service_t *ct;
   th_descrambler_t *td;
 
   lock_assert(&global_lock);
@@ -1463,25 +1463,25 @@ cwc_transport_start(th_transport_t *t)
     if(cwc_find_stream_by_caid(t, cwc->cwc_caid) == NULL)
       continue;
 
-    ct = calloc(1, sizeof(cwc_transport_t));
-    ct->ct_cluster_size = get_suggested_cluster_size();
-    ct->ct_tsbcluster = malloc(ct->ct_cluster_size * 188);
+    ct = calloc(1, sizeof(cwc_service_t));
+    ct->cs_cluster_size = get_suggested_cluster_size();
+    ct->cs_tsbcluster = malloc(ct->cs_cluster_size * 188);
 
-    ct->ct_keys = get_key_struct();
-    ct->ct_cwc = cwc;
-    ct->ct_transport = t;
-    ct->ct_okchannel = -1;
+    ct->cs_keys = get_key_struct();
+    ct->cs_cwc = cwc;
+    ct->cs_service = t;
+    ct->cs_okchannel = -1;
 
-    td = &ct->ct_head;
-    td->td_stop       = cwc_transport_destroy;
+    td = &ct->cs_head;
+    td->td_stop       = cwc_service_destroy;
     td->td_table      = cwc_table_input;
     td->td_descramble = cwc_descramble;
-    LIST_INSERT_HEAD(&t->tht_descramblers, td, td_transport_link);
+    LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
 
-    LIST_INSERT_HEAD(&cwc->cwc_transports, ct, ct_link);
+    LIST_INSERT_HEAD(&cwc->cwc_services, ct, cs_link);
 
     tvhlog(LOG_DEBUG, "cwc", "%s using CWC %s:%d",
-	   transport_nicename(t), cwc->cwc_hostname, cwc->cwc_port);
+	   service_nicename(t), cwc->cwc_hostname, cwc->cwc_port);
 
   }
 }

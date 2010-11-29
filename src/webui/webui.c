@@ -237,7 +237,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq)
       run = 0;
       break;
 
-    case SMT_TRANSPORT_STATUS:
+    case SMT_SERVICE_STATUS:
       //printf("SMT_TRANSPORT_STATUS\n");
       break;
 

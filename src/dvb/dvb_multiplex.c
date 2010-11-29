@@ -39,11 +39,11 @@
 #include "tvheadend.h"
 #include "dvb.h"
 #include "channels.h"
-#include "transports.h"
 #include "teletext.h"
 #include "psi.h"
 #include "dvb_support.h"
 #include "notify.h"
+#include "subscriptions.h"
 
 struct th_dvb_mux_instance_tree dvb_muxes;
 
@@ -294,7 +294,7 @@ void
 dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-  th_transport_t *t;
+  service_t *t;
 
   lock_assert(&global_lock);
   
@@ -303,9 +303,9 @@ dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
 
   while((t = LIST_FIRST(&tdmi->tdmi_transports)) != NULL) {
     hts_settings_remove("dvbtransports/%s/%s",
-			t->tht_dvb_mux_instance->tdmi_identifier,
-			t->tht_identifier);
-    transport_destroy(t);
+			t->s_dvb_mux_instance->tdmi_identifier,
+			t->s_identifier);
+    service_destroy(t);
   }
 
   dvb_transport_notify_by_adapter(tda);
@@ -1074,7 +1074,7 @@ int
 dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src)
 {
   th_dvb_mux_instance_t *tdmi_dst;
-  th_transport_t *t_src, *t_dst;
+  service_t *t_src, *t_dst;
   th_stream_t *st_src, *st_dst;
   caid_t *caid_src, *caid_dst;
 
@@ -1088,34 +1088,34 @@ dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src)
   if(tdmi_dst == NULL)
     return -1; // Already exist
 
-  LIST_FOREACH(t_src, &tdmi_src->tdmi_transports, tht_group_link) {
+  LIST_FOREACH(t_src, &tdmi_src->tdmi_transports, s_group_link) {
     t_dst = dvb_transport_find(tdmi_dst, 
-			       t_src->tht_dvb_service_id,
-			       t_src->tht_pmt_pid, NULL);
+			       t_src->s_dvb_service_id,
+			       t_src->s_pmt_pid, NULL);
 
-    t_dst->tht_pcr_pid     = t_src->tht_pcr_pid;
-    t_dst->tht_enabled     = t_src->tht_enabled;
-    t_dst->tht_servicetype = t_src->tht_servicetype;
-    t_dst->tht_scrambled   = t_src->tht_scrambled;
+    t_dst->s_pcr_pid     = t_src->s_pcr_pid;
+    t_dst->s_enabled     = t_src->s_enabled;
+    t_dst->s_servicetype = t_src->s_servicetype;
+    t_dst->s_scrambled   = t_src->s_scrambled;
 
-    if(t_src->tht_provider != NULL)
-      t_dst->tht_provider    = strdup(t_src->tht_provider);
+    if(t_src->s_provider != NULL)
+      t_dst->s_provider    = strdup(t_src->s_provider);
 
-    if(t_src->tht_svcname != NULL)
-      t_dst->tht_svcname = strdup(t_src->tht_svcname);
+    if(t_src->s_svcname != NULL)
+      t_dst->s_svcname = strdup(t_src->s_svcname);
 
-    if(t_src->tht_ch != NULL)
-      transport_map_channel(t_dst, t_src->tht_ch, 0);
+    if(t_src->s_ch != NULL)
+      service_map_channel(t_dst, t_src->s_ch, 0);
 
-    pthread_mutex_lock(&t_src->tht_stream_mutex);
-    pthread_mutex_lock(&t_dst->tht_stream_mutex);
+    pthread_mutex_lock(&t_src->s_stream_mutex);
+    pthread_mutex_lock(&t_dst->s_stream_mutex);
 
-    TAILQ_FOREACH(st_src, &t_src->tht_components, st_link) {
+    TAILQ_FOREACH(st_src, &t_src->s_components, st_link) {
 
 
-      st_dst = transport_stream_create(t_dst, 
-				       st_src->st_pid,
-				       st_src->st_type);
+      st_dst = service_stream_create(t_dst, 
+				     st_src->st_pid,
+				     st_src->st_type);
 	
       memcpy(st_dst->st_lang, st_src->st_lang, 4);
       st_dst->st_frame_duration = st_src->st_frame_duration;
@@ -1130,10 +1130,10 @@ dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src)
       }
     }
 
-    pthread_mutex_unlock(&t_dst->tht_stream_mutex);
-    pthread_mutex_unlock(&t_src->tht_stream_mutex);
+    pthread_mutex_unlock(&t_dst->s_stream_mutex);
+    pthread_mutex_unlock(&t_src->s_stream_mutex);
 
-    t_dst->tht_config_save(t_dst); // Save config
+    t_dst->s_config_save(t_dst); // Save config
 
   }
   dvb_mux_save(tdmi_dst);

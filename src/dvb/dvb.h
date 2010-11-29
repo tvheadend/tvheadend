@@ -128,7 +128,7 @@ typedef struct th_dvb_mux_instance {
   char *tdmi_identifier;
   char *tdmi_network;     /* Name of network, from NIT table */
 
-  struct th_transport_list tdmi_transports; /* via tht_mux_link */
+  struct service_list tdmi_transports; /* via s_mux_link */
 
 
   TAILQ_ENTRY(th_dvb_mux_instance) tdmi_scan_link;
@@ -183,7 +183,7 @@ typedef struct th_dvb_adapter {
   gtimer_t tda_mux_scanner_timer;
 
   pthread_mutex_t tda_delivery_mutex;
-  struct th_transport_list tda_transports; /* Currently bound transports */
+  struct service_list tda_transports; /* Currently bound transports */
 
   gtimer_t tda_fe_monitor_timer;
   int tda_fe_monitor_hold;
@@ -297,17 +297,17 @@ int dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src);
  */
 void dvb_transport_load(th_dvb_mux_instance_t *tdmi);
 
-th_transport_t *dvb_transport_find(th_dvb_mux_instance_t *tdmi,
+struct service *dvb_transport_find(th_dvb_mux_instance_t *tdmi,
 				   uint16_t sid, int pmt_pid,
 				   const char *identifier);
 
-void dvb_transport_notify(th_transport_t *t);
+void dvb_transport_notify(struct service *t);
 
 void dvb_transport_notify_by_adapter(th_dvb_adapter_t *tda);
 
-htsmsg_t *dvb_transport_build_msg(th_transport_t *t);
+htsmsg_t *dvb_transport_build_msg(struct service *t);
 
-int dvb_transport_get_signal_status(th_transport_t *t,
+int dvb_transport_get_signal_status(struct service *t,
 				    signal_status_t *status);
 
 /**

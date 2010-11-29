@@ -31,9 +31,9 @@
 
 #include "tvheadend.h"
 #include "teletext.h"
-#include "transports.h"
 #include "packet.h"
 #include "streaming.h"
+#include "service.h"
 
 /**
  *
@@ -61,7 +61,7 @@ typedef struct tt_private {
 
 static void teletext_rundown_copy(tt_private_t *ttp, tt_mag_t *ttm);
 
-static void teletext_rundown_scan(th_transport_t *t, tt_private_t *ttp);
+static void teletext_rundown_scan(service_t *t, tt_private_t *ttp);
 
 #define bitreverse(b) \
 (((b) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
@@ -236,7 +236,7 @@ is_tt_clock(const uint8_t *str)
  *
  */
 static int
-update_tt_clock(th_transport_t *t, const uint8_t *buf)
+update_tt_clock(service_t *t, const uint8_t *buf)
 {
   uint8_t str[10];
   int i;
@@ -250,17 +250,17 @@ update_tt_clock(th_transport_t *t, const uint8_t *buf)
     return 0;
 
   ti = tt_construct_unix_time(str);
-  if(t->tht_tt_clock == ti)
+  if(t->s_tt_clock == ti)
     return 0;
 
-  t->tht_tt_clock = ti;
+  t->s_tt_clock = ti;
   //  printf("teletext clock is: %s", ctime(&ti));
   return 1;
 }
 
 
 static void
-extract_subtitle(th_transport_t *t, th_stream_t *st,
+extract_subtitle(service_t *t, th_stream_t *st,
 		 tt_mag_t *ttm, int64_t pts)
 {
   int i, j, off = 0;
@@ -315,7 +315,7 @@ extract_subtitle(th_transport_t *t, th_stream_t *st,
   pkt->pkt_componentindex = st->st_index;
 
   streaming_message_t *sm = streaming_msg_create_pkt(pkt);
-  streaming_pad_deliver(&t->tht_streaming_pad, sm);
+  streaming_pad_deliver(&t->s_streaming_pad, sm);
   streaming_msg_free(sm);
 
   /* Decrease our own reference to the packet */
@@ -354,14 +354,14 @@ dump_page(tt_mag_t *ttm)
 
 
 static void
-tt_subtitle_deliver(th_transport_t *t, th_stream_t *parent, tt_mag_t *ttm)
+tt_subtitle_deliver(service_t *t, th_stream_t *parent, tt_mag_t *ttm)
 {
   th_stream_t *st;
 
   if(ttm->ttm_current_pts == PTS_UNSET)
     return;
 
-  TAILQ_FOREACH(st, &t->tht_components, st_link) {
+  TAILQ_FOREACH(st, &t->s_components, st_link) {
      if(parent->st_pid == st->st_parent_pid &&
 	ttm->ttm_curpage == st->st_pid -  PID_TELETEXT_BASE) {
        extract_subtitle(t, st, ttm, ttm->ttm_current_pts);
@@ -373,7 +373,7 @@ tt_subtitle_deliver(th_transport_t *t, th_stream_t *parent, tt_mag_t *ttm)
  *
  */
 static void
-tt_decode_line(th_transport_t *t, th_stream_t *st, uint8_t *buf)
+tt_decode_line(service_t *t, th_stream_t *st, uint8_t *buf)
 {
   uint8_t mpag, line, s12, s34, c;
   int page, magidx, i;
@@ -429,7 +429,7 @@ tt_decode_line(th_transport_t *t, th_stream_t *st, uint8_t *buf)
     if(update_tt_clock(t, buf + 34))
       teletext_rundown_scan(t, ttp);
 
-    ttm->ttm_current_pts = t->tht_current_pts;
+    ttm->ttm_current_pts = t->s_current_pts;
     ttm->ttm_inactive = 0;
     break;
 
@@ -453,7 +453,7 @@ tt_decode_line(th_transport_t *t, th_stream_t *st, uint8_t *buf)
  *
  */
 static void
-teletext_scan_stream(th_transport_t *t, th_stream_t *st)
+teletext_scan_stream(service_t *t, th_stream_t *st)
 {
   tt_private_t *ttp = st->st_priv;
   tt_mag_t *ttm;
@@ -475,7 +475,7 @@ teletext_scan_stream(th_transport_t *t, th_stream_t *st)
  *
  */
 void
-teletext_input(th_transport_t *t, th_stream_t *st, const uint8_t *tsb)
+teletext_input(service_t *t, th_stream_t *st, const uint8_t *tsb)
 {
   int i, j;
   const uint8_t *x;
@@ -562,11 +562,11 @@ teletext_rundown_copy(tt_private_t *ttp, tt_mag_t *ttm)
 
 
 static void
-teletext_rundown_scan(th_transport_t *t, tt_private_t *ttp)
+teletext_rundown_scan(service_t *t, tt_private_t *ttp)
 {
   int i;
   uint8_t *l;
-  time_t now = t->tht_tt_clock, start, stop, last = 0;
+  time_t now = t->s_tt_clock, start, stop, last = 0;
   th_commercial_advice_t ca;
 
   if(ttp->ttp_rundown_valid == 0)
@@ -586,9 +586,9 @@ teletext_rundown_scan(th_transport_t *t, tt_private_t *ttp)
     stop  = start + tt_time_to_len(l + 32);
     
     if(start <= now && stop > now)
-      t->tht_tt_commercial_advice = ca;
+      t->s_tt_commercial_advice = ca;
     
-    if(start > now && ca != t->tht_tt_commercial_advice && last == 0)
+    if(start > now && ca != t->s_tt_commercial_advice && last == 0)
       last = start;
   }
 }

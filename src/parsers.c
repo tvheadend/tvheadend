@@ -26,12 +26,12 @@
 #include <assert.h>
 
 #include "tvheadend.h"
+#include "service.h"
 #include "parsers.h"
 #include "parser_h264.h"
 #include "parser_latm.h"
 #include "bitstream.h"
 #include "packet.h"
-#include "transports.h"
 #include "streaming.h"
 
 #define PTS_MASK 0x1ffffffffLL
@@ -81,48 +81,48 @@ getpts(const uint8_t *p)
 }
 
 
-static int parse_mpeg2video(th_transport_t *t, th_stream_t *st, size_t len,
+static int parse_mpeg2video(service_t *t, th_stream_t *st, size_t len,
 			    uint32_t next_startcode, int sc_offset);
 
-static int parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
+static int parse_h264(service_t *t, th_stream_t *st, size_t len,
 		      uint32_t next_startcode, int sc_offset);
 
-typedef int (packet_parser_t)(th_transport_t *t, th_stream_t *st, size_t len,
+typedef int (packet_parser_t)(service_t *t, th_stream_t *st, size_t len,
 			      uint32_t next_startcode, int sc_offset);
 
-typedef void (aparser_t)(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
+typedef void (aparser_t)(service_t *t, th_stream_t *st, th_pkt_t *pkt);
 
-static void parse_sc(th_transport_t *t, th_stream_t *st, const uint8_t *data,
+static void parse_sc(service_t *t, th_stream_t *st, const uint8_t *data,
 		     int len, packet_parser_t *vp);
 
 
-static void parse_aac(th_transport_t *t, th_stream_t *st, const uint8_t *data,
+static void parse_aac(service_t *t, th_stream_t *st, const uint8_t *data,
 		      int len, int start);
 
-static void parse_subtitles(th_transport_t *t, th_stream_t *st, 
+static void parse_subtitles(service_t *t, th_stream_t *st, 
 			    const uint8_t *data, int len, int start);
 
-static int parse_mpa(th_transport_t *t, th_stream_t *st, size_t len,
+static int parse_mpa(service_t *t, th_stream_t *st, size_t len,
 		     uint32_t next_startcode, int sc_offset);
 
-static int parse_mpa2(th_transport_t *t, th_stream_t *st);
+static int parse_mpa2(service_t *t, th_stream_t *st);
 
-static int parse_ac3(th_transport_t *t, th_stream_t *st, size_t len,
+static int parse_ac3(service_t *t, th_stream_t *st, size_t len,
 		     uint32_t next_startcode, int sc_offset);
 
-static int parse_eac3(th_transport_t *t, th_stream_t *st, size_t len,
+static int parse_eac3(service_t *t, th_stream_t *st, size_t len,
 		      uint32_t next_startcode, int sc_offset);
 
-static void parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt);
+static void parser_deliver(service_t *t, th_stream_t *st, th_pkt_t *pkt);
 
-static int parse_pes_header(th_transport_t *t, th_stream_t *st,
+static int parse_pes_header(service_t *t, th_stream_t *st,
 			    const uint8_t *buf, size_t len);
 
 /**
  * Parse raw mpeg data
  */
 void
-parse_mpeg_ts(th_transport_t *t, th_stream_t *st, const uint8_t *data, 
+parse_mpeg_ts(service_t *t, th_stream_t *st, const uint8_t *data, 
 	      int len, int start, int err)
 {
   
@@ -170,7 +170,7 @@ parse_mpeg_ts(th_transport_t *t, th_stream_t *st, const uint8_t *data,
  * Note: data does not include startcode and packet length
  */
 void
-parse_mpeg_ps(th_transport_t *t, th_stream_t *st, uint8_t *data, int len)
+parse_mpeg_ps(service_t *t, th_stream_t *st, uint8_t *data, int len)
 {
   int hlen;
 
@@ -206,7 +206,7 @@ parse_mpeg_ps(th_transport_t *t, th_stream_t *st, uint8_t *data, int len)
  * Parse AAC LATM
  */
 static void 
-parse_aac(th_transport_t *t, th_stream_t *st, const uint8_t *data,
+parse_aac(service_t *t, th_stream_t *st, const uint8_t *data,
 	  int len, int start)
 {
   int l, muxlen, p;
@@ -273,7 +273,7 @@ parse_aac(th_transport_t *t, th_stream_t *st, const uint8_t *data,
  * derive further information.
  */
 static void
-parse_sc(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
+parse_sc(service_t *t, th_stream_t *st, const uint8_t *data, int len,
 	 packet_parser_t *vp)
 {
   uint32_t sc = st->st_startcond;
@@ -373,7 +373,7 @@ parse_sc(th_transport_t *t, th_stream_t *st, const uint8_t *data, int len,
  *
  */
 static int
-depacketize(th_transport_t *t, th_stream_t *st, size_t len, 
+depacketize(service_t *t, th_stream_t *st, size_t len, 
 	    uint32_t next_startcode, int sc_offset)
 {
   const uint8_t *buf = st->st_buf.sb_data + sc_offset;
@@ -413,13 +413,13 @@ depacketize(th_transport_t *t, th_stream_t *st, size_t len,
  *
  */
 static void
-makeapkt(th_transport_t *t, th_stream_t *st, const void *buf,
+makeapkt(service_t *t, th_stream_t *st, const void *buf,
 	 int len, int64_t dts, int duration, int channels, int sri)
 {
 
   th_pkt_t *pkt = pkt_alloc(buf, len, dts, dts);
 	  
-  pkt->pkt_commercial = t->tht_tt_commercial_advice;
+  pkt->pkt_commercial = t->s_tt_commercial_advice;
   pkt->pkt_duration = duration;
   pkt->pkt_channels = channels;
   pkt->pkt_sri = sri;
@@ -453,7 +453,7 @@ mpa_valid_frame(const uint8_t *buf)
  *
  */
 static int
-parse_mpa2(th_transport_t *t, th_stream_t *st)
+parse_mpa2(service_t *t, th_stream_t *st)
 {
   int i, len;
   const uint8_t *buf;
@@ -495,7 +495,7 @@ parse_mpa2(th_transport_t *t, th_stream_t *st)
  *
  */
 static int 
-parse_mpa(th_transport_t *t, th_stream_t *st, size_t ilen,
+parse_mpa(service_t *t, th_stream_t *st, size_t ilen,
 	  uint32_t next_startcode, int sc_offset)
 {
   int r;
@@ -567,7 +567,7 @@ static const char acmodtab[8] = {2,1,2,3,3,4,4,5};
 
 
 static int 
-parse_ac3(th_transport_t *t, th_stream_t *st, size_t ilen,
+parse_ac3(service_t *t, th_stream_t *st, size_t ilen,
 	  uint32_t next_startcode, int sc_offset)
 {
   int i, len;
@@ -646,7 +646,7 @@ eac3_valid_frame(const uint8_t *buf)
 }
 
 static int 
-parse_eac3(th_transport_t *t, th_stream_t *st, size_t ilen,
+parse_eac3(service_t *t, th_stream_t *st, size_t ilen,
 	   uint32_t next_startcode, int sc_offset)
 {
   int i, len;
@@ -709,7 +709,7 @@ parse_eac3(th_transport_t *t, th_stream_t *st, size_t ilen,
  * Extract DTS and PTS and update current values in stream
  */
 static int
-parse_pes_header(th_transport_t *t, th_stream_t *st, 
+parse_pes_header(service_t *t, th_stream_t *st, 
 		 const uint8_t *buf, size_t len)
 {
   int64_t dts, pts, d;
@@ -754,7 +754,7 @@ parse_pes_header(th_transport_t *t, th_stream_t *st,
  err:
   st->st_curdts = PTS_UNSET;
   st->st_curpts = PTS_UNSET;
-  limitedlog(&st->st_loglimit_pes, "TS", transport_component_nicename(st),
+  limitedlog(&st->st_loglimit_pes, "TS", service_component_nicename(st),
 	     "Corrupted PES header");
   return -1;
 } 
@@ -780,7 +780,7 @@ const unsigned int mpeg2video_framedurations[16] = {
  * Parse mpeg2video picture start
  */
 static int
-parse_mpeg2video_pic_start(th_transport_t *t, th_stream_t *st, int *frametype,
+parse_mpeg2video_pic_start(service_t *t, th_stream_t *st, int *frametype,
 			   bitstream_t *bs)
 {
   int v, pct;
@@ -829,7 +829,7 @@ parser_set_stream_vsize(th_stream_t *st, int width, int height)
   if(need_save) {
     st->st_width = width;
     st->st_height = height;
-    transport_request_save(st->st_transport, 1);
+    service_request_save(st->st_service, 1);
   }
 }
 
@@ -858,7 +858,7 @@ static const uint8_t mpeg2_aspect[16][2]={
  * Parse mpeg2video sequence start
  */
 static int
-parse_mpeg2video_seq_start(th_transport_t *t, th_stream_t *st,
+parse_mpeg2video_seq_start(service_t *t, th_stream_t *st,
 			   bitstream_t *bs)
 {
   int v, width, height, aspect;
@@ -926,7 +926,7 @@ parser_global_data_move(th_stream_t *st, const uint8_t *data, size_t len)
  *
  */
 static int
-parse_mpeg2video(th_transport_t *t, th_stream_t *st, size_t len, 
+parse_mpeg2video(service_t *t, th_stream_t *st, size_t len, 
 		 uint32_t next_startcode, int sc_offset)
 {
   const uint8_t *buf = st->st_buf.sb_data + sc_offset;
@@ -961,7 +961,7 @@ parse_mpeg2video(th_transport_t *t, th_stream_t *st, size_t len,
     st->st_curpkt = pkt_alloc(NULL, 0, st->st_curpts, st->st_curdts);
     st->st_curpkt->pkt_frametype = frametype;
     st->st_curpkt->pkt_duration = st->st_frame_duration;
-    st->st_curpkt->pkt_commercial = t->tht_tt_commercial_advice;
+    st->st_curpkt->pkt_commercial = t->s_tt_commercial_advice;
     break;
 
   case 0x000001b3:
@@ -1054,7 +1054,7 @@ parse_mpeg2video(th_transport_t *t, th_stream_t *st, size_t len,
  * H.264 parser
  */
 static int
-parse_h264(th_transport_t *t, th_stream_t *st, size_t len, 
+parse_h264(service_t *t, th_stream_t *st, size_t len, 
 	   uint32_t next_startcode, int sc_offset)
 {
   const uint8_t *buf = st->st_buf.sb_data + sc_offset;
@@ -1130,7 +1130,7 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
       st->st_curpkt->pkt_frametype = pkttype;
       st->st_curpkt->pkt_field = isfield;
       st->st_curpkt->pkt_duration = duration ?: st->st_frame_duration;
-      st->st_curpkt->pkt_commercial = t->tht_tt_commercial_advice;
+      st->st_curpkt->pkt_commercial = t->s_tt_commercial_advice;
       break;
 
     default:
@@ -1172,7 +1172,7 @@ parse_h264(th_transport_t *t, th_stream_t *st, size_t len,
  * http://broadcasting.ru/pdf-standard-specifications/subtitling/dvb-sub/en300743.v1.2.1.pdf
  */
 static void
-parse_subtitles(th_transport_t *t, th_stream_t *st, const uint8_t *data,
+parse_subtitles(service_t *t, th_stream_t *st, const uint8_t *data,
 		int len, int start)
 {
   th_pkt_t *pkt;
@@ -1226,7 +1226,7 @@ parse_subtitles(th_transport_t *t, th_stream_t *st, const uint8_t *data,
     // end_of_PES_data_field_marker
     if(buf[psize - 1] == 0xff) {
       pkt = pkt_alloc(buf, psize - 1, st->st_curpts, st->st_curdts);
-      pkt->pkt_commercial = t->tht_tt_commercial_advice;
+      pkt->pkt_commercial = t->s_tt_commercial_advice;
       parser_deliver(t, st, pkt);
     }
   }
@@ -1237,13 +1237,13 @@ parse_subtitles(th_transport_t *t, th_stream_t *st, const uint8_t *data,
  *
  */
 static void
-parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
+parser_deliver(service_t *t, th_stream_t *st, th_pkt_t *pkt)
 {
   if(SCT_ISAUDIO(st->st_type) && pkt->pkt_pts != PTS_UNSET &&
-     (t->tht_current_pts == PTS_UNSET ||
-      pkt->pkt_pts > t->tht_current_pts ||
-      pkt->pkt_pts < t->tht_current_pts - 180000))
-    t->tht_current_pts = pkt->pkt_pts;
+     (t->s_current_pts == PTS_UNSET ||
+      pkt->pkt_pts > t->s_current_pts ||
+      pkt->pkt_pts < t->s_current_pts - 180000))
+    t->s_current_pts = pkt->pkt_pts;
 
 #if 0
   printf("PARSE: %-12s %d %10"PRId64" %10"PRId64" %10d %10d\n",
@@ -1263,14 +1263,14 @@ parser_deliver(th_transport_t *t, th_stream_t *st, th_pkt_t *pkt)
   /**
    * Input is ok
    */
-  transport_set_streaming_status_flags(t, TSS_PACKETS);
+  service_set_streaming_status_flags(t, TSS_PACKETS);
 
   /* Forward packet */
   pkt->pkt_componentindex = st->st_index;
 
   streaming_message_t *sm = streaming_msg_create_pkt(pkt);
 
-  streaming_pad_deliver(&t->tht_streaming_pad, sm);
+  streaming_pad_deliver(&t->s_streaming_pad, sm);
   streaming_msg_free(sm);
 
   /* Decrease our own reference to the packet */

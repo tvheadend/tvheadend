@@ -37,7 +37,6 @@
 #include "dvb.h"
 #include "dvb_support.h"
 #include "epg.h"
-#include "transports.h"
 #include "channels.h"
 #include "psi.h"
 #include "notify.h"
@@ -478,7 +477,7 @@ static int
 dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
-  th_transport_t *t;
+  service_t *t;
   channel_t *ch;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
@@ -539,7 +538,7 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     return -1;
 
   t = dvb_transport_find(tdmi, serviceid, 0, NULL);
-  if(t == NULL || !t->tht_enabled || (ch = t->tht_ch) == NULL)
+  if(t == NULL || !t->s_enabled || (ch = t->s_ch) == NULL)
     return 0;
 
   while(len >= 12) {
@@ -640,7 +639,7 @@ static int
 dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
-  th_transport_t *t;
+  service_t *t;
   int version;
   uint8_t section_number;
   uint8_t last_section_number;
@@ -733,26 +732,26 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	  if(t == NULL)
 	    break;
 
-	  if(t->tht_servicetype != stype ||
-	     t->tht_scrambled != free_ca_mode ||
-	     strcmp(t->tht_provider ?: "", provider) ||
-	     strcmp(t->tht_svcname  ?: "", chname)) {
+	  if(t->s_servicetype != stype ||
+	     t->s_scrambled != free_ca_mode ||
+	     strcmp(t->s_provider ?: "", provider) ||
+	     strcmp(t->s_svcname  ?: "", chname)) {
 	    
-	    t->tht_servicetype = stype;
-	    t->tht_scrambled = free_ca_mode;
+	    t->s_servicetype = stype;
+	    t->s_scrambled = free_ca_mode;
 	    
-	    free(t->tht_provider);
-	    t->tht_provider = strdup(provider);
+	    free(t->s_provider);
+	    t->s_provider = strdup(provider);
 	    
-	    free(t->tht_svcname);
-	    t->tht_svcname = strdup(chname);
+	    free(t->s_svcname);
+	    t->s_svcname = strdup(chname);
 
-	    pthread_mutex_lock(&t->tht_stream_mutex); 
-	    transport_make_nicename(t);
-	    pthread_mutex_unlock(&t->tht_stream_mutex); 
+	    pthread_mutex_lock(&t->s_stream_mutex); 
+	    service_make_nicename(t);
+	    pthread_mutex_unlock(&t->s_stream_mutex); 
 	    
-	    t->tht_config_save(t);
-	    transport_refresh_channel(t);
+	    t->s_config_save(t);
+	    service_refresh_channel(t);
 	  }
 	}
 	break;
@@ -1045,7 +1044,7 @@ dvb_table_local_channel(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 {
   uint16_t sid, chan;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-  th_transport_t *t;
+  service_t *t;
 
   LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
     if(tdmi->tdmi_transport_stream_id == tsid)
@@ -1062,10 +1061,10 @@ dvb_table_local_channel(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       t = dvb_transport_find(tdmi, sid, 0, NULL);
       if(t != NULL) {
 
-	if(t->tht_channel_number != chan) {
-	  t->tht_channel_number = chan;
-	  t->tht_config_save(t);
-	  transport_refresh_channel(t);
+	if(t->s_channel_number != chan) {
+	  t->s_channel_number = chan;
+	  t->s_config_save(t);
+	  service_refresh_channel(t);
 	}
       }
     }
@@ -1190,7 +1189,7 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		  uint8_t tableid, void *opaque)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-  th_transport_t *t;
+  service_t *t;
   int numch;
   char chname[256];
   uint8_t atsc_stype;
@@ -1250,13 +1249,13 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       dptr += dptr[1] + 2;
     }
 
-    if(t->tht_servicetype != stype ||
-       strcmp(t->tht_svcname ?: "", chname)) {
+    if(t->s_servicetype != stype ||
+       strcmp(t->s_svcname ?: "", chname)) {
 
-      t->tht_servicetype = stype;
-      tvh_str_set(&t->tht_svcname, chname);
+      t->s_servicetype = stype;
+      tvh_str_set(&t->s_svcname, chname);
       
-      t->tht_config_save(t);
+      t->s_config_save(t);
     }
   }
   return 0;
@@ -1272,12 +1271,12 @@ static int
 dvb_pmt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
-  th_transport_t *t;
+  service_t *t;
 
-  LIST_FOREACH(t, &tdmi->tdmi_transports, tht_group_link) {
-    pthread_mutex_lock(&t->tht_stream_mutex);
+  LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
+    pthread_mutex_lock(&t->s_stream_mutex);
     psi_parse_pmt(t, ptr, len, 1, 1);
-    pthread_mutex_unlock(&t->tht_stream_mutex);
+    pthread_mutex_unlock(&t->s_stream_mutex);
   }
   return 0;
 }

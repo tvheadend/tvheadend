@@ -33,7 +33,6 @@
 #include "tvheadend.h"
 #include "psi.h"
 #include "channels.h"
-#include "transports.h"
 #include "epg.h"
 #include "xmltv.h"
 #include "dtable.h"
@@ -344,12 +343,12 @@ channel_save(channel_t *ch)
 }
 
 /**
- * Rename a channel and all tied transports
+ * Rename a channel and all tied services
  */
 int
 channel_rename(channel_t *ch, const char *newname)
 {
-  th_transport_t *t;
+  service_t *t;
 
   lock_assert(&global_lock);
 
@@ -362,8 +361,8 @@ channel_rename(channel_t *ch, const char *newname)
   RB_REMOVE(&channel_name_tree, ch, ch_name_link);
   channel_set_name(ch, newname);
 
-  LIST_FOREACH(t, &ch->ch_transports, tht_ch_link)
-    t->tht_config_save(t);
+  LIST_FOREACH(t, &ch->ch_services, s_ch_link)
+    t->s_config_save(t);
 
   channel_save(ch);
   htsp_channel_update(ch);
@@ -376,7 +375,7 @@ channel_rename(channel_t *ch, const char *newname)
 void
 channel_delete(channel_t *ch)
 {
-  th_transport_t *t;
+  service_t *t;
   th_subscription_t *s;
   channel_tag_mapping_t *ctm;
 
@@ -392,8 +391,8 @@ channel_delete(channel_t *ch)
 
   dvr_destroy_by_channel(ch);
 
-  while((t = LIST_FIRST(&ch->ch_transports)) != NULL)
-    transport_map_channel(t, NULL, 1);
+  while((t = LIST_FIRST(&ch->ch_services)) != NULL)
+    service_map_channel(t, NULL, 1);
 
   while((s = LIST_FIRST(&ch->ch_subscriptions)) != NULL) {
     LIST_REMOVE(s, ths_channel_link);
@@ -423,22 +422,22 @@ channel_delete(channel_t *ch)
 
 
 /**
- * Merge transports from channel 'src' to channel 'dst'
+ * Merge services from channel 'src' to channel 'dst'
  *
  * Then, destroy the 'src' channel
  */
 void
 channel_merge(channel_t *dst, channel_t *src)
 {
-  th_transport_t *t;
+  service_t *t;
 
   lock_assert(&global_lock);
   
   tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" merged into \"%s\"",
 	 src->ch_name, dst->ch_name);
 
-  while((t = LIST_FIRST(&src->ch_transports)) != NULL)
-    transport_map_channel(t, dst, 1);
+  while((t = LIST_FIRST(&src->ch_services)) != NULL)
+    service_map_channel(t, dst, 1);
 
   channel_delete(src);
 }
