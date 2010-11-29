@@ -322,11 +322,11 @@ htsp_build_channel(channel_t *ch, const char *method)
     uint16_t caid;
     htsmsg_add_str(svcmsg, "name", transport_nicename(t));
     htsmsg_add_str(svcmsg, "type", transport_servicetype_txt(t));
-    htsmsg_add_msg(services, NULL, svcmsg);
     if((caid = transport_get_encryption(t)) != 0) {
       htsmsg_add_u32(svcmsg, "caid", caid);
       htsmsg_add_str(svcmsg, "caname", psi_caid2name(caid));
     }
+    htsmsg_add_msg(services, NULL, svcmsg);
   }
 
   htsmsg_add_msg(out, "services", services);
