@@ -31,7 +31,7 @@
 
 #include <linux/dvb/frontend.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "dvb_support.h"
 #include "dvb.h"
 

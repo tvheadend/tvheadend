@@ -18,7 +18,7 @@
 
 #include <string.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "streaming.h"
 #include "packet.h"
 #include "atomic.h"

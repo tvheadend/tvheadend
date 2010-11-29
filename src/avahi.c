@@ -49,7 +49,7 @@
 #include <avahi-common/error.h>
 #include <avahi-common/timeval.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "avahi.h"
 
 static AvahiEntryGroup *group = NULL;

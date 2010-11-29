@@ -23,7 +23,7 @@
 #include <regex.h>
 #include <assert.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "channels.h"
 #include "epg.h"
 #include "dvr/dvr.h"

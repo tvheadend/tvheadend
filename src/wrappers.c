@@ -1,7 +1,7 @@
 #include <fcntl.h>
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
-#include "tvhead.h"
+#include "tvheadend.h"
 
 int
 tvh_open(const char *pathname, int flags, mode_t mode)

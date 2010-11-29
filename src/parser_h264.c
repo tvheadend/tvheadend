@@ -28,7 +28,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "parsers.h"
 #include "parser_h264.h"
 #include "bitstream.h"

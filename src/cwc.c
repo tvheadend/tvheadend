@@ -29,7 +29,7 @@
 #include <ctype.h>
 #include <rpc/des_crypt.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "tcp.h"
 #include "psi.h"
 #include "tsdemux.h"

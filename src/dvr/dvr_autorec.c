@@ -27,7 +27,7 @@
 #include <errno.h>
 #include <math.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "settings.h"
 #include "dvr.h"
 #include "notify.h"

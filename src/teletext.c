@@ -29,7 +29,7 @@
 #include <errno.h>
 #include <ctype.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "teletext.h"
 #include "transports.h"
 #include "packet.h"

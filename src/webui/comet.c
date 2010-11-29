@@ -27,7 +27,7 @@
 #include "htsmsg.h"
 #include "htsmsg_json.h"
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "http.h"
 #include "webui/webui.h"
 #include "access.h"

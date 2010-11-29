@@ -50,7 +50,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 
 #include "htsmsg_xml.h"
 #include "htsbuf.h"

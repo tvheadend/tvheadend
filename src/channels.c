@@ -30,7 +30,7 @@
 
 #include "settings.h"
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "psi.h"
 #include "channels.h"
 #include "transports.h"

@@ -29,7 +29,7 @@
 
 #include "settings.h"
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "dtable.h"
 #include "notify.h"
 

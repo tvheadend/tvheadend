@@ -35,7 +35,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "dvb/dvb.h"
 #include "tcp.h"
 #include "psi.h"

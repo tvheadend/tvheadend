@@ -28,7 +28,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "transports.h"
 #include "rawtsinput.h"
 #include "psi.h"

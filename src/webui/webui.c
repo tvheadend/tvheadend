@@ -29,7 +29,7 @@
 #include <sys/stat.h>
 #include <sys/sendfile.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "access.h"
 #include "http.h"
 #include "webui.h"

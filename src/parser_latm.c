@@ -30,7 +30,7 @@
 #include <errno.h>
 #include <assert.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "parsers.h"
 #include "parser_latm.h"
 #include "bitstream.h"

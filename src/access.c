@@ -29,7 +29,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "access.h"
 #include "dtable.h"
 #include "settings.h"

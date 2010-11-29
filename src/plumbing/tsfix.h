@@ -19,7 +19,7 @@
 #ifndef TSFIX_H__
 #define TSFIX_H__
 
-#include "tvhead.h"
+#include "tvheadend.h"
 
 streaming_target_t *tsfix_create(streaming_target_t *output);
 

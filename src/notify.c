@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "notify.h"
 #include "webui/webui.h"
 

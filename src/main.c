@@ -36,7 +36,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "tcp.h"
 #include "access.h"
 #include "http.h"

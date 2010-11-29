@@ -27,7 +27,7 @@
 
 
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "channels.h"
 #include "subscriptions.h"
 #include "serviceprobe.h"

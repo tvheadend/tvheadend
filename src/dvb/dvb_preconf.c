@@ -26,7 +26,7 @@
 
 #include <linux/dvb/frontend.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "dvb.h"
 #include "dvb_preconf.h"
 

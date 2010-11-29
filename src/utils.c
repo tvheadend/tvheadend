@@ -20,7 +20,7 @@
 #include <limits.h>
 #include <string.h>
 #include <assert.h>
-#include "tvhead.h"
+#include "tvheadend.h"
 
 /**
  * CRC32 

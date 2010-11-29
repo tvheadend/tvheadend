@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "psi.h"
 #include "transports.h"
 #include "dvb/dvb_support.h"

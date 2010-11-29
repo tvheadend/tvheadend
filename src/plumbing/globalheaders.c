@@ -17,7 +17,7 @@
  */
 
 #include <assert.h>
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "streaming.h"
 #include "globalheaders.h"
 

@@ -25,7 +25,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "streaming.h"
 #include "dvr.h"
 #include "mkmux.h"

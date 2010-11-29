@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "http.h"
 #include "webui.h"
 #include "access.h"

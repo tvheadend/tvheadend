@@ -29,7 +29,7 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "channels.h"
 #include "subscriptions.h"
 #include "tcp.h"

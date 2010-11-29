@@ -33,7 +33,7 @@
 
 #include "settings.h"
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "transports.h"
 #include "v4l.h"
 #include "parsers.h"

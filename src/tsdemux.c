@@ -32,7 +32,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "teletext.h"
 #include "transports.h"
 #include "subscriptions.h"

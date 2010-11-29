@@ -24,7 +24,7 @@
 
 #include "settings.h"
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "dvr.h"
 #include "notify.h"
 #include "htsp.h"

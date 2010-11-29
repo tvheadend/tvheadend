@@ -23,7 +23,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include "htsbuf.h"
-#include "tvhead.h"
+#include "tvheadend.h"
 
 #ifndef MIN
 #define MIN(a, b) ((a) < (b) ? (a) : (b))

@@ -19,7 +19,7 @@
 #ifndef GLOBALHEADERS_H__
 #define GLOBALHEADERS_H__
 
-#include "tvhead.h"
+#include "tvheadend.h"
 
 streaming_target_t *globalheaders_create(streaming_target_t *output);
 

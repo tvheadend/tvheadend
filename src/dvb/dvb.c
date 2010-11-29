@@ -17,7 +17,7 @@
  */
 
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "dvb.h"
 #include "dvb_support.h"
 

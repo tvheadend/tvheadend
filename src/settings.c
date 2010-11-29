@@ -30,7 +30,7 @@
 #include "htsmsg.h"
 #include "htsmsg_json.h"
 #include "settings.h"
-#include "tvhead.h"
+#include "tvheadend.h"
 
 static char *settingspath;
 

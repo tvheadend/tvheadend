@@ -17,7 +17,7 @@
  */
 
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "packet.h"
 #include "string.h"
 #include "atomic.h"

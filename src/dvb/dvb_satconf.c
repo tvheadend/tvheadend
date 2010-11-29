@@ -28,7 +28,7 @@
 #include <linux/dvb/frontend.h>
 #include <linux/dvb/dmx.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "dvb.h"
 #include "dtable.h"
 #include "notify.h"

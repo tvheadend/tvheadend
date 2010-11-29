@@ -38,7 +38,7 @@ char tvh_binshasum[20];
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "sha1.h"
 
 #define MAXFRAMES 100

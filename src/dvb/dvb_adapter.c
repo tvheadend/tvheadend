@@ -35,7 +35,7 @@
 
 #include "settings.h"
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "transports.h"
 #include "dvb.h"
 #include "dvb_support.h"

@@ -31,7 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "transports.h"
 #include "subscriptions.h"
 #include "streaming.h"

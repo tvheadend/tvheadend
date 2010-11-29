@@ -25,7 +25,7 @@
 
 #include "htsstr.h"
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "streaming.h"
 #include "dvr.h"
 #include "spawn.h"

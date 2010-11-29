@@ -33,7 +33,7 @@
 #include <errno.h>
 #include <linux/netdevice.h>
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "htsmsg.h"
 #include "channels.h"
 #include "transports.h"

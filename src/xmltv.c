@@ -28,7 +28,7 @@
 #include "htsmsg_xml.h"
 #include "settings.h"
 
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "channels.h"
 #include "epg.h"
 #include "xmltv.h"
