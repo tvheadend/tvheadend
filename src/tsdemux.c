@@ -49,14 +49,14 @@ static void
 got_section(const uint8_t *data, size_t len, void *opaque)
 {
   th_descrambler_t *td;
-  th_stream_t *st = opaque;
-  service_t *t = st->st_service;
+  elementary_stream_t *st = opaque;
+  service_t *t = st->es_service;
 
-  if(st->st_type == SCT_CA) {
+  if(st->es_type == SCT_CA) {
     LIST_FOREACH(td, &t->s_descramblers, td_service_link)
       td->td_table(td, t, st, data, len);
-  } else if(st->st_got_section != NULL) {
-    st->st_got_section(t, st, data, len);
+  } else if(st->es_got_section != NULL) {
+    st->es_got_section(t, st, data, len);
   }
 }
 
@@ -65,7 +65,7 @@ got_section(const uint8_t *data, size_t len, void *opaque)
  * Continue processing of transport stream packets
  */
 static void
-ts_recv_packet0(service_t *t, th_stream_t *st, const uint8_t *tsb)
+ts_recv_packet0(service_t *t, elementary_stream_t *st, const uint8_t *tsb)
 {
   int off, pusi, cc, error;
 
@@ -81,32 +81,32 @@ ts_recv_packet0(service_t *t, th_stream_t *st, const uint8_t *tsb)
 
   if(tsb[3] & 0x10) {
     cc = tsb[3] & 0xf;
-    if(st->st_cc_valid && cc != st->st_cc) {
+    if(st->es_cc_valid && cc != st->es_cc) {
       /* Incorrect CC */
-      limitedlog(&st->st_loglimit_cc, "TS", service_component_nicename(st),
+      limitedlog(&st->es_loglimit_cc, "TS", service_component_nicename(st),
 		 "Continuity counter error");
       avgstat_add(&t->s_cc_errors, 1, dispatch_clock);
-      avgstat_add(&st->st_cc_errors, 1, dispatch_clock);
+      avgstat_add(&st->es_cc_errors, 1, dispatch_clock);
 
       // Mark as error if this is not the first packet of a payload
       if(!pusi)
 	error |= 0x2;
     }
-    st->st_cc_valid = 1;
-    st->st_cc = (cc + 1) & 0xf;
+    st->es_cc_valid = 1;
+    st->es_cc = (cc + 1) & 0xf;
   }
 
   off = tsb[3] & 0x20 ? tsb[4] + 5 : 4;
 
-  switch(st->st_type) {
+  switch(st->es_type) {
 
   case SCT_CA:
   case SCT_PAT:
   case SCT_PMT:
-    if(st->st_section == NULL)
-      st->st_section = calloc(1, sizeof(struct psi_section));
+    if(st->es_section == NULL)
+      st->es_section = calloc(1, sizeof(struct psi_section));
 
-    psi_section_reassemble(st->st_section, tsb, st->st_section_docrc,
+    psi_section_reassemble(st->es_section, tsb, st->es_section_docrc,
 			   got_section, st);
     break;
 
@@ -127,11 +127,11 @@ ts_recv_packet0(service_t *t, th_stream_t *st, const uint8_t *tsb)
 /**
  * Recover PCR
  *
- * st->st_pcr_drift will increase if our (system clock) runs faster
+ * st->es_pcr_drift will increase if our (system clock) runs faster
  * than the stream PCR
  */
 static void
-ts_extract_pcr(service_t *t, th_stream_t *st, const uint8_t *tsb, 
+ts_extract_pcr(service_t *t, elementary_stream_t *st, const uint8_t *tsb, 
 	       int64_t *pcrp)
 {
   int64_t real, pcr, d;
@@ -152,29 +152,29 @@ ts_extract_pcr(service_t *t, th_stream_t *st, const uint8_t *tsb,
 
   real = getmonoclock();
 
-  if(st->st_pcr_real_last != PTS_UNSET) {
-    d = (real - st->st_pcr_real_last) - (pcr - st->st_pcr_last);
+  if(st->es_pcr_real_last != PTS_UNSET) {
+    d = (real - st->es_pcr_real_last) - (pcr - st->es_pcr_last);
     
     if(d < -90000LL || d > 90000LL) {
-      st->st_pcr_recovery_fails++;
-      if(st->st_pcr_recovery_fails > 10) {
-	st->st_pcr_recovery_fails = 0;
-	st->st_pcr_real_last = PTS_UNSET;
+      st->es_pcr_recovery_fails++;
+      if(st->es_pcr_recovery_fails > 10) {
+	st->es_pcr_recovery_fails = 0;
+	st->es_pcr_real_last = PTS_UNSET;
       }
       return;
     }
-    st->st_pcr_recovery_fails = 0;
-    st->st_pcr_drift += d;
+    st->es_pcr_recovery_fails = 0;
+    st->es_pcr_drift += d;
     
-    if(t->s_pcr_pid == st->st_pid) {
+    if(t->s_pcr_pid == st->es_pid) {
       /* This is the registered PCR PID, adjust service PCR drift
 	 via an IIR filter */
       
-      t->s_pcr_drift = (t->s_pcr_drift * 255 + st->st_pcr_drift) / 256;
+      t->s_pcr_drift = (t->s_pcr_drift * 255 + st->es_pcr_drift) / 256;
     }
   }
-  st->st_pcr_last = pcr;
-  st->st_pcr_real_last = real;
+  st->es_pcr_last = pcr;
+  st->es_pcr_real_last = real;
 }
 
 /**
@@ -183,7 +183,7 @@ ts_extract_pcr(service_t *t, th_stream_t *st, const uint8_t *tsb,
 void
 ts_recv_packet1(service_t *t, const uint8_t *tsb, int64_t *pcrp)
 {
-  th_stream_t *st;
+  elementary_stream_t *st;
   int pid, n, m, r;
   th_descrambler_t *td;
   int error = 0;
@@ -221,8 +221,8 @@ ts_recv_packet1(service_t *t, const uint8_t *tsb, int64_t *pcrp)
   avgstat_add(&t->s_rate, 188, dispatch_clock);
 
   if((tsb[3] & 0xc0) ||
-      (t->s_scrambled_seen && st->st_type != SCT_CA &&
-       st->st_type != SCT_PAT && st->st_type != SCT_PMT)) {
+      (t->s_scrambled_seen && st->es_type != SCT_CA &&
+       st->es_type != SCT_PAT && st->es_type != SCT_PMT)) {
 
     /**
      * Lock for descrambling, but only if packet was not in error
@@ -267,7 +267,7 @@ ts_recv_packet1(service_t *t, const uint8_t *tsb, int64_t *pcrp)
 void
 ts_recv_packet2(service_t *t, const uint8_t *tsb)
 {
-  th_stream_t *st;
+  elementary_stream_t *st;
   int pid = (tsb[1] & 0x1f) << 8 | tsb[2];
 
   if((st = service_stream_find(t, pid)) != NULL)

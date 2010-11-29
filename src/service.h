@@ -34,11 +34,11 @@ typedef struct th_descrambler {
   LIST_ENTRY(th_descrambler) td_service_link;
 
   void (*td_table)(struct th_descrambler *d, struct service *t,
-		   struct th_stream *st, 
+		   struct elementary_stream *st, 
 		   const uint8_t *section, int section_len);
 
   int (*td_descramble)(struct th_descrambler *d, struct service *t,
-		       struct th_stream *st, const uint8_t *tsb);
+		       struct elementary_stream *st, const uint8_t *tsb);
 
   void (*td_stop)(struct th_descrambler *d);
 
@@ -49,7 +49,7 @@ typedef struct th_descrambler {
  * Section callback, called when a PSI table is fully received
  */
 typedef void (pid_section_callback_t)(struct service *t,
-				      struct th_stream *pi,
+				      struct elementary_stream *pi,
 				      const uint8_t *section, int section_len);
 
 
@@ -66,107 +66,105 @@ typedef struct caid {
 
 } caid_t;
 
-/*
+/**
  * Stream, one media component for a service.
- *
- * XXX: This should be renamed to 'elementary_stream' or something
  */
-typedef struct th_stream {
+typedef struct elementary_stream {
 
-  TAILQ_ENTRY(th_stream) st_link;
-  int st_position;
-  struct service *st_service;
+  TAILQ_ENTRY(elementary_stream) es_link;
+  int es_position;
+  struct service *es_service;
 
-  streaming_component_type_t st_type;
-  int st_index;
+  streaming_component_type_t es_type;
+  int es_index;
 
-  uint16_t st_aspect_num;
-  uint16_t st_aspect_den;
+  uint16_t es_aspect_num;
+  uint16_t es_aspect_den;
 
-  char st_lang[4];           /* ISO 639 3-letter language code */
-  uint16_t st_composition_id;
-  uint16_t st_ancillary_id;
+  char es_lang[4];           /* ISO 639 3-letter language code */
+  uint16_t es_composition_id;
+  uint16_t es_ancillary_id;
 
-  int16_t st_pid;
-  uint16_t st_parent_pid;    /* For subtitle streams originating from 
+  int16_t es_pid;
+  uint16_t es_parent_pid;    /* For subtitle streams originating from 
 				a teletext stream. this is the pid
 				of the teletext stream */
 
-  uint8_t st_cc;             /* Last CC */
-  uint8_t st_cc_valid;       /* Is CC valid at all? */
+  uint8_t es_cc;             /* Last CC */
+  uint8_t es_cc_valid;       /* Is CC valid at all? */
 
-  avgstat_t st_cc_errors;
-  avgstat_t st_rate;
+  avgstat_t es_cc_errors;
+  avgstat_t es_rate;
 
-  int st_demuxer_fd;
-  int st_peak_presentation_delay; /* Max seen diff. of DTS and PTS */
+  int es_demuxer_fd;
+  int es_peak_presentation_delay; /* Max seen diff. of DTS and PTS */
 
-  struct psi_section *st_section;
-  int st_section_docrc;           /* Set if we should verify CRC on tables */
-  pid_section_callback_t *st_got_section;
-  void *st_got_section_opaque;
+  struct psi_section *es_section;
+  int es_section_docrc;           /* Set if we should verify CRC on tables */
+  pid_section_callback_t *es_got_section;
+  void *es_got_section_opaque;
 
   /* PCR recovery */
 
-  int st_pcr_recovery_fails;
-  int64_t st_pcr_real_last;     /* realtime clock when we saw last PCR */
-  int64_t st_pcr_last;          /* PCR clock when we saw last PCR */
-  int64_t st_pcr_drift;
+  int es_pcr_recovery_fails;
+  int64_t es_pcr_real_last;     /* realtime clock when we saw last PCR */
+  int64_t es_pcr_last;          /* PCR clock when we saw last PCR */
+  int64_t es_pcr_drift;
 
   /* For service stream packet reassembly */
 
-  sbuf_t st_buf;
+  sbuf_t es_buf;
 
-  uint32_t st_startcond;
-  uint32_t st_startcode;
-  uint32_t st_startcode_offset;
-  int st_parser_state;
-  int st_parser_ptr;
-  void *st_priv;          /* Parser private data */
+  uint32_t es_startcond;
+  uint32_t es_startcode;
+  uint32_t es_startcode_offset;
+  int es_parser_state;
+  int es_parser_ptr;
+  void *es_priv;          /* Parser private data */
 
-  sbuf_t st_buf_ps;       // program stream reassembly (analogue adapters)
-  sbuf_t st_buf_a;        // Audio packet reassembly
+  sbuf_t es_buf_ps;       // program stream reassembly (analogue adapters)
+  sbuf_t es_buf_a;        // Audio packet reassembly
 
-  uint8_t *st_global_data;
-  int st_global_data_len;
-  int st_incomplete;
-  int st_ssc_intercept;
-  int st_ssc_ptr;
-  uint8_t st_ssc_buf[32];
+  uint8_t *es_global_data;
+  int es_global_data_len;
+  int es_incomplete;
+  int es_ssc_intercept;
+  int es_ssc_ptr;
+  uint8_t es_ssc_buf[32];
 
-  struct th_pkt *st_curpkt;
-  int64_t st_curpts;
-  int64_t st_curdts;
-  int64_t st_prevdts;
-  int64_t st_nextdts;
-  int st_frame_duration;
-  int st_width;
-  int st_height;
+  struct th_pkt *es_curpkt;
+  int64_t es_curpts;
+  int64_t es_curdts;
+  int64_t es_prevdts;
+  int64_t es_nextdts;
+  int es_frame_duration;
+  int es_width;
+  int es_height;
 
-  int st_meta_change;
+  int es_meta_change;
 
   /* CA ID's on this stream */
-  struct caid_list st_caids;
+  struct caid_list es_caids;
 
-  int st_vbv_size;        /* Video buffer size (in bytes) */
-  int st_vbv_delay;       /* -1 if CBR */
+  int es_vbv_size;        /* Video buffer size (in bytes) */
+  int es_vbv_delay;       /* -1 if CBR */
 
   /* */
 
-  int st_delete_me;      /* Temporary flag for deleting streams */
+  int es_delete_me;      /* Temporary flag for deleting streams */
 
   /* Error log limiters */
 
-  loglimiter_t st_loglimit_cc;
-  loglimiter_t st_loglimit_pes;
+  loglimiter_t es_loglimit_cc;
+  loglimiter_t es_loglimit_pes;
   
-  char *st_nicename;
+  char *es_nicename;
 
   /* Teletext subtitle */ 
-  char st_blank; // Last subtitle was blank
+  char es_blank; // Last subtitle was blank
 
 
-} th_stream_t;
+} elementary_stream_t;
 
 
 /**
@@ -399,7 +397,7 @@ typedef struct service {
 
   /**
    * Mutex to be held during streaming.
-   * This mutex also protects all th_stream_t instances for this
+   * This mutex also protects all elementary_stream_t instances for this
    * transport.
    */
   pthread_mutex_t s_stream_mutex;
@@ -434,8 +432,8 @@ typedef struct service {
    * For simple streaming sources (such as video4linux) keeping
    * track of the video and audio stream is convenient.
    */
-  th_stream_t *s_video;
-  th_stream_t *s_audio;
+  elementary_stream_t *s_video;
+  elementary_stream_t *s_audio;
  
   /**
    * Average continuity errors
@@ -464,7 +462,7 @@ typedef struct service {
   /**
    * List of all components.
    */
-  struct th_stream_queue s_components;
+  struct elementary_stream_queue s_components;
 
 
   /**
@@ -505,9 +503,9 @@ service_t *service_find(struct channel *ch, unsigned int weight,
 			const char *loginfo, int *errorp,
 			service_t *skip);
 
-th_stream_t *service_stream_find(service_t *t, int pid);
+elementary_stream_t *service_stream_find(service_t *t, int pid);
 
-th_stream_t *service_stream_create(service_t *t, int pid,
+elementary_stream_t *service_stream_create(service_t *t, int pid,
 				     streaming_component_type_t type);
 
 void service_set_priority(service_t *t, int prio);
@@ -532,7 +530,7 @@ void service_set_enable(service_t *t, int enabled);
 
 void service_restart(service_t *t, int had_components);
 
-void service_stream_destroy(service_t *t, th_stream_t *st);
+void service_stream_destroy(service_t *t, elementary_stream_t *st);
 
 void service_request_save(service_t *t, int restart);
 
@@ -544,7 +542,7 @@ void service_make_nicename(service_t *t);
 
 const char *service_nicename(service_t *t);
 
-const char *service_component_nicename(th_stream_t *st);
+const char *service_component_nicename(elementary_stream_t *st);
 
 const char *service_tss2text(int flags);
 

@@ -1122,7 +1122,7 @@ extjs_servicedetails(http_connection_t *hc,
   htsbuf_queue_t *hq = &hc->hc_reply;
   htsmsg_t *out, *streams, *c;
   service_t *t;
-  th_stream_t *st;
+  elementary_stream_t *st;
   caid_t *ca;
   char buf[128];
 
@@ -1135,14 +1135,14 @@ extjs_servicedetails(http_connection_t *hc,
 
   streams = htsmsg_create_list();
 
-  TAILQ_FOREACH(st, &t->s_components, st_link) {
+  TAILQ_FOREACH(st, &t->s_components, es_link) {
     c = htsmsg_create_map();
 
-    htsmsg_add_u32(c, "pid", st->st_pid);
+    htsmsg_add_u32(c, "pid", st->es_pid);
 
-    htsmsg_add_str(c, "type", streaming_component_type2txt(st->st_type));
+    htsmsg_add_str(c, "type", streaming_component_type2txt(st->es_type));
 
-    switch(st->st_type) {
+    switch(st->es_type) {
     default:
       htsmsg_add_str(c, "details", "");
       break;
@@ -1150,7 +1150,7 @@ extjs_servicedetails(http_connection_t *hc,
     case SCT_CA:
       buf[0] = 0;
 
-      LIST_FOREACH(ca, &st->st_caids, link) {
+      LIST_FOREACH(ca, &st->es_caids, link) {
 	snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), 
 		 "%s (0x%04x) [0x%08x]",
 		 psi_caid2name(ca->caid), ca->caid, ca->providerid);
@@ -1162,21 +1162,21 @@ extjs_servicedetails(http_connection_t *hc,
     case SCT_AC3:
     case SCT_AAC:
     case SCT_MPEG2AUDIO:
-      htsmsg_add_str(c, "details", st->st_lang);
+      htsmsg_add_str(c, "details", st->es_lang);
       break;
 
     case SCT_DVBSUB:
       snprintf(buf, sizeof(buf), "%s (%04x %04x)",
-	       st->st_lang, st->st_composition_id, st->st_ancillary_id);
+	       st->es_lang, st->es_composition_id, st->es_ancillary_id);
       htsmsg_add_str(c, "details", buf);
       break;
 
     case SCT_MPEG2VIDEO:
     case SCT_H264:
       buf[0] = 0;
-      if(st->st_frame_duration)
+      if(st->es_frame_duration)
 	snprintf(buf, sizeof(buf), "%2.2f Hz",
-		 90000.0 / st->st_frame_duration);
+		 90000.0 / st->es_frame_duration);
       htsmsg_add_str(c, "details", buf);
       break;
     }

@@ -58,21 +58,21 @@ static void service_data_timeout(void *aux);
  *
  */
 static void
-stream_init(th_stream_t *st)
+stream_init(elementary_stream_t *st)
 {
-  st->st_cc_valid = 0;
+  st->es_cc_valid = 0;
 
-  st->st_startcond = 0xffffffff;
-  st->st_curdts = PTS_UNSET;
-  st->st_curpts = PTS_UNSET;
-  st->st_prevdts = PTS_UNSET;
+  st->es_startcond = 0xffffffff;
+  st->es_curdts = PTS_UNSET;
+  st->es_curpts = PTS_UNSET;
+  st->es_prevdts = PTS_UNSET;
   
-  st->st_pcr_real_last = PTS_UNSET;
-  st->st_pcr_last      = PTS_UNSET;
-  st->st_pcr_drift     = 0;
-  st->st_pcr_recovery_fails = 0;
+  st->es_pcr_real_last = PTS_UNSET;
+  st->es_pcr_last      = PTS_UNSET;
+  st->es_pcr_drift     = 0;
+  st->es_pcr_recovery_fails = 0;
 
-  st->st_blank = 0;
+  st->es_blank = 0;
 }
 
 
@@ -80,33 +80,33 @@ stream_init(th_stream_t *st)
  *
  */
 static void
-stream_clean(th_stream_t *st)
+stream_clean(elementary_stream_t *st)
 {
-  if(st->st_demuxer_fd != -1) {
+  if(st->es_demuxer_fd != -1) {
     // XXX: Should be in DVB-code perhaps
-    close(st->st_demuxer_fd);
-    st->st_demuxer_fd = -1;
+    close(st->es_demuxer_fd);
+    st->es_demuxer_fd = -1;
   }
 
-  free(st->st_priv);
-  st->st_priv = NULL;
+  free(st->es_priv);
+  st->es_priv = NULL;
 
   /* Clear reassembly buffers */
 
-  st->st_startcode = 0;
+  st->es_startcode = 0;
   
-  sbuf_free(&st->st_buf);
-  sbuf_free(&st->st_buf_ps);
-  sbuf_free(&st->st_buf_a);
+  sbuf_free(&st->es_buf);
+  sbuf_free(&st->es_buf_ps);
+  sbuf_free(&st->es_buf_a);
 
-  if(st->st_curpkt != NULL) {
-    pkt_ref_dec(st->st_curpkt);
-    st->st_curpkt = NULL;
+  if(st->es_curpkt != NULL) {
+    pkt_ref_dec(st->es_curpkt);
+    st->es_curpkt = NULL;
   }
 
-  free(st->st_global_data);
-  st->st_global_data = NULL;
-  st->st_global_data_len = 0;
+  free(st->es_global_data);
+  st->es_global_data = NULL;
+  st->es_global_data_len = 0;
 }
 
 
@@ -114,12 +114,12 @@ stream_clean(th_stream_t *st)
  *
  */
 void
-service_stream_destroy(service_t *t, th_stream_t *st)
+service_stream_destroy(service_t *t, elementary_stream_t *st)
 {
   if(t->s_status == SERVICE_RUNNING)
     stream_clean(st);
-  TAILQ_REMOVE(&t->s_components, st, st_link);
-  free(st->st_nicename);
+  TAILQ_REMOVE(&t->s_components, st, es_link);
+  free(st->es_nicename);
   free(st);
 }
 
@@ -130,7 +130,7 @@ static void
 service_stop(service_t *t)
 {
   th_descrambler_t *td;
-  th_stream_t *st;
+  elementary_stream_t *st;
  
   gtimer_disarm(&t->s_receive_timer);
 
@@ -149,7 +149,7 @@ service_stop(service_t *t)
   /**
    * Clean up each stream
    */
-  TAILQ_FOREACH(st, &t->s_components, st_link)
+  TAILQ_FOREACH(st, &t->s_components, es_link)
     stream_clean(st);
 
   t->s_status = SERVICE_IDLE;
@@ -190,7 +190,7 @@ service_remove_subscriber(service_t *t, th_subscription_t *s,
 int
 service_start(service_t *t, unsigned int weight, int force_start)
 {
-  th_stream_t *st;
+  elementary_stream_t *st;
   int r, timeout = 2;
 
   lock_assert(&global_lock);
@@ -213,7 +213,7 @@ service_start(service_t *t, unsigned int weight, int force_start)
   /**
    * Initialize stream
    */
-  TAILQ_FOREACH(st, &t->s_components, st_link)
+  TAILQ_FOREACH(st, &t->s_components, es_link)
     stream_init(st);
 
   pthread_mutex_unlock(&t->s_stream_mutex);
@@ -434,7 +434,7 @@ service_ref(service_t *t)
 void
 service_destroy(service_t *t)
 {
-  th_stream_t *st;
+  elementary_stream_t *st;
   th_subscription_t *s;
   channel_t *ch = t->s_ch;
 
@@ -467,8 +467,8 @@ service_destroy(service_t *t)
   free(t->s_provider);
 
   while((st = TAILQ_FIRST(&t->s_components)) != NULL) {
-    TAILQ_REMOVE(&t->s_components, st, st_link);
-    free(st->st_nicename);
+    TAILQ_REMOVE(&t->s_components, st, es_link);
+    free(st->es_nicename);
     free(st);
   }
 
@@ -533,20 +533,20 @@ service_find_by_identifier(const char *identifier)
  *
  */
 static void 
-service_stream_make_nicename(service_t *t, th_stream_t *st)
+service_stream_make_nicename(service_t *t, elementary_stream_t *st)
 {
   char buf[200];
-  if(st->st_pid != -1)
+  if(st->es_pid != -1)
     snprintf(buf, sizeof(buf), "%s: %s @ #%d", 
 	     service_nicename(t),
-	     streaming_component_type2txt(st->st_type), st->st_pid);
+	     streaming_component_type2txt(st->es_type), st->es_pid);
   else
     snprintf(buf, sizeof(buf), "%s: %s", 
 	     service_nicename(t),
-	     streaming_component_type2txt(st->st_type));
+	     streaming_component_type2txt(st->es_type));
 
-  free(st->st_nicename);
-  st->st_nicename = strdup(buf);
+  free(st->es_nicename);
+  st->es_nicename = strdup(buf);
 }
 
 
@@ -558,7 +558,7 @@ service_make_nicename(service_t *t)
 {
   char buf[200];
   source_info_t si;
-  th_stream_t *st;
+  elementary_stream_t *st;
 
   lock_assert(&t->s_stream_mutex);
 
@@ -575,7 +575,7 @@ service_make_nicename(service_t *t)
   free(t->s_nicename);
   t->s_nicename = strdup(buf);
 
-  TAILQ_FOREACH(st, &t->s_components, st_link)
+  TAILQ_FOREACH(st, &t->s_components, es_link)
     service_stream_make_nicename(t, st);
 }
 
@@ -583,40 +583,40 @@ service_make_nicename(service_t *t)
 /**
  * Add a new stream to a service
  */
-th_stream_t *
+elementary_stream_t *
 service_stream_create(service_t *t, int pid,
 			streaming_component_type_t type)
 {
-  th_stream_t *st;
+  elementary_stream_t *st;
   int i = 0;
   int idx = 0;
   lock_assert(&t->s_stream_mutex);
 
-  TAILQ_FOREACH(st, &t->s_components, st_link) {
-    if(st->st_index > idx)
-      idx = st->st_index;
+  TAILQ_FOREACH(st, &t->s_components, es_link) {
+    if(st->es_index > idx)
+      idx = st->es_index;
     i++;
-    if(pid != -1 && st->st_pid == pid)
+    if(pid != -1 && st->es_pid == pid)
       return st;
   }
 
-  st = calloc(1, sizeof(th_stream_t));
-  st->st_index = idx + 1;
-  st->st_type = type;
+  st = calloc(1, sizeof(elementary_stream_t));
+  st->es_index = idx + 1;
+  st->es_type = type;
 
-  TAILQ_INSERT_TAIL(&t->s_components, st, st_link);
-  st->st_service = t;
+  TAILQ_INSERT_TAIL(&t->s_components, st, es_link);
+  st->es_service = t;
 
-  st->st_pid = pid;
-  st->st_demuxer_fd = -1;
+  st->es_pid = pid;
+  st->es_demuxer_fd = -1;
 
-  avgstat_init(&st->st_rate, 10);
-  avgstat_init(&st->st_cc_errors, 10);
+  avgstat_init(&st->es_rate, 10);
+  avgstat_init(&st->es_cc_errors, 10);
 
   service_stream_make_nicename(t, st);
 
   if(t->s_flags & S_DEBUG)
-    tvhlog(LOG_DEBUG, "service", "Add stream %s", st->st_nicename);
+    tvhlog(LOG_DEBUG, "service", "Add stream %s", st->es_nicename);
 
   if(t->s_status == SERVICE_RUNNING)
     stream_init(st);
@@ -629,15 +629,15 @@ service_stream_create(service_t *t, int pid,
 /**
  * Add a new stream to a service
  */
-th_stream_t *
+elementary_stream_t *
 service_stream_find(service_t *t, int pid)
 {
-  th_stream_t *st;
+  elementary_stream_t *st;
  
   lock_assert(&t->s_stream_mutex);
 
-  TAILQ_FOREACH(st, &t->s_components, st_link) {
-    if(st->st_pid == pid)
+  TAILQ_FOREACH(st, &t->s_components, es_link) {
+    if(st->es_pid == pid)
       return st;
   }
   return NULL;
@@ -795,13 +795,13 @@ service_restart(service_t *t, int had_components)
 streaming_start_t *
 service_build_stream_start(service_t *t)
 {
-  th_stream_t *st;
+  elementary_stream_t *st;
   int n = 0;
   streaming_start_t *ss;
 
   lock_assert(&t->s_stream_mutex);
   
-  TAILQ_FOREACH(st, &t->s_components, st_link)
+  TAILQ_FOREACH(st, &t->s_components, es_link)
     n++;
 
   ss = calloc(1, sizeof(streaming_start_t) + 
@@ -810,16 +810,16 @@ service_build_stream_start(service_t *t)
   ss->ss_num_components = n;
   
   n = 0;
-  TAILQ_FOREACH(st, &t->s_components, st_link) {
+  TAILQ_FOREACH(st, &t->s_components, es_link) {
     streaming_start_component_t *ssc = &ss->ss_components[n++];
-    ssc->ssc_index = st->st_index;
-    ssc->ssc_type  = st->st_type;
-    memcpy(ssc->ssc_lang, st->st_lang, 4);
-    ssc->ssc_composition_id = st->st_composition_id;
-    ssc->ssc_ancillary_id = st->st_ancillary_id;
-    ssc->ssc_pid = st->st_pid;
-    ssc->ssc_width = st->st_width;
-    ssc->ssc_height = st->st_height;
+    ssc->ssc_index = st->es_index;
+    ssc->ssc_type  = st->es_type;
+    memcpy(ssc->ssc_lang, st->es_lang, 4);
+    ssc->ssc_composition_id = st->es_composition_id;
+    ssc->ssc_ancillary_id = st->es_ancillary_id;
+    ssc->ssc_pid = st->es_pid;
+    ssc->ssc_width = st->es_width;
+    ssc->ssc_height = st->es_height;
   }
 
   t->s_setsourceinfo(t, &ss->ss_si);
@@ -964,9 +964,9 @@ service_nicename(service_t *t)
 }
 
 const char *
-service_component_nicename(th_stream_t *st)
+service_component_nicename(elementary_stream_t *st)
 {
-  return st->st_nicename;
+  return st->es_nicename;
 }
 
 const char *
@@ -1034,13 +1034,13 @@ service_refresh_channel(service_t *t)
 uint16_t
 service_get_encryption(service_t *t)
 {
-  th_stream_t *st;
+  elementary_stream_t *st;
   caid_t *c;
 
-  TAILQ_FOREACH(st, &t->s_components, st_link) {
-    switch(st->st_type) {
+  TAILQ_FOREACH(st, &t->s_components, es_link) {
+    switch(st->es_type) {
     case SCT_CA:
-      LIST_FOREACH(c, &st->st_caids, link)
+      LIST_FOREACH(c, &st->es_caids, link)
 	if(c->caid != 0)
 	  return c->caid;
       break;

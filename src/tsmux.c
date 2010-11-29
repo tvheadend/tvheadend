@@ -750,7 +750,7 @@ ts_muxer_add_packet(ts_muxer_t *ts, void *data, uint16_t pid)
  */
 static void
 ts_muxer_raw_input(struct th_subscription *s, void *data, int len,
-		   th_stream_t *st, void *opaque)
+		   elementary_stream_t *st, void *opaque)
 {
   th_muxer_t *tm = s->ths_muxer;
   ts_muxer_t *ts = opaque;
@@ -988,7 +988,7 @@ ts_check_deliver(ts_muxer_t *ts, th_muxstream_t *tms)
 static void
 lookahead_dequeue(ts_muxer_t *ts, th_muxstream_t *tms)
 {
-  //  th_stream_t *st = tms->tms_stream;
+  //  elementary_stream_t *st = tms->tms_stream;
   th_pkt_t *pkt;
   th_muxpkt_t *tm;
   th_refpkt_t *o;
@@ -1232,7 +1232,7 @@ static void
 ts_mux_packet_input(void *opaque, th_muxstream_t *tms, th_pkt_t *pkt)
 {
   ts_muxer_t *ts = opaque;
-  th_stream_t *st = tms->tms_stream;
+  elementary_stream_t *st = tms->tms_stream;
   th_refpkt_t *trp;
 
   if(tms->tms_index == 0)
@@ -1265,7 +1265,7 @@ ts_muxer_init(th_subscription_t *s, ts_mux_output_t *output,
   int pididx = PID_ES_BASE;
   th_muxstream_t *tms;
   th_muxer_t *tm;
-  th_stream_t *st;
+  elementary_stream_t *st;
 
 
   ts->ts_output = output;

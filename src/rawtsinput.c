@@ -156,7 +156,7 @@ rawts_service_add(rawts_t *rt, uint16_t sid, int pmt_pid)
  */
 
 static void
-got_pmt(struct service *t, th_stream_t *st,
+got_pmt(struct service *t, elementary_stream_t *st,
 	const uint8_t *table, int table_len)
 {
   if(table[0] != 2)
@@ -177,7 +177,7 @@ got_pat(const uint8_t *ptr, size_t len, void *opaque)
 {
   rawts_t *rt = opaque;
   service_t *t;
-  th_stream_t *st;
+  elementary_stream_t *st;
   uint16_t prognum;
   uint16_t pid;
 
@@ -202,8 +202,8 @@ got_pat(const uint8_t *ptr, size_t len, void *opaque)
 
 	if(service_stream_find(t, pid) == NULL) {
 	  st = service_stream_create(t, pid, SCT_PMT);
-	  st->st_section_docrc = 1;
-	  st->st_got_section = got_pmt;
+	  st->es_section_docrc = 1;
+	  st->es_got_section = got_pmt;
 	}
 	pthread_mutex_unlock(&t->s_stream_mutex);
       }

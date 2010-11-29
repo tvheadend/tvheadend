@@ -260,7 +260,7 @@ update_tt_clock(service_t *t, const uint8_t *buf)
 
 
 static void
-extract_subtitle(service_t *t, th_stream_t *st,
+extract_subtitle(service_t *t, elementary_stream_t *st,
 		 tt_mag_t *ttm, int64_t pts)
 {
   int i, j, off = 0;
@@ -299,20 +299,20 @@ extract_subtitle(service_t *t, th_stream_t *st,
       sub[off++] = '\n';
   }
 
-  if(off == 0 && st->st_blank)
+  if(off == 0 && st->es_blank)
     return; // Avoid multiple blank subtitles
 
-  st->st_blank = !off;
+  st->es_blank = !off;
 
-  if(st->st_curpts == pts)
+  if(st->es_curpts == pts)
     pts++; // Avoid non-monotonic PTS
 
-  st->st_curpts = pts;
+  st->es_curpts = pts;
 
   sub[off++] = 0;
   
   th_pkt_t *pkt = pkt_alloc(sub, off, pts, pts);
-  pkt->pkt_componentindex = st->st_index;
+  pkt->pkt_componentindex = st->es_index;
 
   streaming_message_t *sm = streaming_msg_create_pkt(pkt);
   streaming_pad_deliver(&t->s_streaming_pad, sm);
@@ -354,16 +354,16 @@ dump_page(tt_mag_t *ttm)
 
 
 static void
-tt_subtitle_deliver(service_t *t, th_stream_t *parent, tt_mag_t *ttm)
+tt_subtitle_deliver(service_t *t, elementary_stream_t *parent, tt_mag_t *ttm)
 {
-  th_stream_t *st;
+  elementary_stream_t *st;
 
   if(ttm->ttm_current_pts == PTS_UNSET)
     return;
 
-  TAILQ_FOREACH(st, &t->s_components, st_link) {
-     if(parent->st_pid == st->st_parent_pid &&
-	ttm->ttm_curpage == st->st_pid -  PID_TELETEXT_BASE) {
+  TAILQ_FOREACH(st, &t->s_components, es_link) {
+     if(parent->es_pid == st->es_parent_pid &&
+	ttm->ttm_curpage == st->es_pid -  PID_TELETEXT_BASE) {
        extract_subtitle(t, st, ttm, ttm->ttm_current_pts);
      }
   }
@@ -373,18 +373,18 @@ tt_subtitle_deliver(service_t *t, th_stream_t *parent, tt_mag_t *ttm)
  *
  */
 static void
-tt_decode_line(service_t *t, th_stream_t *st, uint8_t *buf)
+tt_decode_line(service_t *t, elementary_stream_t *st, uint8_t *buf)
 {
   uint8_t mpag, line, s12, s34, c;
   int page, magidx, i;
   tt_mag_t *ttm;
   tt_private_t *ttp;
 
-  if(st->st_priv == NULL) {
+  if(st->es_priv == NULL) {
     /* Allocate privdata for reassembly */
-    ttp = st->st_priv = calloc(1, sizeof(tt_private_t));
+    ttp = st->es_priv = calloc(1, sizeof(tt_private_t));
   } else {
-    ttp = st->st_priv;
+    ttp = st->es_priv;
   }
 
   mpag = ham_decode(buf[0], buf[1]);
@@ -453,9 +453,9 @@ tt_decode_line(service_t *t, th_stream_t *st, uint8_t *buf)
  *
  */
 static void
-teletext_scan_stream(service_t *t, th_stream_t *st)
+teletext_scan_stream(service_t *t, elementary_stream_t *st)
 {
-  tt_private_t *ttp = st->st_priv;
+  tt_private_t *ttp = st->es_priv;
   tt_mag_t *ttm;
   int i;
 
@@ -475,7 +475,7 @@ teletext_scan_stream(service_t *t, th_stream_t *st)
  *
  */
 void
-teletext_input(service_t *t, th_stream_t *st, const uint8_t *tsb)
+teletext_input(service_t *t, elementary_stream_t *st, const uint8_t *tsb)
 {
   int i, j;
   const uint8_t *x;

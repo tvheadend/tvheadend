@@ -84,7 +84,7 @@ static void
 dumptransports(htsbuf_queue_t *hq, struct service_list *l, int indent)
 {
   service_t *t;
-  th_stream_t *st;
+  elementary_stream_t *st;
 
   outputtitle(hq, indent, "Transports (or services)");
   LIST_FOREACH(t, l, s_group_link) {
@@ -104,14 +104,14 @@ dumptransports(htsbuf_queue_t *hq, struct service_list *l, int indent)
     htsbuf_qprintf(hq, "%*.s-------------------------------------------\n",
 		   indent + 4, "");
 
-    TAILQ_FOREACH(st, &t->s_components, st_link) {
+    TAILQ_FOREACH(st, &t->s_components, es_link) {
       caid_t *caid;
       htsbuf_qprintf(hq, "%*.s%-16s %-5d %-5d %-5s\n", indent + 4, "",
-		     streaming_component_type2txt(st->st_type),
-		     st->st_index,
-		     st->st_pid,
-		     st->st_lang[0] ? st->st_lang : "");
-      LIST_FOREACH(caid, &st->st_caids, link) {
+		     streaming_component_type2txt(st->es_type),
+		     st->es_index,
+		     st->es_pid,
+		     st->es_lang[0] ? st->es_lang : "");
+      LIST_FOREACH(caid, &st->es_caids, link) {
 	htsbuf_qprintf(hq, "%*.sCAID %04x (%s) %08x\n", indent + 6, "",
 		       caid->caid,
 		       psi_caid2name(caid->caid),

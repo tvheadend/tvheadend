@@ -1075,7 +1075,7 @@ dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src)
 {
   th_dvb_mux_instance_t *tdmi_dst;
   service_t *t_src, *t_dst;
-  th_stream_t *st_src, *st_dst;
+  elementary_stream_t *st_src, *st_dst;
   caid_t *caid_src, *caid_dst;
 
   tdmi_dst = dvb_mux_create(dst, 
@@ -1110,23 +1110,23 @@ dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src)
     pthread_mutex_lock(&t_src->s_stream_mutex);
     pthread_mutex_lock(&t_dst->s_stream_mutex);
 
-    TAILQ_FOREACH(st_src, &t_src->s_components, st_link) {
+    TAILQ_FOREACH(st_src, &t_src->s_components, es_link) {
 
 
       st_dst = service_stream_create(t_dst, 
-				     st_src->st_pid,
-				     st_src->st_type);
+				     st_src->es_pid,
+				     st_src->es_type);
 	
-      memcpy(st_dst->st_lang, st_src->st_lang, 4);
-      st_dst->st_frame_duration = st_src->st_frame_duration;
+      memcpy(st_dst->es_lang, st_src->es_lang, 4);
+      st_dst->es_frame_duration = st_src->es_frame_duration;
 
-      LIST_FOREACH(caid_src, &st_src->st_caids, link) {
+      LIST_FOREACH(caid_src, &st_src->es_caids, link) {
 	caid_dst = malloc(sizeof(caid_t));
 
 	caid_dst->caid       = caid_src->caid;
 	caid_dst->providerid = caid_src->providerid;
 	caid_dst->delete_me  = 0;
-	LIST_INSERT_HEAD(&st_dst->st_caids, caid_dst, link);
+	LIST_INSERT_HEAD(&st_dst->es_caids, caid_dst, link);
       }
     }
 

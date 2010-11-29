@@ -220,15 +220,15 @@ decode_scaling_list(bitstream_t *bs, int size)
 
 
 int
-h264_decode_seq_parameter_set(th_stream_t *st, bitstream_t *bs)
+h264_decode_seq_parameter_set(elementary_stream_t *st, bitstream_t *bs)
 {
   int profile_idc, level_idc, poc_type;
   unsigned int sps_id, tmp, i, width, height;
   int cbpsize = -1;
   h264_private_t *p;
 
-  if((p = st->st_priv) == NULL)
-    p = st->st_priv = calloc(1, sizeof(h264_private_t));
+  if((p = st->es_priv) == NULL)
+    p = st->es_priv = calloc(1, sizeof(h264_private_t));
 
   profile_idc= read_bits(bs, 8);
   read_bits1(bs);   //constraint_set0_flag
@@ -328,13 +328,13 @@ h264_decode_seq_parameter_set(th_stream_t *st, bitstream_t *bs)
 
 
 int
-h264_decode_pic_parameter_set(th_stream_t *st, bitstream_t *bs)
+h264_decode_pic_parameter_set(elementary_stream_t *st, bitstream_t *bs)
 {
   h264_private_t *p;
   int pps_id, sps_id;
 
-  if((p = st->st_priv) == NULL)
-    p = st->st_priv = calloc(1, sizeof(h264_private_t));
+  if((p = st->es_priv) == NULL)
+    p = st->es_priv = calloc(1, sizeof(h264_private_t));
   
   pps_id = read_golomb_ue(bs);
   sps_id = read_golomb_ue(bs);
@@ -344,13 +344,13 @@ h264_decode_pic_parameter_set(th_stream_t *st, bitstream_t *bs)
 
 
 int
-h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype,
+h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
 			 int *duration, int *isfield)
 {
   h264_private_t *p;
   int slice_type, pps_id, sps_id, fnum;
 
-  if((p = st->st_priv) == NULL)
+  if((p = st->es_priv) == NULL)
     return -1;
 
   read_golomb_ue(bs); /* first_mb_in_slice */
@@ -400,29 +400,29 @@ h264_decode_slice_header(th_stream_t *st, bitstream_t *bs, int *pkttype,
   }
 
   if(p->sps[sps_id].cbpsize != 0)
-    st->st_vbv_size = p->sps[sps_id].cbpsize;
+    st->es_vbv_size = p->sps[sps_id].cbpsize;
 
-  st->st_vbv_delay = -1;
+  st->es_vbv_delay = -1;
 
-  if(p->sps[sps_id].width && p->sps[sps_id].height && !st->st_buf.sb_err)
+  if(p->sps[sps_id].width && p->sps[sps_id].height && !st->es_buf.sb_err)
     parser_set_stream_vsize(st, p->sps[sps_id].width, 
 			    p->sps[sps_id].height *
 			    (2 - p->sps[sps_id].mbs_only_flag));
 
   if(p->sps[sps_id].aspect_num && p->sps[sps_id].aspect_den) {
 
-    int w = p->sps[sps_id].aspect_num * st->st_width;
-    int h = p->sps[sps_id].aspect_den * st->st_height;
+    int w = p->sps[sps_id].aspect_num * st->es_width;
+    int h = p->sps[sps_id].aspect_den * st->es_height;
 
     if(w && h) { 
       int d = gcd(w, h);
-      st->st_aspect_num = w / d;
-      st->st_aspect_den = h / d;
+      st->es_aspect_num = w / d;
+      st->es_aspect_den = h / d;
     }
 
   } else {
-    st->st_aspect_num = 0;
-    st->st_aspect_den = 1;
+    st->es_aspect_num = 0;
+    st->es_aspect_den = 1;
   }
 
   return 0;

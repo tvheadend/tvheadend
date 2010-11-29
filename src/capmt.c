@@ -404,7 +404,7 @@ capmt_thread(void *aux)
  */
 static void
 capmt_table_input(struct th_descrambler *td, struct service *t,
-    struct th_stream *st, const uint8_t *data, int len)
+    struct elementary_stream *st, const uint8_t *data, int len)
 {
   capmt_service_t *ct = (capmt_service_t *)td;
   capmt_t *capmt = ct->ct_capmt;
@@ -412,7 +412,7 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
 
   caid_t *c;
 
-  c = LIST_FIRST(&st->st_caids);
+  c = LIST_FIRST(&st->es_caids);
   if(c == NULL)
     return;
 
@@ -442,7 +442,7 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
           /* ecmpid not already seen, add it to list */
           cce             = calloc(1, sizeof(capmt_caid_ecm_t));
           cce->cce_caid   = c->caid;
-          cce->cce_ecmpid = st->st_pid;
+          cce->cce_ecmpid = st->es_pid;
           LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
         }
 
@@ -456,7 +456,7 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
         }
 
         uint16_t sid = t->s_dvb_service_id;
-        uint16_t ecmpid = st->st_pid;
+        uint16_t ecmpid = st->es_pid;
         uint16_t transponder = 0;
 
         /* don't do too much requests */
@@ -555,7 +555,7 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
  *
  */
 static int
-capmt_descramble(th_descrambler_t *td, service_t *t, struct th_stream *st,
+capmt_descramble(th_descrambler_t *td, service_t *t, struct elementary_stream *st,
      const uint8_t *tsb)
 {
   capmt_service_t *ct = (capmt_service_t *)td;
@@ -615,7 +615,7 @@ capmt_service_start(service_t *t)
       t->s_svcname,
       t->s_dvb_mux_instance->tdmi_adapter->tda_adapter_num);
 
-    th_stream_t *st;
+    elementary_stream_t *st;
 
     /* create new capmt service */
     ct                  = calloc(1, sizeof(capmt_service_t));
@@ -623,8 +623,8 @@ capmt_service_start(service_t *t)
     ct->ct_tsbcluster   = malloc(ct->ct_cluster_size * 188);
     ct->ct_seq          = capmt->capmt_seq++;
 
-    TAILQ_FOREACH(st, &t->s_components, st_link) {
-      caid_t *c = LIST_FIRST(&st->st_caids);
+    TAILQ_FOREACH(st, &t->s_components, es_link) {
+      caid_t *c = LIST_FIRST(&st->es_caids);
       if(c == NULL)
 	continue;
 
@@ -634,7 +634,7 @@ capmt_service_start(service_t *t)
       /* add it to list */
       cce             = calloc(1, sizeof(capmt_caid_ecm_t));
       cce->cce_caid   = c->caid;
-      cce->cce_ecmpid = st->st_pid;
+      cce->cce_ecmpid = st->es_pid;
       LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
 
       /* sending request will be based on first seen caid */

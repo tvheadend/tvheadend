@@ -118,7 +118,7 @@ psi_parse_pat(service_t *t, uint8_t *ptr, int len,
 {
   uint16_t prognum;
   uint16_t pid;
-  th_stream_t *st;
+  elementary_stream_t *st;
 
   lock_assert(&t->s_stream_mutex);
 
@@ -136,8 +136,8 @@ psi_parse_pat(service_t *t, uint8_t *ptr, int len,
     if(prognum != 0) {
       if(service_stream_find(t, pid) == NULL) {
 	st = service_stream_create(t, pid, SCT_PMT);
-	st->st_section_docrc = 1;
-	st->st_got_section = pmt_callback;
+	st->es_section_docrc = 1;
+	st->es_got_section = pmt_callback;
       }
     }
     ptr += 4;
@@ -226,7 +226,7 @@ psi_build_pat(service_t *t, uint8_t *buf, int maxlen, int pmtpid)
 static int
 psi_desc_add_ca(service_t *t, uint16_t caid, uint32_t provid, uint16_t pid)
 {
-  th_stream_t *st;
+  elementary_stream_t *st;
   caid_t *c;
   int r = 0;
 
@@ -235,11 +235,11 @@ psi_desc_add_ca(service_t *t, uint16_t caid, uint32_t provid, uint16_t pid)
     r |= PMT_UPDATE_NEW_CA_STREAM;
   }
 
-  st->st_delete_me = 0;
+  st->es_delete_me = 0;
 
-  st->st_position = 0x40000;
+  st->es_position = 0x40000;
 
-  LIST_FOREACH(c, &st->st_caids, link) {
+  LIST_FOREACH(c, &st->es_caids, link) {
     if(c->caid == caid) {
       c->delete_me = 0;
 
@@ -257,7 +257,7 @@ psi_desc_add_ca(service_t *t, uint16_t caid, uint32_t provid, uint16_t pid)
   c->providerid = provid;
   
   c->delete_me = 0;
-  LIST_INSERT_HEAD(&st->st_caids, c, link);
+  LIST_INSERT_HEAD(&st->es_caids, c, link);
   r |= PMT_UPDATE_NEW_CAID;
   return r;
 }
@@ -324,7 +324,7 @@ psi_desc_teletext(service_t *t, const uint8_t *ptr, int size,
 		  int parent_pid, int *position)
 {
   int r = 0;
-  th_stream_t *st;
+  elementary_stream_t *st;
 
   while(size >= 5) {
     int page = (ptr[3] & 0x7 ?: 8) * 100 + (ptr[4] >> 4) * 10 + (ptr[4] & 0xf);
@@ -342,20 +342,20 @@ psi_desc_teletext(service_t *t, const uint8_t *ptr, int size,
 	st = service_stream_create(t, pid, SCT_TEXTSUB);
       }
 
-      st->st_delete_me = 0;
+      st->es_delete_me = 0;
 
-      if(memcmp(st->st_lang, ptr, 3)) {
+      if(memcmp(st->es_lang, ptr, 3)) {
 	r |= PMT_UPDATE_LANGUAGE;
-	memcpy(st->st_lang, ptr, 3);
+	memcpy(st->es_lang, ptr, 3);
       }
 
-      if(st->st_parent_pid != parent_pid) {
+      if(st->es_parent_pid != parent_pid) {
 	r |= PMT_UPDATE_PARENT_PID;
-	st->st_parent_pid = parent_pid;
+	st->es_parent_pid = parent_pid;
       }
 
-      if(st->st_position != *position) {
-	st->st_position = *position;
+      if(st->es_position != *position) {
+	st->es_position = *position;
 	r |= PMT_REORDERED;
       }
       (*position)++;
@@ -372,9 +372,9 @@ psi_desc_teletext(service_t *t, const uint8_t *ptr, int size,
 static int
 pidcmp(const void *A, const void *B)
 {
-  th_stream_t *a = *(th_stream_t **)A;
-  th_stream_t *b = *(th_stream_t **)B;
-  return a->st_position - b->st_position;
+  elementary_stream_t *a = *(elementary_stream_t **)A;
+  elementary_stream_t *b = *(elementary_stream_t **)B;
+  return a->es_position - b->es_position;
 }
 
 
@@ -385,21 +385,21 @@ pidcmp(const void *A, const void *B)
 static void
 sort_pids(service_t *t)
 {
-  th_stream_t *st, **v;
+  elementary_stream_t *st, **v;
   int num = 0, i = 0;
 
-  TAILQ_FOREACH(st, &t->s_components, st_link)
+  TAILQ_FOREACH(st, &t->s_components, es_link)
     num++;
 
-  v = alloca(num * sizeof(th_stream_t *));
-  TAILQ_FOREACH(st, &t->s_components, st_link)
+  v = alloca(num * sizeof(elementary_stream_t *));
+  TAILQ_FOREACH(st, &t->s_components, es_link)
     v[i++] = st;
 
-  qsort(v, num, sizeof(th_stream_t *), pidcmp);
+  qsort(v, num, sizeof(elementary_stream_t *), pidcmp);
 
   TAILQ_INIT(&t->s_components);
   for(i = 0; i < num; i++)
-    TAILQ_INSERT_TAIL(&t->s_components, v[i], st_link);
+    TAILQ_INSERT_TAIL(&t->s_components, v[i], es_link);
 }
 
 
@@ -416,7 +416,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
   uint8_t dtag, dlen;
   uint16_t sid;
   streaming_component_type_t hts_stream_type;
-  th_stream_t *st, *next;
+  elementary_stream_t *st, *next;
   char lang[4];
   int update = 0;
   int had_components;
@@ -459,10 +459,10 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 
   /* Mark all streams for deletion */
   if(delete) {
-    TAILQ_FOREACH(st, &t->s_components, st_link) {
-      st->st_delete_me = 1;
+    TAILQ_FOREACH(st, &t->s_components, es_link) {
+      st->es_delete_me = 1;
 
-      LIST_FOREACH(c, &st->st_caids, link)
+      LIST_FOREACH(c, &st->es_caids, link)
 	c->delete_me = 1;
     }
   }
@@ -604,25 +604,25 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 	st = service_stream_create(t, pid, hts_stream_type);
       }
 
-      st->st_delete_me = 0;
+      st->es_delete_me = 0;
 
-      if(st->st_position != position) {
+      if(st->es_position != position) {
 	update |= PMT_REORDERED;
-	st->st_position = position;
+	st->es_position = position;
       }
 
-      if(memcmp(st->st_lang, lang, 4)) {
+      if(memcmp(st->es_lang, lang, 4)) {
 	update |= PMT_UPDATE_LANGUAGE;
-	memcpy(st->st_lang, lang, 4);
+	memcpy(st->es_lang, lang, 4);
       }
 
-      if(composition_id != -1 && st->st_composition_id != composition_id) {
-	st->st_composition_id = composition_id;
+      if(composition_id != -1 && st->es_composition_id != composition_id) {
+	st->es_composition_id = composition_id;
 	update |= PMT_UPDATE_COMPOSITION_ID;
       }
 
-      if(ancillary_id != -1 && st->st_ancillary_id != ancillary_id) {
-	st->st_ancillary_id = ancillary_id;
+      if(ancillary_id != -1 && st->es_ancillary_id != ancillary_id) {
+	st->es_ancillary_id = ancillary_id;
 	update |= PMT_UPDATE_ANCILLARY_ID;
       }
     }
@@ -631,9 +631,9 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 
   /* Scan again to see if any streams should be deleted */
   for(st = TAILQ_FIRST(&t->s_components); st != NULL; st = next) {
-    next = TAILQ_NEXT(st, st_link);
+    next = TAILQ_NEXT(st, es_link);
 
-    for(c = LIST_FIRST(&st->st_caids); c != NULL; c = cn) {
+    for(c = LIST_FIRST(&st->es_caids); c != NULL; c = cn) {
       cn = LIST_NEXT(c, link);
       if(c->delete_me) {
 	LIST_REMOVE(c, link);
@@ -643,7 +643,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
     }
 
 
-    if(st->st_delete_me) {
+    if(st->es_delete_me) {
       service_stream_destroy(t, st);
       update |= PMT_UPDATE_STREAM_DELETED;
     }
@@ -869,7 +869,7 @@ streaming_component_type2txt(streaming_component_type_t s)
 void
 psi_save_service_settings(htsmsg_t *m, service_t *t)
 {
-  th_stream_t *st;
+  elementary_stream_t *st;
   htsmsg_t *sub;
 
   htsmsg_add_u32(m, "pcr", t->s_pcr_pid);
@@ -878,22 +878,22 @@ psi_save_service_settings(htsmsg_t *m, service_t *t)
 
   lock_assert(&t->s_stream_mutex);
 
-  TAILQ_FOREACH(st, &t->s_components, st_link) {
+  TAILQ_FOREACH(st, &t->s_components, es_link) {
     sub = htsmsg_create_map();
 
-    htsmsg_add_u32(sub, "pid", st->st_pid);
-    htsmsg_add_str(sub, "type", val2str(st->st_type, streamtypetab) ?: "?");
-    htsmsg_add_u32(sub, "position", st->st_position);
+    htsmsg_add_u32(sub, "pid", st->es_pid);
+    htsmsg_add_str(sub, "type", val2str(st->es_type, streamtypetab) ?: "?");
+    htsmsg_add_u32(sub, "position", st->es_position);
 
-    if(st->st_lang[0])
-      htsmsg_add_str(sub, "language", st->st_lang);
+    if(st->es_lang[0])
+      htsmsg_add_str(sub, "language", st->es_lang);
 
-    if(st->st_type == SCT_CA) {
+    if(st->es_type == SCT_CA) {
 
       caid_t *c;
       htsmsg_t *v = htsmsg_create_list();
 
-      LIST_FOREACH(c, &st->st_caids, link) {
+      LIST_FOREACH(c, &st->es_caids, link) {
 	htsmsg_t *caid = htsmsg_create_map();
 
 	htsmsg_add_u32(caid, "caid", c->caid);
@@ -905,18 +905,18 @@ psi_save_service_settings(htsmsg_t *m, service_t *t)
       htsmsg_add_msg(sub, "caidlist", v);
     }
 
-    if(st->st_type == SCT_DVBSUB) {
-      htsmsg_add_u32(sub, "compositionid", st->st_composition_id);
-      htsmsg_add_u32(sub, "ancillartyid", st->st_ancillary_id);
+    if(st->es_type == SCT_DVBSUB) {
+      htsmsg_add_u32(sub, "compositionid", st->es_composition_id);
+      htsmsg_add_u32(sub, "ancillartyid", st->es_ancillary_id);
     }
 
-    if(st->st_type == SCT_TEXTSUB)
-      htsmsg_add_u32(sub, "parentpid", st->st_parent_pid);
+    if(st->es_type == SCT_TEXTSUB)
+      htsmsg_add_u32(sub, "parentpid", st->es_parent_pid);
 
-    if(st->st_type == SCT_MPEG2VIDEO || st->st_type == SCT_H264) {
-      if(st->st_width && st->st_height) {
-	htsmsg_add_u32(sub, "width", st->st_width);
-	htsmsg_add_u32(sub, "height", st->st_height);
+    if(st->es_type == SCT_MPEG2VIDEO || st->es_type == SCT_H264) {
+      if(st->es_width && st->es_height) {
+	htsmsg_add_u32(sub, "width", st->es_width);
+	htsmsg_add_u32(sub, "height", st->es_height);
       }
     }
     
@@ -929,13 +929,13 @@ psi_save_service_settings(htsmsg_t *m, service_t *t)
  *
  */
 static void
-add_caid(th_stream_t *st, uint16_t caid, uint32_t providerid)
+add_caid(elementary_stream_t *st, uint16_t caid, uint32_t providerid)
 {
   caid_t *c = malloc(sizeof(caid_t));
   c->caid = caid;
   c->providerid = providerid;
   c->delete_me = 0;
-  LIST_INSERT_HEAD(&st->st_caids, c, link);
+  LIST_INSERT_HEAD(&st->es_caids, c, link);
 }
 
 
@@ -943,7 +943,7 @@ add_caid(th_stream_t *st, uint16_t caid, uint32_t providerid)
  *
  */
 static void
-load_legacy_caid(htsmsg_t *c, th_stream_t *st)
+load_legacy_caid(htsmsg_t *c, elementary_stream_t *st)
 {
   uint32_t a, b;
   const char *v;
@@ -968,7 +968,7 @@ load_legacy_caid(htsmsg_t *c, th_stream_t *st)
  *
  */
 static void 
-load_caid(htsmsg_t *m, th_stream_t *st)
+load_caid(htsmsg_t *m, elementary_stream_t *st)
 {
   htsmsg_field_t *f;
   htsmsg_t *c, *v = htsmsg_get_list(m, "caidlist");
@@ -1002,7 +1002,7 @@ psi_load_service_settings(htsmsg_t *m, service_t *t)
   htsmsg_t *c;
   htsmsg_field_t *f;
   uint32_t u32, pid;
-  th_stream_t *st;
+  elementary_stream_t *st;
   streaming_component_type_t type;
   const char *v;
 
@@ -1034,33 +1034,33 @@ psi_load_service_settings(htsmsg_t *m, service_t *t)
     st = service_stream_create(t, pid, type);
     
     if((v = htsmsg_get_str(c, "language")) != NULL)
-      snprintf(st->st_lang, 4, "%s", v);
+      snprintf(st->es_lang, 4, "%s", v);
 
     if(!htsmsg_get_u32(c, "position", &u32))
-      st->st_position = u32;
+      st->es_position = u32;
    
     load_legacy_caid(c, st);
     load_caid(c, st);
 
     if(type == SCT_DVBSUB) {
       if(!htsmsg_get_u32(c, "compositionid", &u32))
-	st->st_composition_id = u32;
+	st->es_composition_id = u32;
 
       if(!htsmsg_get_u32(c, "ancillartyid", &u32))
-	st->st_ancillary_id = u32;
+	st->es_ancillary_id = u32;
     }
 
     if(type == SCT_TEXTSUB) {
       if(!htsmsg_get_u32(c, "parentpid", &u32))
-	st->st_parent_pid = u32;
+	st->es_parent_pid = u32;
     }
 
     if(type == SCT_MPEG2VIDEO || type == SCT_H264) {
       if(!htsmsg_get_u32(c, "width", &u32))
-	st->st_width = u32;
+	st->es_width = u32;
 
       if(!htsmsg_get_u32(c, "height", &u32))
-	st->st_height = u32;
+	st->es_height = u32;
     }
 
   }

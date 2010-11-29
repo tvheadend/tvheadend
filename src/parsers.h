@@ -21,17 +21,17 @@
 
 #include "packet.h"
 
-void parse_mpeg_ts(struct service *t, struct th_stream *st,
+void parse_mpeg_ts(struct service *t, struct elementary_stream *st,
 		   const uint8_t *data, 
 		   int len, int start, int err);
 
-void parse_mpeg_ps(struct service *t, struct th_stream *st,
+void parse_mpeg_ps(struct service *t, struct elementary_stream *st,
 		   uint8_t *data, int len);
 
-void parser_enqueue_packet(struct service *t, struct th_stream *st,
+void parser_enqueue_packet(struct service *t, struct elementary_stream *st,
 			   th_pkt_t *pkt);
 
-void parser_set_stream_vsize(struct th_stream *st, int width, int height);
+void parser_set_stream_vsize(struct elementary_stream *st, int width, int height);
 
 extern const unsigned int mpeg2video_framedurations[16];
 

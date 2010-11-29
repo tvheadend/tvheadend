@@ -1210,7 +1210,7 @@ cwc_emm_seca(cwc_t *cwc, uint8_t *data, int len)
  */
 static void
 cwc_table_input(struct th_descrambler *td, struct service *t,
-		struct th_stream *st, const uint8_t *data, int len)
+		struct elementary_stream *st, const uint8_t *data, int len)
 {
   cwc_service_t *ct = (cwc_service_t *)td;
   uint16_t sid = t->s_dvb_service_id;
@@ -1229,18 +1229,18 @@ cwc_table_input(struct th_descrambler *td, struct service *t,
     return;
 
   LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
-    if(ep->ep_pid == st->st_pid)
+    if(ep->ep_pid == st->es_pid)
       break;
   }
 
   if(ep == NULL) {
     ep = calloc(1, sizeof(ecm_pid_t));
-    ep->ep_pid = st->st_pid;
+    ep->ep_pid = st->es_pid;
     LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
   }
 
 
-  LIST_FOREACH(c, &st->st_caids, link) {
+  LIST_FOREACH(c, &st->es_caids, link) {
     if(cwc->cwc_caid == c->caid)
       break;
   }
@@ -1300,7 +1300,7 @@ cwc_table_input(struct th_descrambler *td, struct service *t,
     tvhlog(LOG_DEBUG, "cwc", 
 	   "Sending ECM%s section=%d/%d, for service %s (seqno: %d) PID %d", 
 	   chaninfo, section, ep->ep_last_section, t->s_svcname, es->es_seq,
-	   st->st_pid);
+	   st->es_pid);
     es->es_time = getmonoclock();
     break;
 
@@ -1339,7 +1339,7 @@ update_keys(cwc_service_t *ct)
  *
  */
 static int
-cwc_descramble(th_descrambler_t *td, service_t *t, struct th_stream *st,
+cwc_descramble(th_descrambler_t *td, service_t *t, struct elementary_stream *st,
 	       const uint8_t *tsb)
 {
   cwc_service_t *ct = (cwc_service_t *)td;
@@ -1427,14 +1427,14 @@ cwc_service_destroy(th_descrambler_t *td)
 /**
  *
  */
-static inline th_stream_t *
+static inline elementary_stream_t *
 cwc_find_stream_by_caid(service_t *t, int caid)
 {
-  th_stream_t *st;
+  elementary_stream_t *st;
   caid_t *c;
 
-  TAILQ_FOREACH(st, &t->s_components, st_link) {
-    LIST_FOREACH(c, &st->st_caids, link) {
+  TAILQ_FOREACH(st, &t->s_components, es_link) {
+    LIST_FOREACH(c, &st->es_caids, link) {
       if(c->caid == caid)
 	return st;
     }

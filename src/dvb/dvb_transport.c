@@ -52,29 +52,29 @@ dvb_transport_open_demuxers(th_dvb_adapter_t *tda, service_t *t)
 {
   struct dmx_pes_filter_params dmx_param;
   int fd;
-  th_stream_t *st;
+  elementary_stream_t *st;
 
-  TAILQ_FOREACH(st, &t->s_components, st_link) {
-    if(st->st_pid >= 0x2000)
+  TAILQ_FOREACH(st, &t->s_components, es_link) {
+    if(st->es_pid >= 0x2000)
       continue;
 
-    if(st->st_demuxer_fd != -1)
+    if(st->es_demuxer_fd != -1)
       continue;
 
     fd = tvh_open(tda->tda_demux_path, O_RDWR, 0);
-    st->st_cc_valid = 0;
+    st->es_cc_valid = 0;
 
     if(fd == -1) {
-      st->st_demuxer_fd = -1;
+      st->es_demuxer_fd = -1;
       tvhlog(LOG_ERR, "dvb",
 	     "\"%s\" unable to open demuxer \"%s\" for pid %d -- %s",
 	     t->s_identifier, tda->tda_demux_path, 
-	     st->st_pid, strerror(errno));
+	     st->es_pid, strerror(errno));
       continue;
     }
 
     memset(&dmx_param, 0, sizeof(dmx_param));
-    dmx_param.pid = st->st_pid;
+    dmx_param.pid = st->es_pid;
     dmx_param.input = DMX_IN_FRONTEND;
     dmx_param.output = DMX_OUT_TS_TAP;
     dmx_param.pes_type = DMX_PES_OTHER;
@@ -84,12 +84,12 @@ dvb_transport_open_demuxers(th_dvb_adapter_t *tda, service_t *t)
       tvhlog(LOG_ERR, "dvb",
 	     "\"%s\" unable to configure demuxer \"%s\" for pid %d -- %s",
 	     t->s_identifier, tda->tda_demux_path, 
-	     st->st_pid, strerror(errno));
+	     st->es_pid, strerror(errno));
       close(fd);
       fd = -1;
     }
 
-    st->st_demuxer_fd = fd;
+    st->es_demuxer_fd = fd;
   }
 }
 
@@ -153,7 +153,7 @@ static void
 dvb_transport_stop(service_t *t)
 {
   th_dvb_adapter_t *tda = t->s_dvb_mux_instance->tdmi_adapter;
-  th_stream_t *st;
+  elementary_stream_t *st;
 
   lock_assert(&global_lock);
 
@@ -161,10 +161,10 @@ dvb_transport_stop(service_t *t)
   LIST_REMOVE(t, s_active_link);
   pthread_mutex_unlock(&tda->tda_delivery_mutex);
 
-  TAILQ_FOREACH(st, &t->s_components, st_link) {
-    if(st->st_demuxer_fd != -1) {
-      close(st->st_demuxer_fd);
-      st->st_demuxer_fd = -1;
+  TAILQ_FOREACH(st, &t->s_components, es_link) {
+    if(st->es_demuxer_fd != -1) {
+      close(st->es_demuxer_fd);
+      st->es_demuxer_fd = -1;
     }
   }
   t->s_status = SERVICE_IDLE;

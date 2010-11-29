@@ -53,7 +53,7 @@ static void
 v4l_input(v4l_adapter_t *va)
 {
   service_t *t = va->va_current_service;
-  th_stream_t *st;
+  elementary_stream_t *st;
   uint8_t buf[4000];
   uint8_t *ptr, *pkt;
   int len, l, r;
@@ -87,36 +87,36 @@ v4l_input(v4l_adapter_t *va)
     }
 
     if(va->va_lenlock == 2) {
-      l = st->st_buf_ps.sb_size;
-      st->st_buf_ps.sb_data = pkt = realloc(st->st_buf_ps.sb_data, l);
+      l = st->es_buf_ps.sb_size;
+      st->es_buf_ps.sb_data = pkt = realloc(st->es_buf_ps.sb_data, l);
       
-      r = l - st->st_buf_ps.sb_ptr;
+      r = l - st->es_buf_ps.sb_ptr;
       if(r > len)
 	r = len;
-      memcpy(pkt + st->st_buf_ps.sb_ptr, ptr, r);
+      memcpy(pkt + st->es_buf_ps.sb_ptr, ptr, r);
       
       ptr += r;
       len -= r;
 
-      st->st_buf_ps.sb_ptr += r;
-      if(st->st_buf_ps.sb_ptr == l) {
+      st->es_buf_ps.sb_ptr += r;
+      if(st->es_buf_ps.sb_ptr == l) {
 
 	service_set_streaming_status_flags(t, TSS_MUX_PACKETS);
 
 	parse_mpeg_ps(t, st, pkt + 6, l - 6);
 
-	st->st_buf_ps.sb_size = 0;
+	st->es_buf_ps.sb_size = 0;
 	va->va_startcode = 0;
       } else {
-	assert(st->st_buf_ps.sb_ptr < l);
+	assert(st->es_buf_ps.sb_ptr < l);
       }
       
     } else {
-      st->st_buf_ps.sb_size = st->st_buf_ps.sb_size << 8 | *ptr;
+      st->es_buf_ps.sb_size = st->es_buf_ps.sb_size << 8 | *ptr;
       va->va_lenlock++;
       if(va->va_lenlock == 2) {
-	st->st_buf_ps.sb_size += 6;
-	st->st_buf_ps.sb_ptr = 6;
+	st->es_buf_ps.sb_size += 6;
+	st->es_buf_ps.sb_ptr = 6;
       }
       ptr++; len--;
     }
