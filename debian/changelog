@@ -1,4 +1,4 @@
-hts-tvheadend (2.11.99) hts; urgency=low
+hts-tvheadend (2.12) hts; urgency=low
 
   * Add support for IPTV over IPv6
 
@@ -51,7 +51,7 @@ hts-tvheadend (2.11.99) hts; urgency=low
     received data if we suspect that an error has occured (MPEG-TS TEI
     or continuity counter errors).
 
- -- Andreas Öman <andreas@lonelycoder.com>  Mon, 14 Jun 2010 20:54:40 +0200
+ -- Andreas Öman <andreas@lonelycoder.com>  Mon, 29 Nov 2010 20:06:52 +0100
 
 hts-tvheadend (2.11) hts; urgency=low
 
