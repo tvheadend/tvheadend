@@ -726,7 +726,15 @@ psi_build_pmt(streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid)
       break;
 
     case SCT_MPEG2AUDIO:
-      c = 0x03;
+      c = 0x04;
+      break;
+
+    case SCT_DVBSUB:
+      c = 0x06;
+      break;
+
+    case SCT_AAC:
+      c = 0x11;
       break;
 
     case SCT_H264:
@@ -734,7 +742,7 @@ psi_build_pmt(streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid)
       break;
 
     case SCT_AC3:
-      c = 0x06;
+      c = 0x81;
       break;
 
     default:
@@ -752,11 +760,34 @@ psi_build_pmt(streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid)
     dlen = 0;
 
     switch(ssc->ssc_type) {
+    case SCT_MPEG2AUDIO:
+    case SCT_AAC:
+      buf[0] = DVB_DESC_LANGUAGE;
+      buf[1] = 4;
+      memcpy(&buf[2],ssc->ssc_lang,3);
+      buf[5] = 0; /* Main audio */
+      dlen = 6;
+      break;
+    case SCT_DVBSUB:
+      buf[0] = DVB_DESC_SUBTITLE;
+      buf[1] = 8;
+      memcpy(&buf[2],ssc->ssc_lang,3);
+      buf[5] = 16; /* Subtitling type */
+      buf[6] = ssc->ssc_composition_id >> 8; 
+      buf[7] = ssc->ssc_composition_id;
+      buf[8] = ssc->ssc_ancillary_id >> 8; 
+      buf[9] = ssc->ssc_ancillary_id;
+      dlen = 10;
+      break;
     case SCT_AC3:
-      buf[0] = DVB_DESC_AC3;
-      buf[1] = 1;
-      buf[2] = 0; /* XXX: generate real AC3 desc */
-      dlen = 3;
+      buf[0] = DVB_DESC_LANGUAGE;
+      buf[1] = 4;
+      memcpy(&buf[2],ssc->ssc_lang,3);
+      buf[5] = 0; /* Main audio */
+      buf[6] = DVB_DESC_AC3;
+      buf[7] = 1;
+      buf[8] = 0; /* XXX: generate real AC3 desc */
+      dlen = 9;
       break;
     default:
       break;
