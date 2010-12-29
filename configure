@@ -119,12 +119,26 @@ if enabled avahi; then
     if pkg-config avahi-client; then
 	# CFLAGS are included by Makefile
 	echo >>${CONFIG_MAK} "LDFLAGS_cfg += " `pkg-config --libs avahi-client`
+	echo >>${CONFIG_MAK} "CFLAGS_cfg += "`pkg-config --cflags avahi-client`
 	echo "Using AVAHI client:    `pkg-config --modversion avahi-client`"
     else
 	echo "avahi-client not found. Unable to build with AVAHI support."
 	echo "To compile without it, configure with: --disable-avahi"
 	die
     fi
+fi
+
+if pkg-config libssl; then
+    echo >>${CONFIG_MAK} "LDFLAGS_cfg += " `pkg-config --libs libssl`
+    echo >>${CONFIG_MAK} "CFLAGS_cfg += " `pkg-config --cflags libssl`
+    echo "Using libssl:          `pkg-config --modversion libssl`"
+elif pkg-config openssl; then
+    echo >>${CONFIG_MAK} "LDFLAGS_cfg += " `pkg-config --libs openssl`
+    echo >>${CONFIG_MAK} "CFLAGS_cfg += " `pkg-config --cflags openssl`
+    echo "Using openssl:         `pkg-config --modversion openssl`"
+else
+    echo "libssl or openssl not found"
+    die
 fi
 
 #

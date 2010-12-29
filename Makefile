@@ -103,7 +103,6 @@ SRCS-${CONFIG_V4L} += \
 #
 SRCS += src/cwc.c \
 	src/capmt.c \
-	src/krypt.c \
 	src/ffdecsa/ffdecsa_interface.c \
 	src/ffdecsa/ffdecsa_int.c
 

@@ -27,7 +27,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <ctype.h>
-#include <rpc/des_crypt.h>
 
 #include "tvheadend.h"
 #include "tcp.h"
@@ -39,6 +38,8 @@
 #include "atomic.h"
 #include "dtable.h"
 #include "subscriptions.h"
+
+#include <openssl/des.h>
 
 /**
  *
@@ -92,6 +93,7 @@ TAILQ_HEAD(cwc_message_queue, cwc_message);
 LIST_HEAD(ecm_section_list, ecm_section);
 static struct cwc_queue cwcs;
 static pthread_cond_t cwc_config_changed;
+static char *crypt_md5(const char *pw, const char *salt);
 
 /**
  *
@@ -206,7 +208,7 @@ typedef struct cwc {
 
   int cwc_seq;
 
-  uint8_t cwc_key[16];
+  DES_key_schedule cwc_k1, cwc_k2;
 
   uint8_t cwc_buf[256];
   int cwc_bufptr;
@@ -249,7 +251,6 @@ typedef struct cwc {
  */
 
 static void cwc_service_destroy(th_descrambler_t *td);
-extern char *cwc_krypt(const char *key, const char *salt);
 static void cwc_detecs_card_type(cwc_t *cwc);
 void cwc_emm_conax(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_irdeto(cwc_t *cwc, uint8_t *data, int len);
@@ -274,11 +275,9 @@ des_key_parity_adjust(uint8_t *key, uint8_t len)
 /**
  *
  */
-static uint8_t *
-des_key_spread(uint8_t *normal)
+static void
+des_key_spread(uint8_t *normal, uint8_t *spread)
 {
-  static uint8_t spread[16];
-
   spread[ 0] = normal[ 0] & 0xfe;
   spread[ 1] = ((normal[ 0] << 7) | (normal[ 1] >> 1)) & 0xfe;
   spread[ 2] = ((normal[ 1] << 6) | (normal[ 2] >> 2)) & 0xfe;
@@ -297,7 +296,6 @@ des_key_spread(uint8_t *normal)
   spread[15] = normal[13] << 1;
 
   des_key_parity_adjust(spread, 16);
-  return spread;
 }
 
 /**
@@ -319,15 +317,14 @@ des_random_get(uint8_t *buffer, uint8_t len)
  *
  */
 static int
-des_encrypt(uint8_t *buffer, int len, uint8_t *deskey)
+des_encrypt(uint8_t *buffer, int len, cwc_t *cwc)
 {
   uint8_t checksum = 0;
   uint8_t noPadBytes;
   uint8_t padBytes[7];
-  char ivec[8];
+  DES_cblock ivec;
   uint16_t i;
 
-  if (!deskey) return len;
   noPadBytes = (8 - ((len - 1) % 8)) % 8;
   if (len + noPadBytes + 1 >= CWS_NETMSGSIZE-8) return -1;
   des_random_get(padBytes, noPadBytes);
@@ -337,9 +334,13 @@ des_encrypt(uint8_t *buffer, int len, uint8_t *deskey)
   des_random_get((uint8_t *)ivec, 8);
   memcpy(buffer+len, ivec, 8);
   for (i = 2; i < len; i += 8) {
-    cbc_crypt((char *)deskey  , (char *) buffer+i, 8, DES_ENCRYPT, ivec);
-    ecb_crypt((char *)deskey+8, (char *) buffer+i, 8, DES_DECRYPT);
-    ecb_crypt((char *)deskey  , (char *) buffer+i, 8, DES_ENCRYPT);
+    DES_ncbc_encrypt(buffer+i, buffer+i, 8,  &cwc->cwc_k1, &ivec, 1);
+
+    DES_ecb_encrypt((DES_cblock *)(buffer+i), (DES_cblock *)(buffer+i),
+		    &cwc->cwc_k2, 0);
+
+    DES_ecb_encrypt((DES_cblock *)(buffer+i), (DES_cblock *)(buffer+i),
+		    &cwc->cwc_k1, 1);
     memcpy(ivec, buffer+i, 8);
   }
   len += 8;
@@ -350,14 +351,13 @@ des_encrypt(uint8_t *buffer, int len, uint8_t *deskey)
  *
  */
 static int 
-des_decrypt(uint8_t *buffer, int len, uint8_t *deskey)
+des_decrypt(uint8_t *buffer, int len, cwc_t *cwc)
 {
-  char ivec[8];
-  char nextIvec[8];
+  DES_cblock ivec;
+  DES_cblock nextIvec;
   int i;
   uint8_t checksum = 0;
 
-  if (!deskey) return len;
   if ((len-2) % 8 || (len-2) < 16) return -1;
   len -= 8;
   memcpy(nextIvec, buffer+len, 8);
@@ -365,9 +365,13 @@ des_decrypt(uint8_t *buffer, int len, uint8_t *deskey)
     {
       memcpy(ivec, nextIvec, 8);
       memcpy(nextIvec, buffer+i, 8);
-      ecb_crypt((char *)deskey  , (char *) buffer+i, 8, DES_DECRYPT);
-      ecb_crypt((char *)deskey+8, (char *) buffer+i, 8, DES_ENCRYPT);
-      cbc_crypt((char *)deskey  , (char *) buffer+i, 8, DES_DECRYPT, ivec);
+
+      DES_ecb_encrypt((DES_cblock *)(buffer+i), (DES_cblock *)(buffer+i),
+		      &cwc->cwc_k1, 0);
+      DES_ecb_encrypt((DES_cblock *)(buffer+i), (DES_cblock *)(buffer+i),
+		      &cwc->cwc_k2, 1);
+
+      DES_ncbc_encrypt(buffer+i, buffer+i, 8,  &cwc->cwc_k1, &ivec, 0);
     } 
   for (i = 2; i < len; i++) checksum ^= buffer[i];
   if (checksum) return -1;
@@ -380,12 +384,15 @@ des_decrypt(uint8_t *buffer, int len, uint8_t *deskey)
 static void
 des_make_login_key(cwc_t *cwc, uint8_t *k)
 {
-  uint8_t des14[14];
+  uint8_t des14[14], spread[16];
   int i;
 
   for (i = 0; i < 14; i++) 
     des14[i] = cwc->cwc_confedkey[i] ^ k[i];
-  memcpy(cwc->cwc_key, des_key_spread(des14), 16);
+  des_key_spread(des14, spread);
+  
+  DES_key_sched((DES_cblock *)spread,     &cwc->cwc_k1);
+  DES_key_sched((DES_cblock *)(spread+8), &cwc->cwc_k2);
 }
 
 /**
@@ -394,7 +401,7 @@ des_make_login_key(cwc_t *cwc, uint8_t *k)
 static void
 des_make_session_key(cwc_t *cwc)
 {
-  uint8_t des14[14], *k2 = (uint8_t *)cwc->cwc_password_salted;
+  uint8_t des14[14], spread[16], *k2 = (uint8_t *)cwc->cwc_password_salted;
   int i, l = strlen(cwc->cwc_password_salted);
 
   memcpy(des14, cwc->cwc_confedkey, 14);
@@ -402,7 +409,9 @@ des_make_session_key(cwc_t *cwc)
   for (i = 0; i < l; i++)
     des14[i % 14] ^= k2[i];
 
-  memcpy(cwc->cwc_key, des_key_spread(des14), 16);
+  des_key_spread(des14, spread);
+  DES_key_sched((DES_cblock *)spread,     &cwc->cwc_k1);
+  DES_key_sched((DES_cblock *)(spread+8), &cwc->cwc_k2);
 }
 
 /**
@@ -432,7 +441,7 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid, int enq)
   buf[4] = sid >> 8;
   buf[5] = sid;
 
-  if((len = des_encrypt(buf, len, cwc->cwc_key)) < 0) {
+  if((len = des_encrypt(buf, len, cwc)) < 0) {
     free(buf);
     return -1;
   }
@@ -839,7 +848,7 @@ cwc_read_message(cwc_t *cwc, const char *state, int timeout)
     return -1;
   }
 
-  if((msglen = des_decrypt(cwc->cwc_buf, msglen + 2, cwc->cwc_key)) < 15) {
+  if((msglen = des_decrypt(cwc->cwc_buf, msglen + 2, cwc)) < 15) {
     tvhlog(LOG_INFO, "cwc", "%s: %s: Decrypt failed",
 	   state, cwc->cwc_hostname);
     return -1;
@@ -1632,7 +1641,7 @@ cwc_entry_update(void *opaque, const char *id, htsmsg_t *values, int maycreate)
     free(cwc->cwc_password);
     free(cwc->cwc_password_salted);
     cwc->cwc_password = strdup(s);
-    cwc->cwc_password_salted = strdup(cwc_krypt(s, "$1$abcdefgh$"));
+    cwc->cwc_password_salted = crypt_md5(s, "$1$abcdefgh$");
   }
 
   if((s = htsmsg_get_str(values, "comment")) != NULL) {
@@ -1774,4 +1783,136 @@ cwc_init(void)
 
   dt = dtable_create(&cwc_dtc, "cwc", NULL);
   dtable_load(dt);
+}
+
+
+#include <openssl/md5.h>
+
+/*
+ * "THE BEER-WARE LICENSE" (Revision 42):
+ * <phk@login.dknet.dk> wrote this file.  As long as you retain this notice you
+ * can do whatever you want with this stuff. If we meet some day, and you think
+ * this stuff is worth it, you can buy me a beer in return.   Poul-Henning Kamp
+ */
+
+static unsigned char itoa64[] = /* 0 ... 63 => ascii - 64 */
+        "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+/* to64 BUFFER VALUE NUM
+ * Write NUM base64 characters of VALUE into BUFFER. */
+static void to64(char *s, unsigned long v, int n)
+{
+    while (--n >= 0) {
+        *s++ = itoa64[v&0x3f];
+        v >>= 6;
+    }
+}
+
+/* crypt_md5 PASSWORD SALT
+ * Poul-Henning Kamp's crypt(3)-alike using MD5. */
+static char *
+crypt_md5(const char *pw, const char *salt)
+{
+    const char *magic = "$1$";
+    /* This string is magic for this algorithm.  Having
+     * it this way, we can get get better later on */
+    char *p;
+    const char *sp,*ep;
+    unsigned char   final[16];
+    int sl,pl,i,j;
+    MD5_CTX ctx,ctx1;
+    unsigned long l;
+
+    /* Refine the Salt first */
+    sp = salt;
+
+    /* If it starts with the magic string, then skip that */
+    if(!strncmp(sp,magic,strlen(magic)))
+        sp += strlen(magic);
+
+    /* It stops at the first '$', max 8 chars */
+    for(ep=sp;*ep && *ep != '$' && ep < (sp+8);ep++)
+        continue;
+
+    /* get the length of the true salt */
+    sl = ep - sp;
+
+    MD5_Init(&ctx);
+
+    /* The password first, since that is what is most unknown */
+    MD5_Update(&ctx,(unsigned char *)pw,strlen(pw));
+
+    /* Then our magic string */
+    MD5_Update(&ctx,(unsigned char *)magic,strlen(magic));
+
+    /* Then the raw salt */
+    MD5_Update(&ctx,(unsigned char *)sp,sl);
+
+    /* Then just as many characters of the MD5_(pw,salt,pw) */
+    MD5_Init(&ctx1);
+    MD5_Update(&ctx1,(unsigned char *)pw,strlen(pw));
+    MD5_Update(&ctx1,(unsigned char *)sp,sl);
+    MD5_Update(&ctx1,(unsigned char *)pw,strlen(pw));
+    MD5_Final(final,&ctx1);
+    for(pl = strlen(pw); pl > 0; pl -= 16)
+        MD5_Update(&ctx,(unsigned char *)final,pl>16 ? 16 : pl);
+
+    /* Don't leave anything around in vm they could use. */
+    memset(final,0,sizeof final);
+
+    /* Then something really weird... */
+    for (j=0,i = strlen(pw); i ; i >>= 1)
+        if(i&1)
+            MD5_Update(&ctx, (unsigned char *)final+j, 1);
+        else
+            MD5_Update(&ctx, (unsigned char *)pw+j, 1);
+
+    /* Now make the output string */
+    char *passwd = malloc(120);
+
+    strcpy(passwd,magic);
+    strncat(passwd,sp,sl);
+    strcat(passwd,"$");
+
+    MD5_Final(final,&ctx);
+
+    /*
+     * and now, just to make sure things don't run too fast
+     * On a 60 Mhz Pentium this takes 34 msec, so you would
+     * need 30 seconds to build a 1000 entry dictionary...
+     */
+    for(i=0;i<1000;i++) {
+        MD5_Init(&ctx1);
+        if(i & 1)
+            MD5_Update(&ctx1,(unsigned char *)pw,strlen(pw));
+        else
+            MD5_Update(&ctx1,(unsigned char *)final,16);
+
+        if(i % 3)
+            MD5_Update(&ctx1,(unsigned char *)sp,sl);
+
+        if(i % 7)
+            MD5_Update(&ctx1,(unsigned char *)pw,strlen(pw));
+
+        if(i & 1)
+            MD5_Update(&ctx1,(unsigned char *)final,16);
+        else
+            MD5_Update(&ctx1,(unsigned char *)pw,strlen(pw));
+        MD5_Final(final,&ctx1);
+    }
+
+    p = passwd + strlen(passwd);
+
+    l = (final[ 0]<<16) | (final[ 6]<<8) | final[12]; to64(p,l,4); p += 4;
+    l = (final[ 1]<<16) | (final[ 7]<<8) | final[13]; to64(p,l,4); p += 4;
+    l = (final[ 2]<<16) | (final[ 8]<<8) | final[14]; to64(p,l,4); p += 4;
+    l = (final[ 3]<<16) | (final[ 9]<<8) | final[15]; to64(p,l,4); p += 4;
+    l = (final[ 4]<<16) | (final[10]<<8) | final[ 5]; to64(p,l,4); p += 4;
+    l =                    final[11]                ; to64(p,l,2); p += 2;
+    *p = '\0';
+
+    /* Don't leave anything around in vm they could use. */
+    memset(final,0,sizeof final);
+
+    return passwd;
 }
