@@ -39,6 +39,7 @@
 #include "diseqc.h"
 #include "notify.h"
 #include "dvr/dvr.h"
+#if 0
 
 /**
  * Front end monitor
@@ -478,3 +479,4 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
   dvb_adapter_notify(tda);
   return 0;
 }
+#endif

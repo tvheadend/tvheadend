@@ -43,6 +43,8 @@
 #include "dvb/dvb_preconf.h"
 #include "dvr/dvr.h"
 
+#if 0
+
 /**
  *
  */
@@ -672,3 +674,4 @@ extjs_start_dvb(void)
 		NULL, extjs_dvb_copymux, ACCESS_ADMIN);
 
 }
+#endif

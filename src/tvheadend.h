@@ -133,17 +133,6 @@ void limitedlog(loglimiter_t *ll, const char *sys,
 		const char *o, const char *event);
 
 
-/**
- * Device connection types
- */
-#define HOSTCONNECTION_UNKNOWN    0
-#define HOSTCONNECTION_USB12      1
-#define HOSTCONNECTION_USB480     2
-#define HOSTCONNECTION_PCI        3
-
-const char *hostconnection2str(int type);
-int get_device_connection(const char *dev);
-
 
 /**
  * Stream component types

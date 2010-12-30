@@ -22,9 +22,9 @@
 #include "dvb_support.h"
 
 void
-dvb_init(uint32_t adapter_mask)
+dvb_init()
 {
-  dvb_adapter_init(adapter_mask);
+  dvb_adapter_init();
   dvb_conversion_init();
 
 }

@@ -405,9 +405,11 @@ static void
 capmt_table_input(struct th_descrambler *td, struct service *t,
     struct elementary_stream *st, const uint8_t *data, int len)
 {
+  abort(); //int adapter_num = t->s_dvb_mux_instance->tdmi_adapter->tda_adapter_num;
+#if 0
   capmt_service_t *ct = (capmt_service_t *)td;
   capmt_t *capmt = ct->ct_capmt;
-  int adapter_num = t->s_dvb_mux_instance->tdmi_adapter->tda_adapter_num;
+
 
   caid_t *c;
 
@@ -547,6 +549,7 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
       /* EMM */
       break;
   }
+#endif
 }
 
 
@@ -609,11 +612,12 @@ capmt_service_start(service_t *t)
   lock_assert(&global_lock);
 
   TAILQ_FOREACH(capmt, &capmts, capmt_link) {
-    tvhlog(LOG_INFO, "capmt",
+    abort(); 
+    /*tvhlog(LOG_INFO, "capmt",
       "Starting capmt server for service \"%s\" on tuner %d", 
       t->s_svcname,
       t->s_dvb_mux_instance->tdmi_adapter->tda_adapter_num);
-
+    */
     elementary_stream_t *st;
 
     /* create new capmt service */

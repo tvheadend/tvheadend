@@ -44,6 +44,8 @@
 #include "dvb_support.h"
 #include "notify.h"
 
+#if 0
+
 /**
  *
  */
@@ -476,3 +478,4 @@ dvb_transport_get_signal_status(service_t *t, signal_status_t *status)
   status->unc         = tdmi->tdmi_uncorrected_blocks;
   return 0;
 }
+#endif

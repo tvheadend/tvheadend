@@ -42,6 +42,8 @@
 #include "notify.h"
 #include "cwc.h"
 
+#if 0
+
 #define TDT_CRC           0x1
 #define TDT_QUICKREQ      0x2
 #define TDT_INC_TABLE_HDR 0x4
@@ -1415,3 +1417,4 @@ dvb_table_flush_all(th_dvb_mux_instance_t *tdmi)
     dvb_tdt_destroy(tda, tdmi, tdt);
   
 }
+#endif

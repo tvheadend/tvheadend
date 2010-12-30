@@ -34,7 +34,7 @@
  * A big list of all known DVB networks (from linuxtv.org)
  */
 #include "linuxtv_muxes.h"
-
+#if 0
 /**
  *
  */
@@ -220,3 +220,4 @@ dvb_mux_preconf_get_node(int fetype, const char *node)
       
   return out;
 }
+#endif

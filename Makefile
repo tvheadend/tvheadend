@@ -32,6 +32,7 @@ LDFLAGS += -lrt -ldl
 # Core
 #
 SRCS =  src/main.c \
+	src/device.c \
 	src/utils.c \
 	src/wrappers.c \
 	src/version.c \
@@ -86,6 +87,7 @@ SRCS-${CONFIG_LINUXDVB} += \
 	src/dvb/dvb_tables.c \
 	src/dvb/diseqc.c \
 	src/dvb/dvb_adapter.c \
+	src/dvb/dvb_fullmux.c \
 	src/dvb/dvb_multiplex.c \
 	src/dvb/dvb_transport.c \
 	src/dvb/dvb_preconf.c \

@@ -33,6 +33,8 @@
 #include "dtable.h"
 #include "notify.h"
 
+#if 0
+
 /**
  *
  */
@@ -334,3 +336,4 @@ dvb_lnb_get_frequencies(const char *id, int *f_low, int *f_hi, int *f_switch)
     *f_switch = 0;
   }
 }
+#endif

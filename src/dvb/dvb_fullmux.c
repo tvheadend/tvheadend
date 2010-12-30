@@ -1,6 +1,6 @@
 /*
- *  TV headend - Code for configuring DVB muxes
- *  Copyright (C) 2007 Andreas Öman
+ *  TV Input - Linux DVB interface
+ *  Copyright (C) 2007 - 2010 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,14 +16,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DVB_MUXCONFIG_H_
-#define DVB_MUXCONFIG_H_
+#include "tvheadend.h"
+#include "dvb.h"
 
-#include "htsmsg.h"
+void
+dvb_fullmux_init(dvb_adapter_t *da)
+{
 
-htsmsg_t *dvb_mux_preconf_get_node(int fetype, const char *node);
-
-int dvb_mux_preconf_add_network(struct dvb_adapter *da, const char *id,
-				const char *satconf);
-
-#endif /* DVB_MUXCONFIG_H */
+}

@@ -239,38 +239,12 @@ main(int argc, char **argv)
   const char *rawts_input = NULL;
   const char *join_transport = NULL;
   const char *confpath = NULL;
-  char *p, *endp;
-  uint32_t adapter_mask = 0xffffffff;
-  int crash = 0;
 
   // make sure the timezone is set
   tzset();
 
-  while((c = getopt(argc, argv, "Aa:fu:g:c:Chdr:j:s")) != -1) {
+  while((c = getopt(argc, argv, "fu:g:c:Chdr:j:s")) != -1) {
     switch(c) {
-    case 'a':
-      adapter_mask = 0x0;
-      p = strtok(optarg, ",");
-      if (p != NULL) {
-        do {
-          int adapter = strtol(p, &endp, 10);
-          if (*endp != 0 || adapter < 0 || adapter > 31) {
-              fprintf(stderr, "Invalid adapter number '%s'\n", p);
-              return 1;
-          }
-          adapter_mask |= (1 << adapter);
-        } while ((p = strtok(NULL, ",")) != NULL);
-        if (adapter_mask == 0x0) {
-          fprintf(stderr, "No adapters specified!\n");
-          return 1;
-        }
-      } else {
-        usage(argv[0]);
-      }
-      break;
-    case 'A':
-      crash = 1;
-      break;
     case 'f':
       forkaway = 1;
       break;
@@ -371,13 +345,19 @@ main(int argc, char **argv)
   access_init(createdefault);
 
   tcp_server_init();
+
+  device_init();
+
 #if ENABLE_LINUXDVB
-  dvb_init(adapter_mask);
+  dvb_init();
 #endif
   iptv_input_init();
 #if ENABLE_V4L
   v4l_init();
 #endif
+
+  device_map();
+
   http_server_init();
 
   webui_init(TVHEADEND_CONTENT_PATH);
@@ -406,6 +386,8 @@ main(int argc, char **argv)
   avahi_init();
 #endif
 
+  device_save_all();
+
   pthread_mutex_unlock(&global_lock);
 
 
@@ -427,9 +409,6 @@ main(int argc, char **argv)
 	 "running as PID:%d UID:%d GID:%d, settings located in '%s'",
 	 htsversion_full,
 	 getpid(), getuid(), getgid(), hts_settings_get_root());
-
-  if(crash)
-    abort();
 
   mainloop();
 
@@ -600,71 +579,3 @@ limitedlog(loglimiter_t *ll, const char *sys, const char *o, const char *event)
   tvhlog(LOG_WARNING, sys, "%s: %s%s", o, event, buf);
   ll->last = now;
 }
-
-
-/**
- *
- */  
-const char *
-hostconnection2str(int type)
-{
-  switch(type) {
-  case HOSTCONNECTION_USB12:
-    return "USB (12 Mbit/s)";
-    
-  case HOSTCONNECTION_USB480:
-    return "USB (480 Mbit/s)";
-
-  case HOSTCONNECTION_PCI:
-    return "PCI";
-  }
-  return "Unknown";
-
-}
-
-
-/**
- *
- */
-static int
-readlinefromfile(const char *path, char *buf, size_t buflen)
-{
-  int fd = open(path, O_RDONLY);
-  ssize_t r;
-
-  if(fd == -1)
-    return -1;
-
-  r = read(fd, buf, buflen - 1);
-  close(fd);
-  if(r < 0)
-    return -1;
-
-  buf[buflen - 1] = 0;
-  return 0;
-}
-
-
-/**
- *
- */  
-int
-get_device_connection(const char *dev)
-{
-  char path[200];
-  char l[64];
-  int speed;
-
-  snprintf(path, sizeof(path),  "/sys/class/%s/device/speed", dev);
-
-  if(readlinefromfile(path, l, sizeof(l))) {
-    // Unable to read speed, assume it's PCI
-    return HOSTCONNECTION_PCI;
-  } else {
-    speed = atoi(l);
-   
-    return speed >= 480 ? HOSTCONNECTION_USB480 : HOSTCONNECTION_USB12;
-  }
-}
-
-

@@ -79,7 +79,7 @@ dumpchannels(htsbuf_queue_t *hq)
   }
 }
 
-#if ENABLE_LINUXDVB
+#if 0 && ENABLE_LINUXDVB
 static void
 dumptransports(htsbuf_queue_t *hq, struct service_list *l, int indent)
 {
@@ -186,7 +186,7 @@ page_statedump(http_connection_t *hc, const char *remain, void *opaque)
 
   dumpchannels(hq);
   
-#if ENABLE_LINUXDVB
+#if 0 && ENABLE_LINUXDVB
   dumpdvbadapters(hq);
 #endif 
 

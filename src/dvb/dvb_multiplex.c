@@ -45,6 +45,8 @@
 #include "notify.h"
 #include "subscriptions.h"
 
+#if 0
+
 struct th_dvb_mux_instance_tree dvb_muxes;
 
 static struct strtab muxfestatustab[] = {
@@ -1139,3 +1141,4 @@ dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src)
   dvb_mux_save(tdmi_dst);
   return 0;
 }
+#endif

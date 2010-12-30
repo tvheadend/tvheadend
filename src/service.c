@@ -228,11 +228,14 @@ service_start(service_t *t, unsigned int weight, int force_start)
 /**
  *
  */
+#if 0
 static int
 dvb_extra_prio(th_dvb_adapter_t *tda)
 {
-  return tda->tda_hostconnection * 10;
+  abort();
+  //  return tda->tda_hostconnection * 10;
 }
+#endif
 
 /**
  * Return prio for the given service
@@ -242,8 +245,8 @@ service_get_prio(service_t *t)
 {
   switch(t->s_type) {
   case SERVICE_TYPE_DVB:
-    return (t->s_scrambled ? 300 : 100) + 
-      dvb_extra_prio(t->s_dvb_mux_instance->tdmi_adapter);
+    abort(); // return (t->s_scrambled ? 300 : 100) + 
+    //dvb_extra_prio(t->s_dvb_mux_instance->tdmi_adapter);
 
   case SERVICE_TYPE_IPTV:
     return 200;
@@ -1062,7 +1065,7 @@ service_get_signal_status(service_t *t, signal_status_t *status)
   switch(t->s_type) {
 #if ENABLE_LINUXDVB
   case SERVICE_TYPE_DVB:
-    return dvb_transport_get_signal_status(t, status);
+    abort(); //return dvb_transport_get_signal_status(t, status);
 #endif
   default:
     return -1;
