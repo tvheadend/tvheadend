@@ -29,11 +29,12 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include <openssl/sha.h>
+
 #include "tvheadend.h"
 #include "access.h"
 #include "dtable.h"
 #include "settings.h"
-#include "sha1.h"
 
 struct access_entry_queue access_entries;
 
@@ -95,18 +96,18 @@ access_get_hashed(const char *username, const uint8_t digest[20],
   struct sockaddr_in *si = (struct sockaddr_in *)src;
   uint32_t b = ntohl(si->sin_addr.s_addr);
   access_entry_t *ae;
-  SHA1Context shactx;
+  SHA_CTX shactx;
   uint8_t d[20];
   uint32_t r = 0;
   int match = 0;
 
   if(superuser_username != NULL && superuser_password != NULL) {
 
-    SHA1Reset(&shactx);
-    SHA1Input(&shactx, (const uint8_t *)superuser_password,
-	      strlen(superuser_password));
-    SHA1Input(&shactx, challenge, 32);
-    SHA1Result(&shactx, d);
+    SHA_Init(&shactx);
+    SHA_Update(&shactx, (const uint8_t *)superuser_password,
+	       strlen(superuser_password));
+    SHA_Update(&shactx, challenge, 32);
+    SHA_Final(d, &shactx);
 
     if(!strcmp(superuser_username, username) && !memcmp(d, digest, 20))
       return 0xffffffff;
@@ -121,11 +122,11 @@ access_get_hashed(const char *username, const uint8_t digest[20],
     if((b & ae->ae_netmask) != ae->ae_network)
       continue; /* IP based access mismatches */
 
-    SHA1Reset(&shactx);
-    SHA1Input(&shactx, (const uint8_t *)ae->ae_password,
+    SHA_Init(&shactx);
+    SHA_Update(&shactx, (const uint8_t *)ae->ae_password,
 	      strlen(ae->ae_password));
-    SHA1Input(&shactx, challenge, 32);
-    SHA1Result(&shactx, d);
+    SHA1_Update(&shactx, challenge, 32);
+    SHA1_Final(d, &shactx);
 
     if(strcmp(ae->ae_username, username) || memcmp(d, digest, 20))
       continue;

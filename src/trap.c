@@ -38,8 +38,9 @@ char tvh_binshasum[20];
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include <openssl/sha.h>
+
 #include "tvheadend.h"
-#include "sha1.h"
 
 #define MAXFRAMES 100
 
@@ -150,7 +151,7 @@ trap_init(const char *ver)
   struct sigaction sa, old;
   char path[256];
 
-  struct SHA1Context binsum;
+  SHA_CTX binsum;
   int fd;
 
   
@@ -160,9 +161,9 @@ trap_init(const char *ver)
       char *m = malloc(st.st_size);
       if(m != NULL) {
 	if(read(fd, m, st.st_size) == st.st_size) {
-	  SHA1Reset(&binsum);
-	  SHA1Input(&binsum, (void *)m, st.st_size);
-	  SHA1Result(&binsum, digest);
+	  SHA_Init(&binsum);
+	  SHA_Update(&binsum, (void *)m, st.st_size);
+	  SHA_Final(digest, &binsum);
 	}
 	free(m);
       }

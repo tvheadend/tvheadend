@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <openssl/sha.h>
 
 #include "htsmsg.h"
 #include "htsmsg_json.h"
@@ -31,7 +32,6 @@
 #include "http.h"
 #include "webui/webui.h"
 #include "access.h"
-#include "sha1.h"
 
 static pthread_mutex_t comet_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t comet_cond = PTHREAD_COND_INITIALIZER;
@@ -106,14 +106,14 @@ comet_mailbox_create(void)
   uint8_t sum[20];
   char id[20 * 2 + 1];
   int i;
-  struct SHA1Context sha1;
+  SHA_CTX sha1;
 
   gettimeofday(&tv, NULL);
 
-  SHA1Reset(&sha1);
-  SHA1Input(&sha1, (void *)&tv, sizeof(tv));
-  SHA1Input(&sha1, (void *)&mailbox_tally, sizeof(uint32_t));
-  SHA1Result(&sha1, sum);
+  SHA1_Init(&sha1);
+  SHA1_Update(&sha1, (void *)&tv, sizeof(tv));
+  SHA1_Update(&sha1, (void *)&mailbox_tally, sizeof(uint32_t));
+  SHA1_Final(sum, &sha1);
 
   for(i = 0; i < sizeof(sum); i++) {
     id[i * 2 + 0] = "0123456789abcdef"[sum[i] >> 4];
