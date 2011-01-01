@@ -241,13 +241,48 @@ htsbuf_drop(htsbuf_queue_t *hq, size_t len)
 }
 
 /**
- *
+ * Inspired by vsnprintf man page
  */
 void
-htsbuf_vqprintf(htsbuf_queue_t *hq, const char *fmt, va_list ap)
+htsbuf_vqprintf(htsbuf_queue_t *hq, const char *fmt, va_list ap0)
 {
-  char buf[5000];
-  htsbuf_append(hq, buf, vsnprintf(buf, sizeof(buf), fmt, ap));
+  // First try to format it on-stack
+  va_list ap;
+  int n, size;
+  char buf[100], *p, *np;
+
+  va_copy(ap, ap0);
+
+  n = vsnprintf(buf, sizeof(buf), fmt, ap);
+  if(n > -1 && n < sizeof(buf)) {
+    htsbuf_append(hq, buf, n);
+    return;
+  }
+
+  // Else, do allocations
+  size = sizeof(buf) * 2;
+
+  p = malloc(size);
+  while (1) {
+    /* Try to print in the allocated space. */
+    va_copy(ap, ap0);
+    n = vsnprintf(p, size, fmt, ap);
+    if(n > -1 && n < size) {
+      htsbuf_append_prealloc(hq, p, n);
+      return;
+    }
+    /* Else try again with more space. */
+    if (n > -1)    /* glibc 2.1 */
+      size = n+1; /* precisely what is needed */
+    else           /* glibc 2.0 */
+      size *= 2;  /* twice the old size */
+    if ((np = realloc (p, size)) == NULL) {
+      free(p);
+      abort();
+    } else {
+      p = np;
+    }
+  }
 }
 
 
