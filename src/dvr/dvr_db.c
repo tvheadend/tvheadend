@@ -601,11 +601,20 @@ dvr_timer_expire(void *aux)
 static void
 dvr_stop_recording(dvr_entry_t *de, int stopcode)
 {
+  time_t now;
+
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
 
   dvr_rec_unsubscribe(de, stopcode);
 
   de->de_sched_state = DVR_COMPLETED;
+
+ if (stopcode == 300) {
+    time(&now);
+    de->de_stop = now;
+    de->de_stop_extra = 0;
+  }
+
 
   tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": "
 	 "End of program: %s",
