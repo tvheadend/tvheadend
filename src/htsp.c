@@ -473,7 +473,8 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Send all DVR entries */
   LIST_FOREACH(de, &dvrentries, de_global_link)
-    htsp_send_message(htsp, htsp_build_dvrentry(de, "dvrEntryAdd"), NULL);
+    if (de->de_sched_state != DVR_MISSED_TIME)
+      htsp_send_message(htsp, htsp_build_dvrentry(de, "dvrEntryAdd"), NULL);
 
   /* Notify that initial sync has been completed */
   m = htsmsg_create_map();
