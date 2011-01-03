@@ -47,7 +47,7 @@
 
 #define CWC_KEEPALIVE_INTERVAL 30
 
-#define CWS_NETMSGSIZE 256
+#define CWS_NETMSGSIZE 272
 #define CWS_FIRSTCMDNO 0xe0
 
 /**
@@ -55,6 +55,7 @@
  */
 typedef enum {
   CARD_IRDETO,
+  CARD_DRE,
   CARD_CONAX,
   CARD_SECA,
   CARD_VIACCESS,
@@ -271,6 +272,7 @@ static void cwc_service_destroy(th_descrambler_t *td);
 static void cwc_detecs_card_type(cwc_t *cwc);
 void cwc_emm_conax(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_irdeto(cwc_t *cwc, uint8_t *data, int len);
+void cwc_emm_dre(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_seca(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_viaccess(cwc_t *cwc, uint8_t *data, int len);
 
@@ -666,6 +668,10 @@ cwc_detecs_card_type(cwc_t *cwc)
   case 0x01:
     cwc->cwc_card_type = CARD_SECA;
     tvhlog(LOG_INFO, "cwc", "%s: seca card",
+	   cwc->cwc_hostname);
+  case 0x4a:
+    cwc->cwc_card_type = CARD_DRE;
+    tvhlog(LOG_INFO, "cwc", "%s: dre card",
 	   cwc->cwc_hostname);
     break;
   default:
@@ -1175,6 +1181,9 @@ cwc_emm(uint8_t *data, int len)
       case CARD_VIACCESS:
 	cwc_emm_viaccess(cwc, data, len);
 	break;
+      case CARD_DRE:
+	cwc_emm_dre(cwc, data, len);
+	break;
       case CARD_UNKNOWN:
 	break;
       }
@@ -1542,6 +1551,34 @@ cwc_table_input(struct th_descrambler *td, struct service *t,
       cwc_send_msg(cwc, data, len, sid, 1);
     break;
   }
+}
+
+/**
+ * dre emm handler
+ */
+void
+cwc_emm_dre(cwc_t *cwc, uint8_t *data, int len)
+{
+  int match = 0;
+
+  if (data[0] == 0x87) {
+    if (memcmp(&data[3], &cwc->cwc_ua[4], 4) == 0) {
+      match = 1;
+    }
+  } 
+  else if (data[0] == 0x86) {
+    int i;
+    for (i=0; i < cwc->cwc_num_providers; i++) {
+      if (memcmp(&data[40], &cwc->cwc_providers[i].sa[4], 4) == 0) {
+/*      if (memcmp(&data[3], &cwc->cwc_providers[i].sa[4], 1) == 0) { */
+        match = 1;
+        break;
+      }
+    }
+  }
+
+  if (match)
+    cwc_send_msg(cwc, data, len, 0, 1);
 }
 
 
