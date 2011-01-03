@@ -392,7 +392,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   case DVR_COMPLETED:
     s = "completed";
     if(de->de_last_error)
-      error = streaming_code2txt(de->de_last_error);
+      if (de->de_last_error != 300) // In case of an aborted recording, still show it in the recording list
+        error = streaming_code2txt(de->de_last_error);
     break;
   case DVR_MISSED_TIME:
     s = "missed";
