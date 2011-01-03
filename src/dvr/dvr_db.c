@@ -391,7 +391,9 @@ dvr_entry_dec_ref(dvr_entry_t *de)
 static void
 dvr_entry_remove(dvr_entry_t *de)
 {
-  if (de->de_filename) {
+  dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
+
+  if ((cfg->dvr_flags |= DVR_DEL_RECORDING) && (de->de_filename)) {
     tvhlog(LOG_DEBUG, "dvr_db", "Going to delete recording '%s'", de->de_filename);
     unlink(de->de_filename);
   }
@@ -788,6 +790,9 @@ dvr_init(void)
       htsmsg_get_s32(m, "post-extra-time", &cfg->dvr_extra_time_post);
       htsmsg_get_u32(m, "retention-days", &cfg->dvr_retention_days);
       tvh_str_set(&cfg->dvr_storage, htsmsg_get_str(m, "storage"));
+      
+      if(!htsmsg_get_u32(m, "delete-recording", &u32) && u32)
+        cfg->dvr_flags |= DVR_DEL_RECORDING;
 
       if(!htsmsg_get_u32(m, "day-dir", &u32) && u32)
         cfg->dvr_flags |= DVR_DIR_PER_DAY;
@@ -953,6 +958,7 @@ dvr_save(dvr_config_t *cfg)
     htsmsg_add_str(m, "config_name", cfg->dvr_config_name);
   htsmsg_add_str(m, "storage", cfg->dvr_storage);
   htsmsg_add_u32(m, "retention-days", cfg->dvr_retention_days);
+  htsmsg_add_u32(m, "delete-recording",          !!(cfg->dvr_flags & DVR_DEL_RECORDING));
   htsmsg_add_u32(m, "pre-extra-time", cfg->dvr_extra_time_pre);
   htsmsg_add_u32(m, "post-extra-time", cfg->dvr_extra_time_post);
   htsmsg_add_u32(m, "day-dir",          !!(cfg->dvr_flags & DVR_DIR_PER_DAY));

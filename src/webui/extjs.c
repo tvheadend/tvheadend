@@ -871,6 +871,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(r, "retention", cfg->dvr_retention_days);
     htsmsg_add_u32(r, "preExtraTime", cfg->dvr_extra_time_pre);
     htsmsg_add_u32(r, "postExtraTime", cfg->dvr_extra_time_post);
+    htsmsg_add_u32(r, "delRec",         !!(cfg->dvr_flags & DVR_DEL_RECORDING));
     htsmsg_add_u32(r, "dayDirs",        !!(cfg->dvr_flags & DVR_DIR_PER_DAY));
     htsmsg_add_u32(r, "channelDirs",    !!(cfg->dvr_flags & DVR_DIR_PER_CHANNEL));
     htsmsg_add_u32(r, "channelInTitle", !!(cfg->dvr_flags & DVR_CHANNEL_IN_TITLE));
@@ -901,6 +902,9 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     if((s = http_arg_get(&hc->hc_req_args, "retention")) != NULL)
       dvr_retention_set(cfg,atoi(s));
+    
+   if(http_arg_get(&hc->hc_req_args, "delRec") != NULL)
+      flags |= DVR_DEL_RECORDING;
 
    if((s = http_arg_get(&hc->hc_req_args, "preExtraTime")) != NULL)
      dvr_extra_time_pre_set(cfg,atoi(s));

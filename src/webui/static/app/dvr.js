@@ -641,7 +641,7 @@ tvheadend.dvrsettings = function() {
 
     var confreader = new Ext.data.JsonReader({
 	root: 'dvrSettings'
-    }, ['storage','postproc','retention','dayDirs',
+    }, ['storage','postproc','retention','delRec', 'dayDirs',
 	'channelDirs','channelInTitle',
 	'dateInTitle','timeInTitle',
 	'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 
@@ -688,6 +688,9 @@ tvheadend.dvrsettings = function() {
 	    minValue: 1,
 	    fieldLabel: 'DVR Log retention time (days)',
 	    name: 'retention'
+        }), new Ext.form.Checkbox({
+            fieldLabel: 'Delete recordings upon DVR Log deletion',
+            name: 'delRec',
 	}), new Ext.form.NumberField({
 	    allowDecimals: false,
 	    fieldLabel: 'Extra time before recordings (minutes)',
