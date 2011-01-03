@@ -504,6 +504,10 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   uint32_t end;
   const char *title;
 
+  htsmsg_get_u32(in, "eventId", &eventid);
+  
+  if((dvr_config_name = htsmsg_get_str(in, "configName")) == NULL)
+    dvr_config_name = "";
 
   if((e = epg_event_find_by_id(eventid)) == NULL) {
         tvhlog(LOG_INFO, "htsp", "Could not find a event with given eventId, assuming it is an instant record!");
@@ -543,8 +547,6 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   
   
-  if((dvr_config_name = htsmsg_get_str(in, "configName")) == NULL)
-    dvr_config_name = "";
 
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
   
