@@ -391,6 +391,11 @@ dvr_entry_dec_ref(dvr_entry_t *de)
 static void
 dvr_entry_remove(dvr_entry_t *de)
 {
+  if (de->de_filename) {
+    tvhlog(LOG_DEBUG, "dvr_db", "Going to delete recording '%s'", de->de_filename);
+    unlink(de->de_filename);
+  }
+
   hts_settings_remove("dvr/log/%d", de->de_id);
 
   htsp_dvr_entry_delete(de);
