@@ -219,6 +219,9 @@ extjs_tablemgr(http_connection_t *hc, const char *remain, void *opaque)
   const char *op        = http_arg_get(&hc->hc_req_args, "op");
   const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
 
+  if(op == NULL)
+    return 400;
+
   if(tablename == NULL || (dt = dtable_find(tablename)) == NULL)
     return 404;
   
@@ -356,6 +359,9 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
   const char *op        = http_arg_get(&hc->hc_req_args, "op");
   const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
 
+  if(op == NULL)
+    return 400;
+
   htsmsg_autodtor(in) =
     entries != NULL ? htsmsg_json_deserialize(entries) : NULL;
 
@@ -470,6 +476,9 @@ extjs_xmltv(http_connection_t *hc, const char *remain, void *opaque)
   xmltv_channel_t *xc;
   htsmsg_t *out, *array, *e, *r;
   const char *s;
+
+  if(op == NULL)
+    return 400;
 
   pthread_mutex_lock(&global_lock);
 
@@ -1340,6 +1349,9 @@ extjs_iptvservices(http_connection_t *hc, const char *remain, void *opaque)
   const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
   service_t *t, **tvec;
   int count = 0, i = 0;
+
+  if(op == NULL)
+    return 400;
 
   pthread_mutex_lock(&global_lock);
 
