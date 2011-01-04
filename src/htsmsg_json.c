@@ -37,13 +37,17 @@ htsmsg_json_encode_string(const char *str, htsbuf_queue_t *hq)
   htsbuf_append(hq, "\"", 1);
 
   while(*s != 0) {
-    if(*s == '"' || *s == '\\' || *s == '\n') {
+    if(*s == '"' || *s == '\\' || *s == '\n' || *s == '\t' || *s == '\r') {
       htsbuf_append(hq, str, s - str);
 
       if(*s == '"')
 	htsbuf_append(hq, "\\\"", 2);
       else if(*s == '\n') 
 	htsbuf_append(hq, "\\n", 2);
+      else if(*s == '\t') 
+	htsbuf_append(hq, "\\t", 2);
+      else if(*s == '\r')
+	htsbuf_append(hq, "\\r", 2);
       else
 	htsbuf_append(hq, "\\\\", 2);
       s++;
