@@ -26,6 +26,7 @@ CONFIG_LIST="
  sse2
  linuxdvb
  v4l
+ execinfo
 "
 
 die() {

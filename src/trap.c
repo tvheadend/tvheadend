@@ -30,7 +30,9 @@ char tvh_binshasum[20];
 #include <string.h>
 #include <signal.h>
 #include <ucontext.h>
+#if ENABLE_EXECINFO
 #include <execinfo.h>
+#endif
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -64,9 +66,11 @@ static void
 traphandler(int sig, siginfo_t *si, void *UC)
 {
   ucontext_t *uc = UC;
+#if ENABLE_EXECINFO
   static void *frames[MAXFRAMES];
   int nframes = backtrace(frames, MAXFRAMES);
   Dl_info dli;
+#endif
   int i;
   const char *reason = NULL;
 
@@ -102,6 +106,7 @@ traphandler(int sig, siginfo_t *si, void *UC)
   }
   tvhlog_spawn(LOG_ALERT, "CRASH", "%s", tmpbuf);
 
+#if ENABLE_EXECINFO
   tvhlog_spawn(LOG_ALERT, "CRASH", "STACKTRACE");
 
   for(i = 0; i < nframes; i++) {
@@ -128,6 +133,7 @@ traphandler(int sig, siginfo_t *si, void *UC)
       tvhlog_spawn(LOG_ALERT, "CRASH", "%p", frames[i]);
     }
   }
+#endif
 }
 
 

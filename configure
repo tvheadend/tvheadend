@@ -110,6 +110,19 @@ if checkccarg "-msse2"; then
    enable sse2
 fi
 
+check_header_c() {
+    cat >$TMPDIR/1.c <<EOF
+#include <$1>
+int main() {
+ return 0;
+}
+EOF
+    $CC 2>/dev/null $TMPDIR/1.c -o $TMPDIR/1.bin
+}
+
+check_header_c "execinfo.h" && enable execinfo
+
+
 echo >>${CONFIG_MAK} $CC_CONFIG_MAK 
 
 #
