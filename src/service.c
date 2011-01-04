@@ -1060,8 +1060,10 @@ service_get_signal_status(service_t *t, signal_status_t *status)
 {
   // get signal status from the service
   switch(t->s_type) {
+#if ENABLE_LINUXDVB
   case SERVICE_TYPE_DVB:
     return dvb_transport_get_signal_status(t, status);
+#endif
   default:
     return -1;
   }
