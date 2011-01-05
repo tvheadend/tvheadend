@@ -25,6 +25,7 @@
 
 #include "tvheadend.h"
 #include "channels.h"
+#include "settings.h"
 #include "epg.h"
 #include "dvr/dvr.h"
 #include "htsp.h"
@@ -533,6 +534,104 @@ epg_content_group_find_by_name(const char *name)
 void
 epg_init(void)
 {
+  event_t *e;
+  int injected = 0;
+  int created = 0;
+  uint32_t id = 0;
+
+  htsmsg_t *l, *c;
+  htsmsg_field_t *f;
+
+  if((l = hts_settings_load("epg")) == NULL)
+    return;
+ 
+  HTSMSG_FOREACH(f, l) {
+    if((c = htsmsg_get_map_by_field(f)) == NULL)
+      continue;
+
+    e = epg_event_create_by_msg(c, &created);
+    htsmsg_get_u32(c, "id", &id);
+
+    hts_settings_remove("epg/%d", id);
+
+    if(created)
+      injected++;
+  }
+  htsmsg_destroy(l);
+
+  tvhlog(LOG_INFO, "epg", "Injected %d epg events.", injected);
+} 
+
+/*
+ *
+ */
+event_t *
+epg_event_create_by_msg(htsmsg_t *c, int *created) 
+{
+  channel_t *ch;
+  event_t *e = NULL;
+  uint32_t ch_id = 0;
+  uint32_t e_start = 0;
+  uint32_t e_stop = 0;
+  int e_dvb_id = 0;
+
+  if (created != NULL)
+    *created = 0;
+
+
+
+    // Now create the event
+    htsmsg_get_u32(c, "ch_id", &ch_id);
+    ch = channel_find_by_identifier(ch_id);
+    if (ch == NULL)
+      tvhlog(LOG_DEBUG, "epg", "Cannot find this channel, skipping...");
+    else {
+      htsmsg_get_u32(c, "start", &e_start);
+      htsmsg_get_u32(c, "stop", &e_stop);
+      htsmsg_get_s32(c, "dvb_id", &e_dvb_id);
+
+      e = epg_event_create(ch, e_start, e_stop, e_dvb_id, created);
+
+      int changed = 0;
+ 
+      changed |= epg_event_set_title(e, htsmsg_get_str(c, "title"));
+      changed |= epg_event_set_desc(e, htsmsg_get_str(c, "desc"));
+
+      if(changed)
+        epg_event_updated(e);
+    }
+
+  return e;
+}
+
+/*
+ * Save the epg on disk
+ */ 
+void
+epg_save(void)
+{
+  event_t *e;
+  int saved = 0;
+
+  channel_t *ch;
+
+  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
+    RB_FOREACH(e, &ch->ch_epg_events, e_channel_link) {
+      htsmsg_t *m = htsmsg_create_map();
+      htsmsg_add_u32(m, "id", saved);
+      htsmsg_add_u32(m, "start", e->e_start);
+      htsmsg_add_u32(m, "stop", e->e_stop);
+      htsmsg_add_str(m, "title", e->e_title);
+      htsmsg_add_str(m, "desc", e->e_desc);
+      htsmsg_add_u32(m, "ch_id", ch->ch_id);
+      htsmsg_add_u32(m, "dvb_id", e->e_dvb_id);
+
+      hts_settings_save(m, "epg/%d", saved);
+
+      saved++;
+    }
+  }
+  tvhlog(LOG_DEBUG, "epg", "Wrote epg data for %d events", saved);
 }
 
 
