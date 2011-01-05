@@ -45,6 +45,10 @@ tvheadend.VLC = function(url) {
     vlc.style.display = 'none';
   }
   
+  var missingPlugin = document.createElement('div');
+  missingPlugin.style.display = 'none';
+  missingPlugin.style.padding = '5px';
+
   var selectChannel = new Ext.form.ComboBox({
     loadingText: 'Loading...',
     width: 200,
@@ -59,8 +63,20 @@ tvheadend.VLC = function(url) {
   selectChannel.on('select', function(c, r) {
       var url = 'stream/channelid/' + r.data.chid;
       var chName = r.data.name;
+      if (!chName.length) {
+	  chName = 'the channel';
+      }
+
+      if(!vlc.playlist || vlc.playlist == 'undefined') {
+	  var chUrl = '<a href="' + url + '">' + chName + '</a>';
+	  missingPlugin.innerHTML  = '<p>You are missing a plugin for your browser.</p>';
+	  missingPlugin.innerHTML += '<p>You can still watch ' + chUrl + ' using an external player.</p>';
+	  missingPlugin.style.display = 'block';
+	  return;
+      }
+
       vlc.style.display = 'block';
-      
+
       if(vlc.playlist && vlc.playlist.isPlaying) {
         vlc.playlist.stop();
       }
@@ -150,7 +166,7 @@ tvheadend.VLC = function(url) {
         disabled: true
       },
     ],
-    items: [vlc]
+    items: [vlc, missingPlugin]
   });
 	  
   win.on('render', function() {
