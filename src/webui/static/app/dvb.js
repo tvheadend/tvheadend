@@ -371,7 +371,7 @@ tvheadend.dvb_services = function(adapterId) {
 	    dataIndex: 'id',
 	    width: 50,
 	    renderer: function(value, metadata, record, row, col, store) {
-		url = makeRTSPprefix() + 'service/' + value
+		url = 'stream/service/' + value
 		return '<a href="'+url+'">Play</a>'
 	    }
 	},
