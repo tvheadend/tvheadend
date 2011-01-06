@@ -596,6 +596,8 @@ dvr_timer_expire(void *aux)
 static void
 dvr_stop_recording(dvr_entry_t *de, int stopcode)
 {
+  time_t now;
+
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
 
   dvr_rec_unsubscribe(de, stopcode);
@@ -606,6 +608,12 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode)
 	 "End of program: %s",
 	 de->de_title, de->de_channel->ch_name,
 	 streaming_code2txt(de->de_last_error) ?: "Program ended");
+
+  if (stopcode == SM_CODE_ABORTED) {
+    time(&now);
+    de->de_stop = now;
+    de->de_stop_extra = 0;
+  }
 
   dvr_entry_save(de);
   htsp_dvr_entry_update(de);
