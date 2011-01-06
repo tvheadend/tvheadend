@@ -393,8 +393,8 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   hc->hc_keep_alive = 0;
 
   if(remain == NULL) {
-    http_stream_playlist(hc, NULL);
-    return 0;
+    http_error(hc, HTTP_STATUS_BAD_REQUEST);
+    return HTTP_STATUS_BAD_REQUEST;
   }
 
   if(http_tokenize((char *)remain, components, 2, '/') != 2) {
