@@ -122,35 +122,6 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
- * Playlist (.pls format) for the rtsp streams
- */
-static int
-page_rtsp_playlist(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  channel_t *ch = NULL;
-  int i = 0;
-  const char *host = http_arg_get(&hc->hc_args, "Host");
-
-  htsbuf_qprintf(hq, "[playlist]\n");
-
-  scopedgloballock();
-
-  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-    i++;
-    htsbuf_qprintf(hq, "File%d=rtsp://%s/channelid/%d\n", i, host, ch->ch_id);
-    htsbuf_qprintf(hq, "Title%d=%s\n",  i, ch->ch_name);
-    htsbuf_qprintf(hq, "Length%d=%d\n\n",  i, -1);
-  }
-
-  htsbuf_qprintf(hq, "NumberOfEntries=%d\n\n", i);
-  htsbuf_qprintf(hq, "Version=2");
-
-  http_output_content(hc, "audio/x-scpls; charset=UTF-8");
-  return 0;
-}
-
-/**
  * HTTP stream loop
  */
 static void
@@ -266,10 +237,10 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq)
 }
 
 /**
- * Playlist with http streams (.m3u format)
+ * Output playlist with http streams (.m3u format)
  */
 static void
-http_stream_playlist(http_connection_t *hc)
+http_stream_playlist(http_connection_t *hc, channel_t *channel)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   channel_t *ch = NULL;
@@ -279,13 +250,62 @@ http_stream_playlist(http_connection_t *hc)
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-    htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ch->ch_name);
-    htsbuf_qprintf(hq, "http://%s/stream/channelid/%d\n", host, ch->ch_id);
+    if (channel == NULL || ch == channel) {
+      htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ch->ch_name);
+      htsbuf_qprintf(hq, "http://%s/stream/channelid/%d\n", host, ch->ch_id);
+    }
   }
 
   http_output_content(hc, "application/x-mpegURL");
 
   pthread_mutex_unlock(&global_lock);
+}
+
+/**
+ * Handle requests for playlists
+ */
+static int
+page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
+{
+  char *components[2];
+  channel_t *ch = NULL;
+
+  if(http_access_verify(hc, ACCESS_STREAMING)) {
+    http_error(hc, HTTP_STATUS_UNAUTHORIZED);
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+
+  hc->hc_keep_alive = 0;
+
+  if(remain == NULL) {
+    http_stream_playlist(hc, NULL);
+    return 0;
+  }
+
+  if(http_tokenize((char *)remain, components, 2, '/') != 2) {
+    http_error(hc, HTTP_STATUS_BAD_REQUEST);
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  http_deescape(components[1]);
+
+  pthread_mutex_lock(&global_lock);
+
+  if(!strcmp(components[0], "channelid")) {
+    ch = channel_find_by_identifier(atoi(components[1]));
+  } else if(!strcmp(components[0], "channel")) {
+    ch = channel_find_by_name(components[1], 0, 0);
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  if(ch == NULL) {
+    http_error(hc, HTTP_STATUS_BAD_REQUEST);
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  http_stream_playlist(hc, ch);
+  return 0;
 }
 
 /**
@@ -373,7 +393,7 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   hc->hc_keep_alive = 0;
 
   if(remain == NULL) {
-    http_stream_playlist(hc);
+    http_stream_playlist(hc, NULL);
     return 0;
   }
 
@@ -589,7 +609,7 @@ webui_init(const char *contentpath)
 
   http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_WEB_INTERFACE);
   http_path_add("/favicon.ico", NULL, favicon, ACCESS_WEB_INTERFACE);
-  http_path_add("/channels.pls", NULL, page_rtsp_playlist, ACCESS_WEB_INTERFACE);
+  http_path_add("/playlist", NULL, page_http_playlist, ACCESS_WEB_INTERFACE);
 
   http_path_add("/state", NULL, page_statedump, ACCESS_ADMIN);
 
