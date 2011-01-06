@@ -63,9 +63,10 @@ tvheadend.VLC = function(url) {
   selectChannel.on('select', function(c, r) {
       var url = 'stream/channelid/' + r.data.chid;
       var playlist = 'playlist/channelid/' + r.data.chid;
+
       var chName = r.data.name;
       if (!chName.length) {
-	  chName = 'the channel';
+	  chName = 'the stream';
       }
 
       if(!vlc.playlist || vlc.playlist == 'undefined') {
