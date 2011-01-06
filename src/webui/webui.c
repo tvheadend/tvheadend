@@ -219,6 +219,10 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq)
         pat_ts[4] = 0x00;
         run = (write(hc->hc_fd, pat_ts, 188) == 188);
         
+        if(!run) {
+          break;
+        }
+
         //Send PMT
         memset(pmt_ts, 0xff, 188);
         psi_build_pmt(ss, pmt_ts+5, 183, pcrpid);
