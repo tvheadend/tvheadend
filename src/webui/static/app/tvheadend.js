@@ -182,6 +182,15 @@ tvheadend.VLC = function(url) {
     win.getTopToolbar().add(new Ext.Toolbar.Spacer());
     win.getTopToolbar().add(new Ext.Toolbar.Spacer());
     win.getTopToolbar().add(sliderLabel);
+
+    if(url && (!vlc.playlist || vlc.playlist == 'undefined')) {
+      missingPlugin.style.display = 'none';
+
+      var chUrl = '<a href="' + url + '">the stream</a>';
+      missingPlugin.innerHTML  = '<p>You are missing a plugin for your browser.</p>';
+      missingPlugin.innerHTML += '<p>You can still watch ' + chUrl + ' using an external player.</p>';
+      missingPlugin.style.display = 'block';
+    }
   });
 
   win.show();
