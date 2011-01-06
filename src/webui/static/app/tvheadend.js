@@ -62,15 +62,21 @@ tvheadend.VLC = function(url) {
   
   selectChannel.on('select', function(c, r) {
       var url = 'stream/channelid/' + r.data.chid;
+      var playlist = 'playlist/channelid/' + r.data.chid;
       var chName = r.data.name;
       if (!chName.length) {
 	  chName = 'the channel';
       }
 
       if(!vlc.playlist || vlc.playlist == 'undefined') {
-	  var chUrl = '<a href="' + url + '">' + chName + '</a>';
-	  missingPlugin.innerHTML  = '<p>You are missing a plugin for your browser.</p>';
-	  missingPlugin.innerHTML += '<p>You can still watch ' + chUrl + ' using an external player.</p>';
+	  var innerHTML = '';
+	  innerHTML += '<p>You are missing a plugin for your browser.'
+	  innerHTML += 'You can still watch ' + chName;
+	  innerHTML += ' using an external player.</p>';
+	  innerHTML += '<p><a href="' + playlist + '">M3U Playlist</a></p>';
+	  innerHTML += '<p><a href="' + url + '">Direct URL</a></p>';
+
+	  missingPlugin.innerHTML = innerHTML;
 	  missingPlugin.style.display = 'block';
 	  return;
       }
