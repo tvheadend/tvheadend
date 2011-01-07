@@ -568,17 +568,16 @@ epg_init(void)
 event_t *
 epg_event_create_by_msg(htsmsg_t *c, int *created) 
 {
-  channel_t *ch;
+ channel_t *ch;
   event_t *e = NULL;
   uint32_t ch_id = 0;
   uint32_t e_start = 0;
   uint32_t e_stop = 0;
   int e_dvb_id = 0;
+  const char *e_title, *e_desc;
 
   if (created != NULL)
     *created = 0;
-
-
 
     // Now create the event
     htsmsg_get_u32(c, "ch_id", &ch_id);
@@ -593,9 +592,14 @@ epg_event_create_by_msg(htsmsg_t *c, int *created)
       e = epg_event_create(ch, e_start, e_stop, e_dvb_id, created);
 
       int changed = 0;
- 
-      changed |= epg_event_set_title(e, htsmsg_get_str(c, "title"));
-      changed |= epg_event_set_desc(e, htsmsg_get_str(c, "desc"));
+
+      e_title = htsmsg_get_str(c, "title");
+      if (e_title != NULL)
+        changed |= epg_event_set_title(e, e_title);
+
+      e_desc = htsmsg_get_str(c, "title");
+      if (e_desc != NULL)
+        changed |= epg_event_set_title(e, e_desc);
 
       if(changed)
         epg_event_updated(e);
