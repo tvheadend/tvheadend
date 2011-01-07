@@ -617,18 +617,23 @@ epg_save(void)
 
   RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
     RB_FOREACH(e, &ch->ch_epg_events, e_channel_link) {
-      htsmsg_t *m = htsmsg_create_map();
-      htsmsg_add_u32(m, "id", saved);
-      htsmsg_add_u32(m, "start", e->e_start);
-      htsmsg_add_u32(m, "stop", e->e_stop);
-      htsmsg_add_str(m, "title", e->e_title);
-      htsmsg_add_str(m, "desc", e->e_desc);
-      htsmsg_add_u32(m, "ch_id", ch->ch_id);
-      htsmsg_add_u32(m, "dvb_id", e->e_dvb_id);
+      if((e->e_start) && (e->e_stop)) {
+        htsmsg_t *m = htsmsg_create_map();
+        htsmsg_add_u32(m, "id", saved);
+        htsmsg_add_u32(m, "start", e->e_start);
+        htsmsg_add_u32(m, "stop", e->e_stop);
+        if (e->e_title != NULL)
+          htsmsg_add_str(m, "title", e->e_title);
 
-      hts_settings_save(m, "epg/%d", saved);
+        if (e->e_desc != NULL)
+          htsmsg_add_str(m, "desc", e->e_desc);
+        htsmsg_add_u32(m, "ch_id", ch->ch_id);
+        htsmsg_add_s32(m, "dvb_id", e->e_dvb_id);
 
-      saved++;
+        hts_settings_save(m, "epg/%d", saved);
+
+        saved++;
+      }
     }
   }
   tvhlog(LOG_DEBUG, "epg", "Wrote epg data for %d events", saved);
