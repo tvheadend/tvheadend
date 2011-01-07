@@ -219,6 +219,10 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq)
         pat_ts[4] = 0x00;
         run = (write(hc->hc_fd, pat_ts, 188) == 188);
         
+        if(!run) {
+          break;
+        }
+
         //Send PMT
         memset(pmt_ts, 0xff, 188);
         psi_build_pmt(ss, pmt_ts+5, 183, pcrpid);
@@ -285,6 +289,39 @@ http_stream_playlist(http_connection_t *hc)
 }
 
 /**
+ * Subscribes to a service and starts the streaming loop
+ */
+static int
+http_stream_service(http_connection_t *hc, service_t *service)
+{
+  streaming_queue_t sq;
+  th_subscription_t *s;
+
+  pthread_mutex_lock(&global_lock);
+
+  streaming_queue_init(&sq, ~SMT_TO_MASK(SUBSCRIPTION_RAW_MPEGTS));
+
+  s = subscription_create_from_service(service,
+                                       "HTTP", &sq.sq_st,
+                                       SUBSCRIPTION_RAW_MPEGTS);
+
+
+  pthread_mutex_unlock(&global_lock);
+
+  //We won't get a START command, send http-header here.
+  http_output_content(hc, "video/mp2t");
+
+  http_stream_run(hc, &sq);
+
+  pthread_mutex_lock(&global_lock);
+  subscription_unsubscribe(s);
+  pthread_mutex_unlock(&global_lock);
+  streaming_queue_deinit(&sq);
+
+  return 0;
+}
+
+/**
  * Subscribes to a channel and starts the streaming loop
  */
 static int
@@ -319,12 +356,14 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
 /**
  * Handle the http request. http://tvheadend/stream/channelid/<chid>
  *                          http://tvheadend/stream/channel/<chname>
+ *                          http://tvheadend/stream/service/<servicename>
  */
 static int
 http_stream(http_connection_t *hc, const char *remain, void *opaque)
 {
   char *components[2];
   channel_t *ch = NULL;
+  service_t *service = NULL;
 
   if(http_access_verify(hc, ACCESS_STREAMING)) {
     http_error(hc, HTTP_STATUS_UNAUTHORIZED);
@@ -351,16 +390,20 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
     ch = channel_find_by_identifier(atoi(components[1]));
   } else if(!strcmp(components[0], "channel")) {
     ch = channel_find_by_name(components[1], 0, 0);
+  } else if(!strcmp(components[0], "service")) {
+    service = service_find_by_identifier(components[1]);
   }
 
   pthread_mutex_unlock(&global_lock);
 
-  if(ch == NULL) {
+  if(ch != NULL) {
+    return http_stream_channel(hc, ch);
+  } else if(service != NULL) {
+    return http_stream_service(hc, service);
+  } else {
     http_error(hc, HTTP_STATUS_BAD_REQUEST);
     return HTTP_STATUS_BAD_REQUEST;
   }
-
-  return http_stream_channel(hc, ch);
 }
 
 
