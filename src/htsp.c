@@ -549,20 +549,19 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     
   if(htsmsg_get_u32(in, "id", &dvrEntryId))
     return htsp_error("Missing argument 'id'");
+  
+  if( (de = dvr_entry_find_by_id(dvrEntryId)) == NULL) 
+    return htsp_error("id not found");
 
   if(htsmsg_get_u32(in, "start", &start))
-    return htsp_error("Missing argument 'start'");
+    start = de->de_start;
   
   if(htsmsg_get_u32(in, "stop", &stop))
-    return htsp_error("Missing argument 'stop'");
+    stop = de->de_stop;
 
   title = htsmsg_get_str(in, "title");
   if (title == NULL)
-    return htsp_error("Missing argument 'title'");
-  
-
-  if( (de = dvr_entry_find_by_id(dvrEntryId)) == NULL) 
-    return htsp_error("id not found");
+    title = de->de_title;
 
   de = dvr_entry_update(de, title, start, stop);
 
