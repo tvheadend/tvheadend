@@ -589,6 +589,26 @@ dvr_timer_expire(void *aux)
  
 }
 
+/**
+ *
+ */
+dvr_entry_t * 
+dvr_entry_update(dvr_entry_t *de, const char* de_title, int de_start, int de_stop) 
+{
+
+  de->de_title = strdup(de_title);
+  de->de_start = de_start;
+  de->de_stop = de_stop;
+
+  dvr_entry_save(de);
+  htsp_dvr_entry_update(de);
+  dvr_entry_notify(de);
+
+
+  tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": Updated Timer", de->de_title, de->de_channel->ch_name);
+
+  return de;
+}
 
 /**
  *

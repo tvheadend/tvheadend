@@ -535,6 +535,45 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 }
 
 /**
+ * update a Dvrentry
+ */
+static htsmsg_t *
+htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *out;
+  uint32_t dvrEntryId;
+  dvr_entry_t *de;
+  uint32_t start;
+  uint32_t stop;
+  const char *title = NULL;
+    
+  if(htsmsg_get_u32(in, "id", &dvrEntryId))
+    return htsp_error("Missing argument 'id'");
+
+  if(htsmsg_get_u32(in, "start", &start))
+    return htsp_error("Missing argument 'start'");
+  
+  if(htsmsg_get_u32(in, "stop", &stop))
+    return htsp_error("Missing argument 'stop'");
+
+  title = htsmsg_get_str(in, "title");
+  if (title == NULL)
+    return htsp_error("Missing argument 'title'");
+  
+
+  if( (de = dvr_entry_find_by_id(dvrEntryId)) == NULL) 
+    return htsp_error("id not found");
+
+  de = dvr_entry_update(de, title, start, stop);
+
+  //create response
+  out = htsmsg_create_map();
+  htsmsg_add_u32(out, "success", 1);
+  
+  return out;
+}
+
+/**
  * delete a Dvrentry
  */
 static htsmsg_t * 
@@ -925,6 +964,7 @@ struct {
   { "unsubscribe", htsp_method_unsubscribe, ACCESS_STREAMING},
   { "subscriptionChangeWeight", htsp_method_change_weight, ACCESS_STREAMING},
   { "addDvrEntry", htsp_method_addDvrEntry, ACCESS_RECORDER},
+  { "updateDvrEntry", htsp_method_updateDvrEntry, ACCESS_RECORDER},
   { "deleteDvrEntry", htsp_method_deleteDvrEntry, ACCESS_RECORDER},
   { "epgQuery", htsp_method_epgQuery, ACCESS_STREAMING},
 
