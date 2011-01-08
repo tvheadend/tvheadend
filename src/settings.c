@@ -284,3 +284,57 @@ hts_settings_remove(const char *pathfmt, ...)
     return;
   unlink(fullpath);
 }
+
+
+/**
+ *
+ */
+int
+hts_settings_open_file(int for_write, const char *pathfmt, ...)
+{
+  char path[256];
+  char fullpath[256];
+  int x, l;
+  va_list ap;
+  struct stat st;
+  char *n;
+
+  if(settingspath == NULL)
+    return -1;
+
+  va_start(ap, pathfmt);
+  vsnprintf(path, sizeof(path), pathfmt, ap);
+  va_end(ap);
+
+  n = path;
+
+  while(*n) {
+    if(*n == ':' || *n == '?' || *n == '*' || *n > 127 || *n < 32)
+      *n = '_';
+    n++;
+  }
+
+  l = strlen(path);
+
+  for(x = 0; x < l; x++) {
+    if(path[x] == '/') {
+      /* It's a directory here */
+
+      path[x] = 0;
+      snprintf(fullpath, sizeof(fullpath), "%s/%s", settingspath, path);
+
+      if(stat(fullpath, &st) && mkdir(fullpath, 0700)) {
+	tvhlog(LOG_ALERT, "settings", "Unable to create dir \"%s\": %s",
+	       fullpath, strerror(errno));
+	return -1;
+      }
+      path[x] = '/';
+    }
+  }
+
+  snprintf(fullpath, sizeof(fullpath), "%s/%s", settingspath, path);
+
+  int flags = for_write ? O_CREAT | O_TRUNC | O_WRONLY : O_RDONLY;
+
+  return tvh_open(fullpath, flags, 0700);
+}

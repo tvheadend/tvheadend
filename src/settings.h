@@ -32,4 +32,6 @@ void hts_settings_remove(const char *pathfmt, ...);
 
 const char *hts_settings_get_root(void);
 
+int hts_settings_open_file(int for_write, const char *pathfmt, ...);
+
 #endif /* HTSSETTINGS_H__ */ 
