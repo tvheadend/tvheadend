@@ -20,6 +20,7 @@
 #define EPG_H
 
 #include "channels.h"
+#include "settings.h"
 
 
 
@@ -68,6 +69,8 @@ typedef struct event {
  */
 void epg_init(void);
 
+void epg_save(void);
+
 /**
  * All the epg_event_set_ function return 1 if it actually changed
  * the EPG records. otherwise it returns 0.
@@ -104,6 +107,8 @@ void epg_event_updated(event_t *e);
 
 event_t *epg_event_create(channel_t *ch, time_t start, time_t stop,
 			  int dvb_id, int *created);
+
+event_t *epg_event_create_by_msg(htsmsg_t *c, int *created);
 
 event_t *epg_event_find_by_time(channel_t *ch, time_t t);
 
