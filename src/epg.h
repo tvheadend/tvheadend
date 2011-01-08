@@ -82,11 +82,9 @@ void epg_save(void);
  * can combine multiple set()'s into one update
  *
  */
-int epg_event_set_title(event_t *e, const char *title)
-       __attribute__ ((warn_unused_result));
+int epg_event_set_title(event_t *e, const char *title);
 
-int epg_event_set_desc(event_t *e, const char *desc)
-       __attribute__ ((warn_unused_result));
+int epg_event_set_desc(event_t *e, const char *desc);
 
 int epg_event_set_ext_desc(event_t *e, int ext_dn, const char *desc)
        __attribute__ ((warn_unused_result));
@@ -107,8 +105,6 @@ void epg_event_updated(event_t *e);
 
 event_t *epg_event_create(channel_t *ch, time_t start, time_t stop,
 			  int dvb_id, int *created);
-
-event_t *epg_event_create_by_msg(htsmsg_t *c, int *created);
 
 event_t *epg_event_find_by_time(channel_t *ch, time_t t);
 

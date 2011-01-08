@@ -16,6 +16,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sys/mman.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -29,6 +31,7 @@
 #include "epg.h"
 #include "dvr/dvr.h"
 #include "htsp.h"
+#include "htsmsg_binary.h"
 
 #define EPG_MAX_AGE 86400
 
@@ -528,119 +531,187 @@ epg_content_group_find_by_name(const char *name)
 }
 
 
-/*
+/**
  *
  */
-void
-epg_init(void)
-{
-  event_t *e;
-  int injected = 0;
-  int created = 0;
-  uint32_t id = 0;
-
-  htsmsg_t *l, *c;
-  htsmsg_field_t *f;
-
-  if((l = hts_settings_load("epg")) == NULL)
-    return;
- 
-  HTSMSG_FOREACH(f, l) {
-    if((c = htsmsg_get_map_by_field(f)) == NULL)
-      continue;
-
-    e = epg_event_create_by_msg(c, &created);
-    htsmsg_get_u32(c, "id", &id);
-
-    hts_settings_remove("epg/%d", id);
-
-    if(created)
-      injected++;
-  }
-  htsmsg_destroy(l);
-
-  tvhlog(LOG_INFO, "epg", "Injected %d epg events.", injected);
-} 
-
-/*
- *
- */
-event_t *
-epg_event_create_by_msg(htsmsg_t *c, int *created) 
+static int
+epg_event_create_by_msg(htsmsg_t *c, time_t now)
 {
  channel_t *ch;
   event_t *e = NULL;
   uint32_t ch_id = 0;
   uint32_t e_start = 0;
   uint32_t e_stop = 0;
-  int e_dvb_id = 0;
-  const char *e_title, *e_desc;
+  int e_dvb_id = 0, v;
+  const char *s;
 
-  if (created != NULL)
-    *created = 0;
+  // Now create the event
+  if(htsmsg_get_u32(c, "ch_id", &ch_id))
+    return 0;
 
-    // Now create the event
-    htsmsg_get_u32(c, "ch_id", &ch_id);
-    ch = channel_find_by_identifier(ch_id);
-    if (ch == NULL)
-      tvhlog(LOG_DEBUG, "epg", "Cannot find this channel, skipping...");
-    else {
-      htsmsg_get_u32(c, "start", &e_start);
-      htsmsg_get_u32(c, "stop", &e_stop);
-      htsmsg_get_s32(c, "dvb_id", &e_dvb_id);
+  if((ch = channel_find_by_identifier(ch_id)) == NULL)
+    return 0;
 
-      e = epg_event_create(ch, e_start, e_stop, e_dvb_id, created);
+  if(htsmsg_get_u32(c, "start", &e_start))
+    return 0;
 
-      int changed = 0;
+  if(htsmsg_get_u32(c, "stop", &e_stop))
+    return 0;
 
-      e_title = htsmsg_get_str(c, "title");
-      if (e_title != NULL)
-        changed |= epg_event_set_title(e, e_title);
+  if(e_stop < now)
+    return 0;
 
-      e_desc = htsmsg_get_str(c, "title");
-      if (e_desc != NULL)
-        changed |= epg_event_set_title(e, e_desc);
+  if(htsmsg_get_s32(c, "dvb_id", &e_dvb_id))
+    e_dvb_id = -1;
 
-      if(changed)
-        epg_event_updated(e);
-    }
+  e = epg_event_create(ch, e_start, e_stop, e_dvb_id, NULL);
 
-  return e;
+  if((s = htsmsg_get_str(c, "title")) != NULL)
+    epg_event_set_title(e, s);
+
+  if((s = htsmsg_get_str(c, "desc")) != NULL)
+    epg_event_set_desc(e, s);
+
+  if(!htsmsg_get_s32(c, "season", &v))
+    e->e_episode.ee_season = v;
+
+  if(!htsmsg_get_s32(c, "episode", &v))
+    e->e_episode.ee_episode = v;
+
+  if(!htsmsg_get_s32(c, "part", &v))
+    e->e_episode.ee_part = v;
+
+  if((s = htsmsg_get_str(c, "epname")) != NULL)
+    tvh_str_set(&e->e_episode.ee_onscreen, s);
+
+  return 1;
 }
 
-/*
+
+/**
+ *
+ */
+static void
+epg_load(void)
+{
+  struct stat st;
+  int fd = hts_settings_open_file(0, "epgdb");
+  time_t now;
+  int created = 0;
+
+  time(&now);
+
+  if(fd == -1)
+    return;
+
+  if(fstat(fd, &st)) {
+    close(fd);
+    return;
+  }
+  uint8_t *mem = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
+  if(mem == MAP_FAILED) {
+    close(fd);
+    return;
+  }
+  const uint8_t *rp = mem;
+  size_t remain = st.st_size;
+
+  while(remain > 4) {
+    int msglen = (rp[0] << 24) | (rp[1] << 16) | (rp[2] << 8) | rp[3];
+    remain -= 4;
+    rp += 4;
+
+    if(msglen > remain) {
+      tvhlog(LOG_ERR, "EPG", "Malformed EPG database, skipping some data");
+      break;
+    }
+    htsmsg_t *m = htsmsg_binary_deserialize(rp, msglen, NULL);
+
+    created += epg_event_create_by_msg(m, now);
+
+    htsmsg_destroy(m);
+    rp += msglen;
+    remain -= msglen;
+  }
+
+  munmap(mem, st.st_size);
+  close(fd);
+  tvhlog(LOG_NOTICE, "EPG", "Injected %d event from disk database", created);
+}
+
+/**
+ *
+ */
+void
+epg_init(void)
+{
+  epg_load();
+}
+
+
+/**
  * Save the epg on disk
  */ 
 void
 epg_save(void)
 {
   event_t *e;
-  int saved = 0;
-
+  int num_saved = 0;
+  size_t msglen;
+  void *msgdata;
   channel_t *ch;
+
+  int fd = hts_settings_open_file(1, "epgdb");
 
   RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
     RB_FOREACH(e, &ch->ch_epg_events, e_channel_link) {
-      if((e->e_start) && (e->e_stop)) {
-        htsmsg_t *m = htsmsg_create_map();
-        htsmsg_add_u32(m, "id", saved);
-        htsmsg_add_u32(m, "start", e->e_start);
-        htsmsg_add_u32(m, "stop", e->e_stop);
-        if (e->e_title != NULL)
-          htsmsg_add_str(m, "title", e->e_title);
+      if(!e->e_start || !e->e_stop)
+	continue;
 
-        if (e->e_desc != NULL)
-          htsmsg_add_str(m, "desc", e->e_desc);
-        htsmsg_add_u32(m, "ch_id", ch->ch_id);
-        htsmsg_add_s32(m, "dvb_id", e->e_dvb_id);
+      htsmsg_t *m = htsmsg_create_map();
+      htsmsg_add_u32(m, "ch_id", ch->ch_id);
+      htsmsg_add_u32(m, "start", e->e_start);
+      htsmsg_add_u32(m, "stop", e->e_stop);
+      if(e->e_title != NULL)
+	htsmsg_add_str(m, "title", e->e_title);
+      if(e->e_desc != NULL)
+	htsmsg_add_str(m, "desc", e->e_desc);
+      if(e->e_dvb_id)
+	htsmsg_add_u32(m, "dvb_id", e->e_dvb_id);
 
-        hts_settings_save(m, "epg/%d", saved);
+      if(e->e_episode.ee_season)
+	htsmsg_add_u32(m, "season", e->e_episode.ee_season);
 
-        saved++;
+      if(e->e_episode.ee_episode)
+	htsmsg_add_u32(m, "episode", e->e_episode.ee_episode);
+
+      if(e->e_episode.ee_part)
+	htsmsg_add_u32(m, "part", e->e_episode.ee_part);
+
+      if(e->e_episode.ee_onscreen)
+	htsmsg_add_str(m, "epname", e->e_episode.ee_onscreen);
+
+
+      int r = htsmsg_binary_serialize(m, &msgdata, &msglen, 0x10000);
+      htsmsg_destroy(m);
+
+      if(!r) {
+	ssize_t written = write(fd, msgdata, msglen);
+	int err = errno;
+	free(msgdata);
+	if(written != msglen) {
+	  tvhlog(LOG_DEBUG, "epg", "Failed to store EPG on disk -- %s",
+		 strerror(err));
+	  close(fd);
+	  hts_settings_remove("epgdb");
+	  return;
+	}
       }
+      num_saved++;
     }
   }
-  tvhlog(LOG_DEBUG, "epg", "Wrote epg data for %d events", saved);
+  close(fd);
+  tvhlog(LOG_DEBUG, "EPG", "Stored EPG data for %d events on disk", num_saved);
 }
 
 
