@@ -60,13 +60,18 @@ iptv_got_pat(const uint8_t *ptr, size_t len, void *aux)
   len -= 8;
   ptr += 8;
 
-  if(len < 4)
-    return;
+  while(len >= 4) {
 
-  prognum =  ptr[0]         << 8 | ptr[1];
-  pmt     = (ptr[2] & 0x1f) << 8 | ptr[3];
+    prognum =  ptr[0]         << 8 | ptr[1];
+    pmt     = (ptr[2] & 0x1f) << 8 | ptr[3];
 
-  t->s_pmt_pid = pmt;
+    if(prognum != 0) {
+      t->s_pmt_pid = pmt;
+      return;
+    }
+    ptr += 4;
+    len -= 4;
+  }
 }
 
 
