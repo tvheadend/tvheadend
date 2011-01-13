@@ -398,23 +398,23 @@ page_status(http_connection_t *hc,
 		     "<date>%02d/%02d/%02d</date>"
 		     "<time>%02d:%02d</time>"
 		     "<unixtime>%d</unixtime>"
-                     "<extra_start>%d</extra_start>"
+		     "<extra_start>%d</extra_start>"
 		     "</start>"
 		     "<stop>"
 		     "<date>%02d/%02d/%02d</date>"
 		     "<time>%02d:%02d</time>"
 		     "<unixtime>%d</unixtime>"
-                     "<extra_stop>%d</extra_stop>"
+		     "<extra_stop>%d</extra_stop>"
 		     "</stop>"
 		     "<title>%s</title>",
 		     a.tm_year + 1900, a.tm_mon, a.tm_mday, 
 		     a.tm_hour, a.tm_min, 
 		     de->de_start, 
-                     de->de_start_extra,
+		     de->de_start_extra, 
 		     b.tm_year+1900, b.tm_mon, b.tm_mday, 
 		     b.tm_hour, b.tm_min, 
 		     de->de_stop, 
-                     de->de_stop_extra,
+		     de->de_stop_extra, 
 		     de->de_title);
 
       rstatus = val2str(de->de_sched_state, recstatustxt);
