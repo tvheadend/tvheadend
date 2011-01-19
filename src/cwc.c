@@ -269,7 +269,7 @@ typedef struct cwc {
  */
 
 static void cwc_service_destroy(th_descrambler_t *td);
-static void cwc_detecs_card_type(cwc_t *cwc);
+static void cwc_detect_card_type(cwc_t *cwc);
 void cwc_emm_conax(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_irdeto(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_dre(cwc_t *cwc, uint8_t *data, int len);
@@ -578,7 +578,7 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 	 cwc->cwc_ua[0], cwc->cwc_ua[1], cwc->cwc_ua[2], cwc->cwc_ua[3], cwc->cwc_ua[4], cwc->cwc_ua[5], cwc->cwc_ua[6], cwc->cwc_ua[7],
 	 nprov);
 
-  cwc_detecs_card_type(cwc);
+  cwc_detect_card_type(cwc);
 
   msg  += 15;
   plen -= 12;
@@ -644,7 +644,7 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
  * based on the equivalent in sasc-ng
  */
 static void
-cwc_detecs_card_type(cwc_t *cwc)
+cwc_detect_card_type(cwc_t *cwc)
 {
   uint8_t c_sys = cwc->cwc_caid >> 8;
 		
