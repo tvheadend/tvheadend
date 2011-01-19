@@ -59,6 +59,7 @@ typedef enum {
   CARD_CONAX,
   CARD_SECA,
   CARD_VIACCESS,
+  CARD_NAGRA,
   CARD_UNKNOWN
 } card_type_t;
 
@@ -276,7 +277,7 @@ void cwc_emm_irdeto(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_dre(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_seca(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_viaccess(cwc_t *cwc, uint8_t *data, int len);
-
+void cwc_emm_nagra(cwc_t *cwc, uint8_t *data, int len);
 
 /**
  *
@@ -674,6 +675,11 @@ cwc_detect_card_type(cwc_t *cwc)
     cwc->cwc_card_type = CARD_DRE;
     tvhlog(LOG_INFO, "cwc", "%s: dre card",
 	   cwc->cwc_hostname);
+    break;
+  case 0x18:
+    cwc->cwc_card_type = CARD_NAGRA;
+    tvhlog(LOG_INFO, "cwc", "%s: nagra card",
+           cwc->cwc_hostname);
     break;
   default:
     cwc->cwc_card_type = CARD_UNKNOWN;
@@ -1183,6 +1189,9 @@ cwc_emm(uint8_t *data, int len)
       case CARD_DRE:
 	cwc_emm_dre(cwc, data, len);
 	break;
+      case CARD_NAGRA:
+        cwc_emm_nagra(cwc, data, len);
+        break;
       case CARD_UNKNOWN:
 	break;
       }
@@ -1242,6 +1251,28 @@ cwc_emm_irdeto(cwc_t *cwc, uint8_t *data, int len)
     cwc_send_msg(cwc, data, len, 0, 1);
 }
 
+/**
+ * nagravision emm handler
+ * ported from vdr-sasc-sc
+ */
+void
+cwc_emm_nagra(cwc_t *cwc, uint8_t *data, int len)
+{
+  /* get the address */
+  uint8_t addr[4];
+  addr[0] = data[2];
+  addr[1] = data[1];
+  addr[2] = data[0];
+  addr[3] = data[3];
+
+  /* try to match */
+  if ( data[0] == 0x82 ||
+      (data[0] == 0x84 && data[1] == 0x70 && data[2] == 0x96) ||
+      (data[0] == 0x83 && !memcmp(&data[3], addr, (data[7] == 0x10) ? 3 : 4)))
+  {
+    cwc_send_msg(cwc, data, len, 0, 1);
+  }
+}
 
 /**
  * seca emm handler
@@ -1580,7 +1611,6 @@ cwc_emm_dre(cwc_t *cwc, uint8_t *data, int len)
   if (match)
     cwc_send_msg(cwc, data, len, 0, 1);
 }
-
 
 /**
  *
