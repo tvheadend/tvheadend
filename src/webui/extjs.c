@@ -230,7 +230,7 @@ extjs_tablemgr(http_connection_t *hc, const char *remain, void *opaque)
 
   in = entries != NULL ? htsmsg_json_deserialize(entries) : NULL;
 
-  pthread_mutex_lock(&global_lock);
+  pthread_mutex_lock(dt->dt_dtc->dtc_mutex);
 
   if(!strcmp(op, "create")) {
     if(http_access_verify(hc, dt->dt_dtc->dtc_write_access))
@@ -264,15 +264,15 @@ extjs_tablemgr(http_connection_t *hc, const char *remain, void *opaque)
 
   } else {
   bad:
-    pthread_mutex_unlock(&global_lock);
+    pthread_mutex_lock(dt->dt_dtc->dtc_mutex);
     return HTTP_STATUS_BAD_REQUEST;
 
   noaccess:
-    pthread_mutex_unlock(&global_lock);
+    pthread_mutex_lock(dt->dt_dtc->dtc_mutex);
     return HTTP_STATUS_BAD_REQUEST;
   }
 
-  pthread_mutex_unlock(&global_lock);
+  pthread_mutex_lock(dt->dt_dtc->dtc_mutex);
 
   if(in != NULL)
     htsmsg_destroy(in);

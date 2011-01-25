@@ -40,6 +40,8 @@ typedef struct dtable_class {
   int dtc_read_access;
   int dtc_write_access;
 
+  pthread_mutex_t *dtc_mutex;
+
 } dtable_class_t;
 
 

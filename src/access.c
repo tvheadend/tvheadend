@@ -409,6 +409,7 @@ static const dtable_class_t access_dtc = {
   .dtc_record_delete  = access_record_delete,
   .dtc_read_access = ACCESS_ADMIN,
   .dtc_write_access = ACCESS_ADMIN,
+  .dtc_mutex = &global_lock,
 };
 
 /**

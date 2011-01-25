@@ -858,6 +858,7 @@ static const dtable_class_t channel_tags_dtc = {
   .dtc_record_delete  = channel_tag_record_delete,
   .dtc_read_access = ACCESS_ADMIN,
   .dtc_write_access = ACCESS_ADMIN,
+  .dtc_mutex = &global_lock,
 };
 
 
