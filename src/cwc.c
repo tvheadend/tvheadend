@@ -413,8 +413,8 @@ des_make_login_key(cwc_t *cwc, uint8_t *k)
     des14[i] = cwc->cwc_confedkey[i] ^ k[i];
   des_key_spread(des14, spread);
   
-  DES_key_sched((DES_cblock *)spread,     &cwc->cwc_k1);
-  DES_key_sched((DES_cblock *)(spread+8), &cwc->cwc_k2);
+  DES_set_key_unchecked((DES_cblock *)spread,     &cwc->cwc_k1);
+  DES_set_key_unchecked((DES_cblock *)(spread+8), &cwc->cwc_k2);
 }
 
 /**
@@ -432,8 +432,8 @@ des_make_session_key(cwc_t *cwc)
     des14[i % 14] ^= k2[i];
 
   des_key_spread(des14, spread);
-  DES_key_sched((DES_cblock *)spread,     &cwc->cwc_k1);
-  DES_key_sched((DES_cblock *)(spread+8), &cwc->cwc_k2);
+  DES_set_key_unchecked((DES_cblock *)spread,     &cwc->cwc_k1);
+  DES_set_key_unchecked((DES_cblock *)(spread+8), &cwc->cwc_k2);
 }
 
 /**
