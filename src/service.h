@@ -516,6 +516,8 @@ const char *service_servicetype_txt(service_t *t);
 
 int service_is_tv(service_t *t);
 
+int service_is_radio(service_t *t);
+
 void service_destroy(service_t *t);
 
 void service_remove_subscriber(service_t *t, struct th_subscription *s,

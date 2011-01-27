@@ -44,8 +44,8 @@ static pthread_cond_t serviceprobe_cond;
 void
 serviceprobe_enqueue(service_t *t)
 {
-  if(!service_is_tv(t))
-    return; /* Don't even consider non-tv channels */
+  if(!service_is_tv(t) && !service_is_radio(t))
+    return; /* Don't even consider non-tv/non-radio channels */
 
   if(t->s_sp_onqueue)
     return;
@@ -170,9 +170,11 @@ serviceprobe_thread(void *aux)
 	tvhlog(LOG_INFO, "serviceprobe", "%20s: mapped to channel \"%s\"",
 	       t->s_svcname, t->s_svcname);
 
-	channel_tag_map(ch, channel_tag_find_by_name("TV channels", 1), 1);
-	tvhlog(LOG_INFO, "serviceprobe", "%20s: joined tag \"%s\"",
-	       t->s_svcname, "TV channels");
+	if(service_is_tv(t)) {
+ 	  channel_tag_map(ch, channel_tag_find_by_name("TV channels", 1), 1);
+	  tvhlog(LOG_INFO, "serviceprobe", "%20s: joined tag \"%s\"",
+		 t->s_svcname, "TV channels");
+	}
 
 	switch(t->s_servicetype) {
 	case ST_SDTV:
@@ -182,6 +184,9 @@ serviceprobe_thread(void *aux)
 	case ST_HDTV:
 	case ST_AC_HDTV:
 	  str = "HDTV";
+	  break;
+	case ST_RADIO:
+	  str = "Radio";
 	  break;
 	default:
 	  str = NULL;

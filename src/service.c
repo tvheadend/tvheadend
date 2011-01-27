@@ -720,6 +720,14 @@ service_is_tv(service_t *t)
     t->s_servicetype == ST_AC_HDTV;
 }
 
+/**
+ *
+ */
+int
+service_is_radio(service_t *t)
+{
+  return t->s_servicetype == ST_RADIO;
+}
 
 /**
  *
