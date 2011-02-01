@@ -264,15 +264,15 @@ extjs_tablemgr(http_connection_t *hc, const char *remain, void *opaque)
 
   } else {
   bad:
-    pthread_mutex_lock(dt->dt_dtc->dtc_mutex);
+    pthread_mutex_unlock(dt->dt_dtc->dtc_mutex);
     return HTTP_STATUS_BAD_REQUEST;
 
   noaccess:
-    pthread_mutex_lock(dt->dt_dtc->dtc_mutex);
+    pthread_mutex_unlock(dt->dt_dtc->dtc_mutex);
     return HTTP_STATUS_BAD_REQUEST;
   }
 
-  pthread_mutex_lock(dt->dt_dtc->dtc_mutex);
+  pthread_mutex_unlock(dt->dt_dtc->dtc_mutex);
 
   if(in != NULL)
     htsmsg_destroy(in);
