@@ -243,6 +243,9 @@ static void
 http_stream_playlist(http_connection_t *hc, channel_t *channel)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
+  char buf[255];
+  const char *ticket_id = NULL;
+
   channel_t *ch = NULL;
   const char *host = http_arg_get(&hc->hc_args, "Host");
 
@@ -252,7 +255,10 @@ http_stream_playlist(http_connection_t *hc, channel_t *channel)
   RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
     if (channel == NULL || ch == channel) {
       htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ch->ch_name);
-      htsbuf_qprintf(hq, "http://%s/stream/channelid/%d\n", host, ch->ch_id);
+
+      snprintf(buf, sizeof(buf), "/stream/channelid/%d", ch->ch_id);
+      ticket_id = access_ticket_create(buf);
+      htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, ticket_id);
     }
   }
 
@@ -384,11 +390,6 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   char *components[2];
   channel_t *ch = NULL;
   service_t *service = NULL;
-
-  if(http_access_verify(hc, ACCESS_STREAMING)) {
-    http_error(hc, HTTP_STATUS_UNAUTHORIZED);
-    return HTTP_STATUS_UNAUTHORIZED;
-  }
 
   hc->hc_keep_alive = 0;
 

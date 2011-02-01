@@ -80,11 +80,6 @@ typedef struct http_connection {
   char *hc_username;
   char *hc_password;
 
-  int hc_authenticated; /* Used by RTSP, it seems VLC does not 
-			   send authentication headers for each 
-			   command, so we just say that it's ok
-			   if it has authenticated at least once */
-
   struct config_head *hc_user_config;
 
   int hc_no_output;

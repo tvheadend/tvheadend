@@ -308,6 +308,15 @@ http_redirect(http_connection_t *hc, const char *location)
 int
 http_access_verify(http_connection_t *hc, int mask)
 {
+  const char *ticket_id = http_arg_get(&hc->hc_req_args, "ticket");
+
+  if(!access_ticket_verify(ticket_id, hc->hc_url)) {
+    tvhlog(LOG_INFO, "HTTP", "%s: using ticket %s for %s", 
+	   inet_ntoa(hc->hc_peer->sin_addr), ticket_id,
+	   hc->hc_url);
+    return 0;
+  }
+
   return access_verify(hc->hc_username, hc->hc_password,
 		       (struct sockaddr *)hc->hc_peer, mask);
 }
