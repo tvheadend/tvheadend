@@ -69,6 +69,8 @@ tvheadend.VLC = function(url) {
 	  chName = 'the stream';
       }
 
+      vlc.style.display = 'block';
+
       if(!vlc.playlist || vlc.playlist == 'undefined') {
 	  var innerHTML = '';
 	  innerHTML += '<p>You are missing a plugin for your browser.'
@@ -78,11 +80,10 @@ tvheadend.VLC = function(url) {
 	  innerHTML += '<p><a href="' + url + '">Direct URL</a></p>';
 
 	  missingPlugin.innerHTML = innerHTML;
+	  vlc.style.display = 'none';
 	  missingPlugin.style.display = 'block';
 	  return;
       }
-
-      vlc.style.display = 'block';
 
       if(vlc.playlist && vlc.playlist.isPlaying) {
         vlc.playlist.stop();
