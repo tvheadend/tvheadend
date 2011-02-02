@@ -42,8 +42,6 @@ struct access_ticket_queue access_tickets;
 const char *superuser_username;
 const char *superuser_password;
 
-static pthread_mutex_t access_ticket_mutex;
-
 /**
  *
  */
@@ -81,9 +79,7 @@ access_ticket_timout(void *aux)
 {
   access_ticket_t *at = aux;
 
-  pthread_mutex_lock(&access_ticket_mutex);
   access_ticket_destroy(at);
-  pthread_mutex_unlock(&access_ticket_mutex);
 }
 
 /**
@@ -100,7 +96,6 @@ access_ticket_create(const char *resource)
   
   static const char hex_string[16] = "0123456789ABCDEF";
   
-  pthread_mutex_lock(&access_ticket_mutex);
 
   at = calloc(1, sizeof(access_ticket_t));
   rnd = time(NULL);
@@ -126,8 +121,6 @@ access_ticket_create(const char *resource)
   TAILQ_INSERT_TAIL(&access_tickets, at, at_link);
   gtimer_arm(&at->at_timer, access_ticket_timout, at, 60*5);
 
-  pthread_mutex_unlock(&access_ticket_mutex);
-
   return at->at_id;
 }
 
@@ -138,17 +131,13 @@ int
 access_ticket_delete(const char *id)
 {
   access_ticket_t *at;
-  pthread_mutex_lock(&access_ticket_mutex);
 
-  if((at = access_ticket_find(id)) == NULL) {
-    pthread_mutex_unlock(&access_ticket_mutex);
+  if((at = access_ticket_find(id)) == NULL)
     return -1;
-  }
 
   gtimer_disarm(&at->at_timer);
   access_ticket_destroy(at);
 
-  pthread_mutex_unlock(&access_ticket_mutex);
   return 0;
 }
 
@@ -160,19 +149,12 @@ access_ticket_verify(const char *id, const char *resource)
 {
   access_ticket_t *at;
 
-  pthread_mutex_lock(&access_ticket_mutex);
-
-  if((at = access_ticket_find(id)) == NULL) {
-    pthread_mutex_unlock(&access_ticket_mutex);
+  if((at = access_ticket_find(id)) == NULL)
     return -1;
-  }
 
-  if(strcmp(at->at_resource, resource)) {
-    pthread_mutex_unlock(&access_ticket_mutex);
+  if(strcmp(at->at_resource, resource))
     return -1;
-  }
 
-  pthread_mutex_unlock(&access_ticket_mutex);
   return 0;
 }
 
@@ -559,8 +541,6 @@ access_init(int createdefault)
 
   TAILQ_INIT(&access_entries);
   TAILQ_INIT(&access_tickets);
-
-  pthread_mutex_init(&access_ticket_mutex, NULL);
 
   dt = dtable_create(&access_dtc, "accesscontrol", NULL);
 
