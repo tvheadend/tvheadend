@@ -276,13 +276,6 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
   char *components[2];
   channel_t *ch = NULL;
 
-  if(http_access_verify(hc, ACCESS_STREAMING)) {
-    http_error(hc, HTTP_STATUS_UNAUTHORIZED);
-    return HTTP_STATUS_UNAUTHORIZED;
-  }
-
-  hc->hc_keep_alive = 0;
-
   if(remain == NULL) {
     http_stream_playlist(hc, NULL);
     return 0;
@@ -481,11 +474,6 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
     return 404;
 
   pthread_mutex_lock(&global_lock);
-
-  if(http_access_verify(hc, ACCESS_RECORDER)) {
-    pthread_mutex_unlock(&global_lock);
-    return HTTP_STATUS_UNAUTHORIZED;
-  }
 
   de = dvr_entry_find_by_id(atoi(remain));
   if(de == NULL || de->de_filename == NULL) {
