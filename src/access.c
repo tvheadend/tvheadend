@@ -30,6 +30,7 @@
 #include <arpa/inet.h>
 
 #include <openssl/sha.h>
+#include <openssl/rand.h>
 
 #include "tvheadend.h"
 #include "access.h"
@@ -90,23 +91,13 @@ access_ticket_create(const char *resource)
 {
   uint8_t buf[20];
   char id[41];
-  unsigned int i, rnd;
+  unsigned int i;
   access_ticket_t *at;
-  SHA_CTX shactx;
-  
   static const char hex_string[16] = "0123456789ABCDEF";
-  
 
   at = calloc(1, sizeof(access_ticket_t));
-  rnd = time(NULL);
-  
-  //Generate a pseudo-random ticket id
-  SHA_Init(&shactx);
-  for(i=0; i<5; i++) {
-    SHA_Update(&shactx, (const uint8_t *)&rnd, sizeof(int));
-    rnd = rand_r(&rnd);
-  }
-  SHA_Final(buf, &shactx);
+
+  RAND_bytes(buf, 20);
 
   //convert to hexstring
   for(i=0; i<sizeof(buf); i++){
@@ -538,6 +529,15 @@ access_init(int createdefault)
   htsmsg_t *r, *m;
   access_entry_t *ae;
   const char *s;
+
+  static struct {
+    pid_t pid;
+    struct timeval tv;
+  } randseed;
+
+  randseed.pid = getpid();
+  gettimeofday(&randseed.tv, NULL);
+  RAND_seed(&randseed, sizeof(randseed));
 
   TAILQ_INIT(&access_entries);
   TAILQ_INIT(&access_tickets);
