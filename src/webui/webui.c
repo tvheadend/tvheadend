@@ -237,9 +237,9 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq)
 }
 
 /**
- * Output playlist with http streams (.m3u format)
+ * Output a playlist with http streams for a channel (.m3u format)
  */
-static void
+static int
 http_stream_playlist(http_connection_t *hc, channel_t *channel)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
@@ -265,6 +265,59 @@ http_stream_playlist(http_connection_t *hc, channel_t *channel)
   http_output_content(hc, "application/x-mpegURL");
 
   pthread_mutex_unlock(&global_lock);
+
+  return 0;
+}
+
+/**
+ * Output a playlist with a http stream for a dvr entry (.m3u format)
+ */
+static int
+http_dvr_playlist(http_connection_t *hc, int dvr_id)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  char buf[255];
+  const char *ticket_id = NULL;
+  dvr_entry_t *de = NULL;
+  time_t durration = 0;
+  off_t fsize = 0;
+  int bandwidth = 0;
+  const char *host = http_arg_get(&hc->hc_args, "Host");
+
+  pthread_mutex_lock(&global_lock);
+
+  de = dvr_entry_find_by_id(dvr_id);
+
+  if(de) {
+    durration  = de->de_stop - de->de_start;
+    durration += (de->de_stop_extra + de->de_start_extra)*60;
+    
+    fsize = dvr_get_filesize(de);
+
+    if(fsize) {
+      bandwidth = ((8*fsize) / (durration*1024.0));
+
+      htsbuf_qprintf(hq, "#EXTM3U\n");
+      htsbuf_qprintf(hq, "#EXTINF:%d,%s\n", durration, de->de_title);
+
+      htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%d\n", durration);
+      htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=%d\n", bandwidth);
+
+      snprintf(buf, sizeof(buf), "/dvrfile/%d", dvr_id);
+      ticket_id = access_ticket_create(buf);
+      htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, ticket_id);
+
+      http_output_content(hc, "application/x-mpegURL");
+    }
+  }
+  pthread_mutex_unlock(&global_lock);
+
+  if(!de || !fsize) {
+    http_error(hc, HTTP_STATUS_BAD_REQUEST);
+    return HTTP_STATUS_BAD_REQUEST;
+  } else {
+    return 0;
+  }
 }
 
 /**
@@ -275,6 +328,7 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
 {
   char *components[2];
   channel_t *ch = NULL;
+  int dvr_id = -1;
 
   if(remain == NULL) {
     http_stream_playlist(hc, NULL);
@@ -294,17 +348,20 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
     ch = channel_find_by_identifier(atoi(components[1]));
   } else if(!strcmp(components[0], "channel")) {
     ch = channel_find_by_name(components[1], 0, 0);
+  } else if(!strcmp(components[0], "dvrid")) {
+    dvr_id = atoi(components[1]);
   }
 
   pthread_mutex_unlock(&global_lock);
 
-  if(ch == NULL) {
+  if(ch)
+    return http_stream_playlist(hc, ch);
+  else if(dvr_id >= 0)
+    return http_dvr_playlist(hc, dvr_id);
+  else {
     http_error(hc, HTTP_STATUS_BAD_REQUEST);
     return HTTP_STATUS_BAD_REQUEST;
   }
-
-  http_stream_playlist(hc, ch);
-  return 0;
 }
 
 /**
