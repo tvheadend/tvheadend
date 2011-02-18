@@ -4,7 +4,7 @@ Version: 2.12.cae47cf
 Release: 1%{dist}
 License: GPL
 Group: Applications/Multimedia
-URL: http://www.lonelycoder.com/hts/tvheadend_overview.html
+URL: http://www.lonelycoder.com/tvheadend
 Packager: Jouk Hettema
 Source: tvheadend-%{version}.tar.bz2
 Prefix: /usr
