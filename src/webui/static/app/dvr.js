@@ -98,6 +98,14 @@ tvheadend.dvrDetails = function(entry) {
 	    text: "Abort recording"
 	});
 	break;
+	case 'completedError':
+	case 'completed':
+	win.addButton({
+	    handler: deleteEvent, 
+	    text: "Delete recording"
+	
+	});
+	break;
     }
 
 
@@ -112,6 +120,21 @@ tvheadend.dvrDetails = function(entry) {
 
 	    success:function(response, options) {
 		win.close();
+	    },
+
+	    failure:function(response, options) {
+		Ext.MessageBox.alert('DVR', response.statusText);
+	    }
+	});
+    }
+    
+    function deleteEvent() {
+	Ext.Ajax.request({
+	    url: 'dvr',
+	    params: {entryId: entry.id, op: 'deleteEntry'},
+
+	    success:function(response, options) {
+		win.close();v
 	    },
 
 	    failure:function(response, options) {

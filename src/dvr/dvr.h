@@ -274,6 +274,8 @@ void dvr_extra_time_pre_set(dvr_config_t *cfg, int d);
 
 void dvr_extra_time_post_set(dvr_config_t *cfg, int d);
 
+int dvr_entry_delete(dvr_entry_t *de);
+
 /**
  * Query interface
  */

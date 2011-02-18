@@ -804,6 +804,19 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
+  
+  } else if(!strcmp(op, "deleteEntry")) {
+    s = http_arg_get(&hc->hc_req_args, "entryId");
+
+    if((de = dvr_entry_find_by_id(atoi(s))) == NULL) {
+      pthread_mutex_unlock(&global_lock);
+      return HTTP_STATUS_BAD_REQUEST;
+    }
+
+    dvr_entry_delete(de);
+
+    out = htsmsg_create_map();
+    htsmsg_add_u32(out, "success", 1);
 
   } else if(!strcmp(op, "createEntry")) {
 

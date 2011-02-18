@@ -1160,3 +1160,18 @@ dvr_val2pri(dvr_prio_t v)
 {
   return val2str(v, priotab) ?: "invalid";
 }
+
+int
+dvr_entry_delete(dvr_entry_t *de)
+{
+  int result;
+  tvhlog(LOG_DEBUG, "dvr_db", "Going to delete recording '%s'", de->de_filename);
+  result = unlink(de->de_filename);
+  if( result == 0 || result == ENOENT )
+  {
+    dvr_entry_remove(de);
+  }
+  return result;
+	
+}
+
