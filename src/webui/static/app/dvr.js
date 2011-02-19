@@ -103,7 +103,6 @@ tvheadend.dvrDetails = function(entry) {
 	win.addButton({
 	    handler: deleteEvent, 
 	    text: "Delete recording"
-	
 	});
 	break;
     }
@@ -127,7 +126,7 @@ tvheadend.dvrDetails = function(entry) {
 	    }
 	});
     }
-    
+
     function deleteEvent() {
 	Ext.Ajax.request({
 	    url: 'dvr',

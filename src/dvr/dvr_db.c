@@ -1164,14 +1164,14 @@ dvr_val2pri(dvr_prio_t v)
 int
 dvr_entry_delete(dvr_entry_t *de)
 {
-  int result;
-  tvhlog(LOG_DEBUG, "dvr_db", "Going to delete recording '%s'", de->de_filename);
-  result = unlink(de->de_filename);
-  if( result == 0 || result == ENOENT )
-  {
+  if(!unlink(de->de_filename) || errno == ENOENT) {
+    tvhlog(LOG_DEBUG, "dvr", "Delete recording '%s'", de->de_filename);
     dvr_entry_remove(de);
+    return 0;
+  } else {
+    tvhlog(LOG_WARNING, "dvr", "Unable to delete recording '%s' -- %s",
+	   de->de_filename, strerror(errno));
+    return -1;
   }
-  return result;
-	
 }
 
