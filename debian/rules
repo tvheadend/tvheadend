@@ -1,38 +1,31 @@
 #!/usr/bin/make -f
 
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
 DEB_BUILD_GNU_TYPE := $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
-config.mak: configure
-	dh_testdir
-	./configure --release --prefix=/usr
+%:
+	dh $@
 
-clean:  
+override_dh_clean:
 	dh_testdir
 	dh_testroot
 	rm -rf build.*
-	dh_clean 
+	dh_clean
 
+override_dh_auto_clean:
+	dh_clean
 
-build: config.mak
+override_dh_auto_configure:
+	dh_testdir
+	./configure --release --prefix=/usr
+
+override_dh_auto_build:
 	$(MAKE)
 
-binary:
-	dh_testdir
-	dh_testroot
-	dh_installdirs
-	dh_install
+override_dh_install:
 	$(MAKE) prefix=$(CURDIR)/debian/hts-tvheadend/usr install
-	dh_installchangelogs 
-	dh_installinit --name tvheadend
-	dh_installdocs
-	dh_installdebconf
-	dh_link
-	dh_strip
-	dh_compress 
-	dh_fixperms
-	dh_makeshlibs
-	dh_installdeb
-	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
+
+override_dh_installinit:
+	dh_installinit --name tvheadend	
