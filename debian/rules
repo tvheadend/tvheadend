@@ -25,7 +25,7 @@ override_dh_auto_build:
 	$(MAKE)
 
 override_dh_install:
-	$(MAKE) prefix=$(CURDIR)/debian/hts-tvheadend/usr install
+	$(MAKE) prefix=$(CURDIR)/debian/tvheadend/usr install
 
 override_dh_installinit:
 	dh_installinit --name tvheadend	

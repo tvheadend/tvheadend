@@ -27,11 +27,11 @@ configure)
 
    echo >>"${HTS_SUPERUSERCONF}" "{"
 
-   if db_get hts-tvheadend/admin_username; then
+   if db_get tvheadend/admin_username; then
        echo >>"${HTS_SUPERUSERCONF}" '"username": "'$RET'",'
    fi
 
-   if db_get hts-tvheadend/admin_password; then
+   if db_get tvheadend/admin_password; then
        echo >>"${HTS_SUPERUSERCONF}" '"password": "'$RET'"'
    fi
     
