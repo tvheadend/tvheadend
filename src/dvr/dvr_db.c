@@ -38,6 +38,7 @@ struct dvr_config_list dvrconfigs;
 struct dvr_entry_list dvrentries;
 
 static void dvr_entry_save(dvr_entry_t *de);
+static int dvr_entries_overlap(time_t a_start, time_t a_stop, time_t b_start, time_t b_stop);
 
 static void dvr_timer_expire(void *aux);
 static void dvr_timer_start_recording(void *aux);
@@ -241,7 +242,6 @@ dvr_entry_link(dvr_entry_t *de)
 
   } else {
     de->de_sched_state = DVR_SCHEDULED;
-
     gtimer_arm_abs(&de->de_timer, dvr_timer_start_recording, de, preamble);
   }
   htsp_dvr_entry_add(de);
@@ -264,9 +264,43 @@ dvr_entry_create(const char *config_name,
   time_t t;
   dvr_config_t *cfg = dvr_config_find_by_name_default(config_name);
 
-  LIST_FOREACH(de, &ch->ch_dvrs, de_channel_link)
-    if(de->de_start == start && de->de_sched_state != DVR_COMPLETED)
+  /* The below definitions could be moved to global settings, 
+     with an option to change things in the GUI.... */
+  int EXTEND_OR_REPLACE;
+  const int REPLACE = 0;
+  const int EXTEND = 1;
+  EXTEND_OR_REPLACE = REPLACE + EXTEND;
+  /* End of global definitions */
+  struct tm a, b; /* Only for logging */
+
+  LIST_FOREACH(de, &ch->ch_dvrs, de_channel_link) {
+    if (dvr_entries_overlap(start, stop, de->de_start, de->de_stop) && de->de_sched_state != DVR_COMPLETED) {
+      if (strcmp(de->de_title, title) == 0) {
+        if (strlen(description) > strlen(de->de_desc) ) { /* Update when more data available */
+		  de->de_desc = strdup(description);
+	      tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": "
+      	       de->de_title, de->de_channel->ch_name,
+	       "Updating description to: ",
+	       de->de_desc);
+        }
+        if (EXTEND_OR_REPLACE == EXTEND) {
+          de->de_start = de->de_start < start ? de->de_start : start;
+          de->de_stop = de->de_stop > stop ? de->de_stop : stop;
+        } else {
+          de->de_start = start;
+          de->de_stop = stop;
+        }
+        dvr_entry_save(de);
+        localtime_r(&de->de_start, &a);
+        localtime_r(&de->de_stop, &b);
+        tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": "
+      	  "Update detected, changing start- and stop-times to: %02d:%02d-%02d:%02d",
+      	  de->de_title, de->de_channel->ch_name,
+      	  a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
+      }
       return NULL;
+    }
+  }
 
   de = calloc(1, sizeof(dvr_entry_t));
   de->de_id = ++de_tally;
@@ -664,6 +698,20 @@ dvr_entry_find_by_id(int id)
   return de;  
 }
 
+/**
+ *
+ */
+static int
+dvr_entries_overlap (time_t a_start, time_t a_stop, time_t b_start, time_t b_stop )
+{
+	int a_in_b;
+	int b_in_a;
+
+	a_in_b = a_stop > b_start && a_stop <= b_stop;
+	b_in_a = b_stop > a_start && b_stop <= a_stop;
+
+	return a_in_b || b_in_a;
+}
 
 /**
  *
@@ -1170,8 +1218,9 @@ dvr_entry_delete(dvr_entry_t *de)
     return 0;
   } else {
     tvhlog(LOG_WARNING, "dvr", "Unable to delete recording '%s' -- %s",
-	   de->de_filename, strerror(errno));
+          de->de_filename, strerror(errno));
     return -1;
   }
 }
+
 
