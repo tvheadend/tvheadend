@@ -278,10 +278,8 @@ dvr_entry_create(const char *config_name,
       if (strcmp(de->de_title, title) == 0) {
         if (strlen(description) > strlen(de->de_desc) ) { /* Update when more data available */
 		  de->de_desc = strdup(description);
-	      tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": "
-      	       de->de_title, de->de_channel->ch_name,
-	       "Updating description to: ",
-	       de->de_desc);
+	      tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": Updating description to: \"%s\"",
+      	       de->de_title, de->de_channel->ch_name, de->de_desc);
         }
         if (EXTEND_OR_REPLACE == EXTEND) {
           de->de_start = de->de_start < start ? de->de_start : start;
