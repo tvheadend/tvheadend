@@ -525,7 +525,8 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   dvr_entry_t *de;
   char *fname;
   char range_buf[255];
-  off_t content_len, file_start, file_end;
+  off_t content_len, file_start, file_end, chunk;
+  ssize_t r;
   
   if(remain == NULL)
     return 404;
@@ -577,19 +578,27 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   content_len = file_end - file_start+1;
   
-  sprintf(range_buf, "bytes %"PRId64"-%"PRId64"/%"PRId64"", file_start, file_end, st.st_size);
+  sprintf(range_buf, "bytes %"PRId64"-%"PRId64"/%"PRId64"",
+	  file_start, file_end, st.st_size);
 
   if(file_start > 0)
     lseek(fd, file_start, SEEK_SET);
 
-  http_send_header(hc, 200, content, content_len, NULL, NULL, 10, range_buf);
-  sendfile(hc->hc_fd, fd, NULL, content_len);
-  close(fd);
+  http_send_header(hc, range ? HTTP_STATUS_PARTIAL_CONTENT : HTTP_STATUS_OK,
+		   content, content_len, NULL, NULL, 10, 
+		   range ? range_buf : NULL);
 
-  if(range)
-    return 206;
-  else
-    return 0;
+  if(!hc->hc_no_output) {
+    while(content_len > 0) {
+      chunk = MIN(1024 * 1024 * 1024, content_len);
+      r = sendfile(hc->hc_fd, fd, NULL, chunk);
+      if(r == -1)
+	return -1;
+      content_len -= r;
+    }
+  }
+  close(fd);
+  return 0;
 }
 
 

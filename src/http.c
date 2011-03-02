@@ -123,7 +123,8 @@ static const char *
 http_rc2str(int code)
 {
   switch(code) {
-  case HTTP_STATUS_OK:              return "Ok";
+  case HTTP_STATUS_OK:              return "OK";
+  case HTTP_STATUS_PARTIAL_CONTENT: return "Partial Content";
   case HTTP_STATUS_NOT_FOUND:       return "Not found";
   case HTTP_STATUS_UNAUTHORIZED:    return "Unauthorized";
   case HTTP_STATUS_BAD_REQUEST:     return "Bad request";
@@ -149,7 +150,8 @@ static const char *cachemonths[12] = {
  */
 void
 http_send_header(http_connection_t *hc, int rc, const char *content, 
-		 int contentlen, const char *encoding, const char *location, 
+		 int64_t contentlen,
+		 const char *encoding, const char *location, 
 		 int maxage, const char *range)
 {
   struct tm tm0, *tm;
@@ -204,7 +206,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
     htsbuf_qprintf(&hdrs, "Content-Type: %s\r\n", content);
 
   if(contentlen > 0)
-    htsbuf_qprintf(&hdrs, "Content-Length: %d\r\n", contentlen);
+    htsbuf_qprintf(&hdrs, "Content-Length: %"PRId64"\r\n", contentlen);
 
   if(range) {
     htsbuf_qprintf(&hdrs, "Accept-Ranges: %s\r\n", "bytes");
