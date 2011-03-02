@@ -115,7 +115,7 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
     return 404;
   }
 
-  http_send_header(hc, 200, content, st.st_size, NULL, NULL, 10, 0);
+  http_send_header(hc, 200, content, st.st_size, NULL, NULL, 10, 0, NULL);
   sendfile(hc->hc_fd, fd, NULL, st.st_size);
   close(fd);
   return 0;
@@ -503,7 +503,8 @@ page_static_bundle(http_connection_t *hc, const char *remain, void *opaque)
     if(!strcmp(fbe->filename, remain)) {
 
       http_send_header(hc, 200, content, fbe->size, 
-		       fbe->original_size == -1 ? NULL : "gzip", NULL, 10, 0);
+		       fbe->original_size == -1 ? NULL : "gzip", NULL, 10, 0,
+		       NULL);
       /* ignore return value */
       n = write(hc->hc_fd, fbe->data, fbe->size);
       return 0;
@@ -519,12 +520,13 @@ page_static_bundle(http_connection_t *hc, const char *remain, void *opaque)
 static int
 page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 {
-  int fd;
+  int fd, i;
   struct stat st;
   const char *content = NULL, *postfix, *range;
   dvr_entry_t *de;
   char *fname;
   char range_buf[255];
+  char disposition[256];
   off_t content_len, file_start, file_end, chunk;
   ssize_t r;
   
@@ -584,9 +586,24 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   if(file_start > 0)
     lseek(fd, file_start, SEEK_SET);
 
+  if(de->de_title != NULL) {
+    snprintf(disposition, sizeof(disposition),
+	     "attachment; filename=%s.mkv", de->de_title);
+    i = 20;
+    while(disposition[i]) {
+      if(disposition[i] == ' ')
+	disposition[i] = '_';
+      i++;
+    }
+    
+  } else {
+    disposition[0] = 0;
+  }
+
   http_send_header(hc, range ? HTTP_STATUS_PARTIAL_CONTENT : HTTP_STATUS_OK,
 		   content, content_len, NULL, NULL, 10, 
-		   range ? range_buf : NULL);
+		   range ? range_buf : NULL,
+		   disposition[0] ? disposition : NULL);
 
   if(!hc->hc_no_output) {
     while(content_len > 0) {

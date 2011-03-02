@@ -152,7 +152,8 @@ void
 http_send_header(http_connection_t *hc, int rc, const char *content, 
 		 int64_t contentlen,
 		 const char *encoding, const char *location, 
-		 int maxage, const char *range)
+		 int maxage, const char *range,
+		 const char *disposition)
 {
   struct tm tm0, *tm;
   htsbuf_queue_t hdrs;
@@ -212,6 +213,9 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
     htsbuf_qprintf(&hdrs, "Accept-Ranges: %s\r\n", "bytes");
     htsbuf_qprintf(&hdrs, "Content-Range: %s\r\n", range);
   }
+
+  if(disposition != NULL)
+    htsbuf_qprintf(&hdrs, "Content-Disposition: %s\r\n", disposition);
   
   htsbuf_qprintf(&hdrs, "\r\n");
 
@@ -228,7 +232,7 @@ http_send_reply(http_connection_t *hc, int rc, const char *content,
 		const char *encoding, const char *location, int maxage)
 {
   http_send_header(hc, rc, content, hc->hc_reply.hq_size,
-		   encoding, location, maxage, 0);
+		   encoding, location, maxage, 0, NULL);
   
   if(hc->hc_no_output)
     return;
