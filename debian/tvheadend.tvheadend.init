@@ -1,6 +1,6 @@
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:          hts-tvheadend
+# Provides:          tvheadend
 # Required-Start:    $local_fs $remote_fs udev
 # Required-Stop:     $local_fs $remote_fs
 # Default-Start:     2 3 4 5

@@ -30,6 +30,7 @@ typedef struct http_arg {
 } http_arg_t;
 
 #define HTTP_STATUS_OK           200
+#define HTTP_STATUS_PARTIAL_CONTENT 206
 #define HTTP_STATUS_FOUND        302
 #define HTTP_STATUS_BAD_REQUEST  400
 #define HTTP_STATUS_UNAUTHORIZED 401
@@ -111,8 +112,9 @@ void http_output_content(http_connection_t *hc, const char *content);
 void http_redirect(http_connection_t *hc, const char *location);
 
 void http_send_header(http_connection_t *hc, int rc, const char *content, 
-		      int contentlen, const char *encoding,
-		      const char *location, int maxage, const char *range);
+		      int64_t contentlen, const char *encoding,
+		      const char *location, int maxage, const char *range,
+		      const char *disposition);
 
 typedef int (http_callback_t)(http_connection_t *hc, 
 			      const char *remain, void *opaque);
