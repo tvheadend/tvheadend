@@ -53,16 +53,20 @@ e_ch_cmp(const event_t *a, const event_t *b)
  *
  */
 static void
-epg_set_current(channel_t *ch, event_t *e)
+epg_set_current(channel_t *ch, event_t *e, event_t *next)
 {
-  if(ch->ch_epg_current == e)
+  if(next == NULL && e != NULL)
+    next = RB_NEXT(e, e_channel_link);
+
+  if(ch->ch_epg_current == e && ch->ch_epg_next == next)
     return;
 
   ch->ch_epg_current = e;
+  ch->ch_epg_next = next;
   if(e != NULL)
     gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
 		   ch, MAX(e->e_stop, dispatch_clock + 1));
-  htsp_event_update(ch, e);
+  htsp_channgel_update_current(ch);
 }
 
 /**
@@ -73,17 +77,16 @@ epg_ch_check_current_event(void *aux)
 {
   channel_t *ch = aux;
   event_t skel, *e = ch->ch_epg_current;
-
   if(e != NULL) {
     if(e->e_start <= dispatch_clock && e->e_stop > dispatch_clock) {
-      epg_set_current(ch, e);
+      epg_set_current(ch, e, NULL);
       return;
     }
 
     if((e = RB_NEXT(e, e_channel_link)) != NULL) {
 
       if(e->e_start <= dispatch_clock && e->e_stop > dispatch_clock) {
-	epg_set_current(ch, e);
+	epg_set_current(ch, e, NULL);
 	return;
       }
     }
@@ -91,20 +94,20 @@ epg_ch_check_current_event(void *aux)
 
   e = epg_event_find_by_time(ch, dispatch_clock);
   if(e != NULL) {
-    epg_set_current(ch, e);
+    epg_set_current(ch, e, NULL);
     return;
   }
-
-  epg_set_current(ch, NULL);
 
   skel.e_start = dispatch_clock;
   e = RB_FIND_GT(&ch->ch_epg_events, &skel, e_channel_link, e_ch_cmp);
   if(e != NULL) {
     gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
 		   ch, MAX(e->e_start, dispatch_clock + 1));
+    epg_set_current(ch, NULL, e);
+  } else {
+    epg_set_current(ch, NULL, NULL);
   }
 }
-
 
 
 /**
@@ -303,11 +306,13 @@ epg_remove_event_from_channel(channel_t *ch, event_t *e)
   epg_event_unref(e);
 
   if(ch->ch_epg_current == e) {
-    epg_set_current(ch, NULL);
+    epg_set_current(ch, NULL, n);
 
     if(n != NULL)
       gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
 		     ch, n->e_start);
+  } else if(ch->ch_epg_next == e) {
+    epg_set_current(ch, ch->ch_epg_current, NULL);
   }
 
   if(wasfirst && (e = RB_FIRST(&ch->ch_epg_events)) != NULL) {
@@ -645,7 +650,12 @@ epg_load(void)
 void
 epg_init(void)
 {
+  channel_t *ch;
+
   epg_load();
+  
+  RB_FOREACH(ch, &channel_name_tree, ch_name_link)
+    epg_ch_check_current_event(ch);
 }
 
 

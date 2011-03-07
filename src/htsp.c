@@ -309,6 +309,8 @@ htsp_build_channel(channel_t *ch, const char *method)
 
   htsmsg_add_u32(out, "eventId",
 		 ch->ch_epg_current != NULL ? ch->ch_epg_current->e_id : 0);
+  htsmsg_add_u32(out, "nextEventId",
+		 ch->ch_epg_next ? ch->ch_epg_next->e_id : 0);
 
   LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
     ct = ctm->ctm_tag;
@@ -1256,7 +1258,7 @@ htsp_async_send(htsmsg_t *m)
  * global_lock is held
  */
 void
-htsp_event_update(channel_t *ch, event_t *e)
+htsp_channgel_update_current(channel_t *ch)
 {
   htsmsg_t *m;
   time_t now;
@@ -1266,10 +1268,10 @@ htsp_event_update(channel_t *ch, event_t *e)
   htsmsg_add_str(m, "method", "channelUpdate");
   htsmsg_add_u32(m, "channelId", ch->ch_id);
 
-  if(e == NULL)
-    e = epg_event_find_by_time(ch, now);
-  
-  htsmsg_add_u32(m, "eventId", e ? e->e_id : 0);
+  htsmsg_add_u32(m, "eventId",
+		 ch->ch_epg_current ? ch->ch_epg_current->e_id : 0);
+  htsmsg_add_u32(m, "nextEventId",
+		 ch->ch_epg_next ? ch->ch_epg_next->e_id : 0);
   htsp_async_send(m);
 }
 

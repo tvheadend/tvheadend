@@ -45,6 +45,7 @@ typedef struct channel {
 
   struct event_tree ch_epg_events;
   struct event *ch_epg_current;
+  struct event *ch_epg_next;
 
   gtimer_t ch_epg_timer_head;
   gtimer_t ch_epg_timer_current;

@@ -357,6 +357,8 @@ main(int argc, char **argv)
 
   pthread_mutex_lock(&global_lock);
 
+  time(&dispatch_clock);
+
   trap_init(argv[0]);
   
   /**
