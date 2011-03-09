@@ -637,7 +637,7 @@ htsmsg_xml_parse_cd0(xmlparser_t *xp,
     }
 
     if(cc == NULL) {
-      if(*src <= 32) {
+      if(*src < 32) {
 	src++;
 	continue;
       }
