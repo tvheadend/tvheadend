@@ -499,21 +499,55 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   dvr_entry_t *de;
   dvr_entry_sched_state_t dvr_status;
   const char *dvr_config_name;
-    
-  if(htsmsg_get_u32(in, "eventId", &eventid))
-    return htsp_error("Missing argument 'eventId'");
-  
-  if((e = epg_event_find_by_id(eventid)) == NULL)
-    return htsp_error("Event does not exist");
 
   if((dvr_config_name = htsmsg_get_str(in, "configName")) == NULL)
     dvr_config_name = "";
-  
-  //create the dvr entry
-  de = dvr_entry_create_by_event(dvr_config_name,e, 
-				 htsp->htsp_username ? 
-				 htsp->htsp_username : "anonymous",
-				 NULL, DVR_PRIO_NORMAL);
+
+  if(htsmsg_get_u32(in, "eventId", &eventid))
+    eventid = -1;
+
+  if ((e = epg_event_find_by_id(eventid)) == NULL)
+  {
+    uint32_t iChannelId, iStartTime, iStopTime, iPriority;
+    channel_t *channel;
+    const char *strTitle = NULL, *strDescription = NULL, *strCreator = NULL;
+
+    // no event found with this event id.
+    // check if there is at least a start time, stop time, channel id and title set
+    if (htsmsg_get_u32(in, "channelId", &iChannelId) ||
+        htsmsg_get_u32(in, "start", &iStartTime) ||
+        htsmsg_get_u32(in, "stop", &iStopTime) ||
+        (strTitle = htsmsg_get_str(in, "title")) == NULL)
+    {
+      // not enough info available to create a new entry
+      return htsp_error("Invalid arguments");
+    }
+
+    // invalid channel
+    if ((channel = channel_find_by_identifier(iChannelId)) == NULL)
+      return htsp_error("Channel does not exist");
+
+    // get the optional attributes
+    if (htsmsg_get_u32(in, "priority", &iPriority))
+      iPriority = 0;
+
+    if ((strDescription = htsmsg_get_str(in, "description")) == NULL)
+      strDescription = "";
+
+    if ((strCreator = htsmsg_get_str(in, "creator")) == NULL)
+      strCreator = "";
+
+    // create the dvr entry
+    de = dvr_entry_create(dvr_config_name, channel, iStartTime, iStopTime, strTitle, strDescription, strCreator, NULL, NULL, 0, iPriority);
+  }
+  else
+  {
+    //create the dvr entry
+    de = dvr_entry_create_by_event(dvr_config_name,e,
+                                   htsp->htsp_username ?
+                                   htsp->htsp_username : "anonymous",
+                                   NULL, DVR_PRIO_NORMAL);
+  }
 
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
   
