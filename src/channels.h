@@ -63,6 +63,11 @@ typedef struct channel {
 
   struct channel_tag_mapping_list ch_ctms;
 
+  /**
+   * EPG default charset
+   */
+  char *ch_epg_default_charset;
+
 } channel_t;
 
 
@@ -126,6 +131,8 @@ struct xmltv_channel;
 void channel_set_xmltv_source(channel_t *ch, struct xmltv_channel *xc);
 
 void channel_set_tags_from_list(channel_t *ch, const char *maplist);
+
+void channel_set_epg_default_charset(channel_t *ch, const char *epg_default_charset);
 
 channel_tag_t *channel_tag_find_by_name(const char *name, int create);
 

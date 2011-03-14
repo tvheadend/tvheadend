@@ -28,7 +28,7 @@ tvheadend.channels = new Ext.data.JsonStore({
     autoLoad: true,
     root:'entries',
     fields: ['name', 'chid', 'xmltvsrc', 'tags', 'ch_icon',
-	     'epg_pre_start', 'epg_post_end', 'number'],
+	     'epg_pre_start', 'epg_post_end', 'number', 'epg_default_charset'],
     id: 'chid',
     url: "channels",
     baseParams: {
@@ -112,6 +112,28 @@ tvheadend.chconf = function()
 	}
     });
 
+    var EPGCharsets = new Ext.data.SimpleStore({
+	fields: ['key','value'],
+	data: [
+		['ISO6937','default'],
+		['ISO6937','ISO6937'],
+		['ISO8859-1','ISO8859-1'],
+		['ISO8859-2','ISO8859-2'],
+		['ISO8859-3','ISO8859-3'],
+		['ISO8859-4','ISO8859-4'],
+		['ISO8859-5','ISO8859-5'],
+		['ISO8859-6','ISO8859-6'],
+		['ISO8859-7','ISO8859-7'],
+		['ISO8859-8','ISO8859-8'],
+		['ISO8859-9','ISO8859-9'],
+		['ISO8859-10','ISO8859-10'],
+		['ISO8859-11','ISO8859-11'],
+		['ISO8859-12','ISO8859-12'],
+		['ISO8859-13','ISO8859-13'],
+		['ISO8859-14','ISO8859-14'],
+		['ISO8859-15','ISO8859-15']
+	]
+    });
 
     var fm = Ext.form;
 
@@ -250,7 +272,29 @@ tvheadend.chconf = function()
 	    minValue: 0,
 	    maxValue: 1440
 	})
-    }, actions
+    },
+	{
+		header: "EPG Default Charset",
+		dataIndex: 'epg_default_charset',
+		width: 200,
+		renderer: function(value, metadata, record, row, col, store) {
+			if (!value) {
+				return '<span class="tvh-grid-unset">ISO6937</span>';
+			} else {
+				return value;
+			}
+		},
+		editor: new fm.ComboBox({
+			mode: 'local',
+                	store: EPGCharsets,
+			typeAhead: true,
+			lazyRender: true,
+			triggerAction: 'all',
+			displayField:'value',
+			valueField:'key'
+		})
+	},
+	actions
     ]);
 
 

@@ -285,6 +285,9 @@ channel_load_one(htsmsg_t *c, int id)
       }
     }
   }
+
+  tvh_str_update(&ch->ch_epg_default_charset, htsmsg_get_str(c, "epg_default_charset"));
+
 }
 
 
@@ -337,6 +340,9 @@ channel_save(channel_t *ch)
   htsmsg_add_u32(m, "dvr_extra_time_pre",  ch->ch_dvr_extra_time_pre);
   htsmsg_add_u32(m, "dvr_extra_time_post", ch->ch_dvr_extra_time_post);
   htsmsg_add_s32(m, "channel_number", ch->ch_number);
+
+  if(ch->ch_epg_default_charset != NULL)
+    htsmsg_add_str(m, "epg_default_charset", ch->ch_epg_default_charset);
 
   hts_settings_save(m, "channels/%d", ch->ch_id);
   htsmsg_destroy(m);
@@ -413,6 +419,7 @@ channel_delete(channel_t *ch)
   free(ch->ch_name);
   free(ch->ch_sname);
   free(ch->ch_icon);
+  free(ch->ch_epg_default_charset);
 
   channel_list_changed();
   
@@ -587,6 +594,22 @@ channel_set_tags_from_list(channel_t *ch, const char *maplist)
     channel_save(ch);
 }
 
+/**
+ *
+ */
+void
+channel_set_epg_default_charset(channel_t *ch, const char *epg_default_charset)
+{
+  lock_assert(&global_lock);
+
+  if(ch->ch_epg_default_charset != NULL && !strcmp(ch->ch_epg_default_charset, epg_default_charset))
+    return;
+
+  free(ch->ch_epg_default_charset);
+  ch->ch_epg_default_charset = strdup(epg_default_charset);
+  channel_save(ch);
+  htsp_channel_update(ch);
+}
 
 
 
