@@ -1164,9 +1164,9 @@ dvr_val2pri(dvr_prio_t v)
 int
 dvr_entry_delete(dvr_entry_t *de)
 {
-  if(!unlink(de->de_filename) || 
-	  errno == ENOENT ||
-	  !de->de_filename) {
+  if( !de->de_filename ||
+      !unlink(de->de_filename) || 
+	  errno == ENOENT ) {
     tvhlog(LOG_DEBUG, "dvr", "Delete recording '%s'", de->de_filename);
     dvr_entry_remove(de);
     return 0;
