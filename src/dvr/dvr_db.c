@@ -1161,17 +1161,18 @@ dvr_val2pri(dvr_prio_t v)
   return val2str(v, priotab) ?: "invalid";
 }
 
-int
+
+/**
+ *
+ */
+void
 dvr_entry_delete(dvr_entry_t *de)
 {
-  if(!unlink(de->de_filename) || errno == ENOENT) {
-    tvhlog(LOG_DEBUG, "dvr", "Delete recording '%s'", de->de_filename);
-    dvr_entry_remove(de);
-    return 0;
-  } else {
-    tvhlog(LOG_WARNING, "dvr", "Unable to delete recording '%s' -- %s",
-	   de->de_filename, strerror(errno));
-    return -1;
+  if(de->de_filename != NULL) {
+    if(unlink(de->de_filename) && errno != ENOENT)
+      tvhlog(LOG_WARNING, "dvr", "Unable to remove file '%s' from disk -- %s",
+	     de->de_filename, strerror(errno));
   }
+  dvr_entry_remove(de);
 }
 

@@ -764,7 +764,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
   event_t *e;
   dvr_entry_t *de;
   const char *s;
-  int flags = 0, retval;
+  int flags = 0;
   dvr_config_t *cfg;
 
   if(op == NULL)
@@ -813,10 +813,10 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
       return HTTP_STATUS_BAD_REQUEST;
     }
 
-    retval = dvr_entry_delete(de);
+    dvr_entry_delete(de);
 
     out = htsmsg_create_map();
-    htsmsg_add_u32(out, "success", !retval);
+    htsmsg_add_u32(out, "success", 1);
 
   } else if(!strcmp(op, "createEntry")) {
 
