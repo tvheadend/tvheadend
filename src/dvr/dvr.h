@@ -242,6 +242,8 @@ dvr_entry_t *dvr_entry_create(const char *dvr_config_name,
 			      epg_episode_t *ee, uint8_t content_type,
 			      dvr_prio_t pri);
 
+dvr_entry_t *dvr_entry_update(dvr_entry_t *de, const char* de_title, int de_start, int de_stop);
+
 void dvr_init(void);
 
 void dvr_autorec_init(void);
@@ -274,7 +276,7 @@ void dvr_extra_time_pre_set(dvr_config_t *cfg, int d);
 
 void dvr_extra_time_post_set(dvr_config_t *cfg, int d);
 
-int dvr_entry_delete(dvr_entry_t *de);
+void dvr_entry_delete(dvr_entry_t *de);
 
 /**
  * Query interface

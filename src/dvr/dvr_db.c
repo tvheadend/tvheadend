@@ -589,6 +589,26 @@ dvr_timer_expire(void *aux)
  
 }
 
+/**
+ *
+ */
+dvr_entry_t * 
+dvr_entry_update(dvr_entry_t *de, const char* de_title, int de_start, int de_stop) 
+{
+
+  de->de_title = strdup(de_title);
+  de->de_start = de_start;
+  de->de_stop = de_stop;
+
+  dvr_entry_save(de);
+  htsp_dvr_entry_update(de);
+  dvr_entry_notify(de);
+
+
+  tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": Updated Timer", de->de_title, de->de_channel->ch_name);
+
+  return de;
+}
 
 /**
  *
@@ -1161,17 +1181,18 @@ dvr_val2pri(dvr_prio_t v)
   return val2str(v, priotab) ?: "invalid";
 }
 
-int
+
+/**
+ *
+ */
+void
 dvr_entry_delete(dvr_entry_t *de)
 {
-  if(!unlink(de->de_filename) || errno == ENOENT) {
-    tvhlog(LOG_DEBUG, "dvr", "Delete recording '%s'", de->de_filename);
-    dvr_entry_remove(de);
-    return 0;
-  } else {
-    tvhlog(LOG_WARNING, "dvr", "Unable to delete recording '%s' -- %s",
-	   de->de_filename, strerror(errno));
-    return -1;
+  if(de->de_filename != NULL) {
+    if(unlink(de->de_filename) && errno != ENOENT)
+      tvhlog(LOG_WARNING, "dvr", "Unable to remove file '%s' from disk -- %s",
+	     de->de_filename, strerror(errno));
   }
+  dvr_entry_remove(de);
 }
 
