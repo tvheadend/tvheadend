@@ -395,6 +395,45 @@ tvheadend.dvb_services = function(adapterId) {
 	    })
 	},
 	{
+		header: "DVB default charset",
+		dataIndex: 'dvb_default_charset',
+		width: 200,
+		renderer: function(value, metadata, record, row, col, store) {
+			return value ? value :
+				'<span class="tvh-grid-unset">ISO6937</span>';
+		},
+		editor: new fm.ComboBox({
+			mode: 'local',
+			store: new Ext.data.SimpleStore({
+				fields: ['key','value'],
+				data: [
+					['ISO6937','default'],
+					['ISO6937','ISO6937'],
+					['ISO8859-1','ISO8859-1'],
+					['ISO8859-2','ISO8859-2'],
+					['ISO8859-3','ISO8859-3'],
+					['ISO8859-4','ISO8859-4'],
+					['ISO8859-5','ISO8859-5'],
+					['ISO8859-6','ISO8859-6'],
+					['ISO8859-7','ISO8859-7'],
+					['ISO8859-8','ISO8859-8'],
+					['ISO8859-9','ISO8859-9'],
+					['ISO8859-10','ISO8859-10'],
+					['ISO8859-11','ISO8859-11'],
+					['ISO8859-12','ISO8859-12'],
+					['ISO8859-13','ISO8859-13'],
+					['ISO8859-14','ISO8859-14'],
+					['ISO8859-15','ISO8859-15']
+       				]
+			}),
+			typeAhead: true,
+			lazyRender: true,
+			triggerAction: 'all',
+			displayField:'value',
+			valueField:'key'
+		})
+	},
+	{
 	    header: "Type",
 	    dataIndex: 'type',
 	    width: 50
@@ -440,7 +479,7 @@ tvheadend.dvb_services = function(adapterId) {
 	root: 'entries',
 	fields: Ext.data.Record.create([
 	    'id', 'enabled', 'type', 'sid', 'pmt', 'pcr', 
-	    'svcname', 'network', 'provider', 'mux', 'channelname'
+	    'svcname', 'network', 'provider', 'mux', 'channelname', 'dvb_default_charset'
 	]),
 	url: "dvb/services/" + adapterId,
 	autoLoad: true,

@@ -369,7 +369,8 @@ tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
 static int
 dvb_desc_short_event(uint8_t *ptr, int len, 
 		     char *title, size_t titlelen,
-		     char *desc,  size_t desclen)
+		     char *desc,  size_t desclen,
+		     char *dvb_default_charset)
 {
   int r;
 
@@ -377,11 +378,11 @@ dvb_desc_short_event(uint8_t *ptr, int len,
     return -1;
   ptr += 3; len -= 3;
 
-  if((r = dvb_get_string_with_len(title, titlelen, ptr, len)) < 0)
+  if((r = dvb_get_string_with_len(title, titlelen, ptr, len, dvb_default_charset)) < 0)
     return -1;
   ptr += r; len -= r;
 
-  if((r = dvb_get_string_with_len(desc, desclen, ptr, len)) < 0)
+  if((r = dvb_get_string_with_len(desc, desclen, ptr, len, dvb_default_charset)) < 0)
     return -1;
 
   return 0;
@@ -394,7 +395,8 @@ static int
 dvb_desc_extended_event(uint8_t *ptr, int len, 
 		     char *desc, size_t desclen,
 		     char *item, size_t itemlen,
-                     char *text, size_t textlen)
+                     char *text, size_t textlen,
+                     char *dvb_default_charset)
 {
   int count = ptr[4], r;
   uint8_t *localptr = ptr + 5, *items = localptr; 
@@ -434,7 +436,7 @@ dvb_desc_extended_event(uint8_t *ptr, int len,
   count = localptr[0];
 
   /* get text */
-  if((r = dvb_get_string_with_len(text, textlen, localptr, locallen)) < 0)
+  if((r = dvb_get_string_with_len(text, textlen, localptr, locallen, dvb_default_charset)) < 0)
     return -1;
 
   return 0;
@@ -459,11 +461,11 @@ dvb_desc_service(uint8_t *ptr, int len, uint8_t *typep,
   ptr++;
   len--;
 
-  if((r = dvb_get_string_with_len(provider, providerlen, ptr, len)) < 0)
+  if((r = dvb_get_string_with_len(provider, providerlen, ptr, len, NULL)) < 0)
     return -1;
   ptr += r; len -= r;
 
-  if((r = dvb_get_string_with_len(name, namelen, ptr, len)) < 0)
+  if((r = dvb_get_string_with_len(name, namelen, ptr, len, NULL)) < 0)
     return -1;
   ptr += r; len -= r;
   return 0;
@@ -586,7 +588,8 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       case DVB_DESC_SHORT_EVENT:
 	if(!dvb_desc_short_event(ptr, dlen,
 				 title, sizeof(title),
-				 desc,  sizeof(desc))) {
+				 desc,  sizeof(desc),
+				 t->s_dvb_default_charset)) {
 	  changed |= epg_event_set_title(e, title);
 	  changed |= epg_event_set_desc(e, desc);
 	}
@@ -602,7 +605,8 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
         if(!dvb_desc_extended_event(ptr, dlen,
               extdesc, sizeof(extdesc),
               extitem, sizeof(extitem),
-              exttext, sizeof(exttext))) {
+              exttext, sizeof(exttext),
+              t->s_dvb_default_charset)) {
           
           char language[4];
           memcpy(language, &ptr[1], 3);
@@ -1122,7 +1126,7 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
     switch(tag) {
     case DVB_DESC_NETWORK_NAME:
-      if(dvb_get_string(networkname, sizeof(networkname), ptr, tlen))
+      if(dvb_get_string(networkname, sizeof(networkname), ptr, tlen, NULL))
 	return -1;
 
       if(strcmp(tdmi->tdmi_network ?: "", networkname))
