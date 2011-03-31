@@ -534,8 +534,8 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     if ((strDescription = htsmsg_get_str(in, "description")) == NULL)
       strDescription = "";
 
-    if ((strCreator = htsmsg_get_str(in, "creator")) == NULL)
-      strCreator = "";
+    if ((strCreator = htsmsg_get_str(in, "creator")) == NULL || strcmp(strCreator, "") == 0)
+      strCreator = htsp->htsp_username ? htsp->htsp_username : "anonymous";
 
     // create the dvr entry
     de = dvr_entry_create(dvr_config_name, channel, iStartTime, iStopTime, strTitle, strDescription, strCreator, NULL, NULL, 0, iPriority);
