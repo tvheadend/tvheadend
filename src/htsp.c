@@ -529,7 +529,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
     // get the optional attributes
     if (htsmsg_get_u32(in, "priority", &iPriority))
-      iPriority = 0;
+      iPriority = DVR_PRIO_NORMAL;
 
     if ((strDescription = htsmsg_get_str(in, "description")) == NULL)
       strDescription = "";
