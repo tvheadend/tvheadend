@@ -59,6 +59,8 @@ typedef enum {
   CARD_CONAX,
   CARD_SECA,
   CARD_VIACCESS,
+  CARD_NAGRA,
+  CARD_NDS,
   CARD_UNKNOWN
 } card_type_t;
 
@@ -276,6 +278,8 @@ void cwc_emm_irdeto(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_dre(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_seca(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_viaccess(cwc_t *cwc, uint8_t *data, int len);
+void cwc_emm_nagra(cwc_t *cwc, uint8_t *data, int len);
+void cwc_emm_nds(cwc_t *cwc, uint8_t *data, int len);
 
 
 /**
@@ -567,7 +571,7 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
   cwc->cwc_connected = 1;
   cwc_comet_status_update(cwc);
   cwc->cwc_caid = (msg[4] << 8) | msg[5];
-  n = psi_caid2name(cwc->cwc_caid) ?: "Unknown";
+  n = psi_caid2name(cwc->cwc_caid & 0xff00) ?: "Unknown";
 
   memcpy(cwc->cwc_ua, &msg[6], 8);
 
@@ -673,6 +677,16 @@ cwc_detect_card_type(cwc_t *cwc)
   case 0x4a:
     cwc->cwc_card_type = CARD_DRE;
     tvhlog(LOG_INFO, "cwc", "%s: dre card",
+	   cwc->cwc_hostname);
+    break;
+  case 0x18:
+    cwc->cwc_card_type = CARD_NAGRA;
+    tvhlog(LOG_INFO, "cwc", "%s: nagra card",
+	   cwc->cwc_hostname);
+    break;
+  case 0x09:
+    cwc->cwc_card_type = CARD_NDS;
+    tvhlog(LOG_INFO, "cwc", "%s: nds card",
 	   cwc->cwc_hostname);
     break;
   default:
@@ -1183,6 +1197,12 @@ cwc_emm(uint8_t *data, int len)
       case CARD_DRE:
 	cwc_emm_dre(cwc, data, len);
 	break;
+      case CARD_NAGRA:
+	cwc_emm_nagra(cwc, data, len);
+	break;
+      case CARD_NDS:
+	cwc_emm_nds(cwc, data, len);
+	break;
       case CARD_UNKNOWN:
 	break;
       }
@@ -1581,6 +1601,51 @@ cwc_emm_dre(cwc_t *cwc, uint8_t *data, int len)
     cwc_send_msg(cwc, data, len, 0, 1);
 }
 
+void
+cwc_emm_nagra(cwc_t *cwc, uint8_t *data, int len)
+{
+  int match = 0;
+  unsigned char hexserial[4];
+
+  if (data[0] == 0x83) {      // unique|shared
+    hexserial[0] = data[5];
+    hexserial[1] = data[4];
+    hexserial[2] = data[3];
+    hexserial[3] = data[6];
+    if (memcmp(hexserial, &cwc->cwc_ua[4], (data[7] == 0x10) ? 3 : 4) == 0)
+      match = 1;
+  } 
+  else if (data[0] == 0x82) { // global
+    match = 1;
+  }
+
+  if (match)
+    cwc_send_msg(cwc, data, len, 0, 1);
+}
+
+void
+cwc_emm_nds(cwc_t *cwc, uint8_t *data, int len)
+{
+  int match = 0;
+  int i;
+  int serial_count = ((data[3] >> 4) & 3) + 1;
+  unsigned char emmtype = (data[3] & 0xC0) >> 6;
+
+  if (emmtype == 1 || emmtype == 2) {  // unique|shared
+    for (i = 0; i < serial_count; i++) {
+      if (memcmp(&data[i * 4 + 4], &cwc->cwc_ua[4], 5 - emmtype) == 0) {
+        match = 1;
+        break;
+      }
+    }
+  }
+  else if (emmtype == 0) {  // global
+    match = 1;
+  }
+
+  if (match)
+    cwc_send_msg(cwc, data, len, 0, 1);
+}
 
 /**
  *
