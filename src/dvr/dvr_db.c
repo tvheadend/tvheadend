@@ -1196,3 +1196,29 @@ dvr_entry_delete(dvr_entry_t *de)
   dvr_entry_remove(de);
 }
 
+/**
+ *
+ */
+void
+dvr_entry_cancel_delete(dvr_entry_t *de)
+{
+  switch(de->de_sched_state) {
+  case DVR_SCHEDULED:
+    dvr_entry_remove(de);
+    break;
+
+  case DVR_RECORDING:
+    de->de_dont_reschedule = 1;
+    dvr_stop_recording(de, SM_CODE_ABORTED);
+  case DVR_COMPLETED:
+    dvr_entry_delete(de);
+    break;
+
+  case DVR_MISSED_TIME:
+    dvr_entry_remove(de);
+    break;
+
+  default:
+    abort();
+  }
+}
