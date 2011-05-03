@@ -159,6 +159,8 @@ CFLAGS_com += -D_FILE_OFFSET_BITS=64
 CFLAGS_com += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR}
 CFLAGS_com += -DHTS_VERSION=\"$(VERSION)\"
 
+MKBUNDLE = $(CURDIR)/support/mkbundle
+
 ifndef V
 ECHO   = printf "$(1)\t%s\n" $(2)
 BRIEF  = CC MKBUNDLE CXX
@@ -209,6 +211,5 @@ include support/${OSENV}.mk
 $(BUILDDIR)/bundles/%.o: $(BUILDDIR)/bundles/%.c
 	$(CC) -I${CURDIR}/src -c -o $@ $<
 
-$(BUILDDIR)/bundles/%.c: % $(CURDIR)/support/mkbundle
-	$(CURDIR)/support/mkbundle \
-		-o $@ -s $< -d ${BUILDDIR}/bundles/$<.d -p $< -z
+$(BUILDDIR)/bundles/%.c: %
+	$(MKBUNDLE) -o $@ -s $< -d ${BUILDDIR}/bundles/$<.d -p $< -z
