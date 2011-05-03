@@ -1192,6 +1192,34 @@ dvr_entry_delete(dvr_entry_t *de)
     if(unlink(de->de_filename) && errno != ENOENT)
       tvhlog(LOG_WARNING, "dvr", "Unable to remove file '%s' from disk -- %s",
 	     de->de_filename, strerror(errno));
+
+    /* Also delete directories, if they were created for the recording and if they are empty */
+
+    dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
+    char path[500];
+
+    snprintf(path, sizeof(path), "%s", cfg->dvr_storage);
+
+    if(cfg->dvr_flags & DVR_DIR_PER_TITLE || cfg->dvr_flags & DVR_DIR_PER_CHANNEL || cfg->dvr_flags & DVR_DIR_PER_DAY) {
+      char *p;
+      int l;
+
+      l = strlen(de->de_filename);
+      p = alloca(l + 1);
+      memcpy(p, de->de_filename, l);
+      p[l--] = 0;
+
+      for(; l >= 0; l--) {
+        if(p[l] == '/') {
+          p[l] = 0;
+          if(strncmp(p, cfg->dvr_storage, strlen(p)) == 0)
+            break;
+          if(rmdir(p) == -1)
+            break;
+        }
+      }
+    }
+
   }
   dvr_entry_remove(de);
 }
