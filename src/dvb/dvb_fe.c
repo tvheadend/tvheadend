@@ -41,6 +41,42 @@
 #include "dvr/dvr.h"
 
 /**
+ * Return uncorrected block (since last read)
+ *
+ * Some adapters report delta themselfs, some return ever increasing value
+ * we need to deal with that ourselfs
+ */
+static int
+dvb_fe_get_unc(th_dvb_adapter_t *tda)
+{
+  uint32_t fec;
+  int d, r;
+
+  if(ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &fec))
+    return 0; // read failed, just say 0
+
+  if(tda->tda_unc_is_delta)
+    return fec;
+
+  d = (int)fec - (int)tda->tda_last_fec;
+
+  if(d < 0) {
+    tda->tda_unc_is_delta = 1;
+    tvhlog(LOG_DEBUG, "dvb",
+	   "%s: FE_READ_UNCORRECTED_BLOCKS returns delta updates (delta=%d)",
+	   tda->tda_displayname, d);
+    return fec;
+  }
+  
+  r = fec - tda->tda_last_fec;
+
+  tda->tda_last_fec = fec;
+  return r;
+}
+
+
+
+/**
  * Front end monitor
  *
  * Monitor status every second
@@ -79,7 +115,7 @@ dvb_fe_monitor(void *aux)
     if(status == -1) { /* We have a lock, don't hold off */
       tda->tda_fe_monitor_hold = 0; 
       /* Reset FEC counter */
-      ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &fec);
+      dvb_fe_get_unc(tda);
     } else {
       tda->tda_fe_monitor_hold--;
       return;
@@ -89,8 +125,7 @@ dvb_fe_monitor(void *aux)
   if(status == -1) {
     /* Read FEC counter (delta) */
 
-    if(ioctl(tda->tda_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &fec))
-      fec = 0;
+    fec = dvb_fe_get_unc(tda);
     
     tdmi->tdmi_fec_err_histogram[tdmi->tdmi_fec_err_ptr++] = fec;
     if(tdmi->tdmi_fec_err_ptr == TDMI_FEC_ERR_HISTOGRAM_SIZE)
@@ -277,7 +312,7 @@ static int check_frontend (int fe_fd, int dvr, int human_readable) {
   (void)dvr;
   fe_status_t status;
   uint16_t snr, signal;
-  uint32_t ber, uncorrected_blocks;
+  uint32_t ber;
   int timeout = 0;
 
   do {
@@ -292,15 +327,13 @@ static int check_frontend (int fe_fd, int dvr, int human_readable) {
       snr = -2;
     if (ioctl(fe_fd, FE_READ_BER, &ber) == -1)
       ber = -2;
-    if (ioctl(fe_fd, FE_READ_UNCORRECTED_BLOCKS, &uncorrected_blocks) == -1)
-      uncorrected_blocks = -2;
 
     if (human_readable) {
-      printf ("status %02x | signal %3u%% | snr %3u%% | ber %d | unc %d | ",
-          status, (signal * 100) / 0xffff, (snr * 100) / 0xffff, ber, uncorrected_blocks);
+      printf ("status %02x | signal %3u%% | snr %3u%% | ber %d | ",
+          status, (signal * 100) / 0xffff, (snr * 100) / 0xffff, ber);
     } else {
-      printf ("status %02x | signal %04x | snr %04x | ber %08x | unc %08x | ",
-          status, signal, snr, ber, uncorrected_blocks);
+      printf ("status %02x | signal %04x | snr %04x | ber %08x | ",
+          status, signal, snr, ber);
     }
     if (status & FE_HAS_LOCK)
       printf("FE_HAS_LOCK");
