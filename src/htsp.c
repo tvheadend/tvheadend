@@ -1600,6 +1600,18 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
 	htsmsg_add_u32(c, "width", ssc->ssc_width);
       if(ssc->ssc_height)
 	htsmsg_add_u32(c, "height", ssc->ssc_height);
+      if (ssc->ssc_aspect_num)
+        htsmsg_add_u32(c, "aspect_num", ssc->ssc_aspect_num);
+      if (ssc->ssc_aspect_den)
+        htsmsg_add_u32(c, "aspect_den", ssc->ssc_aspect_den);
+    }
+
+    if (SCT_ISAUDIO(ssc->ssc_type))
+    {
+      if (ssc->ssc_channels)
+        htsmsg_add_u32(c, "channels", ssc->ssc_channels);
+      if (ssc->ssc_sri)
+        htsmsg_add_u32(c, "rate", ssc->ssc_sri);
     }
 
     htsmsg_add_msg(streams, NULL, c);
