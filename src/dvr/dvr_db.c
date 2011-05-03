@@ -323,17 +323,38 @@ dvr_entry_create(const char *config_name,
 /**
  *
  */
+static const char *
+longest_string(const char *a, const char *b)
+{
+  if(b == NULL)
+    return a;
+  if(a == NULL)
+    return b;
+  return strlen(a) > strlen(b) ? a : b;
+}
+
+
+/**
+ *
+ */
 dvr_entry_t *
 dvr_entry_create_by_event(const char *config_name,
                           event_t *e, const char *creator, 
 			  dvr_autorec_entry_t *dae, dvr_prio_t pri)
 {
+  const char *desc = NULL;
   if(e->e_channel == NULL || e->e_title == NULL)
     return NULL;
 
+  // Try to find best description
+
+  desc = longest_string(e->e_desc, e->e_ext_desc);
+  desc = longest_string(desc, e->e_ext_item);
+  desc = longest_string(desc, e->e_ext_text);
+
   return dvr_entry_create(config_name,
                           e->e_channel, e->e_start, e->e_stop, 
-			  e->e_title, e->e_desc, creator, dae, &e->e_episode,
+			  e->e_title, desc, creator, dae, &e->e_episode,
 			  e->e_content_type, pri);
 }
 
