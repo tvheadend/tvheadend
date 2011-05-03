@@ -1104,6 +1104,9 @@ dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src)
     if(t_src->s_svcname != NULL)
       t_dst->s_svcname = strdup(t_src->s_svcname);
 
+    if(t_src->s_dvb_default_charset != NULL)
+      t_dst->s_dvb_default_charset = strdup(t_src->s_dvb_default_charset);
+
     if(t_src->s_ch != NULL)
       service_map_channel(t_dst, t_src->s_ch, 0);
 
