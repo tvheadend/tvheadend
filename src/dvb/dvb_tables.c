@@ -638,7 +638,6 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
   service_t *t;
-  uint8_t section_number;
   uint16_t service_id;
   uint16_t transport_stream_id;
   int free_ca_mode;
@@ -659,7 +658,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     return -1;
 
   //  version                     = ptr[2] >> 1 & 0x1f;
-  section_number              = ptr[3];
+  //  section_number              = ptr[3];
   //  last_section_number         = ptr[4];
   //  original_network_id         = ptr[5] << 8 | ptr[6];
   //  reserved                    = ptr[7];
