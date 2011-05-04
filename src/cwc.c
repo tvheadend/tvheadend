@@ -484,6 +484,9 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid, int enq)
     pthread_mutex_unlock(&cwc->cwc_writer_mutex);
   } else {
     n = write(cwc->cwc_fd, buf, len);
+    if(n != len)
+      tvhlog(LOG_INFO, "cwc", "write error %s", strerror(errno));
+
     free(cm);
   }
   return seq & 0xffff;

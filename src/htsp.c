@@ -1248,8 +1248,13 @@ htsp_write_scheduler(void *aux)
    
     /* ignore return value */ 
     r = write(htsp->htsp_fd, dptr, dlen);
+    if(r != dlen)
+      tvhlog(LOG_INFO, "htsp", "%s: Write error -- %s", 
+	     htsp->htsp_logname, strerror(errno));
     free(dptr);
     pthread_mutex_lock(&htsp->htsp_out_mutex);
+    if(r != dlen) 
+      break;
   }
 
   pthread_mutex_unlock(&htsp->htsp_out_mutex);
