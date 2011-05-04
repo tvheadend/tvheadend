@@ -333,7 +333,7 @@ http_access_verify(http_connection_t *hc, int mask)
  * Returns 1 if we should disconnect
  * 
  */
-static void
+static int
 http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
 {
   int err;
@@ -343,8 +343,12 @@ http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
   else
     err = hp->hp_callback(hc, remain, hp->hp_opaque);
 
+  if(err == -1)
+     return 1;
+
   if(err)
     http_error(hc, err);
+  return 0;
 }
 
 
@@ -368,8 +372,7 @@ http_cmd_get(http_connection_t *hc)
   if(args != NULL)
     http_parse_get_args(hc, args);
 
-  http_exec(hc, hp, remain);
-  return 0;
+  return http_exec(hc, hp, remain);
 }
 
 
@@ -431,8 +434,7 @@ http_cmd_post(http_connection_t *hc, htsbuf_queue_t *spill)
     http_error(hc, HTTP_STATUS_NOT_FOUND);
     return 0;
   }
-  http_exec(hc, hp, remain);
-  return 0;
+  return http_exec(hc, hp, remain);
 }
 
 

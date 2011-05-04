@@ -487,7 +487,6 @@ page_static_bundle(http_connection_t *hc, const char *remain, void *opaque)
   const struct filebundle *fb = opaque;
   const struct filebundle_entry *fbe;
   const char *content = NULL, *postfix;
-  int n;
 
   if(remain == NULL)
     return 404;
@@ -506,7 +505,8 @@ page_static_bundle(http_connection_t *hc, const char *remain, void *opaque)
 		       fbe->original_size == -1 ? NULL : "gzip", NULL, 10, 0,
 		       NULL);
       /* ignore return value */
-      n = write(hc->hc_fd, fbe->data, fbe->size);
+      if(write(hc->hc_fd, fbe->data, fbe->size) != fbe->size)
+	return -1;
       return 0;
     }
   }
