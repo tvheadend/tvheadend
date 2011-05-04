@@ -484,13 +484,7 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
   uint16_t serviceid;
-  int version;
-  uint8_t section_number;
-  uint8_t last_section_number;
   uint16_t transport_stream_id;
-  uint16_t original_network_id;
-  uint8_t segment_last_section_number;
-  uint8_t last_table_id;
 
   uint16_t event_id;
   time_t start_time, stop_time;
@@ -515,13 +509,13 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     return -1;
 
   serviceid                   = ptr[0] << 8 | ptr[1];
-  version                     = ptr[2] >> 1 & 0x1f;
-  section_number              = ptr[3];
-  last_section_number         = ptr[4];
+  //  version                     = ptr[2] >> 1 & 0x1f;
+  //  section_number              = ptr[3];
+  //  last_section_number         = ptr[4];
   transport_stream_id         = ptr[5] << 8 | ptr[6];
-  original_network_id         = ptr[7] << 8 | ptr[8];
-  segment_last_section_number = ptr[9];
-  last_table_id               = ptr[10];
+  //  original_network_id         = ptr[7] << 8 | ptr[8];
+  //  segment_last_section_number = ptr[9];
+  //  last_table_id               = ptr[10];
 
   if((ptr[2] & 1) == 0) {
     /* current_next_indicator == next, skip this */
@@ -644,15 +638,10 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
   service_t *t;
-  int version;
   uint8_t section_number;
-  uint8_t last_section_number;
   uint16_t service_id;
   uint16_t transport_stream_id;
-  uint16_t original_network_id;
-
-  int reserved;
-  int running_status, free_ca_mode;
+  int free_ca_mode;
   int dllen;
   uint8_t dtag, dlen;
 
@@ -669,11 +658,11 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   if(tdmi->tdmi_transport_stream_id != transport_stream_id)
     return -1;
 
-  version                     = ptr[2] >> 1 & 0x1f;
+  //  version                     = ptr[2] >> 1 & 0x1f;
   section_number              = ptr[3];
-  last_section_number         = ptr[4];
-  original_network_id         = ptr[5] << 8 | ptr[6];
-  reserved                    = ptr[7];
+  //  last_section_number         = ptr[4];
+  //  original_network_id         = ptr[5] << 8 | ptr[6];
+  //  reserved                    = ptr[7];
 
   if((ptr[2] & 1) == 0) {
     /* current_next_indicator == next, skip this */
@@ -686,8 +675,8 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   while(len >= 5) {
     service_id                = ptr[0] << 8 | ptr[1];
-    reserved                  = ptr[2];
-    running_status            = (ptr[3] >> 5) & 0x7;
+    //    reserved                  = ptr[2];
+    //    running_status            = (ptr[3] >> 5) & 0x7;
     free_ca_mode              = (ptr[3] >> 4) & 0x1;
     dllen                     = ((ptr[3] & 0x0f) << 8) | ptr[4];
 
@@ -841,7 +830,6 @@ dvb_cat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
   int tag, tlen;
-  uint16_t caid;
   uint16_t pid;
 
   if((ptr[2] & 1) == 0) {
@@ -858,7 +846,7 @@ dvb_cat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     len -= 2;
     switch(tag) {
     case DVB_DESC_CA:
-      caid = ( ptr[0]         << 8) | ptr[1];
+      //      caid = ( ptr[0]         << 8) | ptr[1];
       pid  = ((ptr[2] & 0x1f) << 8) | ptr[3];
 
       if(pid == 0)
@@ -960,7 +948,7 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		       uint16_t tsid)
 {
   int freq, symrate;
-  uint16_t orbital_pos;
+  //  uint16_t orbital_pos;
   struct dvb_mux_conf dmc;
 
   if(!tdmi->tdmi_adapter->tda_autodiscovery)
@@ -980,7 +968,7 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   if(!freq)
     return -1;
 
-  orbital_pos = bcdtoint(ptr[4]) * 100 + bcdtoint(ptr[5]);
+  //  orbital_pos = bcdtoint(ptr[4]) * 100 + bcdtoint(ptr[5]);
 
   symrate =
     bcdtoint(ptr[7]) * 100000 + bcdtoint(ptr[8]) * 1000 + 

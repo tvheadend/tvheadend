@@ -348,7 +348,7 @@ h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
 			 int *duration, int *isfield)
 {
   h264_private_t *p;
-  int slice_type, pps_id, sps_id, fnum;
+  int slice_type, pps_id, sps_id;
 
   if((p = st->es_priv) == NULL)
     return -1;
@@ -378,7 +378,7 @@ h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
   if(p->sps[sps_id].max_frame_num_bits == 0)
     return -1;
 
-  fnum = read_bits(bs, p->sps[sps_id].max_frame_num_bits);
+  skip_bits(bs, p->sps[sps_id].max_frame_num_bits);
 
   int field = 0;
   int timebase = 180000;
