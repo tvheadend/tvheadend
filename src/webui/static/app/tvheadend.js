@@ -199,6 +199,14 @@ tvheadend.VLC = function(url) {
 	  vlc.playlist.items.clear();
 	  vlc.playlist.add(url);
 	  vlc.playlist.playItem(0);
+	  
+	  //enable yadif2x deinterlacer for vlc > 1.1
+	  var point1 = vlc.VersionInfo.indexOf('.');
+	  var point2 = vlc.VersionInfo.indexOf('.', point1+1);
+	  var majVersion = vlc.VersionInfo.substring(0,point1);
+	  var minVersion = vlc.VersionInfo.substring(point1+1,point2);
+	  if ((majVersion >= 1) && (minVersion >= 1))
+	    vlc.video.deinterlace.enable("yadif2x");	  
 	}
     }
   });
