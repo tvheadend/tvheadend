@@ -31,24 +31,30 @@ tvheadend.help = function(title, pagename) {
  * Displays a mediaplayer using VLC plugin
  */
 tvheadend.VLC = function(url) {
+ 
+  function randomString() {
+	var chars = "ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
+	var string_length = 8;
+	var randomstring = '';
+	for (var i=0; i<string_length; i++) {
+		var rnum = Math.floor(Math.random() * chars.length);
+		randomstring += chars.substring(rnum,rnum+1);
+	}
+	return randomstring;
+  }
   var vlc = document.createElement('embed');
   vlc.setAttribute('type', 'application/x-vlc-plugin');
   vlc.setAttribute('pluginspage', 'http://www.videolan.org');
-  vlc.setAttribute('version', 'version="VideoLAN.VLCPlugin.2');
-  vlc.setAttribute('width', '507');
-  vlc.setAttribute('height', '384');
-  vlc.setAttribute('autoplay', 'yes');
-  vlc.setAttribute('id', 'vlc');
-  if(url) {
-    vlc.setAttribute('src', url);
-  } else {
-    vlc.style.display = 'none';
-  }
+  vlc.setAttribute('version', 'VideoLAN.VLCPlugin.2');
+  vlc.setAttribute('width', '100%');
+  vlc.setAttribute('height', '100%');
+  vlc.setAttribute('autoplay', 'no');
+  vlc.setAttribute('id', randomString());
   
   var missingPlugin = document.createElement('div');
   missingPlugin.style.display = 'none';
   missingPlugin.style.padding = '5px';
-
+  
   var selectChannel = new Ext.form.ComboBox({
     loadingText: 'Loading...',
     width: 200,
@@ -61,40 +67,25 @@ tvheadend.VLC = function(url) {
   });
   
   selectChannel.on('select', function(c, r) {
-      var url = 'stream/channelid/' + r.data.chid;
-      var playlist = 'playlist/channelid/' + r.data.chid;
+      var streamurl = 'stream/channelid/' + r.data.chid;
+      var playlisturl = 'playlist/channelid/' + r.data.chid;
 
-      var chName = r.data.name;
-      if (!chName.length) {
-	  chName = 'the stream';
-      }
-
-      vlc.style.display = 'block';
+      // if the player was initialised, but not yet shown, make it visible
+      if (vlc.playlist && (vlc.style.display == 'none'))
+	vlc.style.display = 'block';
 
       if(!vlc.playlist || vlc.playlist == 'undefined') {
-	  var innerHTML = '';
-	  innerHTML += '<p>You are missing a plugin for your browser.'
-	  innerHTML += 'You can still watch ' + chName;
-	  innerHTML += ' using an external player.</p>';
-	  innerHTML += '<p><a href="' + playlist + '">M3U Playlist</a></p>';
-	  innerHTML += '<p><a href="' + url + '">Direct URL</a></p>';
-
-	  missingPlugin.innerHTML = innerHTML;
-	  vlc.style.display = 'none';
-	  missingPlugin.style.display = 'block';
-	  return;
+	 missingPlugin.innerHTML  = '<p>Embedded player could not be started. <br> You are probably missing VLC Mozilla plugin for your browser.</p>';
+	 missingPlugin.innerHTML += '<p><a href="' + playlisturl + '">M3U Playlist</a></p>';
+	 missingPlugin.innerHTML += '<p><a href="' + streamurl + '">Direct URL</a></p>';
       }
-
-      if(vlc.playlist && vlc.playlist.isPlaying) {
+      else {
         vlc.playlist.stop();
-      }
-      if(vlc.playlist && vlc.playlist.items.count) {
-        vlc.playlist.items.clear();
-      }
-      
-      vlc.playlist.add(url, chName, "");
-      vlc.playlist.play();
-      vlc.audio.volume = slider.getValue();
+   	 vlc.playlist.items.clear();
+   	 vlc.playlist.add(streamurl);
+    	 vlc.playlist.playItem(0);
+     	 vlc.audio.volume = slider.getValue();
+	}
     }
   );
   
@@ -125,7 +116,7 @@ tvheadend.VLC = function(url) {
     height: 384 + 56,
     constrainHeader: true,
     iconCls: 'eye',
-    resizable: false,
+    resizable: true,
     tbar: [
       selectChannel,
       '-',
@@ -151,9 +142,8 @@ tvheadend.VLC = function(url) {
         iconCls: 'control_stop',
         tooltip: 'Stop',
         handler: function() {
-          if(vlc.playlist && vlc.playlist.items.count) {
+          if(vlc.playlist) {
             vlc.playlist.stop();
-            vlc.style.display = 'none';
           }
         }
       },
@@ -162,8 +152,11 @@ tvheadend.VLC = function(url) {
         iconCls: 'control_fullscreen',
         tooltip: 'Fullscreen',
         handler: function() {
-          if(vlc.playlist && vlc.playlist.isPlaying) {
+          if(vlc.playlist && vlc.playlist.isPlaying && (vlc.VersionInfo.substr(0,3) != '1.1')) {
             vlc.video.toggleFullscreen();
+          }
+	   else if (vlc.VersionInfo.substr(0,3) == '1.1') {
+            alert('Fullscreen mode is broken in VLC 1.1.x');
           }
         }
       },
@@ -177,20 +170,36 @@ tvheadend.VLC = function(url) {
     items: [vlc, missingPlugin]
   });
 	  
-  win.on('render', function() {
+  win.on('beforeShow', function() {
     win.getTopToolbar().add(slider);
     win.getTopToolbar().add(new Ext.Toolbar.Spacer());
     win.getTopToolbar().add(new Ext.Toolbar.Spacer());
     win.getTopToolbar().add(new Ext.Toolbar.Spacer());
     win.getTopToolbar().add(sliderLabel);
 
-    if(url && (!vlc.playlist || vlc.playlist == 'undefined')) {
+    // check if vlc plugin wasn't initialised correctly
+    if(!vlc.playlist || (vlc.playlist == 'undefined')) {
       vlc.style.display = 'none';
+      
+      missingPlugin.innerHTML  = '<p>Embedded player could not be started. <br> You are probably missing VLC Mozilla plugin for your browser.</p>';
+      
+      if (url) {
+        var channelid = url.substr(url.lastIndexOf('/'));
+        var streamurl = 'stream/channelid/' + channelid;
+        var playlisturl = 'playlist/channelid/' + channelid;
+        missingPlugin.innerHTML += '<p><a href="' + playlisturl + '">M3U Playlist</a></p>';
+        missingPlugin.innerHTML += '<p><a href="' + streamurl + '">Direct URL</a></p>';
+      }
 
-      var chUrl = '<a href="' + url + '">the stream</a>';
-      missingPlugin.innerHTML  = '<p>You are missing a plugin for your browser.</p>';
-      missingPlugin.innerHTML += '<p>You can still watch ' + chUrl + ' using an external player.</p>';
       missingPlugin.style.display = 'block';
+    }
+    else {
+	// check if the window was opened with an url-parameter
+	if (url) {
+	  vlc.playlist.items.clear();
+	  vlc.playlist.add(url);
+	  vlc.playlist.playItem(0);
+	}
     }
   });
 
