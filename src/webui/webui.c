@@ -262,7 +262,7 @@ http_stream_playlist(http_connection_t *hc, channel_t *channel)
     }
   }
 
-  http_output_content(hc, "application/x-mpegURL");
+  http_output_content(hc, "audio/x-mpegurl");
 
   pthread_mutex_unlock(&global_lock);
 
