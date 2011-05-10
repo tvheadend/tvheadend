@@ -30,6 +30,7 @@ tvheadend.channels = new Ext.data.JsonStore({
     fields: ['name', 'chid', 'xmltvsrc', 'tags', 'ch_icon',
 	     'epg_pre_start', 'epg_post_end', 'number'],
     id: 'chid',
+    sortInfo: { field: 'number', direction: "ASC" },
     url: "channels",
     baseParams: {
 	op: 'list'
