@@ -30,6 +30,7 @@
 #include <arpa/inet.h>
 
 #include <openssl/sha.h>
+#include <openssl/rand.h>
 
 #include "tvheadend.h"
 #include "access.h"
@@ -37,10 +38,116 @@
 #include "settings.h"
 
 struct access_entry_queue access_entries;
+struct access_ticket_queue access_tickets;
 
 const char *superuser_username;
 const char *superuser_password;
 
+/**
+ *
+ */
+static void
+access_ticket_destroy(access_ticket_t *at)
+{
+  free(at->at_id);
+  free(at->at_resource);
+  TAILQ_REMOVE(&access_tickets, at, at_link);
+  free(at);
+}
+
+/**
+ *
+ */
+static access_ticket_t *
+access_ticket_find(const char *id)
+{
+  access_ticket_t *at = NULL;
+  
+  if(id != NULL) {
+    TAILQ_FOREACH(at, &access_tickets, at_link)
+      if(!strcmp(at->at_id, id))
+	return at;
+  }
+  
+  return NULL;
+}
+
+/**
+ *
+ */
+static void
+access_ticket_timout(void *aux)
+{
+  access_ticket_t *at = aux;
+
+  access_ticket_destroy(at);
+}
+
+/**
+ * Create a new ticket for the requested resource and generate a id for it
+ */
+const char *
+access_ticket_create(const char *resource)
+{
+  uint8_t buf[20];
+  char id[41];
+  unsigned int i;
+  access_ticket_t *at;
+  static const char hex_string[16] = "0123456789ABCDEF";
+
+  at = calloc(1, sizeof(access_ticket_t));
+
+  RAND_bytes(buf, 20);
+
+  //convert to hexstring
+  for(i=0; i<sizeof(buf); i++){
+    id[i*2] = hex_string[((buf[i] >> 4) & 0xF)];
+    id[(i*2)+1] = hex_string[(buf[i]) & 0x0F];
+  }
+  id[40] = '\0';
+
+  at->at_id = strdup(id);
+  at->at_resource = strdup(resource);
+
+  TAILQ_INSERT_TAIL(&access_tickets, at, at_link);
+  gtimer_arm(&at->at_timer, access_ticket_timout, at, 60*5);
+
+  return at->at_id;
+}
+
+/**
+ *
+ */
+int
+access_ticket_delete(const char *id)
+{
+  access_ticket_t *at;
+
+  if((at = access_ticket_find(id)) == NULL)
+    return -1;
+
+  gtimer_disarm(&at->at_timer);
+  access_ticket_destroy(at);
+
+  return 0;
+}
+
+/**
+ *
+ */
+int
+access_ticket_verify(const char *id, const char *resource)
+{
+  access_ticket_t *at;
+
+  if((at = access_ticket_find(id)) == NULL)
+    return -1;
+
+  if(strcmp(at->at_resource, resource))
+    return -1;
+
+  return 0;
+}
 
 /**
  *
@@ -409,6 +516,7 @@ static const dtable_class_t access_dtc = {
   .dtc_record_delete  = access_record_delete,
   .dtc_read_access = ACCESS_ADMIN,
   .dtc_write_access = ACCESS_ADMIN,
+  .dtc_mutex = &global_lock,
 };
 
 /**
@@ -422,7 +530,17 @@ access_init(int createdefault)
   access_entry_t *ae;
   const char *s;
 
+  static struct {
+    pid_t pid;
+    struct timeval tv;
+  } randseed;
+
+  randseed.pid = getpid();
+  gettimeofday(&randseed.tv, NULL);
+  RAND_seed(&randseed, sizeof(randseed));
+
   TAILQ_INIT(&access_entries);
+  TAILQ_INIT(&access_tickets);
 
   dt = dtable_create(&access_dtc, "accesscontrol", NULL);
 

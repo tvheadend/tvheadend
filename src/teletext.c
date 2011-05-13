@@ -375,7 +375,7 @@ tt_subtitle_deliver(service_t *t, elementary_stream_t *parent, tt_mag_t *ttm)
 static void
 tt_decode_line(service_t *t, elementary_stream_t *st, uint8_t *buf)
 {
-  uint8_t mpag, line, s12, s34, c;
+  uint8_t mpag, line, s12, c;
   int page, magidx, i;
   tt_mag_t *ttm;
   tt_private_t *ttp;
@@ -416,7 +416,6 @@ tt_decode_line(service_t *t, elementary_stream_t *st, uint8_t *buf)
     ttm->ttm_curpage = page;
 
     s12 = ham_decode(buf[4], buf[5]);
-    s34 = ham_decode(buf[6], buf[7]);
     c = ham_decode(buf[8], buf[9]);
 
     ttm->ttm_lang = c >> 5;

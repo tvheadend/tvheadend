@@ -30,6 +30,7 @@ tvheadend.channels = new Ext.data.JsonStore({
     fields: ['name', 'chid', 'xmltvsrc', 'tags', 'ch_icon',
 	     'epg_pre_start', 'epg_post_end', 'number'],
     id: 'chid',
+    sortInfo: { field: 'number', direction: "ASC" },
     url: "channels",
     baseParams: {
 	op: 'list'
@@ -163,7 +164,7 @@ tvheadend.chconf = function()
 	    dataIndex: 'chid',
 	    width: 50,
 	    renderer: function(value, metadata, record, row, col, store) {
-	    url = 'stream/channelid/' + value
+	    url = 'playlist/channelid/' + value
 	    return "<a href=\"javascript:tvheadend.VLC('"+url+"')\">Play</a>"
 	    }
 	},

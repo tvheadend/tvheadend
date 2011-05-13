@@ -1,15 +1,25 @@
-Source: hts-tvheadend
+Source: tvheadend
 Section: main
 Priority: extra
 Maintainer: Andreas Öman <andreas@lonelycoder.com>
-Build-Depends: debhelper (>= 5)
+Build-Depends: debhelper (>= 7.0.50)
 Standards-Version: 3.7.3
 
-Package: hts-tvheadend
+Package: tvheadend
 Architecture: any
 Depends: ${shlibs:Depends}, libavahi-client3
 Recommends: xmltv
-Enhances: hts-showtime
-Description: HTS Tvheadend
- TV backend for use with hts-showtime and various other clients.
- Based on ffmpeg 'http://www.ffmpeg.org/' and ExtJS 'http://www.extjs.org/'
+Enhances: showtime
+Replaces: hts-tvheadend
+Homepage: http://www.lonelycoder.com/tvheadend
+Description: Tvheadend
+ TV backend for use with Showtime, XBMC and various other clients.
+ Uses ExtJS 'http://www.extjs.org/'
+
+Package: tvheadend-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends: tvheadend (= ${binary:Version}), ${misc:Depends}
+Description: Debug symbols for Tvheadend
+ This package contains the debugging symbols for Tvheadend.

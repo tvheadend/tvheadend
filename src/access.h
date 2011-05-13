@@ -42,14 +42,36 @@ typedef struct access_entry {
   uint32_t ae_netmask; /* derived from ae_prefixlen */
 } access_entry_t;
 
+TAILQ_HEAD(access_ticket_queue, access_ticket);
+
+extern struct access_ticket_queue access_tickets;
+
+typedef struct access_ticket {
+  char *at_id;
+
+  TAILQ_ENTRY(access_ticket) at_link;
+
+  gtimer_t at_timer;
+  char *at_resource;
+} access_ticket_t;
 
 #define ACCESS_STREAMING       0x1
 #define ACCESS_WEB_INTERFACE   0x2
 #define ACCESS_RECORDER        0x4
 #define ACCESS_ADMIN           0x8
-
 #define ACCESS_FULL 0x3f
 
+/**
+ * Create a new ticket for the requested resource and generate a id for it
+ */
+const char* access_ticket_create(const char *resource);
+
+/**
+ * Verifies that a given ticket id matches a resource
+ */
+int access_ticket_verify(const char *id, const char *resource);
+
+int access_ticket_delete(const char *ticket_id);
 /**
  * Verifies that the given user in combination with the source ip
  * complies with the requested mask

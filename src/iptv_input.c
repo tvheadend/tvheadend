@@ -60,13 +60,18 @@ iptv_got_pat(const uint8_t *ptr, size_t len, void *aux)
   len -= 8;
   ptr += 8;
 
-  if(len < 4)
-    return;
+  while(len >= 4) {
 
-  prognum =  ptr[0]         << 8 | ptr[1];
-  pmt     = (ptr[2] & 0x1f) << 8 | ptr[3];
+    prognum =  ptr[0]         << 8 | ptr[1];
+    pmt     = (ptr[2] & 0x1f) << 8 | ptr[3];
 
-  t->s_pmt_pid = pmt;
+    if(prognum != 0) {
+      t->s_pmt_pid = pmt;
+      return;
+    }
+    ptr += 4;
+    len -= 4;
+  }
 }
 
 
@@ -119,7 +124,7 @@ iptv_ts_input(service_t *t, const uint8_t *tsb)
 static void *
 iptv_thread(void *aux)
 {
-  int nfds, fd, r, j;
+  int nfds, fd, r, j, hlen;
   uint8_t tsb[65536], *buf;
   struct epoll_event ev;
   service_t *t;
@@ -153,7 +158,17 @@ iptv_thread(void *aux)
       if((tsb[1] & 0x7f) != 33)
 	continue;
       
-      int hlen = (tsb[0] & 0xf) * 4 + 12;
+      hlen = (tsb[0] & 0xf) * 4 + 12;
+
+      if(tsb[0] & 0x10) {
+	// Extension (X bit) == true
+
+	if(r < hlen + 4)
+	  continue; // Packet size < hlen + extension header
+
+	// Skip over extension header (last 2 bytes of header is length)
+	hlen += ((tsb[hlen + 2] << 8) | tsb[hlen + 3]) * 4;
+      }
 
       if(r < hlen || (r - hlen) % 188 != 0)
 	continue;

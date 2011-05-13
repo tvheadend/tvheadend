@@ -1,3 +1,36 @@
+tvheadend (2.12.99) hts; urgency=low
+
+  * Debian package has been renamed from hts-tvheadend to tvheadend
+
+  * Add functionality to delete recordings
+
+  * Better support for playing in web clients.
+    Temporary tickets are used instead of username/password authentication
+
+  * Remove lock contention in CWC updates
+
+  * Fix bug in IPTV PAT parser (Ticket #318)
+
+  * Store EPG on disk so it can be reloaded on restart
+
+  * Add support for Viaccess EMM
+
+  * Add support for DRECrypt EMM
+
+  * Depend on OpenSSL for cryptographic features
+
+  * RTSP has been dropped. It was too buggy and noone wanted to maintain it
+
+  * Fix bug in JSON encoder. Ticket #163
+
+  * Fix crash in HTTP service. Ticket #334
+
+  * Added http-streaming of services. Tested and working with mplayer.
+
+  * Add support for building RPM packages
+
+ -- Andreas Öman <andreas@lonelycoder.com>  Sat, 19 Feb 2011 12:57:09 +0100
+
 hts-tvheadend (2.12) hts; urgency=low
 
   * Add support for IPTV over IPv6

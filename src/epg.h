@@ -20,6 +20,7 @@
 #define EPG_H
 
 #include "channels.h"
+#include "settings.h"
 
 
 
@@ -68,6 +69,8 @@ typedef struct event {
  */
 void epg_init(void);
 
+void epg_save(void);
+
 /**
  * All the epg_event_set_ function return 1 if it actually changed
  * the EPG records. otherwise it returns 0.
@@ -79,11 +82,9 @@ void epg_init(void);
  * can combine multiple set()'s into one update
  *
  */
-int epg_event_set_title(event_t *e, const char *title)
-       __attribute__ ((warn_unused_result));
+int epg_event_set_title(event_t *e, const char *title);
 
-int epg_event_set_desc(event_t *e, const char *desc)
-       __attribute__ ((warn_unused_result));
+int epg_event_set_desc(event_t *e, const char *desc);
 
 int epg_event_set_ext_desc(event_t *e, int ext_dn, const char *desc)
        __attribute__ ((warn_unused_result));

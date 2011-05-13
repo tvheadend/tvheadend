@@ -1,4 +1,4 @@
-Template: hts-tvheadend/admin_username
+Template: tvheadend/admin_username
 Type: string
 Description: Choose a username for Tvheadend administrator.
  Tvheadend is accessed via a world reachable web interface (assuming your
@@ -8,10 +8,10 @@ Description: Choose a username for Tvheadend administrator.
  If you want to change the superuser account you need to reconfigure the
  Tvheadend package.
 
-Template: hts-tvheadend/admin_password
+Template: tvheadend/admin_password
 Type: password
 Description: Administrator password.
 
-Template: hts-tvheadend/webinterface
+Template: tvheadend/webinterface
 Type: note
 Description: After installation Tvheadend can be accessed via HTTP on port 9981. From this machine you can point your web-browser to http://localhost:9981/

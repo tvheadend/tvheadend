@@ -30,6 +30,7 @@ typedef struct http_arg {
 } http_arg_t;
 
 #define HTTP_STATUS_OK           200
+#define HTTP_STATUS_PARTIAL_CONTENT 206
 #define HTTP_STATUS_FOUND        302
 #define HTTP_STATUS_BAD_REQUEST  400
 #define HTTP_STATUS_UNAUTHORIZED 401
@@ -80,11 +81,6 @@ typedef struct http_connection {
   char *hc_username;
   char *hc_password;
 
-  int hc_authenticated; /* Used by RTSP, it seems VLC does not 
-			   send authentication headers for each 
-			   command, so we just say that it's ok
-			   if it has authenticated at least once */
-
   struct config_head *hc_user_config;
 
   int hc_no_output;
@@ -116,8 +112,9 @@ void http_output_content(http_connection_t *hc, const char *content);
 void http_redirect(http_connection_t *hc, const char *location);
 
 void http_send_header(http_connection_t *hc, int rc, const char *content, 
-		      int contentlen, const char *encoding,
-		      const char *location, int maxage, const char *range);
+		      int64_t contentlen, const char *encoding,
+		      const char *location, int maxage, const char *range,
+		      const char *disposition);
 
 typedef int (http_callback_t)(http_connection_t *hc, 
 			      const char *remain, void *opaque);

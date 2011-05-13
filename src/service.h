@@ -476,6 +476,12 @@ typedef struct service {
 
   int64_t s_current_pts;
 
+  /**
+   * DVB default charset
+   * 	used to overide the default ISO6937 per service
+   */
+  char *s_dvb_default_charset;
+
 } service_t;
 
 
@@ -515,6 +521,8 @@ void service_settings_write(service_t *t);
 const char *service_servicetype_txt(service_t *t);
 
 int service_is_tv(service_t *t);
+
+int service_is_radio(service_t *t);
 
 void service_destroy(service_t *t);
 
@@ -559,5 +567,6 @@ uint16_t service_get_encryption(service_t *t);
 
 int service_get_signal_status(service_t *t, signal_status_t *status);
 
+void service_set_dvb_default_charset(service_t *t, const char *dvb_default_charset);
 
 #endif // SERVICE_H__

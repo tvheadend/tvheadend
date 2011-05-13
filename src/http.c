@@ -123,7 +123,8 @@ static const char *
 http_rc2str(int code)
 {
   switch(code) {
-  case HTTP_STATUS_OK:              return "Ok";
+  case HTTP_STATUS_OK:              return "OK";
+  case HTTP_STATUS_PARTIAL_CONTENT: return "Partial Content";
   case HTTP_STATUS_NOT_FOUND:       return "Not found";
   case HTTP_STATUS_UNAUTHORIZED:    return "Unauthorized";
   case HTTP_STATUS_BAD_REQUEST:     return "Bad request";
@@ -149,8 +150,10 @@ static const char *cachemonths[12] = {
  */
 void
 http_send_header(http_connection_t *hc, int rc, const char *content, 
-		 int contentlen, const char *encoding, const char *location, 
-		 int maxage, const char *range)
+		 int64_t contentlen,
+		 const char *encoding, const char *location, 
+		 int maxage, const char *range,
+		 const char *disposition)
 {
   struct tm tm0, *tm;
   htsbuf_queue_t hdrs;
@@ -204,12 +207,15 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
     htsbuf_qprintf(&hdrs, "Content-Type: %s\r\n", content);
 
   if(contentlen > 0)
-    htsbuf_qprintf(&hdrs, "Content-Length: %d\r\n", contentlen);
+    htsbuf_qprintf(&hdrs, "Content-Length: %"PRId64"\r\n", contentlen);
 
   if(range) {
     htsbuf_qprintf(&hdrs, "Accept-Ranges: %s\r\n", "bytes");
     htsbuf_qprintf(&hdrs, "Content-Range: %s\r\n", range);
   }
+
+  if(disposition != NULL)
+    htsbuf_qprintf(&hdrs, "Content-Disposition: %s\r\n", disposition);
   
   htsbuf_qprintf(&hdrs, "\r\n");
 
@@ -226,7 +232,7 @@ http_send_reply(http_connection_t *hc, int rc, const char *content,
 		const char *encoding, const char *location, int maxage)
 {
   http_send_header(hc, rc, content, hc->hc_reply.hq_size,
-		   encoding, location, maxage, 0);
+		   encoding, location, maxage, 0, NULL);
   
   if(hc->hc_no_output)
     return;
@@ -308,6 +314,15 @@ http_redirect(http_connection_t *hc, const char *location)
 int
 http_access_verify(http_connection_t *hc, int mask)
 {
+  const char *ticket_id = http_arg_get(&hc->hc_req_args, "ticket");
+
+  if(!access_ticket_verify(ticket_id, hc->hc_url)) {
+    tvhlog(LOG_INFO, "HTTP", "%s: using ticket %s for %s", 
+	   inet_ntoa(hc->hc_peer->sin_addr), ticket_id,
+	   hc->hc_url);
+    return 0;
+  }
+
   return access_verify(hc->hc_username, hc->hc_password,
 		       (struct sockaddr *)hc->hc_peer, mask);
 }
@@ -318,7 +333,7 @@ http_access_verify(http_connection_t *hc, int mask)
  * Returns 1 if we should disconnect
  * 
  */
-static void
+static int
 http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
 {
   int err;
@@ -328,8 +343,12 @@ http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
   else
     err = hp->hp_callback(hc, remain, hp->hp_opaque);
 
+  if(err == -1)
+     return 1;
+
   if(err)
     http_error(hc, err);
+  return 0;
 }
 
 
@@ -353,8 +372,7 @@ http_cmd_get(http_connection_t *hc)
   if(args != NULL)
     http_parse_get_args(hc, args);
 
-  http_exec(hc, hp, remain);
-  return 0;
+  return http_exec(hc, hp, remain);
 }
 
 
@@ -416,8 +434,7 @@ http_cmd_post(http_connection_t *hc, htsbuf_queue_t *spill)
     http_error(hc, HTTP_STATUS_NOT_FOUND);
     return 0;
   }
-  http_exec(hc, hp, remain);
-  return 0;
+  return http_exec(hc, hp, remain);
 }
 
 

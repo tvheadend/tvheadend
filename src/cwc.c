@@ -59,6 +59,8 @@ typedef enum {
   CARD_CONAX,
   CARD_SECA,
   CARD_VIACCESS,
+  CARD_NAGRA,
+  CARD_NDS,
   CARD_UNKNOWN
 } card_type_t;
 
@@ -95,6 +97,7 @@ TAILQ_HEAD(cwc_message_queue, cwc_message);
 LIST_HEAD(ecm_section_list, ecm_section);
 static struct cwc_queue cwcs;
 static pthread_cond_t cwc_config_changed;
+static pthread_mutex_t cwc_mutex;
 static char *crypt_md5(const char *pw, const char *salt);
 
 /**
@@ -202,7 +205,7 @@ typedef struct cwc {
   int cwc_writer_running;
   struct cwc_message_queue cwc_writeq;
 
-  TAILQ_ENTRY(cwc) cwc_link; /* Linkage protected via global_lock */
+  TAILQ_ENTRY(cwc) cwc_link; /* Linkage protected via cwc_mutex */
 
   struct cwc_service_list cwc_services;
 
@@ -269,12 +272,14 @@ typedef struct cwc {
  */
 
 static void cwc_service_destroy(th_descrambler_t *td);
-static void cwc_detecs_card_type(cwc_t *cwc);
+static void cwc_detect_card_type(cwc_t *cwc);
 void cwc_emm_conax(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_irdeto(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_dre(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_seca(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_viaccess(cwc_t *cwc, uint8_t *data, int len);
+void cwc_emm_nagra(cwc_t *cwc, uint8_t *data, int len);
+void cwc_emm_nds(cwc_t *cwc, uint8_t *data, int len);
 
 
 /**
@@ -412,8 +417,8 @@ des_make_login_key(cwc_t *cwc, uint8_t *k)
     des14[i] = cwc->cwc_confedkey[i] ^ k[i];
   des_key_spread(des14, spread);
   
-  DES_key_sched((DES_cblock *)spread,     &cwc->cwc_k1);
-  DES_key_sched((DES_cblock *)(spread+8), &cwc->cwc_k2);
+  DES_set_key_unchecked((DES_cblock *)spread,     &cwc->cwc_k1);
+  DES_set_key_unchecked((DES_cblock *)(spread+8), &cwc->cwc_k2);
 }
 
 /**
@@ -431,8 +436,8 @@ des_make_session_key(cwc_t *cwc)
     des14[i % 14] ^= k2[i];
 
   des_key_spread(des14, spread);
-  DES_key_sched((DES_cblock *)spread,     &cwc->cwc_k1);
-  DES_key_sched((DES_cblock *)(spread+8), &cwc->cwc_k2);
+  DES_set_key_unchecked((DES_cblock *)spread,     &cwc->cwc_k1);
+  DES_set_key_unchecked((DES_cblock *)(spread+8), &cwc->cwc_k2);
 }
 
 /**
@@ -479,6 +484,9 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid, int enq)
     pthread_mutex_unlock(&cwc->cwc_writer_mutex);
   } else {
     n = write(cwc->cwc_fd, buf, len);
+    if(n != len)
+      tvhlog(LOG_INFO, "cwc", "write error %s", strerror(errno));
+
     free(cm);
   }
   return seq & 0xffff;
@@ -566,7 +574,7 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
   cwc->cwc_connected = 1;
   cwc_comet_status_update(cwc);
   cwc->cwc_caid = (msg[4] << 8) | msg[5];
-  n = psi_caid2name(cwc->cwc_caid) ?: "Unknown";
+  n = psi_caid2name(cwc->cwc_caid & 0xff00) ?: "Unknown";
 
   memcpy(cwc->cwc_ua, &msg[6], 8);
 
@@ -578,7 +586,7 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 	 cwc->cwc_ua[0], cwc->cwc_ua[1], cwc->cwc_ua[2], cwc->cwc_ua[3], cwc->cwc_ua[4], cwc->cwc_ua[5], cwc->cwc_ua[6], cwc->cwc_ua[7],
 	 nprov);
 
-  cwc_detecs_card_type(cwc);
+  cwc_detect_card_type(cwc);
 
   msg  += 15;
   plen -= 12;
@@ -644,7 +652,7 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
  * based on the equivalent in sasc-ng
  */
 static void
-cwc_detecs_card_type(cwc_t *cwc)
+cwc_detect_card_type(cwc_t *cwc)
 {
   uint8_t c_sys = cwc->cwc_caid >> 8;
 		
@@ -672,6 +680,16 @@ cwc_detecs_card_type(cwc_t *cwc)
   case 0x4a:
     cwc->cwc_card_type = CARD_DRE;
     tvhlog(LOG_INFO, "cwc", "%s: dre card",
+	   cwc->cwc_hostname);
+    break;
+  case 0x18:
+    cwc->cwc_card_type = CARD_NAGRA;
+    tvhlog(LOG_INFO, "cwc", "%s: nagra card",
+	   cwc->cwc_hostname);
+    break;
+  case 0x09:
+    cwc->cwc_card_type = CARD_NDS;
+    tvhlog(LOG_INFO, "cwc", "%s: nds card",
 	   cwc->cwc_hostname);
     break;
   default:
@@ -770,18 +788,16 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
 	     "Obtained key for for service \"%s\" in %lld ms, from %s",
 	     t->s_svcname, delay, ct->cs_cwc->cwc_hostname);
     
-    pthread_mutex_lock(&t->s_stream_mutex);
     ct->cs_keystate = CS_RESOLVED;
     memcpy(ct->cs_cw, msg + 3, 16);
     ct->cs_pending_cw_update = 1;
-    pthread_mutex_unlock(&t->s_stream_mutex);
   }
 }
 
 
 /**
  * Handle running reply
- * global_lock is held
+ * cwc_mutex is held
  */
 static int
 cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
@@ -836,9 +852,9 @@ cwc_read(cwc_t *cwc, void *buf, size_t len, int timeout)
 {
   int r;
 
-  pthread_mutex_unlock(&global_lock);
+  pthread_mutex_unlock(&cwc_mutex);
   r = tcp_read_timeout(cwc->cwc_fd, buf, len, timeout);
-  pthread_mutex_lock(&global_lock);
+  pthread_mutex_lock(&cwc_mutex);
 
   if(cwc_must_break(cwc))
     return ECONNABORTED;
@@ -1031,23 +1047,23 @@ cwc_thread(void *aux)
   struct timespec ts;
   int attempts = 0;
 
-  pthread_mutex_lock(&global_lock);
+  pthread_mutex_lock(&cwc_mutex);
 
   while(cwc->cwc_running) {
     
     while(cwc->cwc_running && cwc->cwc_enabled == 0)
-      pthread_cond_wait(&cwc->cwc_cond, &global_lock);
+      pthread_cond_wait(&cwc->cwc_cond, &cwc_mutex);
 
     snprintf(hostname, sizeof(hostname), "%s", cwc->cwc_hostname);
     port = cwc->cwc_port;
 
     tvhlog(LOG_INFO, "cwc", "Attemping to connect to %s:%d", hostname, port);
 
-    pthread_mutex_unlock(&global_lock);
+    pthread_mutex_unlock(&cwc_mutex);
 
     fd = tcp_connect(hostname, port, errbuf, sizeof(errbuf), 10);
 
-    pthread_mutex_lock(&global_lock);
+    pthread_mutex_lock(&cwc_mutex);
 
     if(fd == -1) {
       attempts++;
@@ -1092,7 +1108,7 @@ cwc_thread(void *aux)
 	   "%s: Automatic connection attempt in in %d seconds",
 	   cwc->cwc_hostname, d);
 
-    pthread_cond_timedwait(&cwc_config_changed, &global_lock, &ts);
+    pthread_cond_timedwait(&cwc_config_changed, &cwc_mutex, &ts);
   }
 
   tvhlog(LOG_INFO, "cwc", "%s destroyed", cwc->cwc_hostname);
@@ -1110,7 +1126,7 @@ cwc_thread(void *aux)
   free((void *)cwc->cwc_hostname);
   free(cwc);
 
-  pthread_mutex_unlock(&global_lock);
+  pthread_mutex_unlock(&cwc_mutex);
   return NULL;
 }
 
@@ -1164,7 +1180,7 @@ cwc_emm(uint8_t *data, int len)
 {
   cwc_t *cwc;
 
-  lock_assert(&global_lock);
+  pthread_mutex_lock(&cwc_mutex);
 
   TAILQ_FOREACH(cwc, &cwcs, cwc_link) {
     if(cwc->cwc_forward_emm && cwc->cwc_writer_running) {
@@ -1184,11 +1200,18 @@ cwc_emm(uint8_t *data, int len)
       case CARD_DRE:
 	cwc_emm_dre(cwc, data, len);
 	break;
+      case CARD_NAGRA:
+	cwc_emm_nagra(cwc, data, len);
+	break;
+      case CARD_NDS:
+	cwc_emm_nds(cwc, data, len);
+	break;
       case CARD_UNKNOWN:
 	break;
       }
     }
   }
+  pthread_mutex_unlock(&cwc_mutex);
 }
 
 
@@ -1447,7 +1470,7 @@ cwc_emm_viaccess(cwc_t *cwc, uint8_t *data, int mlen)
 }
 
 /**
- *
+ * t->s_streaming_mutex is held
  */
 static void
 cwc_table_input(struct th_descrambler *td, struct service *t,
@@ -1581,6 +1604,51 @@ cwc_emm_dre(cwc_t *cwc, uint8_t *data, int len)
     cwc_send_msg(cwc, data, len, 0, 1);
 }
 
+void
+cwc_emm_nagra(cwc_t *cwc, uint8_t *data, int len)
+{
+  int match = 0;
+  unsigned char hexserial[4];
+
+  if (data[0] == 0x83) {      // unique|shared
+    hexserial[0] = data[5];
+    hexserial[1] = data[4];
+    hexserial[2] = data[3];
+    hexserial[3] = data[6];
+    if (memcmp(hexserial, &cwc->cwc_ua[4], (data[7] == 0x10) ? 3 : 4) == 0)
+      match = 1;
+  } 
+  else if (data[0] == 0x82) { // global
+    match = 1;
+  }
+
+  if (match)
+    cwc_send_msg(cwc, data, len, 0, 1);
+}
+
+void
+cwc_emm_nds(cwc_t *cwc, uint8_t *data, int len)
+{
+  int match = 0;
+  int i;
+  int serial_count = ((data[3] >> 4) & 3) + 1;
+  unsigned char emmtype = (data[3] & 0xC0) >> 6;
+
+  if (emmtype == 1 || emmtype == 2) {  // unique|shared
+    for (i = 0; i < serial_count; i++) {
+      if (memcmp(&data[i * 4 + 4], &cwc->cwc_ua[4], 5 - emmtype) == 0) {
+        match = 1;
+        break;
+      }
+    }
+  }
+  else if (emmtype == 0) {  // global
+    match = 1;
+  }
+
+  if (match)
+    cwc_send_msg(cwc, data, len, 0, 1);
+}
 
 /**
  *
@@ -1667,7 +1735,7 @@ cwc_descramble(th_descrambler_t *td, service_t *t, struct elementary_stream *st,
 }
 
 /**
- * global_lock is held
+ * cwc_mutex is held
  * s_stream_mutex is held
  */
 static void 
@@ -1715,7 +1783,7 @@ cwc_find_stream_by_caid(service_t *t, int caid)
 /**
  * Check if our CAID's matches, and if so, link
  *
- * global_lock is held
+ * global_lock is held. Not that we care about that, but either way, it is.
  */
 void
 cwc_service_start(service_t *t)
@@ -1724,7 +1792,7 @@ cwc_service_start(service_t *t)
   cwc_service_t *ct;
   th_descrambler_t *td;
 
-  lock_assert(&global_lock);
+  pthread_mutex_lock(&cwc_mutex);
   TAILQ_FOREACH(cwc, &cwcs, cwc_link) {
     if(cwc->cwc_caid == 0)
       continue;
@@ -1753,6 +1821,7 @@ cwc_service_start(service_t *t)
 	   service_nicename(t), cwc->cwc_hostname, cwc->cwc_port);
 
   }
+  pthread_mutex_unlock(&cwc_mutex);
 }
 
 
@@ -1762,10 +1831,11 @@ cwc_service_start(service_t *t)
 static void
 cwc_destroy(cwc_t *cwc)
 {
-  lock_assert(&global_lock);
+  pthread_mutex_lock(&cwc_mutex);
   TAILQ_REMOVE(&cwcs, cwc, cwc_link);  
   cwc->cwc_running = 0;
   pthread_cond_signal(&cwc->cwc_cond);
+  pthread_mutex_unlock(&cwc_mutex);
 }
 
 
@@ -1890,8 +1960,6 @@ cwc_entry_update(void *opaque, const char *id, htsmsg_t *values, int maycreate)
   if((cwc = cwc_entry_find(id, maycreate)) == NULL)
     return NULL;
 
-  lock_assert(&global_lock);
-  
   if((s = htsmsg_get_str(values, "username")) != NULL) {
     free(cwc->cwc_username);
     cwc->cwc_username = strdup(s);
@@ -2025,6 +2093,7 @@ static const dtable_class_t cwc_dtc = {
   .dtc_record_delete  = cwc_entry_delete,
   .dtc_read_access = ACCESS_ADMIN,
   .dtc_write_access = ACCESS_ADMIN,
+  .dtc_mutex = &cwc_mutex,
 };
 
 
@@ -2038,7 +2107,7 @@ cwc_init(void)
   dtable_t *dt;
 
   TAILQ_INIT(&cwcs);
-
+  pthread_mutex_init(&cwc_mutex, NULL);
   pthread_cond_init(&cwc_config_changed, NULL);
 
   dt = dtable_create(&cwc_dtc, "cwc", NULL);

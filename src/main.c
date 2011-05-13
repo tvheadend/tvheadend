@@ -357,6 +357,8 @@ main(int argc, char **argv)
 
   pthread_mutex_lock(&global_lock);
 
+  time(&dispatch_clock);
+
   trap_init(argv[0]);
   
   /**
@@ -432,6 +434,8 @@ main(int argc, char **argv)
     abort();
 
   mainloop();
+
+  epg_save();
 
   tvhlog(LOG_NOTICE, "STOP", "Exiting HTS Tvheadend");
 

@@ -152,7 +152,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
 		 "\tpadding:0;\n"
 		 "\tborder:0 none;\n"
 		 "\toverflow:hidden;\n"
-		 "\theight:100%;\n"
+		 "\theight:100%%;\n"
 		 "}\n"
 		 "#systemlog {\n"
 		 "\tfont:normal 12px courier; font-weight: bold;\n"
@@ -230,7 +230,7 @@ extjs_tablemgr(http_connection_t *hc, const char *remain, void *opaque)
 
   in = entries != NULL ? htsmsg_json_deserialize(entries) : NULL;
 
-  pthread_mutex_lock(&global_lock);
+  pthread_mutex_lock(dt->dt_dtc->dtc_mutex);
 
   if(!strcmp(op, "create")) {
     if(http_access_verify(hc, dt->dt_dtc->dtc_write_access))
@@ -264,15 +264,15 @@ extjs_tablemgr(http_connection_t *hc, const char *remain, void *opaque)
 
   } else {
   bad:
-    pthread_mutex_unlock(&global_lock);
+    pthread_mutex_unlock(dt->dt_dtc->dtc_mutex);
     return HTTP_STATUS_BAD_REQUEST;
 
   noaccess:
-    pthread_mutex_unlock(&global_lock);
+    pthread_mutex_unlock(dt->dt_dtc->dtc_mutex);
     return HTTP_STATUS_BAD_REQUEST;
   }
 
-  pthread_mutex_unlock(&global_lock);
+  pthread_mutex_unlock(dt->dt_dtc->dtc_mutex);
 
   if(in != NULL)
     htsmsg_destroy(in);
@@ -805,6 +805,19 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
 
+  } else if(!strcmp(op, "deleteEntry")) {
+    s = http_arg_get(&hc->hc_req_args, "entryId");
+
+    if((de = dvr_entry_find_by_id(atoi(s))) == NULL) {
+      pthread_mutex_unlock(&global_lock);
+      return HTTP_STATUS_BAD_REQUEST;
+    }
+
+    dvr_entry_delete(de);
+
+    out = htsmsg_create_map();
+    htsmsg_add_u32(out, "success", 1);
+
   } else if(!strcmp(op, "createEntry")) {
 
     const char *config_name = http_arg_get(&hc->hc_req_args, "config_name");
@@ -1103,6 +1116,7 @@ service_update(htsmsg_t *in)
   uint32_t u32;
   const char *id;
   const char *chname;
+  const char *dvb_default_charset;
 
   TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
     if((c = htsmsg_get_map_by_field(f)) == NULL ||
@@ -1117,6 +1131,9 @@ service_update(htsmsg_t *in)
 
     if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
       service_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
+
+    if((dvb_default_charset = htsmsg_get_str(c, "dvb_default_charset")) != NULL)
+      service_set_dvb_default_charset(t, dvb_default_charset);
   }
 }
 
@@ -1197,6 +1214,9 @@ extjs_servicedetails(http_connection_t *hc,
   htsmsg_add_str(out, "title", t->s_svcname ?: "unnamed service");
 
   htsmsg_add_msg(out, "streams", streams);
+
+  if(t->s_dvb_default_charset != NULL)
+    htsmsg_add_str(out, "dvb_default_charset", t->s_dvb_default_charset);
 
   pthread_mutex_unlock(&global_lock);
 
@@ -1422,6 +1442,7 @@ extjs_service_update(htsmsg_t *in)
   uint32_t u32;
   const char *id;
   const char *chname;
+  const char *dvb_default_charset;
 
   TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
     if((c = htsmsg_get_map_by_field(f)) == NULL ||
@@ -1436,6 +1457,9 @@ extjs_service_update(htsmsg_t *in)
 
     if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
       service_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
+
+    if((dvb_default_charset = htsmsg_get_str(c, "dvb_default_charset")) != NULL)
+      service_set_dvb_default_charset(t, dvb_default_charset);
   }
 }
 

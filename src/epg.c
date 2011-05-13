@@ -16,6 +16,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sys/mman.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -25,9 +27,11 @@
 
 #include "tvheadend.h"
 #include "channels.h"
+#include "settings.h"
 #include "epg.h"
 #include "dvr/dvr.h"
 #include "htsp.h"
+#include "htsmsg_binary.h"
 
 #define EPG_MAX_AGE 86400
 
@@ -49,16 +53,20 @@ e_ch_cmp(const event_t *a, const event_t *b)
  *
  */
 static void
-epg_set_current(channel_t *ch, event_t *e)
+epg_set_current(channel_t *ch, event_t *e, event_t *next)
 {
-  if(ch->ch_epg_current == e)
+  if(next == NULL && e != NULL)
+    next = RB_NEXT(e, e_channel_link);
+
+  if(ch->ch_epg_current == e && ch->ch_epg_next == next)
     return;
 
   ch->ch_epg_current = e;
+  ch->ch_epg_next = next;
   if(e != NULL)
     gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
 		   ch, MAX(e->e_stop, dispatch_clock + 1));
-  htsp_event_update(ch, e);
+  htsp_channgel_update_current(ch);
 }
 
 /**
@@ -69,17 +77,16 @@ epg_ch_check_current_event(void *aux)
 {
   channel_t *ch = aux;
   event_t skel, *e = ch->ch_epg_current;
-
   if(e != NULL) {
     if(e->e_start <= dispatch_clock && e->e_stop > dispatch_clock) {
-      epg_set_current(ch, e);
+      epg_set_current(ch, e, NULL);
       return;
     }
 
     if((e = RB_NEXT(e, e_channel_link)) != NULL) {
 
       if(e->e_start <= dispatch_clock && e->e_stop > dispatch_clock) {
-	epg_set_current(ch, e);
+	epg_set_current(ch, e, NULL);
 	return;
       }
     }
@@ -87,20 +94,20 @@ epg_ch_check_current_event(void *aux)
 
   e = epg_event_find_by_time(ch, dispatch_clock);
   if(e != NULL) {
-    epg_set_current(ch, e);
+    epg_set_current(ch, e, NULL);
     return;
   }
-
-  epg_set_current(ch, NULL);
 
   skel.e_start = dispatch_clock;
   e = RB_FIND_GT(&ch->ch_epg_events, &skel, e_channel_link, e_ch_cmp);
   if(e != NULL) {
     gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
 		   ch, MAX(e->e_start, dispatch_clock + 1));
+    epg_set_current(ch, NULL, e);
+  } else {
+    epg_set_current(ch, NULL, NULL);
   }
 }
-
 
 
 /**
@@ -299,11 +306,13 @@ epg_remove_event_from_channel(channel_t *ch, event_t *e)
   epg_event_unref(e);
 
   if(ch->ch_epg_current == e) {
-    epg_set_current(ch, NULL);
+    epg_set_current(ch, NULL, n);
 
     if(n != NULL)
       gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
 		     ch, n->e_start);
+  } else if(ch->ch_epg_next == e) {
+    epg_set_current(ch, ch->ch_epg_current, NULL);
   }
 
   if(wasfirst && (e = RB_FIRST(&ch->ch_epg_events)) != NULL) {
@@ -527,12 +536,192 @@ epg_content_group_find_by_name(const char *name)
 }
 
 
-/*
+/**
+ *
+ */
+static int
+epg_event_create_by_msg(htsmsg_t *c, time_t now)
+{
+ channel_t *ch;
+  event_t *e = NULL;
+  uint32_t ch_id = 0;
+  uint32_t e_start = 0;
+  uint32_t e_stop = 0;
+  int e_dvb_id = 0, v;
+  const char *s;
+
+  // Now create the event
+  if(htsmsg_get_u32(c, "ch_id", &ch_id))
+    return 0;
+
+  if((ch = channel_find_by_identifier(ch_id)) == NULL)
+    return 0;
+
+  if(htsmsg_get_u32(c, "start", &e_start))
+    return 0;
+
+  if(htsmsg_get_u32(c, "stop", &e_stop))
+    return 0;
+
+  if(e_stop < now)
+    return 0;
+
+  if(htsmsg_get_s32(c, "dvb_id", &e_dvb_id))
+    e_dvb_id = -1;
+
+  e = epg_event_create(ch, e_start, e_stop, e_dvb_id, NULL);
+
+  if((s = htsmsg_get_str(c, "title")) != NULL)
+    epg_event_set_title(e, s);
+
+  if((s = htsmsg_get_str(c, "desc")) != NULL)
+    epg_event_set_desc(e, s);
+
+  if(!htsmsg_get_s32(c, "season", &v))
+    e->e_episode.ee_season = v;
+
+  if(!htsmsg_get_s32(c, "episode", &v))
+    e->e_episode.ee_episode = v;
+
+  if(!htsmsg_get_s32(c, "part", &v))
+    e->e_episode.ee_part = v;
+
+  if((s = htsmsg_get_str(c, "epname")) != NULL)
+    tvh_str_set(&e->e_episode.ee_onscreen, s);
+
+  return 1;
+}
+
+
+/**
+ *
+ */
+static void
+epg_load(void)
+{
+  struct stat st;
+  int fd = hts_settings_open_file(0, "epgdb");
+  time_t now;
+  int created = 0;
+
+  time(&now);
+
+  if(fd == -1)
+    return;
+
+  if(fstat(fd, &st)) {
+    close(fd);
+    return;
+  }
+  uint8_t *mem = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
+  if(mem == MAP_FAILED) {
+    close(fd);
+    return;
+  }
+  const uint8_t *rp = mem;
+  size_t remain = st.st_size;
+
+  while(remain > 4) {
+    int msglen = (rp[0] << 24) | (rp[1] << 16) | (rp[2] << 8) | rp[3];
+    remain -= 4;
+    rp += 4;
+
+    if(msglen > remain) {
+      tvhlog(LOG_ERR, "EPG", "Malformed EPG database, skipping some data");
+      break;
+    }
+    htsmsg_t *m = htsmsg_binary_deserialize(rp, msglen, NULL);
+
+    created += epg_event_create_by_msg(m, now);
+
+    htsmsg_destroy(m);
+    rp += msglen;
+    remain -= msglen;
+  }
+
+  munmap(mem, st.st_size);
+  close(fd);
+  tvhlog(LOG_NOTICE, "EPG", "Injected %d event from disk database", created);
+}
+
+/**
  *
  */
 void
 epg_init(void)
 {
+  channel_t *ch;
+
+  epg_load();
+  
+  RB_FOREACH(ch, &channel_name_tree, ch_name_link)
+    epg_ch_check_current_event(ch);
+}
+
+
+/**
+ * Save the epg on disk
+ */ 
+void
+epg_save(void)
+{
+  event_t *e;
+  int num_saved = 0;
+  size_t msglen;
+  void *msgdata;
+  channel_t *ch;
+
+  int fd = hts_settings_open_file(1, "epgdb");
+
+  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
+    RB_FOREACH(e, &ch->ch_epg_events, e_channel_link) {
+      if(!e->e_start || !e->e_stop)
+	continue;
+
+      htsmsg_t *m = htsmsg_create_map();
+      htsmsg_add_u32(m, "ch_id", ch->ch_id);
+      htsmsg_add_u32(m, "start", e->e_start);
+      htsmsg_add_u32(m, "stop", e->e_stop);
+      if(e->e_title != NULL)
+	htsmsg_add_str(m, "title", e->e_title);
+      if(e->e_desc != NULL)
+	htsmsg_add_str(m, "desc", e->e_desc);
+      if(e->e_dvb_id)
+	htsmsg_add_u32(m, "dvb_id", e->e_dvb_id);
+
+      if(e->e_episode.ee_season)
+	htsmsg_add_u32(m, "season", e->e_episode.ee_season);
+
+      if(e->e_episode.ee_episode)
+	htsmsg_add_u32(m, "episode", e->e_episode.ee_episode);
+
+      if(e->e_episode.ee_part)
+	htsmsg_add_u32(m, "part", e->e_episode.ee_part);
+
+      if(e->e_episode.ee_onscreen)
+	htsmsg_add_str(m, "epname", e->e_episode.ee_onscreen);
+
+
+      int r = htsmsg_binary_serialize(m, &msgdata, &msglen, 0x10000);
+      htsmsg_destroy(m);
+
+      if(!r) {
+	ssize_t written = write(fd, msgdata, msglen);
+	int err = errno;
+	free(msgdata);
+	if(written != msglen) {
+	  tvhlog(LOG_DEBUG, "epg", "Failed to store EPG on disk -- %s",
+		 strerror(err));
+	  close(fd);
+	  hts_settings_remove("epgdb");
+	  return;
+	}
+      }
+      num_saved++;
+    }
+  }
+  close(fd);
+  tvhlog(LOG_DEBUG, "EPG", "Stored EPG data for %d events on disk", num_saved);
 }
 
 

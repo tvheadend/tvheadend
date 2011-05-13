@@ -465,6 +465,7 @@ service_destroy(service_t *t)
   free(t->s_identifier);
   free(t->s_svcname);
   free(t->s_provider);
+  free(t->s_dvb_default_charset);
 
   while((st = TAILQ_FIRST(&t->s_components)) != NULL) {
     TAILQ_REMOVE(&t->s_components, st, es_link);
@@ -503,6 +504,7 @@ service_create(const char *identifier, int type, int source_type)
   t->s_refcount = 1;
   t->s_enabled = 1;
   t->s_pcr_last = PTS_UNSET;
+  t->s_dvb_default_charset = NULL;
   TAILQ_INIT(&t->s_components);
 
   streaming_pad_init(&t->s_streaming_pad);
@@ -677,6 +679,23 @@ service_map_channel(service_t *t, channel_t *ch, int save)
 /**
  *
  */
+void
+service_set_dvb_default_charset(service_t *t, const char *dvb_default_charset)
+{
+  lock_assert(&global_lock);
+
+  if(t->s_dvb_default_charset != NULL && !strcmp(t->s_dvb_default_charset, dvb_default_charset))
+    return;
+
+  free(t->s_dvb_default_charset);
+  t->s_dvb_default_charset = strdup(dvb_default_charset);
+  t->s_config_save(t);
+}
+
+
+/**
+ *
+ */
 static void
 service_data_timeout(void *aux)
 {
@@ -720,6 +739,14 @@ service_is_tv(service_t *t)
     t->s_servicetype == ST_AC_HDTV;
 }
 
+/**
+ *
+ */
+int
+service_is_radio(service_t *t)
+{
+  return t->s_servicetype == ST_RADIO;
+}
 
 /**
  *
