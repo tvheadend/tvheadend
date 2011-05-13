@@ -715,6 +715,7 @@ htsp_build_event(event_t *e)
 
   out = htsmsg_create_map();
 
+  htsmsg_add_u32(out, "eventId", e->e_id);
   htsmsg_add_u32(out, "channelId", e->e_channel->ch_id);
   htsmsg_add_u32(out, "start", e->e_start);
   htsmsg_add_u32(out, "stop", e->e_stop);
