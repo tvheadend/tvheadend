@@ -54,10 +54,6 @@ tvheadend.VLC = function(url) {
   var missingPlugin = document.createElement('div');
   missingPlugin.style.display = 'none';
   missingPlugin.style.padding = '5px';
-  
-  var missingPlugin = document.createElement('div');
-  missingPlugin.style.display = 'none';
-  missingPlugin.style.padding = '5px';
 
   var selectChannel = new Ext.form.ComboBox({
     loadingText: 'Loading...',
