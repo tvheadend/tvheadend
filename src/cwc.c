@@ -44,7 +44,7 @@
 /**
  *
  */
-
+#define TVHEADEND_PROTOCOL_ID 0x6502
 #define CWC_KEEPALIVE_INTERVAL 30
 
 #define CWS_NETMSGSIZE 272
@@ -714,7 +714,7 @@ cwc_send_login(cwc_t *cwc)
   memcpy(buf + 3,      cwc->cwc_username, ul);
   memcpy(buf + 3 + ul, cwc->cwc_password_salted, pl);
  
-  cwc_send_msg(cwc, buf, ul + pl + 3, 0, 0);
+  cwc_send_msg(cwc, buf, ul + pl + 3, TVHEADEND_PROTOCOL_ID, 0);
 }
 
 
