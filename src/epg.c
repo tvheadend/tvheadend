@@ -482,11 +482,12 @@ epg_unlink_from_channel(channel_t *ch)
 {
   event_t *e;
 
+  while((e = ch->ch_epg_events.root) != NULL)
+    epg_remove_event_from_channel(ch, e);
+
   gtimer_disarm(&ch->ch_epg_timer_head);
   gtimer_disarm(&ch->ch_epg_timer_current);
 
-  while((e = ch->ch_epg_events.root) != NULL)
-    epg_remove_event_from_channel(ch, e);
 }
 
 
