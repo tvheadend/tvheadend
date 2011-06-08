@@ -1,8 +1,8 @@
 Source: tvheadend
-Section: main
+Section: video
 Priority: extra
 Maintainer: Andreas Öman <andreas@lonelycoder.com>
-Build-Depends: debhelper (>= 7.0.50)
+Build-Depends: debhelper (>= 7.0.50), pkg-config, libavahi-client-dev, libssl-dev
 Standards-Version: 3.7.3
 
 Package: tvheadend

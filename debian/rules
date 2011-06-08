@@ -25,10 +25,14 @@ override_dh_auto_build:
 	$(MAKE)
 
 override_dh_install:
-	$(MAKE) prefix=$(CURDIR)/debian/tvheadend/usr install
+	$(MAKE) DESTDIR=$(CURDIR)/debian/tvheadend install
 
 override_dh_installinit:
 	dh_installinit --name tvheadend	
 
 override_dh_strip:
-        dh_strip --dbg-package=tvheadend-dbg
+	dh_strip --dbg-package=tvheadend-dbg
+
+override_dh_autotest:
+	echo "skipped autotest"
+
