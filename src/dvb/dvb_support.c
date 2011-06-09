@@ -47,7 +47,7 @@ static iconv_t
 dvb_iconv_open(const char *srcencoding)
 {
   iconv_t ic;
-  ic = iconv_open("UTF8", srcencoding);
+  ic = iconv_open("UTF-8", srcencoding);
   return ic;
 }
 
@@ -62,7 +62,7 @@ dvb_conversion_init(void)
     convert_iso_8859[i] = dvb_iconv_open(buf);
   }
 
-  convert_utf8   = dvb_iconv_open("UTF8");
+  convert_utf8   = dvb_iconv_open("UTF-8");
   convert_latin1 = dvb_iconv_open("ISO6937");
 }
 
