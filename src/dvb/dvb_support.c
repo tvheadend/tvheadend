@@ -64,6 +64,9 @@ dvb_conversion_init(void)
 
   convert_utf8   = dvb_iconv_open("UTF-8");
   convert_latin1 = dvb_iconv_open("ISO6937");
+  if(convert_latin1 == (iconv_t)(-1)) {
+    convert_latin1 = dvb_iconv_open("ISO_8859-1");
+  }
 }
 
 
