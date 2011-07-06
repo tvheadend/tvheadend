@@ -279,10 +279,14 @@ static const struct {
   const char *name;
 
 } tldlist[] = {
+  {"auto", "--Generic--"},
   {"ad", "Andorra"},
   {"at", "Austria"},
   {"au", "Australia"},
+  {"ax", "Aland Islands"},
   {"be", "Belgium"},
+  {"br", "Brazil"},
+  {"ca", "Canada"},
   {"ch", "Switzerland"},
   {"cz", "Czech Republic"},
   {"de", "Germany"},
@@ -307,6 +311,7 @@ static const struct {
   {"pl", "Poland"},
   {"ro", "Romania"},
   {"se", "Sweden"},
+  {"si", "Slovenia"},
   {"sk", "Slovakia"},
   {"tw", "Taiwan"},
   {"uk", "United Kingdom"},
@@ -367,10 +372,16 @@ scan_file(char *fname)
     co = find_region("geo", "Geosynchronous Orbit");
 
   } else {
-    displayname = name + 3;
-    buf[0] = name[0];
-    buf[1] = name[1];
-    buf[2] = 0;
+    l = 0;
+    c = 0;
+    while(*name && c != '-') {
+      c = *name++;
+      if (c != '-') {
+        buf[l++] = c;
+      }
+    }
+    buf[l] = 0;
+    displayname = name;
     co = find_region(buf, tldcode2longname(buf));
   }
 
