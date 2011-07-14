@@ -72,6 +72,7 @@ SRCS =  src/main.c \
 
 SRCS += src/plumbing/tsfix.c \
 	src/plumbing/globalheaders.c \
+	src/plumbing/transcode.c \
 
 SRCS += src/dvr/dvr_db.c \
 	src/dvr/dvr_rec.c \

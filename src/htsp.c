@@ -39,6 +39,7 @@
 #include "streaming.h"
 #include "psi.h"
 #include "htsmsg_binary.h"
+#include "plumbing/transcode.h"
 
 #include <sys/statvfs.h>
 #include "settings.h"
@@ -156,6 +157,8 @@ typedef struct htsp_subscription {
 
   streaming_target_t hs_input;
 
+  streaming_target_t *hs_transcoder;
+
   htsp_msg_q_t hs_q;
 
   time_t hs_last_report; /* Last queue status report sent */
@@ -236,6 +239,8 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
 {
   LIST_REMOVE(hs, hs_link);
   subscription_unsubscribe(hs->hs_s);
+  if(hs->hs_transcoder != NULL)
+    transcoder_destroy(hs->hs_transcoder);
   htsp_flush_queue(htsp, &hs->hs_q);
   free(hs);
 }
@@ -876,9 +881,13 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
   streaming_target_init(&hs->hs_input, htsp_streaming_input, hs, 0);
 
-  hs->hs_s = subscription_create_from_channel(ch, weight,
-					      htsp->htsp_logname,
-					      &hs->hs_input, 0);
+  if(1 /* do transcoding */ )
+    hs->hs_transcoder = transcoder_create(&hs->hs_input);
+    
+  hs->hs_s =
+    subscription_create_from_channel(ch, weight,
+				     htsp->htsp_logname,
+				     hs->hs_transcoder ?: &hs->hs_input, 0);
   return NULL;
 }
 
