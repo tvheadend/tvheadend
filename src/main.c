@@ -36,6 +36,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include <libavcodec/avcodec.h>
+
 #include "tvheadend.h"
 #include "tcp.h"
 #include "access.h"
@@ -380,6 +382,11 @@ main(int argc, char **argv)
 #if ENABLE_V4L
   v4l_init();
 #endif
+#if 1
+  avcodec_init();
+  avcodec_register_all();
+#endif
+
   http_server_init();
 
   webui_init(TVHEADEND_CONTENT_PATH);
