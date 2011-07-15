@@ -154,6 +154,24 @@ else
     die
 fi
 
+if pkg-config --atleast-version 52.96.0 libavcodec; then
+    echo >>${CONFIG_MAK} "LDFLAGS_cfg += " `pkg-config --libs libavcodec`
+    echo >>${CONFIG_MAK} "CFLAGS_cfg += " `pkg-config --cflags libavcodec`
+    echo "Using libavcodec:      `pkg-config --modversion libavcodec`"
+else
+    echo "libavcodec 52.96.0 or newer not found."
+    die
+fi
+
+if pkg-config --atleast-version 0.13.0 libswscale; then
+    echo >>${CONFIG_MAK} "LDFLAGS_cfg += " `pkg-config --libs libswscale`
+    echo >>${CONFIG_MAK} "CFLAGS_cfg += " `pkg-config --cflags libswscale`
+    echo "Using libswscale:      `pkg-config --modversion libswscale`"
+else
+    echo "libswscale 0.13.0 or newer not found."
+    die
+fi
+
 #
 # Configure paths, etc
 #
