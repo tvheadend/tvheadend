@@ -111,8 +111,8 @@ transcoder_stream_init(transcoder_stream_t *ts, const streaming_start_component_
     ts->sctx->codec_type = CODEC_TYPE_AUDIO;
   } else if (SCT_ISVIDEO(ssc->ssc_type)) {
     ts->sctx->codec_type = CODEC_TYPE_VIDEO;
-    ((streaming_start_component_t *)ssc)->ssc_width = ts->tctx->width = ssc->ssc_width / 2;
-    ((streaming_start_component_t *)ssc)->ssc_height = ts->tctx->height = ssc->ssc_height / 2;
+    ((streaming_start_component_t *)ssc)->ssc_width = ts->tctx->width = (2*ssc->ssc_width / 3);
+    ((streaming_start_component_t *)ssc)->ssc_height = ts->tctx->height = (2*ssc->ssc_height / 3);
   }
 
   return 0;
@@ -233,7 +233,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   ts->tctx->sample_aspect_ratio = ts->sctx->sample_aspect_ratio;
 
   ts->tctx->bit_rate = 1500*1000;
-  ts->tctx->bit_rate_tolerance = 40000000;
+  ts->tctx->bit_rate_tolerance = 8*2*1024*1024;
   ts->tctx->gop_size = 12;
   ts->tctx->max_b_frames = 2;
 
