@@ -38,7 +38,6 @@ typedef struct transcoder_audio {
 } transcoder_stream_t;
 
 
-
 typedef struct transcoder {
   streaming_target_t t_input;  // must be first
   streaming_target_t *t_output;
@@ -75,6 +74,7 @@ transcoder_stream_destroy(transcoder_stream_t *ts)
   av_free(ts->tctx);
   av_free(ts->frame);
   av_free(ts->samples);
+  sws_freeContext(ts->conv);
 }
 
 
@@ -426,6 +426,8 @@ streaming_target_t *
 transcoder_create(streaming_target_t *output)
 {
   transcoder_t *t = calloc(1, sizeof(transcoder_t));
+
+  memset(t, 0, sizeof(transcoder_t));
   t->t_output = output;
 
   transcoder_stream_create(&t->ts_video);
