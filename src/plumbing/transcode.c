@@ -346,7 +346,7 @@ transcoder_packet(transcoder_t *t, th_pkt_t *pkt)
  * initializes eatch transcoding stream
  */
 static void
-transcoder_start(transcoder_t *t, const streaming_start_t *ss)
+transcoder_start(transcoder_t *t, streaming_start_t *ss)
 {
   int i;
 
@@ -391,27 +391,27 @@ transcoder_stop(transcoder_t *t)
 static void
 transcoder_input(void *opaque, streaming_message_t *sm)
 {
-  th_pkt_t *s_pkt;
-  th_pkt_t *t_pkt;
   transcoder_t *t = opaque;
 
   switch(sm->sm_type) {
-  case SMT_PACKET:
-    s_pkt = pkt_merge_header(sm->sm_data);
-    t_pkt = transcoder_packet(t, s_pkt);
-    if(t_pkt) {
-      sm = streaming_msg_create_pkt(t_pkt);
+  case SMT_PACKET: {
+      th_pkt_t *s_pkt = pkt_merge_header(sm->sm_data);
+      th_pkt_t *t_pkt = transcoder_packet(t, s_pkt);
+      if(t_pkt) {
+        sm = streaming_msg_create_pkt(t_pkt);
+        streaming_target_deliver2(t->t_output, sm);
+        pkt_ref_dec(t_pkt);
+      }
+      pkt_ref_dec(s_pkt);
+      break;
+  }
+  case SMT_START: {
+      streaming_start_t *ss = streaming_start_copy(sm->sm_data);
+      transcoder_start(t, ss);
       streaming_target_deliver2(t->t_output, sm);
-      pkt_ref_dec(t_pkt);
-    }
-    pkt_ref_dec(s_pkt);
-    break;
-
-  case SMT_START:
-    transcoder_start(t, sm->sm_data);
-    streaming_target_deliver2(t->t_output, sm);
-    break;
-
+      streaming_start_unref(ss);
+      break;
+  }
   case SMT_STOP:
     transcoder_stop(t);
     // Fallthrough
