@@ -31,10 +31,12 @@ typedef struct transcoder_stream {
   AVCodecContext *tctx; // target
   int            index; // refers to the stream index
 
-  struct SwsContext *conv; // used for scaling
-  AVFrame           *frame; // decoding buffer for video stream
+  struct SwsContext *scaler; // used for scaling
+  AVFrame           *dec_frame; // decoding buffer for video stream
+  AVFrame           *enc_frame; // encoding buffer for video stream
 
-  short *samples; // decoding buffer for audio stream
+  short           *dec_sample; // decoding buffer for audio stream
+  uint8_t         *enc_sample; // encoding buffer for audio stream
 } transcoder_stream_t;
 
 
@@ -56,11 +58,15 @@ transcoder_stream_create(transcoder_stream_t *ts)
 {
   ts->sctx = avcodec_alloc_context();
   ts->tctx = avcodec_alloc_context();
-  ts->frame = avcodec_alloc_frame();
-  ts->samples = av_malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE*2);
+  ts->dec_frame = avcodec_alloc_frame();
+  ts->dec_sample = av_malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE*2);
+  ts->enc_frame = avcodec_alloc_frame();
+  ts->enc_sample = av_malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE*2);
 
-  avcodec_get_frame_defaults(ts->frame);
-  memset(ts->samples, 0, AVCODEC_MAX_AUDIO_FRAME_SIZE*2);
+  avcodec_get_frame_defaults(ts->dec_frame);
+  avcodec_get_frame_defaults(ts->enc_frame);
+  memset(ts->dec_sample, 0, AVCODEC_MAX_AUDIO_FRAME_SIZE*2);
+  memset(ts->enc_sample, 0, AVCODEC_MAX_AUDIO_FRAME_SIZE*2);
 }
 
 
@@ -72,9 +78,11 @@ transcoder_stream_destroy(transcoder_stream_t *ts)
 {
   av_free(ts->sctx);
   av_free(ts->tctx);
-  av_free(ts->frame);
-  av_free(ts->samples);
-  sws_freeContext(ts->conv);
+  av_free(ts->dec_frame);
+  av_free(ts->enc_frame);
+  av_free(ts->dec_sample);
+  av_free(ts->enc_sample);
+  sws_freeContext(ts->scaler);
 }
 
 
@@ -138,7 +146,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   packet.duration = pkt->pkt_duration;
 
   len = AVCODEC_MAX_AUDIO_FRAME_SIZE*2;
-  length = avcodec_decode_audio3(ts->sctx, ts->samples, &len, &packet);
+  length = avcodec_decode_audio3(ts->sctx, ts->dec_sample, &len, &packet);
 
   if(length <= 0) {
     tvhlog(LOG_ERR, "transcode", "Unable to decode audio");
@@ -161,17 +169,13 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     }
   }
 
-  len = AVCODEC_MAX_AUDIO_FRAME_SIZE;
-  out = av_malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE * 2);
-  memset(out, 0, AVCODEC_MAX_AUDIO_FRAME_SIZE * 2);
-
-  length = avcodec_encode_audio(ts->tctx, out, len, ts->samples);
+  length = avcodec_encode_audio(ts->tctx, ts->enc_sample, AVCODEC_MAX_AUDIO_FRAME_SIZE*2, ts->dec_sample);
   if(length <= 0) {
     tvhlog(LOG_ERR, "transcoder", "Unable to encode audio");
     goto cleanup;
   }
 
-  n = pkt_alloc(out, length, pkt->pkt_pts, pkt->pkt_dts);
+  n = pkt_alloc(ts->enc_sample, length, pkt->pkt_pts, pkt->pkt_dts);
   n->pkt_duration = pkt->pkt_duration;
   n->pkt_commercial = pkt->pkt_commercial;
   n->pkt_componentindex = pkt->pkt_componentindex;
@@ -200,7 +204,6 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 static th_pkt_t *
 transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
 {
-  AVFrame frame;
   uint8_t *buf = NULL;
   uint8_t *out = NULL;
   th_pkt_t *n;
@@ -215,7 +218,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   packet.dts  = pkt->pkt_dts;
   packet.duration = pkt->pkt_duration;
 
-  length = avcodec_decode_video2(ts->sctx, ts->frame, &got_picture, &packet);
+  length = avcodec_decode_video2(ts->sctx, ts->dec_frame, &got_picture, &packet);
 
   if(length <= 0) {
     tvhlog(LOG_ERR, "transcoder", "Unable to decode video");
@@ -249,16 +252,14 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   len = avpicture_get_size(ts->tctx->pix_fmt, ts->tctx->width, ts->tctx->height);
   buf = av_malloc(len);
   memset(buf, 0, len);
- 
-  avcodec_get_frame_defaults(&frame);
 
-  avpicture_fill((AVPicture *)&frame, 
+  avpicture_fill((AVPicture *)ts->enc_frame, 
                  buf, 
                  ts->tctx->pix_fmt,
                  ts->tctx->width, 
                  ts->tctx->height);
  
-  ts->conv = sws_getCachedContext(ts->conv,
+  ts->scaler = sws_getCachedContext(ts->scaler,
                                   ts->sctx->width,
                                   ts->sctx->height,
                                   ts->sctx->pix_fmt,
@@ -270,21 +271,21 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
                                   NULL,
                                   NULL);
  
-  sws_scale(ts->conv, 
-            (const uint8_t * const*)ts->frame->data, 
-            ts->frame->linesize,
+  sws_scale(ts->scaler, 
+            (const uint8_t * const*)ts->dec_frame->data, 
+            ts->dec_frame->linesize,
             0, 
             ts->sctx->height, 
-            frame.data, 
-            frame.linesize);
+            ts->enc_frame->data, 
+            ts->enc_frame->linesize);
  
-  frame.pts = pkt->pkt_pts;
+  ts->enc_frame->pts = pkt->pkt_pts;
 
   len = avpicture_get_size(ts->tctx->pix_fmt, ts->sctx->width, ts->sctx->height);
   out = av_malloc(len);
   memset(out, 0, len);
 
-  length = avcodec_encode_video(ts->tctx, out, len, &frame);
+  length = avcodec_encode_video(ts->tctx, out, len, ts->enc_frame);
   if(length <= 0) {
     tvhlog(LOG_ERR, "transcoder", "Unable to encode video");
     goto cleanup;
