@@ -116,11 +116,23 @@ transcoder_stream_init(transcoder_stream_t *ts, streaming_start_component_t *ssc
   }
 
   if (SCT_ISAUDIO(ssc->ssc_type)) {
-    ts->sctx->codec_type = CODEC_TYPE_AUDIO;
+    ssc->ssc_type = SCT_MPEG2AUDIO;
+
+    ts->sctx->codec_type     = CODEC_TYPE_AUDIO;
+    ts->tctx->channels       = 2;
+    ts->tctx->bit_rate       = 2 * 64000;
   } else if (SCT_ISVIDEO(ssc->ssc_type)) {
-    ts->sctx->codec_type = CODEC_TYPE_VIDEO;
-    ssc->ssc_width = ts->tctx->width = (2*ssc->ssc_width / 3);
-    ssc->ssc_height = ts->tctx->height = (2*ssc->ssc_height / 3);
+    ssc->ssc_type   = SCT_MPEG2VIDEO;
+    ssc->ssc_width  = (2*ssc->ssc_width / 3);
+    ssc->ssc_height = (2*ssc->ssc_height / 3);
+
+    ts->sctx->codec_type         = CODEC_TYPE_VIDEO;
+    ts->tctx->bit_rate           = 2500*1000;
+    ts->tctx->bit_rate_tolerance = 8*2*1024*1024;
+    ts->tctx->gop_size           = 12;
+    ts->tctx->max_b_frames       = 2;
+    ts->tctx->width              = ssc->ssc_width;
+    ts->tctx->height             = ssc->ssc_height;
   }
 
   return 0;
@@ -153,8 +165,6 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   }
 
   ts->tctx->channel_layout = ts->sctx->channel_layout;
-  ts->tctx->channels       = ts->sctx->channels;
-  ts->tctx->bit_rate       = ts->sctx->channels * 64000;
   ts->tctx->sample_rate    = ts->sctx->sample_rate;
   ts->tctx->sample_fmt     = ts->sctx->sample_fmt;
   ts->tctx->frame_size     = ts->sctx->frame_size;
@@ -223,18 +233,12 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   }
 
   ts->tctx->pix_fmt = ts->sctx->pix_fmt;
-  ts->tctx->has_b_frames = ts->sctx->has_b_frames;
   ts->tctx->time_base.den = ts->sctx->time_base.den;
   ts->tctx->time_base.num = ts->sctx->time_base.num;
   ts->tctx->sample_aspect_ratio = ts->sctx->sample_aspect_ratio;
 
-  ts->tctx->bit_rate = 1500*1000;
-  ts->tctx->bit_rate_tolerance = 8*2*1024*1024;
-  ts->tctx->gop_size = 12;
-  ts->tctx->max_b_frames = 2;
-
   if(ts->tctx->codec_id == CODEC_ID_NONE) {
-    AVCodec *codec = avcodec_find_encoder(ts->sctx->codec_id);
+    AVCodec *codec = avcodec_find_encoder(CODEC_ID_MPEG2VIDEO);
     if(!codec || avcodec_open(ts->tctx, codec) < 0) {
       tvhlog(LOG_ERR, "transcoder", "Unable to find video encoder");
       ts->tctx->codec_id = CODEC_ID_NONE;
@@ -397,17 +401,21 @@ transcoder_input(void *opaque, streaming_message_t *sm)
   case SMT_PACKET: {
     th_pkt_t *s_pkt = pkt_merge_header(sm->sm_data);
     th_pkt_t *t_pkt = transcoder_packet(t, s_pkt);
+
     if(t_pkt) {
       sm = streaming_msg_create_pkt(t_pkt);
       streaming_target_deliver2(t->t_output, sm);
       pkt_ref_dec(t_pkt);
     }
+
     pkt_ref_dec(s_pkt);
     break;
   }
   case SMT_START: {
     streaming_start_t *ss = streaming_start_copy(sm->sm_data);
     transcoder_start(t, ss);
+    sm->sm_data = ss;
+
     streaming_target_deliver2(t->t_output, sm);
     streaming_start_unref(ss);
     break;
