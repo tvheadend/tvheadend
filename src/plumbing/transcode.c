@@ -133,7 +133,6 @@ transcoder_stream_init(transcoder_stream_t *ts, streaming_start_component_t *ssc
 static th_pkt_t *
 transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 {
-  uint8_t *out = NULL;
   th_pkt_t *n;
   AVPacket packet;
   int length, len;
@@ -191,8 +190,6 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 
  cleanup:
   av_free_packet(&packet);
-  if(out)
-    av_free(out);
 
   return pkt;
 }
