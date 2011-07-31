@@ -133,7 +133,7 @@ transcoder_stream_init(transcoder_stream_t *ts, streaming_start_component_t *ssc
 static th_pkt_t *
 transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 {
-  th_pkt_t *n;
+  th_pkt_t *n = NULL;
   AVPacket packet;
   int length, len;
 
@@ -185,13 +185,9 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   n->pkt_aspect_num = pkt->pkt_aspect_num;
   n->pkt_aspect_den = pkt->pkt_aspect_den;
 
-  pkt_ref_dec(pkt);
-  pkt = n;
-
  cleanup:
   av_free_packet(&packet);
-
-  return pkt;
+  return n;
 }
 
 
@@ -203,7 +199,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
 {
   uint8_t *buf = NULL;
   uint8_t *out = NULL;
-  th_pkt_t *n;
+  th_pkt_t *n = NULL;
   AVPacket packet;
   int length, len;
   int got_picture;
@@ -289,18 +285,27 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   }
   
   n = pkt_alloc(out, length, pkt->pkt_pts, pkt->pkt_dts);
+
+  if(ts->enc_frame->pict_type & FF_I_TYPE)
+    n->pkt_frametype = PKT_I_FRAME;
+  else if(ts->enc_frame->pict_type & FF_P_TYPE)
+    n->pkt_frametype = PKT_P_FRAME;
+  else if(ts->enc_frame->pict_type & FF_B_TYPE)
+    n->pkt_frametype = PKT_B_FRAME;
+  else
+    n->pkt_frametype = pkt->pkt_frametype;
+
   n->pkt_duration = pkt->pkt_duration;
+
   n->pkt_commercial = pkt->pkt_commercial;
   n->pkt_componentindex = pkt->pkt_componentindex;
-  n->pkt_frametype = pkt->pkt_frametype;
   n->pkt_field = pkt->pkt_field;
+
   n->pkt_channels = pkt->pkt_channels;
   n->pkt_sri = pkt->pkt_sri;
+
   n->pkt_aspect_num = pkt->pkt_aspect_num;
   n->pkt_aspect_den = pkt->pkt_aspect_den;
-
-  pkt_ref_dec(pkt);
-  pkt = n;
   
  cleanup:
   av_free_packet(&packet);
@@ -309,7 +314,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   if(out)
     av_free(out);
 
-  return pkt;
+  return n;
 }
 
 
@@ -333,7 +338,7 @@ transcoder_packet(transcoder_t *t, th_pkt_t *pkt)
     return transcoder_stream_video(ts, pkt);
   }
 
-  return pkt;
+  return NULL;
 }
 
 
@@ -386,16 +391,20 @@ transcoder_stop(transcoder_t *t)
 static void
 transcoder_input(void *opaque, streaming_message_t *sm)
 {
-  th_pkt_t *pkt;
+  th_pkt_t *s_pkt;
+  th_pkt_t *t_pkt;
   transcoder_t *t = opaque;
 
   switch(sm->sm_type) {
   case SMT_PACKET:
-    pkt = pkt_merge_header(sm->sm_data);
-    pkt = transcoder_packet(t, pkt);
-
-    sm = streaming_msg_create_pkt(pkt);
-    streaming_target_deliver2(t->t_output, sm);
+    s_pkt = pkt_merge_header(sm->sm_data);
+    t_pkt = transcoder_packet(t, s_pkt);
+    if(t_pkt) {
+      sm = streaming_msg_create_pkt(t_pkt);
+      streaming_target_deliver2(t->t_output, sm);
+      pkt_ref_dec(t_pkt);
+    }
+    pkt_ref_dec(s_pkt);
     break;
 
   case SMT_START:
