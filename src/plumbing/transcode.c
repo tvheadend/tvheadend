@@ -90,7 +90,7 @@ transcoder_stream_destroy(transcoder_stream_t *ts)
  * initialize a transcoder stream
  */
 static int
-transcoder_stream_init(transcoder_stream_t *ts, const streaming_start_component_t *ssc)
+transcoder_stream_init(transcoder_stream_t *ts, streaming_start_component_t *ssc)
 {
   AVCodec *codec = NULL;
 
@@ -119,8 +119,8 @@ transcoder_stream_init(transcoder_stream_t *ts, const streaming_start_component_
     ts->sctx->codec_type = CODEC_TYPE_AUDIO;
   } else if (SCT_ISVIDEO(ssc->ssc_type)) {
     ts->sctx->codec_type = CODEC_TYPE_VIDEO;
-    ((streaming_start_component_t *)ssc)->ssc_width = ts->tctx->width = (2*ssc->ssc_width / 3);
-    ((streaming_start_component_t *)ssc)->ssc_height = ts->tctx->height = (2*ssc->ssc_height / 3);
+    ssc->ssc_width = ts->tctx->width = (2*ssc->ssc_width / 3);
+    ssc->ssc_height = ts->tctx->height = (2*ssc->ssc_height / 3);
   }
 
   return 0;
@@ -349,7 +349,7 @@ transcoder_start(transcoder_t *t, const streaming_start_t *ss)
   int i;
 
   for(i = 0; i < ss->ss_num_components; i++) {
-    const streaming_start_component_t *ssc = &ss->ss_components[i];
+    streaming_start_component_t *ssc = &ss->ss_components[i];
 
     if (SCT_ISAUDIO(ssc->ssc_type))
       if (t->ts_audio.index || transcoder_stream_init(&t->ts_audio, ssc) < 0)
