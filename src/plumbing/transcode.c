@@ -26,7 +26,7 @@
 /**
  * Reference to a transcoder stream
  */
-typedef struct transcoder_audio {
+typedef struct transcoder_stream {
   AVCodecContext *sctx; // source
   AVCodecContext *tctx; // target
   int            index; // refers to the stream index
