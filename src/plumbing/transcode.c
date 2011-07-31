@@ -253,16 +253,16 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
                  ts->tctx->height);
  
   ts->scaler = sws_getCachedContext(ts->scaler,
-                                  ts->sctx->width,
-                                  ts->sctx->height,
-                                  ts->sctx->pix_fmt,
-                                  ts->tctx->width,
-                                  ts->tctx->height,
-                                  ts->tctx->pix_fmt,
-                                  1,
-                                  NULL,
-                                  NULL,
-                                  NULL);
+				    ts->sctx->width,
+				    ts->sctx->height,
+				    ts->sctx->pix_fmt,
+				    ts->tctx->width,
+				    ts->tctx->height,
+				    ts->tctx->pix_fmt,
+				    1,
+				    NULL,
+				    NULL,
+				    NULL);
  
   sws_scale(ts->scaler, 
             (const uint8_t * const*)ts->dec_frame->data, 
@@ -395,22 +395,22 @@ transcoder_input(void *opaque, streaming_message_t *sm)
 
   switch(sm->sm_type) {
   case SMT_PACKET: {
-      th_pkt_t *s_pkt = pkt_merge_header(sm->sm_data);
-      th_pkt_t *t_pkt = transcoder_packet(t, s_pkt);
-      if(t_pkt) {
-        sm = streaming_msg_create_pkt(t_pkt);
-        streaming_target_deliver2(t->t_output, sm);
-        pkt_ref_dec(t_pkt);
-      }
-      pkt_ref_dec(s_pkt);
-      break;
+    th_pkt_t *s_pkt = pkt_merge_header(sm->sm_data);
+    th_pkt_t *t_pkt = transcoder_packet(t, s_pkt);
+    if(t_pkt) {
+      sm = streaming_msg_create_pkt(t_pkt);
+      streaming_target_deliver2(t->t_output, sm);
+      pkt_ref_dec(t_pkt);
+    }
+    pkt_ref_dec(s_pkt);
+    break;
   }
   case SMT_START: {
-      streaming_start_t *ss = streaming_start_copy(sm->sm_data);
-      transcoder_start(t, ss);
-      streaming_target_deliver2(t->t_output, sm);
-      streaming_start_unref(ss);
-      break;
+    streaming_start_t *ss = streaming_start_copy(sm->sm_data);
+    transcoder_start(t, ss);
+    streaming_target_deliver2(t->t_output, sm);
+    streaming_start_unref(ss);
+    break;
   }
   case SMT_STOP:
     transcoder_stop(t);
