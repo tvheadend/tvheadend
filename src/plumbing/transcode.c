@@ -359,11 +359,11 @@ transcoder_start(transcoder_t *t, streaming_start_t *ss)
 
     if (SCT_ISAUDIO(ssc->ssc_type))
       if (t->ts_audio.index || transcoder_stream_init(&t->ts_audio, ssc) < 0)
-	continue;
-    
+	ssc->ssc_type = SCT_UNKNOWN;
+
     if (SCT_ISVIDEO(ssc->ssc_type))
       if (t->ts_video.index || transcoder_stream_init(&t->ts_video, ssc) < 0)
-	continue;
+	ssc->ssc_type = SCT_UNKNOWN;
   }
 }
 
