@@ -171,7 +171,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   ts->tctx->block_align    = ts->sctx->block_align;
 
   if(ts->tctx->codec_id == CODEC_ID_NONE) {
-    AVCodec *codec = avcodec_find_encoder(ts->sctx->codec_id);
+    AVCodec *codec = avcodec_find_encoder(CODEC_ID_MP2);
     if(!codec || avcodec_open(ts->tctx, codec) < 0) {
       tvhlog(LOG_ERR, "transcoder", "Unable to find audio encoder");
       goto cleanup;
