@@ -338,6 +338,12 @@ tvheadend.dvb_services = function(adapterId) {
        width: 45
     });
 
+	var eitColumn = new Ext.grid.CheckColumn({
+		header: "EIT",
+		dataIndex: 'dvb_eit_enable',
+		width: 45
+	});
+
     var actions = new Ext.ux.grid.RowActions({
 	header:'',
 	dataIndex: 'actions',
@@ -433,32 +439,7 @@ tvheadend.dvb_services = function(adapterId) {
 			valueField:'key'
 		})
 	},
-	{
-		header: "EIT",
-		dataIndex: 'dvb_eit_enable',
-		width: 100,
-		renderer: function(value, metadata, record, row, col, store) {
-			if (value == '0')
-				return 'Disabled';
-			if (value == '1')
-				return 'Enabled';
-		},
-		editor: new fm.ComboBox({
-			mode: 'local',
-			store: new Ext.data.SimpleStore({
-				fields: ['key','value'],
-				data: [
-					['0','Disabled'],
-					['1','Enabled']
-				]
-			}),
-			typeAhead: true,
-			lazyRender: true,
-			triggerAction: 'all',
-			displayField:'value',
-			valueField:'key'
-		})
-	},
+	eitColumn,
 	{
 	    header: "Type",
 	    dataIndex: 'type',
@@ -591,7 +572,7 @@ tvheadend.dvb_services = function(adapterId) {
     var grid = new Ext.grid.EditorGridPanel({
 	stripeRows: true,
 	title: 'Services',
-	plugins: [enabledColumn, actions],
+	plugins: [enabledColumn, eitColumn, actions],
 	store: store,
 	clicksToEdit: 2,
 	cm: cm,
