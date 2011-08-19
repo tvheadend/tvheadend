@@ -434,6 +434,47 @@ tvheadend.dvb_services = function(adapterId) {
 		})
 	},
 	{
+        header: "EIT",
+        dataIndex: 'dvb_eit_enable',
+		width: 100,
+		renderer: function(value, metadata, record, row, col, store) {
+			if (value == '0')
+	            return 'Disabled';
+			if (value == '1')
+				return 'Enabled';
+		},
+		editor: new fm.ComboBox({
+			mode: 'local',
+			store: new Ext.data.SimpleStore({
+				fields: ['key','value'],
+				data: [
+					['0','Disabled'],
+					['1','Enabled']
+       				]
+			}),
+			typeAhead: true,
+			lazyRender: true,
+			triggerAction: 'all',
+			displayField:'value',
+			valueField:'key'
+		})
+	},
+/*    var eitColumn = new Ext.grid.CheckColumn({
+       header: "EIT Check",
+       dataIndex: 'dvb_eit_enable',
+       width: 45
+    });
+
+	{
+        header: "EIT",
+        dataIndex: 'dvb_eit_enable',
+		width: 45,
+		editor: new fm.Checkbox({
+			fieldLabel: 'EIT',
+			name: 'eit',
+		})
+	},*/
+	{
 	    header: "Type",
 	    dataIndex: 'type',
 	    width: 50
@@ -478,8 +519,8 @@ tvheadend.dvb_services = function(adapterId) {
     var store = new Ext.data.JsonStore({
 	root: 'entries',
 	fields: Ext.data.Record.create([
-	    'id', 'enabled', 'type', 'sid', 'pmt', 'pcr', 
-	    'svcname', 'network', 'provider', 'mux', 'channelname', 'dvb_default_charset'
+	    'id', 'enabled', 'type', 'sid', 'pmt', 'pcr', 'svcname', 'network',
+        'provider', 'mux', 'channelname', 'dvb_default_charset', 'dvb_eit_enable'
 	]),
 	url: "dvb/services/" + adapterId,
 	autoLoad: true,

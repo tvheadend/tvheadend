@@ -482,6 +482,11 @@ typedef struct service {
    */
   char *s_dvb_default_charset;
 
+  /**
+   * Set if EIT grab is enabled for DVB service (the default).
+   */
+  int s_dvb_eit_enable;
+
 } service_t;
 
 
@@ -568,5 +573,7 @@ uint16_t service_get_encryption(service_t *t);
 int service_get_signal_status(service_t *t, signal_status_t *status);
 
 void service_set_dvb_default_charset(service_t *t, const char *dvb_default_charset);
+
+void service_set_dvb_eit_enable(service_t *t, int dvb_eit_enable);
 
 #endif // SERVICE_H__
