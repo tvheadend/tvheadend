@@ -1363,7 +1363,7 @@ htsp_async_send(htsmsg_t *m)
  * global_lock is held
  */
 void
-htsp_channgel_update_current(channel_t *ch)
+htsp_channel_update_current(channel_t *ch)
 {
   htsmsg_t *m;
   time_t now;
