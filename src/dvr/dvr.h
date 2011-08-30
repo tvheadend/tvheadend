@@ -258,6 +258,8 @@ dvr_entry_t *dvr_entry_find_by_id(int id);
 
 dvr_entry_t *dvr_entry_find_by_event(event_t *e);
 
+dvr_entry_t *dvr_entry_find_by_event_fuzzy(event_t *e);
+
 off_t dvr_get_filesize(dvr_entry_t *de);
 
 dvr_entry_t *dvr_entry_cancel(dvr_entry_t *de);

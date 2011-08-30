@@ -625,7 +625,6 @@ dvr_entry_update(dvr_entry_t *de, const char* de_title, int de_start, int de_sto
   htsp_dvr_entry_update(de);
   dvr_entry_notify(de);
 
-
   tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": Updated Timer", de->de_title, de->de_channel->ch_name);
 
   return de;
@@ -718,6 +717,23 @@ dvr_entry_find_by_event(event_t *e)
     if(de->de_start == e->e_start &&
        de->de_stop  == e->e_stop)
       return de;
+  return NULL;
+}
+
+/**
+ * Find event with same title starting and ending around same time
+ * on same channel
+ */
+dvr_entry_t *
+dvr_entry_find_by_event_fuzzy(event_t *e)
+{
+  dvr_entry_t *de;
+
+  LIST_FOREACH(de, &e->e_channel->ch_dvrs, de_channel_link)
+    if(strcmp(de->de_title, e->e_title) == 0) {
+        if ((abs(de->de_start - e->e_start) < 600) && (abs(de->de_stop - e->e_stop) < 600))
+           return de;
+    }
   return NULL;
 }
 
