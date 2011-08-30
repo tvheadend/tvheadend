@@ -855,6 +855,7 @@ static htsmsg_t *
 htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 {
   uint32_t chid, sid, weight;
+  uint32_t  max_width, max_height;
   channel_t *ch;
   htsp_subscription_t *hs;
 
@@ -868,7 +869,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("Requested channel does not exist");
 
   weight = htsmsg_get_u32_or_default(in, "weight", 150);
-
+  max_width = htsmsg_get_u32_or_default(in, "maxWidth", 0);
+  max_height = htsmsg_get_u32_or_default(in, "maxHeight", 0);
   /*
    * We send the reply now to avoid the user getting the 'subscriptionStart'
    * async message before the reply to 'subscribe'.
@@ -886,9 +888,9 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
   streaming_target_init(&hs->hs_input, htsp_streaming_input, hs, 0);
 
-  if(1 /* do transcoding */ )
+  if(max_width && max_height) {
     hs->hs_transcoder = transcoder_create(&hs->hs_input);
-    
+  }
   hs->hs_s =
     subscription_create_from_channel(ch, weight,
 				     htsp->htsp_logname,
