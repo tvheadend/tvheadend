@@ -454,6 +454,17 @@ transcoder_create(streaming_target_t *output)
   return &t->t_input;
 }
 
+/**
+ * 
+ */
+void
+transcoder_set_network_speed(streaming_target_t *st, int speed)
+{
+  //transcoder_t *t = (transcoder_t *)st;
+
+  tvhlog(LOG_DEBUG, "transcode", "Client network speed: %d%%", speed);
+}
+
 
 /**
  * 

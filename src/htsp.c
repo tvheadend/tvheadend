@@ -808,6 +808,31 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
 }
 
 /**
+ * Get information about the client network speed
+ */
+static htsmsg_t *
+htsp_method_feedback(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsp_subscription_t *s;
+  uint32_t sid, speed;
+
+  if(htsmsg_get_u32(in, "subscriptionId", &sid))
+    return htsp_error("Missing argument 'subscriptionId'");
+
+  LIST_FOREACH(s, &htsp->htsp_subscriptions, hs_link)
+    if(s->hs_sid == sid)
+      break;
+
+  if(htsmsg_get_u32(in, "speed", &speed))
+    return htsp_error("Missing argument 'speed'");
+  
+  if(s != NULL)
+    transcoder_set_network_speed(&s->hs_input, speed);
+
+  return NULL;
+}
+
+/**
  * Get total and free disk space on configured path
  */
 static htsmsg_t *
@@ -1045,7 +1070,7 @@ struct {
   { "cancelDvrEntry", htsp_method_cancelDvrEntry, ACCESS_RECORDER},
   { "deleteDvrEntry", htsp_method_deleteDvrEntry, ACCESS_RECORDER},
   { "epgQuery", htsp_method_epgQuery, ACCESS_STREAMING},
-
+  { "feedback", htsp_method_feedback, ACCESS_STREAMING},
 };
 
 #define NUM_METHODS (sizeof(htsp_methods) / sizeof(htsp_methods[0]))
