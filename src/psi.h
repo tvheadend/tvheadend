@@ -1,6 +1,6 @@
 /*
  *  Multicasted IPTV Input
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas ï¿½man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ int psi_parse_pmt(struct service *t, const uint8_t *ptr, int len, int chksvcid,
 
 int psi_build_pat(struct service *t, uint8_t *buf, int maxlen, int pmtpid);
 
-int psi_build_pmt(streaming_start_t *ss, uint8_t *buf, int maxlen, int pcrpid);
+int psi_build_pmt(const streaming_start_t *ss, uint8_t *buf, int maxlen, int pcrpid);
 
 const char *psi_caid2name(uint16_t caid);
 
