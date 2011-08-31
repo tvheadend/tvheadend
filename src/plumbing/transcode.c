@@ -235,7 +235,9 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   ts->tctx->pix_fmt = ts->sctx->pix_fmt;
   ts->tctx->time_base.den = ts->sctx->time_base.den;
   ts->tctx->time_base.num = ts->sctx->time_base.num;
-  ts->tctx->sample_aspect_ratio = ts->sctx->sample_aspect_ratio;
+
+  ts->tctx->sample_aspect_ratio.num = pkt->pkt_aspect_num;
+  ts->tctx->sample_aspect_ratio.den = pkt->pkt_aspect_den;
 
   if(ts->tctx->codec_id == CODEC_ID_NONE) {
     AVCodec *codec = avcodec_find_encoder(CODEC_ID_MPEG2VIDEO);
