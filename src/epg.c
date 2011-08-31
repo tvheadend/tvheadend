@@ -66,7 +66,7 @@ epg_set_current(channel_t *ch, event_t *e, event_t *next)
   if(e != NULL)
     gtimer_arm_abs(&ch->ch_epg_timer_current, epg_ch_check_current_event,
 		   ch, MAX(e->e_stop, dispatch_clock + 1));
-  htsp_channgel_update_current(ch);
+  htsp_channel_update_current(ch);
 }
 
 /**

@@ -712,6 +712,7 @@ htsp_build_event(event_t *e)
 {
   htsmsg_t *out;
   event_t *n;
+  dvr_entry_t *de;
 
   out = htsmsg_create_map();
 
@@ -732,6 +733,10 @@ htsp_build_event(event_t *e)
 
   if(e->e_content_type)
     htsmsg_add_u32(out, "contentType", e->e_content_type);
+
+  if((de = dvr_entry_find_by_event(e)) != NULL) {
+    htsmsg_add_u32(out, "dvrId", de->de_id);
+  }
 
   n = RB_NEXT(e, e_channel_link);
   if(n != NULL)
@@ -1363,7 +1368,7 @@ htsp_async_send(htsmsg_t *m)
  * global_lock is held
  */
 void
-htsp_channgel_update_current(channel_t *ch)
+htsp_channel_update_current(channel_t *ch)
 {
   htsmsg_t *m;
   time_t now;
