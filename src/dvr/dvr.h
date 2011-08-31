@@ -171,6 +171,7 @@ typedef struct dvr_entry {
    */
 
   struct mk_mux *de_mkmux;
+  struct mk_ts *de_mkts;
 
 } dvr_entry_t;
 
@@ -269,6 +270,10 @@ dvr_entry_t *dvr_entry_cancel(dvr_entry_t *de);
 void dvr_entry_dec_ref(dvr_entry_t *de);
 
 void dvr_storage_set(dvr_config_t *cfg, const char *storage);
+
+void dvr_format_set(dvr_config_t *cfg, const char *format);
+
+void dvr_file_postfix_set(dvr_config_t *cfg, const char *file_postfix);
 
 void dvr_postproc_set(dvr_config_t *cfg, const char *postproc);
 
