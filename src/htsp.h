@@ -24,7 +24,7 @@
 
 void htsp_init(void);
 
-void htsp_channgel_update_current(channel_t *ch);
+void htsp_channel_update_current(channel_t *ch);
 
 void htsp_channel_add(channel_t *ch);
 void htsp_channel_update(channel_t *ch);
