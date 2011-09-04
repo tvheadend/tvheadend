@@ -510,6 +510,7 @@ dvr_thread(void *aux)
     	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
     	if(de->de_mkts != NULL) {
     	  mk_ts_write(de->de_mkts, sm->sm_data);
+    	  free(sm->sm_data);
     	  sm->sm_data = NULL;
     	}
       }
