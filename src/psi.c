@@ -733,6 +733,7 @@ psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid
       break;
 
     case SCT_DVBSUB:
+    case SCT_EAC3:
       c = 0x06;
       break;
 
@@ -790,6 +791,16 @@ psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid
       buf[6] = DVB_DESC_AC3;
       buf[7] = 1;
       buf[8] = 0; /* XXX: generate real AC3 desc */
+      dlen = 9;
+      break;
+    case SCT_EAC3:
+      buf[0] = DVB_DESC_LANGUAGE;
+      buf[1] = 4;
+      memcpy(&buf[2],ssc->ssc_lang,3);
+      buf[5] = 0; /* Main audio */
+      buf[6] = DVB_DESC_EAC3;
+      buf[7] = 1;
+      buf[8] = 0; /* XXX: generate real EAC3 desc */
       dlen = 9;
       break;
     default:

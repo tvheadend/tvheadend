@@ -58,7 +58,6 @@ mk_ts_create(const char *filename,
   mkr->fd = fd;
   mkr->title = strdup(de->de_title);
 
-  // XXX Code from webui.c, it doesn't work with HD stream (H264+EAC3) and XBMC
   if (strcmp(cfg->dvr_format, "mpegts") == 0) {
 	uint8_t pat_ts[188];
 	uint8_t pmt_ts[188];
