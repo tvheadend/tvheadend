@@ -118,7 +118,7 @@ transcoder_stream_init(transcoder_stream_t *ts, streaming_start_component_t *ssc
   if (SCT_ISAUDIO(ssc->ssc_type)) {
     ssc->ssc_type = SCT_MPEG2AUDIO;
 
-    ts->sctx->codec_type     = CODEC_TYPE_AUDIO;
+    ts->sctx->codec_type     = AVMEDIA_TYPE_AUDIO;
     ts->tctx->channels       = 2;
     ts->tctx->bit_rate       = 2 * 64000;
   } else if (SCT_ISVIDEO(ssc->ssc_type)) {
@@ -126,7 +126,7 @@ transcoder_stream_init(transcoder_stream_t *ts, streaming_start_component_t *ssc
     ssc->ssc_width  = (2*ssc->ssc_width / 3);
     ssc->ssc_height = (2*ssc->ssc_height / 3);
 
-    ts->sctx->codec_type         = CODEC_TYPE_VIDEO;
+    ts->sctx->codec_type         = AVMEDIA_TYPE_VIDEO;
     ts->tctx->bit_rate           = 2500*1000;
     ts->tctx->bit_rate_tolerance = 8*2*1024*1024;
     ts->tctx->gop_size           = 12;
@@ -338,9 +338,9 @@ transcoder_packet(transcoder_t *t, th_pkt_t *pkt)
     ts = &t->ts_audio;
   }
 
-  if(ts && ts->sctx->codec_type == CODEC_TYPE_AUDIO) {
+  if(ts && ts->sctx->codec_type == AVMEDIA_TYPE_AUDIO) {
     return transcoder_stream_audio(ts, pkt);
-  } else if(ts && ts->sctx->codec_type == CODEC_TYPE_VIDEO) {
+  } else if(ts && ts->sctx->codec_type == AVMEDIA_TYPE_VIDEO) {
     return transcoder_stream_video(ts, pkt);
   }
 
