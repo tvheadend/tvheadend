@@ -41,6 +41,9 @@ static struct event_list epg_hash[EPG_GLOBAL_HASH_WIDTH];
 
 static void epg_expire_event_from_channel(void *opauqe);
 static void epg_ch_check_current_event(void *aux);
+/* helper function to fuzzy compare two events */
+static int epg_event_cmp_overlap(event_t *e1, event_t *e2);
+static void epg_erase_duplicates(event_t *e, channel_t *ch);
 
 
 static int
@@ -330,7 +333,7 @@ epg_event_create(channel_t *ch, time_t start, time_t stop, int dvb_id,
 		 int *created)
 {
   static event_t *skel;
-  event_t *e, *p, *n;
+  event_t *e;
   static int tally;
 
   if(created != NULL)
@@ -404,31 +407,71 @@ epg_event_create(channel_t *ch, time_t start, time_t stop, int dvb_id,
     }
   }
 
+  epg_erase_duplicates(e, ch);
+  return e;
+}
+
+static void
+epg_erase_duplicates(event_t *e, channel_t *ch) {
+
+  event_t *p, *n;
+  int dvb_id = e->e_dvb_id;
 
   if(dvb_id != -1) {
-    /* Erase any close events with the same DVB event id */
+    /* Erase any close events with the same DVB event id or are very similar*/
 
     if((p = RB_PREV(e, e_channel_link)) != NULL) {
-      if(p->e_dvb_id == dvb_id) {
+      if(p->e_dvb_id == dvb_id || epg_event_cmp_overlap(p, e)) {
+        tvhlog(LOG_DEBUG, "epg",
+               "Removing overlapping event instance %s from EPG", p->e_title);
+        dvr_event_cancelled(p);
 	epg_remove_event_from_channel(ch, p);
       } else if((p = RB_PREV(p, e_channel_link)) != NULL) {
-	if(p->e_dvb_id == dvb_id)
+	if(p->e_dvb_id == dvb_id || epg_event_cmp_overlap(p, e)) {
+          tvhlog(LOG_DEBUG, "epg",
+                 "Removing overlapping event instance %s from EPG", p->e_title);
+          dvr_event_cancelled(p);
 	  epg_remove_event_from_channel(ch, p);
+        }
       }
     }
 
     if((n = RB_NEXT(e, e_channel_link)) != NULL) {
-      if(n->e_dvb_id == dvb_id) {
+      if(n->e_dvb_id == dvb_id || epg_event_cmp_overlap(n, e)) {
+        tvhlog(LOG_DEBUG, "epg",
+               "Removing overlapping event instance %s from EPG", n->e_title);
+        dvr_event_cancelled(n);
 	epg_remove_event_from_channel(ch, n);
       } else if((n = RB_NEXT(n, e_channel_link)) != NULL) {
-	if(n->e_dvb_id == dvb_id)
+	if(n->e_dvb_id == dvb_id || epg_event_cmp_overlap(n, e)) {
+          tvhlog(LOG_DEBUG, "epg",
+                 "Removing overlapping event instance %s from EPG", n->e_title);
+          dvr_event_cancelled(n);
 	  epg_remove_event_from_channel(ch, n);
+        }   
       }
     }
   }
-  return e;
+  
 }
 
+static int
+epg_event_cmp_overlap(event_t *e1, event_t *e2)
+{
+  if ((e1->e_title == NULL) || (e2->e_title == NULL))
+    return 0;
+  
+  if ((e1->e_stop < e2->e_start) || (e2->e_stop < e1->e_start)) {
+    return 0;
+  } else {
+    if ((e1->e_start < e2->e_stop) && (e2->e_start < e1->e_stop)) {
+    if ((e1->e_stop - e2->e_start) > 60 || (e2->e_stop - e1->e_start) > 60)
+        return 1;
+    }
+  }
+
+  return 0;
+}
 
 /**
  *

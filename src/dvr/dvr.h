@@ -254,6 +254,8 @@ void dvr_rec_subscribe(dvr_entry_t *de);
 
 void dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode);
 
+void dvr_event_cancelled(event_t *e);
+
 dvr_entry_t *dvr_entry_find_by_id(int id);
 
 dvr_entry_t *dvr_entry_find_by_event(event_t *e);
