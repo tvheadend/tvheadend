@@ -168,6 +168,8 @@ iptv_thread(void *aux)
 
 	// Skip over extension header (last 2 bytes of header is length)
 	hlen += ((tsb[hlen + 2] << 8) | tsb[hlen + 3]) * 4;
+	// Add the extension header itself (EHL does not inc header)
+	hlen += 4;
       }
 
       if(r < hlen || (r - hlen) % 188 != 0)
