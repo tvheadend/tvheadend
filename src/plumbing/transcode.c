@@ -117,20 +117,13 @@ transcoder_stream_init(transcoder_stream_t *ts, streaming_start_component_t *ssc
 
   if (SCT_ISAUDIO(ssc->ssc_type)) {
     ssc->ssc_type = SCT_MPEG2AUDIO;
-
-    ts->sctx->codec_type     = AVMEDIA_TYPE_AUDIO;
-    ts->tctx->channels       = 2;
-    ts->tctx->bit_rate       = 2 * 64000;
+    ts->sctx->codec_type = AVMEDIA_TYPE_AUDIO;
   } else if (SCT_ISVIDEO(ssc->ssc_type)) {
     ssc->ssc_type   = SCT_MPEG2VIDEO;
-    ssc->ssc_width  = (2*ssc->ssc_width / 3);
-    ssc->ssc_height = (2*ssc->ssc_height / 3);
+    ssc->ssc_width  = (ssc->ssc_width / 2);
+    ssc->ssc_height = (ssc->ssc_height / 2);
 
     ts->sctx->codec_type         = AVMEDIA_TYPE_VIDEO;
-    ts->tctx->bit_rate           = 2500*1000;
-    ts->tctx->bit_rate_tolerance = 8*2*1024*1024;
-    ts->tctx->gop_size           = 12;
-    ts->tctx->max_b_frames       = 2;
     ts->tctx->width              = ssc->ssc_width;
     ts->tctx->height             = ssc->ssc_height;
   }
@@ -164,11 +157,15 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     goto cleanup;
   }
 
-  ts->tctx->channel_layout = ts->sctx->channel_layout;
-  ts->tctx->sample_rate    = ts->sctx->sample_rate;
-  ts->tctx->sample_fmt     = ts->sctx->sample_fmt;
-  ts->tctx->frame_size     = ts->sctx->frame_size;
-  ts->tctx->block_align    = ts->sctx->block_align;
+  ts->tctx->channels        = ts->sctx->channels > 1 ? 2 : 1;
+  ts->tctx->channel_layout  = ts->tctx->channels > 1 ? AV_CH_LAYOUT_STEREO : AV_CH_LAYOUT_MONO;
+  ts->tctx->bit_rate        = ts->tctx->channels * 64000;
+  ts->tctx->sample_rate     = ts->sctx->sample_rate;
+  ts->tctx->sample_fmt      = ts->sctx->sample_fmt;
+  ts->tctx->frame_size      = ts->sctx->frame_size;
+  ts->tctx->block_align     = ts->sctx->block_align;
+  ts->tctx->time_base.den   = ts->tctx->sample_rate;
+  ts->tctx->time_base.num   = 1;
 
   if(ts->tctx->codec_id == CODEC_ID_NONE) {
     AVCodec *codec = avcodec_find_encoder(CODEC_ID_MP2);
@@ -232,7 +229,6 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
     goto cleanup;
   }
 
-  ts->tctx->pix_fmt = ts->sctx->pix_fmt;
   ts->tctx->time_base.den = ts->sctx->time_base.den;
   ts->tctx->time_base.num = ts->sctx->time_base.num;
 
@@ -240,6 +236,11 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   ts->tctx->sample_aspect_ratio.den = pkt->pkt_aspect_den;
 
   if(ts->tctx->codec_id == CODEC_ID_NONE) {
+    ts->tctx->pix_fmt               = PIX_FMT_YUV420P;
+    ts->tctx->flags                |= CODEC_FLAG_QSCALE;
+    ts->tctx->rc_lookahead          = 0;
+    ts->tctx->max_b_frames          = 0;
+
     AVCodec *codec = avcodec_find_encoder(CODEC_ID_MPEG2VIDEO);
     if(!codec || avcodec_open(ts->tctx, codec) < 0) {
       tvhlog(LOG_ERR, "transcoder", "Unable to find video encoder");
@@ -290,7 +291,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
     goto cleanup;
   }
   
-  n = pkt_alloc(out, length, pkt->pkt_pts, pkt->pkt_dts);
+  n = pkt_alloc(out, length, ts->enc_frame->pts, pkt->pkt_dts);
 
   if(ts->enc_frame->pict_type & FF_I_TYPE)
     n->pkt_frametype = PKT_I_FRAME;
