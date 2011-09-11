@@ -116,7 +116,7 @@ transcoder_stream_init(transcoder_stream_t *ts, streaming_start_component_t *ssc
   }
 
   if (SCT_ISAUDIO(ssc->ssc_type)) {
-    ssc->ssc_type = SCT_MPEG2AUDIO;
+    ssc->ssc_type = SCT_MP3;
     ts->sctx->codec_type = AVMEDIA_TYPE_AUDIO;
   } else if (SCT_ISVIDEO(ssc->ssc_type)) {
     ssc->ssc_type   = SCT_MPEG2VIDEO;
@@ -168,7 +168,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   ts->tctx->time_base.num   = 1;
 
   if(ts->tctx->codec_id == CODEC_ID_NONE) {
-    AVCodec *codec = avcodec_find_encoder(CODEC_ID_MP2);
+    AVCodec *codec = avcodec_find_encoder(CODEC_ID_MP3);
     if(!codec || avcodec_open(ts->tctx, codec) < 0) {
       tvhlog(LOG_ERR, "transcoder", "Unable to find audio encoder");
       goto cleanup;
