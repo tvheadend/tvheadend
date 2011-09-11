@@ -424,13 +424,13 @@ epg_erase_duplicates(event_t *e, channel_t *ch) {
       if(p->e_dvb_id == dvb_id || epg_event_cmp_overlap(p, e)) {
         tvhlog(LOG_DEBUG, "epg",
                "Removing overlapping event instance %s from EPG", p->e_title);
-        dvr_event_cancelled(p);
+        dvr_event_replaced(p, e);
 	epg_remove_event_from_channel(ch, p);
       } else if((p = RB_PREV(p, e_channel_link)) != NULL) {
 	if(p->e_dvb_id == dvb_id || epg_event_cmp_overlap(p, e)) {
           tvhlog(LOG_DEBUG, "epg",
                  "Removing overlapping event instance %s from EPG", p->e_title);
-          dvr_event_cancelled(p);
+          dvr_event_replaced(p, e);
 	  epg_remove_event_from_channel(ch, p);
         }
       }
@@ -440,13 +440,13 @@ epg_erase_duplicates(event_t *e, channel_t *ch) {
       if(n->e_dvb_id == dvb_id || epg_event_cmp_overlap(n, e)) {
         tvhlog(LOG_DEBUG, "epg",
                "Removing overlapping event instance %s from EPG", n->e_title);
-        dvr_event_cancelled(n);
+        dvr_event_replaced(n, e);
 	epg_remove_event_from_channel(ch, n);
       } else if((n = RB_NEXT(n, e_channel_link)) != NULL) {
 	if(n->e_dvb_id == dvb_id || epg_event_cmp_overlap(n, e)) {
           tvhlog(LOG_DEBUG, "epg",
                  "Removing overlapping event instance %s from EPG", n->e_title);
-          dvr_event_cancelled(n);
+          dvr_event_replaced(n, e);
 	  epg_remove_event_from_channel(ch, n);
         }   
       }

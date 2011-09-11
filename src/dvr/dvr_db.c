@@ -631,17 +631,20 @@ dvr_entry_update(dvr_entry_t *de, const char* de_title, int de_start, int de_sto
 }
 
 /**
- * Used to notify the DVR that an event has been removed from the EPG
+ * Used to notify the DVR that an event has been replaced in the EPG
  */
 void 
-dvr_event_cancelled(event_t *e)
+dvr_event_replaced(event_t *e, event_t *new_e)
 {
-  dvr_entry_t *de;
+  dvr_entry_t *de, *ude;
 
   de = dvr_entry_find_by_event(e);
   if (de != NULL) {
-    if (de->de_sched_state == DVR_SCHEDULED)
+    ude = dvr_entry_find_by_event_fuzzy(new_e);
+    if (ude == NULL && de->de_sched_state == DVR_SCHEDULED)
       dvr_entry_cancel(de);
+    else
+      dvr_entry_update(de, new_e->e_title, new_e->e_start, new_e->e_stop);
   }
       
     
