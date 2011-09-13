@@ -631,6 +631,26 @@ dvr_entry_update(dvr_entry_t *de, const char* de_title, int de_start, int de_sto
 }
 
 /**
+ * Used to notify the DVR that an event has been replaced in the EPG
+ */
+void 
+dvr_event_replaced(event_t *e, event_t *new_e)
+{
+  dvr_entry_t *de, *ude;
+
+  de = dvr_entry_find_by_event(e);
+  if (de != NULL) {
+    ude = dvr_entry_find_by_event_fuzzy(new_e);
+    if (ude == NULL && de->de_sched_state == DVR_SCHEDULED)
+      dvr_entry_cancel(de);
+    else
+      dvr_entry_update(de, new_e->e_title, new_e->e_start, new_e->e_stop);
+  }
+      
+    
+}
+
+/**
  *
  */
 static void
@@ -721,8 +741,7 @@ dvr_entry_find_by_event(event_t *e)
 }
 
 /**
- * Find event with same title starting and ending around same time
- * on same channel
+ * Find dvr entry using 'fuzzy' search
  */
 dvr_entry_t *
 dvr_entry_find_by_event_fuzzy(event_t *e)
@@ -730,10 +749,8 @@ dvr_entry_find_by_event_fuzzy(event_t *e)
   dvr_entry_t *de;
 
   LIST_FOREACH(de, &e->e_channel->ch_dvrs, de_channel_link)
-    if(strcmp(de->de_title, e->e_title) == 0) {
-        if ((abs(de->de_start - e->e_start) < 600) && (abs(de->de_stop - e->e_stop) < 600))
-           return de;
-    }
+    if (abs(de->de_start - e->e_start) < 600 && abs(de->de_stop - e->e_stop) < 600)
+      return de;
   return NULL;
 }
 
