@@ -605,6 +605,7 @@ service_stream_create(service_t *t, int pid,
 
   st = calloc(1, sizeof(elementary_stream_t));
   st->es_index = idx + 1;
+
   st->es_type = type;
 
   TAILQ_INSERT_TAIL(&t->s_components, st, es_link);
@@ -854,6 +855,12 @@ service_build_stream_start(service_t *t)
     streaming_start_component_t *ssc = &ss->ss_components[n++];
     ssc->ssc_index = st->es_index;
     ssc->ssc_type  = st->es_type;
+
+    // Jernej says: I don't know how else?!
+    if (ssc->ssc_type == SCT_MP4A) {
+      ssc->ssc_type = SCT_AAC;
+    }
+
     memcpy(ssc->ssc_lang, st->es_lang, 4);
     ssc->ssc_composition_id = st->es_composition_id;
     ssc->ssc_ancillary_id = st->es_ancillary_id;

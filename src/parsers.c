@@ -113,6 +113,9 @@ static int parse_ac3(service_t *t, elementary_stream_t *st, size_t len,
 static int parse_eac3(service_t *t, elementary_stream_t *st, size_t len,
 		      uint32_t next_startcode, int sc_offset);
 
+static int parse_mp4a(service_t *t, elementary_stream_t *st, size_t ilen,
+	  uint32_t next_startcode, int sc_offset);
+
 static void parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt);
 
 static int parse_pes_header(service_t *t, elementary_stream_t *st,
@@ -148,6 +151,10 @@ parse_mpeg_ts(service_t *t, elementary_stream_t *st, const uint8_t *data,
 
   case SCT_EAC3:
     parse_sc(t, st, data, len, parse_eac3);
+    break;
+
+  case SCT_MP4A:
+    parse_sc(t, st, data, len, parse_mp4a);
     break;
 
   case SCT_DVBSUB:
@@ -261,9 +268,6 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
   }
   st->es_parser_ptr = p;
 }
-
-
-
 
 
 /**
@@ -429,7 +433,80 @@ makeapkt(service_t *t, elementary_stream_t *st, const void *buf,
   st->es_curdts = PTS_UNSET;
   st->es_nextdts = dts + duration;
 }
-	  
+
+/**
+ * Parse AAC MP4A
+ */
+
+static const int aac_sample_rates[12] = 
+{ 
+	96000, 
+	88200, 
+	64000, 
+	48000, 
+	44100,
+    	32000, 
+	24000, 
+	22050, 
+	16000, 
+	12000, 
+	11025, 
+	8000
+};
+
+/**
+ * Inspect ADTS header
+ */
+static int
+mp4a_valid_frame(const uint8_t *buf)
+{
+  return (buf[0] == 0xff) && ((buf[1] & 0xf6) == 0xf0);
+}
+
+static int parse_mp4a(service_t *t, elementary_stream_t *st, size_t ilen,
+	  uint32_t next_startcode, int sc_offset)
+{
+  int i, len;
+  const uint8_t *buf;
+
+  if((i = depacketize(t, st, ilen, next_startcode, sc_offset)) != 0)
+    return i;
+
+ again:
+  buf = st->es_buf_a.sb_data;
+  len = st->es_buf_a.sb_ptr;
+
+  for(i = 0; i < len - 6; i++) {
+    const uint8_t *p = buf + i;
+    if(mp4a_valid_frame(p)) {
+
+      int fsize     = ((p[3] & 0x03) << 11) | (p[4] << 3) | ((p[5] & 0xe0) >> 5);
+      int sr_index = (p[2] & 0x3c) >> 2;
+      int sr = aac_sample_rates[sr_index];
+
+      
+      if(sr) {
+	int duration = 90000 * 1536 / sr;
+	int64_t dts = st->es_curdts;
+	int sri = rate_to_sri(sr);
+
+	if(dts == PTS_UNSET)
+	  dts = st->es_nextdts;
+
+	if(dts != PTS_UNSET && len >= i + fsize + 6 &&
+	   mp4a_valid_frame(p + fsize)) {
+
+	  int channels = ((p[2] & 0x01) << 2) | ((p[3] & 0xc0) >> 6);
+
+	  makeapkt(t, st, p, fsize, dts, duration, channels, sri);
+	  sbuf_cut(&st->es_buf_a, i + fsize);
+	  goto again;
+	}
+      }
+    }
+  }
+  return 1;
+}	  
 
 
 const static int mpa_br[16] = {
