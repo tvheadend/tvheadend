@@ -486,7 +486,7 @@ static int parse_mp4a(service_t *t, elementary_stream_t *st, size_t ilen,
 
       
       if(sr) {
-	int duration = 90000 * 1536 / sr;
+	int duration = 90000 * 1024 / sr;
 	int64_t dts = st->es_curdts;
 	int sri = rate_to_sri(sr);
 
