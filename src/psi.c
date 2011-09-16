@@ -612,6 +612,11 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 	st = service_stream_create(t, pid, hts_stream_type);
       }
 
+      // Jernej: I don't know why. But it seems that sometimes the stream is created with a wrong es_type??
+      if(st->es_type != hts_stream_type) {
+        st->es_type = hts_stream_type;
+      }
+
       st->es_delete_me = 0;
 
       if(st->es_position != position) {
@@ -893,7 +898,7 @@ static struct strtab streamtypetab[] = {
   { "MPEGTS",     SCT_MPEGTS },
   { "TEXTSUB",    SCT_TEXTSUB },
   { "EAC3",       SCT_EAC3 },
-  { "MP4A",       SCT_MP4A },
+  { "AAC",       SCT_MP4A },
 };
 
 

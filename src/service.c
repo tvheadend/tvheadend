@@ -856,11 +856,6 @@ service_build_stream_start(service_t *t)
     ssc->ssc_index = st->es_index;
     ssc->ssc_type  = st->es_type;
 
-    // Jernej says: I don't know how else?!
-    if (ssc->ssc_type == SCT_MP4A) {
-      ssc->ssc_type = SCT_AAC;
-    }
-
     memcpy(ssc->ssc_lang, st->es_lang, 4);
     ssc->ssc_composition_id = st->es_composition_id;
     ssc->ssc_ancillary_id = st->es_ancillary_id;
