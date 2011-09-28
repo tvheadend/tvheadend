@@ -747,10 +747,14 @@ dvr_entry_t *
 dvr_entry_find_by_event_fuzzy(event_t *e)
 {
   dvr_entry_t *de;
+  
+  if (e->e_title == NULL)
+    return NULL;
 
   LIST_FOREACH(de, &e->e_channel->ch_dvrs, de_channel_link)
-    if (abs(de->de_start - e->e_start) < 600 && abs(de->de_stop - e->e_stop) < 600)
-      return de;
+    if ((abs(de->de_start - e->e_start) < 600) && (abs(de->de_stop - e->e_stop) < 600)) {
+        return de;
+    }
   return NULL;
 }
 
