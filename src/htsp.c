@@ -1508,6 +1508,9 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 
     hs->hs_dropstats[pkt->pkt_frametype]++;
 
+    // destroy the already created htsmsg to avoid memory leaks
+    htsmsg_destroy(m);
+
     /* Queue size protection */
     pkt_ref_dec(pkt);
     return;
