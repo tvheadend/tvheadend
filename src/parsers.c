@@ -102,6 +102,9 @@ static void parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data
 static void parse_subtitles(service_t *t, elementary_stream_t *st, 
 			    const uint8_t *data, int len, int start);
 
+static void parse_teletext(service_t *t, elementary_stream_t *st, 
+			    const uint8_t *data, int len, int start);
+
 static int parse_mpa(service_t *t, elementary_stream_t *st, size_t len,
 		     uint32_t next_startcode, int sc_offset);
 
@@ -156,6 +159,10 @@ parse_mpeg_ts(service_t *t, elementary_stream_t *st, const uint8_t *data,
     
   case SCT_AAC:
     parse_aac(t, st, data, len, start);
+    break;
+
+  case SCT_TELETEXT:
+    parse_teletext(t, st, data, len, start);
     break;
 
   default:
@@ -1232,6 +1239,54 @@ parse_subtitles(service_t *t, elementary_stream_t *st, const uint8_t *data,
   }
 }
 
+/**
+ * Teletext parser
+ */
+static void
+parse_teletext(service_t *t, elementary_stream_t *st, const uint8_t *data,
+		int len, int start)
+{
+  th_pkt_t *pkt;
+  int psize, hlen;
+  const uint8_t *buf;
+  const uint8_t *d;
+  if(start) {
+    st->es_parser_state = 1;
+    st->es_buf.sb_err = 0;
+    st->es_parser_ptr = 0;
+    sbuf_reset(&st->es_buf);    
+  }
+
+  if(st->es_parser_state == 0)
+    return;
+
+  sbuf_append(&st->es_buf, data, len);
+
+  if(st->es_buf.sb_ptr < 6)
+    return;
+  d = st->es_buf.sb_data;
+
+  psize = d[4] << 8 | d[5];
+
+  if(st->es_buf.sb_ptr != psize + 6)
+    return;
+
+  st->es_parser_state = 0;
+
+  hlen = parse_pes_header(t, st, d + 6, st->es_buf.sb_ptr - 6);
+  if(hlen < 0)
+    return;
+
+  psize -= hlen;
+  buf = d + 6 + hlen;
+  
+  if(psize >= 46) {
+
+      pkt = pkt_alloc(buf, psize, st->es_curpts, st->es_curdts);
+      pkt->pkt_commercial = t->s_tt_commercial_advice;
+      parser_deliver(t, st, pkt);
+  }	
+}
 
 /**
  *
