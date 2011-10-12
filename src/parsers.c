@@ -485,7 +485,7 @@ static int parse_mp4a(service_t *t, elementary_stream_t *st, size_t ilen,
       int sr = aac_sample_rates[sr_index];
 
       
-      if(sr) {
+      if(sr && fsize) {
 	int duration = 90000 * 1024 / sr;
 	int64_t dts = st->es_curdts;
 	int sri = rate_to_sri(sr);
