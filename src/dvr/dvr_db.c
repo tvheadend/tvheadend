@@ -643,7 +643,7 @@ dvr_event_replaced(event_t *e, event_t *new_e)
     ude = dvr_entry_find_by_event_fuzzy(new_e);
     if (ude == NULL && de->de_sched_state == DVR_SCHEDULED)
       dvr_entry_cancel(de);
-    else
+    else if(new_e->e_title != NULL)
       dvr_entry_update(de, new_e->e_title, new_e->e_start, new_e->e_stop);
   }
       
