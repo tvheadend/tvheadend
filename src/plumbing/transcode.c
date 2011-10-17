@@ -50,6 +50,7 @@ typedef struct transcoder {
 
   int feedback_error;
   int feedback_error_sum;
+  time_t feedback_clock;
 } transcoder_t;
 
 
@@ -360,6 +361,8 @@ transcoder_start(transcoder_t *t, streaming_start_t *ss)
 {
   int i;
 
+  t->feedback_clock = dispatch_clock;
+
   for(i = 0; i < ss->ss_num_components; i++) {
     streaming_start_component_t *ssc = &ss->ss_components[i];
 
@@ -474,12 +477,17 @@ transcoder_set_network_speed(streaming_target_t *st, int speed)
   if(!ts->tctx)
     return;
 
+  if(dispatch_clock - t->feedback_clock < 1)
+    return;
+
   tvhlog(LOG_DEBUG, "transcode", "Client network speed: %d%%", speed);
 
   int error = 100 - speed;
-  int derivative = error - t->feedback_error; //assume one sample per second
+  int derivative = (error - t->feedback_error) / MAX(1, dispatch_clock - t->feedback_clock);
+
   t->feedback_error = error;
   t->feedback_error_sum += error;
+  t->feedback_clock = dispatch_clock;
 
   tvhlog(LOG_DEBUG, "transcode", "Error: %d, Sum: %d, Derivative: %d", 
 	 t->feedback_error, t->feedback_error_sum, derivative);
