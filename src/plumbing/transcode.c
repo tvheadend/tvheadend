@@ -47,6 +47,9 @@ typedef struct transcoder {
   // transcoder private stuff
   transcoder_stream_t ts_audio;
   transcoder_stream_t ts_video;
+
+  int feedback_error;
+  int feedback_error_sum;
 } transcoder_t;
 
 
@@ -455,15 +458,41 @@ transcoder_create(streaming_target_t *output)
   return &t->t_input;
 }
 
+#define K_P     4
+#define K_D     1
+#define K_I     2
+
 /**
  * 
  */
 void
 transcoder_set_network_speed(streaming_target_t *st, int speed)
 {
-  //transcoder_t *t = (transcoder_t *)st;
+  transcoder_t *t = (transcoder_t *)st;
+  transcoder_stream_t *ts = &t->ts_video;
+
+  if(!ts->tctx)
+    return;
 
   tvhlog(LOG_DEBUG, "transcode", "Client network speed: %d%%", speed);
+
+  int error = 100 - speed;
+  int derivative = error - t->feedback_error; //assume one sample per second
+  t->feedback_error = error;
+  t->feedback_error_sum += error;
+
+  tvhlog(LOG_DEBUG, "transcode", "Error: %d, Sum: %d, Derivative: %d", 
+	 t->feedback_error, t->feedback_error_sum, derivative);
+
+  int q = 1 + (K_P*t->feedback_error + K_I*t->feedback_error_sum + K_D*derivative);
+
+  q = MIN(q, FF_LAMBDA_MAX);
+  q = MAX(q, 1);
+
+  //if(q != ts->enc_frame->quality) {
+    tvhlog(LOG_DEBUG, "transcode", "New quality: %d ==> %d", ts->enc_frame->quality, q);
+    ts->enc_frame->quality = q;
+    //}
 }
 
 
