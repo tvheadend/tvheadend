@@ -505,6 +505,7 @@ service_create(const char *identifier, int type, int source_type)
   t->s_enabled = 1;
   t->s_pcr_last = PTS_UNSET;
   t->s_dvb_default_charset = NULL;
+  t->s_dvb_eit_enable = 1;
   TAILQ_INIT(&t->s_components);
 
   streaming_pad_init(&t->s_streaming_pad);
@@ -692,6 +693,18 @@ service_set_dvb_default_charset(service_t *t, const char *dvb_default_charset)
   t->s_config_save(t);
 }
 
+/**
+ *
+ */
+void
+service_set_dvb_eit_enable(service_t *t, int dvb_eit_enable)
+{
+  if(t->s_dvb_eit_enable == dvb_eit_enable)
+    return;
+
+  t->s_dvb_eit_enable = dvb_eit_enable;
+  t->s_config_save(t);
+}
 
 /**
  *
