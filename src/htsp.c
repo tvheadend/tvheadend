@@ -827,7 +827,7 @@ htsp_method_feedback(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("Missing argument 'speed'");
   
   if(s != NULL)
-    transcoder_set_network_speed(&s->hs_input, speed);
+    transcoder_set_network_speed(hs->hs_transcoder, speed);
 
   return NULL;
 }
