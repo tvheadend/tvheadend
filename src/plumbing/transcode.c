@@ -218,7 +218,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   av_init_packet(&packet);
   packet.data = pktbuf_ptr(pkt->pkt_payload);
   packet.size = pktbuf_len(pkt->pkt_payload);
-  packet.pts  = pkt->pkt_pts;
+  packet.pts  = ts->dec_frame->pts = pkt->pkt_pts;
   packet.dts  = pkt->pkt_dts;
   packet.duration = pkt->pkt_duration;
 
@@ -283,7 +283,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
             ts->enc_frame->data, 
             ts->enc_frame->linesize);
  
-  ts->enc_frame->pts = pkt->pkt_pts;
+  ts->enc_frame->pts = ts->dec_frame->pts;
 
   len = avpicture_get_size(ts->tctx->pix_fmt, ts->sctx->width, ts->sctx->height);
   out = av_malloc(len);
