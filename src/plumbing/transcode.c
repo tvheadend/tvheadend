@@ -63,14 +63,14 @@ transcoder_stream_create(transcoder_stream_t *ts)
   ts->sctx = avcodec_alloc_context();
   ts->tctx = avcodec_alloc_context();
   ts->dec_frame = avcodec_alloc_frame();
-  ts->dec_sample = av_malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE*2);
+  ts->dec_sample = av_malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE*2 + FF_INPUT_BUFFER_PADDING_SIZE);
   ts->enc_frame = avcodec_alloc_frame();
-  ts->enc_sample = av_malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE*2);
+  ts->enc_sample = av_malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE*2 + FF_INPUT_BUFFER_PADDING_SIZE);
 
   avcodec_get_frame_defaults(ts->dec_frame);
   avcodec_get_frame_defaults(ts->enc_frame);
-  memset(ts->dec_sample, 0, AVCODEC_MAX_AUDIO_FRAME_SIZE*2);
-  memset(ts->enc_sample, 0, AVCODEC_MAX_AUDIO_FRAME_SIZE*2);
+  memset(ts->dec_sample, 0, AVCODEC_MAX_AUDIO_FRAME_SIZE*2 + FF_INPUT_BUFFER_PADDING_SIZE);
+  memset(ts->enc_sample, 0, AVCODEC_MAX_AUDIO_FRAME_SIZE*2 + FF_INPUT_BUFFER_PADDING_SIZE);
 }
 
 
@@ -254,7 +254,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   }
 
   len = avpicture_get_size(ts->tctx->pix_fmt, ts->tctx->width, ts->tctx->height);
-  buf = av_malloc(len);
+  buf = av_malloc(len + FF_INPUT_BUFFER_PADDING_SIZE);
   memset(buf, 0, len);
 
   avpicture_fill((AVPicture *)ts->enc_frame, 
@@ -286,7 +286,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   ts->enc_frame->pts = ts->dec_frame->pts;
 
   len = avpicture_get_size(ts->tctx->pix_fmt, ts->sctx->width, ts->sctx->height);
-  out = av_malloc(len);
+  out = av_malloc(len + FF_INPUT_BUFFER_PADDING_SIZE);
   memset(out, 0, len);
 
   length = avcodec_encode_video(ts->tctx, out, len, ts->enc_frame);
@@ -422,11 +422,12 @@ transcoder_input(void *opaque, streaming_message_t *sm)
   }
   case SMT_START: {
     streaming_start_t *ss = streaming_start_copy(sm->sm_data);
+    streaming_start_unref(sm->sm_data);
+
     transcoder_start(t, ss);
     sm->sm_data = ss;
 
     streaming_target_deliver2(t->t_output, sm);
-    streaming_start_unref(ss);
     break;
   }
   case SMT_STOP:
