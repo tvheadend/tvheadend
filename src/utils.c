@@ -265,12 +265,33 @@ sbuf_alloc(sbuf_t *sb, int len)
 }
 
 void
-sbuf_append(sbuf_t *sb, const uint8_t *data, int len)
+sbuf_append(sbuf_t *sb, const void *data, int len)
 {
   sbuf_alloc(sb, len);
   memcpy(sb->sb_data + sb->sb_ptr, data, len);
   sb->sb_ptr += len;
 }
+
+void
+sbuf_put_be32(sbuf_t *sb, uint32_t u32)
+{
+  u32 = htonl(u32);
+  sbuf_append(sb, &u32, 4);
+}
+
+void
+sbuf_put_be16(sbuf_t *sb, uint16_t u16)
+{
+  u16 = htons(u16);
+  sbuf_append(sb, &u16, 2);
+}
+
+void
+sbuf_put_byte(sbuf_t *sb, uint8_t u8)
+{
+  sbuf_append(sb, &u8, 1);
+}
+
 
 void 
 sbuf_cut(sbuf_t *sb, int off)

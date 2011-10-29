@@ -436,8 +436,14 @@ void sbuf_err(sbuf_t *sb);
 
 void sbuf_alloc(sbuf_t *sb, int len);
 
-void sbuf_append(sbuf_t *sb, const uint8_t *data, int len);
+void sbuf_append(sbuf_t *sb, const void *data, int len);
 
 void sbuf_cut(sbuf_t *sb, int off);
+
+void sbuf_put_be32(sbuf_t *sb, uint32_t u32);
+
+void sbuf_put_be16(sbuf_t *sb, uint16_t u16);
+
+void sbuf_put_byte(sbuf_t *sb, uint8_t u8);
 
 #endif /* TV_HEAD_H */
