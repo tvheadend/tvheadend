@@ -227,6 +227,12 @@ put_utf8(char *out, int c)
 }
 
 
+void
+sbuf_init(sbuf_t *sb)
+{
+  memset(sb, 0, sizeof(sbuf_t));
+}
+
 
 void
 sbuf_free(sbuf_t *sb)
