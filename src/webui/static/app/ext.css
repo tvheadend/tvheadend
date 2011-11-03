@@ -257,8 +257,8 @@
 .x-epg-chicon {
     float: right;
     margin: 5px;
-    max-width: 64px;
-    max-height: 64px;
+    max-width: 132px;
+    max-height: 99px;
 }
 
 .x-epg-meta {
