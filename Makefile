@@ -68,6 +68,7 @@ SRCS =  src/main.c \
 	src/htsstr.c \
 	src/rawtsinput.c \
 	src/iptv_input.c \
+	src/avc.c \
 
 
 SRCS += src/plumbing/tsfix.c \

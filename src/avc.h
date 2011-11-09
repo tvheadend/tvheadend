@@ -22,16 +22,9 @@
 #ifndef AVC_H__
 #define AVC_H__
 
-#include <stdint.h>
-#include <libavformat/avformat.h>
-#include <libavformat/avio.h>
-#include "tvhead.h"
+#include "tvheadend.h"
 #include "packet.h"
 
-const uint8_t *avc_find_startcode(const uint8_t *p, const uint8_t *end);
-int avc_parse_nal_units(ByteIOContext *pb, const uint8_t *buf_in, int size);
-int avc_parse_nal_units_buf(const uint8_t *buf_in, uint8_t **buf, int *size);
 th_pkt_t *avc_convert_pkt(th_pkt_t *src);
-
 
 #endif 
