@@ -518,3 +518,13 @@ transcoder_destroy(streaming_target_t *st)
   free(t);
 }
 
+/**
+ * 
+ */ 
+void
+transcoder_init(void)
+{
+  avcodec_init();
+  avcodec_register_all();
+}
+

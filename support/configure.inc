@@ -27,6 +27,7 @@ CONFIG_LIST="
  linuxdvb
  v4l
  execinfo
+ transcoder
 "
 
 die() {

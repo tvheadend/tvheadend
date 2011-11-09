@@ -157,7 +157,9 @@ typedef struct htsp_subscription {
 
   streaming_target_t hs_input;
 
+#ifdef CONFIG_TRANSCODER
   streaming_target_t *hs_transcoder;
+#endif
 
   htsp_msg_q_t hs_q;
 
@@ -239,8 +241,10 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
 {
   LIST_REMOVE(hs, hs_link);
   subscription_unsubscribe(hs->hs_s);
+#ifdef CONFIG_TRANSCODER
   if(hs->hs_transcoder != NULL)
     transcoder_destroy(hs->hs_transcoder);
+#endif
   htsp_flush_queue(htsp, &hs->hs_q);
   free(hs);
 }
@@ -826,8 +830,10 @@ htsp_method_feedback(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsmsg_get_u32(in, "speed", &speed))
     return htsp_error("Missing argument 'speed'");
   
+#ifdef CONFIG_TRANSCODER
   if(s != NULL)
     transcoder_set_network_speed(s->hs_transcoder, speed);
+#endif
 
   return NULL;
 }
@@ -913,6 +919,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
   streaming_target_init(&hs->hs_input, htsp_streaming_input, hs, 0);
 
+#ifdef CONFIG_TRANSCODER
   if(max_width && max_height) {
     hs->hs_transcoder = transcoder_create(&hs->hs_input);
   }
@@ -920,6 +927,13 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
     subscription_create_from_channel(ch, weight,
 				     htsp->htsp_logname,
 				     hs->hs_transcoder ?: &hs->hs_input, 0);
+#else
+  hs->hs_s =
+    subscription_create_from_channel(ch, weight,
+				     htsp->htsp_logname,
+				     &hs->hs_input, 0);
+#endif
+
   return NULL;
 }
 

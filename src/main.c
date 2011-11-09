@@ -36,8 +36,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <libavcodec/avcodec.h>
-
 #include "tvheadend.h"
 #include "tcp.h"
 #include "access.h"
@@ -54,6 +52,7 @@
 #include "htsp.h"
 #include "rawtsinput.h"
 #include "avahi.h"
+#include "plumbing/transcode.h"
 #include "iptv_input.h"
 #include "service.h"
 #include "v4l.h"
@@ -382,9 +381,8 @@ main(int argc, char **argv)
 #if ENABLE_V4L
   v4l_init();
 #endif
-#if 1
-  avcodec_init();
-  avcodec_register_all();
+#ifdef CONFIG_TRANSCODER
+  transcoder_init();
 #endif
 
   http_server_init();
