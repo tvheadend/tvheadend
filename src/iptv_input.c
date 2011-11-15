@@ -248,6 +248,7 @@ iptv_service_start(service_t *t, unsigned int weight, int force_start)
     sin.sin_family = AF_INET;
     sin.sin_port = htons(t->s_iptv_port);
     sin.sin_addr.s_addr = t->s_iptv_group.s_addr;
+    setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &m, sizeof(struct ip_mreqn));
     if(bind(fd, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
       tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot bind %s:%d -- %s",
            t->s_identifier, inet_ntoa(sin.sin_addr), t->s_iptv_port,
@@ -274,6 +275,7 @@ iptv_service_start(service_t *t, unsigned int weight, int force_start)
     sin6.sin6_family = AF_INET6;
     sin6.sin6_port = htons(t->s_iptv_port);
     sin6.sin6_addr = t->s_iptv_group6;
+    setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &m6, sizeof(struct ipv6_mreq));
     if(bind(fd, (struct sockaddr *)&sin6, sizeof(sin6)) == -1) {
       inet_ntop(AF_INET6, &sin6.sin6_addr, straddr, sizeof(straddr));
       tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot bind %s:%d -- %s",
