@@ -202,6 +202,12 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
 						  pkt->pkt_componentindex);
     assert(ssc != NULL);
 
+    if(ssc->ssc_type == SCT_TELETEXT) {
+      free(sm);
+      ssc->ssc_disabled = 1;
+      break;
+    }
+
     pkt = convertpkt(ssc, pkt);
 
     apply_header(ssc, pkt);
