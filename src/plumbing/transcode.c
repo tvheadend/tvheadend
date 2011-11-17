@@ -130,7 +130,7 @@ transcoder_stream_init(transcoder_stream_t *ts, streaming_start_component_t *ssc
     ts->sctx->codec_type         = AVMEDIA_TYPE_VIDEO;
     ts->tctx->width              = ssc->ssc_width;
     ts->tctx->height             = ssc->ssc_height;
-    ts->tctx->qmin               = 0;
+    ts->tctx->qmin               = 1;
     ts->tctx->qmax               = FF_LAMBDA_MAX;
   }
 
