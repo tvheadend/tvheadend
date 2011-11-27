@@ -165,6 +165,15 @@ if enabled transcoder; then
 	die
     fi
 
+   if pkg-config --atleast-version 50.43.0 libavutil; then
+	echo >>${CONFIG_MAK} "LDFLAGS_cfg += " `pkg-config --libs libavutil`
+	echo >>${CONFIG_MAK} "CFLAGS_cfg += " `pkg-config --cflags libavutil`
+	echo "Using libavutil:       `pkg-config --modversion libavutil`"
+    else
+	echo "libavutil 50.43.0 or newer not found."
+	die
+    fi
+
     if pkg-config --atleast-version 0.13.0 libswscale; then
 	echo >>${CONFIG_MAK} "LDFLAGS_cfg += " `pkg-config --libs libswscale`
 	echo >>${CONFIG_MAK} "CFLAGS_cfg += " `pkg-config --cflags libswscale`
