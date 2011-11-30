@@ -47,7 +47,10 @@ typedef struct transcoder {
   // transcoder private stuff
   transcoder_stream_t ts_audio;
   transcoder_stream_t ts_video;
+  size_t max_width;
+  size_t max_height;
 
+  //for the PID-regulator
   int feedback_error;
   int feedback_error_sum;
   time_t feedback_clock;
@@ -450,12 +453,14 @@ transcoder_input(void *opaque, streaming_message_t *sm)
  *
  */
 streaming_target_t *
-transcoder_create(streaming_target_t *output)
+transcoder_create(streaming_target_t *output, size_t max_width, size_t max_height)
 {
   transcoder_t *t = calloc(1, sizeof(transcoder_t));
 
   memset(t, 0, sizeof(transcoder_t));
   t->t_output = output;
+  t->max_width = max_width;
+  t->max_height = max_height;
 
   transcoder_stream_create(&t->ts_video);
   transcoder_stream_create(&t->ts_audio);
