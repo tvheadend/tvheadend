@@ -20,6 +20,7 @@
 
 #include "tvheadend.h"
 #include "streaming.h"
+#include "service.h"
 #include "packet.h"
 #include "transcode.h"
 
@@ -90,54 +91,6 @@ transcoder_stream_destroy(transcoder_stream_t *ts)
   av_free(ts->dec_sample);
   av_free(ts->enc_sample);
   sws_freeContext(ts->scaler);
-}
-
-
-/**
- * initialize a transcoder stream
- */
-static int
-transcoder_stream_init(transcoder_stream_t *ts, streaming_start_component_t *ssc)
-{
-  AVCodec *codec = NULL;
-
-  if(ssc->ssc_type == SCT_H264)
-    codec = avcodec_find_decoder(CODEC_ID_H264);
-  else if(ssc->ssc_type == SCT_MPEG2VIDEO)
-    codec = avcodec_find_decoder(CODEC_ID_MPEG2VIDEO);
-  else if(ssc->ssc_type == SCT_AC3)
-    codec = avcodec_find_decoder(CODEC_ID_AC3);
-  else if(ssc->ssc_type == SCT_EAC3)
-    codec = avcodec_find_decoder(CODEC_ID_EAC3);
-  else if(ssc->ssc_type == SCT_AAC)
-    codec = avcodec_find_decoder(CODEC_ID_AAC);
-  else if(ssc->ssc_type == SCT_MPEG2AUDIO)
-    codec = avcodec_find_decoder(CODEC_ID_MP2);
-
-  if(codec && !avcodec_open(ts->sctx, codec)) {
-    ts->index = ssc->ssc_index;
-  } else {
-    tvhlog(LOG_ERR, "transcoder", "Unable to find decoder");
-    ts->index = 0;
-    return -1;
-  }
-
-  if (SCT_ISAUDIO(ssc->ssc_type)) {
-    ssc->ssc_type = SCT_MP3;
-    ts->sctx->codec_type = AVMEDIA_TYPE_AUDIO;
-  } else if (SCT_ISVIDEO(ssc->ssc_type)) {
-    ssc->ssc_type   = SCT_MPEG2VIDEO;
-    ssc->ssc_width  = (ssc->ssc_width / 2);
-    ssc->ssc_height = (ssc->ssc_height / 2);
-
-    ts->sctx->codec_type         = AVMEDIA_TYPE_VIDEO;
-    ts->tctx->width              = ssc->ssc_width;
-    ts->tctx->height             = ssc->ssc_height;
-    ts->tctx->qmin               = 1;
-    ts->tctx->qmax               = FF_LAMBDA_MAX;
-  }
-
-  return 0;
 }
 
 
@@ -361,24 +314,99 @@ transcoder_packet(transcoder_t *t, th_pkt_t *pkt)
 /**
  * initializes eatch transcoding stream
  */
-static void
-transcoder_start(transcoder_t *t, streaming_start_t *ss)
+static streaming_start_t *
+transcoder_start(transcoder_t *t, streaming_start_t *src)
 {
-  int i;
+  int i = 0;
+  streaming_start_t *ss = NULL;
 
   t->feedback_clock = dispatch_clock;
 
-  for(i = 0; i < ss->ss_num_components; i++) {
-    streaming_start_component_t *ssc = &ss->ss_components[i];
+  ss = malloc(sizeof(streaming_start_t) + sizeof(streaming_start_component_t) * 2);
+  memset(ss, 0, sizeof(streaming_start_t) + sizeof(streaming_start_component_t) * 2);
 
-    if (SCT_ISAUDIO(ssc->ssc_type))
-      if (t->ts_audio.index || transcoder_stream_init(&t->ts_audio, ssc) < 0)
-	ssc->ssc_type = SCT_UNKNOWN;
+  ss->ss_num_components = 2;
+  ss->ss_refcount = 1;
+  ss->ss_pcr_pid = src->ss_pcr_pid;
+  service_source_info_copy(&ss->ss_si, &src->ss_si);
 
-    if (SCT_ISVIDEO(ssc->ssc_type))
-      if (t->ts_video.index || transcoder_stream_init(&t->ts_video, ssc) < 0)
-	ssc->ssc_type = SCT_UNKNOWN;
+  for(i = 0; i < src->ss_num_components; i++) {
+    streaming_start_component_t *ssc_src = &src->ss_components[i];
+    enum CodecID codec_id = CODEC_ID_NONE;
+
+    switch(ssc_src->ssc_type) {
+    case SCT_H264:
+      codec_id = CODEC_ID_H264;
+      break;
+    case SCT_MPEG2VIDEO:
+      codec_id = CODEC_ID_MPEG2VIDEO;
+      break;
+    case SCT_AC3:
+      codec_id = CODEC_ID_AC3;
+      break;
+    case SCT_EAC3:
+      codec_id = CODEC_ID_EAC3;
+      break;
+    case SCT_AAC:
+      codec_id = CODEC_ID_AAC;
+      break;
+    case SCT_MPEG2AUDIO:
+      codec_id = CODEC_ID_MP2;
+      break;
+    }
+
+    if (!t->ts_audio.index && SCT_ISAUDIO(ssc_src->ssc_type)) {
+      AVCodec *codec = avcodec_find_decoder(codec_id);
+      if(!codec || avcodec_open(t->ts_audio.sctx, codec) < 0) {
+	tvhlog(LOG_ERR, "transcoder", "Unable to find %s decoder", streaming_component_type2txt(ssc_src->ssc_type));
+	continue;
+      }
+
+      t->ts_audio.index = ssc_src->ssc_index;
+
+      streaming_start_component_t *ssc = &ss->ss_components[0];
+      ssc->ssc_index    = ssc_src->ssc_index;
+      ssc->ssc_type     = SCT_MPEG2AUDIO;
+      ssc->ssc_sri      = ssc_src->ssc_sri;
+      ssc->ssc_channels = ssc_src->ssc_channels;
+      memcpy(ssc->ssc_lang, ssc_src->ssc_lang, 4);
+
+      t->ts_audio.sctx->codec_type = AVMEDIA_TYPE_AUDIO;
+      t->ts_audio.tctx->codec_type = AVMEDIA_TYPE_AUDIO;
+    }
+
+    if (!t->ts_video.index && SCT_ISVIDEO(ssc_src->ssc_type)) {
+      AVCodec *codec = avcodec_find_decoder(codec_id);
+      if(!codec || avcodec_open(t->ts_video.sctx, codec) < 0) {
+	tvhlog(LOG_ERR, "transcoder", "Unable to find %s decoder", streaming_component_type2txt(ssc_src->ssc_type));
+	continue;
+      }
+
+      t->ts_video.index = ssc_src->ssc_index;
+
+      streaming_start_component_t *ssc = &ss->ss_components[1];
+
+      ssc->ssc_index         = ssc_src->ssc_index;
+      ssc->ssc_type          = SCT_MPEG2VIDEO;
+      ssc->ssc_aspect_num    = ssc_src->ssc_aspect_num;
+      ssc->ssc_aspect_den    = ssc_src->ssc_aspect_den;
+      ssc->ssc_height        = MIN(t->max_height, ssc_src->ssc_height);
+      ssc->ssc_width         = ssc->ssc_height * ((double)ssc_src->ssc_width / ssc_src->ssc_height);
+      ssc->ssc_frameduration = ssc_src->ssc_frameduration;
+
+      t->ts_video.sctx->codec_type         = AVMEDIA_TYPE_VIDEO;
+
+      t->ts_video.tctx->codec_type         = AVMEDIA_TYPE_VIDEO;
+      t->ts_video.tctx->width              = ssc->ssc_width;
+      t->ts_video.tctx->height             = ssc->ssc_height;
+      t->ts_video.tctx->qmin               = 1;
+      t->ts_video.tctx->qmax               = FF_LAMBDA_MAX;
+    }
   }
+
+  streaming_start_unref(src);
+
+  return ss;
 }
 
 
@@ -426,10 +454,8 @@ transcoder_input(void *opaque, streaming_message_t *sm)
     break;
   }
   case SMT_START: {
-    streaming_start_t *ss = streaming_start_copy(sm->sm_data);
+    streaming_start_t *ss = transcoder_start(t, sm->sm_data);
     streaming_start_unref(sm->sm_data);
-
-    transcoder_start(t, ss);
     sm->sm_data = ss;
 
     streaming_target_deliver2(t->t_output, sm);
