@@ -401,6 +401,14 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
       t->ts_video.tctx->height             = ssc->ssc_height;
       t->ts_video.tctx->qmin               = 1;
       t->ts_video.tctx->qmax               = FF_LAMBDA_MAX;
+
+      tvhlog(LOG_INFO, "transcode", "%s %dx%d ==> %s %dx%d", 
+	     streaming_component_type2txt(ssc_src->ssc_type),
+	     ssc_src->ssc_width,
+	     ssc_src->ssc_height,
+	     streaming_component_type2txt(ssc->ssc_type),
+	     ssc->ssc_width,
+	     ssc->ssc_height);
     }
   }
 
