@@ -132,14 +132,14 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   if(ts->tctx->codec_id == CODEC_ID_NONE) {
     AVCodec *codec = avcodec_find_encoder(CODEC_ID_MP3);
     if(!codec || avcodec_open(ts->tctx, codec) < 0) {
-      tvhlog(LOG_ERR, "transcoder", "Unable to find audio encoder");
+      tvhlog(LOG_ERR, "transcode", "Unable to find audio encoder");
       goto cleanup;
     }
   }
 
   length = avcodec_encode_audio(ts->tctx, ts->enc_sample, AVCODEC_MAX_AUDIO_FRAME_SIZE*2, ts->dec_sample);
   if(length <= 0) {
-    tvhlog(LOG_ERR, "transcoder", "Unable to encode audio");
+    tvhlog(LOG_ERR, "transcode", "Unable to encode audio");
     goto cleanup;
   }
 
@@ -183,7 +183,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   length = avcodec_decode_video2(ts->sctx, ts->dec_frame, &got_picture, &packet);
 
   if(length <= 0) {
-    tvhlog(LOG_ERR, "transcoder", "Unable to decode video");
+    tvhlog(LOG_ERR, "transcode", "Unable to decode video");
     goto cleanup;
   }
 
@@ -205,7 +205,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
 
     AVCodec *codec = avcodec_find_encoder(CODEC_ID_MPEG2VIDEO);
     if(!codec || avcodec_open(ts->tctx, codec) < 0) {
-      tvhlog(LOG_ERR, "transcoder", "Unable to find video encoder");
+      tvhlog(LOG_ERR, "transcode", "Unable to find video encoder");
       ts->tctx->codec_id = CODEC_ID_NONE;
       goto cleanup;
     }
@@ -249,7 +249,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
 
   length = avcodec_encode_video(ts->tctx, out, len, ts->enc_frame);
   if(length <= 0) {
-    tvhlog(LOG_ERR, "transcoder", "Unable to encode video");
+    tvhlog(LOG_ERR, "transcode", "Unable to encode video");
     goto cleanup;
   }
   
@@ -358,7 +358,7 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
     if (!t->ts_audio.index && SCT_ISAUDIO(ssc_src->ssc_type)) {
       AVCodec *codec = avcodec_find_decoder(codec_id);
       if(!codec || avcodec_open(t->ts_audio.sctx, codec) < 0) {
-	tvhlog(LOG_ERR, "transcoder", "Unable to find %s decoder", streaming_component_type2txt(ssc_src->ssc_type));
+	tvhlog(LOG_ERR, "transcode", "Unable to find %s decoder", streaming_component_type2txt(ssc_src->ssc_type));
 	continue;
       }
 
@@ -378,7 +378,7 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
     if (!t->ts_video.index && SCT_ISVIDEO(ssc_src->ssc_type)) {
       AVCodec *codec = avcodec_find_decoder(codec_id);
       if(!codec || avcodec_open(t->ts_video.sctx, codec) < 0) {
-	tvhlog(LOG_ERR, "transcoder", "Unable to find %s decoder", streaming_component_type2txt(ssc_src->ssc_type));
+	tvhlog(LOG_ERR, "transcode", "Unable to find %s decoder", streaming_component_type2txt(ssc_src->ssc_type));
 	continue;
       }
 
