@@ -404,8 +404,6 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
     }
   }
 
-  streaming_start_unref(src);
-
   return ss;
 }
 
