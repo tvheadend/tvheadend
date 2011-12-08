@@ -663,7 +663,7 @@ tvheadend.dvrsettings = function() {
 
     var confreader = new Ext.data.JsonReader({
 	root: 'dvrSettings'
-    }, ['storage','postproc','retention','dayDirs',
+    }, ['storage','format','file-postfix','postproc','retention','dayDirs',
 	'channelDirs','channelInTitle',
 	'dateInTitle','timeInTitle',
 	'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 
@@ -704,6 +704,27 @@ tvheadend.dvrsettings = function() {
 	    width: 300,
 	    fieldLabel: 'Recording system path',
 	    name: 'storage'
+	}, new Ext.form.ComboBox({
+	    width: 300,
+	    fieldLabel: 'File format',
+	    mode: 'local',
+	    store: new Ext.data.SimpleStore({
+	        fields: ['key','value'],
+	        data: [
+	            ['matroska','Matroska Multimedia Container'],
+				['mpegts','MPEG TS Container'],
+				['rawts','Raw Transport Stream']
+       		]
+       	}),
+       	triggerAction: 'all',
+		displayField:'value',
+		valueField:'key',
+		editable: false,
+	    hiddenName: 'format'
+	}), {
+	    width: 300,
+	    fieldLabel: 'File extention',
+	    name: 'file-postfix'
 	}, new Ext.form.NumberField({
 	    allowNegative: false,
 	    allowDecimals: false,

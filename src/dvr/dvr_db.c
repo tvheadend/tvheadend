@@ -852,6 +852,8 @@ dvr_init(void)
       htsmsg_get_s32(m, "post-extra-time", &cfg->dvr_extra_time_post);
       htsmsg_get_u32(m, "retention-days", &cfg->dvr_retention_days);
       tvh_str_set(&cfg->dvr_storage, htsmsg_get_str(m, "storage"));
+      tvh_str_set(&cfg->dvr_format, htsmsg_get_str(m, "format"));
+      tvh_str_set(&cfg->dvr_file_postfix, htsmsg_get_str(m, "file-postfix"));
 
       if(!htsmsg_get_u32(m, "day-dir", &u32) && u32)
         cfg->dvr_flags |= DVR_DIR_PER_DAY;
@@ -1016,6 +1018,8 @@ dvr_save(dvr_config_t *cfg)
   if (cfg->dvr_config_name != NULL && strlen(cfg->dvr_config_name) != 0)
     htsmsg_add_str(m, "config_name", cfg->dvr_config_name);
   htsmsg_add_str(m, "storage", cfg->dvr_storage);
+  htsmsg_add_str(m, "format", cfg->dvr_format);
+  htsmsg_add_str(m, "file-postfix", cfg->dvr_file_postfix);
   htsmsg_add_u32(m, "retention-days", cfg->dvr_retention_days);
   htsmsg_add_u32(m, "pre-extra-time", cfg->dvr_extra_time_pre);
   htsmsg_add_u32(m, "post-extra-time", cfg->dvr_extra_time_post);
@@ -1047,6 +1051,34 @@ dvr_storage_set(dvr_config_t *cfg, const char *storage)
     return;
 
   tvh_str_set(&cfg->dvr_storage, storage);
+  dvr_save(cfg);
+}
+
+/**
+ *
+ */
+void
+dvr_format_set(dvr_config_t *cfg, const char *format)
+{
+  if(cfg->dvr_format != NULL && !strcmp(cfg->dvr_format, format))
+    return;
+
+  tvhlog(LOG_DEBUG, "dvr", "Saving format: \"%s\" was : \"%s\"", format, cfg->dvr_format);
+  tvh_str_set(&cfg->dvr_format, format);
+  dvr_save(cfg);
+}
+
+/**
+ *
+ */
+void
+dvr_file_postfix_set(dvr_config_t *cfg, const char *file_postfix)
+{
+  if(cfg->dvr_file_postfix != NULL && !strcmp(cfg->dvr_file_postfix, file_postfix))
+    return;
+
+  tvhlog(LOG_DEBUG, "dvr", "Saving file_postfix: \"%s\" was : \"%s\"", file_postfix, cfg->dvr_file_postfix);
+  tvh_str_set(&cfg->dvr_file_postfix, file_postfix);
   dvr_save(cfg);
 }
 
