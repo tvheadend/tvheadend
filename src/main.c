@@ -158,6 +158,8 @@ usage(const char *argv0)
   printf(" -c <directory>  Alternate configuration path.\n"
 	 "                 Defaults to [$HOME/.hts/tvheadend]\n");
   printf(" -f              Fork and daemonize\n");
+  printf(" -p <pidfile>    Write pid to <pidfile> instead of /var/run/tvheadend.pid,\n"
+        "                 only works with -f\n");
   printf(" -u <username>   Run as user <username>, only works with -f\n");
   printf(" -g <groupname>  Run as group <groupname>, only works with -f\n");
   printf(" -C              If no useraccount exist then create one with\n"
@@ -229,6 +231,7 @@ main(int argc, char **argv)
   int c;
   int forkaway = 0;
   FILE *pidfile;
+  const char *pidpath = "/var/run/tvheadend.pid";
   struct group *grp;
   struct passwd *pw;
   const char *usernam = NULL;
@@ -247,7 +250,7 @@ main(int argc, char **argv)
   // make sure the timezone is set
   tzset();
 
-  while((c = getopt(argc, argv, "Aa:fu:g:c:Chdr:j:s")) != -1) {
+  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:s")) != -1) {
     switch(c) {
     case 'a':
       adapter_mask = 0x0;
@@ -274,6 +277,9 @@ main(int argc, char **argv)
       break;
     case 'f':
       forkaway = 1;
+      break;
+    case 'p':
+      pidpath = optarg;
       break;
     case 'u':
       usernam = optarg;
@@ -315,8 +321,7 @@ main(int argc, char **argv)
     if(daemon(0, 0)) {
       exit(2);
     }
-
-    pidfile = fopen("/var/run/tvheadend.pid", "w+");
+    pidfile = fopen(pidpath, "w+");
     if(pidfile != NULL) {
       fprintf(pidfile, "%d\n", getpid());
       fclose(pidfile);
