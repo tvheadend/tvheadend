@@ -255,6 +255,12 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   
   n = pkt_alloc(out, length, ts->enc_frame->pts, pkt->pkt_dts);
 
+  if(n->pkt_pts == PTS_UNSET)
+    n->pkt_pts = pkt->pkt_pts;
+
+  if(n->pkt_pts == PTS_UNSET)
+    n->pkt_pts = pkt->pkt_dts;
+
   if(ts->enc_frame->pict_type & FF_I_TYPE)
     n->pkt_frametype = PKT_I_FRAME;
   else if(ts->enc_frame->pict_type & FF_P_TYPE)

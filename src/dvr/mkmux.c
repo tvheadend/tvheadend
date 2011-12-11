@@ -629,7 +629,46 @@ mk_mux_create(const char *filename,
   return mkm;
 }
 
+/**
+ *
+ */
+mk_mux_t *
+mk_mux_stream_create(int fd, const struct streaming_start *ss)
+{
+  mk_mux_t *mkm;
 
+  mkm = calloc(1, sizeof(struct mk_mux));
+  getuuid(mkm->uuid);
+  mkm->filename = strdup("Live stream");
+  mkm->fd = fd;
+  mkm->title = strdup("Live stream");
+  TAILQ_INIT(&mkm->cues);
+
+  mk_write_master(mkm, 0x1a45dfa3, mk_build_ebmlheader());
+
+  mkm->segment_header_pos = mkm->fdpos;
+  mk_write_segment_header(mkm, 0);
+
+  mkm->segment_pos = mkm->fdpos;
+  mk_write_metaseek(mkm, 1); // Must be first in segment
+
+
+  mkm->segmentinfo_pos = mkm->fdpos;
+  mk_write_master(mkm, 0x1549a966, mk_build_segment_info(mkm));
+
+  mkm->trackinfo_pos = mkm->fdpos;
+  mk_write_master(mkm, 0x1654ae6b, mk_build_tracks(mkm, ss));
+
+  /*
+  if(write_tags) {
+    mkm->metadata_pos = mkm->fdpos;
+    mk_write_master(mkm, 0x1254c367, mk_build_metadata(de));
+  }
+ 
+  mk_write_metaseek(mkm, 0);
+  */
+  return mkm;
+}
 /**
  *
  */
@@ -748,7 +787,7 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track *t, th_pkt_t *pkt)
 /**
  *
  */
-void
+int
 mk_mux_write_pkt(mk_mux_t *mkm, struct th_pkt *pkt)
 {
   int i;
@@ -768,6 +807,8 @@ mk_mux_write_pkt(mk_mux_t *mkm, struct th_pkt *pkt)
   }
   
   pkt_ref_dec(pkt);
+
+  return mkm->error;
 }
 
 

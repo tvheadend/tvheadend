@@ -34,8 +34,10 @@
 #include "http.h"
 #include "webui.h"
 #include "dvr/dvr.h"
+#include "dvr/mkmux.h"
 #include "filebundle.h"
 #include "psi.h"
+#include "plumbing/transcode.h"
 
 struct filebundle *filebundles;
 
@@ -131,9 +133,10 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq)
   int run = 1;
   int start = 1;
   int timeouts = 0;
-  pthread_mutex_lock(&sq->sq_mutex);
+  mk_mux_t *mkm = NULL;
 
   while(run) {
+    pthread_mutex_lock(&sq->sq_mutex);
     sm = TAILQ_FIRST(&sq->sq_queue);
     if(sm == NULL) {      
       struct timespec ts;
@@ -157,55 +160,23 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq)
             run = 0;            
           }
       }
+      pthread_mutex_unlock(&sq->sq_mutex);
       continue;
     }
 
     timeouts = 0; //Reset timeout counter
     TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
 
-    pthread_mutex_unlock(&sq->sq_mutex);
-
     switch(sm->sm_type) {
     case SMT_PACKET:
-      //printf("SMT_PACKET\n");
+      pkt_ref_inc(sm->sm_data);
+      run = !mk_mux_write_pkt(mkm, sm->sm_data);
       break;
 
     case SMT_START:
-      if (start) {
-        struct streaming_start *ss = sm->sm_data;
-        uint8_t pat_ts[188];
-        uint8_t pmt_ts[188];  
-        int pcrpid = ss->ss_pcr_pid;
-        int pmtpid = 0x0fff;
-
-        http_output_content(hc, "video/mp2t");
-        
-        //Send PAT
-        memset(pat_ts, 0xff, 188);
-        psi_build_pat(NULL, pat_ts+5, 183, pmtpid);
-        pat_ts[0] = 0x47;
-        pat_ts[1] = 0x40;
-        pat_ts[2] = 0x00;
-        pat_ts[3] = 0x10;
-        pat_ts[4] = 0x00;
-        run = (write(hc->hc_fd, pat_ts, 188) == 188);
-        
-        if(!run) {
-          break;
-        }
-
-        //Send PMT
-        memset(pmt_ts, 0xff, 188);
-        psi_build_pmt(ss, pmt_ts+5, 183, pcrpid);
-        pmt_ts[0] = 0x47;
-        pmt_ts[1] = 0x40 | (pmtpid >> 8);
-        pmt_ts[2] = pmtpid;
-        pmt_ts[3] = 0x10;
-        pmt_ts[4] = 0x00;
-        run = (write(hc->hc_fd, pmt_ts, 188) == 188);
-        
-        start = 0;
-      }
+      start = 0;
+      http_output_content(hc, "video/x-matroska");
+      mkm = mk_mux_stream_create(hc->hc_fd, sm->sm_data);
       break;
 
     case SMT_STOP:
@@ -213,7 +184,6 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq)
       break;
 
     case SMT_SERVICE_STATUS:
-      //printf("SMT_TRANSPORT_STATUS\n");
       break;
 
     case SMT_NOSTART:
@@ -221,19 +191,15 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq)
       break;
 
     case SMT_MPEGTS:
-      run = (write(hc->hc_fd, sm->sm_data, 188) == 188);
       break;
 
     case SMT_EXIT:
       run = 0;
       break;
     }
-
     streaming_msg_free(sm);
-    pthread_mutex_lock(&sq->sq_mutex);
+    pthread_mutex_unlock(&sq->sq_mutex);
   }
-
-  pthread_mutex_unlock(&sq->sq_mutex);
 }
 
 /**
@@ -375,11 +341,11 @@ http_stream_service(http_connection_t *hc, service_t *service)
 
   pthread_mutex_lock(&global_lock);
 
-  streaming_queue_init(&sq, ~SMT_TO_MASK(SUBSCRIPTION_RAW_MPEGTS));
+  streaming_queue_init(&sq, 0);
 
   s = subscription_create_from_service(service,
                                        "HTTP", &sq.sq_st,
-                                       SUBSCRIPTION_RAW_MPEGTS);
+                                       0);
 
 
   pthread_mutex_unlock(&global_lock);
@@ -405,17 +371,20 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
 {
   streaming_queue_t sq;
   th_subscription_t *s;
+  streaming_target_t *st;
   int priority = 150; //Default value, Compute this somehow
 
+  streaming_queue_init(&sq, 0);
+#ifdef CONFIG_TRANSCODER
+  st = transcoder_create(&sq.sq_st, 640, 480);
+#else
+  st = &sq.sq_st;
+#endif
+
   pthread_mutex_lock(&global_lock);
-
-  streaming_queue_init(&sq, ~SMT_TO_MASK(SUBSCRIPTION_RAW_MPEGTS));
-
   s = subscription_create_from_channel(ch, priority, 
-                                       "HTTP", &sq.sq_st,
-                                       SUBSCRIPTION_RAW_MPEGTS);
-
-
+                                       "HTTP", st,
+                                       0);
   pthread_mutex_unlock(&global_lock);
 
   http_stream_run(hc, &sq);
@@ -423,8 +392,12 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   pthread_mutex_lock(&global_lock);
   subscription_unsubscribe(s);
   pthread_mutex_unlock(&global_lock);
-  streaming_queue_deinit(&sq);
 
+#ifdef CONFIG_TRANSCODER
+  transcoder_destroy(st);
+#endif
+
+  streaming_queue_deinit(&sq);
   return 0;
 }
 
