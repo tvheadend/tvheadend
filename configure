@@ -38,6 +38,7 @@ enable cwc
 enable avahi
 enable linuxdvb
 enable v4l
+enable transcoder
 
 for opt do
   optval="${opt#*=}"
@@ -141,17 +142,46 @@ if enabled avahi; then
     fi
 fi
 
-if pkg-config libssl; then
-    echo >>${CONFIG_MAK} "LDFLAGS_cfg += " `pkg-config --libs libssl`
-    echo >>${CONFIG_MAK} "CFLAGS_cfg += " `pkg-config --cflags libssl`
-    echo "Using libssl:          `pkg-config --modversion libssl`"
-elif pkg-config openssl; then
+if pkg-config openssl; then
     echo >>${CONFIG_MAK} "LDFLAGS_cfg += " `pkg-config --libs openssl`
     echo >>${CONFIG_MAK} "CFLAGS_cfg += " `pkg-config --cflags openssl`
     echo "Using openssl:         `pkg-config --modversion openssl`"
+elif pkg-config libssl; then
+    echo >>${CONFIG_MAK} "LDFLAGS_cfg += " `pkg-config --libs libssl`
+    echo >>${CONFIG_MAK} "CFLAGS_cfg += " `pkg-config --cflags libssl`
+    echo "Using libssl:          `pkg-config --modversion libssl`"
 else
     echo "libssl or openssl not found"
     die
+fi
+
+if enabled transcoder; then
+    if pkg-config --atleast-version 52.96.0 libavcodec; then
+	echo >>${CONFIG_MAK} "LDFLAGS_cfg += " `pkg-config --libs libavcodec`
+	echo >>${CONFIG_MAK} "CFLAGS_cfg += " `pkg-config --cflags libavcodec`
+	echo "Using libavcodec:      `pkg-config --modversion libavcodec`"
+    else
+	echo "libavcodec 52.96.0 or newer not found."
+	die
+    fi
+
+    if pkg-config --atleast-version 50.43.0 libavutil; then
+	echo >>${CONFIG_MAK} "LDFLAGS_cfg += " `pkg-config --libs libavutil`
+	echo >>${CONFIG_MAK} "CFLAGS_cfg += " `pkg-config --cflags libavutil`
+	echo "Using libavutil:       `pkg-config --modversion libavutil`"
+    else
+	echo "libavutil 50.43.0 or newer not found."
+	die
+    fi
+
+    if pkg-config --atleast-version 0.13.0 libswscale; then
+	echo >>${CONFIG_MAK} "LDFLAGS_cfg += " `pkg-config --libs libswscale`
+	echo >>${CONFIG_MAK} "CFLAGS_cfg += " `pkg-config --cflags libswscale`
+	echo "Using libswscale:      `pkg-config --modversion libswscale`"
+    else
+	echo "libswscale 0.13.0 or newer not found."
+	die
+    fi
 fi
 
 #

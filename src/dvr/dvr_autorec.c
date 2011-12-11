@@ -479,10 +479,17 @@ void
 dvr_autorec_check_event(event_t *e)
 {
   dvr_autorec_entry_t *dae;
+  dvr_entry_t *existingde;
 
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
-    if(autorec_cmp(dae, e))
-      dvr_entry_create_by_autorec(e, dae);
+    if(autorec_cmp(dae, e)) {
+      existingde = dvr_entry_find_by_event_fuzzy(e);
+      if (existingde != NULL) {
+        tvhlog(LOG_DEBUG, "dvr", "Updating existing DVR entry for %s", e->e_title);
+        dvr_entry_update(existingde, e->e_title, e->e_start, e->e_stop);
+      } else
+        dvr_entry_create_by_autorec(e, dae);
+    }
 }
 
 /**

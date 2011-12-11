@@ -157,7 +157,9 @@ typedef struct htsp_subscription {
 
   streaming_target_t hs_input;
 
+#ifdef CONFIG_TRANSCODER
   streaming_target_t *hs_transcoder;
+#endif
 
   htsp_msg_q_t hs_q;
 
@@ -239,8 +241,10 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
 {
   LIST_REMOVE(hs, hs_link);
   subscription_unsubscribe(hs->hs_s);
+#ifdef CONFIG_TRANSCODER
   if(hs->hs_transcoder != NULL)
     transcoder_destroy(hs->hs_transcoder);
+#endif
   htsp_flush_queue(htsp, &hs->hs_q);
   free(hs);
 }
@@ -717,6 +721,7 @@ htsp_build_event(event_t *e)
 {
   htsmsg_t *out;
   event_t *n;
+  dvr_entry_t *de;
 
   out = htsmsg_create_map();
 
@@ -737,6 +742,10 @@ htsp_build_event(event_t *e)
 
   if(e->e_content_type)
     htsmsg_add_u32(out, "contentType", e->e_content_type);
+
+  if((de = dvr_entry_find_by_event(e)) != NULL) {
+    htsmsg_add_u32(out, "dvrId", de->de_id);
+  }
 
   n = RB_NEXT(e, e_channel_link);
   if(n != NULL)
@@ -803,6 +812,33 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
 }
 
 /**
+ * Get information about the client network speed
+ */
+static htsmsg_t *
+htsp_method_feedback(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsp_subscription_t *s;
+  uint32_t sid, speed;
+
+  if(htsmsg_get_u32(in, "subscriptionId", &sid))
+    return htsp_error("Missing argument 'subscriptionId'");
+
+  LIST_FOREACH(s, &htsp->htsp_subscriptions, hs_link)
+    if(s->hs_sid == sid)
+      break;
+
+  if(htsmsg_get_u32(in, "speed", &speed))
+    return htsp_error("Missing argument 'speed'");
+  
+#ifdef CONFIG_TRANSCODER
+  if(s != NULL)
+    transcoder_set_network_speed(s->hs_transcoder, speed);
+#endif
+
+  return NULL;
+}
+
+/**
  * Get total and free disk space on configured path
  */
 static htsmsg_t *
@@ -850,6 +886,7 @@ static htsmsg_t *
 htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 {
   uint32_t chid, sid, weight;
+  uint32_t  max_width, max_height;
   channel_t *ch;
   htsp_subscription_t *hs;
 
@@ -863,7 +900,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("Requested channel does not exist");
 
   weight = htsmsg_get_u32_or_default(in, "weight", 150);
-
+  max_width = htsmsg_get_u32_or_default(in, "maxWidth", 0);
+  max_height = htsmsg_get_u32_or_default(in, "maxHeight", 0);
   /*
    * We send the reply now to avoid the user getting the 'subscriptionStart'
    * async message before the reply to 'subscribe'.
@@ -881,13 +919,21 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
   streaming_target_init(&hs->hs_input, htsp_streaming_input, hs, 0);
 
-  if(1 /* do transcoding */ )
-    hs->hs_transcoder = transcoder_create(&hs->hs_input);
-    
+#ifdef CONFIG_TRANSCODER
+  if(max_width && max_height) {
+    hs->hs_transcoder = transcoder_create(&hs->hs_input, max_width, max_height);
+  }
   hs->hs_s =
     subscription_create_from_channel(ch, weight,
 				     htsp->htsp_logname,
 				     hs->hs_transcoder ?: &hs->hs_input, 0);
+#else
+  hs->hs_s =
+    subscription_create_from_channel(ch, weight,
+				     htsp->htsp_logname,
+				     &hs->hs_input, 0);
+#endif
+
   return NULL;
 }
 
@@ -1038,7 +1084,7 @@ struct {
   { "cancelDvrEntry", htsp_method_cancelDvrEntry, ACCESS_RECORDER},
   { "deleteDvrEntry", htsp_method_deleteDvrEntry, ACCESS_RECORDER},
   { "epgQuery", htsp_method_epgQuery, ACCESS_STREAMING},
-
+  { "feedback", htsp_method_feedback, ACCESS_STREAMING},
 };
 
 #define NUM_METHODS (sizeof(htsp_methods) / sizeof(htsp_methods[0]))
@@ -1372,7 +1418,7 @@ htsp_async_send(htsmsg_t *m)
  * global_lock is held
  */
 void
-htsp_channgel_update_current(channel_t *ch)
+htsp_channel_update_current(channel_t *ch)
 {
   htsmsg_t *m;
   time_t now;
@@ -1506,9 +1552,9 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   int64_t ts;
   int qlen = hs->hs_q.hmq_payload;
 
-  if((qlen > 500000 && pkt->pkt_frametype == PKT_B_FRAME) ||
-     (qlen > 750000 && pkt->pkt_frametype == PKT_P_FRAME) || 
-     (qlen > 1500000)) {
+  if((qlen > 1500000 && pkt->pkt_frametype == PKT_B_FRAME) ||
+     (qlen > 3000000 && pkt->pkt_frametype == PKT_P_FRAME) || 
+     (qlen > 9000000)) {
 
     hs->hs_dropstats[pkt->pkt_frametype]++;
 

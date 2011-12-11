@@ -68,11 +68,11 @@ SRCS =  src/main.c \
 	src/htsstr.c \
 	src/rawtsinput.c \
 	src/iptv_input.c \
+	src/avc.c \
 
 
 SRCS += src/plumbing/tsfix.c \
 	src/plumbing/globalheaders.c \
-	src/plumbing/transcode.c \
 
 SRCS += src/dvr/dvr_db.c \
 	src/dvr/dvr_rec.c \
@@ -134,6 +134,16 @@ SRCS-$(CONFIG_AVAHI) += src/avahi.c
 
 ${BUILDDIR}/src/avahi.o : CFLAGS = \
                       $(shell pkg-config --cflags avahi-client) -Wall -Werror
+
+#
+# Transcoder
+#
+
+SRCS-$(CONFIG_TRANSCODER) += src/plumbing/transcode.c
+
+#${BUILDDIR}/src/plumbing/transcode.o : CFLAGS = \
+#                      $(shell pkg-config --cflags libavcode libcwscale) -Wall -Werror
+
 
 # Various transformations
 SRCS  += $(SRCS-yes)

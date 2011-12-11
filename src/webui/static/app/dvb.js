@@ -338,6 +338,12 @@ tvheadend.dvb_services = function(adapterId) {
        width: 45
     });
 
+	var eitColumn = new Ext.grid.CheckColumn({
+		header: "EIT",
+		dataIndex: 'dvb_eit_enable',
+		width: 45
+	});
+
     var actions = new Ext.ux.grid.RowActions({
 	header:'',
 	dataIndex: 'actions',
@@ -433,6 +439,7 @@ tvheadend.dvb_services = function(adapterId) {
 			valueField:'key'
 		})
 	},
+	eitColumn,
 	{
 	    header: "Type",
 	    dataIndex: 'type',
@@ -478,8 +485,8 @@ tvheadend.dvb_services = function(adapterId) {
     var store = new Ext.data.JsonStore({
 	root: 'entries',
 	fields: Ext.data.Record.create([
-	    'id', 'enabled', 'type', 'sid', 'pmt', 'pcr', 
-	    'svcname', 'network', 'provider', 'mux', 'channelname', 'dvb_default_charset'
+	    'id', 'enabled', 'type', 'sid', 'pmt', 'pcr', 'svcname', 'network',
+	    'provider', 'mux', 'channelname', 'dvb_default_charset', 'dvb_eit_enable'
 	]),
 	url: "dvb/services/" + adapterId,
 	autoLoad: true,
@@ -565,7 +572,7 @@ tvheadend.dvb_services = function(adapterId) {
     var grid = new Ext.grid.EditorGridPanel({
 	stripeRows: true,
 	title: 'Services',
-	plugins: [enabledColumn, actions],
+	plugins: [enabledColumn, eitColumn, actions],
 	store: store,
 	clicksToEdit: 2,
 	cm: cm,

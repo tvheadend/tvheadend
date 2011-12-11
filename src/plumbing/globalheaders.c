@@ -20,6 +20,7 @@
 #include "tvheadend.h"
 #include "streaming.h"
 #include "globalheaders.h"
+#include "avc.h"
 
 typedef struct globalheaders {
   streaming_target_t gh_input;
@@ -164,7 +165,7 @@ convertpkt(streaming_start_component_t *ssc, th_pkt_t *pkt)
 {
   switch(ssc->ssc_type) {
   case SCT_H264:
-    //    return avc_convert_pkt(pkt);
+    return avc_convert_pkt(pkt);
 
   default:
     return pkt;
