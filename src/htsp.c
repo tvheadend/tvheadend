@@ -1552,9 +1552,9 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   int64_t ts;
   int qlen = hs->hs_q.hmq_payload;
 
-  if((qlen > 500000 && pkt->pkt_frametype == PKT_B_FRAME) ||
-     (qlen > 750000 && pkt->pkt_frametype == PKT_P_FRAME) || 
-     (qlen > 1500000)) {
+  if((qlen > 1500000 && pkt->pkt_frametype == PKT_B_FRAME) ||
+     (qlen > 3000000 && pkt->pkt_frametype == PKT_P_FRAME) || 
+     (qlen > 9000000)) {
 
     hs->hs_dropstats[pkt->pkt_frametype]++;
 
