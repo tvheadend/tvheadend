@@ -677,6 +677,7 @@ cwc_detect_card_type(cwc_t *cwc)
     cwc->cwc_card_type = CARD_SECA;
     tvhlog(LOG_INFO, "cwc", "%s: seca card",
 	   cwc->cwc_hostname);
+    break;
   case 0x4a:
     cwc->cwc_card_type = CARD_DRE;
     tvhlog(LOG_INFO, "cwc", "%s: dre card",
