@@ -7822,12 +7822,11 @@ static const struct mux muxes_DVBT_uk_Eitshal[] = {
  };
 
 static const struct mux muxes_DVBT_uk_EmleyMoor[] = {
-	{.freq = 722167000, .bw = 0, .constellation = 1, .fechp = 3, .feclp = 0, .tmode = 0, .guard = 0, .hierarchy = 0},
- 	{.freq = 625833000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 0, .guard = 0, .hierarchy = 0},
- 	{.freq = 649833000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 0, .guard = 0, .hierarchy = 0},
- 	{.freq = 673833000, .bw = 0, .constellation = 1, .fechp = 3, .feclp = 0, .tmode = 0, .guard = 0, .hierarchy = 0},
- 	{.freq = 705833000, .bw = 0, .constellation = 1, .fechp = 3, .feclp = 0, .tmode = 0, .guard = 0, .hierarchy = 0},
- 	{.freq = 697833000, .bw = 0, .constellation = 1, .fechp = 3, .feclp = 0, .tmode = 0, .guard = 0, .hierarchy = 0},
+	{.freq = 682000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 0, .hierarchy = 0},
+ 	{.freq = 658000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 0, .hierarchy = 0},
+ 	{.freq = 714000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 0, .hierarchy = 0},
+ 	{.freq = 722000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 0, .hierarchy = 0},
+ 	{.freq = 690000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 0, .hierarchy = 0},
  };
 
 static const struct mux muxes_DVBT_uk_Fenham[] = {
