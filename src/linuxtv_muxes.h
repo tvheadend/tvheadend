@@ -7826,7 +7826,7 @@ static const struct mux muxes_DVBT_uk_EmleyMoor[] = {
  	{.freq = 658000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 0, .hierarchy = 0},
  	{.freq = 714000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 0, .hierarchy = 0},
  	{.freq = 722000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 0, .hierarchy = 0},
- 	{.freq = 690000000, .bw = 0, .constellation = 3, .fechp = 2, .feclp = 0, .tmode = 1, .guard = 0, .hierarchy = 0},
+ 	{.freq = 690000000, .bw = 0, .constellation = 3, .fechp = 3, .feclp = 0, .tmode = 1, .guard = 0, .hierarchy = 0},
  };
 
 static const struct mux muxes_DVBT_uk_Fenham[] = {
