@@ -1,6 +1,6 @@
 /*
  *  MPEG TS Program Specific Information code
- *  Copyright (C) 2007 - 2010 Andreas Öman
+ *  Copyright (C) 2007 - 2010 Andreas ï¿½man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -692,7 +692,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
  * PMT generator
  */
 int
-psi_build_pmt(streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid)
+psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid)
 {
   int c, tlen, dlen, l, i;
   uint8_t *buf, *buf1;
@@ -721,7 +721,7 @@ psi_build_pmt(streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid)
   tlen = 12;
 
   for(i = 0; i < ss->ss_num_components; i++) {
-    streaming_start_component_t *ssc = &ss->ss_components[i];
+    const streaming_start_component_t *ssc = &ss->ss_components[i];
 
     switch(ssc->ssc_type) {
     case SCT_MPEG2VIDEO:
@@ -733,6 +733,7 @@ psi_build_pmt(streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid)
       break;
 
     case SCT_DVBSUB:
+    case SCT_EAC3:
       c = 0x06;
       break;
 
@@ -790,6 +791,16 @@ psi_build_pmt(streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid)
       buf[6] = DVB_DESC_AC3;
       buf[7] = 1;
       buf[8] = 0; /* XXX: generate real AC3 desc */
+      dlen = 9;
+      break;
+    case SCT_EAC3:
+      buf[0] = DVB_DESC_LANGUAGE;
+      buf[1] = 4;
+      memcpy(&buf[2],ssc->ssc_lang,3);
+      buf[5] = 0; /* Main audio */
+      buf[6] = DVB_DESC_EAC3;
+      buf[7] = 1;
+      buf[8] = 0; /* XXX: generate real EAC3 desc */
       dlen = 9;
       break;
     default:

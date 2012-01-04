@@ -79,6 +79,7 @@ SRCS += src/dvr/dvr_db.c \
 	src/dvr/dvr_autorec.c \
 	src/dvr/ebml.c \
 	src/dvr/mkmux.c \
+	src/dvr/mkts.c \
 
 SRCS-${CONFIG_LINUXDVB} += \
 	src/dvb/dvb.c \
