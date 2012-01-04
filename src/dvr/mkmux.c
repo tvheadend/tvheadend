@@ -215,6 +215,7 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
       codec_id = "A_EAC3";
       break;
 
+    case SCT_MP4A:
     case SCT_AAC:
       tracktype = 2;
       codec_id = "A_AAC";
@@ -252,6 +253,7 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
     switch(ssc->ssc_type) {
     case SCT_H264:
     case SCT_MPEG2VIDEO:
+    case SCT_MP4A:
     case SCT_AAC:
       if(ssc->ssc_gh)
 	ebml_append_bin(t, 0x63a2, 
@@ -723,7 +725,7 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track *t, th_pkt_t *pkt)
   data = pktbuf_ptr(pkt->pkt_payload);
   len  = pktbuf_len(pkt->pkt_payload);
 
-  if(t->type == SCT_AAC) {
+  if(t->type == SCT_AAC || t->type == SCT_MP4A) {
     // Skip ADTS header
     if(len < 7)
       return;
