@@ -270,6 +270,69 @@ http_stream_playlist(http_connection_t *hc, channel_t *channel)
 }
 
 /**
+ * Output a playlist with a http stream for all dvr entries (.m3u format)
+ */
+static int
+http_dvrs_playlist(http_connection_t *hc)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  char buf[255];
+  const char *ticket_id = NULL;
+  dvr_entry_t *de = NULL;
+  time_t durration = 0;
+  struct tm *tp = NULL;
+  char start_time[100];
+  int dim = 0;
+  off_t fsize = 0;
+  int bandwidth = 0;
+  int dvrs = 0 ;
+  const char *host = http_arg_get(&hc->hc_args, "Host");
+
+  pthread_mutex_lock(&global_lock);
+
+  LIST_FOREACH(de, &dvrentries, de_global_link)
+  if(de) {
+    durration  = de->de_stop - de->de_start;
+    durration += (de->de_stop_extra + de->de_start_extra)*60;
+    
+    fsize = dvr_get_filesize(de);
+
+    if(fsize) {
+      bandwidth = ((8*fsize) / (durration*1024.0));
+
+      htsbuf_qprintf(hq, "#EXTM3U\n");
+      htsbuf_qprintf(hq, "#EXTINF:%d,%s\n", durration, de->de_title);
+
+      tp = localtime (&(de->de_start));
+      dim = strftime (start_time, 100, "%FT%T%z", tp);
+      if ( dim > 0 ) 
+          htsbuf_qprintf(hq, "#EXT-X-PROGRAM-DATE-TIME:%s\n", start_time);
+
+      htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%d\n", durration);
+      htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=%d\n", bandwidth);
+
+      snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
+      ticket_id = access_ticket_create(buf);
+      htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, ticket_id);
+      dvrs++;
+    }
+  }
+
+  
+  pthread_mutex_unlock(&global_lock);
+  tvhlog(LOG_DEBUG, "webui", "Returning %d Dvr entries for %s", 
+	 dvrs,
+	 hc->hc_url);
+  if( dvrs == 0 ) {
+    http_error(hc, HTTP_STATUS_BAD_REQUEST);
+    return HTTP_STATUS_BAD_REQUEST;
+  } else {
+    http_output_content(hc, "application/x-mpegURL");
+    return 0;
+  }
+}
+
+/**
  * Output a playlist with a http stream for a dvr entry (.m3u format)
  */
 static int
@@ -285,7 +348,6 @@ http_dvr_playlist(http_connection_t *hc, int dvr_id)
   int dim = 0;
   off_t fsize = 0;
   int bandwidth = 0;
-  int dvrs = 0 ;
   const char *host = http_arg_get(&hc->hc_args, "Host");
 
   pthread_mutex_lock(&global_lock);
@@ -316,44 +378,12 @@ http_dvr_playlist(http_connection_t *hc, int dvr_id)
       snprintf(buf, sizeof(buf), "/dvrfile/%d", dvr_id);
       ticket_id = access_ticket_create(buf);
       htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, ticket_id);
-      dvrs++;
     }
   }
-  } else {
-  LIST_FOREACH(de, &dvrentries, de_global_link)
-  if(de) {
-    durration  = de->de_stop - de->de_start;
-    durration += (de->de_stop_extra + de->de_start_extra)*60;
-    
-    fsize = dvr_get_filesize(de);
+  } 
 
-    if(fsize) {
-      bandwidth = ((8*fsize) / (durration*1024.0));
-
-      htsbuf_qprintf(hq, "#EXTM3U\n");
-      htsbuf_qprintf(hq, "#EXTINF:%d,%s\n", durration, de->de_title);
-
-      tp = localtime (&(de->de_start));
-      dim = strftime (start_time, 100, "%FT%T%z", tp);
-      if ( dim > 0 ) 
-          htsbuf_qprintf(hq, "#EXT-X-PROGRAM-DATE-TIME:%s\n", start_time);
-
-      htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%d\n", durration);
-      htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=%d\n", bandwidth);
-
-      snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
-      ticket_id = access_ticket_create(buf);
-      htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, ticket_id);
-      dvrs++;
-    }
-  }
-
-  }
   pthread_mutex_unlock(&global_lock);
-  tvhlog(LOG_DEBUG, "HTTP", "Returning %d Dvr entries for %s", 
-	 dvrs,
-	 hc->hc_url);
-  if( dvrs == 0 ) {
+  if(!de || !fsize) {
     http_error(hc, HTTP_STATUS_BAD_REQUEST);
     return HTTP_STATUS_BAD_REQUEST;
   } else {
@@ -391,15 +421,21 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
   } else if(!strcmp(components[0], "channel")) {
     ch = channel_find_by_name(components[1], 0, 0);
   } else if(!strcmp(components[0], "dvrid")) {
-    dvr_id = atoi(components[1]);
+      dvr_id = atoi(components[1]);
+  } else if(!strcmp(components[0], "dvrs")) {
+    if (!strcmp(components[1],"total"))
+      dvr_id=-2;
   }
+
 
   pthread_mutex_unlock(&global_lock);
 
   if(ch)
     return http_stream_playlist(hc, ch);
-  else if(dvr_id >= -1)
+  else if(dvr_id >= 0)
     return http_dvr_playlist(hc, dvr_id);
+  else if(dvr_id == -2)
+    return http_dvrs_playlist(hc);
   else {
     http_error(hc, HTTP_STATUS_BAD_REQUEST);
     return HTTP_STATUS_BAD_REQUEST;
