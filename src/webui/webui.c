@@ -280,12 +280,17 @@ http_dvr_playlist(http_connection_t *hc, int dvr_id)
   const char *ticket_id = NULL;
   dvr_entry_t *de = NULL;
   time_t durration = 0;
+  struct tm *tp = NULL;
+  char start_time[100];
+  int dim = 0;
   off_t fsize = 0;
   int bandwidth = 0;
+  int dvrs = 0 ;
   const char *host = http_arg_get(&hc->hc_args, "Host");
 
   pthread_mutex_lock(&global_lock);
 
+  if(dvr_id >= 0) {
   de = dvr_entry_find_by_id(dvr_id);
 
   if(de) {
@@ -300,22 +305,59 @@ http_dvr_playlist(http_connection_t *hc, int dvr_id)
       htsbuf_qprintf(hq, "#EXTM3U\n");
       htsbuf_qprintf(hq, "#EXTINF:%d,%s\n", durration, de->de_title);
 
+      tp = localtime (&(de->de_start));
+      dim = strftime (start_time, 100, "%FT%T%z", tp);
+      if ( dim > 0 ) 
+          htsbuf_qprintf(hq, "#EXT-X-PROGRAM-DATE-TIME:%s\n", start_time);
+
       htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%d\n", durration);
       htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=%d\n", bandwidth);
 
       snprintf(buf, sizeof(buf), "/dvrfile/%d", dvr_id);
       ticket_id = access_ticket_create(buf);
       htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, ticket_id);
-
-      http_output_content(hc, "application/x-mpegURL");
+      dvrs++;
     }
   }
-  pthread_mutex_unlock(&global_lock);
+  } else {
+  LIST_FOREACH(de, &dvrentries, de_global_link)
+  if(de) {
+    durration  = de->de_stop - de->de_start;
+    durration += (de->de_stop_extra + de->de_start_extra)*60;
+    
+    fsize = dvr_get_filesize(de);
 
-  if(!de || !fsize) {
+    if(fsize) {
+      bandwidth = ((8*fsize) / (durration*1024.0));
+
+      htsbuf_qprintf(hq, "#EXTM3U\n");
+      htsbuf_qprintf(hq, "#EXTINF:%d,%s\n", durration, de->de_title);
+
+      tp = localtime (&(de->de_start));
+      dim = strftime (start_time, 100, "%FT%T%z", tp);
+      if ( dim > 0 ) 
+          htsbuf_qprintf(hq, "#EXT-X-PROGRAM-DATE-TIME:%s\n", start_time);
+
+      htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%d\n", durration);
+      htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=%d\n", bandwidth);
+
+      snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
+      ticket_id = access_ticket_create(buf);
+      htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, ticket_id);
+      dvrs++;
+    }
+  }
+
+  }
+  pthread_mutex_unlock(&global_lock);
+  tvhlog(LOG_DEBUG, "HTTP", "Returning %d Dvr entries for %s", 
+	 dvrs,
+	 hc->hc_url);
+  if( dvrs == 0 ) {
     http_error(hc, HTTP_STATUS_BAD_REQUEST);
     return HTTP_STATUS_BAD_REQUEST;
   } else {
+    http_output_content(hc, "application/x-mpegURL");
     return 0;
   }
 }
@@ -356,7 +398,7 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
 
   if(ch)
     return http_stream_playlist(hc, ch);
-  else if(dvr_id >= 0)
+  else if(dvr_id >= -1)
     return http_dvr_playlist(hc, dvr_id);
   else {
     http_error(hc, HTTP_STATUS_BAD_REQUEST);
