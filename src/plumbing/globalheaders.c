@@ -79,6 +79,7 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
     return;
 
   switch(ssc->ssc_type) {
+  case SCT_MP4A:
   case SCT_AAC:
     ssc->ssc_gh = pktbuf_alloc(NULL, 2);
     d = pktbuf_ptr(ssc->ssc_gh);
@@ -122,6 +123,7 @@ header_complete(streaming_start_component_t *ssc, int not_so_picky)
   if(ssc->ssc_gh == NULL &&
      (ssc->ssc_type == SCT_H264 ||
       ssc->ssc_type == SCT_MPEG2VIDEO ||
+      ssc->ssc_type == SCT_MP4A ||
       ssc->ssc_type == SCT_AAC))
     return 0;
   return 1;

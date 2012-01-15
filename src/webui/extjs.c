@@ -1189,6 +1189,7 @@ extjs_servicedetails(http_connection_t *hc,
       break;
 
     case SCT_AC3:
+    case SCT_MP4A:
     case SCT_AAC:
     case SCT_MPEG2AUDIO:
       htsmsg_add_str(c, "details", st->es_lang);

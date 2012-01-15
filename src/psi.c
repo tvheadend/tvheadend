@@ -519,6 +519,10 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
     case 0x81:
       hts_stream_type = SCT_AC3;
       break;
+    
+    case 0x0f:
+      hts_stream_type = SCT_MP4A;
+      break;
 
     case 0x11:
       hts_stream_type = SCT_AAC;
@@ -568,7 +572,9 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 	break;
 
       case DVB_DESC_AAC:
-	if(estype == 0x11)
+	if(estype == 0x0f)
+	  hts_stream_type = SCT_MP4A;
+	else if(estype == 0x11)
 	  hts_stream_type = SCT_AAC;
 	break;
 
@@ -592,7 +598,6 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
       }
       len -= dlen; ptr += dlen; dllen -= dlen;
     }
-
     
     if(hts_stream_type == SCT_UNKNOWN && estype == 0x06 &&
        pid == 3401 && t->s_dvb_service_id == 10510) {
@@ -605,6 +610,11 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
       if((st = service_stream_find(t, pid)) == NULL) {
 	update |= PMT_UPDATE_NEW_STREAM;
 	st = service_stream_create(t, pid, hts_stream_type);
+      }
+
+      // Jernej: I don't know why. But it seems that sometimes the stream is created with a wrong es_type??
+      if(st->es_type != hts_stream_type) {
+        st->es_type = hts_stream_type;
       }
 
       st->es_delete_me = 0;
@@ -736,6 +746,7 @@ psi_build_pmt(streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid)
       c = 0x06;
       break;
 
+    case SCT_MP4A:
     case SCT_AAC:
       c = 0x11;
       break;
@@ -764,6 +775,7 @@ psi_build_pmt(streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid)
 
     switch(ssc->ssc_type) {
     case SCT_MPEG2AUDIO:
+    case SCT_MP4A:
     case SCT_AAC:
       buf[0] = DVB_DESC_LANGUAGE;
       buf[1] = 4;
@@ -886,6 +898,7 @@ static struct strtab streamtypetab[] = {
   { "MPEGTS",     SCT_MPEGTS },
   { "TEXTSUB",    SCT_TEXTSUB },
   { "EAC3",       SCT_EAC3 },
+  { "AAC",       SCT_MP4A },
 };
 
 
