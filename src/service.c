@@ -732,6 +732,8 @@ static struct strtab stypetab[] = {
   { "HDTV",         ST_HDTV },
   { "SDTV-AC",      ST_AC_SDTV },
   { "HDTV-AC",      ST_AC_HDTV },
+  { "IPTV",         ST_IPTV },
+  { "IPTV Radio",   ST_IPTV_RADIO },
 };
 
 const char *
@@ -750,7 +752,8 @@ service_is_tv(service_t *t)
     t->s_servicetype == ST_SDTV    ||
     t->s_servicetype == ST_HDTV    ||
     t->s_servicetype == ST_AC_SDTV ||
-    t->s_servicetype == ST_AC_HDTV;
+    t->s_servicetype == ST_AC_HDTV ||
+    t->s_servicetype == ST_IPTV;
 }
 
 /**
@@ -759,7 +762,9 @@ service_is_tv(service_t *t)
 int
 service_is_radio(service_t *t)
 {
-  return t->s_servicetype == ST_RADIO;
+  return
+    t->s_servicetype == ST_RADIO ||
+    t->s_servicetype == ST_IPTV_RADIO;
 }
 
 /**
