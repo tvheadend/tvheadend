@@ -428,7 +428,7 @@ iptv_service_save(service_t *t)
     inet_ntop(AF_INET6, &t->s_iptv_group6, abuf6, sizeof(abuf6));
     htsmsg_add_str(m, "group", abuf6);
   }
-  htsmsg_add_u32(m, "radio", t->s_servicetype == ST_IPTV_RADIO);
+  htsmsg_add_u32(m, "radio", t->s_servicetype == ST_RADIO);
   if(t->s_ch != NULL) {
     htsmsg_add_str(m, "channelname", t->s_ch->ch_name);
     htsmsg_add_u32(m, "mapped", 1);
@@ -593,7 +593,7 @@ iptv_service_load(void)
       t->s_iptv_port = u32;
 
     if(!htsmsg_get_u32(c, "radio", &u32) && u32)
-      t->s_servicetype = ST_IPTV_RADIO;
+      t->s_servicetype = ST_RADIO;
     else
       t->s_servicetype = ST_IPTV;
 

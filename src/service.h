@@ -319,7 +319,6 @@ typedef struct service {
     ST_AC_SDTV    = 0x16,   /* Advanced codec SDTV */
     ST_AC_HDTV    = 0x19,   /* Advanced codec HDTV */
     ST_IPTV       = 0x30,   /* IPTV */
-    ST_IPTV_RADIO = 0x31,   /* Radio over IPTV */
   } s_servicetype;
 
 
