@@ -417,6 +417,7 @@ tvheadend.dvb_services = function(adapterId) {
 					['ISO6937','ISO6937'],
 					['ISO8859-1','ISO8859-1'],
 					['ISO8859-2','ISO8859-2'],
+					['ISO8859-2-polish','ISO8859-2-polish'],
 					['ISO8859-3','ISO8859-3'],
 					['ISO8859-4','ISO8859-4'],
 					['ISO8859-5','ISO8859-5'],

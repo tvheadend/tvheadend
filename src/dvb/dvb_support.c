@@ -98,10 +98,10 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char
     return -1;
 
   case 0x01 ... 0x0b:
-    ic = convert_iso_8859[src[0] + 4];
-
-    if(dvb_default_charset != NULL && sscanf(dvb_default_charset, "ISO8859-%d", &i) != (src[0] + 4) )
-	  ic = convert_latin1;
+    if (dvb_default_charset != NULL && strcmp (dvb_default_charset,"ISO8859-2-polish") == 0 && sscanf(dvb_default_charset, "ISO8859-%d", &i) > 0 && i!=5 && (src[0] + 4) == 5)
+      ic = convert_latin1;
+    else
+	  ic = convert_iso_8859[src[0] + 4];
 
     src++; srclen--;
     break;
