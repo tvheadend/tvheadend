@@ -57,7 +57,6 @@
 #include "v4l.h"
 #include "trap.h"
 #include "settings.h"
-#include "ffdecsa/FFdecsa.h"
 
 int running;
 extern const char *htsversion;
@@ -401,8 +400,6 @@ main(int argc, char **argv)
 
   htsp_init();
 
-  ffdecsa_init();
-  
   if(rawts_input != NULL)
     rawts_init(rawts_input);
 
