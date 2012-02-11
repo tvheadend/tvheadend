@@ -31,7 +31,7 @@
 #include "tcp.h"
 #include "psi.h"
 #include "tsdemux.h"
-#include "ffdecsa/FFdecsa.h"
+#include <dvbcsa/dvbcsa.h>
 #include "cwc.h"
 #include "notify.h"
 #include "atomic.h"
@@ -155,7 +155,8 @@ typedef struct cwc_service {
     CS_IDLE
   } cs_keystate;
 
-  void *cs_keys;
+  struct dvbcsa_bs_key_s *cs_key_even;
+  struct dvbcsa_bs_key_s *cs_key_odd;
 
 
   uint8_t cs_cw[16];
@@ -166,7 +167,11 @@ typedef struct cwc_service {
    */
   int cs_cluster_size;
   uint8_t *cs_tsbcluster;
+  struct dvbcsa_bs_batch_s *cs_tsbbatch_even;
+  struct dvbcsa_bs_batch_s *cs_tsbbatch_odd;
   int cs_fill;
+  int cs_fill_even;
+  int cs_fill_odd;
 
   LIST_HEAD(, ecm_pid) cs_pids;
 
@@ -1884,13 +1889,13 @@ update_keys(cwc_service_t *ct)
   ct->cs_pending_cw_update = 0;
   for(i = 0; i < 8; i++)
     if(ct->cs_cw[i]) {
-      set_even_control_word(ct->cs_keys, ct->cs_cw);
+      dvbcsa_bs_key_set(ct->cs_cw, ct->cs_key_even);
       break;
     }
   
   for(i = 0; i < 8; i++)
     if(ct->cs_cw[8 + i]) {
-      set_odd_control_word(ct->cs_keys, ct->cs_cw + 8);
+      dvbcsa_bs_key_set(ct->cs_cw + 8, ct->cs_key_odd);
       break;
     }
 }
@@ -1904,8 +1909,13 @@ cwc_descramble(th_descrambler_t *td, service_t *t, struct elementary_stream *st,
 	       const uint8_t *tsb)
 {
   cwc_service_t *ct = (cwc_service_t *)td;
-  int r;
-  unsigned char *vec[3];
+  uint8_t *pkt;
+  int xc0;
+  int ev_od;
+  int len;
+  int offset;
+  int n;
+  // FIXME: //int residue;
 
   if(ct->cs_keystate == CS_FORBIDDEN)
     return 1;
@@ -1916,42 +1926,72 @@ cwc_descramble(th_descrambler_t *td, service_t *t, struct elementary_stream *st,
   if(ct->cs_fill == 0 && ct->cs_pending_cw_update)
     update_keys(ct);
 
-  memcpy(ct->cs_tsbcluster + ct->cs_fill * 188, tsb, 188);
+  pkt = ct->cs_tsbcluster + ct->cs_fill * 188;
+  memcpy(pkt, tsb, 188);
   ct->cs_fill++;
+
+  do { // handle this packet
+    xc0 = pkt[3] & 0xc0;
+    if(xc0 == 0x00) { // clear
+      break;
+    }
+    if(xc0 == 0x40) { // reserved
+      break;
+    }
+    if(xc0 == 0x80 || xc0 == 0xc0) { // encrypted
+      ev_od = (xc0 & 0x40) >> 6; // 0 even, 1 odd
+      pkt[3] &= 0x3f;  // consider it decrypted now
+      if(pkt[3] & 0x20) { // incomplete packet
+        offset = 4 + pkt[4] + 1;
+        len = 188 - offset;
+        n = len >> 3;
+        // FIXME: //residue = len - (n << 3);
+        if(n == 0) { // decrypted==encrypted!
+          break; // this doesn't need more processing
+        }
+      } else {
+        len = 184;
+        offset = 4;
+        // FIXME: //n = 23;
+        // FIXME: //residue = 0;
+      }
+      if(ev_od == 0) {
+        ct->cs_tsbbatch_even[ct->cs_fill_even].data = pkt + offset;
+        ct->cs_tsbbatch_even[ct->cs_fill_even].len = len;
+        ct->cs_fill_even++;
+      } else {
+        ct->cs_tsbbatch_odd[ct->cs_fill_odd].data = pkt + offset;
+        ct->cs_tsbbatch_odd[ct->cs_fill_odd].len = len;
+        ct->cs_fill_odd++;
+      }
+    }
+  } while(0);
 
   if(ct->cs_fill != ct->cs_cluster_size)
     return 0;
 
-  while(1) {
+  if(ct->cs_fill_even) {
+    ct->cs_tsbbatch_even[ct->cs_fill_even].data = NULL;
+    dvbcsa_bs_decrypt(ct->cs_key_even, ct->cs_tsbbatch_even, 184);
+    ct->cs_fill_even = 0;
+  }
+  if(ct->cs_fill_odd) {
+    ct->cs_tsbbatch_odd[ct->cs_fill_odd].data = NULL;
+    dvbcsa_bs_decrypt(ct->cs_key_odd, ct->cs_tsbbatch_odd, 184);
+    ct->cs_fill_odd = 0;
+  }
 
-    vec[0] = ct->cs_tsbcluster;
-    vec[1] = ct->cs_tsbcluster + ct->cs_fill * 188;
-    vec[2] = NULL;
-    
-    r = decrypt_packets(ct->cs_keys, vec);
-    if(r > 0) {
+  {
       int i;
       const uint8_t *t0 = ct->cs_tsbcluster;
 
-      for(i = 0; i < r; i++) {
+      for(i = 0; i < ct->cs_fill; i++) {
 	ts_recv_packet2(t, t0);
 	t0 += 188;
       }
-
-      r = ct->cs_fill - r;
-      assert(r >= 0);
-
-      if(r > 0)
-	memmove(ct->cs_tsbcluster, t0, r * 188);
-      ct->cs_fill = r;
-
-      if(ct->cs_pending_cw_update && r > 0)
-	continue;
-    } else {
-      ct->cs_fill = 0;
-    }
-    break;
   }
+  ct->cs_fill = 0;
+
   if(ct->cs_pending_cw_update)
     update_keys(ct);
 
@@ -1980,7 +2020,10 @@ cwc_service_destroy(th_descrambler_t *td)
 
   LIST_REMOVE(ct, cs_link);
 
-  free_key_struct(ct->cs_keys);
+  dvbcsa_bs_key_free(ct->cs_key_odd);
+  dvbcsa_bs_key_free(ct->cs_key_even);
+  free(ct->cs_tsbbatch_odd);
+  free(ct->cs_tsbbatch_even);
   free(ct->cs_tsbcluster);
   free(ct);
 }
@@ -2025,10 +2068,15 @@ cwc_service_start(service_t *t)
       continue;
 
     ct = calloc(1, sizeof(cwc_service_t));
-    ct->cs_cluster_size = get_suggested_cluster_size();
+    ct->cs_cluster_size = dvbcsa_bs_batch_size();
     ct->cs_tsbcluster = malloc(ct->cs_cluster_size * 188);
+    ct->cs_tsbbatch_even = malloc((ct->cs_cluster_size + 1) *
+                             sizeof(struct dvbcsa_bs_batch_s));
+    ct->cs_tsbbatch_odd = malloc((ct->cs_cluster_size + 1) *
+                            sizeof(struct dvbcsa_bs_batch_s));
 
-    ct->cs_keys = get_key_struct();
+    ct->cs_key_even = dvbcsa_bs_key_alloc();
+    ct->cs_key_odd = dvbcsa_bs_key_alloc();
     ct->cs_cwc = cwc;
     ct->cs_service = t;
     ct->cs_okchannel = -3;

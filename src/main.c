@@ -468,8 +468,6 @@ main(int argc, char **argv)
 
   htsp_init();
 
-  ffdecsa_init();
-  
   if(rawts_input != NULL)
     rawts_init(rawts_input);
 
