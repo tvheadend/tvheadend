@@ -11,6 +11,12 @@ tvheadend.iptv = function(adapterId) {
        width: 45
     });
 
+    var radioColumn = new Ext.grid.CheckColumn({
+       header: "Radio",
+       dataIndex: 'radio',
+       width: 45
+    });
+
     var actions = new Ext.ux.grid.RowActions({
 	header:'',
 	dataIndex: 'actions',
@@ -82,6 +88,7 @@ tvheadend.iptv = function(adapterId) {
 		maxValue: 65535
 	    })
 	},
+	radioColumn,
 	{
 	    header: "Service ID",
 	    dataIndex: 'sid',
@@ -105,7 +112,7 @@ tvheadend.iptv = function(adapterId) {
     cm.defaultSortable = true;
 
     var rec = Ext.data.Record.create([
-	'id', 'enabled', 'channelname', 'interface', 'group', 'port',
+    'id', 'enabled', 'channelname', 'interface', 'group', 'port', 'radio',
 	'sid', 'pmt', 'pcr'
     ]);
 
@@ -246,7 +253,7 @@ tvheadend.iptv = function(adapterId) {
 	stripeRows: true,
 	title: 'IPTV',
 	iconCls: 'iptv',
-	plugins: [enabledColumn, actions],
+	plugins: [enabledColumn, radioColumn, actions],
 	store: store,
 	clicksToEdit: 2,
 	cm: cm,
