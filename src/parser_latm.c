@@ -63,18 +63,27 @@ read_audio_specific_config(elementary_stream_t *st, latm_private_t *latm,
   int aot, sr;
 
   aot = read_bits(bs, 5);
-  if(aot != 2)
-    return;
 
   latm->sample_rate_index = read_bits(bs, 4);
 
   if(latm->sample_rate_index == 0xf)
-    return;
+    sr = read_bits(bs, 24);
+  else
+    sr = sri_to_rate(latm->sample_rate_index);
 
-  sr = sri_to_rate(latm->sample_rate_index);
   st->es_frame_duration = 1024 * 90000 / sr;
 
   latm->channel_config = read_bits(bs, 4);
+
+  if (aot == 5) { // AOT_SBR
+    if (read_bits(bs, 4) == 0xf) {  // extensionSamplingFrequencyIndex
+	skip_bits(bs, 24);
+    }
+    aot = read_bits(bs, 5);	// this is the main object type (i.e. non-extended)
+  }
+
+  if(aot != 2)
+    return;
 
   skip_bits(bs, 1); //framelen_flag
   if(read_bits1(bs))  // depends_on_coder
