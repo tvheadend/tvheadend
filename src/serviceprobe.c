@@ -92,6 +92,7 @@ serviceprobe_thread(void *aux)
 
   streaming_queue_init(&sq, 0);
 
+  err = NULL;
   while(1) {
 
     while((t = TAILQ_FIRST(&serviceprobe_queue)) == NULL) {
