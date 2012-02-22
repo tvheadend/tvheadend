@@ -164,6 +164,7 @@ typedef struct th_dvb_adapter {
   uint32_t tda_autodiscovery;
   uint32_t tda_idlescan;
   uint32_t tda_qmon;
+  uint32_t tda_off;
   uint32_t tda_nitoid;
   uint32_t tda_diseqc_version;
   char *tda_displayname;
@@ -230,6 +231,8 @@ void dvb_adapter_set_idlescan(th_dvb_adapter_t *tda, int on);
 void dvb_adapter_set_qmon(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_dump_muxes(th_dvb_adapter_t *tda, int on);
+
+void dvb_adapter_set_off(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_nitoid(th_dvb_adapter_t *tda, int nitoid);
 
@@ -321,6 +324,8 @@ int dvb_transport_get_signal_status(struct service *t,
 int dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason);
 
 void dvb_fe_stop(th_dvb_mux_instance_t *tdmi);
+
+void dvb_fe_turn_off(th_dvb_adapter_t *tda);
 
 
 /**
