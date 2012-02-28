@@ -938,7 +938,7 @@ dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   dmc.dmc_fe_params.u.qam.fec_inner = fec_tab[ptr[10] & 0x07];
 
   dvb_mux_create(tdmi->tdmi_adapter, &dmc, tsid, NULL,
-		 "automatic mux discovery", 1, 1, NULL);
+		 "automatic mux discovery", 1, 1, NULL, NULL);
   return 0;
 }
 
@@ -1023,7 +1023,7 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
 #endif
   dvb_mux_create(tdmi->tdmi_adapter, &dmc, tsid, NULL,
-		 "automatic mux discovery", 1, 1, NULL);
+		 "automatic mux discovery", 1, 1, NULL, NULL);
   
   return 0;
 }

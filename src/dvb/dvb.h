@@ -265,7 +265,8 @@ th_dvb_mux_instance_t *dvb_mux_create(th_dvb_adapter_t *tda,
 				      const struct dvb_mux_conf *dmc,
 				      uint16_t tsid, const char *network,
 				      const char *logprefix, int enabled,
-				      int initialscan, const char *identifier);
+				      int initialscan, const char *identifier,
+				      dvb_satconf_t *satconf);
 
 void dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *name);
 
@@ -295,7 +296,8 @@ const char *dvb_mux_add_by_params(th_dvb_adapter_t *tda,
 				  int polarisation,
 				  const char *satconf);
 
-int dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src);
+int dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src,
+		 dvb_satconf_t *satconf);
 
 /**
  * DVB Transport (aka DVB service)
