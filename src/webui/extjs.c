@@ -624,6 +624,9 @@ extjs_confignames(http_connection_t *hc, const char *remain, void *opaque)
     out = htsmsg_create_map();
     array = htsmsg_create_list();
 
+    if (http_access_verify(hc, ACCESS_RECORDER_ALL))
+      goto skip;
+
     LIST_FOREACH(cfg, &dvrconfigs, config_link) {
       e = htsmsg_create_map();
       htsmsg_add_str(e, "identifier", cfg->dvr_config_name);
@@ -634,6 +637,7 @@ extjs_confignames(http_connection_t *hc, const char *remain, void *opaque)
       htsmsg_add_msg(array, NULL, e);
     }
 
+skip:
     htsmsg_add_msg(out, "entries", array);
 
   } else {
@@ -787,6 +791,18 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
       return HTTP_STATUS_BAD_REQUEST;
     }
 
+    if (http_access_verify(hc, ACCESS_RECORDER_ALL)) {
+      config_name = NULL;
+      LIST_FOREACH(cfg, &dvrconfigs, config_link) {
+        if (strcmp(cfg->dvr_config_name, hc->hc_username) == 0) {
+          config_name = cfg->dvr_config_name;
+          break;
+        }
+      }
+      if (config_name == NULL)
+        tvhlog(LOG_INFO,"dvr","User '%s' has no dvr config with identical name, using default...", hc->hc_username);
+    }
+
     dvr_entry_create_by_event(config_name,
                               e, hc->hc_representative, NULL, DVR_PRIO_NORMAL);
 
@@ -856,6 +872,18 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     if(stop < start)
       stop += 86400;
+
+    if (http_access_verify(hc, ACCESS_RECORDER_ALL)) {
+      config_name = NULL;
+      LIST_FOREACH(cfg, &dvrconfigs, config_link) {
+        if (strcmp(cfg->dvr_config_name, hc->hc_username) == 0) {
+          config_name = cfg->dvr_config_name;
+          break;
+        }
+      }
+      if (config_name == NULL)
+        tvhlog(LOG_INFO,"dvr","User '%s' has no dvr config with identical name, using default...", hc->hc_username);
+    }
 
     dvr_entry_create(config_name,
                      ch, start, stop, title, NULL, hc->hc_representative, 

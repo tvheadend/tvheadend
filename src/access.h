@@ -58,7 +58,8 @@ typedef struct access_ticket {
 #define ACCESS_STREAMING       0x1
 #define ACCESS_WEB_INTERFACE   0x2
 #define ACCESS_RECORDER        0x4
-#define ACCESS_ADMIN           0x8
+#define ACCESS_RECORDER_ALL    0x8
+#define ACCESS_ADMIN           0x10
 #define ACCESS_FULL 0x3f
 
 /**
