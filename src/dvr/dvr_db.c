@@ -265,7 +265,11 @@ dvr_entry_create(const char *config_name,
   dvr_config_t *cfg = dvr_config_find_by_name_default(config_name);
 
   LIST_FOREACH(de, &ch->ch_dvrs, de_channel_link)
-    if(de->de_start == start && de->de_sched_state != DVR_COMPLETED)
+    if(de->de_start == start &&
+       de->de_stop == stop &&
+       de->de_pri == pri &&
+       de->de_config_name && strcmp(de->de_config_name, config_name) == 0 &&
+       de->de_sched_state != DVR_COMPLETED)
       return NULL;
 
   de = calloc(1, sizeof(dvr_entry_t));
