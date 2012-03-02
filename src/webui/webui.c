@@ -569,14 +569,19 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
     sscanf(range, "bytes=%"PRId64"-%"PRId64"", &file_start, &file_end);
 
   //Sanity checks
-  if(file_start < 0 || file_start >= st.st_size)
+  if(file_start < 0 || file_start >= st.st_size) {
+    close(fd);
     return 200;
+  }
+  if(file_end < 0 || file_end >= st.st_size) {
+    close(fd);
+    return 200;
+  }
 
-  if(file_end < 0 || file_end >= st.st_size)
+  if(file_start > file_end) {
+    close(fd);
     return 200;
-
-  if(file_start > file_end)
-    return 200;
+  }
 
   content_len = file_end - file_start+1;
   
@@ -609,8 +614,10 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
     while(content_len > 0) {
       chunk = MIN(1024 * 1024 * 1024, content_len);
       r = sendfile(hc->hc_fd, fd, NULL, chunk);
-      if(r == -1)
+      if(r == -1) {
+	close(fd);
 	return -1;
+      }
       content_len -= r;
     }
   }
