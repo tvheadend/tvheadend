@@ -51,6 +51,7 @@
 #define SERVICE_HASH_WIDTH 101
 
 static struct service_list servicehash[SERVICE_HASH_WIDTH];
+static TAILQ_HEAD(, audio_filter) audio_filters;
 
 static void service_data_timeout(void *aux);
 
@@ -829,6 +830,25 @@ service_restart(service_t *t, int had_components)
   }
 }
 
+/**
+ *
+ */
+static void
+ss_copy_info(streaming_start_t *ss, elementary_stream_t *st)
+{
+    streaming_start_component_t *ssc;
+
+    ssc = &ss->ss_components[ss->ss_num_components++];
+    ssc->ssc_index = st->es_index;
+    ssc->ssc_type  = st->es_type;
+
+    memcpy(ssc->ssc_lang, st->es_lang, 4);
+    ssc->ssc_composition_id = st->es_composition_id;
+    ssc->ssc_ancillary_id = st->es_ancillary_id;
+    ssc->ssc_pid = st->es_pid;
+    ssc->ssc_width = st->es_width;
+    ssc->ssc_height = st->es_height;  
+}
 
 /**
  * Generate a message containing info about all components
@@ -848,21 +868,49 @@ service_build_stream_start(service_t *t)
   ss = calloc(1, sizeof(streaming_start_t) + 
 	      sizeof(streaming_start_component_t) * n);
 
-  ss->ss_num_components = n;
-  
-  n = 0;
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
-    streaming_start_component_t *ssc = &ss->ss_components[n++];
-    ssc->ssc_index = st->es_index;
-    ssc->ssc_type  = st->es_type;
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+    if (SCT_ISVIDEO(st->es_type))
+      ss_copy_info(ss, st);
 
-    memcpy(ssc->ssc_lang, st->es_lang, 4);
-    ssc->ssc_composition_id = st->es_composition_id;
-    ssc->ssc_ancillary_id = st->es_ancillary_id;
-    ssc->ssc_pid = st->es_pid;
-    ssc->ssc_width = st->es_width;
-    ssc->ssc_height = st->es_height;
+  if (TAILQ_EMPTY(&audio_filters)) {
+all_audio:
+    TAILQ_FOREACH(st, &t->s_components, es_link)
+      if (SCT_ISAUDIO(st->es_type))
+        ss_copy_info(ss, st);
+  } else {
+    int streams = 0, found;
+    audio_filter_t *af;
+
+    TAILQ_FOREACH(af, &audio_filters, af_link) {
+      found = 0;
+      TAILQ_FOREACH(st, &t->s_components, es_link) {
+        if (memcmp(st->es_lang, af->af_lang, 4) == 0) {
+          if ((af->af_flags & AF_PREFER_AC3) == 0 ||
+                                      SCT_ISAUDIOP(st->es_type)) {
+            ss_copy_info(ss, st);
+            found = 1;
+            streams++;
+          }
+        }
+      }
+      /* no AC3+ audio, but we prefer the language, use MPEG2 audio if exists */
+      if (!found) {
+        TAILQ_FOREACH(st, &t->s_components, es_link) {
+          if (memcmp(st->es_lang, af->af_lang, 4) == 0) {
+            ss_copy_info(ss, st);
+            streams++;
+          }
+        }
+      }
+    }
+    /* no preferred streams found.. insert all */
+    if (!streams)
+      goto all_audio;
   }
+
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+    if (!SCT_ISVIDEO(st->es_type) && !SCT_ISAUDIO(st->es_type))
+      ss_copy_info(ss, st);
 
   t->s_setsourceinfo(t, &ss->ss_si);
 
@@ -960,6 +1008,7 @@ void
 service_init(void)
 {
   pthread_t tid;
+  memset(&servicehash, 0, sizeof(servicehash));
   TAILQ_INIT(&pending_save_queue);
   pthread_mutex_init(&pending_save_mutex, NULL);
   pthread_cond_init(&pending_save_cond, NULL);
@@ -1111,3 +1160,28 @@ service_get_signal_status(service_t *t, signal_status_t *status)
   }
 }
 
+/*
+ * Init the audio filter list
+ */
+void
+service_audio_filter_init(void)
+{
+  TAILQ_INIT(&audio_filters);
+}
+
+/*
+ * Add an entry to the audio filter list
+ */
+int
+service_audio_filter_add(int flags, const char *lang)
+{
+  audio_filter_t *af = calloc(1, sizeof(audio_filter_t));
+  
+  if (af == NULL)
+    return -1;
+  af->af_flags = flags;
+  strncpy(af->af_lang, lang, 4);
+  TAILQ_INSERT_TAIL(&audio_filters, af, af_link);
+
+  return 0;
+}

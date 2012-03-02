@@ -167,6 +167,8 @@ usage(const char *argv0)
 	 "                 to your Tvheadend installation until you edit\n"
 	 "                 the access-control from within the Tvheadend UI\n");
   printf(" -s              Log debug to syslog\n");
+  printf(" -l <lngcode>    Add the language filter for audio streams\n");
+  printf("                 Use '+' prefix to prefer only AC3/AAC streams\n");
   printf("\n");
   printf("Development options\n");
   printf("\n");
@@ -248,8 +250,9 @@ main(int argc, char **argv)
 
   // make sure the timezone is set
   tzset();
+  service_audio_filter_init();
 
-  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:s")) != -1) {
+  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:sl:")) != -1) {
     switch(c) {
     case 'a':
       adapter_mask = 0x0;
@@ -303,6 +306,13 @@ main(int argc, char **argv)
       break;
     case 'j':
       join_transport = optarg;
+      break;
+    case 'l':
+      if (*optarg == '+') {
+        service_audio_filter_add(AF_PREFER_AC3, optarg+1);
+      } else {
+        service_audio_filter_add(0, optarg);
+      }
       break;
     default:
       usage(argv[0]);
