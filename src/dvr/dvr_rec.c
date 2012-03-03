@@ -553,8 +553,10 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
 static void
 dvr_thread_epilog(dvr_entry_t *de)
 {
-  mk_mux_close(de->de_mkmux);
-  de->de_mkmux = NULL;
+  if(de->de_mkmux) {
+    mk_mux_close(de->de_mkmux);
+    de->de_mkmux = NULL;
+  }
 
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
   if(cfg->dvr_postproc)
