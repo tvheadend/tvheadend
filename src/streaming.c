@@ -333,7 +333,7 @@ streaming_code2txt(int code)
   case SM_CODE_OK: return "OK";
     
   case SM_CODE_SOURCE_RECONFIGURED:
-    return "Soruce reconfigured";
+    return "Source reconfigured";
   case SM_CODE_BAD_SOURCE:
     return "Source quality is bad";
   case SM_CODE_SOURCE_DELETED:
