@@ -551,6 +551,9 @@ mk_build_metadata2(const event_t *e)
   if(e->e_channel != NULL)
     addtag(q, build_tag_string("TVCHANNEL", e->e_channel->ch_name, 0, NULL));
 
+  if(e->e_title != NULL)
+    addtag(q, build_tag_string("TITLE", e->e_title, 0, NULL));
+
   if(e->e_episode.ee_onscreen)
     addtag(q, build_tag_string("SYNOPSIS", 
 			       e->e_episode.ee_onscreen, 0, NULL));
@@ -740,7 +743,12 @@ mk_mux_stream_create(int fd, const struct streaming_start *ss,
   getuuid(mkm->uuid);
   mkm->filename = strdup("Live stream");
   mkm->fd = fd;
-  mkm->title = strdup(e ? e->e_title : mkm->filename);
+
+  if(e && e->e_channel && e->e_channel->ch_name)
+    mkm->title = strdup(e->e_channel->ch_name);
+  else
+    mkm->title = strdup("Live stream");
+
   TAILQ_INIT(&mkm->cues);
 
   htsbuf_queue_init(&q, 0);
