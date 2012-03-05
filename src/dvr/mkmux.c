@@ -664,15 +664,16 @@ mk_build_segment(mk_mux_t *mkm,
   htsbuf_queue_t q;
   htsbuf_queue_t *p = htsbuf_queue_alloc(0);
   htsbuf_queue_init(&q, 0);
-  
-  mkm->segmentinfo_pos = 33;
+  int offset = e ? 48 : 33;
+
+  mkm->segmentinfo_pos = offset;
   ebml_append_master(&q, 0x1549a966, mk_build_segment_info(mkm));
   
-  mkm->trackinfo_pos = 33 + q.hq_size;
+  mkm->trackinfo_pos = offset + q.hq_size;
   ebml_append_master(&q, 0x1654ae6b, mk_build_tracks(mkm, ss));
   
   if(e) {
-    mkm->metadata_pos = 33 + q.hq_size;
+    mkm->metadata_pos = offset + q.hq_size;
     ebml_append_master(&q, 0x1254c367, mk_build_metadata2(e));
   }
   
