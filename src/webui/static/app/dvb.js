@@ -377,8 +377,10 @@ tvheadend.dvb_services = function(adapterId) {
 	    dataIndex: 'id',
 	    width: 50,
 	    renderer: function(value, metadata, record, row, col, store) {
-		url = 'stream/service/' + value
-		return '<a href="'+url+'">Play</a>'
+		url1 = 'stream/service/' + value
+		url2 = 'stream/ts-service/' + value
+		url3 = 'stream/raw-service/' + value
+		return '<a href="'+url1+'">Play</a>|<a href="'+url2+'">MTS</a>|<a href="'+url3+'">Raw</a>'
 	    }
 	},
 	{

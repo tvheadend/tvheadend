@@ -358,9 +358,11 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
  */
 th_subscription_t *
 subscription_create_from_service(service_t *t, const char *name,
-				   streaming_target_t *st, int flags)
+				   streaming_target_t *st, int flags,
+				   int direct)
 {
-  th_subscription_t *s = subscription_create(INT32_MAX, name, st, flags, 1);
+  th_subscription_t *s = subscription_create(INT32_MAX, name, st,
+							flags, direct);
   source_info_t si;
   int r;
 
@@ -473,7 +475,7 @@ subscription_dummy_join(const char *id, int first)
 
   st = calloc(1, sizeof(streaming_target_t));
   streaming_target_init(st, dummy_callback, NULL, 0);
-  subscription_create_from_service(t, "dummy", st, 0);
+  subscription_create_from_service(t, "dummy", st, 0, 1);
 
   tvhlog(LOG_NOTICE, "subscription", 
 	 "Dummy join %s ok", id);
