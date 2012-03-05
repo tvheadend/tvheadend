@@ -183,7 +183,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
       else
 	http_output_content(hc, "video/x-matroska");
 
-      event_t *e = NULL; //epg_event_find_by_time(s->ths_channel, dispatch_clock);
+      event_t *e = s->ths_channel->ch_epg_current;
 
       mkm = mk_mux_stream_create(hc->hc_fd, sm->sm_data, e);
       break;
