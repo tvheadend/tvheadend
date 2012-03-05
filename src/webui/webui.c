@@ -155,8 +155,8 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
           //Check socket status
           getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen);  
           
-          //Abort upon socket error, or after 5 seconds of silence
-          if(err || timeouts > 4){
+          //Abort upon socket error, or after 20 seconds of silence
+          if(err || timeouts >= 20){
             run = 0;            
           }
       }
