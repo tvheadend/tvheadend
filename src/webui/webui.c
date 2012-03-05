@@ -178,13 +178,16 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
       break;
 
     case SMT_START: {
+      event_t *e = NULL;
       tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
+
       if(s->ths_service->s_servicetype == ST_RADIO)
 	http_output_content(hc, "audio/x-matroska");
       else
 	http_output_content(hc, "video/x-matroska");
 
-      event_t *e = s->ths_channel->ch_epg_current;
+      if(s->ths_channel)
+	e = s->ths_channel->ch_epg_current;
 
       mkm = mk_mux_stream_create(hc->hc_fd, sm->sm_data, e);
       break;
