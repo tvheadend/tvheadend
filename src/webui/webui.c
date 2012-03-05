@@ -132,6 +132,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
 {
   streaming_message_t *sm;
   int run = 1;
+  int start = 1;
   mk_mux_t *mkm = NULL;
   int timeouts = 0;
 
@@ -169,23 +170,67 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
 
     switch(sm->sm_type) {
     case SMT_PACKET:
-      if(!mkm)
-	break;
+      if(hc->stream_type == STREAM_TYPE_MKV) {
+        if(!mkm)
+	  break;
 
-      pkt_ref_inc(sm->sm_data);
-      run = !mk_mux_write_pkt(mkm, sm->sm_data);
-      sm->sm_data = NULL;
+        pkt_ref_inc(sm->sm_data);
+        run = !mk_mux_write_pkt(mkm, sm->sm_data);
+        sm->sm_data = NULL;
+      }
       break;
 
     case SMT_START: {
-      if(s->ths_service->s_servicetype == ST_RADIO)
-	http_output_content(hc, "audio/x-matroska");
-      else
-	http_output_content(hc, "video/x-matroska");
+      if(hc->stream_type == STREAM_TYPE_MKV) {
+        // mkv stream start
+        if(s->ths_service->s_servicetype == ST_RADIO)
+	  http_output_content(hc, "audio/x-matroska");
+        else
+	  http_output_content(hc, "video/x-matroska");
 
-      event_t *e = NULL; //epg_event_find_by_time(s->ths_channel, dispatch_clock);
+        event_t *e = NULL; //epg_event_find_by_time(s->ths_channel, dispatch_clock);
 
-      mkm = mk_mux_stream_create(hc->hc_fd, sm->sm_data, e);
+        mkm = mk_mux_stream_create(hc->hc_fd, sm->sm_data, e);
+      }
+      else {
+        // default ts stream start
+        if (start) {
+
+          struct streaming_start *ss = sm->sm_data;
+          uint8_t pat_ts[188];
+          uint8_t pmt_ts[188];  
+          int pcrpid = ss->ss_pcr_pid;
+          int pmtpid = 0x0fff;
+  
+          http_output_content(hc, "video/mp2t");
+          
+          //Send PAT
+          memset(pat_ts, 0xff, 188);
+          psi_build_pat(NULL, pat_ts+5, 183, pmtpid);
+          pat_ts[0] = 0x47;
+          pat_ts[1] = 0x40;
+          pat_ts[2] = 0x00;
+          pat_ts[3] = 0x10;
+          pat_ts[4] = 0x00;
+          run = (write(hc->hc_fd, pat_ts, 188) == 188);
+        
+          if(!run) {
+            break;
+          }
+  
+          //Send PMT
+          memset(pmt_ts, 0xff, 188);
+          psi_build_pmt(ss, pmt_ts+5, 183, pcrpid);
+          pmt_ts[0] = 0x47;
+          pmt_ts[1] = 0x40 | (pmtpid >> 8);
+          pmt_ts[2] = pmtpid;
+          pmt_ts[3] = 0x10;
+          pmt_ts[4] = 0x00;
+          run = (write(hc->hc_fd, pmt_ts, 188) == 188);
+        
+          start = 0;
+        }
+      }
       break;
     }
     case SMT_STOP:
@@ -200,6 +245,9 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
       break;
 
     case SMT_MPEGTS:
+      if(hc->stream_type == STREAM_TYPE_TS) {
+        run = (write(hc->hc_fd, sm->sm_data, 188) == 188);
+      }
       break;
 
     case SMT_EXIT:
@@ -209,9 +257,11 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
     streaming_msg_free(sm);
     pthread_mutex_unlock(&sq->sq_mutex);
   }
-
-  if(mkm)
-    mk_mux_close(mkm);
+  
+  if(hc->stream_type == STREAM_TYPE_MKV) {
+    if(mkm)
+      mk_mux_close(mkm);
+  }
 }
 
 /**
@@ -352,17 +402,32 @@ http_stream_service(http_connection_t *hc, service_t *service)
   th_subscription_t *s;
   streaming_target_t *gh;
   streaming_target_t *tsfix;
-
-  streaming_queue_init(&sq, 0);
-  gh = globalheaders_create(&sq.sq_st);
-  tsfix = tsfix_create(gh);
-
+ 
   pthread_mutex_lock(&global_lock);
-  s = subscription_create_from_service(service,
-                                       "HTTP", tsfix,
-                                       0);
+
+  if(hc->stream_type == STREAM_TYPE_MKV) {
+    streaming_queue_init(&sq, 0);
+    gh = globalheaders_create(&sq.sq_st);
+    tsfix = tsfix_create(gh);
+    s = subscription_create_from_service(service,
+                                         "HTTP", tsfix,
+                                         0);
+  }
+  else {
+    tsfix = NULL;
+    gh = NULL;
+    streaming_queue_init(&sq, ~SMT_TO_MASK(SUBSCRIPTION_RAW_MPEGTS));
+    s = subscription_create_from_service(service,
+                                         "HTTP", &sq.sq_st,
+                                         SUBSCRIPTION_RAW_MPEGTS);
+  }
 
   pthread_mutex_unlock(&global_lock);
+
+  if(hc->stream_type == STREAM_TYPE_TS) {
+    //We won't get a START command, send http-header here.
+    http_output_content(hc, "video/mp2t");
+  }
 
   http_stream_run(hc, &sq, s);
 
@@ -370,8 +435,10 @@ http_stream_service(http_connection_t *hc, service_t *service)
   subscription_unsubscribe(s);
   pthread_mutex_unlock(&global_lock);
 
-  globalheaders_destroy(gh);
-  tsfix_destroy(tsfix);
+  if(hc->stream_type == STREAM_TYPE_MKV) {
+    globalheaders_destroy(gh);
+    tsfix_destroy(tsfix);
+  }
   streaming_queue_deinit(&sq);
 
   return 0;
@@ -389,14 +456,25 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   streaming_target_t *tsfix;
   int priority = 100;
 
-  streaming_queue_init(&sq, 0);
-  gh = globalheaders_create(&sq.sq_st);
-  tsfix = tsfix_create(gh);
-
   pthread_mutex_lock(&global_lock);
-  s = subscription_create_from_channel(ch, priority, 
-                                       "HTTP", tsfix,
-                                       0);
+
+  if(hc->stream_type == STREAM_TYPE_MKV) {
+    streaming_queue_init(&sq, 0);
+    gh = globalheaders_create(&sq.sq_st);
+    tsfix = tsfix_create(gh);
+    s = subscription_create_from_channel(ch, priority, 
+                                         "HTTP", tsfix,
+                                         0);
+  }
+  else {
+    tsfix = NULL;
+    gh = NULL;
+    streaming_queue_init(&sq, ~SMT_TO_MASK(SUBSCRIPTION_RAW_MPEGTS));
+    s = subscription_create_from_channel(ch, priority, 
+                                         "HTTP", &sq.sq_st,
+                                         SUBSCRIPTION_RAW_MPEGTS);
+  }
+
   pthread_mutex_unlock(&global_lock);
 
   http_stream_run(hc, &sq, s);
@@ -405,8 +483,10 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   subscription_unsubscribe(s);
   pthread_mutex_unlock(&global_lock);
 
-  globalheaders_destroy(gh);
-  tsfix_destroy(tsfix);
+  if(hc->stream_type == STREAM_TYPE_MKV) {
+    globalheaders_destroy(gh);
+    tsfix_destroy(tsfix);
+  }
   streaming_queue_deinit(&sq);
 
   return 0;
@@ -421,7 +501,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
 static int
 http_stream(http_connection_t *hc, const char *remain, void *opaque)
 {
-  char *components[2];
+  char *components[3];
   channel_t *ch = NULL;
   service_t *service = NULL;
 
@@ -432,12 +512,21 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_BAD_REQUEST;
   }
 
-  if(http_tokenize((char *)remain, components, 2, '/') != 2) {
+  if(http_tokenize((char *)remain, components, 3, '/') < 2) {
     http_error(hc, HTTP_STATUS_BAD_REQUEST);
     return HTTP_STATUS_BAD_REQUEST;
   }
 
   http_deescape(components[1]);
+
+  if(!strcmp(components[2], "mkv")) {
+    // it's a mkv stream
+    hc->stream_type = STREAM_TYPE_MKV;
+  }
+  else {
+    // default to ts stream
+    hc->stream_type = STREAM_TYPE_TS;
+  }
 
   pthread_mutex_lock(&global_lock);
 

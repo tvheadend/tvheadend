@@ -1313,7 +1313,14 @@ service_update_iptv(htsmsg_t *in)
       }
       save = 1;
     }
-    
+    if(!htsmsg_get_u32(c, "radio", &u32)) {
+        if(u32)
+          t->s_servicetype = ST_RADIO;
+        else
+          t->s_servicetype = ST_IPTV;
+      save = 1;
+    }
+
 
     save |= tvh_str_update(&t->s_iptv_iface, htsmsg_get_str(c, "interface"));
     if(save)
@@ -1347,6 +1354,7 @@ build_record_iptv(service_t *t)
   }
 
   htsmsg_add_u32(r, "port", t->s_iptv_port);
+  htsmsg_add_u32(r, "radio", t->s_servicetype == ST_RADIO);
   htsmsg_add_u32(r, "enabled", t->s_enabled);
   return r;
 }
