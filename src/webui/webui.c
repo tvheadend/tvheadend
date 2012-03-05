@@ -178,6 +178,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
       break;
 
     case SMT_START: {
+      tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
       if(s->ths_service->s_servicetype == ST_RADIO)
 	http_output_content(hc, "audio/x-matroska");
       else
@@ -196,6 +197,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
       break;
 
     case SMT_NOSTART:
+      tvhlog(LOG_DEBUG, "webui",  "Couldn't start stream for %s", hc->hc_url_orig);
       run = 0;
       break;
 
