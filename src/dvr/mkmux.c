@@ -69,6 +69,7 @@ struct mk_mux {
   char *filename;
   int error;
   off_t fdpos; // Current position in file
+  int seekable;
 
   mk_track *tracks;
   int ntracks;
@@ -638,7 +639,7 @@ mk_write_metaseek(mk_mux_t *mkm, int first)
   
   if(first) {
     mk_write_to_fd(mkm, &q);
-  } else {
+  } else if(mkm->seekable) {
     off_t prev = mkm->fdpos;
     if(lseek(mkm->fd, mkm->segment_pos, SEEK_SET) == (off_t) -1)
       mkm->error = errno;
@@ -707,6 +708,7 @@ mk_mux_create(const char *filename,
   mkm->fd = fd;
   mkm->title = strdup(de->de_title);
   mkm->cluster_maxsize = 2000000/4;
+  mkm->seekable = 1;
   TAILQ_INIT(&mkm->cues);
 
   mk_write_master(mkm, 0x1a45dfa3, mk_build_ebmlheader());
@@ -958,19 +960,21 @@ mk_mux_close(mk_mux_t *mkm)
   mk_write_metaseek(mkm, 0);
   totsize = mkm->fdpos;
 
-  // Rewrite segment info to update duration
-  if(lseek(mkm->fd, mkm->segmentinfo_pos, SEEK_SET) == mkm->segmentinfo_pos)
-    mk_write_master(mkm, 0x1549a966, mk_build_segment_info(mkm));
-  else
-    tvhlog(LOG_ERR, "MKV", "%s: Unable to write duration, seek failed -- %s",
-	   mkm->filename, strerror(errno));
+  if(mkm->seekable) {
+    // Rewrite segment info to update duration
+    if(lseek(mkm->fd, mkm->segmentinfo_pos, SEEK_SET) == mkm->segmentinfo_pos)
+      mk_write_master(mkm, 0x1549a966, mk_build_segment_info(mkm));
+    else
+      tvhlog(LOG_ERR, "MKV", "%s: Unable to write duration, seek failed -- %s",
+	     mkm->filename, strerror(errno));
 
-  // Rewrite segment header to update total size
-  if(lseek(mkm->fd, mkm->segment_header_pos, SEEK_SET) == mkm->segment_header_pos) {
-    mk_write_segment_header(mkm, totsize - mkm->segment_header_pos - 12);
-  } else
-    tvhlog(LOG_ERR, "MKV", "%s: Unable to write total size, seek failed -- %s",
-	   mkm->filename, strerror(errno));
+    // Rewrite segment header to update total size
+    if(lseek(mkm->fd, mkm->segment_header_pos, SEEK_SET) == mkm->segment_header_pos) {
+      mk_write_segment_header(mkm, totsize - mkm->segment_header_pos - 12);
+    } else
+      tvhlog(LOG_ERR, "MKV", "%s: Unable to write total size, seek failed -- %s",
+	     mkm->filename, strerror(errno));
+  }
 
   close(mkm->fd);
   free(mkm->filename);
