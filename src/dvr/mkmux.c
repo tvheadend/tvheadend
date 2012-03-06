@@ -706,7 +706,7 @@ mk_mux_create(const char *filename,
   mkm->filename = strdup(filename);
   mkm->fd = fd;
   mkm->title = strdup(de->de_title);
-  mkm->cluster_maxsize = 2*1024*1024; //2Mb
+  mkm->cluster_maxsize = 2000000/4;
   TAILQ_INIT(&mkm->cues);
 
   mk_write_master(mkm, 0x1a45dfa3, mk_build_ebmlheader());
@@ -745,6 +745,7 @@ mk_mux_stream_create(int fd, const struct streaming_start *ss,
   getuuid(mkm->uuid);
   mkm->filename = strdup("Live stream");
   mkm->fd = fd;
+  mkm->cluster_maxsize = 0;
 
   if(e && e->e_channel && e->e_channel->ch_name)
     mkm->title = strdup(e->e_channel->ch_name);
@@ -760,11 +761,6 @@ mk_mux_stream_create(int fd, const struct streaming_start *ss,
   htsbuf_appendq(&q, mk_build_segment(mkm, ss, e));
  
   mk_write_queue(mkm, &q);
-
-  if(mkm->has_video)
-    mkm->cluster_maxsize = 100*1024; //200Kb
-  else
-    mkm->cluster_maxsize = 10*1024; //20Kb
 
   return mkm;
 }
@@ -810,6 +806,7 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track *t, th_pkt_t *pkt)
 
   uint8_t *data;
   size_t len;
+  const int clusersizemax = 2000000;
 
   if(pts == PTS_UNSET)
     // This is our best guess, it might be wrong but... oh well
@@ -835,10 +832,13 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track *t, th_pkt_t *pkt)
     return;
   }
 
-  if(vkeyframe && mkm->cluster && mkm->cluster->hq_size > mkm->cluster_maxsize / 4)
+  if(vkeyframe && mkm->cluster && mkm->cluster->hq_size > mkm->cluster_maxsize)
     mk_close_cluster(mkm);
 
-  else if(mkm->cluster && mkm->cluster->hq_size > mkm->cluster_maxsize)
+  else if(!mkm->has_video && mkm->cluster && mkm->cluster->hq_size > clusersizemax/40)
+    mk_close_cluster(mkm);
+
+  else if(mkm->cluster && mkm->cluster->hq_size > clusersizemax)
     mk_close_cluster(mkm);
 
   if(mkm->cluster == NULL) {
