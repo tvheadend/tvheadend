@@ -659,28 +659,15 @@ mk_write_metaseek(mk_mux_t *mkm, int first)
  */
 static htsbuf_queue_t *
 mk_build_segment(mk_mux_t *mkm, 
-		 const struct streaming_start *ss, 
-		 const event_t *e)
+		 const struct streaming_start *ss)
 {
-  htsbuf_queue_t q;
   htsbuf_queue_t *p = htsbuf_queue_alloc(0);
-  htsbuf_queue_init(&q, 0);
-  int offset = e ? 48 : 33;
 
-  mkm->segmentinfo_pos = offset;
-  ebml_append_master(&q, 0x1549a966, mk_build_segment_info(mkm));
+  mkm->segmentinfo_pos = p->hq_size;
+  ebml_append_master(p, 0x1549a966, mk_build_segment_info(mkm));
   
-  mkm->trackinfo_pos = offset + q.hq_size;
-  ebml_append_master(&q, 0x1654ae6b, mk_build_tracks(mkm, ss));
-  
-  if(e) {
-    mkm->metadata_pos = offset + q.hq_size;
-    ebml_append_master(&q, 0x1254c367, mk_build_metadata2(e));
-  }
-  
-  ebml_append_master(p, 0x114d9b74,  mk_build_metaseek(mkm));
-  htsbuf_appendq(p, &q);
-  htsbuf_queue_flush(&q);
+  mkm->trackinfo_pos = p->hq_size;
+  ebml_append_master(p, 0x1654ae6b, mk_build_tracks(mkm, ss));
   
   return p;
 }
@@ -738,7 +725,7 @@ mk_mux_create(const char *filename,
 
 mk_mux_t *
 mk_mux_stream_create(int fd, const struct streaming_start *ss,
-		     const event_t *e)
+		     const channel_t *ch)
 {
   mk_mux_t *mkm;
   htsbuf_queue_t q;
@@ -749,8 +736,8 @@ mk_mux_stream_create(int fd, const struct streaming_start *ss,
   mkm->fd = fd;
   mkm->cluster_maxsize = 0;
 
-  if(e && e->e_channel && e->e_channel->ch_name)
-    mkm->title = strdup(e->e_channel->ch_name);
+  if(ch && ch->ch_name)
+    mkm->title = strdup(ch->ch_name);
   else
     mkm->title = strdup("Live stream");
 
@@ -760,12 +747,13 @@ mk_mux_stream_create(int fd, const struct streaming_start *ss,
 
   ebml_append_master(&q, 0x1a45dfa3, mk_build_ebmlheader());
   htsbuf_appendq(&q, mk_build_segment_header(0));
-  htsbuf_appendq(&q, mk_build_segment(mkm, ss, e));
+  htsbuf_appendq(&q, mk_build_segment(mkm, ss));
  
   mk_write_queue(mkm, &q);
 
   return mkm;
 }
+
 
 /**
  *
@@ -790,6 +778,22 @@ mk_close_cluster(mk_mux_t *mkm)
   if(mkm->cluster != NULL)
     mk_write_master(mkm, 0x1f43b675, mkm->cluster);
   mkm->cluster = NULL;
+}
+
+
+/**
+ *
+ */
+int
+mk_mux_append_meta(mk_mux_t *mkm, event_t *e)
+{
+  htsbuf_queue_t q;
+
+  htsbuf_queue_init(&q, 0);
+  ebml_append_master(&q, 0x1254c367, mk_build_metadata2(e));
+  mk_write_queue(mkm, &q);
+
+  return mkm->error;
 }
 
 

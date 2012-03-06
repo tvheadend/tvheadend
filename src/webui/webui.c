@@ -133,6 +133,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
   streaming_message_t *sm;
   int run = 1;
   mk_mux_t *mkm = NULL;
+  uint32_t event_id = 0;
   int timeouts = 0;
 
   while(run) {
@@ -168,17 +169,26 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
     TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
 
     switch(sm->sm_type) {
-    case SMT_PACKET:
+    case SMT_PACKET: {
       if(!mkm)
 	break;
 
       pkt_ref_inc(sm->sm_data);
       run = !mk_mux_write_pkt(mkm, sm->sm_data);
       sm->sm_data = NULL;
+
+      event_t *e = NULL;
+      if(s->ths_channel)
+	e = s->ths_channel->ch_epg_current;
+
+      if(e && event_id != e->e_id) {
+	event_id = e->e_id;
+	run = !mk_mux_append_meta(mkm, e);
+      }
       break;
+    }
 
     case SMT_START: {
-      event_t *e = NULL;
       tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
 
       if(s->ths_service->s_servicetype == ST_RADIO)
@@ -186,10 +196,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
       else
 	http_output_content(hc, "video/x-matroska");
 
-      if(s->ths_channel)
-	e = s->ths_channel->ch_epg_current;
-
-      mkm = mk_mux_stream_create(hc->hc_fd, sm->sm_data, e);
+      mkm = mk_mux_stream_create(hc->hc_fd, sm->sm_data, s->ths_channel);
       break;
     }
     case SMT_STOP:
