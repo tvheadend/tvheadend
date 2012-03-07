@@ -452,8 +452,10 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid, int enq)
   uint8_t *buf = cm->cm_data;
   int seq, n;
 
-  if(len + 12 > CWS_NETMSGSIZE)
+  if(len + 12 > CWS_NETMSGSIZE) {
+    free(cm);
     return -1;
+  }
 
   memset(buf, 0, 12);
   memcpy(buf + 12, msg, len);
@@ -469,6 +471,7 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid, int enq)
 
   if((len = des_encrypt(buf, len, cwc)) < 0) {
     free(buf);
+    free(cm);
     return -1;
   }
 
