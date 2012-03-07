@@ -69,6 +69,7 @@ struct mk_mux {
   char *filename;
   int error;
   off_t fdpos; // Current position in file
+  int seekable;
 
   mk_track *tracks;
   int ntracks;
@@ -79,7 +80,7 @@ struct mk_mux {
   htsbuf_queue_t *cluster;
   int64_t cluster_tc;
   off_t cluster_pos;
-
+  int cluster_maxsize;
 
   off_t segment_header_pos;
 
@@ -551,6 +552,9 @@ mk_build_metadata2(const event_t *e)
   if(e->e_channel != NULL)
     addtag(q, build_tag_string("TVCHANNEL", e->e_channel->ch_name, 0, NULL));
 
+  if(e->e_title != NULL)
+    addtag(q, build_tag_string("TITLE", e->e_title, 0, NULL));
+
   if(e->e_episode.ee_onscreen)
     addtag(q, build_tag_string("SYNOPSIS", 
 			       e->e_episode.ee_onscreen, 0, NULL));
@@ -635,7 +639,7 @@ mk_write_metaseek(mk_mux_t *mkm, int first)
   
   if(first) {
     mk_write_to_fd(mkm, &q);
-  } else {
+  } else if(mkm->seekable) {
     off_t prev = mkm->fdpos;
     if(lseek(mkm->fd, mkm->segment_pos, SEEK_SET) == (off_t) -1)
       mkm->error = errno;
@@ -655,27 +659,15 @@ mk_write_metaseek(mk_mux_t *mkm, int first)
  */
 static htsbuf_queue_t *
 mk_build_segment(mk_mux_t *mkm, 
-		 const struct streaming_start *ss, 
-		 const event_t *e)
+		 const struct streaming_start *ss)
 {
-  htsbuf_queue_t q;
   htsbuf_queue_t *p = htsbuf_queue_alloc(0);
-  htsbuf_queue_init(&q, 0);
+
+  mkm->segmentinfo_pos = p->hq_size;
+  ebml_append_master(p, 0x1549a966, mk_build_segment_info(mkm));
   
-  mkm->segmentinfo_pos = 33;
-  ebml_append_master(&q, 0x1549a966, mk_build_segment_info(mkm));
-  
-  mkm->trackinfo_pos = 33 + q.hq_size;
-  ebml_append_master(&q, 0x1654ae6b, mk_build_tracks(mkm, ss));
-  
-  if(e) {
-    mkm->metadata_pos = 33 + q.hq_size;
-    ebml_append_master(&q, 0x1254c367, mk_build_metadata2(e));
-  }
-  
-  ebml_append_master(p, 0x114d9b74,  mk_build_metaseek(mkm));
-  htsbuf_appendq(p, &q);
-  htsbuf_queue_flush(&q);
+  mkm->trackinfo_pos = p->hq_size;
+  ebml_append_master(p, 0x1654ae6b, mk_build_tracks(mkm, ss));
   
   return p;
 }
@@ -702,6 +694,8 @@ mk_mux_create(const char *filename,
   mkm->filename = strdup(filename);
   mkm->fd = fd;
   mkm->title = strdup(de->de_title);
+  mkm->cluster_maxsize = 2000000/4;
+  mkm->seekable = 1;
   TAILQ_INIT(&mkm->cues);
 
   mk_write_master(mkm, 0x1a45dfa3, mk_build_ebmlheader());
@@ -731,7 +725,7 @@ mk_mux_create(const char *filename,
 
 mk_mux_t *
 mk_mux_stream_create(int fd, const struct streaming_start *ss,
-		     const event_t *e)
+		     const channel_t *ch)
 {
   mk_mux_t *mkm;
   htsbuf_queue_t q;
@@ -740,19 +734,26 @@ mk_mux_stream_create(int fd, const struct streaming_start *ss,
   getuuid(mkm->uuid);
   mkm->filename = strdup("Live stream");
   mkm->fd = fd;
-  mkm->title = strdup(e ? e->e_title : mkm->filename);
+  mkm->cluster_maxsize = 0;
+
+  if(ch && ch->ch_name)
+    mkm->title = strdup(ch->ch_name);
+  else
+    mkm->title = strdup("Live stream");
+
   TAILQ_INIT(&mkm->cues);
 
   htsbuf_queue_init(&q, 0);
 
   ebml_append_master(&q, 0x1a45dfa3, mk_build_ebmlheader());
   htsbuf_appendq(&q, mk_build_segment_header(0));
-  htsbuf_appendq(&q, mk_build_segment(mkm, ss, e));
+  htsbuf_appendq(&q, mk_build_segment(mkm, ss));
  
   mk_write_queue(mkm, &q);
 
   return mkm;
 }
+
 
 /**
  *
@@ -777,6 +778,22 @@ mk_close_cluster(mk_mux_t *mkm)
   if(mkm->cluster != NULL)
     mk_write_master(mkm, 0x1f43b675, mkm->cluster);
   mkm->cluster = NULL;
+}
+
+
+/**
+ *
+ */
+int
+mk_mux_append_meta(mk_mux_t *mkm, event_t *e)
+{
+  htsbuf_queue_t q;
+
+  htsbuf_queue_init(&q, 0);
+  ebml_append_master(&q, 0x1254c367, mk_build_metadata2(e));
+  mk_write_queue(mkm, &q);
+
+  return mkm->error;
 }
 
 
@@ -821,13 +838,13 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track *t, th_pkt_t *pkt)
     return;
   }
 
-  if(vkeyframe && mkm->cluster && mkm->cluster->hq_size > clusersizemax/4)
-    mk_close_cluster(mkm);
-
-  else if(mkm->cluster && mkm->cluster->hq_size > clusersizemax)
+  if(vkeyframe && mkm->cluster && mkm->cluster->hq_size > mkm->cluster_maxsize)
     mk_close_cluster(mkm);
 
   else if(!mkm->has_video && mkm->cluster && mkm->cluster->hq_size > clusersizemax/40)
+    mk_close_cluster(mkm);
+
+  else if(mkm->cluster && mkm->cluster->hq_size > clusersizemax)
     mk_close_cluster(mkm);
 
   if(mkm->cluster == NULL) {
@@ -947,19 +964,21 @@ mk_mux_close(mk_mux_t *mkm)
   mk_write_metaseek(mkm, 0);
   totsize = mkm->fdpos;
 
-  // Rewrite segment info to update duration
-  if(lseek(mkm->fd, mkm->segmentinfo_pos, SEEK_SET) == mkm->segmentinfo_pos)
-    mk_write_master(mkm, 0x1549a966, mk_build_segment_info(mkm));
-  else
-    tvhlog(LOG_ERR, "MKV", "%s: Unable to write duration, seek failed -- %s",
-	   mkm->filename, strerror(errno));
+  if(mkm->seekable) {
+    // Rewrite segment info to update duration
+    if(lseek(mkm->fd, mkm->segmentinfo_pos, SEEK_SET) == mkm->segmentinfo_pos)
+      mk_write_master(mkm, 0x1549a966, mk_build_segment_info(mkm));
+    else
+      tvhlog(LOG_ERR, "MKV", "%s: Unable to write duration, seek failed -- %s",
+	     mkm->filename, strerror(errno));
 
-  // Rewrite segment header to update total size
-  if(lseek(mkm->fd, mkm->segment_header_pos, SEEK_SET) == mkm->segment_header_pos) {
-    mk_write_segment_header(mkm, totsize - mkm->segment_header_pos - 12);
-  } else
-    tvhlog(LOG_ERR, "MKV", "%s: Unable to write total size, seek failed -- %s",
-	   mkm->filename, strerror(errno));
+    // Rewrite segment header to update total size
+    if(lseek(mkm->fd, mkm->segment_header_pos, SEEK_SET) == mkm->segment_header_pos) {
+      mk_write_segment_header(mkm, totsize - mkm->segment_header_pos - 12);
+    } else
+      tvhlog(LOG_ERR, "MKV", "%s: Unable to write total size, seek failed -- %s",
+	     mkm->filename, strerror(errno));
+  }
 
   close(mkm->fd);
   free(mkm->filename);
