@@ -25,6 +25,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+#include <ctype.h>
 
 #include <sys/stat.h>
 #include <sys/sendfile.h>
@@ -41,6 +43,13 @@
 #include "plumbing/globalheaders.h"
 
 struct filebundle *filebundles;
+
+/**
+ * Extension functions prototypes
+ */
+bool compare_extension(char *filename, char *extension);
+
+void remove_extension(char *filename, int extension_length);
 
 /**
  *
@@ -506,6 +515,53 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
 
 
 /**
+ * Checks if filename has the given extension.
+ */
+bool
+compare_extension(char *filename, char *extension)
+{
+    /* Sanity checks */
+
+    if(filename == NULL || extension == NULL)
+        return false;
+
+    if(strlen(filename) == 0 || strlen(extension) == 0)
+        return false;
+
+    if(strchr(filename, '.') == NULL || strchr(extension, '.') == NULL)
+        return false;
+
+    /* Iterate backwards through respective strings and compare each char one at a time */
+
+    int i;
+    for(i = 0; i < strlen(filename); i++)
+    {
+        if(tolower(filename[strlen(filename) - i - 1]) == tolower(extension[strlen(extension) - i - 1]))
+        {
+            if(i == strlen(extension) - 1)
+                return true;
+        } else
+            break;
+    }
+
+    return false;
+}
+
+
+/**
+ * Remove extension with the given length
+ */
+void remove_extension(char *filename, int extension_length)
+{
+  int filename_length = strlen(filename);
+  int i;
+  for(i = 0; i < extension_length; i++) {
+    filename[filename_length - i - 1] = 0;
+  }
+}
+
+
+/**
  * Handle the http request. http://tvheadend/stream/channelid/<chid>
  *                          http://tvheadend/stream/channel/<chname>
  *                          http://tvheadend/stream/service/<servicename>
@@ -531,12 +587,21 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
 
   http_deescape(components[1]);
 
-  if(!strcmp(components[2], "mkv")) {
-    // it's a mkv stream
+  char mkv_ext[] = ".mkv";
+  char ts_ext[] = ".ts";
+
+  if(compare_extension(components[1], mkv_ext)) {
+    // file has mkv extension, set STREAM_TYPE_MKV and remove extension
     hc->stream_type = STREAM_TYPE_MKV;
+    remove_extension(components[1], strlen(mkv_ext));
+  }
+  else if(compare_extension(components[1], ts_ext)) {
+    // file has ts extension, set STREAM_TYPE_TS and remove extension
+    hc->stream_type = STREAM_TYPE_TS;
+    remove_extension(components[1], strlen(ts_ext));
   }
   else {
-    // default to ts stream
+    // request without extension, default to TS stream (or MKV if you like)
     hc->stream_type = STREAM_TYPE_TS;
   }
 
