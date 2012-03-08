@@ -134,6 +134,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
   int run = 1;
   int start = 1;
   mk_mux_t *mkm = NULL;
+  uint32_t event_id = 0;
   int timeouts = 0;
 
   while(run) {
@@ -156,8 +157,8 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
           //Check socket status
           getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen);  
           
-          //Abort upon socket error, or after 5 seconds of silence
-          if(err || timeouts > 4){
+          //Abort upon socket error, or after 20 seconds of silence
+          if(err || timeouts >= 20){
             run = 0;            
           }
       }
@@ -169,7 +170,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
     TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
 
     switch(sm->sm_type) {
-    case SMT_PACKET:
+    case SMT_PACKET: {
       if(hc->stream_type == STREAM_TYPE_MKV) {
         if(!mkm)
 	  break;
@@ -177,23 +178,33 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
         pkt_ref_inc(sm->sm_data);
         run = !mk_mux_write_pkt(mkm, sm->sm_data);
         sm->sm_data = NULL;
+
+        event_t *e = NULL;
+        if(s->ths_channel)
+	  e = s->ths_channel->ch_epg_current;
+
+        if(e && event_id != e->e_id) {
+	  event_id = e->e_id;
+	  run = !mk_mux_append_meta(mkm, e);
+        }
       }
       break;
+    }
 
     case SMT_START: {
       if(hc->stream_type == STREAM_TYPE_MKV) {
         // mkv stream start
+        tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
+
         if(s->ths_service->s_servicetype == ST_RADIO)
 	  http_output_content(hc, "audio/x-matroska");
         else
 	  http_output_content(hc, "video/x-matroska");
 
-        event_t *e = NULL; //epg_event_find_by_time(s->ths_channel, dispatch_clock);
-
-        mkm = mk_mux_stream_create(hc->hc_fd, sm->sm_data, e);
+        mkm = mk_mux_stream_create(hc->hc_fd, sm->sm_data, s->ths_channel);
       }
       else {
-        // default ts stream start
+        // ts stream start
         if (start) {
 
           struct streaming_start *ss = sm->sm_data;
@@ -241,6 +252,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
       break;
 
     case SMT_NOSTART:
+      tvhlog(LOG_DEBUG, "webui",  "Couldn't start stream for %s", hc->hc_url_orig);
       run = 0;
       break;
 
