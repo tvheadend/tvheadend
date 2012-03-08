@@ -569,7 +569,7 @@ void remove_extension(char *filename, int extension_length)
 static int
 http_stream(http_connection_t *hc, const char *remain, void *opaque)
 {
-  char *components[3];
+  char *components[2];
   channel_t *ch = NULL;
   service_t *service = NULL;
 
@@ -580,7 +580,7 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_BAD_REQUEST;
   }
 
-  if(http_tokenize((char *)remain, components, 3, '/') < 2) {
+  if(http_tokenize((char *)remain, components, 2, '/') != 2) {
     http_error(hc, HTTP_STATUS_BAD_REQUEST);
     return HTTP_STATUS_BAD_REQUEST;
   }
