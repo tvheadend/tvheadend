@@ -255,8 +255,11 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
       break;
 
     case SMT_MPEGTS:
-      if (s->ths_flags & SUBSCRIPTION_RAW_MPEGTS)
-        run = (write(hc->hc_fd, sm->sm_data, 188) == 188);
+      if (s->ths_flags & SUBSCRIPTION_RAW_MPEGTS) {
+        streaming_tsbuf_t *tsbuf = sm->sm_data;
+        uint32_t size = tsbuf->ts_cnt * 188;
+        run = (write(hc->hc_fd, tsbuf->ts_data, size) == size);
+      }
       break;
 
     case SMT_EXIT:

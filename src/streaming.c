@@ -40,6 +40,7 @@ streaming_target_init(streaming_target_t *st, st_callback_t *cb, void *opaque,
   st->st_cb = cb;
   st->st_opaque = opaque;
   st->st_reject_filter = reject_filter;
+  st->st_clone = 1;
 }
 
 
@@ -61,14 +62,62 @@ streaming_queue_deliver(void *opauqe, streaming_message_t *sm)
 /**
  *
  */
+static void 
+streaming_queue_deliver2(void *opauqe, streaming_message_t *sm)
+{
+  streaming_queue_t *sq = opauqe;
+
+  if (sm->sm_type == SMT_MPEGTS) {
+    if (((streaming_tsbuf_t *)sm->sm_data)->ts_cnt == 1) {
+      streaming_tsbuf_t *tsbuf = sq->sq_tsbuf;
+      if (tsbuf == NULL) {
+        sq->sq_tsbuf = tsbuf = malloc(sizeof(*tsbuf) + 100*188);
+        tsbuf->ts_data = (uint8_t *)tsbuf + sizeof(*tsbuf);
+        tsbuf->ts_cnt = 0;
+      }
+      memcpy(tsbuf->ts_data + tsbuf->ts_cnt * 188,
+                        ((streaming_tsbuf_t *)sm->sm_data)->ts_data, 188);
+      tsbuf->ts_cnt++;
+      if (tsbuf->ts_cnt < 100)
+        return;
+      sm = NULL;
+    } else {
+      sm = streaming_msg_clone(sm);
+    }
+  }
+  if (sq->sq_tsbuf) {
+    streaming_message_t *sm2 = streaming_msg_create_data(SMT_MPEGTS, sq->sq_tsbuf);
+    sq->sq_tsbuf = NULL;
+    pthread_mutex_lock(&sq->sq_mutex);
+    TAILQ_INSERT_TAIL(&sq->sq_queue, sm2, sm_link);
+    goto insert;
+  }
+  pthread_mutex_lock(&sq->sq_mutex);
+insert:
+  if (sm != NULL)
+    TAILQ_INSERT_TAIL(&sq->sq_queue, sm, sm_link);
+  pthread_cond_signal(&sq->sq_cond);
+  pthread_mutex_unlock(&sq->sq_mutex);
+}
+
+
+/**
+ *
+ */
 void
 streaming_queue_init(streaming_queue_t *sq, int reject_filter)
 {
-  streaming_target_init(&sq->sq_st, streaming_queue_deliver, sq, reject_filter);
+  if ((reject_filter & SMT_TO_MASK(SMT_PACKET)) == 0) {
+    streaming_target_init(&sq->sq_st, streaming_queue_deliver, sq, reject_filter);
+  } else {
+    streaming_target_init(&sq->sq_st, streaming_queue_deliver2, sq, reject_filter);
+    sq->sq_st.st_clone = 0;
+  }
 
   pthread_mutex_init(&sq->sq_mutex, NULL);
   pthread_cond_init(&sq->sq_cond, NULL);
   TAILQ_INIT(&sq->sq_queue);
+  sq->sq_tsbuf = NULL;
 }
 
 
@@ -81,6 +130,8 @@ streaming_queue_deinit(streaming_queue_t *sq)
   streaming_queue_clear(&sq->sq_queue);
   pthread_mutex_destroy(&sq->sq_mutex);
   pthread_cond_destroy(&sq->sq_cond);
+  if (sq->sq_tsbuf)
+    free(sq->sq_tsbuf);
 }
 
 
@@ -191,9 +242,17 @@ streaming_msg_clone(streaming_message_t *src)
   case SMT_EXIT:
     break;
 
-  case SMT_MPEGTS:
-    dst->sm_data = malloc(188);
-    memcpy(dst->sm_data, src->sm_data, 188);
+  case SMT_MPEGTS: {
+      streaming_tsbuf_t *src_tsbuf = src->sm_data;
+      streaming_tsbuf_t *dst_tsbuf;
+      uint32_t size = src_tsbuf->ts_cnt * 188;
+      
+      dst_tsbuf = dst->sm_data = malloc(sizeof(*dst_tsbuf) + size);
+      dst_tsbuf->ts_cnt = src_tsbuf->ts_cnt;
+      dst_tsbuf->ts_data = (uint8_t *)dst_tsbuf + sizeof(*dst_tsbuf);
+      
+      memcpy(dst_tsbuf->ts_data, src_tsbuf->ts_data, size);
+    }
     break;
 
   default:
@@ -285,7 +344,10 @@ streaming_pad_deliver(streaming_pad_t *sp, streaming_message_t *sm)
     next = LIST_NEXT(st, st_link);
     if(st->st_reject_filter & SMT_TO_MASK(sm->sm_type))
       continue;
-    st->st_cb(st->st_opaque, streaming_msg_clone(sm));
+    if (st->st_clone || sm->sm_type != SMT_MPEGTS)
+      st->st_cb(st->st_opaque, streaming_msg_clone(sm));
+    else
+      st->st_cb(st->st_opaque, sm);
   }
 }
 

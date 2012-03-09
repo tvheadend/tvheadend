@@ -258,6 +258,8 @@ subscription_input(void *opauqe, streaming_message_t *sm)
   }
 
   if(s->ths_state != SUBSCRIPTION_GOT_SERVICE) {
+    if (!s->ths_input.st_clone && sm->sm_type == SMT_MPEGTS)
+      return;
     streaming_msg_free(sm);
     return;
   }
@@ -295,6 +297,8 @@ subscription_create(int weight, const char *name, streaming_target_t *st,
 
   streaming_target_init(&s->ths_input, direct ? subscription_input_direct : 
 			subscription_input, s, reject);
+  if (flags & SUBSCRIPTION_RAW_MPEGTS)
+    s->ths_input.st_clone = 0;  
 
   s->ths_weight            = weight;
   s->ths_title             = strdup(name);

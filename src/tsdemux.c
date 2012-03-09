@@ -281,11 +281,14 @@ ts_recv_packet2(service_t *t, const uint8_t *tsb)
 static void
 ts_remux(service_t *t, const uint8_t *src)
 {
-  uint8_t tsb[188];
-  memcpy(tsb, src, 188);
+  streaming_tsbuf_t *tsbuf = alloca(sizeof(*tsbuf) + 188);
+
+  tsbuf->ts_cnt = 1;
+  tsbuf->ts_data = (uint8_t *)tsbuf + sizeof(*tsbuf);
+  memcpy(tsbuf->ts_data, src, 188);
 
   streaming_message_t sm;
   sm.sm_type = SMT_MPEGTS;
-  sm.sm_data = tsb;
+  sm.sm_data = tsbuf;
   streaming_pad_deliver(&t->s_streaming_pad, &sm);
 }
