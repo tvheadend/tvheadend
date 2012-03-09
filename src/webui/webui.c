@@ -410,7 +410,7 @@ http_stream_service(http_connection_t *hc, service_t *service,
   streaming_target_t *gh = NULL;
   streaming_target_t *tsfix = NULL;
 
-  streaming_queue_init(&sq, mkv ? 0 : ~SMT_TO_MASK(SUBSCRIPTION_RAW_MPEGTS));
+  streaming_queue_init(&sq, mkv ? 0 : SMT_TO_MASK(SMT_PACKET));
   if (mkv) {
     gh = globalheaders_create(&sq.sq_st);
     tsfix = tsfix_create(gh);
@@ -451,7 +451,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int mkv)
   streaming_target_t *tsfix = NULL;
   int priority = 100;
 
-  streaming_queue_init(&sq, mkv ? 0 : ~SMT_TO_MASK(SUBSCRIPTION_RAW_MPEGTS));
+  streaming_queue_init(&sq, mkv ? 0 : SMT_TO_MASK(SMT_PACKET));
   if (mkv) {
     gh = globalheaders_create(&sq.sq_st);
     tsfix = tsfix_create(gh);
