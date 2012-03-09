@@ -190,6 +190,20 @@ typedef struct audio_filter {
 /**
  *
  */
+typedef struct subtitle_filter {
+
+  TAILQ_ENTRY(subtitle_filter) sf_link;
+
+  /**
+   * language 3-byte code
+   */
+  char sf_lang[4];
+
+} subtitle_filter_t;
+
+/**
+ *
+ */
 typedef struct service {
 
   LIST_ENTRY(service) s_hash_link;
@@ -598,5 +612,6 @@ void service_set_dvb_eit_enable(service_t *t, int dvb_eit_enable);
 
 void service_audio_filter_init(void);
 int service_audio_filter_add(int flags, const char *lang);
+int service_subtitle_filter_add(const char *lang);
 
 #endif // SERVICE_H__

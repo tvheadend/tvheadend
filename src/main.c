@@ -169,6 +169,7 @@ usage(const char *argv0)
   printf(" -s              Log debug to syslog\n");
   printf(" -l <lngcode>    Add the language filter for audio streams\n");
   printf("                 Use '+' prefix to prefer only AC3/AAC streams\n");
+  printf(" -t <lngcode>    Add the subtitle filter\n");
   printf("\n");
   printf("Development options\n");
   printf("\n");
@@ -252,7 +253,7 @@ main(int argc, char **argv)
   tzset();
   service_audio_filter_init();
 
-  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:sl:")) != -1) {
+  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:sl:t:")) != -1) {
     switch(c) {
     case 'a':
       adapter_mask = 0x0;
@@ -313,6 +314,9 @@ main(int argc, char **argv)
       } else {
         service_audio_filter_add(0, optarg);
       }
+      break;
+    case 't':
+      service_subtitle_filter_add(optarg);
       break;
     default:
       usage(argv[0]);

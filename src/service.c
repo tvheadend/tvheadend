@@ -52,6 +52,7 @@
 
 static struct service_list servicehash[SERVICE_HASH_WIDTH];
 static TAILQ_HEAD(, audio_filter) audio_filters;
+static TAILQ_HEAD(, subtitle_filter) subtitle_filters;
 
 static void service_data_timeout(void *aux);
 
@@ -908,8 +909,31 @@ all_audio:
       goto all_audio;
   }
 
+  if (TAILQ_EMPTY(&subtitle_filters)) {
+all_subtitles:
+    TAILQ_FOREACH(st, &t->s_components, es_link)
+      if (SCT_ISDVBSUB(st->es_type))
+        ss_copy_info(ss, st);
+  } else {
+    int streams = 0;
+    subtitle_filter_t *subf;
+
+    TAILQ_FOREACH(subf, &subtitle_filters, sf_link) {
+      TAILQ_FOREACH(st, &t->s_components, es_link) {
+        if (memcmp(st->es_lang, subf->sf_lang, 4) == 0) {
+          ss_copy_info(ss, st);
+          streams++;
+        }
+      }
+    }
+    /* no preferred streams found.. insert all */
+    if (!streams)
+      goto all_subtitles;
+  }
+
   TAILQ_FOREACH(st, &t->s_components, es_link)
-    if (!SCT_ISVIDEO(st->es_type) && !SCT_ISAUDIO(st->es_type))
+    if (!SCT_ISVIDEO(st->es_type) && !SCT_ISAUDIO(st->es_type) &&
+        !SCT_ISDVBSUB(st->es_type))
       ss_copy_info(ss, st);
 
   t->s_setsourceinfo(t, &ss->ss_si);
@@ -1161,12 +1185,13 @@ service_get_signal_status(service_t *t, signal_status_t *status)
 }
 
 /*
- * Init the audio filter list
+ * Init the audio/subtitle filter list
  */
 void
 service_audio_filter_init(void)
 {
   TAILQ_INIT(&audio_filters);
+  TAILQ_INIT(&subtitle_filters);
 }
 
 /*
@@ -1182,6 +1207,22 @@ service_audio_filter_add(int flags, const char *lang)
   af->af_flags = flags;
   strncpy(af->af_lang, lang, 4);
   TAILQ_INSERT_TAIL(&audio_filters, af, af_link);
+
+  return 0;
+}
+
+/*
+ * Add an entry to the subtitle filter list
+ */
+int
+service_subtitle_filter_add(const char *lang)
+{
+  subtitle_filter_t *sf = calloc(1, sizeof(subtitle_filter_t));
+  
+  if (sf == NULL)
+    return -1;
+  strncpy(sf->sf_lang, lang, 4);
+  TAILQ_INSERT_TAIL(&subtitle_filters, sf, sf_link);
 
   return 0;
 }
