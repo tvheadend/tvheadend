@@ -381,7 +381,7 @@ http_dvrs_playlist (http_connection_t * hc)
 	  bandwidth = ((8 * fsize) / (durration * 1024.0));
 
 	  htsbuf_qprintf (hq, "#EXTM3U\n");
-	  htsbuf_qprintf (hq, "#EXTINF:%d,%s\n", durration, de->de_title);
+	  htsbuf_qprintf (hq, "#EXTINF:%d,%s\n", durration, de->de_ititle);
 
 	  tp = localtime (&(de->de_start));
 	  dim = strftime (start_time, 100, "%FT%T%z", tp);
