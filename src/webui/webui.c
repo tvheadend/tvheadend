@@ -376,11 +376,12 @@ http_stream_service(http_connection_t *hc, service_t *service)
 
   pthread_mutex_unlock(&global_lock);
 
-  http_stream_run(hc, &sq, s);
-
-  pthread_mutex_lock(&global_lock);
-  subscription_unsubscribe(s);
-  pthread_mutex_unlock(&global_lock);
+  if(s) {
+    http_stream_run(hc, &sq, s);
+    pthread_mutex_lock(&global_lock);
+    subscription_unsubscribe(s);
+    pthread_mutex_unlock(&global_lock);
+  }
 
   globalheaders_destroy(gh);
   tsfix_destroy(tsfix);
@@ -411,11 +412,12 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
                                        0);
   pthread_mutex_unlock(&global_lock);
 
-  http_stream_run(hc, &sq, s);
-
-  pthread_mutex_lock(&global_lock);
-  subscription_unsubscribe(s);
-  pthread_mutex_unlock(&global_lock);
+  if(s) {
+    http_stream_run(hc, &sq, s);
+    pthread_mutex_lock(&global_lock);
+    subscription_unsubscribe(s);
+    pthread_mutex_unlock(&global_lock);
+  }
 
   globalheaders_destroy(gh);
   tsfix_destroy(tsfix);
