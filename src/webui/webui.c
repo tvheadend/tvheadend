@@ -155,9 +155,10 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
 
           //Check socket status
           getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen);  
-          
-          //Abort upon socket error, or after 20 seconds of silence
-          if(err || timeouts >= 20) {
+          if(err) {
+	    tvhlog(LOG_DEBUG, "webui",  "Client hung up, exit streaming");
+	    run = 0;
+          }else if(timeouts >= 20) {
 	    tvhlog(LOG_WARNING, "webui",  "Timeout waiting for packets");
 	    run = 0;
           }
