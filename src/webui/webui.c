@@ -168,6 +168,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
 
     timeouts = 0; //Reset timeout counter
     TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
+    pthread_mutex_unlock(&sq->sq_mutex);
 
     switch(sm->sm_type) {
     case SMT_PACKET: {
@@ -220,7 +221,6 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
       break;
     }
     streaming_msg_free(sm);
-    pthread_mutex_unlock(&sq->sq_mutex);
   }
 
   if(mkm)
