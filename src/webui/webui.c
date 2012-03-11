@@ -175,7 +175,6 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
       if(!mkm)
 	break;
 
-      pkt_ref_inc(sm->sm_data);
       run = !mk_mux_write_pkt(mkm, sm->sm_data);
       sm->sm_data = NULL;
 
