@@ -274,6 +274,9 @@ epg_event_destroy(event_t *e)
 {
   free(e->e_title);
   free(e->e_desc);
+  free(e->e_ext_desc);
+  free(e->e_ext_item);
+  free(e->e_ext_text);
   free(e->e_episode.ee_onscreen);
   LIST_REMOVE(e, e_global_link);
   free(e);
