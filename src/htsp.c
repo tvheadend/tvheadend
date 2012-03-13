@@ -1527,7 +1527,7 @@ const static char frametypearray[PKT_NTYPES] = {
 static void
 htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 {
-  htsmsg_t *m = htsmsg_create_map(), *n;
+  htsmsg_t *m, *n;
   htsp_msg_t *hm;
   htsp_connection_t *htsp = hs->hs_htsp;
   int64_t ts;
@@ -1543,6 +1543,8 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
     pkt_ref_dec(pkt);
     return;
   }
+
+  m = htsmsg_create_map();
  
   htsmsg_add_str(m, "method", "muxpkt");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
