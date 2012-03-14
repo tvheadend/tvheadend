@@ -856,6 +856,10 @@ epg_query0(epg_query_result_t *eqr, channel_t *ch, channel_tag_t *ct,
 
   RB_FOREACH(ch, &channel_name_tree, ch_name_link)
     epg_query_add_channel(eqr, ch, content_type, preg, now);
+    
+  if(preg != NULL) {
+  	regfree(preg);
+  }
 }
 
 /**
