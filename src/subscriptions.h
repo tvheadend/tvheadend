@@ -20,6 +20,7 @@
 #define SUBSCRIPTIONS_H
 
 #define SUBSCRIPTION_RAW_MPEGTS 0x1
+#define SUBSCRIPTION_PMT 0x1
 
 typedef struct th_subscription {
   LIST_ENTRY(th_subscription) ths_global_link;
@@ -77,7 +78,7 @@ th_subscription_t *subscription_create_from_channel(struct channel *ch,
 th_subscription_t *subscription_create_from_service(struct service *t,
 						    const char *name,
 						    streaming_target_t *st,
-						    int flags);
+						    int flags, int direct);
 
 void subscription_change_weight(th_subscription_t *s, int weight);
 

@@ -309,12 +309,18 @@ typedef struct streaming_target {
   st_callback_t *st_cb;
   void *st_opaque;
   int st_reject_filter;
+  int st_clone;
 } streaming_target_t;
 
 
 /**
  *
  */
+typedef struct streaming_tsbuf {
+  uint32_t ts_cnt;
+  uint8_t *ts_data;
+} streaming_tsbuf_t;
+
 typedef struct streaming_queue {
   
   streaming_target_t sq_st;
@@ -324,6 +330,8 @@ typedef struct streaming_queue {
 					    packets */
   
   struct streaming_message_queue sq_queue;
+  
+  streaming_tsbuf_t *sq_tsbuf;
 
 } streaming_queue_t;
 
