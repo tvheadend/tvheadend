@@ -835,8 +835,10 @@ epg_query0(epg_query_result_t *eqr, channel_t *ch, channel_tag_t *ct,
   time(&now);
 
   if(title != NULL) {
-    if(regcomp(&preg0, title, REG_ICASE | REG_EXTENDED | REG_NOSUB))
+    if(regcomp(&preg0, title, REG_ICASE | REG_EXTENDED | REG_NOSUB)) {
+      regfree(&preg0);
       return;
+    }
     preg = &preg0;
   } else {
     preg = NULL;
@@ -844,6 +846,8 @@ epg_query0(epg_query_result_t *eqr, channel_t *ch, channel_tag_t *ct,
 
   if(ch != NULL && ct == NULL) {
     epg_query_add_channel(eqr, ch, content_type, preg, now);
+    if(preg != NULL)
+      regfree(&preg0);
     return;
   }
   
@@ -851,11 +855,16 @@ epg_query0(epg_query_result_t *eqr, channel_t *ch, channel_tag_t *ct,
     LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
       if(ch == NULL || ctm->ctm_channel == ch)
 	epg_query_add_channel(eqr, ctm->ctm_channel, content_type, preg, now);
+    if(preg != NULL)
+      regfree(&preg0);
     return;
   }
 
   RB_FOREACH(ch, &channel_name_tree, ch_name_link)
     epg_query_add_channel(eqr, ch, content_type, preg, now);
+
+  if(preg != NULL)
+    regfree(&preg0);
 }
 
 /**
