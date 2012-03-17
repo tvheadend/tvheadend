@@ -135,6 +135,16 @@ SRCS-$(CONFIG_AVAHI) += src/avahi.c
 ${BUILDDIR}/src/avahi.o : CFLAGS = \
                       $(shell pkg-config --cflags avahi-client) -Wall -Werror
 
+#
+# Transcoder
+#
+
+SRCS-$(CONFIG_TRANSCODER) += src/plumbing/transcode.c
+
+#${BUILDDIR}/src/plumbing/transcode.o : CFLAGS = \
+#                      $(shell pkg-config --cflags libavcode libcwscale) -Wall -Werror
+
+
 # Various transformations
 SRCS  += $(SRCS-yes)
 DLIBS += $(DLIBS-yes)

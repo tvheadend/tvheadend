@@ -341,6 +341,7 @@ typedef struct sbuf {
 
 
 const char *streaming_component_type2txt(streaming_component_type_t s);
+streaming_component_type_t streaming_component_txt2type(const char *str);
 
 static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 {

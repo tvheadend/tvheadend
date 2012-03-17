@@ -39,6 +39,8 @@
 #include "streaming.h"
 #include "psi.h"
 #include "htsmsg_binary.h"
+#include "plumbing/transcode.h"
+#include "plumbing/tsfix.h"
 
 #include <sys/statvfs.h>
 #include "settings.h"
@@ -156,6 +158,11 @@ typedef struct htsp_subscription {
 
   streaming_target_t hs_input;
 
+#ifdef CONFIG_TRANSCODER
+  streaming_target_t *hs_transcoder;
+  streaming_target_t *hs_tsfix;
+#endif
+
   htsp_msg_q_t hs_q;
 
   time_t hs_last_report; /* Last queue status report sent */
@@ -236,6 +243,12 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
 {
   LIST_REMOVE(hs, hs_link);
   subscription_unsubscribe(hs->hs_s);
+#ifdef CONFIG_TRANSCODER
+  if(hs->hs_transcoder != NULL)
+    transcoder_destroy(hs->hs_transcoder);
+  if(hs->hs_tsfix != NULL)
+    tsfix_destroy(hs->hs_tsfix);
+#endif
   htsp_flush_queue(htsp, &hs->hs_q);
   free(hs);
 }
@@ -832,6 +845,36 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
   return out;
 }
 
+
+/**
+ * Get information about the client network speed
+ */
+static htsmsg_t *
+htsp_method_feedback(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsp_subscription_t *s;
+  uint32_t sid, speed;
+
+  if(htsmsg_get_u32(in, "subscriptionId", &sid))
+    return htsp_error("Missing argument 'subscriptionId'");
+
+  LIST_FOREACH(s, &htsp->htsp_subscriptions, hs_link)
+    if(s->hs_sid == sid)
+      break;
+
+  if(htsmsg_get_u32(in, "speed", &speed))
+    return htsp_error("Missing argument 'speed'");
+  
+#ifdef CONFIG_TRANSCODER
+  if(s != NULL)
+    transcoder_set_network_speed(s->hs_transcoder, speed);
+#endif
+
+  return NULL;
+}
+
+
+
 /**
  * Get total and free disk space on configured path
  */
@@ -880,6 +923,8 @@ static htsmsg_t *
 htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 {
   uint32_t chid, sid, weight;
+  uint32_t  max_width, max_height;
+  streaming_component_type_t acodec, vcodec;
   channel_t *ch;
   htsp_subscription_t *hs;
 
@@ -893,6 +938,11 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("Requested channel does not exist");
 
   weight = htsmsg_get_u32_or_default(in, "weight", 150);
+
+  max_width = htsmsg_get_u32_or_default(in, "maxWidth", 0);
+  max_height = htsmsg_get_u32_or_default(in, "maxHeight", 0);
+  vcodec = streaming_component_txt2type(htsmsg_get_str(in, "videoCodec"));
+  acodec = streaming_component_txt2type(htsmsg_get_str(in, "audioCodec"));
 
   /*
    * We send the reply now to avoid the user getting the 'subscriptionStart'
@@ -911,9 +961,23 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
   streaming_target_init(&hs->hs_input, htsp_streaming_input, hs, 0);
 
+#ifdef CONFIG_TRANSCODER
+  if(max_width && max_height) {
+    hs->hs_transcoder = transcoder_create(&hs->hs_input, 
+					  max_width, 
+					  max_height,
+					  vcodec,
+					  acodec);
+    hs->hs_tsfix = tsfix_create(hs->hs_transcoder);
+  }
+  hs->hs_s = subscription_create_from_channel(ch, weight,
+					      htsp->htsp_logname,
+					      hs->hs_tsfix ?: &hs->hs_input, 0);
+#else
   hs->hs_s = subscription_create_from_channel(ch, weight,
 					      htsp->htsp_logname,
 					      &hs->hs_input, 0);
+#endif
   return NULL;
 }
 
@@ -1065,7 +1129,7 @@ struct {
   { "deleteDvrEntry", htsp_method_deleteDvrEntry, ACCESS_RECORDER},
   { "epgQuery", htsp_method_epgQuery, ACCESS_STREAMING},
   { "getTicket", htsp_method_getTicket, ACCESS_STREAMING},
-
+  { "feedback", htsp_method_feedback, ACCESS_STREAMING},
 };
 
 #define NUM_METHODS (sizeof(htsp_methods) / sizeof(htsp_methods[0]))

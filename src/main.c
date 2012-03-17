@@ -52,6 +52,7 @@
 #include "htsp.h"
 #include "rawtsinput.h"
 #include "avahi.h"
+#include "plumbing/transcode.h"
 #include "iptv_input.h"
 #include "service.h"
 #include "v4l.h"
@@ -384,6 +385,9 @@ main(int argc, char **argv)
   iptv_input_init();
 #if ENABLE_V4L
   v4l_init();
+#endif
+#ifdef CONFIG_TRANSCODER
+  transcoder_init();
 #endif
   http_server_init();
 

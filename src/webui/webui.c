@@ -39,8 +39,11 @@
 #include "psi.h"
 #include "plumbing/tsfix.h"
 #include "plumbing/globalheaders.h"
+#include "plumbing/transcode.h"
 
 struct filebundle *filebundles;
+
+#define ATOI(x, y) x ? atoi(x) : y;
 
 /**
  *
@@ -368,6 +371,36 @@ http_stream_service(http_connection_t *hc, service_t *service)
 
   streaming_queue_init(&sq, 0);
   gh = globalheaders_create(&sq.sq_st);
+#ifdef CONFIG_TRANSCODER
+  streaming_target_t *tr = NULL;
+  int transcode = ATOI(http_arg_get(&hc->hc_req_args, "transcode"), 0);
+  int width = ATOI(http_arg_get(&hc->hc_req_args, "width"), 480);
+  int height = ATOI(http_arg_get(&hc->hc_req_args, "height"), 384);
+  streaming_component_type_t vcodec = streaming_component_txt2type(http_arg_get(&hc->hc_req_args, "vcodec"));
+  streaming_component_type_t acodec = streaming_component_txt2type(http_arg_get(&hc->hc_req_args, "acodec"));
+
+  width = MIN(width, 576);
+  height = MIN(height, 480);
+
+  width = MAX(width, 144);
+  height = MAX(height, 120);
+
+  if(!SCT_ISVIDEO(vcodec))
+    vcodec = SCT_MPEG2VIDEO;
+
+  if(!SCT_ISAUDIO(acodec))
+    acodec = SCT_MPEG2AUDIO;
+
+  if(transcode)
+    tr = transcoder_create(gh, 
+                          width, 
+                          height,
+                          vcodec,
+                          acodec);
+  if(tr)
+    tsfix = tsfix_create(tr);
+  else
+#endif
   tsfix = tsfix_create(gh);
 
   pthread_mutex_lock(&global_lock);
@@ -405,6 +438,36 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
 
   streaming_queue_init(&sq, 0);
   gh = globalheaders_create(&sq.sq_st);
+#ifdef CONFIG_TRANSCODER
+  streaming_target_t *tr = NULL;
+  int transcode = ATOI(http_arg_get(&hc->hc_req_args, "transcode"), 0);
+  int width = ATOI(http_arg_get(&hc->hc_req_args, "width"), 480);
+  int height = ATOI(http_arg_get(&hc->hc_req_args, "height"), 384);
+  streaming_component_type_t vcodec = streaming_component_txt2type(http_arg_get(&hc->hc_req_args, "vcodec"));
+  streaming_component_type_t acodec = streaming_component_txt2type(http_arg_get(&hc->hc_req_args, "acodec"));
+
+  width = MIN(width, 576);
+  height = MIN(height, 480);
+
+  width = MAX(width, 144);
+  height = MAX(height, 120);
+
+  if(!SCT_ISVIDEO(vcodec))
+    vcodec = SCT_MPEG2VIDEO;
+
+  if(!SCT_ISAUDIO(acodec))
+    acodec = SCT_MPEG2AUDIO;
+
+  if(transcode)
+    tr = transcoder_create(gh, 
+                          width, 
+                          height,
+                          vcodec,
+                          acodec);
+  if(tr)
+    tsfix = tsfix_create(tr);
+  else
+#endif
   tsfix = tsfix_create(gh);
 
   pthread_mutex_lock(&global_lock);
@@ -421,6 +484,10 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   }
 
   globalheaders_destroy(gh);
+#ifdef CONFIG_TRANSCODER
+  if(tr)
+    transcoder_destroy(tr);
+#endif
   tsfix_destroy(tsfix);
   streaming_queue_deinit(&sq);
 
