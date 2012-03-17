@@ -329,7 +329,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
       ts->tctx->thread_count          = 1;
       ts->tctx->crf                   = 10;
       ts->tctx->cqp                   = -1;
-      ts->tctx->bit_rate              = 500*1000;
+      ts->tctx->bit_rate              = 2 * ts->tctx->width * ts->tctx->height;
       ts->tctx->bit_rate_tolerance    = 0;
       ts->tctx->flags                |= CODEC_FLAG_GLOBAL_HEADER;
       break;
