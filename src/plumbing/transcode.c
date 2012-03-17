@@ -540,7 +540,13 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
       ssc->ssc_aspect_num    = ssc_src->ssc_aspect_num;
       ssc->ssc_aspect_den    = ssc_src->ssc_aspect_den;
       ssc->ssc_height        = MIN(t->max_height, ssc_src->ssc_height);
+      if(ssc->ssc_height&1)
+	ssc->ssc_height++;
+
       ssc->ssc_width         = ssc->ssc_height * ((double)ssc_src->ssc_width / ssc_src->ssc_height);
+      if(ssc->ssc_width&1)
+	ssc->ssc_width++;
+
       ssc->ssc_frameduration = ssc_src->ssc_frameduration;
 
       t->ts_video.sctx->codec_type         = AVMEDIA_TYPE_VIDEO;
