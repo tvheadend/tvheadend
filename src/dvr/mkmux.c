@@ -810,9 +810,12 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track *t, th_pkt_t *pkt)
   int skippable = pkt->pkt_frametype == PKT_B_FRAME;
   int vkeyframe = SCT_ISVIDEO(t->type) && keyframe;
 
-  uint8_t *data;
-  size_t len;
+  uint8_t *data = pktbuf_ptr(pkt->pkt_payload);
+  size_t len = pktbuf_len(pkt->pkt_payload);
   const int clusersizemax = 2000000;
+
+  if(!data || len <= 0)
+    return;
 
   if(pts == PTS_UNSET)
     // This is our best guess, it might be wrong but... oh well
@@ -862,10 +865,6 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track *t, th_pkt_t *pkt)
     mkm->addcue = 0;
     addcue(mkm, pts, t->tracknum);
   }
-
-
-  data = pktbuf_ptr(pkt->pkt_payload);
-  len  = pktbuf_len(pkt->pkt_payload);
 
   if(t->type == SCT_AAC || t->type == SCT_MP4A) {
     // Skip ADTS header

@@ -174,7 +174,7 @@ access_verify(const char *username, const char *password,
 
     if(ae->ae_username[0] != '*') {
       /* acl entry requires username to match */
-      if(username == NULL)
+      if(username == NULL || password == NULL)
 	continue; /* Didn't get one */
 
       if(strcmp(ae->ae_username, username) ||

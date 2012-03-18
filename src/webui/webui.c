@@ -165,10 +165,12 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
 
           //Check socket status
           getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen);  
-          
-          //Abort upon socket error, or after 20 seconds of silence
-          if(err || timeouts >= 20){
-            run = 0;            
+          if(err) {
+	    tvhlog(LOG_DEBUG, "webui",  "Client hung up, exit streaming");
+	    run = 0;
+          }else if(timeouts >= 20) {
+	    tvhlog(LOG_WARNING, "webui",  "Timeout waiting for packets");
+	    run = 0;
           }
       }
       pthread_mutex_unlock(&sq->sq_mutex);
@@ -177,24 +179,24 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
 
     timeouts = 0; //Reset timeout counter
     TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
+    pthread_mutex_unlock(&sq->sq_mutex);
 
     switch(sm->sm_type) {
     case SMT_PACKET: {
       if(hc->stream_type == STREAM_TYPE_MKV) {
         if(!mkm)
-	  break;
+          break;
 
-        pkt_ref_inc(sm->sm_data);
         run = !mk_mux_write_pkt(mkm, sm->sm_data);
         sm->sm_data = NULL;
 
         event_t *e = NULL;
         if(s->ths_channel)
-	  e = s->ths_channel->ch_epg_current;
+          e = s->ths_channel->ch_epg_current;
 
         if(e && event_id != e->e_id) {
-	  event_id = e->e_id;
-	  run = !mk_mux_append_meta(mkm, e);
+          event_id = e->e_id;
+          run = !mk_mux_append_meta(mkm, e);
         }
       }
       break;
@@ -276,7 +278,6 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
       break;
     }
     streaming_msg_free(sm);
-    pthread_mutex_unlock(&sq->sq_mutex);
   }
   
   if(hc->stream_type == STREAM_TYPE_MKV) {
@@ -450,11 +451,12 @@ http_stream_service(http_connection_t *hc, service_t *service)
     http_output_content(hc, "video/mp2t");
   }
 
-  http_stream_run(hc, &sq, s);
-
-  pthread_mutex_lock(&global_lock);
-  subscription_unsubscribe(s);
-  pthread_mutex_unlock(&global_lock);
+  if(s) {
+    http_stream_run(hc, &sq, s);
+    pthread_mutex_lock(&global_lock);
+    subscription_unsubscribe(s);
+    pthread_mutex_unlock(&global_lock);
+  }
 
   if(hc->stream_type == STREAM_TYPE_MKV) {
     globalheaders_destroy(gh);
@@ -498,11 +500,12 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
 
   pthread_mutex_unlock(&global_lock);
 
-  http_stream_run(hc, &sq, s);
-
-  pthread_mutex_lock(&global_lock);
-  subscription_unsubscribe(s);
-  pthread_mutex_unlock(&global_lock);
+  if(s) {
+    http_stream_run(hc, &sq, s);
+    pthread_mutex_lock(&global_lock);
+    subscription_unsubscribe(s);
+    pthread_mutex_unlock(&global_lock);
+  }
 
   if(hc->stream_type == STREAM_TYPE_MKV) {
     globalheaders_destroy(gh);
