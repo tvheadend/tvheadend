@@ -40,7 +40,6 @@
  */
 typedef struct tt_mag {
   int ttm_curpage;
-  int ttm_inactive;
   int64_t ttm_current_pts;
   uint8_t ttm_lang;
   uint8_t ttm_page[23*40 + 1];
@@ -397,8 +396,7 @@ tt_decode_line(service_t *t, elementary_stream_t *st, uint8_t *buf)
   case 0:
     if(ttm->ttm_curpage != 0) {
 
-      if(ttm->ttm_inactive == 0)
-	tt_subtitle_deliver(t, st, ttm);
+      tt_subtitle_deliver(t, st, ttm);
 
       if(ttm->ttm_curpage == 192)
 	teletext_rundown_copy(ttp, ttm);
@@ -429,11 +427,9 @@ tt_decode_line(service_t *t, elementary_stream_t *st, uint8_t *buf)
       teletext_rundown_scan(t, ttp);
 
     ttm->ttm_current_pts = t->s_current_pts;
-    ttm->ttm_inactive = 0;
     break;
 
   case 1 ... 23:
-    ttm->ttm_inactive = 0;
     for(i = 0; i < 40; i++) {
       c = buf[i + 2] & 0x7f;
       ttm->ttm_page[i + 40 * (line - 1)] = c;
@@ -442,30 +438,6 @@ tt_decode_line(service_t *t, elementary_stream_t *st, uint8_t *buf)
 
   default:
     break;
-  }
-}
-
-
-
-
-/**
- *
- */
-static void
-teletext_scan_stream(service_t *t, elementary_stream_t *st)
-{
-  tt_private_t *ttp = st->es_priv;
-  tt_mag_t *ttm;
-  int i;
-
-  if(ttp == NULL)
-    return;
-  for(i = 0; i < 8; i++) {
-    ttm = &ttp->ttp_mags[i];
-    ttm->ttm_inactive++;
-    if(ttm->ttm_inactive == 2) {
-      tt_subtitle_deliver(t, st, ttm);
-    }
   }
 }
 
@@ -489,7 +461,6 @@ teletext_input(service_t *t, elementary_stream_t *st, const uint8_t *tsb)
     }
     x += 46;
   }
-  teletext_scan_stream(t, st);
 }
 
 
