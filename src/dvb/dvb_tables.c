@@ -411,9 +411,13 @@ dvb_desc_extended_event(uint8_t *ptr, int len,
     if ((desclen - strlen(desc)) > 2)
     {
       /* get description -> append to desc if space left */
-      strncat(desc, "\n", 1);
-      strncat(desc, (char*)(items+1), 
-          items[0] > (desclen - strlen(desc)) ? (desclen - strlen(desc)) : items[0]);
+      if (desc[0] != '\0')
+        strncat(desc, "\n", 1);
+      if((r = dvb_get_string_with_len(desc + strlen(desc),
+                                      desclen - strlen(desc),
+                                      items, (localptr + count) - items,
+                                      dvb_default_charset)) < 0)
+        return -1;
     }
 
     items += 1 + items[0];
@@ -422,9 +426,13 @@ dvb_desc_extended_event(uint8_t *ptr, int len,
     if ((itemlen - strlen(item)) > 2)
     {
       /* get item -> append to item if space left */
-      strncat(item, "\n", 1);
-      strncat(item, (char*)(items+1), 
-          items[0] > (itemlen - strlen(item)) ? (itemlen - strlen(item)) : items[0]);
+      if (item[0] != '\0')
+        strncat(item, "\n", 1);
+      if((r = dvb_get_string_with_len(item + strlen(item),
+                                      itemlen - strlen(item),
+                                      items, (localptr + count) - items,
+                                      dvb_default_charset)) < 0)
+        return -1;
     }
 
     /* go to next item */
