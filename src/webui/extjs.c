@@ -794,12 +794,13 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     if (http_access_verify(hc, ACCESS_RECORDER_ALL)) {
       config_name = NULL;
       LIST_FOREACH(cfg, &dvrconfigs, config_link) {
-        if (strcmp(cfg->dvr_config_name, hc->hc_username) == 0) {
+        if (cfg->dvr_config_name && hc->hc_username &&
+            strcmp(cfg->dvr_config_name, hc->hc_username) == 0) {
           config_name = cfg->dvr_config_name;
           break;
         }
       }
-      if (config_name == NULL)
+      if (config_name == NULL && hc->hc_username)
         tvhlog(LOG_INFO,"dvr","User '%s' has no dvr config with identical name, using default...", hc->hc_username);
     }
 
