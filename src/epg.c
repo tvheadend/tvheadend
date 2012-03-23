@@ -1,6 +1,6 @@
 /*
  *  Electronic Program Guide - Common functions
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas ï¿½man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -559,6 +559,132 @@ static const char *groupnames[16] = {
   [11] = "Special characteristics",
 };
 
+static const char *groupdefinition[0xFF] = {
+    /* ox1Y are Movie/Drama */
+    [0x10] = "Movie / Drama",
+    [0x11] = "Detective / Thriller",
+    [0x12] = "Adventure / Western / War",
+    [0x13] = "science fiction/fantasy/horror",
+    [0x14] = "comedy",
+    [0x15] = "soap/melodrama/folkloric",
+    [0x16] = "romance",
+    [0x17] = "serious/classical/religious/historical movie/drama",
+    [0x18] = "Drama",
+    [0x19] = "film",
+    [0x1A] = "movie",
+    [0x1B] = "comedy drama",
+    [0x1C] = "sitcom",
+    [0x1D] = "entertainment",
+    /* 0x2Y: News / Current Affairs */
+    [0x20] = "News / Current Affairs",
+    [0x21] = "news/weather report",
+    [0x22] = "news magazine",
+    [0x23] = "documentary",
+    [0x24] = "discussion/interview/debate",
+    [0x25] = "news",
+    [0x26] = "current Affairs",
+    [0x27] = "news and current affairs",
+    /*0x3Y:  Show/Game show */
+    [0x30] = "show/game show",
+    [0x31] = "game show/quiz/contest",
+    [0x32] = "variety show",
+    [0x33] = "talk show",
+    [0x34] = "game Show",
+    /*0x4Y: Sports */
+    [0x40] = "sports",
+    [0x41] = "special events",
+    [0x42] = "sports magazines",
+    [0x43] = "football/soccer",
+    [0x44] = "tennis/squash",
+    [0x45] = "team sports",
+    [0x46] = "athletics",
+    [0x47] = "motor sport",
+    [0x48] = "water sport",
+    [0x49] = "winter sports",
+    [0x4A] = "equestrian",
+    [0x4B] = "martial sports",
+    [0x4C] = "Sport",
+    /*0x5Y: Children's/Youth programmes */
+    [0x50] = "children's/youth programmes",
+    [0x51] = "pre-school children's programmes",
+    [0x52] = "entertainment programmes for 6 to 14",
+    [0x53] = "entertainment programmes for 10 to 16",
+    [0x54] = "informational/educational/school programmes",
+    [0x55] = "cartoons/puppets",
+    [0x56] = "children",
+    [0x57] = "animation",
+    /*0x6Y: Music/Ballet/Dance */
+    [0x60] = "music/ballet/dance",
+    [0x61] = "rock/pop ",
+    [0x62] = "serious music/classical music",
+    [0x63] = "folk/traditional music",
+    [0x64] = "jazz",
+    [0x65] = "musical/opera",
+    [0x66] = "ballet",
+    [0x67] = "music",
+    [0x68] = "music and arts",
+    /*0x7Y: Arts/Culture */
+    [0x70] = "arts/culture",
+    [0x71] = "performing arts",
+    [0x72] = "fine arts",
+    [0x73] = "religion",
+    [0x74] = "popular culture/traditional arts",
+    [0x75] = "literature",
+    [0x76] = "film/cinema",
+    [0x77] = "experimental film/video",
+    [0x78] = "broadcasting/press",
+    [0x79] = "new media",
+    [0x7A] = "arts/culture magazines",
+    [0x7B] = "fashion",
+    [0x7C] = "arts and culture",
+    /*0x8Y: Social/Political issues/Economics */
+    [0x80] = "social/political issues/economics",
+    [0x81] = "magazines/reports/documentary",
+    [0x82] = "economics/social advisory",
+    [0x83] = "remarkable people",
+    [0x84] = "Discussion/Debate",
+    [0x85] = "Reality",
+    [0x86] = "Soap",
+    /*0x8Y: Education/ Science/Factual topics */
+    [0x90] = "education/science/factual topics",
+    [0x91] = "nature/animals/environment",
+    [0x92] = "technology/natural sciences",
+    [0x93] = "medicine/physiology/psychology",
+    [0x94] = "foreign countries/expeditions",
+    [0x95] = "social/spiritual sciences",
+    [0x96] = "further education",
+    [0x97] = "languages",
+    [0x98] = "Education",
+    [0x99] = "sci-fi",
+    [0x9A] = "drama documentary",
+    [0x9B] = "documentary",
+    [0x9C] = "factual",
+    [0x9D] = "science",
+    [0x9E] = "religion",
+    /*0xA0: Leisure hobbies */
+    [0xA0] = "leisure hobbies",
+    [0xA1] = "tourism/travel",
+    [0xA2] = "handicraft",
+    [0xA3] = "motoring",
+    [0xA4] = "fitness & health",
+    [0xA5] = "cooking",
+    [0xA6] = "advertisement/shopping",
+    [0xA8] = "gardening",
+    [0xA9] = "transport",
+    [0xAA] = "cookery",
+    [0xAB] = "nature",
+    [0xAC] = "health",
+    [0xAD] = "home and property",
+    [0xAE] = "travel",
+    [0xAF] = "FOOD",
+    /*0xB0: Special Characteristics */
+    [0xB0] = "original language",
+    [0xB1] = "black & white",
+    [0xB2] = "unpublished",
+    [0xB3] = "live broadcast",
+    [0xB4] = "special characteristics",
+    [0xB5] = "interests",
+};
 
 /**
  *
@@ -575,13 +701,14 @@ epg_content_group_get_name(uint8_t id)
 uint8_t
 epg_content_group_find_by_name(const char *name)
 {
-  int i;
-  
-  for(i = 0; i < 16; i++) {
-    if(groupnames[i] != NULL && !strcmp(name, groupnames[i]))
-      return i;
-  }
-  return 0;
+      unsigned int i;
+      for(i = 0; i < 0xFF; i++) {
+         if(groupdefinition[i] != NULL && !strcasecmp(name, groupdefinition[i])){
+             int b = (i >> 4) & 0xF;
+             return b;
+         }
+      }
+      return 0;
 }
 
 
