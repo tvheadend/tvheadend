@@ -1134,6 +1134,9 @@ service_update(htsmsg_t *in)
 
     if((dvb_default_charset = htsmsg_get_str(c, "dvb_default_charset")) != NULL)
       service_set_dvb_default_charset(t, dvb_default_charset);
+
+    if(!htsmsg_get_u32(c, "dvb_eit_enable", &u32))
+      service_set_dvb_eit_enable(t, u32);
   }
 }
 
@@ -1186,6 +1189,7 @@ extjs_servicedetails(http_connection_t *hc,
       break;
 
     case SCT_AC3:
+    case SCT_MP4A:
     case SCT_AAC:
     case SCT_MPEG2AUDIO:
       htsmsg_add_str(c, "details", st->es_lang);
@@ -1217,6 +1221,8 @@ extjs_servicedetails(http_connection_t *hc,
 
   if(t->s_dvb_default_charset != NULL)
     htsmsg_add_str(out, "dvb_default_charset", t->s_dvb_default_charset);
+
+  htsmsg_add_u32(out, "dvb_eit_enable", t->s_dvb_eit_enable);
 
   pthread_mutex_unlock(&global_lock);
 
@@ -1460,6 +1466,9 @@ extjs_service_update(htsmsg_t *in)
 
     if((dvb_default_charset = htsmsg_get_str(c, "dvb_default_charset")) != NULL)
       service_set_dvb_default_charset(t, dvb_default_charset);
+
+    if(!htsmsg_get_u32(c, "dvb_eit_enable", &u32))
+      service_set_dvb_eit_enable(t, u32);
   }
 }
 

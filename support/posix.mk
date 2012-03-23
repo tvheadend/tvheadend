@@ -1,6 +1,6 @@
 
 INSTBIN=  ${DESTDIR}${INSTALLPREFIX}/bin
-INSTMAN=  ${DESTDIR}${INSTALLPREFIX}/share/man1
+INSTMAN=  ${DESTDIR}${INSTALLPREFIX}/share/man/man1
 INSTDBG=  ${DESTDIR}${INSTALLPREFIX}/lib/debug/bin
 MAN=man/tvheadend.1
 

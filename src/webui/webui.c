@@ -34,8 +34,11 @@
 #include "http.h"
 #include "webui.h"
 #include "dvr/dvr.h"
+#include "dvr/mkmux.h"
 #include "filebundle.h"
 #include "psi.h"
+#include "plumbing/tsfix.h"
+#include "plumbing/globalheaders.h"
 
 struct filebundle *filebundles;
 
@@ -125,15 +128,16 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
  * HTTP stream loop
  */
 static void
-http_stream_run(http_connection_t *hc, streaming_queue_t *sq)
+http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t *s)
 {
   streaming_message_t *sm;
   int run = 1;
-  int start = 1;
+  mk_mux_t *mkm = NULL;
+  uint32_t event_id = 0;
   int timeouts = 0;
-  pthread_mutex_lock(&sq->sq_mutex);
 
   while(run) {
+    pthread_mutex_lock(&sq->sq_mutex);
     sm = TAILQ_FIRST(&sq->sq_queue);
     if(sm == NULL) {      
       struct timespec ts;
@@ -151,93 +155,80 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq)
 
           //Check socket status
           getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen);  
-          
-          //Abort upon socket error, or after 5 seconds of silence
-          if(err || timeouts > 4){
-            run = 0;            
+          if(err) {
+	    tvhlog(LOG_DEBUG, "webui",  "Client hung up, exit streaming");
+	    run = 0;
+          }else if(timeouts >= 20) {
+	    tvhlog(LOG_WARNING, "webui",  "Timeout waiting for packets");
+	    run = 0;
           }
       }
+      pthread_mutex_unlock(&sq->sq_mutex);
       continue;
     }
 
     timeouts = 0; //Reset timeout counter
     TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
-
     pthread_mutex_unlock(&sq->sq_mutex);
 
     switch(sm->sm_type) {
-    case SMT_PACKET:
-      //printf("SMT_PACKET\n");
-      break;
+    case SMT_PACKET: {
+      if(!mkm)
+	break;
 
-    case SMT_START:
-      if (start) {
-        struct streaming_start *ss = sm->sm_data;
-        uint8_t pat_ts[188];
-        uint8_t pmt_ts[188];  
-        int pcrpid = ss->ss_pcr_pid;
-        int pmtpid = 0x0fff;
+      run = !mk_mux_write_pkt(mkm, sm->sm_data);
+      sm->sm_data = NULL;
 
-        http_output_content(hc, "video/mp2t");
-        
-        //Send PAT
-        memset(pat_ts, 0xff, 188);
-        psi_build_pat(NULL, pat_ts+5, 183, pmtpid);
-        pat_ts[0] = 0x47;
-        pat_ts[1] = 0x40;
-        pat_ts[2] = 0x00;
-        pat_ts[3] = 0x10;
-        pat_ts[4] = 0x00;
-        run = (write(hc->hc_fd, pat_ts, 188) == 188);
-        
-        if(!run) {
-          break;
-        }
+      event_t *e = NULL;
+      if(s->ths_channel)
+	e = s->ths_channel->ch_epg_current;
 
-        //Send PMT
-        memset(pmt_ts, 0xff, 188);
-        psi_build_pmt(ss, pmt_ts+5, 183, pcrpid);
-        pmt_ts[0] = 0x47;
-        pmt_ts[1] = 0x40 | (pmtpid >> 8);
-        pmt_ts[2] = pmtpid;
-        pmt_ts[3] = 0x10;
-        pmt_ts[4] = 0x00;
-        run = (write(hc->hc_fd, pmt_ts, 188) == 188);
-        
-        start = 0;
+      if(e && event_id != e->e_id) {
+	event_id = e->e_id;
+	run = !mk_mux_append_meta(mkm, e);
       }
       break;
+    }
 
+    case SMT_START: {
+      tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
+
+      if(s->ths_service->s_servicetype == ST_RADIO)
+	http_output_content(hc, "audio/x-matroska");
+      else
+	http_output_content(hc, "video/x-matroska");
+
+      mkm = mk_mux_stream_create(hc->hc_fd, sm->sm_data, s->ths_channel);
+      break;
+    }
     case SMT_STOP:
       run = 0;
       break;
 
     case SMT_SERVICE_STATUS:
-      //printf("SMT_TRANSPORT_STATUS\n");
       break;
 
     case SMT_NOSTART:
+      tvhlog(LOG_DEBUG, "webui",  "Couldn't start stream for %s", hc->hc_url_orig);
       run = 0;
       break;
 
     case SMT_MPEGTS:
-      run = (write(hc->hc_fd, sm->sm_data, 188) == 188);
       break;
 
     case SMT_EXIT:
       run = 0;
       break;
     }
-
     streaming_msg_free(sm);
-    pthread_mutex_lock(&sq->sq_mutex);
   }
 
-  pthread_mutex_unlock(&sq->sq_mutex);
+  if(mkm)
+    mk_mux_close(mkm);
 }
 
 /**
- * Output a playlist with http streams for a channel (.m3u format)
+ * Output a playlist with http streams for a channel (.m3u8 format)
  */
 static int
 http_stream_playlist(http_connection_t *hc, channel_t *channel)
@@ -248,7 +239,7 @@ http_stream_playlist(http_connection_t *hc, channel_t *channel)
 
   channel_t *ch = NULL;
   const char *host = http_arg_get(&hc->hc_args, "Host");
-
+  
   pthread_mutex_lock(&global_lock);
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
@@ -372,26 +363,29 @@ http_stream_service(http_connection_t *hc, service_t *service)
 {
   streaming_queue_t sq;
   th_subscription_t *s;
+  streaming_target_t *gh;
+  streaming_target_t *tsfix;
+
+  streaming_queue_init(&sq, 0);
+  gh = globalheaders_create(&sq.sq_st);
+  tsfix = tsfix_create(gh);
 
   pthread_mutex_lock(&global_lock);
-
-  streaming_queue_init(&sq, ~SMT_TO_MASK(SUBSCRIPTION_RAW_MPEGTS));
-
   s = subscription_create_from_service(service,
-                                       "HTTP", &sq.sq_st,
-                                       SUBSCRIPTION_RAW_MPEGTS);
-
+                                       "HTTP", tsfix,
+                                       0);
 
   pthread_mutex_unlock(&global_lock);
 
-  //We won't get a START command, send http-header here.
-  http_output_content(hc, "video/mp2t");
+  if(s) {
+    http_stream_run(hc, &sq, s);
+    pthread_mutex_lock(&global_lock);
+    subscription_unsubscribe(s);
+    pthread_mutex_unlock(&global_lock);
+  }
 
-  http_stream_run(hc, &sq);
-
-  pthread_mutex_lock(&global_lock);
-  subscription_unsubscribe(s);
-  pthread_mutex_unlock(&global_lock);
+  globalheaders_destroy(gh);
+  tsfix_destroy(tsfix);
   streaming_queue_deinit(&sq);
 
   return 0;
@@ -405,24 +399,29 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
 {
   streaming_queue_t sq;
   th_subscription_t *s;
-  int priority = 150; //Default value, Compute this somehow
+  streaming_target_t *gh;
+  streaming_target_t *tsfix;
+  int priority = 100;
+
+  streaming_queue_init(&sq, 0);
+  gh = globalheaders_create(&sq.sq_st);
+  tsfix = tsfix_create(gh);
 
   pthread_mutex_lock(&global_lock);
-
-  streaming_queue_init(&sq, ~SMT_TO_MASK(SUBSCRIPTION_RAW_MPEGTS));
-
   s = subscription_create_from_channel(ch, priority, 
-                                       "HTTP", &sq.sq_st,
-                                       SUBSCRIPTION_RAW_MPEGTS);
-
-
+                                       "HTTP", tsfix,
+                                       0);
   pthread_mutex_unlock(&global_lock);
 
-  http_stream_run(hc, &sq);
+  if(s) {
+    http_stream_run(hc, &sq, s);
+    pthread_mutex_lock(&global_lock);
+    subscription_unsubscribe(s);
+    pthread_mutex_unlock(&global_lock);
+  }
 
-  pthread_mutex_lock(&global_lock);
-  subscription_unsubscribe(s);
-  pthread_mutex_unlock(&global_lock);
+  globalheaders_destroy(gh);
+  tsfix_destroy(tsfix);
   streaming_queue_deinit(&sq);
 
   return 0;
@@ -569,14 +568,19 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
     sscanf(range, "bytes=%"PRId64"-%"PRId64"", &file_start, &file_end);
 
   //Sanity checks
-  if(file_start < 0 || file_start >= st.st_size)
+  if(file_start < 0 || file_start >= st.st_size) {
+    close(fd);
     return 200;
+  }
+  if(file_end < 0 || file_end >= st.st_size) {
+    close(fd);
+    return 200;
+  }
 
-  if(file_end < 0 || file_end >= st.st_size)
+  if(file_start > file_end) {
+    close(fd);
     return 200;
-
-  if(file_start > file_end)
-    return 200;
+  }
 
   content_len = file_end - file_start+1;
   
@@ -609,8 +613,10 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
     while(content_len > 0) {
       chunk = MIN(1024 * 1024 * 1024, content_len);
       r = sendfile(hc->hc_fd, fd, NULL, chunk);
-      if(r == -1)
+      if(r == -1) {
+	close(fd);
 	return -1;
+      }
       content_len -= r;
     }
   }

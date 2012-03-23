@@ -141,14 +141,14 @@ if enabled avahi; then
     fi
 fi
 
-if pkg-config libssl; then
-    echo >>${CONFIG_MAK} "LDFLAGS_cfg += " `pkg-config --libs libssl`
-    echo >>${CONFIG_MAK} "CFLAGS_cfg += " `pkg-config --cflags libssl`
-    echo "Using libssl:          `pkg-config --modversion libssl`"
-elif pkg-config openssl; then
+if pkg-config openssl; then
     echo >>${CONFIG_MAK} "LDFLAGS_cfg += " `pkg-config --libs openssl`
     echo >>${CONFIG_MAK} "CFLAGS_cfg += " `pkg-config --cflags openssl`
     echo "Using openssl:         `pkg-config --modversion openssl`"
+elif pkg-config libssl; then
+    echo >>${CONFIG_MAK} "LDFLAGS_cfg += " `pkg-config --libs libssl`
+    echo >>${CONFIG_MAK} "CFLAGS_cfg += " `pkg-config --cflags libssl`
+    echo "Using libssl:          `pkg-config --modversion libssl`"
 else
     echo "libssl or openssl not found"
     die

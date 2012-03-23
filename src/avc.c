@@ -21,87 +21,65 @@
 
 #include "avc.h"
 
-const uint8_t *avc_find_startcode(const uint8_t *p, const uint8_t *end)
+static const uint8_t *
+avc_find_startcode(const uint8_t *p, const uint8_t *end)
 {
-    const uint8_t *a = p + 4 - ((long)p & 3);
-
-    for( end -= 3; p < a && p < end; p++ ) {
-        if( p[0] == 0 && p[1] == 0 && p[2] == 1 )
-            return p;
+  int i;
+	
+  uint32_t sc=0xFFFFFFFF;
+  size_t len = (end -p)+1;
+  for (i=0;i<len;i++)
+    {
+      sc = (sc <<8) | p[i];
+      if((sc & 0xffffff00) == 0x00000100) {
+	return p+i-3;
+      }
+		
     }
-
-    for( end -= 3; p < end; p += 4 ) {
-        uint32_t x = *(const uint32_t*)p;
-//      if( (x - 0x01000100) & (~x) & 0x80008000 ) // little endian
-//      if( (x - 0x00010001) & (~x) & 0x00800080 ) // big endian
-        if( (x - 0x01010101) & (~x) & 0x80808080 ) { // generic
-            if( p[1] == 0 ) {
-                if( p[0] == 0 && p[2] == 1 )
-                    return p-1;
-                if( p[2] == 0 && p[3] == 1 )
-                    return p;
-            }
-            if( p[3] == 0 ) {
-                if( p[2] == 0 && p[4] == 1 )
-                    return p+1;
-                if( p[4] == 0 && p[5] == 1 )
-                    return p+2;
-            }
-        }
-    }
-
-    for( end += 3; p < end; p++ ) {
-        if( p[0] == 0 && p[1] == 0 && p[2] == 1 )
-            return p;
-    }
-
-    return end + 3;
+  return end;
 }
-
-int avc_parse_nal_units(ByteIOContext *pb, const uint8_t *buf_in, int size)
+static int
+avc_parse_nal_units(sbuf_t *sb, const uint8_t *buf_in, int size)
 {
-    const uint8_t *p = buf_in;
-    const uint8_t *end = p + size;
-    const uint8_t *nal_start, *nal_end, *b;
+  const uint8_t *p = buf_in;
+  const uint8_t *end = p + size;
+  const uint8_t *nal_start, *nal_end; 
 
-    printf("CONVERT SIZE %d\n", size);
+  //printf("CONVERT SIZE %d\n", size);
 
-    size = 0;
-    nal_start = avc_find_startcode(p, end);
-    while (nal_start < end) {
-        while(!*(nal_start++));
-        nal_end = avc_find_startcode(nal_start, end);
-	printf("%4d bytes  %5d : %d\n", nal_end - nal_start,
-	       nal_start - buf_in,
-	       nal_end   - buf_in);
+  size = 0;
+  nal_start = avc_find_startcode(p, end);
+  while (nal_start < end) {
+    while(!*(nal_start++));
+    nal_end = avc_find_startcode(nal_start, end);
+    /*printf("%4d bytes  %5d : %d\n", nal_end - nal_start,
+      nal_start - buf_in,
+      nal_end   - buf_in);*/
 
-	int l = nal_end - nal_start;
+    int l = nal_end - nal_start;
 
-	b = nal_start;
-	while(l > 3 && !(b[l-3] | b[l-2] | b[l-1]))
-	  l--;
-        put_be32(pb, l);
-        put_buffer(pb, nal_start, l);
-        size += 4 + l;
-        nal_start = nal_end;
+    if (l) {
+      sbuf_put_be32(sb, l);
+      sbuf_append(sb, nal_start, l);
+      size += 4 + l;
     }
-    printf("size=%d\n", size);
-    return size;
+    nal_start = nal_end;
+  }
+  return size;
 }
 
 
-int avc_parse_nal_units_buf(const uint8_t *buf_in, uint8_t **buf, int *size)
+static int
+avc_parse_nal_units_buf(const uint8_t *buf_in, uint8_t **buf, int *size)
 {
-    ByteIOContext *pb;
-    int ret = url_open_dyn_buf(&pb);
-    if(ret < 0)
-        return ret;
+  sbuf_t sb;
+  sbuf_init(&sb);
+  avc_parse_nal_units(&sb, buf_in, *size);
 
-    avc_parse_nal_units(pb, buf_in, *size);
-
-    av_freep(buf);
-    *size = url_close_dyn_buf(pb, buf);
-    return 0;
+  free(*buf);
+  *buf = sb.sb_data;
+  *size = sb.sb_ptr;
+  return 0;
 }
 
 
@@ -118,60 +96,82 @@ RB24(const uint8_t *d)
 }
 
 
-static int isom_write_avcc(ByteIOContext *pb, const uint8_t *data, int len)
+static int
+isom_write_avcc(sbuf_t *sb, const uint8_t *data, int len)
 {
-    if (len > 6) {
-        /* check for h264 start code */
-        if (RB32(data) == 0x00000001 ||
-            RB24(data) == 0x000001) {
-            uint8_t *buf=NULL, *end, *start;
-            uint32_t sps_size=0, pps_size=0;
-            uint8_t *sps=0, *pps=0;
+  if (len > 6) {
+    /* check for h264 start code */
+    if (RB32(data) == 0x00000001 ||
+	RB24(data) == 0x000001) {
+      uint8_t *buf=NULL, *end, *start;
+      uint32_t *sps_size_array=0, *pps_size_array=0;
+      uint32_t pps_count=0,sps_count=0;
+      uint8_t **sps_array=0, **pps_array=0;
+      int i;
 
-            int ret = avc_parse_nal_units_buf(data, &buf, &len);
-            if (ret < 0)
-                return ret;
-            start = buf;
-            end = buf + len;
+      int ret = avc_parse_nal_units_buf(data, &buf, &len);
+      if (ret < 0)
+	return ret;
+      start = buf;
+      end = buf + len;
 
-            /* look for sps and pps */
-            while (buf < end) {
-                unsigned int size;
-                uint8_t nal_type;
-                size = RB32(buf);
-                nal_type = buf[4] & 0x1f;
-                if (nal_type == 7) { /* SPS */
-                    sps = buf + 4;
-                    sps_size = size;
-                } else if (nal_type == 8) { /* PPS */
-                    pps = buf + 4;
-                    pps_size = size;
-                }
-                buf += size + 4;
-            }
-	    if(!sps || !pps) {
-	      av_free(start);
-	      return -1;
-	    }
+      /* look for sps and pps */
+      while (buf < end) {
+	unsigned int size;
+	uint8_t nal_type;
+	size = RB32(buf);
+	nal_type = buf[4] & 0x1f;
+	if (nal_type == 7) { /* SPS */
+	  sps_array = realloc(sps_array,sizeof(uint8_t*)*(sps_count+1));
+	  sps_size_array = realloc(sps_size_array,sizeof(uint32_t)*(sps_count+1));
+	  sps_array[sps_count] = buf + 4;
+	  sps_size_array[sps_count] = size;
+	  sps_count++;
+	} else if (nal_type == 8) { /* PPS */
+	  pps_size_array = realloc(pps_size_array,sizeof(uint32_t)*(pps_count+1));
+	  pps_array = realloc(pps_array,sizeof (uint8_t*)*(pps_count+1));
+	  pps_array[pps_count] = buf + 4;
+	  pps_size_array[pps_count] = size;
+	  pps_count++;
+	}
+	buf += size + 4;
+      }
+      if(!sps_count || !pps_count) {
+	free(start);
+	if (sps_count)
+	  free(sps_array);
+	if (pps_count)
+	  free(pps_array);
+	return -1;
+      }
 
-            put_byte(pb, 1); /* version */
-            put_byte(pb, sps[1]); /* profile */
-            put_byte(pb, sps[2]); /* profile compat */
-            put_byte(pb, sps[3]); /* level */
-            put_byte(pb, 0xff); /* 6 bits reserved (111111) + 2 bits nal size length - 1 (11) */
-            put_byte(pb, 0xe1); /* 3 bits reserved (111) + 5 bits number of sps (00001) */
+      sbuf_put_byte(sb, 1); /* version */
+      sbuf_put_byte(sb, sps_array[0][1]); /* profile */
+      sbuf_put_byte(sb, sps_array[0][2]); /* profile compat */
+      sbuf_put_byte(sb, sps_array[0][3]); /* level */
+      sbuf_put_byte(sb, 0xff); /* 6 bits reserved (111111) + 2 bits nal size length - 1 (11) */
+      sbuf_put_byte(sb, 0xe0+sps_count); /* 3 bits reserved (111) + 5 bits number of sps (00001) */
+      for (i=0;i<sps_count;i++) {
+	sbuf_put_be16(sb, sps_size_array[i]);
+	sbuf_append(sb, sps_array[i], sps_size_array[i]);
+      }
 
-            put_be16(pb, sps_size);
-            put_buffer(pb, sps, sps_size);
-            put_byte(pb, 1); /* number of pps */
-            put_be16(pb, pps_size);
-            put_buffer(pb, pps, pps_size);
-            av_free(start);
-        } else {
-            put_buffer(pb, data, len);
-        }
+      sbuf_put_byte(sb, pps_count); /* number of pps */
+      for (i=0;i<pps_count;i++) {
+	sbuf_put_be16(sb, pps_size_array[i]);
+	sbuf_append(sb, pps_array[i], pps_size_array[i]);
+      }
+      free(start);
+
+      if (sps_count)
+	free(sps_array);
+      if (pps_count)
+	free(pps_array);
+    } else {
+      sbuf_append(sb, data, len);
     }
-    return 0;
+  }
+  return 0;
 }
 
 
@@ -180,28 +180,34 @@ static int isom_write_avcc(ByteIOContext *pb, const uint8_t *data, int len)
 th_pkt_t *
 avc_convert_pkt(th_pkt_t *src)
 {
-  ByteIOContext *payload, *headers;
-
   th_pkt_t *pkt = malloc(sizeof(th_pkt_t));
   *pkt = *src;
   pkt->pkt_refcount = 1;
+  pkt->pkt_header = NULL;
+  pkt->pkt_payload = NULL;
 
-  url_open_dyn_buf(&payload);
-  avc_parse_nal_units(payload, pkt->pkt_payload, pkt->pkt_payloadlen);
-  
-  pkt->pkt_payloadlen = url_close_dyn_buf(payload, &pkt->pkt_payload);
-
-  if(pkt->pkt_globaldata) {
-    url_open_dyn_buf(&headers);
-
-    isom_write_avcc(headers, pkt->pkt_globaldata, pkt->pkt_globaldata_len);
-    pkt->pkt_globaldata_len = url_close_dyn_buf(headers, &pkt->pkt_globaldata);
-
-    hexdump("annexB: ", src->pkt_globaldata, src->pkt_globaldata_len);
-    hexdump("   AVC: ", pkt->pkt_globaldata, pkt->pkt_globaldata_len);
-
-
+  pkt->pkt_payload = malloc(sizeof(pktbuf_t));
+  pkt->pkt_payload->pb_refcount=1;
+  if (src->pkt_header) {
+    sbuf_t headers;
+    sbuf_init(&headers);
+    
+    isom_write_avcc(&headers, pktbuf_ptr(src->pkt_header),
+		    pktbuf_len(src->pkt_header));
+    pkt->pkt_header = pktbuf_make(headers.sb_data, headers.sb_ptr);
   }
+
+  sbuf_t payload;
+  sbuf_init(&payload);
+
+  if(src->pkt_header)
+    avc_parse_nal_units(&payload, pktbuf_ptr(src->pkt_header),
+			pktbuf_len(src->pkt_header));
+
+  avc_parse_nal_units(&payload, pktbuf_ptr(src->pkt_payload),
+		      pktbuf_len(src->pkt_payload));
+  
+  pkt->pkt_payload = pktbuf_make(payload.sb_data, payload.sb_ptr);
   pkt_ref_dec(src);
   return pkt;
 }

@@ -24,13 +24,21 @@ typedef struct mk_mux mk_mux_t;
 struct streaming_start;
 struct dvr_entry;
 struct th_pkt;
+struct channel;
+struct event;
 
 mk_mux_t *mk_mux_create(const char *filename,
 			const struct streaming_start *ss,
 			const struct dvr_entry *de,
 			int write_tags);
 
-void mk_mux_write_pkt(mk_mux_t *mkm, struct th_pkt *pkt);
+mk_mux_t *mk_mux_stream_create(int fd,
+			       const struct streaming_start *ss,
+			       const struct channel *ch);
+
+int mk_mux_write_pkt(mk_mux_t *mkm, struct th_pkt *pkt);
+
+int mk_mux_append_meta(mk_mux_t *mkm, struct event *e);
 
 void mk_mux_close(mk_mux_t *mk_mux);
 

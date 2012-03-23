@@ -163,11 +163,12 @@ typedef enum {
   SCT_MPEGTS,
   SCT_TEXTSUB,
   SCT_EAC3,
+  SCT_MP4A,
 } streaming_component_type_t;
 
 #define SCT_ISVIDEO(t) ((t) == SCT_MPEG2VIDEO || (t) == SCT_H264)
 #define SCT_ISAUDIO(t) ((t) == SCT_MPEG2AUDIO || (t) == SCT_AC3 || \
-                        (t) == SCT_AAC)
+                        (t) == SCT_AAC || (t) == SCT_MP4A)
 
 /**
  * The signal status of a tuner
@@ -428,6 +429,8 @@ static inline int64_t ts_rescale(int64_t ts, int tb)
   return (ts * tb ) / 90000LL;
 }
 
+void sbuf_init(sbuf_t *sb);
+
 void sbuf_free(sbuf_t *sb);
 
 void sbuf_reset(sbuf_t *sb);
@@ -436,8 +439,14 @@ void sbuf_err(sbuf_t *sb);
 
 void sbuf_alloc(sbuf_t *sb, int len);
 
-void sbuf_append(sbuf_t *sb, const uint8_t *data, int len);
+void sbuf_append(sbuf_t *sb, const void *data, int len);
 
 void sbuf_cut(sbuf_t *sb, int off);
+
+void sbuf_put_be32(sbuf_t *sb, uint32_t u32);
+
+void sbuf_put_be16(sbuf_t *sb, uint16_t u16);
+
+void sbuf_put_byte(sbuf_t *sb, uint8_t u8);
 
 #endif /* TV_HEAD_H */

@@ -505,6 +505,7 @@ service_create(const char *identifier, int type, int source_type)
   t->s_enabled = 1;
   t->s_pcr_last = PTS_UNSET;
   t->s_dvb_default_charset = NULL;
+  t->s_dvb_eit_enable = 1;
   TAILQ_INIT(&t->s_components);
 
   streaming_pad_init(&t->s_streaming_pad);
@@ -604,6 +605,7 @@ service_stream_create(service_t *t, int pid,
 
   st = calloc(1, sizeof(elementary_stream_t));
   st->es_index = idx + 1;
+
   st->es_type = type;
 
   TAILQ_INSERT_TAIL(&t->s_components, st, es_link);
@@ -692,6 +694,18 @@ service_set_dvb_default_charset(service_t *t, const char *dvb_default_charset)
   t->s_config_save(t);
 }
 
+/**
+ *
+ */
+void
+service_set_dvb_eit_enable(service_t *t, int dvb_eit_enable)
+{
+  if(t->s_dvb_eit_enable == dvb_eit_enable)
+    return;
+
+  t->s_dvb_eit_enable = dvb_eit_enable;
+  t->s_config_save(t);
+}
 
 /**
  *
@@ -841,6 +855,7 @@ service_build_stream_start(service_t *t)
     streaming_start_component_t *ssc = &ss->ss_components[n++];
     ssc->ssc_index = st->es_index;
     ssc->ssc_type  = st->es_type;
+
     memcpy(ssc->ssc_lang, st->es_lang, 4);
     ssc->ssc_composition_id = st->es_composition_id;
     ssc->ssc_ancillary_id = st->es_ancillary_id;

@@ -47,7 +47,7 @@
 #define TVHEADEND_PROTOCOL_ID 0x6502
 #define CWC_KEEPALIVE_INTERVAL 30
 
-#define CWS_NETMSGSIZE 272
+#define CWS_NETMSGSIZE 362
 #define CWS_FIRSTCMDNO 0xe0
 
 /**
@@ -452,8 +452,10 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid, int enq)
   uint8_t *buf = cm->cm_data;
   int seq, n;
 
-  if(len + 12 > CWS_NETMSGSIZE)
+  if(len + 12 > CWS_NETMSGSIZE) {
+    free(cm);
     return -1;
+  }
 
   memset(buf, 0, 12);
   memcpy(buf + 12, msg, len);
@@ -469,6 +471,7 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid, int enq)
 
   if((len = des_encrypt(buf, len, cwc)) < 0) {
     free(buf);
+    free(cm);
     return -1;
   }
 
@@ -677,6 +680,7 @@ cwc_detect_card_type(cwc_t *cwc)
     cwc->cwc_card_type = CARD_SECA;
     tvhlog(LOG_INFO, "cwc", "%s: seca card",
 	   cwc->cwc_hostname);
+    break;
   case 0x4a:
     cwc->cwc_card_type = CARD_DRE;
     tvhlog(LOG_INFO, "cwc", "%s: dre card",

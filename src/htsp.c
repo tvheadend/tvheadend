@@ -493,6 +493,36 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
 }
 
 /**
+ * Request a ticket for a http url pointing to a channel or dvr
+ */
+static htsmsg_t *
+htsp_method_getTicket(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *out;
+  uint32_t id;
+  char path[255];
+  const char *ticket = NULL;
+
+  if(!htsmsg_get_u32(in, "channelId", &id)) {
+    snprintf(path, sizeof(path), "/stream/channelid/%d", id);
+    ticket = access_ticket_create(path);
+  } else if(!htsmsg_get_u32(in, "dvrId", &id)) {
+    snprintf(path, sizeof(path), "/dvrfile/%d", id);
+    ticket = access_ticket_create(path);
+  } else {
+    return htsp_error("Missing argument 'channelId' or 'dvrId'");
+  }
+
+  out = htsmsg_create_map();
+
+  htsmsg_add_str(out, "path", path);
+  htsmsg_add_str(out, "ticket", ticket);
+
+  return out;
+}
+
+
+/**
  * add a Dvrentry
  */
 static htsmsg_t * 
@@ -717,6 +747,7 @@ htsp_build_event(event_t *e)
 {
   htsmsg_t *out;
   event_t *n;
+  dvr_entry_t *de;
 
   out = htsmsg_create_map();
 
@@ -737,6 +768,10 @@ htsp_build_event(event_t *e)
 
   if(e->e_content_type)
     htsmsg_add_u32(out, "contentType", e->e_content_type);
+
+  if((de = dvr_entry_find_by_event(e)) != NULL) {
+    htsmsg_add_u32(out, "dvrId", de->de_id);
+  }
 
   n = RB_NEXT(e, e_channel_link);
   if(n != NULL)
@@ -1038,6 +1073,7 @@ struct {
   { "cancelDvrEntry", htsp_method_cancelDvrEntry, ACCESS_RECORDER},
   { "deleteDvrEntry", htsp_method_deleteDvrEntry, ACCESS_RECORDER},
   { "epgQuery", htsp_method_epgQuery, ACCESS_STREAMING},
+  { "getTicket", htsp_method_getTicket, ACCESS_STREAMING},
 
 };
 
@@ -1372,7 +1408,7 @@ htsp_async_send(htsmsg_t *m)
  * global_lock is held
  */
 void
-htsp_channgel_update_current(channel_t *ch)
+htsp_channel_update_current(channel_t *ch)
 {
   htsmsg_t *m;
   time_t now;
@@ -1500,7 +1536,7 @@ const static char frametypearray[PKT_NTYPES] = {
 static void
 htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 {
-  htsmsg_t *m = htsmsg_create_map(), *n;
+  htsmsg_t *m, *n;
   htsp_msg_t *hm;
   htsp_connection_t *htsp = hs->hs_htsp;
   int64_t ts;
@@ -1516,6 +1552,8 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
     pkt_ref_dec(pkt);
     return;
   }
+
+  m = htsmsg_create_map();
  
   htsmsg_add_str(m, "method", "muxpkt");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
