@@ -243,7 +243,14 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
       break;
 
     case SMT_STOP:
-      run = 0;
+      if (sm->sm_code == SM_CODE_SOURCE_RECONFIGURED) {
+        if (mkm) {
+          mk_mux_close(mkm);
+          mkm = NULL;
+        }
+      } else {
+        run = 0;
+      }
       break;
 
     case SMT_SERVICE_STATUS:
