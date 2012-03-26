@@ -885,6 +885,8 @@ all_audio:
     TAILQ_FOREACH(af, &audio_filters, af_link) {
       found = 0;
       TAILQ_FOREACH(st, &t->s_components, es_link) {
+        if (!SCT_ISAUDIO(st->es_type))
+          continue;
         if (memcmp(st->es_lang, af->af_lang, 4) == 0) {
           if ((af->af_flags & AF_PREFER_AC3) == 0 ||
                                       SCT_ISAUDIOP(st->es_type)) {
@@ -897,6 +899,8 @@ all_audio:
       /* no AC3+ audio, but we prefer the language, use MPEG2 audio if exists */
       if (!found) {
         TAILQ_FOREACH(st, &t->s_components, es_link) {
+          if (!SCT_ISAUDIO(st->es_type))
+            continue;
           if (memcmp(st->es_lang, af->af_lang, 4) == 0) {
             ss_copy_info(ss, st);
             streams++;
@@ -920,6 +924,8 @@ all_subtitles:
 
     TAILQ_FOREACH(subf, &subtitle_filters, sf_link) {
       TAILQ_FOREACH(st, &t->s_components, es_link) {
+        if (!SCT_ISDVBSUB(st->es_type))
+          continue;
         if (memcmp(st->es_lang, subf->sf_lang, 4) == 0) {
           ss_copy_info(ss, st);
           streams++;
