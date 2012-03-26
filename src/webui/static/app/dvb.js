@@ -227,6 +227,37 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
              satConf = null;
          }
 
+         var mitems = [
+             new Ext.form.ComboBox({
+                 store: targetStore,
+                 fieldLabel: 'Target adapter',
+                 name: 'targetadapter',
+                 hiddenName: 'targetID',
+                 editable: false,
+                 allowBlank: false,
+                 triggerAction: 'all',
+                 mode: 'remote',
+                 displayField:'name',
+                 valueField:'identifier',
+                 emptyText: 'Select target adapter...',
+                 listeners: {
+                    'select': function(combo, value) {
+                        if (satConf) {
+                            satConf.emptyText = 'Select satellite configuration...';
+                            satConf.clearValue();
+                            targetSatConfStore.baseParams = {adapter: combo.value};
+                            targetSatConfStore.load();
+                            satConf.focus();
+                            satConf.expand();
+                        }
+                    }
+                }
+             }),
+	 ];
+
+	 if (satConf)
+	     mitems.push(satConf);
+
 	 var panel = new Ext.FormPanel({
 	     frame:true,
 	     border:true,
@@ -234,35 +265,7 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 	     labelAlign: 'right',
 	     labelWidth: 150,
 	     defaultType: 'textfield',
-	     items: [
-
-		 new Ext.form.ComboBox({
-		     store: targetStore,
-		     fieldLabel: 'Target adapter',
-		     name: 'targetadapter',
-		     hiddenName: 'targetID',
-		     editable: false,
-		     allowBlank: false,
-		     triggerAction: 'all',
-		     mode: 'remote',
-		     displayField:'name',
-		     valueField:'identifier',
-		     emptyText: 'Select target adapter...',
-		     listeners: {
-			'select': function(combo, value) {
-                            if (satConf) {
-                                satConf.emptyText = 'Select satellite configuration...';
-                                satConf.clearValue();
-                                targetSatConfStore.baseParams = {adapter: combo.value};
-                                targetSatConfStore.load();
-                                satConf.focus();
-                                satConf.expand();
-                            }
-			}
-                    }
-		 }),
-		 satConf,
-	     ],
+	     items: mitems,
 	     buttons: [{
 		 text: 'Copy',
 		 handler: doCopy
