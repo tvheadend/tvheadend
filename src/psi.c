@@ -307,8 +307,10 @@ psi_desc_ca(service_t *t, const uint8_t *buffer, int size)
     }
     break;
   case 0x4a00://DRECrypt
-    provid = size < 4 ? 0 : buffer[4];
-    break;
+    if (caid != 0x4aee) { // Bulcrypt
+      provid = size < 4 ? 0 : buffer[4];
+      break;
+    }
   default:
     provid = 0;
     break;
