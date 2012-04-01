@@ -400,7 +400,7 @@ extern void scopedunlock(pthread_mutex_t **mtxp);
 #define scopedlock(mtx) \
  pthread_mutex_t *scopedlock ## __LINE__ \
  __attribute__((cleanup(scopedunlock))) = mtx; \
- pthread_mutex_lock(mtx);
+ pthread_mutex_lock(scopedlock ## __LINE__);
 
 #define scopedgloballock() scopedlock(&global_lock)
 

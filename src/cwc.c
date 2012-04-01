@@ -469,7 +469,7 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid, int enq)
   buf[4] = sid >> 8;
   buf[5] = sid;
 
-  if((len = des_encrypt(buf, len, cwc)) < 0) {
+  if((len = des_encrypt(buf, len, cwc)) <= 0) {
     free(buf);
     free(cm);
     return -1;
