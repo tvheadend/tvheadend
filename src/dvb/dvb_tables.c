@@ -44,7 +44,7 @@
 
 #define TDT_CRC           0x1
 #define TDT_QUICKREQ      0x2
-#define TDT_INC_TABLE_HDR 0x4
+#define TDT_CA		  0x4
 
 static void dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid);
 
@@ -214,8 +214,9 @@ dvb_proc_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt, uint8_t *sec,
   ptr = &sec[3];
   if(chkcrc) len -= 4;   /* Strip trailing CRC */
 
-  if(tdt->tdt_flags & TDT_INC_TABLE_HDR)
-    ret = tdt->tdt_callback(tdmi, sec, len + 3, tableid, tdt->tdt_opaque);
+  if(tdt->tdt_flags & TDT_CA)
+    ret = tdt->tdt_callback((th_dvb_mux_instance_t *)tdt,
+                                sec, len + 3, tableid, tdt->tdt_opaque);
   else
     ret = tdt->tdt_callback(tdmi, ptr, len, tableid, tdt->tdt_opaque);
   
@@ -828,7 +829,7 @@ static int
 dvb_ca_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		uint8_t tableid, void *opaque)
 {
-  cwc_emm(ptr, len, (uintptr_t)opaque);
+  cwc_emm(ptr, len, (uintptr_t)opaque, (void *)tdmi);
   return 0;
 }
 
@@ -864,7 +865,7 @@ dvb_cat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	break;
 
       tdt_add(tdmi, NULL, dvb_ca_callback, (void *)caid, "CA", 
-	      TDT_INC_TABLE_HDR, pid, NULL);
+	      TDT_CA, pid, NULL);
       break;
 
     default:

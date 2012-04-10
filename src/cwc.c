@@ -243,6 +243,7 @@ typedef struct cwc {
     int shared_toggle;
     int shared_len;
     uint8_t * shared_emm;
+    void *ca_update_id;
   } cwc_viaccess_emm;
 #define cwc_cryptoworks_emm cwc_viaccess_emm
 
@@ -279,10 +280,10 @@ void cwc_emm_conax(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_irdeto(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_dre(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_seca(cwc_t *cwc, uint8_t *data, int len);
-void cwc_emm_viaccess(cwc_t *cwc, uint8_t *data, int len);
+void cwc_emm_viaccess(cwc_t *cwc, uint8_t *data, int len, void *ca_update_id);
 void cwc_emm_nagra(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_nds(cwc_t *cwc, uint8_t *data, int len);
-void cwc_emm_cryptoworks(cwc_t *cwc, uint8_t *data, int len);
+void cwc_emm_cryptoworks(cwc_t *cwc, uint8_t *data, int len, void *ca_update_id);
 
 
 /**
@@ -1188,7 +1189,7 @@ cwc_emm_cache_lookup(cwc_t *cwc, uint32_t crc)
  *
  */
 void
-cwc_emm(uint8_t *data, int len, uint16_t caid)
+cwc_emm(uint8_t *data, int len, uint16_t caid, void *ca_update_id)
 {
   cwc_t *cwc;
 
@@ -1208,7 +1209,7 @@ cwc_emm(uint8_t *data, int len, uint16_t caid)
 	cwc_emm_seca(cwc, data, len);
 	break;
       case CARD_VIACCESS:
-	cwc_emm_viaccess(cwc, data, len);
+	cwc_emm_viaccess(cwc, data, len, ca_update_id);
 	break;
       case CARD_DRE:
 	cwc_emm_dre(cwc, data, len);
@@ -1220,7 +1221,7 @@ cwc_emm(uint8_t *data, int len, uint16_t caid)
 	cwc_emm_nds(cwc, data, len);
 	break;
       case CARD_CRYPTOWORKS:
-	cwc_emm_cryptoworks(cwc, data, len);
+	cwc_emm_cryptoworks(cwc, data, len, ca_update_id);
 	break;
       case CARD_UNKNOWN:
 	break;
@@ -1382,7 +1383,7 @@ static int via_provider_id(uint8_t * data)
 
 
 void
-cwc_emm_viaccess(cwc_t *cwc, uint8_t *data, int mlen)
+cwc_emm_viaccess(cwc_t *cwc, uint8_t *data, int mlen, void *ca_update_id)
 {
   /* Get SCT len */
   int len = 3 + ((data[1] & 0x0f) << 8) + data[2];
@@ -1414,13 +1415,15 @@ cwc_emm_viaccess(cwc_t *cwc, uint8_t *data, int mlen)
 	  if (cwc->cwc_viaccess_emm.shared_emm) {
 	    cwc->cwc_viaccess_emm.shared_len = len;
 	    memcpy(cwc->cwc_viaccess_emm.shared_emm, data, len);
+	    cwc->cwc_viaccess_emm.ca_update_id = ca_update_id;
 	  }
 	  cwc->cwc_viaccess_emm.shared_toggle = data[0];
 	}
       }
       break;
     case 0x8e:
-      if (cwc->cwc_viaccess_emm.shared_emm) {
+      if (cwc->cwc_viaccess_emm.shared_emm &&
+          cwc->cwc_viaccess_emm.ca_update_id == ca_update_id) {
 	int match = 0;
 	int i;
 	/* Match SA and provider in shared */
@@ -1667,7 +1670,7 @@ cwc_emm_nds(cwc_t *cwc, uint8_t *data, int len)
 }
 
 void
-cwc_emm_cryptoworks(cwc_t *cwc, uint8_t *data, int len)
+cwc_emm_cryptoworks(cwc_t *cwc, uint8_t *data, int len, void *ca_update_id)
 {
   int match = 0;
 
@@ -1686,11 +1689,13 @@ cwc_emm_cryptoworks(cwc_t *cwc, uint8_t *data, int len)
       if (cwc->cwc_cryptoworks_emm.shared_emm) {
         cwc->cwc_cryptoworks_emm.shared_len = len;
         memcpy(cwc->cwc_cryptoworks_emm.shared_emm, data, len);
+        cwc->cwc_cryptoworks_emm.ca_update_id = ca_update_id;
       }
     }
     break;
   case 0x86: /* emm-sb */ 
-    if (cwc->cwc_cryptoworks_emm.shared_emm) {
+    if (cwc->cwc_cryptoworks_emm.shared_emm &&
+        cwc->cwc_cryptoworks_emm.ca_update_id == ca_update_id) {
       /* python: EMM_SH[0:12] + EMM_SB[5:-1] + EMM_SH[12:-1] */
       uint32_t elen = len - 5 + cwc->cwc_cryptoworks_emm.shared_len - 12;
       uint8_t *tmp = malloc(elen);
