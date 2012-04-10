@@ -150,7 +150,8 @@ tdmi_compare_conf(int adapter_type,
 th_dvb_mux_instance_t *
 dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
 	       uint16_t tsid, const char *network, const char *source,
-	       int enabled, int initialscan, const char *identifier)
+	       int enabled, int initialscan, const char *identifier,
+	       dvb_satconf_t *satconf)
 {
   th_dvb_mux_instance_t *tdmi, *c;
   unsigned int hash;
@@ -225,8 +226,9 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
     
     snprintf(buf, sizeof(buf), "%s%d%s%s%s", 
 	     tda->tda_identifier, dmc->dmc_fe_params.frequency, qpsktxt,
-	     dmc->dmc_satconf ? "_satconf_" : "", 
-	     dmc->dmc_satconf ? dmc->dmc_satconf->sc_id : "");
+	     (satconf || dmc->dmc_satconf) ? "_satconf_" : "", 
+	     (satconf ? satconf->sc_id :
+	       (dmc->dmc_satconf ? dmc->dmc_satconf->sc_id : "")));
     
     tdmi->tdmi_identifier = strdup(buf);
   } else {
@@ -259,6 +261,8 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
 
 
   memcpy(&tdmi->tdmi_conf, dmc, sizeof(struct dvb_mux_conf));
+  if(satconf)
+    tdmi->tdmi_conf.dmc_satconf = satconf;
   if(tdmi->tdmi_conf.dmc_satconf != NULL) {
     LIST_INSERT_HEAD(&tdmi->tdmi_conf.dmc_satconf->sc_tdmis, 
 		     tdmi, tdmi_satconf_link);
@@ -708,7 +712,7 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
 
   tdmi = dvb_mux_create(tda, &dmc,
 			tsid, htsmsg_get_str(m, "network"), NULL, enabled, 1,
-			identifier);
+			identifier, NULL);
   if(tdmi != NULL) {
 
     if((s = htsmsg_get_str(m, "status")) != NULL)
@@ -1058,7 +1062,7 @@ dvb_mux_add_by_params(th_dvb_adapter_t *tda,
   }
   dmc.dmc_polarisation = polarisation;
 
-  tdmi = dvb_mux_create(tda, &dmc, 0xffff, NULL, NULL, 1, 1, NULL);
+  tdmi = dvb_mux_create(tda, &dmc, 0xffff, NULL, NULL, 1, 1, NULL, NULL);
 
   if(tdmi == NULL)
     return "Mux already exist";
@@ -1071,7 +1075,8 @@ dvb_mux_add_by_params(th_dvb_adapter_t *tda,
  *
  */
 int
-dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src)
+dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src,
+             dvb_satconf_t *satconf)
 {
   th_dvb_mux_instance_t *tdmi_dst;
   service_t *t_src, *t_dst;
@@ -1083,7 +1088,7 @@ dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src)
 			    tdmi_src->tdmi_transport_stream_id,
 			    tdmi_src->tdmi_network,
 			    "copy operation", tdmi_src->tdmi_enabled,
-			    1, NULL);
+			    1, NULL, satconf);
 
   if(tdmi_dst == NULL)
     return -1; // Already exist
