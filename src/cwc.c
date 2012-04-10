@@ -61,6 +61,7 @@ typedef enum {
   CARD_VIACCESS,
   CARD_NAGRA,
   CARD_NDS,
+  CARD_CRYPTOWORKS,
   CARD_UNKNOWN
 } card_type_t;
 
@@ -280,6 +281,7 @@ void cwc_emm_seca(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_viaccess(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_nagra(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_nds(cwc_t *cwc, uint8_t *data, int len);
+void cwc_emm_cryptoworks(cwc_t *cwc, uint8_t *data, int len);
 
 
 /**
@@ -694,6 +696,11 @@ cwc_detect_card_type(cwc_t *cwc)
   case 0x09:
     cwc->cwc_card_type = CARD_NDS;
     tvhlog(LOG_INFO, "cwc", "%s: nds card",
+	   cwc->cwc_hostname);
+    break;
+  case 0x0d:
+    cwc->cwc_card_type = CARD_CRYPTOWORKS;
+    tvhlog(LOG_INFO, "cwc", "%s: cryptoworks card",
 	   cwc->cwc_hostname);
     break;
   default:
@@ -1210,6 +1217,9 @@ cwc_emm(uint8_t *data, int len)
       case CARD_NDS:
 	cwc_emm_nds(cwc, data, len);
 	break;
+      case CARD_CRYPTOWORKS:
+	cwc_emm_cryptoworks(cwc, data, len);
+	break;
       case CARD_UNKNOWN:
 	break;
       }
@@ -1648,6 +1658,31 @@ cwc_emm_nds(cwc_t *cwc, uint8_t *data, int len)
   }
   else if (emmtype == 0) {  // global
     match = 1;
+  }
+
+  if (match)
+    cwc_send_msg(cwc, data, len, 0, 1);
+}
+
+void
+cwc_emm_cryptoworks(cwc_t *cwc, uint8_t *data, int len)
+{
+  int match = 0;
+
+  switch (data[0]) {
+  case 0x82: /* unique */
+    match = len >= 10 && memcmp(data + 5, cwc->cwc_ua + 3, 5) == 0;
+    break;
+  case 0x84: /* shared */
+    match = len >= 9 && memcmp(data + 5, cwc->cwc_ua + 3, 4) == 0;
+    break;
+  case 0x86: /* shared header */
+  case 0x88: /* global */
+  case 0x89: /* global */
+    match = 1;
+    break;
+  default:
+    break;
   }
 
   if (match)
