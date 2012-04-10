@@ -102,7 +102,7 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, const struct mux *m, int num,
 
     dmc.dmc_satconf = dvb_satconf_entry_find(tda, satconf, 0);
       
-    dvb_mux_create(tda, &dmc, 0xffff, NULL, source, 1, 1, NULL);
+    dvb_mux_create(tda, &dmc, 0xffff, NULL, source, 1, 1, NULL, NULL);
     m++;
   }
 }

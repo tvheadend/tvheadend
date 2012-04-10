@@ -458,7 +458,7 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
     dvb_mux_destroy(tdmi_dst);
 
   LIST_FOREACH(tdmi_src, &src->tda_muxes, tdmi_adapter_link)
-    dvb_mux_copy(dst, tdmi_src);
+    dvb_mux_copy(dst, tdmi_src, NULL);
 
   tda_save(dst);
 }
