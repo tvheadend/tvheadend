@@ -43,9 +43,6 @@
 #include "epg.h"
 #include "iptv_input.h"
 
-extern const char *htsversion;
-extern const char *htsversion_full;
-
 static void
 extjs_load(htsbuf_queue_t *hq, const char *script)
 {
@@ -166,7 +163,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
 		 "<body>\n"
 		 "<div id=\"systemlog\"></div>\n"
 		 "</body></html>\n",
-		 htsversion);
+		 tvheadend_version);
   http_output_html(hc);
   return 0;
 }
@@ -185,7 +182,7 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 		 "<div class=\"about-title\">"
 		 "HTS Tvheadend %s"
 		 "</div><br>"
-		 "&copy; 2006 - 2010 Andreas \303\226man, et al.<br><br>"
+		 "&copy; 2006 - 2012 Andreas \303\226man, et al.<br><br>"
 		 "<img src=\"docresources/tvheadendlogo.png\"><br>"
 		 "<a href=\"http://www.lonelycoder.com/hts\">"
 		 "http://www.lonelycoder.com/hts</a><br><br>"
@@ -197,8 +194,8 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 		 "<br><br>"
 		 "Build: %s"
 		 "</center>",
-		 htsversion,
-		 htsversion_full);
+		 tvheadend_version,
+		 tvheadend_version);
 
   http_output_html(hc);
   return 0;

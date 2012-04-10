@@ -50,7 +50,6 @@ static void *htsp_server;
 
 #define HTSP_PRIV_MASK (ACCESS_STREAMING)
 
-extern const char *htsversion;
 extern char *dvr_storage;
 
 LIST_HEAD(htsp_connection_list, htsp_connection);
@@ -1032,7 +1031,7 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
 
   htsmsg_add_u32(r, "htspversion", HTSP_PROTO_VERSION);
   htsmsg_add_str(r, "servername", "HTS Tvheadend");
-  htsmsg_add_str(r, "serverversion", htsversion);
+  htsmsg_add_str(r, "serverversion", tvheadend_version);
   htsmsg_add_bin(r, "challenge", htsp->htsp_challenge, 32);
 
   htsp_update_logname(htsp);

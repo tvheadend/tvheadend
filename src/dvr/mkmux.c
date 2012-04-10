@@ -143,14 +143,13 @@ static htsbuf_queue_t *
 mk_build_segment_info(mk_mux_t *mkm)
 {
   htsbuf_queue_t *q = htsbuf_queue_alloc(0);
-  extern char *htsversion_full;
   char app[128];
 
-  snprintf(app, sizeof(app), "HTS Tvheadend %s", htsversion_full);
+  snprintf(app, sizeof(app), "Tvheadend %s", tvheadend_version);
 
   ebml_append_bin(q, 0x73a4, mkm->uuid, sizeof(mkm->uuid));
   ebml_append_string(q, 0x7ba9, mkm->title);
-  ebml_append_string(q, 0x4d80, "HTS Tvheadend Matroska muxer");
+  ebml_append_string(q, 0x4d80, "Tvheadend Matroska muxer");
   ebml_append_string(q, 0x5741, app);
   ebml_append_uint(q, 0x2ad7b1, MATROSKA_TIMESCALE);
 

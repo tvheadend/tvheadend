@@ -15,7 +15,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #ifndef TVHEADEND_H
 #define TVHEADEND_H
 
@@ -33,6 +32,8 @@
 #include "hts_strtab.h"
 
 #include "redblack.h"
+
+extern const char *tvheadend_version;
 
 #define PTS_UNSET INT64_C(0x8000000000000000)
 

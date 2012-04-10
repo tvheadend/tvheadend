@@ -151,14 +151,11 @@ BUNDLE_OBJS=$(BUNDLE_SRCS:%.c=%.o)
 OBJDIRS+= $(sort $(dir $(BUNDLE_OBJS)))
 .PRECIOUS: ${BUNDLE_SRCS}
 
-VERSION=$(shell support/version.sh)
-CURVERSION=$(shell cat ${BUILDDIR}/ver || echo "0")
 
 # Common CFLAGS for all files
 CFLAGS_com  = -g -funsigned-char -O2 
 CFLAGS_com += -D_FILE_OFFSET_BITS=64
 CFLAGS_com += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR}
-CFLAGS_com += -DHTS_VERSION=\"$(VERSION)\"
 
 MKBUNDLE = $(CURDIR)/support/mkbundle
 
@@ -188,18 +185,17 @@ ${BUILDDIR}/%.so: ${SRCS_EXTRA}
 	${CC} -O -fbuiltin -fomit-frame-pointer -fPIC -shared -o $@ $< -ldl
 
 clean:
-	rm -rf ${BUILDDIR}/src ${BUILDDIR}/bundles ${BUILDDIR}/ver
+	rm -rf ${BUILDDIR}/src ${BUILDDIR}/bundles
 	find . -name "*~" | xargs rm -f
 
 distclean: clean
 	rm -rf build.*
 
-ifneq ($(VERSION), $(CURVERSION))
-.PHONY:	src/version.c
-$(info Version changed)
-src/version.c:
-	@echo $(VERSION) >${BUILDDIR}/ver
-endif
+# Create buildversion.h
+src/version.c: $(BUILDDIR)/buildversion.h
+$(BUILDDIR)/buildversion.h: FORCE
+	@$(CURDIR)/support/version.sh $(CURDIR) $@
+FORCE:
 
 
 # Include dependency files if they exist.
