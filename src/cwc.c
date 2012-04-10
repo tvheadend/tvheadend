@@ -244,6 +244,7 @@ typedef struct cwc {
     int shared_len;
     uint8_t * shared_emm;
   } cwc_viaccess_emm;
+#define cwc_cryptoworks_emm cwc_viaccess_emm
 
   /* Card type */
   card_type_t cwc_card_type;
@@ -1673,10 +1674,44 @@ cwc_emm_cryptoworks(cwc_t *cwc, uint8_t *data, int len)
   case 0x82: /* unique */
     match = len >= 10 && memcmp(data + 5, cwc->cwc_ua + 3, 5) == 0;
     break;
-  case 0x84: /* shared */
-    match = len >= 9 && memcmp(data + 5, cwc->cwc_ua + 3, 4) == 0;
+  case 0x84: /* emm-sh */
+    if (len >= 9 && memcmp(data + 5, cwc->cwc_ua + 3, 4) == 0) {
+      if (cwc->cwc_cryptoworks_emm.shared_emm) {
+        free(cwc->cwc_cryptoworks_emm.shared_emm);
+        cwc->cwc_cryptoworks_emm.shared_len = 0;
+        cwc->cwc_cryptoworks_emm.shared_emm = (uint8_t *)malloc(len);
+      }
+      cwc->cwc_cryptoworks_emm.shared_emm = malloc(len);
+      if (cwc->cwc_cryptoworks_emm.shared_emm) {
+        cwc->cwc_cryptoworks_emm.shared_len = len;
+        memcpy(cwc->cwc_cryptoworks_emm.shared_emm, data, len);
+        printf("emm-sh[%04x]: loaded\n", cwc->cwc_caid);
+      }
+    }
     break;
-  case 0x86: /* shared header */
+  case 0x86: /* emm-sb */ 
+    if (cwc->cwc_cryptoworks_emm.shared_emm) {
+      /* python: EMM_SH[0:12] + EMM_SB[5:-1] + EMM_SH[12:-1] */
+      uint32_t elen = len - 5 + cwc->cwc_cryptoworks_emm.shared_len - 12;
+      uint8_t *tmp = malloc(elen);
+      uint8_t *composed = tmp ? malloc(elen + 12) : NULL;
+      if (composed) {
+        printf("emm-sb[%04x]: composed\n", cwc->cwc_caid);
+        memcpy(tmp, data + 5, len - 5);
+        memcpy(tmp + len - 5, cwc->cwc_cryptoworks_emm.shared_emm + 12,
+                                cwc->cwc_cryptoworks_emm.shared_len - 12);
+        memcpy(composed, cwc->cwc_cryptoworks_emm.shared_emm, 12);
+        sort_nanos(composed + 12, tmp, elen);
+        composed[1] = ((elen + 9) >> 8) | 0x70;
+        composed[2] = (elen + 9) & 0xff;
+        cwc_send_msg(cwc, composed, elen + 12, 0, 1);
+        free(composed);
+        free(tmp);
+      }
+      cwc->cwc_cryptoworks_emm.shared_emm = NULL;
+      cwc->cwc_cryptoworks_emm.shared_len = 0;
+    }
+    break;
   case 0x88: /* global */
   case 0x89: /* global */
     match = 1;
