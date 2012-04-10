@@ -1180,14 +1180,15 @@ cwc_emm_cache_lookup(cwc_t *cwc, uint32_t crc)
  *
  */
 void
-cwc_emm(uint8_t *data, int len)
+cwc_emm(uint8_t *data, int len, uint16_t caid)
 {
   cwc_t *cwc;
 
   pthread_mutex_lock(&cwc_mutex);
 
   TAILQ_FOREACH(cwc, &cwcs, cwc_link) {
-    if(cwc->cwc_forward_emm && cwc->cwc_writer_running) {
+    if(cwc->cwc_caid == caid &&
+       cwc->cwc_forward_emm && cwc->cwc_writer_running) {
       switch (cwc->cwc_card_type) {
       case CARD_CONAX:
 	cwc_emm_conax(cwc, data, len);
