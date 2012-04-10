@@ -13,7 +13,7 @@
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
-DESC="HTS Tvheadend"
+DESC="Tvheadend"
 NAME=tvheadend
 DAEMON=/usr/bin/$NAME
 DAEMON_ARGS="-f -u hts -g video"
