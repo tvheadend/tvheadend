@@ -1685,7 +1685,6 @@ cwc_emm_cryptoworks(cwc_t *cwc, uint8_t *data, int len)
       if (cwc->cwc_cryptoworks_emm.shared_emm) {
         cwc->cwc_cryptoworks_emm.shared_len = len;
         memcpy(cwc->cwc_cryptoworks_emm.shared_emm, data, len);
-        printf("emm-sh[%04x]: loaded\n", cwc->cwc_caid);
       }
     }
     break;
@@ -1696,7 +1695,6 @@ cwc_emm_cryptoworks(cwc_t *cwc, uint8_t *data, int len)
       uint8_t *tmp = malloc(elen);
       uint8_t *composed = tmp ? malloc(elen + 12) : NULL;
       if (composed) {
-        printf("emm-sb[%04x]: composed\n", cwc->cwc_caid);
         memcpy(tmp, data + 5, len - 5);
         memcpy(tmp + len - 5, cwc->cwc_cryptoworks_emm.shared_emm + 12,
                                 cwc->cwc_cryptoworks_emm.shared_len - 12);
