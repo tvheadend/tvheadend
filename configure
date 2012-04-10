@@ -44,6 +44,8 @@ for opt do
   case "$opt" in
   --prefix=*) PREFIX="$optval"
   ;;
+  --arch=*) ARCH="$optval"
+  ;;
   --cpu=*) CPU="$optval"
   ;;
   --help) show_help
