@@ -385,7 +385,7 @@ main(int argc, char **argv)
 #endif
   http_server_init();
 
-  webui_init(TVHEADEND_CONTENT_PATH);
+  webui_init(tvheadend_dataroot());
 
   serviceprobe_init();
 
@@ -429,9 +429,11 @@ main(int argc, char **argv)
   pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 
   tvhlog(LOG_NOTICE, "START", "HTS Tvheadend version %s started, "
-	 "running as PID:%d UID:%d GID:%d, settings located in '%s'",
+	 "running as PID:%d UID:%d GID:%d, settings located in '%s', "
+	 "dataroot: %s",
 	 tvheadend_version,
-	 getpid(), getuid(), getgid(), hts_settings_get_root());
+	 getpid(), getuid(), getgid(), hts_settings_get_root(),
+	 tvheadend_dataroot() ?: "<Embedded file system>");
 
   if(crash)
     abort();

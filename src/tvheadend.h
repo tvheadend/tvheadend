@@ -34,6 +34,7 @@
 #include "redblack.h"
 
 extern const char *tvheadend_version;
+extern const char *tvheadend_dataroot();
 
 #define PTS_UNSET INT64_C(0x8000000000000000)
 

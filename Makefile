@@ -28,6 +28,8 @@ CFLAGS += -Wall -Werror -Wwrite-strings -Wno-deprecated-declarations
 CFLAGS += -Wmissing-prototypes
 LDFLAGS += -lrt -ldl
 
+BUNDLES += docs/html docs/docresources src/webui/static
+
 #
 # Core
 #
@@ -170,10 +172,21 @@ all: ${PROG}
 
 .PHONY:	clean distclean
 
-${PROG}: $(OBJS) $(BUNDLE_OBJS) ${OBJS_EXTRA} Makefile
-	@mkdir -p $(dir $@)
-	$(CC) -o $@ $(OBJS) $(BUNDLE_OBJS) $(LDFLAGS) ${LDFLAGS_cfg}
+#
+#
+#
+${PROG}: $(OBJS) $(ALLDEPS)  support/dataroot/wd.c
+	$(CC) -o $@ $(OBJS) support/dataroot/wd.c $(LDFLAGS) ${LDFLAGS_cfg}
 
+${PROG}.bundle: $(OBJS) $(BUNDLE_OBJS) $(ALLDEPS)  support/dataroot/bundle.c
+	$(CC) -o $@ $(OBJS) support/dataroot/bundle.c $(BUNDLE_OBJS) $(LDFLAGS) ${LDFLAGS_cfg}
+
+${PROG}.datadir: $(OBJS) $(ALLDEPS)  support/dataroot/datadir.c
+	$(CC) -o $@ $(OBJS) -iquote${BUILDDIR} support/dataroot/datadir.c $(LDFLAGS) ${LDFLAGS_cfg}
+
+#
+#
+#
 ${BUILDDIR}/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) -MD -MP $(CFLAGS_com) $(CFLAGS) $(CFLAGS_cfg) -c -o $@ $(CURDIR)/$<

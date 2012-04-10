@@ -11,14 +11,16 @@
 # Copyright (c) 2005-2008 Mans Rullgard
 #
 
-PLATFORM=`uname`
-
+PLATFORM=linux
 source support/configure.inc
 
 CPU=generic
 ARCH=`uname -m`
 OSENV="posix"
-PREFIX=/usr/local
+prefix=/usr/local
+bindir="\${prefix}/bin"
+mandir="\${prefix}/share/man"
+datadir="\${prefix}/share/tvheadend"
 
 show_help(){
   echo "Usage: configure [options]"
@@ -26,7 +28,11 @@ show_help(){
   echo
   echo "Standard options:"
   echo "  --help                   print this message"
-  echo "  --prefix=PREFIX          install in PREFIX [$PREFIX]"
+  echo "  --prefix=PREFIX          Install in PREFIX [$prefix]"
+  echo "  --bindir=DIR             Install binaries in DIR [$bindir]"
+  echo "  --mandir=DIR             Install man pages in DIR [$mandir]"
+  echo "  --datadir=DIR            Install data files in DIR [$datadir]"
+  echo
   echo "  --arch=arch              Build for this architecture [$ARCH]"
   echo "  --cpu=cpu                Build and optimize for specific CPU"
   echo "  --cc=CC                  Build using the given compiler"
@@ -42,8 +48,6 @@ enable v4l
 for opt do
   optval="${opt#*=}"
   case "$opt" in
-  --prefix=*) PREFIX="$optval"
-  ;;
   --cpu=*) CPU="$optval"
   ;;
   --help) show_help
@@ -53,6 +57,33 @@ for opt do
   ;;
   --cc=*) CC="$optval"
   ;;
+  --prefix=*)
+  prefix="$optval"
+  ;;
+  --bindir=*)
+  bindir="$optval"
+  ;;
+  --mandir=*)
+  mandir="$optval"
+  ;;
+  --datadir=*)
+  datadir="$optval"
+  ;;
+  --includedir=*)
+  ;;
+  --infodir=*)
+  ;;
+  --sysconfdir=*)
+  ;;
+  --localstatedir=*)
+  ;;
+  --libexecdir=*)
+  ;;
+  --disable-maintainer-mode)
+  ;;
+  --disable-dependency-tracking)
+  ;;
+
   --enable-?*|--disable-?*)
   eval $(echo "$opt" | sed 's/--/action=/;s/-/ option=/;s/-/_/g')
   $action $option
@@ -155,37 +186,31 @@ else
 fi
 
 #
-# Configure paths, etc
-#
-if [ ${RELEASE} != yes ]; then
-    echo  NOTE:
-    echo  NOTE: Development build. 
-    echo  NOTE: The generated binary will contained compild-in paths to
-    echo  NOTE: the current build tree. If you plan to install or move 
-    echo  NOTE: the binary, please reconfigure with '--release'.
-    echo  NOTE:
-
-    cat >> ${CONFIG_H} << EOF
-#define TVHEADEND_CONTENT_PATH "${TOPDIR}"
-EOF
-
-else
-
-    echo >>${CONFIG_MAK} "BUNDLES += docs/html docs/docresources src/webui/static"
-
-    cat >> ${CONFIG_H} << EOF
-#define TVHEADEND_CONTENT_PATH NULL
-EOF
-fi
-
-#
 # Finalize
 #
 cat >> ${CONFIG_MAK} << EOF 
 ARCH=$ARCH
-INSTALLPREFIX=$PREFIX
 LDFLAGS_cfg += -lpthread
 EOF
+
+
+#
+# Finalize
+#
+echo
+echo "Installation paths:"
+echo "  Prefix:        ${prefix}"
+echo "  Binaries:      ${bindir}"
+echo "  Man pages:     ${mandir}"
+echo "  Data files:    ${datadir}"
+echo
+echo >>${CONFIG_MAK} "prefix=$prefix"
+echo >>${CONFIG_MAK} "bindir=\${DESTDIR}$bindir"
+echo >>${CONFIG_MAK} "mandir=\${DESTDIR}$mandir"
+echo >>${CONFIG_MAK} "datadir=\${DESTDIR}$datadir"
+echo >>${CONFIG_MAK} LDFLAGS_cfg += -lpthread -lrt -ldl
+eval datadirpath=${datadir}
+echo >>${CONFIG_H} "#define TVHEADEND_DATADIR \"${datadirpath}\""
 
 
 finalize
