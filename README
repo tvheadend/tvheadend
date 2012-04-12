@@ -1,4 +1,3 @@
-
 		    Tvheadend TV streaming server
 		    =============================
 
@@ -21,7 +20,7 @@ $ make
 Build the binary, after build the binary resides in 'build.Linux/'.
 Thus, to start it, just type:
 
-$ build.Linux/tvheadend
+$ build.linux/tvheadend
 
 Settings are stored in $HOME/.hts/tvheadend
 
