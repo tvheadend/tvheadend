@@ -765,20 +765,48 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
     if(ct->cs_okchannel == es->es_channel)
       ct->cs_okchannel = -1;
 
+    if (es->es_nok < 3)
+      es->es_nok++;
+
     if(ct->cs_keystate == CS_FORBIDDEN)
       return; // We already know it's bad
 
-    es->es_nok = 1;
+    if (es->es_nok > 2) {
+      tvhlog(LOG_DEBUG, "cwc",
+             "Too many NOKs for service \"%s\"%s from %s:%i",
+             t->s_svcname, chaninfo, ct->cs_cwc->cwc_hostname,
+             ct->cs_cwc->cwc_port);
+      goto forbid;
+    }
+
+    TAILQ_FOREACH(cwc2, &cwcs, cwc_link) {
+      LIST_FOREACH(ct2, &cwc2->cwc_services, cs_link) {
+        if (ct != ct2 && ct2->cs_service == t &&
+            ct2->cs_keystate == CS_RESOLVED) {
+          tvhlog(LOG_DEBUG, "cwc",
+	    "NOK from %s:%i: Already has a key for service \"%s\", from %s:%i",
+            ct->cs_cwc->cwc_hostname, ct->cs_cwc->cwc_port,
+	    t->s_svcname, ct2->cs_cwc->cwc_hostname, ct2->cs_cwc->cwc_port);
+          es->es_nok = 3; /* do not send more ECM requests */
+          goto forbid;
+        }
+      }
+    }
 
     tvhlog(LOG_DEBUG, "cwc", "Received NOK for service \"%s\"%s (seqno: %d "
 	   "Req delay: %lld ms)", t->s_svcname, chaninfo, seq, delay);
 
+forbid:
     LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
       for(i = 0; i <= ep->ep_last_section; i++)
-	if(ep->ep_sections[i] == NULL || 
-	   ep->ep_sections[i]->es_pending ||
-	   ep->ep_sections[i]->es_nok == 0)
-	  return;
+	if(ep->ep_sections[i] == NULL) {
+          if(es->es_nok < 2) /* only first hit is allowed */
+            return;
+	} else {
+          if(ep->ep_sections[i]->es_pending ||
+	     ep->ep_sections[i]->es_nok == 0)
+	    return;
+        }
     }
     tvhlog(LOG_ERR, "cwc",
 	   "Can not descramble service \"%s\", access denied (seqno: %d "
@@ -1593,6 +1621,9 @@ cwc_table_input(struct th_descrambler *td, struct service *t,
       ep->ep_sections[section] = calloc(1, sizeof(ecm_section_t));
 
     es = ep->ep_sections[section];
+
+    if (es->es_nok > 2)
+      break; /* too many NOK responses in a row */
 
     if(es->es_ecmsize == len && !memcmp(es->es_ecm, data, len))
       break; /* key already sent */
