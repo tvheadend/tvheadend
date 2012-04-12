@@ -151,7 +151,8 @@ typedef struct cwc_service {
   enum {
     CS_UNKNOWN,
     CS_RESOLVED,
-    CS_FORBIDDEN
+    CS_FORBIDDEN,
+    CS_IDLE
   } cs_keystate;
 
   void *cs_keys;
@@ -742,6 +743,8 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
 		 int len, int seq)
 {
   service_t *t = ct->cs_service;
+  cwc_service_t *ct2;
+  cwc_t *cwc2;
   ecm_pid_t *ep;
   char chaninfo[32];
   int i;
@@ -800,12 +803,25 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
 	   msg[3 + 5], msg[3 + 6], msg[3 + 7], msg[3 + 8], msg[3 + 9],
 	   msg[3 + 10],msg[3 + 11],msg[3 + 12],msg[3 + 13],msg[3 + 14],
 	   msg[3 + 15], seq, delay);
+
+    TAILQ_FOREACH(cwc2, &cwcs, cwc_link) {
+      LIST_FOREACH(ct2, &cwc2->cwc_services, cs_link) {
+        if (ct != ct2 && ct2->cs_service == t &&
+            ct2->cs_keystate == CS_RESOLVED) {
+          ct->cs_keystate = CS_IDLE;
+          tvhlog(LOG_DEBUG, "cwc",
+	     "Already has a key for service \"%s\", from %s:%i",
+	     t->s_svcname, ct2->cs_cwc->cwc_hostname, ct2->cs_cwc->cwc_port);
+          return;
+        }
+      }
+    }
     
     if(ct->cs_keystate != CS_RESOLVED)
       tvhlog(LOG_INFO, "cwc",
 	     "Obtained key for for service \"%s\" in %lld ms, from %s",
 	     t->s_svcname, delay, ct->cs_cwc->cwc_hostname);
-    
+
     ct->cs_keystate = CS_RESOLVED;
     memcpy(ct->cs_cw, msg + 3, 16);
     ct->cs_pending_cw_update = 1;
@@ -1518,6 +1534,9 @@ cwc_table_input(struct th_descrambler *td, struct service *t,
   ecm_section_t *es;
   char chaninfo[32];
   caid_t *c;
+
+  if (ct->cs_keystate == CS_IDLE)
+    return;
 
   if(len > 4096)
     return;
