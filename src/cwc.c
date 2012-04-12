@@ -591,10 +591,10 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 
   memcpy(cwc->cwc_ua, &msg[6], 8);
 
-  tvhlog(LOG_INFO, "cwc", "%s: Connected as user 0x%02x "
+  tvhlog(LOG_INFO, "cwc", "%s:%i: Connected as user 0x%02x "
 	 "to a %s-card [0x%04x : %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x] "
 	 "with %d providers", 
-	 cwc->cwc_hostname,
+	 cwc->cwc_hostname, cwc->cwc_port,
 	 msg[3], n, cwc->cwc_caid, 
 	 cwc->cwc_ua[0], cwc->cwc_ua[1], cwc->cwc_ua[2], cwc->cwc_ua[3], cwc->cwc_ua[4], cwc->cwc_ua[5], cwc->cwc_ua[6], cwc->cwc_ua[7],
 	 nprov);
@@ -617,8 +617,8 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
     cwc->cwc_providers[i].sa[6] = msg[9];
     cwc->cwc_providers[i].sa[7] = msg[10];
 
-    tvhlog(LOG_INFO, "cwc", "%s: Provider ID #%d: 0x%06x %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x",
-	   cwc->cwc_hostname, i + 1,
+    tvhlog(LOG_INFO, "cwc", "%s:%i: Provider ID #%d: 0x%06x %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x",
+	   cwc->cwc_hostname, cwc->cwc_port, i + 1,
 	   cwc->cwc_providers[i].id,
 	   cwc->cwc_providers[i].sa[0],
 	   cwc->cwc_providers[i].sa[1],
@@ -641,16 +641,16 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 
     if (!emm_allowed) {
       tvhlog(LOG_INFO, "cwc", 
-	     "%s: Will not forward EMMs (not allowed by server)",
-	     cwc->cwc_hostname);
+	     "%s:%i: Will not forward EMMs (not allowed by server)",
+	     cwc->cwc_hostname, cwc->cwc_port);
     } else if (cwc->cwc_card_type != CARD_UNKNOWN) {
-      tvhlog(LOG_INFO, "cwc", "%s: Will forward EMMs",
-	     cwc->cwc_hostname);
+      tvhlog(LOG_INFO, "cwc", "%s:%i: Will forward EMMs",
+	     cwc->cwc_hostname, cwc->cwc_port);
       cwc->cwc_forward_emm = 1;
     } else {
       tvhlog(LOG_INFO, "cwc", 
-	     "%s: Will not forward EMMs (unsupported CA system)",
-	     cwc->cwc_hostname);
+	     "%s:%i: Will not forward EMMs (unsupported CA system)",
+	     cwc->cwc_hostname, cwc->cwc_port);
     }
   }
 
@@ -673,43 +673,43 @@ cwc_detect_card_type(cwc_t *cwc)
   case 0x17:
   case 0x06: 
     cwc->cwc_card_type = CARD_IRDETO;
-    tvhlog(LOG_INFO, "cwc", "%s: irdeto card",
-	   cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: irdeto card",
+	   cwc->cwc_hostname, cwc->cwc_port);
     break;
   case 0x05:
     cwc->cwc_card_type = CARD_VIACCESS;
-    tvhlog(LOG_INFO, "cwc", "%s: viaccess card",
-	   cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: viaccess card",
+	   cwc->cwc_hostname, cwc->cwc_port);
     break;
   case 0x0b:
     cwc->cwc_card_type = CARD_CONAX;
-    tvhlog(LOG_INFO, "cwc", "%s: conax card",
-	   cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: conax card",
+	   cwc->cwc_hostname, cwc->cwc_port);
     break;
   case 0x01:
     cwc->cwc_card_type = CARD_SECA;
-    tvhlog(LOG_INFO, "cwc", "%s: seca card",
-	   cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: seca card",
+	   cwc->cwc_hostname, cwc->cwc_port);
     break;
   case 0x4a:
     cwc->cwc_card_type = CARD_DRE;
-    tvhlog(LOG_INFO, "cwc", "%s: dre card",
-	   cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: dre card",
+	   cwc->cwc_hostname, cwc->cwc_port);
     break;
   case 0x18:
     cwc->cwc_card_type = CARD_NAGRA;
-    tvhlog(LOG_INFO, "cwc", "%s: nagra card",
-	   cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: nagra card",
+	   cwc->cwc_hostname, cwc->cwc_port);
     break;
   case 0x09:
     cwc->cwc_card_type = CARD_NDS;
-    tvhlog(LOG_INFO, "cwc", "%s: nds card",
-	   cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: nds card",
+	   cwc->cwc_hostname, cwc->cwc_port);
     break;
   case 0x0d:
     cwc->cwc_card_type = CARD_CRYPTOWORKS;
-    tvhlog(LOG_INFO, "cwc", "%s: cryptoworks card",
-	   cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: cryptoworks card",
+	   cwc->cwc_hostname, cwc->cwc_port);
     break;
   default:
     cwc->cwc_card_type = CARD_UNKNOWN;
@@ -819,8 +819,9 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
     
     if(ct->cs_keystate != CS_RESOLVED)
       tvhlog(LOG_INFO, "cwc",
-	     "Obtained key for for service \"%s\" in %lld ms, from %s",
-	     t->s_svcname, delay, ct->cs_cwc->cwc_hostname);
+	     "Obtained key for service \"%s\" in %lld ms, from %s:%i",
+	     t->s_svcname, delay, ct->cs_cwc->cwc_hostname,
+	     ct->cs_cwc->cwc_port);
 
     ct->cs_keystate = CS_RESOLVED;
     memcpy(ct->cs_cw, msg + 3, 16);
@@ -907,15 +908,15 @@ cwc_read_message(cwc_t *cwc, const char *state, int timeout)
   int msglen, r;
 
   if((r = cwc_read(cwc, buf, 2, timeout))) {
-    tvhlog(LOG_INFO, "cwc", "%s: %s: Read error (header): %s",
-	   cwc->cwc_hostname, state, strerror(r));
+    tvhlog(LOG_INFO, "cwc", "%s:%i: %s: Read error (header): %s",
+	   cwc->cwc_hostname, cwc->cwc_port, state, strerror(r));
     return -1;
   }
 
   msglen = (buf[0] << 8) | buf[1];
   if(msglen >= CWS_NETMSGSIZE) {
-    tvhlog(LOG_INFO, "cwc", "%s: %s: Invalid message size: %d",
-	   cwc->cwc_hostname, state, msglen);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: %s: Invalid message size: %d",
+	   cwc->cwc_hostname, cwc->cwc_port, state, msglen);
     return -1;
   }
 
@@ -923,14 +924,14 @@ cwc_read_message(cwc_t *cwc, const char *state, int timeout)
      so just wait 1 second here */
 
   if((r = cwc_read(cwc, cwc->cwc_buf + 2, msglen, 1000))) {
-    tvhlog(LOG_INFO, "cwc", "%s: %s: Read error: %s",
-	   cwc->cwc_hostname, state, strerror(r));
+    tvhlog(LOG_INFO, "cwc", "%s:%i: %s: Read error: %s",
+	   cwc->cwc_hostname, cwc->cwc_port, state, strerror(r));
     return -1;
   }
 
   if((msglen = des_decrypt(cwc->cwc_buf, msglen + 2, cwc)) < 15) {
-    tvhlog(LOG_INFO, "cwc", "%s: %s: Decrypt failed",
-	   state, cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: %s: Decrypt failed",
+	   cwc->cwc_hostname, cwc->cwc_port, state);
     return -1;
   }
   return msglen;
@@ -992,8 +993,8 @@ cwc_session(cwc_t *cwc)
    * Get login key
    */
   if((r = cwc_read(cwc, cwc->cwc_buf, 14, 5000))) {
-    tvhlog(LOG_INFO, "cwc", "%s: No login key received: %s",
-	   cwc->cwc_hostname, strerror(r));
+    tvhlog(LOG_INFO, "cwc", "%s:%i: No login key received: %s",
+	   cwc->cwc_hostname, cwc->cwc_port, strerror(r));
     return;
   }
 
@@ -1008,7 +1009,8 @@ cwc_session(cwc_t *cwc)
     return;
 
   if(cwc->cwc_buf[12] != MSG_CLIENT_2_SERVER_LOGIN_ACK) {
-    tvhlog(LOG_INFO, "cwc", "%s: Login failed", cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: Login failed",
+           cwc->cwc_hostname, cwc->cwc_port);
     return;
   }
 
@@ -1022,7 +1024,8 @@ cwc_session(cwc_t *cwc)
     return;
 
   if(cwc->cwc_buf[12] != MSG_CARD_DATA) {
-    tvhlog(LOG_INFO, "cwc", "%s: Card data request failed", cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: Card data request failed",
+           cwc->cwc_hostname, cwc->cwc_port);
     return;
   }
 
@@ -1124,7 +1127,8 @@ cwc_thread(void *aux)
       cwc->cwc_caid = 0;
       cwc->cwc_connected = 0;
       cwc_comet_status_update(cwc);
-      tvhlog(LOG_INFO, "cwc", "Disconnected from %s",  cwc->cwc_hostname);
+      tvhlog(LOG_INFO, "cwc", "Disconnected from %s:%i", 
+             cwc->cwc_hostname, cwc->cwc_port);
     }
 
     if(subscriptions_active()) {
@@ -1139,13 +1143,14 @@ cwc_thread(void *aux)
     ts.tv_nsec = 0;
 
     tvhlog(LOG_INFO, "cwc", 
-	   "%s: Automatic connection attempt in in %d seconds",
-	   cwc->cwc_hostname, d);
+	   "%s:%i: Automatic connection attempt in in %d seconds",
+	   cwc->cwc_hostname, cwc->cwc_port, d);
 
     pthread_cond_timedwait(&cwc_config_changed, &cwc_mutex, &ts);
   }
 
-  tvhlog(LOG_INFO, "cwc", "%s destroyed", cwc->cwc_hostname);
+  tvhlog(LOG_INFO, "cwc", "%s:%i destroyed",
+         cwc->cwc_hostname, cwc->cwc_port);
 
   while((ct = LIST_FIRST(&cwc->cwc_services)) != NULL) {
     t = ct->cs_service;
