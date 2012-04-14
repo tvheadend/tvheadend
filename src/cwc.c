@@ -151,7 +151,8 @@ typedef struct cwc_service {
   enum {
     CS_UNKNOWN,
     CS_RESOLVED,
-    CS_FORBIDDEN
+    CS_FORBIDDEN,
+    CS_IDLE
   } cs_keystate;
 
   void *cs_keys;
@@ -243,8 +244,13 @@ typedef struct cwc {
     int shared_toggle;
     int shared_len;
     uint8_t * shared_emm;
+    void *ca_update_id;
   } cwc_viaccess_emm;
 #define cwc_cryptoworks_emm cwc_viaccess_emm
+
+  /* one update id */
+  int64_t cwc_update_time;
+  void *cwc_update_id;
 
   /* Card type */
   card_type_t cwc_card_type;
@@ -260,6 +266,7 @@ typedef struct cwc {
   int cwc_port;
   char *cwc_id;
   int cwc_emm;
+  int cwc_emmex;
 
   const char *cwc_errtxt;
 
@@ -584,10 +591,10 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 
   memcpy(cwc->cwc_ua, &msg[6], 8);
 
-  tvhlog(LOG_INFO, "cwc", "%s: Connected as user 0x%02x "
+  tvhlog(LOG_INFO, "cwc", "%s:%i: Connected as user 0x%02x "
 	 "to a %s-card [0x%04x : %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x] "
 	 "with %d providers", 
-	 cwc->cwc_hostname,
+	 cwc->cwc_hostname, cwc->cwc_port,
 	 msg[3], n, cwc->cwc_caid, 
 	 cwc->cwc_ua[0], cwc->cwc_ua[1], cwc->cwc_ua[2], cwc->cwc_ua[3], cwc->cwc_ua[4], cwc->cwc_ua[5], cwc->cwc_ua[6], cwc->cwc_ua[7],
 	 nprov);
@@ -610,8 +617,8 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
     cwc->cwc_providers[i].sa[6] = msg[9];
     cwc->cwc_providers[i].sa[7] = msg[10];
 
-    tvhlog(LOG_INFO, "cwc", "%s: Provider ID #%d: 0x%06x %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x",
-	   cwc->cwc_hostname, i + 1,
+    tvhlog(LOG_INFO, "cwc", "%s:%i: Provider ID #%d: 0x%06x %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x",
+	   cwc->cwc_hostname, cwc->cwc_port, i + 1,
 	   cwc->cwc_providers[i].id,
 	   cwc->cwc_providers[i].sa[0],
 	   cwc->cwc_providers[i].sa[1],
@@ -634,16 +641,16 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 
     if (!emm_allowed) {
       tvhlog(LOG_INFO, "cwc", 
-	     "%s: Will not forward EMMs (not allowed by server)",
-	     cwc->cwc_hostname);
+	     "%s:%i: Will not forward EMMs (not allowed by server)",
+	     cwc->cwc_hostname, cwc->cwc_port);
     } else if (cwc->cwc_card_type != CARD_UNKNOWN) {
-      tvhlog(LOG_INFO, "cwc", "%s: Will forward EMMs",
-	     cwc->cwc_hostname);
+      tvhlog(LOG_INFO, "cwc", "%s:%i: Will forward EMMs",
+	     cwc->cwc_hostname, cwc->cwc_port);
       cwc->cwc_forward_emm = 1;
     } else {
       tvhlog(LOG_INFO, "cwc", 
-	     "%s: Will not forward EMMs (unsupported CA system)",
-	     cwc->cwc_hostname);
+	     "%s:%i: Will not forward EMMs (unsupported CA system)",
+	     cwc->cwc_hostname, cwc->cwc_port);
     }
   }
 
@@ -666,43 +673,43 @@ cwc_detect_card_type(cwc_t *cwc)
   case 0x17:
   case 0x06: 
     cwc->cwc_card_type = CARD_IRDETO;
-    tvhlog(LOG_INFO, "cwc", "%s: irdeto card",
-	   cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: irdeto card",
+	   cwc->cwc_hostname, cwc->cwc_port);
     break;
   case 0x05:
     cwc->cwc_card_type = CARD_VIACCESS;
-    tvhlog(LOG_INFO, "cwc", "%s: viaccess card",
-	   cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: viaccess card",
+	   cwc->cwc_hostname, cwc->cwc_port);
     break;
   case 0x0b:
     cwc->cwc_card_type = CARD_CONAX;
-    tvhlog(LOG_INFO, "cwc", "%s: conax card",
-	   cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: conax card",
+	   cwc->cwc_hostname, cwc->cwc_port);
     break;
   case 0x01:
     cwc->cwc_card_type = CARD_SECA;
-    tvhlog(LOG_INFO, "cwc", "%s: seca card",
-	   cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: seca card",
+	   cwc->cwc_hostname, cwc->cwc_port);
     break;
   case 0x4a:
     cwc->cwc_card_type = CARD_DRE;
-    tvhlog(LOG_INFO, "cwc", "%s: dre card",
-	   cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: dre card",
+	   cwc->cwc_hostname, cwc->cwc_port);
     break;
   case 0x18:
     cwc->cwc_card_type = CARD_NAGRA;
-    tvhlog(LOG_INFO, "cwc", "%s: nagra card",
-	   cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: nagra card",
+	   cwc->cwc_hostname, cwc->cwc_port);
     break;
   case 0x09:
     cwc->cwc_card_type = CARD_NDS;
-    tvhlog(LOG_INFO, "cwc", "%s: nds card",
-	   cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: nds card",
+	   cwc->cwc_hostname, cwc->cwc_port);
     break;
   case 0x0d:
     cwc->cwc_card_type = CARD_CRYPTOWORKS;
-    tvhlog(LOG_INFO, "cwc", "%s: cryptoworks card",
-	   cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: cryptoworks card",
+	   cwc->cwc_hostname, cwc->cwc_port);
     break;
   default:
     cwc->cwc_card_type = CARD_UNKNOWN;
@@ -736,6 +743,8 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
 		 int len, int seq)
 {
   service_t *t = ct->cs_service;
+  cwc_service_t *ct2;
+  cwc_t *cwc2;
   ecm_pid_t *ep;
   char chaninfo[32];
   int i;
@@ -756,20 +765,48 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
     if(ct->cs_okchannel == es->es_channel)
       ct->cs_okchannel = -1;
 
+    if (es->es_nok < 3)
+      es->es_nok++;
+
     if(ct->cs_keystate == CS_FORBIDDEN)
       return; // We already know it's bad
 
-    es->es_nok = 1;
+    if (es->es_nok > 2) {
+      tvhlog(LOG_DEBUG, "cwc",
+             "Too many NOKs for service \"%s\"%s from %s:%i",
+             t->s_svcname, chaninfo, ct->cs_cwc->cwc_hostname,
+             ct->cs_cwc->cwc_port);
+      goto forbid;
+    }
+
+    TAILQ_FOREACH(cwc2, &cwcs, cwc_link) {
+      LIST_FOREACH(ct2, &cwc2->cwc_services, cs_link) {
+        if (ct != ct2 && ct2->cs_service == t &&
+            ct2->cs_keystate == CS_RESOLVED) {
+          tvhlog(LOG_DEBUG, "cwc",
+	    "NOK from %s:%i: Already has a key for service \"%s\", from %s:%i",
+            ct->cs_cwc->cwc_hostname, ct->cs_cwc->cwc_port,
+	    t->s_svcname, ct2->cs_cwc->cwc_hostname, ct2->cs_cwc->cwc_port);
+          es->es_nok = 3; /* do not send more ECM requests */
+          goto forbid;
+        }
+      }
+    }
 
     tvhlog(LOG_DEBUG, "cwc", "Received NOK for service \"%s\"%s (seqno: %d "
 	   "Req delay: %lld ms)", t->s_svcname, chaninfo, seq, delay);
 
+forbid:
     LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
       for(i = 0; i <= ep->ep_last_section; i++)
-	if(ep->ep_sections[i] == NULL || 
-	   ep->ep_sections[i]->es_pending ||
-	   ep->ep_sections[i]->es_nok == 0)
-	  return;
+	if(ep->ep_sections[i] == NULL) {
+          if(es->es_nok < 2) /* only first hit is allowed */
+            return;
+	} else {
+          if(ep->ep_sections[i]->es_pending ||
+	     ep->ep_sections[i]->es_nok == 0)
+	    return;
+        }
     }
     tvhlog(LOG_ERR, "cwc",
 	   "Can not descramble service \"%s\", access denied (seqno: %d "
@@ -794,12 +831,26 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
 	   msg[3 + 5], msg[3 + 6], msg[3 + 7], msg[3 + 8], msg[3 + 9],
 	   msg[3 + 10],msg[3 + 11],msg[3 + 12],msg[3 + 13],msg[3 + 14],
 	   msg[3 + 15], seq, delay);
+
+    TAILQ_FOREACH(cwc2, &cwcs, cwc_link) {
+      LIST_FOREACH(ct2, &cwc2->cwc_services, cs_link) {
+        if (ct != ct2 && ct2->cs_service == t &&
+            ct2->cs_keystate == CS_RESOLVED) {
+          ct->cs_keystate = CS_IDLE;
+          tvhlog(LOG_DEBUG, "cwc",
+	     "Already has a key for service \"%s\", from %s:%i",
+	     t->s_svcname, ct2->cs_cwc->cwc_hostname, ct2->cs_cwc->cwc_port);
+          return;
+        }
+      }
+    }
     
     if(ct->cs_keystate != CS_RESOLVED)
       tvhlog(LOG_INFO, "cwc",
-	     "Obtained key for for service \"%s\" in %lld ms, from %s",
-	     t->s_svcname, delay, ct->cs_cwc->cwc_hostname);
-    
+	     "Obtained key for service \"%s\" in %lld ms, from %s:%i",
+	     t->s_svcname, delay, ct->cs_cwc->cwc_hostname,
+	     ct->cs_cwc->cwc_port);
+
     ct->cs_keystate = CS_RESOLVED;
     memcpy(ct->cs_cw, msg + 3, 16);
     ct->cs_pending_cw_update = 1;
@@ -885,15 +936,15 @@ cwc_read_message(cwc_t *cwc, const char *state, int timeout)
   int msglen, r;
 
   if((r = cwc_read(cwc, buf, 2, timeout))) {
-    tvhlog(LOG_INFO, "cwc", "%s: %s: Read error (header): %s",
-	   cwc->cwc_hostname, state, strerror(r));
+    tvhlog(LOG_INFO, "cwc", "%s:%i: %s: Read error (header): %s",
+	   cwc->cwc_hostname, cwc->cwc_port, state, strerror(r));
     return -1;
   }
 
   msglen = (buf[0] << 8) | buf[1];
   if(msglen >= CWS_NETMSGSIZE) {
-    tvhlog(LOG_INFO, "cwc", "%s: %s: Invalid message size: %d",
-	   cwc->cwc_hostname, state, msglen);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: %s: Invalid message size: %d",
+	   cwc->cwc_hostname, cwc->cwc_port, state, msglen);
     return -1;
   }
 
@@ -901,14 +952,14 @@ cwc_read_message(cwc_t *cwc, const char *state, int timeout)
      so just wait 1 second here */
 
   if((r = cwc_read(cwc, cwc->cwc_buf + 2, msglen, 1000))) {
-    tvhlog(LOG_INFO, "cwc", "%s: %s: Read error: %s",
-	   cwc->cwc_hostname, state, strerror(r));
+    tvhlog(LOG_INFO, "cwc", "%s:%i: %s: Read error: %s",
+	   cwc->cwc_hostname, cwc->cwc_port, state, strerror(r));
     return -1;
   }
 
   if((msglen = des_decrypt(cwc->cwc_buf, msglen + 2, cwc)) < 15) {
-    tvhlog(LOG_INFO, "cwc", "%s: %s: Decrypt failed",
-	   state, cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: %s: Decrypt failed",
+	   cwc->cwc_hostname, cwc->cwc_port, state);
     return -1;
   }
   return msglen;
@@ -970,8 +1021,8 @@ cwc_session(cwc_t *cwc)
    * Get login key
    */
   if((r = cwc_read(cwc, cwc->cwc_buf, 14, 5000))) {
-    tvhlog(LOG_INFO, "cwc", "%s: No login key received: %s",
-	   cwc->cwc_hostname, strerror(r));
+    tvhlog(LOG_INFO, "cwc", "%s:%i: No login key received: %s",
+	   cwc->cwc_hostname, cwc->cwc_port, strerror(r));
     return;
   }
 
@@ -986,7 +1037,8 @@ cwc_session(cwc_t *cwc)
     return;
 
   if(cwc->cwc_buf[12] != MSG_CLIENT_2_SERVER_LOGIN_ACK) {
-    tvhlog(LOG_INFO, "cwc", "%s: Login failed", cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: Login failed",
+           cwc->cwc_hostname, cwc->cwc_port);
     return;
   }
 
@@ -1000,7 +1052,8 @@ cwc_session(cwc_t *cwc)
     return;
 
   if(cwc->cwc_buf[12] != MSG_CARD_DATA) {
-    tvhlog(LOG_INFO, "cwc", "%s: Card data request failed", cwc->cwc_hostname);
+    tvhlog(LOG_INFO, "cwc", "%s:%i: Card data request failed",
+           cwc->cwc_hostname, cwc->cwc_port);
     return;
   }
 
@@ -1102,7 +1155,8 @@ cwc_thread(void *aux)
       cwc->cwc_caid = 0;
       cwc->cwc_connected = 0;
       cwc_comet_status_update(cwc);
-      tvhlog(LOG_INFO, "cwc", "Disconnected from %s",  cwc->cwc_hostname);
+      tvhlog(LOG_INFO, "cwc", "Disconnected from %s:%i", 
+             cwc->cwc_hostname, cwc->cwc_port);
     }
 
     if(subscriptions_active()) {
@@ -1117,13 +1171,14 @@ cwc_thread(void *aux)
     ts.tv_nsec = 0;
 
     tvhlog(LOG_INFO, "cwc", 
-	   "%s: Automatic connection attempt in in %d seconds",
-	   cwc->cwc_hostname, d);
+	   "%s:%i: Automatic connection attempt in in %d seconds",
+	   cwc->cwc_hostname, cwc->cwc_port, d);
 
     pthread_cond_timedwait(&cwc_config_changed, &cwc_mutex, &ts);
   }
 
-  tvhlog(LOG_INFO, "cwc", "%s destroyed", cwc->cwc_hostname);
+  tvhlog(LOG_INFO, "cwc", "%s:%i destroyed",
+         cwc->cwc_hostname, cwc->cwc_port);
 
   while((ct = LIST_FIRST(&cwc->cwc_services)) != NULL) {
     t = ct->cs_service;
@@ -1188,7 +1243,7 @@ cwc_emm_cache_lookup(cwc_t *cwc, uint32_t crc)
  *
  */
 void
-cwc_emm(uint8_t *data, int len, uint16_t caid)
+cwc_emm(uint8_t *data, int len, uint16_t caid, void *ca_update_id)
 {
   cwc_t *cwc;
 
@@ -1197,6 +1252,15 @@ cwc_emm(uint8_t *data, int len, uint16_t caid)
   TAILQ_FOREACH(cwc, &cwcs, cwc_link) {
     if(cwc->cwc_caid == caid &&
        cwc->cwc_forward_emm && cwc->cwc_writer_running) {
+      if (cwc->cwc_emmex) {
+        if (cwc->cwc_update_id != ca_update_id) {
+          int64_t delta = getmonoclock() - cwc->cwc_update_time;
+          if (delta < 25000000UL)		/* 25 seconds */
+            continue;
+        }
+        cwc->cwc_update_time = getmonoclock();
+      }
+      cwc->cwc_update_id = ca_update_id;
       switch (cwc->cwc_card_type) {
       case CARD_CONAX:
 	cwc_emm_conax(cwc, data, len);
@@ -1414,13 +1478,15 @@ cwc_emm_viaccess(cwc_t *cwc, uint8_t *data, int mlen)
 	  if (cwc->cwc_viaccess_emm.shared_emm) {
 	    cwc->cwc_viaccess_emm.shared_len = len;
 	    memcpy(cwc->cwc_viaccess_emm.shared_emm, data, len);
+	    cwc->cwc_viaccess_emm.ca_update_id = cwc->cwc_update_id;
 	  }
 	  cwc->cwc_viaccess_emm.shared_toggle = data[0];
 	}
       }
       break;
     case 0x8e:
-      if (cwc->cwc_viaccess_emm.shared_emm) {
+      if (cwc->cwc_viaccess_emm.shared_emm &&
+          cwc->cwc_viaccess_emm.ca_update_id == cwc->cwc_update_id) {
 	int match = 0;
 	int i;
 	/* Match SA and provider in shared */
@@ -1502,6 +1568,9 @@ cwc_table_input(struct th_descrambler *td, struct service *t,
   char chaninfo[32];
   caid_t *c;
 
+  if (ct->cs_keystate == CS_IDLE)
+    return;
+
   if(len > 4096)
     return;
 
@@ -1552,6 +1621,9 @@ cwc_table_input(struct th_descrambler *td, struct service *t,
       ep->ep_sections[section] = calloc(1, sizeof(ecm_section_t));
 
     es = ep->ep_sections[section];
+
+    if (es->es_nok > 2)
+      break; /* too many NOK responses in a row */
 
     if(es->es_ecmsize == len && !memcmp(es->es_ecm, data, len))
       break; /* key already sent */
@@ -1686,11 +1758,13 @@ cwc_emm_cryptoworks(cwc_t *cwc, uint8_t *data, int len)
       if (cwc->cwc_cryptoworks_emm.shared_emm) {
         cwc->cwc_cryptoworks_emm.shared_len = len;
         memcpy(cwc->cwc_cryptoworks_emm.shared_emm, data, len);
+        cwc->cwc_cryptoworks_emm.ca_update_id = cwc->cwc_update_id;
       }
     }
     break;
   case 0x86: /* emm-sb */ 
-    if (cwc->cwc_cryptoworks_emm.shared_emm) {
+    if (cwc->cwc_cryptoworks_emm.shared_emm &&
+        cwc->cwc_cryptoworks_emm.ca_update_id == cwc->cwc_update_id) {
       /* python: EMM_SH[0:12] + EMM_SB[5:-1] + EMM_SH[12:-1] */
       uint32_t elen = len - 5 + cwc->cwc_cryptoworks_emm.shared_len - 12;
       uint8_t *tmp = malloc(elen);
@@ -1993,6 +2067,7 @@ cwc_record_build(cwc_t *cwc)
   
   htsmsg_add_str(e, "deskey", buf);
   htsmsg_add_u32(e, "emm", cwc->cwc_emm);
+  htsmsg_add_u32(e, "emmex", cwc->cwc_emmex);
   htsmsg_add_str(e, "comment", cwc->cwc_comment ?: "");
 
   return e;
@@ -2078,6 +2153,9 @@ cwc_entry_update(void *opaque, const char *id, htsmsg_t *values, int maycreate)
 
   if(!htsmsg_get_u32(values, "emm", &u32))
     cwc->cwc_emm = u32;
+
+  if(!htsmsg_get_u32(values, "emmex", &u32))
+    cwc->cwc_emmex = u32;
 
   cwc->cwc_reconfigure = 1;
 
