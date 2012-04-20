@@ -62,6 +62,7 @@ typedef enum {
   CARD_NAGRA,
   CARD_NDS,
   CARD_CRYPTOWORKS,
+  CARD_BULCRYPT,
   CARD_UNKNOWN
 } card_type_t;
 
@@ -290,6 +291,7 @@ void cwc_emm_viaccess(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_nagra(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_nds(cwc_t *cwc, uint8_t *data, int len);
 void cwc_emm_cryptoworks(cwc_t *cwc, uint8_t *data, int len);
+void cwc_emm_bulcrypt(cwc_t *cwc, uint8_t *data, int len);
 
 
 /**
@@ -668,6 +670,15 @@ static void
 cwc_detect_card_type(cwc_t *cwc)
 {
   uint8_t c_sys = cwc->cwc_caid >> 8;
+
+  switch(cwc->cwc_caid) {
+  case 0x5581:
+  case 0x4aee:
+    cwc->cwc_card_type = CARD_BULCRYPT;
+    tvhlog(LOG_INFO, "cwc", "%s:%i: bulcrypt card",
+	   cwc->cwc_hostname, cwc->cwc_port);
+    return;
+  }
 		
   switch(c_sys) {
   case 0x17:
@@ -1286,6 +1297,9 @@ cwc_emm(uint8_t *data, int len, uint16_t caid, void *ca_update_id)
       case CARD_CRYPTOWORKS:
 	cwc_emm_cryptoworks(cwc, data, len);
 	break;
+      case CARD_BULCRYPT:
+	cwc_emm_bulcrypt(cwc, data, len);
+	break;
       case CARD_UNKNOWN:
 	break;
       }
@@ -1790,6 +1804,31 @@ cwc_emm_cryptoworks(cwc_t *cwc, uint8_t *data, int len)
     match = 1;
     break;
   default:
+    break;
+  }
+
+  if (match)
+    cwc_send_msg(cwc, data, len, 0, 1);
+}
+
+void
+cwc_emm_bulcrypt(cwc_t *cwc, uint8_t *data, int len)
+{
+  int match = 0;
+
+  switch (data[0]) {
+  case 0x82: /* unique */
+  case 0x85: /* unique */
+    match = len >= 10 && memcmp(data + 3, cwc->cwc_ua + 2, 3) == 0;
+    break;
+  case 0x84: /* shared */
+    match = len >= 10 && memcmp(data + 3, cwc->cwc_ua + 2, 2) == 0;
+    break;
+  case 0x8b: /* shared-unknown */
+    match = len >= 10 && memcmp(data + 4, cwc->cwc_ua + 2, 2) == 0;
+    break;
+  case 0x8a: /* global */
+    match = len >= 10 && memcmp(data + 4, cwc->cwc_ua + 2, 1) == 0;
     break;
   }
 
