@@ -878,7 +878,9 @@ static struct strtab caidnametab[] = {
   { "GI",               0x4700 }, 
   { "Telemann",         0x4800 },
   { "DRECrypt",         0x4ae0 },
-  { "DRECrypt2",        0x4ae1 }
+  { "DRECrypt2",        0x4ae1 },
+  { "Bulcrypt",         0x4aee },
+  { "Bulcrypt",         0x5581 },
 };
 
 const char *
