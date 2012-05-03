@@ -58,7 +58,7 @@ dvb_conversion_init(void)
   int i;
  
   for(i = 1; i <= 15; i++) {
-    snprintf(buf, sizeof(buf), "ISO_8859-%d", i);
+    snprintf(buf, sizeof(buf), "ISO-8859-%d", i);
     convert_iso_8859[i] = dvb_iconv_open(buf);
   }
 
