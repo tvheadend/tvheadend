@@ -25,6 +25,7 @@ CONFIG_LIST="
  linuxdvb
  v4l
  execinfo
+ dvbconv
 "
 
 die() {
