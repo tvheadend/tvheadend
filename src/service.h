@@ -166,6 +166,40 @@ typedef struct elementary_stream {
 
 } elementary_stream_t;
 
+/**
+ *
+ */
+typedef struct audio_filter {
+
+  TAILQ_ENTRY(audio_filter) af_link;
+
+  /**
+   *
+   */
+  int af_flags;
+
+#define AF_PREFER_AC3	1
+  
+  /**
+   * language 3-byte code
+   */
+  char af_lang[4];
+
+} audio_filter_t;
+
+/**
+ *
+ */
+typedef struct subtitle_filter {
+
+  TAILQ_ENTRY(subtitle_filter) sf_link;
+
+  /**
+   * language 3-byte code
+   */
+  char sf_lang[4];
+
+} subtitle_filter_t;
 
 /**
  *
@@ -575,5 +609,9 @@ int service_get_signal_status(service_t *t, signal_status_t *status);
 void service_set_dvb_default_charset(service_t *t, const char *dvb_default_charset);
 
 void service_set_dvb_eit_enable(service_t *t, int dvb_eit_enable);
+
+void service_audio_filter_init(void);
+int service_audio_filter_add(int flags, const char *lang);
+int service_subtitle_filter_add(const char *lang);
 
 #endif // SERVICE_H__
