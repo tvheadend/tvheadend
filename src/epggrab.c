@@ -37,18 +37,6 @@ void epggrab_init ( void )
   epggrab_interval  = 12;   // hours
   epggrab_module    = NULL; // disabled
 
-  // TODO: HACK : testing
-#if 0
-  epggrab_advanced = 1;
-  epggrab_sched_t es;
-  memset(&es, 0, sizeof(epggrab_sched_t));
-  es.opts      = strdup("-d 1");
-  es.mod       = NULL;
-  es.cron.hour = 0x1001;
-  _epggrab_set_schedule(1, &es);
-  _epggrab_save();
-#endif
-
   /* Start thread */
   pthread_t      tid;
   pthread_attr_t tattr;
@@ -90,14 +78,14 @@ time_t _epggrab_thread_advanced ( void )
 
   /* Determine which to run */
   LIST_FOREACH(s, &epggrab_schedule, es_link) {
-    if ( s->mod && cron_is_time(&s->cron) ) {
-      s->mod->run(s->opts);
+    if ( cron_is_time(&s->cron) ) {
+      if ( s->mod ) s->mod->run(s->opts);
     }
   }
 
   // TODO: make this driven off next time
   //       get cron to tell us when next call will run
-  return time(NULL) + 30;
+  return time(NULL) + 60;
 }
 
 /*
@@ -158,15 +146,11 @@ void _epggrab_load ( void )
 
   /* Load settings */
   htsmsg_get_u32(m, "advanced", &epggrab_advanced);
-  printf("advanced = %d\n", epggrab_advanced);
   htsmsg_get_u32(m, "eit",      &epggrab_eit);
-  printf("eit      = %d\n", epggrab_eit);
   if ( !epggrab_advanced ) {
     htsmsg_get_u32(m, "interval", &epggrab_interval);
-    printf("interval = %d\n", epggrab_interval);
     str = htsmsg_get_str(m, "module");
     if (str) epggrab_module = epggrab_module_find_by_name(str);
-    printf("module   = %p\n", epggrab_module);
   } else {
     if ((s = htsmsg_get_list(m, "schedule")) != NULL) {
       HTSMSG_FOREACH(f, s) {
@@ -178,8 +162,7 @@ void _epggrab_load ( void )
           if (str) es->opts = strdup(str);
           c = htsmsg_get_map(e, "cron");
           if (f) cron_unpack(&es->cron, c);
-          printf("scheduleN: mod %p opts %s cron 0x%04X\n",
-                 es->mod, es->opts, es->cron.hour);
+          LIST_INSERT_HEAD(&epggrab_schedule, es, es_link);
         }
       }
     }
@@ -225,18 +208,19 @@ void _epggrab_save ( void )
 void _epggrab_set_schedule ( int count, epggrab_sched_t *sched )
 {
   int i;
+  epggrab_sched_t *es;
 
   /* Remove existing */
-#if 0
-  for ( i = 0; i < epggrab_schedcnt; i++ ) {
-    if ( epggrab_schedule[i].opts ) free(epggrab_schedule[i].opts);
+  while ( !LIST_EMPTY(&epggrab_schedule) ) {
+    es = LIST_FIRST(&epggrab_schedule);
+    LIST_REMOVE(es, es_link);
+    if ( es->opts ) free(es->opts);
+    free(es);
   }
-  free(epggrab_schedule);
-#endif
 
   /* Create new */
   for ( i = 0; i < count; i++ ) {
-    epggrab_sched_t *es = calloc(1, sizeof(epggrab_sched_t));
+    es = calloc(1, sizeof(epggrab_sched_t));
     es->mod  = sched[i].mod;
     es->cron = sched[i].cron;
     if ( sched[i].opts ) es->opts = strdup(sched[i].opts);
