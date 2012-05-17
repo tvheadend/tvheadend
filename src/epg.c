@@ -73,6 +73,11 @@ static int ebc_win_cmp ( const epg_broadcast_t *a, const epg_broadcast_t *b )
   return 0;
 }
 
+static int ptr_cmp ( void *a, void *b )
+{
+  return a - b;
+}
+
 /* **************************************************************************
  * Testing/Debug
  * *************************************************************************/
@@ -512,6 +517,35 @@ int epg_episode_set_season ( epg_episode_t *episode, epg_season_t *season, int u
   return save;
 }
 
+int epg_episode_add_broadcast 
+  ( epg_episode_t *episode, epg_broadcast_t *broadcast, int u )
+{
+  int save = 0;
+  epg_broadcast_t *eb;
+  if ( !episode || !broadcast ) return 0;
+  eb = RB_INSERT_SORTED(&episode->ee_broadcasts, broadcast, eb_elink, ptr_cmp);
+  if ( eb == NULL ) {
+    if ( u ) save |= epg_broadcast_set_episode(broadcast, episode, 0);
+    save = 1;
+  }
+  return save;
+}
+
+int epg_episode_rem_broadcast
+  ( epg_episode_t *episode, epg_broadcast_t *broadcast, int u )
+{
+  int save = 0;
+  epg_broadcast_t *eb;
+  if ( !episode || !broadcast ) return 0;
+  eb = RB_FIND(&episode->ee_broadcasts, broadcast, eb_elink, ptr_cmp);
+  if ( eb != NULL ) {
+    if ( u ) save |= epg_broadcast_set_episode(broadcast, episode, 0);
+    RB_REMOVE(&episode->ee_broadcasts, broadcast, eb_elink);
+    save = 1;
+  }
+  return save;
+}
+
 /* **************************************************************************
  * Broadcast
  * *************************************************************************/
@@ -606,4 +640,36 @@ epg_channel_t* epg_channel_find
   /* Update fields? */
 
   return channel;
+}
+
+/* **************************************************************************
+ * Querying
+ * *************************************************************************/
+
+void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
+	       const char *contentgroup, const char *title)
+{
+  epg_channel_t *ec;
+  epg_broadcast_t *ebc;
+  eqr->eqr_array = calloc(2, sizeof(epg_broadcast_t*));
+  RB_FOREACH(ec, &epg_channels, ec_link) {
+    RB_FOREACH(ebc, &ec->ec_schedule, eb_slink) {
+      if ( ebc->eb_episode ) {
+        eqr->eqr_array[0] = ebc;
+        eqr->eqr_entries  = 1;
+        eqr->eqr_alloced  = 2;
+        return;
+      }
+    }
+  }
+  return;
+}
+
+void epg_query_free(epg_query_result_t *eqr)
+{
+  free(eqr->eqr_array);
+}
+
+void epg_query_sort(epg_query_result_t *eqr)
+{
 }
