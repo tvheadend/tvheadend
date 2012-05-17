@@ -57,6 +57,8 @@ void epggrab_init ( void )
  */
 time_t _epggrab_thread_simple ( void )
 {
+  htsmsg_t *data;
+
   /* Copy config */
   time_t            ret = time(NULL) + epggrab_interval;
   epggrab_module_t* mod = epggrab_module;
@@ -65,7 +67,15 @@ time_t _epggrab_thread_simple ( void )
   pthread_mutex_unlock(&epggrab_mutex);
 
   /* Run the module */
-  if ( mod ) mod->run(NULL);
+  if ( mod ) {
+    data = mod->grab(NULL);
+    if ( data ) {
+      pthread_mutex_lock(&global_lock);
+      mod->parse(data);
+      pthread_mutex_unlock(&global_lock);
+      htsmsg_destroy(data);
+    }
+  }
 
   /* Re-lock */
   pthread_mutex_lock(&epggrab_mutex);
@@ -81,12 +91,21 @@ time_t _epggrab_thread_simple ( void )
  */
 time_t _epggrab_thread_advanced ( void )
 {
+  htsmsg_t *data;
   epggrab_sched_t *s;
 
   /* Determine which to run */
   LIST_FOREACH(s, &epggrab_schedule, es_link) {
     if ( cron_is_time(&s->cron) ) {
-      if ( s->mod ) s->mod->run(s->opts);
+      if ( s->mod ) {
+        data = s->mod->grab(s->opts);
+        if ( data ) {
+          pthread_mutex_lock(&global_lock);
+          s->mod->parse(data);
+          pthread_mutex_unlock(&global_lock);
+          htsmsg_destroy(data);
+        }
+      }
     }
   }
 

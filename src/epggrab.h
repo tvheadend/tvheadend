@@ -16,7 +16,8 @@ typedef struct epggrab_module
   const char* (*name)    ( void );
   void        (*enable)  ( void );
   void        (*disable) ( void );
-  void        (*run )    ( const char *opts );
+  htsmsg_t*   (*grab)    ( const char *opts );
+  int         (*parse)   ( htsmsg_t *data );
 } epggrab_module_t;
 
 /*
