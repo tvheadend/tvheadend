@@ -424,13 +424,16 @@ static int
 extjs_ecglist(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
-  htsmsg_t *out, *array, *c;
+  htsmsg_t *out, *array;//TODO:, *c;
+#if TODO
   const char *s;
   int i;
+#endif
 
   out = htsmsg_create_map();
   array = htsmsg_create_list();
 
+#if TODO
   for(i = 0; i < 16; i++) {
     if((s = epg_content_group_get_name(i)) == NULL)
       continue;
@@ -439,6 +442,7 @@ extjs_ecglist(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_str(c, "name", s);
     htsmsg_add_msg(array, NULL, c);
   }
+#endif
 
   htsmsg_add_msg(out, "entries", array);
 
@@ -663,6 +667,7 @@ skip:
 static int
 extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
 {
+#if TODO
   htsbuf_queue_t *hq = &hc->hc_reply;
   htsmsg_t *out, *array, *m;
   epg_query_result_t eqr;
@@ -756,6 +761,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");
+#endif
   return 0;
 }
 
@@ -768,7 +774,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_queue_t *hq = &hc->hc_reply;
   const char *op = http_arg_get(&hc->hc_req_args, "op");
   htsmsg_t *out, *r;
-  event_t *e;
+  //TODO:event_t *e;
   dvr_entry_t *de;
   const char *s;
   int flags = 0;
@@ -786,6 +792,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
   if(!strcmp(op, "recordEvent")) {
 
+#if TODO
     const char *config_name = http_arg_get(&hc->hc_req_args, "config_name");
 
     s = http_arg_get(&hc->hc_req_args, "eventId");
@@ -809,6 +816,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     dvr_entry_create_by_event(config_name,
                               e, hc->hc_representative, NULL, DVR_PRIO_NORMAL);
+#endif
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
@@ -898,6 +906,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(out, "success", 1);
 
   } else if(!strcmp(op, "createAutoRec")) {
+#if TODO
     const char *cgrp = http_arg_get(&hc->hc_req_args, "contentgrp");
 
     
@@ -908,6 +917,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 		    http_arg_get(&hc->hc_req_args, "tag"),
 		    cgrp ? epg_content_group_find_by_name(cgrp) : 0,
 		    hc->hc_representative, "Created from EPG query");
+#endif
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
@@ -1074,8 +1084,10 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
     if(de->de_desc != NULL)
       htsmsg_add_str(m, "description", de->de_desc);
 
+#if TODO
     if(de->de_episode.ee_onscreen)
       htsmsg_add_str(m, "episode", de->de_episode.ee_onscreen);
+#endif
 
     htsmsg_add_u32(m, "id", de->de_id);
     htsmsg_add_u32(m, "start", de->de_start);

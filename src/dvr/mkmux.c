@@ -470,7 +470,9 @@ mk_build_metadata(const dvr_entry_t *de)
   htsbuf_queue_t *q = htsbuf_queue_alloc(0);
   char datestr[64];
   struct tm tm;
+#if TODO
   const char *ctype;
+#endif
   localtime_r(&de->de_start, &tm);
 
   snprintf(datestr, sizeof(datestr),
@@ -487,22 +489,27 @@ mk_build_metadata(const dvr_entry_t *de)
   addtag(q, build_tag_string("ORIGINAL_MEDIA_TYPE", "TV", 0, NULL));
 
   
+#if TODO
   if(de->de_content_type) {
     ctype = epg_content_group_get_name(de->de_content_type);
     if(ctype != NULL)
       addtag(q, build_tag_string("CONTENT_TYPE", ctype, 0, NULL));
   }
+#endif
 
   if(de->de_channel != NULL)
     addtag(q, build_tag_string("TVCHANNEL", de->de_channel->ch_name, 0, NULL));
 
+#if TODO
   if(de->de_episode.ee_onscreen)
     addtag(q, build_tag_string("SYNOPSIS", 
 			       de->de_episode.ee_onscreen, 0, NULL));
+#endif
 
   if(de->de_desc != NULL)
     addtag(q, build_tag_string("SUMMARY", de->de_desc, 0, NULL));
 
+#if TODO
   if(de->de_episode.ee_season)
     addtag(q, build_tag_int("PART_NUMBER", de->de_episode.ee_season,
 			    60, "SEASON"));
@@ -514,6 +521,7 @@ mk_build_metadata(const dvr_entry_t *de)
   if(de->de_episode.ee_part)
     addtag(q, build_tag_int("PART_NUMBER", de->de_episode.ee_part,
 			    40, "PART"));
+#endif
 
   return q;
 }
@@ -525,7 +533,9 @@ mk_build_metadata2(const event_t *e)
   htsbuf_queue_t *q = htsbuf_queue_alloc(0);
   char datestr[64];
   struct tm tm;
+#if TODO
   const char *ctype;
+#endif
   localtime_r(&e->e_start, &tm);
 
   snprintf(datestr, sizeof(datestr),
@@ -542,11 +552,13 @@ mk_build_metadata2(const event_t *e)
   addtag(q, build_tag_string("ORIGINAL_MEDIA_TYPE", "TV", 0, NULL));
 
   
+#if TODO
   if(e->e_content_type) {
     ctype = epg_content_group_get_name(e->e_content_type);
     if(ctype != NULL)
       addtag(q, build_tag_string("CONTENT_TYPE", ctype, 0, NULL));
   }
+#endif
 
   if(e->e_channel != NULL)
     addtag(q, build_tag_string("TVCHANNEL", e->e_channel->ch_name, 0, NULL));

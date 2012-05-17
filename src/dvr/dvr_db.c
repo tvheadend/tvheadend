@@ -30,7 +30,7 @@
 #include "htsp.h"
 #include "streaming.h"
 
-static int de_tally;
+//static int de_tally;
 
 int dvr_iov_max;
 
@@ -40,7 +40,9 @@ struct dvr_entry_list dvrentries;
 static void dvr_entry_save(dvr_entry_t *de);
 
 static void dvr_timer_expire(void *aux);
+#if 0
 static void dvr_timer_start_recording(void *aux);
+#endif
 
 /**
  * Return printable status for a dvr entry
@@ -153,6 +155,7 @@ dvr_entry_notify(dvr_entry_t *de)
 /**
  *
  */
+#if TODO
 static void
 dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
 {
@@ -207,11 +210,13 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
         }
   }
 }
+#endif
 
 
 /**
  *
  */
+#if TODO
 static void
 dvr_entry_link(dvr_entry_t *de)
 {
@@ -246,6 +251,7 @@ dvr_entry_link(dvr_entry_t *de)
   }
   htsp_dvr_entry_add(de);
 }
+#endif
 
 
 /**
@@ -258,6 +264,7 @@ dvr_entry_create(const char *config_name,
 		 const char *creator, dvr_autorec_entry_t *dae,
 		 epg_episode_t *ee, uint8_t content_type, dvr_prio_t pri)
 {
+#if TODO
   dvr_entry_t *de;
   char tbuf[30];
   struct tm tm;
@@ -317,12 +324,15 @@ dvr_entry_create(const char *config_name,
   dvrdb_changed();
   dvr_entry_save(de);
   return de;
+#endif
+  return NULL;
 }
 
 
 /**
  *
  */
+#if TODO
 static const char *
 longest_string(const char *a, const char *b)
 {
@@ -332,6 +342,7 @@ longest_string(const char *a, const char *b)
     return b;
   return strlen(a) > strlen(b) ? a : b;
 }
+#endif
 
 
 /**
@@ -342,6 +353,7 @@ dvr_entry_create_by_event(const char *config_name,
                           event_t *e, const char *creator, 
 			  dvr_autorec_entry_t *dae, dvr_prio_t pri)
 {
+#if TODO
   const char *desc = NULL;
   if(e->e_channel == NULL || e->e_title == NULL)
     return NULL;
@@ -356,6 +368,8 @@ dvr_entry_create_by_event(const char *config_name,
                           e->e_channel, e->e_start, e->e_stop, 
 			  e->e_title, desc, creator, dae, &e->e_episode,
 			  e->e_content_type, pri);
+#endif
+  return NULL;
 }
 
 
@@ -382,6 +396,7 @@ dvr_entry_create_by_autorec(event_t *e, dvr_autorec_entry_t *dae)
 void
 dvr_entry_dec_ref(dvr_entry_t *de)
 {
+#if TODO
   lock_assert(&global_lock);
 
   if(de->de_refcnt > 1) {
@@ -401,6 +416,7 @@ dvr_entry_dec_ref(dvr_entry_t *de)
   free(de->de_episode.ee_onscreen);
 
   free(de);
+#endif
 }
 
 
@@ -434,6 +450,7 @@ dvr_entry_remove(dvr_entry_t *de)
 static void
 dvr_db_load_one(htsmsg_t *c, int id)
 {
+#if TODO
   dvr_entry_t *de;
   const char *s, *title, *creator;
   channel_t *ch;
@@ -516,6 +533,7 @@ dvr_db_load_one(htsmsg_t *c, int id)
   tvh_str_set(&de->de_episode.ee_onscreen, htsmsg_get_str(c, "episodename"));
 
   dvr_entry_link(de);
+#endif
 }
 
 
@@ -546,6 +564,7 @@ dvr_db_load(void)
 static void
 dvr_entry_save(dvr_entry_t *de)
 {
+#if TODO
   htsmsg_t *m = htsmsg_create_map();
 
   lock_assert(&global_lock);
@@ -596,6 +615,7 @@ dvr_entry_save(dvr_entry_t *de)
 
   hts_settings_save(m, "dvr/log/%d", de->de_id);
   htsmsg_destroy(m);
+#endif
 }
 
 
@@ -681,17 +701,20 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode)
 /**
  *
  */
+#if TODO
 static void
 dvr_timer_stop_recording(void *aux)
 {
   dvr_stop_recording(aux, 0);
 }
+#endif
 
 
 
 /**
  *
  */
+#if 0
 static void
 dvr_timer_start_recording(void *aux)
 {
@@ -710,6 +733,7 @@ dvr_timer_start_recording(void *aux)
   gtimer_arm_abs(&de->de_timer, dvr_timer_stop_recording, de, 
 		 de->de_stop + (60 * de->de_stop_extra));
 }
+#endif
 
 
 /**

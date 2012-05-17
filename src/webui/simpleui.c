@@ -58,6 +58,7 @@ static int
 page_simple(http_connection_t *hc,
 	  const char *remain, void *opaque)
 {
+#if TODO
   htsbuf_queue_t *hq = &hc->hc_reply;
   const char *s = http_arg_get(&hc->hc_req_args, "s");
   event_t *e;
@@ -184,6 +185,7 @@ page_simple(http_connection_t *hc,
 
   htsbuf_qprintf(hq, "</body></html>");
   http_output_html(hc);
+#endif
   return 0;
 }
 
@@ -193,6 +195,7 @@ page_simple(http_connection_t *hc,
 static int
 page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 {
+#if TODO
   htsbuf_queue_t *hq = &hc->hc_reply;
   event_t *e;
   struct tm a, b;
@@ -267,6 +270,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_qprintf(hq, "<hr><a href=\"/simple.html\">To main page</a><br>");
   htsbuf_qprintf(hq, "</body></html>");
   http_output_html(hc);
+#endif
   return 0;
 }
 
