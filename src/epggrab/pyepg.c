@@ -2,9 +2,11 @@
  * PyEPG grabber
  */
 
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include "htsmsg_xml.h"
 #include "tvheadend.h"
 #include "spawn.h"
@@ -15,10 +17,15 @@
  * Parsing
  * *************************************************************************/
 
-static int _pyepg_parse_time ( const char *str, time_t *tm )
+static int _pyepg_parse_time ( const char *str, time_t *out )
 {
-  // TODO: implement
-  return 0;
+  int ret = 0;
+  struct tm tm; 
+  if ( strptime(str, "%F %T %z", &tm) != NULL ) {
+    *out = mktime(&tm);
+    ret  = 1;
+  }
+  return ret;
 }
 
 static int _pyepg_parse_channel ( htsmsg_t *data )
@@ -33,7 +40,6 @@ static int _pyepg_parse_channel ( htsmsg_t *data )
   if ((attr = htsmsg_get_map(data, "attrib")) == NULL) return 0;
   if ((id   = htsmsg_get_str(attr, "id")) == NULL) return 0;
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
-  printf("parse_channel(%s)\n", id);
 
   /* Find channel */
   if ((channel = epg_channel_find(id, name, NULL, NULL)) == NULL) return 0;
@@ -55,7 +61,6 @@ static int _pyepg_parse_brand ( htsmsg_t *data )
   if ((attr = htsmsg_get_map(data, "attrib")) == NULL) return 0;
   if ((str  = htsmsg_get_str(attr, "id")) == NULL) return 0;
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
-  printf("parse_brand(%s)\n", str);
   
   /* Find brand */
   if ((brand = epg_brand_find_by_uri(str, 1)) == NULL) return 0;
@@ -100,18 +105,15 @@ static int _pyepg_parse_season ( htsmsg_t *data )
   if ((attr = htsmsg_get_map(data, "attrib")) == NULL) return 0;
   if ((str  = htsmsg_get_str(attr, "id")) == NULL) return 0;
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
-  printf("parse_season(%s)\n", str);
 
   /* Find series */
   if ((season = epg_season_find_by_uri(str, 1)) == NULL) return 0;
   // TODO: do we need to save if created?
-  printf("have season\n");
   
   /* Set brand */
   if ((str = htsmsg_get_str(attr, "brand"))) {
-    printf("lookup brand(%s)\n", str);
     if ((brand = epg_brand_find_by_uri(str, 0))) {
-      save |= epg_season_set_brand(season, brand);
+      save |= epg_season_set_brand(season, brand, 1);
     }
   }
 
@@ -160,26 +162,22 @@ static int _pyepg_parse_episode ( htsmsg_t *data )
   if ((attr = htsmsg_get_map(data, "attrib")) == NULL) return 0;
   if ((str  = htsmsg_get_str(attr, "id")) == NULL) return 0;
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
-  printf("parse_episode(%s)\n", str);
 
   /* Find episode */
   if ((episode = epg_episode_find_by_uri(str, 1)) == NULL) return 0;
   // TODO: do we need to save if created?
-  printf("have episode\n");
   
   /* Set brand */
   if ((str = htsmsg_get_str(attr, "brand"))) {
-    printf("lookup brand(%s)\n", str);
     if ((brand = epg_brand_find_by_uri(str, 0))) {
-      save |= epg_episode_set_brand(episode, brand);
+      save |= epg_episode_set_brand(episode, brand, 1);
     }
   }
 
   /* Set season */
   if ((str = htsmsg_get_str(attr, "series"))) {
-    printf("lookup season(%s)\n", str);
     if ((season = epg_season_find_by_uri(str, 0))) {
-      save |= epg_episode_set_season(episode, season);
+      save |= epg_episode_set_season(episode, season, 1);
     }
   }
 
@@ -230,7 +228,6 @@ static int _pyepg_parse_broadcast ( htsmsg_t *data, epg_channel_t *channel )
   if ((id      = htsmsg_get_str(attr, "episode")) == NULL) return 0;
   if ((start   = htsmsg_get_str(attr, "start")) == NULL ) return 0;
   if ((stop    = htsmsg_get_str(attr, "stop")) == NULL ) return 0;
-  printf("parse_broadcast(ep=%s, start=%s, stop=%s)\n", id, start, stop);
 
   /* Find episode */
   if ((episode = epg_episode_find_by_uri(id, 1)) == NULL) return 0;
@@ -240,9 +237,14 @@ static int _pyepg_parse_broadcast ( htsmsg_t *data, epg_channel_t *channel )
   if (!_pyepg_parse_time(stop, &tm_stop)) return 0;
 
   /* Find broadcast */
-  // TODO: need to think about this
-  if ((broadcast = epg_broadcast_find(channel, episode, tm_start, tm_stop, 1)) == NULL) return 0;
-  save = 1;
+  printf("%s find broadcast %ld to %ld\n",
+          channel->ec_uri, tm_start, tm_stop);
+  broadcast = epg_broadcast_find_by_time(channel, tm_start, tm_stop, 1);
+  printf("%s broadcast %p\n", channel->ec_uri, broadcast);
+  if ( broadcast == NULL ) return 0;
+
+  /* Set episode */
+  save |= epg_broadcast_set_episode(broadcast, episode, 1);
 
   /* TODO: extra metadata */
   
@@ -261,7 +263,6 @@ static int _pyepg_parse_schedule ( htsmsg_t *data )
 
   if ((attr    = htsmsg_get_map(data, "attrib")) == NULL) return 0;
   if ((str     = htsmsg_get_str(attr, "channel")) == NULL) return 0;
-  printf("parse_schedule(ch=%s)\n", str);
   if ((channel = epg_channel_find_by_uri(str, 0)) == NULL) return 0;
   if ((tags    = htsmsg_get_map(data, "tags")) == NULL) return 0;
 
@@ -279,7 +280,6 @@ static int _pyepg_parse_epg ( htsmsg_t *data )
   int save = 0;
   htsmsg_t *tags;
   htsmsg_field_t *f;
-  printf("parse_epg()\n");
 
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
 
@@ -304,7 +304,6 @@ static int _pyepg_parse ( htsmsg_t *data )
 {
   htsmsg_t *tags, *epg;
   epggrab_module_t *mod;
-  printf("parse()\n");
 
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
 
