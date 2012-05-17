@@ -243,6 +243,11 @@ int epg_episode_set_brand        ( epg_episode_t *e, epg_brand_t *b, int u )
   __attribute__((warn_unused_result));
 int epg_episode_set_season       ( epg_episode_t *e, epg_season_t *s, int u )
   __attribute__((warn_unused_result));
+int epg_episode_add_broadcast    ( epg_episode_t *e, epg_broadcast_t *b, int u )
+  __attribute__((warn_unused_result));
+int epg_episode_rem_broadcast    ( epg_episode_t *e, epg_broadcast_t *b, int u )
+  __attribute__((warn_unused_result));
+
 
 /* Broadcast set() calls */
 int epg_broadcast_set_episode    ( epg_broadcast_t *b, epg_episode_t *e, int u )
