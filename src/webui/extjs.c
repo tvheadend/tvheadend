@@ -39,7 +39,7 @@
 
 #include "dvr/dvr.h"
 #include "serviceprobe.h"
-#include "xmltv.h"
+#include "epggrab.h"
 #include "epg.h"
 #include "iptv_input.h"
 
@@ -130,7 +130,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/chconf.js");
   extjs_load(hq, "static/app/epg.js");
   extjs_load(hq, "static/app/dvr.js");
-  extjs_load(hq, "static/app/xmltv.js");
+  extjs_load(hq, "static/app/epggrab.js");
 
   /**
    * Finally, the app itself
@@ -322,8 +322,10 @@ extjs_channels_update(htsmsg_t *in)
     if((s = htsmsg_get_str(c, "name")) != NULL)
       channel_rename(ch, s);
 
+#if TODO_XMLTV
     if((s = htsmsg_get_str(c, "xmltvsrc")) != NULL)
       channel_set_xmltv_source(ch, xmltv_channel_find_by_displayname(s));
+#endif
 
     if((s = htsmsg_get_str(c, "ch_icon")) != NULL)
       channel_set_icon(ch, s);
@@ -374,8 +376,10 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
       htsmsg_add_str(c, "name", ch->ch_name);
       htsmsg_add_u32(c, "chid", ch->ch_id);
       
+#if TODO_XMLTV
       if(ch->ch_xc != NULL)
 	htsmsg_add_str(c, "xmltvsrc", ch->ch_xc->xc_displayname);
+#endif
 
       if(ch->ch_icon != NULL)
         htsmsg_add_str(c, "ch_icon", ch->ch_icon);
@@ -466,8 +470,9 @@ json_single_record(htsmsg_t *rec, const char *root)
  *
  */
 static int
-extjs_xmltv(http_connection_t *hc, const char *remain, void *opaque)
+extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
 {
+#if TODO_EPGGRAB
   htsbuf_queue_t *hq = &hc->hc_reply;
   const char *op = http_arg_get(&hc->hc_req_args, "op");
   xmltv_channel_t *xc;
@@ -554,8 +559,9 @@ extjs_xmltv(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;
 
+#endif
+  return 0;
 }
 
 
@@ -1543,7 +1549,7 @@ extjs_start(void)
   http_path_add("/extjs.html",  NULL, extjs_root,        ACCESS_WEB_INTERFACE);
   http_path_add("/tablemgr",    NULL, extjs_tablemgr,    ACCESS_WEB_INTERFACE);
   http_path_add("/channels",    NULL, extjs_channels,    ACCESS_WEB_INTERFACE);
-  http_path_add("/xmltv",       NULL, extjs_xmltv,       ACCESS_WEB_INTERFACE);
+  http_path_add("/epggrab",     NULL, extjs_epggrab,     ACCESS_WEB_INTERFACE);
   http_path_add("/channeltags", NULL, extjs_channeltags, ACCESS_WEB_INTERFACE);
   http_path_add("/confignames", NULL, extjs_confignames, ACCESS_WEB_INTERFACE);
   http_path_add("/epg",         NULL, extjs_epg,         ACCESS_WEB_INTERFACE);

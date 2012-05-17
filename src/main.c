@@ -41,7 +41,7 @@
 #include "http.h"
 #include "webui/webui.h"
 #include "dvb/dvb.h"
-#include "xmltv.h"
+#include "epggrab.h"
 #include "spawn.h"
 #include "subscriptions.h"
 #include "serviceprobe.h"
@@ -379,7 +379,7 @@ main(int argc, char **argv)
   /**
    * Initialize subsystems
    */
-  xmltv_init();   /* Must be initialized before channels */
+  epggrab_init(); /* Must be initialized before channels */
 
   service_init();
 

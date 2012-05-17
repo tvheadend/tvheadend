@@ -58,9 +58,6 @@ typedef struct channel {
   
   struct dvr_autorec_entry_list ch_autorecs;
 
-  struct xmltv_channel *ch_xc;
-  LIST_ENTRY(channel) ch_xc_link;
-
   struct channel_tag_mapping_list ch_ctms;
 
 } channel_t;
@@ -122,9 +119,6 @@ void channel_set_number(channel_t *ch, int number);
 
 void channel_set_icon(channel_t *ch, const char *icon);
 
-struct xmltv_channel;
-void channel_set_xmltv_source(channel_t *ch, struct xmltv_channel *xc);
-
 void channel_set_tags_from_list(channel_t *ch, const char *maplist);
 
 channel_tag_t *channel_tag_find_by_name(const char *name, int create);
@@ -134,7 +128,5 @@ channel_tag_t *channel_tag_find_by_identifier(uint32_t id);
 int channel_tag_map(channel_t *ch, channel_tag_t *ct, int check);
 
 void channel_save(channel_t *ch);
-
-extern struct channel_list channels_not_xmltv_mapped;
 
 #endif /* CHANNELS_H */
