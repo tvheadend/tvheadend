@@ -5,11 +5,12 @@
 #include "settings.h"
 #include "tvheadend.h"
 #include "epggrab.h"
+#include "epggrab/pyepg.h"
 
 /* Thread protection */
-int               epggrab_confver;
-pthread_mutex_t   epggrab_mutex;
-pthread_cond_t    epggrab_cond;
+int                  epggrab_confver;
+pthread_mutex_t      epggrab_mutex;
+pthread_cond_t       epggrab_cond;
 
 /* Config */
 uint32_t             epggrab_advanced;
@@ -17,6 +18,9 @@ uint32_t             epggrab_eit;
 uint32_t             epggrab_interval;
 epggrab_module_t*    epggrab_module;
 epggrab_sched_list_t epggrab_schedule;
+
+/* Modules */
+epggrab_module_t*    epggrab_module_pyepg;
 
 /* Internal prototypes */
 static void*  _epggrab_thread          ( void* );
@@ -36,6 +40,9 @@ void epggrab_init ( void )
   epggrab_eit       = 1;    // on air grab enabled
   epggrab_interval  = 12;   // hours
   epggrab_module    = NULL; // disabled
+
+  /* Initialise modules */
+  epggrab_module_pyepg = pyepg_init();
 
   /* Start thread */
   pthread_t      tid;
@@ -126,6 +133,7 @@ void* _epggrab_thread ( void* p )
 
 epggrab_module_t* epggrab_module_find_by_name ( const char *name )
 {
+  if ( strcmp(name, "pyepg") == 0 ) return epggrab_module_pyepg;
   return NULL;
 }
 
@@ -156,7 +164,7 @@ void _epggrab_load ( void )
       HTSMSG_FOREACH(f, s) {
         if ((e = htsmsg_get_map_by_field(f)) != NULL) {
           es = calloc(1, sizeof(epggrab_sched_t));
-          str = htsmsg_get_str(e, "module");
+          str = htsmsg_get_str(e, "mod");
           if (str) es->mod  = epggrab_module_find_by_name(str);
           str = htsmsg_get_str(e, "opts");
           if (str) es->opts = strdup(str);
@@ -192,7 +200,7 @@ void _epggrab_save ( void )
     s = htsmsg_create_list();
     LIST_FOREACH(es, &epggrab_schedule, es_link) {
       e = htsmsg_create_map();
-      if ( es->mod  ) htsmsg_add_str(e, "module", es->mod->name());
+      if ( es->mod  ) htsmsg_add_str(e, "mod", es->mod->name());
       if ( es->opts ) htsmsg_add_str(e, "opts",   es->opts);
       c = htsmsg_create_map();
       cron_pack(&es->cron, c);
