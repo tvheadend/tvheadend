@@ -4,6 +4,7 @@
 #include "htsmsg.h"
 #include "settings.h"
 #include "tvheadend.h"
+#include "epg.h"
 #include "epggrab.h"
 #include "epggrab/pyepg.h"
 
@@ -53,12 +54,38 @@ void epggrab_init ( void )
 }
 
 /*
+ * Grab from module
+ */
+static void _epggrab_module_run ( epggrab_module_t *mod, const char *opts )
+{
+  int save = 0;
+  time_t tm1, tm2;
+  htsmsg_t *data;
+
+  /* Check */
+  if ( !mod ) return;
+  
+  /* Grab */
+  time(&tm1);
+  data = mod->grab(opts);
+  time(&tm2);
+  if ( !data ) {
+    tvhlog(LOG_WARNING, mod->name(), "grab returned no data");
+  } else {
+    tvhlog(LOG_DEBUG, mod->name(), "grab took %d seconds", tm2 - tm1);
+    pthread_mutex_lock(&global_lock);
+    save = mod->parse(data);
+    if (save) epg_updated();
+    pthread_mutex_unlock(&global_lock);
+    htsmsg_destroy(data);
+  }
+}
+
+/*
  * Simple run
  */
 time_t _epggrab_thread_simple ( void )
 {
-  htsmsg_t *data;
-
   /* Copy config */
   time_t            ret = time(NULL) + epggrab_interval;
   epggrab_module_t* mod = epggrab_module;
@@ -67,15 +94,7 @@ time_t _epggrab_thread_simple ( void )
   pthread_mutex_unlock(&epggrab_mutex);
 
   /* Run the module */
-  if ( mod ) {
-    data = mod->grab(NULL);
-    if ( data ) {
-      pthread_mutex_lock(&global_lock);
-      mod->parse(data);
-      pthread_mutex_unlock(&global_lock);
-      htsmsg_destroy(data);
-    }
-  }
+  _epggrab_module_run(mod, NULL);
 
   /* Re-lock */
   pthread_mutex_lock(&epggrab_mutex);
@@ -91,21 +110,12 @@ time_t _epggrab_thread_simple ( void )
  */
 time_t _epggrab_thread_advanced ( void )
 {
-  htsmsg_t *data;
   epggrab_sched_t *s;
 
   /* Determine which to run */
   LIST_FOREACH(s, &epggrab_schedule, es_link) {
     if ( cron_is_time(&s->cron) ) {
-      if ( s->mod ) {
-        data = s->mod->grab(s->opts);
-        if ( data ) {
-          pthread_mutex_lock(&global_lock);
-          s->mod->parse(data);
-          pthread_mutex_unlock(&global_lock);
-          htsmsg_destroy(data);
-        }
-      }
+      _epggrab_module_run(s->mod, s->opts);
     }
   }
 

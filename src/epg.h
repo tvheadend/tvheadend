@@ -34,6 +34,10 @@ struct epg_season;
 struct epg_episode;
 struct epg_broadcast;
 struct epg_channel;
+RB_HEAD(epg_brand_tree,   epg_brand);
+RB_HEAD(epg_season_tree,  epg_season);
+RB_HEAD(epg_episode_tree, epg_episode);
+RB_HEAD(epg_channel_tree, epg_channel);
 
 /* 
  * Represents a specific show
@@ -41,6 +45,7 @@ struct epg_channel;
  */
 typedef struct epg_brand
 {
+  RB_ENTRY(epg_brand) eb_link;
   uint32_t  eb_id;              ///< Internal ID
   char     *eb_uri;             ///< Grabber URI
   char     *eb_title;           ///< Brand name
@@ -60,6 +65,7 @@ typedef struct epg_brand
  */
 typedef struct epg_season
 {
+  RB_ENTRY(epg_season) es_link;
   uint32_t  es_id;              ///< Internal ID
   char     *es_uri;             ///< Grabber URI
   char     *es_summary;         ///< Season summary
@@ -78,6 +84,7 @@ typedef struct epg_season
  */
 typedef struct epg_episode
 {
+  RB_ENTRY(epg_episode) ee_link;
   uint32_t  ee_id;              ///< Internal ID
   char     *ee_uri;             ///< Grabber URI
   char     *ee_title;           ///< Title
@@ -129,6 +136,13 @@ typedef struct epg_broadcast
  */
 typedef struct epg_channel
 {
+  RB_ENTRY(epg_channel) ec_link;     ///< Link to channel map
+  char                  *ec_uri;      ///< Internal ID (defined by grabbers)
+  char                  **ec_sname;  ///< DVB service name (for searching)
+  int                   **ec_sid;    ///< DVB service ids  (for searching)
+  channel_t             *ec_channel; ///< Link to real channel
+  // TODO: further links?
+  // TODO: reference counter?
 } epg_channel_t;
 
 /*
@@ -182,7 +196,7 @@ int epg_season_set_number        ( epg_season_t *s, uint16_t number )
   __attribute__((warn_unused_result));
 int epg_season_set_episode_count ( epg_season_t *s, uint16_t episode_count )
   __attribute__((warn_unused_result));
-int epg_season_set_brand         ( epg_season_t *s, const epg_brand_t *b )
+int epg_season_set_brand         ( epg_season_t *s, epg_brand_t *b )
   __attribute__((warn_unused_result));
 
 /* Episode set() calls */
@@ -221,11 +235,11 @@ void epg_broadcast_updated ( epg_broadcast_t *b );
  * Simple lookup
  */
 
-epg_brand_t *epg_brand_find_by_id ( const char *id, int create );
-epg_season_t *epg_season_find_by_id ( const char *id, int create );
-epg_episode_t *epg_episode_find_by_id ( const char *id, int create );
-epg_channel_t *epg_channel_find_by_id ( const char *id, int create );
-epg_channel_t *epg_channel_find ( const char *id, const char *name, const char **sname, const int **sid );
+epg_brand_t *epg_brand_find_by_uri ( const char *uri, int create );
+epg_season_t *epg_season_find_by_uri ( const char *uri, int create );
+epg_episode_t *epg_episode_find_by_uri ( const char *uri, int create );
+epg_channel_t *epg_channel_find_by_uri ( const char *uri, int create );
+epg_channel_t *epg_channel_find ( const char *uri, const char *name, const char **sname, const int **sid );
 epg_broadcast_t *epg_broadcast_find ( epg_channel_t *ch, epg_episode_t *ep, time_t start, time_t stop, int create );
 
 epg_broadcast_t *epg_event_find_by_time(channel_t *ch, time_t t);
