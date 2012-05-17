@@ -40,8 +40,9 @@ SRCS =  src/main.c \
 	src/tcp.c \
 	src/http.c \
 	src/notify.c \
+  src/cron.c \
 	src/epg.c \
-	src/xmltv.c \
+	src/epggrab.c\
 	src/spawn.c \
 	src/packet.c \
 	src/streaming.c \
@@ -69,6 +70,8 @@ SRCS =  src/main.c \
 	src/rawtsinput.c \
 	src/iptv_input.c \
 	src/avc.c \
+
+SRCS += src/epggrab/pyepg.c
 
 
 SRCS += src/plumbing/tsfix.c \
