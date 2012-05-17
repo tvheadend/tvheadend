@@ -33,6 +33,7 @@ static int _pyepg_parse_channel ( htsmsg_t *data )
   if ((attr = htsmsg_get_map(data, "attrib")) == NULL) return 0;
   if ((id   = htsmsg_get_str(attr, "id")) == NULL) return 0;
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
+  printf("parse_channel(%s)\n", id);
 
   /* Find channel */
   if ((channel = epg_channel_find(id, name, NULL, NULL)) == NULL) return 0;
@@ -54,9 +55,10 @@ static int _pyepg_parse_brand ( htsmsg_t *data )
   if ((attr = htsmsg_get_map(data, "attrib")) == NULL) return 0;
   if ((str  = htsmsg_get_str(attr, "id")) == NULL) return 0;
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
+  printf("parse_brand(%s)\n", str);
   
   /* Find brand */
-  if ((brand = epg_brand_find_by_id(str, 1)) == NULL) return 0;
+  if ((brand = epg_brand_find_by_uri(str, 1)) == NULL) return 0;
   // TODO: do we need to save if created?
 
   /* Set title */
@@ -98,14 +100,17 @@ static int _pyepg_parse_season ( htsmsg_t *data )
   if ((attr = htsmsg_get_map(data, "attrib")) == NULL) return 0;
   if ((str  = htsmsg_get_str(attr, "id")) == NULL) return 0;
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
+  printf("parse_season(%s)\n", str);
 
   /* Find series */
-  if ((season = epg_season_find_by_id(str, 1)) == NULL) return 0;
+  if ((season = epg_season_find_by_uri(str, 1)) == NULL) return 0;
   // TODO: do we need to save if created?
+  printf("have season\n");
   
   /* Set brand */
-  if ((str = htsmsg_xml_get_cdata_str(tags, "brand"))) {
-    if ((brand = epg_brand_find_by_id(str, 0))) {
+  if ((str = htsmsg_get_str(attr, "brand"))) {
+    printf("lookup brand(%s)\n", str);
+    if ((brand = epg_brand_find_by_uri(str, 0))) {
       save |= epg_season_set_brand(season, brand);
     }
   }
@@ -155,21 +160,25 @@ static int _pyepg_parse_episode ( htsmsg_t *data )
   if ((attr = htsmsg_get_map(data, "attrib")) == NULL) return 0;
   if ((str  = htsmsg_get_str(attr, "id")) == NULL) return 0;
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
+  printf("parse_episode(%s)\n", str);
 
   /* Find episode */
-  if ((episode = epg_episode_find_by_id(str, 1)) == NULL) return 0;
+  if ((episode = epg_episode_find_by_uri(str, 1)) == NULL) return 0;
   // TODO: do we need to save if created?
+  printf("have episode\n");
   
   /* Set brand */
-  if ((str = htsmsg_xml_get_cdata_str(tags, "brand"))) {
-    if ((brand = epg_brand_find_by_id(str, 0))) {
+  if ((str = htsmsg_get_str(attr, "brand"))) {
+    printf("lookup brand(%s)\n", str);
+    if ((brand = epg_brand_find_by_uri(str, 0))) {
       save |= epg_episode_set_brand(episode, brand);
     }
   }
 
   /* Set season */
-  if ((str = htsmsg_xml_get_cdata_str(tags, "season"))) {
-    if ((season = epg_season_find_by_id(str, 0))) {
+  if ((str = htsmsg_get_str(attr, "series"))) {
+    printf("lookup season(%s)\n", str);
+    if ((season = epg_season_find_by_uri(str, 0))) {
       save |= epg_episode_set_season(episode, season);
     }
   }
@@ -221,9 +230,10 @@ static int _pyepg_parse_broadcast ( htsmsg_t *data, epg_channel_t *channel )
   if ((id      = htsmsg_get_str(attr, "episode")) == NULL) return 0;
   if ((start   = htsmsg_get_str(attr, "start")) == NULL ) return 0;
   if ((stop    = htsmsg_get_str(attr, "stop")) == NULL ) return 0;
+  printf("parse_broadcast(ep=%s, start=%s, stop=%s)\n", id, start, stop);
 
   /* Find episode */
-  if ((episode = epg_episode_find_by_id(id, 1)) == NULL) return 0;
+  if ((episode = epg_episode_find_by_uri(id, 1)) == NULL) return 0;
 
   /* Parse times */
   if (!_pyepg_parse_time(start, &tm_start)) return 0;
@@ -251,11 +261,12 @@ static int _pyepg_parse_schedule ( htsmsg_t *data )
 
   if ((attr    = htsmsg_get_map(data, "attrib")) == NULL) return 0;
   if ((str     = htsmsg_get_str(attr, "channel")) == NULL) return 0;
-  if ((channel = epg_channel_find_by_id(str, 0)) == NULL) return 0;
+  printf("parse_schedule(ch=%s)\n", str);
+  if ((channel = epg_channel_find_by_uri(str, 0)) == NULL) return 0;
   if ((tags    = htsmsg_get_map(data, "tags")) == NULL) return 0;
 
   HTSMSG_FOREACH(f, tags) {
-    if (strcmp(f->hmf_name, "broadcast")) {
+    if (strcmp(f->hmf_name, "broadcast") == 0) {
       save |= _pyepg_parse_broadcast(htsmsg_get_map_by_field(f), channel);
     }
   }
@@ -268,6 +279,7 @@ static int _pyepg_parse_epg ( htsmsg_t *data )
   int save = 0;
   htsmsg_t *tags;
   htsmsg_field_t *f;
+  printf("parse_epg()\n");
 
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
 
@@ -292,6 +304,7 @@ static int _pyepg_parse ( htsmsg_t *data )
 {
   htsmsg_t *tags, *epg;
   epggrab_module_t *mod;
+  printf("parse()\n");
 
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
 
@@ -326,8 +339,6 @@ static htsmsg_t* _pyepg_grab ( const char *iopts )
   int        i, outlen;
   char       *outbuf;
   char       errbuf[100];
-  time_t     t1, t2;
-  htsmsg_t   *body;
   const char *argv[32]; // 32 args max!
   char       *toksave, *tok;
   char       *opts = NULL;
@@ -349,24 +360,15 @@ static htsmsg_t* _pyepg_grab ( const char *iopts )
   tvhlog(LOG_DEBUG, "pyepg", "grab %s %s", argv[0], iopts ? iopts : ""); 
 
   /* Grab */
-  time(&t1);
   outlen = spawn_and_store_stdout(argv[0], (char *const*)argv, &outbuf);
   free(opts);
   if ( outlen < 1 ) {
     tvhlog(LOG_ERR, "pyepg", "no output detected");
     return NULL;
   }
-  time(&t2);
-  tvhlog(LOG_DEBUG, "pyepg", "grab took %d seconds", t2 - t1);
 
   /* Extract */
-  body = htsmsg_xml_deserialize(outbuf, errbuf, sizeof(errbuf));
-  if ( !body ) {
-    tvhlog(LOG_ERR, "pyepg", "unable to parse output [e=%s]", errbuf);
-    return NULL;
-  }
-
-  return body;
+  return htsmsg_xml_deserialize(outbuf, errbuf, sizeof(errbuf));
 }
 
 epggrab_module_t* pyepg_init ( void )
