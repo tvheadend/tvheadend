@@ -11,121 +11,17 @@
 #include "epg.h"
 #include "epggrab/pyepg.h"
 
-void   _pyepg_grab            ( const char **argv );
-void   _pyepg_parse           ( htsmsg_t *data );
-void   _pyepg_parse_epg       ( htsmsg_t *data );
-int    _pyepg_parse_channel   ( htsmsg_t *data );
-int    _pyepg_parse_brand     ( htsmsg_t *data );
-int    _pyepg_parse_season    ( htsmsg_t *data );
-int    _pyepg_parse_episode   ( htsmsg_t *data );
-int    _pyepg_parse_broadcast ( htsmsg_t *data, epg_channel_t *channel );
-int    _pyepg_parse_schedule  ( htsmsg_t *data );
-int    _pyepg_parse_time      ( const char *str, time_t *tm );
-
-/* ************************************************************************
- * Module Setup
- * ***********************************************************************/
-
-static epggrab_module_t pyepg_module;
-
-static const char* pyepg_name ( void )
-{
-  return "pyepg";
-}
-
-static void pyepg_run ( const char *iopts )
-{
-  int i = 1;
-  const char *argv[32]; // 32 args max!
-  char *toksave, *tok;
-  char *opts = strdup(iopts);
-
-  /* TODO: do something better! */
-  argv[0] = "/usr/bin/pyepg";
-  if ( opts ) {
-    tok = strtok_r(opts, " ", &toksave);
-    while ( tok != NULL ) {
-      argv[i++] = tok;
-      tok = strtok_r(NULL, " ", &toksave);
-    }
-    argv[i] = NULL;
-  }
-
-  _pyepg_grab(argv);
-  free(opts);
-}
-
-epggrab_module_t* pyepg_init ( void )
-{
-  pyepg_module.enable  = NULL;
-  pyepg_module.disable = NULL;
-  pyepg_module.name    = pyepg_name;
-  pyepg_module.run     = pyepg_run;
-  return &pyepg_module;
-}
-
-/* **************************************************************************
- * Grabber
- * *************************************************************************/
-
-void _pyepg_grab ( const char **argv )
-{
-  int      i = 0, outlen;
-  char     *outbuf;
-  char     cmdstr[1024], errbuf[100];
-  time_t   t1, t2;
-  htsmsg_t *body;
-
-  /* Debug */
-  cmdstr[0] = '\0';
-  while ( argv[i] ) {
-    strcat(cmdstr, argv[i++]);
-    if ( argv[i] ) strcat(cmdstr, " ");
-  }
-  tvhlog(LOG_DEBUG, "pyepg", "grab %s", cmdstr); 
-
-  /* Grab */
-  time(&t1);
-  outlen = spawn_and_store_stdout(argv[0], (char *const*)argv, &outbuf);
-  if ( outlen < 1 ) {
-    tvhlog(LOG_ERR, "pyepg", "no output detected");
-    return;
-  }
-  time(&t2);
-  tvhlog(LOG_DEBUG, "pyepg", "grab took %d seconds", t2 - t1);
-
-  /* Extract */
-  body = htsmsg_xml_deserialize(outbuf, errbuf, sizeof(errbuf));
-  if ( !body ) {
-    tvhlog(LOG_ERR, "pyepg", "unable to parse output [e=%s]", errbuf);
-    return;
-  }
-
-  /* Parse */
-  pthread_mutex_lock(&global_lock);
-  _pyepg_parse(body);
-  pthread_mutex_unlock(&global_lock);
-  htsmsg_destroy(body);
-}
-
 /* **************************************************************************
  * Parsing
  * *************************************************************************/
 
-void _pyepg_parse ( htsmsg_t *data )
+static int _pyepg_parse_time ( const char *str, time_t *tm )
 {
-  htsmsg_t *tags, *epg;
-
-  if ((tags = htsmsg_get_map(data, "tags")) == NULL) return;
-  
-  /* PyEPG format */
-  if ((epg = htsmsg_get_map(tags, "epg")) != NULL) _pyepg_parse_epg(epg);
-
-  /* XMLTV format */
-  if ((epg = htsmsg_get_map(tags, "tv")) != NULL) return;// TODO: add
+  // TODO: implement
+  return 0;
 }
 
-int _pyepg_parse_channel ( htsmsg_t *data )
+static int _pyepg_parse_channel ( htsmsg_t *data )
 {
   int save = 0;
   htsmsg_t *attr, *tags;
@@ -145,7 +41,7 @@ int _pyepg_parse_channel ( htsmsg_t *data )
   return save;
 }
 
-int _pyepg_parse_brand ( htsmsg_t *data )
+static int _pyepg_parse_brand ( htsmsg_t *data )
 {
   int save = 0;
   htsmsg_t *attr, *tags;
@@ -188,7 +84,7 @@ int _pyepg_parse_brand ( htsmsg_t *data )
   return save;
 }
 
-int _pyepg_parse_season ( htsmsg_t *data )
+static int _pyepg_parse_season ( htsmsg_t *data )
 {
   int save = 0;
   htsmsg_t *attr, *tags;
@@ -244,7 +140,7 @@ int _pyepg_parse_season ( htsmsg_t *data )
   return save;
 }
 
-int _pyepg_parse_episode ( htsmsg_t *data )
+static int _pyepg_parse_episode ( htsmsg_t *data )
 {
   int save = 0;
   htsmsg_t *attr, *tags;
@@ -310,7 +206,7 @@ int _pyepg_parse_episode ( htsmsg_t *data )
   return save;
 }
 
-int _pyepg_parse_broadcast ( htsmsg_t *data, epg_channel_t *channel )
+static int _pyepg_parse_broadcast ( htsmsg_t *data, epg_channel_t *channel )
 {
   int save = 0;
   htsmsg_t *attr;//, *tags;
@@ -343,7 +239,7 @@ int _pyepg_parse_broadcast ( htsmsg_t *data, epg_channel_t *channel )
   return save;
 }
 
-int _pyepg_parse_schedule ( htsmsg_t *data )
+static int _pyepg_parse_schedule ( htsmsg_t *data )
 {
   int save = 0;
   htsmsg_t *attr, *tags;
@@ -367,13 +263,13 @@ int _pyepg_parse_schedule ( htsmsg_t *data )
   return save;
 }
 
-void _pyepg_parse_epg ( htsmsg_t *data )
+static int _pyepg_parse_epg ( htsmsg_t *data )
 {
   int save = 0;
   htsmsg_t *tags;
   htsmsg_field_t *f;
 
-  if ((tags = htsmsg_get_map(data, "tags")) == NULL) return;
+  if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
 
   HTSMSG_FOREACH(f, tags) {
     if (strcmp(f->hmf_name, "channel") == 0 ) {
@@ -389,6 +285,97 @@ void _pyepg_parse_epg ( htsmsg_t *data )
     }
   }
 
-  /* Updated */
-  if (save) epg_updated();
+  return save;
 }
+
+static int _pyepg_parse ( htsmsg_t *data )
+{
+  htsmsg_t *tags, *epg;
+  epggrab_module_t *mod;
+
+  if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
+
+  // TODO: might be a better way to do this using DTD definition?
+  
+  /* PyEPG format */
+  if ((epg = htsmsg_get_map(tags, "epg")) != NULL)
+    return _pyepg_parse_epg(epg);
+
+  /* XMLTV format */
+  if ((epg = htsmsg_get_map(tags, "tv")) != NULL) {
+    mod = epggrab_module_find_by_name("xmltv");
+    if (mod) return mod->parse(epg);
+  }
+    
+  return 0;
+}
+
+/* ************************************************************************
+ * Module Setup
+ * ***********************************************************************/
+
+static epggrab_module_t pyepg_module;
+
+static const char* _pyepg_name ( void )
+{
+  return "pyepg";
+}
+
+static htsmsg_t* _pyepg_grab ( const char *iopts )
+{
+  int        i, outlen;
+  char       *outbuf;
+  char       errbuf[100];
+  time_t     t1, t2;
+  htsmsg_t   *body;
+  const char *argv[32]; // 32 args max!
+  char       *toksave, *tok;
+  char       *opts = NULL;
+
+  /* TODO: do something (much) better! */
+  if (iopts) opts = strdup(iopts);
+  i = 1;
+  argv[0] = "/usr/bin/pyepg";
+  if ( opts ) {
+    tok = strtok_r(opts, " ", &toksave);
+    while ( tok != NULL ) {
+      argv[i++] = tok;
+      tok = strtok_r(NULL, " ", &toksave);
+    }
+    argv[i] = NULL;
+  }
+
+  /* Debug */
+  tvhlog(LOG_DEBUG, "pyepg", "grab %s %s", argv[0], iopts ? iopts : ""); 
+
+  /* Grab */
+  time(&t1);
+  outlen = spawn_and_store_stdout(argv[0], (char *const*)argv, &outbuf);
+  free(opts);
+  if ( outlen < 1 ) {
+    tvhlog(LOG_ERR, "pyepg", "no output detected");
+    return NULL;
+  }
+  time(&t2);
+  tvhlog(LOG_DEBUG, "pyepg", "grab took %d seconds", t2 - t1);
+
+  /* Extract */
+  body = htsmsg_xml_deserialize(outbuf, errbuf, sizeof(errbuf));
+  if ( !body ) {
+    tvhlog(LOG_ERR, "pyepg", "unable to parse output [e=%s]", errbuf);
+    return NULL;
+  }
+
+  return body;
+}
+
+epggrab_module_t* pyepg_init ( void )
+{
+  pyepg_module.enable  = NULL;
+  pyepg_module.disable = NULL;
+  pyepg_module.grab    = _pyepg_grab;
+  pyepg_module.parse   = _pyepg_parse;
+  pyepg_module.name    = _pyepg_name;
+  return &pyepg_module;
+}
+
