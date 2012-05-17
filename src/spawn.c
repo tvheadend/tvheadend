@@ -165,7 +165,7 @@ spawn_and_store_stdout(const char *prog, char *const argv[], char **outp)
 
   if(p == 0) {
     close(0);
-    close(2);
+    //close(2);
     close(fd[0]);
     dup2(fd[1], 1);
     close(fd[1]);
@@ -179,7 +179,7 @@ spawn_and_store_stdout(const char *prog, char *const argv[], char **outp)
     }
 
     dup2(f, 0);
-    dup2(f, 2);
+    //dup2(f, 2);
     close(f);
 
     execve(prog, argv, environ);

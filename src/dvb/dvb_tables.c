@@ -366,6 +366,7 @@ tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
 /**
  * DVB Descriptor; Short Event
  */
+#if TODO
 static int
 dvb_desc_short_event(uint8_t *ptr, int len, 
 		     char *title, size_t titlelen,
@@ -441,6 +442,7 @@ dvb_desc_extended_event(uint8_t *ptr, int len,
 
   return 0;
 }
+#endif
 
 
 /**
@@ -479,6 +481,7 @@ static int
 dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
+#if TODO
   service_t *t;
   channel_t *ch;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
@@ -629,6 +632,7 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     if(changed)
       epg_event_updated(e);
   }
+#endif
   return 0;
 }
 

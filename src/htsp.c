@@ -307,10 +307,12 @@ htsp_build_channel(channel_t *ch, const char *method)
   if(ch->ch_icon != NULL)
     htsmsg_add_str(out, "channelIcon", ch->ch_icon);
 
+#if TODO
   htsmsg_add_u32(out, "eventId",
 		 ch->ch_epg_current != NULL ? ch->ch_epg_current->e_id : 0);
   htsmsg_add_u32(out, "nextEventId",
 		 ch->ch_epg_next ? ch->ch_epg_next->e_id : 0);
+#endif
 
   LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
     ct = ctm->ctm_tag;
@@ -523,6 +525,7 @@ htsp_method_getTicket(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t * 
 htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
+#if TODO
   htsmsg_t *out;
   uint32_t eventid;
   event_t *e;
@@ -598,6 +601,8 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     break;
   }
   return out;
+#endif
+  return NULL;
 }
 
 /**
@@ -695,6 +700,7 @@ htsp_method_deleteDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
 {
+#if TODO
   htsmsg_t *out, *eventIds;
   const char *query;
   int c, i;
@@ -732,11 +738,14 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   epg_query_free(&eqr);
   
   return out;
+#endif
+  return NULL;
 }
 
 /**
  *
  */
+#if 0
 static htsmsg_t *
 htsp_build_event(event_t *e)
 {
@@ -774,6 +783,7 @@ htsp_build_event(event_t *e)
 
   return out;
 }
+#endif
 
 /**
  * Get information about the given event + 
@@ -782,6 +792,7 @@ htsp_build_event(event_t *e)
 static htsmsg_t *
 htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
 {
+#if TODO
   uint32_t eventid, numFollowing;
   htsmsg_t *out, *events;
   event_t *e;
@@ -809,6 +820,8 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
   
   htsmsg_add_msg(out, "events", events);
   return out;
+#endif
+  return NULL;
 }
 
 
@@ -818,6 +831,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
 {
+#if TODO
   uint32_t eventid;
   event_t *e;
   htsmsg_t *out;
@@ -830,6 +844,8 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
 
   out = htsp_build_event(e);  
   return out;
+#endif
+  return NULL;
 }
 
 /**

@@ -405,7 +405,7 @@ channel_delete(channel_t *ch)
     s->ths_channel = NULL;
   }
 
-  epg_unlink_from_channel(ch);
+  //epg_unlink_from_channel(ch);
 
   hts_settings_remove("channels/%d", ch->ch_id);
 
