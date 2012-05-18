@@ -44,7 +44,7 @@ typedef struct channel {
   LIST_HEAD(, th_subscription) ch_subscriptions;
 
   struct epg_channel *ch_epg_channel;
-#if 1 //TODO_REMOVE_THESE
+#if TODO_EPG_CHANNEL
   struct event_tree ch_epg_events;
   struct event *ch_epg_current;
   struct event *ch_epg_next;

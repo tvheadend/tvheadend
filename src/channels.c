@@ -175,8 +175,12 @@ channel_create(const char *name, int number)
   }
 
   ch = calloc(1, sizeof(channel_t));
+#if TODO_EPG_CHANNEL
   RB_INIT(&ch->ch_epg_events);
-  //LIST_INSERT_HEAD(&channels_not_xmltv_mapped, ch, ch_xc_link);
+#endif
+#if TODO_XMLTV
+  LIST_INSERT_HEAD(&channels_not_xmltv_mapped, ch, ch_xc_link);
+#endif
   channel_set_name(ch, name);
   ch->ch_number = number;
 
@@ -186,7 +190,7 @@ channel_create(const char *name, int number)
 
   assert(x == NULL);
 
-#if 0
+#if TODO_XMLTV
   if((xc = xmltv_channel_find_by_displayname(name)) != NULL) {
     channel_set_xmltv_source(ch, xc);
     if(xc->xc_icon != NULL)
@@ -258,11 +262,13 @@ channel_load_one(htsmsg_t *c, int id)
     return;
   }
 
+#if TODO_EPG_CHANNEL
   RB_INIT(&ch->ch_epg_events);
+#endif
 
   channel_set_name(ch, name);
 
-#if 0
+#if TODO_XMLTV
   if((s = htsmsg_get_str(c, "xmltv-channel")) != NULL &&
      (ch->ch_xc = xmltv_channel_find(s, 0)) != NULL) {
     LIST_INSERT_HEAD(&ch->ch_xc->xc_channels, ch, ch_xc_link);
@@ -326,7 +332,7 @@ channel_save(channel_t *ch)
 
   htsmsg_add_str(m, "name", ch->ch_name);
 
-#if 0
+#if TODO_XMLTV
   if(ch->ch_xc != NULL)
     htsmsg_add_str(m, "xmltv-channel", ch->ch_xc->xc_identifier);
 #endif
@@ -511,7 +517,7 @@ channel_set_number(channel_t *ch, int number)
 /**
  *
  */
-#if 0
+#if TODO_XMLTV
 void
 channel_set_xmltv_source(channel_t *ch, xmltv_channel_t *xc)
 {
