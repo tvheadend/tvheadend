@@ -697,8 +697,9 @@ static void _eqr_add_channel
   }
 }
 
-void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
-	       const char *contentgroup, const char *title)
+void epg_query0
+  ( epg_query_result_t *eqr, channel_t *channel, channel_tag_t *tag,
+    uint8_t contentgroup, const char *title )
 {
   // TODO: will need some real code here
   epg_channel_t *ec;
@@ -710,6 +711,12 @@ void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
     _eqr_add_channel(eqr, ec);
   }
   return;
+}
+
+void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
+	       const char *contentgroup, const char *title)
+{
+  epg_query0(eqr, NULL, NULL, 0, title);
 }
 
 void epg_query_free(epg_query_result_t *eqr)

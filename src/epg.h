@@ -263,12 +263,17 @@ typedef struct epg_query_result {
   int               eqr_alloced;
 } epg_query_result_t;
 
+void epg_query_free(epg_query_result_t *eqr);
+
+/* Sorting */
+// TODO: comparator function input?
+void epg_query_sort(epg_query_result_t *eqr);
+
+/* Query routines */
 void epg_query0(epg_query_result_t *eqr, channel_t *ch, channel_tag_t *ct,
                 uint8_t type, const char *title);
 void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
 	       const char *contentgroup, const char *title);
-void epg_query_free(epg_query_result_t *eqr);
-void epg_query_sort(epg_query_result_t *eqr);
 
 
 /* ************************************************************************

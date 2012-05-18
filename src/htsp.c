@@ -307,7 +307,7 @@ htsp_build_channel(channel_t *ch, const char *method)
   if(ch->ch_icon != NULL)
     htsmsg_add_str(out, "channelIcon", ch->ch_icon);
 
-#if TODO
+#if TODO_EPG_CHANNEL
   htsmsg_add_u32(out, "eventId",
 		 ch->ch_epg_current != NULL ? ch->ch_epg_current->e_id : 0);
   htsmsg_add_u32(out, "nextEventId",
@@ -525,7 +525,7 @@ htsp_method_getTicket(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t * 
 htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
-#if TODO
+#if TODO_DVR
   htsmsg_t *out;
   uint32_t eventid;
   event_t *e;
@@ -700,7 +700,6 @@ htsp_method_deleteDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
 {
-#if TODO
   htsmsg_t *out, *eventIds;
   const char *query;
   int c, i;
@@ -730,7 +729,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   if( c ) {
     eventIds = htsmsg_create_list();
     for(i = 0; i < c; ++i) {
-        htsmsg_add_u32(eventIds, NULL, eqr.eqr_array[i]->e_id);
+        htsmsg_add_u32(eventIds, NULL, eqr.eqr_array[i]->eb_id);
     }
     htsmsg_add_msg(out, "eventIds", eventIds);
   }
@@ -738,52 +737,58 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   epg_query_free(&eqr);
   
   return out;
-#endif
-  return NULL;
 }
 
 /**
  *
  */
-#if 0
 static htsmsg_t *
-htsp_build_event(event_t *e)
+htsp_build_event(epg_broadcast_t *e)
 {
   htsmsg_t *out;
-  event_t *n;
+  epg_broadcast_t *n;
+#if TODO_DVR
   dvr_entry_t *de;
+#endif
 
   out = htsmsg_create_map();
 
-  htsmsg_add_u32(out, "eventId", e->e_id);
+  htsmsg_add_u32(out, "eventId", e->eb_id);
+#if TODO_EPG_CHANNEL
   htsmsg_add_u32(out, "channelId", e->e_channel->ch_id);
-  htsmsg_add_u32(out, "start", e->e_start);
-  htsmsg_add_u32(out, "stop", e->e_stop);
-  if(e->e_title != NULL)
-    htsmsg_add_str(out, "title", e->e_title);
-  if(e->e_desc != NULL)
-    htsmsg_add_str(out, "description", e->e_desc);
+#endif
+  htsmsg_add_u32(out, "start", e->eb_start);
+  htsmsg_add_u32(out, "stop", e->eb_stop);
+  if(e->eb_episode->ee_title != NULL)
+    htsmsg_add_str(out, "title", e->eb_episode->ee_title);
+  if(e->eb_episode->ee_description != NULL)
+    htsmsg_add_str(out, "description", e->eb_episode->ee_description);
+  else if(e->eb_episode->ee_summary != NULL)
+    htsmsg_add_str(out, "description", e->eb_episode->ee_summary);
+#if TODO_REMOVE_THESE
   if(e->e_ext_desc != NULL)
     htsmsg_add_str(out, "ext_desc", e->e_ext_desc);
   if(e->e_ext_item != NULL)
     htsmsg_add_str(out, "ext_item", e->e_ext_item);
   if(e->e_ext_text != NULL)
     htsmsg_add_str(out, "ext_text", e->e_ext_text);
+#endif
 
-  if(e->e_content_type)
-    htsmsg_add_u32(out, "contentType", e->e_content_type);
+  if(e->eb_episode->ee_genre)
+    htsmsg_add_u32(out, "contentType", e->eb_episode->ee_genre);
 
+#if TODO_DVR
   if((de = dvr_entry_find_by_event(e)) != NULL) {
     htsmsg_add_u32(out, "dvrId", de->de_id);
   }
+#endif
 
-  n = RB_NEXT(e, e_channel_link);
+  n = RB_NEXT(e, eb_slink);
   if(n != NULL)
-    htsmsg_add_u32(out, "nextEventId", n->e_id);
+    htsmsg_add_u32(out, "nextEventId", n->eb_id);
 
   return out;
 }
-#endif
 
 /**
  * Get information about the given event + 
@@ -792,10 +797,9 @@ htsp_build_event(event_t *e)
 static htsmsg_t *
 htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
 {
-#if TODO
   uint32_t eventid, numFollowing;
   htsmsg_t *out, *events;
-  event_t *e;
+  epg_broadcast_t *e;
 
   if(htsmsg_get_u32(in, "eventId", &eventid))
     return htsp_error("Missing argument 'eventId'");
@@ -803,7 +807,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsmsg_get_u32(in, "numFollowing", &numFollowing))
     return htsp_error("Missing argument 'numFollowing'");
 
-  if((e = epg_event_find_by_id(eventid)) == NULL) {
+  if((e = epg_broadcast_find_by_id(eventid)) == NULL) {
     return htsp_error("Event does not exist");
   }
 
@@ -812,7 +816,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
   
   htsmsg_add_msg(events, NULL, htsp_build_event(e));
   while( numFollowing-- > 0 ) {
-    e = RB_NEXT(e, e_channel_link);
+    e = RB_NEXT(e, eb_slink);
     if( e == NULL ) 
       break;
     htsmsg_add_msg(events, NULL, htsp_build_event(e));
@@ -820,8 +824,6 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
   
   htsmsg_add_msg(out, "events", events);
   return out;
-#endif
-  return NULL;
 }
 
 
@@ -831,20 +833,18 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
 {
-#if TODO
   uint32_t eventid;
-  event_t *e;
+  epg_broadcast_t *e;
   htsmsg_t *out;
   
   if(htsmsg_get_u32(in, "eventId", &eventid))
     return htsp_error("Missing argument 'eventId'");
 
-  if((e = epg_event_find_by_id(eventid)) == NULL)
+  if((e = epg_broadcast_find_by_id(eventid)) == NULL)
     return htsp_error("Event does not exist");
 
   out = htsp_build_event(e);  
   return out;
-#endif
   return NULL;
 }
 
