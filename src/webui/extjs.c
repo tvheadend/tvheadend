@@ -322,7 +322,7 @@ extjs_channels_update(htsmsg_t *in)
     if((s = htsmsg_get_str(c, "name")) != NULL)
       channel_rename(ch, s);
 
-#if TODO_XMLTV
+#if TODO_XMLTV_REMOVE_THIS
     if((s = htsmsg_get_str(c, "xmltvsrc")) != NULL)
       channel_set_xmltv_source(ch, xmltv_channel_find_by_displayname(s));
 #endif
@@ -376,7 +376,7 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
       htsmsg_add_str(c, "name", ch->ch_name);
       htsmsg_add_u32(c, "chid", ch->ch_id);
       
-#if TODO_XMLTV
+#if TODO_XMLTV_REMOVE_THIS
       if(ch->ch_xc != NULL)
 	htsmsg_add_str(c, "xmltvsrc", ch->ch_xc->xc_displayname);
 #endif
@@ -425,7 +425,7 @@ extjs_ecglist(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   htsmsg_t *out, *array;//TODO:, *c;
-#if TODO
+#if TODO_GENRE
   const char *s;
   int i;
 #endif
@@ -433,7 +433,7 @@ extjs_ecglist(http_connection_t *hc, const char *remain, void *opaque)
   out = htsmsg_create_map();
   array = htsmsg_create_list();
 
-#if TODO
+#if TODO_GENRE
   for(i = 0; i < 16; i++) {
     if((s = epg_content_group_get_name(i)) == NULL)
       continue;
@@ -476,7 +476,7 @@ json_single_record(htsmsg_t *rec, const char *root)
 static int
 extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
 {
-#if TODO_EPGGRAB
+#if TODO_EPGGRAB_CONFIG
   htsbuf_queue_t *hq = &hc->hc_reply;
   const char *op = http_arg_get(&hc->hc_req_args, "op");
   xmltv_channel_t *xc;
@@ -747,9 +747,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
       htsmsg_add_str(m, "ext_text", e->e_ext_text);
 #endif
 
-#if TODO_ARE_WE_JUNKING_THIS
-    htsmsg_add_u32(m, "id", e->e_id);
-#endif
+    htsmsg_add_u32(m, "id", e->eb_id);
     htsmsg_add_u32(m, "start", e->eb_start);
     htsmsg_add_u32(m, "end", e->eb_stop);
     htsmsg_add_u32(m, "duration", e->eb_stop - e->eb_start);
@@ -807,7 +805,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
   if(!strcmp(op, "recordEvent")) {
 
-#if TODO
+#if TODO_DVR
     const char *config_name = http_arg_get(&hc->hc_req_args, "config_name");
 
     s = http_arg_get(&hc->hc_req_args, "eventId");
@@ -921,7 +919,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(out, "success", 1);
 
   } else if(!strcmp(op, "createAutoRec")) {
-#if TODO
+#if TODO_DVR
     const char *cgrp = http_arg_get(&hc->hc_req_args, "contentgrp");
 
     
@@ -1099,7 +1097,7 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
     if(de->de_desc != NULL)
       htsmsg_add_str(m, "description", de->de_desc);
 
-#if TODO
+#if TODO_DVR
     if(de->de_episode.ee_onscreen)
       htsmsg_add_str(m, "episode", de->de_episode.ee_onscreen);
 #endif
