@@ -1418,18 +1418,17 @@ htsp_async_send(htsmsg_t *m)
 void
 htsp_channel_update_current(channel_t *ch)
 {
+  epg_broadcast_t *now, *next;
   htsmsg_t *m;
-  time_t now;
 
-  time(&now);
   m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "channelUpdate");
   htsmsg_add_u32(m, "channelId", ch->ch_id);
 
-  htsmsg_add_u32(m, "eventId",
-		 ch->ch_epg_current ? ch->ch_epg_current->e_id : 0);
-  htsmsg_add_u32(m, "nextEventId",
-		 ch->ch_epg_next ? ch->ch_epg_next->e_id : 0);
+  now  = epg_channel_get_current_broadcast(ch->ch_epg_channel);
+  next = epg_broadcast_get_next(now);
+  htsmsg_add_u32(m, "eventId",     now  ? now->eb_id : 0);
+  htsmsg_add_u32(m, "nextEventId", next ? next->eb_id : 0);
   htsp_async_send(m);
 }
 

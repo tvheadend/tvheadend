@@ -511,6 +511,7 @@ dvr_autorec_check_event(event_t *e)
 static void
 dvr_autorec_changed(dvr_autorec_entry_t *dae)
 {
+#if TODO_DVR
   channel_t *ch;
   event_t *e;
 
@@ -522,6 +523,7 @@ dvr_autorec_changed(dvr_autorec_entry_t *dae)
 	dvr_entry_create_by_autorec(e, dae);
     }
   }
+#endif
 }
 
 
