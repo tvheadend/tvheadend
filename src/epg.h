@@ -217,6 +217,7 @@ typedef struct epg_broadcast
 
 /* Lookup */
 epg_broadcast_t *epg_broadcast_find_by_time ( epg_channel_t *ch, time_t start, time_t stop, int create );
+epg_broadcast_t *epg_broadcast_find_by_id   ( int id );
 
 /* Mutators */
 int epg_broadcast_set_episode    ( epg_broadcast_t *b, epg_episode_t *e, int u )

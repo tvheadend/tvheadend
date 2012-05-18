@@ -561,6 +561,8 @@ int epg_episode_get_number_onscreen
  * Broadcast
  * *************************************************************************/
 
+static int _epg_broadcast_idx = 0;
+
 // Note: will find broadcast playing at this time (not necessarily
 //       one that starts at this time)
 //
@@ -580,6 +582,7 @@ epg_broadcast_t* epg_broadcast_find_by_time
   skel->eb_channel = channel;
   skel->eb_start   = start;
   skel->eb_stop    = stop;
+  skel->eb_id      = _epg_broadcast_idx;
   
   /* Find */
   if ( !create ) {
@@ -591,10 +594,24 @@ epg_broadcast_t* epg_broadcast_find_by_time
     if ( eb == NULL ) {
       eb   = skel;
       skel = NULL;
+      _epg_broadcast_idx++;
     }
   }
 
   return eb;
+}
+
+epg_broadcast_t *epg_broadcast_find_by_id ( int id )
+{
+  // TODO: do this properly
+  epg_channel_t *ec;
+  epg_broadcast_t *ebc;
+  RB_FOREACH(ec, &epg_channels, ec_link) {
+    RB_FOREACH(ebc, &ec->ec_schedule, eb_slink) {
+      if (ebc->eb_id == id) return ebc;
+    }
+  }
+  return NULL;
 }
 
 int epg_broadcast_set_episode 
