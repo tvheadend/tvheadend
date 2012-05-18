@@ -33,32 +33,13 @@
 #include "tvheadend.h"
 #include "dvb_support.h"
 #include "dvb.h"
-
-#ifdef CONFIG_DVBCONV // Use builtin charset conversion
-#define dvbconv_t int
-static dvbconv_t convert_iso_8859[16];
-static dvbconv_t convert_utf8;
-static dvbconv_t convert_latin1;
-
 #include "dvb_charset_tables.h"
 
-#define CONV_UTF8      14
-#define CONV_ISO6937   15
-void
-dvb_conversion_init(void)
-{
-  int i;
-  convert_utf8 = CONV_UTF8;
-  convert_iso_8859[0] = -1;
-  for (i=1; i<=11; i++) {
-    convert_iso_8859[i] = i-1;
-  }
-  convert_iso_8859[12] = -1; // There is no ISO-8859-12
-  for (i=13; i<=15; i++) {
-    convert_iso_8859[i] = i-2;
-  }
-  convert_latin1 = CONV_ISO6937;
-}
+static int convert_iso_8859[16] = {
+  -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, -1, 11, 12, 13
+};
+#define convert_utf8   14
+#define convert_iso6937 15
 
 static inline int encode_utf8(uint16_t c, char *outb, int outleft)
 {
@@ -100,7 +81,7 @@ static inline size_t conv_utf8(const uint8_t *src, size_t srclen,
   return 0;
 }
 
-static inline size_t conv_8859(dvbconv_t conv,
+static inline size_t conv_8859(int conv,
                               const uint8_t *src, size_t srclen,
                               char *dst, size_t *dstlen)
 {
@@ -204,95 +185,16 @@ static inline size_t conv_6937(const uint8_t *src, size_t srclen,
   return 0;
 }
 
-static size_t dvb_convert(dvbconv_t conv,
+static inline size_t dvb_convert(int conv,
                           const uint8_t *src, size_t srclen,
                           char *dst, size_t *dstlen)
 {
   switch (conv) {
-    case CONV_UTF8: return conv_utf8(src, srclen, dst, dstlen);
-    case CONV_ISO6937: return conv_6937(src, srclen, dst, dstlen);
+    case convert_utf8: return conv_utf8(src, srclen, dst, dstlen);
+    case convert_iso6937: return conv_6937(src, srclen, dst, dstlen);
     default: return conv_8859(conv, src, srclen, dst, dstlen);
   }
 }
-
-#else // use iconv for charset conversion
-
-#include <iconv.h>
-#define dvbconv_t iconv_t
-static dvbconv_t convert_iso_8859[16];
-static dvbconv_t convert_utf8;
-static dvbconv_t convert_latin1;
-
-static dvbconv_t
-dvb_iconv_open(const char *srcencoding)
-{
-  dvbconv_t ic;
-  ic = iconv_open("UTF-8", srcencoding);
-  return ic;
-}
-
-void
-dvb_conversion_init(void)
-{
-  char buf[50];
-  int i;
- 
-  for(i = 1; i <= 15; i++) {
-    snprintf(buf, sizeof(buf), "ISO-8859-%d", i);
-    convert_iso_8859[i] = dvb_iconv_open(buf);
-  }
-
-  convert_utf8   = dvb_iconv_open("UTF-8");
-  convert_latin1 = dvb_iconv_open("ISO6937");
-  if(convert_latin1 == (dvbconv_t)(-1)) {
-    convert_latin1 = dvb_iconv_open("ISO_8859-1");
-  }
-}
-static size_t dvb_convert(dvbconv_t ic,
-                          const uint8_t *src, size_t srclen,
-                          char *dst, size_t *outlen) {
-  char *in, *out;
-  size_t inlen;
-  unsigned char *tmp;
-  int i;
-  int r;
-
-  tmp = alloca(srclen + 1);
-  memcpy(tmp, src, srclen);
-  tmp[srclen] = 0;
-
-  /* Escape control codes */
-  if(ic != convert_utf8) {
-    for(i = 0; i < srclen; i++) {
-      if(tmp[i] >= 0x80 && tmp[i] <= 0x9f)
-	tmp[i] = ' ';
-    }
-  }
-
-  out = dst;
-  in = (char *)tmp;
-  inlen = srclen;
-
-  while(inlen > 0) {
-    r = iconv(ic, &in, &inlen, &out, outlen);
-
-    if(r == (size_t) -1) {
-      if(errno == EILSEQ) {
-	in++;
-	inlen--;
-	continue;
-      } else {
-	return -1;
-      }
-    }
-  }
-  return 0;
-}
-#endif
-/**
- *
- */
-
 
 /*
  * DVB String conversion according to EN 300 468, Annex A
@@ -302,7 +204,7 @@ static size_t dvb_convert(dvbconv_t ic,
 int
 dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char *dvb_default_charset)
 {
-  dvbconv_t ic;
+  int ic;
   size_t len, outlen;
   int i;
 
@@ -345,10 +247,10 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char
       if (i > 0 && i < 16) {
         ic = convert_iso_8859[i];
       } else {
-        ic = convert_latin1;
+        ic = convert_iso6937;
       }
     } else {
-      ic = convert_latin1;
+      ic = convert_iso6937;
     }
     break;
   }
@@ -358,7 +260,7 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char
     return 0;
   }
 
-  if(ic == (dvbconv_t) -1)
+  if(ic == -1)
     return -1;
 
   outlen = dstlen - 1;
