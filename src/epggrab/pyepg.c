@@ -42,8 +42,13 @@ static int _pyepg_parse_channel ( htsmsg_t *data )
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
 
   /* Find channel */
-  if ((channel = epg_channel_find(id, name, NULL, NULL)) == NULL) return 0;
+  if ((channel = epg_channel_find_by_uri(id, 1)) == NULL) return 0;
   // TODO: need to save if created
+
+  /* Set name */
+  name = htsmsg_xml_get_cdata_str(tags, "name");
+  if ( name ) save |= epg_channel_set_name(channel, name);
+  
 
   return save;
 }
@@ -237,10 +242,7 @@ static int _pyepg_parse_broadcast ( htsmsg_t *data, epg_channel_t *channel )
   if (!_pyepg_parse_time(stop, &tm_stop)) return 0;
 
   /* Find broadcast */
-  printf("%s find broadcast %ld to %ld\n",
-          channel->ec_uri, tm_start, tm_stop);
   broadcast = epg_broadcast_find_by_time(channel, tm_start, tm_stop, 1);
-  printf("%s broadcast %p\n", channel->ec_uri, broadcast);
   if ( broadcast == NULL ) return 0;
 
   /* Set episode */
