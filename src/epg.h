@@ -223,6 +223,9 @@ epg_broadcast_t *epg_broadcast_find_by_id   ( int id );
 int epg_broadcast_set_episode    ( epg_broadcast_t *b, epg_episode_t *e, int u )
   __attribute__((warn_unused_result));
 
+/* Accessors */
+epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *b );
+
 /* ************************************************************************
  * Channel - provides mapping from EPG channels to real channels
  * ***********************************************************************/
@@ -249,6 +252,9 @@ epg_channel_t *epg_channel_find_by_uri ( const char *uri, int create );
 /* Mutators */
 int epg_channel_set_name ( epg_channel_t *c, const char *n )
   __attribute__((warn_unused_result));
+
+/* Accessors */
+epg_broadcast_t *epg_channel_get_current_broadcast ( epg_channel_t *c );
 
 /* ************************************************************************
  * Querying

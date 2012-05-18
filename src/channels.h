@@ -43,9 +43,12 @@ typedef struct channel {
   LIST_HEAD(, service) ch_services;
   LIST_HEAD(, th_subscription) ch_subscriptions;
 
+  struct epg_channel *ch_epg_channel;
+#if 1 //TODO_REMOVE_THESE
   struct event_tree ch_epg_events;
   struct event *ch_epg_current;
   struct event *ch_epg_next;
+#endif
 
   gtimer_t ch_epg_timer_head;
   gtimer_t ch_epg_timer_current;
@@ -59,6 +62,7 @@ typedef struct channel {
   struct dvr_autorec_entry_list ch_autorecs;
 
   struct channel_tag_mapping_list ch_ctms;
+
 
 } channel_t;
 

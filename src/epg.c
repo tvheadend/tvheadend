@@ -627,6 +627,12 @@ int epg_broadcast_set_episode
   return save;
 }
 
+epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *broadcast )
+{
+  if ( !broadcast ) return NULL;
+  return RB_NEXT(broadcast, eb_slink);
+}
+
 /* **************************************************************************
  * Channel
  * *************************************************************************/
@@ -668,6 +674,13 @@ int epg_channel_set_name ( epg_channel_t *channel, const char *name )
     save = 1;
   }
   return save;
+}
+
+epg_broadcast_t *epg_channel_get_current_broadcast ( epg_channel_t *channel )
+{
+  // TODO: its not really the head!
+  if ( !channel ) return NULL;
+  return RB_FIRST(&channel->ec_schedule);
 }
 
 /* **************************************************************************

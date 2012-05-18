@@ -295,6 +295,7 @@ htsp_build_channel(channel_t *ch, const char *method)
   channel_tag_mapping_t *ctm;
   channel_tag_t *ct;
   service_t *t;
+  epg_broadcast_t *now, *next = NULL;
 
   htsmsg_t *out = htsmsg_create_map();
   htsmsg_t *tags = htsmsg_create_list();
@@ -307,12 +308,10 @@ htsp_build_channel(channel_t *ch, const char *method)
   if(ch->ch_icon != NULL)
     htsmsg_add_str(out, "channelIcon", ch->ch_icon);
 
-#if TODO_EPG_CHANNEL
-  htsmsg_add_u32(out, "eventId",
-		 ch->ch_epg_current != NULL ? ch->ch_epg_current->e_id : 0);
-  htsmsg_add_u32(out, "nextEventId",
-		 ch->ch_epg_next ? ch->ch_epg_next->e_id : 0);
-#endif
+  now = epg_channel_get_current_broadcast(ch->ch_epg_channel);
+  if ( now ) next = epg_broadcast_get_next(now);
+  htsmsg_add_u32(out, "eventId", now ? now->eb_id : 0);
+  htsmsg_add_u32(out, "nextEventId", next ? next->eb_id : 0);
 
   LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
     ct = ctm->ctm_tag;
@@ -783,7 +782,7 @@ htsp_build_event(epg_broadcast_t *e)
   }
 #endif
 
-  n = RB_NEXT(e, eb_slink);
+  n = epg_broadcast_get_next(e);
   if(n != NULL)
     htsmsg_add_u32(out, "nextEventId", n->eb_id);
 
@@ -816,7 +815,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
   
   htsmsg_add_msg(events, NULL, htsp_build_event(e));
   while( numFollowing-- > 0 ) {
-    e = RB_NEXT(e, eb_slink);
+    e = epg_broadcast_get_next(e);
     if( e == NULL ) 
       break;
     htsmsg_add_msg(events, NULL, htsp_build_event(e));
