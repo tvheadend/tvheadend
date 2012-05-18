@@ -25,6 +25,4 @@ void
 dvb_init(uint32_t adapter_mask)
 {
   dvb_adapter_init(adapter_mask);
-  dvb_conversion_init();
-
 }
