@@ -58,15 +58,14 @@ static int
 page_simple(http_connection_t *hc,
 	  const char *remain, void *opaque)
 {
-#if TODO
   htsbuf_queue_t *hq = &hc->hc_reply;
   const char *s = http_arg_get(&hc->hc_req_args, "s");
-  event_t *e;
+  epg_broadcast_t *e;
   int c, k, i;
   struct tm a, b, day;
   dvr_entry_t *de;
   dvr_query_result_t dqr;
-  const char *rstatus;
+  const char *rstatus = NULL;
   epg_query_result_t eqr;
 
   htsbuf_qprintf(hq, "<html>");
@@ -109,8 +108,8 @@ page_simple(http_connection_t *hc,
       for(k = 0; k < c; k++) {
 	e = eqr.eqr_array[k];
       
-	localtime_r(&e->e_start, &a);
-	localtime_r(&e->e_stop, &b);
+	localtime_r(&e->eb_start, &a);
+	localtime_r(&e->eb_stop, &b);
 
 	if(a.tm_wday != day.tm_wday || a.tm_mday != day.tm_mday  ||
 	   a.tm_mon  != day.tm_mon  || a.tm_year != day.tm_year) {
@@ -120,16 +119,18 @@ page_simple(http_connection_t *hc,
 		      days[day.tm_wday], day.tm_mday, day.tm_mon + 1);
 	}
 
+#if TODO_DVR
 	de = dvr_entry_find_by_event(e);
 	rstatus = de != NULL ? val2str(de->de_sched_state,
 				       recstatustxt) : NULL;
+#endif
 
 	htsbuf_qprintf(hq, 
 		    "<a href=\"/eventinfo/%d\">"
 		    "%02d:%02d-%02d:%02d&nbsp;%s%s%s</a><br>",
-		    e->e_id,
+		    e->eb_id,
 		    a.tm_hour, a.tm_min, b.tm_hour, b.tm_min,
-		    e->e_title,
+		    e->eb_episode->ee_title,
 		    rstatus ? "&nbsp;" : "", rstatus ?: "");
       }
     }
@@ -185,7 +186,6 @@ page_simple(http_connection_t *hc,
 
   htsbuf_qprintf(hq, "</body></html>");
   http_output_html(hc);
-#endif
   return 0;
 }
 
@@ -195,9 +195,8 @@ page_simple(http_connection_t *hc,
 static int
 page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 {
-#if TODO
   htsbuf_queue_t *hq = &hc->hc_reply;
-  event_t *e;
+  epg_broadcast_t *e;
   struct tm a, b;
   dvr_entry_t *de;
   const char *rstatus;
@@ -205,11 +204,12 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_lock(&global_lock);
 
-  if(remain == NULL || (e = epg_event_find_by_id(atoi(remain))) == NULL) {
+  if(remain == NULL || (e = epg_broadcast_find_by_id(atoi(remain))) == NULL) {
     pthread_mutex_unlock(&global_lock);
     return 404;
   }
 
+#if TODO_DVR
   de = dvr_entry_find_by_event(e);
 
   if((http_arg_get(&hc->hc_req_args, "rec")) != NULL) {
@@ -218,20 +218,22 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   } else if(de != NULL && (http_arg_get(&hc->hc_req_args, "cancel")) != NULL) {
     de = dvr_entry_cancel(de);
   }
+#endif
 
   htsbuf_qprintf(hq, "<html>");
   htsbuf_qprintf(hq, "<body>");
 
-  localtime_r(&e->e_start, &a);
-  localtime_r(&e->e_stop, &b);
+  localtime_r(&e->eb_start, &a);
+  localtime_r(&e->eb_stop, &b);
 
   htsbuf_qprintf(hq, 
 	      "%s, %d/%d %02d:%02d - %02d:%02d<br>",
 	      days[a.tm_wday], a.tm_mday, a.tm_mon + 1,
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
 
+  // TODO: use real channel?
   htsbuf_qprintf(hq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
-	      e->e_channel->ch_name, e->e_title);
+	      e->eb_channel->ec_name, e->eb_episode->ee_title);
   
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
 
@@ -239,7 +241,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
     htsbuf_qprintf(hq, "Recording status: %s<br>", rstatus);
 
   htsbuf_qprintf(hq, "<form method=\"post\" action=\"/eventinfo/%d\">", 
-		 e->e_id);
+		 e->eb_id);
 
   switch(dvr_status) {
   case DVR_SCHEDULED:
@@ -263,14 +265,17 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   htsbuf_qprintf(hq, "</form>");
-  htsbuf_qprintf(hq, "%s", e->e_desc);
+  if ( e->eb_episode->ee_description )
+    htsbuf_qprintf(hq, "%s", e->eb_episode->ee_description);
+  else if ( e->eb_episode->ee_summary )
+    htsbuf_qprintf(hq, "%s", e->eb_episode->ee_summary);
+  
 
   pthread_mutex_unlock(&global_lock);
 
   htsbuf_qprintf(hq, "<hr><a href=\"/simple.html\">To main page</a><br>");
   htsbuf_qprintf(hq, "</body></html>");
   http_output_html(hc);
-#endif
   return 0;
 }
 
