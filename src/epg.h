@@ -22,19 +22,6 @@
 #include "channels.h"
 #include "settings.h"
 
-/* ************************************************************************
- * Type definitions
- * ***********************************************************************/
-
-/*
- * Forward declarations
- */
-struct epg_brand;
-struct epg_season;
-struct epg_episode;
-struct epg_broadcast;
-struct epg_channel;
-
 /*
  * Map types
  */
@@ -43,12 +30,22 @@ RB_HEAD(epg_season_tree,    epg_season);
 RB_HEAD(epg_episode_tree,   epg_episode);
 RB_HEAD(epg_channel_tree,   epg_channel);
 RB_HEAD(epg_broadcast_tree, epg_broadcast);
-// TODO: not sure above wants to be an RB, prob just LIST
 
-/* 
- * Represents a specific show
- * e.g. The Simpsons, 24, Eastenders, etc...
+/*
+ * Forward declerations
  */
+typedef struct epg_brand     epg_brand_t;
+typedef struct epg_season    epg_season_t;
+typedef struct epg_episode   epg_episode_t;
+typedef struct epg_broadcast epg_broadcast_t;
+typedef struct epg_channel   epg_channel_t;
+
+/* ************************************************************************
+ * Brand - Represents a specific show
+ * e.g. The Simpsons, 24, Eastenders, etc...
+ * ***********************************************************************/
+
+/* Object */
 typedef struct epg_brand
 {
   RB_ENTRY(epg_brand)        eb_link;         ///< Global list link
@@ -60,14 +57,34 @@ typedef struct epg_brand
 
   struct epg_season_tree     eb_seasons;      ///< Season list
   struct epg_episode_tree    eb_episodes;     ///< Episode list
-  // TODO: should this only include unattached episodes?
 
   int                        eb_refcount;     ///< Reference counting
 } epg_brand_t;
 
-/*
- * Represents a season
- */
+/* Lookup */
+epg_brand_t *epg_brand_find_by_uri ( const char *uri, int create );
+
+/* Mutators */
+int epg_brand_set_title        ( epg_brand_t *b, const char *title )
+  __attribute__((warn_unused_result));
+int epg_brand_set_summary      ( epg_brand_t *b, const char *summary )
+  __attribute__((warn_unused_result));
+int epg_brand_set_season_count ( epg_brand_t *b, uint16_t season_count )
+  __attribute__((warn_unused_result));
+int epg_brand_add_season       ( epg_brand_t *b, epg_season_t *s, int u )
+  __attribute__((warn_unused_result));
+int epg_brand_rem_season       ( epg_brand_t *b, epg_season_t *s, int u )
+  __attribute__((warn_unused_result));
+int epg_brand_add_episode      ( epg_brand_t *b, epg_episode_t *s, int u )
+  __attribute__((warn_unused_result));
+int epg_brand_rem_episode      ( epg_brand_t *b, epg_episode_t *s, int u )
+  __attribute__((warn_unused_result));
+
+/* ************************************************************************
+ * Season
+ * ***********************************************************************/
+
+/* Object */
 typedef struct epg_season
 {
   RB_ENTRY(epg_season)       es_link;          ///< Global list link
@@ -85,9 +102,30 @@ typedef struct epg_season
 
 } epg_season_t;
 
-/*
- * Represents a particular episode
- */
+/* Lookup */
+epg_season_t *epg_season_find_by_uri ( const char *uri, int create );
+
+/* Mutators */
+int epg_season_set_summary       ( epg_season_t *s, const char *summary )
+  __attribute__((warn_unused_result));
+int epg_season_set_number        ( epg_season_t *s, uint16_t number )
+  __attribute__((warn_unused_result));
+int epg_season_set_episode_count ( epg_season_t *s, uint16_t episode_count )
+  __attribute__((warn_unused_result));
+int epg_season_set_brand         ( epg_season_t *s, epg_brand_t *b, int u )
+  __attribute__((warn_unused_result));
+int epg_season_add_episode       ( epg_season_t *s, epg_episode_t *e, int u )
+  __attribute__((warn_unused_result));
+int epg_season_rem_episode       ( epg_season_t *s, epg_episode_t *e, int u )
+  __attribute__((warn_unused_result));
+
+/* ************************************************************************
+ * Episode
+ *
+ * TODO: ee_genre needs to be a list
+ * ***********************************************************************/
+
+/* Object */
 typedef struct epg_episode
 {
   RB_ENTRY(epg_episode)      ee_link;          ///< Global link
@@ -100,7 +138,6 @@ typedef struct epg_episode
   char                      *ee_summary;       ///< Summary
   char                      *ee_description;   ///< An extended description
   uint8_t                    ee_genre;         ///< Episode genre
-  // TODO: genre needs to be a list (should it be a string?)
   uint16_t                   ee_number;        ///< The episode number
   uint16_t                   ee_part_number;   ///< For multipart episodes
   uint16_t                   ee_part_count;    ///< For multipart episodes
@@ -112,9 +149,41 @@ typedef struct epg_episode
   int                        ee_refcount;      ///< Reference counting
 } epg_episode_t;
 
-/*
- * A specific broadcast of an episode
- */
+/* Lookup */
+epg_episode_t *epg_episode_find_by_uri ( const char *uri, int create );
+
+/* Mutators */
+int epg_episode_set_title        ( epg_episode_t *e, const char *title )
+  __attribute__((warn_unused_result));
+int epg_episode_set_subtitle     ( epg_episode_t *e, const char *subtitle )
+  __attribute__((warn_unused_result));
+int epg_episode_set_summary      ( epg_episode_t *e, const char *summary )
+  __attribute__((warn_unused_result));
+int epg_episode_set_description  ( epg_episode_t *e, const char *description )
+  __attribute__((warn_unused_result));
+int epg_episode_set_number       ( epg_episode_t *e, uint16_t number )
+  __attribute__((warn_unused_result));
+int epg_episode_set_part         ( epg_episode_t *e, 
+                                   uint16_t number, uint16_t count )
+  __attribute__((warn_unused_result));
+int epg_episode_set_brand        ( epg_episode_t *e, epg_brand_t *b, int u )
+  __attribute__((warn_unused_result));
+int epg_episode_set_season       ( epg_episode_t *e, epg_season_t *s, int u )
+  __attribute__((warn_unused_result));
+int epg_episode_add_broadcast    ( epg_episode_t *e, epg_broadcast_t *b, int u )
+  __attribute__((warn_unused_result));
+int epg_episode_rem_broadcast    ( epg_episode_t *e, epg_broadcast_t *b, int u )
+  __attribute__((warn_unused_result));
+
+/* Acessors */
+int epg_episode_get_number_onscreen ( epg_episode_t *e, char *b, int c );
+
+
+/* ************************************************************************
+ * Broadcast - specific airing (channel & time) of an episode
+ * ***********************************************************************/
+
+/* Object */
 typedef struct epg_broadcast
 {
   RB_ENTRY(epg_broadcast)    eb_slink;         ///< Schedule link
@@ -141,19 +210,29 @@ typedef struct epg_broadcast
   uint8_t                    eb_repeat;        ///< Repeat screening
 
   epg_episode_t             *eb_episode;       ///< Episode shown
-  channel_t                 *eb_channel;       ///< Channel being broadcast on
+  epg_channel_t             *eb_channel;       ///< Channel being broadcast on
 
   int                        eb_refcount;      ///< Reference counting
 } epg_broadcast_t;
 
-/*
- * Channel for mappings
- */
+/* Lookup */
+epg_broadcast_t *epg_broadcast_find_by_time ( epg_channel_t *ch, time_t start, time_t stop, int create );
+
+/* Mutators */
+int epg_broadcast_set_episode    ( epg_broadcast_t *b, epg_episode_t *e, int u )
+  __attribute__((warn_unused_result));
+
+/* ************************************************************************
+ * Channel - provides mapping from EPG channels to real channels
+ * ***********************************************************************/
+
+/* Object */
 typedef struct epg_channel
 {
   RB_ENTRY(epg_channel)      ec_link;          ///< Global link
 
   char                      *ec_uri;           ///< Channel URI
+  char                      *ec_name;          ///< Channel name
   char                     **ec_sname;         ///< DVB svc names (to map)
   int                      **ec_sid;           ///< DVB svc ids   (to map)
 
@@ -163,6 +242,17 @@ typedef struct epg_channel
   
 } epg_channel_t;
 
+/* Lookup */
+epg_channel_t *epg_channel_find_by_uri ( const char *uri, int create );
+
+/* Mutators */
+int epg_channel_set_name ( epg_channel_t *c, const char *n )
+  __attribute__((warn_unused_result));
+
+/* ************************************************************************
+ * Querying
+ * ***********************************************************************/
+
 /*
  * Query result
  */
@@ -171,6 +261,14 @@ typedef struct epg_query_result {
   int               eqr_entries;
   int               eqr_alloced;
 } epg_query_result_t;
+
+void epg_query0(epg_query_result_t *eqr, channel_t *ch, channel_tag_t *ct,
+                uint8_t type, const char *title);
+void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
+	       const char *contentgroup, const char *title);
+void epg_query_free(epg_query_result_t *eqr);
+void epg_query_sort(epg_query_result_t *eqr);
+
 
 /* ************************************************************************
  * Function prototypes
@@ -183,106 +281,18 @@ typedef struct epg_query_result {
 void epg_init(void);
 void epg_save(void);
 
-/**
- * All the epg_X_set_ function return 1 if it actually changed
- * the EPG records. otherwise it returns 0.
- *
- * If the caller detects that something has changed, it should call
- * epg_event_updated().
- *
- * There reason to put the burden on the caller is that the caller
- * can combine multiple set()'s into one update
- *
- */
-
-/* Brand set() calls */
-int epg_brand_set_title        ( epg_brand_t *b, const char *title )
-  __attribute__((warn_unused_result));
-int epg_brand_set_summary      ( epg_brand_t *b, const char *summary )
-  __attribute__((warn_unused_result));
-int epg_brand_set_season_count ( epg_brand_t *b, uint16_t season_count )
-  __attribute__((warn_unused_result));
-int epg_brand_add_season       ( epg_brand_t *b, epg_season_t *s, int u )
-  __attribute__((warn_unused_result));
-int epg_brand_rem_season       ( epg_brand_t *b, epg_season_t *s, int u )
-  __attribute__((warn_unused_result));
-int epg_brand_add_episode      ( epg_brand_t *b, epg_episode_t *s, int u )
-  __attribute__((warn_unused_result));
-int epg_brand_rem_episode      ( epg_brand_t *b, epg_episode_t *s, int u )
-  __attribute__((warn_unused_result));
-
-/* Season set() calls */
-int epg_season_set_summary       ( epg_season_t *s, const char *summary )
-  __attribute__((warn_unused_result));
-int epg_season_set_number        ( epg_season_t *s, uint16_t number )
-  __attribute__((warn_unused_result));
-int epg_season_set_episode_count ( epg_season_t *s, uint16_t episode_count )
-  __attribute__((warn_unused_result));
-int epg_season_set_brand         ( epg_season_t *s, epg_brand_t *b, int u )
-  __attribute__((warn_unused_result));
-int epg_season_add_episode       ( epg_season_t *s, epg_episode_t *e, int u )
-  __attribute__((warn_unused_result));
-int epg_season_rem_episode       ( epg_season_t *s, epg_episode_t *e, int u )
-  __attribute__((warn_unused_result));
-
-/* Episode set() calls */
-int epg_episode_set_title        ( epg_episode_t *e, const char *title )
-  __attribute__((warn_unused_result));
-int epg_episode_set_subtitle     ( epg_episode_t *e, const char *subtitle )
-  __attribute__((warn_unused_result));
-int epg_episode_set_summary      ( epg_episode_t *e, const char *summary )
-  __attribute__((warn_unused_result));
-int epg_episode_set_description  ( epg_episode_t *e, const char *description )
-  __attribute__((warn_unused_result));
-int epg_episode_set_number       ( epg_episode_t *e, uint16_t number )
-  __attribute__((warn_unused_result));
-int epg_episode_set_part         ( epg_episode_t *e, 
-                                   uint16_t number, uint16_t count )
-  __attribute__((warn_unused_result));
-int epg_episode_set_brand        ( epg_episode_t *e, epg_brand_t *b, int u )
-  __attribute__((warn_unused_result));
-int epg_episode_set_season       ( epg_episode_t *e, epg_season_t *s, int u )
-  __attribute__((warn_unused_result));
-int epg_episode_add_broadcast    ( epg_episode_t *e, epg_broadcast_t *b, int u )
-  __attribute__((warn_unused_result));
-int epg_episode_rem_broadcast    ( epg_episode_t *e, epg_broadcast_t *b, int u )
-  __attribute__((warn_unused_result));
-
-
-/* Broadcast set() calls */
-int epg_broadcast_set_episode    ( epg_broadcast_t *b, epg_episode_t *e, int u )
-  __attribute__((warn_unused_result));
-
-// TODO: need to think how this will work with the new hierarchy
 void epg_updated           ( void );
-void epg_brand_updated     ( epg_brand_t *b );
-void epg_season_updated    ( epg_season_t *s );
-void epg_episode_updated   ( epg_episode_t *e );
-void epg_broadcast_updated ( epg_broadcast_t *b );
 
 /*
  * Simple lookup
  */
 
-epg_brand_t *epg_brand_find_by_uri ( const char *uri, int create );
-epg_season_t *epg_season_find_by_uri ( const char *uri, int create );
-epg_episode_t *epg_episode_find_by_uri ( const char *uri, int create );
-epg_channel_t *epg_channel_find_by_uri ( const char *uri, int create );
-epg_channel_t *epg_channel_find ( const char *uri, const char *name, const char **sname, const int **sid );
-epg_broadcast_t *epg_broadcast_find_by_time ( epg_channel_t *ch, time_t start, time_t stop, int create );
 
 epg_broadcast_t *epg_event_find_by_id(int eventid);
 
 /*
  * Advanced Query
  */
-
-void epg_query0(epg_query_result_t *eqr, channel_t *ch, channel_tag_t *ct,
-                uint8_t type, const char *title);
-void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
-	       const char *contentgroup, const char *title);
-void epg_query_free(epg_query_result_t *eqr);
-void epg_query_sort(epg_query_result_t *eqr);
 
 /*
  * Genres?

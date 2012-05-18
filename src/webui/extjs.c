@@ -676,6 +676,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   //epg_brand_t *eb = NULL;
   int start = 0, end, limit, i;
   const char *s;
+  char buf[100];
   const char *channel = http_arg_get(&hc->hc_req_args, "channel");
   const char *tag     = http_arg_get(&hc->hc_req_args, "tag");
   const char *cgrp    = http_arg_get(&hc->hc_req_args, "contentgrp");
@@ -708,24 +709,21 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   end = MIN(start + limit, eqr.eqr_entries);
 
   for(i = start; i < end; i++) {
-    //const char *s;
-    //eb = NULL; es = NULL; ee = NULL;
 
     e  = eqr.eqr_array[i];
     ee = e->eb_episode;
-    //if (ee) es = ee->ee_season;
-    //if (ee) eb = ee->ee_brand;
 
     m = htsmsg_create_map();
 
-#if TODO
-    if(e->e_channel != NULL) {
-      htsmsg_add_str(m, "channel", e->e_channel->ch_name);
+    if(e->eb_channel != NULL) {
+      // TODO: this should probably be the real channel!
+      htsmsg_add_str(m, "channel", e->eb_channel->ec_name);
+#if TODO_ADD_FULL_CHANNEL_INFO
       htsmsg_add_u32(m, "channelid", e->e_channel->ch_id);
       if(e->e_channel->ch_icon != NULL)
 	htsmsg_add_str(m, "chicon", e->e_channel->ch_icon);
-    }
 #endif
+    }
 
     if(ee->ee_title != NULL)
       htsmsg_add_str(m, "title", ee->ee_title);
@@ -735,12 +733,10 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     else if(ee->ee_summary != NULL)
       htsmsg_add_str(m, "description", ee->ee_summary);
 
-#if TODO
-    if(e->e_episode.ee_onscreen != NULL)
-      htsmsg_add_str(m, "episode", e->e_episode.ee_onscreen);
-#endif
+    if (epg_episode_get_number_onscreen(ee, buf, 100))
+      htsmsg_add_str(m, "episode", strdup(buf));
 
-#if TODO
+#if TODO_REMOVE_THIS_QQ
     if(e->e_ext_desc != NULL)
       htsmsg_add_str(m, "ext_desc", e->e_ext_desc);
 
@@ -751,15 +747,19 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
       htsmsg_add_str(m, "ext_text", e->e_ext_text);
 #endif
 
-    //htsmsg_add_u32(m, "id", e->e_id);
+#if TODO_ARE_WE_JUNKING_THIS
+    htsmsg_add_u32(m, "id", e->e_id);
+#endif
     htsmsg_add_u32(m, "start", e->eb_start);
     htsmsg_add_u32(m, "end", e->eb_stop);
     htsmsg_add_u32(m, "duration", e->eb_stop - e->eb_start);
     
-#if TODO
+#if TODO_INCLUDE_GENRE_SUPORT
     if((s = epg_content_group_get_name(e->e_content_type)) != NULL)
       htsmsg_add_str(m, "contentgrp", s);
+#endif
 
+#if TODO_UPDATE_DVR_CODE
     dvr_entry_t *de;
     if((de = dvr_entry_find_by_event(e)) != NULL)
       htsmsg_add_str(m, "schedstate", dvr_entry_schedstatus(de));

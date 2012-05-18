@@ -16,8 +16,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// TODO:
-
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -66,8 +64,6 @@ static int ec_uri_cmp ( const epg_channel_t *a, const epg_channel_t *b )
 
 static int ebc_win_cmp ( const epg_broadcast_t *a, const epg_broadcast_t *b )
 {
-  printf("check a %ld against b %ld to %ld\n", a->eb_start, b->eb_start, b->eb_stop);
-// TODO: some le-way?
   if ( a->eb_start < b->eb_start ) return -1;
   if ( a->eb_start >= b->eb_stop  ) return 1;
   return 0;
@@ -142,7 +138,7 @@ void epg_save ( void )
 
 void epg_updated ( void )
 {
-  _epg_dump();
+  if (0)_epg_dump();
 }
 
 
@@ -546,6 +542,21 @@ int epg_episode_rem_broadcast
   return save;
 }
 
+int epg_episode_get_number_onscreen
+  ( epg_episode_t *episode, char *buf, int len )
+{
+  int i = 0;
+  if ( episode->ee_number ) {
+    // TODO: add counts
+    if ( episode->ee_season && episode->ee_season->es_number ) {
+      i += snprintf(&buf[i], len-i, "Season %d ",
+                    episode->ee_season->es_number);
+    }
+    i += snprintf(&buf[i], len-i, "Episode %d", episode->ee_number);
+  }
+  return i;
+}
+
 /* **************************************************************************
  * Broadcast
  * *************************************************************************/
@@ -566,8 +577,9 @@ epg_broadcast_t* epg_broadcast_find_by_time
   lock_assert(&global_lock); // pointless!
 
   if ( skel == NULL ) skel = calloc(1, sizeof(epg_broadcast_t));
-  skel->eb_start = start;
-  skel->eb_stop  = stop;
+  skel->eb_channel = channel;
+  skel->eb_start   = start;
+  skel->eb_stop    = stop;
   
   /* Find */
   if ( !create ) {
@@ -592,7 +604,7 @@ int epg_broadcast_set_episode
   if ( !broadcast || !episode ) return 0;
   if ( broadcast->eb_episode != episode ) {
     broadcast->eb_episode = episode;
-    //if ( u ) epg_episode_add_broadcast(episode, broadcast, 0);
+    if ( u ) save |= epg_episode_add_broadcast(episode, broadcast, 0);
     save = 1;
   }
   return save;
@@ -629,38 +641,56 @@ epg_channel_t* epg_channel_find_by_uri ( const char *id, int create )
   return ec;
 }
 
-epg_channel_t* epg_channel_find 
-  ( const char *id, const char *name, const char **sname, const int **sid )
+int epg_channel_set_name ( epg_channel_t *channel, const char *name )
 {
-  epg_channel_t* channel;
-
-  /* Find or create */
-  if ((channel = epg_channel_find_by_uri(id, 1)) == NULL) return NULL;
-
-  /* Update fields? */
-
-  return channel;
+  int save = 0;
+  if ( !channel || !name ) return 0;
+  if ( !channel->ec_name || strcmp(channel->ec_name, name) ) {
+    channel->ec_name = strdup(name);
+    // TODO: lookup real channel
+    save = 1;
+  }
+  return save;
 }
 
 /* **************************************************************************
  * Querying
  * *************************************************************************/
 
+static void _eqr_add ( epg_query_result_t *eqr, epg_broadcast_t *e )
+{
+  /* More space */
+  if ( eqr->eqr_entries == eqr->eqr_alloced ) {
+    eqr->eqr_alloced = MAX(100, eqr->eqr_alloced * 2);
+    eqr->eqr_array   = realloc(eqr->eqr_array, 
+                               eqr->eqr_alloced * sizeof(epg_broadcast_t));
+  }
+  
+  /* Store */
+  eqr->eqr_array[eqr->eqr_entries++] = e;
+  // TODO: ref counting
+}
+
+static void _eqr_add_channel 
+  ( epg_query_result_t *eqr, epg_channel_t *ec )
+{
+  epg_broadcast_t *ebc;
+  RB_FOREACH(ebc, &ec->ec_schedule, eb_slink) {
+    if ( ebc->eb_episode ) _eqr_add(eqr, ebc);
+  }
+}
+
 void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
 	       const char *contentgroup, const char *title)
 {
+  // TODO: will need some real code here
   epg_channel_t *ec;
-  epg_broadcast_t *ebc;
-  eqr->eqr_array = calloc(2, sizeof(epg_broadcast_t*));
+
+  /* Clear (just incase) */
+  memset(eqr, 0, sizeof(epg_query_result_t));
+
   RB_FOREACH(ec, &epg_channels, ec_link) {
-    RB_FOREACH(ebc, &ec->ec_schedule, eb_slink) {
-      if ( ebc->eb_episode ) {
-        eqr->eqr_array[0] = ebc;
-        eqr->eqr_entries  = 1;
-        eqr->eqr_alloced  = 2;
-        return;
-      }
-    }
+    _eqr_add_channel(eqr, ec);
   }
   return;
 }
@@ -668,8 +698,16 @@ void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
 void epg_query_free(epg_query_result_t *eqr)
 {
   free(eqr->eqr_array);
+  // TODO: reference counting
+}
+
+static int _epg_sort_start_ascending ( const void *a, const void *b )
+{
+  return (*(epg_broadcast_t**)a)->eb_start - (*(epg_broadcast_t**)b)->eb_start;
 }
 
 void epg_query_sort(epg_query_result_t *eqr)
 {
+  qsort(eqr->eqr_array, eqr->eqr_entries, sizeof(epg_broadcast_t*),
+        _epg_sort_start_ascending);
 }
