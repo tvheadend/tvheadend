@@ -26,6 +26,7 @@
 #include <assert.h>
 
 #include "tvheadend.h"
+#include "queue.h"
 #include "channels.h"
 #include "settings.h"
 #include "epg.h"
@@ -37,6 +38,11 @@ struct epg_brand_tree   epg_brands;
 struct epg_season_tree  epg_seasons;
 struct epg_episode_tree epg_episodes;
 struct epg_channel_tree epg_channels;
+
+LIST_HEAD(epg_unlinked_channel_list1, epg_channel);
+LIST_HEAD(epg_unlinked_channel_list2, channel);
+struct epg_unlinked_channel_list1 epg_unlinked_channels1;
+struct epg_unlinked_channel_list2 epg_unlinked_channels2;
 
 /* **************************************************************************
  * Comparators
@@ -72,6 +78,18 @@ static int ebc_win_cmp ( const epg_broadcast_t *a, const epg_broadcast_t *b )
 static int ptr_cmp ( void *a, void *b )
 {
   return a - b;
+}
+
+static int epg_channel_match ( epg_channel_t *ec, channel_t *ch )
+{
+  int ret = 0;
+  if ( !strcmp(ec->ec_name, ch->ch_name) ) ret = 1;
+  if ( ret ) {
+    LIST_REMOVE(ec, ec_ulink);
+    channel_set_epg_source(ch, ec);
+    ec->ec_channel = ch;
+  }
+  return ret;
 }
 
 /* **************************************************************************
@@ -139,6 +157,25 @@ void epg_save ( void )
 void epg_updated ( void )
 {
   if (0)_epg_dump();
+}
+
+void epg_add_channel ( channel_t *ch )
+{
+  epg_channel_t *ec;
+  LIST_FOREACH(ec, &epg_unlinked_channels1, ec_ulink) {
+    if ( epg_channel_match(ec, ch) ) break;
+  }
+  LIST_INSERT_HEAD(&epg_unlinked_channels2, ch, ch_eulink);
+}
+
+void epg_rem_channel ( channel_t *ch )
+{
+  if ( ch->ch_epg_channel ) {
+    ch->ch_epg_channel->ec_channel = NULL;
+    // TODO: free the channel?
+  } else {
+    LIST_REMOVE(ch, ch_eulink);
+  }
 }
 
 
@@ -637,6 +674,14 @@ epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *broadcast )
  * Channel
  * *************************************************************************/
 
+static void _epg_channel_link ( epg_channel_t *ec )
+{
+  channel_t *ch;
+  LIST_FOREACH(ch, &epg_unlinked_channels2, ch_eulink) {
+    if ( epg_channel_match(ec, ch) ) break;
+  }
+}
+
 epg_channel_t* epg_channel_find_by_uri ( const char *id, int create )
 {
   epg_channel_t *ec;
@@ -658,6 +703,7 @@ epg_channel_t* epg_channel_find_by_uri ( const char *id, int create )
       ec   = skel;
       skel = NULL;
       ec->ec_uri = strdup(id);
+      LIST_INSERT_HEAD(&epg_unlinked_channels1, ec, ec_ulink);
     }
   }
 
@@ -670,7 +716,8 @@ int epg_channel_set_name ( epg_channel_t *channel, const char *name )
   if ( !channel || !name ) return 0;
   if ( !channel->ec_name || strcmp(channel->ec_name, name) ) {
     channel->ec_name = strdup(name);
-    // TODO: lookup real channel
+    _epg_channel_link(channel);
+    // TODO: will this cope with an already linked channel?
     save = 1;
   }
   return save;

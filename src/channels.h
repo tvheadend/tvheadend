@@ -44,11 +44,7 @@ typedef struct channel {
   LIST_HEAD(, th_subscription) ch_subscriptions;
 
   struct epg_channel *ch_epg_channel;
-#if TODO_EPG_CHANNEL
-  struct event_tree ch_epg_events;
-  struct event *ch_epg_current;
-  struct event *ch_epg_next;
-#endif
+  LIST_ENTRY(channel) ch_eulink;
 
   gtimer_t ch_epg_timer_head;
   gtimer_t ch_epg_timer_current;
@@ -116,6 +112,8 @@ int channel_rename(channel_t *ch, const char *newname);
 void channel_delete(channel_t *ch);
 
 void channel_merge(channel_t *dst, channel_t *src);
+
+void channel_set_epg_source(channel_t *ch, struct epg_channel *ec);
 
 void channel_set_epg_postpre_time(channel_t *ch, int pre, int mins);
 
