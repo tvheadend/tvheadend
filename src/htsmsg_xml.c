@@ -693,7 +693,7 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
     }
   }
 
-  if(y == 1 && c > 1) {
+  if(y == 1 && c >= 1) {
     /* One segment UTF-8 (or 7bit ASCII),
        use data directly from source */
 
@@ -707,7 +707,7 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
     *cc->cc_end = 0;
     free(cc);
 
-  } else if(c > 1) {
+  } else if(c >= 1) {
     body = malloc(c + 1);
     c = 0;
 
@@ -886,7 +886,7 @@ htsmsg_xml_get_cdata_u32(htsmsg_t *tags, const char *name, uint32_t *u32)
 {
   htsmsg_t *sub;
   if((sub = htsmsg_get_map(tags, name)) == NULL)
-    return 0;
+    return HTSMSG_ERR_FIELD_NOT_FOUND;
   return htsmsg_get_u32(sub, "cdata", u32);
 }
 
