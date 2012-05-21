@@ -21,6 +21,7 @@ static int _pyepg_parse_time ( const char *str, time_t *out )
 {
   int ret = 0;
   struct tm tm; 
+  tm.tm_isdst = 0;
   if ( strptime(str, "%F %T %z", &tm) != NULL ) {
     *out = mktime(&tm);
     ret  = 1;
