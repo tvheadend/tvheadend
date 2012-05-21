@@ -111,26 +111,26 @@ static void _epg_dump ( void )
   RB_FOREACH(eb, &epg_brands, eb_link) {
     printf("BRAND: %p %s\n", eb, eb->eb_uri);
     RB_FOREACH(es, &eb->eb_seasons, es_blink) {
-      printf("  SEASON: %p %s\n", es, es->es_uri);
+      printf("  SEASON: %p %s %d\n", es, es->es_uri, es->es_number);
       RB_FOREACH(ee, &es->es_episodes, ee_slink) {
-        printf("    EPISODE: %p %s\n", ee, ee->ee_uri);
+        printf("    EPISODE: %p %s %d\n", ee, ee->ee_uri, ee->ee_number);
       }
     }
     RB_FOREACH(ee, &eb->eb_episodes, ee_blink) {
-      if ( !ee->ee_season ) printf("  EPISODE: %p %s\n", ee, ee->ee_uri);
+      if ( !ee->ee_season ) printf("  EPISODE: %p %s %d\n", ee, ee->ee_uri, ee->ee_number);
     }
   }
   RB_FOREACH(es, &epg_seasons, es_link) {
     if ( !es->es_brand ) {
-      printf("SEASON: %p %s\n", es, es->es_uri);
+      printf("SEASON: %p %s %d\n", es, es->es_uri, es->es_number);
       RB_FOREACH(ee, &es->es_episodes, ee_slink) {
-        printf("  EPISODE: %p %s\n", ee, ee->ee_uri);
+        printf("  EPISODE: %p %s %d\n", ee, ee->ee_uri, ee->ee_number);
       }
     }
   }
   RB_FOREACH(ee, &epg_episodes, ee_link) {
     if ( !ee->ee_brand && !ee->ee_season ) {
-      printf("EPISODE: %p %s\n", ee, ee->ee_uri);
+      printf("EPISODE: %p %s %d\n", ee, ee->ee_uri, ee->ee_number);
     }
   }
   RB_FOREACH(ec, &epg_channels, ec_link) {

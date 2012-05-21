@@ -90,7 +90,7 @@ static int _pyepg_parse_brand ( htsmsg_t *data )
 #endif
 
   /* Set season count */
-  if (htsmsg_xml_get_cdata_u32(tags, "series-count", &u32)) {
+  if (htsmsg_xml_get_cdata_u32(tags, "series-count", &u32) == 0) {
     save |= epg_brand_set_season_count(brand, u32);
   }
 
@@ -141,12 +141,12 @@ static int _pyepg_parse_season ( htsmsg_t *data )
 #endif
 
   /* Set season number */
-  if (htsmsg_xml_get_cdata_u32(tags, "number", &u32)) {
+  if (htsmsg_xml_get_cdata_u32(tags, "number", &u32) == 0) {
     save |= epg_season_set_number(season, u32);
   }
 
   /* Set episode count */
-  if (htsmsg_xml_get_cdata_u32(tags, "episode-count", &u32)) {
+  if (htsmsg_xml_get_cdata_u32(tags, "episode-count", &u32) == 0) {
     save |= epg_season_set_episode_count(season, u32);
   }
 
@@ -201,7 +201,7 @@ static int _pyepg_parse_episode ( htsmsg_t *data )
   }
 
   /* Number */
-  if (htsmsg_xml_get_cdata_u32(tags, "number", &u32)) {
+  if (htsmsg_xml_get_cdata_u32(tags, "number", &u32) == 0) {
     save |= epg_episode_set_number(episode, u32);
   }
 
