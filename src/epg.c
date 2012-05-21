@@ -80,12 +80,14 @@ static int ptr_cmp ( void *a, void *b )
   return a - b;
 }
 
+// TODO: wrong place?
 static int epg_channel_match ( epg_channel_t *ec, channel_t *ch )
 {
   int ret = 0;
   if ( !strcmp(ec->ec_name, ch->ch_name) ) ret = 1;
   if ( ret ) {
     LIST_REMOVE(ec, ec_ulink);
+    LIST_REMOVE(ch, ch_eulink);
     channel_set_epg_source(ch, ec);
     ec->ec_channel = ch;
   }
@@ -751,6 +753,7 @@ static void _eqr_add ( epg_query_result_t *eqr, epg_broadcast_t *e )
 static void _eqr_add_channel 
   ( epg_query_result_t *eqr, epg_channel_t *ec )
 {
+  // TODO: add other searching
   epg_broadcast_t *ebc;
   RB_FOREACH(ebc, &ec->ec_schedule, eb_slink) {
     if ( ebc->eb_episode ) _eqr_add(eqr, ebc);
@@ -761,22 +764,31 @@ void epg_query0
   ( epg_query_result_t *eqr, channel_t *channel, channel_tag_t *tag,
     uint8_t contentgroup, const char *title )
 {
-  // TODO: will need some real code here
   epg_channel_t *ec;
 
   /* Clear (just incase) */
   memset(eqr, 0, sizeof(epg_query_result_t));
 
-  RB_FOREACH(ec, &epg_channels, ec_link) {
-    _eqr_add_channel(eqr, ec);
+  /* All channels */
+  if (!channel) {
+    RB_FOREACH(ec, &epg_channels, ec_link) {
+      _eqr_add_channel(eqr, ec);
+    }
+
+  /* Single channel */
+  } else if ( channel->ch_epg_channel ) {
+    _eqr_add_channel(eqr, channel->ch_epg_channel);
   }
+
   return;
 }
 
 void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
 	       const char *contentgroup, const char *title)
 {
-  epg_query0(eqr, NULL, NULL, 0, title);
+  channel_t *ch = NULL;
+  if (channel) ch = channel_find_by_name(channel, 0, 0);
+  epg_query0(eqr, ch, NULL, 0, title);
 }
 
 void epg_query_free(epg_query_result_t *eqr)
