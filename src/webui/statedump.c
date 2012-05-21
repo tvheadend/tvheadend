@@ -67,14 +67,10 @@ dumpchannels(htsbuf_queue_t *hq)
 		   "  refcount = %d\n"
 		   "  zombie = %d\n"
 		   "  number = %d\n"
-		   "  xmltv source = %s\n"
 		   "  icon = %s\n\n",
 		   ch->ch_refcount,
 		   ch->ch_zombie,
 		   ch->ch_number,
-#if TODO_XMLTV
-		   ch->ch_xc ? ch->ch_xc->xc_displayname : "<none set>",
-#endif
 		   ch->ch_icon ?: "<none set>");
   }
 }

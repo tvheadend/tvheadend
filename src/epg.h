@@ -241,6 +241,7 @@ typedef struct epg_channel
   int                      **ec_sid;           ///< DVB svc ids   (to map)
 
   channel_t                 *ec_channel;       ///< Link to real channel
+  LIST_ENTRY(epg_channel)    ec_ulink;         ///< Unlinked list
 
   struct epg_broadcast_tree  ec_schedule;      ///< Schedule (broadcasts)
   
@@ -294,6 +295,12 @@ void epg_init(void);
 void epg_save(void);
 
 void epg_updated           ( void );
+
+/*
+ * Channel linking
+ */
+void epg_add_channel ( channel_t *ch );
+void epg_rem_channel ( channel_t *ch );
 
 /*
  * Simple lookup

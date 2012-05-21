@@ -32,9 +32,8 @@
 
 #include "tvheadend.h"
 #include "psi.h"
-#include "channels.h"
 #include "epg.h"
-//#include "xmltv.h"
+#include "channels.h"
 #include "dtable.h"
 #include "notify.h"
 #include "dvr/dvr.h"
@@ -164,7 +163,6 @@ static channel_t *
 channel_create(const char *name, int number)
 {
   channel_t *ch, *x;
-  //xmltv_channel_t *xc;
   int id;
 
   ch = RB_LAST(&channel_identifier_tree);
@@ -175,12 +173,6 @@ channel_create(const char *name, int number)
   }
 
   ch = calloc(1, sizeof(channel_t));
-#if TODO_EPG_CHANNEL
-  RB_INIT(&ch->ch_epg_events);
-#endif
-#if TODO_XMLTV
-  LIST_INSERT_HEAD(&channels_not_xmltv_mapped, ch, ch_xc_link);
-#endif
   channel_set_name(ch, name);
   ch->ch_number = number;
 
@@ -190,13 +182,7 @@ channel_create(const char *name, int number)
 
   assert(x == NULL);
 
-#if TODO_XMLTV
-  if((xc = xmltv_channel_find_by_displayname(name)) != NULL) {
-    channel_set_xmltv_source(ch, xc);
-    if(xc->xc_icon != NULL)
-      channel_set_icon(ch, xc->xc_icon);
-  }
-#endif
+  epg_add_channel(ch);
 
   htsp_channel_add(ch);
   return ch;
@@ -242,7 +228,6 @@ static void
 channel_load_one(htsmsg_t *c, int id)
 {
   channel_t *ch;
-  //const char *s;
   const char *name = htsmsg_get_str(c, "name");
   htsmsg_t *tags;
   htsmsg_field_t *f;
@@ -262,22 +247,9 @@ channel_load_one(htsmsg_t *c, int id)
     return;
   }
 
-#if TODO_EPG_CHANNEL
-  RB_INIT(&ch->ch_epg_events);
-#endif
-
   channel_set_name(ch, name);
 
-#if TODO_XMLTV
-  if((s = htsmsg_get_str(c, "xmltv-channel")) != NULL &&
-     (ch->ch_xc = xmltv_channel_find(s, 0)) != NULL) {
-    LIST_INSERT_HEAD(&ch->ch_xc->xc_channels, ch, ch_xc_link);
-    tvh_str_update(&ch->ch_icon, ch->ch_xc->xc_icon);
-  } else {
-    LIST_INSERT_HEAD(&channels_not_xmltv_mapped, ch, ch_xc_link);
-  }
-#endif
-
+  epg_add_channel(ch);
 
   tvh_str_update(&ch->ch_icon, htsmsg_get_str(c, "icon"));
 
@@ -331,11 +303,6 @@ channel_save(channel_t *ch)
   lock_assert(&global_lock);
 
   htsmsg_add_str(m, "name", ch->ch_name);
-
-#if TODO_XMLTV
-  if(ch->ch_xc != NULL)
-    htsmsg_add_str(m, "xmltv-channel", ch->ch_xc->xc_identifier);
-#endif
 
   if(ch->ch_icon != NULL)
     htsmsg_add_str(m, "icon", ch->ch_icon);
@@ -411,7 +378,7 @@ channel_delete(channel_t *ch)
     s->ths_channel = NULL;
   }
 
-  //epg_unlink_from_channel(ch);
+  epg_rem_channel(ch);
 
   hts_settings_remove("channels/%d", ch->ch_id);
 
@@ -419,8 +386,6 @@ channel_delete(channel_t *ch)
 
   RB_REMOVE(&channel_name_tree, ch, ch_name_link);
   RB_REMOVE(&channel_identifier_tree, ch, ch_identifier_link);
-
-  //LIST_REMOVE(ch, ch_xc_link);
 
   free(ch->ch_name);
   free(ch->ch_sname);
@@ -517,31 +482,14 @@ channel_set_number(channel_t *ch, int number)
 /**
  *
  */
-#if TODO_XMLTV
 void
-channel_set_xmltv_source(channel_t *ch, xmltv_channel_t *xc)
+channel_set_epg_source(channel_t *ch, epg_channel_t *ec)
 {
   lock_assert(&global_lock);
 
-  if(xc == ch->ch_xc)
+  if(ec == ch->ch_epg_channel)
     return;
-
-  LIST_REMOVE(ch, ch_xc_link);
-
-  if(xc == NULL) {
-    LIST_INSERT_HEAD(&channels_not_xmltv_mapped, ch, ch_xc_link);
-  } else {
-    LIST_INSERT_HEAD(&xc->xc_channels, ch, ch_xc_link);
-  }
-  ch->ch_xc = xc;
-
-  if(xc != NULL)
-    tvh_str_update(&ch->ch_icon, xc->xc_icon);
-
-  channel_save(ch);
 }
-#endif
-
 
 /**
  *
