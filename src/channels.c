@@ -489,6 +489,9 @@ channel_set_epg_source(channel_t *ch, epg_channel_t *ec)
 
   if(ec == ch->ch_epg_channel)
     return;
+
+  ch->ch_epg_channel = ec;
+  htsp_channel_update(ch); // Not sure?
 }
 
 /**

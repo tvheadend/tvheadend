@@ -379,7 +379,6 @@ main(int argc, char **argv)
   /**
    * Initialize subsystems
    */
-  epggrab_init(); /* Must be initialized before channels */
 
   service_init();
 
@@ -406,6 +405,7 @@ main(int argc, char **argv)
   capmt_init();
 
   epg_init();
+  epggrab_init();
 
   dvr_init();
 
