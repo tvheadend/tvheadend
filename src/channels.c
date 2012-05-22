@@ -339,6 +339,7 @@ channel_rename(channel_t *ch, const char *newname)
 
   RB_REMOVE(&channel_name_tree, ch, ch_name_link);
   channel_set_name(ch, newname);
+  epg_mod_channel(ch);
 
   LIST_FOREACH(t, &ch->ch_services, s_ch_link)
     t->s_config_save(t);
