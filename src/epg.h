@@ -80,6 +80,10 @@ int epg_brand_add_episode      ( epg_brand_t *b, epg_episode_t *s, int u )
 int epg_brand_rem_episode      ( epg_brand_t *b, epg_episode_t *s, int u )
   __attribute__((warn_unused_result));
 
+/* Serialization */
+htsmsg_t    *epg_brand_serialize   ( epg_brand_t *b );
+epg_brand_t *epg_brand_deserialize ( htsmsg_t *m, int create );
+
 /* ************************************************************************
  * Season
  * ***********************************************************************/
@@ -118,6 +122,10 @@ int epg_season_add_episode       ( epg_season_t *s, epg_episode_t *e, int u )
   __attribute__((warn_unused_result));
 int epg_season_rem_episode       ( epg_season_t *s, epg_episode_t *e, int u )
   __attribute__((warn_unused_result));
+
+/* Serialization */
+htsmsg_t    *epg_season_serialize    ( epg_season_t *b );
+epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create );
 
 /* ************************************************************************
  * Episode
@@ -178,6 +186,9 @@ int epg_episode_rem_broadcast    ( epg_episode_t *e, epg_broadcast_t *b, int u )
 /* Acessors */
 int epg_episode_get_number_onscreen ( epg_episode_t *e, char *b, int c );
 
+/* Serialization */
+htsmsg_t      *epg_episode_serialize   ( epg_episode_t *b );
+epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create );
 
 /* ************************************************************************
  * Broadcast - specific airing (channel & time) of an episode
@@ -226,6 +237,10 @@ int epg_broadcast_set_episode    ( epg_broadcast_t *b, epg_episode_t *e, int u )
 /* Accessors */
 epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *b );
 
+/* Serialization */
+htsmsg_t        *epg_broadcast_serialize   ( epg_broadcast_t *b );
+epg_broadcast_t *epg_broadcast_deserialize ( htsmsg_t *m, int create );
+
 /* ************************************************************************
  * Channel - provides mapping from EPG channels to real channels
  * ***********************************************************************/
@@ -256,6 +271,10 @@ int epg_channel_set_name ( epg_channel_t *c, const char *n )
 
 /* Accessors */
 epg_broadcast_t *epg_channel_get_current_broadcast ( epg_channel_t *c );
+
+/* Serialization */
+htsmsg_t      *epg_channel_serialize   ( epg_channel_t *b );
+epg_channel_t *epg_channel_deserialize ( htsmsg_t *m, int create );
 
 /* ************************************************************************
  * Querying

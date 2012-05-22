@@ -73,7 +73,9 @@ SRCS =  src/main.c \
 	src/iptv_input.c \
 	src/avc.c \
 
-SRCS += src/epggrab/pyepg.c
+SRCS += src/epggrab/pyepg.c\
+  src/epggrab/xmltv.c
+
 
 
 SRCS += src/plumbing/tsfix.c \
