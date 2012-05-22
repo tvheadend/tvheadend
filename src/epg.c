@@ -91,17 +91,10 @@ static int ptr_cmp ( void *a, void *b )
   return a - b;
 }
 
-// TODO: wrong place?
-static int epg_channel_match ( epg_channel_t *ec, channel_t *ch )
+static int _epg_channel_match ( epg_channel_t *ec, channel_t *ch )
 {
   int ret = 0;
-  if ( !strcmp(ec->ec_name, ch->ch_name) ) ret = 1;
-  if ( ret ) {
-    LIST_REMOVE(ec, ec_ulink);
-    LIST_REMOVE(ch, ch_eulink);
-    channel_set_epg_source(ch, ec);
-    ec->ec_channel = ch;
-  }
+  if ( ec->ec_name && !strcmp(ec->ec_name, ch->ch_name) ) ret = 1;
   return ret;
 }
 
@@ -337,10 +330,13 @@ void epg_updated ( void )
 void epg_add_channel ( channel_t *ch )
 {
   epg_channel_t *ec;
-  LIST_FOREACH(ec, &epg_unlinked_channels1, ec_ulink) {
-    if ( epg_channel_match(ec, ch) ) break;
-  }
   LIST_INSERT_HEAD(&epg_unlinked_channels2, ch, ch_eulink);
+  LIST_FOREACH(ec, &epg_unlinked_channels1, ec_ulink) {
+    if ( _epg_channel_match(ec, ch) ) {
+      epg_channel_set_channel(ec, ch);
+      break;
+    }
+  }
 }
 
 void epg_rem_channel ( channel_t *ch )
@@ -351,6 +347,11 @@ void epg_rem_channel ( channel_t *ch )
   } else {
     LIST_REMOVE(ch, ch_eulink);
   }
+}
+
+void epg_mod_channel ( channel_t *ch )
+{
+  if ( !ch->ch_epg_channel ) epg_add_channel(ch);
 }
 
 
@@ -1080,14 +1081,6 @@ epg_broadcast_t *epg_broadcast_deserialize
  * Channel
  * *************************************************************************/
 
-static void _epg_channel_link ( epg_channel_t *ec )
-{
-  channel_t *ch;
-  LIST_FOREACH(ch, &epg_unlinked_channels2, ch_eulink) {
-    if ( epg_channel_match(ec, ch) ) break;
-  }
-}
-
 epg_channel_t* epg_channel_find_by_uri
   ( const char *id, int create, int *save )
 {
@@ -1132,12 +1125,38 @@ epg_channel_t *epg_channel_find_by_id ( uint32_t id )
 int epg_channel_set_name ( epg_channel_t *channel, const char *name )
 {
   int save = 0;
+  channel_t *ch;
   if ( !channel || !name ) return 0;
+  printf("channel %s set name %s\n", channel->ec_uri, name);
   if ( !channel->ec_name || strcmp(channel->ec_name, name) ) {
     channel->ec_name = strdup(name);
-    _epg_channel_link(channel);
-    // TODO: will this cope with an already linked channel?
+    if ( !channel->ec_channel ) {
+      LIST_FOREACH(ch, &epg_unlinked_channels2, ch_eulink) {
+        if ( _epg_channel_match(channel, ch) ) {
+          epg_channel_set_channel(channel, ch);
+          break;
+        }
+      }
+    }
+    // TODO: should be try to override?
     save = 1;
+  }
+  return save;
+}
+
+int epg_channel_set_channel ( epg_channel_t *ec, channel_t *ch )
+{
+  int save = 0;
+  if ( !ec || !ch ) return 0;
+  if ( ec->ec_channel != ch ) {
+    if (!ec->ec_channel)     LIST_REMOVE(ec, ec_ulink);
+    if (!ch->ch_epg_channel) LIST_REMOVE(ch, ch_eulink);
+    // TODO: should it be possible to "change" it
+    //if(ec->ec_channel)
+    //   channel_set_epg_source(ec->ec_channel, NULL)
+    //   LIST_INSERT_HEAD(&epg_unlinked_channels2, ec->ec_channel, ch_eulink);
+    ec->ec_channel = ch;
+    channel_set_epg_source(ch, ec);
   }
   return save;
 }
@@ -1155,6 +1174,8 @@ htsmsg_t *epg_channel_serialize ( epg_channel_t *channel )
   if (!channel || !channel->ec_uri) return NULL;
   m = htsmsg_create_map();
   htsmsg_add_str(m, "uri", channel->ec_uri);
+  if (channel->ec_name)
+    htsmsg_add_str(m, "name", channel->ec_name);
   if (channel->ec_channel)
     htsmsg_add_u32(m, "channel", channel->ec_channel->ch_id);
   // TODO: other data
@@ -1164,19 +1185,20 @@ htsmsg_t *epg_channel_serialize ( epg_channel_t *channel )
 epg_channel_t *epg_channel_deserialize ( htsmsg_t *m, int create, int *save )
 {
   epg_channel_t *ec;
-#if TODO_CHANNEL_LINK
   channel_t *ch;
   uint32_t u32;
-#endif
   const char *str;
   
   if ( !(str = htsmsg_get_str(m, "uri"))                   ) return NULL;
   if ( !(ec  = epg_channel_find_by_uri(str, create, save)) ) return NULL;
 
-#if TODO_CHANNEL_LINK
+  if ( (str = htsmsg_get_str(m, "name")) )
+    *save |= epg_channel_set_name(ec, str);
+
   if ( !htsmsg_get_u32(m, "channel", &u32) )
     if ( (ch = channel_find_by_identifier(u32)) )
-#endif
+      epg_channel_set_channel(ec, ch);
+  // TODO: this call needs updating
       
   return ec;
 }
@@ -1205,7 +1227,7 @@ static void _eqr_add_channel
   // TODO: add other searching
   epg_broadcast_t *ebc;
   RB_FOREACH(ebc, &ec->ec_schedule, eb_slink) {
-    if ( ebc->eb_episode ) _eqr_add(eqr, ebc);
+    if ( ebc->eb_episode && ebc->eb_channel ) _eqr_add(eqr, ebc);
   }
 }
 

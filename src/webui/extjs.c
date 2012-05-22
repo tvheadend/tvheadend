@@ -671,8 +671,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   epg_query_result_t eqr;
   epg_broadcast_t *e;
   epg_episode_t *ee = NULL;
-  //epg_season_t *es = NULL;
-  //epg_brand_t *eb = NULL;
+  channel_t *ch;
   int start = 0, end, limit, i;
   const char *s;
   char buf[100];
@@ -708,21 +707,17 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   end = MIN(start + limit, eqr.eqr_entries);
 
   for(i = start; i < end; i++) {
-
     e  = eqr.eqr_array[i];
     ee = e->eb_episode;
+    ch = e->eb_channel->ec_channel;
+    if (!ch||!ee) continue;
 
     m = htsmsg_create_map();
 
-    if(e->eb_channel != NULL) {
-      // TODO: this should probably be the real channel!
-      htsmsg_add_str(m, "channel", e->eb_channel->ec_name);
-#if TODO_ADD_FULL_CHANNEL_INFO
-      htsmsg_add_u32(m, "channelid", e->e_channel->ch_id);
-      if(e->e_channel->ch_icon != NULL)
-	htsmsg_add_str(m, "chicon", e->e_channel->ch_icon);
-#endif
-    }
+    htsmsg_add_str(m, "channel", ch->ch_name);
+    htsmsg_add_u32(m, "channelid", ch->ch_id);
+    if(ch->ch_icon != NULL)
+	    htsmsg_add_str(m, "chicon", ch->ch_icon);
 
     if(ee->ee_title != NULL)
       htsmsg_add_str(m, "title", ee->ee_title);

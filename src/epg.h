@@ -289,6 +289,7 @@ epg_channel_t *epg_channel_find_by_id ( uint32_t id );
 /* Mutators */
 int epg_channel_set_name ( epg_channel_t *c, const char *n )
   __attribute__((warn_unused_result));
+int epg_channel_set_channel ( epg_channel_t *c, channel_t *ch );
 
 /* Accessors */
 epg_broadcast_t *epg_channel_get_current_broadcast ( epg_channel_t *c );
@@ -341,6 +342,7 @@ void epg_updated           ( void );
  */
 void epg_add_channel ( channel_t *ch );
 void epg_rem_channel ( channel_t *ch );
+void epg_mod_channel ( channel_t *ch );
 
 /*
  * Simple lookup
