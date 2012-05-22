@@ -16,6 +16,13 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * TODO LIST:
+ *
+ *   URI in the objects limits us to single grabber, might want something
+ *   more flexible to try and merge grabbers? Is that feasible?
+ */
+
 #ifndef EPG_H
 #define EPG_H
 
@@ -50,6 +57,7 @@ typedef struct epg_brand
 {
   RB_ENTRY(epg_brand)        eb_link;         ///< Global list link
 
+  uint32_t                   eb_id;           ///< Internal ID
   char                      *eb_uri;          ///< Grabber URI
   char                      *eb_title;        ///< Brand name
   char                      *eb_summary;      ///< Brand summary
@@ -64,6 +72,7 @@ typedef struct epg_brand
 /* Lookup */
 epg_brand_t *epg_brand_find_by_uri
   ( const char *uri, int create, int *save );
+epg_brand_t *epg_brand_find_by_id ( uint32_t id );
 
 /* Mutators */
 int epg_brand_set_title        ( epg_brand_t *b, const char *title )
@@ -83,7 +92,7 @@ int epg_brand_rem_episode      ( epg_brand_t *b, epg_episode_t *s, int u )
 
 /* Serialization */
 htsmsg_t    *epg_brand_serialize   ( epg_brand_t *b );
-epg_brand_t *epg_brand_deserialize ( htsmsg_t *m, int create );
+epg_brand_t *epg_brand_deserialize ( htsmsg_t *m, int create, int *save );
 
 /* ************************************************************************
  * Season
@@ -95,6 +104,7 @@ typedef struct epg_season
   RB_ENTRY(epg_season)       es_link;          ///< Global list link
   RB_ENTRY(epg_season)       es_blink;         ///< Brand list link
 
+  uint32_t                   es_id;            ///< Internal ID
   char                      *es_uri;           ///< Grabber URI
   char                      *es_summary;       ///< Season summary
   uint16_t                   es_number;        ///< The season number
@@ -110,6 +120,7 @@ typedef struct epg_season
 /* Lookup */
 epg_season_t *epg_season_find_by_uri
   ( const char *uri, int create, int *save );
+epg_season_t *epg_season_find_by_id ( uint32_t id );
 
 /* Mutators */
 int epg_season_set_summary       ( epg_season_t *s, const char *summary )
@@ -127,7 +138,7 @@ int epg_season_rem_episode       ( epg_season_t *s, epg_episode_t *e, int u )
 
 /* Serialization */
 htsmsg_t    *epg_season_serialize    ( epg_season_t *b );
-epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create );
+epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save );
 
 /* ************************************************************************
  * Episode
@@ -142,6 +153,7 @@ typedef struct epg_episode
   RB_ENTRY(epg_episode)      ee_blink;         ///< Brand link
   RB_ENTRY(epg_episode)      ee_slink;         ///< Season link
 
+  uint32_t                   ee_id;            ///< Internal ID
   char                      *ee_uri;           ///< Grabber URI
   char                      *ee_title;         ///< Title
   char                      *ee_subtitle;      ///< Sub-title
@@ -162,6 +174,7 @@ typedef struct epg_episode
 /* Lookup */
 epg_episode_t *epg_episode_find_by_uri
   ( const char *uri, int create, int *save );
+epg_episode_t *epg_episode_find_by_id ( uint32_t id );
 
 /* Mutators */
 int epg_episode_set_title        ( epg_episode_t *e, const char *title )
@@ -191,7 +204,7 @@ int epg_episode_get_number_onscreen ( epg_episode_t *e, char *b, int c );
 
 /* Serialization */
 htsmsg_t      *epg_episode_serialize   ( epg_episode_t *b );
-epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create );
+epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save );
 
 /* ************************************************************************
  * Broadcast - specific airing (channel & time) of an episode
@@ -203,8 +216,8 @@ typedef struct epg_broadcast
   RB_ENTRY(epg_broadcast)    eb_slink;         ///< Schedule link
   RB_ENTRY(epg_broadcast)    eb_elink;         ///< Episode link
 
-  int                        eb_id;            ///< Internal ID
-  int                        eb_dvb_id;        ///< DVB identifier
+  uint32_t                   eb_id;            ///< Internal ID
+  uint32_t                   eb_dvb_id;        ///< DVB identifier
   time_t                     eb_start;         ///< Start time
   time_t                     eb_stop;          ///< End time
 
@@ -232,7 +245,7 @@ typedef struct epg_broadcast
 /* Lookup */
 epg_broadcast_t *epg_broadcast_find_by_time 
   ( epg_channel_t *ch, time_t start, time_t stop, int create, int *save );
-epg_broadcast_t *epg_broadcast_find_by_id   ( int id );
+epg_broadcast_t *epg_broadcast_find_by_id ( uint32_t id );
 
 /* Mutators */
 int epg_broadcast_set_episode    ( epg_broadcast_t *b, epg_episode_t *e, int u )
@@ -243,7 +256,8 @@ epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *b );
 
 /* Serialization */
 htsmsg_t        *epg_broadcast_serialize   ( epg_broadcast_t *b );
-epg_broadcast_t *epg_broadcast_deserialize ( htsmsg_t *m, int create );
+epg_broadcast_t *epg_broadcast_deserialize 
+  ( htsmsg_t *m, int create, int *save );
 
 /* ************************************************************************
  * Channel - provides mapping from EPG channels to real channels
@@ -254,7 +268,8 @@ typedef struct epg_channel
 {
   RB_ENTRY(epg_channel)      ec_link;          ///< Global link
 
-  char                      *ec_uri;           ///< Channel URI
+  uint32_t                   ec_id;            ///< Internal ID
+  char                      *ec_uri;           ///< Grabber URI
   char                      *ec_name;          ///< Channel name
   char                     **ec_sname;         ///< DVB svc names (to map)
   int                      **ec_sid;           ///< DVB svc ids   (to map)
@@ -269,6 +284,7 @@ typedef struct epg_channel
 /* Lookup */
 epg_channel_t *epg_channel_find_by_uri
   ( const char *uri, int create, int *save );
+epg_channel_t *epg_channel_find_by_id ( uint32_t id );
 
 /* Mutators */
 int epg_channel_set_name ( epg_channel_t *c, const char *n )
@@ -279,7 +295,7 @@ epg_broadcast_t *epg_channel_get_current_broadcast ( epg_channel_t *c );
 
 /* Serialization */
 htsmsg_t      *epg_channel_serialize   ( epg_channel_t *b );
-epg_channel_t *epg_channel_deserialize ( htsmsg_t *m, int create );
+epg_channel_t *epg_channel_deserialize ( htsmsg_t *m, int create, int *save );
 
 /* ************************************************************************
  * Querying

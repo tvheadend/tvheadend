@@ -33,16 +33,27 @@
 #include "dvr/dvr.h"
 #include "htsp.h"
 #include "htsmsg_binary.h"
+#include "epggrab.h"
 
-struct epg_brand_tree   epg_brands;
-struct epg_season_tree  epg_seasons;
-struct epg_episode_tree epg_episodes;
-struct epg_channel_tree epg_channels;
+/* Element lists */
+struct epg_brand_tree     epg_brands;
+struct epg_season_tree    epg_seasons;
+struct epg_episode_tree   epg_episodes;
+struct epg_channel_tree   epg_channels;
+struct epg_broadcast_tree epg_broadcasts; // TODO: do we need this
 
+/* Unlinked channels */
 LIST_HEAD(epg_unlinked_channel_list1, epg_channel);
 LIST_HEAD(epg_unlinked_channel_list2, channel);
 struct epg_unlinked_channel_list1 epg_unlinked_channels1;
 struct epg_unlinked_channel_list2 epg_unlinked_channels2;
+
+/* Global counters */
+static uint32_t _epg_channel_idx   = 0;
+static uint32_t _epg_brand_idx     = 0;
+static uint32_t _epg_season_idx    = 0;
+static uint32_t _epg_episode_idx   = 0;
+static uint32_t _epg_broadcast_idx = 0;
 
 /* **************************************************************************
  * Comparators
@@ -170,6 +181,13 @@ static int _epg_write ( int fd, htsmsg_t *m )
   return ret;
 }
 
+static int _epg_write_sect ( int fd, const char *sect )
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "__section__", sect);
+  return _epg_write(fd, m);
+}
+
 void epg_save ( void )
 {
   int fd;
@@ -183,18 +201,25 @@ void epg_save ( void )
   // TODO: requires markers in the file or some other means of
   //       determining where the various object types are?
   fd = hts_settings_open_file(1, "epgdb");
+
+  /* Channels */
+  if ( _epg_write_sect(fd, "channels") ) return;
   RB_FOREACH(ec,  &epg_channels, ec_link) {
     if (_epg_write(fd, epg_channel_serialize(ec))) return;
   }
+  if ( _epg_write_sect(fd, "brands") ) return;
   RB_FOREACH(eb,  &epg_brands, eb_link) {
     if (_epg_write(fd, epg_brand_serialize(eb))) return;
   }
+  if ( _epg_write_sect(fd, "seasons") ) return;
   RB_FOREACH(es,  &epg_seasons, es_link) {
     if (_epg_write(fd, epg_season_serialize(es))) return;
   }
+  if ( _epg_write_sect(fd, "episodes") ) return;
   RB_FOREACH(ee,  &epg_episodes, ee_link) {
     if (_epg_write(fd, epg_episode_serialize(ee))) return;
   }
+  if ( _epg_write_sect(fd, "broadcasts") ) return;
   RB_FOREACH(ec, &epg_channels, ec_link) {
     RB_FOREACH(ebc, &ec->ec_schedule, eb_slink) {
       if (_epg_write(fd, epg_broadcast_serialize(ebc))) return;
@@ -204,26 +229,102 @@ void epg_save ( void )
 
 void epg_init ( void )
 {
+  int save, fd;
   struct stat st;
-  int fd = hts_settings_open_file(0, "epgdb");
   size_t remain;
   uint8_t *mem, *rp;
-  fstat(fd, &st);
+  char *sect = NULL;
+  const char *s;
+  epggrab_stats_t stats;
+
+  /* Map file to memory */
+  fd = hts_settings_open_file(0, "epgdb");
+  if ( fd < 0 ) {
+    tvhlog(LOG_DEBUG, "epg", "database does not exist");
+    return;
+  }
+  if ( fstat(fd, &st) != 0 ) {
+    tvhlog(LOG_ERR, "epg", "failed to detect database size");
+    return;
+  }
+  if ( !st.st_size ) {
+    tvhlog(LOG_DEBUG, "epg", "database is empty");
+    return;
+  }
+  remain   = st.st_size;
   rp = mem = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
-  //TODO:if ( mem == MAP_FAILED ) return;
-  remain = st.st_size;
+  if ( mem == MAP_FAILED ) {
+    tvhlog(LOG_ERR, "epg", "failed to mmap database");
+    return;
+  }
+
+  /* Process */
+  memset(&stats, 0, sizeof(stats));
   while ( remain > 4 ) {
+
+    // TODO: would be nice if htsmsg_binary handled this for us!
+
+    /* Get message length */
     int msglen = (rp[0] << 24) | (rp[1] << 16) | (rp[2] << 8) | rp[3];
-    remain -= 4;
-    rp += 4;
+    remain    -= 4;
+    rp        += 4;
+
+    /* Extract message */
     htsmsg_t *m = htsmsg_binary_deserialize(rp, msglen, NULL);
+
+    /* Process */
     if(m) {
-      //htsmsg_print(m);
+
+      /* New section */
+      s = htsmsg_get_str(m, "__section__");
+      if (s) {
+        if (sect) free(sect);
+        sect = strdup(s);
+
+      /* Channel */
+      } else if ( !strcmp(sect, "channels") ) {
+        if (epg_channel_deserialize(m, 1, &save)) stats.channels.total++;
+
+      /* Brand */
+      } else if ( !strcmp(sect, "brands") ) {
+        if (epg_brand_deserialize(m, 1, &save)) stats.brands.total++;
+        
+      /* Season */
+      } else if ( !strcmp(sect, "seasons") ) {
+        if (epg_season_deserialize(m, 1, &save)) stats.seasons.total++;
+
+      /* Episode */
+      } else if ( !strcmp(sect, "episodes") ) {
+        if (epg_episode_deserialize(m, 1, &save)) stats.episodes.total++;
+  
+      /* Broadcasts */
+      } else if ( !strcmp(sect, "broadcasts") ) {
+        if (epg_broadcast_deserialize(m, 1, &save)) stats.broadcasts.total++;
+
+      /* Unknown */
+      } else {
+        tvhlog(LOG_DEBUG, "epg", "malformed database section [%s]", sect);
+        //htsmsg_print(m);
+      }
+
+      /* Cleanup */
       htsmsg_destroy(m);
     }
-    rp += msglen;
+
+    /* Next */
+    rp     += msglen;
     remain -= msglen;
   }
+
+  /* Stats */
+  tvhlog(LOG_DEBUG, "epg", "database loaded");
+  tvhlog(LOG_DEBUG, "epg", "channels   %d", stats.channels.total);
+  tvhlog(LOG_DEBUG, "epg", "brands     %d", stats.brands.total);
+  tvhlog(LOG_DEBUG, "epg", "seasons    %d", stats.seasons.total);
+  tvhlog(LOG_DEBUG, "epg", "episodes   %d", stats.episodes.total);
+  tvhlog(LOG_DEBUG, "epg", "broadcasts %d", stats.broadcasts.total);
+
+  /* Close file */
   munmap(mem, st.st_size);
   close(fd);
 }
@@ -267,6 +368,7 @@ epg_brand_t* epg_brand_find_by_uri
 
   if ( skel == NULL ) skel = calloc(1, sizeof(epg_brand_t));
   skel->eb_uri = (char*)id;
+  skel->eb_id  = _epg_brand_idx;
 
   /* Find */
   if ( !create ) {
@@ -276,14 +378,24 @@ epg_brand_t* epg_brand_find_by_uri
   } else {
     eb = RB_INSERT_SORTED(&epg_brands, skel, eb_link, eb_uri_cmp);
     if ( eb == NULL ) {
-      eb   = skel;
-      skel = NULL;
+      *save     |= 1;
+      eb         = skel;
+      skel       = NULL;
       eb->eb_uri = strdup(id);
-      *save |= 1;
+      _epg_brand_idx++;
     }
   }
 
   return eb;
+}
+
+epg_brand_t *epg_brand_find_by_id ( uint32_t id )
+{
+  epg_brand_t *eb;
+  RB_FOREACH(eb, &epg_brands, eb_link) {
+    if ( eb->eb_id == id ) return eb;
+  }
+  return NULL;
 }
 
 int epg_brand_set_title ( epg_brand_t *brand, const char *title )
@@ -383,11 +495,9 @@ int epg_brand_rem_episode ( epg_brand_t *brand, epg_episode_t *episode, int u )
 htsmsg_t *epg_brand_serialize ( epg_brand_t *brand )
 {
   htsmsg_t *m;
-  if ( !brand ) return NULL;
+  if ( !brand || !brand->eb_uri ) return NULL;
   m = htsmsg_create_map();
-  // TODO: ID
-  if (brand->eb_uri)
-    htsmsg_add_str(m, "uri", brand->eb_uri);
+  htsmsg_add_str(m, "uri", brand->eb_uri);
   if (brand->eb_title)
     htsmsg_add_str(m, "title",   brand->eb_title);
   if (brand->eb_summary)
@@ -395,6 +505,25 @@ htsmsg_t *epg_brand_serialize ( epg_brand_t *brand )
   if (brand->eb_season_count)
     htsmsg_add_u32(m, "season-count", brand->eb_season_count);
   return m;
+}
+
+epg_brand_t *epg_brand_deserialize ( htsmsg_t *m, int create, int *save )
+{
+  epg_brand_t *eb;
+  uint32_t u32;
+  const char *str;
+
+  if ( !(str = htsmsg_get_str(m, "uri"))                ) return NULL;
+  if ( !(eb = epg_brand_find_by_uri(str, create, save)) ) return NULL;
+  
+  if ( (str = htsmsg_get_str(m, "title")) )
+    *save |= epg_brand_set_title(eb, str);
+  if ( (str = htsmsg_get_str(m, "summary")) )
+    *save |= epg_brand_set_summary(eb, str);
+  if ( !htsmsg_get_u32(m, "season-count", &u32) )
+    *save |= epg_brand_set_season_count(eb, u32);
+
+  return eb;
 }
 
 /* **************************************************************************
@@ -411,6 +540,7 @@ epg_season_t* epg_season_find_by_uri
 
   if ( skel == NULL ) skel = calloc(1, sizeof(epg_season_t));
   skel->es_uri = (char*)id;
+  skel->es_id  = _epg_season_idx;
 
   /* Find */
   if ( !create ) {
@@ -420,14 +550,24 @@ epg_season_t* epg_season_find_by_uri
   } else {
     es = RB_INSERT_SORTED(&epg_seasons, skel, es_link, es_uri_cmp);
     if ( es == NULL ) {
-      es   = skel;
-      skel = NULL;
+      *save     |= 1;
+      es         = skel;
+      skel       = NULL;
       es->es_uri = strdup(id);
-      *save |= 1;
+      _epg_season_idx++;
     }
   }
 
   return es;
+}
+
+epg_season_t *epg_season_find_by_id ( uint32_t id )
+{
+  epg_season_t *es;
+  RB_FOREACH(es, &epg_seasons, es_link) {
+    if ( es->es_id == id ) return es;
+  }
+  return NULL;
 }
 
 int epg_season_set_summary ( epg_season_t *season, const char *summary )
@@ -512,10 +652,9 @@ int epg_season_rem_episode
 htsmsg_t *epg_season_serialize ( epg_season_t *season )
 {
   htsmsg_t *m;
-  if (!season) return NULL;
+  if (!season || !season->es_uri) return NULL;
   m = htsmsg_create_map();
-  if (season->es_uri)
-    htsmsg_add_str(m, "uri", season->es_uri);
+  htsmsg_add_str(m, "uri", season->es_uri);
   if (season->es_summary)
     htsmsg_add_str(m, "summary", season->es_summary);
   if (season->es_number)
@@ -523,9 +662,32 @@ htsmsg_t *epg_season_serialize ( epg_season_t *season )
   if (season->es_episode_count)
     htsmsg_add_u32(m, "episode-count", season->es_episode_count);
   if (season->es_brand)
-    htsmsg_add_str(m, "brand-id", season->es_brand->eb_uri);
-  // TODO: change to ID
+    htsmsg_add_str(m, "brand", season->es_brand->eb_uri);
   return m;
+}
+
+epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save )
+{
+  epg_season_t *es;
+  epg_brand_t *eb;
+  uint32_t u32;
+  const char *str;
+
+  if ( !(str = htsmsg_get_str(m, "uri")) )                  return NULL;
+  if ( !(es  = epg_season_find_by_uri(str, create, save)) ) return NULL;
+  
+  if ( (str = htsmsg_get_str(m, "summary")) )
+    *save |= epg_season_set_summary(es, str);
+  if ( !htsmsg_get_u32(m, "number", &u32) )
+    *save |= epg_season_set_number(es, u32);
+  if ( !htsmsg_get_u32(m, "episode-count", &u32) )
+    *save |= epg_season_set_episode_count(es, u32);
+  
+  if ( (str = htsmsg_get_str(m, "brand")) )
+    if ( (eb = epg_brand_find_by_uri(str, 0, NULL)) )
+      *save |= epg_season_set_brand(es, eb, 1);
+
+  return es;
 }
 
 /* **************************************************************************
@@ -542,6 +704,7 @@ epg_episode_t* epg_episode_find_by_uri
 
   if ( skel == NULL ) skel = calloc(1, sizeof(epg_episode_t));
   skel->ee_uri = (char*)id;
+  skel->ee_id  = _epg_episode_idx;
 
   /* Find */
   if ( !create ) {
@@ -551,14 +714,24 @@ epg_episode_t* epg_episode_find_by_uri
   } else {
     ee = RB_INSERT_SORTED(&epg_episodes, skel, ee_link, ee_uri_cmp);
     if ( ee == NULL ) {
-      ee   = skel;
-      skel = NULL;
+      *save     |= 1;
+      ee         = skel;
+      skel       = NULL;
       ee->ee_uri = strdup(id);
-      *save |= 1;
+      _epg_episode_idx++;
     }
   }
 
   return ee;
+}
+
+epg_episode_t *epg_episode_find_by_id ( uint32_t id )
+{
+  epg_episode_t *ee;
+  RB_FOREACH(ee, &epg_episodes, ee_link) {
+    if ( ee->ee_id == id ) return ee;
+  }
+  return NULL;
 }
 
 int epg_episode_set_title ( epg_episode_t *episode, const char *title )
@@ -713,10 +886,9 @@ int epg_episode_get_number_onscreen
 htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
 {
   htsmsg_t *m;
-  if (!episode) return NULL;
+  if (!episode || !episode->ee_uri) return NULL;
   m = htsmsg_create_map();
-  if (episode->ee_uri)
-    htsmsg_add_str(m, "uri", episode->ee_uri);
+  htsmsg_add_str(m, "uri", episode->ee_uri);
   if (episode->ee_title)
     htsmsg_add_str(m, "title", episode->ee_title);
   if (episode->ee_subtitle)
@@ -731,21 +903,52 @@ htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
     htsmsg_add_u32(m, "part-number", episode->ee_part_number);
     htsmsg_add_u32(m, "part-count", episode->ee_part_count);
   }
-  // TODO: use ids
   if (episode->ee_brand)
-    htsmsg_add_str(m, "brand-id", episode->ee_brand->eb_uri);
+    htsmsg_add_str(m, "brand", episode->ee_brand->eb_uri);
   if (episode->ee_season)
-    htsmsg_add_str(m, "season-id", episode->ee_season->es_uri);
+    htsmsg_add_str(m, "season", episode->ee_season->es_uri);
   return m;
+}
+
+epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
+{
+  epg_episode_t *ee;
+  epg_season_t *es;
+  epg_brand_t *eb;
+  uint32_t u32, u32a;
+  const char *str;
+  
+  if ( !(str = htsmsg_get_str(m, "uri")) )                   return NULL;
+  if ( !(ee  = epg_episode_find_by_uri(str, create, save)) ) return NULL;
+
+  if ( (str = htsmsg_get_str(m, "title")) )
+    *save |= epg_episode_set_title(ee, str);
+  if ( (str = htsmsg_get_str(m, "subtitle")) )
+    *save |= epg_episode_set_subtitle(ee, str);
+  if ( (str = htsmsg_get_str(m, "summary")) )
+    *save |= epg_episode_set_summary(ee, str);
+  if ( (str = htsmsg_get_str(m, "description")) )
+    *save |= epg_episode_set_description(ee, str);
+  if ( !htsmsg_get_u32(m, "number", &u32) )
+    *save |= epg_episode_set_number(ee, u32);
+  if ( !htsmsg_get_u32(m, "part-number", &u32) &&
+       !htsmsg_get_u32(m, "part-count", &u32a) )
+    *save |= epg_episode_set_part(ee, u32, u32a);
+  
+  if ( (str = htsmsg_get_str(m, "brand")) )
+    if ( (eb = epg_brand_find_by_uri(str, 0, NULL)) )
+      *save |= epg_episode_set_brand(ee, eb, 1);
+  if ( (str = htsmsg_get_str(m, "season")) )
+    if ( (es = epg_season_find_by_uri(str, 0, NULL)) )
+      *save |= epg_episode_set_season(ee, es, 1);
+  
+  return ee;
 }
 
 /* **************************************************************************
  * Broadcast
  * *************************************************************************/
 
-static int _epg_broadcast_idx = 0;
-
-// Note: will find broadcast playing at this time (not necessarily
 //       one that starts at this time)
 //
 // Note: do we need to pass in stop?
@@ -774,9 +977,9 @@ epg_broadcast_t* epg_broadcast_find_by_time
   } else {
     eb = RB_INSERT_SORTED(&channel->ec_schedule, skel, eb_slink, ebc_win_cmp);
     if ( eb == NULL ) {
-      eb   = skel;
-      skel = NULL;
       *save |= 1;
+      eb     = skel;
+      skel   = NULL;
       _epg_broadcast_idx++;
     }
   }
@@ -784,9 +987,9 @@ epg_broadcast_t* epg_broadcast_find_by_time
   return eb;
 }
 
-epg_broadcast_t *epg_broadcast_find_by_id ( int id )
+// TODO: optional channel?
+epg_broadcast_t *epg_broadcast_find_by_id ( uint32_t id )
 {
-  // TODO: do this properly
   epg_channel_t *ec;
   epg_broadcast_t *ebc;
   RB_FOREACH(ec, &epg_channels, ec_link) {
@@ -820,17 +1023,57 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
 {
   htsmsg_t *m;
   if (!broadcast) return NULL;
+  if (!broadcast->eb_channel || !broadcast->eb_channel->ec_uri) return NULL;
+  if (!broadcast->eb_episode || !broadcast->eb_episode->ee_uri) return NULL;
   m = htsmsg_create_map();
+
   htsmsg_add_u32(m, "id", broadcast->eb_id);
   htsmsg_add_u32(m, "start", broadcast->eb_start);
   htsmsg_add_u32(m, "stop", broadcast->eb_stop);
+  // TODO: should these be optional?
+  htsmsg_add_str(m, "channel", broadcast->eb_channel->ec_uri);
+  htsmsg_add_str(m, "episode", broadcast->eb_episode->ee_uri);
+  
   if (broadcast->eb_dvb_id)
     htsmsg_add_u32(m, "dvb-id", broadcast->eb_dvb_id);
   // TODO: add other metadata fields
-  // TODO: use ID
-  if (broadcast->eb_episode)
-    htsmsg_add_str(m, "episode-id", broadcast->eb_episode->ee_uri);
   return m;
+}
+
+epg_broadcast_t *epg_broadcast_deserialize
+  ( htsmsg_t *m, int create, int *save )
+{
+  epg_broadcast_t *ebc;
+  epg_channel_t *ec;
+  epg_episode_t *ee;
+  const char *str;
+  uint32_t id, start, stop;
+
+  if ( htsmsg_get_u32(m, "id", &id)                   ) return NULL;
+  if ( htsmsg_get_u32(m, "start", &start)             ) return NULL;
+  if ( htsmsg_get_u32(m, "stop", &stop)               ) return NULL;
+  // TODO: should these be optional?
+  if ( !(str = htsmsg_get_str(m, "channel"))          ) return NULL;
+  if ( !(ec  = epg_channel_find_by_uri(str, 0, NULL)) ) return NULL;
+  if ( !(str = htsmsg_get_str(m, "episode"))          ) return NULL;
+  if ( !(ee  = epg_episode_find_by_uri(str, 0, NULL)) ) return NULL;
+
+  ebc = epg_broadcast_find_by_time(ec, start, stop, create, save);
+  if ( !ebc ) return NULL;
+
+  *save |= epg_broadcast_set_episode(ebc, ee, 1);
+
+  /* Bodge the ID - keep them the same */
+  ebc->eb_id = id;
+  if ( id >= _epg_broadcast_idx ) _epg_broadcast_idx = id + 1;
+
+#if TODO_BROADCAST_METADATA
+  if ( !htsmsg_get_u32(m, "dvb-id", &u32) )
+    save |= epg_broadcast_set_dvb_id(ebc, u32);
+  // TODO: more metadata
+#endif
+
+  return ebc;
 }
 
 /* **************************************************************************
@@ -855,6 +1098,7 @@ epg_channel_t* epg_channel_find_by_uri
 
   if ( skel == NULL ) skel = calloc(1, sizeof(epg_channel_t));
   skel->ec_uri = (char*)id;
+  skel->ec_id  = _epg_channel_idx;
 
   /* Find */
   if ( !create ) {
@@ -864,15 +1108,25 @@ epg_channel_t* epg_channel_find_by_uri
   } else {
     ec = RB_INSERT_SORTED(&epg_channels, skel, ec_link, ec_uri_cmp);
     if ( ec == NULL ) {
-      ec   = skel;
-      skel = NULL;
+      *save     |= 1;
+      ec         = skel;
+      skel       = NULL;
       ec->ec_uri = strdup(id);
       LIST_INSERT_HEAD(&epg_unlinked_channels1, ec, ec_ulink);
-      *save |= 1;
+      _epg_channel_idx++;
     }
   }
 
   return ec;
+}
+
+epg_channel_t *epg_channel_find_by_id ( uint32_t id )
+{
+  epg_channel_t *ec;
+  RB_FOREACH(ec, &epg_channels, ec_link) {
+    if (ec->ec_id == id) return ec;
+  }
+  return NULL;
 }
 
 int epg_channel_set_name ( epg_channel_t *channel, const char *name )
@@ -898,14 +1152,33 @@ epg_broadcast_t *epg_channel_get_current_broadcast ( epg_channel_t *channel )
 htsmsg_t *epg_channel_serialize ( epg_channel_t *channel )
 {
   htsmsg_t *m;
-  if (!channel) return NULL;
+  if (!channel || !channel->ec_uri) return NULL;
   m = htsmsg_create_map();
-  if (channel->ec_uri)
-    htsmsg_add_str(m, "uri", channel->ec_uri);
+  htsmsg_add_str(m, "uri", channel->ec_uri);
   if (channel->ec_channel)
-    htsmsg_add_u32(m, "channel-id", channel->ec_channel->ch_id);
+    htsmsg_add_u32(m, "channel", channel->ec_channel->ch_id);
   // TODO: other data
   return m;
+}
+
+epg_channel_t *epg_channel_deserialize ( htsmsg_t *m, int create, int *save )
+{
+  epg_channel_t *ec;
+#if TODO_CHANNEL_LINK
+  channel_t *ch;
+  uint32_t u32;
+#endif
+  const char *str;
+  
+  if ( !(str = htsmsg_get_str(m, "uri"))                   ) return NULL;
+  if ( !(ec  = epg_channel_find_by_uri(str, create, save)) ) return NULL;
+
+#if TODO_CHANNEL_LINK
+  if ( !htsmsg_get_u32(m, "channel", &u32) )
+    if ( (ch = channel_find_by_identifier(u32)) )
+#endif
+      
+  return ec;
 }
 
 /* **************************************************************************
