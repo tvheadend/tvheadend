@@ -40,9 +40,9 @@ void epggrab_init ( void )
 {
   /* Defaults */
   epggrab_advanced  = 0;
-  epggrab_eit       = 1;    // on air grab enabled
-  epggrab_interval  = 12;   // hours
-  epggrab_module    = NULL; // disabled
+  epggrab_eit       = 1;         // on air grab enabled
+  epggrab_interval  = 12 * 3600; // hours
+  epggrab_module    = NULL;      // disabled
 
   /* Initialise modules */
   epggrab_module_pyepg = pyepg_init();
@@ -64,6 +64,8 @@ static void _epggrab_module_run ( epggrab_module_t *mod, const char *opts )
   int save = 0;
   time_t tm1, tm2;
   htsmsg_t *data;
+  epggrab_stats_t stats;
+  memset(&stats, 0, sizeof(stats));
 
   /* Check */
   if ( !mod ) return;
@@ -72,15 +74,40 @@ static void _epggrab_module_run ( epggrab_module_t *mod, const char *opts )
   time(&tm1);
   data = mod->grab(opts);
   time(&tm2);
-  if ( !data ) {
-    tvhlog(LOG_WARNING, mod->name(), "grab returned no data");
-  } else {
+
+  /* Process */
+  if ( data ) {
+    //htsmsg_print(data);
     tvhlog(LOG_DEBUG, mod->name(), "grab took %d seconds", tm2 - tm1);
     pthread_mutex_lock(&global_lock);
-    save = mod->parse(data);
-    if (save) epg_updated();
+    time(&tm1);
+    save = mod->parse(data, &stats);
+    time(&tm2);
     pthread_mutex_unlock(&global_lock);
     htsmsg_destroy(data);
+    tvhlog(LOG_DEBUG, mod->name(), "parse took %d seconds", tm2 - tm1);
+    tvhlog(LOG_DEBUG, mod->name(), "  channels   tot=%5d new=%5d mod=%5d",
+           stats.channels.total, stats.channels.created,
+           stats.channels.modified);
+    tvhlog(LOG_DEBUG, mod->name(), "  brands     tot=%5d new=%5d mod=%5d",
+           stats.brands.total, stats.brands.created,
+           stats.brands.modified);
+    tvhlog(LOG_DEBUG, mod->name(), "  seasons    tot=%5d new=%5d mod=%5d",
+           stats.seasons.total, stats.seasons.created,
+           stats.seasons.modified);
+    tvhlog(LOG_DEBUG, mod->name(), "  episodes   tot=%5d new=%5d mod=%5d",
+           stats.episodes.total, stats.episodes.created,
+           stats.episodes.modified);
+    tvhlog(LOG_DEBUG, mod->name(), "  broadcasts tot=%5d new=%5d mod=%5d",
+           stats.broadcasts.total, stats.broadcasts.created,
+           stats.broadcasts.modified);
+
+    /* Updated */
+    // TODO: should epg_updated happen inside or outside the lock?
+    if (save) epg_updated();  
+
+  } else {
+    tvhlog(LOG_WARNING, mod->name(), "grab returned no data");
   }
 }
 
