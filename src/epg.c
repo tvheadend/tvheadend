@@ -148,12 +148,85 @@ static void _epg_dump ( void )
  * Setup / Update
  * *************************************************************************/
 
-void epg_init ( void )
+static int _epg_write ( int fd, htsmsg_t *m )
 {
+  int ret = 1;
+  size_t msglen;
+  void *msgdata;
+  if (m) {
+    int r = htsmsg_binary_serialize(m, &msgdata, &msglen, 0x10000);
+    htsmsg_destroy(m);
+    if (!r) {
+      ssize_t w = write(fd, msgdata, msglen);
+      free(msgdata);
+      if(w == msglen) ret = 0;
+    }
+  }
+  if(ret) {
+    tvhlog(LOG_DEBUG, "epg", "failed to store epg to disk");
+    close(fd);
+    hts_settings_remove("epgdb");
+  }
+  return ret;
 }
 
 void epg_save ( void )
 {
+  int fd;
+  epg_brand_t   *eb;
+  epg_season_t  *es;
+  epg_episode_t *ee;
+  epg_channel_t *ec;
+  epg_broadcast_t *ebc;
+  
+  printf("EPG save\n");
+  // TODO: requires markers in the file or some other means of
+  //       determining where the various object types are?
+  fd = hts_settings_open_file(1, "epgdb");
+  RB_FOREACH(ec,  &epg_channels, ec_link) {
+    if (_epg_write(fd, epg_channel_serialize(ec))) return;
+  }
+  RB_FOREACH(eb,  &epg_brands, eb_link) {
+    if (_epg_write(fd, epg_brand_serialize(eb))) return;
+  }
+  RB_FOREACH(es,  &epg_seasons, es_link) {
+    if (_epg_write(fd, epg_season_serialize(es))) return;
+  }
+  RB_FOREACH(ee,  &epg_episodes, ee_link) {
+    if (_epg_write(fd, epg_episode_serialize(ee))) return;
+  }
+  RB_FOREACH(ec, &epg_channels, ec_link) {
+    RB_FOREACH(ebc, &ec->ec_schedule, eb_slink) {
+      if (_epg_write(fd, epg_broadcast_serialize(ebc))) return;
+    }
+  }
+}
+
+void epg_init ( void )
+{
+  struct stat st;
+  int fd = hts_settings_open_file(0, "epgdb");
+  size_t remain;
+  uint8_t *mem, *rp;
+  fstat(fd, &st);
+  rp = mem = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
+  //TODO:if ( mem == MAP_FAILED ) return;
+  remain = st.st_size;
+  while ( remain > 4 ) {
+    int msglen = (rp[0] << 24) | (rp[1] << 16) | (rp[2] << 8) | rp[3];
+    printf("msglen = %d\n", msglen);
+    remain -= 4;
+    rp += 4;
+    htsmsg_t *m = htsmsg_binary_deserialize(rp, msglen, NULL);
+    if(m) {
+      htsmsg_print(m);
+      htsmsg_destroy(m);
+    }
+    rp += msglen;
+    remain -= msglen;
+  }
+  munmap(mem, st.st_size);
+  close(fd);
 }
 
 void epg_updated ( void )
@@ -306,6 +379,23 @@ int epg_brand_rem_episode ( epg_brand_t *brand, epg_episode_t *episode, int u )
   return save;
 }
 
+htsmsg_t *epg_brand_serialize ( epg_brand_t *brand )
+{
+  htsmsg_t *m;
+  if ( !brand ) return NULL;
+  m = htsmsg_create_map();
+  // TODO: ID
+  if (brand->eb_uri)
+    htsmsg_add_str(m, "uri", brand->eb_uri);
+  if (brand->eb_title)
+    htsmsg_add_str(m, "title",   brand->eb_title);
+  if (brand->eb_summary)
+    htsmsg_add_str(m, "summary", brand->eb_summary);
+  if (brand->eb_season_count)
+    htsmsg_add_u32(m, "season-count", brand->eb_season_count);
+  return m;
+}
+
 /* **************************************************************************
  * Season
  * *************************************************************************/
@@ -414,6 +504,25 @@ int epg_season_rem_episode
     save = 1;
   }
   return save;
+}
+
+htsmsg_t *epg_season_serialize ( epg_season_t *season )
+{
+  htsmsg_t *m;
+  if (!season) return NULL;
+  m = htsmsg_create_map();
+  if (season->es_uri)
+    htsmsg_add_str(m, "uri", season->es_uri);
+  if (season->es_summary)
+    htsmsg_add_str(m, "summary", season->es_summary);
+  if (season->es_number)
+    htsmsg_add_u32(m, "number", season->es_number);
+  if (season->es_episode_count)
+    htsmsg_add_u32(m, "episode-count", season->es_episode_count);
+  if (season->es_brand)
+    htsmsg_add_str(m, "brand-id", season->es_brand->eb_uri);
+  // TODO: change to ID
+  return m;
 }
 
 /* **************************************************************************
@@ -596,6 +705,35 @@ int epg_episode_get_number_onscreen
   return i;
 }
 
+htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
+{
+  htsmsg_t *m;
+  if (!episode) return NULL;
+  m = htsmsg_create_map();
+  if (episode->ee_uri)
+    htsmsg_add_str(m, "uri", episode->ee_uri);
+  if (episode->ee_title)
+    htsmsg_add_str(m, "title", episode->ee_title);
+  if (episode->ee_subtitle)
+    htsmsg_add_str(m, "subtitle", episode->ee_subtitle);
+  if (episode->ee_summary)
+    htsmsg_add_str(m, "summary", episode->ee_summary);
+  if (episode->ee_description)
+    htsmsg_add_str(m, "description", episode->ee_description);
+  if (episode->ee_number)
+    htsmsg_add_u32(m, "number", episode->ee_number);
+  if (episode->ee_part_count && episode->ee_part_count) {
+    htsmsg_add_u32(m, "part-number", episode->ee_part_number);
+    htsmsg_add_u32(m, "part-count", episode->ee_part_count);
+  }
+  // TODO: use ids
+  if (episode->ee_brand)
+    htsmsg_add_str(m, "brand-id", episode->ee_brand->eb_uri);
+  if (episode->ee_season)
+    htsmsg_add_str(m, "season-id", episode->ee_season->es_uri);
+  return m;
+}
+
 /* **************************************************************************
  * Broadcast
  * *************************************************************************/
@@ -672,6 +810,23 @@ epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *broadcast )
   return RB_NEXT(broadcast, eb_slink);
 }
 
+htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
+{
+  htsmsg_t *m;
+  if (!broadcast) return NULL;
+  m = htsmsg_create_map();
+  htsmsg_add_u32(m, "id", broadcast->eb_id);
+  htsmsg_add_u32(m, "start", broadcast->eb_start);
+  htsmsg_add_u32(m, "stop", broadcast->eb_stop);
+  if (broadcast->eb_dvb_id)
+    htsmsg_add_u32(m, "dvb-id", broadcast->eb_dvb_id);
+  // TODO: add other metadata fields
+  // TODO: use ID
+  if (broadcast->eb_episode)
+    htsmsg_add_str(m, "episode-id", broadcast->eb_episode->ee_uri);
+  return m;
+}
+
 /* **************************************************************************
  * Channel
  * *************************************************************************/
@@ -730,6 +885,19 @@ epg_broadcast_t *epg_channel_get_current_broadcast ( epg_channel_t *channel )
   // TODO: its not really the head!
   if ( !channel ) return NULL;
   return RB_FIRST(&channel->ec_schedule);
+}
+
+htsmsg_t *epg_channel_serialize ( epg_channel_t *channel )
+{
+  htsmsg_t *m;
+  if (!channel) return NULL;
+  m = htsmsg_create_map();
+  if (channel->ec_uri)
+    htsmsg_add_str(m, "uri", channel->ec_uri);
+  if (channel->ec_channel)
+    htsmsg_add_u32(m, "channel-id", channel->ec_channel->ch_id);
+  // TODO: other data
+  return m;
 }
 
 /* **************************************************************************

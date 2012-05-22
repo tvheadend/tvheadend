@@ -7,6 +7,7 @@
 #include "epg.h"
 #include "epggrab.h"
 #include "epggrab/pyepg.h"
+#include "epggrab/xmltv.h"
 
 /* Thread protection */
 int                  epggrab_confver;
@@ -22,6 +23,7 @@ epggrab_sched_list_t epggrab_schedule;
 
 /* Modules */
 epggrab_module_t*    epggrab_module_pyepg;
+epggrab_module_t*    epggrab_module_xmltv;
 
 /* Internal prototypes */
 static void*  _epggrab_thread          ( void* );
@@ -44,6 +46,7 @@ void epggrab_init ( void )
 
   /* Initialise modules */
   epggrab_module_pyepg = pyepg_init();
+  epggrab_module_xmltv = xmltv_init();
 
   /* Start thread */
   pthread_t      tid;
@@ -163,6 +166,7 @@ void* _epggrab_thread ( void* p )
 epggrab_module_t* epggrab_module_find_by_name ( const char *name )
 {
   if ( strcmp(name, "pyepg") == 0 ) return epggrab_module_pyepg;
+  if ( strcmp(name, "xmltv") == 0 ) return epggrab_module_xmltv;
   return NULL;
 }
 
