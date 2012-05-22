@@ -214,12 +214,11 @@ void epg_init ( void )
   remain = st.st_size;
   while ( remain > 4 ) {
     int msglen = (rp[0] << 24) | (rp[1] << 16) | (rp[2] << 8) | rp[3];
-    printf("msglen = %d\n", msglen);
     remain -= 4;
     rp += 4;
     htsmsg_t *m = htsmsg_binary_deserialize(rp, msglen, NULL);
     if(m) {
-      htsmsg_print(m);
+      //htsmsg_print(m);
       htsmsg_destroy(m);
     }
     rp += msglen;
@@ -258,7 +257,8 @@ void epg_rem_channel ( channel_t *ch )
  * Brand
  * *************************************************************************/
 
-epg_brand_t* epg_brand_find_by_uri ( const char *id, int create )
+epg_brand_t* epg_brand_find_by_uri 
+  ( const char *id, int create, int *save )
 {
   epg_brand_t *eb;
   static epg_brand_t* skel = NULL;
@@ -279,6 +279,7 @@ epg_brand_t* epg_brand_find_by_uri ( const char *id, int create )
       eb   = skel;
       skel = NULL;
       eb->eb_uri = strdup(id);
+      *save |= 1;
     }
   }
 
@@ -400,7 +401,8 @@ htsmsg_t *epg_brand_serialize ( epg_brand_t *brand )
  * Season
  * *************************************************************************/
 
-epg_season_t* epg_season_find_by_uri ( const char *id, int create )
+epg_season_t* epg_season_find_by_uri 
+  ( const char *id, int create, int *save )
 {
   epg_season_t *es;
   static epg_season_t* skel = NULL;
@@ -421,6 +423,7 @@ epg_season_t* epg_season_find_by_uri ( const char *id, int create )
       es   = skel;
       skel = NULL;
       es->es_uri = strdup(id);
+      *save |= 1;
     }
   }
 
@@ -529,7 +532,8 @@ htsmsg_t *epg_season_serialize ( epg_season_t *season )
  * Episode
  * *************************************************************************/
 
-epg_episode_t* epg_episode_find_by_uri ( const char *id, int create )
+epg_episode_t* epg_episode_find_by_uri
+  ( const char *id, int create, int *save )
 {
   epg_episode_t *ee;
   static epg_episode_t* skel = NULL;
@@ -550,6 +554,7 @@ epg_episode_t* epg_episode_find_by_uri ( const char *id, int create )
       ee   = skel;
       skel = NULL;
       ee->ee_uri = strdup(id);
+      *save |= 1;
     }
   }
 
@@ -745,7 +750,7 @@ static int _epg_broadcast_idx = 0;
 //
 // Note: do we need to pass in stop?
 epg_broadcast_t* epg_broadcast_find_by_time 
-  ( epg_channel_t *channel, time_t start, time_t stop, int create )
+  ( epg_channel_t *channel, time_t start, time_t stop, int create, int *save )
 {
   epg_broadcast_t *eb;
   static epg_broadcast_t *skel = NULL;
@@ -771,6 +776,7 @@ epg_broadcast_t* epg_broadcast_find_by_time
     if ( eb == NULL ) {
       eb   = skel;
       skel = NULL;
+      *save |= 1;
       _epg_broadcast_idx++;
     }
   }
@@ -839,7 +845,8 @@ static void _epg_channel_link ( epg_channel_t *ec )
   }
 }
 
-epg_channel_t* epg_channel_find_by_uri ( const char *id, int create )
+epg_channel_t* epg_channel_find_by_uri
+  ( const char *id, int create, int *save )
 {
   epg_channel_t *ec;
   static epg_channel_t *skel = NULL;
@@ -861,6 +868,7 @@ epg_channel_t* epg_channel_find_by_uri ( const char *id, int create )
       skel = NULL;
       ec->ec_uri = strdup(id);
       LIST_INSERT_HEAD(&epg_unlinked_channels1, ec, ec_ulink);
+      *save |= 1;
     }
   }
 

@@ -62,7 +62,8 @@ typedef struct epg_brand
 } epg_brand_t;
 
 /* Lookup */
-epg_brand_t *epg_brand_find_by_uri ( const char *uri, int create );
+epg_brand_t *epg_brand_find_by_uri
+  ( const char *uri, int create, int *save );
 
 /* Mutators */
 int epg_brand_set_title        ( epg_brand_t *b, const char *title )
@@ -107,7 +108,8 @@ typedef struct epg_season
 } epg_season_t;
 
 /* Lookup */
-epg_season_t *epg_season_find_by_uri ( const char *uri, int create );
+epg_season_t *epg_season_find_by_uri
+  ( const char *uri, int create, int *save );
 
 /* Mutators */
 int epg_season_set_summary       ( epg_season_t *s, const char *summary )
@@ -158,7 +160,8 @@ typedef struct epg_episode
 } epg_episode_t;
 
 /* Lookup */
-epg_episode_t *epg_episode_find_by_uri ( const char *uri, int create );
+epg_episode_t *epg_episode_find_by_uri
+  ( const char *uri, int create, int *save );
 
 /* Mutators */
 int epg_episode_set_title        ( epg_episode_t *e, const char *title )
@@ -227,7 +230,8 @@ typedef struct epg_broadcast
 } epg_broadcast_t;
 
 /* Lookup */
-epg_broadcast_t *epg_broadcast_find_by_time ( epg_channel_t *ch, time_t start, time_t stop, int create );
+epg_broadcast_t *epg_broadcast_find_by_time 
+  ( epg_channel_t *ch, time_t start, time_t stop, int create, int *save );
 epg_broadcast_t *epg_broadcast_find_by_id   ( int id );
 
 /* Mutators */
@@ -263,7 +267,8 @@ typedef struct epg_channel
 } epg_channel_t;
 
 /* Lookup */
-epg_channel_t *epg_channel_find_by_uri ( const char *uri, int create );
+epg_channel_t *epg_channel_find_by_uri
+  ( const char *uri, int create, int *save );
 
 /* Mutators */
 int epg_channel_set_name ( epg_channel_t *c, const char *n )

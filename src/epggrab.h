@@ -9,6 +9,25 @@
  * *************************************************************************/
 
 /*
+ * Grab statistics
+ */
+typedef struct epggrab_stats_part
+{
+  int created;
+  int modified;
+  int total;
+} epggrab_stats_part_t;
+
+typedef struct epggrab_stats
+{
+  epggrab_stats_part_t channels;
+  epggrab_stats_part_t brands;
+  epggrab_stats_part_t seasons;
+  epggrab_stats_part_t episodes;
+  epggrab_stats_part_t broadcasts;
+} epggrab_stats_t;
+
+/*
  * Grabber base class
  */
 typedef struct epggrab_module
@@ -17,7 +36,7 @@ typedef struct epggrab_module
   void        (*enable)  ( void );
   void        (*disable) ( void );
   htsmsg_t*   (*grab)    ( const char *opts );
-  int         (*parse)   ( htsmsg_t *data );
+  int         (*parse)   ( htsmsg_t *data, epggrab_stats_t *stats );
 } epggrab_module_t;
 
 /*
