@@ -9,7 +9,6 @@ tvheadend.ContentGroupStore.setDefaultSort('name', 'ASC');
 
 tvheadend.epgDetails = function(event) {
 
-
     var content = '';
     
     if(event.chicon != null && event.chicon.length > 0)
@@ -39,6 +38,8 @@ tvheadend.epgDetails = function(event) {
             "<a href=\"javascript:tvheadend.VLC('stream/channelid/" +
             event.channelid + "')\">Play</a>" + "</div>";
     }
+
+    content += '<div id="altbcast"></div>';
 
     var confcombo = new Ext.form.ComboBox({
         store: tvheadend.configNames,
@@ -91,6 +92,31 @@ tvheadend.epgDetails = function(event) {
 	});
     }
 
+    function showAlternatives (s) {
+      // TODO: must be a way to constrain this
+      var e = Ext.get('altbcast')
+      html = '';
+      if ( s.getTotalCount() > 0 ) {
+        html += '<div class="x-epg-subtitle">Alternative Broadcasts</div>';
+        for ( i = 0; i < s.getTotalCount(); i++ ) {
+          var ab = s.getAt(i).data;
+  	      var dt = Date.parseDate(ab.start, 'U');
+          html += '<div class="x-epg-desc">' + dt.format('l H:i') + '&nbsp;&nbsp;&nbsp;' + ab.channel + '</div>';
+          // TODO: record option?
+        }
+      }
+      e.dom.innerHTML = html;
+    }
+
+    var ab = new Ext.data.JsonStore({
+      root: 'entries',
+      url:  'epgaltbcast',
+      autoLoad: true,
+      id: 'id',
+      baseParams: { op: 'get', id: event.id },
+      fields: Ext.data.Record.create([ 'id', 'channel', 'start' ]),
+      listeners: { 'datachanged': showAlternatives }
+    });
 }
 
 
@@ -111,6 +137,7 @@ tvheadend.epg = function() {
             }
         ]
     });
+
 
     var epgStore = new Ext.ux.grid.livegrid.Store({
 	autoLoad: true,

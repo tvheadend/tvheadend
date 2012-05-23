@@ -250,6 +250,12 @@
     font-weight:bold;
 }
 
+.x-epg-subtitle {
+    margin: 5px;
+    font:normal 12px arial, tahoma, helvetica, sans-serif;
+    font-weight:bold;
+}
+
 .x-epg-desc {
     margin: 5px;
 }
