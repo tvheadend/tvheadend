@@ -29,7 +29,7 @@ static int _pyepg_parse_time ( const char *str, time_t *out )
   return ret;
 }
 
-static int _pyepg_parse_channel ( htsmsg_t *data )
+static int _pyepg_parse_channel ( htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
   htsmsg_t *attr, *tags;
@@ -44,17 +44,19 @@ static int _pyepg_parse_channel ( htsmsg_t *data )
 
   /* Find channel */
   if ((channel = epg_channel_find_by_uri(id, 1, &save)) == NULL) return 0;
-  // TODO: need to save if created
+  stats->channels.total++;
+  if (save) stats->channels.created++;
 
   /* Set name */
   name = htsmsg_xml_get_cdata_str(tags, "name");
   if ( name ) save |= epg_channel_set_name(channel, name);
   
+  if (save) stats->channels.modified++;
 
   return save;
 }
 
-static int _pyepg_parse_brand ( htsmsg_t *data )
+static int _pyepg_parse_brand ( htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
   htsmsg_t *attr, *tags;
@@ -70,7 +72,8 @@ static int _pyepg_parse_brand ( htsmsg_t *data )
   
   /* Find brand */
   if ((brand = epg_brand_find_by_uri(str, 1, &save)) == NULL) return 0;
-  // TODO: do we need to save if created?
+  stats->brands.total++;
+  if (save) stats->brands.created++;
 
   /* Set title */
   if ((str = htsmsg_xml_get_cdata_str(tags, "title"))) {
@@ -94,10 +97,12 @@ static int _pyepg_parse_brand ( htsmsg_t *data )
     save |= epg_brand_set_season_count(brand, u32);
   }
 
+  if (save) stats->brands.modified++;
+
   return save;
 }
 
-static int _pyepg_parse_season ( htsmsg_t *data )
+static int _pyepg_parse_season ( htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
   htsmsg_t *attr, *tags;
@@ -114,7 +119,8 @@ static int _pyepg_parse_season ( htsmsg_t *data )
 
   /* Find series */
   if ((season = epg_season_find_by_uri(str, 1, &save)) == NULL) return 0;
-  // TODO: do we need to save if created?
+  stats->seasons.total++;
+  if (save) stats->seasons.created++;
   
   /* Set brand */
   if ((str = htsmsg_get_str(attr, "brand"))) {
@@ -150,10 +156,12 @@ static int _pyepg_parse_season ( htsmsg_t *data )
     save |= epg_season_set_episode_count(season, u32);
   }
 
+  if(save) stats->seasons.modified++;
+
   return save;
 }
 
-static int _pyepg_parse_episode ( htsmsg_t *data )
+static int _pyepg_parse_episode ( htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
   htsmsg_t *attr, *tags;
@@ -171,7 +179,8 @@ static int _pyepg_parse_episode ( htsmsg_t *data )
 
   /* Find episode */
   if ((episode = epg_episode_find_by_uri(str, 1, &save)) == NULL) return 0;
-  // TODO: do we need to save if created?
+  stats->episodes.total++;
+  if (save) stats->episodes.created++;
   
   /* Set brand */
   if ((str = htsmsg_get_str(attr, "brand"))) {
@@ -216,10 +225,13 @@ static int _pyepg_parse_episode ( htsmsg_t *data )
 
   /* TODO: extra metadata */
 
+  if (save) stats->episodes.modified++;
+
   return save;
 }
 
-static int _pyepg_parse_broadcast ( htsmsg_t *data, epg_channel_t *channel )
+static int _pyepg_parse_broadcast 
+  ( htsmsg_t *data, epg_channel_t *channel, epggrab_stats_t *stats )
 {
   int save = 0;
   htsmsg_t *attr;//, *tags;
@@ -242,19 +254,26 @@ static int _pyepg_parse_broadcast ( htsmsg_t *data, epg_channel_t *channel )
   if (!_pyepg_parse_time(start, &tm_start)) return 0;
   if (!_pyepg_parse_time(stop, &tm_stop)) return 0;
 
+  /* Ignore */
+  if(tm_stop <= tm_start || tm_stop < dispatch_clock) return 0;
+
   /* Find broadcast */
   broadcast = epg_broadcast_find_by_time(channel, tm_start, tm_stop, 1, &save);
   if ( broadcast == NULL ) return 0;
+  stats->broadcasts.total++;
+  if ( save ) stats->broadcasts.created++;
 
   /* Set episode */
   save |= epg_broadcast_set_episode(broadcast, episode, 1);
 
   /* TODO: extra metadata */
   
+  if (save) stats->broadcasts.modified++;  
+
   return save;
 }
 
-static int _pyepg_parse_schedule ( htsmsg_t *data )
+static int _pyepg_parse_schedule ( htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
   htsmsg_t *attr, *tags;
@@ -271,14 +290,14 @@ static int _pyepg_parse_schedule ( htsmsg_t *data )
 
   HTSMSG_FOREACH(f, tags) {
     if (strcmp(f->hmf_name, "broadcast") == 0) {
-      save |= _pyepg_parse_broadcast(htsmsg_get_map_by_field(f), channel);
+      save |= _pyepg_parse_broadcast(htsmsg_get_map_by_field(f), channel, stats);
     }
   }
 
   return save;
 }
 
-static int _pyepg_parse_epg ( htsmsg_t *data )
+static int _pyepg_parse_epg ( htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
   htsmsg_t *tags;
@@ -288,15 +307,15 @@ static int _pyepg_parse_epg ( htsmsg_t *data )
 
   HTSMSG_FOREACH(f, tags) {
     if (strcmp(f->hmf_name, "channel") == 0 ) {
-      save |= _pyepg_parse_channel(htsmsg_get_map_by_field(f));
+      save |= _pyepg_parse_channel(htsmsg_get_map_by_field(f), stats);
     } else if (strcmp(f->hmf_name, "brand") == 0 ) {
-      save |= _pyepg_parse_brand(htsmsg_get_map_by_field(f));
+      save |= _pyepg_parse_brand(htsmsg_get_map_by_field(f), stats);
     } else if (strcmp(f->hmf_name, "series") == 0 ) {
-      save |= _pyepg_parse_season(htsmsg_get_map_by_field(f));
+      save |= _pyepg_parse_season(htsmsg_get_map_by_field(f), stats);
     } else if (strcmp(f->hmf_name, "episode") == 0 ) {
-      save |= _pyepg_parse_episode(htsmsg_get_map_by_field(f));
+      save |= _pyepg_parse_episode(htsmsg_get_map_by_field(f), stats);
     } else if (strcmp(f->hmf_name, "schedule") == 0 ) {
-      save |= _pyepg_parse_schedule(htsmsg_get_map_by_field(f));
+      save |= _pyepg_parse_schedule(htsmsg_get_map_by_field(f), stats);
     }
   }
 
@@ -315,7 +334,7 @@ static int _pyepg_parse ( htsmsg_t *data, epggrab_stats_t *stats )
   
   /* PyEPG format */
   if ((epg = htsmsg_get_map(tags, "epg")) != NULL)
-    return _pyepg_parse_epg(epg);
+    return _pyepg_parse_epg(epg, stats);
 
   /* XMLTV format */
   if ((epg = htsmsg_get_map(tags, "tv")) != NULL) {
