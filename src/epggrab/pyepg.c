@@ -364,6 +364,7 @@ static htsmsg_t* _pyepg_grab ( const char *iopts )
   const char *argv[32]; // 32 args max!
   char       *toksave, *tok;
   char       *opts = NULL;
+  htsmsg_t   *ret;
 
   /* TODO: do something (much) better! */
   if (iopts) opts = strdup(iopts);
@@ -382,6 +383,7 @@ static htsmsg_t* _pyepg_grab ( const char *iopts )
   tvhlog(LOG_DEBUG, "pyepg", "grab %s %s", argv[0], iopts ? iopts : ""); 
 
   /* Grab */
+  // TODO: HACK: use static input
   outlen = spawn_and_store_stdout(argv[0], (char *const*)argv, &outbuf);
   free(opts);
   if ( outlen < 1 ) {
@@ -390,7 +392,10 @@ static htsmsg_t* _pyepg_grab ( const char *iopts )
   }
 
   /* Extract */
-  return htsmsg_xml_deserialize(outbuf, errbuf, sizeof(errbuf));
+  ret = htsmsg_xml_deserialize(outbuf, errbuf, sizeof(errbuf));
+  if (!ret)
+    tvhlog(LOG_ERR, "pyepg", "htsmsg_xml_deserialize error %s", errbuf);
+  return ret;
 }
 
 epggrab_module_t* pyepg_init ( void )

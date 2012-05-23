@@ -23,8 +23,7 @@ int cron_is_time ( cron_t *cron )
 
 void cron_pack ( cron_t *cron, htsmsg_t *msg )
 {
-  htsmsg_add_u32(msg, "min0", cron->min & 0xFFFFFFFF);
-  htsmsg_add_u32(msg, "min1", cron->min >> 32);
+  htsmsg_add_u64(msg, "min",  cron->min);
   htsmsg_add_u32(msg, "hour", cron->hour);
   htsmsg_add_u32(msg, "dom",  cron->dom);
   htsmsg_add_u32(msg, "mon",  cron->mon);
@@ -34,10 +33,7 @@ void cron_pack ( cron_t *cron, htsmsg_t *msg )
 void cron_unpack ( cron_t *cron, htsmsg_t *msg )
 {
   uint32_t u32 = 0;
-  htsmsg_get_u32(msg, "min0", &u32);
-  cron->min = u32;
-  htsmsg_get_u32(msg, "min1", &u32);
-  cron->min += ((uint64_t)u32 << 32);
+  htsmsg_get_u64(msg, "min", &cron->min);
   htsmsg_get_u32(msg, "hour", &cron->hour);
   htsmsg_get_u32(msg, "dom",  &cron->dom);
   htsmsg_get_u32(msg, "mon",  &u32);
