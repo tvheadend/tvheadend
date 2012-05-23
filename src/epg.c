@@ -1127,7 +1127,6 @@ int epg_channel_set_name ( epg_channel_t *channel, const char *name )
   int save = 0;
   channel_t *ch;
   if ( !channel || !name ) return 0;
-  printf("channel %s set name %s\n", channel->ec_uri, name);
   if ( !channel->ec_name || strcmp(channel->ec_name, name) ) {
     channel->ec_name = strdup(name);
     if ( !channel->ec_channel ) {
