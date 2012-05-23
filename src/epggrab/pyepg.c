@@ -356,8 +356,8 @@ static htsmsg_t* _pyepg_grab ( const char *iopts )
       argv[i++] = tok;
       tok = strtok_r(NULL, " ", &toksave);
     }
-    argv[i] = NULL;
   }
+  argv[i] = NULL;
 
   /* Debug */
   tvhlog(LOG_DEBUG, "pyepg", "grab %s %s", argv[0], iopts ? iopts : ""); 
