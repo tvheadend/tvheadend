@@ -40,6 +40,7 @@ tvheadend.epgDetails = function(event) {
     }
 
     content += '<div id="altbcast"></div>';
+    content += '<div id="related"></div>';
 
     var confcombo = new Ext.form.ComboBox({
         store: tvheadend.configNames,
@@ -107,15 +108,42 @@ tvheadend.epgDetails = function(event) {
       }
       e.dom.innerHTML = html;
     }
+    function showRelated (s)
+    {
+      // TODO: must be a way to constrain this
+      var e = Ext.get('related')
+      html = '';
+      if ( s.getTotalCount() > 0 ) {
+        html += '<div class="x-epg-subtitle">Related Episodes</div>';
+        for ( i = 0; i < s.getTotalCount(); i++ ) {
+          var ee = s.getAt(i).data;
+          html += '<div class="x-epg-desc">';
+          if (ee.episode) html += ee.episode + '&nbsp;&nbsp;&nbsp;';
+          html += ee.title;
+          if (ee.subtitle) html += ':' + ee.subtitle
+          html += '</div>';
+        }
+      }
+      e.dom.innerHTML = html;
+    }
 
     var ab = new Ext.data.JsonStore({
       root: 'entries',
-      url:  'epgaltbcast',
+      url:  'epgrelated',
       autoLoad: true,
       id: 'id',
-      baseParams: { op: 'get', id: event.id },
+      baseParams: { op: 'get', id: event.id, type: 'alternative' },
       fields: Ext.data.Record.create([ 'id', 'channel', 'start' ]),
-      listeners: { 'datachanged': showAlternatives }
+      listeners: { 'datachanged': showAlternatives}
+    });
+    var re = new Ext.data.JsonStore({
+      root: 'entries',
+      url:  'epgrelated',
+      autoLoad: true,
+      id: 'uri',
+      baseParams: { op: 'get', id: event.id, type: 'related' },
+      fields: Ext.data.Record.create([ 'uri', 'title', 'subtitle', 'episode']),
+      listeners: { 'datachanged': showRelated}
     });
 }
 
