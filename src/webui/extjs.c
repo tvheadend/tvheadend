@@ -774,40 +774,74 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 static int
-extjs_epgaltbcast(http_connection_t *hc, const char *remain, void *opaque)
+extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   htsmsg_t *out, *array, *m;
   epg_broadcast_t *e, *ebc;
-  epg_episode_t *ee = NULL;
+  epg_episode_t *ee, *ee2;
   channel_t *ch;
-  uint32_t id;
   uint32_t count = 0;
-  const char *arg;
+  const char *id, *type;
+  char buf[100];
 
-  arg = http_arg_get(&hc->hc_req_args, "id");
-  // TODO: limit param?
+  id   = http_arg_get(&hc->hc_req_args, "id");
+  type = http_arg_get(&hc->hc_req_args, "type");
 
   out = htsmsg_create_map();
   array = htsmsg_create_list();
 
   pthread_mutex_lock(&global_lock);
-  if ( arg ) {
-    if ( arg ) id = atoi(arg);
-    e = epg_broadcast_find_by_id(id);
+  if ( id && type ) {
+    e = epg_broadcast_find_by_id(atoi(id));
     if ( e && e->eb_episode ) {
       ee = e->eb_episode;
-      RB_FOREACH(ebc, &ee->ee_broadcasts, eb_elink) {
-        ch = ebc->eb_channel->ec_channel;
-        if ( !ch ) continue; // skip something not viewable
-        if ( ebc == e ) continue; // skip self
-        count++;
-        m = htsmsg_create_map();
-        htsmsg_add_u32(m, "id", ebc->eb_id);
-        if ( ch->ch_name ) htsmsg_add_str(m, "channel", ch->ch_name);
-        if ( ch->ch_icon ) htsmsg_add_str(m, "chicon", ch->ch_icon);
-        htsmsg_add_u32(m, "start", ebc->eb_start);
-        htsmsg_add_msg(array, NULL, m);
+
+      /* Alternative broadcasts */
+      if (!strcmp(type, "alternative")) {
+        RB_FOREACH(ebc, &ee->ee_broadcasts, eb_elink) {
+          ch = ebc->eb_channel->ec_channel;
+          if ( !ch ) continue; // skip something not viewable
+          if ( ebc == e ) continue; // skip self
+          count++;
+          m = htsmsg_create_map();
+          htsmsg_add_u32(m, "id", ebc->eb_id);
+          if ( ch->ch_name ) htsmsg_add_str(m, "channel", ch->ch_name);
+          if ( ch->ch_icon ) htsmsg_add_str(m, "chicon", ch->ch_icon);
+          htsmsg_add_u32(m, "start", ebc->eb_start);
+          htsmsg_add_msg(array, NULL, m);
+        }
+      
+      /* Related */
+      } else if (!strcmp(type, "related")) {
+        // TODO: broadcasts?
+        if (ee->ee_brand) {
+          RB_FOREACH(ee2, &ee->ee_brand->eb_episodes, ee_blink) {
+            if (ee2 == ee) continue;
+            if (!ee2->ee_title) continue;
+            count++;
+            m = htsmsg_create_map();
+            htsmsg_add_str(m, "uri", ee2->ee_uri);
+            htsmsg_add_str(m, "title", ee2->ee_title);
+            if (ee2->ee_subtitle) htsmsg_add_str(m, "title", ee2->ee_subtitle);
+            if (epg_episode_get_number_onscreen(ee2, buf, 100))
+              htsmsg_add_str(m, "episode", strdup(buf));
+            htsmsg_add_msg(array, NULL, m);
+          }
+        } else if (ee->ee_season) {
+          RB_FOREACH(ee2, &ee->ee_season->es_episodes, ee_slink) {
+            if (ee2 == ee) continue;
+            if (!ee2->ee_title) continue;
+            count++;
+            m = htsmsg_create_map();
+            htsmsg_add_str(m, "uri", ee2->ee_uri);
+            htsmsg_add_str(m, "title", ee2->ee_title);
+            if (ee2->ee_subtitle) htsmsg_add_str(m, "title", ee2->ee_subtitle);
+            if (epg_episode_get_number_onscreen(ee2, buf, 100))
+              htsmsg_add_str(m, "episode", strdup(buf));
+            htsmsg_add_msg(array, NULL, m);
+          }
+        }
       }
     }
   }
@@ -1621,7 +1655,7 @@ extjs_start(void)
   http_path_add("/channeltags", NULL, extjs_channeltags, ACCESS_WEB_INTERFACE);
   http_path_add("/confignames", NULL, extjs_confignames, ACCESS_WEB_INTERFACE);
   http_path_add("/epg",         NULL, extjs_epg,         ACCESS_WEB_INTERFACE);
-  http_path_add("/epgaltbcast", NULL, extjs_epgaltbcast, ACCESS_WEB_INTERFACE);
+  http_path_add("/epgrelated",  NULL, extjs_epgrelated,  ACCESS_WEB_INTERFACE);
   http_path_add("/dvr",         NULL, extjs_dvr,         ACCESS_WEB_INTERFACE);
   http_path_add("/dvrlist",     NULL, extjs_dvrlist,     ACCESS_WEB_INTERFACE);
   http_path_add("/ecglist",     NULL, extjs_ecglist,     ACCESS_WEB_INTERFACE);
