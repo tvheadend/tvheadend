@@ -108,8 +108,8 @@ page_simple(http_connection_t *hc,
       for(k = 0; k < c; k++) {
 	e = eqr.eqr_array[k];
       
-	localtime_r(&e->eb_start, &a);
-	localtime_r(&e->eb_stop, &b);
+	localtime_r(&e->start, &a);
+	localtime_r(&e->stop, &b);
 
 	if(a.tm_wday != day.tm_wday || a.tm_mday != day.tm_mday  ||
 	   a.tm_mon  != day.tm_mon  || a.tm_year != day.tm_year) {
@@ -128,9 +128,9 @@ page_simple(http_connection_t *hc,
 	htsbuf_qprintf(hq, 
 		    "<a href=\"/eventinfo/%d\">"
 		    "%02d:%02d-%02d:%02d&nbsp;%s%s%s</a><br>",
-		    e->eb_id,
+		    e->_.id,
 		    a.tm_hour, a.tm_min, b.tm_hour, b.tm_min,
-		    e->eb_episode->ee_title,
+		    e->episode->title,
 		    rstatus ? "&nbsp;" : "", rstatus ?: "");
       }
     }
@@ -223,8 +223,8 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_qprintf(hq, "<html>");
   htsbuf_qprintf(hq, "<body>");
 
-  localtime_r(&e->eb_start, &a);
-  localtime_r(&e->eb_stop, &b);
+  localtime_r(&e->start, &a);
+  localtime_r(&e->stop, &b);
 
   htsbuf_qprintf(hq, 
 	      "%s, %d/%d %02d:%02d - %02d:%02d<br>",
@@ -233,7 +233,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 
   // TODO: use real channel?
   htsbuf_qprintf(hq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
-	      e->eb_channel->ec_name, e->eb_episode->ee_title);
+	      e->channel->name, e->episode->title);
   
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
 
@@ -241,7 +241,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
     htsbuf_qprintf(hq, "Recording status: %s<br>", rstatus);
 
   htsbuf_qprintf(hq, "<form method=\"post\" action=\"/eventinfo/%d\">", 
-		 e->eb_id);
+		 e->_.id);
 
   switch(dvr_status) {
   case DVR_SCHEDULED:
@@ -265,10 +265,10 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   htsbuf_qprintf(hq, "</form>");
-  if ( e->eb_episode->ee_description )
-    htsbuf_qprintf(hq, "%s", e->eb_episode->ee_description);
-  else if ( e->eb_episode->ee_summary )
-    htsbuf_qprintf(hq, "%s", e->eb_episode->ee_summary);
+  if ( e->episode->description )
+    htsbuf_qprintf(hq, "%s", e->episode->description);
+  else if ( e->episode->summary )
+    htsbuf_qprintf(hq, "%s", e->episode->summary);
   
 
   pthread_mutex_unlock(&global_lock);

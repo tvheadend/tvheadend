@@ -708,8 +708,8 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
 
   for(i = start; i < end; i++) {
     e  = eqr.eqr_array[i];
-    ee = e->eb_episode;
-    ch = e->eb_channel->ec_channel;
+    ee = e->episode;
+    ch = e->channel->channel;
     if (!ch||!ee) continue;
 
     m = htsmsg_create_map();
@@ -719,13 +719,13 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     if(ch->ch_icon != NULL)
 	    htsmsg_add_str(m, "chicon", ch->ch_icon);
 
-    if(ee->ee_title != NULL)
-      htsmsg_add_str(m, "title", ee->ee_title);
+    if(ee->title != NULL)
+      htsmsg_add_str(m, "title", ee->title);
 
-    if(ee->ee_description != NULL)
-      htsmsg_add_str(m, "description", ee->ee_description);
-    else if(ee->ee_summary != NULL)
-      htsmsg_add_str(m, "description", ee->ee_summary);
+    if(ee->description != NULL)
+      htsmsg_add_str(m, "description", ee->description);
+    else if(ee->summary != NULL)
+      htsmsg_add_str(m, "description", ee->summary);
 
     if (epg_episode_get_number_onscreen(ee, buf, 100))
       htsmsg_add_str(m, "episode", strdup(buf));
@@ -741,10 +741,10 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
       htsmsg_add_str(m, "ext_text", e->e_ext_text);
 #endif
 
-    htsmsg_add_u32(m, "id", e->eb_id);
-    htsmsg_add_u32(m, "start", e->eb_start);
-    htsmsg_add_u32(m, "end", e->eb_stop);
-    htsmsg_add_u32(m, "duration", e->eb_stop - e->eb_start);
+    htsmsg_add_u32(m, "id", e->_.id);
+    htsmsg_add_u32(m, "start", e->start);
+    htsmsg_add_u32(m, "end", e->stop);
+    htsmsg_add_u32(m, "duration", e->stop - e->start);
     
 #if TODO_INCLUDE_GENRE_SUPORT
     if((s = epg_content_group_get_name(e->e_content_type)) != NULL)
@@ -793,49 +793,49 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
   pthread_mutex_lock(&global_lock);
   if ( id && type ) {
     e = epg_broadcast_find_by_id(atoi(id));
-    if ( e && e->eb_episode ) {
-      ee = e->eb_episode;
+    if ( e && e->episode ) {
+      ee = e->episode;
 
       /* Alternative broadcasts */
       if (!strcmp(type, "alternative")) {
-        RB_FOREACH(ebc, &ee->ee_broadcasts, eb_elink) {
-          ch = ebc->eb_channel->ec_channel;
+        RB_FOREACH(ebc, &ee->broadcasts, elink) {
+          ch = ebc->channel->channel;
           if ( !ch ) continue; // skip something not viewable
           if ( ebc == e ) continue; // skip self
           count++;
           m = htsmsg_create_map();
-          htsmsg_add_u32(m, "id", ebc->eb_id);
+          htsmsg_add_u32(m, "id", ebc->_.id);
           if ( ch->ch_name ) htsmsg_add_str(m, "channel", ch->ch_name);
           if ( ch->ch_icon ) htsmsg_add_str(m, "chicon", ch->ch_icon);
-          htsmsg_add_u32(m, "start", ebc->eb_start);
+          htsmsg_add_u32(m, "start", ebc->start);
           htsmsg_add_msg(array, NULL, m);
         }
       
       /* Related */
       } else if (!strcmp(type, "related")) {
         // TODO: broadcasts?
-        if (ee->ee_brand) {
-          RB_FOREACH(ee2, &ee->ee_brand->eb_episodes, ee_blink) {
+        if (ee->brand) {
+          RB_FOREACH(ee2, &ee->brand->episodes, blink) {
             if (ee2 == ee) continue;
-            if (!ee2->ee_title) continue;
+            if (!ee2->title) continue;
             count++;
             m = htsmsg_create_map();
-            htsmsg_add_str(m, "uri", ee2->ee_uri);
-            htsmsg_add_str(m, "title", ee2->ee_title);
-            if (ee2->ee_subtitle) htsmsg_add_str(m, "title", ee2->ee_subtitle);
+            htsmsg_add_str(m, "uri", ee2->_.uri);
+            htsmsg_add_str(m, "title", ee2->title);
+            if (ee2->subtitle) htsmsg_add_str(m, "title", ee2->subtitle);
             if (epg_episode_get_number_onscreen(ee2, buf, 100))
               htsmsg_add_str(m, "episode", strdup(buf));
             htsmsg_add_msg(array, NULL, m);
           }
-        } else if (ee->ee_season) {
-          RB_FOREACH(ee2, &ee->ee_season->es_episodes, ee_slink) {
+        } else if (ee->season) {
+          RB_FOREACH(ee2, &ee->season->episodes, slink) {
             if (ee2 == ee) continue;
-            if (!ee2->ee_title) continue;
+            if (!ee2->title) continue;
             count++;
             m = htsmsg_create_map();
-            htsmsg_add_str(m, "uri", ee2->ee_uri);
-            htsmsg_add_str(m, "title", ee2->ee_title);
-            if (ee2->ee_subtitle) htsmsg_add_str(m, "title", ee2->ee_subtitle);
+            htsmsg_add_str(m, "uri", ee2->_.uri);
+            htsmsg_add_str(m, "title", ee2->title);
+            if (ee2->subtitle) htsmsg_add_str(m, "title", ee2->subtitle);
             if (epg_episode_get_number_onscreen(ee2, buf, 100))
               htsmsg_add_str(m, "episode", strdup(buf));
             htsmsg_add_msg(array, NULL, m);
@@ -1148,8 +1148,8 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
       htsmsg_add_str(m, "description", de->de_desc);
 
 #if TODO_DVR
-    if(de->de_episode.ee_onscreen)
-      htsmsg_add_str(m, "episode", de->de_episode.ee_onscreen);
+    if(de->de_episode.onscreen)
+      htsmsg_add_str(m, "episode", de->de_episode.onscreen);
 #endif
 
     htsmsg_add_u32(m, "id", de->de_id);

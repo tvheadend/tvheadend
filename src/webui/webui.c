@@ -181,8 +181,8 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
       epg_broadcast_t *e = NULL;
       if(s->ths_channel) e = epg_channel_get_current_broadcast(s->ths_channel->ch_epg_channel);
 
-      if(e && event_id != e->eb_id) {
-	event_id = e->eb_id;
+      if(e && event_id != e->_.id) {
+	event_id = e->_.id;
 #if TODO_EVENT
 	run = !mk_mux_append_meta(mkm, e);
 #endif
