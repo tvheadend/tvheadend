@@ -32,6 +32,7 @@
 /*
  * Map types
  */
+RB_HEAD(epg_object_tree,    epg_object);
 RB_HEAD(epg_brand_tree,     epg_brand);
 RB_HEAD(epg_season_tree,    epg_season);
 RB_HEAD(epg_episode_tree,   epg_episode);
@@ -39,13 +40,40 @@ RB_HEAD(epg_channel_tree,   epg_channel);
 RB_HEAD(epg_broadcast_tree, epg_broadcast);
 
 /*
- * Forward declerations
+ * Typedefs
  */
-typedef struct epg_brand     epg_brand_t;
-typedef struct epg_season    epg_season_t;
-typedef struct epg_episode   epg_episode_t;
-typedef struct epg_broadcast epg_broadcast_t;
-typedef struct epg_channel   epg_channel_t;
+typedef struct epg_object         epg_object_t;
+typedef struct epg_brand          epg_brand_t;
+typedef struct epg_season         epg_season_t;
+typedef struct epg_episode        epg_episode_t;
+typedef struct epg_broadcast      epg_broadcast_t;
+typedef struct epg_channel        epg_channel_t;
+typedef struct epg_object_tree    epg_object_tree_t;
+typedef struct epg_brand_tree     epg_brand_tree_t;
+typedef struct epg_season_tree    epg_season_tree_t;
+typedef struct epg_episode_tree   epg_episode_tree_t;
+typedef struct epg_channel_tree   epg_channel_tree_t;
+typedef struct epg_broadcast_tree epg_broadcast_tree_t;
+
+/* ************************************************************************
+ * Generic Object
+ * ***********************************************************************/
+
+/* Object */
+typedef struct epg_object
+{
+  RB_ENTRY(epg_object)  glink;      ///< Global list link
+  RB_ENTRY(epg_object)  ulink;     ///< Global unref'd link
+
+  char                 *uri;        ///< Unique ID (from grabber)
+  uint64_t              id;         ///< Internal ID
+  int                   refcount;   ///< Reference counting
+
+  void (*getref)  ( epg_object_t* ); ///< Get a reference
+  void (*putref)  ( epg_object_t* ); ///< Release a reference
+  void (*destroy) ( epg_object_t* ); ///< Delete the object
+} epg_object_t;
+
 
 /* ************************************************************************
  * Brand - Represents a specific show
@@ -55,24 +83,20 @@ typedef struct epg_channel   epg_channel_t;
 /* Object */
 typedef struct epg_brand
 {
-  RB_ENTRY(epg_brand)        eb_link;         ///< Global list link
+  epg_object_t               _; ///< Base object
 
-  uint32_t                   eb_id;           ///< Internal ID
-  char                      *eb_uri;          ///< Grabber URI
-  char                      *eb_title;        ///< Brand name
-  char                      *eb_summary;      ///< Brand summary
-  uint16_t                   eb_season_count; ///< Total number of seasons
+  char                      *title;        ///< Brand name
+  char                      *summary;      ///< Brand summary
+  uint16_t                   season_count; ///< Total number of seasons
 
-  struct epg_season_tree     eb_seasons;      ///< Season list
-  struct epg_episode_tree    eb_episodes;     ///< Episode list
-
-  int                        eb_refcount;     ///< Reference counting
+  epg_season_tree_t          seasons;      ///< Season list
+  epg_episode_tree_t         episodes;     ///< Episode list
 } epg_brand_t;
 
 /* Lookup */
 epg_brand_t *epg_brand_find_by_uri
   ( const char *uri, int create, int *save );
-epg_brand_t *epg_brand_find_by_id ( uint32_t id );
+epg_brand_t *epg_brand_find_by_id ( uint64_t id );
 
 /* Mutators */
 int epg_brand_set_title        ( epg_brand_t *b, const char *title )
@@ -101,26 +125,22 @@ epg_brand_t *epg_brand_deserialize ( htsmsg_t *m, int create, int *save );
 /* Object */
 typedef struct epg_season
 {
-  RB_ENTRY(epg_season)       es_link;          ///< Global list link
-  RB_ENTRY(epg_season)       es_blink;         ///< Brand list link
+  epg_object_t               _;                ///< Parent object
 
-  uint32_t                   es_id;            ///< Internal ID
-  char                      *es_uri;           ///< Grabber URI
-  char                      *es_summary;       ///< Season summary
-  uint16_t                   es_number;        ///< The season number
-  uint16_t                   es_episode_count; ///< Total number of episodes
+  char                      *summary;       ///< Season summary
+  uint16_t                   number;        ///< The season number
+  uint16_t                   episode_count; ///< Total number of episodes
 
-  epg_brand_t               *es_brand;         ///< Parent brand
-  struct epg_episode_tree    es_episodes;      ///< Episode list
-
-  int                        es_refcount;      ///< Reference counting
+  RB_ENTRY(epg_season)       blink;         ///< Brand list link
+  epg_brand_t               *brand;         ///< Parent brand
+  epg_episode_tree_t         episodes;      ///< Episode list
 
 } epg_season_t;
 
 /* Lookup */
 epg_season_t *epg_season_find_by_uri
   ( const char *uri, int create, int *save );
-epg_season_t *epg_season_find_by_id ( uint32_t id );
+epg_season_t *epg_season_find_by_id ( uint64_t id );
 
 /* Mutators */
 int epg_season_set_summary       ( epg_season_t *s, const char *summary )
@@ -149,32 +169,29 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save );
 /* Object */
 typedef struct epg_episode
 {
-  RB_ENTRY(epg_episode)      ee_link;          ///< Global link
-  RB_ENTRY(epg_episode)      ee_blink;         ///< Brand link
-  RB_ENTRY(epg_episode)      ee_slink;         ///< Season link
+  epg_object_t               _;                ///< Parent object
 
-  uint32_t                   ee_id;            ///< Internal ID
-  char                      *ee_uri;           ///< Grabber URI
-  char                      *ee_title;         ///< Title
-  char                      *ee_subtitle;      ///< Sub-title
-  char                      *ee_summary;       ///< Summary
-  char                      *ee_description;   ///< An extended description
-  uint8_t                    ee_genre;         ///< Episode genre
-  uint16_t                   ee_number;        ///< The episode number
-  uint16_t                   ee_part_number;   ///< For multipart episodes
-  uint16_t                   ee_part_count;    ///< For multipart episodes
+  char                      *title;         ///< Title
+  char                      *subtitle;      ///< Sub-title
+  char                      *summary;       ///< Summary
+  char                      *description;   ///< An extended description
+  uint8_t                    genre;         ///< Episode genre
+  uint16_t                   number;        ///< The episode number
+  uint16_t                   part_number;   ///< For multipart episodes
+  uint16_t                   part_count;    ///< For multipart episodes
 
-  epg_brand_t               *ee_brand;         ///< (Grand-)Parent brand
-  epg_season_t              *ee_season;        ///< Parent season
-  struct epg_broadcast_tree  ee_broadcasts;    ///< Broadcast list
+  RB_ENTRY(epg_episode)      blink;         ///< Brand link
+  RB_ENTRY(epg_episode)      slink;         ///< Season link
+  epg_brand_t               *brand;         ///< (Grand-)Parent brand
+  epg_season_t              *season;        ///< Parent season
+  epg_broadcast_tree_t       broadcasts;    ///< Broadcast list
 
-  int                        ee_refcount;      ///< Reference counting
 } epg_episode_t;
 
 /* Lookup */
 epg_episode_t *epg_episode_find_by_uri
   ( const char *uri, int create, int *save );
-epg_episode_t *epg_episode_find_by_id ( uint32_t id );
+epg_episode_t *epg_episode_find_by_id ( uint64_t id );
 
 /* Mutators */
 int epg_episode_set_title        ( epg_episode_t *e, const char *title )
@@ -213,39 +230,38 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save );
 /* Object */
 typedef struct epg_broadcast
 {
-  RB_ENTRY(epg_broadcast)    eb_slink;         ///< Schedule link
-  RB_ENTRY(epg_broadcast)    eb_elink;         ///< Episode link
-
-  uint32_t                   eb_id;            ///< Internal ID
-  uint32_t                   eb_dvb_id;        ///< DVB identifier
-  time_t                     eb_start;         ///< Start time
-  time_t                     eb_stop;          ///< End time
+  epg_object_t               _;                ///< Parent object
+  
+  uint32_t                   dvb_id;           ///< DVB identifier
+  time_t                     start;            ///< Start time
+  time_t                     stop;             ///< End time
 
   /* Some quality info */
-  uint8_t                    eb_widescreen;    ///< Is widescreen
-  uint8_t                    eb_hd;            ///< Is HD
-  uint16_t                   eb_lines;         ///< Lines in image (quality)
-  uint16_t                   eb_aspect;        ///< Aspect ratio (*100)
+  uint8_t                    is_widescreen;    ///< Is widescreen
+  uint8_t                    is_hd;            ///< Is HD
+  uint16_t                   lines;            ///< Lines in image (quality)
+  uint16_t                   aspect;           ///< Aspect ratio (*100)
 
   /* Some accessibility support */
-  uint8_t                    eb_deafsigned;    ///< In screen signing
-  uint8_t                    eb_subtitled;     ///< Teletext subtitles
-  uint8_t                    eb_audio_desc;    ///< Audio description
+  uint8_t                    is_deafsigned;    ///< In screen signing
+  uint8_t                    is_subtitled;     ///< Teletext subtitles
+  uint8_t                    is_audio_desc;    ///< Audio description
 
   /* Misc flags */
-  uint8_t                    eb_new;           ///< New series / file premiere
-  uint8_t                    eb_repeat;        ///< Repeat screening
+  uint8_t                    is_new;           ///< New series / file premiere
+  uint8_t                    is_repeat;        ///< Repeat screening
 
-  epg_episode_t             *eb_episode;       ///< Episode shown
-  epg_channel_t             *eb_channel;       ///< Channel being broadcast on
+  RB_ENTRY(epg_broadcast)    slink;         ///< Schedule link
+  RB_ENTRY(epg_broadcast)    elink;         ///< Episode link
+  epg_episode_t             *episode;       ///< Episode shown
+  epg_channel_t             *channel;       ///< Channel being broadcast on
 
-  int                        eb_refcount;      ///< Reference counting
 } epg_broadcast_t;
 
 /* Lookup */
 epg_broadcast_t *epg_broadcast_find_by_time 
   ( epg_channel_t *ch, time_t start, time_t stop, int create, int *save );
-epg_broadcast_t *epg_broadcast_find_by_id ( uint32_t id );
+epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id );
 
 /* Mutators */
 int epg_broadcast_set_episode    ( epg_broadcast_t *b, epg_episode_t *e, int u )
@@ -266,25 +282,20 @@ epg_broadcast_t *epg_broadcast_deserialize
 /* Object */
 typedef struct epg_channel
 {
-  RB_ENTRY(epg_channel)      ec_link;          ///< Global link
+  epg_object_t               _;             ///< Parent object
 
-  uint32_t                   ec_id;            ///< Internal ID
-  char                      *ec_uri;           ///< Grabber URI
-  char                      *ec_name;          ///< Channel name
-  char                     **ec_sname;         ///< DVB svc names (to map)
-  int                      **ec_sid;           ///< DVB svc ids   (to map)
+  char                      *name;          ///< Channel name
+  char                     **sname;         ///< DVB svc names (to map)
+  int                      **sid;           ///< DVB svc ids   (to map)
 
-  channel_t                 *ec_channel;       ///< Link to real channel
-  LIST_ENTRY(epg_channel)    ec_ulink;         ///< Unlinked list
-
-  struct epg_broadcast_tree  ec_schedule;      ///< Schedule (broadcasts)
-  
+  channel_t                 *channel;       ///< Link to real channel
+  epg_object_tree_t          schedule;      ///< Schedule (broadcasts)
 } epg_channel_t;
 
 /* Lookup */
 epg_channel_t *epg_channel_find_by_uri
   ( const char *uri, int create, int *save );
-epg_channel_t *epg_channel_find_by_id ( uint32_t id );
+epg_channel_t *epg_channel_find_by_id ( uint64_t id );
 
 /* Mutators */
 int epg_channel_set_name ( epg_channel_t *c, const char *n )

@@ -36,11 +36,11 @@
 #include "epggrab.h"
 
 /* Element lists */
-struct epg_brand_tree     epg_brands;
-struct epg_season_tree    epg_seasons;
-struct epg_episode_tree   epg_episodes;
-struct epg_channel_tree   epg_channels;
-struct epg_broadcast_tree epg_broadcasts; // TODO: do we need this
+struct epg_object_tree epg_brands;
+struct epg_object_tree epg_seasons;
+struct epg_object_tree epg_episodes;
+struct epg_object_tree epg_channels;
+struct epg_object_tree epg_broadcasts;
 
 /* Unlinked channels */
 LIST_HEAD(epg_unlinked_channel_list1, epg_channel);
@@ -49,52 +49,40 @@ struct epg_unlinked_channel_list1 epg_unlinked_channels1;
 struct epg_unlinked_channel_list2 epg_unlinked_channels2;
 
 /* Global counters */
-static uint32_t _epg_channel_idx   = 0;
-static uint32_t _epg_brand_idx     = 0;
-static uint32_t _epg_season_idx    = 0;
-static uint32_t _epg_episode_idx   = 0;
-static uint32_t _epg_broadcast_idx = 0;
+static uint64_t _epg_object_idx    = 0;
 
 /* **************************************************************************
  * Comparators
  * *************************************************************************/
 
-static int eb_uri_cmp ( const epg_brand_t *a, const epg_brand_t *b )
+static int _uri_cmp ( const void *a, const void *b )
 {
-  return strcmp(a->eb_uri, b->eb_uri);
+  return strcmp(((epg_object_t*)a)->uri, ((epg_object_t*)b)->uri);
 }
 
-static int es_uri_cmp ( const epg_season_t *a, const epg_season_t *b )
+#if TODO_MIGHT_NEED_LATER
+static int _id_cmp ( const void *a, const void *b )
 {
-  return strcmp(a->es_uri, b->es_uri);
+  return ((epg_object_t*)a)->id - ((epg_object_t*)b)->id;
 }
+#endif
 
-static int ee_uri_cmp ( const epg_episode_t *a, const epg_episode_t *b )
-{
-  return strcmp(a->ee_uri, b->ee_uri);
-}
-
-static int ec_uri_cmp ( const epg_channel_t *a, const epg_channel_t *b )
-{
-  return strcmp(a->ec_uri, b->ec_uri);
-}
-
-static int ebc_win_cmp ( const epg_broadcast_t *a, const epg_broadcast_t *b )
-{
-  if ( a->eb_start < b->eb_start ) return -1;
-  if ( a->eb_start >= b->eb_stop  ) return 1;
-  return 0;
-}
-
-static int ptr_cmp ( void *a, void *b )
+static int _ptr_cmp ( const void *a, const void *b )
 {
   return a - b;
+}
+
+static int _ebc_win_cmp ( const void *a, const void *b )
+{
+  if ( ((epg_broadcast_t*)a)->start < ((epg_broadcast_t*)b)->start ) return -1;
+  if ( ((epg_broadcast_t*)a)->start >= ((epg_broadcast_t*)b)->stop  ) return 1;
+  return 0;
 }
 
 static int _epg_channel_match ( epg_channel_t *ec, channel_t *ch )
 {
   int ret = 0;
-  if ( ec->ec_name && !strcmp(ec->ec_name, ch->ch_name) ) ret = 1;
+  if ( ec->name && !strcmp(ec->name, ch->ch_name) ) ret = 1;
   return ret;
 }
 
@@ -104,6 +92,7 @@ static int _epg_channel_match ( epg_channel_t *ec, channel_t *ch )
 
 static void _epg_dump ( void )
 {
+  epg_object_t  *eo;
   epg_brand_t   *eb;
   epg_season_t  *es;
   epg_episode_t *ee;
@@ -112,37 +101,42 @@ static void _epg_dump ( void )
   printf("dump epg\n");
 
   /* Go down the brand/season/episode */
-  RB_FOREACH(eb, &epg_brands, eb_link) {
-    printf("BRAND: %p %s\n", eb, eb->eb_uri);
-    RB_FOREACH(es, &eb->eb_seasons, es_blink) {
-      printf("  SEASON: %p %s %d\n", es, es->es_uri, es->es_number);
-      RB_FOREACH(ee, &es->es_episodes, ee_slink) {
-        printf("    EPISODE: %p %s %d\n", ee, ee->ee_uri, ee->ee_number);
+  RB_FOREACH(eo, &epg_brands, glink) {
+    eb = (epg_brand_t*)eo;
+    printf("BRAND: %p %s\n", eb, eb->_.uri);
+    RB_FOREACH(es, &eb->seasons, blink) {
+      printf("  SEASON: %p %s %d\n", es, es->_.uri, es->number);
+      RB_FOREACH(ee, &es->episodes, slink) {
+        printf("    EPISODE: %p %s %d\n", ee, ee->_.uri, ee->number);
       }
     }
-    RB_FOREACH(ee, &eb->eb_episodes, ee_blink) {
-      if ( !ee->ee_season ) printf("  EPISODE: %p %s %d\n", ee, ee->ee_uri, ee->ee_number);
+    RB_FOREACH(ee, &eb->episodes, blink) {
+      if ( !ee->season ) printf("  EPISODE: %p %s %d\n", ee, ee->_.uri, ee->number);
     }
   }
-  RB_FOREACH(es, &epg_seasons, es_link) {
-    if ( !es->es_brand ) {
-      printf("SEASON: %p %s %d\n", es, es->es_uri, es->es_number);
-      RB_FOREACH(ee, &es->es_episodes, ee_slink) {
-        printf("  EPISODE: %p %s %d\n", ee, ee->ee_uri, ee->ee_number);
+  RB_FOREACH(eo, &epg_seasons, glink) {
+    es = (epg_season_t*)eo;
+    if ( !es->brand ) {
+      printf("SEASON: %p %s %d\n", es, es->_.uri, es->number);
+      RB_FOREACH(ee, &es->episodes, slink) {
+        printf("  EPISODE: %p %s %d\n", ee, ee->_.uri, ee->number);
       }
     }
   }
-  RB_FOREACH(ee, &epg_episodes, ee_link) {
-    if ( !ee->ee_brand && !ee->ee_season ) {
-      printf("EPISODE: %p %s %d\n", ee, ee->ee_uri, ee->ee_number);
+  RB_FOREACH(eo, &epg_episodes, glink) {
+    ee = (epg_episode_t*)eo;
+    if ( !ee->brand && !ee->season ) {
+      printf("EPISODE: %p %s %d\n", ee, ee->_.uri, ee->number);
     }
   }
-  RB_FOREACH(ec, &epg_channels, ec_link) {
-    printf("CHANNEL: %s\n", ec->ec_uri);
-    RB_FOREACH(ebc, &ec->ec_schedule, eb_slink) {
-      if ( ebc->eb_episode ) {
-        printf("  BROADCAST: %s @ %ld to %ld\n", ebc->eb_episode->ee_uri,
-               ebc->eb_start, ebc->eb_stop);
+  RB_FOREACH(eo, &epg_channels, glink) {
+    ec = (epg_channel_t*)eo;
+    printf("CHANNEL: %s\n", ec->_.uri);
+    RB_FOREACH(eo, &ec->schedule, glink) {
+      ebc = (epg_broadcast_t*)eo;
+      if ( ebc->episode ) {
+        printf("  BROADCAST: %s @ %ld to %ld\n", ebc->episode->_.uri,
+               ebc->start, ebc->stop);
       }
     }
   }
@@ -184,38 +178,35 @@ static int _epg_write_sect ( int fd, const char *sect )
 void epg_save ( void )
 {
   int fd;
-  epg_brand_t   *eb;
-  epg_season_t  *es;
-  epg_episode_t *ee;
+  epg_object_t  *eo;
   epg_channel_t *ec;
-  epg_broadcast_t *ebc;
   
-  printf("EPG save\n");
   // TODO: requires markers in the file or some other means of
   //       determining where the various object types are?
   fd = hts_settings_open_file(1, "epgdb");
 
   /* Channels */
   if ( _epg_write_sect(fd, "channels") ) return;
-  RB_FOREACH(ec,  &epg_channels, ec_link) {
-    if (_epg_write(fd, epg_channel_serialize(ec))) return;
+  RB_FOREACH(eo,  &epg_channels, glink) {
+    if (_epg_write(fd, epg_channel_serialize((epg_channel_t*)eo))) return;
   }
   if ( _epg_write_sect(fd, "brands") ) return;
-  RB_FOREACH(eb,  &epg_brands, eb_link) {
-    if (_epg_write(fd, epg_brand_serialize(eb))) return;
+  RB_FOREACH(eo,  &epg_brands, glink) {
+    if (_epg_write(fd, epg_brand_serialize((epg_brand_t*)eo))) return;
   }
   if ( _epg_write_sect(fd, "seasons") ) return;
-  RB_FOREACH(es,  &epg_seasons, es_link) {
-    if (_epg_write(fd, epg_season_serialize(es))) return;
+  RB_FOREACH(eo,  &epg_seasons, glink) {
+    if (_epg_write(fd, epg_season_serialize((epg_season_t*)eo))) return;
   }
   if ( _epg_write_sect(fd, "episodes") ) return;
-  RB_FOREACH(ee,  &epg_episodes, ee_link) {
-    if (_epg_write(fd, epg_episode_serialize(ee))) return;
+  RB_FOREACH(eo,  &epg_episodes, glink) {
+    if (_epg_write(fd, epg_episode_serialize((epg_episode_t*)eo))) return;
   }
   if ( _epg_write_sect(fd, "broadcasts") ) return;
-  RB_FOREACH(ec, &epg_channels, ec_link) {
-    RB_FOREACH(ebc, &ec->ec_schedule, eb_slink) {
-      if (_epg_write(fd, epg_broadcast_serialize(ebc))) return;
+  RB_FOREACH(eo, &epg_channels, glink) {
+    ec = (epg_channel_t*)eo;
+    RB_FOREACH(eo, &ec->schedule, glink) {
+      if (_epg_write(fd, epg_broadcast_serialize((epg_broadcast_t*)eo))) return;
     }
   }
 }
@@ -329,24 +320,28 @@ void epg_updated ( void )
 
 void epg_add_channel ( channel_t *ch )
 {
+#if TODO_REDO_CHANNEL_LINKING
   epg_channel_t *ec;
   LIST_INSERT_HEAD(&epg_unlinked_channels2, ch, ch_eulink);
-  LIST_FOREACH(ec, &epg_unlinked_channels1, ec_ulink) {
+  LIST_FOREACH(ec, &epg_unlinked_channels1, ulink) {
     if ( _epg_channel_match(ec, ch) ) {
       epg_channel_set_channel(ec, ch);
       break;
     }
   }
+#endif
 }
 
 void epg_rem_channel ( channel_t *ch )
 {
+#if TODO_REDO_CHANNEL_LINKING
   if ( ch->ch_epg_channel ) {
-    ch->ch_epg_channel->ec_channel = NULL;
+    ch->ch_epg_channel->channel = NULL;
     // TODO: free the channel?
   } else {
     LIST_REMOVE(ch, ch_eulink);
   }
+#endif
 }
 
 void epg_mod_channel ( channel_t *ch )
@@ -356,56 +351,89 @@ void epg_mod_channel ( channel_t *ch )
 
 
 /* **************************************************************************
+ * Object
+ * *************************************************************************/
+
+static epg_object_t *_epg_object_find
+  ( int create, int *save, epg_object_tree_t *tree,
+    epg_object_t *skel, int (*cmp) (const void*,const void*))
+{
+  epg_object_t *eo;
+
+  /* Find */
+  if ( !create ) {
+    eo = RB_FIND(tree, skel, glink, cmp);
+  
+  /* Create */
+  } else {
+    eo = RB_INSERT_SORTED(tree, skel, glink, cmp);
+    if ( eo == NULL ) {
+      *save     |= 1;
+      eo         = skel;
+      skel       = NULL;
+      _epg_object_idx++;
+    }
+  }
+
+  return eo;
+}
+
+static epg_object_t *_epg_object_find_by_uri 
+  ( const char *uri, int create, int *save,
+    epg_object_tree_t *tree, size_t size )
+{
+  int save2 = 0;
+  epg_object_t *eo;
+  static epg_object_t* skel = NULL;
+  
+  lock_assert(&global_lock); // pointless!
+
+  if ( skel == NULL ) skel = calloc(1, size);
+  skel->uri = (char*)uri;
+  skel->id  = _epg_object_idx;
+  // TODO: need to add function pointers
+
+  eo = _epg_object_find(create, &save2, tree, skel, _uri_cmp);
+  if (save2) eo->uri = strdup(uri);
+  *save |= save2;
+  return eo;
+}
+
+static epg_object_t *_epg_object_find_by_id 
+  ( uint64_t id, epg_object_tree_t *tree )
+{
+  epg_object_t *eo;
+  if (!tree) return NULL; // TODO: use a global list?
+  RB_FOREACH(eo, tree, glink) {
+    if ( eo->id == id ) return eo;
+  }
+  return NULL;
+}
+
+/* **************************************************************************
  * Brand
  * *************************************************************************/
 
 epg_brand_t* epg_brand_find_by_uri 
-  ( const char *id, int create, int *save )
+  ( const char *uri, int create, int *save )
 {
-  epg_brand_t *eb;
-  static epg_brand_t* skel = NULL;
-  
-  lock_assert(&global_lock); // pointless!
-
-  if ( skel == NULL ) skel = calloc(1, sizeof(epg_brand_t));
-  skel->eb_uri = (char*)id;
-  skel->eb_id  = _epg_brand_idx;
-
-  /* Find */
-  if ( !create ) {
-    eb = RB_FIND(&epg_brands, skel, eb_link, eb_uri_cmp);
-  
-  /* Create */
-  } else {
-    eb = RB_INSERT_SORTED(&epg_brands, skel, eb_link, eb_uri_cmp);
-    if ( eb == NULL ) {
-      *save     |= 1;
-      eb         = skel;
-      skel       = NULL;
-      eb->eb_uri = strdup(id);
-      _epg_brand_idx++;
-    }
-  }
-
-  return eb;
+  return (epg_brand_t*)
+    _epg_object_find_by_uri(uri, create, save,
+                            &epg_brands, sizeof(epg_brand_t));
 }
 
-epg_brand_t *epg_brand_find_by_id ( uint32_t id )
+epg_brand_t *epg_brand_find_by_id ( uint64_t id )
 {
-  epg_brand_t *eb;
-  RB_FOREACH(eb, &epg_brands, eb_link) {
-    if ( eb->eb_id == id ) return eb;
-  }
-  return NULL;
+  return (epg_brand_t*)_epg_object_find_by_id(id, &epg_brands);
 }
 
 int epg_brand_set_title ( epg_brand_t *brand, const char *title )
 {
   int save = 0;
   if ( !brand || !title ) return 0;
-  if ( !brand->eb_title || strcmp(brand->eb_title, title) ) {
-    if ( brand->eb_title ) free(brand->eb_title);
-    brand->eb_title = strdup(title);
+  if ( !brand->title || strcmp(brand->title, title) ) {
+    if ( brand->title ) free(brand->title);
+    brand->title = strdup(title);
     save = 1;
   }
   return save;
@@ -415,9 +443,9 @@ int epg_brand_set_summary ( epg_brand_t *brand, const char *summary )
 {
   int save = 0;
   if ( !brand || !summary ) return 0;
-  if ( !brand->eb_summary || strcmp(brand->eb_summary, summary) ) {
-    if ( brand->eb_summary ) free(brand->eb_summary);
-    brand->eb_summary = strdup(summary);
+  if ( !brand->summary || strcmp(brand->summary, summary) ) {
+    if ( brand->summary ) free(brand->summary);
+    brand->summary = strdup(summary);
     save = 1;
   }
   return save;
@@ -428,8 +456,8 @@ int epg_brand_set_season_count ( epg_brand_t *brand, uint16_t count )
   // TODO: could set only if less?
   int save = 0;
   if ( !brand || !count ) return 0;
-  if ( brand->eb_season_count != count ) {
-    brand->eb_season_count = count;
+  if ( brand->season_count != count ) {
+    brand->season_count = count;
     save = 1;
   }
   return save;
@@ -440,12 +468,11 @@ int epg_brand_add_season ( epg_brand_t *brand, epg_season_t *season, int u )
   int save = 0;
   epg_season_t *es;
   if ( !brand || !season ) return 0;
-  es = RB_INSERT_SORTED(&brand->eb_seasons, season, es_blink, es_uri_cmp);
+  es = RB_INSERT_SORTED(&brand->seasons, season, blink, _uri_cmp);
   if ( es == NULL ) {
     if ( u ) save |= epg_season_set_brand(season, brand, 0);
     save = 1;
   }
-  // TODO?: else assert(es == season)
   return save;
 }
 
@@ -454,11 +481,10 @@ int epg_brand_rem_season ( epg_brand_t *brand, epg_season_t *season, int u )
   int save = 0;
   epg_season_t *es;
   if ( !brand || !season ) return 0;
-  es = RB_FIND(&brand->eb_seasons, season, es_blink, es_uri_cmp);
+  es = RB_FIND(&brand->seasons, season, blink, _uri_cmp);
   if ( es != NULL ) {
-    // TODO: assert(es == season)
     if ( u ) save |= epg_season_set_brand(season, NULL, 0); // TODO: this will do nothing
-    RB_REMOVE(&brand->eb_seasons, season, es_blink);
+    RB_REMOVE(&brand->seasons, season, blink);
     save = 1;
   }
   return save;
@@ -469,12 +495,11 @@ int epg_brand_add_episode ( epg_brand_t *brand, epg_episode_t *episode, int u )
   int save = 0;
   epg_episode_t *ee;
   if ( !brand || !episode ) return 0;
-  ee = RB_INSERT_SORTED(&brand->eb_episodes, episode, ee_blink, ee_uri_cmp);
+  ee = RB_INSERT_SORTED(&brand->episodes, episode, blink, _uri_cmp);
   if ( ee == NULL ) {
     if ( u ) save |= epg_episode_set_brand(episode, brand, 0);
     save = 1;
   }
-  // TODO?: else assert(ee == episode)
   return save;
 }
 
@@ -483,11 +508,10 @@ int epg_brand_rem_episode ( epg_brand_t *brand, epg_episode_t *episode, int u )
   int save = 0;
   epg_episode_t *ee;
   if ( !brand || !episode ) return 0;
-  ee = RB_FIND(&brand->eb_episodes, episode, ee_blink, ee_uri_cmp);
+  ee = RB_FIND(&brand->episodes, episode, blink, _uri_cmp);
   if ( ee != NULL ) {
-    // TODO?: assert(ee == episode)
     if ( u ) save |= epg_episode_set_brand(episode, NULL, 0); // TODO: will do nothing
-    RB_REMOVE(&brand->eb_episodes, episode, ee_blink);
+    RB_REMOVE(&brand->episodes, episode, blink);
     save = 1;
   }
   return save;
@@ -496,15 +520,16 @@ int epg_brand_rem_episode ( epg_brand_t *brand, epg_episode_t *episode, int u )
 htsmsg_t *epg_brand_serialize ( epg_brand_t *brand )
 {
   htsmsg_t *m;
-  if ( !brand || !brand->eb_uri ) return NULL;
+  if ( !brand || !brand->_.uri ) return NULL;
   m = htsmsg_create_map();
-  htsmsg_add_str(m, "uri", brand->eb_uri);
-  if (brand->eb_title)
-    htsmsg_add_str(m, "title",   brand->eb_title);
-  if (brand->eb_summary)
-    htsmsg_add_str(m, "summary", brand->eb_summary);
-  if (brand->eb_season_count)
-    htsmsg_add_u32(m, "season-count", brand->eb_season_count);
+  // TODO: generic serialize?
+  htsmsg_add_str(m, "uri", brand->_.uri);
+  if (brand->title)
+    htsmsg_add_str(m, "title",   brand->title);
+  if (brand->summary)
+    htsmsg_add_str(m, "summary", brand->summary);
+  if (brand->season_count)
+    htsmsg_add_u32(m, "season-count", brand->season_count);
   return m;
 }
 
@@ -513,7 +538,8 @@ epg_brand_t *epg_brand_deserialize ( htsmsg_t *m, int create, int *save )
   epg_brand_t *eb;
   uint32_t u32;
   const char *str;
-
+  
+  // TODO: generic deserialize?
   if ( !(str = htsmsg_get_str(m, "uri"))                ) return NULL;
   if ( !(eb = epg_brand_find_by_uri(str, create, save)) ) return NULL;
   
@@ -532,52 +558,25 @@ epg_brand_t *epg_brand_deserialize ( htsmsg_t *m, int create, int *save )
  * *************************************************************************/
 
 epg_season_t* epg_season_find_by_uri 
-  ( const char *id, int create, int *save )
+  ( const char *uri, int create, int *save )
 {
-  epg_season_t *es;
-  static epg_season_t* skel = NULL;
-  
-  lock_assert(&global_lock); // pointless!
-
-  if ( skel == NULL ) skel = calloc(1, sizeof(epg_season_t));
-  skel->es_uri = (char*)id;
-  skel->es_id  = _epg_season_idx;
-
-  /* Find */
-  if ( !create ) {
-    es = RB_FIND(&epg_seasons, skel, es_link, es_uri_cmp);
-  
-  /* Create */
-  } else {
-    es = RB_INSERT_SORTED(&epg_seasons, skel, es_link, es_uri_cmp);
-    if ( es == NULL ) {
-      *save     |= 1;
-      es         = skel;
-      skel       = NULL;
-      es->es_uri = strdup(id);
-      _epg_season_idx++;
-    }
-  }
-
-  return es;
+  return (epg_season_t*)
+    _epg_object_find_by_uri(uri, create, save,
+                            &epg_seasons, sizeof(epg_season_t));
 }
 
-epg_season_t *epg_season_find_by_id ( uint32_t id )
+epg_season_t *epg_season_find_by_id ( uint64_t id )
 {
-  epg_season_t *es;
-  RB_FOREACH(es, &epg_seasons, es_link) {
-    if ( es->es_id == id ) return es;
-  }
-  return NULL;
+  return (epg_season_t*)_epg_object_find_by_id(id, &epg_seasons);
 }
 
 int epg_season_set_summary ( epg_season_t *season, const char *summary )
 {
   int save = 0;
   if ( !season || !summary ) return 0;
-  if ( !season->es_summary || strcmp(season->es_summary, summary) ) {
-    if ( season->es_summary ) free(season->es_summary);
-    season->es_summary = strdup(summary);
+  if ( !season->summary || strcmp(season->summary, summary) ) {
+    if ( season->summary ) free(season->summary);
+    season->summary = strdup(summary);
     save = 1;
   }
   return save;
@@ -588,8 +587,8 @@ int epg_season_set_episode_count ( epg_season_t *season, uint16_t count )
   int save = 0;
   if ( !season || !count ) return 0;
   // TODO: should we only update if number is larger
-  if ( season->es_episode_count != count ) {
-    season->es_episode_count = count;
+  if ( season->episode_count != count ) {
+    season->episode_count = count;
     save = 1;
   }
   return save;
@@ -599,8 +598,8 @@ int epg_season_set_number ( epg_season_t *season, uint16_t number )
 {
   int save = 0;
   if ( !season || !number ) return 0;
-  if ( season->es_number != number ) {
-    season->es_number = number;
+  if ( season->number != number ) {
+    season->number = number;
     save = 1;
   }
   return save;
@@ -610,10 +609,10 @@ int epg_season_set_brand ( epg_season_t *season, epg_brand_t *brand, int u )
 {
   int save = 0;
   if ( !season || !brand ) return 0;
-  if ( season->es_brand != brand ) {
-    if ( u ) save |= epg_brand_rem_season(season->es_brand, season, 0);
-    season->es_brand = brand;
-    if ( u ) save |= epg_brand_add_season(season->es_brand, season, 0);
+  if ( season->brand != brand ) {
+    if ( u ) save |= epg_brand_rem_season(season->brand, season, 0);
+    season->brand = brand;
+    if ( u ) save |= epg_brand_add_season(season->brand, season, 0);
     save = 1;
   }
   return save;
@@ -625,7 +624,7 @@ int epg_season_add_episode
   int save = 0;
   epg_episode_t *ee;
   if ( !season || !episode ) return 0;
-  ee = RB_INSERT_SORTED(&season->es_episodes, episode, ee_slink, ee_uri_cmp);
+  ee = RB_INSERT_SORTED(&season->episodes, episode, slink, _uri_cmp);
   if ( ee == NULL ) {
     if ( u ) save |= epg_episode_set_season(episode, season, 0);
     save = 1;
@@ -640,11 +639,11 @@ int epg_season_rem_episode
   int save = 0;
   epg_episode_t *ee;
   if ( !season || !episode ) return 0;
-  ee = RB_FIND(&season->es_episodes, episode, ee_slink, ee_uri_cmp);
+  ee = RB_FIND(&season->episodes, episode, slink, _uri_cmp);
   if ( ee != NULL ) {
     // TODO?: assert(ee == episode)
     if ( u ) save |= epg_episode_set_season(episode, NULL, 0); // does nothing
-    RB_REMOVE(&season->es_episodes, episode, ee_slink);
+    RB_REMOVE(&season->episodes, episode, slink);
     save = 1;
   }
   return save;
@@ -653,17 +652,18 @@ int epg_season_rem_episode
 htsmsg_t *epg_season_serialize ( epg_season_t *season )
 {
   htsmsg_t *m;
-  if (!season || !season->es_uri) return NULL;
+  if (!season || !season->_.uri) return NULL;
   m = htsmsg_create_map();
-  htsmsg_add_str(m, "uri", season->es_uri);
-  if (season->es_summary)
-    htsmsg_add_str(m, "summary", season->es_summary);
-  if (season->es_number)
-    htsmsg_add_u32(m, "number", season->es_number);
-  if (season->es_episode_count)
-    htsmsg_add_u32(m, "episode-count", season->es_episode_count);
-  if (season->es_brand)
-    htsmsg_add_str(m, "brand", season->es_brand->eb_uri);
+  // TODO: generic
+  htsmsg_add_str(m, "uri", season->_.uri);
+  if (season->summary)
+    htsmsg_add_str(m, "summary", season->summary);
+  if (season->number)
+    htsmsg_add_u32(m, "number", season->number);
+  if (season->episode_count)
+    htsmsg_add_u32(m, "episode-count", season->episode_count);
+  if (season->brand)
+    htsmsg_add_str(m, "brand", season->brand->_.uri);
   return m;
 }
 
@@ -674,6 +674,7 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save )
   uint32_t u32;
   const char *str;
 
+  // TODO: generic
   if ( !(str = htsmsg_get_str(m, "uri")) )                  return NULL;
   if ( !(es  = epg_season_find_by_uri(str, create, save)) ) return NULL;
   
@@ -696,52 +697,25 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save )
  * *************************************************************************/
 
 epg_episode_t* epg_episode_find_by_uri
-  ( const char *id, int create, int *save )
+  ( const char *uri, int create, int *save )
 {
-  epg_episode_t *ee;
-  static epg_episode_t* skel = NULL;
-  
-  lock_assert(&global_lock); // pointless!
-
-  if ( skel == NULL ) skel = calloc(1, sizeof(epg_episode_t));
-  skel->ee_uri = (char*)id;
-  skel->ee_id  = _epg_episode_idx;
-
-  /* Find */
-  if ( !create ) {
-    ee = RB_FIND(&epg_episodes, skel, ee_link, ee_uri_cmp);
-  
-  /* Create */
-  } else {
-    ee = RB_INSERT_SORTED(&epg_episodes, skel, ee_link, ee_uri_cmp);
-    if ( ee == NULL ) {
-      *save     |= 1;
-      ee         = skel;
-      skel       = NULL;
-      ee->ee_uri = strdup(id);
-      _epg_episode_idx++;
-    }
-  }
-
-  return ee;
+  return (epg_episode_t*)
+    _epg_object_find_by_uri(uri, create, save,
+                            &epg_episodes, sizeof(epg_episode_t));
 }
 
-epg_episode_t *epg_episode_find_by_id ( uint32_t id )
+epg_episode_t *epg_episode_find_by_id ( uint64_t id )
 {
-  epg_episode_t *ee;
-  RB_FOREACH(ee, &epg_episodes, ee_link) {
-    if ( ee->ee_id == id ) return ee;
-  }
-  return NULL;
+  return (epg_episode_t*)_epg_object_find_by_id(id, &epg_episodes);
 }
 
 int epg_episode_set_title ( epg_episode_t *episode, const char *title )
 {
   int save = 0;
   if ( !episode || !title ) return 0;
-  if ( !episode->ee_title || strcmp(episode->ee_title, title) ) {
-    if ( episode->ee_title ) free(episode->ee_title);
-    episode->ee_title = strdup(title);
+  if ( !episode->title || strcmp(episode->title, title) ) {
+    if ( episode->title ) free(episode->title);
+    episode->title = strdup(title);
     save = 1;
   }
   return save;
@@ -751,9 +725,9 @@ int epg_episode_set_subtitle ( epg_episode_t *episode, const char *subtitle )
 {
   int save = 0;
   if ( !episode || !subtitle ) return 0;
-  if ( !episode->ee_subtitle || strcmp(episode->ee_subtitle, subtitle) ) {
-    if ( episode->ee_subtitle ) free(episode->ee_subtitle);
-    episode->ee_subtitle = strdup(subtitle);
+  if ( !episode->subtitle || strcmp(episode->subtitle, subtitle) ) {
+    if ( episode->subtitle ) free(episode->subtitle);
+    episode->subtitle = strdup(subtitle);
     save = 1;
   }
   return save;
@@ -763,9 +737,9 @@ int epg_episode_set_summary ( epg_episode_t *episode, const char *summary )
 {
   int save = 0;
   if ( !episode || !summary ) return 0;
-  if ( !episode->ee_summary || strcmp(episode->ee_summary, summary) ) {
-    if ( episode->ee_summary ) free(episode->ee_summary);
-    episode->ee_summary = strdup(summary);
+  if ( !episode->summary || strcmp(episode->summary, summary) ) {
+    if ( episode->summary ) free(episode->summary);
+    episode->summary = strdup(summary);
     save = 1;
   }
   return save;
@@ -775,9 +749,9 @@ int epg_episode_set_description ( epg_episode_t *episode, const char *desc )
 {
   int save = 0;
   if ( !episode || !desc ) return 0;
-  if ( !episode->ee_description || strcmp(episode->ee_description, desc) ) {
-    if ( episode->ee_description ) free(episode->ee_description);
-    episode->ee_description = strdup(desc);
+  if ( !episode->description || strcmp(episode->description, desc) ) {
+    if ( episode->description ) free(episode->description);
+    episode->description = strdup(desc);
     save = 1;
   }
   return save;
@@ -787,8 +761,8 @@ int epg_episode_set_number ( epg_episode_t *episode, uint16_t number )
 {
   int save = 0;
   if ( !episode || !number ) return 0;
-  if ( episode->ee_number != number ) {
-    episode->ee_number = number;
+  if ( episode->number != number ) {
+    episode->number = number;
     save = 1;
   }
   return save;
@@ -799,12 +773,12 @@ int epg_episode_set_part ( epg_episode_t *episode, uint16_t part, uint16_t count
   int save = 0;
   // TODO: could treat part/count independently
   if ( !episode || !part || !count ) return 0;
-  if ( episode->ee_part_number != part ) {
-    episode->ee_part_number = part;
+  if ( episode->part_number != part ) {
+    episode->part_number = part;
     save |= 1;
   }
-  if ( episode->ee_part_count != count ) {
-    episode->ee_part_count = count;
+  if ( episode->part_count != count ) {
+    episode->part_count = count;
     save |= 1;
   }
   return save;
@@ -814,10 +788,10 @@ int epg_episode_set_brand ( epg_episode_t *episode, epg_brand_t *brand, int u )
 {
   int save = 0;
   if ( !episode || !brand ) return 0;
-  if ( episode->ee_brand != brand ) {
-    if ( u ) save |= epg_brand_rem_episode(episode->ee_brand, episode, 0); /// does nothing
-    episode->ee_brand = brand;
-    if ( u ) save |= epg_brand_add_episode(episode->ee_brand, episode, 0);
+  if ( episode->brand != brand ) {
+    if ( u ) save |= epg_brand_rem_episode(episode->brand, episode, 0); /// does nothing
+    episode->brand = brand;
+    if ( u ) save |= epg_brand_add_episode(episode->brand, episode, 0);
     save |= 1;
   }
   return save;
@@ -827,12 +801,12 @@ int epg_episode_set_season ( epg_episode_t *episode, epg_season_t *season, int u
 {
   int save = 0;
   if ( !episode || !season ) return 0;
-  if ( episode->ee_season != season ) {
-    if ( u ) save |= epg_season_rem_episode(episode->ee_season, episode, 0);
-    episode->ee_season = season;
-    if ( u && episode->ee_season ) {
-      save |= epg_season_add_episode(episode->ee_season, episode, 0);
-      save |= epg_brand_add_episode(episode->ee_season->es_brand, episode, 0);
+  if ( episode->season != season ) {
+    if ( u ) save |= epg_season_rem_episode(episode->season, episode, 0);
+    episode->season = season;
+    if ( u && episode->season ) {
+      save |= epg_season_add_episode(episode->season, episode, 0);
+      save |= epg_brand_add_episode(episode->season->brand, episode, 0);
       // TODO: is this the right place?
     }
     save = 1;
@@ -846,7 +820,7 @@ int epg_episode_add_broadcast
   int save = 0;
   epg_broadcast_t *eb;
   if ( !episode || !broadcast ) return 0;
-  eb = RB_INSERT_SORTED(&episode->ee_broadcasts, broadcast, eb_elink, ptr_cmp);
+  eb = RB_INSERT_SORTED(&episode->broadcasts, broadcast, elink, _ptr_cmp);
   if ( eb == NULL ) {
     if ( u ) save |= epg_broadcast_set_episode(broadcast, episode, 0);
     save = 1;
@@ -860,10 +834,10 @@ int epg_episode_rem_broadcast
   int save = 0;
   epg_broadcast_t *eb;
   if ( !episode || !broadcast ) return 0;
-  eb = RB_FIND(&episode->ee_broadcasts, broadcast, eb_elink, ptr_cmp);
+  eb = RB_FIND(&episode->broadcasts, broadcast, elink, _ptr_cmp);
   if ( eb != NULL ) {
     if ( u ) save |= epg_broadcast_set_episode(broadcast, episode, 0);
-    RB_REMOVE(&episode->ee_broadcasts, broadcast, eb_elink);
+    RB_REMOVE(&episode->broadcasts, broadcast, elink);
     save = 1;
   }
   return save;
@@ -873,13 +847,13 @@ int epg_episode_get_number_onscreen
   ( epg_episode_t *episode, char *buf, int len )
 {
   int i = 0;
-  if ( episode->ee_number ) {
+  if ( episode->number ) {
     // TODO: add counts
-    if ( episode->ee_season && episode->ee_season->es_number ) {
+    if ( episode->season && episode->season->number ) {
       i += snprintf(&buf[i], len-i, "Season %d ",
-                    episode->ee_season->es_number);
+                    episode->season->number);
     }
-    i += snprintf(&buf[i], len-i, "Episode %d", episode->ee_number);
+    i += snprintf(&buf[i], len-i, "Episode %d", episode->number);
   }
   return i;
 }
@@ -887,27 +861,27 @@ int epg_episode_get_number_onscreen
 htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
 {
   htsmsg_t *m;
-  if (!episode || !episode->ee_uri) return NULL;
+  if (!episode || !episode->_.uri) return NULL;
   m = htsmsg_create_map();
-  htsmsg_add_str(m, "uri", episode->ee_uri);
-  if (episode->ee_title)
-    htsmsg_add_str(m, "title", episode->ee_title);
-  if (episode->ee_subtitle)
-    htsmsg_add_str(m, "subtitle", episode->ee_subtitle);
-  if (episode->ee_summary)
-    htsmsg_add_str(m, "summary", episode->ee_summary);
-  if (episode->ee_description)
-    htsmsg_add_str(m, "description", episode->ee_description);
-  if (episode->ee_number)
-    htsmsg_add_u32(m, "number", episode->ee_number);
-  if (episode->ee_part_count && episode->ee_part_count) {
-    htsmsg_add_u32(m, "part-number", episode->ee_part_number);
-    htsmsg_add_u32(m, "part-count", episode->ee_part_count);
+  htsmsg_add_str(m, "uri", episode->_.uri);
+  if (episode->title)
+    htsmsg_add_str(m, "title", episode->title);
+  if (episode->subtitle)
+    htsmsg_add_str(m, "subtitle", episode->subtitle);
+  if (episode->summary)
+    htsmsg_add_str(m, "summary", episode->summary);
+  if (episode->description)
+    htsmsg_add_str(m, "description", episode->description);
+  if (episode->number)
+    htsmsg_add_u32(m, "number", episode->number);
+  if (episode->part_count && episode->part_count) {
+    htsmsg_add_u32(m, "part-number", episode->part_number);
+    htsmsg_add_u32(m, "part-count", episode->part_count);
   }
-  if (episode->ee_brand)
-    htsmsg_add_str(m, "brand", episode->ee_brand->eb_uri);
-  if (episode->ee_season)
-    htsmsg_add_str(m, "season", episode->ee_season->es_uri);
+  if (episode->brand)
+    htsmsg_add_str(m, "brand", episode->brand->_.uri);
+  if (episode->season)
+    htsmsg_add_str(m, "season", episode->season->_.uri);
   return m;
 }
 
@@ -950,53 +924,31 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
  * Broadcast
  * *************************************************************************/
 
-//       one that starts at this time)
-//
-// Note: do we need to pass in stop?
 epg_broadcast_t* epg_broadcast_find_by_time 
   ( epg_channel_t *channel, time_t start, time_t stop, int create, int *save )
 {
-  epg_broadcast_t *eb;
-  static epg_broadcast_t *skel = NULL;
-
+  static epg_broadcast_t *skel;
   if ( !channel || !start || !stop ) return 0;
   if ( stop < start ) return 0;
-  
-  lock_assert(&global_lock); // pointless!
 
   if ( skel == NULL ) skel = calloc(1, sizeof(epg_broadcast_t));
-  skel->eb_channel = channel;
-  skel->eb_start   = start;
-  skel->eb_stop    = stop;
-  skel->eb_id      = _epg_broadcast_idx;
-  
-  /* Find */
-  if ( !create ) {
-    eb = RB_FIND(&channel->ec_schedule, skel, eb_slink, ebc_win_cmp);
+  skel->channel = channel;
+  skel->start   = start;
+  skel->stop    = stop;
+  skel->_.id    = _epg_object_idx; // TODO: prefer if this wasn't here!
 
-  /* Create */
-  } else {
-    eb = RB_INSERT_SORTED(&channel->ec_schedule, skel, eb_slink, ebc_win_cmp);
-    if ( eb == NULL ) {
-      *save |= 1;
-      eb     = skel;
-      skel   = NULL;
-      _epg_broadcast_idx++;
-    }
-  }
-
-  return eb;
+  return (epg_broadcast_t*)
+    _epg_object_find(create, save, &channel->schedule,
+                     (epg_object_t*)skel, _ebc_win_cmp);
 }
 
 // TODO: optional channel?
-epg_broadcast_t *epg_broadcast_find_by_id ( uint32_t id )
+epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id )
 {
-  epg_channel_t *ec;
-  epg_broadcast_t *ebc;
-  RB_FOREACH(ec, &epg_channels, ec_link) {
-    RB_FOREACH(ebc, &ec->ec_schedule, eb_slink) {
-      if (ebc->eb_id == id) return ebc;
-    }
+  epg_object_t *eo, *ec;
+  RB_FOREACH(ec, &epg_channels, glink) {
+    eo = _epg_object_find_by_id(id, &((epg_channel_t*)ec)->schedule);
+    if (eo) return (epg_broadcast_t*)eo;
   }
   return NULL;
 }
@@ -1006,8 +958,8 @@ int epg_broadcast_set_episode
 {
   int save = 0;
   if ( !broadcast || !episode ) return 0;
-  if ( broadcast->eb_episode != episode ) {
-    broadcast->eb_episode = episode;
+  if ( broadcast->episode != episode ) {
+    broadcast->episode = episode;
     if ( u ) save |= epg_episode_add_broadcast(episode, broadcast, 0);
     save = 1;
   }
@@ -1017,26 +969,26 @@ int epg_broadcast_set_episode
 epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *broadcast )
 {
   if ( !broadcast ) return NULL;
-  return RB_NEXT(broadcast, eb_slink);
+  return RB_NEXT(broadcast, slink);
 }
 
 htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
 {
   htsmsg_t *m;
   if (!broadcast) return NULL;
-  if (!broadcast->eb_channel || !broadcast->eb_channel->ec_uri) return NULL;
-  if (!broadcast->eb_episode || !broadcast->eb_episode->ee_uri) return NULL;
+  if (!broadcast->channel || !broadcast->channel->_.uri) return NULL;
+  if (!broadcast->episode || !broadcast->episode->_.uri) return NULL;
   m = htsmsg_create_map();
 
-  htsmsg_add_u32(m, "id", broadcast->eb_id);
-  htsmsg_add_u32(m, "start", broadcast->eb_start);
-  htsmsg_add_u32(m, "stop", broadcast->eb_stop);
+  htsmsg_add_u32(m, "id", broadcast->_.id);
+  htsmsg_add_u32(m, "start", broadcast->start);
+  htsmsg_add_u32(m, "stop", broadcast->stop);
   // TODO: should these be optional?
-  htsmsg_add_str(m, "channel", broadcast->eb_channel->ec_uri);
-  htsmsg_add_str(m, "episode", broadcast->eb_episode->ee_uri);
+  htsmsg_add_str(m, "channel", broadcast->channel->_.uri);
+  htsmsg_add_str(m, "episode", broadcast->episode->_.uri);
   
-  if (broadcast->eb_dvb_id)
-    htsmsg_add_u32(m, "dvb-id", broadcast->eb_dvb_id);
+  if (broadcast->dvb_id)
+    htsmsg_add_u32(m, "dvb-id", broadcast->dvb_id);
   // TODO: add other metadata fields
   return m;
 }
@@ -1048,9 +1000,10 @@ epg_broadcast_t *epg_broadcast_deserialize
   epg_channel_t *ec;
   epg_episode_t *ee;
   const char *str;
-  uint32_t id, start, stop;
+  uint32_t start, stop;
+  uint64_t id;
 
-  if ( htsmsg_get_u32(m, "id", &id)                   ) return NULL;
+  if ( htsmsg_get_u64(m, "id", &id)                   ) return NULL;
   if ( htsmsg_get_u32(m, "start", &start)             ) return NULL;
   if ( htsmsg_get_u32(m, "stop", &stop)               ) return NULL;
   // TODO: should these be optional?
@@ -1065,8 +1018,8 @@ epg_broadcast_t *epg_broadcast_deserialize
   *save |= epg_broadcast_set_episode(ebc, ee, 1);
 
   /* Bodge the ID - keep them the same */
-  ebc->eb_id = id;
-  if ( id >= _epg_broadcast_idx ) _epg_broadcast_idx = id + 1;
+  ebc->_.id = id;
+  if ( id >= _epg_object_idx ) _epg_object_idx = id + 1;
 
 #if TODO_BROADCAST_METADATA
   if ( !htsmsg_get_u32(m, "dvb-id", &u32) )
@@ -1082,44 +1035,16 @@ epg_broadcast_t *epg_broadcast_deserialize
  * *************************************************************************/
 
 epg_channel_t* epg_channel_find_by_uri
-  ( const char *id, int create, int *save )
+  ( const char *uri, int create, int *save )
 {
-  epg_channel_t *ec;
-  static epg_channel_t *skel = NULL;
-  
-  lock_assert(&global_lock); // pointless!
-
-  if ( skel == NULL ) skel = calloc(1, sizeof(epg_channel_t));
-  skel->ec_uri = (char*)id;
-  skel->ec_id  = _epg_channel_idx;
-
-  /* Find */
-  if ( !create ) {
-    ec = RB_FIND(&epg_channels, skel, ec_link, ec_uri_cmp);
-  
-  /* Create */
-  } else {
-    ec = RB_INSERT_SORTED(&epg_channels, skel, ec_link, ec_uri_cmp);
-    if ( ec == NULL ) {
-      *save     |= 1;
-      ec         = skel;
-      skel       = NULL;
-      ec->ec_uri = strdup(id);
-      LIST_INSERT_HEAD(&epg_unlinked_channels1, ec, ec_ulink);
-      _epg_channel_idx++;
-    }
-  }
-
-  return ec;
+  return (epg_channel_t*)
+    _epg_object_find_by_uri(uri, create, save,
+                            &epg_channels, sizeof(epg_channel_t));
 }
 
-epg_channel_t *epg_channel_find_by_id ( uint32_t id )
+epg_channel_t *epg_channel_find_by_id ( uint64_t id )
 {
-  epg_channel_t *ec;
-  RB_FOREACH(ec, &epg_channels, ec_link) {
-    if (ec->ec_id == id) return ec;
-  }
-  return NULL;
+  return (epg_channel_t*)_epg_object_find_by_id(id, &epg_channels);
 }
 
 int epg_channel_set_name ( epg_channel_t *channel, const char *name )
@@ -1127,9 +1052,9 @@ int epg_channel_set_name ( epg_channel_t *channel, const char *name )
   int save = 0;
   channel_t *ch;
   if ( !channel || !name ) return 0;
-  if ( !channel->ec_name || strcmp(channel->ec_name, name) ) {
-    channel->ec_name = strdup(name);
-    if ( !channel->ec_channel ) {
+  if ( !channel->name || strcmp(channel->name, name) ) {
+    channel->name = strdup(name);
+    if ( !channel->channel ) {
       LIST_FOREACH(ch, &epg_unlinked_channels2, ch_eulink) {
         if ( _epg_channel_match(channel, ch) ) {
           epg_channel_set_channel(channel, ch);
@@ -1146,17 +1071,19 @@ int epg_channel_set_name ( epg_channel_t *channel, const char *name )
 int epg_channel_set_channel ( epg_channel_t *ec, channel_t *ch )
 {
   int save = 0;
+#if TODO_REDO_CHANNEL_LINKING
   if ( !ec || !ch ) return 0;
-  if ( ec->ec_channel != ch ) {
-    if (!ec->ec_channel)     LIST_REMOVE(ec, ec_ulink);
+  if ( ec->channel != ch ) {
+    if (!ec->channel)     LIST_REMOVE(ec, ulink);
     if (!ch->ch_epg_channel) LIST_REMOVE(ch, ch_eulink);
     // TODO: should it be possible to "change" it
-    //if(ec->ec_channel)
-    //   channel_set_epg_source(ec->ec_channel, NULL)
-    //   LIST_INSERT_HEAD(&epg_unlinked_channels2, ec->ec_channel, ch_eulink);
-    ec->ec_channel = ch;
+    //if(ec->channel)
+    //   channel_set_epg_source(ec->channel, NULL)
+    //   LIST_INSERT_HEAD(&epg_unlinked_channels2, ec->channel, ch_eulink);
+    ec->channel = ch;
     channel_set_epg_source(ch, ec);
   }
+#endif
   return save;
 }
 
@@ -1164,19 +1091,19 @@ epg_broadcast_t *epg_channel_get_current_broadcast ( epg_channel_t *channel )
 {
   // TODO: its not really the head!
   if ( !channel ) return NULL;
-  return RB_FIRST(&channel->ec_schedule);
+  return (epg_broadcast_t*)RB_FIRST(&channel->schedule);
 }
 
 htsmsg_t *epg_channel_serialize ( epg_channel_t *channel )
 {
   htsmsg_t *m;
-  if (!channel || !channel->ec_uri) return NULL;
+  if (!channel || !channel->_.uri) return NULL;
   m = htsmsg_create_map();
-  htsmsg_add_str(m, "uri", channel->ec_uri);
-  if (channel->ec_name)
-    htsmsg_add_str(m, "name", channel->ec_name);
-  if (channel->ec_channel)
-    htsmsg_add_u32(m, "channel", channel->ec_channel->ch_id);
+  htsmsg_add_str(m, "uri", channel->_.uri);
+  if (channel->name)
+    htsmsg_add_str(m, "name", channel->name);
+  if (channel->channel)
+    htsmsg_add_u32(m, "channel", channel->channel->ch_id);
   // TODO: other data
   return m;
 }
@@ -1223,10 +1150,11 @@ static void _eqr_add ( epg_query_result_t *eqr, epg_broadcast_t *e )
 static void _eqr_add_channel 
   ( epg_query_result_t *eqr, epg_channel_t *ec )
 {
-  // TODO: add other searching
+  epg_object_t *eo;
   epg_broadcast_t *ebc;
-  RB_FOREACH(ebc, &ec->ec_schedule, eb_slink) {
-    if ( ebc->eb_episode && ebc->eb_channel ) _eqr_add(eqr, ebc);
+  RB_FOREACH(eo, &ec->schedule, glink) {
+    ebc = (epg_broadcast_t*)eo;
+    if ( ebc->episode && ebc->channel ) _eqr_add(eqr, ebc);
   }
 }
 
@@ -1234,15 +1162,15 @@ void epg_query0
   ( epg_query_result_t *eqr, channel_t *channel, channel_tag_t *tag,
     uint8_t contentgroup, const char *title )
 {
-  epg_channel_t *ec;
+  epg_object_t *ec;
 
   /* Clear (just incase) */
   memset(eqr, 0, sizeof(epg_query_result_t));
 
   /* All channels */
   if (!channel) {
-    RB_FOREACH(ec, &epg_channels, ec_link) {
-      _eqr_add_channel(eqr, ec);
+    RB_FOREACH(ec, &epg_channels, glink) {
+      _eqr_add_channel(eqr, (epg_channel_t*)ec);
     }
 
   /* Single channel */
@@ -1269,7 +1197,7 @@ void epg_query_free(epg_query_result_t *eqr)
 
 static int _epg_sort_start_ascending ( const void *a, const void *b )
 {
-  return (*(epg_broadcast_t**)a)->eb_start - (*(epg_broadcast_t**)b)->eb_start;
+  return (*(epg_broadcast_t**)a)->start - (*(epg_broadcast_t**)b)->start;
 }
 
 void epg_query_sort(epg_query_result_t *eqr)

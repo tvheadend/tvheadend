@@ -312,8 +312,8 @@ htsp_build_channel(channel_t *ch, const char *method)
 
   now = epg_channel_get_current_broadcast(ch->ch_epg_channel);
   if ( now ) next = epg_broadcast_get_next(now);
-  htsmsg_add_u32(out, "eventId", now ? now->eb_id : 0);
-  htsmsg_add_u32(out, "nextEventId", next ? next->eb_id : 0);
+  htsmsg_add_u32(out, "eventId", now ? now->_.id : 0);
+  htsmsg_add_u32(out, "nextEventId", next ? next->_.id : 0);
 
   LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
     ct = ctm->ctm_tag;
@@ -730,7 +730,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   if( c ) {
     eventIds = htsmsg_create_list();
     for(i = 0; i < c; ++i) {
-        htsmsg_add_u32(eventIds, NULL, eqr.eqr_array[i]->eb_id);
+        htsmsg_add_u32(eventIds, NULL, eqr.eqr_array[i]->_.id);
     }
     htsmsg_add_msg(out, "eventIds", eventIds);
   }
@@ -754,18 +754,18 @@ htsp_build_event(epg_broadcast_t *e)
 
   out = htsmsg_create_map();
 
-  htsmsg_add_u32(out, "eventId", e->eb_id);
+  htsmsg_add_u32(out, "eventId", e->_.id);
 #if TODO_EPG_CHANNEL
   htsmsg_add_u32(out, "channelId", e->e_channel->ch_id);
 #endif
-  htsmsg_add_u32(out, "start", e->eb_start);
-  htsmsg_add_u32(out, "stop", e->eb_stop);
-  if(e->eb_episode->ee_title != NULL)
-    htsmsg_add_str(out, "title", e->eb_episode->ee_title);
-  if(e->eb_episode->ee_description != NULL)
-    htsmsg_add_str(out, "description", e->eb_episode->ee_description);
-  else if(e->eb_episode->ee_summary != NULL)
-    htsmsg_add_str(out, "description", e->eb_episode->ee_summary);
+  htsmsg_add_u32(out, "start", e->start);
+  htsmsg_add_u32(out, "stop", e->stop);
+  if(e->episode->title != NULL)
+    htsmsg_add_str(out, "title", e->episode->title);
+  if(e->episode->description != NULL)
+    htsmsg_add_str(out, "description", e->episode->description);
+  else if(e->episode->summary != NULL)
+    htsmsg_add_str(out, "description", e->episode->summary);
 #if TODO_REMOVE_THESE
   if(e->e_ext_desc != NULL)
     htsmsg_add_str(out, "ext_desc", e->e_ext_desc);
@@ -775,8 +775,8 @@ htsp_build_event(epg_broadcast_t *e)
     htsmsg_add_str(out, "ext_text", e->e_ext_text);
 #endif
 
-  if(e->eb_episode->ee_genre)
-    htsmsg_add_u32(out, "contentType", e->eb_episode->ee_genre);
+  if(e->episode->genre)
+    htsmsg_add_u32(out, "contentType", e->episode->genre);
 
 #if TODO_DVR
   if((de = dvr_entry_find_by_event(e)) != NULL) {
@@ -786,7 +786,7 @@ htsp_build_event(epg_broadcast_t *e)
 
   n = epg_broadcast_get_next(e);
   if(n != NULL)
-    htsmsg_add_u32(out, "nextEventId", n->eb_id);
+    htsmsg_add_u32(out, "nextEventId", n->_.id);
 
   return out;
 }
@@ -1427,8 +1427,8 @@ htsp_channel_update_current(channel_t *ch)
 
   now  = epg_channel_get_current_broadcast(ch->ch_epg_channel);
   next = epg_broadcast_get_next(now);
-  htsmsg_add_u32(m, "eventId",     now  ? now->eb_id : 0);
-  htsmsg_add_u32(m, "nextEventId", next ? next->eb_id : 0);
+  htsmsg_add_u32(m, "eventId",     now  ? now->_.id : 0);
+  htsmsg_add_u32(m, "nextEventId", next ? next->_.id : 0);
   htsp_async_send(m);
 }
 
