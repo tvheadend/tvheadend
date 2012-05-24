@@ -60,17 +60,17 @@ static int _uri_cmp ( const void *a, const void *b )
   return strcmp(((epg_object_t*)a)->uri, ((epg_object_t*)b)->uri);
 }
 
-#if TODO_MIGHT_NEED_LATER
 static int _id_cmp ( const void *a, const void *b )
 {
   return ((epg_object_t*)a)->id - ((epg_object_t*)b)->id;
 }
-#endif
 
+#if TODO_NOT_NEEDED
 static int _ptr_cmp ( const void *a, const void *b )
 {
   return a - b;
 }
+#endif
 
 static int _ebc_win_cmp ( const void *a, const void *b )
 {
@@ -79,7 +79,7 @@ static int _ebc_win_cmp ( const void *a, const void *b )
   return 0;
 }
 
-static int _epg_channel_match ( epg_channel_t *ec, channel_t *ch )
+static int _epg_channel_cmp ( epg_channel_t *ec, channel_t *ch )
 {
   int ret = 0;
   if ( ec->name && !strcmp(ec->name, ch->ch_name) ) ret = 1;
@@ -178,8 +178,7 @@ static int _epg_write_sect ( int fd, const char *sect )
 void epg_save ( void )
 {
   int fd;
-  epg_object_t  *eo;
-  epg_channel_t *ec;
+  epg_object_t  *eo, *ec;
   
   // TODO: requires markers in the file or some other means of
   //       determining where the various object types are?
@@ -203,9 +202,8 @@ void epg_save ( void )
     if (_epg_write(fd, epg_episode_serialize((epg_episode_t*)eo))) return;
   }
   if ( _epg_write_sect(fd, "broadcasts") ) return;
-  RB_FOREACH(eo, &epg_channels, glink) {
-    ec = (epg_channel_t*)eo;
-    RB_FOREACH(eo, &ec->schedule, glink) {
+  RB_FOREACH(ec, &epg_channels, glink) {
+    RB_FOREACH(eo, &((epg_channel_t*)ec)->schedule, glink) {
       if (_epg_write(fd, epg_broadcast_serialize((epg_broadcast_t*)eo))) return;
     }
   }
@@ -324,7 +322,7 @@ void epg_add_channel ( channel_t *ch )
   epg_channel_t *ec;
   LIST_INSERT_HEAD(&epg_unlinked_channels2, ch, ch_eulink);
   LIST_FOREACH(ec, &epg_unlinked_channels1, ulink) {
-    if ( _epg_channel_match(ec, ch) ) {
+    if ( _epg_channel_cmp(ec, ch) ) {
       epg_channel_set_channel(ec, ch);
       break;
     }
@@ -356,21 +354,21 @@ void epg_mod_channel ( channel_t *ch )
 
 static epg_object_t *_epg_object_find
   ( int create, int *save, epg_object_tree_t *tree,
-    epg_object_t *skel, int (*cmp) (const void*,const void*))
+    epg_object_t **skel, int (*cmp) (const void*,const void*))
 {
   epg_object_t *eo;
 
   /* Find */
   if ( !create ) {
-    eo = RB_FIND(tree, skel, glink, cmp);
+    eo = RB_FIND(tree, *skel, glink, cmp);
   
   /* Create */
   } else {
-    eo = RB_INSERT_SORTED(tree, skel, glink, cmp);
+    eo = RB_INSERT_SORTED(tree, *skel, glink, cmp);
     if ( eo == NULL ) {
       *save     |= 1;
-      eo         = skel;
-      skel       = NULL;
+      eo         = *skel;
+      *skel      = NULL;
       _epg_object_idx++;
     }
   }
@@ -384,18 +382,28 @@ static epg_object_t *_epg_object_find_by_uri
 {
   int save2 = 0;
   epg_object_t *eo;
-  static epg_object_t* skel = NULL;
+  static epg_object_t* skel   = NULL;
+  static size_t        skelsz = 0;
   
   lock_assert(&global_lock); // pointless!
 
-  if ( skel == NULL ) skel = calloc(1, size);
+  if ( !skel || size > skelsz ) {
+    skel   = realloc(skel, size);
+    skelsz = size;
+    memset(skel, 0, size);
+  }
   skel->uri = (char*)uri;
   skel->id  = _epg_object_idx;
   // TODO: need to add function pointers
 
-  eo = _epg_object_find(create, &save2, tree, skel, _uri_cmp);
-  if (save2) eo->uri = strdup(uri);
-  *save |= save2;
+  eo = _epg_object_find(create, &save2, tree, &skel, _uri_cmp);
+  if (save2) {
+    eo->uri = strdup(uri);
+    *save  |= 1;
+
+    /* Shrink - not necessary (but saves RAM) */
+    if ( size < skelsz ) eo = realloc(eo, size);
+  }
   return eo;
 }
 
@@ -820,7 +828,7 @@ int epg_episode_add_broadcast
   int save = 0;
   epg_broadcast_t *eb;
   if ( !episode || !broadcast ) return 0;
-  eb = RB_INSERT_SORTED(&episode->broadcasts, broadcast, elink, _ptr_cmp);
+  eb = RB_INSERT_SORTED(&episode->broadcasts, broadcast, elink, _id_cmp);
   if ( eb == NULL ) {
     if ( u ) save |= epg_broadcast_set_episode(broadcast, episode, 0);
     save = 1;
@@ -834,7 +842,7 @@ int epg_episode_rem_broadcast
   int save = 0;
   epg_broadcast_t *eb;
   if ( !episode || !broadcast ) return 0;
-  eb = RB_FIND(&episode->broadcasts, broadcast, elink, _ptr_cmp);
+  eb = RB_FIND(&episode->broadcasts, broadcast, elink, _id_cmp);
   if ( eb != NULL ) {
     if ( u ) save |= epg_broadcast_set_episode(broadcast, episode, 0);
     RB_REMOVE(&episode->broadcasts, broadcast, elink);
@@ -939,7 +947,7 @@ epg_broadcast_t* epg_broadcast_find_by_time
 
   return (epg_broadcast_t*)
     _epg_object_find(create, save, &channel->schedule,
-                     (epg_object_t*)skel, _ebc_win_cmp);
+                     (epg_object_t**)&skel, _ebc_win_cmp);
 }
 
 // TODO: optional channel?
@@ -959,8 +967,8 @@ int epg_broadcast_set_episode
   int save = 0;
   if ( !broadcast || !episode ) return 0;
   if ( broadcast->episode != episode ) {
-    broadcast->episode = episode;
     if ( u ) save |= epg_episode_add_broadcast(episode, broadcast, 0);
+    broadcast->episode = episode;
     save = 1;
   }
   return save;
@@ -1056,7 +1064,7 @@ int epg_channel_set_name ( epg_channel_t *channel, const char *name )
     channel->name = strdup(name);
     if ( !channel->channel ) {
       LIST_FOREACH(ch, &epg_unlinked_channels2, ch_eulink) {
-        if ( _epg_channel_match(channel, ch) ) {
+        if ( _epg_channel_cmp(channel, ch) ) {
           epg_channel_set_channel(channel, ch);
           break;
         }
