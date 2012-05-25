@@ -184,7 +184,7 @@ got_pat(const uint8_t *ptr, size_t len, void *opaque)
   len -= 8;
   ptr += 8;
 
-  if(len < 0)
+  if(len <= 0)
     return;
 
   pthread_mutex_lock(&global_lock);

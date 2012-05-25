@@ -14,6 +14,12 @@ tvheadend.cwceditor = function() {
        width: 100
     });
 
+    var emmexColumn = new Ext.grid.CheckColumn({
+       header: "Update One",
+       dataIndex: 'emmex',
+       width: 100
+    });
+
     function setMetaAttr(meta, record){
         var enabled = record.get('enabled');
         if(!enabled) return;
@@ -72,6 +78,7 @@ tvheadend.cwceditor = function() {
 	    editor: new fm.TextField({allowBlank: false})
 	},
 	emmColumn,
+	emmexColumn,
 	{
 	    header: "Comment",
 	    dataIndex: 'comment',
@@ -86,7 +93,7 @@ tvheadend.cwceditor = function() {
 
     var rec = Ext.data.Record.create([
 	'enabled', 'connected', 'hostname', 'port', 'username',
-	'password', 'deskey', 'emm', 'comment'
+	'password', 'deskey', 'emm', 'emmex', 'comment'
     ]);
 
     var store = new Ext.data.JsonStore({
@@ -99,7 +106,7 @@ tvheadend.cwceditor = function() {
     });
 
     var grid = new tvheadend.tableEditor('Code Word Client', 'cwc', cm, rec,
-	[enabledColumn, emmColumn], store,
+	[enabledColumn, emmColumn, emmexColumn], store,
 	'config_cwc.html', 'key');
     
     tvheadend.comet.on('cwcStatus', function(msg) {

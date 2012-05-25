@@ -143,14 +143,13 @@ static htsbuf_queue_t *
 mk_build_segment_info(mk_mux_t *mkm)
 {
   htsbuf_queue_t *q = htsbuf_queue_alloc(0);
-  extern char *htsversion_full;
   char app[128];
 
-  snprintf(app, sizeof(app), "HTS Tvheadend %s", htsversion_full);
+  snprintf(app, sizeof(app), "Tvheadend %s", tvheadend_version);
 
   ebml_append_bin(q, 0x73a4, mkm->uuid, sizeof(mkm->uuid));
   ebml_append_string(q, 0x7ba9, mkm->title);
-  ebml_append_string(q, 0x4d80, "HTS Tvheadend Matroska muxer");
+  ebml_append_string(q, 0x4d80, "Tvheadend Matroska muxer");
   ebml_append_string(q, 0x5741, app);
   ebml_append_uint(q, 0x2ad7b1, MATROSKA_TIMESCALE);
 
@@ -822,9 +821,12 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track *t, th_pkt_t *pkt)
   int skippable = pkt->pkt_frametype == PKT_B_FRAME;
   int vkeyframe = SCT_ISVIDEO(t->type) && keyframe;
 
-  uint8_t *data;
-  size_t len;
+  uint8_t *data = pktbuf_ptr(pkt->pkt_payload);
+  size_t len = pktbuf_len(pkt->pkt_payload);
   const int clusersizemax = 2000000;
+
+  if(!data || len <= 0)
+    return;
 
   if(pts == PTS_UNSET)
     // This is our best guess, it might be wrong but... oh well
@@ -874,10 +876,6 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track *t, th_pkt_t *pkt)
     mkm->addcue = 0;
     addcue(mkm, pts, t->tracknum);
   }
-
-
-  data = pktbuf_ptr(pkt->pkt_payload);
-  len  = pktbuf_len(pkt->pkt_payload);
 
   if(t->type == SCT_AAC || t->type == SCT_MP4A) {
     // Skip ADTS header

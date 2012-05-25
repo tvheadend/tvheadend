@@ -20,6 +20,12 @@ tvheadend.acleditor = function() {
        width: 100
     });
 
+    var dvrallcfgColumn = new Ext.grid.CheckColumn({
+       header: "All Configs (VR)",
+       dataIndex: 'dvrallcfg',
+       width: 100
+    });
+
     var webuiColumn = new Ext.grid.CheckColumn({
        header: "Web Interface",
        dataIndex: 'webui',
@@ -52,6 +58,7 @@ tvheadend.acleditor = function() {
 	},
 	streamingColumn,
 	dvrColumn,
+	dvrallcfgColumn,
 	webuiColumn,
 	adminColumn,
 	{
@@ -63,14 +70,14 @@ tvheadend.acleditor = function() {
     ]);
     
     var UserRecord = Ext.data.Record.create([
-	'enabled','streaming','dvr','admin','webui','username',
+	'enabled','streaming','dvr','dvrallcfg','admin','webui','username',
 	'prefix','password','comment'
     ]);
 
     return new tvheadend.tableEditor('Access control', 'accesscontrol', cm,
 				     UserRecord,
 				     [enabledColumn, streamingColumn,
-				      dvrColumn, webuiColumn,
+				      dvrColumn, dvrallcfgColumn, webuiColumn,
 				      adminColumn],
 				     null,
 				     'config_access.html', 'group');

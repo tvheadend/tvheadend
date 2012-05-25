@@ -71,6 +71,9 @@ read_audio_specific_config(elementary_stream_t *st, latm_private_t *latm,
   else
     sr = sri_to_rate(latm->sample_rate_index);
 
+  if(sr == 0)
+    return;
+
   st->es_frame_duration = 1024 * 90000 / sr;
 
   latm->channel_config = read_bits(bs, 4);

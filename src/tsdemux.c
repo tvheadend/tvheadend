@@ -142,8 +142,6 @@ ts_extract_pcr(service_t *t, elementary_stream_t *st, const uint8_t *tsb,
   pcr |= (uint64_t)tsb[9] << 1;
   pcr |= ((uint64_t)tsb[10] >> 7) & 0x01;
   
-  pcr = pcr;
-
   if(pcrp != NULL)
     *pcrp = pcr;
 

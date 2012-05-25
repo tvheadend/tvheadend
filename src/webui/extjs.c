@@ -43,9 +43,6 @@
 #include "epg.h"
 #include "iptv_input.h"
 
-extern const char *htsversion;
-extern const char *htsversion_full;
-
 static void
 extjs_load(htsbuf_queue_t *hq, const char *script)
 {
@@ -166,7 +163,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
 		 "<body>\n"
 		 "<div id=\"systemlog\"></div>\n"
 		 "</body></html>\n",
-		 htsversion);
+		 tvheadend_version);
   http_output_html(hc);
   return 0;
 }
@@ -185,7 +182,7 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 		 "<div class=\"about-title\">"
 		 "HTS Tvheadend %s"
 		 "</div><br>"
-		 "&copy; 2006 - 2010 Andreas \303\226man, et al.<br><br>"
+		 "&copy; 2006 - 2012 Andreas \303\226man, et al.<br><br>"
 		 "<img src=\"docresources/tvheadendlogo.png\"><br>"
 		 "<a href=\"http://www.lonelycoder.com/hts\">"
 		 "http://www.lonelycoder.com/hts</a><br><br>"
@@ -197,8 +194,8 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 		 "<br><br>"
 		 "Build: %s"
 		 "</center>",
-		 htsversion,
-		 htsversion_full);
+		 tvheadend_version,
+		 tvheadend_version);
 
   http_output_html(hc);
   return 0;
@@ -634,6 +631,9 @@ extjs_confignames(http_connection_t *hc, const char *remain, void *opaque)
     out = htsmsg_create_map();
     array = htsmsg_create_list();
 
+    if (http_access_verify(hc, ACCESS_RECORDER_ALL))
+      goto skip;
+
     LIST_FOREACH(cfg, &dvrconfigs, config_link) {
       e = htsmsg_create_map();
       htsmsg_add_str(e, "identifier", cfg->dvr_config_name);
@@ -644,6 +644,7 @@ extjs_confignames(http_connection_t *hc, const char *remain, void *opaque)
       htsmsg_add_msg(array, NULL, e);
     }
 
+skip:
     htsmsg_add_msg(out, "entries", array);
 
   } else {
@@ -890,6 +891,19 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
       return HTTP_STATUS_BAD_REQUEST;
     }
 
+    if (http_access_verify(hc, ACCESS_RECORDER_ALL)) {
+      config_name = NULL;
+      LIST_FOREACH(cfg, &dvrconfigs, config_link) {
+        if (cfg->dvr_config_name && hc->hc_username &&
+            strcmp(cfg->dvr_config_name, hc->hc_username) == 0) {
+          config_name = cfg->dvr_config_name;
+          break;
+        }
+      }
+      if (config_name == NULL && hc->hc_username)
+        tvhlog(LOG_INFO,"dvr","User '%s' has no dvr config with identical name, using default...", hc->hc_username);
+    }
+
     dvr_entry_create_by_event(config_name,
                               e, hc->hc_representative, NULL, DVR_PRIO_NORMAL);
 #endif
@@ -960,6 +974,19 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     if(stop < start)
       stop += 86400;
+
+    if (http_access_verify(hc, ACCESS_RECORDER_ALL)) {
+      config_name = NULL;
+      LIST_FOREACH(cfg, &dvrconfigs, config_link) {
+        if (cfg->dvr_config_name && hc->hc_username &&
+            strcmp(cfg->dvr_config_name, hc->hc_username) == 0) {
+          config_name = cfg->dvr_config_name;
+          break;
+        }
+      }
+      if (config_name == NULL && hc->hc_username)
+        tvhlog(LOG_INFO,"dvr","User '%s' has no dvr config with identical name, using default...", hc->hc_username);
+    }
 
     dvr_entry_create(config_name,
                      ch, start, stop, title, NULL, hc->hc_representative, 

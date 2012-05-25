@@ -307,8 +307,10 @@ psi_desc_ca(service_t *t, const uint8_t *buffer, int size)
     }
     break;
   case 0x4a00://DRECrypt
-    provid = size < 4 ? 0 : buffer[4];
-    break;
+    if (caid != 0x4aee) { // Bulcrypt
+      provid = size < 4 ? 0 : buffer[4];
+      break;
+    }
   default:
     provid = 0;
     break;
@@ -834,13 +836,23 @@ static struct strtab caidnametab[] = {
   { "Irdeto",           0x0600 }, 
   { "Irdeto",           0x0602 }, 
   { "Irdeto",           0x0604 }, 
+  { "Irdeto",		0x0624 },
+  { "Irdeto",		0x0666 },
   { "Jerroldgi",        0x0700 }, 
   { "Matra",            0x0800 }, 
   { "NDS",              0x0900 }, 
   { "Nokia",            0x0A00 }, 
   { "Conax",            0x0B00 }, 
   { "NTL",              0x0C00 }, 
-  { "CryptoWorks",      0x0D00 }, 
+  { "CryptoWorks",	0x0D00 },
+  { "CryptoWorks",	0x0D01 },
+  { "CryptoWorks",	0x0D02 },
+  { "CryptoWorks",	0x0D03 },
+  { "CryptoWorks",	0x0D05 },
+  { "CryptoWorks",	0x0D0F },
+  { "CryptoWorks",	0x0D70 },
+  { "CryptoWorks ICE",	0x0D96 },
+  { "CryptoWorks ICE",	0x0D97 },
   { "PowerVu",          0x0E00 }, 
   { "Sony",             0x0F00 }, 
   { "Tandberg",         0x1000 }, 
@@ -866,7 +878,9 @@ static struct strtab caidnametab[] = {
   { "GI",               0x4700 }, 
   { "Telemann",         0x4800 },
   { "DRECrypt",         0x4ae0 },
-  { "DRECrypt2",        0x4ae1 }
+  { "DRECrypt2",        0x4ae1 },
+  { "Bulcrypt",         0x4aee },
+  { "Bulcrypt",         0x5581 },
 };
 
 const char *

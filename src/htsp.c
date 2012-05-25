@@ -50,7 +50,6 @@ static void *htsp_server;
 
 #define HTSP_PRIV_MASK (ACCESS_STREAMING)
 
-extern const char *htsversion;
 extern char *dvr_storage;
 
 LIST_HEAD(htsp_connection_list, htsp_connection);
@@ -1047,7 +1046,7 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
 
   htsmsg_add_u32(r, "htspversion", HTSP_PROTO_VERSION);
   htsmsg_add_str(r, "servername", "HTS Tvheadend");
-  htsmsg_add_str(r, "serverversion", htsversion);
+  htsmsg_add_str(r, "serverversion", tvheadend_version);
   htsmsg_add_bin(r, "challenge", htsp->htsp_challenge, 32);
 
   htsp_update_logname(htsp);
@@ -1541,7 +1540,7 @@ const static char frametypearray[PKT_NTYPES] = {
 static void
 htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 {
-  htsmsg_t *m = htsmsg_create_map(), *n;
+  htsmsg_t *m, *n;
   htsp_msg_t *hm;
   htsp_connection_t *htsp = hs->hs_htsp;
   int64_t ts;
@@ -1557,6 +1556,8 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
     pkt_ref_dec(pkt);
     return;
   }
+
+  m = htsmsg_create_map();
  
   htsmsg_add_str(m, "method", "muxpkt");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);

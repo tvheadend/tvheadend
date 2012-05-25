@@ -28,6 +28,8 @@ CFLAGS += -Wall -Werror -Wwrite-strings -Wno-deprecated-declarations
 CFLAGS += -Wmissing-prototypes
 LDFLAGS += -lrt -ldl
 
+BUNDLES += docs/html docs/docresources src/webui/static
+
 #
 # Core
 #
@@ -147,23 +149,18 @@ SLIBS += $(SLIBS-yes)
 OBJS=    $(SRCS:%.c=$(BUILDDIR)/%.o)
 OBJS_EXTRA = $(SRCS_EXTRA:%.c=$(BUILDDIR)/%.so)
 DEPS=    ${OBJS:%.o=%.d}
-OBJDIRS= $(sort $(dir $(OBJS))) $(sort $(dir $(OBJS_EXTRA)))
 
 # File bundles
 BUNDLE_SRCS=$(BUNDLES:%=$(BUILDDIR)/bundles/%.c)
 BUNDLE_DEPS=$(BUNDLE_SRCS:%.c=%.d)
 BUNDLE_OBJS=$(BUNDLE_SRCS:%.c=%.o)
-OBJDIRS+= $(sort $(dir $(BUNDLE_OBJS)))
 .PRECIOUS: ${BUNDLE_SRCS}
 
-VERSION=$(shell support/version.sh)
-CURVERSION=$(shell cat ${BUILDDIR}/ver || echo "0")
 
 # Common CFLAGS for all files
 CFLAGS_com  = -g -funsigned-char -O2 
 CFLAGS_com += -D_FILE_OFFSET_BITS=64
 CFLAGS_com += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR}
-CFLAGS_com += -DHTS_VERSION=\"$(VERSION)\"
 
 MKBUNDLE = $(CURDIR)/support/mkbundle
 
@@ -180,31 +177,41 @@ all: ${PROG}
 
 .PHONY:	clean distclean
 
-${PROG}: $(OBJDIRS) $(OBJS) $(BUNDLE_OBJS) ${OBJS_EXTRA} Makefile
-	$(CC) -o $@ $(OBJS) $(BUNDLE_OBJS) $(LDFLAGS) ${LDFLAGS_cfg}
+#
+#
+#
+${PROG}: $(OBJS) $(ALLDEPS)  support/dataroot/wd.c
+	$(CC) -o $@ $(OBJS) support/dataroot/wd.c $(LDFLAGS) ${LDFLAGS_cfg}
 
-$(OBJDIRS):
-	@mkdir -p $@
+${PROG}.bundle: $(OBJS) $(BUNDLE_OBJS) $(ALLDEPS)  support/dataroot/bundle.c
+	$(CC) -o $@ $(OBJS) support/dataroot/bundle.c $(BUNDLE_OBJS) $(LDFLAGS) ${LDFLAGS_cfg}
 
+${PROG}.datadir: $(OBJS) $(ALLDEPS)  support/dataroot/datadir.c
+	$(CC) -o $@ $(OBJS) -iquote${BUILDDIR} support/dataroot/datadir.c $(LDFLAGS) ${LDFLAGS_cfg}
+
+#
+#
+#
 ${BUILDDIR}/%.o: %.c
+	@mkdir -p $(dir $@)
 	$(CC) -MD -MP $(CFLAGS_com) $(CFLAGS) $(CFLAGS_cfg) -c -o $@ $(CURDIR)/$<
 
 ${BUILDDIR}/%.so: ${SRCS_EXTRA}
+	@mkdir -p $(dir $@)
 	${CC} -O -fbuiltin -fomit-frame-pointer -fPIC -shared -o $@ $< -ldl
 
 clean:
-	rm -rf ${BUILDDIR}/src ${BUILDDIR}/bundles ${BUILDDIR}/ver
+	rm -rf ${BUILDDIR}/src ${BUILDDIR}/bundles
 	find . -name "*~" | xargs rm -f
 
 distclean: clean
 	rm -rf build.*
 
-ifneq ($(VERSION), $(CURVERSION))
-.PHONY:	src/version.c
-$(info Version changed)
-src/version.c:
-	@echo $(VERSION) >${BUILDDIR}/ver
-endif
+# Create buildversion.h
+src/version.c: $(BUILDDIR)/buildversion.h
+$(BUILDDIR)/buildversion.h: FORCE
+	@$(CURDIR)/support/version.sh $(CURDIR) $@
+FORCE:
 
 
 # Include dependency files if they exist.
@@ -215,7 +222,9 @@ include support/${OSENV}.mk
 
 # Bundle files
 $(BUILDDIR)/bundles/%.o: $(BUILDDIR)/bundles/%.c
+	@mkdir -p $(dir $@)
 	$(CC) -I${CURDIR}/src -c -o $@ $<
 
 $(BUILDDIR)/bundles/%.c: %
+	@mkdir -p $(dir $@)
 	$(MKBUNDLE) -o $@ -s $< -d ${BUILDDIR}/bundles/$<.d -p $< -z

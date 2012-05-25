@@ -1,38 +1,18 @@
 #!/usr/bin/make -f
-
-# Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
-
-DEB_BUILD_GNU_TYPE := $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+export DH_VERBOSE=1
 
 %:
 	dh $@
 
-override_dh_clean:
-	dh_testdir
-	dh_testroot
-	rm -rf build.*
-	dh_clean
-
-override_dh_auto_clean:
-	dh_clean
-
 override_dh_auto_configure:
-	dh_testdir
-	./configure --release --prefix=/usr
+	dh_auto_configure -- ${JOBSARGS}
 
 override_dh_auto_build:
-	$(MAKE)
-
-override_dh_install:
-	$(MAKE) DESTDIR=$(CURDIR)/debian/tvheadend install
-
-override_dh_installinit:
-	dh_installinit --name tvheadend	
+	make ${JARGS}
 
 override_dh_strip:
 	dh_strip --dbg-package=tvheadend-dbg
 
-override_dh_autotest:
-	echo "skipped autotest"
+override_dh_auto_install:
+	dh_auto_install --destdir=debian/tvheadend
 

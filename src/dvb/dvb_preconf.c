@@ -64,9 +64,7 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, const struct mux *m, int num,
       break;
       
     case FE_QPSK:
-      #ifdef SYS_DVBS
-        dmc.dmc_fe_delsys = SYS_DVBS;
-      #endif
+      dmc.dmc_fe_delsys                    = SYS_DVBS;
       dmc.dmc_fe_params.u.qpsk.symbol_rate = m->symrate;
       dmc.dmc_fe_params.u.qpsk.fec_inner   = m->fec;
 
@@ -102,7 +100,7 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, const struct mux *m, int num,
 
     dmc.dmc_satconf = dvb_satconf_entry_find(tda, satconf, 0);
       
-    dvb_mux_create(tda, &dmc, 0xffff, NULL, source, 1, 1, NULL);
+    dvb_mux_create(tda, &dmc, 0xffff, NULL, source, 1, 1, NULL, NULL);
     m++;
   }
 }

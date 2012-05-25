@@ -36,7 +36,6 @@
 #endif
 
 extern char tvh_binshasum[20];
-extern char *htsversion_full;
 
 int page_statedump(http_connection_t *hc, const char *remain, void *opaque);
 
@@ -159,7 +158,7 @@ page_statedump(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_qprintf(hq, "Tvheadend %s  Binary SHA1: "
 		 "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 		 "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n",
-		 htsversion_full,
+		 tvheadend_version,
 		 tvh_binshasum[0],
 		 tvh_binshasum[1],
 		 tvh_binshasum[2],

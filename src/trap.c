@@ -220,9 +220,6 @@ callback(struct dl_phdr_info *info, size_t size, void *data)
 }
 
 
-extern const char *htsversion_full;
-
-
 void
 trap_init(const char *ver)
 {
@@ -259,7 +256,7 @@ trap_init(const char *ver)
 	   "PRG: %s (%s) "
 	   "[%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"
 	   "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x] "
-	   "CWD: %s ", ver, htsversion_full,
+	   "CWD: %s ", ver, tvheadend_version,
 	   digest[0],
 	   digest[1],
 	   digest[2],
