@@ -277,6 +277,9 @@ typedef struct epg_channel
   LIST_ENTRY(epg_channel)    umlink;        ///< Unmapped channel link
   channel_t                 *channel;       ///< Link to real channel
 
+  epg_broadcast_t           *now;           ///< Current broadcast
+  epg_broadcast_t           *next;          ///< Next broadcast
+
   gtimer_t                   expire;        ///< Expiration timer
 } epg_channel_t;
 
@@ -291,7 +294,6 @@ int epg_channel_set_name ( epg_channel_t *c, const char *n )
 int epg_channel_set_channel ( epg_channel_t *c, channel_t *ch );
 
 /* Accessors */
-epg_broadcast_t *epg_channel_get_current_broadcast ( epg_channel_t *c );
 epg_broadcast_t *epg_channel_get_broadcast
   ( epg_channel_t *ch, time_t start, time_t stop, int create, int *save );
 
