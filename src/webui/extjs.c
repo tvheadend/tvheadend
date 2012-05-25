@@ -792,7 +792,7 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_lock(&global_lock);
   if ( id && type ) {
-    e = epg_broadcast_find_by_id(atoi(id));
+    e = epg_broadcast_find_by_id(atoi(id), NULL);
     if ( e && e->episode ) {
       ee = e->episode;
 

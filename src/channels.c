@@ -182,7 +182,7 @@ channel_create(const char *name, int number)
 
   assert(x == NULL);
 
-  epg_add_channel(ch);
+  epg_channel_map_add(ch);
 
   htsp_channel_add(ch);
   return ch;
@@ -249,7 +249,7 @@ channel_load_one(htsmsg_t *c, int id)
 
   channel_set_name(ch, name);
 
-  epg_add_channel(ch);
+  epg_channel_map_add(ch);
 
   tvh_str_update(&ch->ch_icon, htsmsg_get_str(c, "icon"));
 
@@ -339,7 +339,7 @@ channel_rename(channel_t *ch, const char *newname)
 
   RB_REMOVE(&channel_name_tree, ch, ch_name_link);
   channel_set_name(ch, newname);
-  epg_mod_channel(ch);
+  epg_channel_map_mod(ch);
 
   LIST_FOREACH(t, &ch->ch_services, s_ch_link)
     t->s_config_save(t);
@@ -379,7 +379,7 @@ channel_delete(channel_t *ch)
     s->ths_channel = NULL;
   }
 
-  epg_rem_channel(ch);
+  epg_channel_map_rem(ch);
 
   hts_settings_remove("channels/%d", ch->ch_id);
 
@@ -492,6 +492,7 @@ channel_set_epg_source(channel_t *ch, epg_channel_t *ec)
     return;
 
   ch->ch_epg_channel = ec;
+  // TODO: should I do this?
   htsp_channel_update(ch); // Not sure?
 }
 

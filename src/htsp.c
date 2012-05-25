@@ -806,7 +806,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsmsg_get_u32(in, "numFollowing", &numFollowing))
     return htsp_error("Missing argument 'numFollowing'");
 
-  if((e = epg_broadcast_find_by_id(eventid)) == NULL) {
+  if((e = epg_broadcast_find_by_id(eventid, NULL)) == NULL) {
     return htsp_error("Event does not exist");
   }
 
@@ -839,7 +839,7 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsmsg_get_u32(in, "eventId", &eventid))
     return htsp_error("Missing argument 'eventId'");
 
-  if((e = epg_broadcast_find_by_id(eventid)) == NULL)
+  if((e = epg_broadcast_find_by_id(eventid, NULL)) == NULL)
     return htsp_error("Event does not exist");
 
   out = htsp_build_event(e);  
