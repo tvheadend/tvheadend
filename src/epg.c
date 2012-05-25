@@ -261,6 +261,7 @@ void epg_init ( void )
     rp     += msglen;
     remain -= msglen;
   }
+  if (sect) free(sect);
 
   /* Stats */
   tvhlog(LOG_DEBUG, "epg", "database loaded");
@@ -339,33 +340,21 @@ static epg_object_t *_epg_object_find
 
 static epg_object_t *_epg_object_find_by_uri 
   ( const char *uri, int create, int *save,
-    epg_object_tree_t *tree, size_t size,
-    void (*destroy) (epg_object_t*) )
+    epg_object_tree_t *tree, epg_object_t **skel )
 {
   int save2 = 0;
   epg_object_t *eo;
-  static epg_object_t* skel   = NULL;
-  static size_t        skelsz = 0;
   
-  assert(destroy != NULL); // sanity
+  assert(skel != NULL);
   lock_assert(&global_lock); // pointless!
 
-  if ( !skel || size > skelsz ) {
-    skel   = realloc(skel, size);
-    skelsz = size;
-    memset(skel, 0, size);
-  }
-  skel->uri = (char*)uri;
-  skel->id  = _epg_object_idx;
+  (*skel)->uri = (char*)uri;
+  (*skel)->id  = _epg_object_idx;
 
-  eo = _epg_object_find(create, &save2, tree, &skel, _uri_cmp);
+  eo = _epg_object_find(create, &save2, tree, skel, _uri_cmp);
   if (save2) {
-    eo->uri     = strdup(uri);
-    eo->destroy = destroy;
+    eo->uri = strdup(uri);
     *save  |= 1;
-
-    /* Shrink - not necessary (but saves RAM) */
-    if ( size < skelsz ) eo = realloc(eo, size);
   }
   return eo;
 }
@@ -405,10 +394,14 @@ static void _epg_brand_destroy ( epg_object_t *eo )
 epg_brand_t* epg_brand_find_by_uri 
   ( const char *uri, int create, int *save )
 {
+  static epg_object_t *skel = NULL;
+  if ( !skel ) {
+    skel          = calloc(1, sizeof(epg_brand_t));
+    skel->destroy = _epg_brand_destroy;
+  }
   return (epg_brand_t*)
     _epg_object_find_by_uri(uri, create, save,
-                            &epg_brands, sizeof(epg_brand_t),
-                            _epg_brand_destroy);
+                            &epg_brands, &skel);
 }
 
 epg_brand_t *epg_brand_find_by_id ( uint64_t id )
@@ -534,10 +527,14 @@ static void _epg_season_destroy ( epg_object_t *eo )
 epg_season_t* epg_season_find_by_uri 
   ( const char *uri, int create, int *save )
 {
+  static epg_object_t *skel = NULL;
+  if ( !skel ) {
+    skel          = calloc(1, sizeof(epg_season_t));
+    skel->destroy = _epg_season_destroy;
+  }
   return (epg_season_t*)
     _epg_object_find_by_uri(uri, create, save,
-                            &epg_seasons, sizeof(epg_season_t),
-                            _epg_season_destroy);
+                            &epg_seasons, &skel);
 }
 
 epg_season_t *epg_season_find_by_id ( uint64_t id )
@@ -681,10 +678,14 @@ static void _epg_episode_destroy ( epg_object_t *eo )
 epg_episode_t* epg_episode_find_by_uri
   ( const char *uri, int create, int *save )
 {
+  static epg_object_t *skel = NULL;
+  if ( !skel ) {
+    skel          = calloc(1, sizeof(epg_episode_t));
+    skel->destroy = _epg_episode_destroy;
+  }
   return (epg_episode_t*)
     _epg_object_find_by_uri(uri, create, save,
-                            &epg_episodes, sizeof(epg_episode_t),
-                            _epg_episode_destroy);
+                            &epg_episodes, &skel);
 }
 
 epg_episode_t *epg_episode_find_by_id ( uint64_t id )
@@ -1105,10 +1106,14 @@ epg_channel_t* epg_channel_find_by_uri
   ( const char *uri, int create, int *save )
 {
   int save2 = 0;
+  static epg_object_t *skel = NULL;
+  if ( !skel ) {
+    skel          = calloc(1, sizeof(epg_channel_t));
+    skel->destroy = _epg_channel_destroy;
+  }
   epg_channel_t *ec = (epg_channel_t*)
     _epg_object_find_by_uri(uri, create, &save2,
-                            &epg_channels, sizeof(epg_channel_t),
-                            _epg_channel_destroy);
+                            &epg_channels, &skel);
   if (save2) {
     LIST_INSERT_HEAD(&epg_channel_unmapped, ec, umlink);
     *save |= 1;
