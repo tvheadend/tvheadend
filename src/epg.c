@@ -269,6 +269,7 @@ void epg_init ( void )
   tvhlog(LOG_DEBUG, "epg", "  seasons    %d", stats.seasons.total);
   tvhlog(LOG_DEBUG, "epg", "  episodes   %d", stats.episodes.total);
   tvhlog(LOG_DEBUG, "epg", "  broadcasts %d", stats.broadcasts.total);
+  tvhlog(LOG_DEBUG, "epg", "next object id %lu", _epg_object_idx);
 
   /* Close file */
   munmap(mem, st.st_size);
