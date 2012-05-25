@@ -39,8 +39,6 @@
 #include "dvr/dvr.h"
 #include "htsp.h"
 
-//struct channel_list channels_not_xmltv_mapped;
-
 struct channel_tree channel_name_tree;
 static struct channel_tree channel_identifier_tree;
 struct channel_tag_queue channel_tags;
@@ -492,8 +490,12 @@ channel_set_epg_source(channel_t *ch, epg_channel_t *ec)
     return;
 
   ch->ch_epg_channel = ec;
-  // TODO: should I do this?
-  htsp_channel_update(ch); // Not sure?
+
+  if(ec != NULL)
+    tvh_str_update(&ch->ch_icon, ec->icon);
+
+  channel_save(ch);
+  htsp_channel_update(ch);
 }
 
 /**
