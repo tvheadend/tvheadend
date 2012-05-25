@@ -235,7 +235,6 @@ typedef struct epg_broadcast
   uint8_t                    is_new;           ///< New series / file premiere
   uint8_t                    is_repeat;        ///< Repeat screening
 
-  RB_ENTRY(epg_broadcast)    slink;         ///< Schedule link
   RB_ENTRY(epg_broadcast)    elink;         ///< Episode link
   epg_episode_t             *episode;       ///< Episode shown
   epg_channel_t             *channel;       ///< Channel being broadcast on
@@ -344,6 +343,8 @@ void epg_updated (void);
  * Compatibility code
  * ***********************************************************************/
 
+#ifndef TODO_REMOVE_EPG_COMPAT 
+
 typedef struct _epg_episode {
 
   uint16_t ee_season;
@@ -382,41 +383,5 @@ typedef struct event {
   _epg_episode_t e_episode;
 
 } event_t;
-#if 0
-
-void epg_event_updated(event_t *e);
-
-event_t *epg_event_create(channel_t *ch, time_t start, time_t stop,
-			  int dvb_id, int *created);
-
-event_t *epg_event_find_by_time(channel_t *ch, time_t t);
-
-event_t *epg_event_find_by_id(int eventid);
-
-void epg_unlink_from_channel(channel_t *ch);
-
-
-/**
- *
- */
-uint8_t epg_content_group_find_by_name(const char *name);
-
-const char *epg_content_group_get_name(uint8_t type);
-
-/**
- *
- */
-typedef struct epg_query_result {
-  event_t **eqr_array;
-  int eqr_entries;
-  int eqr_alloced;
-} epg_query_result_t;
-
-void epg_query0(epg_query_result_t *eqr, channel_t *ch, channel_tag_t *ct,
-                uint8_t type, const char *title);
-void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
-	       const char *contentgroup, const char *title);
-void epg_query_free(epg_query_result_t *eqr);
-void epg_query_sort(epg_query_result_t *eqr);
 #endif
 #endif /* EPG_H */
