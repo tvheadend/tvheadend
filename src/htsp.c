@@ -298,7 +298,6 @@ htsp_build_channel(channel_t *ch, const char *method)
   channel_tag_t *ct;
   service_t *t;
   epg_broadcast_t *now, *next = NULL;
-  printf("htsp_build_channel(%s)\n", ch->ch_name);
 
   htsmsg_t *out = htsmsg_create_map();
   htsmsg_t *tags = htsmsg_create_list();
@@ -314,7 +313,6 @@ htsp_build_channel(channel_t *ch, const char *method)
   if (ch->ch_epg_channel) {
     now  = ch->ch_epg_channel->now;
     next = ch->ch_epg_channel->next;
-    printf("  now = %p, next = %p\n", now, next);
     htsmsg_add_u32(out, "eventId", now ? now->_.id : 0);
     htsmsg_add_u32(out, "nextEventId", next ? next->_.id : 0);
   }
@@ -755,7 +753,6 @@ htsp_build_event(epg_broadcast_t *e)
 #if TODO_DVR
   dvr_entry_t *de;
 #endif
-  printf("htsp_build_event(%p, %lu)\n", e, e->_.id);
 
   out = htsmsg_create_map();
 
@@ -810,7 +807,6 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
 
   if(htsmsg_get_u32(in, "numFollowing", &numFollowing))
     return htsp_error("Missing argument 'numFollowing'");
-  printf("htsp_method_getEvents(%d, %d)\n", eventid, numFollowing);
 
   if((e = epg_broadcast_find_by_id(eventid, NULL)) == NULL) {
     return htsp_error("Event does not exist");
@@ -844,7 +840,6 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
   
   if(htsmsg_get_u32(in, "eventId", &eventid))
     return htsp_error("Missing argument 'eventId'");
-  printf("htsp_method_getEvent(%d)", eventid);
 
   if((e = epg_broadcast_find_by_id(eventid, NULL)) == NULL)
     return htsp_error("Event does not exist");
