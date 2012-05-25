@@ -62,10 +62,11 @@ dvr_autorec_purge_spawns(dvr_autorec_entry_t *dae)
  * return 1 if the event 'e' is matched by the autorec rule 'dae'
  */
 static int
-autorec_cmp(dvr_autorec_entry_t *dae, event_t *e)
+autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 {
   channel_tag_mapping_t *ctm;
 
+  if (!e->channel || !e->channel->channel) return 0;
   if(dae->dae_enabled == 0 || dae->dae_weekdays == 0)
     return 0;
 
@@ -76,33 +77,34 @@ autorec_cmp(dvr_autorec_entry_t *dae, event_t *e)
     return 0; // Avoid super wildcard match
 
   if(dae->dae_channel != NULL &&
-     dae->dae_channel != e->e_channel)
+     dae->dae_channel != e->channel->channel)
     return 0;
   
   if(dae->dae_channel_tag != NULL) {
     LIST_FOREACH(ctm, &dae->dae_channel_tag->ct_ctms, ctm_tag_link)
-      if(ctm->ctm_channel == e->e_channel)
+      if(ctm->ctm_channel == e->channel->channel)
 	break;
     if(ctm == NULL)
       return 0;
   }
 
-
+#if TODO_GENRE_SUPPORT
   if(dae->dae_content_type != 0 &&
      dae->dae_content_type != e->e_content_type)
     return 0;
+#endif
   
   if(dae->dae_title != NULL) {
-    if(e->e_title == NULL ||
-       regexec(&dae->dae_title_preg, e->e_title, 0, NULL, 0))
+    if(e->episode->title == NULL ||
+       regexec(&dae->dae_title_preg, e->episode->title, 0, NULL, 0))
     return 0;
   }
 
   if(dae->dae_approx_time != 0) {
     struct tm a_time;
     struct tm ev_time;
-    localtime_r(&e->e_start, &a_time);
-    localtime_r(&e->e_start, &ev_time);
+    localtime_r(&e->start, &a_time);
+    localtime_r(&e->start, &ev_time);
     a_time.tm_min = dae->dae_approx_time % 60;
     a_time.tm_hour = dae->dae_approx_time / 60;
     if(abs(mktime(&a_time) - mktime(&ev_time)) > 900)
@@ -111,7 +113,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, event_t *e)
 
   if(dae->dae_weekdays != 0x7f) {
     struct tm tm;
-    localtime_r(&e->e_start, &tm);
+    localtime_r(&e->start, &tm);
     if(!((1 << ((tm.tm_wday ?: 7) - 1)) & dae->dae_weekdays))
       return 0;
   }
@@ -476,7 +478,7 @@ dvr_autorec_add(const char *config_name,
  *
  */
 void
-dvr_autorec_check_event(event_t *e)
+dvr_autorec_check_event(epg_broadcast_t *e)
 {
   dvr_autorec_entry_t *dae;
   dvr_entry_t *existingde;
@@ -485,8 +487,8 @@ dvr_autorec_check_event(event_t *e)
     if(autorec_cmp(dae, e)) {
       existingde = dvr_entry_find_by_event_fuzzy(e);
       if (existingde != NULL) {
-        tvhlog(LOG_DEBUG, "dvr", "Updating existing DVR entry for %s", e->e_title);
-        dvr_entry_update(existingde, e->e_title, e->e_start, e->e_stop);
+        tvhlog(LOG_DEBUG, "dvr", "Updating existing DVR entry for %s", e->episode->title);
+        dvr_entry_update(existingde, e->episode->title, e->start, e->stop);
       } else
         dvr_entry_create_by_autorec(e, dae);
     }
@@ -498,7 +500,7 @@ dvr_autorec_check_event(event_t *e)
 static void
 dvr_autorec_changed(dvr_autorec_entry_t *dae)
 {
-#if TODO_DVR
+#if TODO_DVR_AUTOREC
   channel_t *ch;
   event_t *e;
 

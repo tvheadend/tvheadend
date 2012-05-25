@@ -728,19 +728,8 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     else if(ee->summary != NULL)
       htsmsg_add_str(m, "description", ee->summary);
 
-    if (epg_episode_get_number_onscreen(ee, buf, 100))
-      htsmsg_add_str(m, "episode", strdup(buf));
-
-#if TODO_REMOVE_THIS_QQ
-    if(e->e_ext_desc != NULL)
-      htsmsg_add_str(m, "ext_desc", e->e_ext_desc);
-
-    if(e->e_ext_item != NULL)
-      htsmsg_add_str(m, "ext_item", e->e_ext_item);
-
-    if(e->e_ext_text != NULL)
-      htsmsg_add_str(m, "ext_text", e->e_ext_text);
-#endif
+    if (epg_episode_number_format(ee, buf, 100, NULL, "Season %d", ".", "Episode %d", "/%d"))
+      htsmsg_add_str(m, "episode", buf);
 
     htsmsg_add_u32(m, "id", e->_.id);
     htsmsg_add_u32(m, "start", e->start);
@@ -752,11 +741,9 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
       htsmsg_add_str(m, "contentgrp", s);
 #endif
 
-#if TODO_UPDATE_DVR_CODE
     dvr_entry_t *de;
     if((de = dvr_entry_find_by_event(e)) != NULL)
       htsmsg_add_str(m, "schedstate", dvr_entry_schedstatus(de));
-#endif
 
     htsmsg_add_msg(array, NULL, m);
   }
@@ -824,8 +811,8 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
             htsmsg_add_str(m, "uri", ee2->_.uri);
             htsmsg_add_str(m, "title", ee2->title);
             if (ee2->subtitle) htsmsg_add_str(m, "title", ee2->subtitle);
-            if (epg_episode_get_number_onscreen(ee2, buf, 100))
-              htsmsg_add_str(m, "episode", strdup(buf));
+            if (epg_episode_number_format(ee, buf, 100, NULL, "Season %d", ".", "Episode %d", "/%d"))
+              htsmsg_add_str(m, "episode", buf);
             htsmsg_add_msg(array, NULL, m);
           }
         } else if (ee->season) {
@@ -837,8 +824,8 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
             htsmsg_add_str(m, "uri", ee2->_.uri);
             htsmsg_add_str(m, "title", ee2->title);
             if (ee2->subtitle) htsmsg_add_str(m, "title", ee2->subtitle);
-            if (epg_episode_get_number_onscreen(ee2, buf, 100))
-              htsmsg_add_str(m, "episode", strdup(buf));
+            if (epg_episode_number_format(ee, buf, 100, NULL, "Season %d", ".", "Episode %d", "/%d"))
+              htsmsg_add_str(m, "episode", buf);
             htsmsg_add_msg(array, NULL, m);
           }
         }
@@ -864,11 +851,11 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_queue_t *hq = &hc->hc_reply;
   const char *op = http_arg_get(&hc->hc_req_args, "op");
   htsmsg_t *out, *r;
-  //TODO:event_t *e;
   dvr_entry_t *de;
   const char *s;
   int flags = 0;
   dvr_config_t *cfg;
+  epg_broadcast_t *e;
 
   if(op == NULL)
     op = "loadSettings";
@@ -882,11 +869,10 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
   if(!strcmp(op, "recordEvent")) {
 
-#if TODO_DVR
     const char *config_name = http_arg_get(&hc->hc_req_args, "config_name");
 
     s = http_arg_get(&hc->hc_req_args, "eventId");
-    if((e = epg_event_find_by_id(atoi(s))) == NULL) {
+    if((e = epg_broadcast_find_by_id(atoi(s), NULL)) == NULL) {
       pthread_mutex_unlock(&global_lock);
       return HTTP_STATUS_BAD_REQUEST;
     }
@@ -906,7 +892,6 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     dvr_entry_create_by_event(config_name,
                               e, hc->hc_representative, NULL, DVR_PRIO_NORMAL);
-#endif
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
@@ -990,13 +975,13 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     dvr_entry_create(config_name,
                      ch, start, stop, title, NULL, hc->hc_representative, 
-		     NULL, NULL, 0, dvr_pri2val(pri));
+		                 NULL, dvr_pri2val(pri));
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
 
   } else if(!strcmp(op, "createAutoRec")) {
-#if TODO_DVR
+#if TODO_DVR_AUTOREC
     const char *cgrp = http_arg_get(&hc->hc_req_args, "contentgrp");
 
     

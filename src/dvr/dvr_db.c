@@ -30,7 +30,7 @@
 #include "htsp.h"
 #include "streaming.h"
 
-//static int de_tally;
+static int de_tally;
 
 int dvr_iov_max;
 
@@ -40,9 +40,7 @@ struct dvr_entry_list dvrentries;
 static void dvr_entry_save(dvr_entry_t *de);
 
 static void dvr_timer_expire(void *aux);
-#if 0
 static void dvr_timer_start_recording(void *aux);
-#endif
 
 /**
  * Return printable status for a dvr entry
@@ -155,7 +153,6 @@ dvr_entry_notify(dvr_entry_t *de)
 /**
  *
  */
-#if TODO
 static void
 dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
 {
@@ -185,16 +182,11 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
   }
 
   if(cfg->dvr_flags & DVR_EPISODE_IN_TITLE) {
-
-    if(de->de_episode.ee_season && de->de_episode.ee_episode)
-      snprintf(output + strlen(output), outlen - strlen(output), 
-	       ".S%02dE%02d",
-	       de->de_episode.ee_season, de->de_episode.ee_episode);
-
-    else if(de->de_episode.ee_episode)
-      snprintf(output + strlen(output), outlen - strlen(output), 
-	       ".E%02d",
-	       de->de_episode.ee_episode);
+    if(de->de_bcast)  
+      epg_episode_number_format(de->de_bcast->episode,
+                                output + strlen(output),
+                                outlen - strlen(output),
+                                ".", "S%02d", NULL, "E%02d", NULL);
   }
 
   if(cfg->dvr_flags & DVR_CLEAN_TITLE) {
@@ -210,13 +202,10 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
         }
   }
 }
-#endif
-
 
 /**
  *
  */
-#if TODO
 static void
 dvr_entry_link(dvr_entry_t *de)
 {
@@ -251,20 +240,17 @@ dvr_entry_link(dvr_entry_t *de)
   }
   htsp_dvr_entry_add(de);
 }
-#endif
-
 
 /**
- *
+ * Create the event
  */
-dvr_entry_t *
-dvr_entry_create(const char *config_name,
-                 channel_t *ch, time_t start, time_t stop, 
-		 const char *title, const char *description,
-		 const char *creator, dvr_autorec_entry_t *dae,
-		 epg_episode_t *ee, uint8_t content_type, dvr_prio_t pri)
+static dvr_entry_t *_dvr_entry_create (
+  const char *config_name, epg_broadcast_t *e,
+  channel_t *ch, time_t start, time_t stop, 
+	const char *title, const char *description,
+	const char *creator, dvr_autorec_entry_t *dae,
+	dvr_prio_t pri)
 {
-#if TODO
   dvr_entry_t *de;
   char tbuf[30];
   struct tm tm;
@@ -297,14 +283,9 @@ dvr_entry_create(const char *config_name,
   de->de_title   = strdup(title);
   de->de_desc    = description ? strdup(description) : NULL;
 
-  if(ee != NULL) {
-    de->de_episode.ee_season  = ee->ee_season;
-    de->de_episode.ee_episode = ee->ee_episode;
-    de->de_episode.ee_part    = ee->ee_part;
-    tvh_str_set(&de->de_episode.ee_onscreen, ee->ee_onscreen);
-  }
-
+#if TODO_GENRE_SUPPORT
   de->de_content_type = content_type;
+#endif
 
   dvr_entry_link(de);
 
@@ -324,52 +305,40 @@ dvr_entry_create(const char *config_name,
   dvrdb_changed();
   dvr_entry_save(de);
   return de;
-#endif
-  return NULL;
 }
-
-
-/**
- *
- */
-#if TODO
-static const char *
-longest_string(const char *a, const char *b)
-{
-  if(b == NULL)
-    return a;
-  if(a == NULL)
-    return b;
-  return strlen(a) > strlen(b) ? a : b;
-}
-#endif
 
 
 /**
  *
  */
 dvr_entry_t *
-dvr_entry_create_by_event(const char *config_name,
-                          event_t *e, const char *creator, 
-			  dvr_autorec_entry_t *dae, dvr_prio_t pri)
+dvr_entry_create(const char *config_name,
+                 channel_t *ch, time_t start, time_t stop, 
+		 const char *title, const char *description,
+		 const char *creator, dvr_autorec_entry_t *dae, dvr_prio_t pri)
 {
-#if TODO
-  const char *desc = NULL;
-  if(e->e_channel == NULL || e->e_title == NULL)
+  return _dvr_entry_create(config_name, NULL,
+                           ch, start, stop, title, description,
+                           creator, dae, pri);
+}
+
+/**
+ *
+ */
+dvr_entry_t *
+dvr_entry_create_by_event(const char *config_name,
+                          epg_broadcast_t *e, const char *creator, 
+                          dvr_autorec_entry_t *dae, dvr_prio_t pri)
+{
+  if(e->channel == NULL || e->channel->channel || e->episode->title == NULL)
     return NULL;
 
-  // Try to find best description
-
-  desc = longest_string(e->e_desc, e->e_ext_desc);
-  desc = longest_string(desc, e->e_ext_item);
-  desc = longest_string(desc, e->e_ext_text);
-
-  return dvr_entry_create(config_name,
-                          e->e_channel, e->e_start, e->e_stop, 
-			  e->e_title, desc, creator, dae, &e->e_episode,
-			  e->e_content_type, pri);
-#endif
-  return NULL;
+  return _dvr_entry_create(config_name, e,
+                           e->channel->channel, e->start, e->stop,
+                           e->episode->title,
+                           e->episode->description ? e->episode->description
+                                                   : e->episode->summary,
+                           creator, dae, pri);
 }
 
 
@@ -377,7 +346,7 @@ dvr_entry_create_by_event(const char *config_name,
  *
  */
 void
-dvr_entry_create_by_autorec(event_t *e, dvr_autorec_entry_t *dae)
+dvr_entry_create_by_autorec(epg_broadcast_t *e, dvr_autorec_entry_t *dae)
 {
   char buf[200];
 
@@ -396,7 +365,6 @@ dvr_entry_create_by_autorec(event_t *e, dvr_autorec_entry_t *dae)
 void
 dvr_entry_dec_ref(dvr_entry_t *de)
 {
-#if TODO
   lock_assert(&global_lock);
 
   if(de->de_refcnt > 1) {
@@ -413,10 +381,7 @@ dvr_entry_dec_ref(dvr_entry_t *de)
   free(de->de_ititle);
   free(de->de_desc);
 
-  free(de->de_episode.ee_onscreen);
-
   free(de);
-#endif
 }
 
 
@@ -636,6 +601,7 @@ dvr_timer_expire(void *aux)
 dvr_entry_t * 
 dvr_entry_update(dvr_entry_t *de, const char* de_title, int de_start, int de_stop) 
 {
+  if (de->de_title) free(de->de_title);
 
   de->de_title = strdup(de_title);
   de->de_start = de_start;
@@ -652,19 +618,24 @@ dvr_entry_update(dvr_entry_t *de, const char* de_title, int de_start, int de_sto
 
 /**
  * Used to notify the DVR that an event has been replaced in the EPG
+ *
+ * TODO: I think this will record the title slot event if its now a 
+ *       completely different episode etc...
  */
 void 
-dvr_event_replaced(event_t *e, event_t *new_e)
+dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
 {
   dvr_entry_t *de, *ude;
+  if ( e == new_e ) return;
 
   de = dvr_entry_find_by_event(e);
   if (de != NULL) {
     ude = dvr_entry_find_by_event_fuzzy(new_e);
     if (ude == NULL && de->de_sched_state == DVR_SCHEDULED)
       dvr_entry_cancel(de);
-    else if(new_e->e_title != NULL)
-      dvr_entry_update(de, new_e->e_title, new_e->e_start, new_e->e_stop);
+    else if(new_e->episode->title != NULL)
+      dvr_entry_update(de, new_e->episode->title, new_e->start, new_e->stop);
+      // TODO: need to actually replace the event?
   }
       
     
@@ -700,20 +671,17 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode)
 /**
  *
  */
-#if TODO
 static void
 dvr_timer_stop_recording(void *aux)
 {
   dvr_stop_recording(aux, 0);
 }
-#endif
 
 
 
 /**
  *
  */
-#if 0
 static void
 dvr_timer_start_recording(void *aux)
 {
@@ -732,7 +700,6 @@ dvr_timer_start_recording(void *aux)
   gtimer_arm_abs(&de->de_timer, dvr_timer_stop_recording, de, 
 		 de->de_stop + (60 * de->de_stop_extra));
 }
-#endif
 
 
 /**
@@ -753,14 +720,12 @@ dvr_entry_find_by_id(int id)
  *
  */
 dvr_entry_t *
-dvr_entry_find_by_event(event_t *e)
+dvr_entry_find_by_event(epg_broadcast_t *e)
 {
   dvr_entry_t *de;
 
-  LIST_FOREACH(de, &e->e_channel->ch_dvrs, de_channel_link)
-    if(de->de_start == e->e_start &&
-       de->de_stop  == e->e_stop)
-      return de;
+  LIST_FOREACH(de, &e->channel->channel->ch_dvrs, de_channel_link)
+    if(de->de_bcast == e) return de;
   return NULL;
 }
 
@@ -768,15 +733,15 @@ dvr_entry_find_by_event(event_t *e)
  * Find dvr entry using 'fuzzy' search
  */
 dvr_entry_t *
-dvr_entry_find_by_event_fuzzy(event_t *e)
+dvr_entry_find_by_event_fuzzy(epg_broadcast_t *e)
 {
   dvr_entry_t *de;
   
-  if (e->e_title == NULL)
+  if (e->episode->title == NULL)
     return NULL;
 
-  LIST_FOREACH(de, &e->e_channel->ch_dvrs, de_channel_link)
-    if ((abs(de->de_start - e->e_start) < 600) && (abs(de->de_stop - e->e_stop) < 600)) {
+  LIST_FOREACH(de, &e->channel->channel->ch_dvrs, de_channel_link)
+    if ((abs(de->de_start - e->start) < 600) && (abs(de->de_stop - e->stop) < 600)) {
         return de;
     }
   return NULL;

@@ -124,10 +124,12 @@ typedef struct dvr_entry {
 
   dvr_prio_t de_pri;
 
-  epg_episode_t de_episode;
-  uint8_t de_content_type;
-
   uint32_t de_dont_reschedule;
+
+  /**
+   * EPG information / links
+   */
+  epg_broadcast_t *de_bcast;
 
   /**
    * Major State
@@ -188,6 +190,8 @@ typedef struct dvr_autorec_entry {
   char *dae_creator;
   char *dae_comment;
 
+// TODO: EPG linking for proper series recording
+
   char *dae_title;
   regex_t dae_title_preg;
   
@@ -228,10 +232,10 @@ const char *dvr_entry_status(dvr_entry_t *de);
 
 const char *dvr_entry_schedstatus(dvr_entry_t *de);
 
-void dvr_entry_create_by_autorec(event_t *e, dvr_autorec_entry_t *dae);
+void dvr_entry_create_by_autorec(epg_broadcast_t *e, dvr_autorec_entry_t *dae);
 
 dvr_entry_t *dvr_entry_create_by_event(const char *dvr_config_name,
-                                       event_t *e, const char *creator,
+                                       epg_broadcast_t *e, const char *creator,
 				       dvr_autorec_entry_t *dae,
 				       dvr_prio_t pri);
 
@@ -239,7 +243,6 @@ dvr_entry_t *dvr_entry_create(const char *dvr_config_name,
                               channel_t *ch, time_t start, time_t stop, 
 			      const char *title, const char *description,
 			      const char *creator, dvr_autorec_entry_t *dae,
-			      epg_episode_t *ee, uint8_t content_type,
 			      dvr_prio_t pri);
 
 dvr_entry_t *dvr_entry_update(dvr_entry_t *de, const char* de_title, int de_start, int de_stop);
@@ -254,13 +257,13 @@ void dvr_rec_subscribe(dvr_entry_t *de);
 
 void dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode);
 
-void dvr_event_replaced(event_t *e, event_t *new_e);
+void dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e);
 
 dvr_entry_t *dvr_entry_find_by_id(int id);
 
-dvr_entry_t *dvr_entry_find_by_event(event_t *e);
+dvr_entry_t *dvr_entry_find_by_event(epg_broadcast_t *e);
 
-dvr_entry_t *dvr_entry_find_by_event_fuzzy(event_t *e);
+dvr_entry_t *dvr_entry_find_by_event_fuzzy(epg_broadcast_t *e);
 
 off_t dvr_get_filesize(dvr_entry_t *de);
 
@@ -305,7 +308,7 @@ void dvr_autorec_add(const char *dvr_config_name,
 		     const char *tag, uint8_t content_type,
 		     const char *creator, const char *comment);
 
-void dvr_autorec_check_event(event_t *e);
+void dvr_autorec_check_event(epg_broadcast_t *e);
 
 void autorec_destroy_by_channel(channel_t *ch);
 

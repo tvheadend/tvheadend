@@ -815,17 +815,26 @@ static void _epg_episode_rem_broadcast
   RB_REMOVE(&episode->broadcasts, broadcast, elink);
 }
 
-int epg_episode_get_number_onscreen
-  ( epg_episode_t *episode, char *buf, int len )
+
+size_t epg_episode_number_format 
+  ( epg_episode_t *episode, char *buf, size_t len,
+    const char *pre,  const char *sfmt,
+    const char *sep,  const char *efmt,
+    const char *cfmt )
 {
-  int i = 0;
+  size_t i = 0;
   if ( episode->number ) {
-    // TODO: add counts
-    if ( episode->season && episode->season->number ) {
-      i += snprintf(&buf[i], len-i, "Season %d ",
-                    episode->season->number);
+    if (pre) i += snprintf(&buf[i], len-i, "%s", pre);
+    if ( sfmt && episode->season && episode->season->number ) {
+      i += snprintf(&buf[i], len-i, sfmt, episode->season->number);
+      if ( cfmt && episode->brand && episode->brand->season_count )
+        i += snprintf(&buf[i], len-i, cfmt,
+                      episode->brand->season_count);
+      if (sep) i += snprintf(&buf[i], len-i, "%s", sep);
     }
-    i += snprintf(&buf[i], len-i, "Episode %d", episode->number);
+    i += snprintf(&buf[i], len-i, efmt, episode->number);
+    if ( cfmt && episode->season && episode->season->episode_count)
+      i+= snprintf(&buf[i], len-i, cfmt, episode->season->episode_count);
   }
   return i;
 }
