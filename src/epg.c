@@ -130,32 +130,47 @@ void epg_save ( void )
 {
   int fd;
   epg_object_t  *eo, *ec;
+  epggrab_stats_t stats;
   
   fd = hts_settings_open_file(1, "epgdb");
 
   /* Channels */
+  memset(&stats, 0, sizeof(stats));
   if ( _epg_write_sect(fd, "channels") ) return;
   RB_FOREACH(eo,  &epg_channels, glink) {
     if (_epg_write(fd, epg_channel_serialize((epg_channel_t*)eo))) return;
+    stats.channels.total++;
   }
   if ( _epg_write_sect(fd, "brands") ) return;
   RB_FOREACH(eo,  &epg_brands, glink) {
     if (_epg_write(fd, epg_brand_serialize((epg_brand_t*)eo))) return;
+    stats.brands.total++;
   }
   if ( _epg_write_sect(fd, "seasons") ) return;
   RB_FOREACH(eo,  &epg_seasons, glink) {
     if (_epg_write(fd, epg_season_serialize((epg_season_t*)eo))) return;
+    stats.seasons.total++;
   }
   if ( _epg_write_sect(fd, "episodes") ) return;
   RB_FOREACH(eo,  &epg_episodes, glink) {
     if (_epg_write(fd, epg_episode_serialize((epg_episode_t*)eo))) return;
+    stats.episodes.total++;
   }
   if ( _epg_write_sect(fd, "broadcasts") ) return;
   RB_FOREACH(ec, &epg_channels, glink) {
     RB_FOREACH(eo, &((epg_channel_t*)ec)->schedule, glink) {
       if (_epg_write(fd, epg_broadcast_serialize((epg_broadcast_t*)eo))) return;
+      stats.broadcasts.total++;
     }
   }
+
+  /* Stats */
+  tvhlog(LOG_DEBUG, "epg", "database saved");
+  tvhlog(LOG_DEBUG, "epg", "  channels   %d", stats.channels.total);
+  tvhlog(LOG_DEBUG, "epg", "  brands     %d", stats.brands.total);
+  tvhlog(LOG_DEBUG, "epg", "  seasons    %d", stats.seasons.total);
+  tvhlog(LOG_DEBUG, "epg", "  episodes   %d", stats.episodes.total);
+  tvhlog(LOG_DEBUG, "epg", "  broadcasts %d", stats.broadcasts.total);
 }
 
 void epg_init ( void )
@@ -249,11 +264,11 @@ void epg_init ( void )
 
   /* Stats */
   tvhlog(LOG_DEBUG, "epg", "database loaded");
-  tvhlog(LOG_DEBUG, "epg", "channels   %d", stats.channels.total);
-  tvhlog(LOG_DEBUG, "epg", "brands     %d", stats.brands.total);
-  tvhlog(LOG_DEBUG, "epg", "seasons    %d", stats.seasons.total);
-  tvhlog(LOG_DEBUG, "epg", "episodes   %d", stats.episodes.total);
-  tvhlog(LOG_DEBUG, "epg", "broadcasts %d", stats.broadcasts.total);
+  tvhlog(LOG_DEBUG, "epg", "  channels   %d", stats.channels.total);
+  tvhlog(LOG_DEBUG, "epg", "  brands     %d", stats.brands.total);
+  tvhlog(LOG_DEBUG, "epg", "  seasons    %d", stats.seasons.total);
+  tvhlog(LOG_DEBUG, "epg", "  episodes   %d", stats.episodes.total);
+  tvhlog(LOG_DEBUG, "epg", "  broadcasts %d", stats.broadcasts.total);
 
   /* Close file */
   munmap(mem, st.st_size);
@@ -1058,16 +1073,24 @@ static void _epg_channel_timer_callback ( void *p )
 
 static void _epg_channel_destroy ( epg_object_t *eo )
 {
+  epg_object_t *ebc;
   epg_channel_t *ec = (epg_channel_t*)eo;
   if (ec->channel) {
     tvhlog(LOG_CRIT, "epg", "attempt to destroy mapped channel");
     assert(0);
   }
+#if TODO_WHAT_SHOULD_BE_DONE
   if (RB_FIRST(&ec->schedule)) {
     tvhlog(LOG_CRIT, "epg", "attempt to destroy channel with schedule");
     assert(0);
   }
+#endif
   _epg_object_destroy(eo, &epg_channels);
+  // TODO: should we be doing this?
+  while ((ebc = RB_FIRST(&ec->schedule))) {
+    RB_REMOVE(&ec->schedule, ebc, glink);
+    ebc->putref(ebc);
+  }
   gtimer_disarm(&ec->expire);
   if (ec->name)  free(ec->name);
 #if TODO_NOT_IMPLEMENTED
