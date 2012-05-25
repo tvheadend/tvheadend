@@ -251,7 +251,6 @@ int epg_broadcast_set_episode    ( epg_broadcast_t *b, epg_episode_t *e )
   __attribute__((warn_unused_result));
 
 /* Accessors */
-// TODO: remove this!
 epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *b );
 
 /* Serialization */

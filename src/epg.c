@@ -79,13 +79,6 @@ static int _id_cmp ( const void *a, const void *b )
   return ((epg_object_t*)a)->id - ((epg_object_t*)b)->id;
 }
 
-#if TODO_NOT_NEEDED
-static int _ptr_cmp ( const void *a, const void *b )
-{
-  return a - b;
-}
-#endif
-
 static int _ebc_win_cmp ( const void *a, const void *b )
 {
   if ( ((epg_broadcast_t*)a)->start < ((epg_broadcast_t*)b)->start ) return -1;
@@ -99,64 +92,6 @@ static int _epg_channel_cmp ( epg_channel_t *ec, channel_t *ch )
   if ( ec->name && !strcmp(ec->name, ch->ch_name) ) ret = 1;
   return ret;
 }
-
-/* **************************************************************************
- * Testing/Debug
- * *************************************************************************/
-
-#if 0
-static void _epg_dump ( void )
-{
-  epg_object_t  *eo;
-  epg_brand_t   *eb;
-  epg_season_t  *es;
-  epg_episode_t *ee;
-  epg_channel_t *ec;
-  epg_broadcast_t *ebc;
-  printf("dump epg\n");
-
-  /* Go down the brand/season/episode */
-  RB_FOREACH(eo, &epg_brands, glink) {
-    eb = (epg_brand_t*)eo;
-    printf("BRAND: %p %s\n", eb, eb->_.uri);
-    RB_FOREACH(es, &eb->seasons, blink) {
-      printf("  SEASON: %p %s %d\n", es, es->_.uri, es->number);
-      RB_FOREACH(ee, &es->episodes, slink) {
-        printf("    EPISODE: %p %s %d\n", ee, ee->_.uri, ee->number);
-      }
-    }
-    RB_FOREACH(ee, &eb->episodes, blink) {
-      if ( !ee->season ) printf("  EPISODE: %p %s %d\n", ee, ee->_.uri, ee->number);
-    }
-  }
-  RB_FOREACH(eo, &epg_seasons, glink) {
-    es = (epg_season_t*)eo;
-    if ( !es->brand ) {
-      printf("SEASON: %p %s %d\n", es, es->_.uri, es->number);
-      RB_FOREACH(ee, &es->episodes, slink) {
-        printf("  EPISODE: %p %s %d\n", ee, ee->_.uri, ee->number);
-      }
-    }
-  }
-  RB_FOREACH(eo, &epg_episodes, glink) {
-    ee = (epg_episode_t*)eo;
-    if ( !ee->brand && !ee->season ) {
-      printf("EPISODE: %p %s %d\n", ee, ee->_.uri, ee->number);
-    }
-  }
-  RB_FOREACH(eo, &epg_channels, glink) {
-    ec = (epg_channel_t*)eo;
-    printf("CHANNEL: %s\n", ec->_.uri);
-    RB_FOREACH(eo, &ec->schedule, glink) {
-      ebc = (epg_broadcast_t*)eo;
-      if ( ebc->episode ) {
-        printf("  BROADCAST: %s @ %ld to %ld\n", ebc->episode->_.uri,
-               ebc->start, ebc->stop);
-      }
-    }
-  }
-}
-#endif
 
 /* **************************************************************************
  * Setup / Update
@@ -193,7 +128,6 @@ static int _epg_write_sect ( int fd, const char *sect )
 
 void epg_save ( void )
 {
-  // TODO: skip unref'd objects?
   int fd;
   epg_object_t  *eo, *ec;
   
@@ -357,8 +291,6 @@ static void _epg_object_putref ( epg_object_t *eo )
 {
   assert(eo->refcount>0); // Sanity!
   eo->refcount--;
-  printf("putref(%lu) = %d\n", eo->id, eo->refcount);
-  // TODO: do this here or defer to the epg_updated call?
   if (!eo->refcount) eo->destroy(eo);
 }
 
@@ -409,7 +341,6 @@ static epg_object_t *_epg_object_find_by_uri
   }
   skel->uri = (char*)uri;
   skel->id  = _epg_object_idx;
-  // TODO: need to add function pointers
 
   eo = _epg_object_find(create, &save2, tree, &skel, _uri_cmp);
   if (save2) {
@@ -427,7 +358,7 @@ static epg_object_t *_epg_object_find_by_id
   ( uint64_t id, epg_object_tree_t *tree )
 {
   epg_object_t *eo;
-  if (!tree) return NULL; // TODO: use a global list?
+  if (!tree) return NULL;
   RB_FOREACH(eo, tree, glink) {
     if ( eo->id == id ) return eo;
   }
@@ -440,7 +371,6 @@ static epg_object_t *_epg_object_find_by_id
 
 static void _epg_brand_destroy ( epg_object_t *eo )
 {
-  printf("_epg_brand_destroy(%lu, %s)\n", eo->id, eo->uri);
   epg_brand_t *eb = (epg_brand_t*)eo;
   if (RB_FIRST(&eb->seasons)) {
     tvhlog(LOG_CRIT, "epg", "attempt to destroy brand with seasons");
@@ -496,7 +426,6 @@ int epg_brand_set_summary ( epg_brand_t *brand, const char *summary )
 
 int epg_brand_set_season_count ( epg_brand_t *brand, uint16_t count )
 {
-  // TODO: could set only if less?
   int save = 0;
   if ( !brand || !count ) return 0;
   if ( brand->season_count != count ) {
@@ -572,7 +501,6 @@ epg_brand_t *epg_brand_deserialize ( htsmsg_t *m, int create, int *save )
 
 static void _epg_season_destroy ( epg_object_t *eo )
 {
-  printf("_epg_season_destroy(%lu, %s)\n", eo->id, eo->uri);
   epg_season_t *es = (epg_season_t*)eo;
   if (RB_FIRST(&es->episodes)) {
     tvhlog(LOG_CRIT, "epg", "attempt to destory season with episodes");
@@ -617,7 +545,6 @@ int epg_season_set_episode_count ( epg_season_t *season, uint16_t count )
 {
   int save = 0;
   if ( !season || !count ) return 0;
-  // TODO: should we only update if number is larger
   if ( season->episode_count != count ) {
     season->episode_count = count;
     save = 1;
@@ -714,7 +641,6 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save )
 
 static void _epg_episode_destroy ( epg_object_t *eo )
 {
-  printf("_epg_episode_destroy(%lu, %s)\n", eo->id, eo->uri);
   epg_episode_t *ee = (epg_episode_t*)eo;
   if (RB_FIRST(&ee->broadcasts)) {
     tvhlog(LOG_CRIT, "epg", "attempt to destroy episode with broadcasts");
@@ -955,7 +881,6 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
 
 static void _epg_broadcast_destroy ( epg_object_t *eo )
 {
-  printf("_epg_broadcast_destroy(%lu)\n", eo->id);
   epg_broadcast_t *ebc = (epg_broadcast_t*)eo;
   _epg_object_destroy(eo, NULL);
   if (ebc->episode) {
@@ -1085,13 +1010,6 @@ static void _epg_channel_timer_callback ( void *p )
   /* Clear now/next */
   cur = ec->now;
   ec->now = ec->next = NULL;
-#if 0
-  printf("dispatch_clock = %lu\n", dispatch_clock);
-  RB_FOREACH(eo, &ec->schedule, glink) {
-    ebc = (epg_broadcast_t*)eo;
-    printf("entry %lu @ %lu to %lu\n", eo->id, ebc->start, ebc->stop);
-  }
-#endif
 
   /* Check events */
   while ( (eo = RB_FIRST(&ec->schedule)) ) {
@@ -1140,7 +1058,6 @@ static void _epg_channel_timer_callback ( void *p )
 
 static void _epg_channel_destroy ( epg_object_t *eo )
 {
-  printf("_epg_channel_destroy(%lu, %s)\n", eo->id, eo->uri);
   epg_channel_t *ec = (epg_channel_t*)eo;
   if (ec->channel) {
     tvhlog(LOG_CRIT, "epg", "attempt to destroy mapped channel");
