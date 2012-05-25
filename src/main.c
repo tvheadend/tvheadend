@@ -423,6 +423,8 @@ main(int argc, char **argv)
   avahi_init();
 #endif
 
+  epg_updated(); // cleanup now all prev ref's should have been created
+
   pthread_mutex_unlock(&global_lock);
 
 
