@@ -269,7 +269,7 @@ _xmltv_parse_programme_tags(epg_channel_t *xc, htsmsg_t *tags,
   if ( ebc != NULL ) {
     stats->broadcasts.total++;
     if (save2) stats->broadcasts.created++;
-    save2 |= epg_broadcast_set_episode(ebc, ee, 1);
+    save2 |= epg_broadcast_set_episode(ebc, ee);
     if (save2) stats->broadcasts.modified++;
   }
   

@@ -185,14 +185,14 @@ static int _pyepg_parse_episode ( htsmsg_t *data, epggrab_stats_t *stats )
   /* Set brand */
   if ((str = htsmsg_get_str(attr, "brand"))) {
     if ((brand = epg_brand_find_by_uri(str, 0, NULL))) {
-      save |= epg_episode_set_brand(episode, brand, 1);
+      save |= epg_episode_set_brand(episode, brand);
     }
   }
 
   /* Set season */
   if ((str = htsmsg_get_str(attr, "series"))) {
     if ((season = epg_season_find_by_uri(str, 0, NULL))) {
-      save |= epg_episode_set_season(episode, season, 1);
+      save |= epg_episode_set_season(episode, season);
     }
   }
 
@@ -254,9 +254,6 @@ static int _pyepg_parse_broadcast
   if (!_pyepg_parse_time(start, &tm_start)) return 0;
   if (!_pyepg_parse_time(stop, &tm_stop)) return 0;
 
-  /* Ignore */
-  if(tm_stop <= tm_start || tm_stop < dispatch_clock) return 0;
-
   /* Find broadcast */
   broadcast = epg_broadcast_find_by_time(channel, tm_start, tm_stop, 1, &save);
   if ( broadcast == NULL ) return 0;
@@ -264,7 +261,7 @@ static int _pyepg_parse_broadcast
   if ( save ) stats->broadcasts.created++;
 
   /* Set episode */
-  save |= epg_broadcast_set_episode(broadcast, episode, 1);
+  save |= epg_broadcast_set_episode(broadcast, episode);
 
   /* TODO: extra metadata */
   
@@ -383,8 +380,11 @@ static htsmsg_t* _pyepg_grab ( const char *iopts )
   tvhlog(LOG_DEBUG, "pyepg", "grab %s %s", argv[0], iopts ? iopts : ""); 
 
   /* Grab */
-  // TODO: HACK: use static input
+#if 0
   outlen = spawn_and_store_stdout(argv[0], (char *const*)argv, &outbuf);
+#else
+  outlen = spawn_and_store_stdout("/home/aps/tmp/epg.sh", NULL, &outbuf);
+#endif
   free(opts);
   if ( outlen < 1 ) {
     tvhlog(LOG_ERR, "pyepg", "no output detected");
