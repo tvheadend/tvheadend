@@ -62,12 +62,12 @@ typedef struct epg_broadcast_tree epg_broadcast_tree_t;
 /* Object */
 typedef struct epg_object
 {
-  RB_ENTRY(epg_object)  glink;      ///< Global list link
-  RB_ENTRY(epg_object)  ulink;     ///< Global unref'd link
+  RB_ENTRY(epg_object)    glink;     ///< Global list link
+  LIST_ENTRY(epg_object)  ulink;     ///< Global unref'd link
 
-  char                 *uri;        ///< Unique ID (from grabber)
-  uint64_t              id;         ///< Internal ID
-  int                   refcount;   ///< Reference counting
+  char                   *uri;       ///< Unique ID (from grabber)
+  uint64_t                id;        ///< Internal ID
+  int                     refcount;  ///< Reference counting
 
   void (*getref)  ( epg_object_t* ); ///< Get a reference
   void (*putref)  ( epg_object_t* ); ///< Release a reference
@@ -104,14 +104,6 @@ int epg_brand_set_title        ( epg_brand_t *b, const char *title )
 int epg_brand_set_summary      ( epg_brand_t *b, const char *summary )
   __attribute__((warn_unused_result));
 int epg_brand_set_season_count ( epg_brand_t *b, uint16_t season_count )
-  __attribute__((warn_unused_result));
-int epg_brand_add_season       ( epg_brand_t *b, epg_season_t *s, int u )
-  __attribute__((warn_unused_result));
-int epg_brand_rem_season       ( epg_brand_t *b, epg_season_t *s, int u )
-  __attribute__((warn_unused_result));
-int epg_brand_add_episode      ( epg_brand_t *b, epg_episode_t *s, int u )
-  __attribute__((warn_unused_result));
-int epg_brand_rem_episode      ( epg_brand_t *b, epg_episode_t *s, int u )
   __attribute__((warn_unused_result));
 
 /* Serialization */
@@ -150,10 +142,6 @@ int epg_season_set_number        ( epg_season_t *s, uint16_t number )
 int epg_season_set_episode_count ( epg_season_t *s, uint16_t episode_count )
   __attribute__((warn_unused_result));
 int epg_season_set_brand         ( epg_season_t *s, epg_brand_t *b, int u )
-  __attribute__((warn_unused_result));
-int epg_season_add_episode       ( epg_season_t *s, epg_episode_t *e, int u )
-  __attribute__((warn_unused_result));
-int epg_season_rem_episode       ( epg_season_t *s, epg_episode_t *e, int u )
   __attribute__((warn_unused_result));
 
 /* Serialization */
@@ -207,13 +195,9 @@ int epg_episode_set_number       ( epg_episode_t *e, uint16_t number )
 int epg_episode_set_part         ( epg_episode_t *e, 
                                    uint16_t number, uint16_t count )
   __attribute__((warn_unused_result));
-int epg_episode_set_brand        ( epg_episode_t *e, epg_brand_t *b, int u )
+int epg_episode_set_brand        ( epg_episode_t *e, epg_brand_t *b )
   __attribute__((warn_unused_result));
-int epg_episode_set_season       ( epg_episode_t *e, epg_season_t *s, int u )
-  __attribute__((warn_unused_result));
-int epg_episode_add_broadcast    ( epg_episode_t *e, epg_broadcast_t *b, int u )
-  __attribute__((warn_unused_result));
-int epg_episode_rem_broadcast    ( epg_episode_t *e, epg_broadcast_t *b, int u )
+int epg_episode_set_season       ( epg_episode_t *e, epg_season_t *s )
   __attribute__((warn_unused_result));
 
 /* Acessors */
@@ -261,13 +245,14 @@ typedef struct epg_broadcast
 /* Lookup */
 epg_broadcast_t *epg_broadcast_find_by_time 
   ( epg_channel_t *ch, time_t start, time_t stop, int create, int *save );
-epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id );
+epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id, epg_channel_t *ch );
 
 /* Mutators */
-int epg_broadcast_set_episode    ( epg_broadcast_t *b, epg_episode_t *e, int u )
+int epg_broadcast_set_episode    ( epg_broadcast_t *b, epg_episode_t *e )
   __attribute__((warn_unused_result));
 
 /* Accessors */
+// TODO: remove this!
 epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *b );
 
 /* Serialization */
@@ -288,8 +273,11 @@ typedef struct epg_channel
   char                     **sname;         ///< DVB svc names (to map)
   int                      **sid;           ///< DVB svc ids   (to map)
 
+  epg_object_tree_t          schedule;      ///< List of broadcasts
+  LIST_ENTRY(epg_channel)    umlink;        ///< Unmapped channel link
   channel_t                 *channel;       ///< Link to real channel
-  epg_object_tree_t          schedule;      ///< Schedule (broadcasts)
+
+  gtimer_t                   expire;        ///< Expiration timer
 } epg_channel_t;
 
 /* Lookup */
@@ -304,10 +292,17 @@ int epg_channel_set_channel ( epg_channel_t *c, channel_t *ch );
 
 /* Accessors */
 epg_broadcast_t *epg_channel_get_current_broadcast ( epg_channel_t *c );
+epg_broadcast_t *epg_channel_get_broadcast
+  ( epg_channel_t *ch, time_t start, time_t stop, int create, int *save );
 
 /* Serialization */
 htsmsg_t      *epg_channel_serialize   ( epg_channel_t *b );
 epg_channel_t *epg_channel_deserialize ( htsmsg_t *m, int create, int *save );
+
+/* Channel mapping */
+void epg_channel_map_add ( channel_t *ch );
+void epg_channel_map_rem ( channel_t *ch );
+void epg_channel_map_mod ( channel_t *ch );
 
 /* ************************************************************************
  * Querying
@@ -336,43 +331,12 @@ void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
 
 
 /* ************************************************************************
- * Function prototypes
+ * Setup/Shutdown
  * ***********************************************************************/
 
-/*
- * Load/Save
- */
-
-void epg_init(void);
-void epg_save(void);
-
-void epg_updated           ( void );
-
-/*
- * Channel linking
- */
-void epg_add_channel ( channel_t *ch );
-void epg_rem_channel ( channel_t *ch );
-void epg_mod_channel ( channel_t *ch );
-
-/*
- * Simple lookup
- */
-
-
-epg_broadcast_t *epg_event_find_by_id(int eventid);
-
-/*
- * Advanced Query
- */
-
-/*
- * Genres?
- */
-uint8_t epg_content_group_find_by_name(const char *name);
-
-const char *epg_content_group_get_name(uint8_t type);
-
+void epg_init    (void);
+void epg_save    (void);
+void epg_updated (void);
 
 /* ************************************************************************
  * Compatibility code
