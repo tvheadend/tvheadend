@@ -104,8 +104,6 @@ LIST_HEAD(th_subscription_list, th_subscription);
 RB_HEAD(channel_tree, channel);
 TAILQ_HEAD(channel_queue, channel);
 LIST_HEAD(channel_list, channel);
-LIST_HEAD(event_list, event);
-RB_HEAD(event_tree, event);
 LIST_HEAD(dvr_config_list, dvr_config);
 LIST_HEAD(dvr_entry_list, dvr_entry);
 TAILQ_HEAD(ref_update_queue, ref_update);

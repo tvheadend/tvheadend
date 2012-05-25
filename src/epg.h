@@ -200,8 +200,21 @@ int epg_episode_set_brand        ( epg_episode_t *e, epg_brand_t *b )
 int epg_episode_set_season       ( epg_episode_t *e, epg_season_t *s )
   __attribute__((warn_unused_result));
 
-/* Acessors */
-int epg_episode_get_number_onscreen ( epg_episode_t *e, char *b, int c );
+/* EpNum format helper */
+// output string will be:
+// if (episode_num) 
+//   ret = pre
+//   if (season_num) ret += sprintf(sfmt, season_num)
+//   if (season_cnt && cnt) ret += sprintf(cnt, season_cnt)
+//   ret += sep
+//   ret += sprintf(efmt, episode_num)
+//   if (episode_cnt) ret += sprintf(cfmt, episode_cnt)
+// and will return num chars written
+size_t epg_episode_number_format 
+  ( epg_episode_t *e, char *buf, size_t len,
+    const char *pre,  const char *sfmt,
+    const char *sep,  const char *efmt,
+    const char *cfmt );
 
 /* Serialization */
 htsmsg_t      *epg_episode_serialize   ( epg_episode_t *b );
@@ -342,7 +355,8 @@ void epg_updated (void);
  * Compatibility code
  * ***********************************************************************/
 
-#ifndef TODO_REMOVE_EPG_COMPAT 
+//#define TODO_EPG_COMPAT
+#ifdef TODO_EPG_COMPAT
 
 typedef struct _epg_episode {
 

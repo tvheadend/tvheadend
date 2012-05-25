@@ -448,7 +448,7 @@ static int
 dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
-#if TODO
+#ifdef TODO_EIT_GRABBER
   service_t *t;
   channel_t *ch;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
@@ -468,8 +468,6 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   char extdesc[5000];
   char extitem[5000];
   char exttext[5000];
-
-  event_t *e;
 
   lock_assert(&global_lock);
 

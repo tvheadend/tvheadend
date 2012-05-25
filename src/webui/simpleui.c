@@ -209,7 +209,6 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
     return 404;
   }
 
-#if TODO_DVR
   de = dvr_entry_find_by_event(e);
 
   if((http_arg_get(&hc->hc_req_args, "rec")) != NULL) {
@@ -218,7 +217,6 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   } else if(de != NULL && (http_arg_get(&hc->hc_req_args, "cancel")) != NULL) {
     de = dvr_entry_cancel(de);
   }
-#endif
 
   htsbuf_qprintf(hq, "<html>");
   htsbuf_qprintf(hq, "<body>");
