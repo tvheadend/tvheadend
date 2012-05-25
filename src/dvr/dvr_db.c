@@ -601,7 +601,7 @@ dvr_timer_expire(void *aux)
 dvr_entry_t * 
 dvr_entry_update(dvr_entry_t *de, const char* de_title, int de_start, int de_stop) 
 {
-  if (de->de_title) free(de->de_title);
+  if(de->de_title) free(de->de_title);
 
   de->de_title = strdup(de_title);
   de->de_start = de_start;
