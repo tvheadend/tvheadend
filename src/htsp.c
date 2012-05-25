@@ -308,10 +308,12 @@ htsp_build_channel(channel_t *ch, const char *method)
   if(ch->ch_icon != NULL)
     htsmsg_add_str(out, "channelIcon", ch->ch_icon);
 
-  now = epg_channel_get_current_broadcast(ch->ch_epg_channel);
-  if ( now ) next = epg_broadcast_get_next(now);
-  htsmsg_add_u32(out, "eventId", now ? now->_.id : 0);
-  htsmsg_add_u32(out, "nextEventId", next ? next->_.id : 0);
+  if (ch->ch_epg_channel) {
+    now  = ch->ch_epg_channel->now;
+    next = ch->ch_epg_channel->next;
+    htsmsg_add_u32(out, "eventId", now ? now->_.id : 0);
+    htsmsg_add_u32(out, "nextEventId", next ? next->_.id : 0);
+  }
 
   LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
     ct = ctm->ctm_tag;
@@ -1423,8 +1425,8 @@ htsp_channel_update_current(channel_t *ch)
   htsmsg_add_str(m, "method", "channelUpdate");
   htsmsg_add_u32(m, "channelId", ch->ch_id);
 
-  now  = epg_channel_get_current_broadcast(ch->ch_epg_channel);
-  next = epg_broadcast_get_next(now);
+  now  = ch->ch_epg_channel->now;
+  next = ch->ch_epg_channel->next;
   htsmsg_add_u32(m, "eventId",     now  ? now->_.id : 0);
   htsmsg_add_u32(m, "nextEventId", next ? next->_.id : 0);
   htsp_async_send(m);

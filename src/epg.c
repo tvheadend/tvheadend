@@ -104,6 +104,7 @@ static int _epg_channel_cmp ( epg_channel_t *ec, channel_t *ch )
  * Testing/Debug
  * *************************************************************************/
 
+#if 0
 static void _epg_dump ( void )
 {
   epg_object_t  *eo;
@@ -155,6 +156,7 @@ static void _epg_dump ( void )
     }
   }
 }
+#endif
 
 /* **************************************************************************
  * Setup / Update
@@ -327,21 +329,22 @@ void epg_init ( void )
 void epg_updated ( void )
 {
   epg_object_t *eo;
-  LIST_FOREACH(eo, &epg_object_unref, ulink) {
-    printf("unref'd object %lu\n", eo->id);
+  while ((eo = LIST_FIRST(&epg_object_unref))) {
+    tvhlog(LOG_DEBUG, "epg",
+           "unref'd object %lu (%s) created during update", eo->id, eo->uri);
+    LIST_REMOVE(eo, ulink);
+    eo->destroy(eo);
   }
-
-  // TODO: remove this
-  if (0)_epg_dump();
 }
 
 /* **************************************************************************
  * Object
  * *************************************************************************/
 
-static void _epg_object_destroy ( epg_object_t *eo )
+static void _epg_object_destroy ( epg_object_t *eo, epg_object_tree_t *tree )
 {
   if (eo->uri) free(eo->uri);
+  if (tree) RB_REMOVE(tree, eo, glink);
 }
 
 static void _epg_object_getref ( epg_object_t *eo )
@@ -354,6 +357,7 @@ static void _epg_object_putref ( epg_object_t *eo )
 {
   assert(eo->refcount>0); // Sanity!
   eo->refcount--;
+  printf("putref(%lu) = %d\n", eo->id, eo->refcount);
   // TODO: do this here or defer to the epg_updated call?
   if (!eo->refcount) eo->destroy(eo);
 }
@@ -436,6 +440,7 @@ static epg_object_t *_epg_object_find_by_id
 
 static void _epg_brand_destroy ( epg_object_t *eo )
 {
+  printf("_epg_brand_destroy(%lu, %s)\n", eo->id, eo->uri);
   epg_brand_t *eb = (epg_brand_t*)eo;
   if (RB_FIRST(&eb->seasons)) {
     tvhlog(LOG_CRIT, "epg", "attempt to destroy brand with seasons");
@@ -445,7 +450,7 @@ static void _epg_brand_destroy ( epg_object_t *eo )
     tvhlog(LOG_CRIT, "epg", "attempt to destroy brand with episodes");
     assert(0);
   }
-  _epg_object_destroy(eo);
+  _epg_object_destroy(eo, &epg_brands);
   if (eb->title)   free(eb->title);
   if (eb->summary) free(eb->summary);
   free(eb);
@@ -567,12 +572,13 @@ epg_brand_t *epg_brand_deserialize ( htsmsg_t *m, int create, int *save )
 
 static void _epg_season_destroy ( epg_object_t *eo )
 {
+  printf("_epg_season_destroy(%lu, %s)\n", eo->id, eo->uri);
   epg_season_t *es = (epg_season_t*)eo;
   if (RB_FIRST(&es->episodes)) {
     tvhlog(LOG_CRIT, "epg", "attempt to destory season with episodes");
     assert(0);
   }
-  _epg_object_destroy(eo);
+  _epg_object_destroy(eo, &epg_seasons);
   if (es->brand) {
     _epg_brand_rem_season(es->brand, es);
     es->brand->_.putref((epg_object_t*)es->brand);
@@ -641,7 +647,7 @@ int epg_season_set_brand ( epg_season_t *season, epg_brand_t *brand, int u )
     }
     season->brand = brand;
     _epg_brand_add_season(brand, season);
-    season->_.getref((epg_object_t*)season);
+    brand->_.getref((epg_object_t*)brand);
     save = 1;
   }
   return save;
@@ -708,12 +714,13 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save )
 
 static void _epg_episode_destroy ( epg_object_t *eo )
 {
+  printf("_epg_episode_destroy(%lu, %s)\n", eo->id, eo->uri);
   epg_episode_t *ee = (epg_episode_t*)eo;
   if (RB_FIRST(&ee->broadcasts)) {
     tvhlog(LOG_CRIT, "epg", "attempt to destroy episode with broadcasts");
     assert(0);
   }
-  _epg_object_destroy(eo);
+  _epg_object_destroy(eo, &epg_episodes);
   if (ee->brand) {
     _epg_brand_rem_episode(ee->brand, ee);
     ee->brand->_.putref((epg_object_t*)ee->brand);
@@ -948,7 +955,9 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
 
 static void _epg_broadcast_destroy ( epg_object_t *eo )
 {
+  printf("_epg_broadcast_destroy(%lu)\n", eo->id);
   epg_broadcast_t *ebc = (epg_broadcast_t*)eo;
+  _epg_object_destroy(eo, NULL);
   if (ebc->episode) {
     _epg_episode_rem_broadcast(ebc->episode, ebc);
     ebc->episode->_.putref((epg_object_t*)ebc->episode);
@@ -1012,8 +1021,8 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
   htsmsg_add_u32(m, "id", broadcast->_.id);
   htsmsg_add_u32(m, "start", broadcast->start);
   htsmsg_add_u32(m, "stop", broadcast->stop);
-  // TODO: should these be optional?
-  htsmsg_add_str(m, "channel", broadcast->channel->_.uri);
+  if (broadcast->channel)
+    htsmsg_add_str(m, "channel", broadcast->channel->_.uri);
   htsmsg_add_str(m, "episode", broadcast->episode->_.uri);
   
   if (broadcast->dvb_id)
@@ -1032,10 +1041,13 @@ epg_broadcast_t *epg_broadcast_deserialize
   uint32_t start, stop;
   uint64_t id;
 
+  // TODO: need to handle broadcasts without a channel
+  //       this will happen for DVR maintained broadcasts which
+  //       reference a no longer used channel (and also they will be
+  //       outside the time limit).
   if ( htsmsg_get_u64(m, "id", &id)                   ) return NULL;
   if ( htsmsg_get_u32(m, "start", &start)             ) return NULL;
   if ( htsmsg_get_u32(m, "stop", &stop)               ) return NULL;
-  // TODO: should these be optional?
   if ( !(str = htsmsg_get_str(m, "channel"))          ) return NULL;
   if ( !(ec  = epg_channel_find_by_uri(str, 0, NULL)) ) return NULL;
   if ( !(str = htsmsg_get_str(m, "episode"))          ) return NULL;
@@ -1063,30 +1075,72 @@ epg_broadcast_t *epg_broadcast_deserialize
  * Channel
  * *************************************************************************/
 
-static void _epg_channel_expire_callback ( void *p )
+static void _epg_channel_timer_callback ( void *p )
 {
   time_t next = 0;
   epg_object_t *eo;
-  epg_broadcast_t *ebc;
+  epg_broadcast_t *ebc, *cur;
   epg_channel_t *ec = (epg_channel_t*)p;
+
+  /* Clear now/next */
+  cur = ec->now;
+  ec->now = ec->next = NULL;
+#if 0
+  printf("dispatch_clock = %lu\n", dispatch_clock);
+  RB_FOREACH(eo, &ec->schedule, glink) {
+    ebc = (epg_broadcast_t*)eo;
+    printf("entry %lu @ %lu to %lu\n", eo->id, ebc->start, ebc->stop);
+  }
+#endif
+
+  /* Check events */
   while ( (eo = RB_FIRST(&ec->schedule)) ) {
     ebc = (epg_broadcast_t*)eo;
-    if ( ebc->stop < dispatch_clock ) {
+
+    /* Expire */
+    if ( ebc->stop <= dispatch_clock ) {
       RB_REMOVE(&ec->schedule, eo, glink);
       eo->putref(eo);
+      tvhlog(LOG_DEBUG, "epg", "expire event %lu from %s",
+             eo->id, ec->_.uri);
+      continue; // skip to next
+
+    /* No now */
+    } else if ( ebc->start > dispatch_clock ) {
+      ec->next = ebc;
+      next     = ebc->start;
+
+    /* Now/Next */
     } else {
-      next = ebc->stop;
-      break;
+      ec->now  = ebc;
+      ec->next = (epg_broadcast_t*)RB_NEXT(eo, glink);
+      next     = ebc->stop;
     }
+    break;
   }
+  tvhlog(LOG_DEBUG, "epg", "now/next %lu/%lu set on %s",
+         ec->now ? ec->now->_.id : 0,
+         ec->next ? ec->next->_.id : 0,
+         ec->_.uri);
 
   /* re-arm */
-  if ( next ) 
-    gtimer_arm_abs(&ec->expire, _epg_channel_expire_callback, ec, next);
+  if ( next ) {
+    tvhlog(LOG_DEBUG, "epg", "arm channel timer @ %lu for %s",
+           next, ec->_.uri);
+    gtimer_arm_abs(&ec->expire, _epg_channel_timer_callback, ec, next);
+  }
+
+  /* Update HTSP */
+  if ( (cur != ec->now) && ec->channel ) {
+    tvhlog(LOG_DEBUG, "epg", "inform HTSP of now event change on %s",
+           ec->_.uri);
+    htsp_channel_update_current(ec->channel);
+  }
 }
 
 static void _epg_channel_destroy ( epg_object_t *eo )
 {
+  printf("_epg_channel_destroy(%lu, %s)\n", eo->id, eo->uri);
   epg_channel_t *ec = (epg_channel_t*)eo;
   if (ec->channel) {
     tvhlog(LOG_CRIT, "epg", "attempt to destroy mapped channel");
@@ -1096,6 +1150,7 @@ static void _epg_channel_destroy ( epg_object_t *eo )
     tvhlog(LOG_CRIT, "epg", "attempt to destroy channel with schedule");
     assert(0);
   }
+  _epg_object_destroy(eo, &epg_channels);
   gtimer_disarm(&ec->expire);
   if (ec->name)  free(ec->name);
 #if TODO_NOT_IMPLEMENTED
@@ -1196,18 +1251,16 @@ epg_broadcast_t *epg_channel_get_broadcast
                      (epg_object_t**)&skel, _ebc_win_cmp);
   if (save2) {
     ebc->_.getref((epg_object_t*)ebc);
-    if (RB_FIRST(&channel->schedule) == (epg_object_t*)ebc)
-      _epg_channel_expire_callback(channel);
+    
+    /* New current/next */
+    if ( (RB_FIRST(&channel->schedule) == (epg_object_t*)ebc) ||
+         (channel->now &&
+          RB_NEXT((epg_object_t*)channel->now, glink) == (epg_object_t*)ebc) ) {
+      _epg_channel_timer_callback(channel);
+    }
     *save |= 1;
   }
   return ebc;
-}
-
-epg_broadcast_t *epg_channel_get_current_broadcast ( epg_channel_t *channel )
-{
-  // TODO: its not really the head!
-  if ( !channel ) return NULL;
-  return (epg_broadcast_t*)RB_FIRST(&channel->schedule);
 }
 
 htsmsg_t *epg_channel_serialize ( epg_channel_t *channel )
