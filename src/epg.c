@@ -1044,9 +1044,9 @@ static void _epg_channel_timer_callback ( void *p )
     /* Expire */
     if ( ebc->stop <= dispatch_clock ) {
       RB_REMOVE(&ec->schedule, eo, glink);
-      eo->putref(eo);
       tvhlog(LOG_DEBUG, "epg", "expire event %lu from %s",
              eo->id, ec->_.uri);
+      eo->putref(eo);
       continue; // skip to next
 
     /* No now */
