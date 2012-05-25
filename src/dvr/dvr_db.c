@@ -330,7 +330,7 @@ dvr_entry_create_by_event(const char *config_name,
                           epg_broadcast_t *e, const char *creator, 
                           dvr_autorec_entry_t *dae, dvr_prio_t pri)
 {
-  if(e->channel == NULL || e->channel->channel || e->episode->title == NULL)
+  if(!e->channel || !e->channel->channel || !e->episode->title)
     return NULL;
 
   return _dvr_entry_create(config_name, e,
