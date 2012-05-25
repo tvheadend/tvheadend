@@ -1127,6 +1127,7 @@ int epg_channel_set_name ( epg_channel_t *channel, const char *name )
   channel_t *ch;
   if ( !channel || !name ) return 0;
   if ( !channel->name || strcmp(channel->name, name) ) {
+    if (channel->name) free(channel->name);
     channel->name = strdup(name);
     // NOTE: does not remap
     if ( !channel->channel ) {
