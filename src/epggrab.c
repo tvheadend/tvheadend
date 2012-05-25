@@ -77,14 +77,16 @@ static void _epggrab_module_run ( epggrab_module_t *mod, const char *opts )
 
   /* Process */
   if ( data ) {
-    //htsmsg_print(data);
     tvhlog(LOG_DEBUG, mod->name(), "grab took %d seconds", tm2 - tm1);
     pthread_mutex_lock(&global_lock);
     time(&tm1);
-    save = mod->parse(data, &stats);
+    save |= mod->parse(data, &stats);
     time(&tm2);
+    if (save) epg_updated();  
     pthread_mutex_unlock(&global_lock);
     htsmsg_destroy(data);
+
+    /* Debug stats */
     tvhlog(LOG_DEBUG, mod->name(), "parse took %d seconds", tm2 - tm1);
     tvhlog(LOG_DEBUG, mod->name(), "  channels   tot=%5d new=%5d mod=%5d",
            stats.channels.total, stats.channels.created,
@@ -101,10 +103,6 @@ static void _epggrab_module_run ( epggrab_module_t *mod, const char *opts )
     tvhlog(LOG_DEBUG, mod->name(), "  broadcasts tot=%5d new=%5d mod=%5d",
            stats.broadcasts.total, stats.broadcasts.created,
            stats.broadcasts.modified);
-
-    /* Updated */
-    // TODO: should epg_updated happen inside or outside the lock?
-    if (save) epg_updated();  
 
   } else {
     tvhlog(LOG_WARNING, mod->name(), "grab returned no data");
@@ -235,6 +233,7 @@ void _epggrab_load ( void )
       }
     }
   }
+  htsmsg_destroy(m);
 }
 
 void _epggrab_save ( void )
