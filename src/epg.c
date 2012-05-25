@@ -1007,7 +1007,7 @@ int epg_broadcast_set_episode
 epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *broadcast )
 {
   if ( !broadcast ) return NULL;
-  return RB_NEXT(broadcast, slink);
+  return (epg_broadcast_t*)RB_NEXT((epg_object_t*)broadcast, glink);
 }
 
 htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
