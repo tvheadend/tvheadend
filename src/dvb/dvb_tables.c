@@ -41,6 +41,7 @@
 #include "psi.h"
 #include "notify.h"
 #include "cwc.h"
+#include "epggrab/eit.h"
 
 static void dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid);
 
@@ -325,7 +326,6 @@ tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
 /**
  * DVB Descriptor; Short Event
  */
-#if TODO
 static int
 dvb_desc_short_event(uint8_t *ptr, int len, 
 		     char *title, size_t titlelen,
@@ -409,7 +409,6 @@ dvb_desc_extended_event(uint8_t *ptr, int len,
 
   return 0;
 }
-#endif
 
 
 /**
@@ -448,7 +447,6 @@ static int
 dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
-#ifdef TODO_EIT_GRABBER
   service_t *t;
   channel_t *ch;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
@@ -459,6 +457,7 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   uint16_t event_id;
   time_t start_time, stop_time;
 
+  int ok;
   int duration;
   int dllen;
   uint8_t dtag, dlen;
@@ -509,6 +508,7 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     return 0;
 
   while(len >= 12) {
+    ok                        = 1;
     event_id                  = ptr[0] << 8 | ptr[1];
     start_time                = dvb_convert_date(&ptr[2]);
     duration                  = bcdtoint(ptr[7] & 0xff) * 3600 +
@@ -519,24 +519,8 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     len -= 12;
     ptr += 12;
 
-    if(dllen > len)
-      break;
+    if(dllen > len) break;
     stop_time = start_time + duration;
-
-    if(stop_time < dispatch_clock) {
-      /* Already come to pass, skip over it */
-      len -= dllen;
-      ptr += dllen;
-      continue;
-    }
-
-    if((e = epg_event_create(ch, start_time, start_time + duration,
-			     event_id, NULL)) == NULL) {
-      len -= dllen;
-      ptr += dllen;
-      continue;
-    }
-    int changed = 0;
 
     *title = 0;
     *desc = 0;
@@ -546,46 +530,29 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
       len -= 2; ptr += 2; dllen -= 2; 
 
-      if(dlen > len)
-	break;
+      if(dlen > len) break;
 
       switch(dtag) {
       case DVB_DESC_SHORT_EVENT:
-	if(!dvb_desc_short_event(ptr, dlen,
-				 title, sizeof(title),
-				 desc,  sizeof(desc),
-				 t->s_dvb_default_charset)) {
-	  changed |= epg_event_set_title(e, title);
-	  changed |= epg_event_set_desc(e, desc);
-	}
-	break;
+	      if(dvb_desc_short_event(ptr, dlen,
+				      title, sizeof(title),
+  				    desc,  sizeof(desc),
+				      t->s_dvb_default_charset)) ok = 0;
+	      break;
 
       case DVB_DESC_CONTENT:
-	if(dlen >= 2) {
-	  /* We only support one content type per event atm. */
-	  changed |= epg_event_set_content_type(e, (*ptr) >> 4);
-	}
-	break;
+#ifdef TODO_GENRE_SUPPORT
+      	if(dlen >= 2) {
+          genre = (*ptr) >> 4;
+	      }
+#endif
+	      break;
       case DVB_DESC_EXT_EVENT:
-        if(!dvb_desc_extended_event(ptr, dlen,
+        if(dvb_desc_extended_event(ptr, dlen,
               extdesc, sizeof(extdesc),
               extitem, sizeof(extitem),
               exttext, sizeof(exttext),
-              t->s_dvb_default_charset)) {
-          
-          char language[4];
-          memcpy(language, &ptr[1], 3);
-          language[3] = '\0';
-          int desc_number = (ptr[0] & 0xF0) >> 4;
-          //int desc_last   = (ptr[0] & 0x0F);
-          
-          if (strlen(extdesc))
-            changed |= epg_event_set_ext_desc(e, desc_number, extdesc);
-          if (strlen(extitem))
-            changed |= epg_event_set_ext_item(e, desc_number, extitem);
-          if (strlen(exttext))
-	    changed |= epg_event_set_ext_text(e, desc_number, exttext);
-        }
+              t->s_dvb_default_charset)) ok = 0;
         break;
       default: 
         break;
@@ -594,10 +561,11 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       len -= dlen; ptr += dlen; dllen -= dlen;
     }
 
-    if(changed)
-      epg_event_updated(e);
+    /* Pass to EIT handler */
+    if (ok)
+      eit_callback(ch, event_id, start_time, stop_time,
+                   title, desc, extitem, extdesc, exttext);
   }
-#endif
   return 0;
 }
 

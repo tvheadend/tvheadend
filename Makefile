@@ -74,7 +74,8 @@ SRCS =  src/main.c \
 	src/avc.c \
 
 SRCS += src/epggrab/pyepg.c\
-  src/epggrab/xmltv.c
+  src/epggrab/xmltv.c\
+  src/epggrab/eit.c
 
 
 
