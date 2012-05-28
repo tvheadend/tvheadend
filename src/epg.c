@@ -45,12 +45,16 @@
 #include "htsmsg_binary.h"
 #include "epggrab.h"
 
+/* Broadcast hashing */
+#define EPG_HASH_WIDTH 1024
+#define EPG_HASH_MASK  (EPG_HASH_WIDTH - 1)
+
 /* Element lists */
-struct epg_object_tree epg_brands;
-struct epg_object_tree epg_seasons;
-struct epg_object_tree epg_episodes;
-struct epg_object_tree epg_channels;
-struct epg_object_tree epg_broadcasts;
+epg_object_list_t epg_objects[EPG_HASH_WIDTH];
+epg_object_tree_t epg_brands;
+epg_object_tree_t epg_seasons;
+epg_object_tree_t epg_episodes;
+epg_object_tree_t epg_channels;
 
 /* Unmapped */
 LIST_HEAD(epg_channel_unmapped_list, epg_channel);
@@ -59,10 +63,9 @@ struct epg_channel_unmapped_list epg_channel_unmapped;
 struct channel_unmapped_list     channel_unmapped;
 
 /* Unreferenced */
-LIST_HEAD(epg_object_unref_list, epg_object);
-struct epg_object_unref_list epg_object_unref;
+epg_object_list_t epg_object_unref;
 
-/* Global counters */
+/* Global counter */
 static uint64_t _epg_object_idx    = 0;
 
 /* **************************************************************************
@@ -332,6 +335,7 @@ static epg_object_t *_epg_object_find
       if (!eo->putref) eo->putref = _epg_object_putref;
       _epg_object_idx++;
       LIST_INSERT_HEAD(&epg_object_unref, eo, ulink);
+      LIST_INSERT_HEAD(&epg_objects[eo->id & EPG_HASH_WIDTH], eo, hlink);
     }
   }
 
@@ -359,11 +363,20 @@ static epg_object_t *_epg_object_find_by_uri
   return eo;
 }
 
-static epg_object_t *_epg_object_find_by_id 
+static epg_object_t *_epg_object_find_by_id2 ( uint64_t id )
+{
+  epg_object_t *eo;
+  LIST_FOREACH(eo, &epg_objects[id & EPG_HASH_WIDTH], hlink) {
+    if (eo->id == id) return eo;
+  }
+  return NULL;
+}
+
+static epg_object_t *_epg_object_find_by_id
   ( uint64_t id, epg_object_tree_t *tree )
 {
   epg_object_t *eo;
-  if (!tree) return NULL;
+  if (!tree) return _epg_object_find_by_id2(id);
   RB_FOREACH(eo, tree, glink) {
     if ( eo->id == id ) return eo;
   }
@@ -755,13 +768,12 @@ int epg_episode_set_number ( epg_episode_t *episode, uint16_t number )
 int epg_episode_set_part ( epg_episode_t *episode, uint16_t part, uint16_t count )
 {
   int save = 0;
-  // TODO: could treat part/count independently
-  if ( !episode || !part || !count ) return 0;
+  if ( !episode || !part ) return 0;
   if ( episode->part_number != part ) {
     episode->part_number = part;
     save |= 1;
   }
-  if ( episode->part_count != count ) {
+  if ( count && episode->part_count != count ) {
     episode->part_count = count;
     save |= 1;
   }
@@ -925,14 +937,11 @@ epg_broadcast_t* epg_broadcast_find_by_time
 // TODO: allow optional channel parameter?
 epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id, epg_channel_t *ec )
 {
-  epg_object_t *eo = NULL, *eoc;
+  epg_object_t *eo = NULL;
   if ( ec ) {
     eo = _epg_object_find_by_id(id, &((epg_channel_t*)ec)->schedule);
   } else {
-    RB_FOREACH(eoc, &epg_channels, glink) {
-      eo = _epg_object_find_by_id(id, &((epg_channel_t*)eoc)->schedule);
-      if (eo) break;
-    }
+    eo = _epg_object_find_by_id2(id);
   }
   return (epg_broadcast_t*)eo;
 }
