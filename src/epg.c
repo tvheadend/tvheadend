@@ -1162,7 +1162,7 @@ int epg_channel_set_name ( epg_channel_t *channel, const char *name )
   if ( !channel->name || strcmp(channel->name, name) ) {
     if (channel->name) free(channel->name);
     channel->name = strdup(name);
-    // NOTE: does not remap
+    // TODO: need to allow overriding of EIT created channels
     if ( !channel->channel ) {
       LIST_FOREACH(ch, &channel_unmapped, ch_eulink) {
         if ( _epg_channel_cmp(channel, ch) ) {
@@ -1171,7 +1171,27 @@ int epg_channel_set_name ( epg_channel_t *channel, const char *name )
         }
       }
     }
+    // pass through
+    if ( channel->channel ) {
+      save |= channel_rename(channel->channel, name);
+    }
     save |= 1;
+  }
+  return save;
+}
+
+int epg_channel_set_icon ( epg_channel_t *channel, const char *icon )
+{
+  int save = 0;
+  if ( !channel | !icon ) return 0;
+  if ( !channel->icon || strcmp(channel->icon, icon) ) {
+    if ( channel->icon ) free(channel->icon);
+    channel->icon = strdup(icon);
+    // pass through
+    if ( channel->channel ) {
+      channel_set_icon(channel->channel, icon);
+    }
+    save = 1;
   }
   return save;
 }
@@ -1200,18 +1220,6 @@ int epg_channel_set_channel ( epg_channel_t *ec, channel_t *ch )
       ec->_.getref((epg_object_t*)ec);
     }
     save |= 1;
-  }
-  return save;
-}
-
-int epg_channel_set_icon ( epg_channel_t *channel, const char *icon )
-{
-  int save = 0;
-  if ( !channel | !icon ) return 0;
-  if ( !channel->icon || strcmp(channel->icon, icon) ) {
-    if ( channel->icon ) free(channel->icon);
-    channel->icon = strdup(icon);
-    save = 1;
   }
   return save;
 }
