@@ -32,9 +32,9 @@ static const char* _eit_name ( void )
   return "eit";
 }
 
-static void _eit_episode_uri ( char *uri, const char *title, const char *summary )
+static void _eit_episode_uri 
+  ( char *uri, const char *title, const char *summary )
 {
-
 }
 
 // called from dvb_tables.c
@@ -43,6 +43,7 @@ void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
                     const char *extitem, const char *extdesc,
                     const char *exttext ) {
   int save = 0;
+  epg_channel_t *ec;
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
   const char *summary     = NULL;
@@ -53,10 +54,13 @@ void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
 //if (epggrab_eit_disabled) return;
 
   /* Channel */
-  if (!ch->ch_epg_channel) {
-    // TODO: create??
-    return;
+  ec = ch->ch_epg_channel;
+  if (!ec) {
+    ec = epg_channel_find_by_uri(ch->ch_name, 1, &save);
+    if (ec)
+      epg_channel_set_channel(ec, ch);
   }
+  if (!ec) return;
 
   /* Find broadcast */
   ebc  = epg_channel_get_broadcast(ch->ch_epg_channel, start, stop, 1, &save);
@@ -67,7 +71,8 @@ void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
 
   /* Create/Replace episode */
   if ( !ebc->episode ||
-       !epg_episode_fuzzy_match(ebc->episode, uri, title, summary, description) ) {
+       !epg_episode_fuzzy_match(ebc->episode, uri, title,
+                                summary, description) ) {
     
     /* Create episode */
     ee  = epg_episode_find_by_uri(uri, 1, &save);
