@@ -32,6 +32,7 @@
 /*
  * Map types
  */
+LIST_HEAD(epg_object_list,  epg_object);
 RB_HEAD(epg_object_tree,    epg_object);
 RB_HEAD(epg_brand_tree,     epg_brand);
 RB_HEAD(epg_season_tree,    epg_season);
@@ -48,6 +49,7 @@ typedef struct epg_season         epg_season_t;
 typedef struct epg_episode        epg_episode_t;
 typedef struct epg_broadcast      epg_broadcast_t;
 typedef struct epg_channel        epg_channel_t;
+typedef struct epg_object_list    epg_object_list_t;
 typedef struct epg_object_tree    epg_object_tree_t;
 typedef struct epg_brand_tree     epg_brand_tree_t;
 typedef struct epg_season_tree    epg_season_tree_t;
@@ -62,7 +64,8 @@ typedef struct epg_broadcast_tree epg_broadcast_tree_t;
 /* Object */
 typedef struct epg_object
 {
-  RB_ENTRY(epg_object)    glink;     ///< Global list link
+  RB_ENTRY(epg_object)    glink;     ///< Global (URI) list link
+  LIST_ENTRY(epg_object)  hlink;     ///< Global (ID) hash link
   LIST_ENTRY(epg_object)  ulink;     ///< Global unref'd link
 
   char                   *uri;       ///< Unique ID (from grabber)
@@ -150,8 +153,6 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save );
 
 /* ************************************************************************
  * Episode
- *
- * TODO: ee_genre needs to be a list
  * ***********************************************************************/
 
 /* Object */
@@ -192,12 +193,18 @@ int epg_episode_set_description  ( epg_episode_t *e, const char *description )
   __attribute__((warn_unused_result));
 int epg_episode_set_number       ( epg_episode_t *e, uint16_t number )
   __attribute__((warn_unused_result));
+int epg_episode_set_onscreen     ( epg_episode_t *e, const char *onscreen )
+  __attribute__((warn_unused_result));
 int epg_episode_set_part         ( epg_episode_t *e, 
                                    uint16_t number, uint16_t count )
   __attribute__((warn_unused_result));
 int epg_episode_set_brand        ( epg_episode_t *e, epg_brand_t *b )
   __attribute__((warn_unused_result));
 int epg_episode_set_season       ( epg_episode_t *e, epg_season_t *s )
+  __attribute__((warn_unused_result));
+int epg_episode_set_genre        ( epg_episode_t *e, uint8_t g )
+  __attribute__((warn_unused_result));
+int epg_episode_set_genre_str    ( epg_episode_t *e, const char *s )
   __attribute__((warn_unused_result));
 
 /* EpNum format helper */
@@ -248,9 +255,9 @@ typedef struct epg_broadcast
   uint8_t                    is_new;           ///< New series / file premiere
   uint8_t                    is_repeat;        ///< Repeat screening
 
-  RB_ENTRY(epg_broadcast)    elink;         ///< Episode link
-  epg_episode_t             *episode;       ///< Episode shown
-  epg_channel_t             *channel;       ///< Channel being broadcast on
+  RB_ENTRY(epg_broadcast)    elink;            ///< Episode link
+  epg_episode_t             *episode;          ///< Episode shown
+  epg_channel_t             *channel;          ///< Channel being broadcast on
 
 } epg_broadcast_t;
 
@@ -281,6 +288,7 @@ typedef struct epg_channel
   epg_object_t               _;             ///< Parent object
 
   char                      *name;          ///< Channel name
+  char                      *icon;          ///< Channel icon
   char                     **sname;         ///< DVB svc names (to map)
   int                      **sid;           ///< DVB svc ids   (to map)
 
@@ -301,6 +309,8 @@ epg_channel_t *epg_channel_find_by_id ( uint64_t id );
 
 /* Mutators */
 int epg_channel_set_name ( epg_channel_t *c, const char *n )
+  __attribute__((warn_unused_result));
+int epg_channel_set_icon ( epg_channel_t *c, const char *i )
   __attribute__((warn_unused_result));
 int epg_channel_set_channel ( epg_channel_t *c, channel_t *ch );
 
