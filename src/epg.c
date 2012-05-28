@@ -851,6 +851,16 @@ size_t epg_episode_number_format
   return i;
 }
 
+int epg_episode_fuzzy_match
+  ( epg_episode_t *episode, const char *uri, const char *title,
+    const char *summary, const char *description )
+{
+  if ( !episode ) return 0;
+  if ( uri && episode->_.uri && !strcmp(episode->_.uri, uri) ) return 1;
+  // TODO: how to match title/summary/description
+  return 0;
+}
+
 htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
 {
   htsmsg_t *m;
@@ -1190,6 +1200,18 @@ int epg_channel_set_channel ( epg_channel_t *ec, channel_t *ch )
       ec->_.getref((epg_object_t*)ec);
     }
     save |= 1;
+  }
+  return save;
+}
+
+int epg_channel_set_icon ( epg_channel_t *channel, const char *icon )
+{
+  int save = 0;
+  if ( !channel | !icon ) return 0;
+  if ( !channel->icon || strcmp(channel->icon, icon) ) {
+    if ( channel->icon ) free(channel->icon);
+    channel->icon = strdup(icon);
+    save = 1;
   }
   return save;
 }

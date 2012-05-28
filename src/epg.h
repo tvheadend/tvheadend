@@ -223,6 +223,11 @@ size_t epg_episode_number_format
     const char *sep,  const char *efmt,
     const char *cfmt );
 
+/* Matching */
+int epg_episode_fuzzy_match
+  ( epg_episode_t *ee, const char *uri, const char *title,
+    const char *summary, const char *description );
+
 /* Serialization */
 htsmsg_t      *epg_episode_serialize   ( epg_episode_t *b );
 epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save );

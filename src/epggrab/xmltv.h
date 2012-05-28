@@ -1,6 +1,6 @@
 /*
- *  Electronic Program Guide - xmltv interface
- *  Copyright (C) 2007 Andreas Öman
+ *  Electronic Program Guide - xmltv grabber
+ *  Copyright (C) 2012 Adam Sutton
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

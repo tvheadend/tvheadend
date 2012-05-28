@@ -1,6 +1,6 @@
 /*
- *  Electronic Program Guide - xmltv interface
- *  Copyright (C) 2007 Andreas Öman
+ *  Electronic Program Guide - xmltv grabber
+ *  Copyright (C) 2012 Adam Sutton
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -43,7 +43,9 @@
  * Hash the description to get a URI for episode
  *
  * Note: converts to an ASCII format
+ * TODO: move somewhere else
  */
+#if 0
 static const char *_xmltv_hash ( const char *str )
 {
   size_t i;
@@ -56,6 +58,7 @@ static const char *_xmltv_hash ( const char *str )
   ret[MD5_DIGEST_LENGTH*2] = '\0';
   return ret;
 }
+#endif
 
 /**
  *
@@ -88,9 +91,7 @@ _xmltv_str2time(const char *str)
   }
 }
 
-#if TODO_XMLTV_EP_NUMBERING
-
-
+#if 0
 /**
  * This is probably the most obscure formating there is. From xmltv.dtd:
  *
@@ -180,35 +181,28 @@ xmltv_ns_get_parse_num(const char *s, int *ap, int *bp)
 
 
 static void
-parse_xmltv_ns_episode(const char *s, epg_episode_t *ee)
+parse_xmltv_ns_episode  
+(const char *s, int *season, int *episode, int *part)
 {
-  int season;
-  int episode;
-  int part;
+  s = xmltv_ns_get_parse_num(s, season, NULL);
+  s = xmltv_ns_get_parse_num(s, episode, NULL);
+  xmltv_ns_get_parse_num(s, part, NULL);
 
-  s = xmltv_ns_get_parse_num(s, &season, NULL);
-  s = xmltv_ns_get_parse_num(s, &episode, NULL);
-  xmltv_ns_get_parse_num(s, &part, NULL);
-
-  if(season != -1)
-    ee->ee_season = season + 1;
-  if(episode != -1)
-    ee->ee_episode = episode + 1;
-  if(part != -1)
-    ee->ee_part = part + 1;
+  *season += 1;
+  *episode += 1;
+  *part += 1;
 }
 
 /**
  *
  */
 static void
-get_episode_info(htsmsg_t *tags, epg_episode_t *ee)
+get_episode_info
+(htsmsg_t *tags, const char **screen, int *season, int *episode, int *part)
 {
   htsmsg_field_t *f;
   htsmsg_t *c, *a;
   const char *sys, *cdata;
-
-  memset(ee, 0, sizeof(epg_episode_t));
 
   HTSMSG_FOREACH(f, tags) {
     if((c = htsmsg_get_map_by_field(f)) == NULL ||
@@ -218,10 +212,9 @@ get_episode_info(htsmsg_t *tags, epg_episode_t *ee)
        (sys = htsmsg_get_str(a, "system")) == NULL)
       continue;
     
-    if(!strcmp(sys, "onscreen"))
-      tvh_str_set(&ee->ee_onscreen, cdata);
+    if(!strcmp(sys, "onscreen")) *screen = cdata;
     else if(!strcmp(sys, "xmltv_ns"))
-      parse_xmltv_ns_episode(cdata, ee);
+      parse_xmltv_ns_episode(cdata, season, episode, part);
   }
 }
 
@@ -234,20 +227,37 @@ static int
 _xmltv_parse_programme_tags(epg_channel_t *xc, htsmsg_t *tags, 
 			   time_t start, time_t stop, epggrab_stats_t *stats)
 {
+#if TODO_XMLTV
   int save = 0, save2 = 0;
-  epg_broadcast_t *ebc;
   epg_episode_t *ee;
+  epg_broadcast_t *ebc;
+  int sn = 0, en = 0, pn = 0;
+  const char *onscreen = NULL;
   const char *uri = NULL;
   const char *title = htsmsg_xml_get_cdata_str(tags, "title");
   const char *desc  = htsmsg_xml_get_cdata_str(tags, "desc");
-#if TODO_EPG_GENRE
   const char *category = htsmsg_xml_get_cdata_str(tags, "category");
-#endif
+  get_episode_info(tags, &onscreen, &sn, &en, &pn);
+
+  /* Create/Find broadcast */
+  ebc = epg_broadcast_find_by_time(xc, start, stop, 1, &save2);
+  if ( ebc != NULL ) {
+    stats->broadcasts.total++;
+    if (save2) stats->broadcasts.created++;
+    save2 |= epg_broadcast_set_episode(ebc, ee);
+    if (save2) stats->broadcasts.modified++;
+  }
+
+  // TODO:
+  //   do we attempt to make an episode URI from info?
+  //   OR
+  //   do we first try to find the broadcast and do a fuzzy check on params?
+  //   OR
+  //   do we do something else?
 
   /* Generate a URI */
   if ( desc ) 
     uri = _xmltv_hash(desc);
-  // TODO: what to do otherwise?
   if ( !uri ) return 0;
   
   /* Find episode */
@@ -256,24 +266,17 @@ _xmltv_parse_programme_tags(epg_channel_t *xc, htsmsg_t *tags,
   if (save) stats->episodes.created++;
   if (title) save |= epg_episode_set_title(ee, title);
   if (desc)  save |= epg_episode_set_description(ee, desc);
-#if TODO_EPG_GENRE
-  if (category) save |= epg_episode_set_genre(ee, category);
-#endif
-#if TODO_XMLTV_EP_NUMBERING
-  _get_episode_info(tags, &episode);
-#endif
+  if (category) save |= epg_episode_set_genre_str(ee, category);
+  if (onscreen) save |= epg_episode_set_onscreen(ee, onscreen);
+  if (pn) save |= epg_episode_set_part(ee, pn, 0);
+  if (en) save |= epg_episode_set_number(ee, en);
+  // TODO: how can we handle season number?
   if (save) stats->episodes.modified++;
 
-  /* Create broadcast */
-  ebc = epg_broadcast_find_by_time(xc, start, stop, 1, &save2);
-  if ( ebc != NULL ) {
-    stats->broadcasts.total++;
-    if (save2) stats->broadcasts.created++;
-    save2 |= epg_broadcast_set_episode(ebc, ee);
-    if (save2) stats->broadcasts.modified++;
-  }
   
   return save | save2;
+#endif
+  return 0;
 }
 
 
@@ -313,8 +316,8 @@ static int
 _xmltv_parse_channel(htsmsg_t *body, epggrab_stats_t *stats)
 {
   int save =0;
-  htsmsg_t *attribs, *tags;/*, *subtag;*/
-  const char *id, *name; /*,icon;*/
+  htsmsg_t *attribs, *tags, *subtag;
+  const char *id, *name, *icon;
   epg_channel_t *xc;
 
   if(body == NULL) return 0;
@@ -330,20 +333,11 @@ _xmltv_parse_channel(htsmsg_t *body, epggrab_stats_t *stats)
     save |= epg_channel_set_name(xc, name);
   }
 
-#if TODO_EPG_CHANNEL_META
   if((subtag  = htsmsg_get_map(tags,    "icon"))   != NULL &&
      (attribs = htsmsg_get_map(subtag,  "attrib")) != NULL &&
      (icon    = htsmsg_get_str(attribs, "src"))    != NULL) {
-    
-    if(xc->xc_icon == NULL || strcmp(xc->xc_icon, icon)) {
-      tvh_str_set(&xc->xc_icon, icon);
-      
-      LIST_FOREACH(ch, &xc->xc_channels, ch_xc_link)
-	channel_set_icon(ch, icon);
-      save = 1;
-    }
+    save |= epg_channel_set_icon(xc, icon);
   }
-#endif
   if (save) stats->channels.modified++;
   return save;
 }
