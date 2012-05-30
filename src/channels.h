@@ -19,6 +19,8 @@
 #ifndef CHANNELS_H
 #define CHANNELS_H
 
+#include "epg.h"
+
 LIST_HEAD(channel_tag_mapping_list, channel_tag_mapping);
 TAILQ_HEAD(channel_tag_queue, channel_tag);
 
@@ -43,8 +45,11 @@ typedef struct channel {
   LIST_HEAD(, service) ch_services;
   LIST_HEAD(, th_subscription) ch_subscriptions;
 
-  struct epg_channel *ch_epg_channel;
-  LIST_ENTRY(channel) ch_eulink;
+  /* EPG fields */
+  epg_object_tree_t   ch_epg_schedule;
+  epg_broadcast_t    *ch_epg_now;
+  epg_broadcast_t    *ch_epg_next;
+  gtimer_t            ch_epg_timer;
 
   gtimer_t ch_epg_timer_head;
   gtimer_t ch_epg_timer_current;
@@ -112,8 +117,6 @@ int channel_rename(channel_t *ch, const char *newname);
 void channel_delete(channel_t *ch);
 
 void channel_merge(channel_t *dst, channel_t *src);
-
-void channel_set_epg_source(channel_t *ch, struct epg_channel *ec);
 
 void channel_set_epg_postpre_time(channel_t *ch, int pre, int mins);
 

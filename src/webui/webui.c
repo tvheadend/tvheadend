@@ -181,7 +181,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
       sm->sm_data = NULL;
 
       epg_broadcast_t *e = NULL;
-      if(s->ths_channel) e = s->ths_channel->ch_epg_channel->now;
+      if(s->ths_channel) e = s->ths_channel->ch_epg_now;
 
       if(e && event_id != e->_.id) {
 	event_id = e->_.id;

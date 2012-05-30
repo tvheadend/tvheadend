@@ -563,8 +563,8 @@ mk_build_metadata2(const epg_broadcast_t *e)
   }
 #endif
 
-  if(e->channel->channel != NULL)
-    addtag(q, build_tag_string("TVCHANNEL", e->channel->channel->ch_name, 0, NULL));
+  if(e->channel != NULL)
+    addtag(q, build_tag_string("TVCHANNEL", e->channel->ch_name, 0, NULL));
 
   if(ee->title != NULL)
     addtag(q, build_tag_string("TITLE", ee->title, 0, NULL));

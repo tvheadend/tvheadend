@@ -26,8 +26,13 @@
 #ifndef EPG_H
 #define EPG_H
 
-#include "channels.h"
 #include "settings.h"
+
+/*
+ * Forward decls
+ */
+struct channel;
+struct channel_tag;
 
 /*
  * Map types
@@ -37,7 +42,6 @@ RB_HEAD(epg_object_tree,    epg_object);
 RB_HEAD(epg_brand_tree,     epg_brand);
 RB_HEAD(epg_season_tree,    epg_season);
 RB_HEAD(epg_episode_tree,   epg_episode);
-RB_HEAD(epg_channel_tree,   epg_channel);
 RB_HEAD(epg_broadcast_tree, epg_broadcast);
 
 /*
@@ -48,13 +52,11 @@ typedef struct epg_brand          epg_brand_t;
 typedef struct epg_season         epg_season_t;
 typedef struct epg_episode        epg_episode_t;
 typedef struct epg_broadcast      epg_broadcast_t;
-typedef struct epg_channel        epg_channel_t;
 typedef struct epg_object_list    epg_object_list_t;
 typedef struct epg_object_tree    epg_object_tree_t;
 typedef struct epg_brand_tree     epg_brand_tree_t;
 typedef struct epg_season_tree    epg_season_tree_t;
 typedef struct epg_episode_tree   epg_episode_tree_t;
-typedef struct epg_channel_tree   epg_channel_tree_t;
 typedef struct epg_broadcast_tree epg_broadcast_tree_t;
 
 /* ************************************************************************
@@ -241,7 +243,6 @@ typedef struct epg_broadcast
 {
   epg_object_t               _;                ///< Parent object
   
-  uint32_t                   dvb_id;           ///< DVB identifier
   time_t                     start;            ///< Start time
   time_t                     stop;             ///< End time
 
@@ -262,14 +263,14 @@ typedef struct epg_broadcast
 
   RB_ENTRY(epg_broadcast)    elink;            ///< Episode link
   epg_episode_t             *episode;          ///< Episode shown
-  epg_channel_t             *channel;          ///< Channel being broadcast on
+  struct channel            *channel;          ///< Channel being broadcast on
 
 } epg_broadcast_t;
 
 /* Lookup */
 epg_broadcast_t *epg_broadcast_find_by_time 
-  ( epg_channel_t *ch, time_t start, time_t stop, int create, int *save );
-epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id, epg_channel_t *ch );
+  ( struct channel *ch, time_t start, time_t stop, int create, int *save );
+epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id, struct channel *ch );
 
 /* Mutators */
 int epg_broadcast_set_episode    ( epg_broadcast_t *b, epg_episode_t *e )
@@ -287,50 +288,12 @@ epg_broadcast_t *epg_broadcast_deserialize
  * Channel - provides mapping from EPG channels to real channels
  * ***********************************************************************/
 
-/* Object */
-typedef struct epg_channel
-{
-  epg_object_t               _;             ///< Parent object
-
-  char                      *name;          ///< Channel name
-  char                      *icon;          ///< Channel icon
-  char                     **sname;         ///< DVB svc names (to map)
-  int                      **sid;           ///< DVB svc ids   (to map)
-
-  epg_object_tree_t          schedule;      ///< List of broadcasts
-  LIST_ENTRY(epg_channel)    umlink;        ///< Unmapped channel link
-  channel_t                 *channel;       ///< Link to real channel
-
-  epg_broadcast_t           *now;           ///< Current broadcast
-  epg_broadcast_t           *next;          ///< Next broadcast
-
-  gtimer_t                   expire;        ///< Expiration timer
-} epg_channel_t;
-
-/* Lookup */
-epg_channel_t *epg_channel_find_by_uri
-  ( const char *uri, int create, int *save );
-epg_channel_t *epg_channel_find_by_id ( uint64_t id );
-
-/* Mutators */
-int epg_channel_set_name ( epg_channel_t *c, const char *n )
-  __attribute__((warn_unused_result));
-int epg_channel_set_icon ( epg_channel_t *c, const char *i )
-  __attribute__((warn_unused_result));
-int epg_channel_set_channel ( epg_channel_t *c, channel_t *ch );
-
 /* Accessors */
 epg_broadcast_t *epg_channel_get_broadcast
-  ( epg_channel_t *ch, time_t start, time_t stop, int create, int *save );
+  ( struct channel *ch, time_t start, time_t stop, int create, int *save );
 
-/* Serialization */
-htsmsg_t      *epg_channel_serialize   ( epg_channel_t *b );
-epg_channel_t *epg_channel_deserialize ( htsmsg_t *m, int create, int *save );
-
-/* Channel mapping */
-void epg_channel_map_add ( channel_t *ch );
-void epg_channel_map_rem ( channel_t *ch );
-void epg_channel_map_mod ( channel_t *ch );
+/* Unlink */
+void epg_channel_unlink ( struct channel *ch );
 
 /* ************************************************************************
  * Querying
@@ -352,8 +315,8 @@ void epg_query_free(epg_query_result_t *eqr);
 void epg_query_sort(epg_query_result_t *eqr);
 
 /* Query routines */
-void epg_query0(epg_query_result_t *eqr, channel_t *ch, channel_tag_t *ct,
-                uint8_t type, const char *title);
+void epg_query0(epg_query_result_t *eqr, struct channel *ch,
+                struct channel_tag *ct, uint8_t type, const char *title);
 void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
 	       const char *contentgroup, const char *title);
 

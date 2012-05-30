@@ -229,9 +229,8 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 	      days[a.tm_wday], a.tm_mday, a.tm_mon + 1,
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
 
-  // TODO: use real channel?
   htsbuf_qprintf(hq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
-	      e->channel->name, e->episode->title);
+	      e->channel->ch_name, e->episode->title);
   
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
 
