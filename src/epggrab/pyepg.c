@@ -26,6 +26,44 @@
 #include "spawn.h"
 #include "epg.h"
 #include "epggrab/pyepg.h"
+#include "channels.h"
+
+/* **************************************************************************
+ * Channels
+ * *************************************************************************/
+
+epggrab_channel_tree_t _pyepg_channels;
+
+static channel_t *_pyepg_channel_create ( epggrab_channel_t *skel )
+{
+  epggrab_channel_t *ch
+    = epggrab_module_channel_create(&_pyepg_channels, skel);
+  if (ch) return ch->channel;
+  return NULL;
+}
+
+static channel_t *_pyepg_channel_find ( const char *id )
+{
+  epggrab_channel_t *ch 
+    = epggrab_module_channel_find(&_pyepg_channels, id);
+  if (ch) return ch->channel;
+  return NULL;
+}
+
+static void _pyepg_channel_add ( channel_t *ch )
+{
+  epggrab_module_channel_add(&_pyepg_channels, ch);
+}
+
+static void _pyepg_channel_rem ( channel_t *ch )
+{
+  epggrab_module_channel_rem(&_pyepg_channels, ch);
+}
+
+static void _pyepg_channel_mod ( channel_t *ch )
+{
+  epggrab_module_channel_mod(&_pyepg_channels, ch);
+}
 
 /* **************************************************************************
  * Parsing
@@ -47,25 +85,26 @@ static int _pyepg_parse_channel ( htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
   htsmsg_t *attr, *tags;
-  const char *id, *name = NULL;
-  epg_channel_t *channel;
+  const char *icon;
+  channel_t *ch;
+  epggrab_channel_t skel;
 
   if ( data == NULL ) return 0;
 
-  if ((attr = htsmsg_get_map(data, "attrib")) == NULL) return 0;
-  if ((id   = htsmsg_get_str(attr, "id")) == NULL) return 0;
-  if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
+  if ((attr    = htsmsg_get_map(data, "attrib")) == NULL) return 0;
+  if ((skel.id = (char*)htsmsg_get_str(attr, "id")) == NULL) return 0;
+  if ((tags    = htsmsg_get_map(data, "tags")) == NULL) return 0;
+  skel.name = (char*)htsmsg_xml_get_cdata_str(tags, "name");
+  icon      = htsmsg_xml_get_cdata_str(tags, "image");
 
-  /* Find channel */
-  if ((channel = epg_channel_find_by_uri(id, 1, &save)) == NULL) return 0;
-  stats->channels.total++;
-  if (save) stats->channels.created++;
+  ch = _pyepg_channel_create(&skel);
 
-  /* Set name */
-  name = htsmsg_xml_get_cdata_str(tags, "name");
-  if ( name ) save |= epg_channel_set_name(channel, name);
-  
-  if (save) stats->channels.modified++;
+  /* Update values */
+  if (ch) {
+    // TODO: set the name
+    //if (skel.name) save |= channel_rename(ch, skel.name);
+    if (icon)      channel_set_icon(ch, icon);
+  }
 
   return save;
 }
@@ -245,7 +284,7 @@ static int _pyepg_parse_episode ( htsmsg_t *data, epggrab_stats_t *stats )
 }
 
 static int _pyepg_parse_broadcast 
-  ( htsmsg_t *data, epg_channel_t *channel, epggrab_stats_t *stats )
+  ( htsmsg_t *data, channel_t *channel, epggrab_stats_t *stats )
 {
   int save = 0;
   htsmsg_t *attr;//, *tags;
@@ -289,19 +328,21 @@ static int _pyepg_parse_schedule ( htsmsg_t *data, epggrab_stats_t *stats )
   int save = 0;
   htsmsg_t *attr, *tags;
   htsmsg_field_t *f;
-  epg_channel_t *channel;
+  channel_t *channel;
   const char *str;
 
   if ( data == NULL ) return 0;
 
   if ((attr    = htsmsg_get_map(data, "attrib")) == NULL) return 0;
   if ((str     = htsmsg_get_str(attr, "channel")) == NULL) return 0;
-  if ((channel = epg_channel_find_by_uri(str, 0, NULL)) == NULL) return 0;
+  if ((channel = _pyepg_channel_find(str)) == NULL) return 0;
   if ((tags    = htsmsg_get_map(data, "tags")) == NULL) return 0;
+  stats->channels.total++;
 
   HTSMSG_FOREACH(f, tags) {
     if (strcmp(f->hmf_name, "broadcast") == 0) {
-      save |= _pyepg_parse_broadcast(htsmsg_get_map_by_field(f), channel, stats);
+      save |= _pyepg_parse_broadcast(htsmsg_get_map_by_field(f),
+                                     channel, stats);
     }
   }
 
@@ -333,7 +374,6 @@ static int _pyepg_parse_epg ( htsmsg_t *data, epggrab_stats_t *stats )
   return save;
 }
 
-// TODO: add stats updating
 static int _pyepg_parse ( htsmsg_t *data, epggrab_stats_t *stats )
 {
   htsmsg_t *tags, *epg;
@@ -341,8 +381,6 @@ static int _pyepg_parse ( htsmsg_t *data, epggrab_stats_t *stats )
 
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
 
-  // TODO: might be a better way to do this using DTD definition?
-  
   /* PyEPG format */
   if ((epg = htsmsg_get_map(tags, "epg")) != NULL)
     return _pyepg_parse_epg(epg, stats);
@@ -419,6 +457,9 @@ epggrab_module_t* pyepg_init ( void )
   pyepg_module.grab    = _pyepg_grab;
   pyepg_module.parse   = _pyepg_parse;
   pyepg_module.name    = _pyepg_name;
+  pyepg_module.ch_add  = _pyepg_channel_add;
+  pyepg_module.ch_rem  = _pyepg_channel_rem;
+  pyepg_module.ch_mod  = _pyepg_channel_mod;
   return &pyepg_module;
 }
 

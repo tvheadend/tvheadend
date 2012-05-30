@@ -63,6 +63,16 @@ typedef struct epg_broadcast_tree epg_broadcast_tree_t;
  * Generic Object
  * ***********************************************************************/
 
+/* Object type */
+typedef enum epg_object_type
+{
+  EPG_UNDEF,
+  EPG_BRAND,
+  EPG_SEASON,
+  EPG_EPISODE,
+  EPG_BROADCAST
+} epg_object_type_t;
+
 /* Object */
 typedef struct epg_object
 {
@@ -70,8 +80,9 @@ typedef struct epg_object
   LIST_ENTRY(epg_object)  hlink;     ///< Global (ID) hash link
   LIST_ENTRY(epg_object)  ulink;     ///< Global unref'd link
 
-  char                   *uri;       ///< Unique ID (from grabber)
+  epg_object_type_t       type;      ///< Specific object type
   uint64_t                id;        ///< Internal ID
+  char                   *uri;       ///< Unique ID (from grabber)
   int                     refcount;  ///< Reference counting
 
   void (*getref)  ( epg_object_t* ); ///< Get a reference

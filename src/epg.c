@@ -16,16 +16,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * TODO: list:
- *
- * - sanity checks on _destroy calls could just do what we're told and
- * unreference all links?
- *
- * - does the broadcast <-> channel referencing need to be 2 way?
- *   i.e. do we need to hold onto the CHANNEL info for DVR held broadcasts?
- */
-
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -54,13 +44,6 @@ epg_object_list_t epg_objects[EPG_HASH_WIDTH];
 epg_object_tree_t epg_brands;
 epg_object_tree_t epg_seasons;
 epg_object_tree_t epg_episodes;
-epg_object_tree_t epg_channels;
-
-/* Unmapped */
-LIST_HEAD(epg_channel_unmapped_list, epg_channel);
-LIST_HEAD(channel_unmapped_list, channel);
-struct epg_channel_unmapped_list epg_channel_unmapped;
-struct channel_unmapped_list     channel_unmapped;
 
 /* Unreferenced */
 epg_object_list_t epg_object_unref;
@@ -89,13 +72,6 @@ static int _ebc_win_cmp ( const void *a, const void *b )
   return 0;
 }
 
-static int _epg_channel_cmp ( epg_channel_t *ec, channel_t *ch )
-{
-  int ret = 0;
-  if ( ec->name && !strcmp(ec->name, ch->ch_name) ) ret = 1;
-  return ret;
-}
-
 /* **************************************************************************
  * Setup / Update
  * *************************************************************************/
@@ -113,6 +89,8 @@ static int _epg_write ( int fd, htsmsg_t *m )
       free(msgdata);
       if(w == msglen) ret = 0;
     }
+  } else {
+    ret = 0;
   }
   if(ret) {
     tvhlog(LOG_DEBUG, "epg", "failed to store epg to disk");
@@ -132,18 +110,13 @@ static int _epg_write_sect ( int fd, const char *sect )
 void epg_save ( void )
 {
   int fd;
-  epg_object_t  *eo, *ec;
+  epg_object_t  *eo;
+  channel_t *ch;
   epggrab_stats_t stats;
   
   fd = hts_settings_open_file(1, "epgdb");
 
-  /* Channels */
   memset(&stats, 0, sizeof(stats));
-  if ( _epg_write_sect(fd, "channels") ) return;
-  RB_FOREACH(eo,  &epg_channels, glink) {
-    if (_epg_write(fd, epg_channel_serialize((epg_channel_t*)eo))) return;
-    stats.channels.total++;
-  }
   if ( _epg_write_sect(fd, "brands") ) return;
   RB_FOREACH(eo,  &epg_brands, glink) {
     if (_epg_write(fd, epg_brand_serialize((epg_brand_t*)eo))) return;
@@ -160,8 +133,8 @@ void epg_save ( void )
     stats.episodes.total++;
   }
   if ( _epg_write_sect(fd, "broadcasts") ) return;
-  RB_FOREACH(ec, &epg_channels, glink) {
-    RB_FOREACH(eo, &((epg_channel_t*)ec)->schedule, glink) {
+  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
+    RB_FOREACH(eo, &ch->ch_epg_schedule, glink) {
       if (_epg_write(fd, epg_broadcast_serialize((epg_broadcast_t*)eo))) return;
       stats.broadcasts.total++;
     }
@@ -169,7 +142,6 @@ void epg_save ( void )
 
   /* Stats */
   tvhlog(LOG_DEBUG, "epg", "database saved");
-  tvhlog(LOG_DEBUG, "epg", "  channels   %d", stats.channels.total);
   tvhlog(LOG_DEBUG, "epg", "  brands     %d", stats.brands.total);
   tvhlog(LOG_DEBUG, "epg", "  seasons    %d", stats.seasons.total);
   tvhlog(LOG_DEBUG, "epg", "  episodes   %d", stats.episodes.total);
@@ -229,10 +201,6 @@ void epg_init ( void )
       if (s) {
         if (sect) free(sect);
         sect = strdup(s);
-
-      /* Channel */
-      } else if ( !strcmp(sect, "channels") ) {
-        if (epg_channel_deserialize(m, 1, &save)) stats.channels.total++;
 
       /* Brand */
       } else if ( !strcmp(sect, "brands") ) {
@@ -297,8 +265,10 @@ void epg_updated ( void )
 
 static void _epg_object_destroy ( epg_object_t *eo, epg_object_tree_t *tree )
 {
+  assert(eo->refcount == 0);
   if (eo->uri) free(eo->uri);
   if (tree) RB_REMOVE(tree, eo, glink);
+  LIST_REMOVE(eo, hlink);
 }
 
 static void _epg_object_getref ( epg_object_t *eo )
@@ -335,7 +305,7 @@ static epg_object_t *_epg_object_find
       if (!eo->putref) eo->putref = _epg_object_putref;
       _epg_object_idx++;
       LIST_INSERT_HEAD(&epg_object_unref, eo, ulink);
-      LIST_INSERT_HEAD(&epg_objects[eo->id & EPG_HASH_WIDTH], eo, hlink);
+      LIST_INSERT_HEAD(&epg_objects[eo->id & EPG_HASH_MASK], eo, hlink);
     }
   }
 
@@ -366,7 +336,7 @@ static epg_object_t *_epg_object_find_by_uri
 static epg_object_t *_epg_object_find_by_id2 ( uint64_t id )
 {
   epg_object_t *eo;
-  LIST_FOREACH(eo, &epg_objects[id & EPG_HASH_WIDTH], hlink) {
+  LIST_FOREACH(eo, &epg_objects[id & EPG_HASH_MASK], hlink) {
     if (eo->id == id) return eo;
   }
   return NULL;
@@ -410,6 +380,7 @@ epg_brand_t* epg_brand_find_by_uri
   static epg_object_t *skel = NULL;
   if ( !skel ) {
     skel          = calloc(1, sizeof(epg_brand_t));
+    skel->type    = EPG_BRAND;
     skel->destroy = _epg_brand_destroy;
   }
   return (epg_brand_t*)
@@ -543,6 +514,7 @@ epg_season_t* epg_season_find_by_uri
   static epg_object_t *skel = NULL;
   if ( !skel ) {
     skel          = calloc(1, sizeof(epg_season_t));
+    skel->type    = EPG_SEASON;
     skel->destroy = _epg_season_destroy;
   }
   return (epg_season_t*)
@@ -694,6 +666,7 @@ epg_episode_t* epg_episode_find_by_uri
   static epg_object_t *skel = NULL;
   if ( !skel ) {
     skel          = calloc(1, sizeof(epg_episode_t));
+    skel->type    = EPG_EPISODE;
     skel->destroy = _epg_episode_destroy;
   }
   return (epg_episode_t*)
@@ -939,17 +912,17 @@ static void _epg_broadcast_destroy ( epg_object_t *eo )
 }
 
 epg_broadcast_t* epg_broadcast_find_by_time 
-  ( epg_channel_t *channel, time_t start, time_t stop, int create, int *save )
+  ( channel_t *channel, time_t start, time_t stop, int create, int *save )
 {
   return epg_channel_get_broadcast(channel, start, stop, create, save);
 }
 
 // TODO: allow optional channel parameter?
-epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id, epg_channel_t *ec )
+epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id, channel_t *ch )
 {
   epg_object_t *eo = NULL;
-  if ( ec ) {
-    eo = _epg_object_find_by_id(id, &((epg_channel_t*)ec)->schedule);
+  if ( ch ) {
+    eo = _epg_object_find_by_id(id, &ch->ch_epg_schedule);
   } else {
     eo = _epg_object_find_by_id2(id);
   }
@@ -984,31 +957,27 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
 {
   htsmsg_t *m;
   if (!broadcast) return NULL;
-  if (!broadcast->channel || !broadcast->channel->_.uri) return NULL;
   if (!broadcast->episode || !broadcast->episode->_.uri) return NULL;
   m = htsmsg_create_map();
 
-  htsmsg_add_u32(m, "id", broadcast->_.id);
+  htsmsg_add_u64(m, "id", broadcast->_.id);
   htsmsg_add_u32(m, "start", broadcast->start);
   htsmsg_add_u32(m, "stop", broadcast->stop);
   if (broadcast->channel)
-    htsmsg_add_str(m, "channel", broadcast->channel->_.uri);
+    htsmsg_add_u32(m, "channel", broadcast->channel->ch_id);
   htsmsg_add_str(m, "episode", broadcast->episode->_.uri);
   
-  if (broadcast->dvb_id)
-    htsmsg_add_u32(m, "dvb-id", broadcast->dvb_id);
-  // TODO: add other metadata fields
   return m;
 }
 
 epg_broadcast_t *epg_broadcast_deserialize
   ( htsmsg_t *m, int create, int *save )
 {
+  channel_t *ch;
   epg_broadcast_t *ebc;
-  epg_channel_t *ec;
   epg_episode_t *ee;
   const char *str;
-  uint32_t start, stop;
+  uint32_t chid, start, stop;
   uint64_t id;
 
   // TODO: need to handle broadcasts without a channel
@@ -1018,12 +987,12 @@ epg_broadcast_t *epg_broadcast_deserialize
   if ( htsmsg_get_u64(m, "id", &id)                   ) return NULL;
   if ( htsmsg_get_u32(m, "start", &start)             ) return NULL;
   if ( htsmsg_get_u32(m, "stop", &stop)               ) return NULL;
-  if ( !(str = htsmsg_get_str(m, "channel"))          ) return NULL;
-  if ( !(ec  = epg_channel_find_by_uri(str, 0, NULL)) ) return NULL;
+  if ( htsmsg_get_u32(m, "channel", &chid)            ) return NULL;
+  if ( !(ch  = channel_find_by_identifier(chid))      ) return NULL;
   if ( !(str = htsmsg_get_str(m, "episode"))          ) return NULL;
   if ( !(ee  = epg_episode_find_by_uri(str, 0, NULL)) ) return NULL;
 
-  ebc = epg_broadcast_find_by_time(ec, start, stop, create, save);
+  ebc = epg_broadcast_find_by_time(ch, start, stop, create, save);
   if ( !ebc ) return NULL;
 
   *save |= epg_broadcast_set_episode(ebc, ee);
@@ -1032,11 +1001,7 @@ epg_broadcast_t *epg_broadcast_deserialize
   ebc->_.id = id;
   if ( id >= _epg_object_idx ) _epg_object_idx = id + 1;
 
-#if TODO_BROADCAST_METADATA
-  if ( !htsmsg_get_u32(m, "dvb-id", &u32) )
-    save |= epg_broadcast_set_dvb_id(ebc, u32);
   // TODO: more metadata
-#endif
 
   return ebc;
 }
@@ -1050,280 +1015,100 @@ static void _epg_channel_timer_callback ( void *p )
   time_t next = 0;
   epg_object_t *eo;
   epg_broadcast_t *ebc, *cur;
-  epg_channel_t *ec = (epg_channel_t*)p;
+  channel_t *ch = (channel_t*)p;
 
   /* Clear now/next */
-  cur = ec->now;
-  ec->now = ec->next = NULL;
+  cur = ch->ch_epg_now;
+  ch->ch_epg_now = ch->ch_epg_next = NULL;
 
   /* Check events */
-  while ( (eo = RB_FIRST(&ec->schedule)) ) {
+  while ( (eo = RB_FIRST(&ch->ch_epg_schedule)) ) {
     ebc = (epg_broadcast_t*)eo;
 
     /* Expire */
     if ( ebc->stop <= dispatch_clock ) {
-      RB_REMOVE(&ec->schedule, eo, glink);
+      RB_REMOVE(&ch->ch_epg_schedule, eo, glink);
       tvhlog(LOG_DEBUG, "epg", "expire event %lu from %s",
-             eo->id, ec->_.uri);
+             eo->id, ch->ch_name);
       eo->putref(eo);
       continue; // skip to next
 
     /* No now */
     } else if ( ebc->start > dispatch_clock ) {
-      ec->next = ebc;
-      next     = ebc->start;
+      ch->ch_epg_next = ebc;
+      next            = ebc->start;
 
     /* Now/Next */
     } else {
-      ec->now  = ebc;
-      ec->next = (epg_broadcast_t*)RB_NEXT(eo, glink);
-      next     = ebc->stop;
+      ch->ch_epg_now  = ebc;
+      ch->ch_epg_next = (epg_broadcast_t*)RB_NEXT(eo, glink);
+      next            = ebc->stop;
     }
     break;
   }
   tvhlog(LOG_DEBUG, "epg", "now/next %lu/%lu set on %s",
-         ec->now ? ec->now->_.id : 0,
-         ec->next ? ec->next->_.id : 0,
-         ec->_.uri);
+         ch->ch_epg_now  ?: 0,
+         ch->ch_epg_next ?: 0,
+         ch->ch_name);
 
   /* re-arm */
   if ( next ) {
     tvhlog(LOG_DEBUG, "epg", "arm channel timer @ %lu for %s",
-           next, ec->_.uri);
-    gtimer_arm_abs(&ec->expire, _epg_channel_timer_callback, ec, next);
+           next, ch->ch_name);
+    gtimer_arm_abs(&ch->ch_epg_timer, _epg_channel_timer_callback, ch, next);
   }
 
   /* Update HTSP */
-  if ( (cur != ec->now) && ec->channel ) {
+  if ( cur != ch->ch_epg_now ) {
     tvhlog(LOG_DEBUG, "epg", "inform HTSP of now event change on %s",
-           ec->_.uri);
-    htsp_channel_update_current(ec->channel);
+           ch->ch_name);
+    htsp_channel_update_current(ch);
   }
 }
 
-static void _epg_channel_destroy ( epg_object_t *eo )
+void epg_channel_unlink ( channel_t *ch )
 {
-  epg_object_t *ebc;
-  epg_channel_t *ec = (epg_channel_t*)eo;
-  if (ec->channel) {
-    tvhlog(LOG_CRIT, "epg", "attempt to destroy mapped channel");
-    assert(0);
+  epg_object_t *eo;
+  while ( (eo = RB_FIRST(&ch->ch_epg_schedule)) ) {
+    RB_REMOVE(&ch->ch_epg_schedule, eo, glink);
   }
-#if TODO_WHAT_SHOULD_BE_DONE
-  if (RB_FIRST(&ec->schedule)) {
-    tvhlog(LOG_CRIT, "epg", "attempt to destroy channel with schedule");
-    assert(0);
-  }
-#endif
-  _epg_object_destroy(eo, &epg_channels);
-  // TODO: should we be doing this?
-  while ((ebc = RB_FIRST(&ec->schedule))) {
-    RB_REMOVE(&ec->schedule, ebc, glink);
-    ebc->putref(ebc);
-  }
-  gtimer_disarm(&ec->expire);
-  if (ec->name)  free(ec->name);
-#if TODO_NOT_IMPLEMENTED
-  if (ec->sname) free(ec->sname);
-  if (ec->sid)   free(ec->sid);
-#endif
-  free(ec);
-}
-
-epg_channel_t* epg_channel_find_by_uri
-  ( const char *uri, int create, int *save )
-{
-  int save2 = 0;
-  static epg_object_t *skel = NULL;
-  if ( !skel ) {
-    skel          = calloc(1, sizeof(epg_channel_t));
-    skel->destroy = _epg_channel_destroy;
-  }
-  epg_channel_t *ec = (epg_channel_t*)
-    _epg_object_find_by_uri(uri, create, &save2,
-                            &epg_channels, &skel);
-  if (save2) {
-    LIST_INSERT_HEAD(&epg_channel_unmapped, ec, umlink);
-    *save |= 1;
-  }
-  return ec;
-}
-
-epg_channel_t *epg_channel_find_by_id ( uint64_t id )
-{
-  return (epg_channel_t*)_epg_object_find_by_id(id, &epg_channels);
-}
-
-int epg_channel_set_name ( epg_channel_t *channel, const char *name )
-{
-  int save = 0;
-  channel_t *ch;
-  if ( !channel || !name ) return 0;
-  if ( !channel->name || strcmp(channel->name, name) ) {
-    if (channel->name) free(channel->name);
-    channel->name = strdup(name);
-    // TODO: need to allow overriding of EIT created channels
-    if ( !channel->channel ) {
-      LIST_FOREACH(ch, &channel_unmapped, ch_eulink) {
-        if ( _epg_channel_cmp(channel, ch) ) {
-          epg_channel_set_channel(channel, ch);
-          break;
-        }
-      }
-    }
-    // pass through
-    if ( channel->channel ) {
-      save |= channel_rename(channel->channel, name);
-    }
-    save |= 1;
-  }
-  return save;
-}
-
-int epg_channel_set_icon ( epg_channel_t *channel, const char *icon )
-{
-  int save = 0;
-  if ( !channel | !icon ) return 0;
-  if ( !channel->icon || strcmp(channel->icon, icon) ) {
-    if ( channel->icon ) free(channel->icon);
-    channel->icon = strdup(icon);
-    // pass through
-    if ( channel->channel ) {
-      channel_set_icon(channel->channel, icon);
-    }
-    save = 1;
-  }
-  return save;
-}
-
-int epg_channel_set_channel ( epg_channel_t *ec, channel_t *ch )
-{
-  int save = 0;
-  if ( !ec ) return 0;
-  if ( ec->channel != ch ) {
-    if (ec->channel) {
-      tvhlog(LOG_DEBUG, "epg", "unlink channels %-30s -> %s",
-             ec->_.uri, ec->channel->ch_name);
-      channel_set_epg_source(ec->channel, NULL);
-      LIST_INSERT_HEAD(&channel_unmapped, ec->channel, ch_eulink);
-    } else {
-      LIST_REMOVE(ec, umlink);
-    }
-    ec->channel = ch;
-    if (!ch) {
-      LIST_INSERT_HEAD(&epg_channel_unmapped, ec, umlink);
-      ec->_.putref((epg_object_t*)ec);
-    } else {
-      tvhlog(LOG_DEBUG, "epg", "link channels %-30s -> %s",
-             ec->_.uri, ch->ch_name);
-      channel_set_epg_source(ch, ec);
-      ec->_.getref((epg_object_t*)ec);
-    }
-    save |= 1;
-  }
-  return save;
+  gtimer_disarm(&ch->ch_epg_timer);
 }
 
 epg_broadcast_t *epg_channel_get_broadcast 
-  ( epg_channel_t *channel, time_t start, time_t stop, int create, int *save )
+  ( channel_t *ch, time_t start, time_t stop, int create, int *save )
 {
   int save2 = 0;
   epg_broadcast_t *ebc;
   static epg_broadcast_t *skel;
-  if ( !channel || !start || !stop ) return NULL;
+  if ( !ch || !start || !stop ) return NULL;
   if ( stop <= start ) return NULL;
   if ( stop < dispatch_clock ) return NULL;
 
   if ( skel == NULL ) skel = calloc(1, sizeof(epg_broadcast_t));
-  skel->channel   = channel;
+  skel->channel   = ch;
   skel->start     = start;
   skel->stop      = stop;
   skel->_.id      = _epg_object_idx;
+  skel->_.type    = EPG_BROADCAST;
   skel->_.destroy = _epg_broadcast_destroy;
 
   ebc = (epg_broadcast_t*)
-    _epg_object_find(create, &save2, &channel->schedule,
+    _epg_object_find(create, &save2, &ch->ch_epg_schedule,
                      (epg_object_t**)&skel, _ebc_win_cmp);
   if (save2) {
     ebc->_.getref((epg_object_t*)ebc);
     
     /* New current/next */
-    if ( (RB_FIRST(&channel->schedule) == (epg_object_t*)ebc) ||
-         (channel->now &&
-          RB_NEXT((epg_object_t*)channel->now, glink) == (epg_object_t*)ebc) ) {
-      _epg_channel_timer_callback(channel);
+    if ( (RB_FIRST(&ch->ch_epg_schedule) == (epg_object_t*)ebc) ||
+         (ch->ch_epg_now &&
+          RB_NEXT((epg_object_t*)ch->ch_epg_now, glink) == (epg_object_t*)ebc) ) {
+      _epg_channel_timer_callback(ch);
     }
     *save |= 1;
   }
   return ebc;
 }
-
-htsmsg_t *epg_channel_serialize ( epg_channel_t *channel )
-{
-  htsmsg_t *m;
-  if (!channel || !channel->_.uri) return NULL;
-  m = htsmsg_create_map();
-  htsmsg_add_str(m, "uri", channel->_.uri);
-  if (channel->name)
-    htsmsg_add_str(m, "name", channel->name);
-  if (channel->channel)
-    htsmsg_add_u32(m, "channel", channel->channel->ch_id);
-  // TODO: other data
-  return m;
-}
-
-epg_channel_t *epg_channel_deserialize ( htsmsg_t *m, int create, int *save )
-{
-  epg_channel_t *ec;
-  channel_t *ch;
-  uint32_t u32;
-  const char *str;
-  
-  if ( !(str = htsmsg_get_str(m, "uri"))                   ) return NULL;
-  if ( !(ec  = epg_channel_find_by_uri(str, create, save)) ) return NULL;
-
-  if ( (str = htsmsg_get_str(m, "name")) )
-    *save |= epg_channel_set_name(ec, str);
-
-  if ( !htsmsg_get_u32(m, "channel", &u32) )
-    if ( (ch = channel_find_by_identifier(u32)) )
-      epg_channel_set_channel(ec, ch);
-  // TODO: this call needs updating
-      
-  return ec;
-}
-
-/* **************************************************************************
- * Channel mapping
- * *************************************************************************/
-
-void epg_channel_map_add ( channel_t *ch )
-{
-  epg_channel_t *ec;
-  LIST_FOREACH(ec, &epg_channel_unmapped, umlink) {
-    if ( _epg_channel_cmp(ec, ch) ) {
-      epg_channel_set_channel(ec, ch);
-      return;
-    }
-  }
-  LIST_INSERT_HEAD(&channel_unmapped, ch, ch_eulink);
-}
-
-void epg_channel_map_rem ( channel_t *ch )
-{
-  if (ch->ch_epg_channel) {
-    epg_channel_set_channel(ch->ch_epg_channel, NULL);
-  } else {
-    LIST_REMOVE(ch, ch_eulink);
-  }
-}
-
-void epg_channel_map_mod ( channel_t *ch )
-{
-  // If already mapped, ignore
-  if (!ch->ch_epg_channel) epg_channel_map_add(ch);
-}
-
 
 /* **************************************************************************
  * Querying
@@ -1344,13 +1129,13 @@ static void _eqr_add ( epg_query_result_t *eqr, epg_broadcast_t *e )
 }
 
 static void _eqr_add_channel 
-  ( epg_query_result_t *eqr, epg_channel_t *ec )
+  ( epg_query_result_t *eqr, channel_t *ch )
 {
   epg_object_t *eo;
   epg_broadcast_t *ebc;
-  RB_FOREACH(eo, &ec->schedule, glink) {
+  RB_FOREACH(eo, &ch->ch_epg_schedule, glink) {
     ebc = (epg_broadcast_t*)eo;
-    if ( ebc->episode && ebc->channel ) _eqr_add(eqr, ebc);
+    if ( ebc->episode ) _eqr_add(eqr, ebc);
   }
 }
 
@@ -1358,20 +1143,18 @@ void epg_query0
   ( epg_query_result_t *eqr, channel_t *channel, channel_tag_t *tag,
     uint8_t contentgroup, const char *title )
 {
-  epg_object_t *ec;
-
   /* Clear (just incase) */
   memset(eqr, 0, sizeof(epg_query_result_t));
 
   /* All channels */
   if (!channel) {
-    RB_FOREACH(ec, &epg_channels, glink) {
-      _eqr_add_channel(eqr, (epg_channel_t*)ec);
+    RB_FOREACH(channel, &channel_name_tree, ch_name_link) {
+      _eqr_add_channel(eqr, channel);
     }
 
   /* Single channel */
-  } else if ( channel->ch_epg_channel ) {
-    _eqr_add_channel(eqr, channel->ch_epg_channel);
+  } else if ( channel ) {
+    _eqr_add_channel(eqr, channel);
   }
 
   return;

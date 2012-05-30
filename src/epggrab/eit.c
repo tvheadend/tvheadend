@@ -43,7 +43,6 @@ void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
                     const char *extitem, const char *extdesc,
                     const char *exttext ) {
   int save = 0;
-  epg_channel_t *ec;
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
   const char *summary     = NULL;
@@ -53,17 +52,8 @@ void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
   /* Disabled? */
 //if (epggrab_eit_disabled) return;
 
-  /* Channel */
-  ec = ch->ch_epg_channel;
-  if (!ec) {
-    ec = epg_channel_find_by_uri(ch->ch_name, 1, &save);
-    if (ec)
-      epg_channel_set_channel(ec, ch);
-  }
-  if (!ec) return;
-
   /* Find broadcast */
-  ebc  = epg_channel_get_broadcast(ch->ch_epg_channel, start, stop, 1, &save);
+  ebc  = epg_channel_get_broadcast(ch, start, stop, 1, &save);
   if (!ebc) return;
 
   /* Create episode URI */
