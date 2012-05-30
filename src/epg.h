@@ -74,7 +74,7 @@ typedef enum epg_object_type
 } epg_object_type_t;
 
 /* Object */
-typedef struct epg_object
+struct epg_object
 {
   RB_ENTRY(epg_object)    glink;     ///< Global (URI) list link
   LIST_ENTRY(epg_object)  hlink;     ///< Global (ID) hash link
@@ -88,7 +88,7 @@ typedef struct epg_object
   void (*getref)  ( epg_object_t* ); ///< Get a reference
   void (*putref)  ( epg_object_t* ); ///< Release a reference
   void (*destroy) ( epg_object_t* ); ///< Delete the object
-} epg_object_t;
+};
 
 
 /* ************************************************************************
@@ -97,7 +97,7 @@ typedef struct epg_object
  * ***********************************************************************/
 
 /* Object */
-typedef struct epg_brand
+struct epg_brand
 {
   epg_object_t               _; ///< Base object
 
@@ -107,7 +107,7 @@ typedef struct epg_brand
 
   epg_season_tree_t          seasons;      ///< Season list
   epg_episode_tree_t         episodes;     ///< Episode list
-} epg_brand_t;
+};
 
 /* Lookup */
 epg_brand_t *epg_brand_find_by_uri
@@ -131,7 +131,7 @@ epg_brand_t *epg_brand_deserialize ( htsmsg_t *m, int create, int *save );
  * ***********************************************************************/
 
 /* Object */
-typedef struct epg_season
+struct epg_season
 {
   epg_object_t               _;                ///< Parent object
 
@@ -143,7 +143,7 @@ typedef struct epg_season
   epg_brand_t               *brand;         ///< Parent brand
   epg_episode_tree_t         episodes;      ///< Episode list
 
-} epg_season_t;
+};
 
 /* Lookup */
 epg_season_t *epg_season_find_by_uri
@@ -169,7 +169,7 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save );
  * ***********************************************************************/
 
 /* Object */
-typedef struct epg_episode
+struct epg_episode
 {
   epg_object_t               _;                ///< Parent object
 
@@ -188,7 +188,7 @@ typedef struct epg_episode
   epg_season_t              *season;        ///< Parent season
   epg_broadcast_tree_t       broadcasts;    ///< Broadcast list
 
-} epg_episode_t;
+};
 
 /* Lookup */
 epg_episode_t *epg_episode_find_by_uri
@@ -250,7 +250,7 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save );
  * ***********************************************************************/
 
 /* Object */
-typedef struct epg_broadcast
+struct epg_broadcast
 {
   epg_object_t               _;                ///< Parent object
   
@@ -276,7 +276,7 @@ typedef struct epg_broadcast
   epg_episode_t             *episode;          ///< Episode shown
   struct channel            *channel;          ///< Channel being broadcast on
 
-} epg_broadcast_t;
+};
 
 /* Lookup */
 epg_broadcast_t *epg_broadcast_find_by_time 
