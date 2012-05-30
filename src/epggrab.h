@@ -37,6 +37,9 @@ typedef struct epggrab_module
   void        (*disable) ( void );
   htsmsg_t*   (*grab)    ( const char *opts );
   int         (*parse)   ( htsmsg_t *data, epggrab_stats_t *stats );
+  void        (*ch_add)  ( struct channel *ch );
+  void        (*ch_rem)  ( struct channel *ch );
+  void        (*ch_mod)  ( struct channel *ch );
 } epggrab_module_t;
 
 /*
@@ -86,5 +89,12 @@ epggrab_module_t*  epggrab_module_find_by_name ( const char *name );
 void epggrab_set_simple   ( uint32_t interval, epggrab_module_t* mod );
 void epggrab_set_advanced ( uint32_t count, epggrab_sched_t* sched );
 void epggrab_set_eit      ( uint32_t eit );
+
+/*
+ * Channel handling
+ */
+void epggrab_channel_add ( struct channel *ch );
+void epggrab_channel_rem ( struct channel *ch );
+void epggrab_channel_mod ( struct channel *ch );
 
 #endif /* __EPGGRAB_H__ */

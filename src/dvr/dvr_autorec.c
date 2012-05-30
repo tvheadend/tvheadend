@@ -66,7 +66,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 {
   channel_tag_mapping_t *ctm;
 
-  if (!e->channel || !e->channel->channel) return 0;
+  if (!e->channel) return 0;
   if(dae->dae_enabled == 0 || dae->dae_weekdays == 0)
     return 0;
 
@@ -77,12 +77,12 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     return 0; // Avoid super wildcard match
 
   if(dae->dae_channel != NULL &&
-     dae->dae_channel != e->channel->channel)
+     dae->dae_channel != e->channel)
     return 0;
   
   if(dae->dae_channel_tag != NULL) {
     LIST_FOREACH(ctm, &dae->dae_channel_tag->ct_ctms, ctm_tag_link)
-      if(ctm->ctm_channel == e->channel->channel)
+      if(ctm->ctm_channel == e->channel)
 	break;
     if(ctm == NULL)
       return 0;

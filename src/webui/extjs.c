@@ -710,7 +710,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   for(i = start; i < end; i++) {
     e  = eqr.eqr_array[i];
     ee = e->episode;
-    ch = e->channel->channel;
+    ch = e->channel;
     if (!ch||!ee) continue;
 
     m = htsmsg_create_map();
@@ -787,7 +787,7 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
       /* Alternative broadcasts */
       if (!strcmp(type, "alternative")) {
         RB_FOREACH(ebc, &ee->broadcasts, elink) {
-          ch = ebc->channel->channel;
+          ch = ebc->channel;
           if ( !ch ) continue; // skip something not viewable
           if ( ebc == e ) continue; // skip self
           count++;

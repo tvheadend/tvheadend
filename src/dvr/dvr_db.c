@@ -330,11 +330,11 @@ dvr_entry_create_by_event(const char *config_name,
                           epg_broadcast_t *e, const char *creator, 
                           dvr_autorec_entry_t *dae, dvr_prio_t pri)
 {
-  if(!e->channel || !e->channel->channel || !e->episode->title)
+  if(!e->channel || !e->episode->title)
     return NULL;
 
   return _dvr_entry_create(config_name, e,
-                           e->channel->channel, e->start, e->stop,
+                           e->channel, e->start, e->stop,
                            e->episode->title,
                            e->episode->description ? e->episode->description
                                                    : e->episode->summary,
@@ -724,7 +724,7 @@ dvr_entry_find_by_event(epg_broadcast_t *e)
 {
   dvr_entry_t *de;
 
-  LIST_FOREACH(de, &e->channel->channel->ch_dvrs, de_channel_link)
+  LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link)
     if(de->de_bcast == e) return de;
   return NULL;
 }
@@ -740,7 +740,7 @@ dvr_entry_find_by_event_fuzzy(epg_broadcast_t *e)
   if (e->episode->title == NULL)
     return NULL;
 
-  LIST_FOREACH(de, &e->channel->channel->ch_dvrs, de_channel_link)
+  LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link)
     if ((abs(de->de_start - e->start) < 600) && (abs(de->de_stop - e->stop) < 600)) {
         return de;
     }

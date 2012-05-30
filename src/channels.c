@@ -33,6 +33,7 @@
 #include "tvheadend.h"
 #include "psi.h"
 #include "epg.h"
+#include "epggrab.h"
 #include "channels.h"
 #include "dtable.h"
 #include "notify.h"
@@ -180,7 +181,7 @@ channel_create(const char *name, int number)
 
   assert(x == NULL);
 
-  epg_channel_map_add(ch);
+  epggrab_channel_add(ch);
 
   htsp_channel_add(ch);
   return ch;
@@ -247,7 +248,7 @@ channel_load_one(htsmsg_t *c, int id)
 
   channel_set_name(ch, name);
 
-  epg_channel_map_add(ch);
+  epggrab_channel_add(ch);
 
   tvh_str_update(&ch->ch_icon, htsmsg_get_str(c, "icon"));
 
@@ -337,7 +338,7 @@ channel_rename(channel_t *ch, const char *newname)
 
   RB_REMOVE(&channel_name_tree, ch, ch_name_link);
   channel_set_name(ch, newname);
-  epg_channel_map_mod(ch);
+  epggrab_channel_mod(ch);
 
   LIST_FOREACH(t, &ch->ch_services, s_ch_link)
     t->s_config_save(t);
@@ -377,7 +378,8 @@ channel_delete(channel_t *ch)
     s->ths_channel = NULL;
   }
 
-  epg_channel_map_rem(ch);
+  epggrab_channel_rem(ch);
+  epg_channel_unlink(ch);
 
   hts_settings_remove("channels/%d", ch->ch_id);
 
@@ -474,26 +476,6 @@ channel_set_number(channel_t *ch, int number)
   if(ch->ch_number == number)
     return;
   ch->ch_number = number;
-  channel_save(ch);
-  htsp_channel_update(ch);
-}
-
-/**
- *
- */
-void
-channel_set_epg_source(channel_t *ch, epg_channel_t *ec)
-{
-  lock_assert(&global_lock);
-
-  if(ec == ch->ch_epg_channel)
-    return;
-
-  ch->ch_epg_channel = ec;
-
-  if(ec != NULL)
-    tvh_str_update(&ch->ch_icon, ec->icon);
-
   channel_save(ch);
   htsp_channel_update(ch);
 }
