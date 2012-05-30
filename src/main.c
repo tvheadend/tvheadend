@@ -391,8 +391,8 @@ main(int argc, char **argv)
 
   capmt_init();
 
-  epg_init();
   epggrab_init();
+  epg_init();
 
   dvr_init();
 

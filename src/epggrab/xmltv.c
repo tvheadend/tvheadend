@@ -38,6 +38,7 @@
 /* **************************************************************************
  * Parsing
  * *************************************************************************/
+#if TODO_XMLTV_GRABBER
 
 /**
  * Hash the description to get a URI for episode
@@ -425,3 +426,5 @@ epggrab_module_t* xmltv_init ( void )
   xmltv_module.name    = _xmltv_name;
   return &xmltv_module;
 }
+
+#endif

@@ -23,7 +23,7 @@
 
 epggrab_module_t *eit_init ( void );
 
-void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
+void eit_callback ( struct channel *ch, int id, time_t start, time_t stop,
                     const char *title, const char *desc,
                     const char *extitem, const char *extdesc,
                     const char *exttext );
