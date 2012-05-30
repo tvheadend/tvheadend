@@ -546,8 +546,10 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   if(t == NULL || !t->s_enabled || (ch = t->s_ch) == NULL)
     return 0;
 
+#ifdef TODO_REENABLE_THIS
   if(!t->s_dvb_eit_enable)
     return 0;
+#endif
 
   while(len >= 12) {
     ok                        = 1;

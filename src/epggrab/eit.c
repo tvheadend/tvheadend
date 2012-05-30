@@ -35,6 +35,8 @@ static const char* _eit_name ( void )
 static void _eit_episode_uri 
   ( char *uri, const char *title, const char *summary )
 {
+  // TODO: do something better
+  snprintf(uri, 1023, "%s::%s", title, summary);
 }
 
 // called from dvb_tables.c
@@ -49,12 +51,20 @@ void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
   const char *description = NULL;
   char uri[1024];
 
+  /* Ignore */
+  if (!ch || !ch->ch_name || !ch->ch_name[0]) return;
+
   /* Disabled? */
-//if (epggrab_eit_disabled) return;
+#if TODO_REENABLE_THIS
+  if (epggrab_eit_disabled) return;
+#endif
 
   /* Find broadcast */
   ebc  = epg_channel_get_broadcast(ch, start, stop, 1, &save);
   if (!ebc) return;
+
+  /* TODO: Determine summary */
+  summary = desc;
 
   /* Create episode URI */
   _eit_episode_uri(uri, title, summary);

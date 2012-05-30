@@ -979,8 +979,8 @@ static void _epg_channel_timer_callback ( void *p )
     break;
   }
   tvhlog(LOG_DEBUG, "epg", "now/next %lu/%lu set on %s",
-         ch->ch_epg_now  ?: 0,
-         ch->ch_epg_next ?: 0,
+         ch->ch_epg_now  ? ch->ch_epg_now->_.id : 0,
+         ch->ch_epg_next ? ch->ch_epg_next->_.id : 0,
          ch->ch_name);
 
   /* re-arm */
