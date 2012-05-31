@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "htsmsg.h"
 #include "settings.h"
 #include "tvheadend.h"
@@ -41,6 +42,8 @@ static void   _epggrab_set_schedule    ( int, epggrab_sched_t* );
  */
 void epggrab_init ( void )
 {
+  epggrab_module_t *m;
+
   /* Defaults */
   epggrab_advanced  = 0;
   epggrab_eit       = 1;         // on air grab enabled
@@ -48,11 +51,14 @@ void epggrab_init ( void )
   epggrab_module    = NULL;      // disabled
 
   /* Initialise modules */
-  LIST_INSERT_HEAD(&epggrab_modules, eit_init(), glink);
+  m = eit_init();
+  LIST_INSERT_HEAD(&epggrab_modules, m, glink);
 #if TODO_XMLTV_SUPPORT
-  LIST_INSERT_HEAD(&epggrab_modules, xmltv_init(), glink);
+  m = xmltv_init();
+  LIST_INSERT_HEAD(&epggrab_modules, m, glink);
 #endif
-  LIST_INSERT_HEAD(&epggrab_modules, pyepg_init(), glink);
+  m = pyepg_init();
+  LIST_INSERT_HEAD(&epggrab_modules, m, glink);
 
   /* Start thread */
   pthread_t      tid;
@@ -261,8 +267,43 @@ void epggrab_channel_mod ( channel_t *ch )
   }
 }
 
+void epggrab_module_channels_load
+  ( const char *path, epggrab_channel_tree_t *tree )
+{
+  uint32_t chid;
+  htsmsg_t *m;
+  htsmsg_field_t *f;
+  epggrab_channel_t *ec;
+  channel_t *ch;
+
+  if ((m = hts_settings_load(path))) {
+    HTSMSG_FOREACH(f, m) {
+      if ( !htsmsg_get_u32(m, f->hmf_name, &chid) ) {
+        ch = channel_find_by_identifier(chid);
+        if (ch) {
+          ec = calloc(1, sizeof(epggrab_channel_t));
+          ec->id      = strdup(f->hmf_name);
+          ec->channel = ch;
+          assert(RB_INSERT_SORTED(tree, ec, glink, _ch_id_cmp) == NULL);
+        }
+      }
+    }
+  }
+}
+
+void epggrab_module_channels_save
+  ( const char *path, epggrab_channel_tree_t *tree )
+{
+  epggrab_channel_t *c;
+  htsmsg_t *m = htsmsg_create_map();
+  RB_FOREACH(c, tree, glink) {
+    if (c->channel) htsmsg_add_u32(m, c->id, c->channel->ch_id);
+  }
+  hts_settings_save(m, path);
+}
+
 epggrab_channel_t *epggrab_module_channel_create 
-  ( epggrab_channel_tree_t *tree, epggrab_channel_t *iskel )
+  ( epggrab_channel_tree_t *tree, epggrab_channel_t *iskel, int *save )
 {
   epggrab_channel_t *egc;
   static epggrab_channel_t *skel = NULL;
@@ -274,6 +315,7 @@ epggrab_channel_t *epggrab_module_channel_create
     skel->id      = strdup(skel->id);
     skel->name    = strdup(skel->name);
     skel->channel = _channel_find(skel);
+    if ( skel->channel ) *save |= 1;
     egc  = skel;
     skel = NULL;
   }
@@ -288,31 +330,37 @@ epggrab_channel_t *epggrab_module_channel_find
   return RB_FIND(tree, &skel, glink, _ch_id_cmp); 
 }
 
-void epggrab_module_channel_add ( epggrab_channel_tree_t *tree, channel_t *ch )
+int epggrab_module_channel_add ( epggrab_channel_tree_t *tree, channel_t *ch )
 {
+  int save = 0;
   epggrab_channel_t *egc;
   RB_FOREACH(egc, tree, glink) {
     if (_channel_match(egc, ch) ) {
+      save = 1;
       egc->channel = ch;
       break;
     }
   }
+  return save;
 }
 
-void epggrab_module_channel_rem ( epggrab_channel_tree_t *tree, channel_t *ch )
+int epggrab_module_channel_rem ( epggrab_channel_tree_t *tree, channel_t *ch )
 {
+  int save = 0;
   epggrab_channel_t *egc;
   RB_FOREACH(egc, tree, glink) {
     if (egc->channel == ch) {
+      save = 1;
       egc->channel = NULL;
       break;
     }
   }
+  return save;
 }
 
-void epggrab_module_channel_mod ( epggrab_channel_tree_t *tree, channel_t *ch )
+int epggrab_module_channel_mod ( epggrab_channel_tree_t *tree, channel_t *ch )
 {
-  epggrab_module_channel_add(tree, ch);
+  return epggrab_module_channel_add(tree, ch);
 }
 
 /* **************************************************************************
