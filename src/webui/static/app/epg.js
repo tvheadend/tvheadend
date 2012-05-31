@@ -14,7 +14,9 @@ tvheadend.epgDetails = function(event) {
     if(event.chicon != null && event.chicon.length > 0)
 	content += '<img class="x-epg-chicon" src="' + event.chicon + '">';
 
-    content += '<div class="x-epg-title">' + event.title + '</div>';
+    content += '<div class="x-epg-title">' + event.title;
+    if (event.subtitle) content += "&nbsp;:&nbsp;" + event.subtitle;
+    content += '</div>';
     content += '<div class="x-epg-desc">' + event.episode + '</div>';
     content += '<div class="x-epg-desc">' + event.description + '</div>';
 
@@ -120,7 +122,7 @@ tvheadend.epgDetails = function(event) {
           html += '<div class="x-epg-desc">';
           if (ee.episode) html += ee.episode + '&nbsp;&nbsp;&nbsp;';
           html += ee.title;
-          if (ee.subtitle) html += ':' + ee.subtitle
+          if (ee.subtitle) html += ' : ' + ee.subtitle
           html += '</div>';
         }
       }
@@ -180,11 +182,9 @@ tvheadend.epg = function() {
 	    {name: 'channel'},
 	    {name: 'channelid'},
 	    {name: 'title'},
+	    {name: 'subtitle'},
 	    {name: 'episode'},
 	    {name: 'description'},
-	    {name: 'ext_desc'},
-	    {name: 'ext_item'},
-	    {name: 'ext_text'},
 	    {name: 'chicon'},
             {name: 'start', type: 'date', dateFormat: 'U' /* unix time */},
             {name: 'end', type: 'date', dateFormat: 'U' /* unix time */},
@@ -241,6 +241,12 @@ tvheadend.epg = function() {
 	    id:'title',
 	    header: "Title",
 	    dataIndex: 'title',
+	    renderer: renderText
+	},{
+	    width: 250,
+	    id:'subtitle',
+	    header: "SubTitle",
+	    dataIndex: 'subtitle',
 	    renderer: renderText
 	},{
 	    width: 100,
