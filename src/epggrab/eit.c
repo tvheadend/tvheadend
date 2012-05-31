@@ -60,7 +60,7 @@ void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
 #endif
 
   /* Find broadcast */
-  ebc  = epg_channel_get_broadcast(ch, start, stop, 1, &save);
+  ebc  = epg_broadcast_find_by_time(ch, start, stop, 1, &save);
   if (!ebc) return;
 
   /* TODO: Determine summary */
