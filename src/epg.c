@@ -65,11 +65,9 @@ static int _id_cmp ( const void *a, const void *b )
   return ((epg_object_t*)a)->id - ((epg_object_t*)b)->id;
 }
 
-static int _ebc_win_cmp ( const void *a, const void *b )
+static int _ebc_start_cmp ( const void *a, const void *b )
 {
-  if ( ((epg_broadcast_t*)a)->start < ((epg_broadcast_t*)b)->start ) return -1;
-  if ( ((epg_broadcast_t*)a)->start >= ((epg_broadcast_t*)b)->stop  ) return 1;
-  return 0;
+  return ((epg_broadcast_t*)a)->start - ((epg_broadcast_t*)b)->start;
 }
 
 /* **************************************************************************
@@ -940,8 +938,6 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
  * Channel
  * *************************************************************************/
 
-static epg_broadcast_t **_epg_broadcast_skel ( void );
-
 static void _epg_channel_timer_callback ( void *p )
 {
   time_t next = 0;
@@ -998,74 +994,74 @@ static void _epg_channel_timer_callback ( void *p )
   }
 }
 
-void epg_channel_unlink ( channel_t *ch )
+static void _epg_channel_rem_broadcast 
+  ( channel_t *ch, epg_broadcast_t *ebc, epg_broadcast_t *new )
 {
-  epg_object_t *eo;
-  while ( (eo = RB_FIRST(&ch->ch_epg_schedule)) ) {
-    RB_REMOVE(&ch->ch_epg_schedule, eo, glink);
-  }
-  gtimer_disarm(&ch->ch_epg_timer);
+  if (new) dvr_event_replaced(ebc, new);
+  RB_REMOVE(&ch->ch_epg_schedule, (epg_object_t*)ebc, glink);
+  ebc->_.putref((epg_object_t*)ebc);
 }
 
 static epg_broadcast_t *_epg_channel_add_broadcast 
-  ( channel_t *ch, epg_broadcast_t **ebc, int create, int *save )
+  ( channel_t *ch, epg_broadcast_t **bcast, int create, int *save )
 {
   int save2 = 0, timer = 0;
-  epg_broadcast_t *ret;
+  epg_object_t *eo;
+  epg_broadcast_t *ebc, *ret;
+
+  /* Set channel */
+  (*bcast)->channel = ch;
 
   /* Find/Create */
-  ret = (epg_broadcast_t*)
-    _epg_object_find(create, &save2, &ch->ch_epg_schedule,
-                     (epg_object_t**)ebc, _ebc_win_cmp);
-  if (!ret) return NULL;
+  eo = _epg_object_find(create, &save2, &ch->ch_epg_schedule,
+                        (epg_object_t**)bcast, _ebc_start_cmp);
+  if (!eo) return NULL;
+  ret = (epg_broadcast_t*)eo;
 
-  /* Created */
-  if (save2) {
-    ret->_.getref((epg_object_t*)ret);
-    
-    /* New current/next */
-    if ( (RB_FIRST(&ch->ch_epg_schedule) == (epg_object_t*)ret) ||
-         (ch->ch_epg_now &&
-          RB_NEXT((epg_object_t*)ch->ch_epg_now, glink) == (epg_object_t*)ret) ) {
-      timer = 1;
-    }
-    *save |= 1;
+  /* No changes */
+  if (!save2 && (ret->start == (*bcast)->start) &&
+                (ret->stop  == (*bcast)->stop)) return ret;
 
-  /* Update */
-  } else {
-    if ( (*ebc)->stop != ret->stop ) {
-      ret->stop = (*ebc)->stop;
-      if ( ret == ch->ch_epg_now ) timer = 1;
-      *save |= 1;
-    }
-    if ( (*ebc)->start != ret->start ) {
-      ret->start = (*ebc)->start;
-      if ( !ch->ch_epg_now && ret == ch->ch_epg_next ) timer = 1;
-    }
-    if ( (*ebc)->episode ) {
-      *save |= epg_broadcast_set_episode(ret, (*ebc)->episode);
-    }
+  // Note: scheduling changes are relatively rare and therefore
+  //       the rest of this code will happen infrequently (hopefully)
+
+  /* Grab ref */
+  ret->_.getref((epg_object_t*)ret);
+  *save |= 1;
+
+  /* Remove overlapping (before) */
+  while ( (ebc = (epg_broadcast_t*)RB_PREV(eo, glink)) != NULL ) {
+    if ( ebc->stop <= ret->start ) break;
+    if ( ch->ch_epg_now == ebc ) ch->ch_epg_now = NULL;
+    _epg_channel_rem_broadcast(ch, ebc, ret);
   }
 
-  /* reset timer */
+  /* Remove overlapping (after) */
+  while ( (ebc = (epg_broadcast_t*)RB_NEXT(eo, glink)) != NULL ) {
+    if ( ebc->start >= ret->stop ) break;
+    _epg_channel_rem_broadcast(ch, ebc, ret);
+  }
+
+  /* Check now/next change */
+  if ( RB_FIRST(&ch->ch_epg_schedule) == eo ) {
+    timer = 1;
+  } else if ( ch->ch_epg_now &&
+            RB_NEXT((epg_object_t*)ch->ch_epg_now, glink) == eo ) {
+    timer = 1;
+  }
+
+  /* Reset timer */
   if (timer) _epg_channel_timer_callback(ch);
   return ret;
 }
 
-epg_broadcast_t *epg_channel_get_broadcast 
-  ( channel_t *ch, time_t start, time_t stop, int create, int *save )
+void epg_channel_unlink ( channel_t *ch )
 {
-  epg_broadcast_t **ebc;
-  if ( !ch || !start || !stop ) return NULL;
-  if ( stop <= start ) return NULL;
-  if ( stop < dispatch_clock ) return NULL;
-
-  ebc = _epg_broadcast_skel();
-  (*ebc)->channel = ch;
-  (*ebc)->start   = start;
-  (*ebc)->stop    = stop;
-
-  return _epg_channel_add_broadcast(ch, ebc, create, save);
+  epg_object_t *eo;
+  while ( (eo = RB_FIRST(&ch->ch_epg_schedule)) ) {
+    _epg_channel_rem_broadcast(ch, (epg_broadcast_t*)eo, NULL);
+  }
+  gtimer_disarm(&ch->ch_epg_timer);
 }
 
 /* **************************************************************************
@@ -1097,10 +1093,18 @@ static epg_broadcast_t **_epg_broadcast_skel ( void )
 epg_broadcast_t* epg_broadcast_find_by_time 
   ( channel_t *channel, time_t start, time_t stop, int create, int *save )
 {
-  return epg_channel_get_broadcast(channel, start, stop, create, save);
+  epg_broadcast_t **ebc;
+  if ( !channel || !start || !stop ) return NULL;
+  if ( stop <= start ) return NULL;
+  if ( stop < dispatch_clock ) return NULL;
+
+  ebc = _epg_broadcast_skel();
+  (*ebc)->start   = start;
+  (*ebc)->stop    = stop;
+
+  return _epg_channel_add_broadcast(channel, ebc, create, save);
 }
 
-// TODO: allow optional channel parameter?
 epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id, channel_t *ch )
 {
   epg_object_t *eo = NULL;
@@ -1182,7 +1186,7 @@ epg_broadcast_t *epg_broadcast_deserialize
   if ( ch ) {
     ret = _epg_channel_add_broadcast(ch, ebc, create, save);
 
-  /* Create dangling */
+  /* Create dangling (possibly in use by DVR?) */
   } else {
     ret = *ebc;
     _epg_object_create((epg_object_t*)*ebc);
