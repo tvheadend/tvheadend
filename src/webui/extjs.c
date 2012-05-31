@@ -722,6 +722,8 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
 
     if(ee->title != NULL)
       htsmsg_add_str(m, "title", ee->title);
+    if(ee->subtitle)
+      htsmsg_add_str(m, "subtitle", ee->subtitle);
 
     if(ee->description != NULL)
       htsmsg_add_str(m, "description", ee->description);
