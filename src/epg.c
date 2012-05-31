@@ -1203,8 +1203,18 @@ epg_broadcast_t *epg_broadcast_deserialize
  * Querying
  * *************************************************************************/
 
-static void _eqr_add ( epg_query_result_t *eqr, epg_broadcast_t *e )
+static void _eqr_add 
+  ( epg_query_result_t *eqr, epg_broadcast_t *e,
+    uint8_t genre, regex_t *preg, time_t start )
 {
+  /* Ignore */
+  if ( e->stop < start ) return;
+#if TODO_GENRE_SUPPORT
+  if ( genre && e->genre != genre ) return;
+#endif
+  if ( !e->episode->title ) return;
+  if ( preg && regexec(preg, e->episode->title, 0, NULL, 0) ) return;
+
   /* More space */
   if ( eqr->eqr_entries == eqr->eqr_alloced ) {
     eqr->eqr_alloced = MAX(100, eqr->eqr_alloced * 2);
@@ -1214,53 +1224,76 @@ static void _eqr_add ( epg_query_result_t *eqr, epg_broadcast_t *e )
   
   /* Store */
   eqr->eqr_array[eqr->eqr_entries++] = e;
-  // TODO: ref counting
 }
 
 static void _eqr_add_channel 
-  ( epg_query_result_t *eqr, channel_t *ch )
+  ( epg_query_result_t *eqr, channel_t *ch, uint8_t genre,
+    regex_t *preg, time_t start )
 {
   epg_object_t *eo;
   epg_broadcast_t *ebc;
   RB_FOREACH(eo, &ch->ch_epg_schedule, glink) {
     ebc = (epg_broadcast_t*)eo;
-    if ( ebc->episode ) _eqr_add(eqr, ebc);
+    if ( ebc->episode ) _eqr_add(eqr, ebc, genre, preg, start);
   }
 }
 
 void epg_query0
   ( epg_query_result_t *eqr, channel_t *channel, channel_tag_t *tag,
-    uint8_t contentgroup, const char *title )
+    uint8_t genre, const char *title )
 {
+  time_t now;
+  channel_tag_mapping_t *ctm;
+  regex_t preg0, *preg;
+  time(&now);
+
   /* Clear (just incase) */
   memset(eqr, 0, sizeof(epg_query_result_t));
 
-  /* All channels */
-  if (!channel) {
-    RB_FOREACH(channel, &channel_name_tree, ch_name_link) {
-      _eqr_add_channel(eqr, channel);
+  /* Setup exp */
+  if ( title ) {
+    if (regcomp(&preg0, title, REG_ICASE | REG_EXTENDED | REG_NOSUB) )
+      return;
+    preg = &preg0;
+  } else {
+    preg = NULL;
+  }
+  
+  /* Single channel */
+  if (channel && !tag) {
+    _eqr_add_channel(eqr, channel, genre, preg, now);
+  
+  /* Tag based */
+  } else if ( tag ) {
+    LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
+      if(channel == NULL || ctm->ctm_channel == channel)
+        _eqr_add_channel(eqr, ctm->ctm_channel, genre, preg, now);
     }
 
-  /* Single channel */
-  } else if ( channel ) {
-    _eqr_add_channel(eqr, channel);
+  /* All channels */
+  } else {
+    RB_FOREACH(channel, &channel_name_tree, ch_name_link) {
+      _eqr_add_channel(eqr, channel, genre, preg, now);
+    }
   }
 
   return;
 }
 
 void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
-	       const char *contentgroup, const char *title)
+	       const char *genre, const char *title)
 {
-  channel_t *ch = NULL;
-  if (channel) ch = channel_find_by_name(channel, 0, 0);
-  epg_query0(eqr, ch, NULL, 0, title);
+  channel_t     *ch = channel ? channel_find_by_name(channel, 0, 0) : NULL;
+  channel_tag_t *ct = tag     ? channel_tag_find_by_name(tag, 0)    : NULL;
+#if TODO_GENRE_SUPPORT
+  uint8_t        ge = genre   ? epg_content_group_find_by_name(genre) : 0;
+#endif
+  epg_query0(eqr, ch, ct, 0, title);
 }
 
 void epg_query_free(epg_query_result_t *eqr)
 {
   free(eqr->eqr_array);
-  // TODO: reference counting
 }
 
 static int _epg_sort_start_ascending ( const void *a, const void *b )

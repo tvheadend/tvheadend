@@ -810,8 +810,8 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
             m = htsmsg_create_map();
             htsmsg_add_str(m, "uri", ee2->_.uri);
             htsmsg_add_str(m, "title", ee2->title);
-            if (ee2->subtitle) htsmsg_add_str(m, "title", ee2->subtitle);
-            if (epg_episode_number_format(ee, buf, 100, NULL, "Season %d", ".", "Episode %d", "/%d"))
+            if (ee2->subtitle) htsmsg_add_str(m, "subtitle", ee2->subtitle);
+            if (epg_episode_number_format(ee2, buf, 100, NULL, "Season %d", ".", "Episode %d", "/%d"))
               htsmsg_add_str(m, "episode", buf);
             htsmsg_add_msg(array, NULL, m);
           }
@@ -823,8 +823,8 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
             m = htsmsg_create_map();
             htsmsg_add_str(m, "uri", ee2->_.uri);
             htsmsg_add_str(m, "title", ee2->title);
-            if (ee2->subtitle) htsmsg_add_str(m, "title", ee2->subtitle);
-            if (epg_episode_number_format(ee, buf, 100, NULL, "Season %d", ".", "Episode %d", "/%d"))
+            if (ee2->subtitle) htsmsg_add_str(m, "subtitle", ee2->subtitle);
+            if (epg_episode_number_format(ee2, buf, 100, NULL, "Season %d", ".", "Episode %d", "/%d"))
               htsmsg_add_str(m, "episode", buf);
             htsmsg_add_msg(array, NULL, m);
           }
