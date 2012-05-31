@@ -28,16 +28,31 @@
 #include "epggrab/pyepg.h"
 #include "channels.h"
 
+epggrab_channel_tree_t _pyepg_channels;
+
+/* **************************************************************************
+ * Config/Load save
+ * *************************************************************************/
+
+static void _pyepg_load ( void )
+{
+  epggrab_module_channels_load("epggrab/pyepg/channels", &_pyepg_channels);
+}
+
+static void _pyepg_save ( void )
+{
+  epggrab_module_channels_save("epggrab/pyepg/channels", &_pyepg_channels);
+}
+
 /* **************************************************************************
  * Channels
  * *************************************************************************/
 
-epggrab_channel_tree_t _pyepg_channels;
 
-static channel_t *_pyepg_channel_create ( epggrab_channel_t *skel )
+static channel_t *_pyepg_channel_create ( epggrab_channel_t *skel, int *save )
 {
   epggrab_channel_t *ch
-    = epggrab_module_channel_create(&_pyepg_channels, skel);
+    = epggrab_module_channel_create(&_pyepg_channels, skel, save);
   if (ch) return ch->channel;
   return NULL;
 }
@@ -52,17 +67,20 @@ static channel_t *_pyepg_channel_find ( const char *id )
 
 static void _pyepg_channel_add ( channel_t *ch )
 {
-  epggrab_module_channel_add(&_pyepg_channels, ch);
+  if ( epggrab_module_channel_add(&_pyepg_channels, ch) )
+    _pyepg_save();
 }
 
 static void _pyepg_channel_rem ( channel_t *ch )
 {
-  epggrab_module_channel_rem(&_pyepg_channels, ch);
+  if ( epggrab_module_channel_rem(&_pyepg_channels, ch) )
+    _pyepg_save();
 }
 
 static void _pyepg_channel_mod ( channel_t *ch )
 {
-  epggrab_module_channel_mod(&_pyepg_channels, ch);
+  if ( epggrab_module_channel_mod(&_pyepg_channels, ch) )
+    _pyepg_save();
 }
 
 /* **************************************************************************
@@ -83,7 +101,7 @@ static int _pyepg_parse_time ( const char *str, time_t *out )
 
 static int _pyepg_parse_channel ( htsmsg_t *data, epggrab_stats_t *stats )
 {
-  int save = 0;
+  int save = 0, save2 = 0;
   htsmsg_t *attr, *tags;
   const char *icon;
   channel_t *ch;
@@ -97,14 +115,23 @@ static int _pyepg_parse_channel ( htsmsg_t *data, epggrab_stats_t *stats )
   skel.name = (char*)htsmsg_xml_get_cdata_str(tags, "name");
   icon      = htsmsg_xml_get_cdata_str(tags, "image");
 
-  ch = _pyepg_channel_create(&skel);
+  ch = _pyepg_channel_create(&skel, &save2);
+  stats->channels.total++;
+  if (save2) {
+    stats->channels.created++;
+    save |= 1;
+  }
 
   /* Update values */
   if (ch) {
-    // TODO: set the name
-    //if (skel.name) save |= channel_rename(ch, skel.name);
+    if (skel.name) {
+      if(!ch->ch_name || strcmp(ch->ch_name, skel.name)) {
+        save |= channel_rename(ch, skel.name);
+      }
+    }
     if (icon)      channel_set_icon(ch, icon);
   }
+  if (save) stats->channels.modified++;
 
   return save;
 }
@@ -351,7 +378,7 @@ static int _pyepg_parse_schedule ( htsmsg_t *data, epggrab_stats_t *stats )
 
 static int _pyepg_parse_epg ( htsmsg_t *data, epggrab_stats_t *stats )
 {
-  int save = 0;
+  int save = 0, chsave = 0;
   htsmsg_t *tags;
   htsmsg_field_t *f;
 
@@ -359,7 +386,7 @@ static int _pyepg_parse_epg ( htsmsg_t *data, epggrab_stats_t *stats )
 
   HTSMSG_FOREACH(f, tags) {
     if (strcmp(f->hmf_name, "channel") == 0 ) {
-      save |= _pyepg_parse_channel(htsmsg_get_map_by_field(f), stats);
+      chsave |= _pyepg_parse_channel(htsmsg_get_map_by_field(f), stats);
     } else if (strcmp(f->hmf_name, "brand") == 0 ) {
       save |= _pyepg_parse_brand(htsmsg_get_map_by_field(f), stats);
     } else if (strcmp(f->hmf_name, "series") == 0 ) {
@@ -370,6 +397,8 @@ static int _pyepg_parse_epg ( htsmsg_t *data, epggrab_stats_t *stats )
       save |= _pyepg_parse_schedule(htsmsg_get_map_by_field(f), stats);
     }
   }
+  save |= chsave;
+  if (chsave) _pyepg_save();
 
   return save;
 }
@@ -460,6 +489,7 @@ epggrab_module_t* pyepg_init ( void )
   pyepg_module.ch_add  = _pyepg_channel_add;
   pyepg_module.ch_rem  = _pyepg_channel_rem;
   pyepg_module.ch_mod  = _pyepg_channel_mod;
+  _pyepg_load();
   return &pyepg_module;
 }
 

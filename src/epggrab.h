@@ -117,11 +117,13 @@ void epggrab_channel_mod ( struct channel *ch );
 /*
  * Module specific channel handling
  */
-void epggrab_module_channel_add ( epggrab_channel_tree_t *tree, struct channel *ch );
-void epggrab_module_channel_rem ( epggrab_channel_tree_t *tree, struct channel *ch );
-void epggrab_module_channel_mod ( epggrab_channel_tree_t *tree, struct channel *ch );
+void epggrab_module_channels_load ( const char *path, epggrab_channel_tree_t *tree );
+void epggrab_module_channels_save ( const char *path, epggrab_channel_tree_t *tree );
+int epggrab_module_channel_add ( epggrab_channel_tree_t *tree, struct channel *ch );
+int epggrab_module_channel_rem ( epggrab_channel_tree_t *tree, struct channel *ch );
+int epggrab_module_channel_mod ( epggrab_channel_tree_t *tree, struct channel *ch );
 
-epggrab_channel_t *epggrab_module_channel_create ( epggrab_channel_tree_t *tree, epggrab_channel_t *ch );
+epggrab_channel_t *epggrab_module_channel_create ( epggrab_channel_tree_t *tree, epggrab_channel_t *ch, int *save );
 epggrab_channel_t *epggrab_module_channel_find ( epggrab_channel_tree_t *tree, const char *id );
 
 #endif /* __EPGGRAB_H__ */
