@@ -1,54 +1,48 @@
 #include "cron.h"
 #include <time.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-static int _field_to_string 
-  ( char *out, uint64_t field, uint64_t mask, int offset )
+typedef struct cron
 {
-  int i, cnt = 0, first = 1, start = -1;
-  field &= mask;
+  char     *str; ///< String representation
+  uint64_t min;  ///< Minutes
+  uint32_t hour; ///< Hours
+  uint32_t dom;  ///< Day of month
+  uint16_t mon;  ///< Month
+  uint8_t  dow;  ///< Day of week
+} cron_t;
 
-  /* Star */
-  if ( field == mask )
-    return sprintf(out, "*");
-
-  for ( i = 0; i < 64; i++ ) {
-    int b = (field >> i) & 0x1;
-    if ( !b & start != -1 ) {
-      if (!first)
-        cnt += sprintf(out+cnt, ",");
-      first = 0;
-      cnt += sprintf(out+cnt, "%d", start + offset);
-      if (i != (start+1))
-        cnt += sprintf(out+cnt, "-%d", (i - 1) + offset);
-      start = -1;
-    } else if ( b & start == -1 )
-      start = i;
-  }
-  
-  return cnt;
-}
-
-static int _field_from_string 
+static int _cron_parse_field 
   ( const char *str, uint64_t *field, uint64_t mask, int offset )
 { 
-  int i = 0, j = 0, sn = -1, en = -1;
+  int i = 0, j = 0, sn = -1, en = -1, mn = -1;
   *field = 0;
   while ( str[i] != '\0' ) {
-    if ( str[i] == '*' ) *field = mask;
-    else if ( str[i] == ',' || str[i] == ' ' ) {
-      sscanf(str+j, "%d", sn == -1 ? &sn : &en);
+    if ( str[i] == '*' ) {
+      sn = 0;
+      en = 64;
+      j  = -1;
+    } else if ( str[i] == ',' || str[i] == ' ' ) {
+      if (j >= 0) 
+        sscanf(str+j, "%d", en == -1 ? (sn == -1 ? &sn : &en) : &mn);
       if (en == -1) en = sn;
+      if (mn == -1) mn = 1;
       while (sn <= en) {
-        *field |= (0x1LL << (sn - offset));
+        if ( (sn % mn) == 0 )
+          *field |= (0x1LL << (sn - offset));
         sn++;
       }
       j  = i+1;
-      sn = -1;
-      en = -1;
+      sn = en = mn = -1;
       if (str[i] == ' ') break;
+    } else if ( str[i] == '/' ) {
+      if (j >= 0) sscanf(str+j, "%d", sn == -1 ? &sn : &en);
+      j  = i+1;
+      mn = 1;
     } else if ( str[i] == '-' ) {
-      sscanf(str+j, "%d", &sn);
+      if (j >= 0) sscanf(str+j, "%d", &sn);
       j  = i+1;
       en = 64;
     }
@@ -59,34 +53,74 @@ static int _field_from_string
   return i;
 }
 
-void cron_to_string ( cron_t *cron, char *str )
-{
-  int i = 0;
-  i += _field_to_string(str+i, cron->min,  CRON_MIN_MASK, 0);
-  i += sprintf(str+i, " ");
-  i += _field_to_string(str+i, cron->hour, CRON_HOUR_MASK, 0);
-  i += sprintf(str+i, " ");
-  i += _field_to_string(str+i, cron->dom,  CRON_DOM_MASK, 1);
-  i += sprintf(str+i, " ");
-  i += _field_to_string(str+i, cron->mon,  CRON_MON_MASK, 1);
-  i += sprintf(str+i, " ");
-  i += _field_to_string(str+i, cron->dow,  CRON_DOW_MASK, 0);
-}
-
-void cron_from_string ( cron_t *cron, const char *str )
+static int _cron_parse ( cron_t *cron, const char *str )
 {
   int i = 0;
   uint64_t u64;
-  i += _field_from_string(str+i, &u64, CRON_MIN_MASK, 0);
-  cron->min = u64;
-  i += _field_from_string(str+i, &u64, CRON_HOUR_MASK, 0);
-  cron->hour = (uint32_t)u64;
-  i += _field_from_string(str+i, &u64, CRON_DOM_MASK, 1);
-  cron->dom = (uint32_t)u64;
-  i += _field_from_string(str+i, &u64, CRON_MON_MASK, 1);
-  cron->mon = (uint16_t)u64;
-  i += _field_from_string(str+i, &u64, CRON_DOW_MASK, 0);
-  cron->dow = (uint8_t)u64;
+
+  /* daily */
+  if ( !strcmp(str, "@daily") ) {
+    cron->min  = 1;
+    cron->hour = 1;
+    cron->dom  = CRON_DOM_MASK;
+    cron->mon  = CRON_MON_MASK;
+    cron->dow  = CRON_DOW_MASK;
+
+  /* hourly */
+  } else if ( !strcmp(str, "@hourly") ) {
+    cron->min  = 1;
+    cron->hour = CRON_HOUR_MASK;
+    cron->dom  = CRON_DOM_MASK;
+    cron->mon  = CRON_MON_MASK;
+    cron->dow  = CRON_DOW_MASK;
+  
+  /* standard */
+  } else {
+    i += _cron_parse_field(str+i, &u64, CRON_MIN_MASK, 0);
+    cron->min = u64;
+    i += _cron_parse_field(str+i, &u64, CRON_HOUR_MASK, 0);
+    cron->hour = (uint32_t)u64;
+    i += _cron_parse_field(str+i, &u64, CRON_DOM_MASK, 1);
+    cron->dom = (uint32_t)u64;
+    i += _cron_parse_field(str+i, &u64, CRON_MON_MASK, 1);
+    cron->mon = (uint16_t)u64;
+    i += _cron_parse_field(str+i, &u64, CRON_DOW_MASK, 0);
+    cron->dow = (uint8_t)u64;
+  }
+
+  return 1; // TODO: do proper validation
+}
+
+cron_t *cron_create ( void )
+{
+  return calloc(1, sizeof(cron_t));
+}
+
+void cron_destroy ( cron_t *cron )
+{
+  if (cron->str) free(cron->str);
+  free(cron);
+}
+
+const char *cron_get_string ( cron_t *cron )
+{
+  return cron->str;
+}
+
+int cron_set_string ( cron_t *cron, const char *str )
+{
+  int save = 0;
+  cron_t tmp;
+  if (!cron->str || !strcmp(cron->str, str)) {
+    tmp.str = (char*)str;
+    if (_cron_parse(&tmp, str)) {
+      if (cron->str) free(cron->str);
+      *cron     = tmp;
+      cron->str = strdup(str);
+      save      = 1;
+    }
+  }
+  return save;
 }
 
 int cron_is_time ( cron_t *cron )
@@ -109,23 +143,40 @@ int cron_is_time ( cron_t *cron )
   return ret;
 }
 
-void cron_pack ( cron_t *cron, htsmsg_t *msg )
+// TODO: do proper search for next time
+time_t cron_next ( cron_t *cron )
 {
-  htsmsg_add_u64(msg, "min",  cron->min);
-  htsmsg_add_u32(msg, "hour", cron->hour);
-  htsmsg_add_u32(msg, "dom",  cron->dom);
-  htsmsg_add_u32(msg, "mon",  cron->mon);
-  htsmsg_add_u32(msg, "dow",  cron->dow);
+  time_t now;
+  time(&now);
+  now += 60;
+  return (now / 60) * 60; // round to start of minute
 }
 
-void cron_unpack ( cron_t *cron, htsmsg_t *msg )
+
+void cron_serialize ( cron_t *cron, htsmsg_t *msg )
 {
-  uint32_t u32 = 0;
-  htsmsg_get_u64(msg, "min", &cron->min);
-  htsmsg_get_u32(msg, "hour", &cron->hour);
-  htsmsg_get_u32(msg, "dom",  &cron->dom);
-  htsmsg_get_u32(msg, "mon",  &u32);
-  cron->mon = (uint16_t)u32;
-  htsmsg_get_u32(msg, "dow",  &u32);
-  cron->dow = (uint8_t)u32;
+  htsmsg_add_str(msg, "cron", cron->str);
 }
+
+cron_t *cron_deserialize ( htsmsg_t *msg )
+{
+  // TODO: validate the string!
+  cron_t *cron = cron_create();
+  const char *str = htsmsg_get_str(msg, "cron");
+  if (str) cron_set_string(cron, str);
+  return cron;
+}
+
+#if 0
+int main ( int argc, char **argv )
+{
+  cron_t *c = cron_create();
+  cron_set_string(c, argv[1]);
+  printf("min  = 0x%016lx\n", c->min);
+  printf("hour = 0x%06x\n",   c->hour);
+  printf("dom  = 0x%08x\n",   c->dom);
+  printf("mon  = 0x%03hx\n",  c->mon);
+  printf("dow  = 0x%0hhx\n",  c->dow);
+  cron_destroy(c);
+}
+#endif
