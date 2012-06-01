@@ -35,6 +35,8 @@
 #include "xmltv.h"
 #include "spawn.h"
 
+#define XMLTV_FIND_GRABBERS "/usr/bin/tv_find_grabbers"
+
 /* **************************************************************************
  * Parsing
  * *************************************************************************/
@@ -381,7 +383,51 @@ static int _xmltv_parse ( htsmsg_t *data, epggrab_stats_t *stats )
 
   return _xmltv_parse_tv(tv, stats);
 }
+#endif
 
+/* ************************************************************************
+ * Config
+ * ***********************************************************************/
+
+#if 0
+static htsmsg_t *xmltv_grabber_list ( void )
+{
+  size_t i, outlen, p, n;
+  char *outbuf;
+  char errbuf[100];
+  htsmsg_t *e = NULL, *array;
+
+  /* Load data */
+  outlen = spawn_and_store_stdout(XMLTV_FIND_GRABBERS, NULL, &outbuf);
+  if ( outlen < 1 ) {
+    tvhlog(LOG_ERR, "xmltv", "%s failed [%s]", XMLTV_FIND_GRABBERS, errbuf);
+    return NULL;
+  }
+
+  /* Process */
+  array     = htsmsg_create_list();
+  p = n = i = 0;
+  while ( i < outlen ) {
+    if ( outbuf[i] == '\n' || outbuf[i] == '\0' ) {
+      outbuf[i] = '\0';
+      e = htsmsg_create_map();
+      htsmsg_add_str(e, "path", &outbuf[p]);
+      htsmsg_add_str(e, "name", &outbuf[n]);
+      htsmsg_add_msg(array, NULL, e);
+      p = n = i + 1;
+    } else if ( outbuf[i] == '|' ) {
+      outbuf[i] = '\0';
+      n = i + 1;
+    }
+    i++;
+  }
+  free(outbuf);
+
+  return array;
+}
+#endif
+
+#if TODO_XMLTV
 /* ************************************************************************
  * Module Setup
  * ***********************************************************************/
@@ -401,7 +447,6 @@ static htsmsg_t* _xmltv_grab ( const char *iopts )
   size_t outlen;
   char *outbuf;
   char errbuf[100];
-  const char *cmd = "/home/aps/tmp/epg.sh";//usr/bin/tv_grab_uk_rt";
 
   /* Debug */
   tvhlog(LOG_DEBUG, "xmltv", "grab %s", cmd);

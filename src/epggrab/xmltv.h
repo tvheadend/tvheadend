@@ -19,8 +19,9 @@
 #ifndef EPGGRAB_XMLTV_H
 #define EPGGRAB_XMLTV_H
 
+#include "htsmsg.h"
 #include "epggrab.h"
 
-epggrab_module_t *xmltv_init ( void );
+void xmltv_init ( epggrab_module_list_t *list );
 
 #endif

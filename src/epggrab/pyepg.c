@@ -29,58 +29,17 @@
 #include "channels.h"
 
 epggrab_channel_tree_t _pyepg_channels;
-
-/* **************************************************************************
- * Config/Load save
- * *************************************************************************/
-
-static void _pyepg_load ( void )
-{
-  epggrab_module_channels_load("epggrab/pyepg/channels", &_pyepg_channels);
-}
-
-static void _pyepg_save ( void )
-{
-  epggrab_module_channels_save("epggrab/pyepg/channels", &_pyepg_channels);
-}
-
-/* **************************************************************************
- * Channels
- * *************************************************************************/
-
+epggrab_module_t       _pyepg_sync;
+epggrab_module_t       _pyepg_async;
 
 static channel_t *_pyepg_channel_create ( epggrab_channel_t *skel, int *save )
 {
-  epggrab_channel_t *ch
-    = epggrab_module_channel_create(&_pyepg_channels, skel, save);
-  if (ch) return ch->channel;
   return NULL;
 }
 
 static channel_t *_pyepg_channel_find ( const char *id )
 {
-  epggrab_channel_t *ch 
-    = epggrab_module_channel_find(&_pyepg_channels, id);
-  if (ch) return ch->channel;
   return NULL;
-}
-
-static void _pyepg_channel_add ( channel_t *ch )
-{
-  if ( epggrab_module_channel_add(&_pyepg_channels, ch) )
-    _pyepg_save();
-}
-
-static void _pyepg_channel_rem ( channel_t *ch )
-{
-  if ( epggrab_module_channel_rem(&_pyepg_channels, ch) )
-    _pyepg_save();
-}
-
-static void _pyepg_channel_mod ( channel_t *ch )
-{
-  if ( epggrab_module_channel_mod(&_pyepg_channels, ch) )
-    _pyepg_save();
 }
 
 /* **************************************************************************
@@ -397,16 +356,18 @@ static int _pyepg_parse_epg ( htsmsg_t *data, epggrab_stats_t *stats )
       save |= _pyepg_parse_schedule(htsmsg_get_map_by_field(f), stats);
     }
   }
+#if 0
   save |= chsave;
-  if (chsave) _pyepg_save();
+  if (chsave) pyepg_save();
+#endif
 
   return save;
 }
 
-static int _pyepg_parse ( htsmsg_t *data, epggrab_stats_t *stats )
+static int _pyepg_parse 
+  ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
   htsmsg_t *tags, *epg;
-  epggrab_module_t *mod;
 
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
 
@@ -416,8 +377,8 @@ static int _pyepg_parse ( htsmsg_t *data, epggrab_stats_t *stats )
 
   /* XMLTV format */
   if ((epg = htsmsg_get_map(tags, "tv")) != NULL) {
-    mod = epggrab_module_find_by_name("xmltv");
-    if (mod) return mod->parse(epg, stats);
+    mod = epggrab_module_find_by_id("xmltv_sync");
+    if (mod) return mod->parse(mod, epg, stats);
   }
     
   return 0;
@@ -427,14 +388,12 @@ static int _pyepg_parse ( htsmsg_t *data, epggrab_stats_t *stats )
  * Module Setup
  * ***********************************************************************/
 
-static epggrab_module_t pyepg_module;
-
-static const char* _pyepg_name ( void )
+static void _pyepg_enable ( epggrab_module_t *mod, uint8_t e )
 {
-  return "pyepg";
 }
 
-static htsmsg_t* _pyepg_grab ( const char *iopts )
+
+static htsmsg_t* _pyepg_grab ( epggrab_module_t *mod, const char *icmd, const char *iopts )
 {
   int        i, outlen;
   char       *outbuf;
@@ -479,17 +438,29 @@ static htsmsg_t* _pyepg_grab ( const char *iopts )
   return ret;
 }
 
-epggrab_module_t* pyepg_init ( void )
+void pyepg_init ( epggrab_module_list_t *list )
 {
-  pyepg_module.enable  = NULL;
-  pyepg_module.disable = NULL;
-  pyepg_module.grab    = _pyepg_grab;
-  pyepg_module.parse   = _pyepg_parse;
-  pyepg_module.name    = _pyepg_name;
-  pyepg_module.ch_add  = _pyepg_channel_add;
-  pyepg_module.ch_rem  = _pyepg_channel_rem;
-  pyepg_module.ch_mod  = _pyepg_channel_mod;
-  _pyepg_load();
-  return &pyepg_module;
+  /* Common routines */
+  _pyepg_sync.channels = _pyepg_async.channels = &_pyepg_channels;
+  _pyepg_sync.ch_save  = _pyepg_async.ch_save  = epggrab_module_channels_save;
+  _pyepg_sync.ch_add   = _pyepg_async.ch_add   = epggrab_module_channel_add;
+  _pyepg_sync.ch_rem   = _pyepg_async.ch_rem   = epggrab_module_channel_rem;
+  _pyepg_sync.ch_mod   = _pyepg_async.ch_mod   = epggrab_module_channel_mod;
+  _pyepg_sync.name     = _pyepg_async.name     = strdup("PyEPG");
+
+  /* Sync */
+  _pyepg_sync.id       = strdup("pyepg_sync");
+  _pyepg_sync.path     = strdup("/usr/bin/pyepg");
+  _pyepg_sync.grab     = _pyepg_grab;
+  _pyepg_sync.parse    = _pyepg_parse;
+
+  /* Async */
+  _pyepg_async.id      = strdup("pyepg_async");
+  _pyepg_async.enable  = _pyepg_enable;
+  *((uint8_t*)&_pyepg_async.async) = 1;
+
+  /* Add to list */
+  LIST_INSERT_HEAD(list, &_pyepg_sync, link);
+  LIST_INSERT_HEAD(list, &_pyepg_async, link);
 }
 

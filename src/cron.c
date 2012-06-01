@@ -91,9 +91,11 @@ static int _cron_parse ( cron_t *cron, const char *str )
   return 1; // TODO: do proper validation
 }
 
-cron_t *cron_create ( void )
+cron_t *cron_create ( const char *str )
 {
-  return calloc(1, sizeof(cron_t));
+  cron_t *c = calloc(1, sizeof(cron_t));
+  if (str) cron_set_string(c, str);
+  return c;
 }
 
 void cron_destroy ( cron_t *cron )
@@ -160,11 +162,7 @@ void cron_serialize ( cron_t *cron, htsmsg_t *msg )
 
 cron_t *cron_deserialize ( htsmsg_t *msg )
 {
-  // TODO: validate the string!
-  cron_t *cron = cron_create();
-  const char *str = htsmsg_get_str(msg, "cron");
-  if (str) cron_set_string(cron, str);
-  return cron;
+  return cron_create(htsmsg_get_str(msg, "cron"));
 }
 
 #if 0
