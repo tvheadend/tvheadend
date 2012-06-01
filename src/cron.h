@@ -13,7 +13,7 @@
 
 typedef struct cron cron_t;
 
-cron_t     *cron_create        ( void );
+cron_t     *cron_create        ( const char *str );
 void        cron_destroy       ( cron_t *cron );
 const char *cron_get_string    ( cron_t *cron );
 int         cron_set_string    ( cron_t *cron, const char *str );
