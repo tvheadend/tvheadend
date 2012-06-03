@@ -367,12 +367,23 @@ _xmltv_parse_tv(htsmsg_t *body, epggrab_stats_t *stats)
   }
   return save;
 }
+#endif
 
-/**
- *
- */
-static int _xmltv_parse ( htsmsg_t *data, epggrab_stats_t *stats )
+/* ************************************************************************
+ * Module Setup
+ * ***********************************************************************/
+
+epggrab_channel_tree_t _xmltv_channels;
+
+static void _xmltv_save ( epggrab_module_t *mod )
 {
+  epggrab_module_channels_save(mod, "epggrab/xmltv/channels");
+}
+
+static int _xmltv_parse
+  ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
+{
+#if 0
   htsmsg_t *tags, *tv;
 
   if((tags = htsmsg_get_map(data, "tags")) == NULL)
@@ -382,38 +393,39 @@ static int _xmltv_parse ( htsmsg_t *data, epggrab_stats_t *stats )
     return 0;
 
   return _xmltv_parse_tv(tv, stats);
-}
 #endif
+  return 0;
+}
 
-/* ************************************************************************
- * Config
- * ***********************************************************************/
-
-#if 0
-static htsmsg_t *xmltv_grabber_list ( void )
+static void _xmltv_load_grabbers ( epggrab_module_list_t *list )
 {
   size_t i, outlen, p, n;
   char *outbuf;
   char errbuf[100];
-  htsmsg_t *e = NULL, *array;
+  epggrab_module_t *mod;
 
   /* Load data */
   outlen = spawn_and_store_stdout(XMLTV_FIND_GRABBERS, NULL, &outbuf);
   if ( outlen < 1 ) {
     tvhlog(LOG_ERR, "xmltv", "%s failed [%s]", XMLTV_FIND_GRABBERS, errbuf);
-    return NULL;
+    return;
   }
 
   /* Process */
-  array     = htsmsg_create_list();
   p = n = i = 0;
   while ( i < outlen ) {
     if ( outbuf[i] == '\n' || outbuf[i] == '\0' ) {
       outbuf[i] = '\0';
-      e = htsmsg_create_map();
-      htsmsg_add_str(e, "path", &outbuf[p]);
-      htsmsg_add_str(e, "name", &outbuf[n]);
-      htsmsg_add_msg(array, NULL, e);
+      mod = calloc(1, sizeof(epggrab_module_t));
+      mod->id = mod->path = strdup(&outbuf[p]);
+      mod->name = malloc(200);
+      sprintf((char*)mod->name, "XMLTV: %s", &outbuf[n]);
+      mod->parse   = _xmltv_parse;
+      mod->ch_add  = epggrab_module_channel_add;
+      mod->ch_rem  = epggrab_module_channel_rem;
+      mod->ch_mod  = epggrab_module_channel_mod;
+      mod->ch_save = _xmltv_save;
+      LIST_INSERT_HEAD(list, mod, link);
       p = n = i + 1;
     } else if ( outbuf[i] == '|' ) {
       outbuf[i] = '\0';
@@ -422,54 +434,29 @@ static htsmsg_t *xmltv_grabber_list ( void )
     i++;
   }
   free(outbuf);
-
-  return array;
 }
-#endif
 
-#if TODO_XMLTV
-/* ************************************************************************
- * Module Setup
- * ***********************************************************************/
-
-// TODO: config
-// TODO: remove use of hardcoded xmltv script
-
-static epggrab_module_t xmltv_module;
-
-static const char* _xmltv_name ( void )
+void xmltv_init ( epggrab_module_list_t *list )
 {
-  return "xmltv";
+  epggrab_module_t *mod;
+
+  /* Advanced module */
+  mod                      = calloc(1, sizeof(epggrab_module_t));
+  mod->id                  = strdup("xmltv");
+  mod->name                = strdup("XMLTV: Advanced");
+  *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_ASYNC
+                           | EPGGRAB_MODULE_SYNC
+                           | EPGGRAB_MODULE_ADVANCED;
+  mod->enable              = epggrab_module_enable;
+  mod->grab                = epggrab_module_grab;
+  mod->parse               = _xmltv_parse;
+  mod->channels            = &_xmltv_channels;
+  mod->ch_add              = epggrab_module_channel_add;
+  mod->ch_rem              = epggrab_module_channel_rem;
+  mod->ch_mod              = epggrab_module_channel_mod;
+  mod->ch_save             = _xmltv_save;
+  LIST_INSERT_HEAD(list, mod, link);
+
+  /* Standard modules */
+  _xmltv_load_grabbers(list);
 }
-
-static htsmsg_t* _xmltv_grab ( const char *iopts )
-{
-  size_t outlen;
-  char *outbuf;
-  char errbuf[100];
-
-  /* Debug */
-  tvhlog(LOG_DEBUG, "xmltv", "grab %s", cmd);
-
-  /* Grab */
-  outlen = spawn_and_store_stdout(cmd, NULL, &outbuf);
-  if ( outlen < 1 ) {
-    tvhlog(LOG_ERR, "xmltv", "no output detected");
-    return NULL;
-  }
-
-  /* Extract */
-  return htsmsg_xml_deserialize(outbuf, errbuf, sizeof(errbuf));
-}
-
-epggrab_module_t* xmltv_init ( void )
-{
-  xmltv_module.enable  = NULL;
-  xmltv_module.disable = NULL;
-  xmltv_module.grab    = _xmltv_grab;
-  xmltv_module.parse   = _xmltv_parse;
-  xmltv_module.name    = _xmltv_name;
-  return &xmltv_module;
-}
-
-#endif

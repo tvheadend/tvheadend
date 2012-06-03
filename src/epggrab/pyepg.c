@@ -28,9 +28,6 @@
 #include "epggrab/pyepg.h"
 #include "channels.h"
 
-epggrab_channel_tree_t _pyepg_channels;
-epggrab_module_t       _pyepg_sync;
-epggrab_module_t       _pyepg_async;
 
 static channel_t *_pyepg_channel_create ( epggrab_channel_t *skel, int *save )
 {
@@ -364,6 +361,19 @@ static int _pyepg_parse_epg ( htsmsg_t *data, epggrab_stats_t *stats )
   return save;
 }
 
+
+/* ************************************************************************
+ * Module Setup
+ * ***********************************************************************/
+
+epggrab_channel_tree_t _pyepg_channels;
+epggrab_module_t       _pyepg_module;
+
+static void _pyepg_save ( epggrab_module_t *mod )
+{
+  epggrab_module_channels_save(mod, "epggrab/pyepg/channels");
+}
+
 static int _pyepg_parse 
   ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
@@ -384,83 +394,24 @@ static int _pyepg_parse
   return 0;
 }
 
-/* ************************************************************************
- * Module Setup
- * ***********************************************************************/
-
-static void _pyepg_enable ( epggrab_module_t *mod, uint8_t e )
-{
-}
-
-
-static htsmsg_t* _pyepg_grab ( epggrab_module_t *mod, const char *icmd, const char *iopts )
-{
-  int        i, outlen;
-  char       *outbuf;
-  char       errbuf[100];
-  const char *argv[32]; // 32 args max!
-  char       *toksave, *tok;
-  char       *opts = NULL;
-  htsmsg_t   *ret;
-
-  /* TODO: do something (much) better! */
-  if (iopts) opts = strdup(iopts);
-  i = 1;
-  argv[0] = "/usr/bin/pyepg";
-  if ( opts ) {
-    tok = strtok_r(opts, " ", &toksave);
-    while ( tok != NULL ) {
-      argv[i++] = tok;
-      tok = strtok_r(NULL, " ", &toksave);
-    }
-  }
-  argv[i] = NULL;
-
-  /* Debug */
-  tvhlog(LOG_DEBUG, "pyepg", "grab %s %s", argv[0], iopts ? iopts : ""); 
-
-  /* Grab */
-#if 0
-  outlen = spawn_and_store_stdout(argv[0], (char *const*)argv, &outbuf);
-#else
-  outlen = spawn_and_store_stdout("/home/aps/tmp/epg.sh", NULL, &outbuf);
-#endif
-  free(opts);
-  if ( outlen < 1 ) {
-    tvhlog(LOG_ERR, "pyepg", "no output detected");
-    return NULL;
-  }
-
-  /* Extract */
-  ret = htsmsg_xml_deserialize(outbuf, errbuf, sizeof(errbuf));
-  if (!ret)
-    tvhlog(LOG_ERR, "pyepg", "htsmsg_xml_deserialize error %s", errbuf);
-  return ret;
-}
-
 void pyepg_init ( epggrab_module_list_t *list )
 {
-  /* Common routines */
-  _pyepg_sync.channels = _pyepg_async.channels = &_pyepg_channels;
-  _pyepg_sync.ch_save  = _pyepg_async.ch_save  = epggrab_module_channels_save;
-  _pyepg_sync.ch_add   = _pyepg_async.ch_add   = epggrab_module_channel_add;
-  _pyepg_sync.ch_rem   = _pyepg_async.ch_rem   = epggrab_module_channel_rem;
-  _pyepg_sync.ch_mod   = _pyepg_async.ch_mod   = epggrab_module_channel_mod;
-  _pyepg_sync.name     = _pyepg_async.name     = strdup("PyEPG");
-
-  /* Sync */
-  _pyepg_sync.id       = strdup("pyepg_sync");
-  _pyepg_sync.path     = strdup("/usr/bin/pyepg");
-  _pyepg_sync.grab     = _pyepg_grab;
-  _pyepg_sync.parse    = _pyepg_parse;
-
-  /* Async */
-  _pyepg_async.id      = strdup("pyepg_async");
-  _pyepg_async.enable  = _pyepg_enable;
-  *((uint8_t*)&_pyepg_async.async) = 1;
+  _pyepg_module.id       = strdup("pyepg_sync");
+  _pyepg_module.path     = strdup("/usr/bin/pyepg");
+  *((uint8_t*)&_pyepg_module.flags) = EPGGRAB_MODULE_SYNC
+                                    | EPGGRAB_MODULE_ASYNC
+                                    | EPGGRAB_MODULE_ADVANCED
+                                    | EPGGRAB_MODULE_SIMPLE;
+  _pyepg_module.enable   = epggrab_module_enable;
+  _pyepg_module.grab     = epggrab_module_grab;
+  _pyepg_module.parse    = _pyepg_parse;
+  _pyepg_module.channels = &_pyepg_channels;
+  _pyepg_module.ch_save  = _pyepg_save;
+  _pyepg_module.ch_add   = epggrab_module_channel_add;
+  _pyepg_module.ch_rem   = epggrab_module_channel_rem;
+  _pyepg_module.ch_mod   = epggrab_module_channel_mod;
 
   /* Add to list */
-  LIST_INSERT_HEAD(list, &_pyepg_sync, link);
-  LIST_INSERT_HEAD(list, &_pyepg_async, link);
+  LIST_INSERT_HEAD(list, &_pyepg_module, link);
 }
 
