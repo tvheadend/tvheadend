@@ -55,6 +55,14 @@ typedef struct epggrab_channel_tree epggrab_channel_tree_t;
 typedef struct epggrab_module epggrab_module_t;
 
 /*
+ * Grabber flags
+ */
+#define EPGGRAB_MODULE_SYNC     0x1
+#define EPGGRAB_MODULE_ASYNC    0x2
+#define EPGGRAB_MODULE_SIMPLE   0x4
+#define EPGGRAB_MODULE_ADVANCED 0x8
+
+/*
  * Grabber base class
  */
 struct epggrab_module
@@ -64,8 +72,7 @@ struct epggrab_module
   const char                 *id;       ///< Module identifier
   const char                 *name;     ///< Module name (for display)
   const char                 *path;     ///< Module path (for fixed config)
-  const uint8_t              simple;    ///< Include in simple list
-  const uint8_t              async;     ///< Asynchronous (not schedulable)
+  const uint8_t              flags;     ///< Mode flags
   epggrab_channel_tree_t     *channels; ///< Channel list
 
   /* Enable/Disable for async */
@@ -87,10 +94,12 @@ struct epggrab_module
 };
 
 /*
- * Default channel handlers
+ * Default module functions
  */
+void epggrab_module_enable        ( epggrab_module_t *m, uint8_t e );
+htsmsg_t *epggrab_module_grab     ( epggrab_module_t *m, const char *cmd, const char *opts );
 void epggrab_module_channels_load ( epggrab_module_t *m );
-void epggrab_module_channels_save ( epggrab_module_t *m );
+void epggrab_module_channels_save ( epggrab_module_t *m, const char *path );
 int  epggrab_module_channel_add   ( epggrab_module_t *m, channel_t *ch );
 int  epggrab_module_channel_rem   ( epggrab_module_t *m, channel_t *ch );
 int  epggrab_module_channel_mod   ( epggrab_module_t *m, channel_t *ch );

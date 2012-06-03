@@ -66,13 +66,12 @@ void epggrab_module_channels_load ( epggrab_module_t *mod )
   }
 }
 
-void epggrab_module_channels_save ( epggrab_module_t *mod )
+void epggrab_module_channels_save
+  ( epggrab_module_t *mod, const char *path )
 {
-  char path[100];
   epggrab_channel_t *c;
   htsmsg_t *m = htsmsg_create_map();
 
-  sprintf(path, "epggrab/%s/channels", mod->id);
   RB_FOREACH(c, mod->channels, link) {
     if (c->channel) htsmsg_add_u32(m, c->id, c->channel->ch_id);
   }

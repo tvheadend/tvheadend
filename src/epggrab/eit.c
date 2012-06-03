@@ -84,11 +84,23 @@ void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
   }
 }
 
-epggrab_module_t _eit_mod;
+/* ************************************************************************
+ * Module Setup
+ * ***********************************************************************/
+
+static epggrab_module_t _eit_mod;
+static uint8_t          _eit_enabled;
+
+static void _eit_enable ( epggrab_module_t *mod, uint8_t e )
+{
+  _eit_enabled = e;
+}
+
 void eit_init ( epggrab_module_list_t *list )
 {
-  _eit_mod.id    = strdup("eit");
-  _eit_mod.name  = strdup("EIT On-Air Grabber");
-  *((uint8_t*)&_eit_mod.async) = 1;
+  _eit_mod.id     = strdup("eit");
+  _eit_mod.name   = strdup("EIT: On-Air Grabber");
+  *((uint8_t*)&_eit_mod.flags) = EPGGRAB_MODULE_ASYNC;
+  _eit_mod.enable = _eit_enable; 
   LIST_INSERT_HEAD(list, &_eit_mod, link);
 }
