@@ -8,23 +8,20 @@
 
 set -eu
 
-BUILD_API_VERSION=2
+BUILD_API_VERSION=3
 EXTRA_BUILD_NAME=""
 JARGS=""
 JOBSARGS=""
 TARGET=""
 RELEASE="--release"
 WORKINGDIR="/var/tmp/showtime-autobuild"
-UPLOAD_BUILD_ARTIFACTS=1
-while getopts "vht:e:j:w:R" OPTION
+OP="build"
+while getopts "vht:e:j:w:o:c:" OPTION
 do
   case $OPTION in
       v)
 	  echo $BUILD_API_VERSION
 	  exit 0
-	  ;;
-      R)
-	  UPLOAD_BUILD_ARTIFACTS=0
 	  ;;
       h)
 	  echo "This script is intended to be used by the autobuild system only"
@@ -43,9 +40,11 @@ do
       w)
 	  WORKINGDIR="$OPTARG"
 	  ;;
+      o)
+	  OP="$OPTARG"
+	  ;;
   esac
 done
-
 
 if [[ -z $TARGET ]]; then
     echo "target (-t) not specified"
@@ -59,11 +58,11 @@ fi
 # $4 = filename
 #
 artifact() {
-    if [ $UPLOAD_BUILD_ARTIFACTS -eq 1 ]; then
-	echo "doozer-artifact:$PWD/$1:$2:$3:$4"
-    else
-	echo "Ignoring: $1:$2:$3:$4"
-    fi
+    echo "doozer-artifact:$PWD/$1:$2:$3:$4"
+}
+
+versioned_artifact() {
+    echo "doozer-versioned-artifact:$PWD/$1:$2:$3:$4"
 }
 
 if [ -f Autobuild/${TARGET}.sh ]; then
@@ -72,3 +71,4 @@ else
     echo "target $TARGET not supported"
     exit 1
 fi
+
