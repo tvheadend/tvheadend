@@ -217,6 +217,8 @@ htsp_flush_queue(htsp_connection_t *htsp, htsp_msg_q_t *hmq)
 {
   htsp_msg_t *hm;
 
+  pthread_mutex_lock(&htsp->htsp_out_mutex);
+
   if(hmq->hmq_length)
     TAILQ_REMOVE(&htsp->htsp_active_output_queues, hmq, hmq_link);
 
@@ -224,6 +226,7 @@ htsp_flush_queue(htsp_connection_t *htsp, htsp_msg_q_t *hmq)
     TAILQ_REMOVE(&hmq->hmq_q, hm, hm_link);
     htsp_msg_destroy(hm);
   }
+  pthread_mutex_unlock(&htsp->htsp_out_mutex);
 }
 
 
