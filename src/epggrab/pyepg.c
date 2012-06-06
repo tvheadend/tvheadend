@@ -122,7 +122,7 @@ static int _pyepg_parse_brand ( htsmsg_t *data, epggrab_stats_t *stats )
   }
   
   /* Set icon */
-#if TODO
+#if TODO_ICON_SUPPORT
   if ((str = htsmsg_xml_get_cdata_str(tags, "icon"))) {
     save |= epg_brand_set_icon(brand, str);
   }
@@ -166,7 +166,7 @@ static int _pyepg_parse_season ( htsmsg_t *data, epggrab_stats_t *stats )
   }
 
   /* Set title */
-#if TODO
+#if TODO_EXTRA_METADATA
   if ((str = htsmsg_xml_get_cdata_str(tags, "title"))) {
     save |= epg_season_set_title(season, str);
   } 
@@ -252,7 +252,7 @@ static int _pyepg_parse_episode ( htsmsg_t *data, epggrab_stats_t *stats )
 
   /* Genre */
   // TODO: can actually have multiple!
-#if TODO
+#if TODO_GENRE_SUPPORT
   if ((str = htsmsg_xml_get_cdata_str(tags, "genre"))) {
     // TODO: conversion?
     save |= epg_episode_set_genre(episode, str);
@@ -396,13 +396,15 @@ static int _pyepg_parse
 
 void pyepg_init ( epggrab_module_list_t *list )
 {
-  _pyepg_module.id       = strdup("pyepg_sync");
-  _pyepg_module.path     = strdup("/usr/bin/pyepg");
+  _pyepg_module.id   = strdup("pyepg");
+  _pyepg_module.path = strdup("/usr/bin/pyepg");
+  _pyepg_module.name = strdup("PyEPG");
   *((uint8_t*)&_pyepg_module.flags) = EPGGRAB_MODULE_SYNC
                                     | EPGGRAB_MODULE_ASYNC
                                     | EPGGRAB_MODULE_ADVANCED
-                                    | EPGGRAB_MODULE_SIMPLE;
-  _pyepg_module.enable   = epggrab_module_enable;
+                                    | EPGGRAB_MODULE_SIMPLE
+                                    | EPGGRAB_MODULE_EXTERNAL;
+  _pyepg_module.enable   = epggrab_module_enable_socket;
   _pyepg_module.grab     = epggrab_module_grab;
   _pyepg_module.parse    = _pyepg_parse;
   _pyepg_module.channels = &_pyepg_channels;

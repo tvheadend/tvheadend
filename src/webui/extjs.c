@@ -42,6 +42,7 @@
 #include "epggrab.h"
 #include "epg.h"
 #include "iptv_input.h"
+#include "epggrab/xmltv.h"
 
 static void
 extjs_load(htsbuf_queue_t *hq, const char *script)
@@ -322,11 +323,6 @@ extjs_channels_update(htsmsg_t *in)
     if((s = htsmsg_get_str(c, "name")) != NULL)
       channel_rename(ch, s);
 
-#if TODO_XMLTV_REMOVE_THIS
-    if((s = htsmsg_get_str(c, "xmltvsrc")) != NULL)
-      channel_set_xmltv_source(ch, xmltv_channel_find_by_displayname(s));
-#endif
-
     if((s = htsmsg_get_str(c, "ch_icon")) != NULL)
       channel_set_icon(ch, s);
 
@@ -376,11 +372,6 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
       htsmsg_add_str(c, "name", ch->ch_name);
       htsmsg_add_u32(c, "chid", ch->ch_id);
       
-#if TODO_XMLTV_REMOVE_THIS
-      if(ch->ch_xc != NULL)
-	htsmsg_add_str(c, "xmltvsrc", ch->ch_xc->xc_displayname);
-#endif
-
       if(ch->ch_icon != NULL)
         htsmsg_add_str(c, "ch_icon", ch->ch_icon);
 
@@ -476,15 +467,15 @@ json_single_record(htsmsg_t *rec, const char *root)
 static int
 extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
 {
-#if TODO_EPGGRAB_CONFIG
   htsbuf_queue_t *hq = &hc->hc_reply;
   const char *op = http_arg_get(&hc->hc_req_args, "op");
-  xmltv_channel_t *xc;
-  htsmsg_t *out, *array, *e, *r;
-  const char *s;
+  htsmsg_t *out, *array, *r;
+  const char *str;
 
   if(op == NULL)
     return 400;
+
+  printf("extjs_epggrab: %s\n", op);
 
   pthread_mutex_lock(&global_lock);
 
@@ -495,66 +486,63 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_unlock(&global_lock);
 
-  if(!strcmp(op, "listChannels")) {
+  /* Basic settings (not the advanced schedule) */
+  if(!strcmp(op, "loadSettings")) {
 
+    pthread_mutex_lock(&epggrab_mutex);
+    r = htsmsg_create_map();
+    htsmsg_add_u32(r, "eitenabled", epggrab_eitenabled);
+    htsmsg_add_u32(r, "advanced", epggrab_advanced);
+    if (epggrab_module)
+      htsmsg_add_str(r, "module", epggrab_module->id);
+    htsmsg_add_u32(r, "interval", epggrab_interval);
+    pthread_mutex_unlock(&epggrab_mutex);
+
+    out = json_single_record(r, "epggrabSettings");
+
+  /* List of modules */
+  } else if (!strcmp(op, "moduleList")) {
     out = htsmsg_create_map();
-    array = htsmsg_create_list();
-    
-    e = htsmsg_create_map();
-    htsmsg_add_str(e, "xcTitle", "None");
-    htsmsg_add_msg(array, NULL, e);
-
-    pthread_mutex_lock(&global_lock);
-    LIST_FOREACH(xc, &xmltv_displaylist, xc_displayname_link) {
-      e = htsmsg_create_map();
-      htsmsg_add_str(e, "xcTitle", xc->xc_displayname);
-      htsmsg_add_msg(array, NULL, e);
-    }
-    pthread_mutex_unlock(&global_lock);
-
+    pthread_mutex_lock(&epggrab_mutex);
+    array = epggrab_module_list();
+    pthread_mutex_unlock(&epggrab_mutex);
     htsmsg_add_msg(out, "entries", array);
 
-  } else if(!strcmp(op, "loadSettings")) {
+  /* Advanced schedule */
+  } else if (!strcmp(op, "loadSchedule")) {
+    out = htsmsg_create_map();
+    pthread_mutex_lock(&epggrab_mutex);
+    array = epggrab_get_schedule();
+    pthread_mutex_unlock(&epggrab_mutex);
+    htsmsg_add_msg(out, "entries", array);
 
-    pthread_mutex_lock(&xmltv_mutex);
-    r = htsmsg_create_map();
-
-    if((s = xmltv_get_current_grabber()) != NULL)
-      htsmsg_add_str(r, "grabber", s);
-
-    htsmsg_add_u32(r, "grabinterval", xmltv_grab_interval);
-    htsmsg_add_u32(r, "grabenable", xmltv_grab_enabled);
-    pthread_mutex_unlock(&xmltv_mutex);
-
-    out = json_single_record(r, "xmltvSettings");
-
-  } else if(!strcmp(op, "saveSettings")) {
-
-    pthread_mutex_lock(&xmltv_mutex);
-
-    s = http_arg_get(&hc->hc_req_args, "grabber");
-    xmltv_set_current_grabber(s);
-
-    s = http_arg_get(&hc->hc_req_args, "grabinterval");
-    xmltv_set_grab_interval(atoi(s));
-
-    s = http_arg_get(&hc->hc_req_args, "grabenable");
-    xmltv_set_grab_enable(!!s);
-
-    pthread_mutex_unlock(&xmltv_mutex);
-
+  /* Save settings */
+  } else if (!strcmp(op, "saveSettings") ) {
+    int save = 0;
+    pthread_mutex_lock(&epggrab_mutex);
+    if ( http_arg_get(&hc->hc_req_args, "advanced") )
+      save |= epggrab_set_advanced(1);
+    else
+      save |= epggrab_set_advanced(0);
+    if ( http_arg_get(&hc->hc_req_args, "eitenabled") )
+      save |= epggrab_set_eitenabled(1);
+    else
+      save |= epggrab_set_eitenabled(0);
+    if ( (str = http_arg_get(&hc->hc_req_args, "interval")) )
+      save |= epggrab_set_interval(atoi(str));
+    if ( (str = http_arg_get(&hc->hc_req_args, "module")) )
+      save |= epggrab_set_module_by_id(str);
+    if ( (str = http_arg_get(&hc->hc_req_args, "schedule")) ) {
+      if ( (array = htsmsg_json_deserialize(str)) ) {
+        htsmsg_print(array);
+        save |= epggrab_set_schedule(array);
+        htsmsg_destroy(array);
+      }
+    }
+    if (save) epggrab_save();
+    pthread_mutex_unlock(&epggrab_mutex);
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
-
-  } else if(!strcmp(op, "listGrabbers")) {
-
-    out = htsmsg_create_map();
-
-    pthread_mutex_lock(&xmltv_mutex);
-    array = xmltv_list_grabbers();
-    pthread_mutex_unlock(&xmltv_mutex);
-    if(array != NULL)
-      htsmsg_add_msg(out, "entries", array);
 
   } else {
     return HTTP_STATUS_BAD_REQUEST;
@@ -564,7 +552,6 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");
 
-#endif
   return 0;
 }
 

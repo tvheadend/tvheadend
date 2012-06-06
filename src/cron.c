@@ -113,7 +113,7 @@ int cron_set_string ( cron_t *cron, const char *str )
 {
   int save = 0;
   cron_t tmp;
-  if (!cron->str || !strcmp(cron->str, str)) {
+  if (!cron->str || strcmp(cron->str, str)) {
     tmp.str = (char*)str;
     if (_cron_parse(&tmp, str)) {
       if (cron->str) free(cron->str);

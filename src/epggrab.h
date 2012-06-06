@@ -57,10 +57,11 @@ typedef struct epggrab_module epggrab_module_t;
 /*
  * Grabber flags
  */
-#define EPGGRAB_MODULE_SYNC     0x1
-#define EPGGRAB_MODULE_ASYNC    0x2
-#define EPGGRAB_MODULE_SIMPLE   0x4
-#define EPGGRAB_MODULE_ADVANCED 0x8
+#define EPGGRAB_MODULE_SYNC     0x01
+#define EPGGRAB_MODULE_ASYNC    0x02
+#define EPGGRAB_MODULE_SIMPLE   0x04
+#define EPGGRAB_MODULE_ADVANCED 0x08
+#define EPGGRAB_MODULE_EXTERNAL 0x10
 
 /*
  * Grabber base class
@@ -96,7 +97,7 @@ struct epggrab_module
 /*
  * Default module functions
  */
-void epggrab_module_enable        ( epggrab_module_t *m, uint8_t e );
+void epggrab_module_enable_socket ( epggrab_module_t *m, uint8_t e );
 htsmsg_t *epggrab_module_grab     ( epggrab_module_t *m, const char *cmd, const char *opts );
 void epggrab_module_channels_load ( epggrab_module_t *m );
 void epggrab_module_channels_save ( epggrab_module_t *m, const char *path );
@@ -129,7 +130,7 @@ htsmsg_t*         epggrab_module_list       ( void );
  */
 typedef struct epggrab_sched
 { 
-  LIST_ENTRY(epggrab_sched) link;
+  TAILQ_ENTRY(epggrab_sched) link;
   cron_t                    *cron;  ///< Cron definition
   epggrab_module_t          *mod;   ///< Module
   char                      *cmd;   ///< Command
@@ -139,7 +140,7 @@ typedef struct epggrab_sched
 /*
  * Schedule list
  */
-LIST_HEAD(epggrab_sched_list, epggrab_sched);
+TAILQ_HEAD(epggrab_sched_list, epggrab_sched);
 typedef struct epggrab_sched_list epggrab_sched_list_t;
 
 /*
