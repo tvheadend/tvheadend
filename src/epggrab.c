@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <wordexp.h>
 #include "htsmsg.h"
 #include "settings.h"
 #include "tvheadend.h"
@@ -12,6 +13,8 @@
 #include "epggrab/xmltv.h"
 #include "epggrab/pyepg.h"
 #include "channels.h"
+#include "spawn.h"
+#include "htsmsg_xml.h"
 
 /* Thread protection */
 int                   epggrab_confver;
@@ -156,9 +159,50 @@ void epggrab_module_enable_socket ( epggrab_module_t *mod, uint8_t e )
 
 htsmsg_t *epggrab_module_grab
   ( epggrab_module_t *mod, const char *cmd, const char *opts )
-{
-  // TODO: implement this
-  return NULL;
+{ 
+  int        i, outlen;
+  char       *outbuf;
+  char       errbuf[100];
+  const char **argv = NULL;
+  wordexp_t  we;
+  htsmsg_t   *ret;
+
+  /* Determine command */
+  if ( !cmd || cmd[0] == '\0' )
+    cmd = mod->path;
+  if ( !cmd ) {
+    tvhlog(LOG_ERR, "epggrab", "invalid configuraton no command specified");
+    return NULL;
+  }
+  printf("cmd = %s, opts = %s\n", cmd, opts);
+
+  /* Parse opts */
+  if (opts) {
+    wordexp(opts, &we, 0);
+    argv = calloc(we.we_wordc+2, sizeof(char*));
+    argv[0] = cmd;
+    for ( i = 0; i < we.we_wordc; i++ ) {
+      argv[i + 1] = we.we_wordv[i];
+    }
+  }
+
+  /* Debug */
+  tvhlog(LOG_DEBUG, "pyepg", "grab %s %s", cmd, opts ?: "");
+
+  /* Grab */
+  outlen = spawn_and_store_stdout(cmd, (char*const*)argv, &outbuf);
+  free(argv);
+  wordfree(&we);
+  if ( outlen < 1 ) {
+    tvhlog(LOG_ERR, "pyepg", "no output detected");
+    return NULL;
+  }
+
+  /* Extract */
+  ret = htsmsg_xml_deserialize(outbuf, errbuf, sizeof(errbuf));
+  if (!ret)
+    tvhlog(LOG_ERR, "pyepg", "htsmsg_xml_deserialize error %s", errbuf);
+  return ret;
 }
 
 /* **************************************************************************
@@ -361,7 +405,6 @@ htsmsg_t *epggrab_get_schedule ( void )
 static void _epggrab_module_run 
   ( epggrab_module_t *mod, const char *icmd, const char *iopts )
 {
-#if 0
   int save = 0;
   time_t tm1, tm2;
   htsmsg_t *data;
@@ -372,8 +415,8 @@ static void _epggrab_module_run
   if ( !mod || !mod->grab || !mod->parse ) return;
   
   /* Dup before unlock */
-  if ( !icmd  ) cmd  = strdup(icmd);
-  if ( !iopts ) opts = strdup(iopts);
+  if ( icmd  ) cmd  = strdup(icmd);
+  if ( iopts ) opts = strdup(iopts);
   pthread_mutex_unlock(&epggrab_mutex);
   
   /* Grab */
@@ -419,9 +462,8 @@ static void _epggrab_module_run
 
   /* Free a re-lock */
   if (cmd)  free(cmd);
-  if (opts) free(cmd);
+  if (opts) free(opts);
   pthread_mutex_lock(&epggrab_mutex);
-#endif
 }
 
 /*
@@ -444,19 +486,25 @@ static time_t _epggrab_thread_simple ( void )
  */
 static time_t _epggrab_thread_advanced ( void )
 {
-  time_t ret;
+  time_t ret, now;
   epggrab_sched_t *s;
 
   /* Determine which to run */
-  time(&ret);
+  time(&now);
+  ret = now + 3600; // default
   TAILQ_FOREACH(s, &epggrab_schedule, link) {
     if ( cron_is_time(s->cron) ) {
+      cron_run(s->cron);
       _epggrab_module_run(s->mod, s->cmd, s->opts);
-      break; // TODO: can only run once else config may have changed
+      return now + 10;
+      // TODO: don't try to interate the list, it'll break due to locking
+      //       module (i.e. _epggrab_module_run() unlocks)
+    } else {
+      ret = MIN(ret, cron_next(s->cron));
     }
   }
 
-  return ret + 60;
+  return ret;//now + 30;
 }
 
 /*
