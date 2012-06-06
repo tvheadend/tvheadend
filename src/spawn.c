@@ -28,6 +28,7 @@
 #include <fcntl.h>
 
 #include "tvheadend.h"
+#include "file.h"
 #include "spawn.h"
 
 extern char **environ;
@@ -41,21 +42,6 @@ typedef struct spawn {
   pid_t pid;
   const char *name;
 } spawn_t;
-
-
-/**
- * Structs for reading back output from a spawn via a pipe
- */
-TAILQ_HEAD(spawn_output_buf_queue, spawn_output_buf);
-
-#define MAX_SOB_SIZE 4000
-
-typedef struct spawn_output_buf {
-  TAILQ_ENTRY(spawn_output_buf) sob_link;
-  int sob_size;
-  char sob_buf[MAX_SOB_SIZE];
-} spawn_output_buf_t;
-
 
 
 /**
@@ -135,10 +121,7 @@ int
 spawn_and_store_stdout(const char *prog, char *const argv[], char **outp)
 {
   pid_t p;
-  int fd[2], r, totalsize = 0, f;
-  char *outbuf;
-  struct spawn_output_buf_queue bufs;
-  spawn_output_buf_t *b = NULL;
+  int fd[2], f;
   const char *local_argv[2];
 
   if(argv == NULL) {
@@ -194,43 +177,7 @@ spawn_and_store_stdout(const char *prog, char *const argv[], char **outp)
 
   close(fd[1]);
 
-  TAILQ_INIT(&bufs);
-  while(1) {
-    if(b == NULL) {
-      b = malloc(sizeof(spawn_output_buf_t));
-      b->sob_size = 0;
-      TAILQ_INSERT_TAIL(&bufs, b, sob_link);
-    }
-
-    r = read(fd[0], b->sob_buf + b->sob_size, MAX_SOB_SIZE - b->sob_size);
-    if(r < 1)
-      break;
-    b->sob_size += r;
-    totalsize += r;
-    if(b->sob_size == MAX_SOB_SIZE)
-      b = NULL;
-  } 
-
-  close(fd[0]);
-
-  if(totalsize == 0) {
-    free(b);
-    *outp = NULL;
-    return 0;
-  }
-
-  outbuf = malloc(totalsize + 1);
-  r = 0;
-  while((b = TAILQ_FIRST(&bufs)) != NULL) {
-    memcpy(outbuf + r, b->sob_buf, b->sob_size);
-    r+= b->sob_size;
-    TAILQ_REMOVE(&bufs, b, sob_link);
-    free(b);
-  }
-  assert(r == totalsize);
-  *outp = outbuf;
-  outbuf[totalsize] = 0;
-  return totalsize;
+  return file_readall(fd[0], outp);
 }
 
 
