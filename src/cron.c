@@ -19,12 +19,12 @@ static int _cron_parse_field
 { 
   int i = 0, j = 0, sn = -1, en = -1, mn = -1;
   *field = 0;
-  while ( str[i] != '\0' ) {
+  while ( 1 ) {
     if ( str[i] == '*' ) {
       sn = 0;
       en = 64;
       j  = -1;
-    } else if ( str[i] == ',' || str[i] == ' ' ) {
+    } else if ( str[i] == ',' || str[i] == ' ' || str[i] == '\0' ) {
       if (j >= 0) 
         sscanf(str+j, "%d", en == -1 ? (sn == -1 ? &sn : &en) : &mn);
       if (en == -1) en = sn;
@@ -34,6 +34,7 @@ static int _cron_parse_field
           *field |= (0x1LL << (sn - offset));
         sn++;
       }
+      if ( str[i] == '\0' ) break;
       j  = i+1;
       sn = en = mn = -1;
       if (str[i] == ' ') break;
@@ -145,13 +146,20 @@ int cron_is_time ( cron_t *cron )
   return ret;
 }
 
+// TODO: use this as part of cron_next/cron_is_time
+void cron_run ( cron_t *cron )
+{
+}
+
 // TODO: do proper search for next time
 time_t cron_next ( cron_t *cron )
 {
   time_t now;
   time(&now);
-  now += 60;
-  return (now / 60) * 60; // round to start of minute
+  now += 62; // TODO: hack because timer goes off just before second tick
+  now /= 60;
+  now *= 60;
+  return now;
 }
 
 

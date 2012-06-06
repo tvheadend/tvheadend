@@ -49,9 +49,7 @@ void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
   if (!ch || !ch->ch_name || !ch->ch_name[0]) return;
 
   /* Disabled? */
-#if TODO_REENABLE_THIS
-  if (epggrab_eit_disabled) return;
-#endif
+  if (!epggrab_eitenabled) return;
 
   /* Find broadcast */
   ebc  = epg_broadcast_find_by_time(ch, start, stop, 1, &save);
@@ -89,18 +87,12 @@ void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
  * ***********************************************************************/
 
 static epggrab_module_t _eit_mod;
-static uint8_t          _eit_enabled;
-
-static void _eit_enable ( epggrab_module_t *mod, uint8_t e )
-{
-  _eit_enabled = e;
-}
 
 void eit_init ( epggrab_module_list_t *list )
 {
   _eit_mod.id     = strdup("eit");
   _eit_mod.name   = strdup("EIT: On-Air Grabber");
   *((uint8_t*)&_eit_mod.flags) = EPGGRAB_MODULE_ASYNC;
-  _eit_mod.enable = _eit_enable; 
   LIST_INSERT_HEAD(list, &_eit_mod, link);
+  // Note: this is mostly ignored anyway as EIT is treated as a special case!
 }
