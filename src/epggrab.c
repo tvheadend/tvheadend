@@ -20,7 +20,7 @@ pthread_cond_t        epggrab_cond;
 
 /* Config */
 uint32_t              epggrab_advanced;
-uint32_t              epggrab_eit;
+uint32_t              epggrab_eitenabled;
 uint32_t              epggrab_interval;
 epggrab_module_t*     epggrab_module;
 epggrab_sched_list_t  epggrab_schedule;
@@ -136,8 +136,30 @@ epggrab_module_t* epggrab_module_find_by_id ( const char *id )
 
 htsmsg_t *epggrab_module_list ( void )
 {
-  htsmsg_t *a = htsmsg_create_list();
+  epggrab_module_t *m;
+  htsmsg_t *e, *a = htsmsg_create_list();
+  LIST_FOREACH(m, &epggrab_modules, link) {
+    e = htsmsg_create_map();
+    htsmsg_add_str(e, "id", m->id);
+    if(m->name) htsmsg_add_str(e, "name", m->name);
+    else printf("no name: %s\n", m->id);
+    if(m->path) htsmsg_add_str(e, "path", m->path);
+    htsmsg_add_u32(e, "flags", m->flags);
+    htsmsg_add_msg(a, NULL, e);
+  }
   return a;
+}
+
+void epggrab_module_enable_socket ( epggrab_module_t *mod, uint8_t e )
+{
+  // TODO: implement this?
+}
+
+htsmsg_t *epggrab_module_grab
+  ( epggrab_module_t *mod, const char *cmd, const char *opts )
+{
+  // TODO: implement this
+  return NULL;
 }
 
 /* **************************************************************************
@@ -162,57 +184,56 @@ static int _update_str ( char **dst, const char *src )
   return save;
 } 
 
-static int _epggrab_schedule_deserialize ( htsmsg_t *m )
+static int _epggrab_schedule_deserialize ( htsmsg_t *a )
 { 
   int save = 0;
-  htsmsg_t *a, *e;
+  htsmsg_t *e;
   htsmsg_field_t *f;
   epggrab_sched_t *es;
   epggrab_module_t *mod;
   const char *str;
 
-  es = LIST_FIRST(&epggrab_schedule);
-  if ( (a = htsmsg_get_list(m, "schedule")) ) {
-    HTSMSG_FOREACH(f, a) {
-      if ((e = htsmsg_get_map_by_field(f))) {
-        if (es) {
-          es = LIST_NEXT(es, link);
-        } else {
-          es   = calloc(1, sizeof(epggrab_sched_t));
-          save = 1;
-          LIST_INSERT_HEAD(&epggrab_schedule, es, link);
-        }
+  es = TAILQ_FIRST(&epggrab_schedule);
+  HTSMSG_FOREACH(f, a) {
+    if ((e = htsmsg_get_map_by_field(f))) {
+      if (!es) {
+        es   = calloc(1, sizeof(epggrab_sched_t));
+        save = 1;
+        TAILQ_INSERT_TAIL(&epggrab_schedule, es, link);
+      }
 
-        mod = NULL;
-        if ((str = htsmsg_get_str(e, "module")))
-          mod = epggrab_module_find_by_id(str);
-        if (es->mod != mod) {
-          es->mod = mod;
-          save    = 1;
-        }
+      mod = NULL;
+      if ((str = htsmsg_get_str(e, "module")))
+        mod = epggrab_module_find_by_id(str);
+      if (es->mod != mod) {
+        es->mod = mod;
+        save    = 1;
+      }
 
-        save |= _update_str(&es->cmd,  htsmsg_get_str(e, "command"));
-        save |= _update_str(&es->opts, htsmsg_get_str(e, "options"));
-        str   = htsmsg_get_str(e, "cron");
-        if (es->cron) {
-          if (!str) {
-            free(es->cron);
-            es->cron = NULL;
-            save     = 1;
-          } else {
-            save |= cron_set_string(es->cron, str);
-          }
-        } else if (str) {
-          es->cron = cron_create(str);
+      save |= _update_str(&es->cmd,  htsmsg_get_str(e, "command"));
+      save |= _update_str(&es->opts, htsmsg_get_str(e, "options"));
+      str   = htsmsg_get_str(e, "cron");
+      if (es->cron) {
+        if (!str) {
+          free(es->cron);
+          es->cron = NULL;
           save     = 1;
+        } else {
+          save |= cron_set_string(es->cron, str);
         }
+      } else if (str) {
+        es->cron = cron_create(str);
+        save     = 1;
       }
     }
+
+    /* Next */
+    if (es) es = TAILQ_NEXT(es, link);
   }
   
   if (es)
-    while ( LIST_NEXT(es, link) ) {
-      LIST_REMOVE(es, link);
+    while ( (es = TAILQ_NEXT(es, link)) ) {
+      TAILQ_REMOVE(&epggrab_schedule, es, link);
       save = 1;
     }
 
@@ -224,7 +245,7 @@ static htsmsg_t *_epggrab_schedule_serialize ( void )
   epggrab_sched_t *es;
   htsmsg_t *e, *a;
   a = htsmsg_create_list();
-  LIST_FOREACH(es, &epggrab_schedule, link) {
+  TAILQ_FOREACH(es, &epggrab_schedule, link) {
     e = htsmsg_create_map();
     if ( es->mod  ) htsmsg_add_str(e, "module",  es->mod->id);
     if ( es->cmd  ) htsmsg_add_str(e, "command", es->cmd);
@@ -246,7 +267,7 @@ static void _epggrab_load ( void )
 
   /* Load settings */
   htsmsg_get_u32(m, "advanced", &epggrab_advanced);
-  htsmsg_get_u32(m, "eit",      &epggrab_eit);
+  htsmsg_get_u32(m, "eit",      &epggrab_eitenabled);
   htsmsg_get_u32(m, "interval", &epggrab_interval);
   if ( (str = htsmsg_get_str(m, "module")) )
     epggrab_module = epggrab_module_find_by_id(str);
@@ -271,6 +292,7 @@ void epggrab_save ( void )
   if ( epggrab_module )
     htsmsg_add_str(m, "module", epggrab_module->id);
   htsmsg_add_msg(m, "schedule", _epggrab_schedule_serialize());
+  htsmsg_print(m);
   hts_settings_save(m, "epggrab/config");
   htsmsg_destroy(m);
 }
@@ -288,9 +310,9 @@ int epggrab_set_advanced ( uint32_t advanced )
 int epggrab_set_eitenabled ( uint32_t eitenabled )
 {
   int save = 0;
-  if ( epggrab_eit != eitenabled ) {
+  if ( epggrab_eitenabled != eitenabled ) {
     save = 1;
-    eitenabled = eitenabled;
+    epggrab_eitenabled = eitenabled;
   }
   return save;
 }
@@ -340,6 +362,7 @@ htsmsg_t *epggrab_get_schedule ( void )
 static void _epggrab_module_run 
   ( epggrab_module_t *mod, const char *icmd, const char *iopts )
 {
+#if 0
   int save = 0;
   time_t tm1, tm2;
   htsmsg_t *data;
@@ -399,6 +422,7 @@ static void _epggrab_module_run
   if (cmd)  free(cmd);
   if (opts) free(cmd);
   pthread_mutex_lock(&epggrab_mutex);
+#endif
 }
 
 /*
@@ -426,7 +450,7 @@ static time_t _epggrab_thread_advanced ( void )
 
   /* Determine which to run */
   time(&ret);
-  LIST_FOREACH(s, &epggrab_schedule, link) {
+  TAILQ_FOREACH(s, &epggrab_schedule, link) {
     if ( cron_is_time(s->cron) ) {
       _epggrab_module_run(s->mod, s->cmd, s->opts);
       break; // TODO: can only run once else config may have changed
@@ -480,10 +504,11 @@ static void* _epggrab_thread ( void* p )
 void epggrab_init ( void )
 {
   /* Defaults */
-  epggrab_advanced  = 0;
-  epggrab_eit       = 1;         // on air grab enabled
-  epggrab_interval  = 12 * 3600; // hours
-  epggrab_module    = NULL;      // disabled
+  epggrab_advanced   = 0;
+  epggrab_eitenabled = 1;         // on air grab enabled
+  epggrab_interval   = 12 * 3600; // hours
+  epggrab_module     = NULL;      // disabled
+  TAILQ_INIT(&epggrab_schedule);
 
   /* Initialise modules */
   eit_init(&epggrab_modules);
