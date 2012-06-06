@@ -475,8 +475,6 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
   if(op == NULL)
     return 400;
 
-  printf("extjs_epggrab: %s\n", op);
-
   pthread_mutex_lock(&global_lock);
 
   if(http_access_verify(hc, ACCESS_ADMIN)) {
@@ -534,7 +532,6 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
       save |= epggrab_set_module_by_id(str);
     if ( (str = http_arg_get(&hc->hc_req_args, "schedule")) ) {
       if ( (array = htsmsg_json_deserialize(str)) ) {
-        htsmsg_print(array);
         save |= epggrab_set_schedule(array);
         htsmsg_destroy(array);
       }

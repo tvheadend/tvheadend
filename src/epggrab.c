@@ -142,7 +142,6 @@ htsmsg_t *epggrab_module_list ( void )
     e = htsmsg_create_map();
     htsmsg_add_str(e, "id", m->id);
     if(m->name) htsmsg_add_str(e, "name", m->name);
-    else printf("no name: %s\n", m->id);
     if(m->path) htsmsg_add_str(e, "path", m->path);
     htsmsg_add_u32(e, "flags", m->flags);
     htsmsg_add_msg(a, NULL, e);
@@ -231,11 +230,12 @@ static int _epggrab_schedule_deserialize ( htsmsg_t *a )
     if (es) es = TAILQ_NEXT(es, link);
   }
   
-  if (es)
-    while ( (es = TAILQ_NEXT(es, link)) ) {
+  if (es) {
+    do {
       TAILQ_REMOVE(&epggrab_schedule, es, link);
       save = 1;
-    }
+    } while ( (es = TAILQ_NEXT(es, link)) );
+  }
 
   return save;
 }
@@ -292,7 +292,6 @@ void epggrab_save ( void )
   if ( epggrab_module )
     htsmsg_add_str(m, "module", epggrab_module->id);
   htsmsg_add_msg(m, "schedule", _epggrab_schedule_serialize());
-  htsmsg_print(m);
   hts_settings_save(m, "epggrab/config");
   htsmsg_destroy(m);
 }
