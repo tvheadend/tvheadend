@@ -178,10 +178,11 @@ static void *_epggrab_socket_thread ( void *p )
   while ( mod->enabled && mod->sock ) {
     tvhlog(LOG_DEBUG, mod->id, "waiting for connection");
     s = accept(mod->sock, NULL, NULL);
-    if (!s) break; // assume closed
-    tvhlog(LOG_DEBUG, mod->id, "got connection");
+    if (s <= 0) break; // assume closed
+    tvhlog(LOG_DEBUG, mod->id, "got connection %d", s);
     _epggrab_socket_handler(mod, s);
   }
+  tvhlog(LOG_DEBUG, mod->id, "terminated");
   return NULL;
 }
 
