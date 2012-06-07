@@ -421,6 +421,8 @@ static void _xmltv_load_grabbers ( epggrab_module_list_t *list )
       mod->name                = malloc(200);
       sprintf((char*)mod->name, "XMLTV: %s", &outbuf[n]);
       *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_SIMPLE;
+      mod->grab                = epggrab_module_grab;
+      mod->trans               = epggrab_module_trans_xml;
       mod->parse               = _xmltv_parse;
       LIST_INSERT_HEAD(list, mod, link);
       p = n = i + 1;
@@ -441,15 +443,16 @@ void xmltv_init ( epggrab_module_list_t *list )
   mod                      = calloc(1, sizeof(epggrab_module_t));
   mod->id                  = strdup("xmltv");
   mod->name                = strdup("XMLTV");
-  *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_EXTERNAL;
+  mod->path                = epggrab_module_socket_path(mod);
   mod->enable              = epggrab_module_enable_socket;
-  mod->grab                = epggrab_module_grab;
+  mod->trans               = epggrab_module_trans_xml;
   mod->parse               = _xmltv_parse;
   mod->channels            = &_xmltv_channels;
   mod->ch_add              = epggrab_module_channel_add;
   mod->ch_rem              = epggrab_module_channel_rem;
   mod->ch_mod              = epggrab_module_channel_mod;
   mod->ch_save             = _xmltv_save;
+  *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_EXTERNAL;
   LIST_INSERT_HEAD(list, mod, link);
 
   /* Standard modules */

@@ -92,7 +92,7 @@ void eit_init ( epggrab_module_list_t *list )
 {
   _eit_mod.id     = strdup("eit");
   _eit_mod.name   = strdup("EIT: On-Air Grabber");
-  *((uint8_t*)&_eit_mod.flags) = EPGGRAB_MODULE_ASYNC;
+  *((uint8_t*)&_eit_mod.flags) = EPGGRAB_MODULE_SPECIAL;
   LIST_INSERT_HEAD(list, &_eit_mod, link);
   // Note: this is mostly ignored anyway as EIT is treated as a special case!
 }

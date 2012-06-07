@@ -7,8 +7,8 @@ tvheadend.epggrab = function() {
   /*
    * Module lists (I'm sure there is a better way!)
    */
-  var EPGGRAB_MODULE_SIMPLE   = 0x04;
-  var EPGGRAB_MODULE_EXTERNAL = 0x10;
+  var EPGGRAB_MODULE_SIMPLE   = 0x01;
+  var EPGGRAB_MODULE_EXTERNAL = 0x02;
 
   var moduleStore = new Ext.data.JsonStore({
     root       : 'entries',
@@ -27,6 +27,8 @@ tvheadend.epggrab = function() {
     moduleStore.filterBy(function(r) {
       return r.get('flags') & EPGGRAB_MODULE_SIMPLE;
     });
+    r = new simpleModuleStore.recordType({ id: '', name : 'Disabled'});
+    simpleModuleStore.add(r);
     moduleStore.each(function(r) {
       simpleModuleStore.add(r.copy());
     });
@@ -150,14 +152,14 @@ tvheadend.epggrab = function() {
     {
       header    : 'Path',
       dataIndex : 'path',
-      width     : 200,
+      width     : 300,
       sortable  : false,
       // TODO: editable?
     },
     {
       dataIndex : 'enabled',
       header    : 'Enabled',
-      width     : 50,
+      width     : 100,
       sortable  : false,
       editor    : new Ext.form.Checkbox(),
       // TODO: newer versions of extjs provide proper checkbox in grid
@@ -175,7 +177,7 @@ tvheadend.epggrab = function() {
   var externalGrid = new Ext.grid.EditorGridPanel({
     store          : externalModuleStore,
     cm             : externalColumnModel,
-    width          : 450,
+    width          : 600,
     height         : 150,
     frame          : false,
     viewConfig     : {
