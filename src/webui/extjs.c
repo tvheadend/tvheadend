@@ -518,17 +518,12 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
     if ( (str = http_arg_get(&hc->hc_req_args, "module")) )
       save |= epggrab_set_module_by_id(str);
     if ( (str = http_arg_get(&hc->hc_req_args, "external")) ) {
-      printf("got external\n");
       if ( (array = htsmsg_json_deserialize(str)) ) {
-        printf("got array\n");
         HTSMSG_FOREACH(f, array) {
           if ( (e = htsmsg_get_map_by_field(f)) ) {
-            printf("got field\n");
             str = htsmsg_get_str(e, "id");
-            printf("id = %s\n", str);
             u32 = 0;
             htsmsg_get_u32(e, "enabled", &u32);
-            printf("enabled = %d\n", u32);
             if ( str ) save |= epggrab_enable_module_by_id(str, u32);
           }
         }
@@ -543,7 +538,6 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_BAD_REQUEST;
   }
 
-  htsmsg_print(out);
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");
