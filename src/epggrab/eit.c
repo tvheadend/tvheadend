@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
 #include "tvheadend.h"
 #include "channels.h"
 #include "epg.h"
@@ -24,13 +25,6 @@
 /* ************************************************************************
  * Module Setup
  * ***********************************************************************/
-
-static epggrab_module_t eit_module;
-
-static const char* _eit_name ( void )
-{
-  return "eit";
-}
 
 static void _eit_episode_uri 
   ( char *uri, const char *title, const char *summary )
@@ -55,9 +49,7 @@ void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
   if (!ch || !ch->ch_name || !ch->ch_name[0]) return;
 
   /* Disabled? */
-#if TODO_REENABLE_THIS
-  if (epggrab_eit_disabled) return;
-#endif
+  if (!epggrab_eitenabled) return;
 
   /* Find broadcast */
   ebc  = epg_broadcast_find_by_time(ch, start, stop, 1, &save);
@@ -90,14 +82,17 @@ void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
   }
 }
 
-epggrab_module_t* eit_init ( void )
+/* ************************************************************************
+ * Module Setup
+ * ***********************************************************************/
+
+static epggrab_module_t _eit_mod;
+
+void eit_init ( epggrab_module_list_t *list )
 {
-  // Note: the EIT grabber is very different to the others, in that
-  //       its asynchronous based on DVB data stream
-  eit_module.enable  = NULL;
-  eit_module.disable = NULL;
-  eit_module.grab    = NULL;
-  eit_module.parse   = NULL;
-  eit_module.name    = _eit_name;
-  return &eit_module;
+  _eit_mod.id     = strdup("eit");
+  _eit_mod.name   = strdup("EIT: On-Air Grabber");
+  *((uint8_t*)&_eit_mod.flags) = EPGGRAB_MODULE_ASYNC;
+  LIST_INSERT_HEAD(list, &_eit_mod, link);
+  // Note: this is mostly ignored anyway as EIT is treated as a special case!
 }
