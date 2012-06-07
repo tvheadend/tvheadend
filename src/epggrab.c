@@ -486,25 +486,24 @@ static time_t _epggrab_thread_simple ( void )
  */
 static time_t _epggrab_thread_advanced ( void )
 {
-  time_t ret, now;
+  time_t now, ret, tmp;
   epggrab_sched_t *s;
 
   /* Determine which to run */
   time(&now);
-  ret = now + 3600; // default
+  ret = now + 3600; // once an hour if no entries
   TAILQ_FOREACH(s, &epggrab_schedule, link) {
-    if ( cron_is_time(s->cron) ) {
-      cron_run(s->cron);
+    if ( cron_run(s->cron, &tmp) ) {
+      ret = now; // re-run immediately
       _epggrab_module_run(s->mod, s->cmd, s->opts);
-      return now + 10;
       // TODO: don't try to interate the list, it'll break due to locking
       //       module (i.e. _epggrab_module_run() unlocks)
     } else {
-      ret = MIN(ret, cron_next(s->cron));
+      ret = MIN(ret, tmp);
     }
   }
 
-  return ret;//now + 30;
+  return ret;
 }
 
 /*
