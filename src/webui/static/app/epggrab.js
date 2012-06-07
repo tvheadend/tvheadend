@@ -142,7 +142,19 @@ tvheadend.epggrab = function() {
   /*
    * External modules
    */
+  var externalSelectionModel = new Ext.grid.CheckboxSelectionModel({
+    singleSelect : false,
+    listeners : {
+      'rowselect' : function (s, ri, r) {
+        r.set('enabled', 1);
+      },
+      'rowdeselect' : function (s, ri, r) {
+        r.set('enabled', 0);
+      }
+    }
+  });
   var externalColumnModel = new Ext.grid.ColumnModel([
+    externalSelectionModel,
     {
       header    : 'Module',
       dataIndex : 'name',
@@ -156,27 +168,12 @@ tvheadend.epggrab = function() {
       sortable  : false,
       // TODO: editable?
     },
-    {
-      dataIndex : 'enabled',
-      header    : 'Enabled',
-      width     : 100,
-      sortable  : false,
-      editor    : new Ext.form.Checkbox(),
-      // TODO: newer versions of extjs provide proper checkbox in grid
-      //       support, I think!
-      renderer  : function (v) {
-        if (v) {
-          return "Y";
-        } else {
-          return "N";
-        }
-      }
-    }
   ]);
 
   var externalGrid = new Ext.grid.EditorGridPanel({
     store          : externalModuleStore,
     cm             : externalColumnModel,
+    sm             : externalSelectionModel,
     width          : 600,
     height         : 150,
     frame          : false,
@@ -186,6 +183,17 @@ tvheadend.epggrab = function() {
     iconCls        : 'icon-grid',
   });
   var advancedPanel = externalGrid;
+  externalGrid.on('render', function(){
+    // TODO: bit of hack to get selection working
+    delay = new Ext.util.DelayedTask(function(){
+    rows = [];
+    externalModuleStore.each(function(r){
+      if (r.get('enabled')) rows.push(r);
+    });
+    externalSelectionModel.selectRecords(rows);
+    });
+    delay.delay(100);
+  });
 
   /* ****************************************************************
    * Form
