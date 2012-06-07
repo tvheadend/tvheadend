@@ -469,8 +469,10 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   const char *op = http_arg_get(&hc->hc_req_args, "op");
-  htsmsg_t *out, *array, *r;
+  htsmsg_t *out, *array, *r, *e;
+  htsmsg_field_t *f;
   const char *str;
+  uint32_t u32;
 
   if(op == NULL)
     return 400;
@@ -490,7 +492,6 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
     pthread_mutex_lock(&epggrab_mutex);
     r = htsmsg_create_map();
     htsmsg_add_u32(r, "eitenabled", epggrab_eitenabled);
-    htsmsg_add_u32(r, "advanced", epggrab_advanced);
     if (epggrab_module)
       htsmsg_add_str(r, "module", epggrab_module->id);
     htsmsg_add_u32(r, "interval", epggrab_interval);
@@ -498,7 +499,7 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
 
     out = json_single_record(r, "epggrabSettings");
 
-  /* List of modules */
+  /* List of modules and currently states */
   } else if (!strcmp(op, "moduleList")) {
     out = htsmsg_create_map();
     pthread_mutex_lock(&epggrab_mutex);
@@ -506,34 +507,31 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
     pthread_mutex_unlock(&epggrab_mutex);
     htsmsg_add_msg(out, "entries", array);
 
-  /* Advanced schedule */
-  } else if (!strcmp(op, "loadSchedule")) {
-    out = htsmsg_create_map();
-    pthread_mutex_lock(&epggrab_mutex);
-    array = epggrab_get_schedule();
-    pthread_mutex_unlock(&epggrab_mutex);
-    htsmsg_add_msg(out, "entries", array);
-
   /* Save settings */
   } else if (!strcmp(op, "saveSettings") ) {
     int save = 0;
     pthread_mutex_lock(&epggrab_mutex);
-    if ( http_arg_get(&hc->hc_req_args, "advanced") )
-      save |= epggrab_set_advanced(1);
-    else
-      save |= epggrab_set_advanced(0);
-    if ( http_arg_get(&hc->hc_req_args, "eitenabled") )
-      save |= epggrab_set_eitenabled(1);
-    else
-      save |= epggrab_set_eitenabled(0);
+    u32 = http_arg_get(&hc->hc_req_args, "eitenabled") ? 1 : 0;
+    save |= epggrab_set_eitenabled(u32);
     if ( (str = http_arg_get(&hc->hc_req_args, "interval")) )
       save |= epggrab_set_interval(atoi(str));
     if ( (str = http_arg_get(&hc->hc_req_args, "module")) )
       save |= epggrab_set_module_by_id(str);
-    if ( (str = http_arg_get(&hc->hc_req_args, "schedule")) ) {
+    if ( (str = http_arg_get(&hc->hc_req_args, "external")) ) {
+      printf("got external\n");
       if ( (array = htsmsg_json_deserialize(str)) ) {
-        save |= epggrab_set_schedule(array);
-        htsmsg_destroy(array);
+        printf("got array\n");
+        HTSMSG_FOREACH(f, array) {
+          if ( (e = htsmsg_get_map_by_field(f)) ) {
+            printf("got field\n");
+            str = htsmsg_get_str(e, "id");
+            printf("id = %s\n", str);
+            u32 = 0;
+            htsmsg_get_u32(e, "enabled", &u32);
+            printf("enabled = %d\n", u32);
+            if ( str ) save |= epggrab_enable_module_by_id(str, u32);
+          }
+        }
       }
     }
     if (save) epggrab_save();
@@ -545,6 +543,7 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_BAD_REQUEST;
   }
 
+  htsmsg_print(out);
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");

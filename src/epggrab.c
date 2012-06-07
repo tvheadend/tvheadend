@@ -3,6 +3,10 @@
 #include <string.h>
 #include <assert.h>
 #include <wordexp.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/un.h>
+#include <sys/socket.h>
 #include "htsmsg.h"
 #include "settings.h"
 #include "tvheadend.h"
@@ -15,6 +19,7 @@
 #include "channels.h"
 #include "spawn.h"
 #include "htsmsg_xml.h"
+#include "file.h"
 
 /* Thread protection */
 int                   epggrab_confver;
@@ -22,12 +27,59 @@ pthread_mutex_t       epggrab_mutex;
 pthread_cond_t        epggrab_cond;
 
 /* Config */
-uint32_t              epggrab_advanced;
 uint32_t              epggrab_eitenabled;
 uint32_t              epggrab_interval;
 epggrab_module_t*     epggrab_module;
-epggrab_sched_list_t  epggrab_schedule;
 epggrab_module_list_t epggrab_modules;
+
+/* Prototypes */
+static void _epggrab_module_parse
+  ( epggrab_module_t *mod, htsmsg_t *data );
+
+/* **************************************************************************
+ * Threads
+ * *************************************************************************/
+
+// TODO: should I put this in a thread
+static void _epggrab_socket_handler ( epggrab_module_t *mod, int s )
+{
+  size_t outlen;
+  char *outbuf;
+  time_t tm1, tm2;
+  htsmsg_t *data = NULL;
+
+  /* Grab/Translate */
+  time(&tm1);
+  outlen = file_readall(s, &outbuf);
+  if (outlen) data = mod->trans(mod, outbuf);
+  time(&tm2);
+
+  /* Process */
+  if ( data ) {
+    tvhlog(LOG_DEBUG, mod->id, "grab took %d seconds", tm2 - tm1);
+    _epggrab_module_parse(mod, data);
+
+  /* Failed */
+  } else {
+    tvhlog(LOG_ERR, mod->id, "failed to read data");
+  }
+}
+
+// TODO: what happens if we terminate early?
+static void *_epggrab_socket_thread ( void *p )
+{
+  int s;
+  epggrab_module_t *mod = (epggrab_module_t*)p;
+  
+  while ( mod->enabled && mod->sock ) {
+    tvhlog(LOG_DEBUG, mod->id, "waiting for connection");
+    s = accept(mod->sock, NULL, NULL);
+    if (!s) break; // assume closed
+    tvhlog(LOG_DEBUG, mod->id, "got connection");
+    _epggrab_socket_handler(mod, s);
+  }
+  return NULL;
+}
 
 /* **************************************************************************
  * Modules
@@ -147,61 +199,93 @@ htsmsg_t *epggrab_module_list ( void )
     if(m->name) htsmsg_add_str(e, "name", m->name);
     if(m->path) htsmsg_add_str(e, "path", m->path);
     htsmsg_add_u32(e, "flags", m->flags);
+    htsmsg_add_u32(e, "enabled", m->enabled);
     htsmsg_add_msg(a, NULL, e);
   }
   return a;
 }
 
+// Uses a unix domain socket, but we could extend to a remote interface
+// to allow EPG data to be remotely generated (another machine in the local
+// network etc...)
 void epggrab_module_enable_socket ( epggrab_module_t *mod, uint8_t e )
 {
-  // TODO: implement this?
+  pthread_t      tid;
+  pthread_attr_t tattr;
+  struct sockaddr_un addr;
+  assert(mod->path);
+  assert(mod->flags & EPGGRAB_MODULE_EXTERNAL);
+
+  /* Disable */
+  if (!e) {
+    shutdown(mod->sock, SHUT_RDWR);
+    close(mod->sock);
+    unlink(mod->path);
+    mod->sock = 0;
+    // TODO: I don't shutdown the thread!
+  
+  /* Enable */
+  } else {
+    unlink(mod->path); // just in case!
+
+    mod->sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    assert(mod->sock);
+
+    memset(&addr, 0, sizeof(struct sockaddr_un));
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, mod->path, 100);
+    // TODO: possibly asserts here not a good idea if I make the socket
+    //       path configurable
+    assert(bind(mod->sock, (struct sockaddr*)&addr,
+             sizeof(struct sockaddr_un)) == 0);
+
+    assert(listen(mod->sock, 5) == 0);
+
+    pthread_attr_init(&tattr);
+    pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
+    pthread_create(&tid, &tattr, _epggrab_socket_thread, mod);
+    tvhlog(LOG_DEBUG, mod->id, "enabled socket");
+  }
 }
 
-htsmsg_t *epggrab_module_grab
-  ( epggrab_module_t *mod, const char *cmd, const char *opts )
+char *epggrab_module_grab ( epggrab_module_t *mod )
 { 
-  int        i, outlen;
+  int        outlen;
   char       *outbuf;
-  char       errbuf[100];
-  const char **argv = NULL;
-  wordexp_t  we;
-  htsmsg_t   *ret;
-
-  /* Determine command */
-  if ( !cmd || cmd[0] == '\0' )
-    cmd = mod->path;
-  if ( !cmd ) {
-    tvhlog(LOG_ERR, "epggrab", "invalid configuraton no command specified");
-    return NULL;
-  }
-  printf("cmd = %s, opts = %s\n", cmd, opts);
-
-  /* Parse opts */
-  if (opts) {
-    wordexp(opts, &we, 0);
-    argv = calloc(we.we_wordc+2, sizeof(char*));
-    argv[0] = cmd;
-    for ( i = 0; i < we.we_wordc; i++ ) {
-      argv[i + 1] = we.we_wordv[i];
-    }
-  }
 
   /* Debug */
-  tvhlog(LOG_DEBUG, "pyepg", "grab %s %s", cmd, opts ?: "");
+  tvhlog(LOG_DEBUG, mod->id, "grab %s", mod->path);
 
   /* Grab */
-  outlen = spawn_and_store_stdout(cmd, (char*const*)argv, &outbuf);
-  free(argv);
-  wordfree(&we);
+  outlen = spawn_and_store_stdout(mod->path, NULL, &outbuf);
   if ( outlen < 1 ) {
     tvhlog(LOG_ERR, "pyepg", "no output detected");
     return NULL;
   }
 
+  return outbuf;
+}
+
+htsmsg_t *epggrab_module_trans_xml
+  ( epggrab_module_t *mod, char *c )
+{
+  htsmsg_t *ret;
+  char     errbuf[100];
+
+  if (!c) return NULL;
+
   /* Extract */
-  ret = htsmsg_xml_deserialize(outbuf, errbuf, sizeof(errbuf));
+  ret = htsmsg_xml_deserialize(c, errbuf, sizeof(errbuf));
   if (!ret)
     tvhlog(LOG_ERR, "pyepg", "htsmsg_xml_deserialize error %s", errbuf);
+  return ret;
+}
+
+const char *epggrab_module_socket_path ( epggrab_module_t *mod )
+{
+  char *ret = malloc(100);
+  snprintf(ret, 100, "%s/epggrab/%s.sock",
+           hts_settings_get_root(), mod->id);
   return ret;
 }
 
@@ -209,100 +293,9 @@ htsmsg_t *epggrab_module_grab
  * Configuration
  * *************************************************************************/
 
-static int _update_str ( char **dst, const char *src )
-{
-  int save = 0;
-  if ( !(*dst) && src ) {
-    *dst = strdup(src);
-    save = 1;
-  } else if ( (*dst) && !src ) {
-    free(*dst);
-    *dst = NULL;
-    save = 1;
-  } else if ( strcmp(*dst, src) ) {
-    free(*dst);
-    *dst = strdup(src);
-    save = 1;
-  }
-  return save;
-} 
-
-static int _epggrab_schedule_deserialize ( htsmsg_t *a )
-{ 
-  int save = 0;
-  htsmsg_t *e;
-  htsmsg_field_t *f;
-  epggrab_sched_t *es;
-  epggrab_module_t *mod;
-  const char *str;
-
-  es = TAILQ_FIRST(&epggrab_schedule);
-  HTSMSG_FOREACH(f, a) {
-    if ((e = htsmsg_get_map_by_field(f))) {
-      if (!es) {
-        es   = calloc(1, sizeof(epggrab_sched_t));
-        save = 1;
-        TAILQ_INSERT_TAIL(&epggrab_schedule, es, link);
-      }
-
-      mod = NULL;
-      if ((str = htsmsg_get_str(e, "module")))
-        mod = epggrab_module_find_by_id(str);
-      if (es->mod != mod) {
-        es->mod = mod;
-        save    = 1;
-      }
-
-      save |= _update_str(&es->cmd,  htsmsg_get_str(e, "command"));
-      save |= _update_str(&es->opts, htsmsg_get_str(e, "options"));
-      str   = htsmsg_get_str(e, "cron");
-      if (es->cron) {
-        if (!str) {
-          free(es->cron);
-          es->cron = NULL;
-          save     = 1;
-        } else {
-          save |= cron_set_string(es->cron, str);
-        }
-      } else if (str) {
-        es->cron = cron_create(str);
-        save     = 1;
-      }
-    }
-
-    /* Next */
-    if (es) es = TAILQ_NEXT(es, link);
-  }
-  
-  if (es) {
-    do {
-      TAILQ_REMOVE(&epggrab_schedule, es, link);
-      save = 1;
-    } while ( (es = TAILQ_NEXT(es, link)) );
-  }
-
-  return save;
-}
-
-static htsmsg_t *_epggrab_schedule_serialize ( void )
-{
-  epggrab_sched_t *es;
-  htsmsg_t *e, *a;
-  a = htsmsg_create_list();
-  TAILQ_FOREACH(es, &epggrab_schedule, link) {
-    e = htsmsg_create_map();
-    if ( es->mod  ) htsmsg_add_str(e, "module",  es->mod->id);
-    if ( es->cmd  ) htsmsg_add_str(e, "command", es->cmd);
-    if ( es->opts ) htsmsg_add_str(e, "options", es->opts);
-    if ( es->cron ) cron_serialize(es->cron, e);
-    htsmsg_add_msg(a, NULL, e);
-  }
-  return a;
-}
-
 static void _epggrab_load ( void )
 {
-  htsmsg_t *m, *a;
+  htsmsg_t *m;
   const char *str;
   
   /* No config */
@@ -310,13 +303,11 @@ static void _epggrab_load ( void )
     return;
 
   /* Load settings */
-  htsmsg_get_u32(m, "advanced", &epggrab_advanced);
   htsmsg_get_u32(m, "eit",      &epggrab_eitenabled);
   htsmsg_get_u32(m, "interval", &epggrab_interval);
   if ( (str = htsmsg_get_str(m, "module")) )
     epggrab_module = epggrab_module_find_by_id(str);
-  if ( (a = htsmsg_get_list(m, "schedule")) )
-    _epggrab_schedule_deserialize(a);
+  // TODO: module states
   htsmsg_destroy(m);
 }
 
@@ -330,28 +321,17 @@ void epggrab_save ( void )
 
   /* Save */
   m = htsmsg_create_map();
-  htsmsg_add_u32(m, "advanced",   epggrab_advanced);
   htsmsg_add_u32(m, "eitenabled", epggrab_eitenabled);
   htsmsg_add_u32(m, "interval",   epggrab_interval);
   if ( epggrab_module )
     htsmsg_add_str(m, "module", epggrab_module->id);
-  htsmsg_add_msg(m, "schedule", _epggrab_schedule_serialize());
   hts_settings_save(m, "epggrab/config");
   htsmsg_destroy(m);
 }
 
-int epggrab_set_advanced ( uint32_t advanced )
-{ 
-  int save = 0;
-  if ( epggrab_advanced != advanced ) {
-    save = 1;
-    epggrab_advanced = advanced;
-  }
-  return save;
-}
-
 int epggrab_set_eitenabled ( uint32_t eitenabled )
 {
+  // TODO: could use module variable
   int save = 0;
   if ( epggrab_eitenabled != eitenabled ) {
     save = 1;
@@ -374,8 +354,11 @@ int epggrab_set_module ( epggrab_module_t *mod )
 {
   int save = 0;
   if ( mod && epggrab_module != mod ) {
-    save = 1;
+    assert(mod->grab);
+    assert(mod->trans);
+    assert(mod->parse);
     epggrab_module = mod;
+    save           = 1;
   }
   return save;
 }
@@ -385,14 +368,22 @@ int epggrab_set_module_by_id ( const char *id )
   return epggrab_set_module(epggrab_module_find_by_id(id));
 }
 
-int epggrab_set_schedule ( htsmsg_t *sched )
+int epggrab_enable_module ( epggrab_module_t *mod, uint8_t e )
 {
-  return _epggrab_schedule_deserialize(sched);
+  int save = 0;
+  if ( e != mod->enabled ) {
+    assert(mod->trans);
+    assert(mod->parse);
+    mod->enabled = e;
+    if (mod->enable) mod->enable(mod, e);
+    save         = 1;
+  }
+  return save;
 }
 
-htsmsg_t *epggrab_get_schedule ( void )
+int epggrab_enable_module_by_id ( const char *id, uint8_t e )
 {
-  return _epggrab_schedule_serialize();
+  return epggrab_enable_module(epggrab_module_find_by_id(id), e);
 }
 
 /* **************************************************************************
@@ -400,120 +391,77 @@ htsmsg_t *epggrab_get_schedule ( void )
  * *************************************************************************/
 
 /*
+ * Run the parse
+ */
+static void _epggrab_module_parse
+  ( epggrab_module_t *mod, htsmsg_t *data )
+{
+  time_t tm1, tm2;
+  int save = 0;
+  epggrab_stats_t stats;
+
+  /* Parse */
+  memset(&stats, 0, sizeof(stats));
+  pthread_mutex_lock(&global_lock);
+  time(&tm1);
+  save |= mod->parse(mod, data, &stats);
+  time(&tm2);
+  if (save) epg_updated();  
+  pthread_mutex_unlock(&global_lock);
+  htsmsg_destroy(data);
+
+  /* Debug stats */
+  tvhlog(LOG_DEBUG, mod->id, "parse took %d seconds", tm2 - tm1);
+  tvhlog(LOG_DEBUG, mod->id, "  channels   tot=%5d new=%5d mod=%5d",
+         stats.channels.total, stats.channels.created,
+         stats.channels.modified);
+  tvhlog(LOG_DEBUG, mod->id, "  brands     tot=%5d new=%5d mod=%5d",
+         stats.brands.total, stats.brands.created,
+         stats.brands.modified);
+  tvhlog(LOG_DEBUG, mod->id, "  seasons    tot=%5d new=%5d mod=%5d",
+         stats.seasons.total, stats.seasons.created,
+         stats.seasons.modified);
+  tvhlog(LOG_DEBUG, mod->id, "  episodes   tot=%5d new=%5d mod=%5d",
+         stats.episodes.total, stats.episodes.created,
+         stats.episodes.modified);
+  tvhlog(LOG_DEBUG, mod->id, "  broadcasts tot=%5d new=%5d mod=%5d",
+         stats.broadcasts.total, stats.broadcasts.created,
+         stats.broadcasts.modified);
+}
+
+/*
  * Grab from module
  */
-static void _epggrab_module_run 
-  ( epggrab_module_t *mod, const char *icmd, const char *iopts )
+static void _epggrab_module_grab ( epggrab_module_t *mod )
 {
-  int save = 0;
   time_t tm1, tm2;
   htsmsg_t *data;
-  epggrab_stats_t stats;
-  char *cmd = NULL, *opts = NULL;
 
-  /* Check */
-  if ( !mod || !mod->grab || !mod->parse ) return;
-  
-  /* Dup before unlock */
-  if ( icmd  ) cmd  = strdup(icmd);
-  if ( iopts ) opts = strdup(iopts);
-  pthread_mutex_unlock(&epggrab_mutex);
-  
   /* Grab */
   time(&tm1);
-  data = mod->grab(mod, cmd, opts);
+  printf("mod = %s\n", mod->id);
+  printf("trans = %p, grab = %p\n", mod->trans, mod->grab);
+  data = mod->trans(mod, mod->grab(mod));
   time(&tm2);
 
   /* Process */
   if ( data ) {
-
-    /* Parse */
-    memset(&stats, 0, sizeof(stats));
     tvhlog(LOG_DEBUG, mod->id, "grab took %d seconds", tm2 - tm1);
-    pthread_mutex_lock(&global_lock);
-    time(&tm1);
-    save |= mod->parse(mod, data, &stats);
-    time(&tm2);
-    if (save) epg_updated();  
-    pthread_mutex_unlock(&global_lock);
-    htsmsg_destroy(data);
-
-    /* Debug stats */
-    tvhlog(LOG_DEBUG, mod->id, "parse took %d seconds", tm2 - tm1);
-    tvhlog(LOG_DEBUG, mod->id, "  channels   tot=%5d new=%5d mod=%5d",
-           stats.channels.total, stats.channels.created,
-           stats.channels.modified);
-    tvhlog(LOG_DEBUG, mod->id, "  brands     tot=%5d new=%5d mod=%5d",
-           stats.brands.total, stats.brands.created,
-           stats.brands.modified);
-    tvhlog(LOG_DEBUG, mod->id, "  seasons    tot=%5d new=%5d mod=%5d",
-           stats.seasons.total, stats.seasons.created,
-           stats.seasons.modified);
-    tvhlog(LOG_DEBUG, mod->id, "  episodes   tot=%5d new=%5d mod=%5d",
-           stats.episodes.total, stats.episodes.created,
-           stats.episodes.modified);
-    tvhlog(LOG_DEBUG, mod->id, "  broadcasts tot=%5d new=%5d mod=%5d",
-           stats.broadcasts.total, stats.broadcasts.created,
-           stats.broadcasts.modified);
-
+    _epggrab_module_parse(mod, data);
   } else {
     tvhlog(LOG_WARNING, mod->id, "grab returned no data");
   }
-
-  /* Free a re-lock */
-  if (cmd)  free(cmd);
-  if (opts) free(opts);
-  pthread_mutex_lock(&epggrab_mutex);
 }
 
 /*
- * Simple run
- */
-static time_t _epggrab_thread_simple ( void )
-{
-  /* Copy config */
-  time_t            ret = time(NULL) + epggrab_interval;
-  epggrab_module_t* mod = epggrab_module;
-
-  /* Run the module */
-  _epggrab_module_run(mod, NULL, NULL);
-
-  return ret;
-}
-
-/*
- * Advanced run
- */
-static time_t _epggrab_thread_advanced ( void )
-{
-  time_t now, ret, tmp;
-  epggrab_sched_t *s;
-
-  /* Determine which to run */
-  time(&now);
-  ret = now + 3600; // once an hour if no entries
-  TAILQ_FOREACH(s, &epggrab_schedule, link) {
-    if ( cron_run(s->cron, &tmp) ) {
-      ret = now; // re-run immediately
-      _epggrab_module_run(s->mod, s->cmd, s->opts);
-      // TODO: don't try to interate the list, it'll break due to locking
-      //       module (i.e. _epggrab_module_run() unlocks)
-    } else {
-      ret = MIN(ret, tmp);
-    }
-  }
-
-  return ret;
-}
-
-/*
- * Thread
+ * Thread (for internal grabbing)
  */
 static void* _epggrab_thread ( void* p )
 {
   int confver = 0;
   struct timespec ts;
   pthread_mutex_lock(&epggrab_mutex);
+  epggrab_module_t *mod;
 
   /* Load */
   _epggrab_load();
@@ -529,12 +477,16 @@ static void* _epggrab_thread ( void* p )
       int err = pthread_cond_timedwait(&epggrab_cond, &epggrab_mutex, &ts);
       if ( err == ETIMEDOUT ) break;
     }
-    confver = epggrab_confver;
+    confver    = epggrab_confver;
+    mod        = NULL;//epggrab_module;
+    ts.tv_sec += epggrab_interval;
 
-    /* Run grabber */
-    ts.tv_sec = epggrab_advanced
-              ? _epggrab_thread_advanced()
-              : _epggrab_thread_simple();
+    /* Run grabber (without lock) */
+    if (mod) {
+      pthread_mutex_unlock(&epggrab_mutex);
+      _epggrab_module_grab(mod);
+      pthread_mutex_lock(&epggrab_mutex);
+    }
   }
 
   return NULL;
@@ -550,11 +502,9 @@ static void* _epggrab_thread ( void* p )
 void epggrab_init ( void )
 {
   /* Defaults */
-  epggrab_advanced   = 0;
   epggrab_eitenabled = 1;         // on air grab enabled
   epggrab_interval   = 12 * 3600; // hours
   epggrab_module     = NULL;      // disabled
-  TAILQ_INIT(&epggrab_schedule);
 
   /* Initialise modules */
   eit_init(&epggrab_modules);

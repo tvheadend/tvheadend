@@ -367,7 +367,6 @@ static int _pyepg_parse_epg ( htsmsg_t *data, epggrab_stats_t *stats )
  * ***********************************************************************/
 
 epggrab_channel_tree_t _pyepg_channels;
-epggrab_module_t       _pyepg_module;
 
 static void _pyepg_save ( epggrab_module_t *mod )
 {
@@ -396,24 +395,33 @@ static int _pyepg_parse
 
 void pyepg_init ( epggrab_module_list_t *list )
 {
-  _pyepg_module.id   = strdup("pyepg");
-  _pyepg_module.path = strdup("/usr/bin/pyepg");
-  _pyepg_module.name = strdup("PyEPG");
-  *((uint8_t*)&_pyepg_module.flags) = EPGGRAB_MODULE_SYNC
-                                    | EPGGRAB_MODULE_ASYNC
-                                    | EPGGRAB_MODULE_ADVANCED
-                                    | EPGGRAB_MODULE_SIMPLE
-                                    | EPGGRAB_MODULE_EXTERNAL;
-  _pyepg_module.enable   = epggrab_module_enable_socket;
-  _pyepg_module.grab     = epggrab_module_grab;
-  _pyepg_module.parse    = _pyepg_parse;
-  _pyepg_module.channels = &_pyepg_channels;
-  _pyepg_module.ch_save  = _pyepg_save;
-  _pyepg_module.ch_add   = epggrab_module_channel_add;
-  _pyepg_module.ch_rem   = epggrab_module_channel_rem;
-  _pyepg_module.ch_mod   = epggrab_module_channel_mod;
+  epggrab_module_t *mod;
 
-  /* Add to list */
-  LIST_INSERT_HEAD(list, &_pyepg_module, link);
+  /* Standard module */
+  mod                      = calloc(1, sizeof(epggrab_module_t));
+  mod->id                  = strdup("pyepg");
+  mod->path                = strdup("/usr/bin/pyepg");
+  mod->name                = strdup("PyEPG");
+  mod->grab                = epggrab_module_grab;
+  mod->trans               = epggrab_module_trans_xml;
+  mod->parse               = _pyepg_parse;
+  mod->channels            = &_pyepg_channels;
+  mod->ch_save             = _pyepg_save;
+  mod->ch_add              = epggrab_module_channel_add;
+  mod->ch_rem              = epggrab_module_channel_rem;
+  mod->ch_mod              = epggrab_module_channel_mod;
+  *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_SIMPLE;
+  LIST_INSERT_HEAD(list, mod, link);
+
+  /* External module */
+  mod                      = calloc(1, sizeof(epggrab_module_t));
+  mod->id                  = strdup("pyepg_ext");
+  mod->path                = epggrab_module_socket_path(mod);
+  mod->name                = strdup("PyEPG");
+  mod->enable              = epggrab_module_enable_socket;
+  mod->trans               = epggrab_module_trans_xml;
+  mod->parse               = _pyepg_parse;
+  *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_EXTERNAL;
+  LIST_INSERT_HEAD(list, mod, link);
 }
 
