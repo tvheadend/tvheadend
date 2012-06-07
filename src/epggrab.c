@@ -135,24 +135,28 @@ static void _epggrab_socket_handler ( epggrab_module_t *mod, int s )
  */
 static void* _epggrab_internal_thread ( void* p )
 {
-  int confver = -1; // force first run
+  int err, confver = -1; // force first run
   struct timespec ts;
   epggrab_module_t *mod;
 
   /* Setup timeout */
   ts.tv_nsec = 0; 
-  ts.tv_sec  = 0;
+  time(&ts.tv_sec);
 
   while ( 1 ) {
 
     /* Check for config change */
     pthread_mutex_lock(&epggrab_mutex);
     while ( confver == epggrab_confver ) {
-      int err = pthread_cond_timedwait(&epggrab_cond, &epggrab_mutex, &ts);
+      if (epggrab_module) {
+        err = pthread_cond_timedwait(&epggrab_cond, &epggrab_mutex, &ts);
+      } else {
+        err = pthread_cond_wait(&epggrab_cond, &epggrab_mutex);
+      }
       if ( err == ETIMEDOUT ) break;
     }
     confver    = epggrab_confver;
-    mod        = NULL;//epggrab_module;
+    mod        = epggrab_module;
     ts.tv_sec += epggrab_interval;
     pthread_mutex_unlock(&epggrab_mutex);
 
@@ -196,95 +200,26 @@ static int _ch_id_cmp ( void *a, void *b )
                 ((epggrab_channel_t*)b)->id);
 }
 
-static int _ch_match ( epggrab_channel_t *ec, channel_t *ch )
+// TODO: add other matches
+static int _ch_link ( epggrab_channel_t *ec, channel_t *ch )
 {
-  // TODO: this needs implementing
-  return 0;
-}
+  int match = 0;
 
-void epggrab_module_channels_load ( epggrab_module_t *mod )
-{
-  char path[100];
-  uint32_t chid;
-  htsmsg_t *m;
-  htsmsg_field_t *f;
-  epggrab_channel_t *ec;
-  channel_t *ch;
+  if (!ec || !ch) return 0;
+  if (ec->channel) return 0;
 
-  sprintf(path, "epggrab/%s/channels", mod->id);
-  if ((m = hts_settings_load(path))) {
-    HTSMSG_FOREACH(f, m) {
-      if ( !htsmsg_get_u32(m, f->hmf_name, &chid) ) {
-        ch = channel_find_by_identifier(chid);
-        if (ch) {
-          ec = calloc(1, sizeof(epggrab_channel_t));
-          ec->id      = strdup(f->hmf_name);
-          ec->channel = ch;
-          RB_INSERT_SORTED(mod->channels, ec, link, _ch_id_cmp);
-        }
-      }
-    }
+  if (ec->name && !strcmp(ec->name, ch->ch_name))
+    match = 1;
+
+  if (match) {
+    tvhlog(LOG_INFO, "epggrab", "linking %s to %s",
+           ch->ch_name, ec->id);
+    ec->channel = ch;
+    if (ec->name) channel_rename(ch, ec->name);
+    if (ec->icon) channel_set_icon(ch, ec->icon);
   }
-}
 
-void epggrab_module_channels_save
-  ( epggrab_module_t *mod, const char *path )
-{
-  epggrab_channel_t *c;
-  htsmsg_t *m = htsmsg_create_map();
-
-  RB_FOREACH(c, mod->channels, link) {
-    if (c->channel) htsmsg_add_u32(m, c->id, c->channel->ch_id);
-  }
-  hts_settings_save(m, path);
-}
-
-int epggrab_module_channel_add ( epggrab_module_t *mod, channel_t *ch )
-{
-  int save = 0;
-  epggrab_channel_t *egc;
-  RB_FOREACH(egc, mod->channels, link) {
-    if (_ch_match(egc, ch) ) {
-      save = 1;
-      egc->channel = ch;
-      break;
-    }
-  }
-  return save;
-}
-
-int epggrab_module_channel_rem ( epggrab_module_t *mod, channel_t *ch )
-{
-  int save = 0;
-  epggrab_channel_t *egc;
-  RB_FOREACH(egc, mod->channels, link) {
-    if (egc->channel == ch) {
-      save = 1;
-      egc->channel = NULL;
-      break;
-    }
-  }
-  return save;
-}
-
-int epggrab_module_channel_mod ( epggrab_module_t *mod, channel_t *ch )
-{
-  return epggrab_module_channel_add(mod, ch);
-}
-
-
-epggrab_channel_t *epggrab_module_channel_create ( epggrab_module_t *mod )
-{
-  // TODO: implement this
-  return NULL;
-}
-
-epggrab_channel_t *epggrab_module_channel_find
-  ( epggrab_module_t *mod, const char *id )
-{
-  epggrab_channel_t skel; 
-  skel.id = (char*)id;
-  return RB_FIND(mod->channels, &skel, link, _ch_id_cmp);
+  return match;
 }
 
 // TODO: could use TCP socket to allow remote access
@@ -340,6 +275,14 @@ int epggrab_module_enable_socket ( epggrab_module_t *mod, uint8_t e )
   return 1;
 }
 
+const char *epggrab_module_socket_path ( const char *id )
+{
+  char *ret = malloc(100);
+  snprintf(ret, 100, "%s/epggrab/%s.sock",
+           hts_settings_get_root(), id);
+  return ret;
+}
+
 char *epggrab_module_grab ( epggrab_module_t *mod )
 { 
   int        outlen;
@@ -373,12 +316,166 @@ htsmsg_t *epggrab_module_trans_xml
   return ret;
 }
 
-const char *epggrab_module_socket_path ( epggrab_module_t *mod )
+// TODO: add extra metadata
+void epggrab_module_channel_save
+  ( epggrab_module_t *mod, epggrab_channel_t *ch )
 {
-  char *ret = malloc(100);
-  snprintf(ret, 100, "%s/epggrab/%s.sock",
-           hts_settings_get_root(), mod->id);
-  return ret;
+  htsmsg_t *m = htsmsg_create_map();
+
+  if (ch->name)
+    htsmsg_add_str(m, "name", ch->name);
+  if (ch->icon)
+    htsmsg_add_str(m, "icon", ch->icon);
+  if (ch->channel)
+    htsmsg_add_u32(m, "channel", ch->channel->ch_id);
+
+  hts_settings_save(m, "epggrab/%s/channels/%s", mod->id, ch->id);
+}
+
+static void epggrab_module_channel_load 
+  ( epggrab_module_t *mod, htsmsg_t *m, const char *id )
+{
+  int save = 0;
+  const char *str;
+  uint32_t u32;
+
+  epggrab_channel_t *ch = epggrab_module_channel_find(mod, id, 1, &save);
+
+  if ((str = htsmsg_get_str(m, "name")))
+    save |= epggrab_channel_set_name(ch, str);
+  if ((str = htsmsg_get_str(m, "icon")))
+    save |= epggrab_channel_set_icon(ch, str);
+
+  if (!htsmsg_get_u32(m, "channel", &u32))
+    ch->channel = channel_find_by_identifier(u32);
+
+  epggrab_channel_link(ch);
+}
+
+void epggrab_module_channels_load ( epggrab_module_t *mod )
+{
+  htsmsg_t *m, *e;
+  htsmsg_field_t *f;
+
+  if ((m = hts_settings_load("epggrab/%s/channels", mod->id))) {
+    HTSMSG_FOREACH(f, m) {
+      printf("CHANNEL %s\n", f->hmf_name);
+      if ((e = htsmsg_get_map_by_field(f)))
+        epggrab_module_channel_load(mod, e, f->hmf_name);
+    }
+  }
+}
+
+void epggrab_module_channel_add ( epggrab_module_t *mod, channel_t *ch )
+{
+  epggrab_channel_t *egc;
+  RB_FOREACH(egc, mod->channels, link) {
+    if (_ch_link(egc, ch) ) {
+      epggrab_module_channel_save(mod, egc);
+      break;
+    }
+  }
+}
+
+void epggrab_module_channel_rem ( epggrab_module_t *mod, channel_t *ch )
+{
+  epggrab_channel_t *egc;
+  RB_FOREACH(egc, mod->channels, link) {
+    if (egc->channel == ch) {
+      egc->channel = NULL;
+      epggrab_module_channel_save(mod, egc);
+      break;
+    }
+  }
+}
+
+void epggrab_module_channel_mod ( epggrab_module_t *mod, channel_t *ch )
+{
+  return epggrab_module_channel_add(mod, ch);
+}
+
+
+epggrab_channel_t *epggrab_module_channel_find
+  ( epggrab_module_t *mod, const char *id, int create, int *save ) 
+{
+  epggrab_channel_t *ec;
+  static epggrab_channel_t *skel = NULL;
+
+  if (!mod || !mod->channels ) return NULL;
+
+  if ( !skel ) skel = calloc(1, sizeof(epggrab_channel_t));
+  skel->id  = (char*)id;
+  skel->mod = mod;
+
+  /* Find */
+  if (!create) {
+    ec = RB_FIND(mod->channels, skel, link, _ch_id_cmp);
+
+  /* Create (if required) */
+  } else {
+    ec = RB_INSERT_SORTED(mod->channels, skel, link, _ch_id_cmp);
+    if ( ec == NULL ) {
+      skel->id = strdup(skel->id);
+      ec       = skel;
+      skel     = NULL;
+      *save    = 1;
+    }
+  }
+
+  return ec;
+}
+
+/* **************************************************************************
+ * Channels
+ * *************************************************************************/
+
+int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
+{
+  int save = 0;
+  if (!ec || !name) return 0;
+  if (!ec->name || strcmp(ec->name, name)) {
+    if (ec->name) free(ec->name);
+    ec->name = strdup(name);
+    if (ec->channel) channel_rename(ec->channel, name);
+    save = 1;
+  }
+  return save;
+}
+
+int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
+{
+  int save = 0;
+  if (!ec->icon || strcmp(ec->icon, icon) ) {
+  if (!ec | !icon) return 0;
+    if (ec->icon) free(ec->icon);
+    ec->icon = strdup(icon);
+    if (ec->channel) channel_set_icon(ec->channel, icon);
+    save = 1;
+  }
+  return save;
+}
+
+// TODO: add other match critera
+// TODO: add additional metadata updates
+// TODO: add configurable updating
+void epggrab_channel_link ( epggrab_channel_t *ec )
+{ 
+  channel_t *ch;
+
+  if (!ec) return;
+
+  /* Link */
+  if (ec->channel) {
+    RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
+      if (_ch_link(ec, ch)) break;
+    }
+  }
+}
+
+void epggrab_channel_updated ( epggrab_channel_t *ec )
+{
+  epggrab_channel_link(ec);
+  epggrab_module_channel_save(ec->mod, ec);
 }
 
 /* **************************************************************************
@@ -526,9 +623,7 @@ void epggrab_channel_add ( channel_t *ch )
 {
   epggrab_module_t *m;
   LIST_FOREACH(m, &epggrab_modules, link) {
-    if (m->ch_add) 
-      if (m->ch_add(m, ch) && m->ch_save)
-        m->ch_save(m);
+    if (m->ch_add) m->ch_add(m, ch);
   }
 }
 
@@ -536,9 +631,7 @@ void epggrab_channel_rem ( channel_t *ch )
 {
   epggrab_module_t *m;
   LIST_FOREACH(m, &epggrab_modules, link) {
-    if (m->ch_rem) 
-      if (m->ch_rem(m, ch) && m->ch_save)
-        m->ch_save(m);
+    if (m->ch_rem) m->ch_rem(m, ch);
   }
 }
 
@@ -546,9 +639,7 @@ void epggrab_channel_mod ( channel_t *ch )
 {
   epggrab_module_t *m;
   LIST_FOREACH(m, &epggrab_modules, link) {
-    if (m->ch_mod) 
-      if (m->ch_mod(m, ch) && m->ch_save)
-        m->ch_save(m);
+    if (m->ch_mod) m->ch_mod(m, ch);
   }
 }
 

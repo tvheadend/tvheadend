@@ -4,6 +4,8 @@
 #include <pthread.h>
 #include "channels.h"
 
+typedef struct epggrab_module epggrab_module_t;
+
 /* **************************************************************************
  * Grabber Stats
  * *************************************************************************/
@@ -33,10 +35,12 @@ typedef struct epggrab_stats
  */
 typedef struct epggrab_channel
 {
-  RB_ENTRY(epggrab_channel)  link;   ///< Global link
+  RB_ENTRY(epggrab_channel)  link;    ///< Global link
 
+  epggrab_module_t          *mod;     ///< Linked module
   char                      *id;      ///< Grabber's ID
   char                      *name;    ///< Channel name
+  char                      *icon;    ///< Channel icon
   struct channel            *channel; ///< Mapped channel
   // TODO: I think we might need a list of channels!
 } epggrab_channel_t;
@@ -52,11 +56,22 @@ typedef struct epggrab_channel_tree epggrab_channel_tree_t;
  */
 htsmsg_t*         epggrab_channel_list      ( void );
 
+/*
+ * Mutators
+ */
+int epggrab_channel_set_name ( epggrab_channel_t *ch, const char *name );
+int epggrab_channel_set_icon ( epggrab_channel_t *ch, const char *icon );
+
+void epggrab_channel_updated ( epggrab_channel_t *ch );
+void epggrab_channel_link ( epggrab_channel_t *ch );
+
+/*
+ * Match the channel
+ */
+
 /* **************************************************************************
  * Grabber Modules
  * *************************************************************************/
-
-typedef struct epggrab_module epggrab_module_t;
 
 /*
  * Grabber flags
@@ -90,36 +105,30 @@ struct epggrab_module
                         htsmsg_t *d, epggrab_stats_t *s );
 
   /* Channel listings */
-  int       (*ch_add)  ( epggrab_module_t *m, channel_t *ch );
-  int       (*ch_rem)  ( epggrab_module_t *m, channel_t *ch );
-  int       (*ch_mod)  ( epggrab_module_t *m, channel_t *ch );
-
-  /* Save any settings */
-  void      (*ch_save) ( epggrab_module_t *m );
+  void      (*ch_add)  ( epggrab_module_t *m, channel_t *ch );
+  void      (*ch_rem)  ( epggrab_module_t *m, channel_t *ch );
+  void      (*ch_mod)  ( epggrab_module_t *m, channel_t *ch );
 };
 
 /*
  * Default module functions
- *
- * Kinda like a base class (shared by current modules xmltv and pyepg)
  */
 
 int        epggrab_module_enable_socket ( epggrab_module_t *m, uint8_t e );
-const char *epggrab_module_socket_path  ( epggrab_module_t *m );
+const char *epggrab_module_socket_path  ( const char *id );
 
 char     *epggrab_module_grab       ( epggrab_module_t *m );
 htsmsg_t *epggrab_module_trans_xml  ( epggrab_module_t *m, char *d );
 
+void epggrab_module_channel_save    
+  ( epggrab_module_t *m, epggrab_channel_t *ch );
 void epggrab_module_channels_load   ( epggrab_module_t *m );
-void epggrab_module_channels_save   ( epggrab_module_t *m, const char *path );
-int  epggrab_module_channel_add     ( epggrab_module_t *m, channel_t *ch );
-int  epggrab_module_channel_rem     ( epggrab_module_t *m, channel_t *ch );
-int  epggrab_module_channel_mod     ( epggrab_module_t *m, channel_t *ch );
+void epggrab_module_channel_add     ( epggrab_module_t *m, channel_t *ch );
+void epggrab_module_channel_rem     ( epggrab_module_t *m, channel_t *ch );
+void epggrab_module_channel_mod     ( epggrab_module_t *m, channel_t *ch );
 
-epggrab_channel_t *epggrab_module_channel_create
-  ( epggrab_module_t *m );
-epggrab_channel_t *epggrab_module_channel_find   
-  ( epggrab_module_t *m, const char *id );
+epggrab_channel_t *epggrab_module_channel_find
+  ( epggrab_module_t *mod, const char *id, int create, int *save );
 
 /*
  * Module list

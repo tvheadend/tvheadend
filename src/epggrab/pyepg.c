@@ -28,15 +28,13 @@
 #include "epggrab/pyepg.h"
 #include "channels.h"
 
+static epggrab_channel_tree_t _pyepg_channels;
+static epggrab_module_t       *_pyepg_module;
 
-static channel_t *_pyepg_channel_create ( epggrab_channel_t *skel, int *save )
+static epggrab_channel_t *_pyepg_channel_find
+  ( const char *id, int create, int *save )
 {
-  return NULL;
-}
-
-static channel_t *_pyepg_channel_find ( const char *id )
-{
-  return NULL;
+  return epggrab_module_channel_find(_pyepg_module, id, create, save);
 }
 
 /* **************************************************************************
@@ -57,37 +55,32 @@ static int _pyepg_parse_time ( const char *str, time_t *out )
 
 static int _pyepg_parse_channel ( htsmsg_t *data, epggrab_stats_t *stats )
 {
-  int save = 0, save2 = 0;
+  int save = 0;
   htsmsg_t *attr, *tags;
-  const char *icon;
-  channel_t *ch;
-  epggrab_channel_t skel;
+  const char *str;
+  epggrab_channel_t *ch;
 
   if ( data == NULL ) return 0;
 
   if ((attr    = htsmsg_get_map(data, "attrib")) == NULL) return 0;
-  if ((skel.id = (char*)htsmsg_get_str(attr, "id")) == NULL) return 0;
+  if ((str     = htsmsg_get_str(attr, "id")) == NULL) return 0;
   if ((tags    = htsmsg_get_map(data, "tags")) == NULL) return 0;
-  skel.name = (char*)htsmsg_xml_get_cdata_str(tags, "name");
-  icon      = htsmsg_xml_get_cdata_str(tags, "image");
-
-  ch = _pyepg_channel_create(&skel, &save2);
+  if (!(ch     = _pyepg_channel_find(str, 1, &save))) return 0;
   stats->channels.total++;
-  if (save2) {
-    stats->channels.created++;
-    save |= 1;
-  }
+  if (save) stats->channels.created++;
 
-  /* Update values */
-  if (ch) {
-    if (skel.name) {
-      if(!ch->ch_name || strcmp(ch->ch_name, skel.name)) {
-        save |= channel_rename(ch, skel.name);
-      }
-    }
-    if (icon)      channel_set_icon(ch, icon);
+  /* Update data */
+  if ((str = htsmsg_xml_get_cdata_str(tags, "name")))
+    save |= epggrab_channel_set_name(ch, str);
+  if ((str = htsmsg_xml_get_cdata_str(tags, "image")))
+    save |= epggrab_channel_set_icon(ch, str);
+  // TODO: extra metadata
+
+  /* Update */
+  if (save) {
+    epggrab_channel_updated(ch);
+    stats->channels.modified++;
   }
-  if (save) stats->channels.modified++;
 
   return save;
 }
@@ -311,21 +304,21 @@ static int _pyepg_parse_schedule ( htsmsg_t *data, epggrab_stats_t *stats )
   int save = 0;
   htsmsg_t *attr, *tags;
   htsmsg_field_t *f;
-  channel_t *channel;
+  epggrab_channel_t *ec;
   const char *str;
 
   if ( data == NULL ) return 0;
 
-  if ((attr    = htsmsg_get_map(data, "attrib")) == NULL) return 0;
-  if ((str     = htsmsg_get_str(attr, "channel")) == NULL) return 0;
-  if ((channel = _pyepg_channel_find(str)) == NULL) return 0;
-  if ((tags    = htsmsg_get_map(data, "tags")) == NULL) return 0;
-  stats->channels.total++;
+  if ((attr = htsmsg_get_map(data, "attrib")) == NULL) return 0;
+  if ((str  = htsmsg_get_str(attr, "channel")) == NULL) return 0;
+  if ((ec   = _pyepg_channel_find(str, 0, NULL)) == NULL) return 0;
+  if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
+  if (!ec->channel) return 0;
 
   HTSMSG_FOREACH(f, tags) {
     if (strcmp(f->hmf_name, "broadcast") == 0) {
       save |= _pyepg_parse_broadcast(htsmsg_get_map_by_field(f),
-                                     channel, stats);
+                                     ec->channel, stats);
     }
   }
 
@@ -334,7 +327,7 @@ static int _pyepg_parse_schedule ( htsmsg_t *data, epggrab_stats_t *stats )
 
 static int _pyepg_parse_epg ( htsmsg_t *data, epggrab_stats_t *stats )
 {
-  int save = 0, chsave = 0;
+  int save = 0;
   htsmsg_t *tags;
   htsmsg_field_t *f;
 
@@ -342,7 +335,7 @@ static int _pyepg_parse_epg ( htsmsg_t *data, epggrab_stats_t *stats )
 
   HTSMSG_FOREACH(f, tags) {
     if (strcmp(f->hmf_name, "channel") == 0 ) {
-      chsave |= _pyepg_parse_channel(htsmsg_get_map_by_field(f), stats);
+      save |= _pyepg_parse_channel(htsmsg_get_map_by_field(f), stats);
     } else if (strcmp(f->hmf_name, "brand") == 0 ) {
       save |= _pyepg_parse_brand(htsmsg_get_map_by_field(f), stats);
     } else if (strcmp(f->hmf_name, "series") == 0 ) {
@@ -353,10 +346,6 @@ static int _pyepg_parse_epg ( htsmsg_t *data, epggrab_stats_t *stats )
       save |= _pyepg_parse_schedule(htsmsg_get_map_by_field(f), stats);
     }
   }
-#if 0
-  save |= chsave;
-  if (chsave) pyepg_save();
-#endif
 
   return save;
 }
@@ -366,12 +355,6 @@ static int _pyepg_parse_epg ( htsmsg_t *data, epggrab_stats_t *stats )
  * Module Setup
  * ***********************************************************************/
 
-epggrab_channel_tree_t _pyepg_channels;
-
-static void _pyepg_save ( epggrab_module_t *mod )
-{
-  epggrab_module_channels_save(mod, "epggrab/pyepg/channels");
-}
 
 static int _pyepg_parse 
   ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
@@ -384,12 +367,6 @@ static int _pyepg_parse
   if ((epg = htsmsg_get_map(tags, "epg")) != NULL)
     return _pyepg_parse_epg(epg, stats);
 
-  /* XMLTV format */
-  if ((epg = htsmsg_get_map(tags, "tv")) != NULL) {
-    mod = epggrab_module_find_by_id("xmltv_sync");
-    if (mod) return mod->parse(mod, epg, stats);
-  }
-    
   return 0;
 }
 
@@ -406,22 +383,25 @@ void pyepg_init ( epggrab_module_list_t *list )
   mod->trans               = epggrab_module_trans_xml;
   mod->parse               = _pyepg_parse;
   mod->channels            = &_pyepg_channels;
-  mod->ch_save             = _pyepg_save;
   mod->ch_add              = epggrab_module_channel_add;
   mod->ch_rem              = epggrab_module_channel_rem;
   mod->ch_mod              = epggrab_module_channel_mod;
   *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_SIMPLE;
   LIST_INSERT_HEAD(list, mod, link);
+  _pyepg_module = mod;
 
   /* External module */
   mod                      = calloc(1, sizeof(epggrab_module_t));
   mod->id                  = strdup("pyepg_ext");
-  mod->path                = epggrab_module_socket_path(mod);
+  mod->path                = epggrab_module_socket_path("pyepg");
   mod->name                = strdup("PyEPG");
   mod->enable              = epggrab_module_enable_socket;
   mod->trans               = epggrab_module_trans_xml;
   mod->parse               = _pyepg_parse;
   *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_EXTERNAL;
   LIST_INSERT_HEAD(list, mod, link);
+
+  /* Load channel config */
+  epggrab_module_channels_load(_pyepg_module);
 }
 
