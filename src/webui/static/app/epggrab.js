@@ -8,7 +8,6 @@ tvheadend.epggrab = function() {
    * Module lists (I'm sure there is a better way!)
    */
   var EPGGRAB_MODULE_SIMPLE   = 0x04;
-  var EPGGRAB_MODULE_ADVANCED = 0x08;
   var EPGGRAB_MODULE_EXTERNAL = 0x10;
 
   var moduleStore = new Ext.data.JsonStore({
@@ -16,12 +15,9 @@ tvheadend.epggrab = function() {
     url        : 'epggrab',
     baseParams : { op : 'moduleList' },
     autoLoad   : true,
-    fields     : [ 'id', 'name', 'path', 'flags' ]
+    fields     : [ 'id', 'name', 'path', 'flags', 'enabled' ]
   });
   var simpleModuleStore = new Ext.data.Store({
-    recordType: moduleStore.recordType
-  });
-  var advancedModuleStore = new Ext.data.Store({
     recordType: moduleStore.recordType
   });
   var externalModuleStore = new Ext.data.Store({
@@ -35,38 +31,11 @@ tvheadend.epggrab = function() {
       simpleModuleStore.add(r.copy());
     });
     moduleStore.filterBy(function(r) {
-      return r.get('flags') & (EPGGRAB_MODULE_ADVANCED | EPGGRAB_MODULE_SIMPLE);
-    });
-    moduleStore.each(function(r) {
-      advancedModuleStore.add(r.copy());
-    });
-    moduleStore.filterBy(function(r) {
       return r.get('flags') & EPGGRAB_MODULE_EXTERNAL;
     });
     moduleStore.each(function(r) {
       externalModuleStore.add(r.copy());
     });
-  });
-
-  /*
-   * Schedule
-   */
-
-  var scheduleRow = Ext.data.Record.create(
-    [
-      { name : 'module'  },
-      { name : 'command' },
-      { name : 'options' },
-      { name : 'cron'    }
-    ]
-  );
-
-  var scheduleStore = new Ext.data.JsonStore({
-    root       : 'entries',
-    url        : 'epggrab',
-    baseParams : { op : 'loadSchedule' },
-    autoLoad   : true,
-    fields     : [ 'module', 'command', 'options', 'cron' ]
   });
 
   /*
@@ -79,7 +48,7 @@ tvheadend.epggrab = function() {
   );
 
   /* ****************************************************************
-   * Simple Config
+   * Basic Fields
    * ***************************************************************/
 
   /*
@@ -164,172 +133,61 @@ tvheadend.epggrab = function() {
     }
   });
 
-  var simplePanel = new Ext.form.FieldSet({
-    title  : 'Simple Config',
-    height : 120,
-    width  : 900,
-    items : [
-      simpleModule,
-      intervalValue,
-      intervalUnit
-    ]
-  });
-
   /* ****************************************************************
-   * Advanced Config
+   * Advanced Fields
    * ***************************************************************/
 
   /*
-   * Schedule
+   * External modules
    */
-  var scheduleColumnModel = new Ext.grid.ColumnModel([
+  var externalColumnModel = new Ext.grid.ColumnModel([
     {
       header    : 'Module',
-      dataIndex : 'module',
-      width     : 300,
-      sortable  : false,
-      renderer  : function (v)
-      {
-        if ( v != "" ) {
-          i = advancedModuleStore.find('id', v);
-          v = advancedModuleStore.getAt(i).get('name');
-        }
-        return v;
-      },
-      editor    : new Ext.form.ComboBox({
-        valueField    : 'id',
-        displayField  : 'name',
-        editable      : false,
-        mode          : 'local',
-        triggerAction : 'all',
-        store         : advancedModuleStore
-      }),
-    },
-    {
-      header : 'Cron',
-      dataIndex : 'cron',
-      width     : 150,
-      sortable  : false,
-      editor    : new Ext.form.TextField()
-    },
-    {
-      header    : 'Command',
-      dataIndex : 'command',
+      dataIndex : 'name',
       width     : 200,
       sortable  : false,
-      editor    : new Ext.form.TextField()
     },
     {
-      dataIndex : 'options',
-      header    : 'Options',
+      header    : 'Path',
+      dataIndex : 'path',
       width     : 200,
       sortable  : false,
-      editor    : new Ext.form.TextField()
-    }
-  ]);
-  scheduleColumnModel.isCellEditable = function (ci, ri)
-  {
-    if (ci == 0) return true;
-    m = scheduleStore.getAt(ri).get('module');
-    if (m == "") return false;
-    m = advancedModuleStore.find('id', m);
-    m = advancedModuleStore.getAt(m);
-    if (!(m.get('flags') & EPGGRAB_MODULE_ADVANCED)) {
-      return (ci == 1);
-    }
-    return true;
-  };
-
-  scheduleSelectModel = new Ext.grid.RowSelectionModel({
-    singleSelect : false,
-  });
-  scheduleSelectModel.on('selectionchange', function(s) {
-    delButton.setDisabled(s.getCount() == 0);
-  });
-
-  var addButton = new Ext.Button({
-    text    : 'Add',
-    iconCls : 'add',
-    handler : function () {
-      scheduleStore.add(new scheduleRow({
-        module  : '',
-        cron    : '',
-        command : '',
-        options : ''}
-      ));
-    }
-  });
-  
-  var delButton = new Ext.Button({
-    text     : 'Delete',
-    iconCls  : 'remove',
-    disabled : true,
-    handler : function () {
-      var s = schedulePanel.getSelectionModel().each(function(r){
-        scheduleStore.remove(r);
-      });
-    }
-  });
-
-  var schedulePanel = new Ext.grid.EditorGridPanel({
-    store          : scheduleStore,
-    cm             : scheduleColumnModel,
-    sm             : scheduleSelectModel,
-    width          : 850,
-    height         : 150,
-    frame          : true,
-    viewConfig     : {
-      forceFit  : true,
-      markDirty : false
+      // TODO: editable?
     },
-    iconCls        : 'icon-grid',
-    tbar : [
-      addButton,
-      delButton
-    ],
-    listeners : {
-      'afteredit' : function (r) {
-        if ( r.field == 'module' ) {
-          d = scheduleStore.getAt(r.row);
-          c = '';
-          if ( r.value != "" ) {
-            i = advancedModuleStore.find('id', r.value);
-            m = advancedModuleStore.getAt(i);
-            c = m.get('path');
-          }
-          d.set('command', c)
+    {
+      dataIndex : 'enabled',
+      header    : 'Enabled',
+      width     : 50,
+      sortable  : false,
+      editor    : new Ext.form.Checkbox(),
+      // TODO: newer versions of extjs provide proper checkbox in grid
+      //       support, I think!
+      renderer  : function (v) {
+        if (v) {
+          return "Y";
+        } else {
+          return "N";
         }
-      },
-      'select' : function(r) {
-        delButton.setDisabled(false);
       }
     }
-  });
+  ]);
 
-  var advancedPanel = new Ext.form.FieldSet({
-    title : 'Advanced Config',
-    height : 200,
-    width  : 900,
-    items  : [
-      // TODO: external editors
-      schedulePanel
-    ]
+  var externalGrid = new Ext.grid.EditorGridPanel({
+    store          : externalModuleStore,
+    cm             : externalColumnModel,
+    width          : 450,
+    height         : 150,
+    frame          : false,
+    viewConfig     : {
+      forceFit  : true,
+    },
+    iconCls        : 'icon-grid',
   });
+  var advancedPanel = externalGrid;
 
   /* ****************************************************************
    * Form
    * ***************************************************************/
-
-  var advancedCheck = new Ext.form.Checkbox({
-    fieldLabel    : 'Advanced Config',
-    name          : 'advanced',
-    listeners     : {
-      'check' : function (e, v) {
-        simplePanel.setVisible(!v);
-        advancedPanel.setVisible(v);
-      }
-    }
-  });
 
   var eitCheck = new Ext.form.Checkbox({
     fieldLabel    : 'EIT Enabled',
@@ -352,7 +210,7 @@ tvheadend.epggrab = function() {
 
   var confpanel = new Ext.FormPanel({
     title         : 'EPG Grabber',
-     iconCls       : 'xml',
+    iconCls       : 'xml',
     border        : false,
     bodyStyle     : 'padding:15px',
     labelAlign    : 'left',
@@ -363,9 +221,11 @@ tvheadend.epggrab = function() {
     defaultType   : 'textfield',
     items         : [
       interval,
-      advancedCheck,
       eitCheck,
-      simplePanel,
+      simpleModule,
+      intervalValue,
+      intervalUnit,
+      new Ext.form.Label({text: 'External Interfaces'}),
       advancedPanel
     ],
     tbar: [
@@ -373,15 +233,6 @@ tvheadend.epggrab = function() {
       '->',
       helpButton
     ]
-  });
-
-  // TODO: HACK: bug in extjs seems to cause sub-components of the form not to render!
-  confpanel.on('afterlayout', function()
-  {
-    simplePanel.syncSize();
-    advancedPanel.syncSize();
-    simplePanel.setVisible(!advancedCheck.getValue());
-    advancedPanel.setVisible(advancedCheck.getValue());
   });
 
   /* ****************************************************************
@@ -399,17 +250,17 @@ tvheadend.epggrab = function() {
   });
 
   function saveChanges() {
-    data  = [];
-    scheduleStore.each(function(r) {
-      data.push(r.data);
-    });
-    json = Ext.util.JSON.encode(data);
+    mods = [];
+    externalModuleStore.each(function(r) {
+      mods.push({id: r.get('id'), enabled: r.get('enabled') ? 1 : 0});
+    });  
+    mods = Ext.util.JSON.encode(mods);
     confpanel.getForm().submit({
       url     : 'epggrab', 
-      params  : { op : 'saveSettings', schedule : json },
+      params  : { op : 'saveSettings', external : mods },
       waitMsg : 'Saving Data...',
       success : function(form, action) {
-        scheduleStore.commitChanges();
+        externalModuleStore.commitChanges();
       },
       failure : function (form, action) {
         Ext.Msg.alert('Save failed', action.result.errormsg);

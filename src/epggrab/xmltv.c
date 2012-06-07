@@ -416,17 +416,12 @@ static void _xmltv_load_grabbers ( epggrab_module_list_t *list )
   while ( i < outlen ) {
     if ( outbuf[i] == '\n' || outbuf[i] == '\0' ) {
       outbuf[i] = '\0';
-      mod = calloc(1, sizeof(epggrab_module_t));
-      mod->id = mod->path = strdup(&outbuf[p]);
-      mod->name = malloc(200);
+      mod                      = calloc(1, sizeof(epggrab_module_t));
+      mod->id = mod->path      = strdup(&outbuf[p]);
+      mod->name                = malloc(200);
       sprintf((char*)mod->name, "XMLTV: %s", &outbuf[n]);
-      *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_SYNC
-                           | EPGGRAB_MODULE_SIMPLE;
-      mod->parse   = _xmltv_parse;
-      mod->ch_add  = epggrab_module_channel_add;
-      mod->ch_rem  = epggrab_module_channel_rem;
-      mod->ch_mod  = epggrab_module_channel_mod;
-      mod->ch_save = _xmltv_save;
+      *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_SIMPLE;
+      mod->parse               = _xmltv_parse;
       LIST_INSERT_HEAD(list, mod, link);
       p = n = i + 1;
     } else if ( outbuf[i] == '|' ) {
@@ -442,14 +437,11 @@ void xmltv_init ( epggrab_module_list_t *list )
 {
   epggrab_module_t *mod;
 
-  /* Advanced module */
+  /* External module */
   mod                      = calloc(1, sizeof(epggrab_module_t));
   mod->id                  = strdup("xmltv");
-  mod->name                = strdup("XMLTV: Advanced");
-  *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_ASYNC
-                           | EPGGRAB_MODULE_SYNC
-                           | EPGGRAB_MODULE_ADVANCED
-                           | EPGGRAB_MODULE_EXTERNAL;
+  mod->name                = strdup("XMLTV");
+  *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_EXTERNAL;
   mod->enable              = epggrab_module_enable_socket;
   mod->grab                = epggrab_module_grab;
   mod->parse               = _xmltv_parse;

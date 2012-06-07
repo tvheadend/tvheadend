@@ -2,7 +2,6 @@
 #define __EPGGRAB_H__
 
 #include <pthread.h>
-#include "cron.h"
 #include "channels.h"
 
 /* **************************************************************************
@@ -74,14 +73,16 @@ struct epggrab_module
   const char                 *name;     ///< Module name (for display)
   const char                 *path;     ///< Module path (for fixed config)
   const uint8_t              flags;     ///< Mode flags
+  uint8_t                    enabled;   ///< Whether the module is enabled
+  int                        sock;      ///< Socket descriptor
   epggrab_channel_tree_t     *channels; ///< Channel list
 
-  /* Enable/Disable for async */
+  /* Enable/Disable */
   void      (*enable) ( epggrab_module_t *m, uint8_t e );
 
-  /* Synchronous grab&parse */
-  htsmsg_t* (*grab)   ( epggrab_module_t *m,
-                        const char *c, const char *o );
+  /* Grab/Translate/Parse */
+  char*     (*grab)   ( epggrab_module_t *m );
+  htsmsg_t* (*trans)  ( epggrab_module_t *m, char *d );
   int       (*parse)  ( epggrab_module_t *m,
                         htsmsg_t *d, epggrab_stats_t *s );
 
@@ -95,15 +96,17 @@ struct epggrab_module
 };
 
 /*
- * Default module functions
+ * Default module functions (shared by pyepg and xmltv)
  */
-void epggrab_module_enable_socket ( epggrab_module_t *m, uint8_t e );
-htsmsg_t *epggrab_module_grab     ( epggrab_module_t *m, const char *cmd, const char *opts );
-void epggrab_module_channels_load ( epggrab_module_t *m );
-void epggrab_module_channels_save ( epggrab_module_t *m, const char *path );
-int  epggrab_module_channel_add   ( epggrab_module_t *m, channel_t *ch );
-int  epggrab_module_channel_rem   ( epggrab_module_t *m, channel_t *ch );
-int  epggrab_module_channel_mod   ( epggrab_module_t *m, channel_t *ch );
+const char *epggrab_module_socket_path ( epggrab_module_t *m );
+void epggrab_module_enable_socket   ( epggrab_module_t *m, uint8_t e );
+char *epggrab_module_grab       ( epggrab_module_t *m );
+htsmsg_t *epggrab_module_trans_xml  ( epggrab_module_t *m, char *d );
+void epggrab_module_channels_load   ( epggrab_module_t *m );
+void epggrab_module_channels_save   ( epggrab_module_t *m, const char *path );
+int  epggrab_module_channel_add     ( epggrab_module_t *m, channel_t *ch );
+int  epggrab_module_channel_rem     ( epggrab_module_t *m, channel_t *ch );
+int  epggrab_module_channel_mod     ( epggrab_module_t *m, channel_t *ch );
 epggrab_channel_t *epggrab_module_channel_create
   ( epggrab_module_t *m );
 epggrab_channel_t *epggrab_module_channel_find
@@ -121,50 +124,33 @@ typedef struct epggrab_module_list epggrab_module_list_t;
 epggrab_module_t* epggrab_module_find_by_id ( const char *id );
 htsmsg_t*         epggrab_module_list       ( void );
 
+/*
+ * Channel list
+ */
+htsmsg_t*         epggrab_channel_list      ( void );
+
 /* **************************************************************************
  * Configuration
  * *************************************************************************/
 
 /*
- * Schedule specification (for advanced config)
- */
-typedef struct epggrab_sched
-{ 
-  TAILQ_ENTRY(epggrab_sched) link;
-  cron_t                    *cron;  ///< Cron definition
-  epggrab_module_t          *mod;   ///< Module
-  char                      *cmd;   ///< Command
-  char                      *opts;  ///< Extra (advanced) options
-} epggrab_sched_t;
-
-/*
- * Schedule list
- */
-TAILQ_HEAD(epggrab_sched_list, epggrab_sched);
-typedef struct epggrab_sched_list epggrab_sched_list_t;
-
-/*
  * Configuration
  */
 extern pthread_mutex_t      epggrab_mutex;
-extern uint32_t             epggrab_advanced;
 extern uint32_t             epggrab_eitenabled;
 extern uint32_t             epggrab_interval;
 extern epggrab_module_t*    epggrab_module;
-extern epggrab_sched_list_t epggrab_schedule;
-
-htsmsg_t *epggrab_get_schedule ( void );
 
 /*
  * Update
  */
-int  epggrab_set_advanced     ( uint32_t advanced );
-int  epggrab_set_eitenabled   ( uint32_t eitenabled );
-int  epggrab_set_interval     ( uint32_t interval );
-int  epggrab_set_module       ( epggrab_module_t *module );
-int  epggrab_set_module_by_id ( const char *id );
-int  epggrab_set_schedule     ( htsmsg_t *sched );
-void epggrab_save             ( void );
+int  epggrab_set_eitenabled      ( uint32_t eitenabled );
+int  epggrab_set_interval        ( uint32_t interval );
+int  epggrab_set_module          ( epggrab_module_t *module );
+int  epggrab_set_module_by_id    ( const char *id );
+int  epggrab_enable_module       ( epggrab_module_t *module, uint8_t e );
+int  epggrab_enable_module_by_id ( const char *id, uint8_t e );
+void epggrab_save                ( void );
 
 /* **************************************************************************
  * Global Functions
