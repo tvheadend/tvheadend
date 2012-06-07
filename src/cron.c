@@ -7,6 +7,7 @@
 typedef struct cron
 {
   char     *str; ///< String representation
+  time_t   last; ///< Last execution time
   uint64_t min;  ///< Minutes
   uint32_t hour; ///< Hours
   uint32_t dom;  ///< Day of month
@@ -126,16 +127,22 @@ int cron_set_string ( cron_t *cron, const char *str )
   return save;
 }
 
-int cron_is_time ( cron_t *cron )
+time_t cron_run ( cron_t *cron )
 {
+  time_t t;
+  struct tm now;
   int      ret = 1;
   uint64_t b   = 0x1;
 
   /* Get the current time */
-  time_t t = time(NULL);
-  struct tm now;
-  localtime_r(&t, &now);
-  
+  time(&t);
+  localtime_t(&t, &now);
+
+  /* Find next event */
+  if ( now->min == cron->last->min) {
+    
+  }
+
   /* Check */
   if ( ret && !((b << now.tm_min)  & cron->min)  ) ret = 0;
   if ( ret && !((b << now.tm_hour) & cron->hour) ) ret = 0;
@@ -145,23 +152,6 @@ int cron_is_time ( cron_t *cron )
 
   return ret;
 }
-
-// TODO: use this as part of cron_next/cron_is_time
-void cron_run ( cron_t *cron )
-{
-}
-
-// TODO: do proper search for next time
-time_t cron_next ( cron_t *cron )
-{
-  time_t now;
-  time(&now);
-  now += 62; // TODO: hack because timer goes off just before second tick
-  now /= 60;
-  now *= 60;
-  return now;
-}
-
 
 void cron_serialize ( cron_t *cron, htsmsg_t *msg )
 {

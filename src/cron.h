@@ -17,9 +17,7 @@ cron_t     *cron_create        ( const char *str );
 void        cron_destroy       ( cron_t *cron );
 const char *cron_get_string    ( cron_t *cron );
 int         cron_set_string    ( cron_t *cron, const char *str );
-int         cron_is_time       ( cron_t *cron );
-time_t      cron_next          ( cron_t *cron );
-void        cron_run           ( cron_t *cron );
+int         cron_run           ( cron_t *cron, time_t *next );
 void        cron_serialize     ( cron_t *cron, htsmsg_t *msg );
 cron_t     *cron_deserialize   ( htsmsg_t *msg );
 
