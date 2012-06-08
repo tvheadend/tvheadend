@@ -476,20 +476,3 @@ dvb_transport_notify(service_t *t)
   htsmsg_add_str(m, "adapterId", tdmi->tdmi_adapter->tda_identifier);
   notify_by_msg("dvbService", m);
 }
-
-
-/**
- * Get the signal status from a DVB transport
- */
-int
-dvb_transport_get_signal_status(service_t *t, signal_status_t *status)
-{
-  th_dvb_mux_instance_t *tdmi = t->s_dvb_mux_instance;
-
-  status->status_text = dvb_mux_status(tdmi);
-  status->snr         = tdmi->tdmi_snr;
-  status->signal      = tdmi->tdmi_signal;
-  status->ber         = tdmi->tdmi_ber;
-  status->unc         = tdmi->tdmi_uncorrected_blocks;
-  return 0;
-}

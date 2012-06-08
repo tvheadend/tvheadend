@@ -314,9 +314,6 @@ void dvb_transport_notify_by_adapter(th_dvb_adapter_t *tda);
 
 htsmsg_t *dvb_transport_build_msg(struct service *t);
 
-int dvb_transport_get_signal_status(struct service *t,
-				    signal_status_t *status);
-
 /**
  * DVB Frontend
  */

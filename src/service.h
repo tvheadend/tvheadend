@@ -570,8 +570,6 @@ int tss2errcode(int tss);
 
 uint16_t service_get_encryption(service_t *t);
 
-int service_get_signal_status(service_t *t, signal_status_t *status);
-
 void service_set_dvb_default_charset(service_t *t, const char *dvb_default_charset);
 
 void service_set_dvb_eit_enable(service_t *t, int dvb_eit_enable);

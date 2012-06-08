@@ -1580,7 +1580,6 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   htsp_send(htsp, m, pkt->pkt_payload, &hs->hs_q, pktbuf_len(pkt->pkt_payload));
 
   if(hs->hs_last_report != dispatch_clock) {
-    signal_status_t status;
 
     /* Send a queue and signal status report every second */
 
@@ -1614,26 +1613,6 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
     /* We use a special queue for queue status message so they're not
        blocked by anything else */
     htsp_send_message(hs->hs_htsp, m, &hs->hs_htsp->htsp_hmq_qstatus);
-
-
-    if(!service_get_signal_status(hs->hs_s->ths_service, &status)) {
-
-      m = htsmsg_create_map();
-      htsmsg_add_str(m, "method", "signalStatus");
-      htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
-
-      htsmsg_add_str(m, "feStatus",   status.status_text);
-      if(status.snr != -2)
-	htsmsg_add_u32(m, "feSNR",    status.snr);
-      if(status.signal != -2)
-	htsmsg_add_u32(m, "feSignal", status.signal);
-      if(status.ber != -2)
-	htsmsg_add_u32(m, "feBER",    status.ber);
-      if(status.unc != -2)
-	htsmsg_add_u32(m, "feUNC",    status.unc);
-      htsp_send_message(hs->hs_htsp, m, &hs->hs_htsp->htsp_hmq_qstatus);
-    }
-
   }
   pkt_ref_dec(pkt);
 }
