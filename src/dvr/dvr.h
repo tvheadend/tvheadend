@@ -211,6 +211,9 @@ typedef struct dvr_autorec_entry {
 
   struct dvr_entry_list dae_spawns;
 
+  epg_brand_t *dae_brand;
+  epg_season_t *dae_season;
+
 } dvr_autorec_entry_t;
 
 
@@ -308,7 +311,14 @@ void dvr_autorec_add(const char *dvr_config_name,
 		     const char *tag, uint8_t content_type,
 		     const char *creator, const char *comment);
 
+void dvr_autorec_add_series_link(const char *dvr_config_name,
+                                 epg_broadcast_t *event,
+                        		     const char *creator, const char *comment);
+
 void dvr_autorec_check_event(epg_broadcast_t *e);
+void dvr_autorec_check_brand(epg_brand_t *b);
+void dvr_autorec_check_season(epg_season_t *s);
+
 
 void autorec_destroy_by_channel(channel_t *ch);
 
