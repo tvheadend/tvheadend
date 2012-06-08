@@ -20,6 +20,7 @@
 #include "spawn.h"
 #include "htsmsg_xml.h"
 #include "file.h"
+#include "service.h"
 
 /* Thread protection */
 int                   epggrab_confver;
@@ -57,20 +58,20 @@ static void _epggrab_module_parse
   htsmsg_destroy(data);
 
   /* Debug stats */
-  tvhlog(LOG_DEBUG, mod->id, "parse took %d seconds", tm2 - tm1);
-  tvhlog(LOG_DEBUG, mod->id, "  channels   tot=%5d new=%5d mod=%5d",
+  tvhlog(LOG_INFO, mod->id, "parse took %d seconds", tm2 - tm1);
+  tvhlog(LOG_INFO, mod->id, "  channels   tot=%5d new=%5d mod=%5d",
          stats.channels.total, stats.channels.created,
          stats.channels.modified);
-  tvhlog(LOG_DEBUG, mod->id, "  brands     tot=%5d new=%5d mod=%5d",
+  tvhlog(LOG_INFO, mod->id, "  brands     tot=%5d new=%5d mod=%5d",
          stats.brands.total, stats.brands.created,
          stats.brands.modified);
-  tvhlog(LOG_DEBUG, mod->id, "  seasons    tot=%5d new=%5d mod=%5d",
+  tvhlog(LOG_INFO, mod->id, "  seasons    tot=%5d new=%5d mod=%5d",
          stats.seasons.total, stats.seasons.created,
          stats.seasons.modified);
-  tvhlog(LOG_DEBUG, mod->id, "  episodes   tot=%5d new=%5d mod=%5d",
+  tvhlog(LOG_INFO, mod->id, "  episodes   tot=%5d new=%5d mod=%5d",
          stats.episodes.total, stats.episodes.created,
          stats.episodes.modified);
-  tvhlog(LOG_DEBUG, mod->id, "  broadcasts tot=%5d new=%5d mod=%5d",
+  tvhlog(LOG_INFO, mod->id, "  broadcasts tot=%5d new=%5d mod=%5d",
          stats.broadcasts.total, stats.broadcasts.created,
          stats.broadcasts.modified);
 }
@@ -90,7 +91,7 @@ static void _epggrab_module_grab ( epggrab_module_t *mod )
 
   /* Process */
   if ( data ) {
-    tvhlog(LOG_DEBUG, mod->id, "grab took %d seconds", tm2 - tm1);
+    tvhlog(LOG_INFO, mod->id, "grab took %d seconds", tm2 - tm1);
     _epggrab_module_parse(mod, data);
   } else {
     tvhlog(LOG_WARNING, mod->id, "grab returned no data");
@@ -117,7 +118,7 @@ static void _epggrab_socket_handler ( epggrab_module_t *mod, int s )
 
   /* Process */
   if ( data ) {
-    tvhlog(LOG_DEBUG, mod->id, "grab took %d seconds", tm2 - tm1);
+    tvhlog(LOG_INFO, mod->id, "grab took %d seconds", tm2 - tm1);
     _epggrab_module_parse(mod, data);
 
   /* Failed */
@@ -178,6 +179,7 @@ static void *_epggrab_socket_thread ( void *p )
 {
   int s;
   epggrab_module_t *mod = (epggrab_module_t*)p;
+  tvhlog(LOG_INFO, mod->id, "external socket enabled");
   
   while ( mod->enabled && mod->sock ) {
     tvhlog(LOG_DEBUG, mod->id, "waiting for connection");
@@ -203,20 +205,45 @@ static int _ch_id_cmp ( void *a, void *b )
 // TODO: add other matches
 static int _ch_link ( epggrab_channel_t *ec, channel_t *ch )
 {
-  int match = 0;
+  service_t *sv;
+  int match = 0, i;
 
   if (!ec || !ch) return 0;
   if (ec->channel) return 0;
 
   if (ec->name && !strcmp(ec->name, ch->ch_name))
     match = 1;
+  else {
+    LIST_FOREACH(sv, &ch->ch_services, s_ch_link) {
+      if (ec->sid) {
+        for (i = 0; i < ec->sid_cnt; i++ ) {
+          if (sv->s_dvb_service_id == ec->sid[i]) {
+            match = 1;
+            break;
+          }
+        }
+      }
+      if (!match && ec->sname) {
+        i = 0;
+        while (ec->sname[i]) {
+          if (!strcmp(ec->sname[i], sv->s_svcname)) {
+            match = 1;
+            break;
+          }
+          i++;
+        }
+      }
+      if (match) break;
+    }
+  }
 
   if (match) {
-    tvhlog(LOG_INFO, "epggrab", "linking %s to %s",
-           ch->ch_name, ec->id);
+    tvhlog(LOG_INFO, ec->mod->id, "linking %s to %s",
+           ec->id, ch->ch_name);
     ec->channel = ch;
-    if (ec->name) channel_rename(ch, ec->name);
-    if (ec->icon) channel_set_icon(ch, ec->icon);
+    if (ec->name)     channel_rename(ch, ec->name);
+    if (ec->icon)     channel_set_icon(ch, ec->icon);
+    if (ec->number>0) channel_set_number(ch, ec->number);
   }
 
   return match;
@@ -289,7 +316,7 @@ char *epggrab_module_grab ( epggrab_module_t *mod )
   char       *outbuf;
 
   /* Debug */
-  tvhlog(LOG_DEBUG, mod->id, "grab %s", mod->path);
+  tvhlog(LOG_INFO, mod->id, "grab %s", mod->path);
 
   /* Grab */
   outlen = spawn_and_store_stdout(mod->path, NULL, &outbuf);
@@ -320,7 +347,9 @@ htsmsg_t *epggrab_module_trans_xml
 void epggrab_module_channel_save
   ( epggrab_module_t *mod, epggrab_channel_t *ch )
 {
+  int i;
   htsmsg_t *m = htsmsg_create_map();
+  htsmsg_t *a;
 
   if (ch->name)
     htsmsg_add_str(m, "name", ch->name);
@@ -328,6 +357,22 @@ void epggrab_module_channel_save
     htsmsg_add_str(m, "icon", ch->icon);
   if (ch->channel)
     htsmsg_add_u32(m, "channel", ch->channel->ch_id);
+  if (ch->sid) {
+    a = htsmsg_create_list();
+    for (i = 0; i < ch->sid_cnt; i++ ) {
+      htsmsg_add_u32(a, NULL, ch->sid[i]);
+    }
+    htsmsg_add_msg(m, "sid", a);
+  }
+  if (ch->sname) {
+    a = htsmsg_create_list();
+    i = 0;
+    while (ch->sname[i]) {
+      htsmsg_add_str(a, NULL, ch->sname[i]);
+      i++;
+    }
+    htsmsg_add_msg(m, "sname", a);
+  }
 
   hts_settings_save(m, "epggrab/%s/channels/%s", mod->id, ch->id);
 }
@@ -335,21 +380,42 @@ void epggrab_module_channel_save
 static void epggrab_module_channel_load 
   ( epggrab_module_t *mod, htsmsg_t *m, const char *id )
 {
-  int save = 0;
+  int save = 0, i;
   const char *str;
   uint32_t u32;
+  htsmsg_t *a;
+  htsmsg_field_t *f;
 
   epggrab_channel_t *ch = epggrab_module_channel_find(mod, id, 1, &save);
 
   if ((str = htsmsg_get_str(m, "name")))
-    save |= epggrab_channel_set_name(ch, str);
+    ch->name = strdup(str);
   if ((str = htsmsg_get_str(m, "icon")))
-    save |= epggrab_channel_set_icon(ch, str);
+    ch->icon = strdup(str);
+  if ((a = htsmsg_get_list(m, "sid"))) {
+    i = 0;
+    HTSMSG_FOREACH(f, a) i++;
+    ch->sid_cnt = i;
+    ch->sid     = calloc(i, sizeof(uint16_t));
+    i = 0;
+    HTSMSG_FOREACH(f, a) {
+      ch->sid[i] = (uint16_t)f->hmf_s64;
+      i++;
+    }
+  }
+  if ((a = htsmsg_get_list(m, "sname"))) {
+    i = 0;
+    HTSMSG_FOREACH(f, a) i++;
+    ch->sname = calloc(i+1, sizeof(char*));
+    i = 0;
+    HTSMSG_FOREACH(f, a) {
+      ch->sname[i] = strdup(f->hmf_str);
+      i++;
+    }
+  }
 
   if (!htsmsg_get_u32(m, "channel", &u32))
     ch->channel = channel_find_by_identifier(u32);
-
-  epggrab_channel_link(ch);
 }
 
 void epggrab_module_channels_load ( epggrab_module_t *mod )
@@ -359,7 +425,6 @@ void epggrab_module_channels_load ( epggrab_module_t *mod )
 
   if ((m = hts_settings_load("epggrab/%s/channels", mod->id))) {
     HTSMSG_FOREACH(f, m) {
-      printf("CHANNEL %s\n", f->hmf_name);
       if ((e = htsmsg_get_map_by_field(f)))
         epggrab_module_channel_load(mod, e, f->hmf_name);
     }
@@ -442,6 +507,68 @@ int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
   return save;
 }
 
+// TODO: what a mess!
+int epggrab_channel_set_sid 
+  ( epggrab_channel_t *ec, const uint16_t *sid, int num )
+{
+  int save = 0, i = 0;
+  if ( !ec || !sid ) return 0;
+  if (!ec->sid) save = 1;
+  else if (ec->sid_cnt != num) save = 1;
+  else {
+    for (i = 0; i < num; i++ ) {
+      if (sid[i] != ec->sid[i]) {
+        save = 1;
+        break;
+      }
+    }
+  }
+  if (save) {
+    if (ec->sid) free(ec->sid);
+    ec->sid = calloc(num, sizeof(uint16_t));
+    for (i = 0; i < num; i++ ) {
+      ec->sid[i] = sid[i];
+    }
+    ec->sid_cnt = num;
+  }
+  return save;
+}
+
+// TODO: what a mess!
+int epggrab_channel_set_sname ( epggrab_channel_t *ec, const char **sname )
+{
+  int save = 0, i = 0;
+  if ( !ec || !sname ) return 0;
+  if (!ec->sname) save = 1;
+  else {
+    while ( ec->sname[i] && sname[i] ) {
+      if (strcmp(ec->sname[i], sname[i])) {
+        save = 1;
+        break;
+      }
+      i++;
+    }
+    if (!save && (ec->sname[i] || sname[i])) save = 1;
+  }
+  if (save) {
+    if (ec->sname) {
+      i = 0;
+      while (ec->sname[i])
+        free(ec->sname[i++]);
+      free(ec->sname);
+    }
+    i = 0;
+    while (sname[i++]);
+    ec->sname = calloc(i+1, sizeof(char*));
+    i = 0;
+    while (sname[i]) {
+      ec->sname[i] = strdup(sname[i]);
+      i++;
+    } 
+  }
+  return save;
+}
+
 int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
 {
   int save = 0;
@@ -450,6 +577,18 @@ int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
     if (ec->icon) free(ec->icon);
     ec->icon = strdup(icon);
     if (ec->channel) channel_set_icon(ec->channel, icon);
+    save = 1;
+  }
+  return save;
+}
+
+int epggrab_channel_set_number ( epggrab_channel_t *ec, int number )
+{
+  int save = 0;
+  if (!ec || (number <= 0)) return 0;
+  if (ec->number != number) {
+    ec->number = number;
+    if (ec->channel) channel_set_number(ec->channel, number);
     save = 1;
   }
   return save;
