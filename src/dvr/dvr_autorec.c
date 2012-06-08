@@ -67,13 +67,17 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   channel_tag_mapping_t *ctm;
 
   if (!e->channel) return 0;
+  if (!e->episode) return 0;
   if(dae->dae_enabled == 0 || dae->dae_weekdays == 0)
     return 0;
 
   if(dae->dae_channel == NULL &&
      dae->dae_channel_tag == NULL &&
      dae->dae_content_type == 0 &&
-     dae->dae_title == NULL)
+     (dae->dae_title == NULL ||
+     dae->dae_title[0] == '\0') &&
+     dae->dae_brand == NULL &&
+     dae->dae_season == NULL)
     return 0; // Avoid super wildcard match
 
   if(dae->dae_channel != NULL &&
@@ -93,8 +97,13 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
      dae->dae_content_type != e->e_content_type)
     return 0;
 #endif
+
+  if(dae->dae_brand)
+    if (!e->episode->brand || dae->dae_brand != e->episode->brand) return 0;
+  if(dae->dae_season)
+    if (!e->episode->season || dae->dae_season != e->episode->season) return 0;
   
-  if(dae->dae_title != NULL) {
+  if(dae->dae_title != NULL && dae->dae_title[0] != '\0') {
     if(e->episode->title == NULL ||
        regexec(&dae->dae_title_preg, e->episode->title, 0, NULL, 0))
     return 0;
@@ -183,6 +192,12 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae)
   if(dae->dae_channel_tag != NULL)
     LIST_REMOVE(dae, dae_channel_tag_link);
 
+  if(dae->dae_brand)
+    dae->dae_brand->_.putref((epg_object_t*)dae->dae_brand);
+  if(dae->dae_season)
+    dae->dae_season->_.putref((epg_object_t*)dae->dae_season);
+  
+
   TAILQ_REMOVE(&autorec_entries, dae, dae_link);
   free(dae);
 }
@@ -258,6 +273,11 @@ autorec_record_build(dvr_autorec_entry_t *dae)
   htsmsg_add_str(e, "weekdays", str);
 
   htsmsg_add_str(e, "pri", dvr_val2pri(dae->dae_pri));
+  
+  if (dae->dae_brand)
+    htsmsg_add_str(e, "brand", dae->dae_brand->_.uri);
+  if (dae->dae_season)
+    htsmsg_add_str(e, "season", dae->dae_season->_.uri);
 
   return e;
 }
@@ -386,6 +406,16 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
   if((s = htsmsg_get_str(values, "pri")) != NULL)
     dae->dae_pri = dvr_pri2val(s);
 
+  if((s = htsmsg_get_str(values, "brand")) != NULL) {
+    dae->dae_brand = epg_brand_find_by_uri(s, 0, NULL);
+    if (dae->dae_brand)
+      dae->dae_brand->_.getref((epg_object_t*)dae->dae_brand);
+  }
+  if((s = htsmsg_get_str(values, "season")) != NULL) {
+    dae->dae_season = epg_season_find_by_uri(s, 0, NULL);
+    if (dae->dae_season)
+      dae->dae_season->_.getref((epg_object_t*)dae->dae_season);
+  }
   dvr_autorec_changed(dae);
 
   return autorec_record_build(dae);
@@ -432,19 +462,15 @@ dvr_autorec_init(void)
   dtable_load(autorec_dt);
 }
 
-
-/**
- *
- */
-void
-dvr_autorec_add(const char *config_name,
-                const char *title, const char *channel,
+static void
+_dvr_autorec_add(const char *config_name,
+                const char *title, channel_t *ch,
 		const char *tag, uint8_t content_type,
+    epg_brand_t *brand, epg_season_t *season,
 		const char *creator, const char *comment)
 {
   dvr_autorec_entry_t *dae;
   htsmsg_t *m;
-  channel_t *ch;
   channel_tag_t *ct;
 
   if((dae = autorec_entry_find(NULL, 1)) == NULL)
@@ -454,7 +480,7 @@ dvr_autorec_add(const char *config_name,
   tvh_str_set(&dae->dae_creator, creator);
   tvh_str_set(&dae->dae_comment, comment);
 
-  if(channel != NULL &&  (ch = channel_find_by_name(channel, 0, 0)) != NULL) {
+  if(ch) {
     LIST_INSERT_HEAD(&ch->ch_autorecs, dae, dae_channel_link);
     dae->dae_channel = ch;
   }
@@ -473,6 +499,15 @@ dvr_autorec_add(const char *config_name,
   dae->dae_enabled = 1;
   dae->dae_content_type = content_type;
 
+  if(brand) {
+    dae->dae_brand = brand;
+    brand->_.getref((epg_object_t*)brand);
+  }
+  if(season) {
+    dae->dae_season = season;
+    season->_.getref((epg_object_t*)season);
+  }
+
   m = autorec_record_build(dae);
   hts_settings_save(m, "%s/%s", "autorec", dae->dae_id);
   htsmsg_destroy(m);
@@ -484,6 +519,35 @@ dvr_autorec_add(const char *config_name,
   notify_by_msg("autorec", m);
 
   dvr_autorec_changed(dae);
+}
+
+void
+dvr_autorec_add(const char *config_name,
+                const char *title, const char *channel,
+		const char *tag, uint8_t content_type,
+		const char *creator, const char *comment)
+{
+  channel_t *ch = NULL;
+  if(channel != NULL) ch = channel_find_by_name(channel, 0, 0);
+  _dvr_autorec_add(config_name, title, ch, tag, content_type,
+                   NULL, NULL, creator, comment);
+}
+
+/* TODO: configurable brand/series selection */
+void dvr_autorec_add_series_link 
+  ( const char *dvr_config_name, epg_broadcast_t *event,
+    const char *creator, const char *comment )
+{
+  if (!event || !event->episode) return;
+  _dvr_autorec_add(dvr_config_name, event->episode->title,
+                   event->channel, NULL, 0,
+                   event->episode->brand,
+#ifdef TODO_SEASON_SUPPORT
+                   event->episode->season,
+#else
+                   NULL,
+#endif
+                   creator, comment);
 }
 
 
@@ -501,10 +565,36 @@ dvr_autorec_check_event(epg_broadcast_t *e)
       existingde = dvr_entry_find_by_event_fuzzy(e);
       if (existingde != NULL) {
         tvhlog(LOG_DEBUG, "dvr", "Updating existing DVR entry for %s", e->episode->title);
+// TODO: do we want to do this?
         dvr_entry_update(existingde, e->episode->title, e->start, e->stop);
       } else
         dvr_entry_create_by_autorec(e, dae);
     }
+}
+
+void dvr_autorec_check_brand(epg_brand_t *b)
+{
+#ifdef TODO_BRAND_UPDATED_SUPPORT
+  epg_objet
+  dvr_autorec_entry_t *dae;
+  TAILQ_FOREACH(dae, &autorec_entries, dae_link) {
+    if (dae->dae_brand == b) {
+    }
+  }
+#endif
+// Note: for the most part this will only be relevant should an episode
+//       to which a broadcast is linked suddenly get added to a new brand
+//       this is pretty damn unlikely!
+}
+
+void dvr_autorec_check_season(epg_season_t *s)
+{
+#ifdef TODO_SEASON_SUPPORT
+  TAILQ_FOREACH(dae, &autorec_entries, dae_link) {
+    if (dae->dae_season == s) {
+    }
+  }
+#endif
 }
 
 /**
@@ -513,19 +603,17 @@ dvr_autorec_check_event(epg_broadcast_t *e)
 static void
 dvr_autorec_changed(dvr_autorec_entry_t *dae)
 {
-#if TODO_DVR_AUTOREC
   channel_t *ch;
-  event_t *e;
+  epg_object_t *e;
 
   dvr_autorec_purge_spawns(dae);
 
   RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-    RB_FOREACH(e, &ch->ch_epg_events, e_channel_link) {
-      if(autorec_cmp(dae, e))
-	dvr_entry_create_by_autorec(e, dae);
+    RB_FOREACH(e, &ch->ch_epg_schedule, glink) {
+      if(autorec_cmp(dae, (epg_broadcast_t*)e))
+	      dvr_entry_create_by_autorec((epg_broadcast_t*)e, dae);
     }
   }
-#endif
 }
 
 
