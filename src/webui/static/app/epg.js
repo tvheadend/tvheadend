@@ -1,3 +1,13 @@
+tvheadend.brands = new Ext.data.JsonStore({
+  root: 'entries',
+  // TODO: this is not ALL fields, just those that I'm likely to use here
+  fields: [ 'uri', 'title' ],
+  autoLoad: true,
+  url : 'epgobject',
+  baseParams : { op : 'brandList' }
+});
+// TODO: we might want this to periodically update!
+
 tvheadend.ContentGroupStore = new Ext.data.JsonStore({
     root:'entries',
     fields: [{name: 'name'}],

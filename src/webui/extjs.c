@@ -545,7 +545,6 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_BAD_REQUEST;
   }
 
-  htsmsg_print(out);
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");
@@ -826,6 +825,34 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+}
+
+static int
+extjs_epgobject(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  const char *op = http_arg_get(&hc->hc_req_args, "op");
+  htsmsg_t *out, *array;
+
+  if(op == NULL)
+    return 400;
+
+  if (!strcmp(op, "brandList")) {
+    out   = htsmsg_create_map();
+    pthread_mutex_lock(&global_lock);
+    array = epg_brand_list();
+    pthread_mutex_unlock(&global_lock);
+    htsmsg_add_msg(out, "entries", array);
+
+  } else {
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+
   return 0;
 }
 
@@ -1628,6 +1655,7 @@ extjs_start(void)
   http_path_add("/confignames", NULL, extjs_confignames, ACCESS_WEB_INTERFACE);
   http_path_add("/epg",         NULL, extjs_epg,         ACCESS_WEB_INTERFACE);
   http_path_add("/epgrelated",  NULL, extjs_epgrelated,  ACCESS_WEB_INTERFACE);
+  http_path_add("/epgobject",   NULL, extjs_epgobject,   ACCESS_WEB_INTERFACE);
   http_path_add("/dvr",         NULL, extjs_dvr,         ACCESS_WEB_INTERFACE);
   http_path_add("/dvrlist",     NULL, extjs_dvrlist,     ACCESS_WEB_INTERFACE);
   http_path_add("/ecglist",     NULL, extjs_ecglist,     ACCESS_WEB_INTERFACE);
