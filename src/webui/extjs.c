@@ -881,7 +881,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_UNAUTHORIZED;
   }
 
-  if(!strcmp(op, "recordEvent")) {
+  if(!strcmp(op, "recordEvent") || !strcmp(op, "recordSeries")) {
 
     const char *config_name = http_arg_get(&hc->hc_req_args, "config_name");
 
@@ -904,8 +904,11 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
         tvhlog(LOG_INFO,"dvr","User '%s' has no dvr config with identical name, using default...", hc->hc_username);
     }
 
-    dvr_entry_create_by_event(config_name,
-                              e, hc->hc_representative, NULL, DVR_PRIO_NORMAL);
+    if (!strcmp(op, "recordEvent"))
+      dvr_entry_create_by_event(config_name,
+                                e, hc->hc_representative, NULL, DVR_PRIO_NORMAL);
+    else
+      dvr_autorec_add_series_link(config_name, e, hc->hc_representative, "Created from EPG query");
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);

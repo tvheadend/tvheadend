@@ -70,7 +70,7 @@ tvheadend.epgDetails = function(event) {
 	title: event.title,
 	bodyStyle: 'margin: 5px',
         layout: 'fit',
-        width: 400,
+        width: 500,
         height: 300,
 	constrainHeader: true,
 	buttons: [
@@ -78,20 +78,31 @@ tvheadend.epgDetails = function(event) {
 	    new Ext.Button({
 		handler: recordEvent,
 		text: "Record program"
-	    })
+	    }),
+    new Ext.Button({
+      handler: recordSeries,
+      text: "Record series"
+    })
 	],
 	buttonAlign: 'center',
 	html: content
     });
     win.show();
 
-
     function recordEvent() {
+      record('recordEvent');
+    }
+
+    function recordSeries() {
+      record('recordSeries');
+    }
+
+    function record(op) {
 	Ext.Ajax.request({
 	    url: 'dvr',
 	    params: {
                 eventId: event.id, 
-                op: 'recordEvent', 
+                op: op,
                 config_name: confcombo.getValue()
             },
 
