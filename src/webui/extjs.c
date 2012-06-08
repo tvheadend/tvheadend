@@ -42,7 +42,6 @@
 #include "epggrab.h"
 #include "epg.h"
 #include "iptv_input.h"
-#include "epggrab/xmltv.h"
 
 static void
 extjs_load(htsbuf_queue_t *hq, const char *script)
@@ -507,6 +506,14 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
     pthread_mutex_unlock(&epggrab_mutex);
     htsmsg_add_msg(out, "entries", array);
 
+  /* Channel list */
+  } else if (!strcmp(op, "channelList")) {
+    out = htsmsg_create_map();
+    pthread_mutex_lock(&global_lock);
+    array = epggrab_channel_list();
+    pthread_mutex_unlock(&global_lock);
+    htsmsg_add_msg(out, "entries", array);
+
   /* Save settings */
   } else if (!strcmp(op, "saveSettings") ) {
     int save = 0;
@@ -538,6 +545,7 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_BAD_REQUEST;
   }
 
+  htsmsg_print(out);
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");

@@ -617,6 +617,30 @@ void epggrab_channel_updated ( epggrab_channel_t *ec )
   epggrab_module_channel_save(ec->mod, ec);
 }
 
+// TODO: currently lists ALL channels from ALL active modules
+// TODO: won't work if channels are handled internally within module!
+htsmsg_t *epggrab_channel_list ( void )
+{
+  char name[100];
+  epggrab_module_t *mod;
+  epggrab_channel_t *ec;
+  htsmsg_t *e, *m;
+  m = htsmsg_create_list();
+  LIST_FOREACH(mod, &epggrab_modules, link) {
+    if (mod->enabled && mod->channels) {
+      RB_FOREACH(ec, mod->channels, link) {
+        e = htsmsg_create_map();
+        htsmsg_add_str(e, "module", mod->id);
+        htsmsg_add_str(e, "id",     ec->id);
+        sprintf(name, "%s: %s", mod->name, ec->name);
+        htsmsg_add_str(e, "name", name);
+        htsmsg_add_msg(m, NULL, e);
+      }
+    }
+  }
+  return m;
+}
+
 /* **************************************************************************
  * Configuration
  * *************************************************************************/
@@ -695,12 +719,14 @@ int epggrab_set_module ( epggrab_module_t *mod )
 {
   int save = 0;
   if ( epggrab_module != mod ) {
+    if (epggrab_module) epggrab_enable_module(epggrab_module, 0);
     if (mod) {
       assert(mod->grab);
       assert(mod->trans);
       assert(mod->parse);
     }
     epggrab_module = mod;
+    if (epggrab_module) epggrab_enable_module(epggrab_module, 1);
     save           = 1;
   }
   return save;
