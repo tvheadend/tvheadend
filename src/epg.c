@@ -399,6 +399,21 @@ static epg_object_t *_epg_object_deserialize ( htsmsg_t *m, epg_object_t *eo )
   return eo;
 }
 
+static int _epg_object_set_str
+  ( void *o, char **old, const char *new )
+{
+  epg_object_t *eo = (epg_object_t*)o;
+  int save = 0;
+  if ( !eo || !new ) return 0;
+  if ( !*old || strcmp(*old, new) ) {
+    if ( *old ) free(*old);
+    *old = strdup(new);
+    _epg_object_set_updated(eo);
+    save = 1;
+  }
+  return save;
+}
+
 /* **************************************************************************
  * Brand
  * *************************************************************************/
@@ -453,28 +468,17 @@ epg_brand_t *epg_brand_find_by_id ( uint64_t id )
 
 int epg_brand_set_title ( epg_brand_t *brand, const char *title )
 {
-  int save = 0;
-  if ( !brand || !title ) return 0;
-  if ( !brand->title || strcmp(brand->title, title) ) {
-    if ( brand->title ) free(brand->title);
-    brand->title     = strdup(title);
-    _epg_object_set_updated((epg_object_t*)brand);
-    save = 1;
-  }
-  return save;
+  return _epg_object_set_str(brand, &brand->title, title);
 }
 
 int epg_brand_set_summary ( epg_brand_t *brand, const char *summary )
 {
-  int save = 0;
-  if ( !brand || !summary ) return 0;
-  if ( !brand->summary || strcmp(brand->summary, summary) ) {
-    if ( brand->summary ) free(brand->summary);
-    brand->summary   = strdup(summary);
-    _epg_object_set_updated((epg_object_t*)brand);
-    save = 1;
-  }
-  return save;
+  return _epg_object_set_str(brand, &brand->summary, summary);
+}
+
+int epg_brand_set_image ( epg_brand_t *brand, const char *image )
+{
+  return _epg_object_set_str(brand, &brand->image, image);
 }
 
 int epg_brand_set_season_count ( epg_brand_t *brand, uint16_t count )
@@ -616,15 +620,12 @@ epg_season_t *epg_season_find_by_id ( uint64_t id )
 
 int epg_season_set_summary ( epg_season_t *season, const char *summary )
 {
-  int save = 0;
-  if ( !season || !summary ) return 0;
-  if ( !season->summary || strcmp(season->summary, summary) ) {
-    if ( season->summary ) free(season->summary);
-    season->summary = strdup(summary);
-    _epg_object_set_updated((epg_object_t*)season);
-    save = 1;
-  }
-  return save;
+  return _epg_object_set_str(season, &season->summary, summary);
+}
+
+int epg_season_set_image ( epg_season_t *season, const char *image )
+{
+  return _epg_object_set_str(season, &season->image, image);
 }
 
 int epg_season_set_episode_count ( epg_season_t *season, uint16_t count )
@@ -783,53 +784,27 @@ epg_episode_t *epg_episode_find_by_id ( uint64_t id )
 
 int epg_episode_set_title ( epg_episode_t *episode, const char *title )
 {
-  int save = 0;
-  if ( !episode || !title ) return 0;
-  if ( !episode->title || strcmp(episode->title, title) ) {
-    if ( episode->title ) free(episode->title);
-    episode->title = strdup(title);
-    save = 1;
-  }
-  return save;
+  return _epg_object_set_str(episode, &episode->title, title);
 }
 
 int epg_episode_set_subtitle ( epg_episode_t *episode, const char *subtitle )
 {
-  int save = 0;
-  if ( !episode || !subtitle ) return 0;
-  if ( !episode->subtitle || strcmp(episode->subtitle, subtitle) ) {
-    if ( episode->subtitle ) free(episode->subtitle);
-    episode->subtitle = strdup(subtitle);
-    _epg_object_set_updated((epg_object_t*)episode);
-    save = 1;
-  }
-  return save;
+  return _epg_object_set_str(episode, &episode->subtitle, subtitle);
 }
 
 int epg_episode_set_summary ( epg_episode_t *episode, const char *summary )
 {
-  int save = 0;
-  if ( !episode || !summary ) return 0;
-  if ( !episode->summary || strcmp(episode->summary, summary) ) {
-    if ( episode->summary ) free(episode->summary);
-    episode->summary = strdup(summary);
-    _epg_object_set_updated((epg_object_t*)episode);
-    save = 1;
-  }
-  return save;
+  return _epg_object_set_str(episode, &episode->summary, summary);
 }
 
 int epg_episode_set_description ( epg_episode_t *episode, const char *desc )
 {
-  int save = 0;
-  if ( !episode || !desc ) return 0;
-  if ( !episode->description || strcmp(episode->description, desc) ) {
-    if ( episode->description ) free(episode->description);
-    episode->description = strdup(desc);
-    _epg_object_set_updated((epg_object_t*)episode);
-    save = 1;
-  }
-  return save;
+  return _epg_object_set_str(episode, &episode->description, desc);
+}
+
+int epg_episode_set_image ( epg_episode_t *episode, const char *image )
+{
+  return _epg_object_set_str(episode, &episode->image, image);
 }
 
 int epg_episode_set_number ( epg_episode_t *episode, uint16_t number )
