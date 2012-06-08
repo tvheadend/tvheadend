@@ -53,7 +53,12 @@ static int _pyepg_parse_time ( const char *str, time_t *out )
   return ret;
 }
 
-/* TODO: currently limited to at most 10 services */
+static const uint8_t *_pyepg_parse_genre ( htsmsg_t *tags, int *cnt )
+{
+  // TODO: implement this
+  return NULL;
+}
+
 static int _pyepg_parse_channel ( htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
@@ -66,8 +71,6 @@ static int _pyepg_parse_channel ( htsmsg_t *data, epggrab_stats_t *stats )
   uint16_t sid[10];
   int sid_idx = 0, sname_idx = 0;
   
-  
-
   if ( data == NULL ) return 0;
 
   if ((attr    = htsmsg_get_map(data, "attrib")) == NULL) return 0;
@@ -148,12 +151,12 @@ static int _pyepg_parse_brand ( htsmsg_t *data, epggrab_stats_t *stats )
     save |= epg_brand_set_summary(brand, str);
   }
   
-  /* Set icon */
-#if TODO_ICON_SUPPORT
-  if ((str = htsmsg_xml_get_cdata_str(tags, "icon"))) {
-    save |= epg_brand_set_icon(brand, str);
+  /* Set image */
+  if ((str = htsmsg_xml_get_cdata_str(tags, "image"))) {
+    save |= epg_brand_set_image(brand, str);
+  } else if ((str = htsmsg_xml_get_cdata_str(tags, "thumb"))) {
+    save |= epg_brand_set_image(brand, str);
   }
-#endif
 
   /* Set season count */
   if (htsmsg_xml_get_cdata_u32(tags, "series-count", &u32) == 0) {
@@ -192,22 +195,17 @@ static int _pyepg_parse_season ( htsmsg_t *data, epggrab_stats_t *stats )
     }
   }
 
-  /* Set title */
-#if TODO_EXTRA_METADATA
-  if ((str = htsmsg_xml_get_cdata_str(tags, "title"))) {
-    save |= epg_season_set_title(season, str);
-  } 
-
   /* Set summary */
   if ((str = htsmsg_xml_get_cdata_str(tags, "summary"))) {
     save |= epg_season_set_summary(season, str);
   }
   
-  /* Set icon */
-  if ((str = htsmsg_xml_get_cdata_str(tags, "icon"))) {
-    save |= epg_season_set_icon(season, str);
+  /* Set image */
+  if ((str = htsmsg_xml_get_cdata_str(tags, "image"))) {
+    save |= epg_season_set_image(season, str);
+  } else if ((str = htsmsg_xml_get_cdata_str(tags, "thumb"))) {
+    save |= epg_season_set_image(season, str);
   }
-#endif
 
   /* Set season number */
   if (htsmsg_xml_get_cdata_u32(tags, "number", &u32) == 0) {
@@ -226,13 +224,14 @@ static int _pyepg_parse_season ( htsmsg_t *data, epggrab_stats_t *stats )
 
 static int _pyepg_parse_episode ( htsmsg_t *data, epggrab_stats_t *stats )
 {
-  int save = 0;
+  int genre_cnt, save = 0;
   htsmsg_t *attr, *tags;
   epg_episode_t *episode;
   epg_season_t *season;
   epg_brand_t *brand;
   const char *str;
-  uint32_t u32;
+  uint32_t u32, pc, pn;
+  const uint8_t *genre;
 
   if ( data == NULL ) return 0;
 
@@ -276,15 +275,23 @@ static int _pyepg_parse_episode ( htsmsg_t *data, epggrab_stats_t *stats )
   if (htsmsg_xml_get_cdata_u32(tags, "number", &u32) == 0) {
     save |= epg_episode_set_number(episode, u32);
   }
+  if (!htsmsg_xml_get_cdata_u32(tags, "part-number", &pn)) {
+    pc = 0;
+    htsmsg_xml_get_cdata_u32(tags, "part-count", &pc);
+    save |= epg_episode_set_part(episode, pn, pc);
+  }
+
+  /* Set image */
+  if ((str = htsmsg_xml_get_cdata_str(tags, "image"))) {
+    save |= epg_episode_set_image(episode, str);
+  } else if ((str = htsmsg_xml_get_cdata_str(tags, "thumb"))) {
+    save |= epg_episode_set_image(episode, str);
+  }
 
   /* Genre */
-  // TODO: can actually have multiple!
-#if TODO_GENRE_SUPPORT
-  if ((str = htsmsg_xml_get_cdata_str(tags, "genre"))) {
-    // TODO: conversion?
-    save |= epg_episode_set_genre(episode, str);
+  if ((genre = _pyepg_parse_genre(tags, &genre_cnt))) {
+    save |= epg_episode_set_genre(episode, genre, genre_cnt);
   }
-#endif
 
   /* TODO: extra metadata */
 
