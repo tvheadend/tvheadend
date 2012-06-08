@@ -414,6 +414,7 @@ static void _xmltv_load_grabbers ( epggrab_module_list_t *list )
       mod                      = calloc(1, sizeof(epggrab_module_t));
       mod->id = mod->path      = strdup(&outbuf[p]);
       mod->name                = malloc(200);
+      mod->channels            = &_xmltv_channels;
       sprintf((char*)mod->name, "XMLTV: %s", &outbuf[n]);
       *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_SIMPLE;
       mod->grab                = epggrab_module_grab;

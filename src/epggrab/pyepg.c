@@ -429,6 +429,7 @@ void pyepg_init ( epggrab_module_list_t *list )
   mod->id                  = strdup("pyepg_ext");
   mod->path                = epggrab_module_socket_path("pyepg");
   mod->name                = strdup("PyEPG");
+  mod->channels            = &_pyepg_channels;
   mod->enable              = epggrab_module_enable_socket;
   mod->trans               = epggrab_module_trans_xml;
   mod->parse               = _pyepg_parse;
