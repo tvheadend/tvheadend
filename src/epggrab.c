@@ -604,7 +604,7 @@ void epggrab_channel_link ( epggrab_channel_t *ec )
   if (!ec) return;
 
   /* Link */
-  if (ec->channel) {
+  if (!ec->channel) {
     RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
       if (_ch_link(ec, ch)) break;
     }
