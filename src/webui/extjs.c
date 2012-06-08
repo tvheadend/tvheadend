@@ -414,25 +414,21 @@ static int
 extjs_ecglist(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
-  htsmsg_t *out, *array;//TODO:, *c;
-#if TODO_GENRE
+  htsmsg_t *out, *array, *c;
   const char *s;
   int i;
-#endif
 
   out = htsmsg_create_map();
   array = htsmsg_create_list();
 
-#if TODO_GENRE
   for(i = 0; i < 16; i++) {
-    if((s = epg_content_group_get_name(i)) == NULL)
+    if((s = epg_genre_get_name(i<<4, 0)) == NULL)
       continue;
 
     c = htsmsg_create_map();
     htsmsg_add_str(c, "name", s);
     htsmsg_add_msg(array, NULL, c);
   }
-#endif
 
   htsmsg_add_msg(out, "entries", array);
 
@@ -722,10 +718,9 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(m, "end", e->stop);
     htsmsg_add_u32(m, "duration", e->stop - e->start);
     
-#if TODO_INCLUDE_GENRE_SUPORT
-    if((s = epg_content_group_get_name(e->e_content_type)) != NULL)
-      htsmsg_add_str(m, "contentgrp", s);
-#endif
+    if(ee->genre_cnt)
+      if((s = epg_genre_get_name(ee->genre[0], 0)))
+        htsmsg_add_str(m, "contentgrp", s);
 
     dvr_entry_t *de;
     if((de = dvr_entry_find_by_event(e)) != NULL)
@@ -787,7 +782,6 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
       
       /* Related */
       } else if (!strcmp(type, "related")) {
-        // TODO: broadcasts?
         if (ee->brand) {
           RB_FOREACH(ee2, &ee->brand->episodes, blink) {
             if (ee2 == ee) continue;
@@ -906,7 +900,8 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     if (!strcmp(op, "recordEvent"))
       dvr_entry_create_by_event(config_name,
-                                e, hc->hc_representative, NULL, DVR_PRIO_NORMAL);
+                                e, 0, 0, 
+                                hc->hc_representative, NULL, DVR_PRIO_NORMAL);
     else
       dvr_autorec_add_series_link(config_name, e, hc->hc_representative, "Created from EPG query");
 
@@ -991,25 +986,22 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     }
 
     dvr_entry_create(config_name,
-                     ch, start, stop, title, NULL, hc->hc_representative, 
+                     ch, start, stop, 0, 0, title, NULL, 0,
+                     hc->hc_representative, 
 		                 NULL, dvr_pri2val(pri));
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
 
   } else if(!strcmp(op, "createAutoRec")) {
-#if TODO_DVR_AUTOREC
     const char *cgrp = http_arg_get(&hc->hc_req_args, "contentgrp");
-
-    
 
     dvr_autorec_add(http_arg_get(&hc->hc_req_args, "config_name"),
                     http_arg_get(&hc->hc_req_args, "title"),
 		    http_arg_get(&hc->hc_req_args, "channel"),
 		    http_arg_get(&hc->hc_req_args, "tag"),
-		    cgrp ? epg_content_group_find_by_name(cgrp) : 0,
+		    cgrp ? epg_genre_find_by_name(cgrp) : 0,
 		    hc->hc_representative, "Created from EPG query");
-#endif
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
@@ -1128,6 +1120,7 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
   int start = 0, end, limit, i;
   const char *s;
   off_t fsize;
+  char buf[100];
 
   if((s = http_arg_get(&hc->hc_req_args, "start")) != NULL)
     start = atoi(s);
@@ -1176,10 +1169,9 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
     if(de->de_desc != NULL)
       htsmsg_add_str(m, "description", de->de_desc);
 
-#if TODO_DVR
-    if(de->de_episode.onscreen)
-      htsmsg_add_str(m, "episode", de->de_episode.onscreen);
-#endif
+    if (de->de_bcast && de->de_bcast->episode)
+      if (epg_episode_number_format(de->de_bcast->episode, buf, 100, NULL, "Season %d", ".", "Episode %d", "/%d"))
+        htsmsg_add_str(m, "episode", buf);
 
     htsmsg_add_u32(m, "id", de->de_id);
     htsmsg_add_u32(m, "start", de->de_start);

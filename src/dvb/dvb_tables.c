@@ -545,7 +545,7 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       case DVB_DESC_CONTENT:
       	if(dlen >= 2) {
           if (genre_idx < 10)
-            genre[genre_idx++] = (*ptr) >> 4;
+            genre[genre_idx++] = (*ptr);
 	      }
 	      break;
       case DVB_DESC_EXT_EVENT:

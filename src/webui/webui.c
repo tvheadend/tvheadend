@@ -185,9 +185,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
 
       if(e && event_id != e->_.id) {
 	event_id = e->_.id;
-#if TODO_EVENT
 	run = !mk_mux_append_meta(mkm, e);
-#endif
       }
       break;
     }
