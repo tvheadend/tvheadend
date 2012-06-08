@@ -16,13 +16,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * TODO LIST:
- *
- *   URI in the objects limits us to single grabber, might want something
- *   more flexible to try and merge grabbers? Is that feasible?
- */
-
 #ifndef EPG_H
 #define EPG_H
 
@@ -107,6 +100,7 @@ struct epg_brand
   char                      *title;        ///< Brand name
   char                      *summary;      ///< Brand summary
   uint16_t                   season_count; ///< Total number of seasons
+  char                      *image;        ///< Brand image
 
   epg_season_tree_t          seasons;      ///< Season list
   epg_episode_tree_t         episodes;     ///< Episode list
@@ -123,6 +117,8 @@ int epg_brand_set_title        ( epg_brand_t *b, const char *title )
 int epg_brand_set_summary      ( epg_brand_t *b, const char *summary )
   __attribute__((warn_unused_result));
 int epg_brand_set_season_count ( epg_brand_t *b, uint16_t season_count )
+  __attribute__((warn_unused_result));
+int epg_brand_set_image        ( epg_brand_t *b, const char *i )
   __attribute__((warn_unused_result));
 
 /* Serialization */
@@ -144,6 +140,7 @@ struct epg_season
   char                      *summary;       ///< Season summary
   uint16_t                   number;        ///< The season number
   uint16_t                   episode_count; ///< Total number of episodes
+  char                      *image;         ///< Season image
 
   RB_ENTRY(epg_season)       blink;         ///< Brand list link
   epg_brand_t               *brand;         ///< Parent brand
@@ -164,6 +161,8 @@ int epg_season_set_number        ( epg_season_t *s, uint16_t number )
 int epg_season_set_episode_count ( epg_season_t *s, uint16_t episode_count )
   __attribute__((warn_unused_result));
 int epg_season_set_brand         ( epg_season_t *s, epg_brand_t *b, int u )
+  __attribute__((warn_unused_result));
+int epg_season_set_image         ( epg_season_t *s, const char *image )
   __attribute__((warn_unused_result));
 
 /* Serialization */
@@ -188,6 +187,7 @@ struct epg_episode
   uint16_t                   number;        ///< The episode number
   uint16_t                   part_number;   ///< For multipart episodes
   uint16_t                   part_count;    ///< For multipart episodes
+  char                      *image;         ///< Episode image
 
   RB_ENTRY(epg_episode)      blink;         ///< Brand link
   RB_ENTRY(epg_episode)      slink;         ///< Season link
@@ -225,6 +225,8 @@ int epg_episode_set_season       ( epg_episode_t *e, epg_season_t *s )
 int epg_episode_set_genre        ( epg_episode_t *e, const uint8_t *g, int c )
   __attribute__((warn_unused_result));
 int epg_episode_set_genre_str    ( epg_episode_t *e, const char **s )
+  __attribute__((warn_unused_result));
+int epg_episode_set_image        ( epg_episode_t *e, const char *i )
   __attribute__((warn_unused_result));
 
 /* EpNum format helper */
