@@ -79,15 +79,19 @@ struct epg_object
   RB_ENTRY(epg_object)    glink;     ///< Global (URI) list link
   LIST_ENTRY(epg_object)  hlink;     ///< Global (ID) hash link
   LIST_ENTRY(epg_object)  ulink;     ///< Global unref'd link
+  LIST_ENTRY(epg_object)  uplink;    ///< Global updated link
 
   epg_object_type_t       type;      ///< Specific object type
   uint64_t                id;        ///< Internal ID
   char                   *uri;       ///< Unique ID (from grabber)
   int                     refcount;  ///< Reference counting
+  int                     _updated;  ///< Flag to indicate updated
+  // Note: could use LIST_ENTRY field to determine this!
 
   void (*getref)  ( epg_object_t* ); ///< Get a reference
   void (*putref)  ( epg_object_t* ); ///< Release a reference
   void (*destroy) ( epg_object_t* ); ///< Delete the object
+  void (*updated) ( epg_object_t* ); ///< Updated
 };
 
 
@@ -125,6 +129,9 @@ int epg_brand_set_season_count ( epg_brand_t *b, uint16_t season_count )
 /* Serialization */
 htsmsg_t    *epg_brand_serialize   ( epg_brand_t *b );
 epg_brand_t *epg_brand_deserialize ( htsmsg_t *m, int create, int *save );
+
+/* List all brands (serialized) */
+htsmsg_t    *epg_brand_list ( void );
 
 /* ************************************************************************
  * Season
