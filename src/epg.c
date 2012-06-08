@@ -898,6 +898,49 @@ int epg_episode_set_season ( epg_episode_t *episode, epg_season_t *season )
   return save;
 }
 
+int epg_episode_set_genre ( epg_episode_t *ee, const uint8_t *genre, int cnt )
+{
+  int i, save = 0;
+  if (!ee || !genre || !cnt) return 0;
+  if (cnt != ee->genre_cnt)
+    save = 1;
+  else {
+    for (i = 0; i < cnt; i++ ) {
+      if (genre[i] != ee->genre[i]) {
+        save = 1;
+        break;
+      }
+    }
+  }
+  if (save) {
+    if (cnt > ee->genre_cnt)
+      ee->genre     = realloc(ee->genre, cnt * sizeof(uint8_t));
+    memcpy(ee->genre, genre, cnt * sizeof(uint8_t));
+    ee->genre_cnt = cnt;
+  }
+  return save;
+}
+
+// Note: only works for the EN 300 468 defined names
+int epg_episode_set_genre_str ( epg_episode_t *ee, const char **gstr )
+{
+  static int gcnt = 0;
+  static uint8_t *genre;
+  int cnt = 0;
+  while (gstr[cnt]) cnt++;
+  if (!cnt) return 0;
+  if (cnt > gcnt) {
+    genre = realloc(genre, sizeof(uint8_t) * cnt);
+    gcnt  = cnt;
+  }
+  cnt = 0;
+  while (gstr[cnt]) {
+    genre[cnt] = epg_genre_find_by_name(gstr[cnt]);
+    cnt++;
+  }
+  return epg_episode_set_genre(ee, genre, gcnt);
+}
+
 static void _epg_episode_add_broadcast 
   ( epg_episode_t *episode, epg_broadcast_t *broadcast )
 {
@@ -1279,6 +1322,201 @@ epg_broadcast_t *epg_broadcast_deserialize
   *save |= epg_broadcast_set_episode(ret, ee);
 
   return ret;
+}
+
+/* **************************************************************************
+ * Genre
+ * *************************************************************************/
+
+// FULL(ish) list from EN 300 468, I've excluded the last category
+// that relates more to broadcast content than what I call a "genre"
+// these will be handled elsewhere as broadcast metadata
+static const char *_epg_genre_names[16][16] = {
+  {},
+  {
+    "Movie/Drama",
+    "detective/thriller",
+    "adventure/western/war",
+    "science fiction/fantasy/horror",
+    "comedy",
+    "soap/melodrama/folkloric",
+    "romance",
+    "serious/classical/religious/historical movie/drama",
+    "adult movie/drama",
+    "adult movie/drama",
+    "adult movie/drama",
+    "adult movie/drama",
+    "adult movie/drama",
+    "adult movie/drama",
+  },
+  {
+    "News/Current affairs",
+    "news/weather report",
+    "news magazine",
+    "documentary",
+    "discussion/interview/debate",
+    "discussion/interview/debate",
+    "discussion/interview/debate",
+    "discussion/interview/debate",
+    "discussion/interview/debate",
+    "discussion/interview/debate",
+    "discussion/interview/debate",
+    "discussion/interview/debate",
+    "discussion/interview/debate",
+    "discussion/interview/debate",
+  },
+  {
+    "Show/Game show",
+    "game show/quiz/contest",
+    "variety show",
+    "talk show",
+    "talk show",
+    "talk show",
+    "talk show",
+    "talk show",
+    "talk show",
+    "talk show",
+    "talk show",
+    "talk show",
+    "talk show",
+    "talk show",
+  },
+  {
+    "Sports",
+    "special events (Olympic Games, World Cup, etc.)",
+    "sports magazines",
+    "football/soccer",
+    "tennis/squash",
+    "team sports (excluding football)",
+    "athletics",
+    "motor sport",
+    "water sport",
+  },
+  {
+    "Children's/Youth programmes",
+    "pre-school children's programmes",
+    "entertainment programmes for 6 to14",
+    "entertainment programmes for 10 to 16",
+    "informational/educational/school programmes",
+    "cartoons/puppets",
+    "cartoons/puppets",
+    "cartoons/puppets",
+    "cartoons/puppets",
+    "cartoons/puppets",
+    "cartoons/puppets",
+    "cartoons/puppets",
+    "cartoons/puppets",
+    "cartoons/puppets",
+  },
+  {
+    "Music/Ballet/Dance",
+    "rock/pop",
+    "serious music/classical music",
+    "folk/traditional music",
+    "jazz",
+    "musical/opera",
+    "musical/opera",
+    "musical/opera",
+    "musical/opera",
+    "musical/opera",
+    "musical/opera",
+    "musical/opera",
+    "musical/opera",
+  },
+  {
+    "Arts/Culture (without music)",
+    "performing arts",
+    "fine arts",
+    "religion",
+    "popular culture/traditional arts",
+    "literature",
+    "film/cinema",
+    "experimental film/video",
+    "broadcasting/press",
+  },
+  {
+    "Social/Political issues/Economics",
+    "magazines/reports/documentary",
+    "economics/social advisory",
+    "remarkable people",
+    "remarkable people",
+    "remarkable people",
+    "remarkable people",
+    "remarkable people",
+    "remarkable people",
+    "remarkable people",
+    "remarkable people",
+    "remarkable people",
+    "remarkable people",
+    "remarkable people",
+  },
+  {
+    "Education/Science/Factual topics",
+    "nature/animals/environment",
+    "technology/natural sciences",
+    "medicine/physiology/psychology",
+    "foreign countries/expeditions",
+    "social/spiritual sciences",
+    "further education",
+    "languages",
+    "languages",
+    "languages",
+    "languages",
+    "languages",
+    "languages",
+    "languages",
+  },
+  {
+    "Leisure hobbies",
+    "tourism/travel",
+    "handicraft",
+    "motoring",
+    "fitness and health",
+    "cooking",
+    "advertisement/shopping",
+    "gardening",
+    "gardening",
+    "gardening",
+    "gardening",
+    "gardening",
+    "gardening",
+    "gardening",
+  }
+};
+
+// match strings, ignoring case and whitespace
+// Note: | 0x20 is a cheats (fast) way of lowering case
+static int _genre_str_match ( const char *a, const char *b )
+{
+  int i = 0, j = 0;
+  if (!a || !b) return 0;
+  while (a[i] != '\0' || b[j] != '\0') {
+    while (a[i] == ' ') i++;
+    while (b[j] == ' ') j++;
+    if ((a[i] | 0x20) != (b[j] | 0x20)) return 0;
+    i++; j++;
+  }
+  return (a[i] == '\0' && b[j] == '\0'); // end of string(both)
+}
+
+uint8_t epg_genre_find_by_name ( const char *name )
+{
+  uint8_t a, b;
+  for ( a = 1; a < 11; a++ ) {
+    for ( b = 0; b < 16; b++ ) {
+      if (_genre_str_match(name, _epg_genre_names[a][b]))
+        return (a | (b << 4));
+    }
+  }
+  return 0; // undefined
+}
+
+const char *epg_genre_get_name ( uint8_t genre, int full )
+{
+  int a, b = 0;
+  a = genre & 0xF;
+  if (full) b = (genre >> 4) & 0xF;
+  return _epg_genre_names[a][b];
 }
 
 /* **************************************************************************

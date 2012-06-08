@@ -94,7 +94,6 @@ struct epg_object
   void (*updated) ( epg_object_t* ); ///< Updated
 };
 
-
 /* ************************************************************************
  * Brand - Represents a specific show
  * e.g. The Simpsons, 24, Eastenders, etc...
@@ -184,7 +183,8 @@ struct epg_episode
   char                      *subtitle;      ///< Sub-title
   char                      *summary;       ///< Summary
   char                      *description;   ///< An extended description
-  uint8_t                    genre;         ///< Episode genre
+  uint8_t                   *genre;         ///< Episode genre(s)
+  int                        genre_cnt;     ///< Genre count
   uint16_t                   number;        ///< The episode number
   uint16_t                   part_number;   ///< For multipart episodes
   uint16_t                   part_count;    ///< For multipart episodes
@@ -222,9 +222,9 @@ int epg_episode_set_brand        ( epg_episode_t *e, epg_brand_t *b )
   __attribute__((warn_unused_result));
 int epg_episode_set_season       ( epg_episode_t *e, epg_season_t *s )
   __attribute__((warn_unused_result));
-int epg_episode_set_genre        ( epg_episode_t *e, uint8_t g )
+int epg_episode_set_genre        ( epg_episode_t *e, const uint8_t *g, int c )
   __attribute__((warn_unused_result));
-int epg_episode_set_genre_str    ( epg_episode_t *e, const char *s )
+int epg_episode_set_genre_str    ( epg_episode_t *e, const char **s )
   __attribute__((warn_unused_result));
 
 /* EpNum format helper */
@@ -314,6 +314,13 @@ epg_broadcast_t *epg_channel_get_broadcast
 void epg_channel_unlink ( struct channel *ch );
 
 /* ************************************************************************
+ * Genre
+ * ***********************************************************************/
+
+uint8_t     epg_genre_find_by_name ( const char *name );
+const char *epg_genre_get_name     ( uint8_t genre, int full );
+
+/* ************************************************************************
  * Querying
  * ***********************************************************************/
 
@@ -347,50 +354,4 @@ void epg_init    (void);
 void epg_save    (void);
 void epg_updated (void);
 
-/* ************************************************************************
- * Compatibility code
- * ***********************************************************************/
-
-//#define TODO_EPG_COMPAT
-#ifdef TODO_EPG_COMPAT
-
-typedef struct _epg_episode {
-
-  uint16_t ee_season;
-  uint16_t ee_episode;
-  uint16_t ee_part;
-
-  char *ee_onscreen;
-} _epg_episode_t;
-
-
-/*
- * EPG event
- */
-typedef struct event {
-  LIST_ENTRY(event) e_global_link;
-
-  struct channel *e_channel;
-  RB_ENTRY(event) e_channel_link;
-
-  int e_refcount;
-  uint32_t e_id;
-
-  uint8_t e_content_type;
-
-  time_t e_start;  /* UTC time */
-  time_t e_stop;   /* UTC time */
-
-  char *e_title;   /* UTF-8 encoded */
-  char *e_desc;    /* UTF-8 encoded */
-  char *e_ext_desc;/* UTF-8 encoded (from extended descriptor) */
-  char *e_ext_item;/* UTF-8 encoded (from extended descriptor) */
-  char *e_ext_text;/* UTF-8 encoded (from extended descriptor) */
-
-  int e_dvb_id;
-
-  _epg_episode_t e_episode;
-
-} event_t;
-#endif
 #endif /* EPG_H */
