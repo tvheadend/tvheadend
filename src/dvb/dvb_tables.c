@@ -509,6 +509,8 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   char extdesc[5000];
   char extitem[5000];
   char exttext[5000];
+  uint8_t genre[10]; // max 10 genres
+  int genre_idx = 0;
 
   lock_assert(&global_lock);
 
@@ -546,10 +548,8 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   if(t == NULL || !t->s_enabled || (ch = t->s_ch) == NULL)
     return 0;
 
-#ifdef TODO_REENABLE_THIS
   if(!t->s_dvb_eit_enable)
     return 0;
-#endif
 
   while(len >= 12) {
     ok                        = 1;
@@ -585,11 +585,10 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	      break;
 
       case DVB_DESC_CONTENT:
-#ifdef TODO_GENRE_SUPPORT
       	if(dlen >= 2) {
-          genre = (*ptr) >> 4;
+          if (genre_idx < 10)
+            genre[genre_idx++] = (*ptr) >> 4;
 	      }
-#endif
 	      break;
       case DVB_DESC_EXT_EVENT:
         if(dvb_desc_extended_event(ptr, dlen,
@@ -608,7 +607,8 @@ dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     /* Pass to EIT handler */
     if (ok)
       eit_callback(ch, event_id, start_time, stop_time,
-                   title, desc, extitem, extdesc, exttext);
+                   title, desc, extitem, extdesc, exttext,
+                   genre, genre_idx);
   }
   return 0;
 }
