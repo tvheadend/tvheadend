@@ -92,11 +92,16 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
       return 0;
   }
 
-#if TODO_GENRE_SUPPORT
-  if(dae->dae_content_type != 0 &&
-     dae->dae_content_type != e->e_content_type)
-    return 0;
-#endif
+  if(dae->dae_content_type != 0) {
+    int i, ok = 0;
+    for (i = 0; i < e->episode->genre_cnt; i++) {
+      if (e->episode->genre[i] == dae->dae_content_type) {
+        ok = 1;
+        break;
+      }
+    }
+    if (!ok) return 0;
+  }
 
   if(dae->dae_brand)
     if (!e->episode->brand || dae->dae_brand != e->episode->brand) return 0;
@@ -529,11 +534,7 @@ void dvr_autorec_add_series_link
   _dvr_autorec_add(dvr_config_name, event->episode->title,
                    event->channel, NULL, 0,
                    event->episode->brand,
-#ifdef TODO_SEASON_SUPPORT
                    event->episode->season,
-#else
-                   NULL,
-#endif
                    creator, comment);
 }
 
@@ -550,37 +551,27 @@ dvr_autorec_check_event(epg_broadcast_t *e)
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
     if(autorec_cmp(dae, e)) {
       existingde = dvr_entry_find_by_event_fuzzy(e);
-      if (existingde != NULL) {
-        tvhlog(LOG_DEBUG, "dvr", "Updating existing DVR entry for %s", e->episode->title);
-// TODO: do we want to do this?
-        dvr_entry_update(existingde, e->episode->title, e->start, e->stop);
-      } else
+      if (existingde == NULL)
         dvr_entry_create_by_autorec(e, dae);
     }
+  // Note: no longer updating event here as it will be done from EPG
+  //       anyway
 }
 
 void dvr_autorec_check_brand(epg_brand_t *b)
 {
 #ifdef TODO_BRAND_UPDATED_SUPPORT
-  epg_objet
-  dvr_autorec_entry_t *dae;
-  TAILQ_FOREACH(dae, &autorec_entries, dae_link) {
-    if (dae->dae_brand == b) {
-    }
-  }
-#endif
 // Note: for the most part this will only be relevant should an episode
 //       to which a broadcast is linked suddenly get added to a new brand
 //       this is pretty damn unlikely!
+#endif
 }
 
 void dvr_autorec_check_season(epg_season_t *s)
 {
 #ifdef TODO_SEASON_SUPPORT
-  TAILQ_FOREACH(dae, &autorec_entries, dae_link) {
-    if (dae->dae_season == s) {
-    }
-  }
+// Note: I guess new episodes might have been added, but again its likely
+//       this will already have been picked up by the check_event call
 #endif
 }
 

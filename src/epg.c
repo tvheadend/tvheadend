@@ -1174,6 +1174,7 @@ static void _epg_broadcast_destroy ( epg_object_t *eo )
 
 static void _epg_broadcast_updated ( epg_object_t *eo )
 {
+  dvr_event_updated((epg_broadcast_t*)eo);
   dvr_autorec_check_event((epg_broadcast_t*)eo);
 }
 
@@ -1480,7 +1481,7 @@ uint8_t epg_genre_find_by_name ( const char *name )
   for ( a = 1; a < 11; a++ ) {
     for ( b = 0; b < 16; b++ ) {
       if (_genre_str_match(name, _epg_genre_names[a][b]))
-        return (a | (b << 4));
+        return (a << 4) | b;
     }
   }
   return 0; // undefined
@@ -1489,8 +1490,8 @@ uint8_t epg_genre_find_by_name ( const char *name )
 const char *epg_genre_get_name ( uint8_t genre, int full )
 {
   int a, b = 0;
-  a = genre & 0xF;
-  if (full) b = (genre >> 4) & 0xF;
+  a = (genre >> 4) & 0xF;
+  if (full) b = (genre & 0xF);
   return _epg_genre_names[a][b];
 }
 
@@ -1504,9 +1505,7 @@ static void _eqr_add
 {
   /* Ignore */
   if ( e->stop < start ) return;
-#if TODO_GENRE_SUPPORT
-  if ( genre && e->genre != genre ) return;
-#endif
+  if ( genre && e->episode->genre_cnt && e->episode->genre[0] != genre ) return;
   if ( !e->episode->title ) return;
   if ( preg && regexec(preg, e->episode->title, 0, NULL, 0) ) return;
 
@@ -1580,10 +1579,8 @@ void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
 {
   channel_t     *ch = channel ? channel_find_by_name(channel, 0, 0) : NULL;
   channel_tag_t *ct = tag     ? channel_tag_find_by_name(tag, 0)    : NULL;
-#if TODO_GENRE_SUPPORT
-  uint8_t        ge = genre   ? epg_content_group_find_by_name(genre) : 0;
-#endif
-  epg_query0(eqr, ch, ct, 0, title);
+  uint8_t        ge = genre   ? epg_genre_find_by_name(genre) : 0;
+  epg_query0(eqr, ch, ct, ge, title);
 }
 
 void epg_query_free(epg_query_result_t *eqr)

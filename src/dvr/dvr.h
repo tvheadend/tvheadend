@@ -121,6 +121,7 @@ typedef struct dvr_entry {
   char *de_ititle;     /* Internal title optionally with channelname
 			  date and time pre/post/fixed */
   char *de_desc;       /* Description in UTF-8 (from EPG) */
+  uint8_t de_content_type; /* Content type (from EPG) */
 
   dvr_prio_t de_pri;
 
@@ -190,8 +191,6 @@ typedef struct dvr_autorec_entry {
   char *dae_creator;
   char *dae_comment;
 
-// TODO: EPG linking for proper series recording
-
   char *dae_title;
   regex_t dae_title_preg;
   
@@ -238,13 +237,17 @@ const char *dvr_entry_schedstatus(dvr_entry_t *de);
 void dvr_entry_create_by_autorec(epg_broadcast_t *e, dvr_autorec_entry_t *dae);
 
 dvr_entry_t *dvr_entry_create_by_event(const char *dvr_config_name,
-                                       epg_broadcast_t *e, const char *creator,
+                                       epg_broadcast_t *e, 
+                time_t start_extra, time_t stop_extra,
+                const char *creator,
 				       dvr_autorec_entry_t *dae,
 				       dvr_prio_t pri);
 
 dvr_entry_t *dvr_entry_create(const char *dvr_config_name,
                               channel_t *ch, time_t start, time_t stop, 
+            time_t start_extra, time_t stop_extra,
 			      const char *title, const char *description,
+            uint8_t content_type,
 			      const char *creator, dvr_autorec_entry_t *dae,
 			      dvr_prio_t pri);
 
@@ -261,6 +264,8 @@ void dvr_rec_subscribe(dvr_entry_t *de);
 void dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode);
 
 void dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e);
+
+void dvr_event_updated(epg_broadcast_t *e);
 
 dvr_entry_t *dvr_entry_find_by_id(int id);
 

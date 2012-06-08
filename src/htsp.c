@@ -523,13 +523,15 @@ htsp_method_getTicket(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t * 
 htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
-#if TODO_DVR
   htsmsg_t *out;
   uint32_t eventid;
-  event_t *e;
+  epg_broadcast_t *e;
   dvr_entry_t *de;
   dvr_entry_sched_state_t dvr_status;
   const char *dvr_config_name;
+  time_t start_extra = 0, stop_extra = 0;
+  uint32_t u32;
+  channel_t *ch = NULL;
 
   if((dvr_config_name = htsmsg_get_str(in, "configName")) == NULL)
     dvr_config_name = "";
@@ -537,26 +539,31 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsmsg_get_u32(in, "eventId", &eventid))
     eventid = -1;
 
-  if ((e = epg_event_find_by_id(eventid)) == NULL)
+  if(!htsmsg_get_u32(in, "startExtra", &u32))
+    start_extra = u32;
+  if(!htsmsg_get_u32(in, "stopExtra", &u32))
+    stop_extra = u32;
+  if(!htsmsg_get_u32(in, "channelId", &u32))
+    ch = channel_find_by_identifier(u32);
+
+  if ((e = epg_broadcast_find_by_id(eventid, ch)) == NULL)
   {
-    uint32_t iChannelId, iStartTime, iStopTime, iPriority;
-    channel_t *channel;
+    uint32_t iStartTime, iStopTime, iPriority;
     const char *strTitle = NULL, *strDescription = NULL, *strCreator = NULL;
 
+    // no event, must have a channel
+    if (!ch)
+      return htsp_error("Channel does not exist");
+
     // no event found with this event id.
-    // check if there is at least a start time, stop time, channel id and title set
-    if (htsmsg_get_u32(in, "channelId", &iChannelId) ||
-        htsmsg_get_u32(in, "start", &iStartTime) ||
+    // check if there is at least a start time, stop time and title set
+    if (htsmsg_get_u32(in, "start", &iStartTime) ||
         htsmsg_get_u32(in, "stop", &iStopTime) ||
         (strTitle = htsmsg_get_str(in, "title")) == NULL)
     {
       // not enough info available to create a new entry
       return htsp_error("Invalid arguments");
     }
-
-    // invalid channel
-    if ((channel = channel_find_by_identifier(iChannelId)) == NULL)
-      return htsp_error("Channel does not exist");
 
     // get the optional attributes
     if (htsmsg_get_u32(in, "priority", &iPriority))
@@ -569,12 +576,12 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
       strCreator = htsp->htsp_username ? htsp->htsp_username : "anonymous";
 
     // create the dvr entry
-    de = dvr_entry_create(dvr_config_name, channel, iStartTime, iStopTime, strTitle, strDescription, strCreator, NULL, NULL, 0, iPriority);
+    de = dvr_entry_create(dvr_config_name, ch, iStartTime, iStopTime, start_extra, stop_extra, strTitle, strDescription, 0, strCreator, NULL, iPriority);
   }
   else
   {
     //create the dvr entry
-    de = dvr_entry_create_by_event(dvr_config_name,e,
+    de = dvr_entry_create_by_event(dvr_config_name,e, start_extra, stop_extra,
                                    htsp->htsp_username ?
                                    htsp->htsp_username : "anonymous",
                                    NULL, DVR_PRIO_NORMAL);
@@ -599,8 +606,6 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     break;
   }
   return out;
-#endif
-  return NULL;
 }
 
 /**
@@ -745,9 +750,7 @@ htsp_build_event(epg_broadcast_t *e)
 {
   htsmsg_t *out;
   epg_broadcast_t *n;
-#if TODO_DVR
   dvr_entry_t *de;
-#endif
 
   out = htsmsg_create_map();
 
@@ -761,23 +764,14 @@ htsp_build_event(epg_broadcast_t *e)
     htsmsg_add_str(out, "description", e->episode->description);
   else if(e->episode->summary != NULL)
     htsmsg_add_str(out, "description", e->episode->summary);
-#if TODO_REMOVE_THESE
-  if(e->e_ext_desc != NULL)
-    htsmsg_add_str(out, "ext_desc", e->e_ext_desc);
-  if(e->e_ext_item != NULL)
-    htsmsg_add_str(out, "ext_item", e->e_ext_item);
-  if(e->e_ext_text != NULL)
-    htsmsg_add_str(out, "ext_text", e->e_ext_text);
-#endif
 
-  if(e->episode->genre)
-    htsmsg_add_u32(out, "contentType", e->episode->genre);
+  // TODO: only supports one entry!
+  if(e->episode->genre_cnt)
+    htsmsg_add_u32(out, "contentType", e->episode->genre[0]);
 
-#if TODO_DVR
   if((de = dvr_entry_find_by_event(e)) != NULL) {
     htsmsg_add_u32(out, "dvrId", de->de_id);
   }
-#endif
 
   n = epg_broadcast_get_next(e);
   if(n != NULL)

@@ -213,6 +213,8 @@ pvr_generate_filename(dvr_entry_t *de)
     free(chname);
   }
 
+  // TODO: per-brand, per-season
+
   /* Append per-title directory */
 
   if(cfg->dvr_flags & DVR_DIR_PER_TITLE) {
@@ -533,6 +535,7 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
   fmap['e'] = tvh_strdupa(streaming_code2txt(de->de_last_error));
   fmap['S'] = start; /* start time, unix epoch */
   fmap['E'] = stop; /* stop time, unix epoch */
+  // TODO: brand, season
 
   /* format arguments */
   for(i = 0; args[i]; i++) {
