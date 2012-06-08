@@ -37,7 +37,8 @@ static void _eit_episode_uri
 void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
                     const char *title, const char *desc,
                     const char *extitem, const char *extdesc,
-                    const char *exttext ) {
+                    const char *exttext,
+                    const uint8_t *genre, int genre_cnt ) {
   int save = 0;
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
@@ -76,6 +77,8 @@ void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
       save |= epg_episode_set_summary(ee, summary);
     if (description)
       save |= epg_episode_set_description(ee, description);
+    if (genre_cnt)
+      save |= epg_episode_set_genre(ee, genre, genre_cnt);
 
     /* Update */
     save |= epg_broadcast_set_episode(ebc, ee);
