@@ -53,12 +53,20 @@ static int _pyepg_parse_time ( const char *str, time_t *out )
   return ret;
 }
 
+/* TODO: currently limited to at most 10 services */
 static int _pyepg_parse_channel ( htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
-  htsmsg_t *attr, *tags;
-  const char *str;
   epggrab_channel_t *ch;
+  htsmsg_t *attr, *tags, *e;
+  htsmsg_field_t *f;
+  const char *str;
+  uint32_t u32;
+  const char *sname[11];
+  uint16_t sid[10];
+  int sid_idx = 0, sname_idx = 0;
+  
+  
 
   if ( data == NULL ) return 0;
 
@@ -74,7 +82,33 @@ static int _pyepg_parse_channel ( htsmsg_t *data, epggrab_stats_t *stats )
     save |= epggrab_channel_set_name(ch, str);
   if ((str = htsmsg_xml_get_cdata_str(tags, "image")))
     save |= epggrab_channel_set_icon(ch, str);
-  // TODO: extra metadata
+  if ((!htsmsg_xml_get_cdata_u32(tags, "number", &u32)))
+    save |= epggrab_channel_set_number(ch, u32);
+  
+  HTSMSG_FOREACH(f, tags) {
+    if (!strcmp(f->hmf_name, "sid")) {
+      if (sid_idx < 10) {
+        e = htsmsg_get_map_by_field(f);
+        if (!htsmsg_get_u32(e, "cdata", &u32)) {
+          sid[sid_idx] = (uint16_t)u32;
+          sid_idx++;
+        }
+      }
+    } else if (!strcmp(f->hmf_name, "sname")) {
+      if (sname_idx < 10) {
+        e = htsmsg_get_map_by_field(f);
+        if ((str = htsmsg_get_str(e, "cdata"))) {
+          sname[sname_idx] = str;
+          sname_idx++;
+        }
+      }
+    }
+  }
+  if (sid_idx)   save |= epggrab_channel_set_sid(ch, sid, sid_idx);
+  if (sname_idx) {
+    sname[sname_idx] = NULL;
+    save |= epggrab_channel_set_sname(ch, sname);
+  }
 
   /* Update */
   if (save) {

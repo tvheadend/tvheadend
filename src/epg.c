@@ -91,7 +91,7 @@ static int _epg_write ( int fd, htsmsg_t *m )
     ret = 0;
   }
   if(ret) {
-    tvhlog(LOG_DEBUG, "epg", "failed to store epg to disk");
+    tvhlog(LOG_ERR, "epg", "failed to store epg to disk");
     close(fd);
     hts_settings_remove("epgdb");
   }
@@ -139,11 +139,11 @@ void epg_save ( void )
   }
 
   /* Stats */
-  tvhlog(LOG_DEBUG, "epg", "database saved");
-  tvhlog(LOG_DEBUG, "epg", "  brands     %d", stats.brands.total);
-  tvhlog(LOG_DEBUG, "epg", "  seasons    %d", stats.seasons.total);
-  tvhlog(LOG_DEBUG, "epg", "  episodes   %d", stats.episodes.total);
-  tvhlog(LOG_DEBUG, "epg", "  broadcasts %d", stats.broadcasts.total);
+  tvhlog(LOG_INFO, "epg", "database saved");
+  tvhlog(LOG_INFO, "epg", "  brands     %d", stats.brands.total);
+  tvhlog(LOG_INFO, "epg", "  seasons    %d", stats.seasons.total);
+  tvhlog(LOG_INFO, "epg", "  episodes   %d", stats.episodes.total);
+  tvhlog(LOG_INFO, "epg", "  broadcasts %d", stats.broadcasts.total);
 }
 
 void epg_init ( void )
@@ -233,12 +233,12 @@ void epg_init ( void )
   if (sect) free(sect);
 
   /* Stats */
-  tvhlog(LOG_DEBUG, "epg", "database loaded");
-  tvhlog(LOG_DEBUG, "epg", "  channels   %d", stats.channels.total);
-  tvhlog(LOG_DEBUG, "epg", "  brands     %d", stats.brands.total);
-  tvhlog(LOG_DEBUG, "epg", "  seasons    %d", stats.seasons.total);
-  tvhlog(LOG_DEBUG, "epg", "  episodes   %d", stats.episodes.total);
-  tvhlog(LOG_DEBUG, "epg", "  broadcasts %d", stats.broadcasts.total);
+  tvhlog(LOG_INFO, "epg", "database loaded");
+  tvhlog(LOG_INFO, "epg", "  channels   %d", stats.channels.total);
+  tvhlog(LOG_INFO, "epg", "  brands     %d", stats.brands.total);
+  tvhlog(LOG_INFO, "epg", "  seasons    %d", stats.seasons.total);
+  tvhlog(LOG_INFO, "epg", "  episodes   %d", stats.episodes.total);
+  tvhlog(LOG_INFO, "epg", "  broadcasts %d", stats.broadcasts.total);
   tvhlog(LOG_DEBUG, "epg", "next object id %lu", _epg_object_idx+1);
 
   /* Close file */

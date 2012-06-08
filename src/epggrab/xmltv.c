@@ -242,7 +242,7 @@ _xmltv_parse_programme_tags(channel_t *ch, htsmsg_t *tags,
   const char *uri = NULL;
   const char *title = htsmsg_xml_get_cdata_str(tags, "title");
   const char *desc  = htsmsg_xml_get_cdata_str(tags, "desc");
-  const char *category = htsmsg_xml_get_cdata_str(tags, "category");
+  //const char *category = htsmsg_xml_get_cdata_str(tags, "category");
   get_episode_info(tags, &onscreen, &sn, &en, &pn);
 
   /* Create/Find broadcast */
@@ -273,8 +273,8 @@ _xmltv_parse_programme_tags(channel_t *ch, htsmsg_t *tags,
   if (save) stats->episodes.created++;
   if (title) save |= epg_episode_set_title(ee, title);
   if (desc)  save |= epg_episode_set_description(ee, desc);
-  if (category) save |= epg_episode_set_genre_str(ee, category);
-  if (onscreen) save |= epg_episode_set_onscreen(ee, onscreen);
+  //if (category) save |= epg_episode_set_genre_str(ee, category);
+  //if (onscreen) save |= epg_episode_set_onscreen(ee, onscreen);
   if (pn) save |= epg_episode_set_part(ee, pn, 0);
   if (en) save |= epg_episode_set_number(ee, en);
   // TODO: how can we handle season number?

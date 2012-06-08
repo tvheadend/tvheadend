@@ -36,13 +36,19 @@ typedef struct epggrab_stats
 typedef struct epggrab_channel
 {
   RB_ENTRY(epggrab_channel)  link;    ///< Global link
-
   epggrab_module_t          *mod;     ///< Linked module
+
   char                      *id;      ///< Grabber's ID
   char                      *name;    ///< Channel name
+  char                      **sname;  ///< Service name's
+  uint16_t                  *sid;     ///< Service ID's
+  int                       sid_cnt;  ///< Number of service IDs
+  
   char                      *icon;    ///< Channel icon
-  struct channel            *channel; ///< Mapped channel
+  int                       number;   ///< Channel number
+
   // TODO: I think we might need a list of channels!
+  struct channel            *channel; ///< Mapped channel
 } epggrab_channel_t;
 
 /*
@@ -59,8 +65,11 @@ htsmsg_t*         epggrab_channel_list      ( void );
 /*
  * Mutators
  */
-int epggrab_channel_set_name ( epggrab_channel_t *ch, const char *name );
-int epggrab_channel_set_icon ( epggrab_channel_t *ch, const char *icon );
+int epggrab_channel_set_name   ( epggrab_channel_t *ch, const char *name );
+int epggrab_channel_set_sid    ( epggrab_channel_t *ch, const uint16_t *sid, int num );
+int epggrab_channel_set_sname  ( epggrab_channel_t *ch, const char **sname );
+int epggrab_channel_set_icon   ( epggrab_channel_t *ch, const char *icon );
+int epggrab_channel_set_number ( epggrab_channel_t *ch, int number );
 
 void epggrab_channel_updated ( epggrab_channel_t *ch );
 void epggrab_channel_link ( epggrab_channel_t *ch );
