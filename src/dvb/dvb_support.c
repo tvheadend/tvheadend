@@ -41,7 +41,7 @@ static int convert_iso_8859[16] = {
 #define convert_utf8   14
 #define convert_iso6937 15
 
-static inline int encode_utf8(uint16_t c, char *outb, int outleft)
+static inline int encode_utf8(unsigned int c, char *outb, int outleft)
 {
   if (c <= 0x7F && outleft >= 1) {
     *outb = c;
