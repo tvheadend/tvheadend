@@ -46,10 +46,10 @@ typedef struct channel {
   LIST_HEAD(, th_subscription) ch_subscriptions;
 
   /* EPG fields */
-  epg_object_tree_t   ch_epg_schedule;
-  epg_broadcast_t    *ch_epg_now;
-  epg_broadcast_t    *ch_epg_next;
-  gtimer_t            ch_epg_timer;
+  epg_broadcast_tree_t  ch_epg_schedule;
+  epg_broadcast_t      *ch_epg_now;
+  epg_broadcast_t      *ch_epg_next;
+  gtimer_t              ch_epg_timer;
 
   gtimer_t ch_epg_timer_head;
   gtimer_t ch_epg_timer_current;

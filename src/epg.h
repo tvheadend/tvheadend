@@ -30,31 +30,47 @@ struct channel_tag;
 /*
  * Map types
  */
-LIST_HEAD(epg_object_list,  epg_object);
-RB_HEAD(epg_object_tree,    epg_object);
-RB_HEAD(epg_brand_tree,     epg_brand);
-RB_HEAD(epg_season_tree,    epg_season);
-RB_HEAD(epg_episode_tree,   epg_episode);
-RB_HEAD(epg_broadcast_tree, epg_broadcast);
+LIST_HEAD(epg_object_list,     epg_object);
+LIST_HEAD(epg_object_key_list, epg_object_key);
+RB_HEAD  (epg_object_key_tree, epg_object_key);
+LIST_HEAD(epg_brand_list,      epg_brand);
+LIST_HEAD(epg_season_list,     epg_season);
+LIST_HEAD(epg_episode_list,    epg_episode);
+LIST_HEAD(epg_broadcast_list,  epg_broadcast);
+RB_HEAD  (epg_broadcast_tree,  epg_broadcast);
 
 /*
- * Typedefs
+ * Typedefs (most are redundant!)
  */
-typedef struct epg_object         epg_object_t;
-typedef struct epg_brand          epg_brand_t;
-typedef struct epg_season         epg_season_t;
-typedef struct epg_episode        epg_episode_t;
-typedef struct epg_broadcast      epg_broadcast_t;
-typedef struct epg_object_list    epg_object_list_t;
-typedef struct epg_object_tree    epg_object_tree_t;
-typedef struct epg_brand_tree     epg_brand_tree_t;
-typedef struct epg_season_tree    epg_season_tree_t;
-typedef struct epg_episode_tree   epg_episode_tree_t;
-typedef struct epg_broadcast_tree epg_broadcast_tree_t;
+typedef struct epg_object          epg_object_t;
+typedef struct epg_object_key      epg_object_key_t;
+typedef struct epg_brand           epg_brand_t;
+typedef struct epg_season          epg_season_t;
+typedef struct epg_episode         epg_episode_t;
+typedef struct epg_broadcast       epg_broadcast_t;
+typedef struct epg_season_list     epg_season_list_t;
+typedef struct epg_episode_list    epg_episode_list_t;
+typedef struct epg_broadcast_list  epg_broadcast_list_t;
+typedef struct epg_broadcast_tree  epg_broadcast_tree_t;
+typedef struct epg_object_list     epg_object_list_t;
+typedef struct epg_object_key_tree epg_object_key_tree_t;
+typedef struct epg_object_key_list epg_object_key_list_t;
+
 
 /* ************************************************************************
  * Generic Object
  * ***********************************************************************/
+
+/* Used to allow multiple keys per object */
+typedef struct epg_object_key
+{
+  LIST_ENTRY(epg_object_key) olink; ///< Link to object's list
+  RB_ENTRY(epg_object_key)   glink; ///< Link to global list
+
+  epg_object_t               *obj;  ///< Object we're wrapping
+  const char                 *uri;  ///< Object URI
+  // TODO: could make this union?
+} epg_object_key_t;
 
 /* Object type */
 typedef enum epg_object_type
@@ -69,16 +85,17 @@ typedef enum epg_object_type
 /* Object */
 struct epg_object
 {
-  RB_ENTRY(epg_object)    glink;     ///< Global (URI) list link
-  LIST_ENTRY(epg_object)  hlink;     ///< Global (ID) hash link
-  LIST_ENTRY(epg_object)  ulink;     ///< Global unref'd link
-  LIST_ENTRY(epg_object)  uplink;    ///< Global updated link
+  LIST_ENTRY(epg_object)  hlink;      ///< Global (ID) link
+  LIST_ENTRY(epg_object)  ulink;      ///< Global unref'd link
+  LIST_ENTRY(epg_object)  uplink;     ///< Global updated link
+ 
+  epg_object_type_t       type;       ///< Specific object type
+  uint64_t                id;         ///< Internal ID
+  char                   *uri;        ///< Unique ID (from grabber)
+  epg_object_key_list_t   aliases;    ///< URI aliases (inc primary)
 
-  epg_object_type_t       type;      ///< Specific object type
-  uint64_t                id;        ///< Internal ID
-  char                   *uri;       ///< Unique ID (from grabber)
-  int                     refcount;  ///< Reference counting
-  int                     _updated;  ///< Flag to indicate updated
+  int                     _updated;   ///< Flag to indicate updated
+  int                     refcount;   ///< Reference counting
   // Note: could use LIST_ENTRY field to determine this!
 
   void (*getref)  ( epg_object_t* ); ///< Get a reference
@@ -102,8 +119,8 @@ struct epg_brand
   uint16_t                   season_count; ///< Total number of seasons
   char                      *image;        ///< Brand image
 
-  epg_season_tree_t          seasons;      ///< Season list
-  epg_episode_tree_t         episodes;     ///< Episode list
+  epg_season_list_t          seasons;      ///< Season list
+  epg_episode_list_t         episodes;     ///< Episode list
 };
 
 /* Lookup */
@@ -142,9 +159,9 @@ struct epg_season
   uint16_t                   episode_count; ///< Total number of episodes
   char                      *image;         ///< Season image
 
-  RB_ENTRY(epg_season)       blink;         ///< Brand list link
+  LIST_ENTRY(epg_season)     blink;         ///< Brand list link
   epg_brand_t               *brand;         ///< Parent brand
-  epg_episode_tree_t         episodes;      ///< Episode list
+  epg_episode_list_t         episodes;      ///< Episode list
 
 };
 
@@ -189,11 +206,11 @@ struct epg_episode
   uint16_t                   part_count;    ///< For multipart episodes
   char                      *image;         ///< Episode image
 
-  RB_ENTRY(epg_episode)      blink;         ///< Brand link
-  RB_ENTRY(epg_episode)      slink;         ///< Season link
+  LIST_ENTRY(epg_episode)    blink;         ///< Brand link
+  LIST_ENTRY(epg_episode)    slink;         ///< Season link
   epg_brand_t               *brand;         ///< (Grand-)Parent brand
   epg_season_t              *season;        ///< Parent season
-  epg_broadcast_tree_t       broadcasts;    ///< Broadcast list
+  epg_broadcast_list_t       broadcasts;    ///< Broadcast list
 
 };
 
@@ -281,7 +298,8 @@ struct epg_broadcast
   uint8_t                    is_new;           ///< New series / file premiere
   uint8_t                    is_repeat;        ///< Repeat screening
 
-  RB_ENTRY(epg_broadcast)    elink;            ///< Episode link
+  RB_ENTRY(epg_broadcast)    glink;            ///< Schedule link
+  LIST_ENTRY(epg_broadcast)  elink;            ///< Episode link
   epg_episode_t             *episode;          ///< Episode shown
   struct channel            *channel;          ///< Channel being broadcast on
 

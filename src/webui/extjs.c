@@ -767,7 +767,7 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
 
       /* Alternative broadcasts */
       if (!strcmp(type, "alternative")) {
-        RB_FOREACH(ebc, &ee->broadcasts, elink) {
+        LIST_FOREACH(ebc, &ee->broadcasts, elink) {
           ch = ebc->channel;
           if ( !ch ) continue; // skip something not viewable
           if ( ebc == e ) continue; // skip self
@@ -783,7 +783,7 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
       /* Related */
       } else if (!strcmp(type, "related")) {
         if (ee->brand) {
-          RB_FOREACH(ee2, &ee->brand->episodes, blink) {
+          LIST_FOREACH(ee2, &ee->brand->episodes, blink) {
             if (ee2 == ee) continue;
             if (!ee2->title) continue;
             count++;
@@ -796,7 +796,7 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
             htsmsg_add_msg(array, NULL, m);
           }
         } else if (ee->season) {
-          RB_FOREACH(ee2, &ee->season->episodes, slink) {
+          LIST_FOREACH(ee2, &ee->season->episodes, slink) {
             if (ee2 == ee) continue;
             if (!ee2->title) continue;
             count++;

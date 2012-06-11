@@ -582,14 +582,14 @@ static void
 dvr_autorec_changed(dvr_autorec_entry_t *dae)
 {
   channel_t *ch;
-  epg_object_t *e;
+  epg_broadcast_t *e;
 
   dvr_autorec_purge_spawns(dae);
 
   RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
     RB_FOREACH(e, &ch->ch_epg_schedule, glink) {
-      if(autorec_cmp(dae, (epg_broadcast_t*)e))
-	      dvr_entry_create_by_autorec((epg_broadcast_t*)e, dae);
+      if(autorec_cmp(dae, e))
+	      dvr_entry_create_by_autorec(e, dae);
     }
   }
 }
