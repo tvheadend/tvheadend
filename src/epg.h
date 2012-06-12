@@ -31,8 +31,7 @@ struct channel_tag;
  * Map types
  */
 LIST_HEAD(epg_object_list,     epg_object);
-LIST_HEAD(epg_object_key_list, epg_object_key);
-RB_HEAD  (epg_object_key_tree, epg_object_key);
+RB_HEAD  (epg_object_tree,     epg_object);
 LIST_HEAD(epg_brand_list,      epg_brand);
 LIST_HEAD(epg_season_list,     epg_season);
 LIST_HEAD(epg_episode_list,    epg_episode);
@@ -43,7 +42,6 @@ RB_HEAD  (epg_broadcast_tree,  epg_broadcast);
  * Typedefs (most are redundant!)
  */
 typedef struct epg_object          epg_object_t;
-typedef struct epg_object_key      epg_object_key_t;
 typedef struct epg_brand           epg_brand_t;
 typedef struct epg_season          epg_season_t;
 typedef struct epg_episode         epg_episode_t;
@@ -53,24 +51,12 @@ typedef struct epg_episode_list    epg_episode_list_t;
 typedef struct epg_broadcast_list  epg_broadcast_list_t;
 typedef struct epg_broadcast_tree  epg_broadcast_tree_t;
 typedef struct epg_object_list     epg_object_list_t;
-typedef struct epg_object_key_tree epg_object_key_tree_t;
-typedef struct epg_object_key_list epg_object_key_list_t;
+typedef struct epg_object_tree     epg_object_tree_t;
 
 
 /* ************************************************************************
  * Generic Object
  * ***********************************************************************/
-
-/* Used to allow multiple keys per object */
-typedef struct epg_object_key
-{
-  LIST_ENTRY(epg_object_key) olink; ///< Link to object's list
-  RB_ENTRY(epg_object_key)   glink; ///< Link to global list
-
-  epg_object_t               *obj;  ///< Object we're wrapping
-  const char                 *uri;  ///< Object URI
-  // TODO: could make this union?
-} epg_object_key_t;
 
 /* Object type */
 typedef enum epg_object_type
@@ -85,6 +71,7 @@ typedef enum epg_object_type
 /* Object */
 struct epg_object
 {
+  RB_ENTRY(epg_object)    glink;      ///< Global URI link
   LIST_ENTRY(epg_object)  hlink;      ///< Global (ID) link
   LIST_ENTRY(epg_object)  ulink;      ///< Global unref'd link
   LIST_ENTRY(epg_object)  uplink;     ///< Global updated link
@@ -92,7 +79,6 @@ struct epg_object
   epg_object_type_t       type;       ///< Specific object type
   uint64_t                id;         ///< Internal ID
   char                   *uri;        ///< Unique ID (from grabber)
-  epg_object_key_list_t   aliases;    ///< URI aliases (inc primary)
 
   int                     _updated;   ///< Flag to indicate updated
   int                     refcount;   ///< Reference counting

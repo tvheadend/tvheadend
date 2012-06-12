@@ -111,18 +111,6 @@
         }							\
 } while(0)
 
-#define LIST_FIND(head, skel, field, cmpfunc)\
-({\
-  typeof(skel) a, b = NULL;\
-  LIST_FOREACH(a, head, field) {\
-    if (!cmpfunc(skel, a)) {\
-      b = a;\
-      break;\
-    }\
-  }\
-  b;\
-})
-  
 #define TAILQ_INSERT_SORTED(head, elm, field, cmpfunc) do {	\
         if(TAILQ_FIRST(head) == NULL) {				\
            TAILQ_INSERT_HEAD(head, elm, field);			\
