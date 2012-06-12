@@ -244,17 +244,17 @@ static int _pyepg_parse_episode ( htsmsg_t *data, epggrab_stats_t *stats )
   stats->episodes.total++;
   if (save) stats->episodes.created++;
   
-  /* Set brand */
-  if ((str = htsmsg_get_str(attr, "brand"))) {
-    if ((brand = epg_brand_find_by_uri(str, 0, NULL))) {
-      save |= epg_episode_set_brand(episode, brand);
-    }
-  }
-
   /* Set season */
   if ((str = htsmsg_get_str(attr, "series"))) {
     if ((season = epg_season_find_by_uri(str, 0, NULL))) {
       save |= epg_episode_set_season(episode, season);
+    }
+  }
+
+  /* Set brand */
+  if ((str = htsmsg_get_str(attr, "brand"))) {
+    if ((brand = epg_brand_find_by_uri(str, 0, NULL))) {
+      save |= epg_episode_set_brand(episode, brand);
     }
   }
 
