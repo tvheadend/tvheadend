@@ -40,14 +40,14 @@
 #define EPG_HASH_MASK  (EPG_HASH_WIDTH - 1)
 
 /* URI lists */
-epg_object_key_tree_t epg_brands;
-epg_object_key_tree_t epg_seasons;
-epg_object_key_tree_t epg_episodes;
+epg_object_tree_t epg_brands;
+epg_object_tree_t epg_seasons;
+epg_object_tree_t epg_episodes;
 
 /* Other special case lists */
-epg_object_list_t     epg_objects[EPG_HASH_WIDTH];
-epg_object_list_t     epg_object_unref;
-epg_object_list_t     epg_object_updated;
+epg_object_list_t epg_objects[EPG_HASH_WIDTH];
+epg_object_list_t epg_object_unref;
+epg_object_list_t epg_object_updated;
 
 /* Global counter */
 static uint64_t _epg_object_idx    = 0;
@@ -59,11 +59,6 @@ static uint64_t _epg_object_idx    = 0;
 static int _uri_cmp ( const void *a, const void *b )
 {
   return strcmp(((epg_object_t*)a)->uri, ((epg_object_t*)b)->uri);
-}
-
-static int _key_cmp ( const void *a, const void *b )
-{
-  return _uri_cmp(((epg_object_key_t*)a)->obj, ((epg_object_key_t*)b)->obj);
 }
 
 static int _ebc_start_cmp ( const void *a, const void *b )
@@ -99,44 +94,46 @@ static int _epg_write ( int fd, htsmsg_t *m )
   return ret;
 }
 
-#define _epg_write_sect(_fd, _total, _sect, _type, _type2, _pack)\
-{\
-  int i;\
-  epg_object_t *eo;\
-  htsmsg_t *m = htsmsg_create_map();\
-  htsmsg_add_str(m, "__section__", _sect);\
-  if (_epg_write(_fd, m)) return;\
-  for ( i = 0; i < EPG_HASH_WIDTH; i++ ) {\
-    LIST_FOREACH(eo, &epg_objects[i], hlink) {\
-      if (eo->type == _type) {\
-        if (_epg_write(_fd, _pack((_type2*)eo))) return;\
-        _total++;\
-      }\
-    }\
-  }\
+static int _epg_write_sect ( int fd, const char *sect )
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "__section__", sect);
+  return _epg_write(fd, m);
 }
 
 void epg_save ( void )
 {
   int fd;
+  epg_object_t *eo;
+  epg_broadcast_t *ebc;
+  channel_t *ch;
   epggrab_stats_t stats;
   
   fd = hts_settings_open_file(1, "epgdb");
-  memset(&stats, 0, sizeof(stats));
 
-  /* Write each object type:
-   * Note: this is slightly inefficient (due to excessive looping)
-   *       but should be ok */
-  _epg_write_sect(fd, stats.brands.total, "brands", EPG_BRAND,
-                  epg_brand_t, epg_brand_serialize);
-  _epg_write_sect(fd, stats.seasons.total, "seasons", EPG_SEASON,
-                  epg_season_t, epg_season_serialize);
-  _epg_write_sect(fd, stats.episodes.total, "episodes", EPG_EPISODE,
-                  epg_episode_t, epg_episode_serialize);
-  _epg_write_sect(fd, stats.broadcasts.total, "broadcasts", EPG_BROADCAST,
-                  epg_broadcast_t, epg_broadcast_serialize);
-  // TODO: as I include the URI in the object I could use that to allow
-  //       me to only loop over the type lists
+  memset(&stats, 0, sizeof(stats));
+  if ( _epg_write_sect(fd, "brands") ) return;
+  RB_FOREACH(eo,  &epg_brands, glink) {
+    if (_epg_write(fd, epg_brand_serialize((epg_brand_t*)eo))) return;
+    stats.brands.total++;
+  }
+  if ( _epg_write_sect(fd, "seasons") ) return;
+  RB_FOREACH(eo,  &epg_seasons, glink) {
+    if (_epg_write(fd, epg_season_serialize((epg_season_t*)eo))) return;
+    stats.seasons.total++;
+  }
+  if ( _epg_write_sect(fd, "episodes") ) return;
+  RB_FOREACH(eo,  &epg_episodes, glink) {
+    if (_epg_write(fd, epg_episode_serialize((epg_episode_t*)eo))) return;
+    stats.episodes.total++;
+  }
+  if ( _epg_write_sect(fd, "broadcasts") ) return;
+  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
+    RB_FOREACH(ebc, &ch->ch_epg_schedule, glink) {
+      if (_epg_write(fd, epg_broadcast_serialize(ebc))) return;
+      stats.broadcasts.total++;
+    }
+  }
 
   /* Stats */
   tvhlog(LOG_INFO, "epg", "database saved");
@@ -274,16 +271,11 @@ void epg_updated ( void )
  * *************************************************************************/
 
 static void _epg_object_destroy 
-  ( epg_object_t *eo, epg_object_key_tree_t *tree )
+  ( epg_object_t *eo, epg_object_tree_t *tree )
 {
-  epg_object_key_t *ek;
   assert(eo->refcount == 0);
   if (eo->uri) free(eo->uri);
-  if (tree) {
-    LIST_FOREACH(ek, &eo->aliases, olink) {
-      RB_REMOVE(tree, ek, glink);
-    }
-  }
+  if (tree) RB_REMOVE(tree, eo, glink);
   if (eo->_updated) LIST_REMOVE(eo, uplink);
   LIST_REMOVE(eo, hlink);
 }
@@ -322,37 +314,31 @@ static void _epg_object_create ( epg_object_t *eo )
 
 static epg_object_t *_epg_object_find_by_uri 
   ( const char *uri, int create, int *save,
-    epg_object_key_tree_t *tree, epg_object_t **skel )
+    epg_object_tree_t *tree, epg_object_t **skel )
 {
-  static epg_object_key_t *ekskel = NULL;
-  epg_object_key_t *ek;
-  
+  epg_object_t *eo;
+
   assert(skel != NULL);
   lock_assert(&global_lock);
 
-  if (!ekskel) ekskel = calloc(1, sizeof(epg_object_key_t));
-  ekskel->uri = (char*)uri;
+  (*skel)->uri = (char*)uri;
 
   /* Find only */
   if ( !create ) {
-    ek = RB_FIND(tree, ekskel, glink, _key_cmp);
+    eo = RB_FIND(tree, *skel, glink, _uri_cmp);
   
   /* Find/create */
   } else {
-    ek = RB_INSERT_SORTED(tree, ekskel, glink, _key_cmp);
-    if ( !ek ) {
+    eo = RB_INSERT_SORTED(tree, *skel, glink, _uri_cmp);
+    if ( !eo ) {
       *save        = 1;
-      ek           = ekskel;
-      ek->uri      = strdup(uri);
-      ek->obj      = *skel;
-      ek->obj->uri = strdup(uri); // TODO: could not dup this!
-      LIST_INSERT_HEAD(&ek->obj->aliases, ek, olink);
-      _epg_object_create(ek->obj);
+      eo           = *skel;
       *skel        = NULL;
-      ekskel       = NULL;
+      eo->uri      = strdup(uri);
+      _epg_object_create(eo);
     }
   }
-  return ek ? ek->obj : NULL;
+  return eo;
 }
 
 static epg_object_t *_epg_object_find_by_id ( uint64_t id )
