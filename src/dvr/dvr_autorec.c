@@ -328,6 +328,7 @@ static htsmsg_t *
 autorec_record_update(void *opaque, const char *id, htsmsg_t *values, 
 		      int maycreate)
 {
+  int save;
   dvr_autorec_entry_t *dae;
   const char *s;
   channel_t *ch;
@@ -399,12 +400,12 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
     dae->dae_pri = dvr_pri2val(s);
 
   if((s = htsmsg_get_str(values, "brand")) != NULL) {
-    dae->dae_brand = epg_brand_find_by_uri(s, 0, NULL);
+    dae->dae_brand = epg_brand_find_by_uri(s, 1, &save);
     if (dae->dae_brand)
       dae->dae_brand->_.getref((epg_object_t*)dae->dae_brand);
   }
   if((s = htsmsg_get_str(values, "season")) != NULL) {
-    dae->dae_season = epg_season_find_by_uri(s, 0, NULL);
+    dae->dae_season = epg_season_find_by_uri(s, 1, &save);
     if (dae->dae_season)
       dae->dae_season->_.getref((epg_object_t*)dae->dae_season);
   }
