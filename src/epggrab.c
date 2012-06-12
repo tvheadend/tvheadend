@@ -184,7 +184,7 @@ static void *_epggrab_socket_thread ( void *p )
   while ( mod->enabled && mod->sock ) {
     tvhlog(LOG_DEBUG, mod->id, "waiting for connection");
     s = accept(mod->sock, NULL, NULL);
-    if (s <= 0) break; // assume closed
+    if (s <= 0) continue;
     tvhlog(LOG_DEBUG, mod->id, "got connection %d", s);
     _epggrab_socket_handler(mod, s);
   }
@@ -428,6 +428,7 @@ void epggrab_module_channels_load ( epggrab_module_t *mod )
       if ((e = htsmsg_get_map_by_field(f)))
         epggrab_module_channel_load(mod, e, f->hmf_name);
     }
+    htsmsg_destroy(m);
   }
 }
 

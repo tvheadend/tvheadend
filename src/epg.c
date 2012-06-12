@@ -53,7 +53,7 @@ epg_object_list_t epg_object_updated;
 static uint64_t _epg_object_idx    = 0;
 
 /* **************************************************************************
- * Comparators
+ * Comparators / Ordering
  * *************************************************************************/
 
 static int _uri_cmp ( const void *a, const void *b )
@@ -64,6 +64,27 @@ static int _uri_cmp ( const void *a, const void *b )
 static int _ebc_start_cmp ( const void *a, const void *b )
 {
   return ((epg_broadcast_t*)a)->start - ((epg_broadcast_t*)b)->start;
+}
+
+static int _season_order ( const void *_a, const void *_b )
+{
+  const epg_season_t *a = (const epg_season_t*)_a;
+  const epg_season_t *b = (const epg_season_t*)_b;
+  if ( !a || !a->number ) return 1;
+  if ( !b || !b->number ) return -1;
+  return a->number - b->number;
+}
+
+static int _episode_order ( const void *_a, const void *_b )
+{
+  int r;
+  const epg_episode_t *a = (const epg_episode_t*)_a;
+  const epg_episode_t *b = (const epg_episode_t*)_b;
+  r = _season_order(a->season, b->season);
+  if (r) return r;
+  if (!a || !a->number) return 1;
+  if (!b || !b->number) return -1;
+  return a->number - b->number;
 }
 
 /* **************************************************************************
@@ -467,7 +488,7 @@ int epg_brand_set_season_count ( epg_brand_t *brand, uint16_t count )
 static void _epg_brand_add_season 
   ( epg_brand_t *brand, epg_season_t *season )
 {
-  LIST_INSERT_HEAD(&brand->seasons, season, blink);
+  LIST_INSERT_SORTED(&brand->seasons, season, blink, _season_order);
   _epg_object_set_updated((epg_object_t*)brand);
 }
 
@@ -481,7 +502,7 @@ static void _epg_brand_rem_season
 static void _epg_brand_add_episode
   ( epg_brand_t *brand, epg_episode_t *episode )
 {
-  LIST_INSERT_HEAD(&brand->episodes, episode, blink);
+  LIST_INSERT_SORTED(&brand->episodes, episode, blink, _episode_order);
   _epg_object_set_updated((epg_object_t*)brand);
 }
 
@@ -649,7 +670,7 @@ int epg_season_set_brand ( epg_season_t *season, epg_brand_t *brand, int u )
 static void _epg_season_add_episode
   ( epg_season_t *season, epg_episode_t *episode )
 {
-  LIST_INSERT_HEAD(&season->episodes, episode, slink);
+  LIST_INSERT_SORTED(&season->episodes, episode, slink, _episode_order);
   _epg_object_set_updated((epg_object_t*)season);
 }
 
@@ -993,12 +1014,12 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
        !htsmsg_get_u32(m, "part-count", &u32a) )
     *save |= epg_episode_set_part(ee, u32, u32a);
   
-  if ( (str = htsmsg_get_str(m, "brand")) )
-    if ( (eb = epg_brand_find_by_uri(str, 0, NULL)) )
-      *save |= epg_episode_set_brand(ee, eb);
   if ( (str = htsmsg_get_str(m, "season")) )
     if ( (es = epg_season_find_by_uri(str, 0, NULL)) )
       *save |= epg_episode_set_season(ee, es);
+  if ( (str = htsmsg_get_str(m, "brand")) )
+    if ( (eb = epg_brand_find_by_uri(str, 0, NULL)) )
+      *save |= epg_episode_set_brand(ee, eb);
   
   return ee;
 }
@@ -1548,6 +1569,7 @@ void epg_query0
       _eqr_add_channel(eqr, channel, genre, preg, now);
     }
   }
+  if (preg) regfree(preg);
 
   return;
 }
