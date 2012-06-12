@@ -51,8 +51,8 @@ tvheadend.epgDetails = function(event) {
             event.channelid + "')\">Play</a>" + "</div>";
     }
 
-    content += '<div id="altbcast"></div>';
     content += '<div id="related"></div>';
+    content += '<div id="altbcast"></div>';
 
     var confcombo = new Ext.form.ComboBox({
         store: tvheadend.configNames,
