@@ -959,9 +959,14 @@ int epg_episode_fuzzy_match
   ( epg_episode_t *episode, const char *uri, const char *title,
     const char *summary, const char *description )
 {
+  // TODO: this is pretty noddy and likely to fail!
+  //       hence the reason I don't recommend mixing external grabbers and EIT
   if ( !episode ) return 0;
   if ( uri && episode->_.uri && !strcmp(episode->_.uri, uri) ) return 1;
-  // TODO: how to match title/summary/description
+  if ( title && episode->title && (strstr(title, episode->title) || strstr(episode->title, title)) ) return 1;
+  // TODO: could we do fuzzy string matching on the description/summary
+  //     : there are a few algorithms that might work, but some early testing
+  //     : suggested it wasn't clear cut enough to make sensible decisions.
   return 0;
 }
 
