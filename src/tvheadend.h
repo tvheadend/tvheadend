@@ -449,4 +449,6 @@ void sbuf_put_be16(sbuf_t *sb, uint16_t u16);
 
 void sbuf_put_byte(sbuf_t *sb, uint8_t u8);
 
+char *md5sum ( const char *str );
+
 #endif /* TV_HEAD_H */

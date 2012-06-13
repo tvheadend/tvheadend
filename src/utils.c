@@ -20,7 +20,9 @@
 #include <limits.h>
 #include <string.h>
 #include <assert.h>
+#include <openssl/md5.h>
 #include "tvheadend.h"
+
 
 /**
  * CRC32 
@@ -305,4 +307,18 @@ sbuf_cut(sbuf_t *sb, int off)
   assert(off <= sb->sb_ptr);
   sb->sb_ptr = sb->sb_ptr - off;
   memmove(sb->sb_data, sb->sb_data + off, sb->sb_ptr);
+}
+
+char *
+md5sum ( const char *str )
+{
+  int i;
+  static unsigned char md5[MD5_DIGEST_LENGTH];
+  char *ret = malloc((MD5_DIGEST_LENGTH * 2) + 1);
+  MD5((const unsigned char*)str, strlen(str), md5);
+  for ( i = 0; i < MD5_DIGEST_LENGTH; i++ ) {
+    sprintf(&ret[i*2], "%02X", md5[i]);
+  }
+  ret[MD5_DIGEST_LENGTH*2] = '\0';
+  return ret;
 }

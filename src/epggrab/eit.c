@@ -26,11 +26,12 @@
  * Module Setup
  * ***********************************************************************/
 
-static void _eit_episode_uri 
-  ( char *uri, const char *title, const char *summary )
+static const char *
+longest_string ( const char *a, const char *b )
 {
-  // TODO: do something better
-  snprintf(uri, 1023, "%s::%s", title, summary);
+  if (!a) return b;
+  if (!b) return a;
+  if (strlen(a) - strlen(b) >= 0) return a;
 }
 
 // called from dvb_tables.c
@@ -44,10 +45,11 @@ void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
   epg_episode_t *ee;
   const char *summary     = NULL;
   const char *description = NULL;
-  char uri[1024];
+  char *uri;
 
   /* Ignore */
   if (!ch || !ch->ch_name || !ch->ch_name[0]) return;
+  if (!title) return;
 
   /* Disabled? */
   if (!epggrab_eitenabled) return;
@@ -56,11 +58,16 @@ void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
   ebc  = epg_broadcast_find_by_time(ch, start, stop, 1, &save);
   if (!ebc) return;
 
-  /* TODO: Determine summary */
-  summary = desc;
+  /* Determine summary */
+  description = summary = desc;
+  description = longest_string(description, extitem);
+  description = longest_string(description, extdesc);
+  description = longest_string(description, exttext);
+  if (summary == description) description = NULL;
+  // TODO: is this correct?
 
   /* Create episode URI */
-  _eit_episode_uri(uri, title, summary);
+  uri = md5sum(longest_string(title, longest_string(description, summary)));
 
   /* Create/Replace episode */
   if ( !ebc->episode ||
@@ -83,6 +90,7 @@ void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
     /* Update */
     save |= epg_broadcast_set_episode(ebc, ee);
   }
+  free(uri);
 }
 
 /* ************************************************************************

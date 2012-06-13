@@ -52,25 +52,6 @@ static epggrab_channel_t *_xmltv_channel_find
  * *************************************************************************/
 
 /**
- * Hash the description to get a URI for episode
- *
- * Note: converts to an ASCII format
- * TODO: move somewhere else
- */
-static const char *_xmltv_hash ( const char *str )
-{
-  size_t i;
-  static char ret[(MD5_DIGEST_LENGTH*2)+1];
-  static unsigned char md5[MD5_DIGEST_LENGTH];
-  (void)MD5((const unsigned char*)str, strlen(str), md5);
-  for ( i = 0; i < MD5_DIGEST_LENGTH; i++ ) {
-    sprintf(&ret[i*2], "%02X", md5[i]);
-  }
-  ret[MD5_DIGEST_LENGTH*2] = '\0';
-  return ret;
-}
-
-/**
  *
  */
 static time_t
@@ -181,8 +162,8 @@ xmltv_ns_get_parse_num(const char *s, int *ap, int *bp)
 
 
  out:
-  if(ap) *ap = a;
-  if(bp) *bp = b;
+  if(ap) *ap = a + 1;
+  if(bp) *bp = b + 1;
   return s;
 }
 
@@ -191,15 +172,11 @@ xmltv_ns_get_parse_num(const char *s, int *ap, int *bp)
 
 static void
 parse_xmltv_ns_episode  
-(const char *s, int *season, int *episode, int *part)
+(const char *s, int *sn, int *sc, int *en, int *ec, int *pn, int *pc)
 {
-  s = xmltv_ns_get_parse_num(s, season, NULL);
-  s = xmltv_ns_get_parse_num(s, episode, NULL);
-  xmltv_ns_get_parse_num(s, part, NULL);
-
-  *season += 1;
-  *episode += 1;
-  *part += 1;
+  s = xmltv_ns_get_parse_num(s, sn, sc);
+  s = xmltv_ns_get_parse_num(s, en, ec);
+  xmltv_ns_get_parse_num(s, pn, pc);
 }
 
 /**
@@ -207,7 +184,7 @@ parse_xmltv_ns_episode
  */
 static void
 get_episode_info
-(htsmsg_t *tags, const char **screen, int *season, int *episode, int *part)
+(htsmsg_t *tags, const char **screen, int *sn, int *sc, int *en, int *ec, int *pn, int *pc)
 {
   htsmsg_field_t *f;
   htsmsg_t *c, *a;
@@ -223,7 +200,7 @@ get_episode_info
     
     if(!strcmp(sys, "onscreen")) *screen = cdata;
     else if(!strcmp(sys, "xmltv_ns"))
-      parse_xmltv_ns_episode(cdata, season, episode, part);
+      parse_xmltv_ns_episode(cdata, sn, sc, en, ec, pn, pc);
   }
 }
 
@@ -237,53 +214,49 @@ _xmltv_parse_programme_tags(channel_t *ch, htsmsg_t *tags,
   int save = 0, save2 = 0;
   epg_episode_t *ee;
   epg_broadcast_t *ebc;
-  int sn = 0, en = 0, pn = 0;
+  int sn = 0, sc = 0, en = 0, ec = 0, pn = 0, pc = 0;
   const char *onscreen = NULL;
-  const char *uri = NULL;
+  char *uri;
   const char *title = htsmsg_xml_get_cdata_str(tags, "title");
   const char *desc  = htsmsg_xml_get_cdata_str(tags, "desc");
-  //const char *category = htsmsg_xml_get_cdata_str(tags, "category");
-  get_episode_info(tags, &onscreen, &sn, &en, &pn);
+  const char *category[2];
+  get_episode_info(tags, &onscreen, &sn, &sc, &en, &ec, &pn, &pc);
+
+  /* Ignore */
+  if (!title) return 0;
+
+  /* Build episode */
+  uri = md5sum(desc ?: title);
+  ee  = epg_episode_find_by_uri(uri, 1, &save);
+  free(uri);
+  if (!ee) return 0;
+  stats->episodes.total++;
+  if (save) stats->episodes.created++;
+
+  category[0] = htsmsg_xml_get_cdata_str(tags, "category");
+  category[1] = NULL;
+  if (title)     save |= epg_episode_set_title(ee, title);
+  if (desc)      save |= epg_episode_set_description(ee, desc);
+  if (*category) save |= epg_episode_set_genre_str(ee, category);
+  if (pn)        save |= epg_episode_set_part(ee, pn, pc);
+  if (en)        save |= epg_episode_set_number(ee, en);
+  if (save) stats->episodes.modified++;
+
+  // TODO: need to handle season numbering!
+  // TODO: need to handle onscreen numbering
+  //if (onscreen) save |= epg_episode_set_onscreen(ee, onscreen);
 
   /* Create/Find broadcast */
   ebc = epg_broadcast_find_by_time(ch, start, stop, 1, &save2);
   if ( ebc != NULL ) {
     stats->broadcasts.total++;
     if (save2) stats->broadcasts.created++;
-    //save2 |= epg_broadcast_set_episode(ebc, ee);
+    save2 |= epg_broadcast_set_episode(ebc, ee);
     if (save2) stats->broadcasts.modified++;
   }
-  // TODO: this needs reworking
-
-  // TODO:
-  //   do we attempt to make an episode URI from info?
-  //   OR
-  //   do we first try to find the broadcast and do a fuzzy check on params?
-  //   OR
-  //   do we do something else?
-
-  /* Generate a URI */
-  if ( desc ) 
-    uri = _xmltv_hash(desc);
-  if ( !uri ) return 0;
-  
-  /* Find episode */
-  ee = epg_episode_find_by_uri(uri, 1, &save);
-  stats->episodes.total++;
-  if (save) stats->episodes.created++;
-  if (title) save |= epg_episode_set_title(ee, title);
-  if (desc)  save |= epg_episode_set_description(ee, desc);
-  //if (category) save |= epg_episode_set_genre_str(ee, category);
-  //if (onscreen) save |= epg_episode_set_onscreen(ee, onscreen);
-  if (pn) save |= epg_episode_set_part(ee, pn, 0);
-  if (en) save |= epg_episode_set_number(ee, en);
-  // TODO: how can we handle season number?
-  if (save) stats->episodes.modified++;
-
   
   return save | save2;
 }
-
 
 /**
  * Parse a <programme> tag from xmltv
