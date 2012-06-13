@@ -424,6 +424,7 @@ static void _epg_brand_destroy ( epg_object_t *eo )
   _epg_object_destroy(eo, &epg_brands);
   if (eb->title)   free(eb->title);
   if (eb->summary) free(eb->summary);
+  if (eb->image)   free(eb->image);
   free(eb);
 }
 
@@ -581,6 +582,7 @@ static void _epg_season_destroy ( epg_object_t *eo )
     es->brand->_.putref((epg_object_t*)es->brand);
   }
   if (es->summary) free(es->summary);
+  if (es->image)   free(es->image);
   free(es);
 }
 
@@ -746,6 +748,8 @@ static void _epg_episode_destroy ( epg_object_t *eo )
   if (ee->subtitle)    free(ee->subtitle);
   if (ee->summary)     free(ee->summary);
   if (ee->description) free(ee->description);
+  if (ee->genre)       free(ee->genre);
+  if (ee->image)       free(ee->image);
   free(ee);
 }
 
