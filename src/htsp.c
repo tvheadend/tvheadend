@@ -312,8 +312,8 @@ htsp_build_channel(channel_t *ch, const char *method)
 
   now  = ch->ch_epg_now;
   next = ch->ch_epg_next;
-  htsmsg_add_u32(out, "eventId", now ? now->_.id : 0);
-  htsmsg_add_u32(out, "nextEventId", next ? next->_.id : 0);
+  htsmsg_add_u32(out, "eventId", now ? now->id : 0);
+  htsmsg_add_u32(out, "nextEventId", next ? next->id : 0);
 
   LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
     ct = ctm->ctm_tag;
@@ -735,7 +735,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   if( c ) {
     eventIds = htsmsg_create_list();
     for(i = 0; i < c; ++i) {
-        htsmsg_add_u32(eventIds, NULL, eqr.eqr_array[i]->_.id);
+        htsmsg_add_u32(eventIds, NULL, eqr.eqr_array[i]->id);
     }
     htsmsg_add_msg(out, "eventIds", eventIds);
   }
@@ -757,7 +757,7 @@ htsp_build_event(epg_broadcast_t *e)
 
   out = htsmsg_create_map();
 
-  htsmsg_add_u32(out, "eventId", e->_.id);
+  htsmsg_add_u32(out, "eventId", e->id);
   htsmsg_add_u32(out, "channelId", e->channel->ch_id);
   htsmsg_add_u32(out, "start", e->start);
   htsmsg_add_u32(out, "stop", e->stop);
@@ -778,7 +778,7 @@ htsp_build_event(epg_broadcast_t *e)
 
   n = epg_broadcast_get_next(e);
   if(n != NULL)
-    htsmsg_add_u32(out, "nextEventId", n->_.id);
+    htsmsg_add_u32(out, "nextEventId", n->id);
 
   return out;
 }
@@ -1419,8 +1419,8 @@ htsp_channel_update_current(channel_t *ch)
 
   now  = ch->ch_epg_now;
   next = ch->ch_epg_next;
-  htsmsg_add_u32(m, "eventId",     now  ? now->_.id : 0);
-  htsmsg_add_u32(m, "nextEventId", next ? next->_.id : 0);
+  htsmsg_add_u32(m, "eventId",     now  ? now->id : 0);
+  htsmsg_add_u32(m, "nextEventId", next ? next->id : 0);
   htsp_async_send(m);
 }
 

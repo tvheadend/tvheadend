@@ -183,8 +183,8 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
       epg_broadcast_t *e = NULL;
       if(s->ths_channel) e = s->ths_channel->ch_epg_now;
 
-      if(e && event_id != e->_.id) {
-	event_id = e->_.id;
+      if(e && event_id != e->id) {
+	event_id = e->id;
 	run = !mk_mux_append_meta(mkm, e);
       }
       break;

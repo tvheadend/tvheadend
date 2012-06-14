@@ -126,7 +126,7 @@ page_simple(http_connection_t *hc,
 	htsbuf_qprintf(hq, 
 		    "<a href=\"/eventinfo/%d\">"
 		    "%02d:%02d-%02d:%02d&nbsp;%s%s%s</a><br>",
-		    e->_.id,
+		    e->id,
 		    a.tm_hour, a.tm_min, b.tm_hour, b.tm_min,
 		    e->episode->title,
 		    rstatus ? "&nbsp;" : "", rstatus ?: "");
@@ -236,7 +236,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
     htsbuf_qprintf(hq, "Recording status: %s<br>", rstatus);
 
   htsbuf_qprintf(hq, "<form method=\"post\" action=\"/eventinfo/%d\">", 
-		 e->_.id);
+		 e->id);
 
   switch(dvr_status) {
   case DVR_SCHEDULED:

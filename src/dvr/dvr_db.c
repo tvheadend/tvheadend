@@ -290,7 +290,7 @@ static dvr_entry_t *_dvr_entry_create (
   de->de_desc    = description ? strdup(description) : NULL;
   de->de_content_type = content_type;
   de->de_bcast   = e;
-  if (e) e->_.getref((epg_object_t*)e);
+  if (e) e->getref((epg_object_t*)e);
 
   dvr_entry_link(de);
 
@@ -406,7 +406,7 @@ dvr_entry_dec_ref(dvr_entry_t *de)
   free(de->de_title);
   free(de->de_ititle);
   free(de->de_desc);
-  if(de->de_bcast) de->de_bcast->_.putref((epg_object_t*)de->de_bcast);
+  if(de->de_bcast) de->de_bcast->putref((epg_object_t*)de->de_bcast);
 
   free(de);
 }
@@ -595,7 +595,7 @@ dvr_entry_save(dvr_entry_t *de)
     htsmsg_add_u32(m, "contenttype", de->de_content_type);
 
   if(de->de_bcast)
-    htsmsg_add_u32(m, "broadcast", de->de_bcast->_.id);
+    htsmsg_add_u32(m, "broadcast", de->de_bcast->id);
 
   hts_settings_save(m, "dvr/log/%d", de->de_id);
   htsmsg_destroy(m);
@@ -653,9 +653,9 @@ static dvr_entry_t *_dvr_entry_update
       save = 1;
     }
     if (de->de_bcast != e) {
-      de->de_bcast->_.putref((epg_object_t*)de->de_bcast);
+      de->de_bcast->putref((epg_object_t*)de->de_bcast);
       de->de_bcast = e;
-      e->_.getref((epg_object_t*)e);
+      e->getref((epg_object_t*)e);
       save = 1;
     }
   }
