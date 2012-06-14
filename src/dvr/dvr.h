@@ -35,6 +35,15 @@ typedef struct dvr_config {
   int dvr_extra_time_pre;
   int dvr_extra_time_post;
 
+  /*
+   * Series link support
+   */
+  int dvr_sl_brand_lock;
+  int dvr_sl_season_lock;
+  int dvr_sl_channel_lock;
+  int dvr_sl_time_lock;
+  int dvr_sl_more_recent;
+
   LIST_ENTRY(dvr_config) config_link;
 } dvr_config_t;
 
@@ -212,6 +221,7 @@ typedef struct dvr_autorec_entry {
 
   epg_brand_t *dae_brand;
   epg_season_t *dae_season;
+  epg_episode_num_t dae_epnum;
 
 } dvr_autorec_entry_t;
 

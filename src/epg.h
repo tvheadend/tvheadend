@@ -176,6 +176,19 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save );
  * Episode
  * ***********************************************************************/
 
+/* Episode numbering object - this is for some back-compat and also
+ * to allow episode information to be "collated" into easy to use object
+ */
+typedef struct epg_episode_num
+{
+  uint16_t s_num;  ///< Series number
+  uint16_t s_cnt;  ///< Series count
+  uint16_t e_num;  ///< Episode number
+  uint16_t e_cnt;  ///< Episode count
+  uint16_t p_num;  ///< Part number
+  uint16_t p_cnt;  ///< Part count
+} epg_episode_num_t;
+
 /* Object */
 struct epg_episode
 {
@@ -247,6 +260,8 @@ size_t epg_episode_number_format
     const char *pre,  const char *sfmt,
     const char *sep,  const char *efmt,
     const char *cfmt );
+void epg_episode_number_full
+  ( epg_episode_t *e, epg_episode_num_t *epnum );
 
 /* Matching */
 int epg_episode_fuzzy_match

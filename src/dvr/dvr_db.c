@@ -1035,6 +1035,13 @@ dvr_config_create(const char *name)
   cfg->dvr_file_postfix = strdup("mkv");
   cfg->dvr_flags = DVR_TAG_FILES;
 
+  /* series link support */
+  cfg->dvr_sl_brand_lock   = 1; // use brand linking
+  cfg->dvr_sl_season_lock  = 0; // ignore season (except if no brand)
+  cfg->dvr_sl_channel_lock = 1; // channel locked
+  cfg->dvr_sl_time_lock    = 0; // time slot (approx) locked
+  cfg->dvr_sl_more_recent  = 1; // Only record more reason episodes
+
   LIST_INSERT_HEAD(&dvrconfigs, cfg, config_link);
 
   return LIST_FIRST(&dvrconfigs);
