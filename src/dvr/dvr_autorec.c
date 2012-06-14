@@ -198,9 +198,9 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae)
     LIST_REMOVE(dae, dae_channel_tag_link);
 
   if(dae->dae_brand)
-    dae->dae_brand->_.putref((epg_object_t*)dae->dae_brand);
+    dae->dae_brand->putref((epg_object_t*)dae->dae_brand);
   if(dae->dae_season)
-    dae->dae_season->_.putref((epg_object_t*)dae->dae_season);
+    dae->dae_season->putref((epg_object_t*)dae->dae_season);
   
 
   TAILQ_REMOVE(&autorec_entries, dae, dae_link);
@@ -280,9 +280,9 @@ autorec_record_build(dvr_autorec_entry_t *dae)
   htsmsg_add_str(e, "pri", dvr_val2pri(dae->dae_pri));
   
   if (dae->dae_brand)
-    htsmsg_add_str(e, "brand", dae->dae_brand->_.uri);
+    htsmsg_add_str(e, "brand", dae->dae_brand->uri);
   if (dae->dae_season)
-    htsmsg_add_str(e, "season", dae->dae_season->_.uri);
+    htsmsg_add_str(e, "season", dae->dae_season->uri);
 
   return e;
 }
@@ -415,12 +415,12 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
   if((s = htsmsg_get_str(values, "brand")) != NULL) {
     dae->dae_brand = epg_brand_find_by_uri(s, 1, &save);
     if (dae->dae_brand)
-      dae->dae_brand->_.getref((epg_object_t*)dae->dae_brand);
+      dae->dae_brand->getref((epg_object_t*)dae->dae_brand);
   }
   if((s = htsmsg_get_str(values, "season")) != NULL) {
     dae->dae_season = epg_season_find_by_uri(s, 1, &save);
     if (dae->dae_season)
-      dae->dae_season->_.getref((epg_object_t*)dae->dae_season);
+      dae->dae_season->getref((epg_object_t*)dae->dae_season);
   }
   dvr_autorec_changed(dae);
 
@@ -507,11 +507,11 @@ _dvr_autorec_add(const char *config_name,
 
   if(brand) {
     dae->dae_brand = brand;
-    brand->_.getref((epg_object_t*)brand);
+    brand->getref((epg_object_t*)brand);
   }
   if(season) {
     dae->dae_season = season;
-    season->_.getref((epg_object_t*)season);
+    season->getref((epg_object_t*)season);
   }
 
   m = autorec_record_build(dae);
@@ -601,7 +601,7 @@ dvr_autorec_changed(dvr_autorec_entry_t *dae)
   dvr_autorec_purge_spawns(dae);
 
   RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-    RB_FOREACH(e, &ch->ch_epg_schedule, glink) {
+    RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {
       if(autorec_cmp(dae, e))
 	      dvr_entry_create_by_autorec(e, dae);
     }

@@ -713,7 +713,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     if (epg_episode_number_format(ee, buf, 100, NULL, "Season %d", ".", "Episode %d", "/%d"))
       htsmsg_add_str(m, "episode", buf);
 
-    htsmsg_add_u32(m, "id", e->_.id);
+    htsmsg_add_u32(m, "id", e->id);
     htsmsg_add_u32(m, "start", e->start);
     htsmsg_add_u32(m, "end", e->stop);
     htsmsg_add_u32(m, "duration", e->stop - e->start);
@@ -767,13 +767,13 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
 
       /* Alternative broadcasts */
       if (!strcmp(type, "alternative")) {
-        LIST_FOREACH(ebc, &ee->broadcasts, elink) {
+        LIST_FOREACH(ebc, &ee->broadcasts, ep_link) {
           ch = ebc->channel;
           if ( !ch ) continue; // skip something not viewable
           if ( ebc == e ) continue; // skip self
           count++;
           m = htsmsg_create_map();
-          htsmsg_add_u32(m, "id", ebc->_.id);
+          htsmsg_add_u32(m, "id", ebc->id);
           if ( ch->ch_name ) htsmsg_add_str(m, "channel", ch->ch_name);
           if ( ch->ch_icon ) htsmsg_add_str(m, "chicon", ch->ch_icon);
           htsmsg_add_u32(m, "start", ebc->start);
@@ -788,7 +788,7 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
             if (!ee2->title) continue;
             count++;
             m = htsmsg_create_map();
-            htsmsg_add_str(m, "uri", ee2->_.uri);
+            htsmsg_add_str(m, "uri", ee2->uri);
             htsmsg_add_str(m, "title", ee2->title);
             if (ee2->subtitle) htsmsg_add_str(m, "subtitle", ee2->subtitle);
             if (epg_episode_number_format(ee2, buf, 100, NULL, "Season %d", ".", "Episode %d", "/%d"))
@@ -801,7 +801,7 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
             if (!ee2->title) continue;
             count++;
             m = htsmsg_create_map();
-            htsmsg_add_str(m, "uri", ee2->_.uri);
+            htsmsg_add_str(m, "uri", ee2->uri);
             htsmsg_add_str(m, "title", ee2->title);
             if (ee2->subtitle) htsmsg_add_str(m, "subtitle", ee2->subtitle);
             if (epg_episode_number_format(ee2, buf, 100, NULL, "Season %d", ".", "Episode %d", "/%d"))

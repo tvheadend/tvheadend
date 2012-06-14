@@ -71,10 +71,10 @@ typedef enum epg_object_type
 /* Object */
 struct epg_object
 {
-  RB_ENTRY(epg_object)    glink;      ///< Global URI link
-  LIST_ENTRY(epg_object)  hlink;      ///< Global (ID) link
-  LIST_ENTRY(epg_object)  ulink;      ///< Global unref'd link
-  LIST_ENTRY(epg_object)  uplink;     ///< Global updated link
+  RB_ENTRY(epg_object)    uri_link;    ///< Global URI link
+  LIST_ENTRY(epg_object)  id_link;     ///< Global (ID) link
+  LIST_ENTRY(epg_object)  un_link;     ///< Global unref'd link
+  LIST_ENTRY(epg_object)  up_link;     ///< Global updated link
  
   epg_object_type_t       type;       ///< Specific object type
   uint64_t                id;         ///< Internal ID
@@ -98,7 +98,7 @@ struct epg_object
 /* Object */
 struct epg_brand
 {
-  epg_object_t               _; ///< Base object
+  epg_object_t;                            ///< Base object
 
   char                      *title;        ///< Brand name
   char                      *summary;      ///< Brand summary
@@ -138,7 +138,7 @@ htsmsg_t    *epg_brand_list ( void );
 /* Object */
 struct epg_season
 {
-  epg_object_t               _;                ///< Parent object
+  epg_object_t;                             ///< Parent object
 
   char                      *summary;       ///< Season summary
   uint16_t                   number;        ///< The season number
@@ -179,7 +179,7 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save );
 /* Object */
 struct epg_episode
 {
-  epg_object_t               _;                ///< Parent object
+  epg_object_t;                             ///< Parent object
 
   char                      *title;         ///< Title
   char                      *subtitle;      ///< Sub-title
@@ -264,7 +264,7 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save );
 /* Object */
 struct epg_broadcast
 {
-  epg_object_t               _;                ///< Parent object
+  epg_object_t;                                ///< Parent object
   
   time_t                     start;            ///< Start time
   time_t                     stop;             ///< End time
@@ -284,8 +284,8 @@ struct epg_broadcast
   uint8_t                    is_new;           ///< New series / file premiere
   uint8_t                    is_repeat;        ///< Repeat screening
 
-  RB_ENTRY(epg_broadcast)    glink;            ///< Schedule link
-  LIST_ENTRY(epg_broadcast)  elink;            ///< Episode link
+  RB_ENTRY(epg_broadcast)    sched_link;       ///< Schedule link
+  LIST_ENTRY(epg_broadcast)  ep_link;          ///< Episode link
   epg_episode_t             *episode;          ///< Episode shown
   struct channel            *channel;          ///< Channel being broadcast on
 

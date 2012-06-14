@@ -25,7 +25,7 @@ include ${BUILDDIR}/config.mak
 PROG=${BUILDDIR}/tvheadend
 
 CFLAGS += -Wall -Werror -Wwrite-strings -Wno-deprecated-declarations
-CFLAGS += -Wmissing-prototypes
+CFLAGS += -Wmissing-prototypes -fms-extensions
 LDFLAGS += -lrt -ldl
 
 BUNDLES += docs/html docs/docresources src/webui/static
@@ -76,8 +76,6 @@ SRCS =  src/main.c \
 SRCS += src/epggrab/pyepg.c\
   src/epggrab/xmltv.c\
   src/epggrab/eit.c
-
-
 
 SRCS += src/plumbing/tsfix.c \
 	src/plumbing/globalheaders.c \
