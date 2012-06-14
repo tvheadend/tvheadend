@@ -43,6 +43,7 @@ typedef struct dvr_config {
   int dvr_sl_channel_lock;
   int dvr_sl_time_lock;
   int dvr_sl_more_recent;
+  int dvr_sl_quality_lock;
 
   LIST_ENTRY(dvr_config) config_link;
 } dvr_config_t;

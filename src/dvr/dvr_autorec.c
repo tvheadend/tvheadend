@@ -57,7 +57,6 @@ dvr_autorec_purge_spawns(dvr_autorec_entry_t *dae)
   }
 }
 
-
 /**
  * return 1 if the event 'e' is matched by the autorec rule 'dae'
  */
@@ -66,6 +65,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 {
   channel_tag_mapping_t *ctm;
   epg_episode_num_t epnum;
+  dvr_config_t *cfg;
 
   if (!e->channel) return 0;
   if (!e->episode) return 0;
@@ -81,9 +81,29 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
      dae->dae_season == NULL)
     return 0; // Avoid super wildcard match
 
-  if(dae->dae_channel != NULL &&
-     dae->dae_channel != e->channel)
+  // Note: we always test season first, though it will only be set
+  //       if configured
+  if(dae->dae_season)
+    if (!e->episode->season || dae->dae_season != e->episode->season) return 0;
+  if(dae->dae_brand)
+    if (!e->episode->brand || dae->dae_brand != e->episode->brand) return 0;
+  
+  if(dae->dae_title != NULL && dae->dae_title[0] != '\0') {
+    if(e->episode->title == NULL ||
+       regexec(&dae->dae_title_preg, e->episode->title, 0, NULL, 0))
     return 0;
+  }
+
+  // Note: ignore channel test if we allow quality unlocking 
+  // TODO: should we only apply this setting if this is actually 
+  ///      created as a series link?
+  // TODO: I could just REMOVE the channel, but I think we probably still
+  //       want the channel as a "preferred" option
+  cfg = dvr_config_find_by_name_default(dae->dae_config_name);
+  if (cfg->dvr_sl_quality_lock)
+    if(dae->dae_channel != NULL &&
+       dae->dae_channel != e->channel)
+      return 0;
   
   if(dae->dae_channel_tag != NULL) {
     LIST_FOREACH(ctm, &dae->dae_channel_tag->ct_ctms, ctm_tag_link)
@@ -102,19 +122,6 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
       }
     }
     if (!ok) return 0;
-  }
-
-  // Note: we always test season first, though it will only be set
-  //       if configured
-  if(dae->dae_season)
-    if (!e->episode->season || dae->dae_season != e->episode->season) return 0;
-  if(dae->dae_brand)
-    if (!e->episode->brand || dae->dae_brand != e->episode->brand) return 0;
-  
-  if(dae->dae_title != NULL && dae->dae_title[0] != '\0') {
-    if(e->episode->title == NULL ||
-       regexec(&dae->dae_title_preg, e->episode->title, 0, NULL, 0))
-    return 0;
   }
 
   if(dae->dae_approx_time != 0) {
