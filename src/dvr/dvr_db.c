@@ -263,6 +263,19 @@ static dvr_entry_t *_dvr_entry_create (
     if(de->de_start == start && de->de_sched_state != DVR_COMPLETED)
       return NULL;
 
+  /* Reject duplicate episodes (unless earlier) */
+  if (e && cfg->dvr_dup_detect_episode) {
+    de = dvr_entry_find_by_episode(e);
+    if (de) {
+      if (de->de_start > start) {
+        dvr_event_replaced(de->de_bcast, e);
+        return de;
+      } else {
+        return NULL;
+      }
+    }
+  }
+
   de = calloc(1, sizeof(dvr_entry_t));
   de->de_id = ++de_tally;
 
@@ -815,6 +828,26 @@ dvr_entry_find_by_event_fuzzy(epg_broadcast_t *e)
   return NULL;
 }
 
+/*
+ * Find DVR entry based on an episode
+ */
+dvr_entry_t *
+dvr_entry_find_by_episode(epg_broadcast_t *e)
+{
+  // TODO: should be configurable?
+  if (e->episode) {
+    dvr_entry_t *de;
+    epg_broadcast_t *ebc;
+    LIST_FOREACH(ebc, &e->episode->broadcasts, ep_link) {
+      de = dvr_entry_find_by_event(ebc);
+      if (de) return de;
+    }
+    return NULL;
+  } else {
+    return dvr_entry_find_by_event(e);
+  }
+}
+
 /**
  *
  */
@@ -1041,6 +1074,9 @@ dvr_config_create(const char *name)
   cfg->dvr_sl_channel_lock = 1; // channel locked
   cfg->dvr_sl_time_lock    = 0; // time slot (approx) locked
   cfg->dvr_sl_more_recent  = 1; // Only record more reason episodes
+
+  /* dup detect */
+  cfg->dvr_dup_detect_episode = 1; // detect dup episodes
 
   LIST_INSERT_HEAD(&dvrconfigs, cfg, config_link);
 
