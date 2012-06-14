@@ -939,20 +939,36 @@ size_t epg_episode_number_format
     const char *cfmt )
 {
   size_t i = 0;
-  if ( episode->number ) {
+  epg_episode_num_t num;
+  epg_episode_number_full(episode, &num);
+  if ( num.e_num ) {
     if (pre) i += snprintf(&buf[i], len-i, "%s", pre);
-    if ( sfmt && episode->season && episode->season->number ) {
-      i += snprintf(&buf[i], len-i, sfmt, episode->season->number);
-      if ( cfmt && episode->brand && episode->brand->season_count )
-        i += snprintf(&buf[i], len-i, cfmt,
-                      episode->brand->season_count);
+    if ( sfmt && num.s_num ) {
+      i += snprintf(&buf[i], len-i, sfmt, num.s_num);
+      if ( cfmt && num.s_cnt )
+        i += snprintf(&buf[i], len-i, cfmt, num.s_cnt);
       if (sep) i += snprintf(&buf[i], len-i, "%s", sep);
     }
-    i += snprintf(&buf[i], len-i, efmt, episode->number);
-    if ( cfmt && episode->season && episode->season->episode_count)
-      i+= snprintf(&buf[i], len-i, cfmt, episode->season->episode_count);
+    i += snprintf(&buf[i], len-i, efmt, num.e_num);
+    if ( cfmt && num.e_cnt )
+      i+= snprintf(&buf[i], len-i, cfmt, num.e_cnt);
   }
   return i;
+}
+
+void epg_episode_number_full ( epg_episode_t *ee, epg_episode_num_t *num )
+{
+  if (!ee || !num) return;
+  num->e_num = ee->number;
+  num->p_num = ee->part_number;
+  num->p_cnt = ee->part_count;
+  if (ee->season) {
+    num->e_cnt = ee->season->episode_count;
+    num->s_num = ee->season->number;
+  }
+  if (ee->brand) {
+    num->s_cnt = ee->brand->season_count;
+  }
 }
 
 int epg_episode_fuzzy_match

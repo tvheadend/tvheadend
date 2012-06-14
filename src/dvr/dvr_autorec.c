@@ -473,6 +473,7 @@ _dvr_autorec_add(const char *config_name,
                 const char *title, channel_t *ch,
 		const char *tag, uint8_t content_type,
     epg_brand_t *brand, epg_season_t *season,
+    int approx_time, epg_episode_num_t *epnum,
 		const char *creator, const char *comment)
 {
   dvr_autorec_entry_t *dae;
@@ -513,6 +514,11 @@ _dvr_autorec_add(const char *config_name,
     dae->dae_season = season;
     season->getref((epg_object_t*)season);
   }
+  if(epnum) {
+    dae->dae_epnum = *epnum;
+  }
+
+  dae->dae_approx_time = approx_time;
 
   m = autorec_record_build(dae);
   hts_settings_save(m, "%s/%s", "autorec", dae->dae_id);
@@ -536,7 +542,7 @@ dvr_autorec_add(const char *config_name,
   channel_t *ch = NULL;
   if(channel != NULL) ch = channel_find_by_name(channel, 0, 0);
   _dvr_autorec_add(config_name, title, ch, tag, content_type,
-                   NULL, NULL, creator, comment);
+                   NULL, NULL, 0, NULL, creator, comment);
 }
 
 /* TODO: configurable brand/series selection */
@@ -544,11 +550,29 @@ void dvr_autorec_add_series_link
   ( const char *dvr_config_name, epg_broadcast_t *event,
     const char *creator, const char *comment )
 {
+  int atime = 0;
+  dvr_config_t *cfg;
+  epg_episode_t *ee;
+  epg_episode_num_t *epnump = NULL, epnum;
   if (!event || !event->episode) return;
+  
+  ee  = event->episode;
+  cfg = dvr_config_find_by_name_default(dvr_config_name);
+  if (cfg->dvr_sl_time_lock) {
+    struct tm t;
+    localtime_r(&event->start, &t);
+    atime = (t.tm_hour * 60) + t.tm_min;
+  }
+  if (cfg->dvr_sl_more_recent) {
+    epg_episode_number_full(ee, &epnum);
+    epnump = &epnum;
+  }
   _dvr_autorec_add(dvr_config_name, event->episode->title,
-                   event->channel, NULL, 0,
-                   event->episode->brand,
-                   event->episode->season,
+                   cfg->dvr_sl_channel_lock ? event->channel : NULL,
+                   NULL, 0, // tag/content type
+                   cfg->dvr_sl_brand_lock ? ee->brand : NULL,
+                   cfg->dvr_sl_season_lock || !ee->brand ? ee->season : NULL,
+                   atime, epnump,
                    creator, comment);
 }
 
