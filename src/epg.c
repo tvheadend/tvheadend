@@ -958,7 +958,6 @@ size_t epg_episode_number_format
 
 void epg_episode_number_full ( epg_episode_t *ee, epg_episode_num_t *num )
 {
-  if (!ee || !num) return;
   num->e_num = ee->number;
   num->p_num = ee->part_number;
   num->p_cnt = ee->part_count;
@@ -968,6 +967,17 @@ void epg_episode_number_full ( epg_episode_t *ee, epg_episode_num_t *num )
   }
   if (ee->brand) {
     num->s_cnt = ee->brand->season_count;
+  }
+}
+
+int epg_episode_number_cmp ( epg_episode_num_t *a, epg_episode_num_t *b )
+{
+  if (a->s_num != b->s_num) {
+    return a->s_num - b->s_num;
+  } else if (a->e_num != b->e_num) {
+    return a->e_num - b->e_num;
+  } else {
+    return a->p_num - b->p_num;
   }
 }
 
