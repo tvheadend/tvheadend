@@ -939,6 +939,7 @@ size_t epg_episode_number_format
     const char *cfmt )
 {
   size_t i = 0;
+  if (!episode) return 0;
   epg_episode_num_t num;
   epg_episode_number_full(episode, &num);
   if ( num.e_num ) {
@@ -958,7 +959,8 @@ size_t epg_episode_number_format
 
 void epg_episode_number_full ( epg_episode_t *ee, epg_episode_num_t *num )
 {
-  if (!ee || !!num) return;
+  if (!ee || !num) return;
+  memset(num, 0, sizeof(epg_episode_num_t));
   num->e_num = ee->number;
   num->p_num = ee->part_number;
   num->p_cnt = ee->part_count;
