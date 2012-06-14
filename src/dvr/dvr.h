@@ -35,15 +35,16 @@ typedef struct dvr_config {
   int dvr_extra_time_pre;
   int dvr_extra_time_post;
 
-  /*
-   * Series link support
-   */
+  /* Series link support */
   int dvr_sl_brand_lock;
   int dvr_sl_season_lock;
   int dvr_sl_channel_lock;
   int dvr_sl_time_lock;
   int dvr_sl_more_recent;
   int dvr_sl_quality_lock;
+
+  /* Duplicate detect */
+  int dvr_dup_detect_episode;
 
   LIST_ENTRY(dvr_config) config_link;
 } dvr_config_t;
@@ -283,6 +284,8 @@ dvr_entry_t *dvr_entry_find_by_id(int id);
 dvr_entry_t *dvr_entry_find_by_event(epg_broadcast_t *e);
 
 dvr_entry_t *dvr_entry_find_by_event_fuzzy(epg_broadcast_t *e);
+
+dvr_entry_t *dvr_entry_find_by_episode(epg_broadcast_t *e);
 
 off_t dvr_get_filesize(dvr_entry_t *de);
 
