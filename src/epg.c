@@ -958,6 +958,7 @@ size_t epg_episode_number_format
 
 void epg_episode_number_full ( epg_episode_t *ee, epg_episode_num_t *num )
 {
+  if (!ee || !!num) return;
   num->e_num = ee->number;
   num->p_num = ee->part_number;
   num->p_cnt = ee->part_count;
