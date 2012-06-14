@@ -262,6 +262,8 @@ size_t epg_episode_number_format
     const char *cfmt );
 void epg_episode_number_full
   ( epg_episode_t *e, epg_episode_num_t *epnum );
+int  epg_episode_number_cmp
+  ( epg_episode_num_t *a, epg_episode_num_t *b );
 
 /* Matching */
 int epg_episode_fuzzy_match
