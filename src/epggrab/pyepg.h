@@ -22,5 +22,6 @@
 #include "epggrab.h"
 
 void pyepg_init ( epggrab_module_list_t *list );
+void pyepg_load ( void );
 
 #endif

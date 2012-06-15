@@ -426,7 +426,9 @@ void xmltv_init ( epggrab_module_list_t *list )
 
   /* Standard modules */
   _xmltv_load_grabbers(list);
+}
 
-  /* Load channel config */
-  epggrab_module_channels_load(mod);
+void xmltv_load ( void )
+{
+  epggrab_module_channels_load(_xmltv_module);
 }

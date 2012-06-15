@@ -91,6 +91,55 @@ static int _episode_order ( const void *_a, const void *_b )
  * Setup / Update
  * *************************************************************************/
 
+static void _epg_event_deserialize ( htsmsg_t *c, epggrab_stats_t *stats )
+{
+  channel_t *ch;
+  epg_episode_t *ee;
+  epg_broadcast_t *ebc;
+  uint32_t ch_id = 0;
+  uint32_t e_start = 0;
+  uint32_t e_stop = 0;
+  uint32_t u32;
+  const char *title, *desc;
+  char *uri;
+  int save = 0;
+
+  /* Check key info */
+  if(htsmsg_get_u32(c, "ch_id", &ch_id)) return;
+  if((ch = channel_find_by_identifier(ch_id)) == NULL) return;
+  if(htsmsg_get_u32(c, "start", &e_start)) return;
+  if(htsmsg_get_u32(c, "stop", &e_stop)) return;
+  if(!(title = htsmsg_get_str(c, "title"))) return;
+  
+  /* Create broadcast */
+  save = 0;
+  ebc  = epg_broadcast_find_by_time(ch, e_start, e_stop, 1, &save);
+  if (!ebc) return;
+  if (save) stats->broadcasts.total++;
+
+  /* Create episode */
+  save = 0;
+  desc = htsmsg_get_str(c, "desc");
+  uri  = md5sum(desc ?: title);
+  ee   = epg_episode_find_by_uri(uri, 1, &save);
+  free(uri);
+  if (!ee) return;
+  if (save) stats->episodes.total++;
+  if (title)
+    save |= epg_episode_set_title(ee, title);
+  if (desc)
+    save |= epg_episode_set_summary(ee, desc);
+  if (!htsmsg_get_u32(c, "episode", &u32))
+    save |= epg_episode_set_number(ee, u32);
+  if (!htsmsg_get_u32(c, "part", &u32))
+    save |= epg_episode_set_part(ee, u32, 0);
+  // TODO: season number!
+  // TODO: onscreen
+
+  /* Set episode */
+  save |= epg_broadcast_set_episode(ebc, ee);
+}
+
 static int _epg_write ( int fd, htsmsg_t *m )
 {
   int ret = 1;
@@ -173,6 +222,7 @@ void epg_init ( void )
   char *sect = NULL;
   const char *s;
   epggrab_stats_t stats;
+  int old = 0;
   
   /* Map file to memory */
   fd = hts_settings_open_file(0, "epgdb");
@@ -217,6 +267,14 @@ void epg_init ( void )
       if (s) {
         if (sect) free(sect);
         sect = strdup(s);
+  
+      /* Assume OLD data */
+      } else if ( !sect ) {
+        if (!old) { 
+          old = 1;
+          tvhlog(LOG_INFO, "epg", "migrating old database");
+        }
+        _epg_event_deserialize(m, &stats);
 
       /* Brand */
       } else if ( !strcmp(sect, "brands") ) {

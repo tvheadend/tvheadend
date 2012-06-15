@@ -23,5 +23,6 @@
 #include "epggrab.h"
 
 void xmltv_init ( epggrab_module_list_t *list );
+void xmltv_load ( void );
 
 #endif

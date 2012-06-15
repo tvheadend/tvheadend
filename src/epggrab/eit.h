@@ -22,6 +22,7 @@
 #include "epggrab.h"
 
 void eit_init ( epggrab_module_list_t *list );
+void eit_load ( void );
 
 void eit_callback ( struct channel *ch, int id, time_t start, time_t stop,
                     const char *title, const char *desc,

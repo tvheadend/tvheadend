@@ -107,3 +107,7 @@ void eit_init ( epggrab_module_list_t *list )
   LIST_INSERT_HEAD(list, &_eit_mod, link);
   // Note: this is mostly ignored anyway as EIT is treated as a special case!
 }
+
+void eit_load ( void )
+{
+}
