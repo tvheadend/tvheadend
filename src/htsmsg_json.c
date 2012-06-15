@@ -233,7 +233,10 @@ htsmsg_json_parse_object(const char *s, const char **endp)
 
   r = htsmsg_create_map();
   
-  while(1) {
+  while(*s > 0 && *s < 33)
+    s++;
+
+  if(*s != '}') while(1) {
 
     if((name = htsmsg_json_parse_string(s, &s2)) == NULL) {
       htsmsg_destroy(r);
