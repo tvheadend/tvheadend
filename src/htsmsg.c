@@ -258,6 +258,7 @@ htsmsg_add_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub)
 
   assert(sub->hm_data == NULL);
   TAILQ_MOVE(&f->hmf_msg.hm_fields, &sub->hm_fields, hmf_link);
+  f->hmf_msg.hm_islist = sub->hm_islist;
   free(sub);
 }
 
@@ -275,6 +276,7 @@ htsmsg_add_msg_extname(htsmsg_t *msg, const char *name, htsmsg_t *sub)
 
   assert(sub->hm_data == NULL);
   TAILQ_MOVE(&f->hmf_msg.hm_fields, &sub->hm_fields, hmf_link);
+  f->hmf_msg.hm_islist = sub->hm_islist;
   free(sub);
 }
 
