@@ -650,25 +650,70 @@ static void _epggrab_load ( void )
 {
   epggrab_module_t *mod;
   htsmsg_t *m, *a;
+  uint32_t enabled = 1;
   const char *str;
-  
-  /* No config */
-  if ((m = hts_settings_load("epggrab/config")) == NULL)
-    return;
+  int old = 0;
 
   /* Load settings */
-  htsmsg_get_u32(m, "eit",      &epggrab_eitenabled);
-  htsmsg_get_u32(m, "interval", &epggrab_interval);
-  if ( (str = htsmsg_get_str(m, "module")) )
-    epggrab_module = epggrab_module_find_by_id(str);
-  if ( (a = htsmsg_get_map(m, "mod_enabled")) ) {
-    LIST_FOREACH(mod, &epggrab_modules, link) {
-      if (htsmsg_get_u32_or_default(a, mod->id, 0)) {
-        if (mod->enable) mod->enable(mod, 1);
+  if (!(m = hts_settings_load("epggrab/config"))) {
+    printf("failed to load config\n");
+    assert(0);
+    if ((m = hts_settings_load("xmltv/config")))
+      old = 1;
+  }
+  if (old) tvhlog(LOG_INFO, "epggrab", "migrating old configuration");
+
+  /* Process */
+  if (m) {
+    htsmsg_get_u32(m, "eit",      &epggrab_eitenabled);
+    if (!htsmsg_get_u32(m, old ? "grab-interval" : "interval", &epggrab_interval))
+      if (old) epggrab_interval *= 3600;
+    if ( !htsmsg_get_u32(m, "grab-enabled", &enabled) )
+    if (enabled) {
+      if ( (str = htsmsg_get_str(m, old ? "current-grabber" : "module")) )
+        epggrab_module = epggrab_module_find_by_id(str);
+      if ( (a = htsmsg_get_map(m, "mod_enabled")) ) {
+        LIST_FOREACH(mod, &epggrab_modules, link) {
+          if (htsmsg_get_u32_or_default(a, mod->id, 0)) {
+            if (mod->enable) mod->enable(mod, 1);
+          }
+        }
       }
     }
+    htsmsg_destroy(m);
   }
-  htsmsg_destroy(m);
+  
+  /* Finish up migration */
+  if (old) {
+    htsmsg_field_t *f;
+    htsmsg_t *xc, *ch;
+    htsmsg_t *xchs = hts_settings_load("xmltv/channels");
+    htsmsg_t *chs  = hts_settings_load("channels");
+    if (xchs) {
+      HTSMSG_FOREACH(f, chs) {
+        if ((ch = htsmsg_get_map_by_field(f))) {
+          if ((str = htsmsg_get_str(ch, "xmltv-channel"))) {
+            if ((xc = htsmsg_get_map(xchs, str))) {
+              htsmsg_add_u32(xc, "channel", atoi(f->hmf_name));
+            }
+          }
+        }
+      }
+      HTSMSG_FOREACH(f, xchs) {
+        if ((xc = htsmsg_get_map_by_field(f))) {
+          hts_settings_save(xc, "epggrab/xmltv/channels/%s", f->hmf_name);
+        }
+      }
+    }
+
+    /* Save epggrab config */
+    epggrab_save();
+  }
+
+  /* Load module config (channels) */
+  eit_load();
+  xmltv_load();
+  pyepg_load();
 }
 
 void epggrab_save ( void )
@@ -686,11 +731,14 @@ void epggrab_save ( void )
   htsmsg_add_u32(m, "interval",   epggrab_interval);
   if ( epggrab_module )
     htsmsg_add_str(m, "module", epggrab_module->id);
-  a = htsmsg_create_map();
+  a = NULL;
   LIST_FOREACH(mod, &epggrab_modules, link) {
-    if (mod->enabled) htsmsg_add_u32(a, mod->id, 1);
+    if (mod->enabled) {
+      if (!a) a = htsmsg_create_map();
+      htsmsg_add_u32(a, mod->id, 1);
+    } 
   }
-  htsmsg_add_msg(m, "mod_enabled", a);
+  if (a) htsmsg_add_msg(m, "mod_enabled", a);
   hts_settings_save(m, "epggrab/config");
   htsmsg_destroy(m);
 }

@@ -442,8 +442,9 @@ void pyepg_init ( epggrab_module_list_t *list )
   mod->parse               = _pyepg_parse;
   *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_EXTERNAL;
   LIST_INSERT_HEAD(list, mod, link);
-
-  /* Load channel config */
-  epggrab_module_channels_load(_pyepg_module);
 }
 
+void pyepg_load ( void )
+{
+  epggrab_module_channels_load(_pyepg_module);
+}
