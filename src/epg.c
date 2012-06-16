@@ -35,6 +35,10 @@
 #include "htsmsg_binary.h"
 #include "epggrab.h"
 
+/* EPG database file */
+#define EPG_DB_OLD "epgdb"
+#define EPG_DB_NEW "epgdb.aps"
+
 /* Broadcast hashing */
 #define EPG_HASH_WIDTH 1024
 #define EPG_HASH_MASK  (EPG_HASH_WIDTH - 1)
@@ -159,7 +163,7 @@ static int _epg_write ( int fd, htsmsg_t *m )
   if(ret) {
     tvhlog(LOG_ERR, "epg", "failed to store epg to disk");
     close(fd);
-    hts_settings_remove("epgdb");
+    hts_settings_remove(EPG_DB_NEW);
   }
   return ret;
 }
@@ -179,7 +183,7 @@ void epg_save ( void )
   channel_t *ch;
   epggrab_stats_t stats;
   
-  fd = hts_settings_open_file(1, "epgdb");
+  fd = hts_settings_open_file(1, EPG_DB_NEW);
 
   memset(&stats, 0, sizeof(stats));
   if ( _epg_write_sect(fd, "brands") ) return;
@@ -225,7 +229,8 @@ void epg_init ( void )
   int old = 0;
   
   /* Map file to memory */
-  fd = hts_settings_open_file(0, "epgdb");
+  fd = hts_settings_open_file(0, EPG_DB_NEW);
+  if (fd < 0) fd = hts_settings_open_file(0, EPG_DB_OLD);
   if ( fd < 0 ) {
     tvhlog(LOG_DEBUG, "epg", "database does not exist");
     return;
