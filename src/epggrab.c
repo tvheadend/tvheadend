@@ -656,8 +656,6 @@ static void _epggrab_load ( void )
 
   /* Load settings */
   if (!(m = hts_settings_load("epggrab/config"))) {
-    printf("failed to load config\n");
-    assert(0);
     if ((m = hts_settings_load("xmltv/config")))
       old = 1;
   }
