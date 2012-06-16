@@ -42,67 +42,18 @@
 #include "notify.h"
 #include "cwc.h"
 
-#define TDT_CRC           0x1
-#define TDT_QUICKREQ      0x2
-#define TDT_CA		  0x4
-
 static void dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid);
 
 static int tdt_id_tally;
 
 /**
- *
- */
-typedef struct th_dvb_table {
-  /**
-   * Flags, must never be changed after creation.
-   * We inspect it without holding global_lock
-   */
-  int tdt_flags;
-
-  /**
-   * Cycle queue
-   * Tables that did not get a fd or filter in hardware will end up here
-   * waiting for any other table to be received so it can reuse that fd.
-   * Only linked if fd == -1
-   */
-  TAILQ_ENTRY(th_dvb_table) tdt_pending_link;
-
-  /**
-   * File descriptor for filter
-   */
-  int tdt_fd;
-
-  LIST_ENTRY(th_dvb_table) tdt_link;
-
-  char *tdt_name;
-
-  void *tdt_opaque;
-  int (*tdt_callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
-		      uint8_t tableid, void *opaque);
-
-
-  int tdt_count;
-  int tdt_pid;
-
-  struct dmx_sct_filter_params *tdt_fparams;
-
-  int tdt_id;
-
-} th_dvb_table_t;
-
-
-
-
-/**
  * Helper for preparing a section filter parameter struct
  */
-static struct dmx_sct_filter_params *
+struct dmx_sct_filter_params *
 dvb_fparams_alloc(void)
 {
   return calloc(1, sizeof(struct dmx_sct_filter_params));
 }
-
 
 /**
  *
@@ -323,7 +274,7 @@ dvb_tdt_destroy(th_dvb_adapter_t *tda, th_dvb_mux_instance_t *tdmi,
 /**
  * Add a new DVB table
  */
-static void
+void
 tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
 	int (*callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
 			 uint8_t tableid, void *opaque), void *opaque,
