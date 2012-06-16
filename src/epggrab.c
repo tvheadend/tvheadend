@@ -16,6 +16,7 @@
 #include "epggrab/eit.h"
 #include "epggrab/xmltv.h"
 #include "epggrab/pyepg.h"
+#include "epggrab/opentv.h"
 #include "channels.h"
 #include "spawn.h"
 #include "htsmsg_xml.h"
@@ -712,6 +713,7 @@ static void _epggrab_load ( void )
   eit_load();
   xmltv_load();
   pyepg_load();
+  opentv_load();
 }
 
 void epggrab_save ( void )
@@ -819,6 +821,7 @@ void epggrab_init ( void )
   eit_init(&epggrab_modules);
   xmltv_init(&epggrab_modules);
   pyepg_init(&epggrab_modules);
+  opentv_init(&epggrab_modules);
 
   /* Load config */
   _epggrab_load();
