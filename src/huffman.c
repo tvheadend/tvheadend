@@ -35,8 +35,11 @@ void huffman_tree_destroy ( huffman_node_t *n )
 huffman_node_t *huffman_tree_load ( const char *path )
 {
   htsmsg_t *m;
+  huffman_node_t *ret;
   if (!(m = hts_settings_load(path))) return NULL;
-  return huffman_tree_build(m);
+  ret = huffman_tree_build(m);
+  htsmsg_destroy(m);
+  return ret;
 }
 
 huffman_node_t *huffman_tree_build ( htsmsg_t *m )
@@ -68,8 +71,6 @@ huffman_node_t *huffman_tree_build ( htsmsg_t *m )
       node->data = strdup(data);
     }
   }
-  
-  htsmsg_destroy(m);
   return root; 
 }
 
@@ -77,7 +78,7 @@ char *huffman_decode
   ( huffman_node_t *tree, const char *data, size_t len, uint8_t mask )
 {
   char*           ret;
-  size_t          nalloc = len, nused = 0;
+  size_t          nalloc = len*4, nused = 0;
   huffman_node_t *node = tree;
   if (!len) return NULL;
 
@@ -104,6 +105,7 @@ char *huffman_decode
       }
     }
     mask = 0x80;
+    data++;
   }
   return ret;
 }
