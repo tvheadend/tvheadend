@@ -858,6 +858,14 @@ void epggrab_channel_mod ( channel_t *ch )
   }
 }
 
+void epggrab_tune ( th_dvb_mux_instance_t *tdmi )
+{
+  epggrab_module_t *m;
+  LIST_FOREACH(m, &epggrab_modules, link) {
+    if (m->tune) m->tune(m, tdmi);
+  }
+}
+
 epggrab_module_t* epggrab_module_find_by_id ( const char *id )
 {
   epggrab_module_t *m;

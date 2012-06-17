@@ -3,6 +3,7 @@
 
 #include <pthread.h>
 #include "channels.h"
+#include "dvb/dvb.h"
 
 typedef struct epggrab_module epggrab_module_t;
 
@@ -117,6 +118,9 @@ struct epggrab_module
   void      (*ch_add)  ( epggrab_module_t *m, channel_t *ch );
   void      (*ch_rem)  ( epggrab_module_t *m, channel_t *ch );
   void      (*ch_mod)  ( epggrab_module_t *m, channel_t *ch );
+
+  /* Transponder tuning */
+  void      (*tune)    ( epggrab_module_t *m, th_dvb_mux_instance_t *tdmi );
 };
 
 /*
@@ -186,5 +190,10 @@ void epggrab_init ( void );
 void epggrab_channel_add ( struct channel *ch );
 void epggrab_channel_rem ( struct channel *ch );
 void epggrab_channel_mod ( struct channel *ch );
+
+/*
+ * Transport handling
+ */
+void epggrab_tune ( th_dvb_mux_instance_t *tdmi );
 
 #endif /* __EPGGRAB_H__ */
