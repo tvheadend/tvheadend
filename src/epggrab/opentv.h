@@ -19,8 +19,10 @@
 #ifndef __TVH_EPGGRAB_OPENTV_H__
 #define __TVH_EPGGRAB_OPENTV_H__
 
+#include "dvb/dvb.h"
 #include "epggrab.h"
 
+void opentv_tune ( th_dvb_mux_instance_t *tdmi );
 void opentv_init ( epggrab_module_list_t *list );
 void opentv_load ( void );
 
