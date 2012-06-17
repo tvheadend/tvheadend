@@ -667,7 +667,7 @@ static void _epggrab_load ( void )
     htsmsg_get_u32(m, "eit",      &epggrab_eitenabled);
     if (!htsmsg_get_u32(m, old ? "grab-interval" : "interval", &epggrab_interval))
       if (old) epggrab_interval *= 3600;
-    if ( !htsmsg_get_u32(m, "grab-enabled", &enabled) )
+    htsmsg_get_u32(m, "grab-enabled", &enabled);
     if (enabled) {
       if ( (str = htsmsg_get_str(m, old ? "current-grabber" : "module")) )
         epggrab_module = epggrab_module_find_by_id(str);
