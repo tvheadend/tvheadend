@@ -75,7 +75,7 @@ huffman_node_t *huffman_tree_build ( htsmsg_t *m )
 }
 
 char *huffman_decode 
-  ( huffman_node_t *tree, const char *data, size_t len, uint8_t mask )
+  ( huffman_node_t *tree, const uint8_t *data, size_t len, uint8_t mask )
 {
   char*           ret;
   size_t          nalloc = len*4, nused = 0;
