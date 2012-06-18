@@ -231,7 +231,7 @@ service_start(service_t *t, unsigned int weight, int force_start)
 static int
 dvb_extra_prio(th_dvb_adapter_t *tda)
 {
-  return tda->tda_hostconnection * 10;
+  return tda->tda_extrapriority + tda->tda_hostconnection * 10;
 }
 
 /**
@@ -285,10 +285,19 @@ servicecmp(const void *A, const void *B)
   service_t *a = *(service_t **)A;
   service_t *b = *(service_t **)B;
 
-  int q = service_get_quality(a) - service_get_quality(b);
+  /* only check quality if both adapters have the same prio
+   *
+   * there needs to be a much more sophisticated algorithm to take priority and quality into account
+   * additional, it may be problematic, since a higher priority value lowers the ranking
+   *
+   */
+  if (dvb_extra_prio(a->s_dvb_mux_instance->tdmi_adapter) == dvb_extra_prio(b->s_dvb_mux_instance->tdmi_adapter)) {
 
-  if(q != 0)
-    return q; /* Quality precedes priority */
+    int q = service_get_quality(a) - service_get_quality(b);
+
+    if(q != 0)
+      return q; /* Quality precedes priority */
+  }
 
   return service_get_prio(a) - service_get_prio(b);
 }
@@ -335,6 +344,9 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
       continue;
     }
     vec[cnt++] = t;
+    tvhlog(LOG_DEBUG, "Service",
+    		"%s: Adding adapter \"%s\" for service \"%s\"",
+    		 loginfo, t->s_dvb_mux_instance->tdmi_identifier, service_nicename(t));
   }
 
   /* Sort services, lower priority should come come earlier in the vector
@@ -358,6 +370,9 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
   /* First, try all services without stealing */
   for(i = off; i < cnt; i++) {
     t = vec[i];
+    tvhlog(LOG_DEBUG, "Service", "%s: Probing adapter \"%s\" without stealing for service \"%s\"",
+	     loginfo, t->s_dvb_mux_instance->tdmi_identifier, service_nicename(t));
+
     if(t->s_status == SERVICE_RUNNING) 
       return t;
     if((r = service_start(t, 0, 0)) == 0)
@@ -372,6 +387,9 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
 
   for(i = off; i < cnt; i++) {
     t = vec[i];
+    tvhlog(LOG_DEBUG, "Service", "%s: Probing adapter \"%s\" with weight %d for service \"%s\"",
+	     loginfo, t->s_dvb_mux_instance->tdmi_identifier, weight, service_nicename(t));
+
     if((r = service_start(t, weight, 0)) == 0)
       return t;
     *errorp = r;
