@@ -51,9 +51,6 @@ static void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
   const char *description = NULL;
   char *uri;
 
-  /* Disabled? */
-  if (!_eit_mod.enabled) return;
-
   /* Ignore */
   if (!ch || !ch->ch_name || !ch->ch_name[0]) return;
   if (!title) return;
@@ -196,7 +193,6 @@ _eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   service_t *t;
   channel_t *ch;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-  epggrab_module_t *mod = (epggrab_module_t*)opaque;
 
   uint16_t serviceid;
   uint16_t transport_stream_id;
@@ -218,7 +214,7 @@ _eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   int genre_idx = 0;
 
   /* Global disable */
-  if (!mod->enabled) return 0;
+  if (!_eit_mod.enabled) return 0;
 
   lock_assert(&global_lock);
 
