@@ -282,8 +282,13 @@ tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
 {
   th_dvb_table_t *t;
 
+  // Allow multiple entries per PID, but only one per callback/opaque instance
+  // TODO: this could mean reading the same data multiple times, and not
+  //       sure how well this will work! I know Andreas has some thoughts on
+  //       this
   LIST_FOREACH(t, &tdmi->tdmi_tables, tdt_link) {
-    if(pid == t->tdt_pid) {
+    if(pid == t->tdt_pid && 
+       tdt->tdt_callback == callback && tdt->tdt_opaque == opaque) {
       free(tdt);
       free(fparams);
       return;
