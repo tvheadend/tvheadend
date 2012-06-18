@@ -156,6 +156,7 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 		   ((const char *[]){"DiSEqC 1.0 / 2.0",
 				       "DiSEqC 1.1 / 2.1"})
 		   [tda->tda_diseqc_version % 2]);
+    htsmsg_add_u32(r, "extrapriority", tda->tda_extrapriority);
  
     out = json_single_record(r, "dvbadapters");
   } else if(!strcmp(op, "save")) {
@@ -184,6 +185,9 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
       else if(!strcmp(s, "DiSEqC 1.1 / 2.1"))
 	dvb_adapter_set_diseqc_version(tda, 1);
     }
+
+    if((s = http_arg_get(&hc->hc_req_args, "extrapriority")) != NULL)
+      dvb_adapter_set_extrapriority(tda, atoi(s));
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
