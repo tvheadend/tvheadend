@@ -1203,7 +1203,7 @@ static epg_broadcast_t *_epg_channel_add_broadcast
 
   /* Find (only) */
   if ( !create ) {
-    ret = RB_FIND(&ch->ch_epg_schedule, *bcast, sched_link, _ebc_start_cmp);
+    return RB_FIND(&ch->ch_epg_schedule, *bcast, sched_link, _ebc_start_cmp);
 
   /* Find/Create */
   } else {
@@ -1213,14 +1213,13 @@ static epg_broadcast_t *_epg_channel_add_broadcast
       ret    = *bcast;
       *bcast = NULL;
       _epg_object_create((epg_object_t*)ret);
+    } else if ( ret->stop == (*bcast)->stop ) {
+      return ret;
+    } else {
+      ret->stop = (*bcast)->stop;
     }
   }
-  if (!ret) return NULL;
   
-  /* No changes */
-  if (!save2 && (ret->start == (*bcast)->start) &&
-                (ret->stop  == (*bcast)->stop)) return ret;
-
   // Note: scheduling changes are relatively rare and therefore
   //       the rest of this code will happen infrequently (hopefully)
 
@@ -1363,6 +1362,8 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
   htsmsg_add_str(m, "episode", broadcast->episode->uri);
   if (broadcast->channel)
     htsmsg_add_u32(m, "channel", broadcast->channel->ch_id);
+  if (broadcast->dvb_eid)
+    htsmsg_add_u32(m, "dvb_eid", broadcast->dvb_eid);
   
   return m;
 }
@@ -1374,7 +1375,7 @@ epg_broadcast_t *epg_broadcast_deserialize
   epg_broadcast_t *ret, **ebc = _epg_broadcast_skel();
   epg_episode_t *ee;
   const char *str;
-  uint32_t chid, start, stop;
+  uint32_t chid, eid, start, stop;
 
   if ( htsmsg_get_u32(m, "start", &start) ) return NULL;
   if ( htsmsg_get_u32(m, "stop", &stop)   ) return NULL;
@@ -1388,6 +1389,11 @@ epg_broadcast_t *epg_broadcast_deserialize
   _epg_object_deserialize(m, (epg_object_t*)*ebc);
   (*ebc)->start   = start;
   (*ebc)->stop    = stop;
+
+  /* Get DVB id */
+  if ( !htsmsg_get_u32(m, "dvb_eid", &eid) ) {
+    (*ebc)->dvb_eid = eid;
+  }
 
   /* Get channel */
   if ( !htsmsg_get_u32(m, "channel", &chid) ) {
