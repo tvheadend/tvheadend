@@ -208,22 +208,27 @@ static channel_t *_opentv_find_channel ( int tsid, int sid )
  * OpenTV data processing
  * ***********************************************************************/
 
+#define MAX_LEN_TITLE   1024
+#define MAX_LEN_SUMMARY 1024
+#define MAX_LEN_DESC    2048
+
 typedef struct opentv_event
 { 
   int     eid;
   int     start;
   int     duration;
-  char    *title;
-  char    *summary;
-  char    *description;
+  char    title[MAX_LEN_TITLE];
+  char    summary[MAX_LEN_SUMMARY];
+  char    description[MAX_LEN_DESC];
   int     serieslink;
   uint8_t cat;
 } opentv_event_t;
 
 /* Parse huffman encoded string */
-static char *_parse_string ( opentv_prov_t *prov, uint8_t *buf, int len )
+static const char *_parse_string 
+  ( opentv_prov_t *prov, uint8_t *buf, int len, char *outb, int outl )
 {
-  return huffman_decode(prov->dict->codes, buf, len, 0x20);
+  return huffman_decode(prov->dict->codes, buf, len, 0x20, outb, outl);
 }
 
 /* Parse a specific record */
@@ -238,13 +243,13 @@ static int _opentv_parse_event_record
         ev->start       = (((int)buf[2] << 9) | (buf[3] << 1));
         ev->duration    = (((int)buf[4] << 9) | (buf[5] << 1));
         ev->cat         = buf[6];
-        ev->title       = _parse_string(prov, buf+9, rlen-7);
+        _parse_string(prov, buf+9, rlen-7, ev->title, MAX_LEN_TITLE);
         break;
       case 0xb9: // summary
-        ev->summary     = _parse_string(prov, buf+2, rlen);
+        _parse_string(prov, buf+2, rlen, ev->summary, MAX_LEN_SUMMARY);
         break;
       case 0xbb: // description
-        ev->description = _parse_string(prov, buf+2, rlen);
+        _parse_string(prov, buf+2, rlen, ev->description, MAX_LEN_DESC);
         break;
       case 0xc1: // series link
         ev->serieslink  = ((int)buf[2] << 8) | buf[3];
@@ -284,6 +289,7 @@ static int _opentv_parse_event_section
   cid = ((int)buf[0] << 8) | buf[1];
   if (!(ec = _opentv_find_epggrab_channel(mod, cid, 0, NULL))) return 0;
   if (!ec->channel) return 0;
+  if (!*ec->channel->ch_name) return 0; // ignore unnamed channels
   
   /* Time (start/stop referenced to this) */
   mjd = ((int)buf[5] << 8) | buf[6];
@@ -310,8 +316,8 @@ static int _opentv_parse_event_section
       }
 
       /* Create/Find episode */
-      if (ev.description || ev.summary) {
-        uri   = md5sum(ev.description ?: ev.summary);
+      if (*ev.description || *ev.summary) {
+        uri   = md5sum(*ev.description ? ev.description : ev.summary);
         ee    = epg_episode_find_by_uri(uri, 1, &save);
         free(uri);
       } else if (ebc) {
@@ -320,24 +326,20 @@ static int _opentv_parse_event_section
 
       /* Set episode data */
       if (ee) {
-        if (ev.description) 
+        if (*ev.description) 
           save |= epg_episode_set_description(ee, ev.description);
-        if (ev.summary)
+        if (*ev.summary)
           save |= epg_episode_set_summary(ee, ev.summary);
-        if (ev.title)
+        if (*ev.title)
           save |= epg_episode_set_title(ee, ev.title);
         if (ev.cat)
           save |= epg_episode_set_genre(ee, &ev.cat, 1);
+
         // TODO: series link
 
         save |= epg_broadcast_set_episode(ebc, ee);
       }
     }
-
-    /* Cleanup */
-    if (ev.title)       free(ev.title);
-    if (ev.summary)     free(ev.summary);
-    if (ev.description) free(ev.description);
   }
 
   /* Update EPG */
