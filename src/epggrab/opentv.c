@@ -320,10 +320,6 @@ static int _opentv_parse_event_section
     }
 
     if (ebc) {
-      if (ebc->dvb_eid != ev.eid) {
-        ebc->dvb_eid = ev.eid;
-        save = 1;
-      }
 
       /* Create/Find episode */
       if (*ev.description || *ev.summary) {
@@ -332,6 +328,14 @@ static int _opentv_parse_event_section
         free(uri);
       } else if (ebc) {
         ee    = ebc->episode;
+      }
+
+      /* DVB Event Id */
+      // TODO: this causes serious problems for channels backed by multiple
+      // services where the ids don't match
+      if (ebc->dvb_eid != ev.eid) {
+        ebc->dvb_eid = ev.eid;
+        save = 1;
       }
 
       /* Set episode data */
@@ -345,8 +349,11 @@ static int _opentv_parse_event_section
         if (ev.cat)
           save |= epg_episode_set_genre(ee, &ev.cat, 1);
 
-        // TODO: series link
-        if (ev.serieslink) {
+	// Note: we don't overwrite an existing season, the reason for
+        // this is that seasons in opentv are channel specific but episodes
+        // are not (to allow episode matching) so this is a bit of bodge
+        // to make things play nice
+        if (ev.serieslink && !ee->season) {
           es = _opentv_find_season(mod, cid, ev.serieslink);
           if (es) save |= epg_episode_set_season(ee, es);
 	}
