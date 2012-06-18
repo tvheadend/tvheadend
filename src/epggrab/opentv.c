@@ -559,6 +559,7 @@ void opentv_init ( epggrab_module_list_t *list )
     mod->_.enable   = _opentv_enable;
     mod->_.tune     = _opentv_tune;
     mod->_.channels = &_opentv_channels;
+    mod->prov       = p;
     *((uint8_t*)&mod->_.flags) = EPGGRAB_MODULE_OTA;
     LIST_INSERT_HEAD(list, &mod->_, link);
   }
