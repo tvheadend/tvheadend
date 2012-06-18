@@ -188,6 +188,15 @@ static epggrab_channel_t *_opentv_find_epggrab_channel
   return epggrab_module_channel_find((epggrab_module_t*)mod, chid, create, save);
 }
 
+static epg_season_t *_opentv_find_season 
+  ( opentv_module_t *mod, int cid, int slink )
+{
+  int save = 0;
+  char uri[64];
+  sprintf(uri, "%s-%d-%d", mod->prov->id, cid, slink);
+  return epg_season_find_by_uri(uri, 1, &save);
+}
+
 static channel_t *_opentv_find_channel ( int tsid, int sid )
 {
   th_dvb_adapter_t *tda;
@@ -268,7 +277,7 @@ static int _opentv_parse_event
   int      slen = ((int)buf[2] & 0xf << 8) | buf[3];
   int      i    = 4;
   ev->eid  = ((uint16_t)buf[0] << 8) | buf[1];
-  while (i < slen) {
+  while (i < slen+4) {
     i += _opentv_parse_event_record(prov, ev, buf+i, len-i);
   }
   return slen+4;
@@ -283,6 +292,7 @@ static int _opentv_parse_event_section
   epggrab_channel_t *ec;
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
+  epg_season_t *es;
   opentv_event_t ev;
 
   /* Channel */
@@ -336,6 +346,10 @@ static int _opentv_parse_event_section
           save |= epg_episode_set_genre(ee, &ev.cat, 1);
 
         // TODO: series link
+        if (ev.serieslink) {
+          es = _opentv_find_season(mod, cid, ev.serieslink);
+          if (es) save |= epg_episode_set_season(ee, es);
+	}
 
         save |= epg_broadcast_set_episode(ebc, ee);
       }
