@@ -75,15 +75,14 @@ huffman_node_t *huffman_tree_build ( htsmsg_t *m )
 }
 
 char *huffman_decode 
-  ( huffman_node_t *tree, const uint8_t *data, size_t len, uint8_t mask )
+  ( huffman_node_t *tree, const uint8_t *data, size_t len, uint8_t mask,
+    char *outb, int outl )
 {
-  char*           ret;
-  size_t          nalloc = len*4, nused = 0;
+  char           *ret  = outb;
   huffman_node_t *node = tree;
   if (!len) return NULL;
 
-  ret    = malloc(nalloc);
-  ret[0] = '\0';
+  outl--; // leave space for NULL
   while (len) {
     len--;
     while (mask) {
@@ -93,19 +92,21 @@ char *huffman_decode
         node = node->b0;
       }
       mask >>= 1;
-      if (!node) return ret;
+      if (!node) goto end;
       if (node->data) {
-        size_t l = strlen(node->data);
-        if ((nalloc - nused) < l) {
-          nalloc *= 2;
-          ret     = realloc(ret, nalloc);
+        char *t = node->data;
+        while (*t && outl) {
+          *outb = *t;
+          outb++; t++; outl--;
         }
-        strcat(ret, node->data);
+        if (!outl) goto end;
         node = tree;
       }
     }
     mask = 0x80;
     data++;
   }
+end:
+  *outb = '\0';
   return ret;
 }

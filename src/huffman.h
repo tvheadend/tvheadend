@@ -33,6 +33,7 @@ void huffman_tree_destroy ( huffman_node_t *tree );
 huffman_node_t *huffman_tree_load  ( const char *path );
 huffman_node_t *huffman_tree_build ( htsmsg_t *codes );
 char *huffman_decode 
-  ( huffman_node_t *tree, const uint8_t *data, size_t len, uint8_t mask );
+  ( huffman_node_t *tree, const uint8_t *data, size_t len, uint8_t mask,
+    char *outb, int outl );
 
 #endif
