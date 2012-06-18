@@ -1318,6 +1318,15 @@ epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id, channel_t *ch )
   return (epg_broadcast_t*)_epg_object_find_by_id(id);
 }
 
+epg_broadcast_t *epg_broadcast_find_by_eid ( int eid, channel_t *ch )
+{
+  epg_broadcast_t *e;
+  RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {
+    if (e->dvb_eid == eid) return e;
+  }
+  return NULL;
+}
+
 int epg_broadcast_set_episode 
   ( epg_broadcast_t *broadcast, epg_episode_t *episode )
 {
