@@ -238,7 +238,7 @@ static int _opentv_parse_event_record
         ev->start       = (((int)buf[2] << 9) | (buf[3] << 1));
         ev->duration    = (((int)buf[4] << 9) | (buf[5] << 1));
         ev->cat         = buf[6];
-        ev->title       = _parse_string(prov, buf+7, rlen-7);
+        ev->title       = _parse_string(prov, buf+9, rlen-7);
         break;
       case 0xb9: // summary
         ev->summary     = _parse_string(prov, buf+2, rlen);
@@ -294,12 +294,10 @@ static int _opentv_parse_event_section
     memset(&ev, 0, sizeof(opentv_event_t));
     i += _opentv_parse_event(mod->prov, &ev, buf+i, len-i);
 
-    /* Process the event */
-
     /* Create/Find broadcast */
     if (ev.start && ev.duration) {
       time_t start = ev.start + ((mjd - 40587) * 86400);
-      time_t stop  = ev.start + ev.duration;
+      time_t stop  = start + ev.duration;
       ebc = epg_broadcast_find_by_time(ec->channel, start, stop, 1, &save);
     } else {
       ebc = epg_broadcast_find_by_eid(ev.eid, ec->channel);
