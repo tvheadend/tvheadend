@@ -86,9 +86,9 @@ void epggrab_channel_link ( epggrab_channel_t *ch );
 /*
  * Grabber flags
  */
-#define EPGGRAB_MODULE_SIMPLE   0x01
-#define EPGGRAB_MODULE_EXTERNAL 0x02
-#define EPGGRAB_MODULE_SPECIAL  0x04
+#define EPGGRAB_MODULE_INTERNAL 0x01 ///< IP based internally run
+#define EPGGRAB_MODULE_EXTERNAL 0x02 ///< IP based externally run
+#define EPGGRAB_MODULE_OTA      0x04 ///< DVB OTA EPGs
 
 /*
  * Grabber base class
@@ -163,14 +163,12 @@ htsmsg_t*         epggrab_module_list       ( void );
  * Configuration
  */
 extern pthread_mutex_t      epggrab_mutex;
-extern uint32_t             epggrab_eitenabled;
 extern uint32_t             epggrab_interval;
 extern epggrab_module_t*    epggrab_module;
 
 /*
  * Update
  */
-int  epggrab_set_eitenabled      ( uint32_t eitenabled );
 int  epggrab_set_interval        ( uint32_t interval );
 int  epggrab_set_module          ( epggrab_module_t *module );
 int  epggrab_set_module_by_id    ( const char *id );

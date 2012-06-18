@@ -427,7 +427,7 @@ void pyepg_init ( epggrab_module_list_t *list )
   mod->ch_add              = epggrab_module_channel_add;
   mod->ch_rem              = epggrab_module_channel_rem;
   mod->ch_mod              = epggrab_module_channel_mod;
-  *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_SIMPLE;
+  *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_INTERNAL;
   LIST_INSERT_HEAD(list, mod, link);
   _pyepg_module = mod;
 

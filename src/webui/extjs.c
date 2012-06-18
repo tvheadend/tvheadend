@@ -486,7 +486,6 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
 
     pthread_mutex_lock(&epggrab_mutex);
     r = htsmsg_create_map();
-    htsmsg_add_u32(r, "eitenabled", epggrab_eitenabled);
     if (epggrab_module)
       htsmsg_add_str(r, "module", epggrab_module->id);
     htsmsg_add_u32(r, "interval", epggrab_interval);
@@ -514,8 +513,6 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
   } else if (!strcmp(op, "saveSettings") ) {
     int save = 0;
     pthread_mutex_lock(&epggrab_mutex);
-    u32 = http_arg_get(&hc->hc_req_args, "eitenabled") ? 1 : 0;
-    save |= epggrab_set_eitenabled(u32);
     if ( (str = http_arg_get(&hc->hc_req_args, "interval")) )
       save |= epggrab_set_interval(atoi(str));
     if ( (str = http_arg_get(&hc->hc_req_args, "module")) )
