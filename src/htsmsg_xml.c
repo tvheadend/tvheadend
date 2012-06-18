@@ -1,6 +1,6 @@
 /*
  *  Functions converting HTSMSGs to/from XML
- *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2008 Andreas ï¿½man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -707,7 +707,7 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
     *cc->cc_end = 0;
     free(cc);
 
-  } else if(c > 1) {
+  } else if(c > 0) {
     body = malloc(c + 1);
     c = 0;
 
