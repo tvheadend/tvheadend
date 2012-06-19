@@ -335,7 +335,7 @@ void epg_updated ( void )
   /* Remove unref'd */
   while ((eo = LIST_FIRST(&epg_object_unref))) {
     tvhlog(LOG_DEBUG, "epg",
-           "unref'd object "PRIu64" (%s) created during update", eo->id, eo->uri);
+           "unref'd object %"PRIu64" (%s) created during update", eo->id, eo->uri);
     LIST_REMOVE(eo, un_link);
     eo->destroy(eo);
   }
@@ -1146,7 +1146,7 @@ static void _epg_channel_timer_callback ( void *p )
     /* Expire */
     if ( ebc->stop <= dispatch_clock ) {
       RB_REMOVE(&ch->ch_epg_schedule, ebc, sched_link);
-      tvhlog(LOG_DEBUG, "epg", "expire event "PRIu64" from %s",
+      tvhlog(LOG_DEBUG, "epg", "expire event %"PRIu64" from %s",
              ebc->id, ch->ch_name);
       ebc->putref((epg_object_t*)ebc);
       continue; // skip to next
@@ -1164,14 +1164,14 @@ static void _epg_channel_timer_callback ( void *p )
     }
     break;
   }
-  tvhlog(LOG_DEBUG, "epg", "now/next "PRIu64"/"PRIu64" set on %s",
+  tvhlog(LOG_DEBUG, "epg", "now/next %"PRIu64"/%"PRIu64" set on %s",
          ch->ch_epg_now  ? ch->ch_epg_now->id : 0,
          ch->ch_epg_next ? ch->ch_epg_next->id : 0,
          ch->ch_name);
 
   /* re-arm */
   if ( next ) {
-    tvhlog(LOG_DEBUG, "epg", "arm channel timer @ "PRIu64" for %s",
+    tvhlog(LOG_DEBUG, "epg", "arm channel timer @ %"PRIu64" for %s",
            next, ch->ch_name);
     gtimer_arm_abs(&ch->ch_epg_timer, _epg_channel_timer_callback, ch, next);
   }
@@ -1195,7 +1195,7 @@ static void _epg_channel_rem_broadcast
 static epg_broadcast_t *_epg_channel_add_broadcast 
   ( channel_t *ch, epg_broadcast_t **bcast, int create, int *save )
 {
-  int save2 = 0, timer = 0;
+  int timer = 0;
   epg_broadcast_t *ebc, *ret;
 
   /* Set channel */
@@ -1210,7 +1210,7 @@ static epg_broadcast_t *_epg_channel_add_broadcast
   } else {
     ret = RB_INSERT_SORTED(&ch->ch_epg_schedule, *bcast, sched_link, _ebc_start_cmp);
     if (!ret) {
-      save2  = 1;
+      *save  = 1;
       ret    = *bcast;
       *bcast = NULL;
       _epg_object_create((epg_object_t*)ret);
