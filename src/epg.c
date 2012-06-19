@@ -24,6 +24,7 @@
 #include <string.h>
 #include <regex.h>
 #include <assert.h>
+#include <inttypes.h>
 
 #include "tvheadend.h"
 #include "queue.h"
@@ -320,7 +321,7 @@ void epg_init ( void )
   tvhlog(LOG_INFO, "epg", "  seasons    %d", stats.seasons.total);
   tvhlog(LOG_INFO, "epg", "  episodes   %d", stats.episodes.total);
   tvhlog(LOG_INFO, "epg", "  broadcasts %d", stats.broadcasts.total);
-  tvhlog(LOG_DEBUG, "epg", "next object id %lu", _epg_object_idx+1);
+  tvhlog(LOG_DEBUG, "epg", "next object id %"PRIu64, _epg_object_idx+1);
 
   /* Close file */
   munmap(mem, st.st_size);
@@ -334,7 +335,7 @@ void epg_updated ( void )
   /* Remove unref'd */
   while ((eo = LIST_FIRST(&epg_object_unref))) {
     tvhlog(LOG_DEBUG, "epg",
-           "unref'd object %lu (%s) created during update", eo->id, eo->uri);
+           "unref'd object "PRIu64" (%s) created during update", eo->id, eo->uri);
     LIST_REMOVE(eo, un_link);
     eo->destroy(eo);
   }
@@ -1145,7 +1146,7 @@ static void _epg_channel_timer_callback ( void *p )
     /* Expire */
     if ( ebc->stop <= dispatch_clock ) {
       RB_REMOVE(&ch->ch_epg_schedule, ebc, sched_link);
-      tvhlog(LOG_DEBUG, "epg", "expire event %lu from %s",
+      tvhlog(LOG_DEBUG, "epg", "expire event "PRIu64" from %s",
              ebc->id, ch->ch_name);
       ebc->putref((epg_object_t*)ebc);
       continue; // skip to next
@@ -1163,14 +1164,14 @@ static void _epg_channel_timer_callback ( void *p )
     }
     break;
   }
-  tvhlog(LOG_DEBUG, "epg", "now/next %lu/%lu set on %s",
+  tvhlog(LOG_DEBUG, "epg", "now/next "PRIu64"/"PRIu64" set on %s",
          ch->ch_epg_now  ? ch->ch_epg_now->id : 0,
          ch->ch_epg_next ? ch->ch_epg_next->id : 0,
          ch->ch_name);
 
   /* re-arm */
   if ( next ) {
-    tvhlog(LOG_DEBUG, "epg", "arm channel timer @ %lu for %s",
+    tvhlog(LOG_DEBUG, "epg", "arm channel timer @ "PRIu64" for %s",
            next, ch->ch_name);
     gtimer_arm_abs(&ch->ch_epg_timer, _epg_channel_timer_callback, ch, next);
   }
