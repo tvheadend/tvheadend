@@ -64,7 +64,9 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, const struct mux *m, int num,
       break;
       
     case FE_QPSK:
+#if DVB_API_VERSION > 5
       dmc.dmc_fe_delsys                    = SYS_DVBS;
+#endif
       dmc.dmc_fe_params.u.qpsk.symbol_rate = m->symrate;
       dmc.dmc_fe_params.u.qpsk.fec_inner   = m->fec;
 
