@@ -283,6 +283,7 @@ struct epg_broadcast
 {
   epg_object_t;                                ///< Parent object
   
+  int                        dvb_eid;          ///< DVB Event ID
   time_t                     start;            ///< Start time
   time_t                     stop;             ///< End time
 
@@ -312,6 +313,7 @@ struct epg_broadcast
 epg_broadcast_t *epg_broadcast_find_by_time 
   ( struct channel *ch, time_t start, time_t stop, int create, int *save );
 epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id, struct channel *ch );
+epg_broadcast_t *epg_broadcast_find_by_eid ( int eid, struct channel *ch );
 
 /* Mutators */
 int epg_broadcast_set_episode    ( epg_broadcast_t *b, epg_episode_t *e )

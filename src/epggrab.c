@@ -16,6 +16,7 @@
 #include "epggrab/eit.h"
 #include "epggrab/xmltv.h"
 #include "epggrab/pyepg.h"
+#include "epggrab/opentv.h"
 #include "channels.h"
 #include "spawn.h"
 #include "htsmsg_xml.h"
@@ -28,7 +29,6 @@ pthread_mutex_t       epggrab_mutex;
 pthread_cond_t        epggrab_cond;
 
 /* Config */
-uint32_t              epggrab_eitenabled;
 uint32_t              epggrab_interval;
 epggrab_module_t*     epggrab_module;
 epggrab_module_list_t epggrab_modules;
@@ -663,7 +663,6 @@ static void _epggrab_load ( void )
 
   /* Process */
   if (m) {
-    htsmsg_get_u32(m, "eit",      &epggrab_eitenabled);
     if (!htsmsg_get_u32(m, old ? "grab-interval" : "interval", &epggrab_interval))
       if (old) epggrab_interval *= 3600;
     htsmsg_get_u32(m, "grab-enabled", &enabled);
@@ -712,6 +711,7 @@ static void _epggrab_load ( void )
   eit_load();
   xmltv_load();
   pyepg_load();
+  opentv_load();
 }
 
 void epggrab_save ( void )
@@ -725,7 +725,6 @@ void epggrab_save ( void )
 
   /* Save */
   m = htsmsg_create_map();
-  htsmsg_add_u32(m, "eitenabled", epggrab_eitenabled);
   htsmsg_add_u32(m, "interval",   epggrab_interval);
   if ( epggrab_module )
     htsmsg_add_str(m, "module", epggrab_module->id);
@@ -739,17 +738,6 @@ void epggrab_save ( void )
   if (a) htsmsg_add_msg(m, "mod_enabled", a);
   hts_settings_save(m, "epggrab/config");
   htsmsg_destroy(m);
-}
-
-int epggrab_set_eitenabled ( uint32_t eitenabled )
-{
-  // TODO: could use module variable
-  int save = 0;
-  if ( epggrab_eitenabled != eitenabled ) {
-    save = 1;
-    epggrab_eitenabled = eitenabled;
-  }
-  return save;
 }
 
 int epggrab_set_interval ( uint32_t interval )
@@ -811,7 +799,6 @@ int epggrab_enable_module_by_id ( const char *id, uint8_t e )
 void epggrab_init ( void )
 {
   /* Defaults */
-  epggrab_eitenabled = 1;         // on air grab enabled
   epggrab_interval   = 12 * 3600; // hours
   epggrab_module     = NULL;      // disabled
 
@@ -819,6 +806,7 @@ void epggrab_init ( void )
   eit_init(&epggrab_modules);
   xmltv_init(&epggrab_modules);
   pyepg_init(&epggrab_modules);
+  opentv_init(&epggrab_modules);
 
   /* Load config */
   _epggrab_load();
@@ -852,6 +840,14 @@ void epggrab_channel_mod ( channel_t *ch )
   epggrab_module_t *m;
   LIST_FOREACH(m, &epggrab_modules, link) {
     if (m->ch_mod) m->ch_mod(m, ch);
+  }
+}
+
+void epggrab_tune ( th_dvb_mux_instance_t *tdmi )
+{
+  epggrab_module_t *m;
+  LIST_FOREACH(m, &epggrab_modules, link) {
+    if (m->tune) m->tune(m, tdmi);
   }
 }
 

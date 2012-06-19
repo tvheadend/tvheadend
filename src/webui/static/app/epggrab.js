@@ -7,8 +7,9 @@ tvheadend.epggrab = function() {
   /*
    * Module lists (I'm sure there is a better way!)
    */
-  var EPGGRAB_MODULE_SIMPLE   = 0x01;
+  var EPGGRAB_MODULE_INTERNAL = 0x01;
   var EPGGRAB_MODULE_EXTERNAL = 0x02;
+  var EPGGRAB_MODULE_OTA      = 0x04;
 
   var moduleStore = new Ext.data.JsonStore({
     root       : 'entries',
@@ -17,26 +18,35 @@ tvheadend.epggrab = function() {
     autoLoad   : true,
     fields     : [ 'id', 'name', 'path', 'flags', 'enabled' ]
   });
-  var simpleModuleStore = new Ext.data.Store({
+  var internalModuleStore = new Ext.data.Store({
     recordType: moduleStore.recordType
   });
   var externalModuleStore = new Ext.data.Store({
     recordType: moduleStore.recordType
   });
+  var otaModuleStore = new Ext.data.Store({
+    recordType: moduleStore.recordType
+  });
   moduleStore.on('load', function() {
     moduleStore.filterBy(function(r) {
-      return r.get('flags') & EPGGRAB_MODULE_SIMPLE;
+      return r.get('flags') & EPGGRAB_MODULE_INTERNAL;
     });
-    r = new simpleModuleStore.recordType({ id: '', name : 'Disabled'});
-    simpleModuleStore.add(r);
+    r = new internalModuleStore.recordType({ id: '', name : 'Disabled'});
+    internalModuleStore.add(r);
     moduleStore.each(function(r) {
-      simpleModuleStore.add(r.copy());
+      internalModuleStore.add(r.copy());
     });
     moduleStore.filterBy(function(r) {
       return r.get('flags') & EPGGRAB_MODULE_EXTERNAL;
     });
     moduleStore.each(function(r) {
       externalModuleStore.add(r.copy());
+    });
+    moduleStore.filterBy(function(r) {
+      return r.get('flags') & EPGGRAB_MODULE_OTA;
+    });
+    moduleStore.each(function(r) {
+      otaModuleStore.add(r.copy());
     });
   });
 
@@ -46,7 +56,7 @@ tvheadend.epggrab = function() {
 
   var confreader = new Ext.data.JsonReader(
     { root: 'epggrabSettings' },
-    [ 'module', 'eitenabled', 'advanced', 'interval' ]
+    [ 'module', 'interval' ]
   );
 
   /* ****************************************************************
@@ -56,7 +66,7 @@ tvheadend.epggrab = function() {
   /*
    * Module selector
    */
-  var simpleModule = new Ext.form.ComboBox({
+  var internalModule = new Ext.form.ComboBox({
     fieldLabel     : 'Module',
     hiddenName     : 'module',
     width          : 300,
@@ -66,7 +76,7 @@ tvheadend.epggrab = function() {
     editable       : false,
     mode           : 'local',
     triggerAction  : 'all',
-    store          : simpleModuleStore
+    store          : internalModuleStore
   });
 
   /*
@@ -182,9 +192,38 @@ tvheadend.epggrab = function() {
     },
     iconCls        : 'icon-grid',
   });
-  var advancedPanel = externalGrid;
+
+  /*
+   * OTA modules
+   */
+
+  var otaSelectionModel = new Ext.grid.CheckboxSelectionModel({
+    singleSelect : false,
+    listeners : {
+      'rowselect' : function (s, ri, r) {
+        r.set('enabled', 1);
+      },
+      'rowdeselect' : function (s, ri, r) {
+        r.set('enabled', 0);
+      }
+    }
+  });
+
+  var otaGrid = new Ext.grid.EditorGridPanel({
+    store          : otaModuleStore,
+    cm             : externalColumnModel,
+    sm             : otaSelectionModel,
+    width          : 600,
+    height         : 150,
+    frame          : false,
+    viewConfig     : {
+      forceFit  : true,
+    },
+    iconCls        : 'icon-grid',
+  });
+
+  /* HACK: get display working */
   externalGrid.on('render', function(){
-    // TODO: bit of hack to get selection working
     delay = new Ext.util.DelayedTask(function(){
     rows = [];
     externalModuleStore.each(function(r){
@@ -194,15 +233,20 @@ tvheadend.epggrab = function() {
     });
     delay.delay(100);
   });
+  otaGrid.on('render', function(){
+    delay = new Ext.util.DelayedTask(function(){
+    rows = [];
+    otaModuleStore.each(function(r){
+      if (r.get('enabled')) rows.push(r);
+    });
+    otaSelectionModel.selectRecords(rows);
+    });
+    delay.delay(100);
+  });
 
   /* ****************************************************************
    * Form
    * ***************************************************************/
-
-  var eitCheck = new Ext.form.Checkbox({
-    fieldLabel    : 'EIT Enabled',
-    name          : 'eitenabled'
-  });
 
   var saveButton = new Ext.Button({
     text     : "Save configuration",
@@ -231,12 +275,13 @@ tvheadend.epggrab = function() {
     defaultType   : 'textfield',
     items         : [
       interval,
-      eitCheck,
-      simpleModule,
+      internalModule,
       intervalValue,
       intervalUnit,
       new Ext.form.Label({text: 'External Interfaces'}),
-      advancedPanel
+      externalGrid,
+      new Ext.form.Label({text: 'OTA Modules'}),
+      otaGrid,
     ],
     tbar: [
       saveButton,
@@ -264,6 +309,9 @@ tvheadend.epggrab = function() {
     externalModuleStore.each(function(r) {
       mods.push({id: r.get('id'), enabled: r.get('enabled') ? 1 : 0});
     });  
+    otaModuleStore.each(function(r) {
+      mods.push({id: r.get('id'), enabled: r.get('enabled') ? 1 : 0});
+    });  
     mods = Ext.util.JSON.encode(mods);
     confpanel.getForm().submit({
       url     : 'epggrab', 
@@ -280,4 +328,3 @@ tvheadend.epggrab = function() {
 
   return confpanel;
 }
-

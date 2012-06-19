@@ -1,5 +1,5 @@
 /*
- *  Electronic Program Guide - eit grabber
+ *  TV headend - Huffman decoder
  *  Copyright (C) 2012 Adam Sutton
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,12 +16,24 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef EPGGRAB_EIT_H
-#define EPGGRAB_EIT_H
+#ifndef __TVH_HUFFMAN_H__
+#define __TVH_HUFFMAN_H__
 
-#include "epggrab.h"
+#include <sys/types.h>
+#include "htsmsg.h"
 
-void eit_init ( epggrab_module_list_t *list );
-void eit_load ( void );
+typedef struct huffman_node
+{
+  struct huffman_node *b0;
+  struct huffman_node *b1;
+  char                *data;
+} huffman_node_t;
+
+void huffman_tree_destroy ( huffman_node_t *tree );
+huffman_node_t *huffman_tree_load  ( const char *path );
+huffman_node_t *huffman_tree_build ( htsmsg_t *codes );
+char *huffman_decode 
+  ( huffman_node_t *tree, const uint8_t *data, size_t len, uint8_t mask,
+    char *outb, int outl );
 
 #endif

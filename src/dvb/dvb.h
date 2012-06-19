@@ -207,6 +207,46 @@ typedef struct th_dvb_adapter {
 
 } th_dvb_adapter_t;
 
+/**
+ * DVB table
+ */
+typedef struct th_dvb_table {
+  /**
+   * Flags, must never be changed after creation.
+   * We inspect it without holding global_lock
+   */
+  int tdt_flags;
+
+  /**
+   * Cycle queue
+   * Tables that did not get a fd or filter in hardware will end up here
+   * waiting for any other table to be received so it can reuse that fd.
+   * Only linked if fd == -1
+   */
+  TAILQ_ENTRY(th_dvb_table) tdt_pending_link;
+
+  /**
+   * File descriptor for filter
+   */
+  int tdt_fd;
+
+  LIST_ENTRY(th_dvb_table) tdt_link;
+
+  char *tdt_name;
+
+  void *tdt_opaque;
+  int (*tdt_callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
+		      uint8_t tableid, void *opaque);
+
+
+  int tdt_count;
+  int tdt_pid;
+
+  struct dmx_sct_filter_params *tdt_fparams;
+
+  int tdt_id;
+
+} th_dvb_table_t;
 
 
 extern struct th_dvb_adapter_queue dvb_adapters;
@@ -330,6 +370,17 @@ void dvb_table_init(th_dvb_adapter_t *tda);
 void dvb_table_add_default(th_dvb_mux_instance_t *tdmi);
 
 void dvb_table_flush_all(th_dvb_mux_instance_t *tdmi);
+
+struct dmx_sct_filter_params *dvb_fparams_alloc(void);
+void
+tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
+	int (*callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
+			 uint8_t tableid, void *opaque), void *opaque,
+	const char *name, int flags, int pid, th_dvb_table_t *tdt);
+
+#define TDT_CRC           0x1
+#define TDT_QUICKREQ      0x2
+#define TDT_CA		  0x4
 
 /**
  * Satellite configuration

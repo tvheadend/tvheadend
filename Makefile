@@ -72,10 +72,12 @@ SRCS =  src/main.c \
 	src/rawtsinput.c \
 	src/iptv_input.c \
 	src/avc.c \
+  src/huffman.c \
 
 SRCS += src/epggrab/pyepg.c\
   src/epggrab/xmltv.c\
-  src/epggrab/eit.c
+  src/epggrab/eit.c \
+  src/epggrab/opentv.c
 
 SRCS += src/plumbing/tsfix.c \
 	src/plumbing/globalheaders.c \

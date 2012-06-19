@@ -1,5 +1,5 @@
 /*
- *  Electronic Program Guide - eit grabber
+ *  Electronic Program Guide - opentv
  *  Copyright (C) 2012 Adam Sutton
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,12 +16,14 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef EPGGRAB_EIT_H
-#define EPGGRAB_EIT_H
+#ifndef __TVH_EPGGRAB_OPENTV_H__
+#define __TVH_EPGGRAB_OPENTV_H__
 
+#include "dvb/dvb.h"
 #include "epggrab.h"
 
-void eit_init ( epggrab_module_list_t *list );
-void eit_load ( void );
+void opentv_tune ( th_dvb_mux_instance_t *tdmi );
+void opentv_init ( epggrab_module_list_t *list );
+void opentv_load ( void );
 
-#endif
+#endif /* __TVH_EPGGRAB_OPENTV_H__ */

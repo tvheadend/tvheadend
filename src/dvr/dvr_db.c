@@ -1074,6 +1074,7 @@ dvr_config_create(const char *name)
   cfg->dvr_sl_channel_lock = 1; // channel locked
   cfg->dvr_sl_time_lock    = 0; // time slot (approx) locked
   cfg->dvr_sl_more_recent  = 1; // Only record more reason episodes
+  cfg->dvr_sl_quality_lock = 1; // Don't attempt to ajust quality
 
   /* dup detect */
   cfg->dvr_dup_detect_episode = 1; // detect dup episodes

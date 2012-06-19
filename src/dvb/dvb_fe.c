@@ -40,6 +40,8 @@
 #include "notify.h"
 #include "dvr/dvr.h"
 
+#include "epggrab.h"
+
 /**
  * Return uncorrected block (since last read)
  *
@@ -506,7 +508,9 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 
   gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 1);
 
+
   dvb_table_add_default(tdmi);
+  epggrab_tune(tdmi);
 
   dvb_adapter_notify(tda);
   return 0;

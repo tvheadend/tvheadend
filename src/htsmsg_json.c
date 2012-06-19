@@ -164,7 +164,7 @@ htsmsg_json_parse_string(const char *s, const char **endp)
 
     if(*s == '\\') {
       esc = 1;
-    } else if(*s == '"' && s[-1] != '\\') {
+    } else if(*s == '"' && (s[-1] != '\\' || s[-2] == '\\')) {
 
       *endp = s + 1;
 
@@ -184,6 +184,8 @@ htsmsg_json_parse_string(const char *s, const char **endp)
 	    a++;
 	    if(*a == 'b')
 	      *b++ = '\b';
+      else if (*a == '\\')
+        *b++ = '\\';
 	    else if(*a == 'f')
 	      *b++ = '\f';
 	    else if(*a == 'n')
@@ -193,9 +195,12 @@ htsmsg_json_parse_string(const char *s, const char **endp)
 	    else if(*a == 't')
 	      *b++ = '\t';
 	    else if(*a == 'u') {
+#if TODO
 	      /* 4 hexdigits: Not supported */
 	      free(r);
 	      return NULL;
+#endif
+        a += 4;
 	    } else {
 	      *b++ = *a;
 	    }
