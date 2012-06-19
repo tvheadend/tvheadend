@@ -1,6 +1,6 @@
 /*
- *  Functions converting HTSMSGs to/from XML
- *  Copyright (C) 2008 Andreas Öman
+ *  Process file operations
+ *  Copyright (C) 2012 Adam Sutton
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,14 +16,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HTSMSG_XML_H_
-#define HTSMSG_XML_H_
+#ifndef FILE_H
+#define FILE_H
 
-#include "htsmsg.h"
-#include "htsbuf.h"
+#include <sys/types.h>
 
-htsmsg_t *htsmsg_xml_deserialize(char *src, char *errbuf, size_t errbufsize);
-const char *htsmsg_xml_get_cdata_str (htsmsg_t *tags, const char *tag);
-int htsmsg_xml_get_cdata_u32 (htsmsg_t *tags, const char *tag, uint32_t *u32);
+size_t file_readall ( int fd, char **outbuf ); 
 
-#endif /* HTSMSG_XML_H_ */
+#endif /* FILE_H */
