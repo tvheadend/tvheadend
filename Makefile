@@ -42,6 +42,7 @@ SRCS =  src/main.c \
 	src/tcp.c \
 	src/http.c \
 	src/notify.c \
+	src/file.c \
 	src/epg.c \
 	src/xmltv.c \
 	src/spawn.c \

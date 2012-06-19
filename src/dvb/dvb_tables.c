@@ -288,7 +288,7 @@ tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
   //       this
   LIST_FOREACH(t, &tdmi->tdmi_tables, tdt_link) {
     if(pid == t->tdt_pid && 
-       tdt->tdt_callback == callback && tdt->tdt_opaque == opaque) {
+       t->tdt_callback == callback && t->tdt_opaque == opaque) {
       free(tdt);
       free(fparams);
       return;
