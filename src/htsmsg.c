@@ -197,6 +197,16 @@ htsmsg_add_s64(htsmsg_t *msg, const char *name, int64_t s64)
 }
 
 /*
+ * 
+ */
+void
+htsmsg_add_u64(htsmsg_t *msg, const char *name, uint64_t u64)
+{
+  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_S64, HMF_NAME_ALLOCED);
+  f->hmf_s64 = u64;
+}
+
+/*
  *
  */
 void
@@ -301,6 +311,30 @@ htsmsg_get_s64(htsmsg_t *msg, const char *name, int64_t *s64p)
     break;
   case HMF_S64:
     *s64p = f->hmf_s64;
+    break;
+  }
+  return 0;
+}
+
+/**
+ *
+ */
+int
+htsmsg_get_u64(htsmsg_t *msg, const char *name, uint64_t *u64p)
+{
+  htsmsg_field_t *f;
+
+  if((f = htsmsg_field_find(msg, name)) == NULL)
+    return HTSMSG_ERR_FIELD_NOT_FOUND;
+
+  switch(f->hmf_type) {
+  default:
+    return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
+  case HMF_STR:
+    *u64p = strtoull(f->hmf_str, NULL, 0);
+    break;
+  case HMF_S64:
+    *u64p = f->hmf_s64;
     break;
   }
   return 0;
