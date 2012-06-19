@@ -27,6 +27,7 @@
 #include "epg.h"
 #include "epggrab/opentv.h"
 #include "subscriptions.h"
+#include "streaming.h"
 #include "service.h"
 #include "htsmsg.h"
 #include "settings.h"
@@ -68,8 +69,11 @@ typedef struct opentv_prov
 /* Extension of epggrab module to include linked provider */
 typedef struct opentv_module
 {
-  epggrab_module_t _;     ///< Base struct
-  opentv_prov_t    *prov; ///< Associated provider config
+  epggrab_module_t   ;      ///< Base struct
+  opentv_prov_t      *prov; ///< Associated provider config
+  pthread_mutex_t    mutex;
+  pthread_cond_t     cond;
+  time_t             updated;
 } opentv_module_t;
 
 /*
@@ -197,7 +201,7 @@ static epg_season_t *_opentv_find_season
   return epg_season_find_by_uri(uri, 1, &save);
 }
 
-static channel_t *_opentv_find_channel ( int tsid, int sid )
+static service_t *_opentv_find_service ( int tsid, int sid )
 {
   th_dvb_adapter_t *tda;
   th_dvb_mux_instance_t *tdmi;
@@ -206,11 +210,17 @@ static channel_t *_opentv_find_channel ( int tsid, int sid )
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
       if (tdmi->tdmi_transport_stream_id != tsid) continue;
       LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
-        if (t->s_dvb_service_id == sid) return t->s_ch;
+        if (t->s_dvb_service_id == sid) return t;
       }
     }
   }
   return NULL;
+}
+
+static channel_t *_opentv_find_channel ( int tsid, int sid )
+{
+  service_t *t = _opentv_find_service(tsid, sid);
+  return t ? t->s_ch : NULL;
 }
 
 /* ************************************************************************
@@ -435,39 +445,77 @@ static int _opentv_channel_callback
  * Tuning Thread
  * ***********************************************************************/
 
-#if 0
+static void _opentv_stream ( void *p, streaming_message_t *sm )
+{
+  // TODO: handle start?
+  // TODO: handle stop?
+}
+
+// TODO: if channel not found we still wait
+// TODO: make time periods configurable?
+// TODO: dynamic detection of when to start/stop
 static void* _opentv_thread ( void *p )
 {
-  int err = 0;
-  th_dvb_adapter_t *tda;
-  th_dvb_mux_instance_t *tdmi;
-  service_t *svc = NULL;
+  int err;
+  service_t *svc;
+  th_subscription_t *sub;
+  streaming_target_t stream;
+  time_t start;
+  struct timespec ts;
+  opentv_module_t *mod = (opentv_module_t*)p;
+  streaming_target_init(&stream, _opentv_stream, NULL, 0);
+  tvhlog(LOG_INFO, mod->id, "thread started\n");
 
-  pthread_mutex_lock(&global_lock);
+  do {
 
-  TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
-      if ((svc = dvb_transport_find(tdmi, 4152, 0, NULL))) {
-        _opentv_tdmi = tdmi;
-	break;
-      }
+    /* Find channel and subscribe */
+    tvhlog(LOG_DEBUG, mod->id, "grab begin %d %d", mod->prov->tsid, mod->prov->sid);
+    pthread_mutex_lock(&global_lock);
+    svc  = _opentv_find_service(mod->prov->tsid, mod->prov->sid);
+    if (svc) {
+      sub = subscription_create_from_service(svc, mod->prov->id,
+                                             &stream, 0);
+      if (sub) subscription_change_weight(sub, 1);
     }
-  }
+    else
+      sub = NULL;
+    pthread_mutex_unlock(&global_lock);
+    if (sub) tvhlog(LOG_DEBUG, mod->id, "subscription added");
+ 
+    /* Allow scanning */
+    if (sub) {
+      time(&start);
+      ts.tv_nsec = 0;
+      pthread_mutex_lock(&mod->mutex);
+      while ( mod->enabled ) {
+        ts.tv_sec = start + 300;
+        err = pthread_cond_timedwait(&mod->cond, &mod->mutex, &ts);
+        if (err == ETIMEDOUT ) break;
+      }
+      pthread_mutex_unlock(&mod->mutex);
+    }
+    tvhlog(LOG_DEBUG, mod->id, "grab complete");
 
-  /* start */
-  printf("found svc = %p\n", svc);
-  if(svc) err = service_start(svc, 1, 0);
-  printf("service_start = %d\n", err);
+    /* Terminate subscription */
+    pthread_mutex_lock(&global_lock);
+    if (sub) subscription_unsubscribe(sub);
+    pthread_mutex_unlock(&global_lock);
   
-  pthread_mutex_unlock(&global_lock);
+    /* Wait */
+    time(&mod->updated);
+    pthread_mutex_lock(&mod->mutex);
+    while ( mod->enabled ) {
+      ts.tv_sec = mod->updated + 3600;
+      err = pthread_cond_timedwait(&mod->cond, &mod->mutex, &ts);
+      if (err == ETIMEDOUT) break;
+    }
+    if (!mod->enabled) break;
+    pthread_mutex_unlock(&mod->mutex);
+  } while (1);
+  pthread_mutex_unlock(&mod->mutex);
 
-  while (1) {
-    // check status?
-    sleep(10);
-  }
   return NULL;
 }
-#endif
 
 /* ************************************************************************
  * Module Setup
@@ -520,12 +568,22 @@ static void _opentv_tune ( epggrab_module_t *m, th_dvb_mux_instance_t *tdmi )
 
 static int _opentv_enable ( epggrab_module_t *m, uint8_t e )
 {
-  // TODO: do I need to kick off a thread here or elsewhere?
   int save = 0;
+  pthread_t t;
+  pthread_attr_t ta;
+  opentv_module_t *mod = (opentv_module_t*)m;
+  pthread_mutex_lock(&mod->mutex);
   if (m->enabled != e) {
     m->enabled = e;
+    if (e) {
+      pthread_attr_init(&ta);
+      pthread_attr_setdetachstate(&ta, PTHREAD_CREATE_DETACHED);
+      pthread_create(&t, &ta, _opentv_thread, mod);
+    } else
+      pthread_cond_signal(&mod->cond);
     save = 1;
   }
+  pthread_mutex_unlock(&mod->mutex);
   return save;
 }
 
@@ -574,15 +632,15 @@ void opentv_init ( epggrab_module_list_t *list )
   RB_FOREACH(p, &_opentv_provs, h_link) {
     mod = calloc(1, sizeof(opentv_module_t));
     sprintf(buf, "opentv-%s", p->id);
-    mod->_.id       = strdup(buf);
+    mod->id       = strdup(buf);
     sprintf(buf, "OpenTV: %s", p->name);
-    mod->_.name     = strdup(buf);
-    mod->_.enable   = _opentv_enable;
-    mod->_.tune     = _opentv_tune;
-    mod->_.channels = &_opentv_channels;
+    mod->name     = strdup(buf);
+    mod->enable   = _opentv_enable;
+    mod->tune     = _opentv_tune;
+    mod->channels = &_opentv_channels;
     mod->prov       = p;
-    *((uint8_t*)&mod->_.flags) = EPGGRAB_MODULE_OTA;
-    LIST_INSERT_HEAD(list, &mod->_, link);
+    *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_OTA;
+    LIST_INSERT_HEAD(list, ((epggrab_module_t*)mod), link);
   }
 }
 
