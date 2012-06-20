@@ -637,6 +637,8 @@ static dvr_entry_t *_dvr_entry_update
   if (e) {
     if (e->episode)
       title = e->episode->title;
+    else
+      title = NULL;
     start = e->start;
     stop  = e->stop;
   } else {
@@ -645,7 +647,7 @@ static dvr_entry_t *_dvr_entry_update
     stop  = de_stop;
   }
 
-  if (!de->de_title || strcmp(de->de_title, title)) {
+  if (title && (!de->de_title || strcmp(de->de_title, title))) {
     free(de->de_title);
     de->de_title = strdup(title);
     save = 1;
