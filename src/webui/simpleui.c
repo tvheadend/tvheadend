@@ -128,7 +128,7 @@ page_simple(http_connection_t *hc,
 		    "%02d:%02d-%02d:%02d&nbsp;%s%s%s</a><br>",
 		    e->id,
 		    a.tm_hour, a.tm_min, b.tm_hour, b.tm_min,
-		    e->episode->title,
+		    e->episode ? e->episode->title : "",
 		    rstatus ? "&nbsp;" : "", rstatus ?: "");
       }
     }
@@ -228,7 +228,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
 
   htsbuf_qprintf(hq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
-	      e->channel->ch_name, e->episode->title);
+	      e->channel->ch_name, e->episode ? e->episode->title : "");
   
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
 
@@ -260,10 +260,12 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   htsbuf_qprintf(hq, "</form>");
-  if ( e->episode->description )
-    htsbuf_qprintf(hq, "%s", e->episode->description);
-  else if ( e->episode->summary )
-    htsbuf_qprintf(hq, "%s", e->episode->summary);
+  if (e->episode) {
+    if ( e->episode->description )
+      htsbuf_qprintf(hq, "%s", e->episode->description);
+    else if ( e->episode->summary )
+      htsbuf_qprintf(hq, "%s", e->episode->summary);
+  }
   
 
   pthread_mutex_unlock(&global_lock);

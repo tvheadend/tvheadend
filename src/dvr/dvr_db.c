@@ -182,7 +182,7 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
   }
 
   if(cfg->dvr_flags & DVR_EPISODE_IN_TITLE) {
-    if(de->de_bcast)  
+    if(de->de_bcast && de->de_bcast->episode)  
       epg_episode_number_format(de->de_bcast->episode,
                                 output + strlen(output),
                                 outlen - strlen(output),
@@ -354,7 +354,7 @@ dvr_entry_create_by_event(const char *config_name,
                           const char *creator, 
                           dvr_autorec_entry_t *dae, dvr_prio_t pri)
 {
-  if(!e->channel || !e->episode->title)
+  if(!e->channel || !e->episode || !e->episode->title)
     return NULL;
 
   return _dvr_entry_create(config_name, e,
@@ -635,7 +635,8 @@ static dvr_entry_t *_dvr_entry_update
   int start, stop;
 
   if (e) {
-    title = e->episode->title;
+    if (e->episode)
+      title = e->episode->title;
     start = e->start;
     stop  = e->stop;
   } else {
@@ -661,7 +662,8 @@ static dvr_entry_t *_dvr_entry_update
   }
 
   if (e) {
-    if (e->episode->genre_cnt && e->episode->genre_cnt != de->de_content_type) {
+    if (e->episode && 
+        e->episode->genre_cnt && e->episode->genre_cnt != de->de_content_type) {
       de->de_content_type = e->episode->genre[0];
       save = 1;
     }
@@ -710,7 +712,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
     ude = dvr_entry_find_by_event_fuzzy(new_e);
     if (ude == NULL && de->de_sched_state == DVR_SCHEDULED)
       dvr_entry_cancel(de);
-    else if(new_e->episode->title != NULL)
+    else if(new_e->episode && new_e->episode->title)
       _dvr_entry_update(de, new_e, NULL, 0, 0);
   }
 }
@@ -818,7 +820,7 @@ dvr_entry_find_by_event_fuzzy(epg_broadcast_t *e)
 {
   dvr_entry_t *de;
   
-  if (e->episode->title == NULL)
+  if (!e->episode || !e->episode->title)
     return NULL;
 
   LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link)
