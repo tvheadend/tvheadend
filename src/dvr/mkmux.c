@@ -501,12 +501,6 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc)
   if(ch)
     addtag(q, build_tag_string("TVCHANNEL", ch->ch_name, 0, NULL));
 
-#if TODO_EP_NUMBER_ONSCREEN
-  if(ee && ee->onscreen)
-    addtag(q, build_tag_string("SYNOPSIS", 
-			     ee->onscreen, 0, NULL));
-#endif
-
   if(de && de->de_desc)
     addtag(q, build_tag_string("SUMMARY", de->de_desc, 0, NULL));
   else if (ee && ee->description)
@@ -515,15 +509,20 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc)
     addtag(q, build_tag_string("SUMMARY", ee->summary, 0, NULL));
 
   if (ee) {
-    if(ee->number)
-      addtag(q, build_tag_int("PART_NUMBER", ee->number,
+    epg_episode_num_t num;
+    epg_episode_get_epnum(ee, &num);
+    if(num.e_num)
+      addtag(q, build_tag_int("PART_NUMBER", num.e_num,
 			       0, NULL));
-    if(ee->season && ee->season->number)
-      addtag(q, build_tag_int("PART_NUMBER", ee->season->number,
+    if(num.s_num)
+      addtag(q, build_tag_int("PART_NUMBER", num.s_num,
 			       60, "SEASON"));
-    if(ee->part_number)
-      addtag(q, build_tag_int("PART_NUMBER", ee->part_number,
+    if(num.p_num)
+      addtag(q, build_tag_int("PART_NUMBER", num.p_num,
 			       40, "PART"));
+    if (num.text)
+      addtag(q, build_tag_string("SYNOPSIS", 
+			       num.text, 0, NULL));
   }
 
   return q;
