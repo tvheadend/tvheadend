@@ -369,7 +369,6 @@ dvr_entry_create_by_event(const char *config_name,
 
 static int _dvr_duplicate_event ( epg_broadcast_t *e )
 {
-  // TODO: include other searches?
   dvr_entry_t *de;
   LIST_FOREACH(de, &dvrentries, de_global_link) {
     if (de->de_bcast && (de->de_bcast->episode == e->episode)) return 1;
@@ -386,7 +385,6 @@ dvr_entry_create_by_autorec(epg_broadcast_t *e, dvr_autorec_entry_t *dae)
   char buf[200];
 
   /* Dup detection */
-  // TODO: need to allow overrides
   if (_dvr_duplicate_event(e)) return;
 
   if(dae->dae_creator) {
@@ -838,7 +836,6 @@ dvr_entry_find_by_event_fuzzy(epg_broadcast_t *e)
 dvr_entry_t *
 dvr_entry_find_by_episode(epg_broadcast_t *e)
 {
-  // TODO: should be configurable?
   if (e->episode) {
     dvr_entry_t *de;
     epg_broadcast_t *ebc;
