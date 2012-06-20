@@ -890,4 +890,21 @@ htsmsg_xml_get_cdata_u32(htsmsg_t *tags, const char *name, uint32_t *u32)
   return htsmsg_get_u32(sub, "cdata", u32);
 }
 
+/*
+ * Get tag attribute
+ */
+const char *
+htsmsg_xml_get_attr_str ( htsmsg_t *tag, const char *name )
+{
+  htsmsg_t *attr = htsmsg_get_map(tag, "attrib");
+  if (attr) return htsmsg_get_str(tag, name);
+  return NULL;
+}
 
+int
+htsmsg_xml_get_attr_u32 ( htsmsg_t *tag, const char *name, uint32_t *ret )
+{
+  htsmsg_t *attr = htsmsg_get_map(tag, "attrib");
+  if (attr) return htsmsg_get_u32(attr, name, ret);
+  return HTSMSG_ERR_FIELD_NOT_FOUND;
+}
