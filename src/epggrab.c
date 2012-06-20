@@ -100,8 +100,6 @@ static void _epggrab_module_grab ( epggrab_module_t *mod )
 
 /*
  * Socket handler
- *
- * TODO: could make this threaded to allow multiple simultaneous inputs
  */
 static void _epggrab_socket_handler ( epggrab_module_t *mod, int s )
 {
@@ -170,10 +168,6 @@ static void* _epggrab_internal_thread ( void* p )
 
 /*
  * External (socket) grab thread
- *
- * TODO: I could common all of this up and have a single thread
- *       servicing all the available sockets, but we're unlikely to
- *       have a massive number of modules enabled anyway!
  */
 static void *_epggrab_socket_thread ( void *p )
 {
@@ -202,7 +196,6 @@ static int _ch_id_cmp ( void *a, void *b )
                 ((epggrab_channel_t*)b)->id);
 }
 
-// TODO: add other matches
 static int _ch_link ( epggrab_channel_t *ec, channel_t *ch )
 {
   service_t *sv;
@@ -249,7 +242,6 @@ static int _ch_link ( epggrab_channel_t *ec, channel_t *ch )
   return match;
 }
 
-// TODO: could use TCP socket to allow remote access
 int epggrab_module_enable_socket ( epggrab_module_t *mod, uint8_t e )
 {
   pthread_t      tid;
@@ -343,7 +335,6 @@ htsmsg_t *epggrab_module_trans_xml
   return ret;
 }
 
-// TODO: add extra metadata
 void epggrab_module_channel_save
   ( epggrab_module_t *mod, epggrab_channel_t *ch )
 {
@@ -373,6 +364,8 @@ void epggrab_module_channel_save
     }
     htsmsg_add_msg(m, "sname", a);
   }
+  if (ch->number)
+    htsmsg_add_u32(m, "number", ch->number);
 
   hts_settings_save(m, "epggrab/%s/channels/%s", mod->id, ch->id);
 }
@@ -413,6 +406,8 @@ static void epggrab_module_channel_load
       i++;
     }
   }
+  if(!htsmsg_get_u32(m, "number", &u32))
+    ch->number = u32;
 
   if (!htsmsg_get_u32(m, "channel", &u32))
     ch->channel = channel_find_by_identifier(u32);
@@ -508,7 +503,6 @@ int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
   return save;
 }
 
-// TODO: what a mess!
 int epggrab_channel_set_sid 
   ( epggrab_channel_t *ec, const uint16_t *sid, int num )
 {
@@ -535,7 +529,6 @@ int epggrab_channel_set_sid
   return save;
 }
 
-// TODO: what a mess!
 int epggrab_channel_set_sname ( epggrab_channel_t *ec, const char **sname )
 {
   int save = 0, i = 0;
@@ -595,9 +588,6 @@ int epggrab_channel_set_number ( epggrab_channel_t *ec, int number )
   return save;
 }
 
-// TODO: add other match critera
-// TODO: add additional metadata updates
-// TODO: add configurable updating
 void epggrab_channel_link ( epggrab_channel_t *ec )
 { 
   channel_t *ch;
@@ -618,8 +608,6 @@ void epggrab_channel_updated ( epggrab_channel_t *ec )
   epggrab_module_channel_save(ec->mod, ec);
 }
 
-// TODO: currently lists ALL channels from ALL active modules
-// TODO: won't work if channels are handled internally within module!
 htsmsg_t *epggrab_channel_list ( void )
 {
   char name[100];
