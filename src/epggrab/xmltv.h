@@ -25,4 +25,7 @@
 void xmltv_init ( epggrab_module_list_t *list );
 void xmltv_load ( void );
 
+// reused by pyepg
+int xmltv_parse_accessibility ( epg_broadcast_t *ebc, htsmsg_t *m );
+
 #endif
