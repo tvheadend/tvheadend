@@ -378,8 +378,9 @@ static void _epg_object_putref ( epg_object_t *eo )
   if (!eo->refcount) eo->destroy(eo);
 }
 
-static void _epg_object_set_updated ( epg_object_t *eo )
+static void _epg_object_set_updated ( void *p )
 {
+  epg_object_t *eo = (epg_object_t*)p;
   if (!eo->_updated) {
     eo->_updated = 1;
     LIST_INSERT_HEAD(&epg_object_updated, eo, up_link);
@@ -465,6 +466,30 @@ static int _epg_object_set_str
     if ( *old ) free(*old);
     *old = strdup(new);
     _epg_object_set_updated(eo);
+    save = 1;
+  }
+  return save;
+}
+
+static int _epg_object_set_u8
+  ( void *o, uint8_t *old, const uint8_t new )
+{
+  int save = 0;
+  if ( *old != new ) {
+    *old = new;
+    _epg_object_set_updated(o);
+    save = 1;
+  }
+  return save;
+}
+
+static int _epg_object_set_u16
+  ( void *o, uint16_t *old, const uint16_t new )
+{
+  int save = 0;
+  if ( *old != new ) {
+    *old = new;
+    _epg_object_set_updated(o);
     save = 1;
   }
   return save;
@@ -1346,6 +1371,66 @@ int epg_broadcast_set_episode
   return save;
 }
 
+int epg_broadcast_set_is_widescreen ( epg_broadcast_t *b, uint8_t ws )
+{
+  if (!b) return 0;
+  return _epg_object_set_u8(b, &b->is_widescreen, ws);
+}
+
+int epg_broadcast_set_is_hd ( epg_broadcast_t *b, uint8_t hd )
+{
+  if (!b) return 0;
+  return _epg_object_set_u8(b, &b->is_hd, hd);
+}
+
+int epg_broadcast_set_is_bw ( epg_broadcast_t *b, uint8_t bw )
+{
+  if (!b) return 0;
+  return _epg_object_set_u8(b, &b->is_bw, bw);
+}
+
+int epg_broadcast_set_lines ( epg_broadcast_t *b, uint16_t lines )
+{
+  if (!b) return 0;
+  return _epg_object_set_u16(b, &b->lines, lines);
+}
+
+int epg_broadcast_set_aspect ( epg_broadcast_t *b, uint16_t aspect )
+{
+  if (!b) return 0;
+  return _epg_object_set_u16(b, &b->aspect, aspect);
+}
+
+int epg_broadcast_set_is_deafsigned ( epg_broadcast_t *b, uint8_t ds )
+{
+  if (!b) return 0;
+  return _epg_object_set_u8(b, &b->is_deafsigned, ds);
+}
+
+int epg_broadcast_set_is_subtitled ( epg_broadcast_t *b, uint8_t st )
+{
+  if (!b) return 0;
+  return _epg_object_set_u8(b, &b->is_subtitled, st);
+}
+
+int epg_broadcast_set_is_audio_desc ( epg_broadcast_t *b, uint8_t ad )
+{
+  if (!b) return 0;
+  return _epg_object_set_u8(b, &b->is_audio_desc, ad);
+}
+
+int epg_broadcast_set_is_new ( epg_broadcast_t *b, uint8_t n )
+{
+  if (!b) return 0;
+  return _epg_object_set_u8(b, &b->is_new, n);
+}
+
+int epg_broadcast_set_is_repeat ( epg_broadcast_t *b, uint8_t r )
+{
+  if (!b) return 0;
+  return _epg_object_set_u8(b, &b->is_repeat, r);
+}
+
 epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *broadcast )
 {
   if ( !broadcast ) return NULL;
@@ -1365,6 +1450,26 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
     htsmsg_add_u32(m, "channel", broadcast->channel->ch_id);
   if (broadcast->dvb_eid)
     htsmsg_add_u32(m, "dvb_eid", broadcast->dvb_eid);
+  if (broadcast->is_widescreen)
+    htsmsg_add_u32(m, "is_widescreen", 1);
+  if (broadcast->is_hd)
+    htsmsg_add_u32(m, "is_hd", 1);
+  if (broadcast->is_bw)
+    htsmsg_add_u32(m, "is_widescreen", 1);
+  if (broadcast->lines)
+    htsmsg_add_u32(m, "lines", broadcast->lines);
+  if (broadcast->aspect)
+    htsmsg_add_u32(m, "aspect", broadcast->aspect);
+  if (broadcast->is_deafsigned)
+    htsmsg_add_u32(m, "is_deafsigned", 1);
+  if (broadcast->is_subtitled)
+    htsmsg_add_u32(m, "is_subtitled", 1);
+  if (broadcast->is_audio_desc)
+    htsmsg_add_u32(m, "is_audio_desc", 1);
+  if (broadcast->is_new)
+    htsmsg_add_u32(m, "is_new", 1);
+  if (broadcast->is_repeat)
+    htsmsg_add_u32(m, "is_repeat", 1);
   
   return m;
 }
@@ -1376,7 +1481,7 @@ epg_broadcast_t *epg_broadcast_deserialize
   epg_broadcast_t *ret, **ebc = _epg_broadcast_skel();
   epg_episode_t *ee;
   const char *str;
-  uint32_t chid, eid, start, stop;
+  uint32_t chid, eid, start, stop, u32;
 
   if ( htsmsg_get_u32(m, "start", &start) ) return NULL;
   if ( htsmsg_get_u32(m, "stop", &stop)   ) return NULL;
@@ -1400,6 +1505,28 @@ epg_broadcast_t *epg_broadcast_deserialize
   if ( !htsmsg_get_u32(m, "channel", &chid) ) {
     ch  = channel_find_by_identifier(chid);
   }
+
+  /* Get metadata */
+  if (!htsmsg_get_u32(m, "is_widescreen", &u32))
+    (*ebc)->is_widescreen = 1;
+  if (!htsmsg_get_u32(m, "is_hd", &u32))
+    (*ebc)->is_hd = 1;
+  if (!htsmsg_get_u32(m , "is_bw", &u32))
+    (*ebc)->is_bw = 1;
+  if (!htsmsg_get_u32(m, "lines", &u32))
+    (*ebc)->lines = u32;
+  if (!htsmsg_get_u32(m, "aspect", &u32))
+    (*ebc)->aspect = u32;
+  if (!htsmsg_get_u32(m, "is_deafsigned", &u32))
+    (*ebc)->is_deafsigned = 1;
+  if (!htsmsg_get_u32(m, "is_subtitled", &u32))
+    (*ebc)->is_subtitled = 1;
+  if (!htsmsg_get_u32(m, "is_audio_desc", &u32))
+    (*ebc)->is_audio_desc = 1;
+  if (!htsmsg_get_u32(m, "is_new", &u32))
+    (*ebc)->is_new = 1;
+  if (!htsmsg_get_u32(m, "is_repeat", &u32))
+    (*ebc)->is_repeat = 1;
 
   /* Add to channel */
   if ( ch ) {
