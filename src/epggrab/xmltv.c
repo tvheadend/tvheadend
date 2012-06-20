@@ -204,6 +204,85 @@ get_episode_info
   }
 }
 
+/*
+ * Process video quality flags
+ *
+ * Note: this is very rough/approx someone might be able to do a much better
+ *       job
+ */
+static int
+parse_vid_quality ( epg_broadcast_t *ebc, htsmsg_t *m )
+{
+  int save = 0;
+  int hd = 0, lines = 0, aspect = 0;
+  const char *str;
+  if (!ebc || !m) return 0;
+
+  if ((str = htsmsg_xml_get_cdata_str(m, "colour")))
+    save |= epg_broadcast_set_is_bw(ebc, strcmp(str, "no") ? 0 : 1);
+  if ((str = htsmsg_xml_get_cdata_str(m, "quality"))) {
+    if (strstr(str, "HD")) {
+      hd    = 1;
+    } else if (strstr(str, "480")) {
+      lines  = 480;
+      aspect = 150;
+    } else if (strstr(str, "576")) {
+      lines  = 576;
+      aspect = 133;
+    } else if (strstr(str, "720")) {
+      lines  = 720;
+      hd     = 1;
+      aspect = 178;
+    } else if (strstr(str, "1080")) {
+      lines  = 1080;
+      hd     = 1;
+      aspect = 178;
+    }
+  }
+  if ((str = htsmsg_xml_get_cdata_str(m, "aspect"))) {
+    int w, h;
+    if (sscanf(str, "%d:%d", &w, &h) == 2) {
+      aspect = (100 * w) / h;
+    }
+  }
+  save |= epg_broadcast_set_is_hd(ebc, hd);
+  if (aspect) {
+    save |= epg_broadcast_set_is_widescreen(ebc, hd || aspect > 137);
+    save |= epg_broadcast_set_aspect(ebc, aspect);
+  }
+  if (lines)
+    save |= epg_broadcast_set_lines(ebc, lines);
+  
+  return save;
+}
+
+/*
+ * Parse accessibility data
+ */
+static int
+parse_accessibility ( epg_broadcast_t *ebc, htsmsg_t *m )
+{
+  int save = 0;
+  htsmsg_t *tag;
+  htsmsg_field_t *f;
+  const char *str;
+
+  HTSMSG_FOREACH(f, m) {
+    if(!strcmp(f->hmf_name, "subtitles")) {
+      if ((tag = htsmsg_get_map_by_field(f))) {
+        str = htsmsg_xml_get_attr_str(tag, "type");
+        if (str && !strcmp(str, "teletext"))
+          save |= epg_broadcast_set_is_subtitled(ebc, 1);
+        else if (str && !strcmp(str, "deaf-signed"))
+          save |= epg_broadcast_set_is_deafsigned(ebc, 1);
+      }
+    } else if (!strcmp(f->hmf_name, "audio-described")) {
+      save |= epg_broadcast_set_is_audio_desc(ebc, 1);
+    }
+  }
+  return save;
+}
+
 /**
  * Parse tags inside of a programme
  */
@@ -242,6 +321,7 @@ _xmltv_parse_programme_tags(channel_t *ch, htsmsg_t *tags,
   if (en)        save |= epg_episode_set_number(ee, en);
   if (save) stats->episodes.modified++;
 
+  // TODO: need to handle certification and ratings
   // TODO: need to handle season numbering!
   // TODO: need to handle onscreen numbering
   //if (onscreen) save |= epg_episode_set_onscreen(ee, onscreen);
@@ -252,6 +332,21 @@ _xmltv_parse_programme_tags(channel_t *ch, htsmsg_t *tags,
     stats->broadcasts.total++;
     if (save2) stats->broadcasts.created++;
     save2 |= epg_broadcast_set_episode(ebc, ee);
+
+    /* Quality metadata */
+    save2 |= parse_vid_quality(ebc, htsmsg_get_map(tags, "video"));
+
+    /* Accessibility */
+    save2 |= parse_accessibility(ebc, tags);
+
+    /* Misc */
+    if (htsmsg_get_map(tags, "previously-shown"))
+      save |= epg_broadcast_set_is_repeat(ebc, 1);
+    else if (htsmsg_get_map(tags, "premiere") ||
+             htsmsg_get_map(tags, "new"))
+      save |= epg_broadcast_set_is_new(ebc, 1);
+  
+    /* Stats */
     if (save2) stats->broadcasts.modified++;
   }
   
