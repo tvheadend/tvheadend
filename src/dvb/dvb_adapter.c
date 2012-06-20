@@ -86,6 +86,7 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "dump_muxes", tda->tda_dump_muxes);
   htsmsg_add_u32(m, "nitoid", tda->tda_nitoid);
   htsmsg_add_u32(m, "diseqc_version", tda->tda_diseqc_version);
+  htsmsg_add_u32(m, "extrapriority", tda->tda_extrapriority);
   hts_settings_save(m, "dvbadapters/%s", tda->tda_identifier);
   htsmsg_destroy(m);
 }
@@ -232,6 +233,23 @@ dvb_adapter_set_diseqc_version(th_dvb_adapter_t *tda, unsigned int v)
   tda_save(tda);
 }
 
+/**
+ *
+ */
+void
+dvb_adapter_set_extrapriority(th_dvb_adapter_t *tda, int extrapriority)
+{
+  lock_assert(&global_lock);
+
+  if(tda->tda_extrapriority == extrapriority)
+    return;
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" extra priority \"%d\" changed to \"%d\"",
+         tda->tda_displayname, tda->tda_extrapriority, extrapriority);
+
+  tda->tda_extrapriority = extrapriority;
+  tda_save(tda);
+}
 
 /**
  *
@@ -383,6 +401,7 @@ dvb_adapter_init(uint32_t adapter_mask)
       htsmsg_get_u32(c, "dump_muxes", &tda->tda_dump_muxes);
       htsmsg_get_u32(c, "nitoid", &tda->tda_nitoid);
       htsmsg_get_u32(c, "diseqc_version", &tda->tda_diseqc_version);
+      htsmsg_get_u32(c, "extrapriority", &tda->tda_extrapriority);
     }
     htsmsg_destroy(l);
   }

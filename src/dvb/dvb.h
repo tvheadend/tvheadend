@@ -205,6 +205,8 @@ typedef struct th_dvb_adapter {
   int tda_unc_is_delta;  /* 1 if we believe FE_READ_UNCORRECTED_BLOCKS
 			  * return dela values */
 
+  uint32_t tda_extrapriority; // extra priority for choosing the best adapter/service
+
 } th_dvb_adapter_t;
 
 /**
@@ -286,6 +288,8 @@ void dvb_adapter_notify(th_dvb_adapter_t *tda);
 htsmsg_t *dvb_adapter_build_msg(th_dvb_adapter_t *tda);
 
 htsmsg_t *dvb_fe_opts(th_dvb_adapter_t *tda, const char *which);
+
+void dvb_adapter_set_extrapriority(th_dvb_adapter_t *tda, int extrapriority);
 
 /**
  * DVB Multiplex
