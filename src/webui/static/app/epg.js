@@ -1,12 +1,11 @@
 tvheadend.brands = new Ext.data.JsonStore({
   root: 'entries',
-  // TODO: this is not ALL fields, just those that I'm likely to use here
   fields: [ 'uri', 'title' ],
   autoLoad: true,
   url : 'epgobject',
   baseParams : { op : 'brandList' }
 });
-// TODO: we might want this to periodically update!
+// WIBNI: might want this store to periodically update
 
 tvheadend.ContentGroupStore = new Ext.data.JsonStore({
     root:'entries',
@@ -117,7 +116,6 @@ tvheadend.epgDetails = function(event) {
     }
 
     function showAlternatives (s) {
-      // TODO: must be a way to constrain this
       var e = Ext.get('altbcast')
       html = '';
       if ( s.getTotalCount() > 0 ) {
@@ -126,14 +124,12 @@ tvheadend.epgDetails = function(event) {
           var ab = s.getAt(i).data;
   	      var dt = Date.parseDate(ab.start, 'U');
           html += '<div class="x-epg-desc">' + dt.format('l H:i') + '&nbsp;&nbsp;&nbsp;' + ab.channel + '</div>';
-          // TODO: record option?
         }
       }
       e.dom.innerHTML = html;
     }
     function showRelated (s)
     {
-      // TODO: must be a way to constrain this
       var e = Ext.get('related')
       html = '';
       if ( s.getTotalCount() > 0 ) {

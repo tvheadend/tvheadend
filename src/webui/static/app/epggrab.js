@@ -176,7 +176,6 @@ tvheadend.epggrab = function() {
       dataIndex : 'path',
       width     : 300,
       sortable  : false,
-      // TODO: editable?
     },
   ]);
 
@@ -258,7 +257,8 @@ tvheadend.epggrab = function() {
   var helpButton = new Ext.Button({
     text    : 'Help',
     handler : function() {
-      alert('TODO: help info');
+      new tvheadend.help('EPG Grab Configuration',
+                         'config_epggrab.html');
     }
   });
 

@@ -80,16 +80,23 @@ static int _season_order ( const void *_a, const void *_b )
   return a->number - b->number;
 }
 
+// Note: this will do nothing with text episode numbering
 static int _episode_order ( const void *_a, const void *_b )
 {
-  int r;
+  int r, as, bs;
   const epg_episode_t *a = (const epg_episode_t*)_a;
   const epg_episode_t *b = (const epg_episode_t*)_b;
-  r = _season_order(a->season, b->season);
+  if (!a) return -1;
+  if (!b) return 1;
+  if (a->season) as = a->season->number;
+  else           as = a->epnum.s_num;
+  if (b->season) bs = b->season->number;
+  else           bs = b->epnum.s_num;
+  r = as - bs;
   if (r) return r;
-  if (!a || !a->number) return 1;
-  if (!b || !b->number) return -1;
-  return a->number - b->number;
+  r = a->epnum.e_num - b->epnum.e_num;
+  if (r) return r;
+  return a->epnum.p_num - b->epnum.p_num;
 }
 
 /* **************************************************************************
@@ -105,7 +112,7 @@ static void _epg_event_deserialize ( htsmsg_t *c, epggrab_stats_t *stats )
   uint32_t e_start = 0;
   uint32_t e_stop = 0;
   uint32_t u32;
-  const char *title, *desc;
+  const char *title, *desc, *str;
   char *uri;
   int save = 0;
 
@@ -138,8 +145,10 @@ static void _epg_event_deserialize ( htsmsg_t *c, epggrab_stats_t *stats )
     save |= epg_episode_set_number(ee, u32);
   if (!htsmsg_get_u32(c, "part", &u32))
     save |= epg_episode_set_part(ee, u32, 0);
-  // TODO: season number!
-  // TODO: onscreen
+  if (!htsmsg_get_u32(c, "season", &u32))
+    ee->epnum.s_num = u32;
+  if ((str = htsmsg_get_str(c, "epname")))
+    ee->epnum.text  = strdup(str);
 
   /* Set episode */
   save |= epg_broadcast_set_episode(ebc, ee);
@@ -254,8 +263,6 @@ void epg_init ( void )
   /* Process */
   memset(&stats, 0, sizeof(stats));
   while ( remain > 4 ) {
-
-    // TODO: would be nice if htsmsg_binary handled this for us!
 
     /* Get message length */
     int msglen = (rp[0] << 24) | (rp[1] << 16) | (rp[2] << 8) | rp[3];
@@ -378,8 +385,9 @@ static void _epg_object_putref ( epg_object_t *eo )
   if (!eo->refcount) eo->destroy(eo);
 }
 
-static void _epg_object_set_updated ( epg_object_t *eo )
+static void _epg_object_set_updated ( void *p )
 {
+  epg_object_t *eo = (epg_object_t*)p;
   if (!eo->_updated) {
     eo->_updated = 1;
     LIST_INSERT_HEAD(&epg_object_updated, eo, up_link);
@@ -465,6 +473,30 @@ static int _epg_object_set_str
     if ( *old ) free(*old);
     *old = strdup(new);
     _epg_object_set_updated(eo);
+    save = 1;
+  }
+  return save;
+}
+
+static int _epg_object_set_u8
+  ( void *o, uint8_t *old, const uint8_t new )
+{
+  int save = 0;
+  if ( *old != new ) {
+    *old = new;
+    _epg_object_set_updated(o);
+    save = 1;
+  }
+  return save;
+}
+
+static int _epg_object_set_u16
+  ( void *o, uint16_t *old, const uint16_t new )
+{
+  int save = 0;
+  if ( *old != new ) {
+    *old = new;
+    _epg_object_set_updated(o);
     save = 1;
   }
   return save;
@@ -792,6 +824,53 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save )
  * Episode
  * *************************************************************************/
 
+static htsmsg_t *epg_episode_num_serialize ( epg_episode_num_t *num )
+{
+  htsmsg_t *m;
+  if (!num) return NULL;
+  m = htsmsg_create_map();
+  if (num->e_num)
+    htsmsg_add_u32(m, "e_num", num->e_num);
+  if (num->e_cnt)
+    htsmsg_add_u32(m, "e_cnt", num->e_cnt);
+  if (num->s_num)
+    htsmsg_add_u32(m, "s_num", num->e_num);
+  if (num->s_cnt)
+    htsmsg_add_u32(m, "s_cnt", num->e_cnt);
+  if (num->p_num)
+    htsmsg_add_u32(m, "p_num", num->e_num);
+  if (num->p_cnt)
+    htsmsg_add_u32(m, "p_cnt", num->e_cnt);
+  if (num->text)
+    htsmsg_add_str(m, "text", num->text);
+  return m;
+}
+
+static epg_episode_num_t *epg_episode_num_deserialize 
+  ( htsmsg_t *m, epg_episode_num_t *num )
+{
+  const char *str;
+  uint32_t u32;
+  if (!m) return NULL;
+  if (!num) num = calloc(1, sizeof(epg_episode_num_t));
+  if (!htsmsg_get_u32(m, "e_num", &u32))
+    num->e_num = u32;
+  if (!htsmsg_get_u32(m, "e_cnt", &u32))
+    num->e_cnt = u32;
+  if (!htsmsg_get_u32(m, "s_num", &u32))
+    num->s_num = u32;
+  if (!htsmsg_get_u32(m, "s_cnt", &u32))
+    num->s_cnt = u32;
+  if (!htsmsg_get_u32(m, "p_num", &u32))
+    num->p_num = u32;
+  if (!htsmsg_get_u32(m, "p_cnt", &u32))
+    num->p_cnt = u32;
+  if ((str = htsmsg_get_str(m, "text")))
+    num->text = strdup(str);
+  
+  return num;
+}
+
 static void _epg_episode_destroy ( epg_object_t *eo )
 {
   epg_episode_t *ee = (epg_episode_t*)eo;
@@ -814,6 +893,7 @@ static void _epg_episode_destroy ( epg_object_t *eo )
   if (ee->description) free(ee->description);
   if (ee->genre)       free(ee->genre);
   if (ee->image)       free(ee->image);
+  if (ee->epnum.text)  free(ee->epnum.text);
   free(ee);
 }
 
@@ -876,8 +956,8 @@ int epg_episode_set_number ( epg_episode_t *episode, uint16_t number )
 {
   int save = 0;
   if ( !episode || !number ) return 0;
-  if ( episode->number != number ) {
-    episode->number = number;
+  if ( episode->epnum.e_num != number ) {
+    episode->epnum.e_num = number;
     _epg_object_set_updated((epg_object_t*)episode);
     save = 1;
   }
@@ -888,14 +968,35 @@ int epg_episode_set_part ( epg_episode_t *episode, uint16_t part, uint16_t count
 {
   int save = 0;
   if ( !episode || !part ) return 0;
-  if ( episode->part_number != part ) {
-    episode->part_number = part;
+  if ( episode->epnum.p_num != part ) {
+    episode->epnum.p_num = part;
     _epg_object_set_updated((epg_object_t*)episode);
     save = 1;
   }
-  if ( count && episode->part_count != count ) {
-    episode->part_count = count;
+  if ( count && episode->epnum.p_cnt != count ) {
+    episode->epnum.p_cnt = count;
     _epg_object_set_updated((epg_object_t*)episode);
+    save = 1;
+  }
+  return save;
+}
+
+int epg_episode_set_epnum ( epg_episode_t *episode, epg_episode_num_t *num )
+{
+  int save = 0;
+  if (!episode || !num || (!num->e_num && !num->text)) return 0;
+  if      ( episode->epnum.e_num != num->e_num ) save = 1;
+  else if ( episode->epnum.e_cnt != num->e_cnt ) save = 1;
+  else if ( episode->epnum.s_num != num->s_num ) save = 1;
+  else if ( episode->epnum.s_cnt != num->s_cnt ) save = 1;
+  else if ( episode->epnum.p_num != num->p_num ) save = 1;
+  else if ( episode->epnum.p_cnt != num->p_cnt ) save = 1;
+  else if ( !episode->epnum.text || 
+            (num->text && strcmp(num->text, episode->epnum.text)) ) save = 1;
+  if (save) {
+    if (episode->epnum.text) free(episode->epnum.text);
+    episode->epnum = *num;
+    if (episode->epnum.text) strdup(episode->epnum.text);
     save = 1;
   }
   return save;
@@ -981,6 +1082,12 @@ int epg_episode_set_genre_str ( epg_episode_t *ee, const char **gstr )
   return epg_episode_set_genre(ee, genre, gcnt);
 }
 
+int epg_episode_set_is_bw ( epg_episode_t *e, uint8_t bw )
+{
+  if (!e) return 0;
+  return _epg_object_set_u8(e, &e->is_bw, bw);
+}
+
 static void _epg_episode_add_broadcast 
   ( epg_episode_t *episode, epg_broadcast_t *broadcast )
 {
@@ -1005,7 +1112,7 @@ size_t epg_episode_number_format
   size_t i = 0;
   if (!episode) return 0;
   epg_episode_num_t num;
-  epg_episode_number_full(episode, &num);
+  epg_episode_get_epnum(episode, &num);
   if ( num.e_num ) {
     if (pre) i += snprintf(&buf[i], len-i, "%s", pre);
     if ( sfmt && num.s_num ) {
@@ -1017,17 +1124,17 @@ size_t epg_episode_number_format
     i += snprintf(&buf[i], len-i, efmt, num.e_num);
     if ( cfmt && num.e_cnt )
       i+= snprintf(&buf[i], len-i, cfmt, num.e_cnt);
+  } else if ( num.text ) {
+    strncpy(buf, num.text, len);
+    i = MAX(strlen(num.text), len);
   }
   return i;
 }
 
-void epg_episode_number_full ( epg_episode_t *ee, epg_episode_num_t *num )
+void epg_episode_get_epnum ( epg_episode_t *ee, epg_episode_num_t *num )
 {
   if (!ee || !num) return;
-  memset(num, 0, sizeof(epg_episode_num_t));
-  num->e_num = ee->number;
-  num->p_num = ee->part_number;
-  num->p_cnt = ee->part_count;
+  *num = ee->epnum;
   if (ee->season) {
     num->e_cnt = ee->season->episode_count;
     num->s_num = ee->season->number;
@@ -1048,18 +1155,17 @@ int epg_episode_number_cmp ( epg_episode_num_t *a, epg_episode_num_t *b )
   }
 }
 
+
+// WIBNI: this could do with soem proper matching, maybe some form of
+//        fuzzy string match. I did try a few things, but none of them
+//        were very reliable.
 int epg_episode_fuzzy_match
   ( epg_episode_t *episode, const char *uri, const char *title,
     const char *summary, const char *description )
 {
-  // TODO: this is pretty noddy and likely to fail!
-  //       hence the reason I don't recommend mixing external grabbers and EIT
   if ( !episode ) return 0;
   if ( uri && episode->uri && !strcmp(episode->uri, uri) ) return 1;
   if ( title && episode->title && (strstr(title, episode->title) || strstr(episode->title, title)) ) return 1;
-  // TODO: could we do fuzzy string matching on the description/summary
-  //     : there are a few algorithms that might work, but some early testing
-  //     : suggested it wasn't clear cut enough to make sensible decisions.
   return 0;
 }
 
@@ -1077,16 +1183,13 @@ htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
     htsmsg_add_str(m, "summary", episode->summary);
   if (episode->description)
     htsmsg_add_str(m, "description", episode->description);
-  if (episode->number)
-    htsmsg_add_u32(m, "number", episode->number);
-  if (episode->part_count && episode->part_count) {
-    htsmsg_add_u32(m, "part-number", episode->part_number);
-    htsmsg_add_u32(m, "part-count", episode->part_count);
-  }
+  htsmsg_add_msg(m, "epnum", epg_episode_num_serialize(&episode->epnum)); 
   if (episode->brand)
     htsmsg_add_str(m, "brand", episode->brand->uri);
   if (episode->season)
     htsmsg_add_str(m, "season", episode->season->uri);
+  if (episode->is_bw)
+    htsmsg_add_u32(m, "is_bw", 1);
   return m;
 }
 
@@ -1098,6 +1201,8 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
   epg_brand_t *eb;
   uint32_t u32, u32a;
   const char *str;
+  epg_episode_num_t num;
+  htsmsg_t *sub;
   
   if ( !_epg_object_deserialize(m, *skel) ) return NULL;
   if ( !(ee = epg_episode_find_by_uri((*skel)->uri, create, save)) ) return NULL;
@@ -1110,6 +1215,12 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
     *save |= epg_episode_set_summary(ee, str);
   if ( (str = htsmsg_get_str(m, "description")) )
     *save |= epg_episode_set_description(ee, str);
+  if ( (sub = htsmsg_get_map(m, "epnum")) ) {
+    epg_episode_num_deserialize(sub, &num);
+    *save |= epg_episode_set_epnum(ee, &num);
+    if (num.text) free(num.text);
+  }
+  // Note: retained for compat
   if ( !htsmsg_get_u32(m, "number", &u32) )
     *save |= epg_episode_set_number(ee, u32);
   if ( !htsmsg_get_u32(m, "part-number", &u32) &&
@@ -1123,6 +1234,8 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
     if ( (eb = epg_brand_find_by_uri(str, 0, NULL)) )
       *save |= epg_episode_set_brand(ee, eb);
   
+  *save |= epg_episode_set_is_bw(ee, htsmsg_get_u32_or_default(m , "is_bw", 0));
+
   return ee;
 }
 
@@ -1313,8 +1426,8 @@ epg_broadcast_t* epg_broadcast_find_by_time
 
 epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id, channel_t *ch )
 {
-  // TODO: channel left in for now in case I decide to change implementation
-  // to simplify the search!
+  // Note: I have left channel_t param, just in case I decide to change
+  //       to use it for shorter search
   return (epg_broadcast_t*)_epg_object_find_by_id(id);
 }
 
@@ -1346,6 +1459,60 @@ int epg_broadcast_set_episode
   return save;
 }
 
+int epg_broadcast_set_is_widescreen ( epg_broadcast_t *b, uint8_t ws )
+{
+  if (!b) return 0;
+  return _epg_object_set_u8(b, &b->is_widescreen, ws);
+}
+
+int epg_broadcast_set_is_hd ( epg_broadcast_t *b, uint8_t hd )
+{
+  if (!b) return 0;
+  return _epg_object_set_u8(b, &b->is_hd, hd);
+}
+
+int epg_broadcast_set_lines ( epg_broadcast_t *b, uint16_t lines )
+{
+  if (!b) return 0;
+  return _epg_object_set_u16(b, &b->lines, lines);
+}
+
+int epg_broadcast_set_aspect ( epg_broadcast_t *b, uint16_t aspect )
+{
+  if (!b) return 0;
+  return _epg_object_set_u16(b, &b->aspect, aspect);
+}
+
+int epg_broadcast_set_is_deafsigned ( epg_broadcast_t *b, uint8_t ds )
+{
+  if (!b) return 0;
+  return _epg_object_set_u8(b, &b->is_deafsigned, ds);
+}
+
+int epg_broadcast_set_is_subtitled ( epg_broadcast_t *b, uint8_t st )
+{
+  if (!b) return 0;
+  return _epg_object_set_u8(b, &b->is_subtitled, st);
+}
+
+int epg_broadcast_set_is_audio_desc ( epg_broadcast_t *b, uint8_t ad )
+{
+  if (!b) return 0;
+  return _epg_object_set_u8(b, &b->is_audio_desc, ad);
+}
+
+int epg_broadcast_set_is_new ( epg_broadcast_t *b, uint8_t n )
+{
+  if (!b) return 0;
+  return _epg_object_set_u8(b, &b->is_new, n);
+}
+
+int epg_broadcast_set_is_repeat ( epg_broadcast_t *b, uint8_t r )
+{
+  if (!b) return 0;
+  return _epg_object_set_u8(b, &b->is_repeat, r);
+}
+
 epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *broadcast )
 {
   if ( !broadcast ) return NULL;
@@ -1365,6 +1532,24 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
     htsmsg_add_u32(m, "channel", broadcast->channel->ch_id);
   if (broadcast->dvb_eid)
     htsmsg_add_u32(m, "dvb_eid", broadcast->dvb_eid);
+  if (broadcast->is_widescreen)
+    htsmsg_add_u32(m, "is_widescreen", 1);
+  if (broadcast->is_hd)
+    htsmsg_add_u32(m, "is_hd", 1);
+  if (broadcast->lines)
+    htsmsg_add_u32(m, "lines", broadcast->lines);
+  if (broadcast->aspect)
+    htsmsg_add_u32(m, "aspect", broadcast->aspect);
+  if (broadcast->is_deafsigned)
+    htsmsg_add_u32(m, "is_deafsigned", 1);
+  if (broadcast->is_subtitled)
+    htsmsg_add_u32(m, "is_subtitled", 1);
+  if (broadcast->is_audio_desc)
+    htsmsg_add_u32(m, "is_audio_desc", 1);
+  if (broadcast->is_new)
+    htsmsg_add_u32(m, "is_new", 1);
+  if (broadcast->is_repeat)
+    htsmsg_add_u32(m, "is_repeat", 1);
   
   return m;
 }
@@ -1376,7 +1561,7 @@ epg_broadcast_t *epg_broadcast_deserialize
   epg_broadcast_t *ret, **ebc = _epg_broadcast_skel();
   epg_episode_t *ee;
   const char *str;
-  uint32_t chid, eid, start, stop;
+  uint32_t chid, eid, start, stop, u32;
 
   if ( htsmsg_get_u32(m, "start", &start) ) return NULL;
   if ( htsmsg_get_u32(m, "stop", &stop)   ) return NULL;
@@ -1400,6 +1585,26 @@ epg_broadcast_t *epg_broadcast_deserialize
   if ( !htsmsg_get_u32(m, "channel", &chid) ) {
     ch  = channel_find_by_identifier(chid);
   }
+
+  /* Get metadata */
+  if (!htsmsg_get_u32(m, "is_widescreen", &u32))
+    (*ebc)->is_widescreen = 1;
+  if (!htsmsg_get_u32(m, "is_hd", &u32))
+    (*ebc)->is_hd = 1;
+  if (!htsmsg_get_u32(m, "lines", &u32))
+    (*ebc)->lines = u32;
+  if (!htsmsg_get_u32(m, "aspect", &u32))
+    (*ebc)->aspect = u32;
+  if (!htsmsg_get_u32(m, "is_deafsigned", &u32))
+    (*ebc)->is_deafsigned = 1;
+  if (!htsmsg_get_u32(m, "is_subtitled", &u32))
+    (*ebc)->is_subtitled = 1;
+  if (!htsmsg_get_u32(m, "is_audio_desc", &u32))
+    (*ebc)->is_audio_desc = 1;
+  if (!htsmsg_get_u32(m, "is_new", &u32))
+    (*ebc)->is_new = 1;
+  if (!htsmsg_get_u32(m, "is_repeat", &u32))
+    (*ebc)->is_repeat = 1;
 
   /* Add to channel */
   if ( ch ) {

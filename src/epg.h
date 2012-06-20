@@ -181,12 +181,13 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save );
  */
 typedef struct epg_episode_num
 {
-  uint16_t s_num;  ///< Series number
-  uint16_t s_cnt;  ///< Series count
-  uint16_t e_num;  ///< Episode number
-  uint16_t e_cnt;  ///< Episode count
-  uint16_t p_num;  ///< Part number
-  uint16_t p_cnt;  ///< Part count
+  uint16_t s_num; ///< Series number
+  uint16_t s_cnt; ///< Series count
+  uint16_t e_num; ///< Episode number
+  uint16_t e_cnt; ///< Episode count
+  uint16_t p_num; ///< Part number
+  uint16_t p_cnt; ///< Part count
+  char     *text; ///< Arbitary text description of episode num
 } epg_episode_num_t;
 
 /* Object */
@@ -200,10 +201,13 @@ struct epg_episode
   char                      *description;   ///< An extended description
   uint8_t                   *genre;         ///< Episode genre(s)
   int                        genre_cnt;     ///< Genre count
-  uint16_t                   number;        ///< The episode number
-  uint16_t                   part_number;   ///< For multipart episodes
-  uint16_t                   part_count;    ///< For multipart episodes
+  epg_episode_num_t          epnum;         ///< Episode numbering
+  // Note: do not use epnum directly! use the accessor routine
   char                      *image;         ///< Episode image
+
+  uint8_t                    is_bw;            ///< Is black and white
+  // TODO: certification and rating
+  // TODO: film/year
 
   LIST_ENTRY(epg_episode)    blink;         ///< Brand link
   LIST_ENTRY(epg_episode)    slink;         ///< Season link
@@ -229,10 +233,10 @@ int epg_episode_set_description  ( epg_episode_t *e, const char *description )
   __attribute__((warn_unused_result));
 int epg_episode_set_number       ( epg_episode_t *e, uint16_t number )
   __attribute__((warn_unused_result));
-int epg_episode_set_onscreen     ( epg_episode_t *e, const char *onscreen )
-  __attribute__((warn_unused_result));
 int epg_episode_set_part         ( epg_episode_t *e, 
                                    uint16_t number, uint16_t count )
+  __attribute__((warn_unused_result));
+int epg_episode_set_epnum        ( epg_episode_t *e, epg_episode_num_t *num )
   __attribute__((warn_unused_result));
 int epg_episode_set_brand        ( epg_episode_t *e, epg_brand_t *b )
   __attribute__((warn_unused_result));
@@ -244,7 +248,12 @@ int epg_episode_set_genre_str    ( epg_episode_t *e, const char **s )
   __attribute__((warn_unused_result));
 int epg_episode_set_image        ( epg_episode_t *e, const char *i )
   __attribute__((warn_unused_result));
+int epg_episode_set_is_bw ( epg_episode_t *b, uint8_t bw )
+  __attribute__((warn_unused_result));
 
+// Note: this does NOT strdup the text field
+void epg_episode_get_epnum
+  ( epg_episode_t *e, epg_episode_num_t *epnum );
 /* EpNum format helper */
 // output string will be:
 // if (episode_num) 
@@ -260,8 +269,6 @@ size_t epg_episode_number_format
     const char *pre,  const char *sfmt,
     const char *sep,  const char *efmt,
     const char *cfmt );
-void epg_episode_number_full
-  ( epg_episode_t *e, epg_episode_num_t *epnum );
 int  epg_episode_number_cmp
   ( epg_episode_num_t *a, epg_episode_num_t *b );
 
@@ -318,6 +325,24 @@ epg_broadcast_t *epg_broadcast_find_by_eid ( int eid, struct channel *ch );
 /* Mutators */
 int epg_broadcast_set_episode    ( epg_broadcast_t *b, epg_episode_t *e )
   __attribute__((warn_unused_result));
+int epg_broadcast_set_is_widescreen ( epg_broadcast_t *b, uint8_t ws )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_is_hd ( epg_broadcast_t *b, uint8_t hd )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_lines ( epg_broadcast_t *b, uint16_t lines )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_aspect ( epg_broadcast_t *b, uint16_t aspect )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_is_deafsigned ( epg_broadcast_t *b, uint8_t ds )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_is_subtitled ( epg_broadcast_t *b, uint8_t st )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_is_audio_desc ( epg_broadcast_t *b, uint8_t ad )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_is_new ( epg_broadcast_t *b, uint8_t n )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_is_repeat ( epg_broadcast_t *b, uint8_t r )
+  __attribute__((warn_unused_result));
 
 /* Accessors */
 epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *b );
@@ -361,7 +386,7 @@ typedef struct epg_query_result {
 void epg_query_free(epg_query_result_t *eqr);
 
 /* Sorting */
-// TODO: comparator function input?
+// WIBNI: might be useful to have a user defined comparator function
 void epg_query_sort(epg_query_result_t *eqr);
 
 /* Query routines */

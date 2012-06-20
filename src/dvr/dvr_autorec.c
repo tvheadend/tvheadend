@@ -95,10 +95,6 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   }
 
   // Note: ignore channel test if we allow quality unlocking 
-  // TODO: should we only apply this setting if this is actually 
-  ///      created as a series link?
-  // TODO: I could just REMOVE the channel, but I think we probably still
-  //       want the channel as a "preferred" option
   cfg = dvr_config_find_by_name_default(dae->dae_config_name);
   if (cfg->dvr_sl_quality_lock)
     if(dae->dae_channel != NULL &&
@@ -137,7 +133,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 
   // Note: dae_epnum is unset then all values are 0 and this will
   //       always return 1
-  epg_episode_number_full(e->episode, &epnum);
+  epg_episode_get_epnum(e->episode, &epnum);
   if(epg_episode_number_cmp(&dae->dae_epnum, &epnum) < 0)
     return 0;
 
@@ -548,7 +544,6 @@ dvr_autorec_add(const char *config_name,
                    NULL, NULL, 0, NULL, creator, comment);
 }
 
-/* TODO: configurable brand/series selection */
 void dvr_autorec_add_series_link 
   ( const char *dvr_config_name, epg_broadcast_t *event,
     const char *creator, const char *comment )
@@ -567,7 +562,7 @@ void dvr_autorec_add_series_link
     atime = (t.tm_hour * 60) + t.tm_min;
   }
   if (cfg->dvr_sl_more_recent) {
-    epg_episode_number_full(ee, &epnum);
+    epg_episode_get_epnum(ee, &epnum);
     epnump = &epnum;
   }
   _dvr_autorec_add(dvr_config_name, event->episode->title,
@@ -601,19 +596,15 @@ dvr_autorec_check_event(epg_broadcast_t *e)
 
 void dvr_autorec_check_brand(epg_brand_t *b)
 {
-#ifdef TODO_BRAND_UPDATED_SUPPORT
 // Note: for the most part this will only be relevant should an episode
 //       to which a broadcast is linked suddenly get added to a new brand
 //       this is pretty damn unlikely!
-#endif
 }
 
 void dvr_autorec_check_season(epg_season_t *s)
 {
-#ifdef TODO_SEASON_SUPPORT
 // Note: I guess new episodes might have been added, but again its likely
 //       this will already have been picked up by the check_event call
-#endif
 }
 
 /**
