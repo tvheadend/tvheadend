@@ -48,7 +48,6 @@ typedef struct epggrab_channel
   char                      *icon;    ///< Channel icon
   int                       number;   ///< Channel number
 
-  // TODO: I think we might need a list of channels!
   struct channel            *channel; ///< Mapped channel
 } epggrab_channel_t;
 
