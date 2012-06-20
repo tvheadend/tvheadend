@@ -205,6 +205,8 @@ struct epg_episode
   uint16_t                   part_count;    ///< For multipart episodes
   char                      *image;         ///< Episode image
 
+  // TODO: certification and rating
+
   LIST_ENTRY(epg_episode)    blink;         ///< Brand link
   LIST_ENTRY(epg_episode)    slink;         ///< Season link
   epg_brand_t               *brand;         ///< (Grand-)Parent brand
@@ -290,6 +292,7 @@ struct epg_broadcast
   /* Some quality info */
   uint8_t                    is_widescreen;    ///< Is widescreen
   uint8_t                    is_hd;            ///< Is HD
+  uint8_t                    is_bw;            ///< Is black and white
   uint16_t                   lines;            ///< Lines in image (quality)
   uint16_t                   aspect;           ///< Aspect ratio (*100)
 
@@ -317,6 +320,26 @@ epg_broadcast_t *epg_broadcast_find_by_eid ( int eid, struct channel *ch );
 
 /* Mutators */
 int epg_broadcast_set_episode    ( epg_broadcast_t *b, epg_episode_t *e )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_is_widescreen ( epg_broadcast_t *b, uint8_t ws )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_is_hd ( epg_broadcast_t *b, uint8_t hd )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_is_bw ( epg_broadcast_t *b, uint8_t bw )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_lines ( epg_broadcast_t *b, uint16_t lines )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_aspect ( epg_broadcast_t *b, uint16_t aspect )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_is_deafsigned ( epg_broadcast_t *b, uint8_t ds )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_is_subtitled ( epg_broadcast_t *b, uint8_t st )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_is_audio_desc ( epg_broadcast_t *b, uint8_t ad )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_is_new ( epg_broadcast_t *b, uint8_t n )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_is_repeat ( epg_broadcast_t *b, uint8_t r )
   __attribute__((warn_unused_result));
 
 /* Accessors */
