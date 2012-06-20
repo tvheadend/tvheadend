@@ -211,7 +211,7 @@ get_episode_info
  *       job
  */
 static int
-parse_vid_quality ( epg_broadcast_t *ebc, htsmsg_t *m )
+parse_vid_quality ( epg_broadcast_t *ebc, epg_episode_t *ee, htsmsg_t *m )
 {
   int save = 0;
   int hd = 0, lines = 0, aspect = 0;
@@ -219,7 +219,7 @@ parse_vid_quality ( epg_broadcast_t *ebc, htsmsg_t *m )
   if (!ebc || !m) return 0;
 
   if ((str = htsmsg_xml_get_cdata_str(m, "colour")))
-    save |= epg_broadcast_set_is_bw(ebc, strcmp(str, "no") ? 0 : 1);
+    save |= epg_episode_set_is_bw(ee, strcmp(str, "no") ? 0 : 1);
   if ((str = htsmsg_xml_get_cdata_str(m, "quality"))) {
     if (strstr(str, "HD")) {
       hd    = 1;
@@ -259,8 +259,8 @@ parse_vid_quality ( epg_broadcast_t *ebc, htsmsg_t *m )
 /*
  * Parse accessibility data
  */
-static int
-parse_accessibility ( epg_broadcast_t *ebc, htsmsg_t *m )
+int
+xmltv_parse_accessibility ( epg_broadcast_t *ebc, htsmsg_t *m )
 {
   int save = 0;
   htsmsg_t *tag;
@@ -328,16 +328,16 @@ _xmltv_parse_programme_tags(channel_t *ch, htsmsg_t *tags,
 
   /* Create/Find broadcast */
   ebc = epg_broadcast_find_by_time(ch, start, stop, 1, &save2);
-  if ( ebc != NULL ) {
+  if ( ebc ) {
     stats->broadcasts.total++;
     if (save2) stats->broadcasts.created++;
     save2 |= epg_broadcast_set_episode(ebc, ee);
 
     /* Quality metadata */
-    save2 |= parse_vid_quality(ebc, htsmsg_get_map(tags, "video"));
+    save2 |= parse_vid_quality(ebc, ee, htsmsg_get_map(tags, "video"));
 
     /* Accessibility */
-    save2 |= parse_accessibility(ebc, tags);
+    save2 |= xmltv_parse_accessibility(ebc, tags);
 
     /* Misc */
     if (htsmsg_get_map(tags, "previously-shown"))

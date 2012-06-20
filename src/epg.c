@@ -1082,6 +1082,12 @@ int epg_episode_set_genre_str ( epg_episode_t *ee, const char **gstr )
   return epg_episode_set_genre(ee, genre, gcnt);
 }
 
+int epg_episode_set_is_bw ( epg_episode_t *e, uint8_t bw )
+{
+  if (!e) return 0;
+  return _epg_object_set_u8(e, &e->is_bw, bw);
+}
+
 static void _epg_episode_add_broadcast 
   ( epg_episode_t *episode, epg_broadcast_t *broadcast )
 {
@@ -1182,6 +1188,8 @@ htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
     htsmsg_add_str(m, "brand", episode->brand->uri);
   if (episode->season)
     htsmsg_add_str(m, "season", episode->season->uri);
+  if (episode->is_bw)
+    htsmsg_add_u32(m, "is_bw", 1);
   return m;
 }
 
@@ -1226,6 +1234,8 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
     if ( (eb = epg_brand_find_by_uri(str, 0, NULL)) )
       *save |= epg_episode_set_brand(ee, eb);
   
+  *save |= epg_episode_set_is_bw(ee, htsmsg_get_u32_or_default(m , "is_bw", 0));
+
   return ee;
 }
 
@@ -1461,12 +1471,6 @@ int epg_broadcast_set_is_hd ( epg_broadcast_t *b, uint8_t hd )
   return _epg_object_set_u8(b, &b->is_hd, hd);
 }
 
-int epg_broadcast_set_is_bw ( epg_broadcast_t *b, uint8_t bw )
-{
-  if (!b) return 0;
-  return _epg_object_set_u8(b, &b->is_bw, bw);
-}
-
 int epg_broadcast_set_lines ( epg_broadcast_t *b, uint16_t lines )
 {
   if (!b) return 0;
@@ -1532,8 +1536,6 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
     htsmsg_add_u32(m, "is_widescreen", 1);
   if (broadcast->is_hd)
     htsmsg_add_u32(m, "is_hd", 1);
-  if (broadcast->is_bw)
-    htsmsg_add_u32(m, "is_widescreen", 1);
   if (broadcast->lines)
     htsmsg_add_u32(m, "lines", broadcast->lines);
   if (broadcast->aspect)
@@ -1589,8 +1591,6 @@ epg_broadcast_t *epg_broadcast_deserialize
     (*ebc)->is_widescreen = 1;
   if (!htsmsg_get_u32(m, "is_hd", &u32))
     (*ebc)->is_hd = 1;
-  if (!htsmsg_get_u32(m , "is_bw", &u32))
-    (*ebc)->is_bw = 1;
   if (!htsmsg_get_u32(m, "lines", &u32))
     (*ebc)->lines = u32;
   if (!htsmsg_get_u32(m, "aspect", &u32))

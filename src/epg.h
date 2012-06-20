@@ -205,7 +205,9 @@ struct epg_episode
   // Note: do not use epnum directly! use the accessor routine
   char                      *image;         ///< Episode image
 
+  uint8_t                    is_bw;            ///< Is black and white
   // TODO: certification and rating
+  // TODO: film/year
 
   LIST_ENTRY(epg_episode)    blink;         ///< Brand link
   LIST_ENTRY(epg_episode)    slink;         ///< Season link
@@ -245,6 +247,8 @@ int epg_episode_set_genre        ( epg_episode_t *e, const uint8_t *g, int c )
 int epg_episode_set_genre_str    ( epg_episode_t *e, const char **s )
   __attribute__((warn_unused_result));
 int epg_episode_set_image        ( epg_episode_t *e, const char *i )
+  __attribute__((warn_unused_result));
+int epg_episode_set_is_bw ( epg_episode_t *b, uint8_t bw )
   __attribute__((warn_unused_result));
 
 // Note: this does NOT strdup the text field
@@ -293,7 +297,6 @@ struct epg_broadcast
   /* Some quality info */
   uint8_t                    is_widescreen;    ///< Is widescreen
   uint8_t                    is_hd;            ///< Is HD
-  uint8_t                    is_bw;            ///< Is black and white
   uint16_t                   lines;            ///< Lines in image (quality)
   uint16_t                   aspect;           ///< Aspect ratio (*100)
 
@@ -325,8 +328,6 @@ int epg_broadcast_set_episode    ( epg_broadcast_t *b, epg_episode_t *e )
 int epg_broadcast_set_is_widescreen ( epg_broadcast_t *b, uint8_t ws )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_is_hd ( epg_broadcast_t *b, uint8_t hd )
-  __attribute__((warn_unused_result));
-int epg_broadcast_set_is_bw ( epg_broadcast_t *b, uint8_t bw )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_lines ( epg_broadcast_t *b, uint16_t lines )
   __attribute__((warn_unused_result));

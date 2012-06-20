@@ -26,6 +26,7 @@
 #include "spawn.h"
 #include "epg.h"
 #include "epggrab/pyepg.h"
+#include "epggrab/xmltv.h"
 #include "channels.h"
 
 static epggrab_channel_tree_t _pyepg_channels;
@@ -293,7 +294,9 @@ static int _pyepg_parse_episode ( htsmsg_t *data, epggrab_stats_t *stats )
     save |= epg_episode_set_genre(episode, genre, genre_cnt);
   }
 
-  /* TODO: extra metadata */
+  /* Content */
+  if ((htsmsg_get_map(tags, "blackandwhite")))
+    save |= epg_episode_set_is_bw(episode, 1);
 
   if (save) stats->episodes.modified++;
 
@@ -304,11 +307,12 @@ static int _pyepg_parse_broadcast
   ( htsmsg_t *data, channel_t *channel, epggrab_stats_t *stats )
 {
   int save = 0;
-  htsmsg_t *attr;//, *tags;
+  htsmsg_t *attr, *tags;
   epg_episode_t *episode;
   epg_broadcast_t *broadcast;
   const char *id, *start, *stop;
   time_t tm_start, tm_stop;
+  uint32_t u32;
 
   if ( data == NULL || channel == NULL ) return 0;
 
@@ -316,6 +320,7 @@ static int _pyepg_parse_broadcast
   if ((id      = htsmsg_get_str(attr, "episode")) == NULL) return 0;
   if ((start   = htsmsg_get_str(attr, "start")) == NULL ) return 0;
   if ((stop    = htsmsg_get_str(attr, "stop")) == NULL ) return 0;
+  if ((tags    = htsmsg_get_map(data, "tags")) == NULL) return 0;
 
   /* Find episode */
   if ((episode = epg_episode_find_by_uri(id, 1, &save)) == NULL) return 0;
@@ -333,8 +338,23 @@ static int _pyepg_parse_broadcast
   /* Set episode */
   save |= epg_broadcast_set_episode(broadcast, episode);
 
-  /* TODO: extra metadata */
-  
+  /* Quality */
+  u32 = htsmsg_get_map(tags, "hd") ? 1 : 0;
+  save |= epg_broadcast_set_is_hd(broadcast, u32);
+  u32 = htsmsg_get_map(tags, "widescreen") ? 1 : 0;
+  save |= epg_broadcast_set_is_widescreen(broadcast, u32);
+  // TODO: lines, aspect
+
+  /* Accessibility */
+  // Note: reuse XMLTV parse code as this is the same
+  xmltv_parse_accessibility(broadcast, tags);
+
+  /* New/Repeat */
+  u32 = htsmsg_get_map(tags, "new") || htsmsg_get_map(tags, "premiere");
+  save |= epg_broadcast_set_is_new(broadcast, u32);
+  u32 = htsmsg_get_map(tags, "repeat") ? 1 : 0;
+  save |= epg_broadcast_set_is_repeat(broadcast, u32);
+
   if (save) stats->broadcasts.modified++;  
 
   return save;
