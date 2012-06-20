@@ -1,6 +1,6 @@
 /*
  *  Multicasted IPTV Input
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas ï¿½man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@
 #include "tvheadend.h"
 #include "htsmsg.h"
 #include "channels.h"
+#include "dvb/dvb.h"
 #include "iptv_input.h"
 #include "tsdemux.h"
 #include "psi.h"
@@ -541,6 +542,12 @@ iptv_service_find(const char *id, int create)
   t->s_grace_period  = iptv_grace_period;
   t->s_dtor          = iptv_service_dtor;
   t->s_iptv_fd = -1;
+
+  th_dvb_mux_instance_t *tdmi;
+  tdmi = calloc(1, sizeof(th_dvb_mux_instance_t));
+  tdmi->tdmi_identifier = strdup("IPTV");
+
+  t->s_dvb_mux_instance = tdmi;
 
   LIST_INSERT_HEAD(&iptv_all_services, t, s_group_link);
 
