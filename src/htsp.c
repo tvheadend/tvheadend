@@ -761,16 +761,18 @@ htsp_build_event(epg_broadcast_t *e)
   htsmsg_add_u32(out, "channelId", e->channel->ch_id);
   htsmsg_add_u32(out, "start", e->start);
   htsmsg_add_u32(out, "stop", e->stop);
-  if(e->episode->title != NULL)
-    htsmsg_add_str(out, "title", e->episode->title);
-  if(e->episode->description != NULL)
-    htsmsg_add_str(out, "description", e->episode->description);
-  else if(e->episode->summary != NULL)
-    htsmsg_add_str(out, "description", e->episode->summary);
+  if (e->episode) {
+    if(e->episode->title != NULL)
+      htsmsg_add_str(out, "title", e->episode->title);
+    if(e->episode->description != NULL)
+      htsmsg_add_str(out, "description", e->episode->description);
+    else if(e->episode->summary != NULL)
+      htsmsg_add_str(out, "description", e->episode->summary);
 
-  // TODO: only supports one entry!
-  if(e->episode->genre_cnt)
-    htsmsg_add_u32(out, "contentType", e->episode->genre[0]);
+    // TODO: only supports one entry!
+    if(e->episode->genre_cnt)
+      htsmsg_add_u32(out, "contentType", e->episode->genre[0]);
+  }
 
   if((de = dvr_entry_find_by_event(e)) != NULL) {
     htsmsg_add_u32(out, "dvrId", de->de_id);
