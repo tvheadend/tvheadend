@@ -199,11 +199,9 @@ htsmsg_json_parse_string(const char *s, const char **endp)
 	    else if(*a == 't')
 	      *b++ = '\t';
 	    else if(*a == 'u') {
-#if TODO
 	      /* 4 hexdigits: Not supported */
 	      free(r);
 	      return NULL;
-#endif
         a += 4;
 	    } else {
 	      *b++ = *a;
