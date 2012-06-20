@@ -137,7 +137,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 
   // Note: dae_epnum is unset then all values are 0 and this will
   //       always return 1
-  epg_episode_number_full(e->episode, &epnum);
+  epg_episode_get_epnum(e->episode, &epnum);
   if(epg_episode_number_cmp(&dae->dae_epnum, &epnum) < 0)
     return 0;
 
@@ -580,7 +580,7 @@ void dvr_autorec_add_series_link
     atime = (t.tm_hour * 60) + t.tm_min;
   }
   if (cfg->dvr_sl_more_recent) {
-    epg_episode_number_full(ee, &epnum);
+    epg_episode_get_epnum(ee, &epnum);
     epnump = &epnum;
   }
   _dvr_autorec_add(dvr_config_name, event->episode->title,
