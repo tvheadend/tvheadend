@@ -1146,7 +1146,7 @@ static void _epg_channel_timer_callback ( void *p )
     /* Expire */
     if ( ebc->stop <= dispatch_clock ) {
       RB_REMOVE(&ch->ch_epg_schedule, ebc, sched_link);
-      tvhlog(LOG_DEBUG, "epg", "expire event %"PRIu64" from %s",
+      tvhlog(LOG_DEBUG, "epg", "expire event %"PRItime_t" from %s",
              ebc->id, ch->ch_name);
       ebc->putref((epg_object_t*)ebc);
       continue; // skip to next
@@ -1171,7 +1171,7 @@ static void _epg_channel_timer_callback ( void *p )
 
   /* re-arm */
   if ( next ) {
-    tvhlog(LOG_DEBUG, "epg", "arm channel timer @ %"PRIu64" for %s",
+    tvhlog(LOG_DEBUG, "epg", "arm channel timer @ %"PRItime_t" for %s",
            next, ch->ch_name);
     gtimer_arm_abs(&ch->ch_epg_timer, _epg_channel_timer_callback, ch, next);
   }

@@ -451,4 +451,11 @@ void sbuf_put_byte(sbuf_t *sb, uint8_t u8);
 
 char *md5sum ( const char *str );
 
+/* printing */
+#if __SIZEOF_LONG__ == 8
+  #define PRItime_t PRIu64
+#else
+  #define PRItime_t PRIu32
+#endif
+
 #endif /* TV_HEAD_H */
