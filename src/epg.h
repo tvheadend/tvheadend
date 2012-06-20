@@ -385,7 +385,7 @@ typedef struct epg_query_result {
 void epg_query_free(epg_query_result_t *eqr);
 
 /* Sorting */
-// TODO: comparator function input?
+// WIBNI: might be useful to have a user defined comparator function
 void epg_query_sort(epg_query_result_t *eqr);
 
 /* Query routines */

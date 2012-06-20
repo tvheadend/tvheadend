@@ -112,7 +112,7 @@ static void _epg_event_deserialize ( htsmsg_t *c, epggrab_stats_t *stats )
   uint32_t e_start = 0;
   uint32_t e_stop = 0;
   uint32_t u32;
-  const char *title, *desc;
+  const char *title, *desc, *str;
   char *uri;
   int save = 0;
 
@@ -145,8 +145,10 @@ static void _epg_event_deserialize ( htsmsg_t *c, epggrab_stats_t *stats )
     save |= epg_episode_set_number(ee, u32);
   if (!htsmsg_get_u32(c, "part", &u32))
     save |= epg_episode_set_part(ee, u32, 0);
-  // TODO: season number!
-  // TODO: onscreen
+  if (!htsmsg_get_u32(c, "season", &u32))
+    ee->epnum.s_num = u32;
+  if ((str = htsmsg_get_str(c, "epname")))
+    ee->epnum.text  = strdup(str);
 
   /* Set episode */
   save |= epg_broadcast_set_episode(ebc, ee);
@@ -261,8 +263,6 @@ void epg_init ( void )
   /* Process */
   memset(&stats, 0, sizeof(stats));
   while ( remain > 4 ) {
-
-    // TODO: would be nice if htsmsg_binary handled this for us!
 
     /* Get message length */
     int msglen = (rp[0] << 24) | (rp[1] << 16) | (rp[2] << 8) | rp[3];
@@ -1149,18 +1149,17 @@ int epg_episode_number_cmp ( epg_episode_num_t *a, epg_episode_num_t *b )
   }
 }
 
+
+// WIBNI: this could do with soem proper matching, maybe some form of
+//        fuzzy string match. I did try a few things, but none of them
+//        were very reliable.
 int epg_episode_fuzzy_match
   ( epg_episode_t *episode, const char *uri, const char *title,
     const char *summary, const char *description )
 {
-  // TODO: this is pretty noddy and likely to fail!
-  //       hence the reason I don't recommend mixing external grabbers and EIT
   if ( !episode ) return 0;
   if ( uri && episode->uri && !strcmp(episode->uri, uri) ) return 1;
   if ( title && episode->title && (strstr(title, episode->title) || strstr(episode->title, title)) ) return 1;
-  // TODO: could we do fuzzy string matching on the description/summary
-  //     : there are a few algorithms that might work, but some early testing
-  //     : suggested it wasn't clear cut enough to make sensible decisions.
   return 0;
 }
 
@@ -1417,8 +1416,8 @@ epg_broadcast_t* epg_broadcast_find_by_time
 
 epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id, channel_t *ch )
 {
-  // TODO: channel left in for now in case I decide to change implementation
-  // to simplify the search!
+  // Note: I have left channel_t param, just in case I decide to change
+  //       to use it for shorter search
   return (epg_broadcast_t*)_epg_object_find_by_id(id);
 }
 
