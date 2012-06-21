@@ -31,78 +31,14 @@ static epggrab_module_t _eit_mod;
  * Processing
  * ***********************************************************************/
 
-static const char *
-longest_string ( const char *a, const char *b )
-{
-  if (!a) return b;
-  if (!b) return a;
-  if (strlen(a) - strlen(b) >= 0) return a;
-}
-
-static void eit_callback ( channel_t *ch, int id, time_t start, time_t stop,
-                    const char *title, const char *desc,
-                    const char *extitem, const char *extdesc,
-                    const char *exttext,
-                    const uint8_t *genre, int genre_cnt ) {
-  int save = 0;
-  epg_broadcast_t *ebc;
-  epg_episode_t *ee;
-  const char *summary     = NULL;
-  const char *description = NULL;
-  char *uri;
-
-  /* Ignore */
-  if (!ch || !ch->ch_name || !ch->ch_name[0]) return;
-  if (!title) return;
-
-  /* Find broadcast */
-  ebc  = epg_broadcast_find_by_time(ch, start, stop, 1, &save);
-  if (!ebc) return;
-
-  /* Determine summary */
-  description = summary = desc;
-  description = longest_string(description, extitem);
-  description = longest_string(description, extdesc);
-  description = longest_string(description, exttext);
-  if (summary == description) description = NULL;
-  // TODO: is this correct?
-
-  /* Create episode URI */
-  uri = md5sum(longest_string(title, longest_string(description, summary)));
-
-  /* Create/Replace episode */
-  if ( !ebc->episode ||
-       !epg_episode_fuzzy_match(ebc->episode, uri, title,
-                                summary, description) ) {
-    
-    /* Create episode */
-    ee  = epg_episode_find_by_uri(uri, 1, &save);
-
-    /* Set fields */
-    if (title)
-      save |= epg_episode_set_title(ee, title);
-    if (summary)
-      save |= epg_episode_set_summary(ee, summary);
-    if (description)
-      save |= epg_episode_set_description(ee, description);
-    if (genre_cnt)
-      save |= epg_episode_set_genre(ee, genre, genre_cnt);
-
-    /* Update */
-    save |= epg_broadcast_set_episode(ebc, ee);
-  }
-  free(uri);
-}
-
-
 /**
  * DVB Descriptor; Short Event
  */
 static int
 dvb_desc_short_event(uint8_t *ptr, int len, 
-		     char *title, size_t titlelen,
-		     char *desc,  size_t desclen,
-		     char *dvb_default_charset)
+         char *title, size_t titlelen,
+         char *desc,  size_t desclen,
+         char *dvb_default_charset)
 {
   int r;
 
@@ -125,11 +61,11 @@ dvb_desc_short_event(uint8_t *ptr, int len,
  */
 static int
 dvb_desc_extended_event(uint8_t *ptr, int len, 
-		     char *desc, size_t desclen,
-		     char *item, size_t itemlen,
-                     char *text, size_t textlen,
-                     char *dvb_default_charset)
+                        char *desc, size_t desclen,
+                        char *text, size_t textlen,
+                        char *dvb_default_charset)
 {
+#if TODO
   int count = ptr[4], r;
   uint8_t *localptr = ptr + 5, *items = localptr; 
   int locallen = len - 5;
@@ -178,100 +114,100 @@ dvb_desc_extended_event(uint8_t *ptr, int len,
   /* get text */
   if((r = dvb_get_string_with_len(text, textlen, localptr, locallen, dvb_default_charset)) < 0)
     return -1;
-
+#endif
   return 0;
 }
 
-
-/**
- * DVB EIT (Event Information Table)
- */
-static int
-_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
-		 uint8_t tableid, void *opaque)
+// TODO: reg interest th_dvb_mux_instance_t *otdmi = tdmi;
+static int _eit_callback
+  ( th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len, 
+    uint8_t tableid, void *opaque )
 {
-  service_t *t;
+  th_dvb_adapter_t *tda;
+  service_t *svc;
   channel_t *ch;
-  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-
-  uint16_t serviceid;
-  uint16_t transport_stream_id;
-
-  uint16_t event_id;
-  time_t start_time, stop_time;
-
-  int ok;
-  int duration;
-  int dllen;
-  uint8_t dtag, dlen;
-
-  char title[256];
-  char desc[5000];
-  char extdesc[5000];
-  char extitem[5000];
-  char exttext[5000];
-  uint8_t genre[10]; // max 10 genres
+  epg_broadcast_t *ebc;
+  epg_episode_t *ee;
+  int resched = 0, save = 0, save2 = 0, dllen, dtag, dlen;
+  uint16_t tsid, sid, eid;
+  uint8_t bw, hd, ws, ad, ds, st;
+  time_t start, stop;
   int genre_idx = 0;
+  uint8_t genre[10];
+  char title[256];
+  char summary[256];
+  char desc[5000];
+  char info[5000];
 
-  /* Global disable */
-  if (!_eit_mod.enabled) return 0;
+  /* Disabled */
+  if(!_eit_mod.enabled) return 0;
 
-  lock_assert(&global_lock);
-
-  //  printf("EIT!, tid = %x\n", tableid);
-
+  /* Invalid */
   if(tableid < 0x4e || tableid > 0x6f || len < 11)
     return -1;
 
-  serviceid                   = ptr[0] << 8 | ptr[1];
-  //  version                     = ptr[2] >> 1 & 0x1f;
-  //  section_number              = ptr[3];
-  //  last_section_number         = ptr[4];
-  transport_stream_id         = ptr[5] << 8 | ptr[6];
-  //  original_network_id         = ptr[7] << 8 | ptr[8];
-  //  segment_last_section_number = ptr[9];
-  //  last_table_id               = ptr[10];
+  /* Skip */
+  if((ptr[2] & 1) == 0)
+    return 0;
 
-  if((ptr[2] & 1) == 0) {
-    /* current_next_indicator == next, skip this */
-    return -1;
+  /* Get tsid/sid */
+  sid  = ptr[0] << 8 | ptr[1];
+  tsid = ptr[5] << 8 | ptr[6];
+
+  /* Get transport stream */
+  // Note: tableid=0x4f,0x60-0x6f is other TS
+  //       so must find the tdmi
+  if(tableid == 0x4f || tableid >= 0x60) {
+    tda = tdmi->tdmi_adapter;
+    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
+      if(tdmi->tdmi_transport_stream_id == tsid)
+        break;
   }
+  if(!tdmi) return -1;
+  /* TODO: register mux interest for more interesting stuff */
 
+  /* Get service */
+  svc = dvb_transport_find(tdmi, sid, 0, NULL);
+  if (!svc || !svc->s_enabled || (ch = svc->s_ch)) return 0;
+
+  /* Ignore (disabled or up to date) */
+  if (!svc->s_dvb_eit_enable) return 0;
+#if TODO_INCLUDE_EIT_VER_CHECK
+  ver  = ptr[2] >> 1 & 0x1f;
+  if (svc->s_dvb_eit_version[tableid-0x4f] == ver) return 0;
+  svc->s_dvb_eit_version[tableid-0x4e] = ver;
+#endif
+
+  /* Process events */
   len -= 11;
   ptr += 11;
-
-  /* Search all muxes on adapter */
-  LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
-    if(tdmi->tdmi_transport_stream_id == transport_stream_id)
-      break;
-  
-  if(tdmi == NULL)
-    return -1;
-
-  t = dvb_transport_find(tdmi, serviceid, 0, NULL);
-  if(t == NULL || !t->s_enabled || (ch = t->s_ch) == NULL)
-    return 0;
-
-  if(!t->s_dvb_eit_enable)
-    return 0;
-
   while(len >= 12) {
-    ok                        = 1;
-    event_id                  = ptr[0] << 8 | ptr[1];
-    start_time                = dvb_convert_date(&ptr[2]);
-    duration                  = bcdtoint(ptr[7] & 0xff) * 3600 +
-                                bcdtoint(ptr[8] & 0xff) * 60 +
-                                bcdtoint(ptr[9] & 0xff);
-    dllen                     = ((ptr[10] & 0x0f) << 8) | ptr[11];
+    eid   = ptr[0] << 8 | ptr[1];
+    start = dvb_convert_date(&ptr[2]);
+    stop  = start + bcdtoint(ptr[7] & 0xff) * 3600 +
+                    bcdtoint(ptr[8] & 0xff) * 60 +
+                    bcdtoint(ptr[9] & 0xff);
+    dllen = ((ptr[10] & 0x0f) << 8) | ptr[11];
 
     len -= 12;
     ptr += 12;
-
     if(dllen > len) break;
-    stop_time = start_time + duration;
 
-    *title = 0;
-    *desc = 0;
+    /* Get the event */
+    ebc  = epg_broadcast_find_by_time(ch, start, stop, eid, 1, &save2);
+    if (!ebc) {
+      len -= dllen;
+      ptr += dllen;
+      continue;
+    }
+
+    /* Mark re-schedule detect */
+    if (save2 && tableid < 0x50) resched = 1;
+
+    /* Process tags */
+    *title    = *summary = *desc = *info = 0;
+    genre_idx = 0;
+    hd = ws = bw = ad = st = ds = 0;
     while(dllen > 0) {
       dtag = ptr[0];
       dlen = ptr[1];
@@ -281,39 +217,131 @@ _eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       if(dlen > len) break;
 
       switch(dtag) {
-      case DVB_DESC_SHORT_EVENT:
-	      if(dvb_desc_short_event(ptr, dlen,
-				      title, sizeof(title),
-  				    desc,  sizeof(desc),
-				      t->s_dvb_default_charset)) ok = 0;
-	      break;
 
-      case DVB_DESC_CONTENT:
-      	if(dlen >= 2) {
-          if (genre_idx < 10)
-            genre[genre_idx++] = (*ptr);
-	      }
-	      break;
-      case DVB_DESC_EXT_EVENT:
-        if(dvb_desc_extended_event(ptr, dlen,
-              extdesc, sizeof(extdesc),
-              extitem, sizeof(extitem),
-              exttext, sizeof(exttext),
-              t->s_dvb_default_charset)) ok = 0;
+        /* Short descriptor (title/summary) */
+        case DVB_DESC_SHORT_EVENT:
+          dvb_desc_short_event(ptr, dlen,
+                               title, sizeof(title),
+                               summary,  sizeof(summary),
+                               svc->s_dvb_default_charset);
         break;
-      default: 
+
+        /* Extended (description) */
+        case DVB_DESC_EXT_EVENT:
+          dvb_desc_extended_event(ptr, dlen,
+                                  desc, sizeof(desc),
+                                  info, sizeof(info),
+                                  svc->s_dvb_default_charset);
+          break;
+
+        /* Content type */
+        case DVB_DESC_CONTENT:
+          while (dlen > 0) {
+            ptr  += 2;
+            dlen -= 2;
+            if   ( *ptr == 0xb1 )
+              bw = 1;
+            else if ( *ptr < 0xb0 && genre_idx < sizeof(genre) )
+              genre[genre_idx++] = *ptr;
+          }
+          break;
+
+        /* Component descriptor */
+        case DVB_DESC_COMPONENT: {
+          uint8_t c = *ptr & 0x0f;
+          uint8_t t = ptr[1];
+
+          /* MPEG2 (video) */
+          if (c == 0x1) {
+            if (t > 0x08 && t < 0x11) {
+              hd = 1;
+              if ( t != 0x09 && t != 0x0d )
+                ws = 1;
+            } else if (t == 0x02 || t == 0x03 || t == 0x04 || t == 0x06 || t == 0x07 || t == 0x08 ) {
+              ws = 1;
+            }
+
+          /* MPEG2 (audio) */
+          } else if (c == 0x2) {
+
+            /* Described */
+            if (t == 0x40 || t == 0x41) 
+              ad = 1;
+
+          /* Subtitles */
+          } else if (c == 0x3) {
+            st = 1;
+    
+          /* H264 */
+          } else if (c == 0x5) {
+            if (t == 0x0b || t == 0x0c || t == 0x10)
+              hd = ws = 1;
+            else if (t == 0x03 || t == 0x04 || t == 0x07 || t == 0x08)
+              ws = 1;
+
+          /* AAC */
+          } else if ( c == 0x6 ) {
+
+            /* Described */
+            if (t == 0x40 || t == 0x44)
+              ad = 1;
+          }
+        }
         break;
+
+        /* Parental Rating */
+#if TODO_AGE_RATING
+        case DVB_DESC_PARENTAL_RAT:
+          if (*ptr > 0 && *ptr < 15)
+            minage = *ptr + 3;
+#endif
+
+        /* Ignore */
+        default:  
+          break;
       }
 
       len -= dlen; ptr += dlen; dllen -= dlen;
     }
 
-    /* Pass to EIT handler */
-    if (ok)
-      eit_callback(ch, event_id, start_time, stop_time,
-                   title, desc, extitem, extdesc, exttext,
-                   genre, genre_idx);
+    /* Metadata */
+    if ( save2 ) {
+      save |= epg_broadcast_set_is_hd(ebc, hd);
+      save |= epg_broadcast_set_is_widescreen(ebc, ws);
+      save |= epg_broadcast_set_is_audio_desc(ebc, ad);
+      save |= epg_broadcast_set_is_subtitled(ebc, st);
+      save |= epg_broadcast_set_is_deafsigned(ebc, ds);
+    }
+
+    /* Create episode */
+    ee = ebc->episode;
+    if ( !ee || save2 ) {
+      char *uri;
+      uri   = epg_hash(title, desc, summary);
+      ee    = epg_episode_find_by_uri(uri, 1, &save2);
+      save |= epg_broadcast_set_episode(ebc, ee);
+      free(uri);
+    }
+    save |= save2;
+    if (!ee) continue;
+    
+    /* Episode data */
+    // Note: currently we don't update if already set (else things fight)
+    save |= epg_episode_set_is_bw(ee, bw);
+    if ( !ee->title && *title )
+      save |= epg_episode_set_title(ee, title);
+    if ( !ee->summary && *summary )
+      save |= epg_episode_set_summary(ee, summary);
+    if ( !ee->description && *desc )
+      save |= epg_episode_set_description(ee, desc);
+    if ( !ee->genre_cnt && genre_idx )
+      save |= epg_episode_set_genre(ee, genre, genre_idx);
   }
+  
+  /* Update EPG */
+  if (resched) tvhlog(LOG_DEBUG, "eit", "alert grabbers to resched");
+  if (save) epg_updated();
+
   return 0;
 }
 
@@ -323,7 +351,8 @@ _eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
 static void _eit_tune ( epggrab_module_t *m, th_dvb_mux_instance_t *tdmi )
 {
-  tdt_add(tdmi, NULL, _eit_callback, NULL, "eit", TDT_CRC, 0x12, NULL);
+  if (_eit_mod.enabled)
+    tdt_add(tdmi, NULL, _eit_callback, NULL, "eit", TDT_CRC, 0x12, NULL);
 }
 
 void eit_init ( epggrab_module_list_t *list )
