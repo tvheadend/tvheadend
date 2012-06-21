@@ -1,11 +1,12 @@
 #ifndef __EPGGRAB_H__
 #define __EPGGRAB_H__
 
+typedef struct epggrab_module epggrab_module_t;
+
 #include <pthread.h>
 #include "channels.h"
 #include "dvb/dvb.h"
-
-typedef struct epggrab_module epggrab_module_t;
+#include "epggrab/ota.h"
 
 /* **************************************************************************
  * Grabber Stats
@@ -96,13 +97,14 @@ struct epggrab_module
 {
   LIST_ENTRY(epggrab_module) link;      ///< Global list link
 
-  const char                 *id;       ///< Module identifier
-  const char                 *name;     ///< Module name (for display)
-  const char                 *path;     ///< Module path (for fixed config)
-  const uint8_t              flags;     ///< Mode flag
-  uint8_t                    enabled;   ///< Whether the module is enabled
-  int                        sock;      ///< Socket descriptor
-  epggrab_channel_tree_t     *channels; ///< Channel list
+  const char                   *id;       ///< Module identifier
+  const char                   *name;     ///< Module name (for display)
+  const char                   *path;     ///< Module path (for fixed config)
+  const uint8_t                flags;     ///< Mode flag
+  uint8_t                      enabled;   ///< Whether the module is enabled
+  int                          sock;      ///< Socket descriptor
+  epggrab_channel_tree_t       *channels; ///< Channel list
+  LIST_HEAD(, epggrab_ota_mux) muxes;     ///< Linked muxes
 
   /* Enable/Disable */
   int       (*enable) ( epggrab_module_t *m, uint8_t e );

@@ -44,6 +44,7 @@
 #include "dvb_support.h"
 #include "notify.h"
 #include "subscriptions.h"
+#include "epggrab/ota.h"
 
 struct th_dvb_mux_instance_tree dvb_muxes;
 
@@ -297,6 +298,7 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
 void
 dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
 {
+  epggrab_ota_mux_t *ota;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   service_t *t;
 
@@ -329,6 +331,9 @@ dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
 
   if(tdmi->tdmi_table_initial)
     tda->tda_initial_num_mux--;
+
+  while ((ota = LIST_FIRST(&tdmi->tdmi_epg_grabbers)))
+    epggrab_ota_unregister(ota);
 
   hts_settings_remove("dvbmuxes/%s", tdmi->tdmi_identifier);
 
