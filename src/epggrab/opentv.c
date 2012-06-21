@@ -324,7 +324,7 @@ static int _opentv_parse_event_section
     if (ev.start && ev.duration) {
       time_t start = ev.start + ((mjd - 40587) * 86400);
       time_t stop  = start + ev.duration;
-      ebc = epg_broadcast_find_by_time(ec->channel, start, stop, 1, &save);
+      ebc = epg_broadcast_find_by_time(ec->channel, start, stop, ev.eid, 1, &save);
     } else {
       ebc = epg_broadcast_find_by_eid(ev.eid, ec->channel);
     }

@@ -327,7 +327,7 @@ _xmltv_parse_programme_tags(channel_t *ch, htsmsg_t *tags,
   //if (onscreen) save |= epg_episode_set_onscreen(ee, onscreen);
 
   /* Create/Find broadcast */
-  ebc = epg_broadcast_find_by_time(ch, start, stop, 1, &save2);
+  ebc = epg_broadcast_find_by_time(ch, start, stop, 0, 1, &save2);
   if ( ebc ) {
     stats->broadcasts.total++;
     if (save2) stats->broadcasts.created++;

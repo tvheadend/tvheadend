@@ -125,7 +125,7 @@ static void _epg_event_deserialize ( htsmsg_t *c, epggrab_stats_t *stats )
   
   /* Create broadcast */
   save = 0;
-  ebc  = epg_broadcast_find_by_time(ch, e_start, e_stop, 1, &save);
+  ebc  = epg_broadcast_find_by_time(ch, e_start, e_stop, 0, 1, &save);
   if (!ebc) return;
   if (save) stats->broadcasts.total++;
 
@@ -1410,7 +1410,8 @@ static epg_broadcast_t **_epg_broadcast_skel ( void )
 }
 
 epg_broadcast_t* epg_broadcast_find_by_time 
-  ( channel_t *channel, time_t start, time_t stop, int create, int *save )
+  ( channel_t *channel, time_t start, time_t stop, uint16_t eid, 
+    int create, int *save )
 {
   epg_broadcast_t **ebc;
   if ( !channel || !start || !stop ) return NULL;
@@ -1919,4 +1920,14 @@ void epg_query_sort(epg_query_result_t *eqr)
 {
   qsort(eqr->eqr_array, eqr->eqr_entries, sizeof(epg_broadcast_t*),
         _epg_sort_start_ascending);
+}
+
+/* **************************************************************************
+ * Miscellaneous
+ * *************************************************************************/
+
+/* Hash title/summary/description to form URI */
+char *epg_hash ( const char *t, const char *s, const char *d )
+{
+  return NULL; // TODO
 }

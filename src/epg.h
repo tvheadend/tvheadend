@@ -318,7 +318,8 @@ struct epg_broadcast
 
 /* Lookup */
 epg_broadcast_t *epg_broadcast_find_by_time 
-  ( struct channel *ch, time_t start, time_t stop, int create, int *save );
+  ( struct channel *ch, time_t start, time_t stop, 
+    uint16_t eid, int create, int *save );
 epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id, struct channel *ch );
 epg_broadcast_t *epg_broadcast_find_by_eid ( int eid, struct channel *ch );
 
@@ -355,10 +356,6 @@ epg_broadcast_t *epg_broadcast_deserialize
 /* ************************************************************************
  * Channel - provides mapping from EPG channels to real channels
  * ***********************************************************************/
-
-/* Accessors */
-epg_broadcast_t *epg_channel_get_broadcast
-  ( struct channel *ch, time_t start, time_t stop, int create, int *save );
 
 /* Unlink */
 void epg_channel_unlink ( struct channel *ch );
@@ -403,5 +400,11 @@ void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
 void epg_init    (void);
 void epg_save    (void);
 void epg_updated (void);
+
+/* ************************************************************************
+ * Miscellaneous
+ * ***********************************************************************/
+
+char *epg_hash ( const char *t, const char *s, const char *d );
 
 #endif /* EPG_H */
