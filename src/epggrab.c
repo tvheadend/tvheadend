@@ -10,7 +10,7 @@
 #include "htsmsg.h"
 #include "settings.h"
 #include "tvheadend.h"
-#include "src/queue.h"
+#include "queue.h"
 #include "epg.h"
 #include "epggrab.h"
 #include "epggrab/eit.h"
@@ -834,6 +834,18 @@ void epggrab_channel_mod ( channel_t *ch )
 void epggrab_tune ( th_dvb_mux_instance_t *tdmi )
 {
   epggrab_module_t *m;
+  epggrab_ota_mux_t *o;
+  th_dvb_mux_instance_t *t;
+
+  /* Cancel all currently active ota grabs */
+  LIST_FOREACH(t, &tdmi->tdmi_adapter->tda_muxes, tdmi_adapter_link) {
+    if (t == tdmi) continue;
+    LIST_FOREACH(o, &t->tdmi_epg_grabbers, tdmi_link) {
+      epggrab_ota_cancel(o);
+    }
+  }
+
+  /* Inform all modules */
   LIST_FOREACH(m, &epggrab_modules, link) {
     if (m->tune) m->tune(m, tdmi);
   }

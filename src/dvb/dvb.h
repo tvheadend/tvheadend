@@ -120,6 +120,8 @@ typedef struct th_dvb_mux_instance {
 
   int tdmi_enabled;
 
+  LIST_HEAD(, epggrab_ota_mux) tdmi_epg_grabbers;
+
   time_t tdmi_got_adapter;
   time_t tdmi_lost_adapter;
 
@@ -148,13 +150,18 @@ typedef struct th_dvb_mux_instance {
  */
 #define TDA_MUX_HASH_WIDTH 101
 
+#define TDA_SCANQ_BAD  0 ///< Bad muxes (monitor quality)
+#define TDA_SCANQ_OK   1 ///< OK muxes
+#define TDA_SCANQ_EPG  2 ///< EPG muxes (TBD)
+#define TDA_SCANQ_NUM  3
+
 typedef struct th_dvb_adapter {
 
   TAILQ_ENTRY(th_dvb_adapter) tda_global_link;
 
   struct th_dvb_mux_instance_list tda_muxes;
 
-  struct th_dvb_mux_instance_queue tda_scan_queues[2];
+  struct th_dvb_mux_instance_queue tda_scan_queues[TDA_SCANQ_NUM];
   int tda_scan_selector;
 
   struct th_dvb_mux_instance_queue tda_initial_scan_queue;

@@ -228,7 +228,17 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi)
   assert(tdmi->tdmi_scan_queue == NULL);
 
   if(tdmi->tdmi_enabled) {
-    tdmi->tdmi_scan_queue = &tda->tda_scan_queues[tdmi->tdmi_quality == 100];
+    int ti;
+    time_t now;
+    epggrab_ota_mux_t *ota;
+    time(&now);
+    LIST_FOREACH(ota, &tdmi->tdmi_epg_grabbers, tdmi_link) {
+      if ( now >= (ota->completed+ota->interval) ) break;
+    }
+    ti = ota                       ? TDA_SCANQ_EPG
+       : tdmi->tdmi_quality == 100 ? TDA_SCANQ_OK
+                                   : TDA_SCANQ_BAD;
+    tdmi->tdmi_scan_queue = &tda->tda_scan_queues[ti];
     TAILQ_INSERT_TAIL(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
   }
 
