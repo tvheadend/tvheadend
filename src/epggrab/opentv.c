@@ -25,6 +25,7 @@
 #include "channels.h"
 #include "huffman.h"
 #include "epg.h"
+#include "epggrab/ota.h"
 #include "epggrab/opentv.h"
 #include "subscriptions.h"
 #include "streaming.h"
@@ -41,6 +42,9 @@
  * TODO: some of this is a bit overkill, for example the global tree of
  *       dicts/provs etc... they're only used to get things up and running
  * ***********************************************************************/
+
+#define OPENTV_SCAN_MAX 600    // 10min max scan period
+#define OPENTV_SCAN_PER 3600   // 1hour interval
 
 /* Huffman dictionary */
 typedef struct opentv_dict
@@ -378,10 +382,23 @@ static int _opentv_parse_event_section
   return 0;
 }
 
+static void _opentv_table_callback 
+  ( opentv_module_t *m, th_dvb_mux_instance_t *tdmi )
+{
+  epggrab_ota_mux_t *ota;
+  ota = epggrab_ota_register((epggrab_module_t*)m, tdmi,
+                             OPENTV_SCAN_MAX, OPENTV_SCAN_PER);
+  if (epggrab_ota_begin(ota)) {
+    // setup internal status
+  }
+}
+
 static int _opentv_event_callback
   ( th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len, uint8_t tid, void *p )
 {
-  return _opentv_parse_event_section((opentv_module_t*)p, buf, len);
+  opentv_module_t *mod = (opentv_module_t*)p;
+  _opentv_table_callback(mod, tdmi);
+  return _opentv_parse_event_section(mod, buf, len);
 }
 
 // TODO: this function is currently a bit of a mess
@@ -395,7 +412,7 @@ static int _opentv_channel_callback
   uint16_t sid;
   int i, j, k, tdlen, dlen, dtag, tslen;
   channel_t *ch;
-  if (tid != 0x4a) return 0;
+  _opentv_table_callback(mod, tdmi);
   i     = 7 + ((((int)buf[5] & 0xf) << 8) | buf[6]);
   tslen = (((int)buf[i] & 0xf) << 8) | buf[i+1];
   i    += 2;
@@ -442,82 +459,6 @@ static int _opentv_channel_callback
 }
 
 /* ************************************************************************
- * Tuning Thread
- * ***********************************************************************/
-
-static void _opentv_stream ( void *p, streaming_message_t *sm )
-{
-  // TODO: handle start?
-  // TODO: handle stop?
-}
-
-// TODO: if channel not found we still wait
-// TODO: make time periods configurable?
-// TODO: dynamic detection of when to start/stop
-static void* _opentv_thread ( void *p )
-{
-  int err;
-  service_t *svc;
-  th_subscription_t *sub;
-  streaming_target_t stream;
-  time_t start;
-  struct timespec ts;
-  opentv_module_t *mod = (opentv_module_t*)p;
-  streaming_target_init(&stream, _opentv_stream, NULL, 0);
-  tvhlog(LOG_INFO, mod->id, "thread started\n");
-
-  do {
-
-    /* Find channel and subscribe */
-    tvhlog(LOG_DEBUG, mod->id, "grab begin %d %d", mod->prov->tsid, mod->prov->sid);
-    pthread_mutex_lock(&global_lock);
-    svc  = _opentv_find_service(mod->prov->tsid, mod->prov->sid);
-    if (svc) {
-      sub = subscription_create_from_service(svc, mod->prov->id,
-                                             &stream, 0);
-      if (sub) subscription_change_weight(sub, 1);
-    }
-    else
-      sub = NULL;
-    pthread_mutex_unlock(&global_lock);
-    if (sub) tvhlog(LOG_DEBUG, mod->id, "subscription added");
- 
-    /* Allow scanning */
-    if (sub) {
-      time(&start);
-      ts.tv_nsec = 0;
-      pthread_mutex_lock(&mod->mutex);
-      while ( mod->enabled ) {
-        ts.tv_sec = start + 300;
-        err = pthread_cond_timedwait(&mod->cond, &mod->mutex, &ts);
-        if (err == ETIMEDOUT ) break;
-      }
-      pthread_mutex_unlock(&mod->mutex);
-    }
-    tvhlog(LOG_DEBUG, mod->id, "grab complete");
-
-    /* Terminate subscription */
-    pthread_mutex_lock(&global_lock);
-    if (sub) subscription_unsubscribe(sub);
-    pthread_mutex_unlock(&global_lock);
-  
-    /* Wait */
-    time(&mod->updated);
-    pthread_mutex_lock(&mod->mutex);
-    while ( mod->enabled ) {
-      ts.tv_sec = mod->updated + 3600;
-      err = pthread_cond_timedwait(&mod->cond, &mod->mutex, &ts);
-      if (err == ETIMEDOUT) break;
-    }
-    if (!mod->enabled) break;
-    pthread_mutex_unlock(&mod->mutex);
-  } while (1);
-  pthread_mutex_unlock(&mod->mutex);
-
-  return NULL;
-}
-
-/* ************************************************************************
  * Module Setup
  * ***********************************************************************/
 
@@ -528,7 +469,7 @@ static void _opentv_tune ( epggrab_module_t *m, th_dvb_mux_instance_t *tdmi )
   int *t;
   struct dmx_sct_filter_params *fp;
   opentv_module_t *mod = (opentv_module_t*)m;
-
+  
   /* Install tables */
   if (m->enabled && (mod->prov->tsid == tdmi->tdmi_transport_stream_id)) {
     tvhlog(LOG_INFO, "opentv", "install provider %s tables", mod->prov->id);
@@ -568,23 +509,27 @@ static void _opentv_tune ( epggrab_module_t *m, th_dvb_mux_instance_t *tdmi )
 
 static int _opentv_enable ( epggrab_module_t *m, uint8_t e )
 {
-  int save = 0;
-  pthread_t t;
-  pthread_attr_t ta;
+  th_dvb_adapter_t *tda;
+  th_dvb_mux_instance_t *tdmi;
   opentv_module_t *mod = (opentv_module_t*)m;
-  pthread_mutex_lock(&mod->mutex);
-  if (m->enabled != e) {
-    m->enabled = e;
-    if (e) {
-      pthread_attr_init(&ta);
-      pthread_attr_setdetachstate(&ta, PTHREAD_CREATE_DETACHED);
-      pthread_create(&t, &ta, _opentv_thread, mod);
-    } else
-      pthread_cond_signal(&mod->cond);
-    save = 1;
+
+  if (m->enabled == e) return 0;
+
+  m->enabled = e;
+
+  /* Find muxes and enable/disable */
+  TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
+    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+      if (tdmi->tdmi_transport_stream_id != mod->prov->tsid) continue;
+      if (e) {
+        epggrab_ota_register(m, tdmi, OPENTV_SCAN_MAX, OPENTV_SCAN_PER);
+      } else {
+        epggrab_ota_unregister_one(m, tdmi);
+      }
+    }
   }
-  pthread_mutex_unlock(&mod->mutex);
-  return save;
+
+  return 1;
 }
 
 void opentv_init ( epggrab_module_list_t *list )
