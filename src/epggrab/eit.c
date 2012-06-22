@@ -62,63 +62,52 @@ dvb_desc_short_event(uint8_t *ptr, int len,
 static int
 dvb_desc_extended_event(uint8_t *ptr, int len, 
                         char *desc, size_t desclen,
-                        char *text, size_t textlen,
+                        htsmsg_t *extra,
                         char *dvb_default_charset)
 {
-#if TODO
-  int count = ptr[4], r;
-  uint8_t *localptr = ptr + 5, *items = localptr; 
-  int locallen = len - 5;
+  int ilen, nitems = ptr[4];
+  char ikey[256], ival[256];
+  if (len < 8) return -1;
+  ptr += 5;
+  len -= 5;
 
-  /* terminate buffers */
-  desc[0] = '\0'; item[0] = '\0'; text[0] = '\0';
+  /* key/value items */
+  while (nitems-- > 0) {
 
-  while (items < (localptr + count))
-  {
-    /* this only makes sense if we have 2 or more character left in buffer */
-    if ((desclen - strlen(desc)) > 2)
-    {
-      /* get description -> append to desc if space left */
-      if (desc[0] != '\0')
-        strncat(desc, "\n", 1);
-      if((r = dvb_get_string_with_len(desc + strlen(desc),
-                                      desclen - strlen(desc),
-                                      items, (localptr + count) - items,
-                                      dvb_default_charset)) < 0)
-        return -1;
-    }
+    /* key */
+    ilen = *ptr;
+    if (ilen+1 > len) return -1;
+    if(dvb_get_string_with_len(ikey, sizeof(ikey),
+                               ptr+1, ilen,
+                               dvb_default_charset) < 0) return -1;
+      return -1;
+    ptr += (ilen + 1);
+    len -= (ilen + 1);
 
-    items += 1 + items[0];
+    /* value */
+    ilen = *ptr;
+    if (ilen+1 > len) return -1;
+    if(dvb_get_string_with_len(ival, sizeof(ival),
+                               ptr, ilen,
+                               dvb_default_charset) < 0) return -1;
+    ptr += (ilen + 1);
+    len -= (ilen + 1);
 
-    /* this only makes sense if we have 2 or more character left in buffer */
-    if ((itemlen - strlen(item)) > 2)
-    {
-      /* get item -> append to item if space left */
-      if (item[0] != '\0')
-        strncat(item, "\n", 1);
-      if((r = dvb_get_string_with_len(item + strlen(item),
-                                      itemlen - strlen(item),
-                                      items, (localptr + count) - items,
-                                      dvb_default_charset)) < 0)
-        return -1;
-    }
-
-    /* go to next item */
-    items += 1 + items[0];
+    // TODO: should this extend existing strings?
+    htsmsg_add_str(extra, ikey, ival);
   }
 
-  localptr += count;
-  locallen -= count;
-  count = localptr[0];
+  /* raw text (append) */
+  ilen = *ptr;
+  if (ilen+1 > len) return -1;
+  if(dvb_get_string_with_len(desc    + strlen(desc),
+                             desclen - strlen(desc),
+                             ptr+1, ilen,
+                             dvb_default_charset) < 0) return -1;
 
-  /* get text */
-  if((r = dvb_get_string_with_len(text, textlen, localptr, locallen, dvb_default_charset)) < 0)
-    return -1;
-#endif
   return 0;
 }
 
-// TODO: reg interest th_dvb_mux_instance_t *otdmi = tdmi;
 static int _eit_callback
   ( th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len, 
     uint8_t tableid, void *opaque )
@@ -137,7 +126,7 @@ static int _eit_callback
   char title[256];
   char summary[256];
   char desc[5000];
-  char info[5000];
+  htsmsg_t *extra;
 
   /* Disabled */
   if(!_eit_mod.enabled) return 0;
@@ -164,11 +153,10 @@ static int _eit_callback
         break;
   }
   if(!tdmi) return -1;
-  /* TODO: register mux interest for more interesting stuff */
 
   /* Get service */
   svc = dvb_transport_find(tdmi, sid, 0, NULL);
-  if (!svc || !svc->s_enabled || (ch = svc->s_ch)) return 0;
+  if (!svc || !svc->s_enabled || !(ch = svc->s_ch)) return 0;
 
   /* Ignore (disabled or up to date) */
   if (!svc->s_dvb_eit_enable) return 0;
@@ -205,7 +193,8 @@ static int _eit_callback
     if (save2 && tableid < 0x50) resched = 1;
 
     /* Process tags */
-    *title    = *summary = *desc = *info = 0;
+    *title    = *summary = *desc = 0;
+    extra     = NULL;
     genre_idx = 0;
     hd = ws = bw = ad = st = ds = 0;
     while(dllen > 0) {
@@ -228,9 +217,10 @@ static int _eit_callback
 
         /* Extended (description) */
         case DVB_DESC_EXT_EVENT:
+          if (!extra) extra = htsmsg_create_map();
           dvb_desc_extended_event(ptr, dlen,
                                   desc, sizeof(desc),
-                                  info, sizeof(info),
+                                  extra,
                                   svc->s_dvb_default_charset);
           break;
 
@@ -257,7 +247,8 @@ static int _eit_callback
               hd = 1;
               if ( t != 0x09 && t != 0x0d )
                 ws = 1;
-            } else if (t == 0x02 || t == 0x03 || t == 0x04 || t == 0x06 || t == 0x07 || t == 0x08 ) {
+            } else if (t == 0x02 || t == 0x03 || t == 0x04 || 
+                       t == 0x06 || t == 0x07 || t == 0x08 ) {
               ws = 1;
             }
 
@@ -297,7 +288,7 @@ static int _eit_callback
 #endif
 
         /* Ignore */
-        default:  
+        default:
           break;
       }
 
@@ -317,29 +308,37 @@ static int _eit_callback
     ee = ebc->episode;
     if ( !ee || save2 ) {
       char *uri;
-      uri   = epg_hash(title, desc, summary);
-      ee    = epg_episode_find_by_uri(uri, 1, &save2);
-      save |= epg_broadcast_set_episode(ebc, ee);
-      free(uri);
+      uri   = epg_hash(title, summary, desc);
+      if (uri) {
+        ee    = epg_episode_find_by_uri(uri, 1, &save2);
+        save |= epg_broadcast_set_episode(ebc, ee);
+        free(uri);
+      }
     }
     save |= save2;
-    if (!ee) continue;
-    
+
     /* Episode data */
-    // Note: currently we don't update if already set (else things fight)
-    save |= epg_episode_set_is_bw(ee, bw);
-    if ( !ee->title && *title )
-      save |= epg_episode_set_title(ee, title);
-    if ( !ee->summary && *summary )
-      save |= epg_episode_set_summary(ee, summary);
-    if ( !ee->description && *desc )
-      save |= epg_episode_set_description(ee, desc);
-    if ( !ee->genre_cnt && genre_idx )
-      save |= epg_episode_set_genre(ee, genre, genre_idx);
+    if (ee) {
+      save |= epg_episode_set_is_bw(ee, bw);
+      if ( !ee->title && *title )
+        save |= epg_episode_set_title(ee, title);
+      if ( !ee->summary && *summary )
+        save |= epg_episode_set_summary(ee, summary);
+      if ( !ee->description && *desc )
+        save |= epg_episode_set_description(ee, desc);
+      if ( !ee->genre_cnt && genre_idx )
+        save |= epg_episode_set_genre(ee, genre, genre_idx);
+#if TODO_ADD_EXTRA
+      if ( extra )
+        save |= epg_episode_set_extra(ee, extra);
+#endif
+    }
+    if (extra) free(extra);
   }
   
   /* Update EPG */
   if (resched) tvhlog(LOG_DEBUG, "eit", "alert grabbers to resched");
+  // TODO: handle the reschedule
   if (save) epg_updated();
 
   return 0;
@@ -362,7 +361,6 @@ void eit_init ( epggrab_module_list_t *list )
   _eit_mod.tune   = _eit_tune;
   *((uint8_t*)&_eit_mod.flags) = EPGGRAB_MODULE_OTA;
   LIST_INSERT_HEAD(list, &_eit_mod, link);
-  // Note: this is mostly ignored anyway as EIT is treated as a special case!
 }
 
 void eit_load ( void )
