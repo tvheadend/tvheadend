@@ -492,9 +492,9 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 #if DVB_API_VERSION >= 5
   if (tda->tda_type == FE_QPSK) {
     tvhlog(LOG_DEBUG, "dvb", "\"%s\" tuning via s2api to \"%s\" (%d, %d Baud, "
-	    "%s, %s, %s)", tda->tda_rootpath, buf, p->frequency, p->u.qpsk.symbol_rate, 
+	    "%s, %s, %s) for %s", tda->tda_rootpath, buf, p->frequency, p->u.qpsk.symbol_rate, 
       dvb_mux_fec2str(p->u.qpsk.fec_inner), dvb_mux_delsys2str(dmc.dmc_fe_delsys), 
-      dvb_mux_qam2str(dmc.dmc_fe_modulation));
+      dvb_mux_qam2str(dmc.dmc_fe_modulation), reason);
   
     r = dvb_fe_tune_s2(tdmi, &dmc);
   } else
