@@ -853,6 +853,7 @@ static epg_episode_num_t *epg_episode_num_deserialize
   uint32_t u32;
   if (!m) return NULL;
   if (!num) num = calloc(1, sizeof(epg_episode_num_t));
+  else memset(num, 0, sizeof(epg_episode_num_t));
   if (!htsmsg_get_u32(m, "e_num", &u32))
     num->e_num = u32;
   if (!htsmsg_get_u32(m, "e_cnt", &u32))
