@@ -33,7 +33,11 @@ epggrab_ota_mux_t *epggrab_ota_register
 
   /* Check for existing */
   LIST_FOREACH(ota, &ota_muxes, glob_link) {
-    if (ota->grab == mod && ota->tdmi == tdmi) return ota;
+    if (ota->grab == mod && ota->tdmi == tdmi) {
+      ota->timeout  = MAX(ota->timeout, timeout);
+      ota->interval = MIN(ota->interval, interval);
+      return ota;
+    }
   }
   
   /* Install new */
