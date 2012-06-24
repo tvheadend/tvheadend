@@ -76,8 +76,9 @@ SRCS =  src/main.c \
 
 SRCS += src/epggrab/pyepg.c\
   src/epggrab/xmltv.c\
+  src/epggrab/ota.c \
   src/epggrab/eit.c \
-  src/epggrab/opentv.c
+  src/epggrab/opentv.c \
 
 SRCS += src/plumbing/tsfix.c \
 	src/plumbing/globalheaders.c \
