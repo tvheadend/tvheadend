@@ -112,6 +112,7 @@ static int _eit_callback
   ( th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len, 
     uint8_t tableid, void *opaque )
 {
+  th_dvb_mux_instance_t *otdmi = tdmi;
   th_dvb_adapter_t *tda;
   service_t *svc;
   channel_t *ch;
@@ -158,8 +159,16 @@ static int _eit_callback
   svc = dvb_transport_find(tdmi, sid, 0, NULL);
   if (!svc || !svc->s_enabled || !(ch = svc->s_ch)) return 0;
 
-  /* Ignore (disabled or up to date) */
+  /* Ignore (disabled) */
   if (!svc->s_dvb_eit_enable) return 0;
+
+  /* Register interest */
+  if (tableid < 0x50)
+    epggrab_ota_register(&_eit_mod, otdmi, 20, 0);
+  else
+    epggrab_ota_register(&_eit_mod, otdmi, 40, 0);
+ 
+  /* Up to date */
 #if TODO_INCLUDE_EIT_VER_CHECK
   ver  = ptr[2] >> 1 & 0x1f;
   if (svc->s_dvb_eit_version[tableid-0x4f] == ver) return 0;
