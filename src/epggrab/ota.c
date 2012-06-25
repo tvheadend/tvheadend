@@ -86,7 +86,7 @@ void epggrab_ota_unregister_all
  */
 int epggrab_ota_begin     ( epggrab_ota_mux_t *ota )
 {
-  if (ota->status != EPGGRAB_OTA_STARTED) {
+  if (ota->status == EPGGRAB_OTA_IDLE) {
     ota->status = EPGGRAB_OTA_STARTED;
     time(&ota->started);
     return 1;
@@ -111,4 +111,9 @@ void epggrab_ota_timeout ( epggrab_ota_mux_t *ota )
   epggrab_ota_complete(ota); 
   // TODO: for now just treat as completed, stops it being allowed
   //       to immediately re-enter the queue
+}
+
+int epggrab_ota_is_complete ( epggrab_ota_mux_t *ota )
+{
+  return ota->status == EPGGRAB_OTA_COMPLETED;
 }
