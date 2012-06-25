@@ -291,7 +291,9 @@ servicecmp(const void *A, const void *B)
    * additional, it may be problematic, since a higher priority value lowers the ranking
    *
    */
-  if (dvb_extra_prio(a->s_dvb_mux_instance->tdmi_adapter) == dvb_extra_prio(b->s_dvb_mux_instance->tdmi_adapter)) {
+  int prio_a = service_get_prio(a);
+  int prio_b = service_get_prio(b);
+  if (prio_a == prio_b) {
 
     int q = service_get_quality(a) - service_get_quality(b);
 
@@ -299,7 +301,7 @@ servicecmp(const void *A, const void *B)
       return q; /* Quality precedes priority */
   }
 
-  return service_get_prio(a) - service_get_prio(b);
+  return prio_a - prio_b;
 }
 
 
@@ -346,7 +348,7 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
     vec[cnt++] = t;
     tvhlog(LOG_DEBUG, "Service",
     		"%s: Adding adapter \"%s\" for service \"%s\"",
-    		 loginfo, t->s_dvb_mux_instance->tdmi_identifier, service_nicename(t));
+    		 loginfo, service_adapter_nicename(t), service_nicename(t));
   }
 
   /* Sort services, lower priority should come come earlier in the vector
@@ -371,7 +373,7 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
   for(i = off; i < cnt; i++) {
     t = vec[i];
     tvhlog(LOG_DEBUG, "Service", "%s: Probing adapter \"%s\" without stealing for service \"%s\"",
-	     loginfo, t->s_dvb_mux_instance->tdmi_identifier, service_nicename(t));
+	     loginfo, service_adapter_nicename(t), service_nicename(t));
 
     if(t->s_status == SERVICE_RUNNING) 
       return t;
@@ -388,7 +390,7 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
   for(i = off; i < cnt; i++) {
     t = vec[i];
     tvhlog(LOG_DEBUG, "Service", "%s: Probing adapter \"%s\" with weight %d for service \"%s\"",
-	     loginfo, t->s_dvb_mux_instance->tdmi_identifier, weight, service_nicename(t));
+	     loginfo, service_adapter_nicename(t), weight, service_nicename(t));
 
     if((r = service_start(t, weight, 0)) == 0)
       return t;
@@ -1027,6 +1029,24 @@ const char *
 service_component_nicename(elementary_stream_t *st)
 {
   return st->es_nicename;
+}
+
+const char *
+service_adapter_nicename(service_t *t)
+{
+  switch(t->s_type) {
+  case SERVICE_TYPE_DVB:
+	return t->s_dvb_mux_instance->tdmi_identifier;
+
+  case SERVICE_TYPE_IPTV:
+	return t->s_iptv_iface;
+
+  case SERVICE_TYPE_V4L:
+	return t->s_v4l_adapter->va_displayname;
+
+  default:
+    return "Unknown adapter";
+  }
 }
 
 const char *

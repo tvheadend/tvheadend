@@ -557,6 +557,8 @@ const char *service_nicename(service_t *t);
 
 const char *service_component_nicename(elementary_stream_t *st);
 
+const char *service_adapter_nicename(service_t *t);
+
 const char *service_tss2text(int flags);
 
 static inline int service_tss_is_error(int flags)
