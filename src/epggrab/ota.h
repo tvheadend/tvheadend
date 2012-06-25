@@ -66,9 +66,10 @@ void epggrab_ota_unregister_all
 /*
  * Status
  */
-int  epggrab_ota_begin     ( epggrab_ota_mux_t *ota );
-void epggrab_ota_complete  ( epggrab_ota_mux_t *ota );
-void epggrab_ota_cancel    ( epggrab_ota_mux_t *ota );
-void epggrab_ota_timeout   ( epggrab_ota_mux_t *ota );
+int  epggrab_ota_begin       ( epggrab_ota_mux_t *ota );
+void epggrab_ota_complete    ( epggrab_ota_mux_t *ota );
+void epggrab_ota_cancel      ( epggrab_ota_mux_t *ota );
+void epggrab_ota_timeout     ( epggrab_ota_mux_t *ota );
+int  epggrab_ota_is_complete ( epggrab_ota_mux_t *ota );
 
 #endif /* __TVH_EPGGRAB_OTA_H__ */
