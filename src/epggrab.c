@@ -32,6 +32,9 @@ pthread_cond_t        epggrab_cond;
 uint32_t              epggrab_interval;
 epggrab_module_t*     epggrab_module;
 epggrab_module_list_t epggrab_modules;
+uint32_t              epggrab_channel_rename;
+uint32_t              epggrab_channel_renumber;
+uint32_t              epggrab_channel_reicon;
 
 /* **************************************************************************
  * Helpers
@@ -234,9 +237,12 @@ static int _ch_link ( epggrab_channel_t *ec, channel_t *ch )
     tvhlog(LOG_INFO, ec->mod->id, "linking %s to %s",
            ec->id, ch->ch_name);
     ec->channel = ch;
-    if (ec->name)     channel_rename(ch, ec->name);
-    if (ec->icon)     channel_set_icon(ch, ec->icon);
-    if (ec->number>0) channel_set_number(ch, ec->number);
+    if (ec->name && epggrab_channel_rename)
+      channel_rename(ch, ec->name);
+    if (ec->icon && epggrab_channel_reicon)
+      channel_set_icon(ch, ec->icon);
+    if (ec->number>0 && epggrab_channel_renumber)
+      channel_set_number(ch, ec->number);
   }
 
   return match;
@@ -651,6 +657,9 @@ static void _epggrab_load ( void )
 
   /* Process */
   if (m) {
+    htsmsg_get_u32(m, "channel_rename",   &epggrab_channel_rename);
+    htsmsg_get_u32(m, "channel_renumber", &epggrab_channel_renumber);
+    htsmsg_get_u32(m, "channel_reicon",   &epggrab_channel_reicon);
     if (!htsmsg_get_u32(m, old ? "grab-interval" : "interval", &epggrab_interval))
       if (old) epggrab_interval *= 3600;
     htsmsg_get_u32(m, "grab-enabled", &enabled);
@@ -666,35 +675,44 @@ static void _epggrab_load ( void )
       }
     }
     htsmsg_destroy(m);
-  }
   
-  /* Finish up migration */
-  if (old) {
-    htsmsg_field_t *f;
-    htsmsg_t *xc, *ch;
-    htsmsg_t *xchs = hts_settings_load("xmltv/channels");
-    htsmsg_t *chs  = hts_settings_load("channels");
-    if (xchs) {
-      HTSMSG_FOREACH(f, chs) {
-        if ((ch = htsmsg_get_map_by_field(f))) {
-          if ((str = htsmsg_get_str(ch, "xmltv-channel"))) {
-            if ((xc = htsmsg_get_map(xchs, str))) {
-              htsmsg_add_u32(xc, "channel", atoi(f->hmf_name));
+    /* Finish up migration */
+    if (old) {
+      htsmsg_field_t *f;
+      htsmsg_t *xc, *ch;
+      htsmsg_t *xchs = hts_settings_load("xmltv/channels");
+      htsmsg_t *chs  = hts_settings_load("channels");
+      if (xchs) {
+        HTSMSG_FOREACH(f, chs) {
+          if ((ch = htsmsg_get_map_by_field(f))) {
+            if ((str = htsmsg_get_str(ch, "xmltv-channel"))) {
+              if ((xc = htsmsg_get_map(xchs, str))) {
+                htsmsg_add_u32(xc, "channel", atoi(f->hmf_name));
+              }
             }
           }
         }
-      }
-      HTSMSG_FOREACH(f, xchs) {
-        if ((xc = htsmsg_get_map_by_field(f))) {
-          hts_settings_save(xc, "epggrab/xmltv/channels/%s", f->hmf_name);
+        HTSMSG_FOREACH(f, xchs) {
+          if ((xc = htsmsg_get_map_by_field(f))) {
+            hts_settings_save(xc, "epggrab/xmltv/channels/%s", f->hmf_name);
+          }
         }
       }
+
+      /* Save epggrab config */
+      epggrab_save();
     }
 
-    /* Save epggrab config */
-    epggrab_save();
+  /* Defaults */
+  } else {
+    epggrab_module_t *m;
+    epggrab_interval   = 12 * 3600;         // hours
+    epggrab_module     = NULL;              // disabled
+    LIST_FOREACH(m, &epggrab_modules, link) // enable all OTA by default
+      if (m->flags & EPGGRAB_MODULE_OTA)
+        epggrab_enable_module(m, 1);
   }
-
+ 
   /* Load module config (channels) */
   eit_load();
   xmltv_load();
@@ -713,6 +731,9 @@ void epggrab_save ( void )
 
   /* Save */
   m = htsmsg_create_map();
+  htsmsg_add_u32(m, "channel_rename", epggrab_channel_rename);
+  htsmsg_add_u32(m, "channel_renumber", epggrab_channel_renumber);
+  htsmsg_add_u32(m, "channel_reicon", epggrab_channel_reicon);
   htsmsg_add_u32(m, "interval",   epggrab_interval);
   if ( epggrab_module )
     htsmsg_add_str(m, "module", epggrab_module->id);
@@ -760,6 +781,36 @@ int epggrab_set_module_by_id ( const char *id )
   return epggrab_set_module(epggrab_module_find_by_id(id));
 }
 
+int epggrab_set_channel_rename ( uint32_t e )
+{
+  int save = 0;
+  if ( e != epggrab_channel_rename ) {
+    epggrab_channel_rename = e;
+    save = 1;
+  }
+  return save;
+}
+
+int epggrab_set_channel_renumber ( uint32_t e )
+{
+  int save = 0;
+  if ( e != epggrab_channel_renumber ) {
+    epggrab_channel_renumber = e;
+    save = 1;
+  }
+  return save;
+}
+
+int epggrab_set_channel_reicon ( uint32_t e )
+{
+  int save = 0;
+  if ( e != epggrab_channel_reicon ) {
+    epggrab_channel_reicon = e;
+    save = 1;
+  }
+  return save;
+}
+
 int epggrab_enable_module ( epggrab_module_t *mod, uint8_t e )
 {
   int save = 0;
@@ -786,10 +837,6 @@ int epggrab_enable_module_by_id ( const char *id, uint8_t e )
  */
 void epggrab_init ( void )
 {
-  /* Defaults */
-  epggrab_interval   = 12 * 3600; // hours
-  epggrab_module     = NULL;      // disabled
-
   /* Initialise modules */
   eit_init(&epggrab_modules);
   xmltv_init(&epggrab_modules);
