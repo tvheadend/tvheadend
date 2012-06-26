@@ -320,8 +320,8 @@ struct epg_broadcast
 epg_broadcast_t *epg_broadcast_find_by_time 
   ( struct channel *ch, time_t start, time_t stop, 
     uint16_t eid, int create, int *save );
-epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id, struct channel *ch );
-epg_broadcast_t *epg_broadcast_find_by_eid ( int eid, struct channel *ch );
+epg_broadcast_t *epg_broadcast_find_by_eid ( struct channel *ch, int eid );
+epg_broadcast_t *epg_broadcast_find_by_id  ( uint64_t id, struct channel *ch );
 
 /* Mutators */
 int epg_broadcast_set_episode    ( epg_broadcast_t *b, epg_episode_t *e )
