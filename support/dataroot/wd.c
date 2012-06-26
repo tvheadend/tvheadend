@@ -9,6 +9,5 @@ const char *tvheadend_dataroot(void)
     assert(getcwd(cwd, 254));
     strcat(cwd, "/");
   }
-   printf("cwd = %s\n", cwd);
   return cwd;
 }
