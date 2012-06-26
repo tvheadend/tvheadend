@@ -531,21 +531,20 @@ static void _opentv_parse_channels
 {
   epggrab_channel_t *ec;
   channel_t *ch;
-  int sid, cid;//, cnum;
+  int sid, cid, cnum;
   int save = 0;
   int i = 2;
   while (i < len) {
     sid  = ((int)buf[i] << 8) | buf[i+1];
     cid  = ((int)buf[i+3] << 8) | buf[i+4];
-    //cnum = ((int)buf[i+5] << 8) | buf[i+6];
+    cnum = ((int)buf[i+5] << 8) | buf[i+6];
 
     /* Find the channel */
     if ((ch = _opentv_find_channel(tsid, sid))) {
       ec = _opentv_find_epggrab_channel(mod, cid, 1, &save);
       if (save) {
         ec->channel = ch; 
-        //TODO: must be configurable
-        //epggrab_channel_set_number(ec, cnum);
+        epggrab_channel_set_number(ec, cnum);
       }
     }
     i += 9;
