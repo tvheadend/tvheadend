@@ -223,7 +223,6 @@ hts_settings_buildpath(char *dst, size_t dstsize, const char *fmt, va_list ap)
       *n = '_';
     n++;
   }
-  printf("hts_settings_buildpath(): %s => %s\n", fmt, dst);
   return 0;
 }
 
