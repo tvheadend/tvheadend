@@ -410,13 +410,11 @@ static int _opentv_parse_event
   ev->eid = ((uint16_t)buf[0] << 8) | buf[1];
 
   /* Get existing summary */
-  if ( type == OPENTV_TITLE ) {
-    e = RB_FIND(&_opentv_events, ev, ev_link, _ev_cmp);
-    if (e) {
-      RB_REMOVE(&_opentv_events, e, ev_link);
-      memcpy(ev, e, sizeof(opentv_event_t));
-      free(e);
-    }
+  e = RB_FIND(&_opentv_events, ev, ev_link, _ev_cmp);
+  if (e) {
+    RB_REMOVE(&_opentv_events, e, ev_link);
+    memcpy(ev, e, sizeof(opentv_event_t));
+    free(e);
   }
   ev->type |= type;
 
