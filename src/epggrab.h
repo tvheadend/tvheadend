@@ -163,19 +163,25 @@ htsmsg_t*         epggrab_module_list       ( void );
 /*
  * Configuration
  */
-extern pthread_mutex_t      epggrab_mutex;
-extern uint32_t             epggrab_interval;
-extern epggrab_module_t*    epggrab_module;
+extern pthread_mutex_t   epggrab_mutex;
+extern uint32_t          epggrab_interval;
+extern epggrab_module_t* epggrab_module;
+extern uint32_t          epggrab_channel_rename;
+extern uint32_t          epggrab_channel_renumber;
+extern uint32_t          epggrab_channel_reicon;
 
 /*
  * Update
  */
-int  epggrab_set_interval        ( uint32_t interval );
-int  epggrab_set_module          ( epggrab_module_t *module );
-int  epggrab_set_module_by_id    ( const char *id );
-int  epggrab_enable_module       ( epggrab_module_t *module, uint8_t e );
-int  epggrab_enable_module_by_id ( const char *id, uint8_t e );
-void epggrab_save                ( void );
+int  epggrab_set_interval         ( uint32_t interval );
+int  epggrab_set_module           ( epggrab_module_t *module );
+int  epggrab_set_module_by_id     ( const char *id );
+int  epggrab_set_channel_rename   ( uint32_t e );
+int  epggrab_set_channel_renumber ( uint32_t e );
+int  epggrab_set_channel_reicon   ( uint32_t e );
+int  epggrab_enable_module        ( epggrab_module_t *module, uint8_t e );
+int  epggrab_enable_module_by_id  ( const char *id, uint8_t e );
+void epggrab_save                 ( void );
 
 /* **************************************************************************
  * Global Functions

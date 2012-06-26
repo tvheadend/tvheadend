@@ -489,6 +489,9 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
     if (epggrab_module)
       htsmsg_add_str(r, "module", epggrab_module->id);
     htsmsg_add_u32(r, "interval", epggrab_interval);
+    htsmsg_add_u32(r, "channel_rename", epggrab_channel_rename);
+    htsmsg_add_u32(r, "channel_renumber", epggrab_channel_renumber);
+    htsmsg_add_u32(r, "channel_reicon", epggrab_channel_reicon);
     pthread_mutex_unlock(&epggrab_mutex);
 
     out = json_single_record(r, "epggrabSettings");
@@ -513,6 +516,12 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
   } else if (!strcmp(op, "saveSettings") ) {
     int save = 0;
     pthread_mutex_lock(&epggrab_mutex);
+    str = http_arg_get(&hc->hc_req_args, "channel_rename");
+    save |= epggrab_set_channel_rename(str ? 1 : 0);
+    str = http_arg_get(&hc->hc_req_args, "channel_renumber");
+    save |= epggrab_set_channel_renumber(str ? 1 : 0);
+    str = http_arg_get(&hc->hc_req_args, "channel_reicon");
+    save |= epggrab_set_channel_reicon(str ? 1 : 0);
     if ( (str = http_arg_get(&hc->hc_req_args, "interval")) )
       save |= epggrab_set_interval(atoi(str));
     if ( (str = http_arg_get(&hc->hc_req_args, "module")) )
