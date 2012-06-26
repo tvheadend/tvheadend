@@ -490,7 +490,9 @@ static int _opentv_parse_event_section
 
       /* Update */
       if (ee) {
-        if (ev.title)
+        if (!ev.title && ebc->episode)
+          save |= epg_episode_set_title(ee, ebc->episode->title);
+        else if (ev.title)
           save |= epg_episode_set_title(ee, ev.title);
         if (ev.summary)
           save |= epg_episode_set_summary(ee, ev.summary);
