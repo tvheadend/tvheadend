@@ -109,11 +109,16 @@ void epggrab_ota_cancel    ( epggrab_ota_mux_t *ota )
 void epggrab_ota_timeout ( epggrab_ota_mux_t *ota )
 {
   epggrab_ota_complete(ota); 
-  // TODO: for now just treat as completed, stops it being allowed
-  //       to immediately re-enter the queue
 }
 
 int epggrab_ota_is_complete ( epggrab_ota_mux_t *ota )
 {
   return ota->status == EPGGRAB_OTA_COMPLETED;
+}
+
+int epggrab_ota_is_blocked ( epggrab_ota_mux_t *ota )
+{
+  time_t t;
+  time(&t);
+  return t < (ota->completed + ota->interval);
 }
