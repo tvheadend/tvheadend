@@ -206,14 +206,17 @@ hts_settings_load_one(const char *filename)
 static int
 hts_settings_buildpath(char *dst, size_t dstsize, const char *fmt, va_list ap)
 {
+  char tmp[256];
   char *n = dst;
 
   if(settingspath == NULL)
      return -1;
-
-  snprintf(dst, dstsize, "%s/", settingspath);
-
-  vsnprintf(dst + strlen(dst), dstsize - strlen(dst), fmt, ap);
+  
+  vsnprintf(tmp, sizeof(tmp), fmt, ap);
+  if (*tmp != '/')
+    snprintf(dst, dstsize, "%s/%s", settingspath, tmp);
+  else
+    strncpy(dst, tmp, dstsize);
 
   while(*n) {
     if(*n == ':' || *n == '?' || *n == '*' || *n > 127 || *n < 32)

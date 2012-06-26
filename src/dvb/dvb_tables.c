@@ -168,6 +168,8 @@ dvb_proc_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt, uint8_t *sec,
   if(tdt->tdt_flags & TDT_CA)
     ret = tdt->tdt_callback((th_dvb_mux_instance_t *)tdt,
                                 sec, len + 3, tableid, tdt->tdt_opaque);
+  else if(tdt->tdt_flags & TDT_TDT)
+    ret = tdt->tdt_callback(tdmi, ptr, len, tableid, tdt);
   else
     ret = tdt->tdt_callback(tdmi, ptr, len, tableid, tdt->tdt_opaque);
   
