@@ -48,7 +48,18 @@ tvheadend.epggrab = function() {
     moduleStore.each(function(r) {
       otaModuleStore.add(r.copy());
     });
+    moduleStore.filterBy(function(r) {
+      return r.get('flags') & (EPGGRAB_MODULE_OTA | EPGGRAB_MODULE_EXTERNAL);
+    });
   });
+
+  /* Enable module in one of the stores (will auto update primary) */
+  function moduleSelect ( r, e )
+  {
+    r.set('enabled', e);
+    t = moduleStore.getById(r.id);
+    if (t) t.set('enabled', e);
+  }
 
   /*
    * Basic Config
@@ -56,7 +67,10 @@ tvheadend.epggrab = function() {
 
   var confreader = new Ext.data.JsonReader(
     { root: 'epggrabSettings' },
-    [ 'module', 'interval' ]
+    [ 
+      'module', 'interval',
+      'channel_rename', 'channel_renumber', 'channel_reicon',
+    ]
   );
 
   /* ****************************************************************
@@ -145,9 +159,48 @@ tvheadend.epggrab = function() {
     }
   });
 
+  /*
+   * Channel handling
+   */
+  var channelRename = new Ext.form.Checkbox({
+    name       : 'channel_rename',
+    fieldLabel : 'Update channel name',
+  });
+
+  var channelRenumber = new Ext.form.Checkbox({
+    name       : 'channel_renumber',
+    fieldLabel : 'Update channel number',
+  });
+
+  var channelReicon = new Ext.form.Checkbox({
+    name       : 'channel_reicon',
+    fieldLabel : 'Update channel icon'
+  });
+
+  /*
+   * Simple fieldet
+   */
+  var simplePanel = new Ext.form.FieldSet({
+    title       : 'Basic Config',
+    width       : 800,
+    autoHeight  : true,
+    collapsible : true,
+    items       : [
+      interval,
+      internalModule,
+      intervalValue,
+      intervalUnit,
+      channelRename,
+      channelRenumber,
+      channelReicon,
+    ]
+  });
+  
+
   /* ****************************************************************
    * Advanced Fields
    * ***************************************************************/
+
 
   /*
    * External modules
@@ -156,13 +209,14 @@ tvheadend.epggrab = function() {
     singleSelect : false,
     listeners : {
       'rowselect' : function (s, ri, r) {
-        r.set('enabled', 1);
+        moduleSelect(r, 1);
       },
       'rowdeselect' : function (s, ri, r) {
-        r.set('enabled', 0);
+        moduleSelect(r, 0);
       }
     }
   });
+
   var externalColumnModel = new Ext.grid.ColumnModel([
     externalSelectionModel,
     {
@@ -192,6 +246,17 @@ tvheadend.epggrab = function() {
     iconCls        : 'icon-grid',
   });
 
+  var externalPanel = new Ext.form.FieldSet({
+    title       : 'External Interfaces',
+    width       : 800,
+    autoHeight  : true,
+    collapsible : true,
+    collapsed   : true,
+    items       : [
+      externalGrid
+    ]
+  });
+
   /*
    * OTA modules
    */
@@ -200,17 +265,27 @@ tvheadend.epggrab = function() {
     singleSelect : false,
     listeners : {
       'rowselect' : function (s, ri, r) {
-        r.set('enabled', 1);
+        moduleSelect(r, 1);
       },
       'rowdeselect' : function (s, ri, r) {
-        r.set('enabled', 0);
+        moduleSelect(r, 0);
       }
     }
   });
 
+  var otaColumnModel = new Ext.grid.ColumnModel([
+    otaSelectionModel,
+    {
+      header    : 'Module',
+      dataIndex : 'name',
+      width     : 200,
+      sortable  : false,
+    }
+  ]);
+
   var otaGrid = new Ext.grid.EditorGridPanel({
     store          : otaModuleStore,
-    cm             : externalColumnModel,
+    cm             : otaColumnModel,
     sm             : otaSelectionModel,
     width          : 600,
     height         : 150,
@@ -221,26 +296,15 @@ tvheadend.epggrab = function() {
     iconCls        : 'icon-grid',
   });
 
-  /* HACK: get display working */
-  externalGrid.on('render', function(){
-    delay = new Ext.util.DelayedTask(function(){
-    rows = [];
-    externalModuleStore.each(function(r){
-      if (r.get('enabled')) rows.push(r);
-    });
-    externalSelectionModel.selectRecords(rows);
-    });
-    delay.delay(100);
-  });
-  otaGrid.on('render', function(){
-    delay = new Ext.util.DelayedTask(function(){
-    rows = [];
-    otaModuleStore.each(function(r){
-      if (r.get('enabled')) rows.push(r);
-    });
-    otaSelectionModel.selectRecords(rows);
-    });
-    delay.delay(100);
+  var otaPanel = new Ext.form.FieldSet({
+    title       : 'OTA Interfaces',
+    width       : 800,
+    autoHeight  : true,
+    collapsible : true,
+    collapsed   : true,
+    items       : [
+      otaGrid
+    ],
   });
 
   /* ****************************************************************
@@ -273,15 +337,11 @@ tvheadend.epggrab = function() {
     reader        : confreader,
     layout        : 'form',
     defaultType   : 'textfield',
+    autoHeight    : true,
     items         : [
-      interval,
-      internalModule,
-      intervalValue,
-      intervalUnit,
-      new Ext.form.Label({text: 'External Interfaces'}),
-      externalGrid,
-      new Ext.form.Label({text: 'OTA Modules'}),
-      otaGrid,
+      simplePanel,
+      externalPanel,
+      otaPanel,
     ],
     tbar: [
       saveButton,
@@ -294,7 +354,38 @@ tvheadend.epggrab = function() {
    * Load/Save
    * ***************************************************************/
 
+  /* HACK: get display working */
+  externalGrid.on('render', function(){
+    delay = new Ext.util.DelayedTask(function(){
+    rows = [];
+    externalModuleStore.each(function(r){
+      if (r.get('enabled')) rows.push(r);
+    });
+    externalSelectionModel.selectRecords(rows);
+    });
+    delay.delay(100);
+  });
+  otaGrid.on('render', function(){
+    delay = new Ext.util.DelayedTask(function(){
+    rows = [];
+    otaModuleStore.each(function(r){
+      if (r.get('enabled')) rows.push(r);
+    });
+    otaSelectionModel.selectRecords(rows);
+    });
+    delay.delay(100);
+  });
+
   confpanel.on('render', function() {
+
+    /* Hack to get display working */
+    delay = new Ext.util.DelayedTask(function(){
+      simplePanel.doLayout(false);
+      externalPanel.doLayout(false);
+      otaPanel.doLayout(false);
+    });
+    delay.delay(100);
+
     confpanel.getForm().load({
       url     : 'epggrab',
       params  : { op : 'loadSettings' },
@@ -306,10 +397,7 @@ tvheadend.epggrab = function() {
 
   function saveChanges() {
     mods = [];
-    externalModuleStore.each(function(r) {
-      mods.push({id: r.get('id'), enabled: r.get('enabled') ? 1 : 0});
-    });  
-    otaModuleStore.each(function(r) {
+    moduleStore.each(function(r) {
       mods.push({id: r.get('id'), enabled: r.get('enabled') ? 1 : 0});
     });  
     mods = Ext.util.JSON.encode(mods);
