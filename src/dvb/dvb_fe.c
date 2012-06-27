@@ -230,6 +230,8 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi)
   if(tdmi->tdmi_enabled) {
     dvb_mux_add_to_scan_queue(tdmi);
   }
+  
+  epggrab_mux_stop(tdmi);
 
   time(&tdmi->tdmi_lost_adapter);
 }
@@ -509,7 +511,7 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 
 
   dvb_table_add_default(tdmi);
-  epggrab_tune(tdmi);
+  epggrab_mux_start(tdmi);
 
   dvb_adapter_notify(tda);
   return 0;

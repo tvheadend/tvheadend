@@ -115,8 +115,6 @@ typedef struct th_dvb_mux_instance {
 
   int tdmi_enabled;
 
-  LIST_HEAD(, epggrab_ota_mux) tdmi_epg_grabbers;
-
   time_t tdmi_got_adapter;
   time_t tdmi_lost_adapter;
 
@@ -147,8 +145,7 @@ typedef struct th_dvb_mux_instance {
 
 #define TDA_SCANQ_BAD  0 ///< Bad muxes (monitor quality)
 #define TDA_SCANQ_OK   1 ///< OK muxes
-#define TDA_SCANQ_EPG  2 ///< EPG muxes (TBD)
-#define TDA_SCANQ_NUM  3
+#define TDA_SCANQ_NUM  2
 
 typedef struct th_dvb_adapter {
 
@@ -163,6 +160,8 @@ typedef struct th_dvb_adapter {
   int tda_initial_num_mux;
 
   th_dvb_mux_instance_t *tda_mux_current;
+
+  th_dvb_mux_instance_t *tda_mux_epg;
 
   int tda_table_epollfd;
 
