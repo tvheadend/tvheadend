@@ -424,11 +424,6 @@ dvb_adapter_mux_scanner(void *aux)
   th_dvb_mux_instance_t *tdmi;
   int i;
   int idle_epg;
-  static const char* scan_string[] = {
-    "Autoscan BAD",
-    "Autoscan OK",
-    "Autoscan EPG"
-  };
 
   if(tda->tda_rootpath == NULL)
     return; // No hardware
@@ -477,7 +472,7 @@ dvb_adapter_mux_scanner(void *aux)
       gtimer_arm(&tda->tda_mux_scanner_timer,
                  dvb_adapter_mux_scanner, tda, period);
     dvb_fe_tune(tda->tda_mux_epg, "EPG scan");
-    
+
   /* Normal */
   } else {
 
