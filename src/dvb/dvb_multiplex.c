@@ -1167,3 +1167,14 @@ dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src,
   dvb_mux_save(tdmi_dst);
   return 0;
 }
+
+void dvb_mux_add_to_scan_queue ( th_dvb_mux_instance_t *tdmi )
+{
+  int ti;
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  ti = LIST_FIRST(&tdmi->tdmi_epg_grabbers) ? TDA_SCANQ_EPG
+     : tdmi->tdmi_quality == 100            ? TDA_SCANQ_OK
+                                            : TDA_SCANQ_BAD;
+  tdmi->tdmi_scan_queue = &tda->tda_scan_queues[ti];
+  TAILQ_INSERT_TAIL(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
+}

@@ -49,6 +49,12 @@ epggrab_ota_mux_t *epggrab_ota_register
   LIST_INSERT_HEAD(&ota_muxes, ota, glob_link);
   LIST_INSERT_HEAD(&tdmi->tdmi_epg_grabbers, ota, tdmi_link);
   LIST_INSERT_HEAD(&mod->muxes, ota, grab_link);
+
+  /* Re-assign to correct queue */
+  if (tdmi->tdmi_scan_queue)
+    TAILQ_REMOVE(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
+  dvb_mux_add_to_scan_queue(tdmi);
+
   return ota;
 }
 
