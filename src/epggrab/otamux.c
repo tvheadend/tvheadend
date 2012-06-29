@@ -269,7 +269,7 @@ void epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
 
     /* Check others */
     TAILQ_FOREACH(ota, &tdmi->tdmi_epg_grab, tdmi_link) {
-      if (ota->is_reg && ota->state != EPGGRAB_OTA_MUX_RUNNING) break;
+      if (ota->is_reg && ota->state == EPGGRAB_OTA_MUX_RUNNING) break;
     }
 
     /* All complete (bring timer forward) */
