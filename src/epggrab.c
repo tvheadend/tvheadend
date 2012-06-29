@@ -133,7 +133,7 @@ static void _epggrab_load ( void )
       if ( (a = htsmsg_get_map(m, "mod_enabled")) ) {
         LIST_FOREACH(mod, &epggrab_modules, link) {
           if (htsmsg_get_u32_or_default(a, mod->id, 0)) {
-            if (mod->enable) mod->enable(mod, 1);
+	    epggrab_enable_module(mod, 1);
           }
         }
       }
@@ -230,11 +230,9 @@ int epggrab_set_module ( epggrab_module_t *m )
   if (m && m->type != EPGGRAB_INT) return 0;
   mod = (epggrab_module_int_t*)m;
   if ( epggrab_module != mod ) {
-    if (epggrab_module && epggrab_module->enable)
-      epggrab_module->enable(epggrab_module, 0);
+    epggrab_enable_module((epggrab_module_t*)epggrab_module, 0);
     epggrab_module = (epggrab_module_int_t*)mod;
-    if (epggrab_module && epggrab_module->enable)
-      epggrab_module->enable(epggrab_module, 1);
+    epggrab_enable_module((epggrab_module_t*)epggrab_module, 1);
     save           = 1;
   }
   return save;
@@ -278,6 +276,7 @@ int epggrab_set_channel_reicon ( uint32_t e )
 int epggrab_enable_module ( epggrab_module_t *mod, uint8_t e )
 {
   int save = 0;
+  if (!mod) return 0;
   if (mod->enable) {
     save         = mod->enable(mod, e);
   } else if ( e != mod->enabled ) {
