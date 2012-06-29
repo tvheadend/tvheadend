@@ -44,9 +44,8 @@ static epggrab_channel_tree_t _xmltv_channels;
 static epggrab_channel_t *_xmltv_channel_find
   ( const char *id, int create, int *save )
 {
-  return NULL;//return epggrab_module_channel_find(_xmltv_module, id, create, save);
+  return epggrab_channel_find(&_xmltv_channels, id, create, save);
 }
-
 
 /* **************************************************************************
  * Parsing
@@ -481,8 +480,7 @@ static void _xmltv_load_grabbers ( void )
       outbuf[i] = '\0';
       sprintf(name, "XMLTV: %s", &outbuf[n]);
       epggrab_module_int_create(NULL, &outbuf[p], name, &outbuf[p],
-                                NULL, _xmltv_parse, NULL,
-                                &_xmltv_channels);
+                                NULL, _xmltv_parse, NULL, NULL);
       p = n = i + 1;
     } else if ( outbuf[i] == '|' ) {
       outbuf[i] = '\0';
@@ -506,5 +504,5 @@ void xmltv_init ( void )
 
 void xmltv_load ( void )
 {
-  //epggrab_module_channels_load(_xmltv_module);
+  epggrab_module_channels_load(epggrab_module_find_by_id("xmltv"));
 }

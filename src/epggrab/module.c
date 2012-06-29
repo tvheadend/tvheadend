@@ -36,17 +36,58 @@
 #include "epggrab/private.h"
 
 /* **************************************************************************
+ * Module Access
+ * *************************************************************************/
+
+epggrab_module_t* epggrab_module_find_by_id ( const char *id )
+{
+  epggrab_module_t *m;
+  LIST_FOREACH(m, &epggrab_modules, link) {
+    if ( !strcmp(m->id, id) ) return m;
+  }
+  return NULL;
+}
+
+htsmsg_t *epggrab_module_list ( void )
+{
+  epggrab_module_t *m;
+  htsmsg_t *e, *a = htsmsg_create_list();
+  LIST_FOREACH(m, &epggrab_modules, link) {
+    e = htsmsg_create_map();
+    htsmsg_add_str(e, "id", m->id);
+    htsmsg_add_u32(e, "type", m->type);
+    htsmsg_add_u32(e, "enabled", m->enabled);
+    if(m->name) 
+      htsmsg_add_str(e, "name", m->name);
+    if(m->type == EPGGRAB_EXT) {
+      epggrab_module_ext_t *ext = (epggrab_module_ext_t*)m;
+      htsmsg_add_str(e, "path", ext->path);
+    }
+    htsmsg_add_msg(a, NULL, e);
+  }
+  return a;
+}
+
+/* **************************************************************************
  * Generic module routines
  * *************************************************************************/
 
 epggrab_module_t *epggrab_module_create
-  ( epggrab_module_t *skel, const char *id, const char *name )
+  ( epggrab_module_t *skel, const char *id, const char *name,
+    epggrab_channel_tree_t *channels )
 {
   assert(skel);
   
   /* Setup */
-  skel->id   = strdup(id);
-  skel->name = strdup(name);
+  skel->id       = strdup(id);
+  skel->name     = strdup(name);
+  skel->channels = channels;
+  if (channels) {
+    skel->ch_save = epggrab_module_ch_save;
+    skel->ch_add  = epggrab_module_ch_add;
+    skel->ch_mod  = epggrab_module_ch_mod;
+    skel->ch_rem  = epggrab_module_ch_rem;
+  }
 
   /* Insert */
   assert(!epggrab_module_find_by_id(id));
@@ -55,8 +96,48 @@ epggrab_module_t *epggrab_module_create
   return skel;
 }
 
+/*
+ * Run the parse
+ */
+void epggrab_module_parse
+  ( void *m, htsmsg_t *data )
+{
+  time_t tm1, tm2;
+  int save = 0;
+  epggrab_stats_t stats;
+  epggrab_module_int_t *mod = m;
+
+  /* Parse */
+  memset(&stats, 0, sizeof(stats));
+  pthread_mutex_lock(&global_lock);
+  time(&tm1);
+  save |= mod->parse(mod, data, &stats);
+  time(&tm2);
+  if (save) epg_updated();  
+  pthread_mutex_unlock(&global_lock);
+  htsmsg_destroy(data);
+
+  /* Debug stats */
+  tvhlog(LOG_INFO, mod->id, "parse took %d seconds", tm2 - tm1);
+  tvhlog(LOG_INFO, mod->id, "  channels   tot=%5d new=%5d mod=%5d",
+         stats.channels.total, stats.channels.created,
+         stats.channels.modified);
+  tvhlog(LOG_INFO, mod->id, "  brands     tot=%5d new=%5d mod=%5d",
+         stats.brands.total, stats.brands.created,
+         stats.brands.modified);
+  tvhlog(LOG_INFO, mod->id, "  seasons    tot=%5d new=%5d mod=%5d",
+         stats.seasons.total, stats.seasons.created,
+         stats.seasons.modified);
+  tvhlog(LOG_INFO, mod->id, "  episodes   tot=%5d new=%5d mod=%5d",
+         stats.episodes.total, stats.episodes.created,
+         stats.episodes.modified);
+  tvhlog(LOG_INFO, mod->id, "  broadcasts tot=%5d new=%5d mod=%5d",
+         stats.broadcasts.total, stats.broadcasts.created,
+         stats.broadcasts.modified);
+}
+
 /* **************************************************************************
- * Channel related routines
+ * Module channel routines
  * *************************************************************************/
 
 void epggrab_module_ch_save ( void *_m, epggrab_channel_t *ch )
@@ -102,7 +183,7 @@ void epggrab_module_ch_add ( void *m, channel_t *ch )
   epggrab_module_int_t *mod = m;
   RB_FOREACH(egc, mod->channels, link) {
     if (epggrab_channel_link(egc, ch)) {
-      epggrab_module_ch_save(mod, egc);
+      if (mod->ch_save) mod->ch_save(mod, egc);
       break;
     }
   }
@@ -115,7 +196,7 @@ void epggrab_module_ch_rem ( void *m, channel_t *ch )
   RB_FOREACH(egc, mod->channels, link) {
     if (egc->channel == ch) {
       egc->channel = NULL;
-      epggrab_module_ch_save(mod, egc);
+      if (mod->ch_save) mod->ch_save(mod, egc);
       break;
     }
   }
@@ -126,10 +207,7 @@ void epggrab_module_ch_mod ( void *mod, channel_t *ch )
   return epggrab_module_ch_add(mod, ch);
 }
 
-
-#if 0
-
-static void epggrab_module_ch_load 
+static void _epggrab_module_channel_load 
   ( epggrab_module_t *mod, htsmsg_t *m, const char *id )
 {
   int save = 0, i;
@@ -138,7 +216,7 @@ static void epggrab_module_ch_load
   htsmsg_t *a;
   htsmsg_field_t *f;
 
-  epggrab_channel_t *ch = epggrab_module_channel_find(mod, id, 1, &save);
+  epggrab_channel_t *ch = epggrab_channel_find(mod->channels, id, 1, &save);
 
   if ((str = htsmsg_get_str(m, "name")))
     ch->name = strdup(str);
@@ -147,22 +225,23 @@ static void epggrab_module_ch_load
   if ((a = htsmsg_get_list(m, "sid"))) {
     i = 0;
     HTSMSG_FOREACH(f, a) i++;
-    ch->sid_cnt = i;
-    ch->sid     = calloc(i, sizeof(uint16_t));
-    i = 0;
-    HTSMSG_FOREACH(f, a) {
-      ch->sid[i] = (uint16_t)f->hmf_s64;
-      i++;
+    if (i) {
+      ch->sid     = calloc(i+1, sizeof(uint16_t));
+      i = 0;
+      HTSMSG_FOREACH(f, a) {
+        ch->sid[i++] = (uint16_t)f->hmf_s64;
+      }
     }
   }
   if ((a = htsmsg_get_list(m, "sname"))) {
     i = 0;
     HTSMSG_FOREACH(f, a) i++;
-    ch->sname = calloc(i+1, sizeof(char*));
-    i = 0;
-    HTSMSG_FOREACH(f, a) {
-      ch->sname[i] = strdup(f->hmf_str);
-      i++;
+    if (i) {
+      ch->sname = calloc(i+1, sizeof(char*));
+      i = 0;
+      HTSMSG_FOREACH(f, a) {
+        ch->sname[i++] = strdup(f->hmf_str);
+      }
     }
   }
   if(!htsmsg_get_u32(m, "number", &u32))
@@ -176,46 +255,15 @@ void epggrab_module_channels_load ( epggrab_module_t *mod )
 {
   htsmsg_t *m, *e;
   htsmsg_field_t *f;
-
+  if (!mod || !mod->channels) return;
   if ((m = hts_settings_load("epggrab/%s/channels", mod->id))) {
     HTSMSG_FOREACH(f, m) {
       if ((e = htsmsg_get_map_by_field(f)))
-        epggrab_module_channel_load(mod, e, f->hmf_name);
+        _epggrab_module_channel_load(mod, e, f->hmf_name);
     }
     htsmsg_destroy(m);
   }
 }
-
-epggrab_channel_t *epggrab_module_ch_find
-  ( epggrab_module_t *mod, const char *id, int create, int *save ) 
-{
-  epggrab_channel_t *ec;
-  static epggrab_channel_t *skel = NULL;
-
-  if (!mod || !mod->channels ) return NULL;
-
-  if ( !skel ) skel = calloc(1, sizeof(epggrab_channel_t));
-  skel->id  = (char*)id;
-  skel->mod = mod;
-
-  /* Find */
-  if (!create) {
-    ec = RB_FIND(mod->channels, skel, link, _ch_id_cmp);
-
-  /* Create (if required) */
-  } else {
-    ec = RB_INSERT_SORTED(mod->channels, skel, link, _ch_id_cmp);
-    if ( ec == NULL ) {
-      skel->id = strdup(skel->id);
-      ec       = skel;
-      skel     = NULL;
-      *save    = 1;
-    }
-  }
-
-  return ec;
-}
-#endif
 
 /* **************************************************************************
  * Internal module routines
@@ -233,7 +281,7 @@ epggrab_module_int_t *epggrab_module_int_create
   if (!skel) skel = calloc(1, sizeof(epggrab_module_int_t));
   
   /* Pass through */
-  epggrab_module_create((epggrab_module_t*)skel, id, name);
+  epggrab_module_create((epggrab_module_t*)skel, id, name, channels);
 
   /* Int data */
   skel->type     = EPGGRAB_INT;
@@ -242,11 +290,6 @@ epggrab_module_int_t *epggrab_module_int_create
   skel->grab     = grab  ?: epggrab_module_grab_spawn;
   skel->trans    = trans ?: epggrab_module_trans_xml;
   skel->parse    = parse;
-  if (channels) {
-    skel->ch_add = epggrab_module_ch_add;
-    skel->ch_rem = epggrab_module_ch_rem;
-    skel->ch_mod = epggrab_module_ch_mod;
-  }
 
   return skel;
 }
@@ -438,7 +481,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ota_t));
   
   /* Pass through */
-  epggrab_module_create((epggrab_module_t*)skel, id, name);
+  epggrab_module_create((epggrab_module_t*)skel, id, name, channels);
 
   /* Setup */
   skel->type   = EPGGRAB_OTA;

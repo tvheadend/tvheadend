@@ -135,10 +135,10 @@ typedef struct th_dvb_mux_instance {
 
   struct service_list tdmi_transports; /* via s_mux_link */
 
-
   TAILQ_ENTRY(th_dvb_mux_instance) tdmi_scan_link;
   struct th_dvb_mux_instance_queue *tdmi_scan_queue;
 
+  TAILQ_HEAD(, epggrab_ota_mux) tdmi_epg_grab;
 
 } th_dvb_mux_instance_t;
 

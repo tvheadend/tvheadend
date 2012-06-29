@@ -34,52 +34,8 @@ uint32_t              epggrab_channel_renumber;
 uint32_t              epggrab_channel_reicon;
 
 /* **************************************************************************
- * Helpers
+ * Internal Grab Thread
  * *************************************************************************/
-
-void epggrab_resched ( void )
-{
-}
-
-/*
- * Run the parse
- */
-void epggrab_module_parse
-  ( void *m, htsmsg_t *data )
-{
-  time_t tm1, tm2;
-  int save = 0;
-  epggrab_stats_t stats;
-  epggrab_module_int_t *mod = m;
-
-  /* Parse */
-  memset(&stats, 0, sizeof(stats));
-  pthread_mutex_lock(&global_lock);
-  time(&tm1);
-  save |= mod->parse(mod, data, &stats);
-  time(&tm2);
-  if (save) epg_updated();  
-  pthread_mutex_unlock(&global_lock);
-  htsmsg_destroy(data);
-
-  /* Debug stats */
-  tvhlog(LOG_INFO, mod->id, "parse took %d seconds", tm2 - tm1);
-  tvhlog(LOG_INFO, mod->id, "  channels   tot=%5d new=%5d mod=%5d",
-         stats.channels.total, stats.channels.created,
-         stats.channels.modified);
-  tvhlog(LOG_INFO, mod->id, "  brands     tot=%5d new=%5d mod=%5d",
-         stats.brands.total, stats.brands.created,
-         stats.brands.modified);
-  tvhlog(LOG_INFO, mod->id, "  seasons    tot=%5d new=%5d mod=%5d",
-         stats.seasons.total, stats.seasons.created,
-         stats.seasons.modified);
-  tvhlog(LOG_INFO, mod->id, "  episodes   tot=%5d new=%5d mod=%5d",
-         stats.episodes.total, stats.episodes.created,
-         stats.episodes.modified);
-  tvhlog(LOG_INFO, mod->id, "  broadcasts tot=%5d new=%5d mod=%5d",
-         stats.broadcasts.total, stats.broadcasts.created,
-         stats.broadcasts.modified);
-}
 
 /*
  * Grab from module
@@ -102,10 +58,6 @@ static void _epggrab_module_grab ( epggrab_module_int_t *mod )
     tvhlog(LOG_WARNING, mod->id, "grab returned no data");
   }
 }
-
-/* **************************************************************************
- * Internal Grab Thread
- * *************************************************************************/
 
 /*
  * Thread (for internal grabbing)
@@ -341,41 +293,15 @@ int epggrab_enable_module_by_id ( const char *id, uint8_t e )
 }
 
 /* **************************************************************************
- * Module Access
- * *************************************************************************/
-
-epggrab_module_t* epggrab_module_find_by_id ( const char *id )
-{
-  epggrab_module_t *m;
-  LIST_FOREACH(m, &epggrab_modules, link) {
-    if ( !strcmp(m->id, id) ) return m;
-  }
-  return NULL;
-}
-
-htsmsg_t *epggrab_module_list ( void )
-{
-  epggrab_module_t *m;
-  htsmsg_t *e, *a = htsmsg_create_list();
-  LIST_FOREACH(m, &epggrab_modules, link) {
-    e = htsmsg_create_map();
-    htsmsg_add_str(e, "id", m->id);
-    htsmsg_add_u32(e, "type", m->type);
-    htsmsg_add_u32(e, "enabled", m->enabled);
-    if(m->name) 
-      htsmsg_add_str(e, "name", m->name);
-    if(m->type == EPGGRAB_EXT) {
-      epggrab_module_ext_t *ext = (epggrab_module_ext_t*)m;
-      htsmsg_add_str(e, "path", ext->path);
-    }
-    htsmsg_add_msg(a, NULL, e);
-  }
-  return a;
-}
-
-/* **************************************************************************
  * Initialisation
  * *************************************************************************/
+
+/*
+ * TODO: implement this
+ */
+void epggrab_resched ( void )
+{
+}
 
 /*
  * Initialise

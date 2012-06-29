@@ -28,14 +28,12 @@
 #include "epggrab.h"
 #include "epggrab/private.h"
 
-#if 0
-static int _ch_id_cmp ( void *a, void *b )
-{
-  return strcmp(((epggrab_channel_t*)a)->id,
-                ((epggrab_channel_t*)b)->id);
-}
-#endif
+/* **************************************************************************
+ * EPG Grab Channel functions
+ * *************************************************************************/
 
+/* Link epggrab channel to real channel */
+// returns 1 if link made
 int epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch )
 {
   service_t *sv;
@@ -87,6 +85,7 @@ int epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch )
   return match;
 }
 
+/* Set name */
 int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
 {
   int save = 0;
@@ -94,41 +93,66 @@ int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
   if (!ec->name || strcmp(ec->name, name)) {
     if (ec->name) free(ec->name);
     ec->name = strdup(name);
-    if (ec->channel) channel_rename(ec->channel, name);
+    if (ec->channel && epggrab_channel_rename)
+      channel_rename(ec->channel, name);
     save = 1;
   }
   return save;
 }
 
+/* Set icon */
+int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
+{
+  int save = 0;
+  if (!ec->icon || strcmp(ec->icon, icon) ) {
+  if (!ec | !icon) return 0;
+    if (ec->icon) free(ec->icon);
+    ec->icon = strdup(icon);
+    if (ec->channel) channel_set_icon(ec->channel, icon);
+    save = 1;
+  }
+  return save;
+}
+
+/* Set channel number */
+int epggrab_channel_set_number ( epggrab_channel_t *ec, int number )
+{
+  int save = 0;
+  if (!ec || (number <= 0)) return 0;
+  if (ec->number != number) {
+    ec->number = number;
+    if (ec->channel) channel_set_number(ec->channel, number);
+    save = 1;
+  }
+  return save;
+}
+
+/* Set service IDs */
 int epggrab_channel_set_sid 
   ( epggrab_channel_t *ec, const uint16_t *sid )
 {
-#if 0
-  int save = 0, i = 0, num = 0;
+  int save = 0, i;
   if ( !ec || !sid ) return 0;
   if (!ec->sid) save = 1;
   else {
-    
-    for (i = 0; i < num; i++ ) {
-      if (sid[i] != ec->sid[i]) {
-        save = 1;
-        break;
-      }
+    i = 0;
+    while ( ec->sid[i] && sid[i] ) {
+      if ( ec->sid[i] != sid[i] ) break;
+      i++;
     }
+    if (ec->sid[i] || sid[i]) save = 1;
   }
   if (save) {
+    i = 0;
+    while (ec->sid[i++]);
     if (ec->sid) free(ec->sid);
-    ec->sid = calloc(num, sizeof(uint16_t));
-    for (i = 0; i < num; i++ ) {
-      ec->sid[i] = sid[i];
-    }
-    ec->sid_cnt = num;
+    ec->sid = calloc(i, sizeof(uint16_t));
+    memcpy(ec->sid, sid, i * sizeof(uint16_t));
   }
   return save;
-#endif
-  return 0;
 }
 
+/* Set names */
 int epggrab_channel_set_sname ( epggrab_channel_t *ec, const char **sname )
 {
   int save = 0, i = 0;
@@ -136,13 +160,10 @@ int epggrab_channel_set_sname ( epggrab_channel_t *ec, const char **sname )
   if (!ec->sname) save = 1;
   else {
     while ( ec->sname[i] && sname[i] ) {
-      if (strcmp(ec->sname[i], sname[i])) {
-        save = 1;
-        break;
-      }
+      if (strcmp(ec->sname[i], sname[i])) break;
       i++;
     }
-    if (!save && (ec->sname[i] || sname[i])) save = 1;
+    if (ec->sname[i] || sname[i]) save = 1;
   }
   if (save) {
     if (ec->sname) {
@@ -163,57 +184,60 @@ int epggrab_channel_set_sname ( epggrab_channel_t *ec, const char **sname )
   return save;
 }
 
-int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
-{
-  int save = 0;
-  if (!ec->icon || strcmp(ec->icon, icon) ) {
-  if (!ec | !icon) return 0;
-    if (ec->icon) free(ec->icon);
-    ec->icon = strdup(icon);
-    if (ec->channel) channel_set_icon(ec->channel, icon);
-    save = 1;
-  }
-  return save;
-}
-
-int epggrab_channel_set_number ( epggrab_channel_t *ec, int number )
-{
-  int save = 0;
-  if (!ec || (number <= 0)) return 0;
-  if (ec->number != number) {
-    ec->number = number;
-    if (ec->channel) channel_set_number(ec->channel, number);
-    save = 1;
-  }
-  return save;
-}
-
-
+/* Channel settings updated */
 void epggrab_channel_updated ( epggrab_channel_t *ec )
 {
-  //epggrab_channel_link(ec);
-  epggrab_module_ch_save(ec->mod, ec);
-}
-
-#if 0
-void epggrab_channel_link ( epggrab_channel_t *ec )
-{ 
   channel_t *ch;
-
   if (!ec) return;
 
-  /* Link */
-  if (!ec->channel) {
-    RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-      if (_ch_link(ec, ch)) break;
+  /* Find a link */
+  if (!ec->channel)
+    RB_FOREACH(ch, &channel_name_tree, ch_name_link)
+      if (epggrab_channel_link(ec, ch)) break;
+
+  /* Save */
+  if (ec->mod->ch_save) ec->mod->ch_save(ec->mod, ec);
+}
+
+/* ID comparison */
+static int _ch_id_cmp ( void *a, void *b )
+{
+  return strcmp(((epggrab_channel_t*)a)->id,
+                ((epggrab_channel_t*)b)->id);
+}
+
+/* Find/Create channel in the list */
+epggrab_channel_t *epggrab_channel_find
+  ( epggrab_channel_tree_t *tree, const char *id, int create, int *save )
+{
+  epggrab_channel_t *ec;
+  static epggrab_channel_t *skel = NULL;
+  if (!skel) skel = calloc(1, sizeof(epggrab_channel_t));
+  skel->id = (char*)id;
+
+  /* Find */
+  if (!create) {
+    ec = RB_FIND(tree, skel, link, _ch_id_cmp);
+
+  /* Find/Create */
+  } else {
+    ec = RB_INSERT_SORTED(tree, skel, link, _ch_id_cmp);
+    if (!ec) {
+      ec     = skel;
+      skel   = NULL;
+      ec->id = strdup(id);
+      *save  = 1;
     }
   }
+  return ec;
 }
-#endif
+
+/* **************************************************************************
+ * Global routines
+ * *************************************************************************/
 
 htsmsg_t *epggrab_channel_list ( void )
 {
-#if 0
   char name[100];
   epggrab_module_t *mod;
   epggrab_channel_t *ec;
@@ -232,44 +256,28 @@ htsmsg_t *epggrab_channel_list ( void )
     }
   }
   return m;
-#endif
-  return NULL;
 }
 
 void epggrab_channel_add ( channel_t *ch )
 {
-#if 0
   epggrab_module_t *m;
   LIST_FOREACH(m, &epggrab_modules, link) {
     if (m->ch_add) m->ch_add(m, ch);
   }
-#endif
 }
 
 void epggrab_channel_rem ( channel_t *ch )
 {
-#if 0
   epggrab_module_t *m;
   LIST_FOREACH(m, &epggrab_modules, link) {
     if (m->ch_rem) m->ch_rem(m, ch);
   }
-#endif
 }
 
 void epggrab_channel_mod ( channel_t *ch )
 {
-#if 0
   epggrab_module_t *m;
   LIST_FOREACH(m, &epggrab_modules, link) {
     if (m->ch_mod) m->ch_mod(m, ch);
   }
-#endif
 }
-
-epggrab_channel_t *epggrab_channel_find
-  ( epggrab_channel_tree_t *tree, const char *id, int create, int *save )
-{
-  // TODO
-  return NULL;
-}
-
