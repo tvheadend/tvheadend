@@ -843,7 +843,7 @@ void opentv_init ( void )
   /* Load providers */
   if ((m = hts_settings_load("epggrab/opentv/prov")))
     _opentv_prov_load(m);
-  if ((m = hts_settings_load("%sdata/epggrab/opentv/prov", dr)))
+  if ((m = hts_settings_load("%s/data/epggrab/opentv/prov", dr)))
     _opentv_prov_load(m);
   tvhlog(LOG_INFO, "opentv", "providers loaded");
 }
