@@ -28,7 +28,7 @@ CFLAGS += -Wall -Werror -Wwrite-strings -Wno-deprecated-declarations
 CFLAGS += -Wmissing-prototypes -fms-extensions
 LDFLAGS += -lrt -ldl
 
-BUNDLES += docs/html docs/docresources src/webui/static
+BUNDLES += docs/html docs/docresources src/webui/static data
 
 #
 # Core
