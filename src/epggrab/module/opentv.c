@@ -795,13 +795,15 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
                               NULL);
   
   /* Add provider details */
-  mod->dict    = dict;
-  mod->nid     = nid;
-  mod->tsid    = tsid;
-  mod->sid     = sid;
-  mod->channel = _pid_list_to_array(cl);
-  mod->title   = _pid_list_to_array(tl);
-  mod->summary = _pid_list_to_array(sl);
+  mod->dict     = dict;
+  mod->nid      = nid;
+  mod->tsid     = tsid;
+  mod->sid      = sid;
+  mod->channel  = _pid_list_to_array(cl);
+  mod->title    = _pid_list_to_array(tl);
+  mod->summary  = _pid_list_to_array(sl);
+  mod->channels = &_opentv_channels;
+  mod->ch_rem   = epggrab_module_ch_rem;
 
   return 1;
 }
