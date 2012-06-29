@@ -122,7 +122,7 @@ typedef struct opentv_dict
 /* Provider configuration */
 typedef struct opentv_module_t
 {
-  epggrab_module_t      ;      ///< Base struct
+  epggrab_module_ota_t  ;      ///< Base struct
 
   int                   nid;
   int                   tsid;
@@ -505,7 +505,7 @@ static int _opentv_bat_section
  * Table Callbacks
  * ***********************************************************************/
 
-static epggrab_ota_mux_t *_opentv_table_callback 
+static epggrab_ota_mux_t *_opentv_event_callback 
   ( th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len, uint8_t tid, void *p )
 {
   th_dvb_table_t *tdt = (th_dvb_table_t*)p;
@@ -568,7 +568,7 @@ static epggrab_ota_mux_t *_opentv_table_callback
 static int _opentv_title_callback
   ( th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len, uint8_t tid, void *p )
 {
-  epggrab_ota_mux_t *ota = _opentv_table_callback(tdmi, buf, len, tid, p);
+  epggrab_ota_mux_t *ota = _opentv_event_callback(tdmi, buf, len, tid, p);
   if (ota)
     return _opentv_parse_event_section((opentv_module_t*)ota->grab,
                                        (opentv_status_t*)ota->status,
@@ -579,7 +579,7 @@ static int _opentv_title_callback
 static int _opentv_summary_callback
   ( th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len, uint8_t tid, void *p )
 {
-  epggrab_ota_mux_t *ota = _opentv_table_callback(tdmi, buf, len, tid, p);
+  epggrab_ota_mux_t *ota = _opentv_event_callback(tdmi, buf, len, tid, p);
   if (ota)
     return _opentv_parse_event_section((opentv_module_t*)ota->grab,
                                        (opentv_status_t*)ota->status,

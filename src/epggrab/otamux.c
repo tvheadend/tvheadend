@@ -72,7 +72,7 @@ int epggrab_mux_period ( th_dvb_mux_instance_t *tdmi )
   int period = 0;
   epggrab_ota_mux_t *ota;
   TAILQ_FOREACH(ota, &tdmi->tdmi_epg_grab, tdmi_link) {
-    if (!ota->is_reg) break;
+    if (!ota->is_reg) continue;
     if (ota->timeout > period)
       period = ota->timeout;
   }
@@ -146,7 +146,7 @@ epggrab_ota_mux_t *epggrab_ota_create
   } else {
     time_t now;
     time(&now);
-    if (ota) ota->state = EPGGRAB_OTA_MUX_IDLE;
+    ota->state = EPGGRAB_OTA_MUX_IDLE;
 
     /* Blocked */
     if (epggrab_ota_is_blocked(ota)) ota = NULL;

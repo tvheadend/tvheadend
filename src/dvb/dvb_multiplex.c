@@ -289,6 +289,8 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
     mux_link_initial(tda, tdmi);
   }
 
+  TAILQ_INIT(&tdmi->tdmi_epg_grab);
+
   return tdmi;
 }
 

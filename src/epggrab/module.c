@@ -487,6 +487,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
   skel->type   = EPGGRAB_OTA;
   skel->enable = enable;
   skel->start  = start;
+  TAILQ_INIT(&skel->muxes);
 
   return skel;
 }
