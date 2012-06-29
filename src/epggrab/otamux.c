@@ -81,9 +81,12 @@ int epggrab_mux_period ( th_dvb_mux_instance_t *tdmi )
 
 th_dvb_mux_instance_t *epggrab_mux_next ( th_dvb_adapter_t *tda )
 {
+  time_t now;
   epggrab_ota_mux_t *ota;
+  time(&now);
   TAILQ_FOREACH(ota, &ota_mux_all, glob_link) {
-    if (!ota->is_reg) break;
+    if (ota->interval + ota->completed > now) return NULL;
+    if (!ota->is_reg) return NULL;
     if (ota->tdmi->tdmi_adapter == tda) break;
   }
   return ota ? ota->tdmi : NULL;
