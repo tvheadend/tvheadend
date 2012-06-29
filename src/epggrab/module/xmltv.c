@@ -31,21 +31,21 @@
 
 #include "tvheadend.h"
 #include "channels.h"
-#include "epg.h"
-#include "xmltv.h"
 #include "spawn.h"
+
+#include "epg.h"
+#include "epggrab.h"
+#include "epggrab/private.h"
 
 #define XMLTV_FIND_GRABBERS "/usr/bin/tv_find_grabbers"
 
 static epggrab_channel_tree_t _xmltv_channels;
-static epggrab_module_t      *_xmltv_module;
 
 static epggrab_channel_t *_xmltv_channel_find
   ( const char *id, int create, int *save )
 {
-  return epggrab_module_channel_find(_xmltv_module, id, create, save);
+  return epggrab_channel_find(&_xmltv_channels, id, create, save);
 }
-
 
 /* **************************************************************************
  * Parsing
@@ -442,12 +442,8 @@ _xmltv_parse_tv(htsmsg_t *body, epggrab_stats_t *stats)
   return save;
 }
 
-/* ************************************************************************
- * Module Setup
- * ***********************************************************************/
-
 static int _xmltv_parse
-  ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
+  ( void *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
   htsmsg_t *tags, *tv;
 
@@ -460,17 +456,20 @@ static int _xmltv_parse
   return _xmltv_parse_tv(tv, stats);
 }
 
-static void _xmltv_load_grabbers ( epggrab_module_list_t *list )
+/* ************************************************************************
+ * Module Setup
+ * ***********************************************************************/
+
+static void _xmltv_load_grabbers ( void )
 {
   size_t i, outlen, p, n;
   char *outbuf;
-  char errbuf[100];
-  epggrab_module_t *mod;
+  char name[1000];
 
   /* Load data */
   outlen = spawn_and_store_stdout(XMLTV_FIND_GRABBERS, NULL, &outbuf);
   if ( outlen < 1 ) {
-    tvhlog(LOG_ERR, "xmltv", "%s failed [%s]", XMLTV_FIND_GRABBERS, errbuf);
+    tvhlog(LOG_ERR, "xmltv", "%s failed", XMLTV_FIND_GRABBERS);
     return;
   }
 
@@ -479,16 +478,9 @@ static void _xmltv_load_grabbers ( epggrab_module_list_t *list )
   while ( i < outlen ) {
     if ( outbuf[i] == '\n' || outbuf[i] == '\0' ) {
       outbuf[i] = '\0';
-      mod                      = calloc(1, sizeof(epggrab_module_t));
-      mod->id = mod->path      = strdup(&outbuf[p]);
-      mod->name                = malloc(200);
-      mod->channels            = &_xmltv_channels;
-      sprintf((char*)mod->name, "XMLTV: %s", &outbuf[n]);
-      *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_INTERNAL;
-      mod->grab                = epggrab_module_grab;
-      mod->trans               = epggrab_module_trans_xml;
-      mod->parse               = _xmltv_parse;
-      LIST_INSERT_HEAD(list, mod, link);
+      sprintf(name, "XMLTV: %s", &outbuf[n]);
+      epggrab_module_int_create(NULL, &outbuf[p], name, &outbuf[p],
+                                NULL, _xmltv_parse, NULL, NULL);
       p = n = i + 1;
     } else if ( outbuf[i] == '|' ) {
       outbuf[i] = '\0';
@@ -499,31 +491,18 @@ static void _xmltv_load_grabbers ( epggrab_module_list_t *list )
   free(outbuf);
 }
 
-void xmltv_init ( epggrab_module_list_t *list )
+void xmltv_init ( void )
 {
-  epggrab_module_t *mod;
-
   /* External module */
-  mod                      = calloc(1, sizeof(epggrab_module_t));
-  mod->id                  = strdup("xmltv");
-  mod->name                = strdup("XMLTV");
-  mod->path                = epggrab_module_socket_path("xmltv");
-  mod->enable              = epggrab_module_enable_socket;
-  mod->trans               = epggrab_module_trans_xml;
-  mod->parse               = _xmltv_parse;
-  mod->channels            = &_xmltv_channels;
-  mod->ch_add              = epggrab_module_channel_add;
-  mod->ch_rem              = epggrab_module_channel_rem;
-  mod->ch_mod              = epggrab_module_channel_mod;
-  *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_EXTERNAL;
-  LIST_INSERT_HEAD(list, mod, link);
-  _xmltv_module = mod;
+  epggrab_module_ext_create(NULL, "xmltv", "XMLTV", "xmltv",
+                            _xmltv_parse, NULL,
+                            &_xmltv_channels);
 
   /* Standard modules */
-  _xmltv_load_grabbers(list);
+  _xmltv_load_grabbers();
 }
 
 void xmltv_load ( void )
 {
-  epggrab_module_channels_load(_xmltv_module);
+  epggrab_module_channels_load(epggrab_module_find_by_id("xmltv"));
 }
