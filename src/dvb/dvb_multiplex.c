@@ -287,6 +287,8 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
     tda->tda_initial_num_mux++;
     tdmi->tdmi_table_initial = 1;
     mux_link_initial(tda, tdmi);
+  } else {
+    dvb_mux_add_to_scan_queue(tdmi);
   }
 
   TAILQ_INIT(&tdmi->tdmi_epg_grab);
@@ -716,7 +718,8 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
     dmc.dmc_satconf = NULL;
 
   tdmi = dvb_mux_create(tda, &dmc,
-			tsid, htsmsg_get_str(m, "network"), NULL, enabled, 1,
+			tsid, htsmsg_get_str(m, "network"), NULL, enabled,
+      tda->tda_skip_initialscan ? 0 : 1,
 			identifier, NULL);
   if(tdmi != NULL) {
 

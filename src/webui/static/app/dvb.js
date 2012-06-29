@@ -1105,7 +1105,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 
     var confreader = new Ext.data.JsonReader({
 	root: 'dvbadapters'
-    }, ['name', 'automux', 'idlescan', 'diseqcversion', 'qmon',
+    }, ['name', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion', 'qmon',
 	'dumpmux', 'nitoid','extrapriority']);
 
     
@@ -1127,6 +1127,10 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	    fieldLabel: 'Autodetect muxes',
 	    name: 'automux'
 	}),
+  new Ext.form.Checkbox({
+      fieldLabel: 'Skip initial scan',
+      name: 'skip_initialscan'
+  }),
 	new Ext.form.Checkbox({
 	    fieldLabel: 'Idle scanning',
 	    name: 'idlescan'
