@@ -218,6 +218,8 @@ typedef struct th_dvb_adapter {
 
   uint32_t tda_extrapriority; // extra priority for choosing the best adapter/service
 
+  uint32_t tda_skip_initialscan; // skip the initial scan
+
 } th_dvb_adapter_t;
 
 /**
@@ -277,6 +279,8 @@ void dvb_adapter_mux_scanner(void *aux);
 void dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s);
 
 void dvb_adapter_set_auto_discovery(th_dvb_adapter_t *tda, int on);
+
+void dvb_adapter_set_skip_initialscan(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_idlescan(th_dvb_adapter_t *tda, int on);
 
