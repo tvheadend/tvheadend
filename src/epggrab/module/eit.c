@@ -23,9 +23,18 @@
 #include "dvb/dvb_support.h"
 #include "service.h"
 #include "epg.h"
-#include "epggrab/eit.h"
+#include "epggrab.h"
+#include "epggrab/private.h"
 
-static epggrab_module_t _eit_mod;
+/* ************************************************************************
+ * Status handling
+ * ***********************************************************************/
+
+typedef struct eit_status
+{
+  int tid;
+  int sec;
+} eit_status_t;
 
 /* ************************************************************************
  * Processing
@@ -112,12 +121,13 @@ static int _eit_callback
   ( th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len, 
     uint8_t tableid, void *opaque )
 {
-  th_dvb_mux_instance_t *otdmi = tdmi;
+  epggrab_ota_mux_t *ota = (epggrab_ota_mux_t*)opaque;
   th_dvb_adapter_t *tda;
   service_t *svc;
   channel_t *ch;
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
+  eit_status_t *sta;
   int resched = 0, save = 0, save2 = 0, dllen, dtag, dlen;
   uint16_t tsid, sid, eid;
   uint8_t bw, hd, ws, ad, ds, st;
@@ -129,14 +139,26 @@ static int _eit_callback
   char desc[5000];
   htsmsg_t *extra;
 
-  /* Disabled */
-  if(!_eit_mod.enabled) return 0;
-
   /* Invalid */
   if(tableid < 0x4e || tableid > 0x6f || len < 11)
     return -1;
 
-  /* Skip */
+  /* Already complete */
+  if (epggrab_ota_is_complete(ota)) return 0;
+
+  /* Started */
+  sta = ota->status;
+  if (epggrab_ota_begin(ota)) {
+    sta->tid = tableid;
+    sta->sec = ptr[3];
+
+  /* Complete */
+  } else if (sta->tid == tableid && sta->sec == ptr[3]) {
+    epggrab_ota_complete(ota);
+    return 0;
+  }
+
+  /* Don't process */
   if((ptr[2] & 1) == 0)
     return 0;
 
@@ -162,12 +184,12 @@ static int _eit_callback
   /* Ignore (disabled) */
   if (!svc->s_dvb_eit_enable) return 0;
 
-  /* Register interest */
+  /* Register as interesting */
   if (tableid < 0x50)
-    epggrab_ota_register(&_eit_mod, otdmi, 20, 0);
+    epggrab_ota_register(ota, 20, 0);
   else
-    epggrab_ota_register(&_eit_mod, otdmi, 40, 0);
- 
+    epggrab_ota_register(ota, 40, 0);
+
   /* Up to date */
 #if TODO_INCLUDE_EIT_VER_CHECK
   ver  = ptr[2] >> 1 & 0x1f;
@@ -198,7 +220,7 @@ static int _eit_callback
       continue;
     }
 
-    /* Mark re-schedule detect */
+    /* Mark re-schedule detect (only now/next) */
     if (save2 && tableid < 0x50) resched = 1;
 
     /* Process tags */
@@ -346,9 +368,8 @@ static int _eit_callback
   }
   
   /* Update EPG */
-  if (resched) tvhlog(LOG_DEBUG, "eit", "alert grabbers to resched");
-  // TODO: handle the reschedule
-  if (save) epg_updated();
+  if (resched) epggrab_resched();
+  if (save)    epg_updated();
 
   return 0;
 }
@@ -357,19 +378,21 @@ static int _eit_callback
  * Module Setup
  * ***********************************************************************/
 
-static void _eit_tune ( epggrab_module_t *m, th_dvb_mux_instance_t *tdmi )
+static void _eit_start 
+  ( epggrab_module_ota_t *m, th_dvb_mux_instance_t *tdmi )
 {
-  if (_eit_mod.enabled)
-    tdt_add(tdmi, NULL, _eit_callback, NULL, "eit", TDT_CRC, 0x12, NULL);
+  epggrab_ota_mux_t *ota;
+  if (!m->enabled) return;
+  if (!(ota = epggrab_ota_create(m, tdmi))) return;
+  if (!ota->status)
+    ota->status = calloc(1, sizeof(eit_status_t));
+  tdt_add(tdmi, NULL, _eit_callback, ota, "eit", TDT_CRC, 0x12, NULL);
 }
 
-void eit_init ( epggrab_module_list_t *list )
+void eit_init ( void )
 {
-  _eit_mod.id     = strdup("eit");
-  _eit_mod.name   = strdup("EIT: On-Air Grabber");
-  _eit_mod.tune   = _eit_tune;
-  *((uint8_t*)&_eit_mod.flags) = EPGGRAB_MODULE_OTA;
-  LIST_INSERT_HEAD(list, &_eit_mod, link);
+  epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber",
+                            _eit_start, NULL, NULL);
 }
 
 void eit_load ( void )

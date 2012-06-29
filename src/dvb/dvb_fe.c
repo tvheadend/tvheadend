@@ -231,7 +231,7 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi)
     dvb_mux_add_to_scan_queue(tdmi);
   }
   
-  epggrab_mux_stop(tdmi);
+  epggrab_mux_stop(tdmi, 0);
 
   time(&tdmi->tdmi_lost_adapter);
 }
