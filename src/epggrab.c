@@ -308,6 +308,10 @@ void epggrab_resched ( void )
  */
 void epggrab_init ( void )
 {
+  /* Lists */
+  extern TAILQ_HEAD(, epggrab_ota_mux) ota_mux_all;
+  TAILQ_INIT(&ota_mux_all);
+
   /* Initialise modules */
   eit_init();
   xmltv_init();
