@@ -503,7 +503,8 @@ int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
   if (!ec->name || strcmp(ec->name, name)) {
     if (ec->name) free(ec->name);
     ec->name = strdup(name);
-    if (ec->channel) channel_rename(ec->channel, name);
+    if (ec->channel && epggrab_channel_rename)
+      channel_rename(ec->channel, name);
     save = 1;
   }
   return save;
@@ -576,7 +577,8 @@ int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
   if (!ec | !icon) return 0;
     if (ec->icon) free(ec->icon);
     ec->icon = strdup(icon);
-    if (ec->channel) channel_set_icon(ec->channel, icon);
+    if (ec->channel && epggrab_channel_reicon)
+      channel_set_icon(ec->channel, icon);
     save = 1;
   }
   return save;
@@ -588,7 +590,8 @@ int epggrab_channel_set_number ( epggrab_channel_t *ec, int number )
   if (!ec || (number <= 0)) return 0;
   if (ec->number != number) {
     ec->number = number;
-    if (ec->channel) channel_set_number(ec->channel, number);
+    if (ec->channel && epggrab_channel_renumber)
+      channel_set_number(ec->channel, number);
     save = 1;
   }
   return save;
