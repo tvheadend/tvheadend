@@ -444,10 +444,12 @@ dvb_adapter_mux_scanner(void *aux)
   }
 
   /* Check EPG */
-  if (tda->tda_mux_epg)
+  if (tda->tda_mux_epg) {
+    epggrab_mux_stop(tda->tda_mux_epg, 1); // timeout anything not complete
     tda->tda_mux_epg = NULL; // skip this time
-  else
+  } else {
     tda->tda_mux_epg = epggrab_mux_next(tda);
+  }
 
   /* Idle or EPG scan enabled */
   idle_epg = tda->tda_idlescan || tda->tda_mux_epg;
