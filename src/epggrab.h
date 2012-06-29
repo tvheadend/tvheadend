@@ -125,9 +125,16 @@ struct epggrab_module
   const char                   *id;       ///< Module identifier
   const char                   *name;     ///< Module name (for display)
   uint8_t                      enabled;   ///< Whether the module is enabled
+  epggrab_channel_tree_t       *channels; ///< Channel list
 
   /* Enable/Disable */
   int       (*enable)  ( void *m, uint8_t e );
+
+  /* Channel listings */
+  void      (*ch_add)  ( void *m, struct channel *ch );
+  void      (*ch_rem)  ( void *m, struct channel *ch );
+  void      (*ch_mod)  ( void *m, struct channel *ch );
+  void      (*ch_save) ( void *m, epggrab_channel_t *ch );
 };
 
 /*
@@ -138,17 +145,11 @@ struct epggrab_module_int
   epggrab_module_t             ;          ///< Parent object
 
   const char                   *path;     ///< Path for the command
-  epggrab_channel_tree_t       *channels; ///< Channel list
 
   /* Handle data */
   char*     (*grab)   ( void *mod );
   htsmsg_t* (*trans)  ( void *mod, char *data );
   int       (*parse)  ( void *mod, htsmsg_t *data, epggrab_stats_t *stat );
-
-  /* Channel listings */
-  void      (*ch_add)  ( void *m, struct channel *ch );
-  void      (*ch_rem)  ( void *m, struct channel *ch );
-  void      (*ch_mod)  ( void *m, struct channel *ch );
 };
 
 /*
@@ -166,15 +167,16 @@ struct epggrab_module_ext
  */
 struct epggrab_ota_mux
 {
-  LIST_ENTRY(epggrab_ota_mux)       glob_link; ///< Grabber link
-  TAILQ_ENTRY(epggrab_ota_mux)      reg_link;  ///< List of reg'd
+  TAILQ_ENTRY(epggrab_ota_mux)       glob_link; ///< Grabber link
+  TAILQ_ENTRY(epggrab_ota_mux)       tdmi_link; ///< Link to mux
+  TAILQ_ENTRY(epggrab_ota_mux)       grab_link; ///< Link to grabber
   struct th_dvb_mux_instance        *tdmi;     ///< Mux  instance
   epggrab_module_ota_t              *grab;     ///< Grab instance
 
   int                               timeout;   ///< Time out if this long
   int                               interval;  ///< Re-grab this often
 
-  int                               is_reg;    ///< Registered with mux
+  int                               is_reg;    ///< Permanently registered
 
   void                              *status;   ///< Status information
   enum {
@@ -194,7 +196,9 @@ struct epggrab_ota_mux
  */
 struct epggrab_module_ota
 {
-  epggrab_module_t              ;          ///< Parent object
+  epggrab_module_t               ;      ///< Parent object
+
+  TAILQ_HEAD(, epggrab_ota_mux)  muxes; ///< List of related muxes
 
   /* Transponder tuning */
   void (*start) ( epggrab_module_ota_t *m, struct th_dvb_mux_instance *tdmi );

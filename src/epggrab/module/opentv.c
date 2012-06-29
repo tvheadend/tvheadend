@@ -56,47 +56,60 @@ typedef struct opentv_event
   uint8_t                type;        ///< 0x1=title, 0x2=summary
 } opentv_event_t;
 
-typedef struct opentv_pid_status
+/* PID status (for event PIDs) */
+typedef struct opentv_pid
 {
-  LIST_ENTRY(opentv_pid_status) link;
-  int                           pid;
+  LIST_ENTRY(opentv_pid) link;
+  int                    pid;
   enum {
     OPENTV_PID_INIT,
     OPENTV_PID_STARTED,
     OPENTV_PID_COMPLETE
-  }                             state;
-  uint8_t                       start[20];
-} opentv_pid_status_t;
+  }                      state;
+  uint8_t                start[20];
+} opentv_pid_t;
 
+/* Scan status */
 typedef struct opentv_status
 {
-  int                            begbat;
-  int                            endbat;
-  LIST_HEAD(, opentv_pid_status) pids;
-  RB_HEAD(, opentv_event)        events;
+  int                     begbat;
+  int                     endbat;
+  LIST_HEAD(, opentv_pid) pids;
+  RB_HEAD(, opentv_event) events;
 } opentv_status_t;
 
-static opentv_pid_status_t *_opentv_get_pid_status
+/* Get a pid entry */
+static opentv_pid_t *_opentv_status_get_pid
   ( opentv_status_t *sta, int pid )
 {
-  opentv_pid_status_t *p;
+  opentv_pid_t *p;
   LIST_FOREACH(p, &sta->pids, link) {
     if (p->pid == pid) break;
   }
   if (!p) {
-    p = calloc(1, sizeof(opentv_pid_status_t));
+    p = calloc(1, sizeof(opentv_pid_t));
     p->pid = pid;
     LIST_INSERT_HEAD(&sta->pids, p, link);
   }
   return p;
 }
 
-/* ************************************************************************
- * Data structures
- * ***********************************************************************/
+/* Clear events */
+static void _opentv_status_remove_events ( opentv_status_t *sta )
+{
+  opentv_event_t *ev;
+  while ((ev = RB_FIRST(&sta->events))) {
+    RB_REMOVE(&sta->events, ev, ev_link);
+    if (ev->title)   free(ev->title);
+    if (ev->summary) free(ev->summary);
+    if (ev->desc)    free(ev->desc);
+    free(ev);
+  }
+}
 
-#define OPENTV_SCAN_MAX 600    // 10min max scan period
-#define OPENTV_SCAN_PER 3600   // 1hour interval
+/* ************************************************************************
+ * Module structure
+ * ***********************************************************************/
 
 /* Huffman dictionary */
 typedef struct opentv_dict
@@ -139,35 +152,15 @@ static opentv_dict_t *_opentv_dict_find ( const char *id )
 }
 
 /* ************************************************************************
- * Module functions
- * ***********************************************************************/
-
-#if 0
-static opentv_status_t *_opentv_module_get_status 
-  ( opentv_module_t *mod, int pid )
-{
-  opentv_status_t *sta;
-  LIST_FOREACH(sta, &mod->status, link)
-    if (sta->pid == pid) break;
-  if (!sta) {
-    sta = calloc(1, sizeof(opentv_status_t));
-    sta->pid = pid;
-    LIST_INSERT_HEAD(&mod->status, sta, link);
-  }
-  return sta;
-}
-#endif
-
-/* ************************************************************************
  * EPG Object wrappers
  * ***********************************************************************/
 
 static epggrab_channel_t *_opentv_find_epggrab_channel
   ( opentv_module_t *mod, int cid, int create, int *save )
 {
-//  char chid[32];
-//  sprintf(chid, "%s-%d", mod->id, cid);
-  return NULL;//return epggrab_module_channel_find((epggrab_module_t*)mod, chid, create, save);
+  char chid[32];
+  sprintf(chid, "%s-%d", mod->id, cid);
+  return epggrab_channel_find(&_opentv_channels, chid, create, save);
 }
 
 static epg_season_t *_opentv_find_season 
@@ -518,26 +511,22 @@ static epggrab_ota_mux_t *_opentv_table_callback
   th_dvb_table_t *tdt = (th_dvb_table_t*)p;
   epggrab_ota_mux_t *ota = tdt->tdt_opaque;
   opentv_status_t *sta = ota->status;
-  opentv_pid_status_t *pid;
+  opentv_pid_t *pid;
 
   /* Ignore (not enough data) */
   if (len < 20) return NULL;
+
+  /* Ignore (don't have BAT) */
+  if (!sta->endbat) return NULL;
 
   /* Finished / Blocked */
   if (epggrab_ota_is_complete(ota)) return NULL;
 
   /* Begin (reset state) */
   if (epggrab_ota_begin(ota)) {
-    opentv_event_t *ev;
 
     /* Remove outstanding event data */
-    while ((ev = RB_FIRST(&sta->events))) {
-      RB_REMOVE(&sta->events, ev, ev_link);
-      if (ev->title)   free(ev->title);
-      if (ev->desc)    free(ev->desc);
-      if (ev->summary) free(ev->summary);
-      free(ev);
-    }
+    _opentv_status_remove_events(sta);
 
     /* Reset status */
     LIST_FOREACH(pid, &sta->pids, link)
@@ -545,7 +534,7 @@ static epggrab_ota_mux_t *_opentv_table_callback
   }
 
   /* Insert/Find */
-  pid = _opentv_get_pid_status(sta, tdt->tdt_pid);
+  pid = _opentv_status_get_pid(sta, tdt->tdt_pid);
 
   /* Begin PID */
   if (pid->state == OPENTV_PID_INIT) {
@@ -614,7 +603,21 @@ static int _opentv_channel_callback
 
 static void _opentv_ota_destroy ( epggrab_ota_mux_t *ota )
 {
-  // TODO
+  opentv_status_t *sta = ota->status;
+  opentv_pid_t    *pid;
+
+  /* Empty the events */
+  _opentv_status_remove_events(sta);
+
+  /* Empty pids */
+  while ((pid = LIST_FIRST(&sta->pids))) {
+    LIST_REMOVE(pid, link);
+    free(pid);
+  }
+
+  /* Free the rest */
+  free(sta);
+  free(ota);
 }
 
 static void _opentv_start
@@ -639,8 +642,8 @@ static void _opentv_start
   sta = ota->status;
   sta->begbat = sta->endbat = 0;
 
-  /* Register interest (we're always interested in this mux) */
-  epggrab_ota_register(ota, OPENTV_SCAN_MAX, OPENTV_SCAN_PER);
+  /* Register (just in case we missed it on enable somehow) */
+  epggrab_ota_register(ota, 600, 3600); // 10min scan every hour
   
   /* Install tables */
   tvhlog(LOG_INFO, "opentv", "install provider %s tables", mod->id);
@@ -652,7 +655,7 @@ static void _opentv_start
     fp->filter.filter[0] = 0x4a;
     fp->filter.mask[0]   = 0xff;
     // TODO: what about 0x46 (service description)
-    tdt_add(tdmi, fp, _opentv_channel_callback, mod,
+    tdt_add(tdmi, fp, _opentv_channel_callback, ota,
             m->id, TDT_CRC, *t++, NULL);
   }
 
@@ -662,7 +665,8 @@ static void _opentv_start
     fp = dvb_fparams_alloc();
     fp->filter.filter[0] = 0xa0;
     fp->filter.mask[0]   = 0xfc;
-    tdt_add(tdmi, fp, _opentv_title_callback, mod,
+    _opentv_status_get_pid(sta, *t);
+    tdt_add(tdmi, fp, _opentv_title_callback, ota,
             m->id, TDT_CRC | TDT_TDT, *t++, NULL);
   }
 
@@ -672,33 +676,28 @@ static void _opentv_start
     fp = dvb_fparams_alloc();
     fp->filter.filter[0] = 0xa8;
     fp->filter.mask[0]   = 0xfc;
-    tdt_add(tdmi, fp, _opentv_summary_callback, mod,
+    _opentv_status_get_pid(sta, *t);
+    tdt_add(tdmi, fp, _opentv_summary_callback, ota,
             m->id, TDT_CRC | TDT_TDT, *t++, NULL);
   }
 }
 
 static int _opentv_enable ( void  *m, uint8_t e )
 {
-  //th_dvb_adapter_t *tda;
-  //th_dvb_mux_instance_t *tdmi;
   opentv_module_t *mod = (opentv_module_t*)m;
 
   if (mod->enabled == e) return 0;
   mod->enabled = e;
 
-  /* TODO
-  * Find muxes and enable/disable *
-  TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
-      if (tdmi->tdmi_transport_stream_id != mod->tsid) continue;
-      if (e) {
-        epggrab_ota_register(m, tdmi, OPENTV_SCAN_MAX, OPENTV_SCAN_PER);
-      } else {
-        epggrab_ota_unregister_one(m, tdmi);
-      }
-    }
+  /* Register interest */
+  if (e) {
+    epggrab_ota_create_and_register_by_id((epggrab_module_ota_t*)mod,
+                                          mod->nid, mod->tsid,
+                                          600, 3600);
+  /* Remove all links */
+  } else {
+    epggrab_ota_destroy_by_module((epggrab_module_ota_t*)mod);
   }
-*/
 
   return 1;
 }
@@ -793,7 +792,7 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
     epggrab_module_ota_create(calloc(1, sizeof(opentv_module_t)),
                               ibuf, nbuf,
                               _opentv_start, _opentv_enable,
-                              &_opentv_channels);
+                              NULL);
   
   /* Add provider details */
   mod->dict    = dict;

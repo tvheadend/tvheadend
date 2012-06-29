@@ -25,7 +25,7 @@
 
 epggrab_module_t *epggrab_module_create
   ( epggrab_module_t *skel,
-    const char *id, const char *name );
+    const char *id, const char *name, epggrab_channel_tree_t *channels );
 
 char     *epggrab_module_grab_spawn ( void *m );
 htsmsg_t *epggrab_module_trans_xml  ( void *m, char *data );
@@ -38,6 +38,8 @@ void      epggrab_module_ch_save ( void *m, epggrab_channel_t *ec );
 int       epggrab_module_enable_socket ( void *m, uint8_t e );
 
 void      epggrab_module_parse ( void *m, htsmsg_t *data );
+
+void      epggrab_module_channels_load ( epggrab_module_t *m );
 
 /* **************************************************************************
  * Channel processing
@@ -94,9 +96,17 @@ epggrab_module_ota_t *epggrab_module_ota_create
  *       blocked (i.e. has completed within interval period)
  */
 epggrab_ota_mux_t *epggrab_ota_create
-  ( struct epggrab_module_ota *mod, struct th_dvb_mux_instance *tdmi );
+  ( epggrab_module_ota_t *mod, struct th_dvb_mux_instance *tdmi );
+void epggrab_ota_create_and_register_by_id
+  ( epggrab_module_ota_t *mod, int nid, int tsid,
+    int period, int interval );
 
-void epggrab_ota_destroy ( epggrab_ota_mux_t *ota );
+/*
+ * Delete
+ */
+void epggrab_ota_destroy           ( epggrab_ota_mux_t *ota );
+void epggrab_ota_destroy_by_module ( epggrab_module_ota_t *mod );
+void epggrab_ota_destroy_by_tdmi   ( struct th_dvb_mux_instance *tdmi );
 
 /*
  * Register interest

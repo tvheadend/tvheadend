@@ -37,6 +37,26 @@ typedef struct eit_status
 } eit_status_t;
 
 /* ************************************************************************
+ * Diagnostics
+ * ***********************************************************************/
+
+// Dump a descriptor tag for debug (looking for new tags etc...)
+static void _eit_dtag_dump ( uint8_t dtag, uint8_t dlen, uint8_t *buf )
+{ 
+  int i = 0, j = 0;
+  char tmp[100];
+  tvhlog(LOG_DEBUG, "eit", "dtag 0x%02X len %d\n", dtag, dlen);
+  while (i < dlen)
+  while (dlen--) {
+    j += sprintf(tmp+j, "%02X ", buf[i]);
+    i++;
+    if ((i % 8) == 0 || !dlen) {
+      tvhlog(LOG_DEBUG, "eit", "  %s", tmp);
+    }
+  }
+}
+
+/* ************************************************************************
  * Processing
  * ***********************************************************************/
 
@@ -182,9 +202,12 @@ static int _eit_callback
   if (!svc || !svc->s_enabled || !(ch = svc->s_ch)) return 0;
 
   /* Ignore (disabled) */
+  // TODO: should this be altered?
   if (!svc->s_dvb_eit_enable) return 0;
 
   /* Register as interesting */
+  // TODO: do we want to register for now/next?
+  // TODO: want should the intervals be?
   if (tableid < 0x50)
     epggrab_ota_register(ota, 20, 0);
   else
@@ -320,6 +343,7 @@ static int _eit_callback
 
         /* Ignore */
         default:
+          _eit_dtag_dump(dtag, dlen, ptr);
           break;
       }
 
