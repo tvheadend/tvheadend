@@ -53,7 +53,6 @@ typedef struct epg_broadcast_tree  epg_broadcast_tree_t;
 typedef struct epg_object_list     epg_object_list_t;
 typedef struct epg_object_tree     epg_object_tree_t;
 
-
 /* ************************************************************************
  * Generic Object
  * ***********************************************************************/
