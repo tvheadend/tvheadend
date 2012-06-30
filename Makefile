@@ -44,6 +44,7 @@ SRCS =  src/main.c \
 	src/notify.c \
 	src/file.c \
 	src/epg.c \
+	src/epgdb.c\
 	src/epggrab.c\
 	src/spawn.c \
 	src/packet.c \
