@@ -7,16 +7,16 @@ tvheadend.epggrab = function() {
   /*
    * Module lists (I'm sure there is a better way!)
    */
-  var EPGGRAB_MODULE_INTERNAL = 0x01;
-  var EPGGRAB_MODULE_EXTERNAL = 0x02;
-  var EPGGRAB_MODULE_OTA      = 0x04;
+  var EPGGRAB_MODULE_INTERNAL = 0;
+  var EPGGRAB_MODULE_EXTERNAL = 1;
+  var EPGGRAB_MODULE_OTA      = 2;
 
   var moduleStore = new Ext.data.JsonStore({
     root       : 'entries',
     url        : 'epggrab',
     baseParams : { op : 'moduleList' },
     autoLoad   : true,
-    fields     : [ 'id', 'name', 'path', 'flags', 'enabled' ]
+    fields     : [ 'id', 'name', 'path', 'type', 'enabled' ]
   });
   var internalModuleStore = new Ext.data.Store({
     recordType: moduleStore.recordType
@@ -29,7 +29,7 @@ tvheadend.epggrab = function() {
   });
   moduleStore.on('load', function() {
     moduleStore.filterBy(function(r) {
-      return r.get('flags') & EPGGRAB_MODULE_INTERNAL;
+      return r.get('type') == EPGGRAB_MODULE_INTERNAL;
     });
     r = new internalModuleStore.recordType({ id: '', name : 'Disabled'});
     internalModuleStore.add(r);
@@ -37,19 +37,19 @@ tvheadend.epggrab = function() {
       internalModuleStore.add(r.copy());
     });
     moduleStore.filterBy(function(r) {
-      return r.get('flags') & EPGGRAB_MODULE_EXTERNAL;
+      return r.get('type') == EPGGRAB_MODULE_EXTERNAL;
     });
     moduleStore.each(function(r) {
       externalModuleStore.add(r.copy());
     });
     moduleStore.filterBy(function(r) {
-      return r.get('flags') & EPGGRAB_MODULE_OTA;
+      return r.get('type') == EPGGRAB_MODULE_OTA;
     });
     moduleStore.each(function(r) {
       otaModuleStore.add(r.copy());
     });
     moduleStore.filterBy(function(r) {
-      return r.get('flags') & (EPGGRAB_MODULE_OTA | EPGGRAB_MODULE_EXTERNAL);
+      return r.get('type') != EPGGRAB_MODULE_INTERNAL;
     });
   });
 

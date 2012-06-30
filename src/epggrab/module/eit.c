@@ -45,13 +45,13 @@ static void _eit_dtag_dump ( uint8_t dtag, uint8_t dlen, uint8_t *buf )
 { 
   int i = 0, j = 0;
   char tmp[100];
-  tvhlog(LOG_DEBUG, "eit", "dtag 0x%02X len %d\n", dtag, dlen);
-  while (i < dlen)
-  while (dlen--) {
+  tvhlog(LOG_DEBUG, "eit", "  dtag 0x%02X len %d", dtag, dlen);
+  while (i < dlen) {
     j += sprintf(tmp+j, "%02X ", buf[i]);
     i++;
     if ((i % 8) == 0 || !dlen) {
-      tvhlog(LOG_DEBUG, "eit", "  %s", tmp);
+      tvhlog(LOG_DEBUG, "eit", "    %s", tmp);
+      j = 0;
     }
   }
 }
@@ -200,6 +200,7 @@ static int _eit_callback
   /* Get service */
   svc = dvb_transport_find(tdmi, sid, 0, NULL);
   if (!svc || !svc->s_enabled || !(ch = svc->s_ch)) return 0;
+
 
   /* Ignore (disabled) */
   // TODO: should this be altered?

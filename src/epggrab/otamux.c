@@ -265,7 +265,6 @@ void epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
   if (ota->state != EPGGRAB_OTA_MUX_COMPLETE) {
     ota->state = EPGGRAB_OTA_MUX_COMPLETE;
     time(&ota->completed);
-    _epggrab_ota_finished(ota);
 
     /* Check others */
     TAILQ_FOREACH(ota, &tdmi->tdmi_epg_grab, tdmi_link) {
@@ -291,6 +290,7 @@ void epggrab_ota_cancel    ( epggrab_ota_mux_t *ota )
 void epggrab_ota_timeout ( epggrab_ota_mux_t *ota )
 {
   epggrab_ota_complete(ota);
+  _epggrab_ota_finished(ota);
 }
 
 /*
