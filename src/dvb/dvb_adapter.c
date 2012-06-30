@@ -41,7 +41,7 @@
 #include "tsdemux.h"
 #include "notify.h"
 #include "service.h"
-#include "epggrab/ota.h"
+#include "epggrab.h"
 
 struct th_dvb_adapter_queue dvb_adapters;
 struct th_dvb_mux_instance_tree dvb_muxes;
@@ -420,16 +420,10 @@ dvb_adapter_init(uint32_t adapter_mask)
 void
 dvb_adapter_mux_scanner(void *aux)
 {
-  epggrab_ota_mux_t *ota;
   th_dvb_adapter_t *tda = aux;
   th_dvb_mux_instance_t *tdmi;
   int i;
   int idle_epg;
-  static const char* scan_string[] = {
-    "Autoscan BAD",
-    "Autoscan OK",
-    "Autoscan EPG"
-  };
 
   if(tda->tda_rootpath == NULL)
     return; // No hardware
@@ -449,15 +443,16 @@ dvb_adapter_mux_scanner(void *aux)
     return;
   }
 
-  /* Mark any incomplete EPG grabbers as timed out (basically complete) */
-  if (tda->tda_mux_current)
-    LIST_FOREACH(ota, &tda->tda_mux_current->tdmi_epg_grabbers, tdmi_link) {
-      epggrab_ota_timeout(ota);
-    }
+  /* Check EPG */
+  if (tda->tda_mux_epg) {
+    epggrab_mux_stop(tda->tda_mux_epg, 1); // timeout anything not complete
+    tda->tda_mux_epg = NULL; // skip this time
+  } else {
+    tda->tda_mux_epg = epggrab_mux_next(tda);
+  }
 
   /* Idle or EPG scan enabled */
-  idle_epg = tda->tda_idlescan ||
-             TAILQ_FIRST(&tda->tda_scan_queues[TDA_SCANQ_EPG]);
+  idle_epg = tda->tda_idlescan || tda->tda_mux_epg;
 
   /* Idlescan is disabled and no muxes are bad */
   if(!idle_epg && TAILQ_FIRST(&tda->tda_scan_queues[TDA_SCANQ_BAD]) == NULL) {
@@ -472,27 +467,27 @@ dvb_adapter_mux_scanner(void *aux)
       return;
   }
 
-  /* Alternate between the three queues (BAD, OK, EPG) */
-  for(i = 0; i < TDA_SCANQ_NUM; i++) {
-    tda->tda_scan_selector++;
-    if (tda->tda_scan_selector == TDA_SCANQ_NUM)
-      tda->tda_scan_selector = 0;
+  /* EPG */
+  if (tda->tda_mux_epg) {
+    int period = epggrab_mux_period(tda->tda_mux_epg);
+    if (period > 20)
+      gtimer_arm(&tda->tda_mux_scanner_timer,
+                 dvb_adapter_mux_scanner, tda, period);
+    dvb_fe_tune(tda->tda_mux_epg, "EPG scan");
 
-    tdmi = TAILQ_FIRST(&tda->tda_scan_queues[tda->tda_scan_selector]);
-    if(tdmi != NULL) {
+  /* Normal */
+  } else {
 
-      /* EPG - adjust dwell time */
-      if (tda->tda_scan_selector == TDA_SCANQ_EPG) {
-        epggrab_ota_mux_t *ota;
-        int period = 20;
-        LIST_FOREACH(ota, &tdmi->tdmi_epg_grabbers, tdmi_link) {
-          if (ota->timeout > period) period = ota->timeout;
-        }
-        gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, period);
+    /* Alternate queue */
+    for(i = 0; i < TDA_SCANQ_NUM; i++) {
+      tda->tda_scan_selector++;
+      if (tda->tda_scan_selector == TDA_SCANQ_NUM)
+        tda->tda_scan_selector = 0;
+      tdmi = TAILQ_FIRST(&tda->tda_scan_queues[tda->tda_scan_selector]);
+      if (tdmi) {
+        dvb_fe_tune(tdmi, "Autoscan");
+        return;
       }
-
-      dvb_fe_tune(tdmi, scan_string[tda->tda_scan_selector]);
-      return;
     }
   }
 }

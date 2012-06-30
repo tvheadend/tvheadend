@@ -24,18 +24,17 @@
 #include "htsmsg_xml.h"
 #include "tvheadend.h"
 #include "spawn.h"
-#include "epg.h"
-#include "epggrab/pyepg.h"
-#include "epggrab/xmltv.h"
 #include "channels.h"
+#include "epg.h"
+#include "epggrab.h"
+#include "epggrab/private.h"
 
 static epggrab_channel_tree_t _pyepg_channels;
-static epggrab_module_t       *_pyepg_module;
 
 static epggrab_channel_t *_pyepg_channel_find
   ( const char *id, int create, int *save )
 {
-  return epggrab_module_channel_find(_pyepg_module, id, create, save);
+  return epggrab_channel_find(&_pyepg_channels, id, create, save);
 }
 
 /* **************************************************************************
@@ -69,7 +68,7 @@ static int _pyepg_parse_channel ( htsmsg_t *data, epggrab_stats_t *stats )
   const char *str;
   uint32_t u32;
   const char *sname[11];
-  uint16_t sid[10];
+  uint16_t sid[11];
   int sid_idx = 0, sname_idx = 0;
   
   if ( data == NULL ) return 0;
@@ -108,7 +107,10 @@ static int _pyepg_parse_channel ( htsmsg_t *data, epggrab_stats_t *stats )
       }
     }
   }
-  if (sid_idx)   save |= epggrab_channel_set_sid(ch, sid, sid_idx);
+  if (sid_idx) {
+    sid[sid_idx] = 0;
+    save |= epggrab_channel_set_sid(ch, sid);
+  }
   if (sname_idx) {
     sname[sname_idx] = NULL;
     save |= epggrab_channel_set_sname(ch, sname);
@@ -412,14 +414,8 @@ static int _pyepg_parse_epg ( htsmsg_t *data, epggrab_stats_t *stats )
   return save;
 }
 
-
-/* ************************************************************************
- * Module Setup
- * ***********************************************************************/
-
-
 static int _pyepg_parse 
-  ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
+  ( void *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
   htsmsg_t *tags, *epg;
 
@@ -432,40 +428,23 @@ static int _pyepg_parse
   return 0;
 }
 
-void pyepg_init ( epggrab_module_list_t *list )
-{
-  epggrab_module_t *mod;
+/* ************************************************************************
+ * Module Setup
+ * ***********************************************************************/
 
-  /* Standard module */
-  mod                      = calloc(1, sizeof(epggrab_module_t));
-  mod->id                  = strdup("pyepg");
-  mod->path                = strdup("/usr/bin/pyepg");
-  mod->name                = strdup("PyEPG");
-  mod->grab                = epggrab_module_grab;
-  mod->trans               = epggrab_module_trans_xml;
-  mod->parse               = _pyepg_parse;
-  mod->channels            = &_pyepg_channels;
-  mod->ch_add              = epggrab_module_channel_add;
-  mod->ch_rem              = epggrab_module_channel_rem;
-  mod->ch_mod              = epggrab_module_channel_mod;
-  *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_INTERNAL;
-  LIST_INSERT_HEAD(list, mod, link);
-  _pyepg_module = mod;
+void pyepg_init ( void )
+{
+  /* Internal module */
+  epggrab_module_int_create(NULL, "/usr/bin/pyepg", "PyEPG", "/usr/bin/pyepg",
+                            NULL, _pyepg_parse, NULL, NULL);
 
   /* External module */
-  mod                      = calloc(1, sizeof(epggrab_module_t));
-  mod->id                  = strdup("pyepg_ext");
-  mod->path                = epggrab_module_socket_path("pyepg");
-  mod->name                = strdup("PyEPG");
-  mod->channels            = &_pyepg_channels;
-  mod->enable              = epggrab_module_enable_socket;
-  mod->trans               = epggrab_module_trans_xml;
-  mod->parse               = _pyepg_parse;
-  *((uint8_t*)&mod->flags) = EPGGRAB_MODULE_EXTERNAL;
-  LIST_INSERT_HEAD(list, mod, link);
+  epggrab_module_ext_create(NULL, "pyepg", "PyEPG", "pyepg",
+                            _pyepg_parse, NULL,
+                            &_pyepg_channels);
 }
 
 void pyepg_load ( void )
 {
-  epggrab_module_channels_load(_pyepg_module);
+  epggrab_module_channels_load(epggrab_module_find_by_id("pyepg"));
 }

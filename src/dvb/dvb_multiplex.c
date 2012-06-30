@@ -44,7 +44,7 @@
 #include "dvb_support.h"
 #include "notify.h"
 #include "subscriptions.h"
-#include "epggrab/ota.h"
+#include "epggrab.h"
 
 struct th_dvb_mux_instance_tree dvb_muxes;
 
@@ -289,6 +289,8 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
     mux_link_initial(tda, tdmi);
   }
 
+  TAILQ_INIT(&tdmi->tdmi_epg_grab);
+
   return tdmi;
 }
 
@@ -298,7 +300,6 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
 void
 dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
 {
-  epggrab_ota_mux_t *ota;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   service_t *t;
 
@@ -332,8 +333,7 @@ dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
   if(tdmi->tdmi_table_initial)
     tda->tda_initial_num_mux--;
 
-  while ((ota = LIST_FIRST(&tdmi->tdmi_epg_grabbers)))
-    epggrab_ota_unregister(ota);
+  epggrab_mux_delete(tdmi);
 
   hts_settings_remove("dvbmuxes/%s", tdmi->tdmi_identifier);
 
@@ -1157,9 +1157,8 @@ void dvb_mux_add_to_scan_queue ( th_dvb_mux_instance_t *tdmi )
 {
   int ti;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-  ti = LIST_FIRST(&tdmi->tdmi_epg_grabbers) ? TDA_SCANQ_EPG
-     : tdmi->tdmi_quality == 100            ? TDA_SCANQ_OK
-                                            : TDA_SCANQ_BAD;
+  ti = tdmi->tdmi_quality == 100 ? TDA_SCANQ_OK
+                                 : TDA_SCANQ_BAD;
   tdmi->tdmi_scan_queue = &tda->tda_scan_queues[ti];
   TAILQ_INSERT_TAIL(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
 }
