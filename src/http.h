@@ -78,6 +78,11 @@ typedef struct http_connection {
     RTSP_VERSION_1_0,
   } hc_version;
 
+  enum {
+    STREAM_TYPE_TS,
+    STREAM_TYPE_MKV,
+  } stream_type;
+
   char *hc_username;
   char *hc_password;
 
