@@ -44,18 +44,20 @@ typedef struct eit_status
 
 // Dump a descriptor tag for debug (looking for new tags etc...)
 static void _eit_dtag_dump ( uint8_t dtag, uint8_t dlen, uint8_t *buf )
-{ 
+{
+#if APS_DEBUG
   int i = 0, j = 0;
   char tmp[100];
   tvhlog(LOG_DEBUG, "eit", "  dtag 0x%02X len %d", dtag, dlen);
   while (i < dlen) {
     j += sprintf(tmp+j, "%02X ", buf[i]);
     i++;
-    if ((i % 8) == 0 || !dlen) {
+    if ((i % 8) == 0 || (i == dlen)) {
       tvhlog(LOG_DEBUG, "eit", "    %s", tmp);
       j = 0;
     }
   }
+#endif
 }
 
 /* ************************************************************************
