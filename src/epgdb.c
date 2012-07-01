@@ -25,6 +25,7 @@
 #include "queue.h"
 #include "htsmsg_binary.h"
 #include "settings.h"
+#include "channels.h"
 #include "epg.h"
 #include "epggrab.h"
 
