@@ -342,16 +342,13 @@ static int _opentv_parse_event_section
     if (ev.type & OPENTV_TITLE) {
       ebc = epg_broadcast_find_by_time(ec->channel, ev.start, ev.stop, ev.eid,
                                        1, &save);
-    } else {
-      ebc = epg_broadcast_find_by_eid(ec->channel, ev.eid);
 
-      /* Store */
-      if (!ebc) {
-        opentv_event_t *skel = malloc(sizeof(opentv_event_t));
-        memcpy(skel, &ev, sizeof(opentv_event_t));
-        assert(!RB_INSERT_SORTED(&sta->events, skel, ev_link, _ev_cmp));
-        continue; // don't want to free() anything
-      }
+    /* Store */
+    } else {
+      opentv_event_t *skel = malloc(sizeof(opentv_event_t));
+      memcpy(skel, &ev, sizeof(opentv_event_t));
+      assert(!RB_INSERT_SORTED(&sta->events, skel, ev_link, _ev_cmp));
+      continue; // don't want to free() anything
     }
 
     /* Find episode */
