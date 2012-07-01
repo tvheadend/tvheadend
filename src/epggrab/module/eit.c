@@ -33,6 +33,8 @@
 typedef struct eit_status
 {
   int tid;
+  int tsid;
+  int sid;
   int sec;
 } eit_status_t;
 
@@ -163,17 +165,23 @@ static int _eit_callback
   if(tableid < 0x4e || tableid > 0x6f || len < 11)
     return -1;
 
+  /* Get tsid/sid */
+  sid  = ptr[0] << 8 | ptr[1];
+  tsid = ptr[5] << 8 | ptr[6];
+
   /* Already complete */
   if (epggrab_ota_is_complete(ota)) return 0;
 
   /* Started */
   sta = ota->status;
   if (epggrab_ota_begin(ota)) {
-    sta->tid = tableid;
-    sta->sec = ptr[3];
+    sta->tid  = tableid;
+    sta->tsid = tsid;
+    sta->sid  = sid;
+    sta->sec  = ptr[3];
 
   /* Complete */
-  } else if (sta->tid == tableid && sta->sec == ptr[3]) {
+  } else if (sta->tid == tableid && sta->sec == ptr[3] && sta->tsid == tsid && sta->sid == sid) {
     epggrab_ota_complete(ota);
     return 0;
   }
@@ -181,10 +189,6 @@ static int _eit_callback
   /* Don't process */
   if((ptr[2] & 1) == 0)
     return 0;
-
-  /* Get tsid/sid */
-  sid  = ptr[0] << 8 | ptr[1];
-  tsid = ptr[5] << 8 | ptr[6];
 
   /* Get transport stream */
   // Note: tableid=0x4f,0x60-0x6f is other TS
@@ -204,7 +208,7 @@ static int _eit_callback
 
   /* Ignore (disabled) */
   // TODO: should this be altered?
-  if (!svc->s_dvb_eit_enable) return 0;
+//  if (!svc->s_dvb_eit_enable) return 0;
 
   /* Register as interesting */
   // TODO: do we want to register for now/next?
@@ -243,6 +247,7 @@ static int _eit_callback
       ptr += dllen;
       continue;
     }
+    tvhlog(LOG_DEBUG, "eit", "process tid 0x%02x eid %d event %p %"PRIu64" on %s", tableid, eid, ebc, ebc->id, ch->ch_name);
 
     /* Mark re-schedule detect (only now/next) */
     if (save2 && tableid < 0x50) resched = 1;
@@ -412,6 +417,7 @@ static void _eit_start
   if (!ota->status)
     ota->status = calloc(1, sizeof(eit_status_t));
   tdt_add(tdmi, NULL, _eit_callback, ota, "eit", TDT_CRC, 0x12, NULL);
+  tvhlog(LOG_DEBUG, "eit", "install table handlers");
 }
 
 void eit_init ( void )
