@@ -210,7 +210,7 @@ static int _eit_callback
 
   /* Ignore (disabled) */
   // TODO: should this be altered?
-//  if (!svc->s_dvb_eit_enable) return 0;
+  if (!svc->s_dvb_eit_enable) return 0;
 
   /* Register as interesting */
   // TODO: do we want to register for now/next?
