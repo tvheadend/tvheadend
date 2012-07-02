@@ -533,10 +533,15 @@ static int _opentv_bat_section
 static epggrab_ota_mux_t *_opentv_event_callback 
   ( th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len, uint8_t tid, void *p )
 {
-  th_dvb_table_t *tdt = (th_dvb_table_t*)p;
-  epggrab_ota_mux_t *ota = tdt->tdt_opaque;
-  opentv_status_t *sta = ota->status;
+  th_dvb_table_t    *tdt = p;
+  opentv_module_t   *mod = tdt->tdt_opaque;
+  epggrab_ota_mux_t *ota = epggrab_ota_find((epggrab_module_ota_t*)mod, tdmi);
+  opentv_status_t *sta;
   opentv_pid_t *pid;
+
+  /* Ignore (invalid - stopped?) */
+  if (!ota || !ota->status) return NULL;
+  sta = ota->status;
 
   /* Ignore (not enough data) */
   if (len < 20) return NULL;
@@ -615,10 +620,13 @@ static int _opentv_summary_callback
 static int _opentv_channel_callback
   ( th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len, uint8_t tid, void *p )
 {
-  epggrab_ota_mux_t *ota = (epggrab_ota_mux_t*)p;
-  opentv_status_t *sta = ota->status;
+  opentv_module_t      *mod = p;
+  epggrab_ota_mux_t    *ota = epggrab_ota_find((epggrab_module_ota_t*)mod, tdmi);
+  opentv_status_t      *sta;
+  if (!ota || !ota->status) return 0;
+  sta = ota->status;
   if (!sta->endbat)
-    return _opentv_bat_section((opentv_module_t*)ota->grab, sta, buf, len);
+    return _opentv_bat_section(mod, sta, buf, len);
   return 0;
 }
 
@@ -680,7 +688,7 @@ static void _opentv_start
     fp->filter.filter[0] = 0x4a;
     fp->filter.mask[0]   = 0xff;
     // TODO: what about 0x46 (service description)
-    tdt_add(tdmi, fp, _opentv_channel_callback, ota,
+    tdt_add(tdmi, fp, _opentv_channel_callback, m,
             m->id, TDT_CRC, *t++, NULL);
   }
 
@@ -691,7 +699,7 @@ static void _opentv_start
     fp->filter.filter[0] = 0xa0;
     fp->filter.mask[0]   = 0xfc;
     _opentv_status_get_pid(sta, *t);
-    tdt_add(tdmi, fp, _opentv_title_callback, ota,
+    tdt_add(tdmi, fp, _opentv_title_callback, m,
             m->id, TDT_CRC | TDT_TDT, *t++, NULL);
   }
 
@@ -702,7 +710,7 @@ static void _opentv_start
     fp->filter.filter[0] = 0xa8;
     fp->filter.mask[0]   = 0xfc;
     _opentv_status_get_pid(sta, *t);
-    tdt_add(tdmi, fp, _opentv_summary_callback, ota,
+    tdt_add(tdmi, fp, _opentv_summary_callback, m,
             m->id, TDT_CRC | TDT_TDT, *t++, NULL);
   }
 }
