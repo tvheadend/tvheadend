@@ -96,6 +96,8 @@ epggrab_module_ota_t *epggrab_module_ota_create
  * Note: this will return NULL for an already existing link that is currently
  *       blocked (i.e. has completed within interval period)
  */
+epggrab_ota_mux_t *epggrab_ota_find
+  ( epggrab_module_ota_t *mod, struct th_dvb_mux_instance *tdmi );
 epggrab_ota_mux_t *epggrab_ota_create
   ( epggrab_module_ota_t *mod, struct th_dvb_mux_instance *tdmi );
 void epggrab_ota_create_and_register_by_id

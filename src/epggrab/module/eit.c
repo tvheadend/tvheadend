@@ -145,7 +145,8 @@ static int _eit_callback
   ( th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len, 
     uint8_t tableid, void *opaque )
 {
-  epggrab_ota_mux_t *ota = (epggrab_ota_mux_t*)opaque;
+  epggrab_module_ota_t *mod = opaque;
+  epggrab_ota_mux_t *ota;
   th_dvb_adapter_t *tda;
   service_t *svc;
   channel_t *ch;
@@ -167,15 +168,19 @@ static int _eit_callback
   if(tableid < 0x4e || tableid > 0x6f || len < 11)
     return -1;
 
-  /* Get tsid/sid */
-  sid  = ptr[0] << 8 | ptr[1];
-  tsid = ptr[5] << 8 | ptr[6];
+  /* Get OTA */
+  ota = epggrab_ota_find(mod, tdmi);
+  if (!ota || !ota->status) return 0;
+  sta = ota->status;
 
   /* Already complete */
   if (epggrab_ota_is_complete(ota)) return 0;
 
+  /* Get tsid/sid */
+  sid  = ptr[0] << 8 | ptr[1];
+  tsid = ptr[5] << 8 | ptr[6];
+
   /* Started */
-  sta = ota->status;
   if (epggrab_ota_begin(ota)) {
     sta->tid  = tableid;
     sta->tsid = tsid;
@@ -416,7 +421,7 @@ static void _eit_start
   if (!(ota = epggrab_ota_create(m, tdmi))) return;
   if (!ota->status)
     ota->status = calloc(1, sizeof(eit_status_t));
-  tdt_add(tdmi, NULL, _eit_callback, ota, "eit", TDT_CRC, 0x12, NULL);
+  tdt_add(tdmi, NULL, _eit_callback, m, "eit", TDT_CRC, 0x12, NULL);
   tvhlog(LOG_DEBUG, "eit", "install table handlers");
 }
 
