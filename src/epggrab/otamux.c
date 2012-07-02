@@ -123,16 +123,26 @@ static int _ota_time_cmp ( void *_a, void *_b )
 }
 
 /*
+ * Find existing link
+ */
+epggrab_ota_mux_t *epggrab_ota_find
+  ( epggrab_module_ota_t *mod, th_dvb_mux_instance_t *tdmi )
+{
+  epggrab_ota_mux_t *ota;
+  TAILQ_FOREACH(ota, &mod->muxes, grab_link) {
+    if (ota->tdmi == tdmi) break;
+  }
+  return ota;
+}
+
+/*
  * Create (temporary) or Find (existing) link
  */
 epggrab_ota_mux_t *epggrab_ota_create
   ( epggrab_module_ota_t *mod, th_dvb_mux_instance_t *tdmi )
 {
   /* Search for existing */
-  epggrab_ota_mux_t *ota;
-  TAILQ_FOREACH(ota, &ota_mux_all, glob_link) {
-    if (ota->grab == mod && ota->tdmi == tdmi) break;
-  }
+  epggrab_ota_mux_t *ota = epggrab_ota_find(mod, tdmi);
 
   /* Create new */
   if (!ota) {
