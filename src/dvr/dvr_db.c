@@ -532,8 +532,12 @@ dvr_db_load_one(htsmsg_t *c, int id)
 
   de->de_content_type = htsmsg_get_u32_or_default(c, "contenttype", 0);
 
-  if (!htsmsg_get_u32(c, "broadcast", &bcid))
+  if (!htsmsg_get_u32(c, "broadcast", &bcid)) {
     de->de_bcast = epg_broadcast_find_by_id(bcid, ch);
+    if (de->de_bcast) {
+      de->de_bcast->getref((epg_object_t*)de->de_bcast);
+    }
+  }
 
   dvr_entry_link(de);
 }
