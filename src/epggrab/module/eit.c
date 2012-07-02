@@ -207,18 +207,16 @@ static int _eit_callback
   svc = dvb_transport_find(tdmi, sid, 0, NULL);
   if (!svc || !svc->s_enabled || !(ch = svc->s_ch)) return 0;
 
-
   /* Ignore (disabled) */
-  // TODO: should this be altered?
   if (!svc->s_dvb_eit_enable) return 0;
 
   /* Register as interesting */
-  // TODO: do we want to register for now/next?
-  // TODO: want should the intervals be?
   if (tableid < 0x50)
-    epggrab_ota_register(ota, 20, 0);
+    epggrab_ota_register(ota, 20, 300); // 20s grab, 5min interval
   else
-    epggrab_ota_register(ota, 40, 0);
+    epggrab_ota_register(ota, 600, 3600); // 10min grab, 1hour interval
+  // Note: this does mean you will get a slight oddity for muxes that
+  //       carry both, since they will end up with setting of 600/300 
 
   /* Up to date */
 #if TODO_INCLUDE_EIT_VER_CHECK
