@@ -119,6 +119,13 @@ typedef struct opentv_dict
   RB_ENTRY(opentv_dict) h_link;
 } opentv_dict_t;
 
+typedef struct opentv_genre
+{
+  char                  *id;
+  uint8_t                map[256];
+  RB_ENTRY(opentv_genre) h_link;
+} opentv_genre_t;
+
 /* Provider configuration */
 typedef struct opentv_module_t
 {
@@ -131,13 +138,14 @@ typedef struct opentv_module_t
   int                   *title;
   int                   *summary;
   opentv_dict_t         *dict;
+  opentv_genre_t        *genre;
   
 } opentv_module_t;
 
 /*
  * Dictionary list
  */
-RB_HEAD(, opentv_dict) _opentv_dicts;
+RB_HEAD(, opentv_dict)  _opentv_dicts;
 
 static int _dict_cmp ( void *a, void *b )
 {
@@ -151,6 +159,23 @@ static opentv_dict_t *_opentv_dict_find ( const char *id )
   return RB_FIND(&_opentv_dicts, &skel, h_link, _dict_cmp);
 }
 
+/*
+ * Genre mapping list
+ */
+RB_HEAD(, opentv_genre) _opentv_genres;
+
+static int _genre_cmp ( void *a, void *b )
+{
+  return strcmp(((opentv_genre_t*)a)->id, ((opentv_genre_t*)b)->id);
+}
+
+static opentv_genre_t *_opentv_genre_find ( const char *id )
+{
+  opentv_genre_t skel;
+  skel.id = (char*)id;
+  return RB_FIND(&_opentv_genres, &skel, h_link, _genre_cmp);
+}
+
 /* ************************************************************************
  * EPG Object wrappers
  * ***********************************************************************/
@@ -160,7 +185,8 @@ static epggrab_channel_t *_opentv_find_epggrab_channel
 {
   char chid[32];
   sprintf(chid, "%s-%d", mod->id, cid);
-  return epggrab_channel_find(&_opentv_channels, chid, create, save);
+  return epggrab_channel_find(&_opentv_channels, chid, create, save,
+                              (epggrab_module_t*)mod);
 }
 
 static epg_season_t *_opentv_find_season 
@@ -258,6 +284,8 @@ static int _opentv_parse_event_record
         ev->stop        = (((int)buf[4] << 9) | (buf[5] << 1))
                         + ev->start;
         ev->cat         = buf[6];
+        if (prov->genre)
+          ev->cat = prov->genre->map[ev->cat];
         if (!ev->title)
           ev->title     = _opentv_parse_string(prov, buf+9, rlen-7);
         break;
@@ -720,6 +748,44 @@ static int* _pid_list_to_array ( htsmsg_t *m )
   return ret;
 }
 
+static int _opentv_genre_load_one ( const char *id, htsmsg_t *m )
+{
+  htsmsg_field_t *f;
+  opentv_genre_t *genre = calloc(1, sizeof(opentv_genre_t));
+  genre->id = (char*)id;
+  if (RB_INSERT_SORTED(&_opentv_genres, genre, h_link, _genre_cmp)) {
+    tvhlog(LOG_DEBUG, "opentv", "ignore duplicate genre map %s", id);
+    free(genre);
+    return 0;
+  } else {
+    genre->id = strdup(id);
+    int i = 0;
+    HTSMSG_FOREACH(f, m) {
+      genre->map[i] = (uint8_t)f->hmf_s64;
+      if (++i == 256) break;
+    }
+  }
+  return 1;
+}
+
+static void _opentv_genre_load ( htsmsg_t *m )
+{
+  int r;
+  htsmsg_t *e;
+  htsmsg_field_t *f;
+  HTSMSG_FOREACH(f, m) {
+    if ((e = htsmsg_get_list(m, f->hmf_name))) {
+      if ((r = _opentv_genre_load_one(f->hmf_name, e))) {
+        if (r > 0) 
+          tvhlog(LOG_INFO, "opentv", "genre map %s loaded", f->hmf_name);
+        else
+          tvhlog(LOG_WARNING, "opentv", "genre map %s failed", f->hmf_name);
+      }
+    }
+  }
+  htsmsg_destroy(m);
+}
+
 static int _opentv_dict_load_one ( const char *id, htsmsg_t *m )
 {
   opentv_dict_t *dict = calloc(1, sizeof(opentv_dict_t));
@@ -766,6 +832,7 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
   uint32_t tsid, sid, nid;
   const char *str, *name;
   opentv_dict_t *dict;
+  opentv_genre_t *genre;
   opentv_module_t *mod;
 
   /* Check config */
@@ -778,6 +845,14 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
   if (htsmsg_get_u32(m, "nid", &nid)) return -1;
   if (htsmsg_get_u32(m, "tsid", &tsid)) return -1;
   if (htsmsg_get_u32(m, "sid", &sid)) return -1;
+
+  /* Genre map (optional) */
+  str = htsmsg_get_str(m, "genre");
+  if (str)
+    genre = _opentv_genre_find(str);
+  else
+    genre = NULL;
+ 
 
   /* Exists (we expect some duplicates due to config layout) */
   sprintf(ibuf, "opentv-%s", id);
@@ -793,6 +868,7 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
   
   /* Add provider details */
   mod->dict     = dict;
+  mod->genre    = genre;
   mod->nid      = nid;
   mod->tsid     = tsid;
   mod->sid      = sid;
@@ -838,6 +914,13 @@ void opentv_init ( void )
   if ((m = hts_settings_load("%s/data/epggrab/opentv/dict", dr)))
     _opentv_dict_load(m);
   tvhlog(LOG_INFO, "opentv", "dictonaries loaded");
+
+  /* Load genres */
+  if ((m = hts_settings_load("epggrab/opentv/genre")))
+    _opentv_genre_load(m);
+  if ((m = hts_settings_load("%s/data/epggrab/opentv/genre", dr)))
+    _opentv_genre_load(m);
+  tvhlog(LOG_INFO, "opentv", "genre maps loaded");
 
   /* Load providers */
   if ((m = hts_settings_load("epggrab/opentv/prov")))

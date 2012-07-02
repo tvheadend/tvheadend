@@ -40,11 +40,14 @@
 #define XMLTV_FIND_GRABBERS "/usr/bin/tv_find_grabbers"
 
 static epggrab_channel_tree_t _xmltv_channels;
+static epggrab_module_t      *_xmltv_module;
 
 static epggrab_channel_t *_xmltv_channel_find
   ( const char *id, int create, int *save )
 {
-  return epggrab_channel_find(&_xmltv_channels, id, create, save);
+  
+  return epggrab_channel_find(&_xmltv_channels, id, create, save,
+                              _xmltv_module);
 }
 
 /* **************************************************************************
@@ -494,9 +497,10 @@ static void _xmltv_load_grabbers ( void )
 void xmltv_init ( void )
 {
   /* External module */
-  epggrab_module_ext_create(NULL, "xmltv", "XMLTV", "xmltv",
-                            _xmltv_parse, NULL,
-                            &_xmltv_channels);
+  _xmltv_module = (epggrab_module_t*)
+    epggrab_module_ext_create(NULL, "xmltv", "XMLTV", "xmltv",
+                              _xmltv_parse, NULL,
+                              &_xmltv_channels);
 
   /* Standard modules */
   _xmltv_load_grabbers();

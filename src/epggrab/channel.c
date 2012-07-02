@@ -210,10 +210,12 @@ static int _ch_id_cmp ( void *a, void *b )
 
 /* Find/Create channel in the list */
 epggrab_channel_t *epggrab_channel_find
-  ( epggrab_channel_tree_t *tree, const char *id, int create, int *save )
+  ( epggrab_channel_tree_t *tree, const char *id, int create, int *save,
+    epggrab_module_t *owner )
 {
   epggrab_channel_t *ec;
   static epggrab_channel_t *skel = NULL;
+  assert(owner);
   if (!skel) skel = calloc(1, sizeof(epggrab_channel_t));
   skel->id = (char*)id;
 
@@ -225,10 +227,11 @@ epggrab_channel_t *epggrab_channel_find
   } else {
     ec = RB_INSERT_SORTED(tree, skel, link, _ch_id_cmp);
     if (!ec) {
-      ec     = skel;
-      skel   = NULL;
-      ec->id = strdup(id);
-      *save  = 1;
+      ec      = skel;
+      skel    = NULL;
+      ec->id  = strdup(id);
+      ec->mod = owner;
+      *save   = 1;
     }
   }
   return ec;

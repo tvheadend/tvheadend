@@ -216,7 +216,7 @@ static void _epggrab_module_channel_load
   htsmsg_t *a;
   htsmsg_field_t *f;
 
-  epggrab_channel_t *ch = epggrab_channel_find(mod->channels, id, 1, &save);
+  epggrab_channel_t *ch = epggrab_channel_find(mod->channels, id, 1, &save, mod);
 
   if ((str = htsmsg_get_str(m, "name")))
     ch->name = strdup(str);
