@@ -185,7 +185,8 @@ static epggrab_channel_t *_opentv_find_epggrab_channel
 {
   char chid[32];
   sprintf(chid, "%s-%d", mod->id, cid);
-  return epggrab_channel_find(&_opentv_channels, chid, create, save);
+  return epggrab_channel_find(&_opentv_channels, chid, create, save,
+                              (epggrab_module_t*)mod);
 }
 
 static epg_season_t *_opentv_find_season 

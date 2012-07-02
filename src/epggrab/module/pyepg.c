@@ -30,11 +30,13 @@
 #include "epggrab/private.h"
 
 static epggrab_channel_tree_t _pyepg_channels;
+static epggrab_module_t      *_pyepg_module;   // primary module
 
 static epggrab_channel_t *_pyepg_channel_find
   ( const char *id, int create, int *save )
 {
-  return epggrab_channel_find(&_pyepg_channels, id, create, save);
+  return epggrab_channel_find(&_pyepg_channels, id, create, save,
+                              _pyepg_module);
 }
 
 /* **************************************************************************
@@ -439,9 +441,10 @@ void pyepg_init ( void )
                             NULL, _pyepg_parse, NULL, NULL);
 
   /* External module */
-  epggrab_module_ext_create(NULL, "pyepg", "PyEPG", "pyepg",
-                            _pyepg_parse, NULL,
-                            &_pyepg_channels);
+  _pyepg_module = (epggrab_module_t*)
+    epggrab_module_ext_create(NULL, "pyepg", "PyEPG", "pyepg",
+                              _pyepg_parse, NULL,
+                              &_pyepg_channels);
 }
 
 void pyepg_load ( void )
