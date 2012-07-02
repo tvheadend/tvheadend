@@ -191,11 +191,11 @@ static epg_object_t *_epg_object_find_by_uri
   return eo;
 }
 
-static epg_object_t *_epg_object_find_by_id ( uint64_t id )
+static epg_object_t *_epg_object_find_by_id ( uint64_t id, epg_object_type_t type )
 {
   epg_object_t *eo;
   LIST_FOREACH(eo, &epg_objects[id & EPG_HASH_MASK], id_link) {
-    if (eo->id == id) return eo;
+    if (eo->id == id) return eo->type == type ? eo : NULL;
   }
   return NULL;
 }
@@ -309,7 +309,7 @@ epg_brand_t* epg_brand_find_by_uri
 
 epg_brand_t *epg_brand_find_by_id ( uint64_t id )
 {
-  return (epg_brand_t*)_epg_object_find_by_id(id);
+  return (epg_brand_t*)_epg_object_find_by_id(id, EPG_BRAND);
 }
 
 int epg_brand_set_title ( epg_brand_t *brand, const char *title )
@@ -467,7 +467,7 @@ epg_season_t* epg_season_find_by_uri
 
 epg_season_t *epg_season_find_by_id ( uint64_t id )
 {
-  return (epg_season_t*)_epg_object_find_by_id(id);
+  return (epg_season_t*)_epg_object_find_by_id(id, EPG_SEASON);
 }
 
 int epg_season_set_summary ( epg_season_t *season, const char *summary )
@@ -682,7 +682,7 @@ epg_episode_t* epg_episode_find_by_uri
 
 epg_episode_t *epg_episode_find_by_id ( uint64_t id )
 {
-  return (epg_episode_t*)_epg_object_find_by_id(id);
+  return (epg_episode_t*)_epg_object_find_by_id(id, EPG_EPISODE);
 }
 
 int epg_episode_set_title ( epg_episode_t *episode, const char *title )
@@ -1187,7 +1187,7 @@ epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id, channel_t *ch )
 {
   // Note: I have left channel_t param, just in case I decide to change
   //       to use it for shorter search
-  return (epg_broadcast_t*)_epg_object_find_by_id(id);
+  return (epg_broadcast_t*)_epg_object_find_by_id(id, EPG_BROADCAST);
 }
 
 epg_broadcast_t *epg_broadcast_find_by_eid ( channel_t *ch, int eid )
