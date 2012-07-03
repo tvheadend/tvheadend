@@ -336,6 +336,7 @@ _xmltv_parse_programme_tags(channel_t *ch, htsmsg_t *tags,
   if (suri) {
     es = epg_season_find_by_uri(suri, 1, &save);
     if (es) save |= epg_episode_set_season(ee, es);
+    free(suri);
   }
 
   category[0] = htsmsg_xml_get_cdata_str(tags, "category");
