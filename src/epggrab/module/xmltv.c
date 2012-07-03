@@ -182,12 +182,26 @@ parse_xmltv_ns_episode
   xmltv_ns_get_parse_num(s, pn, pc);
 }
 
+static void
+parse_xmltv_dd_progid
+(const char *s, char **uri, char **suri, int *en )
+{
+  *uri = strdup(s); // use full ID for episode URI
+  // TODO: a bit more info available here
+
+  /* Episode */
+  if (!strncmp("EP", s, 2) || !strncmp("SH", s, 2)) {
+    *suri = strndup(s, 10);
+    sscanf(s+11, "%d", en);
+  }
+}
+
 /**
  *
  */
 static void
 get_episode_info
-(htsmsg_t *tags, const char **screen, int *sn, int *sc, int *en, int *ec, int *pn, int *pc)
+(htsmsg_t *tags, char **uri, char **suri, const char **screen, int *sn, int *sc, int *en, int *ec, int *pn, int *pc)
 {
   htsmsg_field_t *f;
   htsmsg_t *c, *a;
@@ -204,6 +218,8 @@ get_episode_info
     if(!strcmp(sys, "onscreen")) *screen = cdata;
     else if(!strcmp(sys, "xmltv_ns"))
       parse_xmltv_ns_episode(cdata, sn, sc, en, ec, pn, pc);
+    else if(!strcmp(sys, "dd_progid"))
+      parse_xmltv_dd_progid(cdata, uri, suri, en);
   }
 }
 
@@ -296,24 +312,31 @@ _xmltv_parse_programme_tags(channel_t *ch, htsmsg_t *tags,
   int save = 0, save2 = 0;
   epg_episode_t *ee;
   epg_broadcast_t *ebc;
+  epg_season_t *es;
   int sn = 0, sc = 0, en = 0, ec = 0, pn = 0, pc = 0;
+  char *uri = NULL, *suri = NULL;
   const char *onscreen = NULL;
-  char *uri;
   const char *title = htsmsg_xml_get_cdata_str(tags, "title");
   const char *desc  = htsmsg_xml_get_cdata_str(tags, "desc");
   const char *category[2];
-  get_episode_info(tags, &onscreen, &sn, &sc, &en, &ec, &pn, &pc);
+  get_episode_info(tags, &uri, &suri, &onscreen, &sn, &sc, &en, &ec, &pn, &pc);
 
   /* Ignore */
   if (!title) return 0;
 
   /* Build episode */
-  uri = md5sum(desc ?: title);
+  if (!uri) uri = md5sum(desc ?: title);
   ee  = epg_episode_find_by_uri(uri, 1, &save);
   free(uri);
   if (!ee) return 0;
   stats->episodes.total++;
   if (save) stats->episodes.created++;
+
+  /* Find season */
+  if (suri) {
+    es = epg_season_find_by_uri(suri, 1, &save);
+    if (es) save |= epg_episode_set_season(ee, es);
+  }
 
   category[0] = htsmsg_xml_get_cdata_str(tags, "category");
   category[1] = NULL;
