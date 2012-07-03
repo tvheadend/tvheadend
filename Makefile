@@ -25,10 +25,10 @@ include ${BUILDDIR}/config.mak
 PROG=${BUILDDIR}/tvheadend
 
 CFLAGS += -Wall -Werror -Wwrite-strings -Wno-deprecated-declarations
-CFLAGS += -Wmissing-prototypes
+CFLAGS += -Wmissing-prototypes -fms-extensions
 LDFLAGS += -lrt -ldl
 
-BUNDLES += docs/html docs/docresources src/webui/static
+BUNDLES += docs/html docs/docresources src/webui/static data
 
 #
 # Core
@@ -44,7 +44,8 @@ SRCS =  src/main.c \
 	src/notify.c \
 	src/file.c \
 	src/epg.c \
-	src/xmltv.c \
+	src/epgdb.c\
+	src/epggrab.c\
 	src/spawn.c \
 	src/packet.c \
 	src/streaming.c \
@@ -72,7 +73,15 @@ SRCS =  src/main.c \
 	src/rawtsinput.c \
 	src/iptv_input.c \
 	src/avc.c \
+  src/huffman.c \
 
+SRCS += src/epggrab/module.c\
+  src/epggrab/channel.c\
+  src/epggrab/otamux.c\
+  src/epggrab/module/pyepg.c\
+  src/epggrab/module/xmltv.c\
+  src/epggrab/module/eit.c \
+  src/epggrab/module/opentv.c \
 
 SRCS += src/plumbing/tsfix.c \
 	src/plumbing/globalheaders.c \

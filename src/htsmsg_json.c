@@ -202,6 +202,7 @@ htsmsg_json_parse_string(const char *s, const char **endp)
 	      /* 4 hexdigits: Not supported */
 	      free(r);
 	      return NULL;
+        a += 4;
 	    } else {
 	      *b++ = *a;
 	    }

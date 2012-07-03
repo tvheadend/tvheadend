@@ -234,7 +234,7 @@ function accessUpdate(o) {
 	    title: 'Configuration', 
 	    iconCls: 'wrench',
 	    items: [new tvheadend.chconf,
-		    new tvheadend.xmltv,
+		    new tvheadend.epggrab,
 		    new tvheadend.cteditor,
 		    new tvheadend.dvrsettings,
 		    new tvheadend.tvadapters,

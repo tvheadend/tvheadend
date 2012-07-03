@@ -41,7 +41,7 @@
 #include "http.h"
 #include "webui/webui.h"
 #include "dvb/dvb.h"
-#include "xmltv.h"
+#include "epggrab.h"
 #include "spawn.h"
 #include "subscriptions.h"
 #include "serviceprobe.h"
@@ -366,7 +366,6 @@ main(int argc, char **argv)
   /**
    * Initialize subsystems
    */
-  xmltv_init();   /* Must be initialized before channels */
 
   service_init();
 
@@ -392,6 +391,7 @@ main(int argc, char **argv)
 
   capmt_init();
 
+  epggrab_init();
   epg_init();
 
   dvr_init();
@@ -409,6 +409,8 @@ main(int argc, char **argv)
 #ifdef CONFIG_AVAHI
   avahi_init();
 #endif
+
+  epg_updated(); // cleanup now all prev ref's should have been created
 
   pthread_mutex_unlock(&global_lock);
 

@@ -35,6 +35,17 @@ typedef struct dvr_config {
   int dvr_extra_time_pre;
   int dvr_extra_time_post;
 
+  /* Series link support */
+  int dvr_sl_brand_lock;
+  int dvr_sl_season_lock;
+  int dvr_sl_channel_lock;
+  int dvr_sl_time_lock;
+  int dvr_sl_more_recent;
+  int dvr_sl_quality_lock;
+
+  /* Duplicate detect */
+  int dvr_dup_detect_episode;
+
   LIST_ENTRY(dvr_config) config_link;
 } dvr_config_t;
 
@@ -121,13 +132,16 @@ typedef struct dvr_entry {
   char *de_ititle;     /* Internal title optionally with channelname
 			  date and time pre/post/fixed */
   char *de_desc;       /* Description in UTF-8 (from EPG) */
+  uint8_t de_content_type; /* Content type (from EPG) */
 
   dvr_prio_t de_pri;
 
-  epg_episode_t de_episode;
-  uint8_t de_content_type;
-
   uint32_t de_dont_reschedule;
+
+  /**
+   * EPG information / links
+   */
+  epg_broadcast_t *de_bcast;
 
   /**
    * Major State
@@ -207,6 +221,10 @@ typedef struct dvr_autorec_entry {
 
   struct dvr_entry_list dae_spawns;
 
+  epg_brand_t *dae_brand;
+  epg_season_t *dae_season;
+  epg_episode_num_t dae_epnum;
+
 } dvr_autorec_entry_t;
 
 
@@ -228,18 +246,21 @@ const char *dvr_entry_status(dvr_entry_t *de);
 
 const char *dvr_entry_schedstatus(dvr_entry_t *de);
 
-void dvr_entry_create_by_autorec(event_t *e, dvr_autorec_entry_t *dae);
+void dvr_entry_create_by_autorec(epg_broadcast_t *e, dvr_autorec_entry_t *dae);
 
 dvr_entry_t *dvr_entry_create_by_event(const char *dvr_config_name,
-                                       event_t *e, const char *creator,
+                                       epg_broadcast_t *e, 
+                time_t start_extra, time_t stop_extra,
+                const char *creator,
 				       dvr_autorec_entry_t *dae,
 				       dvr_prio_t pri);
 
 dvr_entry_t *dvr_entry_create(const char *dvr_config_name,
                               channel_t *ch, time_t start, time_t stop, 
+            time_t start_extra, time_t stop_extra,
 			      const char *title, const char *description,
+            uint8_t content_type,
 			      const char *creator, dvr_autorec_entry_t *dae,
-			      epg_episode_t *ee, uint8_t content_type,
 			      dvr_prio_t pri);
 
 dvr_entry_t *dvr_entry_update(dvr_entry_t *de, const char* de_title, int de_start, int de_stop);
@@ -254,13 +275,17 @@ void dvr_rec_subscribe(dvr_entry_t *de);
 
 void dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode);
 
-void dvr_event_replaced(event_t *e, event_t *new_e);
+void dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e);
+
+void dvr_event_updated(epg_broadcast_t *e);
 
 dvr_entry_t *dvr_entry_find_by_id(int id);
 
-dvr_entry_t *dvr_entry_find_by_event(event_t *e);
+dvr_entry_t *dvr_entry_find_by_event(epg_broadcast_t *e);
 
-dvr_entry_t *dvr_entry_find_by_event_fuzzy(event_t *e);
+dvr_entry_t *dvr_entry_find_by_event_fuzzy(epg_broadcast_t *e);
+
+dvr_entry_t *dvr_entry_find_by_episode(epg_broadcast_t *e);
 
 off_t dvr_get_filesize(dvr_entry_t *de);
 
@@ -305,7 +330,14 @@ void dvr_autorec_add(const char *dvr_config_name,
 		     const char *tag, uint8_t content_type,
 		     const char *creator, const char *comment);
 
-void dvr_autorec_check_event(event_t *e);
+void dvr_autorec_add_series_link(const char *dvr_config_name,
+                                 epg_broadcast_t *event,
+                        		     const char *creator, const char *comment);
+
+void dvr_autorec_check_event(epg_broadcast_t *e);
+void dvr_autorec_check_brand(epg_brand_t *b);
+void dvr_autorec_check_season(epg_season_t *s);
+
 
 void autorec_destroy_by_channel(channel_t *ch);
 

@@ -28,7 +28,6 @@
 #include "webui.h"
 #include "access.h"
 #include "epg.h"
-#include "xmltv.h"
 #include "psi.h"
 #if ENABLE_LINUXDVB
 #include "dvr/dvr.h"
@@ -68,12 +67,10 @@ dumpchannels(htsbuf_queue_t *hq)
 		   "  refcount = %d\n"
 		   "  zombie = %d\n"
 		   "  number = %d\n"
-		   "  xmltv source = %s\n"
 		   "  icon = %s\n\n",
 		   ch->ch_refcount,
 		   ch->ch_zombie,
 		   ch->ch_number,
-		   ch->ch_xc ? ch->ch_xc->xc_displayname : "<none set>",
 		   ch->ch_icon ?: "<none set>");
   }
 }

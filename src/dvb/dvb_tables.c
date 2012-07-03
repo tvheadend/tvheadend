@@ -168,6 +168,8 @@ dvb_proc_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt, uint8_t *sec,
   if(tdt->tdt_flags & TDT_CA)
     ret = tdt->tdt_callback((th_dvb_mux_instance_t *)tdt,
                                 sec, len + 3, tableid, tdt->tdt_opaque);
+  else if(tdt->tdt_flags & TDT_TDT)
+    ret = tdt->tdt_callback(tdmi, ptr, len, tableid, tdt);
   else
     ret = tdt->tdt_callback(tdmi, ptr, len, tableid, tdt->tdt_opaque);
   
@@ -319,95 +321,6 @@ tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
   tdt_open_fd(tdmi, tdt);
 }
 
-
-/**
- * DVB Descriptor; Short Event
- */
-static int
-dvb_desc_short_event(uint8_t *ptr, int len, 
-		     char *title, size_t titlelen,
-		     char *desc,  size_t desclen,
-		     char *dvb_default_charset)
-{
-  int r;
-
-  if(len < 4)
-    return -1;
-  ptr += 3; len -= 3;
-
-  if((r = dvb_get_string_with_len(title, titlelen, ptr, len, dvb_default_charset)) < 0)
-    return -1;
-  ptr += r; len -= r;
-
-  if((r = dvb_get_string_with_len(desc, desclen, ptr, len, dvb_default_charset)) < 0)
-    return -1;
-
-  return 0;
-}
-
-/**
- * DVB Descriptor; Extended Event
- */
-static int
-dvb_desc_extended_event(uint8_t *ptr, int len, 
-		     char *desc, size_t desclen,
-		     char *item, size_t itemlen,
-                     char *text, size_t textlen,
-                     char *dvb_default_charset)
-{
-  int count = ptr[4], r;
-  uint8_t *localptr = ptr + 5, *items = localptr; 
-  int locallen = len - 5;
-
-  /* terminate buffers */
-  desc[0] = '\0'; item[0] = '\0'; text[0] = '\0';
-
-  while (items < (localptr + count))
-  {
-    /* this only makes sense if we have 2 or more character left in buffer */
-    if ((desclen - strlen(desc)) > 2)
-    {
-      /* get description -> append to desc if space left */
-      if (desc[0] != '\0')
-        strncat(desc, "\n", 1);
-      if((r = dvb_get_string_with_len(desc + strlen(desc),
-                                      desclen - strlen(desc),
-                                      items, (localptr + count) - items,
-                                      dvb_default_charset)) < 0)
-        return -1;
-    }
-
-    items += 1 + items[0];
-
-    /* this only makes sense if we have 2 or more character left in buffer */
-    if ((itemlen - strlen(item)) > 2)
-    {
-      /* get item -> append to item if space left */
-      if (item[0] != '\0')
-        strncat(item, "\n", 1);
-      if((r = dvb_get_string_with_len(item + strlen(item),
-                                      itemlen - strlen(item),
-                                      items, (localptr + count) - items,
-                                      dvb_default_charset)) < 0)
-        return -1;
-    }
-
-    /* go to next item */
-    items += 1 + items[0];
-  }
-
-  localptr += count;
-  locallen -= count;
-  count = localptr[0];
-
-  /* get text */
-  if((r = dvb_get_string_with_len(text, textlen, localptr, locallen, dvb_default_charset)) < 0)
-    return -1;
-
-  return 0;
-}
-
-
 /**
  * DVB Descriptor; Service
  */
@@ -435,168 +348,6 @@ dvb_desc_service(uint8_t *ptr, int len, uint8_t *typep,
   ptr += r; len -= r;
   return 0;
 }
-
-
-/**
- * DVB EIT (Event Information Table)
- */
-static int
-dvb_eit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
-		 uint8_t tableid, void *opaque)
-{
-  service_t *t;
-  channel_t *ch;
-  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-
-  uint16_t serviceid;
-  uint16_t transport_stream_id;
-
-  uint16_t event_id;
-  time_t start_time, stop_time;
-
-  int duration;
-  int dllen;
-  uint8_t dtag, dlen;
-
-  char title[256];
-  char desc[5000];
-  char extdesc[5000];
-  char extitem[5000];
-  char exttext[5000];
-
-  event_t *e;
-
-  lock_assert(&global_lock);
-
-  //  printf("EIT!, tid = %x\n", tableid);
-
-  if(tableid < 0x4e || tableid > 0x6f || len < 11)
-    return -1;
-
-  serviceid                   = ptr[0] << 8 | ptr[1];
-  //  version                     = ptr[2] >> 1 & 0x1f;
-  //  section_number              = ptr[3];
-  //  last_section_number         = ptr[4];
-  transport_stream_id         = ptr[5] << 8 | ptr[6];
-  //  original_network_id         = ptr[7] << 8 | ptr[8];
-  //  segment_last_section_number = ptr[9];
-  //  last_table_id               = ptr[10];
-
-  if((ptr[2] & 1) == 0) {
-    /* current_next_indicator == next, skip this */
-    return -1;
-  }
-
-  len -= 11;
-  ptr += 11;
-
-  /* Search all muxes on adapter */
-  LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
-    if(tdmi->tdmi_transport_stream_id == transport_stream_id)
-      break;
-  
-  if(tdmi == NULL)
-    return -1;
-
-  t = dvb_transport_find(tdmi, serviceid, 0, NULL);
-  if(t == NULL || !t->s_enabled || (ch = t->s_ch) == NULL)
-    return 0;
-
-  if(!t->s_dvb_eit_enable)
-    return 0;
-
-  while(len >= 12) {
-    event_id                  = ptr[0] << 8 | ptr[1];
-    start_time                = dvb_convert_date(&ptr[2]);
-    duration                  = bcdtoint(ptr[7] & 0xff) * 3600 +
-                                bcdtoint(ptr[8] & 0xff) * 60 +
-                                bcdtoint(ptr[9] & 0xff);
-    dllen                     = ((ptr[10] & 0x0f) << 8) | ptr[11];
-
-    len -= 12;
-    ptr += 12;
-
-    if(dllen > len)
-      break;
-    stop_time = start_time + duration;
-
-    if(stop_time < dispatch_clock) {
-      /* Already come to pass, skip over it */
-      len -= dllen;
-      ptr += dllen;
-      continue;
-    }
-
-    if((e = epg_event_create(ch, start_time, start_time + duration,
-			     event_id, NULL)) == NULL) {
-      len -= dllen;
-      ptr += dllen;
-      continue;
-    }
-    int changed = 0;
-
-    *title = 0;
-    *desc = 0;
-    while(dllen > 0) {
-      dtag = ptr[0];
-      dlen = ptr[1];
-
-      len -= 2; ptr += 2; dllen -= 2; 
-
-      if(dlen > len)
-	break;
-
-      switch(dtag) {
-      case DVB_DESC_SHORT_EVENT:
-	if(!dvb_desc_short_event(ptr, dlen,
-				 title, sizeof(title),
-				 desc,  sizeof(desc),
-				 t->s_dvb_default_charset)) {
-	  changed |= epg_event_set_title(e, title);
-	  changed |= epg_event_set_desc(e, desc);
-	}
-	break;
-
-      case DVB_DESC_CONTENT:
-	if(dlen >= 2) {
-	  /* We only support one content type per event atm. */
-	  changed |= epg_event_set_content_type(e, (*ptr) >> 4);
-	}
-	break;
-      case DVB_DESC_EXT_EVENT:
-        if(!dvb_desc_extended_event(ptr, dlen,
-              extdesc, sizeof(extdesc),
-              extitem, sizeof(extitem),
-              exttext, sizeof(exttext),
-              t->s_dvb_default_charset)) {
-          
-          char language[4];
-          memcpy(language, &ptr[1], 3);
-          language[3] = '\0';
-          int desc_number = (ptr[0] & 0xF0) >> 4;
-          //int desc_last   = (ptr[0] & 0x0F);
-          
-          if (strlen(extdesc))
-            changed |= epg_event_set_ext_desc(e, desc_number, extdesc);
-          if (strlen(extitem))
-            changed |= epg_event_set_ext_item(e, desc_number, extitem);
-          if (strlen(exttext))
-	    changed |= epg_event_set_ext_text(e, desc_number, exttext);
-        }
-        break;
-      default: 
-        break;
-      }
-
-      len -= dlen; ptr += dlen; dllen -= dlen;
-    }
-
-    if(changed)
-      epg_event_updated(e);
-  }
-  return 0;
-}
-
 
 /**
  * DVB SDT (Service Description Table)
@@ -1270,12 +1021,6 @@ dvb_table_add_default_dvb(th_dvb_mux_instance_t *tdmi)
   fp->filter.mask[0] = 0xff;
   tdt_add(tdmi, fp, dvb_sdt_callback, NULL, "sdt", 
 	  TDT_QUICKREQ | TDT_CRC, 0x11, NULL);
-
-  /* Event Information table */
-
-  fp = dvb_fparams_alloc();
-  tdt_add(tdmi, fp, dvb_eit_callback, NULL, "eit", 
-	  TDT_CRC, 0x12, NULL);
 }
 
 

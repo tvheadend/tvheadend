@@ -60,12 +60,12 @@ page_simple(http_connection_t *hc,
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   const char *s = http_arg_get(&hc->hc_req_args, "s");
-  event_t *e;
+  epg_broadcast_t *e;
   int c, k, i;
   struct tm a, b, day;
   dvr_entry_t *de;
   dvr_query_result_t dqr;
-  const char *rstatus;
+  const char *rstatus = NULL;
   epg_query_result_t eqr;
 
   htsbuf_qprintf(hq, "<html>");
@@ -108,8 +108,8 @@ page_simple(http_connection_t *hc,
       for(k = 0; k < c; k++) {
 	e = eqr.eqr_array[k];
       
-	localtime_r(&e->e_start, &a);
-	localtime_r(&e->e_stop, &b);
+	localtime_r(&e->start, &a);
+	localtime_r(&e->stop, &b);
 
 	if(a.tm_wday != day.tm_wday || a.tm_mday != day.tm_mday  ||
 	   a.tm_mon  != day.tm_mon  || a.tm_year != day.tm_year) {
@@ -126,9 +126,9 @@ page_simple(http_connection_t *hc,
 	htsbuf_qprintf(hq, 
 		    "<a href=\"/eventinfo/%d\">"
 		    "%02d:%02d-%02d:%02d&nbsp;%s%s%s</a><br>",
-		    e->e_id,
+		    e->id,
 		    a.tm_hour, a.tm_min, b.tm_hour, b.tm_min,
-		    e->e_title,
+		    e->episode ? e->episode->title : "",
 		    rstatus ? "&nbsp;" : "", rstatus ?: "");
       }
     }
@@ -194,7 +194,7 @@ static int
 page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
-  event_t *e;
+  epg_broadcast_t *e;
   struct tm a, b;
   dvr_entry_t *de;
   const char *rstatus;
@@ -202,7 +202,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_lock(&global_lock);
 
-  if(remain == NULL || (e = epg_event_find_by_id(atoi(remain))) == NULL) {
+  if(remain == NULL || (e = epg_broadcast_find_by_id(atoi(remain), NULL)) == NULL) {
     pthread_mutex_unlock(&global_lock);
     return 404;
   }
@@ -210,7 +210,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   de = dvr_entry_find_by_event(e);
 
   if((http_arg_get(&hc->hc_req_args, "rec")) != NULL) {
-    de = dvr_entry_create_by_event("", e, hc->hc_username ?: "anonymous", NULL,
+    de = dvr_entry_create_by_event("", e, 0, 0, hc->hc_username ?: "anonymous", NULL,
 				   DVR_PRIO_NORMAL);
   } else if(de != NULL && (http_arg_get(&hc->hc_req_args, "cancel")) != NULL) {
     de = dvr_entry_cancel(de);
@@ -219,8 +219,8 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_qprintf(hq, "<html>");
   htsbuf_qprintf(hq, "<body>");
 
-  localtime_r(&e->e_start, &a);
-  localtime_r(&e->e_stop, &b);
+  localtime_r(&e->start, &a);
+  localtime_r(&e->stop, &b);
 
   htsbuf_qprintf(hq, 
 	      "%s, %d/%d %02d:%02d - %02d:%02d<br>",
@@ -228,7 +228,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
 
   htsbuf_qprintf(hq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
-	      e->e_channel->ch_name, e->e_title);
+	      e->channel->ch_name, e->episode ? e->episode->title : "");
   
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
 
@@ -236,7 +236,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
     htsbuf_qprintf(hq, "Recording status: %s<br>", rstatus);
 
   htsbuf_qprintf(hq, "<form method=\"post\" action=\"/eventinfo/%d\">", 
-		 e->e_id);
+		 e->id);
 
   switch(dvr_status) {
   case DVR_SCHEDULED:
@@ -260,7 +260,13 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   htsbuf_qprintf(hq, "</form>");
-  htsbuf_qprintf(hq, "%s", e->e_desc);
+  if (e->episode) {
+    if ( e->episode->description )
+      htsbuf_qprintf(hq, "%s", e->episode->description);
+    else if ( e->episode->summary )
+      htsbuf_qprintf(hq, "%s", e->episode->summary);
+  }
+  
 
   pthread_mutex_unlock(&global_lock);
 

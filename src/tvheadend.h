@@ -104,8 +104,6 @@ LIST_HEAD(th_subscription_list, th_subscription);
 RB_HEAD(channel_tree, channel);
 TAILQ_HEAD(channel_queue, channel);
 LIST_HEAD(channel_list, channel);
-LIST_HEAD(event_list, event);
-RB_HEAD(event_tree, event);
 LIST_HEAD(dvr_config_list, dvr_config);
 LIST_HEAD(dvr_entry_list, dvr_entry);
 TAILQ_HEAD(ref_update_queue, ref_update);
@@ -450,5 +448,14 @@ void sbuf_put_be32(sbuf_t *sb, uint32_t u32);
 void sbuf_put_be16(sbuf_t *sb, uint16_t u16);
 
 void sbuf_put_byte(sbuf_t *sb, uint8_t u8);
+
+char *md5sum ( const char *str );
+
+/* printing */
+#if __SIZEOF_LONG__ == 8
+  #define PRItime_t PRIu64
+#else
+  #define PRItime_t PRIu32
+#endif
 
 #endif /* TV_HEAD_H */

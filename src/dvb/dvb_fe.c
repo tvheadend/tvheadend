@@ -40,6 +40,8 @@
 #include "notify.h"
 #include "dvr/dvr.h"
 
+#include "epggrab.h"
+
 /**
  * Return uncorrected block (since last read)
  *
@@ -226,9 +228,10 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi)
   assert(tdmi->tdmi_scan_queue == NULL);
 
   if(tdmi->tdmi_enabled) {
-    tdmi->tdmi_scan_queue = &tda->tda_scan_queues[tdmi->tdmi_quality == 100];
-    TAILQ_INSERT_TAIL(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
+    dvb_mux_add_to_scan_queue(tdmi);
   }
+  
+  epggrab_mux_stop(tdmi, 0);
 
   time(&tdmi->tdmi_lost_adapter);
 }
@@ -480,9 +483,9 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 #if DVB_API_VERSION >= 5
   if (tda->tda_type == FE_QPSK) {
     tvhlog(LOG_DEBUG, "dvb", "\"%s\" tuning via s2api to \"%s\" (%d, %d Baud, "
-	    "%s, %s, %s)", tda->tda_rootpath, buf, p->frequency, p->u.qpsk.symbol_rate, 
+	    "%s, %s, %s) for %s", tda->tda_rootpath, buf, p->frequency, p->u.qpsk.symbol_rate, 
       dvb_mux_fec2str(p->u.qpsk.fec_inner), dvb_mux_delsys2str(dmc.dmc_fe_delsys), 
-      dvb_mux_qam2str(dmc.dmc_fe_modulation));
+      dvb_mux_qam2str(dmc.dmc_fe_modulation), reason);
   
     r = dvb_fe_tune_s2(tdmi, &dmc);
   } else
@@ -506,7 +509,9 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 
   gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 1);
 
+
   dvb_table_add_default(tdmi);
+  epggrab_mux_start(tdmi);
 
   dvb_adapter_notify(tda);
   return 0;
