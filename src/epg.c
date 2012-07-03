@@ -1017,7 +1017,7 @@ static void _epg_channel_timer_callback ( void *p )
     /* Expire */
     if ( ebc->stop <= dispatch_clock ) {
       RB_REMOVE(&ch->ch_epg_schedule, ebc, sched_link);
-      tvhlog(LOG_DEBUG, "epg", "expire event %"PRItime_t" from %s",
+      tvhlog(LOG_DEBUG, "epg", "expire event %"PRIu64" from %s",
              ebc->id, ch->ch_name);
       ebc->putref((epg_object_t*)ebc);
       continue; // skip to next
