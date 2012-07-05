@@ -36,39 +36,13 @@
 // returns 1 if link made
 int epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch )
 {
-  service_t *sv;
-  int match = 0, i;
+  int match = 0;
 
   if (!ec || !ch) return 0;
   if (ec->channel) return 0;
 
   if (ec->name && !strcmp(ec->name, ch->ch_name))
     match = 1;
-  else {
-    LIST_FOREACH(sv, &ch->ch_services, s_ch_link) {
-      if (ec->sid) {
-        i = 0;
-        while (ec->sid[i]) {
-          if (sv->s_dvb_service_id == ec->sid[i]) {
-            match = 1;
-            break;
-          }
-          i++;
-        }
-      }
-      if (!match && ec->sname) {
-        i = 0;
-        while (ec->sname[i]) {
-          if (!strcmp(ec->sname[i], sv->s_svcname)) {
-            match = 1;
-            break;
-          }
-          i++;
-        }
-      }
-      if (match) break;
-    }
-  }
 
   if (match) {
     tvhlog(LOG_INFO, ec->mod->id, "linking %s to %s",
@@ -125,63 +99,6 @@ int epggrab_channel_set_number ( epggrab_channel_t *ec, int number )
     if (ec->channel && epggrab_channel_renumber)
       channel_set_number(ec->channel, number);
     save = 1;
-  }
-  return save;
-}
-
-/* Set service IDs */
-int epggrab_channel_set_sid 
-  ( epggrab_channel_t *ec, const uint16_t *sid )
-{
-  int save = 0, i;
-  if ( !ec || !sid ) return 0;
-  if (!ec->sid) save = 1;
-  else {
-    i = 0;
-    while ( ec->sid[i] && sid[i] ) {
-      if ( ec->sid[i] != sid[i] ) break;
-      i++;
-    }
-    if (ec->sid[i] || sid[i]) save = 1;
-  }
-  if (save) {
-    i = 0;
-    while (ec->sid[i++]);
-    if (ec->sid) free(ec->sid);
-    ec->sid = calloc(i, sizeof(uint16_t));
-    memcpy(ec->sid, sid, i * sizeof(uint16_t));
-  }
-  return save;
-}
-
-/* Set names */
-int epggrab_channel_set_sname ( epggrab_channel_t *ec, const char **sname )
-{
-  int save = 0, i = 0;
-  if ( !ec || !sname ) return 0;
-  if (!ec->sname) save = 1;
-  else {
-    while ( ec->sname[i] && sname[i] ) {
-      if (strcmp(ec->sname[i], sname[i])) break;
-      i++;
-    }
-    if (ec->sname[i] || sname[i]) save = 1;
-  }
-  if (save) {
-    if (ec->sname) {
-      i = 0;
-      while (ec->sname[i])
-        free(ec->sname[i++]);
-      free(ec->sname);
-    }
-    i = 0;
-    while (sname[i++]);
-    ec->sname = calloc(i+1, sizeof(char*));
-    i = 0;
-    while (sname[i]) {
-      ec->sname[i] = strdup(sname[i]);
-      i++;
-    } 
   }
   return save;
 }

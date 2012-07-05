@@ -142,9 +142,7 @@ void epggrab_module_parse
 
 void epggrab_module_ch_save ( void *_m, epggrab_channel_t *ch )
 {
-  int i;
   htsmsg_t *m = htsmsg_create_map();
-  htsmsg_t *a;
   epggrab_module_t *mod = _m;
 
   if (ch->name)
@@ -153,24 +151,6 @@ void epggrab_module_ch_save ( void *_m, epggrab_channel_t *ch )
     htsmsg_add_str(m, "icon", ch->icon);
   if (ch->channel)
     htsmsg_add_u32(m, "channel", ch->channel->ch_id);
-  if (ch->sid) {
-    a = htsmsg_create_list();
-    i = 0;
-    while (ch->sid[i]) {
-      htsmsg_add_u32(a, NULL, ch->sid[i]);
-      i++;
-    }
-    htsmsg_add_msg(m, "sid", a);
-  }
-  if (ch->sname) {
-    a = htsmsg_create_list();
-    i = 0;
-    while (ch->sname[i]) {
-      htsmsg_add_str(a, NULL, ch->sname[i]);
-      i++;
-    }
-    htsmsg_add_msg(m, "sname", a);
-  }
   if (ch->number)
     htsmsg_add_u32(m, "number", ch->number);
 
@@ -210,11 +190,9 @@ void epggrab_module_ch_mod ( void *mod, channel_t *ch )
 static void _epggrab_module_channel_load 
   ( epggrab_module_t *mod, htsmsg_t *m, const char *id )
 {
-  int save = 0, i;
+  int save = 0;
   const char *str;
   uint32_t u32;
-  htsmsg_t *a;
-  htsmsg_field_t *f;
 
   epggrab_channel_t *ch = epggrab_channel_find(mod->channels, id, 1, &save, mod);
 
@@ -222,28 +200,6 @@ static void _epggrab_module_channel_load
     ch->name = strdup(str);
   if ((str = htsmsg_get_str(m, "icon")))
     ch->icon = strdup(str);
-  if ((a = htsmsg_get_list(m, "sid"))) {
-    i = 0;
-    HTSMSG_FOREACH(f, a) i++;
-    if (i) {
-      ch->sid     = calloc(i+1, sizeof(uint16_t));
-      i = 0;
-      HTSMSG_FOREACH(f, a) {
-        ch->sid[i++] = (uint16_t)f->hmf_s64;
-      }
-    }
-  }
-  if ((a = htsmsg_get_list(m, "sname"))) {
-    i = 0;
-    HTSMSG_FOREACH(f, a) i++;
-    if (i) {
-      ch->sname = calloc(i+1, sizeof(char*));
-      i = 0;
-      HTSMSG_FOREACH(f, a) {
-        ch->sname[i++] = strdup(f->hmf_str);
-      }
-    }
-  }
   if(!htsmsg_get_u32(m, "number", &u32))
     ch->number = u32;
 
