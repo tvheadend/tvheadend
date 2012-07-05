@@ -83,10 +83,10 @@ struct epg_object
   int                     refcount;   ///< Reference counting
   // Note: could use LIST_ENTRY field to determine this!
 
-  void (*getref)  ( epg_object_t* ); ///< Get a reference
-  void (*putref)  ( epg_object_t* ); ///< Release a reference
-  void (*destroy) ( epg_object_t* ); ///< Delete the object
-  void (*updated) ( epg_object_t* ); ///< Updated
+  void (*getref)  ( void *o ); ///< Get a reference
+  void (*putref)  ( void *o ); ///< Release a reference
+  void (*destroy) ( void *o ); ///< Delete the object
+  void (*updated) ( void *o ); ///< Updated
 };
 
 /* ************************************************************************
