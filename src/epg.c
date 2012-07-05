@@ -343,33 +343,33 @@ int epg_brand_set_season_count ( epg_brand_t *brand, uint16_t count )
 static void _epg_brand_add_season 
   ( epg_brand_t *brand, epg_season_t *season )
 {
-  LIST_INSERT_SORTED(&brand->seasons, season, blink, _season_order);
   _epg_object_getref(brand);
   _epg_object_set_updated(brand);
+  LIST_INSERT_SORTED(&brand->seasons, season, blink, _season_order);
 }
 
 static void _epg_brand_rem_season
   ( epg_brand_t *brand, epg_season_t *season )
 {
   LIST_REMOVE(season, blink);
-  _epg_object_putref(brand);
   _epg_object_set_updated(brand);
+  _epg_object_putref(brand);
 }
 
 static void _epg_brand_add_episode
   ( epg_brand_t *brand, epg_episode_t *episode )
 {
-  LIST_INSERT_SORTED(&brand->episodes, episode, blink, _episode_order);
   _epg_object_getref(brand);
   _epg_object_set_updated(brand);
+  LIST_INSERT_SORTED(&brand->episodes, episode, blink, _episode_order);
 }
 
 static void _epg_brand_rem_episode
   ( epg_brand_t *brand, epg_episode_t *episode )
 {
   LIST_REMOVE(episode, blink);
-  _epg_object_putref(brand);
   _epg_object_set_updated(brand);
+  _epg_object_putref(brand);
 }
 
 htsmsg_t *epg_brand_serialize ( epg_brand_t *brand )
@@ -509,17 +509,17 @@ int epg_season_set_brand ( epg_season_t *season, epg_brand_t *brand, int u )
 static void _epg_season_add_episode
   ( epg_season_t *season, epg_episode_t *episode )
 {
-  LIST_INSERT_SORTED(&season->episodes, episode, slink, _episode_order);
   _epg_object_getref(season);
   _epg_object_set_updated(season);
+  LIST_INSERT_SORTED(&season->episodes, episode, slink, _episode_order);
 }
 
 static void _epg_season_rem_episode
   ( epg_season_t *season, epg_episode_t *episode )
 {
   LIST_REMOVE(episode, slink);
-  _epg_object_putref(season);
   _epg_object_set_updated(season);
+  _epg_object_putref(season);
 }
 
 htsmsg_t *epg_season_serialize ( epg_season_t *season )
@@ -813,17 +813,17 @@ int epg_episode_set_is_bw ( epg_episode_t *e, uint8_t bw )
 static void _epg_episode_add_broadcast 
   ( epg_episode_t *episode, epg_broadcast_t *broadcast )
 {
-  LIST_INSERT_SORTED(&episode->broadcasts, broadcast, ep_link, _ebc_start_cmp);
   _epg_object_getref(episode);
   _epg_object_set_updated(episode);
+  LIST_INSERT_SORTED(&episode->broadcasts, broadcast, ep_link, _ebc_start_cmp);
 }
 
 static void _epg_episode_rem_broadcast
   ( epg_episode_t *episode, epg_broadcast_t *broadcast )
 {
   LIST_REMOVE(broadcast, ep_link);
-  _epg_object_putref(episode);
   _epg_object_set_updated(episode);
+  _epg_object_putref(episode);
 }
 
 size_t epg_episode_number_format 
@@ -1045,6 +1045,7 @@ static epg_broadcast_t *_epg_channel_add_broadcast
       ret    = *bcast;
       *bcast = NULL;
       _epg_object_create(ret);
+      // Note: sets updated
       _epg_object_getref(ret);
 
     /* No change */
@@ -1054,6 +1055,7 @@ static epg_broadcast_t *_epg_channel_add_broadcast
     /* Extend in time */
     } else {
       ret->stop = (*bcast)->stop;
+      _epg_object_set_updated(ret);
     }
   }
   
