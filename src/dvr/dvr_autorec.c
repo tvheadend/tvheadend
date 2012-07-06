@@ -340,8 +340,6 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
   channel_t *ch;
   channel_tag_t *ct;
   uint32_t u32;
-printf("autorec_record_update()\n");
-  htsmsg_print(values);
 
   if((dae = autorec_entry_find(id, maycreate)) == NULL)
     return NULL;

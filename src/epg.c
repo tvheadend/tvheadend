@@ -1346,7 +1346,7 @@ epg_broadcast_t *epg_broadcast_deserialize
 // that relates more to broadcast content than what I call a "genre"
 // these will be handled elsewhere as broadcast metadata
 static const char *_epg_genre_names[16][16] = {
-  { },
+  { "" },
   {
     "Movie/Drama",
     "detective/thriller",
