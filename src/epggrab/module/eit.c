@@ -374,8 +374,8 @@ static int _eit_callback
       char *uri;
       uri   = epg_hash(title, summary, desc);
       if (uri) {
-        ee    = epg_episode_find_by_uri(uri, 1, &save2);
-        save |= epg_broadcast_set_episode(ebc, ee);
+        if ((ee    = epg_episode_find_by_uri(uri, 1, &save2)))
+          save |= epg_broadcast_set_episode(ebc, ee);
         free(uri);
       }
     }
