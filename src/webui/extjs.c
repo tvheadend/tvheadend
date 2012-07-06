@@ -414,24 +414,11 @@ static int
 extjs_ecglist(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
-  htsmsg_t *out, *array, *c;
-  const char *s;
-  int i;
+  htsmsg_t *out, *array;
 
-  out = htsmsg_create_map();
-  array = htsmsg_create_list();
-
-  for(i = 0; i < 16; i++) {
-    if((s = epg_genre_get_name(i<<4, 0)) == NULL)
-      continue;
-
-    c = htsmsg_create_map();
-    htsmsg_add_str(c, "name", s);
-    htsmsg_add_msg(array, NULL, c);
-  }
-
+  out   = htsmsg_create_map();
+  array = epg_genres_list_all(1, 0);
   htsmsg_add_msg(out, "entries", array);
-
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");
@@ -658,13 +645,13 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   epg_query_result_t eqr;
   epg_broadcast_t *e;
   epg_episode_t *ee = NULL;
+  epg_genre_t *eg = NULL, genre;
   channel_t *ch;
   int start = 0, end, limit, i;
   const char *s;
   char buf[100];
   const char *channel = http_arg_get(&hc->hc_req_args, "channel");
   const char *tag     = http_arg_get(&hc->hc_req_args, "tag");
-  const char *cgrp    = http_arg_get(&hc->hc_req_args, "contentgrp");
   const char *title   = http_arg_get(&hc->hc_req_args, "title");
 
   if(channel && !channel[0]) channel = NULL;
@@ -678,12 +665,17 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   else
     limit = 20; /* XXX */
 
+  if ((s = http_arg_get(&hc->hc_req_args, "contenttype"))) {
+    genre.code = atoi(s);
+    eg = &genre;
+  }
+
   out = htsmsg_create_map();
   array = htsmsg_create_list();
 
   pthread_mutex_lock(&global_lock);
 
-  epg_query(&eqr, channel, tag, cgrp, title);
+  epg_query(&eqr, channel, tag, eg, title);
 
   epg_query_sort(&eqr);
 
@@ -724,9 +716,9 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(m, "end", e->stop);
     htsmsg_add_u32(m, "duration", e->stop - e->start);
     
-    if(ee->genre_cnt)
-      if((s = epg_genre_get_name(ee->genre[0], 0)))
-        htsmsg_add_str(m, "contentgrp", s);
+    if((eg = LIST_FIRST(&ee->genre))) {
+      htsmsg_add_u32(m, "contenttype", eg->code);
+    }
 
     dvr_entry_t *de;
     if((de = dvr_entry_find_by_event(e)) != NULL)
@@ -1000,13 +992,17 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(out, "success", 1);
 
   } else if(!strcmp(op, "createAutoRec")) {
-    const char *cgrp = http_arg_get(&hc->hc_req_args, "contentgrp");
+    epg_genre_t genre, *eg = NULL;
+    if ((s = http_arg_get(&hc->hc_req_args, "contenttype"))) {
+      genre.code = atoi(s);
+      eg = &genre;
+    }
 
     dvr_autorec_add(http_arg_get(&hc->hc_req_args, "config_name"),
                     http_arg_get(&hc->hc_req_args, "title"),
 		    http_arg_get(&hc->hc_req_args, "channel"),
 		    http_arg_get(&hc->hc_req_args, "tag"),
-		    cgrp ? epg_genre_find_by_name(cgrp) : 0,
+        eg,
 		    hc->hc_representative, "Created from EPG query");
 
     out = htsmsg_create_map();

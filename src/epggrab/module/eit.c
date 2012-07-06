@@ -152,13 +152,12 @@ static int _eit_callback
   channel_t *ch;
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
+  epg_genre_list_t *egl = NULL;
   eit_status_t *sta;
   int resched = 0, save = 0, save2 = 0, dllen, dtag, dlen;
   uint16_t tsid, sid, eid;
   uint8_t bw, hd, ws, ad, ds, st;
   time_t start, stop;
-  int genre_idx = 0;
-  uint8_t genre[10];
   char title[256];
   char summary[256];
   char desc[5000];
@@ -260,7 +259,6 @@ static int _eit_callback
     /* Process tags */
     *title    = *summary = *desc = 0;
     extra     = NULL;
-    genre_idx = 0;
     hd = ws = bw = ad = st = ds = 0;
     while(dllen > 0) {
       dtag = ptr[0];
@@ -296,8 +294,10 @@ static int _eit_callback
             dlen -= 2;
             if   ( *ptr == 0xb1 )
               bw = 1;
-            else if ( *ptr < 0xb0 && genre_idx < sizeof(genre) )
-              genre[genre_idx++] = *ptr;
+            else if ( *ptr < 0xb0 ) {
+              if (!egl) egl = calloc(1, sizeof(epg_genre_list_t));
+              epg_genre_list_add_by_eit(egl, *ptr);
+            }
           }
           break;
 
@@ -376,8 +376,8 @@ static int _eit_callback
       char *uri;
       uri   = epg_hash(title, summary, desc);
       if (uri) {
-        ee    = epg_episode_find_by_uri(uri, 1, &save2);
-        save |= epg_broadcast_set_episode(ebc, ee);
+        if ((ee    = epg_episode_find_by_uri(uri, 1, &save2)))
+          save |= epg_broadcast_set_episode(ebc, ee);
         free(uri);
       }
     }
@@ -392,14 +392,17 @@ static int _eit_callback
         save |= epg_episode_set_summary(ee, summary);
       if ( !ee->description && *desc )
         save |= epg_episode_set_description(ee, desc);
-      if ( !ee->genre_cnt && genre_idx )
-        save |= epg_episode_set_genre(ee, genre, genre_idx);
+      if ( !LIST_FIRST(&ee->genre) && egl )
+        save |= epg_episode_set_genre(ee, egl);
 #if TODO_ADD_EXTRA
       if ( extra )
         save |= epg_episode_set_extra(ee, extra);
 #endif
     }
+
+    /* Tidy up */
     if (extra) free(extra);
+    if (egl)   epg_genre_list_destroy(egl);
   }
   
   /* Update EPG */
