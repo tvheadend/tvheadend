@@ -256,6 +256,7 @@ build_weekday_mask(const char *str)
 static htsmsg_t *
 autorec_record_build(dvr_autorec_entry_t *dae)
 {
+  const char *s;
   char str[30];
   htsmsg_t *e = htsmsg_create_map();
 
@@ -275,7 +276,11 @@ autorec_record_build(dvr_autorec_entry_t *dae)
   if(dae->dae_channel_tag != NULL)
     htsmsg_add_str(e, "tag", dae->dae_channel_tag->ct_name);
 
+  // Note: Mixed usage creates problems, for now we have to store
+  //       both values!
   htsmsg_add_u32(e, "contenttype",dae->dae_content_type);
+  if ((s = epg_content_group_get_name(dae->dae_content_type)))
+    htsmsg_add_str(e, "contentgrp", s);
 
   htsmsg_add_str(e, "title", dae->dae_title ?: "");
 
@@ -389,7 +394,15 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
     }
   }
 
-  dae->dae_content_type = htsmsg_get_u32_or_default(values, "contenttype", 0);
+  // Note: unfortunately there is a mixed usage here, DVR code uses
+  // contenttype however UI code uses contentgrp. so we test for both!
+  if (htsmsg_get_u32(values, "contenttype", &u32)) {
+    if ((s = htsmsg_get_str(values, "contentgrp")))
+      u32 = epg_content_group_find_by_name(s);
+    else
+      u32 = 0;
+  }
+  dae->dae_content_type = u32;
 
   if((s = htsmsg_get_str(values, "approx_time")) != NULL) {
     if(strchr(s, ':') != NULL) {
