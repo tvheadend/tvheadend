@@ -132,7 +132,7 @@ typedef struct dvr_entry {
   char *de_ititle;     /* Internal title optionally with channelname
 			  date and time pre/post/fixed */
   char *de_desc;       /* Description in UTF-8 (from EPG) */
-  uint8_t de_content_type; /* Content type (from EPG) */
+  epg_genre_t de_content_type; /* Content type (from EPG) */
 
   dvr_prio_t de_pri;
 
@@ -205,7 +205,7 @@ typedef struct dvr_autorec_entry {
   char *dae_title;
   regex_t dae_title_preg;
   
-  uint8_t dae_content_type;
+  epg_genre_t dae_content_type;
 
   int dae_approx_time; /* Minutes from midnight */
 
@@ -259,7 +259,7 @@ dvr_entry_t *dvr_entry_create(const char *dvr_config_name,
                               channel_t *ch, time_t start, time_t stop, 
             time_t start_extra, time_t stop_extra,
 			      const char *title, const char *description,
-            uint8_t content_type,
+            epg_genre_t *content_type,
 			      const char *creator, dvr_autorec_entry_t *dae,
 			      dvr_prio_t pri);
 
@@ -327,7 +327,7 @@ void dvr_query_sort(dvr_query_result_t *dqr);
  */
 void dvr_autorec_add(const char *dvr_config_name,
                      const char *title, const char *channel,
-		     const char *tag, uint8_t content_type,
+		     const char *tag, epg_genre_t *content_type,
 		     const char *creator, const char *comment);
 
 void dvr_autorec_add_series_link(const char *dvr_config_name,

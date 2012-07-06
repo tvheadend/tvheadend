@@ -709,10 +709,11 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_t *out, *eventIds;
   const char *query;
   int c, i;
-  uint32_t channelid, tagid, epg_content_dvbcode = 0;
+  uint32_t channelid, tagid, epg_content_dvbcode;
   channel_t *ch = NULL;
   channel_tag_t *ct = NULL;
   epg_query_result_t eqr;
+  epg_genre_t genre, *eg = NULL;
   
   //only mandatory parameter is the query
   if( (query = htsmsg_get_str(in, "query")) == NULL )
@@ -724,10 +725,13 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   if( !(htsmsg_get_u32(in, "tagId", &tagid)) )
     ct = channel_tag_find_by_identifier(tagid);
 
-  htsmsg_get_u32(in, "contentType", &epg_content_dvbcode);
+  if (!htsmsg_get_u32(in, "contentType", &epg_content_dvbcode)) {
+    genre.code = epg_content_dvbcode;
+    eg = &genre;
+  }
 
   //do the query
-  epg_query0(&eqr, ch, ct, epg_content_dvbcode, query);
+  epg_query0(&eqr, ch, ct, eg, query);
   c = eqr.eqr_entries;
 
   // create reply
@@ -754,6 +758,7 @@ htsp_build_event(epg_broadcast_t *e)
   htsmsg_t *out;
   epg_broadcast_t *n;
   dvr_entry_t *de;
+  epg_genre_t *g;
 
   out = htsmsg_create_map();
 
@@ -769,9 +774,8 @@ htsp_build_event(epg_broadcast_t *e)
     else if(e->episode->summary != NULL)
       htsmsg_add_str(out, "description", e->episode->summary);
 
-    // TODO: only supports one entry!
-    if(e->episode->genre_cnt)
-      htsmsg_add_u32(out, "contentType", e->episode->genre[0]);
+    if((g = LIST_FIRST(&e->episode->genre)))
+      htsmsg_add_u32(out, "contentType", g->code);
   }
 
   if((de = dvr_entry_find_by_event(e)) != NULL) {

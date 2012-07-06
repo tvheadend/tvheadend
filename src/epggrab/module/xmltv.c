@@ -302,6 +302,24 @@ xmltv_parse_accessibility ( epg_broadcast_t *ebc, htsmsg_t *m )
   return save;
 }
 
+/*
+ * Parse category list
+ */
+static epg_genre_list_t
+*_xmltv_parse_categories ( htsmsg_t *tags )
+{
+  htsmsg_t *e;
+  htsmsg_field_t *f;
+  epg_genre_list_t *egl = NULL;
+  HTSMSG_FOREACH(f, tags) {
+    if (!strcmp(f->hmf_name, "category") && (e = htsmsg_get_map_by_field(f))) {
+      if (!egl) egl = calloc(1, sizeof(epg_genre_list_t));
+      epg_genre_list_add_by_str(egl, htsmsg_get_str(e, "cdata"));
+    }
+  }
+  return egl;
+}
+
 /**
  * Parse tags inside of a programme
  */
@@ -313,12 +331,12 @@ _xmltv_parse_programme_tags(channel_t *ch, htsmsg_t *tags,
   epg_episode_t *ee;
   epg_broadcast_t *ebc;
   epg_season_t *es;
+  epg_genre_list_t *egl;
   int sn = 0, sc = 0, en = 0, ec = 0, pn = 0, pc = 0;
   char *uri = NULL, *suri = NULL;
   const char *onscreen = NULL;
   const char *title = htsmsg_xml_get_cdata_str(tags, "title");
   const char *desc  = htsmsg_xml_get_cdata_str(tags, "desc");
-  const char *category[2];
   get_episode_info(tags, &uri, &suri, &onscreen, &sn, &sc, &en, &ec, &pn, &pc);
 
   /* Ignore */
@@ -339,11 +357,12 @@ _xmltv_parse_programme_tags(channel_t *ch, htsmsg_t *tags,
     free(suri);
   }
 
-  category[0] = htsmsg_xml_get_cdata_str(tags, "category");
-  category[1] = NULL;
   if (title)     save |= epg_episode_set_title(ee, title);
   if (desc)      save |= epg_episode_set_description(ee, desc);
-  if (*category) save |= epg_episode_set_genre_str(ee, category);
+  if ((egl = _xmltv_parse_categories(tags))) {
+    save |= epg_episode_set_genre(ee, egl);
+    epg_genre_list_destroy(egl);
+  }
   if (pn)        save |= epg_episode_set_part(ee, pn, pc);
   if (en)        save |= epg_episode_set_number(ee, en);
   if (save) stats->episodes.modified++;

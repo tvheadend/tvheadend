@@ -28,7 +28,7 @@ struct channel;
 struct channel_tag;
 
 /*
- * Map types
+ * Map/List types
  */
 LIST_HEAD(epg_object_list,     epg_object);
 RB_HEAD  (epg_object_tree,     epg_object);
@@ -37,10 +37,12 @@ LIST_HEAD(epg_season_list,     epg_season);
 LIST_HEAD(epg_episode_list,    epg_episode);
 LIST_HEAD(epg_broadcast_list,  epg_broadcast);
 RB_HEAD  (epg_broadcast_tree,  epg_broadcast);
+LIST_HEAD(epg_genre_list,      epg_genre);
 
 /*
  * Typedefs (most are redundant!)
  */
+typedef struct epg_genre           epg_genre_t;
 typedef struct epg_object          epg_object_t;
 typedef struct epg_brand           epg_brand_t;
 typedef struct epg_season          epg_season_t;
@@ -52,6 +54,38 @@ typedef struct epg_broadcast_list  epg_broadcast_list_t;
 typedef struct epg_broadcast_tree  epg_broadcast_tree_t;
 typedef struct epg_object_list     epg_object_list_t;
 typedef struct epg_object_tree     epg_object_tree_t;
+typedef struct epg_genre_list      epg_genre_list_t;
+
+/* ************************************************************************
+ * Genres
+ * ***********************************************************************/
+
+/* Genre object */
+struct epg_genre
+{
+  LIST_ENTRY(epg_genre) link;
+  uint8_t               code;
+};
+
+/* Accessors */
+uint8_t epg_genre_get_eit ( const epg_genre_t *genre );
+size_t  epg_genre_get_str ( const epg_genre_t *genre, int major_only,
+                            int major_prefix, char *buf, size_t len );
+
+/* Delete */
+void epg_genre_list_destroy   ( epg_genre_list_t *list );
+
+/* Add to list */
+int epg_genre_list_add        ( epg_genre_list_t *list, epg_genre_t *genre );
+int epg_genre_list_add_by_eit ( epg_genre_list_t *list, uint8_t eit );
+int epg_genre_list_add_by_str ( epg_genre_list_t *list, const char *str );
+
+/* Search */
+int epg_genre_list_contains
+  ( epg_genre_list_t *list, epg_genre_t *genre, int partial );
+
+/* List all available genres */
+htsmsg_t *epg_genres_list_all ( int major_only, int major_prefix );
 
 /* ************************************************************************
  * Generic Object
@@ -198,11 +232,10 @@ struct epg_episode
   char                      *subtitle;      ///< Sub-title
   char                      *summary;       ///< Summary
   char                      *description;   ///< An extended description
-  uint8_t                   *genre;         ///< Episode genre(s)
-  int                        genre_cnt;     ///< Genre count
+  char                      *image;         ///< Episode image
+  epg_genre_list_t           genre;         ///< Episode genre(s)
   epg_episode_num_t          epnum;         ///< Episode numbering
   // Note: do not use epnum directly! use the accessor routine
-  char                      *image;         ///< Episode image
 
   uint8_t                    is_bw;            ///< Is black and white
   // TODO: certification and rating
@@ -213,7 +246,6 @@ struct epg_episode
   epg_brand_t               *brand;         ///< (Grand-)Parent brand
   epg_season_t              *season;        ///< Parent season
   epg_broadcast_list_t       broadcasts;    ///< Broadcast list
-
 };
 
 /* Lookup */
@@ -241,7 +273,7 @@ int epg_episode_set_brand        ( epg_episode_t *e, epg_brand_t *b )
   __attribute__((warn_unused_result));
 int epg_episode_set_season       ( epg_episode_t *e, epg_season_t *s )
   __attribute__((warn_unused_result));
-int epg_episode_set_genre        ( epg_episode_t *e, const uint8_t *g, int c )
+int epg_episode_set_genre        ( epg_episode_t *e, epg_genre_list_t *g )
   __attribute__((warn_unused_result));
 int epg_episode_set_genre_str    ( epg_episode_t *e, const char **s )
   __attribute__((warn_unused_result));
@@ -360,13 +392,6 @@ epg_broadcast_t *epg_broadcast_deserialize
 void epg_channel_unlink ( struct channel *ch );
 
 /* ************************************************************************
- * Genre
- * ***********************************************************************/
-
-uint8_t     epg_genre_find_by_name ( const char *name );
-const char *epg_genre_get_name     ( uint8_t genre, int full );
-
-/* ************************************************************************
  * Querying
  * ***********************************************************************/
 
@@ -387,9 +412,9 @@ void epg_query_sort(epg_query_result_t *eqr);
 
 /* Query routines */
 void epg_query0(epg_query_result_t *eqr, struct channel *ch,
-                struct channel_tag *ct, uint8_t type, const char *title);
+                struct channel_tag *ct, epg_genre_t *genre, const char *title);
 void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
-	       const char *contentgroup, const char *title);
+	       epg_genre_t *genre, const char *title);
 
 
 /* ************************************************************************
