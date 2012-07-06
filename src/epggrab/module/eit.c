@@ -152,7 +152,7 @@ static int _eit_callback
   channel_t *ch;
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
-  epg_genre_list_t genre;
+  epg_genre_list_t *egl = NULL;
   eit_status_t *sta;
   int resched = 0, save = 0, save2 = 0, dllen, dtag, dlen;
   uint16_t tsid, sid, eid;
@@ -294,8 +294,10 @@ static int _eit_callback
             dlen -= 2;
             if   ( *ptr == 0xb1 )
               bw = 1;
-            else if ( *ptr < 0xb0 )
-              epg_genre_list_add_by_eit(&genre, *ptr);
+            else if ( *ptr < 0xb0 ) {
+              if (!egl) egl = calloc(1, sizeof(epg_genre_list_t));
+              epg_genre_list_add_by_eit(egl, *ptr);
+            }
           }
           break;
 
@@ -390,8 +392,8 @@ static int _eit_callback
         save |= epg_episode_set_summary(ee, summary);
       if ( !ee->description && *desc )
         save |= epg_episode_set_description(ee, desc);
-      if ( !LIST_FIRST(&ee->genre) && LIST_FIRST(&genre) )
-        save |= epg_episode_set_genre(ee, &genre);
+      if ( !LIST_FIRST(&ee->genre) && egl )
+        save |= epg_episode_set_genre(ee, egl);
 #if TODO_ADD_EXTRA
       if ( extra )
         save |= epg_episode_set_extra(ee, extra);
@@ -400,7 +402,7 @@ static int _eit_callback
 
     /* Tidy up */
     if (extra) free(extra);
-    epg_genre_list_destroy(&genre);
+    if (egl)   epg_genre_list_destroy(egl);
   }
   
   /* Update EPG */
