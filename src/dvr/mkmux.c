@@ -464,9 +464,9 @@ static htsbuf_queue_t *
 _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc)
 {
   htsbuf_queue_t *q = htsbuf_queue_alloc(0);
-  char datestr[64];
+  char datestr[64], ctype[100];
+  const epg_genre_t *eg = NULL;
   struct tm tm;
-  const char *ctype = NULL;
   localtime_r(de ? &de->de_start : &ebc->start, &tm);
   epg_episode_t *ee = NULL;
   channel_t *ch;
@@ -490,12 +490,12 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc)
 
   addtag(q, build_tag_string("ORIGINAL_MEDIA_TYPE", "TV", 0, NULL));
 
-  if(de && de->de_content_type) {
-    ctype = epg_genre_get_name(de->de_content_type, 0);
-  } else if (ee && ee->genre_cnt) {
-    ctype = epg_genre_get_name(ee->genre[0], 0);
+  if(de && de->de_content_type.code) {
+    eg = &de->de_content_type;
+  } else if (ee) {
+    eg = LIST_FIRST(&ee->genre);
   }
-  if(ctype != NULL)
+  if(eg && epg_genre_get_str(eg, 1, 0, ctype, 100))
     addtag(q, build_tag_string("CONTENT_TYPE", ctype, 0, NULL));
 
   if(ch)

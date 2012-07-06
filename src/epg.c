@@ -618,6 +618,7 @@ static epg_episode_num_t *epg_episode_num_deserialize
 
 static void _epg_episode_destroy ( void *eo )
 {
+  epg_genre_t *g;
   epg_episode_t *ee = eo;
   if (LIST_FIRST(&ee->broadcasts)) {
     tvhlog(LOG_CRIT, "epg", "attempt to destroy episode with broadcasts");
@@ -630,7 +631,10 @@ static void _epg_episode_destroy ( void *eo )
   if (ee->subtitle)    free(ee->subtitle);
   if (ee->summary)     free(ee->summary);
   if (ee->description) free(ee->description);
-  if (ee->genre)       free(ee->genre);
+  while ((g = LIST_FIRST(&ee->genre))) {
+    LIST_REMOVE(g, link);
+    free(g);
+  }
   if (ee->image)       free(ee->image);
   if (ee->epnum.text)  free(ee->epnum.text);
   free(ee);
@@ -761,53 +765,36 @@ int epg_episode_set_season ( epg_episode_t *episode, epg_season_t *season )
   return save;
 }
 
-int epg_episode_set_genre ( epg_episode_t *ee, const uint8_t *genre, int cnt )
+int epg_episode_set_genre ( epg_episode_t *ee, epg_genre_list_t *genre )
 {
-  int i, save = 0;
-  if (!ee || !genre || !cnt) return 0;
-  if (cnt != ee->genre_cnt)
-    save = 1;
-  else {
-    for (i = 0; i < cnt; i++ ) {
-      if (genre[i] != ee->genre[i]) {
-        save = 1;
-        break;
-      }
-    }
-  }
-  if (save) {
-    if (cnt > ee->genre_cnt)
-      ee->genre     = realloc(ee->genre, cnt * sizeof(uint8_t));
-    memcpy(ee->genre, genre, cnt * sizeof(uint8_t));
-    ee->genre_cnt = cnt;
-  }
-  return save;
-}
+  int save = 0;
+  epg_genre_t *g1, *g2;
 
-// Note: only works for the EN 300 468 defined names
-int epg_episode_set_genre_str ( epg_episode_t *ee, const char **gstr )
-{
-  static int gcnt = 0;
-  static uint8_t *genre;
-  int cnt = 0;
-  while (gstr[cnt]) cnt++;
-  if (!cnt) return 0;
-  if (cnt > gcnt) {
-    genre = realloc(genre, sizeof(uint8_t) * cnt);
-    gcnt  = cnt;
+  /* Remove old */
+  g1 = LIST_FIRST(&ee->genre);
+  while (g1) {
+    g2 = LIST_NEXT(g1, link);
+    if (!epg_genre_list_contains(genre, g1, 0)) {
+      LIST_REMOVE(g1, link);
+      save = 1;
+    }
+    g1 = g2;
   }
-  cnt = 0;
-  while (gstr[cnt]) {
-    genre[cnt] = epg_genre_find_by_name(gstr[cnt]);
-    cnt++;
+  
+  /* Insert all entries */
+  LIST_FOREACH(g1, genre, link) {
+    save |= epg_genre_list_add(&ee->genre, g1);
   }
-  return epg_episode_set_genre(ee, genre, gcnt);
+
+  return save;
 }
 
 int epg_episode_set_is_bw ( epg_episode_t *e, uint8_t bw )
 {
+  int save = 0;
   if (!e) return 0;
   return _epg_object_set_u8(e, &e->is_bw, bw);
+  return save;
 }
 
 static void _epg_episode_add_broadcast 
@@ -893,7 +880,8 @@ int epg_episode_fuzzy_match
 
 htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
 {
-  htsmsg_t *m;
+  epg_genre_t *eg;
+  htsmsg_t *m, *a = NULL;
   if (!episode || !episode->uri) return NULL;
   if (!(m = _epg_object_serialize((epg_object_t*)episode))) return NULL;
   htsmsg_add_str(m, "uri", episode->uri);
@@ -905,7 +893,12 @@ htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
     htsmsg_add_str(m, "summary", episode->summary);
   if (episode->description)
     htsmsg_add_str(m, "description", episode->description);
-  htsmsg_add_msg(m, "epnum", epg_episode_num_serialize(&episode->epnum)); 
+  htsmsg_add_msg(m, "epnum", epg_episode_num_serialize(&episode->epnum));
+  LIST_FOREACH(eg, &episode->genre, link) {
+    if (!a) a = htsmsg_create_list();
+    htsmsg_add_u32(a, NULL, eg->code);
+  }
+  if (a) htsmsg_add_msg(m, "genre", a);
   if (episode->brand)
     htsmsg_add_str(m, "brand", episode->brand->uri);
   if (episode->season)
@@ -924,6 +917,7 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
   const char *str;
   epg_episode_num_t num;
   htsmsg_t *sub;
+  htsmsg_field_t *f;
   
   if ( !_epg_object_deserialize(m, *skel) ) return NULL;
   if ( !(ee = epg_episode_find_by_uri((*skel)->uri, create, save)) ) return NULL;
@@ -941,6 +935,17 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
     *save |= epg_episode_set_epnum(ee, &num);
     if (num.text) free(num.text);
   }
+  if ( (sub = htsmsg_get_list(m, "genre")) ) {
+    epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
+    HTSMSG_FOREACH(f, sub) {
+      epg_genre_t genre;
+      genre.code = (uint8_t)f->hmf_s64;
+      epg_genre_list_add(egl, &genre);
+    }
+    *save |= epg_episode_set_genre(ee, egl);
+    epg_genre_list_destroy(egl);
+  }
+  
   if ( (str = htsmsg_get_str(m, "season")) )
     if ( (es = epg_season_find_by_uri(str, 0, NULL)) )
       *save |= epg_episode_set_season(ee, es);
@@ -1336,11 +1341,12 @@ epg_broadcast_t *epg_broadcast_deserialize
  * Genre
  * *************************************************************************/
 
+// TODO: make this configurable
 // FULL(ish) list from EN 300 468, I've excluded the last category
 // that relates more to broadcast content than what I call a "genre"
 // these will be handled elsewhere as broadcast metadata
 static const char *_epg_genre_names[16][16] = {
-  {},
+  { },
   {
     "Movie/Drama",
     "detective/thriller",
@@ -1507,7 +1513,7 @@ static int _genre_str_match ( const char *a, const char *b )
   return (a[i] == '\0' && b[j] == '\0'); // end of string(both)
 }
 
-uint8_t epg_genre_find_by_name ( const char *name )
+static uint8_t _epg_genre_find_by_name ( const char *name )
 {
   uint8_t a, b;
   for ( a = 1; a < 11; a++ ) {
@@ -1519,12 +1525,131 @@ uint8_t epg_genre_find_by_name ( const char *name )
   return 0; // undefined
 }
 
-const char *epg_genre_get_name ( uint8_t genre, int full )
+uint8_t epg_genre_get_eit ( const epg_genre_t *genre )
 {
-  int a, b = 0;
-  a = (genre >> 4) & 0xF;
-  if (full) b = (genre & 0xF);
-  return _epg_genre_names[a][b];
+  if (!genre) return 0;
+  return genre->code;
+}
+
+size_t epg_genre_get_str ( const epg_genre_t *genre, int major_only,
+                           int major_prefix, char *buf, size_t len )
+{
+  int maj, min;
+  size_t ret = 0;
+  if (!genre || !buf) return 0;
+  maj = (genre->code >> 4) & 0xf;
+  if (!_epg_genre_names[maj][0]) return 0;
+  min = major_only ? 0 : (genre->code & 0xf);
+  if (!min || major_prefix ) {
+    ret = snprintf(buf, len, "%s", _epg_genre_names[maj][0]);
+    if (min) ret += snprintf(buf+ret, len-ret, " : ");
+  }
+  if (min && _epg_genre_names[maj][min]) {
+    ret += snprintf(buf+ret, len-ret, "%s", _epg_genre_names[maj][min]);
+  }
+  return ret;
+}
+
+int epg_genre_list_add ( epg_genre_list_t *list, epg_genre_t *genre )
+{
+  epg_genre_t *g1, *g2;
+  if (!list || !genre || !genre->code) return 0;
+  g1 = LIST_FIRST(list);
+  if (!g1) {
+    g2 = calloc(1, sizeof(epg_genre_t));
+    g2->code = genre->code;
+    LIST_INSERT_HEAD(list, g2, link);
+  } else {
+    while (g1) {
+    
+      /* Already exists */
+      if (g1->code == genre->code) return 0;
+
+      /* Update a major only entry */
+      if (g1->code == (genre->code & 0xF0)) {
+        g1->code = genre->code;
+        break;
+      }
+
+      /* Insert before */
+      if (g1->code > genre->code) {
+        g2 = calloc(1, sizeof(epg_genre_t));
+        g2->code = genre->code;
+        LIST_INSERT_BEFORE(g1, g2, link);
+        break;
+      }
+
+      /* Insert after (end) */
+      if (!(g2 = LIST_NEXT(g1, link))) {
+        g2 = calloc(1, sizeof(epg_genre_t));
+        g2->code = genre->code;
+        LIST_INSERT_AFTER(g1, g2, link);
+        break;
+      }
+
+      /* Next */
+      g1 = g2;
+    }
+  }
+  return 1;
+}
+
+int epg_genre_list_add_by_eit ( epg_genre_list_t *list, uint8_t eit )
+{
+  epg_genre_t g;
+  g.code = eit;
+  return epg_genre_list_add(list, &g);
+}
+
+int epg_genre_list_add_by_str ( epg_genre_list_t *list, const char *str )
+{
+  epg_genre_t g;
+  g.code = _epg_genre_find_by_name(str);
+  return epg_genre_list_add(list, &g);
+}
+
+// Note: if partial=1 and genre is a major only category then all minor
+// entries will also match
+int epg_genre_list_contains 
+  ( epg_genre_list_t *list, epg_genre_t *genre, int partial )
+{
+  uint8_t mask = 0xFF;
+  epg_genre_t *g;
+  if (!list || !genre) return 0;
+  if (partial && !(genre->code & 0x0F)) mask = 0xF0;
+  LIST_FOREACH(g, list, link) {
+    if ((g->code & mask) == genre->code) break;
+  }
+  return g ? 1 : 0;
+}
+
+void epg_genre_list_destroy ( epg_genre_list_t *list )
+{
+  epg_genre_t *g;
+  while ((g = LIST_FIRST(list))) {
+    LIST_REMOVE(g, link);
+    free(g);
+  }
+  free(list);
+}
+
+htsmsg_t *epg_genres_list_all ( int major_only, int major_prefix )
+{
+  int i, j;
+  htsmsg_t *e, *m;
+  m = htsmsg_create_list();
+  for (i = 0; i < 16; i++ ) {
+    for (j = 0; j < (major_only ? 1 : 16); j++) {
+      if (_epg_genre_names[i][j]) {
+        e = htsmsg_create_map();
+        htsmsg_add_u32(e, "code", i << 4 | j);
+        htsmsg_add_str(e, "name", _epg_genre_names[i][j]);
+        // TODO: use major_prefix
+        htsmsg_add_msg(m, NULL, e);
+      }
+    }
+  }
+  return m;
 }
 
 /* **************************************************************************
@@ -1533,12 +1658,12 @@ const char *epg_genre_get_name ( uint8_t genre, int full )
 
 static void _eqr_add 
   ( epg_query_result_t *eqr, epg_broadcast_t *e,
-    uint8_t genre, regex_t *preg, time_t start )
+    epg_genre_t *genre, regex_t *preg, time_t start )
 {
   /* Ignore */
   if ( e->stop < start ) return;
-  if ( genre && e->episode->genre_cnt && e->episode->genre[0] != genre ) return;
   if ( !e->episode->title ) return;
+  if ( genre && !epg_genre_list_contains(&e->episode->genre, genre, 1) ) return;
   if ( preg && regexec(preg, e->episode->title, 0, NULL, 0) ) return;
 
   /* More space */
@@ -1553,7 +1678,7 @@ static void _eqr_add
 }
 
 static void _eqr_add_channel 
-  ( epg_query_result_t *eqr, channel_t *ch, uint8_t genre,
+  ( epg_query_result_t *eqr, channel_t *ch, epg_genre_t *genre,
     regex_t *preg, time_t start )
 {
   epg_broadcast_t *ebc;
@@ -1564,7 +1689,7 @@ static void _eqr_add_channel
 
 void epg_query0
   ( epg_query_result_t *eqr, channel_t *channel, channel_tag_t *tag,
-    uint8_t genre, const char *title )
+    epg_genre_t *genre, const char *title )
 {
   time_t now;
   channel_tag_mapping_t *ctm;
@@ -1606,12 +1731,11 @@ void epg_query0
 }
 
 void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
-	       const char *genre, const char *title)
+	       epg_genre_t *genre, const char *title)
 {
   channel_t     *ch = channel ? channel_find_by_name(channel, 0, 0) : NULL;
   channel_tag_t *ct = tag     ? channel_tag_find_by_name(tag, 0)    : NULL;
-  uint8_t        ge = genre   ? epg_genre_find_by_name(genre) : 0;
-  epg_query0(eqr, ch, ct, ge, title);
+  epg_query0(eqr, ch, ct, genre, title);
 }
 
 void epg_query_free(epg_query_result_t *eqr)

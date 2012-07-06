@@ -405,8 +405,12 @@ static int _opentv_parse_event_section
           save |= epg_episode_set_summary(ee, ev.summary);
         if (ev.desc)
           save |= epg_episode_set_description(ee, ev.desc);
-        if (ev.cat)
-          save |= epg_episode_set_genre(ee, &ev.cat, 1);
+        if (ev.cat) {
+          epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
+          epg_genre_list_add_by_eit(egl, ev.cat);
+          save |= epg_episode_set_genre(ee, egl);
+          epg_genre_list_destroy(egl);
+        }
         // Note: don't override the season (since the ID is channel specific
         //       it'll keep changing!
         if (ev.series && !ee->season) {
