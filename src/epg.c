@@ -1139,7 +1139,7 @@ epg_broadcast_t* epg_broadcast_find_by_time
   epg_broadcast_t **ebc;
   if ( !channel || !start || !stop ) return NULL;
   if ( stop <= start ) return NULL;
-  if ( stop < dispatch_clock ) return NULL;
+  if ( stop <= dispatch_clock ) return NULL;
 
   ebc = _epg_broadcast_skel();
   (*ebc)->start   = start;
@@ -1287,7 +1287,7 @@ epg_broadcast_t *epg_broadcast_deserialize
   if ( htsmsg_get_u32(m, "stop", &stop)   ) return NULL;
   if ( !start || !stop ) return NULL;
   if ( stop <= start ) return NULL;
-  if ( stop < dispatch_clock ) return NULL;
+  if ( stop <= dispatch_clock ) return NULL;
   if ( !(str = htsmsg_get_str(m, "episode")) ) return NULL;
   if ( !(ee  = epg_episode_find_by_uri(str, 0, NULL)) ) return NULL;
 
