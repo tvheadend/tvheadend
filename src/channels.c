@@ -164,6 +164,8 @@ channel_create(const char *name, int number)
   channel_t *ch, *x;
   int id;
 
+  if (!name || !*name) return NULL;
+
   ch = RB_LAST(&channel_identifier_tree);
   if(ch == NULL) {
     id = 1;
@@ -329,6 +331,8 @@ channel_rename(channel_t *ch, const char *newname)
   service_t *t;
 
   lock_assert(&global_lock);
+
+  if (!newname || !*newname) return 0;
 
   if(channel_find_by_name(newname, 0, 0))
     return -1;

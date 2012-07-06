@@ -91,7 +91,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   if(dae->dae_title != NULL && dae->dae_title[0] != '\0') {
     if(e->episode->title == NULL ||
        regexec(&dae->dae_title_preg, e->episode->title, 0, NULL, 0))
-    return 0;
+      return 0;
   }
 
   // Note: ignore channel test if we allow quality unlocking 
