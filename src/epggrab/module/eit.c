@@ -259,6 +259,7 @@ static int _eit_callback
     /* Process tags */
     *title    = *summary = *desc = 0;
     extra     = NULL;
+    egl       = NULL;
     hd = ws = bw = ad = st = ds = 0;
     while(dllen > 0) {
       dtag = ptr[0];
