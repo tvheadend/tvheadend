@@ -249,7 +249,7 @@ static dvr_entry_t *_dvr_entry_create (
   channel_t *ch, time_t start, time_t stop, 
   time_t start_extra, time_t stop_extra,
 	const char *title, const char *description,
-  uint8_t content_type,
+  epg_genre_t *content_type,
 	const char *creator, dvr_autorec_entry_t *dae,
 	dvr_prio_t pri)
 {
@@ -301,7 +301,7 @@ static dvr_entry_t *_dvr_entry_create (
   de->de_creator = strdup(creator);
   de->de_title   = strdup(title);
   de->de_desc    = description ? strdup(description) : NULL;
-  de->de_content_type = content_type;
+  if (content_type) de->de_content_type = *content_type;
   de->de_bcast   = e;
   if (e) e->getref((epg_object_t*)e);
 
@@ -334,7 +334,7 @@ dvr_entry_create(const char *config_name,
                  channel_t *ch, time_t start, time_t stop, 
                  time_t start_extra, time_t stop_extra,
 		             const char *title, const char *description,
-                 uint8_t content_type,
+                 epg_genre_t *content_type,
 		             const char *creator, dvr_autorec_entry_t *dae,
                  dvr_prio_t pri)
 {
@@ -363,7 +363,7 @@ dvr_entry_create_by_event(const char *config_name,
                            e->episode->title,
                            e->episode->description ? e->episode->description
                                                    : e->episode->summary,
-                           e->episode->genre_cnt ? e->episode->genre[0] : 0,
+                           LIST_FIRST(&e->episode->genre),
                            creator, dae, pri);
 }
 
@@ -530,7 +530,7 @@ dvr_db_load_one(htsmsg_t *c, int id)
   }
 
 
-  de->de_content_type = htsmsg_get_u32_or_default(c, "contenttype", 0);
+  de->de_content_type.code = htsmsg_get_u32_or_default(c, "contenttype", 0);
 
   if (!htsmsg_get_u32(c, "broadcast", &bcid)) {
     de->de_bcast = epg_broadcast_find_by_id(bcid, ch);
@@ -606,8 +606,8 @@ dvr_entry_save(dvr_entry_t *de)
   if(de->de_autorec != NULL)
     htsmsg_add_str(m, "autorec", de->de_autorec->dae_id);
 
-  if(de->de_content_type)
-    htsmsg_add_u32(m, "contenttype", de->de_content_type);
+  if(de->de_content_type.code)
+    htsmsg_add_u32(m, "contenttype", de->de_content_type.code);
 
   if(de->de_bcast)
     htsmsg_add_u32(m, "broadcast", de->de_bcast->id);
@@ -666,10 +666,12 @@ static dvr_entry_t *_dvr_entry_update
   }
 
   if (e) {
-    if (e->episode && 
-        e->episode->genre_cnt && e->episode->genre_cnt != de->de_content_type) {
-      de->de_content_type = e->episode->genre[0];
-      save = 1;
+    epg_genre_t *g;
+    if (e->episode && (g = LIST_FIRST(&e->episode->genre))) {
+      if (g->code != de->de_content_type.code) {
+        de->de_content_type.code = g->code;
+        save = 1;
+      }
     }
     if (de->de_bcast != e) {
       de->de_bcast->putref((epg_object_t*)de->de_bcast);

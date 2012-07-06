@@ -55,10 +55,20 @@ static int _pyepg_parse_time ( const char *str, time_t *out )
   return ret;
 }
 
-static const uint8_t *_pyepg_parse_genre ( htsmsg_t *tags, int *cnt )
+static epg_genre_list_t
+*_pyepg_parse_genre ( htsmsg_t *tags )
 {
-  // TODO: implement this
-  return NULL;
+  htsmsg_t *e;
+  htsmsg_field_t *f;
+  epg_genre_list_t *egl = NULL;
+  HTSMSG_FOREACH(f, tags) {
+    if (!strcmp(f->hmf_name, "genre") && (e = htsmsg_get_map_by_field(f))) {
+      if (!egl) { egl = calloc(1, sizeof(epg_genre_list_t)); printf("alloc %p\n", egl); }
+      printf("GENRE %s\n", htsmsg_get_str(e, "cdata"));
+      epg_genre_list_add_by_str(egl, htsmsg_get_str(e, "cdata"));
+    }
+  }
+  return egl;
 }
 
 static int _pyepg_parse_channel ( htsmsg_t *data, epggrab_stats_t *stats )
@@ -197,14 +207,14 @@ static int _pyepg_parse_season ( htsmsg_t *data, epggrab_stats_t *stats )
 
 static int _pyepg_parse_episode ( htsmsg_t *data, epggrab_stats_t *stats )
 {
-  int genre_cnt, save = 0;
+  int save = 0;
   htsmsg_t *attr, *tags;
   epg_episode_t *episode;
   epg_season_t *season;
   epg_brand_t *brand;
   const char *str;
   uint32_t u32, pc, pn;
-  const uint8_t *genre;
+  epg_genre_list_t *egl;
 
   if ( data == NULL ) return 0;
 
@@ -262,8 +272,9 @@ static int _pyepg_parse_episode ( htsmsg_t *data, epggrab_stats_t *stats )
   }
 
   /* Genre */
-  if ((genre = _pyepg_parse_genre(tags, &genre_cnt))) {
-    save |= epg_episode_set_genre(episode, genre, genre_cnt);
+  if ((egl = _pyepg_parse_genre(tags))) {
+    save |= epg_episode_set_genre(episode, egl);
+    epg_genre_list_destroy(egl);
   }
 
   /* Content */

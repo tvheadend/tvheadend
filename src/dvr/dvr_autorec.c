@@ -74,7 +74,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 
   if(dae->dae_channel == NULL &&
      dae->dae_channel_tag == NULL &&
-     dae->dae_content_type == 0 &&
+     dae->dae_content_type.code == 0 &&
      (dae->dae_title == NULL ||
      dae->dae_title[0] == '\0') &&
      dae->dae_brand == NULL &&
@@ -109,15 +109,9 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
       return 0;
   }
 
-  if(dae->dae_content_type != 0) {
-    int i, ok = 0;
-    for (i = 0; i < e->episode->genre_cnt; i++) {
-      if (e->episode->genre[i] == dae->dae_content_type) {
-        ok = 1;
-        break;
-      }
-    }
-    if (!ok) return 0;
+  if(dae->dae_content_type.code != 0) {
+    if (!epg_genre_list_contains(&e->episode->genre, &dae->dae_content_type, 1))
+      return 0;
   }
 
   if(dae->dae_approx_time != 0) {
@@ -256,7 +250,6 @@ build_weekday_mask(const char *str)
 static htsmsg_t *
 autorec_record_build(dvr_autorec_entry_t *dae)
 {
-  const char *s;
   char str[30];
   htsmsg_t *e = htsmsg_create_map();
 
@@ -276,11 +269,7 @@ autorec_record_build(dvr_autorec_entry_t *dae)
   if(dae->dae_channel_tag != NULL)
     htsmsg_add_str(e, "tag", dae->dae_channel_tag->ct_name);
 
-  // Note: Mixed usage creates problems, for now we have to store
-  //       both values!
-  htsmsg_add_u32(e, "contenttype",dae->dae_content_type);
-  if ((s = epg_content_group_get_name(dae->dae_content_type)))
-    htsmsg_add_str(e, "contentgrp", s);
+  htsmsg_add_u32(e, "contenttype",dae->dae_content_type.code);
 
   htsmsg_add_str(e, "title", dae->dae_title ?: "");
 
@@ -394,15 +383,7 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
     }
   }
 
-  // Note: unfortunately there is a mixed usage here, DVR code uses
-  // contenttype however UI code uses contentgrp. so we test for both!
-  if (htsmsg_get_u32(values, "contenttype", &u32)) {
-    if ((s = htsmsg_get_str(values, "contentgrp")))
-      u32 = epg_content_group_find_by_name(s);
-    else
-      u32 = 0;
-  }
-  dae->dae_content_type = u32;
+  dae->dae_content_type.code = htsmsg_get_u32_or_default(values, "contenttype", 0);
 
   if((s = htsmsg_get_str(values, "approx_time")) != NULL) {
     if(strchr(s, ':') != NULL) {
@@ -483,7 +464,7 @@ dvr_autorec_init(void)
 static void
 _dvr_autorec_add(const char *config_name,
                 const char *title, channel_t *ch,
-		const char *tag, uint8_t content_type,
+		const char *tag, epg_genre_t *content_type,
     epg_brand_t *brand, epg_season_t *season,
     int approx_time, epg_episode_num_t *epnum,
 		const char *creator, const char *comment)
@@ -516,7 +497,8 @@ _dvr_autorec_add(const char *config_name,
   }
 
   dae->dae_enabled = 1;
-  dae->dae_content_type = content_type;
+  if (content_type)
+    dae->dae_content_type.code = content_type->code;
 
   if(brand) {
     dae->dae_brand = brand;
@@ -548,7 +530,7 @@ _dvr_autorec_add(const char *config_name,
 void
 dvr_autorec_add(const char *config_name,
                 const char *title, const char *channel,
-		const char *tag, uint8_t content_type,
+		const char *tag, epg_genre_t *content_type,
 		const char *creator, const char *comment)
 {
   channel_t *ch = NULL;
