@@ -249,7 +249,7 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
     return NULL;
   }
 
-
+  TAILQ_INIT(&tdmi->tdmi_epg_grab);
 
   tdmi->tdmi_enabled = enabled;
   
@@ -259,7 +259,6 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
   tdmi->tdmi_adapter = tda;
   tdmi->tdmi_network = network ? strdup(network) : NULL;
   tdmi->tdmi_quality = 100;
-
 
   memcpy(&tdmi->tdmi_conf, dmc, sizeof(struct dvb_mux_conf));
   if(satconf)
@@ -290,8 +289,6 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
   } else {
     dvb_mux_add_to_scan_queue(tdmi);
   }
-
-  TAILQ_INIT(&tdmi->tdmi_epg_grab);
 
   return tdmi;
 }
