@@ -213,14 +213,19 @@ static htsmsg_t * _epg_object_serialize ( void *o )
   htsmsg_add_u32(m, "type", eo->type);
   if (eo->uri)
     htsmsg_add_str(m, "uri", eo->uri);
+  if (eo->grabber)
+    htsmsg_add_str(m, "grabber", eo->grabber->id);
   return m;
 }
 
 static epg_object_t *_epg_object_deserialize ( htsmsg_t *m, epg_object_t *eo )
 {
+  const char *s;
   if (htsmsg_get_u64(m, "id",   &eo->id))   return NULL;
   if (htsmsg_get_u32(m, "type", &eo->type)) return NULL;
   eo->uri = (char*)htsmsg_get_str(m, "uri");
+  if ((s = htsmsg_get_str(m, "grabber")))
+    eo->grabber = epggrab_module_find_by_id(s);
   return eo;
 }
 
