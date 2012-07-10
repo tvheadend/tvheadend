@@ -431,7 +431,7 @@ static void _eit_start
 
 void eit_init ( void )
 {
-  epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber",
+  epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber", 1,
                             _eit_start, NULL, NULL);
 }
 
