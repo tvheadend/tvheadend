@@ -162,6 +162,7 @@ static int _eit_callback
   char summary[256];
   char desc[5000];
   htsmsg_t *extra;
+  int update;
 
   /* Invalid */
   if(tableid < 0x4e || tableid > 0x6f || len < 11)
@@ -362,8 +363,9 @@ static int _eit_callback
       len -= dlen; ptr += dlen; dllen -= dlen;
     }
 
-    /* Metadata */
-    if ( save2 ) {
+    /* Broadcast Metadata */
+    update = epg_broadcast_set_grabber(ebc, (epggrab_module_t*)mod, &save);
+    if (update) {
       save |= epg_broadcast_set_is_hd(ebc, hd);
       save |= epg_broadcast_set_is_widescreen(ebc, ws);
       save |= epg_broadcast_set_is_audio_desc(ebc, ad);
@@ -377,7 +379,7 @@ static int _eit_callback
       char *uri;
       uri   = epg_hash(title, summary, desc);
       if (uri) {
-        if ((ee    = epg_episode_find_by_uri(uri, 1, &save2)))
+        if ((ee = epg_episode_find_by_uri(uri, 1, &save2)) && update)
           save |= epg_broadcast_set_episode(ebc, ee);
         free(uri);
       }
@@ -386,14 +388,16 @@ static int _eit_callback
 
     /* Episode data */
     if (ee) {
-      save |= epg_episode_set_is_bw(ee, bw);
-      if ( !ee->title && *title )
+      update = epg_episode_set_grabber(ee, (epggrab_module_t*)mod, &save);
+      if (update)
+        save |= epg_episode_set_is_bw(ee, bw);
+      if ( *title   && (update || !ee->title) )
         save |= epg_episode_set_title(ee, title);
-      if ( !ee->summary && *summary )
+      if ( *summary && (update || !ee->summary) )
         save |= epg_episode_set_summary(ee, summary);
-      if ( !ee->description && *desc )
+      if ( *desc && (update || !ee->description) )
         save |= epg_episode_set_description(ee, desc);
-      if ( !LIST_FIRST(&ee->genre) && egl )
+      if ( egl   && (update || !LIST_FIRST(&ee->genre)) )
         save |= epg_episode_set_genre(ee, egl);
 #if TODO_ADD_EXTRA
       if ( extra )
