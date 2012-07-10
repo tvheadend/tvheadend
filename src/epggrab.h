@@ -120,6 +120,7 @@ struct epggrab_module
   const char                   *id;       ///< Module identifier
   const char                   *name;     ///< Module name (for display)
   uint8_t                      enabled;   ///< Whether the module is enabled
+  int                          priority;  ///< Priority of the module
   epggrab_channel_tree_t       *channels; ///< Channel list
 
   /* Enable/Disable */
