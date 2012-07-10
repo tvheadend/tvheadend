@@ -103,6 +103,7 @@ static void* _epggrab_internal_thread ( void* p )
 static void _epggrab_load ( void )
 {
   epggrab_module_t *mod;
+  htsmsg_field_t *f;
   htsmsg_t *m, *a;
   uint32_t enabled = 1;
   const char *str;
@@ -120,8 +121,10 @@ static void _epggrab_load ( void )
     htsmsg_get_u32(m, "channel_rename",   &epggrab_channel_rename);
     htsmsg_get_u32(m, "channel_renumber", &epggrab_channel_renumber);
     htsmsg_get_u32(m, "channel_reicon",   &epggrab_channel_reicon);
-    if (!htsmsg_get_u32(m, old ? "grab-interval" : "interval", &epggrab_interval))
+    if (!htsmsg_get_u32(m, old ? "grab-interval" : "interval",
+                        &epggrab_interval)) {
       if (old) epggrab_interval *= 3600;
+    }
     htsmsg_get_u32(m, "grab-enabled", &enabled);
     if (enabled) {
       if ( (str = htsmsg_get_str(m, old ? "current-grabber" : "module")) ) {
@@ -133,8 +136,17 @@ static void _epggrab_load ( void )
       if ( (a = htsmsg_get_map(m, "mod_enabled")) ) {
         LIST_FOREACH(mod, &epggrab_modules, link) {
           if (htsmsg_get_u32_or_default(a, mod->id, 0)) {
-	    epggrab_enable_module(mod, 1);
+            epggrab_enable_module(mod, 1);
           }
+        }
+      }
+      if ( (a = htsmsg_get_list(m, "mod_priority")) ) {
+        int prio = 1;
+        LIST_FOREACH(mod, &epggrab_modules, link)
+          mod->priority = 0;
+        HTSMSG_FOREACH(f, a) {
+          mod = epggrab_module_find_by_id(f->hmf_str);
+          if (mod) mod->priority = prio++;
         }
       }
     }
@@ -142,7 +154,6 @@ static void _epggrab_load ( void )
   
     /* Finish up migration */
     if (old) {
-      htsmsg_field_t *f;
       htsmsg_t *xc, *ch;
       htsmsg_t *xchs = hts_settings_load("xmltv/channels");
       htsmsg_t *chs  = hts_settings_load("channels");
