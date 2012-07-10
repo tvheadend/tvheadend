@@ -416,12 +416,13 @@ static int _pyepg_parse
 void pyepg_init ( void )
 {
   /* Internal module */
-  epggrab_module_int_create(NULL, "/usr/bin/pyepg", "PyEPG", "/usr/bin/pyepg",
+  epggrab_module_int_create(NULL, "/usr/bin/pyepg", "PyEPG", 4,
+                            "/usr/bin/pyepg",
                             NULL, _pyepg_parse, NULL, NULL);
 
   /* External module */
   _pyepg_module = (epggrab_module_t*)
-    epggrab_module_ext_create(NULL, "pyepg", "PyEPG", "pyepg",
+    epggrab_module_ext_create(NULL, "pyepg", "PyEPG", 4, "pyepg",
                               _pyepg_parse, NULL,
                               &_pyepg_channels);
 }

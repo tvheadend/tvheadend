@@ -25,7 +25,8 @@
 
 epggrab_module_t *epggrab_module_create
   ( epggrab_module_t *skel,
-    const char *id, const char *name, epggrab_channel_tree_t *channels );
+    const char *id, const char *name, int priority,
+    epggrab_channel_tree_t *channels );
 
 char     *epggrab_module_grab_spawn ( void *m );
 htsmsg_t *epggrab_module_trans_xml  ( void *m, char *data );
@@ -57,7 +58,8 @@ epggrab_channel_t *epggrab_channel_find
 
 epggrab_module_int_t *epggrab_module_int_create
   ( epggrab_module_int_t *skel,
-    const char *id, const char *name, const char *path,
+    const char *id, const char *name, int priority,
+    const char *path,
     char* (*grab) (void*m),
     int (*parse) (void *m, htsmsg_t *data, epggrab_stats_t *sta),
     htsmsg_t* (*trans) (void *mod, char *data),
@@ -69,7 +71,8 @@ epggrab_module_int_t *epggrab_module_int_create
 
 epggrab_module_ext_t *epggrab_module_ext_create
   ( epggrab_module_ext_t *skel,
-    const char *id, const char *name, const char *sockid,
+    const char *id, const char *name, int priority,
+    const char *sockid,
     int (*parse) (void *m, htsmsg_t *data, epggrab_stats_t *sta),
     htsmsg_t* (*trans) (void *mod, char *data),
     epggrab_channel_tree_t *channels );
@@ -80,7 +83,7 @@ epggrab_module_ext_t *epggrab_module_ext_create
 
 epggrab_module_ota_t *epggrab_module_ota_create
   ( epggrab_module_ota_t *skel,
-    const char *id, const char *name,
+    const char *id, const char *name, int priority,
     void (*start) (epggrab_module_ota_t*m,
                    struct th_dvb_mux_instance *tdmi),
     int (*enable) (void *m, uint8_t e ),

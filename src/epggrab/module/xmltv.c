@@ -525,7 +525,7 @@ static void _xmltv_load_grabbers ( void )
     if ( outbuf[i] == '\n' || outbuf[i] == '\0' ) {
       outbuf[i] = '\0';
       sprintf(name, "XMLTV: %s", &outbuf[n]);
-      epggrab_module_int_create(NULL, &outbuf[p], name, &outbuf[p],
+      epggrab_module_int_create(NULL, &outbuf[p], name, 3, &outbuf[p],
                                 NULL, _xmltv_parse, NULL, NULL);
       p = n = i + 1;
     } else if ( outbuf[i] == '|' ) {
@@ -541,7 +541,7 @@ void xmltv_init ( void )
 {
   /* External module */
   _xmltv_module = (epggrab_module_t*)
-    epggrab_module_ext_create(NULL, "xmltv", "XMLTV", "xmltv",
+    epggrab_module_ext_create(NULL, "xmltv", "XMLTV", 3, "xmltv",
                               _xmltv_parse, NULL,
                               &_xmltv_channels);
 

@@ -874,7 +874,7 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
   sprintf(nbuf, "OpenTV: %s", name);
   mod = (opentv_module_t*)
     epggrab_module_ota_create(calloc(1, sizeof(opentv_module_t)),
-                              ibuf, nbuf,
+                              ibuf, nbuf, 2,
                               _opentv_start, _opentv_enable,
                               NULL);
   
