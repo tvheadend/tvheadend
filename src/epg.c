@@ -263,6 +263,17 @@ static int _epg_object_set_u16
   return save;
 }
 
+static int _epg_object_set_grabber 
+  ( void *o, epggrab_module_t *grab, int *save )
+{
+  epg_object_t *eo = o;
+  if ( eo->grabber != grab && grab->priority > eo->grabber->priority ) {
+    eo->grabber = grab;
+    *save       = 1;
+  }
+  return grab == eo->grabber;
+}
+
 /* **************************************************************************
  * Brand
  * *************************************************************************/
@@ -338,6 +349,13 @@ int epg_brand_set_season_count ( epg_brand_t *brand, uint16_t count )
 {
   if (!brand || !count) return 0;
   return _epg_object_set_u16(brand, &brand->season_count, count);
+}
+
+int epg_brand_set_grabber 
+  ( epg_brand_t *brand, epggrab_module_t *grab, int *save )
+{
+  if (!brand || !grab) return 0;
+  return _epg_object_set_grabber(brand, grab, save);
 }
 
 static void _epg_brand_add_season 
@@ -504,6 +522,13 @@ int epg_season_set_brand ( epg_season_t *season, epg_brand_t *brand, int u )
     save = 1;
   }
   return save;
+}
+
+int epg_season_set_grabber 
+  ( epg_season_t *season, epggrab_module_t *grab, int *save )
+{
+  if (!season || !grab) return 0;
+  return _epg_object_set_grabber(season, grab, save);
 }
 
 static void _epg_season_add_episode
@@ -803,6 +828,13 @@ static void _epg_episode_add_broadcast
   _epg_object_getref(episode);
   _epg_object_set_updated(episode);
   LIST_INSERT_SORTED(&episode->broadcasts, broadcast, ep_link, _ebc_start_cmp);
+}
+
+int epg_episode_set_grabber 
+  ( epg_episode_t *episode, epggrab_module_t *grab, int *save )
+{
+  if (!episode || !grab) return 0;
+  return _epg_object_set_grabber(episode, grab, save);
 }
 
 static void _epg_episode_rem_broadcast
@@ -1231,6 +1263,13 @@ int epg_broadcast_set_is_repeat ( epg_broadcast_t *b, uint8_t r )
 {
   if (!b) return 0;
   return _epg_object_set_u8(b, &b->is_repeat, r);
+}
+
+int epg_broadcast_set_grabber 
+  ( epg_broadcast_t *broadcast, epggrab_module_t *grab, int *save )
+{
+  if (!broadcast || !grab) return 0;
+  return _epg_object_set_grabber(broadcast, grab, save);
 }
 
 epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *broadcast )

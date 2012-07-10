@@ -1,6 +1,6 @@
 /*
  *  Electronic Program Guide - Common functions
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2012 Adam Sutton
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,10 +22,11 @@
 #include "settings.h"
 
 /*
- * Forward decls
+ * External forward decls
  */
 struct channel;
 struct channel_tag;
+struct epggrab_module;
 
 /*
  * Map/List types
@@ -117,6 +118,8 @@ struct epg_object
   int                     refcount;   ///< Reference counting
   // Note: could use LIST_ENTRY field to determine this!
 
+  struct epggrab_module  *grabber;   ///< Originating grabber
+
   void (*getref)  ( void *o ); ///< Get a reference
   void (*putref)  ( void *o ); ///< Release a reference
   void (*destroy) ( void *o ); ///< Delete the object
@@ -155,6 +158,10 @@ int epg_brand_set_summary      ( epg_brand_t *b, const char *summary )
 int epg_brand_set_season_count ( epg_brand_t *b, uint16_t season_count )
   __attribute__((warn_unused_result));
 int epg_brand_set_image        ( epg_brand_t *b, const char *i )
+  __attribute__((warn_unused_result));
+
+int epg_brand_set_grabber
+  ( epg_brand_t *b, struct epggrab_module *grab, int *save )
   __attribute__((warn_unused_result));
 
 /* Serialization */
@@ -199,6 +206,10 @@ int epg_season_set_episode_count ( epg_season_t *s, uint16_t episode_count )
 int epg_season_set_brand         ( epg_season_t *s, epg_brand_t *b, int u )
   __attribute__((warn_unused_result));
 int epg_season_set_image         ( epg_season_t *s, const char *image )
+  __attribute__((warn_unused_result));
+
+int epg_season_set_grabber
+  ( epg_season_t *s, struct epggrab_module *grab, int *save )
   __attribute__((warn_unused_result));
 
 /* Serialization */
@@ -280,6 +291,10 @@ int epg_episode_set_genre_str    ( epg_episode_t *e, const char **s )
 int epg_episode_set_image        ( epg_episode_t *e, const char *i )
   __attribute__((warn_unused_result));
 int epg_episode_set_is_bw ( epg_episode_t *b, uint8_t bw )
+  __attribute__((warn_unused_result));
+
+int epg_episode_set_grabber
+  ( epg_episode_t *e, struct epggrab_module *grab, int *save )
   __attribute__((warn_unused_result));
 
 // Note: this does NOT strdup the text field
@@ -374,6 +389,10 @@ int epg_broadcast_set_is_audio_desc ( epg_broadcast_t *b, uint8_t ad )
 int epg_broadcast_set_is_new ( epg_broadcast_t *b, uint8_t n )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_is_repeat ( epg_broadcast_t *b, uint8_t r )
+  __attribute__((warn_unused_result));
+
+int epg_broadcast_set_grabber
+  ( epg_broadcast_t *b, struct epggrab_module *grab, int *save )
   __attribute__((warn_unused_result));
 
 /* Accessors */
