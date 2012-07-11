@@ -77,20 +77,20 @@ static void _epgdb_v1_process ( htsmsg_t *c, epggrab_stats_t *stats )
   if (!ee) return;
   if (save) stats->episodes.total++;
   if (title)
-    save |= epg_episode_set_title(ee, title);
+    save |= epg_episode_set_title(ee, title, NULL);
   if (desc)
-    save |= epg_episode_set_summary(ee, desc);
+    save |= epg_episode_set_summary(ee, desc, NULL);
   if (!htsmsg_get_u32(c, "episode", &u32))
-    save |= epg_episode_set_number(ee, u32);
+    save |= epg_episode_set_number(ee, u32, NULL);
   if (!htsmsg_get_u32(c, "part", &u32))
-    save |= epg_episode_set_part(ee, u32, 0);
+    save |= epg_episode_set_part(ee, u32, 0, NULL);
   if (!htsmsg_get_u32(c, "season", &u32))
     ee->epnum.s_num = u32;
   if ((str = htsmsg_get_str(c, "epname")))
     ee->epnum.text  = strdup(str);
 
   /* Set episode */
-  save |= epg_broadcast_set_episode(ebc, ee);
+  save |= epg_broadcast_set_episode(ebc, ee, NULL);
 }
 
 /*
