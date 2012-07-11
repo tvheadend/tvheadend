@@ -57,8 +57,7 @@ static epggrab_channel_t *_xmltv_channel_find
 /**
  *
  */
-static time_t
-_xmltv_str2time(const char *str)
+static time_t _xmltv_str2time(const char *str)
 {
   struct tm tm;
   int tz, r;
@@ -119,8 +118,8 @@ _xmltv_str2time(const char *str)
  *
  */
 
-static const char *
-xmltv_ns_get_parse_num(const char *s, int *ap, int *bp)
+static const char *xmltv_ns_get_parse_num
+  (const char *s, int *ap, int *bp)
 {
   int a = -1, b = -1;
 
@@ -170,24 +169,37 @@ xmltv_ns_get_parse_num(const char *s, int *ap, int *bp)
   return s;
 }
 
-
-
-
-static void
-parse_xmltv_ns_episode  
-(const char *s, int *sn, int *sc, int *en, int *ec, int *pn, int *pc)
+static void parse_xmltv_ns_episode
+  (const char *s, int *sn, int *sc, int *en, int *ec, int *pn, int *pc)
 {
   s = xmltv_ns_get_parse_num(s, sn, sc);
   s = xmltv_ns_get_parse_num(s, en, ec);
   xmltv_ns_get_parse_num(s, pn, pc);
 }
 
+static void parse_xmltv_dd_progid
+  (epggrab_module_t *mod, const char *s, char **uri, char **suri, int *en )
+{
+  if (strlen(s) < 2) return;
+  *uri = malloc(strlen(mod->id) + 1 + strlen(s));
+  sprintf(*uri, "%s-%s", mod->id, s);
+
+  /* Episode */
+  if (!strncmp("EP", s, 2) || !strncmp("SH", s, 2)) {
+    int e = 0;
+    while (s[e] && s[e] != '.') e++;
+    *suri = strndup(s, e);
+    if (s[e] && s[e+1]) sscanf(s+e+1, "%d", en);
+  }
+}
+
 /**
  *
  */
-static void
-get_episode_info
-(htsmsg_t *tags, const char **screen, int *sn, int *sc, int *en, int *ec, int *pn, int *pc)
+static void get_episode_info
+  (epggrab_module_t *mod,
+   htsmsg_t *tags, char **uri, char **suri, const char **screen,
+   int *sn, int *sc, int *en, int *ec, int *pn, int *pc)
 {
   htsmsg_field_t *f;
   htsmsg_t *c, *a;
@@ -201,9 +213,12 @@ get_episode_info
        (sys = htsmsg_get_str(a, "system")) == NULL)
       continue;
     
-    if(!strcmp(sys, "onscreen")) *screen = cdata;
+    if(!strcmp(sys, "onscreen"))
+      *screen = cdata;
     else if(!strcmp(sys, "xmltv_ns"))
       parse_xmltv_ns_episode(cdata, sn, sc, en, ec, pn, pc);
+    else if(!strcmp(sys, "dd_progid"))
+      parse_xmltv_dd_progid(mod, cdata, uri, suri, en);
   }
 }
 
@@ -316,14 +331,14 @@ static int _xmltv_parse_programme_tags
 {
   int save = 0, save2 = 0;
   epg_episode_t *ee;
+  epg_season_t *es;
   epg_broadcast_t *ebc;
   epg_genre_list_t *egl;
   int sn = 0, sc = 0, en = 0, ec = 0, pn = 0, pc = 0;
   const char *onscreen = NULL;
-  char *uri;
+  char *suri = NULL, *uri = NULL;
   const char *title    = htsmsg_xml_get_cdata_str(tags, "title");
   const char *desc     = htsmsg_xml_get_cdata_str(tags, "desc");
-  get_episode_info(tags, &onscreen, &sn, &sc, &en, &ec, &pn, &pc);
 
   /* Ignore */
   if (!title) return 0;
@@ -331,8 +346,10 @@ static int _xmltv_parse_programme_tags
   /*
    * Episode
    */
-
-  uri = epg_hash(title, NULL, desc);
+  get_episode_info(mod, tags, &uri, &suri, &onscreen,
+                   &sn, &sc, &en, &ec, &pn, &pc);
+  if (!uri) uri = epg_hash(title, NULL, desc);
+  if (!uri) return 0;
   ee  = epg_episode_find_by_uri(uri, 1, &save);
   free(uri);
   if (!ee) return 0;
@@ -350,6 +367,15 @@ static int _xmltv_parse_programme_tags
   if (pn)   save |= epg_episode_set_part(ee, pn, pc, mod);
   if (en)   save |= epg_episode_set_number(ee, en, mod);
   if (save) stats->episodes.modified++;
+
+  /*
+   * Season
+   */
+  if (suri) {
+    es = epg_season_find_by_uri(suri, 1, &save);
+    if (es) save |= epg_episode_set_season(ee, es, mod);
+    free(suri);
+  }
 
   /*
    * Broadcast
