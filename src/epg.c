@@ -1107,14 +1107,19 @@ static epg_broadcast_t *_epg_channel_add_broadcast
       // Note: sets updated
       _epg_object_getref(ret);
 
-    /* No change */
-    } else if ( ret->stop == (*bcast)->stop ) {
-      return ret;
-
-    /* Extend in time */
+    /* Existing */
     } else {
-      ret->stop = (*bcast)->stop;
-      _epg_object_set_updated(ret);
+      *save |= _epg_object_set_u16(ret, &ret->dvb_eid, (*bcast)->dvb_eid, NULL);
+
+      /* No time change */
+      if ( ret->stop == (*bcast)->stop ) {
+        return ret;
+
+      /* Extend in time */
+      } else {
+        ret->stop = (*bcast)->stop;
+        _epg_object_set_updated(ret);
+      }
     }
   }
   
@@ -1198,6 +1203,7 @@ epg_broadcast_t* epg_broadcast_find_by_time
   ebc = _epg_broadcast_skel();
   (*ebc)->start   = start;
   (*ebc)->stop    = stop;
+  (*ebc)->dvb_eid = eid;
 
   return _epg_channel_add_broadcast(channel, ebc, create, save);
 }
@@ -1209,7 +1215,7 @@ epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id, channel_t *ch )
   return (epg_broadcast_t*)_epg_object_find_by_id(id, EPG_BROADCAST);
 }
 
-epg_broadcast_t *epg_broadcast_find_by_eid ( channel_t *ch, int eid )
+epg_broadcast_t *epg_broadcast_find_by_eid ( channel_t *ch, uint16_t eid )
 {
   epg_broadcast_t *e;
   RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {
