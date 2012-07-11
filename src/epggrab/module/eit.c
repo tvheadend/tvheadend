@@ -85,6 +85,11 @@ static void _eit_dtag_dump ( uint8_t dtag, uint8_t dlen, uint8_t *buf )
  * EIT Event descriptors
  * ***********************************************************************/
 
+static dvb_string_conv_t _eit_freesat_conv[2] = {
+  { 0x1f, freesat_huffman_decode },
+  { 0x00, NULL }
+};
+
 /*
  * Get string
  */
@@ -93,7 +98,12 @@ static int _eit_get_string_with_len
     char *dst, size_t dstlen, 
 		const uint8_t *src, size_t srclen, char *charset )
 {
-  return dvb_get_string_with_len(dst, dstlen, src, srclen, charset, NULL);
+  dvb_string_conv_t *cptr = NULL;
+  if (!strcmp("freesat", mod->id)) {
+    cptr = _eit_freesat_conv;
+  }
+
+  return dvb_get_string_with_len(dst, dstlen, src, srclen, charset, cptr);
 }
 
 /*
@@ -558,14 +568,40 @@ static void _eit_start
   if (!(ota = epggrab_ota_create(m, tdmi))) return;
   if (!ota->status)
     ota->status = calloc(1, sizeof(eit_status_t));
-  tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 0x12, NULL);
+  if (!strcmp("freesat", m->id))
+    tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 0xf02, NULL);
+  else
+    tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 0x12, NULL);
   tvhlog(LOG_DEBUG, m->id, "install table handlers");
+}
+
+static int _eit_enable ( void *m, uint8_t e )
+{
+ epggrab_module_ota_t *mod = m;
+
+  if (mod->enabled == e) return 0;
+  mod->enabled = e;
+
+  /* Register interest */
+  if (e) {
+    if (!strcmp(mod->id, "freesat"))
+      epggrab_ota_create_and_register_by_id((epggrab_module_ota_t*)mod,
+                                            0, 2050,
+                                            600, 3600);
+  /* Remove all links */
+  } else {
+    epggrab_ota_destroy_by_module((epggrab_module_ota_t*)mod);
+  }
+
+  return 1;
 }
 
 void eit_init ( void )
 {
   epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber", 1,
-                            _eit_start, NULL, NULL);
+                            _eit_start, _eit_enable, NULL);
+  epggrab_module_ota_create(NULL, "freesat", "Freesat", 5,
+                            _eit_start, _eit_enable, NULL);
 }
 
 void eit_load ( void )

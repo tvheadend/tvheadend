@@ -135,6 +135,18 @@ int  epggrab_ota_is_complete ( epggrab_ota_mux_t *ota );
 int  epggrab_ota_is_blocked  ( epggrab_ota_mux_t *ota );
 
 /* **************************************************************************
+ * Miscellaneous
+ * *************************************************************************/
+
+/* Note: this is reused by pyepg since they share a common format */
+int  xmltv_parse_accessibility
+  ( epggrab_module_t *mod, epg_broadcast_t *ebc, htsmsg_t *m );
+
+/* Freesat huffman decoder */
+size_t freesat_huffman_decode
+  (char *dst, size_t* dstlen, const uint8_t *src, size_t srclen);
+
+/* **************************************************************************
  * Module setup(s)
  * *************************************************************************/
 
@@ -153,9 +165,5 @@ void pyepg_load  ( void );
 /* XMLTV module */
 void xmltv_init  ( void );
 void xmltv_load  ( void );
-
-/* Note: this is reused by pyepg since they share a common format */
-int  xmltv_parse_accessibility
-  ( epggrab_module_t *mod, epg_broadcast_t *ebc, htsmsg_t *m );
 
 #endif /* __EPGGRAB_PRIVATE_H__ */

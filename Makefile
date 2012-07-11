@@ -82,6 +82,7 @@ SRCS += src/epggrab/module.c\
   src/epggrab/module/xmltv.c\
   src/epggrab/module/eit.c \
   src/epggrab/module/opentv.c \
+  src/epggrab/support/freesat_huffman.c \
 
 SRCS += src/plumbing/tsfix.c \
 	src/plumbing/globalheaders.c \
