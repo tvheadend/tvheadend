@@ -339,11 +339,11 @@ dvb_desc_service(uint8_t *ptr, int len, uint8_t *typep,
   ptr++;
   len--;
 
-  if((r = dvb_get_string_with_len(provider, providerlen, ptr, len, NULL)) < 0)
+  if((r = dvb_get_string_with_len(provider, providerlen, ptr, len, NULL, NULL)) < 0)
     return -1;
   ptr += r; len -= r;
 
-  if((r = dvb_get_string_with_len(name, namelen, ptr, len, NULL)) < 0)
+  if((r = dvb_get_string_with_len(name, namelen, ptr, len, NULL, NULL)) < 0)
     return -1;
   ptr += r; len -= r;
   return 0;
@@ -833,7 +833,7 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
     switch(tag) {
     case DVB_DESC_NETWORK_NAME:
-      if(dvb_get_string(networkname, sizeof(networkname), ptr, tlen, NULL))
+      if(dvb_get_string(networkname, sizeof(networkname), ptr, tlen, NULL, NULL))
 	return -1;
 
       if(strcmp(tdmi->tdmi_network ?: "", networkname))

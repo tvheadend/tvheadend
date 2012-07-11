@@ -86,10 +86,21 @@ static void _eit_dtag_dump ( uint8_t dtag, uint8_t dlen, uint8_t *buf )
  * ***********************************************************************/
 
 /*
+ * Get string
+ */
+static int _eit_get_string_with_len
+  ( epggrab_module_t *mod,
+    char *dst, size_t dstlen, 
+		const uint8_t *src, size_t srclen, char *charset )
+{
+  return dvb_get_string_with_len(dst, dstlen, src, srclen, charset, NULL);
+}
+
+/*
  * Short Event - 0x4d
  */
 static int _eit_desc_short_event
-  ( uint8_t *ptr, int len, eit_event_t *ev )
+  ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev )
 {
   int r;
 
@@ -100,8 +111,8 @@ static int _eit_desc_short_event
   ptr += 3;
 
   /* Title */
-  if ( (r = dvb_get_string_with_len(ev->title, sizeof(ev->title),
-                                    ptr, len, ev->default_charset)) < 0 )
+  if ( (r = _eit_get_string_with_len(mod, ev->title, sizeof(ev->title),
+                                     ptr, len, ev->default_charset)) < 0 )
     return -1;
 
   len -= r;
@@ -109,8 +120,8 @@ static int _eit_desc_short_event
   if ( len < 1 ) return -1;
 
   /* Summary */
-  if ( (r = dvb_get_string_with_len(ev->summary, sizeof(ev->summary),
-                                    ptr, len, ev->default_charset)) < 0 )
+  if ( (r = _eit_get_string_with_len(mod, ev->summary, sizeof(ev->summary),
+                                     ptr, len, ev->default_charset)) < 0 )
     return -1;
 
   return 0;
@@ -120,7 +131,7 @@ static int _eit_desc_short_event
  * Extended Event - 0x4e
  */
 static int _eit_desc_ext_event
-  ( uint8_t *ptr, int len, eit_event_t *ev )
+  ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev )
 {
   int r, nitem;
   char ikey[256], ival[256];
@@ -144,16 +155,16 @@ static int _eit_desc_ext_event
   while (nitem--) {
 
     /* Key */
-    if ( (r = dvb_get_string_with_len(ikey, sizeof(ikey),
-                                      ptr, len, ev->default_charset)) < 0 )
+    if ( (r = _eit_get_string_with_len(mod, ikey, sizeof(ikey),
+                                       ptr, len, ev->default_charset)) < 0 )
       return -1;
 
     len -= r;
     ptr += r;
 
     /* Value */
-    if ( (r = dvb_get_string_with_len(ival, sizeof(ival),
-                                      ptr, len, ev->default_charset)) < 0 )
+    if ( (r = _eit_get_string_with_len(mod, ival, sizeof(ival),
+                                       ptr, len, ev->default_charset)) < 0 )
       return -1;
 
     len -= r;
@@ -166,10 +177,11 @@ static int _eit_desc_ext_event
   }
 
   /* Description */
-  if ( dvb_get_string_with_len(ev->desc         + strlen(ev->desc),
-                               sizeof(ev->desc) - strlen(ev->desc),
-                               ptr, len,
-                               ev->default_charset) < 0 )
+  if ( _eit_get_string_with_len(mod,
+                                ev->desc         + strlen(ev->desc),
+                                sizeof(ev->desc) - strlen(ev->desc),
+                                ptr, len,
+                                ev->default_charset) < 0 )
     return -1;
 
   return 0;
@@ -180,7 +192,7 @@ static int _eit_desc_ext_event
  */
 
 static int _eit_desc_component
-  ( uint8_t *ptr, int len, eit_event_t *ev )
+  ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev )
 {
   uint8_t c, t;
 
@@ -238,7 +250,7 @@ static int _eit_desc_component
  */
 
 static int _eit_desc_content
-  ( uint8_t *ptr, int len, eit_event_t *ev )
+  ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev )
 {
   while (len > 1) {
     if (*ptr == 0xb1)
@@ -257,7 +269,7 @@ static int _eit_desc_content
  * Content ID
  */
 static int _eit_desc_crid
-  ( uint8_t *ptr, int len, eit_event_t *ev )
+  ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev )
 {
   int r;
   uint8_t type;
@@ -270,13 +282,13 @@ static int _eit_desc_crid
 
       /* Episode */
       if (type == 0x1 || type == 0x31) {
-        r = dvb_get_string_with_len(ev->uri, sizeof(ev->uri),
-                                    ptr+1, len-1, ev->default_charset);
+        r = _eit_get_string_with_len(mod, ev->uri, sizeof(ev->uri),
+                                     ptr+1, len-1, ev->default_charset);
 
       /* Season */
       } else if (type == 0x2 || type == 0x32) {
-        r = dvb_get_string_with_len(ev->suri, sizeof(ev->suri),
-                                    ptr+1, len-1, ev->default_charset);
+        r = _eit_get_string_with_len(mod, ev->suri, sizeof(ev->suri),
+                                     ptr+1, len-1, ev->default_charset);
 
       /* Unknown */
       } else {
@@ -352,24 +364,24 @@ static int _eit_process_event
 
     switch (dtag) {
       case DVB_DESC_SHORT_EVENT:
-        r = _eit_desc_short_event(ptr, dlen, &ev);
+        r = _eit_desc_short_event(mod, ptr, dlen, &ev);
         break;
       case DVB_DESC_EXT_EVENT:
-        r = _eit_desc_ext_event(ptr, dlen, &ev);
+        r = _eit_desc_ext_event(mod, ptr, dlen, &ev);
         break;
       case DVB_DESC_CONTENT:
-        r = _eit_desc_content(ptr, dlen, &ev);
+        r = _eit_desc_content(mod, ptr, dlen, &ev);
         break;
       case DVB_DESC_COMPONENT:
-        r = _eit_desc_component(ptr, dlen, &ev);
+        r = _eit_desc_component(mod, ptr, dlen, &ev);
         break;
 #if TODO_AGE_RATING
       case DVB_DESC_PARENTAL_RAT:
-        r = _eit_desc_parental(ptr, dlen, &ev);
+        r = _eit_desc_parental(mod, ptr, dlen, &ev);
         break;
 #endif
       case DVB_DESC_CRID:
-        r = _eit_desc_crid(ptr, dlen, &ev);
+        r = _eit_desc_crid(mod, ptr, dlen, &ev);
         break;
       default:
         r = 0;
@@ -497,9 +509,6 @@ static int _eit_callback
   svc = dvb_transport_find(tdmi, sid, 0, NULL);
   if (!svc || !svc->s_enabled || !svc->s_ch) return 0;
 
-  /* Ignore (disabled) */
-  if (!svc->s_dvb_eit_enable) return 0;
-
   /* Ignore (not primary EPG service) */
   if (!service_is_primary_epg(svc)) return 0;
 
@@ -549,8 +558,8 @@ static void _eit_start
   if (!(ota = epggrab_ota_create(m, tdmi))) return;
   if (!ota->status)
     ota->status = calloc(1, sizeof(eit_status_t));
-  tdt_add(tdmi, NULL, _eit_callback, m, "eit", TDT_CRC, 0x12, NULL);
-  tvhlog(LOG_DEBUG, "eit", "install table handlers");
+  tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 0x12, NULL);
+  tvhlog(LOG_DEBUG, m->id, "install table handlers");
 }
 
 void eit_init ( void )

@@ -202,7 +202,7 @@ static inline size_t dvb_convert(int conv,
  */
 
 int
-dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char *dvb_default_charset)
+dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char *dvb_default_charset, dvb_string_conv_t *conv)
 {
   int ic;
   size_t len, outlen;
@@ -211,6 +211,13 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char
   if(srclen < 1) {
     *dst = 0;
     return 0;
+  }
+
+  /* Check custom conversion */
+  while (conv) {
+    if (conv->type == src[0])
+      return conv->func(dst, &dstlen, src+1, srclen-1);
+    conv++;
   }
 
   switch(src[0]) {
@@ -277,14 +284,15 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char
 
 int
 dvb_get_string_with_len(char *dst, size_t dstlen, 
-			const uint8_t *buf, size_t buflen, char *dvb_default_charset)
+			const uint8_t *buf, size_t buflen, char *dvb_default_charset,
+      dvb_string_conv_t *conv)
 {
   int l = buf[0];
 
   if(l + 1 > buflen)
     return -1;
 
-  if(dvb_get_string(dst, dstlen, buf + 1, l, dvb_default_charset))
+  if(dvb_get_string(dst, dstlen, buf + 1, l, dvb_default_charset, conv))
     return -1;
 
   return l + 1;
