@@ -214,7 +214,7 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char
   }
 
   /* Check custom conversion */
-  while (conv) {
+  while (conv && conv->func) {
     if (conv->type == src[0])
       return conv->func(dst, &dstlen, src+1, srclen-1);
     conv++;
