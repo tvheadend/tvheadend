@@ -230,7 +230,9 @@ get_episode_info
  *       job
  */
 static int
-parse_vid_quality ( epg_broadcast_t *ebc, epg_episode_t *ee, htsmsg_t *m )
+parse_vid_quality
+  ( epggrab_module_t *mod, epg_broadcast_t *ebc, epg_episode_t *ee,
+    htsmsg_t *m )
 {
   int save = 0;
   int hd = 0, lines = 0, aspect = 0;
@@ -238,7 +240,7 @@ parse_vid_quality ( epg_broadcast_t *ebc, epg_episode_t *ee, htsmsg_t *m )
   if (!ebc || !m) return 0;
 
   if ((str = htsmsg_xml_get_cdata_str(m, "colour")))
-    save |= epg_episode_set_is_bw(ee, strcmp(str, "no") ? 0 : 1);
+    save |= epg_episode_set_is_bw(ee, strcmp(str, "no") ? 0 : 1, mod);
   if ((str = htsmsg_xml_get_cdata_str(m, "quality"))) {
     if (strstr(str, "HD")) {
       hd    = 1;
@@ -264,13 +266,13 @@ parse_vid_quality ( epg_broadcast_t *ebc, epg_episode_t *ee, htsmsg_t *m )
       aspect = (100 * w) / h;
     }
   }
-  save |= epg_broadcast_set_is_hd(ebc, hd);
+  save |= epg_broadcast_set_is_hd(ebc, hd, mod);
   if (aspect) {
-    save |= epg_broadcast_set_is_widescreen(ebc, hd || aspect > 137);
-    save |= epg_broadcast_set_aspect(ebc, aspect);
+    save |= epg_broadcast_set_is_widescreen(ebc, hd || aspect > 137, mod);
+    save |= epg_broadcast_set_aspect(ebc, aspect, mod);
   }
   if (lines)
-    save |= epg_broadcast_set_lines(ebc, lines);
+    save |= epg_broadcast_set_lines(ebc, lines, mod);
   
   return save;
 }
@@ -279,7 +281,8 @@ parse_vid_quality ( epg_broadcast_t *ebc, epg_episode_t *ee, htsmsg_t *m )
  * Parse accessibility data
  */
 int
-xmltv_parse_accessibility ( epg_broadcast_t *ebc, htsmsg_t *m )
+xmltv_parse_accessibility 
+  ( epggrab_module_t *mod, epg_broadcast_t *ebc, htsmsg_t *m )
 {
   int save = 0;
   htsmsg_t *tag;
@@ -291,12 +294,12 @@ xmltv_parse_accessibility ( epg_broadcast_t *ebc, htsmsg_t *m )
       if ((tag = htsmsg_get_map_by_field(f))) {
         str = htsmsg_xml_get_attr_str(tag, "type");
         if (str && !strcmp(str, "teletext"))
-          save |= epg_broadcast_set_is_subtitled(ebc, 1);
+          save |= epg_broadcast_set_is_subtitled(ebc, 1, mod);
         else if (str && !strcmp(str, "deaf-signed"))
-          save |= epg_broadcast_set_is_deafsigned(ebc, 1);
+          save |= epg_broadcast_set_is_deafsigned(ebc, 1, mod);
       }
     } else if (!strcmp(f->hmf_name, "audio-described")) {
-      save |= epg_broadcast_set_is_audio_desc(ebc, 1);
+      save |= epg_broadcast_set_is_audio_desc(ebc, 1, mod);
     }
   }
   return save;
@@ -323,9 +326,9 @@ static epg_genre_list_t
 /**
  * Parse tags inside of a programme
  */
-static int
-_xmltv_parse_programme_tags(channel_t *ch, htsmsg_t *tags, 
-			   time_t start, time_t stop, epggrab_stats_t *stats)
+static int _xmltv_parse_programme_tags
+  (epggrab_module_t *mod, channel_t *ch, htsmsg_t *tags, 
+   time_t start, time_t stop, epggrab_stats_t *stats)
 {
   int save = 0, save2 = 0;
   epg_episode_t *ee;
@@ -342,8 +345,11 @@ _xmltv_parse_programme_tags(channel_t *ch, htsmsg_t *tags,
   /* Ignore */
   if (!title) return 0;
 
-  /* Build episode */
-  if (!uri) uri = md5sum(desc ?: title);
+  /*
+   * Episode
+   */
+
+  uri = epg_hash(title, NULL, desc);
   ee  = epg_episode_find_by_uri(uri, 1, &save);
   free(uri);
   if (!ee) return 0;
@@ -357,15 +363,21 @@ _xmltv_parse_programme_tags(channel_t *ch, htsmsg_t *tags,
     free(suri);
   }
 
-  if (title)     save |= epg_episode_set_title(ee, title);
-  if (desc)      save |= epg_episode_set_description(ee, desc);
+  if (title)
+    save |= epg_episode_set_title(ee, title, mod);
+  if (desc)
+    save |= epg_episode_set_description(ee, desc, mod);
   if ((egl = _xmltv_parse_categories(tags))) {
-    save |= epg_episode_set_genre(ee, egl);
+    save |= epg_episode_set_genre(ee, egl, mod);
     epg_genre_list_destroy(egl);
   }
-  if (pn)        save |= epg_episode_set_part(ee, pn, pc);
-  if (en)        save |= epg_episode_set_number(ee, en);
+  if (pn)   save |= epg_episode_set_part(ee, pn, pc, mod);
+  if (en)   save |= epg_episode_set_number(ee, en, mod);
   if (save) stats->episodes.modified++;
+
+  /*
+   * Broadcast
+   */
 
   // TODO: need to handle certification and ratings
   // TODO: need to handle season numbering!
@@ -377,20 +389,20 @@ _xmltv_parse_programme_tags(channel_t *ch, htsmsg_t *tags,
   if ( ebc ) {
     stats->broadcasts.total++;
     if (save2) stats->broadcasts.created++;
-    save2 |= epg_broadcast_set_episode(ebc, ee);
+    save2 |= epg_broadcast_set_episode(ebc, ee, mod);
 
     /* Quality metadata */
-    save2 |= parse_vid_quality(ebc, ee, htsmsg_get_map(tags, "video"));
+    save2 |= parse_vid_quality(mod, ebc, ee, htsmsg_get_map(tags, "video"));
 
     /* Accessibility */
-    save2 |= xmltv_parse_accessibility(ebc, tags);
+    save2 |= xmltv_parse_accessibility(mod, ebc, tags);
 
     /* Misc */
     if (htsmsg_get_map(tags, "previously-shown"))
-      save |= epg_broadcast_set_is_repeat(ebc, 1);
+      save |= epg_broadcast_set_is_repeat(ebc, 1, mod);
     else if (htsmsg_get_map(tags, "premiere") ||
              htsmsg_get_map(tags, "new"))
-      save |= epg_broadcast_set_is_new(ebc, 1);
+      save |= epg_broadcast_set_is_new(ebc, 1, mod);
   
     /* Stats */
     if (save2) stats->broadcasts.modified++;
@@ -402,8 +414,8 @@ _xmltv_parse_programme_tags(channel_t *ch, htsmsg_t *tags,
 /**
  * Parse a <programme> tag from xmltv
  */
-static int
-_xmltv_parse_programme(htsmsg_t *body, epggrab_stats_t *stats)
+static int _xmltv_parse_programme
+  (epggrab_module_t *mod, htsmsg_t *body, epggrab_stats_t *stats)
 {
   int save = 0;
   htsmsg_t *attribs, *tags;
@@ -421,19 +433,20 @@ _xmltv_parse_programme(htsmsg_t *body, epggrab_stats_t *stats)
   if((s       = htsmsg_get_str(attribs, "start"))   == NULL) return 0;
   start = _xmltv_str2time(s);
   if((s       = htsmsg_get_str(attribs, "stop"))    == NULL) return 0;
-  stop = _xmltv_str2time(s);
+  stop  = _xmltv_str2time(s);
 
   if(stop <= start || stop < dispatch_clock) return 0;
 
-  save |= _xmltv_parse_programme_tags(ch->channel, tags, start, stop, stats);
+  save |= _xmltv_parse_programme_tags(mod, ch->channel, tags,
+                                      start, stop, stats);
   return save;
 }
 
 /**
  * Parse a <channel> tag from xmltv
  */
-static int
-_xmltv_parse_channel(htsmsg_t *body, epggrab_stats_t *stats)
+static int _xmltv_parse_channel
+  (epggrab_module_t *mod, htsmsg_t *body, epggrab_stats_t *stats)
 {
   int save =0;
   htsmsg_t *attribs, *tags, *subtag;
@@ -468,8 +481,8 @@ _xmltv_parse_channel(htsmsg_t *body, epggrab_stats_t *stats)
 /**
  *
  */
-static int
-_xmltv_parse_tv(htsmsg_t *body, epggrab_stats_t *stats)
+static int _xmltv_parse_tv
+  (epggrab_module_t *mod, htsmsg_t *body, epggrab_stats_t *stats)
 {
   int save = 0;
   htsmsg_t *tags;
@@ -480,9 +493,9 @@ _xmltv_parse_tv(htsmsg_t *body, epggrab_stats_t *stats)
 
   HTSMSG_FOREACH(f, tags) {
     if(!strcmp(f->hmf_name, "channel")) {
-      save |= _xmltv_parse_channel(htsmsg_get_map_by_field(f), stats);
+      save |= _xmltv_parse_channel(mod, htsmsg_get_map_by_field(f), stats);
     } else if(!strcmp(f->hmf_name, "programme")) {
-      save |= _xmltv_parse_programme(htsmsg_get_map_by_field(f), stats);
+      save |= _xmltv_parse_programme(mod, htsmsg_get_map_by_field(f), stats);
     }
   }
   return save;
@@ -499,7 +512,7 @@ static int _xmltv_parse
   if((tv = htsmsg_get_map(tags, "tv")) == NULL)
     return 0;
 
-  return _xmltv_parse_tv(tv, stats);
+  return _xmltv_parse_tv(mod, tv, stats);
 }
 
 /* ************************************************************************

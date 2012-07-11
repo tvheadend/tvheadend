@@ -155,6 +155,7 @@ void xmltv_init  ( void );
 void xmltv_load  ( void );
 
 /* Note: this is reused by pyepg since they share a common format */
-int  xmltv_parse_accessibility ( epg_broadcast_t *ebc, htsmsg_t *m );
+int  xmltv_parse_accessibility
+  ( epggrab_module_t *mod, epg_broadcast_t *ebc, htsmsg_t *m );
 
 #endif /* __EPGGRAB_PRIVATE_H__ */
