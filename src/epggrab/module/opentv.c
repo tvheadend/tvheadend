@@ -378,7 +378,7 @@ static int _opentv_parse_event_section
                                        1, &save);
 
     /* Store */
-    } else {
+    } else if (!(ebc = epg_broadcast_find_by_eid(ec->channel, ev.eid))) {
       opentv_event_t *skel = malloc(sizeof(opentv_event_t));
       memcpy(skel, &ev, sizeof(opentv_event_t));
       assert(!RB_INSERT_SORTED(&sta->events, skel, ev_link, _ev_cmp));
