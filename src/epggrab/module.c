@@ -73,7 +73,7 @@ htsmsg_t *epggrab_module_list ( void )
  * *************************************************************************/
 
 epggrab_module_t *epggrab_module_create
-  ( epggrab_module_t *skel, const char *id, const char *name,
+  ( epggrab_module_t *skel, const char *id, const char *name, int priority,
     epggrab_channel_tree_t *channels )
 {
   assert(skel);
@@ -81,6 +81,7 @@ epggrab_module_t *epggrab_module_create
   /* Setup */
   skel->id       = strdup(id);
   skel->name     = strdup(name);
+  skel->priority = priority;
   skel->channels = channels;
   if (channels) {
     skel->ch_save = epggrab_module_ch_save;
@@ -227,7 +228,8 @@ void epggrab_module_channels_load ( epggrab_module_t *mod )
 
 epggrab_module_int_t *epggrab_module_int_create
   ( epggrab_module_int_t *skel,
-    const char *id, const char *name, const char *path,
+    const char *id, const char *name, int priority,
+    const char *path,
     char* (*grab) (void*m),
     int (*parse) (void *m, htsmsg_t *data, epggrab_stats_t *sta),
     htsmsg_t* (*trans) (void *mod, char *data),
@@ -237,7 +239,7 @@ epggrab_module_int_t *epggrab_module_int_create
   if (!skel) skel = calloc(1, sizeof(epggrab_module_int_t));
   
   /* Pass through */
-  epggrab_module_create((epggrab_module_t*)skel, id, name, channels);
+  epggrab_module_create((epggrab_module_t*)skel, id, name, priority, channels);
 
   /* Int data */
   skel->type     = EPGGRAB_INT;
@@ -397,7 +399,7 @@ int epggrab_module_enable_socket ( void *m, uint8_t e )
  */
 epggrab_module_ext_t *epggrab_module_ext_create
   ( epggrab_module_ext_t *skel,
-    const char *id, const char *name, const char *sockid,
+    const char *id, const char *name, int priority, const char *sockid,
     int (*parse) (void *m, htsmsg_t *data, epggrab_stats_t *sta),
     htsmsg_t* (*trans) (void *mod, char *data),
     epggrab_channel_tree_t *channels )
@@ -411,7 +413,7 @@ epggrab_module_ext_t *epggrab_module_ext_create
   snprintf(path, 512, "%s/epggrab/%s.sock",
            hts_settings_get_root(), sockid);
   epggrab_module_int_create((epggrab_module_int_t*)skel,
-                            id, name, path,
+                            id, name, priority, path,
                             NULL, parse, trans,
                             channels);
 
@@ -428,7 +430,7 @@ epggrab_module_ext_t *epggrab_module_ext_create
 
 epggrab_module_ota_t *epggrab_module_ota_create
   ( epggrab_module_ota_t *skel,
-    const char *id, const char *name,
+    const char *id, const char *name, int priority,
     void (*start) (epggrab_module_ota_t*m,
                    struct th_dvb_mux_instance *tdmi),
     int (*enable) (void *m, uint8_t e ),
@@ -437,7 +439,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ota_t));
   
   /* Pass through */
-  epggrab_module_create((epggrab_module_t*)skel, id, name, channels);
+  epggrab_module_create((epggrab_module_t*)skel, id, name, priority, channels);
 
   /* Setup */
   skel->type   = EPGGRAB_OTA;

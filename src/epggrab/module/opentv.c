@@ -349,6 +349,7 @@ static int _opentv_parse_event_section
   epg_episode_t *ee;
   epg_season_t *es;
   opentv_event_t ev;
+  epggrab_module_t *src = (epggrab_module_t*)mod;
 
   /* Channel */
   cid = ((int)buf[0] << 8) | buf[1];
@@ -398,27 +399,27 @@ static int _opentv_parse_event_section
       /* Update */
       if (ee) {
         if (!ev.title && ebc->episode)
-          save |= epg_episode_set_title(ee, ebc->episode->title);
+          save |= epg_episode_set_title(ee, ebc->episode->title, src);
         else if (ev.title)
-          save |= epg_episode_set_title(ee, ev.title);
+          save |= epg_episode_set_title(ee, ev.title, src);
         if (ev.summary)
-          save |= epg_episode_set_summary(ee, ev.summary);
+          save |= epg_episode_set_summary(ee, ev.summary, src);
         if (ev.desc)
-          save |= epg_episode_set_description(ee, ev.desc);
+          save |= epg_episode_set_description(ee, ev.desc, src);
         if (ev.cat) {
           epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
           epg_genre_list_add_by_eit(egl, ev.cat);
-          save |= epg_episode_set_genre(ee, egl);
+          save |= epg_episode_set_genre(ee, egl, src);
           epg_genre_list_destroy(egl);
         }
         // Note: don't override the season (since the ID is channel specific
         //       it'll keep changing!
         if (ev.series && !ee->season) {
           es = _opentv_find_season(mod, cid, ev.series);
-          if (es) save |= epg_episode_set_season(ee, es);
+          if (es) save |= epg_episode_set_season(ee, es, src);
         }
 
-        save |= epg_broadcast_set_episode(ebc, ee);
+        save |= epg_broadcast_set_episode(ebc, ee, src);
       }
     }
 
@@ -874,7 +875,7 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
   sprintf(nbuf, "OpenTV: %s", name);
   mod = (opentv_module_t*)
     epggrab_module_ota_create(calloc(1, sizeof(opentv_module_t)),
-                              ibuf, nbuf,
+                              ibuf, nbuf, 2,
                               _opentv_start, _opentv_enable,
                               NULL);
   

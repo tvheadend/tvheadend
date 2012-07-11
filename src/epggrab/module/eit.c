@@ -145,7 +145,7 @@ static int _eit_callback
   ( th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len, 
     uint8_t tableid, void *opaque )
 {
-  epggrab_module_ota_t *mod = opaque;
+  epggrab_module_t *mod = opaque;
   epggrab_ota_mux_t *ota;
   th_dvb_adapter_t *tda;
   service_t *svc;
@@ -168,7 +168,7 @@ static int _eit_callback
     return -1;
 
   /* Get OTA */
-  ota = epggrab_ota_find(mod, tdmi);
+  ota = epggrab_ota_find((epggrab_module_ota_t*)mod, tdmi);
   if (!ota || !ota->status) return 0;
   sta = ota->status;
 
@@ -364,11 +364,11 @@ static int _eit_callback
 
     /* Metadata */
     if ( save2 ) {
-      save |= epg_broadcast_set_is_hd(ebc, hd);
-      save |= epg_broadcast_set_is_widescreen(ebc, ws);
-      save |= epg_broadcast_set_is_audio_desc(ebc, ad);
-      save |= epg_broadcast_set_is_subtitled(ebc, st);
-      save |= epg_broadcast_set_is_deafsigned(ebc, ds);
+      save |= epg_broadcast_set_is_hd(ebc, hd, mod);
+      save |= epg_broadcast_set_is_widescreen(ebc, ws, mod);
+      save |= epg_broadcast_set_is_audio_desc(ebc, ad, mod);
+      save |= epg_broadcast_set_is_subtitled(ebc, st, mod);
+      save |= epg_broadcast_set_is_deafsigned(ebc, ds, mod);
     }
 
     /* Create episode */
@@ -378,7 +378,7 @@ static int _eit_callback
       uri   = epg_hash(title, summary, desc);
       if (uri) {
         if ((ee    = epg_episode_find_by_uri(uri, 1, &save2)))
-          save |= epg_broadcast_set_episode(ebc, ee);
+          save |= epg_broadcast_set_episode(ebc, ee, mod);
         free(uri);
       }
     }
@@ -386,18 +386,18 @@ static int _eit_callback
 
     /* Episode data */
     if (ee) {
-      save |= epg_episode_set_is_bw(ee, bw);
-      if ( !ee->title && *title )
-        save |= epg_episode_set_title(ee, title);
-      if ( !ee->summary && *summary )
-        save |= epg_episode_set_summary(ee, summary);
-      if ( !ee->description && *desc )
-        save |= epg_episode_set_description(ee, desc);
-      if ( !LIST_FIRST(&ee->genre) && egl )
-        save |= epg_episode_set_genre(ee, egl);
+      save |= epg_episode_set_is_bw(ee, bw, mod);
+      if ( *title )
+        save |= epg_episode_set_title(ee, title, mod);
+      if ( *summary )
+        save |= epg_episode_set_summary(ee, summary, mod);
+      if ( *desc )
+        save |= epg_episode_set_description(ee, desc, mod);
+      if ( egl )
+        save |= epg_episode_set_genre(ee, egl, mod);
 #if TODO_ADD_EXTRA
       if ( extra )
-        save |= epg_episode_set_extra(ee, extra);
+        save |= epg_episode_set_extra(ee, extra, mod);
 #endif
     }
 
@@ -431,7 +431,7 @@ static void _eit_start
 
 void eit_init ( void )
 {
-  epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber",
+  epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber", 1,
                             _eit_start, NULL, NULL);
 }
 

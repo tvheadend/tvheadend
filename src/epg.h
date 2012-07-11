@@ -1,6 +1,6 @@
 /*
  *  Electronic Program Guide - Common functions
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2012 Adam Sutton
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,10 +22,11 @@
 #include "settings.h"
 
 /*
- * Forward decls
+ * External forward decls
  */
 struct channel;
 struct channel_tag;
+struct epggrab_module;
 
 /*
  * Map/List types
@@ -117,6 +118,8 @@ struct epg_object
   int                     refcount;   ///< Reference counting
   // Note: could use LIST_ENTRY field to determine this!
 
+  struct epggrab_module  *grabber;   ///< Originating grabber
+
   void (*getref)  ( void *o ); ///< Get a reference
   void (*putref)  ( void *o ); ///< Release a reference
   void (*destroy) ( void *o ); ///< Delete the object
@@ -148,13 +151,17 @@ epg_brand_t *epg_brand_find_by_uri
 epg_brand_t *epg_brand_find_by_id ( uint64_t id );
 
 /* Mutators */
-int epg_brand_set_title        ( epg_brand_t *b, const char *title )
+int epg_brand_set_title        
+  ( epg_brand_t *b, const char *title, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_brand_set_summary      ( epg_brand_t *b, const char *summary )
+int epg_brand_set_summary
+  ( epg_brand_t *b, const char *summary, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_brand_set_season_count ( epg_brand_t *b, uint16_t season_count )
+int epg_brand_set_season_count
+  ( epg_brand_t *b, uint16_t season_count, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_brand_set_image        ( epg_brand_t *b, const char *i )
+int epg_brand_set_image
+  ( epg_brand_t *b, const char *i, struct epggrab_module *src )
   __attribute__((warn_unused_result));
 
 /* Serialization */
@@ -190,15 +197,20 @@ epg_season_t *epg_season_find_by_uri
 epg_season_t *epg_season_find_by_id ( uint64_t id );
 
 /* Mutators */
-int epg_season_set_summary       ( epg_season_t *s, const char *summary )
+int epg_season_set_summary
+  ( epg_season_t *s, const char *summary, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_season_set_number        ( epg_season_t *s, uint16_t number )
+int epg_season_set_number
+  ( epg_season_t *s, uint16_t number, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_season_set_episode_count ( epg_season_t *s, uint16_t episode_count )
+int epg_season_set_episode_count
+  ( epg_season_t *s, uint16_t episode_count, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_season_set_brand         ( epg_season_t *s, epg_brand_t *b, int u )
+int epg_season_set_brand
+  ( epg_season_t *s, epg_brand_t *b, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_season_set_image         ( epg_season_t *s, const char *image )
+int epg_season_set_image
+  ( epg_season_t *s, const char *image, struct epggrab_module *src )
   __attribute__((warn_unused_result));
 
 /* Serialization */
@@ -254,32 +266,42 @@ epg_episode_t *epg_episode_find_by_uri
 epg_episode_t *epg_episode_find_by_id ( uint64_t id );
 
 /* Mutators */
-int epg_episode_set_title        ( epg_episode_t *e, const char *title )
+int epg_episode_set_title
+  ( epg_episode_t *e, const char *title, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_episode_set_subtitle     ( epg_episode_t *e, const char *subtitle )
+int epg_episode_set_subtitle
+  ( epg_episode_t *e, const char *subtitle, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_episode_set_summary      ( epg_episode_t *e, const char *summary )
+int epg_episode_set_summary
+  ( epg_episode_t *e, const char *summary, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_episode_set_description  ( epg_episode_t *e, const char *description )
+int epg_episode_set_description
+  ( epg_episode_t *e, const char *description, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_episode_set_number       ( epg_episode_t *e, uint16_t number )
+int epg_episode_set_number
+  ( epg_episode_t *e, uint16_t number, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_episode_set_part         ( epg_episode_t *e, 
-                                   uint16_t number, uint16_t count )
+int epg_episode_set_part
+  ( epg_episode_t *e, uint16_t number, uint16_t count,
+    struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_episode_set_epnum        ( epg_episode_t *e, epg_episode_num_t *num )
+int epg_episode_set_epnum
+  ( epg_episode_t *e, epg_episode_num_t *num, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_episode_set_brand        ( epg_episode_t *e, epg_brand_t *b )
+int epg_episode_set_brand
+  ( epg_episode_t *e, epg_brand_t *b, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_episode_set_season       ( epg_episode_t *e, epg_season_t *s )
+int epg_episode_set_season
+  ( epg_episode_t *e, epg_season_t *s, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_episode_set_genre        ( epg_episode_t *e, epg_genre_list_t *g )
+int epg_episode_set_genre
+  ( epg_episode_t *e, epg_genre_list_t *g, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_episode_set_genre_str    ( epg_episode_t *e, const char **s )
+int epg_episode_set_image
+  ( epg_episode_t *e, const char *i, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_episode_set_image        ( epg_episode_t *e, const char *i )
-  __attribute__((warn_unused_result));
-int epg_episode_set_is_bw ( epg_episode_t *b, uint8_t bw )
+int epg_episode_set_is_bw
+  ( epg_episode_t *b, uint8_t bw, struct epggrab_module *src )
   __attribute__((warn_unused_result));
 
 // Note: this does NOT strdup the text field
@@ -355,25 +377,35 @@ epg_broadcast_t *epg_broadcast_find_by_eid ( struct channel *ch, int eid );
 epg_broadcast_t *epg_broadcast_find_by_id  ( uint64_t id, struct channel *ch );
 
 /* Mutators */
-int epg_broadcast_set_episode    ( epg_broadcast_t *b, epg_episode_t *e )
+int epg_broadcast_set_episode
+  ( epg_broadcast_t *b, epg_episode_t *e, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_broadcast_set_is_widescreen ( epg_broadcast_t *b, uint8_t ws )
+int epg_broadcast_set_is_widescreen
+  ( epg_broadcast_t *b, uint8_t ws, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_broadcast_set_is_hd ( epg_broadcast_t *b, uint8_t hd )
+int epg_broadcast_set_is_hd
+  ( epg_broadcast_t *b, uint8_t hd, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_broadcast_set_lines ( epg_broadcast_t *b, uint16_t lines )
+int epg_broadcast_set_lines 
+  ( epg_broadcast_t *b, uint16_t lines, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_broadcast_set_aspect ( epg_broadcast_t *b, uint16_t aspect )
+int epg_broadcast_set_aspect
+  ( epg_broadcast_t *b, uint16_t aspect, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_broadcast_set_is_deafsigned ( epg_broadcast_t *b, uint8_t ds )
+int epg_broadcast_set_is_deafsigned
+  ( epg_broadcast_t *b, uint8_t ds, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_broadcast_set_is_subtitled ( epg_broadcast_t *b, uint8_t st )
+int epg_broadcast_set_is_subtitled
+  ( epg_broadcast_t *b, uint8_t st, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_broadcast_set_is_audio_desc ( epg_broadcast_t *b, uint8_t ad )
+int epg_broadcast_set_is_audio_desc
+  ( epg_broadcast_t *b, uint8_t ad, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_broadcast_set_is_new ( epg_broadcast_t *b, uint8_t n )
+int epg_broadcast_set_is_new
+  ( epg_broadcast_t *b, uint8_t n, struct epggrab_module *src )
   __attribute__((warn_unused_result));
-int epg_broadcast_set_is_repeat ( epg_broadcast_t *b, uint8_t r )
+int epg_broadcast_set_is_repeat
+  ( epg_broadcast_t *b, uint8_t r, struct epggrab_module *src )
   __attribute__((warn_unused_result));
 
 /* Accessors */
