@@ -494,9 +494,11 @@ static int _opentv_bat_section
   //       most of the time
   i = 0x80000000 | (bid << 8) | sec;
   if (!sta->begbat) {
+    tvhlog(LOG_DEBUG, "opentv", "begin processing BAT");
     sta->begbat = i;
   } else if (sta->begbat == i) {
     sta->endbat = 1;
+    tvhlog(LOG_DEBUG, "opentv", "finish processing BAT");
     return 0;
   }
 
@@ -559,6 +561,7 @@ static epggrab_ota_mux_t *_opentv_event_callback
 
   /* Begin (reset state) */
   if (epggrab_ota_begin(ota)) {
+    tvhlog(LOG_DEBUG, "opentv", "begin processing events");
 
     /* Remove outstanding event data */
     _opentv_status_remove_events(sta);
@@ -595,6 +598,7 @@ static epggrab_ota_mux_t *_opentv_event_callback
   }
 
   /* Mark complete */
+  tvhlog(LOG_DEBUG, "opentv", "finish processing events");
   epggrab_ota_complete(ota);
   
   return NULL;
