@@ -190,12 +190,24 @@ static epggrab_channel_t *_opentv_find_epggrab_channel
 }
 
 static epg_season_t *_opentv_find_season 
-  ( opentv_module_t *mod, int cid, int slink )
+  ( opentv_module_t *mod, int cid, opentv_event_t *ev, int *save )
 {
-  int save = 0;
   char uri[64];
-  sprintf(uri, "%s-%d-%d", mod->id, cid, slink);
-  return epg_season_find_by_uri(uri, 1, &save);
+  sprintf(uri, "%s-%d-%d", mod->id, cid, ev->series);
+  return epg_season_find_by_uri(uri, 1, save);
+}
+
+static epg_episode_t *_opentv_find_episode
+  ( opentv_module_t *mod, int cid, opentv_event_t *ev, int *save )
+{
+  char uri[100];
+  char *tmp = epg_hash(ev->title, ev->summary, ev->desc);
+  if (tmp) {
+    snprintf(uri, 100, "%s-%d-%s", mod->id, cid, tmp);
+    free(tmp);
+    return epg_episode_find_by_uri(uri, 1, save);
+  }
+  return NULL;
 }
 
 static service_t *_opentv_find_service ( int tsid, int sid )
@@ -212,12 +224,6 @@ static service_t *_opentv_find_service ( int tsid, int sid )
     }
   }
   return NULL;
-}
-
-static channel_t *_opentv_find_channel ( int tsid, int sid )
-{
-  service_t *t = _opentv_find_service(tsid, sid);
-  return t ? t->s_ch : NULL;
 }
 
 /* ************************************************************************
@@ -343,7 +349,6 @@ static int _opentv_parse_event_section
 {
   int i, cid, save = 0;
   time_t mjd;
-  char *uri;
   epggrab_channel_t *ec;
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
@@ -385,13 +390,8 @@ static int _opentv_parse_event_section
       ee = NULL;
 
       /* Find episode */
-      if (ev.type & OPENTV_SUMMARY || !ebc->episode) {
-        uri = epg_hash(ev.title, ev.summary, ev.desc);
-        if (uri) {
-          ee = epg_episode_find_by_uri(uri, 1, &save);
-          free(uri);
-        }
-      }
+      if (ev.type & OPENTV_SUMMARY || !ebc->episode)
+        ee = _opentv_find_episode(mod, cid, &ev, &save);
 
       /* Use existing */
       if (!ee) ee = ebc->episode;
@@ -415,7 +415,7 @@ static int _opentv_parse_event_section
         // Note: don't override the season (since the ID is channel specific
         //       it'll keep changing!
         if (ev.series && !ee->season) {
-          es = _opentv_find_season(mod, cid, ev.series);
+          es = _opentv_find_season(mod, cid, &ev, &save);
           if (es) save |= epg_episode_set_season(ee, es, src);
         }
 
@@ -442,7 +442,7 @@ static void _opentv_parse_channels
   ( opentv_module_t *mod, uint8_t *buf, int len, uint16_t tsid )
 {
   epggrab_channel_t *ec;
-  channel_t *ch;
+  service_t *svc;
   int sid, cid, cnum;
   int save = 0;
   int i = 2;
@@ -451,13 +451,15 @@ static void _opentv_parse_channels
     cid  = ((int)buf[i+3] << 8) | buf[i+4];
     cnum = ((int)buf[i+5] << 8) | buf[i+6];
 
-    /* Find the channel */
-    if ((ch = _opentv_find_channel(tsid, sid))) {
-      ec = _opentv_find_epggrab_channel(mod, cid, 1, &save);
-      if (save) {
-        ec->channel = ch; 
-        epggrab_channel_set_number(ec, cnum);
-      }
+    /* Find the service */
+    svc = _opentv_find_service(tsid, sid);
+    if (svc && svc->s_ch) {
+      ec  =_opentv_find_epggrab_channel(mod, cid, 1, &save);
+      if (service_is_primary_epg(svc))
+        ec->channel = svc->s_ch;
+      else
+        ec->channel = NULL;
+      save |= epggrab_channel_set_number(ec, cnum);
     }
     i += 9;
   }
