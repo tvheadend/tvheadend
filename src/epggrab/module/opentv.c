@@ -341,7 +341,7 @@ static int _opentv_parse_event_section
   ( opentv_module_t *mod, opentv_status_t *sta,
     uint8_t *buf, int len, int type )
 {
-  int i, cid, update, save = 0;
+  int i, cid, save = 0;
   time_t mjd;
   char *uri;
   epggrab_channel_t *ec;
@@ -381,11 +381,10 @@ static int _opentv_parse_event_section
 
     /* Find episode */
     if (ebc) {
-      update = epg_broadcast_set_grabber(ebc, (epggrab_module_t*)mod, &save);
-      ee     = NULL;
+      ee = NULL;
 
       /* Find episode */
-      if ((update && (ev.type & OPENTV_SUMMARY)) || !ebc->episode) {
+      if (ev.type & OPENTV_SUMMARY || !ebc->episode) {
         uri = epg_hash(ev.title, ev.summary, ev.desc);
         if (uri) {
           ee = epg_episode_find_by_uri(uri, 1, &save);
@@ -393,36 +392,33 @@ static int _opentv_parse_event_section
         }
       }
 
-      /* Copy existing title */
-      if (!ev.title && ebc->episode && ebc->episode->title)
-        ev.title = strdup(ebc->episode->title);
-
       /* Use existing */
-      if (!ee) 
-        ee = ebc->episode;
-      else if (update || !ebc->episode)
-        save |= epg_broadcast_set_episode(ebc, ee);
+      if (!ee) ee = ebc->episode;
 
       /* Update */
       if (ee) {
-        update = epg_episode_set_grabber(ee, (epggrab_module_t*)mod, &save);
-
-        if (ev.title && (update || !ee->title))
+        if (!ev.title && ebc->episode)
+          save |= epg_episode_set_title(ee, ebc->episode->title);
+        else if (ev.title)
           save |= epg_episode_set_title(ee, ev.title);
-        if (ev.summary && (update || !ee->summary))
+        if (ev.summary)
           save |= epg_episode_set_summary(ee, ev.summary);
-        if (ev.desc && (update || !ee->description))
+        if (ev.desc)
           save |= epg_episode_set_description(ee, ev.desc);
-        if (ev.cat && (update || !LIST_FIRST(&ee->genre))) {
+        if (ev.cat) {
           epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
           epg_genre_list_add_by_eit(egl, ev.cat);
           save |= epg_episode_set_genre(ee, egl);
           epg_genre_list_destroy(egl);
         }
-        if (ev.series && (update || !ee->season)) {
+        // Note: don't override the season (since the ID is channel specific
+        //       it'll keep changing!
+        if (ev.series && !ee->season) {
           es = _opentv_find_season(mod, cid, ev.series);
           if (es) save |= epg_episode_set_season(ee, es);
         }
+
+        save |= epg_broadcast_set_episode(ebc, ee);
       }
     }
 
