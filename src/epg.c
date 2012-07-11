@@ -233,7 +233,8 @@ static int _epg_object_set_grabber ( void *o, epggrab_module_t *grab  )
 {
   epg_object_t *eo = o;
   if ( !grab ) return 1; // grab=NULL is override
-  if ( eo->grabber != grab && grab->priority > eo->grabber->priority ) {
+  if ( !eo->grabber ||
+       ((eo->grabber != grab) && (grab->priority > eo->grabber->priority)) ) {
     eo->grabber = grab;
   }
   return grab == eo->grabber;
