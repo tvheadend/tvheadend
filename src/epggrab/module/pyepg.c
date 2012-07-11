@@ -71,7 +71,8 @@ static epg_genre_list_t
   return egl;
 }
 
-static int _pyepg_parse_channel ( htsmsg_t *data, epggrab_stats_t *stats )
+static int _pyepg_parse_channel 
+  ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
   epggrab_channel_t *ch;
@@ -105,7 +106,8 @@ static int _pyepg_parse_channel ( htsmsg_t *data, epggrab_stats_t *stats )
   return save;
 }
 
-static int _pyepg_parse_brand ( htsmsg_t *data, epggrab_stats_t *stats )
+static int _pyepg_parse_brand 
+  ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
   htsmsg_t *attr, *tags;
@@ -126,24 +128,24 @@ static int _pyepg_parse_brand ( htsmsg_t *data, epggrab_stats_t *stats )
 
   /* Set title */
   if ((str = htsmsg_xml_get_cdata_str(tags, "title"))) {
-    save |= epg_brand_set_title(brand, str);
+    save |= epg_brand_set_title(brand, str, mod);
   }
 
   /* Set summary */
   if ((str = htsmsg_xml_get_cdata_str(tags, "summary"))) {
-    save |= epg_brand_set_summary(brand, str);
+    save |= epg_brand_set_summary(brand, str, mod);
   }
   
   /* Set image */
   if ((str = htsmsg_xml_get_cdata_str(tags, "image"))) {
-    save |= epg_brand_set_image(brand, str);
+    save |= epg_brand_set_image(brand, str, mod);
   } else if ((str = htsmsg_xml_get_cdata_str(tags, "thumb"))) {
-    save |= epg_brand_set_image(brand, str);
+    save |= epg_brand_set_image(brand, str, mod);
   }
 
   /* Set season count */
   if (htsmsg_xml_get_cdata_u32(tags, "series-count", &u32) == 0) {
-    save |= epg_brand_set_season_count(brand, u32);
+    save |= epg_brand_set_season_count(brand, u32, mod);
   }
 
   if (save) stats->brands.modified++;
@@ -151,7 +153,8 @@ static int _pyepg_parse_brand ( htsmsg_t *data, epggrab_stats_t *stats )
   return save;
 }
 
-static int _pyepg_parse_season ( htsmsg_t *data, epggrab_stats_t *stats )
+static int _pyepg_parse_season 
+  ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
   htsmsg_t *attr, *tags;
@@ -174,30 +177,30 @@ static int _pyepg_parse_season ( htsmsg_t *data, epggrab_stats_t *stats )
   /* Set brand */
   if ((str = htsmsg_get_str(attr, "brand"))) {
     if ((brand = epg_brand_find_by_uri(str, 0, NULL))) {
-      save |= epg_season_set_brand(season, brand, 1);
+      save |= epg_season_set_brand(season, brand, mod);
     }
   }
 
   /* Set summary */
   if ((str = htsmsg_xml_get_cdata_str(tags, "summary"))) {
-    save |= epg_season_set_summary(season, str);
+    save |= epg_season_set_summary(season, str, mod);
   }
   
   /* Set image */
   if ((str = htsmsg_xml_get_cdata_str(tags, "image"))) {
-    save |= epg_season_set_image(season, str);
+    save |= epg_season_set_image(season, str, mod);
   } else if ((str = htsmsg_xml_get_cdata_str(tags, "thumb"))) {
-    save |= epg_season_set_image(season, str);
+    save |= epg_season_set_image(season, str, mod);
   }
 
   /* Set season number */
   if (htsmsg_xml_get_cdata_u32(tags, "number", &u32) == 0) {
-    save |= epg_season_set_number(season, u32);
+    save |= epg_season_set_number(season, u32, mod);
   }
 
   /* Set episode count */
   if (htsmsg_xml_get_cdata_u32(tags, "episode-count", &u32) == 0) {
-    save |= epg_season_set_episode_count(season, u32);
+    save |= epg_season_set_episode_count(season, u32, mod);
   }
 
   if(save) stats->seasons.modified++;
@@ -205,7 +208,8 @@ static int _pyepg_parse_season ( htsmsg_t *data, epggrab_stats_t *stats )
   return save;
 }
 
-static int _pyepg_parse_episode ( htsmsg_t *data, epggrab_stats_t *stats )
+static int _pyepg_parse_episode 
+  ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
   htsmsg_t *attr, *tags;
@@ -230,56 +234,56 @@ static int _pyepg_parse_episode ( htsmsg_t *data, epggrab_stats_t *stats )
   /* Set season */
   if ((str = htsmsg_get_str(attr, "series"))) {
     if ((season = epg_season_find_by_uri(str, 0, NULL))) {
-      save |= epg_episode_set_season(episode, season);
+      save |= epg_episode_set_season(episode, season, mod);
     }
   }
 
   /* Set brand */
   if ((str = htsmsg_get_str(attr, "brand"))) {
     if ((brand = epg_brand_find_by_uri(str, 0, NULL))) {
-      save |= epg_episode_set_brand(episode, brand);
+      save |= epg_episode_set_brand(episode, brand, mod);
     }
   }
 
   /* Set title/subtitle */
   if ((str = htsmsg_xml_get_cdata_str(tags, "title"))) {
-    save |= epg_episode_set_title(episode, str);
+    save |= epg_episode_set_title(episode, str, mod);
   } 
   if ((str = htsmsg_xml_get_cdata_str(tags, "subtitle"))) {
-    save |= epg_episode_set_subtitle(episode, str);
+    save |= epg_episode_set_subtitle(episode, str, mod);
   } 
 
   /* Set summary */
   if ((str = htsmsg_xml_get_cdata_str(tags, "summary"))) {
-    save |= epg_episode_set_summary(episode, str);
+    save |= epg_episode_set_summary(episode, str, mod);
   }
 
   /* Number */
   if (htsmsg_xml_get_cdata_u32(tags, "number", &u32) == 0) {
-    save |= epg_episode_set_number(episode, u32);
+    save |= epg_episode_set_number(episode, u32, mod);
   }
   if (!htsmsg_xml_get_cdata_u32(tags, "part-number", &pn)) {
     pc = 0;
     htsmsg_xml_get_cdata_u32(tags, "part-count", &pc);
-    save |= epg_episode_set_part(episode, pn, pc);
+    save |= epg_episode_set_part(episode, pn, pc, mod);
   }
 
   /* Set image */
   if ((str = htsmsg_xml_get_cdata_str(tags, "image"))) {
-    save |= epg_episode_set_image(episode, str);
+    save |= epg_episode_set_image(episode, str, mod);
   } else if ((str = htsmsg_xml_get_cdata_str(tags, "thumb"))) {
-    save |= epg_episode_set_image(episode, str);
+    save |= epg_episode_set_image(episode, str, mod);
   }
 
   /* Genre */
   if ((egl = _pyepg_parse_genre(tags))) {
-    save |= epg_episode_set_genre(episode, egl);
+    save |= epg_episode_set_genre(episode, egl, mod);
     epg_genre_list_destroy(egl);
   }
 
   /* Content */
   if ((htsmsg_get_map(tags, "blackandwhite")))
-    save |= epg_episode_set_is_bw(episode, 1);
+    save |= epg_episode_set_is_bw(episode, 1, mod);
 
   if (save) stats->episodes.modified++;
 
@@ -287,7 +291,8 @@ static int _pyepg_parse_episode ( htsmsg_t *data, epggrab_stats_t *stats )
 }
 
 static int _pyepg_parse_broadcast 
-  ( htsmsg_t *data, channel_t *channel, epggrab_stats_t *stats )
+  ( epggrab_module_t *mod, htsmsg_t *data, channel_t *channel,
+    epggrab_stats_t *stats )
 {
   int save = 0;
   htsmsg_t *attr, *tags;
@@ -320,31 +325,32 @@ static int _pyepg_parse_broadcast
   if ( save ) stats->broadcasts.created++;
 
   /* Set episode */
-  save |= epg_broadcast_set_episode(broadcast, episode);
+  save |= epg_broadcast_set_episode(broadcast, episode, mod);
 
   /* Quality */
   u32 = htsmsg_get_map(tags, "hd") ? 1 : 0;
-  save |= epg_broadcast_set_is_hd(broadcast, u32);
+  save |= epg_broadcast_set_is_hd(broadcast, u32, mod);
   u32 = htsmsg_get_map(tags, "widescreen") ? 1 : 0;
-  save |= epg_broadcast_set_is_widescreen(broadcast, u32);
+  save |= epg_broadcast_set_is_widescreen(broadcast, u32, mod);
   // TODO: lines, aspect
 
   /* Accessibility */
   // Note: reuse XMLTV parse code as this is the same
-  xmltv_parse_accessibility(broadcast, tags);
+  xmltv_parse_accessibility(mod, broadcast, tags);
 
   /* New/Repeat */
   u32 = htsmsg_get_map(tags, "new") || htsmsg_get_map(tags, "premiere");
-  save |= epg_broadcast_set_is_new(broadcast, u32);
+  save |= epg_broadcast_set_is_new(broadcast, u32, mod);
   u32 = htsmsg_get_map(tags, "repeat") ? 1 : 0;
-  save |= epg_broadcast_set_is_repeat(broadcast, u32);
+  save |= epg_broadcast_set_is_repeat(broadcast, u32, mod);
 
   if (save) stats->broadcasts.modified++;  
 
   return save;
 }
 
-static int _pyepg_parse_schedule ( htsmsg_t *data, epggrab_stats_t *stats )
+static int _pyepg_parse_schedule 
+  ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
   htsmsg_t *attr, *tags;
@@ -362,7 +368,7 @@ static int _pyepg_parse_schedule ( htsmsg_t *data, epggrab_stats_t *stats )
 
   HTSMSG_FOREACH(f, tags) {
     if (strcmp(f->hmf_name, "broadcast") == 0) {
-      save |= _pyepg_parse_broadcast(htsmsg_get_map_by_field(f),
+      save |= _pyepg_parse_broadcast(mod, htsmsg_get_map_by_field(f),
                                      ec->channel, stats);
     }
   }
@@ -370,7 +376,8 @@ static int _pyepg_parse_schedule ( htsmsg_t *data, epggrab_stats_t *stats )
   return save;
 }
 
-static int _pyepg_parse_epg ( htsmsg_t *data, epggrab_stats_t *stats )
+static int _pyepg_parse_epg 
+  ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
   int save = 0;
   htsmsg_t *tags;
@@ -380,15 +387,15 @@ static int _pyepg_parse_epg ( htsmsg_t *data, epggrab_stats_t *stats )
 
   HTSMSG_FOREACH(f, tags) {
     if (strcmp(f->hmf_name, "channel") == 0 ) {
-      save |= _pyepg_parse_channel(htsmsg_get_map_by_field(f), stats);
+      save |= _pyepg_parse_channel(mod, htsmsg_get_map_by_field(f), stats);
     } else if (strcmp(f->hmf_name, "brand") == 0 ) {
-      save |= _pyepg_parse_brand(htsmsg_get_map_by_field(f), stats);
+      save |= _pyepg_parse_brand(mod, htsmsg_get_map_by_field(f), stats);
     } else if (strcmp(f->hmf_name, "series") == 0 ) {
-      save |= _pyepg_parse_season(htsmsg_get_map_by_field(f), stats);
+      save |= _pyepg_parse_season(mod, htsmsg_get_map_by_field(f), stats);
     } else if (strcmp(f->hmf_name, "episode") == 0 ) {
-      save |= _pyepg_parse_episode(htsmsg_get_map_by_field(f), stats);
+      save |= _pyepg_parse_episode(mod, htsmsg_get_map_by_field(f), stats);
     } else if (strcmp(f->hmf_name, "schedule") == 0 ) {
-      save |= _pyepg_parse_schedule(htsmsg_get_map_by_field(f), stats);
+      save |= _pyepg_parse_schedule(mod, htsmsg_get_map_by_field(f), stats);
     }
   }
 
@@ -404,7 +411,7 @@ static int _pyepg_parse
 
   /* PyEPG format */
   if ((epg = htsmsg_get_map(tags, "epg")) != NULL)
-    return _pyepg_parse_epg(epg, stats);
+    return _pyepg_parse_epg(mod, epg, stats);
 
   return 0;
 }
