@@ -40,8 +40,11 @@ typedef struct eit_status
 
 typedef struct eit_event
 {
-  char              title[256];
-  char              summary[256];
+  char              uri[257];
+  char              suri[257];
+
+  char              title[257];
+  char              summary[257];
   char              desc[2000];
 
   char             *default_charset;
@@ -250,6 +253,47 @@ static int _eit_desc_content
   return 0;
 }
 
+/*
+ * Content ID
+ */
+static int _eit_desc_crid
+  ( uint8_t *ptr, int len, eit_event_t *ev )
+{
+  int r;
+  uint8_t type;
+
+  while (len > 3) {
+
+    /* Explicit only */
+    if ( (*ptr & 0x3) == 0 ) {
+      type = *ptr >> 2;
+
+      /* Episode */
+      if (type == 0x1 || type == 0x31) {
+        r = dvb_get_string_with_len(ev->uri, sizeof(ev->uri),
+                                    ptr+1, len-1, ev->default_charset);
+
+      /* Season */
+      } else if (type == 0x2 || type == 0x32) {
+        r = dvb_get_string_with_len(ev->suri, sizeof(ev->suri),
+                                    ptr+1, len-1, ev->default_charset);
+
+      /* Unknown */
+      } else {
+        r = ptr[1] + 1;
+      }
+
+      /* Next */
+      if (r < 0) return -1;
+      len -= 1 + r;
+      ptr += 1 + r;
+    }
+  }
+
+  return 0;
+}
+
+
 /* ************************************************************************
  * EIT Event
  * ***********************************************************************/
@@ -266,6 +310,7 @@ static int _eit_process_event
   uint8_t dtag, dlen;
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
+  epg_season_t *es;
   eit_event_t ev;
 
   if ( len < 12 ) return -1;
@@ -323,6 +368,9 @@ static int _eit_process_event
         r = _eit_desc_parental(ptr, dlen, &ev);
         break;
 #endif
+      case DVB_DESC_CRID:
+        r = _eit_desc_crid(ptr, dlen, &ev);
+        break;
       default:
         r = 0;
         _eit_dtag_dump(dtag, dlen, ptr);
@@ -334,26 +382,29 @@ static int _eit_process_event
     ptr   += dlen;
   }
 
-  /* Metadata */
+  /* Broadcast Metadata */
   *save |= epg_broadcast_set_is_hd(ebc, ev.hd, mod);
   *save |= epg_broadcast_set_is_widescreen(ebc, ev.ws, mod);
   *save |= epg_broadcast_set_is_audio_desc(ebc, ev.ad, mod);
   *save |= epg_broadcast_set_is_subtitled(ebc, ev.st, mod);
   *save |= epg_broadcast_set_is_deafsigned(ebc, ev.ds, mod);
 
-  /* Create episode */
-  ee = ebc->episode;
-  if ( !ee ) {
+  /* Find episode */
+  if (*ev.uri) {
+    ee = epg_episode_find_by_uri(ev.uri, 1, save);
+  } else if ( !(ee = ebc->episode) ) {
     char *uri;
     uri   = epg_hash(ev.title, ev.summary, ev.desc);
     if (uri) {
-      if ((ee = epg_episode_find_by_uri(uri, 1, save)))
-        *save |= epg_broadcast_set_episode(ebc, ee, mod);
+      ee = epg_episode_find_by_uri(uri, 1, save);
       free(uri);
     }
   }
 
-  /* Episode data */
+  /* Update Broadcast */
+  if (ee) *save |= epg_broadcast_set_episode(ebc, ee, mod);
+
+  /* Update Episode */
   if (ee) {
     *save |= epg_episode_set_is_bw(ee, ev.bw, mod);
     if ( *ev.title )
@@ -368,6 +419,13 @@ static int _eit_process_event
     if ( extra )
       *save |= epg_episode_set_extra(ee, extra, mod);
 #endif
+
+    /* Season */
+    if (*ev.suri) {
+      es = epg_season_find_by_uri(ev.suri, 1, save);
+      if (es)
+        *save |= epg_episode_set_season(ee, es, mod);
+    }
   }
 
   /* Tidy up */
