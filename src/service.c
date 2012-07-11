@@ -1110,3 +1110,20 @@ service_get_encryption(service_t *t)
   }
   return 0;
 }
+
+/*
+ * Find the primary EPG service (to stop EPG trying to update
+ * from multiple OTA sources)
+ */
+int
+service_is_primary_epg(service_t *svc)
+{
+  service_t *ret = NULL, *t;
+  if (!svc || !svc->s_ch) return 0;
+  LIST_FOREACH(t, &svc->s_ch->ch_services, s_ch_link) {
+    if (!t->s_enabled || !t->s_dvb_eit_enable) continue;
+    if (!ret || dvb_extra_prio(t->s_dvb_mux_instance->tdmi_adapter) > dvb_extra_prio(ret->s_dvb_mux_instance->tdmi_adapter))
+      ret = t;
+  }
+  return !ret ? 0 : (ret->s_dvb_service_id == svc->s_dvb_service_id);
+}

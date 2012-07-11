@@ -574,4 +574,6 @@ void service_set_dvb_default_charset(service_t *t, const char *dvb_default_chars
 
 void service_set_dvb_eit_enable(service_t *t, int dvb_eit_enable);
 
+int service_is_primary_epg (service_t *t);
+
 #endif // SERVICE_H__
