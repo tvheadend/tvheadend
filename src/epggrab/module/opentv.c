@@ -412,9 +412,7 @@ static int _opentv_parse_event_section
           save |= epg_episode_set_genre(ee, egl, src);
           epg_genre_list_destroy(egl);
         }
-        // Note: don't override the season (since the ID is channel specific
-        //       it'll keep changing!
-        if (ev.series && !ee->season) {
+        if (ev.series) {
           es = _opentv_find_season(mod, cid, &ev, &save);
           if (es) save |= epg_episode_set_season(ee, es, src);
         }
