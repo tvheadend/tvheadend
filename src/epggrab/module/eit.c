@@ -524,7 +524,7 @@ static int _eit_callback
   if (tableid < 0x50)
     epggrab_ota_register(ota, 20, 300); // 20s grab, 5min interval
   else
-    epggrab_ota_register(ota, 600, 7200); // 10min grab, 1hour interval
+    epggrab_ota_register(ota, 600, 3600); // 10min grab, 1hour interval
   // Note: this does mean you will get a slight oddity for muxes that
   //       carry both, since they will end up with setting of 600/300 
 
@@ -598,8 +598,10 @@ void eit_init ( void )
 {
   epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber", 1,
                             _eit_start, _eit_enable, NULL);
+#if TODO_FREESAT_SUPPORT
   epggrab_module_ota_create(NULL, "freesat", "Freesat", 5,
                             _eit_start, _eit_enable, NULL);
+#endif
 }
 
 void eit_load ( void )
