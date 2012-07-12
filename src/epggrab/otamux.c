@@ -21,6 +21,8 @@
  *       tdmi on different adapters
  */
 
+#include <string.h>
+
 #include "tvheadend.h"
 #include "queue.h"
 #include "epg.h"
@@ -168,7 +170,7 @@ epggrab_ota_mux_t *epggrab_ota_create
  * Create and register using mux ID
  */
 void epggrab_ota_create_and_register_by_id
-  ( epggrab_module_ota_t *mod, int nid, int tsid, int period, int interval )
+  ( epggrab_module_ota_t *mod, int nid, int tsid, int period, int interval, const char *networkname )
 {
   th_dvb_adapter_t *tda;
   th_dvb_mux_instance_t *tdmi;
@@ -177,6 +179,7 @@ void epggrab_ota_create_and_register_by_id
     //TODO: if (tda->nitoid != nid) continue;
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
       if (tdmi->tdmi_transport_stream_id != tsid) continue;
+      if (networkname && (!tdmi->tdmi_network || strcmp(networkname, tdmi->tdmi_network))) continue;
       ota = epggrab_ota_create(mod, tdmi);
       epggrab_ota_register(ota, period, interval);
     }
@@ -261,7 +264,7 @@ static void _epggrab_ota_finished ( epggrab_ota_mux_t *ota )
 int epggrab_ota_begin     ( epggrab_ota_mux_t *ota )
 {
   if (ota->state == EPGGRAB_OTA_MUX_IDLE) {
-    tvhlog(LOG_DEBUG, ota->grab->id, "begin processing");
+    tvhlog(LOG_INFO, ota->grab->id, "begin processing");
     ota->state = EPGGRAB_OTA_MUX_RUNNING;
     time(&ota->started);
     return 1;
@@ -274,7 +277,7 @@ void epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
   th_dvb_mux_instance_t *tdmi = ota->tdmi;
 
   if (ota->state != EPGGRAB_OTA_MUX_COMPLETE) {
-    tvhlog(LOG_DEBUG, ota->grab->id, "processing complete");
+    tvhlog(LOG_INFO, ota->grab->id, "processing complete");
     ota->state = EPGGRAB_OTA_MUX_COMPLETE;
     time(&ota->completed);
 
@@ -294,7 +297,7 @@ void epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
 /* Reset */
 void epggrab_ota_cancel    ( epggrab_ota_mux_t *ota )
 {
-  tvhlog(LOG_DEBUG, ota->grab->id, "processing cancelled");
+  tvhlog(LOG_INFO, ota->grab->id, "processing cancelled");
   ota->state = EPGGRAB_OTA_MUX_IDLE;
   _epggrab_ota_finished(ota);
 }

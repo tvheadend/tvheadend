@@ -733,7 +733,7 @@ static int _opentv_enable ( void  *m, uint8_t e )
   if (e) {
     epggrab_ota_create_and_register_by_id((epggrab_module_ota_t*)mod,
                                           mod->nid, mod->tsid,
-                                          600, 3600);
+                                          600, 3600,  NULL);
   /* Remove all links */
   } else {
     epggrab_ota_destroy_by_module((epggrab_module_ota_t*)mod);

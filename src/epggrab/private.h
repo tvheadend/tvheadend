@@ -105,7 +105,7 @@ epggrab_ota_mux_t *epggrab_ota_create
   ( epggrab_module_ota_t *mod, struct th_dvb_mux_instance *tdmi );
 void epggrab_ota_create_and_register_by_id
   ( epggrab_module_ota_t *mod, int nid, int tsid,
-    int period, int interval );
+    int period, int interval, const char *name );
 
 /*
  * Delete
