@@ -64,17 +64,17 @@ typedef struct eit_event
  * ***********************************************************************/
 
 // Dump a descriptor tag for debug (looking for new tags etc...)
-static void _eit_dtag_dump ( uint8_t dtag, uint8_t dlen, uint8_t *buf )
+static void _eit_dtag_dump ( epggrab_module_t *mod, uint8_t dtag, uint8_t dlen, uint8_t *buf )
 {
 #if APS_DEBUG
   int i = 0, j = 0;
   char tmp[100];
-  tvhlog(LOG_DEBUG, "eit", "  dtag 0x%02X len %d", dtag, dlen);
+  tvhlog(LOG_DEBUG, mod->id, "  dtag 0x%02X len %d", dtag, dlen);
   while (i < dlen) {
     j += sprintf(tmp+j, "%02X ", buf[i]);
     i++;
     if ((i % 8) == 0 || (i == dlen)) {
-      tvhlog(LOG_DEBUG, "eit", "    %s", tmp);
+      tvhlog(LOG_DEBUG, mod->id, "    %s", tmp);
       j = 0;
     }
   }
@@ -353,8 +353,6 @@ static int _eit_process_event
   /* Find broadcast */
   ebc  = epg_broadcast_find_by_time(svc->s_ch, start, stop, eid, 1, &save2);
   if (!ebc) return dllen + 12;
-  tvhlog(LOG_DEBUG, "eit", "process eid %d event %p %"PRIu64" on %s",
-         eid, ebc, ebc->id, svc->s_ch->ch_name);
 
   /* Mark re-schedule detect (only now/next) */
   if (save2 && tableid < 0x50) *resched = 1;
@@ -395,7 +393,7 @@ static int _eit_process_event
         break;
       default:
         r = 0;
-        _eit_dtag_dump(dtag, dlen, ptr);
+        _eit_dtag_dump(mod, dtag, dlen, ptr);
         break;
     }
 
@@ -513,7 +511,7 @@ static int _eit_callback
       if(tdmi->tdmi_transport_stream_id == tsid)
         break;
   }
-  if(!tdmi) return -1;
+  if(!tdmi) return 0;
 
   /* Get service */
   svc = dvb_transport_find(tdmi, sid, 0, NULL);
@@ -526,7 +524,7 @@ static int _eit_callback
   if (tableid < 0x50)
     epggrab_ota_register(ota, 20, 300); // 20s grab, 5min interval
   else
-    epggrab_ota_register(ota, 600, 3600); // 10min grab, 1hour interval
+    epggrab_ota_register(ota, 600, 7200); // 10min grab, 1hour interval
   // Note: this does mean you will get a slight oddity for muxes that
   //       carry both, since they will end up with setting of 600/300 
 
