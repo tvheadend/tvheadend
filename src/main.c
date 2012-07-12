@@ -499,14 +499,17 @@ tvhlogv(int notify, int severity, const char *subsys, const char *fmt,
     syslog(severity, "%s", buf);
 
   /**
+   * Get time (string)
+   */
+  time(&now);
+  localtime_r(&now, &tm);
+  strftime(t, sizeof(t), "%b %d %H:%M:%S", &tm);
+
+  /**
    * Send notification to Comet (Push interface to web-clients)
    */
   if(notify) {
     htsmsg_t *m;
-
-    time(&now);
-    localtime_r(&now, &tm);
-    strftime(t, sizeof(t), "%b %d %H:%M:%S", &tm);
 
     snprintf(buf2, sizeof(buf2), "%s %s", t, buf);
     m = htsmsg_create_map();
@@ -531,7 +534,7 @@ tvhlogv(int notify, int severity, const char *subsys, const char *fmt,
     } else {
       sgroff = "\033[0m";
     }
-    fprintf(stderr, "%s[%s]:%s%s\n", sgr, leveltxt, buf, sgroff);
+    fprintf(stderr, "%s%s [%s]:%s%s\n", sgr, t, leveltxt, buf, sgroff);
   }
 }
 
