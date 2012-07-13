@@ -936,7 +936,6 @@ htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
   htsmsg_t *m, *a = NULL;
   if (!episode || !episode->uri) return NULL;
   if (!(m = _epg_object_serialize((epg_object_t*)episode))) return NULL;
-  htsmsg_add_str(m, "uri", episode->uri);
   if (episode->title)
     htsmsg_add_str(m, "title", episode->title);
   if (episode->subtitle)
