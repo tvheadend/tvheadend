@@ -669,10 +669,8 @@ void eit_init ( void )
 {
   epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber", 1,
                             _eit_start, _eit_enable, NULL);
-#if TODO_FREESAT_SUPPORT
   epggrab_module_ota_create(NULL, "freesat", "Freesat", 5,
                             _eit_start, _eit_enable, NULL);
-#endif
 }
 
 void eit_load ( void )
