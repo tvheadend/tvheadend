@@ -496,6 +496,15 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
     tvhlog(LOG_ERR, "dvb", "\"%s\" tuning to \"%s\""
      " -- Front configuration failed -- %s, frequency: %ld",
      tda->tda_rootpath, buf, strerror(errno), p->frequency);
+
+    /* Remove from initial scan set */
+    if(tdmi->tdmi_table_initial) {
+      tdmi->tdmi_table_initial = 0;
+      tda->tda_initial_num_mux--;
+    }
+
+    /* Mark as bad */
+    tdmi->tdmi_enabled = 0;
     return SM_CODE_TUNING_FAILED;
   }   
 
