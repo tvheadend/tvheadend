@@ -1160,7 +1160,7 @@ htsp_read_message(htsp_connection_t *htsp, htsmsg_t **mp, int timeout)
 static int
 htsp_read_loop(htsp_connection_t *htsp)
 {
-  htsmsg_t *m, *reply;
+  htsmsg_t *m = NULL, *reply;
   int r, i;
   const char *method;
 
