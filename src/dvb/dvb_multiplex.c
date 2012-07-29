@@ -424,13 +424,23 @@ static struct strtab bwtab[] = {
   { "8MHz", BANDWIDTH_8_MHZ },
   { "7MHz", BANDWIDTH_7_MHZ },
   { "6MHz", BANDWIDTH_6_MHZ },
-  { "AUTO", BANDWIDTH_AUTO }
+  { "AUTO", BANDWIDTH_AUTO },
+#if DVB_VER_ATLEAST(5,3)
+  { "5MHz", BANDWIDTH_5_MHZ },
+  { "10MHz", BANDWIDTH_10_MHZ },
+  { "1712kHz", BANDWIDTH_1_712_MHZ},
+#endif
 };
 
 static struct strtab modetab[] = {
   { "2k",   TRANSMISSION_MODE_2K },
   { "8k",   TRANSMISSION_MODE_8K },
-  { "AUTO", TRANSMISSION_MODE_AUTO }
+  { "AUTO", TRANSMISSION_MODE_AUTO },
+#if DVB_VER_ATLEAST(5,3)
+  { "1k",   TRANSMISSION_MODE_1K },
+  { "2k",   TRANSMISSION_MODE_16K },
+  { "32k",  TRANSMISSION_MODE_32K },
+#endif
 };
 
 static struct strtab guardtab[] = {
@@ -439,6 +449,11 @@ static struct strtab guardtab[] = {
   { "1/8",  GUARD_INTERVAL_1_8 },
   { "1/4",  GUARD_INTERVAL_1_4 },
   { "AUTO", GUARD_INTERVAL_AUTO },
+#if DVB_VER_ATLEAST(5,3)
+  { "1/128", GUARD_INTERVAL_1_128 },
+  { "19/128", GUARD_INTERVAL_19_128 },
+  { "19/256", GUARD_INTERVAL_19_256},
+#endif
 };
 
 static struct strtab hiertab[] = {
