@@ -24,6 +24,11 @@
 #include "htsmsg.h"
 
 
+#define DVB_VER_INT(maj,min) (((maj) << 16) + (min))
+
+#define DVB_VER_ATLEAST(maj, min) \
+ (DVB_VER_INT(DVB_API_VERSION,  DVB_API_VERSION_MINOR) >= DVB_VER_INT(maj, min))
+
 TAILQ_HEAD(th_dvb_adapter_queue, th_dvb_adapter);
 RB_HEAD(th_dvb_mux_instance_tree, th_dvb_mux_instance);
 TAILQ_HEAD(th_dvb_mux_instance_queue, th_dvb_mux_instance);
