@@ -330,6 +330,7 @@ void epggrab_init ( void )
 
   /* Load config */
   _epggrab_load();
+  epggrab_ota_load();
 
   /* Start internal grab thread */
   pthread_t      tid;

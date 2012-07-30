@@ -95,6 +95,82 @@ th_dvb_mux_instance_t *epggrab_mux_next ( th_dvb_adapter_t *tda )
 }
 
 /* **************************************************************************
+ * Config
+ * *************************************************************************/
+
+static void _epggrab_ota_load_one ( epggrab_module_ota_t *mod, htsmsg_t *m )
+{
+  htsmsg_t *e;
+  htsmsg_field_t *f;
+  int nid, tsid, period, interval;
+  const char *netname;
+
+  HTSMSG_FOREACH(f, m) {
+    if ((e = htsmsg_get_map_by_field(f))) {
+      nid      = htsmsg_get_u32_or_default(m, "nid",      0);
+      tsid     = htsmsg_get_u32_or_default(m, "tsid",     0);
+      period   = htsmsg_get_u32_or_default(m, "period",   0);
+      interval = htsmsg_get_u32_or_default(m, "interval", 0);
+      netname  = htsmsg_get_str(m, "networkname");
+
+      if (tsid)
+        epggrab_ota_create_and_register_by_id(mod, nid, tsid,
+                                              period, interval,
+                                              netname);
+    }
+  }
+}
+
+void epggrab_ota_load ( void )
+{
+  htsmsg_t *m, *l;
+  htsmsg_field_t *f;
+  epggrab_module_t *mod;
+
+  if ((m = hts_settings_load("epggrab/otamux"))) {
+    HTSMSG_FOREACH(f, m) {
+      mod = epggrab_module_find_by_id(f->hmf_name);
+      if (!mod || mod->type != EPGGRAB_OTA) continue;
+      if ((l = htsmsg_get_list_by_field(f)))
+        _epggrab_ota_load_one((epggrab_module_ota_t*)mod, l);
+    }
+  }
+}
+
+static void _epggrab_ota_save_one ( htsmsg_t *m, epggrab_module_ota_t *mod )
+{
+  epggrab_ota_mux_t *ota;
+  htsmsg_t *e, *l = NULL;
+  TAILQ_FOREACH(ota, &mod->muxes, grab_link) {
+    if (!l) l = htsmsg_create_list();
+    e = htsmsg_create_map();
+    //htsmsg_add_u32(e, "nid", );
+    htsmsg_add_u32(e, "tsid",     ota->tdmi->tdmi_transport_stream_id);
+    htsmsg_add_u32(e, "period",   ota->timeout);
+    htsmsg_add_u32(e, "interval", ota->interval);
+    htsmsg_add_str(e, "networkname", ota->tdmi->tdmi_network);
+    htsmsg_add_msg(l, NULL, e);
+  }
+  if (l) htsmsg_add_msg(m, mod->id, l);
+}
+
+void epggrab_ota_save ( void )
+{
+  htsmsg_t *m = htsmsg_create_map();
+  epggrab_module_t *mod;
+    
+  // TODO: there is redundancy in this saving, because each MUX can
+  // be represented N times, due to one copy per adapter. But load
+  // only requires one instance to find them all.
+  LIST_FOREACH(mod, &epggrab_modules, link) {
+    if (mod->type != EPGGRAB_OTA) continue;
+    _epggrab_ota_save_one(m, (epggrab_module_ota_t*)mod);
+  }
+
+  hts_settings_save(m, "epggrab/otamux");
+}
+
+/* **************************************************************************
  * OTA Mux link functions
  * *************************************************************************/
 
@@ -241,6 +317,7 @@ void epggrab_ota_register ( epggrab_ota_mux_t *ota, int timeout, int interval )
   if (up) {
     TAILQ_REMOVE(&ota_mux_all, ota, glob_link);
     TAILQ_INSERT_SORTED(&ota_mux_all, ota, glob_link, _ota_time_cmp);
+    epggrab_ota_save();
   }
 }
 

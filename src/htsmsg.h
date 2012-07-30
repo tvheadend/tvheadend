@@ -79,6 +79,8 @@ typedef struct htsmsg_field {
 
 #define htsmsg_get_map_by_field(f) \
  ((f)->hmf_type == HMF_MAP ? &(f)->hmf_msg : NULL)
+#define htsmsg_get_list_by_field(f) \
+ ((f)->hmf_type == HMF_LIST ? &(f)->hmf_msg : NULL)
 
 #define HTSMSG_FOREACH(f, msg) TAILQ_FOREACH(f, &(msg)->hm_fields, hmf_link)
 
