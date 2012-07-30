@@ -792,7 +792,7 @@ static void _opentv_genre_load ( htsmsg_t *m )
     if ((e = htsmsg_get_list(m, f->hmf_name))) {
       if ((r = _opentv_genre_load_one(f->hmf_name, e))) {
         if (r > 0) 
-          tvhlog(LOG_INFO, "opentv", "genre map %s loaded", f->hmf_name);
+          tvhlog(LOG_DEBUG, "opentv", "genre map %s loaded", f->hmf_name);
         else
           tvhlog(LOG_WARNING, "opentv", "genre map %s failed", f->hmf_name);
       }
@@ -831,7 +831,7 @@ static void _opentv_dict_load ( htsmsg_t *m )
     if ((e = htsmsg_get_list(m, f->hmf_name))) {
       if ((r = _opentv_dict_load_one(f->hmf_name, e))) {
         if (r > 0) 
-          tvhlog(LOG_INFO, "opentv", "dictionary %s loaded", f->hmf_name);
+          tvhlog(LOG_DEBUG, "opentv", "dictionary %s loaded", f->hmf_name);
         else
           tvhlog(LOG_WARNING, "opentv", "dictionary %s failed", f->hmf_name);
       }
@@ -905,7 +905,7 @@ static void _opentv_prov_load ( htsmsg_t *m )
     if ((e = htsmsg_get_map_by_field(f))) {
       if ((r = _opentv_prov_load_one(f->hmf_name, e))) {
         if (r > 0)
-          tvhlog(LOG_INFO, "opentv", "provider %s loaded", f->hmf_name);
+          tvhlog(LOG_DEBUG, "opentv", "provider %s loaded", f->hmf_name);
         else
           tvhlog(LOG_WARNING, "opentv", "provider %s failed", f->hmf_name);
       }
@@ -928,21 +928,21 @@ void opentv_init ( void )
     _opentv_dict_load(m);
   if ((m = hts_settings_load("%s/data/epggrab/opentv/dict", dr)))
     _opentv_dict_load(m);
-  tvhlog(LOG_INFO, "opentv", "dictonaries loaded");
+  tvhlog(LOG_DEBUG, "opentv", "dictonaries loaded");
 
   /* Load genres */
   if ((m = hts_settings_load("epggrab/opentv/genre")))
     _opentv_genre_load(m);
   if ((m = hts_settings_load("%s/data/epggrab/opentv/genre", dr)))
     _opentv_genre_load(m);
-  tvhlog(LOG_INFO, "opentv", "genre maps loaded");
+  tvhlog(LOG_DEBUG, "opentv", "genre maps loaded");
 
   /* Load providers */
   if ((m = hts_settings_load("epggrab/opentv/prov")))
     _opentv_prov_load(m);
   if ((m = hts_settings_load("%s/data/epggrab/opentv/prov", dr)))
     _opentv_prov_load(m);
-  tvhlog(LOG_INFO, "opentv", "providers loaded");
+  tvhlog(LOG_DEBUG, "opentv", "providers loaded");
 }
 
 void opentv_load ( void )

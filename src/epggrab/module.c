@@ -93,6 +93,7 @@ epggrab_module_t *epggrab_module_create
   /* Insert */
   assert(!epggrab_module_find_by_id(id));
   LIST_INSERT_HEAD(&epggrab_modules, skel, link);
+  tvhlog(LOG_INFO, "epggrab", "module %s created", id);
 
   return skel;
 }

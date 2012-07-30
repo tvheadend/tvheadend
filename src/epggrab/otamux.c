@@ -264,7 +264,7 @@ static void _epggrab_ota_finished ( epggrab_ota_mux_t *ota )
 int epggrab_ota_begin     ( epggrab_ota_mux_t *ota )
 {
   if (ota->state == EPGGRAB_OTA_MUX_IDLE) {
-    tvhlog(LOG_INFO, ota->grab->id, "begin processing");
+    tvhlog(LOG_DEBUG, ota->grab->id, "begin processing");
     ota->state = EPGGRAB_OTA_MUX_RUNNING;
     time(&ota->started);
     return 1;
@@ -277,7 +277,7 @@ void epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
   th_dvb_mux_instance_t *tdmi = ota->tdmi;
 
   if (ota->state != EPGGRAB_OTA_MUX_COMPLETE) {
-    tvhlog(LOG_INFO, ota->grab->id, "processing complete");
+    tvhlog(LOG_DEBUG, ota->grab->id, "processing complete");
     ota->state = EPGGRAB_OTA_MUX_COMPLETE;
     time(&ota->completed);
 
@@ -297,7 +297,7 @@ void epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
 /* Reset */
 void epggrab_ota_cancel    ( epggrab_ota_mux_t *ota )
 {
-  tvhlog(LOG_INFO, ota->grab->id, "processing cancelled");
+  tvhlog(LOG_DEBUG, ota->grab->id, "processing cancelled");
   ota->state = EPGGRAB_OTA_MUX_IDLE;
   _epggrab_ota_finished(ota);
 }

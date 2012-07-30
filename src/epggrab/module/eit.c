@@ -403,7 +403,8 @@ static int _eit_process_event
 
   /* Find broadcast */
   ebc  = epg_broadcast_find_by_time(svc->s_ch, start, stop, eid, 1, &save2);
-  tvhlog(LOG_DEBUG, mod->id, "eid=%5d, start=%lu, stop=%lu, ebc=%p", eid, start, stop, ebc);
+  tvhlog(LOG_DEBUG, mod->id, "eid=%5d, start=%lu, stop=%lu, ebc=%p",
+         eid, start, stop, ebc);
   if (!ebc) return dllen + 12;
 
   /* Mark re-schedule detect (only now/next) */
