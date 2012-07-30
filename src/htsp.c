@@ -526,11 +526,12 @@ static htsmsg_t *
 htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out;
-  uint32_t eventid;
+  uint32_t eventid, iPriority;
   event_t *e;
   dvr_entry_t *de;
   dvr_entry_sched_state_t dvr_status;
   const char *dvr_config_name;
+  dvr_prio_t tPriority = DVR_PRIO_NORMAL;
 
   if((dvr_config_name = htsmsg_get_str(in, "configName")) == NULL)
     dvr_config_name = "";
@@ -538,9 +539,22 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsmsg_get_u32(in, "eventId", &eventid))
     eventid = -1;
 
+  if (!htsmsg_get_u32(in, "priority", &iPriority)){
+    if (iPriority < 25)
+      tPriority = DVR_PRIO_UNIMPORTANT;
+    else if (iPriority < 50)
+      tPriority = DVR_PRIO_LOW;
+    else if (iPriority == 50)
+      tPriority = DVR_PRIO_NORMAL;
+    else if (iPriority < 75)
+      tPriority = DVR_PRIO_HIGH;
+    else
+      tPriority = DVR_PRIO_IMPORTANT;
+  }
+
   if ((e = epg_event_find_by_id(eventid)) == NULL)
   {
-    uint32_t iChannelId, iStartTime, iStopTime, iPriority;
+    uint32_t iChannelId, iStartTime, iStopTime;
     channel_t *channel;
     const char *strTitle = NULL, *strDescription = NULL, *strCreator = NULL;
 
@@ -560,9 +574,6 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
       return htsp_error("Channel does not exist");
 
     // get the optional attributes
-    if (htsmsg_get_u32(in, "priority", &iPriority))
-      iPriority = DVR_PRIO_NORMAL;
-
     if ((strDescription = htsmsg_get_str(in, "description")) == NULL)
       strDescription = "";
 
@@ -570,7 +581,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
       strCreator = htsp->htsp_username ? htsp->htsp_username : "anonymous";
 
     // create the dvr entry
-    de = dvr_entry_create(dvr_config_name, channel, iStartTime, iStopTime, strTitle, strDescription, strCreator, NULL, NULL, 0, iPriority);
+    de = dvr_entry_create(dvr_config_name, channel, iStartTime, iStopTime, strTitle, strDescription, strCreator, NULL, NULL, 0, tPriority);
   }
   else
   {
@@ -578,7 +589,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     de = dvr_entry_create_by_event(dvr_config_name,e,
                                    htsp->htsp_username ?
                                    htsp->htsp_username : "anonymous",
-                                   NULL, DVR_PRIO_NORMAL);
+                                   NULL, tPriority);
   }
 
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
