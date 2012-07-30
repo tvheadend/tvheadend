@@ -26,7 +26,7 @@ PROG=${BUILDDIR}/tvheadend
 
 CFLAGS += -Wall -Werror -Wwrite-strings -Wno-deprecated-declarations
 CFLAGS += -Wmissing-prototypes
-LDFLAGS += -lrt -ldl
+LDFLAGS += -lrt -ldl -ldvbcsa
 
 BUNDLES += docs/html docs/docresources src/webui/static
 
@@ -105,15 +105,15 @@ SRCS-${CONFIG_V4L} += \
 # cwc
 #
 SRCS += src/cwc.c \
-	src/capmt.c \
-	src/ffdecsa/ffdecsa_interface.c \
-	src/ffdecsa/ffdecsa_int.c
+	src/capmt.c # \
+#	src/ffdecsa/ffdecsa_interface.c \
+#	src/ffdecsa/ffdecsa_int.c
 
-SRCS-${CONFIG_MMX}  += src/ffdecsa/ffdecsa_mmx.c
-SRCS-${CONFIG_SSE2} += src/ffdecsa/ffdecsa_sse2.c
+#SRCS-${CONFIG_MMX}  += src/ffdecsa/ffdecsa_mmx.c
+#SRCS-${CONFIG_SSE2} += src/ffdecsa/ffdecsa_sse2.c
 
-${BUILDDIR}/src/ffdecsa/ffdecsa_mmx.o  : CFLAGS = -mmmx
-${BUILDDIR}/src/ffdecsa/ffdecsa_sse2.o : CFLAGS = -msse2
+#${BUILDDIR}/src/ffdecsa/ffdecsa_mmx.o  : CFLAGS = -mmmx
+#${BUILDDIR}/src/ffdecsa/ffdecsa_sse2.o : CFLAGS = -msse2
 
 #
 # Primary web interface
