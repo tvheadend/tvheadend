@@ -83,6 +83,21 @@ doexit(int x)
   running = 0;
 }
 
+static int
+get_user_groups (const struct passwd *pw, gid_t* glist, size_t gmax)
+{
+  int num = 0;
+  struct group *gr;
+  char **mem;
+  glist[num++] = pw->pw_gid;
+  for ( gr = getgrent(); (gr != NULL) && (num < gmax); gr = getgrent() ) {
+    if (gr->gr_gid == pw->pw_gid) continue;
+    for (mem = gr->gr_mem; *mem; mem++) {
+      if(!strcmp(*mem, pw->pw_name)) glist[num++] = gr->gr_gid;
+    }
+  }
+  return num;
+}
 
 /**
  *
@@ -308,11 +323,9 @@ main(int argc, char **argv)
 
   signal(SIGPIPE, handle_sigpipe);
 
-  grp = getgrnam(groupnam ?: "video");
-  pw = usernam ? getpwnam(usernam) : NULL;
-
-
   if(forkaway) {
+    grp  = getgrnam(groupnam ?: "video");
+    pw   = usernam ? getpwnam(usernam) : NULL;
 
     if(daemon(0, 0)) {
       exit(2);
@@ -323,22 +336,22 @@ main(int argc, char **argv)
       fclose(pidfile);
     }
 
-   if(grp != NULL) {
+    if(grp != NULL) {
       setgid(grp->gr_gid);
     } else {
       setgid(1);
     }
 
-   if(pw != NULL) {
+    if (pw != NULL) {
+      gid_t glist[10];
+      int gnum = get_user_groups(pw, glist, 10);
+      setgroups(gnum, glist);
       setuid(pw->pw_uid);
+      homedir = pw->pw_dir;
+      setenv("HOME", homedir, 1);
     } else {
       setuid(1);
     }
-
-   if(pw != NULL) {
-     homedir = pw->pw_dir;
-     setenv("HOME", homedir, 1);
-   }
 
     umask(0);
   }

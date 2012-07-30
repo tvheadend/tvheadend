@@ -389,7 +389,8 @@ tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
 
 #define TDT_CRC           0x1
 #define TDT_QUICKREQ      0x2
-#define TDT_CA		  0x4
+#define TDT_CA		        0x4
+#define TDT_TDT           0x8
 
 /**
  * Satellite configuration
