@@ -148,7 +148,8 @@ static void _epggrab_ota_save_one ( htsmsg_t *m, epggrab_module_ota_t *mod )
     htsmsg_add_u32(e, "tsid",     ota->tdmi->tdmi_transport_stream_id);
     htsmsg_add_u32(e, "period",   ota->timeout);
     htsmsg_add_u32(e, "interval", ota->interval);
-    htsmsg_add_str(e, "networkname", ota->tdmi->tdmi_network);
+    if (ota->tdmi->tdmi_network)
+      htsmsg_add_str(e, "networkname", ota->tdmi->tdmi_network);
     htsmsg_add_msg(l, NULL, e);
   }
   if (l) htsmsg_add_msg(m, mod->id, l);
