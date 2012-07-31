@@ -1,0 +1,74 @@
+/** vim: ts=4:sw=4:nu:fdc=4:nospell
+ *
+ * Ext.ux.form.LovCombo Example Application CSS File
+ *
+ * @author    Ing.Jozef Sakáloš
+ * @copyright (c) 2008, by Ing. Jozef Sakáloš
+ * @date      16. April 2008
+ * @version   $Id: lovcombo.css 194 2008-04-17 00:16:12Z jozo $
+ *
+ * @license Ext.ux.form.LovCombo.css is licensed under the terms of the Open Source
+ * LGPL 3.0 license. Commercial use is permitted to the extent that the 
+ * code/component(s) do NOT become part of another Open Source or Commercially
+ * licensed development library or toolkit without explicit permission.
+ * 
+ * License details: http://www.gnu.org/licenses/lgpl.html
+ */
+ 
+#west-content a {
+	text-decoration:none;
+}
+#west-content a:hover {
+	text-decoration:underline;
+}
+#west {
+	width:280px;
+}
+#center {
+	width:640px;
+}
+#adsense-top {
+	margin: 10px 0 10px 0;
+}
+#west-content {
+	font-family:arial, sans-serif;
+}
+#center-content {
+	font-family:arial, sans-serif;
+	margin:0 0 0 10px;
+	color:#777777;
+}
+#center-content h2 {
+	font-size:16px;
+	text-align:center;
+}
+#description {
+	color:#777777;
+	text-align:justify;
+}
+#description em {
+	font-style:italic;
+	font-weight:bold;
+}
+#description p {
+	margin: 2px 0 8px 0;
+}
+.adsense {
+	opacity:.55;
+	filter:alpha(opacity=55);
+	-moz-opacity:.55;
+}
+#change-log {
+	padding:20px 0 0 20px;
+}
+#change-log ul {
+	margin: 8px 0 0 1em;
+	list-style:disc outside;
+	text-align:justify;
+}
+#cts {
+	margin: 20px;
+	zoom:1;
+}
+
+/* eof */

@@ -1,0 +1,154 @@
+/** vim: ts=4:sw=4:nu:fdc=4:nospell
+ *
+ * css file for webpage layout
+ *
+ * @author    Ing.Jozef Sakáloš
+ * @copyright (c) 2008, by Ing. Jozef Sakáloš
+ * @date      6. April 2008
+ * @version   $Id: webpage.css 15 2008-04-24 14:15:22Z jozo $
+ */
+
+body {
+	color:#222222;
+	background:#ffffff;
+	margin:0;
+	padding:0;
+	border:0;
+	font-size:13px;
+}
+.cleaner {
+	clear:both;
+	height:0;
+	width:0;
+	line-height:0;
+	font-size:0;
+	margin:0;
+	padding:0;
+	border:0;
+}
+
+/* {{{
+// layout */
+#ct-wrap {
+	text-align:center;
+}
+#ct {
+	margin:auto;
+	width:920px;
+	text-align:left;
+}
+#west {
+	width:220px;
+	float:left;
+	clear:left;
+}
+#center {
+	width:700px;
+	float:left;
+}
+#east {
+	float:right;
+	clear:right;
+	width:0px;
+}
+#north {
+	float:none;
+	clear:both;
+	height:30px;
+	padding:10px;
+	color:white;
+	background: #203d8e;
+}
+#north h1 {
+	float:left;
+	font-family:"Lucida Grande", Tahoma, Arial, sans-serif;
+	font-size:24px;
+	font-weight:bold;
+}
+#navlinks {
+	float:none;
+	clear:both;
+	height:24px;
+	background:#ffc800;
+	vertical-align:middle;	
+	font-family:Verdana, Arial, Tahoma, sans-serif;
+	font-size:12px;
+	text-transform:lowercase;
+	line-height:24px;
+}
+#navlinks li {
+	display:inline;
+}
+#navlinks a {
+	display:block;
+	float:left;
+	padding:0 15px;
+	text-decoration:none;	
+	color:blue;
+}
+#navlinks a:hover {
+	background-color:#ffff40;
+}
+#south {
+	height:30px;
+	float:none;
+	clear:both;
+}
+/* }}} */
+/* {{{
+// containers */
+#themect {
+	float:right;
+	width:150px;
+	margin:4px 0 0 0;
+}
+#langct {
+	float:right;
+	width:140px;
+	margin:4px 10px 0 0;
+}
+#adrow {
+	min-height:1em;
+	clear:both;
+	float:none;	
+	position:relative;
+}
+.adsense {
+	opacity:.55;
+	filter:alpha(opacity=55);
+	-moz-opacity:.55;
+}
+#adsense-float {
+	margin: 4px 4px 0 0;
+	float:left;
+}
+#adsense-top {
+	float:left;
+	margin: 10px 0 10px 220px;
+	opacity:.55;
+	filter:alpha(opacity=55);
+	-moz-opacity:.55;
+}
+#adsense-west {
+	margin: 25px 0;
+	opacity:.55;
+	filter:alpha(opacity=55);
+	-moz-opacity:.55;
+}
+#google-search {
+	margin:20px 0;
+}
+#paypal {
+	margin:20px 0;
+}
+#digg {
+	margin:30px 0;
+}
+#addthis {
+	float:left;
+	clear:right;
+	margin:10px 0 0 40px;
+}
+/* }}} */
+
+/* eof */
