@@ -179,6 +179,12 @@ void epg_init ( void )
     int msglen = (rp[0] << 24) | (rp[1] << 16) | (rp[2] << 8) | rp[3];
     remain    -= 4;
     rp        += 4;
+
+    /* Safety check */
+    if (msglen > remain) {
+      tvhlog(LOG_ERR, "epgdb", "corruption detected, some/all data lost");
+      break;
+    }
     
     /* Extract message */
     htsmsg_t *m = htsmsg_binary_deserialize(rp, msglen, NULL);
