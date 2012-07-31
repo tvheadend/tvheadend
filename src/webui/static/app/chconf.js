@@ -27,7 +27,7 @@ tvheadend.comet.on('channeltags', function(m) {
 tvheadend.channels = new Ext.data.JsonStore({
     autoLoad: true,
     root:'entries',
-    fields: ['name', 'chid', 'xmltvsrc', 'tags', 'ch_icon',
+    fields: ['name', 'chid', 'epggrabsrc', 'tags', 'ch_icon',
 	     'epg_pre_start', 'epg_post_end', 'number'],
     id: 'chid',
     sortInfo: { field: 'number', direction: "ASC" },
@@ -104,16 +104,6 @@ tvheadend.mergeChannel = function(chan) {
  */
 tvheadend.chconf = function() 
 {
-    var xmltvChannels = new Ext.data.JsonStore({
-	root:'entries',
-	fields: ['xcTitle','xcIcon'],
-	url:'xmltv',
-	baseParams: {
-	    op: 'listChannels'
-	}
-    });
-
-
     var fm = Ext.form;
 
     var actions = new Ext.ux.grid.RowActions({
@@ -169,20 +159,20 @@ tvheadend.chconf = function()
 	    }
 	},
 	{
-	    header: "XMLTV source",
-	    dataIndex: 'xmltvsrc',
+	    header: "EPG Grab source",
+	    dataIndex: 'epggrabsrc',
 	    width: 150,
-	    editor: new fm.ComboBox({
+	    editor: new Ext.ux.form.LovCombo({
 		loadingText: 'Loading...',
-		store: xmltvChannels,
+		store: tvheadend.epggrabChannels,
 		allowBlank: true,
 		typeAhead: true,
 		minChars: 2,
 		lazyRender: true,
 		triggerAction: 'all',
 		mode: 'remote',
-                displayField:'xcTitle',
-                valueField:'xcTitle'
+                displayField:'mod-name',
+                valueField:'mod-id'
 	    })
 	},
 	{

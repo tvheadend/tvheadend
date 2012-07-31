@@ -298,6 +298,7 @@ extjs_channels_delete(htsmsg_t *in)
       channel_delete(ch);
 }
 
+#include "epggrab/private.h"
 
 /**
  *
@@ -336,6 +337,42 @@ extjs_channels_update(htsmsg_t *in)
 
     if((s = htsmsg_get_str(c, "number")) != NULL)
       channel_set_number(ch, atoi(s));
+
+    if((s = htsmsg_get_str(c, "epggrabsrc")) != NULL) {
+      char *sptr;
+      char *modecid  = strtok_r((char*)s, ",", &sptr);
+      char *modid, *ecid;
+      epggrab_module_t *mod;
+      epggrab_channel_t *ec;
+
+      /* Clear existing */
+      LIST_FOREACH(mod, &epggrab_modules, link) {
+        if (mod->type != EPGGRAB_OTA && mod->channels) {
+          RB_FOREACH(ec, mod->channels, link) {
+            if (ec->channel == ch) {
+              ec->channel = NULL;
+              mod->ch_save(mod, ec);
+            }
+          }
+        }
+      }
+
+      /* Add new */
+      while (modecid) {
+        modid    = strtok(modecid, "|");
+        ecid     = strtok(NULL, "|");
+        modecid  = strtok_r(NULL, ",", &sptr);
+
+        if (!(mod = epggrab_module_find_by_id(modid)))
+          continue;
+        if (!mod->channels)
+          continue;
+        if (!(ec = epggrab_channel_find(mod->channels, ecid, 0, NULL, mod)))
+          continue;
+
+        epggrab_channel_link(ec, ch);
+      }
+    }
   }
 }
 
@@ -352,6 +389,9 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
   channel_tag_mapping_t *ctm;
   const char *op        = http_arg_get(&hc->hc_req_args, "op");
   const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
+  char *epggrabsrc;
+  epggrab_module_t *mod;
+  epggrab_channel_t *ec;
 
   if(op == NULL)
     return 400;
@@ -385,6 +425,27 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
       htsmsg_add_s32(c, "epg_pre_start", ch->ch_dvr_extra_time_pre);
       htsmsg_add_s32(c, "epg_post_end",  ch->ch_dvr_extra_time_post);
       htsmsg_add_s32(c, "number",        ch->ch_number);
+
+      epggrabsrc = NULL;
+      LIST_FOREACH(mod, &epggrab_modules, link) {
+        if (mod->type != EPGGRAB_OTA && mod->channels) {
+          RB_FOREACH(ec, mod->channels, link) {
+            if (ec->channel == ch) {
+              char id[100];
+              sprintf(id, "%s|%s", mod->id, ec->id);
+              if (!epggrabsrc) {
+                epggrabsrc = strdup(id);
+              } else {
+                epggrabsrc = realloc(epggrabsrc, strlen(epggrabsrc) + 2 + strlen(id));
+                strcat(epggrabsrc, ",");
+                strcat(epggrabsrc, id);
+              }
+            }
+          }
+        }
+      }
+      if (epggrabsrc) htsmsg_add_str(c, "epggrabsrc", epggrabsrc);
+      free(epggrabsrc);
 
       htsmsg_add_msg(array, NULL, c);
     }
