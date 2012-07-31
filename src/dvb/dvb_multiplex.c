@@ -525,6 +525,8 @@ dvb_mux_save(th_dvb_mux_instance_t *tdmi)
 
   htsmsg_add_u32(m, "frequency", f->frequency);
 
+  htsmsg_add_u32(m, "initialscan", tdmi->tdmi_table_initial);
+
   switch(tdmi->tdmi_adapter->tda_type) {
   case FE_OFDM:
     htsmsg_add_str(m, "bandwidth",
@@ -605,7 +607,7 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
   struct dvb_mux_conf dmc;
   const char *s;
   int r;
-  unsigned int tsid, u32, enabled;
+  unsigned int tsid, u32, enabled, initscan;
 
   memset(&dmc, 0, sizeof(dmc));
   
@@ -729,9 +731,13 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
   else
     dmc.dmc_satconf = NULL;
 
+  initscan = htsmsg_get_u32_or_default(m, "initialscan", 1);
+  if (!initscan && !tda->tda_skip_initialscan)
+    initscan = 1;
+
   tdmi = dvb_mux_create(tda, &dmc,
 			tsid, htsmsg_get_str(m, "network"), NULL, enabled,
-      tda->tda_skip_initialscan ? 0 : 1,
+      initscan,
 			identifier, NULL);
   if(tdmi != NULL) {
 
