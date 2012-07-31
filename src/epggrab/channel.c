@@ -32,31 +32,44 @@
  * EPG Grab Channel functions
  * *************************************************************************/
 
-/* Link epggrab channel to real channel */
-// returns 1 if link made
-int epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch )
+/* Check if channels match */
+int epggrab_channel_match ( epggrab_channel_t *ec, channel_t *ch )
 {
-  int match = 0;
-
   if (!ec || !ch) return 0;
-  if (ec->channel) return 0;
+  if (ec->channel) return 0; // ignore already paired
 
-  if (ec->name && !strcmp(ec->name, ch->ch_name))
-    match = 1;
+  if (ec->name && !strcmp(ec->name, ch->ch_name)) return 1;
+  return 0;
+}
 
-  if (match) {
-    tvhlog(LOG_INFO, ec->mod->id, "linking %s to %s",
-           ec->id, ch->ch_name);
-    ec->channel = ch;
-    if (ec->name && epggrab_channel_rename)
-      channel_rename(ch, ec->name);
-    if (ec->icon && epggrab_channel_reicon)
-      channel_set_icon(ch, ec->icon);
-    if (ec->number>0 && epggrab_channel_renumber)
-      channel_set_number(ch, ec->number);
-  }
+/* Link epggrab channel to real channel */
+void epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch )
+{
+  /* No change */
+  if (!ch || ch == ec->channel) return;
 
-  return match;
+  tvhlog(LOG_INFO, ec->mod->id, "linking %s to %s",
+         ec->id, ch->ch_name);
+  ec->channel = ch;
+  if (ec->name && epggrab_channel_rename)
+    channel_rename(ch, ec->name);
+  if (ec->icon && epggrab_channel_reicon)
+    channel_set_icon(ch, ec->icon);
+  if (ec->number>0 && epggrab_channel_renumber)
+    channel_set_number(ch, ec->number);
+
+  /* Save */
+  if (ec->mod->ch_save) ec->mod->ch_save(ec->mod, ec);
+
+}
+
+/* Match and link (basically combines two funcs above for ease) */
+int epggrab_channel_match_and_link ( epggrab_channel_t *ec, channel_t *ch )
+{
+  int r = epggrab_channel_match(ec, ch);
+  if (r)
+    epggrab_channel_link(ec, ch);
+  return r;
 }
 
 /* Set name */
@@ -112,7 +125,7 @@ void epggrab_channel_updated ( epggrab_channel_t *ec )
   /* Find a link */
   if (!ec->channel)
     RB_FOREACH(ch, &channel_name_tree, ch_name_link)
-      if (epggrab_channel_link(ec, ch)) break;
+      if (epggrab_channel_match_and_link(ec, ch)) break;
 
   /* Save */
   if (ec->mod->ch_save) ec->mod->ch_save(ec->mod, ec);
@@ -171,8 +184,11 @@ htsmsg_t *epggrab_channel_list ( void )
         e = htsmsg_create_map();
         htsmsg_add_str(e, "module", mod->id);
         htsmsg_add_str(e, "id",     ec->id);
+        htsmsg_add_str(e, "name",   ec->name);
+        sprintf(name, "%s|%s", mod->id, ec->id);
+        htsmsg_add_str(e, "mod-id", name);
         sprintf(name, "%s: %s", mod->name, ec->name);
-        htsmsg_add_str(e, "name", name);
+        htsmsg_add_str(e, "mod-name", name);
         htsmsg_add_msg(m, NULL, e);
       }
     }

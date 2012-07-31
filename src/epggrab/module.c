@@ -164,10 +164,7 @@ void epggrab_module_ch_add ( void *m, channel_t *ch )
   epggrab_channel_t *egc;
   epggrab_module_int_t *mod = m;
   RB_FOREACH(egc, mod->channels, link) {
-    if (epggrab_channel_link(egc, ch)) {
-      if (mod->ch_save) mod->ch_save(mod, egc);
-      break;
-    }
+    if (epggrab_channel_match_and_link(egc, ch)) break;
   }
 }
 

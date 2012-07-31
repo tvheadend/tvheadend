@@ -46,7 +46,10 @@ void      epggrab_module_channels_load ( epggrab_module_t *m );
  * Channel processing
  * *************************************************************************/
 
-int epggrab_channel_link ( epggrab_channel_t *ec, struct channel *ch );
+void epggrab_channel_link  ( epggrab_channel_t *ec, struct channel *ch );
+int  epggrab_channel_match ( epggrab_channel_t *ec, struct channel *ch );
+int  epggrab_channel_match_and_link
+  ( epggrab_channel_t *ec, struct channel *ch );
 
 epggrab_channel_t *epggrab_channel_find
   ( epggrab_channel_tree_t *chs, const char *id, int create, int *save,
