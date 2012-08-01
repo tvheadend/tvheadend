@@ -83,7 +83,7 @@ for file in $FILES; do
 
     if [ -f ${SOURCE}/$file ]; then
 
-	name=`echo $file | sed -e s#[/.-]#_#g`
+	name=`echo $file | perl -pe s#[^a-z0-9A-Z]#_#g`
 	
 	echo >>${OUTPUT} "// ${SOURCE}/$file"
 	echo >>${OUTPUT} "static const unsigned char embedded_$name[]={"
@@ -107,7 +107,7 @@ for file in $FILES; do
 	    ORIGINAL_SIZE="-1"
 	fi
 
-	N=`echo $file | sed -e s#[/.-]#_#g`
+	N=`echo $file | perl -pe s#[^a-z0-9A-Z]#_#g`
 	echo >>${OUTPUT} "{\"$file\", embedded_$N, sizeof(embedded_$N),${ORIGINAL_SIZE}},"
     fi
 done
