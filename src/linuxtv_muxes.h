@@ -12337,6 +12337,34 @@ static const struct mux muxes_DVBC_de_Kabel_BW[] = {
 	{ .freq = 113000000, .symrate = 6900000, .fec = 0, .constellation = 3},
 };
 
+static const struct mux muxes_DVBC_de_Kabel_Deutschland[] = {
+	{ .freq = 114000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 122000000, .symrate = 6900000, .fec = 0, .constellation = 3},
+	{ .freq = 130000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 330000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 338000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 346000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 354000000, .symrate = 6900000, .fec = 0, .constellation = 3},
+	{ .freq = 362000000, .symrate = 6900000, .fec = 0, .constellation = 3},
+	{ .freq = 370000000, .symrate = 6900000, .fec = 0, .constellation = 3},
+	{ .freq = 378000000, .symrate = 6900000, .fec = 0, .constellation = 3},
+	{ .freq = 386000000, .symrate = 6900000, .fec = 0, .constellation = 3},
+	{ .freq = 394000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 402000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 410000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 426000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 434000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 442000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 450000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 458000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 466000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 498000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 522000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 530000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 538000000, .symrate = 6900000, .fec = 0, .constellation = 5},
+	{ .freq = 610000000, .symrate = 6900000, .fec = 0, .constellation = 3},
+};
+
 static const struct mux muxes_DVBC_de_komro_Rosenheim[] = {
 	{ .freq = 113000000, .symrate = 6900000, .fec = 0, .constellation = 3},
 	{ .freq = 121000000, .symrate = 6900000, .fec = 0, .constellation = 3},
@@ -13001,6 +13029,11 @@ static const struct network networks_DVBC_de[] = {
 		.name = "Kabel BW",
 		.muxes = muxes_DVBC_de_Kabel_BW,
 		.nmuxes = sizeof(muxes_DVBC_de_Kabel_BW) / sizeof(struct mux),
+	},
+	{
+		.name = "Kabel Deutschland",
+		.muxes = muxes_DVBC_de_Kabel_Deutschland,
+		.nmuxes = sizeof(muxes_DVBC_de_Kabel_Deutschland) / sizeof(struct mux),
 	},
 	{
 		.name = "Muenchen",
@@ -14170,4 +14203,3 @@ static const struct region regions_ATSC[] = {
 		.nnetworks = sizeof(networks_ATSC_us) / sizeof(struct network),
 	},
 };
-
