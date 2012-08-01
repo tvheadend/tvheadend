@@ -169,9 +169,16 @@ static void _epggrab_load ( void )
       }
     }
     htsmsg_destroy(m);
-  
+
     /* Finish up migration */
     if (old) {
+
+      /* Enable OTA modules */
+      LIST_FOREACH(mod, &epggrab_modules, link)
+        if (mod->type == EPGGRAB_OTA)
+          epggrab_enable_module(mod, 1);
+
+      /* Migrate XMLTV channels */
       htsmsg_t *xc, *ch;
       htsmsg_t *xchs = hts_settings_load("xmltv/channels");
       htsmsg_t *chs  = hts_settings_load("channels");
@@ -198,12 +205,11 @@ static void _epggrab_load ( void )
 
   /* Defaults */
   } else {
-    epggrab_module_t *m;
     epggrab_interval   = 12 * 3600;         // hours
     epggrab_module     = NULL;              // disabled
-    LIST_FOREACH(m, &epggrab_modules, link) // enable all OTA by default
-      if (m->type == EPGGRAB_OTA)
-        epggrab_enable_module(m, 1);
+    LIST_FOREACH(mod, &epggrab_modules, link) // enable all OTA by default
+      if (mod->type == EPGGRAB_OTA)
+        epggrab_enable_module(mod, 1);
   }
  
   /* Load module config (channels) */
