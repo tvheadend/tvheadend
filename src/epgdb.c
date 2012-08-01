@@ -145,10 +145,10 @@ void epg_init ( void )
   /* Find the right file (and version) */
   while (fd < 0 && ver > 0) {
     fd = hts_settings_open_file(0, "epgdb.v%d", ver);
-    if (fd) break;
+    if (fd > 0) break;
     ver--;
   }
-  if (!fd)
+  if ( fd < 0 )
     fd = hts_settings_open_file(0, "epgdb");
   if ( fd < 0 ) {
     tvhlog(LOG_DEBUG, "epgdb", "database does not exist");
