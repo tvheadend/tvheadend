@@ -506,6 +506,39 @@ const char* dvb_mux_rolloff2str(int rolloff) {
 #endif
 
 /**
+ * for external use
+ */
+int dvb_mux_str2bw(const char *str)
+{
+  return str2val(str, bwtab);
+}
+
+int dvb_mux_str2qam(const char *str)
+{
+  return str2val(str, qamtab);
+}
+
+int dvb_mux_str2fec(const char *str)
+{
+  return str2val(str, fectab);
+}
+
+int dvb_mux_str2mode(const char *str)
+{
+  return str2val(str, modetab);
+}
+
+int dvb_mux_str2guard(const char *str)
+{
+  return str2val(str, guardtab);
+}
+
+int dvb_mux_str2hier(const char *str)
+{
+  return str2val(str, hiertab);
+}
+
+/**
  *
  */
 void
