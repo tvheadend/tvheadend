@@ -28,14 +28,6 @@
 #include "filebundle.h"
 #include "tvheadend.h"
 
-#ifdef TEST
-#define MIN(x,y) ((x<y)?x:y)
-static char *tvheadend_dataroot()
-{
-  return NULL;
-}
-#endif
-
 /* **************************************************************************
  * Opaque data types
  * *************************************************************************/
@@ -70,17 +62,85 @@ typedef struct filebundle_file
   fb_type type;
   size_t  size;
   int     gzip;
+  uint8_t *buf;
+  size_t  pos;
   union {
     struct {
-      FILE *cur;
+      FILE  *cur;
     } d;
     struct {
-      size_t                     cur;
       const  filebundle_entry_t *root;
-      uint8_t                   *buf;
     } b;
   };
 } fb_file;
+
+/* **************************************************************************
+ * Compression/Decompression
+ * *************************************************************************/
+
+static uint8_t *_fb_inflate ( const uint8_t *data, size_t size, size_t orig )
+{
+  int err;
+  z_stream zstr;
+  uint8_t *bufin, *bufout;
+
+  /* Setup buffers */
+  bufin  = malloc(size);
+  bufout = malloc(orig);
+  memcpy(bufin, data, size);
+
+  /* Setup zlib */
+  memset(&zstr, 0, sizeof(zstr));
+  inflateInit2(&zstr, 31);
+  zstr.avail_in  = size;
+  zstr.next_in   = bufin;
+  zstr.avail_out = orig;
+  zstr.next_out  = bufout;
+    
+  /* Decompress */
+  err = inflate(&zstr, Z_NO_FLUSH);
+  if ( err != Z_STREAM_END || zstr.avail_out != 0 ) {
+    free(bufout);
+    bufout = NULL;
+  }
+  free(bufin);
+  inflateEnd(&zstr);
+  
+  return bufout;
+}
+
+static uint8_t *_fb_deflate ( const uint8_t *data, size_t orig, size_t *size )
+{
+  int err;
+  z_stream zstr;
+  uint8_t *bufin, *bufout;
+
+  /* Setup buffers */
+  bufin  = malloc(orig);
+  bufout = malloc(orig);
+  memcpy(bufin, data, orig);
+
+  /* Setup zlib */
+  memset(&zstr, 0, sizeof(zstr));
+  err = deflateInit2(&zstr, 9, Z_DEFLATED, 31, 9, Z_DEFAULT_STRATEGY);
+  zstr.avail_in  = orig;
+  zstr.next_in   = bufin;
+  zstr.avail_out = orig;
+  zstr.next_out  = bufout;
+    
+  /* Decompress */
+  err = deflate(&zstr, Z_FINISH);
+  if ( (err != Z_STREAM_END && err != Z_OK) || zstr.total_out == 0 ) {
+    free(bufout);
+    bufout = NULL;
+  } else {
+    *size  = zstr.total_out;
+  }
+  free(bufin);
+  deflateEnd(&zstr);
+  
+  return bufout;
+}
 
 /* **************************************************************************
  * Directory processing
@@ -125,7 +185,7 @@ fb_dir *fb_opendir ( const char *path )
   } else {
     DIR *dir;
     char buf[512];
-    snprintf(buf, sizeof(buf), "%s%s%s", root, *root ? "" : "/", path);
+    snprintf(buf, sizeof(buf), "%s/%s", root, path);
     if ((dir = opendir(buf))) {
       ret         = calloc(1, sizeof(fb_dir));
       ret->type   = FB_DIRECT;
@@ -185,10 +245,13 @@ fb_dirent *fb_readdir ( fb_dir *dir )
 //       be passed in though and will be ignored if this is not the case
 // Note: compress will work on EITHER type (but will be ignored for already
 //       compressed bundles)
-fb_file *fb_open2 ( const fb_dir *dir, const char *name, int decompress, int compress )
+fb_file *fb_open2 
+  ( const fb_dir *dir, const char *name, int decompress, int compress )
 {
   assert(!decompress || !compress);
   fb_file *ret = NULL;
+
+  /* Bundle file */
   if (dir->type == FB_BUNDLE) {
     const filebundle_entry_t *fb = dir->b.root->d.child;
     while (fb) {
@@ -206,47 +269,56 @@ fb_file *fb_open2 ( const fb_dir *dir, const char *name, int decompress, int com
       if (fb->f.orig != -1 && decompress) {
         ret->gzip = 0;
         ret->size = fb->f.orig;
-        int err;
-        z_stream zstr;
-        uint8_t *bufin, *bufout;
-
-        /* Setup buffers */
-        bufin  = malloc(fb->f.size);
-        bufout = malloc(fb->f.orig);
-        memcpy(bufin, fb->f.data, fb->f.size);
-      
-        /* Setup zlib */
-        zstr.zalloc    = Z_NULL;
-        zstr.zfree     = 0;
-        zstr.opaque    = Z_NULL;
-        zstr.avail_in  = 0;
-        zstr.next_in   = Z_NULL;
-        inflateInit2(&zstr, 31);
-        zstr.avail_in  = fb->f.size;
-        zstr.next_in   = bufin;
-        zstr.avail_out = fb->f.orig;
-        zstr.next_out  = bufout;
-    
-        /* Decompress */
-        err = inflate(&zstr, Z_NO_FLUSH);
-        if ( err == Z_STREAM_END && zstr.avail_out == 0 ) {
-          ret->b.buf = bufout;
-
-        /* Error */
-        } else {
-          free(bufout);
+        ret->buf  = _fb_inflate(fb->f.data, fb->f.size, fb->f.orig);
+        if (!ret->buf) {
           free(ret);
           ret = NULL;
         }
-
-        /* Cleanup */
-        free(bufin);
-        inflateEnd(&zstr);
       }
     }
+
+  /* Direct file */
   } else {
-    
+    char path[512];
+    snprintf(path, sizeof(path), "%s/%s", dir->d.root, name);
+    FILE *fp = fopen(path, "r");
+    if (fp) {
+      struct stat st;
+      lstat(path, &st);
+      ret         = calloc(1, sizeof(fb_file));
+      ret->type   = FB_DIRECT;
+      ret->size   = st.st_size;
+      ret->gzip   = 0;
+      ret->d.cur  = fp;
+    }
   }
+
+  /* Compress */
+  if (ret && !ret->gzip && compress) {
+    ret->gzip = 1;
+      
+    /* Get data */
+    if (ret->type == FB_BUNDLE) {
+      const uint8_t *data;
+      data     = ret->b.root->f.data;
+      ret->buf = _fb_deflate(data, ret->size, &ret->size);
+    } else {
+      uint8_t *data = malloc(ret->size);
+      ssize_t c = fread(data, 1, ret->size, ret->d.cur);
+      if (c == ret->size)
+        ret->buf = _fb_deflate(data, ret->size, &ret->size);
+      fclose(ret->d.cur);
+      ret->d.cur = NULL;
+      free(data);
+    }
+  
+    /* Cleanup */
+    if (!ret->buf) {
+      free(ret);
+      ret = NULL; 
+    }
+  }
+
   return ret;
 }
 
@@ -261,7 +333,7 @@ fb_file *fb_open ( const char *path, int decompress, int compress )
     free(tmp);
     return NULL;
   }
-
+    
   /* Find directory */
   *pos = '\0';
   dir  = fb_opendir(tmp);
@@ -279,10 +351,10 @@ fb_file *fb_open ( const char *path, int decompress, int compress )
 /* Close file */
 void fb_close ( fb_file *fp )
 {
-  if (fp->type == FB_DIRECT)
+  if (fp->type == FB_DIRECT && fp->d.cur)
     fclose(fp->d.cur);
-  else if (fp->b.buf)
-    free(fp->b.buf);
+  if (fp->buf)
+    free(fp->buf);
   free(fp);
 }
 
@@ -301,28 +373,25 @@ int fb_gzipped ( fb_file *fp )
 /* Check for EOF */
 int fb_eof ( fb_file *fp )
 {
-  if (fp->type == FB_DIRECT) {
-    return feof(fp->d.cur);
-  } else {
-    return fp->b.cur >= fp->size;
-  }
+  return fp->pos >= fp->size;
 }
 
 /* Read some data */
 ssize_t fb_read ( fb_file *fp, void *buf, size_t count )
 {
-  if (fp->type == FB_DIRECT) {
-    return fread(buf, 1, count, fp->d.cur);
-  } else if (fb_eof(fp)) {
+  if (fb_eof(fp)) {
     return -1;
-  } else if (fp->b.buf) {
-    count = MIN(count, fp->b.root->f.orig - fp->b.cur);
-    memcpy(buf, fp->b.buf + fp->b.cur, count);
-    fp->b.cur += count;
+  } else if (fp->buf) {
+    count = MIN(count, fp->size - fp->pos);
+    memcpy(buf, fp->buf + fp->pos, count);
+    fp->pos += count;
+  } else if (fp->type == FB_DIRECT) {
+    fp->pos += fread(buf, 1, count, fp->d.cur);
+    return -1;
   } else {
-    count = MIN(count, fp->b.root->f.size - fp->b.cur);
-    memcpy(buf, fp->b.root->f.data + fp->b.cur, count);
-    fp->b.cur += count;
+    count = MIN(count, fp->b.root->f.size - fp->pos);
+    memcpy(buf, fp->b.root->f.data + fp->pos, count);
+    fp->pos += count;
   }
   return count;
 }
@@ -340,26 +409,3 @@ char *fb_gets ( fb_file *fp, void *buf, size_t count )
   ((char*)buf)[c] = '\0';
   return buf;
 }
-
-#ifdef TEST
-int main ( int argc, char **argv )
-{
-  uint8_t buf[100000];
-  fb_dirent *de;
-  fb_dir    *d = fb_opendir(argv[1]);
-  if (d) {
-    while ((de = fb_readdir(d))) {
-      printf("name = %s\n", de->name); 
-      fb_file *fp = fb_open2(d, de->name, 1, 0);
-      printf("size = %lu\n", fb_size(fp));
-      while (!fb_eof(fp)) {
-        if (fb_gets(fp, buf, sizeof(buf)) == NULL)
-          return 1;
-        printf("LINE: %s", buf);
-      }
-      fb_close(fp);
-    }
-    fb_closedir(d);
-  }
-}
-#endif

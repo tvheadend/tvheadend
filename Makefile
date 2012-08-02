@@ -188,13 +188,13 @@ all: ${PROG}
 #
 #
 ${PROG}: $(OBJS) $(ALLDEPS)  support/dataroot/wd.c
-	$(CC) -o $@ $(OBJS) support/dataroot/wd.c $(LDFLAGS) ${LDFLAGS_cfg}
+	$(CC) -o $@ $(OBJS) $(CFLAGS_com) support/dataroot/wd.c $(LDFLAGS) ${LDFLAGS_cfg}
 
 ${PROG}.bundle: $(OBJS) $(BUNDLE_OBJS) $(ALLDEPS)  support/dataroot/bundle.c
 	$(CC) -o $@ $(OBJS) support/dataroot/bundle.c $(BUNDLE_OBJS) $(LDFLAGS) ${LDFLAGS_cfg}
 
 ${PROG}.datadir: $(OBJS) $(ALLDEPS)  support/dataroot/datadir.c
-	$(CC) -o $@ $(OBJS) -iquote${BUILDDIR} support/dataroot/datadir.c $(LDFLAGS) ${LDFLAGS_cfg}
+	$(CC) -o $@ $(OBJS) $(CFLAGS_com) -iquote${BUILDDIR} support/dataroot/datadir.c $(LDFLAGS) ${LDFLAGS_cfg}
 
 #
 #

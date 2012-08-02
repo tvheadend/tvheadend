@@ -99,7 +99,6 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_BAD_REQUEST;
 
   snprintf(path, sizeof(path), "%s/%s", base, remain);
-  printf("path = %s\n", path);
 
   postfix = strrchr(remain, '.');
   if(postfix != NULL) {
