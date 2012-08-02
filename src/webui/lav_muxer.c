@@ -190,7 +190,7 @@ lav_muxer_support_stream(muxer_container_type_t mc,
  * Init the muxer with streams
  */
 static int
-lav_muxer_init(muxer_t* m, const struct streaming_start *ss)
+lav_muxer_init(muxer_t* m, const struct streaming_start *ss, const struct channel *ch)
 {
   int i;
   int cnt = 0;

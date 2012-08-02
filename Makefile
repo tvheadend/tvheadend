@@ -134,6 +134,7 @@ SRCS += src/webui/webui.c \
 	src/webui/simpleui.c \
 	src/webui/statedump.c \
 	src/webui/muxer.c \
+	src/webui/tvh_muxer.c \
 
 #
 # libav dependent sources

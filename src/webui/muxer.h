@@ -33,7 +33,8 @@ struct muxer;
 
 typedef struct muxer {
   int  (*m_init)       (struct muxer *, 
-			const struct streaming_start *);    // Init streams
+			const struct streaming_start *,
+			const struct channel *);            // Init The muxer
   int  (*m_open)       (struct muxer *);                    // Write header 
   int  (*m_close)      (struct muxer *);                    // Write trailer
   void (*m_destroy)    (struct muxer *);                    // Free the memory

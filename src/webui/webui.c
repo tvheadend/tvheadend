@@ -201,7 +201,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
       http_output_content(hc, mux->m_mime);
 
-      if(mux->m_init(mux, sm->sm_data) < 0) {
+      if(mux->m_init(mux, sm->sm_data, s->ths_channel) < 0) {
 	run = 0;
 	break;
       }

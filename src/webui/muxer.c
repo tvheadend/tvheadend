@@ -20,7 +20,7 @@
 #include "tvheadend.h"
 #include "service.h"
 #include "muxer.h"
-
+#include "tvh_muxer.h"
 #if ENABLE_LIBAV
 #include "lav_muxer.h"
 #endif
@@ -114,8 +114,7 @@ muxer_create(int fd, struct service *s, muxer_container_type_t mc)
 #if ENABLE_LIBAV
   m = lav_muxer_create(mc);
 #else
-  //m = tvh_muxer_create(mc);
-  
+  m = tvh_muxer_create(mc);
 #endif
 
   if(m) {
