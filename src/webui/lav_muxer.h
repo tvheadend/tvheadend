@@ -21,39 +21,14 @@
 #define LAV_MUXER_H_
 
 #include <libavformat/avformat.h>
-#include <libavformat/avio.h>
 
-#include "tvheadend.h"
-#include "service.h"
-#include "channels.h"
-#include "epg.h"
 #include "muxer.h"
 
 typedef struct lav_muxer {
-  // File descriptor for socket
-  int lm_fd;
-
+  muxer_t;
   AVFormatContext *lm_oc;
-  AVIOContext *lm_pb;
-
-  // Number of errors encountered
-  int lm_errors;
-
-  // Type of muxer
-  muxer_container_type_t lm_type;
 } lav_muxer_t;
 
-
-lav_muxer_t* lav_muxer_create(int fd,
-			      const struct streaming_start *ss,
-			      const channel_t *ch,
-			      muxer_container_type_t mc);
-
-int lav_muxer_open(lav_muxer_t *lm);
-int lav_muxer_write_pkt(lav_muxer_t *lm, struct th_pkt *pkt);
-int lav_muxer_write_meta(lav_muxer_t *lm, epg_broadcast_t *eb);
-
-int lav_muxer_close(lav_muxer_t *lm);
-void lav_muxer_destroy(lav_muxer_t *lm);
+muxer_t* lav_muxer_create(muxer_container_type_t mc);
 
 #endif

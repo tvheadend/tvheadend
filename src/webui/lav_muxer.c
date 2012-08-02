@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
-
+#include <libavformat/avio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -71,8 +71,8 @@ lav_muxer_write(void *opaque, uint8_t *buf, int buf_size)
   int r;
   lav_muxer_t *lm = (lav_muxer_t*)opaque;
   
-  r = write(lm->lm_fd, buf, buf_size);
-  lm->lm_errors += (r != buf_size);
+  r = write(lm->m_fd, buf, buf_size);
+  lm->m_errors += (r != buf_size);
   
   return r;
 }
@@ -167,87 +167,66 @@ lav_muxer_support_stream(muxer_container_type_t mc,
   return ret;
 }
 
+
 /**
- * Create a new libavformat based muxer
+ * Init the muxer with streams
  */
-lav_muxer_t*
-lav_muxer_create(int fd, const struct streaming_start *ss,
-		 const channel_t *ch, muxer_container_type_t mc)
+static int
+lav_muxer_init(muxer_t* m, const struct streaming_start *ss)
 {
   int i;
-  const char *mux_name;
-  lav_muxer_t *lm;
-  AVFormatContext *oc;
-  AVIOContext *pb;
-  AVOutputFormat *fmt;
-  uint8_t *buf;
+  int cnt = 0;
   const streaming_start_component_t *ssc;
-
-  mux_name = muxer_container_type2txt(mc);
-
-  fmt = av_guess_format(mux_name, NULL, NULL);
-  if(!fmt) {
-    tvhlog(LOG_ERR, "mux",  "Can't find the '%s' muxer", mux_name);
-    return NULL;
-  }
-
-  oc = avformat_alloc_context();
-  oc->oformat = fmt;
-
-  lm = calloc(1, sizeof(lav_muxer_t));
-  lm->lm_fd = fd;
-  lm->lm_oc = oc;
-  lm->lm_type = mc;
+  lav_muxer_t *lm = (lav_muxer_t*)m;
 
   for(i=0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
 
-    if(!lav_muxer_support_stream(mc, ssc->ssc_type))
+    if(!lav_muxer_support_stream(lm->m_container, ssc->ssc_type))
       continue;
 
     if(ssc->ssc_disabled)
       continue;
 
-    lav_muxer_add_stream(lm, ssc);
+    if(lav_muxer_add_stream(lm, ssc) < 0)
+      continue;
+
+    cnt++;
   }
 
-  buf = av_malloc(MUX_BUF_SIZE);
-  pb = avio_alloc_context(buf, MUX_BUF_SIZE, 1, lm, NULL, 
-			  lav_muxer_write, NULL);
-  pb->seekable = 0;
-  oc->pb = pb;
-  lm->lm_pb = pb;
-
-  return lm;
+  return cnt;
 }
 
 
 /**
  * Open the muxer and write the header
  */
-int
-lav_muxer_open(lav_muxer_t *lm)
+static int
+lav_muxer_open(muxer_t *m)
 {
+  lav_muxer_t *lm = (lav_muxer_t*)m;
+
   if(avformat_write_header(lm->lm_oc, NULL) < 0) {
     tvhlog(LOG_WARNING, "mux",  "Failed to write %s header", 
-	   muxer_container_type2txt(lm->lm_type));
-    lm->lm_errors++;
+	   muxer_container_type2txt(lm->m_container));
+    lm->m_errors++;
   }
 
-  return lm->lm_errors;
+  return lm->m_errors;
 }
 
 
 /**
  * Write a packet to the muxer
  */
-int
-lav_muxer_write_pkt(lav_muxer_t *lm, struct th_pkt *pkt)
+static int
+lav_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
 {
   int i;
   AVFormatContext *oc;
   AVStream *st;
   AVPacket packet;
+  lav_muxer_t *lm = (lav_muxer_t*)m;
 
   oc = lm->lm_oc;
 
@@ -266,7 +245,7 @@ lav_muxer_write_pkt(lav_muxer_t *lm, struct th_pkt *pkt)
     packet.size = pktbuf_len(pkt->pkt_payload);
     packet.stream_index = st->index;
 
-    if(lm->lm_type != MC_MPEGTS) {
+    if(lm->m_container != MC_MPEGTS) {
       packet.pts = ts_rescale(pkt->pkt_pts, 1000);
       packet.dts = ts_rescale(pkt->pkt_dts, 1000);
       packet.duration = ts_rescale(pkt->pkt_duration, 1000);
@@ -281,50 +260,95 @@ lav_muxer_write_pkt(lav_muxer_t *lm, struct th_pkt *pkt)
 
     if (av_interleaved_write_frame(oc, &packet) != 0) {
         tvhlog(LOG_WARNING, "mux",  "Failed to write frame");
-	lm->lm_errors++;
+	lm->m_errors++;
     }
 
     break;
   }
 
-  return lm->lm_errors;
+  return lm->m_errors;
 }
 
 
 /**
  * Append meta data when a channel changes its programme
  */
-int
-lav_muxer_write_meta(lav_muxer_t *lm, epg_broadcast_t *eb)
+static int
+lav_muxer_write_meta(muxer_t *m, epg_broadcast_t *eb)
 {
-  return lm->lm_errors;
+  lav_muxer_t *lm = (lav_muxer_t*)m;
+
+  return lm->m_errors;
 }
 
 
 /**
  * Close the muxer and append trailer to output
  */
-int
-lav_muxer_close(lav_muxer_t *lm)
+static int
+lav_muxer_close(muxer_t *m)
 {
+  lav_muxer_t *lm = (lav_muxer_t*)m;
+
   if(av_write_trailer(lm->lm_oc) < 0) {
     tvhlog(LOG_WARNING, "mux",  "Failed to write %s trailer", 
-	   muxer_container_type2txt(lm->lm_type));
-    lm->lm_errors++;
+	   muxer_container_type2txt(lm->m_container));
+    lm->m_errors++;
   }
 
-  return lm->lm_errors;
+  return lm->m_errors;
 }
 
 
 /**
  * Free all memory associated with teh muxer
  */
-void
-lav_muxer_destroy(lav_muxer_t *lm)
+static void
+lav_muxer_destroy(muxer_t *m)
 {
-  av_free(lm->lm_pb);
+  lav_muxer_t *lm = (lav_muxer_t*)m;
+
+  av_free(lm->lm_oc->pb);
   avformat_free_context(lm->lm_oc);
   free(lm);
 }
 
+
+/**
+ * Create a new libavformat based muxer
+ */
+muxer_t*
+lav_muxer_create(muxer_container_type_t mc)
+{
+  const char *mux_name;
+  lav_muxer_t *lm;
+  AVIOContext *pb;
+  AVOutputFormat *fmt;
+  uint8_t *buf;
+
+  mux_name = muxer_container_type2txt(mc);
+  fmt = av_guess_format(mux_name, NULL, NULL);
+  if(!fmt) {
+    tvhlog(LOG_ERR, "mux",  "Can't find the '%s' muxer", mux_name);
+    return NULL;
+  }
+
+  lm = calloc(1, sizeof(lav_muxer_t));
+  lm->m_init         = lav_muxer_init;
+  lm->m_open         = lav_muxer_open;
+  lm->m_close        = lav_muxer_close;
+  lm->m_destroy      = lav_muxer_destroy;
+  lm->m_write_meta   = lav_muxer_write_meta;
+  lm->m_write_pkt    = lav_muxer_write_pkt;
+  lm->lm_oc          = avformat_alloc_context();
+  lm->lm_oc->oformat = fmt;
+
+  buf = av_malloc(MUX_BUF_SIZE);
+  pb = avio_alloc_context(buf, MUX_BUF_SIZE, 1, lm, NULL, 
+			  lav_muxer_write, NULL);
+  pb->seekable = 0;
+
+  lm->lm_oc->pb = pb;
+
+  return (muxer_t*)lm;
+}

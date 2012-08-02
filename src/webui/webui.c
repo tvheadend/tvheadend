@@ -135,12 +135,11 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 {
   streaming_message_t *sm;
   int run = 1;
-  lav_muxer_t *lm = NULL;
+  muxer_t *mux = NULL;
   uint32_t event_id = 0;
   int timeouts = 0;
   struct timespec ts;
   struct timeval  tp;
-  const char *mime = NULL;
   int err = 0;
   socklen_t errlen = sizeof(err);
   epg_broadcast_t *eb = NULL;
@@ -176,10 +175,10 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
     switch(sm->sm_type) {
     case SMT_PACKET:
-      if(!lm)
+      if(!mux)
 	break;
 
-      lav_muxer_write_pkt(lm, sm->sm_data);
+      mux->m_write_pkt(mux, sm->sm_data);
       sm->sm_data = NULL;
 
       if(s->ths_channel)
@@ -187,25 +186,36 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
       if(eb && event_id != eb->id) {
 	event_id = eb->id;
-	lav_muxer_write_meta(lm, eb);
+	mux->m_write_meta(mux, eb);
       }
       break;
 
     case SMT_START:
       tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
 
-      mime = muxer_container_mimetype(mc, s->ths_service->s_servicetype);
-      http_output_content(hc, mime);
+      mux = muxer_create(hc->hc_fd, s->ths_service, mc);
+      if(!mux) {
+	run = 0;
+	break;
+      }
 
-      lm = lav_muxer_create(hc->hc_fd, sm->sm_data, s->ths_channel, mc);
-      if(lm)
-	lav_muxer_open(lm);
+      http_output_content(hc, mux->m_mime);
+
+      if(mux->m_init(mux, sm->sm_data) < 0) {
+	run = 0;
+	break;
+      }
+
+      if(mux->m_open(mux) < 0) {
+	run = 0;
+	break;
+      }
 
       break;
 
     case SMT_STOP:
-      if(lm)
-	lav_muxer_close(lm);
+      if(mux)
+	mux->m_close(mux);
 
       run = 0;
       break;
@@ -226,20 +236,20 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
       break;
 
     case SMT_EXIT:
-      if(lm)
-	lav_muxer_close(lm);
+      if(mux)
+	mux->m_close(mux);
 
       run = 0;
       break;
     }
     streaming_msg_free(sm);
 
-    if(lm && lm->lm_errors)
+    if(mux && mux->m_errors)
       run = 0;
   }
 
-  if(lm)
-    lav_muxer_destroy(lm);
+  if(mux)
+    mux->m_destroy(mux);
 }
 
 /**

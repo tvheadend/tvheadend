@@ -21,28 +21,32 @@
 #include "service.h"
 #include "muxer.h"
 
+#if ENABLE_LIBAV
+#include "lav_muxer.h"
+#endif
 
 /**
- *
+ * Get the mime type for a service muxer
  */
-const char*
-muxer_container_mimetype(muxer_container_type_t mc, int st)
+static const char*
+muxer_container_mimetype(muxer_container_type_t mc, struct service *s)
 {
   switch(mc) {
+
   case MC_MATROSKA:
-    if(st == ST_RADIO)
+    if(s->s_servicetype == ST_RADIO)
       return "audio/x-matroska";
     else
       return "video/x-matroska";
 
   case MC_MPEGTS:
-    if(st == ST_RADIO)
+    if(s->s_servicetype == ST_RADIO)
       return "audio/x-mpegts";
     else
       return "video/x-mpegts";
 
   case MC_WEBM:
-    if(st == ST_RADIO)
+    if(s->s_servicetype == ST_RADIO)
       return "audio/webm";
     else
       return "video/webm";
@@ -54,18 +58,22 @@ muxer_container_mimetype(muxer_container_type_t mc, int st)
 
 
 /**
- * 
+ * Convert a container type to a string
  */
 const char*
 muxer_container_type2txt(muxer_container_type_t mc)
 {
   switch(mc) {
+
   case MC_MATROSKA:
     return "matroska";
+
   case MC_MPEGTS:
     return "mpegts";
+
   case MC_WEBM:
     return "webm";
+
   default:
     return "unknown";
   }
@@ -73,20 +81,49 @@ muxer_container_type2txt(muxer_container_type_t mc)
 
 
 /**
- *
+ * Convert a string to a container type
  */
 muxer_container_type_t
 muxer_container_txt2type(const char *str)
 {
   if(!str)
     return MC_UNKNOWN;
+
   else if(!strcmp("matroska", str))
     return MC_MATROSKA;
+
   else if(!strcmp("mpegts", str))
     return MC_MPEGTS;
+
   else if(!strcmp("webm", str))
     return MC_WEBM;
+
   else
     return MC_UNKNOWN;
+}
+
+
+/**
+ * Create a new muxer
+ */
+muxer_t* 
+muxer_create(int fd, struct service *s, muxer_container_type_t mc)
+{
+  muxer_t *m;
+
+#if ENABLE_LIBAV
+  m = lav_muxer_create(mc);
+#else
+  //m = tvh_muxer_create(mc);
+  
+#endif
+
+  if(m) {
+    m->m_fd        = fd;
+    m->m_container = mc;
+    m->m_mime      = muxer_container_mimetype(mc, s);
+  }
+
+  return m;
 }
 
