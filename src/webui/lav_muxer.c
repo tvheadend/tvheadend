@@ -101,7 +101,7 @@ lav_muxer_add_stream(lav_muxer_t *lm,
   if (!st)
     return -1;
 
-  st->id = ssc->ssc_index;
+  st->id        = ssc->ssc_index;
   st->time_base = AV_TIME_BASE_Q;
 
   c = st->codec;
@@ -113,10 +113,12 @@ lav_muxer_add_stream(lav_muxer_t *lm,
   }
 
   if(SCT_ISAUDIO(ssc->ssc_type)) {
-    c->codec_type = AVMEDIA_TYPE_AUDIO;
-    c->sample_fmt = AV_SAMPLE_FMT_S16;
-    c->sample_rate = sri_to_rate(ssc->ssc_sri);
-    c->channels = ssc->ssc_channels;
+    c->codec_type    = AVMEDIA_TYPE_AUDIO;
+    c->sample_fmt    = AV_SAMPLE_FMT_S16;
+
+    c->sample_rate   = sri_to_rate(ssc->ssc_sri);
+    c->channels      = ssc->ssc_channels;
+
     c->time_base.num = 1;
     c->time_base.den = c->sample_rate;
 
@@ -124,15 +126,18 @@ lav_muxer_add_stream(lav_muxer_t *lm,
 
   } else if(SCT_ISVIDEO(ssc->ssc_type)) {
     c->codec_type = AVMEDIA_TYPE_VIDEO;
-    c->width = ssc->ssc_width;
-    c->height = ssc->ssc_height;
-    c->time_base.num = 1;
+    c->width      = ssc->ssc_width;
+    c->height     = ssc->ssc_height;
+
+    c->time_base.num  = 1;
     c->time_base.den = 25;
+
     c->sample_aspect_ratio.num = ssc->ssc_aspect_num;
     c->sample_aspect_ratio.den = ssc->ssc_aspect_den;
 
     st->sample_aspect_ratio.num = c->sample_aspect_ratio.num;
     st->sample_aspect_ratio.den = c->sample_aspect_ratio.den;
+
   } else if(SCT_ISSUBTITLE(ssc->ssc_type)) {
     c->codec_type = AVMEDIA_TYPE_SUBTITLE;
     av_dict_set(&st->metadata, "language", ssc->ssc_lang, 0);
@@ -269,12 +274,12 @@ lav_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
     packet.stream_index = st->index;
 
     if(lm->m_container != MC_MPEGTS) {
-      packet.pts = ts_rescale(pkt->pkt_pts, 1000);
-      packet.dts = ts_rescale(pkt->pkt_dts, 1000);
+      packet.pts      = ts_rescale(pkt->pkt_pts, 1000);
+      packet.dts      = ts_rescale(pkt->pkt_dts, 1000);
       packet.duration = ts_rescale(pkt->pkt_duration, 1000);
     } else {
-      packet.pts = pkt->pkt_pts;
-      packet.dts = pkt->pkt_dts;
+      packet.pts      = pkt->pkt_pts;
+      packet.dts      = pkt->pkt_dts;
       packet.duration = pkt->pkt_duration;
     }
 
