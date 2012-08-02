@@ -533,7 +533,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   dvr_entry_sched_state_t dvr_status;
   const char *dvr_config_name;
   time_t start_extra = 0, stop_extra = 0;
-  uint32_t u32;
+  uint32_t u32, priority;
   channel_t *ch = NULL;
 
   if((dvr_config_name = htsmsg_get_str(in, "configName")) == NULL)
@@ -548,10 +548,11 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     stop_extra = u32;
   if(!htsmsg_get_u32(in, "channelId", &u32))
     ch = channel_find_by_identifier(u32);
+  priority = htsmsg_get_u32_or_default(in, "priority", DVR_PRIO_NORMAL);
 
   if ((e = epg_broadcast_find_by_id(eventid, ch)) == NULL)
   {
-    uint32_t iStartTime, iStopTime, iPriority;
+    uint32_t iStartTime, iStopTime;
     const char *strTitle = NULL, *strDescription = NULL, *strCreator = NULL;
 
     // no event, must have a channel
@@ -569,8 +570,6 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     }
 
     // get the optional attributes
-    if (htsmsg_get_u32(in, "priority", &iPriority))
-      iPriority = DVR_PRIO_NORMAL;
 
     if ((strDescription = htsmsg_get_str(in, "description")) == NULL)
       strDescription = "";
@@ -579,7 +578,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
       strCreator = htsp->htsp_username ? htsp->htsp_username : "anonymous";
 
     // create the dvr entry
-    de = dvr_entry_create(dvr_config_name, ch, iStartTime, iStopTime, start_extra, stop_extra, strTitle, strDescription, 0, strCreator, NULL, iPriority);
+    de = dvr_entry_create(dvr_config_name, ch, iStartTime, iStopTime, start_extra, stop_extra, strTitle, strDescription, 0, strCreator, NULL, priority);
   }
   else
   {
@@ -587,7 +586,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     de = dvr_entry_create_by_event(dvr_config_name,e, start_extra, stop_extra,
                                    htsp->htsp_username ?
                                    htsp->htsp_username : "anonymous",
-                                   NULL, DVR_PRIO_NORMAL);
+                                   NULL, priority);
   }
 
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
