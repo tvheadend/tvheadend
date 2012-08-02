@@ -133,6 +133,12 @@ SRCS += src/webui/webui.c \
 	src/webui/extjs.c \
 	src/webui/simpleui.c \
 	src/webui/statedump.c \
+	src/webui/muxer.c \
+
+#
+# libav dependent sources
+#
+SRCS-$(CONFIG_LIBAV) += src/webui/lav_muxer.c
 
 #
 # Extra modules

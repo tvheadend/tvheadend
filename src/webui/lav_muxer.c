@@ -1,0 +1,330 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <assert.h>
+#include <string.h>
+
+#include "tvheadend.h"
+#include "streaming.h"
+#include "lav_muxer.h"
+
+#define MUX_BUF_SIZE 4096
+
+/**
+ * Translate a component type to a libavcodec id
+ */
+static enum CodecID
+lav_muxer_get_codec_id(streaming_component_type_t type)
+{
+  enum CodecID codec_id = CODEC_ID_NONE;
+
+  switch(type) {
+  case SCT_H264:
+    codec_id = CODEC_ID_H264;
+    break;
+  case SCT_MPEG2VIDEO:
+    codec_id = CODEC_ID_MPEG2VIDEO;
+    break;
+  case SCT_AC3:
+    codec_id = CODEC_ID_AC3;
+    break;
+  case SCT_EAC3:
+    codec_id = CODEC_ID_EAC3;
+    break;
+  case SCT_AAC:
+    codec_id = CODEC_ID_AAC;
+    break;
+  case SCT_MPEG2AUDIO:
+    codec_id = CODEC_ID_MP2;
+    break;
+  case SCT_DVBSUB:
+    codec_id = CODEC_ID_DVB_SUBTITLE;
+    break;
+  case SCT_TEXTSUB:
+    codec_id = CODEC_ID_TEXT;
+    break;
+ case SCT_TELETEXT:
+    codec_id = CODEC_ID_DVB_TELETEXT;
+    break;
+  default:
+    codec_id = CODEC_ID_NONE;
+    break;
+  }
+
+  return codec_id;
+}
+
+
+
+/**
+ * Callback function for libavformat
+ */
+static int 
+lav_muxer_write(void *opaque, uint8_t *buf, int buf_size)
+{
+  int r;
+  lav_muxer_t *lm = (lav_muxer_t*)opaque;
+  
+  r = write(lm->lm_fd, buf, buf_size);
+  lm->lm_errors += (r != buf_size);
+  
+  return r;
+}
+
+
+/**
+ * Add a stream to the muxer
+ */
+static int
+lav_muxer_add_stream(lav_muxer_t *lm, 
+		     const streaming_start_component_t *ssc)
+{
+  AVStream *st;
+  AVCodecContext *c;
+
+  st = avformat_new_stream(lm->lm_oc, NULL);
+  if (!st)
+    return -1;
+
+  st->id = ssc->ssc_index;
+  st->time_base = AV_TIME_BASE_Q;
+
+  c = st->codec;
+  c->codec_id = lav_muxer_get_codec_id(ssc->ssc_type);
+
+  if(ssc->ssc_gh) {
+    c->extradata = pktbuf_ptr(ssc->ssc_gh);
+    c->extradata_size = pktbuf_len(ssc->ssc_gh);
+  }
+
+  if(SCT_ISAUDIO(ssc->ssc_type)) {
+    c->codec_type = AVMEDIA_TYPE_AUDIO;
+    c->sample_fmt = AV_SAMPLE_FMT_S16;
+    c->sample_rate = sri_to_rate(ssc->ssc_sri);
+    c->channels = ssc->ssc_channels;
+    c->time_base.num = 1;
+    c->time_base.den = c->sample_rate;
+  } else if(SCT_ISVIDEO(ssc->ssc_type)) {
+    c->codec_type = AVMEDIA_TYPE_VIDEO;
+    c->width = ssc->ssc_width;
+    c->height = ssc->ssc_height;
+    c->time_base.num = 1;
+    c->time_base.den = 25;
+    c->sample_aspect_ratio.num = ssc->ssc_aspect_num;
+    c->sample_aspect_ratio.den = ssc->ssc_aspect_den;
+
+    st->sample_aspect_ratio.num = c->sample_aspect_ratio.num;
+    st->sample_aspect_ratio.den = c->sample_aspect_ratio.den;
+  } else if(SCT_ISSUBTITLE(ssc->ssc_type)) {
+    c->codec_type = AVMEDIA_TYPE_SUBTITLE;
+  }
+
+  if(lm->lm_oc->oformat->flags & AVFMT_GLOBALHEADER)
+    c->flags |= CODEC_FLAG_GLOBAL_HEADER;
+
+  return 0;
+}
+
+
+/**
+ * Check if a container supports a given streaming component
+ */
+static int
+lav_muxer_support_stream(muxer_container_type_t mc, 
+			 streaming_component_type_t type)
+{
+  int ret = 0;
+
+  switch(mc) {
+  case MC_MATROSKA:
+    ret |= SCT_ISAUDIO(type);
+    ret |= SCT_ISVIDEO(type);
+    ret |= SCT_ISSUBTITLE(type);
+    break;
+
+  case MC_MPEGTS:
+    ret |= (type == SCT_MPEG2VIDEO);
+    ret |= (type == SCT_MPEG2AUDIO);
+    ret |= (type == SCT_H264);
+    ret |= (type == SCT_AC3);
+    //Some pids lack pts, disable for now
+    //ret |= (type == SCT_TELETEXT);
+    ret |= (type == SCT_DVBSUB);
+    ret |= (type == SCT_AAC);
+    ret |= (type == SCT_EAC3);
+    break;
+
+  default:
+    break;
+  }
+
+  return ret;
+}
+
+/**
+ * Create a new libavformat based muxer
+ */
+lav_muxer_t*
+lav_muxer_create(int fd, const struct streaming_start *ss,
+		 const channel_t *ch, muxer_container_type_t mc)
+{
+  int i;
+  const char *mux_name;
+  lav_muxer_t *lm;
+  AVFormatContext *oc;
+  AVIOContext *pb;
+  AVOutputFormat *fmt;
+  uint8_t *buf;
+  const streaming_start_component_t *ssc;
+
+  mux_name = muxer_container_type2txt(mc);
+
+  fmt = av_guess_format(mux_name, NULL, NULL);
+  if(!fmt) {
+    tvhlog(LOG_ERR, "mux",  "Can't find the '%s' muxer", mux_name);
+    return NULL;
+  }
+
+  oc = avformat_alloc_context();
+  oc->oformat = fmt;
+
+  lm = calloc(1, sizeof(lav_muxer_t));
+  lm->lm_fd = fd;
+  lm->lm_oc = oc;
+  lm->lm_type = mc;
+
+  for(i=0; i < ss->ss_num_components; i++) {
+    ssc = &ss->ss_components[i];
+
+    if(!lav_muxer_support_stream(mc, ssc->ssc_type))
+      continue;
+
+    if(ssc->ssc_disabled)
+      continue;
+
+    lav_muxer_add_stream(lm, ssc);
+  }
+
+  buf = av_malloc(MUX_BUF_SIZE);
+  pb = avio_alloc_context(buf, MUX_BUF_SIZE, 1, lm, NULL, 
+			  lav_muxer_write, NULL);
+  pb->seekable = 0;
+  oc->pb = pb;
+  lm->lm_pb = pb;
+
+  return lm;
+}
+
+
+/**
+ * Open the muxer and write the header
+ */
+int
+lav_muxer_open(lav_muxer_t *lm)
+{
+  if(avformat_write_header(lm->lm_oc, NULL) < 0) {
+    tvhlog(LOG_WARNING, "mux",  "Failed to write %s header", 
+	   muxer_container_type2txt(lm->lm_type));
+    lm->lm_errors++;
+  }
+
+  return lm->lm_errors;
+}
+
+
+/**
+ * Write a packet to the muxer
+ */
+int
+lav_muxer_write_pkt(lav_muxer_t *lm, struct th_pkt *pkt)
+{
+  int i;
+  AVFormatContext *oc;
+  AVStream *st;
+  AVPacket packet;
+
+  oc = lm->lm_oc;
+
+  for(i=0; i<oc->nb_streams; i++) {
+    st = oc->streams[i];
+
+    if(st->id != pkt->pkt_componentindex)
+      continue;
+
+    av_init_packet(&packet);
+
+    if(st->codec->codec_id == CODEC_ID_MPEG2VIDEO)
+      pkt = pkt_merge_header(pkt);
+
+    packet.data = pktbuf_ptr(pkt->pkt_payload);
+    packet.size = pktbuf_len(pkt->pkt_payload);
+    packet.stream_index = st->index;
+
+    if(lm->lm_type != MC_MPEGTS) {
+      packet.pts = ts_rescale(pkt->pkt_pts, 1000);
+      packet.dts = ts_rescale(pkt->pkt_dts, 1000);
+      packet.duration = ts_rescale(pkt->pkt_duration, 1000);
+    } else {
+      packet.pts = pkt->pkt_pts;
+      packet.dts = pkt->pkt_dts;
+      packet.duration = pkt->pkt_duration;
+    }
+
+    if(pkt->pkt_frametype < PKT_P_FRAME)
+      packet.flags |= AV_PKT_FLAG_KEY;
+
+    if (av_interleaved_write_frame(oc, &packet) != 0) {
+        tvhlog(LOG_WARNING, "mux",  "Failed to write frame");
+	lm->lm_errors++;
+    }
+
+    break;
+  }
+
+  return lm->lm_errors;
+}
+
+
+/**
+ * Append meta data when a channel changes its programme
+ */
+int
+lav_muxer_write_meta(lav_muxer_t *lm, epg_broadcast_t *eb)
+{
+  return lm->lm_errors;
+}
+
+
+/**
+ * Close the muxer and append trailer to output
+ */
+int
+lav_muxer_close(lav_muxer_t *lm)
+{
+  if(av_write_trailer(lm->lm_oc) < 0) {
+    tvhlog(LOG_WARNING, "mux",  "Failed to write %s trailer", 
+	   muxer_container_type2txt(lm->lm_type));
+    lm->lm_errors++;
+  }
+
+  return lm->lm_errors;
+}
+
+
+/**
+ * Free all memory associated with teh muxer
+ */
+void
+lav_muxer_destroy(lav_muxer_t *lm)
+{
+  av_free(lm->lm_pb);
+  avformat_free_context(lm->lm_oc);
+  free(lm);
+}
+
