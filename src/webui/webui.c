@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include <sys/stat.h>
 #include <sys/sendfile.h>
@@ -40,8 +41,6 @@
 #include "plumbing/tsfix.h"
 #include "plumbing/globalheaders.h"
 #include "epg.h"
-
-struct filebundle *filebundles;
 
 /**
  *
@@ -85,18 +84,22 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
 static int
 page_static_file(http_connection_t *hc, const char *remain, void *opaque)
 {
+  int ret = 0;
   const char *base = opaque;
-
-  int fd;
   char path[500];
-  struct stat st;
+  ssize_t size;
   const char *content = NULL, *postfix;
+  char buf[4096];
+  const char *gzip;
 
   if(remain == NULL)
     return 404;
 
   if(strstr(remain, ".."))
     return HTTP_STATUS_BAD_REQUEST;
+
+  snprintf(path, sizeof(path), "%s/%s", base, remain);
+  printf("path = %s\n", path);
 
   postfix = strrchr(remain, '.');
   if(postfix != NULL) {
@@ -105,24 +108,30 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
       content = "text/javascript; charset=UTF-8";
   }
 
-  snprintf(path, sizeof(path), "%s/%s", base, remain);
-
-  if((fd = tvh_open(path, O_RDONLY, 0)) < 0) {
-    tvhlog(LOG_ERR, "webui", 
-	   "Unable to open file %s -- %s", path, strerror(errno));
-    return 404;
+  // TODO: handle compression
+  fb_file *fp = fb_open(path, 0, 1);
+  if (!fp) {
+    tvhlog(LOG_ERR, "webui", "failed to open %s", path);
+    return 500;
   }
-  if(fstat(fd, &st) < 0) {
-    tvhlog(LOG_ERR, "webui", 
-	   "Unable to stat file %s -- %s", path, strerror(errno));
-    close(fd);
-    return 404;
-  }
+  size = fb_size(fp);
+  gzip = fb_gzipped(fp) ? "gzip" : NULL;
 
-  http_send_header(hc, 200, content, st.st_size, NULL, NULL, 10, 0, NULL);
-  sendfile(hc->hc_fd, fd, NULL, st.st_size);
-  close(fd);
-  return 0;
+  http_send_header(hc, 200, content, size, gzip, NULL, 10, 0, NULL);
+  while (!fb_eof(fp)) {
+    ssize_t c = fb_read(fp, buf, sizeof(buf));
+    if (c < 0) {
+      ret = 500;
+      break;
+    }
+    if (write(hc->hc_fd, buf, c) != c) {
+      ret = 500;
+      break;
+    }
+  }
+  fb_close(fp);
+
+  return ret;
 }
 
 /**
@@ -613,6 +622,7 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
 /**
  * Static download of a file from an embedded filebundle
  */
+#if 0
 static int
 page_static_bundle(http_connection_t *hc, const char *remain, void *opaque)
 {
@@ -644,6 +654,7 @@ page_static_bundle(http_connection_t *hc, const char *remain, void *opaque)
   }
   return 404;
 }
+#endif
 
 
 /**
@@ -766,34 +777,7 @@ static void
 webui_static_content(const char *content_path, const char *http_path,
 		     const char *source)
 {
-  char path[256];
-  struct stat st;
-  struct filebundle *fb;
- 
-  if(content_path != NULL) {
-    snprintf(path, sizeof(path), "%s/%s", content_path, source);
-    
-    if(!stat(path, &st) && S_ISDIR(st.st_mode)) {
-
-      http_path_add(http_path, strdup(path), 
-		    page_static_file, ACCESS_WEB_INTERFACE);
-      return;
-    }
-  }
-
-  for(fb = filebundles; fb != NULL; fb = fb->next) {
-    if(!strcmp(source, fb->prefix)) {
-      http_path_add(http_path, fb, 
-		    page_static_bundle, ACCESS_WEB_INTERFACE);
-      return;
-    }
-  }
-
-  tvhlog(LOG_ERR, "webui", 
-	 "No source path providing HTTP content: \"%s\". "
-	 "Checked in \"%s\" and in the binary's embedded file system. "
-	 , http_path, content_path);
-
+  http_path_add(http_path, strdup(source), page_static_file, ACCESS_WEB_INTERFACE);
 }
 
 

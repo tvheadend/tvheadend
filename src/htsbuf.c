@@ -323,7 +323,7 @@ htsbuf_crc32(htsbuf_queue_t *hq, uint32_t crc)
   htsbuf_data_t *hd;
   
   TAILQ_FOREACH(hd, &hq->hq_q, hd_link)
-    crc = crc32(hd->hd_data     + hd->hd_data_off,
+    crc = tvh_crc32(hd->hd_data     + hd->hd_data_off,
 		hd->hd_data_len - hd->hd_data_off,
 		crc);
   return crc;

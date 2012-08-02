@@ -1,0 +1,150 @@
+#!/usr/bin/env python
+#
+# Replacement for old mkbundle script that creates a full file heirarchy
+#
+
+import os, sys, re
+import gzip, cStringIO
+from optparse import OptionParser
+
+# Add reverse path split
+def rsplit ( p ):
+  i = p.find(os.path.sep)
+  if i != -1:
+    return (p[:i], p[i+1:])
+  else:
+    return (p, '')
+
+# Process command line
+optp = OptionParser()
+optp.add_option('-z', '--gzip', action='store_true',
+                help='Compress the files with gzip')
+optp.add_option('-l', '--gzlevel', type='int', default=9,
+                help='Specify compression level if using gzip')
+optp.add_option('-o', '--output', default=None,
+                help='Specify output file (default /dev/stdout)')
+optp.add_option('-d', '--deps', default=None,
+                help='Specify deps file to update during run')
+(opts, args) = optp.parse_args()
+
+# Setup
+outf = sys.stdout
+if opts.output:
+  outf = open(opts.output, 'w')
+depf = None
+if opts.deps:
+  depf = open(opts.deps, 'w')
+  print >>depf, '%s: \\' % opts.output
+
+# Build heirarchy
+root  = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), '..'))
+ents  = {}
+for path in args:
+  for (p, ds, fs) in os.walk(path):
+    p = os.path.abspath(p)
+    n = p.replace(root+'/', '')
+    t = ents
+    while True:
+      (d,n) = rsplit(n)
+      if d not in t:
+        t[d] = {}
+      t = t[d]
+      if not n: break
+    for f in fs:
+      t[f] = None
+
+# Output a file
+def output_file ( path, name, idx, next = -1 ):
+  n = 'NULL'
+  if next >= 0: n = '&filebundle_entry_%06d' % next
+  p = os.path.join(root, path, name);
+
+  # Dep file
+  if depf: print >>depf, '  %s\\' % p
+
+  # First the data
+  print >>outf, '// FILE : %s %s %d %d' % (path, name, idx, next)
+  print >>outf, 'static const uint8_t filebundle_data_%06d[] = {' % idx,
+  o = -1
+  d = open(p, 'rb').read()
+  if opts.gzip:
+    o = len(d)
+    l = opts.gzlevel
+    t = cStringIO.StringIO()
+    if l < 0: l = 1
+    if l > 9: l = 9
+    z = gzip.GzipFile(filename=name, mode='w', compresslevel=l, fileobj=t)
+    z.write(d)
+    z.close()
+    d = t.getvalue()
+    t.close()
+  i = 0
+  for b in d:
+    if not (i % 12): print >>outf, '\n  ',
+    print >>outf, '0x%02x,' % ord(b),
+    i = i + 1
+  print >>outf, ''
+  print >>outf, '};'
+  
+  print >>outf, 'static filebundle_entry_t filebundle_entry_%06d = {' % idx
+  print >>outf, '  .type    = FB_FILE,'
+  print >>outf, '  .name    = "%s",'  % name
+  print >>outf, '  .next    = %s,' % n
+  print >>outf, '  .f.size  = %d,' % len(d)
+  print >>outf, '  .f.orig  = %d,' % o
+  print >>outf, '  .f.data  = filebundle_data_%06d,' % idx
+  print >>outf, '};'
+  print >>outf, ''
+
+# Output a directory
+def output_dir ( path, name, idx, child, next = -1 ):
+  n = 'NULL'
+  if next >= 0: n = '&filebundle_entry_%06d' % next
+  print >>outf, '// DIR: %s %s %d %d %d' % (path, name, idx, child, next)
+  print >>outf, 'static filebundle_entry_t filebundle_entry_%06d = {' % idx
+  print >>outf, '  .type    = FB_DIR,'
+  print >>outf, '  .name    = "%s",'  % name
+  print >>outf, '  .next    = %s,' % n
+  print >>outf, '  .d.child = &filebundle_entry_%06d,' % child
+  print >>outf, '};'
+  print >>outf, ''
+
+# Create output
+def add_entry ( ents, path = "", name = "", idx = -1, next = -1 ):
+
+  # Add children
+  d = os.path.join(path, name)
+  p = -1
+  for k in ents:
+    
+    # File
+    if not ents[k]:
+      output_file(d, k, idx+1, p)
+      p = idx = idx + 1
+      
+    # Directory
+    else:
+      tmp = add_entry(ents[k], d, k, idx, p)
+      if tmp != idx:
+        p = idx = tmp
+
+  # Add directory
+  if p >= 0:
+    if name:
+      output_dir(path, name, idx+1, p, next)
+      idx = idx + 1
+
+  return idx
+
+# Output header
+print >>outf, '// Auto-generated - DO NOT EDIT'
+print >>outf, '// COMMAND: [%s]' % (' '.join(sys.argv))
+print >>outf, ''
+print >>outf, '#include "filebundle.h"'
+print >>outf, ''
+
+# Output entries
+idx = add_entry(ents)
+
+# Output top link
+print >>outf, 'filebundle_entry_t *filebundle_root = &filebundle_entry_%06d;'  % idx

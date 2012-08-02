@@ -74,6 +74,7 @@ SRCS =  src/main.c \
 	src/iptv_input.c \
 	src/avc.c \
   src/huffman.c \
+  src/filebundle.c \
 
 SRCS += src/epggrab/module.c\
   src/epggrab/channel.c\
@@ -157,7 +158,7 @@ OBJS_EXTRA = $(SRCS_EXTRA:%.c=$(BUILDDIR)/%.so)
 DEPS=    ${OBJS:%.o=%.d}
 
 # File bundles
-BUNDLE_SRCS=$(BUNDLES:%=$(BUILDDIR)/bundles/%.c)
+BUNDLE_SRCS=$(BUILDDIR)/bundle.c
 BUNDLE_DEPS=$(BUNDLE_SRCS:%.c=%.d)
 BUNDLE_OBJS=$(BUNDLE_SRCS:%.c=%.o)
 .PRECIOUS: ${BUNDLE_SRCS}
@@ -168,10 +169,10 @@ CFLAGS_com  = -g -funsigned-char -O2
 CFLAGS_com += -D_FILE_OFFSET_BITS=64
 CFLAGS_com += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR}
 
-MKBUNDLE = $(CURDIR)/support/mkbundle
+MKBUNDLE = $(CURDIR)/support/mkbundle.py
 
 ifndef V
-ECHO   = printf "$(1)\t%s\n" $(2)
+ECHO   = printf "$(1)\t\t%s\n" $(2)
 BRIEF  = CC MKBUNDLE CXX
 MSG    = $@
 $(foreach VAR,$(BRIEF), \
@@ -207,7 +208,7 @@ ${BUILDDIR}/%.so: ${SRCS_EXTRA}
 	${CC} -O -fbuiltin -fomit-frame-pointer -fPIC -shared -o $@ $< -ldl
 
 clean:
-	rm -rf ${BUILDDIR}/src ${BUILDDIR}/bundles
+	rm -rf ${BUILDDIR}/src ${BUILDDIR}/bundle*
 	find . -name "*~" | xargs rm -f
 
 distclean: clean
@@ -227,10 +228,10 @@ FORCE:
 include support/${OSENV}.mk
 
 # Bundle files
-$(BUILDDIR)/bundles/%.o: $(BUILDDIR)/bundles/%.c
+$(BUILDDIR)/bundle.o: $(BUILDDIR)/bundle.c
 	@mkdir -p $(dir $@)
 	$(CC) -I${CURDIR}/src -c -o $@ $<
 
-$(BUILDDIR)/bundles/%.c: %
+$(BUILDDIR)/bundle.c:
 	@mkdir -p $(dir $@)
-	$(MKBUNDLE) -o $@ -s $< -d ${BUILDDIR}/bundles/$<.d -p $< -z
+	$(MKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d -z $(BUNDLES)
