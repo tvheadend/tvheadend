@@ -16,17 +16,7 @@
  *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <libavformat/avio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <unistd.h>
-#include <assert.h>
-#include <string.h>
 
 #include "tvheadend.h"
 #include "streaming.h"
@@ -289,7 +279,7 @@ lav_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
 
 
 /**
- * Append meta data when a channel changes its programme
+ * NOP
  */
 static int
 lav_muxer_write_meta(muxer_t *m, epg_broadcast_t *eb)
@@ -319,7 +309,7 @@ lav_muxer_close(muxer_t *m)
 
 
 /**
- * Free all memory associated with teh muxer
+ * Free all memory associated with the muxer
  */
 static void
 lav_muxer_destroy(muxer_t *m)
@@ -370,3 +360,4 @@ lav_muxer_create(muxer_container_type_t mc)
 
   return (muxer_t*)lm;
 }
+

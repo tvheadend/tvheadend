@@ -15,6 +15,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
  */
+
 #include <string.h>
 
 #include "tvheadend.h"
@@ -24,6 +25,7 @@
 #if ENABLE_LIBAV
 #include "lav_muxer.h"
 #endif
+
 
 /**
  * Get the mime type for a service muxer

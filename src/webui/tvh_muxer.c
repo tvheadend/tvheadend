@@ -21,7 +21,7 @@
 #include "tvh_muxer.h"
 
 /**
- * Init the muxer with streams
+ * Init the muxer with streams and write header
  */
 static int
 tvh_muxer_init(muxer_t* m, const struct streaming_start *ss, const struct channel *ch)
@@ -37,7 +37,7 @@ tvh_muxer_init(muxer_t* m, const struct streaming_start *ss, const struct channe
 
 
 /**
- * Open the muxer and write the header
+ * NOP
  */
 static int
 tvh_muxer_open(muxer_t *m)
@@ -91,7 +91,7 @@ tvh_muxer_close(muxer_t *m)
 
 
 /**
- * Free all memory associated with teh muxer
+ * Free all memory associated with the muxer
  */
 static void
 tvh_muxer_destroy(muxer_t *m)

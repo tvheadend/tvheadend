@@ -16,7 +16,6 @@
  *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
  */
 
-
 #ifndef TVH_MUXER_H_
 #define TVH_MUXER_H_
 
@@ -27,7 +26,6 @@ typedef struct tvh_muxer {
   muxer_t;
   mk_mux_t *tm_ref;
 } tvh_muxer_t;
-
 
 muxer_t* tvh_muxer_create(muxer_container_type_t mc);
 

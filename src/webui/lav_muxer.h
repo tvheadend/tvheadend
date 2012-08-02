@@ -16,7 +16,6 @@
  *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
  */
 
-
 #ifndef LAV_MUXER_H_
 #define LAV_MUXER_H_
 
