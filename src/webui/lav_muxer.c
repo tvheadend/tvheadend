@@ -309,7 +309,7 @@ lav_muxer_destroy(muxer_t *m)
   lav_muxer_t *lm = (lav_muxer_t*)m;
 
   av_free(lm->lm_oc->pb);
-  avformat_free_context(lm->lm_oc);
+  av_free(lm->lm_oc);
   free(lm);
 }
 
