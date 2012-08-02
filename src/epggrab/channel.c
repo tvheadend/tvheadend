@@ -184,10 +184,11 @@ htsmsg_t *epggrab_channel_list ( void )
         e = htsmsg_create_map();
         htsmsg_add_str(e, "module", mod->id);
         htsmsg_add_str(e, "id",     ec->id);
-        htsmsg_add_str(e, "name",   ec->name);
+        if (ec->name)
+          htsmsg_add_str(e, "name",   ec->name);
         sprintf(name, "%s|%s", mod->id, ec->id);
         htsmsg_add_str(e, "mod-id", name);
-        sprintf(name, "%s: %s", mod->name, ec->name);
+        sprintf(name, "%s: %s", mod->name, ec->name ?: "unknown");
         htsmsg_add_str(e, "mod-name", name);
         htsmsg_add_msg(m, NULL, e);
       }
