@@ -20,6 +20,7 @@
 
 #include "tvheadend.h"
 #include "streaming.h"
+#include "channels.h"
 #include "lav_muxer.h"
 
 #define MUX_BUF_SIZE 4096
@@ -118,6 +119,9 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     c->channels = ssc->ssc_channels;
     c->time_base.num = 1;
     c->time_base.den = c->sample_rate;
+
+    av_dict_set(&st->metadata, "language", ssc->ssc_lang, 0);
+
   } else if(SCT_ISVIDEO(ssc->ssc_type)) {
     c->codec_type = AVMEDIA_TYPE_VIDEO;
     c->width = ssc->ssc_width;
@@ -131,6 +135,7 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     st->sample_aspect_ratio.den = c->sample_aspect_ratio.den;
   } else if(SCT_ISSUBTITLE(ssc->ssc_type)) {
     c->codec_type = AVMEDIA_TYPE_SUBTITLE;
+    av_dict_set(&st->metadata, "language", ssc->ssc_lang, 0);
   }
 
   if(lm->lm_oc->oformat->flags & AVFMT_GLOBALHEADER)
@@ -185,7 +190,17 @@ lav_muxer_init(muxer_t* m, const struct streaming_start *ss, const struct channe
   int i;
   int cnt = 0;
   const streaming_start_component_t *ssc;
+  AVFormatContext *oc;
   lav_muxer_t *lm = (lav_muxer_t*)m;
+  char app[128];
+
+  snprintf(app, sizeof(app), "Tvheadend %s", tvheadend_version);
+
+  oc = lm->lm_oc;
+
+  av_dict_set(&oc->metadata, "title", ch->ch_name, 0);
+  av_dict_set(&oc->metadata, "service_name", ch->ch_name, 0);
+  av_dict_set(&oc->metadata, "service_provider", app, 0);
 
   for(i=0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
