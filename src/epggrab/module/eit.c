@@ -233,8 +233,12 @@ static int _eit_desc_ext_event
 
     /* Store */
     // TODO: extend existing?
-    if (*ikey && *ival)
+#if TODO_ADD_EXTRA
+    if (*ikey && *ival) {
+      if (!ev->extra) ev->extra = htsmsg_create_map();
       htsmsg_add_str(ev->extra, ikey, ival);
+    }
+#endif
   }
 
   /* Description */
@@ -489,7 +493,7 @@ static int _eit_process_event
     if ( ev.genre )
       *save |= epg_episode_set_genre(ee, ev.genre, mod);
 #if TODO_ADD_EXTRA
-    if ( extra )
+    if ( ev.extra )
       *save |= epg_episode_set_extra(ee, extra, mod);
 #endif
 
@@ -502,7 +506,9 @@ static int _eit_process_event
   }
 
   /* Tidy up */
-  if (ev.extra) free(ev.extra);
+#if TODO_ADD_EXTRA
+  if (ev.extra) htsmsg_destroy(ev.extra);
+#endif
   if (ev.genre) epg_genre_list_destroy(ev.genre);
 
   return ret;
