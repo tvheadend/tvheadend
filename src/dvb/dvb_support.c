@@ -189,6 +189,13 @@ static inline size_t dvb_convert(int conv,
                           const uint8_t *src, size_t srclen,
                           char *dst, size_t *dstlen)
 {
+   // Fix for PL many channels using ISO6937 while specifying different encoding...
+   if (strcspn((const char*)src,"\xC1\xC2\xC3\xC4\xC5\xC7\xC8\xCB\xCD\xCE\xCF\xE8\xF8") < strlen((const char*)src))
+       conv= convert_iso6937;
+   // Below test for characters found in ISO-8859-2
+   else if (strcspn((const char*)src,"\xA1\xA3\xA6\xAC\xAF\xB1\xB3\xB6\xBC\xBF\xC6\xCA\xD1\xD3\xE6\xEA\xF1\xF3") < strlen((const char*)src))
+      conv= convert_iso_8859[2];
+
   switch (conv) {
     case convert_utf8: return conv_utf8(src, srclen, dst, dstlen);
     case convert_iso6937: return conv_6937(src, srclen, dst, dstlen);
