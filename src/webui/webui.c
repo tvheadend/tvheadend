@@ -220,6 +220,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
     case SMT_MPEGTS:
       mux->m_write_pkt(mux, sm->sm_data);
+      sm->sm_data = NULL;
       break;
 
     case SMT_EXIT:
@@ -467,26 +468,26 @@ http_stream_service(http_connection_t *hc, service_t *service)
   th_subscription_t *s;
   streaming_target_t *gh;
   streaming_target_t *tsfix;
+  streaming_target_t *st;
   muxer_container_type_t mc;
-  int smt_mask;
+  int flags;
 
-  smt_mask = 0;
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
- if(mc == MC_UNKNOWN)
-    mc = MC_MATROSKA;
 
- if(mc == MC_PASS)
-    smt_mask = ~SMT_TO_MASK(SUBSCRIPTION_RAW_MPEGTS);
- 
-  streaming_queue_init(&sq, smt_mask);
-  gh = globalheaders_create(&sq.sq_st);
-  tsfix = tsfix_create(gh);
+  if(mc == MC_PASS) {
+    streaming_queue_init(&sq, SMT_PACKET);
+    st = &sq.sq_st;
+    flags = SUBSCRIPTION_RAW_MPEGTS;
+  } else {
+    streaming_queue_init(&sq, 0);
+    gh = globalheaders_create(&sq.sq_st);
+    tsfix = tsfix_create(gh);
+    st = tsfix;
+    flags = 0;
+  }
 
   pthread_mutex_lock(&global_lock);
-  s = subscription_create_from_service(service,
-                                       "HTTP", tsfix,
-                                       0);
-
+  s = subscription_create_from_service(service, "HTTP", st, flags);
   pthread_mutex_unlock(&global_lock);
 
   if(s) {
@@ -496,12 +497,17 @@ http_stream_service(http_connection_t *hc, service_t *service)
     pthread_mutex_unlock(&global_lock);
   }
 
-  globalheaders_destroy(gh);
-  tsfix_destroy(tsfix);
+  if(gh)
+    globalheaders_destroy(gh);
+
+  if(tsfix)
+    tsfix_destroy(tsfix);
+
   streaming_queue_deinit(&sq);
 
   return 0;
 }
+
 
 /**
  * Subscribes to a channel and starts the streaming loop
@@ -513,27 +519,27 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   th_subscription_t *s;
   streaming_target_t *gh;
   streaming_target_t *tsfix;
+  streaming_target_t *st;
   int priority = 100;
+  int flags;
   muxer_container_type_t mc;
-  int smt_mask;
 
-  smt_mask = 0;
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
- if(mc == MC_UNKNOWN)
-    mc = MC_MATROSKA;
 
- if(mc == MC_PASS)
-    smt_mask = ~SMT_TO_MASK(SUBSCRIPTION_RAW_MPEGTS);
- 
-  streaming_queue_init(&sq, smt_mask);
-
-  gh = globalheaders_create(&sq.sq_st);
-  tsfix = tsfix_create(gh);
+ if(mc == MC_PASS) {
+   streaming_queue_init(&sq, SMT_PACKET);
+   st = &sq.sq_st;
+   flags = SUBSCRIPTION_RAW_MPEGTS;
+ } else {
+   streaming_queue_init(&sq, 0);
+   gh = globalheaders_create(&sq.sq_st);
+   tsfix = tsfix_create(gh);
+   st = tsfix;
+   flags = 0;
+ }
 
   pthread_mutex_lock(&global_lock);
-  s = subscription_create_from_channel(ch, priority, 
-                                       "HTTP", tsfix,
-                                       0);
+  s = subscription_create_from_channel(ch, priority, "HTTP", st, flags);
   pthread_mutex_unlock(&global_lock);
 
   if(s) {
@@ -543,8 +549,11 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
     pthread_mutex_unlock(&global_lock);
   }
 
-  globalheaders_destroy(gh);
-  tsfix_destroy(tsfix);
+  if(gh)
+    globalheaders_destroy(gh);
+  if(tsfix)
+    tsfix_destroy(tsfix);
+
   streaming_queue_deinit(&sq);
 
   return 0;
