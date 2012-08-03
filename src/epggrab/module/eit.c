@@ -643,7 +643,6 @@ static void _eit_start
     tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 3003, NULL);
   } else
     tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 0x12, NULL);
-  tvhlog(LOG_INFO, m->id, "install table handlers");
 }
 
 static int _eit_enable ( void *m, uint8_t e )
