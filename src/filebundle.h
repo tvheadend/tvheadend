@@ -24,6 +24,13 @@
 #include <dirent.h>
 #include <stdio.h>
 
+/* Bundle or Direct */
+typedef enum filebundle_handle_type
+{
+  FB_BUNDLE,
+  FB_DIRECT
+} fb_type;
+
 /* File bundle entry type */
 enum filebundle_type
 {
@@ -39,6 +46,7 @@ typedef struct filebundle_entry
   const char          *name;
   union {
     struct {
+      size_t count;
       struct filebundle_entry *child;
     } d;
     struct {
@@ -53,9 +61,17 @@ typedef struct filebundle_entry
 /* File bundle directory entry */
 typedef struct filebundle_dirent
 {
-  const char           *name;
-  enum filebundle_type  type;
+  char                 name[256];
+  enum filebundle_type type;
 } fb_dirent;
+
+/* File bundle stat */
+struct filebundle_stat
+{
+  fb_type  type;
+  uint8_t  is_dir;
+  size_t   size;
+};
 
 /* Opaque types */
 typedef struct filebundle_dir  fb_dir;
@@ -64,10 +80,14 @@ typedef struct filebundle_file fb_file;
 /* Root of bundle */
 extern filebundle_entry_t *filebundle_root;
 
+/* Miscellaneous */
+int fb_stat ( const char *path, struct filebundle_stat *st );
+
 /* Directory processing wrappers */
 fb_dir    *fb_opendir  ( const char *path );
 fb_dirent *fb_readdir  ( fb_dir *fb );
 void       fb_closedir ( fb_dir *fb );
+int        fb_scandir  ( const char *path, fb_dirent ***list );
 
 /* File processing wrappers */
 // Note: all access is read-only

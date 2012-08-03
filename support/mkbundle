@@ -1,133 +1,155 @@
-#!/bin/bash
+#!/usr/bin/env python
 #
-#  Filebundle generator
-#  Copyright (C) 2009 Andreas Öman
-#
-#  This program is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation, either version 3 of the License, or
-#  (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# Replacement for old mkbundle script that creates a full file heirarchy
 #
 
-set -u # Fail on undefined vars
+import os, sys, re
+import gzip, cStringIO
+from optparse import OptionParser
 
-READER="cat"
-SOURCE=
-DEPFILE=
-OUTPUT=
-PREFIX=
-COMPRESS=false
-usage()
-{
-cat << EOF
-usage: $0 options
+# Add reverse path split
+def rsplit ( p ):
+  i = p.find(os.path.sep)
+  if i != -1:
+    return (p[:i], p[i+1:])
+  else:
+    return (p, '')
 
-Generate a filebundle .c-file from a directory
+# Process command line
+optp = OptionParser()
+optp.add_option('-z', '--gzip', action='store_true',
+                help='Compress the files with gzip')
+optp.add_option('-l', '--gzlevel', type='int', default=9,
+                help='Specify compression level if using gzip')
+optp.add_option('-o', '--output', default=None,
+                help='Specify output file (default /dev/stdout)')
+optp.add_option('-d', '--deps', default=None,
+                help='Specify deps file to update during run')
+(opts, args) = optp.parse_args()
 
-OPTIONS:
-   -h      Show this message
-   -s      Source path
-   -d      Dependency file (for use with make)
-   -o      Output file (.c file)
-   -z      Compress individual files using gzip
-   -p      Filebundle prefix
-EOF
-}
+# Setup
+outf = sys.stdout
+if opts.output:
+  outf = open(opts.output, 'w')
+depf = None
+if opts.deps:
+  depf = open(opts.deps, 'w')
+  print >>depf, '%s: \\' % opts.output
 
+# Build heirarchy
+root  = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), '..'))
+ents  = {}
+for path in args:
+  for (p, ds, fs) in os.walk(path):
+    p = os.path.abspath(p)
+    n = p.replace(root+'/', '')
+    t = ents
+    while True:
+      (d,n) = rsplit(n)
+      if d not in t:
+        t[d] = {}
+      t = t[d]
+      if not n: break
+    for f in fs:
+      t[f] = None
 
-while getopts "s:d:o:zhp:" OPTION
-do
-  case $OPTION in
-      h)
-	  usage
-	  exit 1
-	  ;;
-      z)
-	  READER="gzip -9"
-	  COMPRESS=true
-	  ;;
-      d)
-	  DEPFILE="$OPTARG"
-	  ;;
-      s)
-	  SOURCE="$OPTARG"
-	  ;;
-      o)
-	  OUTPUT="$OPTARG"
-	  ;;
-      p)
-	  PREFIX="$OPTARG"
-	  ;;
-      esac
-  done
+# Output a file
+def output_file ( path, name, idx, next = -1 ):
+  n = 'NULL'
+  if next >= 0: n = '&filebundle_entry_%06d' % next
+  p = os.path.join(root, path, name);
 
+  # Dep file
+  if depf: print >>depf, '  %s\\' % p
 
-if [[ -z $SOURCE ]] || [[ -z $OUTPUT ]] || [[ -z $PREFIX ]]; then
-     usage
-     exit 1
-fi
+  # First the data
+  print >>outf, '// FILE : %s %s %d %d' % (path, name, idx, next)
+  print >>outf, 'static const uint8_t filebundle_data_%06d[] = {' % idx,
+  o = -1
+  d = open(p, 'rb').read()
+  if opts.gzip:
+    o = len(d)
+    l = opts.gzlevel
+    t = cStringIO.StringIO()
+    if l < 0: l = 1
+    if l > 9: l = 9
+    z = gzip.GzipFile(filename=name, mode='w', compresslevel=l, fileobj=t)
+    z.write(d)
+    z.close()
+    d = t.getvalue()
+    t.close()
+  i = 0
+  for b in d:
+    if not (i % 12): print >>outf, '\n  ',
+    print >>outf, '0x%02x,' % ord(b),
+    i = i + 1
+  print >>outf, ''
+  print >>outf, '};'
+  
+  print >>outf, 'static filebundle_entry_t filebundle_entry_%06d = {' % idx
+  print >>outf, '  .type    = FB_FILE,'
+  print >>outf, '  .name    = "%s",'  % name
+  print >>outf, '  .next    = %s,' % n
+  print >>outf, '  .f.size  = %d,' % len(d)
+  print >>outf, '  .f.orig  = %d,' % o
+  print >>outf, '  .f.data  = filebundle_data_%06d,' % idx
+  print >>outf, '};'
+  print >>outf, ''
 
-FILES=`find "${SOURCE}" \( \( -name .svn -or -name *~ \) -and -prune \) -or -printf "%P "`
+# Output a directory
+def output_dir ( path, name, idx, child, count, next = -1 ):
+  n = 'NULL'
+  if next >= 0: n = '&filebundle_entry_%06d' % next
+  print >>outf, '// DIR: %s %s %d %d %d %d'\
+  % (path, name, idx, child, count, next)
+  print >>outf, 'static filebundle_entry_t filebundle_entry_%06d = {' % idx
+  print >>outf, '  .type    = FB_DIR,'
+  print >>outf, '  .name    = "%s",'  % name
+  print >>outf, '  .next    = %s,' % n
+  print >>outf, '  .d.count = %d,' % count
+  print >>outf, '  .d.child = &filebundle_entry_%06d,' % child
+  print >>outf, '};'
+  print >>outf, ''
 
-echo >${OUTPUT} "// auto-generated by $0"
+# Create output
+def add_entry ( ents, path = "", name = "", idx = -1, next = -1 ):
 
-for file in $FILES; do
+  # Add children
+  d = os.path.join(path, name)
+  p = -1
+  c = 0
+  for k in ents:
+    
+    # File
+    if not ents[k]:
+      output_file(d, k, idx+1, p)
+      p = idx = idx + 1
+      c = c + 1
+      
+    # Directory
+    else:
+      tmp = add_entry(ents[k], d, k, idx, p)
+      if tmp != idx:
+        p = idx = tmp
+        c = c + 1
 
-    if [ -f ${SOURCE}/$file ]; then
+  # Add directory
+  if p >= 0:
+    if name:
+      output_dir(path, name, idx+1, p, c, next)
+      idx = idx + 1
 
-	name=`echo $file | perl -pe s#[^a-z0-9A-Z]#_#g`
-	
-	echo >>${OUTPUT} "// ${SOURCE}/$file"
-	echo >>${OUTPUT} "static const unsigned char embedded_$name[]={"
-	$READER <${SOURCE}/$file | od -v -An -b | sed s/^\ */0/ | sed s/\ *$$/,/| sed s/\ /,\ 0/g|sed s/$/,/ >>${OUTPUT}
-	echo >>${OUTPUT} "};"
-    fi
-done
+  return idx
 
-echo >>${OUTPUT} "#include <filebundle.h>"
-echo >>${OUTPUT} "static const struct filebundle_entry filebundle_entries[] = {"
-[[ -z $DEPFILE ]] || echo >${DEPFILE} -n "${OUTPUT}: "
+# Output header
+print >>outf, '// Auto-generated - DO NOT EDIT'
+print >>outf, '// COMMAND: [%s]' % (' '.join(sys.argv))
+print >>outf, ''
+print >>outf, '#include "filebundle.h"'
+print >>outf, ''
 
-for file in $FILES; do
-    [[ -z $DEPFILE ]] || echo >>${DEPFILE} -n "${SOURCE}/$file "
+# Output entries
+idx = add_entry(ents)
 
-    if [ -f ${SOURCE}/$file ]; then
-
-	if $COMPRESS; then
-	    ORIGINAL_SIZE=`stat -c "%s" ${SOURCE}/$file`
-	else
-	    ORIGINAL_SIZE="-1"
-	fi
-
-	N=`echo $file | perl -pe s#[^a-z0-9A-Z]#_#g`
-	echo >>${OUTPUT} "{\"$file\", embedded_$N, sizeof(embedded_$N),${ORIGINAL_SIZE}},"
-    fi
-done
-
-echo >>${OUTPUT}  "{(void *)0, 0, 0, 0}};"
-[[ -z $DEPFILE ]] || echo >>${DEPFILE} ""
-
-cat >>${OUTPUT} <<EOF
-
-static struct filebundle fb = {
-  .entries = &filebundle_entries[0],
-  .prefix = "${PREFIX}"
-};
-
-static void  __attribute__((constructor)) filebundle_init(void)
-{
-  extern struct filebundle *filebundles;
-
-  fb.next = filebundles;
-  filebundles = &fb;
-}
-
-EOF
+# Output top link
+print >>outf, 'filebundle_entry_t *filebundle_root = &filebundle_entry_%06d;'  % idx

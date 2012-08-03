@@ -32,13 +32,6 @@
  * Opaque data types
  * *************************************************************************/
 
-/* Bundle or Direct */
-typedef enum filebundle_handle_type
-{
-  FB_BUNDLE,
-  FB_DIRECT
-} fb_type;
-
 /* File bundle dir handle */
 typedef struct filebundle_dir
 {
@@ -143,6 +136,42 @@ static uint8_t *_fb_deflate ( const uint8_t *data, size_t orig, size_t *size )
 }
 
 /* **************************************************************************
+ * Miscellanous
+ * *************************************************************************/
+
+/* Get path stats */
+// TODO: this could do with being more efficient
+int fb_stat ( const char *path, struct filebundle_stat *st )
+{
+  int ret = 1;
+  fb_dir *dir;
+  fb_file *fp;
+
+  if (*path == '/') {
+    struct stat _st;
+    if (!lstat(path, &_st)) {
+      st->type   = FB_DIRECT;
+      st->is_dir = S_ISDIR(_st.st_mode) ? 1 : 0;
+      st->size   = _st.st_size;
+      ret        = 0;
+    }
+  } else if ((dir = fb_opendir(path))) {
+    st->type   = dir->type;
+    st->is_dir = 1;
+    st->size   = 0;
+    ret = 0;
+    fb_closedir(dir);
+  } else if ((fp = fb_open(path, 0, 0))) {
+    st->type   = fp->type;
+    st->is_dir = 0;
+    st->size   = fp->size;
+    ret = 0;
+    fb_close(fp);
+  }
+  return ret;
+}
+
+/* **************************************************************************
  * Directory processing
  * *************************************************************************/
 
@@ -213,7 +242,7 @@ fb_dirent *fb_readdir ( fb_dir *dir )
   fb_dirent *ret = NULL;
   if (dir->type == FB_BUNDLE) {
     if (dir->b.cur) {
-      dir->dirent.name = dir->b.cur->name;
+      strcpy(dir->dirent.name, dir->b.cur->name);
       dir->dirent.type = dir->b.cur->type;
       dir->b.cur       = dir->b.cur->next;
       ret              = &dir->dirent;
@@ -225,11 +254,55 @@ fb_dirent *fb_readdir ( fb_dir *dir )
       struct stat st;
       char buf[512];
       snprintf(buf, sizeof(buf), "%s/%s", dir->d.root, de->d_name);
-      dir->dirent.name = de->d_name;
+      strcpy(dir->dirent.name, de->d_name);
       dir->dirent.type = FB_UNKNOWN;
       if (!lstat(buf, &st))
         dir->dirent.type = S_ISDIR(st.st_mode) ? FB_DIR : FB_FILE;
       ret              = &dir->dirent;
+    }
+  }
+  return ret;
+}
+
+/* Get entry list */
+int fb_scandir ( const char *path, fb_dirent ***list )
+{
+  int i, ret = -1;
+  struct dirent **de;
+  struct filebundle_stat st;
+  if (fb_stat(path, &st)) return -1;
+  if (!st.is_dir) return -1;
+
+  /* Direct */
+  if (st.type == FB_DIRECT) {
+    if ((ret = scandir(path, &de, NULL, NULL)) != -1) {
+      if (ret == 0) return 0;
+      *list = malloc(sizeof(fb_dirent*)*ret);
+      for (i = 0; i < ret; i++) {
+        (*list)[i] = calloc(1, sizeof(fb_dirent));
+        strcpy((*list)[i]->name, de[i]->d_name);
+        (*list)[i]->type = FB_DIRECT;
+        free(de[i]);
+      }
+      free(de);
+    }
+
+  /* Bundle */
+  } else {
+    fb_dir *dir;
+    if ((dir = fb_opendir(path))) {
+      const filebundle_entry_t *fb;
+      ret = dir->b.root->d.count;
+      fb  = dir->b.root->d.child;
+      *list = malloc(ret * sizeof(fb_dirent));
+      i = 0;
+      while (fb) {
+        (*list)[i] = calloc(1, sizeof(fb_dirent));
+        strcpy((*list)[i]->name, fb->name);
+        fb = fb->next;
+        i++;
+      }
+      fb_closedir(dir);
     }
   }
   return ret;
@@ -344,6 +417,7 @@ fb_file *fb_open ( const char *path, int decompress, int compress )
 
   /* Open */
   ret = fb_open2(dir, pos+1, decompress, compress);
+  fb_closedir(dir);
   free(tmp);
   return ret;
 }
@@ -351,8 +425,9 @@ fb_file *fb_open ( const char *path, int decompress, int compress )
 /* Close file */
 void fb_close ( fb_file *fp )
 {
-  if (fp->type == FB_DIRECT && fp->d.cur)
+  if (fp->type == FB_DIRECT && fp->d.cur) {
     fclose(fp->d.cur);
+  }
   if (fp->buf)
     free(fp->buf);
   free(fp);
@@ -387,7 +462,6 @@ ssize_t fb_read ( fb_file *fp, void *buf, size_t count )
     fp->pos += count;
   } else if (fp->type == FB_DIRECT) {
     fp->pos += fread(buf, 1, count, fp->d.cur);
-    return -1;
   } else {
     count = MIN(count, fp->b.root->f.size - fp->pos);
     memcpy(buf, fp->b.root->f.data + fp->pos, count);

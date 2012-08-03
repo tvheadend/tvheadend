@@ -169,7 +169,7 @@ CFLAGS_com  = -g -funsigned-char -O2
 CFLAGS_com += -D_FILE_OFFSET_BITS=64
 CFLAGS_com += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR}
 
-MKBUNDLE = $(CURDIR)/support/mkbundle.py
+MKBUNDLE = $(CURDIR)/support/mkbundle
 
 ifndef V
 ECHO   = printf "$(1)\t\t%s\n" $(2)
