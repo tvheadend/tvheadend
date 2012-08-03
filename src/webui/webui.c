@@ -468,12 +468,17 @@ http_stream_service(http_connection_t *hc, service_t *service)
   streaming_target_t *gh;
   streaming_target_t *tsfix;
   muxer_container_type_t mc;
+  int smt_mask;
 
+  smt_mask = 0;
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
-  if(mc == MC_UNKNOWN)
+ if(mc == MC_UNKNOWN)
     mc = MC_MATROSKA;
 
-  streaming_queue_init(&sq, 0);
+ if(mc == MC_PASS)
+    smt_mask = ~SMT_TO_MASK(SUBSCRIPTION_RAW_MPEGTS);
+ 
+  streaming_queue_init(&sq, smt_mask);
   gh = globalheaders_create(&sq.sq_st);
   tsfix = tsfix_create(gh);
 
@@ -510,12 +515,18 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   streaming_target_t *tsfix;
   int priority = 100;
   muxer_container_type_t mc;
+  int smt_mask;
 
+  smt_mask = 0;
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
-  if(mc == MC_UNKNOWN)
+ if(mc == MC_UNKNOWN)
     mc = MC_MATROSKA;
 
-  streaming_queue_init(&sq, 0);
+ if(mc == MC_PASS)
+    smt_mask = ~SMT_TO_MASK(SUBSCRIPTION_RAW_MPEGTS);
+ 
+  streaming_queue_init(&sq, smt_mask);
+
   gh = globalheaders_create(&sq.sq_st);
   tsfix = tsfix_create(gh);
 

@@ -58,6 +58,7 @@ static struct strtab container_name[] = {
   { "matroska", MC_MATROSKA },
   { "mpegts",   MC_MPEGTS },
   { "webm",     MC_WEBM },
+  { "pass",     MC_PASS },
 };
 
 
