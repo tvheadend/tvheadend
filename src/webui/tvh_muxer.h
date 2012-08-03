@@ -20,12 +20,6 @@
 #define TVH_MUXER_H_
 
 #include "muxer.h"
-#include "dvr/mkmux.h"
-
-typedef struct tvh_muxer {
-  muxer_t;
-  mk_mux_t *tm_ref;
-} tvh_muxer_t;
 
 muxer_t* tvh_muxer_create(muxer_container_type_t mc);
 

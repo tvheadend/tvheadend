@@ -19,14 +19,7 @@
 #ifndef LAV_MUXER_H_
 #define LAV_MUXER_H_
 
-#include <libavformat/avformat.h>
-
 #include "muxer.h"
-
-typedef struct lav_muxer {
-  muxer_t;
-  AVFormatContext *lm_oc;
-} lav_muxer_t;
 
 muxer_t* lav_muxer_create(muxer_container_type_t mc);
 

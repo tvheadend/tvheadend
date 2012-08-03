@@ -19,6 +19,13 @@
 #include "tvheadend.h"
 #include "streaming.h"
 #include "tvh_muxer.h"
+#include "dvr/mkmux.h"
+
+typedef struct tvh_muxer {
+  muxer_t;
+  mk_mux_t *tm_ref;
+} tvh_muxer_t;
+
 
 /**
  * Init the muxer with streams and write header

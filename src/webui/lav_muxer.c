@@ -17,11 +17,17 @@
  */
 
 #include <unistd.h>
+#include <libavformat/avformat.h>
 
 #include "tvheadend.h"
 #include "streaming.h"
 #include "channels.h"
 #include "lav_muxer.h"
+
+typedef struct lav_muxer {
+  muxer_t;
+  AVFormatContext *lm_oc;
+} lav_muxer_t;
 
 #define MUX_BUF_SIZE 4096
 

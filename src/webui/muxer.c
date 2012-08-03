@@ -22,9 +22,43 @@
 #include "service.h"
 #include "muxer.h"
 #include "tvh_muxer.h"
+#include "pass_muxer.h"
 #if ENABLE_LIBAV
 #include "lav_muxer.h"
 #endif
+
+
+/**
+ * Mime type for containers containing only audio
+ */
+static struct strtab container_audio_mime[] = {
+  { "application/octet-stream", MC_UNKNOWN },
+  { "audio/x-matroska",         MC_MATROSKA },
+  { "audio/x-mpegts",           MC_MPEGTS },
+  { "audio/webm",               MC_WEBM },
+};
+
+
+/**
+ * Mime type for containers
+ */
+static struct strtab container_video_mime[] = {
+  { "application/octet-stream", MC_UNKNOWN },
+  { "video/x-matroska",         MC_MATROSKA },
+  { "video/x-mpegts",           MC_MPEGTS },
+  { "video/webm",               MC_WEBM },
+};
+
+
+/**
+ * Name of the container
+ */
+static struct strtab container_name[] = {
+  { "unknown",  MC_UNKNOWN },
+  { "matroska", MC_MATROSKA },
+  { "mpegts",   MC_MPEGTS },
+  { "webm",     MC_WEBM },
+};
 
 
 /**
@@ -33,29 +67,17 @@
 static const char*
 muxer_container_mimetype(muxer_container_type_t mc, struct service *s)
 {
-  switch(mc) {
+  const char *str;
 
-  case MC_MATROSKA:
-    if(s->s_servicetype == ST_RADIO)
-      return "audio/x-matroska";
-    else
-      return "video/x-matroska";
+  if(s->s_servicetype == ST_RADIO)
+    str = val2str(mc, container_audio_mime);
+  else
+    str = val2str(mc, container_video_mime);
 
-  case MC_MPEGTS:
-    if(s->s_servicetype == ST_RADIO)
-      return "audio/x-mpegts";
-    else
-      return "video/x-mpegts";
-
-  case MC_WEBM:
-    if(s->s_servicetype == ST_RADIO)
-      return "audio/webm";
-    else
-      return "video/webm";
-
-  default:
+  if(!str)
     return "application/octet-stream";
-  }
+
+  return str;
 }
 
 
@@ -65,20 +87,13 @@ muxer_container_mimetype(muxer_container_type_t mc, struct service *s)
 const char*
 muxer_container_type2txt(muxer_container_type_t mc)
 {
-  switch(mc) {
+  const char *str;
 
-  case MC_MATROSKA:
-    return "matroska";
-
-  case MC_MPEGTS:
-    return "mpegts";
-
-  case MC_WEBM:
-    return "webm";
-
-  default:
+  str = val2str(mc, container_name);
+  if(!str)
     return "unknown";
-  }
+ 
+  return str;
 }
 
 
@@ -88,20 +103,13 @@ muxer_container_type2txt(muxer_container_type_t mc)
 muxer_container_type_t
 muxer_container_txt2type(const char *str)
 {
-  if(!str)
+  muxer_container_type_t mc;
+
+  mc = str2val(str, container_name);
+  if(mc == -1)
     return MC_UNKNOWN;
-
-  else if(!strcmp("matroska", str))
-    return MC_MATROSKA;
-
-  else if(!strcmp("mpegts", str))
-    return MC_MPEGTS;
-
-  else if(!strcmp("webm", str))
-    return MC_WEBM;
-
   else
-    return MC_UNKNOWN;
+    return mc;
 }
 
 
@@ -111,13 +119,18 @@ muxer_container_txt2type(const char *str)
 muxer_t* 
 muxer_create(int fd, struct service *s, muxer_container_type_t mc)
 {
-  muxer_t *m;
+  muxer_t *m = NULL;
+
+  if(mc == MC_PASS)
+    m = pass_muxer_create(mc);
 
 #if ENABLE_LIBAV
-  m = lav_muxer_create(mc);
-#else
-  m = tvh_muxer_create(mc);
+  if(!m)
+    m = lav_muxer_create(mc);
 #endif
+
+  if(!m)
+    m = tvh_muxer_create(mc);
 
   if(m) {
     m->m_fd        = fd;
