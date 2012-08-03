@@ -31,6 +31,7 @@
 #include "tvheadend.h"
 #include "dvb/dvb.h"
 #include "muxes.h"
+#include "filebundle.h"
 
 region_list_t regions_DVBC;
 region_list_t regions_DVBT;
@@ -65,6 +66,7 @@ static const struct {
   {"hk", "Hong Kong"},
   {"hr", "Croatia"},
   {"hu", "Hungary"},
+  {"ie", "Ireland"},
   {"il", "Israel"},
   {"ir", "Iran"},
   {"is", "Iceland"},
@@ -93,7 +95,8 @@ tldcode2longname(const char *tld)
   for(i = 0; i < sizeof(tldlist) / sizeof(tldlist[0]); i++)
     if(!strcmp(tld, tldlist[i].code))
       return tldlist[i].name;
-  return NULL;
+  tvhlog(LOG_WARNING, "muxes", "unknown tld code %s", tld);
+  return tld;
 }
 
 /* **************************************************************************
@@ -194,6 +197,7 @@ static int _reg_cmp ( void *a, void *b )
 static region_t *_muxes_region_create 
   ( const char *type, const char *id, const char *desc )
 {
+  printf("_muxes_region_create(%s, %s, %s)\n", type, id, desc);
   region_t *reg;
   region_list_t *list = NULL;
   if      (!strcmp(type, "dvb-s")) list = &regions_DVBS;
@@ -249,37 +253,44 @@ static void _muxes_load_one ( network_t *net, const char *line )
 /*
  * Process a file
  */
-static void _muxes_load_file ( const char *type, const char *path )
+static void _muxes_load_file
+  ( const char *type, fb_dir *dir, const char *name )
 {
-  FILE *fp;
   int i;
-  region_t *reg;
+  fb_file *fp;
+  region_t *reg = NULL;
   network_t *net;
-  char *name, *co;
+  char *str;
   char buf[256], buf2[256];
 
-  fp = fopen(path, "r");
+  fp = fb_open2(dir, name, 1, 0);
   if (!fp) return;
 
   /* Region */
-  strcpy(buf, path);
-  if (!(name = basename(buf))) return;
+  strncpy(buf, name, sizeof(buf));
   if (!strcmp(type, "dvb-s")) {
     reg = _muxes_region_create(type, "geo", "Geo-synchronous Orbit");
   } else {
-    if (!(co   = strtok(name, "-"))) return;
-    reg = _muxes_region_create(type, co, tldcode2longname(co));
+    str = buf;
+    while (*str) {
+      if (*str == '-') {
+        *str = '\0';
+        reg  = _muxes_region_create(type, buf, tldcode2longname(buf));
+        *str = '-';
+        break;
+      }
+      str++;
+    }
   }
   if (!reg) return;
 
   /* Network */
-  i = 0;
-  name = basename((char*)path);
-  while (*name) {
-    buf[i++] = isalnum(*name) ? *name : '_';
-    name++;
+  str = buf;
+  while (*str) {
+    if (!isalnum(*str)) *str = '_';
+    str++;
   }
-  buf[i] = '\0';
+  *str = '\0';
   snprintf(buf2, sizeof(buf2), "%s_%s", type, buf);
   net = calloc(1, sizeof(network_t));
   net->id   = strdup(buf2);
@@ -287,11 +298,11 @@ static void _muxes_load_file ( const char *type, const char *path )
   LIST_INSERT_SORTED(&reg->networks, net, link, _net_cmp);
 
   /* Process file */
-  while (!feof(fp)) {
+  while (!fb_eof(fp)) {
 
     /* Get line */
     memset(buf, 0, sizeof(buf));
-    if (!fgets(buf, sizeof(buf) - 1, fp)) break;
+    if (!fb_gets(fp, buf, sizeof(buf) - 1)) break;
     i = 0;
     while (buf[i]) {
       if (buf[i] == '#') 
@@ -312,6 +323,7 @@ static void _muxes_load_file ( const char *type, const char *path )
         break;
     }
   }
+  fb_close(fp);
 }
 
 /*
@@ -321,24 +333,23 @@ static void _muxes_load_file ( const char *type, const char *path )
  */
 static void _muxes_load_dir ( const char *path, const char *type )
 {
-  DIR *dir;
-  struct dirent *dent;
-  struct stat st;
+  char p[256];
+  fb_dir *dir;
+  fb_dirent *de;
 
-  if (!(dir = opendir(path))) return;
+  if (!(dir = fb_opendir(path))) return;
   
-  while ((dent = readdir(dir))) {
-    if (*dent->d_name == '.') continue;
-    char p[256];
-    sprintf(p, "%s/%s", path, dent->d_name);
-    if (stat(p, &st)) continue;
-    if (S_ISDIR(st.st_mode))
-      _muxes_load_dir(p, dent->d_name);
-    else
-      _muxes_load_file(type, p);
+  while ((de = fb_readdir(dir))) {
+    if (*de->name == '.') continue;
+    if (de->type == FB_DIR) {
+      snprintf(p, sizeof(p), "%s/%s", path, de->name);
+      _muxes_load_dir(p, de->name);
+    } else {
+      _muxes_load_file(type, dir, de->name);
+    }
   }
 
-  closedir(dir);
+  fb_closedir(dir);
 }
 
 /*
@@ -346,8 +357,9 @@ static void _muxes_load_dir ( const char *path, const char *type )
  */
 void muxes_init ( const char *path )
 {
-  /* TODO: Default */
-  if (!path) return;
+  /* Default */
+  if (!path)
+    path = "data/dvb-scan";
 
   /* Process */
   _muxes_load_dir(path, NULL);
