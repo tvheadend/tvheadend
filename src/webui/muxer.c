@@ -118,12 +118,15 @@ muxer_container_type_t
 muxer_container_txt2type(const char *str)
 {
   muxer_container_type_t mc;
+  
+  if(!str)
+    return MC_UNKNOWN;
 
   mc = str2val(str, container_name);
   if(mc == -1)
     return MC_UNKNOWN;
-  else
-    return mc;
+
+  return mc;
 }
 
 
