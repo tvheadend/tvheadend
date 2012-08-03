@@ -226,7 +226,7 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char
 
   case 0x01 ... 0x0b:
     // Fix for PL many channels using ISO6937 while specifying different encoding...
-    if (i!=5 && (src[0] + 4) == 5 && strcspn((const char*)src,"\xC1\xC2\xC3\xC4\xC5\xC7\xC8\xCB\xCD\xCE\xCF\xE8\xF8\xA1\xA3\xA6\xAC\xAF\xB1\xB3\xB6\xBC\xBF\xC6\xCA\xD1\xD3\xE6\xEA\xF1\xF3") < strlen((const char*)src))
+    if ((src[0] + 4) == 5 && strcspn((const char*)src,"\xC1\xC2\xC3\xC4\xC5\xC7\xC8\xCB\xCD\xCE\xCF\xE8\xF8\xA1\xA3\xA6\xAC\xAF\xB1\xB3\xB6\xBC\xBF\xC6\xCA\xD1\xD3\xE6\xEA\xF1\xF3") < strlen((const char*)src))
 	ic = convert_iso6937;
     else
     	ic = convert_iso_8859[src[0] + 4];
