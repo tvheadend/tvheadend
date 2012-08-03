@@ -476,6 +476,8 @@ http_stream_service(http_connection_t *hc, service_t *service)
 
   if(mc == MC_PASS) {
     streaming_queue_init(&sq, SMT_PACKET);
+    gh = NULL;
+    tsfix = NULL;
     st = &sq.sq_st;
     flags = SUBSCRIPTION_RAW_MPEGTS;
   } else {
@@ -528,6 +530,8 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
 
  if(mc == MC_PASS) {
    streaming_queue_init(&sq, SMT_PACKET);
+   gh = NULL;
+   tsfix = NULL;
    st = &sq.sq_st;
    flags = SUBSCRIPTION_RAW_MPEGTS;
  } else {
