@@ -398,7 +398,7 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
 
   if(!remain) {
     http_redirect(hc, "/playlist/channels");
-    return 302;
+    return HTTP_STATUS_FOUND;
   }
 
   nc = http_tokenize((char *)remain, components, 2, '/');
