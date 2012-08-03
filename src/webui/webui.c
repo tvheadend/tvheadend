@@ -342,6 +342,49 @@ http_channel_list_playlist(http_connection_t *hc)
 }
 
 
+
+/**
+ * Output a playlist of all recordings.
+ */
+static int
+http_dvr_list_playlist(http_connection_t *hc)
+{
+  htsbuf_queue_t *hq;
+  char buf[255];
+  dvr_entry_t *de;
+  const char *host;
+  off_t fsize;
+  size_t durration;
+  int bandwidth;
+
+  hq = &hc->hc_reply;
+  host = http_arg_get(&hc->hc_args, "Host");
+
+  htsbuf_qprintf(hq, "#EXTM3U\n");
+  LIST_FOREACH(de, &dvrentries, de_global_link) {
+    fsize = dvr_get_filesize(de);
+    if(!fsize)
+      continue;
+
+    durration  = de->de_stop - de->de_start;
+    durration += (de->de_stop_extra + de->de_start_extra)*60;
+    bandwidth = ((8*fsize) / (durration*1024.0));
+
+    htsbuf_qprintf(hq, "#EXTINF:%d,%s\n", durration, de->de_title);
+    
+    htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%d\n", durration);
+    htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%d,BANDWIDTH=%d\n", de->de_id, bandwidth);
+
+    snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
+    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
+		   access_ticket_create(buf));
+  }
+
+  http_output_content(hc, "audio/x-mpegurl");
+
+  return 0;
+}
+
 /**
  * Output a playlist with a http stream for a dvr entry (.m3u format)
  */
@@ -433,6 +476,8 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
     r = http_tag_list_playlist(hc);
   else if(!strcmp(components[0], "channels"))
     r = http_channel_list_playlist(hc);
+  else if(!strcmp(components[0], "recordings"))
+    r = http_dvr_list_playlist(hc);
   else {
     http_error(hc, HTTP_STATUS_BAD_REQUEST);
     r = HTTP_STATUS_BAD_REQUEST;
