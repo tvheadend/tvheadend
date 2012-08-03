@@ -36,6 +36,8 @@ static struct strtab container_audio_mime[] = {
   { "audio/x-matroska",         MC_MATROSKA },
   { "audio/x-mpegts",           MC_MPEGTS },
   { "audio/webm",               MC_WEBM },
+  { "audio/mpeg",               MC_MPEGPS },
+  { "application/octet-stream", MC_PASS },
 };
 
 
@@ -47,6 +49,8 @@ static struct strtab container_video_mime[] = {
   { "video/x-matroska",         MC_MATROSKA },
   { "video/x-mpegts",           MC_MPEGTS },
   { "video/webm",               MC_WEBM },
+  { "video/mpeg",               MC_MPEGPS },
+  { "application/octet-stream", MC_PASS },
 };
 
 
@@ -57,6 +61,7 @@ static struct strtab container_name[] = {
   { "unknown",  MC_UNKNOWN },
   { "matroska", MC_MATROSKA },
   { "mpegts",   MC_MPEGTS },
+  { "mpegps",   MC_MPEGPS },
   { "webm",     MC_WEBM },
   { "pass",     MC_PASS },
 };
@@ -69,6 +74,14 @@ static const char*
 muxer_container_mimetype(muxer_container_type_t mc, struct service *s)
 {
   const char *str;
+
+  // for passthrough, the mime type depends on the source
+  if(mc == MC_PASS) {
+    if(s->s_type == SERVICE_TYPE_V4L)
+      mc = MC_MPEGPS;
+    else
+      mc = MC_MPEGTS;
+  }
 
   if(s->s_servicetype == ST_RADIO)
     str = val2str(mc, container_audio_mime);

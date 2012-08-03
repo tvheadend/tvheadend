@@ -26,7 +26,8 @@ typedef enum {
   MC_MATROSKA    = 1,
   MC_MPEGTS      = 2,
   MC_WEBM        = 3,
-  MC_PASS        = 4,
+  MC_MPEGPS      = 4,
+  MC_PASS        = 5,
 } muxer_container_type_t;
 
 struct muxer;
