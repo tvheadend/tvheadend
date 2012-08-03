@@ -40,7 +40,7 @@
 #include "plumbing/tsfix.h"
 #include "plumbing/globalheaders.h"
 #include "epg.h"
-#include "lav_muxer.h"
+#include "muxer.h"
 
 struct filebundle *filebundles;
 
@@ -144,6 +144,10 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   socklen_t errlen = sizeof(err);
   epg_broadcast_t *eb = NULL;
 
+  mux = muxer_create(hc->hc_fd, s->ths_service, mc);
+  if(!mux)
+    run = 0;
+
   while(run) {
     pthread_mutex_lock(&sq->sq_mutex);
     sm = TAILQ_FIRST(&sq->sq_queue);
@@ -175,9 +179,6 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
     switch(sm->sm_type) {
     case SMT_PACKET:
-      if(!mux)
-	break;
-
       mux->m_write_pkt(mux, sm->sm_data);
       sm->sm_data = NULL;
 
@@ -192,31 +193,16 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
     case SMT_START:
       tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
-
-      mux = muxer_create(hc->hc_fd, s->ths_service, mc);
-      if(!mux) {
-	run = 0;
-	break;
-      }
-
       http_output_content(hc, mux->m_mime);
 
-      if(mux->m_init(mux, sm->sm_data, s->ths_channel) < 0) {
-	run = 0;
+      if(mux->m_init(mux, sm->sm_data, s->ths_channel) < 0)
 	break;
-      }
 
-      if(mux->m_open(mux) < 0) {
-	run = 0;
-	break;
-      }
-
+      mux->m_open(mux);
       break;
 
     case SMT_STOP:
-      if(mux)
-	mux->m_close(mux);
-
+      mux->m_close(mux);
       run = 0;
       break;
 
@@ -233,18 +219,17 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
       break;
 
     case SMT_MPEGTS:
+      mux->m_write_pkt(mux, sm->sm_data);
       break;
 
     case SMT_EXIT:
-      if(mux)
-	mux->m_close(mux);
-
+      mux->m_close(mux);
       run = 0;
       break;
     }
     streaming_msg_free(sm);
 
-    if(mux && mux->m_errors)
+    if(mux->m_errors)
       run = 0;
   }
 
