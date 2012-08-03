@@ -58,6 +58,7 @@
 #include "settings.h"
 #include "ffdecsa/FFdecsa.h"
 #include "muxes.h"
+#include "config2.h"
 
 int running;
 time_t dispatch_clock;
@@ -259,12 +260,11 @@ main(int argc, char **argv)
   char *p, *endp;
   uint32_t adapter_mask = 0xffffffff;
   int crash = 0;
-  const char *muxpath = NULL;
 
   // make sure the timezone is set
   tzset();
 
-  while((c = getopt(argc, argv, "Aa:fp:u:g:c:m:Chdr:j:s")) != -1) {
+  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:s")) != -1) {
     switch(c) {
     case 'a':
       adapter_mask = 0x0;
@@ -303,9 +303,6 @@ main(int argc, char **argv)
       break;
     case 'c':
       confpath = optarg;
-      break;
-    case 'm':
-      muxpath = optarg;
       break;
     case 'd':
       log_debug_to_console = 1;
@@ -386,7 +383,9 @@ main(int argc, char **argv)
    * Initialize subsystems
    */
 
-  muxes_init(muxpath);
+  config_init();
+
+  muxes_init();
 
   service_init();
 

@@ -76,6 +76,7 @@ SRCS =  src/main.c \
   src/huffman.c \
   src/filebundle.c \
   src/muxes.c \
+  src/config2.c \
 
 SRCS += src/epggrab/module.c\
   src/epggrab/channel.c\

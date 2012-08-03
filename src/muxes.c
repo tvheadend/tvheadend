@@ -32,6 +32,7 @@
 #include "dvb/dvb.h"
 #include "muxes.h"
 #include "filebundle.h"
+#include "config2.h"
 
 region_list_t regions_DVBC;
 region_list_t regions_DVBT;
@@ -95,7 +96,6 @@ tldcode2longname(const char *tld)
   for(i = 0; i < sizeof(tldlist) / sizeof(tldlist[0]); i++)
     if(!strcmp(tld, tldlist[i].code))
       return tldlist[i].name;
-  tvhlog(LOG_WARNING, "muxes", "unknown tld code %s", tld);
   return tld;
 }
 
@@ -197,7 +197,6 @@ static int _reg_cmp ( void *a, void *b )
 static region_t *_muxes_region_create 
   ( const char *type, const char *id, const char *desc )
 {
-  printf("_muxes_region_create(%s, %s, %s)\n", type, id, desc);
   region_t *reg;
   region_list_t *list = NULL;
   if      (!strcmp(type, "dvb-s")) list = &regions_DVBS;
@@ -344,7 +343,7 @@ static void _muxes_load_dir ( const char *path, const char *type )
     if (de->type == FB_DIR) {
       snprintf(p, sizeof(p), "%s/%s", path, de->name);
       _muxes_load_dir(p, de->name);
-    } else {
+    } else if (type) {
       _muxes_load_file(type, dir, de->name);
     }
   }
@@ -355,12 +354,9 @@ static void _muxes_load_dir ( const char *path, const char *type )
 /*
  * Initialise the mux list
  */
-void muxes_init ( const char *path )
+void muxes_init ( void )
 {
-  /* Default */
-  if (!path)
-    path = "data/dvb-scan";
-
-  /* Process */
+  const char *path = config_get_muxconfpath();
+  if (!path || !*path) path = "data/dvb-scan";
   _muxes_load_dir(path, NULL);
 } 
