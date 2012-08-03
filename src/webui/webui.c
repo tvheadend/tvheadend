@@ -356,35 +356,31 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
   int bandwidth = 0;
   const char *host = http_arg_get(&hc->hc_args, "Host");
 
-  if(de) {
-    durration  = de->de_stop - de->de_start;
-    durration += (de->de_stop_extra + de->de_start_extra)*60;
+  durration  = de->de_stop - de->de_start;
+  durration += (de->de_stop_extra + de->de_start_extra)*60;
     
-    fsize = dvr_get_filesize(de);
+  fsize = dvr_get_filesize(de);
 
-    if(fsize) {
-      bandwidth = ((8*fsize) / (durration*1024.0));
+  if(fsize) {
+    bandwidth = ((8*fsize) / (durration*1024.0));
 
-      htsbuf_qprintf(hq, "#EXTM3U\n");
-      htsbuf_qprintf(hq, "#EXTINF:%d,%s\n", durration, de->de_title);
+    htsbuf_qprintf(hq, "#EXTM3U\n");
+    htsbuf_qprintf(hq, "#EXTINF:%d,%s\n", durration, de->de_title);
+    
+    htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%d\n", durration);
+    htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%d,BANDWIDTH=%d\n", de->de_id, bandwidth);
 
-      htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%d\n", durration);
-      htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=%d\n", bandwidth);
+    snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
+    ticket_id = access_ticket_create(buf);
+    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, ticket_id);
 
-      snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
-      ticket_id = access_ticket_create(buf);
-      htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, ticket_id);
-
-      http_output_content(hc, "application/x-mpegURL");
-    }
-  }
-
-  if(!de || !fsize) {
-    http_error(hc, HTTP_STATUS_BAD_REQUEST);
-    return HTTP_STATUS_BAD_REQUEST;
+    http_output_content(hc, "application/x-mpegURL");
   } else {
-    return 0;
+    http_error(hc, HTTP_STATUS_NOT_FOUND);
+    return HTTP_STATUS_NOT_FOUND;
   }
+
+  return 0;
 }
 
 
