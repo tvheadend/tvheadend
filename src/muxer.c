@@ -166,7 +166,7 @@ muxer_create(muxer_container_type_t mc)
 
 
 /**
- *
+ * sanity wrapper arround m_mime()
  */
 const char*
 muxer_mime(muxer_t *m,  const struct streaming_start *ss)
@@ -179,7 +179,7 @@ muxer_mime(muxer_t *m,  const struct streaming_start *ss)
 
 
 /**
- *
+ * sanity wrapper arround m_init()
  */
 int
 muxer_init(muxer_t *m, const struct streaming_start *ss, const char *name)
@@ -192,7 +192,7 @@ muxer_init(muxer_t *m, const struct streaming_start *ss, const char *name)
 
 
 /**
- *
+ * sanity wrapper arround m_open_file()
  */
 int
 muxer_open_file(muxer_t *m, const char *filename)
@@ -205,7 +205,7 @@ muxer_open_file(muxer_t *m, const char *filename)
 
 
 /**
- *
+ * sanity wrapper arround m_open_stream()
  */
 int
 muxer_open_stream(muxer_t *m, int fd)
@@ -218,7 +218,7 @@ muxer_open_stream(muxer_t *m, int fd)
 
 
 /**
- *
+ * sanity wrapper arround m_close()
  */
 int
 muxer_close(muxer_t *m)
@@ -230,7 +230,7 @@ muxer_close(muxer_t *m)
 }
 
 /**
- *
+ * sanity wrapper arround m_destroy()
  */
 int
 muxer_destroy(muxer_t *m)
@@ -245,7 +245,7 @@ muxer_destroy(muxer_t *m)
 
 
 /**
- *
+ * sanity wrapppper arround m_write_meta()
  */
 int
 muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
@@ -258,7 +258,7 @@ muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
 
 
 /**
- *
+ * sanity wrapper arround m_write_pkt()
  */
 int
 muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
