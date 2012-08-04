@@ -336,16 +336,15 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     return;
   }
 
-  if(muxer_init(de->de_mux, ss, de->de_title)) {
+  if(muxer_init(de->de_mux, ss, de->de_ititle)) {
     dvr_rec_fatal_error(de, "Unable to init file");
     return;
   }
 
   if(cfg->dvr_flags & DVR_TAG_FILES) {
-    if(muxer_write_meta(de->de_mux, NULL)) {
+    if(muxer_write_meta(de->de_mux, de->de_bcast)) {
       dvr_rec_fatal_error(de, "Unable to write meta data");
-      // TODO: write meta tags
-      // return;
+      return;
     }
   }
 
