@@ -341,6 +341,79 @@ http_channel_list_playlist(http_connection_t *hc)
 }
 
 
+
+/**
+ * Output a playlist of all recordings.
+ */
+static int
+http_dvr_list_playlist(http_connection_t *hc)
+{
+  htsbuf_queue_t *hq;
+  char buf[255];
+  dvr_entry_t *de;
+  const char *host;
+  off_t fsize;
+  size_t durration;
+  int bandwidth;
+
+  hq = &hc->hc_reply;
+  host = http_arg_get(&hc->hc_args, "Host");
+
+  htsbuf_qprintf(hq, "#EXTM3U\n");
+  LIST_FOREACH(de, &dvrentries, de_global_link) {
+    fsize = dvr_get_filesize(de);
+    if(!fsize)
+      continue;
+
+    durration  = de->de_stop - de->de_start;
+    durration += (de->de_stop_extra + de->de_start_extra)*60;
+    bandwidth = ((8*fsize) / (durration*1024.0));
+
+    htsbuf_qprintf(hq, "#EXTINF:%d,%s\n", durration, de->de_title);
+    
+    htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%d\n", durration);
+    htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%d,BANDWIDTH=%d\n", de->de_id, bandwidth);
+
+    snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
+    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
+		   access_ticket_create(buf));
+  }
+
+  http_output_content(hc, "audio/x-mpegurl");
+
+  return 0;
+}
+
+
+/**
+ * Output a flat playlist with all channels
+ */
+static int
+http_channel_list_playlist(http_connection_t *hc)
+{
+  htsbuf_queue_t *hq;
+  char buf[255];
+  channel_t *ch;
+  const char *host;
+
+  hq = &hc->hc_reply;
+  host = http_arg_get(&hc->hc_args, "Host");
+
+  htsbuf_qprintf(hq, "#EXTM3U\n");
+  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
+    snprintf(buf, sizeof(buf), "/stream/channelid/%d", ch->ch_id);
+
+    htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ch->ch_name);
+    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
+		   access_ticket_create(buf));
+  }
+
+  http_output_content(hc, "audio/x-mpegurl");
+
+  return 0;
+}
+
+
 /**
  * Output a playlist with a http stream for a dvr entry (.m3u format)
  */
@@ -355,35 +428,30 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
   int bandwidth = 0;
   const char *host = http_arg_get(&hc->hc_args, "Host");
 
-  if(de) {
-    durration  = de->de_stop - de->de_start;
-    durration += (de->de_stop_extra + de->de_start_extra)*60;
+  durration  = de->de_stop - de->de_start;
+  durration += (de->de_stop_extra + de->de_start_extra)*60;
+  fsize = dvr_get_filesize(de);
+
+  if(fsize) {
+    bandwidth = ((8*fsize) / (durration*1024.0));
+
+    htsbuf_qprintf(hq, "#EXTM3U\n");
+    htsbuf_qprintf(hq, "#EXTINF:%d,%s\n", durration, de->de_title);
     
-    fsize = dvr_get_filesize(de);
+    htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%d\n", durration);
+    htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%d,BANDWIDTH=%d\n", de->de_id, bandwidth);
 
-    if(fsize) {
-      bandwidth = ((8*fsize) / (durration*1024.0));
+    snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
+    ticket_id = access_ticket_create(buf);
+    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, ticket_id);
 
-      htsbuf_qprintf(hq, "#EXTM3U\n");
-      htsbuf_qprintf(hq, "#EXTINF:%d,%s\n", durration, de->de_title);
-
-      htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%d\n", durration);
-      htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=%d\n", bandwidth);
-
-      snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
-      ticket_id = access_ticket_create(buf);
-      htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, ticket_id);
-
-      http_output_content(hc, "application/x-mpegURL");
-    }
-  }
-
-  if(!de || !fsize) {
-    http_error(hc, HTTP_STATUS_BAD_REQUEST);
-    return HTTP_STATUS_BAD_REQUEST;
+    http_output_content(hc, "application/x-mpegURL");
   } else {
-    return 0;
+    http_error(hc, HTTP_STATUS_NOT_FOUND);
+    return HTTP_STATUS_NOT_FOUND;
   }
+
+  return 0;
 }
 
 
@@ -401,7 +469,7 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
 
   if(!remain) {
     http_redirect(hc, "/playlist/channels");
-    return 302;
+    return HTTP_STATUS_FOUND;
   }
 
   nc = http_tokenize((char *)remain, components, 2, '/');
@@ -436,6 +504,8 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
     r = http_tag_list_playlist(hc);
   else if(!strcmp(components[0], "channels"))
     r = http_channel_list_playlist(hc);
+  else if(!strcmp(components[0], "recordings"))
+    r = http_dvr_list_playlist(hc);
   else {
     http_error(hc, HTTP_STATUS_BAD_REQUEST);
     r = HTTP_STATUS_BAD_REQUEST;
