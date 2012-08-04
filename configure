@@ -44,7 +44,6 @@ enable cwc
 enable avahi
 enable linuxdvb
 enable v4l
-enable libav
 
 for opt do
   optval="${opt#*=}"
