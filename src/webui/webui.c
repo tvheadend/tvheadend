@@ -34,7 +34,6 @@
 #include "http.h"
 #include "webui.h"
 #include "dvr/dvr.h"
-#include "dvr/mkmux.h"
 #include "filebundle.h"
 #include "psi.h"
 #include "plumbing/tsfix.h"
