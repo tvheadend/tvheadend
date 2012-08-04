@@ -133,14 +133,18 @@ SRCS += src/webui/webui.c \
 	src/webui/extjs.c \
 	src/webui/simpleui.c \
 	src/webui/statedump.c \
-	src/webui/muxer.c \
-	src/webui/tvh_muxer.c \
-	src/webui/pass_muxer.c \
+
+#
+# Stream muxing
+#
+SRCS += src/muxer.c \
+	src/muxer_pass.c \
+	src/muxer_tvh.c \
 
 #
 # libav dependent sources
 #
-SRCS-$(CONFIG_LIBAV) += src/webui/lav_muxer.c
+SRCS-$(CONFIG_LIBAV) += src/muxer_libav.c
 
 #
 # Extra modules

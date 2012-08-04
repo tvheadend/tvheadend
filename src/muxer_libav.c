@@ -21,8 +21,9 @@
 
 #include "tvheadend.h"
 #include "streaming.h"
+#include "epg.h"
 #include "channels.h"
-#include "lav_muxer.h"
+#include "muxer_libav.h"
 
 typedef struct lav_muxer {
   muxer_t;
@@ -308,7 +309,7 @@ lav_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
  * NOP
  */
 static int
-lav_muxer_write_meta(muxer_t *m, epg_broadcast_t *eb)
+lav_muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
 {
   lav_muxer_t *lm = (lav_muxer_t*)m;
 

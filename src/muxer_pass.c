@@ -20,7 +20,8 @@
 
 #include "tvheadend.h"
 #include "streaming.h"
-#include "pass_muxer.h"
+#include "epg.h"
+#include "muxer_pass.h"
 
 /**
  * Init the passthrough muxer
@@ -62,7 +63,7 @@ pass_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
  * NOP
  */
 static int
-pass_muxer_write_meta(muxer_t *m, epg_broadcast_t *eb)
+pass_muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
 {
   return m->m_errors;
 }

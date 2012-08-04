@@ -33,14 +33,14 @@ typedef enum {
 struct muxer;
 
 typedef struct muxer {
-  int  (*m_init)       (struct muxer *, 
+  int  (*m_init)       (struct muxer *,                          // Init The muxer
 			const struct streaming_start *,
-			const struct channel *);            // Init The muxer
-  int  (*m_open)       (struct muxer *);                    // Write header 
-  int  (*m_close)      (struct muxer *);                    // Write trailer
-  void (*m_destroy)    (struct muxer *);                    // Free the memory
-  int  (*m_write_meta) (struct muxer *, epg_broadcast_t *); // Append epg data
-  int  (*m_write_pkt)  (struct muxer *, struct th_pkt *);   // Append a media packet
+			const struct channel *);
+  int  (*m_open)       (struct muxer *);                         // Write header 
+  int  (*m_close)      (struct muxer *);                         // Write trailer
+  void (*m_destroy)    (struct muxer *);                         // Free the memory
+  int  (*m_write_meta) (struct muxer *, struct epg_broadcast *); // Append epg data
+  int  (*m_write_pkt)  (struct muxer *, struct th_pkt *);        // Append a media packet
 
   int                    m_fd;         // Socket fd
   int                    m_errors;     // Number of errors
@@ -48,7 +48,7 @@ typedef struct muxer {
   const char*            m_mime;       // Mime type for the muxer
 } muxer_t;
 
-const char *muxer_container_type2txt(muxer_container_type_t mc);
+const char *           muxer_container_type2txt(muxer_container_type_t mc);
 muxer_container_type_t muxer_container_txt2type(const char *str);
 
 muxer_t *muxer_create(int fd, struct service *s, muxer_container_type_t mc);

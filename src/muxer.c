@@ -21,10 +21,10 @@
 #include "tvheadend.h"
 #include "service.h"
 #include "muxer.h"
-#include "tvh_muxer.h"
-#include "pass_muxer.h"
+#include "muxer_tvh.h"
+#include "muxer_pass.h"
 #if ENABLE_LIBAV
-#include "lav_muxer.h"
+#include "muxer_libav.h"
 #endif
 
 

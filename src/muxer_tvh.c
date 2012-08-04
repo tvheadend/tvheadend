@@ -18,8 +18,9 @@
 
 #include "tvheadend.h"
 #include "streaming.h"
-#include "tvh_muxer.h"
+#include "epg.h"
 #include "dvr/mkmux.h"
+#include "muxer_tvh.h"
 
 typedef struct tvh_muxer {
   muxer_t;
@@ -73,7 +74,7 @@ tvh_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
  * Append meta data when a channel changes its programme
  */
 static int
-tvh_muxer_write_meta(muxer_t *m, epg_broadcast_t *eb)
+tvh_muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
 {
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
 
