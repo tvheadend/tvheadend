@@ -33,7 +33,7 @@
 #include "plumbing/tsfix.h"
 #include "plumbing/globalheaders.h"
 
-#include "mkmux.h"
+#include "muxer.h"
 
 /**
  *
@@ -312,12 +312,27 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     return;
   }
 
-  de->de_mkmux = mk_mux_create(de->de_filename, ss, de, 
-			       !!(cfg->dvr_flags & DVR_TAG_FILES));
+  de->de_mux = muxer_create(NULL, MC_MATROSKA);
+  if(!de->de_mux) {
+    dvr_rec_fatal_error(de, "Unable to create muxer");
+    return;
+  }
 
-  if(de->de_mkmux == NULL) {
+  if(muxer_open_file(de->de_mux, de->de_filename)) {
     dvr_rec_fatal_error(de, "Unable to open file");
     return;
+  }
+
+  if(muxer_init(de->de_mux, ss, de->de_title)) {
+    dvr_rec_fatal_error(de, "Unable to init file");
+    return;
+  }
+
+  if(cfg->dvr_flags & DVR_TAG_FILES) {
+    if(muxer_write_meta(de->de_mux, NULL)) {
+      dvr_rec_fatal_error(de, "Unable to write meta data");
+      return;
+    }
   }
 
   tvhlog(LOG_INFO, "dvr", "%s from "
@@ -408,10 +423,9 @@ dvr_thread(void *aux)
     case SMT_PACKET:
       if(dispatch_clock > de->de_start - (60 * de->de_start_extra)) {
 	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
-	if(de->de_mkmux != NULL) {
-	  mk_mux_write_pkt(de->de_mkmux, sm->sm_data);
+
+	if(!muxer_write_pkt(de->de_mux, sm->sm_data))
 	  sm->sm_data = NULL;
-	}
       }
       break;
 
@@ -558,10 +572,9 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
 static void
 dvr_thread_epilog(dvr_entry_t *de)
 {
-  if(de->de_mkmux) {
-    mk_mux_close(de->de_mkmux);
-    de->de_mkmux = NULL;
-  }
+  muxer_close(de->de_mux);
+  muxer_destroy(de->de_mux);
+  de->de_mux = NULL;
 
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
   if(cfg->dvr_postproc)

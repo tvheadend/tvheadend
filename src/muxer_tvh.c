@@ -19,6 +19,7 @@
 #include "tvheadend.h"
 #include "streaming.h"
 #include "epg.h"
+#include "channels.h"
 #include "dvr/mkmux.h"
 #include "muxer_tvh.h"
 
@@ -29,28 +30,42 @@ typedef struct tvh_muxer {
 
 
 /**
- * Init the muxer with streams and write header
+ * Init the builtin mkv muxer with streams
  */
 static int
-tvh_muxer_init(muxer_t* m, const struct streaming_start *ss, const struct channel *ch)
+tvh_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
 {
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
 
-  tm->tm_ref = mk_mux_stream_create(tm->m_fd, ss, ch);
-  if(!tm->tm_ref)
-    return -1;
+  tm->m_errors += mk_mux_init(tm->tm_ref, name, ss);
 
-  return 0;
+  return tm->m_errors;
 }
 
 
 /**
- * NOP
+ * Open the muxer as a stream muxer (using a non-seekable socket)
  */
 static int
-tvh_muxer_open(muxer_t *m)
+tvh_muxer_open_stream(muxer_t *m, int fd)
 {
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
+
+  tm->m_errors += mk_mux_open_stream(tm->tm_ref, fd);
+
+  return tm->m_errors;
+}
+
+
+/**
+ * Open a file
+ */
+static int
+tvh_muxer_open_file(muxer_t *m, const char *filename)
+{
+  tvh_muxer_t *tm = (tvh_muxer_t*)m;
+  
+  tm->m_errors += mk_mux_open_file(tm->tm_ref, filename);
 
   return tm->m_errors;
 }
@@ -78,7 +93,7 @@ tvh_muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
 {
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
 
-  tm->m_errors += mk_mux_append_meta(tm->tm_ref, eb);
+  tm->m_errors += mk_mux_write_meta(tm->tm_ref, NULL, eb);
 
   return tm->m_errors;
 }
@@ -92,7 +107,7 @@ tvh_muxer_close(muxer_t *m)
 {
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
 
-  mk_mux_close(tm->tm_ref);
+  tm->m_errors += mk_mux_close(tm->tm_ref);
 
   return tm->m_errors;
 }
@@ -129,11 +144,13 @@ tvh_muxer_create(muxer_container_type_t mc)
 
   tm = calloc(1, sizeof(tvh_muxer_t));
   tm->m_init         = tvh_muxer_init;
-  tm->m_open         = tvh_muxer_open;
+  tm->m_open_stream  = tvh_muxer_open_stream;
+  tm->m_open_file    = tvh_muxer_open_file;
   tm->m_close        = tvh_muxer_close;
   tm->m_destroy      = tvh_muxer_destroy;
   tm->m_write_meta   = tvh_muxer_write_meta;
   tm->m_write_pkt    = tvh_muxer_write_pkt;
+  tm->tm_ref         = mk_mux_create();
 
   return (muxer_t*)tm;
 }

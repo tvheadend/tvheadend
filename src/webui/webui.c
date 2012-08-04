@@ -143,10 +143,14 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   int err = 0;
   socklen_t errlen = sizeof(err);
   epg_broadcast_t *eb = NULL;
+  const char *name = NULL;
 
-  mux = muxer_create(hc->hc_fd, s->ths_service, mc);
-  if(!mux)
+  mux = muxer_create(s->ths_service, mc);
+  if(muxer_open_stream(mux, hc->hc_fd))
     run = 0;
+
+  if(s->ths_channel)
+    name = s->ths_channel->ch_name;
 
   while(run) {
     pthread_mutex_lock(&sq->sq_mutex);
@@ -179,7 +183,9 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
     switch(sm->sm_type) {
     case SMT_PACKET:
-      mux->m_write_pkt(mux, sm->sm_data);
+      if(muxer_write_pkt(mux, sm->sm_data))
+	break;
+
       sm->sm_data = NULL;
 
       if(s->ths_channel)
@@ -187,22 +193,20 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
       if(eb && event_id != eb->id) {
 	event_id = eb->id;
-	mux->m_write_meta(mux, eb);
+	muxer_write_meta(mux, eb);
       }
       break;
 
     case SMT_START:
       tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
-      http_output_content(hc, mux->m_mime);
 
-      if(mux->m_init(mux, sm->sm_data, s->ths_channel) < 0)
-	break;
+      if(!muxer_init(mux, sm->sm_data, name))
+	http_output_content(hc, mux->m_mime);
 
-      mux->m_open(mux);
       break;
 
     case SMT_STOP:
-      mux->m_close(mux);
+      muxer_close(mux);
       run = 0;
       break;
 
@@ -219,12 +223,12 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
       break;
 
     case SMT_MPEGTS:
-      mux->m_write_pkt(mux, sm->sm_data);
+      muxer_write_pkt(mux, sm->sm_data);
       sm->sm_data = NULL;
       break;
 
     case SMT_EXIT:
-      mux->m_close(mux);
+      muxer_close(mux);
       run = 0;
       break;
     }
@@ -234,8 +238,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
       run = 0;
   }
 
-  if(mux)
-    mux->m_destroy(mux);
+  muxer_destroy(mux);
 }
 
 

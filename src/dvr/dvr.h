@@ -184,7 +184,7 @@ typedef struct dvr_entry {
    * Initialized upon SUBSCRIPTION_TRANSPORT_RUN
    */
 
-  struct mk_mux *de_mkmux;
+  struct muxer *de_mux;
 
 } dvr_entry_t;
 

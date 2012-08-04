@@ -134,7 +134,7 @@ muxer_container_txt2type(const char *str)
  * Create a new muxer
  */
 muxer_t* 
-muxer_create(int fd, struct service *s, muxer_container_type_t mc)
+muxer_create(struct service *s, muxer_container_type_t mc)
 {
   muxer_t *m = NULL;
 
@@ -150,7 +150,6 @@ muxer_create(int fd, struct service *s, muxer_container_type_t mc)
     m = tvh_muxer_create(mc);
 
   if(m) {
-    m->m_fd        = fd;
     m->m_container = mc;
     m->m_mime      = muxer_container_mimetype(mc, s);
   }
@@ -158,3 +157,94 @@ muxer_create(int fd, struct service *s, muxer_container_type_t mc)
   return m;
 }
 
+
+/**
+ *
+ */
+int
+muxer_init(muxer_t *m, const struct streaming_start *ss, const char *name)
+{
+  if(!m)
+    return -1;
+
+  return m->m_init(m, ss, name);
+}
+
+
+/**
+ *
+ */
+int
+muxer_open_file(muxer_t *m, const char *filename)
+{
+  if(!m)
+    return -1;
+
+  return m->m_open_file(m, filename);
+}
+
+
+/**
+ *
+ */
+int
+muxer_open_stream(muxer_t *m, int fd)
+{
+  if(!m)
+    return -1;
+
+  return m->m_open_stream(m, fd);
+}
+
+
+/**
+ *
+ */
+int
+muxer_close(muxer_t *m)
+{
+  if(!m)
+    return -1;
+
+  return m->m_close(m);
+}
+
+/**
+ *
+ */
+int
+muxer_destroy(muxer_t *m)
+{
+  if(!m)
+    return -1;
+
+  m->m_destroy(m);
+
+  return 0;
+}
+
+
+/**
+ *
+ */
+int
+muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
+{
+  if(!m)
+    return -1;
+
+  return m->m_write_meta(m, eb);
+}
+
+
+/**
+ *
+ */
+int
+muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
+{
+  if(!m)
+    return -1;
+
+  return m->m_write_pkt(m, pkt);
+}
