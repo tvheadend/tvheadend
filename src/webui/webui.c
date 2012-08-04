@@ -135,14 +135,12 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   streaming_message_t *sm;
   int run = 1;
   muxer_t *mux = NULL;
-  uint32_t event_id = 0;
   int timeouts = 0;
   struct timespec ts;
   struct timeval  tp;
   int err = 0;
   socklen_t errlen = sizeof(err);
-  epg_broadcast_t *eb = NULL;
-  const char *name = NULL;
+  const char *name;
 
   mux = muxer_create(mc);
   if(muxer_open_stream(mux, hc->hc_fd))
@@ -150,6 +148,8 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
   if(s->ths_channel)
     name = s->ths_channel->ch_name;
+  else
+    name = "Live Stream";
 
   while(run) {
     pthread_mutex_lock(&sq->sq_mutex);
@@ -181,19 +181,11 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     pthread_mutex_unlock(&sq->sq_mutex);
 
     switch(sm->sm_type) {
+    case SMT_MPEGTS:
     case SMT_PACKET:
-      if(muxer_write_pkt(mux, sm->sm_data))
-	break;
+      if(!muxer_write_pkt(mux, sm->sm_data))
+	sm->sm_data = NULL;
 
-      sm->sm_data = NULL;
-
-      if(s->ths_channel)
-	eb = s->ths_channel->ch_epg_now;
-
-      if(eb && event_id != eb->id) {
-	event_id = eb->id;
-	muxer_write_meta(mux, eb);
-      }
       break;
 
     case SMT_START:
@@ -218,11 +210,6 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     case SMT_NOSTART:
       tvhlog(LOG_DEBUG, "webui",  "Couldn't start stream for %s", hc->hc_url_orig);
       run = 0;
-      break;
-
-    case SMT_MPEGTS:
-      muxer_write_pkt(mux, sm->sm_data);
-      sm->sm_data = NULL;
       break;
 
     case SMT_EXIT:
