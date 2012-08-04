@@ -219,8 +219,6 @@ dvr_entry_link(dvr_entry_t *de)
 
   de->de_refcnt = 1;
 
-  de->de_mc = cfg->dvr_mc;
-
   LIST_INSERT_HEAD(&dvrentries, de, de_global_link);
 
   time(&now);
@@ -283,6 +281,8 @@ static dvr_entry_t *_dvr_entry_create (
 
   ch = de->de_channel = ch;
   LIST_INSERT_HEAD(&de->de_channel->ch_dvrs, de, de_channel_link);
+
+  de->de_mc = cfg->dvr_mc;
 
   de->de_start   = start;
   de->de_stop    = stop;
@@ -947,6 +947,8 @@ dvr_init(void)
       if(cfg == NULL)
         cfg = dvr_config_create(s);
 
+      cfg->dvr_mc = htsmsg_get_u32_or_default(m, "container", MC_MATROSKA);
+
       htsmsg_get_s32(m, "pre-extra-time", &cfg->dvr_extra_time_pre);
       htsmsg_get_s32(m, "post-extra-time", &cfg->dvr_extra_time_post);
       htsmsg_get_u32(m, "retention-days", &cfg->dvr_retention_days);
@@ -1125,6 +1127,7 @@ dvr_save(dvr_config_t *cfg)
   if (cfg->dvr_config_name != NULL && strlen(cfg->dvr_config_name) != 0)
     htsmsg_add_str(m, "config_name", cfg->dvr_config_name);
   htsmsg_add_str(m, "storage", cfg->dvr_storage);
+  htsmsg_add_u32(m, "container", cfg->dvr_mc);
   htsmsg_add_u32(m, "retention-days", cfg->dvr_retention_days);
   htsmsg_add_u32(m, "pre-extra-time", cfg->dvr_extra_time_pre);
   htsmsg_add_u32(m, "post-extra-time", cfg->dvr_extra_time_post);
