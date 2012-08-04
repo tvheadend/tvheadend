@@ -119,10 +119,17 @@ static int _muxes_load_dvbt ( mux_t *mux, const char *line )
 {
   char bw[20], fec[20], fec2[20], qam[20], mode[20], guard[20], hier[20];
   int r;
+  uint32_t i;
 
-  r = sscanf(line, "%u %10s %10s %10s %10s %10s %10s %10s",
-	           &mux->freq, bw, fec, fec2, qam, mode, guard, hier);
-  if(r != 8) return 1;
+  if (*line == '2') {
+    r = sscanf(line+1, "%u %u %u %10s %10s %10s %10s %10s %10s %10s",
+	             &i, &i, &mux->freq, bw, fec, fec2, qam, mode, guard, hier);
+    if(r != 10) return 1;
+  } else {
+    r = sscanf(line, "%u %10s %10s %10s %10s %10s %10s %10s",
+	             &mux->freq, bw, fec, fec2, qam, mode, guard, hier);
+    if(r != 8) return 1;
+  }
 
   if ((mux->bw            = dvb_mux_str2bw(bw))       == -1) return 1;
   if ((mux->constellation = dvb_mux_str2qam(qam))     == -1) return 1;
