@@ -384,36 +384,6 @@ http_dvr_list_playlist(http_connection_t *hc)
   return 0;
 }
 
-
-/**
- * Output a flat playlist with all channels
- */
-static int
-http_channel_list_playlist(http_connection_t *hc)
-{
-  htsbuf_queue_t *hq;
-  char buf[255];
-  channel_t *ch;
-  const char *host;
-
-  hq = &hc->hc_reply;
-  host = http_arg_get(&hc->hc_args, "Host");
-
-  htsbuf_qprintf(hq, "#EXTM3U\n");
-  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-    snprintf(buf, sizeof(buf), "/stream/channelid/%d", ch->ch_id);
-
-    htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ch->ch_name);
-    htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
-		   access_ticket_create(buf));
-  }
-
-  http_output_content(hc, "audio/x-mpegurl");
-
-  return 0;
-}
-
-
 /**
  * Output a playlist with a http stream for a dvr entry (.m3u format)
  */
@@ -430,6 +400,7 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
 
   durration  = de->de_stop - de->de_start;
   durration += (de->de_stop_extra + de->de_start_extra)*60;
+    
   fsize = dvr_get_filesize(de);
 
   if(fsize) {
@@ -515,6 +486,7 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
 
   return r;
 }
+
 
 /**
  * Subscribes to a service and starts the streaming loop
