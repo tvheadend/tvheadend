@@ -81,7 +81,7 @@ muxer_container_mimetype(muxer_container_type_t mc, int video)
     str = val2str(mc, container_audio_mime);
 
   if(!str)
-    return "application/octet-stream";
+    str = val2str(MC_UNKNOWN, container_video_mime);
 
   return str;
 }

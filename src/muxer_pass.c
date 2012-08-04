@@ -41,7 +41,6 @@ pass_muxer_mime(muxer_t* m, const struct streaming_start *ss)
   const streaming_start_component_t *ssc;
   const source_info_t *si = &ss->ss_si;
   muxer_container_type_t mc = m->m_container;
-  pass_muxer_t *pm = (pass_muxer_t*)m;
   
   if(si->si_type == SERVICE_TYPE_V4L)
     mc = MC_MPEGPS;
@@ -64,7 +63,7 @@ pass_muxer_mime(muxer_t* m, const struct streaming_start *ss)
   else if(has_audio)
     return muxer_container_mimetype(mc, 0);
   else
-    return muxer_container_mimetype(pm->m_container, 1);
+    return muxer_container_mimetype(MC_UNKNOWN, 0);
 }
 
 /**
