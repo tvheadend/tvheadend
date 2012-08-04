@@ -620,10 +620,16 @@ mk_build_segment(mk_mux_t *mkm,
 {
   htsbuf_queue_t *p = htsbuf_queue_alloc(0);
 
-  mkm->segmentinfo_pos = p->hq_size;
+  assert(mkm->segment_pos != 0);
+
+  // Meta seek
+  if(mkm->seekable)
+    ebml_append_pad(p, 500);
+
+  mkm->segmentinfo_pos = mkm->segment_pos + p->hq_size;
   ebml_append_master(p, 0x1549a966, mk_build_segment_info(mkm));
-  
-  mkm->trackinfo_pos = p->hq_size;
+
+  mkm->trackinfo_pos = mkm->segment_pos + p->hq_size;
   ebml_append_master(p, 0x1654ae6b, mk_build_tracks(mkm, ss));
   
   return p;
@@ -788,9 +794,6 @@ mk_write_cues(mk_mux_t *mkm)
 mk_mux_t *mk_mux_create(void)
 {
   mk_mux_t *mkm = calloc(1, sizeof(struct mk_mux));
-  getuuid(mkm->uuid);
-  TAILQ_INIT(&mkm->cues);
-
   return mkm;
 }
 
@@ -840,14 +843,23 @@ mk_mux_init(mk_mux_t *mkm, const char *title, const struct streaming_start *ss)
 {
   htsbuf_queue_t q;
 
+  getuuid(mkm->uuid);
+
   if(title)
     mkm->title = strdup(title);
+  else
+    mkm->title = strdup(mkm->filename);
+
+  TAILQ_INIT(&mkm->cues);
 
   htsbuf_queue_init(&q, 0);
 
   ebml_append_master(&q, 0x1a45dfa3, mk_build_ebmlheader());
   
+  mkm->segment_header_pos = q.hq_size;
   htsbuf_appendq(&q, mk_build_segment_header(0));
+
+  mkm->segment_pos = q.hq_size;
   htsbuf_appendq(&q, mk_build_segment(mkm, ss));
  
   mk_write_queue(mkm, &q);
@@ -892,6 +904,9 @@ mk_mux_write_meta(mk_mux_t *mkm, const dvr_entry_t *de,
 		  const epg_broadcast_t *ebc)
 {
   htsbuf_queue_t q;
+
+  if(!mkm->metadata_pos)
+    mkm->metadata_pos = mkm->fdpos;
 
   htsbuf_queue_init(&q, 0);
   ebml_append_master(&q, 0x1254c367, _mk_build_metadata(de, ebc));

@@ -312,7 +312,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     return;
   }
 
-  de->de_mux = muxer_create(NULL, MC_MATROSKA);
+  de->de_mux = muxer_create(MC_MATROSKA);
   if(!de->de_mux) {
     dvr_rec_fatal_error(de, "Unable to create muxer");
     return;
@@ -331,7 +331,8 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   if(cfg->dvr_flags & DVR_TAG_FILES) {
     if(muxer_write_meta(de->de_mux, NULL)) {
       dvr_rec_fatal_error(de, "Unable to write meta data");
-      return;
+      // TODO: write meta tags
+      // return;
     }
   }
 

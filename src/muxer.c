@@ -68,25 +68,17 @@ static struct strtab container_name[] = {
 
 
 /**
- * Get the mime type for a service muxer
+ * Get the mime type for a container
  */
-static const char*
-muxer_container_mimetype(muxer_container_type_t mc, struct service *s)
+const char*
+muxer_container_mimetype(muxer_container_type_t mc, int video)
 {
   const char *str;
 
-  // for passthrough, the mime type depends on the source
-  if(mc == MC_PASS) {
-    if(s->s_type == SERVICE_TYPE_V4L)
-      mc = MC_MPEGPS;
-    else
-      mc = MC_MPEGTS;
-  }
-
-  if(s->s_servicetype == ST_RADIO)
-    str = val2str(mc, container_audio_mime);
-  else
+  if(video)
     str = val2str(mc, container_video_mime);
+  else
+    str = val2str(mc, container_audio_mime);
 
   if(!str)
     return "application/octet-stream";
@@ -134,7 +126,7 @@ muxer_container_txt2type(const char *str)
  * Create a new muxer
  */
 muxer_t* 
-muxer_create(struct service *s, muxer_container_type_t mc)
+muxer_create(muxer_container_type_t mc)
 {
   muxer_t *m = NULL;
 
@@ -148,10 +140,9 @@ muxer_create(struct service *s, muxer_container_type_t mc)
 
   if(!m)
     m = tvh_muxer_create(mc);
-
+  
   if(m) {
     m->m_container = mc;
-    m->m_mime      = muxer_container_mimetype(mc, s);
   }
 
   return m;
@@ -161,10 +152,23 @@ muxer_create(struct service *s, muxer_container_type_t mc)
 /**
  *
  */
+const char*
+muxer_mime(muxer_t *m,  const struct streaming_start *ss)
+{
+  if(!m || !ss)
+    return NULL;
+
+  return m->m_mime(m, ss);
+}
+
+
+/**
+ *
+ */
 int
 muxer_init(muxer_t *m, const struct streaming_start *ss, const char *name)
 {
-  if(!m)
+  if(!m || !ss)
     return -1;
 
   return m->m_init(m, ss, name);
@@ -177,7 +181,7 @@ muxer_init(muxer_t *m, const struct streaming_start *ss, const char *name)
 int
 muxer_open_file(muxer_t *m, const char *filename)
 {
-  if(!m)
+  if(!m || !filename)
     return -1;
 
   return m->m_open_file(m, filename);
@@ -190,7 +194,7 @@ muxer_open_file(muxer_t *m, const char *filename)
 int
 muxer_open_stream(muxer_t *m, int fd)
 {
-  if(!m)
+  if(!m || fd < 0)
     return -1;
 
   return m->m_open_stream(m, fd);
@@ -230,7 +234,7 @@ muxer_destroy(muxer_t *m)
 int
 muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
 {
-  if(!m)
+  if(!m || !eb)
     return -1;
 
   return m->m_write_meta(m, eb);
@@ -243,8 +247,10 @@ muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
 int
 muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
 {
-  if(!m)
+  if(!m || !pkt)
     return -1;
 
   return m->m_write_pkt(m, pkt);
 }
+
+

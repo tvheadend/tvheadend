@@ -30,6 +30,20 @@ typedef struct tvh_muxer {
 
 
 /**
+ * Figure out the mimetype
+ */
+static const char*
+tvh_muxer_mime(muxer_t* m, const struct streaming_start *ss)
+{
+  tvh_muxer_t *tm = (tvh_muxer_t*)m;
+
+  //TODO: iterate streams
+
+  return muxer_container_mimetype(tm->m_container, 1);
+}
+
+
+/**
  * Init the builtin mkv muxer with streams
  */
 static int
@@ -143,13 +157,14 @@ tvh_muxer_create(muxer_container_type_t mc)
   }
 
   tm = calloc(1, sizeof(tvh_muxer_t));
-  tm->m_init         = tvh_muxer_init;
   tm->m_open_stream  = tvh_muxer_open_stream;
   tm->m_open_file    = tvh_muxer_open_file;
-  tm->m_close        = tvh_muxer_close;
-  tm->m_destroy      = tvh_muxer_destroy;
+  tm->m_mime         = tvh_muxer_mime;
+  tm->m_init         = tvh_muxer_init;
   tm->m_write_meta   = tvh_muxer_write_meta;
   tm->m_write_pkt    = tvh_muxer_write_pkt;
+  tm->m_close        = tvh_muxer_close;
+  tm->m_destroy      = tvh_muxer_destroy;
   tm->tm_ref         = mk_mux_create();
 
   return (muxer_t*)tm;

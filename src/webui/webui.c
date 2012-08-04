@@ -145,7 +145,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   epg_broadcast_t *eb = NULL;
   const char *name = NULL;
 
-  mux = muxer_create(s->ths_service, mc);
+  mux = muxer_create(mc);
   if(muxer_open_stream(mux, hc->hc_fd))
     run = 0;
 
@@ -200,9 +200,8 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     case SMT_START:
       tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
 
-      if(!muxer_init(mux, sm->sm_data, name))
-	http_output_content(hc, mux->m_mime);
-
+      http_output_content(hc, muxer_mime(mux, sm->sm_data));
+      muxer_init(mux, sm->sm_data, name);
       break;
 
     case SMT_STOP:

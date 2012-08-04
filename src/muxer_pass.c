@@ -34,6 +34,42 @@ typedef struct pass_muxer {
 /**
  * Init the passthrough muxer with streams
  */
+static const char*
+pass_muxer_mime(muxer_t* m, const struct streaming_start *ss)
+{
+  int i, has_audio, has_video;
+  const streaming_start_component_t *ssc;
+  const source_info_t *si = &ss->ss_si;
+  muxer_container_type_t mc = m->m_container;
+  pass_muxer_t *pm = (pass_muxer_t*)m;
+  
+  if(si->si_type == SERVICE_TYPE_V4L)
+    mc = MC_MPEGPS;
+  else
+    mc = MC_MPEGTS;
+
+  has_audio = has_video = 0;
+  for(i=0; i < ss->ss_num_components; i++) {
+    ssc = &ss->ss_components[i];
+
+    if(ssc->ssc_disabled)
+      continue;
+
+    has_video |= SCT_ISVIDEO(ssc->ssc_type);
+    has_audio |= SCT_ISAUDIO(ssc->ssc_type);
+  }
+
+  if(has_video)
+    return muxer_container_mimetype(mc, 1);
+  else if(has_audio)
+    return muxer_container_mimetype(mc, 0);
+  else
+    return muxer_container_mimetype(pm->m_container, 1);
+}
+
+/**
+ * Init the passthrough muxer with streams
+ */
 static int
 pass_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
 {
@@ -149,13 +185,14 @@ pass_muxer_create(muxer_container_type_t mc)
   }
 
   pm = calloc(1, sizeof(pass_muxer_t));
-  pm->m_init         = pass_muxer_init;
   pm->m_open_stream  = pass_muxer_open_stream;
   pm->m_open_file    = pass_muxer_open_file;
-  pm->m_close        = pass_muxer_close;
-  pm->m_destroy      = pass_muxer_destroy;
+  pm->m_init         = pass_muxer_init;
+  pm->m_mime         = pass_muxer_mime;
   pm->m_write_meta   = pass_muxer_write_meta;
   pm->m_write_pkt    = pass_muxer_write_pkt;
+  pm->m_close        = pass_muxer_close;
+  pm->m_destroy      = pass_muxer_destroy;
 
   return (muxer_t *)pm;
 }
