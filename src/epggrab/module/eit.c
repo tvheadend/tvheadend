@@ -145,15 +145,20 @@ static dvb_string_conv_t _eit_freesat_conv[2] = {
  * Get string
  */
 static int _eit_get_string_with_len
-  ( epggrab_module_t *mod,
+  ( epggrab_module_t *m,
     char *dst, size_t dstlen, 
 		const uint8_t *src, size_t srclen, char *charset )
 {
   dvb_string_conv_t *cptr = NULL;
-  if (!strcmp("freesat", mod->id)) {
-    cptr = _eit_freesat_conv;
-  }
 
+  /* Enable huffman decode (for freeview and/or freesat) */
+  m = epggrab_module_find_by_id("uk_freeview");
+  if (m && m->enabled) cptr = _eit_freesat_conv;
+  else
+    m = epggrab_module_find_by_id("uk_freeview");
+    if (m && m->enabled) cptr = _eit_freesat_conv;
+
+  /* Convert */
   return dvb_get_string_with_len(dst, dstlen, src, srclen, charset, cptr);
 }
 
@@ -630,19 +635,33 @@ static void _eit_start
   ( epggrab_module_ota_t *m, th_dvb_mux_instance_t *tdmi )
 {
   epggrab_ota_mux_t *ota;
+
+  /* Disabled */
   if (!m->enabled) return;
+
+  /* Freeview (switch to EIT, ignore if explicitly enabled) */
+  if (!strcmp(m->id, "uk_freeview")) {
+    m = (epggrab_module_ota_t*)epggrab_module_find_by_id("eit");
+    if (m->enabled) return;
+  }
+
+  /* Register */
   if (!(ota = epggrab_ota_create(m, tdmi))) return;
   if (!ota->status) {
     ota->status  = calloc(1, sizeof(eit_status_list_t));
     ota->destroy = _eit_ota_destroy;
   }
-  if (!strcmp("freesat", m->id)) {
+
+  /* Add PIDs (freesat uses non-standard) */
+  if (!strcmp("uk_freesat", m->id)) {
 #ifdef IGNORE_TOO_SLOW
     tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 3841, NULL);
 #endif
     tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 3003, NULL);
-  } else
+  } else {
     tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 0x12, NULL);
+  }
+  tvhlog(LOG_DEBUG, m->id, "install table handlers");
 }
 
 static int _eit_enable ( void *m, uint8_t e )
@@ -654,7 +673,9 @@ static int _eit_enable ( void *m, uint8_t e )
 
   /* Register interest */
   if (e) {
-    if (!strcmp(mod->id, "freesat"))
+
+    /* Freesat (register fixed MUX) */
+    if (!strcmp(mod->id, "uk_freesat")) {
 #ifdef IGNORE_TOO_SLOW
       epggrab_ota_create_and_register_by_id((epggrab_module_ota_t*)mod,
                                             0, 2050,
@@ -663,6 +684,7 @@ static int _eit_enable ( void *m, uint8_t e )
       epggrab_ota_create_and_register_by_id((epggrab_module_ota_t*)mod,
                                             0, 2315,
                                             600, 3600, "Freesat");
+    }
   /* Remove all links */
   } else {
     epggrab_ota_destroy_by_module((epggrab_module_ota_t*)mod);
@@ -675,7 +697,9 @@ void eit_init ( void )
 {
   epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber", 1,
                             _eit_start, _eit_enable, NULL);
-  epggrab_module_ota_create(NULL, "freesat", "Freesat", 5,
+  epggrab_module_ota_create(NULL, "uk_freesat", "UK: Freesat", 5,
+                            _eit_start, _eit_enable, NULL);
+  epggrab_module_ota_create(NULL, "uk_freeview", "UK: Freeview", 5,
                             _eit_start, _eit_enable, NULL);
 }
 

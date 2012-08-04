@@ -39,9 +39,11 @@ TAILQ_HEAD(, epggrab_ota_mux) ota_mux_all;
 void epggrab_mux_start ( th_dvb_mux_instance_t *tdmi )
 {
   epggrab_module_t *m;
+  epggrab_module_ota_t *om;
   LIST_FOREACH(m, &epggrab_modules, link) {
     if (m->type == EPGGRAB_OTA) {
-      ((epggrab_module_ota_t*)m)->start((epggrab_module_ota_t*)m, tdmi);
+      om = (epggrab_module_ota_t*)m;
+      if (om->start) om->start(om, tdmi);
     }
   }
 }
