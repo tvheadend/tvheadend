@@ -42,6 +42,13 @@ extern pthread_mutex_t global_lock;
 extern pthread_mutex_t ffmpeg_lock;
 extern pthread_mutex_t fork_lock;
 
+typedef enum {
+  SERVICE_TYPE_DVB,
+  SERVICE_TYPE_IPTV,
+  SERVICE_TYPE_V4L,
+} service_type_t;
+
+
 typedef struct source_info {
   char *si_device;
   char *si_adapter;
@@ -49,6 +56,7 @@ typedef struct source_info {
   char *si_mux;
   char *si_provider;
   char *si_service;
+  service_type_t si_type;
 } source_info_t;
 
 static inline void

@@ -174,11 +174,7 @@ typedef struct service {
 
   LIST_ENTRY(service) s_hash_link;
 
-  enum {
-    SERVICE_TYPE_DVB,
-    SERVICE_TYPE_IPTV,
-    SERVICE_TYPE_V4L,
-  } s_type;
+  service_type_t s_type;
 
   enum {
     /**
