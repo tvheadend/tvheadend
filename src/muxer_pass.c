@@ -37,17 +37,14 @@ typedef struct pass_muxer {
 static const char*
 pass_muxer_mime(muxer_t* m, const struct streaming_start *ss)
 {
-  int i, has_audio, has_video;
+  int i;
+  int has_audio;
+  int has_video;
   const streaming_start_component_t *ssc;
-  const source_info_t *si = &ss->ss_si;
-  muxer_container_type_t mc = m->m_container;
   
-  if(si->si_type == SERVICE_TYPE_V4L)
-    mc = MC_MPEGPS;
-  else
-    mc = MC_MPEGTS;
+  has_audio = 0;
+  has_video = 0;
 
-  has_audio = has_video = 0;
   for(i=0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
 
@@ -59,9 +56,9 @@ pass_muxer_mime(muxer_t* m, const struct streaming_start *ss)
   }
 
   if(has_video)
-    return muxer_container_mimetype(mc, 1);
+    return muxer_container_mimetype(m->m_container, 1);
   else if(has_audio)
-    return muxer_container_mimetype(mc, 0);
+    return muxer_container_mimetype(m->m_container, 0);
   else
     return muxer_container_mimetype(MC_UNKNOWN, 0);
 }
@@ -73,6 +70,9 @@ static int
 pass_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
+
+  if(pm->m_container == MC_MPEGTS)
+    pm->m_errors += 0; //TODO: generate PMT
 
   return pm->m_errors;
 }
@@ -173,7 +173,7 @@ pass_muxer_destroy(muxer_t *m)
  * Create a new passthrough muxer
  */
 muxer_t*
-pass_muxer_create(muxer_container_type_t mc)
+pass_muxer_create(service_type_t s_type, muxer_container_type_t mc)
 {
   pass_muxer_t *pm;
 
@@ -192,6 +192,11 @@ pass_muxer_create(muxer_container_type_t mc)
   pm->m_write_pkt    = pass_muxer_write_pkt;
   pm->m_close        = pass_muxer_close;
   pm->m_destroy      = pass_muxer_destroy;
+
+  if(s_type == SERVICE_TYPE_V4L)
+    pm->m_container = MC_MPEGPS;
+  else
+    pm->m_container = MC_MPEGTS;
 
   return (muxer_t *)pm;
 }

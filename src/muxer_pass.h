@@ -19,8 +19,9 @@
 #ifndef PASS_MUXER_H_
 #define PASS_MUXER_H_
 
+#include "tvheadend.h"
 #include "muxer.h"
 
-muxer_t* pass_muxer_create(muxer_container_type_t mc);
+muxer_t* pass_muxer_create(service_type_t input_type, muxer_container_type_t output_type);
 
 #endif

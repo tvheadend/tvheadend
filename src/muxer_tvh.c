@@ -165,6 +165,7 @@ tvh_muxer_create(muxer_container_type_t mc)
   tm->m_write_pkt    = tvh_muxer_write_pkt;
   tm->m_close        = tvh_muxer_close;
   tm->m_destroy      = tvh_muxer_destroy;
+  tm->m_container    = mc;
   tm->tm_ref         = mk_mux_create();
 
   return (muxer_t*)tm;
