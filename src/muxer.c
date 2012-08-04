@@ -68,6 +68,18 @@ static struct strtab container_name[] = {
 
 
 /**
+ * Name of the container
+ */
+static struct strtab container_file_suffix[] = {
+  { "bin",  MC_UNKNOWN },
+  { "mkv",  MC_MATROSKA },
+  { "ts",   MC_MPEGTS },
+  { "mpeg", MC_MPEGPS },
+  { "webm", MC_WEBM },
+  { "bin",  MC_PASS },
+};
+
+/**
  * Get the mime type for a container
  */
 const char*
@@ -82,6 +94,23 @@ muxer_container_mimetype(muxer_container_type_t mc, int video)
 
   if(!str)
     str = val2str(MC_UNKNOWN, container_video_mime);
+
+  return str;
+}
+
+
+/**
+ * Get the suffix used in file names
+ */
+const char*
+muxer_container_suffix(muxer_container_type_t mc)
+{
+  const char *str;
+
+  str = val2str(mc, container_file_suffix);
+
+  if(!str)
+    str = val2str(MC_UNKNOWN, container_file_suffix);
 
   return str;
 }

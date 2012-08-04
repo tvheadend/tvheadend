@@ -59,26 +59,36 @@ dvr_rec_subscribe(dvr_entry_t *de)
 {
   char buf[100];
   int weight;
+  streaming_target_t *st;
+  int flags;
 
   assert(de->de_s == NULL);
-
-  snprintf(buf, sizeof(buf), "DVR: %s", de->de_title);
-
-  streaming_queue_init(&de->de_sq, 0);
-
-  pthread_create(&de->de_thread, NULL, dvr_thread, de);
 
   if(de->de_pri < 5)
     weight = prio2weight[de->de_pri];
   else
     weight = 300;
 
-  de->de_gh = globalheaders_create(&de->de_sq.sq_st);
+  snprintf(buf, sizeof(buf), "DVR: %s", de->de_title);
 
-  de->de_tsfix = tsfix_create(de->de_gh);
+  if(de->de_mc == MC_PASS) {
+    streaming_queue_init(&de->de_sq, SMT_PACKET);
+    de->de_gh = NULL;
+    de->de_tsfix = NULL;
+    st = &de->de_sq.sq_st;
+    flags = SUBSCRIPTION_RAW_MPEGTS;
+  } else {
+    streaming_queue_init(&de->de_sq, 0);
+    de->de_gh = globalheaders_create(&de->de_sq.sq_st);
+    de->de_tsfix = tsfix_create(de->de_gh);
+    st = de->de_tsfix;
+    flags = 0;
+  }
 
   de->de_s = subscription_create_from_channel(de->de_channel, weight,
-					      buf, de->de_tsfix, 0);
+					      buf, st, flags);
+
+  pthread_create(&de->de_thread, NULL, dvr_thread, de);
 }
 
 /**
@@ -96,8 +106,11 @@ dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
   pthread_join(de->de_thread, NULL);
   de->de_s = NULL;
 
-  tsfix_destroy(de->de_tsfix);
-  globalheaders_destroy(de->de_gh);
+  if(de->de_tsfix)
+    tsfix_destroy(de->de_tsfix);
+
+  if(de->de_gh)
+    globalheaders_destroy(de->de_gh);
 
   de->de_last_error = stopcode;
 }
@@ -237,7 +250,7 @@ pvr_generate_filename(dvr_entry_t *de)
   /* Construct final name */
   
   snprintf(fullname, sizeof(fullname), "%s/%s.%s",
-	   path, filename, cfg->dvr_file_postfix);
+	   path, filename, muxer_container_suffix(de->de_mc));
 
   while(1) {
     if(stat(fullname, &st) == -1) {
@@ -252,7 +265,7 @@ pvr_generate_filename(dvr_entry_t *de)
     tally++;
 
     snprintf(fullname, sizeof(fullname), "%s/%s-%d.%s",
-	     path, filename, tally, cfg->dvr_file_postfix);
+	     path, filename, tally, muxer_container_suffix(de->de_mc));
   }
 
   tvh_str_set(&de->de_filename, fullname);
@@ -312,7 +325,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     return;
   }
 
-  de->de_mux = muxer_create(MC_MATROSKA);
+  de->de_mux = muxer_create(de->de_mc);
   if(!de->de_mux) {
     dvr_rec_fatal_error(de, "Unable to create muxer");
     return;
@@ -421,6 +434,7 @@ dvr_thread(void *aux)
     pthread_mutex_unlock(&sq->sq_mutex);
 
     switch(sm->sm_type) {
+    case SMT_MPEGTS:
     case SMT_PACKET:
       if(dispatch_clock > de->de_start - (60 * de->de_start_extra)) {
 	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
@@ -497,9 +511,6 @@ dvr_thread(void *aux)
 	       de->de_filename ?: de->de_title,
 	       streaming_code2txt(sm->sm_code));
       }
-      break;
-
-    case SMT_MPEGTS:
       break;
 
     case SMT_EXIT:
