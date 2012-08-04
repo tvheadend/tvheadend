@@ -141,10 +141,6 @@ SRCS += src/muxer.c \
 	src/muxer_pass.c \
 	src/muxer_tvh.c \
 
-#
-# libav dependent sources
-#
-SRCS-$(CONFIG_LIBAV) += src/muxer_libav.c
 
 #
 # Extra modules

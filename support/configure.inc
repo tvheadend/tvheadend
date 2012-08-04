@@ -25,7 +25,6 @@ CONFIG_LIST="
  linuxdvb
  v4l
  execinfo
- libav
 "
 
 die() {

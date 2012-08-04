@@ -23,9 +23,6 @@
 #include "muxer.h"
 #include "muxer_tvh.h"
 #include "muxer_pass.h"
-#if ENABLE_LIBAV
-#include "muxer_libav.h"
-#endif
 
 
 /**
@@ -35,7 +32,6 @@ static struct strtab container_audio_mime[] = {
   { "application/octet-stream", MC_UNKNOWN },
   { "audio/x-matroska",         MC_MATROSKA },
   { "audio/x-mpegts",           MC_MPEGTS },
-  { "audio/webm",               MC_WEBM },
   { "audio/mpeg",               MC_MPEGPS },
   { "application/octet-stream", MC_PASS },
 };
@@ -48,7 +44,6 @@ static struct strtab container_video_mime[] = {
   { "application/octet-stream", MC_UNKNOWN },
   { "video/x-matroska",         MC_MATROSKA },
   { "video/x-mpegts",           MC_MPEGTS },
-  { "video/webm",               MC_WEBM },
   { "video/mpeg",               MC_MPEGPS },
   { "application/octet-stream", MC_PASS },
 };
@@ -62,7 +57,6 @@ static struct strtab container_name[] = {
   { "matroska", MC_MATROSKA },
   { "mpegts",   MC_MPEGTS },
   { "mpegps",   MC_MPEGPS },
-  { "webm",     MC_WEBM },
   { "pass",     MC_PASS },
 };
 
@@ -75,7 +69,6 @@ static struct strtab container_file_suffix[] = {
   { "mkv",  MC_MATROSKA },
   { "ts",   MC_MPEGTS },
   { "mpeg", MC_MPEGPS },
-  { "webm", MC_WEBM },
   { "bin",  MC_PASS },
 };
 
@@ -162,17 +155,11 @@ muxer_create(muxer_container_type_t mc)
   if(mc == MC_PASS)
     m = pass_muxer_create(mc);
 
-#if ENABLE_LIBAV
-  if(!m)
-    m = lav_muxer_create(mc);
-#endif
-
   if(!m)
     m = tvh_muxer_create(mc);
   
-  if(m) {
+  if(m)
     m->m_container = mc;
-  }
 
   return m;
 }

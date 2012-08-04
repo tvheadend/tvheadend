@@ -186,21 +186,6 @@ else
 fi
 
 #
-# HTTP Muxing
-#
-if enabled libav; then
-    if pkg-config --atleast-version 50.43.0 libavformat; then
-        echo >>${CONFIG_MAK} "LDFLAGS_cfg += " `pkg-config --libs libavformat`
-        echo >>${CONFIG_MAK} "CFLAGS_cfg += " `pkg-config --cflags libavformat`
-        echo "Using libavformat:     `pkg-config --modversion libavformat`"
-    else
-        echo "libavformat 50.43.0 or newer not found."
-        echo "To compile without it, configure with: --disable-libav"
-        die
-    fi
-fi
-
-#
 # Finalize
 #
 cat >> ${CONFIG_MAK} << EOF 
