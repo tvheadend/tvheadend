@@ -1073,7 +1073,7 @@ dvr_config_create(const char *name)
   cfg = calloc(1, sizeof(dvr_config_t));
   cfg->dvr_config_name = strdup(name);
   cfg->dvr_retention_days = 31;
-  cfg->dvr_mc = MC_PASS;
+  cfg->dvr_mc = MC_MATROSKA;
   cfg->dvr_flags = DVR_TAG_FILES;
 
   /* series link support */
