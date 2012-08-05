@@ -503,6 +503,8 @@ http_stream_service(http_connection_t *hc, service_t *service)
   int flags;
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
+  if(mc == MC_UNKNOWN)
+    mc = MC_MATROSKA;
 
   if(mc == MC_PASS) {
     streaming_queue_init(&sq, SMT_PACKET);
@@ -557,6 +559,8 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   muxer_container_type_t mc;
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
+  if(mc == MC_UNKNOWN)
+    mc = MC_MATROSKA;
 
  if(mc == MC_PASS) {
    streaming_queue_init(&sq, SMT_PACKET);
