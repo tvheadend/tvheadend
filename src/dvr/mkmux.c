@@ -334,7 +334,7 @@ mk_write_to_fd(mk_mux_t *mkm, htsbuf_queue_t *hq)
     ssize_t r;
     int iovcnt = i < dvr_iov_max ? i : dvr_iov_max;
     if((r = writev(mkm->fd, iov, iovcnt)) == -1) {
-      mkm->error = errno;
+      mkm->error++;
       return;
     }
     mkm->fdpos += r;
@@ -597,12 +597,12 @@ mk_write_metaseek(mk_mux_t *mkm, int first)
   } else if(mkm->seekable) {
     off_t prev = mkm->fdpos;
     if(lseek(mkm->fd, mkm->segment_pos, SEEK_SET) == (off_t) -1)
-      mkm->error = errno;
+      mkm->error++;
 
     mk_write_queue(mkm, &q);
     mkm->fdpos = prev;
     if(lseek(mkm->fd, mkm->fdpos, SEEK_SET) == (off_t) -1)
-      mkm->error = errno;
+      mkm->error++;
    
   }
   htsbuf_queue_flush(&q);
