@@ -23,14 +23,25 @@
 #include "tvheadend.h"
 #include "streaming.h"
 #include "epg.h"
+#include "psi.h"
 #include "muxer_pass.h"
 
 typedef struct pass_muxer {
   muxer_t;
-  int pm_fd;
-  int pm_seekable;
-  int pm_error;
+
+  /* File descriptor stuff */
+  int   pm_fd;
+  int   pm_seekable;
+  int   pm_error;
+
+  /* Filename is also used for logging */
   char *pm_filename;
+
+  /* TS muxing */
+  uint8_t  *pm_pat;
+  uint8_t  *pm_pmt;
+  uint16_t pm_pmt_pid;
+  uint16_t pm_pcr_pid;
 } pass_muxer_t;
 
 
@@ -66,6 +77,7 @@ pass_muxer_mime(muxer_t* m, const struct streaming_start *ss)
     return muxer_container_mimetype(MC_UNKNOWN, 0);
 }
 
+
 /**
  * Init the passthrough muxer with streams
  */
@@ -74,8 +86,32 @@ pass_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
-  if(pm->m_container == MC_MPEGTS)
-    pm->m_errors += 0; //TODO: generate PMT
+  if(pm->m_container == MC_MPEGTS) {
+    
+    memset(pm->pm_pat, 0xff, 188);
+    pm->pm_pat[0] = 0x47;
+    pm->pm_pat[1] = 0x40;
+    pm->pm_pat[2] = 0x00;
+    pm->pm_pat[3] = 0x10;
+    pm->pm_pat[4] = 0x00;
+    if(psi_build_pat(NULL, pm->pm_pat+5, 183, pm->pm_pmt_pid) < 0) {
+      pm->m_errors++;
+      tvhlog(LOG_ERR, "pass", "%s: Unable to build pat", pm->pm_filename);
+      return -1;
+    }
+
+    memset(pm->pm_pmt, 0xff, 188);
+    pm->pm_pmt[0] = 0x47;
+    pm->pm_pmt[1] = 0x40 | (pm->pm_pmt_pid >> 8);
+    pm->pm_pmt[2] = 0x00 | (pm->pm_pmt_pid >> 0);
+    pm->pm_pmt[3] = 0x10;
+    pm->pm_pmt[4] = 0x00;
+    if(psi_build_pmt(ss, pm->pm_pmt+5, 183, pm->pm_pcr_pid) < 0) {
+      pm->m_errors++;
+      tvhlog(LOG_ERR, "pass", "%s: Unable to build pmt", pm->pm_filename);
+      return -1;
+    }
+  }
 
   return 0;
 }
@@ -123,21 +159,52 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
 
 
 /**
+ * Write TS packets to the file descriptor
+ */
+static void
+pass_muxer_write_ts(muxer_t *m, const void *ts)
+{
+  pass_muxer_t *pm = (pass_muxer_t*)m;
+
+  if(pm->pm_error) {
+    pm->m_errors++;
+  } else if(write(pm->pm_fd, ts, 188) != 188) {
+    pm->pm_error = errno;
+    tvhlog(LOG_ERR, "pass", "%s: Write failed -- %s", pm->pm_filename, 
+	   strerror(errno));
+    m->m_errors++;
+  }
+}
+
+
+/**
  * Write a packet directly to the file descriptor
  */
 static int
 pass_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
+  static uint32_t ic = 0; // Injection counter
+  static uint32_t pc = 0; // Packet counter
 
-  if(pm->pm_error) {
-    pm->m_errors++;
-  } else if(write(pm->pm_fd, pkt, 188) != 188) {
-    pm->pm_error = errno;
-    tvhlog(LOG_ERR, "pass", "%s: Write failed -- %s", pm->pm_filename, 
-	   strerror(errno));
-    m->m_errors++;
+  // TODO: how often do you send the injected packets?
+  //       Once packet? once every 1000 packets, 10k packets?
+  //       Perhaps messure in seconds instead?
+  //       For now, every 1000 packets will do.
+
+#define INJECTION_RATE 1000
+
+  // Inject pmt and pat into the stream
+  if((pc % INJECTION_RATE) == 0) {
+    pm->pm_pat[3] = (pm->pm_pat[3] & 0xf0) | (ic & 0x0f);
+    pm->pm_pmt[3] = (pm->pm_pat[3] & 0xf0) | (ic & 0x0f);
+    pass_muxer_write_ts(m, pm->pm_pmt);
+    pass_muxer_write_ts(m, pm->pm_pat);
+    ic++;
   }
+
+  pass_muxer_write_ts(m, pkt);
+  pc++;
 
   pkt_ref_dec(pkt);
 
@@ -186,6 +253,12 @@ pass_muxer_destroy(muxer_t *m)
   if(pm->pm_filename)
     free(pm->pm_filename);
 
+  if(pm->pm_pmt)
+    free(pm->pm_pmt);
+
+  if(pm->pm_pat)
+    free(pm->pm_pat);
+
   free(pm);
 }
 
@@ -194,7 +267,7 @@ pass_muxer_destroy(muxer_t *m)
  * Create a new passthrough muxer
  */
 muxer_t*
-pass_muxer_create(service_type_t s_type, muxer_container_type_t mc)
+pass_muxer_create(service_t *s, muxer_container_type_t mc)
 {
   pass_muxer_t *pm;
 
@@ -214,10 +287,15 @@ pass_muxer_create(service_type_t s_type, muxer_container_type_t mc)
   pm->m_close        = pass_muxer_close;
   pm->m_destroy      = pass_muxer_destroy;
 
-  if(s_type == SERVICE_TYPE_V4L)
+  if(s->s_type == SERVICE_TYPE_V4L) {
     pm->m_container = MC_MPEGPS;
-  else
+  } else {
     pm->m_container = MC_MPEGTS;
+    pm->pm_pmt_pid = s->s_pmt_pid;
+    pm->pm_pcr_pid = s->s_pcr_pid;
+    pm->pm_pat = malloc(188);
+    pm->pm_pmt = malloc(188);
+  }
 
   return (muxer_t *)pm;
 }

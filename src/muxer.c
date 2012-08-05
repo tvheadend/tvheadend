@@ -148,12 +148,12 @@ muxer_container_txt2type(const char *str)
  * Create a new muxer
  */
 muxer_t* 
-muxer_create(service_type_t s_type, muxer_container_type_t mc)
+muxer_create(service_t *s, muxer_container_type_t mc)
 {
   muxer_t *m = NULL;
 
   if(mc == MC_PASS)
-    m = pass_muxer_create(s_type, mc);
+    m = pass_muxer_create(s, mc);
 
   if(!m)
     m = tvh_muxer_create(mc);

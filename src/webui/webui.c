@@ -142,7 +142,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   socklen_t errlen = sizeof(err);
   const char *name;
 
-  mux = muxer_create(s->ths_service->s_type, mc);
+  mux = muxer_create(s->ths_service, mc);
   if(muxer_open_stream(mux, hc->hc_fd))
     run = 0;
 

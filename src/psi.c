@@ -704,7 +704,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
  * PMT generator
  */
 int
-psi_build_pmt(streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid)
+psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid)
 {
   int c, tlen, dlen, l, i;
   uint8_t *buf, *buf1;
@@ -733,7 +733,7 @@ psi_build_pmt(streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid)
   tlen = 12;
 
   for(i = 0; i < ss->ss_num_components; i++) {
-    streaming_start_component_t *ssc = &ss->ss_components[i];
+    const streaming_start_component_t *ssc = &ss->ss_components[i];
 
     switch(ssc->ssc_type) {
     case SCT_MPEG2VIDEO:
