@@ -39,9 +39,9 @@
 #include "service.h"
 
 /* Thread protection */
-int                   epggrab_confver;
+static int                   epggrab_confver;
 pthread_mutex_t       epggrab_mutex;
-pthread_cond_t        epggrab_cond;
+static pthread_cond_t        epggrab_cond;
 
 /* Config */
 uint32_t              epggrab_interval;
@@ -346,6 +346,9 @@ void epggrab_init ( void )
   extern TAILQ_HEAD(, epggrab_ota_mux) ota_mux_all;
   TAILQ_INIT(&ota_mux_all);
 
+  pthread_mutex_init(&epggrab_mutex, NULL);
+  pthread_cond_init(&epggrab_cond, NULL);
+  
   /* Initialise modules */
   eit_init();
   xmltv_init();
@@ -362,5 +365,6 @@ void epggrab_init ( void )
   pthread_attr_init(&tattr);
   pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
   pthread_create(&tid, &tattr, _epggrab_internal_thread, NULL);
+  pthread_attr_destroy(&tattr);
 }
 
