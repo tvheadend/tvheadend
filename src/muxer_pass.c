@@ -74,7 +74,7 @@ pass_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
   if(pm->m_container == MC_MPEGTS)
     pm->m_errors += 0; //TODO: generate PMT
 
-  return pm->m_errors;
+  return 0;
 }
 
 
@@ -89,7 +89,7 @@ pass_muxer_open_stream(muxer_t *m, int fd)
   pm->pm_fd       = fd;
   pm->pm_seekable = 0;
 
-  return pm->m_errors;
+  return 0;
 }
 
 
@@ -103,13 +103,15 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
   fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0777);
-  if(fd < 0)
+  if(fd < 0) {
     pm->m_errors++;
+    return -1;
+  }
 
   pm->pm_seekable = 1;
   pm->pm_fd       = fd;
 
-  return pm->m_errors;
+  return 0;
 }
 
 
@@ -136,9 +138,7 @@ pass_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
 static int
 pass_muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
 {
-  pass_muxer_t *pm = (pass_muxer_t*)m;
-
-  return pm->m_errors;
+  return 0;
 }
 
 
@@ -150,10 +150,12 @@ pass_muxer_close(muxer_t *m)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
-  if(pm->pm_seekable && close(pm->pm_fd))
+  if(pm->pm_seekable && close(pm->pm_fd)) {
     pm->m_errors++;
+    return -1;
+  }
 
-  return pm->m_errors;
+  return 0;
 }
 
 
