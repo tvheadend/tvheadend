@@ -335,8 +335,6 @@ mk_write_to_fd(mk_mux_t *mkm, htsbuf_queue_t *hq)
     int iovcnt = i < dvr_iov_max ? i : dvr_iov_max;
     if((r = writev(mkm->fd, iov, iovcnt)) == -1) {
       mkm->error = errno;
-      tvhlog(LOG_ERR, "MKV", "%s: Unable to write -- %s",
-	     mkm->filename, strerror(errno));
       return;
     }
     mkm->fdpos += r;
