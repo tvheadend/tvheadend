@@ -313,7 +313,7 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
 /**
  *
  */
-static void
+static int
 mk_write_to_fd(mk_mux_t *mkm, htsbuf_queue_t *hq)
 {
   htsbuf_data_t *hd;
@@ -335,12 +335,14 @@ mk_write_to_fd(mk_mux_t *mkm, htsbuf_queue_t *hq)
     int iovcnt = i < dvr_iov_max ? i : dvr_iov_max;
     if((r = writev(mkm->fd, iov, iovcnt)) == -1) {
       mkm->error = errno;
-      return;
+      return -1;
     }
     mkm->fdpos += r;
     i -= iovcnt;
     iov += iovcnt;
   } while(i);
+
+  return 0;
 }
 
 
@@ -350,8 +352,9 @@ mk_write_to_fd(mk_mux_t *mkm, htsbuf_queue_t *hq)
 static void
 mk_write_queue(mk_mux_t *mkm, htsbuf_queue_t *q)
 {
-  if(!mkm->error)
-    mk_write_to_fd(mkm, q);
+  if(!mkm->error && mk_write_to_fd(mkm, q))
+    tvhlog(LOG_ERR, "mkv", "%s: Write failed -- %s", mkm->filename, 
+	   strerror(errno));
 
   htsbuf_queue_flush(q);
 }
@@ -821,7 +824,7 @@ mk_mux_open_file(mk_mux_t *mkm, const char *filename)
   fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0777);
   if(fd < 0) {
     mkm->error = errno;
-    tvhlog(LOG_ERR, "MKV", "%s: Unable to create file, open failed -- %s",
+    tvhlog(LOG_ERR, "mkv", "%s: Unable to create file, open failed -- %s",
 	   mkm->filename, strerror(errno));
     return mkm->error;
   }
@@ -935,7 +938,7 @@ mk_mux_close(mk_mux_t *mkm)
       mk_write_master(mkm, 0x1549a966, mk_build_segment_info(mkm));
     else {
       mkm->error = errno;
-      tvhlog(LOG_ERR, "MKV", "%s: Unable to write duration, seek failed -- %s",
+      tvhlog(LOG_ERR, "mkv", "%s: Unable to write duration, seek failed -- %s",
 	     mkm->filename, strerror(errno));
     }
 
@@ -944,13 +947,13 @@ mk_mux_close(mk_mux_t *mkm)
       mk_write_segment_header(mkm, totsize - mkm->segment_header_pos - 12);
     } else {
       mkm->error = errno;
-      tvhlog(LOG_ERR, "MKV", "%s: Unable to write total size, seek failed -- %s",
+      tvhlog(LOG_ERR, "mkv", "%s: Unable to write total size, seek failed -- %s",
 	     mkm->filename, strerror(errno));
     }
 
     if(close(mkm->fd)) {
       mkm->error = errno;
-      tvhlog(LOG_ERR, "MKV", "%s: Unable to close the file descriptor, close failed -- %s",
+      tvhlog(LOG_ERR, "mkv", "%s: Unable to close the file descriptor, close failed -- %s",
 	     mkm->filename, strerror(errno));
     }
   }

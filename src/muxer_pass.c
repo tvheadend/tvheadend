@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -28,6 +29,8 @@ typedef struct pass_muxer {
   muxer_t;
   int pm_fd;
   int pm_seekable;
+  int pm_error;
+  char *pm_filename;
 } pass_muxer_t;
 
 
@@ -88,6 +91,7 @@ pass_muxer_open_stream(muxer_t *m, int fd)
 
   pm->pm_fd       = fd;
   pm->pm_seekable = 0;
+  pm->pm_filename = strdup("Live stream");
 
   return 0;
 }
@@ -104,13 +108,16 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
 
   fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0777);
   if(fd < 0) {
+    pm->pm_error = errno;
+    tvhlog(LOG_ERR, "pass", "%s: Unable to create file, open failed -- %s",
+	   filename, strerror(errno));
     pm->m_errors++;
     return -1;
   }
 
   pm->pm_seekable = 1;
   pm->pm_fd       = fd;
-
+  pm->pm_filename = strdup(filename);
   return 0;
 }
 
@@ -121,19 +128,20 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
 static int
 pass_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
 {
-  int r;
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
-  r = write(pm->pm_fd, pkt, 188);
+  if(pm->pm_error) {
+    pm->m_errors++;
+  } else if(write(pm->pm_fd, pkt, 188) != 188) {
+    pm->pm_error = errno;
+    tvhlog(LOG_ERR, "pass", "%s: Write failed -- %s", pm->pm_filename, 
+	   strerror(errno));
+    m->m_errors++;
+  }
 
   pkt_ref_dec(pkt);
 
-  if(r != 188) {
-    m->m_errors++;
-    return -1;
-  }
-
-  return 0;
+  return pm->pm_error;
 }
 
 
@@ -156,6 +164,9 @@ pass_muxer_close(muxer_t *m)
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
   if(pm->pm_seekable && close(pm->pm_fd)) {
+    pm->pm_error = errno;
+    tvhlog(LOG_ERR, "pass", "%s: Unable to create file, open failed -- %s",
+	   pm->pm_filename, strerror(errno));
     pm->m_errors++;
     return -1;
   }
@@ -172,6 +183,9 @@ pass_muxer_destroy(muxer_t *m)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
+  if(pm->pm_filename)
+    free(pm->pm_filename);
+
   free(pm);
 }
 
@@ -185,7 +199,7 @@ pass_muxer_create(service_type_t s_type, muxer_container_type_t mc)
   pass_muxer_t *pm;
 
   if(mc != MC_PASS) {
-    tvhlog(LOG_ERR, "mux",  "Passthrough muxer doesn't support '%s'",
+    tvhlog(LOG_ERR, "pass",  "Passthrough muxer doesn't support '%s'",
 	   muxer_container_type2txt(mc));
     return NULL;
   }
