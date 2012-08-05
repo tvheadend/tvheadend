@@ -334,7 +334,7 @@ mk_write_to_fd(mk_mux_t *mkm, htsbuf_queue_t *hq)
     ssize_t r;
     int iovcnt = i < dvr_iov_max ? i : dvr_iov_max;
     if((r = writev(mkm->fd, iov, iovcnt)) == -1) {
-      mkm->error++;
+      mkm->error = errno;
       return;
     }
     mkm->fdpos += r;
@@ -597,12 +597,12 @@ mk_write_metaseek(mk_mux_t *mkm, int first)
   } else if(mkm->seekable) {
     off_t prev = mkm->fdpos;
     if(lseek(mkm->fd, mkm->segment_pos, SEEK_SET) == (off_t) -1)
-      mkm->error++;
+      mkm->error = errno;
 
     mk_write_queue(mkm, &q);
     mkm->fdpos = prev;
     if(lseek(mkm->fd, mkm->fdpos, SEEK_SET) == (off_t) -1)
-      mkm->error++;
+      mkm->error = errno;
    
   }
   htsbuf_queue_flush(&q);
@@ -806,7 +806,7 @@ mk_mux_open_stream(mk_mux_t *mkm, int fd)
   mkm->fd = fd;
   mkm->cluster_maxsize = 0;
 
-  return mkm->error;
+  return 0;
 }
 
 
@@ -819,17 +819,19 @@ mk_mux_open_file(mk_mux_t *mkm, const char *filename)
   int fd;
 
   fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0777);
-
   if(fd < 0) {
-    mkm->error++;
-  } else {
-    mkm->filename = strdup(filename);
-    mkm->fd = fd;
-    mkm->cluster_maxsize = 2000000/4;
-    mkm->seekable = 1;
+    mkm->error = errno;
+    tvhlog(LOG_ERR, "MKV", "%s: Unable to create file, open failed -- %s",
+	   mkm->filename, strerror(errno));
+    return mkm->error;
   }
 
-  return mkm->error;
+  mkm->filename = strdup(filename);
+  mkm->fd = fd;
+  mkm->cluster_maxsize = 2000000/4;
+  mkm->seekable = 1;
+
+  return 0;
 }
 
 
@@ -931,19 +933,26 @@ mk_mux_close(mk_mux_t *mkm)
     // Rewrite segment info to update duration
     if(lseek(mkm->fd, mkm->segmentinfo_pos, SEEK_SET) == mkm->segmentinfo_pos)
       mk_write_master(mkm, 0x1549a966, mk_build_segment_info(mkm));
-    else
+    else {
+      mkm->error = errno;
       tvhlog(LOG_ERR, "MKV", "%s: Unable to write duration, seek failed -- %s",
 	     mkm->filename, strerror(errno));
+    }
 
     // Rewrite segment header to update total size
     if(lseek(mkm->fd, mkm->segment_header_pos, SEEK_SET) == mkm->segment_header_pos) {
       mk_write_segment_header(mkm, totsize - mkm->segment_header_pos - 12);
-    } else
+    } else {
+      mkm->error = errno;
       tvhlog(LOG_ERR, "MKV", "%s: Unable to write total size, seek failed -- %s",
 	     mkm->filename, strerror(errno));
+    }
 
-    if(close(mkm->fd))
-      mkm->error++;
+    if(close(mkm->fd)) {
+      mkm->error = errno;
+      tvhlog(LOG_ERR, "MKV", "%s: Unable to close the file descriptor, close failed -- %s",
+	     mkm->filename, strerror(errno));
+    }
   }
 
   return mkm->error;
