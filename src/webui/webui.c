@@ -561,20 +561,19 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN)
     mc = MC_MATROSKA;
-
- if(mc == MC_PASS) {
-   streaming_queue_init(&sq, SMT_PACKET);
-   gh = NULL;
-   tsfix = NULL;
-   st = &sq.sq_st;
-   flags = SUBSCRIPTION_RAW_MPEGTS;
- } else {
-   streaming_queue_init(&sq, 0);
-   gh = globalheaders_create(&sq.sq_st);
-   tsfix = tsfix_create(gh);
-   st = tsfix;
-   flags = 0;
- }
+  if(mc == MC_PASS) {
+    streaming_queue_init(&sq, SMT_PACKET);
+    gh = NULL;
+    tsfix = NULL;
+    st = &sq.sq_st;
+    flags = SUBSCRIPTION_RAW_MPEGTS;
+  } else {
+    streaming_queue_init(&sq, 0);
+    gh = globalheaders_create(&sq.sq_st);
+    tsfix = tsfix_create(gh);
+    st = tsfix;
+    flags = 0;
+  }
 
   pthread_mutex_lock(&global_lock);
   s = subscription_create_from_channel(ch, priority, "HTTP", st, flags);
