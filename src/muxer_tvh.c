@@ -51,9 +51,12 @@ tvh_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
 {
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
 
-  tm->m_errors += mk_mux_init(tm->tm_ref, name, ss);
+  if(mk_mux_init(tm->tm_ref, name, ss)) {
+    tm->m_errors++;
+    return -1;
+  }
 
-  return tm->m_errors;
+  return 0;
 }
 
 
@@ -65,9 +68,12 @@ tvh_muxer_open_stream(muxer_t *m, int fd)
 {
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
 
-  tm->m_errors += mk_mux_open_stream(tm->tm_ref, fd);
+  if(mk_mux_open_stream(tm->tm_ref, fd)) {
+    tm->m_errors++;
+    return -1;
+  }
 
-  return tm->m_errors;
+  return 0;
 }
 
 
@@ -79,9 +85,12 @@ tvh_muxer_open_file(muxer_t *m, const char *filename)
 {
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
   
-  tm->m_errors += mk_mux_open_file(tm->tm_ref, filename);
+  if(mk_mux_open_file(tm->tm_ref, filename)) {
+    tm->m_errors++;
+    return -1;
+  }
 
-  return tm->m_errors;
+  return 0;
 }
 
 
@@ -93,9 +102,12 @@ tvh_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
 {
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
 
-  tm->m_errors += mk_mux_write_pkt(tm->tm_ref, pkt);
+  if(mk_mux_write_pkt(tm->tm_ref, pkt)) {
+    tm->m_errors++;
+    return -1;
+  }
 
-  return tm->m_errors;
+  return 0;
 }
 
 
@@ -107,9 +119,12 @@ tvh_muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
 {
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
 
-  tm->m_errors += mk_mux_write_meta(tm->tm_ref, NULL, eb);
+  if(mk_mux_write_meta(tm->tm_ref, NULL, eb)) {
+    tm->m_errors++;
+    return -1;
+  }
 
-  return tm->m_errors;
+  return 0;
 }
 
 
@@ -121,9 +136,12 @@ tvh_muxer_close(muxer_t *m)
 {
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
 
-  tm->m_errors += mk_mux_close(tm->tm_ref);
+  if(mk_mux_close(tm->tm_ref)) {
+    tm->m_errors++;
+    return -1;
+  }
 
-  return tm->m_errors;
+  return 0;
 }
 
 
