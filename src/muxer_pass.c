@@ -126,9 +126,14 @@ pass_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
 
   r = write(pm->pm_fd, pkt, 188);
 
-  m->m_errors += (r != 188);
+  pkt_ref_dec(pkt);
 
-  return m->m_errors;
+  if(r != 188) {
+    m->m_errors++;
+    return -1;
+  }
+
+  return 0;
 }
 
 
