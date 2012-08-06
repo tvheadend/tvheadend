@@ -162,13 +162,13 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
  * Write TS packets to the file descriptor
  */
 static void
-pass_muxer_write_ts(muxer_t *m, const void *ts)
+pass_muxer_write(muxer_t *m, const void *ts, size_t len)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
   if(pm->pm_error) {
     pm->m_errors++;
-  } else if(write(pm->pm_fd, ts, 188) != 188) {
+  } else if(write(pm->pm_fd, ts, len) != len) {
     pm->pm_error = errno;
     tvhlog(LOG_ERR, "pass", "%s: Write failed -- %s", pm->pm_filename, 
 	   strerror(errno));
@@ -178,10 +178,10 @@ pass_muxer_write_ts(muxer_t *m, const void *ts)
 
 
 /**
- * Write a packet directly to the file descriptor
+ * Write TS packets to the file descriptor
  */
-static int
-pass_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
+static void
+pass_muxer_write_ts(muxer_t *m, struct th_pkt *pkt)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
   static uint32_t ic = 0; // Injection counter
@@ -198,13 +198,32 @@ pass_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
   if((pc % INJECTION_RATE) == 0) {
     pm->pm_pat[3] = (pm->pm_pat[3] & 0xf0) | (ic & 0x0f);
     pm->pm_pmt[3] = (pm->pm_pat[3] & 0xf0) | (ic & 0x0f);
-    pass_muxer_write_ts(m, pm->pm_pmt);
-    pass_muxer_write_ts(m, pm->pm_pat);
+    pass_muxer_write(m, pm->pm_pmt, 188);
+    pass_muxer_write(m, pm->pm_pat, 188);
     ic++;
   }
 
   pass_muxer_write_ts(m, pkt);
   pc++;
+}
+
+
+/**
+ * Write a packet directly to the file descriptor
+ */
+static int
+pass_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
+{
+  pass_muxer_t *pm = (pass_muxer_t*)m;
+
+  switch(pm->m_container) {
+  case MC_MPEGTS:
+    pass_muxer_write_ts(m, pkt);
+    break;
+  default:
+    //NOP
+    break;
+  }
 
   pkt_ref_dec(pkt);
 
