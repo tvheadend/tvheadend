@@ -764,7 +764,7 @@ dvb_table_local_channel(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   if(tdmi == NULL)
     return;
 
-  while(len > 4) {
+  while(len >= 4) {
     sid = (ptr[0] << 8) | ptr[1];
     chan = ((ptr[2] & 3) << 8) | ptr[3];
 
