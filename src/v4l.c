@@ -325,7 +325,6 @@ v4l_service_setsourceinfo(service_t *t, struct source_info *si)
   memset(si, 0, sizeof(struct source_info));
 
   si->si_adapter = strdup(t->s_v4l_adapter->va_displayname);
-  si->si_type = SERVICE_TYPE_V4L;
 
   snprintf(buf, sizeof(buf), "%d Hz", t->s_v4l_frequency);
   si->si_mux = strdup(buf);
