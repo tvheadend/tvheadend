@@ -298,6 +298,8 @@ void dvr_entry_dec_ref(dvr_entry_t *de);
 
 void dvr_storage_set(dvr_config_t *cfg, const char *storage);
 
+void dvr_container_set(dvr_config_t *cfg, const char *container);
+
 void dvr_postproc_set(dvr_config_t *cfg, const char *postproc);
 
 void dvr_retention_set(dvr_config_t *cfg, int days);

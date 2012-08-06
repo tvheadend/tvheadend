@@ -1166,6 +1166,27 @@ dvr_storage_set(dvr_config_t *cfg, const char *storage)
  *
  */
 void
+dvr_container_set(dvr_config_t *cfg, const char *container)
+{
+  muxer_container_type_t mc;
+
+  mc = muxer_container_txt2type(container);
+  if(mc == MC_UNKNOWN)
+    mc = MC_MATROSKA;
+
+  if(cfg->dvr_mc == mc)
+    return;
+
+  cfg->dvr_mc = mc;
+
+  dvr_save(cfg);
+}
+
+
+/**
+ *
+ */
+void
 dvr_postproc_set(dvr_config_t *cfg, const char *postproc)
 {
   if(cfg->dvr_postproc != NULL && !strcmp(cfg->dvr_postproc, postproc))
