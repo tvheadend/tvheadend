@@ -21,6 +21,8 @@
 #ifndef HTSSTR_H__
 #define HTSSTR_H__
 
+char *hts_strndup(const char *str, size_t len);
+
 char *htsstr_unescape(char *str);
 
 char **htsstr_argsplit(const char *str);

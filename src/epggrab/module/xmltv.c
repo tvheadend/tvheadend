@@ -32,6 +32,7 @@
 #include "tvheadend.h"
 #include "channels.h"
 #include "spawn.h"
+#include "htsstr.h"
 
 #include "epg.h"
 #include "epggrab.h"
@@ -188,7 +189,7 @@ static void parse_xmltv_dd_progid
   if (!strncmp("EP", s, 2) || !strncmp("SH", s, 2)) {
     int e = 0;
     while (s[e] && s[e] != '.') e++;
-    *suri = strndup(s, e);
+    *suri = hts_strndup(s, e);
     if (s[e] && s[e+1]) sscanf(s+e+1, "%d", en);
   }
 }
