@@ -225,7 +225,8 @@ pass_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
     break;
   }
 
-  pkt_ref_dec(pkt);
+  if(!pm->pm_error)
+    free(pkt);
 
   return pm->pm_error;
 }
