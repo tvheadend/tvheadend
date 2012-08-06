@@ -33,7 +33,7 @@
  * *************************************************************************/
 
 /* File bundle dir handle */
-typedef struct filebundle_dir
+struct filebundle_dir
 {
   fb_type   type;
   fb_dirent dirent;
@@ -47,10 +47,10 @@ typedef struct filebundle_dir
       filebundle_entry_t       *cur;
     } b;
   };
-} fb_dir;
+};
 
 /* File bundle file handle */
-typedef struct filebundle_file
+struct filebundle_file
 {
   fb_type type;
   size_t  size;
@@ -65,7 +65,7 @@ typedef struct filebundle_file
       const  filebundle_entry_t *root;
     } b;
   };
-} fb_file;
+};
 
 /* **************************************************************************
  * Compression/Decompression
