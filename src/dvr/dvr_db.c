@@ -541,6 +541,8 @@ dvr_db_load_one(htsmsg_t *c, int id)
     }
   }
 
+  de->de_mc = htsmsg_get_u32_or_default(c, "container", MC_MATROSKA);
+
   dvr_entry_link(de);
 }
 
@@ -613,6 +615,8 @@ dvr_entry_save(dvr_entry_t *de)
 
   if(de->de_bcast)
     htsmsg_add_u32(m, "broadcast", de->de_bcast->id);
+
+  htsmsg_add_u32(m, "container", de->de_mc);
 
   hts_settings_save(m, "dvr/log/%d", de->de_id);
   htsmsg_destroy(m);
