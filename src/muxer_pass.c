@@ -203,7 +203,7 @@ pass_muxer_write_ts(muxer_t *m, struct th_pkt *pkt)
     ic++;
   }
 
-  pass_muxer_write_ts(m, pkt);
+  pass_muxer_write(m, pkt, 188);
   pc++;
 }
 
