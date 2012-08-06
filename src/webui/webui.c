@@ -499,12 +499,15 @@ http_stream_service(http_connection_t *hc, service_t *service)
   streaming_target_t *gh;
   streaming_target_t *tsfix;
   streaming_target_t *st;
+  dvr_config_t *cfg;
   muxer_container_type_t mc;
   int flags;
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
-  if(mc == MC_UNKNOWN)
-    mc = MC_MATROSKA;
+  if(mc == MC_UNKNOWN) {
+    cfg = dvr_config_find_by_name_default("");
+    mc = cfg->dvr_mc;
+  }
 
   if(mc == MC_PASS) {
     streaming_queue_init(&sq, SMT_PACKET);
@@ -554,13 +557,17 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   streaming_target_t *gh;
   streaming_target_t *tsfix;
   streaming_target_t *st;
+  dvr_config_t *cfg;
   int priority = 100;
   int flags;
   muxer_container_type_t mc;
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
-  if(mc == MC_UNKNOWN)
-    mc = MC_MATROSKA;
+  if(mc == MC_UNKNOWN) {
+    cfg = dvr_config_find_by_name_default("");
+    mc = cfg->dvr_mc;
+  }
+
   if(mc == MC_PASS) {
     streaming_queue_init(&sq, SMT_PACKET);
     gh = NULL;
