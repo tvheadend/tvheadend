@@ -35,11 +35,30 @@ typedef struct tvh_muxer {
 static const char*
 tvh_muxer_mime(muxer_t* m, const struct streaming_start *ss)
 {
-  tvh_muxer_t *tm = (tvh_muxer_t*)m;
+  int i;
+  int has_audio;
+  int has_video;
+  const streaming_start_component_t *ssc;
+  
+  has_audio = 0;
+  has_video = 0;
 
-  //TODO: iterate streams
+  for(i=0; i < ss->ss_num_components; i++) {
+    ssc = &ss->ss_components[i];
 
-  return muxer_container_mimetype(tm->m_container, 1);
+    if(ssc->ssc_disabled)
+      continue;
+
+    has_video |= SCT_ISVIDEO(ssc->ssc_type);
+    has_audio |= SCT_ISAUDIO(ssc->ssc_type);
+  }
+
+  if(has_video)
+    return muxer_container_mimetype(m->m_container, 1);
+  else if(has_audio)
+    return muxer_container_mimetype(m->m_container, 0);
+  else
+    return muxer_container_mimetype(MC_UNKNOWN, 0);
 }
 
 
