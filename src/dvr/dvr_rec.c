@@ -250,7 +250,7 @@ pvr_generate_filename(dvr_entry_t *de)
   /* Construct final name */
   
   snprintf(fullname, sizeof(fullname), "%s/%s.%s",
-	   path, filename, muxer_container_suffix(de->de_mc));
+	   path, filename, de->de_mc == MC_PASS ? muxer_container_suffix(de->de_mux->m_container) : muxer_container_suffix(de->de_mc));
 
   while(1) {
     if(stat(fullname, &st) == -1) {
@@ -320,14 +320,14 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   int i;
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
 
-  if(pvr_generate_filename(de) != 0) {
-    dvr_rec_fatal_error(de, "Unable to create directories");
-    return;
-  }
-
   de->de_mux = muxer_create(de->de_s->ths_service, de->de_mc);
   if(!de->de_mux) {
     dvr_rec_fatal_error(de, "Unable to create muxer");
+    return;
+  }
+
+  if(pvr_generate_filename(de) != 0) {
+    dvr_rec_fatal_error(de, "Unable to create directories");
     return;
   }
 
