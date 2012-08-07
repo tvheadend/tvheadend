@@ -183,6 +183,21 @@ serviceprobe_thread(void *aux)
 	  str = "SDTV";
 	  break;
 	case ST_HDTV:
+	case ST_EX_HDTV:
+	  str = "HDTV";
+	  break;
+	case ST_EX_SDTV:
+	  str = "SDTV";
+	  break;
+	case ST_EP_HDTV:
+	  str = "HDTV";
+	  break;
+	case ST_ET_HDTV:
+	  str = "HDTV";
+	  break;
+	case ST_SK_SDTV:
+	  str = "SDTV";
+	  break;
 	case ST_AC_HDTV:
 	  str = "HDTV";
 	  break;
