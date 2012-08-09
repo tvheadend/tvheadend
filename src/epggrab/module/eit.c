@@ -152,7 +152,7 @@ static int _eit_get_string_with_len
   dvb_string_conv_t *cptr = NULL;
 
   /* Enable huffman decode (for freeview and/or freesat) */
-  m = epggrab_module_find_by_id("uk_freeview");
+  m = epggrab_module_find_by_id("uk_freesat");
   if (m && m->enabled) cptr = _eit_freesat_conv;
   else
     m = epggrab_module_find_by_id("uk_freeview");
