@@ -1036,13 +1036,19 @@ service_adapter_nicename(service_t *t)
 {
   switch(t->s_type) {
   case SERVICE_TYPE_DVB:
-	return t->s_dvb_mux_instance->tdmi_identifier;
+    if(t->s_dvb_mux_instance)
+      return t->s_dvb_mux_instance->tdmi_identifier;
+    else
+      return "Unknown adapter";
 
   case SERVICE_TYPE_IPTV:
-	return t->s_iptv_iface;
+    return t->s_iptv_iface;
 
   case SERVICE_TYPE_V4L:
-	return t->s_v4l_adapter->va_displayname;
+    if(t->s_v4l_adapter)
+      return t->s_v4l_adapter->va_displayname;
+    else
+      return "Unknown adapter";
 
   default:
     return "Unknown adapter";
