@@ -508,8 +508,7 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
     }
 
     /* Mark as bad */
-    tdmi->tdmi_enabled = 0;
-    dvb_mux_save(tdmi);
+    dvb_mux_set_enable(tdmi, 0);
     return SM_CODE_TUNING_FAILED;
   }   
 
