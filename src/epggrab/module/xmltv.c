@@ -38,7 +38,8 @@
 #include "epggrab.h"
 #include "epggrab/private.h"
 
-#define XMLTV_FIND_GRABBERS "/usr/bin/tv_find_grabbers"
+#define XMLTV_FIND "tv_find_grabbers"
+#define XMLTV_GRAB "tv_grab_"
 
 static epggrab_channel_tree_t _xmltv_channels;
 static epggrab_module_t      *_xmltv_module;
@@ -527,30 +528,66 @@ static void _xmltv_load_grabbers ( void )
   size_t i, outlen, p, n;
   char *outbuf;
   char name[1000];
+  char *tmp, *path;
 
   /* Load data */
-  outlen = spawn_and_store_stdout(XMLTV_FIND_GRABBERS, NULL, &outbuf);
-  if ( outlen < 1 ) {
-    tvhlog(LOG_ERR, "xmltv", "%s failed", XMLTV_FIND_GRABBERS);
-    return;
-  }
+  outlen = spawn_and_store_stdout(XMLTV_FIND, NULL, &outbuf);
 
   /* Process */
-  p = n = i = 0;
-  while ( i < outlen ) {
-    if ( outbuf[i] == '\n' || outbuf[i] == '\0' ) {
-      outbuf[i] = '\0';
-      sprintf(name, "XMLTV: %s", &outbuf[n]);
-      epggrab_module_int_create(NULL, &outbuf[p], name, 3, &outbuf[p],
+  if ( outlen ) {
+    p = n = i = 0;
+    while ( i < outlen ) {
+      if ( outbuf[i] == '\n' || outbuf[i] == '\0' ) {
+        outbuf[i] = '\0';
+        sprintf(name, "XMLTV: %s", &outbuf[n]);
+        epggrab_module_int_create(NULL, &outbuf[p], name, 3, &outbuf[p],
                                 NULL, _xmltv_parse, NULL, NULL);
-      p = n = i + 1;
-    } else if ( outbuf[i] == '|' ) {
-      outbuf[i] = '\0';
-      n = i + 1;
+        p = n = i + 1;
+      } else if ( outbuf[i] == '|' ) {
+        outbuf[i] = '\0';
+        n = i + 1;
+      }
+      i++;
     }
-    i++;
+    free(outbuf);
+
+  /* Internal search */
+  } else if ((tmp = getenv("PATH"))) {
+    tvhlog(LOG_DEBUG, "epggrab", "using internal grab search");
+    char bin[256];
+    char desc[] = "--description";
+    char *argv[] = {
+      NULL,
+      desc,
+      NULL
+    };
+    path = strdup(tmp);
+    tmp  = strtok(path, ":");
+    while (tmp) {
+      DIR *dir;
+      struct dirent *de;
+      struct stat st;
+      if ((dir = opendir(tmp))) {
+        while ((de = readdir(dir))) {
+          if (strstr(de->d_name, XMLTV_GRAB) != de->d_name) continue;
+          snprintf(bin, sizeof(bin), "%s/%s", tmp, de->d_name);
+          if (lstat(bin, &st)) continue;
+          if (!(st.st_mode & S_IEXEC)) continue;
+          if (!S_ISREG(st.st_mode)) continue;
+          if ((outlen = spawn_and_store_stdout(bin, argv, &outbuf))) {
+            if (outbuf[outlen-1] == '\n') outbuf[outlen-1] = '\0';
+            snprintf(name, sizeof(name), "XMLTV: %s", outbuf);
+            epggrab_module_int_create(NULL, bin, name, 3, bin,
+                                      NULL, _xmltv_parse, NULL, NULL);
+            free(outbuf);
+          }
+        }
+      }
+      closedir(dir);
+      tmp = strtok(NULL, ":");
+    }
+    free(path);
   }
-  free(outbuf);
 }
 
 void xmltv_init ( void )
