@@ -221,6 +221,7 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi)
   if(tdmi->tdmi_table_initial) {
     tdmi->tdmi_table_initial = 0;
     tda->tda_initial_num_mux--;
+    dvb_mux_save(tdmi);
   }
 
   dvb_table_flush_all(tdmi);
@@ -508,6 +509,7 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 
     /* Mark as bad */
     tdmi->tdmi_enabled = 0;
+    dvb_mux_save(tdmi);
     return SM_CODE_TUNING_FAILED;
   }   
 

@@ -74,6 +74,7 @@ dvb_table_fastswitch(th_dvb_mux_instance_t *tdmi)
 
   tdmi->tdmi_table_initial = 0;
   tda->tda_initial_num_mux--;
+  dvb_mux_save(tdmi);
 
 
   dvb_mux_nicename(buf, sizeof(buf), tdmi);
