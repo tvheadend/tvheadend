@@ -912,7 +912,9 @@ static struct strtab streamtypetab[] = {
   { "MPEGTS",     SCT_MPEGTS },
   { "TEXTSUB",    SCT_TEXTSUB },
   { "EAC3",       SCT_EAC3 },
-  { "AAC",       SCT_MP4A },
+  { "AAC",        SCT_MP4A },
+  { "VP8",        SCT_VP8 },
+  { "MPEG4VIDEO", SCT_MPEG4VIDEO },
 };
 
 
@@ -923,6 +925,16 @@ const char *
 streaming_component_type2txt(streaming_component_type_t s)
 {
   return val2str(s, streamtypetab) ?: "INVALID";
+}
+
+
+/**
+ *
+ */
+streaming_component_type_t
+streaming_component_txt2type(const char *str)
+{
+  return str ? str2val(str, streamtypetab) : -1;
 }
 
 

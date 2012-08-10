@@ -148,6 +148,12 @@ SRCS += src/muxer.c \
 SRCS_EXTRA = src/extra/capmt_ca.c
 
 #
+# libav depending code
+#
+SRCS-$(CONFIG_LIBAV) += src/muxer_libav.c \
+			src/plumbing/transcode.c \
+
+#
 # AVAHI interface
 # 
 

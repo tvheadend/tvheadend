@@ -40,6 +40,11 @@
 #include "psi.h"
 #include "htsmsg_binary.h"
 
+#if ENABLE_LIBAV
+#include "plumbing/transcode.h"
+#include "plumbing/tsfix.h"
+#endif
+
 #include <sys/statvfs.h>
 #include "settings.h"
 #include <sys/time.h>
@@ -155,6 +160,11 @@ typedef struct htsp_subscription {
 
   streaming_target_t hs_input;
 
+#if ENABLE_LIBAV
+  streaming_target_t *hs_transcoder;
+  streaming_target_t *hs_tsfix;
+#endif
+
   htsp_msg_q_t hs_q;
 
   time_t hs_last_report; /* Last queue status report sent */
@@ -239,6 +249,14 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
   LIST_REMOVE(hs, hs_link);
   subscription_unsubscribe(hs->hs_s);
   htsp_flush_queue(htsp, &hs->hs_q);
+
+#if ENABLE_LIBAV
+  if(hs->hs_transcoder != NULL)
+    transcoder_destroy(hs->hs_transcoder);
+  if(hs->hs_tsfix != NULL)
+    tsfix_destroy(hs->hs_tsfix);
+#endif
+
   free(hs);
 }
 
@@ -897,6 +915,11 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   channel_t *ch;
   htsp_subscription_t *hs;
 
+#if ENABLE_LIBAV
+  uint32_t max_resolution;
+  streaming_component_type_t acodec, vcodec;
+#endif
+
   if(htsmsg_get_u32(in, "channelId", &chid))
     return htsp_error("Missing argument 'channeId'");
 
@@ -907,6 +930,12 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("Requested channel does not exist");
 
   weight = htsmsg_get_u32_or_default(in, "weight", 150);
+
+#if ENABLE_LIBAV
+  max_resolution = htsmsg_get_u32_or_default(in, "maxWidth", 0);
+  vcodec = streaming_component_txt2type(htsmsg_get_str(in, "videoCodec"));
+  acodec = streaming_component_txt2type(htsmsg_get_str(in, "audioCodec"));
+#endif
 
   /*
    * We send the reply now to avoid the user getting the 'subscriptionStart'
@@ -925,9 +954,22 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
   streaming_target_init(&hs->hs_input, htsp_streaming_input, hs, 0);
 
+#if ENABLE_LIBAV
+  if(max_resolution) {
+    hs->hs_transcoder = transcoder_create(&hs->hs_input, 
+					  max_resolution,
+					  vcodec,
+					  acodec);
+    hs->hs_tsfix = tsfix_create(hs->hs_transcoder);
+  }
+  hs->hs_s = subscription_create_from_channel(ch, weight,
+					      htsp->htsp_logname,
+					      hs->hs_tsfix ?: &hs->hs_input, 0);
+#else
   hs->hs_s = subscription_create_from_channel(ch, weight,
 					      htsp->htsp_logname,
 					      &hs->hs_input, 0);
+#endif
   return NULL;
 }
 

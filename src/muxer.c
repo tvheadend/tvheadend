@@ -24,6 +24,9 @@
 #include "muxer_tvh.h"
 #include "muxer_pass.h"
 
+#if ENABLE_LIBAV
+#include "muxer_libav.h"
+#endif
 
 /**
  * Mime type for containers containing only audio
@@ -157,6 +160,11 @@ muxer_create(service_t *s, muxer_container_type_t mc)
 
   if(!m)
     m = tvh_muxer_create(mc);
+
+#ifdef ENABLE_LIBAV
+  if(!m)
+    m = lav_muxer_create(mc);
+#endif
 
   return m;
 }

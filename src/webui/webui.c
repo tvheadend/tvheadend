@@ -38,8 +38,13 @@
 #include "psi.h"
 #include "plumbing/tsfix.h"
 #include "plumbing/globalheaders.h"
+#include "plumbing/transcode.h"
 #include "epg.h"
 #include "muxer.h"
+
+
+#define ATOI(x, y) x ? atoi(x) : y;
+
 
 struct filebundle *filebundles;
 
@@ -562,6 +567,29 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   int flags;
   muxer_container_type_t mc;
 
+#if ENABLE_LIBAV
+  streaming_target_t *tr;
+  int transcode;
+  int resolution;
+  streaming_component_type_t vcodec;
+  streaming_component_type_t acodec;
+
+  tr = NULL;
+  transcode = ATOI(http_arg_get(&hc->hc_req_args, "transcode"), 0);
+  resolution = ATOI(http_arg_get(&hc->hc_req_args, "resolution"), 480);
+  vcodec = streaming_component_txt2type(http_arg_get(&hc->hc_req_args, "vcodec"));
+  acodec = streaming_component_txt2type(http_arg_get(&hc->hc_req_args, "acodec"));
+    
+  resolution = MIN(resolution, 576);
+  resolution = MAX(resolution, 144);
+  
+  if(!SCT_ISVIDEO(vcodec))
+    vcodec = SCT_MPEG4VIDEO;
+
+  if(!SCT_ISAUDIO(acodec))
+    acodec = SCT_AAC;
+#endif
+
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN) {
     cfg = dvr_config_find_by_name_default("");
@@ -577,6 +605,12 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   } else {
     streaming_queue_init(&sq, 0);
     gh = globalheaders_create(&sq.sq_st);
+#if ENABLE_LIBAV
+    if(transcode) {
+      tr = transcoder_create(gh, resolution, vcodec, acodec);
+      tsfix = tsfix_create(tr);
+    } else
+#endif
     tsfix = tsfix_create(gh);
     st = tsfix;
     flags = 0;
@@ -595,6 +629,12 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
 
   if(gh)
     globalheaders_destroy(gh);
+
+#if ENABLE_LIBAV
+  if(tr)
+    transcoder_destroy(tr);
+#endif
+
   if(tsfix)
     tsfix_destroy(tsfix);
 
