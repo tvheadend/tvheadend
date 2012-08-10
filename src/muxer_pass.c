@@ -46,7 +46,7 @@ typedef struct pass_muxer {
 
 
 /**
- * Init the passthrough muxer with streams
+ * Figure out the mime-type for the muxed data stream
  */
 static const char*
 pass_muxer_mime(muxer_t* m, const struct streaming_start *ss)
