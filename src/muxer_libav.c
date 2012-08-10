@@ -452,7 +452,7 @@ lav_muxer_create(muxer_container_type_t mc)
 
   switch(mc) {
   case MC_MPEGPS:
-    mux_name = "mpeg";
+    mux_name = "dvd";
     break;
   default:
     mux_name = muxer_container_type2txt(mc);
