@@ -18,6 +18,7 @@
 
 #include <unistd.h>
 #include <libavformat/avformat.h>
+#include <libavutil/mathematics.h>
 
 #include "tvheadend.h"
 #include "streaming.h"
