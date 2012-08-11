@@ -123,6 +123,10 @@ static void _epg_object_destroy
   ( epg_object_t *eo, epg_object_tree_t *tree )
 {
   assert(eo->refcount == 0);
+#ifdef EPG_TRACE
+  tvhlog(LOG_DEBUG, "epg", "eo [%p, %d, %lu, %s] destroy",
+         eo, eo->id, eo->type, eo->uri);
+#endif
   if (eo->uri) free(eo->uri);
   if (tree) RB_REMOVE(tree, eo, uri_link);
   if (eo->_updated) LIST_REMOVE(eo, up_link);
@@ -132,6 +136,10 @@ static void _epg_object_destroy
 static void _epg_object_getref ( void *o )
 {
   epg_object_t *eo = o;
+#ifdef EPG_TRACE
+  tvhlog(LOG_DEBUG, "epg", "eo [%p, %d, %lu, %s] getref %d",
+         eo, eo->id, eo->type, eo->uri, eo->refcount+1);
+#endif
   if (eo->refcount == 0) LIST_REMOVE(eo, un_link);
   eo->refcount++;
 }
@@ -139,6 +147,10 @@ static void _epg_object_getref ( void *o )
 static void _epg_object_putref ( void *o )
 {
   epg_object_t *eo = o;
+#ifdef EPG_TRACE
+  tvhlog(LOG_DEBUG, "epg", "eo [%p, %d, %lu, %s] putref %d",
+         eo, eo->id, eo->type, eo->uri, eo->refcount-1);
+#endif
   assert(eo->refcount>0);
   eo->refcount--;
   if (!eo->refcount) eo->destroy(eo);
@@ -146,8 +158,12 @@ static void _epg_object_putref ( void *o )
 
 static void _epg_object_set_updated ( void *o )
 {
-  epg_object_t *eo = (epg_object_t*)o;
+  epg_object_t *eo = o;
   if (!eo->_updated) {
+#ifdef EPG_TRACE
+    tvhlog(LOG_DEBUG, "epg", "eo [%p, %d, %lu, %s] updated",
+           eo, eo->id, eo->type, eo->uri, eo->refcount-1);
+#endif
     eo->_updated = 1;
     LIST_INSERT_HEAD(&epg_object_updated, eo, up_link);
   }
@@ -163,6 +179,10 @@ static void _epg_object_create ( void *o )
   _epg_object_set_updated(eo);
   LIST_INSERT_HEAD(&epg_object_unref, eo, un_link);
   LIST_INSERT_HEAD(&epg_objects[eo->id & EPG_HASH_MASK], eo, id_link);
+#ifdef EPG_TRACE
+  tvhlog(LOG_DEBUG, "epg", "eo [%p, %d, %lu, %s] created",
+         eo, eo->id, eo->type, eo->uri, eo->refcount-1);
+#endif
 }
 
 static epg_object_t *_epg_object_find_by_uri 
@@ -206,6 +226,10 @@ static epg_object_t *_epg_object_find_by_id ( uint64_t id, epg_object_type_t typ
 static htsmsg_t * _epg_object_serialize ( void *o )
 {
   epg_object_t *eo = o;
+#ifdef EPG_TRACE
+  tvhlog(LOG_DEBUG, "epg", "eo [%p, %d, %lu, %s] serialize",
+         eo, eo->id, eo->type, eo->uri, eo->refcount);
+#endif
   htsmsg_t *m;
   if ( !eo->id || !eo->type ) return NULL;
   m = htsmsg_create_map();
@@ -226,6 +250,10 @@ static epg_object_t *_epg_object_deserialize ( htsmsg_t *m, epg_object_t *eo )
   eo->uri = (char*)htsmsg_get_str(m, "uri");
   if ((s = htsmsg_get_str(m, "grabber")))
     eo->grabber = epggrab_module_find_by_id(s);
+#ifdef EPG_TRACE
+  tvhlog(LOG_DEBUG, "epg", "eo [%p, %d, %lu, %s] deserialize",
+         eo, eo->id, eo->type, eo->uri, 0);
+#endif
   return eo;
 }
 
