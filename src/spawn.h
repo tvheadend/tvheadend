@@ -19,9 +19,9 @@
 #ifndef SPAWN_H
 #define SPAWN_H
 
-int spawn_and_store_stdout(const char *prog, char *const argv[], char **outp);
+int spawn_and_store_stdout(const char *prog, char *argv[], char **outp);
 
-int spawnv(const char *prog, char *const argv[]);
+int spawnv(const char *prog, char *argv[]);
 
 void spawn_reaper(void);
 

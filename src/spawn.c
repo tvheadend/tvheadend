@@ -18,6 +18,7 @@
 
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -26,6 +27,7 @@
 #include <assert.h>
 #include <syslog.h>
 #include <fcntl.h>
+#include <dirent.h>
 
 #include "tvheadend.h"
 #include "file.h"
@@ -43,6 +45,38 @@ typedef struct spawn {
   const char *name;
 } spawn_t;
 
+/*
+ * Search PATH for executable
+ */
+static int
+_find_exec ( const char *name, char *out, size_t len )
+{
+  int ret = 0;
+  char bin[512];
+  char *path, *tmp;
+  DIR *dir;
+  struct dirent *de;
+  struct stat st;
+  if (!(path = getenv("PATH"))) return 0;
+  path = strdup(path);
+  tmp  = strtok(path, ":");
+  while (tmp && !ret) {
+    if (!(dir = opendir(tmp))) continue;
+    while ((de = readdir(dir))) {
+      if (strstr(de->d_name, name) != de->d_name) continue;
+      snprintf(bin, sizeof(bin), "%s/%s", tmp, de->d_name);
+      if (lstat(bin, &st)) continue;
+      if (!S_ISREG(st.st_mode) || !(st.st_mode & S_IEXEC)) continue;
+      strncpy(out, bin, len);
+      ret = 1;
+      break;
+    }
+    closedir(dir);
+    tmp = strtok(NULL, ":");
+  }
+  free(path);
+  return ret;
+}
 
 /**
  * The reaper is called once a second to finish of any pending spawns
@@ -118,17 +152,20 @@ spawn_enq(const char *name, int pid)
  */
 
 int
-spawn_and_store_stdout(const char *prog, char *const argv[], char **outp)
+spawn_and_store_stdout(const char *prog, char *argv[], char **outp)
 {
   pid_t p;
   int fd[2], f;
-  const char *local_argv[2];
+  char bin[256];
+  const char *local_argv[2] = { NULL, NULL };
 
-  if(argv == NULL) {
-    local_argv[0] = prog;
-    local_argv[1] = NULL;
-    argv = (void *)local_argv;
+  if (*prog != '/' && *prog != '.') {
+    if (!_find_exec(prog, bin, sizeof(bin))) return -1;
+    prog = bin;
   }
+
+  if(!argv) argv = (void *)local_argv;
+  if (!argv[0]) argv[0] = (char*)prog;
 
   pthread_mutex_lock(&fork_lock);
 
@@ -188,9 +225,19 @@ spawn_and_store_stdout(const char *prog, char *const argv[], char **outp)
  * The function will return the size of the buffer
  */
 int
-spawnv(const char *prog, char *const argv[])
+spawnv(const char *prog, char *argv[])
 {
   pid_t p;
+  char bin[256];
+  const char *local_argv[2] = { NULL, NULL };
+
+  if (*prog != '/' && *prog != '.') {
+    if (!_find_exec(prog, bin, sizeof(bin))) return -1;
+    prog = bin;
+  }
+
+  if(!argv) argv = (void *)local_argv;
+  if (!argv[0]) argv[0] = (char*)prog;
 
   p = fork();
 
