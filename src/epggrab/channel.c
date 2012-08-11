@@ -179,7 +179,7 @@ htsmsg_t *epggrab_channel_list ( void )
   htsmsg_t *e, *m;
   m = htsmsg_create_list();
   LIST_FOREACH(mod, &epggrab_modules, link) {
-    if (mod->enabled && mod->channels) {
+    if (mod->channels) {
       RB_FOREACH(ec, mod->channels, link) {
         e = htsmsg_create_map();
         htsmsg_add_str(e, "module", mod->id);
