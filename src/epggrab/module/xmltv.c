@@ -47,7 +47,6 @@ static epggrab_module_t      *_xmltv_module;
 static epggrab_channel_t *_xmltv_channel_find
   ( const char *id, int create, int *save )
 {
-  
   return epggrab_channel_find(&_xmltv_channels, id, create, save,
                               _xmltv_module);
 }
@@ -331,33 +330,47 @@ static int _xmltv_parse_programme_tags
   (epggrab_module_t *mod, channel_t *ch, htsmsg_t *tags, 
    time_t start, time_t stop, epggrab_stats_t *stats)
 {
-  int save = 0, save2 = 0;
-  epg_episode_t *ee;
-  epg_season_t *es;
+  int save = 0, save2 = 0, save3 = 0;
+  epg_episode_t *ee = NULL;
+  epg_season_t *es = NULL;
   epg_broadcast_t *ebc;
   epg_genre_list_t *egl;
   int sn = 0, sc = 0, en = 0, ec = 0, pn = 0, pc = 0;
   const char *onscreen = NULL;
   char *suri = NULL, *uri = NULL;
-  const char *title    = htsmsg_xml_get_cdata_str(tags, "title");
-  const char *desc     = htsmsg_xml_get_cdata_str(tags, "desc");
+  const char *title = htsmsg_xml_get_cdata_str(tags, "title");
+  const char *desc  = htsmsg_xml_get_cdata_str(tags, "desc");
 
   /* Ignore */
   if (!title) return 0;
 
+  get_episode_info(mod, tags, &uri, &suri, &onscreen,
+                   &sn, &sc, &en, &ec, &pn, &pc);
+
+  /*
+   * Season
+   */
+  if (suri) {
+    es = epg_season_find_by_uri(suri, 1, &save3);
+    free(suri);
+    if (es) stats->seasons.total++;
+    if (save3) stats->seasons.created++;
+  }
+
   /*
    * Episode
    */
-  get_episode_info(mod, tags, &uri, &suri, &onscreen,
-                   &sn, &sc, &en, &ec, &pn, &pc);
   if (!uri) uri = epg_hash(title, NULL, desc);
-  if (!uri) return 0;
-  ee  = epg_episode_find_by_uri(uri, 1, &save);
-  free(uri);
+  if (uri) {
+    ee  = epg_episode_find_by_uri(uri, 1, &save);
+    free(uri);
+  }
   if (!ee) return 0;
   stats->episodes.total++;
   if (save) stats->episodes.created++;
 
+  if (es)
+    save |= epg_episode_set_season(ee, es, mod);
   if (title)
     save |= epg_episode_set_title(ee, title, mod);
   if (desc)
@@ -369,15 +382,6 @@ static int _xmltv_parse_programme_tags
   if (pn)   save |= epg_episode_set_part(ee, pn, pc, mod);
   if (en)   save |= epg_episode_set_number(ee, en, mod);
   if (save) stats->episodes.modified++;
-
-  /*
-   * Season
-   */
-  if (suri) {
-    es = epg_season_find_by_uri(suri, 1, &save);
-    if (es) save |= epg_episode_set_season(ee, es, mod);
-    free(suri);
-  }
 
   /*
    * Broadcast
@@ -412,7 +416,7 @@ static int _xmltv_parse_programme_tags
     if (save2) stats->broadcasts.modified++;
   }
   
-  return save | save2;
+  return save | save2 | save3;
 }
 
 /**
@@ -439,7 +443,7 @@ static int _xmltv_parse_programme
   if((s       = htsmsg_get_str(attribs, "stop"))    == NULL) return 0;
   stop  = _xmltv_str2time(s);
 
-  if(stop <= start || stop < dispatch_clock) return 0;
+  if(stop <= start || stop <= dispatch_clock) return 0;
 
   save |= _xmltv_parse_programme_tags(mod, ch->channel, tags,
                                       start, stop, stats);
