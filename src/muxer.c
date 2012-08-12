@@ -62,15 +62,28 @@ static struct strtab container_name[] = {
 
 
 /**
- * Name of the container
+ * filename suffix of audio-only streams
  */
-static struct strtab container_file_suffix[] = {
+static struct strtab container_audio_file_suffix[] = {
+  { "bin",  MC_UNKNOWN },
+  { "mka",  MC_MATROSKA },
+  { "ts",   MC_MPEGTS },
+  { "mpeg", MC_MPEGPS },
+  { "bin",  MC_PASS },
+};
+
+
+/**
+ * filename suffix of video streams
+ */
+static struct strtab container_video_file_suffix[] = {
   { "bin",  MC_UNKNOWN },
   { "mkv",  MC_MATROSKA },
   { "ts",   MC_MPEGTS },
   { "mpeg", MC_MPEGPS },
   { "bin",  MC_PASS },
 };
+
 
 /**
  * Get the mime type for a container
@@ -96,14 +109,16 @@ muxer_container_mimetype(muxer_container_type_t mc, int video)
  * Get the suffix used in file names
  */
 const char*
-muxer_container_suffix(muxer_container_type_t mc)
+muxer_container_suffix(muxer_container_type_t mc, int video)
 {
   const char *str;
-
-  str = val2str(mc, container_file_suffix);
+  if(video)
+    str = val2str(mc, container_video_file_suffix);
+  else
+    str = val2str(mc, container_audio_file_suffix);
 
   if(!str)
-    str = val2str(MC_UNKNOWN, container_file_suffix);
+    str = val2str(MC_UNKNOWN, container_video_file_suffix);
 
   return str;
 }
@@ -172,6 +187,25 @@ muxer_mime(muxer_t *m,  const struct streaming_start *ss)
     return NULL;
 
   return m->m_mime(m, ss);
+}
+
+
+/**
+ * Figure out the file suffix by looking at the mime type
+ */
+const char*
+muxer_suffix(muxer_t *m,  const struct streaming_start *ss)
+{
+  const char *mime;
+  int video;
+
+  if(!m || !ss)
+    return NULL;
+
+  mime  = m->m_mime(m, ss);
+  video = memcmp("audio", mime, 5);
+
+  return muxer_container_suffix(m->m_container, video);
 }
 
 

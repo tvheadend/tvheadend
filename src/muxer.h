@@ -56,7 +56,7 @@ typedef struct muxer {
 const char *           muxer_container_type2txt(muxer_container_type_t mc);
 muxer_container_type_t muxer_container_txt2type(const char *str);
 const char*            muxer_container_mimetype(muxer_container_type_t mc, int video);
-const char*            muxer_container_suffix  (muxer_container_type_t mc);
+const char*            muxer_container_suffix  (muxer_container_type_t mc, int video);
 
 // Muxer factory
 muxer_t *muxer_create(struct service *s, muxer_container_type_t mc);
@@ -70,5 +70,6 @@ int         muxer_destroy     (muxer_t *m);
 int         muxer_write_meta  (muxer_t *m, struct epg_broadcast *eb);
 int         muxer_write_pkt   (muxer_t *m, struct th_pkt *pkt);
 const char* muxer_mime        (muxer_t *m, const struct streaming_start *ss);
+const char* muxer_suffix      (muxer_t *m, const struct streaming_start *ss);
 
 #endif
