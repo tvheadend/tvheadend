@@ -190,7 +190,7 @@ cleanupfilename(char *s, int dvr_flags)
  *
  */
 static int
-pvr_generate_filename(dvr_entry_t *de)
+pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
 {
   char fullname[1000];
   char path[500];
@@ -250,7 +250,7 @@ pvr_generate_filename(dvr_entry_t *de)
   /* Construct final name */
   
   snprintf(fullname, sizeof(fullname), "%s/%s.%s",
-	   path, filename, de->de_mc == MC_PASS ? muxer_container_suffix(de->de_mux->m_container) : muxer_container_suffix(de->de_mc));
+	   path, filename, muxer_suffix(de->de_mux, ss));
 
   while(1) {
     if(stat(fullname, &st) == -1) {
@@ -265,7 +265,7 @@ pvr_generate_filename(dvr_entry_t *de)
     tally++;
 
     snprintf(fullname, sizeof(fullname), "%s/%s-%d.%s",
-	     path, filename, tally, muxer_container_suffix(de->de_mc));
+	     path, filename, tally, muxer_suffix(de->de_mux, ss));
   }
 
   tvh_str_set(&de->de_filename, fullname);
@@ -326,7 +326,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     return;
   }
 
-  if(pvr_generate_filename(de) != 0) {
+  if(pvr_generate_filename(de, ss) != 0) {
     dvr_rec_fatal_error(de, "Unable to create directories");
     return;
   }
