@@ -34,6 +34,7 @@
 #include "spawn.h"
 #include "htsstr.h"
 
+#include "lang_str.h"
 #include "epg.h"
 #include "epggrab.h"
 #include "epggrab/private.h"
@@ -323,6 +324,27 @@ static epg_genre_list_t
   return egl;
 }
 
+/*
+ * Parse a series of language strings
+ */
+static void
+_xmltv_parse_lang_str ( lang_str_t **ls, htsmsg_t *tags, const char *tname )
+{
+  htsmsg_t *e, *attrib;
+  htsmsg_field_t *f;
+  const char *lang;
+
+  HTSMSG_FOREACH(f, tags) {
+    if (!strcmp(f->hmf_name, tname) && (e = htsmsg_get_map_by_field(f))) {
+      if (!*ls) *ls = lang_str_create();
+      lang = NULL;
+      if ((attrib = htsmsg_get_map(e, "attrib")))
+        lang = htsmsg_get_str(attrib, "lang");
+      lang_str_add(*ls, htsmsg_get_str(e, "cdata"), lang, 0);
+    }
+  }
+}
+
 /**
  * Parse tags inside of a programme
  */
@@ -338,11 +360,9 @@ static int _xmltv_parse_programme_tags
   int sn = 0, sc = 0, en = 0, ec = 0, pn = 0, pc = 0;
   const char *onscreen = NULL;
   char *suri = NULL, *uri = NULL;
-  const char *title = htsmsg_xml_get_cdata_str(tags, "title");
-  const char *desc  = htsmsg_xml_get_cdata_str(tags, "desc");
-
-  /* Ignore */
-  if (!title) return 0;
+  lang_str_t *title = NULL;
+  lang_str_t *desc = NULL;
+  lang_str_ele_t *ls;
 
   /*
    * Broadcast
@@ -369,6 +389,8 @@ static int _xmltv_parse_programme_tags
   /* Get episode info */
   get_episode_info(mod, tags, &uri, &suri, &onscreen,
                    &sn, &sc, &en, &ec, &pn, &pc);
+  _xmltv_parse_lang_str(&title, tags, "title");
+  _xmltv_parse_lang_str(&desc,  tags, "desc");
 
   /*
    * Season
@@ -383,12 +405,15 @@ static int _xmltv_parse_programme_tags
   /*
    * Episode
    */
-  if (!uri)
-    uri = epg_hash(title, NULL, desc);
+  if (!uri && title) {
+    uri = epg_hash(lang_str_get(title, NULL), NULL, lang_str_get(desc, NULL));
+  }
   if (uri) {
     ee  = epg_episode_find_by_uri(uri, 1, &save);
     free(uri);
   }
+
+  /* Update */
   if (ee) {
     stats->episodes.total++;
     if (save) stats->episodes.created++;
@@ -397,10 +422,17 @@ static int _xmltv_parse_programme_tags
 
     if (es)
       save |= epg_episode_set_season(ee, es, mod);
-    if (title)
-      save |= epg_episode_set_title(ee, title, mod);
-    if (desc)
-      save |= epg_episode_set_description(ee, desc, mod);
+    if (title) {
+      RB_FOREACH(ls, title, link) {
+        save |= epg_episode_set_title(ee, ls->str, ls->lang, mod);
+      }
+    }
+    if (desc) {
+      RB_FOREACH(ls, desc, link) {
+        save |= epg_episode_set_description(ee, ls->str, ls->lang, mod);
+      }
+    }
+
     if ((egl = _xmltv_parse_categories(tags))) {
       save |= epg_episode_set_genre(ee, egl, mod);
       epg_genre_list_destroy(egl);
@@ -417,6 +449,10 @@ static int _xmltv_parse_programme_tags
   /* Stats */
   if (save2) stats->broadcasts.modified++;
 
+  /* Cleanup */
+  if (title) lang_str_destroy(title);
+  if (desc)  lang_str_destroy(desc);
+  
   return save | save2 | save3;
 }
 

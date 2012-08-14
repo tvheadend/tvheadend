@@ -774,7 +774,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   if(de->de_title != NULL) {
     snprintf(disposition, sizeof(disposition),
-	     "attachment; filename=%s.%s", de->de_title, postfix);
+	     "attachment; filename=%s.%s", lang_str_get(de->de_title, NULL), postfix);
     i = 20;
     while(disposition[i]) {
       if(disposition[i] == ' ')

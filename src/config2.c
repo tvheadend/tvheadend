@@ -43,6 +43,22 @@ htsmsg_t *config_get_all ( void )
   return htsmsg_copy(config);
 }
 
+const char *config_get_language ( void )
+{
+  return htsmsg_get_str(config, "language");
+}
+
+int config_set_language ( const char *lang )
+{
+  const char *c = config_get_language();
+  if (!c || strcmp(c, lang)) {
+    if (c) htsmsg_delete_field(config, "language");
+    htsmsg_add_str(config, "language", lang);
+    return 1;
+  }
+  return 0;
+}
+
 const char *config_get_muxconfpath ( void )
 {
   return htsmsg_get_str(config, "muxconfpath");

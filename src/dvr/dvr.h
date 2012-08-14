@@ -24,6 +24,7 @@
 #include "channels.h"
 #include "subscriptions.h"
 #include "muxer.h"
+#include "lang_str.h"
 
 typedef struct dvr_config {
   char *dvr_config_name;
@@ -129,10 +130,8 @@ typedef struct dvr_entry {
   char *de_creator;
   char *de_filename;   /* Initially null if no filename has been
 			  generated yet */
-  char *de_title;      /* Title in UTF-8 (from EPG) */
-  char *de_ititle;     /* Internal title optionally with channelname
-			  date and time pre/post/fixed */
-  char *de_desc;       /* Description in UTF-8 (from EPG) */
+  lang_str_t *de_title;      /* Title in UTF-8 (from EPG) */
+  lang_str_t *de_desc;       /* Description in UTF-8 (from EPG) */
   epg_genre_t de_content_type; /* Content type (from EPG) */
 
   dvr_prio_t de_pri;
@@ -235,6 +234,8 @@ typedef struct dvr_autorec_entry {
  * Prototypes
  */
 
+void dvr_make_title(char *output, size_t outlen, dvr_entry_t *de);
+
 dvr_config_t *dvr_config_find_by_name(const char *name);
 
 dvr_config_t *dvr_config_find_by_name_default(const char *name);
@@ -266,7 +267,9 @@ dvr_entry_t *dvr_entry_create(const char *dvr_config_name,
 			      const char *creator, dvr_autorec_entry_t *dae,
 			      dvr_prio_t pri);
 
-dvr_entry_t *dvr_entry_update(dvr_entry_t *de, const char* de_title, int de_start, int de_stop);
+dvr_entry_t *dvr_entry_update
+  (dvr_entry_t *de, const char* de_title, const char *lang, 
+   int de_start, int de_stop);
 
 void dvr_init(void);
 

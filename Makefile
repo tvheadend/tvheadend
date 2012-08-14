@@ -99,6 +99,8 @@ SRCS =  src/main.c \
   src/filebundle.c \
   src/muxes.c \
   src/config2.c \
+  src/lang_codes.c \
+  src/lang_str.c \
 
 SRCS += src/epggrab/module.c\
   src/epggrab/channel.c\

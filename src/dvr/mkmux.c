@@ -416,7 +416,7 @@ mk_write_segment_header(mk_mux_t *mkm, int64_t size)
  *
  */
 static htsbuf_queue_t *
-build_tag_string(const char *name, const char *value,
+build_tag_string(const char *name, const char *value, const char *lang,
 		 int targettype, const char *targettypename)
 {
   htsbuf_queue_t *q = htsbuf_queue_alloc(0);
@@ -432,7 +432,7 @@ build_tag_string(const char *name, const char *value,
   ebml_append_string(st, 0x45a3, name);
   ebml_append_string(st, 0x4487, value);
   ebml_append_uint(st, 0x4484, 1);
-  ebml_append_string(st, 0x447a, "und");
+  ebml_append_string(st, 0x447a, lang ?: "und");
 
   ebml_append_master(q, 0x67c8, st);
   return q;
@@ -448,7 +448,7 @@ build_tag_int(const char *name, int value,
 {
   char str[64];
   snprintf(str, sizeof(str), "%d", value);
-  return build_tag_string(name, str, targettype, targettypename);
+  return build_tag_string(name, str, NULL, targettype, targettypename);
 }
 
 
@@ -475,6 +475,7 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc)
   localtime_r(de ? &de->de_start : &ebc->start, &tm);
   epg_episode_t *ee = NULL;
   channel_t *ch;
+  lang_str_t *ls = NULL;
 
   if (ebc)               ee = ebc->episode;
   else if (de->de_bcast) ee = de->de_bcast->episode;
@@ -491,9 +492,9 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc)
 	   tm.tm_min,
 	   tm.tm_sec);
 
-  addtag(q, build_tag_string("DATE_BROADCASTED", datestr, 0, NULL));
+  addtag(q, build_tag_string("DATE_BROADCASTED", datestr, NULL, 0, NULL));
 
-  addtag(q, build_tag_string("ORIGINAL_MEDIA_TYPE", "TV", 0, NULL));
+  addtag(q, build_tag_string("ORIGINAL_MEDIA_TYPE", "TV", NULL, 0, NULL));
 
   if(de && de->de_content_type.code) {
     eg = &de->de_content_type;
@@ -501,17 +502,22 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc)
     eg = LIST_FIRST(&ee->genre);
   }
   if(eg && epg_genre_get_str(eg, 1, 0, ctype, 100))
-    addtag(q, build_tag_string("CONTENT_TYPE", ctype, 0, NULL));
+    addtag(q, build_tag_string("CONTENT_TYPE", ctype, NULL, 0, NULL));
 
   if(ch)
-    addtag(q, build_tag_string("TVCHANNEL", ch->ch_name, 0, NULL));
+    addtag(q, build_tag_string("TVCHANNEL", ch->ch_name, NULL, 0, NULL));
 
   if(de && de->de_desc)
-    addtag(q, build_tag_string("SUMMARY", de->de_desc, 0, NULL));
+    ls = de->de_desc;
   else if (ee && ee->description)
-    addtag(q, build_tag_string("SUMMARY", ee->description, 0, NULL));
+    ls = ee->description;
   else if (ee && ee->summary)
-    addtag(q, build_tag_string("SUMMARY", ee->summary, 0, NULL));
+    ls = ee->summary;
+  if (ls) {
+    lang_str_ele_t *e;
+    RB_FOREACH(e, ls, link)
+      addtag(q, build_tag_string("SUMMARY", e->str, e->lang, 0, NULL));
+  }
 
   if (ee) {
     epg_episode_num_t num;
@@ -527,7 +533,7 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc)
 			       40, "PART"));
     if (num.text)
       addtag(q, build_tag_string("SYNOPSIS", 
-			       num.text, 0, NULL));
+			       num.text, NULL, 0, NULL));
   }
 
   return q;

@@ -93,10 +93,10 @@ typedef struct eit_event
 {
   char              uri[257];
   char              suri[257];
-
-  char              title[257];
-  char              summary[257];
-  char              desc[2000];
+  
+  lang_str_t       *title;
+  lang_str_t       *summary;
+  lang_str_t       *desc;
 
   char             *default_charset;
 
@@ -169,26 +169,38 @@ static int _eit_desc_short_event
   ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev )
 {
   int r;
+  char lang[4];
+  char buf[256];
 
   if ( len < 5 ) return -1;
 
-  /* Language (skip) */
+  /* Language */
+  memcpy(lang, ptr, 3);
+  lang[3] = '\0';
   len -= 3;
   ptr += 3;
 
   /* Title */
-  if ( (r = _eit_get_string_with_len(mod, ev->title, sizeof(ev->title),
-                                     ptr, len, ev->default_charset)) < 0 )
+  if ( (r = _eit_get_string_with_len(mod, buf, sizeof(buf),
+                                     ptr, len, ev->default_charset)) < 0 ) {
     return -1;
+  } else {
+    if (!ev->title) ev->title = lang_str_create();
+    lang_str_add(ev->title, buf, lang, 0);
+  }
 
   len -= r;
   ptr += r;
   if ( len < 1 ) return -1;
 
   /* Summary */
-  if ( (r = _eit_get_string_with_len(mod, ev->summary, sizeof(ev->summary),
-                                     ptr, len, ev->default_charset)) < 0 )
+  if ( (r = _eit_get_string_with_len(mod, buf, sizeof(buf),
+                                     ptr, len, ev->default_charset)) < 0 ) {
     return -1;
+  } else {
+    if (!ev->summary) ev->summary = lang_str_create();
+    lang_str_add(ev->summary, buf, lang, 0);
+  }
 
   return 0;
 }
@@ -201,6 +213,7 @@ static int _eit_desc_ext_event
 {
   int r, nitem;
   char ikey[256], ival[256];
+  char buf[256], lang[4];
 
   if (len < 6) return -1;
 
@@ -208,7 +221,9 @@ static int _eit_desc_ext_event
   len -= 1;
   ptr += 1;
 
-  /* Language (skip) */
+  /* Language */
+  memcpy(lang, ptr, 3);
+  lang[3] = '\0';
   len -= 3;
   ptr += 3;
 
@@ -248,11 +263,14 @@ static int _eit_desc_ext_event
 
   /* Description */
   if ( _eit_get_string_with_len(mod,
-                                ev->desc         + strlen(ev->desc),
-                                sizeof(ev->desc) - strlen(ev->desc),
+                                buf, sizeof(buf),
                                 ptr, len,
-                                ev->default_charset) < 0 )
+                                ev->default_charset) < 0 ) {
     return -1;
+  } else {
+    if (!ev->desc) ev->desc = lang_str_create();
+    lang_str_append(ev->desc, buf, lang);
+  }
 
   return 0;
 }
@@ -394,6 +412,7 @@ static int _eit_process_event
   epg_episode_t *ee;
   epg_season_t *es;
   eit_event_t ev;
+  lang_str_ele_t *ls;
 
   if ( len < 12 ) return -1;
 
@@ -432,7 +451,7 @@ static int _eit_process_event
 
     dllen -= 2;
     ptr   += 2;
-    if (dllen < dlen) return ret;
+    if (dllen < dlen) break;
 
     switch (dtag) {
       case DVB_DESC_SHORT_EVENT:
@@ -461,7 +480,7 @@ static int _eit_process_event
         break;
     }
 
-    if (r < 0) return ret;
+    if (r < 0) break;
     dllen -= dlen;
     ptr   += dlen;
   }
@@ -478,7 +497,9 @@ static int _eit_process_event
     ee = epg_episode_find_by_uri(ev.uri, 1, save);
   } else if ( !(ee = ebc->episode) ) {
     char *uri;
-    uri   = epg_hash(ev.title, ev.summary, ev.desc);
+    uri   = epg_hash(lang_str_get(ev.title, NULL), 
+                     lang_str_get(ev.summary, NULL),
+                     lang_str_get(ev.desc, NULL));
     if (uri) {
       ee = epg_episode_find_by_uri(uri, 1, save);
       free(uri);
@@ -491,12 +512,18 @@ static int _eit_process_event
   /* Update Episode */
   if (ee) {
     *save |= epg_episode_set_is_bw(ee, ev.bw, mod);
-    if ( *ev.title )
-      *save |= epg_episode_set_title(ee, ev.title, mod);
-    if ( *ev.summary )
-      *save |= epg_episode_set_summary(ee, ev.summary, mod);
-    if ( *ev.desc )
-      *save |= epg_episode_set_description(ee, ev.desc, mod);
+    if ( ev.title ) {
+      RB_FOREACH(ls, ev.title, link)
+        *save |= epg_episode_set_title(ee, ls->str, ls->lang, mod);
+    }
+    if ( ev.summary ) {
+      RB_FOREACH(ls, ev.summary, link)
+        *save |= epg_episode_set_summary(ee, ls->str, ls->lang, mod);
+    }
+    if ( ev.desc ) {
+      RB_FOREACH(ls, ev.desc, link)
+        *save |= epg_episode_set_description(ee, ls->str, ls->lang, mod);
+    }
     if ( ev.genre )
       *save |= epg_episode_set_genre(ee, ev.genre, mod);
 #if TODO_ADD_EXTRA
@@ -514,9 +541,12 @@ static int _eit_process_event
 
   /* Tidy up */
 #if TODO_ADD_EXTRA
-  if (ev.extra) htsmsg_destroy(ev.extra);
+  if (ev.extra)   htsmsg_destroy(ev.extra);
 #endif
-  if (ev.genre) epg_genre_list_destroy(ev.genre);
+  if (ev.genre)   epg_genre_list_destroy(ev.genre);
+  if (ev.title)   lang_str_destroy(ev.title);
+  if (ev.summary) lang_str_destroy(ev.summary);
+  if (ev.desc)    lang_str_destroy(ev.desc);
 
   return ret;
 }

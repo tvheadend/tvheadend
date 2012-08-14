@@ -89,9 +89,11 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     if (!e->episode->brand || dae->dae_brand != e->episode->brand) return 0;
   
   if(dae->dae_title != NULL && dae->dae_title[0] != '\0') {
-    if(e->episode->title == NULL ||
-       regexec(&dae->dae_title_preg, e->episode->title, 0, NULL, 0))
-      return 0;
+    lang_str_ele_t *ls;
+    if(!e->episode->title) return 0;
+    RB_FOREACH(ls, e->episode->title, link)
+      if (!regexec(&dae->dae_title_preg, ls->str, 0, NULL, 0)) break;
+    if (!ls) return 0;
   }
 
   // Note: ignore channel test if we allow quality unlocking 
@@ -560,7 +562,7 @@ void dvr_autorec_add_series_link
     epg_episode_get_epnum(ee, &epnum);
     epnump = &epnum;
   }
-  _dvr_autorec_add(dvr_config_name, event->episode->title,
+  _dvr_autorec_add(dvr_config_name, NULL,/*TODO DVR lang_str event->episode->title,*/
                    cfg->dvr_sl_channel_lock ? event->channel : NULL,
                    NULL, 0, // tag/content type
                    cfg->dvr_sl_brand_lock ? ee->brand : NULL,

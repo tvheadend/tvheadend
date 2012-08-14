@@ -382,10 +382,10 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   htsmsg_add_s32(out, "start", de->de_start);
   htsmsg_add_s32(out, "stop", de->de_stop);
 
-  if( de->de_title != NULL )
-    htsmsg_add_str(out, "title", de->de_title);
-  if( de->de_desc != NULL )
-    htsmsg_add_str(out, "description", de->de_desc);
+  if( de->de_title && (s = lang_str_get(de->de_title, NULL)))
+    htsmsg_add_str(out, "title", s);
+  if( de->de_desc && (s = lang_str_get(de->de_desc, NULL)))
+    htsmsg_add_str(out, "description", s);
 
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:
@@ -629,17 +629,11 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if( (de = dvr_entry_find_by_id(dvrEntryId)) == NULL) 
     return htsp_error("id not found");
 
-  if(htsmsg_get_u32(in, "start", &start))
-    start = de->de_start;
-  
-  if(htsmsg_get_u32(in, "stop", &stop))
-    stop = de->de_stop;
-
+  start = htsmsg_get_u32_or_default(in, "start", 0);
+  stop  = htsmsg_get_u32_or_default(in, "stop", 0);
   title = htsmsg_get_str(in, "title");
-  if (title == NULL)
-    title = de->de_title;
 
-  de = dvr_entry_update(de, title, start, stop);
+  de = dvr_entry_update(de, title, NULL, start, stop);
 
   //create response
   out = htsmsg_create_map();
@@ -730,7 +724,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   }
 
   //do the query
-  epg_query0(&eqr, ch, ct, eg, query);
+  epg_query0(&eqr, ch, ct, eg, query, NULL);
   c = eqr.eqr_entries;
 
   // create reply
@@ -758,6 +752,7 @@ htsp_build_event(epg_broadcast_t *e)
   epg_broadcast_t *n;
   dvr_entry_t *de;
   epg_genre_t *g;
+  const char *str;
 
   out = htsmsg_create_map();
 
@@ -766,12 +761,12 @@ htsp_build_event(epg_broadcast_t *e)
   htsmsg_add_u32(out, "start", e->start);
   htsmsg_add_u32(out, "stop", e->stop);
   if (e->episode) {
-    if(e->episode->title != NULL)
-      htsmsg_add_str(out, "title", e->episode->title);
-    if(e->episode->description != NULL)
-      htsmsg_add_str(out, "description", e->episode->description);
-    else if(e->episode->summary != NULL)
-      htsmsg_add_str(out, "description", e->episode->summary);
+    if ((str = epg_episode_get_title(e->episode, NULL)))
+      htsmsg_add_str(out, "title", str);
+    if ((str = epg_episode_get_description(e->episode, NULL)))
+      htsmsg_add_str(out, "description", str);
+    else if((str = epg_episode_get_summary(e->episode, NULL)))
+      htsmsg_add_str(out, "description", str);
 
     if((g = LIST_FIRST(&e->episode->genre)))
       htsmsg_add_u32(out, "contentType", g->code);
