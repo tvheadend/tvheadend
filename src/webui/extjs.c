@@ -1726,10 +1726,10 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
   /* Basic settings (not the advanced schedule) */
   if(!strcmp(op, "loadSettings")) {
     pthread_mutex_lock(&global_lock);
-    out = htsmsg_create_map();
-    if ((m   = config_get_all()))
-      htsmsg_add_msg(out, "config", m);
+    m = config_get_all();
     pthread_mutex_unlock(&global_lock);
+    if (!m) return HTTP_STATUS_BAD_REQUEST;
+    out = json_single_record(m, "config");
 
   /* Save settings */
   } else if (!strcmp(op, "saveSettings") ) {
