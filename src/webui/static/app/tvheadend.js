@@ -233,7 +233,9 @@ function accessUpdate(o) {
 	    autoScroll:true, 
 	    title: 'Configuration', 
 	    iconCls: 'wrench',
-	    items: [new tvheadend.chconf,
+	    items: [
+        new tvheadend.miscconf,
+        new tvheadend.chconf,
 		    new tvheadend.epggrab,
 		    new tvheadend.cteditor,
 		    new tvheadend.dvrsettings,

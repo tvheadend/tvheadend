@@ -29,23 +29,19 @@
 #include "tvheadend.h"
 #include "dvb.h"
 #include "dvb_preconf.h"
-
-/**
- * A big list of all known DVB networks (from linuxtv.org)
- */
-#include "linuxtv_muxes.h"
+#include "muxes.h"
 
 /**
  *
  */
 static void
-dvb_mux_preconf_add(th_dvb_adapter_t *tda, const struct mux *m, int num,
+dvb_mux_preconf_add(th_dvb_adapter_t *tda, const network_t *net,
 		    const char *source, const char *satconf)
 {
+  const mux_t *m;
   struct dvb_mux_conf dmc;
-  int i;
 
-  for(i = 0; i < num; i++) {
+  LIST_FOREACH(m, &net->muxes, link) {
 
     memset(&dmc, 0, sizeof(dmc));
   
@@ -103,7 +99,6 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, const struct mux *m, int num,
     dmc.dmc_satconf = dvb_satconf_entry_find(tda, satconf, 0);
       
     dvb_mux_create(tda, &dmc, 0xffff, NULL, source, 1, 1, NULL, NULL);
-    m++;
   }
 }
 
@@ -115,42 +110,35 @@ int
 dvb_mux_preconf_add_network(th_dvb_adapter_t *tda, const char *id,
 			    const char *satconf)
 {
-  const struct region *r;
-  const struct network *n;
-  int nr, nn, i, j;
+  region_list_t *list;
+  const region_t *r;
+  const network_t *n;
   char source[100];
 
   snprintf(source, sizeof(source), "built-in configuration from \"%s\"", id);
 
   switch(tda->tda_type) {
-  case FE_QAM:
-    r = regions_DVBC;
-    nr = sizeof(regions_DVBC) / sizeof(regions_DVBC[0]);
-    break;
-  case FE_QPSK:
-    r = regions_DVBS;
-    nr = sizeof(regions_DVBS) / sizeof(regions_DVBS[0]);
-    break;
-  case FE_OFDM:
-    r = regions_DVBT;
-    nr = sizeof(regions_DVBT) / sizeof(regions_DVBT[0]);
-    break;
-  case FE_ATSC:
-    r = regions_ATSC;
-    nr = sizeof(regions_ATSC) / sizeof(regions_ATSC[0]);
-    break;
-  default:
-    return -1;
+    case FE_QAM:
+      list = &regions_DVBC;
+      break;
+    case FE_QPSK:
+      list = &regions_DVBS;
+      break;
+    case FE_OFDM:
+      list = &regions_DVBT;
+      break;
+    case FE_ATSC:
+      list = &regions_ATSC;
+      break;
+    default:
+      return -1;
   }
-  
-  for(i = 0; i < nr; i++) {
-    n = r[i].networks;
-    nn = r[i].nnetworks;
 
-    for(j = 0; j < nn; j++) {
-      if(!strcmp(n[j].name, id)) {
-	dvb_mux_preconf_add(tda, n[j].muxes, n[j].nmuxes, source, satconf);
-	break;
+  LIST_FOREACH(r, list, link) {
+    LIST_FOREACH(n, &r->networks, link) {
+      if(!strcmp(n->id, id)) {
+        dvb_mux_preconf_add(tda, n, source, satconf);
+        break;
       }
     }
   }
@@ -163,61 +151,52 @@ dvb_mux_preconf_add_network(th_dvb_adapter_t *tda, const char *id,
 htsmsg_t *
 dvb_mux_preconf_get_node(int fetype, const char *node)
 {
-  const struct region *r;
-  const struct network *n;
-  int nr, nn, i;
+  region_list_t *list = NULL;
+  const region_t *r;
+  const network_t *n;
   htsmsg_t *out, *e;
 
   switch(fetype) {
-  case FE_QAM:
-    r = regions_DVBC;
-    nr = sizeof(regions_DVBC) / sizeof(regions_DVBC[0]);
-    break;
-  case FE_QPSK:
-    r = regions_DVBS;
-    nr = sizeof(regions_DVBS) / sizeof(regions_DVBS[0]);
-    break;
-  case FE_OFDM:
-    r = regions_DVBT;
-    nr = sizeof(regions_DVBT) / sizeof(regions_DVBT[0]);
-    break;
-  case FE_ATSC:
-    r = regions_ATSC;
-    nr = sizeof(regions_ATSC) / sizeof(regions_ATSC[0]);
-    break;
-  default:
-    tvhlog(LOG_ERR, "DVB", "No built-in config for fetype %d", fetype);
-    return NULL;
+    case FE_QAM:
+      list = &regions_DVBC;
+      break;
+    case FE_QPSK:
+      list = &regions_DVBS;
+      break;
+    case FE_OFDM:
+      list = &regions_DVBT;
+      break;
+    case FE_ATSC:
+      list = &regions_ATSC;
+      break;
+    default:
+      tvhlog(LOG_ERR, "DVB", "No built-in config for fetype %d", fetype);
+      return NULL;
   }
   
   out = htsmsg_create_list();
 
   if(!strcmp(node, "root")) {
-
-    for(i = 0; i < nr; i++) {
+    LIST_FOREACH(r, list, link) {
       e = htsmsg_create_map();
       htsmsg_add_u32(e, "leaf", 0);
-      htsmsg_add_str(e, "text", r[i].name);
-      htsmsg_add_str(e, "id", r[i].name);
+      htsmsg_add_str(e, "text", r->name);
+      htsmsg_add_str(e, "id", r->id);
       htsmsg_add_msg(out, NULL, e);
     }
     return out;
   }
 
-  for(i = 0; i < nr; i++)
-    if(!strcmp(node, r[i].name))
+  LIST_FOREACH(r, list, link)
+    if (!strcmp(node, r->id))
       break;
+  if (!r) return out;
 
-  if(i == nr)
-    return out;
-  n = r[i].networks;
-  nn = r[i].nnetworks;
-
-  for(i = 0; i < nn; i++) {
+  LIST_FOREACH(n, &r->networks, link) {
     e = htsmsg_create_map();
     htsmsg_add_u32(e, "leaf", 1);
-    htsmsg_add_str(e, "text", n[i].name);
-    htsmsg_add_str(e, "id", n[i].name);
+    htsmsg_add_str(e, "text", n->name);
+    htsmsg_add_str(e, "id", n->id);
     htsmsg_add_msg(out, NULL, e);
   }
       

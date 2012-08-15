@@ -44,6 +44,7 @@ enable cwc
 enable avahi
 enable linuxdvb
 enable v4l
+enable dvbscan
 
 for opt do
   optval="${opt#*=}"
@@ -183,6 +184,17 @@ elif pkg-config libssl; then
 else
     echo "libssl or openssl not found"
     die
+fi
+
+#
+# DVB-scan files
+#
+if enabled dvbscan; then
+  if [ ! -d data/dvb-scan ]; then
+    echo -n "Fetching dvb-scan files... "
+    ${TOPDIR}/support/getmuxlist &> /dev/null
+    echo "done"
+  fi
 fi
 
 #
