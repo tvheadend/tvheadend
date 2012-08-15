@@ -314,6 +314,13 @@ const char* dvb_mux_delsys2str(int delsys);
 const char* dvb_mux_qam2str(int qam);
 const char* dvb_mux_rolloff2str(int rolloff);
 
+int dvb_mux_str2bw(const char *str);
+int dvb_mux_str2qam(const char *str);
+int dvb_mux_str2fec(const char *str);
+int dvb_mux_str2mode(const char *str);
+int dvb_mux_str2guard(const char *str);
+int dvb_mux_str2hier(const char *str);
+
 void dvb_mux_save(th_dvb_mux_instance_t *tdmi);
 
 void dvb_mux_load(th_dvb_adapter_t *tda);
