@@ -26,6 +26,7 @@ CONFIG_LIST="
  v4l
  execinfo
  libav
+ dvbscan
 "
 
 die() {

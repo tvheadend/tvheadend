@@ -4,3 +4,4 @@ config.default
 .cproject
 .project
 .settings
+data/dvb-scan

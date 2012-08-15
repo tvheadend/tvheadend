@@ -58,6 +58,8 @@
 #include "settings.h"
 #include "ffdecsa/FFdecsa.h"
 #include "plumbing/transcode.h"
+#include "muxes.h"
+#include "config2.h"
 
 int running;
 time_t dispatch_clock;
@@ -169,6 +171,7 @@ usage(const char *argv0)
   printf(" -a <adapters>   Use only DVB adapters specified (csv)\n");
   printf(" -c <directory>  Alternate configuration path.\n"
 	 "                 Defaults to [$HOME/.hts/tvheadend]\n");
+  printf(" -m <directory>  Alternate mux configuration directory\n");
   printf(" -f              Fork and daemonize\n");
   printf(" -p <pidfile>    Write pid to <pidfile> instead of /var/run/tvheadend.pid,\n"
         "                 only works with -f\n");
@@ -380,6 +383,10 @@ main(int argc, char **argv)
   /**
    * Initialize subsystems
    */
+
+  config_init();
+
+  muxes_init();
 
   service_init();
 
