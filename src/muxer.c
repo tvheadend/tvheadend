@@ -176,7 +176,7 @@ muxer_create(service_t *s, muxer_container_type_t mc)
   if(!m)
     m = tvh_muxer_create(mc);
 
-#ifdef ENABLE_LIBAV
+#if ENABLE_LIBAV
   if(!m)
     m = lav_muxer_create(mc);
 #endif
