@@ -26,7 +26,7 @@ PROG=${BUILDDIR}/tvheadend
 
 CFLAGS += -Wall -Werror -Wwrite-strings -Wno-deprecated-declarations
 CFLAGS += -Wmissing-prototypes -fms-extensions
-LDFLAGS += -lrt -ldl
+LDFLAGS += -lrt -ldl -lz
 
 BUNDLES += docs/html docs/docresources src/webui/static data
 
