@@ -16,19 +16,41 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-include ${CURDIR}/config.default
+#
+# Configuration
+#
 
-BUILDDIR = build.${PLATFORM}
+include ${CURDIR}/.config.mk
+PROG = ${BUILDDIR}/tvheadend
 
-include ${BUILDDIR}/config.mak
+#
+# Common compiler flags
+#
 
-PROG=${BUILDDIR}/tvheadend
+CFLAGS  += -Wall -Werror -Wwrite-strings -Wno-deprecated-declarations
+CFLAGS  += -Wmissing-prototypes -fms-extensions
+CFLAGS  += -g -funsigned-char -O2 
+CFLAGS  += -D_FILE_OFFSET_BITS=64
+CFLAGS  += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR}
+LDFLAGS += -lrt -ldl
 
-CFLAGS += -Wall -Werror -Wwrite-strings -Wno-deprecated-declarations
-CFLAGS += -Wmissing-prototypes -fms-extensions
-LDFLAGS += -lrt -ldl -lz
+#
+# Binaries/Scripts
+#
 
-BUNDLES += docs/html docs/docresources src/webui/static data
+MKBUNDLE = $(CURDIR)/support/mkbundle
+
+#
+# Debug/Output
+#
+
+ifndef V
+ECHO   = printf "$(1)\t\t%s\n" $(2)
+BRIEF  = CC MKBUNDLE CXX
+MSG    = $@
+$(foreach VAR,$(BRIEF), \
+    $(eval $(VAR) = @$$(call ECHO,$(VAR),$$(MSG)); $($(VAR))))
+endif
 
 #
 # Core
@@ -96,6 +118,17 @@ SRCS += src/dvr/dvr_db.c \
 	src/dvr/ebml.c \
 	src/dvr/mkmux.c \
 
+SRCS += src/webui/webui.c \
+	src/webui/comet.c \
+	src/webui/extjs.c \
+	src/webui/simpleui.c \
+	src/webui/statedump.c \
+
+#
+# Optional code
+#
+
+# DVB
 SRCS-${CONFIG_LINUXDVB} += \
 	src/dvb/dvb.c \
 	src/dvb/dvb_support.c \
@@ -109,119 +142,83 @@ SRCS-${CONFIG_LINUXDVB} += \
 	src/dvb/dvb_satconf.c \
 	src/webui/extjs_dvb.c \
 
+# V4L
 SRCS-${CONFIG_V4L} += \
 	src/v4l.c \
 	src/webui/extjs_v4l.c \
 
-
-#
-# cwc
-#
-SRCS += src/cwc.c \
+# CWC
+SRCS-${CONFIG_CWC} += src/cwc.c \
 	src/capmt.c \
 	src/ffdecsa/ffdecsa_interface.c \
 	src/ffdecsa/ffdecsa_int.c
 
+# Avahi
+SRCS-$(CONFIG_AVAHI) += src/avahi.c
+
+# Optimised code
 SRCS-${CONFIG_MMX}  += src/ffdecsa/ffdecsa_mmx.c
 SRCS-${CONFIG_SSE2} += src/ffdecsa/ffdecsa_sse2.c
-
 ${BUILDDIR}/src/ffdecsa/ffdecsa_mmx.o  : CFLAGS = -mmmx
 ${BUILDDIR}/src/ffdecsa/ffdecsa_sse2.o : CFLAGS = -msse2
 
-#
-# Primary web interface
-#
-SRCS += src/webui/webui.c \
-	src/webui/comet.c \
-	src/webui/extjs.c \
-	src/webui/simpleui.c \
-	src/webui/statedump.c \
+# File bundles
+SRCS-${CONFIG_BUNDLE} += bundle.c
+BUNDLES               += docs/html docs/docresources src/webui/static data
 
 #
-# Extra modules
+# Add-on modules
 #
+
 SRCS_EXTRA = src/extra/capmt_ca.c
 
 #
-# AVAHI interface
-# 
+# Variable transformations
+#
 
-SRCS-$(CONFIG_AVAHI) += src/avahi.c
-
-${BUILDDIR}/src/avahi.o : CFLAGS = \
-                      $(shell pkg-config --cflags avahi-client) -Wall -Werror
-
-# Various transformations
-SRCS  += $(SRCS-yes)
-DLIBS += $(DLIBS-yes)
-SLIBS += $(SLIBS-yes)
-OBJS=    $(SRCS:%.c=$(BUILDDIR)/%.o)
+SRCS      += $(SRCS-yes)
+OBJS       = $(SRCS:%.c=$(BUILDDIR)/%.o)
 OBJS_EXTRA = $(SRCS_EXTRA:%.c=$(BUILDDIR)/%.so)
-DEPS=    ${OBJS:%.o=%.d}
+DEPS       = ${OBJS:%.o=%.d}
 
-# File bundles
-BUNDLE_SRCS=$(BUILDDIR)/bundle.c
-BUNDLE_DEPS=$(BUNDLE_SRCS:%.c=%.d)
-BUNDLE_OBJS=$(BUNDLE_SRCS:%.c=%.o)
-.PRECIOUS: ${BUNDLE_SRCS}
+#
+# Build Rules
+#
 
-
-# Common CFLAGS for all files
-CFLAGS_com  = -g -funsigned-char -O2 
-CFLAGS_com += -D_FILE_OFFSET_BITS=64
-CFLAGS_com += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR}
-
-MKBUNDLE = $(CURDIR)/support/mkbundle
-
-ifndef V
-ECHO   = printf "$(1)\t\t%s\n" $(2)
-BRIEF  = CC MKBUNDLE CXX
-MSG    = $@
-$(foreach VAR,$(BRIEF), \
-    $(eval $(VAR) = @$$(call ECHO,$(VAR),$$(MSG)); $($(VAR))))
-endif
-
-
+# Default
 all: ${PROG}
 
+# Special
 .PHONY:	clean distclean
 
-#
-#
-#
-${PROG}: $(OBJS) $(ALLDEPS)  support/dataroot/wd.c
-	$(CC) -o $@ $(OBJS) $(CFLAGS_com) support/dataroot/wd.c $(LDFLAGS) ${LDFLAGS_cfg}
+# Binary
+${PROG}: $(OBJS) $(ALLDEPS)
+	$(CC) -o $@ $(OBJS) $(CFLAGS) $(LDFLAGS)
 
-${PROG}.bundle: $(OBJS) $(BUNDLE_OBJS) $(ALLDEPS)  support/dataroot/bundle.c
-	$(CC) -o $@ $(OBJS) support/dataroot/bundle.c $(BUNDLE_OBJS) $(LDFLAGS) ${LDFLAGS_cfg}
-
-${PROG}.datadir: $(OBJS) $(ALLDEPS)  support/dataroot/datadir.c
-	$(CC) -o $@ $(OBJS) $(CFLAGS_com) -iquote${BUILDDIR} support/dataroot/datadir.c $(LDFLAGS) ${LDFLAGS_cfg}
-
-#
-#
-#
+# Object
 ${BUILDDIR}/%.o: %.c
 	@mkdir -p $(dir $@)
-	$(CC) -MD -MP $(CFLAGS_com) $(CFLAGS) $(CFLAGS_cfg) -c -o $@ $(CURDIR)/$<
+	$(CC) -MD -MP $(CFLAGS) -c -o $@ $(CURDIR)/$<
 
+# Add-on
 ${BUILDDIR}/%.so: ${SRCS_EXTRA}
 	@mkdir -p $(dir $@)
 	${CC} -O -fbuiltin -fomit-frame-pointer -fPIC -shared -o $@ $< -ldl
 
+# Clean
 clean:
 	rm -rf ${BUILDDIR}/src ${BUILDDIR}/bundle*
 	find . -name "*~" | xargs rm -f
 
 distclean: clean
-	rm -rf build.*
+	rm -rf ${CURDIR}/build.*
+	rm -f ${CURDIR}/.config.mk
 
 # Create buildversion.h
 src/version.c: $(BUILDDIR)/buildversion.h
 $(BUILDDIR)/buildversion.h: FORCE
 	@$(CURDIR)/support/version.sh $(CURDIR) $@
 FORCE:
-
 
 # Include dependency files if they exist.
 -include $(DEPS) $(BUNDLE_DEPS)

@@ -1,137 +1,350 @@
 #!/bin/bash
 #
-# Tvheadend configure shared functions
+# Generic/Simple configure script
 #
-# Copyright (c) 2005-2008 Andreas Öman
-#
-# Based on FFmpeg's configure script:
-#
-# Copyright (c) 2000-2002 Fabrice Bellard
-# Copyright (c) 2005-2008 Diego Biurrun
-# Copyright (c) 2005-2008 Mans Rullgard
+# Copyright (c) 2012 Adam Sutton <dev@adamsutton.me.uk>
 #
 
-TOPDIR=`pwd`
-TMPDIR=${TOPDIR}/tmp
-BUILDDIR=build.${PLATFORM}
-DEFAULT_THEME="new"
-RELEASE=no
+# ###########################################################################
+# Defaults
+# ###########################################################################
 
-CONFIG_LIST="
- cwc
- avahi
- mmx
- sse2
- linuxdvb
- v4l
- execinfo
- dvbscan
-"
+# System setup
+[ -z "$PLATFORM" ] && PLATFORM=linux
+[ -z "$CPU"      ] && CPU=generic
+[ -z "$ARCH"     ] && ARCH=`uname -m`
+[ -z "$OSENV"    ] && OSENV=posix
+[ -z "$CC"       ] && CC=cc
 
-die() {
-    rm -rf $TMPDIR
-    exit
+# Paths
+[ -z "$prefix"   ] && prefix=/usr/local
+[ -z "$bindir"   ] && bindir=\${prefix}/bin
+[ -z "$libdir"   ] && libdir=\${prefix}/lib
+[ -z "$datadir"  ] && datadir=\${prefix}/share/data
+[ -z "$mandir"   ] && mandir=\${prefix}/share/man
+
+# Compiler
+[ -z "$CC"       ] && CC=cc
+[ -z "$CFLAGS"   ] && CFLAGS=
+[ -z "$LDFLAGS"   ] && LDFLAGS=
+
+# Environment
+[ -z "$ROOTDIR"  ] && ROOTDIR=$(cd $(dirname $0); pwd)
+[ -z "$BUILDDIR" ] && BUILDDIR=$ROOTDIR/build.$PLATFORM
+[ -z "$TMPDIR"   ] && TMPDIR=/tmp
+
+# Options/Package Lists
+[ -z "$OPTIONS"  ] && OPTIONS=()
+[ -z "$PACKAGES" ] && PACKAGES=()
+
+# ###########################################################################
+# Utilities
+# ###########################################################################
+
+# Output
+TAB="\\033[30G"
+
+# Text conversion
+function toupper
+{
+  echo "$@" | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ
 }
 
-set_all(){
-    value=$1
-    shift
-    for var in $*; do
-        eval $var=$value
-    done
+function die
+{
+  [ -z "$1" ] || echo "ERROR: $1"
+  exit 1
 }
 
-enable(){
-    set_all yes $*
+# ###########################################################################
+# Enable/Disable
+# ###########################################################################
+
+# Enable/Disable option
+function _enable
+{
+  local opt=$1 val=$2 row= k= v=
+  for row in ${OPTIONS[*]}; do
+    k=${row%:*}
+    [ "$k" == "$opt" ] || continue
+    v=${row#*:}
+    if [ $v != "$val" ]; then
+      OPTIONS=(${OPTIONS[@]//$row/$k:$val})
+    fi
+    return
+  done
+  OPTIONS=(${OPTIONS[@]} $opt:$val)
 }
 
-disable(){
-    set_all no $*
+# Enable option
+function enable
+{
+  _enable $1 yes
+}
+
+# Disable option
+function disable
+{
+  _enable $1 no
+}
+
+# Enable package
+function enable_pkg
+{
+  local opt=$1 row= k= v=
+  for row in ${PACKAGES[*]}; do
+    [ "$row" == "$opt" ] && return
+  done
+  PACKAGES=(${PACKAGES[@]} $opt)
+}
+
+# Get enabled state
+function _enabled
+{
+  local opt=$1 row= k=
+  for row in ${OPTIONS[*]}; do
+    k=${row%:*}
+    [ "$k" == "$opt" ] || continue
+    echo ${row#*:}
+    return
+  done
+  echo "no"
+}
+
+# Check if enabled
+function enabled
+{
+  local val=$(_enabled $1)
+  [ "$val" == "yes" ] && return 0 || return 1
+}
+
+# Check if enabled (or auto)
+function enabled_or_auto
+{
+  local val=$(_enabled $1)
+  [ "$val" == "yes" -o "$val" == "auto" ] && return 0 || return 1
+}
+
+# ###########################################################################
+# Command Line
+# ###########################################################################
+
+# Show help
+function show_help
+{ 
+  local opt= val=
+  echo "Usage: $0 [options]"
+  echo ""
+  echo "Miscellaneous"
+  echo -e "  --help${TAB}Print this message"
+  echo ""
+  echo "Installation Paths"
+  echo -e "  --prefix=DIR${TAB}Installation root [$prefix]"
+  echo -e "  --bindir=DIR${TAB}Install binaries in DIR [$bindir]"
+  echo -e "  --libdir=DIR${TAB}Install libraries in DIR [$libdir]"
+  echo -e "  --mandir=DIR${TAB}Install man pages in DIR [$mandir]"
+  echo -e "  --datadir=DIR${TAB}Install data files in DIR [$datadir]"
+  echo ""
+  echo "Compiler/Arch"
+  echo -e "  --cc=CC${TAB}Build using compile [$CC]"
+  echo -e "  --cpu=CPU${TAB}Build and optimize for specific CPU"
+  echo -e "  --arch=ARCH${TAB}Build for architecture [$ARCH]"
+  echo -e "  --platform=PLATFORM${TAB}Build for platform [$PLATFORM]"
+  echo ""
+  echo "Options"
+  for opt in ${OPTIONS[*]}; do
+    val=${opt#*:}
+    opt=${opt%:*}
+    echo -e "  --enable-${opt}${TAB}Enable $opt [$val]"
+  done
+  exit 0
+}
+
+# Process command line
+function parse_args
+{
+  local opt= val=
+  for opt do
+    val=${opt#*=}
+    opt=${opt%=*}
+    opt=${opt#*--}
+    case "$opt" in
+      help)
+        show_help
+        ;;
+      *dir|prefix)
+        eval "$opt=$val"
+        ;;
+      cc|arch|cpu|platform)
+        eval "`toupper $opt`=$val"
+        ;;
+      enable-*)
+        opt=${opt#*-}
+        enable $opt
+        ;;
+      disable-*)
+        opt=${opt#*-}
+        disable $opt
+        ;;
+    esac
+  done
 }
 
 
-enabled(){
-    test "${1#!}" = "$1" && op== || op=!=
-    eval test "x\$${1#!}" $op "xyes"
+# ###########################################################################
+# Package tests
+# ###########################################################################
+
+# Check package
+function check_pkg
+{
+  local pkg=$1
+  local ver=$2
+  
+  # Version test
+  ver=$(echo $ver | sed 's/>=/ --atleast-version /'\
+                  | sed 's/<=/ --max-version /'\
+                  | sed 's/==/ --exact-version /')
+
+  # Check for package
+  if pkg-config $pkg $ver; then
+    enable_pkg $pkg
+  else  
+    return 0
+  fi
 }
 
-disabled(){
-    test "${1#!}" = "$1" && op== || op=!=
-    eval test "x\$${1#!}" $op "xno"
+# ###########################################################################
+# Compiler Tests
+# ###########################################################################
+
+# Check compiler
+function check_cc
+{
+  local hdr=$1
+  local opt=$2
+  cat >$TMPDIR/$$.c <<EOF
+$hdr
+int main() {
+ return 0;
+}
+EOF
+  $CC 2>/dev/null $TMPDIR/$$.c -o $TMPDIR/$$.bin $opt
 }
 
-toupper(){
-    echo "$@" | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ
+# Check compiler header
+function check_cc_header
+{
+  local hdr=$1
+  local nam=$2
+  [ -z "$nam" ] && nam=$hdr
+
+  # Enable if supported
+  if check_cc "#include <$1.h>"; then
+    enable $nam
+  else
+    return 1
+  fi
 }
 
-print_config(){
-    pfx=$1
-    header=$2
-    makefile=$3
-    shift 3
-    for cfg; do
-        ucname="`toupper $cfg`"
-        if enabled $cfg; then
-            echo "#define ${pfx}${ucname} 1" >> $header
-            echo "#define ENABLE_${ucname} 1" >> $header
-            echo "${pfx}${ucname}=yes" >> $makefile
-        else
-            echo "#define ENABLE_${ucname} 0" >> $header
-        fi
-    done
+# Check compiler option
+function check_cc_option
+{
+  local opt=$1
+  local nam=$2
+  [ -z "$nam" ] && nam=$opt
+  
+  # Enable if supported
+  if check_cc "" -m${opt}; then
+    enable $nam
+  else
+    return 1
+  fi
 }
 
+# ###########################################################################
+# Config output
+# ###########################################################################
 
+# Print config
+function print_config
+{
+  local pkg=
 
-setup_env(){
-	# Create the dir for local libs, and get rid of any relative path
+  # Compiler settings
+  echo "Compiler:"
+  echo -e "  Using C compiler:${TAB}${CC}"
+  echo -e "  Build for arch:${TAB}${ARCH}"
+  echo ""
 
+  # Packages
+  echo "Packages:"
+  for pkg in ${PACKAGES[*]}; do
+    echo -e "  ${pkg}:${TAB}$(pkg-config --modversion $pkg)"
+  done
+  echo ""
+  
+  # Installation
+  echo "Installation paths:"
+  echo -e "  Prefix:${TAB}${prefix}"
+  echo -e "  Binaries:${TAB}${bindir}"
+  echo -e "  Libraries:${TAB}${libdir}"
+  echo -e "  Man pages:${TAB}${mandir}"
+  echo -e "  Data files:${TAB}${datadir}"
+  echo ""
+}
+
+# Write configuration
+function write_config
+{
+  local pkg= opt= k= v=
+
+  # Create build directory
 	mkdir -p ${BUILDDIR}
 	BUILDDIR=`cd ${BUILDDIR} && pwd`
 
-	CONFIG_H=${BUILDDIR}/config.h
-	CONFIG_MAK=${BUILDDIR}/config.mak
-	CONFIG_DEF=${TOPDIR}/config.default
-
-	mkdir -p ${BUILDDIR}
-
-	# Create a tmpdir used during configure
-	mkdir -p ${TMPDIR}
-	TMPDIR=`cd ${TMPDIR} && pwd`
-
-	# Create config.mak
-
-	cat > ${CONFIG_MAK} << EOF 
-# Automatically generated by configure, do not edit
-TOPDIR=$TOPDIR
+  # Create make include
+	CONFIG_MK=${ROOTDIR}/.config.mk
+  cat > ${CONFIG_MK} <<EOF
+# Automatically generated by configure - DO NOT EDIT!
+ROOTDIR  ?= ${ROOTDIR}
+BUILDDIR ?= ${ROOTDIR}/build.${PLATFORM}
+OSENV    ?= ${OSENV}
+CFLAGS   += ${CFLAGS}
+LDFLAGS  += ${LDFLAGS}
 EOF
 
-	# Create config.h
-
-	cat > ${CONFIG_H} << EOF 
-/* Automatically generated by configure, do not edit */
+  # Create C include
+  CONFIG_H=${BUILDDIR}/config.h
+  cat > ${CONFIG_H} <<EOF
+// Automatically generated by configure - DO NOT EDIT!
 EOF
 
-	# Create config.default
-
-	cat > ${CONFIG_DEF} << EOF 
-# Automatically generated by configure, do not edit
-PLATFORM ?= $PLATFORM
+  # Add package config
+  for pkg in ${PACKAGES[*]}; do
+    cat >>${CONFIG_MK} <<EOF
+LDFLAGS += $(pkg-config --libs $pkg)
+CFLAGS  += $(pkg-config --cflags $pkg)
 EOF
+  done
 
-
+  # Add configuration
+  for row in ${OPTIONS[*]}; do
+    k=$(toupper ${row%:*})
+    v=${row#*:}
+    if [ "$v" == "yes" ]; then
+      cat >>${CONFIG_H} <<EOF
+#define ENABLE_${k} 1
+#define CONFIG_${k} 1
+EOF
+      cat >>${CONFIG_MK} <<EOF
+CONFIG_${k} = yes
+EOF
+    else
+      cat >>${CONFIG_H} <<EOF
+#define ENABLE_${k} 0
+EOF
+    fi
+  done
 }
 
-finalize() {
-
-cat >> ${CONFIG_MAK} << EOF 
-OSENV=${OSENV}
-LDFLAGS_cfg += -lm
-EOF
-
-    print_config CONFIG_ ${CONFIG_H} ${CONFIG_MAK} $CONFIG_LIST
-
-    echo "Final binary is: build.${PLATFORM}/tvheadend"
-
-    die
-}
