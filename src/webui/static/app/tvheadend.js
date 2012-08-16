@@ -318,6 +318,7 @@ tvheadend.app = function() {
 			minSize: 100,
 			maxSize: 400,
 			collapsible: true,
+			collapsed: true,
 			title:'System log',
 			margins:'0 0 0 0',
 			tools:[{

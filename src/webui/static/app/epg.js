@@ -80,7 +80,6 @@ tvheadend.epgDetails = function(event) {
 
     var win = new Ext.Window({
 	title: event.title,
-	bodyStyle: 'margin: 5px',
         layout: 'fit',
         width: 500,
         height: 300,
