@@ -263,7 +263,7 @@ main(int argc, char **argv)
   int crash = 0;
 
   /* Get current directory */
-  tvheadend_cwd = dirname(strdup(argv[0]));
+  tvheadend_cwd = dirname(dirname(strdup(argv[0])));
 
   // make sure the timezone is set
   tzset();

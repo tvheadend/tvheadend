@@ -20,13 +20,13 @@
 [ -z "$prefix"   ] && prefix=/usr/local
 [ -z "$bindir"   ] && bindir=\${prefix}/bin
 [ -z "$libdir"   ] && libdir=\${prefix}/lib
-[ -z "$datadir"  ] && datadir=\${prefix}/share/data
-[ -z "$mandir"   ] && mandir=\${prefix}/share/man
+[ -z "$datadir"  ] && datadir=\${prefix}/share
+[ -z "$mandir"   ] && mandir=\${datadir}/man
 
 # Compiler
 [ -z "$CC"       ] && CC=cc
 [ -z "$CFLAGS"   ] && CFLAGS=
-[ -z "$LDFLAGS"   ] && LDFLAGS=
+[ -z "$LDFLAGS"  ] && LDFLAGS=
 
 # Environment
 [ -z "$ROOTDIR"  ] && ROOTDIR=$(cd $(dirname $0); pwd)
@@ -155,7 +155,13 @@ function show_help
   for opt in ${OPTIONS[*]}; do
     val=${opt#*:}
     opt=${opt%:*}
-    echo -e "  --enable-${opt}${TAB}Enable $opt [$val]"
+    if [ "$val" == "yes" ]; then
+      echo -e "  --disable-${opt}${TAB}Enable $opt [$val]"
+    elif [ "$val" == "no" ]; then
+      echo -e "  --enable-${opt}${TAB}Enable $opt [$val]"
+    else
+      echo -e "  --(en|dis)able-${opt}${TAB}Enable $opt [$val]"
+    fi
   done
   exit 0
 }
@@ -198,9 +204,9 @@ function parse_args
 # Check package
 function check_pkg
 {
-  local pkg=$1
-  local ver=$2
-  
+  local pkg=$1; shift
+  local ver=$*
+
   # Version test
   ver=$(echo $ver | sed 's/>=/ --atleast-version /'\
                   | sed 's/<=/ --max-version /'\
@@ -209,9 +215,10 @@ function check_pkg
   # Check for package
   if pkg-config $pkg $ver; then
     enable_pkg $pkg
-  else  
     return 0
   fi
+
+  return 1
 }
 
 # ###########################################################################
@@ -275,6 +282,19 @@ function print_config
   echo "Compiler:"
   echo -e "  Using C compiler:${TAB}${CC}"
   echo -e "  Build for arch:${TAB}${ARCH}"
+  echo ""
+
+  # Options
+  echo "Options:"
+  for opt in ${OPTIONS[*]}; do
+    k=${opt%:*}
+    v=${opt#*:}
+    if [ "$v" == "yes" ]; then
+      echo -e "  $k:${TAB}yes"
+    else
+      echo -e "  $k:${TAB}no"
+    fi
+  done
   echo ""
 
   # Packages

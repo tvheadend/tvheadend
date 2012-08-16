@@ -104,11 +104,14 @@ fi
 # Write config
 write_config
 cat >> ${CONFIG_H} <<EOF
-#define TVHEADEND_DATADIR "$(eval echo ${datadir})"
+#define TVHEADEND_DATADIR "$(eval echo ${datadir})/tvheadend"
 EOF
 
 # Output config
 print_config
 echo "Final Binary:"
 echo "  $BUILDDIR/tvheadend"
+echo ""
+echo "Tvheadend Data Directory:"
+echo "  $(eval echo ${datadir}/tvheadend)"
 echo ""

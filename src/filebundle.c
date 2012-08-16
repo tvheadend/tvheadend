@@ -394,8 +394,8 @@ fb_file *fb_open2
   }
 
   /* Compress */
-  if (ret && !ret->gzip && compress) {
 #if ENABLE_ZLIB
+  if (ret && !ret->gzip && compress) {
     ret->gzip = 1;
       
     /* Get data */
@@ -418,11 +418,8 @@ fb_file *fb_open2
       free(ret);
       ret = NULL; 
     }
-#else
-    free(ret);
-    ret = NULL;
-#endif
   }
+#endif
 
   return ret;
 }
