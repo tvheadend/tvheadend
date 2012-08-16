@@ -20,7 +20,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#if ENABLE_ZLIB
 #include <zlib.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <assert.h>
@@ -71,6 +73,7 @@ struct filebundle_file
  * Compression/Decompression
  * *************************************************************************/
 
+#if ENABLE_ZLIB
 static uint8_t *_fb_inflate ( const uint8_t *data, size_t size, size_t orig )
 {
   int err;
@@ -134,6 +137,7 @@ static uint8_t *_fb_deflate ( const uint8_t *data, size_t orig, size_t *size )
   
   return bufout;
 }
+#endif
 
 /* **************************************************************************
  * Miscellanous
@@ -358,6 +362,7 @@ fb_file *fb_open2
 
       /* Inflate the file */
       if (fb->f.orig != -1 && decompress) {
+#if ENABLE_BUNDLE
         ret->gzip = 0;
         ret->size = fb->f.orig;
         ret->buf  = _fb_inflate(fb->f.data, fb->f.size, fb->f.orig);
@@ -365,6 +370,10 @@ fb_file *fb_open2
           free(ret);
           ret = NULL;
         }
+#else
+        free(ret);
+        ret = NULL;
+#endif
       }
     }
 
@@ -386,6 +395,7 @@ fb_file *fb_open2
 
   /* Compress */
   if (ret && !ret->gzip && compress) {
+#if ENABLE_ZLIB
     ret->gzip = 1;
       
     /* Get data */
@@ -408,6 +418,10 @@ fb_file *fb_open2
       free(ret);
       ret = NULL; 
     }
+#else
+    free(ret);
+    ret = NULL;
+#endif
   }
 
   return ret;
