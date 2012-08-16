@@ -72,6 +72,7 @@ static int log_decorate;
 int log_debug_to_syslog;
 int log_debug_to_console;
 
+char *tvheadend_cwd;
 
 static void
 handle_sigpipe(int x)
@@ -261,6 +262,9 @@ main(int argc, char **argv)
   uint32_t adapter_mask = 0xffffffff;
   int crash = 0;
 
+  /* Get current directory */
+  tvheadend_cwd = dirname(strdup(argv[0]));
+
   // make sure the timezone is set
   tzset();
 
@@ -403,7 +407,7 @@ main(int argc, char **argv)
 #endif
   http_server_init();
 
-  webui_init(tvheadend_dataroot());
+  webui_init();
 
   serviceprobe_init();
 
@@ -450,11 +454,9 @@ main(int argc, char **argv)
   pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 
   tvhlog(LOG_NOTICE, "START", "HTS Tvheadend version %s started, "
-	 "running as PID:%d UID:%d GID:%d, settings located in '%s', "
-	 "dataroot: %s",
+	 "running as PID:%d UID:%d GID:%d, settings located in '%s'",
 	 tvheadend_version,
-	 getpid(), getuid(), getgid(), hts_settings_get_root(),
-	 tvheadend_dataroot() ?: "<Embedded file system>");
+	 getpid(), getuid(), getgid(), hts_settings_get_root());
 
   if(crash)
     abort();

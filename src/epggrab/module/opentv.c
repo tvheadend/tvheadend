@@ -921,26 +921,19 @@ static void _opentv_prov_load ( htsmsg_t *m )
 void opentv_init ( void )
 {
   htsmsg_t *m;
-  const char *dr = tvheadend_dataroot();
 
   /* Load dictionaries */
   if ((m = hts_settings_load("epggrab/opentv/dict")))
-    _opentv_dict_load(m);
-  if ((m = hts_settings_load("%s/data/epggrab/opentv/dict", dr)))
     _opentv_dict_load(m);
   tvhlog(LOG_DEBUG, "opentv", "dictonaries loaded");
 
   /* Load genres */
   if ((m = hts_settings_load("epggrab/opentv/genre")))
     _opentv_genre_load(m);
-  if ((m = hts_settings_load("%s/data/epggrab/opentv/genre", dr)))
-    _opentv_genre_load(m);
   tvhlog(LOG_DEBUG, "opentv", "genre maps loaded");
 
   /* Load providers */
   if ((m = hts_settings_load("epggrab/opentv/prov")))
-    _opentv_prov_load(m);
-  if ((m = hts_settings_load("%s/data/epggrab/opentv/prov", dr)))
     _opentv_prov_load(m);
   tvhlog(LOG_DEBUG, "opentv", "providers loaded");
 }

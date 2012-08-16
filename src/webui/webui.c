@@ -773,8 +773,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
  *
  */
 static void
-webui_static_content(const char *content_path, const char *http_path,
-		     const char *source)
+webui_static_content(const char *http_path, const char *source)
 {
   http_path_add(http_path, strdup(source), page_static_file, ACCESS_WEB_INTERFACE);
 }
@@ -796,7 +795,7 @@ int page_statedump(http_connection_t *hc, const char *remain, void *opaque);
  * WEB user interface
  */
 void
-webui_init(const char *contentpath)
+webui_init(void)
 {
   http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
 
@@ -808,9 +807,9 @@ webui_init(const char *contentpath)
 
   http_path_add("/stream",  NULL, http_stream,  ACCESS_STREAMING);
 
-  webui_static_content(contentpath, "/static",        "src/webui/static");
-  webui_static_content(contentpath, "/docs",          "docs/html");
-  webui_static_content(contentpath, "/docresources",  "docs/docresources");
+  webui_static_content("/static",        "src/webui/static");
+  webui_static_content("/docs",          "docs/html");
+  webui_static_content("/docresources",  "docs/docresources");
 
   simpleui_start();
   extjs_start();

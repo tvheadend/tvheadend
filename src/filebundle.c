@@ -175,20 +175,39 @@ int fb_stat ( const char *path, struct filebundle_stat *st )
  * Directory processing
  * *************************************************************************/
 
+/* Open directory (directly) */
+static fb_dir *_fb_opendir ( const char *root, const char *path )
+{
+  DIR *dir;
+  char buf[512];
+  fb_dir *ret = NULL;
+
+  /* Pre-pend root */
+  if (root) {
+    snprintf(buf, sizeof(buf), "%s/%s", root, path);
+    path = buf;
+  }
+
+  /* Open */
+  if ((dir = opendir(path))) {
+    ret         = calloc(1, sizeof(fb_dir));
+    ret->type   = FB_DIRECT;
+    ret->d.root = strdup(path);
+    ret->d.cur  = dir;
+  }
+  return ret;
+}
+
 /* Open directory */
 fb_dir *fb_opendir ( const char *path )
 {
   fb_dir *ret = NULL;
-  const char *root;
-  
-  /* Use settings path */
-  if (*path != '/')
-    root = tvheadend_dataroot();
-  else
-    root = "";
 
-  /* Bundle */
-  if (!root) {
+  /* In-direct (search) */
+  if (*path != '/') {
+
+    /* Bundle */
+#if ENABLE_BUNDLE
     char *tmp1 = strdup(path);
     char *tmp2 = strtok(tmp1, "/");
     filebundle_entry_t *fb = filebundle_root;
@@ -209,18 +228,17 @@ fb_dir *fb_opendir ( const char *path )
       ret->b.root = fb;
       ret->b.cur  = fb->d.child;
     }
-  
+#endif
+
+    /* Local */
+    if (!ret) ret = _fb_opendir(tvheadend_cwd, path);
+
+    /* System */
+    if (!ret) ret = _fb_opendir(TVHEADEND_DATADIR, path);
+
   /* Direct */
   } else {
-    DIR *dir;
-    char buf[512];
-    snprintf(buf, sizeof(buf), "%s/%s", root, path);
-    if ((dir = opendir(buf))) {
-      ret         = calloc(1, sizeof(fb_dir));
-      ret->type   = FB_DIRECT;
-      ret->d.root = strdup(buf);
-      ret->d.cur  = dir;
-    }
+    ret = _fb_opendir(NULL, path);
   }
 
   return ret;
