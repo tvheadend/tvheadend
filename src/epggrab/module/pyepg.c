@@ -309,9 +309,6 @@ static int _pyepg_parse_broadcast
   if ((stop    = htsmsg_get_str(attr, "stop")) == NULL ) return 0;
   if ((tags    = htsmsg_get_map(data, "tags")) == NULL) return 0;
 
-  /* Find episode */
-  if ((episode = epg_episode_find_by_uri(id, 1, &save)) == NULL) return 0;
-
   /* Parse times */
   if (!_pyepg_parse_time(start, &tm_start)) return 0;
   if (!_pyepg_parse_time(stop, &tm_stop)) return 0;
@@ -322,9 +319,6 @@ static int _pyepg_parse_broadcast
   if ( broadcast == NULL ) return 0;
   stats->broadcasts.total++;
   if ( save ) stats->broadcasts.created++;
-
-  /* Set episode */
-  save |= epg_broadcast_set_episode(broadcast, episode, mod);
 
   /* Quality */
   u32 = htsmsg_get_map(tags, "hd") ? 1 : 0;
@@ -342,6 +336,10 @@ static int _pyepg_parse_broadcast
   save |= epg_broadcast_set_is_new(broadcast, u32, mod);
   u32 = htsmsg_get_map(tags, "repeat") ? 1 : 0;
   save |= epg_broadcast_set_is_repeat(broadcast, u32, mod);
+
+  /* Set episode */
+  if ((episode = epg_episode_find_by_uri(id, 1, &save)) == NULL) return 0;
+  save |= epg_broadcast_set_episode(broadcast, episode, mod);
 
   if (save) stats->broadcasts.modified++;  
 

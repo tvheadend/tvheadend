@@ -16,17 +16,19 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "filebundle.h"
+#include "tvheadend.h"
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#if ENABLE_ZLIB
 #include <zlib.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <assert.h>
-
-#include "filebundle.h"
-#include "tvheadend.h"
 
 /* **************************************************************************
  * Opaque data types
@@ -71,6 +73,7 @@ struct filebundle_file
  * Compression/Decompression
  * *************************************************************************/
 
+#if (ENABLE_ZLIB && ENABLE_BUNDLE)
 static uint8_t *_fb_inflate ( const uint8_t *data, size_t size, size_t orig )
 {
   int err;
@@ -101,7 +104,9 @@ static uint8_t *_fb_inflate ( const uint8_t *data, size_t size, size_t orig )
   
   return bufout;
 }
+#endif
 
+#if ENABLE_ZLIB
 static uint8_t *_fb_deflate ( const uint8_t *data, size_t orig, size_t *size )
 {
   int err;
@@ -134,6 +139,7 @@ static uint8_t *_fb_deflate ( const uint8_t *data, size_t orig, size_t *size )
   
   return bufout;
 }
+#endif
 
 /* **************************************************************************
  * Miscellanous
@@ -175,20 +181,39 @@ int fb_stat ( const char *path, struct filebundle_stat *st )
  * Directory processing
  * *************************************************************************/
 
+/* Open directory (directly) */
+static fb_dir *_fb_opendir ( const char *root, const char *path )
+{
+  DIR *dir;
+  char buf[512];
+  fb_dir *ret = NULL;
+
+  /* Pre-pend root */
+  if (root) {
+    snprintf(buf, sizeof(buf), "%s/%s", root, path);
+    path = buf;
+  }
+
+  /* Open */
+  if ((dir = opendir(path))) {
+    ret         = calloc(1, sizeof(fb_dir));
+    ret->type   = FB_DIRECT;
+    ret->d.root = strdup(path);
+    ret->d.cur  = dir;
+  }
+  return ret;
+}
+
 /* Open directory */
 fb_dir *fb_opendir ( const char *path )
 {
   fb_dir *ret = NULL;
-  const char *root;
-  
-  /* Use settings path */
-  if (*path != '/')
-    root = tvheadend_dataroot();
-  else
-    root = "";
 
-  /* Bundle */
-  if (!root) {
+  /* In-direct (search) */
+  if (*path != '/') {
+
+    /* Bundle */
+#if ENABLE_BUNDLE
     char *tmp1 = strdup(path);
     char *tmp2 = strtok(tmp1, "/");
     filebundle_entry_t *fb = filebundle_root;
@@ -209,18 +234,17 @@ fb_dir *fb_opendir ( const char *path )
       ret->b.root = fb;
       ret->b.cur  = fb->d.child;
     }
-  
+#endif
+
+    /* Local */
+    if (!ret) ret = _fb_opendir(tvheadend_cwd, path);
+
+    /* System */
+    if (!ret) ret = _fb_opendir(TVHEADEND_DATADIR, path);
+
   /* Direct */
   } else {
-    DIR *dir;
-    char buf[512];
-    snprintf(buf, sizeof(buf), "%s/%s", root, path);
-    if ((dir = opendir(buf))) {
-      ret         = calloc(1, sizeof(fb_dir));
-      ret->type   = FB_DIRECT;
-      ret->d.root = strdup(buf);
-      ret->d.cur  = dir;
-    }
+    ret = _fb_opendir(NULL, path);
   }
 
   return ret;
@@ -340,6 +364,7 @@ fb_file *fb_open2
 
       /* Inflate the file */
       if (fb->f.orig != -1 && decompress) {
+#if ENABLE_BUNDLE
         ret->gzip = 0;
         ret->size = fb->f.orig;
         ret->buf  = _fb_inflate(fb->f.data, fb->f.size, fb->f.orig);
@@ -347,6 +372,10 @@ fb_file *fb_open2
           free(ret);
           ret = NULL;
         }
+#else
+        free(ret);
+        ret = NULL;
+#endif
       }
     }
 
@@ -367,6 +396,7 @@ fb_file *fb_open2
   }
 
   /* Compress */
+#if ENABLE_ZLIB
   if (ret && !ret->gzip && compress) {
     ret->gzip = 1;
       
@@ -391,6 +421,7 @@ fb_file *fb_open2
       ret = NULL; 
     }
   }
+#endif
 
   return ret;
 }

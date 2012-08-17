@@ -361,6 +361,7 @@ int epggrab_module_enable_socket ( void *m, uint8_t e )
   /* Enable */
   } else {
     unlink(mod->path); // just in case!
+    hts_settings_makedirs(mod->path);
 
     mod->sock = socket(AF_UNIX, SOCK_STREAM, 0);
     assert(mod->sock);
