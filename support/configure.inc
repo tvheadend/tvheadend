@@ -334,10 +334,10 @@ ARCH      = ${ARCH}
 CFLAGS   += ${CFLAGS}
 LDFLAGS  += ${LDFLAGS}
 prefix    = ${prefix}
-bindir    = \${DESTDIR}${bindir}
-mandir    = \${DESTDIR}${mandir}
-datadir   = \${DESTDIR}${datadir}
-libdir    = \${DESTDIR}${libdir}
+bindir    = ${bindir}
+mandir    = ${mandir}
+datadir   = ${datadir}
+libdir    = ${libdir}
 EOF
 
   # Create C include
