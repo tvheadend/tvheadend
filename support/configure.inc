@@ -63,7 +63,7 @@ function die
 # Enable/Disable option
 function _enable
 {
-  local opt=$1 val=$2 row= k= v=
+  local opt=$1 val=$2 ignore=$3 row= k= v=
   for row in ${OPTIONS[*]}; do
     k=${row%:*}
     [ "$k" == "$opt" ] || continue
@@ -73,19 +73,19 @@ function _enable
     fi
     return
   done
-  OPTIONS=(${OPTIONS[@]} $opt:$val)
+  [ -z "$ignore" ] && OPTIONS=(${OPTIONS[@]} $opt:$val)
 }
 
 # Enable option
 function enable
 {
-  _enable $1 yes
+  _enable $1 yes $2
 }
 
 # Disable option
 function disable
 {
-  _enable $1 no
+  _enable $1 no $2
 }
 
 # Enable package
@@ -186,11 +186,11 @@ function parse_args
         ;;
       enable-*)
         opt=${opt#*-}
-        enable $opt
+        enable $opt 1
         ;;
       disable-*)
         opt=${opt#*-}
-        disable $opt
+        disable $opt 1
         ;;
     esac
   done
