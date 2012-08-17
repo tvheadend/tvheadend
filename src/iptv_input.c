@@ -535,6 +535,7 @@ iptv_service_find(const char *id, int create)
 
   t = service_create(id, SERVICE_TYPE_IPTV, S_MPEG_TS);
 
+  t->s_servicetype   = ST_SDTV;
   t->s_start_feed    = iptv_service_start;
   t->s_refresh_feed  = iptv_service_refresh;
   t->s_stop_feed     = iptv_service_stop;
@@ -598,6 +599,8 @@ iptv_service_load(void)
       t->s_servicetype = u32;
     else if (!htsmsg_get_u32(c, "radio", &u32))
       t->s_servicetype = ST_RADIO;
+    else
+      t->s_servicetype = ST_SDTV;
     // Note: for compat with old PR #52 I load "radio" flag
 
     pthread_mutex_lock(&t->s_stream_mutex);
