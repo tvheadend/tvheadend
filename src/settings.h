@@ -34,4 +34,6 @@ const char *hts_settings_get_root(void);
 
 int hts_settings_open_file(int for_write, const char *pathfmt, ...);
 
+int hts_settings_makedirs ( const char *path );
+
 #endif /* HTSSETTINGS_H__ */ 
