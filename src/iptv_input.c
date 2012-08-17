@@ -414,6 +414,9 @@ iptv_service_save(service_t *t)
 
   htsmsg_add_u32(m, "pmt", t->s_pmt_pid);
 
+  if(t->s_servicetype)
+    htsmsg_add_u32(m, "stype", t->s_servicetype);
+
   if(t->s_iptv_port)
     htsmsg_add_u32(m, "port", t->s_iptv_port);
 
@@ -590,6 +593,9 @@ iptv_service_load(void)
     
     if(!htsmsg_get_u32(c, "port", &u32))
       t->s_iptv_port = u32;
+
+    if(!htsmsg_get_u32(c, "stype", &u32))
+      t->s_servicetype = u32;
 
     pthread_mutex_lock(&t->s_stream_mutex);
     service_make_nicename(t);

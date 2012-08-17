@@ -1502,6 +1502,11 @@ service_update_iptv(htsmsg_t *in)
       save = 1;
     }
 
+    if (!htsmsg_get_u32(c, "stype", &u32)) {
+      t->s_servicetype = u32;
+      save = 1;
+    }
+
     if((s = htsmsg_get_str(c, "group")) != NULL) {
       if(!inet_pton(AF_INET, s, &t->s_iptv_group.s_addr)){
       	inet_pton(AF_INET6, s, &t->s_iptv_group6.s6_addr);
@@ -1542,6 +1547,7 @@ build_record_iptv(service_t *t)
   }
 
   htsmsg_add_u32(r, "port", t->s_iptv_port);
+  htsmsg_add_u32(r, "stype", t->s_servicetype);
   htsmsg_add_u32(r, "enabled", t->s_enabled);
   return r;
 }
@@ -1612,6 +1618,11 @@ extjs_iptvservices(http_connection_t *hc, const char *remain, void *opaque)
       extjs_service_delete(in);
     
     out = htsmsg_create_map();
+
+  } else if (!strcmp(op, "servicetypeList")) {
+    out   = htsmsg_create_map();
+    array = servicetype_list();
+    htsmsg_add_msg(out, "entries", array);
 
   } else {
     pthread_mutex_unlock(&global_lock);
