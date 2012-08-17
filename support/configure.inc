@@ -330,6 +330,7 @@ function write_config
 ROOTDIR  ?= ${ROOTDIR}
 BUILDDIR ?= ${ROOTDIR}/build.${PLATFORM}
 OSENV    ?= ${OSENV}
+ARCH      = ${ARCH}
 CFLAGS   += ${CFLAGS}
 LDFLAGS  += ${LDFLAGS}
 EOF
