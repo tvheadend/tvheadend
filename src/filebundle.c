@@ -16,6 +16,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "filebundle.h"
+#include "tvheadend.h"
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,9 +29,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <assert.h>
-
-#include "filebundle.h"
-#include "tvheadend.h"
 
 /* **************************************************************************
  * Opaque data types
@@ -73,7 +73,7 @@ struct filebundle_file
  * Compression/Decompression
  * *************************************************************************/
 
-#if ENABLE_ZLIB
+#if (ENABLE_ZLIB && ENABLE_BUNDLE)
 static uint8_t *_fb_inflate ( const uint8_t *data, size_t size, size_t orig )
 {
   int err;
@@ -104,7 +104,9 @@ static uint8_t *_fb_inflate ( const uint8_t *data, size_t size, size_t orig )
   
   return bufout;
 }
+#endif
 
+#if ENABLE_ZLIB
 static uint8_t *_fb_deflate ( const uint8_t *data, size_t orig, size_t *size )
 {
   int err;

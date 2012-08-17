@@ -21,8 +21,8 @@ OPTIONS=(
   "linuxdvb:yes"
   "dvbscan:yes"
   "avahi:auto"
-  "bundle:auto"
   "zlib:auto"
+  "bundle:no"
 )
 
 #
