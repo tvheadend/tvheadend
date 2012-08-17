@@ -344,6 +344,29 @@ static int _xmltv_parse_programme_tags
   /* Ignore */
   if (!title) return 0;
 
+  /*
+   * Broadcast
+   */
+
+  /* Create/Find broadcast */
+  if (!(ebc = epg_broadcast_find_by_time(ch, start, stop, 0, 1, &save2))) return 0;
+  stats->broadcasts.total++;
+  if (save2) stats->broadcasts.created++;
+
+  /* Quality metadata */
+  save2 |= parse_vid_quality(mod, ebc, ee, htsmsg_get_map(tags, "video"));
+
+  /* Accessibility */
+  save2 |= xmltv_parse_accessibility(mod, ebc, tags);
+
+  /* Misc */
+  if (htsmsg_get_map(tags, "previously-shown"))
+    save |= epg_broadcast_set_is_repeat(ebc, 1, mod);
+  else if (htsmsg_get_map(tags, "premiere") ||
+           htsmsg_get_map(tags, "new"))
+    save |= epg_broadcast_set_is_new(ebc, 1, mod);
+
+  /* Get episode info */
   get_episode_info(mod, tags, &uri, &suri, &onscreen,
                    &sn, &sc, &en, &ec, &pn, &pc);
 
@@ -360,62 +383,40 @@ static int _xmltv_parse_programme_tags
   /*
    * Episode
    */
-  if (!uri) uri = epg_hash(title, NULL, desc);
+  if (!uri)
+    uri = epg_hash(title, NULL, desc);
   if (uri) {
     ee  = epg_episode_find_by_uri(uri, 1, &save);
     free(uri);
   }
-  if (!ee) return 0;
-  stats->episodes.total++;
-  if (save) stats->episodes.created++;
+  if (ee) {
+    stats->episodes.total++;
+    if (save) stats->episodes.created++;
 
-  if (es)
-    save |= epg_episode_set_season(ee, es, mod);
-  if (title)
-    save |= epg_episode_set_title(ee, title, mod);
-  if (desc)
-    save |= epg_episode_set_description(ee, desc, mod);
-  if ((egl = _xmltv_parse_categories(tags))) {
-    save |= epg_episode_set_genre(ee, egl, mod);
-    epg_genre_list_destroy(egl);
-  }
-  if (pn)   save |= epg_episode_set_part(ee, pn, pc, mod);
-  if (en)   save |= epg_episode_set_number(ee, en, mod);
-  if (save) stats->episodes.modified++;
-
-  /*
-   * Broadcast
-   */
-
-  // TODO: need to handle certification and ratings
-  // TODO: need to handle season numbering!
-  // TODO: need to handle onscreen numbering
-  //if (onscreen) save |= epg_episode_set_onscreen(ee, onscreen);
-
-  /* Create/Find broadcast */
-  ebc = epg_broadcast_find_by_time(ch, start, stop, 0, 1, &save2);
-  if ( ebc ) {
-    stats->broadcasts.total++;
-    if (save2) stats->broadcasts.created++;
     save2 |= epg_broadcast_set_episode(ebc, ee, mod);
 
-    /* Quality metadata */
-    save2 |= parse_vid_quality(mod, ebc, ee, htsmsg_get_map(tags, "video"));
+    if (es)
+      save |= epg_episode_set_season(ee, es, mod);
+    if (title)
+      save |= epg_episode_set_title(ee, title, mod);
+    if (desc)
+      save |= epg_episode_set_description(ee, desc, mod);
+    if ((egl = _xmltv_parse_categories(tags))) {
+      save |= epg_episode_set_genre(ee, egl, mod);
+      epg_genre_list_destroy(egl);
+    }
+    if (pn)   save |= epg_episode_set_part(ee, pn, pc, mod);
+    if (en)   save |= epg_episode_set_number(ee, en, mod);
+    if (save) stats->episodes.modified++;
 
-    /* Accessibility */
-    save2 |= xmltv_parse_accessibility(mod, ebc, tags);
-
-    /* Misc */
-    if (htsmsg_get_map(tags, "previously-shown"))
-      save |= epg_broadcast_set_is_repeat(ebc, 1, mod);
-    else if (htsmsg_get_map(tags, "premiere") ||
-             htsmsg_get_map(tags, "new"))
-      save |= epg_broadcast_set_is_new(ebc, 1, mod);
-  
-    /* Stats */
-    if (save2) stats->broadcasts.modified++;
+    // TODO: need to handle certification and ratings
+    // TODO: need to handle season numbering!
+    // TODO: need to handle onscreen numbering
   }
-  
+
+  /* Stats */
+  if (save2) stats->broadcasts.modified++;
+
   return save | save2 | save3;
 }
 
