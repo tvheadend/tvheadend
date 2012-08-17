@@ -596,6 +596,9 @@ iptv_service_load(void)
 
     if(!htsmsg_get_u32(c, "stype", &u32))
       t->s_servicetype = u32;
+    else if (!htsmsg_get_u32(c, "radio", &u32))
+      t->s_servicetype = ST_RADIO;
+    // Note: for compat with old PR #52 I load "radio" flag
 
     pthread_mutex_lock(&t->s_stream_mutex);
     service_make_nicename(t);
