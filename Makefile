@@ -124,6 +124,10 @@ SRCS += src/webui/webui.c \
 	src/webui/simpleui.c \
 	src/webui/statedump.c \
 
+SRCS += src/muxer.c \
+	src/muxer_pass.c \
+	src/muxer_tvh.c \
+
 #
 # Optional code
 #
