@@ -160,6 +160,10 @@ SRCS-${CONFIG_CWC} += src/cwc.c \
 # Avahi
 SRCS-$(CONFIG_AVAHI) += src/avahi.c
 
+# libav
+SRCS-$(CONFIG_LIBAV) += src/muxer_libav.c \
+			src/plumbing/transcode.c \
+
 # Optimised code
 SRCS-${CONFIG_MMX}  += src/ffdecsa/ffdecsa_mmx.c
 SRCS-${CONFIG_SSE2} += src/ffdecsa/ffdecsa_sse2.c
