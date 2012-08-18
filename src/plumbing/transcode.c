@@ -465,92 +465,53 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
     case SCT_MPEG2VIDEO:
       ts->tctx->codec_id       = CODEC_ID_MPEG2VIDEO;
       ts->tctx->pix_fmt        = PIX_FMT_YUV420P;
-      ts->tctx->flags         |= CODEC_FLAG_QSCALE;
-      ts->tctx->rc_lookahead   = 0;
-      ts->tctx->max_b_frames   = 0;
+      ts->tctx->bit_rate       = 2 * ts->tctx->width * ts->tctx->height;
+      ts->tctx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
+
       ts->tctx->qmin           = 1;
       ts->tctx->qmax           = FF_LAMBDA_MAX;
-      ts->tctx->global_quality = 10;
-      ts->tctx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
+
+      ts->tctx->bit_rate       = 2 * ts->tctx->width * ts->tctx->height;
+      ts->tctx->rc_buffer_size = 2 * ts->tctx->bit_rate;
+      ts->tctx->rc_max_rate    = 2 * ts->tctx->bit_rate;
+
       break;
     case SCT_MPEG4VIDEO:
       ts->tctx->codec_id       = CODEC_ID_MPEG4;
       ts->tctx->pix_fmt        = PIX_FMT_YUV420P;
-      //ts->tctx->flags         |= CODEC_FLAG_QSCALE;
-      ts->tctx->rc_lookahead   = 0;
-      ts->tctx->max_b_frames   = 0;
-      ts->tctx->qmin           = 1;
-      ts->tctx->qmax           = FF_LAMBDA_MAX;
-      ts->tctx->global_quality = 10;
       ts->tctx->bit_rate       = 2 * ts->tctx->width * ts->tctx->height;
       ts->tctx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
+
+      ts->tctx->qmin = 1;
+      ts->tctx->qmax = 5;
+
+      ts->tctx->bit_rate       = 2 * ts->tctx->width * ts->tctx->height;
+      ts->tctx->rc_buffer_size = 2 * ts->tctx->bit_rate;
+      ts->tctx->rc_max_rate    = 2 * ts->tctx->bit_rate;
       break;
       
     case SCT_VP8:
-      ts->tctx->codec_id     = CODEC_ID_VP8;
-      ts->tctx->pix_fmt      = PIX_FMT_YUV420P;
-      //ts->tctx->flags     |= CODEC_FLAG_QSCALE;
-      ts->tctx->rc_lookahead = 1;
-      ts->tctx->max_b_frames = 1;
-      ts->tctx->qmin         = 1;
-      ts->tctx->qmax         = 63;
-      ts->tctx->bit_rate     = 8 * ts->tctx->width * ts->tctx->height;
-      ts->tctx->rc_min_rate  = ts->tctx->bit_rate;
-      ts->tctx->rc_max_rate  = ts->tctx->bit_rate;
-      ts->enc_frame->quality = 20;
+      ts->tctx->codec_id       = CODEC_ID_VP8;
+      ts->tctx->pix_fmt        = PIX_FMT_YUV420P;
+      ts->tctx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
+
+      ts->tctx->qmin = 10;
+      ts->tctx->qmax = 20;
+
+      av_dict_set(&opts, "quality",  "realtime", 0);
+
+      ts->tctx->bit_rate       = 2 * ts->tctx->width * ts->tctx->height;
+      ts->tctx->rc_buffer_size = 2 * ts->tctx->bit_rate;
+      ts->tctx->rc_max_rate    = 2 * ts->tctx->bit_rate;
       break;
 
     case SCT_H264:
-      ts->tctx->codec_id = CODEC_ID_H264;
-      ts->tctx->pix_fmt  = PIX_FMT_YUV420P;
+      ts->tctx->codec_id       = CODEC_ID_H264;
+      ts->tctx->pix_fmt        = PIX_FMT_YUV420P;
+      ts->tctx->flags          |= CODEC_FLAG_GLOBAL_HEADER;
 
-      // dia (x264) / epzs (FFmpeg) is the simplest search, consisting of starting at the best predictor, 
-      // checking the motion vectors at one pixel upwards, left, down, and to the right, picking the best, 
-      // and repeating the process until it no longer finds any better motion vector.
-      // hex (x264) / hex (FFmpeg) consists of a similar strategy, except it uses a range-2 search of 6 
-      // surrounding points, thus the name. It is considerably more efficient than DIA and hardly any slower, 
-      // and therefore makes a good choice for general-use encoding.
-      // umh (x264) / umh (FFmpeg) is considerably slower than HEX, but searches a complex multi-hexagon pattern 
-      // in order to avoid missing harder-to-find motion vectors. Unlike HEX and DIA, the merange parameter 
-      // directly controls UMH's search radius, allowing one to increase or decrease the size of the wide search.
-      // esa (x264) / full (FFmpeg) is a highly optimized intelligent search of the entire motion search space 
-      // within merange of the best predictor. It is mathematically equivalent to the bruteforce method of searching 
-      // every single motion vector in that area, though faster. However, it is still considerably slower than UMH, 
-      // with not too much benefit, so is not particularly useful for everyday encoding.
-      // One of the most important settings for x264, both speed and quality-wise.
-      ts->tctx->me_method = 0;//ME_HEX
-
-      // 1: Fastest, but extremely low quality. Should be avoided except on first pass encoding.
-      // 2-5: Progressively better and slower, 5 serves as a good medium for higher speed encoding.
-      // 6-7: 6 is the default. Activates rate-distortion optimization for partition decision. This can considerably 
-      //      improve efficiency, though it has a notable speed cost. 6 activates it in I/P frames, and subme7 activates 
-      //      it in B frames.
-      // 8-9: Activates rate-distortion refinement, which uses RDO to refine both motion vectors and intra prediction 
-      //      modes. Slower than subme 6, but again, more efficient.
-      // An extremely important encoding parameter which determines what algorithms are used for both subpixel motion 
-      // searching and partition decision.
-      ts->tctx->me_subpel_quality = 7;
-
-      // MErange controls the max range of the motion search. For HEX and DIA, this is clamped to between 4 and 16, 
-      // with a default of 16. For UMH and ESA, it can be increased beyond the default 16 to allow for a wider-range 
-      // motion search, which is useful on HD footage and for high-motion footage. Note that for UMH and ESA,
-      // increasing MErange will significantly slow down encoding.
-      ts->tctx->me_range = 16;
-
-      // Keyframe interval, also known as GOP length. This determines the maximum distance between I-frames. 
-      // Very high GOP lengths will result in slightly more efficient compression, but will make seeking in 
-      // the video somewhat more difficult. Recommended default: 250
-      ts->tctx->gop_size = 250;
-
-      // Minimum GOP length, the minimum distance between I-frames.
-      // Recommended default: 25
-      ts->tctx->keyint_min = 25;
-
-      // Adjusts the sensitivity of x264's scenecut detection. Rarely needs to be adjusted. 
-      // Recommended default: 40
-      ts->tctx->scenechange_threshold = 40;
-
-      // Qscale difference between I-frames and P-frames. Note: -i_qfactor is handled a little differently than --ipratio. 
+      // Qscale difference between I-frames and P-frames. 
+      // Note: -i_qfactor is handled a little differently than --ipratio. 
       // Recommended: -i_qfactor 0.71
       ts->tctx->i_quant_factor = 0.71;
 
@@ -566,88 +527,13 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
       // Recommended default: -qmax 51
       ts->tctx->qmax = 30;
 
-      // Set max QP step.
-      // Recommended default: -qdiff 4
-      ts->tctx->max_qdiff = 4;
+      av_dict_set(&opts, "preset",  "medium", 0);
+      av_dict_set(&opts, "profile", "baseline", 0);
 
-      // One of H.264's most useful features is the abillity to reference frames other than the one immediately 
-      // prior to the current frame. This parameter lets one specify how many references can be used, through a 
-      // maximum of 16. Increasing the number of refs increases the DPB (Decoded Picture Buffer) requirement, which 
-      // means hardware playback devices will often have strict limits to the number of refs they can handle. 
-      // In live-action sources, more reference have limited use beyond 4-8, but in cartoon sources up to the maximum 
-      // value of 16 is often useful. More reference frames require more processing power because every frame is searched 
-      // by the motion search (except when an early skip decision is made). The slowdown is especially apparent with 
-      // slower motion estimation methods.
-      // Recommended default: -refs 6
-      ts->tctx->refs = 6;
-
-      // B-frames are a core element of H.264 and are more efficient in H.264 than any previous standard. 
-      // Some specific targets, such as HD-DVD and Blu-Ray, have limitations on the number of consecutive B-frames. 
-      // Most, however, do not; as a result, there is rarely any negative effect to setting this to the maximum (16) 
-      // since x264 will, if B-adapt is used, automatically choose the best number of B-frames anyways. 
-      // This parameter simply serves to limit the max number of B-frames. 
-      // Note that Baseline Profile, such as that used by iPods, does not support B-frames. 
-      // Recommended default: 16
-      ts->tctx->max_b_frames = 16;
-
-      // x264, by default, adaptively decides through a low-resolution lookahead the best number of B-frames to use. 
-      // It is possible to disable this adaptivity; this is not recommended. 
-      // Recommended default: 1 
-      //
-      // 0: Very fast, but not recommended. Does not work with pre-scenecut (scenecut must be off to force off b-adapt).
-      // 1: Fast, default mode in x264. A good balance between speed and quality.
-      // 2: A much slower but more accurate B-frame decision mode that correctly detects fades and generally gives 
-      //    considerably better quality. Its speed gets considerably slower at high bframes values, so its recommended to 
-      //    keep bframes relatively low (perhaps around 3) when using this option. It also may slow down the first pass of 
-      //    x264 when in threaded mode.
-      ts->tctx->b_frame_strategy = 1;
-
-      // QP difference between chroma and luma.
-      ts->tctx->chromaoffset = 0;
-
-      // Constant quality mode (also known as constant ratefactor). Bitrate corresponds approximately to that of constant quantizer, 
-      // but gives better quality overall at little speed cost. The best one-pass option in x264.
-      ts->tctx->crf = 10;
-
-      // Constant quantizer mode. Not exactly constant completely--B-frames and I-frames have different quantizers from P-frames. 
-      // Generally should not be used, since CRF gives better quality at the same bitrate.
-      ts->tctx->cqp  = 25;
-
-      // Enables target bitrate mode. Attempts to reach a specific bitrate. Should be used in 2-pass mode whenever possible; 
-      // 1-pass bitrate mode is generally the worst ratecontrol mode x264 has.
-      ts->tctx->bit_rate = 2 * ts->tctx->width * ts->tctx->height;
-
-      // Specifies the maximum bitrate at any point in the video. Requires the VBV buffersize to be set. 
-      // This option is generally used when encoding for a piece of hardware with bitrate limitations.
-      //
-      // Scenario: Streaming a video via Flash on a website, like Youtube. 
-      // Suggestion: You want the video to start very quickly, so there can't be more than (say) 0.5 seconds of buffering. 
-      // You set a minimum connection speed requirement for viewers of 512kbit/sec. Assume that 90% of that bandwidth will be 
-      // usable by your site, and that 96kbit/sec will be used by audio, which leaves 364kbit/sec for x264. 
-      // So, specify --vbv-maxrate 364 --vbv-buffer 182.
-      ts->tctx->rc_lookahead   = 20;
-      ts->tctx->rc_buffer_size = 2 * ts->tctx->width * ts->tctx->height;
+      ts->tctx->bit_rate       = 2 * ts->tctx->width * ts->tctx->height;
+      ts->tctx->rc_buffer_size = 2 * ts->tctx->bit_rate;
       ts->tctx->rc_max_rate    = 2 * ts->tctx->rc_buffer_size;
 
-      // Most devices only support up to specific level and one or more profiles. Levels define the max macroblocks 
-      // per second, max frame size (macroblocks) and max video bit rate. Profiles define the h264 capabilities that 
-      // can be used, such as b frames and CABAC. The H264 wikipedia page lists all the levels and profiles.
-      // Low end devices such as ZTE Blade only supports baseline.
-      av_dict_set(&opts, "profile", "baseline", 0);
-      ts->tctx->coder_type = FF_CODER_TYPE_VLC;
-
-      // An in-loop deblocking filter that helps prevent the blocking artifacts common to other DCT-based 
-      // image compression techniques, resulting in better visual appearance and compression efficiency
-      ts->tctx->flags          |= CODEC_FLAG_LOOP_FILTER;
-
-      ts->tctx->me_cmp         |= FF_CMP_CHROMA; // cmp=+chroma
-      ts->tctx->partitions     |= (X264_PART_I8X8 + X264_PART_I4X4 + X264_PART_P8X8 + X264_PART_B8X8); // partitions=+parti8x8+parti4x4+partp8x8+partb8x8
-      ts->tctx->directpred      = 1; // directpred=1
-      ts->tctx->trellis         = 1; // trellis=1
-      ts->tctx->flags2         |= CODEC_FLAG2_FASTPSKIP; // flags2=+bpyramid+mixed_refs+wpred+dct8x8+fastpskip
-      ts->tctx->weighted_p_pred = 2; // wpredp=2
-      ts->tctx->dsp_mask        = (AV_CPU_FLAG_MMX | AV_CPU_FLAG_MMX2 | AV_CPU_FLAG_SSE);
-      ts->tctx->flags          |= CODEC_FLAG_GLOBAL_HEADER;
       break;
     default:
       ts->tctx->codec_id = CODEC_ID_NONE;
@@ -735,11 +621,11 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   
   n = pkt_alloc(out, length, ts->enc_frame->pkt_pts, ts->enc_frame->pkt_dts);
 
-  if(ts->enc_frame->pict_type == FF_I_TYPE)
+  if(ts->enc_frame->pict_type == AV_PICTURE_TYPE_I)
     n->pkt_frametype = PKT_I_FRAME;
-  else if(ts->enc_frame->pict_type == FF_P_TYPE)
+  else if(ts->enc_frame->pict_type == AV_PICTURE_TYPE_P)
     n->pkt_frametype = PKT_P_FRAME;
-  else if(ts->enc_frame->pict_type == FF_B_TYPE)
+  else if(ts->enc_frame->pict_type == AV_PICTURE_TYPE_B)
     n->pkt_frametype = PKT_B_FRAME;
 
   n->pkt_duration = pkt->pkt_duration;
@@ -1068,8 +954,8 @@ transcoder_set_network_speed(streaming_target_t *st, int speed)
 
   int q = 1 + (K_P*t->feedback_error + K_I*t->feedback_error_sum + K_D*derivative);
 
-  q = MIN(q, FF_LAMBDA_MAX);
-  q = MAX(q, 1);
+  q = MIN(q, ts->tctx->qmin);
+  q = MAX(q, ts->tctx->qmax);
 
   //if(q != ts->enc_frame->quality) {
     tvhlog(LOG_DEBUG, "transcode", "New quality: %d ==> %d", ts->enc_frame->quality, q);
@@ -1096,7 +982,6 @@ transcoder_destroy(streaming_target_t *st)
 void
 transcoder_init(void)
 {
-  avcodec_init();
   av_register_all();
 }
 

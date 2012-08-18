@@ -339,7 +339,7 @@ lav_muxer_open_file(muxer_t *m, const char *filename)
   oc = lm->lm_oc;
   snprintf(oc->filename, sizeof(oc->filename), "%s", filename);
 
-  if(avio_open(&oc->pb, filename, URL_WRONLY) < 0) {
+  if(avio_open(&oc->pb, filename, AVIO_FLAG_WRITE) < 0) {
     tvhlog(LOG_ERR, "libav",  "Could not open %s", filename);
     lm->m_errors++;
     return -1;
