@@ -4,16 +4,16 @@ ICON = support/gnome/tvheadend.svg
 INSTICON= ${DESTDIR}$(prefix)/share/icons/hicolor/scalable/apps
 
 
-install: ${PROG}.datadir ${MAN}
-	install -D ${PROG}.datadir ${bindir}/tvheadend
-	install -D ${MAN} ${mandir}/tvheadend.1
+install: ${PROG} ${MAN}
+	install -D ${PROG} ${DESTDIR}${bindir}/tvheadend
+	install -D ${MAN} ${DESTDIR}${mandir}/tvheadend.1
 
 	for bundle in ${BUNDLES}; do \
-		mkdir -p ${datadir}/$$bundle ;\
-		cp -r $$bundle/*  ${datadir}/$$bundle ;\
+		mkdir -p ${DESTDIR}${datadir}/tvheadend/$$bundle ;\
+		cp -r $$bundle/*  ${DESTDIR}${datadir}/tvheadend/$$bundle ;\
 	done
 
 
 uninstall:
-	rm -f ${bindir)/tvheadend
-	rm -f ${mandir)/tvheadend.1
+	rm -f ${DESTDIR}${bindir)/tvheadend
+	rm -f ${DESTDIR}${mandir)/tvheadend.1

@@ -26,6 +26,7 @@
 #include <errno.h>
 #include <netinet/in.h>
 #include <sys/time.h>
+#include <libgen.h>
 
 #include "queue.h"
 #include "avg.h"
@@ -34,7 +35,7 @@
 #include "redblack.h"
 
 extern const char *tvheadend_version;
-extern const char *tvheadend_dataroot();
+extern char *tvheadend_cwd;
 
 #define PTS_UNSET INT64_C(0x8000000000000000)
 

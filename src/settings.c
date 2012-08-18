@@ -80,12 +80,14 @@ hts_settings_init(const char *confpath)
 /**
  *
  */
-static int
-hts_settings_makedirs ( char *path )
+int
+hts_settings_makedirs ( const char *inpath )
 {
   size_t x;
   struct stat st;
-  size_t l = strlen(path);
+  char path[512];
+  size_t l = strlen(inpath);
+  strcpy(path, inpath);
   for(x = 0; x < l; x++) {
     if(path[x] == '/' && x != 0) {
       path[x] = 0;

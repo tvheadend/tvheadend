@@ -578,4 +578,6 @@ void service_set_dvb_eit_enable(service_t *t, int dvb_eit_enable);
 
 int service_is_primary_epg (service_t *t);
 
+htsmsg_t *servicetype_list (void);
+
 #endif // SERVICE_H__

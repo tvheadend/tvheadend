@@ -1,3 +1,12 @@
+tvheadend.servicetypeStore = new Ext.data.JsonStore({
+  root       : 'entries',
+  id         : 'val',
+  url        : '/iptv/services',
+  baseParams : { op : 'servicetypeList' },
+  fields     : [ 'val', 'str' ],
+  autoLoad   : true,
+});
+
 /**
  * IPTV service grid
  */
@@ -88,7 +97,27 @@ tvheadend.iptv = function(adapterId) {
 	    width: 50,
 	    hidden: true
 	},
-	{
+  {
+      header         : 'Service Type',
+      width          : 100,
+      dataIndex      : 'stype',
+      hidden         : true,
+      editor         : new fm.ComboBox({
+        valueField     : 'val',
+        displayField   : 'str',
+        forceSelection : false,
+        editable       : false,
+        mode           : 'local',
+        triggerAction  : 'all',
+        store          : tvheadend.servicetypeStore,
+      }),
+	    renderer: function(value, metadata, record, row, col, store) {
+        var val = value ? tvheadend.servicetypeStore.getById(value) : null;
+		    return val ? val.get('str') :
+		      '<span class="tvh-grid-unset">Unset</span>';
+	    },
+  },
+  {
 	    header: "PMT PID",
 	    dataIndex: 'pmt',
 	    width: 50,
@@ -106,7 +135,7 @@ tvheadend.iptv = function(adapterId) {
 
     var rec = Ext.data.Record.create([
 	'id', 'enabled', 'channelname', 'interface', 'group', 'port',
-	'sid', 'pmt', 'pcr'
+	'sid', 'pmt', 'pcr', 'stype'
     ]);
 
     var store = new Ext.data.JsonStore({
