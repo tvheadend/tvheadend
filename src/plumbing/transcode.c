@@ -655,7 +655,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
     }
 
     if(avcodec_open2(ts->tctx, ts->tcodec, &opts) < 0) {
-      tvhlog(LOG_ERR, "transcode", "Unable to open %s decoder", ts->tcodec->name);
+      tvhlog(LOG_ERR, "transcode", "Unable to open %s encoder", ts->tcodec->name);
       // Disable the stream
       ts->sindex = 0;
       goto cleanup;
