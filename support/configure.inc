@@ -309,8 +309,8 @@ function print_config
   echo -e "  Prefix:${TAB}${prefix}"
   echo -e "  Binaries:${TAB}${bindir}"
   echo -e "  Libraries:${TAB}${libdir}"
-  echo -e "  Man pages:${TAB}${mandir}"
   echo -e "  Data files:${TAB}${datadir}"
+  echo -e "  Man pages:${TAB}${mandir}"
   echo ""
 }
 
@@ -330,8 +330,14 @@ function write_config
 ROOTDIR  ?= ${ROOTDIR}
 BUILDDIR ?= ${ROOTDIR}/build.${PLATFORM}
 OSENV    ?= ${OSENV}
+ARCH      = ${ARCH}
 CFLAGS   += ${CFLAGS}
 LDFLAGS  += ${LDFLAGS}
+prefix    = ${prefix}
+bindir    = ${bindir}
+mandir    = ${mandir}
+datadir   = ${datadir}
+libdir    = ${libdir}
 EOF
 
   # Create C include
