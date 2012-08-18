@@ -472,7 +472,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
       ts->tctx->qmax           = FF_LAMBDA_MAX;
 
       ts->tctx->bit_rate       = 2 * ts->tctx->width * ts->tctx->height;
-      ts->tctx->rc_buffer_size = 2 * ts->tctx->bit_rate;
+      ts->tctx->rc_buffer_size = 8 * 1024 * 224;
       ts->tctx->rc_max_rate    = 2 * ts->tctx->bit_rate;
 
       break;
@@ -480,20 +480,19 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
       ts->tctx->codec_id       = CODEC_ID_MPEG4;
       ts->tctx->pix_fmt        = PIX_FMT_YUV420P;
       ts->tctx->bit_rate       = 2 * ts->tctx->width * ts->tctx->height;
-      ts->tctx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
+      //ts->tctx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
 
       ts->tctx->qmin = 1;
       ts->tctx->qmax = 5;
 
       ts->tctx->bit_rate       = 2 * ts->tctx->width * ts->tctx->height;
-      ts->tctx->rc_buffer_size = 2 * ts->tctx->bit_rate;
+      ts->tctx->rc_buffer_size = 8 * 1024 * 224;
       ts->tctx->rc_max_rate    = 2 * ts->tctx->bit_rate;
       break;
       
     case SCT_VP8:
       ts->tctx->codec_id       = CODEC_ID_VP8;
       ts->tctx->pix_fmt        = PIX_FMT_YUV420P;
-      ts->tctx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
 
       ts->tctx->qmin = 10;
       ts->tctx->qmax = 20;
@@ -501,7 +500,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
       av_dict_set(&opts, "quality",  "realtime", 0);
 
       ts->tctx->bit_rate       = 2 * ts->tctx->width * ts->tctx->height;
-      ts->tctx->rc_buffer_size = 2 * ts->tctx->bit_rate;
+      ts->tctx->rc_buffer_size = 8 * 1024 * 224;
       ts->tctx->rc_max_rate    = 2 * ts->tctx->bit_rate;
       break;
 
@@ -531,7 +530,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
       av_dict_set(&opts, "profile", "baseline", 0);
 
       ts->tctx->bit_rate       = 2 * ts->tctx->width * ts->tctx->height;
-      ts->tctx->rc_buffer_size = 2 * ts->tctx->bit_rate;
+      ts->tctx->rc_buffer_size = 8 * 1024 * 224;
       ts->tctx->rc_max_rate    = 2 * ts->tctx->rc_buffer_size;
 
       break;
