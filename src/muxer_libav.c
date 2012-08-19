@@ -29,6 +29,7 @@
 typedef struct lav_muxer {
   muxer_t;
   AVFormatContext *lm_oc;
+  AVBitStreamFilterContext *lm_h264_filter;
   int lm_fd;
 } lav_muxer_t;
 
@@ -373,8 +374,20 @@ lav_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
     if(st->codec->codec_id == CODEC_ID_MPEG2VIDEO)
       pkt = pkt_merge_header(pkt);
 
-    packet.data = pktbuf_ptr(pkt->pkt_payload);
-    packet.size = pktbuf_len(pkt->pkt_payload);
+    if(lm->lm_h264_filter && st->codec->codec_id == CODEC_ID_H264) {
+         av_bitstream_filter_filter(lm->lm_h264_filter, 
+				    st->codec, 
+				    NULL, 
+				    &packet.data, 
+				    &packet.size, 
+				    pktbuf_ptr(pkt->pkt_payload), 
+				    pktbuf_len(pkt->pkt_payload), 
+				    pkt->pkt_frametype < PKT_P_FRAME);
+    } else {
+      packet.data = pktbuf_ptr(pkt->pkt_payload);
+      packet.size = pktbuf_len(pkt->pkt_payload);
+    }
+
     packet.stream_index = st->index;
  
     packet.pts      = av_rescale_q(pkt->pkt_pts     , mpeg_tc, st->time_base);
@@ -434,6 +447,7 @@ lav_muxer_destroy(muxer_t *m)
 {
   lav_muxer_t *lm = (lav_muxer_t*)m;
 
+  av_bitstream_filter_close(lm->lm_h264_filter);
   av_free(lm->lm_oc->pb);
   av_free(lm->lm_oc);
   free(lm);
@@ -477,6 +491,9 @@ lav_muxer_create(muxer_container_type_t mc)
   lm->m_container    = mc;
   lm->lm_oc          = avformat_alloc_context();
   lm->lm_oc->oformat = fmt;
+
+  if(mc == MC_MPEGTS)
+    lm->lm_h264_filter = av_bitstream_filter_init("h264_mp4toannexb");
 
   return (muxer_t*)lm;
 }
