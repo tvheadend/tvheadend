@@ -414,6 +414,9 @@ iptv_service_save(service_t *t)
 
   htsmsg_add_u32(m, "pmt", t->s_pmt_pid);
 
+  if(t->s_servicetype)
+    htsmsg_add_u32(m, "stype", t->s_servicetype);
+
   if(t->s_iptv_port)
     htsmsg_add_u32(m, "port", t->s_iptv_port);
 
@@ -532,6 +535,7 @@ iptv_service_find(const char *id, int create)
 
   t = service_create(id, SERVICE_TYPE_IPTV, S_MPEG_TS);
 
+  t->s_servicetype   = ST_SDTV;
   t->s_start_feed    = iptv_service_start;
   t->s_refresh_feed  = iptv_service_refresh;
   t->s_stop_feed     = iptv_service_stop;
@@ -590,6 +594,14 @@ iptv_service_load(void)
     
     if(!htsmsg_get_u32(c, "port", &u32))
       t->s_iptv_port = u32;
+
+    if(!htsmsg_get_u32(c, "stype", &u32))
+      t->s_servicetype = u32;
+    else if (!htsmsg_get_u32(c, "radio", &u32))
+      t->s_servicetype = ST_RADIO;
+    else
+      t->s_servicetype = ST_SDTV;
+    // Note: for compat with old PR #52 I load "radio" flag
 
     pthread_mutex_lock(&t->s_stream_mutex);
     service_make_nicename(t);

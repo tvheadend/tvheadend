@@ -43,6 +43,8 @@
 #include "epg.h"
 #include "iptv_input.h"
 
+#include "config2.h"
+
 static void
 extjs_load(htsbuf_queue_t *hq, const char *script)
 {
@@ -131,6 +133,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/epg.js");
   extjs_load(hq, "static/app/dvr.js");
   extjs_load(hq, "static/app/epggrab.js");
+  extjs_load(hq, "static/app/config.js");
 
   /**
    * Finally, the app itself
@@ -1499,6 +1502,11 @@ service_update_iptv(htsmsg_t *in)
       save = 1;
     }
 
+    if (!htsmsg_get_u32(c, "stype", &u32)) {
+      t->s_servicetype = u32;
+      save = 1;
+    }
+
     if((s = htsmsg_get_str(c, "group")) != NULL) {
       if(!inet_pton(AF_INET, s, &t->s_iptv_group.s_addr)){
       	inet_pton(AF_INET6, s, &t->s_iptv_group6.s6_addr);
@@ -1539,6 +1547,7 @@ build_record_iptv(service_t *t)
   }
 
   htsmsg_add_u32(r, "port", t->s_iptv_port);
+  htsmsg_add_u32(r, "stype", t->s_servicetype);
   htsmsg_add_u32(r, "enabled", t->s_enabled);
   return r;
 }
@@ -1609,6 +1618,11 @@ extjs_iptvservices(http_connection_t *hc, const char *remain, void *opaque)
       extjs_service_delete(in);
     
     out = htsmsg_create_map();
+
+  } else if (!strcmp(op, "servicetypeList")) {
+    out   = htsmsg_create_map();
+    array = servicetype_list();
+    htsmsg_add_msg(out, "entries", array);
 
   } else {
     pthread_mutex_unlock(&global_lock);
@@ -1697,6 +1711,58 @@ extjs_tvadapter(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+/**
+ *
+ */
+static int
+extjs_config(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  const char *op = http_arg_get(&hc->hc_req_args, "op");
+  htsmsg_t *out, *m;
+  const char *str;
+
+  if(op == NULL)
+    return 400;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(http_access_verify(hc, ACCESS_ADMIN)) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  /* Basic settings (not the advanced schedule) */
+  if(!strcmp(op, "loadSettings")) {
+    pthread_mutex_lock(&global_lock);
+    m = config_get_all();
+    pthread_mutex_unlock(&global_lock);
+    if (!m) return HTTP_STATUS_BAD_REQUEST;
+    out = json_single_record(m, "config");
+
+  /* Save settings */
+  } else if (!strcmp(op, "saveSettings") ) {
+    int save = 0;
+    pthread_mutex_lock(&global_lock);
+    if ((str = http_arg_get(&hc->hc_req_args, "muxconfpath")))
+      save |= config_set_muxconfpath(str);
+    if (save) config_save();
+    pthread_mutex_unlock(&global_lock);
+    out = htsmsg_create_map();
+    htsmsg_add_u32(out, "success", 1);
+
+  } else {
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+
+  return 0;
+}
 
 /**
  * WEB user interface
@@ -1717,6 +1783,7 @@ extjs_start(void)
   http_path_add("/dvr",         NULL, extjs_dvr,         ACCESS_WEB_INTERFACE);
   http_path_add("/dvrlist",     NULL, extjs_dvrlist,     ACCESS_WEB_INTERFACE);
   http_path_add("/ecglist",     NULL, extjs_ecglist,     ACCESS_WEB_INTERFACE);
+  http_path_add("/config",      NULL, extjs_config,      ACCESS_WEB_INTERFACE);
 
   http_path_add("/mergechannel",
 		NULL, extjs_mergechannel, ACCESS_ADMIN);

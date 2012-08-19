@@ -57,6 +57,8 @@
 #include "trap.h"
 #include "settings.h"
 #include "ffdecsa/FFdecsa.h"
+#include "muxes.h"
+#include "config2.h"
 
 int running;
 time_t dispatch_clock;
@@ -70,6 +72,7 @@ static int log_decorate;
 int log_debug_to_syslog;
 int log_debug_to_console;
 
+char *tvheadend_cwd;
 
 static void
 handle_sigpipe(int x)
@@ -168,6 +171,7 @@ usage(const char *argv0)
   printf(" -a <adapters>   Use only DVB adapters specified (csv)\n");
   printf(" -c <directory>  Alternate configuration path.\n"
 	 "                 Defaults to [$HOME/.hts/tvheadend]\n");
+  printf(" -m <directory>  Alternate mux configuration directory\n");
   printf(" -f              Fork and daemonize\n");
   printf(" -p <pidfile>    Write pid to <pidfile> instead of /var/run/tvheadend.pid,\n"
         "                 only works with -f\n");
@@ -257,6 +261,9 @@ main(int argc, char **argv)
   char *p, *endp;
   uint32_t adapter_mask = 0xffffffff;
   int crash = 0;
+
+  /* Get current directory */
+  tvheadend_cwd = dirname(dirname(strdup(argv[0])));
 
   // make sure the timezone is set
   tzset();
@@ -380,6 +387,10 @@ main(int argc, char **argv)
    * Initialize subsystems
    */
 
+  config_init();
+
+  muxes_init();
+
   service_init();
 
   channels_init();
@@ -396,7 +407,7 @@ main(int argc, char **argv)
 #endif
   http_server_init();
 
-  webui_init(tvheadend_dataroot());
+  webui_init();
 
   serviceprobe_init();
 
@@ -443,11 +454,9 @@ main(int argc, char **argv)
   pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 
   tvhlog(LOG_NOTICE, "START", "HTS Tvheadend version %s started, "
-	 "running as PID:%d UID:%d GID:%d, settings located in '%s', "
-	 "dataroot: %s",
+	 "running as PID:%d UID:%d GID:%d, settings located in '%s'",
 	 tvheadend_version,
-	 getpid(), getuid(), getgid(), hts_settings_get_root(),
-	 tvheadend_dataroot() ?: "<Embedded file system>");
+	 getpid(), getuid(), getgid(), hts_settings_get_root());
 
   if(crash)
     abort();

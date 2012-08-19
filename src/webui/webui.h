@@ -21,7 +21,7 @@
 
 #include "htsmsg.h"
 
-void webui_init(const char *contentpath);
+void webui_init(void);
 
 void simpleui_start(void);
 

@@ -1153,3 +1153,20 @@ service_is_primary_epg(service_t *svc)
   }
   return !ret ? 0 : (ret->s_dvb_service_id == svc->s_dvb_service_id);
 }
+
+/*
+ * list of known service types
+ */
+htsmsg_t *servicetype_list ( void )
+{
+  htsmsg_t *ret, *e;
+  int i;
+  ret = htsmsg_create_list();
+  for (i = 0; i < sizeof(stypetab) / sizeof(stypetab[0]); i++ ) {
+    e = htsmsg_create_map();
+    htsmsg_add_u32(e, "val", stypetab[i].val);
+    htsmsg_add_str(e, "str", stypetab[i].str);
+    htsmsg_add_msg(ret, NULL, e);
+  }
+  return ret;
+}

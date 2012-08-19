@@ -47,7 +47,6 @@ static epggrab_module_t      *_xmltv_module;
 static epggrab_channel_t *_xmltv_channel_find
   ( const char *id, int create, int *save )
 {
-  
   return epggrab_channel_find(&_xmltv_channels, id, create, save,
                               _xmltv_module);
 }
@@ -331,88 +330,94 @@ static int _xmltv_parse_programme_tags
   (epggrab_module_t *mod, channel_t *ch, htsmsg_t *tags, 
    time_t start, time_t stop, epggrab_stats_t *stats)
 {
-  int save = 0, save2 = 0;
-  epg_episode_t *ee;
-  epg_season_t *es;
+  int save = 0, save2 = 0, save3 = 0;
+  epg_episode_t *ee = NULL;
+  epg_season_t *es = NULL;
   epg_broadcast_t *ebc;
   epg_genre_list_t *egl;
   int sn = 0, sc = 0, en = 0, ec = 0, pn = 0, pc = 0;
   const char *onscreen = NULL;
   char *suri = NULL, *uri = NULL;
-  const char *title    = htsmsg_xml_get_cdata_str(tags, "title");
-  const char *desc     = htsmsg_xml_get_cdata_str(tags, "desc");
+  const char *title = htsmsg_xml_get_cdata_str(tags, "title");
+  const char *desc  = htsmsg_xml_get_cdata_str(tags, "desc");
 
   /* Ignore */
   if (!title) return 0;
 
   /*
-   * Episode
+   * Broadcast
    */
+
+  /* Create/Find broadcast */
+  if (!(ebc = epg_broadcast_find_by_time(ch, start, stop, 0, 1, &save2))) return 0;
+  stats->broadcasts.total++;
+  if (save2) stats->broadcasts.created++;
+
+  /* Quality metadata */
+  save2 |= parse_vid_quality(mod, ebc, ee, htsmsg_get_map(tags, "video"));
+
+  /* Accessibility */
+  save2 |= xmltv_parse_accessibility(mod, ebc, tags);
+
+  /* Misc */
+  if (htsmsg_get_map(tags, "previously-shown"))
+    save |= epg_broadcast_set_is_repeat(ebc, 1, mod);
+  else if (htsmsg_get_map(tags, "premiere") ||
+           htsmsg_get_map(tags, "new"))
+    save |= epg_broadcast_set_is_new(ebc, 1, mod);
+
+  /* Get episode info */
   get_episode_info(mod, tags, &uri, &suri, &onscreen,
                    &sn, &sc, &en, &ec, &pn, &pc);
-  if (!uri) uri = epg_hash(title, NULL, desc);
-  if (!uri) return 0;
-  ee  = epg_episode_find_by_uri(uri, 1, &save);
-  free(uri);
-  if (!ee) return 0;
-  stats->episodes.total++;
-  if (save) stats->episodes.created++;
-
-  if (title)
-    save |= epg_episode_set_title(ee, title, mod);
-  if (desc)
-    save |= epg_episode_set_description(ee, desc, mod);
-  if ((egl = _xmltv_parse_categories(tags))) {
-    save |= epg_episode_set_genre(ee, egl, mod);
-    epg_genre_list_destroy(egl);
-  }
-  if (pn)   save |= epg_episode_set_part(ee, pn, pc, mod);
-  if (en)   save |= epg_episode_set_number(ee, en, mod);
-  if (save) stats->episodes.modified++;
 
   /*
    * Season
    */
   if (suri) {
-    es = epg_season_find_by_uri(suri, 1, &save);
-    if (es) save |= epg_episode_set_season(ee, es, mod);
+    es = epg_season_find_by_uri(suri, 1, &save3);
     free(suri);
+    if (es) stats->seasons.total++;
+    if (save3) stats->seasons.created++;
   }
 
   /*
-   * Broadcast
+   * Episode
    */
+  if (!uri)
+    uri = epg_hash(title, NULL, desc);
+  if (uri) {
+    ee  = epg_episode_find_by_uri(uri, 1, &save);
+    free(uri);
+  }
+  if (ee) {
+    stats->episodes.total++;
+    if (save) stats->episodes.created++;
 
-  // TODO: need to handle certification and ratings
-  // TODO: need to handle season numbering!
-  // TODO: need to handle onscreen numbering
-  //if (onscreen) save |= epg_episode_set_onscreen(ee, onscreen);
-
-  /* Create/Find broadcast */
-  ebc = epg_broadcast_find_by_time(ch, start, stop, 0, 1, &save2);
-  if ( ebc ) {
-    stats->broadcasts.total++;
-    if (save2) stats->broadcasts.created++;
     save2 |= epg_broadcast_set_episode(ebc, ee, mod);
 
-    /* Quality metadata */
-    save2 |= parse_vid_quality(mod, ebc, ee, htsmsg_get_map(tags, "video"));
+    if (es)
+      save |= epg_episode_set_season(ee, es, mod);
+    if (title)
+      save |= epg_episode_set_title(ee, title, mod);
+    if (desc)
+      save |= epg_episode_set_description(ee, desc, mod);
+    if ((egl = _xmltv_parse_categories(tags))) {
+      save |= epg_episode_set_genre(ee, egl, mod);
+      epg_genre_list_destroy(egl);
+    }
+    if (pn)   save |= epg_episode_set_part(ee, pn, pc, mod);
+    if (en)   save |= epg_episode_set_number(ee, en, mod);
+    if (save) stats->episodes.modified++;
 
-    /* Accessibility */
-    save2 |= xmltv_parse_accessibility(mod, ebc, tags);
-
-    /* Misc */
-    if (htsmsg_get_map(tags, "previously-shown"))
-      save |= epg_broadcast_set_is_repeat(ebc, 1, mod);
-    else if (htsmsg_get_map(tags, "premiere") ||
-             htsmsg_get_map(tags, "new"))
-      save |= epg_broadcast_set_is_new(ebc, 1, mod);
-  
-    /* Stats */
-    if (save2) stats->broadcasts.modified++;
+    // TODO: need to handle certification and ratings
+    // TODO: need to handle season numbering!
+    // TODO: need to handle onscreen numbering
   }
-  
-  return save | save2;
+
+  /* Stats */
+  if (save2) stats->broadcasts.modified++;
+
+  return save | save2 | save3;
 }
 
 /**
@@ -439,7 +444,7 @@ static int _xmltv_parse_programme
   if((s       = htsmsg_get_str(attribs, "stop"))    == NULL) return 0;
   stop  = _xmltv_str2time(s);
 
-  if(stop <= start || stop < dispatch_clock) return 0;
+  if(stop <= start || stop <= dispatch_clock) return 0;
 
   save |= _xmltv_parse_programme_tags(mod, ch->channel, tags,
                                       start, stop, stats);
@@ -525,7 +530,8 @@ static int _xmltv_parse
 
 static void _xmltv_load_grabbers ( void )
 {
-  size_t i, outlen, p, n;
+  int outlen;
+  size_t i, p, n;
   char *outbuf;
   char name[1000];
   char *tmp, *path;
@@ -534,7 +540,7 @@ static void _xmltv_load_grabbers ( void )
   outlen = spawn_and_store_stdout(XMLTV_FIND, NULL, &outbuf);
 
   /* Process */
-  if ( outlen ) {
+  if ( outlen > 0 ) {
     p = n = i = 0;
     while ( i < outlen ) {
       if ( outbuf[i] == '\n' || outbuf[i] == '\0' ) {
@@ -574,7 +580,7 @@ static void _xmltv_load_grabbers ( void )
           if (lstat(bin, &st)) continue;
           if (!(st.st_mode & S_IEXEC)) continue;
           if (!S_ISREG(st.st_mode)) continue;
-          if ((outlen = spawn_and_store_stdout(bin, argv, &outbuf))) {
+          if ((outlen = spawn_and_store_stdout(bin, argv, &outbuf)) > 0) {
             if (outbuf[outlen-1] == '\n') outbuf[outlen-1] = '\0';
             snprintf(name, sizeof(name), "XMLTV: %s", outbuf);
             epggrab_module_int_create(NULL, bin, name, 3, bin,

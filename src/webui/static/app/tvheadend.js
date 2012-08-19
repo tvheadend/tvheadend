@@ -233,7 +233,9 @@ function accessUpdate(o) {
 	    autoScroll:true, 
 	    title: 'Configuration', 
 	    iconCls: 'wrench',
-	    items: [new tvheadend.chconf,
+	    items: [
+        new tvheadend.miscconf,
+        new tvheadend.chconf,
 		    new tvheadend.epggrab,
 		    new tvheadend.cteditor,
 		    new tvheadend.dvrsettings,
@@ -316,6 +318,7 @@ tvheadend.app = function() {
 			minSize: 100,
 			maxSize: 400,
 			collapsible: true,
+			collapsed: true,
 			title:'System log',
 			margins:'0 0 0 0',
 			tools:[{

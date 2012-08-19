@@ -1,6 +1,7 @@
 build.*
-config.default
+.config.mk
 
 .cproject
 .project
 .settings
+data/dvb-scan

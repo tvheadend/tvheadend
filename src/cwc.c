@@ -1547,7 +1547,7 @@ cwc_emm_viaccess(cwc_t *cwc, uint8_t *data, int mlen)
 	  ass[2] = len & 0xff;
 	  len += 3;
 
-	  crc = crc32(ass, len, 0xffffffff);
+	  crc = tvh_crc32(ass, len, 0xffffffff);
 	  if (!cwc_emm_cache_lookup(cwc, crc)) {
 	    tvhlog(LOG_DEBUG, "cwc",
 		   "Send EMM "

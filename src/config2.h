@@ -1,6 +1,6 @@
 /*
- *  Functions for storing program settings
- *  Copyright (C) 2008 Andreas Öman
+ *  TV headend - General configuration settings
+ *  Copyright (C) 2012 Adam Sutton
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,24 +16,20 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HTSSETTINGS_H__
-#define HTSSETTINGS_H__
+// TODO: expand this, possibly integrate command line
+
+#ifndef __TVH_CONFIG__H__
+#define __TVH_CONFIG__H__
 
 #include "htsmsg.h"
-#include <stdarg.h>
 
-void hts_settings_init(const char *confpath);
+void        config_init    ( void );
+void        config_save    ( void );
 
-void hts_settings_save(htsmsg_t *record, const char *pathfmt, ...);
+htsmsg_t   *config_get_all ( void );
 
-htsmsg_t *hts_settings_load(const char *pathfmt, ...);
+const char *config_get_muxconfpath ( void );
+int         config_set_muxconfpath ( const char *str )
+  __attribute__((warn_unused_result));
 
-void hts_settings_remove(const char *pathfmt, ...);
-
-const char *hts_settings_get_root(void);
-
-int hts_settings_open_file(int for_write, const char *pathfmt, ...);
-
-int hts_settings_makedirs ( const char *path );
-
-#endif /* HTSSETTINGS_H__ */ 
+#endif /* __TVH_CONFIG__H__ */
