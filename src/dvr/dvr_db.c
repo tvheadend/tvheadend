@@ -282,6 +282,8 @@ static dvr_entry_t *_dvr_entry_create (
   ch = de->de_channel = ch;
   LIST_INSERT_HEAD(&de->de_channel->ch_dvrs, de, de_channel_link);
 
+  de->de_mc = cfg->dvr_mc;
+
   de->de_start   = start;
   de->de_stop    = stop;
   de->de_pri     = pri;
@@ -539,6 +541,8 @@ dvr_db_load_one(htsmsg_t *c, int id)
     }
   }
 
+  de->de_mc = htsmsg_get_u32_or_default(c, "container", MC_MATROSKA);
+
   dvr_entry_link(de);
 }
 
@@ -611,6 +615,8 @@ dvr_entry_save(dvr_entry_t *de)
 
   if(de->de_bcast)
     htsmsg_add_u32(m, "broadcast", de->de_bcast->id);
+
+  htsmsg_add_u32(m, "container", de->de_mc);
 
   hts_settings_save(m, "dvr/log/%d", de->de_id);
   htsmsg_destroy(m);
@@ -945,6 +951,8 @@ dvr_init(void)
       if(cfg == NULL)
         cfg = dvr_config_create(s);
 
+      cfg->dvr_mc = htsmsg_get_u32_or_default(m, "container", MC_MATROSKA);
+
       htsmsg_get_s32(m, "pre-extra-time", &cfg->dvr_extra_time_pre);
       htsmsg_get_s32(m, "post-extra-time", &cfg->dvr_extra_time_post);
       htsmsg_get_u32(m, "retention-days", &cfg->dvr_retention_days);
@@ -1071,8 +1079,7 @@ dvr_config_create(const char *name)
   cfg = calloc(1, sizeof(dvr_config_t));
   cfg->dvr_config_name = strdup(name);
   cfg->dvr_retention_days = 31;
-  cfg->dvr_format = strdup("matroska");
-  cfg->dvr_file_postfix = strdup("mkv");
+  cfg->dvr_mc = MC_MATROSKA;
   cfg->dvr_flags = DVR_TAG_FILES;
 
   /* series link support */
@@ -1124,6 +1131,7 @@ dvr_save(dvr_config_t *cfg)
   if (cfg->dvr_config_name != NULL && strlen(cfg->dvr_config_name) != 0)
     htsmsg_add_str(m, "config_name", cfg->dvr_config_name);
   htsmsg_add_str(m, "storage", cfg->dvr_storage);
+  htsmsg_add_u32(m, "container", cfg->dvr_mc);
   htsmsg_add_u32(m, "retention-days", cfg->dvr_retention_days);
   htsmsg_add_u32(m, "pre-extra-time", cfg->dvr_extra_time_pre);
   htsmsg_add_u32(m, "post-extra-time", cfg->dvr_extra_time_post);
@@ -1157,6 +1165,27 @@ dvr_storage_set(dvr_config_t *cfg, const char *storage)
   tvh_str_set(&cfg->dvr_storage, storage);
   dvr_save(cfg);
 }
+
+/**
+ *
+ */
+void
+dvr_container_set(dvr_config_t *cfg, const char *container)
+{
+  muxer_container_type_t mc;
+
+  mc = muxer_container_txt2type(container);
+  if(mc == MC_UNKNOWN)
+    mc = MC_MATROSKA;
+
+  if(cfg->dvr_mc == mc)
+    return;
+
+  cfg->dvr_mc = mc;
+
+  dvr_save(cfg);
+}
+
 
 /**
  *
