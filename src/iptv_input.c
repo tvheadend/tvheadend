@@ -597,7 +597,7 @@ iptv_service_load(void)
 
     if(!htsmsg_get_u32(c, "stype", &u32))
       t->s_servicetype = u32;
-    else if (!htsmsg_get_u32(c, "radio", &u32))
+    else if (!htsmsg_get_u32(c, "radio", &u32) && u32)
       t->s_servicetype = ST_RADIO;
     else
       t->s_servicetype = ST_SDTV;
