@@ -42,6 +42,8 @@ typedef struct pass_muxer {
   uint8_t  *pm_pmt;
   uint16_t pm_pmt_pid;
   uint16_t pm_pcr_pid;
+  uint32_t pm_ic; // Injection counter
+  uint32_t pm_pc; // Packet counter
 } pass_muxer_t;
 
 
@@ -184,8 +186,6 @@ static void
 pass_muxer_write_ts(muxer_t *m, struct th_pkt *pkt)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
-  static uint32_t ic = 0; // Injection counter
-  static uint32_t pc = 0; // Packet counter
 
   // TODO: how often do you send the injected packets?
   //       Once packet? once every 1000 packets, 10k packets?
@@ -195,16 +195,16 @@ pass_muxer_write_ts(muxer_t *m, struct th_pkt *pkt)
 #define INJECTION_RATE 1000
 
   // Inject pmt and pat into the stream
-  if((pc % INJECTION_RATE) == 0) {
-    pm->pm_pat[3] = (pm->pm_pat[3] & 0xf0) | (ic & 0x0f);
-    pm->pm_pmt[3] = (pm->pm_pat[3] & 0xf0) | (ic & 0x0f);
+  if((pm->pm_pc % INJECTION_RATE) == 0) {
+    pm->pm_pat[3] = (pm->pm_pat[3] & 0xf0) | (pm->pm_ic & 0x0f);
+    pm->pm_pmt[3] = (pm->pm_pat[3] & 0xf0) | (pm->pm_ic & 0x0f);
     pass_muxer_write(m, pm->pm_pmt, 188);
     pass_muxer_write(m, pm->pm_pat, 188);
-    ic++;
+    pm->pm_ic++;
   }
 
   pass_muxer_write(m, pkt, 188);
-  pc++;
+  pm->pm_pc++;
 }
 
 
