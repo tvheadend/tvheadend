@@ -35,12 +35,12 @@
 #include "http.h"
 #include "webui.h"
 #include "dvr/dvr.h"
-#include "dvr/mkmux.h"
 #include "filebundle.h"
 #include "psi.h"
 #include "plumbing/tsfix.h"
 #include "plumbing/globalheaders.h"
 #include "epg.h"
+#include "muxer.h"
 
 /**
  *
@@ -137,29 +137,37 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
  * HTTP stream loop
  */
 static void
-http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t *s)
+http_stream_run(http_connection_t *hc, streaming_queue_t *sq, 
+		th_subscription_t *s, muxer_container_type_t mc)
 {
   streaming_message_t *sm;
   int run = 1;
-  mk_mux_t *mkm = NULL;
-  uint32_t event_id = 0;
+  muxer_t *mux = NULL;
   int timeouts = 0;
+  struct timespec ts;
+  struct timeval  tp;
+  int err = 0;
+  socklen_t errlen = sizeof(err);
+  const char *name;
+
+  mux = muxer_create(s->ths_service, mc);
+  if(muxer_open_stream(mux, hc->hc_fd))
+    run = 0;
+
+  if(s->ths_channel)
+    name = s->ths_channel->ch_name;
+  else
+    name = "Live Stream";
 
   while(run) {
     pthread_mutex_lock(&sq->sq_mutex);
     sm = TAILQ_FIRST(&sq->sq_queue);
     if(sm == NULL) {      
-      struct timespec ts;
-      struct timeval  tp;
-      
       gettimeofday(&tp, NULL);
       ts.tv_sec  = tp.tv_sec + 1;
       ts.tv_nsec = tp.tv_usec * 1000;
 
       if(pthread_cond_timedwait(&sq->sq_cond, &sq->sq_mutex, &ts) == ETIMEDOUT) {
-          int err = 0;
-          socklen_t errlen = sizeof(err);  
-
           timeouts++;
 
           //Check socket status
@@ -181,39 +189,30 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
     pthread_mutex_unlock(&sq->sq_mutex);
 
     switch(sm->sm_type) {
-    case SMT_PACKET: {
-      if(!mkm)
-	break;
+    case SMT_MPEGTS:
+    case SMT_PACKET:
+      if(!muxer_write_pkt(mux, sm->sm_data))
+	sm->sm_data = NULL;
 
-      run = !mk_mux_write_pkt(mkm, sm->sm_data);
-      sm->sm_data = NULL;
-
-      epg_broadcast_t *e = NULL;
-      if(s->ths_channel) e = s->ths_channel->ch_epg_now;
-
-      if(e && event_id != e->id) {
-	event_id = e->id;
-	run = !mk_mux_append_meta(mkm, e);
-      }
       break;
-    }
 
-    case SMT_START: {
+    case SMT_START:
       tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
 
-      if(s->ths_service->s_servicetype == ST_RADIO)
-	http_output_content(hc, "audio/x-matroska");
-      else
-	http_output_content(hc, "video/x-matroska");
-
-      mkm = mk_mux_stream_create(hc->hc_fd, sm->sm_data, s->ths_channel);
+      http_output_content(hc, muxer_mime(mux, sm->sm_data));
+      muxer_init(mux, sm->sm_data, name);
       break;
-    }
+
     case SMT_STOP:
+      muxer_close(mux);
       run = 0;
       break;
 
     case SMT_SERVICE_STATUS:
+      if(getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, &err, &errlen)) {
+	tvhlog(LOG_DEBUG, "webui",  "Client hung up, exit streaming");
+	run = 0;
+      }
       break;
 
     case SMT_NOSTART:
@@ -221,18 +220,18 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq, th_subscription_t 
       run = 0;
       break;
 
-    case SMT_MPEGTS:
-      break;
-
     case SMT_EXIT:
+      muxer_close(mux);
       run = 0;
       break;
     }
     streaming_msg_free(sm);
+
+    if(mux->m_errors)
+      run = 0;
   }
 
-  if(mkm)
-    mk_mux_close(mkm);
+  muxer_destroy(mux);
 }
 
 
@@ -496,6 +495,7 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
   return r;
 }
 
+
 /**
  * Subscribes to a service and starts the streaming loop
  */
@@ -506,31 +506,53 @@ http_stream_service(http_connection_t *hc, service_t *service)
   th_subscription_t *s;
   streaming_target_t *gh;
   streaming_target_t *tsfix;
+  streaming_target_t *st;
+  dvr_config_t *cfg;
+  muxer_container_type_t mc;
+  int flags;
 
-  streaming_queue_init(&sq, 0);
-  gh = globalheaders_create(&sq.sq_st);
-  tsfix = tsfix_create(gh);
+  mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
+  if(mc == MC_UNKNOWN) {
+    cfg = dvr_config_find_by_name_default("");
+    mc = cfg->dvr_mc;
+  }
+
+  if(mc == MC_PASS) {
+    streaming_queue_init(&sq, SMT_PACKET);
+    gh = NULL;
+    tsfix = NULL;
+    st = &sq.sq_st;
+    flags = SUBSCRIPTION_RAW_MPEGTS;
+  } else {
+    streaming_queue_init(&sq, 0);
+    gh = globalheaders_create(&sq.sq_st);
+    tsfix = tsfix_create(gh);
+    st = tsfix;
+    flags = 0;
+  }
 
   pthread_mutex_lock(&global_lock);
-  s = subscription_create_from_service(service,
-                                       "HTTP", tsfix,
-                                       0);
-
+  s = subscription_create_from_service(service, "HTTP", st, flags);
   pthread_mutex_unlock(&global_lock);
 
   if(s) {
-    http_stream_run(hc, &sq, s);
+    http_stream_run(hc, &sq, s, mc);
     pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
     pthread_mutex_unlock(&global_lock);
   }
 
-  globalheaders_destroy(gh);
-  tsfix_destroy(tsfix);
+  if(gh)
+    globalheaders_destroy(gh);
+
+  if(tsfix)
+    tsfix_destroy(tsfix);
+
   streaming_queue_deinit(&sq);
 
   return 0;
 }
+
 
 /**
  * Subscribes to a channel and starts the streaming loop
@@ -542,27 +564,48 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   th_subscription_t *s;
   streaming_target_t *gh;
   streaming_target_t *tsfix;
+  streaming_target_t *st;
+  dvr_config_t *cfg;
   int priority = 100;
+  int flags;
+  muxer_container_type_t mc;
 
-  streaming_queue_init(&sq, 0);
-  gh = globalheaders_create(&sq.sq_st);
-  tsfix = tsfix_create(gh);
+  mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
+  if(mc == MC_UNKNOWN) {
+    cfg = dvr_config_find_by_name_default("");
+    mc = cfg->dvr_mc;
+  }
+
+  if(mc == MC_PASS) {
+    streaming_queue_init(&sq, SMT_PACKET);
+    gh = NULL;
+    tsfix = NULL;
+    st = &sq.sq_st;
+    flags = SUBSCRIPTION_RAW_MPEGTS;
+  } else {
+    streaming_queue_init(&sq, 0);
+    gh = globalheaders_create(&sq.sq_st);
+    tsfix = tsfix_create(gh);
+    st = tsfix;
+    flags = 0;
+  }
 
   pthread_mutex_lock(&global_lock);
-  s = subscription_create_from_channel(ch, priority, 
-                                       "HTTP", tsfix,
-                                       0);
+  s = subscription_create_from_channel(ch, priority, "HTTP", st, flags);
   pthread_mutex_unlock(&global_lock);
 
   if(s) {
-    http_stream_run(hc, &sq, s);
+    http_stream_run(hc, &sq, s, mc);
     pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
     pthread_mutex_unlock(&global_lock);
   }
 
-  globalheaders_destroy(gh);
-  tsfix_destroy(tsfix);
+  if(gh)
+    globalheaders_destroy(gh);
+  if(tsfix)
+    tsfix_destroy(tsfix);
+
   streaming_queue_deinit(&sq);
 
   return 0;
@@ -684,14 +727,10 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   fname = strdup(de->de_filename);
-  pthread_mutex_unlock(&global_lock);
+  content = muxer_container_mimetype(de->de_mc, 1);
+  postfix = muxer_container_suffix(de->de_mc, 1);
 
-  postfix = strrchr(remain, '.');
-  if(postfix != NULL) {
-    postfix++;
-    if(!strcmp(postfix, "mkv"))
-      content = "video/x-matroska";
-  }
+  pthread_mutex_unlock(&global_lock);
 
   fd = tvh_open(fname, O_RDONLY, 0);
   free(fname);
@@ -735,7 +774,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   if(de->de_title != NULL) {
     snprintf(disposition, sizeof(disposition),
-	     "attachment; filename=%s.mkv", de->de_title);
+	     "attachment; filename=%s.%s", de->de_title, postfix);
     i = 20;
     while(disposition[i]) {
       if(disposition[i] == ' ')

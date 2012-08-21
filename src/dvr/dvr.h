@@ -23,17 +23,18 @@
 #include "epg.h"
 #include "channels.h"
 #include "subscriptions.h"
+#include "muxer.h"
 
 typedef struct dvr_config {
   char *dvr_config_name;
   char *dvr_storage;
-  char *dvr_format;
-  char *dvr_file_postfix;
   uint32_t dvr_retention_days;
   int dvr_flags;
   char *dvr_postproc;
   int dvr_extra_time_pre;
   int dvr_extra_time_post;
+
+  muxer_container_type_t dvr_mc;
 
   /* Series link support */
   int dvr_sl_brand_lock;
@@ -138,6 +139,8 @@ typedef struct dvr_entry {
 
   uint32_t de_dont_reschedule;
 
+  muxer_container_type_t de_mc;
+
   /**
    * EPG information / links
    */
@@ -184,7 +187,7 @@ typedef struct dvr_entry {
    * Initialized upon SUBSCRIPTION_TRANSPORT_RUN
    */
 
-  struct mk_mux *de_mkmux;
+  struct muxer *de_mux;
 
 } dvr_entry_t;
 
@@ -294,6 +297,8 @@ dvr_entry_t *dvr_entry_cancel(dvr_entry_t *de);
 void dvr_entry_dec_ref(dvr_entry_t *de);
 
 void dvr_storage_set(dvr_config_t *cfg, const char *storage);
+
+void dvr_container_set(dvr_config_t *cfg, const char *container);
 
 void dvr_postproc_set(dvr_config_t *cfg, const char *postproc);
 

@@ -21,25 +21,26 @@
 
 typedef struct mk_mux mk_mux_t;
 
+struct epg_broadcast;
 struct streaming_start;
 struct dvr_entry;
 struct th_pkt;
 struct channel;
 struct event;
 
-mk_mux_t *mk_mux_create(const char *filename,
-			const struct streaming_start *ss,
-			const struct dvr_entry *de,
-			int write_tags);
+mk_mux_t *mk_mux_create(void);
 
-mk_mux_t *mk_mux_stream_create(int fd,
-			       const struct streaming_start *ss,
-			       const struct channel *ch);
+int mk_mux_open_file  (mk_mux_t *mkm, const char *filename);
+int mk_mux_open_stream(mk_mux_t *mkm, int fd);
 
-int mk_mux_write_pkt(mk_mux_t *mkm, struct th_pkt *pkt);
+int mk_mux_init(mk_mux_t *mkm, const char *title, 
+		const struct streaming_start *ss);
 
-int mk_mux_append_meta(mk_mux_t *mkm, struct epg_broadcast *e);
+int mk_mux_write_pkt (mk_mux_t *mkm, struct th_pkt *pkt);
+int mk_mux_write_meta(mk_mux_t *mkm, const struct dvr_entry *de,
+		      const struct epg_broadcast *eb);
 
-void mk_mux_close(mk_mux_t *mk_mux);
+int  mk_mux_close  (mk_mux_t *mkm);
+void mk_mux_destroy(mk_mux_t *mkm);
 
 #endif // MKMUX_H__
