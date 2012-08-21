@@ -362,6 +362,7 @@ static int _xmltv_parse_programme_tags
   char *suri = NULL, *uri = NULL;
   lang_str_t *title = NULL;
   lang_str_t *desc = NULL;
+  lang_str_t *subtitle = NULL;
   lang_str_ele_t *ls;
 
   /*
@@ -391,6 +392,7 @@ static int _xmltv_parse_programme_tags
                    &sn, &sc, &en, &ec, &pn, &pc);
   _xmltv_parse_lang_str(&title, tags, "title");
   _xmltv_parse_lang_str(&desc,  tags, "desc");
+  _xmltv_parse_lang_str(&subtitle, tags, "sub-title");
 
   /*
    * Season
@@ -427,6 +429,11 @@ static int _xmltv_parse_programme_tags
         save |= epg_episode_set_title(ee, ls->str, ls->lang, mod);
       }
     }
+    if (subtitle) {
+      RB_FOREACH(ls, subtitle, link) {
+        save |= epg_episode_set_subtitle(ee, ls->str, ls->lang, mod);
+      }
+    }
     if (desc) {
       RB_FOREACH(ls, desc, link) {
         save |= epg_episode_set_description(ee, ls->str, ls->lang, mod);
@@ -450,8 +457,9 @@ static int _xmltv_parse_programme_tags
   if (save2) stats->broadcasts.modified++;
 
   /* Cleanup */
-  if (title) lang_str_destroy(title);
-  if (desc)  lang_str_destroy(desc);
+  if (title)    lang_str_destroy(title);
+  if (subtitle) lang_str_destroy(subtitle);
+  if (desc)     lang_str_destroy(desc);
   
   return save | save2 | save3;
 }
