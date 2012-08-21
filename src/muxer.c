@@ -226,6 +226,19 @@ muxer_init(muxer_t *m, const struct streaming_start *ss, const char *name)
 
 
 /**
+ * sanity wrapper arround m_reconfigure()
+ */
+int
+muxer_reconfigure(muxer_t *m, const struct streaming_start *ss)
+{
+  if(!m || !ss)
+    return -1;
+
+  return m->m_reconfigure(m, ss);
+}
+
+
+/**
  * sanity wrapper arround m_open_file()
  */
 int

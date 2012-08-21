@@ -204,8 +204,10 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
       break;
 
     case SMT_STOP:
-      muxer_close(mux);
-      run = 0;
+      if(sm->sm_code == SM_CODE_SOURCE_RECONFIGURED)
+	muxer_reconfigure(mux, sm->sm_data);
+      else
+	run = 0;
       break;
 
     case SMT_SERVICE_STATUS:
@@ -221,7 +223,6 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
       break;
 
     case SMT_EXIT:
-      muxer_close(mux);
       run = 0;
       break;
     }
@@ -231,6 +232,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
       run = 0;
   }
 
+  muxer_close(mux);
   muxer_destroy(mux);
 }
 
