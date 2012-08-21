@@ -28,6 +28,7 @@
 #include <syslog.h>
 #include <limits.h>
 #include <time.h>
+#include <locale.h>
 
 #include <pwd.h>
 #include <grp.h>
@@ -265,6 +266,9 @@ main(int argc, char **argv)
 
   /* Get current directory */
   tvheadend_cwd = dirname(dirname(strdup(argv[0])));
+
+  /* Set locale */
+  setlocale(LC_ALL, "");
 
   // make sure the timezone is set
   tzset();

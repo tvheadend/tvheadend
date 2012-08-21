@@ -77,9 +77,9 @@ static void _epgdb_v1_process ( htsmsg_t *c, epggrab_stats_t *stats )
   if (!ee) return;
   if (save) stats->episodes.total++;
   if (title)
-    save |= epg_episode_set_title(ee, title, NULL);
+    save |= epg_episode_set_title(ee, title, NULL, NULL);
   if (desc)
-    save |= epg_episode_set_summary(ee, desc, NULL);
+    save |= epg_episode_set_summary(ee, desc, NULL, NULL);
   if (!htsmsg_get_u32(c, "episode", &u32))
     save |= epg_episode_set_number(ee, u32, NULL);
   if (!htsmsg_get_u32(c, "part", &u32))

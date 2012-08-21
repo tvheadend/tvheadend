@@ -127,12 +127,12 @@ static int _pyepg_parse_brand
 
   /* Set title */
   if ((str = htsmsg_xml_get_cdata_str(tags, "title"))) {
-    save |= epg_brand_set_title(brand, str, mod);
+    save |= epg_brand_set_title(brand, str, NULL, mod);
   }
 
   /* Set summary */
   if ((str = htsmsg_xml_get_cdata_str(tags, "summary"))) {
-    save |= epg_brand_set_summary(brand, str, mod);
+    save |= epg_brand_set_summary(brand, str, NULL, mod);
   }
   
   /* Set image */
@@ -182,7 +182,7 @@ static int _pyepg_parse_season
 
   /* Set summary */
   if ((str = htsmsg_xml_get_cdata_str(tags, "summary"))) {
-    save |= epg_season_set_summary(season, str, mod);
+    save |= epg_season_set_summary(season, str, NULL, mod);
   }
   
   /* Set image */
@@ -246,15 +246,15 @@ static int _pyepg_parse_episode
 
   /* Set title/subtitle */
   if ((str = htsmsg_xml_get_cdata_str(tags, "title"))) {
-    save |= epg_episode_set_title(episode, str, mod);
+    save |= epg_episode_set_title(episode, str, NULL, mod);
   } 
   if ((str = htsmsg_xml_get_cdata_str(tags, "subtitle"))) {
-    save |= epg_episode_set_subtitle(episode, str, mod);
+    save |= epg_episode_set_subtitle(episode, str, NULL, mod);
   } 
 
   /* Set summary */
   if ((str = htsmsg_xml_get_cdata_str(tags, "summary"))) {
-    save |= epg_episode_set_summary(episode, str, mod);
+    save |= epg_episode_set_summary(episode, str, NULL, mod);
   }
 
   /* Number */

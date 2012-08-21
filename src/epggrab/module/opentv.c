@@ -355,6 +355,12 @@ static int _opentv_parse_event_section
   epg_season_t *es;
   opentv_event_t ev;
   epggrab_module_t *src = (epggrab_module_t*)mod;
+  const char *lang = NULL;
+  const char *str;
+
+  /* Get language (bit of a hack) */
+  if      (!strcmp(mod->dict->id, "skyit"))  lang = "it";
+  else if (!strcmp(mod->dict->id, "skyeng")) lang = "eng";
 
   /* Channel */
   cid = ((int)buf[0] << 8) | buf[1];
@@ -398,14 +404,15 @@ static int _opentv_parse_event_section
 
       /* Update */
       if (ee) {
-        if (!ev.title && ebc->episode)
-          save |= epg_episode_set_title(ee, ebc->episode->title, src);
-        else if (ev.title)
-          save |= epg_episode_set_title(ee, ev.title, src);
+        if (!ev.title && ebc->episode) {
+          if ((str = epg_episode_get_title(ebc->episode, NULL)))
+            save |= epg_episode_set_title(ee, str, lang, NULL);
+        } else if (ev.title)
+          save |= epg_episode_set_title(ee, ev.title, lang, src);
         if (ev.summary)
-          save |= epg_episode_set_summary(ee, ev.summary, src);
+          save |= epg_episode_set_summary(ee, ev.summary, lang, src);
         if (ev.desc)
-          save |= epg_episode_set_description(ee, ev.desc, src);
+          save |= epg_episode_set_description(ee, ev.desc, lang, src);
         if (ev.cat) {
           epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
           epg_genre_list_add_by_eit(egl, ev.cat);

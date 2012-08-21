@@ -7,7 +7,7 @@ tvheadend.miscconf = function() {
   var confreader = new Ext.data.JsonReader(
     { root: 'config' },
     [ 
-      'muxconfpath',
+      'muxconfpath', 'language',
     ]
   );
 
@@ -18,6 +18,12 @@ tvheadend.miscconf = function() {
   var dvbscanPath = new Ext.form.TextField({
     fieldLabel : 'DVB scan files path',
     name       : 'muxconfpath',
+    allowBlank : true,
+  });
+
+  var language = new Ext.form.TextField({
+    fieldLabel : 'Default Language(s)',
+    name       : 'language',
     allowBlank : true,
   });
 
@@ -53,7 +59,8 @@ tvheadend.miscconf = function() {
     defaultType   : 'textfield',
     autoHeight    : true,
     items         : [
-      dvbscanPath
+      language,
+      dvbscanPath,
     ],
     tbar: [
       saveButton,
