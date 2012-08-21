@@ -293,13 +293,13 @@ int fb_scandir ( const char *path, fb_dirent ***list )
 {
   int i, ret = -1;
   struct dirent **de;
-  struct filebundle_stat st;
-  if (fb_stat(path, &st)) return -1;
-  if (!st.is_dir) return -1;
+  fb_dir *dir;
+
+  if (!(dir = fb_opendir(path))) return -1;
 
   /* Direct */
-  if (st.type == FB_DIRECT) {
-    if ((ret = scandir(path, &de, NULL, NULL)) != -1) {
+  if (dir->type == FB_DIRECT) {
+    if ((ret = scandir(dir->d.root, &de, NULL, NULL)) != -1) {
       if (ret == 0) return 0;
       *list = malloc(sizeof(fb_dirent*)*ret);
       for (i = 0; i < ret; i++) {
@@ -313,22 +313,22 @@ int fb_scandir ( const char *path, fb_dirent ***list )
 
   /* Bundle */
   } else {
-    fb_dir *dir;
-    if ((dir = fb_opendir(path))) {
-      const filebundle_entry_t *fb;
-      ret = dir->b.root->d.count;
-      fb  = dir->b.root->d.child;
-      *list = malloc(ret * sizeof(fb_dirent));
-      i = 0;
-      while (fb) {
-        (*list)[i] = calloc(1, sizeof(fb_dirent));
-        strcpy((*list)[i]->name, fb->name);
-        fb = fb->next;
-        i++;
-      }
-      fb_closedir(dir);
+    const filebundle_entry_t *fb;
+    ret = dir->b.root->d.count;
+    fb  = dir->b.root->d.child;
+    *list = malloc(ret * sizeof(fb_dirent));
+    i = 0;
+    while (fb) {
+      (*list)[i] = calloc(1, sizeof(fb_dirent));
+      strcpy((*list)[i]->name, fb->name);
+      fb = fb->next;
+      i++;
     }
   }
+
+  /* Close */
+  fb_closedir(dir);
+
   return ret;
 }
 

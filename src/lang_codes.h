@@ -1,7 +1,6 @@
 /*
- *  String helper functions
- *  Copyright (C) 2008 Andreas Öman
- *  Copyright (C) 2008 Mattias Wadman
+ *  Multi-language Support - language codes
+ *  Copyright (C) 2012 Adam Sutton
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,18 +16,23 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __TVH_LANG_CODES_H__
+#define __TVH_LANG_CODES_H__
 
-#ifndef HTSSTR_H__
-#define HTSSTR_H__
+typedef struct lang_code
+{
+  const char *code2b; ///< ISO 639-2 B
+  const char *code1;  ///< ISO 639-1
+  const char *code2t; ///< ISO 639-2 T
+  const char *desc;   ///< Description
+} lang_code_t;
 
-char *hts_strndup(const char *str, size_t len);
+extern const lang_code_t lang_codes[];
 
-char *htsstr_unescape(char *str);
+/* Convert code to preferred internal code */
+const char *lang_code_get ( const char *code );
 
-char **htsstr_argsplit(const char *str);
+/* Split list of codes as per HTTP Language-Accept spec */
+const char **lang_code_split ( const char *codes );
 
-void htsstr_argsplit_free(char **argv);
-
-char *htsstr_format(const char *str, const char **map);
-
-#endif /* HTSSTR_H__ */
+#endif /* __TVH_LANG_CODES_H__ */

@@ -20,6 +20,7 @@
 #define EPG_H
 
 #include "settings.h"
+#include "lang_str.h"
 
 /*
  * External forward decls
@@ -136,8 +137,8 @@ struct epg_brand
 {
   epg_object_t;                            ///< Base object
 
-  char                      *title;        ///< Brand name
-  char                      *summary;      ///< Brand summary
+  lang_str_t                *title;        ///< Brand name
+  lang_str_t                *summary;      ///< Brand summary
   uint16_t                   season_count; ///< Total number of seasons
   char                      *image;        ///< Brand image
 
@@ -150,12 +151,20 @@ epg_brand_t *epg_brand_find_by_uri
   ( const char *uri, int create, int *save );
 epg_brand_t *epg_brand_find_by_id ( uint64_t id );
 
+/* Accessors */
+const char *epg_brand_get_title
+  ( const epg_brand_t *b, const char *lang );
+const char *epg_brand_get_summary
+  ( const epg_brand_t *b, const char *lang );
+
 /* Mutators */
 int epg_brand_set_title        
-  ( epg_brand_t *b, const char *title, struct epggrab_module *src )
+  ( epg_brand_t *b, const char *title, const char *lang,
+    struct epggrab_module *src )
   __attribute__((warn_unused_result));
 int epg_brand_set_summary
-  ( epg_brand_t *b, const char *summary, struct epggrab_module *src )
+  ( epg_brand_t *b, const char *summary, const char *lang,
+    struct epggrab_module *src )
   __attribute__((warn_unused_result));
 int epg_brand_set_season_count
   ( epg_brand_t *b, uint16_t season_count, struct epggrab_module *src )
@@ -180,7 +189,7 @@ struct epg_season
 {
   epg_object_t;                             ///< Parent object
 
-  char                      *summary;       ///< Season summary
+  lang_str_t                *summary;       ///< Season summary
   uint16_t                   number;        ///< The season number
   uint16_t                   episode_count; ///< Total number of episodes
   char                      *image;         ///< Season image
@@ -196,9 +205,14 @@ epg_season_t *epg_season_find_by_uri
   ( const char *uri, int create, int *save );
 epg_season_t *epg_season_find_by_id ( uint64_t id );
 
+/* Accessors */
+const char *epg_season_get_summary
+  ( const epg_season_t *s, const char *lang );
+
 /* Mutators */
 int epg_season_set_summary
-  ( epg_season_t *s, const char *summary, struct epggrab_module *src )
+  ( epg_season_t *s, const char *summary, const char *lang,
+    struct epggrab_module *src )
   __attribute__((warn_unused_result));
 int epg_season_set_number
   ( epg_season_t *s, uint16_t number, struct epggrab_module *src )
@@ -240,10 +254,10 @@ struct epg_episode
 {
   epg_object_t;                             ///< Parent object
 
-  char                      *title;         ///< Title
-  char                      *subtitle;      ///< Sub-title
-  char                      *summary;       ///< Summary
-  char                      *description;   ///< An extended description
+  lang_str_t                *title;         ///< Title
+  lang_str_t                *subtitle;      ///< Sub-title
+  lang_str_t                *summary;       ///< Summary
+  lang_str_t                *description;   ///< An extended description
   char                      *image;         ///< Episode image
   epg_genre_list_t           genre;         ///< Episode genre(s)
   epg_episode_num_t          epnum;         ///< Episode numbering
@@ -265,18 +279,32 @@ epg_episode_t *epg_episode_find_by_uri
   ( const char *uri, int create, int *save );
 epg_episode_t *epg_episode_find_by_id ( uint64_t id );
 
+/* Accessors */
+const char *epg_episode_get_title
+  ( const epg_episode_t *e, const char *lang );
+const char *epg_episode_get_subtitle
+  ( const epg_episode_t *e, const char *lang );
+const char *epg_episode_get_summary
+  ( const epg_episode_t *e, const char *lang );
+const char *epg_episode_get_description
+  ( const epg_episode_t *e, const char *lang );
+
 /* Mutators */
 int epg_episode_set_title
-  ( epg_episode_t *e, const char *title, struct epggrab_module *src )
+  ( epg_episode_t *e, const char *title, const char *lang,
+    struct epggrab_module *src )
   __attribute__((warn_unused_result));
 int epg_episode_set_subtitle
-  ( epg_episode_t *e, const char *subtitle, struct epggrab_module *src )
+  ( epg_episode_t *e, const char *subtitle, const char *lang,
+    struct epggrab_module *src )
   __attribute__((warn_unused_result));
 int epg_episode_set_summary
-  ( epg_episode_t *e, const char *summary, struct epggrab_module *src )
+  ( epg_episode_t *e, const char *summary, const char *lang,
+    struct epggrab_module *src )
   __attribute__((warn_unused_result));
 int epg_episode_set_description
-  ( epg_episode_t *e, const char *description, struct epggrab_module *src )
+  ( epg_episode_t *e, const char *description, const char *lang,
+    struct epggrab_module *src )
   __attribute__((warn_unused_result));
 int epg_episode_set_number
   ( epg_episode_t *e, uint16_t number, struct epggrab_module *src )
@@ -444,9 +472,10 @@ void epg_query_sort(epg_query_result_t *eqr);
 
 /* Query routines */
 void epg_query0(epg_query_result_t *eqr, struct channel *ch,
-                struct channel_tag *ct, epg_genre_t *genre, const char *title);
+                struct channel_tag *ct, epg_genre_t *genre, const char *title,
+                const char *lang);
 void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
-	       epg_genre_t *genre, const char *title);
+	       epg_genre_t *genre, const char *title, const char *lang);
 
 
 /* ************************************************************************

@@ -67,6 +67,7 @@ page_simple(http_connection_t *hc,
   dvr_query_result_t dqr;
   const char *rstatus = NULL;
   epg_query_result_t eqr;
+  const char *lang  = http_arg_get(&hc->hc_args, "Accept-Language");
 
   htsbuf_qprintf(hq, "<html>");
   htsbuf_qprintf(hq, "<body>");
@@ -86,7 +87,7 @@ page_simple(http_connection_t *hc,
 
   if(s != NULL) {
     
-    epg_query(&eqr, NULL, NULL, NULL, s);
+    epg_query(&eqr, NULL, NULL, NULL, s, lang);
     epg_query_sort(&eqr);
 
     c = eqr.eqr_entries;
@@ -123,12 +124,13 @@ page_simple(http_connection_t *hc,
 	rstatus = de != NULL ? val2str(de->de_sched_state,
 				       recstatustxt) : NULL;
 
+  s = epg_episode_get_title(e->episode, lang);
 	htsbuf_qprintf(hq, 
 		    "<a href=\"/eventinfo/%d\">"
 		    "%02d:%02d-%02d:%02d&nbsp;%s%s%s</a><br>",
 		    e->id,
 		    a.tm_hour, a.tm_min, b.tm_hour, b.tm_min,
-		    e->episode ? e->episode->title : "",
+        s ?: "",
 		    rstatus ? "&nbsp;" : "", rstatus ?: "");
       }
     }
@@ -199,6 +201,8 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   dvr_entry_t *de;
   const char *rstatus;
   dvr_entry_sched_state_t dvr_status;
+  const char *lang  = http_arg_get(&hc->hc_args, "Accept-Language");
+  const char *s;
 
   pthread_mutex_lock(&global_lock);
 
@@ -227,8 +231,9 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
 	      days[a.tm_wday], a.tm_mday, a.tm_mon + 1,
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
 
+  s = epg_episode_get_title(e->episode, lang);
   htsbuf_qprintf(hq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
-	      e->channel->ch_name, e->episode ? e->episode->title : "");
+	      e->channel->ch_name, s ?: "");
   
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
 

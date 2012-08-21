@@ -1,7 +1,6 @@
 /*
- *  String helper functions
- *  Copyright (C) 2008 Andreas Öman
- *  Copyright (C) 2008 Mattias Wadman
+ *  tvheadend, simple muxer that just passes the input along
+ *  Copyright (C) 2012 John Törnblom
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -14,21 +13,14 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
  */
 
+#ifndef PASS_MUXER_H_
+#define PASS_MUXER_H_
 
-#ifndef HTSSTR_H__
-#define HTSSTR_H__
+#include "muxer.h"
 
-char *hts_strndup(const char *str, size_t len);
+muxer_t* pass_muxer_create(struct service *s, muxer_container_type_t mc);
 
-char *htsstr_unescape(char *str);
-
-char **htsstr_argsplit(const char *str);
-
-void htsstr_argsplit_free(char **argv);
-
-char *htsstr_format(const char *str, const char **map);
-
-#endif /* HTSSTR_H__ */
+#endif

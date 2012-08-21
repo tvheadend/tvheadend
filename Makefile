@@ -99,6 +99,8 @@ SRCS =  src/main.c \
   src/filebundle.c \
   src/muxes.c \
   src/config2.c \
+  src/lang_codes.c \
+  src/lang_str.c \
 
 SRCS += src/epggrab/module.c\
   src/epggrab/channel.c\
@@ -123,6 +125,10 @@ SRCS += src/webui/webui.c \
 	src/webui/extjs.c \
 	src/webui/simpleui.c \
 	src/webui/statedump.c \
+
+SRCS += src/muxer.c \
+	src/muxer_pass.c \
+	src/muxer_tvh.c \
 
 #
 # Optional code

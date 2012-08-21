@@ -41,6 +41,7 @@
 #include "serviceprobe.h"
 #include "epggrab.h"
 #include "epg.h"
+#include "muxer.h"
 #include "iptv_input.h"
 
 #include "config2.h"
@@ -342,8 +343,9 @@ extjs_channels_update(htsmsg_t *in)
       channel_set_number(ch, atoi(s));
 
     if((s = htsmsg_get_str(c, "epggrabsrc")) != NULL) {
-      char *sptr;
-      char *modecid  = strtok_r((char*)s, ",", &sptr);
+      char *tmp = strdup(s);
+      char *sptr = NULL;
+      char *modecid  = strtok_r(tmp, ",", &sptr);
       char *modid, *ecid;
       epggrab_module_t *mod;
       epggrab_channel_t *ec;
@@ -375,6 +377,9 @@ extjs_channels_update(htsmsg_t *in)
 
         epggrab_channel_link(ec, ch);
       }
+
+      /* Cleanup */
+      free(tmp);
     }
   }
 }
@@ -717,6 +722,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   const char *channel = http_arg_get(&hc->hc_req_args, "channel");
   const char *tag     = http_arg_get(&hc->hc_req_args, "tag");
   const char *title   = http_arg_get(&hc->hc_req_args, "title");
+  const char *lang    = http_arg_get(&hc->hc_args, "Accept-Language");
 
   if(channel && !channel[0]) channel = NULL;
   if(tag     && !tag[0])     tag = NULL;
@@ -739,7 +745,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_lock(&global_lock);
 
-  epg_query(&eqr, channel, tag, eg, title);
+  epg_query(&eqr, channel, tag, eg, title, lang);
 
   epg_query_sort(&eqr);
 
@@ -762,17 +768,18 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     if(ch->ch_icon != NULL)
 	    htsmsg_add_str(m, "chicon", ch->ch_icon);
 
-    if(ee->title != NULL)
-      htsmsg_add_str(m, "title", ee->title);
-    if(ee->subtitle)
-      htsmsg_add_str(m, "subtitle", ee->subtitle);
+    if((s = epg_episode_get_title(ee, lang)))
+      htsmsg_add_str(m, "title", s);
+    if((s = epg_episode_get_subtitle(ee, lang)))
+      htsmsg_add_str(m, "subtitle", s);
 
-    if(ee->description != NULL)
-      htsmsg_add_str(m, "description", ee->description);
-    else if(ee->summary != NULL)
-      htsmsg_add_str(m, "description", ee->summary);
+    if((s = epg_episode_get_description(ee, lang)))
+      htsmsg_add_str(m, "description", s);
+    else if((s = epg_episode_get_summary(ee, lang)))
+      htsmsg_add_str(m, "description", s);
 
-    if (epg_episode_number_format(ee, buf, 100, NULL, "Season %d", ".", "Episode %d", "/%d"))
+    if (epg_episode_number_format(ee, buf, 100, NULL, "Season %d", ".",
+                                  "Episode %d", "/%d"))
       htsmsg_add_str(m, "episode", buf);
 
     htsmsg_add_u32(m, "id", e->id);
@@ -812,11 +819,12 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
   epg_episode_t *ee, *ee2;
   channel_t *ch;
   uint32_t count = 0;
-  const char *id, *type;
+  const char *s;
   char buf[100];
 
-  id   = http_arg_get(&hc->hc_req_args, "id");
-  type = http_arg_get(&hc->hc_req_args, "type");
+  const char *lang  = http_arg_get(&hc->hc_args, "Accept-Language");
+  const char *id    = http_arg_get(&hc->hc_req_args, "id");
+  const char *type  = http_arg_get(&hc->hc_req_args, "type");
 
   out = htsmsg_create_map();
   array = htsmsg_create_list();
@@ -851,9 +859,12 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
             count++;
             m = htsmsg_create_map();
             htsmsg_add_str(m, "uri", ee2->uri);
-            htsmsg_add_str(m, "title", ee2->title);
-            if (ee2->subtitle) htsmsg_add_str(m, "subtitle", ee2->subtitle);
-            if (epg_episode_number_format(ee2, buf, 100, NULL, "Season %d", ".", "Episode %d", "/%d"))
+            if ((s = epg_episode_get_title(ee2, lang)))
+              htsmsg_add_str(m, "title", s);
+            if ((s = epg_episode_get_subtitle(ee2, lang)))
+              htsmsg_add_str(m, "subtitle", s);
+            if (epg_episode_number_format(ee2, buf, 100, NULL, "Season %d",
+                                          ".", "Episode %d", "/%d"))
               htsmsg_add_str(m, "episode", buf);
             htsmsg_add_msg(array, NULL, m);
           }
@@ -864,9 +875,12 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
             count++;
             m = htsmsg_create_map();
             htsmsg_add_str(m, "uri", ee2->uri);
-            htsmsg_add_str(m, "title", ee2->title);
-            if (ee2->subtitle) htsmsg_add_str(m, "subtitle", ee2->subtitle);
-            if (epg_episode_number_format(ee2, buf, 100, NULL, "Season %d", ".", "Episode %d", "/%d"))
+            if ((s = epg_episode_get_title(ee2, lang)))
+              htsmsg_add_str(m, "title", s);
+            if ((s = epg_episode_get_subtitle(ee2, lang)))
+              htsmsg_add_str(m, "subtitle", s);
+            if (epg_episode_number_format(ee2, buf, 100, NULL, "Season %d",
+                                          ".", "Episode %d", "/%d"))
               htsmsg_add_str(m, "episode", buf);
             htsmsg_add_msg(array, NULL, m);
           }
@@ -1081,6 +1095,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     r = htsmsg_create_map();
     htsmsg_add_str(r, "storage", cfg->dvr_storage);
+    htsmsg_add_str(r, "container", muxer_container_type2txt(cfg->dvr_mc));
     if(cfg->dvr_postproc != NULL)
       htsmsg_add_str(r, "postproc", cfg->dvr_postproc);
     htsmsg_add_u32(r, "retention", cfg->dvr_retention_days);
@@ -1111,6 +1126,9 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     if((s = http_arg_get(&hc->hc_req_args, "storage")) != NULL)
       dvr_storage_set(cfg,s);
     
+   if((s = http_arg_get(&hc->hc_req_args, "container")) != NULL)
+      dvr_container_set(cfg,s);
+
     if((s = http_arg_get(&hc->hc_req_args, "postproc")) != NULL)
       dvr_postproc_set(cfg,s);
 
@@ -1230,10 +1248,10 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_str(m, "config_name", de->de_config_name);
 
     if(de->de_title != NULL)
-      htsmsg_add_str(m, "title", de->de_title);
+      htsmsg_add_str(m, "title", lang_str_get(de->de_title, NULL));
 
     if(de->de_desc != NULL)
-      htsmsg_add_str(m, "description", de->de_desc);
+      htsmsg_add_str(m, "description", lang_str_get(de->de_desc, NULL));
 
     if (de->de_bcast && de->de_bcast->episode)
       if (epg_episode_number_format(de->de_bcast->episode, buf, 100, NULL, "Season %d", ".", "Episode %d", "/%d"))
@@ -1748,6 +1766,8 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
     pthread_mutex_lock(&global_lock);
     if ((str = http_arg_get(&hc->hc_req_args, "muxconfpath")))
       save |= config_set_muxconfpath(str);
+    if ((str = http_arg_get(&hc->hc_req_args, "language")))
+      save |= config_set_language(str);
     if (save) config_save();
     pthread_mutex_unlock(&global_lock);
     out = htsmsg_create_map();
