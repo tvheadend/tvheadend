@@ -23,14 +23,14 @@ typedef struct mux {
   LIST_ENTRY(mux) link;
  unsigned int freq;
  unsigned int symrate;
- char fec;
- char constellation;
- char bw;
- char fechp;
- char feclp;
- char tmode;
- char guard;
- char hierarchy;
+ short fec;
+ short constellation;
+ short bw;
+ short fechp;
+ short feclp;
+ short tmode;
+ short guard;
+ short hierarchy;
  char polarisation;
 } mux_t;
 

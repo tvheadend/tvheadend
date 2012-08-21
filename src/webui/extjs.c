@@ -343,8 +343,9 @@ extjs_channels_update(htsmsg_t *in)
       channel_set_number(ch, atoi(s));
 
     if((s = htsmsg_get_str(c, "epggrabsrc")) != NULL) {
-      char *sptr;
-      char *modecid  = strtok_r((char*)s, ",", &sptr);
+      char *tmp = strdup(s);
+      char *sptr = NULL;
+      char *modecid  = strtok_r(tmp, ",", &sptr);
       char *modid, *ecid;
       epggrab_module_t *mod;
       epggrab_channel_t *ec;
@@ -376,6 +377,9 @@ extjs_channels_update(htsmsg_t *in)
 
         epggrab_channel_link(ec, ch);
       }
+
+      /* Cleanup */
+      free(tmp);
     }
   }
 }
