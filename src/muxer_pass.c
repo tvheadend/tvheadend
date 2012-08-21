@@ -291,11 +291,8 @@ pass_muxer_create(service_t *s, muxer_container_type_t mc)
 {
   pass_muxer_t *pm;
 
-  if(mc != MC_PASS) {
-    tvhlog(LOG_ERR, "pass",  "Passthrough muxer doesn't support '%s'",
-	   muxer_container_type2txt(mc));
+  if(mc != MC_PASS)
     return NULL;
-  }
 
   pm = calloc(1, sizeof(pass_muxer_t));
   pm->m_open_stream  = pass_muxer_open_stream;

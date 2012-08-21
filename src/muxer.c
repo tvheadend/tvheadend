@@ -168,10 +168,9 @@ muxer_container_txt2type(const char *str)
 muxer_t* 
 muxer_create(service_t *s, muxer_container_type_t mc)
 {
-  muxer_t *m = NULL;
+  muxer_t *m;
 
-  if(mc == MC_PASS)
-    m = pass_muxer_create(s, mc);
+  m = pass_muxer_create(s, mc);
 
   if(!m)
     m = tvh_muxer_create(mc);
@@ -180,6 +179,10 @@ muxer_create(service_t *s, muxer_container_type_t mc)
   if(!m)
     m = lav_muxer_create(mc);
 #endif
+
+  if(!m)
+    tvhlog(LOG_ERR, "mux", "Can't find a muxer that supports '%s' container",
+	   muxer_container_type2txt(mc));
 
   return m;
 }

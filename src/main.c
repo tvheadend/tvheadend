@@ -396,6 +396,9 @@ main(int argc, char **argv)
 
   channels_init();
 
+  epggrab_init();
+  epg_init();
+
   access_init(createdefault);
 
   tcp_server_init();
@@ -423,9 +426,6 @@ main(int argc, char **argv)
   cwc_init();
 
   capmt_init();
-
-  epggrab_init();
-  epg_init();
 
   dvr_init();
 

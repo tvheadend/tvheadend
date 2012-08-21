@@ -767,14 +767,10 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   fname = strdup(de->de_filename);
-  pthread_mutex_unlock(&global_lock);
+  content = muxer_container_mimetype(de->de_mc, 1);
+  postfix = muxer_container_suffix(de->de_mc, 1);
 
-  postfix = strrchr(remain, '.');
-  if(postfix != NULL) {
-    postfix++;
-    if(!strcmp(postfix, "mkv"))
-      content = "video/x-matroska";
-  }
+  pthread_mutex_unlock(&global_lock);
 
   fd = tvh_open(fname, O_RDONLY, 0);
   free(fname);
@@ -818,7 +814,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   if(de->de_title != NULL) {
     snprintf(disposition, sizeof(disposition),
-	     "attachment; filename=%s.mkv", de->de_title);
+	     "attachment; filename=%s.%s", de->de_title, postfix);
     i = 20;
     while(disposition[i]) {
       if(disposition[i] == ' ')

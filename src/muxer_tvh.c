@@ -187,11 +187,8 @@ tvh_muxer_create(muxer_container_type_t mc)
 {
   tvh_muxer_t *tm;
 
-  if(mc != MC_MATROSKA) {
-    tvhlog(LOG_ERR, "mux",  "Builtin muxer doesn't support '%s'",
-	   muxer_container_type2txt(mc));
+  if(mc != MC_MATROSKA)
     return NULL;
-  }
 
   tm = calloc(1, sizeof(tvh_muxer_t));
   tm->m_open_stream  = tvh_muxer_open_stream;
