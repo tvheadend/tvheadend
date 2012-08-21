@@ -33,6 +33,8 @@ tvheadend.containers = new Ext.data.SimpleStore({
     id: 0,
     data: [
 	['matroska','Matroska'],
+	['mpegts','MPEG transport stream'],
+	['mpegps','MPEG program stream'],
 	['pass','Pass-through']
     ]
 });

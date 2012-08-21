@@ -58,6 +58,7 @@
 #include "trap.h"
 #include "settings.h"
 #include "ffdecsa/FFdecsa.h"
+#include "plumbing/transcode.h"
 #include "muxes.h"
 #include "config2.h"
 
@@ -405,13 +406,21 @@ main(int argc, char **argv)
   access_init(createdefault);
 
   tcp_server_init();
+
 #if ENABLE_LINUXDVB
   dvb_init(adapter_mask);
 #endif
+
   iptv_input_init();
+
 #if ENABLE_V4L
   v4l_init();
 #endif
+
+#if ENABLE_LIBAV
+  transcoder_init();
+#endif
+
   http_server_init();
 
   webui_init();

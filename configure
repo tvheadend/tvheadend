@@ -23,6 +23,7 @@ OPTIONS=(
   "avahi:auto"
   "zlib:auto"
   "bundle:no"
+  "libav:auto"
 )
 
 #
@@ -72,6 +73,43 @@ if enabled_or_auto bundle; then
     enable bundle
   elif enabled bundle; then
     die "Zlib development support not found (use --disable-bundle)"
+  fi
+fi
+
+#
+# libav
+#
+if enabled_or_auto libav; then
+  has_libav=true
+
+  if $has_libav && ! check_pkg libavcodec "<=55.0.0"; then
+    has_libav=false
+  fi
+
+  if $has_libav && ! check_pkg libavcodec ">=52.96.0"; then
+    has_libav=false
+  fi
+
+  if $has_libav && ! check_pkg libavutil ">=50.43.0"; then
+    has_libav=false
+  fi
+
+  if $has_libav && ! check_pkg libswscale ">=0.13.0"; then
+    has_libav=false
+  fi
+
+  if $has_libav && ! check_pkg libavformat "<=55.0.0"; then
+    has_libav=false
+  fi
+
+  if $has_libav && ! check_pkg libavformat ">=50.43.0"; then
+    has_libav=false
+  fi
+
+  if $has_libav; then
+    enable libav
+  elif enabled libav; then
+    die "libav development support not found (use --disable-libav)"
   fi
 fi
 
