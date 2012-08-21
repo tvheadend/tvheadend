@@ -310,6 +310,20 @@ lav_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
 
 
 /**
+ * Handle changes to the streams (usually PMT updates)
+ */
+static int
+lav_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
+{
+  lav_muxer_t *lm = (lav_muxer_t*)m;
+
+  lm->m_errors++;
+
+  return -1;
+}
+
+
+/**
  * Open the muxer and write the header
  */
 static int
@@ -483,6 +497,7 @@ lav_muxer_create(muxer_container_type_t mc)
   lm->m_open_stream  = lav_muxer_open_stream;
   lm->m_open_file    = lav_muxer_open_file;
   lm->m_init         = lav_muxer_init;
+  lm->m_reconfigure  = lav_muxer_reconfigure;
   lm->m_mime         = lav_muxer_mime;
   lm->m_write_meta   = lav_muxer_write_meta;
   lm->m_write_pkt    = lav_muxer_write_pkt;
