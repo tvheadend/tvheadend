@@ -874,14 +874,16 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
       switch(tag) {
       case DVB_DESC_SAT:
-	dvb_table_sat_delivery(tdmi, ptr, tlen, tsid);
-	break;
+        if(tdmi->tdmi_adapter->tda_type == FE_QPSK)
+          dvb_table_sat_delivery(tdmi, ptr, tlen, tsid);
+        break;
       case DVB_DESC_CABLE:
-	dvb_table_cable_delivery(tdmi, ptr, tlen, tsid);
-	break;
+        if(tdmi->tdmi_adapter->tda_type == FE_QAM)
+          dvb_table_cable_delivery(tdmi, ptr, tlen, tsid);
+        break;
       case DVB_DESC_LOCAL_CHAN:
-	dvb_table_local_channel(tdmi, ptr, tlen, tsid);
-	break;
+        dvb_table_local_channel(tdmi, ptr, tlen, tsid);
+        break;
       }
 
       ptr += tlen;
