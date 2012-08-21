@@ -169,7 +169,8 @@ typedef enum {
 
 #define SCT_ISVIDEO(t) ((t) == SCT_MPEG2VIDEO || (t) == SCT_H264)
 #define SCT_ISAUDIO(t) ((t) == SCT_MPEG2AUDIO || (t) == SCT_AC3 || \
-                        (t) == SCT_AAC || (t) == SCT_MP4A)
+                        (t) == SCT_AAC || (t) == SCT_MP4A ||	   \
+			(t) == SCT_EAC3)
 #define SCT_ISSUBTITLE(t) ((t) == SCT_TEXTSUB || (t) == SCT_DVBSUB)
 
 /**
