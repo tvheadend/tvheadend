@@ -42,6 +42,8 @@ typedef struct muxer {
   int         (*m_init)       (struct muxer *,                          // Init The muxer with streams
 			       const struct streaming_start *,
 			       const char *);
+  int         (*m_reconfigure)(struct muxer *,                          // Reconfigure the muxer on
+			       const struct streaming_start *);         // stream changes
   int         (*m_close)      (struct muxer *);                         // Close the muxer
   void        (*m_destroy)    (struct muxer *);                         // Free the memory
   int         (*m_write_meta) (struct muxer *, struct epg_broadcast *); // Append epg data
@@ -65,6 +67,7 @@ muxer_t *muxer_create(struct service *s, muxer_container_type_t mc);
 int         muxer_open_file   (muxer_t *m, const char *filename);
 int         muxer_open_stream (muxer_t *m, int fd);
 int         muxer_init        (muxer_t *m, const struct streaming_start *ss, const char *name);
+int         muxer_reconfigure (muxer_t *m, const struct streaming_start *ss);
 int         muxer_close       (muxer_t *m);
 int         muxer_destroy     (muxer_t *m);
 int         muxer_write_meta  (muxer_t *m, struct epg_broadcast *eb);

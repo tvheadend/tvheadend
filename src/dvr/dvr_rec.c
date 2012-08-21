@@ -468,6 +468,8 @@ dvr_thread(void *aux)
 	       "dvr", "Recording completed: \"%s\"",
 	       de->de_filename ?: lang_str_get(de->de_title, NULL));
 
+      } else if(sm->sm_code == SM_CODE_SOURCE_RECONFIGURED) {
+	muxer_reconfigure(de->de_mux, sm->sm_data);
       } else {
 
 	if(de->de_last_error != sm->sm_code) {

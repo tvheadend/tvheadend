@@ -90,10 +90,10 @@ pass_muxer_mime(muxer_t* m, const struct streaming_start *ss)
 
 
 /**
- * Init the passthrough muxer with streams
+ * Generate the pmt and pat from a streaming start message
  */
 static int
-pass_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
+pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
@@ -125,6 +125,16 @@ pass_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
   }
 
   return 0;
+}
+
+
+/**
+ * Init the passthrough muxer with streams
+ */
+static int
+pass_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
+{
+  return pass_muxer_reconfigure(m, ss);
 }
 
 
@@ -303,6 +313,7 @@ pass_muxer_create(service_t *s, muxer_container_type_t mc)
   pm->m_open_stream  = pass_muxer_open_stream;
   pm->m_open_file    = pass_muxer_open_file;
   pm->m_init         = pass_muxer_init;
+  pm->m_reconfigure  = pass_muxer_reconfigure;
   pm->m_mime         = pass_muxer_mime;
   pm->m_write_meta   = pass_muxer_write_meta;
   pm->m_write_pkt    = pass_muxer_write_pkt;
