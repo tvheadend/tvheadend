@@ -420,6 +420,8 @@ lav_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
     break;
   }
 
+  pkt_ref_dec(pkt);
+
   return 0;
 }
 
