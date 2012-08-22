@@ -21,6 +21,7 @@
 
 #include <linux/dvb/version.h>
 #include <linux/dvb/frontend.h>
+#include <pthread.h>
 #include "htsmsg.h"
 
 
@@ -184,6 +185,7 @@ typedef struct th_dvb_adapter {
   uint32_t tda_disable_pmt_monitor;
   char *tda_displayname;
 
+  char *tda_fe_path;
   int tda_fe_fd;
   int tda_type;
   struct dvb_frontend_info *tda_fe_info;
@@ -192,7 +194,9 @@ typedef struct th_dvb_adapter {
 
   char *tda_demux_path;
 
-  char *tda_dvr_path;
+  char     *tda_dvr_path;
+  pthread_t tda_dvr_thread;
+  int       tda_dvr_pipe[2];
 
   int tda_hostconnection;
 
@@ -278,6 +282,10 @@ void dvb_init(uint32_t adapter_mask);
 void dvb_adapter_init(uint32_t adapter_mask);
 
 void dvb_adapter_mux_scanner(void *aux);
+
+void dvb_adapter_start (th_dvb_adapter_t *tda);
+
+void dvb_adapter_stop (th_dvb_adapter_t *tda);
 
 void dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s);
 
@@ -404,7 +412,7 @@ htsmsg_t *dvb_transport_build_msg(struct service *t);
  */
 int dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason);
 
-void dvb_fe_stop(th_dvb_mux_instance_t *tdmi);
+void dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune);
 
 
 /**
