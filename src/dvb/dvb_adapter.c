@@ -86,6 +86,7 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "idlescan", tda->tda_idlescan);
   htsmsg_add_u32(m, "qmon", tda->tda_qmon);
   htsmsg_add_u32(m, "dump_muxes", tda->tda_dump_muxes);
+  htsmsg_add_u32(m, "off", tda->tda_off);
   htsmsg_add_u32(m, "nitoid", tda->tda_nitoid);
   htsmsg_add_u32(m, "diseqc_version", tda->tda_diseqc_version);
   htsmsg_add_u32(m, "extrapriority", tda->tda_extrapriority);
@@ -190,6 +191,25 @@ dvb_adapter_set_qmon(th_dvb_adapter_t *tda, int on)
 	 tda->tda_displayname, on ? "On" : "Off");
 
   tda->tda_qmon = on;
+  tda_save(tda);
+}
+
+
+/**
+ *
+ */
+void
+dvb_adapter_set_off(th_dvb_adapter_t *tda, int on)
+{
+  if(tda->tda_off == on)
+    return;
+
+  lock_assert(&global_lock);
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" idle off set to: %s",
+	 tda->tda_displayname, on ? "On" : "Off");
+
+  tda->tda_off = on;
   tda_save(tda);
 }
 
@@ -421,6 +441,7 @@ dvb_adapter_init(uint32_t adapter_mask)
       htsmsg_get_u32(c, "idlescan", &tda->tda_idlescan);
       htsmsg_get_u32(c, "qmon", &tda->tda_qmon);
       htsmsg_get_u32(c, "dump_muxes", &tda->tda_dump_muxes);
+      htsmsg_get_u32(c, "off", &tda->tda_off);
       htsmsg_get_u32(c, "nitoid", &tda->tda_nitoid);
       htsmsg_get_u32(c, "diseqc_version", &tda->tda_diseqc_version);
       htsmsg_get_u32(c, "extrapriority", &tda->tda_extrapriority);
@@ -453,7 +474,7 @@ dvb_adapter_mux_scanner(void *aux)
   gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 20);
 
   if(LIST_FIRST(&tda->tda_muxes) == NULL)
-    return; // No muxes configured
+    goto off; // No muxes configured
 
   if(service_compute_weight(&tda->tda_transports) > 0)
     return; /* someone is here */
@@ -479,13 +500,13 @@ dvb_adapter_mux_scanner(void *aux)
   if(!idle_epg && TAILQ_FIRST(&tda->tda_scan_queues[TDA_SCANQ_BAD]) == NULL) {
 
     if(!tda->tda_qmon)
-      return; // Quality monitoring is disabled
+      goto off; // Quality monitoring is disabled
 
     /* If the currently tuned mux is ok, we can stick to it */
     
     tdmi = tda->tda_mux_current;
     if(tdmi != NULL && tdmi->tdmi_quality > 90)
-      return;
+      goto off;
   }
 
   /* EPG */
@@ -511,6 +532,10 @@ dvb_adapter_mux_scanner(void *aux)
       }
     }
   }
+
+off:
+  /* turn off the LNB voltage */
+  dvb_fe_turn_off(tda);
 }
 
 /**

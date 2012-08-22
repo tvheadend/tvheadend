@@ -526,3 +526,18 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
   dvb_adapter_notify(tda);
   return 0;
 }
+
+/**
+ *
+ */
+void dvb_fe_turn_off(th_dvb_adapter_t *tda)
+{
+  lock_assert(&global_lock);
+  if (!tda->tda_off)
+    return;
+  if (tda->tda_mux_current)
+    dvb_fe_stop(tda->tda_mux_current);
+  if (tda->tda_type == FE_QPSK)
+    diseqc_voltage_off(tda->tda_fe_fd);
+  tvhlog(LOG_DEBUG, "dvb", "\"%s\" is off", tda->tda_rootpath);
+}
