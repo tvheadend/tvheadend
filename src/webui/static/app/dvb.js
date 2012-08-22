@@ -1106,7 +1106,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
     var confreader = new Ext.data.JsonReader({
 	root: 'dvbadapters'
     }, ['name', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion', 'qmon',
-	'dumpmux', 'off', 'nitoid','extrapriority']);
+	'dumpmux', 'poweroff', 'nitoid','extrapriority']);
 
     
     function saveConfForm () {
@@ -1152,7 +1152,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	}),
 	new Ext.form.Checkbox({
 	    fieldLabel: 'Turn off adapter when idle',
-	    name: 'off'
+	    name: 'poweroff'
 	}),
 	{
 	    fieldLabel: 'NIT-o Network ID',

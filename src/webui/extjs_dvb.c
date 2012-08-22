@@ -152,7 +152,7 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(r, "idlescan", tda->tda_idlescan);
     htsmsg_add_u32(r, "qmon", tda->tda_qmon);
     htsmsg_add_u32(r, "dumpmux", tda->tda_dump_muxes);
-    htsmsg_add_u32(r, "off", tda->tda_off);
+    htsmsg_add_u32(r, "poweroff", tda->tda_poweroff);
     htsmsg_add_u32(r, "nitoid", tda->tda_nitoid);
     htsmsg_add_str(r, "diseqcversion", 
 		   ((const char *[]){"DiSEqC 1.0 / 2.0",
@@ -178,8 +178,8 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     s = http_arg_get(&hc->hc_req_args, "qmon");
     dvb_adapter_set_qmon(tda, !!s);
 
-    s = http_arg_get(&hc->hc_req_args, "off");
-    dvb_adapter_set_off(tda, !!s);
+    s = http_arg_get(&hc->hc_req_args, "poweroff");
+    dvb_adapter_set_poweroff(tda, !!s);
 
     s = http_arg_get(&hc->hc_req_args, "dumpmux");
     dvb_adapter_set_dump_muxes(tda, !!s);

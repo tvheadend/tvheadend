@@ -42,6 +42,7 @@
 #include "notify.h"
 #include "service.h"
 #include "epggrab.h"
+#include "diseqc.h"
 
 struct th_dvb_adapter_queue dvb_adapters;
 struct th_dvb_mux_instance_tree dvb_muxes;
@@ -86,7 +87,7 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "idlescan", tda->tda_idlescan);
   htsmsg_add_u32(m, "qmon", tda->tda_qmon);
   htsmsg_add_u32(m, "dump_muxes", tda->tda_dump_muxes);
-  htsmsg_add_u32(m, "off", tda->tda_off);
+  htsmsg_add_u32(m, "poweroff", tda->tda_poweroff);
   htsmsg_add_u32(m, "nitoid", tda->tda_nitoid);
   htsmsg_add_u32(m, "diseqc_version", tda->tda_diseqc_version);
   htsmsg_add_u32(m, "extrapriority", tda->tda_extrapriority);
@@ -199,17 +200,17 @@ dvb_adapter_set_qmon(th_dvb_adapter_t *tda, int on)
  *
  */
 void
-dvb_adapter_set_off(th_dvb_adapter_t *tda, int on)
+dvb_adapter_set_poweroff(th_dvb_adapter_t *tda, int on)
 {
-  if(tda->tda_off == on)
+  if(tda->tda_poweroff == on)
     return;
 
   lock_assert(&global_lock);
 
-  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" idle off set to: %s",
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" idle poweroff set to: %s",
 	 tda->tda_displayname, on ? "On" : "Off");
 
-  tda->tda_off = on;
+  tda->tda_poweroff = on;
   tda_save(tda);
 }
 
@@ -441,7 +442,7 @@ dvb_adapter_init(uint32_t adapter_mask)
       htsmsg_get_u32(c, "idlescan", &tda->tda_idlescan);
       htsmsg_get_u32(c, "qmon", &tda->tda_qmon);
       htsmsg_get_u32(c, "dump_muxes", &tda->tda_dump_muxes);
-      htsmsg_get_u32(c, "off", &tda->tda_off);
+      htsmsg_get_u32(c, "poweroff", &tda->tda_poweroff);
       htsmsg_get_u32(c, "nitoid", &tda->tda_nitoid);
       htsmsg_get_u32(c, "diseqc_version", &tda->tda_diseqc_version);
       htsmsg_get_u32(c, "extrapriority", &tda->tda_extrapriority);
@@ -465,7 +466,6 @@ dvb_adapter_mux_scanner(void *aux)
   th_dvb_adapter_t *tda = aux;
   th_dvb_mux_instance_t *tdmi;
   int i;
-  int idle_epg;
 
   if(tda->tda_rootpath == NULL)
     return; // No hardware
@@ -473,11 +473,15 @@ dvb_adapter_mux_scanner(void *aux)
   // default period
   gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 20);
 
-  if(LIST_FIRST(&tda->tda_muxes) == NULL)
-    goto off; // No muxes configured
+  /* No muxes */
+  if(LIST_FIRST(&tda->tda_muxes) == NULL) {
+    dvb_adapter_poweroff(tda);
+    return;
+  }
 
+  /* Someone is actively using */
   if(service_compute_weight(&tda->tda_transports) > 0)
-    return; /* someone is here */
+    return;
 
   /* Check if we have muxes pending for quickscan, if so, choose them */
   if((tdmi = TAILQ_FIRST(&tda->tda_initial_scan_queue)) != NULL) {
@@ -493,22 +497,6 @@ dvb_adapter_mux_scanner(void *aux)
     tda->tda_mux_epg = epggrab_mux_next(tda);
   }
 
-  /* Idle or EPG scan enabled */
-  idle_epg = tda->tda_idlescan || tda->tda_mux_epg;
-
-  /* Idlescan is disabled and no muxes are bad */
-  if(!idle_epg && TAILQ_FIRST(&tda->tda_scan_queues[TDA_SCANQ_BAD]) == NULL) {
-
-    if(!tda->tda_qmon)
-      goto off; // Quality monitoring is disabled
-
-    /* If the currently tuned mux is ok, we can stick to it */
-    
-    tdmi = tda->tda_mux_current;
-    if(tdmi != NULL && tdmi->tdmi_quality > 90)
-      goto off;
-  }
-
   /* EPG */
   if (tda->tda_mux_epg) {
     int period = epggrab_mux_period(tda->tda_mux_epg);
@@ -516,9 +504,10 @@ dvb_adapter_mux_scanner(void *aux)
       gtimer_arm(&tda->tda_mux_scanner_timer,
                  dvb_adapter_mux_scanner, tda, period);
     dvb_fe_tune(tda->tda_mux_epg, "EPG scan");
+    return;
 
   /* Normal */
-  } else {
+  } else if (tda->tda_idlescan) {
 
     /* Alternate queue */
     for(i = 0; i < TDA_SCANQ_NUM; i++) {
@@ -533,9 +522,10 @@ dvb_adapter_mux_scanner(void *aux)
     }
   }
 
-off:
-  /* turn off the LNB voltage */
-  dvb_fe_turn_off(tda);
+  /* Ensure we stop current mux and power off (if required) */
+  if (tda->tda_mux_current)
+    dvb_fe_stop(tda->tda_mux_current);
+  dvb_adapter_poweroff(tda);
 }
 
 /**
@@ -847,4 +837,17 @@ dvb_fe_opts(th_dvb_adapter_t *tda, const char *which)
 
   htsmsg_destroy(a);
   return NULL;
+}
+
+/**
+ * Turn off the adapter
+ */
+void
+dvb_adapter_poweroff(th_dvb_adapter_t *tda)
+{
+  lock_assert(&global_lock);
+  if (!tda->tda_poweroff || tda->tda_type != FE_QPSK)
+    return;
+  diseqc_voltage_off(tda->tda_fe_fd);
+  tvhlog(LOG_DEBUG, "dvb", "\"%s\" is off", tda->tda_rootpath);
 }
