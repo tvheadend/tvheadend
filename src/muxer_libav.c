@@ -298,7 +298,7 @@ lav_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
     }
   }
 
-  if(avformat_write_header(lm->lm_oc, NULL) < 0) {
+  if(lm->lm_oc->nb_streams && avformat_write_header(lm->lm_oc, NULL) < 0) {
     tvhlog(LOG_ERR, "libav",  "Failed to write %s header", 
 	   muxer_container_type2txt(lm->m_container));
     lm->m_errors++;
@@ -442,7 +442,7 @@ lav_muxer_close(muxer_t *m)
 {
   lav_muxer_t *lm = (lav_muxer_t*)m;
 
-  if(av_write_trailer(lm->lm_oc) < 0) {
+  if(lm->lm_oc->nb_streams && av_write_trailer(lm->lm_oc) < 0) {
     tvhlog(LOG_WARNING, "libav",  "Failed to write %s trailer", 
 	   muxer_container_type2txt(lm->m_container));
     lm->m_errors++;
