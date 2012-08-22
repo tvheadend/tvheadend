@@ -175,6 +175,7 @@ typedef struct th_dvb_adapter {
   uint32_t tda_autodiscovery;
   uint32_t tda_idlescan;
   uint32_t tda_qmon;
+  uint32_t tda_poweroff;
   uint32_t tda_nitoid;
   uint32_t tda_diseqc_version;
   char *tda_displayname;
@@ -288,6 +289,8 @@ void dvb_adapter_set_qmon(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_dump_muxes(th_dvb_adapter_t *tda, int on);
 
+void dvb_adapter_set_poweroff(th_dvb_adapter_t *tda, int on);
+
 void dvb_adapter_set_nitoid(th_dvb_adapter_t *tda, int nitoid);
 
 void dvb_adapter_set_diseqc_version(th_dvb_adapter_t *tda, unsigned int v);
@@ -305,6 +308,8 @@ htsmsg_t *dvb_adapter_build_msg(th_dvb_adapter_t *tda);
 htsmsg_t *dvb_fe_opts(th_dvb_adapter_t *tda, const char *which);
 
 void dvb_adapter_set_extrapriority(th_dvb_adapter_t *tda, int extrapriority);
+
+void dvb_adapter_poweroff(th_dvb_adapter_t *tda);
 
 /**
  * DVB Multiplex

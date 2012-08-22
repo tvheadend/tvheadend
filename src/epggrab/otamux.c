@@ -238,9 +238,6 @@ epggrab_ota_mux_t *epggrab_ota_create
     time_t now;
     time(&now);
     ota->state = EPGGRAB_OTA_MUX_IDLE;
-
-    /* Blocked */
-    if (epggrab_ota_is_blocked(ota)) ota = NULL;
   }
   return ota;
 }
@@ -395,8 +392,13 @@ void epggrab_ota_timeout ( epggrab_ota_mux_t *ota )
 
 int epggrab_ota_is_complete ( epggrab_ota_mux_t *ota )
 {
-  return ota->state == EPGGRAB_OTA_MUX_COMPLETE ||
-         ota->state == EPGGRAB_OTA_MUX_TIMEDOUT;
+  if (ota->state == EPGGRAB_OTA_MUX_COMPLETE ||
+      ota->state == EPGGRAB_OTA_MUX_TIMEDOUT) {
+    if (epggrab_ota_is_blocked(ota))
+      return 1;
+    ota->state = EPGGRAB_OTA_MUX_IDLE;
+  }
+  return 0;
 }
 
 int epggrab_ota_is_blocked ( epggrab_ota_mux_t *ota )
