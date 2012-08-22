@@ -61,17 +61,18 @@ _find_exec ( const char *name, char *out, size_t len )
   path = strdup(path);
   tmp  = strtok(path, ":");
   while (tmp && !ret) {
-    if (!(dir = opendir(tmp))) continue;
-    while ((de = readdir(dir))) {
-      if (strstr(de->d_name, name) != de->d_name) continue;
-      snprintf(bin, sizeof(bin), "%s/%s", tmp, de->d_name);
-      if (lstat(bin, &st)) continue;
-      if (!S_ISREG(st.st_mode) || !(st.st_mode & S_IEXEC)) continue;
-      strncpy(out, bin, len);
-      ret = 1;
-      break;
+    if ((dir = opendir(tmp))) {
+      while ((de = readdir(dir))) {
+        if (strstr(de->d_name, name) != de->d_name) continue;
+        snprintf(bin, sizeof(bin), "%s/%s", tmp, de->d_name);
+        if (lstat(bin, &st)) continue;
+        if (!S_ISREG(st.st_mode) || !(st.st_mode & S_IEXEC)) continue;
+        strncpy(out, bin, len);
+        ret = 1;
+        break;
+      }
+      closedir(dir);
     }
-    closedir(dir);
     tmp = strtok(NULL, ":");
   }
   free(path);

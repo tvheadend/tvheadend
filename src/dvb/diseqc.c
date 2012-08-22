@@ -112,3 +112,13 @@ diseqc_setup(int frontend_fd, int switch_pos, int voltage_18, int hiband,
 }
 
 
+int diseqc_voltage_off(int frontend_fd)
+{
+        fe_sec_voltage_t v = SEC_VOLTAGE_OFF;
+        int err;
+
+	if ((err = ioctl(frontend_fd, FE_SET_VOLTAGE, v)))
+		return err;
+
+        return 0;
+}
