@@ -74,7 +74,7 @@ mux_link_initial(th_dvb_adapter_t *tda, th_dvb_mux_instance_t *tdmi)
 
   if(was_empty && (tda->tda_mux_current == NULL ||
 		   tda->tda_mux_current->tdmi_table_initial == 0))
-    dvb_adapter_mux_scanner(tda);
+    gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 0);
 }
 
 /**
