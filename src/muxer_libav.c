@@ -461,9 +461,15 @@ lav_muxer_destroy(muxer_t *m)
 {
   lav_muxer_t *lm = (lav_muxer_t*)m;
 
-  av_bitstream_filter_close(lm->lm_h264_filter);
-  av_free(lm->lm_oc->pb);
-  av_free(lm->lm_oc);
+  if(lm->lm_h264_filter)
+    av_bitstream_filter_close(lm->lm_h264_filter);
+
+  if(lm->lm_oc && lm->lm_oc->pb)
+    av_free(lm->lm_oc->pb);
+
+  if(lm->lm_oc)
+    av_free(lm->lm_oc);
+
   free(lm);
 }
 
