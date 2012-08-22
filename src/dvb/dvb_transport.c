@@ -266,11 +266,8 @@ dvb_transport_save(service_t *t)
   htsmsg_add_u32(m, "pmt", t->s_pmt_pid);
   htsmsg_add_u32(m, "stype", t->s_servicetype);
   htsmsg_add_u32(m, "scrambled", t->s_scrambled);
-  if(CHANTOSID) {
-    htsmsg_add_u32(m, "channel", t->s_dvb_service_id);
-  } else {
-    htsmsg_add_u32(m, "channel", t->s_channel_number);
-  }
+  htsmsg_add_u32(m, "channel", t->s_channel_number);
+
   if(t->s_provider != NULL)
     htsmsg_add_str(m, "provider", t->s_provider);
 
