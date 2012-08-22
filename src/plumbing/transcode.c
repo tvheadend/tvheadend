@@ -55,12 +55,14 @@ typedef struct transcoder_stream {
 
   uint8_t           *enc_sample; // encoding buffer for audio stream
   uint32_t           enc_size;
-  uint32_t           enc_offset;
+
+  streaming_target_t *target;
 } transcoder_stream_t;
 
 typedef struct transcoder_passthrough {
   int sindex; // refers to the source stream index
   int tindex; // refers to the target stream index
+  streaming_target_t *target;
 } transcoder_passthrough_t;
 
 typedef struct transcoder {
@@ -244,30 +246,31 @@ transcoder_stream_create(streaming_component_type_t stype, streaming_component_t
 
 
 /**
- * passthrough a stream
+ *
  */
-static th_pkt_t *
+static void
+transcoder_pkt_deliver(streaming_target_t *st, th_pkt_t *pkt)
+{
+  streaming_message_t *sm;
+
+  sm = streaming_msg_create_pkt(pkt);
+  streaming_target_deliver2(st, sm);
+  pkt_ref_dec(pkt);
+}
+
+
+/**
+ *
+ */
+static void
 transcoder_stream_passthrough(transcoder_passthrough_t *pt, th_pkt_t *pkt)
 {
-  th_pkt_t *n = NULL;
+  streaming_message_t *sm;
 
-  n = pkt_alloc(pktbuf_ptr(pkt->pkt_payload), 
-		pktbuf_len(pkt->pkt_payload), 
-		pkt->pkt_pts, 
-		pkt->pkt_dts);
-
-  n->pkt_duration = pkt->pkt_duration;
-  n->pkt_commercial = pkt->pkt_commercial;
-  n->pkt_componentindex = pt->tindex;
-  n->pkt_frametype = pkt->pkt_frametype;
-  n->pkt_field = pkt->pkt_field;
-  n->pkt_channels = pkt->pkt_channels;
-  n->pkt_sri = pkt->pkt_sri;
-  n->pkt_aspect_num = pkt->pkt_aspect_num;
-  n->pkt_aspect_den = pkt->pkt_aspect_den;
-
-  return n;
+  sm = streaming_msg_create_pkt(pkt);
+  streaming_target_deliver2(pt->target, sm);
 }
+
 
 /**
  * transcode an audio stream
@@ -350,41 +353,39 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 	ts->tctx->channels;
 
   len = ts->dec_offset;
-  ts->enc_offset = 0;
   
   for(i=0; i<=len-frame_bytes; i+=frame_bytes) {
-    length = avcodec_encode_audio(ts->tctx, 
-				  ts->enc_sample + ts->enc_offset, 
-				  ts->enc_size - ts->enc_offset, 
+    length = avcodec_encode_audio(ts->tctx,
+				  ts->enc_sample,
+				  ts->enc_size,
 				  (short *)(ts->dec_sample + i));
     if(length < 0) {
       tvhlog(LOG_ERR, "transcode", "Unable to encode audio (%d)", length);
       goto cleanup;
+    } else if(length) {
+      n = pkt_alloc(ts->enc_sample, length, pkt->pkt_pts, pkt->pkt_dts);
+      n->pkt_duration = pkt->pkt_duration;
+      n->pkt_commercial = pkt->pkt_commercial;
+      n->pkt_componentindex = ts->tindex;
+      n->pkt_frametype = pkt->pkt_frametype;
+      n->pkt_field = pkt->pkt_field;
+      n->pkt_channels = ts->tctx->channels;
+      n->pkt_sri = pkt->pkt_sri;
+      n->pkt_aspect_num = pkt->pkt_aspect_num;
+      n->pkt_aspect_den = pkt->pkt_aspect_den;
+
+      if(ts->tctx->extradata_size) {
+	n->pkt_header = pktbuf_alloc(ts->tctx->extradata, ts->tctx->extradata_size);
+      }
+
+      transcoder_pkt_deliver(ts->target, n);
     }
 
-    ts->enc_offset += length;
     ts->dec_offset -= frame_bytes;
   }
 
   if(ts->dec_offset) {
     memmove(ts->dec_sample, ts->dec_sample + len - ts->dec_offset, ts->dec_offset);
-  }
-
-  if(ts->enc_offset) {
-    n = pkt_alloc(ts->enc_sample, ts->enc_offset, pkt->pkt_pts, pkt->pkt_dts);
-    n->pkt_duration = pkt->pkt_duration;
-    n->pkt_commercial = pkt->pkt_commercial;
-    n->pkt_componentindex = ts->tindex;
-    n->pkt_frametype = pkt->pkt_frametype;
-    n->pkt_field = pkt->pkt_field;
-    n->pkt_channels = ts->tctx->channels;
-    n->pkt_sri = pkt->pkt_sri;
-    n->pkt_aspect_num = pkt->pkt_aspect_num;
-    n->pkt_aspect_den = pkt->pkt_aspect_den;
-
-    if(ts->tctx->extradata_size) {
-      n->pkt_header = pktbuf_alloc(ts->tctx->extradata, ts->tctx->extradata_size);
-    }
   }
 
  cleanup:
@@ -396,7 +397,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 /**
  * transcode a video stream
  */
-static th_pkt_t *
+static void
 transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
 {
   uint8_t *buf = NULL;
@@ -656,14 +657,16 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
     av_free(out);
   if(deint)
     av_free(deint);
-  return n;
+
+  if(n)
+    transcoder_pkt_deliver(ts->target, n);
 }
 
 
 /**
  * transcode a packet
  */
-static th_pkt_t*
+static void
 transcoder_packet(transcoder_t *t, th_pkt_t *pkt)
 {
   transcoder_stream_t *ts = NULL;
@@ -676,19 +679,20 @@ transcoder_packet(transcoder_t *t, th_pkt_t *pkt)
   }
 
   if(ts && ts->sctx->codec_type == AVMEDIA_TYPE_AUDIO) {
-    return transcoder_stream_audio(ts, pkt);
+    transcoder_stream_audio(ts, pkt);
+    return;
   } else if(ts && ts->sctx->codec_type == AVMEDIA_TYPE_VIDEO) {
-    return transcoder_stream_video(ts, pkt);
+    transcoder_stream_video(ts, pkt);
+    return;
   }
 
   // Look for passthrough streams
   for(i=0; i<t->pt_count; i++) {
     if(t->pt_streams[i].sindex == pkt->pkt_componentindex) {
-      return transcoder_stream_passthrough(&t->pt_streams[i], pkt);
+      transcoder_stream_passthrough(&t->pt_streams[i], pkt);
+      return;
     }
   }
-
-  return NULL;
 }
 
 /**
@@ -751,6 +755,8 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
       if(!ts)
 	continue;
 
+      ts->target = t->t_output;
+
       // Use same index for both source and target, globalheaders seems to need it.
       ts->sindex = ssc_src->ssc_index;
       ts->tindex = ssc_src->ssc_index;
@@ -777,6 +783,8 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
 
       if(!ts)
 	continue;
+
+      ts->target = t->t_output;
 
       // Use same index for both source and target, globalheaders seems to need it.
       ts->sindex = ssc_src->ssc_index;
@@ -814,6 +822,8 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
     } else if (ssc_src->ssc_type == SCT_TEXTSUB || ssc_src->ssc_type == SCT_DVBSUB) {
       streaming_start_component_t *ssc = &ss->ss_components[j++];
       int pt_index = t->pt_count++;
+
+      t->pt_streams[pt_index].target = t->t_output;
 
       // Use same index for both source and target, globalheaders seems to need it.
       t->pt_streams[pt_index].sindex = ssc_src->ssc_index;
@@ -861,30 +871,27 @@ transcoder_stop(transcoder_t *t)
 static void
 transcoder_input(void *opaque, streaming_message_t *sm)
 {
-  transcoder_t *t = opaque;
+  transcoder_t *t;
+  streaming_start_t *ss;
+  th_pkt_t *pkt;
+
+  t = opaque;
 
   switch(sm->sm_type) {
-  case SMT_PACKET: {
-    th_pkt_t *s_pkt = pkt_merge_header(sm->sm_data);
-    th_pkt_t *t_pkt = transcoder_packet(t, s_pkt);
-
-    if(t_pkt) {
-      sm = streaming_msg_create_pkt(t_pkt);
-      streaming_target_deliver2(t->t_output, sm);
-      pkt_ref_dec(t_pkt);
-    }
-
-    pkt_ref_dec(s_pkt);
+  case SMT_PACKET:
+    pkt = pkt_merge_header(sm->sm_data);
+    transcoder_packet(t, pkt);
+    pkt_ref_dec(pkt);
     break;
-  }
-  case SMT_START: {
-    streaming_start_t *ss = transcoder_start(t, sm->sm_data);
+
+  case SMT_START:
+    ss = transcoder_start(t, sm->sm_data);
     streaming_start_unref(sm->sm_data);
     sm->sm_data = ss;
 
     streaming_target_deliver2(t->t_output, sm);
     break;
-  }
+
   case SMT_STOP:
     transcoder_stop(t);
     // Fallthrough
