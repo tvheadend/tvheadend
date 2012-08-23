@@ -267,10 +267,24 @@ transcoder_pkt_deliver(streaming_target_t *st, th_pkt_t *pkt)
 static void
 transcoder_stream_passthrough(transcoder_passthrough_t *pt, th_pkt_t *pkt)
 {
-  streaming_message_t *sm;
+  th_pkt_t *n;
 
-  sm = streaming_msg_create_pkt(pkt);
-  streaming_target_deliver2(pt->target, sm);
+  n = pkt_alloc(pktbuf_ptr(pkt->pkt_payload), 
+		pktbuf_len(pkt->pkt_payload), 
+		pkt->pkt_pts, 
+		pkt->pkt_dts);
+
+  n->pkt_duration = pkt->pkt_duration;
+  n->pkt_commercial = pkt->pkt_commercial;
+  n->pkt_componentindex = pt->tindex;
+  n->pkt_frametype = pkt->pkt_frametype;
+  n->pkt_field = pkt->pkt_field;
+  n->pkt_channels = pkt->pkt_channels;
+  n->pkt_sri = pkt->pkt_sri;
+  n->pkt_aspect_num = pkt->pkt_aspect_num;
+  n->pkt_aspect_den = pkt->pkt_aspect_den;
+
+  transcoder_pkt_deliver(pt->target, n);
 }
 
 
