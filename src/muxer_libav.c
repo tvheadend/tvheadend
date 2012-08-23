@@ -136,8 +136,10 @@ lav_muxer_add_stream(lav_muxer_t *lm,
   c->codec_id = lav_muxer_get_codec_id(ssc->ssc_type);
 
   if(ssc->ssc_gh) {
-    c->extradata = pktbuf_ptr(ssc->ssc_gh);
     c->extradata_size = pktbuf_len(ssc->ssc_gh);
+    c->extradata = malloc(c->extradata_size);
+    memcpy(c->extradata, pktbuf_ptr(ssc->ssc_gh), pktbuf_len(ssc->ssc_gh));
+    //TODO: do we need to free this?
   }
 
   if(SCT_ISAUDIO(ssc->ssc_type)) {
