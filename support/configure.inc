@@ -237,6 +237,9 @@ int main() {
 }
 EOF
   $CC 2>/dev/null $TMPDIR/$$.c -o $TMPDIR/$$.bin $opt
+  RET=$?
+  rm -f $TMPDIR/$$.{c,bin}
+  return $RET
 }
 
 # Check compiler header
