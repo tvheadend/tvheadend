@@ -56,6 +56,8 @@ typedef struct transcoder_stream {
   uint8_t           *enc_sample; // encoding buffer for audio stream
   uint32_t           enc_size;
 
+  uint64_t           cur_pts;
+  uint64_t           cur_dts;
   streaming_target_t *target;
 } transcoder_stream_t;
 
@@ -346,6 +348,9 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       ts->sindex = 0;
       goto cleanup;
     }
+
+    ts->cur_pts = pkt->pkt_pts;
+    ts->cur_dts = pkt->pkt_dts;
   }
 
   frame_bytes = av_get_bytes_per_sample(ts->tctx->sample_fmt) * 
@@ -353,7 +358,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 	ts->tctx->channels;
 
   len = ts->dec_offset;
-  
+
   for(i=0; i<=len-frame_bytes; i+=frame_bytes) {
     length = avcodec_encode_audio(ts->tctx,
 				  ts->enc_sample,
@@ -363,8 +368,9 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       tvhlog(LOG_ERR, "transcode", "Unable to encode audio (%d)", length);
       goto cleanup;
     } else if(length) {
-      n = pkt_alloc(ts->enc_sample, length, pkt->pkt_pts, pkt->pkt_dts);
-      n->pkt_duration = pkt->pkt_duration;
+
+      n = pkt_alloc(ts->enc_sample, length, ts->cur_pts, ts->cur_dts);
+      n->pkt_duration = frame_bytes*90000 / (2 * ts->tctx->channels * ts->tctx->sample_rate);
       n->pkt_commercial = pkt->pkt_commercial;
       n->pkt_componentindex = ts->tindex;
       n->pkt_frametype = pkt->pkt_frametype;
@@ -377,6 +383,9 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       if(ts->tctx->extradata_size) {
 	n->pkt_header = pktbuf_alloc(ts->tctx->extradata, ts->tctx->extradata_size);
       }
+
+      ts->cur_pts += n->pkt_duration;
+      ts->cur_dts += n->pkt_duration;
 
       transcoder_pkt_deliver(ts->target, n);
     }
