@@ -404,7 +404,9 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   uint8_t *out = NULL;
   uint8_t *deint = NULL;
   th_pkt_t *n = NULL;
+  AVDictionary *opts = NULL;
   AVPacket packet;
+  AVPicture deint_pic;
   int length, len;
   int got_picture;
 
@@ -453,7 +455,6 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   ts->tctx->sample_aspect_ratio.num = ts->dec_frame->sample_aspect_ratio.num;
   ts->tctx->sample_aspect_ratio.den = ts->dec_frame->sample_aspect_ratio.den;
 
-  AVDictionary *opts = NULL;
   //Open the encoder
   if(ts->tctx->codec_id == CODEC_ID_NONE) {
  
@@ -548,7 +549,6 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
     }
   }
 
-  AVPicture deint_pic;
   len = avpicture_get_size(ts->sctx->pix_fmt, ts->sctx->width, ts->sctx->height);
   deint = av_malloc(len);
 
@@ -649,6 +649,8 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
     n->pkt_header = pktbuf_alloc(ts->tctx->extradata, ts->tctx->extradata_size);
   }
 
+  transcoder_pkt_deliver(ts->target, n);
+
  cleanup:
   av_free_packet(&packet);
   if(buf)
@@ -658,8 +660,6 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   if(deint)
     av_free(deint);
 
-  if(n)
-    transcoder_pkt_deliver(ts->target, n);
 }
 
 
@@ -748,7 +748,29 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
       break;
     }
 
-    if (!t->ts_audio && SCT_ISAUDIO(ssc_src->ssc_type) && SCT_ISAUDIO(t->atype)) {
+    if (SCT_ISSUBTITLE(ssc_src->ssc_type)) {
+      streaming_start_component_t *ssc = &ss->ss_components[j++];
+      int pt_index = t->pt_count++;
+
+      t->pt_streams[pt_index].target = t->t_output;
+
+      // Use same index for both source and target, globalheaders seems to need it.
+      t->pt_streams[pt_index].sindex = ssc_src->ssc_index;
+      t->pt_streams[pt_index].tindex = ssc_src->ssc_index;
+
+      ssc->ssc_index          = ssc_src->ssc_index;
+      ssc->ssc_type           = ssc_src->ssc_type;
+      ssc->ssc_composition_id = ssc_src->ssc_composition_id;
+      ssc->ssc_ancillary_id   = ssc_src->ssc_ancillary_id;
+      memcpy(ssc->ssc_lang, ssc_src->ssc_lang, 4);
+
+      tvhlog(LOG_INFO, "transcode", "%d:%s (%s) ==> %d:PASSTHROUGH", 
+	     t->pt_streams[pt_index].sindex,
+	     streaming_component_type2txt(ssc_src->ssc_type),
+	     ssc->ssc_lang,
+	     t->pt_streams[pt_index].tindex);
+
+    } else if (!t->ts_audio && SCT_ISAUDIO(ssc_src->ssc_type) && SCT_ISAUDIO(t->atype)) {
       streaming_start_component_t *ssc = &ss->ss_components[j];
       transcoder_stream_t *ts = transcoder_stream_create(ssc_src->ssc_type, t->atype);
 
@@ -775,9 +797,8 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
 
       j++;
       t->ts_audio = ts;
-    }
 
-    if (!t->ts_video && SCT_ISVIDEO(ssc_src->ssc_type) && SCT_ISVIDEO(t->vtype)) {
+    } else if (!t->ts_video && SCT_ISVIDEO(ssc_src->ssc_type) && SCT_ISVIDEO(t->vtype)) {
       streaming_start_component_t *ssc = &ss->ss_components[j];
       transcoder_stream_t *ts = transcoder_stream_create(ssc_src->ssc_type, t->vtype);
 
@@ -818,28 +839,6 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
 
       j++;
       t->ts_video = ts;
-
-    } else if (ssc_src->ssc_type == SCT_TEXTSUB || ssc_src->ssc_type == SCT_DVBSUB) {
-      streaming_start_component_t *ssc = &ss->ss_components[j++];
-      int pt_index = t->pt_count++;
-
-      t->pt_streams[pt_index].target = t->t_output;
-
-      // Use same index for both source and target, globalheaders seems to need it.
-      t->pt_streams[pt_index].sindex = ssc_src->ssc_index;
-      t->pt_streams[pt_index].tindex = ssc_src->ssc_index;
-
-      ssc->ssc_index          = ssc_src->ssc_index;
-      ssc->ssc_type           = ssc_src->ssc_type;
-      ssc->ssc_composition_id = ssc_src->ssc_composition_id;
-      ssc->ssc_ancillary_id   = ssc_src->ssc_ancillary_id;
-      memcpy(ssc->ssc_lang, ssc_src->ssc_lang, 4);
-
-      tvhlog(LOG_INFO, "transcode", "%d:%s (%s) ==> %d:PASSTHROUGH", 
-	     t->pt_streams[pt_index].sindex,
-	     streaming_component_type2txt(ssc_src->ssc_type),
-	     ssc->ssc_lang,
-	     t->pt_streams[pt_index].tindex);
     }
   }
 
