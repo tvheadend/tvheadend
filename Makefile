@@ -173,8 +173,11 @@ ${BUILDDIR}/src/ffdecsa/ffdecsa_mmx.o  : CFLAGS = -mmmx
 ${BUILDDIR}/src/ffdecsa/ffdecsa_sse2.o : CFLAGS = -msse2
 
 # File bundles
-SRCS-${CONFIG_BUNDLE} += bundle.c
-BUNDLES               += docs/html docs/docresources src/webui/static data
+SRCS-${CONFIG_BUNDLE}     += bundle.c
+BUNDLES-yes               += docs/html docs/docresources src/webui/static
+BUNDLES-yes               += data/conf
+BUNDLES-${CONFIG_DVBSCAN} += data/dvb-scan
+BUNDLES                    = $(BUNDLES-yes)
 
 #
 # Add-on modules
@@ -231,7 +234,7 @@ $(BUILDDIR)/buildversion.h: FORCE
 FORCE:
 
 # Include dependency files if they exist.
--include $(DEPS) $(BUNDLE_DEPS)
+-include $(DEPS)
 
 # Include OS specific targets
 include support/${OSENV}.mk

@@ -8,7 +8,7 @@ Standards-Version: 3.7.3
 Package: tvheadend
 Architecture: any
 Depends: ${shlibs:Depends}, libavahi-client3, zlib1g
-Recommends: xmltv
+Recommends: xmltv-util
 Enhances: showtime
 Replaces: hts-tvheadend
 Homepage: http://www.lonelycoder.com/tvheadend

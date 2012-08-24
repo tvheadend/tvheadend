@@ -1046,6 +1046,14 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
     st->es_curpkt->pkt_frametype = frametype;
     st->es_curpkt->pkt_duration = st->es_frame_duration;
     st->es_curpkt->pkt_commercial = t->s_tt_commercial_advice;
+
+    /* If we know the frame duration, increase DTS accordingly */
+    if(st->es_curdts != PTS_UNSET)
+      st->es_curdts += st->es_frame_duration;
+
+    /* PTS cannot be extrapolated (it's not linear) */
+    st->es_curpts = PTS_UNSET; 
+
     break;
 
   case 0x000001b3:
@@ -1106,12 +1114,6 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
 	abort();
       }
 
-      /* If we know the frame duration, increase DTS accordingly */
-      if(st->es_curdts != PTS_UNSET)
-	st->es_curdts += st->es_frame_duration;
-
-      /* PTS cannot be extrapolated (it's not linear) */
-      st->es_curpts = PTS_UNSET; 
       return 1;
     }
     break;

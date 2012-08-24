@@ -237,6 +237,9 @@ int main() {
 }
 EOF
   $CC 2>/dev/null $TMPDIR/$$.c -o $TMPDIR/$$.bin $opt
+  RET=$?
+  rm -f $TMPDIR/$$.{c,bin}
+  return $RET
 }
 
 # Check compiler header
@@ -369,6 +372,9 @@ EOF
     else
       cat >>${CONFIG_H} <<EOF
 #define ENABLE_${k} 0
+EOF
+      cat >>${CONFIG_MK} <<EOF
+CONFIG_${k} = no
 EOF
     fi
   done
