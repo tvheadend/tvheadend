@@ -373,6 +373,9 @@ EOF
       cat >>${CONFIG_H} <<EOF
 #define ENABLE_${k} 0
 EOF
+      cat >>${CONFIG_MK} <<EOF
+CONFIG_${k} = no
+EOF
     fi
   done
 }
