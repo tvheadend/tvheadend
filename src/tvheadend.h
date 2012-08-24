@@ -460,7 +460,7 @@ char *md5sum ( const char *str );
 #if __SIZEOF_LONG__ == 8
   #define PRItime_t PRIu64
 #else
-  #define PRItime_t PRIu32
+  #define PRItime_t "l" PRIu32
 #endif
 
 #endif /* TV_HEAD_H */
