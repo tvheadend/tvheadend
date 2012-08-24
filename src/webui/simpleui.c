@@ -173,7 +173,7 @@ page_simple(http_connection_t *hc,
     
     htsbuf_qprintf(hq, 
 		"%02d:%02d-%02d:%02d&nbsp; %s",
-		a.tm_hour, a.tm_min, b.tm_hour, b.tm_min, de->de_title);
+		a.tm_hour, a.tm_min, b.tm_hour, b.tm_min, lang_str_get(de->de_title, NULL));
 
     htsbuf_qprintf(hq, "</a>");
 
@@ -267,9 +267,9 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_qprintf(hq, "</form>");
   if (e->episode) {
     if ( e->episode->description )
-      htsbuf_qprintf(hq, "%s", e->episode->description);
+      htsbuf_qprintf(hq, "%s", lang_str_get(e->episode->description, NULL));
     else if ( e->episode->summary )
-      htsbuf_qprintf(hq, "%s", e->episode->summary);
+      htsbuf_qprintf(hq, "%s", lang_str_get(e->episode->summary, NULL));
   }
   
 
@@ -322,7 +322,7 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
 
   htsbuf_qprintf(hq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
-	      de->de_channel->ch_name, de->de_title);
+	      de->de_channel->ch_name, lang_str_get(de->de_title, NULL));
   
   if((rstatus = val2str(de->de_sched_state, recstatustxt)) != NULL)
     htsbuf_qprintf(hq, "Recording status: %s<br>", rstatus);
@@ -348,7 +348,7 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   htsbuf_qprintf(hq, "</form>");
-  htsbuf_qprintf(hq, "%s", de->de_desc);
+  htsbuf_qprintf(hq, "%s", lang_str_get(de->de_desc, NULL));
 
   pthread_mutex_unlock(&global_lock);
 
@@ -426,7 +426,7 @@ page_status(http_connection_t *hc,
 		     b.tm_hour, b.tm_min, 
 		     de->de_stop, 
 		     de->de_stop_extra, 
-		     de->de_title);
+		     lang_str_get(de->de_title, NULL));
 
       rstatus = val2str(de->de_sched_state, recstatustxt);
       htsbuf_qprintf(hq, "<status>%s</status></recording>\n", rstatus);

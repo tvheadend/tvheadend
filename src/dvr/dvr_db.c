@@ -755,7 +755,7 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode)
 
   tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": "
 	 "End of program: %s",
-	 de->de_title, de->de_channel->ch_name,
+	 lang_str_get(de->de_title, NULL), de->de_channel->ch_name,
 	 streaming_code2txt(de->de_last_error) ?: "Program ended");
 
   dvr_entry_save(de);
@@ -791,7 +791,7 @@ dvr_timer_start_recording(void *aux)
   de->de_rec_state = DVR_RS_PENDING;
 
   tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\" recorder starting",
-	 de->de_title, de->de_channel->ch_name);
+	 lang_str_get(de->de_title, NULL), de->de_channel->ch_name);
 
   dvr_entry_notify(de);
   htsp_dvr_entry_update(de);
