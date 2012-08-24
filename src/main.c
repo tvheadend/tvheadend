@@ -73,6 +73,8 @@ static int log_decorate;
 int log_debug_to_syslog;
 int log_debug_to_console;
 
+int webui_port;
+int htsp_port;
 char *tvheadend_cwd;
 
 static void
@@ -184,6 +186,8 @@ usage(const char *argv0)
 	 "                 to your Tvheadend installation until you edit\n"
 	 "                 the access-control from within the Tvheadend UI\n");
   printf(" -s              Log debug to syslog\n");
+  printf(" -w <portnumber> WebUI access port [default 9981]\n");
+  printf(" -e <portnumber> HTSP access port [default 9982]\n");
   printf("\n");
   printf("Development options\n");
   printf("\n");
@@ -262,6 +266,8 @@ main(int argc, char **argv)
   char *p, *endp;
   uint32_t adapter_mask = 0xffffffff;
   int crash = 0;
+  webui_port = 9981;
+  htsp_port = 9982;
 
   /* Get current directory */
   tvheadend_cwd = dirname(dirname(strdup(argv[0])));
@@ -272,7 +278,7 @@ main(int argc, char **argv)
   // make sure the timezone is set
   tzset();
 
-  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:s")) != -1) {
+  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:sw:e:")) != -1) {
     switch(c) {
     case 'a':
       adapter_mask = 0x0;
@@ -302,6 +308,12 @@ main(int argc, char **argv)
       break;
     case 'p':
       pidpath = optarg;
+      break;
+    case 'w':
+      webui_port = atoi(optarg);
+      break;
+    case 'e':
+      htsp_port = atoi(optarg);
       break;
     case 'u':
       usernam = optarg;
