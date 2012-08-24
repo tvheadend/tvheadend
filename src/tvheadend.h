@@ -359,9 +359,11 @@ static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 void tvh_str_set(char **strp, const char *src);
 int tvh_str_update(char **strp, const char *src);
 
-void tvhlog(int severity, const char *subsys, const char *fmt, ...);
+void tvhlog(int severity, const char *subsys, const char *fmt, ...)
+  __attribute__((format(printf,3,4)));
 
-void tvhlog_spawn(int severity, const char *subsys, const char *fmt, ...);
+void tvhlog_spawn(int severity, const char *subsys, const char *fmt, ...)
+  __attribute__((format(printf,3,4)));
 
 #define	LOG_EMERG	0	/* system is unusable */
 #define	LOG_ALERT	1	/* action must be taken immediately */
@@ -456,9 +458,9 @@ char *md5sum ( const char *str );
 
 /* printing */
 #if __SIZEOF_LONG__ == 8
-  #define PRItime_t PRIu64
+  #define PRItime_t PRId64
 #else
-  #define PRItime_t PRIu32
+  #define PRItime_t "l" PRId32
 #endif
 
 #endif /* TV_HEAD_H */

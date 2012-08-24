@@ -120,7 +120,7 @@ void epggrab_module_parse
   htsmsg_destroy(data);
 
   /* Debug stats */
-  tvhlog(LOG_INFO, mod->id, "parse took %d seconds", tm2 - tm1);
+  tvhlog(LOG_INFO, mod->id, "parse took %"PRItime_t" seconds", tm2 - tm1);
   tvhlog(LOG_INFO, mod->id, "  channels   tot=%5d new=%5d mod=%5d",
          stats.channels.total, stats.channels.created,
          stats.channels.modified);
@@ -307,7 +307,7 @@ static void _epggrab_socket_handler ( epggrab_module_ext_t *mod, int s )
 
   /* Process */
   if ( data ) {
-    tvhlog(LOG_INFO, mod->id, "grab took %d seconds", tm2 - tm1);
+    tvhlog(LOG_INFO, mod->id, "grab took %"PRItime_t" seconds", tm2 - tm1);
     epggrab_module_parse(mod, data);
 
   /* Failed */

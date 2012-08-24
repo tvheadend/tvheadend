@@ -364,6 +364,11 @@ static void _muxes_load_dir ( const char *path, const char *type )
 void muxes_init ( void )
 {
   const char *path = config_get_muxconfpath();
-  if (!path || !*path) path = "data/dvb-scan";
+  if (!path || !*path)
+#if ENABLE_DVBSCAN
+    path = "data/dvb-scan";
+#else
+    path = "/usr/share/dvb";
+#endif
   _muxes_load_dir(path, NULL);
 } 

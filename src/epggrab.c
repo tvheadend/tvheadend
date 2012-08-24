@@ -70,7 +70,7 @@ static void _epggrab_module_grab ( epggrab_module_int_t *mod )
 
   /* Process */
   if ( data ) {
-    tvhlog(LOG_INFO, mod->id, "grab took %d seconds", tm2 - tm1);
+    tvhlog(LOG_INFO, mod->id, "grab took %"PRItime_t" seconds", tm2 - tm1);
     epggrab_module_parse(mod, data);
   } else {
     tvhlog(LOG_WARNING, mod->id, "grab returned no data");
