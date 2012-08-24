@@ -359,9 +359,11 @@ static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 void tvh_str_set(char **strp, const char *src);
 int tvh_str_update(char **strp, const char *src);
 
-void tvhlog(int severity, const char *subsys, const char *fmt, ...);
+void tvhlog(int severity, const char *subsys, const char *fmt, ...)
+  __attribute__((format(printf,3,4)));
 
-void tvhlog_spawn(int severity, const char *subsys, const char *fmt, ...);
+void tvhlog_spawn(int severity, const char *subsys, const char *fmt, ...)
+  __attribute__((format(printf,3,4)));
 
 #define	LOG_EMERG	0	/* system is unusable */
 #define	LOG_ALERT	1	/* action must be taken immediately */
