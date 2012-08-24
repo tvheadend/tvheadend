@@ -133,7 +133,7 @@ create_services(AvahiClient *c)
     /* Add the service for HTSP */
     if ((ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC, 
 					     AVAHI_PROTO_UNSPEC, 0, name, 
-					     "_htsp._tcp", NULL, NULL, 9982,
+					     "_htsp._tcp", NULL, NULL,webui_port,
 					     NULL)) < 0) {
 
       if (ret == AVAHI_ERR_COLLISION)
