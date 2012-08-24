@@ -39,6 +39,11 @@
 #include "epggrab.h"
 #include "epggrab/private.h"
 
+#include "service.h"
+#include <linux/dvb/dmx.h>
+#include "dvb/dvb.h"
+
+
 #define XMLTV_FIND "tv_find_grabbers"
 #define XMLTV_GRAB "tv_grab_"
 
@@ -531,6 +536,189 @@ static int _xmltv_parse_channel
   return save;
 }
 
+/* Channel search code - andyb2000 Aug 2012 */
+
+/*static service_t *xmltv_find_service ( int sid )*/
+static service_t *_xmltv_find_service ( int sid )
+{
+  th_dvb_adapter_t *tda;
+  th_dvb_mux_instance_t *tdmi;
+  service_t *t = NULL;
+  TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
+    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+      LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
+	if (t->s_enabled) {
+        if (t->s_dvb_service_id == sid) {
+	   return t;
+	};
+	};
+      }
+    }
+  }
+  return NULL;
+}
+
+static epggrab_channel_t *_xmltv_find_epggrab_channel
+  ( epggrab_module_t *mod, int cid, int create, int *save )
+{
+  char chid[32];
+  sprintf(chid, "%s-%d", mod->id, cid);
+  return epggrab_channel_find(&_xmltv_channels, chid, create, save,
+                              (epggrab_module_t*)mod);
+}
+
+
+/** sub-function to retrieve variable from lineup */
+
+static const char *xmltv_lineup_returnvar
+  (epggrab_module_t *mod, htsmsg_field_t *g)
+{
+  htsmsg_t *tag;
+  const char *return_variable = "";
+
+  if ((tag = htsmsg_get_map_by_field(g))) {
+   return_variable=htsmsg_get_str(tag, "cdata");
+  };
+ return return_variable;
+};
+
+/** sub-function to retrieve sub variable from lineup */
+
+static const char *xmltv_lineup_returnvarattrib
+  (epggrab_module_t *mod, htsmsg_field_t *g)
+{
+  htsmsg_t *tag;
+  const char *return_variable_attrib = "";
+
+ if ((tag = htsmsg_get_map_by_field(g))) {
+  tag = htsmsg_get_map(tag, "attrib");
+  return_variable_attrib = htsmsg_get_str(tag, "url");
+ };
+ return return_variable_attrib;
+};
+
+
+/** Parse the channels we get from lineup
+*
+*/
+static int xmltv_parse_lineups
+  (epggrab_module_t *mod, htsmsg_t *body, epggrab_stats_t *stats)
+{
+  tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "start function");
+  htsmsg_field_t *e, *f, *g, *h;
+  htsmsg_t *lineups, *tag, *chandata;
+  const char *chan_number = "0", *chan_name = "", *short_name, *logo = "", *commercial_free, *chan_format, *chan_aspect_ratio, *chan_network_id, *chan_service_id = "0", *chan_lcn, *chan_service_name, *chan_encrypted;
+
+  int save = 0;
+  int cid = 0;
+  int update_counter = 0;
+  service_t *channel_service_id;
+  epggrab_channel_t *ec;
+
+  if((lineups = htsmsg_get_map(body, "tags")) == NULL) return 0;
+  if((lineups = htsmsg_get_map(lineups, "xmltv-lineup")) == NULL) return 0;
+  if((lineups = htsmsg_get_map(lineups, "tags")) == NULL) return 0;
+
+  HTSMSG_FOREACH(e, lineups) {
+   if (strcmp(e->hmf_name, "lineup-entry") == 0) {
+    if ((tag = htsmsg_get_map_by_field(e))) {
+    if((lineups = htsmsg_get_map(tag, "tags")) == NULL) continue;
+    HTSMSG_FOREACH(f, lineups) {
+	if (strcmp(f->hmf_name, "preset") == 0) {
+	 chan_number = xmltv_lineup_returnvar(mod, f);
+	};
+	if (strcmp(f->hmf_name, "station") == 0) {
+	 if ((tag = htsmsg_get_map_by_field(f))) {
+	 chandata = htsmsg_get_map(tag, "tags");
+	 HTSMSG_FOREACH(g, chandata) {
+	if (strcmp(g->hmf_name, "name") == 0) {
+	chan_name = xmltv_lineup_returnvar(mod, g);
+	};
+	if (strcmp(g->hmf_name, "short-name") == 0) {
+	short_name = xmltv_lineup_returnvar(mod, g);
+	};
+	if (strcmp(g->hmf_name, "logo") == 0) {
+	logo = xmltv_lineup_returnvarattrib(mod, g);
+	};
+	if (strcmp(g->hmf_name, "commercial-free") == 0) {
+	commercial_free = xmltv_lineup_returnvar(mod, g);
+	};
+	if (strcmp(g->hmf_name, "video") == 0) {
+	 if ((tag = htsmsg_get_map_by_field(g))) {
+	 chandata = htsmsg_get_map(tag, "tags");
+	 HTSMSG_FOREACH(h, chandata) {
+		if (strcmp(h->hmf_name, "format") == 0) {
+		chan_format = xmltv_lineup_returnvar(mod, h);
+		};
+		if (strcmp(h->hmf_name, "aspect-ratio") == 0) {
+		chan_aspect_ratio = xmltv_lineup_returnvar(mod, h);
+		};
+	 };
+	};
+	};
+	};
+	};
+	};
+
+	if (strcmp(f->hmf_name, "dvb-channel") == 0) {
+		if ((tag = htsmsg_get_map_by_field(f))) {
+			if((chandata = htsmsg_get_map(tag, "tags")) == NULL)
+				continue;
+			HTSMSG_FOREACH(g, chandata) {
+				if (strcmp(g->hmf_name, "original-network-id") == 0) {
+					chan_network_id = xmltv_lineup_returnvar(mod, g);
+				};
+				if (strcmp(g->hmf_name, "service-id") == 0) {
+					chan_service_id = xmltv_lineup_returnvar(mod, g);
+                                };
+				if (strcmp(g->hmf_name, "lcn") == 0) {
+					chan_lcn = xmltv_lineup_returnvar(mod, g);
+                                };
+				if (strcmp(g->hmf_name, "service-name") == 0) {
+					chan_service_name = xmltv_lineup_returnvar(mod, g);
+                                };
+				if (strcmp(g->hmf_name, "encrypted") == 0) {
+					chan_encrypted = xmltv_lineup_returnvar(mod, g);
+                                };
+			};
+		};
+	};
+	};
+	};
+	};
+  cid = 0;
+
+/* check if we got a valid entry and call the searcher routine */
+if(sscanf(chan_service_id, "%d", &cid) <= 0) {
+    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "WARNING: converting chan_service_id to cid failed");
+	cid = 0;
+};
+if(cid != 0) {
+	/* Found a valid cid to search for */
+  tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Channel int: %d (name: %s)",cid, chan_name);
+  channel_service_id = _xmltv_find_service(cid);
+  if (channel_service_id && channel_service_id->s_ch) {
+	ec  =_xmltv_find_epggrab_channel(mod, cid, 1, &save);
+	/* dont bother to check for primary, just overwrite */
+	if (service_is_primary_epg(channel_service_id)) {
+		tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Updating channelid: %d name: %s",channel_service_id->s_dvb_service_id, channel_service_id->s_nicename);
+        	ec->channel = channel_service_id->s_ch;
+        save |= epggrab_channel_set_number(ec, atoi(chan_number));
+	save |= epggrab_channel_set_name(ec, chan_name);
+        save |= epggrab_channel_set_icon(ec, logo);
+	update_counter++;
+	};
+    }
+
+
+};
+
+  };
+  tvhlog(LOG_INFO, "xmltv", "Updated %d channel name/number/icons",update_counter);
+  tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "End xml_parse_lineups function");
+  return 0;
+};
+
 /**
  *
  */
@@ -557,14 +745,22 @@ static int _xmltv_parse_tv
 static int _xmltv_parse
   ( void *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
-  htsmsg_t *tags, *tv;
+  htsmsg_t *tags, *tv, *lineup;
+	tvhlog(LOG_DEBUG, "xmltv_parse", "Begin of parser");
 
   if((tags = htsmsg_get_map(data, "tags")) == NULL)
     return 0;
 
+/* Do lineup processing - each htsmsg_get_map strips */
+  if ((lineup = htsmsg_get_map(tags, "xmltv-lineups")) == NULL) {
+	tvhlog(LOG_DEBUG, "xmltv_parse", "No xmltv-lineups found to parse in xml feed");
+  } else {
+	tvhlog(LOG_DEBUG, "xmltv_parse", "Found xmltv-lineups in xml, calling xmltv_parse_lineups");
+	xmltv_parse_lineups(mod, lineup, stats);
+  };
+
   if((tv = htsmsg_get_map(tags, "tv")) == NULL)
     return 0;
-
   return _xmltv_parse_tv(mod, tv, stats);
 }
 
