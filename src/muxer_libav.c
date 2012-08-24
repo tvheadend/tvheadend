@@ -137,9 +137,9 @@ lav_muxer_add_stream(lav_muxer_t *lm,
 
   if(ssc->ssc_gh) {
     c->extradata_size = pktbuf_len(ssc->ssc_gh);
-    c->extradata = malloc(c->extradata_size);
-    memcpy(c->extradata, pktbuf_ptr(ssc->ssc_gh), pktbuf_len(ssc->ssc_gh));
-    //TODO: do we need to free this?
+    c->extradata = av_malloc(c->extradata_size);
+    memcpy(c->extradata, pktbuf_ptr(ssc->ssc_gh), 
+	   pktbuf_len(ssc->ssc_gh));
   }
 
   if(SCT_ISAUDIO(ssc->ssc_type)) {
@@ -444,16 +444,24 @@ lav_muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
 static int
 lav_muxer_close(muxer_t *m)
 {
+  int i;
+  int ret = 0;
   lav_muxer_t *lm = (lav_muxer_t*)m;
 
   if(lm->lm_oc->nb_streams && av_write_trailer(lm->lm_oc) < 0) {
     tvhlog(LOG_WARNING, "libav",  "Failed to write %s trailer", 
 	   muxer_container_type2txt(lm->m_container));
     lm->m_errors++;
-    return -1;
+    ret = -1;
   }
 
-  return 0;
+  if(lm->lm_h264_filter)
+    av_bitstream_filter_close(lm->lm_h264_filter);
+
+  for(i=0; i<lm->lm_oc->nb_streams; i++)
+    av_freep(&lm->lm_oc->streams[i]->codec->extradata);
+ 
+  return ret;
 }
 
 
@@ -464,9 +472,6 @@ static void
 lav_muxer_destroy(muxer_t *m)
 {
   lav_muxer_t *lm = (lav_muxer_t*)m;
-
-  if(lm->lm_h264_filter)
-    av_bitstream_filter_close(lm->lm_h264_filter);
 
   if(lm->lm_oc && lm->lm_oc->pb)
     av_free(lm->lm_oc->pb);
