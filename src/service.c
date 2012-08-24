@@ -339,7 +339,7 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
     if(t->s_quality_index(t) < 10) {
       if(loginfo != NULL) {
 	tvhlog(LOG_NOTICE, "Service", 
-	       "%s: Skipping \"%s\" -- Quality below 10%",
+	       "%s: Skipping \"%s\" -- Quality below 10%%",
 	       loginfo, service_nicename(t));
 	err = SM_CODE_BAD_SIGNAL;
       }

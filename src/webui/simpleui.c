@@ -126,7 +126,7 @@ page_simple(http_connection_t *hc,
 
   s = epg_episode_get_title(e->episode, lang);
 	htsbuf_qprintf(hq, 
-		    "<a href=\"/eventinfo/%d\">"
+		    "<a href=\"/eventinfo/%"PRIu64"\">"
 		    "%02d:%02d-%02d:%02d&nbsp;%s%s%s</a><br>",
 		    e->id,
 		    a.tm_hour, a.tm_min, b.tm_hour, b.tm_min,
@@ -240,7 +240,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   if((rstatus = val2str(dvr_status, recstatustxt)) != NULL)
     htsbuf_qprintf(hq, "Recording status: %s<br>", rstatus);
 
-  htsbuf_qprintf(hq, "<form method=\"post\" action=\"/eventinfo/%d\">", 
+  htsbuf_qprintf(hq, "<form method=\"post\" action=\"/eventinfo/%"PRIu64"\">",
 		 e->id);
 
   switch(dvr_status) {
@@ -408,14 +408,14 @@ page_status(http_connection_t *hc,
 		     "<start>"
 		     "<date>%02d/%02d/%02d</date>"
 		     "<time>%02d:%02d</time>"
-		     "<unixtime>%d</unixtime>"
-		     "<extra_start>%d</extra_start>"
+		     "<unixtime>%"PRItime_t"</unixtime>"
+		     "<extra_start>%"PRItime_t"</extra_start>"
 		     "</start>"
 		     "<stop>"
 		     "<date>%02d/%02d/%02d</date>"
 		     "<time>%02d:%02d</time>"
-		     "<unixtime>%d</unixtime>"
-		     "<extra_stop>%d</extra_stop>"
+		     "<unixtime>%"PRItime_t"</unixtime>"
+		     "<extra_stop>%"PRItime_t"</extra_stop>"
 		     "</stop>"
 		     "<title>%s</title>",
 		     a.tm_year + 1900, a.tm_mon, a.tm_mday, 

@@ -805,7 +805,7 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
     }
 
     tvhlog(LOG_DEBUG, "cwc", "Received NOK for service \"%s\"%s (seqno: %d "
-	   "Req delay: %lld ms)", t->s_svcname, chaninfo, seq, delay);
+	   "Req delay: %"PRIu64" ms)", t->s_svcname, chaninfo, seq, delay);
 
 forbid:
     LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
@@ -821,7 +821,7 @@ forbid:
     }
     tvhlog(LOG_ERR, "cwc",
 	   "Can not descramble service \"%s\", access denied (seqno: %d "
-	   "Req delay: %lld ms)",
+	   "Req delay: %"PRIu64" ms)",
 	   t->s_svcname, seq, delay);
     ct->cs_keystate = CS_FORBIDDEN;
     return;
@@ -835,7 +835,7 @@ forbid:
 	   "Received ECM reply%s for service \"%s\" "
 	   "even: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
 	   " odd: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x (seqno: %d "
-	   "Req delay: %lld ms)",
+	   "Req delay: %"PRIu64" ms)",
 	   chaninfo,
 	   t->s_svcname,
 	   msg[3 + 0], msg[3 + 1], msg[3 + 2], msg[3 + 3], msg[3 + 4],
@@ -858,7 +858,7 @@ forbid:
     
     if(ct->cs_keystate != CS_RESOLVED)
       tvhlog(LOG_INFO, "cwc",
-	     "Obtained key for service \"%s\" in %lld ms, from %s:%i",
+	     "Obtained key for service \"%s\" in %"PRIu64" ms, from %s:%i",
 	     t->s_svcname, delay, ct->cs_cwc->cwc_hostname,
 	     ct->cs_cwc->cwc_port);
 

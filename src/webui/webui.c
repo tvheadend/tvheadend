@@ -377,9 +377,9 @@ http_dvr_list_playlist(http_connection_t *hc)
     durration += (de->de_stop_extra + de->de_start_extra)*60;
     bandwidth = ((8*fsize) / (durration*1024.0));
 
-    htsbuf_qprintf(hq, "#EXTINF:%d,%s\n", durration, de->de_title);
+    htsbuf_qprintf(hq, "#EXTINF:%"PRId64",%s\n", durration, de->de_title);
     
-    htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%d\n", durration);
+    htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%"PRId64"\n", durration);
     htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%d,BANDWIDTH=%d\n", de->de_id, bandwidth);
 
     snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
@@ -415,9 +415,9 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
     bandwidth = ((8*fsize) / (durration*1024.0));
 
     htsbuf_qprintf(hq, "#EXTM3U\n");
-    htsbuf_qprintf(hq, "#EXTINF:%d,%s\n", durration, de->de_title);
+    htsbuf_qprintf(hq, "#EXTINF:%"PRId64",%s\n", durration, de->de_title);
     
-    htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%d\n", durration);
+    htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%"PRId64"\n", durration);
     htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%d,BANDWIDTH=%d\n", de->de_id, bandwidth);
 
     snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);

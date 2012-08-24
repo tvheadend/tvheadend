@@ -218,7 +218,7 @@ v4l_service_start(service_t *t, unsigned int weight, int force_start)
   }
   if(pipe(va->va_pipe)) {
     tvhlog(LOG_ERR, "v4l",
-	   "%s: Unable to create control pipe", va->va_path, strerror(errno));
+	   "%s: Unable to create control pipe [%s]", va->va_path, strerror(errno));
     close(fd);
     return -1;
   }
@@ -524,7 +524,7 @@ v4l_adapter_check(const char *path, int fd)
 	   path,
 	   fmtdesc.index,
 	   fmtdesc.description,
-	   &fmtdesc.pixelformat,
+	   (char*)&fmtdesc.pixelformat,
 	   fmtdesc.flags & V4L2_FMT_FLAG_COMPRESSED ? "(compressed)" : "");
 
     if(fmtdesc.pixelformat == V4L2_PIX_FMT_MPEG)
