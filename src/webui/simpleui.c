@@ -358,6 +358,36 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+/**
+ * Escape characters that will interfere with xml.
+ */
+static const char *escapexmlchars
+  (const char *data)
+{
+ const char *return_variable = "";
+ int len = strlen(data);
+ int i;
+ static char *tmpchar;
+
+ for(i = 0; i < len; i++) {
+  tvhlog(LOG_DEBUG, "escapexmlchars", "Running escapexmlchars: %d",data[i]);
+  switch(data[i]) {
+   case '&':
+	tmpchar = "&amp;";
+	break;
+/*   case '\"': return_variable = return_variable + "&quot;";      break;
+   case '\'': return_variable = return_variable + "&apos;";      break;
+   case '<':  return_variable = return_variable + "&lt;";        break;
+   case '>':  return_variable = return_variable + "&gt;";        break;*/
+   default:
+	tmpchar = data[i];
+	break;
+  };
+/*  sprintf(return_variable,"%s%s", return_variable,tmpchar);*/
+ };
+ return return_variable;
+};
+
 
 /**
  * 
@@ -373,6 +403,8 @@ page_status(http_connection_t *hc,
   dvr_query_result_t dqr;
   const char *rstatus;
   time_t     now;
+
+  const char *tmpvar;
 
   htsbuf_qprintf(hq, "<?xml version=\"1.0\"?>\n"
 		 "<currentload>\n"
@@ -402,6 +434,8 @@ page_status(http_connection_t *hc,
     {
       localtime_r(&de->de_start, &a);
       localtime_r(&de->de_stop, &b);
+
+      tmpvar = escapexmlchars("Test");
 
       htsbuf_qprintf(hq, 
 		    "<recording>"
