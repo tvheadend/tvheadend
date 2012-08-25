@@ -93,6 +93,7 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "diseqc_version", tda->tda_diseqc_version);
   htsmsg_add_u32(m, "extrapriority", tda->tda_extrapriority);
   htsmsg_add_u32(m, "skip_initialscan", tda->tda_skip_initialscan);
+  htsmsg_add_u32(m, "disable_pmt_monitor", tda->tda_disable_pmt_monitor);
   hts_settings_save(m, "dvbadapters/%s", tda->tda_identifier);
   htsmsg_destroy(m);
 }
@@ -332,6 +333,25 @@ dvb_adapter_set_extrapriority(th_dvb_adapter_t *tda, int extrapriority)
 /**
  *
  */
+void
+dvb_adapter_set_disable_pmt_monitor(th_dvb_adapter_t *tda, int on)
+{
+  if(tda->tda_disable_pmt_monitor == on)
+    return;
+
+  lock_assert(&global_lock);
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" disabled PMT monitoring set to: %s",
+	 tda->tda_displayname, on ? "On" : "Off");
+
+  tda->tda_disable_pmt_monitor = on;
+  tda_save(tda);
+}
+
+
+/**
+ *
+ */
 static void
 dvb_adapter_checkspeed(th_dvb_adapter_t *tda)
 {
@@ -483,6 +503,7 @@ dvb_adapter_init(uint32_t adapter_mask)
       htsmsg_get_u32(c, "diseqc_version", &tda->tda_diseqc_version);
       htsmsg_get_u32(c, "extrapriority", &tda->tda_extrapriority);
       htsmsg_get_u32(c, "skip_initialscan", &tda->tda_skip_initialscan);
+      htsmsg_get_u32(c, "disable_pmt_monitor", &tda->tda_disable_pmt_monitor);
     }
     htsmsg_destroy(l);
   }

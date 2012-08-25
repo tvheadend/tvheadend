@@ -181,6 +181,7 @@ typedef struct th_dvb_adapter {
   uint32_t tda_sidtochan;
   uint32_t tda_nitoid;
   uint32_t tda_diseqc_version;
+  uint32_t tda_disable_pmt_monitor;
   char *tda_displayname;
 
   int tda_fe_fd;
@@ -300,6 +301,8 @@ void dvb_adapter_set_nitoid(th_dvb_adapter_t *tda, int nitoid);
 
 void dvb_adapter_set_diseqc_version(th_dvb_adapter_t *tda, unsigned int v);
 
+void dvb_adapter_set_disable_pmt_monitor(th_dvb_adapter_t *tda, int on);
+
 void dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src);
 
 void dvb_adapter_clean(th_dvb_adapter_t *tda);
@@ -386,6 +389,10 @@ struct service *dvb_transport_find(th_dvb_mux_instance_t *tdmi,
 				   uint16_t sid, int pmt_pid,
 				   const char *identifier);
 
+struct service *dvb_transport_find2(th_dvb_mux_instance_t *tdmi,
+				   uint16_t sid, int pmt_pid,
+				   const char *identifier, int *save);
+
 void dvb_transport_notify(struct service *t);
 
 void dvb_transport_notify_by_adapter(th_dvb_adapter_t *tda);
@@ -409,7 +416,12 @@ void dvb_table_add_default(th_dvb_mux_instance_t *tdmi);
 
 void dvb_table_flush_all(th_dvb_mux_instance_t *tdmi);
 
+void dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid);
+
+void dvb_table_rem_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid);
+
 struct dmx_sct_filter_params *dvb_fparams_alloc(void);
+
 void
 tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
 	int (*callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,

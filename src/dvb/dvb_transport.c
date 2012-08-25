@@ -142,6 +142,8 @@ dvb_transport_start(service_t *t, unsigned int weight, int force_start)
   if(!r)
     dvb_transport_open_demuxers(tda, t);
 
+  dvb_table_add_pmt(tdmi, t->s_pmt_pid);
+
   return r;
 }
 
@@ -365,6 +367,13 @@ service_t *
 dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
 		   const char *identifier)
 {
+  return dvb_transport_find2(tdmi, sid, pmt_pid, identifier, NULL);
+}
+
+service_t *
+dvb_transport_find2(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
+		   const char *identifier, int *save)
+{
   service_t *t;
   char tmp[200];
   char buf[200];
@@ -388,6 +397,7 @@ dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   tvhlog(LOG_DEBUG, "dvb", "Add service \"%s\" on \"%s\"", identifier, buf);
 
   t = service_create(identifier, SERVICE_TYPE_DVB, S_MPEG_TS);
+  if (save) *save = 1;
 
   t->s_dvb_service_id = sid;
   t->s_pmt_pid        = pmt_pid;
