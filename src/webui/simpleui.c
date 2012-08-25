@@ -364,26 +364,24 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
 static const char *escapexmlchars
   (const char *data)
 {
- const char *return_variable = "";
+ const char *return_variable;
  int len = strlen(data);
  int i;
- static char *tmpchar;
+ const char *tmpchar;
 
  for(i = 0; i < len; i++) {
   tvhlog(LOG_DEBUG, "escapexmlchars", "Running escapexmlchars: %d",data[i]);
   switch(data[i]) {
-   case '&':
-	tmpchar = "&amp;";
-	break;
-/*   case '\"': return_variable = return_variable + "&quot;";      break;
-   case '\'': return_variable = return_variable + "&apos;";      break;
-   case '<':  return_variable = return_variable + "&lt;";        break;
-   case '>':  return_variable = return_variable + "&gt;";        break;*/
+   case '&': tmpchar = "&amp;";        break;
+   case '\"': tmpchar = "&quot;";      break;
+   case '\'': tmpchar = "&apos;";      break;
+   case '<':  tmpchar = "&lt;";        break;
+   case '>':  tmpchar = "&gt;";        break;
    default:
-	tmpchar = data[i];
+	tmpchar = &data[i];
 	break;
   };
-/*  sprintf(return_variable,"%s%s", return_variable,tmpchar);*/
+ strcat(return_variable, tmpchar);
  };
  return return_variable;
 };
