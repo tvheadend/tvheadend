@@ -910,6 +910,7 @@ psi_caid2name(uint16_t caid)
  *
  */
 static struct strtab streamtypetab[] = {
+  { "UNKNOWN",    SCT_UNKNOWN },
   { "NONE",       SCT_NONE },
   { "MPEG2VIDEO", SCT_MPEG2VIDEO },
   { "MPEG2AUDIO", SCT_MPEG2AUDIO },

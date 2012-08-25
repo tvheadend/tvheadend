@@ -150,8 +150,8 @@ int get_device_connection(const char *dev);
  * Stream component types
  */
 typedef enum {
-  SCT_NONE = -1,
-  SCT_UNKNOWN = 0,
+  SCT_UNKNOWN = -1,
+  SCT_NONE = 0,
   SCT_MPEG2VIDEO = 1,
   SCT_MPEG2AUDIO,
   SCT_H264,
