@@ -358,7 +358,6 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
-
 /**
  * 
  */
@@ -426,10 +425,10 @@ page_status(http_connection_t *hc,
 		     b.tm_hour, b.tm_min, 
 		     de->de_stop, 
 		     de->de_stop_extra, 
-		     lang_str_get(de->de_title, NULL));
+		     http_escape(lang_str_get(de->de_title, NULL)));
 
       rstatus = val2str(de->de_sched_state, recstatustxt);
-      htsbuf_qprintf(hq, "<status>%s</status></recording>\n", rstatus);
+      htsbuf_qprintf(hq, "<status>%s</status></recording>\n", http_escape(rstatus));
       cc++;
       timeleft = -1;
     }
