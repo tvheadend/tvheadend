@@ -5,6 +5,21 @@
 
 
 
+Compiling Requirements
+=====================
+Ubuntu users can use the following one-liner in order the install the
+software required to compile tvheadend:
+
+$ sudo apt-get install build-essential pkg-config libssl-dev 
+
+If you want avahi support (optional):
+
+$ sudo apt-get install libavahi-client-dev
+
+If you plan on doing transcoding (also optional):
+
+$ sudo apt-get install libavcodec-dev libavfilter-dev libavformat-dev libavutil-dev libswscale-dev libx264-120
+
 How to build for Linux
 ======================
 
