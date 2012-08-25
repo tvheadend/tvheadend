@@ -22,7 +22,8 @@
 streaming_target_t *transcoder_create(streaming_target_t *output, 
 				      size_t max_resolution,
 				      streaming_component_type_t vtype, 
-				      streaming_component_type_t atype);
+				      streaming_component_type_t atype,
+				      streaming_component_type_t stype);
 
 void transcoder_set_network_speed(streaming_target_t *st, int speed);
 void transcoder_destroy(streaming_target_t *gh);

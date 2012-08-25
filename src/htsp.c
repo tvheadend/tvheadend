@@ -912,7 +912,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 
 #if ENABLE_LIBAV
   uint32_t max_resolution;
-  streaming_component_type_t acodec, vcodec;
+  streaming_component_type_t acodec, vcodec, scodec;
 #endif
 
   if(htsmsg_get_u32(in, "channelId", &chid))
@@ -930,6 +930,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   max_resolution = htsmsg_get_u32_or_default(in, "maxWidth", 0);
   vcodec = streaming_component_txt2type(htsmsg_get_str(in, "videoCodec"));
   acodec = streaming_component_txt2type(htsmsg_get_str(in, "audioCodec"));
+  scodec = streaming_component_txt2type(htsmsg_get_str(in, "subtitleCodec"));
 #endif
 
   /*
@@ -954,7 +955,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
     hs->hs_transcoder = transcoder_create(&hs->hs_input, 
 					  max_resolution,
 					  vcodec,
-					  acodec);
+					  acodec,
+					  scodec);
     hs->hs_tsfix = tsfix_create(hs->hs_transcoder);
   }
   hs->hs_s = subscription_create_from_channel(ch, weight,

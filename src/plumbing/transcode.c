@@ -72,8 +72,9 @@ typedef struct transcoder {
   streaming_target_t *t_output;
 
   // client preferences for the target stream
-  streaming_component_type_t atype;
-  streaming_component_type_t vtype;
+  streaming_component_type_t atype; // audio
+  streaming_component_type_t vtype; // video
+  streaming_component_type_t stype; // subtitle
   size_t max_height;
 
   // Audio & Video stream transcoders
@@ -718,11 +719,16 @@ transcoder_packet(transcoder_t *t, th_pkt_t *pkt)
   }
 }
 
+#define IS_PASSTHROUGH(t, ssc) ((SCT_ISAUDIO(ssc->ssc_type) && t->atype == SCT_UNKNOWN) || \
+				(SCT_ISVIDEO(ssc->ssc_type) && t->vtype == SCT_UNKNOWN) || \
+				(SCT_ISSUBTITLE(ssc->ssc_type) && t->stype == SCT_UNKNOWN))
+
+
 /**
  * Figure out how many streams we will use.
  */
 static int
-transcoder_get_stream_count(streaming_start_t *ss) {
+transcoder_get_stream_count(transcoder_t *t, streaming_start_t *ss) {
   int i = 0;
   int video = 0;
   int audio = 0;
@@ -731,16 +737,21 @@ transcoder_get_stream_count(streaming_start_t *ss) {
 
   for(i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
-    video |= SCT_ISVIDEO(ssc->ssc_type);
-    audio |= SCT_ISAUDIO(ssc->ssc_type);
-    passthrough += (ssc->ssc_type == SCT_TEXTSUB);
-    passthrough += (ssc->ssc_type == SCT_DVBSUB);
+
+    if(IS_PASSTHROUGH(t, ssc))
+      passthrough++;
+    else if(SCT_ISVIDEO(ssc->ssc_type))
+      video = 1;
+    else if(SCT_ISAUDIO(ssc->ssc_type))
+      audio = 1;
   }
 
   passthrough = MIN(passthrough, MAX_PASSTHROUGH_STREAMS);
 
   return (video + audio + passthrough);
 }
+
+
 
 /**
  * initializes eatch transcoding stream
@@ -750,7 +761,7 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
 {
   int i = 0;
   int j = 0;
-  int stream_count = transcoder_get_stream_count(src);
+  int stream_count = transcoder_get_stream_count(t, src);
   streaming_start_t *ss = NULL;
 
   t->feedback_clock = dispatch_clock;
@@ -771,8 +782,9 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
       break;
     }
 
-    if (SCT_ISSUBTITLE(ssc_src->ssc_type)) {
-      streaming_start_component_t *ssc = &ss->ss_components[j++];
+    streaming_start_component_t *ssc = &ss->ss_components[j];
+
+    if (IS_PASSTHROUGH(t, ssc_src)) {
       int pt_index = t->pt_count++;
 
       t->pt_streams[pt_index].target = t->t_output;
@@ -785,18 +797,25 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
       ssc->ssc_type           = ssc_src->ssc_type;
       ssc->ssc_composition_id = ssc_src->ssc_composition_id;
       ssc->ssc_ancillary_id   = ssc_src->ssc_ancillary_id;
-      memcpy(ssc->ssc_lang, ssc_src->ssc_lang, 4);
+      ssc->ssc_pid            = ssc_src->ssc_pid;
+      ssc->ssc_width          = ssc_src->ssc_width;
+      ssc->ssc_height         = ssc_src->ssc_height;
+      ssc->ssc_aspect_num     = ssc_src->ssc_aspect_num;
+      ssc->ssc_aspect_den     = ssc_src->ssc_aspect_den;
+      ssc->ssc_sri            = ssc_src->ssc_sri;
+      ssc->ssc_channels       = ssc_src->ssc_channels;
+      ssc->ssc_disabled       = ssc_src->ssc_disabled;
 
-      tvhlog(LOG_INFO, "transcode", "%d:%s (%s) ==> %d:PASSTHROUGH", 
+      memcpy(ssc->ssc_lang, ssc_src->ssc_lang, 4);
+      j++;
+
+      tvhlog(LOG_INFO, "transcode", "%d:%s ==> %d:PASSTHROUGH", 
 	     t->pt_streams[pt_index].sindex,
 	     streaming_component_type2txt(ssc_src->ssc_type),
-	     ssc->ssc_lang,
 	     t->pt_streams[pt_index].tindex);
 
     } else if (!t->ts_audio && SCT_ISAUDIO(ssc_src->ssc_type) && SCT_ISAUDIO(t->atype)) {
-      streaming_start_component_t *ssc = &ss->ss_components[j];
       transcoder_stream_t *ts = transcoder_stream_create(ssc_src->ssc_type, t->atype);
-
       if(!ts)
 	continue;
 
@@ -822,9 +841,7 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
       t->ts_audio = ts;
 
     } else if (!t->ts_video && SCT_ISVIDEO(ssc_src->ssc_type) && SCT_ISVIDEO(t->vtype)) {
-      streaming_start_component_t *ssc = &ss->ss_components[j];
       transcoder_stream_t *ts = transcoder_stream_create(ssc_src->ssc_type, t->vtype);
-
       if(!ts)
 	continue;
 
@@ -935,7 +952,9 @@ streaming_target_t *
 transcoder_create(streaming_target_t *output, 
 		  size_t max_resolution,
 		  streaming_component_type_t vtype, 
-		  streaming_component_type_t atype)
+		  streaming_component_type_t atype,
+		  streaming_component_type_t stype
+		  )
 {
   transcoder_t *t = calloc(1, sizeof(transcoder_t));
 
@@ -944,6 +963,7 @@ transcoder_create(streaming_target_t *output,
   t->max_height = max_resolution;
   t->atype = atype;
   t->vtype = vtype;
+  t->stype = stype;
 
   streaming_target_init(&t->t_input, transcoder_input, t, 0);
   return &t->t_input;
