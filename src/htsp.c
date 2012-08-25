@@ -1384,7 +1384,7 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source,
 void
 htsp_init(void)
 {
-  htsp_server = tcp_server_create(9982, htsp_serve, NULL);
+  htsp_server = tcp_server_create(htsp_port, htsp_serve, NULL);
 }
 
 /**
