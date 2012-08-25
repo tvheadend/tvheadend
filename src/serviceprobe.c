@@ -195,10 +195,17 @@ serviceprobe_thread(void *aux)
         switch(t->s_servicetype) {
           case ST_SDTV:
           case ST_AC_SDTV:
+          case ST_EX_SDTV:
+          case ST_DN_SDTV:
+          case ST_SK_SDTV:
             str = "SDTV";
             break;
           case ST_HDTV:
           case ST_AC_HDTV:
+          case ST_EX_HDTV:
+          case ST_EP_HDTV:
+          case ST_ET_HDTV:
+          case ST_DN_HDTV:
             str = "HDTV";
             break;
           case ST_RADIO:
