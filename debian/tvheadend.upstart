@@ -1,0 +1,13 @@
+description     "Tvheadend upstart script"
+author          "Lior Mualem"
+
+start on (startup
+          and started udev-finish)
+stop on runlevel [016]
+
+expect fork
+
+env uid=hts
+env gid=video
+
+exec start-stop-daemon -N 10 -S -c $uid:$gid -d /home/hts -x /usr/bin/tvheadend -- -f -u $uid -g $gid
