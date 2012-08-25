@@ -280,6 +280,9 @@ lav_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
   av_dict_set(&oc->metadata, "service_name", name, 0);
   av_dict_set(&oc->metadata, "service_provider", app, 0);
 
+ if(lm->m_container == MC_MPEGTS)
+    lm->lm_h264_filter = av_bitstream_filter_init("h264_mp4toannexb");
+
   for(i=0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
 
@@ -521,9 +524,6 @@ lav_muxer_create(muxer_container_type_t mc)
   lm->m_container    = mc;
   lm->lm_oc          = avformat_alloc_context();
   lm->lm_oc->oformat = fmt;
-
-  if(mc == MC_MPEGTS)
-    lm->lm_h264_filter = av_bitstream_filter_init("h264_mp4toannexb");
 
   return (muxer_t*)lm;
 }
