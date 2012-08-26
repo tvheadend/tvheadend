@@ -105,6 +105,8 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
     postfix++;
     if(!strcmp(postfix, "js"))
       content = "text/javascript; charset=UTF-8";
+    else if(!strcmp(postfix, "css"))
+      content = "text/css; charset=UTF-8";
   }
 
   // TODO: handle compression

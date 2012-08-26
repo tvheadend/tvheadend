@@ -7,7 +7,7 @@ tvheadend.miscconf = function() {
   var confreader = new Ext.data.JsonReader(
     { root: 'config' },
     [ 
-      'muxconfpath', 'language',
+      'muxconfpath', 'language'
     ]
   );
 
@@ -18,13 +18,13 @@ tvheadend.miscconf = function() {
   var dvbscanPath = new Ext.form.TextField({
     fieldLabel : 'DVB scan files path',
     name       : 'muxconfpath',
-    allowBlank : true,
+    allowBlank : true
   });
 
   var language = new Ext.form.TextField({
     fieldLabel : 'Default Language(s)',
     name       : 'language',
-    allowBlank : true,
+    allowBlank : true
   });
 
   /* ****************************************************************
@@ -35,7 +35,7 @@ tvheadend.miscconf = function() {
     text     : "Save configuration",
     tooltip  : 'Save changes made to configuration below',
     iconCls  :'save',
-    handler  : saveChanges,
+    handler  : saveChanges
   });
 
   var helpButton = new Ext.Button({
@@ -60,7 +60,7 @@ tvheadend.miscconf = function() {
     autoHeight    : true,
     items         : [
       language,
-      dvbscanPath,
+      dvbscanPath
     ],
     tbar: [
       saveButton,
