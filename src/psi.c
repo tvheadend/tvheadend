@@ -926,6 +926,7 @@ static struct strtab streamtypetab[] = {
   { "TEXTSUB",    SCT_TEXTSUB },
   { "EAC3",       SCT_EAC3 },
   { "AAC",        SCT_MP4A },
+  { "VORBIS",     SCT_VORBIS },
   { "VP8",        SCT_VP8 },
   { "MPEG4VIDEO", SCT_MPEG4VIDEO },
 };

@@ -90,6 +90,7 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
     break;
 
   case SCT_H264:
+  case SCT_VORBIS:
   case SCT_MPEG2VIDEO:
 
     if(pkt->pkt_header != NULL) {
@@ -124,6 +125,7 @@ header_complete(streaming_start_component_t *ssc, int not_so_picky)
      (ssc->ssc_type == SCT_H264 ||
       ssc->ssc_type == SCT_MPEG2VIDEO ||
       ssc->ssc_type == SCT_MP4A ||
+      ssc->ssc_type == SCT_VORBIS ||
       ssc->ssc_type == SCT_AAC))
     return 0;
   return 1;

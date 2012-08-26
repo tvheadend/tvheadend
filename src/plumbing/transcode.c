@@ -156,6 +156,9 @@ transcoder_get_codec_id(streaming_component_type_t type)
   case SCT_VP8:
     codec_id = CODEC_ID_VP8;
     break;
+  case SCT_VORBIS:
+    codec_id = CODEC_ID_VORBIS;
+    break;
   default:
     codec_id = CODEC_ID_NONE;
     break;
@@ -338,7 +341,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   ts->tctx->bit_rate        = ts->tctx->channels * 64000;
   ts->tctx->sample_rate     = ts->sctx->sample_rate;
   ts->tctx->sample_fmt      = ts->sctx->sample_fmt;
-  ts->tctx->time_base.den   = ts->tctx->sample_rate;
+  ts->tctx->time_base.den   = 90000;
   ts->tctx->time_base.num   = 1;
 
   // Open the encoder
@@ -350,6 +353,13 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     case SCT_AAC:
       ts->tctx->codec_id       = CODEC_ID_AAC;
       ts->tctx->flags         |= CODEC_FLAG_QSCALE;
+      ts->tctx->global_quality = 4*FF_QP2LAMBDA;
+      break;
+    case SCT_VORBIS:
+      ts->tctx->codec_id       = CODEC_ID_VORBIS;
+      ts->tctx->flags         |= CODEC_FLAG_QSCALE;
+      ts->tctx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
+      ts->tctx->channels       = 2; // Only stereo suported
       ts->tctx->global_quality = 4*FF_QP2LAMBDA;
       break;
     default:
@@ -385,7 +395,13 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     } else if(length) {
 
       n = pkt_alloc(ts->enc_sample, length, ts->cur_pts, ts->cur_dts);
-      n->pkt_duration = frame_bytes*90000 / (2 * ts->tctx->channels * ts->tctx->sample_rate);
+
+      if(ts->tctx->coded_frame && ts->tctx->coded_frame->pts != AV_NOPTS_VALUE) {
+	n->pkt_duration = ts->tctx->coded_frame->pts - ts->cur_pts;
+      } else {
+	n->pkt_duration = frame_bytes*90000 / (2 * ts->tctx->channels * ts->tctx->sample_rate);
+      }
+
       n->pkt_commercial = pkt->pkt_commercial;
       n->pkt_componentindex = ts->tindex;
       n->pkt_frametype = pkt->pkt_frametype;

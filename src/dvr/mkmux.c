@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <string.h>
+#include <limits.h>
 
 #include "tvheadend.h"
 #include "streaming.h"
@@ -97,6 +98,7 @@ struct mk_mux {
 
   char uuid[16];
   char *title;
+  int webm;
 };
 
 
@@ -104,7 +106,7 @@ struct mk_mux {
  *
  */
 static htsbuf_queue_t *
-mk_build_ebmlheader(void)
+mk_build_ebmlheader(mk_mux_t *mkm)
 {
   htsbuf_queue_t *q = htsbuf_queue_alloc(0);
 
@@ -112,7 +114,7 @@ mk_build_ebmlheader(void)
   ebml_append_uint(q, 0x42f7, 1);
   ebml_append_uint(q, 0x42f2, 4);
   ebml_append_uint(q, 0x42f3, 8);
-  ebml_append_string(q, 0x4282, "matroska");
+  ebml_append_string(q, 0x4282, mkm->webm ? "webm" : "matroska");
   ebml_append_uint(q, 0x4287, 2);
   ebml_append_uint(q, 0x4285, 2);
   return q;
@@ -139,6 +141,40 @@ getuuid(char *id)
 /**
  *
  */
+static int 
+mk_split_vorbis_headers(uint8_t *extradata, int extradata_size, 
+			uint8_t *header_start[3],  int header_len[3])
+{
+  int i;
+  if (extradata_size >= 3 && extradata_size < INT_MAX - 0x1ff && extradata[0] == 2) {
+    int overall_len = 3;
+    extradata++;
+    for (i=0; i<2; i++, extradata++) {
+      header_len[i] = 0;
+      for (; overall_len < extradata_size && *extradata==0xff; extradata++) {
+	header_len[i] += 0xff;
+	overall_len   += 0xff + 1;
+      }
+      header_len[i] += *extradata;
+      overall_len   += *extradata;
+      if (overall_len > extradata_size)
+	return -1;
+    }
+    header_len[2] = extradata_size - overall_len;
+    header_start[0] = extradata;
+    header_start[1] = header_start[0] + header_len[0];
+    header_start[2] = header_start[1] + header_len[1];
+  } else {
+    return -1;
+  }
+  return 0;
+}
+
+
+
+/**
+ *
+ */
 static htsbuf_queue_t *
 mk_build_segment_info(mk_mux_t *mkm)
 {
@@ -147,8 +183,10 @@ mk_build_segment_info(mk_mux_t *mkm)
 
   snprintf(app, sizeof(app), "Tvheadend %s", tvheadend_version);
 
-  ebml_append_bin(q, 0x73a4, mkm->uuid, sizeof(mkm->uuid));
-  ebml_append_string(q, 0x7ba9, mkm->title);
+  if(!mkm->webm)
+    ebml_append_bin(q, 0x73a4, mkm->uuid, sizeof(mkm->uuid));
+  if(!mkm->webm)
+    ebml_append_string(q, 0x7ba9, mkm->title);
   ebml_append_string(q, 0x4d80, "Tvheadend Matroska muxer");
   ebml_append_string(q, 0x5741, app);
   ebml_append_uint(q, 0x2ad7b1, MATROSKA_TIMESCALE);
@@ -226,6 +264,11 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
       codec_id = "A_EAC3";
       break;
 
+    case SCT_VORBIS:
+      tracktype = 2;
+      codec_id = "A_VORBIS";
+      break;
+
     case SCT_MP4A:
     case SCT_AAC:
       tracktype = 2;
@@ -272,7 +315,33 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
 			pktbuf_ptr(ssc->ssc_gh),
 			pktbuf_len(ssc->ssc_gh));
       break;
-      
+
+    case SCT_VORBIS:
+      if(ssc->ssc_gh) {
+	htsbuf_queue_t *cp;
+	uint8_t *header_start[3];
+	int header_len[3];
+	int j;
+	if(mk_split_vorbis_headers(pktbuf_ptr(ssc->ssc_gh), 
+				   pktbuf_len(ssc->ssc_gh),
+				   header_start, 
+				   header_len) < 0)
+	  break;
+
+	cp = htsbuf_queue_alloc(0);
+	
+	ebml_append_xiph_size(cp, 2);
+	
+	for (j = 0; j < 2; j++)
+	  ebml_append_xiph_size(cp, header_len[j]);
+	
+	for (j = 0; j < 3; j++)
+	  htsbuf_append(cp, header_start[j], header_len[j]);
+	
+	ebml_append_master(t, 0x63a2, cp);
+      }
+      break;
+
     case SCT_DVBSUB:
       buf4[0] = ssc->ssc_composition_id >> 8;
       buf4[1] = ssc->ssc_composition_id;
@@ -294,11 +363,16 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
       ebml_append_uint(vi, 0xb0, ssc->ssc_width);
       ebml_append_uint(vi, 0xba, ssc->ssc_height);
 
-      if(ssc->ssc_aspect_num && ssc->ssc_aspect_den) {
-	ebml_append_uint(vi, 0x54b2, 3); // Display width/height is in DAR
+      if(mkm->webm && ssc->ssc_aspect_num && ssc->ssc_aspect_den) {
+	// DAR is not supported by webm
+	ebml_append_uint(vi, 0x54b2, 1);
+	ebml_append_uint(vi, 0x54b0, (ssc->ssc_height * ssc->ssc_aspect_num) / ssc->ssc_aspect_den);
+	ebml_append_uint(vi, 0x54ba, ssc->ssc_height);
+      } else if(ssc->ssc_aspect_num && ssc->ssc_aspect_den) {
+	// Display width/height is in DAR
+	ebml_append_uint(vi, 0x54b2, 3);
 	ebml_append_uint(vi, 0x54b0, ssc->ssc_aspect_num);
 	ebml_append_uint(vi, 0x54ba, ssc->ssc_aspect_den);
-
       }
 
       ebml_append_master(t, 0xe0, vi);
@@ -808,9 +882,12 @@ mk_write_cues(mk_mux_t *mkm)
 /**
  *
  */
-mk_mux_t *mk_mux_create(void)
+mk_mux_t *mk_mux_create(int webm)
 {
   mk_mux_t *mkm = calloc(1, sizeof(struct mk_mux));
+
+  mkm->webm = webm;
+
   return mkm;
 }
 
@@ -873,7 +950,7 @@ mk_mux_init(mk_mux_t *mkm, const char *title, const struct streaming_start *ss)
 
   htsbuf_queue_init(&q, 0);
 
-  ebml_append_master(&q, 0x1a45dfa3, mk_build_ebmlheader());
+  ebml_append_master(&q, 0x1a45dfa3, mk_build_ebmlheader(mkm));
   
   mkm->segment_header_pos = q.hq_size;
   htsbuf_appendq(&q, mk_build_segment_header(0));
