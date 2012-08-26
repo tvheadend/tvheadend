@@ -364,7 +364,7 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
 static const char *escapexmlchars
   (const char *data)
 {
- const char *return_variable;
+ const char *return_variable = "";
  int len = strlen(data);
  int i;
  const char *tmpchar;
