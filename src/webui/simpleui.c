@@ -361,30 +361,105 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
 /**
  * Escape characters that will interfere with xml. - https://github.com/andyb2000
  */
-static const char *escapexmlchars
-  (const char *data)
+/*
+ * Count how many bytes str would contain if it would be rss escapped
+ */
+static int
+rss_escaped_len(const char *str)
 {
- const char *return_variable = "";
- int len = strlen(data);
- int i;
- const char *tmpchar;
+  int i;
+  int len = 0;
 
- for(i = 0; i < len; i++) {
-  tvhlog(LOG_DEBUG, "escapexmlchars", "Running escapexmlchars: %d",data[i]);
-  switch(data[i]) {
-   case '&': tmpchar = "&amp;";        break;
-   case '\"': tmpchar = "&quot;";      break;
-   case '\'': tmpchar = "&apos;";      break;
-   case '<':  tmpchar = "&lt;";        break;
-   case '>':  tmpchar = "&gt;";        break;
-   default:
-	tmpchar = &data[i];
-	break;
-  };
- strcat(return_variable, tmpchar);
- };
- return return_variable;
-};
+  for(i=0; i<strlen(str); i++) {
+    switch (str[i]) {
+    case '>':
+    case '<':  
+      len += 4;
+      break;
+
+    case '&':
+      len += 5;
+      break;
+      
+    case '\"':
+    case '\'':
+      len += 6;
+      break;
+      
+    default:
+      len++;
+      break;
+    }
+  }
+
+  return len;
+}
+
+
+/*
+ * RSS (xml) escape a string
+ */
+static const char*
+rss_escape(const char *str)
+{
+  static char buf[1024];
+  char esc[7];
+  int esc_len;
+  char *p;
+  char *p_end;
+  int len;
+  int i;
+
+  len = rss_escaped_len(str);
+  len = MIN(len, sizeof(buf) - 1);
+
+  p = buf;
+  p_end = buf + len;
+
+  memset(buf, 0, sizeof(buf));
+
+  for(i=0; i<strlen(str); i++) {
+
+    switch (str[i]) {
+    case '<':  
+      strcpy(esc, "&lt;");
+      break;
+
+    case '>':
+      strcpy(esc, "&gt;");
+      break;
+
+    case '&':
+      strcpy(esc, "&amp;");
+      break;
+
+    case '\"':
+      strcpy(esc, "&quot;");
+      break;
+
+    case '\'':
+      strcpy(esc, "&apos;");
+      break;
+
+    default:
+      esc[0] = str[i];
+      esc[1] = 0;
+      break;
+    }
+
+    esc_len = strlen(esc);
+
+    if(p_end < p+esc_len)
+      break;
+
+    strcpy(p, esc);
+    p += esc_len;
+  }
+
+  p[len] = '\0';
+
+  return buf;
+}
 
 
 /**
@@ -401,8 +476,6 @@ page_status(http_connection_t *hc,
   dvr_query_result_t dqr;
   const char *rstatus;
   time_t     now;
-
-  const char *tmpvar;
 
   htsbuf_qprintf(hq, "<?xml version=\"1.0\"?>\n"
 		 "<currentload>\n"
@@ -433,8 +506,6 @@ page_status(http_connection_t *hc,
       localtime_r(&de->de_start, &a);
       localtime_r(&de->de_stop, &b);
 
-      tmpvar = escapexmlchars("Test");
-
       htsbuf_qprintf(hq, 
 		    "<recording>"
 		     "<start>"
@@ -458,7 +529,7 @@ page_status(http_connection_t *hc,
 		     b.tm_hour, b.tm_min, 
 		     de->de_stop, 
 		     de->de_stop_extra, 
-		     lang_str_get(de->de_title, NULL));
+		     rss_escape(lang_str_get(de->de_title, NULL)));
 
       rstatus = val2str(de->de_sched_state, recstatustxt);
       htsbuf_qprintf(hq, "<status>%s</status></recording>\n", rstatus);
