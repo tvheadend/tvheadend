@@ -809,5 +809,5 @@ http_serve(int fd, void *opaque, struct sockaddr_in *peer,
 void
 http_server_init(void)
 {
-  http_server = tcp_server_create(9981, http_serve, NULL);
+  http_server = tcp_server_create(webui_port, http_serve, NULL);
 }
