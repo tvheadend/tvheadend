@@ -77,7 +77,7 @@ tvheadend.epggrab = function() {
     { root: 'epggrabSettings' },
     [ 
       'module', 'interval',
-      'channel_rename', 'channel_renumber', 'channel_reicon',
+      'channel_rename', 'channel_renumber', 'channel_reicon'
     ]
   );
 
@@ -172,12 +172,12 @@ tvheadend.epggrab = function() {
    */
   var channelRename = new Ext.form.Checkbox({
     name       : 'channel_rename',
-    fieldLabel : 'Update channel name',
+    fieldLabel : 'Update channel name'
   });
 
   var channelRenumber = new Ext.form.Checkbox({
     name       : 'channel_renumber',
-    fieldLabel : 'Update channel number',
+    fieldLabel : 'Update channel number'
   });
 
   var channelReicon = new Ext.form.Checkbox({
@@ -200,7 +200,7 @@ tvheadend.epggrab = function() {
       intervalUnit,
       channelRename,
       channelRenumber,
-      channelReicon,
+      channelReicon
     ]
   });
   
@@ -231,14 +231,14 @@ tvheadend.epggrab = function() {
       header    : 'Module',
       dataIndex : 'name',
       width     : 200,
-      sortable  : false,
+      sortable  : false
     },
     {
       header    : 'Path',
       dataIndex : 'path',
       width     : 300,
-      sortable  : false,
-    },
+      sortable  : false
+    }
   ]);
 
   var externalGrid = new Ext.grid.EditorGridPanel({
@@ -249,9 +249,9 @@ tvheadend.epggrab = function() {
     height         : 150,
     frame          : false,
     viewConfig     : {
-      forceFit  : true,
+      forceFit  : true
     },
-    iconCls        : 'icon-grid',
+    iconCls        : 'icon-grid'
   });
 
   var externalPanel = new Ext.form.FieldSet({
@@ -287,7 +287,7 @@ tvheadend.epggrab = function() {
       header    : 'Module',
       dataIndex : 'name',
       width     : 200,
-      sortable  : false,
+      sortable  : false
     }
   ]);
 
@@ -299,9 +299,9 @@ tvheadend.epggrab = function() {
     height         : 150,
     frame          : false,
     viewConfig     : {
-      forceFit  : true,
+      forceFit  : true
     },
-    iconCls        : 'icon-grid',
+    iconCls        : 'icon-grid'
   });
 
   var otaPanel = new Ext.form.FieldSet({
@@ -312,7 +312,7 @@ tvheadend.epggrab = function() {
     collapsed   : true,
     items       : [
       otaGrid
-    ],
+    ]
   });
 
   /* ****************************************************************
@@ -323,7 +323,7 @@ tvheadend.epggrab = function() {
     text     : "Save configuration",
     tooltip  : 'Save changes made to configuration below',
     iconCls  :'save',
-    handler  : saveChanges,
+    handler  : saveChanges
   });
 
   var helpButton = new Ext.Button({
@@ -349,7 +349,7 @@ tvheadend.epggrab = function() {
     items         : [
       simplePanel,
       externalPanel,
-      otaPanel,
+      otaPanel
     ],
     tbar: [
       saveButton,
