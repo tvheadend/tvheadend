@@ -359,7 +359,7 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
- * Escape characters that will interfere with xml.
+ * Escape characters that will interfere with xml. - https://github.com/andyb2000
  */
 static const char *escapexmlchars
   (const char *data)
