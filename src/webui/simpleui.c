@@ -366,16 +366,28 @@ page_status(http_connection_t *hc,
 	    const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
-  int c, i, cc, timeleft, timelefttemp;
+  int c, i, cc, timeleft, timelefttemp, loads;
   struct tm a, b;
   dvr_entry_t *de;
   dvr_query_result_t dqr;
   const char *rstatus;
   time_t     now;
+  double avg[3]; 
 
   htsbuf_qprintf(hq, "<?xml version=\"1.0\"?>\n"
-		 "<currentload>\n"
-		 "<recordings>\n");
+                 "<currentload>\n");
+
+  loads = getloadavg (avg, 3); 
+  if (loads == -1) {
+        tvhlog(LOG_DEBUG, "webui",  "Error getting load average from getloadavg()");
+        loads = 0;
+        /* should we return an error or a 0 on error */
+        htsbuf_qprintf(hq, "<systemload>0</systemload>\n");
+  } else {
+        htsbuf_qprintf(hq, "<systemload>%f,%f,%f</systemload>\n",avg[0],avg[1],avg[2]);
+  };
+
+  htsbuf_qprintf(hq,"<recordings>\n");
 
   pthread_mutex_lock(&global_lock);
 
