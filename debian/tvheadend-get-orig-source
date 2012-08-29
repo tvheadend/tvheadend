@@ -2,15 +2,11 @@
 
 # Script used to generate the orig source tarball for libcec.
 
-TVH_GIT_URL="git://github.com/opdenkamp/tvheadend.git"
-TVH_GIT_BRANCH="ppa"
-TVH_VERSION="2.99"
+TVH_GIT_URL="git://github.com/tvheadend/tvheadend.git"
+TVH_VERSION="3.1"
 
 rm -rf "tvheadend-${TVH_VERSION}"
 git clone "$TVH_GIT_URL" "tvheadend-${TVH_VERSION}"
-cd "tvheadend-${TVH_VERSION}"
-git checkout -b "$TVH_GIT_BRANCH" origin/"$TVH_GIT_BRANCH"
-cd ..
 
 # Remove temp files and other cruft from source tarball
 # The find command snippet here was taken from debhelper's dh_clean command
