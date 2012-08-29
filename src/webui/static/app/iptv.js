@@ -115,7 +115,7 @@ tvheadend.iptv = function(adapterId) {
         var val = value ? tvheadend.servicetypeStore.getById(value) : null;
 		    return val ? val.get('str') :
 		      '<span class="tvh-grid-unset">Unset</span>';
-	    },
+	    }
   },
   {
 	    header: "PMT PID",

@@ -1150,10 +1150,6 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 					 'of diskspace. You have been warned');
 	    }
 	}),
-	new Ext.form.Checkbox({
-	    fieldLabel: 'Turn off adapter when idle',
-	    name: 'poweroff'
-	}),
 	{
 	    fieldLabel: 'NIT-o Network ID',
 	    name: 'nitoid',
@@ -1177,7 +1173,13 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	    store: ['DiSEqC 1.0 / 2.0', 'DiSEqC 1.1 / 2.1']
 	});
 	items.push(v);
-    }
+
+	  v = new Ext.form.Checkbox({
+	    fieldLabel: 'Turn off LNB when idle',
+	    name: 'poweroff'
+	});
+  items.push(v);
+  }
     
     var confform = new Ext.FormPanel({
 	title:'Adapter configuration',
