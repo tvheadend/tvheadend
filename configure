@@ -47,9 +47,8 @@ check_cc_option sse2
 #
 # Python
 #
-check_py || die
-check_py_import zlib pyzlib || die
-check_py_import tarfile pytar || die
+check_py || die 'Unable to detect python'
+check_py_import zlib urllib2 tarfile|| die 'Your python does not have all required python packages.'
 
 #
 # SSL
@@ -99,7 +98,8 @@ fi
 if enabled linuxdvb && enabled dvbscan; then
   if [ ! -d ${ROOTDIR}/data/dvb-scan ]; then
     echo -n "Fetching dvb-scan files... "
-    ${ROOTDIR}/support/getmuxlist &> /dev/null || die "Failed to fetch dvb-scan files (use --disable-dvbscan to skip)"
+    $PYTHON ${ROOTDIR}/support/getmuxlist &> /dev/null || die "Failed to fetch dvb-scan files (use --disable-dvbscan to skip) or use --python to define an alternative python 
+interpretor"
     echo "done"
   fi
 fi

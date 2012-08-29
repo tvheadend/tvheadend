@@ -194,6 +194,9 @@ function parse_args
         opt=${opt#*-}
         disable $opt 1
         ;;
+      python)
+        PYTHON=$val
+        ;;
     esac
   done
 }
@@ -305,20 +308,19 @@ EOF
 # Check python import
 function check_py_import
 {
-  local hdr=$1
-  local nam=$2
-  [ -z "$nam" ] && nam=$hdr
+  
+  for py_pkg in $@;
+  do
+    echo -ne "checking for py module $py_pkg ...${TAB}"
 
-  echo -ne "checking for py module $hdr ...${TAB}"
-
-  # Enable if supported
-  if check_py "import $hdr"; then
-    echo "ok"
-    enable $nam
-  else
-    echo "fail"
-    return 1
-  fi
+    # Enable if supported
+    if check_py "import $py_pkg"; then
+      echo "ok"
+    else
+      echo "fail"
+      return 1
+    fi
+    done
 }
 
 # ###########################################################################
@@ -365,6 +367,12 @@ function print_config
   echo -e "  Data files:${TAB}${datadir}"
   echo -e "  Man pages:${TAB}${mandir}"
   echo ""
+
+  # Misc
+  echo "Misc:"
+  echo -e "  Python:${TAB}$(which $PYTHON)"
+  echo ""
+
 }
 
 # Write configuration
