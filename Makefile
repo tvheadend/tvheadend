@@ -38,7 +38,7 @@ LDFLAGS += -lrt -ldl -lpthread
 # Binaries/Scripts
 #
 
-MKBUNDLE = $(CURDIR)/support/mkbundle
+MKBUNDLE = $(PYTHON) $(CURDIR)/support/mkbundle
 
 #
 # Debug/Output

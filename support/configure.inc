@@ -183,7 +183,7 @@ function parse_args
       *dir|prefix)
         eval "$opt=$val"
         ;;
-      cc|arch|cpu|platform)
+      cc|arch|cpu|platform|python)
         eval "`toupper $opt`=$val"
         ;;
       enable-*)
@@ -337,6 +337,10 @@ function print_config
   echo -e "  Build for arch:${TAB}${ARCH}"
   echo ""
 
+  echo "Binaries:"
+  echo -e "  Using PYTHON:${TAB}${PYTHON}"
+  echo ""
+
   # Options
   echo "Options:"
   for opt in ${OPTIONS[*]}; do
@@ -383,7 +387,9 @@ function write_config
 ROOTDIR  ?= ${ROOTDIR}
 BUILDDIR ?= ${ROOTDIR}/build.${PLATFORM}
 OSENV    ?= ${OSENV}
-ARCH      = ${ARCH}
+ARCH     ?= ${ARCH}
+CC       ?= ${CC}
+PYTHON   ?= ${PYTHON}
 CFLAGS   += ${CFLAGS}
 LDFLAGS  += ${LDFLAGS}
 prefix    = ${prefix}
