@@ -45,6 +45,13 @@ check_cc_option mmx
 check_cc_option sse2
 
 #
+# Python
+#
+check_py || die
+check_py_import zlib pyzlib || die
+check_py_import tarfile pytar || die
+
+#
 # SSL
 #
 if check_pkg openssl || check_pkg libssl; then
@@ -92,7 +99,7 @@ fi
 if enabled linuxdvb && enabled dvbscan; then
   if [ ! -d ${ROOTDIR}/data/dvb-scan ]; then
     echo -n "Fetching dvb-scan files... "
-    ${ROOTDIR}/support/getmuxlist &> /dev/null
+    ${ROOTDIR}/support/getmuxlist &> /dev/null || die "Failed to fetch dvb-scan files (use --disable-dvbscan to skip)"
     echo "done"
   fi
 fi
