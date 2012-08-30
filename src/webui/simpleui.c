@@ -359,108 +359,6 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
- * Escape characters that will interfere with xml. - https://github.com/andyb2000
- * Count how many bytes str would contain if it would be rss escapped
- */
-static int
-rss_escaped_len(const char *str)
-{
-  int i;
-  int len = 0;
-
-  for(i=0; i<strlen(str); i++) {
-    switch (str[i]) {
-    case '>':
-    case '<':  
-      len += 4;
-      break;
-
-    case '&':
-      len += 5;
-      break;
-      
-    case '\"':
-    case '\'':
-      len += 6;
-      break;
-      
-    default:
-      len++;
-      break;
-    }
-  }
-
-  return len;
-}
-
-
-/*
- * RSS (xml) escape a string
- */
-static const char*
-rss_escape(const char *str)
-{
-  static char buf[1024];
-  char esc[7];
-  int esc_len;
-  char *p;
-  char *p_end;
-  int len;
-  int i;
-
-  len = rss_escaped_len(str);
-  len = MIN(len, sizeof(buf) - 1);
-
-  p = buf;
-  p_end = buf + len;
-
-  memset(buf, 0, sizeof(buf));
-
-  for(i=0; i<strlen(str); i++) {
-
-    switch (str[i]) {
-    case '<':  
-      strcpy(esc, "&lt;");
-      break;
-
-    case '>':
-      strcpy(esc, "&gt;");
-      break;
-
-    case '&':
-      strcpy(esc, "&amp;");
-      break;
-
-    case '\"':
-      strcpy(esc, "&quot;");
-      break;
-
-    case '\'':
-      strcpy(esc, "&apos;");
-      break;
-
-    default:
-      esc[0] = str[i];
-      esc[1] = 0;
-      break;
-    }
-
-    esc_len = strlen(esc);
-
-    if(p_end < p+esc_len)
-      break;
-
-    strcpy(p, esc);
-    p += esc_len;
-  }
-
-  p[len] = '\0';
-
-  return buf;
-}
-
-
-/**
  * 
  */
 static int
@@ -539,10 +437,10 @@ page_status(http_connection_t *hc,
 		     b.tm_hour, b.tm_min, 
 		     de->de_stop, 
 		     de->de_stop_extra, 
-		     rss_escape(lang_str_get(de->de_title, NULL)));
+		     http_escape(lang_str_get(de->de_title, NULL)));
 
       rstatus = val2str(de->de_sched_state, recstatustxt);
-      htsbuf_qprintf(hq, "<status>%s</status></recording>\n", rss_escape(rstatus));
+      htsbuf_qprintf(hq, "<status>%s</status></recording>\n", http_escape(rstatus));
       cc++;
       timeleft = -1;
     }
