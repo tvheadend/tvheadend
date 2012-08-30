@@ -55,10 +55,6 @@ epggrab_channel_t *epggrab_channel_find
   ( epggrab_channel_tree_t *chs, const char *id, int create, int *save,
     epggrab_module_t *owner );
 
-epggrab_channel_t *epggrab_channel_find_byname
-  ( epggrab_channel_tree_t *chs, const char *chname, epggrab_module_t *owner );
-
-
 /* **************************************************************************
  * Internal module routines
  * *************************************************************************/

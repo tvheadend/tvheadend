@@ -568,11 +568,10 @@ static epggrab_channel_t *_xmltv_find_epggrab_channel
                               (epggrab_module_t*)mod);
 }
 
-static epggrab_channel_t *_xmltv_find_epggrab_channel_byname
-  ( epggrab_module_t *mod, const char *chname )
+static channel_t *_xmltv_find_epggrab_channel_byname
+  ( const char *chname )
 {
-  tvhlog(LOG_DEBUG, "_xmltv_find_epggrab_channel_byname", "Calling epggrab_channel_find_byname with chname: %s",chname);
-  return epggrab_channel_find_byname(&_xmltv_channels, chname, (epggrab_module_t*)mod);
+  return channel_find_by_name(chname,0,0);
 }
 
 
@@ -623,6 +622,7 @@ static int xmltv_parse_lineups
   int update_counter = 0;
   service_t *channel_service_id;
   epggrab_channel_t *ec;
+  channel_t *chan_t;
 
   if((lineups = htsmsg_get_map(body, "tags")) == NULL) return 0;
   if((lineups = htsmsg_get_map(lineups, "xmltv-lineup")) == NULL) return 0;
@@ -715,35 +715,55 @@ static int xmltv_parse_lineups
 cid = 0;
 /* check if we got a valid entry and call the searcher routine */
 if(sscanf(chan_service_id, "%d", &cid) <= 0) {
-    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "WARNING: converting chan_service_id to cid failed");
-	cid = 0;
-} else {
-	tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "convert chan_service_id to cid SUCCESS %d",cid);
+        cid = 0;
+};
+
+/* Skip all radio channels for now */
+if (strcmp(lineup_section, "Radio channels") == 0) {
+ tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Skipping entry as its Radio channels");
+ continue;
 };
 
 /* If we have stb_preset set then its a sky entry, which dont give us service_id so try pattern match on the name */
 if (stb_preset) {
  tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Searching for channel by NAME (%s)",chan_name);
- ec = 0;
- ec = _xmltv_find_epggrab_channel_byname(mod, chan_name);
- tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Channel search by name returned");
- if (ec != 0) {
-  tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Channel search FOUND MATCH BY NAME: %s",ec->id);
+ chan_t = 0;
+ chan_t = _xmltv_find_epggrab_channel_byname(chan_name);
+ if (chan_t != 0) {
+  tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Channel search FOUND MATCH BY NAME: %d",chan_t->ch_id);
   /* We'll fake a cid here to make the Sky channel lineup with other channels, so the rest of this routine will continue and 'pretend' sky are normal */
   /* id name icon number channel (mapped channel) */
+  cid = chan_t->ch_id;
+  changed_entry = 0;
+  if (epggrab_channel_renumber) {
+   tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "SKY Updating chanid: %d name: %s - Channel Number",chan_t->ch_id, chan_t->ch_name);
+   channel_set_number(chan_t, atoi(chan_number));
+   changed_entry = 1;
+  };
+  if (epggrab_channel_rename) {
+    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "SKY Updating chanid: %d name: %s - Channel Rename",chan_t->ch_id, chan_t->ch_name);
+    save |= channel_rename(chan_t, chan_name);
+    changed_entry = 1;
+   };
+   if (epggrab_channel_reicon) {
+    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "SKY Updating chanid: %d name: %s - Channel Icon (%s)",chan_t->ch_id, chan_t->ch_name, logo);
+    channel_set_icon(chan_t, logo);
+    changed_entry = 1;
+   };
+   if (changed_entry == 1) {
+    update_counter++;
+   };
  };
-};
+} else {
 
 /* Skipping Regional variations in the lineup for now */
 if((cid != 0) && (strcmp(lineup_section, "Regional") != 0)) {
 	/* Found a valid cid to search for */
-  tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Channel int: %d (name: %s)",cid, chan_name);
   channel_service_id = _xmltv_find_service(cid);
   if (channel_service_id && channel_service_id->s_ch) {
    ec  =_xmltv_find_epggrab_channel(mod, cid, 1, &save);
    /* Check for primary, update channel number if primary, or just update icon regardless */
    ec->channel = channel_service_id->s_ch;
-   tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Flags for updating, number: %d  name: %d  logo: %d",epggrab_channel_renumber,epggrab_channel_rename,epggrab_channel_reicon);
    changed_entry = 0;
    if (service_is_primary_epg(channel_service_id)) {
    if (epggrab_channel_renumber) {
@@ -762,15 +782,15 @@ if((cid != 0) && (strcmp(lineup_section, "Regional") != 0)) {
     save |= epggrab_channel_set_icon(ec, logo);
     changed_entry = 1;
    };
-   update_counter++;
    if (changed_entry == 1) {
     update_counter++;
    };
   };
 };
+}; /* stb_preset */
 }; /* HTSMSG_FOREACH e */
 
-  tvhlog(LOG_INFO, "xmltv", "Updated %d channel name/number/icons",update_counter);
+  tvhlog(LOG_NOTICE, "xmltv", "Updated %d channel name/number/icons",update_counter);
   tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "End xml_parse_lineups function");
   return 0;
 };
