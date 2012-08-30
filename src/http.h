@@ -139,4 +139,7 @@ int http_access_verify(http_connection_t *hc, int mask);
 
 void http_deescape(char *s);
 
+int http_escaped_len(const char *str);
+const char* http_escape(const char *str);
+
 #endif /* HTTP_H_ */
