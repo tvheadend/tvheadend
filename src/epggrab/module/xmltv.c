@@ -537,7 +537,7 @@ static int _xmltv_parse_channel
   return save;
 }
 
-/* Channel search code - https://github.com/andyb2000 Aug 2012 */
+/* Channel Lineup parsing and search code - https://github.com/andyb2000 Aug 2012 */
 
 /*static service_t *xmltv_find_service ( int sid )*/
 static service_t *_xmltv_find_service ( int sid )
@@ -577,7 +577,6 @@ static channel_t *_xmltv_find_epggrab_channel_byname
 
 
 /** sub-function to retrieve variable from lineup */
-
 static const char *xmltv_lineup_returnvar
   (epggrab_module_t *mod, htsmsg_field_t *g)
 {
@@ -591,7 +590,6 @@ static const char *xmltv_lineup_returnvar
 };
 
 /** sub-function to retrieve sub variable from lineup */
-
 static const char *xmltv_lineup_returnvarattrib
   (epggrab_module_t *mod, htsmsg_field_t *g)
 {
@@ -605,8 +603,76 @@ static const char *xmltv_lineup_returnvarattrib
  return return_variable_attrib;
 };
 
+/* stb Sky update code */
+static int stb_channel (const char *chan_name, const char *chan_number, const char *logo)
+{
+ channel_t *chan_t = 0;
+ int cid = 0;
+ int changed_entry = 0;
+ int save = 0;
 
-/** Parse the channels we get from lineup
+ chan_t = _xmltv_find_epggrab_channel_byname(chan_name);
+ if (chan_t != 0) {
+  tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Channel search FOUND MATCH BY NAME: %s",chan_t->ch_name);
+  /* We'll fake a cid here to make the Sky channel lineup with other channels, so the rest of this routine will continue and 'pretend' sky are normal */
+  /* id name icon number channel (mapped channel) */
+  cid = chan_t->ch_id;
+  changed_entry = 0;
+  if (epggrab_channel_renumber) {
+   tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "SKY Updating chanid: %d name: %s - Channel Number",chan_t->ch_id, chan_t->ch_name);
+   channel_set_number(chan_t, atoi(chan_number));
+   changed_entry = 1;
+  };
+  if (epggrab_channel_rename) {
+    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "SKY Updating chanid: %d name: %s - Channel Rename",chan_t->ch_id, chan_t->ch_name);
+    save |= channel_rename(chan_t, chan_name);
+    changed_entry = 1;
+   };
+   if (epggrab_channel_reicon) {
+    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "SKY Updating chanid: %d name: %s - Channel Icon (%s)",chan_t->ch_id, chan_t->ch_name, logo);
+    channel_set_icon(chan_t, logo);
+    changed_entry = 1;
+   };
+ };
+ return changed_entry;
+};
+
+/* Normal channge update code (freesat/freeview) */
+static int xmltv_channelupdate (epggrab_module_t *mod, const int cid, const char *chan_name, const char *chan_number, const char *logo)
+{
+  service_t *channel_service_id;
+  epggrab_channel_t *ec;
+  int changed_entry = 0, save = 0;
+
+  channel_service_id = _xmltv_find_service(cid);
+  if (channel_service_id && channel_service_id->s_ch) {
+   ec  =_xmltv_find_epggrab_channel(mod, cid, 1, &save);
+   /* Check for primary, update channel number if primary, or just update icon regardless */
+   ec->channel = channel_service_id->s_ch;
+   changed_entry = 0;
+   if (service_is_primary_epg(channel_service_id)) {
+   if (epggrab_channel_renumber) {
+    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Updating channelid: %d name: %s - Channel Number",channel_service_id->s_dvb_service_id, channel_service_id->s_nicename);
+    save |= epggrab_channel_set_number(ec, atoi(chan_number));
+    changed_entry = 1;
+   };
+   };
+   if (epggrab_channel_rename) {
+    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Updating channelid: %d name: %s - Channel Name",channel_service_id->s_dvb_service_id, channel_service_id->s_nicename);
+    save |= epggrab_channel_set_name(ec, chan_name);
+    changed_entry = 1;
+   };
+   if (epggrab_channel_reicon) {
+    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Updating channelid: %d name: %s - Channel Icon",channel_service_id->s_dvb_service_id, channel_service_id->s_nicename);
+    save |= epggrab_channel_set_icon(ec, logo);
+    changed_entry = 1;
+   };
+  };
+
+return changed_entry;
+};
+
+/** Parse the channels we get from a lineup xml
 *
 */
 static int xmltv_parse_lineups
@@ -617,12 +683,9 @@ static int xmltv_parse_lineups
   htsmsg_t *lineups, *tag, *chandata;
   const char *chan_number = "0", *chan_name = "", *short_name, *logo = "", *commercial_free, *chan_format, *chan_aspect_ratio, *chan_network_id, *chan_service_id = "0", *chan_lcn, *chan_service_name, *chan_encrypted, *lineup_section= "", *stb_preset = 0;
 
-  int save = 0, changed_entry = 0;
+  int changed_entry = 0;
   int cid = 0;
   int update_counter = 0;
-  service_t *channel_service_id;
-  epggrab_channel_t *ec;
-  channel_t *chan_t;
 
   if((lineups = htsmsg_get_map(body, "tags")) == NULL) return 0;
   if((lineups = htsmsg_get_map(lineups, "xmltv-lineup")) == NULL) return 0;
@@ -726,67 +789,22 @@ if (strcmp(lineup_section, "Radio channels") == 0) {
 
 /* If we have stb_preset set then its a sky entry, which dont give us service_id so try pattern match on the name */
 if (stb_preset) {
- tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Searching for channel by NAME (%s)",chan_name);
- chan_t = 0;
- chan_t = _xmltv_find_epggrab_channel_byname(chan_name);
- if (chan_t != 0) {
-  tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Channel search FOUND MATCH BY NAME: %d",chan_t->ch_id);
-  /* We'll fake a cid here to make the Sky channel lineup with other channels, so the rest of this routine will continue and 'pretend' sky are normal */
-  /* id name icon number channel (mapped channel) */
-  cid = chan_t->ch_id;
-  changed_entry = 0;
-  if (epggrab_channel_renumber) {
-   tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "SKY Updating chanid: %d name: %s - Channel Number",chan_t->ch_id, chan_t->ch_name);
-   channel_set_number(chan_t, atoi(chan_number));
-   changed_entry = 1;
-  };
-  if (epggrab_channel_rename) {
-    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "SKY Updating chanid: %d name: %s - Channel Rename",chan_t->ch_id, chan_t->ch_name);
-    save |= channel_rename(chan_t, chan_name);
-    changed_entry = 1;
-   };
-   if (epggrab_channel_reicon) {
-    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "SKY Updating chanid: %d name: %s - Channel Icon (%s)",chan_t->ch_id, chan_t->ch_name, logo);
-    channel_set_icon(chan_t, logo);
-    changed_entry = 1;
-   };
-   if (changed_entry == 1) {
-    update_counter++;
-   };
- };
+ tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Sky lineup detected - searching for channel by NAME (%s)",chan_name);
+  /* call the stb function */
+
+ changed_entry = stb_channel (chan_name, chan_number, logo);
+ if (changed_entry == 1)
+  update_counter++;
+
 } else {
 
-/* Skipping Regional variations in the lineup for now */
-if((cid != 0) && (strcmp(lineup_section, "Regional") != 0)) {
-	/* Found a valid cid to search for */
-  channel_service_id = _xmltv_find_service(cid);
-  if (channel_service_id && channel_service_id->s_ch) {
-   ec  =_xmltv_find_epggrab_channel(mod, cid, 1, &save);
-   /* Check for primary, update channel number if primary, or just update icon regardless */
-   ec->channel = channel_service_id->s_ch;
-   changed_entry = 0;
-   if (service_is_primary_epg(channel_service_id)) {
-   if (epggrab_channel_renumber) {
-    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Updating channelid: %d name: %s - Channel Number",channel_service_id->s_dvb_service_id, channel_service_id->s_nicename);
-    save |= epggrab_channel_set_number(ec, atoi(chan_number));
-    changed_entry = 1;
-   };
-   };
-   if (epggrab_channel_rename) {
-    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Updating channelid: %d name: %s - Channel Name",channel_service_id->s_dvb_service_id, channel_service_id->s_nicename);
-    save |= epggrab_channel_set_name(ec, chan_name);
-    changed_entry = 1;
-   };
-   if (epggrab_channel_reicon) {
-    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Updating channelid: %d name: %s - Channel Icon",channel_service_id->s_dvb_service_id, channel_service_id->s_nicename);
-    save |= epggrab_channel_set_icon(ec, logo);
-    changed_entry = 1;
-   };
-   if (changed_entry == 1) {
-    update_counter++;
-   };
-  };
-};
+ /* Skipping Regional variations in the lineup for now */
+ if((cid != 0) && (strcmp(lineup_section, "Regional") != 0)) {
+  changed_entry = xmltv_channelupdate ( mod, cid, chan_name, chan_number, logo);
+  if (changed_entry == 1)
+   update_counter++;
+ }; /* lineup_section Regional */
+
 }; /* stb_preset */
 }; /* HTSMSG_FOREACH e */
 
