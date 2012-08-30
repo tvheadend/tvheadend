@@ -358,7 +358,6 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
-
 /**
  * 
  */
@@ -367,16 +366,29 @@ page_status(http_connection_t *hc,
 	    const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
-  int c, i, cc, timeleft, timelefttemp;
+  int c, i, cc, timeleft, timelefttemp, loads;
   struct tm a, b;
   dvr_entry_t *de;
   dvr_query_result_t dqr;
   const char *rstatus;
   time_t     now;
+  double avg[3]; 
+  char buf[500];
 
   htsbuf_qprintf(hq, "<?xml version=\"1.0\"?>\n"
-		 "<currentload>\n"
-		 "<recordings>\n");
+                 "<currentload>\n");
+
+  loads = getloadavg (avg, 3); 
+  if (loads == -1) {
+        tvhlog(LOG_DEBUG, "webui",  "Error getting load average from getloadavg()");
+        loads = 0;
+        /* should we return an error or a 0 on error */
+        htsbuf_qprintf(hq, "<systemload>0</systemload>\n");
+  } else {
+        htsbuf_qprintf(hq, "<systemload>%f,%f,%f</systemload>\n",avg[0],avg[1],avg[2]);
+  };
+
+  htsbuf_qprintf(hq,"<recordings>\n");
 
   pthread_mutex_lock(&global_lock);
 
@@ -403,6 +415,7 @@ page_status(http_connection_t *hc,
       localtime_r(&de->de_start, &a);
       localtime_r(&de->de_stop, &b);
 
+      html_escape(buf, lang_str_get(de->de_title, NULL), sizeof(buf));
       htsbuf_qprintf(hq, 
 		    "<recording>"
 		     "<start>"
@@ -425,11 +438,12 @@ page_status(http_connection_t *hc,
 		     b.tm_year+1900, b.tm_mon, b.tm_mday, 
 		     b.tm_hour, b.tm_min, 
 		     de->de_stop, 
-		     de->de_stop_extra, 
-		     lang_str_get(de->de_title, NULL));
+		     de->de_stop_extra,
+         buf);
 
       rstatus = val2str(de->de_sched_state, recstatustxt);
-      htsbuf_qprintf(hq, "<status>%s</status></recording>\n", rstatus);
+      html_escape(buf, rstatus, sizeof(buf));
+      htsbuf_qprintf(hq, "<status>%s</status></recording>\n", buf);
       cc++;
       timeleft = -1;
     }

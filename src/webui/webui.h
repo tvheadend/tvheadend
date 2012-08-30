@@ -27,6 +27,9 @@ void simpleui_start(void);
 
 void extjs_start(void);
 
+size_t html_escaped_len(const char *src);
+const char* html_escape(char *dst, const char *src, size_t len);
+
 #if ENABLE_LINUXDVB
 void extjs_list_dvb_adapters(htsmsg_t *array);
 void extjs_start_dvb(void);
