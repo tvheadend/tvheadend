@@ -24,15 +24,13 @@
 #include <string.h>
 #include <errno.h>
 
-
-
-
 #include "tvheadend.h"
 #include "channels.h"
 #include "subscriptions.h"
 #include "serviceprobe.h"
 #include "streaming.h"
 #include "service.h"
+#include "dvb/dvb.h"
 
 /* List of transports to be probed, protected with global_lock */
 static struct service_queue serviceprobe_queue;  
@@ -87,6 +85,7 @@ serviceprobe_thread(void *aux)
   int run;
   const char *err;
   channel_t *ch;
+  uint32_t checksubscr;
 
   pthread_mutex_lock(&global_lock);
 
@@ -98,8 +97,8 @@ serviceprobe_thread(void *aux)
     while((t = TAILQ_FIRST(&serviceprobe_queue)) == NULL) {
 
       if(was_doing_work) {
-	tvhlog(LOG_INFO, "serviceprobe", "Now idle");
-	was_doing_work = 0;
+        tvhlog(LOG_INFO, "serviceprobe", "Now idle");
+        was_doing_work = 0;
       }
       pthread_cond_wait(&serviceprobe_cond, &global_lock);
     }
@@ -109,102 +108,114 @@ serviceprobe_thread(void *aux)
       was_doing_work = 1;
     }
 
-    tvhlog(LOG_INFO, "serviceprobe", "%20s: checking...",
-	   t->s_svcname);
+    checksubscr = !t->s_dvb_mux_instance->tdmi_adapter->tda_skip_checksubscr;
 
-    s = subscription_create_from_service(t, "serviceprobe", &sq.sq_st, 0);
-    if(s == NULL) {
-      t->s_sp_onqueue = 0;
-      TAILQ_REMOVE(&serviceprobe_queue, t, s_sp_link);
-      tvhlog(LOG_INFO, "serviceprobe", "%20s: could not subscribe",
-	     t->s_svcname);
-      continue;
+    if (checksubscr) {
+      tvhlog(LOG_INFO, "serviceprobe", "%20s: checking...",
+       t->s_svcname);
+
+      s = subscription_create_from_service(t, "serviceprobe", &sq.sq_st, 0);
+      if(s == NULL) {
+        t->s_sp_onqueue = 0;
+        TAILQ_REMOVE(&serviceprobe_queue, t, s_sp_link);
+        tvhlog(LOG_INFO, "serviceprobe", "%20s: could not subscribe",
+         t->s_svcname);
+        continue;
+      }
     }
 
     service_ref(t);
     pthread_mutex_unlock(&global_lock);
 
-    run = 1;
-    pthread_mutex_lock(&sq.sq_mutex);
+    if (checksubscr) {
+      run = 1;
+      pthread_mutex_lock(&sq.sq_mutex);
 
-    while(run) {
+      while(run) {
 
-      while((sm = TAILQ_FIRST(&sq.sq_queue)) == NULL)
-	pthread_cond_wait(&sq.sq_cond, &sq.sq_mutex);
-      TAILQ_REMOVE(&sq.sq_queue, sm, sm_link);
+        while((sm = TAILQ_FIRST(&sq.sq_queue)) == NULL)
+          pthread_cond_wait(&sq.sq_cond, &sq.sq_mutex);
 
-      pthread_mutex_unlock(&sq.sq_mutex);
+        TAILQ_REMOVE(&sq.sq_queue, sm, sm_link);
 
-      if(sm->sm_type == SMT_SERVICE_STATUS) {
-	int status = sm->sm_code;
+        pthread_mutex_unlock(&sq.sq_mutex);
 
-	if(status & TSS_PACKETS) {
-	  run = 0;
-	  err = NULL;
-	} else if(status & (TSS_GRACEPERIOD | TSS_ERRORS)) {
-	  run = 0;
-	  err = service_tss2text(status);
-	}
+        if(sm->sm_type == SMT_SERVICE_STATUS) {
+          int status = sm->sm_code;
+
+          if(status & TSS_PACKETS) {
+            run = 0;
+            err = NULL;
+          } else if(status & (TSS_GRACEPERIOD | TSS_ERRORS)) {
+            run = 0;
+            err = service_tss2text(status);
+          }
+        }
+
+        streaming_msg_free(sm);
+        pthread_mutex_lock(&sq.sq_mutex);
       }
 
-      streaming_msg_free(sm);
-      pthread_mutex_lock(&sq.sq_mutex);
+      streaming_queue_clear(&sq.sq_queue);
+      pthread_mutex_unlock(&sq.sq_mutex);
+    } else {
+      err = NULL;
     }
-
-    streaming_queue_clear(&sq.sq_queue);
-    pthread_mutex_unlock(&sq.sq_mutex);
-
+ 
     pthread_mutex_lock(&global_lock);
-    subscription_unsubscribe(s);
+
+    if (checksubscr) {
+      subscription_unsubscribe(s);
+    }
 
     if(t->s_status != SERVICE_ZOMBIE) {
 
       if(err != NULL) {
-	tvhlog(LOG_INFO, "serviceprobe", "%20s: skipped: %s",
-	       t->s_svcname, err);
+        tvhlog(LOG_INFO, "serviceprobe", "%20s: skipped: %s",
+        t->s_svcname, err);
       } else if(t->s_ch == NULL) {
-	const char *str;
+        const char *str;
 
-	ch = channel_find_by_name(t->s_svcname, 1, t->s_channel_number);
-	service_map_channel(t, ch, 1);
+        ch = channel_find_by_name(t->s_svcname, 1, t->s_channel_number);
+        service_map_channel(t, ch, 1);
       
-	tvhlog(LOG_INFO, "serviceprobe", "%20s: mapped to channel \"%s\"",
-	       t->s_svcname, t->s_svcname);
+        tvhlog(LOG_INFO, "serviceprobe", "%20s: mapped to channel \"%s\"",
+               t->s_svcname, t->s_svcname);
 
-	if(service_is_tv(t)) {
- 	  channel_tag_map(ch, channel_tag_find_by_name("TV channels", 1), 1);
-	  tvhlog(LOG_INFO, "serviceprobe", "%20s: joined tag \"%s\"",
-		 t->s_svcname, "TV channels");
-	}
+        if(service_is_tv(t)) {
+           channel_tag_map(ch, channel_tag_find_by_name("TV channels", 1), 1);
+          tvhlog(LOG_INFO, "serviceprobe", "%20s: joined tag \"%s\"",
+                 t->s_svcname, "TV channels");
+        }
 
-	switch(t->s_servicetype) {
-	case ST_SDTV:
-	case ST_AC_SDTV:
-	  str = "SDTV";
-	  break;
-	case ST_HDTV:
-	case ST_AC_HDTV:
-	  str = "HDTV";
-	  break;
-	case ST_RADIO:
-	  str = "Radio";
-	  break;
-	default:
-	  str = NULL;
-	}
+        switch(t->s_servicetype) {
+          case ST_SDTV:
+          case ST_AC_SDTV:
+            str = "SDTV";
+            break;
+          case ST_HDTV:
+          case ST_AC_HDTV:
+            str = "HDTV";
+            break;
+          case ST_RADIO:
+            str = "Radio";
+            break;
+          default:
+            str = NULL;
+        }
 
-	if(str != NULL) {
-	  channel_tag_map(ch, channel_tag_find_by_name(str, 1), 1);
-	  tvhlog(LOG_INFO, "serviceprobe", "%20s: joined tag \"%s\"",
-		 t->s_svcname, str);
-	}
+        if(str != NULL) {
+          channel_tag_map(ch, channel_tag_find_by_name(str, 1), 1);
+          tvhlog(LOG_INFO, "serviceprobe", "%20s: joined tag \"%s\"",
+                 t->s_svcname, str);
+        }
 
-	if(t->s_provider != NULL) {
-	  channel_tag_map(ch, channel_tag_find_by_name(t->s_provider, 1), 1);
-	  tvhlog(LOG_INFO, "serviceprobe", "%20s: joined tag \"%s\"",
-		 t->s_svcname, t->s_provider);
-	}
-	channel_save(ch);
+        if(t->s_provider != NULL) {
+          channel_tag_map(ch, channel_tag_find_by_name(t->s_provider, 1), 1);
+          tvhlog(LOG_INFO, "serviceprobe", "%20s: joined tag \"%s\"",
+                 t->s_svcname, t->s_provider);
+        }
+        channel_save(ch);
       }
 
       t->s_sp_onqueue = 0;
