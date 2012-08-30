@@ -373,6 +373,7 @@ page_status(http_connection_t *hc,
   const char *rstatus;
   time_t     now;
   double avg[3]; 
+  char buf[500];
 
   htsbuf_qprintf(hq, "<?xml version=\"1.0\"?>\n"
                  "<currentload>\n");
@@ -414,6 +415,7 @@ page_status(http_connection_t *hc,
       localtime_r(&de->de_start, &a);
       localtime_r(&de->de_stop, &b);
 
+      html_escape(buf, lang_str_get(de->de_title, NULL), sizeof(buf));
       htsbuf_qprintf(hq, 
 		    "<recording>"
 		     "<start>"
@@ -436,11 +438,12 @@ page_status(http_connection_t *hc,
 		     b.tm_year+1900, b.tm_mon, b.tm_mday, 
 		     b.tm_hour, b.tm_min, 
 		     de->de_stop, 
-		     de->de_stop_extra, 
-		     http_escape(lang_str_get(de->de_title, NULL)));
+		     de->de_stop_extra,
+         buf);
 
       rstatus = val2str(de->de_sched_state, recstatustxt);
-      htsbuf_qprintf(hq, "<status>%s</status></recording>\n", http_escape(rstatus));
+      html_escape(buf, rstatus, sizeof(buf));
+      htsbuf_qprintf(hq, "<status>%s</status></recording>\n", buf);
       cc++;
       timeleft = -1;
     }
