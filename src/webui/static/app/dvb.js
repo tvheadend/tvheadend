@@ -252,7 +252,7 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
                         }
                     }
                 }
-             }),
+             })
 	 ];
 
 	 if (satConf)
@@ -1106,7 +1106,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
     var confreader = new Ext.data.JsonReader({
 	root: 'dvbadapters'
     }, ['name', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion', 'qmon',
-	'dumpmux', 'poweroff', 'nitoid','extrapriority']);
+	'include_unavailable_services', 'dumpmux', 'poweroff', 'nitoid','extrapriority']);
 
     
     function saveConfForm () {
@@ -1134,6 +1134,10 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	new Ext.form.Checkbox({
 	    fieldLabel: 'Idle scanning',
 	    name: 'idlescan'
+	}),
+	new Ext.form.Checkbox({
+	    fieldLabel: 'Include currently unavailable services when mapping',
+	    name: 'include_unavailable_services'
 	}),
 	new Ext.form.Checkbox({
 	    fieldLabel: 'Monitor signal quality',
