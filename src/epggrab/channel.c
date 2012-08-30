@@ -167,6 +167,29 @@ epggrab_channel_t *epggrab_channel_find
   return ec;
 }
 
+/* Find channel in the list (Using name lookup) */
+epggrab_channel_t *epggrab_channel_find_byname
+  ( epggrab_channel_tree_t *tree, const char *chname, epggrab_module_t *owner )
+{
+  static epggrab_channel_t *ec;
+  static epggrab_channel_t *skel = NULL;
+  assert(owner);
+  if (!skel) skel = calloc(1, sizeof(epggrab_channel_t));
+  skel->name = (char*)chname;
+  /* Find */
+
+  RB_FOREACH(ec, tree, link) {
+	if (ec->name) {
+	tvhlog(LOG_DEBUG, "epggrab_channel_find_byname", "Checking RB_FOREACH : %s",ec->name);
+	if (strcmp(ec->name,chname) == 0) {
+		tvhlog(LOG_DEBUG, "epggrab_channel_find_byname", "MATCH of channel name %s == %s",ec->name,chname);
+		return ec;
+	};
+	};
+  }
+  return NULL;
+}
+
 /* **************************************************************************
  * Global routines
  * *************************************************************************/
