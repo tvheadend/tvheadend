@@ -161,6 +161,11 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   else
     name = "Live Stream";
 
+  /* reduce timeout on write() for streaming */
+  tp.tv_sec  = 5;
+  tp.tv_usec = 0;
+  setsockopt(hc->hc_fd, SOL_SOCKET, SO_SNDTIMEO, &tp, sizeof(tp));
+
   while(run) {
     pthread_mutex_lock(&sq->sq_mutex);
     sm = TAILQ_FIRST(&sq->sq_queue);
