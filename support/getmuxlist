@@ -3,28 +3,35 @@
 # Retrieve the latest dvb-apps scan files
 #
 
-import os, sys, shutil, glob, urllib2, tarfile
+import glob
+import os
+import shutil
+import sys
+import tarfile
+import tempfile
+import urllib2
 
-url = 'http://linuxtv.org/hg/dvb-apps/archive/tip.tar.bz2'
-tmp = '/tmp/getmuxlist.%d' % os.getpid()
-out = os.path.abspath(os.path.dirname(sys.argv[0]) + '/../data/dvb-scan')
+REMOTE_URL = 'http://linuxtv.org/hg/dvb-apps/archive/tip.tar.bz2'
+TEMP_DIR = tempfile.mkdtemp()
+TEMP_TARBALL_PATH = os.path.join(TEMP_DIR, 'dvb-apps.tar.bz2')
+TARGET_DIR = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), '..', 'data', 'dvb-scan'))
 
 # Get files
-if os.path.exists(tmp):
-  shutil.rmtree(tmp)
-os.makedirs(tmp)
-tbz = tmp + '/dvb-apps.tar.bz2'
-open(tbz, 'w').write(urllib2.urlopen(url).read())
-tp = tarfile.open(tbz)
-tp.extractall(tmp)
+with open(TEMP_TARBALL_PATH, 'wb') as tp_file:
+    tp_file.write(urllib2.urlopen(REMOTE_URL).read())    
+    
+assert tarfile.is_tarfile(TEMP_TARBALL_PATH)
+
+tp = tarfile.open(TEMP_TARBALL_PATH)
+tp.extractall(TEMP_DIR)
 
 # Copy to TVH
-if os.path.exists(out):
-  shutil.rmtree(out)
-os.makedirs(out)
-for d in glob.glob('%s/dvb-apps*/util/scan/*' % tmp):
-  if os.path.isdir(d):
-    shutil.move(d, out)
+if os.path.exists(TARGET_DIR):
+    shutil.rmtree(TARGET_DIR)
+os.makedirs(TARGET_DIR)
+
+for dir in glob.glob('%s/dvb-apps*/util/scan/*/' % TEMP_DIR):
+    shutil.move(dir, TARGET_DIR)
 
 # Cleanup
-shutil.rmtree(tmp)
+shutil.rmtree(TEMP_DIR)
