@@ -1175,7 +1175,9 @@ cwc_thread(void *aux)
 	continue; // Retry immediately
       d = 3;
     } else {
-      d = 60;
+      if(attempts == 1)
+        continue; // Retry immediately
+      d = 3;
     }
 
     ts.tv_sec = time(NULL) + d;
