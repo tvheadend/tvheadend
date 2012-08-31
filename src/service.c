@@ -1,6 +1,6 @@
 /*
  *  Services
- *  Copyright (C) 2010 Andreas Öman
+ *  Copyright (C) 2010 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -47,6 +47,7 @@
 #include "atomic.h"
 #include "dvb/dvb.h"
 #include "htsp.h"
+#include "lang_codes.h"
 
 #define SERVICE_HASH_WIDTH 101
 
@@ -851,28 +852,14 @@ service_restart(service_t *t, int had_components)
 
 
 /**
- * Generate a message containing info about all components
+ * Copy streaming info
  */
-streaming_start_t *
-service_build_stream_start(service_t *t)
+static void
+ss_copy_info(streaming_start_t *ss, elementary_stream_t *st)
 {
-  elementary_stream_t *st;
-  int n = 0;
-  streaming_start_t *ss;
+    streaming_start_component_t *ssc;
 
-  lock_assert(&t->s_stream_mutex);
-  
-  TAILQ_FOREACH(st, &t->s_components, es_link)
-    n++;
-
-  ss = calloc(1, sizeof(streaming_start_t) + 
-	      sizeof(streaming_start_component_t) * n);
-
-  ss->ss_num_components = n;
-  
-  n = 0;
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
-    streaming_start_component_t *ssc = &ss->ss_components[n++];
+    ssc = &ss->ss_components[ss->ss_num_components++];
     ssc->ssc_index = st->es_index;
     ssc->ssc_type  = st->es_type;
 
@@ -882,7 +869,74 @@ service_build_stream_start(service_t *t)
     ssc->ssc_pid = st->es_pid;
     ssc->ssc_width = st->es_width;
     ssc->ssc_height = st->es_height;
+}
+
+
+/**
+ * Generate a message containing info about all components
+ */
+streaming_start_t *
+service_build_stream_start(service_t *t)
+{
+  elementary_stream_t *st;
+  streaming_start_t *ss;
+  int n = 0, i = 0, preferred_audio_streams = 0, preferred_subtitle_streams = 0;
+  const char **langs;
+
+  lock_assert(&t->s_stream_mutex);
+
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+    n++;
+
+  ss = calloc(1, sizeof(streaming_start_t) + sizeof(streaming_start_component_t) * n);
+  
+  // copy all video stream information
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+    if(SCT_ISVIDEO(st->es_type))
+      ss_copy_info(ss, st);
+
+  // copy preferred audio/subtitle stream information
+  if ((langs = lang_code_split(NULL))) {
+    while(langs[i]) {
+      tvhlog(LOG_DEBUG, "Service", "Filter audio/subtitle streams for preferred language '%s'", langs[i]);
+      TAILQ_FOREACH(st, &t->s_components, es_link) {
+        if(SCT_ISAUDIO(st->es_type) && memcmp(st->es_lang, langs[i], 4) == 0) {
+          tvhlog(LOG_DEBUG, "Service", "Found audio stream for preferred language '%s'", langs[i]);
+          ss_copy_info(ss, st);
+          preferred_audio_streams++;
+        }
+
+        if(SCT_ISSUBTITLE(st->es_type) && memcmp(st->es_lang, langs[i], 4) == 0) {
+          tvhlog(LOG_DEBUG, "Service", "Found subtitle stream for preferred language '%s'", langs[i]);
+          ss_copy_info(ss, st);
+          preferred_subtitle_streams++;
+        }
+      }
+      i++;
+    }
+    free(langs);
   }
+
+  // no preferred audio streams found, copy all
+  if(!preferred_audio_streams) {
+    tvhlog(LOG_DEBUG, "Service", "No preferred audio streams found, fetch all.");
+    TAILQ_FOREACH(st, &t->s_components, es_link)
+      if(SCT_ISAUDIO(st->es_type))
+        ss_copy_info(ss, st);
+  }
+
+  // no preferred subtitle streams found, copy all
+  if(!preferred_subtitle_streams) {
+    tvhlog(LOG_DEBUG, "Service", "No preferred subtitle streams found, fetch all.");
+    TAILQ_FOREACH(st, &t->s_components, es_link)
+      if (SCT_ISSUBTITLE(st->es_type))
+        ss_copy_info(ss, st);
+  }
+
+  // copy other stream information
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+    if(!SCT_ISVIDEO(st->es_type) && !SCT_ISAUDIO(st->es_type) && !SCT_ISSUBTITLE(st->es_type))
+      ss_copy_info(ss, st);
 
   t->s_setsourceinfo(t, &ss->ss_si);
 
