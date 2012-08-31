@@ -278,6 +278,9 @@ main(int argc, char **argv)
   // make sure the timezone is set
   tzset();
 
+  // init service audio filter
+  service_audio_filter_init();
+
   while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:sw:e:")) != -1) {
     switch(c) {
     case 'a':

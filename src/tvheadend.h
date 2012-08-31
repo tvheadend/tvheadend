@@ -176,6 +176,10 @@ typedef enum {
 			(t) == SCT_EAC3)
 #define SCT_ISSUBTITLE(t) ((t) == SCT_TEXTSUB || (t) == SCT_DVBSUB)
 
+#define SCT_ISAUDIOP(t) ((t) == SCT_AC3 || (t) == SCT_AAC || \
+                        (t) == SCT_MP4A || (t) == SCT_EAC3)
+#define SCT_ISDVBSUB(t) ((t) == SCT_DVBSUB)
+
 /**
  * The signal status of a tuner
  */
