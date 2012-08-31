@@ -54,6 +54,9 @@ static struct service_list servicehash[SERVICE_HASH_WIDTH];
 
 static void service_data_timeout(void *aux);
 
+static TAILQ_HEAD(, audio_filter) audio_filters;
+static TAILQ_HEAD(, subtitle_filter) subtitle_filters;
+
 /**
  *
  */
@@ -849,6 +852,26 @@ service_restart(service_t *t, int had_components)
   }
 }
 
+/**
+ *
+ */
+static void
+ss_copy_info(streaming_start_t *ss, elementary_stream_t *st)
+{
+  streaming_start_component_t *ssc;
+
+  ssc = &ss->ss_components[ss->ss_num_components++];
+  ssc->ssc_index = st->es_index;
+  ssc->ssc_type  = st->es_type;
+
+  memcpy(ssc->ssc_lang, st->es_lang, 4);
+  ssc->ssc_composition_id = st->es_composition_id;
+  ssc->ssc_ancillary_id = st->es_ancillary_id;
+  ssc->ssc_pid = st->es_pid;
+  ssc->ssc_width = st->es_width;
+  ssc->ssc_height = st->es_height;
+}
+
 
 /**
  * Generate a message containing info about all components
@@ -861,28 +884,85 @@ service_build_stream_start(service_t *t)
   streaming_start_t *ss;
 
   lock_assert(&t->s_stream_mutex);
-  
+
   TAILQ_FOREACH(st, &t->s_components, es_link)
-    n++;
+  n++;
 
-  ss = calloc(1, sizeof(streaming_start_t) + 
-	      sizeof(streaming_start_component_t) * n);
+  ss = calloc(1, sizeof(streaming_start_t) +
+      sizeof(streaming_start_component_t) * n);
 
-  ss->ss_num_components = n;
-  
-  n = 0;
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
-    streaming_start_component_t *ssc = &ss->ss_components[n++];
-    ssc->ssc_index = st->es_index;
-    ssc->ssc_type  = st->es_type;
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+  if (SCT_ISVIDEO(st->es_type))
+    ss_copy_info(ss, st);
 
-    memcpy(ssc->ssc_lang, st->es_lang, 4);
-    ssc->ssc_composition_id = st->es_composition_id;
-    ssc->ssc_ancillary_id = st->es_ancillary_id;
-    ssc->ssc_pid = st->es_pid;
-    ssc->ssc_width = st->es_width;
-    ssc->ssc_height = st->es_height;
+  if (TAILQ_EMPTY(&audio_filters)) {
+      all_audio:
+      TAILQ_FOREACH(st, &t->s_components, es_link)
+      if (SCT_ISAUDIO(st->es_type))
+        ss_copy_info(ss, st);
+  } else {
+      int streams = 0, found;
+      audio_filter_t *af;
+
+      TAILQ_FOREACH(af, &audio_filters, af_link) {
+        found = 0;
+        TAILQ_FOREACH(st, &t->s_components, es_link) {
+          if (!SCT_ISAUDIO(st->es_type))
+            continue;
+          if (memcmp(st->es_lang, af->af_lang, 4) == 0) {
+              if ((af->af_flags & AF_PREFER_AC3) == 0 ||
+                  SCT_ISAUDIOP(st->es_type)) {
+                  ss_copy_info(ss, st);
+                  found = 1;
+                  streams++;
+              }
+          }
+        }
+        /* no AC3+ audio, but we prefer the language, use MPEG2 audio if exists */
+        if (!found) {
+            TAILQ_FOREACH(st, &t->s_components, es_link) {
+              if (!SCT_ISAUDIO(st->es_type))
+                continue;
+              if (memcmp(st->es_lang, af->af_lang, 4) == 0) {
+                  ss_copy_info(ss, st);
+                  streams++;
+              }
+            }
+        }
+      }
+      /* no preferred streams found.. insert all */
+      if (!streams)
+        goto all_audio;
   }
+  if (TAILQ_EMPTY(&subtitle_filters)) {
+      all_subtitles:
+      TAILQ_FOREACH(st, &t->s_components, es_link)
+      if (SCT_ISDVBSUB(st->es_type))
+        ss_copy_info(ss, st);
+  } else {
+      int streams = 0;
+      subtitle_filter_t *subf;
+
+      TAILQ_FOREACH(subf, &subtitle_filters, sf_link) {
+        TAILQ_FOREACH(st, &t->s_components, es_link) {
+          if (!SCT_ISDVBSUB(st->es_type))
+            continue;
+          if (memcmp(st->es_lang, subf->sf_lang, 4) == 0) {
+              ss_copy_info(ss, st);
+              streams++;
+          }
+        }
+      }
+      /* no preferred streams found.. insert all */
+      if (!streams)
+        goto all_subtitles;
+  }
+
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+  if (!SCT_ISVIDEO(st->es_type) && !SCT_ISAUDIO(st->es_type) &&
+      !SCT_ISDVBSUB(st->es_type))
+    ss_copy_info(ss, st);
+
 
   t->s_setsourceinfo(t, &ss->ss_si);
 
@@ -1169,4 +1249,47 @@ htsmsg_t *servicetype_list ( void )
     htsmsg_add_msg(ret, NULL, e);
   }
   return ret;
+}
+
+/*
+ * Init the audio/subtitle filter list
+ */
+void
+service_audio_filter_init(void)
+{
+  TAILQ_INIT(&audio_filters);
+  TAILQ_INIT(&subtitle_filters);
+}
+
+/*
+ * Add an entry to the audio filter list
+ */
+int
+service_audio_filter_add(int flags, const char *lang)
+{
+  audio_filter_t *af = calloc(1, sizeof(audio_filter_t));
+
+  if (af == NULL)
+    return -1;
+  af->af_flags = flags;
+  strncpy(af->af_lang, lang, 4);
+  TAILQ_INSERT_TAIL(&audio_filters, af, af_link);
+
+  return 0;
+}
+
+/*
+ * Add an entry to the subtitle filter list
+ */
+int
+service_subtitle_filter_add(const char *lang)
+{
+  subtitle_filter_t *sf = calloc(1, sizeof(subtitle_filter_t));
+
+  if (sf == NULL)
+    return -1;
+  strncpy(sf->sf_lang, lang, 4);
+  TAILQ_INSERT_TAIL(&subtitle_filters, sf, sf_link);
+
+  return 0;
 }
