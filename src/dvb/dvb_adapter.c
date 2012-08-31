@@ -701,7 +701,7 @@ static void *
 dvb_adapter_input_dvr(void *aux)
 {
   th_dvb_adapter_t *tda = aux;
-  int fd, i, r, efd, nfds;
+  int fd, i, r, c, efd, nfds;
   uint8_t tsb[188 * 10];
   service_t *t;
   struct epoll_event ev;
@@ -720,34 +720,68 @@ dvb_adapter_input_dvr(void *aux)
   ev.data.fd = tda->tda_dvr_pipe[0];
   epoll_ctl(efd, EPOLL_CTL_ADD, tda->tda_dvr_pipe[0], &ev);
 
-  while(1){
+  r = i = 0;
+  while(1) {
 
     /* Wait for input */
     nfds = epoll_wait(efd, &ev, 1, -1);
     if (nfds < 1) continue;
     if (ev.data.fd != fd) break;
 
-    r = read(fd, tsb, sizeof(tsb));
+    c = read(fd, tsb+r, sizeof(tsb)-r);
+    if (c < 0) {
+      if (errno == EAGAIN || errno == EINTR)
+        continue;
+      else
+        break;
+    }
+    r += c;
+
+    /* not enough data */
+    if (r < 188) continue;
 
     pthread_mutex_lock(&tda->tda_delivery_mutex);
-    
-    for(i = 0; i < r; i += 188) {
-      LIST_FOREACH(t, &tda->tda_transports, s_active_link)
-        if(t->s_dvb_mux_instance == tda->tda_mux_current)
-          ts_recv_packet1(t, tsb + i, NULL);
-    }
 
+    /* debug */
     if(tda->tda_dump_fd != -1) {
       if(write(tda->tda_dump_fd, tsb, r) != r) {
         tvhlog(LOG_ERR, "dvb",
-	       "\"%s\" unable to write to mux dump file -- %s",
-	       tda->tda_identifier, strerror(errno));
-	      close(tda->tda_dump_fd);
-	      tda->tda_dump_fd = -1;
+               "\"%s\" unable to write to mux dump file -- %s",
+               tda->tda_identifier, strerror(errno));
+        close(tda->tda_dump_fd);
+        tda->tda_dump_fd = -1;
+      }
+    }
+
+    /* find mux */
+    LIST_FOREACH(t, &tda->tda_transports, s_active_link)
+      if(t->s_dvb_mux_instance == tda->tda_mux_current)
+        break;
+
+    /* Process */
+    while (r >= 188) {
+  
+      /* sync */
+      if (tsb[i] == 0x47) {
+        if(t) ts_recv_packet1(t, tsb + i, NULL);
+        i += 188;
+        r -= 188;
+
+      /* no sync */
+      } else {
+        tvhlog(LOG_DEBUG, "dvb", "\"%s\" ts sync lost", tda->tda_identifier);
+        if (ts_resync(tsb, &r, &i)) break;
+        tvhlog(LOG_DEBUG, "dvb", "\"%s\" ts sync found", tda->tda_identifier);
       }
     }
 
     pthread_mutex_unlock(&tda->tda_delivery_mutex);
+
+    /* reset buffer */
+    if (r && r < i) {
+      memcpy(tsb, tsb+i, r);
+      i = 0;
+    }
   }
 
   close(efd);

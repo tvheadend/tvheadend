@@ -286,3 +286,18 @@ ts_remux(service_t *t, const uint8_t *src)
   sm.sm_data = tsb;
   streaming_pad_deliver(&t->s_streaming_pad, &sm);
 }
+
+/*
+ * Attempt to re-sync a ts stream (3 valid sync's in a row)
+ */
+int
+ts_resync ( const uint8_t *tsb, int *len, int *idx )
+{
+  int err = 1;
+  while (err && (*len > 376)) {
+    (*idx)++; (*len)--;
+    err = (tsb[*idx] != 0x47) || (tsb[*idx+188] != 0x47) || 
+          (tsb[*idx+376] != 0x47);
+  }
+  return err;
+}
