@@ -174,6 +174,8 @@ typedef struct th_dvb_adapter {
   char *tda_identifier;
   uint32_t tda_autodiscovery;
   uint32_t tda_idlescan;
+  uint32_t tda_skip_initialscan;
+  uint32_t tda_skip_checksubscr;
   uint32_t tda_qmon;
   uint32_t tda_poweroff;
   uint32_t tda_nitoid;
@@ -218,8 +220,6 @@ typedef struct th_dvb_adapter {
 			  * return dela values */
 
   uint32_t tda_extrapriority; // extra priority for choosing the best adapter/service
-
-  uint32_t tda_skip_initialscan; // skip the initial scan
 
 } th_dvb_adapter_t;
 
@@ -284,6 +284,8 @@ void dvb_adapter_set_auto_discovery(th_dvb_adapter_t *tda, int on);
 void dvb_adapter_set_skip_initialscan(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_idlescan(th_dvb_adapter_t *tda, int on);
+
+void dvb_adapter_set_skip_checksubscr(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_qmon(th_dvb_adapter_t *tda, int on);
 
