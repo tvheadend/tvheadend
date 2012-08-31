@@ -252,7 +252,7 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
                         }
                     }
                 }
-             }),
+             })
 	 ];
 
 	 if (satConf)
@@ -1106,7 +1106,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
     var confreader = new Ext.data.JsonReader({
 	root: 'dvbadapters'
     }, ['name', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion', 'qmon',
-	'dumpmux', 'poweroff', 'nitoid','extrapriority']);
+	'skip_checksubscr', 'dumpmux', 'poweroff', 'nitoid','extrapriority']);
 
     
     function saveConfForm () {
@@ -1136,6 +1136,10 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	    name: 'idlescan'
 	}),
 	new Ext.form.Checkbox({
+	    fieldLabel: 'Skip service availability check when mapping',
+	    name: 'skip_checksubscr'
+	}),
+	new Ext.form.Checkbox({
 	    fieldLabel: 'Monitor signal quality',
 	    name: 'qmon'
 	}),
@@ -1149,10 +1153,6 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 					 'option enabled can consume a lot ' +
 					 'of diskspace. You have been warned');
 	    }
-	}),
-	new Ext.form.Checkbox({
-	    fieldLabel: 'Turn off adapter when idle',
-	    name: 'poweroff'
 	}),
 	{
 	    fieldLabel: 'NIT-o Network ID',
@@ -1177,7 +1177,13 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	    store: ['DiSEqC 1.0 / 2.0', 'DiSEqC 1.1 / 2.1']
 	});
 	items.push(v);
-    }
+
+	  v = new Ext.form.Checkbox({
+	    fieldLabel: 'Turn off LNB when idle',
+	    name: 'poweroff'
+	});
+  items.push(v);
+  }
     
     var confform = new Ext.FormPanel({
 	title:'Adapter configuration',

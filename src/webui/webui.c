@@ -110,6 +110,8 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
     postfix++;
     if(!strcmp(postfix, "js"))
       content = "text/javascript; charset=UTF-8";
+    else if(!strcmp(postfix, "css"))
+      content = "text/css; charset=UTF-8";
   }
 
   // TODO: handle compression
@@ -163,6 +165,11 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     name = s->ths_channel->ch_name;
   else
     name = "Live Stream";
+
+  /* reduce timeout on write() for streaming */
+  tp.tv_sec  = 5;
+  tp.tv_usec = 0;
+  setsockopt(hc->hc_fd, SOL_SOCKET, SO_SNDTIMEO, &tp, sizeof(tp));
 
   while(run) {
     pthread_mutex_lock(&sq->sq_mutex);

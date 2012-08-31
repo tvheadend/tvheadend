@@ -1170,13 +1170,8 @@ cwc_thread(void *aux)
              cwc->cwc_hostname, cwc->cwc_port);
     }
 
-    if(subscriptions_active()) {
-      if(attempts == 1)
-	continue; // Retry immediately
-      d = 3;
-    } else {
-      d = 60;
-    }
+    if(attempts == 1) continue; // Retry immediately
+    d = 3;
 
     ts.tv_sec = time(NULL) + d;
     ts.tv_nsec = 0;

@@ -4,7 +4,7 @@ tvheadend.servicetypeStore = new Ext.data.JsonStore({
   url        : '/iptv/services',
   baseParams : { op : 'servicetypeList' },
   fields     : [ 'val', 'str' ],
-  autoLoad   : true,
+  autoLoad   : true
 });
 
 /**
@@ -109,13 +109,13 @@ tvheadend.iptv = function(adapterId) {
         editable       : false,
         mode           : 'local',
         triggerAction  : 'all',
-        store          : tvheadend.servicetypeStore,
+        store          : tvheadend.servicetypeStore
       }),
 	    renderer: function(value, metadata, record, row, col, store) {
         var val = value ? tvheadend.servicetypeStore.getById(value) : null;
 		    return val ? val.get('str') :
 		      '<span class="tvh-grid-unset">Unset</span>';
-	    },
+	    }
   },
   {
 	    header: "PMT PID",

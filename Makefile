@@ -38,7 +38,7 @@ LDFLAGS += -lrt -ldl -lpthread
 # Binaries/Scripts
 #
 
-MKBUNDLE = $(CURDIR)/support/mkbundle
+MKBUNDLE = $(PYTHON) $(CURDIR)/support/mkbundle
 
 #
 # Debug/Output
@@ -125,6 +125,7 @@ SRCS += src/webui/webui.c \
 	src/webui/extjs.c \
 	src/webui/simpleui.c \
 	src/webui/statedump.c \
+	src/webui/html.c\
 
 SRCS += src/muxer.c \
 	src/muxer_pass.c \
