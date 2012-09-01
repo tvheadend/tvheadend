@@ -73,6 +73,8 @@ dvb_transport_open_demuxers(th_dvb_adapter_t *tda, service_t *t)
       continue;
     }
 
+    sidtochan = tda->tda_sidtochan;
+
     memset(&dmx_param, 0, sizeof(dmx_param));
     dmx_param.pid = st->es_pid;
     dmx_param.input = DMX_IN_FRONTEND;
@@ -266,8 +268,12 @@ dvb_transport_save(service_t *t)
   htsmsg_add_u32(m, "pmt", t->s_pmt_pid);
   htsmsg_add_u32(m, "stype", t->s_servicetype);
   htsmsg_add_u32(m, "scrambled", t->s_scrambled);
-  htsmsg_add_u32(m, "channel", t->s_channel_number);
-
+  if(sidtochan) {
+    tvhlog(LOG_DEBUG, "dvb", "Mapping SID to channel number");
+    htsmsg_add_u32(m, "channel", t->s_dvb_service_id);
+  } else {
+    htsmsg_add_u32(m, "channel", t->s_channel_number);
+  }
   if(t->s_provider != NULL)
     htsmsg_add_str(m, "provider", t->s_provider);
 
