@@ -881,7 +881,7 @@ service_build_stream_start(service_t *t)
   elementary_stream_t *st;
   streaming_start_t *ss;
   int n = 0, i = 0, preferred_audio_streams = 0, preferred_subtitle_streams = 0;
-  const char **langs;
+  const lang_code_t **langs;
 
   lock_assert(&t->s_stream_mutex);
 
@@ -896,25 +896,24 @@ service_build_stream_start(service_t *t)
       ss_copy_info(ss, st);
 
   // copy preferred audio/subtitle stream information
-  if ((langs = lang_code_split(NULL))) {
+  if ((langs = lang_code_split_t(NULL))) {
     while(langs[i]) {
-      tvhlog(LOG_DEBUG, "Service", "Filter audio/subtitle streams for preferred language '%s'", langs[i]);
+      tvhlog(LOG_DEBUG, "Service", "Filter audio/subtitle streams for preferred language '%s'", langs[i]->desc);
       TAILQ_FOREACH(st, &t->s_components, es_link) {
-        if(SCT_ISAUDIO(st->es_type) && memcmp(st->es_lang, langs[i], 4) == 0) {
-          tvhlog(LOG_DEBUG, "Service", "Found audio stream for preferred language '%s'", langs[i]);
+        if(SCT_ISAUDIO(st->es_type) && (memcmp(st->es_lang, langs[i]->code2b, 4) == 0 || memcmp(st->es_lang, langs[i]->code2t, 4) == 0)) {
+          tvhlog(LOG_DEBUG, "Service", "Found audio stream for preferred language '%s'", langs[i]->desc);
           ss_copy_info(ss, st);
           preferred_audio_streams++;
         }
 
-        if(SCT_ISSUBTITLE(st->es_type) && memcmp(st->es_lang, langs[i], 4) == 0) {
-          tvhlog(LOG_DEBUG, "Service", "Found subtitle stream for preferred language '%s'", langs[i]);
+        if(SCT_ISSUBTITLE(st->es_type) && (memcmp(st->es_lang, langs[i]->code2b, 4) == 0 || memcmp(st->es_lang, langs[i]->code2t, 4) == 0)) {
+          tvhlog(LOG_DEBUG, "Service", "Found subtitle stream for preferred language '%s'", langs[i]->desc);
           ss_copy_info(ss, st);
           preferred_subtitle_streams++;
         }
       }
       i++;
     }
-    free(langs);
   }
 
   // no preferred audio streams found, copy all

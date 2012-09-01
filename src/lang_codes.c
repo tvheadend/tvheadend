@@ -524,6 +524,41 @@ const char *lang_code_get ( const char *code )
   return lang_codes[0].code2b;
 }
 
+const lang_code_t *lang_code_get_t ( const char *code )
+{
+  int i;
+  char tmp[4];
+
+  if (code && *code) {
+
+    /* Extract the code (lowercase) */
+    i = 0;
+    while (i < 3 && *code) {
+      if (*code == ';' || *code == ',' || *code == '-') break;
+      if (*code != ' ')
+        tmp[i++] = *code | 0x20; // |0x20 = lower case
+      code++;
+    }
+    tmp[i] = '\0';
+
+    /* Search */
+    if (i) {
+      const lang_code_t *c = lang_codes;
+      while (c->code2b) {
+        if (!strcmp(tmp, c->code2b))
+        	return c;
+        if (c->code1  && !strcmp(tmp, c->code1))
+        	return c;
+        if (c->code2t && !strcmp(tmp, c->code2t))
+        	return c;
+        c++;
+      }
+    }
+  }
+
+  return NULL;
+}
+
 const char **lang_code_split ( const char *codes )
 {
   int n;
@@ -555,6 +590,46 @@ const char **lang_code_split ( const char *codes )
     c++;
   }
   if (*p) ret[n++] = lang_code_get(p);
+  ret[n] = NULL;
+
+  return ret;
+}
+
+const lang_code_t **lang_code_split_t ( const char *codes )
+{
+  int n;
+  const char *c, *p;
+  const lang_code_t **ret;
+  const lang_code_t *co;
+
+  /* Defaults */
+  if (!codes) codes = config_get_language();
+
+  /* No config */
+  if (!codes) return NULL;
+
+  /* Count entries */
+  n = 0;
+  c = codes;
+  while (*c) {
+    if (*c == ',') n++;
+    c++;
+  }
+  ret = calloc(2+n, sizeof(lang_code_t*));
+
+  /* Create list */
+  n = 0;
+  p = c = codes;
+  while (*c) {
+    if (*c == ',') {
+      co = lang_code_get_t(p);
+      if(co)
+        ret[n++] = co;
+      p = c + 1;
+    }
+    c++;
+  }
+  if (*p) ret[n++] = lang_code_get_t(p);
   ret[n] = NULL;
 
   return ret;
