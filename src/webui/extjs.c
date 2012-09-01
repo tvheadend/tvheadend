@@ -1,6 +1,6 @@
 /*
  *  tvheadend, EXTJS based interface
- *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2008 Andreas ï¿½man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@
 #include "iptv_input.h"
 
 #include "config2.h"
+#include "lang_codes.h"
 
 static void
 extjs_load(htsbuf_queue_t *hq, const char *script)
@@ -684,6 +685,52 @@ extjs_confignames(http_connection_t *hc, const char *remain, void *opaque)
       else
         htsmsg_add_str(e, "name", cfg->dvr_config_name);
       htsmsg_add_msg(array, NULL, e);
+    }
+
+skip:
+    htsmsg_add_msg(out, "entries", array);
+
+  } else {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+
+}
+
+/**
+ *
+ */
+static int
+extjs_languages(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  const char *op = http_arg_get(&hc->hc_req_args, "op");
+  htsmsg_t *out, *array, *e;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(op != NULL && !strcmp(op, "list")) {
+
+    out = htsmsg_create_map();
+    array = htsmsg_create_list();
+
+    if (http_access_verify(hc, ACCESS_RECORDER_ALL))
+      goto skip;
+
+    const lang_code_t *c = lang_codes;
+    while (c->code2b) {
+      e = htsmsg_create_map();
+      htsmsg_add_str(e, "identifier", c->code2b);
+      htsmsg_add_str(e, "name", c->desc);
+      htsmsg_add_msg(array, NULL, e);
+      c++;
     }
 
 skip:
@@ -1804,18 +1851,12 @@ extjs_start(void)
   http_path_add("/dvrlist",     NULL, extjs_dvrlist,     ACCESS_WEB_INTERFACE);
   http_path_add("/ecglist",     NULL, extjs_ecglist,     ACCESS_WEB_INTERFACE);
   http_path_add("/config",      NULL, extjs_config,      ACCESS_WEB_INTERFACE);
+  http_path_add("/languages",   NULL, extjs_languages,      ACCESS_WEB_INTERFACE);
 
-  http_path_add("/mergechannel",
-		NULL, extjs_mergechannel, ACCESS_ADMIN);
-
-  http_path_add("/iptv/services", 
-		NULL, extjs_iptvservices, ACCESS_ADMIN);
-
-  http_path_add("/servicedetails", 
-		NULL, extjs_servicedetails, ACCESS_ADMIN);
-
-  http_path_add("/tv/adapter", 
-		NULL, extjs_tvadapter, ACCESS_ADMIN);
+  http_path_add("/mergechannel", NULL, extjs_mergechannel, ACCESS_ADMIN);
+  http_path_add("/iptv/services", NULL, extjs_iptvservices, ACCESS_ADMIN);
+  http_path_add("/servicedetails", NULL, extjs_servicedetails, ACCESS_ADMIN);
+  http_path_add("/tv/adapter", NULL, extjs_tvadapter, ACCESS_ADMIN);
 
 #if ENABLE_LINUXDVB
   extjs_start_dvb();

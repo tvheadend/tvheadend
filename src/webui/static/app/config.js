@@ -1,3 +1,24 @@
+/**
+ * Configuration names
+ */
+tvheadend.languages = new Ext.data.JsonStore({
+    autoLoad:true,
+    root:'entries',
+    fields: ['identifier','name'],
+    id: 'identifier',
+    url:'languages',
+    baseParams: {
+    	op: 'list'
+    }
+});
+
+tvheadend.languages.setDefaultSort('name', 'ASC');
+
+tvheadend.comet.on('config', function(m) {
+    if(m.reload != null)
+        tvheadend.languages.reload();
+});
+
 tvheadend.miscconf = function() {
 
   /*
@@ -20,11 +41,16 @@ tvheadend.miscconf = function() {
     name       : 'muxconfpath',
     allowBlank : true
   });
-
-  var language = new Ext.form.TextField({
-    fieldLabel : 'Default Language(s)',
-    name       : 'language',
-    allowBlank : true
+  
+  var language = new Ext.ux.form.LovCombo({
+	store: tvheadend.languages,
+	name: 'language',
+	mode: 'local',
+	width: 400,
+	triggerAction:'all',
+	fieldLabel: 'Default Language(s)',
+    valueField: 'identifier',
+    displayField: 'name'
   });
 
   /* ****************************************************************
@@ -86,7 +112,7 @@ tvheadend.miscconf = function() {
   function saveChanges() {
     confpanel.getForm().submit({
       url     : 'config', 
-      params  : { op : 'saveSettings' },
+      params  : { op : 'saveSettings', language : language.getValue() },
       waitMsg : 'Saving Data...',
       failure : function (form, action) {
         Ext.Msg.alert('Save failed', action.result.errormsg);
