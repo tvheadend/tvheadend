@@ -30,7 +30,7 @@ tvheadend.help = function(title, pagename) {
 /**
  * Displays a mediaplayer using VLC plugin
  */
-tvheadend.VLC = function(url) {
+tvheadend.VLC1 = function(url) {
  
   function randomString() {
 	var chars = "ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
@@ -212,6 +212,146 @@ tvheadend.VLC = function(url) {
   });
 
   win.show();
+};
+
+
+/**
+ * Displays a mediaplayer using html5 video
+ */
+tvheadend.VLC = function(url) {
+
+    var buildStreamParameters = function(v) {
+	var param = "";
+	
+	if(v.canPlayType('video/x-matroska; codecs="mp4a.40.2,avc1.42E01E"')) {
+	    param += '?mux=webm';
+	    param += '&acodec=AAC';
+	    param += '&vcodec=H264';
+	    param += '&scodec=NONE';
+	    param += '&transcode=1';
+	} else if(v.canPlayType('video/webm; codecs="vorbis,vp8"')) {
+	    param += '?mux=webm';
+	    param += '&acodec=VORBIS';
+	    param += '&vcodec=VP8';
+	    param += '&scodec=NONE';
+	    param += '&transcode=1';
+	    param += '&resolution=' + v.height;
+	}
+	
+	return param;
+    }
+
+    var video = document.createElement('video');
+    video.setAttribute('preload', 'metadata');
+    video.setAttribute('autoplay', 'autoplay');
+    video.setAttribute('poster', '/docresources/tvheadendlogo.png');
+
+    var selectChannel = new Ext.form.ComboBox({
+	loadingText: 'Loading...',
+	width: 200,
+	displayField:'name',
+	store: tvheadend.channels,
+	mode: 'local',
+	editable: false,
+	triggerAction: 'all',
+	emptyText: 'Select channel...'
+    });
+  
+    selectChannel.on('select', function(c, r) {
+	var streamurl = 'stream/channelid/' + r.data.chid;
+	streamurl += buildStreamParameters(video);
+	video.setAttribute('src', streamurl);
+    });
+  
+    var slider = new Ext.Slider({
+	width: 135,
+	height: 20,
+	value: 90,
+	increment: 1,
+	minValue: 0,
+	maxValue: 100
+    });
+  
+    var sliderLabel = new Ext.form.Label();
+    sliderLabel.setText("100%");
+    slider.addListener('change', function() {
+	video.volume = slider.getValue() / 100.0;
+	sliderLabel.setText(slider.getValue() + '%');
+    });
+  
+    var win = new Ext.Window({
+	title: 'Media Player',
+	layout:'fit',
+	width: 384 * 16 / 9,
+	height: 384 + 57,
+	constrainHeader: true,
+	iconCls: 'eye',
+	resizable: true,
+	tbar: [
+	    selectChannel,
+	    '-',
+	    {
+		iconCls: 'control_play',
+		tooltip: 'Play',
+		handler: function() {
+		    video.play();
+		}
+	    },
+	    {
+		iconCls: 'control_pause',
+		tooltip: 'Pause',
+		handler: function() {
+		    video.pause();
+		}
+	    },
+	    {
+		iconCls: 'control_stop',
+		tooltip: 'Stop',
+		handler: function() {
+		    video.src = '';
+		}
+	    },
+	    '-',
+	    {
+		iconCls: 'control_fullscreen',
+		tooltip: 'Fullscreen',
+		handler: function() {
+		    video.webkitEnterFullScreen();
+		}
+	    },
+	    '-',
+	    {
+		iconCls: 'control_volume',
+		tooltip: 'Volume',
+		disabled: true
+	    },
+	],
+	items: [video]
+    });
+
+    video.addEventListener('loadedmetadata', function() {
+	win.setWidth(video.videoWidth);
+	win.setHeight(video.videoHeight + 57);
+    });
+
+    win.on('beforeShow', function() {
+	win.getTopToolbar().add(slider);
+	win.getTopToolbar().add(new Ext.Toolbar.Spacer());
+	win.getTopToolbar().add(new Ext.Toolbar.Spacer());
+	win.getTopToolbar().add(new Ext.Toolbar.Spacer());
+	win.getTopToolbar().add(sliderLabel);
+
+	video.setAttribute('width', '100%');
+	video.setAttribute('height', win.height - 57);
+
+	if(url) {
+	    url += buildStreamParameters(video);
+	    video.setAttribute('src', url);
+	}
+
+    });
+
+    win.show();
 };
 
 /**
