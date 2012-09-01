@@ -23,6 +23,8 @@
 #include <linux/dvb/frontend.h>
 #include "htsmsg.h"
 
+// temporary assignment until GUI can be determined
+#define CHANTOSID 1
 
 #define DVB_VER_INT(maj,min) (((maj) << 16) + (min))
 
