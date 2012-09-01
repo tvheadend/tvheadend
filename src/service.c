@@ -900,16 +900,18 @@ service_build_stream_start(service_t *t)
     while(langs[i]) {
       tvhlog(LOG_DEBUG, "Service", "Filter audio/subtitle streams for preferred language '%s'", langs[i]->desc);
       TAILQ_FOREACH(st, &t->s_components, es_link) {
-        if(SCT_ISAUDIO(st->es_type) && (memcmp(st->es_lang, langs[i]->code2b, 4) == 0 || memcmp(st->es_lang, langs[i]->code2t, 4) == 0)) {
-          tvhlog(LOG_DEBUG, "Service", "Found audio stream for preferred language '%s'", langs[i]->desc);
-          ss_copy_info(ss, st);
-          preferred_audio_streams++;
-        }
-
-        if(SCT_ISSUBTITLE(st->es_type) && (memcmp(st->es_lang, langs[i]->code2b, 4) == 0 || memcmp(st->es_lang, langs[i]->code2t, 4) == 0)) {
-          tvhlog(LOG_DEBUG, "Service", "Found subtitle stream for preferred language '%s'", langs[i]->desc);
-          ss_copy_info(ss, st);
-          preferred_subtitle_streams++;
+        if(memcmp(st->es_lang, langs[i]->code2b, 4) == 0 ||
+           (langs[i]->code2t && memcmp(st->es_lang, langs[i]->code2t, 4) == 0)) {
+          if(SCT_ISAUDIO(st->es_type)) {
+            tvhlog(LOG_DEBUG, "Service", "Found audio stream for preferred language '%s'", langs[i]->desc);
+            ss_copy_info(ss, st);
+            preferred_audio_streams++;
+          }
+          if(SCT_ISSUBTITLE(st->es_type)) {
+            tvhlog(LOG_DEBUG, "Service", "Found subtitle stream for preferred language '%s'", langs[i]->desc);
+            ss_copy_info(ss, st);
+            preferred_subtitle_streams++;
+          }
         }
       }
       i++;

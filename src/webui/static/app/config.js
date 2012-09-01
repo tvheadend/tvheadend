@@ -1,5 +1,5 @@
 /**
- * Configuration names
+ * Store: All languages
  */
 tvheadend.languages = new Ext.data.JsonStore({
     autoLoad:true,
@@ -9,6 +9,19 @@ tvheadend.languages = new Ext.data.JsonStore({
     url:'languages',
     baseParams: {
     	op: 'list'
+    }
+});
+/**
+ * Store: All languages
+ */
+tvheadend.config_languages = new Ext.data.JsonStore({
+    autoLoad:true,
+    root:'entries',
+    fields: ['identifier','name'],
+    id: 'identifier',
+    url:'languages',
+    baseParams: {
+    	op: 'config'
     }
 });
 
@@ -38,19 +51,24 @@ tvheadend.miscconf = function() {
 
   var dvbscanPath = new Ext.form.TextField({
     fieldLabel : 'DVB scan files path',
-    name       : 'muxconfpath',
+    name : 'muxconfpath',
+    width : 510,
     allowBlank : true
   });
   
-  var language = new Ext.ux.form.LovCombo({
-	store: tvheadend.languages,
-	name: 'language',
-	mode: 'local',
-	width: 400,
-	triggerAction:'all',
-	fieldLabel: 'Default Language(s)',
-    valueField: 'identifier',
-    displayField: 'name'
+  var language = new Ext.ux.ItemSelector({
+	name: "language",
+	fromStore: tvheadend.languages,
+	toStore: tvheadend.config_languages,
+	fieldLabel: "Default Language(s)",
+	dataFields:["identifier", "name"],
+	msWidth: 250,
+	msHeight: 200,
+	valueField: "identifier",
+	displayField: "name",
+	imagePath: "static/multiselect/resources",
+	toLegend: "Selected",
+	fromLegend: "Available"
   });
 
   /* ****************************************************************
@@ -85,8 +103,8 @@ tvheadend.miscconf = function() {
     defaultType   : 'textfield',
     autoHeight    : true,
     items         : [
-      language,
-      dvbscanPath
+      dvbscanPath,
+      language
     ],
     tbar: [
       saveButton,
@@ -112,7 +130,7 @@ tvheadend.miscconf = function() {
   function saveChanges() {
     confpanel.getForm().submit({
       url     : 'config', 
-      params  : { op : 'saveSettings', language : language.getValue() },
+      params  : { op : 'saveSettings' },
       waitMsg : 'Saving Data...',
       failure : function (form, action) {
         Ext.Msg.alert('Save failed', action.result.errormsg);

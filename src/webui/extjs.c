@@ -108,6 +108,8 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/extensions.js");
   extjs_load(hq, "static/livegrid/livegrid-all.js");
   extjs_load(hq, "static/lovcombo/lovcombo-all.js");
+  extjs_load(hq, "static/multiselect/multiselect.js");
+  extjs_load(hq, "static/multiselect/ddview.js");
 
   /**
    * Create a namespace for our app
@@ -732,14 +734,32 @@ extjs_languages(http_connection_t *hc, const char *remain, void *opaque)
       htsmsg_add_msg(array, NULL, e);
       c++;
     }
+  }
+  else if(op != NULL && !strcmp(op, "config")) {
 
-skip:
-    htsmsg_add_msg(out, "entries", array);
+    out = htsmsg_create_map();
+    array = htsmsg_create_list();
 
-  } else {
+    if (http_access_verify(hc, ACCESS_RECORDER_ALL))
+      goto skip;
+
+    const lang_code_t **c = lang_code_split_t(NULL);
+    int i = 0;
+    while (c[i]) {
+      e = htsmsg_create_map();
+      htsmsg_add_str(e, "identifier", c[i]->code2b);
+      htsmsg_add_str(e, "name", c[i]->desc);
+      htsmsg_add_msg(array, NULL, e);
+      i++;
+    }
+  }
+  else {
     pthread_mutex_unlock(&global_lock);
     return HTTP_STATUS_BAD_REQUEST;
   }
+
+skip:
+  htsmsg_add_msg(out, "entries", array);
 
   pthread_mutex_unlock(&global_lock);
 
