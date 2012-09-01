@@ -56,7 +56,9 @@ typedef struct transcoder_stream {
   uint8_t           *enc_sample; // encoding buffer for audio stream
   uint32_t           enc_size;
 
-  uint64_t           cur_pts;
+  uint64_t           enc_pts;
+  uint64_t           dec_pts;
+
   uint64_t           drops;
   streaming_target_t *target;
 } transcoder_stream_t;
@@ -292,6 +294,7 @@ transcoder_stream_passthrough(transcoder_passthrough_t *pt, th_pkt_t *pkt)
 }
 
 
+
 /**
  * transcode an audio stream
  */
@@ -302,7 +305,6 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   AVPacket packet;
   int length, len, i, leftovers;
   uint32_t frame_bytes; 
-  uint64_t pts;
 
   // Open the decoder
   if(ts->sctx->codec_id == CODEC_ID_NONE) {
@@ -314,6 +316,13 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       ts->sindex = 0;
       goto cleanup;
     }
+
+    ts->dec_pts = pkt->pkt_pts;
+  }
+
+  if(pkt->pkt_pts > ts->dec_pts + ts->drops) {
+    ts->drops += (pkt->pkt_pts - ts->dec_pts);
+    tvhlog(LOG_WARNING, "transcode", "Detected framedrops");
   }
 
   av_init_packet(&packet);
@@ -336,6 +345,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     goto cleanup;
   }
   ts->dec_offset += len;
+  ts->dec_pts += pkt->pkt_duration;
 
   // Set parameters that are unknown until the first packet has been decoded.
   ts->tctx->channels        = ts->sctx->channels > 1 ? 2 : 1;
@@ -376,22 +386,14 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       goto cleanup;
     }
 
-    ts->cur_pts = pkt->pkt_pts;
-  } else if(pkt->pkt_pts - pkt->pkt_duration - ts->cur_pts > 0) {
-    ts->drops += (pkt->pkt_pts - pkt->pkt_duration - ts->cur_pts);
-    tvhlog(LOG_WARNING, "transcode", "Detected framedrop(s)");
+    ts->enc_pts = pkt->pkt_pts;
   }
-
-  ts->cur_pts = pkt->pkt_pts;
 
   frame_bytes = av_get_bytes_per_sample(ts->tctx->sample_fmt) * 
 	ts->tctx->frame_size *
 	ts->tctx->channels;
 
   len = ts->dec_offset;
-
-  pts =  ts->cur_pts - ts->tctx->delay;
-  pts -= leftovers*90000 / (2 * ts->tctx->channels * ts->tctx->sample_rate);
 
   for(i=0; i<=len-frame_bytes; i+=frame_bytes) {
     length = avcodec_encode_audio(ts->tctx,
@@ -402,11 +404,10 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       tvhlog(LOG_ERR, "transcode", "Unable to encode audio (%d)", length);
       goto cleanup;
     } else if(length) {
-
-      n = pkt_alloc(ts->enc_sample, length, pts, pts);
+      n = pkt_alloc(ts->enc_sample, length, ts->enc_pts + ts->drops, ts->enc_pts + ts->drops);
 
       if(ts->tctx->coded_frame && ts->tctx->coded_frame->pts != AV_NOPTS_VALUE) {
-	n->pkt_duration = ts->tctx->coded_frame->pts - pts + ts->drops;
+	n->pkt_duration = ts->tctx->coded_frame->pts - ts->enc_pts;
       } else {
 	n->pkt_duration = frame_bytes*90000 / (2 * ts->tctx->channels * ts->tctx->sample_rate);
       }
@@ -424,7 +425,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 	n->pkt_header = pktbuf_alloc(ts->tctx->extradata, ts->tctx->extradata_size);
       }
 
-      pts += n->pkt_duration;
+      ts->enc_pts += n->pkt_duration;
 
       transcoder_pkt_deliver(ts->target, n);
     }
