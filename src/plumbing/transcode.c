@@ -57,7 +57,7 @@ typedef struct transcoder_stream {
   uint32_t           enc_size;
 
   uint64_t           cur_pts;
-  uint64_t           cur_dts;
+  uint64_t           drops;
   streaming_target_t *target;
 } transcoder_stream_t;
 
@@ -300,8 +300,9 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 {
   th_pkt_t *n = NULL;
   AVPacket packet;
-  int length, len, i;
+  int length, len, i, leftovers;
   uint32_t frame_bytes; 
+  uint64_t pts;
 
   // Open the decoder
   if(ts->sctx->codec_id == CODEC_ID_NONE) {
@@ -322,6 +323,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   packet.dts  = pkt->pkt_dts;
   packet.duration = pkt->pkt_duration;
 
+  leftovers = ts->dec_offset;
   len = ts->dec_size - ts->dec_offset;
   if(len <= 0) {
     tvhlog(LOG_ERR, "transcode", "Decoder buffer overflow");
@@ -375,14 +377,21 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     }
 
     ts->cur_pts = pkt->pkt_pts;
-    ts->cur_dts = pkt->pkt_dts;
+  } else if(pkt->pkt_pts - pkt->pkt_duration - ts->cur_pts > 0) {
+    ts->drops += (pkt->pkt_pts - pkt->pkt_duration - ts->cur_pts);
+    tvhlog(LOG_WARNING, "transcode", "Detected framedrop(s)");
   }
+
+  ts->cur_pts = pkt->pkt_pts;
 
   frame_bytes = av_get_bytes_per_sample(ts->tctx->sample_fmt) * 
 	ts->tctx->frame_size *
 	ts->tctx->channels;
 
   len = ts->dec_offset;
+
+  pts =  ts->cur_pts - ts->tctx->delay;
+  pts -= leftovers*90000 / (2 * ts->tctx->channels * ts->tctx->sample_rate);
 
   for(i=0; i<=len-frame_bytes; i+=frame_bytes) {
     length = avcodec_encode_audio(ts->tctx,
@@ -394,10 +403,10 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       goto cleanup;
     } else if(length) {
 
-      n = pkt_alloc(ts->enc_sample, length, ts->cur_pts, ts->cur_dts);
+      n = pkt_alloc(ts->enc_sample, length, pts, pts);
 
       if(ts->tctx->coded_frame && ts->tctx->coded_frame->pts != AV_NOPTS_VALUE) {
-	n->pkt_duration = ts->tctx->coded_frame->pts - ts->cur_pts;
+	n->pkt_duration = ts->tctx->coded_frame->pts - pts + ts->drops;
       } else {
 	n->pkt_duration = frame_bytes*90000 / (2 * ts->tctx->channels * ts->tctx->sample_rate);
       }
@@ -415,8 +424,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 	n->pkt_header = pktbuf_alloc(ts->tctx->extradata, ts->tctx->extradata_size);
       }
 
-      ts->cur_pts += n->pkt_duration;
-      ts->cur_dts += n->pkt_duration;
+      pts += n->pkt_duration;
 
       transcoder_pkt_deliver(ts->target, n);
     }
