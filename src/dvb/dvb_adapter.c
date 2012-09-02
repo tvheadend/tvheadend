@@ -995,6 +995,7 @@ dvb_fe_opts(th_dvb_adapter_t *tda, const char *which)
 void
 dvb_adapter_poweroff(th_dvb_adapter_t *tda)
 {
+  if (tda->tda_fe_fd == -1) return;
   lock_assert(&global_lock);
   if (!tda->tda_poweroff || tda->tda_type != FE_QPSK)
     return;
