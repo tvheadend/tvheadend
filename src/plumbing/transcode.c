@@ -335,12 +335,14 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   len = ts->dec_size - ts->dec_offset;
   if(len <= 0) {
     tvhlog(LOG_ERR, "transcode", "Decoder buffer overflow");
+    ts->drops += pkt->pkt_duration;
     goto cleanup;
   }
 
   length = avcodec_decode_audio3(ts->sctx, (short*)(ts->dec_sample + ts->dec_offset), &len, &packet);
   if(length <= 0) {
     tvhlog(LOG_ERR, "transcode", "Unable to decode audio (%d)", length);
+    ts->drops += pkt->pkt_duration;
     goto cleanup;
   }
   ts->dec_offset += len;
