@@ -303,7 +303,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
 {
   th_pkt_t *n = NULL;
   AVPacket packet;
-  int length, len, i, leftovers;
+  int length, len, i;
   uint32_t frame_bytes; 
 
   // Open the decoder
@@ -332,7 +332,6 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
   packet.dts  = pkt->pkt_dts;
   packet.duration = pkt->pkt_duration;
 
-  leftovers = ts->dec_offset;
   len = ts->dec_size - ts->dec_offset;
   if(len <= 0) {
     tvhlog(LOG_ERR, "transcode", "Decoder buffer overflow");
