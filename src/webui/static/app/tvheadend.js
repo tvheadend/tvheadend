@@ -225,16 +225,17 @@ tvheadend.VLC = function(url) {
     var buildStreamParameters = function(v) {
 	var param = "";
 	
-	if(v.canPlayType('video/x-matroska; codecs="mp4a.40.2,avc1.42E01E"')) {
-	    param += '?mux=webm';
-	    param += '&acodec=AAC';
-	    param += '&vcodec=H264';
-	    param += '&scodec=NONE';
-	    param += '&transcode=1';
-	} else if(v.canPlayType('video/webm; codecs="vorbis,vp8"')) {
+	if(v.canPlayType('video/webm; codecs="vorbis,vp8"')) {
 	    param += '?mux=webm';
 	    param += '&acodec=VORBIS';
 	    param += '&vcodec=VP8';
+	    param += '&scodec=NONE';
+	    param += '&transcode=1';
+	    param += '&resolution=' + resolution;
+	} else if(v.canPlayType('video/mp4; codecs="mp4a.40.2,avc1.42E01E"')) {
+	    param += '?mux=mpegts';
+	    param += '&acodec=AAC';
+	    param += '&vcodec=H264';
 	    param += '&scodec=NONE';
 	    param += '&transcode=1';
 	    param += '&resolution=' + resolution;
