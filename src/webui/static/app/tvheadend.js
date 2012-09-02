@@ -27,10 +27,11 @@ tvheadend.help = function(title, pagename) {
 	}});
 }
 
+
 /**
  * Displays a mediaplayer using VLC plugin
  */
-tvheadend.VLC1 = function(url) {
+tvheadend.VLC = function(url) {
  
   function randomString() {
 	var chars = "ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
@@ -218,7 +219,7 @@ tvheadend.VLC1 = function(url) {
 /**
  * Displays a mediaplayer using html5 video
  */
-tvheadend.VLC = function(url) {
+tvheadend.MediaPlayer = function(url) {
     var curentUrl = url;
     var resolution = 384;
 
@@ -450,9 +451,6 @@ function setServerIpPort(o) {
     tvheadend.serverPort = o.port;
 }
 
-function makeRTSPprefix() {
-    return 'rtsp://' + tvheadend.serverIp + ':' + tvheadend.serverPort + '/';
-}
 
 /**
 *
