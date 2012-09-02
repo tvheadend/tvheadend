@@ -550,7 +550,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
 
       av_dict_set(&opts, "quality",  "realtime", 0);
 
-      ts->tctx->bit_rate       = 4 * ts->tctx->width * ts->tctx->height;
+      ts->tctx->bit_rate       = 3 * ts->tctx->width * ts->tctx->height;
       ts->tctx->rc_buffer_size = 8 * 1024 * 224;
       ts->tctx->rc_max_rate    = 2 * ts->tctx->bit_rate;
       break;
