@@ -1106,7 +1106,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
     var confreader = new Ext.data.JsonReader({
 	root: 'dvbadapters'
     }, ['name', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion', 'qmon',
-	'skip_checksubscr', 'dumpmux', 'poweroff', 'nitoid','extrapriority']);
+	'skip_checksubscr', 'dumpmux', 'poweroff', 'sidtochan', 'nitoid','extrapriority']);
 
     
     function saveConfForm () {
@@ -1182,6 +1182,10 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	    fieldLabel: 'Turn off LNB when idle',
 	    name: 'poweroff'
 	});
+          new Ext.form.Checkbox({
+            fieldLabel: 'Use SID as channel number during mapping',
+            name: 'sidtochan'
+        }),
   items.push(v);
   }
     

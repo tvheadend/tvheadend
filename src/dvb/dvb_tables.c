@@ -1021,6 +1021,12 @@ dvb_table_add_default_dvb(th_dvb_mux_instance_t *tdmi)
 
   fp = dvb_fparams_alloc();
   fp->filter.filter[0] = 0x42;
+  // Note: DishNet (EchoStar) send SDT on 0x46 rather than 0x42
+  if (tdmi->tdmi_network != NULL) {
+    if(strstr(tdmi->tdmi_network,"EchoStar")!=NULL) {
+      fp->filter.filter[0] = 0x46;
+    }
+  }
   fp->filter.mask[0] = 0xff;
   tdt_add(tdmi, fp, dvb_sdt_callback, NULL, "sdt", 
 	  TDT_QUICKREQ | TDT_CRC, 0x11, NULL);

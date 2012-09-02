@@ -750,6 +750,13 @@ static struct strtab stypetab[] = {
   { "SDTV",         ST_SDTV },
   { "Radio",        ST_RADIO },
   { "HDTV",         ST_HDTV },
+  { "HDTV",         ST_EX_HDTV },
+  { "SDTV",         ST_EX_SDTV },
+  { "HDTV",         ST_EP_HDTV },
+  { "HDTV",         ST_ET_HDTV },
+  { "SDTV",         ST_DN_SDTV },
+  { "HDTV",         ST_DN_HDTV },
+  { "SDTV",         ST_SK_SDTV },
   { "SDTV-AC",      ST_AC_SDTV },
   { "HDTV-AC",      ST_AC_HDTV },
 };
@@ -769,6 +776,13 @@ service_is_tv(service_t *t)
   return 
     t->s_servicetype == ST_SDTV    ||
     t->s_servicetype == ST_HDTV    ||
+    t->s_servicetype == ST_EX_HDTV ||
+    t->s_servicetype == ST_EX_SDTV ||
+    t->s_servicetype == ST_EP_HDTV ||
+    t->s_servicetype == ST_ET_HDTV ||
+    t->s_servicetype == ST_DN_SDTV ||
+    t->s_servicetype == ST_DN_HDTV ||
+    t->s_servicetype == ST_SK_SDTV ||
     t->s_servicetype == ST_AC_SDTV ||
     t->s_servicetype == ST_AC_HDTV;
 }

@@ -213,6 +213,23 @@ dvb_adapter_set_qmon(th_dvb_adapter_t *tda, int on)
   tda_save(tda);
 }
 
+/**
+ *
+ */
+void
+dvb_adapter_set_sidtochan(th_dvb_adapter_t *tda, int on)
+{
+  if(tda->tda_sidtochan == on)
+    return;
+
+  lock_assert(&global_lock);
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" use SID as channel number when mapping set to: %s",
+	 tda->tda_displayname, on ? "On" : "Off");
+
+  tda->tda_sidtochan = on;
+  tda_save(tda);
+}
 
 /**
  *

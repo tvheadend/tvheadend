@@ -174,9 +174,13 @@ serviceprobe_thread(void *aux)
         tvhlog(LOG_INFO, "serviceprobe", "%20s: skipped: %s",
         t->s_svcname, err);
       } else if(t->s_ch == NULL) {
+        int channum = t->s_channel_number;
         const char *str;
+        
+        if (!channum && t->s_dvb_mux_instance->tdmi_adapter->tda_sidtochan)
+          channum = t->s_dvb_service_id;
 
-        ch = channel_find_by_name(t->s_svcname, 1, t->s_channel_number);
+        ch = channel_find_by_name(t->s_svcname, 1, channum);
         service_map_channel(t, ch, 1);
       
         tvhlog(LOG_INFO, "serviceprobe", "%20s: mapped to channel \"%s\"",
@@ -191,10 +195,17 @@ serviceprobe_thread(void *aux)
         switch(t->s_servicetype) {
           case ST_SDTV:
           case ST_AC_SDTV:
+          case ST_EX_SDTV:
+          case ST_DN_SDTV:
+          case ST_SK_SDTV:
             str = "SDTV";
             break;
           case ST_HDTV:
           case ST_AC_HDTV:
+          case ST_EX_HDTV:
+          case ST_EP_HDTV:
+          case ST_ET_HDTV:
+          case ST_DN_HDTV:
             str = "HDTV";
             break;
           case ST_RADIO:
