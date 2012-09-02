@@ -219,6 +219,8 @@ tvheadend.VLC1 = function(url) {
  * Displays a mediaplayer using html5 video
  */
 tvheadend.VLC = function(url) {
+    var curentUrl = url;
+    var resolution = 384;
 
     var buildStreamParameters = function(v) {
 	var param = "";
@@ -235,7 +237,7 @@ tvheadend.VLC = function(url) {
 	    param += '&vcodec=VP8';
 	    param += '&scodec=NONE';
 	    param += '&transcode=1';
-	    param += '&resolution=' + v.height;
+	    param += '&resolution=' + resolution;
 	}
 	
 	return param;
@@ -245,10 +247,12 @@ tvheadend.VLC = function(url) {
     video.setAttribute('preload', 'metadata');
     video.setAttribute('autoplay', 'autoplay');
     video.setAttribute('poster', '/docresources/tvheadendlogo.png');
+    video.setAttribute('width', '100%');
+    video.setAttribute('height', resolution);
 
     var selectChannel = new Ext.form.ComboBox({
 	loadingText: 'Loading...',
-	width: 200,
+	width: 150,
 	displayField:'name',
 	store: tvheadend.channels,
 	mode: 'local',
@@ -258,32 +262,55 @@ tvheadend.VLC = function(url) {
     });
   
     selectChannel.on('select', function(c, r) {
-	var streamurl = 'stream/channelid/' + r.data.chid;
-	streamurl += buildStreamParameters(video);
-	video.setAttribute('src', streamurl);
+	curentUrl = 'stream/channelid/' + r.data.chid;
+	video.src = curentUrl + buildStreamParameters(video);
     });
+
   
     var slider = new Ext.Slider({
-	width: 135,
+	width: 50,
 	height: 20,
-	value: 90,
+	value: 100,
 	increment: 1,
 	minValue: 0,
 	maxValue: 100
     });
   
-    var sliderLabel = new Ext.form.Label();
-    sliderLabel.setText("100%");
     slider.addListener('change', function() {
 	video.volume = slider.getValue() / 100.0;
-	sliderLabel.setText(slider.getValue() + '%');
     });
   
+    var selectResolution = new Ext.form.ComboBox({
+	width: 150,
+	displayField:'name',
+	valueField: 'res',
+	value: resolution,
+	mode: 'local',
+	editable: false,
+	triggerAction: 'all',
+	emptyText: 'Select resolution...',
+	store: new Ext.data.SimpleStore({
+	    fields: ['res','name'],
+	    id: 0,
+	    data: [
+		['288','288p'],
+		['384','384p'],
+		['480','480p'],
+		['576','576p']
+	    ]
+	})
+    });
+  
+    selectResolution.on('select', function(c, r) {
+	resolution = r.data.res;
+	video.src = curentUrl + buildStreamParameters(video);
+    });
+
     var win = new Ext.Window({
 	title: 'Media Player',
 	layout:'fit',
-	width: 384 * 16 / 9,
-	height: 384 + 57,
+	width: 576,
+	height: 420,
 	constrainHeader: true,
 	iconCls: 'eye',
 	resizable: true,
@@ -294,7 +321,11 @@ tvheadend.VLC = function(url) {
 		iconCls: 'control_play',
 		tooltip: 'Play',
 		handler: function() {
-		    video.play();
+		    if(video.src == video.poster) {
+			video.src = curentUrl + buildStreamParameters(video);
+		    } else {
+			video.play();
+		    }
 		}
 	    },
 	    {
@@ -308,7 +339,7 @@ tvheadend.VLC = function(url) {
 		iconCls: 'control_stop',
 		tooltip: 'Stop',
 		handler: function() {
-		    video.src = '';
+		    video.src = video.poster;
 		}
 	    },
 	    '-',
@@ -316,39 +347,46 @@ tvheadend.VLC = function(url) {
 		iconCls: 'control_fullscreen',
 		tooltip: 'Fullscreen',
 		handler: function() {
-		    video.webkitEnterFullScreen();
+		    if(video.requestFullscreen ) {
+			video.requestFullscreen();
+		    } else if(video.mozRequestFullScreen ) {
+			video.mozRequestFullScreen();
+		    } else if (video.webkitRequestFullScreen ) {
+			video.webkitRequestFullScreen();
+		    }
 		}
 	    },
+	    '-',
+	    selectResolution,
 	    '-',
 	    {
 		iconCls: 'control_volume',
 		tooltip: 'Volume',
 		disabled: true
 	    },
+	    slider
 	],
 	items: [video]
     });
 
     video.addEventListener('loadedmetadata', function() {
-	win.setWidth(video.videoWidth);
-	win.setHeight(video.videoHeight + 57);
+	if(video.videoWidth && video.videoHeight) {
+	    win.setWidth(video.videoWidth);
+	    win.setHeight(video.videoHeight + 57);
+	    
+	    video.width = video.videoWidth;
+	    video.height = video.videoHeight;
+	}
     });
 
     win.on('beforeShow', function() {
-	win.getTopToolbar().add(slider);
-	win.getTopToolbar().add(new Ext.Toolbar.Spacer());
-	win.getTopToolbar().add(new Ext.Toolbar.Spacer());
-	win.getTopToolbar().add(new Ext.Toolbar.Spacer());
-	win.getTopToolbar().add(sliderLabel);
-
-	video.setAttribute('width', '100%');
-	video.setAttribute('height', win.height - 57);
-
-	if(url) {
-	    url += buildStreamParameters(video);
-	    video.setAttribute('src', url);
+	if(curentUrl) {
+	    video.src = curentUrl + buildStreamParameters(video);
 	}
+    });
 
+    win.on('close', function() {
+	video.src = video.poster;
     });
 
     win.show();
