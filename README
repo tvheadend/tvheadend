@@ -18,7 +18,11 @@ $ sudo apt-get install libavahi-client-dev
 
 If you plan on doing transcoding (also optional):
 
-$ sudo apt-get install libavcodec-dev libavfilter-dev libavformat-dev libavutil-dev libswscale-dev libx264-120
+$ sudo apt-get install libavcodec-dev libavfilter-dev libavformat-dev libavutil-dev libswscale-dev
+
+You might also like to install the extra codecs pack (incl. H264 encoder):
+
+$ sudo apt-get install libavcodec-extra-53
 
 How to build for Linux
 ======================
