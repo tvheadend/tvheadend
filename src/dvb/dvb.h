@@ -24,7 +24,6 @@
 #include <pthread.h>
 #include "htsmsg.h"
 
-
 #define DVB_VER_INT(maj,min) (((maj) << 16) + (min))
 
 #define DVB_VER_ATLEAST(maj, min) \
