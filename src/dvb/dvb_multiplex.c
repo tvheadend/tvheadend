@@ -317,7 +317,7 @@ dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
   dvb_transport_notify_by_adapter(tda);
 
   if(tda->tda_mux_current == tdmi)
-    dvb_fe_stop(tda->tda_mux_current);
+    dvb_fe_stop(tda->tda_mux_current, 0);
 
   if(tdmi->tdmi_conf.dmc_satconf != NULL)
     LIST_REMOVE(tdmi, tdmi_satconf_link);

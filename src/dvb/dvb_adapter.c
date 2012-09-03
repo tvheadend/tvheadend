@@ -16,12 +16,14 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE
 #include <pthread.h>
 #include <assert.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <sys/epoll.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <ctype.h>
@@ -93,6 +95,7 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "diseqc_version", tda->tda_diseqc_version);
   htsmsg_add_u32(m, "extrapriority", tda->tda_extrapriority);
   htsmsg_add_u32(m, "skip_initialscan", tda->tda_skip_initialscan);
+  htsmsg_add_u32(m, "disable_pmt_monitor", tda->tda_disable_pmt_monitor);
   hts_settings_save(m, "dvbadapters/%s", tda->tda_identifier);
   htsmsg_destroy(m);
 }
@@ -332,6 +335,25 @@ dvb_adapter_set_extrapriority(th_dvb_adapter_t *tda, int extrapriority)
 /**
  *
  */
+void
+dvb_adapter_set_disable_pmt_monitor(th_dvb_adapter_t *tda, int on)
+{
+  if(tda->tda_disable_pmt_monitor == on)
+    return;
+
+  lock_assert(&global_lock);
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" disabled PMT monitoring set to: %s",
+	 tda->tda_displayname, on ? "On" : "Off");
+
+  tda->tda_disable_pmt_monitor = on;
+  tda_save(tda);
+}
+
+
+/**
+ *
+ */
 static void
 dvb_adapter_checkspeed(th_dvb_adapter_t *tda)
 {
@@ -348,12 +370,10 @@ dvb_adapter_checkspeed(th_dvb_adapter_t *tda)
 static void
 tda_add(int adapter_num)
 {
-  char path[200];
-  char fname[256];
+  char path[200], fname[256];
   int fe, i, r;
   th_dvb_adapter_t *tda;
   char buf[400];
-  pthread_t ptid;
 
   snprintf(path, sizeof(path), "/dev/dvb/adapter%d", adapter_num);
   snprintf(fname, sizeof(fname), "%s/frontend0", path);
@@ -374,18 +394,20 @@ tda_add(int adapter_num)
   snprintf(tda->tda_demux_path, 256, "%s/demux0", path);
   tda->tda_dvr_path = malloc(256);
   snprintf(tda->tda_dvr_path, 256, "%s/dvr0", path);
+  tda->tda_fe_path = strdup(fname);
 
-
-  tda->tda_fe_fd = fe;
+  tda->tda_fe_fd       = -1;
+  tda->tda_dvr_pipe[0] = -1;
 
   tda->tda_fe_info = malloc(sizeof(struct dvb_frontend_info));
 
-  if(ioctl(tda->tda_fe_fd, FE_GET_INFO, tda->tda_fe_info)) {
+  if(ioctl(fe, FE_GET_INFO, tda->tda_fe_info)) {
     tvhlog(LOG_ALERT, "dvb", "%s: Unable to query adapter", fname);
     close(fe);
     free(tda);
     return;
   }
+  close(fe);
 
   tda->tda_type = tda->tda_fe_info->type;
 
@@ -417,7 +439,6 @@ tda_add(int adapter_num)
 
   TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
 
-  pthread_create(&ptid, NULL, dvb_adapter_input_dvr, tda);
 
   dvb_table_init(tda);
 
@@ -427,6 +448,48 @@ tda_add(int adapter_num)
   gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 1);
 }
 
+void
+dvb_adapter_start ( th_dvb_adapter_t *tda )
+{
+  /* Open front end */
+  if (tda->tda_fe_fd == -1) {
+    tda->tda_fe_fd = tvh_open(tda->tda_fe_path, O_RDWR | O_NONBLOCK, 0);
+    if (tda->tda_fe_fd == -1) return;
+    tvhlog(LOG_DEBUG, "dvb", "%s opened frontend %s", tda->tda_rootpath, tda->tda_fe_path);
+  }
+
+  /* Start DVR thread */
+  if (tda->tda_dvr_pipe[0] == -1) {
+    assert(pipe2(tda->tda_dvr_pipe, O_NONBLOCK | O_CLOEXEC) != -1);
+    pthread_create(&tda->tda_dvr_thread, NULL, dvb_adapter_input_dvr, tda);
+    tvhlog(LOG_DEBUG, "dvb", "%s started dvr thread", tda->tda_rootpath);
+  }
+}
+
+void
+dvb_adapter_stop ( th_dvb_adapter_t *tda )
+{
+  /* Poweroff */
+  dvb_adapter_poweroff(tda);
+
+  /* Close front end */
+  if (tda->tda_fe_fd != -1) {
+    tvhlog(LOG_DEBUG, "dvb", "%s closing frontend", tda->tda_rootpath);
+    close(tda->tda_fe_fd);
+    tda->tda_fe_fd = -1;
+  }
+
+  /* Stop DVR thread */
+  if (tda->tda_dvr_pipe[0] != -1) {
+    tvhlog(LOG_DEBUG, "dvb", "%s stopping thread", tda->tda_rootpath);
+    assert(write(tda->tda_dvr_pipe[1], "", 1) == 1);
+    pthread_join(tda->tda_dvr_thread, NULL);
+    close(tda->tda_dvr_pipe[0]);
+    close(tda->tda_dvr_pipe[1]);
+    tda->tda_dvr_pipe[0] = -1;
+    tvhlog(LOG_DEBUG, "dvb", "%s stopped thread", tda->tda_rootpath);
+  }
+}
 
 /**
  *
@@ -483,6 +546,7 @@ dvb_adapter_init(uint32_t adapter_mask)
       htsmsg_get_u32(c, "diseqc_version", &tda->tda_diseqc_version);
       htsmsg_get_u32(c, "extrapriority", &tda->tda_extrapriority);
       htsmsg_get_u32(c, "skip_initialscan", &tda->tda_skip_initialscan);
+      htsmsg_get_u32(c, "disable_pmt_monitor", &tda->tda_disable_pmt_monitor);
     }
     htsmsg_destroy(l);
   }
@@ -560,8 +624,7 @@ dvb_adapter_mux_scanner(void *aux)
 
   /* Ensure we stop current mux and power off (if required) */
   if (tda->tda_mux_current)
-    dvb_fe_stop(tda->tda_mux_current);
-  dvb_adapter_poweroff(tda);
+    dvb_fe_stop(tda->tda_mux_current, 0);
 }
 
 /**
@@ -638,41 +701,92 @@ static void *
 dvb_adapter_input_dvr(void *aux)
 {
   th_dvb_adapter_t *tda = aux;
-  int fd, i, r;
+  int fd, i, r, c, efd, nfds;
   uint8_t tsb[188 * 10];
   service_t *t;
+  struct epoll_event ev;
 
-  fd = tvh_open(tda->tda_dvr_path, O_RDONLY, 0);
+  fd = tvh_open(tda->tda_dvr_path, O_RDONLY | O_NONBLOCK, 0);
   if(fd == -1) {
     tvhlog(LOG_ALERT, "dvb", "%s: unable to open dvr", tda->tda_dvr_path);
     return NULL;
   }
 
+  /* Create poll */
+  efd = epoll_create(2);
+  ev.events  = EPOLLIN;
+  ev.data.fd = fd;
+  epoll_ctl(efd, EPOLL_CTL_ADD, fd, &ev);
+  ev.data.fd = tda->tda_dvr_pipe[0];
+  epoll_ctl(efd, EPOLL_CTL_ADD, tda->tda_dvr_pipe[0], &ev);
 
+  r = i = 0;
   while(1) {
-    r = read(fd, tsb, sizeof(tsb));
+
+    /* Wait for input */
+    nfds = epoll_wait(efd, &ev, 1, -1);
+    if (nfds < 1) continue;
+    if (ev.data.fd != fd) break;
+
+    c = read(fd, tsb+r, sizeof(tsb)-r);
+    if (c < 0) {
+      if (errno == EAGAIN || errno == EINTR)
+        continue;
+      else
+        break;
+    }
+    r += c;
+
+    /* not enough data */
+    if (r < 188) continue;
 
     pthread_mutex_lock(&tda->tda_delivery_mutex);
-    
-    for(i = 0; i < r; i += 188) {
-      LIST_FOREACH(t, &tda->tda_transports, s_active_link)
-	if(t->s_dvb_mux_instance == tda->tda_mux_current)
-	  ts_recv_packet1(t, tsb + i, NULL);
-    }
 
+    /* debug */
     if(tda->tda_dump_fd != -1) {
       if(write(tda->tda_dump_fd, tsb, r) != r) {
-	tvhlog(LOG_ERR, "dvb",
-	       "\"%s\" unable to write to mux dump file -- %s",
-	       tda->tda_identifier, strerror(errno));
+        tvhlog(LOG_ERR, "dvb",
+               "\"%s\" unable to write to mux dump file -- %s",
+               tda->tda_identifier, strerror(errno));
+        close(tda->tda_dump_fd);
+        tda->tda_dump_fd = -1;
+      }
+    }
 
-	close(tda->tda_dump_fd);
-	tda->tda_dump_fd = -1;
-       }
+    /* find mux */
+    LIST_FOREACH(t, &tda->tda_transports, s_active_link)
+      if(t->s_dvb_mux_instance == tda->tda_mux_current)
+        break;
+
+    /* Process */
+    while (r >= 188) {
+  
+      /* sync */
+      if (tsb[i] == 0x47) {
+        if(t) ts_recv_packet1(t, tsb + i, NULL);
+        i += 188;
+        r -= 188;
+
+      /* no sync */
+      } else {
+        tvhlog(LOG_DEBUG, "dvb", "\"%s\" ts sync lost", tda->tda_identifier);
+        if (ts_resync(tsb, &r, &i)) break;
+        tvhlog(LOG_DEBUG, "dvb", "\"%s\" ts sync found", tda->tda_identifier);
+      }
     }
 
     pthread_mutex_unlock(&tda->tda_delivery_mutex);
+
+    /* reset buffer */
+    if (r && r < i) {
+      memcpy(tsb, tsb+i, r);
+      i = 0;
+    }
   }
+
+  close(efd);
+  close(fd);
+  return NULL;
 }
 
 
@@ -881,6 +995,7 @@ dvb_fe_opts(th_dvb_adapter_t *tda, const char *which)
 void
 dvb_adapter_poweroff(th_dvb_adapter_t *tda)
 {
+  if (tda->tda_fe_fd == -1) return;
   lock_assert(&global_lock);
   if (!tda->tda_poweroff || tda->tda_type != FE_QPSK)
     return;
