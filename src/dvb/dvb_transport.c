@@ -142,7 +142,7 @@ dvb_transport_start(service_t *t, unsigned int weight, int force_start)
   if(!r)
     dvb_transport_open_demuxers(tda, t);
 
-  dvb_table_add_pmt(tdmi, t->s_pmt_pid);
+  dvb_table_add_pmt(t->s_dvb_mux_instance, t->s_pmt_pid);
 
   return r;
 }
