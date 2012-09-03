@@ -47,10 +47,8 @@ check_cc_option sse2
 #
 # Python
 #
-check_py || die 'No PYTHON binary found'
-check_py_import zlib pyzlib || die "Python module missing: zlib"
-check_py_import tarfile pytar || die "Python module missing: tarfile"
-# Note: the above could/should be made optional
+check_py || echo 'WARN: no python binary found'
+check_py_import gzip pygzip
 
 #
 # SSL
@@ -75,11 +73,9 @@ fi
 #
 # Bundling
 #
-if enabled_or_auto bundle; then
-  if enabled zlib; then
-    enable bundle
-  elif enabled bundle; then
-    die "Zlib development support not found (use --disable-bundle)"
+if enabled bundle; then
+  if enabled zlib && ! enabled pygzip; then
+    die "Python gzip module not found (use --disable-zlib or --disable-bundle)"
   fi
 fi
 
@@ -100,7 +96,7 @@ fi
 if enabled linuxdvb && enabled dvbscan; then
   if [ ! -d ${ROOTDIR}/data/dvb-scan ]; then
     echo -n "Fetching dvb-scan files... "
-    ${PYTHON} ${ROOTDIR}/support/getmuxlist &> /dev/null || die "Failed to fetch dvb-scan files (use --disable-dvbscan to skip)"
+    ${ROOTDIR}/support/getmuxlist &> /dev/null || die "Failed to fetch dvb-scan files (use --disable-dvbscan to skip)"
     echo "done"
   fi
 fi
