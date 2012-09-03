@@ -364,7 +364,7 @@ fb_file *fb_open2
 
       /* Inflate the file */
       if (fb->f.orig != -1 && decompress) {
-#if ENABLE_BUNDLE
+#if (ENABLE_ZLIB && ENABLE_BUNDLE)
         ret->gzip = 0;
         ret->size = fb->f.orig;
         ret->buf  = _fb_inflate(fb->f.data, fb->f.size, fb->f.orig);

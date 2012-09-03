@@ -35,6 +35,13 @@ CFLAGS  += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR}
 LDFLAGS += -lrt -ldl -lpthread
 
 #
+# Other config
+#
+
+BUNDLE_FLAGS-${CONFIG_ZLIB} = -z
+BUNDLE_FLAGS = ${BUNDLE_FLAGS-yes}
+
+#
 # Binaries/Scripts
 #
 
@@ -247,4 +254,4 @@ $(BUILDDIR)/bundle.o: $(BUILDDIR)/bundle.c
 
 $(BUILDDIR)/bundle.c:
 	@mkdir -p $(dir $@)
-	$(MKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d -z $(BUNDLES)
+	$(MKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d $(BUNDLE_FLAGS) $(BUNDLES)

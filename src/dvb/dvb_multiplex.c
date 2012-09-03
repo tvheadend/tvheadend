@@ -548,7 +548,7 @@ dvb_mux_save(th_dvb_mux_instance_t *tdmi)
 
   htsmsg_t *m = htsmsg_create_map();
 
-  htsmsg_add_u32(m, "quality", tdmi->tdmi_quality);
+  htsmsg_add_u32(m, "quality", tdmi->tdmi_adapter->tda_qmon ? tdmi->tdmi_quality : 100);
   htsmsg_add_u32(m, "enabled", tdmi->tdmi_enabled);
   htsmsg_add_str(m, "status", dvb_mux_status(tdmi));
 
@@ -777,7 +777,7 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
     if((s = htsmsg_get_str(m, "status")) != NULL)
       tdmi->tdmi_fe_status = str2val(s, muxfestatustab);
 
-    if(!htsmsg_get_u32(m, "quality", &u32))
+    if(tda->tda_qmon && !htsmsg_get_u32(m, "quality", &u32))
       tdmi->tdmi_quality = u32;
   }
   return NULL;
