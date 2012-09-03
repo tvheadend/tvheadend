@@ -778,10 +778,8 @@ dvb_adapter_input_dvr(void *aux)
     pthread_mutex_unlock(&tda->tda_delivery_mutex);
 
     /* reset buffer */
-    if (r && r < i) {
-      memcpy(tsb, tsb+i, r);
-      i = 0;
-    }
+    if (r) {memmove(tsb, tsb+i, r);printf("move");}
+    i = 0;
   }
 
   close(efd);
