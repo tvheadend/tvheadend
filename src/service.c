@@ -48,6 +48,7 @@
 #include "dvb/dvb.h"
 #include "htsp.h"
 #include "lang_codes.h"
+#include "config2.h"
 
 #define SERVICE_HASH_WIDTH 101
 
@@ -882,6 +883,7 @@ service_build_stream_start(service_t *t)
   streaming_start_t *ss;
   int n = 0, i = 0, preferred_audio_streams = 0, preferred_subtitle_streams = 0;
   const lang_code_t **langs;
+  const char *filteraudiosubtitle = config_get_filteraudiosubtitle();
 
   lock_assert(&t->s_stream_mutex);
 
@@ -896,7 +898,7 @@ service_build_stream_start(service_t *t)
       ss_copy_info(ss, st);
 
   // copy preferred audio/subtitle stream information
-  if ((langs = lang_code_split_t(NULL))) {
+  if ((langs = lang_code_split_t(NULL)) && filteraudiosubtitle && strcmp(filteraudiosubtitle, "true") == 0) {
     while(langs[i]) {
       tvhlog(LOG_DEBUG, "Service", "Filter audio/subtitle streams for preferred language '%s'", langs[i]->desc);
       TAILQ_FOREACH(st, &t->s_components, es_link) {

@@ -744,13 +744,15 @@ extjs_languages(http_connection_t *hc, const char *remain, void *opaque)
       goto skip;
 
     const lang_code_t **c = lang_code_split_t(NULL);
-    int i = 0;
-    while (c[i]) {
-      e = htsmsg_create_map();
-      htsmsg_add_str(e, "identifier", c[i]->code2b);
-      htsmsg_add_str(e, "name", c[i]->desc);
-      htsmsg_add_msg(array, NULL, e);
-      i++;
+    if(c) {
+      int i = 0;
+      while (c[i]) {
+        e = htsmsg_create_map();
+        htsmsg_add_str(e, "identifier", c[i]->code2b);
+        htsmsg_add_str(e, "name", c[i]->desc);
+        htsmsg_add_msg(array, NULL, e);
+        i++;
+      }
     }
   }
   else {
@@ -1835,6 +1837,8 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
       save |= config_set_muxconfpath(str);
     if ((str = http_arg_get(&hc->hc_req_args, "language")))
       save |= config_set_language(str);
+    if ((str = http_arg_get(&hc->hc_req_args, "filteraudiosubtitle")))
+          save |= config_set_filteraudiosubtitle(str);
     if (save) config_save();
     pthread_mutex_unlock(&global_lock);
     out = htsmsg_create_map();
