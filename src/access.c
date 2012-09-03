@@ -483,6 +483,11 @@ access_record_update(void *opaque, const char *id, htsmsg_t *values,
 
   if(!htsmsg_get_u32(values, "dvrallcfg", &u32))
     access_update_flag(ae, ACCESS_RECORDER_ALL, u32);
+  // Note: dvrallcfg was added post 2.12, to ensure less confusing
+  // migration if this doesn't exist use standard dvr config value
+  else
+    access_update_flag(ae, ACCESS_RECORDER_ALL,
+                       (ae->ae_rights & ACCESS_RECORDER));
 
   if(!htsmsg_get_u32(values, "admin", &u32))
     access_update_flag(ae, ACCESS_ADMIN, u32);

@@ -201,7 +201,7 @@ dvb_fe_monitor(void *aux)
  * Stop the given TDMI
  */
 void
-dvb_fe_stop(th_dvb_mux_instance_t *tdmi)
+dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
@@ -233,8 +233,13 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi)
   }
   
   epggrab_mux_stop(tdmi, 0);
-
+  
   time(&tdmi->tdmi_lost_adapter);
+
+  if (!retune) {
+    gtimer_disarm(&tda->tda_fe_monitor_timer);
+    dvb_adapter_stop(tda);
+  }
 }
 
 
@@ -439,9 +444,10 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
   }
 
   if(tda->tda_mux_current != NULL)
-    dvb_fe_stop(tda->tda_mux_current);
-
-    
+    dvb_fe_stop(tda->tda_mux_current, 1);
+  else
+    dvb_adapter_start(tda);
+      
   if(tda->tda_type == FE_QPSK) {
 	
     /* DVB-S */

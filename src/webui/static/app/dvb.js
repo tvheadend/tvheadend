@@ -1106,7 +1106,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
     var confreader = new Ext.data.JsonReader({
 	root: 'dvbadapters'
     }, ['name', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion', 'qmon',
-	'skip_checksubscr', 'dumpmux', 'poweroff', 'nitoid','extrapriority']);
+	'skip_checksubscr', 'dumpmux', 'poweroff', 'sidtochan', 'nitoid','extrapriority', 'disable_pmt_monitor']);
 
     
     function saveConfForm () {
@@ -1142,6 +1142,10 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	new Ext.form.Checkbox({
 	    fieldLabel: 'Monitor signal quality',
 	    name: 'qmon'
+	}),
+	new Ext.form.Checkbox({
+	    fieldLabel: 'Disable PMT monitoring',
+	    name: 'disable_pmt_monitor'
 	}),
 	new Ext.form.Checkbox({
 	    fieldLabel: 'Write full DVB MUX to disk',
@@ -1182,6 +1186,10 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	    fieldLabel: 'Turn off LNB when idle',
 	    name: 'poweroff'
 	});
+          new Ext.form.Checkbox({
+            fieldLabel: 'Use SID as channel number during mapping',
+            name: 'sidtochan'
+        }),
   items.push(v);
   }
     

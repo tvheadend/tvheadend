@@ -42,8 +42,6 @@
 #include "notify.h"
 #include "cwc.h"
 
-static void dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid);
-
 static int tdt_id_tally;
 
 /**
@@ -292,8 +290,8 @@ tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
   LIST_FOREACH(t, &tdmi->tdmi_tables, tdt_link) {
     if(pid == t->tdt_pid && 
        t->tdt_callback == callback && t->tdt_opaque == opaque) {
-      free(tdt);
-      free(fparams);
+      if (tdt)     free(tdt);
+      if (fparams) free(fparams);
       return;
     }
   }
@@ -520,8 +518,10 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     pmt     = (ptr[2] & 0x1f) << 8 | ptr[3];
 
     if(service != 0 && pmt != 0) {
-      dvb_transport_find(tdmi, service, pmt, NULL);
-      dvb_table_add_pmt(tdmi, pmt);
+      int save = 0;
+      dvb_transport_find2(tdmi, service, pmt, NULL, &save);
+      if (save || !tda->tda_disable_pmt_monitor)
+        dvb_table_add_pmt(tdmi, pmt);
     }
     ptr += 4;
     len -= 4;
@@ -985,13 +985,21 @@ static int
 dvb_pmt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
+  int active = 0;
   service_t *t;
+  th_dvb_table_t *tdt = opaque;
 
   LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
     pthread_mutex_lock(&t->s_stream_mutex);
     psi_parse_pmt(t, ptr, len, 1, 1);
+    if (t->s_pmt_pid == tdt->tdt_pid && t->s_status == SERVICE_RUNNING)
+      active = 1;
     pthread_mutex_unlock(&t->s_stream_mutex);
   }
+  
+  if (tdmi->tdmi_adapter->tda_disable_pmt_monitor && !active)
+    dvb_tdt_destroy(tdmi->tdmi_adapter, tdmi, tdt);
+
   return 0;
 }
 
@@ -1021,6 +1029,12 @@ dvb_table_add_default_dvb(th_dvb_mux_instance_t *tdmi)
 
   fp = dvb_fparams_alloc();
   fp->filter.filter[0] = 0x42;
+  // Note: DishNet (EchoStar) send SDT on 0x46 rather than 0x42
+  if (tdmi->tdmi_network != NULL) {
+    if(strstr(tdmi->tdmi_network,"EchoStar")!=NULL) {
+      fp->filter.filter[0] = 0x46;
+    }
+  }
   fp->filter.mask[0] = 0xff;
   tdt_add(tdmi, fp, dvb_sdt_callback, NULL, "sdt", 
 	  TDT_QUICKREQ | TDT_CRC, 0x11, NULL);
@@ -1095,7 +1109,7 @@ dvb_table_add_default(th_dvb_mux_instance_t *tdmi)
 /**
  * Setup FD + demux for a services PMT
  */
-static void
+void
 dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid)
 {
   struct dmx_sct_filter_params *fp;
@@ -1106,7 +1120,18 @@ dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid)
   fp->filter.filter[0] = 0x02;
   fp->filter.mask[0] = 0xff;
   tdt_add(tdmi, fp, dvb_pmt_callback, NULL, pmtname, 
-	  TDT_CRC | TDT_QUICKREQ, pmt_pid, NULL);
+	  TDT_CRC | TDT_QUICKREQ | TDT_TDT, pmt_pid, NULL);
+}
+
+void
+dvb_table_rem_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid)
+{
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  th_dvb_table_t *tdt = NULL;
+  LIST_FOREACH(tdt, &tdmi->tdmi_tables, tdt_link)
+    if (tdt->tdt_pid == pmt_pid && tdt->tdt_callback == dvb_pmt_callback)
+      break;
+  if (tdt) dvb_tdt_destroy(tda, tdmi, tdt);
 }
 
 
