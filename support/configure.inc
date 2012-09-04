@@ -388,7 +388,7 @@ ROOTDIR  ?= ${ROOTDIR}
 BUILDDIR ?= ${ROOTDIR}/build.${PLATFORM}
 OSENV    ?= ${OSENV}
 ARCH     ?= ${ARCH}
-ifeq ($(origin CC),default)
+ifeq (\$(origin CC),default)
 CC        = ${CC}
 endif
 PYTHON   ?= ${PYTHON}
