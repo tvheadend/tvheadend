@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <time.h>
 
 #include "tvheadend.h"
 #include "rawtsinput.h"
