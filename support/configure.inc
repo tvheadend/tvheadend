@@ -388,7 +388,9 @@ ROOTDIR  ?= ${ROOTDIR}
 BUILDDIR ?= ${ROOTDIR}/build.${PLATFORM}
 OSENV    ?= ${OSENV}
 ARCH     ?= ${ARCH}
-CC       ?= ${CC}
+ifeq ($(origin CC),default)
+CC        = ${CC}
+endif
 PYTHON   ?= ${PYTHON}
 CFLAGS   += ${CFLAGS}
 LDFLAGS  += ${LDFLAGS}
