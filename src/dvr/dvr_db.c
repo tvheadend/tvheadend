@@ -1365,6 +1365,23 @@ dvr_get_filesize(dvr_entry_t *de)
 /**
  *
  */
+static struct strtab repeatstab[] = {
+  { "allepisodes",  DVR_REPEATS_ALLEPISODES },
+  { "newonly",      DVR_REPEATS_NEWONLY },
+};
+
+dvr_repeats_t
+dvr_repeats2val(const char *s)
+{
+  return str2val_def(s, repeatstab, DVR_REPEATS_ALLEPISODES);
+}
+
+const char *
+dvr_val2repeats(dvr_repeats_t v)
+{
+  return val2str(v, repeatstab) ?: "invalid";
+}
+
 static struct strtab priotab[] = {
   { "important",   DVR_PRIO_IMPORTANT },
   { "high",        DVR_PRIO_HIGH },

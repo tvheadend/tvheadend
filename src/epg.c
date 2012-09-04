@@ -1859,7 +1859,7 @@ htsmsg_t *epg_genres_list_all ( int major_only, int major_prefix )
 
 static void _eqr_add 
   ( epg_query_result_t *eqr, epg_broadcast_t *e,
-    epg_genre_t *genre, regex_t *preg, time_t start, const char *lang )
+    epg_genre_t *genre, regex_t *preg, time_t start, const char *lang, int repeats )
 {
   const char *title;
 
@@ -1868,6 +1868,9 @@ static void _eqr_add
   if ( !(title = epg_episode_get_title(e->episode, lang)) ) return;
   if ( genre && !epg_genre_list_contains(&e->episode->genre, genre, 1) ) return;
   if ( preg && regexec(preg, title, 0, NULL, 0)) return;
+
+  /* Check Repeat Flag */
+  if ((repeats == 1) && (e->is_repeat)) return;
 
   /* More space */
   if ( eqr->eqr_entries == eqr->eqr_alloced ) {
@@ -1882,17 +1885,17 @@ static void _eqr_add
 
 static void _eqr_add_channel 
   ( epg_query_result_t *eqr, channel_t *ch, epg_genre_t *genre,
-    regex_t *preg, time_t start, const char *lang )
+    regex_t *preg, time_t start, const char *lang, int repeats )
 {
   epg_broadcast_t *ebc;
   RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
-    if ( ebc->episode ) _eqr_add(eqr, ebc, genre, preg, start, lang);
+    if ( ebc->episode ) _eqr_add(eqr, ebc, genre, preg, start, lang, repeats);
   }
 }
 
 void epg_query0
   ( epg_query_result_t *eqr, channel_t *channel, channel_tag_t *tag,
-    epg_genre_t *genre, const char *title, const char *lang )
+    epg_genre_t *genre, const char *title, const char *lang, int repeats )
 {
   time_t now;
   channel_tag_mapping_t *ctm;
@@ -1913,19 +1916,19 @@ void epg_query0
   
   /* Single channel */
   if (channel && !tag) {
-    _eqr_add_channel(eqr, channel, genre, preg, now, lang);
+    _eqr_add_channel(eqr, channel, genre, preg, now, lang, repeats);
   
   /* Tag based */
   } else if ( tag ) {
     LIST_FOREACH(ctm, &tag->ct_ctms, ctm_tag_link) {
       if(channel == NULL || ctm->ctm_channel == channel)
-        _eqr_add_channel(eqr, ctm->ctm_channel, genre, preg, now, lang);
+        _eqr_add_channel(eqr, ctm->ctm_channel, genre, preg, now, lang, repeats);
     }
 
   /* All channels */
   } else {
     RB_FOREACH(channel, &channel_name_tree, ch_name_link) {
-      _eqr_add_channel(eqr, channel, genre, preg, now, lang);
+      _eqr_add_channel(eqr, channel, genre, preg, now, lang, repeats);
     }
   }
   if (preg) regfree(preg);
@@ -1934,11 +1937,11 @@ void epg_query0
 }
 
 void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
-	       epg_genre_t *genre, const char *title, const char *lang)
+	       epg_genre_t *genre, const char *title, const char *lang, int repeats)
 {
   channel_t     *ch = channel ? channel_find_by_name(channel, 0, 0) : NULL;
   channel_tag_t *ct = tag     ? channel_tag_find_by_name(tag, 0)    : NULL;
-  epg_query0(eqr, ch, ct, genre, title, lang);
+  epg_query0(eqr, ch, ct, genre, title, lang, repeats);
 }
 
 void epg_query_free(epg_query_result_t *eqr)
