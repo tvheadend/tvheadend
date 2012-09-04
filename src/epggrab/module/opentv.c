@@ -51,7 +51,7 @@ typedef struct opentv_event
   char                  *summary;     ///< Event summary
   char                  *desc;        ///< Event description
   uint8_t                cat;         ///< Event category
-  uint16_t               series;      ///< Series (link) reference
+  char                  *series;      ///< Series ID
   
   uint8_t                type;        ///< 0x1=title, 0x2=summary
 } opentv_event_t;
@@ -189,27 +189,6 @@ static epggrab_channel_t *_opentv_find_epggrab_channel
                               (epggrab_module_t*)mod);
 }
 
-static epg_season_t *_opentv_find_season 
-  ( opentv_module_t *mod, int cid, opentv_event_t *ev, int *save )
-{
-  char uri[64];
-  sprintf(uri, "%s-%d-%d", mod->id, cid, ev->series);
-  return epg_season_find_by_uri(uri, 1, save);
-}
-
-static epg_episode_t *_opentv_find_episode
-  ( opentv_module_t *mod, int cid, opentv_event_t *ev, int *save )
-{
-  char uri[100];
-  char *tmp = epg_hash(ev->title, ev->summary, ev->desc);
-  if (tmp) {
-    snprintf(uri, 100, "%s-%d-%s", mod->id, cid, tmp);
-    free(tmp);
-    return epg_episode_find_by_uri(uri, 1, save);
-  }
-  return NULL;
-}
-
 static service_t *_opentv_find_service ( int tsid, int sid )
 {
   th_dvb_adapter_t *tda;
@@ -278,8 +257,9 @@ static char *_opentv_parse_string
 /* Parse a specific record */
 static int _opentv_parse_event_record
  ( opentv_module_t *prov, opentv_event_t *ev, uint8_t *buf, int len,
-   time_t mjd )
+   time_t mjd, channel_t *ch )
 {
+  char series[256];
   uint8_t rtag = buf[0];
   uint8_t rlen = buf[1];
   if (rlen+2 <= len) {
@@ -304,7 +284,11 @@ static int _opentv_parse_event_record
           ev->desc      = _opentv_parse_string(prov, buf+2, rlen);
         break;
       case 0xc1: // series link
-        ev->series      = ((uint16_t)buf[2] << 8) | buf[3];
+        if (!ev->series) {
+          sprintf(series, "opentv://%s/%hu", ch->ch_name, 
+                  ((uint16_t)buf[2] << 8) | buf[3]);
+          ev->series = strdup(series);
+        }
       break;
       default:
         break;
@@ -317,7 +301,8 @@ static int _opentv_parse_event_record
 static int _opentv_parse_event
   ( opentv_module_t *prov, opentv_status_t *sta,
     uint8_t *buf, int len, int cid, time_t mjd,
-    opentv_event_t *ev, int type )
+    opentv_event_t *ev, int type,
+    channel_t *ch )
 {
   int      slen = ((int)buf[2] & 0xf << 8) | buf[3];
   int      i    = 4;
@@ -337,7 +322,7 @@ static int _opentv_parse_event
 
   /* Process records */ 
   while (i < slen+4) {
-    i += _opentv_parse_event_record(prov, ev, buf+i, len-i, mjd);
+    i += _opentv_parse_event_record(prov, ev, buf+i, len-i, mjd, ch);
   }
   return slen+4;
 }
@@ -352,11 +337,10 @@ static int _opentv_parse_event_section
   epggrab_channel_t *ec;
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
-  epg_season_t *es;
+  epg_serieslink_t *es;
   opentv_event_t ev;
   epggrab_module_t *src = (epggrab_module_t*)mod;
   const char *lang = NULL;
-  const char *str;
 
   /* Get language (bit of a hack) */
   if      (!strcmp(mod->dict->id, "skyit"))  lang = "it";
@@ -376,7 +360,12 @@ static int _opentv_parse_event_section
   i = 7;
   while (i < len) {
     memset(&ev, 0, sizeof(opentv_event_t));
-    i += _opentv_parse_event(mod, sta, buf+i, len-i, cid, mjd, &ev, type);
+    i += _opentv_parse_event(mod, sta, buf+i, len-i, cid, mjd,
+                             &ev, type, ec->channel);
+
+    /*
+     * Broadcast
+     */
 
     /* Find broadcast */
     if (ev.type & OPENTV_TITLE) {
@@ -391,40 +380,35 @@ static int _opentv_parse_event_section
       continue; // don't want to free() anything
     }
 
-    /* Find episode */
+    /* Summary / Description */
     if (ebc) {
-      ee = NULL;
+      if (ev.summary)
+        save |= epg_broadcast_set_summary(ebc, ev.summary, lang, src);
+      if (ev.desc)
+        save |= epg_broadcast_set_description(ebc, ev.desc, lang, src);
+    }
 
-      /* Find episode */
-      if (ev.type & OPENTV_SUMMARY || !ebc->episode)
-        ee = _opentv_find_episode(mod, cid, &ev, &save);
+    /*
+     * Series link
+     */
 
-      /* Use existing */
-      if (!ee) ee = ebc->episode;
+    if (ebc && ev.series) {
+      if ((es = epg_serieslink_find_by_uri(ev.series, 1, &save)))
+        save |= epg_broadcast_set_serieslink(ebc, es, src);
+    }
 
-      /* Update */
-      if (ee) {
-        if (!ev.title && ebc->episode) {
-          if ((str = epg_episode_get_title(ebc->episode, NULL)))
-            save |= epg_episode_set_title(ee, str, lang, NULL);
-        } else if (ev.title)
-          save |= epg_episode_set_title(ee, ev.title, lang, src);
-        if (ev.summary)
-          save |= epg_episode_set_summary(ee, ev.summary, lang, src);
-        if (ev.desc)
-          save |= epg_episode_set_description(ee, ev.desc, lang, src);
-        if (ev.cat) {
-          epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
-          epg_genre_list_add_by_eit(egl, ev.cat);
-          save |= epg_episode_set_genre(ee, egl, src);
-          epg_genre_list_destroy(egl);
-        }
-        if (ev.series) {
-          es = _opentv_find_season(mod, cid, &ev, &save);
-          if (es) save |= epg_episode_set_season(ee, es, src);
-        }
+    /*
+     * Episode
+     */
 
-        save |= epg_broadcast_set_episode(ebc, ee, src);
+    if (ebc && (ee = epg_broadcast_get_episode(ebc, 1, &save))) {
+      if (ev.title)
+        save |= epg_episode_set_title(ee, ev.title, lang, src);
+      if (ev.cat) {
+        epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
+        epg_genre_list_add_by_eit(egl, ev.cat);
+        save |= epg_episode_set_genre(ee, egl, src);
+        epg_genre_list_destroy(egl);
       }
     }
 
@@ -432,6 +416,7 @@ static int _opentv_parse_event_section
     if (ev.title)   free(ev.title);
     if (ev.summary) free(ev.summary);
     if (ev.desc)    free(ev.desc);
+    if (ev.series)  free(ev.series);
   }
 
   /* Update EPG */

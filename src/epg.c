@@ -41,6 +41,7 @@
 epg_object_tree_t epg_brands;
 epg_object_tree_t epg_seasons;
 epg_object_tree_t epg_episodes;
+epg_object_tree_t epg_serieslinks;
 
 /* Other special case lists */
 epg_object_list_t epg_objects[EPG_HASH_WIDTH];
@@ -296,6 +297,17 @@ static int _epg_object_set_lang_str
   save = lang_str_add(*old, newstr, newlang, update);
   if (save)
     _epg_object_set_updated(eo);
+  return save;
+}
+
+static int _epg_object_set_lang_str2
+  ( void *o, lang_str_t **old, const lang_str_t *str, epggrab_module_t *src )
+{
+  int save = 0;
+  lang_str_ele_t *ls;
+  RB_FOREACH(ls, str, link) {
+    save |= _epg_object_set_lang_str(o, old, ls->str, ls->lang, src);
+  }
   return save;
 }
 
@@ -781,8 +793,15 @@ int epg_episode_set_title
   ( epg_episode_t *episode, const char *title, const char *lang,
     epggrab_module_t *src )
 {
-  if (!episode || !title || !*title) return 0;
+  if (!episode) return 0;
   return _epg_object_set_lang_str(episode, &episode->title, title, lang, src);
+}
+
+int epg_episode_set_title2
+  ( epg_episode_t *episode, const lang_str_t *str, epggrab_module_t *src )
+{
+  if (!episode) return 0;
+  return _epg_object_set_lang_str2(episode, &episode->title, str, src);
 }
 
 int epg_episode_set_subtitle
@@ -792,6 +811,13 @@ int epg_episode_set_subtitle
   if (!episode || !subtitle || !*subtitle) return 0;
   return _epg_object_set_lang_str(episode, &episode->subtitle,
                                   subtitle, lang, src);
+}
+
+int epg_episode_set_subtitle2
+  ( epg_episode_t *episode, const lang_str_t *str, epggrab_module_t *src )
+{
+  if (!episode) return 0;
+  return _epg_object_set_lang_str2(episode, &episode->subtitle, str, src);
 }
 
 int epg_episode_set_summary
@@ -1142,6 +1168,89 @@ const char *epg_episode_get_description
 }
 
 /* **************************************************************************
+ * Series link
+ * *************************************************************************/
+
+static void _epg_serieslink_destroy ( void *eo )
+{
+  epg_serieslink_t *es = (epg_serieslink_t*)eo;
+  if (LIST_FIRST(&es->broadcasts)) {
+    tvhlog(LOG_CRIT, "epg", "attempt to destory series link with broadcasts");
+    assert(0);
+  }
+  _epg_object_destroy(eo, &epg_serieslinks);
+  free(es);
+}
+
+static void _epg_serieslink_updated ( void *eo )
+{
+  dvr_autorec_check_serieslink((epg_serieslink_t*)eo);
+}
+
+static epg_object_t **_epg_serieslink_skel ( void )
+{
+  static epg_object_t *skel = NULL;
+  if ( !skel ) {
+    skel = calloc(1, sizeof(epg_serieslink_t));
+    skel->type    = EPG_SERIESLINK;
+    skel->destroy = _epg_serieslink_destroy;
+    skel->updated = _epg_serieslink_updated;
+  }
+  return &skel;
+}
+
+epg_serieslink_t* epg_serieslink_find_by_uri
+  ( const char *uri, int create, int *save )
+{
+  return (epg_serieslink_t*)
+    _epg_object_find_by_uri(uri, create, save,
+                            &epg_serieslinks,
+                            _epg_serieslink_skel());
+}
+
+epg_serieslink_t *epg_serieslink_find_by_id ( uint64_t id )
+{
+  return (epg_serieslink_t*)_epg_object_find_by_id(id, EPG_SERIESLINK);
+}
+
+static void _epg_serieslink_add_broadcast
+  ( epg_serieslink_t *esl, epg_broadcast_t *ebc )
+{
+  _epg_object_getref(esl);
+  _epg_object_set_updated(esl);
+  LIST_INSERT_HEAD(&esl->broadcasts, ebc, sl_link);
+}
+
+static void _epg_serieslink_rem_broadcast
+  ( epg_serieslink_t *esl, epg_broadcast_t *ebc )
+{
+  LIST_REMOVE(ebc, sl_link);
+  _epg_object_set_updated(esl);
+  _epg_object_putref(esl);
+}
+
+htsmsg_t *epg_serieslink_serialize ( epg_serieslink_t *esl )
+{
+  htsmsg_t *m;
+  if (!esl || !esl->uri) return NULL;
+  if (!(m = _epg_object_serialize((epg_object_t*)esl))) return NULL;
+  return m;
+}
+
+epg_serieslink_t *epg_serieslink_deserialize 
+  ( htsmsg_t *m, int create, int *save )
+{
+  epg_object_t **skel = _epg_serieslink_skel();
+  epg_serieslink_t *esl;
+
+  if ( !_epg_object_deserialize(m, *skel) ) return NULL;
+  if ( !(esl = epg_serieslink_find_by_uri((*skel)->uri, create, save)) ) 
+    return NULL;
+  
+  return esl;
+}
+
+/* **************************************************************************
  * Channel
  * *************************************************************************/
 
@@ -1371,6 +1480,21 @@ int epg_broadcast_set_episode
   return save;
 }
 
+int epg_broadcast_set_serieslink
+  ( epg_broadcast_t *ebc, epg_serieslink_t *esl, epggrab_module_t *src )
+{
+  int save = 0;
+  if ( !ebc || !esl ) return 0;
+  if ( !_epg_object_set_grabber(ebc, src) && ebc->serieslink ) return 0;
+  if ( ebc->serieslink != esl ) {
+    if ( ebc->serieslink ) _epg_serieslink_rem_broadcast(ebc->serieslink, ebc);
+    ebc->serieslink = esl;
+    _epg_serieslink_add_broadcast(esl, ebc);
+    save = 1;
+  }
+  return save;
+}
+
 int epg_broadcast_set_is_widescreen
   ( epg_broadcast_t *b, uint8_t ws, epggrab_module_t *src )
 {
@@ -1434,10 +1558,73 @@ int epg_broadcast_set_is_repeat
   return _epg_object_set_u8(b, &b->is_repeat, r, src);
 }
 
+int epg_broadcast_set_summary
+  ( epg_broadcast_t *b, const char *str, const char *lang,
+    epggrab_module_t *src )
+{
+  if (!b) return 0;
+  return _epg_object_set_lang_str(b, &b->summary, str, lang, src);
+}
+
+int epg_broadcast_set_description
+  ( epg_broadcast_t *b, const char *str, const char *lang,
+    epggrab_module_t *src )
+{
+  if (!b) return 0;
+  return _epg_object_set_lang_str(b, &b->description, str, lang, src);
+}
+
+int epg_broadcast_set_summary2
+  ( epg_broadcast_t *b, const lang_str_t *str, epggrab_module_t *src )
+{
+  if (!b) return 0;
+  return _epg_object_set_lang_str2(b, &b->summary, str, src);
+}
+
+int epg_broadcast_set_description2
+  ( epg_broadcast_t *b, const lang_str_t *str, epggrab_module_t *src )
+{
+  if (!b) return 0;
+  return _epg_object_set_lang_str2(b, &b->description, str, src);
+}
+
 epg_broadcast_t *epg_broadcast_get_next ( epg_broadcast_t *broadcast )
 {
   if ( !broadcast ) return NULL;
   return RB_NEXT(broadcast, sched_link);
+}
+
+epg_episode_t *epg_broadcast_get_episode
+  ( epg_broadcast_t *ebc, int create, int *save )
+{
+  char uri[256];
+  epg_episode_t *ee;
+  if (!ebc) return NULL;
+  if (ebc->episode) return ebc->episode;
+  if (!create) return NULL;
+  snprintf(uri, sizeof(uri)-1, "tvh://channel-%d/bcast-%"PRIu64"/episode",
+           ebc->channel->ch_id, ebc->id);
+  if ((ee = epg_episode_find_by_uri(uri, 1, save)))
+    *save |= epg_broadcast_set_episode(ebc, ee, ebc->grabber);
+  return ee;
+}
+
+const char *epg_broadcast_get_title ( epg_broadcast_t *b, const char *lang )
+{
+  if (!b || !b->episode) return NULL;
+  return epg_episode_get_title(b->episode, lang);
+}
+
+const char *epg_broadcast_get_summary ( epg_broadcast_t *b, const char *lang )
+{
+  if (!b || !b->summary) return NULL;
+  return lang_str_get(b->summary, lang);
+}
+
+const char *epg_broadcast_get_description ( epg_broadcast_t *b, const char *lang )
+{
+  if (!b || !b->description) return NULL;
+  return lang_str_get(b->description, lang);
 }
 
 htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
@@ -1471,6 +1658,8 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
     htsmsg_add_u32(m, "is_new", 1);
   if (broadcast->is_repeat)
     htsmsg_add_u32(m, "is_repeat", 1);
+  if (broadcast->serieslink)
+    htsmsg_add_str(m, "serieslink", broadcast->serieslink->uri);
   
   return m;
 }
@@ -1481,6 +1670,7 @@ epg_broadcast_t *epg_broadcast_deserialize
   channel_t *ch = NULL;
   epg_broadcast_t *ebc, **skel = _epg_broadcast_skel();
   epg_episode_t *ee;
+  epg_serieslink_t *esl;
   const char *str;
   uint32_t chid, eid, start, stop, u32;
 
@@ -1531,6 +1721,11 @@ epg_broadcast_t *epg_broadcast_deserialize
     *save |= epg_broadcast_set_is_new(ebc, u32, NULL);
   if (!htsmsg_get_u32(m, "is_repeat", &u32))
     *save |= epg_broadcast_set_is_repeat(ebc, u32, NULL);
+
+  /* Series link */
+  if ((str = htsmsg_get_str(m, "serieslink")))
+    if ((esl = epg_serieslink_find_by_uri(str, 1, save)))
+      *save |= epg_broadcast_set_serieslink(ebc, esl, NULL);
 
   /* Set the episode */
   *save |= epg_broadcast_set_episode(ebc, ee, NULL);

@@ -604,6 +604,11 @@ void dvr_autorec_check_season(epg_season_t *s)
 //       this will already have been picked up by the check_event call
 }
 
+void dvr_autorec_check_serieslink(epg_serieslink_t *s)
+{
+// TODO: need to implement this
+}
+
 /**
  *
  */

@@ -410,9 +410,8 @@ static int _eit_process_event
   uint8_t dtag, dlen;
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
-  epg_season_t *es;
+  epg_serieslink_t *es;
   eit_event_t ev;
-  lang_str_ele_t *ls;
 
   if ( len < 12 ) return -1;
 
@@ -485,6 +484,16 @@ static int _eit_process_event
     ptr   += dlen;
   }
 
+  /*
+   * Broadcast
+   */
+
+  /* Summary/Description */
+  if ( ev.summary )
+    *save |= epg_broadcast_set_summary2(ebc, ev.summary, mod);
+  if ( ev.desc )
+    *save |= epg_broadcast_set_description2(ebc, ev.desc, mod);
+
   /* Broadcast Metadata */
   *save |= epg_broadcast_set_is_hd(ebc, ev.hd, mod);
   *save |= epg_broadcast_set_is_widescreen(ebc, ev.ws, mod);
@@ -492,51 +501,39 @@ static int _eit_process_event
   *save |= epg_broadcast_set_is_subtitled(ebc, ev.st, mod);
   *save |= epg_broadcast_set_is_deafsigned(ebc, ev.ds, mod);
 
-  /* Find episode */
-  if (*ev.uri) {
-    ee = epg_episode_find_by_uri(ev.uri, 1, save);
-  } else if ( !(ee = ebc->episode) ) {
-    char *uri;
-    uri   = epg_hash(lang_str_get(ev.title, NULL), 
-                     lang_str_get(ev.summary, NULL),
-                     lang_str_get(ev.desc, NULL));
-    if (uri) {
-      ee = epg_episode_find_by_uri(uri, 1, save);
-      free(uri);
-    }
+  /*
+   * Series link
+   */
+
+  if (*ev.suri) {
+    if ((es = epg_serieslink_find_by_uri(ev.suri, 1, save)))
+      *save |= epg_broadcast_set_serieslink(ebc, es, mod);
   }
 
-  /* Update Broadcast */
-  if (ee) *save |= epg_broadcast_set_episode(ebc, ee, mod);
+  /*
+   * Episode
+   */
+
+  /* Find episode */
+  if (*ev.uri) {
+    if ((ee = epg_episode_find_by_uri(ev.uri, 1, save)))
+      *save |= epg_broadcast_set_episode(ebc, ee, mod);
+
+  /* Existing/Artificial */
+  } else
+    ee = epg_broadcast_get_episode(ebc, 1, save);
 
   /* Update Episode */
   if (ee) {
     *save |= epg_episode_set_is_bw(ee, ev.bw, mod);
-    if ( ev.title ) {
-      RB_FOREACH(ls, ev.title, link)
-        *save |= epg_episode_set_title(ee, ls->str, ls->lang, mod);
-    }
-    if ( ev.summary ) {
-      RB_FOREACH(ls, ev.summary, link)
-        *save |= epg_episode_set_summary(ee, ls->str, ls->lang, mod);
-    }
-    if ( ev.desc ) {
-      RB_FOREACH(ls, ev.desc, link)
-        *save |= epg_episode_set_description(ee, ls->str, ls->lang, mod);
-    }
+    if ( ev.title )
+      *save |= epg_episode_set_title2(ee, ev.title, mod);
     if ( ev.genre )
       *save |= epg_episode_set_genre(ee, ev.genre, mod);
 #if TODO_ADD_EXTRA
     if ( ev.extra )
       *save |= epg_episode_set_extra(ee, extra, mod);
 #endif
-
-    /* Season */
-    if (*ev.suri) {
-      es = epg_season_find_by_uri(ev.suri, 1, save);
-      if (es)
-        *save |= epg_episode_set_season(ee, es, mod);
-    }
   }
 
   /* Tidy up */

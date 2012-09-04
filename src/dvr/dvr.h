@@ -345,6 +345,7 @@ void dvr_autorec_add_series_link(const char *dvr_config_name,
 void dvr_autorec_check_event(epg_broadcast_t *e);
 void dvr_autorec_check_brand(epg_brand_t *b);
 void dvr_autorec_check_season(epg_season_t *s);
+void dvr_autorec_check_serieslink(epg_serieslink_t *s);
 
 
 void autorec_destroy_by_channel(channel_t *ch);
