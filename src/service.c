@@ -1,6 +1,6 @@
 /*
  *  Services
- *  Copyright (C) 2010 Andreas Öman
+ *  Copyright (C) 2010 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -47,6 +47,7 @@
 #include "atomic.h"
 #include "dvb/dvb.h"
 #include "htsp.h"
+#include "lang_codes.h"
 
 #define SERVICE_HASH_WIDTH 101
 
@@ -890,7 +891,7 @@ service_build_stream_start(service_t *t)
     ssc->ssc_index = st->es_index;
     ssc->ssc_type  = st->es_type;
 
-    memcpy(ssc->ssc_lang, st->es_lang, 4);
+    memcpy(ssc->ssc_lang, lang_code_get(st->es_lang), 4);
     ssc->ssc_composition_id = st->es_composition_id;
     ssc->ssc_ancillary_id = st->es_ancillary_id;
     ssc->ssc_pid = st->es_pid;
