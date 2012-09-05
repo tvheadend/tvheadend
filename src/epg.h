@@ -473,9 +473,9 @@ void epg_query_sort(epg_query_result_t *eqr);
 /* Query routines */
 void epg_query0(epg_query_result_t *eqr, struct channel *ch,
                 struct channel_tag *ct, epg_genre_t *genre, const char *title,
-                const char *lang);
+                const char *lang, int repeats);
 void epg_query(epg_query_result_t *eqr, const char *channel, const char *tag,
-	       epg_genre_t *genre, const char *title, const char *lang);
+	       epg_genre_t *genre, const char *title, const char *lang, int repeats);
 
 
 /* ************************************************************************

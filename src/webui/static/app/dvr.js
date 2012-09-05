@@ -13,6 +13,15 @@ tvheadend.weekdays = new Ext.data.SimpleStore({
     ]
 });
 
+// Repeats
+tvheadend.dvrrepeats = new Ext.data.SimpleStore({
+    fields: ['identifier', 'name'],            
+    id: 0,                                     
+    data: [                                    
+        ['allepisodes',   'All Episodes'],
+        ['newonly',       'New Episodes Only']
+    ]                                          
+});        
 
 // This should be loaded from tvheadend
 tvheadend.dvrprio = new Ext.data.SimpleStore({
@@ -26,6 +35,8 @@ tvheadend.dvrprio = new Ext.data.SimpleStore({
 	['unimportant', 'Unimportant']
     ]
 });
+
+
 
 // For the container configuration
 tvheadend.containers = new Ext.data.SimpleStore({
@@ -541,6 +552,20 @@ tvheadend.autoreceditor = function() {
             increment: 10,
             format: 'H:i'
         })
+        }, {                                                               
+            header: "Repeats",                                            
+            dataIndex: 'repeats',
+            width: 100,                                                    
+            renderer: function(value, metadata, record, row, col, store) { 
+                return tvheadend.dvrrepeats.getById(value).data.name;         
+            },                                                             
+            editor: new fm.ComboBox({                                      
+                store: tvheadend.dvrrepeats,                                  
+                triggerAction: 'all',                                      
+                mode: 'local',                                             
+                valueField: 'identifier',                                  
+                displayField: 'name'                                       
+            })                    
 	}, {
 	    header: "Priority",
 	    dataIndex: 'pri',
@@ -650,7 +675,7 @@ tvheadend.dvr = function() {
     
     tvheadend.autorecRecord = Ext.data.Record.create([
 	'enabled','title', 'brand', 'channel','tag','creator','contenttype','comment',
-	'weekdays', 'pri', 'approx_time', 'config_name'
+	'weekdays', 'repeats', 'pri', 'approx_time', 'config_name'
     ]);
     
 

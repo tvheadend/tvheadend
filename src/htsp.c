@@ -724,7 +724,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   }
 
   //do the query
-  epg_query0(&eqr, ch, ct, eg, query, NULL);
+  epg_query0(&eqr, ch, ct, eg, query, NULL, 0);
   c = eqr.eqr_entries;
 
   // create reply

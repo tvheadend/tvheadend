@@ -139,6 +139,10 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     if(!((1 << ((tm.tm_wday ?: 7) - 1)) & dae->dae_weekdays))
       return 0;
   }
+
+  if ((dae->dae_repeats == DVR_REPEATS_NEWONLY) && (e->is_repeat))
+    return 0;
+
   return 1;
 }
 
@@ -280,6 +284,7 @@ autorec_record_build(dvr_autorec_entry_t *dae)
   build_weekday_tags(str, sizeof(str), dae->dae_weekdays);
   htsmsg_add_str(e, "weekdays", str);
 
+  htsmsg_add_str(e, "repeats", dvr_val2repeats(dae->dae_repeats));
   htsmsg_add_str(e, "pri", dvr_val2pri(dae->dae_pri));
   
   if (dae->dae_brand)
@@ -404,6 +409,9 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
   if(!htsmsg_get_u32(values, "enabled", &u32))
     dae->dae_enabled = u32;
 
+  if((s = htsmsg_get_str(values, "repeats")) != NULL)
+    dae->dae_repeats = dvr_repeats2val(s);
+
   if((s = htsmsg_get_str(values, "pri")) != NULL)
     dae->dae_pri = dvr_pri2val(s);
 
@@ -469,7 +477,8 @@ _dvr_autorec_add(const char *config_name,
 		const char *tag, epg_genre_t *content_type,
     epg_brand_t *brand, epg_season_t *season,
     int approx_time, epg_episode_num_t *epnum,
-		const char *creator, const char *comment)
+		const char *creator, const char *comment,
+    dvr_repeats_t repeats)
 {
   dvr_autorec_entry_t *dae;
   htsmsg_t *m;
@@ -514,6 +523,8 @@ _dvr_autorec_add(const char *config_name,
     dae->dae_epnum = *epnum;
   }
 
+  dae->dae_repeats = repeats;
+
   dae->dae_approx_time = approx_time;
 
   m = autorec_record_build(dae);
@@ -533,12 +544,13 @@ void
 dvr_autorec_add(const char *config_name,
                 const char *title, const char *channel,
 		const char *tag, epg_genre_t *content_type,
-		const char *creator, const char *comment)
+		const char *creator, const char *comment,
+                dvr_repeats_t repeats)
 {
   channel_t *ch = NULL;
   if(channel != NULL) ch = channel_find_by_name(channel, 0, 0);
   _dvr_autorec_add(config_name, title, ch, tag, content_type,
-                   NULL, NULL, 0, NULL, creator, comment);
+                   NULL, NULL, 0, NULL, creator, comment, repeats);
 }
 
 void dvr_autorec_add_series_link 
@@ -562,13 +574,16 @@ void dvr_autorec_add_series_link
     epg_episode_get_epnum(ee, &epnum);
     epnump = &epnum;
   }
+
+  dvr_repeats_t repeats = DVR_REPEATS_ALLEPISODES;
+
   _dvr_autorec_add(dvr_config_name, NULL,/*TODO DVR lang_str event->episode->title,*/
                    cfg->dvr_sl_channel_lock ? event->channel : NULL,
                    NULL, 0, // tag/content type
                    cfg->dvr_sl_brand_lock ? ee->brand : NULL,
                    cfg->dvr_sl_season_lock || !ee->brand ? ee->season : NULL,
                    atime, epnump,
-                   creator, comment);
+                   creator, comment, repeats);
 }
 
 
