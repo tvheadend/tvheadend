@@ -495,6 +495,14 @@ const lang_code_t lang_codes[] = {
 
 const char *lang_code_get ( const char *code )
 {
+  const lang_code_t *lc = lang_code_get_t(code);
+  if(lc)
+    return lc->code2b;
+  return NULL;
+}
+
+const lang_code_t *lang_code_get_t ( const char *code )
+{
   int i;
   char tmp[4];
 
@@ -514,20 +522,46 @@ const char *lang_code_get ( const char *code )
     if (i) {
       const lang_code_t *c = lang_codes;
       while (c->code2b) {
-        if ( !strcmp(tmp, c->code2b) )              return c->code2b;
-        if ( c->code1  && !strcmp(tmp, c->code1) )  return c->code2b;
-        if ( c->code2t && !strcmp(tmp, c->code2t) ) return c->code2b;
+        if (!strcmp(tmp, c->code2b) ||
+            (c->code1  && !strcmp(tmp, c->code1)) ||
+            (c->code2t && !strcmp(tmp, c->code2t)))
+            return c;
         c++;
       }
     }
   }
-  return lang_codes[0].code2b;
+
+  return NULL;
 }
 
 const char **lang_code_split ( const char *codes )
 {
+
+  int i = 0;
+  const lang_code_t **lcs = lang_code_split_t(codes);
+  const char **ret;
+
+  while(lcs[i])
+    i++;
+
+  ret = calloc(1+i, sizeof(char*));
+
+  i = 0;
+  while(lcs[i]) {
+      ret[i] = lcs[i]->code2b;
+      i++;
+  }
+  ret[i] = NULL;
+
+  return ret;
+}
+
+const lang_code_t **lang_code_split_t ( const char *codes )
+{
   int n;
-  const char *c, *p, **ret;
+  const char *c, *p;
+  const lang_code_t **ret;
+  const lang_code_t *co;
 
   /* Defaults */
   if (!codes) codes = config_get_language();
@@ -542,19 +576,21 @@ const char **lang_code_split ( const char *codes )
     if (*c == ',') n++;
     c++;
   }
-  ret = calloc(2+n, sizeof(char*));
+  ret = calloc(2+n, sizeof(lang_code_t*));
 
   /* Create list */
   n = 0;
   p = c = codes;
   while (*c) {
     if (*c == ',') {
-      ret[n++] = lang_code_get(p);
+      co = lang_code_get_t(p);
+      if(co)
+        ret[n++] = co;
       p = c + 1;
     }
     c++;
   }
-  if (*p) ret[n++] = lang_code_get(p);
+  if (*p) ret[n++] = lang_code_get_t(p);
   ret[n] = NULL;
 
   return ret;
