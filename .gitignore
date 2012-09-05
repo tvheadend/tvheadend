@@ -5,3 +5,6 @@ build.*
 .project
 .settings
 data/dvb-scan
+
+*.pyc
+.*.sw[op]

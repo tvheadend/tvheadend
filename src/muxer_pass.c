@@ -26,6 +26,17 @@
 #include "psi.h"
 #include "muxer_pass.h"
 
+#define TS_BUFFER_COUNT   100
+#define TS_INJECTION_RATE 1000
+
+/*
+TODO: How often do we send the injected packets?
+      Once evry packet? Once every 1000 packets?
+      Or perhaps even once 10k packets?
+      Maby we should messure in seconds instead?
+      For now, every 1000 packets will do.
+*/
+
 typedef struct pass_muxer {
   muxer_t;
 
@@ -38,6 +49,7 @@ typedef struct pass_muxer {
   char *pm_filename;
 
   /* TS muxing */
+  uint8_t  *pm_buf;
   uint8_t  *pm_pat;
   uint8_t  *pm_pmt;
   uint16_t pm_pmt_pid;
@@ -186,16 +198,11 @@ static void
 pass_muxer_write_ts(muxer_t *m, struct th_pkt *pkt)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
-
-  // TODO: how often do you send the injected packets?
-  //       Once packet? once every 1000 packets, 10k packets?
-  //       Perhaps messure in seconds instead?
-  //       For now, every 1000 packets will do.
-
-#define INJECTION_RATE 1000
+  int rem;
 
   // Inject pmt and pat into the stream
-  if((pm->pm_pc % INJECTION_RATE) == 0) {
+  rem = pm->pm_pc % TS_INJECTION_RATE;
+  if(!rem) {
     pm->pm_pat[3] = (pm->pm_pat[3] & 0xf0) | (pm->pm_ic & 0x0f);
     pm->pm_pmt[3] = (pm->pm_pat[3] & 0xf0) | (pm->pm_ic & 0x0f);
     pass_muxer_write(m, pm->pm_pmt, 188);
@@ -203,7 +210,12 @@ pass_muxer_write_ts(muxer_t *m, struct th_pkt *pkt)
     pm->pm_ic++;
   }
 
-  pass_muxer_write(m, pkt, 188);
+  // flush buffer
+  rem = pm->pm_pc % TS_BUFFER_COUNT;
+  if(pm->pm_pc && !rem)
+    pass_muxer_write(m, pm->pm_buf, TS_BUFFER_COUNT * 188);
+
+  memcpy(pm->pm_buf + rem * 188, pkt, 188);
   pm->pm_pc++;
 }
 
@@ -279,6 +291,9 @@ pass_muxer_destroy(muxer_t *m)
   if(pm->pm_pat)
     free(pm->pm_pat);
 
+  if(pm->pm_buf)
+    free(pm->pm_buf);
+
   free(pm);
 }
 
@@ -312,6 +327,7 @@ pass_muxer_create(service_t *s, muxer_container_type_t mc)
     pm->pm_pcr_pid = s->s_pcr_pid;
     pm->pm_pat = malloc(188);
     pm->pm_pmt = malloc(188);
+    pm->pm_buf = malloc(188 * TS_BUFFER_COUNT);
   }
 
   return (muxer_t *)pm;
