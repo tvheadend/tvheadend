@@ -35,4 +35,10 @@ const char *lang_code_get ( const char *code );
 /* Split list of codes as per HTTP Language-Accept spec */
 const char **lang_code_split ( const char *codes );
 
+/* Convert code to preferred internal code */
+const lang_code_t *lang_code_get_t ( const char *code );
+
+/* Split list of codes as per HTTP Language-Accept spec */
+const lang_code_t **lang_code_split_t ( const char *codes );
+
 #endif /* __TVH_LANG_CODES_H__ */

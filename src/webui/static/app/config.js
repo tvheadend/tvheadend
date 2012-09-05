@@ -1,3 +1,43 @@
+// Store: config languages
+tvheadend.languages = new Ext.data.JsonStore({
+    autoLoad:true,
+    root:'entries',
+    fields: ['identifier','name'],
+    id: 'identifier',
+    url:'languages',
+    baseParams: {
+    	op: 'list'
+    }
+});
+
+// Store: all languages
+tvheadend.config_languages = new Ext.data.JsonStore({
+    autoLoad:true,
+    root:'entries',
+    fields: ['identifier','name'],
+    id: 'identifier',
+    url:'languages',
+    baseParams: {
+    	op: 'config'
+    }
+});
+
+tvheadend.filteraudiosubtitle = new Ext.data.SimpleStore({
+    fields: ['identifier', 'name'],
+    id: 0,
+    data: [
+		['false', 'Disabled'],
+		['true', 'Enabled']
+    ]
+});
+
+tvheadend.languages.setDefaultSort('name', 'ASC');
+
+tvheadend.comet.on('config', function(m) {
+    if(m.reload != null)
+        tvheadend.languages.reload();
+});
+
 tvheadend.miscconf = function() {
 
   /*
@@ -7,7 +47,7 @@ tvheadend.miscconf = function() {
   var confreader = new Ext.data.JsonReader(
     { root: 'config' },
     [ 
-      'muxconfpath', 'language'
+      'muxconfpath', 'language', 'filteraudiosubtitle'
     ]
   );
 
@@ -16,15 +56,37 @@ tvheadend.miscconf = function() {
    * ***************************************************************/
 
   var dvbscanPath = new Ext.form.TextField({
-    fieldLabel : 'DVB scan files path',
-    name       : 'muxconfpath',
-    allowBlank : true
+    fieldLabel: 'DVB scan files path',
+    name: 'muxconfpath',
+    width: 420,
+    allowBlank: true
   });
-
-  var language = new Ext.form.TextField({
-    fieldLabel : 'Default Language(s)',
-    name       : 'language',
-    allowBlank : true
+  
+  var language = new Ext.ux.ItemSelector({
+	name: 'language',
+	fromStore: tvheadend.languages,
+	toStore: tvheadend.config_languages,
+	fieldLabel: 'Default Language(s)',
+	dataFields:['identifier', 'name'],
+	msWidth: 200,
+	msHeight: 150,
+	valueField: 'identifier',
+	displayField: 'name',
+	imagePath: 'static/multiselect/resources',
+	toLegend: 'Selected',
+	fromLegend: 'Available'
+  });
+  
+  var filteraudiosubtitle = new Ext.form.ComboBox({
+    fieldLabel: 'Filter audio/subtitle by language',
+    hiddenName: 'filteraudiosubtitle',
+    store: tvheadend.filteraudiosubtitle,
+    valueField: 'identifier',
+	displayField: 'name',
+	forceSelection: true,
+	mode:'local',
+	triggerAction: 'all',
+    width: 150
   });
 
   /* ****************************************************************
@@ -32,7 +94,7 @@ tvheadend.miscconf = function() {
    * ***************************************************************/
 
   var saveButton = new Ext.Button({
-    text     : "Save configuration",
+    text     : 'Save configuration',
     tooltip  : 'Save changes made to configuration below',
     iconCls  :'save',
     handler  : saveChanges
@@ -52,7 +114,7 @@ tvheadend.miscconf = function() {
     border        : false,
     bodyStyle     : 'padding:15px',
     labelAlign    : 'left',
-    labelWidth    : 150,
+    labelWidth    : 190,
     waitMsgTarget : true,
     reader        : confreader,
     layout        : 'form',
@@ -60,6 +122,7 @@ tvheadend.miscconf = function() {
     autoHeight    : true,
     items         : [
       language,
+      filteraudiosubtitle,
       dvbscanPath
     ],
     tbar: [
