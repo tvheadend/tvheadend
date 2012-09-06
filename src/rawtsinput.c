@@ -267,7 +267,7 @@ process_ts_packet(rawts_t *rt, uint8_t *tsb)
 	  slp.tv_sec  =  d / 1000000;
 	  slp.tv_nsec = (d % 1000000) * 1000;
 	
-	  clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &slp, NULL);
+	  clock_nanosleep(CLOCK_MONOTONIC_COARSE, TIMER_ABSTIME, &slp, NULL);
 	  didsleep = 1;
 	}
 	t->s_pcr_last = pcr;
