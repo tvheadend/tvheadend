@@ -119,11 +119,25 @@ function enabled
   [ "$val" == "yes" ] && return 0 || return 1
 }
 
+# Check if disabled
+function disabled
+{
+  local val=$(_enabled $1)
+  [ "$val" == "no" ] && return 0 || return 1
+}
+
 # Check if enabled (or auto)
 function enabled_or_auto
 {
   local val=$(_enabled $1)
   [ "$val" == "yes" -o "$val" == "auto" ] && return 0 || return 1
+}
+
+# Check if disabled (or auto)
+function disabled_or_auto
+{
+  local val=$(_enabled $1)
+  [ "$val" == "no" -o "$val" == "auto" ] && return 0 || return 1
 }
 
 # ###########################################################################
@@ -258,6 +272,25 @@ function check_cc_header
 
   # Enable if supported
   if check_cc "#include <$1.h>"; then
+    echo "ok"
+    enable $nam
+  else
+    echo "fail"
+    return 1
+  fi
+}
+
+# Check some compiler snippet
+function check_cc_snippet
+{
+  local nam=$1
+  local snp=$2
+  local opt=$3
+
+  echo -ne "checking for cc $nam ...${TAB}"
+
+  # Check if supported
+  if check_cc "$snp" "$opt"; then
     echo "ok"
     enable $nam
   else

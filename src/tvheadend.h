@@ -385,12 +385,16 @@ extern int log_debug;
 } while(0)
 
 
+#ifndef CLOCK_MONOTONIC_COARSE
+#define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
+#endif
+
 static inline int64_t 
 getmonoclock(void)
 {
   struct timespec tp;
 
-  clock_gettime(CLOCK_MONOTONIC, &tp);
+  clock_gettime(CLOCK_MONOTONIC_COARSE, &tp);
 
   return tp.tv_sec * 1000000ULL + (tp.tv_nsec / 1000);
 }
