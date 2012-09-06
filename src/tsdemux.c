@@ -111,6 +111,9 @@ ts_recv_packet0(service_t *t, elementary_stream_t *st, const uint8_t *tsb)
     break;
 
   default:
+    if(!streaming_pad_probe_type(&t->s_streaming_pad, SMT_PACKET))
+      break;
+
     if(st->es_type == SCT_TELETEXT)
       teletext_input(t, st, tsb);
 
@@ -285,6 +288,8 @@ ts_remux(service_t *t, const uint8_t *src)
   sm.sm_type = SMT_MPEGTS;
   sm.sm_data = tsb;
   streaming_pad_deliver(&t->s_streaming_pad, &sm);
+
+  service_set_streaming_status_flags(t, TSS_PACKETS);
 }
 
 /*

@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+#
+# Copyright (C) 2012 Adam Sutton <dev@adamsutton.me.uk>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+"""
+Dump EPG in human readable format for analysis
+"""
+
+# System libs
+import os, sys
+import pprint
+
+# Tvheadend libs
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'lib', 'py'))
+import tvh.htsmsg as htsmsg
+
+# Open file
+fp = open(sys.argv[1], 'rb')
+for msg in htsmsg.deserialize(fp, True):
+  pprint.pprint(msg, indent=2)
+
+# ############################################################################
+# Editor Configuration
+#
+# vim:sts=2:ts=2:sw=2:et
+# ############################################################################
