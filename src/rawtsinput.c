@@ -286,6 +286,7 @@ raw_ts_reader(void *aux)
 {
   rawts_t *rt = aux;
   uint8_t tsblock[188];
+  struct timespec tm = {0, 0};
   int c = 0;
   int i;
 
@@ -299,6 +300,7 @@ raw_ts_reader(void *aux)
       c++;
       process_ts_packet(rt, tsblock);
     }
+    nanosleep(&tm, NULL);
   }
 
   return NULL;
