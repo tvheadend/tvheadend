@@ -385,6 +385,10 @@ extern int log_debug;
 } while(0)
 
 
+#ifndef CLOCK_MONOTONIC_COARSE
+#define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
+#endif
+
 static inline int64_t 
 getmonoclock(void)
 {
