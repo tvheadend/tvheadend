@@ -74,6 +74,10 @@ typedef enum {
   DVR_PRIO_UNIMPORTANT,
 } dvr_prio_t;
 
+typedef enum {
+  DVR_REPEATS_ALLEPISODES,
+  DVR_REPEATS_NEWONLY
+} dvr_repeats_t;
 
 LIST_HEAD(dvr_rec_stream_list, dvr_rec_stream);
 
@@ -219,6 +223,7 @@ typedef struct dvr_autorec_entry {
   channel_tag_t *dae_channel_tag;
   LIST_ENTRY(dvr_autorec_entry) dae_channel_tag_link;
 
+  dvr_repeats_t dae_repeats;
   dvr_prio_t dae_pri;
 
   struct dvr_entry_list dae_spawns;
@@ -336,7 +341,8 @@ void dvr_query_sort(dvr_query_result_t *dqr);
 void dvr_autorec_add(const char *dvr_config_name,
                      const char *title, const char *channel,
 		     const char *tag, epg_genre_t *content_type,
-		     const char *creator, const char *comment);
+		     const char *creator, const char *comment,
+                     dvr_repeats_t repeats);
 
 void dvr_autorec_add_series_link(const char *dvr_config_name,
                                  epg_broadcast_t *event,
@@ -354,8 +360,10 @@ dvr_autorec_entry_t *autorec_entry_find(const char *id, int create);
 /**
  *
  */
-dvr_prio_t dvr_pri2val(const char *s);
+dvr_repeats_t dvr_repeats2val(const char *s);
+const char *dvr_val2repeats(dvr_repeats_t v);
 
+dvr_prio_t dvr_pri2val(const char *s);
 const char *dvr_val2pri(dvr_prio_t v);
 
 #endif /* DVR_H  */

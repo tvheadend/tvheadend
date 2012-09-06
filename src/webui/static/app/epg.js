@@ -14,6 +14,16 @@ tvheadend.ContentGroupStore = new Ext.data.JsonStore({
     url:'ecglist'
 });
 
+// Repeats
+tvheadend.dvrrepeats = new Ext.data.SimpleStore({
+    fields: ['identifier', 'name'],
+    id: 0,
+    data: [
+        ['allepisodes',   'All Episodes'],
+        ['newonly',       'New Episodes Only']
+    ]
+});
+
 tvheadend.contentGroupLookupName = function(code)
 {
   ret = "";
@@ -219,7 +229,8 @@ tvheadend.epg = function() {
             {name: 'end', type: 'date', dateFormat: 'U' /* unix time */},
             {name: 'duration'},
 	    {name: 'contenttype'},
-	    {name: 'schedstate'}
+	    {name: 'schedstate'},
+	    {name: 'repeat'},
 	])
    });
 
@@ -261,6 +272,12 @@ tvheadend.epg = function() {
         setMetaAttr(meta, record);
 
         return value;
+    }
+
+    function renderRepeat(value, meta, record, rowIndex, colIndex, store){
+        setMetaAttr(meta, record);
+
+	return value ? 'Repeat' : 'New';
     }
 
     var epgCm = new Ext.grid.ColumnModel([
@@ -316,6 +333,12 @@ tvheadend.epg = function() {
 	    renderer: function(v) {
         return tvheadend.contentGroupLookupName(v);
       }
+	},{
+	    width: 50,
+	    id:'repeat',
+	    header: "Repeat",
+	    dataIndex: 'repeat',
+	    renderer: renderRepeat
 	}
     ]);
 
@@ -355,7 +378,6 @@ tvheadend.epg = function() {
 
     // Content groups
 
-
     var epgFilterContentGroup = new Ext.form.ComboBox({
 	loadingText: 'Loading...',
 	width: 200,
@@ -367,17 +389,31 @@ tvheadend.epg = function() {
 	emptyText: 'Only include content...'
     });
 
+    // Repeat status
+
+    var epgFilterRepeats = new Ext.form.ComboBox({
+        loadingText: 'Loading...',
+        width: 150,
+        displayField:'name',
+        store: tvheadend.dvrrepeats,
+        mode: 'local',
+        editable: false,
+        triggerAction: 'all',
+        emptyText: 'Only include episodes...'
+    });
 
     function epgQueryClear() {
 	epgStore.baseParams.channel    = null;
 	epgStore.baseParams.tag        = null;
 	epgStore.baseParams.contenttype = null;
 	epgStore.baseParams.title      = null;
+	epgStore.baseParams.repeats    = null;
 
 	epgFilterChannels.setValue("");
 	epgFilterChannelTags.setValue("");
 	epgFilterContentGroup.setValue("");
 	epgFilterTitle.setValue("");
+	epgFilterRepeats.setValue("");
           
 	epgStore.reload();
     }
@@ -415,6 +451,13 @@ tvheadend.epg = function() {
 	}
     });
 
+    epgFilterRepeats.on('select', function(c, r) {
+        if(epgStore.baseParams.repeats != r.data.identifier) {
+            epgStore.baseParams.repeats = r.data.identifier;
+            epgStore.reload();
+        }
+    });
+
     var epgView = new Ext.ux.grid.livegrid.GridView({
 	nearLimit : 100,
 	loadMask  : {
@@ -439,6 +482,8 @@ tvheadend.epg = function() {
 	    epgFilterChannelTags,
 	    '-',
 	    epgFilterContentGroup,
+	    '-',
+	    epgFilterRepeats,
 	    '-',
 	    {
 		text: 'Reset',
@@ -493,6 +538,9 @@ tvheadend.epg = function() {
 	    epgStore.baseParams.tag        : "<i>Don't care</i>";
 	var contenttype = epgStore.baseParams.contenttype ?
 	    epgStore.baseParams.contenttype : "<i>Don't care</i>";
+        var repeats = epgStore.baseParams.repeats ?
+            tvheadend.dvrrepeats.getById(epgStore.baseParams.repeats).data.name  : "<i>Don't care</i>";
+
 
 	Ext.MessageBox.confirm('Auto Recorder',
 			       'This will create an automatic rule that ' +
@@ -503,6 +551,7 @@ tvheadend.epg = function() {
 			       '<div class="x-smallhdr">Channel:</div>' + channel + '<br>' +
 			       '<div class="x-smallhdr">Tag:</div>' + tag + '<br>' +
 			       '<div class="x-smallhdr">Genre:</div>' + contenttype + '<br>' +
+			       '<div class="x-smallhdr">Repeat:</div>' + repeats + '<br>' +
 			       '<br>' +
 			       'Currently this will match (and record) ' + 
 			       epgStore.getTotalCount() + ' events. ' +

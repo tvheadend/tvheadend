@@ -717,6 +717,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
   epg_genre_t *eg = NULL, genre;
   channel_t *ch;
   int start = 0, end, limit, i;
+  int repeats;
   const char *s;
   char buf[100];
   const char *channel = http_arg_get(&hc->hc_req_args, "channel");
@@ -740,12 +741,17 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     eg = &genre;
   }
 
+  if((s = http_arg_get(&hc->hc_req_args, "repeats")) != NULL)
+    repeats = dvr_repeats2val(s);
+  else
+    repeats = 0;
+
   out = htsmsg_create_map();
   array = htsmsg_create_list();
 
   pthread_mutex_lock(&global_lock);
 
-  epg_query(&eqr, channel, tag, eg, title, lang);
+  epg_query(&eqr, channel, tag, eg, title, lang, repeats);
 
   epg_query_sort(&eqr);
 
@@ -794,6 +800,8 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     dvr_entry_t *de;
     if((de = dvr_entry_find_by_event(e)) != NULL)
       htsmsg_add_str(m, "schedstate", dvr_entry_schedstatus(de));
+
+    htsmsg_add_u32(m, "repeat", e->is_repeat);
 
     htsmsg_add_msg(array, NULL, m);
   }
@@ -1076,12 +1084,21 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
       eg = &genre;
     }
 
+    const char *repeats = http_arg_get(&hc->hc_req_args, "repeats");
+    dvr_repeats_t repeats2;
+
+    if (repeats == NULL)
+      repeats2 = DVR_REPEATS_ALLEPISODES;
+    else
+      repeats2 = dvr_repeats2val(repeats);
+
     dvr_autorec_add(http_arg_get(&hc->hc_req_args, "config_name"),
                     http_arg_get(&hc->hc_req_args, "title"),
 		    http_arg_get(&hc->hc_req_args, "channel"),
 		    http_arg_get(&hc->hc_req_args, "tag"),
         eg,
-		    hc->hc_representative, "Created from EPG query");
+		    hc->hc_representative, "Created from EPG query", 
+        repeats2);
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
