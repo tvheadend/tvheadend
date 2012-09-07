@@ -42,6 +42,7 @@ tvheadend.VLC = function(url) {
 		}
 		return randomstring;
 	}
+	
 	var vlc = document.createElement('embed');
 	vlc.setAttribute('type', 'application/x-vlc-plugin');
 	vlc.setAttribute('pluginspage', 'http://www.videolan.org');
@@ -51,9 +52,9 @@ tvheadend.VLC = function(url) {
 	vlc.setAttribute('autoplay', 'no');
 	vlc.setAttribute('id', randomString());
 
-	var missingPlugin = document.createElement('div');
-	missingPlugin.style.display = 'none';
-	missingPlugin.style.padding = '5px';
+//	var missingPlugin = document.createElement('div');
+//	missingPlugin.style.display = 'none';
+//	missingPlugin.style.padding = '5px';
 
 	var selectChannel = new Ext.form.ComboBox({
 		loadingText : 'Loading...',
@@ -65,32 +66,28 @@ tvheadend.VLC = function(url) {
 		triggerAction : 'all',
 		emptyText : 'Select channel...'
 	});
+	
+	selectChannel.on('select', function(c, r) {
+		var streamurl = 'stream/channelid/' + r.data.chid;
+		var playlisturl = 'playlist/channelid/' + r.data.chid;
 
-	selectChannel
-		.on(
-			'select',
-			function(c, r) {
-				var streamurl = 'stream/channelid/' + r.data.chid;
-				var playlisturl = 'playlist/channelid/' + r.data.chid;
+		// if the player was initialised, but not yet shown, make it visible
+		if (vlc.playlist && (vlc.style.display == 'none')) 
+			vlc.style.display = 'block';
 
-				// if the player was initialised, but not yet shown, make it visible
-				if (vlc.playlist && (vlc.style.display == 'none')) vlc.style.display = 'block';
-
-				if (!vlc.playlist || vlc.playlist == 'undefined') {
-					missingPlugin.innerHTML = '<p>Embedded player could not be started. <br> You are probably missing VLC Mozilla plugin for your browser.</p>';
-					missingPlugin.innerHTML += '<p><a href="' + playlisturl
-						+ '">M3U Playlist</a></p>';
-					missingPlugin.innerHTML += '<p><a href="' + streamurl
-						+ '">Direct URL</a></p>';
-				}
-				else {
-					vlc.playlist.stop();
-					vlc.playlist.items.clear();
-					vlc.playlist.add(streamurl);
-					vlc.playlist.playItem(0);
-					vlc.audio.volume = slider.getValue();
-				}
-			});
+		if (!vlc.playlist || vlc.playlist == 'undefined') {
+//			missingPlugin.innerHTML = '<p>Embedded player could not be started. <br> You are probably missing VLC Mozilla plugin for your browser.</p>';
+//			missingPlugin.innerHTML += '<p><a href="' + playlisturl	+ '">M3U Playlist</a></p>';
+//			missingPlugin.innerHTML += '<p><a href="' + streamurl + '">Direct URL</a></p>';
+		}
+		else {
+			vlc.playlist.stop();
+			vlc.playlist.items.clear();
+			vlc.playlist.add(streamurl);
+			vlc.playlist.playItem(0);
+			vlc.audio.volume = slider.getValue();
+		}
+	});
 
 	var slider = new Ext.Slider({
 		width : 135,
@@ -170,55 +167,49 @@ tvheadend.VLC = function(url) {
 				tooltip : 'Volume',
 				disabled : true
 			}, ],
-		items : [ vlc, missingPlugin ]
+		items : [ vlc /*, missingPlugin */]
 	});
 
-	win
-		.on(
-			'beforeShow',
-			function() {
-				win.getTopToolbar().add(slider);
-				win.getTopToolbar().add(new Ext.Toolbar.Spacer());
-				win.getTopToolbar().add(new Ext.Toolbar.Spacer());
-				win.getTopToolbar().add(new Ext.Toolbar.Spacer());
-				win.getTopToolbar().add(sliderLabel);
+	win.on('beforeShow', function() {
+		win.getTopToolbar().add(slider);
+		win.getTopToolbar().add(new Ext.Toolbar.Spacer());
+		win.getTopToolbar().add(new Ext.Toolbar.Spacer());
+		win.getTopToolbar().add(new Ext.Toolbar.Spacer());
+		win.getTopToolbar().add(sliderLabel);
 
-				// check if vlc plugin wasn't initialised correctly
-				if (!vlc.playlist || (vlc.playlist == 'undefined')) {
-					vlc.style.display = 'none';
+		// check if vlc plugin wasn't initialised correctly
+		if (!vlc.playlist || (vlc.playlist == 'undefined')) {
+			vlc.style.display = 'none';
 
-					missingPlugin.innerHTML = '<p>Embedded player could not be started. <br> You are probably missing VLC Mozilla plugin for your browser.</p>';
+//			missingPlugin.innerHTML = '<p>Embedded player could not be started. <br> You are probably missing VLC Mozilla plugin for your browser.</p>';
 
-					if (url) {
-						var channelid = url.substr(url.lastIndexOf('/'));
-						var streamurl = 'stream/channelid/' + channelid;
-						var playlisturl = 'playlist/channelid/' + channelid;
-						missingPlugin.innerHTML += '<p><a href="' + playlisturl
-							+ '">M3U Playlist</a></p>';
-						missingPlugin.innerHTML += '<p><a href="' + streamurl
-							+ '">Direct URL</a></p>';
-					}
+			if (url) {
+				var channelid = url.substr(url.lastIndexOf('/'));
+				var streamurl = 'stream/channelid/' + channelid;
+				var playlisturl = 'playlist/channelid/' + channelid;
+//				missingPlugin.innerHTML += '<p><a href="' + playlisturl	+ '">M3U Playlist</a></p>';
+//				missingPlugin.innerHTML += '<p><a href="' + streamurl + '">Direct URL</a></p>';
+			}
 
-					missingPlugin.style.display = 'block';
-				}
-				else {
-					// check if the window was opened with an url-parameter
-					if (url) {
-						vlc.playlist.items.clear();
-						vlc.playlist.add(url);
-						vlc.playlist.playItem(0);
+//			missingPlugin.style.display = 'block';
+		}
+		else {
+			// check if the window was opened with an url-parameter
+			if (url) {
+				vlc.playlist.items.clear();
+				vlc.playlist.add(url);
+				vlc.playlist.playItem(0);
 
-						//enable yadif2x deinterlacer for vlc > 1.1
-						var point1 = vlc.VersionInfo.indexOf('.');
-						var point2 = vlc.VersionInfo.indexOf('.', point1 + 1);
-						var majVersion = vlc.VersionInfo.substring(0, point1);
-						var minVersion = vlc.VersionInfo
-							.substring(point1 + 1, point2);
-						if ((majVersion >= 1) && (minVersion >= 1)) vlc.video.deinterlace
-							.enable("yadif2x");
-					}
-				}
-			});
+				//enable yadif2x deinterlacer for vlc > 1.1
+				var point1 = vlc.VersionInfo.indexOf('.');
+				var point2 = vlc.VersionInfo.indexOf('.', point1 + 1);
+				var majVersion = vlc.VersionInfo.substring(0, point1);
+				var minVersion = vlc.VersionInfo.substring(point1 + 1, point2);
+				if ((majVersion >= 1) && (minVersion >= 1)) 
+					vlc.video.deinterlace.enable("yadif2x");
+			}
+		}
+	});
 
 	win.show();
 };

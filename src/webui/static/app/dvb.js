@@ -629,7 +629,8 @@ tvheadend.addMuxByLocation = function(adapterData, satConfStore) {
 			win.close();
 		}
 	});
-
+	
+	var locationListBBarElements = [];
 	if (satConfStore) {
 		satConfCombo = new Ext.form.ComboBox({
 			store : satConfStore,
@@ -642,6 +643,7 @@ tvheadend.addMuxByLocation = function(adapterData, satConfStore) {
 			valueField : 'identifier',
 			emptyText : 'Select satellite configuration...'
 		});
+		locationListBBarElements.push(buttonToolbarElements);
 	}
 
 	var locationList = new Ext.tree.TreePanel({
@@ -657,7 +659,7 @@ tvheadend.addMuxByLocation = function(adapterData, satConfStore) {
 		root : new Ext.tree.AsyncTreeNode({
 			id : 'root'
 		}),
-		bbar : [/*satConfCombo*/],
+		bbar : locationListBBarElements,
 		buttons : [ addBtn ],
 		buttonAlign : 'center'
 	});
