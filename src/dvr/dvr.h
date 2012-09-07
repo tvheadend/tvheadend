@@ -225,6 +225,7 @@ typedef struct dvr_autorec_entry {
 
   epg_brand_t *dae_brand;
   epg_season_t *dae_season;
+  epg_serieslink_t *dae_serieslink;
   epg_episode_num_t dae_epnum;
 
 } dvr_autorec_entry_t;

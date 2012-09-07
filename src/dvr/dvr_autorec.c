@@ -286,6 +286,8 @@ autorec_record_build(dvr_autorec_entry_t *dae)
     htsmsg_add_str(e, "brand", dae->dae_brand->uri);
   if (dae->dae_season)
     htsmsg_add_str(e, "season", dae->dae_season->uri);
+  if (dae->dae_serieslink)
+    htsmsg_add_str(e, "serieslink", dae->dae_serieslink->uri);
 
   return e;
 }
@@ -417,6 +419,11 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
     if (dae->dae_season)
       dae->dae_season->getref((epg_object_t*)dae->dae_season);
   }
+  if((s = htsmsg_get_str(values, "serieslink")) != NULL) {
+    dae->dae_serieslink = epg_serieslink_find_by_uri(s, 1, &save);
+    if (dae->dae_serieslink)
+      dae->dae_serieslink->getref(dae->dae_serieslink);
+  }
   dvr_autorec_changed(dae);
 
   return autorec_record_build(dae);
@@ -468,6 +475,7 @@ _dvr_autorec_add(const char *config_name,
                 const char *title, channel_t *ch,
 		const char *tag, epg_genre_t *content_type,
     epg_brand_t *brand, epg_season_t *season,
+    epg_serieslink_t *serieslink,
     int approx_time, epg_episode_num_t *epnum,
 		const char *creator, const char *comment)
 {
@@ -502,16 +510,9 @@ _dvr_autorec_add(const char *config_name,
   if (content_type)
     dae->dae_content_type.code = content_type->code;
 
-  if(brand) {
-    dae->dae_brand = brand;
-    brand->getref((epg_object_t*)brand);
-  }
-  if(season) {
-    dae->dae_season = season;
-    season->getref((epg_object_t*)season);
-  }
-  if(epnum) {
-    dae->dae_epnum = *epnum;
+  if(serieslink) {
+    serieslink->getref(serieslink);
+    dae->dae_serieslink = serieslink;
   }
 
   dae->dae_approx_time = approx_time;
@@ -538,36 +539,22 @@ dvr_autorec_add(const char *config_name,
   channel_t *ch = NULL;
   if(channel != NULL) ch = channel_find_by_name(channel, 0, 0);
   _dvr_autorec_add(config_name, title, ch, tag, content_type,
-                   NULL, NULL, 0, NULL, creator, comment);
+                   NULL, NULL, NULL, 0, NULL, creator, comment);
 }
 
 void dvr_autorec_add_series_link 
   ( const char *dvr_config_name, epg_broadcast_t *event,
     const char *creator, const char *comment )
 {
-  int atime = 0;
-  dvr_config_t *cfg;
-  epg_episode_t *ee;
-  epg_episode_num_t *epnump = NULL, epnum;
   if (!event || !event->episode) return;
-  
-  ee  = event->episode;
-  cfg = dvr_config_find_by_name_default(dvr_config_name);
-  if (cfg->dvr_sl_time_lock) {
-    struct tm t;
-    localtime_r(&event->start, &t);
-    atime = (t.tm_hour * 60) + t.tm_min;
-  }
-  if (cfg->dvr_sl_more_recent) {
-    epg_episode_get_epnum(ee, &epnum);
-    epnump = &epnum;
-  }
-  _dvr_autorec_add(dvr_config_name, NULL,/*TODO DVR lang_str event->episode->title,*/
-                   cfg->dvr_sl_channel_lock ? event->channel : NULL,
+  _dvr_autorec_add(dvr_config_name,
+                   epg_broadcast_get_title(event, NULL),
+                   event->channel,
                    NULL, 0, // tag/content type
-                   cfg->dvr_sl_brand_lock ? ee->brand : NULL,
-                   cfg->dvr_sl_season_lock || !ee->brand ? ee->season : NULL,
-                   atime, epnump,
+                   NULL,
+                   NULL,
+                   event->serieslink,
+                   0, NULL,
                    creator, comment);
 }
 
