@@ -786,6 +786,9 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(m, "start", e->start);
     htsmsg_add_u32(m, "end", e->stop);
     htsmsg_add_u32(m, "duration", e->stop - e->start);
+
+    if(e->serieslink)
+      htsmsg_add_str(m, "serieslink", e->serieslink->uri);
     
     if((eg = LIST_FIRST(&ee->genre))) {
       htsmsg_add_u32(m, "contenttype", eg->code);
