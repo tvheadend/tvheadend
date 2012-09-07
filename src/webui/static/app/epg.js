@@ -30,37 +30,32 @@ tvheadend.ContentGroupStore.setDefaultSort('code', 'ASC');
 tvheadend.epgDetails = function(event) {
 
 	var content = '';
-
-	if (event.chicon != null && event.chicon.length > 0) content += '<img class="x-epg-chicon" src="'
-		+ event.chicon + '">';
-
+	
+	if (event.chicon != null && event.chicon.length > 0) 
+		content += '<img class="x-epg-chicon" src="'+ event.chicon + '">';
+	
 	content += '<div class="x-epg-title">' + event.title;
-	if (event.subtitle) content += "&nbsp;:&nbsp;" + event.subtitle;
+	if (event.subtitle) 
+		content += "&nbsp;:&nbsp;" + event.subtitle;
 	content += '</div>';
 	content += '<div class="x-epg-desc">' + event.episode + '</div>';
 	content += '<div class="x-epg-desc">' + event.description + '</div>';
+	content += '<div class="x-epg-meta">' + tvheadend.contentGroupLookupName(event.contenttype) + '</div>';
 
-	content += '<div class="x-epg-meta">'
-		+ tvheadend.contentGroupLookupName(event.contenttype) + '</div>';
+	if (event.ext_desc != null) 
+		content += '<div class="x-epg-meta">' + event.ext_desc + '</div>';
 
-	if (event.ext_desc != null) content += '<div class="x-epg-meta">'
-		+ event.ext_desc + '</div>';
+	if (event.ext_item != null) 
+		content += '<div class="x-epg-meta">' + event.ext_item + '</div>';
 
-	if (event.ext_item != null) content += '<div class="x-epg-meta">'
-		+ event.ext_item + '</div>';
+	if (event.ext_text != null) 
+		content += '<div class="x-epg-meta">' + event.ext_text + '</div>';
 
-	if (event.ext_text != null) content += '<div class="x-epg-meta">'
-		+ event.ext_text + '</div>';
-
-	content += '<div class="x-epg-meta"><a target="_blank" href="'
-		+ 'http://akas.imdb.org/find?q=' + event.title
-		+ '">Search IMDB</a></div>'
+	content += '<div class="x-epg-meta"><a target="_blank" href="http://akas.imdb.org/find?q=' + event.title + '">Search IMDB</a></div>'
 
 	now = new Date();
 	if (event.start < now && event.end > now) {
-		content += "<div class=\"x-epg-meta\">"
-			+ "<a href=\"javascript:tvheadend.VLC('stream/channelid/"
-			+ event.channelid + "')\">Play</a>" + "</div>";
+		content += "<div class=\"x-epg-meta\"><a href=\"javascript:tvheadend.VLC('stream/channelid/" + event.channelid + "')\">Play</a>" + "</div>";
 	}
 
 	content += '<div id="related"></div>';
@@ -207,37 +202,20 @@ tvheadend.epg = function() {
 			root : 'entries',
 			totalProperty : 'totalCount',
 			id : 'id'
-		}, [ {
-			name : 'id'
-		}, {
-			name : 'channel'
-		}, {
-			name : 'channelid'
-		}, {
-			name : 'title'
-		}, {
-			name : 'subtitle'
-		}, {
-			name : 'episode'
-		}, {
-			name : 'description'
-		}, {
-			name : 'chicon'
-		}, {
-			name : 'start',
-			type : 'date',
-			dateFormat : 'U' /* unix time */
-		}, {
-			name : 'end',
-			type : 'date',
-			dateFormat : 'U' /* unix time */
-		}, {
-			name : 'duration'
-		}, {
-			name : 'contenttype'
-		}, {
-			name : 'schedstate'
-		} ])
+		}, [ {name : 'id'}, 
+		     {name : 'channel'}, 
+		     {name : 'channelid'}, 
+		     {name : 'title'}, 
+		     {name : 'subtitle'},
+		     {name : 'episode'}, 
+		     {name : 'description'},
+		     {name : 'chicon'},
+		     {name : 'start', type : 'date', dateFormat : 'U' /* unix time */}, 
+		     {name : 'end',	type : 'date', dateFormat : 'U' /* unix time */},
+		     {name : 'duration'}, 
+		     {name : 'contenttype'},
+		     {name : 'schedstate'} 
+		     ])
 	});
 
 	function setMetaAttr(meta, record) {
