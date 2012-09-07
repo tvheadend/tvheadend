@@ -612,25 +612,10 @@ tvheadend.dvb_services = function(adapterId) {
  *
  */
 tvheadend.addMuxByLocation = function(adapterData, satConfStore) {
-
-	var addBtn = new Ext.Button({
-		text : 'Add DVB network',
-		disabled : true,
-		handler : function() {
-			var n = locationList.getSelectionModel().getSelectedNode();
-			Ext.Ajax.request({
-				url : 'dvb/adapter/' + adapterData.identifier,
-				params : {
-					network : n.attributes.id,
-					satconf : satConfCombo ? satConfCombo.getValue() : null,
-					op : 'addnetwork'
-				}
-			});
-			win.close();
-		}
-	});
 	
 	var locationListBBarElements = [];
+	var satConfCombo = null;
+	
 	if (satConfStore) {
 		satConfCombo = new Ext.form.ComboBox({
 			store : satConfStore,
@@ -645,6 +630,23 @@ tvheadend.addMuxByLocation = function(adapterData, satConfStore) {
 		});
 		locationListBBarElements.push(buttonToolbarElements);
 	}
+	
+	var addBtn = new Ext.Button({
+		text : 'Add DVB network',
+		disabled : true,
+		handler : function() {
+			var n = locationList.getSelectionModel().getSelectedNode();
+			Ext.Ajax.request({
+				url : 'dvb/adapter/' + adapterData.identifier,
+				params : {
+					network : n.attributes.id,
+					satconf : satConfCombo != null ? satConfCombo.getValue() : null,
+					op : 'addnetwork'
+				}
+			});
+			win.close();
+		}
+	});
 
 	var locationList = new Ext.tree.TreePanel({
 		title : 'By location',
