@@ -289,8 +289,16 @@ tvheadend.app = function() {
 	return {
 
 		// public methods
-		init : function() {
-
+		init : function() {			
+			var header = new Ext.Panel({
+				split: true,
+				region: 'north',
+				height : 45,
+				boxMaxHeight : 45,
+				boxMinHeight : 45,
+				html: '<div id="header"><h1>Tvheadend Web-Panel</h1></div>'
+			});
+			
 			tvheadend.rootTabPanel = new Ext.TabPanel({
 				region : 'center',
 				activeTab : 0,
@@ -299,7 +307,7 @@ tvheadend.app = function() {
 
 			var viewport = new Ext.Viewport({
 				layout : 'border',
-				items : [ {
+				items : [{
 					region : 'south',
 					contentEl : 'systemlog',
 					split : true,
@@ -323,7 +331,7 @@ tvheadend.app = function() {
 							});
 						}
 					} ]
-				}, tvheadend.rootTabPanel ]
+				}, tvheadend.rootTabPanel, header ]
 			});
 
 			tvheadend.comet.on('accessUpdate', accessUpdate);

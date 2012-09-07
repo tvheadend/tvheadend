@@ -4,7 +4,25 @@
  * licensing@extjs.com
  * 
  * http://extjs.com/license
- */
+ */ 
+#header {
+    background-color: #507AAA;
+    color: #F8F8F8;
+    height: 5.3em;
+    margin: 0;
+    padding: 6px 8px 0 6px;
+    background: url("../img/bg-header.png") repeat-x scroll 0 0 transparent;
+    height: 45px;
+}
+ 
+ #header > h1 {
+    background: url("../img/logo.png") no-repeat scroll 10px 20% transparent;
+    color: #E0E0E0;
+    font-size: 22px;
+    padding: 2px 55px;
+    text-shadow: 0 -2px rgba(0, 0, 0, 0.2);
+}
+
 .x-tree-col {
 	float: left;
 	overflow: hidden;
