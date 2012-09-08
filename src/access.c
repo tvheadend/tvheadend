@@ -165,7 +165,8 @@ access_verify(const char *username, const char *password,
      password != NULL && superuser_password != NULL && 
      !strcmp(username, superuser_username) &&
      !strcmp(password, superuser_password)) {
-    tvhlog(LOG_INFO, "accesscontrol", "Authentication via user/pass SUCCESS for SUPERUSER for \"%s\"", username);
+/*    tvhlog(LOG_INFO, "accesscontrol", "Authentication via user/pass SUCCESS for SUPERUSER for \"%s\"", username); */
+/*  this constantly repeats */
     return 0;
   };
 
@@ -365,7 +366,7 @@ access_entry_find(const char *id, int create)
   return ae;
 }
 
-/*static access_log_t *
+static access_log_t *
 access_log_find(const char *id, int create)
 {
   access_log_t *ae;
@@ -388,7 +389,7 @@ access_log_find(const char *id, int create)
   ae->al_username = strdup("*");
   ae->al_type = strdup("*");
   return ae;
-}*/
+}
 
 
 /**
@@ -444,7 +445,7 @@ access_record_build(access_entry_t *ae)
 }
 
 /* https://github.com/andyb2000 access log */
-/*static htsmsg_t *
+static htsmsg_t *
 access_log_build(access_log_t *ae)
 {
   htsmsg_t *e = htsmsg_create_map();
@@ -456,7 +457,7 @@ access_log_build(access_log_t *ae)
   htsmsg_add_str(e, "id", ae->al_id);
   
   return e;
-}*/
+}
 
 
 /**
@@ -474,18 +475,6 @@ access_record_get_all(void *opaque)
   return r;
 }
 
-/*static htsmsg_t *
-access_log_get_all(void *opaque)
-{
-  htsmsg_t *r = htsmsg_create_list();
-  access_log_t *ae;
-
-    htsmsg_add_msg(r, NULL, access_log_build(ae));
-
-  return r;
-}*/
-
-
 /**
  *
  */
@@ -499,7 +488,7 @@ access_record_get(void *opaque, const char *id)
   return access_record_build(ae);
 }
 
-/*static htsmsg_t *
+static htsmsg_t *
 access_log_get(void *opaque, const char *id)
 {
   access_log_t *ae;
@@ -507,16 +496,16 @@ access_log_get(void *opaque, const char *id)
   if((ae = access_log_find(id, 0)) == NULL)
     return NULL;
   return access_log_build(ae);
-}*/
+}
 
 
 /* andyb2000 access logger hooks */
 
-/*static htsmsg_t *
+static htsmsg_t *
 access_log_create(void *opaque)
 {
   return access_log_build(access_log_find(NULL, 1));
-}*/
+}
 
 
 /**
@@ -617,15 +606,28 @@ static const dtable_class_t access_dtc = {
   .dtc_mutex = &global_lock,
 };
 
+static const dtable_class_t access_log_dtc = {
+  .dtc_record_get     = access_log_get,
+/*  .dtc_record_get_all = access_log_get_all,*/
+  .dtc_record_create  = access_log_create,
+/*  .dtc_record_update  = access_log_update,*/
+/*  .dtc_record_delete  = access_log_delete,*/
+  .dtc_read_access = ACCESS_ADMIN,
+  .dtc_write_access = ACCESS_ADMIN,
+  .dtc_mutex = &global_lock,
+};
+
+
 /**
  *
  */
 void
 access_init(int createdefault)
 {
-  dtable_t *dt;
-  htsmsg_t *r, *m;
+  dtable_t *dt, *dl;
+  htsmsg_t *r, *m, *l;
   access_entry_t *ae;
+  access_log_t *al;
   const char *s;
 
   static struct {
@@ -659,6 +661,19 @@ access_init(int createdefault)
     tvhlog(LOG_WARNING, "accesscontrol",
 	   "Created default wide open access controle entry");
   }
+
+  /* Initialise access_log andyb2000 */
+  dl = dtable_create(&access_log_dtc, "accesslog", NULL);
+  if(dtable_load(dl) == 0) {
+   /* This should be empty at each startup */
+   al = access_log_find(NULL, 1);
+   free(al->al_username);
+   al->al_username = strdup("Default");
+   l = access_log_build(al);
+   dtable_record_store(dl, al->al_id, l);
+   htsmsg_destroy(l);
+   tvhlog(LOG_INFO, "accesscontrol", "Initialised access logging");
+  };
 
   /* Load superuser account */
 
