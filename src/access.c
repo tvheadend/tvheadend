@@ -160,6 +160,7 @@ access_verify(const char *username, const char *password,
   struct sockaddr_in *si = (struct sockaddr_in *)src;
   uint32_t b = ntohl(si->sin_addr.s_addr);
   access_entry_t *ae;
+  int auth_status = 0;
 
   if(username != NULL && superuser_username != NULL && 
      password != NULL && superuser_password != NULL && 
@@ -177,27 +178,24 @@ access_verify(const char *username, const char *password,
 
     if(ae->ae_username[0] != '*') {
       /* acl entry requires username to match */
-      if(username == NULL || password == NULL) {
-	tvhlog(LOG_WARNING, "accesscontrol", "Authentication failure - no username/password pair");
+      if(username == NULL || password == NULL)
 	continue; /* Didn't get one */
-      };
 
       if(strcmp(ae->ae_username, username) ||
-	 strcmp(ae->ae_password, password)) {
-	tvhlog(LOG_WARNING, "accesscontrol", "Authentication failure for \"%s\" - Username/Password mismatch", username);
+	 strcmp(ae->ae_password, password))
 	continue; /* username/password mismatch */
-      } else {
-	tvhlog(LOG_INFO, "accesscontrol", "Authentication via user/pass SUCCESS for \"%s\"", username);
-      };
     }
 
-    if((b & ae->ae_netmask) != ae->ae_network) {
-      tvhlog(LOG_WARNING, "accesscontrol", "Authentication failure for \"%s\" - IP access mismatch", username);
+    if((b & ae->ae_netmask) != ae->ae_network)
       continue; /* IP based access mismatches */
-    };
 
+/* If we get here it was a valid authentication */
+    auth_status = 1;
     bits |= ae->ae_rights;
   }
+  if (auth_status == 0) {
+   tvhlog(LOG_WARNING, "accesscontrol", "Authentication failure for \"%s\"", username);
+  };
   return (mask & bits) == mask ? 0 : -1;
 }
 
