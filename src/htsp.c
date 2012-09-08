@@ -1101,6 +1101,8 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
 	   htsp->htsp_logname, username);
     tvh_str_update(&htsp->htsp_username, username);
     htsp_update_logname(htsp);
+/* andyb2000 log user into access_log */
+
   }
 
 

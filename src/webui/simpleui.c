@@ -458,6 +458,8 @@ page_status(http_connection_t *hc,
   htsbuf_qprintf(hq, "</recordings>\n<subscriptions>");
   htsbuf_qprintf(hq, "%d</subscriptions>\n",subscriptions_active());
 
+/* https://github.com/andyb2000/tvheadend */
+
   pthread_mutex_unlock(&global_lock);
 
   htsbuf_qprintf(hq, "</currentload>");

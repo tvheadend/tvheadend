@@ -46,6 +46,11 @@ static gtimer_t subscription_reschedule_timer;
 int
 subscriptions_active(void)
 {
+th_subscription_t *s;
+/* https://github.com/andyb2000/tvheadend */
+LIST_FOREACH(s, &subscriptions, ths_global_link) {
+	tvhlog(LOG_DEBUG, "subscriptions_active", "Active titls: %s", s->ths_title);
+};
   return LIST_FIRST(&subscriptions) != NULL;
 }
 

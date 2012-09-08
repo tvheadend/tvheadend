@@ -164,8 +164,10 @@ access_verify(const char *username, const char *password,
   if(username != NULL && superuser_username != NULL && 
      password != NULL && superuser_password != NULL && 
      !strcmp(username, superuser_username) &&
-     !strcmp(password, superuser_password))
+     !strcmp(password, superuser_password)) {
+    tvhlog(LOG_INFO, "accesscontrol", "Authentication via user/pass SUCCESS for SUPERUSER for \"%s\"", username);
     return 0;
+  };
 
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
 
@@ -174,16 +176,24 @@ access_verify(const char *username, const char *password,
 
     if(ae->ae_username[0] != '*') {
       /* acl entry requires username to match */
-      if(username == NULL || password == NULL)
+      if(username == NULL || password == NULL) {
+	tvhlog(LOG_WARNING, "accesscontrol", "Authentication failure - no username/password pair");
 	continue; /* Didn't get one */
+      };
 
       if(strcmp(ae->ae_username, username) ||
-	 strcmp(ae->ae_password, password))
+	 strcmp(ae->ae_password, password)) {
+	tvhlog(LOG_WARNING, "accesscontrol", "Authentication failure for \"%s\" - Username/Password mismatch", username);
 	continue; /* username/password mismatch */
+      } else {
+	tvhlog(LOG_INFO, "accesscontrol", "Authentication via user/pass SUCCESS for \"%s\"", username);
+      };
     }
 
-    if((b & ae->ae_netmask) != ae->ae_network)
+    if((b & ae->ae_netmask) != ae->ae_network) {
+      tvhlog(LOG_WARNING, "accesscontrol", "Authentication failure for \"%s\" - IP access mismatch", username);
       continue; /* IP based access mismatches */
+    };
 
     bits |= ae->ae_rights;
   }
@@ -355,6 +365,30 @@ access_entry_find(const char *id, int create)
   return ae;
 }
 
+/*static access_log_t *
+access_log_find(const char *id, int create)
+{
+  access_log_t *ae;
+  char buf[20];
+  static int tally;
+
+  if(create == 0)
+    return NULL;
+
+  ae = calloc(1, sizeof(access_log_t));
+  if(id == NULL) {
+    tally++;
+    snprintf(buf, sizeof(buf), "%d", tally);
+    id = buf;
+  } else {
+    tally = MAX(atoi(id), tally);
+  }
+
+  ae->al_id = strdup(id);
+  ae->al_username = strdup("*");
+  ae->al_type = strdup("*");
+  return ae;
+}*/
 
 
 /**
@@ -369,6 +403,14 @@ access_entry_destroy(access_entry_t *ae)
   TAILQ_REMOVE(&access_entries, ae, ae_link);
   free(ae);
 }
+
+/*static void
+access_log_destroy(access_log_t *ae)
+{
+  free(ae->al_id);
+  free(ae->al_username);
+  free(ae);
+}*/
 
 
 /**
@@ -401,6 +443,22 @@ access_record_build(access_entry_t *ae)
   return e;
 }
 
+/* https://github.com/andyb2000 access log */
+/*static htsmsg_t *
+access_log_build(access_log_t *ae)
+{
+  htsmsg_t *e = htsmsg_create_map();
+
+  htsmsg_add_str(e, "username", ae->al_username);
+
+  htsmsg_add_str(e, "ip",   inet_ntoa(ae->al_ip));
+
+  htsmsg_add_str(e, "id", ae->al_id);
+  
+  return e;
+}*/
+
+
 /**
  *
  */
@@ -416,6 +474,18 @@ access_record_get_all(void *opaque)
   return r;
 }
 
+/*static htsmsg_t *
+access_log_get_all(void *opaque)
+{
+  htsmsg_t *r = htsmsg_create_list();
+  access_log_t *ae;
+
+    htsmsg_add_msg(r, NULL, access_log_build(ae));
+
+  return r;
+}*/
+
+
 /**
  *
  */
@@ -428,6 +498,25 @@ access_record_get(void *opaque, const char *id)
     return NULL;
   return access_record_build(ae);
 }
+
+/*static htsmsg_t *
+access_log_get(void *opaque, const char *id)
+{
+  access_log_t *ae;
+
+  if((ae = access_log_find(id, 0)) == NULL)
+    return NULL;
+  return access_log_build(ae);
+}*/
+
+
+/* andyb2000 access logger hooks */
+
+/*static htsmsg_t *
+access_log_create(void *opaque)
+{
+  return access_log_build(access_log_find(NULL, 1));
+}*/
 
 
 /**

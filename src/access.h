@@ -42,6 +42,14 @@ typedef struct access_entry {
   uint32_t ae_netmask; /* derived from ae_prefixlen */
 } access_entry_t;
 
+typedef struct access_log {
+  char *al_id;			/* unique id */
+  char *al_username;		/* username */
+  struct in_addr al_ip;		/* ip address */
+  char *al_type;		/* type of connection - htsp, web, etc */
+  int *al_prefixlen;
+} access_log_t;
+
 TAILQ_HEAD(access_ticket_queue, access_ticket);
 
 extern struct access_ticket_queue access_tickets;
