@@ -81,7 +81,7 @@ typedef struct elementary_stream {
   uint16_t es_aspect_num;
   uint16_t es_aspect_den;
 
-  char es_lang[4];           /* ISO 639 3-letter language code */
+  char es_lang[4];           /* ISO 639 2B 3-letter language code */
   uint16_t es_composition_id;
   uint16_t es_ancillary_id;
 

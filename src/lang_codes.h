@@ -31,6 +31,7 @@ extern const lang_code_t lang_codes[];
 
 /* Convert code to preferred internal code */
 const char *lang_code_get ( const char *code );
+const char *lang_code_get2 ( const char *code, size_t len );
 
 /* Split list of codes as per HTTP Language-Accept spec */
 const char **lang_code_split ( const char *codes );

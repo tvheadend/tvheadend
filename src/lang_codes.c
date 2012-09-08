@@ -493,7 +493,7 @@ const lang_code_t lang_codes[] = {
  * Functions
  * *************************************************************************/
 
-const char *lang_code_get ( const char *code )
+const char *lang_code_get2 ( const char *code, size_t len )
 {
   int i;
   char tmp[4];
@@ -502,11 +502,12 @@ const char *lang_code_get ( const char *code )
 
     /* Extract the code (lowercase) */
     i = 0;
-    while (i < 3 && *code) {
+    while (i < 3 && *code && len) {
       if (*code == ';' || *code == ',' || *code == '-') break;
       if (*code != ' ')
         tmp[i++] = *code | 0x20; // |0x20 = lower case
       code++;
+      len--;
     }
     tmp[i] = '\0';
 
@@ -522,6 +523,11 @@ const char *lang_code_get ( const char *code )
     }
   }
   return lang_codes[0].code2b;
+}
+
+const char *lang_code_get ( const char *code )
+{
+  return lang_code_get2(code, strlen(code));
 }
 
 const char **lang_code_split ( const char *codes )

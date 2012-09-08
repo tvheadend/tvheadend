@@ -27,6 +27,7 @@
 #include "dvb/dvb_support.h"
 #include "tsdemux.h"
 #include "parsers.h"
+#include "lang_codes.h"
 
 static int
 psi_section_reassemble0(psi_section_t *ps, const uint8_t *data, 
@@ -329,6 +330,7 @@ psi_desc_teletext(service_t *t, const uint8_t *ptr, int size,
 		  int parent_pid, int *position)
 {
   int r = 0;
+  const char *lang;
   elementary_stream_t *st;
 
   while(size >= 5) {
@@ -348,10 +350,11 @@ psi_desc_teletext(service_t *t, const uint8_t *ptr, int size,
       }
 
       st->es_delete_me = 0;
-
-      if(memcmp(st->es_lang, ptr, 3)) {
-	r |= PMT_UPDATE_LANGUAGE;
-	memcpy(st->es_lang, ptr, 3);
+  
+      lang = lang_code_get2((const char*)ptr, 3);
+      if(memcmp(st->es_lang,lang,3)) {
+	      r |= PMT_UPDATE_LANGUAGE;
+        memcpy(st->es_lang, lang, 4);
       }
 
       if(st->es_parent_pid != parent_pid) {
@@ -422,7 +425,6 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
   uint16_t sid;
   streaming_component_type_t hts_stream_type;
   elementary_stream_t *st, *next;
-  char lang[4];
   int update = 0;
   int had_components;
   int composition_id;
@@ -430,6 +432,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
   int version;
   int position = 0;
   int tt_position = 1000;
+  const char *lang = NULL;
 
   caid_t *c, *cn;
 
@@ -503,7 +506,6 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
     len -= 5;
 
     hts_stream_type = SCT_UNKNOWN;
-    memset(lang, 0, 4);
     composition_id = -1;
     ancillary_id = -1;
 
@@ -558,8 +560,8 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 	break;
 
       case DVB_DESC_LANGUAGE:
-	memcpy(lang, ptr, 3);
-	break;
+        lang = lang_code_get2((const char*)ptr, 3);
+	      break;
 
       case DVB_DESC_TELETEXT:
 	if(estype == 0x06)
@@ -581,14 +583,14 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 	break;
 
       case DVB_DESC_SUBTITLE:
-	if(dlen < 8)
-	  break;
+        if(dlen < 8)
+	        break;
 
-	memcpy(lang, ptr, 3);
-	composition_id = ptr[4] << 8 | ptr[5];
-	ancillary_id   = ptr[6] << 8 | ptr[7];
-	hts_stream_type = SCT_DVBSUB;
-	break;
+        lang = lang_code_get2((const char*)ptr, 3);
+        composition_id = ptr[4] << 8 | ptr[5];
+        ancillary_id   = ptr[6] << 8 | ptr[7];
+        hts_stream_type = SCT_DVBSUB;
+        break;
 
       case DVB_DESC_EAC3:
 	if(estype == 0x06 || estype == 0x81)
@@ -626,9 +628,9 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 	st->es_position = position;
       }
 
-      if(memcmp(st->es_lang, lang, 4)) {
-	update |= PMT_UPDATE_LANGUAGE;
-	memcpy(st->es_lang, lang, 4);
+      if(lang && memcmp(st->es_lang, lang, 3)) {
+        update |= PMT_UPDATE_LANGUAGE;
+        memcpy(st->es_lang, lang, 4);
       }
 
       if(composition_id != -1 && st->es_composition_id != composition_id) {
@@ -1108,7 +1110,7 @@ psi_load_service_settings(htsmsg_t *m, service_t *t)
     st = service_stream_create(t, pid, type);
     
     if((v = htsmsg_get_str(c, "language")) != NULL)
-      snprintf(st->es_lang, 4, "%s", v);
+      strncpy(st->es_lang, lang_code_get(v), 3);
 
     if(!htsmsg_get_u32(c, "position", &u32))
       st->es_position = u32;
