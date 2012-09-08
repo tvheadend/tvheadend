@@ -493,12 +493,12 @@ const lang_code_t lang_codes[] = {
  * Functions
  * *************************************************************************/
 
-const char *lang_code_get2 ( const char *code, size_t len )
+static const lang_code_t *_lang_code_get ( const char *code, size_t len )
 {
   int i;
   char tmp[4];
 
-  if (code && *code) {
+  if (code && *code && len) {
 
     /* Extract the code (lowercase) */
     i = 0;
@@ -515,19 +515,29 @@ const char *lang_code_get2 ( const char *code, size_t len )
     if (i) {
       const lang_code_t *c = lang_codes;
       while (c->code2b) {
-        if ( !strcmp(tmp, c->code2b) )              return c->code2b;
-        if ( c->code1  && !strcmp(tmp, c->code1) )  return c->code2b;
-        if ( c->code2t && !strcmp(tmp, c->code2t) ) return c->code2b;
+        if ( !strcmp(tmp, c->code2b) )              return c;
+        if ( c->code1  && !strcmp(tmp, c->code1) )  return c;
+        if ( c->code2t && !strcmp(tmp, c->code2t) ) return c;
         c++;
       }
     }
   }
-  return lang_codes[0].code2b;
+  return &lang_codes[0];
 }
 
 const char *lang_code_get ( const char *code )
 {
-  return lang_code_get2(code, strlen(code));
+  return lang_code_get3(code)->code2b;
+}
+
+const char *lang_code_get2 ( const char *code, size_t len )
+{
+  return _lang_code_get(code, len)->code2b;
+}
+
+const lang_code_t *lang_code_get3 ( const char *code )
+{
+  return _lang_code_get(code, strlen(code ?: ""));
 }
 
 const char **lang_code_split ( const char *codes )
