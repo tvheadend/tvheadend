@@ -628,7 +628,7 @@ tvheadend.addMuxByLocation = function(adapterData, satConfStore) {
 			valueField : 'identifier',
 			emptyText : 'Select satellite configuration...'
 		});
-		locationListBBarElements.push(buttonToolbarElements);
+		locationListBBarElements.push(satConfCombo);
 	}
 	
 	var addBtn = new Ext.Button({
