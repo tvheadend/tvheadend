@@ -55,6 +55,18 @@ typedef struct access_ticket {
   char *at_resource;
 } access_ticket_t;
 
+/* https://github.com/andyb2000 structure for access logging */
+typedef struct access_log {
+  char *al_id;
+  time_t *al_startlog; /* First seen seconds */
+  time_t *al_currlog;  /* Last seen seconds */
+  char *al_username;
+  char *al_ip;
+  TAILQ_ENTRY(access_log) al_link;
+} access_log_t;
+TAILQ_HEAD(access_log_list, access_log);
+extern struct access_log_list access_log;
+
 #define ACCESS_STREAMING       0x1
 #define ACCESS_WEB_INTERFACE   0x2
 #define ACCESS_RECORDER        0x4

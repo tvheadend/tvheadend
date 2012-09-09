@@ -36,9 +36,11 @@
 #include "access.h"
 #include "dtable.h"
 #include "settings.h"
+#include <time.h>
 
 struct access_entry_queue access_entries;
 struct access_ticket_queue access_tickets;
+struct access_log_list access_log;
 
 const char *superuser_username;
 const char *superuser_password;
@@ -364,6 +366,83 @@ access_entry_find(const char *id, int create)
   return ae;
 }
 
+/* https://github.com/andyb2000 Access log functions */
+static access_log_t *
+access_log_find(const char *id, int create)
+{
+  access_log_t *al;
+  char buf[20];
+  static int tally;
+
+  tvhlog(LOG_DEBUG, "accesslogging", "Searching for ID %s with flag create %d",id,create);
+  if(id != NULL) {
+    TAILQ_FOREACH(al, &access_log, al_link)
+      if(!strcmp(al->al_id, id))
+        return al;
+  }
+
+  if(create == 0)
+    return NULL;
+
+  al = calloc(1, sizeof(access_log_t));
+  if(id == NULL) {
+    tally++;
+    snprintf(buf, sizeof(buf), "%d", tally);
+    id = buf;
+  } else {
+    tally = MAX(atoi(id), tally);
+  }
+
+  al->al_id = strdup(id);
+  al->al_username = strdup("*");
+  TAILQ_INSERT_TAIL(&access_log, al, al_link);
+  return al;
+}
+static access_log_t *
+access_log_search(const char *username)
+{
+  access_log_t *al;
+  tvhlog(LOG_DEBUG, "accesslogging", "Search by username %s",username);
+  TAILQ_FOREACH(al, &access_log, al_link)
+  if(!strcmp(al->al_username, username))
+   return al;
+ return NULL;
+};
+
+static void
+access_log_update(const char *username, const char *ip)
+{
+  access_log_t *al;
+  tvhlog(LOG_DEBUG, "accesslogging", "Updating access log for user: %s at ip: %s",username,ip);
+  if((al = access_log_search(username)) == NULL) {
+	/* user not logged yet so create */
+	al = access_log_find(NULL,1);
+	time(al->al_startlog);
+	time(al->al_currlog);
+	al->al_username=strdup(username);
+	al->al_ip=strdup(ip);
+/*	access_log_write(al); */
+  } else {
+	/* update user as already got a log entry */
+	time(al->al_currlog);
+	al->al_ip=strdup(ip);
+/*	access_log_write(al);*/
+  };
+}
+static void
+access_log_show_all(access_log_t *al)
+{
+
+ TAILQ_FOREACH(al, &access_log, al_link) {
+	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->id: %s",al->al_id);
+	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->username: %s",al->al_username);
+	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->startlog: %s",ctime(al->al_startlog));
+	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->currlog: %s",ctime(al->al_currlog));
+	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->ip: %s",al->al_ip);
+ };
+}
+
+
 /**
  *
  */
@@ -542,6 +621,7 @@ access_init(int createdefault)
   dtable_t *dt;
   htsmsg_t *r, *m;
   access_entry_t *ae;
+  access_log_t *al;
   const char *s;
 
   static struct {
@@ -555,6 +635,17 @@ access_init(int createdefault)
 
   TAILQ_INIT(&access_entries);
   TAILQ_INIT(&access_tickets);
+  TAILQ_INIT(&access_log);
+
+  /* Initialise access_log */
+  tvhlog(LOG_INFO, "accesslogging", "Initialising access logging system");
+  al = access_log_find(NULL, 1);
+
+  /* dummy access entry */
+  access_log_update("andyb", "1.1.1.1");
+  access_log_update("fred", "2.2.2.2");
+  access_log_update("andyb", "1.1.1.1");
+  access_log_show_all(al);
 
   dt = dtable_create(&access_dtc, "accesscontrol", NULL);
 
