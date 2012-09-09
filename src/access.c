@@ -417,14 +417,14 @@ access_log_update(const char *username, const char *ip)
   if((al = access_log_search(username)) == NULL) {
 	/* user not logged yet so create */
 	al = access_log_find(NULL,1);
-	time(al->al_startlog);
-	time(al->al_currlog);
+	time(&al->al_startlog);
+/*	al->al_currlog=time(NULL);*/
 	al->al_username=strdup(username);
 	al->al_ip=strdup(ip);
 /*	access_log_write(al); */
   } else {
 	/* update user as already got a log entry */
-	time(al->al_currlog);
+/*	al->al_currlog=time(NULL);*/
 	al->al_ip=strdup(ip);
 /*	access_log_write(al);*/
   };
@@ -437,7 +437,7 @@ access_log_show_all(access_log_t *al)
 	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->id: %s",al->al_id);
 	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->username: %s",al->al_username);
 	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->startlog: %s",ctime(al->al_startlog));
-	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->currlog: %s",ctime(al->al_currlog));
+/*	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->currlog: %s",ctime(al->al_currlog));*/
 	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->ip: %s",al->al_ip);
  };
 }

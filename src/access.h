@@ -58,8 +58,8 @@ typedef struct access_ticket {
 /* https://github.com/andyb2000 structure for access logging */
 typedef struct access_log {
   char *al_id;
-  time_t *al_startlog; /* First seen seconds */
-  time_t *al_currlog;  /* Last seen seconds */
+  time_t al_startlog; /* First seen seconds */
+  time_t al_currlog;  /* Last seen seconds */
   char *al_username;
   char *al_ip;
   TAILQ_ENTRY(access_log) al_link;
