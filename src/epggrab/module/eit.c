@@ -357,34 +357,51 @@ static int _eit_desc_content
  * Content ID
  */
 static int _eit_desc_crid
-  ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev )
+  ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev, service_t *svc )
 {
   int r;
   uint8_t type;
+  char buf[257], *crid;
+  int clen;
 
   while (len > 3) {
 
     /* Explicit only */
     if ( (*ptr & 0x3) == 0 ) {
+      crid = NULL;
       type = *ptr >> 2;
+
+      r = _eit_get_string_with_len(mod, buf, sizeof(buf),
+                                   ptr+1, len-1,
+                                   ev->default_charset);
+      if (r < 0) return -1;
 
       /* Episode */
       if (type == 0x1 || type == 0x31) {
-        r = _eit_get_string_with_len(mod, ev->uri, sizeof(ev->uri),
-                                     ptr+1, len-1, ev->default_charset);
+        crid = ev->uri;
+        clen = sizeof(ev->uri);
 
       /* Season */
       } else if (type == 0x2 || type == 0x32) {
-        r = _eit_get_string_with_len(mod, ev->suri, sizeof(ev->suri),
-                                     ptr+1, len-1, ev->default_charset);
-
-      /* Unknown */
-      } else {
-        r = ptr[1] + 1;
+        crid = ev->suri;
+        clen = sizeof(ev->suri);
+      }
+    
+      if (crid) {
+        if (strstr(buf, "crid://") == buf) {
+          strncpy(crid, buf, clen);
+        } else if ( *buf != '/' ) {
+          snprintf(crid, clen, "crid://%s", buf);
+        } else {
+          char *defauth = svc->s_default_authority;
+          if (!defauth)
+            defauth = svc->s_dvb_mux_instance->tdmi_default_authority;
+          if (defauth)
+            snprintf(crid, clen, "crid://%s%s", defauth, buf);
+        }
       }
 
       /* Next */
-      if (r < 0) return -1;
       len -= 1 + r;
       ptr += 1 + r;
     }
@@ -471,7 +488,7 @@ static int _eit_process_event
         break;
 #endif
       case DVB_DESC_CRID:
-        r = _eit_desc_crid(mod, ptr, dlen, &ev);
+        r = _eit_desc_crid(mod, ptr, dlen, &ev, svc);
         break;
       default:
         r = 0;
@@ -684,8 +701,10 @@ static void _eit_start
   /* Add PIDs (freesat uses non-standard) */
   if (!strcmp("uk_freesat", m->id)) {
 #ifdef IGNORE_TOO_SLOW
+    tdt_add(tdmi, NULL, dvb_pidx11_callback, m, m->id, TDT_CRC, 3840, NULL);
     tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 3841, NULL);
 #endif
+    tdt_add(tdmi, NULL, dvb_pidx11_callback, m, m->id, TDT_CRC, 3002, NULL);
     tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 3003, NULL);
   } else {
     tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 0x12, NULL);

@@ -310,6 +310,11 @@ typedef struct service {
    */
   char *s_provider;
 
+  /**
+   * Default authority
+   */
+  char *s_default_authority;
+
   enum {
     /* Service types defined in EN 300 468 */
 
