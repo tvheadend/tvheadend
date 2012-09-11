@@ -188,7 +188,7 @@ htsmsg_t *epggrab_channel_list ( void )
           htsmsg_add_str(e, "name",   ec->name);
         sprintf(name, "%s|%s", mod->id, ec->id);
         htsmsg_add_str(e, "mod-id", name);
-        sprintf(name, "%s: %s", mod->name, ec->id);
+        sprintf(name, "%s: %s (%s)", mod->name, ec->name, ec->id);
         htsmsg_add_str(e, "mod-name", name);
         htsmsg_add_msg(m, NULL, e);
       }
