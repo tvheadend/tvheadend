@@ -315,6 +315,8 @@ const lang_code_t lang_codes[] = {
   { "nah", NULL, NULL , "Nahuatl languages" },
   { "nai", NULL, NULL , "North American Indian languages" },
   { "nap", NULL, NULL , "Neapolitan" },
+  { "nar", NULL, NULL , "Narration: (audio described)"},
+  // Note: above is not part of the ISO spec, but is used in DVB
   { "nau", "na", NULL , "Nauru" },
   { "nav", "nv", NULL , "Navajo; Navaho" },
   { "ndo", "ng", NULL , "Ndonga" },
@@ -357,6 +359,8 @@ const lang_code_t lang_codes[] = {
   { "por", "pt", NULL , "Portuguese" },
   { "pra", NULL, NULL , "Prakrit languages" },
   { "pus", "ps", NULL , "Pushto; Pashto" },
+  { "qaa", NULL, NULL , "Reserved" },
+  // Note: above is actually range from qaa to qtz
   { "que", "qu", NULL , "Quechua" },
   { "raj", NULL, NULL , "Rajasthani" },
   { "rap", NULL, NULL , "Rapanui" },
@@ -458,6 +462,7 @@ const lang_code_t lang_codes[] = {
   { "umb", NULL, NULL , "Umbundu" },
   { "urd", "ur", NULL , "Urdu" },
   { "uzb", "uz", NULL , "Uzbek" },
+  { "v.o", NULL, NULL , "Voice Original" },
   { "vai", NULL, NULL , "Vai" },
   { "ven", "ve", NULL , "Venda" },
   { "vie", "vi", NULL , "Vietnamese" },
@@ -510,6 +515,14 @@ static const lang_code_t *_lang_code_get ( const char *code, size_t len )
       len--;
     }
     tmp[i] = '\0';
+
+    /* Convert special case (qaa..qtz) */
+    if (*tmp == 'q') {
+      if (tmp[1] >= 'a' && tmp[1] <= 'z' && tmp[2] >= 'a' && tmp[2] <= 'z') {
+        tmp[1] = 'a';
+        tmp[2] = 'a';
+      }
+    }
 
     /* Search */
     if (i) {
