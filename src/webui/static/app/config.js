@@ -1,3 +1,35 @@
+// Store: config languages
+tvheadend.languages = new Ext.data.JsonStore({
+    autoLoad:true,
+    root:'entries',
+    fields: ['identifier','name'],
+    id: 'identifier',
+    url:'languages',
+    baseParams: {
+    	op: 'list'
+    }
+});
+
+// Store: all languages
+tvheadend.config_languages = new Ext.data.JsonStore({
+    autoLoad:true,
+    root:'entries',
+    fields: ['identifier','name'],
+    id: 'identifier',
+    url:'languages',
+    baseParams: {
+    	op: 'config'
+    }
+});
+tvheadend.languages.setDefaultSort('name', 'ASC');
+
+tvheadend.comet.on('config', function(m) {
+    if(m.reload != null) {
+        tvheadend.languages.reload();
+        tvheadend.config_languages.reload();
+    }
+});
+
 tvheadend.miscconf = function() {
 
   /*
@@ -16,15 +48,25 @@ tvheadend.miscconf = function() {
    * ***************************************************************/
 
   var dvbscanPath = new Ext.form.TextField({
-    fieldLabel : 'DVB scan files path',
-    name       : 'muxconfpath',
-    allowBlank : true
+    fieldLabel: 'DVB scan files path',
+    name: 'muxconfpath',
+    width: 420,
+    allowBlank: true
   });
 
-  var language = new Ext.form.TextField({
-    fieldLabel : 'Default Language(s)',
-    name       : 'language',
-    allowBlank : true
+  var language = new Ext.ux.ItemSelector({
+	name: 'language',
+	fromStore: tvheadend.languages,
+	toStore: tvheadend.config_languages,
+	fieldLabel: 'Default Language(s)',
+	dataFields:['identifier', 'name'],
+	msWidth: 200,
+	msHeight: 150,
+	valueField: 'identifier',
+	displayField: 'name',
+	imagePath: 'static/multiselect/resources',
+	toLegend: 'Selected',
+	fromLegend: 'Available'
   });
 
   /* ****************************************************************
