@@ -456,18 +456,11 @@ tvheadend.autoreceditor = function() {
 		emptyText: 'Only include channel...'
 	    })
 	},{
-    header : "Brand",
-    dataIndex: 'brand',
-    editor : new Ext.form.ComboBox({
-      loadingText: 'Loading...',
-      displayField: 'title',
-      valueField: 'uri',
-      store: tvheadend.brands,
-      mode: 'local',
-      editable: false,
-      triggerAction: 'all',
-      emptyText: 'Record brand...'
-    })
+    header : "SeriesLink",
+    dataIndex: 'serieslink',
+    renderer : function(v) {
+      return v ? 'yes' : 'no';
+    }
   },{
 	    header: "Channel tag",
 	    dataIndex: 'tag',
@@ -649,7 +642,7 @@ tvheadend.dvr = function() {
 
     
     tvheadend.autorecRecord = Ext.data.Record.create([
-	'enabled','title', 'brand', 'channel','tag','creator','contenttype','comment',
+	'enabled','title', 'serieslink', 'channel','tag','creator','contenttype','comment',
 	'weekdays', 'pri', 'approx_time', 'config_name'
     ]);
     

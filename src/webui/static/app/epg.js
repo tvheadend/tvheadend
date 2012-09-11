@@ -92,7 +92,7 @@ tvheadend.epgDetails = function(event) {
 	    }),
     new Ext.Button({
       handler: recordSeries,
-      text: "Record series"
+      text: event.serieslink ? "Record series" : "Autorec"
     })
 	],
 	buttonAlign: 'center',
@@ -161,7 +161,7 @@ tvheadend.epgDetails = function(event) {
     var ab = new Ext.data.JsonStore({
       root: 'entries',
       url:  'epgrelated',
-      autoLoad: true,
+      autoLoad: false,
       id: 'id',
       baseParams: { op: 'get', id: event.id, type: 'alternative' },
       fields: Ext.data.Record.create([ 'id', 'channel', 'start' ]),
@@ -170,7 +170,7 @@ tvheadend.epgDetails = function(event) {
     var re = new Ext.data.JsonStore({
       root: 'entries',
       url:  'epgrelated',
-      autoLoad: true,
+      autoLoad: false,
       id: 'uri',
       baseParams: { op: 'get', id: event.id, type: 'related' },
       fields: Ext.data.Record.create([ 'uri', 'title', 'subtitle', 'episode']),
@@ -219,7 +219,8 @@ tvheadend.epg = function() {
             {name: 'end', type: 'date', dateFormat: 'U' /* unix time */},
             {name: 'duration'},
 	    {name: 'contenttype'},
-	    {name: 'schedstate'}
+	    {name: 'schedstate'},
+      {name: 'serieslink'},
 	])
    });
 
