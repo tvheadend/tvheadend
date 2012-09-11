@@ -50,6 +50,7 @@ static const struct {
 } tldlist[] = {
   {"auto", "--Generic--"},
   {"ad", "Andorra"},
+  {"ar", "Argentina"},
   {"at", "Austria"},
   {"au", "Australia"},
   {"ax", "Aland Islands"},

@@ -134,6 +134,8 @@ typedef struct th_dvb_mux_instance {
   char *tdmi_identifier;
   char *tdmi_network;     /* Name of network, from NIT table */
 
+  char *tdmi_default_authority;
+
   struct service_list tdmi_transports; /* via s_mux_link */
 
   TAILQ_ENTRY(th_dvb_mux_instance) tdmi_scan_link;
@@ -435,6 +437,10 @@ tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
 	int (*callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
 			 uint8_t tableid, void *opaque), void *opaque,
 	const char *name, int flags, int pid, th_dvb_table_t *tdt);
+
+int dvb_pidx11_callback
+  (th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
+   uint8_t tableid, void *opaque);
 
 #define TDT_CRC           0x1
 #define TDT_QUICKREQ      0x2

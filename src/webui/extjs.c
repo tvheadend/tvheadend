@@ -773,9 +773,9 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     if((s = epg_episode_get_subtitle(ee, lang)))
       htsmsg_add_str(m, "subtitle", s);
 
-    if((s = epg_episode_get_description(ee, lang)))
+    if((s = epg_broadcast_get_description(e, lang)))
       htsmsg_add_str(m, "description", s);
-    else if((s = epg_episode_get_summary(ee, lang)))
+    else if((s = epg_broadcast_get_summary(e, lang)))
       htsmsg_add_str(m, "description", s);
 
     if (epg_episode_number_format(ee, buf, 100, NULL, "Season %d", ".",
@@ -786,6 +786,9 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(m, "start", e->start);
     htsmsg_add_u32(m, "end", e->stop);
     htsmsg_add_u32(m, "duration", e->stop - e->start);
+
+    if(e->serieslink)
+      htsmsg_add_str(m, "serieslink", e->serieslink->uri);
     
     if((eg = LIST_FIRST(&ee->genre))) {
       htsmsg_add_u32(m, "contenttype", eg->code);

@@ -117,17 +117,33 @@ rate_to_sri(int rate)
 /**
  *
  */
+#define HEXDUMP_WIDTH 16
 void
 hexdump(const char *pfx, const uint8_t *data, int len)
 {
-  int i;
-  printf("%s: ", pfx);
-  for(i = 0; i < len; i++)
-    printf("%02x.", data[i]);
-  printf("\n");
+  int i, j=0, l;
+  char str[HEXDUMP_WIDTH+1];
+  l = ((len+(HEXDUMP_WIDTH-1))/HEXDUMP_WIDTH)*HEXDUMP_WIDTH;
+  str[0] = 0;
+  for (i = 0; i < l; i++) {
+    if (!j) printf("%s: ", pfx);
+    if (i < len) {
+      printf("%02X ", data[i]);
+      str[j] = data[i];
+      if (str[j] < ' ' || str[j] > '~') str[j] = '.';
+    } else {
+      printf("   ");
+      str[j] = ' ';
+    }
+    j++;
+    if (j == HEXDUMP_WIDTH) {
+      str[j] = 0;
+      printf("%s\n", str);
+      str[0] = 0;
+      j = 0;
+    }
+  }
 }
-
-
 
 /**
  * @file

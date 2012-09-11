@@ -349,11 +349,95 @@ dvb_desc_service(uint8_t *ptr, int len, uint8_t *typep,
 }
 
 /**
+ * DVB Descriptor: Default authority
+ */
+static int
+dvb_desc_def_authority(uint8_t *ptr, int len, char *defauth, size_t dalen)
+{
+  int r;
+  if ((r = dvb_get_string(defauth, dalen, ptr, len, NULL, NULL)) < 0)
+    return -1;
+  return 0;
+}
+
+static int
+dvb_bat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
+		 uint8_t tableid, void *opaque)
+{
+  int i, j, bdlen, tslen, tdlen;
+  uint8_t dtag, dlen;
+  uint16_t tsid;
+  char crid[257];
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+
+  if (tableid != 0x4a) return -1;
+  bdlen = ((buf[5] & 0xf) << 8) | buf[6];
+  if (bdlen+7 > len) return -1;
+  buf += 7;
+  len -= 7;
+
+  /* Bouquet Desc */
+  i = 0;
+  // TODO: parse top level descriptors?
+  buf += bdlen;
+  len -= bdlen;
+
+  tslen = ((buf[0] & 0xf) << 8) | buf[1];
+  if (tslen+2 > len) return -1;
+  buf += 2;
+  len -= 2;
+
+  /* Transport Loop */
+  i = 0;
+  while (i+6 < tslen) {
+    tsid  = buf[i] << 8 | buf[i+1];
+    tdlen = ((buf[i+4] & 0xf) << 8) | buf[i+5];
+    if (tdlen+i+6 > tslen) break;
+    i += 6;
+    j = 0;
+
+    /* Find TDMI */
+    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
+      if(tdmi->tdmi_transport_stream_id == tsid)
+        break;
+
+    /* Descriptors */
+    if (tdmi) {
+      int save  = 0;
+      *crid = 0;
+      while (j+2 < tdlen) {
+        dtag = buf[i+j];
+        dlen = buf[i+j+1];
+        if (dlen+j+2 > tdlen) break;
+        j += 2;
+        switch (dtag) {
+          case DVB_DESC_DEF_AUTHORITY:
+            dvb_desc_def_authority(buf+i+j, dlen, crid, sizeof(crid));
+            break;
+        }
+        j += dlen;
+      }
+      if (*crid && strcmp(tdmi->tdmi_default_authority ?: "", crid)) {
+        free(tdmi->tdmi_default_authority);
+        tdmi->tdmi_default_authority = strdup(crid);
+        save = 1;
+      }
+      if (save)
+        dvb_mux_save(tdmi);
+    }
+
+    i += tdlen;
+  }
+
+  return 0;
+}
+
+/**
  * DVB SDT (Service Description Table)
  */
 static int
 dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
-		 uint8_t tableid, void *opaque)
+                 uint8_t tableid, void *opaque)
 {
   service_t *t;
   uint16_t service_id;
@@ -362,18 +446,28 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   int dllen;
   uint8_t dtag, dlen;
 
+  char crid[257];
   char provider[256];
   char chname0[256], *chname;
   uint8_t stype;
   int l;
 
-  if(len < 8)
-    return -1;
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+
+  if (tableid != 0x42 || tableid != 0x46) return -1;
+
+  if(len < 8) return -1;
 
   transport_stream_id         = ptr[0] << 8 | ptr[1];
-
-  if(tdmi->tdmi_transport_stream_id != transport_stream_id)
-    return -1;
+  if (tableid == 0x42) {
+    if(tdmi->tdmi_transport_stream_id != transport_stream_id)
+      return -1;
+  } else {
+    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
+      if(tdmi->tdmi_transport_stream_id == transport_stream_id)
+        break;
+    if (!tdmi) return 0;
+  }
 
   //  version                     = ptr[2] >> 1 & 0x1f;
   //  section_number              = ptr[3];
@@ -391,6 +485,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
 
   while(len >= 5) {
+    int save = 0;
     service_id                = ptr[0] << 8 | ptr[1];
     //    reserved                  = ptr[2];
     //    running_status            = (ptr[3] >> 5) & 0x7;
@@ -403,9 +498,15 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     if(dllen > len)
       break;
 
-    stype = 0;
+    if (!(t = dvb_transport_find(tdmi, service_id, 0, NULL))) {
+      len -= dllen;
+      ptr += dllen;
+      continue;
+    }
 
+    stype  = 0;
     chname = NULL;
+    *crid  = 0;
 
     while(dllen > 2) {
       dtag = ptr[0];
@@ -413,66 +514,87 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
       len -= 2; ptr += 2; dllen -= 2; 
 
-      if(dlen > len)
-	break;
+      if(dlen > len) break;
 
       switch(dtag) {
-      case DVB_DESC_SERVICE:
-	if(dvb_desc_service(ptr, dlen, &stype,
-			    provider, sizeof(provider),
-			    chname0, sizeof(chname0)) == 0) {
-	  chname = chname0;
-	  /* Some providers insert spaces.
-	     Clean up that (both heading and trailing) */
-	  while(*chname <= 32 && *chname != 0)
-	    chname++;
+        case DVB_DESC_SERVICE:
+          if(dvb_desc_service(ptr, dlen, &stype,
+                              provider, sizeof(provider),
+                              chname0, sizeof(chname0)) == 0) {
+            chname = chname0;
+            /* Some providers insert spaces.
+               Clean up that (both heading and trailing) */
+            while(*chname <= 32 && *chname != 0)
+              chname++;
 
-	  l = strlen(chname);
-	  while(l > 1 && chname[l - 1] <= 32) {
-	    chname[l - 1] = 0;
-	    l--;
-	  }
+            l = strlen(chname);
+            while(l > 1 && chname[l - 1] <= 32) {
+              chname[l - 1] = 0;
+              l--;
+            }
 
-	  if(l == 0) {
-	    chname = chname0;
-	    snprintf(chname0, sizeof(chname0), "noname-sid-0x%x", service_id);
-	  }
-
-	  t = dvb_transport_find(tdmi, service_id, 0, NULL);
-	  if(t == NULL)
-	    break;
-
-	  if(t->s_servicetype != stype ||
-	     t->s_scrambled != free_ca_mode ||
-	     strcmp(t->s_provider ?: "", provider) ||
-	     strcmp(t->s_svcname  ?: "", chname)) {
-	    
-	    t->s_servicetype = stype;
-	    t->s_scrambled = free_ca_mode;
-	    
-	    free(t->s_provider);
-	    t->s_provider = strdup(provider);
-	    
-	    free(t->s_svcname);
-	    t->s_svcname = strdup(chname);
-
-	    pthread_mutex_lock(&t->s_stream_mutex); 
-	    service_make_nicename(t);
-	    pthread_mutex_unlock(&t->s_stream_mutex); 
-	    
-	    t->s_config_save(t);
-	    service_refresh_channel(t);
-	  }
-	}
-	break;
+            if(l == 0) {
+              chname = chname0;
+              snprintf(chname0, sizeof(chname0), "noname-sid-0x%x", service_id);
+            }
+          }
+          break;
+        case DVB_DESC_DEF_AUTHORITY:
+          dvb_desc_def_authority(ptr, dlen, crid, sizeof(crid));
+          break;
       }
-
       len -= dlen; ptr += dlen; dllen -= dlen;
+    }
+          
+    if(t->s_servicetype != stype ||
+       t->s_scrambled != free_ca_mode) {
+      t->s_servicetype = stype;
+      t->s_scrambled = free_ca_mode;
+      save = 1;
+    }
+
+    if (chname && (strcmp(t->s_provider ?: "", provider) ||
+                   strcmp(t->s_svcname  ?: "", chname))) {
+      free(t->s_provider);
+      t->s_provider = strdup(provider);
+      
+      free(t->s_svcname);
+      t->s_svcname = strdup(chname);
+
+      pthread_mutex_lock(&t->s_stream_mutex); 
+      service_make_nicename(t);
+      pthread_mutex_unlock(&t->s_stream_mutex); 
+
+      save = 1;
+    }
+
+    if (*crid && strcmp(t->s_default_authority ?: "", crid)) {
+      free(t->s_default_authority);
+      t->s_default_authority = strdup(crid);
+      save = 1;
+    }
+
+    if (save) {
+      t->s_config_save(t);
+      service_refresh_channel(t);
     }
   }
   return 0;
 }
 
+/*
+ * Combined PID 0x11 callback, for stuff commonly found on that PID
+ */
+int dvb_pidx11_callback
+  (th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
+   uint8_t tableid, void *opaque)
+{
+  if (tableid == 0x42 || tableid == 0x46)
+    return dvb_sdt_callback(tdmi, ptr, len, tableid, opaque);
+  else if (tableid == 0x4a)
+    return dvb_bat_callback(tdmi, ptr, len, tableid, opaque);
+  return -1;
+}
 
 /**
  * PAT - Program Allocation table
@@ -1025,18 +1147,9 @@ dvb_table_add_default_dvb(th_dvb_mux_instance_t *tdmi)
   tdt_add(tdmi, fp, dvb_nit_callback, NULL, "nit", 
 	  TDT_QUICKREQ | TDT_CRC, 0x10, NULL);
 
-  /* Service Descriptor Table */
+  /* Service Descriptor Table and Bouqeut Allocation Table */
 
-  fp = dvb_fparams_alloc();
-  fp->filter.filter[0] = 0x42;
-  // Note: DishNet (EchoStar) send SDT on 0x46 rather than 0x42
-  if (tdmi->tdmi_network != NULL) {
-    if(strstr(tdmi->tdmi_network,"EchoStar")!=NULL) {
-      fp->filter.filter[0] = 0x46;
-    }
-  }
-  fp->filter.mask[0] = 0xff;
-  tdt_add(tdmi, fp, dvb_sdt_callback, NULL, "sdt", 
+  tdt_add(tdmi, NULL, dvb_pidx11_callback, NULL, "pidx11", 
 	  TDT_QUICKREQ | TDT_CRC, 0x11, NULL);
 }
 
