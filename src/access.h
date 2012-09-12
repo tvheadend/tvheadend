@@ -55,6 +55,7 @@ typedef struct access_ticket {
   char *at_resource;
 } access_ticket_t;
 
+#define ACCESS_ANONYMOUS       0x0
 #define ACCESS_STREAMING       0x1
 #define ACCESS_WEB_INTERFACE   0x2
 #define ACCESS_RECORDER        0x4
