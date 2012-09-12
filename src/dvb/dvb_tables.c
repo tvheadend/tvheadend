@@ -454,7 +454,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
-  if (tableid != 0x42 || tableid != 0x46) return -1;
+  if (tableid != 0x42 && tableid != 0x46) return -1;
 
   if(len < 8) return -1;
 
