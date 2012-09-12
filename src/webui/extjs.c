@@ -1132,8 +1132,8 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     }
 
     dvr_entry_create(config_name,
-                     ch, start, stop, 0, 0, title, NULL, 0,
-                     hc->hc_representative, 
+                     ch, start, stop, 0, 0, title, NULL, NULL,
+                     0, hc->hc_representative, 
 		                 NULL, dvr_pri2val(pri));
 
     out = htsmsg_create_map();
