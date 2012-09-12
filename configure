@@ -44,6 +44,9 @@ check_cc_header execinfo
 check_cc_option mmx
 check_cc_option sse2
 
+check_cc_snippet getloadavg '#include <stdlib.h> 
+void test() { getloadavg(NULL,0); }'
+
 #
 # Python
 #
