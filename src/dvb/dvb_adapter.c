@@ -16,7 +16,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define _GNU_SOURCE
 #include <pthread.h>
 #include <assert.h>
 
@@ -460,7 +459,10 @@ dvb_adapter_start ( th_dvb_adapter_t *tda )
 
   /* Start DVR thread */
   if (tda->tda_dvr_pipe[0] == -1) {
-    assert(pipe2(tda->tda_dvr_pipe, O_NONBLOCK | O_CLOEXEC) != -1);
+    assert(pipe(tda->tda_dvr_pipe) != -1);
+    fcntl(tda->tda_dvr_pipe[0], F_SETFD, fcntl(tda->tda_dvr_pipe[0], F_GETFD) | FD_CLOEXEC);
+    fcntl(tda->tda_dvr_pipe[0], F_SETFL, fcntl(tda->tda_dvr_pipe[0], F_GETFL) | O_NONBLOCK);
+    fcntl(tda->tda_dvr_pipe[1], F_SETFD, fcntl(tda->tda_dvr_pipe[1], F_GETFD) | FD_CLOEXEC);
     pthread_create(&tda->tda_dvr_thread, NULL, dvb_adapter_input_dvr, tda);
     tvhlog(LOG_DEBUG, "dvb", "%s started dvr thread", tda->tda_rootpath);
   }

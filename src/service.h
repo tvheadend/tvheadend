@@ -81,7 +81,7 @@ typedef struct elementary_stream {
   uint16_t es_aspect_num;
   uint16_t es_aspect_den;
 
-  char es_lang[4];           /* ISO 639 3-letter language code */
+  char es_lang[4];           /* ISO 639 2B 3-letter language code */
   uint16_t es_composition_id;
   uint16_t es_ancillary_id;
 
@@ -309,6 +309,11 @@ typedef struct service {
    * Provider name (eg. DVB provider name as specified by EN 300 468)
    */
   char *s_provider;
+
+  /**
+   * Default authority
+   */
+  char *s_default_authority;
 
   enum {
     /* Service types defined in EN 300 468 */

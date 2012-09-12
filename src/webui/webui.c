@@ -369,6 +369,7 @@ http_dvr_list_playlist(http_connection_t *hc)
   const char *host;
   off_t fsize;
   time_t durration;
+  struct tm tm;
   int bandwidth;
 
   hq = &hc->hc_reply;
@@ -383,11 +384,13 @@ http_dvr_list_playlist(http_connection_t *hc)
     durration  = de->de_stop - de->de_start;
     durration += (de->de_stop_extra + de->de_start_extra)*60;
     bandwidth = ((8*fsize) / (durration*1024.0));
+    strftime(buf, sizeof(buf), "%FT%T%z", localtime_r(&(de->de_start), &tm));
 
     htsbuf_qprintf(hq, "#EXTINF:%"PRItime_t",%s\n", durration, lang_str_get(de->de_title, NULL));
     
     htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%"PRItime_t"\n", durration);
     htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%d,BANDWIDTH=%d\n", de->de_id, bandwidth);
+    htsbuf_qprintf(hq, "#EXT-X-PROGRAM-DATE-TIME:%s\n", buf);
 
     snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
@@ -411,6 +414,7 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
   time_t durration = 0;
   off_t fsize = 0;
   int bandwidth = 0;
+  struct tm tm;  
   const char *host = http_arg_get(&hc->hc_args, "Host");
 
   durration  = de->de_stop - de->de_start;
@@ -420,12 +424,14 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
 
   if(fsize) {
     bandwidth = ((8*fsize) / (durration*1024.0));
+    strftime(buf, sizeof(buf), "%FT%T%z", localtime_r(&(de->de_start), &tm));
 
     htsbuf_qprintf(hq, "#EXTM3U\n");
     htsbuf_qprintf(hq, "#EXTINF:%"PRItime_t",%s\n", durration, lang_str_get(de->de_title, NULL));
     
     htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%"PRItime_t"\n", durration);
     htsbuf_qprintf(hq, "#EXT-X-STREAM-INF:PROGRAM-ID=%d,BANDWIDTH=%d\n", de->de_id, bandwidth);
+    htsbuf_qprintf(hq, "#EXT-X-PROGRAM-DATE-TIME:%s\n", buf);
 
     snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
     ticket_id = access_ticket_create(buf);

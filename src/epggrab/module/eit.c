@@ -38,13 +38,14 @@ typedef struct eit_status
   uint16_t               tsid;
   uint16_t               sid;
   uint32_t               sec[8];
+  uint8_t                ver;
   int                    done;
 } eit_status_t;
 typedef LIST_HEAD(, eit_status) eit_status_list_t;
 
 static eit_status_t *eit_status_find
   ( eit_status_list_t *el, int tableid, uint16_t tsid, uint16_t sid,
-    uint8_t sec, uint8_t lst, uint8_t seg )
+    uint8_t sec, uint8_t lst, uint8_t seg, uint8_t ver )
 {
   int i;
   uint32_t msk;
@@ -56,7 +57,7 @@ static eit_status_t *eit_status_find
       break;
 
   /* Already complete */
-  if (sta && sta->done) return NULL;
+  if (sta && sta->done && sta->ver == ver) return NULL;
 
   /* Insert new entry */
   if (!sta) {
@@ -65,6 +66,12 @@ static eit_status_t *eit_status_find
     sta->tid  = tableid;
     sta->tsid = tsid;
     sta->sid  = sid;
+    sta->ver  = 255; // Note: force update below
+  }
+
+  /* Reset */
+  if (sta->ver != ver) {
+    sta->ver = ver;
     for (i = 0; i < (lst / 32); i++)
       sta->sec[i] = 0xFFFFFFFF;
     if (lst % 32)
@@ -357,34 +364,51 @@ static int _eit_desc_content
  * Content ID
  */
 static int _eit_desc_crid
-  ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev )
+  ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev, service_t *svc )
 {
   int r;
   uint8_t type;
+  char buf[257], *crid;
+  int clen;
 
   while (len > 3) {
 
     /* Explicit only */
     if ( (*ptr & 0x3) == 0 ) {
+      crid = NULL;
       type = *ptr >> 2;
+
+      r = _eit_get_string_with_len(mod, buf, sizeof(buf),
+                                   ptr+1, len-1,
+                                   ev->default_charset);
+      if (r < 0) return -1;
 
       /* Episode */
       if (type == 0x1 || type == 0x31) {
-        r = _eit_get_string_with_len(mod, ev->uri, sizeof(ev->uri),
-                                     ptr+1, len-1, ev->default_charset);
+        crid = ev->uri;
+        clen = sizeof(ev->uri);
 
       /* Season */
       } else if (type == 0x2 || type == 0x32) {
-        r = _eit_get_string_with_len(mod, ev->suri, sizeof(ev->suri),
-                                     ptr+1, len-1, ev->default_charset);
-
-      /* Unknown */
-      } else {
-        r = ptr[1] + 1;
+        crid = ev->suri;
+        clen = sizeof(ev->suri);
+      }
+    
+      if (crid) {
+        if (strstr(buf, "crid://") == buf) {
+          strncpy(crid, buf, clen);
+        } else if ( *buf != '/' ) {
+          snprintf(crid, clen, "crid://%s", buf);
+        } else {
+          char *defauth = svc->s_default_authority;
+          if (!defauth)
+            defauth = svc->s_dvb_mux_instance->tdmi_default_authority;
+          if (defauth)
+            snprintf(crid, clen, "crid://%s%s", defauth, buf);
+        }
       }
 
       /* Next */
-      if (r < 0) return -1;
       len -= 1 + r;
       ptr += 1 + r;
     }
@@ -410,9 +434,8 @@ static int _eit_process_event
   uint8_t dtag, dlen;
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
-  epg_season_t *es;
+  epg_serieslink_t *es;
   eit_event_t ev;
-  lang_str_ele_t *ls;
 
   if ( len < 12 ) return -1;
 
@@ -472,7 +495,7 @@ static int _eit_process_event
         break;
 #endif
       case DVB_DESC_CRID:
-        r = _eit_desc_crid(mod, ptr, dlen, &ev);
+        r = _eit_desc_crid(mod, ptr, dlen, &ev, svc);
         break;
       default:
         r = 0;
@@ -485,6 +508,16 @@ static int _eit_process_event
     ptr   += dlen;
   }
 
+  /*
+   * Broadcast
+   */
+
+  /* Summary/Description */
+  if ( ev.summary )
+    *save |= epg_broadcast_set_summary2(ebc, ev.summary, mod);
+  if ( ev.desc )
+    *save |= epg_broadcast_set_description2(ebc, ev.desc, mod);
+
   /* Broadcast Metadata */
   *save |= epg_broadcast_set_is_hd(ebc, ev.hd, mod);
   *save |= epg_broadcast_set_is_widescreen(ebc, ev.ws, mod);
@@ -492,51 +525,39 @@ static int _eit_process_event
   *save |= epg_broadcast_set_is_subtitled(ebc, ev.st, mod);
   *save |= epg_broadcast_set_is_deafsigned(ebc, ev.ds, mod);
 
-  /* Find episode */
-  if (*ev.uri) {
-    ee = epg_episode_find_by_uri(ev.uri, 1, save);
-  } else if ( !(ee = ebc->episode) ) {
-    char *uri;
-    uri   = epg_hash(lang_str_get(ev.title, NULL), 
-                     lang_str_get(ev.summary, NULL),
-                     lang_str_get(ev.desc, NULL));
-    if (uri) {
-      ee = epg_episode_find_by_uri(uri, 1, save);
-      free(uri);
-    }
+  /*
+   * Series link
+   */
+
+  if (*ev.suri) {
+    if ((es = epg_serieslink_find_by_uri(ev.suri, 1, save)))
+      *save |= epg_broadcast_set_serieslink(ebc, es, mod);
   }
 
-  /* Update Broadcast */
-  if (ee) *save |= epg_broadcast_set_episode(ebc, ee, mod);
+  /*
+   * Episode
+   */
+
+  /* Find episode */
+  if (*ev.uri) {
+    if ((ee = epg_episode_find_by_uri(ev.uri, 1, save)))
+      *save |= epg_broadcast_set_episode(ebc, ee, mod);
+
+  /* Existing/Artificial */
+  } else
+    ee = epg_broadcast_get_episode(ebc, 1, save);
 
   /* Update Episode */
   if (ee) {
     *save |= epg_episode_set_is_bw(ee, ev.bw, mod);
-    if ( ev.title ) {
-      RB_FOREACH(ls, ev.title, link)
-        *save |= epg_episode_set_title(ee, ls->str, ls->lang, mod);
-    }
-    if ( ev.summary ) {
-      RB_FOREACH(ls, ev.summary, link)
-        *save |= epg_episode_set_summary(ee, ls->str, ls->lang, mod);
-    }
-    if ( ev.desc ) {
-      RB_FOREACH(ls, ev.desc, link)
-        *save |= epg_episode_set_description(ee, ls->str, ls->lang, mod);
-    }
+    if ( ev.title )
+      *save |= epg_episode_set_title2(ee, ev.title, mod);
     if ( ev.genre )
       *save |= epg_episode_set_genre(ee, ev.genre, mod);
 #if TODO_ADD_EXTRA
     if ( ev.extra )
       *save |= epg_episode_set_extra(ee, extra, mod);
 #endif
-
-    /* Season */
-    if (*ev.suri) {
-      es = epg_season_find_by_uri(ev.suri, 1, save);
-      if (es)
-        *save |= epg_episode_set_season(ee, es, mod);
-    }
   }
 
   /* Tidy up */
@@ -563,6 +584,7 @@ static int _eit_callback
   eit_status_t *sta;
   int resched = 0, save = 0;
   uint16_t tsid, sid;
+  uint16_t sec, lst, seg, ver;
 
   /* Invalid */
   if(tableid < 0x4e || tableid > 0x6f || len < 11) return -1;
@@ -575,12 +597,25 @@ static int _eit_callback
   if (!ota || !ota->status) return -1;
   stal = ota->status;
 
-  /* Already complete */
-  if (epggrab_ota_is_complete(ota)) return 0;
-
-  /* Get tsid/sid */
+  /* Get table info */
   sid  = ptr[0] << 8 | ptr[1];
   tsid = ptr[5] << 8 | ptr[6];
+  sec  = ptr[3];
+  lst  = ptr[4];
+  seg  = ptr[9];
+  ver  = (ptr[2] >> 1) & 0x1f;
+#ifdef EPG_TRACE
+  tvhlog(LOG_DEBUG, mod->id,
+         "tid=%02X, tsid=%04X, sid=%04X, sec=%3d/%3d, seg=%3d, ver=%2d",
+         tableid, tsid, sid, sec, lst, seg, ver);
+#endif
+
+  /* Current status */
+  sta = eit_status_find(stal, tableid, tsid, sid, sec, lst, seg, ver);
+#ifdef EPG_TRACE
+  tvhlog(LOG_DEBUG, mod->id, sta ? "section process" : "section seen");
+#endif
+  if (!sta) return 0;
 
   /* Get transport stream */
   // Note: tableid=0x4f,0x60-0x6f is other TS
@@ -590,6 +625,8 @@ static int _eit_callback
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
       if(tdmi->tdmi_transport_stream_id == tsid)
         break;
+  } else {
+    if (tdmi->tdmi_transport_stream_id != tsid) return -1;
   }
   if(!tdmi) return 0;
 
@@ -600,13 +637,9 @@ static int _eit_callback
   /* Ignore (not primary EPG service) */
   if (!service_is_primary_epg(svc)) return 0;
 
-  sta = eit_status_find(stal, tableid, tsid, sid, ptr[3], ptr[4],
-                        ptr[9]);
-  if (!sta) return 0;
-
   /* Started */
   if (epggrab_ota_begin(ota)) {
-    // nothing/clear?
+    // Note: we don't clear, status is persistent to reduce overhead
 
   /* Check end */
   } else if (sta->done) {
@@ -621,6 +654,7 @@ static int _eit_callback
     epggrab_ota_register(ota, 600, 3600); // 10min grab, 1hour interval
   // Note: this does mean you will get a slight oddity for muxes that
   //       carry both, since they will end up with setting of 600/300 
+  // Note: could we be more dynamic for now/next interval?
 
   /* Process events */
   len -= 11;
@@ -635,7 +669,7 @@ static int _eit_callback
   }
 
   /* Complete */
-  if (!sta) epggrab_ota_complete(ota);
+  if (!sta)    epggrab_ota_complete(ota);
   
   /* Update EPG */
   if (resched) epggrab_resched();
@@ -687,8 +721,10 @@ static void _eit_start
   /* Add PIDs (freesat uses non-standard) */
   if (!strcmp("uk_freesat", m->id)) {
 #ifdef IGNORE_TOO_SLOW
+    tdt_add(tdmi, NULL, dvb_pidx11_callback, m, m->id, TDT_CRC, 3840, NULL);
     tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 3841, NULL);
 #endif
+    tdt_add(tdmi, NULL, dvb_pidx11_callback, m, m->id, TDT_CRC, 3002, NULL);
     tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 3003, NULL);
   } else {
     tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 0x12, NULL);

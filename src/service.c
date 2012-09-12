@@ -1,6 +1,6 @@
 /*
  *  Services
- *  Copyright (C) 2010 Andreas Öman
+ *  Copyright (C) 2010 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -47,6 +47,7 @@
 #include "atomic.h"
 #include "dvb/dvb.h"
 #include "htsp.h"
+#include "lang_codes.h"
 
 #define SERVICE_HASH_WIDTH 101
 
@@ -336,15 +337,6 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
       continue;
     }
 
-    if(t->s_quality_index(t) < 10) {
-      if(loginfo != NULL) {
-	tvhlog(LOG_NOTICE, "Service", 
-	       "%s: Skipping \"%s\" -- Quality below 10%%",
-	       loginfo, service_nicename(t));
-	err = SM_CODE_BAD_SIGNAL;
-      }
-      continue;
-    }
     vec[cnt++] = t;
     tvhlog(LOG_DEBUG, "Service",
     		"%s: Adding adapter \"%s\" for service \"%s\"",
@@ -372,6 +364,15 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
   /* First, try all services without stealing */
   for(i = off; i < cnt; i++) {
     t = vec[i];
+    if(t->s_quality_index(t) < 10) {
+      if(loginfo != NULL) {
+         tvhlog(LOG_NOTICE, "Service",
+	       "%s: Skipping \"%s\" -- Quality below 10%%",
+	       loginfo, service_nicename(t));
+         err = SM_CODE_BAD_SIGNAL;
+      }
+      continue;
+    }
     tvhlog(LOG_DEBUG, "Service", "%s: Probing adapter \"%s\" without stealing for service \"%s\"",
 	     loginfo, service_adapter_nicename(t), service_nicename(t));
 

@@ -84,7 +84,7 @@ tvheadend.epgDetails = function(event) {
 			text : "Record program"
 		}), new Ext.Button({
 			handler : recordSeries,
-			text : "Record series"
+			text: event.serieslink ? "Record series" : "Autorec"
 		}) ],
 		buttonAlign : 'center',
 		html : content
@@ -152,7 +152,7 @@ tvheadend.epgDetails = function(event) {
 	var ab = new Ext.data.JsonStore({
 		root : 'entries',
 		url : 'epgrelated',
-		autoLoad : true,
+		autoLoad : false,
 		id : 'id',
 		baseParams : {
 			op : 'get',
@@ -167,7 +167,7 @@ tvheadend.epgDetails = function(event) {
 	var re = new Ext.data.JsonStore({
 		root : 'entries',
 		url : 'epgrelated',
-		autoLoad : true,
+		autoLoad : false,
 		id : 'uri',
 		baseParams : {
 			op : 'get',
@@ -214,7 +214,8 @@ tvheadend.epg = function() {
 		     {name : 'end',	type : 'date', dateFormat : 'U' /* unix time */},
 		     {name : 'duration'}, 
 		     {name : 'contenttype'},
-		     {name : 'schedstate'} 
+		     {name : 'schedstate'},
+		     {name: 'serieslink'} 
 		     ])
 	});
 

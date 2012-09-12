@@ -397,10 +397,6 @@ tvheadend.dvrschedule = function() {
 /**
  *
  */
-
-/**
- *
- */
 tvheadend.autoreceditor = function() {
 	var fm = Ext.form;
 
@@ -428,24 +424,18 @@ tvheadend.autoreceditor = function() {
 					displayField : 'name',
 					store : tvheadend.channels,
 					mode : 'local',
-					editable : false,
+					editable : true,
+					forceSelection: true,
 					triggerAction : 'all',
-					emptyText : 'Only include channel...'
+					emptyText : 'Select a channel...'
 				})
 			},
 			{
-				header : "Brand",
-				dataIndex : 'brand',
-				editor : new Ext.form.ComboBox({
-					loadingText : 'Loading...',
-					displayField : 'title',
-					valueField : 'uri',
-					store : tvheadend.brands,
-					mode : 'local',
-					editable : false,
-					triggerAction : 'all',
-					emptyText : 'Record brand...'
-				})
+			    header : "Series Link",
+			    dataIndex: 'serieslink',
+			    renderer : function(v) {
+			      return v ? 'yes' : 'no';
+			    }
 			},
 			{
 				header : "Channel tag",
@@ -454,9 +444,10 @@ tvheadend.autoreceditor = function() {
 					displayField : 'name',
 					store : tvheadend.channelTags,
 					mode : 'local',
-					editable : false,
+					editable : true,
+					forceSelection: true,
 					triggerAction : 'all',
-					emptyText : 'Only include tag...'
+					emptyText : 'Select a tag...'
 				})
 			},
 			{
@@ -470,9 +461,10 @@ tvheadend.autoreceditor = function() {
 					displayField : 'name',
 					store : tvheadend.ContentGroupStore,
 					mode : 'local',
-					editable : false,
+					editable : true,
+					forceSelection: true,
 					triggerAction : 'all',
-					emptyText : 'Only include content...'
+					emptyText : 'Select a content type...'
 				})
 			},
 			{
@@ -641,9 +633,9 @@ tvheadend.dvr = function() {
 		}
 	});
 
-	tvheadend.autorecRecord = Ext.data.Record.create([ 'enabled', 'title',
-		'brand', 'channel', 'tag', 'creator', 'contenttype', 'comment',
-		'weekdays', 'pri', 'approx_time', 'config_name' ]);
+	tvheadend.autorecRecord = Ext.data.Record.create([ 'enabled', 'title', 'serieslink', 'channel', 'tag', 
+	                                                   'creator', 'contenttype', 'comment', 'weekdays', 'pri', 
+	                                                   'approx_time', 'config_name' ]);
 
 	tvheadend.autorecStore = new Ext.data.JsonStore({
 		root : 'entries',
