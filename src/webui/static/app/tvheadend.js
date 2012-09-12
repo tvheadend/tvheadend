@@ -296,6 +296,7 @@ tvheadend.app = function() {
 				height : 45,
 				boxMaxHeight : 45,
 				boxMinHeight : 45,
+				border: false,
 				html: '<div id="header"><h1>Tvheadend Web-Panel</h1></div>'
 			});
 			

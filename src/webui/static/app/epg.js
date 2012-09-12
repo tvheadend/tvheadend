@@ -327,9 +327,10 @@ tvheadend.epg = function() {
 		displayField : 'name',
 		store : tvheadend.channels,
 		mode : 'local',
-		editable : false,
+		editable : true,
+		forceSelection: true,
 		triggerAction : 'all',
-		emptyText : 'Only include channel...'
+		emptyText : 'Filter channel...'
 	});
 
 	// Tags, uses global store
@@ -339,9 +340,10 @@ tvheadend.epg = function() {
 		displayField : 'name',
 		store : tvheadend.channelTags,
 		mode : 'local',
-		editable : false,
+		editable : true,
+		forceSelection: true,
 		triggerAction : 'all',
-		emptyText : 'Only include tag...'
+		emptyText : 'Filter tag...'
 	});
 
 	// Content groups
@@ -352,9 +354,10 @@ tvheadend.epg = function() {
 		displayField : 'name',
 		store : tvheadend.ContentGroupStore,
 		mode : 'local',
-		editable : false,
+		editable : true,
+		forceSelection: true,
 		triggerAction : 'all',
-		emptyText : 'Only include content...'
+		emptyText : 'Filter content type...'
 	});
 
 	function epgQueryClear() {

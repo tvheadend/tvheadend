@@ -6,6 +6,7 @@
  * http://extjs.com/license
  */ 
 #header {
+	font-family: tahoma,arial;
     background-color: #507AAA;
     color: #F8F8F8;
     height: 5.3em;
@@ -325,7 +326,7 @@
 }
 
 .about-title {
-	font: normal 24px verdana;
+	font-size: 24px;
 	font-weight: bold;
 }
 
