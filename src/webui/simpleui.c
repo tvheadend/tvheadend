@@ -30,6 +30,7 @@
 #include "access.h"
 #include "epg.h"
 #include "dvr/dvr.h"
+#include "config.h"
 
 #define ACCESS_SIMPLE \
 (ACCESS_WEB_INTERFACE | ACCESS_RECORDER)
@@ -365,18 +366,23 @@ page_status(http_connection_t *hc,
 	    const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
-  int c, i, cc, timeleft, timelefttemp, loads;
+  int c, i, cc, timeleft, timelefttemp;
   struct tm a, b;
   dvr_entry_t *de;
   dvr_query_result_t dqr;
   const char *rstatus;
   time_t     now;
-  double avg[3]; 
   char buf[500];
+
+#ifdef ENABLE_GETLOADAVG
+  int loads;
+  double avg[3];
+#endif
 
   htsbuf_qprintf(hq, "<?xml version=\"1.0\"?>\n"
                  "<currentload>\n");
 
+#ifdef ENABLE_GETLOADAVG
   loads = getloadavg (avg, 3); 
   if (loads == -1) {
         tvhlog(LOG_DEBUG, "webui",  "Error getting load average from getloadavg()");
@@ -386,7 +392,7 @@ page_status(http_connection_t *hc,
   } else {
         htsbuf_qprintf(hq, "<systemload>%f,%f,%f</systemload>\n",avg[0],avg[1],avg[2]);
   };
-
+#endif
   htsbuf_qprintf(hq,"<recordings>\n");
 
   pthread_mutex_lock(&global_lock);
