@@ -177,6 +177,7 @@ typedef struct th_dvb_adapter {
   char *tda_identifier;
   uint32_t tda_autodiscovery;
   uint32_t tda_idlescan;
+  uint32_t tda_idleclose;
   uint32_t tda_skip_initialscan;
   uint32_t tda_skip_checksubscr;
   uint32_t tda_qmon;
@@ -302,6 +303,8 @@ void dvb_adapter_set_skip_checksubscr(th_dvb_adapter_t *tda, int on);
 void dvb_adapter_set_qmon(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_dump_muxes(th_dvb_adapter_t *tda, int on);
+
+void dvb_adapter_set_idleclose(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_poweroff(th_dvb_adapter_t *tda, int on);
 

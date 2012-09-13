@@ -1075,7 +1075,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 		root : 'dvbadapters'
 	}, [ 'name', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion',
 		'qmon', 'skip_checksubscr', 'dumpmux', 'poweroff', 'sidtochan', 'nitoid',
-		'extrapriority', 'disable_pmt_monitor' ]);
+		'extrapriority', 'disable_pmt_monitor', 'idleclose' ]);
 
 	function saveConfForm() {
 		confform.getForm().submit({
@@ -1104,6 +1104,10 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 		new Ext.form.Checkbox({
 			fieldLabel : 'Idle scanning',
 			name : 'idlescan'
+		}),
+		new Ext.form.Checkbox({
+			fieldLabel : 'Close device handle when idle',
+			name : 'idleclose'
 		}),
 		new Ext.form.Checkbox({
 			fieldLabel : 'Skip service availability check when mapping',
