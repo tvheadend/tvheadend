@@ -24,18 +24,26 @@
 
 static htsmsg_t *config;
 
+static const char *PATHFMT = "config";
+static const char *KEY_LANGUAGE = "language";
+static const char *KEY_MUXCONFPATH = "muxconfpath";
+static const char *KEY_FILTER_AUDIO_SUBTITLE = "filteraudiosubtitle";
+
 void config_init ( void )
 {
-  config = hts_settings_load("config");
+  config = hts_settings_load(PATHFMT);
   if (!config) {
-    tvhlog(LOG_WARNING, "config", "no configuration, loading defaults");
+    tvhlog(LOG_WARNING, PATHFMT, "no configuration, loading defaults");
     config = htsmsg_create_map();
+    htsmsg_add_str(config, KEY_LANGUAGE, "");
+    htsmsg_add_str(config, KEY_MUXCONFPATH, "");
+    htsmsg_add_str(config, KEY_FILTER_AUDIO_SUBTITLE, "false");
   }
 }
 
 void config_save ( void )
 {
-  hts_settings_save(config, "config");
+  hts_settings_save(config, PATHFMT);
 }
 
 htsmsg_t *config_get_all ( void )
@@ -45,15 +53,15 @@ htsmsg_t *config_get_all ( void )
 
 const char *config_get_language ( void )
 {
-  return htsmsg_get_str(config, "language");
+  return htsmsg_get_str(config, KEY_LANGUAGE);
 }
 
 int config_set_language ( const char *lang )
 {
   const char *c = config_get_language();
   if (!c || strcmp(c, lang)) {
-    if (c) htsmsg_delete_field(config, "language");
-    htsmsg_add_str(config, "language", lang);
+    if (c) htsmsg_delete_field(config, KEY_LANGUAGE);
+    htsmsg_add_str(config, KEY_LANGUAGE, lang);
     return 1;
   }
   return 0;
@@ -61,15 +69,31 @@ int config_set_language ( const char *lang )
 
 const char *config_get_muxconfpath ( void )
 {
-  return htsmsg_get_str(config, "muxconfpath");
+  return htsmsg_get_str(config, KEY_MUXCONFPATH);
 }
 
 int config_set_muxconfpath ( const char *path )
 {
   const char *c = config_get_muxconfpath();
   if (!c || strcmp(c, path)) {
-    if (c) htsmsg_delete_field(config, "muxconfpath");
-    htsmsg_add_str(config, "muxconfpath", path);
+    if (c) htsmsg_delete_field(config, KEY_MUXCONFPATH);
+    htsmsg_add_str(config, KEY_MUXCONFPATH, path);
+    return 1;
+  }
+  return 0;
+}
+
+const char *config_get_filteraudiosubtitle ( void )
+{
+  return htsmsg_get_str(config, KEY_FILTER_AUDIO_SUBTITLE);
+}
+
+int config_set_filteraudiosubtitle ( const char *path )
+{
+  const char *c = config_get_muxconfpath();
+  if (!c || strcmp(c, path)) {
+    if (c) htsmsg_delete_field(config, KEY_FILTER_AUDIO_SUBTITLE);
+    htsmsg_add_str(config, KEY_FILTER_AUDIO_SUBTITLE, path);
     return 1;
   }
   return 0;

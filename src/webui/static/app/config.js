@@ -1,10 +1,19 @@
+tvheadend.filteraudiosubtitle = new Ext.data.SimpleStore({
+    fields: ['identifier', 'name'],
+    id: 0,
+    data: [
+		['false', 'Disabled'],
+		['true', 'Enabled']
+    ]
+});
+
 tvheadend.miscconf = function() {
 	/*
 	 * Basic Config
 	 */
 	var confreader = new Ext.data.JsonReader({
 		root : 'config'
-	}, [ 'muxconfpath', 'language' ]);
+	}, [ 'muxconfpath', 'language', 'filteraudiosubtitle' ]);
 
 	/* ****************************************************************
 	 * Form Fields
@@ -21,6 +30,20 @@ tvheadend.miscconf = function() {
 		name : 'language',
 		allowBlank : true
 	});
+	
+	var filteraudiosubtitle = new Ext.form.ComboBox({
+		fieldLabel: 'Filter audio/subtitle by language',
+    	hiddenName: 'filteraudiosubtitle',
+    	store: tvheadend.filteraudiosubtitle,
+    	valueField: 'identifier',
+    	displayField: 'name',
+    	editable: false,
+		forceSelection: true,
+		mode:'local',
+		valueNotFoundText: 'Disabled',
+		triggerAction: 'all',
+    	width: 150
+  });
 
 	/* ****************************************************************
 	 * Form
@@ -46,13 +69,13 @@ tvheadend.miscconf = function() {
 		border : false,
 		bodyStyle : 'padding:15px',
 		labelAlign : 'left',
-		labelWidth : 150,
+		labelWidth : 190,
 		waitMsgTarget : true,
 		reader : confreader,
 		layout : 'form',
 		defaultType : 'textfield',
 		autoHeight : true,
-		items : [ language, dvbscanPath ],
+		items : [ language, dvbscanPath, filteraudiosubtitle ],
 		tbar : [ saveButton, '->', helpButton ]
 	});
 
