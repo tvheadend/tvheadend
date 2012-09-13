@@ -392,8 +392,6 @@ page_status(http_connection_t *hc,
   } else {
         htsbuf_qprintf(hq, "<systemload>%f,%f,%f</systemload>\n",avg[0],avg[1],avg[2]);
   };
-#else
-        htsbuf_qprintf(hq, "<systemload>0</systemload>\n");
 #endif
   htsbuf_qprintf(hq,"<recordings>\n");
 
