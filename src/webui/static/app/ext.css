@@ -4,310 +4,331 @@
  * licensing@extjs.com
  * 
  * http://extjs.com/license
- */
-
-
-.x-tree-col {
-    float:left;
-    overflow:hidden;
-    padding:0 1px;
-    zoom:1;
+ */ 
+#header {
+	font-family: tahoma,arial;
+    background-color: #507AAA;
+    color: #F8F8F8;
+    height: 5.3em;
+    margin: 0;
+    padding: 6px 8px 0 6px;
+    background: url("../img/bg-header.png") repeat-x scroll 0 0 transparent;
+    height: 45px;
+}
+ 
+ #header > h1 {
+    background: url("../img/logo.png") no-repeat scroll 10px 20% transparent;
+    color: #E0E0E0;
+    font-size: 22px;
+    padding: 2px 55px;
+    text-shadow: 0 -2px rgba(0, 0, 0, 0.2);
 }
 
-.x-tree-col-text, .x-tree-hd-text {
-    overflow:hidden;
-    -o-text-overflow: ellipsis;
+.x-tree-col {
+	float: left;
+	overflow: hidden;
+	padding: 0 1px;
+	zoom: 1;
+}
+
+.x-tree-col-text,.x-tree-hd-text {
+	overflow: hidden;
+	-o-text-overflow: ellipsis;
 	text-overflow: ellipsis;
-    padding:3px 3px 3px 5px;
-    white-space: nowrap;
-    font:normal 11px arial, tahoma, helvetica, sans-serif;
+	padding: 3px 3px 3px 5px;
+	white-space: nowrap;
+	font: normal 11px arial, tahoma, helvetica, sans-serif;
 }
 
 .x-tree-headers {
-    background: #f9f9f9 url(../extjs/resources/images/default/grid/grid3-hrow.gif) repeat-x 0 bottom;
-	cursor:default;
-    zoom:1;
+	background: #f9f9f9
+		url(../extjs/resources/images/default/grid/grid3-hrow.gif) repeat-x 0
+		bottom;
+	cursor: default;
+	zoom: 1;
 }
 
 .x-tree-hd {
-    float:left;
-    overflow:hidden;
-    border-left:1px solid #eee;
-    border-right:1px solid #d0d0d0;
+	float: left;
+	overflow: hidden;
+	border-left: 1px solid #eee;
+	border-right: 1px solid #d0d0d0;
 }
 
-.ux-mselect{
-    overflow:auto;
-    background:white;
-    position:relative; /* for calculating scroll offsets */
-    zoom:1;
-    overflow:auto;      
-}
-.ux-mselect-item{
-    font:normal 12px tahoma, arial, helvetica, sans-serif;
-    padding:2px;
-    border:1px solid #fff;
-    white-space: nowrap;
-    cursor:pointer;
-}
-.ux-mselect-selected{
-        border:1px dotted #a3bae9 !important;
-    background:#DFE8F6;
-    cursor:pointer;
+.ux-mselect {
+	overflow: auto;
+	background: white;
+	position: relative; /* for calculating scroll offsets */
+	zoom: 1;
+	overflow: auto;
 }
 
-.x-view-drag-insert-above { 
-    border-top:1px dotted #3366cc; 
-} 
-.x-view-drag-insert-below { 
-    border-bottom:1px dotted #3366cc; 
-} 
+.ux-mselect-item {
+	font: normal 12px tahoma, arial, helvetica, sans-serif;
+	padding: 2px;
+	border: 1px solid #fff;
+	white-space: nowrap;
+	cursor: pointer;
+}
 
+.ux-mselect-selected {
+	border: 1px dotted #a3bae9 !important;
+	background: #DFE8F6;
+	cursor: pointer;
+}
+
+.x-view-drag-insert-above {
+	border-top: 1px dotted #3366cc;
+}
+
+.x-view-drag-insert-below {
+	border-bottom: 1px dotted #3366cc;
+}
 
 .x-grid3-progresscol .x-grid3-cell-inner {
-  padding: 0px 0px 0px 5px;
+	padding: 0px 0px 0px 5px;
 }
 
 .x-grid3-progresscol .x-progress-bar {
-  height: 16px;
+	height: 16px;
 }
 
 .x-grid3-progresscol .x-progress-inner {
-  height: 16px;
+	height: 16px;
 }
 
 .x-grid3-progresscol .x-progress-text-front-ie6 {
-  padding: 2.5px 5px;
+	padding: 2.5px 5px;
 }
 
 .x-grid3-progresscol .x-progress-text-front {
-  padding: 2px 5px;
+	padding: 2px 5px;
 }
 
 .x-progress-bar-red,.x-progress-bar-orange,.x-progress-bar-green {
-  border-bottom: 1px solid #7fa9e4;
-  float: left;
-  height: 16px;
+	border-bottom: 1px solid #7fa9e4;
+	float: left;
+	height: 16px;
 }
 
 .x-progress-bar-red {
-  background: #ff0000 url(../icons/progress-bg-red.gif) repeat-x scroll left
-    center;
-  border-top: 1px solid #ecb7ad;
+	background: #ff0000 url(../icons/progress-bg-red.gif) repeat-x scroll
+		left center;
+	border-top: 1px solid #ecb7ad;
 }
 
 .x-progress-bar-orange {
-  background: #9cbfee url(../icons/progress-bg-orange.gif) repeat-x scroll
-    left center;
-  border-right: 1px solid #deab7e;
-  border-top: 1px solid #d7b290;
+	background: #9cbfee url(../icons/progress-bg-orange.gif) repeat-x scroll
+		left center;
+	border-right: 1px solid #deab7e;
+	border-top: 1px solid #d7b290;
 }
 
 .x-progress-bar-green {
-  background: #00ff00 url(../icons/progress-bg-green.gif) repeat-x scroll
-    left center;
-  border-right: 1px solid #5bd976;
-  border-top: 1px solid #79e18f;
+	background: #00ff00 url(../icons/progress-bg-green.gif) repeat-x scroll
+		left center;
+	border-right: 1px solid #5bd976;
+	border-top: 1px solid #79e18f;
 }
 
 .tvh-grid-unset {
-  color: #888;
-  font-style:italic;
+	color: #888;
+	font-style: italic;
 }
 
 .add {
-    background-image:url(../icons/add.gif) !important;
+	background-image: url(../icons/add.gif) !important;
 }
+
 .option {
-    background-image:url(../icons/plugin.gif) !important;
+	background-image: url(../icons/plugin.gif) !important;
 }
+
 .remove {
-    background-image:url(../icons/delete.gif) !important;
+	background-image: url(../icons/delete.gif) !important;
 }
+
 .save {
-    background-image:url(../icons/save.gif) !important;
+	background-image: url(../icons/save.gif) !important;
 }
+
 .rec {
-    background-image:url(../icons/rec.png) !important;
+	background-image: url(../icons/rec.png) !important;
 }
+
 .info {
-    background-image:url(../icons/information.png) !important;
+	background-image: url(../icons/information.png) !important;
 }
+
 .undo {
-    background-image:url(../icons/undo.png) !important;
+	background-image: url(../icons/undo.png) !important;
 }
 
 .key {
-    background-image:url(../icons/key.png) !important;
+	background-image: url(../icons/key.png) !important;
 }
 
 .tags {
-    background-image:url(../icons/tag_blue.png) !important;
+	background-image: url(../icons/tag_blue.png) !important;
 }
 
 .xml {
-    background-image:url(../icons/tag.png) !important;
+	background-image: url(../icons/tag.png) !important;
 }
 
 .drive {
-    background-image:url(../icons/drive.png) !important;
+	background-image: url(../icons/drive.png) !important;
 }
 
 .group {
-    background-image:url(../icons/group.png) !important;
+	background-image: url(../icons/group.png) !important;
 }
 
 .hardware {
-    background-image:url(../icons/pci.png) !important;
+	background-image: url(../icons/pci.png) !important;
 }
 
 .television {
-    background-image:url(../icons/television.png) !important;
+	background-image: url(../icons/television.png) !important;
 }
 
 .eye {
-    background-image:url(../icons/eye.png) !important;
+	background-image: url(../icons/eye.png) !important;
 }
 
 .control_play {
-    background-image:url(../icons/control_play.png) !important;
+	background-image: url(../icons/control_play.png) !important;
 }
 
 .control_pause {
-    background-image:url(../icons/control_pause.png) !important;
+	background-image: url(../icons/control_pause.png) !important;
 }
 
 .control_stop {
-    background-image:url(../icons/control_stop.png) !important;
+	background-image: url(../icons/control_stop.png) !important;
 }
 
 .control_volume {
-    background-image:url(../icons/sound.png) !important;
+	background-image: url(../icons/sound.png) !important;
 }
 
 .control_fullscreen {
-    background-image:url(../icons/arrow_out.png) !important;
+	background-image: url(../icons/arrow_out.png) !important;
 }
 
 .newspaper {
-    background-image:url(../icons/newspaper.png) !important;
+	background-image: url(../icons/newspaper.png) !important;
 }
 
 .clock {
-    background-image:url(../icons/clock.png) !important;
+	background-image: url(../icons/clock.png) !important;
 }
 
 .wrench {
-    background-image:url(../icons/wrench.png) !important;
+	background-image: url(../icons/wrench.png) !important;
 }
 
 .wand {
-    background-image:url(../icons/wand.png) !important;
+	background-image: url(../icons/wand.png) !important;
 }
 
 .merge {
-    background-image:url(../icons/arrow_join.png) !important;
+	background-image: url(../icons/arrow_join.png) !important;
 }
 
 .iptv {
-    background-image:url(../icons/world.png) !important;
+	background-image: url(../icons/world.png) !important;
 }
 
 .clone {
-    background-image:url(../icons/layers.png) !important;
+	background-image: url(../icons/layers.png) !important;
 }
 
 .scheduled {
-    background-image:url(../icons/clock.png) !important;
+	background-image: url(../icons/clock.png) !important;
 }
 
 .recordingError {
-    background-image:url(../icons/exclamation.png) !important;
+	background-image: url(../icons/exclamation.png) !important;
 }
 
 .completed {
-    background-image:url(../icons/tick.png) !important;
+	background-image: url(../icons/tick.png) !important;
 }
 
 .completedError {
-    background-image:url(../icons/exclamation.png) !important;
+	background-image: url(../icons/exclamation.png) !important;
 }
 
 .recording {
-    background-image:url(../icons/rec.png) !important;
+	background-image: url(../icons/rec.png) !important;
 }
 
-
-
 .x-smallhdr {
-    float:left;
-    width: 100px;
+	float: left;
+	width: 100px;
 }
 
 .x-epg-title {
-    margin: 5px;
-    font:normal 15px arial, tahoma, helvetica, sans-serif;
-    font-weight:bold;
+	margin: 5px;
+	font: normal 15px arial, tahoma, helvetica, sans-serif;
+	font-weight: bold;
 }
 
 .x-epg-subtitle {
-    margin: 5px;
-    font:normal 12px arial, tahoma, helvetica, sans-serif;
-    font-weight:bold;
+	margin: 5px;
+	font: normal 12px arial, tahoma, helvetica, sans-serif;
+	font-weight: bold;
 }
 
 .x-epg-desc {
-    margin: 5px;
+	margin: 5px;
 }
 
 .x-epg-chicon {
-    float: right;
-    margin: 5px;
-    max-width: 132px;
-    max-height: 99px;
+	float: right;
+	margin: 5px;
+	max-width: 132px;
+	max-height: 99px;
 }
 
 .x-epg-meta {
-    margin: 5px;
+	margin: 5px;
 }
 
-
-.hts-t-info  {
-    float:left;
-    width:100px;
+.hts-t-info {
+	float: left;
+	width: 100px;
 }
-
-
 
 .hts-doc-text {
-  font:normal 11px verdana;
-  padding: 5px;
+	font: normal 11px verdana;
+	padding: 5px;
 }
 
 .hts-doc-text dt {
-  padding-top: 10px;
-  font-weight: bold;
+	padding-top: 10px;
+	font-weight: bold;
 }
 
 .hts-doc-text dl {
-  padding-left: 10px;
-  padding-bottom: 10px;
+	padding-left: 10px;
+	padding-bottom: 10px;
 }
 
 .hts-doc-text li {
-  padding-top: 5px;
-  padding-bottom: 5px;
+	padding-top: 5px;
+	padding-bottom: 5px;
 }
 
 .hts-doc-text img {
- padding: 10px;
+	padding: 10px;
 }
 
 .about-title {
-  font:normal 24px verdana;
-  font-weight: bold;
+	font-size: 24px;
+	font-weight: bold;
 }
-
 
 /** vim: ts=4:sw=4:nu:fdc=4:nospell 
  *
@@ -329,60 +350,69 @@
 
 /* styles for rows */
 .ux-row-action-cell .x-grid3-cell-inner {
-	padding:1px 0 0 0;
+	padding: 1px 0 0 0;
 }
+
 .ux-row-action-item {
-	float:left;
-	min-width:16px;
-	height:16px;
-	background-repeat:no-repeat;
+	float: left;
+	min-width: 16px;
+	height: 16px;
+	background-repeat: no-repeat;
 	margin: 0 5px 0 0;
-	cursor:pointer;
-	overflow:hidden;
+	cursor: pointer;
+	overflow: hidden;
 }
+
 .ext-ie .ux-row-action-item {
-	width:16px;
+	width: 16px;
 }
+
 .ext-ie .ux-row-action-text {
-	width:auto;
+	width: auto;
 }
+
 .ux-row-action-item span {
-	vertical-align:middle;
-	padding:0 0 0 20px;
-	line-height:18px;
+	vertical-align: middle;
+	padding: 0 0 0 20px;
+	line-height: 18px;
 }
+
 .ext-ie .ux-row-action-item span {
-	width:auto;
+	width: auto;
 }
 
 /* styles for groups */
 .x-grid-group-hd div {
-	position:relative;
-	height:16px;
+	position: relative;
+	height: 16px;
 }
+
 .ux-grow-action-item {
-	min-width:16px;
-	height:16px;
-	background-repeat:no-repeat;
+	min-width: 16px;
+	height: 16px;
+	background-repeat: no-repeat;
 	background-position: 0 50% ! important;
 	margin: 0 0 0 4px;
 	padding: 0 ! important;
-	cursor:pointer;
-	float:left;
+	cursor: pointer;
+	float: left;
 }
+
 .ext-ie .ux-grow-action-item {
-	width:16px;
+	width: 16px;
 }
+
 .ux-action-right {
-	float:right;
+	float: right;
 	margin: 0 3px 0 2px;
 	padding: 0 ! important;
 }
+
 .ux-grow-action-text {
 	padding: 0 ! important;
-	margin:0 ! important;
-	background:transparent none ! important;
-	float:left;
+	margin: 0 ! important;
+	background: transparent none ! important;
+	float: left;
 }
 
 /** vim: ts=4:sw=4:nu:fdc=4:nospell
@@ -401,19 +431,22 @@
  * 
  * License details: http://www.gnu.org/licenses/lgpl.html
  */
-
 .ux-lovcombo-icon {
-	width:16px;
-	height:16px;
-	float:left;
+	width: 16px;
+	height: 16px;
+	float: left;
 	background-position: -1px -1px ! important;
-	background-repeat:no-repeat ! important;
+	background-repeat: no-repeat ! important;
 }
+
 .ux-lovcombo-icon-checked {
-	background: transparent url(../extjs/resources/images/default/menu/checked.gif);
+	background: transparent
+		url(../extjs/resources/images/default/menu/checked.gif);
 }
+
 .ux-lovcombo-icon-unchecked {
-	background: transparent url(../extjs/resources/images/default/menu/unchecked.gif);
+	background: transparent
+		url(../extjs/resources/images/default/menu/unchecked.gif);
 }
- 
+
 /* eof */

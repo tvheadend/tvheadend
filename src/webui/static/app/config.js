@@ -1,98 +1,89 @@
 tvheadend.miscconf = function() {
+	/*
+	 * Basic Config
+	 */
+	var confreader = new Ext.data.JsonReader({
+		root : 'config'
+	}, [ 'muxconfpath', 'language' ]);
 
-  /*
-   * Basic Config
-   */
+	/* ****************************************************************
+	 * Form Fields
+	 * ***************************************************************/
 
-  var confreader = new Ext.data.JsonReader(
-    { root: 'config' },
-    [ 
-      'muxconfpath', 'language'
-    ]
-  );
+	var dvbscanPath = new Ext.form.TextField({
+		fieldLabel : 'DVB scan files path',
+		name : 'muxconfpath',
+		allowBlank : true
+	});
 
-  /* ****************************************************************
-   * Form Fields
-   * ***************************************************************/
+	var language = new Ext.form.TextField({
+		fieldLabel : 'Default Language(s)',
+		name : 'language',
+		allowBlank : true
+	});
 
-  var dvbscanPath = new Ext.form.TextField({
-    fieldLabel : 'DVB scan files path',
-    name       : 'muxconfpath',
-    allowBlank : true
-  });
+	/* ****************************************************************
+	 * Form
+	 * ***************************************************************/
 
-  var language = new Ext.form.TextField({
-    fieldLabel : 'Default Language(s)',
-    name       : 'language',
-    allowBlank : true
-  });
+	var saveButton = new Ext.Button({
+		text : "Save configuration",
+		tooltip : 'Save changes made to configuration below',
+		iconCls : 'save',
+		handler : saveChanges
+	});
 
-  /* ****************************************************************
-   * Form
-   * ***************************************************************/
+	var helpButton = new Ext.Button({
+		text : 'Help',
+		handler : function() {
+			new tvheadend.help('General Configuration', 'config_misc.html');
+		}
+	});
 
-  var saveButton = new Ext.Button({
-    text     : "Save configuration",
-    tooltip  : 'Save changes made to configuration below',
-    iconCls  :'save',
-    handler  : saveChanges
-  });
+	var confpanel = new Ext.FormPanel({
+		title : 'General',
+		iconCls : 'wrench',
+		border : false,
+		bodyStyle : 'padding:15px',
+		labelAlign : 'left',
+		labelWidth : 150,
+		waitMsgTarget : true,
+		reader : confreader,
+		layout : 'form',
+		defaultType : 'textfield',
+		autoHeight : true,
+		items : [ language, dvbscanPath ],
+		tbar : [ saveButton, '->', helpButton ]
+	});
 
-  var helpButton = new Ext.Button({
-    text    : 'Help',
-    handler : function() {
-      new tvheadend.help('General Configuration',
-                         'config_misc.html');
-    }
-  });
+	/* ****************************************************************
+	 * Load/Save
+	 * ***************************************************************/
 
-  var confpanel = new Ext.FormPanel({
-    title         : 'General',
-    iconCls       : 'wrench',
-    border        : false,
-    bodyStyle     : 'padding:15px',
-    labelAlign    : 'left',
-    labelWidth    : 150,
-    waitMsgTarget : true,
-    reader        : confreader,
-    layout        : 'form',
-    defaultType   : 'textfield',
-    autoHeight    : true,
-    items         : [
-      language,
-      dvbscanPath
-    ],
-    tbar: [
-      saveButton,
-      '->',
-      helpButton
-    ]
-  });
+	confpanel.on('render', function() {
+		confpanel.getForm().load({
+			url : 'config',
+			params : {
+				op : 'loadSettings'
+			},
+			success : function(form, action) {
+				confpanel.enable();
+			}
+		});
+	});
 
-  /* ****************************************************************
-   * Load/Save
-   * ***************************************************************/
+	function saveChanges() {
+		confpanel.getForm().submit({
+			url : 'config',
+			params : {
+				op : 'saveSettings'
+			},
+			waitMsg : 'Saving Data...',
+			failure : function(form, action) {
+				Ext.Msg.alert('Save failed', action.result.errormsg);
+			}
+		});
+	}
 
-  confpanel.on('render', function() {
-    confpanel.getForm().load({
-      url     : 'config',
-      params  : { op : 'loadSettings' },
-      success : function ( form, action ) {
-        confpanel.enable();
-      }
-    });
-  });
-
-  function saveChanges() {
-    confpanel.getForm().submit({
-      url     : 'config', 
-      params  : { op : 'saveSettings' },
-      waitMsg : 'Saving Data...',
-      failure : function (form, action) {
-        Ext.Msg.alert('Save failed', action.result.errormsg);
-      }
-    });
-  }
-
-  return confpanel;
+	return confpanel;
 }

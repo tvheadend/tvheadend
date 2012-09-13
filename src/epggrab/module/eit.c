@@ -589,13 +589,16 @@ static int _eit_callback
   /* Invalid */
   if(tableid < 0x4e || tableid > 0x6f || len < 11) return -1;
 
-  /* Don't process */
-  if((ptr[2] & 1) == 0) return 0;
-
   /* Get OTA */
   ota = epggrab_ota_find((epggrab_module_ota_t*)mod, tdmi);
   if (!ota || !ota->status) return -1;
   stal = ota->status;
+
+  /* Begin - reset done stats */
+  if (epggrab_ota_begin(ota)) {
+    LIST_FOREACH(sta, stal, link)
+      sta->done = 0;
+  }
 
   /* Get table info */
   sid  = ptr[0] << 8 | ptr[1];
@@ -615,7 +618,10 @@ static int _eit_callback
 #ifdef EPG_TRACE
   tvhlog(LOG_DEBUG, mod->id, sta ? "section process" : "section seen");
 #endif
-  if (!sta) return 0;
+  if (!sta) goto done;
+
+  /* Don't process */
+  if((ptr[2] & 1) == 0) goto done;
 
   /* Get transport stream */
   // Note: tableid=0x4f,0x60-0x6f is other TS
@@ -626,26 +632,21 @@ static int _eit_callback
       if(tdmi->tdmi_transport_stream_id == tsid)
         break;
   } else {
-    if (tdmi->tdmi_transport_stream_id != tsid) return -1;
+    if (tdmi->tdmi_transport_stream_id != tsid) {
+      tvhlog(LOG_DEBUG, mod->id,
+             "invalid transport id found (tid 0x%02X, tsid %d != %d",
+             tableid, tdmi->tdmi_transport_stream_id, tsid);
+      tdmi = NULL;
+    }
   }
-  if(!tdmi) return 0;
+  if(!tdmi) goto done;
 
   /* Get service */
   svc = dvb_transport_find(tdmi, sid, 0, NULL);
-  if (!svc || !svc->s_enabled || !svc->s_ch) return 0;
+  if (!svc || !svc->s_enabled || !svc->s_ch) goto done;
 
   /* Ignore (not primary EPG service) */
-  if (!service_is_primary_epg(svc)) return 0;
-
-  /* Started */
-  if (epggrab_ota_begin(ota)) {
-    // Note: we don't clear, status is persistent to reduce overhead
-
-  /* Check end */
-  } else if (sta->done) {
-    LIST_FOREACH(sta, stal, link)
-      if (!sta->done) break;
-  }
+  if (!service_is_primary_epg(svc)) goto done;
 
   /* Register as interesting */
   if (tableid < 0x50)
@@ -669,7 +670,12 @@ static int _eit_callback
   }
 
   /* Complete */
-  if (!sta)    epggrab_ota_complete(ota);
+done:
+  if (!sta || sta->done) {
+    LIST_FOREACH(sta, stal, link)
+      if (!sta->done) break;
+    if (!sta)    epggrab_ota_complete(ota);
+  }
   
   /* Update EPG */
   if (resched) epggrab_resched();

@@ -86,6 +86,7 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_str(m, "displayname", tda->tda_displayname);
   htsmsg_add_u32(m, "autodiscovery", tda->tda_autodiscovery);
   htsmsg_add_u32(m, "idlescan", tda->tda_idlescan);
+  htsmsg_add_u32(m, "idleclose", tda->tda_idleclose);
   htsmsg_add_u32(m, "skip_checksubscr", tda->tda_skip_checksubscr);
   htsmsg_add_u32(m, "qmon", tda->tda_qmon);
   htsmsg_add_u32(m, "dump_muxes", tda->tda_dump_muxes);
@@ -178,6 +179,25 @@ dvb_adapter_set_idlescan(th_dvb_adapter_t *tda, int on)
   tda->tda_idlescan = on;
   tda_save(tda);
 }
+
+/**
+ *
+ */
+void
+dvb_adapter_set_idleclose(th_dvb_adapter_t *tda, int on)
+{
+  if(tda->tda_idleclose == on)
+    return;
+
+  lock_assert(&global_lock);
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" idle fd close set to: %s",
+	 tda->tda_displayname, on ? "On" : "Off");
+
+  tda->tda_idleclose = on;
+  tda_save(tda);
+}
+
 
 /**
  *
@@ -394,7 +414,6 @@ tda_add(int adapter_num)
   tda->tda_dvr_path = malloc(256);
   snprintf(tda->tda_dvr_path, 256, "%s/dvr0", path);
   tda->tda_fe_path = strdup(fname);
-
   tda->tda_fe_fd       = -1;
   tda->tda_dvr_pipe[0] = -1;
 
@@ -406,7 +425,10 @@ tda_add(int adapter_num)
     free(tda);
     return;
   }
-  close(fe);
+  if (tda->tda_idlescan || !tda->tda_idleclose)
+    tda->tda_fe_fd = fe;
+  else
+    close(fe);
 
   tda->tda_type = tda->tda_fe_info->type;
 
@@ -474,6 +496,9 @@ dvb_adapter_stop ( th_dvb_adapter_t *tda )
   /* Poweroff */
   dvb_adapter_poweroff(tda);
 
+  /* Don't stop/close */
+  if (!tda->tda_idleclose) return;
+
   /* Close front end */
   if (tda->tda_fe_fd != -1) {
     tvhlog(LOG_DEBUG, "dvb", "%s closing frontend", tda->tda_rootpath);
@@ -540,6 +565,7 @@ dvb_adapter_init(uint32_t adapter_mask)
 
       htsmsg_get_u32(c, "autodiscovery", &tda->tda_autodiscovery);
       htsmsg_get_u32(c, "idlescan", &tda->tda_idlescan);
+      htsmsg_get_u32(c, "idleclose", &tda->tda_idleclose);
       htsmsg_get_u32(c, "skip_checksubscr", &tda->tda_skip_checksubscr);
       htsmsg_get_u32(c, "qmon", &tda->tda_qmon);
       htsmsg_get_u32(c, "dump_muxes", &tda->tda_dump_muxes);
