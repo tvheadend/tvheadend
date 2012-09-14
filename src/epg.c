@@ -125,7 +125,7 @@ static void _epg_object_destroy
 {
   assert(eo->refcount == 0);
 #ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, "epg", "eo [%p, %d, %lu, %s] destroy",
+  tvhlog(LOG_DEBUG, "epg", "eo [%p, %"PRIu64", %d, %s] destroy",
          eo, eo->id, eo->type, eo->uri);
 #endif
   if (eo->uri) free(eo->uri);
@@ -138,7 +138,7 @@ static void _epg_object_getref ( void *o )
 {
   epg_object_t *eo = o;
 #ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, "epg", "eo [%p, %d, %lu, %s] getref %d",
+  tvhlog(LOG_DEBUG, "epg", "eo [%p, %"PRIu64", %d, %s] getref %d",
          eo, eo->id, eo->type, eo->uri, eo->refcount+1);
 #endif
   if (eo->refcount == 0) LIST_REMOVE(eo, un_link);
@@ -149,7 +149,7 @@ static void _epg_object_putref ( void *o )
 {
   epg_object_t *eo = o;
 #ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, "epg", "eo [%p, %d, %lu, %s] putref %d",
+  tvhlog(LOG_DEBUG, "epg", "eo [%p, %"PRIu64", %d, %s] putref %d",
          eo, eo->id, eo->type, eo->uri, eo->refcount-1);
 #endif
   assert(eo->refcount>0);
@@ -162,8 +162,8 @@ static void _epg_object_set_updated ( void *o )
   epg_object_t *eo = o;
   if (!eo->_updated) {
 #ifdef EPG_TRACE
-    tvhlog(LOG_DEBUG, "epg", "eo [%p, %d, %lu, %s] updated",
-           eo, eo->id, eo->type, eo->uri, eo->refcount-1);
+    tvhlog(LOG_DEBUG, "epg", "eo [%p, %"PRIu64", %d, %s] updated",
+           eo, eo->id, eo->type, eo->uri);
 #endif
     eo->_updated = 1;
     LIST_INSERT_HEAD(&epg_object_updated, eo, up_link);
@@ -181,8 +181,8 @@ static void _epg_object_create ( void *o )
   LIST_INSERT_HEAD(&epg_object_unref, eo, un_link);
   LIST_INSERT_HEAD(&epg_objects[eo->id & EPG_HASH_MASK], eo, id_link);
 #ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, "epg", "eo [%p, %d, %lu, %s] created",
-         eo, eo->id, eo->type, eo->uri, eo->refcount-1);
+  tvhlog(LOG_DEBUG, "epg", "eo [%p, %"PRIu64", %d, %s] created",
+         eo, eo->id, eo->type, eo->uri);
 #endif
 }
 
@@ -228,8 +228,8 @@ static htsmsg_t * _epg_object_serialize ( void *o )
 {
   epg_object_t *eo = o;
 #ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, "epg", "eo [%p, %d, %lu, %s] serialize",
-         eo, eo->id, eo->type, eo->uri, eo->refcount);
+  tvhlog(LOG_DEBUG, "epg", "eo [%p, %"PRIu64", %d, %s] serialize",
+         eo, eo->id, eo->type, eo->uri);
 #endif
   htsmsg_t *m;
   if ( !eo->id || !eo->type ) return NULL;
@@ -252,8 +252,8 @@ static epg_object_t *_epg_object_deserialize ( htsmsg_t *m, epg_object_t *eo )
   if ((s = htsmsg_get_str(m, "grabber")))
     eo->grabber = epggrab_module_find_by_id(s);
 #ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, "epg", "eo [%p, %d, %lu, %s] deserialize",
-         eo, eo->id, eo->type, eo->uri, 0);
+  tvhlog(LOG_DEBUG, "epg", "eo [%p, %"PRIu64", %d, %s] deserialize",
+         eo, eo->id, eo->type, eo->uri);
 #endif
   return eo;
 }

@@ -381,6 +381,7 @@ static int _xmltv_parse_programme_tags
   if (save) stats->broadcasts.created++;
 
   /* Description (wait for episode first) */
+  _xmltv_parse_lang_str(&desc, tags, "desc");
   if (desc)
     save3 |= epg_broadcast_set_description2(ebc, desc, mod);
 
