@@ -42,8 +42,9 @@ enum filebundle_type
 /* File bundle entry */
 typedef struct filebundle_entry
 {
-  enum filebundle_type type;
-  const char          *name;
+  enum filebundle_type     type;
+  const char              *name;
+  struct filebundle_entry *next;
   union {
     struct {
       size_t count;
@@ -55,7 +56,6 @@ typedef struct filebundle_entry
       ssize_t orig;
     } f;
   };
-  struct filebundle_entry *next;
 } filebundle_entry_t;
 
 /* File bundle directory entry */

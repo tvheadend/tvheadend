@@ -13,9 +13,9 @@ tvheadend.tvAdapterStore = new Ext.data.JsonStore({
 
 tvheadend.comet.on('tvAdapter', function(m) {
 	idx = tvheadend.tvAdapterStore.find('identifier', m.identifier);
-	if (idx == -1) return;
+	if (idx == -1) 
+		return;
 	r = tvheadend.tvAdapterStore.getAt(idx);
-
 	r.beginEdit();
 	for (key in m)
 		r.set(key, m[key]);
@@ -23,9 +23,6 @@ tvheadend.comet.on('tvAdapter', function(m) {
 	tvheadend.tvAdapterStore.commitChanges();
 });
 
-/**
- *
- */
 tvheadend.tvadapters = function() {
 	var adapterSelection = new Ext.form.ComboBox({
 		loadingText : 'Loading...',
@@ -60,18 +57,16 @@ tvheadend.tvadapters = function() {
 		items : [ dummyadapter ]
 	});
 
-	adapterSelection.on('select',
-		function(c, r) {
-			panel.remove(panel.getComponent(0));
-			panel.doLayout();
+	adapterSelection.on('select', function(c, r) {
+		panel.removeAll(false);
 
-			if (r.data.type == 'dvb') var newPanel = new tvheadend.dvb_adapter(
-				r.data)
-			else var newPanel = new tvheadend.v4l_adapter(r.data)
+		if (r.data.type == 'dvb') 
+			panel.add(new tvheadend.dvb_adapter(r.data));
+		else 
+			panel.add(new tvheadend.v4l_adapter(r.data));
 
-			panel.add(newPanel);
-			panel.doLayout();
-		});
+		panel.doLayout();
+	});
 
 	return panel;
 }
