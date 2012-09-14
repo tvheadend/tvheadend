@@ -48,8 +48,8 @@ typedef struct spawn {
 /*
  * Search PATH for executable
  */
-static int
-_find_exec ( const char *name, char *out, size_t len )
+int
+find_exec ( const char *name, char *out, size_t len )
 {
   int ret = 0;
   char bin[512];
@@ -161,7 +161,7 @@ spawn_and_store_stdout(const char *prog, char *argv[], char **outp)
   const char *local_argv[2] = { NULL, NULL };
 
   if (*prog != '/' && *prog != '.') {
-    if (!_find_exec(prog, bin, sizeof(bin))) return -1;
+    if (!find_exec(prog, bin, sizeof(bin))) return -1;
     prog = bin;
   }
 
@@ -233,7 +233,7 @@ spawnv(const char *prog, char *argv[])
   const char *local_argv[2] = { NULL, NULL };
 
   if (*prog != '/' && *prog != '.') {
-    if (!_find_exec(prog, bin, sizeof(bin))) return -1;
+    if (!find_exec(prog, bin, sizeof(bin))) return -1;
     prog = bin;
   }
 
