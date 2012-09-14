@@ -81,8 +81,14 @@ typedef struct epggrab_channel
   char                      *icon;    ///< Channel icon
   int                       number;   ///< Channel number
   
-  struct channel            *channel; ///< Mapped channel
+  LIST_HEAD(,epggrab_channel_link) channels; ///< Mapped channels
 } epggrab_channel_t;
+
+typedef struct epggrab_channel_link
+{
+  LIST_ENTRY(epggrab_channel_link) link;     ///< Link to grab channel
+  struct channel                   *channel; ///< Real channel
+} epggrab_channel_link_t;
 
 /*
  * Access functions

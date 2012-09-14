@@ -149,6 +149,7 @@ tvheadend.chconf = function() {
 	}, {
 		header : "EPG Grab source",
 		dataIndex : 'epggrabsrc',
+    hiddenName : 'epggrabsrc',
 		width : 150,
 		editor : new Ext.ux.form.LovCombo({
 			loadingText : 'Loading...',
