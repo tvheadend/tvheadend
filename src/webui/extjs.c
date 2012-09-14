@@ -1,6 +1,6 @@
 /*
  *  tvheadend, EXTJS based interface
- *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2008 Andreas ï¿½man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1771,6 +1771,8 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
       save |= config_set_muxconfpath(str);
     if ((str = http_arg_get(&hc->hc_req_args, "language")))
       save |= config_set_language(str);
+    if ((str = http_arg_get(&hc->hc_req_args, "filteraudiosubtitle")))
+      save |= config_set_filteraudiosubtitle(str);
     if (save) config_save();
     pthread_mutex_unlock(&global_lock);
     out = htsmsg_create_map();

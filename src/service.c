@@ -48,6 +48,7 @@
 #include "dvb/dvb.h"
 #include "htsp.h"
 #include "lang_codes.h"
+#include "config2.h"
 
 #define SERVICE_HASH_WIDTH 101
 
@@ -866,38 +867,90 @@ service_restart(service_t *t, int had_components)
 
 
 /**
+ * Copy stream info
+ */
+static void
+copy_stream_info(streaming_start_t *ss, elementary_stream_t *st)
+{
+    streaming_start_component_t *ssc;
+
+    ssc = &ss->ss_components[ss->ss_num_components++];
+    ssc->ssc_index = st->es_index;
+    ssc->ssc_type  = st->es_type;
+
+    memcpy(ssc->ssc_lang, lang_code_get(st->es_lang), 4);
+    ssc->ssc_composition_id = st->es_composition_id;
+    ssc->ssc_ancillary_id = st->es_ancillary_id;
+    ssc->ssc_pid = st->es_pid;
+    ssc->ssc_width = st->es_width;
+    ssc->ssc_height = st->es_height;
+}
+
+
+/**
  * Generate a message containing info about all components
  */
 streaming_start_t *
 service_build_stream_start(service_t *t)
 {
   elementary_stream_t *st;
-  int n = 0;
   streaming_start_t *ss;
+  int n = 0, i = 0, filtered_audio_streams = 0, filtered_subtitle_streams = 0;
+  const char **langs;
+  const char *filteraudiosubtitle = config_get_filteraudiosubtitle();
 
   lock_assert(&t->s_stream_mutex);
-  
+
   TAILQ_FOREACH(st, &t->s_components, es_link)
     n++;
 
-  ss = calloc(1, sizeof(streaming_start_t) + 
-	      sizeof(streaming_start_component_t) * n);
-
-  ss->ss_num_components = n;
+  ss = calloc(1, sizeof(streaming_start_t) + sizeof(streaming_start_component_t) * n);
   
-  n = 0;
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
-    streaming_start_component_t *ssc = &ss->ss_components[n++];
-    ssc->ssc_index = st->es_index;
-    ssc->ssc_type  = st->es_type;
+  // copy all video stream information
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+    if(SCT_ISVIDEO(st->es_type))
+      copy_stream_info(ss, st);
 
-    memcpy(ssc->ssc_lang, st->es_lang, 4);
-    ssc->ssc_composition_id = st->es_composition_id;
-    ssc->ssc_ancillary_id = st->es_ancillary_id;
-    ssc->ssc_pid = st->es_pid;
-    ssc->ssc_width = st->es_width;
-    ssc->ssc_height = st->es_height;
+  // filter audio/subtitle streams if config option is enabled
+  if ((langs = lang_code_split(NULL)) && !strcmp(filteraudiosubtitle, "true")) {
+    // copy only audio/subtitle stream information found in default language(s) configuration
+    while(langs[i]) {
+      tvhlog(LOG_DEBUG, "Service", "Filter audio/subtitle streams for preferred language '%s'", langs[i]);
+      TAILQ_FOREACH(st, &t->s_components, es_link) {
+        if(!strcmp(lang_code_get(st->es_lang), langs[i])) {
+          if(SCT_ISAUDIO(st->es_type)) {
+            tvhlog(LOG_DEBUG, "Service", "Found audio stream for preferred language '%s'", langs[i]);
+            copy_stream_info(ss, st);
+            filtered_audio_streams++;
+          }
+          if(SCT_ISSUBTITLE(st->es_type)) {
+            tvhlog(LOG_DEBUG, "Service", "Found subtitle stream for preferred language '%s'", langs[i]);
+            copy_stream_info(ss, st);
+            filtered_subtitle_streams++;
+          }
+        }
+      }
+      i++;
+    }
   }
+
+  // no audio stream filtered by language, copy all audio streams
+  if(!filtered_audio_streams) {
+    TAILQ_FOREACH(st, &t->s_components, es_link)
+      if(SCT_ISAUDIO(st->es_type))
+          copy_stream_info(ss, st);
+  }
+  // no subtitle stream filtered by language, copy all subtitle streams
+  if(!filtered_subtitle_streams) {
+    TAILQ_FOREACH(st, &t->s_components, es_link)
+      if(SCT_ISSUBTITLE(st->es_type))
+          copy_stream_info(ss, st);
+  }
+
+  // copy other stream information
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+    if(!SCT_ISVIDEO(st->es_type) && !SCT_ISAUDIO(st->es_type) && !SCT_ISSUBTITLE(st->es_type))
+      copy_stream_info(ss, st);
 
   t->s_setsourceinfo(t, &ss->ss_si);
 
