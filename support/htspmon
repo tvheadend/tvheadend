@@ -25,7 +25,6 @@ from optparse import OptionParser
 # System path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'lib', 'py'))
 import tvh
-print sys.path
 
 # TVH imports
 from tvh.htsp import HTSPClient
@@ -35,7 +34,7 @@ try:
   
   # Command line
   optp = OptionParser()
-  optp.add_option('-t', '--host', default='localhost',
+  optp.add_option('-a', '--host', default='localhost',
                   help='Specify HTSP server hostname')
   optp.add_option('-o', '--port', default=9982, type='int',
                   help='Specify HTSP server port')
@@ -43,12 +42,17 @@ try:
                   help='Specify HTSP authentication username')
   optp.add_option('-p', '--passwd', default=None,
                   help='Specify HTSP authentication password')
+  optp.add_option('-e', '--epg', default=False, action='store_true',
+                  help='Get async EPG updates')
+  optp.add_option('-t', '--update', default=None, type='int',
+                  help='Specify when to receive updates from')
   (opts, args) = optp.parse_args()
 
   # Connect
   htsp = HTSPClient((opts.host, opts.port))
   msg  = htsp.hello()
   log.info('connected to %s [%s]' % (msg['servername'], msg['serverversion']))
+  log.info('using protocol v%d' % htsp._version)
 
   # Authenticate
   if opts.user:
@@ -56,7 +60,12 @@ try:
     log.info('authenticated as %s' % opts.user)
 
   # Enable async
-  htsp.enableAsyncMetadata()
+  args = {}
+  if opts.epg:
+    args['epg']    = 1
+  if opts.update != None:
+    args['lastUpdate'] = opts.update
+  htsp.enableAsyncMetadata(args)
   log.info('enabled async data')
 
   # Process messages
