@@ -298,11 +298,17 @@ static dvr_entry_t *_dvr_entry_create (
   de->de_creator = strdup(creator);
 
   de->de_desc  = NULL;
-  if (e && e->episode) {
-    de->de_title = lang_str_copy(e->episode->title);
-    if (e->episode->description)
+  // TODO: this really needs updating
+  if (e) {
+    if (e->episode && e->episode->title)
+      de->de_title = lang_str_copy(e->episode->title);
+    if (e->description)
+      de->de_desc  = lang_str_copy(e->description);
+    else if (e->episode && e->episode->description)
       de->de_desc = lang_str_copy(e->episode->description);
-    else if (e->episode->summary)
+    else if (e->summary)
+      de->de_desc = lang_str_copy(e->summary);
+    else if (e->episode && e->episode->summary)
       de->de_desc = lang_str_copy(e->episode->summary);
   } else if (title) {
     de->de_title = lang_str_create();
