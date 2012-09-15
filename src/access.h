@@ -61,7 +61,7 @@ typedef struct access_log {
   time_t al_startlog; /* First seen seconds */
   time_t al_currlog;  /* Last seen seconds */
   char *al_username;
-  char *al_ip;
+  struct in_addr al_ip;
   TAILQ_ENTRY(access_log) al_link;
 } access_log_t;
 TAILQ_HEAD(access_log_list, access_log);
@@ -111,5 +111,9 @@ uint32_t access_get_by_addr(struct sockaddr *src);
  *
  */
 void access_init(int createdefault);
+
+void access_log_show_all(void);
+
+void access_log_update(const char *username, uint32_t ip);
 
 #endif /* ACCESS_H_ */

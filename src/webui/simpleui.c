@@ -388,6 +388,9 @@ page_status(http_connection_t *hc,
         htsbuf_qprintf(hq, "<systemload>%f,%f,%f</systemload>\n",avg[0],avg[1],avg[2]);
   };
 
+  tvhlog(LOG_DEBUG, "webui",  "Dumping current authentication database, you are identified as %s",hc->hc_username);
+  access_log_show_all();
+
   htsbuf_qprintf(hq,"<recordings>\n");
 
   pthread_mutex_lock(&global_lock);
