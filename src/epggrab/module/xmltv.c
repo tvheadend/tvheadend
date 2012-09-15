@@ -602,7 +602,8 @@ static const char *xmltv_lineup_returnvarattrib
  return return_variable_attrib;
 };
 
-/* stb Sky update code */
+/* Sky STB parsing code, handles the Sky chan number parsing
+  https://github.com/andyb2000 Aug 2012 */
 static int stb_channel
 (const char *chan_name, const char *chan_number, const char *logo)
 {
@@ -650,7 +651,9 @@ static int stb_channel
  return changed_entry;
 };
 
-/* Normal channge update code (freesat/freeview) */
+/* Normal channge update code (freesat/freeview) 
+   https://github.com/andyb2000 Aug 2012 */
+*/
 static int xmltv_channelupdate
 (epggrab_module_t *mod, const int cid, const char *chan_name, const char *chan_number, const char *logo)
 {
@@ -695,7 +698,8 @@ static int xmltv_channelupdate
 return changed_entry;
 };
 
-/** Parse the channels we get from a lineup xml */
+/** Parse the channels we get from a lineup xml
+  https://github.com/andyb2000 Aug 2012 */
 static int xmltv_parse_lineups
   (epggrab_module_t *mod, htsmsg_t *body, epggrab_stats_t *stats)
 {
