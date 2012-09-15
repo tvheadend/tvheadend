@@ -1658,6 +1658,10 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
     htsmsg_add_u32(m, "is_new", 1);
   if (broadcast->is_repeat)
     htsmsg_add_u32(m, "is_repeat", 1);
+  if (broadcast->summary)
+    lang_str_serialize(broadcast->summary, m, "summary");
+  if (broadcast->description)
+    lang_str_serialize(broadcast->description, m, "description");
   if (broadcast->serieslink)
     htsmsg_add_str(m, "serieslink", broadcast->serieslink->uri);
   
@@ -1671,6 +1675,7 @@ epg_broadcast_t *epg_broadcast_deserialize
   epg_broadcast_t *ebc, **skel = _epg_broadcast_skel();
   epg_episode_t *ee;
   epg_serieslink_t *esl;
+  lang_str_t *ls;
   const char *str;
   uint32_t chid, eid, start, stop, u32;
 
@@ -1721,6 +1726,11 @@ epg_broadcast_t *epg_broadcast_deserialize
     *save |= epg_broadcast_set_is_new(ebc, u32, NULL);
   if (!htsmsg_get_u32(m, "is_repeat", &u32))
     *save |= epg_broadcast_set_is_repeat(ebc, u32, NULL);
+
+  if ((ls = lang_str_deserialize(m, "summary")))
+    *save |= epg_broadcast_set_summary2(ebc, ls, NULL);
+  if ((ls = lang_str_deserialize(m, "description")))
+    *save |= epg_broadcast_set_description2(ebc, ls, NULL);
 
   /* Series link */
   if ((str = htsmsg_get_str(m, "serieslink")))
