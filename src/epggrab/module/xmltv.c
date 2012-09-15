@@ -537,7 +537,8 @@ static int _xmltv_parse_channel
   return save;
 }
 
-/* Channel Lineup parsing and search code - https://github.com/andyb2000 Aug 2012 */
+/* Channel Lineup parsing and search code
+  https://github.com/andyb2000 Aug 2012 */
 
 static service_t *_xmltv_find_service ( int sid )
 {
@@ -619,8 +620,7 @@ static int stb_channel
    "Channel search FOUND MATCH BY NAME: %s",chan_t->ch_name);
 #endif
   /* We'll fake a cid here to make the Sky channel lineup with 
-     other channels, so the rest of this routine will continue 
-     and 'pretend' sky are normal */
+     other channels, so the rest of this routine will continue */
   cid = chan_t->ch_id;
   changed_entry = 0;
   if (epggrab_channel_renumber) {
@@ -664,7 +664,8 @@ static int xmltv_channelupdate
   channel_service_id = _xmltv_find_service(cid);
   if (channel_service_id && channel_service_id->s_ch) {
    ec  =_xmltv_find_epggrab_channel(mod, cid, 1, &save);
-   /* Check for primary, update channel number if primary, or just update icon regardless */
+   /* Check for primary, update channel number if primary,
+      or just update icon regardless */
    ec->channel = channel_service_id->s_ch;
    changed_entry = 0;
    if (service_is_primary_epg(channel_service_id)) {
@@ -879,7 +880,8 @@ static int _xmltv_parse
   if((tv = htsmsg_get_map(tags, "tv")) != NULL) {
    return _xmltv_parse_tv(mod, tv, stats);
   } else if ((lineup = htsmsg_get_map(tags, "xmltv-lineups")) != NULL) {
-   tvhlog(LOG_DEBUG, "xmltv_parse", "Found xmltv-lineups in xml, calling xmltv_parse_lineups");
+   tvhlog(LOG_DEBUG, "xmltv_parse", 
+    "Found xmltv-lineups in xml, calling xmltv_parse_lineups");
    return xmltv_parse_lineups(mod, lineup, stats);
   };
 
