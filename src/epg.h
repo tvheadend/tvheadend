@@ -107,7 +107,7 @@ struct epg_object
   LIST_ENTRY(epg_object)  up_link;     ///< Global updated link
  
   epg_object_type_t       type;       ///< Specific object type
-  uint64_t                id;         ///< Internal ID
+  uint32_t                id;         ///< Internal ID
   char                   *uri;        ///< Unique ID (from grabber)
 
   int                     _updated;   ///< Flag to indicate updated
@@ -144,7 +144,7 @@ struct epg_brand
 /* Lookup */
 epg_brand_t *epg_brand_find_by_uri
   ( const char *uri, int create, int *save );
-epg_brand_t *epg_brand_find_by_id ( uint64_t id );
+epg_brand_t *epg_brand_find_by_id ( uint32_t id );
 
 /* Accessors */
 const char *epg_brand_get_title
@@ -198,7 +198,7 @@ struct epg_season
 /* Lookup */
 epg_season_t *epg_season_find_by_uri
   ( const char *uri, int create, int *save );
-epg_season_t *epg_season_find_by_id ( uint64_t id );
+epg_season_t *epg_season_find_by_id ( uint32_t id );
 
 /* Accessors */
 const char *epg_season_get_summary
@@ -272,7 +272,7 @@ struct epg_episode
 /* Lookup */
 epg_episode_t *epg_episode_find_by_uri
   ( const char *uri, int create, int *save );
-epg_episode_t *epg_episode_find_by_id ( uint64_t id );
+epg_episode_t *epg_episode_find_by_id ( uint32_t id );
 
 /* Accessors */
 const char *epg_episode_get_title
@@ -379,7 +379,7 @@ struct epg_serieslink
 epg_serieslink_t *epg_serieslink_find_by_uri
   ( const char *uri, int create, int *save );
 epg_serieslink_t *epg_serieslink_find_by_id
-  ( uint64_t id );
+  ( uint32_t id );
 
 /* Serialization */
 htsmsg_t         *epg_serieslink_serialize   ( epg_serieslink_t *s );
@@ -432,7 +432,7 @@ epg_broadcast_t *epg_broadcast_find_by_time
   ( struct channel *ch, time_t start, time_t stop, 
     uint16_t eid, int create, int *save );
 epg_broadcast_t *epg_broadcast_find_by_eid ( struct channel *ch, uint16_t eid );
-epg_broadcast_t *epg_broadcast_find_by_id  ( uint64_t id, struct channel *ch );
+epg_broadcast_t *epg_broadcast_find_by_id  ( uint32_t id, struct channel *ch );
 
 /* Mutators */
 int epg_broadcast_set_episode

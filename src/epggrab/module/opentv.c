@@ -51,7 +51,7 @@ typedef struct opentv_event
   char                  *summary;     ///< Event summary
   char                  *desc;        ///< Event description
   uint8_t                cat;         ///< Event category
-  char                  *series;      ///< Series ID
+  uint16_t               serieslink;  ///< Series link ID
   
   uint8_t                type;        ///< 0x1=title, 0x2=summary
 } opentv_event_t;
@@ -257,9 +257,8 @@ static char *_opentv_parse_string
 /* Parse a specific record */
 static int _opentv_parse_event_record
  ( opentv_module_t *prov, opentv_event_t *ev, uint8_t *buf, int len,
-   time_t mjd, channel_t *ch )
+   time_t mjd )
 {
-  char series[256];
   uint8_t rtag = buf[0];
   uint8_t rlen = buf[1];
   if (rlen+2 <= len) {
@@ -284,12 +283,9 @@ static int _opentv_parse_event_record
           ev->desc      = _opentv_parse_string(prov, buf+2, rlen);
         break;
       case 0xc1: // series link
-        if (!ev->series) {
-          sprintf(series, "opentv://%s/%hu", ch->ch_name, 
-                  ((uint16_t)buf[2] << 8) | buf[3]);
-          ev->series = strdup(series);
-        }
-      break;
+        if (!ev->serieslink)
+          ev->serieslink = ((uint16_t)buf[2] << 8) | buf[3];
+        break;
       default:
         break;
     }
@@ -301,8 +297,7 @@ static int _opentv_parse_event_record
 static int _opentv_parse_event
   ( opentv_module_t *prov, opentv_status_t *sta,
     uint8_t *buf, int len, int cid, time_t mjd,
-    opentv_event_t *ev, int type,
-    channel_t *ch )
+    opentv_event_t *ev, int type )
 {
   int      slen = ((int)buf[2] & 0xf << 8) | buf[3];
   int      i    = 4;
@@ -322,7 +317,7 @@ static int _opentv_parse_event
 
   /* Process records */ 
   while (i < slen+4) {
-    i += _opentv_parse_event_record(prov, ev, buf+i, len-i, mjd, ch);
+    i += _opentv_parse_event_record(prov, ev, buf+i, len-i, mjd);
   }
   return slen+4;
 }
@@ -361,7 +356,7 @@ static int _opentv_parse_event_section
   while (i < len) {
     memset(&ev, 0, sizeof(opentv_event_t));
     i += _opentv_parse_event(mod, sta, buf+i, len-i, cid, mjd,
-                             &ev, type, ec->channel);
+                             &ev, type);
 
     /*
      * Broadcast
@@ -392,8 +387,11 @@ static int _opentv_parse_event_section
      * Series link
      */
 
-    if (ebc && ev.series) {
-      if ((es = epg_serieslink_find_by_uri(ev.series, 1, &save)))
+    if (ebc && ev.serieslink) {
+      char suri[257];
+      snprintf(suri, 256, "opentv://channel-%d/series-%d",
+               ec->channel->ch_id, ev.serieslink);
+      if ((es = epg_serieslink_find_by_uri(suri, 1, &save)))
         save |= epg_broadcast_set_serieslink(ebc, es, src);
     }
 
@@ -416,7 +414,6 @@ static int _opentv_parse_event_section
     if (ev.title)   free(ev.title);
     if (ev.summary) free(ev.summary);
     if (ev.desc)    free(ev.desc);
-    if (ev.series)  free(ev.series);
   }
 
   /* Update EPG */

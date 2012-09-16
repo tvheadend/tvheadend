@@ -127,7 +127,7 @@ page_simple(http_connection_t *hc,
 
         s = epg_broadcast_get_title(e, lang);
 	htsbuf_qprintf(hq, 
-		    "<a href=\"/eventinfo/%"PRIu64"\">"
+		    "<a href=\"/eventinfo/%u\">"
 		    "%02d:%02d-%02d:%02d&nbsp;%s%s%s</a><br>",
 		    e->id,
 		    a.tm_hour, a.tm_min, b.tm_hour, b.tm_min,
@@ -241,7 +241,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   if((rstatus = val2str(dvr_status, recstatustxt)) != NULL)
     htsbuf_qprintf(hq, "Recording status: %s<br>", rstatus);
 
-  htsbuf_qprintf(hq, "<form method=\"post\" action=\"/eventinfo/%"PRIu64"\">",
+  htsbuf_qprintf(hq, "<form method=\"post\" action=\"/eventinfo/%u\">",
 		 e->id);
 
   switch(dvr_status) {
