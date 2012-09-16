@@ -49,7 +49,7 @@ epg_object_list_t epg_object_unref;
 epg_object_list_t epg_object_updated;
 
 /* Global counter */
-static uint64_t _epg_object_idx    = 0;
+static uint32_t _epg_object_idx    = 0;
 
 /* **************************************************************************
  * Comparators / Ordering
@@ -100,7 +100,7 @@ void epg_updated ( void )
   /* Remove unref'd */
   while ((eo = LIST_FIRST(&epg_object_unref))) {
     tvhlog(LOG_DEBUG, "epg",
-           "unref'd object %"PRIu64" (%s) created during update", eo->id, eo->uri);
+           "unref'd object %u (%s) created during update", eo->id, eo->uri);
     LIST_REMOVE(eo, un_link);
     eo->destroy(eo);
   }
@@ -125,7 +125,7 @@ static void _epg_object_destroy
 {
   assert(eo->refcount == 0);
 #ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, "epg", "eo [%p, %"PRIu64", %d, %s] destroy",
+  tvhlog(LOG_DEBUG, "epg", "eo [%p, %u, %d, %s] destroy",
          eo, eo->id, eo->type, eo->uri);
 #endif
   if (eo->uri) free(eo->uri);
@@ -138,7 +138,7 @@ static void _epg_object_getref ( void *o )
 {
   epg_object_t *eo = o;
 #ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, "epg", "eo [%p, %"PRIu64", %d, %s] getref %d",
+  tvhlog(LOG_DEBUG, "epg", "eo [%p, %u, %d, %s] getref %d",
          eo, eo->id, eo->type, eo->uri, eo->refcount+1);
 #endif
   if (eo->refcount == 0) LIST_REMOVE(eo, un_link);
@@ -149,7 +149,7 @@ static void _epg_object_putref ( void *o )
 {
   epg_object_t *eo = o;
 #ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, "epg", "eo [%p, %"PRIu64", %d, %s] putref %d",
+  tvhlog(LOG_DEBUG, "epg", "eo [%p, %u, %d, %s] putref %d",
          eo, eo->id, eo->type, eo->uri, eo->refcount-1);
 #endif
   assert(eo->refcount>0);
@@ -162,7 +162,7 @@ static void _epg_object_set_updated ( void *o )
   epg_object_t *eo = o;
   if (!eo->_updated) {
 #ifdef EPG_TRACE
-    tvhlog(LOG_DEBUG, "epg", "eo [%p, %"PRIu64", %d, %s] updated",
+    tvhlog(LOG_DEBUG, "epg", "eo [%p, %u, %d, %s] updated",
            eo, eo->id, eo->type, eo->uri);
 #endif
     eo->_updated = 1;
@@ -181,7 +181,7 @@ static void _epg_object_create ( void *o )
   LIST_INSERT_HEAD(&epg_object_unref, eo, un_link);
   LIST_INSERT_HEAD(&epg_objects[eo->id & EPG_HASH_MASK], eo, id_link);
 #ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, "epg", "eo [%p, %"PRIu64", %d, %s] created",
+  tvhlog(LOG_DEBUG, "epg", "eo [%p, %u, %d, %s] created",
          eo, eo->id, eo->type, eo->uri);
 #endif
 }
@@ -215,7 +215,7 @@ static epg_object_t *_epg_object_find_by_uri
   return eo;
 }
 
-static epg_object_t *_epg_object_find_by_id ( uint64_t id, epg_object_type_t type )
+static epg_object_t *_epg_object_find_by_id ( uint32_t id, epg_object_type_t type )
 {
   epg_object_t *eo;
   LIST_FOREACH(eo, &epg_objects[id & EPG_HASH_MASK], id_link) {
@@ -228,13 +228,13 @@ static htsmsg_t * _epg_object_serialize ( void *o )
 {
   epg_object_t *eo = o;
 #ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, "epg", "eo [%p, %"PRIu64", %d, %s] serialize",
+  tvhlog(LOG_DEBUG, "epg", "eo [%p, %u, %d, %s] serialize",
          eo, eo->id, eo->type, eo->uri);
 #endif
   htsmsg_t *m;
   if ( !eo->id || !eo->type ) return NULL;
   m = htsmsg_create_map();
-  htsmsg_add_u64(m, "id", eo->id);
+  htsmsg_add_u32(m, "id", eo->id);
   htsmsg_add_u32(m, "type", eo->type);
   if (eo->uri)
     htsmsg_add_str(m, "uri", eo->uri);
@@ -246,13 +246,13 @@ static htsmsg_t * _epg_object_serialize ( void *o )
 static epg_object_t *_epg_object_deserialize ( htsmsg_t *m, epg_object_t *eo )
 {
   const char *s;
-  if (htsmsg_get_u64(m, "id",   &eo->id))   return NULL;
+  if (htsmsg_get_u32(m, "id",   &eo->id))   return NULL;
   if (htsmsg_get_u32(m, "type", &eo->type)) return NULL;
   eo->uri = (char*)htsmsg_get_str(m, "uri");
   if ((s = htsmsg_get_str(m, "grabber")))
     eo->grabber = epggrab_module_find_by_id(s);
 #ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, "epg", "eo [%p, %"PRIu64", %d, %s] deserialize",
+  tvhlog(LOG_DEBUG, "epg", "eo [%p, %u, %d, %s] deserialize",
          eo, eo->id, eo->type, eo->uri);
 #endif
   return eo;
@@ -385,7 +385,7 @@ epg_brand_t* epg_brand_find_by_uri
                             _epg_brand_skel());
 }
 
-epg_brand_t *epg_brand_find_by_id ( uint64_t id )
+epg_brand_t *epg_brand_find_by_id ( uint32_t id )
 {
   return (epg_brand_t*)_epg_object_find_by_id(id, EPG_BRAND);
 }
@@ -562,7 +562,7 @@ epg_season_t* epg_season_find_by_uri
                             _epg_season_skel());
 }
 
-epg_season_t *epg_season_find_by_id ( uint64_t id )
+epg_season_t *epg_season_find_by_id ( uint32_t id )
 {
   return (epg_season_t*)_epg_object_find_by_id(id, EPG_SEASON);
 }
@@ -784,7 +784,7 @@ epg_episode_t* epg_episode_find_by_uri
                             _epg_episode_skel());
 }
 
-epg_episode_t *epg_episode_find_by_id ( uint64_t id )
+epg_episode_t *epg_episode_find_by_id ( uint32_t id )
 {
   return (epg_episode_t*)_epg_object_find_by_id(id, EPG_EPISODE);
 }
@@ -1208,7 +1208,7 @@ epg_serieslink_t* epg_serieslink_find_by_uri
                             _epg_serieslink_skel());
 }
 
-epg_serieslink_t *epg_serieslink_find_by_id ( uint64_t id )
+epg_serieslink_t *epg_serieslink_find_by_id ( uint32_t id )
 {
   return (epg_serieslink_t*)_epg_object_find_by_id(id, EPG_SERIESLINK);
 }
@@ -1278,7 +1278,7 @@ static void _epg_channel_timer_callback ( void *p )
 
     /* Expire */
     if ( ebc->stop <= dispatch_clock ) {
-      tvhlog(LOG_DEBUG, "epg", "expire event %"PRIu64" from %s",
+      tvhlog(LOG_DEBUG, "epg", "expire event %u from %s",
              ebc->id, ch->ch_name);
       _epg_channel_rem_broadcast(ch, ebc, NULL);
       continue; // skip to next
@@ -1299,7 +1299,7 @@ static void _epg_channel_timer_callback ( void *p )
   
   /* Change */
   if (cur != ch->ch_epg_now || nxt != ch->ch_epg_next)
-    tvhlog(LOG_DEBUG, "epg", "now/next %"PRIu64"/%"PRIu64" set on %s",
+    tvhlog(LOG_DEBUG, "epg", "now/next %u/%u set on %s",
            ch->ch_epg_now  ? ch->ch_epg_now->id : 0,
            ch->ch_epg_next ? ch->ch_epg_next->id : 0,
            ch->ch_name);
@@ -1446,7 +1446,7 @@ epg_broadcast_t* epg_broadcast_find_by_time
   return _epg_channel_add_broadcast(channel, ebc, create, save);
 }
 
-epg_broadcast_t *epg_broadcast_find_by_id ( uint64_t id, channel_t *ch )
+epg_broadcast_t *epg_broadcast_find_by_id ( uint32_t id, channel_t *ch )
 {
   // Note: I have left channel_t param, just in case I decide to change
   //       to use it for shorter search
@@ -1602,7 +1602,7 @@ epg_episode_t *epg_broadcast_get_episode
   if (!ebc) return NULL;
   if (ebc->episode) return ebc->episode;
   if (!create) return NULL;
-  snprintf(uri, sizeof(uri)-1, "tvh://channel-%d/bcast-%"PRIu64"/episode",
+  snprintf(uri, sizeof(uri)-1, "tvh://channel-%d/bcast-%u/episode",
            ebc->channel->ch_id, ebc->id);
   if ((ee = epg_episode_find_by_uri(uri, 1, save)))
     *save |= epg_broadcast_set_episode(ebc, ee, ebc->grabber);
