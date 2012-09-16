@@ -1406,7 +1406,10 @@ void epg_channel_unlink ( channel_t *ch )
 static void _epg_broadcast_destroy ( void *eo )
 {
   epg_broadcast_t *ebc = eo;
-  if (ebc->episode) _epg_episode_rem_broadcast(ebc->episode, ebc);
+  if (ebc->episode)     _epg_episode_rem_broadcast(ebc->episode, ebc);
+  if (ebc->serieslink)  _epg_serieslink_rem_broadcast(ebc->serieslink, ebc);
+  if (ebc->summary)     lang_str_destroy(ebc->summary);
+  if (ebc->description) lang_str_destroy(ebc->description);
   _epg_object_destroy(eo, NULL);
   free(ebc);
 }
