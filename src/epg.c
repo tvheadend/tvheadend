@@ -177,13 +177,13 @@ static void _epg_object_create ( void *o )
   else if (eo->id > _epg_object_idx) _epg_object_idx = eo->id;
   if (!eo->getref) eo->getref = _epg_object_getref;
   if (!eo->putref) eo->putref = _epg_object_putref;
-  _epg_object_set_updated(eo);
-  LIST_INSERT_HEAD(&epg_object_unref, eo, un_link);
-  LIST_INSERT_HEAD(&epg_objects[eo->id & EPG_HASH_MASK], eo, id_link);
 #ifdef EPG_TRACE
   tvhlog(LOG_DEBUG, "epg", "eo [%p, %u, %d, %s] created",
          eo, eo->id, eo->type, eo->uri);
 #endif
+  _epg_object_set_updated(eo);
+  LIST_INSERT_HEAD(&epg_object_unref, eo, un_link);
+  LIST_INSERT_HEAD(&epg_objects[eo->id & EPG_HASH_MASK], eo, id_link);
 }
 
 static epg_object_t *_epg_object_find_by_uri 
@@ -352,10 +352,10 @@ static void _epg_brand_destroy ( void *eo )
     tvhlog(LOG_CRIT, "epg", "attempt to destroy brand with episodes");
     assert(0);
   }
-  _epg_object_destroy(eo, &epg_brands);
   if (eb->title)   lang_str_destroy(eb->title);
   if (eb->summary) lang_str_destroy(eb->summary);
   if (eb->image)   free(eb->image);
+  _epg_object_destroy(eo, &epg_brands);
   free(eb);
 }
 
@@ -529,10 +529,10 @@ static void _epg_season_destroy ( void *eo )
     tvhlog(LOG_CRIT, "epg", "attempt to destory season with episodes");
     assert(0);
   }
-  _epg_object_destroy(eo, &epg_seasons);
   if (es->brand)   _epg_brand_rem_season(es->brand, es);
   if (es->summary) lang_str_destroy(es->summary);
   if (es->image)   free(es->image);
+  _epg_object_destroy(eo, &epg_seasons);
   free(es);
 }
 
@@ -743,7 +743,6 @@ static void _epg_episode_destroy ( void *eo )
     tvhlog(LOG_CRIT, "epg", "attempt to destroy episode with broadcasts");
     assert(0);
   }
-  _epg_object_destroy(eo, &epg_episodes);
   if (ee->brand)       _epg_brand_rem_episode(ee->brand, ee);
   if (ee->season)      _epg_season_rem_episode(ee->season, ee);
   if (ee->title)       lang_str_destroy(ee->title);
@@ -756,6 +755,7 @@ static void _epg_episode_destroy ( void *eo )
   }
   if (ee->image)       free(ee->image);
   if (ee->epnum.text)  free(ee->epnum.text);
+  _epg_object_destroy(eo, &epg_episodes);
   free(ee);
 }
 
@@ -1406,8 +1406,8 @@ void epg_channel_unlink ( channel_t *ch )
 static void _epg_broadcast_destroy ( void *eo )
 {
   epg_broadcast_t *ebc = eo;
-  _epg_object_destroy(eo, NULL);
   if (ebc->episode) _epg_episode_rem_broadcast(ebc->episode, ebc);
+  _epg_object_destroy(eo, NULL);
   free(ebc);
 }
 
