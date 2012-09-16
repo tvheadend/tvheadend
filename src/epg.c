@@ -800,7 +800,7 @@ int epg_episode_set_title
 int epg_episode_set_title2
   ( epg_episode_t *episode, const lang_str_t *str, epggrab_module_t *src )
 {
-  if (!episode) return 0;
+  if (!episode || !str) return 0;
   return _epg_object_set_lang_str2(episode, &episode->title, str, src);
 }
 
@@ -816,7 +816,7 @@ int epg_episode_set_subtitle
 int epg_episode_set_subtitle2
   ( epg_episode_t *episode, const lang_str_t *str, epggrab_module_t *src )
 {
-  if (!episode) return 0;
+  if (!episode || !str) return 0;
   return _epg_object_set_lang_str2(episode, &episode->subtitle, str, src);
 }
 
@@ -1577,14 +1577,14 @@ int epg_broadcast_set_description
 int epg_broadcast_set_summary2
   ( epg_broadcast_t *b, const lang_str_t *str, epggrab_module_t *src )
 {
-  if (!b) return 0;
+  if (!b || !str) return 0;
   return _epg_object_set_lang_str2(b, &b->summary, str, src);
 }
 
 int epg_broadcast_set_description2
   ( epg_broadcast_t *b, const lang_str_t *str, epggrab_module_t *src )
 {
-  if (!b) return 0;
+  if (!b || !str) return 0;
   return _epg_object_set_lang_str2(b, &b->description, str, src);
 }
 
