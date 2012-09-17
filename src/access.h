@@ -61,6 +61,7 @@ typedef struct access_log {
   time_t al_startlog; /* First seen seconds */
   time_t al_currlog;  /* Last seen seconds */
   char *al_username;
+  char *al_type;
   struct in_addr al_ip;
   TAILQ_ENTRY(access_log) al_link;
 } access_log_t;
@@ -114,6 +115,6 @@ void access_init(int createdefault);
 
 void access_log_show_all(void);
 
-void access_log_update(const char *username, uint32_t ip);
+void access_log_update(const char *username, const char *access_type, uint32_t ip);
 
 #endif /* ACCESS_H_ */

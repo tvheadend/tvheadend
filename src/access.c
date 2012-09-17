@@ -88,7 +88,7 @@ access_log_search(const char *username)
 };
 
 void
-access_log_update(const char *username, uint32_t ip)
+access_log_update(const char *username, const char *access_type, uint32_t ip)
 {
   access_log_t *al;
 /*  tvhlog(LOG_DEBUG, "accesslogging", "Updating access log for user: %s at ip: %d",username,ip); */
@@ -98,11 +98,15 @@ access_log_update(const char *username, uint32_t ip)
 	time(&al->al_startlog);
 	time(&al->al_currlog);
 	al->al_username=strdup(username);
-	al->al_ip.s_addr=ip;
+	al->al_ip.s_addr=ntohl(ip);
+	if (access_type != NULL)
+         al->al_type=strdup(access_type);
   } else {
 	/* update user as already got a log entry */
 	time(&al->al_currlog);
-	al->al_ip.s_addr=ip;
+	al->al_ip.s_addr=ntohl(ip);
+	if (access_type != NULL)
+         al->al_type=strdup(access_type);
   };
 }
 void
@@ -115,6 +119,7 @@ access_log_show_all(void)
 	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->startlog: %ld",al->al_startlog);
 	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->currlog: %ld",al->al_currlog);
 	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->ip: %s",inet_ntoa(al->al_ip));
+	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->type: %s",al->al_type);
  };
 }
 
@@ -241,7 +246,7 @@ access_verify(const char *username, const char *password,
      password != NULL && superuser_password != NULL && 
      !strcmp(username, superuser_username) &&
      !strcmp(password, superuser_password)) {
-    if (username) {access_log_update(username, b);};
+    if (username) {access_log_update(username, NULL, b);};
     return 0;
   };
 
@@ -270,7 +275,7 @@ access_verify(const char *username, const char *password,
   if (auth_status == 0) {
    tvhlog(LOG_WARNING, "accesscontrol", "Authentication failure for \"%s\"", username);
   } else {
-   if (username) {access_log_update(username, b);};
+   if (username) {access_log_update(username, NULL, b);};
   };
   return (mask & bits) == mask ? 0 : -1;
 }
@@ -618,8 +623,8 @@ access_init(int createdefault)
   dtable_t *dt;
   htsmsg_t *r, *m;
   access_entry_t *ae;
-  access_log_t *al;
   const char *s;
+  access_log_t *al;
 
   static struct {
     pid_t pid;
@@ -637,9 +642,10 @@ access_init(int createdefault)
   /* Initialise access_log */
   tvhlog(LOG_INFO, "accesslogging", "Initialising access logging system");
   al = access_log_find(NULL, 1);
+  tvhlog(LOG_INFO, "accesslogging", "Default user loaded %s", al->al_id);
 
   /* dummy access entry */
-  access_log_update("andyb", inet_addr("1.1.1.1"));
+  access_log_update("andyb", "http", inet_addr("1.1.1.1"));
   access_log_show_all();
 
   dt = dtable_create(&access_dtc, "accesscontrol", NULL);
