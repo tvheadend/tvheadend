@@ -121,7 +121,7 @@ static time_t _xmltv_str2time(const char *str)
  */
 
 static const char *xmltv_ns_get_parse_num
-  (const char *s, int *ap, int *bp)
+  (const char *s, uint16_t *ap, uint16_t *bp)
 {
   int a = -1, b = -1;
 
@@ -172,15 +172,16 @@ static const char *xmltv_ns_get_parse_num
 }
 
 static void parse_xmltv_ns_episode
-  (const char *s, int *sn, int *sc, int *en, int *ec, int *pn, int *pc)
+  (const char *s, epg_episode_num_t *epnum)
 {
-  s = xmltv_ns_get_parse_num(s, sn, sc);
-  s = xmltv_ns_get_parse_num(s, en, ec);
-  xmltv_ns_get_parse_num(s, pn, pc);
+  s = xmltv_ns_get_parse_num(s, &(epnum->s_num), &(epnum->s_cnt));
+  s = xmltv_ns_get_parse_num(s, &(epnum->e_num), &(epnum->e_cnt));
+  s = xmltv_ns_get_parse_num(s, &(epnum->p_num), &(epnum->p_cnt));
 }
 
 static void parse_xmltv_dd_progid
-  (epggrab_module_t *mod, const char *s, char **uri, char **suri, int *en )
+  (epggrab_module_t *mod, const char *s, char **uri, char **suri,
+   epg_episode_num_t *epnum)
 {
   char buf[128];
   if (strlen(s) < 2) return;
@@ -198,7 +199,7 @@ static void parse_xmltv_dd_progid
     if (e) {
       buf[e] = '\0';
       *suri = strdup(buf);
-      if (s[e+1]) sscanf(s+e+1, "%d", en);
+      if (s[e+1]) sscanf(s+e+1, "%hu", &(epnum->e_num));
     }
   }
 }
@@ -208,8 +209,7 @@ static void parse_xmltv_dd_progid
  */
 static void get_episode_info
   (epggrab_module_t *mod,
-   htsmsg_t *tags, char **uri, char **suri, const char **screen,
-   int *sn, int *sc, int *en, int *ec, int *pn, int *pc)
+   htsmsg_t *tags, char **uri, char **suri, epg_episode_num_t *epnum )
 {
   htsmsg_field_t *f;
   htsmsg_t *c, *a;
@@ -224,11 +224,11 @@ static void get_episode_info
       continue;
     
     if(!strcmp(sys, "onscreen"))
-      *screen = cdata;
+      epnum->text = (char*)cdata;
     else if(!strcmp(sys, "xmltv_ns"))
-      parse_xmltv_ns_episode(cdata, sn, sc, en, ec, pn, pc);
+      parse_xmltv_ns_episode(cdata, epnum);
     else if(!strcmp(sys, "dd_progid"))
-      parse_xmltv_dd_progid(mod, cdata, uri, suri, en);
+      parse_xmltv_dd_progid(mod, cdata, uri, suri, epnum);
   }
 }
 
@@ -365,8 +365,8 @@ static int _xmltv_parse_programme_tags
   epg_serieslink_t *es = NULL;
   epg_broadcast_t *ebc;
   epg_genre_list_t *egl;
-  int sn = 0, sc = 0, en = 0, ec = 0, pn = 0, pc = 0;
-  const char *onscreen = NULL;
+  epg_episode_num_t epnum;
+  memset(&epnum, 0, sizeof(epnum));
   char *suri = NULL, *uri = NULL;
   lang_str_t *title = NULL;
   lang_str_t *desc = NULL;
@@ -401,8 +401,7 @@ static int _xmltv_parse_programme_tags
   /*
    * Episode/Series info
    */
-  get_episode_info(mod, tags, &uri, &suri, &onscreen,
-                   &sn, &sc, &en, &ec, &pn, &pc);
+  get_episode_info(mod, tags, &uri, &suri, &epnum);
 
   /*
    * Series Link
@@ -444,8 +443,7 @@ static int _xmltv_parse_programme_tags
       epg_genre_list_destroy(egl);
     }
 
-    if (pn)   save3 |= epg_episode_set_part(ee, pn, pc, mod);
-    if (en)   save3 |= epg_episode_set_number(ee, en, mod);
+    save3 |= epg_episode_set_epnum(ee, &epnum, mod);
 
     // TODO: need to handle certification and ratings
     // TODO: need to handle season numbering!
