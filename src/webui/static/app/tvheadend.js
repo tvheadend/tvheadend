@@ -247,9 +247,10 @@ tvheadend.MediaPlayer = function(url) {
 
     var video = document.createElement('video');
     var videoPanel = new Ext.Panel({
-        border : false,
-        layout : 'fit',
-        contentEl: video
+	border : false,
+	layout : 'fit',
+	bodyStyle: 'background: transparent;',
+	contentEl: video
     });
 
     video.setAttribute('preload', 'metadata');
@@ -257,6 +258,7 @@ tvheadend.MediaPlayer = function(url) {
     video.setAttribute('poster', '/docresources/tvheadendlogo.png');
     video.setAttribute('width', '100%');
     video.setAttribute('height', '100%');
+    video.setAttribute('style', 'background: transparent;');
 
     var selectChannel = new Ext.form.ComboBox({
 	loadingText: 'Loading...',
