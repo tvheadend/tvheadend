@@ -336,6 +336,7 @@ static int _opentv_parse_event_section
   opentv_event_t ev;
   epggrab_module_t *src = (epggrab_module_t*)mod;
   const char *lang = NULL;
+  epggrab_channel_link_t *ecl;
 
   /* Get language (bit of a hack) */
   if      (!strcmp(mod->dict->id, "skyit"))  lang = "it";
@@ -344,8 +345,8 @@ static int _opentv_parse_event_section
   /* Channel */
   cid = ((int)buf[0] << 8) | buf[1];
   if (!(ec = _opentv_find_epggrab_channel(mod, cid, 0, NULL))) return 0;
-  if (!ec->channel) return 0;
-  if (!*ec->channel->ch_name) return 0; // ignore unnamed channels
+  if (!(ecl = LIST_FIRST(&ec->channels))) return 0;
+  // TODO: it's assumed that opentv channels are always 1-1 mapping!
   
   /* Time (start/stop referenced to this) */
   mjd = ((int)buf[5] << 8) | buf[6];
@@ -364,11 +365,11 @@ static int _opentv_parse_event_section
 
     /* Find broadcast */
     if (ev.type & OPENTV_TITLE) {
-      ebc = epg_broadcast_find_by_time(ec->channel, ev.start, ev.stop, ev.eid,
+      ebc = epg_broadcast_find_by_time(ecl->channel, ev.start, ev.stop, ev.eid,
                                        1, &save);
 
     /* Store */
-    } else if (!(ebc = epg_broadcast_find_by_eid(ec->channel, ev.eid))) {
+    } else if (!(ebc = epg_broadcast_find_by_eid(ecl->channel, ev.eid))) {
       opentv_event_t *skel = malloc(sizeof(opentv_event_t));
       memcpy(skel, &ev, sizeof(opentv_event_t));
       assert(!RB_INSERT_SORTED(&sta->events, skel, ev_link, _ev_cmp));
@@ -390,7 +391,7 @@ static int _opentv_parse_event_section
     if (ebc && ev.serieslink) {
       char suri[257];
       snprintf(suri, 256, "opentv://channel-%d/series-%d",
-               ec->channel->ch_id, ev.serieslink);
+               ecl->channel->ch_id, ev.serieslink);
       if ((es = epg_serieslink_find_by_uri(suri, 1, &save)))
         save |= epg_broadcast_set_serieslink(ebc, es, src);
     }
@@ -429,6 +430,7 @@ static void _opentv_parse_channels
   ( opentv_module_t *mod, uint8_t *buf, int len, uint16_t tsid )
 {
   epggrab_channel_t *ec;
+  epggrab_channel_link_t *ecl;
   service_t *svc;
   int sid, cid, cnum;
   int save = 0;
@@ -440,12 +442,14 @@ static void _opentv_parse_channels
 
     /* Find the service */
     svc = _opentv_find_service(tsid, sid);
-    if (svc && svc->s_ch) {
+    if (svc && svc->s_ch && service_is_primary_epg(svc)) {
       ec  =_opentv_find_epggrab_channel(mod, cid, 1, &save);
-      if (service_is_primary_epg(svc))
-        ec->channel = svc->s_ch;
-      else
-        ec->channel = NULL;
+      ecl = LIST_FIRST(&ec->channels);
+      if (!ecl) {
+        ecl = calloc(1, sizeof(epggrab_channel_link_t));
+        LIST_INSERT_HEAD(&ec->channels, ecl, link);
+      }
+      ecl->channel = svc->s_ch;
       save |= epggrab_channel_set_number(ec, cnum);
     }
     i += 9;
