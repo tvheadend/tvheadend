@@ -560,6 +560,9 @@ dvb_mux_save(th_dvb_mux_instance_t *tdmi)
 
   htsmsg_add_u32(m, "initialscan", tdmi->tdmi_table_initial);
 
+  if(tdmi->tdmi_default_authority)
+    htsmsg_add_str(m, "default_authority", tdmi->tdmi_default_authority);
+
   switch(tdmi->tdmi_adapter->tda_type) {
   case FE_OFDM:
     htsmsg_add_str(m, "bandwidth",
@@ -779,6 +782,9 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
 
     if(tda->tda_qmon && !htsmsg_get_u32(m, "quality", &u32))
       tdmi->tdmi_quality = u32;
+
+    if((s = htsmsg_get_str(m, "default_authority")))
+      tdmi->tdmi_default_authority = strdup(s);
   }
   return NULL;
 }

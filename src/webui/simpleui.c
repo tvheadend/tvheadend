@@ -32,6 +32,7 @@
 #include "access.h"
 #include "epg.h"
 #include "dvr/dvr.h"
+#include "config.h"
 
 #define ACCESS_SIMPLE \
 (ACCESS_WEB_INTERFACE | ACCESS_RECORDER)
@@ -126,9 +127,9 @@ page_simple(http_connection_t *hc,
 	rstatus = de != NULL ? val2str(de->de_sched_state,
 				       recstatustxt) : NULL;
 
-  s = epg_episode_get_title(e->episode, lang);
+        s = epg_broadcast_get_title(e, lang);
 	htsbuf_qprintf(hq, 
-		    "<a href=\"/eventinfo/%"PRIu64"\">"
+		    "<a href=\"/eventinfo/%u\">"
 		    "%02d:%02d-%02d:%02d&nbsp;%s%s%s</a><br>",
 		    e->id,
 		    a.tm_hour, a.tm_min, b.tm_hour, b.tm_min,
@@ -242,7 +243,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   if((rstatus = val2str(dvr_status, recstatustxt)) != NULL)
     htsbuf_qprintf(hq, "Recording status: %s<br>", rstatus);
 
-  htsbuf_qprintf(hq, "<form method=\"post\" action=\"/eventinfo/%"PRIu64"\">",
+  htsbuf_qprintf(hq, "<form method=\"post\" action=\"/eventinfo/%u\">",
 		 e->id);
 
   switch(dvr_status) {
@@ -267,12 +268,11 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   htsbuf_qprintf(hq, "</form>");
-  if (e->episode) {
-    if ( e->episode->description )
-      htsbuf_qprintf(hq, "%s", lang_str_get(e->episode->description, NULL));
-    else if ( e->episode->summary )
-      htsbuf_qprintf(hq, "%s", lang_str_get(e->episode->summary, NULL));
-  }
+
+  if ( (s = epg_broadcast_get_description(e, lang)) )
+    htsbuf_qprintf(hq, "%s", s);
+  else if ( (s = epg_broadcast_get_summary(e, lang)) )
+    htsbuf_qprintf(hq, "%s", s);
   
 
   pthread_mutex_unlock(&global_lock);
@@ -368,19 +368,24 @@ page_status(http_connection_t *hc,
 	    const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
-  int c, i, cc, timeleft, timelefttemp, loads;
+  int c, i, cc, timeleft, timelefttemp;
   struct tm a, b;
   dvr_entry_t *de;
   dvr_query_result_t dqr;
   const char *rstatus;
   time_t     now;
-  double avg[3]; 
   char buf[500];
   access_log_t *al = NULL;
+
+#ifdef ENABLE_GETLOADAVG
+  int loads;
+  double avg[3];
+#endif
 
   htsbuf_qprintf(hq, "<?xml version=\"1.0\"?>\n"
                  "<currentload>\n");
 
+#ifdef ENABLE_GETLOADAVG
   loads = getloadavg (avg, 3); 
   if (loads == -1) {
         tvhlog(LOG_DEBUG, "webui",  "Error getting load average from getloadavg()");
@@ -390,6 +395,7 @@ page_status(http_connection_t *hc,
   } else {
         htsbuf_qprintf(hq, "<systemload>%f,%f,%f</systemload>\n",avg[0],avg[1],avg[2]);
   };
+#endif
 
   tvhlog(LOG_DEBUG, "webui",  "Dumping current authentication database, you are identified as %s",hc->hc_username);
   access_log_show_all();

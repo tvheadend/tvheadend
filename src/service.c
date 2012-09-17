@@ -1,6 +1,6 @@
 /*
  *  Services
- *  Copyright (C) 2010 Andreas Öman
+ *  Copyright (C) 2010 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -47,6 +47,7 @@
 #include "atomic.h"
 #include "dvb/dvb.h"
 #include "htsp.h"
+#include "lang_codes.h"
 
 #define SERVICE_HASH_WIDTH 101
 

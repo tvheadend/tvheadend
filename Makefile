@@ -173,8 +173,8 @@ SRCS-$(CONFIG_AVAHI) += src/avahi.c
 # Optimised code
 SRCS-${CONFIG_MMX}  += src/ffdecsa/ffdecsa_mmx.c
 SRCS-${CONFIG_SSE2} += src/ffdecsa/ffdecsa_sse2.c
-${BUILDDIR}/src/ffdecsa/ffdecsa_mmx.o  : CFLAGS = -mmmx
-${BUILDDIR}/src/ffdecsa/ffdecsa_sse2.o : CFLAGS = -msse2
+${BUILDDIR}/src/ffdecsa/ffdecsa_mmx.o  : CFLAGS += -mmmx
+${BUILDDIR}/src/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
 
 # File bundles
 SRCS-${CONFIG_BUNDLE}     += bundle.c

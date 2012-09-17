@@ -240,6 +240,9 @@ dvb_transport_load(th_dvb_mux_instance_t *tdmi)
     s = htsmsg_get_str(c, "dvb_default_charset");
     t->s_dvb_default_charset = s ? strdup(s) : NULL;
 
+    s = htsmsg_get_str(c, "default_authority");
+    t->s_default_authority = s ? strdup(s) : NULL;
+
     if(htsmsg_get_u32(c, "dvb_eit_enable", &u32))
       u32 = 1;
     t->s_dvb_eit_enable = u32;
@@ -285,6 +288,9 @@ dvb_transport_save(service_t *t)
     htsmsg_add_str(m, "dvb_default_charset", t->s_dvb_default_charset);
   
   htsmsg_add_u32(m, "dvb_eit_enable", t->s_dvb_eit_enable);
+
+  if(t->s_default_authority)
+    htsmsg_add_str(m, "default_authority", t->s_default_authority);
 
   pthread_mutex_lock(&t->s_stream_mutex);
   psi_save_service_settings(m, t);

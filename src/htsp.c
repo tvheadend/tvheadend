@@ -760,14 +760,14 @@ htsp_build_event(epg_broadcast_t *e)
   htsmsg_add_u32(out, "channelId", e->channel->ch_id);
   htsmsg_add_u32(out, "start", e->start);
   htsmsg_add_u32(out, "stop", e->stop);
-  if (e->episode) {
-    if ((str = epg_episode_get_title(e->episode, NULL)))
-      htsmsg_add_str(out, "title", str);
-    if ((str = epg_episode_get_description(e->episode, NULL)))
-      htsmsg_add_str(out, "description", str);
-    else if((str = epg_episode_get_summary(e->episode, NULL)))
-      htsmsg_add_str(out, "description", str);
+  if ((str = epg_broadcast_get_title(e, NULL)))
+    htsmsg_add_str(out, "title", str);
+  if ((str = epg_broadcast_get_description(e, NULL)))
+    htsmsg_add_str(out, "description", str);
+  else if((str = epg_broadcast_get_summary(e, NULL)))
+    htsmsg_add_str(out, "description", str);
 
+  if (e->episode) {
     if((g = LIST_FIRST(&e->episode->genre)))
       htsmsg_add_u32(out, "contentType", g->code);
   }
