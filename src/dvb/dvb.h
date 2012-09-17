@@ -399,6 +399,10 @@ int dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src,
 
 void dvb_mux_add_to_scan_queue (th_dvb_mux_instance_t *tdmi);
 
+th_dvb_mux_instance_t *dvb_mux_find
+  (th_dvb_adapter_t *tda, const char *netname, uint16_t onid, uint16_t tsid,
+   int enabled );
+
 /**
  * DVB Transport (aka DVB service)
  */
@@ -411,6 +415,11 @@ struct service *dvb_transport_find(th_dvb_mux_instance_t *tdmi,
 struct service *dvb_transport_find2(th_dvb_mux_instance_t *tdmi,
 				   uint16_t sid, int pmt_pid,
 				   const char *identifier, int *save);
+
+struct service *dvb_transport_find3
+  (th_dvb_adapter_t *tda, th_dvb_mux_instance_t *tdmi,
+   const char *netname, uint16_t onid, uint16_t tsid, uint16_t sid,
+   int enabled, int epgprimary);
 
 void dvb_transport_notify(struct service *t);
 

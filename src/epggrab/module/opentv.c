@@ -189,23 +189,6 @@ static epggrab_channel_t *_opentv_find_epggrab_channel
                               (epggrab_module_t*)mod);
 }
 
-static service_t *_opentv_find_service ( int onid, int tsid, int sid )
-{
-  th_dvb_adapter_t *tda;
-  th_dvb_mux_instance_t *tdmi;
-  service_t *t = NULL;
-  TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
-      if (tdmi->tdmi_transport_stream_id != tsid) continue;
-      if (tdmi->tdmi_network_id != onid) continue;
-      LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
-        if (t->s_dvb_service_id == sid) return t;
-      }
-    }
-  }
-  return NULL;
-}
-
 /* ************************************************************************
  * OpenTV event processing
  * ***********************************************************************/
@@ -442,8 +425,8 @@ static void _opentv_parse_channels
     cnum = ((int)buf[i+5] << 8) | buf[i+6];
 
     /* Find the service */
-    svc = _opentv_find_service(onid, tsid, sid);
-    if (svc && svc->s_ch && service_is_primary_epg(svc)) {
+    svc = dvb_transport_find3(NULL, NULL, NULL, onid, tsid, sid, 1, 1);
+    if (svc && svc->s_ch) {
       ec  =_opentv_find_epggrab_channel(mod, cid, 1, &save);
       ecl = LIST_FIRST(&ec->channels);
       if (!ecl) {
