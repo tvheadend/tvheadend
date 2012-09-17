@@ -246,11 +246,17 @@ tvheadend.MediaPlayer = function(url) {
     }
 
     var video = document.createElement('video');
+    var videoPanel = new Ext.Panel({
+        border : false,
+        layout : 'fit',
+        contentEl: video
+    });
+
     video.setAttribute('preload', 'metadata');
     video.setAttribute('autoplay', 'autoplay');
     video.setAttribute('poster', '/docresources/tvheadendlogo.png');
     video.setAttribute('width', '100%');
-    video.setAttribute('height', resolution);
+    video.setAttribute('height', '100%');
 
     var selectChannel = new Ext.form.ComboBox({
 	loadingText: 'Loading...',
@@ -368,7 +374,7 @@ tvheadend.MediaPlayer = function(url) {
 	    },
 	    slider
 	],
-	items: [video]
+	items: [videoPanel]
     });
 
     video.addEventListener('loadedmetadata', function() {
@@ -376,8 +382,8 @@ tvheadend.MediaPlayer = function(url) {
 	    win.setWidth(video.videoWidth);
 	    win.setHeight(video.videoHeight + 57);
 	    
-	    video.width = video.videoWidth;
-	    video.height = video.videoHeight;
+	    videoPanel.setWidth(video.videoWidth);
+	    videoPanel.setHeight(video.videoHeight);
 	}
     });
 

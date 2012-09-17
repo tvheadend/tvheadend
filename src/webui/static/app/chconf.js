@@ -143,8 +143,8 @@ tvheadend.chconf = function() {
 		dataIndex : 'chid',
 		width : 50,
 		renderer : function(value, metadata, record, row, col, store) {
-			url = 'playlist/channelid/' + value
-			return "<a href=\"javascript:tvheadend.VLC('" + url + "')\">Play</a>"
+			url = 'stream/channelid/' + value
+			return "<a href=\"javascript:tvheadend.MediaPlayer('" + url + "')\">Play</a>"
 		}
 	}, {
 		header : "EPG Grab source",
