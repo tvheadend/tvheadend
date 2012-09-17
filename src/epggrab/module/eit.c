@@ -627,10 +627,8 @@ static int _eit_callback
   // Note: tableid=0x4f,0x60-0x6f is other TS
   //       so must find the tdmi
   if(tableid == 0x4f || tableid >= 0x60) {
-    tda = tdmi->tdmi_adapter;
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
-      if(tdmi->tdmi_transport_stream_id == tsid)
-        break;
+    tda  = tdmi->tdmi_adapter;
+    tdmi = dvb_mux_find(tda, NULL, 0, tsid, 1);
   } else {
     if (tdmi->tdmi_transport_stream_id != tsid) {
       tvhlog(LOG_DEBUG, mod->id,
@@ -642,11 +640,8 @@ static int _eit_callback
   if(!tdmi) goto done;
 
   /* Get service */
-  svc = dvb_transport_find(tdmi, sid, 0, NULL);
-  if (!svc || !svc->s_enabled || !svc->s_ch) goto done;
-
-  /* Ignore (not primary EPG service) */
-  if (!service_is_primary_epg(svc)) goto done;
+  svc = dvb_transport_find3(NULL, tdmi, NULL, 0, 0, sid, 1, 1);
+  if (!svc || !svc->s_ch) goto done;
 
   /* Register as interesting */
   if (tableid < 0x50)
