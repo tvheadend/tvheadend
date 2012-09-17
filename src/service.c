@@ -47,7 +47,6 @@
 #include "atomic.h"
 #include "dvb/dvb.h"
 #include "htsp.h"
-#include "lang_codes.h"
 
 #define SERVICE_HASH_WIDTH 101
 
@@ -864,6 +863,25 @@ service_restart(service_t *t, int had_components)
   }
 }
 
+/**
+ * Copy stream information
+ */
+static void
+copy_stream_info(streaming_start_t *ss, elementary_stream_t *st)
+{
+    streaming_start_component_t *ssc;
+
+    ssc = &ss->ss_components[ss->ss_num_components++];
+    ssc->ssc_index = st->es_index;
+    ssc->ssc_type  = st->es_type;
+
+    memcpy(ssc->ssc_lang, st->es_lang, 4);
+    ssc->ssc_composition_id = st->es_composition_id;
+    ssc->ssc_ancillary_id = st->es_ancillary_id;
+    ssc->ssc_pid = st->es_pid;
+    ssc->ssc_width = st->es_width;
+    ssc->ssc_height = st->es_height;
+}
 
 /**
  * Generate a message containing info about all components
@@ -880,24 +898,24 @@ service_build_stream_start(service_t *t)
   TAILQ_FOREACH(st, &t->s_components, es_link)
     n++;
 
-  ss = calloc(1, sizeof(streaming_start_t) + 
-	      sizeof(streaming_start_component_t) * n);
+  ss = calloc(1, sizeof(streaming_start_t) + sizeof(streaming_start_component_t) * n);
 
-  ss->ss_num_components = n;
-  
-  n = 0;
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
-    streaming_start_component_t *ssc = &ss->ss_components[n++];
-    ssc->ssc_index = st->es_index;
-    ssc->ssc_type  = st->es_type;
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+    if(SCT_ISVIDEO(st->es_type))
+      copy_stream_info(ss, st);
 
-    memcpy(ssc->ssc_lang, st->es_lang, 4);
-    ssc->ssc_composition_id = st->es_composition_id;
-    ssc->ssc_ancillary_id = st->es_ancillary_id;
-    ssc->ssc_pid = st->es_pid;
-    ssc->ssc_width = st->es_width;
-    ssc->ssc_height = st->es_height;
-  }
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+      if(SCT_ISAUDIO(st->es_type))
+        copy_stream_info(ss, st);
+
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+        if(SCT_ISSUBTITLE(st->es_type))
+          copy_stream_info(ss, st);
+
+  // copy other stream information
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+    if((!SCT_ISVIDEO(st->es_type) && !SCT_ISAUDIO(st->es_type) && !SCT_ISSUBTITLE(st->es_type)))
+      copy_stream_info(ss, st);
 
   t->s_setsourceinfo(t, &ss->ss_si);
 
