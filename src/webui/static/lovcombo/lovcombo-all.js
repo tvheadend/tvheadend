@@ -51,6 +51,11 @@ Ext.ux.form.LovCombo = Ext.extend(Ext.form.ComboBox, {
 	 */
     ,separator:','
 
+  /**
+   * Mask out this function it breaks the component in 3.4
+   */
+    ,assertValue: Ext.emptyFn
+
 	/**
 	 * @cfg {String/Array} tpl Template for items. 
 	 * Change it only if you know what you are doing.
