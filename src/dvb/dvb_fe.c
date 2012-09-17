@@ -466,7 +466,7 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
       	dvb_lnb_get_frequencies(sc->sc_lnb, &lowfreq, &hifreq, &switchfreq);
     }
 
-    if (switchfreq == BANDSTACKED_NA_LNB) {
+    if(!strcmp(sc->sc_id, "DBS Bandstacked")) {
       hiband = 0;
       if(tdmi->tdmi_conf.dmc_polarisation == POLARISATION_HORIZONTAL ||
          tdmi->tdmi_conf.dmc_polarisation == POLARISATION_CIRCULAR_LEFT)

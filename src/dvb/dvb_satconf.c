@@ -317,7 +317,7 @@ dvb_lnb_get_frequencies(const char *id, int *f_low, int *f_hi, int *f_switch)
   } else if(!strcmp(id, "DBS Bandstacked")) {
     *f_low    = 11250000;
     *f_hi     = 14350000;
-    *f_switch = BANDSTACKED_NA_LNB; /* special case for Bandstacked LNB */
+    *f_switch = 0;
   } else if(!strcmp(id, "Standard")) {
     *f_low    = 10000000;
     *f_hi     = 0;
