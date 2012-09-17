@@ -49,7 +49,10 @@ subscriptions_active(void)
 th_subscription_t *s;
 /* https://github.com/andyb2000/tvheadend */
 LIST_FOREACH(s, &subscriptions, ths_global_link) {
-	tvhlog(LOG_DEBUG, "subscriptions_active", "Active titls: %s", s->ths_title);
+	tvhlog(LOG_DEBUG, "subscriptions_active", "Active titles: %s", s->ths_title);
+	tvhlog(LOG_DEBUG, "subscriptions_active", "Active Channel: %s", s->ths_channel->ch_name);
+	tvhlog(LOG_DEBUG, "subscriptions_active", "Active Service: %s", s->ths_service->s_nicename);
+/*	tvhlog(LOG_DEBUG, "subscriptions_active", "Active Input: %s", s->ths_input);*/
 };
   return LIST_FIRST(&subscriptions) != NULL;
 }

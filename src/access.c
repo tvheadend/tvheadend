@@ -88,7 +88,18 @@ access_log_search(const char *username)
 };
 
 void
-access_log_update(const char *username, const char *access_type, uint32_t ip)
+access_log_remove(const char *username, uint32_t ip)
+{
+  access_log_t *al;
+  if((al = access_log_search(username)) != NULL) {
+   free(al->al_id);
+   TAILQ_REMOVE(&access_log, al, al_link);
+   free(al);
+  };
+};
+
+void
+access_log_update(const char *username, const char *access_type, const char *al_streamdata, uint32_t ip)
 {
   access_log_t *al;
 /*  tvhlog(LOG_DEBUG, "accesslogging", "Updating access log for user: %s at ip: %d",username,ip); */
@@ -101,14 +112,20 @@ access_log_update(const char *username, const char *access_type, uint32_t ip)
 	al->al_ip.s_addr=ntohl(ip);
 	if (access_type != NULL)
          al->al_type=strdup(access_type);
+	if (al_streamdata != NULL)
+	 al->al_streamdata=strdup(al_streamdata);
   } else {
 	/* update user as already got a log entry */
 	time(&al->al_currlog);
 	al->al_ip.s_addr=ntohl(ip);
 	if (access_type != NULL)
          al->al_type=strdup(access_type);
+	if (al_streamdata != NULL)
+         al->al_streamdata=strdup(al_streamdata);
   };
-}
+};
+
+
 void
 access_log_show_all(void)
 {
@@ -120,6 +137,7 @@ access_log_show_all(void)
 	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->currlog: %ld",al->al_currlog);
 	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->ip: %s",inet_ntoa(al->al_ip));
 	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->type: %s",al->al_type);
+	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->streamdata: %s", al->al_streamdata);
  };
 }
 
@@ -246,7 +264,7 @@ access_verify(const char *username, const char *password,
      password != NULL && superuser_password != NULL && 
      !strcmp(username, superuser_username) &&
      !strcmp(password, superuser_password)) {
-    if (username) {access_log_update(username, "superuser", b);};
+    if (username) {access_log_update(username, "superuser", "", b);};
     return 0;
   };
 
@@ -275,7 +293,7 @@ access_verify(const char *username, const char *password,
   if (auth_status == 0) {
    tvhlog(LOG_WARNING, "accesscontrol", "Authentication failure for \"%s\" from \"%s\"", username, inet_ntoa(si->sin_addr));
   } else {
-   if (username) {access_log_update(username, NULL, b);};
+   if (username) {access_log_update(username, "http", "", b);};
   };
   return (mask & bits) == mask ? 0 : -1;
 }
@@ -306,8 +324,10 @@ access_get_hashed(const char *username, const uint8_t digest[20],
     SHA1_Update(&shactx, challenge, 32);
     SHA1_Final(d, &shactx);
 
-    if(!strcmp(superuser_username, username) && !memcmp(d, digest, 20))
+    if(!strcmp(superuser_username, username) && !memcmp(d, digest, 20)) {
+      if (username) {access_log_update(username, "http", "", b);};
       return 0xffffffff;
+    };
   }
 
 
@@ -329,6 +349,7 @@ access_get_hashed(const char *username, const uint8_t digest[20],
       continue;
     match = 1;
     r |= ae->ae_rights;
+    if (username) {access_log_update(username, "http", "", b);};
   }
   if(entrymatch != NULL)
     *entrymatch = match;

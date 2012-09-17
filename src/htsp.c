@@ -1102,7 +1102,7 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
     tvh_str_update(&htsp->htsp_username, username);
     htsp_update_logname(htsp);
 /* andyb2000 log user into access_log */
-   if (username) {access_log_update(username, "htsp", inet_addr("127.0.0.1"));};
+   if (username) {access_log_update(username, "htsp", "", inet_addr("127.0.0.1"));};
   }
 
 

@@ -30,6 +30,8 @@
 #include <sys/stat.h>
 #include <sys/sendfile.h>
 
+#include <arpa/inet.h>
+
 #include "tvheadend.h"
 #include "access.h"
 #include "http.h"
@@ -181,9 +183,11 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
           getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen);  
           if(err) {
 	    tvhlog(LOG_DEBUG, "webui",  "Client hung up, exit streaming");
+            if (hc->hc_username) {access_log_remove(hc->hc_username, ntohl(hc->hc_peer->sin_addr.s_addr));};
 	    run = 0;
           }else if(timeouts >= 20) {
 	    tvhlog(LOG_WARNING, "webui",  "Timeout waiting for packets");
+            if (hc->hc_username) {access_log_remove(hc->hc_username, ntohl(hc->hc_peer->sin_addr.s_addr));};
 	    run = 0;
           }
       }
@@ -205,6 +209,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
     case SMT_START:
       tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
+      if (hc->hc_username) {access_log_update(hc->hc_username, "http", name, ntohl(hc->hc_peer->sin_addr.s_addr));};
 
       http_output_content(hc, muxer_mime(mux, sm->sm_data));
       muxer_init(mux, sm->sm_data, name);
@@ -212,12 +217,14 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
     case SMT_STOP:
       muxer_close(mux);
+      if (hc->hc_username) {access_log_remove(hc->hc_username, ntohl(hc->hc_peer->sin_addr.s_addr));};
       run = 0;
       break;
 
     case SMT_SERVICE_STATUS:
       if(getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, &err, &errlen)) {
 	tvhlog(LOG_DEBUG, "webui",  "Client hung up, exit streaming");
+        if (hc->hc_username) {access_log_remove(hc->hc_username, ntohl(hc->hc_peer->sin_addr.s_addr));};
 	run = 0;
       }
       break;

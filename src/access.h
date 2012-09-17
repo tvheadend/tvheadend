@@ -63,6 +63,7 @@ typedef struct access_log {
   char *al_username;
   char *al_type;
   struct in_addr al_ip;
+  char *al_streamdata;
   TAILQ_ENTRY(access_log) al_link;
 } access_log_t;
 TAILQ_HEAD(access_log_list, access_log);
@@ -115,6 +116,7 @@ void access_init(int createdefault);
 
 void access_log_show_all(void);
 
-void access_log_update(const char *username, const char *access_type, uint32_t ip);
+void access_log_update(const char *username, const char *access_type, const char *al_streamdata, uint32_t ip);
+void access_log_remove(const char *username, uint32_t ip);
 
 #endif /* ACCESS_H_ */
