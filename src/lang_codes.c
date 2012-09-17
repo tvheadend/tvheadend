@@ -555,8 +555,34 @@ const lang_code_t *lang_code_get3 ( const char *code )
 
 const char **lang_code_split ( const char *codes )
 {
+  int i = 0;
+  const lang_code_t **lcs = lang_code_split2(codes);
+  const char **ret;
+
+  if(!lcs) return NULL;
+
+  while(lcs[i])
+    i++;
+
+  ret = calloc(1+i, sizeof(char*));
+
+  i = 0;
+  while(lcs[i]) {
+      ret[i] = lcs[i]->code2b;
+      i++;
+  }
+  ret[i] = NULL;
+  free(lcs);
+
+  return ret;
+}
+
+const lang_code_t **lang_code_split2 ( const char *codes )
+{
   int n;
-  const char *c, *p, **ret;
+  const char *c, *p;
+  const lang_code_t **ret;
+  const lang_code_t *co;
 
   /* Defaults */
   if (!codes) codes = config_get_language();
@@ -571,19 +597,21 @@ const char **lang_code_split ( const char *codes )
     if (*c == ',') n++;
     c++;
   }
-  ret = calloc(2+n, sizeof(char*));
+  ret = calloc(2+n, sizeof(lang_code_t*));
 
   /* Create list */
   n = 0;
   p = c = codes;
   while (*c) {
     if (*c == ',') {
-      ret[n++] = lang_code_get(p);
+      co = lang_code_get3(p);
+      if(co)
+        ret[n++] = co;
       p = c + 1;
     }
     c++;
   }
-  if (*p) ret[n++] = lang_code_get(p);
+  if (*p) ret[n++] = lang_code_get3(p);
   ret[n] = NULL;
 
   return ret;

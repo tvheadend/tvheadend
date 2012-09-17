@@ -1,6 +1,6 @@
 /*
  *  tvheadend, EXTJS based interface
- *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2008 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -43,17 +43,19 @@
 #include "epg.h"
 #include "muxer.h"
 #include "iptv_input.h"
-
+#include "epggrab/private.h"
 #include "config2.h"
+#include "lang_codes.h"
 
+/**
+ *
+ */
 static void
 extjs_load(htsbuf_queue_t *hq, const char *script)
 {
   htsbuf_qprintf(hq,
-		 "<script type=\"text/javascript\" "
-		 "src=\"%s\">"
-		 "</script>\n", script);
-		 
+                 "<script type=\"text/javascript\" "
+		             "src=\"%s\"></script>\n", script);
 }
 
 /**
@@ -72,7 +74,6 @@ extjs_exec(htsbuf_queue_t *hq, const char *fmt, ...)
 
   htsbuf_qprintf(hq, "\r\n</script>\r\n");
 }
-
 
 /**
  * PVR info, deliver info about the given PVR entry
@@ -107,6 +108,8 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/extensions.js");
   extjs_load(hq, "static/livegrid/livegrid-all.js");
   extjs_load(hq, "static/lovcombo/lovcombo-all.js");
+  extjs_load(hq, "static/multiselect/multiselect.js");
+  extjs_load(hq, "static/multiselect/ddview.js");
 
   /**
    * Create a namespace for our app
@@ -172,7 +175,6 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
-
 /**
  * 
  */
@@ -204,7 +206,6 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
   http_output_html(hc);
   return 0;
 }
-
 
 /**
  *
@@ -301,8 +302,6 @@ extjs_channels_delete(htsmsg_t *in)
        (ch = channel_find_by_identifier(f->hmf_s64)) != NULL)
       channel_delete(ch);
 }
-
-#include "epggrab/private.h"
 
 /**
  *
@@ -483,7 +482,6 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
-
 /**
  * EPG Content Groups
  */
@@ -518,7 +516,6 @@ json_single_record(htsmsg_t *rec, const char *root)
   return out;
 
 }
-
 
 /**
  *
@@ -618,7 +615,6 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
-
 /**
  *
  */
@@ -703,6 +699,66 @@ skip:
   }
 
   pthread_mutex_unlock(&global_lock);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+
+}
+
+/**
+ *
+ */
+static int
+extjs_languages(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  const char *op = http_arg_get(&hc->hc_req_args, "op");
+  htsmsg_t *out, *array, *e;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(op != NULL && !strcmp(op, "list")) {
+
+    out = htsmsg_create_map();
+    array = htsmsg_create_list();
+
+    const lang_code_t *c = lang_codes;
+    while (c->code2b) {
+      e = htsmsg_create_map();
+      htsmsg_add_str(e, "identifier", c->code2b);
+      htsmsg_add_str(e, "name", c->desc);
+      htsmsg_add_msg(array, NULL, e);
+      c++;
+    }
+  }
+  else if(op != NULL && !strcmp(op, "config")) {
+
+    out = htsmsg_create_map();
+    array = htsmsg_create_list();
+
+    const lang_code_t **c = lang_code_split2(NULL);
+    if(c) {
+      int i = 0;
+      while (c[i]) {
+        e = htsmsg_create_map();
+        htsmsg_add_str(e, "identifier", c[i]->code2b);
+        htsmsg_add_str(e, "name", c[i]->desc);
+        htsmsg_add_msg(array, NULL, e);
+        i++;
+      }
+      free(c);
+    }
+  }
+  else {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_add_msg(out, "entries", array);
 
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
@@ -909,6 +965,9 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+/**
+ *
+ */
 static int
 extjs_epgobject(http_connection_t *hc, const char *remain, void *opaque)
 {
@@ -1201,7 +1260,6 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
 }
 
-
 /**
  *
  */
@@ -1308,8 +1366,6 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
-
-
 /**
  *
  */
@@ -1326,7 +1382,6 @@ extjs_service_delete(htsmsg_t *in)
       service_destroy(t);
   }
 }
-
 
 /**
  *
@@ -1363,7 +1418,6 @@ service_update(htsmsg_t *in)
       service_set_dvb_eit_enable(t, u32);
   }
 }
-
 
 /**
  *
@@ -1456,8 +1510,6 @@ extjs_servicedetails(http_connection_t *hc,
   return 0;
 }
 
-
-
 /**
  *
  */
@@ -1500,8 +1552,6 @@ extjs_mergechannel(http_connection_t *hc, const char *remain, void *opaque)
   http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
-
-
 
 /**
  *
@@ -1549,8 +1599,6 @@ service_update_iptv(htsmsg_t *in)
       t->s_config_save(t); // Save config
   }
 }
-
-
 
 /**
  *
@@ -1669,8 +1717,6 @@ extjs_iptvservices(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
-
-
 /**
  *
  */
@@ -1706,7 +1752,6 @@ extjs_service_update(htsmsg_t *in)
       service_set_dvb_eit_enable(t, u32);
   }
 }
-
 
 /**
  *
@@ -1801,32 +1846,25 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
 void
 extjs_start(void)
 {
-  http_path_add("/about.html",  NULL, page_about,        ACCESS_WEB_INTERFACE);
-  http_path_add("/extjs.html",  NULL, extjs_root,        ACCESS_WEB_INTERFACE);
-  http_path_add("/tablemgr",    NULL, extjs_tablemgr,    ACCESS_WEB_INTERFACE);
-  http_path_add("/channels",    NULL, extjs_channels,    ACCESS_WEB_INTERFACE);
-  http_path_add("/epggrab",     NULL, extjs_epggrab,     ACCESS_WEB_INTERFACE);
-  http_path_add("/channeltags", NULL, extjs_channeltags, ACCESS_WEB_INTERFACE);
-  http_path_add("/confignames", NULL, extjs_confignames, ACCESS_WEB_INTERFACE);
-  http_path_add("/epg",         NULL, extjs_epg,         ACCESS_WEB_INTERFACE);
-  http_path_add("/epgrelated",  NULL, extjs_epgrelated,  ACCESS_WEB_INTERFACE);
-  http_path_add("/epgobject",   NULL, extjs_epgobject,   ACCESS_WEB_INTERFACE);
-  http_path_add("/dvr",         NULL, extjs_dvr,         ACCESS_WEB_INTERFACE);
-  http_path_add("/dvrlist",     NULL, extjs_dvrlist,     ACCESS_WEB_INTERFACE);
-  http_path_add("/ecglist",     NULL, extjs_ecglist,     ACCESS_WEB_INTERFACE);
-  http_path_add("/config",      NULL, extjs_config,      ACCESS_WEB_INTERFACE);
-
-  http_path_add("/mergechannel",
-		NULL, extjs_mergechannel, ACCESS_ADMIN);
-
-  http_path_add("/iptv/services", 
-		NULL, extjs_iptvservices, ACCESS_ADMIN);
-
-  http_path_add("/servicedetails", 
-		NULL, extjs_servicedetails, ACCESS_ADMIN);
-
-  http_path_add("/tv/adapter", 
-		NULL, extjs_tvadapter, ACCESS_ADMIN);
+  http_path_add("/about.html",     NULL, page_about,           ACCESS_WEB_INTERFACE);
+  http_path_add("/extjs.html",     NULL, extjs_root,           ACCESS_WEB_INTERFACE);
+  http_path_add("/tablemgr",       NULL, extjs_tablemgr,       ACCESS_WEB_INTERFACE);
+  http_path_add("/channels",       NULL, extjs_channels,       ACCESS_WEB_INTERFACE);
+  http_path_add("/epggrab",        NULL, extjs_epggrab,        ACCESS_WEB_INTERFACE);
+  http_path_add("/channeltags",    NULL, extjs_channeltags,    ACCESS_WEB_INTERFACE);
+  http_path_add("/confignames",    NULL, extjs_confignames,    ACCESS_WEB_INTERFACE);
+  http_path_add("/epg",            NULL, extjs_epg,            ACCESS_WEB_INTERFACE);
+  http_path_add("/epgrelated",     NULL, extjs_epgrelated,     ACCESS_WEB_INTERFACE);
+  http_path_add("/epgobject",      NULL, extjs_epgobject,      ACCESS_WEB_INTERFACE);
+  http_path_add("/dvr",            NULL, extjs_dvr,            ACCESS_WEB_INTERFACE);
+  http_path_add("/dvrlist",        NULL, extjs_dvrlist,        ACCESS_WEB_INTERFACE);
+  http_path_add("/ecglist",        NULL, extjs_ecglist,        ACCESS_WEB_INTERFACE);
+  http_path_add("/config",         NULL, extjs_config,         ACCESS_WEB_INTERFACE);
+  http_path_add("/languages",      NULL, extjs_languages,      ACCESS_WEB_INTERFACE);
+  http_path_add("/mergechannel",   NULL, extjs_mergechannel,   ACCESS_ADMIN);
+  http_path_add("/iptv/services",  NULL, extjs_iptvservices,   ACCESS_ADMIN);
+  http_path_add("/servicedetails", NULL, extjs_servicedetails, ACCESS_ADMIN);
+  http_path_add("/tv/adapter",     NULL, extjs_tvadapter,      ACCESS_ADMIN);
 
 #if ENABLE_LINUXDVB
   extjs_start_dvb();
