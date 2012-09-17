@@ -395,8 +395,7 @@ page_status(http_connection_t *hc,
   access_log_show_all();
   htsbuf_qprintf(hq,"<accesslog>\n");
   TAILQ_FOREACH(al, &access_log, al_link) {
-    htsbuf_qprintf(hq, "<logentry>\n");
-    htsbuf_qprintf(hq, "<id>%s</id>\n", al->al_id);
+    htsbuf_qprintf(hq, "<logentry id=\"%s\">\n", al->al_id);
     htsbuf_qprintf(hq, "<username>%s</username>\n", al->al_username);
     htsbuf_qprintf(hq, "<starttime>%ld</starttime>\n", al->al_startlog);
     htsbuf_qprintf(hq, "<lastseentime>%ld</lastseentime>\n", al->al_currlog);
@@ -475,8 +474,6 @@ page_status(http_connection_t *hc,
 
   htsbuf_qprintf(hq, "</recordings>\n<subscriptions>");
   htsbuf_qprintf(hq, "%d</subscriptions>\n",subscriptions_active());
-
-/* https://github.com/andyb2000/tvheadend */
 
   pthread_mutex_unlock(&global_lock);
 

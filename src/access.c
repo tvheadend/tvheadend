@@ -624,7 +624,7 @@ access_init(int createdefault)
   htsmsg_t *r, *m;
   access_entry_t *ae;
   const char *s;
-  access_log_t *al;
+/*  access_log_t *al; */
 
   static struct {
     pid_t pid;
@@ -641,8 +641,7 @@ access_init(int createdefault)
 
   /* Initialise access_log */
   tvhlog(LOG_INFO, "accesslogging", "Initialising access logging system");
-  al = access_log_find(NULL, 1);
-  tvhlog(LOG_INFO, "accesslogging", "Default user loaded %s", al->al_id);
+  access_log_find(NULL, 1);
 
   /* dummy access entry */
   access_log_show_all();
