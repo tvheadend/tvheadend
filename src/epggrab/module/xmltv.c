@@ -476,6 +476,7 @@ static int _xmltv_parse_programme
   const char *s, *chid;
   time_t start, stop;
   epggrab_channel_t *ch;
+  epggrab_channel_link_t *ecl;
 
   if(body == NULL) return 0;
 
@@ -483,7 +484,7 @@ static int _xmltv_parse_programme
   if((tags    = htsmsg_get_map(body,    "tags"))    == NULL) return 0;
   if((chid    = htsmsg_get_str(attribs, "channel")) == NULL) return 0;
   if((ch      = _xmltv_channel_find(chid, 0, NULL))   == NULL) return 0;
-  if (ch->channel == NULL) return 0;
+  if (!LIST_FIRST(&ch->channels)) return 0;
   if((s       = htsmsg_get_str(attribs, "start"))   == NULL) return 0;
   start = _xmltv_str2time(s);
   if((s       = htsmsg_get_str(attribs, "stop"))    == NULL) return 0;
@@ -491,8 +492,9 @@ static int _xmltv_parse_programme
 
   if(stop <= start || stop <= dispatch_clock) return 0;
 
-  save |= _xmltv_parse_programme_tags(mod, ch->channel, tags,
-                                      start, stop, stats);
+  LIST_FOREACH(ecl, &ch->channels, link)
+    save |= _xmltv_parse_programme_tags(mod, ecl->channel, tags,
+                                        start, stop, stats);
   return save;
 }
 

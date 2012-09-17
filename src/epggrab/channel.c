@@ -36,7 +36,7 @@
 int epggrab_channel_match ( epggrab_channel_t *ec, channel_t *ch )
 {
   if (!ec || !ch) return 0;
-  if (ec->channel) return 0; // ignore already paired
+  if (LIST_FIRST(&ec->channels)) return 0; // ignore already paired
 
   if (ec->name && !strcmp(ec->name, ch->ch_name)) return 1;
   return 0;
@@ -45,12 +45,18 @@ int epggrab_channel_match ( epggrab_channel_t *ec, channel_t *ch )
 /* Link epggrab channel to real channel */
 void epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch )
 {
+  epggrab_channel_link_t *ecl;
+
   /* No change */
-  if (!ch || ch == ec->channel) return;
+  if (!ch) return;
+  LIST_FOREACH(ecl, &ec->channels, link)
+    if (ecl->channel == ch) return;
 
   tvhlog(LOG_INFO, ec->mod->id, "linking %s to %s",
          ec->id, ch->ch_name);
-  ec->channel = ch;
+  ecl = calloc(1, sizeof(epggrab_channel_link_t));
+  ecl->channel = ch;
+  LIST_INSERT_HEAD(&ec->channels, ecl, link);
   if (ec->name && epggrab_channel_rename)
     channel_rename(ch, ec->name);
   if (ec->icon && epggrab_channel_reicon)
@@ -76,12 +82,14 @@ int epggrab_channel_match_and_link ( epggrab_channel_t *ec, channel_t *ch )
 int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
 {
   int save = 0;
+  epggrab_channel_link_t *ecl;
   if (!ec || !name) return 0;
   if (!ec->name || strcmp(ec->name, name)) {
     if (ec->name) free(ec->name);
     ec->name = strdup(name);
-    if (ec->channel && epggrab_channel_rename)
-      channel_rename(ec->channel, name);
+    if (epggrab_channel_rename)
+      LIST_FOREACH(ecl, &ec->channels, link)
+        channel_rename(ecl->channel, name);
     save = 1;
   }
   return save;
@@ -91,12 +99,14 @@ int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
 int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
 {
   int save = 0;
+  epggrab_channel_link_t *ecl;
   if (!ec->icon || strcmp(ec->icon, icon) ) {
   if (!ec | !icon) return 0;
     if (ec->icon) free(ec->icon);
     ec->icon = strdup(icon);
-    if (ec->channel && epggrab_channel_reicon)
-      channel_set_icon(ec->channel, icon);
+    if (epggrab_channel_reicon)
+      LIST_FOREACH(ecl, &ec->channels, link)
+        channel_set_icon(ecl->channel, icon);
     save = 1;
   }
   return save;
@@ -106,11 +116,13 @@ int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
 int epggrab_channel_set_number ( epggrab_channel_t *ec, int number )
 {
   int save = 0;
+  epggrab_channel_link_t *ecl;
   if (!ec || (number <= 0)) return 0;
   if (ec->number != number) {
     ec->number = number;
-    if (ec->channel && epggrab_channel_renumber)
-      channel_set_number(ec->channel, number);
+    if (epggrab_channel_renumber)
+      LIST_FOREACH(ecl, &ec->channels, link)
+        channel_set_number(ecl->channel, number);
     save = 1;
   }
   return save;
@@ -123,7 +135,7 @@ void epggrab_channel_updated ( epggrab_channel_t *ec )
   if (!ec) return;
 
   /* Find a link */
-  if (!ec->channel)
+  if (!LIST_FIRST(&ec->channels))
     RB_FOREACH(ch, &channel_name_tree, ch_name_link)
       if (epggrab_channel_match_and_link(ec, ch)) break;
 

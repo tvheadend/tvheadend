@@ -349,14 +349,19 @@ extjs_channels_update(htsmsg_t *in)
       char *modid, *ecid;
       epggrab_module_t *mod;
       epggrab_channel_t *ec;
+      epggrab_channel_link_t *ecl;
 
       /* Clear existing */
       LIST_FOREACH(mod, &epggrab_modules, link) {
         if (mod->type != EPGGRAB_OTA && mod->channels) {
           RB_FOREACH(ec, mod->channels, link) {
-            if (ec->channel == ch) {
-              ec->channel = NULL;
-              mod->ch_save(mod, ec);
+            LIST_FOREACH(ecl, &ec->channels, link) {
+              if (ecl->channel == ch) {
+                LIST_REMOVE(ecl, link);
+                free(ecl);
+                mod->ch_save(mod, ec);
+                break;
+              }
             }
           }
         }
@@ -400,6 +405,7 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
   char *epggrabsrc;
   epggrab_module_t *mod;
   epggrab_channel_t *ec;
+  epggrab_channel_link_t *ecl;
 
   if(op == NULL)
     return 400;
@@ -438,15 +444,17 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
       LIST_FOREACH(mod, &epggrab_modules, link) {
         if (mod->type != EPGGRAB_OTA && mod->channels) {
           RB_FOREACH(ec, mod->channels, link) {
-            if (ec->channel == ch) {
-              char id[100];
-              sprintf(id, "%s|%s", mod->id, ec->id);
-              if (!epggrabsrc) {
-                epggrabsrc = strdup(id);
-              } else {
-                epggrabsrc = realloc(epggrabsrc, strlen(epggrabsrc) + 2 + strlen(id));
-                strcat(epggrabsrc, ",");
-                strcat(epggrabsrc, id);
+            LIST_FOREACH(ecl, &ec->channels, link) {
+              if (ecl->channel == ch) {
+                char id[100];
+                sprintf(id, "%s|%s", mod->id, ec->id);
+                if (!epggrabsrc) {
+                  epggrabsrc = strdup(id);
+                } else {
+                  epggrabsrc = realloc(epggrabsrc, strlen(epggrabsrc) + 2 + strlen(id));
+                  strcat(epggrabsrc, ",");
+                  strcat(epggrabsrc, id);
+                }
               }
             }
           }

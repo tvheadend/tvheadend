@@ -354,6 +354,7 @@ static int _pyepg_parse_schedule
   htsmsg_field_t *f;
   epggrab_channel_t *ec;
   const char *str;
+  epggrab_channel_link_t *ecl;
 
   if ( data == NULL ) return 0;
 
@@ -361,12 +362,12 @@ static int _pyepg_parse_schedule
   if ((str  = htsmsg_get_str(attr, "channel")) == NULL) return 0;
   if ((ec   = _pyepg_channel_find(str, 0, NULL)) == NULL) return 0;
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
-  if (!ec->channel) return 0;
 
   HTSMSG_FOREACH(f, tags) {
     if (strcmp(f->hmf_name, "broadcast") == 0) {
-      save |= _pyepg_parse_broadcast(mod, htsmsg_get_map_by_field(f),
-                                     ec->channel, stats);
+      LIST_FOREACH(ecl, &ec->channels, link)
+        save |= _pyepg_parse_broadcast(mod, htsmsg_get_map_by_field(f),
+                                       ecl->channel, stats);
     }
   }
 
