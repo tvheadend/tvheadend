@@ -246,7 +246,7 @@ access_verify(const char *username, const char *password,
      password != NULL && superuser_password != NULL && 
      !strcmp(username, superuser_username) &&
      !strcmp(password, superuser_password)) {
-    if (username) {access_log_update(username, NULL, b);};
+    if (username) {access_log_update(username, "superuser", b);};
     return 0;
   };
 
@@ -273,7 +273,7 @@ access_verify(const char *username, const char *password,
     bits |= ae->ae_rights;
   }
   if (auth_status == 0) {
-   tvhlog(LOG_WARNING, "accesscontrol", "Authentication failure for \"%s\"", username);
+   tvhlog(LOG_WARNING, "accesscontrol", "Authentication failure for \"%s\" from \"%s\"", username, inet_ntoa(si->sin_addr));
   } else {
    if (username) {access_log_update(username, NULL, b);};
   };
@@ -645,7 +645,6 @@ access_init(int createdefault)
   tvhlog(LOG_INFO, "accesslogging", "Default user loaded %s", al->al_id);
 
   /* dummy access entry */
-  access_log_update("andyb", "http", inet_addr("1.1.1.1"));
   access_log_show_all();
 
   dt = dtable_create(&access_dtc, "accesscontrol", NULL);

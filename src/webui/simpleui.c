@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "tvheadend.h"
 #include "http.h"
@@ -374,6 +376,7 @@ page_status(http_connection_t *hc,
   time_t     now;
   double avg[3]; 
   char buf[500];
+  access_log_t *al = NULL;
 
   htsbuf_qprintf(hq, "<?xml version=\"1.0\"?>\n"
                  "<currentload>\n");
@@ -390,6 +393,18 @@ page_status(http_connection_t *hc,
 
   tvhlog(LOG_DEBUG, "webui",  "Dumping current authentication database, you are identified as %s",hc->hc_username);
   access_log_show_all();
+  htsbuf_qprintf(hq,"<accesslog>\n");
+  TAILQ_FOREACH(al, &access_log, al_link) {
+    htsbuf_qprintf(hq, "<logentry>\n");
+    htsbuf_qprintf(hq, "<id>%s</id>\n", al->al_id);
+    htsbuf_qprintf(hq, "<username>%s</username>\n", al->al_username);
+    htsbuf_qprintf(hq, "<starttime>%ld</starttime>\n", al->al_startlog);
+    htsbuf_qprintf(hq, "<lastseentime>%ld</lastseentime>\n", al->al_currlog);
+    htsbuf_qprintf(hq, "<ip>%s</ip>\n", inet_ntoa(al->al_ip));
+    htsbuf_qprintf(hq, "<type>%s</type>\n", al->al_type);
+    htsbuf_qprintf(hq, "</logentry>\n");
+  };
+  htsbuf_qprintf(hq,"</accesslog>\n");
 
   htsbuf_qprintf(hq,"<recordings>\n");
 
