@@ -646,7 +646,7 @@ htsmsg_t *epg_season_serialize ( epg_season_t *season )
 
 epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save )
 {
-  epg_object_t **skel = _epg_brand_skel();
+  epg_object_t **skel = _epg_season_skel();
   epg_season_t *es;
   epg_brand_t *eb;
   uint32_t u32;
@@ -1074,7 +1074,7 @@ htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
 
 epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
 {
-  epg_object_t **skel = _epg_brand_skel();
+  epg_object_t **skel = _epg_episode_skel();
   epg_episode_t *ee;
   epg_season_t *es;
   epg_brand_t *eb;
