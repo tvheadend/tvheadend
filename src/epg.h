@@ -102,25 +102,27 @@ typedef enum epg_object_type
 /* Object */
 struct epg_object
 {
-  RB_ENTRY(epg_object)    uri_link;    ///< Global URI link
-  LIST_ENTRY(epg_object)  id_link;     ///< Global (ID) link
-  LIST_ENTRY(epg_object)  un_link;     ///< Global unref'd link
-  LIST_ENTRY(epg_object)  up_link;     ///< Global updated link
+  RB_ENTRY(epg_object)    uri_link;   ///< Global URI link
+  LIST_ENTRY(epg_object)  id_link;    ///< Global (ID) link
+  LIST_ENTRY(epg_object)  un_link;    ///< Global unref'd link
+  LIST_ENTRY(epg_object)  up_link;    ///< Global updated link
  
   epg_object_type_t       type;       ///< Specific object type
   uint32_t                id;         ///< Internal ID
   char                   *uri;        ///< Unique ID (from grabber)
+  time_t                  created;    ///< Time the object was created
+  time_t                  updated;    ///< Last time object was changed
 
   int                     _updated;   ///< Flag to indicate updated
   int                     refcount;   ///< Reference counting
   // Note: could use LIST_ENTRY field to determine this!
 
-  struct epggrab_module  *grabber;   ///< Originating grabber
+  struct epggrab_module  *grabber;    ///< Originating grabber
 
-  void (*getref)  ( void *o ); ///< Get a reference
-  void (*putref)  ( void *o ); ///< Release a reference
-  void (*destroy) ( void *o ); ///< Delete the object
-  void (*updated) ( void *o ); ///< Updated
+  void (*getref)  ( void *o );        ///< Get a reference
+  void (*putref)  ( void *o ); 	      ///< Release a reference
+  void (*destroy) ( void *o );        ///< Delete the object
+  void (*update)  ( void *o );        ///< Updated
 };
 
 /* Get an object by ID (special case usage) */

@@ -53,6 +53,10 @@ static void *htsp_server;
 
 #define HTSP_PROTO_VERSION 6
 
+#define HTSP_ASYNC_OFF  0x00
+#define HTSP_ASYNC_ON   0x01
+#define HTSP_ASYNC_EPG  0x02
+
 #define HTSP_PRIV_MASK (ACCESS_STREAMING)
 
 extern char *dvr_storage;
@@ -95,7 +99,6 @@ typedef struct htsp_msg_q {
   int hmq_length;
   int hmq_payload;          /* Bytes of streaming payload that's enqueued */
 } htsp_msg_q_t;
-
 
 /**
  *
@@ -463,7 +466,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
  *
  */
 static htsmsg_t *
-htsp_build_event(epg_broadcast_t *e, const char *method, const char *lang )
+htsp_build_event
+  (epg_broadcast_t *e, const char *method, const char *lang, time_t update )
 {
   htsmsg_t *out;
   epg_broadcast_t *n;
@@ -471,6 +475,20 @@ htsp_build_event(epg_broadcast_t *e, const char *method, const char *lang )
   epg_genre_t *g;
   epg_episode_num_t epnum;
   const char *str;
+  epg_episode_t *ee = e->episode;
+
+  /* Ignore? */
+  if (update) {
+    int ignore = 1;
+    if      (e->updated > update) ignore = 0;
+    else if (e->serieslink && e->serieslink->updated > update) ignore = 0;
+    else if (ee) {
+           if (ee->updated > update) ignore = 0;
+      else if (ee->brand  && ee->brand->updated > update)  ignore = 0;
+      else if (ee->season && ee->season->updated > update) ignore = 0;
+    }
+    if (ignore) return NULL;
+  }
 
   out = htsmsg_create_map();
 
@@ -492,21 +510,21 @@ htsp_build_event(epg_broadcast_t *e, const char *method, const char *lang )
   if (e->serieslink)
     htsmsg_add_u32(out, "serieslinkId", e->serieslink->id);
 
-  if (e->episode) {
-    htsmsg_add_u32(out, "episodeId", e->episode->id);
-    if (e->episode->brand)
-      htsmsg_add_u32(out, "brandId", e->episode->brand->id);
-    if (e->episode->season)
-      htsmsg_add_u32(out, "seasonId", e->episode->brand->id);
-    if((g = LIST_FIRST(&e->episode->genre)))
+  if (ee) {
+    htsmsg_add_u32(out, "episodeId", ee->id);
+    if (ee->brand)
+      htsmsg_add_u32(out, "brandId", ee->brand->id);
+    if (ee->season)
+      htsmsg_add_u32(out, "seasonId", ee->season->id);
+    if((g = LIST_FIRST(&ee->genre)))
       htsmsg_add_u32(out, "contentType", g->code);
-    if (e->episode->age_rating)
-      htsmsg_add_u32(out, "ageRating", e->episode->age_rating);
-    if (e->episode->star_rating)
-      htsmsg_add_u32(out, "starRating", e->episode->star_rating);
-    if (e->episode->first_aired)
-      htsmsg_add_s64(out, "firstAired", e->episode->first_aired);
-    epg_episode_get_epnum(e->episode, &epnum);
+    if (ee->age_rating)
+      htsmsg_add_u32(out, "ageRating", ee->age_rating);
+    if (ee->star_rating)
+      htsmsg_add_u32(out, "starRating", ee->star_rating);
+    if (ee->first_aired)
+      htsmsg_add_s64(out, "firstAired", ee->first_aired);
+    epg_episode_get_epnum(ee, &epnum);
     if (epnum.s_num) {
       htsmsg_add_u32(out, "seasonNumber", epnum.s_num);
       if (epnum.s_cnt)
@@ -524,8 +542,8 @@ htsp_build_event(epg_broadcast_t *e, const char *method, const char *lang )
     }
     if (epnum.text)
       htsmsg_add_str(out, "episodeOnscreen", epnum.text);
-    if (e->episode->image)
-      htsmsg_add_str(out, "image", e->episode->image);
+    if (ee->image)
+      htsmsg_add_str(out, "image", ee->image);
   }
 
   if((de = dvr_entry_find_by_event(e)) != NULL) {
@@ -690,7 +708,9 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsp->htsp_async_mode)
     return NULL; /* already in async mode */
 
-  htsp->htsp_async_mode = 1;
+  htsp->htsp_async_mode = HTSP_ASYNC_ON;
+  if(epg)
+    htsp->htsp_async_mode |= HTSP_ASYNC_EPG;
 
   /* Send all enabled and external tags */
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
@@ -715,8 +735,8 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
     RB_FOREACH(ch, &channel_name_tree, ch_name_link)
       RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
         if (epgMaxTime && ebc->start > epgMaxTime) break;
-        htsmsg_t *e = htsp_build_event(ebc, "eventAdd", lang);
-        htsp_send_message(htsp, e, NULL);
+        htsmsg_t *e = htsp_build_event(ebc, "eventAdd", lang, lastUpdate);
+        if (e) htsp_send_message(htsp, e, NULL);
       }
   }
 
@@ -748,7 +768,7 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
   if((e = epg_broadcast_find_by_id(eventId, NULL)) == NULL)
     return htsp_error("Event does not exist");
 
-  return htsp_build_event(e, NULL, lang);
+  return htsp_build_event(e, NULL, lang, 0);
 }
 
 /**
@@ -787,7 +807,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
     events = htsmsg_create_list();
     while (e) {
       if (maxTime && e->start > maxTime) break;
-      htsmsg_add_msg(events, NULL, htsp_build_event(e, NULL, lang));
+      htsmsg_add_msg(events, NULL, htsp_build_event(e, NULL, lang, 0));
       if (numFollowing == 1) break;
       if (numFollowing) numFollowing--;
       e = epg_broadcast_get_next(e);
@@ -800,7 +820,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
       int num = numFollowing;
       RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {
         if (maxTime && e->start > maxTime) break;
-        htsmsg_add_msg(events, NULL, htsp_build_event(e, NULL, lang));
+        htsmsg_add_msg(events, NULL, htsp_build_event(e, NULL, lang, 0));
         if (num == 1) break;
         if (num) num--;
       }
@@ -857,7 +877,8 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
     array = htsmsg_create_list();
     for(i = 0; i < eqr.eqr_entries; ++i) {
       if (full)
-        htsmsg_add_msg(array, NULL, htsp_build_event(eqr.eqr_array[i], NULL, lang));
+        htsmsg_add_msg(array, NULL,
+                       htsp_build_event(eqr.eqr_array[i], NULL, lang, 0));
       else
         htsmsg_add_u32(array, NULL, eqr.eqr_array[i]->id);
     }
@@ -1510,12 +1531,13 @@ htsp_init(void)
  *
  */
 static void
-htsp_async_send(htsmsg_t *m)
+htsp_async_send(htsmsg_t *m, int mode)
 {
   htsp_connection_t *htsp;
 
   LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link)
-    htsp_send_message(htsp, htsmsg_copy(m), NULL);
+    if (htsp->htsp_async_mode & mode)
+      htsp_send_message(htsp, htsmsg_copy(m), NULL);
   htsmsg_destroy(m);
 }
 
@@ -1540,7 +1562,7 @@ htsp_channel_update_current(channel_t *ch)
   next = ch->ch_epg_next;
   htsmsg_add_u32(m, "eventId",     now  ? now->id : 0);
   htsmsg_add_u32(m, "nextEventId", next ? next->id : 0);
-  htsp_async_send(m);
+  htsp_async_send(m, HTSP_ASYNC_ON);
 }
 
 /**
@@ -1549,7 +1571,7 @@ htsp_channel_update_current(channel_t *ch)
 void
 htsp_channel_add(channel_t *ch)
 {
-  htsp_async_send(htsp_build_channel(ch, "channelAdd"));
+  htsp_async_send(htsp_build_channel(ch, "channelAdd"), HTSP_ASYNC_ON);
 }
 
 
@@ -1559,7 +1581,7 @@ htsp_channel_add(channel_t *ch)
 void
 htsp_channel_update(channel_t *ch)
 {
-  htsp_async_send(htsp_build_channel(ch, "channelUpdate"));
+  htsp_async_send(htsp_build_channel(ch, "channelUpdate"), HTSP_ASYNC_ON);
 }
 
 
@@ -1572,7 +1594,7 @@ htsp_channel_delete(channel_t *ch)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_u32(m, "channelId", ch->ch_id);
   htsmsg_add_str(m, "method", "channelDelete");
-  htsp_async_send(m);
+  htsp_async_send(m, HTSP_ASYNC_ON);
 }
 
 
@@ -1582,7 +1604,7 @@ htsp_channel_delete(channel_t *ch)
 void
 htsp_tag_add(channel_tag_t *ct)
 {
-  htsp_async_send(htsp_build_tag(ct, "tagAdd", 1));
+  htsp_async_send(htsp_build_tag(ct, "tagAdd", 1), HTSP_ASYNC_ON);
 }
 
 
@@ -1592,7 +1614,7 @@ htsp_tag_add(channel_tag_t *ct)
 void
 htsp_tag_update(channel_tag_t *ct)
 {
-  htsp_async_send(htsp_build_tag(ct, "tagUpdate", 1));
+  htsp_async_send(htsp_build_tag(ct, "tagUpdate", 1), HTSP_ASYNC_ON);
 }
 
 
@@ -1605,7 +1627,7 @@ htsp_tag_delete(channel_tag_t *ct)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_u32(m, "tagId", ct->ct_identifier);
   htsmsg_add_str(m, "method", "tagDelete");
-  htsp_async_send(m);
+  htsp_async_send(m, HTSP_ASYNC_ON);
 }
 
 
@@ -1615,7 +1637,7 @@ htsp_tag_delete(channel_tag_t *ct)
 void
 htsp_dvr_entry_add(dvr_entry_t *de)
 {
-  htsp_async_send(htsp_build_dvrentry(de, "dvrEntryAdd"));
+  htsp_async_send(htsp_build_dvrentry(de, "dvrEntryAdd"), HTSP_ASYNC_ON);
 }
 
 
@@ -1625,7 +1647,7 @@ htsp_dvr_entry_add(dvr_entry_t *de)
 void
 htsp_dvr_entry_update(dvr_entry_t *de)
 {
-  htsp_async_send(htsp_build_dvrentry(de, "dvrEntryUpdate"));
+  htsp_async_send(htsp_build_dvrentry(de, "dvrEntryUpdate"), HTSP_ASYNC_ON);
 }
 
 
@@ -1638,7 +1660,49 @@ htsp_dvr_entry_delete(dvr_entry_t *de)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_u32(m, "id", de->de_id);
   htsmsg_add_str(m, "method", "dvrEntryDelete");
-  htsp_async_send(m);
+  htsp_async_send(m, HTSP_ASYNC_ON);
+}
+
+/**
+ * Event added
+ */
+void
+htsp_event_add(epg_broadcast_t *ebc)
+{
+  htsp_connection_t *htsp;
+  htsmsg_t *m;
+  LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
+    if (!(htsp->htsp_async_mode & HTSP_ASYNC_EPG)) continue;
+    m = htsp_build_event(ebc, "eventAdd", htsp->htsp_language, 0);
+    htsp_send_message(htsp, m, NULL);
+  }
+}
+
+/**
+ * Event updated
+ */
+void
+htsp_event_update(epg_broadcast_t *ebc)
+{
+  htsp_connection_t *htsp;
+  htsmsg_t *m;
+  LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
+    if (!(htsp->htsp_async_mode & HTSP_ASYNC_EPG)) continue;
+    m = htsp_build_event(ebc, "eventUpdate", htsp->htsp_language, 0);
+    htsp_send_message(htsp, m, NULL);
+  }
+}
+
+/**
+ * Event deleted
+ */
+void
+htsp_event_delete(epg_broadcast_t *ebc)
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "method", "eventDeleted");
+  htsmsg_add_u32(m, "eventId", ebc->id);
+  htsp_async_send(m, HTSP_ASYNC_EPG);
 }
 
 const static char frametypearray[PKT_NTYPES] = {
