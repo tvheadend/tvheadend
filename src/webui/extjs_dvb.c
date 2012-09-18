@@ -150,10 +150,14 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(r, "automux", tda->tda_autodiscovery);
     htsmsg_add_u32(r, "skip_initialscan", tda->tda_skip_initialscan);
     htsmsg_add_u32(r, "idlescan", tda->tda_idlescan);
+    htsmsg_add_u32(r, "idleclose", tda->tda_idleclose);
+    htsmsg_add_u32(r, "skip_checksubscr", tda->tda_skip_checksubscr);
     htsmsg_add_u32(r, "qmon", tda->tda_qmon);
     htsmsg_add_u32(r, "dumpmux", tda->tda_dump_muxes);
     htsmsg_add_u32(r, "poweroff", tda->tda_poweroff);
+    htsmsg_add_u32(r, "sidtochan", tda->tda_sidtochan);
     htsmsg_add_u32(r, "nitoid", tda->tda_nitoid);
+    htsmsg_add_u32(r, "disable_pmt_monitor", tda->tda_disable_pmt_monitor);
     htsmsg_add_str(r, "diseqcversion", 
 		   ((const char *[]){"DiSEqC 1.0 / 2.0",
 				       "DiSEqC 1.1 / 2.1"})
@@ -175,14 +179,26 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     s = http_arg_get(&hc->hc_req_args, "idlescan");
     dvb_adapter_set_idlescan(tda, !!s);
 
+    s = http_arg_get(&hc->hc_req_args, "idleclose");
+    dvb_adapter_set_idleclose(tda, !!s);
+
+    s = http_arg_get(&hc->hc_req_args, "skip_checksubscr");
+    dvb_adapter_set_skip_checksubscr(tda, !!s);
+
     s = http_arg_get(&hc->hc_req_args, "qmon");
     dvb_adapter_set_qmon(tda, !!s);
 
     s = http_arg_get(&hc->hc_req_args, "poweroff");
     dvb_adapter_set_poweroff(tda, !!s);
 
+    s = http_arg_get(&hc->hc_req_args, "sidtochan");
+    dvb_adapter_set_sidtochan(tda, !!s);
+
     s = http_arg_get(&hc->hc_req_args, "dumpmux");
     dvb_adapter_set_dump_muxes(tda, !!s);
+
+    s = http_arg_get(&hc->hc_req_args, "disable_pmt_monitor");
+    dvb_adapter_set_disable_pmt_monitor(tda, !!s);
 
     if((s = http_arg_get(&hc->hc_req_args, "nitoid")) != NULL)
       dvb_adapter_set_nitoid(tda, atoi(s));

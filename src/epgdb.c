@@ -34,6 +34,7 @@
 extern epg_object_tree_t epg_brands;
 extern epg_object_tree_t epg_seasons;
 extern epg_object_tree_t epg_episodes;
+extern epg_object_tree_t epg_serieslinks;
 
 /* **************************************************************************
  * Load
@@ -118,6 +119,10 @@ static void _epgdb_v2_process ( htsmsg_t *m, epggrab_stats_t *stats )
   /* Episode */
   } else if ( !strcmp(sect, "episodes") ) {
     if (epg_episode_deserialize(m, 1, &save)) stats->episodes.total++;
+  
+  /* Series link */
+  } else if ( !strcmp(sect, "serieslinks") ) {
+    if (epg_serieslink_deserialize(m, 1, &save)) stats->seasons.total++;
   
   /* Broadcasts */
   } else if ( !strcmp(sect, "broadcasts") ) {
@@ -283,6 +288,12 @@ void epg_save ( void )
   RB_FOREACH(eo,  &epg_episodes, uri_link) {
     if (_epg_write(fd, epg_episode_serialize((epg_episode_t*)eo))) return;
     stats.episodes.total++;
+  }
+  if ( _epg_write_sect(fd, "serieslinks") ) return;
+  RB_FOREACH(eo, &epg_serieslinks, uri_link) {
+    if (_epg_write(fd, epg_serieslink_serialize((epg_serieslink_t*)eo)))
+      return;
+    stats.seasons.total++;
   }
   if ( _epg_write_sect(fd, "broadcasts") ) return;
   RB_FOREACH(ch, &channel_name_tree, ch_name_link) {

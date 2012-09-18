@@ -1,6 +1,6 @@
 /*
  *  Services
- *  Copyright (C) 2010 Andreas Öman
+ *  Copyright (C) 2010 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -47,6 +47,7 @@
 #include "atomic.h"
 #include "dvb/dvb.h"
 #include "htsp.h"
+#include "lang_codes.h"
 
 #define SERVICE_HASH_WIDTH 101
 
@@ -336,15 +337,6 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
       continue;
     }
 
-    if(t->s_quality_index(t) < 10) {
-      if(loginfo != NULL) {
-	tvhlog(LOG_NOTICE, "Service", 
-	       "%s: Skipping \"%s\" -- Quality below 10%%",
-	       loginfo, service_nicename(t));
-	err = SM_CODE_BAD_SIGNAL;
-      }
-      continue;
-    }
     vec[cnt++] = t;
     tvhlog(LOG_DEBUG, "Service",
     		"%s: Adding adapter \"%s\" for service \"%s\"",
@@ -372,6 +364,15 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
   /* First, try all services without stealing */
   for(i = off; i < cnt; i++) {
     t = vec[i];
+    if(t->s_quality_index(t) < 10) {
+      if(loginfo != NULL) {
+         tvhlog(LOG_NOTICE, "Service",
+	       "%s: Skipping \"%s\" -- Quality below 10%%",
+	       loginfo, service_nicename(t));
+         err = SM_CODE_BAD_SIGNAL;
+      }
+      continue;
+    }
     tvhlog(LOG_DEBUG, "Service", "%s: Probing adapter \"%s\" without stealing for service \"%s\"",
 	     loginfo, service_adapter_nicename(t), service_nicename(t));
 
@@ -750,6 +751,13 @@ static struct strtab stypetab[] = {
   { "SDTV",         ST_SDTV },
   { "Radio",        ST_RADIO },
   { "HDTV",         ST_HDTV },
+  { "HDTV",         ST_EX_HDTV },
+  { "SDTV",         ST_EX_SDTV },
+  { "HDTV",         ST_EP_HDTV },
+  { "HDTV",         ST_ET_HDTV },
+  { "SDTV",         ST_DN_SDTV },
+  { "HDTV",         ST_DN_HDTV },
+  { "SDTV",         ST_SK_SDTV },
   { "SDTV-AC",      ST_AC_SDTV },
   { "HDTV-AC",      ST_AC_HDTV },
 };
@@ -769,6 +777,13 @@ service_is_tv(service_t *t)
   return 
     t->s_servicetype == ST_SDTV    ||
     t->s_servicetype == ST_HDTV    ||
+    t->s_servicetype == ST_EX_HDTV ||
+    t->s_servicetype == ST_EX_SDTV ||
+    t->s_servicetype == ST_EP_HDTV ||
+    t->s_servicetype == ST_ET_HDTV ||
+    t->s_servicetype == ST_DN_SDTV ||
+    t->s_servicetype == ST_DN_HDTV ||
+    t->s_servicetype == ST_SK_SDTV ||
     t->s_servicetype == ST_AC_SDTV ||
     t->s_servicetype == ST_AC_HDTV;
 }

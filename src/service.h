@@ -81,7 +81,7 @@ typedef struct elementary_stream {
   uint16_t es_aspect_num;
   uint16_t es_aspect_den;
 
-  char es_lang[4];           /* ISO 639 3-letter language code */
+  char es_lang[4];           /* ISO 639 2B 3-letter language code */
   uint16_t es_composition_id;
   uint16_t es_ancillary_id;
 
@@ -310,6 +310,11 @@ typedef struct service {
    */
   char *s_provider;
 
+  /**
+   * Default authority
+   */
+  char *s_default_authority;
+
   enum {
     /* Service types defined in EN 300 468 */
 
@@ -318,6 +323,13 @@ typedef struct service {
     ST_HDTV       = 0x11,   /* HDTV (MPEG2) */
     ST_AC_SDTV    = 0x16,   /* Advanced codec SDTV */
     ST_AC_HDTV    = 0x19,   /* Advanced codec HDTV */
+    ST_EX_HDTV    = 0x91,   /* Bell TV HDTV */
+    ST_EX_SDTV    = 0x96,   /* Bell TV SDTV */
+    ST_EP_HDTV    = 0xA0,   /* Bell TV tiered HDTV */
+    ST_ET_HDTV    = 0xA6,   /* Bell TV tiered HDTV */
+    ST_DN_SDTV    = 0xA8,   /* DN advanced SDTV */
+    ST_DN_HDTV    = 0xA4,   /* DN HDTV */
+    ST_SK_SDTV    = 0xd3    /* SKY TV SDTV */
   } s_servicetype;
 
 

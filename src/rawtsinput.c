@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <time.h>
 
 #include "tvheadend.h"
 #include "rawtsinput.h"
@@ -266,7 +267,7 @@ process_ts_packet(rawts_t *rt, uint8_t *tsb)
 	  slp.tv_sec  =  d / 1000000;
 	  slp.tv_nsec = (d % 1000000) * 1000;
 	
-	  clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &slp, NULL);
+	  clock_nanosleep(CLOCK_MONOTONIC_COARSE, TIMER_ABSTIME, &slp, NULL);
 	  didsleep = 1;
 	}
 	t->s_pcr_last = pcr;
@@ -285,6 +286,7 @@ raw_ts_reader(void *aux)
 {
   rawts_t *rt = aux;
   uint8_t tsblock[188];
+  struct timespec tm = {0, 0};
   int c = 0;
   int i;
 
@@ -298,6 +300,7 @@ raw_ts_reader(void *aux)
       c++;
       process_ts_packet(rt, tsblock);
     }
+    nanosleep(&tm, NULL);
   }
 
   return NULL;

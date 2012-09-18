@@ -11,7 +11,7 @@ TVH=$(cd $(dirname $0)/..; pwd)/data/dvb-scan
 rm -rf $TMP
 mkdir -p $TMP
 cd $TMP
-curl $URL | tar xj
+(wget -O - -q $URL | tar xj) || (curl $URL | tar xj)
 cd dvb-apps*
 
 # Copy to TVH

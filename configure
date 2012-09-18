@@ -39,10 +39,19 @@ parse_args $*
 #
 # Compiler
 #
-check_cc || die
+check_cc || die 'No C compiler found'
 check_cc_header execinfo
 check_cc_option mmx
 check_cc_option sse2
+
+check_cc_snippet getloadavg '#include <stdlib.h> 
+void test() { getloadavg(NULL,0); }'
+
+#
+# Python
+#
+check_py || echo 'WARN: no python binary found'
+check_py_import gzip pygzip
 
 #
 # SSL
@@ -67,11 +76,9 @@ fi
 #
 # Bundling
 #
-if enabled_or_auto bundle; then
-  if enabled zlib; then
-    enable bundle
-  elif enabled bundle; then
-    die "Zlib development support not found (use --disable-bundle)"
+if enabled bundle; then
+  if enabled zlib && ! enabled pygzip; then
+    die "Python gzip module not found (use --disable-zlib or --disable-bundle)"
   fi
 fi
 
@@ -92,7 +99,7 @@ fi
 if enabled linuxdvb && enabled dvbscan; then
   if [ ! -d ${ROOTDIR}/data/dvb-scan ]; then
     echo -n "Fetching dvb-scan files... "
-    ${ROOTDIR}/support/getmuxlist &> /dev/null
+    ${ROOTDIR}/support/getmuxlist &> /dev/null || die "Failed to fetch dvb-scan files (use --disable-dvbscan to skip)"
     echo "done"
   fi
 fi

@@ -142,6 +142,8 @@ dvb_transport_start(service_t *t, unsigned int weight, int force_start)
   if(!r)
     dvb_transport_open_demuxers(tda, t);
 
+  dvb_table_add_pmt(t->s_dvb_mux_instance, t->s_pmt_pid);
+
   return r;
 }
 
@@ -238,6 +240,9 @@ dvb_transport_load(th_dvb_mux_instance_t *tdmi)
     s = htsmsg_get_str(c, "dvb_default_charset");
     t->s_dvb_default_charset = s ? strdup(s) : NULL;
 
+    s = htsmsg_get_str(c, "default_authority");
+    t->s_default_authority = s ? strdup(s) : NULL;
+
     if(htsmsg_get_u32(c, "dvb_eit_enable", &u32))
       u32 = 1;
     t->s_dvb_eit_enable = u32;
@@ -283,6 +288,9 @@ dvb_transport_save(service_t *t)
     htsmsg_add_str(m, "dvb_default_charset", t->s_dvb_default_charset);
   
   htsmsg_add_u32(m, "dvb_eit_enable", t->s_dvb_eit_enable);
+
+  if(t->s_default_authority)
+    htsmsg_add_str(m, "default_authority", t->s_default_authority);
 
   pthread_mutex_lock(&t->s_stream_mutex);
   psi_save_service_settings(m, t);
@@ -365,6 +373,13 @@ service_t *
 dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
 		   const char *identifier)
 {
+  return dvb_transport_find2(tdmi, sid, pmt_pid, identifier, NULL);
+}
+
+service_t *
+dvb_transport_find2(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
+		   const char *identifier, int *save)
+{
   service_t *t;
   char tmp[200];
   char buf[200];
@@ -388,6 +403,7 @@ dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   tvhlog(LOG_DEBUG, "dvb", "Add service \"%s\" on \"%s\"", identifier, buf);
 
   t = service_create(identifier, SERVICE_TYPE_DVB, S_MPEG_TS);
+  if (save) *save = 1;
 
   t->s_dvb_service_id = sid;
   t->s_pmt_pid        = pmt_pid;

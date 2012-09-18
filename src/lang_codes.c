@@ -315,6 +315,8 @@ const lang_code_t lang_codes[] = {
   { "nah", NULL, NULL , "Nahuatl languages" },
   { "nai", NULL, NULL , "North American Indian languages" },
   { "nap", NULL, NULL , "Neapolitan" },
+  { "nar", NULL, NULL , "Narration: (audio described)"},
+  // Note: above is not part of the ISO spec, but is used in DVB
   { "nau", "na", NULL , "Nauru" },
   { "nav", "nv", NULL , "Navajo; Navaho" },
   { "ndo", "ng", NULL , "Ndonga" },
@@ -357,6 +359,8 @@ const lang_code_t lang_codes[] = {
   { "por", "pt", NULL , "Portuguese" },
   { "pra", NULL, NULL , "Prakrit languages" },
   { "pus", "ps", NULL , "Pushto; Pashto" },
+  { "qaa", NULL, NULL , "Reserved" },
+  // Note: above is actually range from qaa to qtz
   { "que", "qu", NULL , "Quechua" },
   { "raj", NULL, NULL , "Rajasthani" },
   { "rap", NULL, NULL , "Rapanui" },
@@ -458,6 +462,7 @@ const lang_code_t lang_codes[] = {
   { "umb", NULL, NULL , "Umbundu" },
   { "urd", "ur", NULL , "Urdu" },
   { "uzb", "uz", NULL , "Uzbek" },
+  { "v.o", NULL, NULL , "Voice Original" },
   { "vai", NULL, NULL , "Vai" },
   { "ven", "ve", NULL , "Venda" },
   { "vie", "vi", NULL , "Vietnamese" },
@@ -493,41 +498,91 @@ const lang_code_t lang_codes[] = {
  * Functions
  * *************************************************************************/
 
-const char *lang_code_get ( const char *code )
+static const lang_code_t *_lang_code_get ( const char *code, size_t len )
 {
   int i;
   char tmp[4];
 
-  if (code && *code) {
+  if (code && *code && len) {
 
     /* Extract the code (lowercase) */
     i = 0;
-    while (i < 3 && *code) {
+    while (i < 3 && *code && len) {
       if (*code == ';' || *code == ',' || *code == '-') break;
       if (*code != ' ')
         tmp[i++] = *code | 0x20; // |0x20 = lower case
       code++;
+      len--;
     }
     tmp[i] = '\0';
+
+    /* Convert special case (qaa..qtz) */
+    if (*tmp == 'q') {
+      if (tmp[1] >= 'a' && tmp[1] <= 'z' && tmp[2] >= 'a' && tmp[2] <= 'z') {
+        tmp[1] = 'a';
+        tmp[2] = 'a';
+      }
+    }
 
     /* Search */
     if (i) {
       const lang_code_t *c = lang_codes;
       while (c->code2b) {
-        if ( !strcmp(tmp, c->code2b) )              return c->code2b;
-        if ( c->code1  && !strcmp(tmp, c->code1) )  return c->code2b;
-        if ( c->code2t && !strcmp(tmp, c->code2t) ) return c->code2b;
+        if ( !strcmp(tmp, c->code2b) )              return c;
+        if ( c->code1  && !strcmp(tmp, c->code1) )  return c;
+        if ( c->code2t && !strcmp(tmp, c->code2t) ) return c;
         c++;
       }
     }
   }
-  return lang_codes[0].code2b;
+  return &lang_codes[0];
+}
+
+const char *lang_code_get ( const char *code )
+{
+  return lang_code_get3(code)->code2b;
+}
+
+const char *lang_code_get2 ( const char *code, size_t len )
+{
+  return _lang_code_get(code, len)->code2b;
+}
+
+const lang_code_t *lang_code_get3 ( const char *code )
+{
+  return _lang_code_get(code, strlen(code ?: ""));
 }
 
 const char **lang_code_split ( const char *codes )
 {
+  int i = 0;
+  const lang_code_t **lcs = lang_code_split2(codes);
+  const char **ret;
+
+  if(!lcs) return NULL;
+
+  while(lcs[i])
+    i++;
+
+  ret = calloc(1+i, sizeof(char*));
+
+  i = 0;
+  while(lcs[i]) {
+      ret[i] = lcs[i]->code2b;
+      i++;
+  }
+  ret[i] = NULL;
+  free(lcs);
+
+  return ret;
+}
+
+const lang_code_t **lang_code_split2 ( const char *codes )
+{
   int n;
-  const char *c, *p, **ret;
+  const char *c, *p;
+  const lang_code_t **ret;
+  const lang_code_t *co;
 
   /* Defaults */
   if (!codes) codes = config_get_language();
@@ -542,19 +597,21 @@ const char **lang_code_split ( const char *codes )
     if (*c == ',') n++;
     c++;
   }
-  ret = calloc(2+n, sizeof(char*));
+  ret = calloc(2+n, sizeof(lang_code_t*));
 
   /* Create list */
   n = 0;
   p = c = codes;
   while (*c) {
     if (*c == ',') {
-      ret[n++] = lang_code_get(p);
+      co = lang_code_get3(p);
+      if(co)
+        ret[n++] = co;
       p = c + 1;
     }
     c++;
   }
-  if (*p) ret[n++] = lang_code_get(p);
+  if (*p) ret[n++] = lang_code_get3(p);
   ret[n] = NULL;
 
   return ret;

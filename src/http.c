@@ -144,7 +144,6 @@ static const char *cachemonths[12] = {
   "Dec"
 };
 
-
 /**
  * Transmit a HTTP reply
  */

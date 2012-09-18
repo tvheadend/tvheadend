@@ -35,10 +35,17 @@ CFLAGS  += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR}
 LDFLAGS += -lrt -ldl -lpthread
 
 #
+# Other config
+#
+
+BUNDLE_FLAGS-${CONFIG_ZLIB} = -z
+BUNDLE_FLAGS = ${BUNDLE_FLAGS-yes}
+
+#
 # Binaries/Scripts
 #
 
-MKBUNDLE = $(CURDIR)/support/mkbundle
+MKBUNDLE = $(PYTHON) $(CURDIR)/support/mkbundle
 
 #
 # Debug/Output
@@ -125,6 +132,7 @@ SRCS += src/webui/webui.c \
 	src/webui/extjs.c \
 	src/webui/simpleui.c \
 	src/webui/statedump.c \
+	src/webui/html.c\
 
 SRCS += src/muxer.c \
 	src/muxer_pass.c \
@@ -165,8 +173,8 @@ SRCS-$(CONFIG_AVAHI) += src/avahi.c
 # Optimised code
 SRCS-${CONFIG_MMX}  += src/ffdecsa/ffdecsa_mmx.c
 SRCS-${CONFIG_SSE2} += src/ffdecsa/ffdecsa_sse2.c
-${BUILDDIR}/src/ffdecsa/ffdecsa_mmx.o  : CFLAGS = -mmmx
-${BUILDDIR}/src/ffdecsa/ffdecsa_sse2.o : CFLAGS = -msse2
+${BUILDDIR}/src/ffdecsa/ffdecsa_mmx.o  : CFLAGS += -mmmx
+${BUILDDIR}/src/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
 
 # File bundles
 SRCS-${CONFIG_BUNDLE}     += bundle.c
@@ -242,4 +250,4 @@ $(BUILDDIR)/bundle.o: $(BUILDDIR)/bundle.c
 
 $(BUILDDIR)/bundle.c:
 	@mkdir -p $(dir $@)
-	$(MKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d -z $(BUNDLES)
+	$(MKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d $(BUNDLE_FLAGS) $(BUNDLES)

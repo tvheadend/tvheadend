@@ -19,6 +19,8 @@
 #ifndef SPAWN_H
 #define SPAWN_H
 
+int find_exec ( const char *name, char *out, size_t len );
+
 int spawn_and_store_stdout(const char *prog, char *argv[], char **outp);
 
 int spawnv(const char *prog, char *argv[]);

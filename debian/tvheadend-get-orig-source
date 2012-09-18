@@ -1,0 +1,35 @@
+#!/bin/sh
+
+# Script used to generate the orig source tarball for libcec.
+
+TVH_GIT_URL="git://github.com/tvheadend/tvheadend.git"
+TVH_VERSION="3.1"
+
+rm -rf "tvheadend-${TVH_VERSION}"
+git clone "$TVH_GIT_URL" "tvheadend-${TVH_VERSION}"
+
+# Remove temp files and other cruft from source tarball
+# The find command snippet here was taken from debhelper's dh_clean command
+# with some modification to delete more unneeded files.
+echo "Removing temp files and other cruft from source tarball"
+find tvheadend-${TVH_VERSION} \( \( -type f -a \
+  \( -name '#*#' -o -name '.*~' -o -name '*~' -o -name DEADJOE \
+  -o -name '*.orig' -o -name '*.rej' -o -name '*.bak' \
+  -o -name '.*.orig' -o -name .*.rej -o -name '.SUMS' \
+  -o -name TAGS -o \( -path '*/.deps/*' -a -name '*.P' \) \
+  -o -name config.status -o -name config.cache -o -name config.log \
+  \) -exec rm -f "{}" \; \) -o \
+  \( -type d -a -name autom4te.cache -prune -exec rm -rf "{}" \; \) \)
+rm -rf tvheadend-${TVH_VERSION}/.git
+rm -f tvheadend-${TVH_VERSION}/.gitignore
+rm -rf tvheadend-${TVH_VERSION}/debian
+rm -rf tvheadend-${TVH_VERSION}/Autobuild
+rm -f tvheadend-${TVH_VERSION}/Autobuild.sh
+rm -rf tvheadend-${TVH_VERSION}/contrib/redhat
+
+# Remove empty directories
+echo "Removing empty directories"
+find tvheadend-${TVH_VERSION} -type d -empty -delete
+
+tar --exclude-vcs -czf "tvheadend_${TVH_VERSION}.orig.tar.gz" \
+  "tvheadend-${TVH_VERSION}/"

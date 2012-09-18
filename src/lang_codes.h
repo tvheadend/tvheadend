@@ -31,8 +31,11 @@ extern const lang_code_t lang_codes[];
 
 /* Convert code to preferred internal code */
 const char *lang_code_get ( const char *code );
+const char *lang_code_get2 ( const char *code, size_t len );
+const lang_code_t *lang_code_get3 ( const char *code );
 
 /* Split list of codes as per HTTP Language-Accept spec */
 const char **lang_code_split ( const char *codes );
+const lang_code_t **lang_code_split2 ( const char *codes );
 
 #endif /* __TVH_LANG_CODES_H__ */

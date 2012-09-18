@@ -210,11 +210,11 @@ access_get_hashed(const char *username, const uint8_t digest[20],
 
   if(superuser_username != NULL && superuser_password != NULL) {
 
-    SHA_Init(&shactx);
-    SHA_Update(&shactx, (const uint8_t *)superuser_password,
-	       strlen(superuser_password));
-    SHA_Update(&shactx, challenge, 32);
-    SHA_Final(d, &shactx);
+    SHA1_Init(&shactx);
+    SHA1_Update(&shactx, (const uint8_t *)superuser_password,
+		strlen(superuser_password));
+    SHA1_Update(&shactx, challenge, 32);
+    SHA1_Final(d, &shactx);
 
     if(!strcmp(superuser_username, username) && !memcmp(d, digest, 20))
       return 0xffffffff;
@@ -229,9 +229,9 @@ access_get_hashed(const char *username, const uint8_t digest[20],
     if((b & ae->ae_netmask) != ae->ae_network)
       continue; /* IP based access mismatches */
 
-    SHA_Init(&shactx);
-    SHA_Update(&shactx, (const uint8_t *)ae->ae_password,
-	      strlen(ae->ae_password));
+    SHA1_Init(&shactx);
+    SHA1_Update(&shactx, (const uint8_t *)ae->ae_password,
+		strlen(ae->ae_password));
     SHA1_Update(&shactx, challenge, 32);
     SHA1_Final(d, &shactx);
 
@@ -483,6 +483,11 @@ access_record_update(void *opaque, const char *id, htsmsg_t *values,
 
   if(!htsmsg_get_u32(values, "dvrallcfg", &u32))
     access_update_flag(ae, ACCESS_RECORDER_ALL, u32);
+  // Note: dvrallcfg was added post 2.12, to ensure less confusing
+  // migration if this doesn't exist use standard dvr config value
+  else
+    access_update_flag(ae, ACCESS_RECORDER_ALL,
+                       (ae->ae_rights & ACCESS_RECORDER));
 
   if(!htsmsg_get_u32(values, "admin", &u32))
     access_update_flag(ae, ACCESS_ADMIN, u32);

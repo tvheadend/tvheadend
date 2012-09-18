@@ -21,8 +21,8 @@
 
 #include <linux/dvb/version.h>
 #include <linux/dvb/frontend.h>
+#include <pthread.h>
 #include "htsmsg.h"
-
 
 #define DVB_VER_INT(maj,min) (((maj) << 16) + (min))
 
@@ -133,6 +133,8 @@ typedef struct th_dvb_mux_instance {
   char *tdmi_identifier;
   char *tdmi_network;     /* Name of network, from NIT table */
 
+  char *tdmi_default_authority;
+
   struct service_list tdmi_transports; /* via s_mux_link */
 
   TAILQ_ENTRY(th_dvb_mux_instance) tdmi_scan_link;
@@ -174,12 +176,18 @@ typedef struct th_dvb_adapter {
   char *tda_identifier;
   uint32_t tda_autodiscovery;
   uint32_t tda_idlescan;
+  uint32_t tda_idleclose;
+  uint32_t tda_skip_initialscan;
+  uint32_t tda_skip_checksubscr;
   uint32_t tda_qmon;
   uint32_t tda_poweroff;
+  uint32_t tda_sidtochan;
   uint32_t tda_nitoid;
   uint32_t tda_diseqc_version;
+  uint32_t tda_disable_pmt_monitor;
   char *tda_displayname;
 
+  char *tda_fe_path;
   int tda_fe_fd;
   int tda_type;
   struct dvb_frontend_info *tda_fe_info;
@@ -188,7 +196,9 @@ typedef struct th_dvb_adapter {
 
   char *tda_demux_path;
 
-  char *tda_dvr_path;
+  char     *tda_dvr_path;
+  pthread_t tda_dvr_thread;
+  int       tda_dvr_pipe[2];
 
   int tda_hostconnection;
 
@@ -218,8 +228,6 @@ typedef struct th_dvb_adapter {
 			  * return dela values */
 
   uint32_t tda_extrapriority; // extra priority for choosing the best adapter/service
-
-  uint32_t tda_skip_initialscan; // skip the initial scan
 
 } th_dvb_adapter_t;
 
@@ -277,6 +285,10 @@ void dvb_adapter_init(uint32_t adapter_mask);
 
 void dvb_adapter_mux_scanner(void *aux);
 
+void dvb_adapter_start (th_dvb_adapter_t *tda);
+
+void dvb_adapter_stop (th_dvb_adapter_t *tda);
+
 void dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s);
 
 void dvb_adapter_set_auto_discovery(th_dvb_adapter_t *tda, int on);
@@ -285,15 +297,23 @@ void dvb_adapter_set_skip_initialscan(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_idlescan(th_dvb_adapter_t *tda, int on);
 
+void dvb_adapter_set_skip_checksubscr(th_dvb_adapter_t *tda, int on);
+
 void dvb_adapter_set_qmon(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_dump_muxes(th_dvb_adapter_t *tda, int on);
 
+void dvb_adapter_set_idleclose(th_dvb_adapter_t *tda, int on);
+
 void dvb_adapter_set_poweroff(th_dvb_adapter_t *tda, int on);
+
+void dvb_adapter_set_sidtochan(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_nitoid(th_dvb_adapter_t *tda, int nitoid);
 
 void dvb_adapter_set_diseqc_version(th_dvb_adapter_t *tda, unsigned int v);
+
+void dvb_adapter_set_disable_pmt_monitor(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src);
 
@@ -381,6 +401,10 @@ struct service *dvb_transport_find(th_dvb_mux_instance_t *tdmi,
 				   uint16_t sid, int pmt_pid,
 				   const char *identifier);
 
+struct service *dvb_transport_find2(th_dvb_mux_instance_t *tdmi,
+				   uint16_t sid, int pmt_pid,
+				   const char *identifier, int *save);
+
 void dvb_transport_notify(struct service *t);
 
 void dvb_transport_notify_by_adapter(th_dvb_adapter_t *tda);
@@ -392,7 +416,7 @@ htsmsg_t *dvb_transport_build_msg(struct service *t);
  */
 int dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason);
 
-void dvb_fe_stop(th_dvb_mux_instance_t *tdmi);
+void dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune);
 
 
 /**
@@ -404,12 +428,21 @@ void dvb_table_add_default(th_dvb_mux_instance_t *tdmi);
 
 void dvb_table_flush_all(th_dvb_mux_instance_t *tdmi);
 
+void dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid);
+
+void dvb_table_rem_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid);
+
 struct dmx_sct_filter_params *dvb_fparams_alloc(void);
+
 void
 tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
 	int (*callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
 			 uint8_t tableid, void *opaque), void *opaque,
 	const char *name, int flags, int pid, th_dvb_table_t *tdt);
+
+int dvb_pidx11_callback
+  (th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
+   uint8_t tableid, void *opaque);
 
 #define TDT_CRC           0x1
 #define TDT_QUICKREQ      0x2

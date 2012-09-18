@@ -90,9 +90,11 @@ def output_file ( path, name, idx, next = -1 ):
   print >>outf, '  .type    = FB_FILE,'
   print >>outf, '  .name    = "%s",'  % name
   print >>outf, '  .next    = %s,' % n
-  print >>outf, '  .f.size  = %d,' % len(d)
-  print >>outf, '  .f.orig  = %d,' % o
-  print >>outf, '  .f.data  = filebundle_data_%06d,' % idx
+  print >>outf, '  {'
+  print >>outf, '    .f.size  = %d,' % len(d)
+  print >>outf, '    .f.orig  = %d,' % o
+  print >>outf, '    .f.data  = filebundle_data_%06d' % idx
+  print >>outf, '  },'
   print >>outf, '};'
   print >>outf, ''
 
@@ -106,8 +108,10 @@ def output_dir ( path, name, idx, child, count, next = -1 ):
   print >>outf, '  .type    = FB_DIR,'
   print >>outf, '  .name    = "%s",'  % name
   print >>outf, '  .next    = %s,' % n
-  print >>outf, '  .d.count = %d,' % count
-  print >>outf, '  .d.child = &filebundle_entry_%06d,' % child
+  print >>outf, '  {'
+  print >>outf, '    .d.count = %d,' % count
+  print >>outf, '    .d.child = &filebundle_entry_%06d' % child
+  print >>outf, '  },'
   print >>outf, '};'
   print >>outf, ''
 

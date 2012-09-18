@@ -370,6 +370,7 @@ static void *
 tcp_server_start(void *aux)
 {
   tcp_server_launch_t *tsl = aux;
+  struct timeval to;
   int val;
 
   val = 1;
@@ -393,6 +394,9 @@ tcp_server_start(void *aux)
   val = 1;
   setsockopt(tsl->fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
 
+  to.tv_sec  = 30;
+  to.tv_usec =  0;
+  setsockopt(tsl->fd, SOL_SOCKET, SO_SNDTIMEO, &to, sizeof(to));
 
   tsl->start(tsl->fd, tsl->opaque, &tsl->peer, &tsl->self);
   free(tsl);

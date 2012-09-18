@@ -298,11 +298,17 @@ static dvr_entry_t *_dvr_entry_create (
   de->de_creator = strdup(creator);
 
   de->de_desc  = NULL;
-  if (e && e->episode) {
-    de->de_title = lang_str_copy(e->episode->title);
-    if (e->episode->description)
+  // TODO: this really needs updating
+  if (e) {
+    if (e->episode && e->episode->title)
+      de->de_title = lang_str_copy(e->episode->title);
+    if (e->description)
+      de->de_desc  = lang_str_copy(e->description);
+    else if (e->episode && e->episode->description)
       de->de_desc = lang_str_copy(e->episode->description);
-    else if (e->episode->summary)
+    else if (e->summary)
+      de->de_desc = lang_str_copy(e->summary);
+    else if (e->episode && e->episode->summary)
       de->de_desc = lang_str_copy(e->episode->summary);
   } else if (title) {
     de->de_title = lang_str_create();
@@ -987,9 +993,12 @@ dvr_init(void)
       if(!htsmsg_get_u32(m, "episode-in-title", &u32) && u32)
         cfg->dvr_flags |= DVR_EPISODE_IN_TITLE;
 
+      if(!htsmsg_get_u32(m, "clean-title", &u32) && u32)
+        cfg->dvr_flags |= DVR_CLEAN_TITLE;
+
       if(!htsmsg_get_u32(m, "tag-files", &u32) && !u32)
         cfg->dvr_flags &= ~DVR_TAG_FILES;
-     
+
       tvh_str_set(&cfg->dvr_postproc, htsmsg_get_str(m, "postproc"));
     }
 
@@ -1148,6 +1157,7 @@ dvr_save(dvr_config_t *cfg)
   htsmsg_add_u32(m, "whitespace-in-title", !!(cfg->dvr_flags & DVR_WHITESPACE_IN_TITLE));
   htsmsg_add_u32(m, "title-dir", !!(cfg->dvr_flags & DVR_DIR_PER_TITLE));
   htsmsg_add_u32(m, "episode-in-title", !!(cfg->dvr_flags & DVR_EPISODE_IN_TITLE));
+  htsmsg_add_u32(m, "clean-title", !!(cfg->dvr_flags & DVR_CLEAN_TITLE));
   htsmsg_add_u32(m, "tag-files", !!(cfg->dvr_flags & DVR_TAG_FILES));
   if(cfg->dvr_postproc != NULL)
     htsmsg_add_str(m, "postproc", cfg->dvr_postproc);

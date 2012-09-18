@@ -144,15 +144,19 @@ void epggrab_module_parse
 
 void epggrab_module_ch_save ( void *_m, epggrab_channel_t *ch )
 {
-  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_t *a = NULL, *m = htsmsg_create_map();
   epggrab_module_t *mod = _m;
+  epggrab_channel_link_t *ecl;
 
   if (ch->name)
     htsmsg_add_str(m, "name", ch->name);
   if (ch->icon)
     htsmsg_add_str(m, "icon", ch->icon);
-  if (ch->channel)
-    htsmsg_add_u32(m, "channel", ch->channel->ch_id);
+  LIST_FOREACH(ecl, &ch->channels, link) {
+    if (!a) a = htsmsg_create_list();
+    htsmsg_add_u32(a, NULL, ecl->channel->ch_id);
+  }
+  if (a) htsmsg_add_msg(m, "channels", a);
   if (ch->number)
     htsmsg_add_u32(m, "number", ch->number);
 
@@ -171,12 +175,15 @@ void epggrab_module_ch_add ( void *m, channel_t *ch )
 void epggrab_module_ch_rem ( void *m, channel_t *ch )
 {
   epggrab_channel_t *egc;
+  epggrab_channel_link_t *egl;
   epggrab_module_int_t *mod = m;
   RB_FOREACH(egc, mod->channels, link) {
-    if (egc->channel == ch) {
-      egc->channel = NULL;
-      if (mod->ch_save) mod->ch_save(mod, egc);
-      break;
+    LIST_FOREACH(egl, &egc->channels, link) {
+      if (egl->channel == ch) {
+        LIST_REMOVE(egl, link);
+        free(egl);
+        break;
+      }
     }
   }
 }
@@ -192,18 +199,36 @@ static void _epggrab_module_channel_load
   int save = 0;
   const char *str;
   uint32_t u32;
+  htsmsg_t *a;
+  htsmsg_field_t *f;
+  channel_t *ch;
 
-  epggrab_channel_t *ch = epggrab_channel_find(mod->channels, id, 1, &save, mod);
+  epggrab_channel_t *egc
+    = epggrab_channel_find(mod->channels, id, 1, &save, mod);
 
   if ((str = htsmsg_get_str(m, "name")))
-    ch->name = strdup(str);
+    egc->name = strdup(str);
   if ((str = htsmsg_get_str(m, "icon")))
-    ch->icon = strdup(str);
+    egc->icon = strdup(str);
   if(!htsmsg_get_u32(m, "number", &u32))
-    ch->number = u32;
+    egc->number = u32;
+  if ((a = htsmsg_get_list(m, "channels"))) {
+    HTSMSG_FOREACH(f, a) {
+      if ((ch  = channel_find_by_identifier((uint32_t)f->hmf_s64))) {
+        epggrab_channel_link_t *ecl = calloc(1, sizeof(epggrab_channel_link_t));
+        ecl->channel = ch;
+        LIST_INSERT_HEAD(&egc->channels, ecl, link);
+      }
+    }
 
-  if (!htsmsg_get_u32(m, "channel", &u32))
-    ch->channel = channel_find_by_identifier(u32);
+  /* Compat with older 3.1 code */
+  } else if (!htsmsg_get_u32(m, "channel", &u32)) {
+    if ((ch = channel_find_by_identifier(u32))) {
+      epggrab_channel_link_t *ecl = calloc(1, sizeof(epggrab_channel_link_t));
+      ecl->channel = ch;
+      LIST_INSERT_HEAD(&egc->channels, ecl, link);
+    }
+  }
 }
 
 void epggrab_module_channels_load ( epggrab_module_t *mod )

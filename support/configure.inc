@@ -15,6 +15,7 @@
 [ -z "$ARCH"     ] && ARCH=`uname -m`
 [ -z "$OSENV"    ] && OSENV=posix
 [ -z "$CC"       ] && CC=cc
+[ -z "$PYTHON"   ] && PYTHON=python
 
 # Paths
 [ -z "$prefix"   ] && prefix=/usr/local
@@ -42,7 +43,7 @@
 # ###########################################################################
 
 # Output
-TAB="\\033[30G"
+TAB="\\033[40G"
 
 # Text conversion
 function toupper
@@ -118,11 +119,25 @@ function enabled
   [ "$val" == "yes" ] && return 0 || return 1
 }
 
+# Check if disabled
+function disabled
+{
+  local val=$(_enabled $1)
+  [ "$val" == "no" ] && return 0 || return 1
+}
+
 # Check if enabled (or auto)
 function enabled_or_auto
 {
   local val=$(_enabled $1)
   [ "$val" == "yes" -o "$val" == "auto" ] && return 0 || return 1
+}
+
+# Check if disabled (or auto)
+function disabled_or_auto
+{
+  local val=$(_enabled $1)
+  [ "$val" == "no" -o "$val" == "auto" ] && return 0 || return 1
 }
 
 # ###########################################################################
@@ -150,6 +165,7 @@ function show_help
   echo -e "  --cpu=CPU${TAB}Build and optimize for specific CPU"
   echo -e "  --arch=ARCH${TAB}Build for architecture [$ARCH]"
   echo -e "  --platform=PLATFORM${TAB}Build for platform [$PLATFORM]"
+  echo -e "  --python=PYTHON${TAB}Use python binary [$PYTHON]"
   echo ""
   echo "Options"
   for opt in ${OPTIONS[*]}; do
@@ -181,7 +197,7 @@ function parse_args
       *dir|prefix)
         eval "$opt=$val"
         ;;
-      cc|arch|cpu|platform)
+      cc|arch|cpu|platform|python)
         eval "`toupper $opt`=$val"
         ;;
       enable-*)
@@ -212,13 +228,16 @@ function check_pkg
                   | sed 's/<=/ --max-version /'\
                   | sed 's/==/ --exact-version /')
 
+  echo -ne "checking for pkg $pkg $ver ...${TAB}"
+
   # Check for package
   if pkg-config $pkg $ver; then
+    echo "ok"
     enable_pkg $pkg
-    return 0
+  else
+    echo "fail"
+    return 1
   fi
-
-  return 1
 }
 
 # ###########################################################################
@@ -236,7 +255,7 @@ int main() {
  return 0;
 }
 EOF
-  $CC 2>/dev/null $TMPDIR/$$.c -o $TMPDIR/$$.bin $opt
+  $CC $TMPDIR/$$.c -o $TMPDIR/$$.bin $opt &> /dev/null
   RET=$?
   rm -f $TMPDIR/$$.{c,bin}
   return $RET
@@ -249,10 +268,33 @@ function check_cc_header
   local nam=$2
   [ -z "$nam" ] && nam=$hdr
 
+  echo -ne "checking for cc $hdr.h ...${TAB}"
+
   # Enable if supported
   if check_cc "#include <$1.h>"; then
+    echo "ok"
     enable $nam
   else
+    echo "fail"
+    return 1
+  fi
+}
+
+# Check some compiler snippet
+function check_cc_snippet
+{
+  local nam=$1
+  local snp=$2
+  local opt=$3
+
+  echo -ne "checking for cc $nam ...${TAB}"
+
+  # Check if supported
+  if check_cc "$snp" "$opt"; then
+    echo "ok"
+    enable $nam
+  else
+    echo "fail"
     return 1
   fi
 }
@@ -264,10 +306,50 @@ function check_cc_option
   local nam=$2
   [ -z "$nam" ] && nam=$opt
   
+  echo -ne "checking for cc -m$opt ...${TAB}"
+
   # Enable if supported
   if check_cc "" -m${opt}; then
+    echo "ok"
     enable $nam
   else
+    echo "fail"
+    return 1
+  fi
+}
+
+# ###########################################################################
+# Python tests
+# ###########################################################################
+
+# Check python
+function check_py
+{
+  local hdr=$1
+  cat >$TMPDIR/$$.py <<EOF
+$hdr
+EOF
+  $PYTHON $TMPDIR/$$.py &> /dev/null
+  RET=$?
+  rm -f $TMPDIR/$$.py
+  return $RET
+}
+
+# Check python import
+function check_py_import
+{
+  local hdr=$1
+  local nam=$2
+  [ -z "$nam" ] && nam=$hdr
+
+  echo -ne "checking for py module $hdr ...${TAB}"
+
+  # Enable if supported
+  if check_py "import $hdr"; then
+    echo "ok"
+    enable $nam
+  else
+    echo "fail"
     return 1
   fi
 }
@@ -282,9 +364,14 @@ function print_config
   local pkg=
 
   # Compiler settings
+  echo ""
   echo "Compiler:"
   echo -e "  Using C compiler:${TAB}${CC}"
   echo -e "  Build for arch:${TAB}${ARCH}"
+  echo ""
+
+  echo "Binaries:"
+  echo -e "  Using PYTHON:${TAB}${PYTHON}"
   echo ""
 
   # Options
@@ -333,7 +420,11 @@ function write_config
 ROOTDIR  ?= ${ROOTDIR}
 BUILDDIR ?= ${ROOTDIR}/build.${PLATFORM}
 OSENV    ?= ${OSENV}
-ARCH      = ${ARCH}
+ARCH     ?= ${ARCH}
+ifeq (\$(origin CC),default)
+CC        = ${CC}
+endif
+PYTHON   ?= ${PYTHON}
 CFLAGS   += ${CFLAGS}
 LDFLAGS  += ${LDFLAGS}
 prefix    = ${prefix}
