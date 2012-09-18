@@ -82,15 +82,43 @@ access_log_search(const char *username)
 {
   access_log_t *al;
   TAILQ_FOREACH(al, &access_log, al_link)
-  if(!strcmp(al->al_username, username))
+  if(strcmp(al->al_username, username) == 0)
    return al;
  return NULL;
+};
+static access_log_t *
+access_log_search_bysub(uint32_t ip, const char *al_streamdata)
+{
+  access_log_t *al;
+  TAILQ_FOREACH(al, &access_log, al_link) {
+  tvhlog(LOG_DEBUG, "accesslogging", "Searching by sub al_streamdata %s against db: %s",al_streamdata,al->al_streamdata);
+  if(al->al_streamdata != NULL) {
+   if(strcmp(al->al_streamdata, al_streamdata) == 0) {
+    tvhlog(LOG_DEBUG, "accesslogging", "Searching by sub RETURNING %s",al->al_streamdata);
+    return al;
+   };
+  };
+ };
+ return NULL;
+};
+
+void
+access_log_remove_bysub(uint32_t ip, const char *al_streamdata)
+{
+  access_log_t *al;
+  tvhlog(LOG_DEBUG, "accesslogging", "Removing access log by searching ip: %d and stream: %s",ip,al_streamdata);
+  if((al = access_log_search_bysub(ip,al_streamdata)) != NULL) {
+   free(al->al_id);
+   TAILQ_REMOVE(&access_log, al, al_link);
+   free(al);
+  };
 };
 
 void
 access_log_remove(const char *username, uint32_t ip)
 {
   access_log_t *al;
+  tvhlog(LOG_DEBUG, "accesslogging", "Removing access log for user: %s at ip: %d",username,ip);
   if((al = access_log_search(username)) != NULL) {
    free(al->al_id);
    TAILQ_REMOVE(&access_log, al, al_link);
@@ -105,6 +133,7 @@ access_log_update(const char *username, const char *access_type, const char *al_
 /*  tvhlog(LOG_DEBUG, "accesslogging", "Updating access log for user: %s at ip: %d",username,ip); */
   if((al = access_log_search(username)) == NULL) {
 	/* user not logged yet so create */
+        tvhlog(LOG_DEBUG, "accesslogging", "Creating access log for user: %s at ip: %d",username,ip);
 	al = access_log_find(NULL,1);
 	time(&al->al_startlog);
 	time(&al->al_currlog);

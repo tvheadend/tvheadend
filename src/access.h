@@ -118,5 +118,6 @@ void access_log_show_all(void);
 
 void access_log_update(const char *username, const char *access_type, const char *al_streamdata, uint32_t ip);
 void access_log_remove(const char *username, uint32_t ip);
+void access_log_remove_bysub(uint32_t ip, const char *al_streamdata);
 
 #endif /* ACCESS_H_ */
