@@ -215,11 +215,12 @@ static epg_object_t *_epg_object_find_by_uri
   return eo;
 }
 
-static epg_object_t *_epg_object_find_by_id ( uint32_t id, epg_object_type_t type )
+epg_object_t *epg_object_find_by_id ( uint32_t id, epg_object_type_t type )
 {
   epg_object_t *eo;
   LIST_FOREACH(eo, &epg_objects[id & EPG_HASH_MASK], id_link) {
-    if (eo->id == id) return eo->type == type ? eo : NULL;
+    if (eo->id == id)
+      return ((type == EPG_UNDEF) || (eo->type == type)) ? eo : NULL;
   }
   return NULL;
 }
@@ -245,9 +246,11 @@ static htsmsg_t * _epg_object_serialize ( void *o )
 
 static epg_object_t *_epg_object_deserialize ( htsmsg_t *m, epg_object_t *eo )
 {
+  uint32_t u32;
   const char *s;
-  if (htsmsg_get_u32(m, "id",   &eo->id))   return NULL;
-  if (htsmsg_get_u32(m, "type", &eo->type)) return NULL;
+  if (htsmsg_get_u32(m, "id",   &eo->id)) return NULL;
+  if (htsmsg_get_u32(m, "type", &u32))    return NULL;
+  if (u32 != eo->type)                    return NULL;
   eo->uri = (char*)htsmsg_get_str(m, "uri");
   if ((s = htsmsg_get_str(m, "grabber")))
     eo->grabber = epggrab_module_find_by_id(s);
@@ -337,6 +340,45 @@ static int _epg_object_set_u16
   return save;
 }
 
+htsmsg_t *epg_object_serialize ( epg_object_t *eo )
+{
+  if (!eo) return NULL;
+  switch (eo->type) {
+    case EPG_BRAND:
+      return epg_brand_serialize((epg_brand_t*)eo);
+    case EPG_SEASON:
+      return epg_season_serialize((epg_season_t*)eo);
+    case EPG_EPISODE:
+      return epg_episode_serialize((epg_episode_t*)eo);
+    case EPG_BROADCAST:
+      return epg_broadcast_serialize((epg_broadcast_t*)eo);
+    case EPG_SERIESLINK:
+      return epg_serieslink_serialize((epg_serieslink_t*)eo);
+    default:
+      return NULL;
+  }
+}
+
+epg_object_t *epg_object_deserialize ( htsmsg_t *msg, int create, int *save )
+{
+  uint32_t type;
+  if (!msg) return NULL;
+  type = htsmsg_get_u32_or_default(msg, "type", 0);
+  switch (type) {
+    case EPG_BRAND:
+      return (epg_object_t*)epg_brand_deserialize(msg, create, save);
+    case EPG_SEASON:
+      return (epg_object_t*)epg_season_deserialize(msg, create, save);
+    case EPG_EPISODE:
+      return (epg_object_t*)epg_episode_deserialize(msg, create, save);
+    case EPG_BROADCAST:
+      return (epg_object_t*)epg_broadcast_deserialize(msg, create, save);
+    case EPG_SERIESLINK:
+      return (epg_object_t*)epg_serieslink_deserialize(msg, create, save);
+  }
+  return NULL;
+}
+
 /* **************************************************************************
  * Brand
  * *************************************************************************/
@@ -387,7 +429,7 @@ epg_brand_t* epg_brand_find_by_uri
 
 epg_brand_t *epg_brand_find_by_id ( uint32_t id )
 {
-  return (epg_brand_t*)_epg_object_find_by_id(id, EPG_BRAND);
+  return (epg_brand_t*)epg_object_find_by_id(id, EPG_BRAND);
 }
 
 int epg_brand_set_title
@@ -564,7 +606,7 @@ epg_season_t* epg_season_find_by_uri
 
 epg_season_t *epg_season_find_by_id ( uint32_t id )
 {
-  return (epg_season_t*)_epg_object_find_by_id(id, EPG_SEASON);
+  return (epg_season_t*)epg_object_find_by_id(id, EPG_SEASON);
 }
 
 int epg_season_set_summary
@@ -786,7 +828,7 @@ epg_episode_t* epg_episode_find_by_uri
 
 epg_episode_t *epg_episode_find_by_id ( uint32_t id )
 {
-  return (epg_episode_t*)_epg_object_find_by_id(id, EPG_EPISODE);
+  return (epg_episode_t*)epg_object_find_by_id(id, EPG_EPISODE);
 }
 
 int epg_episode_set_title
@@ -960,6 +1002,35 @@ int epg_episode_set_is_bw
   return _epg_object_set_u8(episode, &episode->is_bw, bw, src);
 }
 
+int epg_episode_set_star_rating
+  ( epg_episode_t *episode, uint8_t stars, epggrab_module_t *src )
+{
+  if (!episode) return 0;
+  return _epg_object_set_u8(episode, &episode->star_rating, stars, src);
+}
+
+int epg_episode_set_age_rating
+  ( epg_episode_t *episode, uint8_t age, epggrab_module_t *src )
+{
+  if (!episode) return 0;
+  return _epg_object_set_u8(episode, &episode->age_rating, age, src);
+}
+
+int epg_episode_set_first_aired
+  ( epg_episode_t *episode, time_t aired, epggrab_module_t *src )
+{
+  int save = 0;
+  if (!episode) return 0;
+  if ( !_epg_object_set_grabber(episode, src) && episode->first_aired ) 
+    return 0;
+  if ( episode->first_aired != aired ) {
+    episode->first_aired = aired;
+    _epg_object_set_updated(episode);
+    save = 1;
+  }
+  return save;
+}
+
 static void _epg_episode_add_broadcast 
   ( epg_episode_t *episode, epg_broadcast_t *broadcast )
 {
@@ -1069,6 +1140,12 @@ htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
     htsmsg_add_str(m, "season", episode->season->uri);
   if (episode->is_bw)
     htsmsg_add_u32(m, "is_bw", 1);
+  if (episode->star_rating)
+    htsmsg_add_u32(m, "star_rating", episode->star_rating);
+  if (episode->age_rating)
+    htsmsg_add_u32(m, "age_rating", episode->age_rating);
+  if (episode->first_aired)
+    htsmsg_add_s64(m, "first_aired", episode->first_aired);
   return m;
 }
 
@@ -1083,6 +1160,7 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
   htsmsg_t *sub;
   htsmsg_field_t *f;
   uint32_t u32;
+  int64_t s64;
   lang_str_t *ls;
   lang_str_ele_t *e;
   
@@ -1135,6 +1213,15 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
   
   if (!htsmsg_get_u32(m, "is_bw", &u32))
     *save |= epg_episode_set_is_bw(ee, u32, NULL);
+
+  if (!htsmsg_get_u32(m, "star_rating", &u32))
+    *save |= epg_episode_set_star_rating(ee, u32, NULL);
+
+  if (!htsmsg_get_u32(m, "age_rating", &u32))
+    *save |= epg_episode_set_age_rating(ee, u32, NULL);
+
+  if (!htsmsg_get_s64(m, "first_aired", &s64))
+    *save |= epg_episode_set_first_aired(ee, (time_t)s64, NULL);
 
   return ee;
 }
@@ -1210,7 +1297,7 @@ epg_serieslink_t* epg_serieslink_find_by_uri
 
 epg_serieslink_t *epg_serieslink_find_by_id ( uint32_t id )
 {
-  return (epg_serieslink_t*)_epg_object_find_by_id(id, EPG_SERIESLINK);
+  return (epg_serieslink_t*)epg_object_find_by_id(id, EPG_SERIESLINK);
 }
 
 static void _epg_serieslink_add_broadcast
@@ -1453,7 +1540,7 @@ epg_broadcast_t *epg_broadcast_find_by_id ( uint32_t id, channel_t *ch )
 {
   // Note: I have left channel_t param, just in case I decide to change
   //       to use it for shorter search
-  return (epg_broadcast_t*)_epg_object_find_by_id(id, EPG_BROADCAST);
+  return (epg_broadcast_t*)epg_object_find_by_id(id, EPG_BROADCAST);
 }
 
 epg_broadcast_t *epg_broadcast_find_by_eid ( channel_t *ch, uint16_t eid )
