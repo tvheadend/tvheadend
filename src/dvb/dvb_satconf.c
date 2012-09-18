@@ -290,6 +290,7 @@ dvb_lnblist_get(void)
 
   add_to_lnblist(array, "Universal");
   add_to_lnblist(array, "DBS");
+  add_to_lnblist(array, "DBS Bandstacked");
   add_to_lnblist(array, "Standard");
   add_to_lnblist(array, "Enhanced");
   add_to_lnblist(array, "C-Band");
@@ -312,6 +313,10 @@ dvb_lnb_get_frequencies(const char *id, int *f_low, int *f_hi, int *f_switch)
   } else if(!strcmp(id, "DBS")) {
     *f_low    = 11250000;
     *f_hi     = 0;
+    *f_switch = 0;
+  } else if(!strcmp(id, "DBS Bandstacked")) {
+    *f_low    = 11250000;
+    *f_hi     = 14350000;
     *f_switch = 0;
   } else if(!strcmp(id, "Standard")) {
     *f_low    = 10000000;

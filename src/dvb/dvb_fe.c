@@ -466,20 +466,29 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
       	dvb_lnb_get_frequencies(sc->sc_lnb, &lowfreq, &hifreq, &switchfreq);
     }
 
-    hiband = switchfreq && p->frequency > switchfreq;
-
-    pol = tdmi->tdmi_conf.dmc_polarisation;
+    if(!strcmp(sc->sc_id, "DBS Bandstacked")) {
+      hiband = 0;
+      if(tdmi->tdmi_conf.dmc_polarisation == POLARISATION_HORIZONTAL ||
+         tdmi->tdmi_conf.dmc_polarisation == POLARISATION_CIRCULAR_LEFT)
+        p->frequency = abs(p->frequency - hifreq);
+      else
+        p->frequency = abs(p->frequency - lowfreq);
+      pol = POLARISATION_CIRCULAR_LEFT;
+    } else {
+      hiband = switchfreq && p->frequency > switchfreq;
+      pol = tdmi->tdmi_conf.dmc_polarisation;
+      if(hiband)
+        p->frequency = abs(p->frequency - hifreq);
+      else
+        p->frequency = abs(p->frequency - lowfreq);
+    }
+ 
     if ((r = diseqc_setup(tda->tda_fe_fd,
 		 port,
 		 pol == POLARISATION_HORIZONTAL ||
 		 pol == POLARISATION_CIRCULAR_LEFT,
 		 hiband, tda->tda_diseqc_version)) != 0)
       tvhlog(LOG_ERR, "dvb", "diseqc setup failed %d\n", r);
-      
-    if(hiband)
-      p->frequency = abs(p->frequency - hifreq);
-    else
-      p->frequency = abs(p->frequency - lowfreq);
   }
 
   dvb_mux_nicename(buf, sizeof(buf), tdmi);

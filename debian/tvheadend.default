@@ -1,0 +1,6 @@
+#
+# Default configuration for tvheadend
+#
+
+ENABLED=1
+DAEMON_ARGS="-f -u hts -g video"
