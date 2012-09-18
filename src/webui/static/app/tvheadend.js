@@ -45,6 +45,13 @@ tvheadend.VLC = function(url) {
 	}
 	
 	var vlc = document.createElement('embed');
+	var vlcPanel = new Ext.Panel({
+	    border : false,
+	    layout : 'fit',
+	    bodyStyle: 'background: transparent;',
+	    contentEl: vlc
+	});
+
 	vlc.setAttribute('type', 'application/x-vlc-plugin');
 	vlc.setAttribute('pluginspage', 'http://www.videolan.org');
 	vlc.setAttribute('version', 'VideoLAN.VLCPlugin.2');
@@ -168,7 +175,7 @@ tvheadend.VLC = function(url) {
 				tooltip : 'Volume',
 				disabled : true
 			}, ],
-		items : [ vlc /*, missingPlugin */]
+		items : [ vlcPanel /*, missingPlugin */]
 	});
 
 	win.on('beforeShow', function() {
