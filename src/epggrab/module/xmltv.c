@@ -607,45 +607,42 @@ static const char *xmltv_lineup_returnvarattrib
 /* Sky STB parsing code, handles the Sky chan number parsing
   https://github.com/andyb2000 Aug 2012 */
 static int stb_channel
-(const char *chan_name, const char *chan_number, const char *logo)
+  (const char *chan_name, const char *chan_number, const char *logo)
 {
- channel_t *chan_t = 0;
- int cid = 0;
+ channel_t *chan = 0;
  int changed_entry = 0;
  int save = 0;
 
- chan_t = _xmltv_find_epggrab_channel_byname(chan_name);
- if (chan_t != 0) {
+ if ((chan = _xmltv_find_epggrab_channel_byname(chan_name))) {
 #ifdef EPG_TRACE
   tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
-   "Channel search FOUND MATCH BY NAME: %s",chan_t->ch_name);
+   "Channel search FOUND MATCH BY NAME: %s",chan->ch_name);
 #endif
   /* We'll fake a cid here to make the Sky channel lineup with 
      other channels, so the rest of this routine will continue */
-  cid = chan_t->ch_id;
   changed_entry = 0;
   if (epggrab_channel_renumber) {
 #ifdef EPG_TRACE
    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
-    "SKY Updating chanid: %d name: %s - Channel Number",chan_t->ch_id, chan_t->ch_name);
+    "SKY Updating chanid: %d name: %s - Channel Number",chan->ch_id, chan->ch_name);
 #endif
-   channel_set_number(chan_t, atoi(chan_number));
+   channel_set_number(chan, atoi(chan_number));
    changed_entry = 1;
   };
   if (epggrab_channel_rename) {
 #ifdef EPG_TRACE
     tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
-     "SKY Updating chanid: %d name: %s - Channel Rename",chan_t->ch_id, chan_t->ch_name);
+     "SKY Updating chanid: %d name: %s - Channel Rename",chan->ch_id, chan->ch_name);
 #endif
-    save |= channel_rename(chan_t, chan_name);
+    save |= channel_rename(chan, chan_name);
     changed_entry = 1;
    };
    if (epggrab_channel_reicon) {
 #ifdef EPG_TRACE
     tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
-     "SKY Updating chanid: %d name: %s - Channel Icon (%s)",chan_t->ch_id, chan_t->ch_name, logo);
+     "SKY Updating chanid: %d name: %s - Channel Icon (%s)",chan->ch_id, chan->ch_name, logo);
 #endif
-    channel_set_icon(chan_t, logo);
+    channel_set_icon(chan, logo);
     changed_entry = 1;
    };
  };
@@ -654,7 +651,7 @@ static int stb_channel
 
 /* Normal channge update code (freesat/freeview) 
    https://github.com/andyb2000 Aug 2012 */
-*/
+
 static int xmltv_channelupdate
 (epggrab_module_t *mod, const int cid, const char *chan_name, const char *chan_number, const char *logo)
 {
