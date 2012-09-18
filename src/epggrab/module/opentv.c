@@ -679,7 +679,7 @@ static void _opentv_start
   epggrab_ota_register(ota, 600, 3600); // 10min scan every hour
   
   /* Install tables */
-  tvhlog(LOG_INFO, "opentv", "install provider %s tables", mod->id);
+  tvhlog(LOG_DEBUG, "opentv", "install provider %s tables", mod->id);
 
   /* Channels */
   t = mod->channel;

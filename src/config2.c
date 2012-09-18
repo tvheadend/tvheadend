@@ -28,7 +28,7 @@ void config_init ( void )
 {
   config = hts_settings_load("config");
   if (!config) {
-    tvhlog(LOG_WARNING, "config", "no configuration, loading defaults");
+    tvhlog(LOG_DEBUG, "config", "no configuration, loading defaults");
     config = htsmsg_create_map();
   }
 }

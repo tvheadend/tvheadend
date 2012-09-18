@@ -214,9 +214,9 @@ static void _epggrab_load ( void )
  
   /* Load module config (channels) */
   eit_load();
-  xmltv_load();
-  pyepg_load();
   opentv_load();
+  pyepg_load();
+  xmltv_load();
 }
 
 void epggrab_save ( void )
@@ -351,9 +351,9 @@ void epggrab_init ( void )
   
   /* Initialise modules */
   eit_init();
-  xmltv_init();
-  pyepg_init();
   opentv_init();
+  pyepg_init();
+  xmltv_init();
 
   /* Load config */
   _epggrab_load();
