@@ -54,7 +54,7 @@ typedef struct comet_mailbox {
   htsmsg_t *cmb_messages; /* A vector */
   time_t cmb_last_used;
   LIST_ENTRY(comet_mailbox) cmb_link;
-  int cmb_debug;
+  comet_mailbox_flags_t cmb_delivery_flags;
 } comet_mailbox_t;
 
 
@@ -100,7 +100,7 @@ comet_flush(void)
  *
  */
 static comet_mailbox_t *
-comet_mailbox_create(void)
+comet_mailbox_create(comet_mailbox_flags_t delivery_flags)
 {
   comet_mailbox_t *cmb = calloc(1, sizeof(comet_mailbox_t));
 
@@ -124,6 +124,7 @@ comet_mailbox_create(void)
   id[40] = 0;
 
   cmb->cmb_boxid = strdup(id);
+  cmb->cmb_delivery_flags = delivery_flags;
   time(&cmb->cmb_last_used);
   mailbox_tally++;
 
@@ -143,6 +144,22 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
 
   htsmsg_add_u32(m, "dvr",   !http_access_verify(hc, ACCESS_RECORDER));
   htsmsg_add_u32(m, "admin", !http_access_verify(hc, ACCESS_ADMIN));
+
+  if(cmb->cmb_messages == NULL)
+    cmb->cmb_messages = htsmsg_create_list();
+  htsmsg_add_msg(cmb->cmb_messages, NULL, m);
+}
+
+static void
+comet_subscription_info(http_connection_t *hc, comet_mailbox_t *cmb)
+{
+  htsmsg_t *m = htsmsg_create_map();
+
+  htsmsg_add_str(m, "notificationClass", "subscriptionInfo");
+
+  htsmsg_add_u32(m, "standard", cmb->cmb_delivery_flags & COMET_DELIVERY_STD ? 1 : 0);
+  htsmsg_add_u32(m, "debug",    cmb->cmb_delivery_flags & COMET_DELIVERY_DBG ? 1 : 0);
+  htsmsg_add_u32(m, "eit",      cmb->cmb_delivery_flags & COMET_DELIVERY_EIT ? 1 : 0);
 
   if(cmb->cmb_messages == NULL)
     cmb->cmb_messages = htsmsg_create_list();
@@ -205,9 +222,18 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
 	break;
     
   if(cmb == NULL) {
-    cmb = comet_mailbox_create();
+    const char *std_flag = http_arg_get(&hc->hc_req_args, "subscribe.standard");
+    const char *dbg_flag = http_arg_get(&hc->hc_req_args, "subscribe.debug");
+    const char *eit_flag = http_arg_get(&hc->hc_req_args, "subscribe.eit");
+    int delivery_flags = COMET_DELIVERY_STD;
+    // standard messages are enabled by default and must be explicitly disabled
+    if (std_flag && !atoi(std_flag)) { delivery_flags &= ~COMET_DELIVERY_STD; }
+    if (dbg_flag && atoi(dbg_flag))  { delivery_flags |= COMET_DELIVERY_DBG; }
+    if (eit_flag && atoi(eit_flag))  { delivery_flags |= COMET_DELIVERY_EIT; }
+    cmb = comet_mailbox_create(delivery_flags);
     comet_access_update(hc, cmb);
     comet_serverIpPort(hc, cmb);
+    comet_subscription_info(hc, cmb);
   }
   time(&reqtime);
 
@@ -252,7 +278,7 @@ comet_mailbox_dbg(http_connection_t *hc, const char *remain, void *opaque)
   LIST_FOREACH(cmb, &mailboxes, cmb_link) {
     if(!strcmp(cmb->cmb_boxid, cometid)) {
       char buf[64];
-      cmb->cmb_debug = !cmb->cmb_debug;
+      cmb->cmb_delivery_flags = cmb->cmb_delivery_flags ^ COMET_DELIVERY_DBG;
  
       if(cmb->cmb_messages == NULL)
 	cmb->cmb_messages = htsmsg_create_list();
@@ -260,7 +286,7 @@ comet_mailbox_dbg(http_connection_t *hc, const char *remain, void *opaque)
       htsmsg_t *m = htsmsg_create_map();
       htsmsg_add_str(m, "notificationClass", "logmessage");
       snprintf(buf, sizeof(buf), "Loglevel debug: %sabled", 
-	       cmb->cmb_debug ? "en" : "dis");
+	       cmb->cmb_delivery_flags & COMET_DELIVERY_DBG ? "en" : "dis");
       htsmsg_add_str(m, "logtxt", buf);
       htsmsg_add_msg(cmb->cmb_messages, NULL, m);
 
@@ -288,22 +314,24 @@ comet_init(void)
  *
  */
 void
-comet_mailbox_add_message(htsmsg_t *m, int isdebug)
+comet_mailbox_add_message(htsmsg_t *m, comet_mailbox_flags_t delivery_flags)
 {
   comet_mailbox_t *cmb;
 
   pthread_mutex_lock(&comet_mutex);
-
+  int msg_delivered = 0;
+  
   LIST_FOREACH(cmb, &mailboxes, cmb_link) {
 
-    if(isdebug && !cmb->cmb_debug)
+    if(!(delivery_flags & cmb->cmb_delivery_flags))
       continue;
-
+    
     if(cmb->cmb_messages == NULL)
       cmb->cmb_messages = htsmsg_create_list();
     htsmsg_add_msg(cmb->cmb_messages, NULL, htsmsg_copy(m));
+    msg_delivered = 1;
   }
 
-  pthread_cond_broadcast(&comet_cond);
+  if (msg_delivered) pthread_cond_broadcast(&comet_cond);
   pthread_mutex_unlock(&comet_mutex);
 }

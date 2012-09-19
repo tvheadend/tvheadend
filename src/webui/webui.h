@@ -51,9 +51,15 @@ void extjs_service_delete(htsmsg_t *in);
 /**
  *
  */
+
 void comet_init(void);
 
-void comet_mailbox_add_message(htsmsg_t *m, int isdebug);
+#define COMET_DELIVERY_STD   (1 << 0)
+#define COMET_DELIVERY_DBG   (1 << 1)
+#define COMET_DELIVERY_EIT   (1 << 2)
+typedef unsigned int comet_mailbox_flags_t;
+
+void comet_mailbox_add_message(htsmsg_t *m, comet_mailbox_flags_t delivery_flags);
 
 void comet_flush(void);
 

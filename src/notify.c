@@ -30,7 +30,7 @@ void
 notify_by_msg(const char *class, htsmsg_t *m)
 {
   htsmsg_add_str(m, "notificationClass", class);
-  comet_mailbox_add_message(m, 0);
+  comet_mailbox_add_message(m, COMET_DELIVERY_STD);
   htsmsg_destroy(m);
 }
 
