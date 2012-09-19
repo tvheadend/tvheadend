@@ -452,21 +452,24 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 	
     /* DVB-S */
     dvb_satconf_t *sc;
-    int port, lowfreq, hifreq, switchfreq, hiband, pol;
+    int port, lowfreq, hifreq, switchfreq, hiband, pol, dbsbs;
 
     lowfreq = 9750000;
     hifreq = 10600000;
     switchfreq = 11700000;
     port = 0;
+    dbsbs = 0;
 
     if((sc = tdmi->tdmi_conf.dmc_satconf) != NULL) {
       port = sc->sc_port;
 
       if(sc->sc_lnb != NULL)
       	dvb_lnb_get_frequencies(sc->sc_lnb, &lowfreq, &hifreq, &switchfreq);
+      if(!strcmp(sc->sc_id ?: "", "DBS Bandstacked"))
+        dbsbs = 1;
     }
 
-    if(!strcmp(sc->sc_id, "DBS Bandstacked")) {
+    if(dbsbs) {
       hiband = 0;
       if(tdmi->tdmi_conf.dmc_polarisation == POLARISATION_HORIZONTAL ||
          tdmi->tdmi_conf.dmc_polarisation == POLARISATION_CIRCULAR_LEFT)

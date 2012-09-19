@@ -64,7 +64,6 @@ static int
 autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 {
   channel_tag_mapping_t *ctm;
-  epg_episode_num_t epnum;
   dvr_config_t *cfg;
 
   if (!e->channel) return 0;
@@ -126,12 +125,6 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     if(abs(mktime(&a_time) - mktime(&ev_time)) > 900)
       return 0;
   }
-
-  // Note: dae_epnum is unset then all values are 0 and this will
-  //       always return 1
-  epg_episode_get_epnum(e->episode, &epnum);
-  if(epg_episode_number_cmp(&dae->dae_epnum, &epnum) < 0)
-    return 0;
 
   if(dae->dae_weekdays != 0x7f) {
     struct tm tm;
