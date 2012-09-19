@@ -298,13 +298,19 @@ dvr_rec_fatal_error(dvr_entry_t *de, const char *fmt, ...)
 static void
 dvr_rec_set_state(dvr_entry_t *de, dvr_rs_state_t newstate, int error)
 {
-  if(de->de_rec_state == newstate)
-    return;
-  de->de_rec_state = newstate;
-  de->de_last_error = error;
-  if(error)
-    de->de_errors++;
-  dvr_entry_notify(de);
+  int notify = 0;
+  if(de->de_rec_state != newstate) {
+    de->de_rec_state = newstate;
+    notify = 1;
+  }
+  if(de->de_last_error != error) {
+    de->de_last_error = error;
+    notify = 1;
+    if(error)
+      de->de_errors++;
+  }
+  if (notify)
+    dvr_entry_notify(de);
 }
 
 /**
@@ -501,7 +507,7 @@ dvr_thread(void *aux)
     case SMT_NOSTART:
 
       if(de->de_last_error != sm->sm_code) {
-	dvr_rec_set_state(de, DVR_RS_ERROR, sm->sm_code);
+	dvr_rec_set_state(de, DVR_RS_PENDING, sm->sm_code);
 
 	tvhlog(LOG_ERR,
 	       "dvr", "Recording unable to start: \"%s\": %s",

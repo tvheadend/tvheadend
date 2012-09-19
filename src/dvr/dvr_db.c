@@ -755,14 +755,17 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode)
 {
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
 
-  dvr_rec_unsubscribe(de, stopcode);
+  if (de->de_rec_state == DVR_RS_PENDING || de->de_rec_state == DVR_RS_WAIT_PROGRAM_START)
+    de->de_sched_state = DVR_MISSED_TIME;
+  else
+    de->de_sched_state = DVR_COMPLETED;
 
-  de->de_sched_state = DVR_COMPLETED;
+  dvr_rec_unsubscribe(de, stopcode);
 
   tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": "
 	 "End of program: %s",
 	 lang_str_get(de->de_title, NULL), de->de_channel->ch_name,
-	 streaming_code2txt(de->de_last_error) ?: "Program ended");
+	 dvr_entry_status(de));
 
   dvr_entry_save(de);
   htsp_dvr_entry_update(de);
@@ -771,7 +774,6 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode)
   gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de, 
 		 de->de_stop + cfg->dvr_retention_days * 86400);
 }
-
 
 
 /**
