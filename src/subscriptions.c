@@ -180,6 +180,7 @@ subscription_reschedule(void)
 
     snprintf(buf, sizeof(buf), "Subscription \"%s\"", s->ths_title);
     t = service_find(s->ths_channel, s->ths_weight, buf, &error, skip);
+    if (s->ths_title) {access_log_update_by_subscription_struct(s->ths_title,s->ths_channel);};
 
     if(t == NULL) {
       /* No service available */

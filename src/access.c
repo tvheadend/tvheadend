@@ -127,6 +127,16 @@ access_log_remove(const char *username, uint32_t ip)
 };
 
 void
+access_log_update_by_subscription_struct(const char *title, const char *channel)
+{
+  char *token, *token2;
+	/* we get title = "192.168.55.15 [ xbmc2 | XBMC Media Center ]"
+           and channel = "BBC 2 England" */
+	token = strtok(title, " "); /* token will be ip in string */
+	token2= strtok(NULL, " ");
+};
+
+void
 access_log_update(const char *username, const char *access_type, const char *al_streamdata, uint32_t ip)
 {
   access_log_t *al;
