@@ -31,37 +31,31 @@ tvheadend.help = function(title, pagename) {
  * Displays a mediaplayer using VLC plugin
  */
 tvheadend.VLC = function(url) {
-
-	function randomString() {
-		var chars = "ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
-		var string_length = 8;
-		var randomstring = '';
-		for ( var i = 0; i < string_length; i++) {
-			var rnum = Math.floor(Math.random() * chars.length);
-			randomstring += chars.substring(rnum, rnum + 1);
-		}
-		return randomstring;
-	}
 	
-	var vlc = document.createElement('embed');
+	var vlc = Ext.get(document.createElement('embed'));
+	vlc.set({
+		type : 'application/x-vlc-plugin',
+		pluginspage : 'http://www.videolan.org',
+		version : 'VideoLAN.VLCPlugin.2',
+		width : '100%',
+		height : '100%',
+		autoplay : 'no'
+	});
+
 	var vlcPanel = new Ext.Panel({
 	    border : false,
 	    layout : 'fit',
-	    bodyStyle: 'background: transparent;',
+	    bodyStyle : 'background: transparent;',
 	    contentEl: vlc
 	});
 
-	vlc.setAttribute('type', 'application/x-vlc-plugin');
-	vlc.setAttribute('pluginspage', 'http://www.videolan.org');
-	vlc.setAttribute('version', 'VideoLAN.VLCPlugin.2');
-	vlc.setAttribute('width', '100%');
-	vlc.setAttribute('height', '100%');
-	vlc.setAttribute('autoplay', 'no');
-	vlc.setAttribute('id', randomString());
-
-//	var missingPlugin = document.createElement('div');
-//	missingPlugin.style.display = 'none';
-//	missingPlugin.style.padding = '5px';
+	var missingPlugin = Ext.get(document.createElement('div'));
+	var missingPluginPanel = new Ext.Panel({
+	    border : false,
+	    layout : 'fit',
+	    bodyStyle : 'background: transparent;',
+	    contentEl : missingPlugin
+	});
 
 	var selectChannel = new Ext.form.ComboBox({
 		loadingText : 'Loading...',
@@ -78,21 +72,22 @@ tvheadend.VLC = function(url) {
 		var streamurl = 'stream/channelid/' + r.data.chid;
 		var playlisturl = 'playlist/channelid/' + r.data.chid;
 
-		// if the player was initialised, but not yet shown, make it visible
-		if (vlc.playlist && (vlc.style.display == 'none')) 
-			vlc.style.display = 'block';
-
-		if (!vlc.playlist || vlc.playlist == 'undefined') {
-//			missingPlugin.innerHTML = '<p>Embedded player could not be started. <br> You are probably missing VLC Mozilla plugin for your browser.</p>';
-//			missingPlugin.innerHTML += '<p><a href="' + playlisturl	+ '">M3U Playlist</a></p>';
-//			missingPlugin.innerHTML += '<p><a href="' + streamurl + '">Direct URL</a></p>';
+		if (!vlc.dom.playlist || vlc.dom.playlist == 'undefined') {
+			var html = '<p>Embedded player could not be started. <br> You are probably missing VLC Mozilla plugin for your browser.</p>';
+			html += '<p><a href="' + playlisturl	+ '">M3U Playlist</a></p>';
+			html += '<p><a href="' + streamurl + '">Direct URL</a></p>';
+			missingPlugin.dom.innerHTML = html;
+			missingPluginPanel.show();
+			vlcPanel.hide();
 		}
 		else {
-			vlc.playlist.stop();
-			vlc.playlist.items.clear();
-			vlc.playlist.add(streamurl);
-			vlc.playlist.playItem(0);
-			vlc.audio.volume = slider.getValue();
+			vlc.dom.playlist.stop();
+			vlc.dom.playlist.items.clear();
+			vlc.dom.playlist.add(streamurl);
+			vlc.dom.playlist.playItem(0);
+			vlc.dom.audio.volume = slider.getValue();
+			missingPluginPanel.hide();
+			vlcPanel.show();
 		}
 	});
 
@@ -108,9 +103,9 @@ tvheadend.VLC = function(url) {
 	var sliderLabel = new Ext.form.Label();
 	sliderLabel.setText("90%");
 	slider.addListener('change', function() {
-		if (vlc.playlist && vlc.playlist.isPlaying) {
-			vlc.audio.volume = slider.getValue();
-			sliderLabel.setText(vlc.audio.volume + '%');
+		if (vlc.dom.playlist && vlc.dom.playlist.isPlaying) {
+			vlc.dom.audio.volume = slider.getValue();
+			sliderLabel.setText(vlc.dom.audio.volume + '%');
 		}
 		else {
 			sliderLabel.setText(slider.getValue() + '%');
@@ -132,9 +127,9 @@ tvheadend.VLC = function(url) {
 				iconCls : 'control_play',
 				tooltip : 'Play',
 				handler : function() {
-					if (vlc.playlist && vlc.playlist.items.count
-						&& !vlc.playlist.isPlaying) {
-						vlc.playlist.play();
+					if (vlc.dom.playlist && vlc.dom.playlist.items.count
+						&& !vlc.dom.playlist.isPlaying) {
+						vlc.dom.playlist.play();
 					}
 				}
 			},
@@ -142,8 +137,8 @@ tvheadend.VLC = function(url) {
 				iconCls : 'control_pause',
 				tooltip : 'Pause',
 				handler : function() {
-					if (vlc.playlist && vlc.playlist.items.count) {
-						vlc.playlist.togglePause();
+					if (vlc.dom.playlist && vlc.dom.playlist.items.count) {
+						vlc.dom.playlist.togglePause();
 					}
 				}
 			},
@@ -151,8 +146,8 @@ tvheadend.VLC = function(url) {
 				iconCls : 'control_stop',
 				tooltip : 'Stop',
 				handler : function() {
-					if (vlc.playlist) {
-						vlc.playlist.stop();
+					if (vlc.dom.playlist) {
+						vlc.dom.playlist.stop();
 					}
 				}
 			},
@@ -161,11 +156,11 @@ tvheadend.VLC = function(url) {
 				iconCls : 'control_fullscreen',
 				tooltip : 'Fullscreen',
 				handler : function() {
-					if (vlc.playlist && vlc.playlist.isPlaying
-						&& (vlc.VersionInfo.substr(0, 3) != '1.1')) {
-						vlc.video.toggleFullscreen();
+					if (vlc.dom.playlist && vlc.dom.playlist.isPlaying
+						&& (vlc.dom.VersionInfo.substr(0, 3) != '1.1')) {
+						vlc.dom.video.toggleFullscreen();
 					}
-					else if (vlc.VersionInfo.substr(0, 3) == '1.1') {
+					else if (vlc.dom.VersionInfo.substr(0, 3) == '1.1') {
 						alert('Fullscreen mode is broken in VLC 1.1.x');
 					}
 				}
@@ -174,7 +169,7 @@ tvheadend.VLC = function(url) {
 				tooltip : 'Volume',
 				disabled : true
 			}, ],
-		items : [ vlcPanel /*, missingPlugin */]
+		items : [ vlcPanel, missingPluginPanel ]
 	});
 
 	win.on('beforeShow', function() {
@@ -185,36 +180,36 @@ tvheadend.VLC = function(url) {
 		win.getTopToolbar().add(sliderLabel);
 
 		// check if vlc plugin wasn't initialised correctly
-		if (!vlc.playlist || (vlc.playlist == 'undefined')) {
-			vlc.style.display = 'none';
-
-//			missingPlugin.innerHTML = '<p>Embedded player could not be started. <br> You are probably missing VLC Mozilla plugin for your browser.</p>';
+		if (!vlc.dom.playlist || (vlc.dom.playlist == 'undefined')) {
+			vlc.dom.style.display = 'none';
+			var html = '<p>Embedded player could not be started. <br> You are probably missing VLC Mozilla plugin for your browser.</p>';
 
 			if (url) {
 				var channelid = url.substr(url.lastIndexOf('/'));
 				var streamurl = 'stream/channelid/' + channelid;
 				var playlisturl = 'playlist/channelid/' + channelid;
-//				missingPlugin.innerHTML += '<p><a href="' + playlisturl	+ '">M3U Playlist</a></p>';
-//				missingPlugin.innerHTML += '<p><a href="' + streamurl + '">Direct URL</a></p>';
+				html += '<p><a href="' + playlisturl	+ '">M3U Playlist</a></p>';
+				html += '<p><a href="' + streamurl + '">Direct URL</a></p>';
 			}
-
-//			missingPlugin.style.display = 'block';
+			missingPlugin.dom.innerHTML = html;
+			vlcPanel.hide();
 		}
 		else {
 			// check if the window was opened with an url-parameter
 			if (url) {
-				vlc.playlist.items.clear();
-				vlc.playlist.add(url);
-				vlc.playlist.playItem(0);
+				vlc.dom.playlist.items.clear();
+				vlc.dom.playlist.add(url);
+				vlc.dom.playlist.playItem(0);
 
 				//enable yadif2x deinterlacer for vlc > 1.1
-				var point1 = vlc.VersionInfo.indexOf('.');
-				var point2 = vlc.VersionInfo.indexOf('.', point1 + 1);
-				var majVersion = vlc.VersionInfo.substring(0, point1);
-				var minVersion = vlc.VersionInfo.substring(point1 + 1, point2);
+				var point1 = vlc.dom.VersionInfo.indexOf('.');
+				var point2 = vlc.dom.VersionInfo.indexOf('.', point1 + 1);
+				var majVersion = vlc.dom.VersionInfo.substring(0, point1);
+				var minVersion = vlc.dom.VersionInfo.substring(point1 + 1, point2);
 				if ((majVersion >= 1) && (minVersion >= 1)) 
-					vlc.video.deinterlace.enable("yadif2x");
+					vlc.dom.video.deinterlace.enable("yadif2x");
 			}
+			missingPluginPanel.hide();
 		}
 	});
 
