@@ -37,6 +37,7 @@
 #include "dtable.h"
 #include "settings.h"
 #include <sys/time.h>
+#include "channels.h"
 
 struct access_entry_queue access_entries;
 struct access_ticket_queue access_tickets;
@@ -127,13 +128,17 @@ access_log_remove(const char *username, uint32_t ip)
 };
 
 void
-access_log_update_by_subscription_struct(const char *title, const char *channel)
+access_log_update_by_subscription_struct(char *title, channel_t *chanstr)
 {
-  char *token, *token2;
+  const char *token, *token2;
 	/* we get title = "192.168.55.15 [ xbmc2 | XBMC Media Center ]"
            and channel = "BBC 2 England" */
 	token = strtok(title, " "); /* token will be ip in string */
 	token2= strtok(NULL, " ");
+	token2= strtok(NULL, " ");
+	tvhlog(LOG_DEBUG, "accesslogging", "update_by_subscription_struct token: %s, token2: %s and channel: %s",
+	  token,token2,chanstr->ch_name);
+	access_log_update(token2,NULL,chanstr->ch_name,inet_addr(token));
 };
 
 void

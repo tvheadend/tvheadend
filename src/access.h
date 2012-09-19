@@ -19,6 +19,7 @@
 #ifndef ACCESS_H_
 #define ACCESS_H_
 
+#include "channels.h"
 
 TAILQ_HEAD(access_entry_queue, access_entry);
 
@@ -119,5 +120,6 @@ void access_log_show_all(void);
 void access_log_update(const char *username, const char *access_type, const char *al_streamdata, uint32_t ip);
 void access_log_remove(const char *username, uint32_t ip);
 void access_log_remove_bysub(uint32_t ip, const char *al_streamdata);
+void access_log_update_by_subscription_struct(char *title, channel_t *chanstr);
 
 #endif /* ACCESS_H_ */
