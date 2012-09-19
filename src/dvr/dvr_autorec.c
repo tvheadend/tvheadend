@@ -130,7 +130,8 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   // Note: dae_epnum is unset then all values are 0 and this will
   //       always return 1
   epg_episode_get_epnum(e->episode, &epnum);
-  if(epg_episode_number_cmp(&dae->dae_epnum, &epnum) < 0)
+  if(dae->dae_epnum.s_num > 0 && 
+     epg_episode_number_cmp(&dae->dae_epnum, &epnum) < 0)
     return 0;
 
   if(dae->dae_weekdays != 0x7f) {
