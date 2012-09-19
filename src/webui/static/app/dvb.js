@@ -1156,10 +1156,12 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 			fieldLabel : 'Turn off LNB when idle',
 			name : 'poweroff'
 		});
-		new Ext.form.Checkbox({
+		items.push(v);
+		v = new Ext.form.Checkbox({
 			fieldLabel : 'Use SID as channel number during mapping',
 			name : 'sidtochan'
-		}), items.push(v);
+		}),
+		items.push(v);
 	}
 
 	var confform = new Ext.FormPanel({
