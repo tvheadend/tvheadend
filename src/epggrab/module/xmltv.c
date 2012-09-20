@@ -541,25 +541,6 @@ static int _xmltv_parse_channel
 /* Channel Lineup parsing and search code
   https://github.com/andyb2000 Aug 2012 */
 
-static service_t *_xmltv_find_service ( int sid )
-{
-  th_dvb_adapter_t *tda;
-  th_dvb_mux_instance_t *tdmi;
-  service_t *t = NULL;
-  TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
-      LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
-	if (t->s_enabled) {
-        if (t->s_dvb_service_id == sid) {
-	   return t;
-	};
-	};
-      }
-    }
-  }
-  return NULL;
-}
-
 static epggrab_channel_t *_xmltv_find_epggrab_channel
   ( epggrab_module_t *mod, int cid, int create, int *save )
 {
@@ -657,14 +638,21 @@ static int xmltv_channelupdate
 {
   service_t *channel_service_id;
   epggrab_channel_t *ec;
+  epggrab_channel_link_t *ecl;
   int changed_entry = 0, save = 0;
 
-  channel_service_id = _xmltv_find_service(cid);
+/*  channel_service_id = _xmltv_find_service(cid);*/
+  channel_service_id = dvb_transport_find3(NULL, NULL, NULL, 0, 0, cid, 1, 0);
   if (channel_service_id && channel_service_id->s_ch) {
    ec  =_xmltv_find_epggrab_channel(mod, cid, 1, &save);
    /* Check for primary, update channel number if primary,
       or just update icon regardless */
-   ec->channel = channel_service_id->s_ch;
+/*   ec->channel = channel_service_id->s_ch;*/
+  LIST_FOREACH(ecl, &ec->channels, link) {
+    if (ecl->channel == channel_service_id->s_ch) {
+      ec->id = channel_service_id->s_ch;
+    };
+  };
    changed_entry = 0;
    if (service_is_primary_epg(channel_service_id)) {
    if (epggrab_channel_renumber) {
@@ -706,10 +694,12 @@ static int xmltv_parse_lineups
   htsmsg_field_t *e, *f, *g, *h;
   htsmsg_t *lineups, *tag, *chandata;
   const char *chan_number = "0", *chan_name = "";
-  const char *short_name, *logo = "", *commercial_free, *chan_format;
-  const char *chan_aspect_ratio, *chan_network_id, *chan_service_id = "0";
-  const char *chan_lcn, *chan_service_name, *chan_encrypted;
+  const char *logo = "", *chan_service_id = "0";
   const char *lineup_section= "", *stb_preset = 0;
+
+/*  const char *chan_encrypted, *chan_service_name, *chan_lcn, *chan_network_id;
+  const char *chan_aspect_ratio, *chan_format, *commercial_free, *short_name;*/
+
 
   int changed_entry = 0;
   int cid = 0;
@@ -740,25 +730,25 @@ static int xmltv_parse_lineups
 	if (strcmp(g->hmf_name, "name") == 0) {
 	chan_name = xmltv_lineup_returnvar(mod, g);
 	};
-	if (strcmp(g->hmf_name, "short-name") == 0) {
+/*	if (strcmp(g->hmf_name, "short-name") == 0) {
 	short_name = xmltv_lineup_returnvar(mod, g);
-	};
+	};*/
 	if (strcmp(g->hmf_name, "logo") == 0) {
 	logo = xmltv_lineup_returnvarattrib(mod, g);
 	};
-	if (strcmp(g->hmf_name, "commercial-free") == 0) {
+/*	if (strcmp(g->hmf_name, "commercial-free") == 0) {
 	commercial_free = xmltv_lineup_returnvar(mod, g);
-	};
+	};*/
 	if (strcmp(g->hmf_name, "video") == 0) {
 	 if ((tag = htsmsg_get_map_by_field(g))) {
 	 chandata = htsmsg_get_map(tag, "tags");
 	 HTSMSG_FOREACH(h, chandata) {
-		if (strcmp(h->hmf_name, "format") == 0) {
+/*		if (strcmp(h->hmf_name, "format") == 0) {
 		chan_format = xmltv_lineup_returnvar(mod, h);
-		};
-		if (strcmp(h->hmf_name, "aspect-ratio") == 0) {
+		};*/
+/*		if (strcmp(h->hmf_name, "aspect-ratio") == 0) {
 		chan_aspect_ratio = xmltv_lineup_returnvar(mod, h);
-		};
+		};*/
 	 }; /* htsmsg_foreach h */
 	}; /* htsmsg_get_map_by_field g */
 	}; /* strcmp video */
@@ -771,16 +761,16 @@ static int xmltv_parse_lineups
 		if((chandata = htsmsg_get_map(tag, "tags")) == NULL)
 			continue;
 		HTSMSG_FOREACH(g, chandata) {
-			if (strcmp(g->hmf_name, "original-network-id") == 0)
-			  chan_network_id = xmltv_lineup_returnvar(mod, g);
+/*			if (strcmp(g->hmf_name, "original-network-id") == 0)
+			  chan_network_id = xmltv_lineup_returnvar(mod, g);*/
 			if (strcmp(g->hmf_name, "service-id") == 0)
 			  chan_service_id = xmltv_lineup_returnvar(mod, g);
-			if (strcmp(g->hmf_name, "lcn") == 0)
-	  		  chan_lcn = xmltv_lineup_returnvar(mod, g);
-			if (strcmp(g->hmf_name, "service-name") == 0)
-			  chan_service_name = xmltv_lineup_returnvar(mod, g);
-			if (strcmp(g->hmf_name, "encrypted") == 0)
-			  chan_encrypted = xmltv_lineup_returnvar(mod, g);
+/*			if (strcmp(g->hmf_name, "lcn") == 0)
+	  		  chan_lcn = xmltv_lineup_returnvar(mod, g);*/
+/*			if (strcmp(g->hmf_name, "service-name") == 0)
+			  chan_service_name = xmltv_lineup_returnvar(mod, g);*/
+/*			if (strcmp(g->hmf_name, "encrypted") == 0)
+			  chan_encrypted = xmltv_lineup_returnvar(mod, g);*/
 		};
 		};
 	};
