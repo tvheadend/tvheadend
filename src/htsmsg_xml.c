@@ -897,7 +897,7 @@ const char *
 htsmsg_xml_get_attr_str ( htsmsg_t *tag, const char *name )
 {
   htsmsg_t *attr = htsmsg_get_map(tag, "attrib");
-  if (attr) return htsmsg_get_str(tag, name);
+  if (attr) return htsmsg_get_str(attr, name);
   return NULL;
 }
 

@@ -161,6 +161,15 @@ void htsmsg_add_binptr(htsmsg_t *msg, const char *name, const void *bin,
 int htsmsg_get_u32(htsmsg_t *msg, const char *name, uint32_t *u32p);
 
 /**
+ * Return the field \p name as an u32.
+ *
+ * @return An unsigned 32 bit integer or def if the field can not be found
+ *         or if conversion is not possible.
+ */
+uint32_t htsmsg_get_u32_or_default
+  (htsmsg_t *msg, const char *name, uint32_t def);
+
+/**
  * Get an integer as an signed 32 bit integer.
  *
  * @return HTSMSG_ERR_FIELD_NOT_FOUND - Field does not exist
@@ -177,6 +186,16 @@ int htsmsg_get_s32(htsmsg_t *msg, const char *name,  int32_t *s32p);
  *              out of range for the requested storage.
  */
 int htsmsg_get_s64(htsmsg_t *msg, const char *name,  int64_t *s64p);
+
+
+/**
+ * Return the field \p name as an s64.
+ *
+ * @return A signed 64 bit integer or def if the field can not be found
+ *         or if conversion is not possible.
+ */
+int64_t htsmsg_get_s64_or_default
+  (htsmsg_t *msg, const char *name, int64_t def);
 
 /**
  * Get an integer as an unsigned 64 bit integer.
@@ -218,6 +237,15 @@ htsmsg_t *htsmsg_get_list(htsmsg_t *msg, const char *name);
 const char *htsmsg_get_str(htsmsg_t *msg, const char *name);
 
 /**
+ * Get a field of type 'string'. No copying is done.
+ *
+ * @return def if the field can not be found or not of string type.
+ *         Otherwise a pointer to the data is returned.
+ */
+const char *htsmsg_get_str_or_default
+  (htsmsg_t *msg, const char *name, const char *def);
+
+/**
  * Get a field of type 'map'. No copying is done.
  *
  * @return NULL if the field can not be found or not of map type.
@@ -235,14 +263,6 @@ htsmsg_t *htsmsg_get_map_multi(htsmsg_t *msg, ...);
  * return NULL
  */
 const char *htsmsg_field_get_string(htsmsg_field_t *f);
-
-/**
- * Return the field \p name as an u32.
- *
- * @return An unsigned 32 bit integer or NULL if the field can not be found
- *         or if conversion is not possible.
- */
-int htsmsg_get_u32_or_default(htsmsg_t *msg, const char *name, uint32_t def);
 
 /**
  * Remove the given field called \p name from the message \p msg.
