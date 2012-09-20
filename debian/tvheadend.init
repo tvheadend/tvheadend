@@ -16,7 +16,6 @@ PATH=/usr/sbin:/usr/bin:/sbin:/bin
 DESC="Tvheadend"
 NAME=tvheadend
 DAEMON=/usr/bin/$NAME
-DAEMON_ARGS="-f -u hts -g video"
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
@@ -25,6 +24,18 @@ SCRIPTNAME=/etc/init.d/$NAME
 
 # Read configuration variable file if it is present
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+# Configure command line options
+[ "$TVH_ENABLED" = "1" ] || exit 0
+
+ARGS="-f"
+[ -z "$TVH_USER"      ] || ARGS="$ARGS -u $TVH_USER"
+[ -z "$TVH_GROUP"     ] || ARGS="$ARGS -g $TVH_GROUP"
+[ -z "$TVH_CONF_DIR"  ] || ARGS="$ARGS -c $TVH_CONF_DIR"
+[ -z "$TVH_ADAPTERS"  ] || ARGS="$ARGS -a $TVH_ADAPTERS"
+[ -z "$TVH_HTTP_PORT" ] || ARGS="$ARGS -w $TVH_HTTP_PORT"
+[ -z "$TVH_HTSP_PORT" ] || ARGS="$ARGS -e $TVH_HTSP_PORT"
+[ "$TVH_DEBUG" = "1"  ] && ARGS="$ARGS -s"
 
 # Load the VERBOSE setting and other rcS variables
 [ -f /etc/default/rcS ] && . /etc/default/rcS
@@ -46,7 +57,7 @@ do_start()
 	start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON --test > /dev/null \
 		|| return 1
 	start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON -- \
-		$DAEMON_ARGS \
+		$ARGS \
 		|| return 2
 }
 
