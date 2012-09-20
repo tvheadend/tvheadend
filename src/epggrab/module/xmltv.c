@@ -719,6 +719,8 @@ static int xmltv_parse_lineups
   if((lineups = htsmsg_get_map(lineups, "xmltv-lineup")) == NULL) return 0;
   if((lineups = htsmsg_get_map(lineups, "tags")) == NULL) return 0;
 
+/* htsmsg_xml_get_cdata_str(htsmsg_t *tags, const char *name) */
+
   HTSMSG_FOREACH(e, lineups) {
    if (strcmp(e->hmf_name, "lineup-entry") == 0) {
     if ((tag = htsmsg_get_map_by_field(e))) {
