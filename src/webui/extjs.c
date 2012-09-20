@@ -964,6 +964,10 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
       htsmsg_add_str(m, "description", s);
     else if((s = epg_broadcast_get_summary(e, lang)))
       htsmsg_add_str(m, "description", s);
+    else if ((s = epg_episode_get_description(ee, lang)))
+      htsmsg_add_str(m, "description", s);
+    else if((s = epg_episode_get_summary(ee, lang)))
+      htsmsg_add_str(m, "description", s);
 
     if (epg_episode_number_format(ee, buf, 100, NULL, "Season %d", ".",
                                   "Episode %d", "/%d"))
