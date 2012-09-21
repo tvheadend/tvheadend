@@ -538,14 +538,6 @@ static int _xmltv_parse_channel
   return save;
 }
 
-static channel_t *_xmltv_find_epggrab_channel_byname
-  ( const char *chname )
-{
-  return channel_find_by_name(chname,0,0);
-}
-
-
-
 /** sub-function to retrieve variable from lineup */
 static const char *xmltv_lineup_returnvar
   (epggrab_module_t *mod, htsmsg_field_t *g)
