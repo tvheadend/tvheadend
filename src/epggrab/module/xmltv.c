@@ -645,15 +645,16 @@ static int xmltv_channelupdate
   channel_service_id = dvb_transport_find3(NULL, NULL, NULL, 0, 0, cid, 1, 0);
   if (channel_service_id && channel_service_id->s_ch) {
    ec  =_xmltv_find_epggrab_channel(mod, cid, 1, &save);
-   /* Check for primary, update channel number if primary,
-      or just update icon regardless */
 /*   ec->channel = channel_service_id->s_ch;*/
-  LIST_FOREACH(ecl, &ec->channels, link) {
-    if (ecl->channel == channel_service_id->s_ch) {
-      ec->id = channel_service_id->s_ch;
-    };
-  };
+   ecl = LIST_FIRST(&ec->channels);
+   if(!ecl) {
+     ecl = calloc(1, sizeof(epggrab_channel_link_t));
+     LIST_INSERT_HEAD(&ec->channels, ecl, link);
+   };
+   ecl->channel = channel_service_id->s_ch;
    changed_entry = 0;
+/* Check for primary, update channel number if primary,
+      or just update icon regardless */
    if (service_is_primary_epg(channel_service_id)) {
    if (epggrab_channel_renumber) {
 #ifdef EPG_TRACE
