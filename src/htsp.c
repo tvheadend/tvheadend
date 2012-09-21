@@ -1244,7 +1244,7 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
     tvh_str_update(&htsp->htsp_username, username);
     htsp_update_logname(htsp);
 /* andyb2000 log user into access_log */
-   if (username) {access_log_update(username, "htsp", "", ntohl(inet_addr(htsp->htsp_logname)));};
+   if (username) {access_log_update(username, "htsp", NULL, ntohl(inet_addr(htsp->htsp_logname)));};
   }
 
   if(htsmsg_get_bin(m, "digest", &digest, &digestlen))
@@ -1357,7 +1357,7 @@ readmsg:
 
                 } else {
                   reply = htsp_methods[i].fn(htsp, m);
-                  if (htsp->htsp_username) {access_log_update(htsp->htsp_username, "htsp", "", ntohl(inet_addr(htsp->htsp_logname)));};
+                  if (htsp->htsp_username) {access_log_update(htsp->htsp_username, "htsp", NULL, ntohl(inet_addr(htsp->htsp_logname)));};
                 }
                 break;
               }

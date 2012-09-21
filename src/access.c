@@ -138,7 +138,7 @@ access_log_update_by_subscription_struct(char *title, channel_t *chanstr)
 	token2= strtok(NULL, " ");
 	tvhlog(LOG_DEBUG, "accesslogging", "update_by_subscription_struct token: %s, token2: %s and channel: %s",
 	  token,token2,chanstr->ch_name);
-	access_log_update(token2,NULL,chanstr->ch_name,inet_addr(token));
+	access_log_update(token2,"htsp",strdup(chanstr->ch_name),inet_addr(token));
 };
 
 void
@@ -308,7 +308,7 @@ access_verify(const char *username, const char *password,
      password != NULL && superuser_password != NULL && 
      !strcmp(username, superuser_username) &&
      !strcmp(password, superuser_password)) {
-    if (username) {access_log_update(username, "superuser", "", b);};
+    if (username) {access_log_update(username, "superuser", NULL, b);};
     return 0;
   };
 
@@ -337,7 +337,7 @@ access_verify(const char *username, const char *password,
   if (auth_status == 0) {
    tvhlog(LOG_WARNING, "accesscontrol", "Authentication failure for \"%s\" from \"%s\"", username, inet_ntoa(si->sin_addr));
   } else {
-   if (username) {access_log_update(username, "http", "", b);};
+   if (username) {access_log_update(username, "http", NULL, b);};
   };
   return (mask & bits) == mask ? 0 : -1;
 }
@@ -369,7 +369,7 @@ access_get_hashed(const char *username, const uint8_t digest[20],
     SHA1_Final(d, &shactx);
 
     if(!strcmp(superuser_username, username) && !memcmp(d, digest, 20)) {
-      if (username) {access_log_update(username, "http", "", b);};
+      if (username) {access_log_update(username, "http", NULL, b);};
       return 0xffffffff;
     };
   }
@@ -393,7 +393,7 @@ access_get_hashed(const char *username, const uint8_t digest[20],
       continue;
     match = 1;
     r |= ae->ae_rights;
-    if (username) {access_log_update(username, "http", "", b);};
+    if (username) {access_log_update(username, "http", NULL, b);};
   }
   if(entrymatch != NULL)
     *entrymatch = match;
