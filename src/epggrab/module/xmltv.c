@@ -570,42 +570,42 @@ static const char *xmltv_lineup_returnvarattrib
 static int stb_channel
   (const char *chan_name, const char *chan_number, const char *logo)
 {
- channel_t *chan = 0;
- int changed_entry = 0;
- int save = 0;
+  channel_t *chan = 0;
+  int changed_entry = 0;
+  int save = 0;
 
- if ((chan = channel_find_by_name(chan_name,0,0))) {
+  if ((chan = channel_find_by_name(chan_name,0,0))) {
 #ifdef EPG_TRACE
   tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
-   "Channel search FOUND MATCH BY NAME: %s",chan->ch_name);
+    "Channel search FOUND MATCH BY NAME: %s",chan->ch_name);
 #endif
   changed_entry = 0;
   if (epggrab_channel_renumber) {
 #ifdef EPG_TRACE
-   tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
-    "SKY Updating chanid: %d name: %s - Channel Number",chan->ch_id, chan->ch_name);
+    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
+      "SKY Updating chanid: (%d) name: (%s) Channel Number: (%s)",chan->ch_id, chan->ch_name,chan_number);
 #endif
-   channel_set_number(chan, atoi(chan_number));
-   changed_entry = 1;
+    channel_set_number(chan, atoi(chan_number));
+    changed_entry = 1;
   };
   if (epggrab_channel_rename) {
 #ifdef EPG_TRACE
     tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
-     "SKY Updating chanid: %d name: %s - Channel Rename",chan->ch_id, chan->ch_name);
+      "SKY Updating chanid: (%d) name: (%s) Channel Rename: (%s)",chan->ch_id, chan->ch_name,chan_name);
 #endif
     save |= channel_rename(chan, chan_name);
     changed_entry = 1;
-   };
-   if (epggrab_channel_reicon) {
+  };
+  if (epggrab_channel_reicon) {
 #ifdef EPG_TRACE
     tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
-     "SKY Updating chanid: %d name: %s - Channel Icon (%s)",chan->ch_id, chan->ch_name, logo);
+      "SKY Updating chanid: (%d) name: (%s) Channel Icon: (%s)",chan->ch_id, chan->ch_name, logo);
 #endif
     channel_set_icon(chan, logo);
     changed_entry = 1;
-   };
- };
- return changed_entry;
+  };
+};
+return changed_entry;
 };
 
 /* Normal channge update code (freesat/freeview) 
@@ -629,29 +629,32 @@ static int xmltv_channelupdate
   if (epggrab_channel_renumber) {
 #ifdef EPG_TRACE
     tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
-     "Updating channelid: (%d) name: (%s) - Channel Number: (%s)",channel_service_id->s_dvb_service_id, channel_service_id->s_nicename,chan_number);
+      "Updating channelid: (%d) name: (%s) Channel Number: (%s)",
+      channel_service_id->s_dvb_service_id, channel_service_id->s_nicename,chan_number);
 #endif
     channel_set_number(ec, atoi(chan_number));
     changed_entry = 1;
-   };
-   };
-   if (epggrab_channel_rename) {
+  };
+  };
+  if (epggrab_channel_rename) {
 #ifdef EPG_TRACE
     tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
-     "Updating channelid: %d name: %s - Channel Name",channel_service_id->s_dvb_service_id, channel_service_id->s_nicename);
+      "Updating channelid: (%d) name: (%s) Channel Name: (%s)",
+      channel_service_id->s_dvb_service_id, channel_service_id->s_nicename,chan_name);
 #endif
     channel_rename(ec, chan_name);
     changed_entry = 1;
-   };
-   if (epggrab_channel_reicon) {
+  };
+  if (epggrab_channel_reicon) {
 #ifdef EPG_TRACE
     tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
-     "Updating channelid: %d name: %s - Channel Icon",channel_service_id->s_dvb_service_id, channel_service_id->s_nicename);
+    "Updating channelid: (%d) name: (%s) Channel Icon: (%s)",
+    channel_service_id->s_dvb_service_id, channel_service_id->s_nicename,logo);
 #endif
     channel_set_icon(ec, logo);
     changed_entry = 1;
-   };
   };
+};
 
 return changed_entry;
 };
@@ -662,15 +665,11 @@ static int xmltv_parse_lineups
   (epggrab_module_t *mod, htsmsg_t *body, epggrab_stats_t *stats)
 {
   tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "start function");
-  htsmsg_field_t *e, *f, *g, *h;
+  htsmsg_field_t *e, *f, *g;
   htsmsg_t *lineups, *tag, *chandata;
   const char *chan_number = "0", *chan_name = "";
   const char *logo = "", *chan_service_id = "0";
   const char *lineup_section= "", *stb_preset = 0;
-
-/*  const char *chan_encrypted, *chan_service_name, *chan_lcn, *chan_network_id;
-  const char *chan_aspect_ratio, *chan_format, *commercial_free, *short_name;*/
-
 
   int changed_entry = 0;
   int cid = 0;
@@ -680,122 +679,87 @@ static int xmltv_parse_lineups
   if((lineups = htsmsg_get_map(lineups, "xmltv-lineup")) == NULL) return 0;
   if((lineups = htsmsg_get_map(lineups, "tags")) == NULL) return 0;
 
-/* htsmsg_xml_get_cdata_str(htsmsg_t *tags, const char *name) */
-
   HTSMSG_FOREACH(e, lineups) {
-   if (strcmp(e->hmf_name, "lineup-entry") == 0) {
-    if ((tag = htsmsg_get_map_by_field(e))) {
-    if((lineups = htsmsg_get_map(tag, "tags")) == NULL) continue;
-    HTSMSG_FOREACH(f, lineups) {
-	if (strcmp(f->hmf_name, "preset") == 0) {
-	 chan_number = xmltv_lineup_returnvar(mod, f);
-	};
-        if (strcmp(f->hmf_name, "section") == 0) {
-         lineup_section = xmltv_lineup_returnvar(mod, f);
-        };
-
-	if (strcmp(f->hmf_name, "station") == 0) {
-	 if ((tag = htsmsg_get_map_by_field(f))) {
-	 chandata = htsmsg_get_map(tag, "tags");
-	 HTSMSG_FOREACH(g, chandata) {
-	if (strcmp(g->hmf_name, "name") == 0) {
-	chan_name = xmltv_lineup_returnvar(mod, g);
-	};
-/*	if (strcmp(g->hmf_name, "short-name") == 0) {
-	short_name = xmltv_lineup_returnvar(mod, g);
-	};*/
-	if (strcmp(g->hmf_name, "logo") == 0) {
-	logo = xmltv_lineup_returnvarattrib(mod, g);
-	};
-/*	if (strcmp(g->hmf_name, "commercial-free") == 0) {
-	commercial_free = xmltv_lineup_returnvar(mod, g);
-	};*/
-	if (strcmp(g->hmf_name, "video") == 0) {
-	 if ((tag = htsmsg_get_map_by_field(g))) {
-	 chandata = htsmsg_get_map(tag, "tags");
-	 HTSMSG_FOREACH(h, chandata) {
-/*		if (strcmp(h->hmf_name, "format") == 0) {
-		chan_format = xmltv_lineup_returnvar(mod, h);
-		};*/
-/*		if (strcmp(h->hmf_name, "aspect-ratio") == 0) {
-		chan_aspect_ratio = xmltv_lineup_returnvar(mod, h);
-		};*/
-	 }; /* htsmsg_foreach h */
-	}; /* htsmsg_get_map_by_field g */
-	}; /* strcmp video */
-	}; /* HTSMSG_FOREACH g */
-	}; /* tag = htsmsg_get_map_by_field */
-	}; /* strcmp station */
-
-	if (strcmp(f->hmf_name, "dvb-channel") == 0) {
-		if ((tag = htsmsg_get_map_by_field(f))) {
-		if((chandata = htsmsg_get_map(tag, "tags")) == NULL)
-			continue;
-		HTSMSG_FOREACH(g, chandata) {
-/*			if (strcmp(g->hmf_name, "original-network-id") == 0)
-			  chan_network_id = xmltv_lineup_returnvar(mod, g);*/
-			if (strcmp(g->hmf_name, "service-id") == 0)
-			  chan_service_id = xmltv_lineup_returnvar(mod, g);
-/*			if (strcmp(g->hmf_name, "lcn") == 0)
-	  		  chan_lcn = xmltv_lineup_returnvar(mod, g);*/
-/*			if (strcmp(g->hmf_name, "service-name") == 0)
-			  chan_service_name = xmltv_lineup_returnvar(mod, g);*/
-/*			if (strcmp(g->hmf_name, "encrypted") == 0)
-			  chan_encrypted = xmltv_lineup_returnvar(mod, g);*/
-		};
-		};
-	};
-        if (strcmp(f->hmf_name, "stb-channel") == 0) {
-	 if ((tag = htsmsg_get_map_by_field(f))) {
-	 if((chandata = htsmsg_get_map(tag, "tags")) == NULL)
-	   continue;
-         HTSMSG_FOREACH(g, chandata) {
-	  if (strcmp(g->hmf_name, "stb-preset") == 0) {
-	   stb_preset = xmltv_lineup_returnvar(mod, g);
+    if (strcmp(e->hmf_name, "lineup-entry") == 0) {
+      if ((tag = htsmsg_get_map_by_field(e))) {
+        if((lineups = htsmsg_get_map(tag, "tags")) == NULL) continue;
+        HTSMSG_FOREACH(f, lineups) {
+	  if (strcmp(f->hmf_name, "preset") == 0) {
+	    chan_number = xmltv_lineup_returnvar(mod, f);
 	  };
-	 };
-	 };
-	 };
+          if (strcmp(f->hmf_name, "section") == 0) {
+            lineup_section = xmltv_lineup_returnvar(mod, f);
+          };
+	  if (strcmp(f->hmf_name, "station") == 0) {
+	    if ((tag = htsmsg_get_map_by_field(f))) {
+	      chandata = htsmsg_get_map(tag, "tags");
+	      HTSMSG_FOREACH(g, chandata) {
+	        if (strcmp(g->hmf_name, "name") == 0)
+	          chan_name = xmltv_lineup_returnvar(mod, g);
+                if (strcmp(g->hmf_name, "logo") == 0)
+                  logo = xmltv_lineup_returnvarattrib(mod, g);
+              }; /* HTSMSG_FOREACH g */
+            }; /* tag = htsmsg_get_map_by_field */
+          }; /* strcmp station */
+
+          if (strcmp(f->hmf_name, "dvb-channel") == 0) {
+            if ((tag = htsmsg_get_map_by_field(f))) {
+              if((chandata = htsmsg_get_map(tag, "tags")) == NULL)
+                continue;
+              HTSMSG_FOREACH(g, chandata) {
+                if (strcmp(g->hmf_name, "service-id") == 0)
+                  chan_service_id = xmltv_lineup_returnvar(mod, g);
+              };
+            };
+          };
+          if (strcmp(f->hmf_name, "stb-channel") == 0) {
+            if ((tag = htsmsg_get_map_by_field(f))) {
+              if((chandata = htsmsg_get_map(tag, "tags")) == NULL)
+                continue;
+              HTSMSG_FOREACH(g, chandata) {
+                if (strcmp(g->hmf_name, "stb-preset") == 0)
+                  stb_preset = xmltv_lineup_returnvar(mod, g);
+              };
+            };
+          };
 	/* end of stb-channel */
-	}; /* f lineups */
-	}; /* htsmsg_get_map_by_field e */
-	}; /* strcmp lineup-entry */
+        }; /* f lineups */
+      }; /* htsmsg_get_map_by_field e */
+    }; /* strcmp lineup-entry */
 
-cid = 0;
-/* check if we got a valid entry and call the searcher routine */
-if(sscanf(chan_service_id, "%d", &cid) <= 0) {
-        cid = 0;
-};
+  cid = 0;
+  /* check if we got a valid entry and call the searcher routine */
+  if(sscanf(chan_service_id, "%d", &cid) <= 0)
+    cid = 0;
 
-/* Skip all radio channels for now */
-if (strcmp(lineup_section, "Radio channels") == 0) {
+  /* Skip all radio channels for now */
+  if (strcmp(lineup_section, "Radio channels") == 0) {
 #ifdef EPG_TRACE
- tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Skipping entry as its Radio channels");
+    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Skipping entry as its Radio channels");
 #endif
- continue;
-};
+    continue;
+  };
 
-/* If we have stb_preset set then its a sky entry, 
-which dont give us service_id so try pattern match on the name */
-if (stb_preset) {
+  /* If we have stb_preset set then its a sky entry, 
+     which dont give us service_id so try pattern match on the name */
+  if (stb_preset) {
 #ifdef EPG_TRACE
- tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
-  "Sky lineup detected - searching for channel by NAME (%s)",chan_name);
+  tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
+    "Sky lineup detected - searching for channel by NAME (%s)",chan_name);
 #endif
- changed_entry = stb_channel (chan_name, chan_number, logo);
- if (changed_entry == 1)
-  update_counter++;
-
-} else {
-
- /* Skipping Regional variations in the lineup for now */
- if((cid != 0) && (strcmp(lineup_section, "Regional") != 0)) {
-  changed_entry = xmltv_channelupdate ( mod, cid, chan_name, chan_number, logo);
+  changed_entry = stb_channel (chan_name, chan_number, logo);
   if (changed_entry == 1)
-   update_counter++;
- }; /* lineup_section Regional */
+    update_counter++;
 
-}; /* stb_preset */
+  } else {
+    /* Skipping Regional variations in the lineup for now */
+    if((cid != 0) && (strcmp(lineup_section, "Regional") != 0)) {
+      changed_entry = xmltv_channelupdate ( mod, cid, chan_name, chan_number, logo);
+      if (changed_entry == 1)
+        update_counter++;
+    }; /* lineup_section Regional */
+
+  }; /* stb_preset */
 }; /* HTSMSG_FOREACH e */
 
   tvhlog(LOG_NOTICE, "xmltv", "Updated %d channel name/number/icons",update_counter);
