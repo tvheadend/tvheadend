@@ -182,6 +182,11 @@ streaming_msg_clone(streaming_message_t *src)
     atomic_add(&ss->ss_refcount, 1);
     break;
 
+  case SMT_SIGNAL_STATUS:
+    dst->sm_data = malloc(sizeof(signal_status_t));
+    memcpy(dst->sm_data, src->sm_data, sizeof(signal_status_t));
+    break;
+
   case SMT_STOP:
   case SMT_SERVICE_STATUS:
   case SMT_NOSTART:
@@ -250,6 +255,7 @@ streaming_msg_free(streaming_message_t *sm)
   case SMT_NOSTART:
     break;
 
+  case SMT_SIGNAL_STATUS:
   case SMT_MPEGTS:
     free(sm->sm_data);
     break;

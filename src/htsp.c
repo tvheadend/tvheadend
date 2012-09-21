@@ -1919,6 +1919,27 @@ htsp_subscription_service_status(htsp_subscription_t *hs, int status)
  *
  */
 static void
+htsp_subscription_signal_status(htsp_subscription_t *hs, signal_status_t *sig)
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "method", "signalStatus");
+  htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
+  htsmsg_add_str(m, "feStatus",   sig->status_text);
+  if(sig->snr != -2)
+    htsmsg_add_u32(m, "feSNR",    sig->snr);
+  if(sig->signal != -2)
+    htsmsg_add_u32(m, "feSignal", sig->signal);
+  if(sig->ber != -2)
+    htsmsg_add_u32(m, "feBER",    sig->ber);
+  if(sig->unc != -2)
+    htsmsg_add_u32(m, "feUNC",    sig->unc);
+  htsp_send_message(hs->hs_htsp, m, &hs->hs_htsp->htsp_hmq_qstatus);
+}
+
+/**
+ *
+ */
+static void
 htsp_streaming_input(void *opaque, streaming_message_t *sm)
 {
   htsp_subscription_t *hs = opaque;
@@ -1939,6 +1960,10 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
 
   case SMT_SERVICE_STATUS:
     htsp_subscription_service_status(hs, sm->sm_code);
+    break;
+
+  case SMT_SIGNAL_STATUS:
+    htsp_subscription_signal_status(hs, sm->sm_data);
     break;
 
   case SMT_NOSTART:

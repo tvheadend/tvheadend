@@ -39,6 +39,8 @@
 #include "diseqc.h"
 #include "notify.h"
 #include "dvr/dvr.h"
+#include "service.h"
+#include "streaming.h"
 
 #include "epggrab.h"
 
@@ -91,6 +93,9 @@ dvb_fe_monitor(void *aux)
   int status, v, update = 0, vv, i, fec, q;
   th_dvb_mux_instance_t *tdmi = tda->tda_mux_current;
   char buf[50];
+  signal_status_t sigstat;
+  streaming_message_t sm;
+  struct service *t;
 
   gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 1);
 
@@ -194,6 +199,22 @@ dvb_fe_monitor(void *aux)
 
     dvb_mux_save(tdmi);
   }
+
+  /* Streaming message */
+  sigstat.status_text = dvb_mux_status(tdmi);
+  sigstat.snr         = tdmi->tdmi_snr;
+  sigstat.signal      = tdmi->tdmi_signal;
+  sigstat.ber         = tdmi->tdmi_ber;
+  sigstat.unc         = tdmi->tdmi_uncorrected_blocks;
+  sm.sm_type = SMT_SIGNAL_STATUS;
+  sm.sm_data = &sigstat;
+  LIST_FOREACH(t, &tda->tda_transports, s_active_link)
+    if(t->s_dvb_mux_instance == tda->tda_mux_current && t->s_status == SERVICE_RUNNING ) {
+      pthread_mutex_lock(&t->s_stream_mutex);
+      streaming_pad_deliver(&t->s_streaming_pad, &sm);
+      pthread_mutex_unlock(&t->s_stream_mutex);
+    }
+
 }
 
 
