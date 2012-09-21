@@ -138,6 +138,8 @@ access_log_update_by_subscription_struct(char *title, channel_t *chanstr)
 	token2= strtok(NULL, " ");
 	tvhlog(LOG_DEBUG, "accesslogging", "update_by_subscription_struct token: %s, token2: %s and channel: %s",
 	  token,token2,chanstr->ch_name);
+	if (token2 == NULL)
+         return;
 	access_log_update(token2,"htsp",strdup(chanstr->ch_name),inet_addr(token));
 };
 
