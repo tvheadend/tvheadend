@@ -538,18 +538,6 @@ static int _xmltv_parse_channel
   return save;
 }
 
-/* Channel Lineup parsing and search code
-  https://github.com/andyb2000 Aug 2012 */
-
-static epggrab_channel_t *_xmltv_find_epggrab_channel
-  ( epggrab_module_t *mod, int cid, int create, int *save )
-{
-  char chid[32];
-  sprintf(chid, "%s-%d", mod->id, cid);
-  return epggrab_channel_find(&_xmltv_channels, chid, create, save,
-                              (epggrab_module_t*)mod);
-}
-
 static channel_t *_xmltv_find_epggrab_channel_byname
   ( const char *chname )
 {
@@ -594,13 +582,11 @@ static int stb_channel
  int changed_entry = 0;
  int save = 0;
 
- if ((chan = _xmltv_find_epggrab_channel_byname(chan_name))) {
+ if ((chan = channel_find_by_name(chan_name,0,0))) {
 #ifdef EPG_TRACE
   tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
    "Channel search FOUND MATCH BY NAME: %s",chan->ch_name);
 #endif
-  /* We'll fake a cid here to make the Sky channel lineup with 
-     other channels, so the rest of this routine will continue */
   changed_entry = 0;
   if (epggrab_channel_renumber) {
 #ifdef EPG_TRACE
@@ -637,31 +623,23 @@ static int xmltv_channelupdate
 (epggrab_module_t *mod, const int cid, const char *chan_name, const char *chan_number, const char *logo)
 {
   service_t *channel_service_id;
-  epggrab_channel_t *ec;
-  epggrab_channel_link_t *ecl;
-  int changed_entry = 0, save = 0;
+  channel_t *ec;
+  int changed_entry = 0;
 
-/*  channel_service_id = _xmltv_find_service(cid);*/
   channel_service_id = dvb_transport_find3(NULL, NULL, NULL, 0, 0, cid, 1, 0);
   if (channel_service_id && channel_service_id->s_ch) {
-   ec  =_xmltv_find_epggrab_channel(mod, cid, 1, &save);
-/*   ec->channel = channel_service_id->s_ch;*/
-   ecl = LIST_FIRST(&ec->channels);
-   if(!ecl) {
-     ecl = calloc(1, sizeof(epggrab_channel_link_t));
-     LIST_INSERT_HEAD(&ec->channels, ecl, link);
-   };
-   ecl->channel = channel_service_id->s_ch;
-   changed_entry = 0;
+  ec = channel_service_id->s_ch;
+  if (ec == NULL)
+    return -1;
 /* Check for primary, update channel number if primary,
       or just update icon regardless */
-   if (service_is_primary_epg(channel_service_id)) {
-   if (epggrab_channel_renumber) {
+  if (service_is_primary_epg(channel_service_id)) {
+  if (epggrab_channel_renumber) {
 #ifdef EPG_TRACE
     tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
-     "Updating channelid: %d name: %s - Channel Number",channel_service_id->s_dvb_service_id, channel_service_id->s_nicename);
+     "Updating channelid: (%d) name: (%s) - Channel Number: (%s)",channel_service_id->s_dvb_service_id, channel_service_id->s_nicename,chan_number);
 #endif
-    save |= epggrab_channel_set_number(ec, atoi(chan_number));
+    channel_set_number(ec, atoi(chan_number));
     changed_entry = 1;
    };
    };
@@ -670,7 +648,7 @@ static int xmltv_channelupdate
     tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
      "Updating channelid: %d name: %s - Channel Name",channel_service_id->s_dvb_service_id, channel_service_id->s_nicename);
 #endif
-    save |= epggrab_channel_set_name(ec, chan_name);
+    channel_rename(ec, chan_name);
     changed_entry = 1;
    };
    if (epggrab_channel_reicon) {
@@ -678,7 +656,7 @@ static int xmltv_channelupdate
     tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
      "Updating channelid: %d name: %s - Channel Icon",channel_service_id->s_dvb_service_id, channel_service_id->s_nicename);
 #endif
-    save |= epggrab_channel_set_icon(ec, logo);
+    channel_set_icon(ec, logo);
     changed_entry = 1;
    };
   };
