@@ -931,7 +931,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   dvr_entry_t *de;
   dvr_entry_sched_state_t dvr_status;
   const char *dvr_config_name, *title, *desc, *creator, *lang;
-  time_t start, stop, start_extra, stop_extra;
+  int64_t start, stop, start_extra, stop_extra;
   uint32_t u32, priority;
   channel_t *ch = NULL;
 
