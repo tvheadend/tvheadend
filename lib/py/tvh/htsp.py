@@ -29,7 +29,7 @@ import log
 # HTSP Client
 # ###########################################################################
 
-HTSP_PROTO_VERSION = 5
+HTSP_PROTO_VERSION = 6
 
 # Create passwd digest
 def htsp_digest ( user, passwd, chal ):
@@ -76,10 +76,9 @@ class HTSPClient:
     self.send('hello', args)
     resp = self.recv()
 
-    # Validate
-    if resp['htspversion'] != HTSP_PROTO_VERSION:
-      raise Exception('version mismatch')
-    self._auth = resp['challenge']
+    # Store
+    self._version = min(HTSP_PROTO_VERSION, resp['htspversion'])
+    self._auth    = resp['challenge']
     
     # Return response
     return resp
@@ -95,8 +94,8 @@ class HTSPClient:
       raise Exception('Authentication failed')
 
   # Enable async receive
-  def enableAsyncMetadata ( self ):
-    self.send('enableAsyncMetadata')
+  def enableAsyncMetadata ( self, args = {} ):
+    self.send('enableAsyncMetadata', args)
 
 # ############################################################################
 # Editor Configuration

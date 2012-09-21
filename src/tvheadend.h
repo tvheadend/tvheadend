@@ -236,6 +236,13 @@ typedef enum {
   SMT_SERVICE_STATUS,
 
   /**
+   * Signal status
+   *
+   * Notification about frontend signal status
+   */
+  SMT_SIGNAL_STATUS,
+
+  /**
    * Streaming stop.
    *
    * End of streaming. If sm_code is 0 this was a result to an
