@@ -70,6 +70,7 @@ typedef struct access_log {
 TAILQ_HEAD(access_log_list, access_log);
 extern struct access_log_list access_log;
 
+#define ACCESS_ANONYMOUS       0x0
 #define ACCESS_STREAMING       0x1
 #define ACCESS_WEB_INTERFACE   0x2
 #define ACCESS_RECORDER        0x4

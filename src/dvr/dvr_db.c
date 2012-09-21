@@ -243,7 +243,7 @@ static dvr_entry_t *_dvr_entry_create (
   const char *config_name, epg_broadcast_t *e,
   channel_t *ch, time_t start, time_t stop, 
   time_t start_extra, time_t stop_extra,
-	const char *title, const char *description,
+	const char *title, const char *description, const char *lang,
   epg_genre_t *content_type,
 	const char *creator, dvr_autorec_entry_t *dae,
 	dvr_prio_t pri)
@@ -312,10 +312,10 @@ static dvr_entry_t *_dvr_entry_create (
       de->de_desc = lang_str_copy(e->episode->summary);
   } else if (title) {
     de->de_title = lang_str_create();
-    lang_str_add(de->de_title, title, NULL, 0);
+    lang_str_add(de->de_title, title, lang, 0);
     if (description) {
       de->de_desc = lang_str_create();
-      lang_str_add(de->de_desc, description, NULL, 0);
+      lang_str_add(de->de_desc, description, lang, 0);
     }
   }
   if (content_type) de->de_content_type = *content_type;
@@ -350,14 +350,14 @@ dvr_entry_t *
 dvr_entry_create(const char *config_name,
                  channel_t *ch, time_t start, time_t stop, 
                  time_t start_extra, time_t stop_extra,
-		             const char *title, const char *description,
+		             const char *title, const char *description, const char *lang,
                  epg_genre_t *content_type,
 		             const char *creator, dvr_autorec_entry_t *dae,
                  dvr_prio_t pri)
 {
   return _dvr_entry_create(config_name, NULL,
                            ch, start, stop, start_extra, stop_extra,
-                           title, description, content_type,
+                           title, description, lang, content_type,
                            creator, dae, pri);
 }
 
@@ -377,7 +377,7 @@ dvr_entry_create_by_event(const char *config_name,
   return _dvr_entry_create(config_name, e,
                            e->channel, e->start, e->stop,
                            start_extra, stop_extra,
-                           NULL, NULL,
+                           NULL, NULL, NULL,
                            LIST_FIRST(&e->episode->genre),
                            creator, dae, pri);
 }
@@ -650,8 +650,8 @@ dvr_timer_expire(void *aux)
 
 static dvr_entry_t *_dvr_entry_update
   ( dvr_entry_t *de, epg_broadcast_t *e,
-    const char *title, const char *lang, 
-    int start, int stop )
+    const char *title, const char *desc, const char *lang, 
+    time_t start, time_t stop, time_t start_extra, time_t stop_extra )
 {
   int save = 0;
 
@@ -668,6 +668,14 @@ static dvr_entry_t *_dvr_entry_update
     de->de_stop = stop;
     save = 1;
   }
+  if (start_extra && (start_extra != de->de_start_extra)) {
+    de->de_start_extra = start_extra;
+    save = 1;
+  }
+  if (stop_extra && (stop_extra != de->de_stop_extra)) {
+    de->de_stop_extra = stop_extra;
+    save = 1;
+  }
 
   /* Title */ 
   if (e && e->episode && e->episode->title) {
@@ -677,6 +685,8 @@ static dvr_entry_t *_dvr_entry_update
     if (!de->de_title) de->de_title = lang_str_create();
     save = lang_str_add(de->de_title, title, lang, 1);
   }
+
+  // TODO: description
 
   /* Genre */
   if (e && e->episode) {
@@ -712,10 +722,13 @@ static dvr_entry_t *_dvr_entry_update
  */
 dvr_entry_t * 
 dvr_entry_update
-  (dvr_entry_t *de, const char* de_title, const char *lang,
-   int de_start, int de_stop) 
+  (dvr_entry_t *de,
+   const char* de_title, const char *de_desc, const char *lang,
+   time_t de_start, time_t de_stop,
+   time_t de_start_extra, time_t de_stop_extra) 
 {
-  return _dvr_entry_update(de, NULL, de_title, lang, de_start, de_stop);
+  return _dvr_entry_update(de, NULL, de_title, de_desc, lang, 
+                           de_start, de_stop, de_start_extra, de_stop_extra);
 }
 
 /**
@@ -736,7 +749,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
     if (ude == NULL && de->de_sched_state == DVR_SCHEDULED)
       dvr_entry_cancel(de);
     else if(new_e->episode && new_e->episode->title)
-      _dvr_entry_update(de, new_e, NULL, NULL, 0, 0);
+      _dvr_entry_update(de, new_e, NULL, NULL, NULL, 0, 0, 0, 0);
   }
 }
 
@@ -744,7 +757,7 @@ void dvr_event_updated ( epg_broadcast_t *e )
 {
   dvr_entry_t *de;
   de = dvr_entry_find_by_event(e);
-  if (de) _dvr_entry_update(de, e, NULL, NULL, 0, 0);
+  if (de) _dvr_entry_update(de, e, NULL, NULL, NULL, 0, 0, 0, 0);
 }
 
 /**

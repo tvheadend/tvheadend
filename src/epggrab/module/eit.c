@@ -115,6 +115,8 @@ typedef struct eit_event
   uint8_t           ad, st, ds;
   uint8_t           bw;
 
+  uint8_t           parental;
+
 } eit_event_t;
 
 /* ************************************************************************
@@ -361,7 +363,27 @@ static int _eit_desc_content
 }
 
 /*
- * Content ID
+ * Parental rating Descriptor - 0x55
+ */
+static int _eit_desc_parental
+  ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev )
+{
+  int cnt = 0, sum = 0;
+  while (len > 3) {
+    if ( ptr[3] && ptr[3] < 0x10 ) {
+      cnt++;
+      sum += (ptr[3] + 3);
+    }
+  }
+  // Note: we ignore the country code and average the lot!
+  if (cnt)
+    ev->parental = (uint8_t)(sum / cnt);
+
+  return 0;
+}
+
+/*
+ * Content ID - 0x76
  */
 static int _eit_desc_crid
   ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev, service_t *svc )
@@ -489,11 +511,9 @@ static int _eit_process_event
       case DVB_DESC_COMPONENT:
         r = _eit_desc_component(mod, ptr, dlen, &ev);
         break;
-#if TODO_AGE_RATING
       case DVB_DESC_PARENTAL_RAT:
         r = _eit_desc_parental(mod, ptr, dlen, &ev);
         break;
-#endif
       case DVB_DESC_CRID:
         r = _eit_desc_crid(mod, ptr, dlen, &ev, svc);
         break;
@@ -554,6 +574,8 @@ static int _eit_process_event
       *save |= epg_episode_set_title2(ee, ev.title, mod);
     if ( ev.genre )
       *save |= epg_episode_set_genre(ee, ev.genre, mod);
+    if ( ev.parental )
+      *save |= epg_episode_set_age_rating(ee, ev.parental, mod);
 #if TODO_ADD_EXTRA
     if ( ev.extra )
       *save |= epg_episode_set_extra(ee, extra, mod);

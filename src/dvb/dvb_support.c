@@ -41,6 +41,11 @@ static int convert_iso_8859[16] = {
 #define convert_utf8   14
 #define convert_iso6937 15
 
+#define PL_FIX_CHARS \
+"\xA1\xA3\xA6\xAC\xAF\xB1\xB3\xB6\xBC\xBF"\
+"\xC1\xC2\xC3\xC4\xC5\xC6\xC7\xC8\xCA\xCB\xCD\xCE\xCF"\
+"\xD1\xD3\xE6\xE8\xEA\xF1\xF3\xF8"
+
 static inline int encode_utf8(unsigned int c, char *outb, int outleft)
 {
   if (c <= 0x7F && outleft >= 1) {
@@ -141,7 +146,7 @@ static inline size_t conv_6937(const uint8_t *src, size_t srclen,
       dst++;
     } else {
       uint16_t uc;
-      if (c <= 0x9f) {
+      if (c >= 0xc0 && c <= 0xcf) {
         // map two-byte sequence, skipping illegal combinations.
         if (srclen<2) {
           errno = EINVAL;
@@ -155,7 +160,7 @@ static inline size_t conv_6937(const uint8_t *src, size_t srclen,
         } else if (c2 >= 0x41 && c2 <= 0x5a) {
           uc = iso6937_multi_byte[c-0xc0][c2-0x41];
         } else if (c2 >= 0x61 && c2 <= 0x7a) {
-          uc = iso6937_multi_byte[c-0xc0][c2-0x61];
+          uc = iso6937_multi_byte[c-0xc0][c2-0x61+26];
         } else {
           uc = 0;
         }
@@ -225,7 +230,11 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char
     return -1;
 
   case 0x01 ... 0x0b:
-    ic = convert_iso_8859[src[0] + 4];
+    // NOTE: some Polish channels using ISO6937 while specifying ISO8859-4
+    if ((src[0] + 4) == 5 && strpbrk((const char*)src, PL_FIX_CHARS))
+      ic = convert_iso6937;
+    else
+      ic = convert_iso_8859[src[0] + 4];
     src++; srclen--;
     break;
 
@@ -257,7 +266,11 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char
         ic = convert_iso6937;
       }
     } else {
-      ic = convert_iso6937;
+      // Note: some Polish channels using ISO8859-2 while specifying no encoding
+      if (strpbrk((const char*)src, PL_FIX_CHARS))
+        ic = convert_iso_8859[2];
+      else
+        ic = convert_iso6937;
     }
     break;
   }

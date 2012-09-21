@@ -84,7 +84,7 @@ tvheadend.epgDetails = function(event) {
 			text : "Record program"
 		}), new Ext.Button({
 			handler : recordSeries,
-			text : event.seriesLink ? "Record series" : "Autorec"
+			text : event.serieslink ? "Record series" : "Autorec"
 		}) ],
 		buttonAlign : 'center',
 		html : content
