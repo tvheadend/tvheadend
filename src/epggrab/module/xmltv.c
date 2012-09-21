@@ -240,7 +240,7 @@ static void get_episode_info
  */
 static int
 xmltv_parse_vid_quality
-  ( epggrab_module_t *mod, epg_broadcast_t *ebc, htsmsg_t *m, uint8_t *bw )
+  ( epggrab_module_t *mod, epg_broadcast_t *ebc, htsmsg_t *m, int8_t *bw )
 {
   int save = 0;
   int hd = 0, lines = 0, aspect = 0;
@@ -401,7 +401,7 @@ static int _xmltv_parse_programme_tags
   lang_str_t *desc = NULL;
   lang_str_t *subtitle = NULL;
   time_t first_aired = 0;
-  uint8_t bw = -1;
+  int8_t bw = -1;
 
   /*
    * Broadcast
@@ -474,7 +474,7 @@ static int _xmltv_parse_programme_tags
     }
 
     if (bw != -1)
-      save3 |= epg_episode_set_is_bw(ee, bw, mod);
+      save3 |= epg_episode_set_is_bw(ee, (uint8_t)bw, mod);
 
     save3 |= epg_episode_set_epnum(ee, &epnum, mod);
 
