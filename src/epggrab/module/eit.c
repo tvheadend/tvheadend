@@ -368,12 +368,14 @@ static int _eit_desc_content
 static int _eit_desc_parental
   ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev )
 {
-  int cnt = 0, sum = 0;
+  int cnt = 0, sum = 0, i = 0;
   while (len > 3) {
-    if ( ptr[3] && ptr[3] < 0x10 ) {
+    if ( ptr[i] && ptr[i] < 0x10 ) {
       cnt++;
-      sum += (ptr[3] + 3);
+      sum += (ptr[i] + 3);
     }
+    len -= 4;
+    i   += 4;
   }
   // Note: we ignore the country code and average the lot!
   if (cnt)
