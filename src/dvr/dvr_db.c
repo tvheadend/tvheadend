@@ -249,7 +249,7 @@ static dvr_entry_t *_dvr_entry_create (
 	dvr_prio_t pri)
 {
   dvr_entry_t *de;
-  char tbuf[30];
+  char tbuf[64];
   struct tm tm;
   time_t t;
   dvr_config_t *cfg = dvr_config_find_by_name_default(config_name);
