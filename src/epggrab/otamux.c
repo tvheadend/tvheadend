@@ -363,10 +363,10 @@ void epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
       if (ota->is_reg && ota->state == EPGGRAB_OTA_MUX_RUNNING) break;
     }
 
-    /* All complete (bring timer forward) */
+    /* All complete, start next scan immediately */
     if (!ota) {
       gtimer_arm(&tdmi->tdmi_adapter->tda_mux_scanner_timer,
-                 dvb_adapter_mux_scanner, tdmi->tdmi_adapter, 20);
+                 dvb_adapter_mux_scanner, tdmi->tdmi_adapter, 0);
     }
   }
 }
@@ -374,8 +374,10 @@ void epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
 /* Reset */
 void epggrab_ota_cancel    ( epggrab_ota_mux_t *ota )
 {
-  tvhlog(LOG_DEBUG, ota->grab->id, "processing cancelled");
-  ota->state = EPGGRAB_OTA_MUX_IDLE;
+  if (ota->state == EPGGRAB_OTA_MUX_RUNNING) {
+    tvhlog(LOG_DEBUG, ota->grab->id, "processing cancelled");
+    ota->state = EPGGRAB_OTA_MUX_IDLE;
+  }
   _epggrab_ota_finished(ota);
 }
 
