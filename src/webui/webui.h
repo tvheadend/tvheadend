@@ -63,4 +63,7 @@ void comet_mailbox_add_message(htsmsg_t *m, comet_mailbox_flags_t delivery_flags
 
 void comet_flush(void);
 
+int comet_eit_subscribers(void);
+
+
 #endif /* WEBUI_H_ */

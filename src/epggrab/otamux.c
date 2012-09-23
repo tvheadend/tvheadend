@@ -35,6 +35,10 @@ TAILQ_HEAD(, epggrab_ota_mux) ota_mux_all;
 /* **************************************************************************
  * Global functions (called from DVB code)
  * *************************************************************************/
+static int _ota_module_is_active( epggrab_module_ota_t *mod ) {
+  return mod->active == NULL || mod->active(mod);
+}
+ 
 
 void epggrab_mux_start ( th_dvb_mux_instance_t *tdmi )
 {
@@ -77,6 +81,7 @@ int epggrab_mux_period ( th_dvb_mux_instance_t *tdmi )
   epggrab_ota_mux_t *ota;
   TAILQ_FOREACH(ota, &tdmi->tdmi_epg_grab, tdmi_link) {
     if (!ota->is_reg) continue;
+    if (!_ota_module_is_active(ota->grab)) continue;
     if (ota->timeout > period)
       period = ota->timeout;
   }
@@ -92,6 +97,7 @@ th_dvb_mux_instance_t *epggrab_mux_next ( th_dvb_adapter_t *tda )
     if (ota->tdmi->tdmi_adapter != tda) continue;
     if (ota->interval + ota->completed > now) return NULL;
     if (!ota->is_reg) return NULL;
+    if (!_ota_module_is_active(ota->grab)) return NULL;
     break;
   }
   return ota ? ota->tdmi : NULL;

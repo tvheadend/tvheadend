@@ -941,18 +941,22 @@ static int _eit_enable ( void *m, uint8_t e )
   return 1;
 }
 
+static int _eit_comet_is_active( epggrab_module_ota_t* m ) {
+  return comet_eit_subscribers() > 0;
+}
+
 void eit_init ( void )
 {
   epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber (internal EPG update)", 1,
-                            _eit_start, _eit_enable, NULL);
+                            _eit_start, _eit_enable, NULL, NULL);
   epggrab_module_ota_create(NULL, "eit_comet", "EIT: DVB Grabber (push EIT data to comet mailbox)", 1,
-                            _eit_start, _eit_enable, NULL);
+                            _eit_start, _eit_enable, _eit_comet_is_active, NULL);
   epggrab_module_ota_create(NULL, "uk_freesat", "UK: Freesat", 5,
-                            _eit_start, _eit_enable, NULL);
+                            _eit_start, _eit_enable, NULL, NULL);
   epggrab_module_ota_create(NULL, "uk_freeview", "UK: Freeview", 5,
-                            _eit_start, _eit_enable, NULL);
+                            _eit_start, _eit_enable, NULL, NULL);
   epggrab_module_ota_create(NULL, "viasat_baltic", "VIASAT: Baltic", 5,
-                            _eit_start, _eit_enable, NULL);
+                            _eit_start, _eit_enable, NULL, NULL);
 }
 
 void eit_load ( void )

@@ -202,6 +202,9 @@ struct epggrab_module_ota
 
   TAILQ_HEAD(, epggrab_ota_mux)  muxes; ///< List of related muxes
 
+  /* Is module active? */
+  int (*active) ( epggrab_module_ota_t *m );
+
   /* Transponder tuning */
   void (*start) ( epggrab_module_ota_t *m, struct th_dvb_mux_instance *tdmi );
 };

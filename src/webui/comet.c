@@ -48,6 +48,7 @@ static pthread_cond_t comet_cond = PTHREAD_COND_INITIALIZER;
 static LIST_HEAD(, comet_mailbox) mailboxes;
 
 int mailbox_tally;
+int eit_subscriber_count = 0;
 
 typedef struct comet_mailbox {
   char *cmb_boxid; /* SHA-1 hash */
@@ -71,6 +72,9 @@ cmb_destroy(comet_mailbox_t *cmb)
 
   LIST_REMOVE(cmb, cmb_link);
 
+  if (eit_subscriber_count && (cmb->cmb_delivery_flags & COMET_DELIVERY_EIT) > 0) {
+    eit_subscriber_count--;
+  }
   free(cmb->cmb_boxid);
   free(cmb);
 }
@@ -127,6 +131,9 @@ comet_mailbox_create(comet_mailbox_flags_t delivery_flags)
   cmb->cmb_delivery_flags = delivery_flags;
   time(&cmb->cmb_last_used);
   mailbox_tally++;
+  if (cmb->cmb_delivery_flags & COMET_DELIVERY_EIT) {
+    eit_subscriber_count++;
+  }
 
   LIST_INSERT_HEAD(&mailboxes, cmb, cmb_link);
   return cmb;
@@ -334,4 +341,8 @@ comet_mailbox_add_message(htsmsg_t *m, comet_mailbox_flags_t delivery_flags)
 
   if (msg_delivered) pthread_cond_broadcast(&comet_cond);
   pthread_mutex_unlock(&comet_mutex);
+}
+
+int comet_eit_subscribers(void) {
+  return eit_subscriber_count;
 }

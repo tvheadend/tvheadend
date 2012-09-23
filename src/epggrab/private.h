@@ -90,6 +90,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
     void (*start) (epggrab_module_ota_t*m,
                    struct th_dvb_mux_instance *tdmi),
     int (*enable) (void *m, uint8_t e ),
+    int (*active) (epggrab_module_ota_t* m ),
     epggrab_channel_tree_t *channels );
 
 /* **************************************************************************
