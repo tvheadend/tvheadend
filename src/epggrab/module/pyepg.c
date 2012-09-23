@@ -307,7 +307,6 @@ static int _pyepg_parse_broadcast
   if ((id      = htsmsg_get_str(attr, "episode")) == NULL) return 0;
   if ((start   = htsmsg_get_str(attr, "start")) == NULL ) return 0;
   if ((stop    = htsmsg_get_str(attr, "stop")) == NULL ) return 0;
-  if ((tags    = htsmsg_get_map(data, "tags")) == NULL) return 0;
 
   /* Parse times */
   if (!_pyepg_parse_time(start, &tm_start)) return 0;
@@ -321,21 +320,23 @@ static int _pyepg_parse_broadcast
   if ( save ) stats->broadcasts.created++;
 
   /* Quality */
-  u32 = htsmsg_get_map(tags, "hd") ? 1 : 0;
-  save |= epg_broadcast_set_is_hd(broadcast, u32, mod);
-  u32 = htsmsg_get_map(tags, "widescreen") ? 1 : 0;
-  save |= epg_broadcast_set_is_widescreen(broadcast, u32, mod);
-  // TODO: lines, aspect
+  if ((tags = htsmsg_get_map(data, "tags")) != NULL) {
+    u32 = htsmsg_get_map(tags, "hd") ? 1 : 0;
+    save |= epg_broadcast_set_is_hd(broadcast, u32, mod);
+    u32 = htsmsg_get_map(tags, "widescreen") ? 1 : 0;
+    save |= epg_broadcast_set_is_widescreen(broadcast, u32, mod);
+    // TODO: lines, aspect
 
-  /* Accessibility */
-  // Note: reuse XMLTV parse code as this is the same
-  xmltv_parse_accessibility(mod, broadcast, tags);
+    /* Accessibility */
+    // Note: reuse XMLTV parse code as this is the same
+    xmltv_parse_accessibility(mod, broadcast, tags);
 
-  /* New/Repeat */
-  u32 = htsmsg_get_map(tags, "new") || htsmsg_get_map(tags, "premiere");
-  save |= epg_broadcast_set_is_new(broadcast, u32, mod);
-  u32 = htsmsg_get_map(tags, "repeat") ? 1 : 0;
-  save |= epg_broadcast_set_is_repeat(broadcast, u32, mod);
+    /* New/Repeat */
+    u32 = htsmsg_get_map(tags, "new") || htsmsg_get_map(tags, "premiere");
+    save |= epg_broadcast_set_is_new(broadcast, u32, mod);
+    u32 = htsmsg_get_map(tags, "repeat") ? 1 : 0;
+    save |= epg_broadcast_set_is_repeat(broadcast, u32, mod);
+  }
 
   /* Set episode */
   if ((episode = epg_episode_find_by_uri(id, 1, &save)) == NULL) return 0;
