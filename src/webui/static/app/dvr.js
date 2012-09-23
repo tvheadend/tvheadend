@@ -410,7 +410,9 @@ tvheadend.autoreceditor = function() {
 		width : 30
 	});
 
-	var cm = new Ext.grid.ColumnModel(
+	var cm = new Ext.grid.ColumnModel({
+  defaultSortable: true,
+  columns :
 		[
 			enabledColumn,
 			{
@@ -557,7 +559,7 @@ tvheadend.autoreceditor = function() {
 				editor : new fm.TextField({
 					allowBlank : false
 				})
-			} ]);
+			} ]});
 
 	return new tvheadend.tableEditor('Automatic Recorder', 'autorec', cm,
 		tvheadend.autorecRecord, [ enabledColumn ], tvheadend.autorecStore,

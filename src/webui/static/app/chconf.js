@@ -134,6 +134,7 @@ tvheadend.chconf = function() {
 	}, {
 		header : "Name",
 		dataIndex : 'name',
+    sortable: true,
 		width : 150,
 		editor : new fm.TextField({
 			allowBlank : false
