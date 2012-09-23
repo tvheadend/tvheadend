@@ -427,8 +427,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   htsmsg_add_u32(out, "id", de->de_id);
   htsmsg_add_u32(out, "channel", de->de_channel->ch_id);
 
-  htsmsg_add_s32(out, "start", de->de_start);
-  htsmsg_add_s32(out, "stop", de->de_stop);
+  htsmsg_add_s64(out, "start", de->de_start);
+  htsmsg_add_s64(out, "stop", de->de_stop);
 
   if( de->de_title && (s = lang_str_get(de->de_title, NULL)))
     htsmsg_add_str(out, "title", s);
@@ -497,8 +497,8 @@ htsp_build_event
 
   htsmsg_add_u32(out, "eventId", e->id);
   htsmsg_add_u32(out, "channelId", e->channel->ch_id);
-  htsmsg_add_u32(out, "start", e->start);
-  htsmsg_add_u32(out, "stop", e->stop);
+  htsmsg_add_s64(out, "start", e->start);
+  htsmsg_add_s64(out, "stop", e->stop);
   if ((str = epg_broadcast_get_title(e, lang)))
     htsmsg_add_str(out, "title", str);
   if ((str = epg_broadcast_get_description(e, lang)))
