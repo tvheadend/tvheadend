@@ -47,8 +47,8 @@ static eit_status_t *eit_status_find
   ( eit_status_list_t *el, int tableid, uint16_t tsid, uint16_t sid,
     uint8_t sec, uint8_t lst, uint8_t seg, uint8_t ver )
 {
-  int i;
-  uint32_t msk;
+  int i, sec_index;
+  uint32_t sec_seen_mask;  
   eit_status_t *sta;
 
   /* Find */
@@ -74,22 +74,41 @@ static eit_status_t *eit_status_find
     sta->ver = ver;
     for (i = 0; i < (lst / 32); i++)
       sta->sec[i] = 0xFFFFFFFF;
-    if (lst % 32)
-      sta->sec[i] = (0xFFFFFFFF >> (31-(lst%32)));
+    sta->sec[i] = (0xFFFFFFFF >> (31-(lst%32)));
   }
 
-  /* Get section mask */
-  if (sec == seg) {
-    msk = 0xFF << (((sec/8)%4) * 8);
-  } else {
-    msk = 0x1  << (sec%32);
+  /* Get "section(s) seen" mask. See ETSI TS 101 211 (V1.11.1) section 4.1.4 
+   * and ETSI EN 300 468 (V1.13.1) section 5.2.4 for usage of the
+   * of the "seg" (= segment_last_section_number) field in the
+   * now/next (tableid < 0x50) and schedule (tableid >= 0x50) tables
+   */
+  sec_index = sec/32;
+  sec_seen_mask = 0x1 << (sec%32);
+  if (tableid >= 0x50) {
+    // ETSI TS 101 211 (V1.11.1) section 4.1.4 specifies seg in eit schedule tables 
+    // as the index of the first section in the segment (always a multiple of 8, 
+    // because a segment has eight sections) plus an offset thaqt depends on the
+    // number of sections used:
+    // * seg_first_section + n - 1  if 0<n<8 segments are used (see section 4.1.4 e)
+    // * seg_first_section + 7      if all segments are used (see section 4.1.4 f)
+    // * seg_first_section + 0      if the section is empty (see section 4.1.4 g)
+    // This means that we can calculate the mask offset of the last used section
+    // simply by taking the lowest three bits of seg + 1 (empty segments count as 
+    // "one section used"). We use this offset to calculate a mask for all *unused* 
+    // sections by shifting 0xff left by this offset, take the lowest eight bits, shift 
+    // them left by the first section offset and finally expand seen_mask (seen_mask) 
+    // by calculating "seen_mask |= unused_mask"
+    
+    uint32_t seg_first_section = seg & ~0x07;
+    uint32_t seg_last_used_section_offset = (seg & 0x07) + 1;
+    uint32_t unused_mask = ((0xff << seg_last_used_section_offset) & 0xff) << (seg_first_section%32);
+    sec_seen_mask |= unused_mask;
   }
-
   /* Already seen */
-  if (!(sta->sec[sec/32] & msk)) return NULL;
+  if (!(sta->sec[sec_index] & sec_seen_mask)) return NULL;
 
   /* Update */
-  sta->sec[sec/32] &= ~msk;
+  sta->sec[sec_index] &= ~sec_seen_mask;
   sta->done = 1;
   for (i = 0; i < 8; i++ )
     if (sta->sec[i]) sta->done = 0;
@@ -618,10 +637,12 @@ static int _eit_callback
   if (!ota || !ota->status) return -1;
   stal = ota->status;
 
-  /* Begin - reset done stats */
+  /* Begin - reset done stats and force mask update in eit_status_find() */
   if (epggrab_ota_begin(ota)) {
-    LIST_FOREACH(sta, stal, link)
+    LIST_FOREACH(sta, stal, link) {
       sta->done = 0;
+      sta->ver = 0xff;
+    }
   }
 
   /* Get table info */
@@ -636,13 +657,6 @@ static int _eit_callback
          "tid=%02X, tsid=%04X, sid=%04X, sec=%3d/%3d, seg=%3d, ver=%2d",
          tableid, tsid, sid, sec, lst, seg, ver);
 #endif
-
-  /* Current status */
-  sta = eit_status_find(stal, tableid, tsid, sid, sec, lst, seg, ver);
-#ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, mod->id, sta ? "section process" : "section seen");
-#endif
-  if (!sta) goto done;
 
   /* Don't process */
   if((ptr[2] & 1) == 0) goto done;
@@ -672,6 +686,13 @@ static int _eit_callback
   /* Ignore (not primary EPG service) */
   if (!service_is_primary_epg(svc)) goto done;
 
+  /* Current status */
+  sta = eit_status_find(stal, tableid, tsid, sid, sec, lst, seg, ver);
+#ifdef EPG_TRACE
+  tvhlog(LOG_DEBUG, mod->id, sta ? "section process" : "section seen");
+#endif
+  if (!sta) goto done;
+
   /* Register as interesting */
   if (tableid < 0x50)
     epggrab_ota_register(ota, 20, 300); // 20s grab, 5min interval
@@ -696,9 +717,26 @@ static int _eit_callback
   /* Complete */
 done:
   if (!sta || sta->done) {
+#ifdef EIT_STATUS_TRACE
+    int total = 0;
+    int finished = 0;
+    LIST_FOREACH(sta, stal, link) {
+      total++;
+      tvhlog(LOG_DEBUG, "eit_status_find", "table=0x%02x, sid=0x%04x, done=%u, mask=%8x|%8x|%8x|%8x|%8x|%8x|%8x|%8x", 
+                  sta->tid, sta->sid, sta->done,
+                  sta->sec[7], sta->sec[6], sta->sec[5], sta->sec[4], sta->sec[3], sta->sec[2], sta->sec[1], sta->sec[0]);
+      if (sta->done) finished++;
+    }
+    if (total == finished) {
+      epggrab_ota_complete(ota);
+    } else {
+      tvhlog(LOG_DEBUG, mod->id, "done: %d of %d", finished, total);
+    }
+#else
     LIST_FOREACH(sta, stal, link)
       if (!sta->done) break;
     if (!sta)    epggrab_ota_complete(ota);
+#endif
   }
   
   /* Update EPG */
