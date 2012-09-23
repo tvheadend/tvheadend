@@ -391,20 +391,72 @@ extjs_channels_update(htsmsg_t *in)
 /**
  *
  */
-static int
-extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
+static htsmsg_t *
+build_record_channel ( channel_t *ch )
 {
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  htsmsg_t *array, *c;
-  channel_t *ch;
   char buf[1024];
   channel_tag_mapping_t *ctm;
-  const char *op        = http_arg_get(&hc->hc_req_args, "op");
-  const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
+  htsmsg_t *c;
   char *epggrabsrc;
   epggrab_module_t *mod;
   epggrab_channel_t *ec;
   epggrab_channel_link_t *ecl;
+
+  c = htsmsg_create_map();
+  htsmsg_add_str(c, "name", ch->ch_name);
+  htsmsg_add_u32(c, "chid", ch->ch_id);
+
+  if(ch->ch_icon != NULL)
+    htsmsg_add_str(c, "ch_icon", ch->ch_icon);
+
+  buf[0] = 0;
+  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
+	  snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
+		  "%s%d", strlen(buf) == 0 ? "" : ",",
+		  ctm->ctm_tag->ct_identifier);
+  }
+  htsmsg_add_str(c, "tags", buf);
+
+  htsmsg_add_s32(c, "epg_pre_start", ch->ch_dvr_extra_time_pre);
+  htsmsg_add_s32(c, "epg_post_end",  ch->ch_dvr_extra_time_post);
+  htsmsg_add_s32(c, "number",        ch->ch_number);
+
+  epggrabsrc = NULL;
+  LIST_FOREACH(mod, &epggrab_modules, link) {
+    if (mod->type != EPGGRAB_OTA && mod->channels) {
+      RB_FOREACH(ec, mod->channels, link) {
+        LIST_FOREACH(ecl, &ec->channels, link) {
+          if (ecl->channel == ch) {
+            char id[100];
+            sprintf(id, "%s|%s", mod->id, ec->id);
+            if (!epggrabsrc) {
+              epggrabsrc = strdup(id);
+            } else {
+              epggrabsrc = realloc(epggrabsrc, strlen(epggrabsrc) + 2 + strlen(id));
+              strcat(epggrabsrc, ",");
+              strcat(epggrabsrc, id);
+            }
+          }
+        }
+      }
+    }
+  }
+  if (epggrabsrc) htsmsg_add_str(c, "epggrabsrc", epggrabsrc);
+  free(epggrabsrc);
+  return c;
+}
+
+/**
+ *
+ */
+static int
+extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  htsmsg_t *array;
+  channel_t *ch;
+  const char *op        = http_arg_get(&hc->hc_req_args, "op");
+  const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
 
   if(op == NULL)
     return 400;
@@ -420,52 +472,13 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
     array = htsmsg_create_list();
 
     RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-      c = htsmsg_create_map();
-      htsmsg_add_str(c, "name", ch->ch_name);
-      htsmsg_add_u32(c, "chid", ch->ch_id);
-      
-      if(ch->ch_icon != NULL)
-        htsmsg_add_str(c, "ch_icon", ch->ch_icon);
-
-      buf[0] = 0;
-      LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
-	snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
-		 "%s%d", strlen(buf) == 0 ? "" : ",",
-		 ctm->ctm_tag->ct_identifier);
-      }
-      htsmsg_add_str(c, "tags", buf);
-
-      htsmsg_add_s32(c, "epg_pre_start", ch->ch_dvr_extra_time_pre);
-      htsmsg_add_s32(c, "epg_post_end",  ch->ch_dvr_extra_time_post);
-      htsmsg_add_s32(c, "number",        ch->ch_number);
-
-      epggrabsrc = NULL;
-      LIST_FOREACH(mod, &epggrab_modules, link) {
-        if (mod->type != EPGGRAB_OTA && mod->channels) {
-          RB_FOREACH(ec, mod->channels, link) {
-            LIST_FOREACH(ecl, &ec->channels, link) {
-              if (ecl->channel == ch) {
-                char id[100];
-                sprintf(id, "%s|%s", mod->id, ec->id);
-                if (!epggrabsrc) {
-                  epggrabsrc = strdup(id);
-                } else {
-                  epggrabsrc = realloc(epggrabsrc, strlen(epggrabsrc) + 2 + strlen(id));
-                  strcat(epggrabsrc, ",");
-                  strcat(epggrabsrc, id);
-                }
-              }
-            }
-          }
-        }
-      }
-      if (epggrabsrc) htsmsg_add_str(c, "epggrabsrc", epggrabsrc);
-      free(epggrabsrc);
-
-      htsmsg_add_msg(array, NULL, c);
+      htsmsg_add_msg(array, NULL, build_record_channel(ch));
     }
     
     htsmsg_add_msg(out, "entries", array);
+
+  } else if(!strcmp(op, "create")) {
+    out = build_record_channel(channel_create());
 
   } else if(!strcmp(op, "delete") && in != NULL) {
     extjs_channels_delete(in);

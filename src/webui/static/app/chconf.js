@@ -21,11 +21,14 @@ tvheadend.comet.on('channeltags', function(m) {
 /**
  * Channels
  */
+tvheadend.channelrec = new Ext.data.Record.create(
+	[ 'name', 'chid', 'epggrabsrc', 'tags', 'ch_icon', 'epg_pre_start',
+		'epg_post_end', 'number' ]);
+
 tvheadend.channels = new Ext.data.JsonStore({
 	autoLoad : true,
 	root : 'entries',
-	fields : [ 'name', 'chid', 'epggrabsrc', 'tags', 'ch_icon', 'epg_pre_start',
-		'epg_post_end', 'number' ],
+	fields : tvheadend.channelrec,
 	id : 'chid',
 	sortInfo : {
 		field : 'number',
@@ -243,6 +246,25 @@ tvheadend.chconf = function() {
 		}
 	}
 
+  function addRecord() {
+    Ext.Ajax.request({
+      url : "channels",
+      params : {
+        op : "create"
+      },
+      failure : function(response, options) {
+        Ext.MessageBox.alert('Server Error', 'Unable to create new record');
+      },
+      success : function(response, options) {
+        var responseData = Ext.util.JSON.decode(response.responseText);
+        var p = new tvheadend.channelrec(responseData, responseData.id);
+        grid.stopEditing();
+        store.insert(0, p)
+        grid.startEditing(0, 0);
+      }
+    })
+  }
+
 	function deleteRecord(btn) {
 		if (btn == 'yes') {
 			var selectedKeys = grid.selModel.selections.keys;
@@ -288,6 +310,13 @@ tvheadend.chconf = function() {
 		singleSelect : false
 	});
 
+  var addBtn = new Ext.Toolbar.Button({
+    tooltop : 'Add a new channel',
+    iconCls : 'add',
+    text    : 'Add channel',
+    handler : addRecord,
+  });
+
 	var delBtn = new Ext.Toolbar.Button({
 		tooltip : 'Delete one or more selected channels',
 		iconCls : 'remove',
@@ -330,7 +359,7 @@ tvheadend.chconf = function() {
 			forceFit : true
 		},
 		selModel : selModel,
-		tbar : [ delBtn, '-', saveBtn, rejectBtn, '->', {
+		tbar : [ addBtn, '-', delBtn, '-', saveBtn, rejectBtn, '->', {
 			text : 'Help',
 			handler : function() {
 				new tvheadend.help('Channels', 'config_channels.html');
