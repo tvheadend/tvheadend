@@ -75,6 +75,7 @@ static eit_status_t *eit_status_find
     for (i = 0; i < (lst / 32); i++)
       sta->sec[i] = 0xFFFFFFFF;
     sta->sec[i] = (0xFFFFFFFF >> (31-(lst%32)));
+    sta->done = 0;
   }
 
   /* Get "section(s) seen" mask. See ETSI TS 101 211 (V1.11.1) section 4.1.4 
@@ -622,9 +623,9 @@ static int _eit_callback
   epggrab_module_t *mod = opaque;
   epggrab_ota_mux_t *ota;
   th_dvb_adapter_t *tda;
-  service_t *svc;
+  service_t *svc = NULL;
   eit_status_list_t *stal;
-  eit_status_t *sta;
+  eit_status_t *sta = NULL;
   int resched = 0, save = 0;
   uint16_t tsid, sid;
   uint16_t sec, lst, seg, ver;
@@ -637,13 +638,8 @@ static int _eit_callback
   if (!ota || !ota->status) return -1;
   stal = ota->status;
 
-  /* Begin - reset done stats and force mask update in eit_status_find() */
-  if (epggrab_ota_begin(ota)) {
-    LIST_FOREACH(sta, stal, link) {
-      sta->done = 0;
-      sta->ver = 0xff;
-    }
-  }
+  /* Begin */
+  epggrab_ota_begin(ota);
 
   /* Get table info */
   sid  = ptr[0] << 8 | ptr[1];
@@ -717,25 +713,26 @@ static int _eit_callback
   /* Complete */
 done:
   if (!sta || sta->done) {
-#ifdef EIT_STATUS_TRACE
-    int total = 0;
-    int finished = 0;
-    LIST_FOREACH(sta, stal, link) {
-      total++;
-      tvhlog(LOG_DEBUG, "eit_status_find", "table=0x%02x, sid=0x%04x, done=%u, mask=%8x|%8x|%8x|%8x|%8x|%8x|%8x|%8x", 
-                  sta->tid, sta->sid, sta->done,
-                  sta->sec[7], sta->sec[6], sta->sec[5], sta->sec[4], sta->sec[3], sta->sec[2], sta->sec[1], sta->sec[0]);
-      if (sta->done) finished++;
-    }
-    if (total == finished) {
-      epggrab_ota_complete(ota);
-    } else {
-      tvhlog(LOG_DEBUG, mod->id, "done: %d of %d", finished, total);
-    }
-#else
     LIST_FOREACH(sta, stal, link)
       if (!sta->done) break;
     if (!sta)    epggrab_ota_complete(ota);
+#ifdef EPG_TRACE
+    else {
+      int total = 0;
+      int finished = 0;
+      LIST_FOREACH(sta, stal, link) {
+        total++;
+        tvhlog(LOG_DEBUG, mod->id, "scan status: table=0x%02x, sid=0x%04x, ver=0x%02d, done=%u, mask=%8x|%8x|%8x|%8x|%8x|%8x|%8x|%8x", 
+                    sta->tid, sta->sid, sta->ver, sta->done,
+                    sta->sec[7], sta->sec[6], sta->sec[5], sta->sec[4], sta->sec[3], sta->sec[2], sta->sec[1], sta->sec[0]);
+        if (sta->done) finished++;
+      }
+      if (total == finished) {
+        epggrab_ota_complete(ota);
+      } else {
+        tvhlog(LOG_DEBUG, mod->id, "scan status: completed %d of %d for service %s", finished, total, svc?svc->s_nicename:"<unknown>");
+      }
+    }
 #endif
   }
   
