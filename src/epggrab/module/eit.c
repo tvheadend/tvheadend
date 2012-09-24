@@ -39,7 +39,11 @@ typedef struct eit_status
   uint16_t               sid;
   uint32_t               sec[8];
   uint8_t                ver;
-  int                    done;
+  enum {
+    EIT_STATUS_START,
+    EIT_STATUS_PROCESS,
+    EIT_STATUS_DONE
+  }                     stage;
 } eit_status_t;
 typedef LIST_HEAD(, eit_status) eit_status_list_t;
 
@@ -48,7 +52,7 @@ static eit_status_t *eit_status_find
     uint8_t sec, uint8_t lst, uint8_t seg, uint8_t ver )
 {
   int i, sec_index;
-  uint32_t sec_seen_mask;  
+  uint32_t sec_seen_mask;
   eit_status_t *sta;
 
   /* Find */
@@ -57,7 +61,7 @@ static eit_status_t *eit_status_find
       break;
 
   /* Already complete */
-  if (sta && sta->done && sta->ver == ver) return NULL;
+  if (sta && sta->stage == EIT_STATUS_DONE && sta->ver == ver) return NULL;
 
   /* Insert new entry */
   if (!sta) {
@@ -75,7 +79,7 @@ static eit_status_t *eit_status_find
     for (i = 0; i < (lst / 32); i++)
       sta->sec[i] = 0xFFFFFFFF;
     sta->sec[i] = (0xFFFFFFFF >> (31-(lst%32)));
-    sta->done = 0;
+    sta->stage = EIT_STATUS_PROCESS;
   }
 
   /* Get "section(s) seen" mask. See ETSI TS 101 211 (V1.11.1) section 4.1.4 
@@ -105,14 +109,30 @@ static eit_status_t *eit_status_find
     uint32_t unused_mask = ((0xff << seg_last_used_section_offset) & 0xff) << (seg_first_section%32);
     sec_seen_mask |= unused_mask;
   }
+
   /* Already seen */
-  if (!(sta->sec[sec_index] & sec_seen_mask)) return NULL;
+  if (!(sta->sec[sec_index] & sec_seen_mask)) {
+    if (sta->stage == EIT_STATUS_START) {
+      sta->stage = EIT_STATUS_DONE;
+      for (i = 0; i < 8; i++ ) {
+        if (sta->sec[i]) {
+          sta->stage = EIT_STATUS_PROCESS;
+          return NULL;
+        }
+      }
+    }
+    return NULL;
+  }
 
   /* Update */
   sta->sec[sec_index] &= ~sec_seen_mask;
-  sta->done = 1;
-  for (i = 0; i < 8; i++ )
-    if (sta->sec[i]) sta->done = 0;
+  sta->stage = EIT_STATUS_DONE;
+  for (i = 0; i < 8; i++ ) {
+    if (sta->sec[i]) {
+      sta->stage = EIT_STATUS_PROCESS;
+      return sta;
+    }
+  }
   return sta;
 }
 
@@ -638,8 +658,12 @@ static int _eit_callback
   if (!ota || !ota->status) return -1;
   stal = ota->status;
 
-  /* Begin */
-  epggrab_ota_begin(ota);
+  /* Begin: reset sta->stage to force revisiting of all tables */
+  if (epggrab_ota_begin(ota)) {
+    LIST_FOREACH(sta, stal, link) {
+      sta->stage = EIT_STATUS_START;
+    }
+  }
 
   /* Get table info */
   sid  = ptr[0] << 8 | ptr[1];
@@ -712,9 +736,9 @@ static int _eit_callback
 
   /* Complete */
 done:
-  if (!sta || sta->done) {
+  if (!sta || sta->stage == EIT_STATUS_DONE) {
     LIST_FOREACH(sta, stal, link)
-      if (!sta->done) break;
+      if (sta->stage != EIT_STATUS_DONE) break;
     if (!sta)    epggrab_ota_complete(ota);
 #ifdef EPG_TRACE
     else {
@@ -723,9 +747,9 @@ done:
       LIST_FOREACH(sta, stal, link) {
         total++;
         tvhlog(LOG_DEBUG, mod->id, "scan status: table=0x%02x, sid=0x%04x, ver=0x%02d, done=%u, mask=%8x|%8x|%8x|%8x|%8x|%8x|%8x|%8x", 
-                    sta->tid, sta->sid, sta->ver, sta->done,
+                    sta->tid, sta->sid, sta->ver, sta->stage,
                     sta->sec[7], sta->sec[6], sta->sec[5], sta->sec[4], sta->sec[3], sta->sec[2], sta->sec[1], sta->sec[0]);
-        if (sta->done) finished++;
+        if (sta->stage == EIT_STATUS_DONE) finished++;
       }
       if (total == finished) {
         epggrab_ota_complete(ota);
