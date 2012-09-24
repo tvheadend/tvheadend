@@ -363,10 +363,10 @@ void epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
       if (ota->is_reg && ota->state == EPGGRAB_OTA_MUX_RUNNING) break;
     }
 
-    /* All complete, start next scan immediately */
+    /* All complete (bring timer forward) */
     if (!ota) {
       gtimer_arm(&tdmi->tdmi_adapter->tda_mux_scanner_timer,
-                 dvb_adapter_mux_scanner, tdmi->tdmi_adapter, 0);
+                 dvb_adapter_mux_scanner, tdmi->tdmi_adapter, 20);
     }
   }
 }
