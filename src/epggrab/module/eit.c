@@ -751,11 +751,7 @@ done:
                     sta->sec[7], sta->sec[6], sta->sec[5], sta->sec[4], sta->sec[3], sta->sec[2], sta->sec[1], sta->sec[0]);
         if (sta->stage == EIT_STATUS_DONE) finished++;
       }
-      if (total == finished) {
-        epggrab_ota_complete(ota);
-      } else {
-        tvhlog(LOG_DEBUG, mod->id, "scan status: completed %d of %d for service %s", finished, total, svc?svc->s_nicename:"<unknown>");
-      }
+      tvhlog(LOG_DEBUG, mod->id, "scan status: completed %d of %d for service %s", finished, total, svc?svc->s_nicename:"<unknown>");
     }
 #endif
   }
