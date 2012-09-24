@@ -374,8 +374,10 @@ void epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
 /* Reset */
 void epggrab_ota_cancel    ( epggrab_ota_mux_t *ota )
 {
-  tvhlog(LOG_DEBUG, ota->grab->id, "processing cancelled");
-  ota->state = EPGGRAB_OTA_MUX_IDLE;
+  if (ota->state == EPGGRAB_OTA_MUX_RUNNING) {
+    tvhlog(LOG_DEBUG, ota->grab->id, "processing cancelled");
+    ota->state = EPGGRAB_OTA_MUX_IDLE;
+  }
   _epggrab_ota_finished(ota);
 }
 
