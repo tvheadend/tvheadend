@@ -1364,8 +1364,10 @@ static void _epg_channel_timer_callback ( void *p )
   channel_t *ch = (channel_t*)p;
 
   /* Clear now/next */
-  cur = ch->ch_epg_now;
-  nxt = ch->ch_epg_next;
+  if ((cur = ch->ch_epg_now))
+    cur->getref(cur);
+  if ((nxt = ch->ch_epg_next))
+    nxt->getref(nxt);
   ch->ch_epg_now = ch->ch_epg_next = NULL;
 
   /* Check events */
@@ -1412,6 +1414,10 @@ static void _epg_channel_timer_callback ( void *p )
            ch->ch_name);
     htsp_channel_update_current(ch);
   }
+
+  /* Remove refs */
+  if (cur) cur->putref(cur);
+  if (nxt) nxt->putref(nxt);
 }
 
 static epg_broadcast_t *_epg_channel_add_broadcast 
