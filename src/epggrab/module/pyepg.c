@@ -49,7 +49,7 @@ static int _pyepg_parse_time ( const char *str, time_t *out )
   struct tm tm; 
   tm.tm_isdst = 0;
   if ( strptime(str, "%F %T %z", &tm) != NULL ) {
-    *out = mktime(&tm);
+    *out = timegm(&tm);
     ret  = 1;
   }
   return ret;
