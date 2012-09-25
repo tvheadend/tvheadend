@@ -31,48 +31,53 @@
  * Status handling
  * ***********************************************************************/
 
-typedef struct eit_status
+typedef struct eit_table_status
 {
-  LIST_ENTRY(eit_status) link;
-  int                    tid;
-  uint16_t               tsid;
-  uint16_t               sid;
-  uint32_t               sec[8];
-  uint8_t                ver;
+  LIST_ENTRY(eit_table_status) link;
+  int                          tid;
+  uint16_t                     tsid;
+  uint16_t                     sid;
+  uint32_t                     sec[8];
+  uint8_t                      ver;
   enum {
     EIT_STATUS_START,
     EIT_STATUS_PROCESS,
+    EIT_STATUS_LAST,
     EIT_STATUS_DONE
-  }                      state;
-} eit_status_t;
-typedef LIST_HEAD(, eit_status) eit_status_list_t;
+  }                            state;
+} eit_table_status_t;
 
-static eit_status_t *eit_status_find
-  ( eit_status_list_t *el, int tableid, uint16_t tsid, uint16_t sid,
+typedef struct eit_status
+{
+  eit_table_status_t            *first;
+  LIST_HEAD(, eit_table_status) tables;
+} eit_status_t;
+
+static eit_table_status_t *eit_status_find
+  ( eit_status_t *status, int tableid, uint16_t tsid, uint16_t sid,
     uint8_t sec, uint8_t lst, uint8_t seg, uint8_t ver )
 {
   int i, sec_index;
   uint32_t sec_seen_mask;
-  eit_status_t *sta, *ret;
+  eit_table_status_t *sta;
 
   /* Find */
-  LIST_FOREACH(sta, el, link)
+  LIST_FOREACH(sta, &status->tables, link)
     if (sta->tid == tableid && sta->tsid == tsid && sta->sid == sid)
       break;
 
   /* Already complete */
-  if (sta && sta->state == EIT_STATUS_DONE && sta->ver == ver) return NULL;
+  if (sta && sta->state == EIT_STATUS_DONE && sta->ver == ver) return sta;
 
   /* Insert new entry */
   if (!sta) {
-    sta = calloc(1, sizeof(eit_status_t));
-    LIST_INSERT_HEAD(el, sta, link);
+    sta = calloc(1, sizeof(eit_table_status_t));
+    LIST_INSERT_HEAD(&status->tables, sta, link);
     sta->tid  = tableid;
     sta->tsid = tsid;
     sta->sid  = sid;
     sta->ver  = 255; // Note: force update below
   }
-  ret = sta;
 
   /* Reset */
   if (sta->ver != ver) {
@@ -115,9 +120,9 @@ static eit_status_t *eit_status_find
   if (!(sta->sec[sec_index] & sec_seen_mask)) {
     if (sta->state == EIT_STATUS_START) {
       sta->state = EIT_STATUS_DONE;
-      ret = NULL;
       goto done;
     }
+    return NULL;
   }
 
   /* Update */
@@ -125,14 +130,14 @@ static eit_status_t *eit_status_find
 
   /* Check complete? */
 done:
-  sta->state = EIT_STATUS_DONE;
+  sta->state = EIT_STATUS_LAST;
   for (i = 0; i < 8; i++ ) {
     if (sta->sec[i]) {
       sta->state = EIT_STATUS_PROCESS;
       break;
     }
   }
-  return ret;
+  return sta;
 }
 
 typedef struct eit_event
@@ -643,8 +648,8 @@ static int _eit_callback
   epggrab_ota_mux_t *ota;
   th_dvb_adapter_t *tda;
   service_t *svc;
-  eit_status_list_t *stal;
   eit_status_t *sta;
+  eit_table_status_t *tsta;
   int resched = 0, save = 0;
   uint16_t tsid, sid;
   uint16_t sec, lst, seg, ver;
@@ -655,12 +660,13 @@ static int _eit_callback
   /* Get OTA */
   ota = epggrab_ota_find((epggrab_module_ota_t*)mod, tdmi);
   if (!ota || !ota->status) return -1;
-  stal = ota->status;
+  sta = ota->status;
 
   /* Begin: reset sta->state to force revisiting of all tables */
   if (epggrab_ota_begin(ota)) {
-    LIST_FOREACH(sta, stal, link) {
-      sta->state = EIT_STATUS_START;
+    sta->first = NULL;
+    LIST_FOREACH(tsta, &sta->tables, link) {
+      tsta->state = EIT_STATUS_START;
     }
   }
 
@@ -673,12 +679,20 @@ static int _eit_callback
   ver  = (ptr[2] >> 1) & 0x1f;
 #ifdef EPG_EIT_TRACE
   tvhlog(LOG_DEBUG, mod->id,
-         "tid=%02X, tsid=%04X, sid=%04X, sec=%3d/%3d, seg=%3d, ver=%2d",
-         tableid, tsid, sid, sec, lst, seg, ver);
+         "tid=0x%02X, tsid=0x%04X, sid=0x%04X, sec=%3d/%3d, seg=%3d, ver=%2d, cur=%d",
+         tableid, tsid, sid, sec, lst, seg, ver, ptr[2] & 1);
 #endif
 
   /* Don't process */
-  if((ptr[2] & 1) == 0) goto done;
+  if((ptr[2] & 1) == 0) return 0;
+
+  /* Current status */
+  tsta = eit_status_find(sta, tableid, tsid, sid, sec, lst, seg, ver);
+#ifdef EPG_EIT_TRACE
+  tvhlog(LOG_DEBUG, mod->id, tsta && tsta->state != EIT_STATUS_DONE ? "section process" : "section seen");
+#endif
+  if (!tsta) return 0; // already seen, no state change
+  if (tsta->state == EIT_STATUS_DONE) goto done;
 
   /* Get transport stream */
   // Note: tableid=0x4f,0x60-0x6f is other TS
@@ -705,13 +719,6 @@ static int _eit_callback
   /* Ignore (not primary EPG service) */
   if (!service_is_primary_epg(svc)) goto done;
 
-  /* Current status */
-  sta = eit_status_find(stal, tableid, tsid, sid, sec, lst, seg, ver);
-#ifdef EPG_EIT_TRACE
-  tvhlog(LOG_DEBUG, mod->id, sta ? "section process" : "section seen");
-#endif
-  if (!sta) goto done;
-
   /* Register as interesting */
   if (tableid < 0x50)
     epggrab_ota_register(ota, 20, 300); // 20s grab, 5min interval
@@ -735,28 +742,37 @@ static int _eit_callback
 
   /* Complete */
 done:
-  if (!sta || sta->state == EIT_STATUS_DONE) {
-    LIST_FOREACH(sta, stal, link)
-      if (sta->state != EIT_STATUS_DONE) break;
-    if (!sta)
-      epggrab_ota_complete(ota);
-#ifdef EPG_EIT_TRACE
-    else {
-      int total = 0;
-      int finished = 0;
-      LIST_FOREACH(sta, stal, link) {
-        total++;
-        tvhlog(LOG_DEBUG, mod->id,
-               "scan status: table=0x%02x, tsid=0x%04x, sid=0x%04x, ver=0x%02d, done=%u, mask=%8x|%8x|%8x|%8x|%8x|%8x|%8x|%8x", 
-               sta->tid, sta->tsid, sta->sid, sta->ver, sta->state,
-               sta->sec[7], sta->sec[6], sta->sec[5], sta->sec[4], sta->sec[3], sta->sec[2], sta->sec[1], sta->sec[0]);
-        if (sta->state == EIT_STATUS_DONE) finished++;
-      }
-      tvhlog(LOG_DEBUG, mod->id, "scan status: completed %d of %d",
-             finished, total);
+  if (tsta->state == EIT_STATUS_LAST)
+    tsta->state = EIT_STATUS_DONE;
+  if (tsta->state == EIT_STATUS_DONE) {
+    if (!sta->first)
+      sta->first = tsta;
+    else if (sta->first == tsta) {
+      LIST_FOREACH(tsta, &sta->tables, link)
+        if (tsta->state != EIT_STATUS_DONE) break;
+      if (!tsta) epggrab_ota_complete(ota);
     }
-#endif
   }
+#ifdef EPG_EIT_TRACE
+  if (ota->state != EPGGRAB_OTA_MUX_COMPLETE)
+  {
+    int total = 0;
+    int finished = 0;
+    tvhlog(LOG_DEBUG, mod->id, "scan status");
+    LIST_FOREACH(tsta, &sta->tables, link) {
+      total++;
+      tvhlog(LOG_DEBUG, mod->id,
+             "  tid=0x%02X, tsid=0x%04X, sid=0x%04X, ver=%02d, done=%d, "
+             "mask=%08X|%08X|%08X|%08X|%08X|%08X|%08X|%08X", 
+             tsta->tid, tsta->tsid, tsta->sid, tsta->ver,
+             tsta->state == EIT_STATUS_DONE,
+             tsta->sec[7], tsta->sec[6], tsta->sec[5], tsta->sec[4],
+             tsta->sec[3], tsta->sec[2], tsta->sec[1], tsta->sec[0]);
+      if (tsta->state == EIT_STATUS_DONE) finished++;
+    }
+    tvhlog(LOG_DEBUG, mod->id, "  completed %d of %d", finished, total);
+  }
+#endif
   
   /* Update EPG */
   if (resched) epggrab_resched();
@@ -771,16 +787,16 @@ done:
 
 static void _eit_ota_destroy ( epggrab_ota_mux_t *ota )
 {
-  eit_status_t      *sta;
-  eit_status_list_t *stal = ota->status;
+  eit_status_t *sta = ota->status;
+  eit_table_status_t *tsta;
 
   /* Remove all entries */
-  while ((sta = LIST_FIRST(stal))) {
-    LIST_REMOVE(sta, link);
-    free(sta);
+  while ((tsta = LIST_FIRST(&sta->tables))) {
+    LIST_REMOVE(tsta, link);
+    free(tsta);
   }
 
-  free(stal);
+  free(sta);
   free(ota);
 }
 
@@ -801,7 +817,7 @@ static void _eit_start
   /* Register */
   if (!(ota = epggrab_ota_create(m, tdmi))) return;
   if (!ota->status) {
-    ota->status  = calloc(1, sizeof(eit_status_list_t));
+    ota->status  = calloc(1, sizeof(eit_status_t));
     ota->destroy = _eit_ota_destroy;
   }
 
