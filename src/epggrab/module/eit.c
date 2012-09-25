@@ -43,7 +43,7 @@ typedef struct eit_status
     EIT_STATUS_START,
     EIT_STATUS_PROCESS,
     EIT_STATUS_DONE
-  }                     stage;
+  }                      state;
 } eit_status_t;
 typedef LIST_HEAD(, eit_status) eit_status_list_t;
 
@@ -53,7 +53,7 @@ static eit_status_t *eit_status_find
 {
   int i, sec_index;
   uint32_t sec_seen_mask;
-  eit_status_t *sta;
+  eit_status_t *sta, *ret;
 
   /* Find */
   LIST_FOREACH(sta, el, link)
@@ -61,7 +61,7 @@ static eit_status_t *eit_status_find
       break;
 
   /* Already complete */
-  if (sta && sta->stage == EIT_STATUS_DONE && sta->ver == ver) return NULL;
+  if (sta && sta->state == EIT_STATUS_DONE && sta->ver == ver) return NULL;
 
   /* Insert new entry */
   if (!sta) {
@@ -72,6 +72,7 @@ static eit_status_t *eit_status_find
     sta->sid  = sid;
     sta->ver  = 255; // Note: force update below
   }
+  ret = sta;
 
   /* Reset */
   if (sta->ver != ver) {
@@ -79,7 +80,7 @@ static eit_status_t *eit_status_find
     for (i = 0; i < (lst / 32); i++)
       sta->sec[i] = 0xFFFFFFFF;
     sta->sec[i] = (0xFFFFFFFF >> (31-(lst%32)));
-    sta->stage = EIT_STATUS_PROCESS;
+    sta->state = EIT_STATUS_PROCESS;
   }
 
   /* Get "section(s) seen" mask. See ETSI TS 101 211 (V1.11.1) section 4.1.4 
@@ -103,7 +104,7 @@ static eit_status_t *eit_status_find
     // sections by shifting 0xff left by this offset, take the lowest eight bits, shift 
     // them left by the first section offset and finally expand seen_mask (seen_mask) 
     // by calculating "seen_mask |= unused_mask"
-    
+
     uint32_t seg_first_section = seg & ~0x07;
     uint32_t seg_last_used_section_offset = (seg & 0x07) + 1;
     uint32_t unused_mask = ((0xff << seg_last_used_section_offset) & 0xff) << (seg_first_section%32);
@@ -112,28 +113,26 @@ static eit_status_t *eit_status_find
 
   /* Already seen */
   if (!(sta->sec[sec_index] & sec_seen_mask)) {
-    if (sta->stage == EIT_STATUS_START) {
-      sta->stage = EIT_STATUS_DONE;
-      for (i = 0; i < 8; i++ ) {
-        if (sta->sec[i]) {
-          sta->stage = EIT_STATUS_PROCESS;
-          return NULL;
-        }
-      }
+    if (sta->state == EIT_STATUS_START) {
+      sta->state = EIT_STATUS_DONE;
+      ret = NULL;
+      goto done;
     }
-    return NULL;
   }
 
   /* Update */
   sta->sec[sec_index] &= ~sec_seen_mask;
-  sta->stage = EIT_STATUS_DONE;
+
+  /* Check complete? */
+done:
+  sta->state = EIT_STATUS_DONE;
   for (i = 0; i < 8; i++ ) {
     if (sta->sec[i]) {
-      sta->stage = EIT_STATUS_PROCESS;
-      return sta;
+      sta->state = EIT_STATUS_PROCESS;
+      break;
     }
   }
-  return sta;
+  return ret;
 }
 
 typedef struct eit_event
@@ -518,7 +517,7 @@ static int _eit_process_event
 
   /* Find broadcast */
   ebc  = epg_broadcast_find_by_time(svc->s_ch, start, stop, eid, 1, &save2);
-#ifdef EPG_TRACE
+#ifdef EPG_EIT_TRACE
   tvhlog(LOG_DEBUG, mod->id, "eid=%5d, start=%lu, stop=%lu, ebc=%p",
          eid, start, stop, ebc);
 #endif
@@ -643,9 +642,9 @@ static int _eit_callback
   epggrab_module_t *mod = opaque;
   epggrab_ota_mux_t *ota;
   th_dvb_adapter_t *tda;
-  service_t *svc = NULL;
+  service_t *svc;
   eit_status_list_t *stal;
-  eit_status_t *sta = NULL;
+  eit_status_t *sta;
   int resched = 0, save = 0;
   uint16_t tsid, sid;
   uint16_t sec, lst, seg, ver;
@@ -658,10 +657,10 @@ static int _eit_callback
   if (!ota || !ota->status) return -1;
   stal = ota->status;
 
-  /* Begin: reset sta->stage to force revisiting of all tables */
+  /* Begin: reset sta->state to force revisiting of all tables */
   if (epggrab_ota_begin(ota)) {
     LIST_FOREACH(sta, stal, link) {
-      sta->stage = EIT_STATUS_START;
+      sta->state = EIT_STATUS_START;
     }
   }
 
@@ -672,7 +671,7 @@ static int _eit_callback
   lst  = ptr[4];
   seg  = ptr[9];
   ver  = (ptr[2] >> 1) & 0x1f;
-#ifdef EPG_TRACE
+#ifdef EPG_EIT_TRACE
   tvhlog(LOG_DEBUG, mod->id,
          "tid=%02X, tsid=%04X, sid=%04X, sec=%3d/%3d, seg=%3d, ver=%2d",
          tableid, tsid, sid, sec, lst, seg, ver);
@@ -708,7 +707,7 @@ static int _eit_callback
 
   /* Current status */
   sta = eit_status_find(stal, tableid, tsid, sid, sec, lst, seg, ver);
-#ifdef EPG_TRACE
+#ifdef EPG_EIT_TRACE
   tvhlog(LOG_DEBUG, mod->id, sta ? "section process" : "section seen");
 #endif
   if (!sta) goto done;
@@ -736,22 +735,25 @@ static int _eit_callback
 
   /* Complete */
 done:
-  if (!sta || sta->stage == EIT_STATUS_DONE) {
+  if (!sta || sta->state == EIT_STATUS_DONE) {
     LIST_FOREACH(sta, stal, link)
-      if (sta->stage != EIT_STATUS_DONE) break;
-    if (!sta)    epggrab_ota_complete(ota);
-#ifdef EPG_TRACE
+      if (sta->state != EIT_STATUS_DONE) break;
+    if (!sta)
+      epggrab_ota_complete(ota);
+#ifdef EPG_EIT_TRACE
     else {
       int total = 0;
       int finished = 0;
       LIST_FOREACH(sta, stal, link) {
         total++;
-        tvhlog(LOG_DEBUG, mod->id, "scan status: table=0x%02x, sid=0x%04x, ver=0x%02d, done=%u, mask=%8x|%8x|%8x|%8x|%8x|%8x|%8x|%8x", 
-                    sta->tid, sta->sid, sta->ver, sta->stage,
-                    sta->sec[7], sta->sec[6], sta->sec[5], sta->sec[4], sta->sec[3], sta->sec[2], sta->sec[1], sta->sec[0]);
-        if (sta->stage == EIT_STATUS_DONE) finished++;
+        tvhlog(LOG_DEBUG, mod->id,
+               "scan status: table=0x%02x, tsid=0x%04x, sid=0x%04x, ver=0x%02d, done=%u, mask=%8x|%8x|%8x|%8x|%8x|%8x|%8x|%8x", 
+               sta->tid, sta->tsid, sta->sid, sta->ver, sta->state,
+               sta->sec[7], sta->sec[6], sta->sec[5], sta->sec[4], sta->sec[3], sta->sec[2], sta->sec[1], sta->sec[0]);
+        if (sta->state == EIT_STATUS_DONE) finished++;
       }
-      tvhlog(LOG_DEBUG, mod->id, "scan status: completed %d of %d for service %s", finished, total, svc?svc->s_nicename:"<unknown>");
+      tvhlog(LOG_DEBUG, mod->id, "scan status: completed %d of %d",
+             finished, total);
     }
 #endif
   }
