@@ -89,9 +89,10 @@ th_dvb_mux_instance_t *epggrab_mux_next ( th_dvb_adapter_t *tda )
   epggrab_ota_mux_t *ota;
   time(&now);
   TAILQ_FOREACH(ota, &ota_mux_all, glob_link) {
+    if (ota->tdmi->tdmi_adapter != tda) continue;
     if (ota->interval + ota->completed > now) return NULL;
     if (!ota->is_reg) return NULL;
-    if (ota->tdmi->tdmi_adapter == tda) break;
+    break;
   }
   return ota ? ota->tdmi : NULL;
 }
@@ -334,7 +335,21 @@ static void _epggrab_ota_finished ( epggrab_ota_mux_t *ota )
   /* Reinsert into reg queue */
   else {
     TAILQ_REMOVE(&ota_mux_all, ota, glob_link);
-    TAILQ_INSERT_SORTED(&ota_mux_all, ota, glob_link, _ota_time_cmp);
+    // Find the last queue entry that can run before ota
+    // (i.e _ota_time_cmp(ota, entry)>0) and re-insert ota
+    // directly after this entry. If no matching entry is
+    // found (i.e ota can run before any other entry),
+    // re-insert ota at the queue head.
+    epggrab_ota_mux_t *entry = NULL;
+    epggrab_ota_mux_t *tmp;
+    TAILQ_FOREACH(tmp, &ota_mux_all, glob_link) {
+      if(_ota_time_cmp(ota, tmp)>0) entry = tmp;
+    }
+    if (entry) {
+      TAILQ_INSERT_AFTER(&ota_mux_all, entry, ota, glob_link);
+    } else {
+      TAILQ_INSERT_HEAD(&ota_mux_all, ota, glob_link);
+    }
   }
 }
 
