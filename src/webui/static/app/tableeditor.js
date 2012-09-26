@@ -1,6 +1,5 @@
 tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
 	helpContent, icon) {
-	cm.defaultSortable = true;
 
 	if (store == null) {
 		store = new Ext.data.JsonStore({

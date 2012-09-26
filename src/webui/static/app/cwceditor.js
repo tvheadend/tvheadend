@@ -32,7 +32,9 @@ tvheadend.cwceditor = function() {
 		}
 	}
 
-	var cm = new Ext.grid.ColumnModel([ enabledColumn, {
+	var cm = new Ext.grid.ColumnModel({
+    defaultSortable: true,
+    columns : [ enabledColumn, {
 		header : "Hostname",
 		dataIndex : 'hostname',
 		width : 200,
@@ -93,7 +95,7 @@ tvheadend.cwceditor = function() {
 			return value;
 		},
 		editor : new fm.TextField()
-	} ]);
+	} ]});
 
 	var rec = Ext.data.Record.create([ 'enabled', 'connected', 'hostname',
 		'port', 'username', 'password', 'deskey', 'emm', 'emmex', 'comment' ]);

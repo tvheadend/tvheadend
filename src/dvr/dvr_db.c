@@ -249,7 +249,7 @@ static dvr_entry_t *_dvr_entry_create (
 	dvr_prio_t pri)
 {
   dvr_entry_t *de;
-  char tbuf[30];
+  char tbuf[64];
   struct tm tm;
   time_t t;
   dvr_config_t *cfg = dvr_config_find_by_name_default(config_name);
@@ -326,7 +326,8 @@ static dvr_entry_t *_dvr_entry_create (
 
   t = de->de_start - de->de_start_extra * 60;
   localtime_r(&t, &tm);
-  strftime(tbuf, sizeof(tbuf), "%c", &tm);
+  if (strftime(tbuf, sizeof(tbuf), "%F %T", &tm) <= 0)
+    *tbuf = 0;
 
   if(dae != NULL) {
     de->de_autorec = dae;

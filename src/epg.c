@@ -1354,6 +1354,8 @@ static void _epg_channel_rem_broadcast
 {
   if (new) dvr_event_replaced(ebc, new);
   RB_REMOVE(&ch->ch_epg_schedule, ebc, sched_link);
+  if (ch->ch_epg_now  == ebc) ch->ch_epg_now  = NULL;
+  if (ch->ch_epg_next == ebc) ch->ch_epg_next = NULL;
   _epg_object_putref(ebc);
 }
 
@@ -1364,8 +1366,10 @@ static void _epg_channel_timer_callback ( void *p )
   channel_t *ch = (channel_t*)p;
 
   /* Clear now/next */
-  cur = ch->ch_epg_now;
-  nxt = ch->ch_epg_next;
+  if ((cur = ch->ch_epg_now))
+    cur->getref(cur);
+  if ((nxt = ch->ch_epg_next))
+    nxt->getref(nxt);
   ch->ch_epg_now = ch->ch_epg_next = NULL;
 
   /* Check events */
@@ -1412,6 +1416,10 @@ static void _epg_channel_timer_callback ( void *p )
            ch->ch_name);
     htsp_channel_update_current(ch);
   }
+
+  /* Remove refs */
+  if (cur) cur->putref(cur);
+  if (nxt) nxt->putref(nxt);
 }
 
 static epg_broadcast_t *_epg_channel_add_broadcast 
@@ -1462,7 +1470,6 @@ static epg_broadcast_t *_epg_channel_add_broadcast
   /* Remove overlapping (before) */
   while ( (ebc = RB_PREV(ret, sched_link)) != NULL ) {
     if ( ebc->stop <= ret->start ) break;
-    if ( ch->ch_epg_now == ebc ) ch->ch_epg_now = NULL;
     _epg_channel_rem_broadcast(ch, ebc, ret);
   }
 

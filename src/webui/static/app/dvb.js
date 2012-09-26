@@ -81,8 +81,9 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 		width : 50
 	}, qualityColumn);
 
-	var cm = new Ext.grid.ColumnModel(cmlist);
-	cm.defaultSortable = true;
+	var cm = new Ext.grid.ColumnModel({
+    columns: cmlist, 
+    defaultSortable: true});
 
 	var rec = Ext.data.Record.create([ 'id', 'enabled', 'network', 'freq',
 		'pol', 'satconf', 'muxid', 'quality', 'fe_status', 'mod' ]);
@@ -405,7 +406,9 @@ tvheadend.dvb_services = function(adapterId) {
 		} ]
 	});
 
-	var cm = new Ext.grid.ColumnModel([
+	var cm = new Ext.grid.ColumnModel({
+  defaultSortable: true,
+  columns: [
 		enabledColumn,
 		{
 			header : "Service name",
@@ -501,9 +504,7 @@ tvheadend.dvb_services = function(adapterId) {
 			dataIndex : 'pcr',
 			width : 50,
 			hidden : true
-		}, actions ]);
-
-	cm.defaultSortable = true;
+		}, actions ]});
 
 	var store = new Ext.data.JsonStore({
 		root : 'entries',
@@ -1265,7 +1266,9 @@ tvheadend.dvb_dummy = function(title) {
 tvheadend.dvb_satconf = function(adapterId, lnbStore) {
 	var fm = Ext.form;
 
-	var cm = new Ext.grid.ColumnModel([ {
+	var cm = new Ext.grid.ColumnModel({
+  defaultSortable: true,
+  columns: [ {
 		header : "Name",
 		dataIndex : 'name',
 		width : 200,
@@ -1298,7 +1301,7 @@ tvheadend.dvb_satconf = function(adapterId, lnbStore) {
 		dataIndex : 'comment',
 		width : 400,
 		editor : new fm.TextField()
-	} ]);
+	} ]});
 
 	var rec = Ext.data.Record.create([ 'name', 'port', 'comment', 'lnb' ]);
 
