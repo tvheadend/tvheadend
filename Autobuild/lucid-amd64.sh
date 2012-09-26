@@ -1,0 +1,2 @@
+AUTOBUILD_CONFIGURE_EXTRA="${AUTOBUILD_CONFIGURE_EXTRA:-_} --arch=x86_64"
+source Autobuild/debian.sh
