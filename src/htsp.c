@@ -503,7 +503,7 @@ htsp_build_event
     htsmsg_add_str(out, "title", str);
   if ((str = epg_broadcast_get_description(e, lang)))
     htsmsg_add_str(out, "description", str);
-    if ((str = epg_broadcast_get_description(e, lang)))
+    if ((str = epg_broadcast_get_summary(e, lang)))
       htsmsg_add_str(out, "summary", str);
   else if((str = epg_broadcast_get_summary(e, lang)))
     htsmsg_add_str(out, "description", str);
