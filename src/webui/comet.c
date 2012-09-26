@@ -34,6 +34,7 @@
 #include "webui/webui.h"
 #include "access.h"
 #include "tcp.h"
+#include "epggrab.h"
 
 static pthread_mutex_t comet_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t comet_cond = PTHREAD_COND_INITIALIZER;
@@ -143,6 +144,21 @@ comet_mailbox_create(comet_mailbox_flags_t delivery_flags)
  *
  */
 static void
+comet_eit_status(comet_mailbox_t *cmb)
+{
+  htsmsg_t *status = epggrab_ota_get_status("eit_comet");
+  if (!status) return;
+  
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "notificationClass", "eitStatus");
+  htsmsg_add_msg(m, "status", status);
+
+  if(cmb->cmb_messages == NULL)
+    cmb->cmb_messages = htsmsg_create_list();
+  htsmsg_add_msg(cmb->cmb_messages, NULL, m);
+}
+
+static void
 comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
 {
   htsmsg_t *m = htsmsg_create_map();
@@ -227,7 +243,7 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
     LIST_FOREACH(cmb, &mailboxes, cmb_link)
       if(!strcmp(cmb->cmb_boxid, cometid))
 	break;
-    
+
   if(cmb == NULL) {
     const char *std_flag = http_arg_get(&hc->hc_req_args, "subscribe.standard");
     const char *dbg_flag = http_arg_get(&hc->hc_req_args, "subscribe.debug");
@@ -241,6 +257,9 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
     comet_access_update(hc, cmb);
     comet_serverIpPort(hc, cmb);
     comet_subscription_info(hc, cmb);
+    if (delivery_flags |= COMET_DELIVERY_EIT) {
+      comet_eit_status(cmb);
+    }
   }
   time(&reqtime);
 

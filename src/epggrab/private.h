@@ -134,7 +134,7 @@ void epggrab_ota_register
  * State change
  */
 int  epggrab_ota_begin       ( epggrab_ota_mux_t *ota );
-void epggrab_ota_complete    ( epggrab_ota_mux_t *ota );
+int  epggrab_ota_complete    ( epggrab_ota_mux_t *ota );
 void epggrab_ota_cancel      ( epggrab_ota_mux_t *ota );
 void epggrab_ota_timeout     ( epggrab_ota_mux_t *ota );
 

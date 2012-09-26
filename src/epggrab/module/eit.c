@@ -496,15 +496,28 @@ static int _eit_desc_crid
 
   return 0;
 }
-
-
 /* ************************************************************************
- * EIT Event
+ * Comet mailbox notification
  * ***********************************************************************/
-static void _notify_eit_event(service_t *svc, eit_event_t *ev, uint16_t eid,  time_t start, time_t stop) {
+static void _notify_eit_finished(epggrab_ota_mux_t *ota) {
   htsmsg_t* m = htsmsg_create_map();
+  htsmsg_add_str(m, "notificationClass", "eitStatus");
+  htsmsg_add_str(m, "muxid", ota->tdmi->tdmi_identifier);
+  htsmsg_add_u32(m, "completed", 1);
+  htsmsg_t* st = epggrab_ota_get_status("eit_comet");
+  if (st) htsmsg_add_msg(m, "status", st);
+  
+  comet_mailbox_add_message(m, COMET_DELIVERY_EIT);
+  htsmsg_destroy(m);
+
+}
+
+static void _notify_eit_event(service_t *svc, eit_event_t *ev, uint16_t eid,  time_t start, time_t stop) {
   epg_genre_t *genre;
   char genre_str[100];
+
+  htsmsg_t* m = htsmsg_create_map();
+  htsmsg_add_str(m, "notificationClass", "eitEvent");
 
   htsmsg_add_str(m, "service", svc->s_svcname);
   htsmsg_add_str(m, "provider", svc->s_provider);
@@ -534,11 +547,15 @@ static void _notify_eit_event(service_t *svc, eit_event_t *ev, uint16_t eid,  ti
     htsmsg_add_msg(m, "contenttype", gl);
   }
 
-  htsmsg_add_str(m, "notificationClass", "eit");
   comet_mailbox_add_message(m, COMET_DELIVERY_EIT);
   htsmsg_destroy(m);
 }
 
+
+
+/* ************************************************************************
+ * EIT Event
+ * ***********************************************************************/
 static int _update_epg_from_eit(epg_broadcast_t *ebc, eit_event_t *ev, epggrab_module_t *mod) {
   int save = 0;
   epg_episode_t *ee;
@@ -819,7 +836,12 @@ done:
     else if (sta->first == tsta) {
       LIST_FOREACH(tsta, &sta->tables, link)
         if (tsta->state != EIT_STATUS_DONE) break;
-      if (!tsta) epggrab_ota_complete(ota);
+      if (!tsta) {
+        int finished = epggrab_ota_complete(ota);
+        if (finished && !update_epg) {
+            _notify_eit_finished(ota);
+        }
+      }
     }
   }
 #if ENABLE_TRACE

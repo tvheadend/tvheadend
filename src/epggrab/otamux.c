@@ -103,6 +103,43 @@ th_dvb_mux_instance_t *epggrab_mux_next ( th_dvb_adapter_t *tda )
   return ota ? ota->tdmi : NULL;
 }
 
+htsmsg_t* epggrab_ota_get_status ( const char *id ) {
+  epggrab_module_t* genmod = epggrab_module_find_by_id(id);
+  if (!genmod || genmod->type != EPGGRAB_OTA || !genmod->enabled) return NULL;
+
+  epggrab_module_ota_t* mod = (epggrab_module_ota_t*)genmod;
+  htsmsg_t* message = htsmsg_create_map();
+
+  time_t now;
+  time(&now);
+  time_t min_blocked_until = -1;
+  htsmsg_t* muxlist = htsmsg_create_list();
+  epggrab_ota_mux_t *ota;
+  TAILQ_FOREACH(ota, &mod->muxes, grab_link) {
+    if(!ota->is_reg) continue;
+
+    htsmsg_t* m = htsmsg_create_map();
+    htsmsg_add_str(m, "id", ota->tdmi->tdmi_identifier);
+    time_t blocked_until = ota->completed + ota->interval;
+    if (min_blocked_until == -1 || blocked_until < min_blocked_until) {
+      min_blocked_until = blocked_until;
+    }
+    if (ota->state == EPGGRAB_OTA_MUX_RUNNING || blocked_until <= now) {
+      htsmsg_add_s64(m, "ready", 1);
+    } else {
+      htsmsg_add_s64(m, "blockeduntil", blocked_until);
+    }
+    htsmsg_add_msg(muxlist, NULL, m);
+  }
+  htsmsg_add_msg(message, "muxes", muxlist);
+  if (min_blocked_until > now) {
+    htsmsg_add_s64(message, "blockeduntil", min_blocked_until);
+  } else {
+    htsmsg_add_s64(message, "ready", 1);
+  }
+  return message;
+}
+
 /* **************************************************************************
  * Config
  * *************************************************************************/
@@ -373,7 +410,7 @@ int epggrab_ota_begin     ( epggrab_ota_mux_t *ota )
   return 0;
 }
 
-void epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
+int epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
 {
   th_dvb_mux_instance_t *tdmi = ota->tdmi;
 
@@ -391,8 +428,10 @@ void epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
     if (!ota) {
       gtimer_arm(&tdmi->tdmi_adapter->tda_mux_scanner_timer,
                  dvb_adapter_mux_scanner, tdmi->tdmi_adapter, 20);
+      return 1;
     }
   }
+  return 0;
 }
 
 /* Reset */

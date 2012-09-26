@@ -215,6 +215,10 @@ struct epggrab_module_ota
 epggrab_module_t* epggrab_module_find_by_id ( const char *id );
 htsmsg_t*         epggrab_module_list       ( void );
 
+/*
+ * Get status information for an OTA module
+ */
+htsmsg_t* epggrab_ota_get_status       ( const char *id );
 /* **************************************************************************
  * Setup/Configuration
  * *************************************************************************/
