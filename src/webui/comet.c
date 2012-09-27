@@ -75,6 +75,9 @@ cmb_destroy(comet_mailbox_t *cmb)
 
   if (eit_subscriber_count && (cmb->cmb_delivery_flags & COMET_DELIVERY_EIT) > 0) {
     eit_subscriber_count--;
+    if (eit_subscriber_count == 0) {
+      epggrab_ota_eit_comet_stop_scan();
+    }
   }
   free(cmb->cmb_boxid);
   free(cmb);
@@ -134,6 +137,9 @@ comet_mailbox_create(comet_mailbox_flags_t delivery_flags)
   mailbox_tally++;
   if (cmb->cmb_delivery_flags & COMET_DELIVERY_EIT) {
     eit_subscriber_count++;
+    htsmsg_t* eit_status = epggrab_ota_eit_comet_start_scan();
+    cmb->cmb_messages = htsmsg_create_list();
+    htsmsg_add_msg(cmb->cmb_messages, NULL, eit_status);
   }
 
   LIST_INSERT_HEAD(&mailboxes, cmb, cmb_link);
@@ -143,21 +149,6 @@ comet_mailbox_create(comet_mailbox_flags_t delivery_flags)
 /**
  *
  */
-static void
-comet_eit_status(comet_mailbox_t *cmb)
-{
-  htsmsg_t *status = epggrab_ota_get_status("eit_comet");
-  if (!status) return;
-  
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "notificationClass", "eitStatus");
-  htsmsg_add_msg(m, "status", status);
-
-  if(cmb->cmb_messages == NULL)
-    cmb->cmb_messages = htsmsg_create_list();
-  htsmsg_add_msg(cmb->cmb_messages, NULL, m);
-}
-
 static void
 comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
 {
@@ -257,9 +248,6 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
     comet_access_update(hc, cmb);
     comet_serverIpPort(hc, cmb);
     comet_subscription_info(hc, cmb);
-    if (delivery_flags |= COMET_DELIVERY_EIT) {
-      comet_eit_status(cmb);
-    }
   }
   time(&reqtime);
 
@@ -360,8 +348,4 @@ comet_mailbox_add_message(htsmsg_t *m, comet_mailbox_flags_t delivery_flags)
 
   if (msg_delivered) pthread_cond_broadcast(&comet_cond);
   pthread_mutex_unlock(&comet_mutex);
-}
-
-int comet_eit_subscribers(void) {
-  return eit_subscriber_count;
 }

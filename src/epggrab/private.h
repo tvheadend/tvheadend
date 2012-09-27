@@ -90,7 +90,6 @@ epggrab_module_ota_t *epggrab_module_ota_create
     void (*start) (epggrab_module_ota_t*m,
                    struct th_dvb_mux_instance *tdmi),
     int (*enable) (void *m, uint8_t e ),
-    int (*active) (epggrab_module_ota_t* m ),
     epggrab_channel_tree_t *channels );
 
 /* **************************************************************************
@@ -116,7 +115,9 @@ epggrab_ota_mux_t *epggrab_ota_create
 void epggrab_ota_create_and_register_by_id
   ( epggrab_module_ota_t *mod, int nid, int tsid,
     int period, int interval, const char *name );
-
+void epggrab_ota_create_and_register_as_tmp 
+  ( epggrab_module_ota_t *mod, struct th_dvb_mux_instance *tdmi,
+    int timeout, int interval );
 /*
  * Delete
  */

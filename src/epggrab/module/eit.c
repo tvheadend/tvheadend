@@ -56,6 +56,8 @@ typedef struct eit_status
   LIST_HEAD(, eit_table_status) tables;
 } eit_status_t;
 
+static int eit_comet_is_active = 0;
+
 static eit_table_status_t *eit_status_find
   ( eit_status_t *status, int tableid,
     uint16_t onid, uint16_t tsid, uint16_t sid,
@@ -499,17 +501,22 @@ static int _eit_desc_crid
 /* ************************************************************************
  * Comet mailbox notification
  * ***********************************************************************/
-static void _notify_eit_finished(epggrab_ota_mux_t *ota) {
+static htsmsg_t* _create_eit_status_message(epggrab_ota_mux_t *completed_mux) {
   htsmsg_t* m = htsmsg_create_map();
   htsmsg_add_str(m, "notificationClass", "eitStatus");
-  htsmsg_add_str(m, "muxid", ota->tdmi->tdmi_identifier);
-  htsmsg_add_u32(m, "completed", 1);
+  if (completed_mux) {
+    htsmsg_add_str(m, "muxid", completed_mux->tdmi->tdmi_identifier);
+    htsmsg_add_u32(m, "completed", 1);
+  }
   htsmsg_t* st = epggrab_ota_get_status("eit_comet");
   if (st) htsmsg_add_msg(m, "status", st);
-  
+  return m;
+}
+
+static void _notify_eit_status(epggrab_ota_mux_t *completed_mux) {
+  htsmsg_t* m = _create_eit_status_message(completed_mux);
   comet_mailbox_add_message(m, COMET_DELIVERY_EIT);
   htsmsg_destroy(m);
-
 }
 
 static void _notify_eit_event(service_t *svc, eit_event_t *ev, uint16_t eid,  time_t start, time_t stop) {
@@ -839,7 +846,7 @@ done:
       if (!tsta) {
         int finished = epggrab_ota_complete(ota);
         if (finished && !update_epg) {
-            _notify_eit_finished(ota);
+            _notify_eit_status(ota);
         }
       }
     }
@@ -899,6 +906,9 @@ static void _eit_start
 
   /* Disabled */
   if (!m->enabled) return;
+
+  /* EIT comet and no one is listening */
+  if (!strcmp(m->id, "eit_comet") && !eit_comet_is_active) return;
 
   /* Freeview (switch to EIT, ignore if explicitly enabled) */
   // Note: do this as PID is the same
@@ -963,22 +973,51 @@ static int _eit_enable ( void *m, uint8_t e )
   return 1;
 }
 
-static int _eit_comet_is_active( epggrab_module_ota_t* m ) {
-  return comet_eit_subscribers() > 0;
+htsmsg_t* epggrab_ota_eit_comet_start_scan(void) {
+  epggrab_module_ota_t* mod = (epggrab_module_ota_t*) epggrab_module_find_by_id("eit_comet");
+  if (mod->enabled && !eit_comet_is_active) {
+    th_dvb_adapter_t *tda;
+    th_dvb_mux_instance_t *tdmi;
+
+    eit_comet_is_active = 1;
+    tvhlog_spawn(LOG_DEBUG, mod->id, "%s", "activating all muxes for EPG scan");
+    TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
+      LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+        if (tdmi->tdmi_enabled) {
+          service_t *s;
+          LIST_FOREACH(s, &tdmi->tdmi_transports, s_group_link) {
+            if(s->s_enabled && s->s_dvb_eit_enable) break;
+          }
+          if (!s) continue;
+          epggrab_ota_create_and_register_as_tmp(mod, tdmi, 20, 0);
+        }
+      }
+    }
+  }
+  return _create_eit_status_message(NULL);
+}
+
+void epggrab_ota_eit_comet_stop_scan(void) {
+  if (eit_comet_is_active) {
+    epggrab_module_ota_t* mod = (epggrab_module_ota_t*) epggrab_module_find_by_id("eit_comet");
+    tvhlog_spawn(LOG_DEBUG, mod->id, "%s", "deactivating all muxes for EPG scan");
+    eit_comet_is_active = 0;
+    epggrab_ota_destroy_by_module(mod);
+  }
 }
 
 void eit_init ( void )
 {
   epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber (internal EPG update)", 1,
-                            _eit_start, _eit_enable, NULL, NULL);
+                            _eit_start, _eit_enable, NULL);
   epggrab_module_ota_create(NULL, "eit_comet", "EIT: DVB Grabber (push EIT data to comet mailbox)", 1,
-                            _eit_start, _eit_enable, _eit_comet_is_active, NULL);
+                            _eit_start, _eit_enable, NULL);
   epggrab_module_ota_create(NULL, "uk_freesat", "UK: Freesat", 5,
-                            _eit_start, _eit_enable, NULL, NULL);
+                            _eit_start, _eit_enable, NULL);
   epggrab_module_ota_create(NULL, "uk_freeview", "UK: Freeview", 5,
-                            _eit_start, _eit_enable, NULL, NULL);
+                            _eit_start, _eit_enable, NULL);
   epggrab_module_ota_create(NULL, "viasat_baltic", "VIASAT: Baltic", 5,
-                            _eit_start, _eit_enable, NULL, NULL);
+                            _eit_start, _eit_enable, NULL);
 }
 
 void eit_load ( void )

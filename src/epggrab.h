@@ -178,8 +178,11 @@ struct epggrab_ota_mux
   int                               timeout;   ///< Time out if this long
   int                               interval;  ///< Re-grab this often
 
-  int                               is_reg;    ///< Permanently registered
-
+  enum {
+    EPGGRAB_OTA_REG_NONE,
+    EPGGRAB_OTA_REG_PERM,
+    EPGGRAB_OTA_REG_TEMP
+  }                                 reg_state; ///< Registration status
   void                              *status;   ///< Status information
   enum {
     EPGGRAB_OTA_MUX_IDLE,
@@ -202,9 +205,6 @@ struct epggrab_module_ota
 
   TAILQ_HEAD(, epggrab_ota_mux)  muxes; ///< List of related muxes
 
-  /* Is module active? */
-  int (*active) ( epggrab_module_ota_t *m );
-
   /* Transponder tuning */
   void (*start) ( epggrab_module_ota_t *m, struct th_dvb_mux_instance *tdmi );
 };
@@ -219,6 +219,13 @@ htsmsg_t*         epggrab_module_list       ( void );
  * Get status information for an OTA module
  */
 htsmsg_t* epggrab_ota_get_status       ( const char *id );
+
+/*
+ * Start/Stop sending EIT events to comet mailboxes.
+ */
+htsmsg_t* epggrab_ota_eit_comet_start_scan(void);
+void      epggrab_ota_eit_comet_stop_scan(void);
+
 /* **************************************************************************
  * Setup/Configuration
  * *************************************************************************/
