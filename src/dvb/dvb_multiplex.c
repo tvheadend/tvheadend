@@ -864,6 +864,9 @@ tdmi_set_enable(th_dvb_mux_instance_t *tdmi, int enabled)
 
   if(tdmi->tdmi_enabled) {
 
+    if(tda->tda_mux_current == tdmi)
+      dvb_fe_stop(tdmi, 0);
+
     if(tdmi->tdmi_scan_queue != NULL) {
       TAILQ_REMOVE(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
       tdmi->tdmi_scan_queue = NULL;
