@@ -26,6 +26,7 @@
 #include "epg.h"
 #include "epggrab.h"
 #include "epggrab/private.h"
+#include "encoding.h"
 
 /* ************************************************************************
  * Status handling
@@ -508,6 +509,7 @@ static int _eit_process_event
   epg_episode_t *ee;
   epg_serieslink_t *es;
   eit_event_t ev;
+  static char pl_workaround[] = "pl_workaround";
 
   if ( len < 12 ) return -1;
 
@@ -539,6 +541,20 @@ static int _eit_process_event
   /* Process tags */
   memset(&ev, 0, sizeof(ev));
   ev.default_charset = svc->s_dvb_charset;
+
+  /* Test channels which needs polish workaround */
+  encoding_t *enc;
+  LIST_FOREACH(enc, &encoding_list, link) {
+    // TODO: also check for original network id (onid)
+    //       currently onid is unavailable in tvh but there are additional cases which has
+    //       to be met, so I believe, that it should not harm Russian ISO-8859-5 channels
+    //       until we've got this information here
+    if (!ev.default_charset && svc->s_dvb_mux_instance->tdmi_transport_stream_id == enc->tsid) {
+      ev.default_charset = pl_workaround;
+      break;
+    }
+  }
+
   while (dllen > 2) {
     int r;
     dtag = ptr[0];
