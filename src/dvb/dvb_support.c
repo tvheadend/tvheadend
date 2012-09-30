@@ -257,7 +257,6 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char
 
   // manual charset override
   if (dvb_charset != NULL && dvb_charset[0] != 0) {
-  {
     if (sscanf(dvb_charset, "ISO8859-%d", &i) > 0 && i > 0 && i < 16) {
       ic = convert_iso_8859[i];
     } else {
