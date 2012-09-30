@@ -62,11 +62,11 @@ typedef struct dvb_string_conv
 } dvb_string_conv_t;
 
 int dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, 
-		   const size_t srclen, char *dvb_default_charset,
+		   const size_t srclen, char *dvb_charset,
        dvb_string_conv_t *conv);
 
 int dvb_get_string_with_len(char *dst, size_t dstlen, 
-			    const uint8_t *buf, size_t buflen, char *dvb_default_charset,
+			    const uint8_t *buf, size_t buflen, char *dvb_charset,
           dvb_string_conv_t *conv);
 
 #define bcdtoint(i) ((((i & 0xf0) >> 4) * 10) + (i & 0x0f))

@@ -534,7 +534,7 @@ static int _eit_process_event
 
   /* Process tags */
   memset(&ev, 0, sizeof(ev));
-  ev.default_charset = svc->s_dvb_default_charset;
+  ev.default_charset = svc->s_dvb_charset;
   while (dllen > 2) {
     int r;
     dtag = ptr[0];
