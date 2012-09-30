@@ -444,18 +444,18 @@ tvheadend.dvb_services = function(adapterId) {
 			})
 		},
 		{
-			header : "DVB default charset",
-			dataIndex : 'dvb_default_charset',
+			header : "DVB charset",
+			dataIndex : 'dvb_charset',
 			width : 200,
 			renderer : function(value, metadata, record, row, col, store) {
 				return value ? value
-					: '<span class="tvh-grid-unset">ISO6937</span>';
+					: '<span class="tvh-grid-unset">auto</span>';
 			},
 			editor : new fm.ComboBox({
 				mode : 'local',
 				store : new Ext.data.SimpleStore({
 					fields : [ 'key', 'value' ],
-					data : [ [ 'ISO6937', 'default' ], [ 'ISO6937', 'ISO6937' ],
+					data : [ [ null, 'auto' ], [ 'ISO6937', 'ISO6937' ],
 						[ 'ISO8859-1', 'ISO8859-1' ], [ 'ISO8859-2', 'ISO8859-2' ],
 						[ 'ISO8859-3', 'ISO8859-3' ], [ 'ISO8859-4', 'ISO8859-4' ],
 						[ 'ISO8859-5', 'ISO8859-5' ], [ 'ISO8859-6', 'ISO8859-6' ],
@@ -510,7 +510,7 @@ tvheadend.dvb_services = function(adapterId) {
 		root : 'entries',
 		fields : Ext.data.Record.create([ 'id', 'enabled', 'type', 'sid', 'pmt',
 			'pcr', 'svcname', 'network', 'provider', 'mux', 'channelname',
-			'dvb_default_charset', 'dvb_eit_enable' ]),
+			'dvb_charset', 'dvb_eit_enable' ]),
 		url : "dvb/services/" + adapterId,
 		autoLoad : true,
 		id : 'id',

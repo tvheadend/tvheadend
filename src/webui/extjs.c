@@ -1408,7 +1408,7 @@ service_update(htsmsg_t *in)
   uint32_t u32;
   const char *id;
   const char *chname;
-  const char *dvb_default_charset;
+  const char *dvb_charset;
 
   TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
     if((c = htsmsg_get_map_by_field(f)) == NULL ||
@@ -1424,8 +1424,8 @@ service_update(htsmsg_t *in)
     if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
       service_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
 
-    if((dvb_default_charset = htsmsg_get_str(c, "dvb_default_charset")) != NULL)
-      service_set_dvb_default_charset(t, dvb_default_charset);
+    if((dvb_charset = htsmsg_get_str(c, "dvb_charset")) != NULL)
+      service_set_dvb_charset(t, dvb_charset);
 
     if(!htsmsg_get_u32(c, "dvb_eit_enable", &u32))
       service_set_dvb_eit_enable(t, u32);
@@ -1510,8 +1510,8 @@ extjs_servicedetails(http_connection_t *hc,
 
   htsmsg_add_msg(out, "streams", streams);
 
-  if(t->s_dvb_default_charset != NULL)
-    htsmsg_add_str(out, "dvb_default_charset", t->s_dvb_default_charset);
+  if(t->s_dvb_charset != NULL)
+    htsmsg_add_str(out, "dvb_charset", t->s_dvb_charset);
 
   htsmsg_add_u32(out, "dvb_eit_enable", t->s_dvb_eit_enable);
 
@@ -1742,7 +1742,7 @@ extjs_service_update(htsmsg_t *in)
   uint32_t u32;
   const char *id;
   const char *chname;
-  const char *dvb_default_charset;
+  const char *dvb_charset;
 
   TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
     if((c = htsmsg_get_map_by_field(f)) == NULL ||
@@ -1758,8 +1758,8 @@ extjs_service_update(htsmsg_t *in)
     if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
       service_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
 
-    if((dvb_default_charset = htsmsg_get_str(c, "dvb_default_charset")) != NULL)
-      service_set_dvb_default_charset(t, dvb_default_charset);
+    if((dvb_charset = htsmsg_get_str(c, "dvb_charset")) != NULL)
+      service_set_dvb_charset(t, dvb_charset);
 
     if(!htsmsg_get_u32(c, "dvb_eit_enable", &u32))
       service_set_dvb_eit_enable(t, u32);
