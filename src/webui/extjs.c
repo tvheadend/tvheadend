@@ -1523,36 +1523,46 @@ extjs_servicedetails(http_connection_t *hc,
   return 0;
 }
 
-/* andyb
+/* https://github.com/andyb2000 Userlist extjs addition
 */
 
-void
+static int
 extjs_userlist(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
-  const char *op = http_arg_get(&hc->hc_req_args, "op");
   htsmsg_t *out, *array, *e;
   access_log_t *al = NULL;
-  struct a, b;
 
-  e = htsmsg_create_map();
   access_log_show_all();
+  out = htsmsg_create_map();
+  array = htsmsg_create_list();
+
   TAILQ_FOREACH(al, &access_log, al_link) {
-    htsmsg_add_u32(e, "id", al->al_id);
-    localtime_r(&al->al_startlog, &a);
-    localtime_r(&al->al_currlog, &b);
-    htsmsg_add_u32(e, "username", al->al_username);
+    e = htsmsg_create_map();
+    htsmsg_add_str(e, "id", al->al_id);
+    htsmsg_add_str(e, "username", al->al_username);
     htsmsg_add_u32(e, "startlog", al->al_startlog);
     htsmsg_add_u32(e, "currlog", al->al_currlog);
-    htsmsg_add_u32(e, "ip", inet_ntoa(al->al_ip));
-    htsmsg_add_u32(e, "type", al->al_type);
-    htsmsg_add_u32(e, "streamdata", al->al_streamdata);
-  };
-  htsmsg_add_msg(array, NULL, e);
+    htsmsg_add_str(e, "ip", inet_ntoa(al->al_ip));
+    if (al->al_type != NULL) {
+      htsmsg_add_str(e, "type", al->al_type);
+    } else {
+      htsmsg_add_str(e, "type", "");
+    };
+    if (al->al_streamdata != NULL) {
+      htsmsg_add_str(e, "streamdata", al->al_streamdata);
+    } else {
+      htsmsg_add_str(e, "streamdata", "");
+    };
 
-  htsmsg_json_serialize(e, hq, 0);
-  htsmsg_destroy(e);
+    htsmsg_add_msg(array, NULL, e);
+  };
+
+  htsmsg_add_msg(out, "entries", array);
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
 };
 
 /**
