@@ -1523,11 +1523,11 @@ extjs_servicedetails(http_connection_t *hc,
   return 0;
 }
 
-/* https://github.com/andyb2000 Userlist extjs addition
-*/
-
+/**
+ * https://github.com/andyb2000 Userlist extjs addition
+ */
 static int
-extjs_userlist(http_connection_t *hc, const char *remain, void *opaque)
+extjs_status_userlist(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   htsmsg_t *out, *array, *e;
@@ -1921,7 +1921,7 @@ extjs_start(void)
   http_path_add("/servicedetails", NULL, extjs_servicedetails, ACCESS_ADMIN);
   http_path_add("/tv/adapter",     NULL, extjs_tvadapter,      ACCESS_ADMIN);
 /* andyb */
-  http_path_add("/status/userlist",NULL, extjs_userlist,       ACCESS_ADMIN);
+  http_path_add("/status/userlist",NULL, extjs_status_userlist,       ACCESS_ADMIN);
 
 #if ENABLE_LINUXDVB
   extjs_start_dvb();
