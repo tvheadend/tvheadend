@@ -1229,6 +1229,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 		title : 'General',
 		layout : 'column',
 		autoScroll : true,
+		autoHeight: true,
 		items : [ toolpanel, confform, infoPanel ]
 	});
 
