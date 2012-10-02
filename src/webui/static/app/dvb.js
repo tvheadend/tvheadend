@@ -1228,6 +1228,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	var panel = new Ext.Panel({
 		title : 'General',
 		layout : 'column',
+		autoScroll : true,
 		items : [ toolpanel, confform, infoPanel ]
 	});
 
