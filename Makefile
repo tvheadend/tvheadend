@@ -232,9 +232,8 @@ distclean: clean
 	rm -f ${CURDIR}/.config.mk
 
 # Create buildversion.h
-src/version.c: $(BUILDDIR)/buildversion.h
-$(BUILDDIR)/buildversion.h: FORCE
-	@$(CURDIR)/support/version.sh $(CURDIR) $@
+src/version.c: FORCE
+	@$(CURDIR)/support/version $@ > /dev/null
 FORCE:
 
 # Include dependency files if they exist.
