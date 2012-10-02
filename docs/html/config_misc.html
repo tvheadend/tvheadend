@@ -6,10 +6,19 @@
  </p>
 
  <dl>
-  <dt>DVB scan files path:
-  <dd>Select the path to use for DVB scan configuration files. Typically</dt>
-  dvb-apps stores these in /usr/share/dvb/. Leave blank to use TVH's internal
-  file set (probably stored at /usr/share/tvheadend/data/dvb-scan/)</dd>
- </dl>  
+  <dt>Default Language(s)
+  <dd>
+  Select the list of languages (in order of priority) to be used for supplying
+  EPG information to clients that don't provide their own configuration.
+  <p>
+  The EPG information is NOT translated, this only applies to EPG providers
+  that give information (titles, descriptions, etc..) in multiple languages.
 
+  <dt>DVB scan files path:
+  <dd>
+  Select the path to use for DVB scan configuration files. Typically
+  dvb-apps stores these in /usr/share/dvb/. Leave blank to use TVH's internal
+  file set.
+
+ </dl>  
 </div>

@@ -190,8 +190,8 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 		 "</div><br>"
 		 "&copy; 2006 - 2012 Andreas \303\226man, et al.<br><br>"
 		 "<img src=\"docresources/tvheadendlogo.png\"><br>"
-		 "<a href=\"http://www.lonelycoder.com/hts\">"
-		 "http://www.lonelycoder.com/hts</a><br><br>"
+		 "<a href=\"http://www.lonelycoder.com/tvheadend\">"
+		 "http://www.lonelycoder.com/tvheadend</a><br><br>"
 		 "Based on software from "
 		 "<a target=\"_blank\" href=\"http://www.extjs.com/\">ExtJS</a>. "
 		 "Icons from "
@@ -199,6 +199,13 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 		 "FamFamFam</a>"
 		 "<br><br>"
 		 "Build: %s"
+     "<p>"
+     "If you'd like to support the project, please consider a donation."
+     "<br/>"
+     "All proceeds are used to support server infrastructure and buy test "
+     "equipment."
+     "<br/>"
+     "<a href='https://www.paypal.com/cgi-bin/webscr?cmd=_donations&#38;business=andreas%%40lonelycoder%%2ecom&#38;item_name=Donation%%20to%%20the%%20Tvheadend%%20project&#38;currency_code=USD'><img src='https://www.paypal.com/en_US/i/btn/btn_donate_LG.gif' alt='' /></a>"
 		 "</center>",
 		 tvheadend_version,
 		 tvheadend_version);

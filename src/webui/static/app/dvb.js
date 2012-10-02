@@ -382,7 +382,7 @@ tvheadend.dvb_services = function(adapterId) {
 	});
 
 	var eitColumn = new Ext.grid.CheckColumn({
-		header : "EIT",
+		header : "EPG",
 		dataIndex : 'dvb_eit_enable',
 		width : 45
 	});
@@ -1115,6 +1115,10 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 			name : 'skip_checksubscr'
 		}),
 		new Ext.form.Checkbox({
+			fieldLabel : 'Use SID as channel number during mapping',
+			name : 'sidtochan'
+		}),
+		new Ext.form.Checkbox({
 			fieldLabel : 'Monitor signal quality',
 			name : 'qmon'
 		}),
@@ -1132,7 +1136,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 						+ 'of diskspace. You have been warned');
 			}
 		}), {
-			fieldLabel : 'NIT-o Network ID',
+			fieldLabel : 'Original Network ID',
 			name : 'nitoid',
 			width : 50
 		}, {
@@ -1157,11 +1161,6 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 			fieldLabel : 'Turn off LNB when idle',
 			name : 'poweroff'
 		});
-		items.push(v);
-		v = new Ext.form.Checkbox({
-			fieldLabel : 'Use SID as channel number during mapping',
-			name : 'sidtochan'
-		}),
 		items.push(v);
 	}
 
