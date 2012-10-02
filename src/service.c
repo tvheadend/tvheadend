@@ -364,6 +364,8 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
   /* First, try all services without stealing */
   for(i = off; i < cnt; i++) {
     t = vec[i];
+    if(t->s_status == SERVICE_RUNNING) 
+      return t;
     if(t->s_quality_index(t) < 10) {
       if(loginfo != NULL) {
          tvhlog(LOG_NOTICE, "Service",
@@ -375,9 +377,6 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
     }
     tvhlog(LOG_DEBUG, "Service", "%s: Probing adapter \"%s\" without stealing for service \"%s\"",
 	     loginfo, service_adapter_nicename(t), service_nicename(t));
-
-    if(t->s_status == SERVICE_RUNNING) 
-      return t;
     if((r = service_start(t, 0, 0)) == 0)
       return t;
     if(loginfo != NULL)
