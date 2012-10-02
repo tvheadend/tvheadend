@@ -1523,6 +1523,38 @@ extjs_servicedetails(http_connection_t *hc,
   return 0;
 }
 
+/* andyb
+*/
+
+void
+extjs_userlist(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  const char *op = http_arg_get(&hc->hc_req_args, "op");
+  htsmsg_t *out, *array, *e;
+  access_log_t *al = NULL;
+  struct a, b;
+
+  e = htsmsg_create_map();
+  access_log_show_all();
+  TAILQ_FOREACH(al, &access_log, al_link) {
+    htsmsg_add_u32(e, "id", al->al_id);
+    localtime_r(&al->al_startlog, &a);
+    localtime_r(&al->al_currlog, &b);
+    htsmsg_add_u32(e, "username", al->al_username);
+    htsmsg_add_u32(e, "startlog", al->al_startlog);
+    htsmsg_add_u32(e, "currlog", al->al_currlog);
+    htsmsg_add_u32(e, "ip", inet_ntoa(al->al_ip));
+    htsmsg_add_u32(e, "type", al->al_type);
+    htsmsg_add_u32(e, "streamdata", al->al_streamdata);
+  };
+  htsmsg_add_msg(array, NULL, e);
+
+  htsmsg_json_serialize(e, hq, 0);
+  htsmsg_destroy(e);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+};
+
 /**
  *
  */
@@ -1878,6 +1910,8 @@ extjs_start(void)
   http_path_add("/iptv/services",  NULL, extjs_iptvservices,   ACCESS_ADMIN);
   http_path_add("/servicedetails", NULL, extjs_servicedetails, ACCESS_ADMIN);
   http_path_add("/tv/adapter",     NULL, extjs_tvadapter,      ACCESS_ADMIN);
+/* andyb */
+  http_path_add("/status/userlist",NULL, extjs_userlist,       ACCESS_ADMIN);
 
 #if ENABLE_LINUXDVB
   extjs_start_dvb();
