@@ -1,0 +1,30 @@
+#!/bin/bash
+#
+# Update Tvheadend version file (if required)
+#
+
+# Path to version file
+FILE=$1
+
+# Calculate version
+VER=$(cd $(dirname $0); git describe --dirty 2> /dev/null | sed "s/-\([0-9]*\)-\(g[0-9a-f]*\)/.\1~\2/")
+
+# Output
+if [ -z "$FILE" ]; then
+  echo $VER
+  exit
+fi
+
+# Leave (probably ppa build)
+if [ -z "$VER" -a -s "$FILE" ]; then
+  cat $FILE
+  exit
+fi
+
+# Update?
+NEW_VER="const char *tvheadend_version = \"$VER\";"
+OLD_VER=$(cat $FILE 2> /dev/null)
+if [ "$NEW_VER" != "$OLD_VER" ]; then
+  echo $NEW_VER > $FILE
+fi
+echo $VER
