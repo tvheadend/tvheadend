@@ -1920,8 +1920,7 @@ extjs_start(void)
   http_path_add("/iptv/services",  NULL, extjs_iptvservices,   ACCESS_ADMIN);
   http_path_add("/servicedetails", NULL, extjs_servicedetails, ACCESS_ADMIN);
   http_path_add("/tv/adapter",     NULL, extjs_tvadapter,      ACCESS_ADMIN);
-/* andyb */
-  http_path_add("/status/userlist",NULL, extjs_status_userlist,       ACCESS_ADMIN);
+  http_path_add("/status/userlist",NULL, extjs_status_userlist,ACCESS_ADMIN);
 
 #if ENABLE_LINUXDVB
   extjs_start_dvb();
