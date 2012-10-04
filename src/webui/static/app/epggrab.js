@@ -185,15 +185,25 @@ tvheadend.epggrab = function() {
 	});
 
 	/*
-	 * Simple fieldet
+	 * Simple fields
 	 */
 	var simplePanel = new Ext.form.FieldSet({
-		title : 'Basic Config',
-		width : 800,
+		title : 'General Config',
+		width : 700,
 		autoHeight : true,
 		collapsible : true,
-		items : [ interval, internalModule, intervalValue, intervalUnit,
-			channelRename, channelRenumber, channelReicon ]
+		items : [ channelRename, channelRenumber, channelReicon ]
+	});
+
+	/*
+	 * Internal grabber
+	 */
+	var internalPanel = new Ext.form.FieldSet({
+		title : 'Internal Grabber',
+		width : 700,
+		autoHeight : true,
+		collapsible : true,
+		items : [ interval, internalModule, intervalValue, intervalUnit ]
 	});
 
 	/* ****************************************************************
@@ -243,7 +253,7 @@ tvheadend.epggrab = function() {
 
 	var externalPanel = new Ext.form.FieldSet({
 		title : 'External Interfaces',
-		width : 800,
+		width : 700,
 		autoHeight : true,
 		collapsible : true,
 		collapsed : true,
@@ -287,8 +297,8 @@ tvheadend.epggrab = function() {
 	});
 
 	var otaPanel = new Ext.form.FieldSet({
-		title : 'OTA Interfaces',
-		width : 800,
+		title : 'Over-the-air Grabbers',
+		width : 700,
 		autoHeight : true,
 		collapsible : true,
 		collapsed : true,
@@ -325,7 +335,7 @@ tvheadend.epggrab = function() {
 		layout : 'form',
 		defaultType : 'textfield',
 		autoHeight : true,
-		items : [ simplePanel, externalPanel, otaPanel ],
+		items : [ simplePanel, internalPanel, otaPanel, externalPanel ],
 		tbar : [ saveButton, '->', helpButton ]
 	});
 
@@ -360,6 +370,7 @@ tvheadend.epggrab = function() {
 		/* Hack to get display working */
 		delay = new Ext.util.DelayedTask(function() {
 			simplePanel.doLayout(false);
+			internalPanel.doLayout(false);
 			externalPanel.doLayout(false);
 			otaPanel.doLayout(false);
 		});

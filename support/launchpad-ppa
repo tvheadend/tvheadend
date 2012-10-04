@@ -1,0 +1,46 @@
+#!/bin/bash
+#
+# Upload packages to launchpad. Note: you must configure dput for tvh-X
+# as target PPA, and you should also define DEBFULLNAME and DEBEMAIL 
+# environment variables
+#
+
+# Configuration
+TVH_ROOT=$(cd $(dirname $0)/..; pwd)
+TVH_DIST="lucid natty oneiric precise"
+TVH_ARCH="i386 amd64"
+
+# Options
+[ ! -z "$1" ] && REL=$1 || REL=master
+[ ! -z "$2" ] && PPA=$2 || PPA=unstable
+
+# Setup
+cd $TVH_ROOT || exit 1
+git checkout $1 && git checkout . || exit 1
+NOW=`date -R`
+CHANGELOG=$TVH_ROOT/debian/changelog
+VERFILE=$TVH_ROOT/src/version.c
+
+# Create version file
+VER=$($TVH_ROOT/support/version $VERFILE)
+
+# Fetch scan files
+./support/getmuxlist
+
+# For each distro
+for d in $TVH_DIST; do
+  V=${VER}~${d}
+  echo $V
+
+  # Create changelog
+  $TVH_ROOT/support/changelog "$CHANGELOG" "$d" "$VER"
+  
+  # Build source package
+  dpkg-buildpackage -I.git* -S -sgpg -pgpg || exit 1
+
+  # Upload
+  dput tvh-$PPA ../tvheadend_${V}_source.changes || exit 1
+done
+
+# Cleanup
+git checkout .

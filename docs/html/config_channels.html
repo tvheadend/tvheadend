@@ -31,12 +31,20 @@
       Changing name of a channel does not interfere with scheduled
       recordings etc.
 
-  <dt>XML-TV Source
-  <dd>Name of the XML-TV channel. If you have XML-TV enabled you can 
-      select which XML-TV channel to obtain data from. By default 
-      Tvheadend tries to match the name itself, but sometimes it might
-      not match between the XML-TV source and the TV provider so in
-      such cases you can change it yourself.
+  <dt>Play
+  <dd>Play the channel using the VLC plugin (if available) else it will
+      display a direct link that can be used to open in preferred media
+      player.
+
+  <dt>EPG Grab Source
+  <dd>Name of the Internet based EPG provider (typically XMLTV) channel
+      that should be used to update this channels EPG info.
+      By default Tvheadend tries to match the name itself, but sometimes
+      it might not match correctly in which case you can do the mapping
+      manually.
+      <p>
+      Over the air (OTA) sources do NOT need to be mapped in this way, the
+      linking is implicitly tied since they are all part of the DVB system.
 
   <dt>Tags
   <dd>Each channel can be bound to a zero, one or many tags.
