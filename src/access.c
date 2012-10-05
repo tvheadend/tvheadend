@@ -147,7 +147,6 @@ void
 access_log_update(const char *username, const char *access_type, const char *al_streamdata, uint32_t ip)
 {
   access_log_t *al;
-/*  tvhlog(LOG_DEBUG, "accesslogging", "Updating access log for user: %s at ip: %d",username,ip); */
   if((al = access_log_search(username)) == NULL) {
 	/* user not logged yet so create */
         tvhlog(LOG_DEBUG, "accesslogging", "Creating access log for user: %s at ip: %d",username,ip);
@@ -175,17 +174,20 @@ access_log_update(const char *username, const char *access_type, const char *al_
 void
 access_log_show_all(void)
 {
- access_log_t *al = NULL;
- TAILQ_FOREACH(al, &access_log, al_link) {
-	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->id: %s",al->al_id);
-	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->username: %s",al->al_username);
-	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->startlog: %ld",al->al_startlog);
-	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->currlog: %ld",al->al_currlog);
-	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->ip: %s",inet_ntoa(al->al_ip));
-	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->type: %s",al->al_type);
-	tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->streamdata: %s", al->al_streamdata);
- };
-}
+  access_log_t *al = NULL;
+  TAILQ_FOREACH(al, &access_log, al_link) {
+    tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->id: %s",al->al_id);
+    tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->username: %s",al->al_username);
+    tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->startlog: %ld",al->al_startlog);
+    tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->currlog: %ld",al->al_currlog);
+    if (al->al_ip)
+      tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->ip: %s",inet_ntoa(al->al_ip));
+    if (al->al_typeal->al_type)
+      tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->type: %s",al->al_type);
+    if (al->al_streamdata)
+      tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->streamdata: %s", al->al_streamdata);
+  };
+};
 
 /**
  *
