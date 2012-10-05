@@ -180,11 +180,10 @@ access_log_show_all(void)
     tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->username: %s",al->al_username);
     tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->startlog: %ld",al->al_startlog);
     tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->currlog: %ld",al->al_currlog);
-    if (al->al_ip)
-      tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->ip: %s",inet_ntoa(al->al_ip));
-    if (al->al_typeal->al_type)
+    tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->ip: %s",inet_ntoa(al->al_ip));
+    if (al->al_type != NULL)
       tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->type: %s",al->al_type);
-    if (al->al_streamdata)
+    if (al->al_streamdata != NULL)
       tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->streamdata: %s", al->al_streamdata);
   };
 };
