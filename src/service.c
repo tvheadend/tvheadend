@@ -485,7 +485,7 @@ service_destroy(service_t *t)
   free(t->s_identifier);
   free(t->s_svcname);
   free(t->s_provider);
-  free(t->s_dvb_default_charset);
+  free(t->s_dvb_charset);
 
   while((st = TAILQ_FIRST(&t->s_components)) != NULL) {
     TAILQ_REMOVE(&t->s_components, st, es_link);
@@ -524,7 +524,7 @@ service_create(const char *identifier, int type, int source_type)
   t->s_refcount = 1;
   t->s_enabled = 1;
   t->s_pcr_last = PTS_UNSET;
-  t->s_dvb_default_charset = NULL;
+  t->s_dvb_charset = NULL;
   t->s_dvb_eit_enable = 1;
   TAILQ_INIT(&t->s_components);
 
@@ -702,15 +702,15 @@ service_map_channel(service_t *t, channel_t *ch, int save)
  *
  */
 void
-service_set_dvb_default_charset(service_t *t, const char *dvb_default_charset)
+service_set_dvb_charset(service_t *t, const char *dvb_charset)
 {
   lock_assert(&global_lock);
 
-  if(t->s_dvb_default_charset != NULL && !strcmp(t->s_dvb_default_charset, dvb_default_charset))
+  if(t->s_dvb_charset != NULL && !strcmp(t->s_dvb_charset, dvb_charset))
     return;
 
-  free(t->s_dvb_default_charset);
-  t->s_dvb_default_charset = strdup(dvb_default_charset);
+  free(t->s_dvb_charset);
+  t->s_dvb_charset = strdup(dvb_charset);
   t->s_config_save(t);
 }
 

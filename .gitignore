@@ -10,3 +10,14 @@ data/dvb-scan
 
 *.pyc
 .*.sw[op]
+
+debian/tvheadend
+debian/tvheadend-dbg
+debian/files
+debian/tvheadend-dbg.debhelper.log
+debian/tvheadend-dbg.substvars
+debian/tvheadend.debhelper.log
+debian/tvheadend.postinst.debhelper
+debian/tvheadend.postrm.debhelper
+debian/tvheadend.prerm.debhelper
+debian/tvheadend.substvars
