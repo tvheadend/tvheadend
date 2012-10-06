@@ -250,7 +250,7 @@ function accessUpdate(o) {
 			autoScroll : true,
 			title : 'Status',
 			iconCls : 'eye',
-			items : [ new tvheadend.userlist ]
+			items : [ new tvheadend.statususerlist ]
 		});
 		tvheadend.rootTabPanel.add(tvheadend.statusPanel);
 	};
