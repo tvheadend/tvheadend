@@ -1,13 +1,19 @@
-tvheadend.servicetypeStore = new Ext.data.JsonStore({
+tvheadend.statusUserlist = new Ext.data.JsonStore({
         root : 'entries',
-        id : 'val',
+        id : 'id',
         url : '/status/userlist',
         baseParams : {
                 op : 'streamdata'
         },
-        fields : [ 'val', 'str' ],
+        fields : [ 'id', 'username', 'startlog', 'currlog', 'ip', 'type', 'streamdata' ],
         autoLoad : true
 });
+
+tvheadend.statusUserlist.setDefaultSort('username', 'ASC');
+tvheadend.comet.on('statususerlist', function(m) {
+        if (m.reload != null) tvheadend.statusUserlist.reload();
+});
+
 
 tvheadend.statususerlist = function() {
 	var fm = Ext.form;
