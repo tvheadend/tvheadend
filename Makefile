@@ -138,6 +138,8 @@ SRCS += src/muxer.c \
 	src/muxer_pass.c \
 	src/muxer_tvh.c \
 
+SRCS += src/iconserve.c \
+
 #
 # Optional code
 #

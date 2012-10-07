@@ -41,6 +41,7 @@
 #include "plumbing/globalheaders.h"
 #include "epg.h"
 #include "muxer.h"
+#include "iconserve.h"
 
 /**
  *
@@ -852,6 +853,9 @@ int page_statedump(http_connection_t *hc, const char *remain, void *opaque);
 void
 webui_init(void)
 {
+  const char *homedir = hts_settings_get_root();
+  char homepath[254];
+
   http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
 
   http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_WEB_INTERFACE);
@@ -862,9 +866,14 @@ webui_init(void)
 
   http_path_add("/stream",  NULL, http_stream,  ACCESS_STREAMING);
 
+  http_path_add("/logo", NULL, page_logo, ACCESS_WEB_INTERFACE);
+
   webui_static_content("/static",        "src/webui/static");
   webui_static_content("/docs",          "docs/html");
   webui_static_content("/docresources",  "docs/docresources");
+
+  snprintf(homepath, sizeof(homepath), "%s/icons", homedir);
+  webui_static_content("/iconstorage",   homepath);
 
   simpleui_start();
   extjs_start();
