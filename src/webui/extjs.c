@@ -47,6 +47,7 @@
 #include "config2.h"
 #include "lang_codes.h"
 #include "subscriptions.h"
+#include "iconserve.h"
 
 /**
  *
@@ -858,7 +859,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_str(m, "channel", ch->ch_name);
     htsmsg_add_u32(m, "channelid", ch->ch_id);
     if(ch->ch_icon != NULL)
-	    htsmsg_add_str(m, "chicon", ch->ch_icon);
+            htsmsg_add_str(m, "chicon", logo_query(ch->ch_id, ch->ch_icon));
 
     if((s = epg_episode_get_title(ee, lang)))
       htsmsg_add_str(m, "title", s);
@@ -940,7 +941,7 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
           m = htsmsg_create_map();
           htsmsg_add_u32(m, "id", ebc->id);
           if ( ch->ch_name ) htsmsg_add_str(m, "channel", ch->ch_name);
-          if ( ch->ch_icon ) htsmsg_add_str(m, "chicon", ch->ch_icon);
+          if ( ch->ch_icon ) htsmsg_add_str(m, "chicon", logo_query(ch->ch_id, ch->ch_icon));
           htsmsg_add_u32(m, "start", ebc->start);
           htsmsg_add_msg(array, NULL, m);
         }
@@ -1340,7 +1341,7 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque,
     if(de->de_channel != NULL) {
       htsmsg_add_str(m, "channel", de->de_channel->ch_name);
       if(de->de_channel->ch_icon != NULL)
-	htsmsg_add_str(m, "chicon", de->de_channel->ch_icon);
+	htsmsg_add_str(m, "chicon", logo_query(de->de_channel->ch_id, de->de_channel->ch_icon));
     }
 
     htsmsg_add_str(m, "config_name", de->de_config_name);
@@ -1930,7 +1931,23 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
       save |= config_set_muxconfpath(str);
     if ((str = http_arg_get(&hc->hc_req_args, "language")))
       save |= config_set_language(str);
+    str = http_arg_get(&hc->hc_req_args, "iconserve");
+    if (str != NULL) {
+     save |= config_set_iconserve(str);
+    } else {
+     save |= config_set_iconserve("off");
+    };
+    str = http_arg_get(&hc->hc_req_args, "iconserve_periodicdownload");
+    if (str != NULL) {
+     save |= config_set_iconserve_periodicdownload(str);
+    } else {
+     save |= config_set_iconserve_periodicdownload("off");
+    };
+    if ((str = http_arg_get(&hc->hc_req_args, "serverip")))
+      save |= config_set_serverip(str);
     if (save) config_save();
+    /* trigger the iconserve init routine */
+    logo_loader();
     pthread_mutex_unlock(&global_lock);
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);

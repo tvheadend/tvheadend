@@ -173,18 +173,18 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 
     tm = gmtime_r(&t, &tm0);
     htsbuf_qprintf(&hdrs, 
-		"Last-Modified: %s, %02d %s %d %02d:%02d:%02d GMT\r\n",
-		cachedays[tm->tm_wday],	tm->tm_year + 1900,
-		cachemonths[tm->tm_mon], tm->tm_mday,
-		tm->tm_hour, tm->tm_min, tm->tm_sec);
+                "Last-Modified: %s, %d %s %02d %02d:%02d:%02d GMT\r\n",
+                cachedays[tm->tm_wday], tm->tm_mday, 
+                cachemonths[tm->tm_mon], tm->tm_year + 1900,
+                tm->tm_hour, tm->tm_min, tm->tm_sec);
 
     t += maxage;
 
     tm = gmtime_r(&t, &tm0);
     htsbuf_qprintf(&hdrs, 
-		"Expires: %s, %02d %s %d %02d:%02d:%02d GMT\r\n",
-		cachedays[tm->tm_wday],	tm->tm_year + 1900,
-		cachemonths[tm->tm_mon], tm->tm_mday,
+		"Expires: %s, %d %s %02d %02d:%02d:%02d GMT\r\n",
+		cachedays[tm->tm_wday],	tm->tm_mday,
+                cachemonths[tm->tm_mon], tm->tm_year + 1900,
 		tm->tm_hour, tm->tm_min, tm->tm_sec);
       
     htsbuf_qprintf(&hdrs, "Cache-Control: max-age=%d\r\n", maxage);
