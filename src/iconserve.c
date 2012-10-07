@@ -20,6 +20,7 @@
 #include <fcntl.h>
 
 #include <stdio.h>
+#include <string.h>
 
 #include "settings.h"
 #include "tvheadend.h"
@@ -77,11 +78,41 @@ void
 logo_loader(void)
 {
   channel_t *ch;
-  char icon_name;
+  char *inpath, *inpath2;
+  const char *outpath = "none";
+  const char *homedir = hts_settings_get_root();
+  char homepath[254];
+  char iconpath[100];
+  fb_file *fp;
+
+  snprintf(homepath, sizeof(homepath), "%s/icons", homedir);
   /* loop through channels and load logo files */
   RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
     tvhlog(LOG_DEBUG, "logo_loader", "Loading channel icon %s", ch->ch_icon);
-    /* split icon to last component */
-    icon_name = ch->ch_icon.Split('/').Last();
+    if (ch->ch_icon != NULL) {
+      inpath = NULL;
+      inpath2 = NULL;
+      outpath = NULL;
+      /* split icon to last component */
+      inpath = strdup(ch->ch_icon);
+      inpath2 = strtok(inpath, "/");
+      while (inpath2 != NULL) {
+        inpath2 = strtok(NULL, "/");
+        if (inpath2 != NULL)
+          outpath = strdup(inpath2);
+      };
+      if (outpath != NULL) {
+        tvhlog(LOG_DEBUG, "logo_loader", "Path check %s", outpath);
+        snprintf(iconpath, sizeof(iconpath), "%s/%s", homepath, outpath);
+        tvhlog(LOG_DEBUG, "logo_loader", "Filename %s", iconpath);
+        fp = fb_open(iconpath, 0, 1);
+        if (!fp) {
+          tvhlog(LOG_DEBUG, "page_loader", "failed to open %s", iconpath);
+        } else {
+          tvhlog(LOG_DEBUG, "page_loader", "File %s opened", iconpath);
+          fb_close(fp);
+        };
+      };
+    };
   };
 };
