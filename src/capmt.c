@@ -77,6 +77,7 @@
 #define INFO_SIZE (2+KEY_SIZE+KEY_SIZE)
 #define EVEN_OFF  (2)
 #define ODD_OFF   (2+KEY_SIZE)
+#define MAX_SOCKETS 16   // max sockets (simultaneous channels) per demux
 static unsigned char ca_info[MAX_CA][MAX_INDEX][INFO_SIZE];
 
 /**
@@ -189,7 +190,8 @@ typedef struct capmt {
   int   capmt_oscam;
 
   /* capmt sockets */
-  int   capmt_sock;
+  int   sids[MAX_SOCKETS];
+  int   capmt_sock[MAX_SOCKETS];
   int   capmt_sock_ca0[MAX_CA];
 
   /* thread flags */
@@ -206,43 +208,128 @@ typedef struct capmt {
  *
  */
 static int
-capmt_send_msg(capmt_t *capmt, const uint8_t *buf, size_t len)
+capmt_send_msg(capmt_t *capmt, int sid, const uint8_t *buf, size_t len)
 {
-  return write(capmt->capmt_sock, buf, len);
+  if (capmt->capmt_oscam) {
+    int i, sent = 0;
+
+    // dumping current SID table
+    for (i = 0; i < MAX_SOCKETS; i++)
+      tvhlog(LOG_DEBUG, "capmt", "%s: SOCKETS TABLE DUMP [%d]: sid=%d socket=%d", __FUNCTION__, i, capmt->sids[i], capmt->capmt_sock[i]);
+    if (sid == 0) {
+      tvhlog(LOG_DEBUG, "capmt", "%s: got empty SID - returning from function", __FUNCTION__);
+      return -1;
+    }
+
+    // searching for the SID and socket
+    int found = 0;
+    for (i = 0; i < MAX_SOCKETS; i++) {
+      if (capmt->sids[i] == sid) {
+        found = 1;
+        break;
+      }
+    }
+
+    if (found)
+      tvhlog(LOG_DEBUG, "capmt", "%s: found sid, reusing socket, i=%d", __FUNCTION__, i);
+    else {                       //not found - adding to first free in table
+      for (i = 0; i < MAX_SOCKETS; i++) {
+        if (capmt->sids[i] == 0) {
+          capmt->sids[i] = sid;
+          break;
+        }
+      }
+    }
+    if (i == MAX_SOCKETS) {
+      tvhlog(LOG_DEBUG, "capmt", "%s: no free space for new SID!!!", __FUNCTION__);
+      return -1;
+    } else {
+      capmt->sids[i] = sid;
+      tvhlog(LOG_DEBUG, "capmt", "%s: added: i=%d", __FUNCTION__, i);
+    }
+
+    // opening socket and sending
+    if (capmt->capmt_sock[i] == 0) {
+      capmt->capmt_sock[i] = tvh_socket(AF_LOCAL, SOCK_STREAM, 0);
+
+      struct sockaddr_un serv_addr_un;
+      memset(&serv_addr_un, 0, sizeof(serv_addr_un));
+      serv_addr_un.sun_family = AF_LOCAL;
+      snprintf(serv_addr_un.sun_path, sizeof(serv_addr_un.sun_path), "%s", capmt->capmt_sockfile);
+
+      if (connect(capmt->capmt_sock[i], (const struct sockaddr*)&serv_addr_un, sizeof(serv_addr_un)) != 0) {
+        tvhlog(LOG_ERR, "capmt", "Cannot connect to %s, Do you have OSCam running?", capmt->capmt_sockfile);
+        capmt->capmt_sock[i] = 0;
+      } else
+        tvhlog(LOG_DEBUG, "capmt", "created socket with socket_fd=%d", capmt->capmt_sock[i]);
+    }
+    if (capmt->capmt_sock[i] > 0) {
+      sent = write(capmt->capmt_sock[i], buf, len);
+      tvhlog(LOG_DEBUG, "capmt", "socket_fd=%d len=%d sent=%d", capmt->capmt_sock[i], (int)len, sent);
+      if (sent != len) {
+        tvhlog(LOG_ERR, "capmt", "%s: len != sent", __FUNCTION__);
+        close(capmt->capmt_sock[i]);
+        capmt->capmt_sock[i] = 0;
+      }
+    }
+    return sent;
+  }
+  else  // standard old capmt mode
+    return write(capmt->capmt_sock[0], buf, len);
 }
 
 static void 
 capmt_send_stop(capmt_service_t *t)
 {
-  /* buffer for capmt */
-  int pos = 0;
-  uint8_t buf[4094];
+  if (t->ct_capmt->capmt_oscam) {
+    int i;
+    // searching for socket to close
+    for (i = 0; i < MAX_SOCKETS; i++)
+      if (t->ct_capmt->sids[i] == t->ct_service->s_dvb_service_id)
+        break;
 
-  capmt_header_t head = {
-    .capmt_indicator        = { 0x9F, 0x80, 0x32, 0x82, 0x00, 0x00 },
-    .capmt_list_management  = CAPMT_LIST_ONLY,
-    .program_number         = t->ct_service->s_dvb_service_id,
-    .version_number         = 0, 
-    .current_next_indicator = 0,
-    .program_info_length    = 0,
-    .capmt_cmd_id           = CAPMT_CMD_NOT_SELECTED,
-  };
-  memcpy(&buf[pos], &head, sizeof(head));
-  pos    += sizeof(head);
+    if (i == MAX_SOCKETS) {
+      tvhlog(LOG_DEBUG, "capmt", "%s: socket to close not found", __FUNCTION__);
+      return;
+    }
 
-  uint8_t end[] = { 
-    0x01, (t->ct_seq >> 8) & 0xFF, t->ct_seq & 0xFF, 0x00, 0x06 };
-  memcpy(&buf[pos], end, sizeof(end));
-  pos    += sizeof(end);
-  buf[4]  = ((pos - 6) >> 8);
-  buf[5]  = ((pos - 6) & 0xFF);
-  buf[7]  = t->ct_service->s_dvb_service_id >> 8;
-  buf[8]  = t->ct_service->s_dvb_service_id & 0xFF;
-  buf[9]  = 1;
-  buf[10] = ((pos - 5 - 12) & 0xF00) >> 8;
-  buf[11] = ((pos - 5 - 12) & 0xFF);
+    // closing socket (oscam handle this as event and stop decrypting)
+    tvhlog(LOG_DEBUG, "capmt", "%s: closing socket i=%d, socket_fd=%d", __FUNCTION__, i, t->ct_capmt->capmt_sock[i]);
+    t->ct_capmt->sids[i] = 0;
+    if (t->ct_capmt->capmt_sock[i] > 0)
+      close(t->ct_capmt->capmt_sock[i]);
+    t->ct_capmt->capmt_sock[i] = 0;
+  } else {  // standard old capmt mode
+    /* buffer for capmt */
+    int pos = 0;
+    uint8_t buf[4094];
+
+    capmt_header_t head = {
+      .capmt_indicator        = { 0x9F, 0x80, 0x32, 0x82, 0x00, 0x00 },
+      .capmt_list_management  = CAPMT_LIST_ONLY,
+      .program_number         = t->ct_service->s_dvb_service_id,
+      .version_number         = 0,
+      .current_next_indicator = 0,
+      .program_info_length    = 0,
+      .capmt_cmd_id           = CAPMT_CMD_NOT_SELECTED,
+    };
+    memcpy(&buf[pos], &head, sizeof(head));
+    pos    += sizeof(head);
+
+    uint8_t end[] = {
+      0x01, (t->ct_seq >> 8) & 0xFF, t->ct_seq & 0xFF, 0x00, 0x06 };
+    memcpy(&buf[pos], end, sizeof(end));
+    pos    += sizeof(end);
+    buf[4]  = ((pos - 6) >> 8);
+    buf[5]  = ((pos - 6) & 0xFF);
+    buf[7]  = t->ct_service->s_dvb_service_id >> 8;
+    buf[8]  = t->ct_service->s_dvb_service_id & 0xFF;
+    buf[9]  = 1;
+    buf[10] = ((pos - 5 - 12) & 0xF00) >> 8;
+    buf[11] = ((pos - 5 - 12) & 0xFF);
   
-  capmt_send_msg(t->ct_capmt, buf, pos);
+    capmt_send_msg(t->ct_capmt, t->ct_service->s_dvb_service_id, buf, pos);
+  }
 }
 
 /**
@@ -457,9 +544,12 @@ capmt_thread(void *aux)
   th_dvb_adapter_t *tda;
 
   while (capmt->capmt_running) {
-    capmt->capmt_sock = -1;
     for (i = 0; i < MAX_CA; i++)
       capmt->capmt_sock_ca0[i] = -1;
+    for (i = 0; i < MAX_SOCKETS; i++) {
+      capmt->sids[i] = 0;
+      capmt->capmt_sock[i] = 0;
+    }
     capmt->capmt_connected = 0;
     
     pthread_mutex_lock(&global_lock);
@@ -470,14 +560,14 @@ capmt_thread(void *aux)
     pthread_mutex_unlock(&global_lock);
 
     /* open connection to camd.socket */
-    capmt->capmt_sock = tvh_socket(AF_LOCAL, SOCK_STREAM, 0);
+    capmt->capmt_sock[0] = tvh_socket(AF_LOCAL, SOCK_STREAM, 0);
 
     struct sockaddr_un serv_addr_un;
     memset(&serv_addr_un, 0, sizeof(serv_addr_un));
     serv_addr_un.sun_family = AF_LOCAL;
     snprintf(serv_addr_un.sun_path, sizeof(serv_addr_un.sun_path), "%s", capmt->capmt_sockfile);
 
-    if (connect(capmt->capmt_sock, (const struct sockaddr*)&serv_addr_un, sizeof(serv_addr_un)) == 0) {
+    if (connect(capmt->capmt_sock[0], (const struct sockaddr*)&serv_addr_un, sizeof(serv_addr_un)) == 0) {
       capmt->capmt_connected = 1;
 
       /* open connection to emulated ca0 device */
@@ -503,8 +593,9 @@ capmt_thread(void *aux)
     capmt->capmt_connected = 0;
 
     /* close opened sockets */
-    if (capmt->capmt_sock > 0)
-      close(capmt->capmt_sock);
+    for (i = 0; i < MAX_SOCKETS; i++)
+      if (capmt->capmt_sock[i] > 0)
+        close(capmt->capmt_sock[i]);
     for (i = 0; i < MAX_CA; i++)
       if (capmt->capmt_sock_ca0[i] > 0)
         close(capmt->capmt_sock_ca0[i]);
@@ -540,6 +631,7 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
   capmt_t *capmt = ct->ct_capmt;
   int adapter_num = t->s_dvb_mux_instance->tdmi_adapter->tda_adapter_num;
   int total_caids = 0, current_caid = 0;
+  int i;
 
   caid_t *c;
 
@@ -587,7 +679,7 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
           if ((cce->cce_ecmsize == len) && !memcmp(cce->cce_ecm, data, len))
             break; /* key already sent */
 
-          if(capmt->capmt_sock == -1) {
+          if(!capmt->capmt_oscam && capmt->capmt_sock[0] == 0) {
             /* New key, but we are not connected (anymore), can not descramble */
             ct->ct_keystate = CT_UNKNOWN;
             break;
@@ -718,7 +810,17 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
           buf[9] = pmtversion;
           pmtversion = (pmtversion + 1) & 0x1F;
 
-          capmt_send_msg(capmt, buf, pos);
+          int found = 0;
+          if (capmt->capmt_oscam) {
+            for (i = 0; i < MAX_SOCKETS; i++) {
+              if (capmt->sids[i] == sid) {
+                found = 1;
+                break;
+              }
+            }
+          }
+          if ((capmt->capmt_oscam && !found) || !capmt->capmt_oscam)
+            capmt_send_msg(capmt, sid, buf, pos);
           break;
         }
       default:
