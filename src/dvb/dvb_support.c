@@ -141,7 +141,7 @@ static inline size_t conv_6937(const uint8_t *src, size_t srclen,
       dst++;
     } else {
       uint16_t uc;
-      if (c <= 0x9f) {
+      if (c >= 0xc0 && c <= 0xcf) {
         // map two-byte sequence, skipping illegal combinations.
         if (srclen<2) {
           errno = EINVAL;
@@ -155,7 +155,7 @@ static inline size_t conv_6937(const uint8_t *src, size_t srclen,
         } else if (c2 >= 0x41 && c2 <= 0x5a) {
           uc = iso6937_multi_byte[c-0xc0][c2-0x41];
         } else if (c2 >= 0x61 && c2 <= 0x7a) {
-          uc = iso6937_multi_byte[c-0xc0][c2-0x61];
+          uc = iso6937_multi_byte[c-0xc0][c2-0x61+26];
         } else {
           uc = 0;
         }

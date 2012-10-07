@@ -5,7 +5,7 @@ export DH_VERBOSE=1
 	dh $@
 
 override_dh_auto_configure:
-	dh_auto_configure -- ${JOBSARGS} --enable-avahi --enable-zlib
+	dh_auto_configure -- ${JOBSARGS}
 
 override_dh_auto_build:
 	make ${JARGS}

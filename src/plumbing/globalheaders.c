@@ -254,6 +254,7 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
 
   case SMT_EXIT:
   case SMT_SERVICE_STATUS:
+  case SMT_SIGNAL_STATUS:
   case SMT_NOSTART:
   case SMT_MPEGTS:
     streaming_target_deliver2(gh->gh_output, sm);
@@ -281,6 +282,7 @@ gh_pass(globalheaders_t *gh, streaming_message_t *sm)
     // FALLTHRU
   case SMT_EXIT:
   case SMT_SERVICE_STATUS:
+  case SMT_SIGNAL_STATUS:
   case SMT_NOSTART:
   case SMT_MPEGTS:
     streaming_target_deliver2(gh->gh_output, sm);

@@ -253,24 +253,28 @@ const char *dvr_entry_schedstatus(dvr_entry_t *de);
 
 void dvr_entry_create_by_autorec(epg_broadcast_t *e, dvr_autorec_entry_t *dae);
 
-dvr_entry_t *dvr_entry_create_by_event(const char *dvr_config_name,
-                                       epg_broadcast_t *e, 
-                time_t start_extra, time_t stop_extra,
-                const char *creator,
-				       dvr_autorec_entry_t *dae,
-				       dvr_prio_t pri);
+dvr_entry_t *dvr_entry_create_by_event
+  (const char *dvr_config_name,
+   epg_broadcast_t *e, 
+   time_t start_extra, time_t stop_extra,
+   const char *creator,
+   dvr_autorec_entry_t *dae,
+   dvr_prio_t pri);
 
-dvr_entry_t *dvr_entry_create(const char *dvr_config_name,
-                              channel_t *ch, time_t start, time_t stop, 
-            time_t start_extra, time_t stop_extra,
-			      const char *title, const char *description,
-            epg_genre_t *content_type,
-			      const char *creator, dvr_autorec_entry_t *dae,
-			      dvr_prio_t pri);
+dvr_entry_t *dvr_entry_create
+  (const char *dvr_config_name,
+   channel_t *ch, time_t start, time_t stop, 
+   time_t start_extra, time_t stop_extra,
+	 const char *title, const char *description, const char *lang,
+   epg_genre_t *content_type,
+	 const char *creator, dvr_autorec_entry_t *dae,
+	 dvr_prio_t pri);
 
 dvr_entry_t *dvr_entry_update
-  (dvr_entry_t *de, const char* de_title, const char *lang, 
-   int de_start, int de_stop);
+  (dvr_entry_t *de,
+   const char* de_title, const char *de_desc, const char *lang, 
+   time_t de_start, time_t de_stop,
+   time_t de_start_extra, time_t de_stop_extra );
 
 void dvr_init(void);
 

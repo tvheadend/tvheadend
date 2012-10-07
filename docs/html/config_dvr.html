@@ -13,10 +13,21 @@
   <dd>Path to where Tvheadend will write recorded events. If components of
       the path does not exist, Tvheadend will try to create them.
 
+  <dt>Media container
+  <dd>Select the container format used to store recordings.
+
   <dt>DVR Log retention time (days)
   <dd>Time that Tvheadend will keep information about the recording in
       its internal database. Notice that the actual recorded file will not
       be deleted when the log entry is deleted.
+
+  <dt>Extra time before recordings (minutes)
+  <dd>Specify the number of minutes to record before the events scheduled
+      start time. Used to cope with small scheduling errors.
+
+  <dt>Extra time after recordings (minutes)
+  <dd>Specify the number of minutes to record after the events scheduled
+      stop time. Used to cope with small scheduling errors.
 
   <dt>Make sub-directories per day
   <dd>If checked, Tvheadend will create a new directory per day in the
@@ -51,6 +62,17 @@
   <dt>Include episode in title
   <dd>If checked, Tvheadend will include the season and episode in the
       title (if such info is available).
+
+  <dt>Remove all unsafe characters from filename
+  <dd>If checked, all characters that could possibly cause problems for
+      filenaming will be removed.
+  
+  <dt>Replace whitespace in title with '-'
+  <dd>If checked, all whitespace characters will be replaced with '-'.
+  
+  <dt>Tag files with metadata
+  <dd>If checked, media containers that support metadata will be tagged with
+      the metadata associated with the event being recorded.
 
   <dt>Post-processor command
   <dd>Command to run after finishing a recording. The command will be

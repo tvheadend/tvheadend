@@ -22,7 +22,9 @@
 
   <dt>Adapter name
   <dd>
-  You can change the display name for the adapter.
+  You can change the display name for the adapter. This is highly recommended
+  for multi-adapter setups with adapters that report the same name to avoid
+  confusion.
 
   <dt>Autodetect muxes
   <dd>
@@ -30,6 +32,15 @@
   on the same network. If this checkbox is enabled, Tvheadend will 
   automatically create new muxes as it receives configuration for them
   via the DVB networks.
+  
+  <dt>Skip initial scan
+  <dd>
+  By default Tvheadend will rescan all muxes before more detailed background
+  scanning (including EPG scans) can be properly started. This is to verify
+  all muxes are still valid.
+  <br/>
+  This will not stop the ability to watch live TV, however for most setups
+  this option can be checked.
 
   <dt>Idle scanning
   <dd>
@@ -37,11 +48,71 @@
   muxes and tune to them to verify that they are still working. 
   If your adapter have problems with lots of tuning, try to disable this.
 
-  <dt>Detailed logging
+  <dt>Close device handle when idle
   <dd>
-  If this is enabled, Tvheadend will log more information related to
-  this specific adapter. You might wanna enable this if you have some
-  kind of issues in order to better diagnose the problems.
+  This will attempt to close all available device handles. This can be 
+  necessary to allow some devices to go into low power states.
+  <br/>
+  However this option has been known to cause problems with some multi tuner
+  DVB cards. If you have signal problems, try disabling this option.
+  <br/>
+  Note: this option has no effect if idle scanning is enabled.
+
+  <dt>Skip service availability check when mapping
+  <dd>
+  By default Tvheadend will validate that a service can be correctly 
+  received (including any descrambling) when mapping channels. You can disable
+  this checking by enabling this option.
+
+  <dt>Use SID as channel number during mapping
+  <dd>
+  If you enable this option then the initial mapping of channels will use
+  the service ID as the channel number, should no local channel number be
+  provided in the service information tables.
+    
+  <dt>Monitor signal quality
+  <dd>
+  If you enable this option Tvheadend will attempt to monitor signal quality
+  of a mux using an internal metric. If the calculated quality falls to low
+  the mux/adapter will generally be ignored.
+
+  <dt>Disable PMT monitoring
+  <dd>
+  This disable monitoring Program Map Table (PMT) for all services on a mux.
+  <br/>
+  Most people should not require this, but because this involves creating a
+  lot of table filters, some DVB cards have problems and report errors related
+  to too many open file descriptors. If this happens try enabling this option.
+
+  <dt>Write full DVB MUX to disk
+  <dd>
+  If this is enabled, Tvheadend will store the full mux stream to disk for
+  debugging and development purposes. Don't enable this unless you know what
+  you're doing.
+  
+  <dt>Original Network ID
+  <dd>
+  If you experience problems caused by overlaps between multiple network
+  providers this option can be used to filter which network ID is received
+  by a given adapter.
+  
+  <dt>Extra priority
+  <dd>
+  This field can be used to define a priority ordering for adapters. This will
+  be used when determining which adapter to use to service a subscription
+  request. It could be used for example to prefer a DVB-S adapter over a 
+  DVB-T one.
+
+  <dt>DiSEqC version (DVB-S only)
+  <dd>
+  If you're using a DiSEqC switch, then specify the version here.
+ 
+  <dt>Turn off LNB when idle
+  <dd>
+  This option can be enabled to disable the power to the LNB when the adapter
+  is not in use. This can reduce power consumption, however for poorly shieled
+  multi tuner setups you may some inteference when the LNB is re-enabled.
+
  </dl>
 </dl>
 
@@ -79,7 +150,16 @@
 
   <dt>Modulation
   <dd>Information about the modulation used on the mux. Can not be changed
+    
+  <dt>Polarisation
+  <dd>Information about the polarisation used on the mux. Can not be changed
 
+  <dt>Satellite config (DVB-S only)
+  <dd>The satellite configuration in use on this mux. Can not be changed.
+
+  <dt>Frontend status
+  <dd>The status of the frontend signal last time the mux was tuned. Can not be changed
+  
   <dt>Mux id
   <dd>Unique ID for this mux in the dvb network. Can not be changed
 
@@ -116,6 +196,9 @@
   <dt>Service name
   <dd>Service name as given in the DVB stream. Can not be changed
 
+  <dt>Play
+  <dd>Open the VLC plugin window to play this service.
+
   <dt>Channel name
   <dd>Double-click on this column to map the service to a channel.
 
@@ -126,8 +209,8 @@
   but fail to correctly announce it. To fix this you can set the default 
   charset to use when none is specified by the broadcaster.
 
-  <dt>EIT
-  <dd>Uncheck this if EIT data should not be retreived for this service.
+  <dt>EPG
+  <dd>Uncheck this if EPG data should not be retreived for this service.
 
   <dt>Type
   <dd>Type of service. Can not be changed
@@ -144,9 +227,47 @@
   <dt>Information button
   <dd>Press this to get a popup with more information about the service
  </dl>
+</dl>
 
- <p>
- A word about DVB adapters
+<dl>
+ <dt>Satellite config (DVB-S only)</dt>
+  Satellite configurations in use on this adapter (for controlling 
+  switch equipment). The default entry will work fine for non-switched
+  setups.
+
+ <ul>
+  <li>To edit a cell, double-click on it. After a cell is changed it
+      will flags one of its corner to red to indicated that it has been
+      changed. To commit these changes back to Tvheadend press the 
+      'Save changes' button. In order to change a Checkbox cell you only
+      have to click once in it.
+
+  <li>To delete one or more entries, select the lines (by clicking once on 
+      them), and press the 'Delete selected' button. A popup
+      will ask you to confirm your request. Note, that if you have 
+      automatic mux discovery enabled the mux will probably come back
+      quite soon.
+ </ul>
+
+ The columns have the following functions:
+
+ <dl>
+  <dt>Name
+  <dd>Descriptive name for this configuration
+  
+  <dt>Switchport
+  <dd>Port number to select for this configuration (numbering begins at 0).
+  
+  <dt>LNB type
+  <dd>Select the LNB type from the list of supported LNBs. If your LNB
+      is not supported please contact the Tvheadend team.
+  
+  <dt>Comment
+  <dd>General comment to remind you what this is for.
+ </dl>
+</dl>
+
+ <h2>A word about DVB adapters</h2>
  <p>
  A DVB adapter represents a piece of hardware attached to the system.
  DVB receivers with dual tuners will present themselves as two adapters
@@ -169,6 +290,5 @@
  Warning2: Suspending a system is (from a USB driver perspective) equivalent
  to a unplug/insert event. Thus, suspending a system running Tvheadend
  with USB adapters is not recommended at the moment.
-</dl>
 
 </div>

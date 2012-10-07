@@ -261,7 +261,7 @@ dvb_satconf_list(th_dvb_adapter_t *tda)
   TAILQ_FOREACH(sc, &tda->tda_satconfs, sc_adapter_link) {
     m = htsmsg_create_map();
     htsmsg_add_str(m, "identifier", sc->sc_id);
-    htsmsg_add_str(m, "name", sc->sc_name);
+    htsmsg_add_str(m, "name", sc->sc_name ?: "");
     htsmsg_add_msg(array, NULL, m);
   }
   return array;

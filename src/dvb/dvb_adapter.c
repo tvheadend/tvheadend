@@ -781,17 +781,14 @@ dvb_adapter_input_dvr(void *aux)
       }
     }
 
-    /* find mux */
-    LIST_FOREACH(t, &tda->tda_transports, s_active_link)
-      if(t->s_dvb_mux_instance == tda->tda_mux_current)
-        break;
-
     /* Process */
     while (r >= 188) {
   
       /* sync */
       if (tsb[i] == 0x47) {
-        if(t) ts_recv_packet1(t, tsb + i, NULL);
+        LIST_FOREACH(t, &tda->tda_transports, s_active_link)
+          if(t->s_dvb_mux_instance == tda->tda_mux_current)
+            ts_recv_packet1(t, tsb + i, NULL);
         i += 188;
         r -= 188;
 

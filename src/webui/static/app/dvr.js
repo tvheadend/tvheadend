@@ -22,7 +22,7 @@ tvheadend.containers = new Ext.data.SimpleStore({
 	['matroska','Matroska'],
 	['mpegts','MPEG transport stream'],
 	['mpegps','MPEG program stream'],
-	['pass','Pass-through']
+	['pass','Same as source (Pass-through)']
     ]
 });
 
@@ -415,7 +415,9 @@ tvheadend.autoreceditor = function() {
 		width : 30
 	});
 
-	var cm = new Ext.grid.ColumnModel(
+	var cm = new Ext.grid.ColumnModel({
+  defaultSortable: true,
+  columns :
 		[
 			enabledColumn,
 			{
@@ -562,7 +564,7 @@ tvheadend.autoreceditor = function() {
 				editor : new fm.TextField({
 					allowBlank : false
 				})
-			} ]);
+			} ]});
 
 	return new tvheadend.tableEditor('Automatic Recorder', 'autorec', cm,
 		tvheadend.autorecRecord, [ enabledColumn ], tvheadend.autorecStore,
@@ -752,9 +754,6 @@ tvheadend.dvrsettings = function() {
 			fieldLabel : 'Include channel name in filename',
 			name : 'channelInTitle'
 		}), new Ext.form.Checkbox({
-			fieldLabel : 'Remove all unsafe characters from filename',
-			name : 'cleanTitle'
-		}), new Ext.form.Checkbox({
 			fieldLabel : 'Include date in filename',
 			name : 'dateInTitle'
 		}), new Ext.form.Checkbox({
@@ -763,6 +762,9 @@ tvheadend.dvrsettings = function() {
 		}), new Ext.form.Checkbox({
 			fieldLabel : 'Include episode in filename',
 			name : 'episodeInTitle'
+		}), new Ext.form.Checkbox({
+			fieldLabel : 'Remove all unsafe characters from filename',
+			name : 'cleanTitle'
 		}), new Ext.form.Checkbox({
 			fieldLabel : 'Replace whitespace in title with \'-\'',
 			name : 'whitespaceInTitle'

@@ -1,6 +1,8 @@
 build.*
 .config.mk
 
+src/version.c
+
 .cproject
 .project
 .settings
