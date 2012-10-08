@@ -693,13 +693,15 @@ htsp_build_event
   htsmsg_add_u32(out, "channelId", e->channel->ch_id);
   htsmsg_add_s64(out, "start", e->start);
   htsmsg_add_s64(out, "stop", e->stop);
-  if ((str = epg_broadcast_get_title(e, lang)))
+  if ((str = epg_generic_get_title(e, lang)))
     htsmsg_add_str(out, "title", str);
-  if ((str = epg_broadcast_get_description(e, lang))) {
+  if ((str = epg_generic_get_subtitle(e, lang)))
+    htsmsg_add_str(out, "subtitle", str);
+  if ((str = epg_generic_get_description(e, lang))) {
     htsmsg_add_str(out, "description", str);
-    if ((str = epg_broadcast_get_summary(e, lang)))
+    if ((str = epg_generic_get_summary(e, lang)))
       htsmsg_add_str(out, "summary", str);
-  } else if((str = epg_broadcast_get_summary(e, lang)))
+  } else if((str = epg_generic_get_summary(e, lang)))
     htsmsg_add_str(out, "description", str);
   if (e->serieslink) {
     htsmsg_add_u32(out, "serieslinkId", e->serieslink->id);

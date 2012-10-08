@@ -955,18 +955,14 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     if(ch->ch_icon != NULL)
       htsmsg_add_imageurl(m, "chicon", "imagecache/%d", ch->ch_icon);
 
-    if((s = epg_episode_get_title(ee, lang)))
+    if((s = epg_generic_get_title(e, lang)))
       htsmsg_add_str(m, "title", s);
-    if((s = epg_episode_get_subtitle(ee, lang)))
+    if((s = epg_generic_get_subtitle(e, lang)))
       htsmsg_add_str(m, "subtitle", s);
 
-    if((s = epg_broadcast_get_description(e, lang)))
+    if((s = epg_generic_get_description(e, lang)))
       htsmsg_add_str(m, "description", s);
-    else if((s = epg_broadcast_get_summary(e, lang)))
-      htsmsg_add_str(m, "description", s);
-    else if ((s = epg_episode_get_description(ee, lang)))
-      htsmsg_add_str(m, "description", s);
-    else if((s = epg_episode_get_summary(ee, lang)))
+    else if((s = epg_generic_get_summary(e, lang)))
       htsmsg_add_str(m, "description", s);
 
     if (epg_episode_number_format(ee, buf, 100, NULL, "Season %d", ".",
