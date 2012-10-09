@@ -5,10 +5,14 @@
 # environment variables
 #
 
+# CMD
+CMD=$(basename $0)
+echo $CMD
+
 # Configuration
 TVH_ROOT=$(cd $(dirname $0)/..; pwd)
-TVH_DIST="lucid natty oneiric precise"
-TVH_ARCH="i386 amd64"
+[ -z "$TVH_DIST" ] && TVH_DIST="lucid natty oneiric precise wheezy"
+[ -z "$TVH_ARCH" ] && TVH_ARCH="i386 amd64"
 
 # Options
 [ ! -z "$1" ] && REL=$1 || REL=master
@@ -38,8 +42,18 @@ for d in $TVH_DIST; do
   # Build source package
   dpkg-buildpackage -I.git* -S -sgpg -pgpg || exit 1
 
+  # Build
+  if [ "$CMD" == "pbuilder" ]; then
+  
+    for a in $TVH_ARCH; do
+      pbuilder-dist $d $a ../tvheadend_${V}.dsc
+    done
+
   # Upload
-  dput tvh-$PPA ../tvheadend_${V}_source.changes || exit 1
+  else
+    dput tvh-$PPA ../tvheadend_${V}_source.changes || exit 1
+  fi
+
 done
 
 # Cleanup
