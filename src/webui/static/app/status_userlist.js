@@ -1,4 +1,4 @@
-tvheadend.statusUserlist = new Ext.data.JsonStore({
+tvheadend.storeStatusUserlist = new Ext.data.JsonStore({
         root : 'entries',
         id : 'id',
         url : '/status/userlist',
@@ -9,11 +9,10 @@ tvheadend.statusUserlist = new Ext.data.JsonStore({
         autoLoad : true
 });
 
-tvheadend.statusUserlist.setDefaultSort('username', 'ASC');
+tvheadend.storeStatusUserlist.setDefaultSort('username', 'ASC');
 tvheadend.comet.on('statususerlist', function(m) {
-        if (m.reload != null) tvheadend.statusUserlist.reload();
+        if (m.reload != null) tvheadend.storeStatusUserlist.reload();
 });
-
 
 tvheadend.statususerlist = function() {
 	var fm = Ext.form;
@@ -22,7 +21,7 @@ tvheadend.statususerlist = function() {
   defaultSortable: true,
   columns : [ {
                 header : "ID",
-                dataIndex : 'uid',
+                dataIndex : 'id',
 		width : 10,
                 editor : new fm.TextField({
                         allowBlank : false
@@ -75,7 +74,8 @@ tvheadend.statususerlist = function() {
 		'startlog', 'currlog', 'ip', 'type', 'streamdata' ]);
 
 	return new tvheadend.tableEditor('Status', 'statususerlist', cm,
-		UserStatusRecord, null ,
-		null, 'config_userlist.html', 'eye');
+		UserStatusRecord,
+		[ 'id', 'username', 'startlog', 'currlog', 'ip', 'type', 'streamdata' ],
+		tvheadend.servicetypeStore, 'status_userlist.html', 'group');
 
 }
