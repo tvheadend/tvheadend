@@ -314,30 +314,12 @@ dvb_transport_load(th_dvb_mux_instance_t *tdmi, const char *tdmi_identifier)
       dvb_transport_save(t);
   }
 
-<<<<<<< HEAD
-  if(t->s_dvb_charset != NULL)
-    htsmsg_add_str(m, "dvb_charset", t->s_dvb_charset);
-  
-  htsmsg_add_u32(m, "dvb_eit_enable", t->s_dvb_eit_enable);
-
-  if(t->s_default_authority)
-    htsmsg_add_str(m, "default_authority", t->s_default_authority);
-
-  pthread_mutex_lock(&t->s_stream_mutex);
-  psi_save_service_settings(m, t);
-  pthread_mutex_unlock(&t->s_stream_mutex);
-  
-  hts_settings_save(m, "dvbtransports/%s/%s",
-		    t->s_dvb_mux_instance->tdmi_identifier,
-		    t->s_identifier);
-=======
   /* HACK - remove old settings */
   if(old) {
     HTSMSG_FOREACH(f, l)
       hts_settings_remove("dvbtransports/%s/%s", tdmi_identifier, f->hmf_name);
     hts_settings_remove("dvbtransports/%s", tdmi_identifier);
   }
->>>>>>> upstream/master
 
   htsmsg_destroy(l);
 }
