@@ -395,7 +395,7 @@ void dvb_mux_add_to_scan_queue (th_dvb_mux_instance_t *tdmi);
 /**
  * DVB Transport (aka DVB service)
  */
-void dvb_transport_load(th_dvb_mux_instance_t *tdmi);
+void dvb_transport_load(th_dvb_mux_instance_t *tdmi, const char *tdmi_identifier);
 
 struct service *dvb_transport_find(th_dvb_mux_instance_t *tdmi,
 				   uint16_t sid, int pmt_pid,
