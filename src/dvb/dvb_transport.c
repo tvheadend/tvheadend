@@ -237,7 +237,8 @@ dvb_transport_load(th_dvb_mux_instance_t *tdmi)
     psi_load_service_settings(c, t);
     pthread_mutex_unlock(&t->s_stream_mutex);
 
-    s = htsmsg_get_str(c, "dvb_charset");
+    if (!(s = htsmsg_get_str(c, "dvb_charset")))
+      s = htsmsg_get_str(c, "dvb_default_charset");
     t->s_dvb_charset = s ? strdup(s) : NULL;
 
     s = htsmsg_get_str(c, "default_authority");
