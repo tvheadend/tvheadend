@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "tvheadend.h"
 #include "http.h"
@@ -373,6 +375,7 @@ page_status(http_connection_t *hc,
   const char *rstatus;
   time_t     now;
   char buf[500];
+  access_log_t *al = NULL;
 
 #ifdef ENABLE_GETLOADAVG
   int loads;
@@ -393,6 +396,29 @@ page_status(http_connection_t *hc,
         htsbuf_qprintf(hq, "<systemload>%f,%f,%f</systemload>\n",avg[0],avg[1],avg[2]);
   };
 #endif
+
+  tvhlog(LOG_DEBUG, "webui",  "Dumping current authentication database, you are identified as %s",hc->hc_username);
+  access_log_show_all();
+  htsbuf_qprintf(hq,"<accesslog>\n");
+  TAILQ_FOREACH(al, &access_log, al_link) {
+    localtime_r(&al->al_startlog, &a);
+    localtime_r(&al->al_currlog, &b);
+    htsbuf_qprintf(hq, "<logentry id=\"%s\">\n", al->al_id);
+    htsbuf_qprintf(hq, "<username>%s</username>\n", al->al_username);
+    htsbuf_qprintf(hq, "<startdate>%02d/%02d/%02d</startdate>\n",
+      a.tm_year + 1900, a.tm_mon, a.tm_mday);
+    htsbuf_qprintf(hq, "<starttime>%02d:%02d:%02d</starttime>\n",
+      a.tm_hour, a.tm_min, a.tm_sec);
+    htsbuf_qprintf(hq, "<lastseendate>%02d/%02d/%02d</lastseendate>\n",
+      b.tm_year + 1900, b.tm_mon, b.tm_mday);
+    htsbuf_qprintf(hq, "<lastseentime>%02d:%02d:%02d</lastseentime>\n",
+      b.tm_hour, b.tm_min, b.tm_sec);
+    htsbuf_qprintf(hq, "<ip>%s</ip>\n", inet_ntoa(al->al_ip));
+    htsbuf_qprintf(hq, "<type>%s</type>\n", al->al_type);
+    htsbuf_qprintf(hq, "<streamdata>%s</streamdata>\n",al->al_streamdata);
+    htsbuf_qprintf(hq, "</logentry>\n");
+  };
+  htsbuf_qprintf(hq,"</accesslog>\n");
   htsbuf_qprintf(hq,"<recordings>\n");
 
   pthread_mutex_lock(&global_lock);

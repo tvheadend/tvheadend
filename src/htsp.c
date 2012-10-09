@@ -247,6 +247,7 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
   subscription_unsubscribe(hs->hs_s);
   htsp_flush_queue(htsp, &hs->hs_q);
   free(hs);
+  if (htsp->htsp_username) {access_log_remove(htsp->htsp_username, inet_addr(htsp->htsp_logname));};
 }
 
 /**
@@ -1242,6 +1243,8 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
 	   htsp->htsp_logname, username);
     tvh_str_update(&htsp->htsp_username, username);
     htsp_update_logname(htsp);
+/* andyb2000 log user into access_log */
+   if (username) {access_log_update(username, "htsp", NULL, ntohl(inet_addr(htsp->htsp_logname)));};
   }
 
   if(htsmsg_get_bin(m, "digest", &digest, &digestlen))
@@ -1344,19 +1347,20 @@ readmsg:
 
 	          /* Classic authentication failed delay */
 	          usleep(250000);
-	    
-	          reply = htsmsg_create_map();
-	          htsmsg_add_u32(reply, "noaccess", 1);
-	          htsp_reply(htsp, m, reply);
 
-	          htsmsg_destroy(m);
-	          goto readmsg;
+                  reply = htsmsg_create_map();
+                  htsmsg_add_u32(reply, "noaccess", 1);
+                  htsp_reply(htsp, m, reply);
 
-	        } else {
-	          reply = htsp_methods[i].fn(htsp, m);
-	        }
-	        break;
-	      }
+                  htsmsg_destroy(m);
+                  goto readmsg;
+
+                } else {
+                  reply = htsp_methods[i].fn(htsp, m);
+                  if (htsp->htsp_username) {access_log_update(htsp->htsp_username, "htsp", NULL, ntohl(inet_addr(htsp->htsp_logname)));};
+                }
+                break;
+              }
       }
 
       if(i == NUM_METHODS) {
@@ -1373,6 +1377,7 @@ readmsg:
       htsp_reply(htsp, m, reply);
 
     htsmsg_destroy(m);
+/*    if (htsp->htsp_username) {access_log_remove(htsp->htsp_username, inet_addr(htsp->htsp_logname));}; */
   }
 }
 

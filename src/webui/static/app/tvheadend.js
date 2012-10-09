@@ -244,6 +244,17 @@ function accessUpdate(o) {
 		tvheadend.rootTabPanel.add(tvheadend.confpanel);
 	}
 
+	if (o.admin == true && tvheadend.statusPanel == null) {
+		tvheadend.statusPanel = new Ext.TabPanel({
+			activeTab : 0,
+			autoScroll : true,
+			title : 'Status',
+			iconCls : 'eye',
+			items : [ new tvheadend.statususerlist ]
+		});
+		tvheadend.rootTabPanel.add(tvheadend.statusPanel);
+	};
+
 	if (tvheadend.aboutPanel == null) {
 		tvheadend.aboutPanel = new Ext.Panel({
 			border : false,
