@@ -18,7 +18,7 @@ tvheadend.dvrprio = new Ext.data.SimpleStore({
 tvheadend.containers = new Ext.data.SimpleStore({
 	fields : [ 'identifier', 'name' ],
 	id : 0,
-	data : [ [ 'matroska', 'Matroska' ], [ 'pass', 'Pass-through' ] ]
+	data : [ [ 'matroska', 'Matroska' ], [ 'pass', 'TS (Pass-through)' ] ]
 });
 
 /**
@@ -749,9 +749,6 @@ tvheadend.dvrsettings = function() {
 			fieldLabel : 'Include channel name in filename',
 			name : 'channelInTitle'
 		}), new Ext.form.Checkbox({
-			fieldLabel : 'Remove all unsafe characters from filename',
-			name : 'cleanTitle'
-		}), new Ext.form.Checkbox({
 			fieldLabel : 'Include date in filename',
 			name : 'dateInTitle'
 		}), new Ext.form.Checkbox({
@@ -760,6 +757,9 @@ tvheadend.dvrsettings = function() {
 		}), new Ext.form.Checkbox({
 			fieldLabel : 'Include episode in filename',
 			name : 'episodeInTitle'
+		}), new Ext.form.Checkbox({
+			fieldLabel : 'Remove all unsafe characters from filename',
+			name : 'cleanTitle'
 		}), new Ext.form.Checkbox({
 			fieldLabel : 'Replace whitespace in title with \'-\'',
 			name : 'whitespaceInTitle'

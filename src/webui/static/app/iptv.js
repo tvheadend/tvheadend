@@ -291,7 +291,13 @@ tvheadend.iptv = function(adapterId) {
 				iconCls : 'add',
 				text : 'Add service',
 				handler : addRecord
-			}, '-', delButton, '-', saveBtn, rejectBtn ]
+			}, '-', delButton, '-', saveBtn, rejectBtn, '->',
+			{
+				text : 'Help',
+				handler : function() {
+					new tvheadend.help('IPTV', 'config_iptv.html');
+				}
+			} ]
 	});
 
 	store.on('update', function(s, r, o) {

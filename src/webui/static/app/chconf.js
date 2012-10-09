@@ -314,7 +314,7 @@ tvheadend.chconf = function() {
     tooltop : 'Add a new channel',
     iconCls : 'add',
     text    : 'Add channel',
-    handler : addRecord,
+    handler : addRecord
   });
 
 	var delBtn = new Ext.Toolbar.Button({

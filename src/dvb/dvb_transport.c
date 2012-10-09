@@ -186,77 +186,6 @@ dvb_transport_refresh(service_t *t)
 }
 
 
-
-/**
- * Load config for the given mux
- */
-void
-dvb_transport_load(th_dvb_mux_instance_t *tdmi)
-{
-  htsmsg_t *l, *c;
-  htsmsg_field_t *f;
-  uint32_t sid, pmt;
-  const char *s;
-  unsigned int u32;
-  service_t *t;
-
-  lock_assert(&global_lock);
-
-  if((l = hts_settings_load("dvbtransports/%s", tdmi->tdmi_identifier)) == NULL)
-    return;
-  
-  HTSMSG_FOREACH(f, l) {
-    if((c = htsmsg_get_map_by_field(f)) == NULL)
-      continue;
-
-    if(htsmsg_get_u32(c, "service_id", &sid))
-      continue;
-
-    if(htsmsg_get_u32(c, "pmt", &pmt))
-      continue;
-    
-    t = dvb_transport_find(tdmi, sid, pmt, f->hmf_name);
-
-    htsmsg_get_u32(c, "stype", &t->s_servicetype);
-    if(htsmsg_get_u32(c, "scrambled", &u32))
-      u32 = 0;
-    t->s_scrambled = u32;
-
-    if(htsmsg_get_u32(c, "channel", &u32))
-      u32 = 0;
-    t->s_channel_number = u32;
-
-    s = htsmsg_get_str(c, "provider");
-    t->s_provider = s ? strdup(s) : NULL;
-
-    s = htsmsg_get_str(c, "servicename");
-    t->s_svcname = s ? strdup(s) : NULL;
-
-    pthread_mutex_lock(&t->s_stream_mutex);
-    service_make_nicename(t);
-    psi_load_service_settings(c, t);
-    pthread_mutex_unlock(&t->s_stream_mutex);
-
-    s = htsmsg_get_str(c, "dvb_charset");
-    t->s_dvb_charset = s ? strdup(s) : NULL;
-
-    s = htsmsg_get_str(c, "default_authority");
-    t->s_default_authority = s ? strdup(s) : NULL;
-
-    if(htsmsg_get_u32(c, "dvb_eit_enable", &u32))
-      u32 = 1;
-    t->s_dvb_eit_enable = u32;
-
-    s = htsmsg_get_str(c, "channelname");
-    if(htsmsg_get_u32(c, "mapped", &u32))
-      u32 = 0;
-
-    if(s && u32)
-      service_map_channel(t, channel_find_by_name(s, 1, 0), 0);
-  }
-  htsmsg_destroy(l);
-}
-
 /**
  *
  */
@@ -302,6 +231,115 @@ dvb_transport_save(service_t *t)
 
   htsmsg_destroy(m);
   dvb_transport_notify(t);
+}
+
+
+/**
+ * Load config for the given mux
+ */
+void
+dvb_transport_load(th_dvb_mux_instance_t *tdmi, const char *tdmi_identifier)
+{
+  htsmsg_t *l, *c;
+  htsmsg_field_t *f;
+  uint32_t sid, pmt;
+  const char *s;
+  unsigned int u32;
+  service_t *t;
+  int old;
+
+  lock_assert(&global_lock);
+
+  /* HACK - use provided identifier to load config incase we've migrated
+   *        mux freq */
+  if (!tdmi_identifier)
+    tdmi_identifier = tdmi->tdmi_identifier;
+  old = strcmp(tdmi_identifier, tdmi->tdmi_identifier);
+
+  if((l = hts_settings_load("dvbtransports/%s", tdmi_identifier)) == NULL)
+    return;
+  
+  HTSMSG_FOREACH(f, l) {
+    if((c = htsmsg_get_map_by_field(f)) == NULL)
+      continue;
+
+    if(htsmsg_get_u32(c, "service_id", &sid))
+      continue;
+
+    if(htsmsg_get_u32(c, "pmt", &pmt))
+      continue;
+    
+    t = dvb_transport_find(tdmi, sid, pmt, f->hmf_name);
+
+    htsmsg_get_u32(c, "stype", &t->s_servicetype);
+    if(htsmsg_get_u32(c, "scrambled", &u32))
+      u32 = 0;
+    t->s_scrambled = u32;
+
+    if(htsmsg_get_u32(c, "channel", &u32))
+      u32 = 0;
+    t->s_channel_number = u32;
+
+    s = htsmsg_get_str(c, "provider");
+    t->s_provider = s ? strdup(s) : NULL;
+
+    s = htsmsg_get_str(c, "servicename");
+    t->s_svcname = s ? strdup(s) : NULL;
+
+    pthread_mutex_lock(&t->s_stream_mutex);
+    service_make_nicename(t);
+    psi_load_service_settings(c, t);
+    pthread_mutex_unlock(&t->s_stream_mutex);
+
+    if (!(s = htsmsg_get_str(c, "dvb_charset")))
+      s = htsmsg_get_str(c, "dvb_default_charset");
+    t->s_dvb_charset = s ? strdup(s) : NULL;
+
+    s = htsmsg_get_str(c, "default_authority");
+    t->s_default_authority = s ? strdup(s) : NULL;
+
+    if(htsmsg_get_u32(c, "dvb_eit_enable", &u32))
+      u32 = 1;
+    t->s_dvb_eit_enable = u32;
+
+    s = htsmsg_get_str(c, "channelname");
+    if(htsmsg_get_u32(c, "mapped", &u32))
+      u32 = 0;
+
+    if(s && u32)
+      service_map_channel(t, channel_find_by_name(s, 1, 0), 0);
+
+    /* HACK - force save for old config */
+    if(old)
+      dvb_transport_save(t);
+  }
+
+<<<<<<< HEAD
+  if(t->s_dvb_charset != NULL)
+    htsmsg_add_str(m, "dvb_charset", t->s_dvb_charset);
+  
+  htsmsg_add_u32(m, "dvb_eit_enable", t->s_dvb_eit_enable);
+
+  if(t->s_default_authority)
+    htsmsg_add_str(m, "default_authority", t->s_default_authority);
+
+  pthread_mutex_lock(&t->s_stream_mutex);
+  psi_save_service_settings(m, t);
+  pthread_mutex_unlock(&t->s_stream_mutex);
+  
+  hts_settings_save(m, "dvbtransports/%s/%s",
+		    t->s_dvb_mux_instance->tdmi_identifier,
+		    t->s_identifier);
+=======
+  /* HACK - remove old settings */
+  if(old) {
+    HTSMSG_FOREACH(f, l)
+      hts_settings_remove("dvbtransports/%s/%s", tdmi_identifier, f->hmf_name);
+    hts_settings_remove("dvbtransports/%s", tdmi_identifier);
+  }
+>>>>>>> upstream/master
+
+  htsmsg_destroy(l);
 }
 
 

@@ -21,20 +21,21 @@ sorted based on start time.
   expression. If you don't know what a regular expression is this means
   that you can type just parts of the title and filter on that too.
   (No need for exact matching).
-  <dt>[Only include channel...]
+  <dt>[Filter channel...]
   <dd>
-  Only display events from the selected channel.
-  <dt>[Only include tag...]
+  Only display events from the selected channel. Channels in the drop down are 
+  ordered by channel number and can be filtered (by name) by typing in the box.
+  <dt>[Filter tag...]
   <dd>
   Only display events from the channels which are included in the selected tag.
   Tags are used for grouping channels and is configured by the administrator.
-  <dt>[Only include content...]
+  <dt>[Filter content type...]
   <dd>
   Most DVB networks classify their events into content groups. This field
   allows you to filter based on content type.
  </dl>
  Thus, if you only would like to browse Movies from your HD-channels you
- would select 'HD channels' in the [Only include tag...]-field, and select
+ would select 'HDTV' in the [Filter tag...]-field, and select
  'Movie / Drama' in the [Only include content...]-field.
  <p>
  Notice that you don't have to press a 'Search' button, the grid immediately
@@ -45,8 +46,8 @@ sorted based on start time.
  <dt>Paging
 
  <dd>
- In an installation with many (hundreds of) channels and full EPG feed from 
- both DVB and XMLTV there will be tens of thousands of events in the database.
+ In large installations with many channels and full EPG feed there could be 
+ tens of thousands of events in the database.
  Therefore the EPG display employs a paging bar at the bottom of the grid.
  Use it to browse backwards and forwards in the EPG. It also displays the
  total amount of events matched by the current query.
@@ -56,6 +57,12 @@ sorted based on start time.
  If you click on a single event, a popup will display detailed information
  about the event. It also allows the user to schedule the event for recording
  by clicking on the [Record program] button.
+ <p>
+ For EPG providers that supply series link information there will also be a 
+ [Record series] button that will record all entries in the series.
+ <p>
+ For events without any series link information, a [Autorec] button will be
+ provided to create a pseudo series link using hte Autorec feature.
  <p>
  <img src="docresources/epg2.png">
  <p>
@@ -67,7 +74,7 @@ sorted based on start time.
  <dt>Autorecordings
  <dd>
  Should you wish to record all events matching a specific query. (Record
- your favorite TV-show, etc) you can press the 'Create Autorec' button
+ your favorite TV-show, etc) you can press the [Create Autorec] button
  in the top toolbar.
  <p>
  A popup with details about the to-be-created autorecording rule needs to
@@ -78,5 +85,11 @@ sorted based on start time.
  The autorecordings can later be changed/deleted in under the
  'Digital Video Recorder'-tag. Use that editor if you temporary want
  to disable an autorecording or make adjustments, etc.
+
+ <dt>Watch TV
+ <dd>
+ If you want to watch live TV in the web UI, the [Watch TV] button will pop-up
+ a VLC plugin window (if you don't have the plugin installed a direct URL should be
+ provided to load into your preferred media player).
 </dl>
 </div>

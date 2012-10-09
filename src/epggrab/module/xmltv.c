@@ -667,8 +667,8 @@ static void _xmltv_load_grabbers ( void )
             free(outbuf);
           }
         }
+        closedir(dir);
       }
-      closedir(dir);
       tmp = strtok(NULL, ":");
     }
     free(path);
