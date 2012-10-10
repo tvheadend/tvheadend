@@ -711,10 +711,12 @@ static int _eit_callback
   } else {
     if (tdmi->tdmi_transport_stream_id != tsid ||
         tdmi->tdmi_network_id != onid) {
+#ifdef EPG_EIT_TRACE
       tvhlog(LOG_DEBUG, mod->id,
              "invalid transport id found tid 0x%02X, onid:tsid %d:%d != %d:%d",
              tableid, tdmi->tdmi_network_id, tdmi->tdmi_transport_stream_id,
              onid, tsid);
+#endif
       tdmi = NULL;
     }
   }
