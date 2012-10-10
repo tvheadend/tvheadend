@@ -76,6 +76,10 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 	}
 
 	cmlist.push({
+		header : "NetworkID",
+		dataIndex : 'onid',
+		width : 50
+	}, {
 		header : "MuxID",
 		dataIndex : 'muxid',
 		width : 50
@@ -86,7 +90,7 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
     defaultSortable: true});
 
 	var rec = Ext.data.Record.create([ 'id', 'enabled', 'network', 'freq',
-		'pol', 'satconf', 'muxid', 'quality', 'fe_status', 'mod' ]);
+		'pol', 'satconf', 'onid', 'muxid', 'quality', 'fe_status', 'mod' ]);
 
 	var store = new Ext.data.JsonStore({
 		root : 'entries',
