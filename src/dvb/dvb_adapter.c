@@ -93,6 +93,7 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "poweroff", tda->tda_poweroff);
   htsmsg_add_u32(m, "nitoid", tda->tda_nitoid);
   htsmsg_add_u32(m, "diseqc_version", tda->tda_diseqc_version);
+  htsmsg_add_u32(m, "diseqc_repeats", tda->tda_diseqc_repeats);
   htsmsg_add_u32(m, "extrapriority", tda->tda_extrapriority);
   htsmsg_add_u32(m, "skip_initialscan", tda->tda_skip_initialscan);
   htsmsg_add_u32(m, "disable_pmt_monitor", tda->tda_disable_pmt_monitor);
@@ -330,6 +331,21 @@ dvb_adapter_set_diseqc_version(th_dvb_adapter_t *tda, unsigned int v)
 	 tda->tda_displayname, v ? "1.1 / 2.1" : "1.0 / 2.0" );
 
   tda->tda_diseqc_version = v;
+  tda_save(tda);
+}
+
+/**
+ * sets the number of diseqc repeats to perform
+ */
+void
+dvb_adapter_set_diseqc_repeats(th_dvb_adapter_t *tda, unsigned int repeats)
+{
+  if(tda->tda_diseqc_repeats == repeats)
+    return;
+  lock_assert(&global_lock);
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" DiSEqC repeats set to: %i",
+         tda->tda_displayname, repeats);
+  tda->tda_diseqc_repeats = repeats;
   tda_save(tda);
 }
 
@@ -572,6 +588,7 @@ dvb_adapter_init(uint32_t adapter_mask)
       htsmsg_get_u32(c, "poweroff", &tda->tda_poweroff);
       htsmsg_get_u32(c, "nitoid", &tda->tda_nitoid);
       htsmsg_get_u32(c, "diseqc_version", &tda->tda_diseqc_version);
+      htsmsg_get_u32(c, "diseqc_repeats", &tda->tda_diseqc_repeats);
       htsmsg_get_u32(c, "extrapriority", &tda->tda_extrapriority);
       htsmsg_get_u32(c, "skip_initialscan", &tda->tda_skip_initialscan);
       htsmsg_get_u32(c, "disable_pmt_monitor", &tda->tda_disable_pmt_monitor);

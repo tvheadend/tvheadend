@@ -42,7 +42,7 @@ TAILQ_HEAD(dvb_satconf_queue, dvb_satconf);
 typedef struct dvb_satconf {
   char *sc_id;
   TAILQ_ENTRY(dvb_satconf) sc_adapter_link;
-  int sc_port;                   // diseqc switchport (0 - 15)
+  int sc_port;                   // diseqc switchport (0 - 63)
 
   char *sc_name;
   char *sc_comment;
@@ -185,6 +185,7 @@ typedef struct th_dvb_adapter {
   uint32_t tda_sidtochan;
   uint32_t tda_nitoid;
   uint32_t tda_diseqc_version;
+  uint32_t tda_diseqc_repeats;
   uint32_t tda_disable_pmt_monitor;
   char *tda_displayname;
 
@@ -313,6 +314,9 @@ void dvb_adapter_set_sidtochan(th_dvb_adapter_t *tda, int on);
 void dvb_adapter_set_nitoid(th_dvb_adapter_t *tda, int nitoid);
 
 void dvb_adapter_set_diseqc_version(th_dvb_adapter_t *tda, unsigned int v);
+
+void dvb_adapter_set_diseqc_repeats(th_dvb_adapter_t *tda,
+                                    unsigned int repeats);
 
 void dvb_adapter_set_disable_pmt_monitor(th_dvb_adapter_t *tda, int on);
 
