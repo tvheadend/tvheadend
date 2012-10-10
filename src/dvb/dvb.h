@@ -215,7 +215,7 @@ typedef struct th_dvb_adapter {
   struct dvb_satconf_queue tda_satconfs;
 
 
-  struct th_dvb_mux_instance_list tda_mux_hash[TDA_MUX_HASH_WIDTH];
+  struct th_dvb_mux_instance_list tda_mux_list;
 
   uint32_t tda_dump_muxes;
 
