@@ -204,7 +204,7 @@ static inline size_t dvb_convert(int conv,
 int
 dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char *dvb_charset, dvb_string_conv_t *conv)
 {
-  int ic;
+  int ic, pl_workaround = 0;
   size_t len, outlen;
   int i;
 
@@ -220,13 +220,22 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char
     conv++;
   }
 
+  // check for polish channels encoding workaround
+  if (dvb_charset && (strcmp(dvb_charset, "pl_workaround") == 0)) {
+    pl_workaround = 1;
+    dvb_charset = NULL;
+  }
+
   // automatic charset detection
   switch(src[0]) {
   case 0:
     return -1;
 
   case 0x01 ... 0x0b:
-    ic = convert_iso_8859[src[0] + 4];
+    if (pl_workaround && (src[0] + 4) == 5)
+      ic = convert_iso6937;
+    else
+      ic = convert_iso_8859[src[0] + 4];
     src++; srclen--;
     break;
 
@@ -251,7 +260,10 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char
     return -1;
 
   default:
-    ic = convert_iso6937;
+    if (pl_workaround)
+      ic = convert_iso_8859[2];
+    else
+      ic = convert_iso6937;
     break;
   }
 

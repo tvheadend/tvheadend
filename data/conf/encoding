@@ -1,0 +1,127 @@
+[
+	{
+		"tsid": 200,
+		"onid": 318,
+		"description": "Hotbird Eutelsat (Eurosport)"
+	},
+	{
+		"tsid": 300,
+		"onid": 318,
+		"description": "Hotbird Eutelsat (Eurosport, Animal Pl.HD)"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"description": "Hotbird 13.0 Cyfra+"
+	},
+	{
+		"tsid": 1000,
+		"onid": 318,
+		"description": "Hotbird 13.0 Grupa ITI"
+	},
+	{
+		"tsid": 1100,
+		"onid": 318,
+		"description": "Hotbird 13.0 Cyfra+"
+	},
+	{
+		"tsid": 1500,
+		"onid": 318,
+		"description": "Hotbird 13.0 Cyfra+"
+	},
+	{
+		"tsid": 1600,
+		"onid": 318,
+		"description": "Hotbird 13.0 Cyfra+"
+	},
+	{
+		"tsid": 1800,
+		"onid": 200,
+		"description": "Hotbird 13.0 Polo TV"
+	},
+	{
+		"tsid": 2800,
+		"onid": 318,
+		"description": "Hotbird 13.0 MTV Networks (Comedy Central)"
+	},
+	{
+		"tsid": 7400,
+		"onid": 113,
+		"description": "Hotbird 13.0 Cyfrowy Polsat"
+	},
+	{
+		"tsid": 7800,
+		"onid": 113,
+		"description": "Hotbird 13.0 Cyfrowy Polsat"
+	},
+	{
+		"tsid": 7900,
+		"onid": 113,
+		"description": "Hotbird 13.0 Cyfrowy Polsat"
+	},
+	{
+		"tsid": 8100,
+		"onid": 113,
+		"description": "Hotbird 13.0 Universal (Cyfra+)"
+	},
+	{
+		"tsid": 8100,
+		"onid": 318,
+		"description": "Hotbird 13.0 Eutelsat (Universal)"
+	},
+	{
+		"tsid": 11000,
+		"onid": 318,
+		"description": "Hotbird 13.0 Cyfra+"
+	},
+	{
+		"tsid": 11400,
+		"onid": 318,
+		"description": "Hotbird 13.0 Cyfra+"
+	},
+	{
+		"tsid": 11600,
+		"onid": 318,
+		"description": "Hotbird 13.0 BBC HD, ITI"
+	},
+	{
+		"tsid": 11700,
+		"onid": 318,
+		"description": "Hotbird 13.0 Eurosport2"
+	},
+	{
+		"tsid": 11900,
+		"onid": 318,
+		"description": "Hotbird 13.0 Cyfra+"
+	},
+	{
+		"tsid": 12200,
+		"onid": 318,
+		"description": "Hotbird 13.0 Disney Channel Polska and other"
+	},
+	{
+		"tsid": 12800,
+		"onid": 318,
+		"description": "Hotbird 13.0 Viacom ... MTV / VH1 Polska"
+	},
+	{
+		"tsid": 13000,
+		"onid": 318,
+		"description": "Hotbird 13.0 BBC Polska and other"
+	},
+	{
+		"tsid": 13100,
+		"onid": 318,
+		"description": "Hotbird 13.0 Crime and Investigation"
+	},
+	{
+		"tsid": 13200,
+		"onid": 113,
+		"description": "Hotbird 13.0 Cyfrowy Polsat"
+	},
+	{
+		"tsid": 15700,
+		"onid": 318,
+		"description": "Hotbird 13.0 Disco TV"
+	}
+]
