@@ -544,7 +544,8 @@ static int _eit_process_event
   /* Override */
   if (!ev.default_charset) {
     ev.default_charset
-      = dvb_charset_find(svc->s_dvb_mux_instance->tdmi_transport_stream_id,
+      = dvb_charset_find(svc->s_dvb_mux_instance->tdmi_network_id,
+                         svc->s_dvb_mux_instance->tdmi_transport_stream_id,
                          svc->s_dvb_service_id);
   }
 

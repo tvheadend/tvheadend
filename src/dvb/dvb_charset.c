@@ -79,11 +79,11 @@ void dvb_charset_init ( void )
  * Find default charset
  */
 const char *dvb_charset_find
-  ( uint16_t tsid, uint16_t sid )
+  ( uint16_t onid, uint16_t tsid, uint16_t sid )
 {
   dvb_charset_t *ret = NULL, *enc;
   LIST_FOREACH(enc, &dvb_charset_list, link) {
-    if (tsid == enc->tsid) {
+    if (onid == enc->onid && tsid == enc->tsid) {
       if (sid == enc->sid) {
          ret = enc;
         break;

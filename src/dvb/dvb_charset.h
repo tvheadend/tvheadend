@@ -32,6 +32,6 @@ LIST_HEAD(,dvb_charset) dvb_charset_list;
 void dvb_charset_init ( void );
 
 const char *dvb_charset_find
-  (uint16_t tsid, uint16_t sid);
+  (uint16_t onid, uint16_t tsid, uint16_t sid);
 
 #endif /* __TVH_DVB_CHARSET_H__ */
