@@ -31,7 +31,7 @@ static void _charset_load_file()
 
   dvb_charset_t *enc;
   const char *charset;
-  unsigned int tsid, onid;
+  uint32_t tsid, onid, sid;
   int i = 0;
 
   l = hts_settings_load("charset");
@@ -39,9 +39,10 @@ static void _charset_load_file()
   {
     HTSMSG_FOREACH(f, l) {
       if ((e = htsmsg_get_map_by_field(f))) {
-        tsid = onid = 0;
-        htsmsg_get_u32(e, "tsid", &tsid);
+        tsid = onid = sid = 0;
         htsmsg_get_u32(e, "onid", &onid);
+        htsmsg_get_u32(e, "tsid", &tsid);
+        htsmsg_get_u32(e, "sid",  &sid);
         charset = htsmsg_get_str(e, "charset");
 
         if (tsid == 0 || onid == 0 || !charset)
@@ -50,8 +51,9 @@ static void _charset_load_file()
         enc = calloc(1, sizeof(dvb_charset_t));
         if (enc)
         {
-          enc->tsid    = tsid;
           enc->onid    = onid;
+          enc->tsid    = tsid;
+          enc->sid     = sid;
           enc->charset = charset;
           LIST_INSERT_HEAD(&dvb_charset_list, enc, link);
           i++;
@@ -71,4 +73,25 @@ static void _charset_load_file()
 void dvb_charset_init ( void )
 {
   _charset_load_file();
+}
+
+/*
+ * Find default charset
+ */
+const char *dvb_charset_find
+  ( uint16_t onid, uint16_t tsid, uint16_t sid )
+{
+  dvb_charset_t *ret = NULL, *enc;
+  LIST_FOREACH(enc, &dvb_charset_list, link) {
+    if (onid == enc->onid &&
+        tsid == enc->tsid) {
+      if (sid == enc->sid) {
+         ret = enc;
+        break;
+      } else if (!enc->tsid) {
+        ret = enc;
+      }
+    }
+  }
+  return ret ? ret->charset : NULL;
 }

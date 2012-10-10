@@ -543,14 +543,10 @@ static int _eit_process_event
 
   /* Override */
   if (!ev.default_charset) {
-    dvb_charset_t *enc;
-    LIST_FOREACH(enc, &dvb_charset_list, link) {
-      if (svc->s_dvb_mux_instance->tdmi_network_id == enc->onid &&
-          svc->s_dvb_mux_instance->tdmi_transport_stream_id == enc->tsid) {
-        ev.default_charset = enc->charset;
-        break;
-      }
-    }
+    ev.default_charset 
+      = dvb_charset_find(svc->s_dvb_mux_instance->tdmi_network_id,
+                         svc->s_dvb_mux_instance->tdmi_transport_stream_id,
+                         svc->s_dvb_service_id);
   }
 
   while (dllen > 2) {
