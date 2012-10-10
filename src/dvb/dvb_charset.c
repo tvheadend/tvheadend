@@ -54,7 +54,7 @@ static void _charset_load_file()
           enc->onid    = onid;
           enc->tsid    = tsid;
           enc->sid     = sid;
-          enc->charset = charset;
+          enc->charset = strdup(charset);
           LIST_INSERT_HEAD(&dvb_charset_list, enc, link);
           i++;
         }
