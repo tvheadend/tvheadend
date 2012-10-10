@@ -185,6 +185,7 @@ typedef struct th_dvb_adapter {
   uint32_t tda_sidtochan;
   uint32_t tda_nitoid;
   uint32_t tda_diseqc_version;
+  uint32_t tda_diseqc_repeats;
   uint32_t tda_disable_pmt_monitor;
   char *tda_displayname;
 
@@ -313,6 +314,9 @@ void dvb_adapter_set_sidtochan(th_dvb_adapter_t *tda, int on);
 void dvb_adapter_set_nitoid(th_dvb_adapter_t *tda, int nitoid);
 
 void dvb_adapter_set_diseqc_version(th_dvb_adapter_t *tda, unsigned int v);
+
+void dvb_adapter_set_diseqc_repeats(th_dvb_adapter_t *tda,
+                                    unsigned int repeats);
 
 void dvb_adapter_set_disable_pmt_monitor(th_dvb_adapter_t *tda, int on);
 

@@ -22,7 +22,7 @@ diseqc_send_msg(int fe_fd, __u8 framing_byte, __u8 address, __u8 cmd,
 {
   struct dvb_diseqc_master_cmd message;
 
-#if 1
+#if 0
   tvhlog(LOG_INFO, "diseqc", "sending %X %X %X %X %X %X",
          framing_byte, address, cmd, data_1, data_2, data_3);
 #endif
@@ -38,16 +38,17 @@ diseqc_send_msg(int fe_fd, __u8 framing_byte, __u8 address, __u8 cmd,
 }
 
 int
-diseqc_setup(int fe_fd, int lnb_num, int voltage, int band, int diseqc_ver)
+diseqc_setup(int fe_fd, int lnb_num, int voltage, int band,
+              uint32_t version, uint32_t repeats)
 {
   int i = (lnb_num % 4) * 4 + voltage * 2 + (band ? 1 : 0);
   int j = lnb_num / 4;
   int err;
 
-#if 1
+#if 0
   tvhlog(LOG_INFO, "diseqc",
-        "fe_fd %i, lnb_num %i, voltage %i, band %i, diseqc_ver %i, i %i, j %i",
-        fe_fd, lnb_num, voltage, band, diseqc_ver, i, j);
+        "fe_fd %i, lnb_num %i, voltage %i, band %i, version %i, repeats %i",
+        fe_fd, lnb_num, voltage, band, version, repeats);
 #endif
 
   /* verify lnb number and diseqc data */
@@ -64,14 +65,35 @@ diseqc_setup(int fe_fd, int lnb_num, int voltage, int band, int diseqc_ver)
     return err;
   msleep(15);
 
-  /* send uncommited message */
-  if ((err = diseqc_send_msg(fe_fd, 0xE0, 0x10, 0x39, 0xF0 | j, 0, 0, 4)))
-    return err;
-  msleep(15);
+  switch (repeats) {
+    case 0:     /* send uncommited msg, wait 15ms, send commited msg */
+      if ((err = diseqc_send_msg(fe_fd, 0xE0, 0x10, 0x39, 0xF0 | j, 0, 0, 4)))
+        return err;
+      msleep(15);
+      if ((err = diseqc_send_msg(fe_fd, 0xE0, 0x10, 0x38, 0xF0 | i, 0, 0, 4)))
+        return err;
+      break;
 
-  /* send commited message */
-  if ((err = diseqc_send_msg(fe_fd, 0xE1, 0x10, 0x38, 0xF0 | i, 0, 0, 4)))
-    return err;
+    default:     /* commited msg, 25ms, uncommited msg, 25ms, commited msg */
+      /* send commited message */
+      if ((err = diseqc_send_msg(fe_fd, 0xE0, 0x10, 0x38, 0xF0 | i, 0, 0, 4)))
+        return err;
+      msleep(25);
+      if ((err = diseqc_send_msg(fe_fd, 0xE0, 0x10, 0x39, 0xF0 | j, 0, 0, 4)))
+        return err;
+      msleep(25);
+      if ((err = diseqc_send_msg(fe_fd, 0xE1, 0x10, 0x38, 0xF0 | i, 0, 0, 4)))
+        return err;
+      if (repeats == 1)         /* if 2 repeats, do it again */
+        break;
+
+      msleep(25);
+      if ((err = diseqc_send_msg(fe_fd, 0xE1, 0x10, 0x39, 0xF0 | j, 0, 0, 4)))
+        return err;
+      msleep(25);
+      if ((err = diseqc_send_msg(fe_fd, 0xE1, 0x10, 0x38, 0xF0 | i, 0, 0, 4)))
+        return err;
+  }
   msleep(15);
 
   /* set toneburst */
