@@ -60,7 +60,6 @@
 #include "ffdecsa/FFdecsa.h"
 #include "muxes.h"
 #include "config2.h"
-#include "epggrab/module/encoding.h"
 
 int running;
 time_t dispatch_clock;
@@ -434,7 +433,6 @@ main(int argc, char **argv)
 
   epggrab_init();
   epg_init();
-  encoding_init();
 
   dvr_init();
 

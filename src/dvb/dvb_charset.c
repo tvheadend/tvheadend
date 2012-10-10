@@ -1,5 +1,5 @@
 /*
- *  tvheadend, encoding list
+ *  tvheadend, charset list
  *  Copyright (C) 2012 Mariusz Białończyk
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -18,22 +18,23 @@
 
 #include <string.h>
 #include "tvheadend.h"
-#include "encoding.h"
-#include "../../settings.h"
+#include "settings.h"
+#include "dvb/dvb_charset.h"
 
 /*
  * Process a file
  */
-static void _encoding_load_file()
+static void _charset_load_file()
 {
   htsmsg_t *l, *e;
   htsmsg_field_t *f;
 
-  encoding_t *enc;
+  dvb_charset_t *enc;
+  const char *charset;
   unsigned int tsid, onid;
   int i = 0;
 
-  l = hts_settings_load("encoding");
+  l = hts_settings_load("charset");
   if (l)
   {
     HTSMSG_FOREACH(f, l) {
@@ -41,16 +42,18 @@ static void _encoding_load_file()
         tsid = onid = 0;
         htsmsg_get_u32(e, "tsid", &tsid);
         htsmsg_get_u32(e, "onid", &onid);
+        charset = htsmsg_get_str(e, "charset");
 
-        if (tsid == 0 || onid == 0)
+        if (tsid == 0 || onid == 0 || !charset)
           continue;
 
-        enc = calloc(1, sizeof(encoding_t));
+        enc = calloc(1, sizeof(dvb_charset_t));
         if (enc)
         {
-          enc->tsid = tsid;
-          enc->onid = onid;
-          LIST_INSERT_HEAD(&encoding_list, enc, link);
+          enc->tsid    = tsid;
+          enc->onid    = onid;
+          enc->charset = charset;
+          LIST_INSERT_HEAD(&dvb_charset_list, enc, link);
           i++;
         }
       }
@@ -59,13 +62,13 @@ static void _encoding_load_file()
   };
 
   if (i > 0)
-    tvhlog(LOG_INFO, "encoding", "%d entries loaded", i);
+    tvhlog(LOG_INFO, "charset", "%d entries loaded", i);
 }
 
 /*
- * Initialise the encoding list
+ * Initialise the charset list
  */
-void encoding_init ( void )
+void dvb_charset_init ( void )
 {
-  _encoding_load_file();
+  _charset_load_file();
 }

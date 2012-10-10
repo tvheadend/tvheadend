@@ -1,5 +1,5 @@
 /*
- *  tvheadend, encoding list
+ *  tvheadend, dvb charset config
  *  Copyright (C) 2012 Mariusz Białończyk
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,17 +16,18 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TVH_ENCODING_H__
-#define __TVH_ENCODING_H__
+#ifndef __TVH_DVB_CHARSET_H__
+#define __TVH_DVB_CHARSET_H__
 
-typedef struct encoding {
-  LIST_ENTRY(encoding) link;
+typedef struct dvb_charset {
+  LIST_ENTRY(dvb_charset) link;
  unsigned int tsid;
  unsigned int onid;
-} encoding_t;
+ const char *charset;
+} dvb_charset_t;
 
-LIST_HEAD(,encoding) encoding_list;
+LIST_HEAD(,dvb_charset) dvb_charset_list;
 
-void encoding_init ( void );
+void dvb_charset_init ( void );
 
-#endif /* __TVH_ENCODING_H__ */
+#endif /* __TVH_DVB_CHARSET_H__ */
