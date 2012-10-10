@@ -545,11 +545,9 @@ static int _eit_process_event
   /* Test channels which needs polish workaround */
   encoding_t *enc;
   LIST_FOREACH(enc, &encoding_list, link) {
-    // TODO: also check for original network id (onid)
-    //       currently onid is unavailable in tvh but there are additional cases which has
-    //       to be met, so I believe, that it should not harm Russian ISO-8859-5 channels
-    //       until we've got this information here
-    if (!ev.default_charset && svc->s_dvb_mux_instance->tdmi_transport_stream_id == enc->tsid) {
+    if (!ev.default_charset &&
+        svc->s_dvb_mux_instance->tdmi_network_id == enc->onid &&
+        svc->s_dvb_mux_instance->tdmi_transport_stream_id == enc->tsid) {
       ev.default_charset = pl_workaround;
       break;
     }
