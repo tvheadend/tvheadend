@@ -88,7 +88,7 @@ const char *dvb_charset_find
       if (sid == enc->sid) {
          ret = enc;
         break;
-      } else if (!enc->tsid) {
+      } else if (!enc->sid) {
         ret = enc;
       }
     }
