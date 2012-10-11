@@ -223,8 +223,9 @@ pass_muxer_write_ts(muxer_t *m, struct th_pkt *pkt)
  * Write a packet directly to the file descriptor
  */
 static int
-pass_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
+pass_muxer_write_pkt(muxer_t *m, void *data)
 {
+  th_pkt_t *pkt = (th_pkt_t*)data;
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
   switch(pm->m_container) {
