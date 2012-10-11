@@ -372,12 +372,13 @@ lav_muxer_open_file(muxer_t *m, const char *filename)
  * Write a packet to the muxer
  */
 static int
-lav_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
+lav_muxer_write_pkt(muxer_t *m, void *data)
 {
   int i;
   AVFormatContext *oc;
   AVStream *st;
   AVPacket packet;
+  th_pkt_t *pkt = (th_pkt_t*)data;
   lav_muxer_t *lm = (lav_muxer_t*)m;
 
   oc = lm->lm_oc;
