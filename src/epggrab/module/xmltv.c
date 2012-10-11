@@ -59,28 +59,46 @@ static epggrab_channel_t *_xmltv_channel_find
 /**
  *
  */
-static time_t _xmltv_str2time(const char *str)
+static time_t _xmltv_str2time(const char *in)
 {
   struct tm tm;
-  int tz, r;
+  int tz = 0, r;
+  int sp = 0;
+  char str[32];
 
   memset(&tm, 0, sizeof(tm));
+  strcpy(str, in);
 
-  r = sscanf(str, "%04d%02d%02d%02d%02d%02d %d",
+  /* split tz */
+  while (str[sp] && str[sp] != ' ')
+    sp++;
+
+  /* parse tz */
+  // TODO: handle string TZ?
+  if (str[sp]) {
+    sscanf(str+sp+1, "%d", &tz);
+    tz = (tz % 100) + (tz / 100) * 3600; // Convert from HHMM to seconds
+    str[sp] = 0;
+    sp = 1;
+  } else {
+    sp = 0;
+  }
+
+  /* parse time */
+  r = sscanf(str, "%04d%02d%02d%02d%02d%02d",
 	     &tm.tm_year, &tm.tm_mon, &tm.tm_mday,
-	     &tm.tm_hour, &tm.tm_min, &tm.tm_sec,
-	     &tz);
+	     &tm.tm_hour, &tm.tm_min, &tm.tm_sec);
 
+  /* adjust */
   tm.tm_mon  -= 1;
   tm.tm_year -= 1900;
   tm.tm_isdst = -1;
 
-  tz = (tz % 100) + (tz / 100) * 60; // Convert from HHMM to minutes
-
-  if(r == 6) {
-    return mktime(&tm);
-  } else if(r == 7) {
-    return timegm(&tm) - tz * 60;
+  if (r >= 5) {
+    if(sp)
+      return timegm(&tm) - tz;
+    else
+      return mktime(&tm);
   } else {
     return 0;
   }
