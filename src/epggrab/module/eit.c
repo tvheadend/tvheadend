@@ -26,6 +26,7 @@
 #include "epg.h"
 #include "epggrab.h"
 #include "epggrab/private.h"
+#include "dvb/dvb_charset.h"
 
 /* ************************************************************************
  * Status handling
@@ -153,7 +154,7 @@ typedef struct eit_event
   lang_str_t       *summary;
   lang_str_t       *desc;
 
-  char             *default_charset;
+  const char       *default_charset;
 
   htsmsg_t         *extra;
 
@@ -204,7 +205,7 @@ static dvb_string_conv_t _eit_freesat_conv[2] = {
 static int _eit_get_string_with_len
   ( epggrab_module_t *m,
     char *dst, size_t dstlen, 
-		const uint8_t *src, size_t srclen, char *charset )
+		const uint8_t *src, size_t srclen, const char *charset )
 {
   dvb_string_conv_t *cptr = NULL;
 
@@ -539,6 +540,15 @@ static int _eit_process_event
   /* Process tags */
   memset(&ev, 0, sizeof(ev));
   ev.default_charset = svc->s_dvb_charset;
+
+  /* Override */
+  if (!ev.default_charset) {
+    ev.default_charset 
+      = dvb_charset_find(svc->s_dvb_mux_instance->tdmi_network_id,
+                         svc->s_dvb_mux_instance->tdmi_transport_stream_id,
+                         svc->s_dvb_service_id);
+  }
+
   while (dllen > 2) {
     int r;
     dtag = ptr[0];

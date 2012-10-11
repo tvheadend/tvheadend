@@ -202,7 +202,7 @@ static inline size_t dvb_convert(int conv,
  */
 
 int
-dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char *dvb_charset, dvb_string_conv_t *conv)
+dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, const char *dvb_charset, dvb_string_conv_t *conv)
 {
   int ic;
   size_t len, outlen;
@@ -286,7 +286,7 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char
 
 int
 dvb_get_string_with_len(char *dst, size_t dstlen, 
-			const uint8_t *buf, size_t buflen, char *dvb_charset,
+			const uint8_t *buf, size_t buflen, const char *dvb_charset,
       dvb_string_conv_t *conv)
 {
   int l = buf[0];

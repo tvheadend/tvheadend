@@ -1,0 +1,415 @@
+[
+	{
+		"tsid": 200,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 13878,
+		"description": "ESP2 NE Polish"
+	},
+	{
+		"tsid": 200,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 13865,
+		"description": "Hotbird Eutelsat (Eurosport)"
+	},
+	{
+		"tsid": 300,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 15206,
+		"description": "Animal Planet HD"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 13020,
+		"description": "Hotbird 13.0 Cyfra+ Canal+ HD Polska"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 13022,
+		"description": "Hotbird 13.0 Cyfra+ Canal+ Sport HD Polska"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 13023,
+		"description": "Hotbird 13.0 Cyfra+ National Geographic HD Polska"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 13025,
+		"description": "Hotbird 13.0 Cyfra+ Filmbox HD"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 13026,
+		"description": "Hotbird 13.0 Cyfra+ AXN Spin HD"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 13027,
+		"description": "Hotbird 13.0 Cyfra+ TVN 7 HD"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 13070,
+		"description": "Hotbird 13.0 Cyfra+ ESP HD PL"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 13081,
+		"description": "EUROSPORT HD"
+	},
+	{
+		"tsid": 400,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 13082,
+		"description": "EUROSPORT HD"
+	},
+	{
+		"tsid": 1000,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 4314,
+		"description": "nSport"
+	},
+	{
+		"tsid": 1000,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 0,
+		"description": "Hotbird 13.0 Grupa ITI"
+	},
+	{
+		"tsid": 1100,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Hotbird 13.0 Cyfra+"
+	},
+	{
+		"tsid": 1500,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 5110,
+		"description": "TV Info"
+	},
+	{
+		"tsid": 1500,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 5108,
+		"description": "Fox Polska"
+	},
+	{
+		"tsid": 1500,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 5102,
+		"description": "TVS"
+	},
+	{
+		"tsid": 1500,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 5122,
+		"description": "Animal Planet Poland"
+	},
+	{
+		"tsid": 1500,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 0,
+		"description": "Hotbird 13.0 Cyfra+"
+	},
+	{
+		"tsid": 1600,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Hotbird 13.0 EskaTV, TVN"
+	},
+	{
+		"tsid": 1800,
+		"onid": 200,
+		"charset": "ISO6937",
+		"sid": 3623,
+		"description": "Hotbird 13.0 Polo TV"
+	},
+	{
+		"tsid": 7400,
+		"onid": 113,
+		"charset": "ISO6937",
+		"sid": 0,
+		"description": "Hotbird 13.0 Cyfrowy Polsat"
+	},
+	{
+		"tsid": 7800,
+		"onid": 113,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Hotbird 13.0 Cyfrowy Polsat"
+	},
+	{
+		"tsid": 7900,
+		"onid": 113,
+		"charset": "ISO6937",
+		"sid": 10510,
+		"description": "TV6 Polska"
+	},
+	{
+		"tsid": 7900,
+		"onid": 113,
+		"charset": "ISO6937",
+		"sid": 10508,
+		"description": "Hotbird 13.0 Cyfrowy Polsat Jim Jam"
+	},
+	{
+		"tsid": 7900,
+		"onid": 113,
+		"charset": "ISO6937",
+		"sid": 10521,
+		"description": "SuperStacja"
+	},
+	{
+		"tsid": 7900,
+		"onid": 113,
+		"charset": "ISO6937",
+		"sid": 10520,
+		"description": "Travel Channel"
+	},
+	{
+		"tsid": 7900,
+		"onid": 113,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Hotbird 13.0 Cyfrowy Polsat"
+	},
+	{
+		"tsid": 8100,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 14911,
+		"description": "UNIVERSAL POL"
+	},
+	{
+		"tsid": 8100,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 14910,
+		"description": "Sport Klub POL"
+	},
+	{
+		"tsid": 8100,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Hotbird 13.0 Eutelsat (Universal)"
+	},
+	{
+		"tsid": 11000,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 0,
+		"description": "Hotbird 13.0 Cyfra+"
+	},
+	{
+		"tsid": 11400,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 15716,
+		"description": "Discovery Channel Polska"
+	},
+	{
+		"tsid": 11400,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 15701,
+		"description": "Discovery Science Polska"
+	},
+	{
+		"tsid": 11400,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 15703,
+		"description": "Discovery World Polska"
+	},
+	{
+		"tsid": 11400,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 0,
+		"description": "Hotbird 13.0 Cyfra+"
+	},
+	{
+		"tsid": 11600,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 3514,
+		"description": "Disney XD Polska"
+	},
+	{
+		"tsid": 11600,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Hotbird 13.0 BBC HD, ITI"
+	},
+	{
+		"tsid": 11900,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 0,
+		"description": "Hotbird 13.0 Cyfra+"
+	},
+	{
+		"tsid": 12200,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 0,
+		"description": "Hotbird 13.0 Disney Channel Polska, TCM and other"
+	},
+	{
+		"tsid": 12800,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 24,
+		"description": "CC Family."
+	},
+	{
+		"tsid": 12800,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 6,
+		"description": "Viacom Blink!"
+	},
+	{
+		"tsid": 12800,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 22,
+		"description": "MTV Polska."
+	},
+	{
+		"tsid": 12800,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 30,
+		"description": "Comedy Central Polska."
+	},
+	{
+		"tsid": 12800,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 25,
+		"description": "VIVA Polska."
+	},
+	{
+		"tsid": 12800,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Hotbird 13.0 Viacom ... MTV / VH1 Polska"
+	},
+	{
+		"tsid": 13000,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 14612,
+		"description": "Investigation Discovery Polska"
+	},
+	{
+		"tsid": 13000,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 14613,
+		"description": "TLC Polska"
+	},
+	{
+		"tsid": 13000,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 14602,
+		"description": "BBC Entertainment Poland"
+	},
+	{
+		"tsid": 13000,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 14603,
+		"description": "BBC Knowledge Poland"
+	},
+	{
+		"tsid": 13000,
+		"onid": 318,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Hotbird 13.0 BBC Polska, TLC and other"
+	},
+	{
+		"tsid": 13100,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 7322,
+		"description": "TV5 Monde Europe"
+	},
+	{
+		"tsid": 13100,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 7324,
+		"description": "Hotbird 13.0 Crime and Investigation"
+	},
+	{
+		"tsid": 13200,
+		"onid": 113,
+		"charset": "ISO88959-2",
+		"sid": 13104,
+		"description": "Polsat Sport"
+	},
+	{
+		"tsid": 13200,
+		"onid": 113,
+		"charset": "ISO88959-2",
+		"sid": 13105,
+		"description": "Polsat Sport Extra"
+	},
+	{
+		"tsid": 13200,
+		"onid": 113,
+		"charset": "ISO88959-2",
+		"sid": 13107,
+		"description": "TV Biznes"
+	},
+	{
+		"tsid": 13200,
+		"onid": 113,
+		"charset": "ISO6937",
+		"sid": 0,
+		"description": "Hotbird 13.0 Cyfrowy Polsat"
+	},
+	{
+		"tsid": 15700,
+		"onid": 318,
+		"charset": "ISO6937",
+		"sid": 10626,
+		"description": "Hotbird 13.0 Disco TV"
+	}
+]
