@@ -1,3 +1,37 @@
+tvheadend.statusTable = function(title, dtable, cm, rec, plugins, store,
+	helpContent, icon) {
+
+	var selModel = new Ext.grid.RowSelectionModel({
+		singleSelect : false
+	});
+
+	function refreshRecords() {
+		store.reload();
+	};
+
+	var grid = new Ext.grid.EditorGridPanel({
+		title : title,
+		iconCls : icon,
+		plugins : plugins,
+		store : store,
+		clicksToEdit : 2,
+		cm : cm,
+		viewConfig : {
+			forceFit : true
+		},
+		selModel : selModel,
+		stripeRows : true,
+		tbar : [
+			{
+				tooltip : 'Refresh the display',
+				iconCls : 'wand',
+				text : 'Refresh display',
+				handler : refreshRecords
+			} ]
+	});
+	return grid;
+}
+
 tvheadend.storeStatusUserlist = new Ext.data.JsonStore({
 	root : 'entries',
 	id : 'id',
@@ -75,8 +109,12 @@ tvheadend.statususerlist = function() {
 	var UserStatusRecord = Ext.data.Record.create([ 'id', 'username',
 			'startlog', 'currlog', 'ip', 'type', 'streamdata' ]);
 
-	return new tvheadend.tableEditor('Status', 'statususerlist', cm,
-			UserStatusRecord, null, tvheadend.storeStatusUserlist,
-			'config_access.html', 'group');
+/*	return new tvheadend.tableEditor('Status', 'statususerlist', cm,
+*			UserStatusRecord, null, tvheadend.storeStatusUserlist,
+*			'config_access.html', 'group');*/
+
+	return new tvheadend.statusTable('Status', 'statususerlist', cm,
+                       UserStatusRecord, null, tvheadend.storeStatusUserlist,
+                       'config_access.html', 'group');
 
 }
