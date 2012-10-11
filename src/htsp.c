@@ -485,7 +485,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
  */
 static htsmsg_t *
 htsp_build_event
-  (epg_broadcast_t *e, const char *method, const char *lang, time_t update )
+  (epg_broadcast_t *e, const char *method, const char *lang, time_t update,
+   htsp_connection_t *htsp )
 {
   htsmsg_t *out;
   epg_broadcast_t *n;
@@ -534,8 +535,11 @@ htsp_build_event
       htsmsg_add_u32(out, "brandId", ee->brand->id);
     if (ee->season)
       htsmsg_add_u32(out, "seasonId", ee->season->id);
-    if((g = LIST_FIRST(&ee->genre)))
-      htsmsg_add_u32(out, "contentType", g->code);
+    if((g = LIST_FIRST(&ee->genre))) {
+      uint32_t code = g->code;
+      if (htsp->htsp_version < 6) code = (code >> 4) & 0xF;
+      htsmsg_add_u32(out, "contentType", code);
+    }
     if (ee->age_rating)
       htsmsg_add_u32(out, "ageRating", ee->age_rating);
     if (ee->star_rating)
@@ -753,7 +757,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
     RB_FOREACH(ch, &channel_name_tree, ch_name_link)
       RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
         if (epgMaxTime && ebc->start > epgMaxTime) break;
-        htsmsg_t *e = htsp_build_event(ebc, "eventAdd", lang, lastUpdate);
+        htsmsg_t *e = htsp_build_event(ebc, "eventAdd", lang, lastUpdate, htsp);
         if (e) htsp_send_message(htsp, e, NULL);
       }
   }
@@ -786,7 +790,7 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
   if((e = epg_broadcast_find_by_id(eventId, NULL)) == NULL)
     return htsp_error("Event does not exist");
 
-  return htsp_build_event(e, NULL, lang, 0);
+  return htsp_build_event(e, NULL, lang, 0, htsp);
 }
 
 /**
@@ -825,7 +829,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
     events = htsmsg_create_list();
     while (e) {
       if (maxTime && e->start > maxTime) break;
-      htsmsg_add_msg(events, NULL, htsp_build_event(e, NULL, lang, 0));
+      htsmsg_add_msg(events, NULL, htsp_build_event(e, NULL, lang, 0, htsp));
       if (numFollowing == 1) break;
       if (numFollowing) numFollowing--;
       e = epg_broadcast_get_next(e);
@@ -838,7 +842,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
       int num = numFollowing;
       RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {
         if (maxTime && e->start > maxTime) break;
-        htsmsg_add_msg(events, NULL, htsp_build_event(e, NULL, lang, 0));
+        htsmsg_add_msg(events, NULL, htsp_build_event(e, NULL, lang, 0, htsp));
         if (num == 1) break;
         if (num) num--;
       }
@@ -880,6 +884,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
     if (!(ct = channel_tag_find_by_identifier(u32)))
       return htsp_error("Channel tag does not exist");
   if (!htsmsg_get_u32(in, "contentType", &u32)) {
+    if(htsp->htsp_version < 6) u32 <<= 4;
     genre.code = u32;
     eg         = &genre;
   }
@@ -896,7 +901,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
     for(i = 0; i < eqr.eqr_entries; ++i) {
       if (full)
         htsmsg_add_msg(array, NULL,
-                       htsp_build_event(eqr.eqr_array[i], NULL, lang, 0));
+                       htsp_build_event(eqr.eqr_array[i], NULL, lang, 0, htsp));
       else
         htsmsg_add_u32(array, NULL, eqr.eqr_array[i]->id);
     }
@@ -1717,7 +1722,7 @@ htsp_event_add(epg_broadcast_t *ebc)
   htsmsg_t *m;
   LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
     if (!(htsp->htsp_async_mode & HTSP_ASYNC_EPG)) continue;
-    m = htsp_build_event(ebc, "eventAdd", htsp->htsp_language, 0);
+    m = htsp_build_event(ebc, "eventAdd", htsp->htsp_language, 0, htsp);
     htsp_send_message(htsp, m, NULL);
   }
 }
@@ -1732,7 +1737,7 @@ htsp_event_update(epg_broadcast_t *ebc)
   htsmsg_t *m;
   LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
     if (!(htsp->htsp_async_mode & HTSP_ASYNC_EPG)) continue;
-    m = htsp_build_event(ebc, "eventUpdate", htsp->htsp_language, 0);
+    m = htsp_build_event(ebc, "eventUpdate", htsp->htsp_language, 0, htsp);
     htsp_send_message(htsp, m, NULL);
   }
 }

@@ -104,19 +104,19 @@ static void _epggrab_ota_load_one ( epggrab_module_ota_t *mod, htsmsg_t *m )
 {
   htsmsg_t *e;
   htsmsg_field_t *f;
-  int nid, tsid, period, interval;
+  int onid, tsid, period, interval;
   const char *netname;
 
   HTSMSG_FOREACH(f, m) {
     if ((e = htsmsg_get_map_by_field(f))) {
-      nid      = htsmsg_get_u32_or_default(m, "nid",      0);
+      onid     = htsmsg_get_u32_or_default(m, "onid",     0);
       tsid     = htsmsg_get_u32_or_default(m, "tsid",     0);
       period   = htsmsg_get_u32_or_default(m, "period",   0);
       interval = htsmsg_get_u32_or_default(m, "interval", 0);
       netname  = htsmsg_get_str(m, "networkname");
 
       if (tsid)
-        epggrab_ota_create_and_register_by_id(mod, nid, tsid,
+        epggrab_ota_create_and_register_by_id(mod, onid, tsid,
                                               period, interval,
                                               netname);
     }
@@ -146,7 +146,7 @@ static void _epggrab_ota_save_one ( htsmsg_t *m, epggrab_module_ota_t *mod )
   TAILQ_FOREACH(ota, &mod->muxes, grab_link) {
     if (!l) l = htsmsg_create_list();
     e = htsmsg_create_map();
-    //htsmsg_add_u32(e, "nid", );
+    htsmsg_add_u32(e, "onid",     ota->tdmi->tdmi_network_id);
     htsmsg_add_u32(e, "tsid",     ota->tdmi->tdmi_transport_stream_id);
     htsmsg_add_u32(e, "period",   ota->timeout);
     htsmsg_add_u32(e, "interval", ota->interval);
@@ -246,15 +246,16 @@ epggrab_ota_mux_t *epggrab_ota_create
  * Create and register using mux ID
  */
 void epggrab_ota_create_and_register_by_id
-  ( epggrab_module_ota_t *mod, int nid, int tsid, int period, int interval, const char *networkname )
+  ( epggrab_module_ota_t *mod, int onid, int tsid, int period, int interval, 
+    const char *networkname )
 {
   th_dvb_adapter_t *tda;
   th_dvb_mux_instance_t *tdmi;
   epggrab_ota_mux_t *ota;
   TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
-    //TODO: if (tda->nitoid != nid) continue;
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
       if (tdmi->tdmi_transport_stream_id != tsid) continue;
+      if (onid && tdmi->tdmi_network_id != onid) continue;
       if (networkname && (!tdmi->tdmi_network || strcmp(networkname, tdmi->tdmi_network))) continue;
       ota = epggrab_ota_create(mod, tdmi);
       epggrab_ota_register(ota, period, interval);

@@ -492,7 +492,7 @@ typedef struct service {
    * DVB default charset
    * 	used to overide the default ISO6937 per service
    */
-  char *s_dvb_default_charset;
+  char *s_dvb_charset;
 
   /**
    * Set if EIT grab is enabled for DVB service (the default).
@@ -584,7 +584,7 @@ int tss2errcode(int tss);
 
 uint16_t service_get_encryption(service_t *t);
 
-void service_set_dvb_default_charset(service_t *t, const char *dvb_default_charset);
+void service_set_dvb_charset(service_t *t, const char *dvb_charset);
 
 void service_set_dvb_eit_enable(service_t *t, int dvb_eit_enable);
 

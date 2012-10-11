@@ -366,7 +366,7 @@ dvb_bat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
 {
   int i, j, bdlen, tslen, tdlen;
   uint8_t dtag, dlen;
-  uint16_t tsid;
+  uint16_t tsid, onid;
   char crid[257];
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
@@ -391,6 +391,7 @@ dvb_bat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
   i = 0;
   while (i+6 < tslen) {
     tsid  = buf[i] << 8 | buf[i+1];
+    onid  = buf[i+2] << 8 | buf[i+3];
     tdlen = ((buf[i+4] & 0xf) << 8) | buf[i+5];
     if (tdlen+i+6 > tslen) break;
     i += 6;
@@ -398,7 +399,8 @@ dvb_bat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
 
     /* Find TDMI */
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
-      if(tdmi->tdmi_transport_stream_id == tsid)
+      if(tdmi->tdmi_transport_stream_id == tsid &&
+         tdmi->tdmi_network_id == onid)
         break;
 
     /* Descriptors */
@@ -441,7 +443,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 {
   service_t *t;
   uint16_t service_id;
-  uint16_t transport_stream_id;
+  uint16_t tsid, onid;
   int free_ca_mode;
   int dllen;
   uint8_t dtag, dlen;
@@ -458,13 +460,15 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   if(len < 8) return -1;
 
-  transport_stream_id         = ptr[0] << 8 | ptr[1];
+  tsid         = ptr[0] << 8 | ptr[1];
+  onid         = ptr[5] << 8 | ptr[6];
   if (tableid == 0x42) {
-    if(tdmi->tdmi_transport_stream_id != transport_stream_id)
+    if(tdmi->tdmi_transport_stream_id != tsid || tdmi->tdmi_network_id != onid)
       return -1;
   } else {
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
-      if(tdmi->tdmi_transport_stream_id == transport_stream_id)
+      if(tdmi->tdmi_transport_stream_id == tsid &&
+         tdmi->tdmi_network_id != onid)
         break;
     if (!tdmi) return 0;
   }
@@ -623,14 +627,14 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   LIST_FOREACH(other, &tda->tda_muxes, tdmi_adapter_link)
     if(other != tdmi && 
        other->tdmi_conf.dmc_satconf == tdmi->tdmi_conf.dmc_satconf &&
-       other->tdmi_transport_stream_id == tsid)
+       other->tdmi_transport_stream_id == tsid &&
+       other->tdmi_network_id == tdmi->tdmi_network_id)
       return -1;
 
   if(tdmi->tdmi_transport_stream_id == 0xffff)
     dvb_mux_set_tsid(tdmi, tsid);
-  else if(tdmi->tdmi_transport_stream_id != tsid) {
+  else if (tdmi->tdmi_transport_stream_id != tsid)
     return -1; // TSID mismatches, skip packet, may be from another mux
-  }
 
   ptr += 5;
   len -= 5;
@@ -740,7 +744,7 @@ static const fe_modulation_t qam_tab [6] = {
  */
 static int
 dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
-			 uint16_t tsid)
+			 uint16_t tsid, uint16_t onid)
 {
   struct dvb_mux_conf dmc;
   int freq, symrate;
@@ -777,7 +781,7 @@ dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   dmc.dmc_fe_params.u.qam.fec_inner = fec_tab[ptr[10] & 0x07];
 
-  dvb_mux_create(tdmi->tdmi_adapter, &dmc, tsid, NULL,
+  dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, NULL,
 		 "automatic mux discovery", 1, 1, NULL, NULL);
   return 0;
 }
@@ -787,7 +791,7 @@ dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
  */
 static int
 dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
-		       uint16_t tsid)
+		       uint16_t tsid, uint16_t onid)
 {
   int freq, symrate;
   //  uint16_t orbital_pos;
@@ -862,7 +866,7 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   }
 
 #endif
-  dvb_mux_create(tdmi->tdmi_adapter, &dmc, tsid, NULL,
+  dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, NULL,
 		 "automatic mux discovery", 1, 1, NULL, tdmi->tdmi_conf.dmc_satconf);
   
   return 0;
@@ -874,14 +878,14 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
  */
 static void
 dvb_table_local_channel(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
-			uint16_t tsid)
+			uint16_t tsid, uint16_t onid)
 {
   uint16_t sid, chan;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   service_t *t;
 
   LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
-    if(tdmi->tdmi_transport_stream_id == tsid)
+    if(tdmi->tdmi_transport_stream_id == tsid && tdmi->tdmi_network_id == onid)
       break;
 
   if(tdmi == NULL)
@@ -919,7 +923,7 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   uint8_t tag, tlen;
   int ntl;
   char networkname[256];
-  uint16_t tsid;
+  uint16_t tsid, onid;
   uint16_t network_id = (ptr[0] << 8) | ptr[1];
 
   if(tdmi->tdmi_adapter->tda_nitoid) {
@@ -981,6 +985,7 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   while(len >= 6) {
     tsid = ( ptr[0]        << 8) | ptr[1];
+    onid = ( ptr[2]        << 8) | ptr[3];
     ntl =  ((ptr[4] & 0xf) << 8) | ptr[5];
 
     ptr += 6;
@@ -997,14 +1002,14 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       switch(tag) {
       case DVB_DESC_SAT:
         if(tdmi->tdmi_adapter->tda_type == FE_QPSK)
-          dvb_table_sat_delivery(tdmi, ptr, tlen, tsid);
+          dvb_table_sat_delivery(tdmi, ptr, tlen, tsid, onid);
         break;
       case DVB_DESC_CABLE:
         if(tdmi->tdmi_adapter->tda_type == FE_QAM)
-          dvb_table_cable_delivery(tdmi, ptr, tlen, tsid);
+          dvb_table_cable_delivery(tdmi, ptr, tlen, tsid, onid);
         break;
       case DVB_DESC_LOCAL_CHAN:
-        dvb_table_local_channel(tdmi, ptr, tlen, tsid);
+        dvb_table_local_channel(tdmi, ptr, tlen, tsid, onid);
         break;
       }
 
@@ -1031,7 +1036,7 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   uint8_t atsc_stype;
   uint8_t stype;
   uint16_t service_id;
-  uint16_t transport_stream_id;
+  uint16_t tsid, onid;
   int dlen, dl;
   uint8_t *dptr;
 
@@ -1055,11 +1060,12 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     if(dlen + 32 > len)
       return -1; // Corrupt table
 
-    transport_stream_id = (ptr[22] << 8) | ptr[23];
+    tsid = (ptr[22] << 8) | ptr[23];
+    onid = (ptr[24] << 8) | ptr[25];
     
     /* Search all muxes on adapter */
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
-      if(tdmi->tdmi_transport_stream_id == transport_stream_id)
+      if(tdmi->tdmi_transport_stream_id == tsid && tdmi->tdmi_network_id == onid);
 	break;
     
     if(tdmi == NULL)

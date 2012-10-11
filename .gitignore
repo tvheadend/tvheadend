@@ -10,3 +10,9 @@ data/dvb-scan
 
 *.pyc
 .*.sw[op]
+
+debian/files
+debian/tvheadend
+debian/tvheadend-dbg
+debian/tvheadend*substvars
+debian/tvheadend*.debhelper*
