@@ -295,12 +295,12 @@ muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
  * sanity wrapper arround m_write_pkt()
  */
 int
-muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
+muxer_write_pkt(muxer_t *m, void *data)
 {
-  if(!m || !pkt)
+  if(!m || !data)
     return -1;
 
-  return m->m_write_pkt(m, pkt);
+  return m->m_write_pkt(m, data);
 }
 
 
