@@ -447,6 +447,13 @@ typedef struct service {
   elementary_stream_t *s_video;
   elementary_stream_t *s_audio;
  
+
+  /**
+   * When a subscription request SMT_MPEGTS, chunk them togeather 
+   * in order to recude load.
+   */
+  sbuf_t s_tsbuf;
+
   /**
    * Average continuity errors
    */

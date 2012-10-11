@@ -40,6 +40,8 @@
 #include "parsers.h"
 #include "streaming.h"
 
+#define TS_REMUX_BUFSIZE (188 * 100)
+
 static void ts_remux(service_t *t, const uint8_t *tsb);
 
 /**
@@ -281,15 +283,26 @@ ts_recv_packet2(service_t *t, const uint8_t *tsb)
 static void
 ts_remux(service_t *t, const uint8_t *src)
 {
-  uint8_t tsb[188];
-  memcpy(tsb, src, 188);
-
   streaming_message_t sm;
+  pktbuf_t *pb;
+  sbuf_t *sb = &t->s_tsbuf;
+
+  sbuf_append(sb, src, 188);
+
+  if(sb->sb_ptr < TS_REMUX_BUFSIZE) 
+    return;
+
+  pb = pktbuf_alloc(sb->sb_data, sb->sb_ptr);
+
   sm.sm_type = SMT_MPEGTS;
-  sm.sm_data = tsb;
+  sm.sm_data = pb;
   streaming_pad_deliver(&t->s_streaming_pad, &sm);
 
+  pktbuf_ref_dec(pb);
+
   service_set_streaming_status_flags(t, TSS_PACKETS);
+
+  sbuf_reset(sb);
 }
 
 /*
