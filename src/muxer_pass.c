@@ -26,7 +26,6 @@
 #include "psi.h"
 #include "muxer_pass.h"
 
-#define TS_BUFFER_COUNT   100
 #define TS_INJECTION_RATE 1000
 
 /*
@@ -49,7 +48,6 @@ typedef struct pass_muxer {
   char *pm_filename;
 
   /* TS muxing */
-  uint8_t  *pm_buf;
   uint8_t  *pm_pat;
   uint8_t  *pm_pmt;
   uint16_t pm_pmt_pid;
@@ -194,7 +192,7 @@ pass_muxer_write(muxer_t *m, const void *ts, size_t len)
  * Write TS packets to the file descriptor
  */
 static void
-pass_muxer_write_ts(muxer_t *m, struct th_pkt *pkt)
+pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
   int rem;
@@ -209,13 +207,9 @@ pass_muxer_write_ts(muxer_t *m, struct th_pkt *pkt)
     pm->pm_ic++;
   }
 
-  // flush buffer
-  rem = pm->pm_pc % TS_BUFFER_COUNT;
-  if(pm->pm_pc && !rem)
-    pass_muxer_write(m, pm->pm_buf, TS_BUFFER_COUNT * 188);
+  pass_muxer_write(m, pb->pb_data, pb->pb_size);
 
-  memcpy(pm->pm_buf + rem * 188, pkt, 188);
-  pm->pm_pc++;
+  pm->pm_pc += (pb->pb_size / 188);
 }
 
 
@@ -225,12 +219,12 @@ pass_muxer_write_ts(muxer_t *m, struct th_pkt *pkt)
 static int
 pass_muxer_write_pkt(muxer_t *m, void *data)
 {
-  th_pkt_t *pkt = (th_pkt_t*)data;
+  pktbuf_t *pb = (pktbuf_t*)data;
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
   switch(pm->m_container) {
   case MC_MPEGTS:
-    pass_muxer_write_ts(m, pkt);
+    pass_muxer_write_ts(m, pb);
     break;
   default:
     //NOP
@@ -238,7 +232,7 @@ pass_muxer_write_pkt(muxer_t *m, void *data)
   }
 
   if(!pm->pm_error)
-    free(pkt);
+    pktbuf_ref_dec(pb);
 
   return pm->pm_error;
 }
@@ -291,9 +285,6 @@ pass_muxer_destroy(muxer_t *m)
   if(pm->pm_pat)
     free(pm->pm_pat);
 
-  if(pm->pm_buf)
-    free(pm->pm_buf);
-
   free(pm);
 }
 
@@ -326,7 +317,6 @@ pass_muxer_create(service_t *s, muxer_container_type_t mc)
     pm->pm_pmt_pid = s->s_pmt_pid;
     pm->pm_pat = malloc(188);
     pm->pm_pmt = malloc(188);
-    pm->pm_buf = malloc(188 * TS_BUFFER_COUNT);
   }
 
   return (muxer_t *)pm;

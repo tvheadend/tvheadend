@@ -496,6 +496,8 @@ service_destroy(service_t *t)
   free(t->s_pat_section);
   free(t->s_pmt_section);
 
+  sbuf_free(&t->s_tsbuf);
+
   service_unref(t);
 
   if(ch != NULL) {
@@ -527,6 +529,8 @@ service_create(const char *identifier, int type, int source_type)
   t->s_dvb_charset = NULL;
   t->s_dvb_eit_enable = 1;
   TAILQ_INIT(&t->s_components);
+
+  sbuf_init(&t->s_tsbuf);
 
   streaming_pad_init(&t->s_streaming_pad);
 

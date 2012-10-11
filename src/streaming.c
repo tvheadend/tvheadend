@@ -197,8 +197,8 @@ streaming_msg_clone(streaming_message_t *src)
     break;
 
   case SMT_MPEGTS:
-    dst->sm_data = malloc(188);
-    memcpy(dst->sm_data, src->sm_data, 188);
+    pktbuf_ref_inc(src->sm_data);
+    dst->sm_data = src->sm_data;
     break;
 
   default:
@@ -256,8 +256,12 @@ streaming_msg_free(streaming_message_t *sm)
     break;
 
   case SMT_SIGNAL_STATUS:
-  case SMT_MPEGTS:
     free(sm->sm_data);
+    break;
+
+  case SMT_MPEGTS:
+    if(sm->sm_data)
+      pktbuf_ref_dec(sm->sm_data);
     break;
 
   default:
