@@ -206,7 +206,7 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, cons
 {
   int ic;
   size_t len, outlen;
-  int i;
+  int i, auto_pl_charset = 0;
 
   if(srclen < 1) {
     *dst = 0;
@@ -220,13 +220,22 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, cons
     conv++;
   }
 
+  // check for automatic polish charset detection
+  if (dvb_charset && strcmp("PL_AUTO", dvb_charset) == 0) {
+    auto_pl_charset = 1;
+    dvb_charset = NULL;
+  }
+
   // automatic charset detection
   switch(src[0]) {
   case 0:
     return -1;
 
   case 0x01 ... 0x0b:
-    ic = convert_iso_8859[src[0] + 4];
+    if (auto_pl_charset && (src[0] + 4) == 5)
+      ic = convert_iso6937;
+    else
+      ic = convert_iso_8859[src[0] + 4];
     src++; srclen--;
     break;
 
@@ -251,7 +260,10 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, cons
     return -1;
 
   default:
-    ic = convert_iso6937;
+    if (auto_pl_charset)
+      ic = convert_iso_8859[2];
+    else
+      ic = convert_iso6937;
     break;
   }
 
