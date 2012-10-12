@@ -23,6 +23,7 @@ OPTIONS=(
   "imagecache:auto"
   "avahi:auto"
   "zlib:auto"
+  "timeshift:no"
   "bundle:no"
   "dvbcsa:no"
 )
