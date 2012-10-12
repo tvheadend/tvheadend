@@ -477,7 +477,7 @@ tvheadend.dvb_services = function(adapterId) {
 						[ 'ISO8859-13', 'ISO8859-13' ],
 						[ 'ISO8859-14', 'ISO8859-14' ],
 						[ 'ISO8859-15', 'ISO8859-15' ],
-            [ 'PL_AUTO', 'Polish Fixup' ]
+            [ 'PL_AUTO', 'Polish Fixup' ] ]
 				}),
 				typeAhead : true,
 				lazyRender : true,
