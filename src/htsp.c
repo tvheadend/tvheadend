@@ -655,35 +655,6 @@ htsp_method_getSysTime(htsp_connection_t *htsp, htsmsg_t *in)
 }
 
 /**
- * Request a ticket for a http url pointing to a channel or dvr
- */
-static htsmsg_t *
-htsp_method_getTicket(htsp_connection_t *htsp, htsmsg_t *in)
-{
-  htsmsg_t *out;
-  uint32_t id;
-  char path[255];
-  const char *ticket = NULL;
-
-  if(!htsmsg_get_u32(in, "channelId", &id)) {
-    snprintf(path, sizeof(path), "/stream/channelid/%d", id);
-    ticket = access_ticket_create(path);
-  } else if(!htsmsg_get_u32(in, "dvrId", &id)) {
-    snprintf(path, sizeof(path), "/dvrfile/%d", id);
-    ticket = access_ticket_create(path);
-  } else {
-    return htsp_error("Missing argument 'channelId' or 'dvrId'");
-  }
-
-  out = htsmsg_create_map();
-
-  htsmsg_add_str(out, "path", path);
-  htsmsg_add_str(out, "ticket", ticket);
-
-  return out;
-}
-
-/**
  * Switch the HTSP connection into async mode
  */
 static htsmsg_t *
@@ -1094,6 +1065,35 @@ htsp_method_deleteDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 }
 
 /**
+ * Request a ticket for a http url pointing to a channel or dvr
+ */
+static htsmsg_t *
+htsp_method_getTicket(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *out;
+  uint32_t id;
+  char path[255];
+  const char *ticket = NULL;
+
+  if(!htsmsg_get_u32(in, "channelId", &id)) {
+    snprintf(path, sizeof(path), "/stream/channelid/%d", id);
+    ticket = access_ticket_create(path);
+  } else if(!htsmsg_get_u32(in, "dvrId", &id)) {
+    snprintf(path, sizeof(path), "/dvrfile/%d", id);
+    ticket = access_ticket_create(path);
+  } else {
+    return htsp_error("Missing argument 'channelId' or 'dvrId'");
+  }
+
+  out = htsmsg_create_map();
+
+  htsmsg_add_str(out, "path", path);
+  htsmsg_add_str(out, "ticket", ticket);
+
+  return out;
+}
+
+/**
  * Request subscription for a channel
  */
 static htsmsg_t *
@@ -1205,7 +1205,6 @@ struct {
   { "authenticate",             htsp_method_authenticate,   ACCESS_ANONYMOUS},
   { "getDiskSpace",             htsp_method_getDiskSpace,   ACCESS_STREAMING},
   { "getSysTime",               htsp_method_getSysTime,     ACCESS_STREAMING},
-  { "getTicket",                htsp_method_getTicket,      ACCESS_STREAMING},
   { "enableAsyncMetadata",      htsp_method_async,          ACCESS_STREAMING},
   { "getEvent",                 htsp_method_getEvent,       ACCESS_STREAMING},
   { "getEvents",                htsp_method_getEvents,      ACCESS_STREAMING},
@@ -1215,6 +1214,7 @@ struct {
   { "updateDvrEntry",           htsp_method_updateDvrEntry, ACCESS_RECORDER},
   { "cancelDvrEntry",           htsp_method_cancelDvrEntry, ACCESS_RECORDER},
   { "deleteDvrEntry",           htsp_method_deleteDvrEntry, ACCESS_RECORDER},
+  { "getTicket",                htsp_method_getTicket,      ACCESS_STREAMING},
   { "subscribe",                htsp_method_subscribe,      ACCESS_STREAMING},
   { "unsubscribe",              htsp_method_unsubscribe,    ACCESS_STREAMING},
   { "subscriptionChangeWeight", htsp_method_change_weight,  ACCESS_STREAMING},
@@ -1705,7 +1705,7 @@ void
 htsp_event_delete(epg_broadcast_t *ebc)
 {
   htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "method", "eventDeleted");
+  htsmsg_add_str(m, "method", "eventDelete");
   htsmsg_add_u32(m, "eventId", ebc->id);
   htsp_async_send(m, HTSP_ASYNC_EPG);
 }
