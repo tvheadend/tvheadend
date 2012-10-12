@@ -122,7 +122,7 @@ SRCS-$(CONFIG_LINUXDVB) += src/epggrab/otamux.c\
   src/epggrab/support/freesat_huffman.c \
 
 SRCS += src/plumbing/tsfix.c \
-	src/plumbing/globalheaders.c \
+	src/plumbing/globalheaders.c
 
 SRCS += src/dvr/dvr_db.c \
 	src/dvr/dvr_rec.c \
@@ -144,6 +144,13 @@ SRCS += src/muxer.c \
 #
 # Optional code
 #
+
+# Timeshift
+SRCS-${CONFIG_TIMESHIFT} += \
+  src/timeshift.c \
+  src/timeshift/timeshift_filemgr.c \
+  src/timeshift/timeshift_writer.c \
+  src/timeshift/timeshift_reader.c \
 
 # DVB
 SRCS-${CONFIG_LINUXDVB} += \

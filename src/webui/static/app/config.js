@@ -104,6 +104,49 @@ tvheadend.miscconf = function() {
     imagecachePanel.hide();
 
 	/* ****************************************************************
+	 * Timeshift
+	 * ***************************************************************/
+
+	var timeshiftPath = new Ext.form.TextField({
+		fieldLabel  : 'Temp. storage path',
+		name        : 'timeshiftpath',
+		allowBlank  : true,
+		width       : 400
+	});
+
+	var timeshiftPeriod = new Ext.form.NumberField({
+		fieldLabel  : 'Max period (minutes, per stream)',
+		name        : 'timeshiftperiod',
+		allowBlank  : false,
+		width       : 400
+	});
+
+	var timeshiftPeriodU = new Ext.form.Checkbox({
+		fieldLabel  : '(unlimited)',
+		name        : 'timeshiftperiod_unlimited',
+		allowBlank  : false,
+		width       : 400
+	});
+	timeshiftPeriodU.on('check', function(e, c) {
+		timeshiftPeriod.setDisabled(c);
+	});
+
+	var timeshiftSize = new Ext.form.NumberField({
+		fieldLabel  : 'Max size (MB, global)',
+		name        : 'timeshiftsize',
+		allowBlank  : false,
+		width       : 400
+	});
+
+	var timeshiftFields = new Ext.form.FieldSet({
+		title       : 'Timeshift',
+		width       : 700,
+		autoHeight  : true,
+		collapsible : true,
+		items       : [ timeshiftPath, timeshiftPeriod, timeshiftPeriodU ]//, timeshiftSize ]
+	});
+
+	/* ****************************************************************
 	 * Form
 	 * ***************************************************************/
 
@@ -127,7 +170,7 @@ tvheadend.miscconf = function() {
 		border : false,
 		bodyStyle : 'padding:15px',
 		labelAlign : 'left',
-		labelWidth : 150,
+		labelWidth : 200,
 		waitMsgTarget : true,
 		reader : confreader,
 		layout : 'form',
@@ -149,6 +192,14 @@ tvheadend.miscconf = function() {
 				op : 'loadSettings'
 			},
 			success : function(form, action) {
+				v = parseInt(timeshiftPeriod.getValue());
+				if (v == 4294967295) {
+					timeshiftPeriodU.setValue(true);
+					timeshiftPeriod.setValue("");
+					timeshiftPeriod.setDisabled(true); // TODO: this isn't working
+				} else {
+					timeshiftPeriod.setValue(v / 60);
+				}
 				confpanel.enable();
 			}
 		});

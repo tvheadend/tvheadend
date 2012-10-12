@@ -545,8 +545,6 @@ subscription_dummy_join(const char *id, int first)
 	 "Dummy join %s ok", id);
 }
 
-
-
 /**
  *
  */
@@ -634,4 +632,42 @@ void
 subscription_init(void)
 {
   gtimer_arm(&every_sec, every_sec_cb, NULL, 1);
+}
+
+/**
+ * Set speed
+ */
+void
+subscription_set_speed ( th_subscription_t *s, int speed )
+{
+  streaming_message_t *sm;
+  service_t *t = s->ths_service;
+
+  pthread_mutex_lock(&t->s_stream_mutex);
+
+  sm = streaming_msg_create_code(SMT_SPEED, speed);
+
+  streaming_target_deliver(s->ths_output, sm);
+
+  pthread_mutex_unlock(&t->s_stream_mutex);
+}
+
+/**
+ * Set skip
+ */
+void
+subscription_set_skip ( th_subscription_t *s, const streaming_skip_t *skip )
+{
+  streaming_message_t *sm;
+  service_t *t = s->ths_service;
+
+  pthread_mutex_lock(&t->s_stream_mutex);
+
+  sm = streaming_msg_create(SMT_SKIP);
+  sm->sm_data = malloc(sizeof(streaming_skip_t));
+  memcpy(sm->sm_data, skip, sizeof(streaming_skip_t));
+
+  streaming_target_deliver(s->ths_output, sm);
+
+  pthread_mutex_unlock(&t->s_stream_mutex);
 }

@@ -61,6 +61,7 @@
 #include "muxes.h"
 #include "config2.h"
 #include "imagecache.h"
+#include "timeshift.h"
 #if ENABLE_LIBAV
 #include "libav.h"
 #endif
@@ -598,6 +599,10 @@ main(int argc, char **argv)
   v4l_init();
 #endif
 
+#if ENABLE_TIMESHIFT
+  timeshift_init();
+#endif
+
   tcp_server_init();
   http_server_init();
   webui_init();
@@ -658,6 +663,10 @@ main(int argc, char **argv)
   mainloop();
 
   epg_save();
+
+#if ENABLE_TIMESHIFT
+  timeshift_term();
+#endif
 
   tvhlog(LOG_NOTICE, "STOP", "Exiting HTS Tvheadend");
 

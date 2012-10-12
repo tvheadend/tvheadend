@@ -111,6 +111,14 @@ th_subscription_t *subscription_create(int weight, const char *name,
 
 void subscription_change_weight(th_subscription_t *s, int weight);
 
+void subscription_set_speed
+  (th_subscription_t *s, int32_t speed );
+
+void subscription_set_skip
+  (th_subscription_t *s, const streaming_skip_t *skip);
+
+void subscription_stop(th_subscription_t *s);
+
 void subscription_unlink_service(th_subscription_t *s, int reason);
 
 void subscription_dummy_join(const char *id, int first);

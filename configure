@@ -24,6 +24,7 @@ OPTIONS=(
   "avahi:auto"
   "zlib:auto"
   "libav:auto"
+  "timeshift:no"
   "bundle:no"
   "dvbcsa:no"
 )

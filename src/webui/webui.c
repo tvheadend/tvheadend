@@ -244,6 +244,8 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
       }
       break;
 
+    case SMT_SKIP:
+    case SMT_SPEED:
     case SMT_SIGNAL_STATUS:
       break;
 

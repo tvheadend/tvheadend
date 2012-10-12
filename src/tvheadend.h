@@ -211,6 +211,24 @@ typedef struct signal_status {
 } signal_status_t;
 
 /**
+ * Streaming skip
+ */
+typedef struct streaming_skip
+{
+  enum {
+    SMT_SKIP_REL_TIME,
+    SMT_SKIP_ABS_TIME,
+    SMT_SKIP_REL_SIZE,
+    SMT_SKIP_ABS_SIZE
+  } type;
+  union {
+    off_t   size;
+    time_t  time;
+  };
+} streaming_skip_t;
+
+
+/**
  * A streaming pad generates data.
  * It has one or more streaming targets attached to it.
  *
@@ -234,6 +252,7 @@ TAILQ_HEAD(streaming_message_queue, streaming_message);
  * Streaming messages types
  */
 typedef enum {
+
   /**
    * Packet with data.
    *
@@ -291,6 +310,17 @@ typedef enum {
    * Internal message to exit receiver
    */
   SMT_EXIT,
+
+  /**
+   * Set stream speed
+   */
+  SMT_SPEED,
+
+  /**
+   * Skip the stream
+   */
+  SMT_SKIP,
+
 } streaming_message_type_t;
 
 #define SMT_TO_MASK(x) (1 << ((unsigned int)x))
@@ -326,6 +356,10 @@ typedef enum {
 typedef struct streaming_message {
   TAILQ_ENTRY(streaming_message) sm_link;
   streaming_message_type_t sm_type;
+#if ENABLE_TIMESHIFT
+  int64_t  sm_time;
+  uint64_t sm_timeshift;
+#endif
   union {
     void *sm_data;
     int sm_code;
