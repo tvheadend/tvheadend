@@ -1163,7 +1163,7 @@ service_is_primary_epg(service_t *svc)
   LIST_FOREACH(t, &svc->s_ch->ch_services, s_ch_link) {
     if (!t->s_dvb_mux_instance) continue;
     if (!t->s_enabled || !t->s_dvb_eit_enable) continue;
-    if (!ret|| servicecmp(t, ret) < 0)
+    if (!ret || dvb_extra_prio(t->s_dvb_mux_instance->tdmi_adapter) > dvb_extra_prio(ret->s_dvb_mux_instance->tdmi_adapter))
       ret = t;
   }
   return !ret ? 0 : (ret->s_dvb_service_id == svc->s_dvb_service_id);
