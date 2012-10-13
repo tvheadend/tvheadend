@@ -131,7 +131,7 @@ typedef struct opentv_module_t
 {
   epggrab_module_ota_t  ;      ///< Base struct
 
-  int                   nid;
+  int                   onid;
   int                   tsid;
   int                   sid;
   int                   *channel;
@@ -189,7 +189,7 @@ static epggrab_channel_t *_opentv_find_epggrab_channel
                               (epggrab_module_t*)mod);
 }
 
-static service_t *_opentv_find_service ( int tsid, int sid )
+static service_t *_opentv_find_service ( int onid, int tsid, int sid )
 {
   th_dvb_adapter_t *tda;
   th_dvb_mux_instance_t *tdmi;
@@ -197,6 +197,7 @@ static service_t *_opentv_find_service ( int tsid, int sid )
   TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
       if (tdmi->tdmi_transport_stream_id != tsid) continue;
+      if (tdmi->tdmi_network_id != onid) continue;
       LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
         if (t->s_dvb_service_id == sid) return t;
       }
@@ -427,7 +428,7 @@ static int _opentv_parse_event_section
  * ***********************************************************************/
 
 static void _opentv_parse_channels
-  ( opentv_module_t *mod, uint8_t *buf, int len, uint16_t tsid )
+  ( opentv_module_t *mod, uint8_t *buf, int len, uint16_t onid, uint16_t tsid )
 {
   epggrab_channel_t *ec;
   epggrab_channel_link_t *ecl;
@@ -441,7 +442,7 @@ static void _opentv_parse_channels
     cnum = ((int)buf[i+5] << 8) | buf[i+6];
 
     /* Find the service */
-    svc = _opentv_find_service(tsid, sid);
+    svc = _opentv_find_service(onid, tsid, sid);
     if (svc && svc->s_ch && service_is_primary_epg(svc)) {
       ec  =_opentv_find_epggrab_channel(mod, cid, 1, &save);
       ecl = LIST_FIRST(&ec->channels);
@@ -457,13 +458,13 @@ static void _opentv_parse_channels
 }
 
 static int _opentv_parse_ts_desc
-  ( opentv_module_t *mod, uint8_t *buf, int len, uint16_t tsid )
+  ( opentv_module_t *mod, uint8_t *buf, int len, uint16_t onid, uint16_t tsid )
 {
   int dtag = buf[0];
   int dlen = buf[1];
   if (dlen+2 > len) return -1;
   if (dtag == 0xb1)
-    _opentv_parse_channels(mod, buf+2, dlen, tsid);
+    _opentv_parse_channels(mod, buf+2, dlen, onid, tsid);
   return dlen + 2;
 }
 
@@ -472,7 +473,7 @@ static int _opentv_bat_section
 {
   int i, r;
   int bdlen, tllen, tdlen;
-  uint16_t bid, tsid;
+  uint16_t bid, tsid, onid;
   uint8_t sec;
 
   /* Skip (not yet applicable) */
@@ -508,14 +509,14 @@ static int _opentv_bat_section
   if (tllen > len) return -1;
   while (len > 0) {
     tsid  = ((int)buf[0] << 8) | buf[1];
-    //nid  = ((int)buf[2] << 8) | buf[3];
+    onid  = ((int)buf[2] << 8) | buf[3];
     tdlen = ((int)buf[4] & 0xf) << 8 | buf[5];
     buf += 6;
     len -= 6;
     if (tdlen > len) return -1;
     i = 0;
     while (i < tdlen) {
-      r = _opentv_parse_ts_desc(mod, buf+i, tdlen-i, tsid);
+      r = _opentv_parse_ts_desc(mod, buf+i, tdlen-i, onid, tsid);
       if (r < 0) return -1;
       i += r;
     }
@@ -725,7 +726,7 @@ static int _opentv_enable ( void  *m, uint8_t e )
   /* Register interest */
   if (e) {
     epggrab_ota_create_and_register_by_id((epggrab_module_ota_t*)mod,
-                                          mod->nid, mod->tsid,
+                                          mod->onid, mod->tsid,
                                           600, 3600,  NULL);
   /* Remove all links */
   } else {
@@ -837,7 +838,7 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
 {
   char ibuf[100], nbuf[1000];
   htsmsg_t *cl, *tl, *sl;
-  uint32_t tsid, sid, nid;
+  uint32_t tsid, sid, onid;
   const char *str, *name;
   opentv_dict_t *dict;
   opentv_genre_t *genre;
@@ -850,7 +851,8 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
   if (!(cl   = htsmsg_get_list(m, "channel"))) return -1;
   if (!(tl   = htsmsg_get_list(m, "title"))) return -1;
   if (!(sl   = htsmsg_get_list(m, "summary"))) return -1;
-  if (htsmsg_get_u32(m, "nid", &nid)) return -1;
+  if (htsmsg_get_u32(m, "onid", &onid))
+    if (htsmsg_get_u32(m, "nid", &onid)) return -1;
   if (htsmsg_get_u32(m, "tsid", &tsid)) return -1;
   if (htsmsg_get_u32(m, "sid", &sid)) return -1;
 
@@ -877,7 +879,7 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
   /* Add provider details */
   mod->dict     = dict;
   mod->genre    = genre;
-  mod->nid      = nid;
+  mod->onid     = onid;
   mod->tsid     = tsid;
   mod->sid      = sid;
   mod->channel  = _pid_list_to_array(cl);

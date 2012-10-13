@@ -128,6 +128,7 @@ typedef struct th_dvb_mux_instance {
   /* Linked if tdmi_conf.dmc_satconf != NULL */
   LIST_ENTRY(th_dvb_mux_instance) tdmi_satconf_link;
 
+  uint32_t tdmi_network_id;
   uint16_t tdmi_transport_stream_id;
 
   char *tdmi_identifier;
@@ -215,7 +216,7 @@ typedef struct th_dvb_adapter {
   struct dvb_satconf_queue tda_satconfs;
 
 
-  struct th_dvb_mux_instance_list tda_mux_hash[TDA_MUX_HASH_WIDTH];
+  struct th_dvb_mux_instance_list tda_mux_list;
 
   uint32_t tda_dump_muxes;
 
@@ -354,7 +355,7 @@ void dvb_mux_destroy(th_dvb_mux_instance_t *tdmi);
 
 th_dvb_mux_instance_t *dvb_mux_create(th_dvb_adapter_t *tda,
 				      const struct dvb_mux_conf *dmc,
-				      uint16_t tsid, const char *network,
+				      uint16_t onid, uint16_t tsid, const char *network,
 				      const char *logprefix, int enabled,
 				      int initialscan, const char *identifier,
 				      dvb_satconf_t *satconf);
