@@ -35,6 +35,7 @@
 #include <netinet/in.h>
 #include <linux/ioctl.h>
 #include <linux/dvb/ca.h>
+#include <fcntl.h>
 
 #include "tvheadend.h"
 #include "dvb/dvb.h"
@@ -187,7 +188,7 @@ typedef struct capmt {
 
   /* capmt sockets */
   int   capmt_sock;
-  int   capmt_sock_ca0;
+  int   capmt_sock_ca0[MAX_CA];
 
   /* thread flags */
   int   capmt_connected;
@@ -282,7 +283,8 @@ handle_ca0(capmt_t* capmt) {
   int *request;
   ca_descr_t *ca;
   ca_pid_t *cpd;
-  int process_key, cai;
+  int process_key, process_next, cai;
+  int i, j;
 
   if (capmt->capmt_oscam)
     bufsize = sizeof(int) + sizeof(ca_descr_t);
@@ -295,21 +297,60 @@ handle_ca0(capmt_t* capmt) {
 
   tvhlog(LOG_INFO, "capmt", "got connection from client ...");
 
+  i = 0;
   while (capmt->capmt_running) {
-
     process_key = 0;
-    ret = recv(capmt->capmt_sock_ca0, buffer, bufsize, MSG_WAITALL);
 
-    if (ret < 0)
-      tvhlog(LOG_ERR, "capmt", "error receiving over socket");
-    else if (ret == 0) {
-      // normal socket shutdown
-      tvhlog(LOG_INFO, "capmt", "normal socket shutdown");
-      break;
+    // receiving data from UDP socket
+    if (!capmt->capmt_oscam) {
+      ret = recv(capmt->capmt_sock_ca0[0], buffer, bufsize, MSG_WAITALL);
+
+      if (ret < 0)
+        tvhlog(LOG_ERR, "capmt", "error receiving over socket");
+      else if (ret == 0) {
+        // normal socket shutdown
+        tvhlog(LOG_INFO, "capmt", "normal socket shutdown");
+        break;
+      }
+    } else {
+      process_next = 0;
+      if (capmt->capmt_sock_ca0[i] > 0) {
+        ret = recv(capmt->capmt_sock_ca0[i], buffer, bufsize, MSG_DONTWAIT);
+        if (ret < 0)
+          process_next = 1;
+        else if (ret == 0) {
+          // normal socket shutdown
+          tvhlog(LOG_INFO, "capmt", "normal socket shutdown");
+          close(capmt->capmt_sock_ca0[i]);
+          capmt->capmt_sock_ca0[i] = -1;
+
+          int still_left = 0;
+          for (j = 0; j < MAX_CA; j++) {
+            if (capmt->capmt_sock_ca0[j] > 0) {
+              still_left = 1;
+              break;
+            }
+          }
+          if (still_left) //this socket is closed but there are others active
+            process_next = 1;
+          else            //all sockets closed
+            break;
+        } 
+      } else
+        process_next = 1;
+
+      if (process_next) {
+        i++;
+        if (i >= MAX_CA)
+          i = 0;
+        usleep(10 * 1000);
+        continue;
+      }
     }
 
+    // parsing data
     if (capmt->capmt_oscam) {
-      cai = capmt->capmt_port - 9000;
+      cai = i;
       request = (int *) &buffer;
       if (*request == CA_SET_PID) {
         cpd = (ca_pid_t *)&buffer[sizeof(int)];
@@ -347,6 +388,7 @@ handle_ca0(capmt_t* capmt) {
       process_key = 1;
     }
 
+   // processing key
    if (process_key) {
     LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
       t = ct->ct_service;
@@ -380,6 +422,25 @@ handle_ca0(capmt_t* capmt) {
   tvhlog(LOG_INFO, "capmt", "connection from client closed ...");
 }
 
+static int
+capmt_create_udp_socket(int *socket, int port)
+{
+  *socket = tvh_socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+  struct sockaddr_in serv_addr;
+  serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+  serv_addr.sin_port = htons( (unsigned short int)port);
+  serv_addr.sin_family = AF_INET;
+
+  if (bind(*socket, (const struct sockaddr*)&serv_addr, sizeof(serv_addr)) != 0)
+  {
+    perror("[CapmtServer] ERROR binding to ca0");
+    return 0;
+  }
+  else
+    return 1;
+}
+
 /**
  *
  */
@@ -388,11 +449,13 @@ capmt_thread(void *aux)
 {
   capmt_t *capmt = aux;
   struct timespec ts;
-  int d;
+  int d, i, bind_ok = 0;
+  th_dvb_adapter_t *tda;
 
   while (capmt->capmt_running) {
     capmt->capmt_sock = -1;
-    capmt->capmt_sock_ca0 = -1;
+    for (i = 0; i < MAX_CA; i++)
+      capmt->capmt_sock_ca0[i] = -1;
     capmt->capmt_connected = 0;
     
     pthread_mutex_lock(&global_lock);
@@ -414,16 +477,21 @@ capmt_thread(void *aux)
       capmt->capmt_connected = 1;
 
       /* open connection to emulated ca0 device */
-      capmt->capmt_sock_ca0 = tvh_socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
-      struct sockaddr_in serv_addr;
-      serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-      serv_addr.sin_port = htons( (unsigned short int)capmt->capmt_port);
-      serv_addr.sin_family = AF_INET;
-
-      if (bind(capmt->capmt_sock_ca0, (const struct sockaddr*)&serv_addr, sizeof(serv_addr)) != 0) 
-        perror("[CapmtServer] ERROR binding to ca0");
-      else 
+      if (!capmt->capmt_oscam) {
+        bind_ok = capmt_create_udp_socket(&capmt->capmt_sock_ca0[0], capmt->capmt_port);
+      } else {
+        TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
+          if (tda->tda_rootpath) {          //if rootpath is NULL then can't rely on tda_adapter_num because it is always 0
+            if (tda->tda_adapter_num > MAX_CA) {
+              tvhlog(LOG_ERR, "capmt", "adapter number > MAX_CA");
+              continue;
+            }
+            tvhlog(LOG_INFO, "capmt", "Creating capmt UDP socket for adapter %d", tda->tda_adapter_num);
+            bind_ok = capmt_create_udp_socket(&capmt->capmt_sock_ca0[tda->tda_adapter_num], 9000 + tda->tda_adapter_num);
+          }
+        }
+      }
+      if (bind_ok)
         handle_ca0(capmt);
     } else 
       tvhlog(LOG_ERR, "capmt", "Error connecting to %s: %s", capmt->capmt_sockfile, strerror(errno));
@@ -433,8 +501,9 @@ capmt_thread(void *aux)
     /* close opened sockets */
     if (capmt->capmt_sock > 0)
       close(capmt->capmt_sock);
-    if (capmt->capmt_sock_ca0 > 0)
-      close(capmt->capmt_sock_ca0);
+    for (i = 0; i < MAX_CA; i++)
+      if (capmt->capmt_sock_ca0[i] > 0)
+        close(capmt->capmt_sock_ca0[i]);
 
     /* schedule reconnection */
     if(subscriptions_active()) {
