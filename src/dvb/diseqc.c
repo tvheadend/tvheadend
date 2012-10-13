@@ -22,8 +22,8 @@ diseqc_send_msg(int fe_fd, __u8 framing_byte, __u8 address, __u8 cmd,
 {
   struct dvb_diseqc_master_cmd message;
 
-#if 0
-  tvhlog(LOG_INFO, "diseqc", "sending %X %X %X %X %X %X",
+#if 1
+  tvhlog(LOG_DEBUG, "diseqc", "sending %X %X %X %X %X %X",
          framing_byte, address, cmd, data_1, data_2, data_3);
 #endif
   
@@ -46,13 +46,13 @@ diseqc_setup(int fe_fd, int lnb_num, int voltage, int band,
   int err;
 
 #if 0
-  tvhlog(LOG_INFO, "diseqc",
+  tvhlog(LOG_DEBUG, "diseqc",
         "fe_fd %i, lnb_num %i, voltage %i, band %i, version %i, repeats %i",
         fe_fd, lnb_num, voltage, band, version, repeats);
 #endif
 
   /* verify lnb number and diseqc data */
-  if(lnb_num < 0 || lnb_num >=16 || i < 0 || i >= 16 || j < 0 || j >= 4)
+  if(lnb_num < 0 || lnb_num >=64 || i < 0 || i >= 16 || j < 0 || j >= 16)
     return -1;
 
   /* turn off continuous tone */

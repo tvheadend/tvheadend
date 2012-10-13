@@ -1297,7 +1297,7 @@ tvheadend.dvb_satconf = function(adapterId, lnbStore) {
 		dataIndex : 'port',
 		editor : new fm.NumberField({
 			minValue : 0,
-			maxValue : 15
+			maxValue : 63
 		})
 	}, {
 		header : "LNB type",
