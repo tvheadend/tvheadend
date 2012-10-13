@@ -236,5 +236,96 @@
 		"charset": "PL_AUTO",
 		"sid": 10626,
 		"description": "Hotbird 13.0 Disco TV"
+	},
+	{
+		"tsid": 1,
+		"onid": 133,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Sky Germany 12070.50 H"
+	},
+	{
+		"tsid": 2,
+		"onid": 133,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Sky Germany 11797.50 H"
+	},
+	{
+		"tsid": 3,
+		"onid": 133,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Sky Germany 11719.50 H"
+	},
+	{
+		"tsid": 4,
+		"onid": 133,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Sky Germany 12031.50 H"
+	},
+	{
+		"tsid": 6,
+		"onid": 133,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Sky Germany 11914.50 H"
+	},
+	{
+		"tsid": 10,
+		"onid": 133,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Sky Germany 11332.25 H"
+	},
+	{
+		"tsid": 11,
+		"onid": 133,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Sky Germany 12382.50 H"
+	},
+	{
+		"tsid": 12,
+		"onid": 133,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Sky Germany 12304.50 H"
+	},
+	{
+		"tsid": 13,
+		"onid": 133,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Sky Germany 11992.50 H"
+	},
+	{
+		"tsid": 14,
+		"onid": 133,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Sky Germany 11875.50 H"
+	},
+	{
+		"tsid": 15,
+		"onid": 133,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Sky Germany 10920.75 H"
+	},
+	{
+		"tsid": 17,
+		"onid": 133,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Sky Germany 11758.50 H"
+	},
+	{
+		"tsid": 33,
+		"onid": 133,
+		"charset": "ISO8859-15",
+		"sid": 0,
+		"description": "Astra 19.2E Sky Germany 12480.00 V"
 	}
 ]
