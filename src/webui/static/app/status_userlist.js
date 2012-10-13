@@ -109,12 +109,8 @@ tvheadend.statususerlist = function() {
 	var UserStatusRecord = Ext.data.Record.create([ 'id', 'username',
 			'startlog', 'currlog', 'ip', 'type', 'streamdata' ]);
 
-/*	return new tvheadend.tableEditor('Status', 'statususerlist', cm,
-*			UserStatusRecord, null, tvheadend.storeStatusUserlist,
-*			'config_access.html', 'group');*/
-
-	return new tvheadend.statusTable('Status', 'statususerlist', cm,
+	return new tvheadend.statusTable('User Access List', 'statususerlist', cm,
                        UserStatusRecord, null, tvheadend.storeStatusUserlist,
-                       'config_access.html', 'group');
+                       'status_userlist.html', 'group');
 
 }

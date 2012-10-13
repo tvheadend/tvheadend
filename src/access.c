@@ -130,17 +130,35 @@ access_log_remove(const char *username, uint32_t ip)
 void
 access_log_update_by_subscription_struct(char *title, channel_t *chanstr)
 {
-  const char *token, *token2;
-	/* we get title = "192.168.55.15 [ xbmc2 | XBMC Media Center ]"
-           and channel = "BBC 2 England" */
-	token = strtok(title, " "); /* token will be ip in string */
-	token2= strtok(NULL, " ");
-	token2= strtok(NULL, " ");
-	tvhlog(LOG_DEBUG, "accesslogging", "update_by_subscription_struct token: %s, token2: %s and channel: %s",
-	  token,token2,chanstr->ch_name);
-	if (token2 == NULL)
-         return;
-	access_log_update(token2,"htsp",strdup(chanstr->ch_name),inet_addr(token));
+  const char *token = "255.255.255.255", *token2 = NULL, *token4;
+  char token3[255] = "none";
+
+  /* we get title = "192.168.55.15 [ xbmc2 | XBMC Media Center ]"
+    and channel = "BBC 2 England" */
+
+  /* or we can get = "DVR: The Big Bang Theory" */
+  if (strstr(title, "DVR:")) {
+    /* Its passed by the DVR recording */
+    token4 = strtok(title, ": "); /*Strip the first before space*/
+    token2 = strdup(token4);
+    while (token4)
+    {
+      tvhlog(LOG_DEBUG, "accesslogging", "update_by_subscription_struct token: while loop token4: %s (%s)",token4,token3);
+      snprintf(token3, sizeof(token3), "%s %s", token3, token4);
+      token4 = strtok (NULL, " ");
+    };
+/*    token2 = strdup(token3);*/
+    tvhlog(LOG_DEBUG, "accesslogging", "update_by_subscription_struct oops, I calculate the chan for no reason %s",token3);
+  } else {
+    token = strtok(title, " "); /* token will be ip in string */
+    token2= strtok(NULL, " ");
+    token2= strtok(NULL, " ");
+  };
+  tvhlog(LOG_DEBUG, "accesslogging", "update_by_subscription_struct token(ip): %s, token2(username): %s and channel: %s",
+    token,token2,chanstr->ch_name);
+  if (token2 == NULL)
+    return;
+  access_log_update(token2,"htsp",strdup(chanstr->ch_name),inet_addr(token));
 };
 
 void
