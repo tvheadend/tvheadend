@@ -289,7 +289,10 @@ static void _muxes_load_file
       str++;
     }
   }
-  if (!reg) return;
+  if (!reg) {
+    fb_close(fp);
+    return;
+  }
 
   /* Network */
   str = buf;
@@ -338,19 +341,22 @@ static void _muxes_load_file
  *
  * Note: should we follow symlinks?
  */
-static void _muxes_load_dir ( const char *path, const char *type )
+static void _muxes_load_dir
+  ( const char *path, const char *type, int lvl )
 {
   char p[256];
   fb_dir *dir;
   fb_dirent *de;
 
+  if (lvl >= 3) return;
   if (!(dir = fb_opendir(path))) return;
+  lvl++;
   
   while ((de = fb_readdir(dir))) {
     if (*de->name == '.') continue;
     if (de->type == FB_DIR) {
       snprintf(p, sizeof(p), "%s/%s", path, de->name);
-      _muxes_load_dir(p, de->name);
+      _muxes_load_dir(p, de->name, lvl+1);
     } else if (type) {
       _muxes_load_file(type, dir, de->name);
     }
@@ -371,5 +377,5 @@ void muxes_init ( void )
 #else
     path = "/usr/share/dvb";
 #endif
-  _muxes_load_dir(path, NULL);
+  _muxes_load_dir(path, NULL, 0);
 } 
