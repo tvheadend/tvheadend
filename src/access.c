@@ -46,7 +46,6 @@ struct access_log_list access_log;
 const char *superuser_username;
 const char *superuser_password;
 
-/* https://github.com/andyb2000 Access log functions */
 static access_log_t *
 access_log_find(const char *id, int create)
 {
@@ -95,7 +94,6 @@ access_log_search_bysub(uint32_t ip, const char *al_streamdata)
   tvhlog(LOG_DEBUG, "accesslogging", "Searching by sub al_streamdata %s against db: %s",al_streamdata,al->al_streamdata);
   if(al->al_streamdata != NULL) {
    if(strcmp(al->al_streamdata, al_streamdata) == 0) {
-    tvhlog(LOG_DEBUG, "accesslogging", "Searching by sub RETURNING %s",al->al_streamdata);
     return al;
    };
   };
@@ -143,11 +141,9 @@ access_log_update_by_subscription_struct(char *title, channel_t *chanstr)
     token2 = strdup(token4);
     while (token4)
     {
-      tvhlog(LOG_DEBUG, "accesslogging", "update_by_subscription_struct token: while loop token4: %s (%s)",token4,token3);
       snprintf(token3, sizeof(token3), "%s %s", token3, token4);
       token4 = strtok (NULL, " ");
     };
-/*    token2 = strdup(token3);*/
     tvhlog(LOG_DEBUG, "accesslogging", "update_by_subscription_struct oops, I calculate the chan for no reason %s",token3);
   } else {
     token = strtok(title, " "); /* token will be ip in string */
