@@ -287,7 +287,7 @@ char *epggrab_module_grab_spawn ( void *m )
   /* Grab */
   outlen = spawn_and_store_stdout(mod->path, NULL, &outbuf);
   if ( outlen < 1 ) {
-    tvhlog(LOG_ERR, "pyepg", "no output detected");
+    tvhlog(LOG_ERR, mod->id, "no output detected");
     return NULL;
   }
 
@@ -300,13 +300,14 @@ htsmsg_t *epggrab_module_trans_xml ( void *m,  char *c )
 {
   htsmsg_t *ret;
   char     errbuf[100];
+  epggrab_module_t *mod = m;
 
   if (!c) return NULL;
 
   /* Extract */
   ret = htsmsg_xml_deserialize(c, errbuf, sizeof(errbuf));
   if (!ret)
-    tvhlog(LOG_ERR, "pyepg", "htsmsg_xml_deserialize error %s", errbuf);
+    tvhlog(LOG_ERR, mod->id, "htsmsg_xml_deserialize error %s", errbuf);
   return ret;
 }
 

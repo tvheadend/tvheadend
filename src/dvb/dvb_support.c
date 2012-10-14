@@ -202,11 +202,11 @@ static inline size_t dvb_convert(int conv,
  */
 
 int
-dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char *dvb_default_charset, dvb_string_conv_t *conv)
+dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, const char *dvb_charset, dvb_string_conv_t *conv)
 {
   int ic;
   size_t len, outlen;
-  int i;
+  int i, auto_pl_charset = 0;
 
   if(srclen < 1) {
     *dst = 0;
@@ -220,12 +220,22 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char
     conv++;
   }
 
+  // check for automatic polish charset detection
+  if (dvb_charset && strcmp("PL_AUTO", dvb_charset) == 0) {
+    auto_pl_charset = 1;
+    dvb_charset = NULL;
+  }
+
+  // automatic charset detection
   switch(src[0]) {
   case 0:
     return -1;
 
   case 0x01 ... 0x0b:
-    ic = convert_iso_8859[src[0] + 4];
+    if (auto_pl_charset && (src[0] + 4) == 5)
+      ic = convert_iso6937;
+    else
+      ic = convert_iso_8859[src[0] + 4];
     src++; srclen--;
     break;
 
@@ -250,16 +260,20 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char
     return -1;
 
   default:
-    if (dvb_default_charset != NULL && sscanf(dvb_default_charset, "ISO8859-%d", &i) > 0) {
-      if (i > 0 && i < 16) {
-        ic = convert_iso_8859[i];
-      } else {
-        ic = convert_iso6937;
-      }
+    if (auto_pl_charset)
+      ic = convert_iso_8859[2];
+    else
+      ic = convert_iso6937;
+    break;
+  }
+
+  // manual charset override
+  if (dvb_charset != NULL && dvb_charset[0] != 0) {
+    if (sscanf(dvb_charset, "ISO8859-%d", &i) > 0 && i > 0 && i < 16) {
+      ic = convert_iso_8859[i];
     } else {
       ic = convert_iso6937;
     }
-    break;
   }
 
   if(srclen < 1) {
@@ -284,7 +298,7 @@ dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, char
 
 int
 dvb_get_string_with_len(char *dst, size_t dstlen, 
-			const uint8_t *buf, size_t buflen, char *dvb_default_charset,
+			const uint8_t *buf, size_t buflen, const char *dvb_charset,
       dvb_string_conv_t *conv)
 {
   int l = buf[0];
@@ -292,7 +306,7 @@ dvb_get_string_with_len(char *dst, size_t dstlen,
   if(l + 1 > buflen)
     return -1;
 
-  if(dvb_get_string(dst, dstlen, buf + 1, l, dvb_default_charset, conv))
+  if(dvb_get_string(dst, dstlen, buf + 1, l, dvb_charset, conv))
     return -1;
 
   return l + 1;

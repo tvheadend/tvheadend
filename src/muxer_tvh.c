@@ -117,8 +117,9 @@ tvh_muxer_open_file(muxer_t *m, const char *filename)
  * Write a packet to the muxer
  */
 static int
-tvh_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
+tvh_muxer_write_pkt(muxer_t *m, void *data)
 {
+  th_pkt_t *pkt = (th_pkt_t*)data;
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
 
   if(mk_mux_write_pkt(tm->tm_ref, pkt)) {

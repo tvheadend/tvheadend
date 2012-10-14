@@ -51,7 +51,12 @@ void test() { getloadavg(NULL,0); }'
 # Python
 #
 check_py || echo 'WARN: no python binary found'
-check_py_import gzip pygzip
+check_py_import gzip
+
+#
+# Binaries
+#
+check_bin bzip2 || echo 'WARN: no bzip2 binary found'
 
 #
 # SSL
@@ -77,7 +82,7 @@ fi
 # Bundling
 #
 if enabled bundle; then
-  if enabled zlib && ! enabled pygzip; then
+  if enabled zlib && ! enabled py_gzip; then
     die "Python gzip module not found (use --disable-zlib or --disable-bundle)"
   fi
 fi
@@ -98,9 +103,16 @@ fi
 #
 if enabled linuxdvb && enabled dvbscan; then
   if [ ! -d ${ROOTDIR}/data/dvb-scan ]; then
+    if ! enabled bin_bzip2; then
+      die "Bzip2 not found, fetch dvb-scan files (use --disable-dvbscan)"
+    fi
     echo -n "Fetching dvb-scan files... "
-    ${ROOTDIR}/support/getmuxlist &> /dev/null || die "Failed to fetch dvb-scan files (use --disable-dvbscan to skip)"
-    echo "done"
+    if ${ROOTDIR}/support/getmuxlist &> /dev/null; then
+      echo "done"
+    else
+      echo
+      die "Failed to fetch dvb-scan files (use --disable-dvbscan to skip)"
+    fi
   fi
 fi
 

@@ -1,6 +1,6 @@
 /*
- *  TV Input - Linux DVB interface
- *  Copyright (C) 2007 Andreas �man
+ *  tvheadend, dvb charset config
+ *  Copyright (C) 2012 Mariusz Białończyk
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,15 +16,22 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __TVH_DVB_CHARSET_H__
+#define __TVH_DVB_CHARSET_H__
 
-#include "tvheadend.h"
-#include "dvb.h"
-#include "dvb_support.h"
-#include "dvb_charset.h"
+typedef struct dvb_charset {
+  LIST_ENTRY(dvb_charset) link;
+ uint16_t onid;
+ uint16_t tsid;
+ uint16_t sid;
+ const char *charset;
+} dvb_charset_t;
 
-void
-dvb_init(uint32_t adapter_mask)
-{
-  dvb_charset_init();
-  dvb_adapter_init(adapter_mask);
-}
+LIST_HEAD(,dvb_charset) dvb_charset_list;
+
+void dvb_charset_init ( void );
+
+const char *dvb_charset_find
+  (uint16_t onid, uint16_t tsid, uint16_t sid);
+
+#endif /* __TVH_DVB_CHARSET_H__ */
