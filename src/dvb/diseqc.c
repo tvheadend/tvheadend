@@ -22,10 +22,8 @@ diseqc_send_msg(int fe_fd, __u8 framing_byte, __u8 address, __u8 cmd,
 {
   struct dvb_diseqc_master_cmd message;
 
-#if 1
   tvhlog(LOG_DEBUG, "diseqc", "sending %X %X %X %X %X %X",
          framing_byte, address, cmd, data_1, data_2, data_3);
-#endif
   
   message.msg[0] = framing_byte;
   message.msg[1] = address;
@@ -43,9 +41,9 @@ diseqc_setup(int fe_fd, int lnb_num, int voltage, int band,
 {
   int i = (lnb_num % 4) * 4 + voltage * 2 + (band ? 1 : 0);
   int j = lnb_num / 4;
-  int err;
+  int k, err;
 
-#if 0
+#if 1
   tvhlog(LOG_DEBUG, "diseqc",
         "fe_fd %i, lnb_num %i, voltage %i, band %i, version %i, repeats %i",
         fe_fd, lnb_num, voltage, band, version, repeats);
@@ -65,34 +63,23 @@ diseqc_setup(int fe_fd, int lnb_num, int voltage, int band,
     return err;
   msleep(15);
 
-  switch (repeats) {
-    case 0:     /* send uncommited msg, wait 15ms, send commited msg */
-      if ((err = diseqc_send_msg(fe_fd, 0xE0, 0x10, 0x39, 0xF0 | j, 0, 0, 4)))
-        return err;
-      msleep(15);
-      if ((err = diseqc_send_msg(fe_fd, 0xE0, 0x10, 0x38, 0xF0 | i, 0, 0, 4)))
-        return err;
-      break;
-
-    default:     /* commited msg, 25ms, uncommited msg, 25ms, commited msg */
-      /* send commited message */
-      if ((err = diseqc_send_msg(fe_fd, 0xE0, 0x10, 0x38, 0xF0 | i, 0, 0, 4)))
-        return err;
+  if (repeats == 0) { /* uncommited msg, wait 15ms, commited msg */
+    if ((err = diseqc_send_msg(fe_fd, 0xE0, 0x10, 0x39, 0xF0 | j, 0, 0, 4)))
+      return err;
+    msleep(15);
+    if ((err = diseqc_send_msg(fe_fd, 0xE0, 0x10, 0x38, 0xF0 | i, 0, 0, 4)))
+      return err;
+  } else { /* commited msg, 25ms, uncommited msg, 25ms, commited msg, etc */
+    if ((err = diseqc_send_msg(fe_fd, 0xE0, 0x10, 0x38, 0xF0 | i, 0, 0, 4)))
+      return err;
+    for (k = 0; k < repeats; k++) {
       msleep(25);
       if ((err = diseqc_send_msg(fe_fd, 0xE0, 0x10, 0x39, 0xF0 | j, 0, 0, 4)))
         return err;
       msleep(25);
       if ((err = diseqc_send_msg(fe_fd, 0xE1, 0x10, 0x38, 0xF0 | i, 0, 0, 4)))
         return err;
-      if (repeats == 1)         /* if 2 repeats, do it again */
-        break;
-
-      msleep(25);
-      if ((err = diseqc_send_msg(fe_fd, 0xE1, 0x10, 0x39, 0xF0 | j, 0, 0, 4)))
-        return err;
-      msleep(25);
-      if ((err = diseqc_send_msg(fe_fd, 0xE1, 0x10, 0x38, 0xF0 | i, 0, 0, 4)))
-        return err;
+    }
   }
   msleep(15);
 
