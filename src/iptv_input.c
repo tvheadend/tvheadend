@@ -568,11 +568,16 @@ iptv_service_load(void)
   const char *s;
   unsigned int u32;
   service_t *t;
+  int old = 0;
 
   lock_assert(&global_lock);
 
-  if((l = hts_settings_load("iptvservices")) == NULL)
-    return;
+  if((l = hts_settings_load("iptvservices")) == NULL) {
+    if ((l = hts_settings_load("iptvtransports")) == NULL)
+      return;
+    else
+      old = 1;
+  }
   
   HTSMSG_FOREACH(f, l) {
     if((c = htsmsg_get_map_by_field(f)) == NULL)
@@ -614,6 +619,10 @@ iptv_service_load(void)
     
     if(s && u32)
       service_map_channel(t, channel_find_by_name(s, 1, 0), 0);
+
+    /* Migrate to new */
+    if(old)
+      iptv_service_save(t);
   }
   htsmsg_destroy(l);
 }

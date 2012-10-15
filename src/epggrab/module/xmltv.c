@@ -65,28 +65,46 @@ static epggrab_channel_t *_xmltv_channel_find
 /**
  *
  */
-static time_t _xmltv_str2time(const char *str)
+static time_t _xmltv_str2time(const char *in)
 {
   struct tm tm;
-  int tz, r;
+  int tz = 0, r;
+  int sp = 0;
+  char str[32];
 
   memset(&tm, 0, sizeof(tm));
+  strcpy(str, in);
 
-  r = sscanf(str, "%04d%02d%02d%02d%02d%02d %d",
+  /* split tz */
+  while (str[sp] && str[sp] != ' ')
+    sp++;
+
+  /* parse tz */
+  // TODO: handle string TZ?
+  if (str[sp]) {
+    sscanf(str+sp+1, "%d", &tz);
+    tz = (tz % 100) + (tz / 100) * 3600; // Convert from HHMM to seconds
+    str[sp] = 0;
+    sp = 1;
+  } else {
+    sp = 0;
+  }
+
+  /* parse time */
+  r = sscanf(str, "%04d%02d%02d%02d%02d%02d",
 	     &tm.tm_year, &tm.tm_mon, &tm.tm_mday,
-	     &tm.tm_hour, &tm.tm_min, &tm.tm_sec,
-	     &tz);
+	     &tm.tm_hour, &tm.tm_min, &tm.tm_sec);
 
+  /* adjust */
   tm.tm_mon  -= 1;
   tm.tm_year -= 1900;
   tm.tm_isdst = -1;
 
-  tz = (tz % 100) + (tz / 100) * 60; // Convert from HHMM to minutes
-
-  if(r == 6) {
-    return mktime(&tm);
-  } else if(r == 7) {
-    return timegm(&tm) - tz * 60;
+  if (r >= 5) {
+    if(sp)
+      return timegm(&tm) - tz;
+    else
+      return mktime(&tm);
   } else {
     return 0;
   }
@@ -245,9 +263,8 @@ static void get_episode_info
  *       job
  */
 static int
-parse_vid_quality
-  ( epggrab_module_t *mod, epg_broadcast_t *ebc, epg_episode_t *ee,
-    htsmsg_t *m )
+xmltv_parse_vid_quality
+  ( epggrab_module_t *mod, epg_broadcast_t *ebc, htsmsg_t *m, int8_t *bw )
 {
   int save = 0;
   int hd = 0, lines = 0, aspect = 0;
@@ -255,7 +272,7 @@ parse_vid_quality
   if (!ebc || !m) return 0;
 
   if ((str = htsmsg_xml_get_cdata_str(m, "colour")))
-    save |= epg_episode_set_is_bw(ee, strcmp(str, "no") ? 0 : 1, mod);
+    *bw = strcmp(str, "no") ? 0 : 1;
   if ((str = htsmsg_xml_get_cdata_str(m, "quality"))) {
     if (strstr(str, "HD")) {
       hd    = 1;
@@ -321,6 +338,36 @@ xmltv_parse_accessibility
 }
 
 /*
+ * Previously shown
+ */
+static int _xmltv_parse_previously_shown
+  ( epggrab_module_t *mod, epg_broadcast_t *ebc, htsmsg_t *tag,
+    time_t *first_aired )
+{
+  int ret;
+  const char *start;
+  if (!mod || !ebc || !tag) return 0;
+  ret = epg_broadcast_set_is_repeat(ebc, 1, mod);
+  if ((start = htsmsg_xml_get_attr_str(tag, "start")))
+    *first_aired = _xmltv_str2time(start);
+  return ret;
+}
+
+/*
+ * Star rating
+ */
+static int _xmltv_parse_star_rating
+  ( epggrab_module_t *mod, epg_episode_t *ee, htsmsg_t *tags )
+{
+  int a, b;
+  const char *stars;
+  if (!mod || !ee || !tags) return 0;
+  if (!(stars = htsmsg_xml_get_cdata_str(tags, "star-rating"))) return 0;
+  if (sscanf(stars, "%d/%d", &a, &b) != 2) return 0;
+  return epg_episode_set_star_rating(ee, (5 * a) / b, mod);
+}
+
+/*
  * Parse category list
  */
 static epg_genre_list_t
@@ -377,6 +424,8 @@ static int _xmltv_parse_programme_tags
   lang_str_t *title = NULL;
   lang_str_t *desc = NULL;
   lang_str_t *subtitle = NULL;
+  time_t first_aired = 0;
+  int8_t bw = -1;
 
   /*
    * Broadcast
@@ -392,16 +441,15 @@ static int _xmltv_parse_programme_tags
     save3 |= epg_broadcast_set_description2(ebc, desc, mod);
 
   /* Quality metadata */
-  save |= parse_vid_quality(mod, ebc, ee, htsmsg_get_map(tags, "video"));
+  save |= xmltv_parse_vid_quality(mod, ebc, htsmsg_get_map(tags, "video"), &bw);
 
   /* Accessibility */
   save |= xmltv_parse_accessibility(mod, ebc, tags);
 
   /* Misc */
-  if (htsmsg_get_map(tags, "previously-shown"))
-    save |= epg_broadcast_set_is_repeat(ebc, 1, mod);
-  else if (htsmsg_get_map(tags, "premiere") ||
-           htsmsg_get_map(tags, "new"))
+  save |= _xmltv_parse_previously_shown(mod, ebc, tags, &first_aired);
+  if (htsmsg_get_map(tags, "premiere") ||
+      htsmsg_get_map(tags, "new"))
     save |= epg_broadcast_set_is_new(ebc, 1, mod);
 
   /*
@@ -449,11 +497,15 @@ static int _xmltv_parse_programme_tags
       epg_genre_list_destroy(egl);
     }
 
+    if (bw != -1)
+      save3 |= epg_episode_set_is_bw(ee, (uint8_t)bw, mod);
+
     save3 |= epg_episode_set_epnum(ee, &epnum, mod);
 
-    // TODO: need to handle certification and ratings
-    // TODO: need to handle season numbering!
-    // TODO: need to handle onscreen numbering
+    save3 |= _xmltv_parse_star_rating(mod, ee, tags);
+
+
+    // TODO: parental rating
   }
 
   /* Stats */
@@ -877,8 +929,8 @@ static void _xmltv_load_grabbers ( void )
             free(outbuf);
           }
         }
+        closedir(dir);
       }
-      closedir(dir);
       tmp = strtok(NULL, ":");
     }
     free(path);

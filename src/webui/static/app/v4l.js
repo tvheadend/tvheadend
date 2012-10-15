@@ -113,7 +113,10 @@ tvheadend.v4l_services = function(adapterId) {
 		width : 45
 	});
 
-	var cm = new Ext.grid.ColumnModel([ enabledColumn, {
+	var cm = new Ext.grid.ColumnModel({
+  defaultSortable: true,
+  columns : [
+    enabledColumn, {
 		header : "Channel name",
 		dataIndex : 'channelname',
 		width : 150,
@@ -138,9 +141,7 @@ tvheadend.v4l_services = function(adapterId) {
 			minValue : 10000,
 			maxValue : 1000000000
 		})
-	} ]);
-
-	cm.defaultSortable = true;
+	} ]});
 
 	var rec = Ext.data.Record.create([ 'id', 'enabled', 'channelname',
 		'frequency' ]);

@@ -41,7 +41,9 @@ tvheadend.iptv = function(adapterId) {
 		} ]
 	});
 
-	var cm = new Ext.grid.ColumnModel([
+	var cm = new Ext.grid.ColumnModel({
+  defaultSortable: true,
+  columns : [
 		enabledColumn,
 		{
 			header : "Channel name",
@@ -128,9 +130,7 @@ tvheadend.iptv = function(adapterId) {
 			dataIndex : 'pcr',
 			width : 50,
 			hidden : true
-		}, actions ]);
-
-	cm.defaultSortable = true;
+		}, actions ]});
 
 	var rec = Ext.data.Record.create([ 'id', 'enabled', 'channelname',
 		'interface', 'group', 'port', 'sid', 'pmt', 'pcr', 'stype' ]);
@@ -291,7 +291,13 @@ tvheadend.iptv = function(adapterId) {
 				iconCls : 'add',
 				text : 'Add service',
 				handler : addRecord
-			}, '-', delButton, '-', saveBtn, rejectBtn ]
+			}, '-', delButton, '-', saveBtn, rejectBtn, '->',
+			{
+				text : 'Help',
+				handler : function() {
+					new tvheadend.help('IPTV', 'config_iptv.html');
+				}
+			} ]
 	});
 
 	store.on('update', function(s, r, o) {

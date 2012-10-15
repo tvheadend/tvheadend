@@ -76,16 +76,21 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 	}
 
 	cmlist.push({
+		header : "NetworkID",
+		dataIndex : 'onid',
+		width : 50
+	}, {
 		header : "MuxID",
 		dataIndex : 'muxid',
 		width : 50
 	}, qualityColumn);
 
-	var cm = new Ext.grid.ColumnModel(cmlist);
-	cm.defaultSortable = true;
+	var cm = new Ext.grid.ColumnModel({
+    columns: cmlist, 
+    defaultSortable: true});
 
 	var rec = Ext.data.Record.create([ 'id', 'enabled', 'network', 'freq',
-		'pol', 'satconf', 'muxid', 'quality', 'fe_status', 'mod' ]);
+		'pol', 'satconf', 'onid', 'muxid', 'quality', 'fe_status', 'mod' ]);
 
 	var store = new Ext.data.JsonStore({
 		root : 'entries',
@@ -381,7 +386,7 @@ tvheadend.dvb_services = function(adapterId) {
 	});
 
 	var eitColumn = new Ext.grid.CheckColumn({
-		header : "EIT",
+		header : "EPG",
 		dataIndex : 'dvb_eit_enable',
 		width : 45
 	});
@@ -405,7 +410,9 @@ tvheadend.dvb_services = function(adapterId) {
 		} ]
 	});
 
-	var cm = new Ext.grid.ColumnModel([
+	var cm = new Ext.grid.ColumnModel({
+  defaultSortable: true,
+  columns: [
 		enabledColumn,
 		{
 			header : "Service name",
@@ -441,28 +448,36 @@ tvheadend.dvb_services = function(adapterId) {
 			})
 		},
 		{
-			header : "DVB default charset",
-			dataIndex : 'dvb_default_charset',
+			header : "DVB charset",
+			dataIndex : 'dvb_charset',
 			width : 200,
 			renderer : function(value, metadata, record, row, col, store) {
 				return value ? value
-					: '<span class="tvh-grid-unset">ISO6937</span>';
+					: '<span class="tvh-grid-unset">auto</span>';
 			},
 			editor : new fm.ComboBox({
 				mode : 'local',
 				store : new Ext.data.SimpleStore({
 					fields : [ 'key', 'value' ],
-					data : [ [ 'ISO6937', 'default' ], [ 'ISO6937', 'ISO6937' ],
-						[ 'ISO8859-1', 'ISO8859-1' ], [ 'ISO8859-2', 'ISO8859-2' ],
-						[ 'ISO8859-3', 'ISO8859-3' ], [ 'ISO8859-4', 'ISO8859-4' ],
-						[ 'ISO8859-5', 'ISO8859-5' ], [ 'ISO8859-6', 'ISO8859-6' ],
-						[ 'ISO8859-7', 'ISO8859-7' ], [ 'ISO8859-8', 'ISO8859-8' ],
-						[ 'ISO8859-9', 'ISO8859-9' ], [ 'ISO8859-10', 'ISO8859-10' ],
+					data : [ 
+            [ null, 'auto' ],
+            [ 'ISO6937', 'ISO6937' ],
+						[ 'ISO8859-1', 'ISO8859-1' ],
+            [ 'ISO8859-2', 'ISO8859-2' ],
+						[ 'ISO8859-3', 'ISO8859-3' ],
+            [ 'ISO8859-4', 'ISO8859-4' ],
+						[ 'ISO8859-5', 'ISO8859-5' ],
+            [ 'ISO8859-6', 'ISO8859-6' ],
+						[ 'ISO8859-7', 'ISO8859-7' ],
+            [ 'ISO8859-8', 'ISO8859-8' ],
+						[ 'ISO8859-9', 'ISO8859-9' ],
+            [ 'ISO8859-10', 'ISO8859-10' ],
 						[ 'ISO8859-11', 'ISO8859-11' ],
 						[ 'ISO8859-12', 'ISO8859-12' ],
 						[ 'ISO8859-13', 'ISO8859-13' ],
 						[ 'ISO8859-14', 'ISO8859-14' ],
-						[ 'ISO8859-15', 'ISO8859-15' ] ]
+						[ 'ISO8859-15', 'ISO8859-15' ],
+            [ 'PL_AUTO', 'Polish Fixup' ] ]
 				}),
 				typeAhead : true,
 				lazyRender : true,
@@ -501,15 +516,13 @@ tvheadend.dvb_services = function(adapterId) {
 			dataIndex : 'pcr',
 			width : 50,
 			hidden : true
-		}, actions ]);
-
-	cm.defaultSortable = true;
+		}, actions ]});
 
 	var store = new Ext.data.JsonStore({
 		root : 'entries',
 		fields : Ext.data.Record.create([ 'id', 'enabled', 'type', 'sid', 'pmt',
 			'pcr', 'svcname', 'network', 'provider', 'mux', 'channelname',
-			'dvb_default_charset', 'dvb_eit_enable' ]),
+			'dvb_charset', 'dvb_eit_enable' ]),
 		url : "dvb/services/" + adapterId,
 		autoLoad : true,
 		id : 'id',
@@ -1074,8 +1087,9 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	var confreader = new Ext.data.JsonReader({
 		root : 'dvbadapters'
 	}, [ 'name', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion',
-		'qmon', 'skip_checksubscr', 'dumpmux', 'poweroff', 'sidtochan', 'nitoid',
-		'extrapriority', 'disable_pmt_monitor', 'idleclose' ]);
+		'diseqcrepeats', 'qmon', 'skip_checksubscr', 'dumpmux',
+		'poweroff', 'sidtochan', 'nitoid', 'extrapriority',
+		,'disable_pmt_monitor', 'idleclose' ]);
 
 	function saveConfForm() {
 		confform.getForm().submit({
@@ -1114,6 +1128,10 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 			name : 'skip_checksubscr'
 		}),
 		new Ext.form.Checkbox({
+			fieldLabel : 'Use SID as channel number during mapping',
+			name : 'sidtochan'
+		}),
+		new Ext.form.Checkbox({
 			fieldLabel : 'Monitor signal quality',
 			name : 'qmon'
 		}),
@@ -1131,7 +1149,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 						+ 'of diskspace. You have been warned');
 			}
 		}), {
-			fieldLabel : 'NIT-o Network ID',
+			fieldLabel : 'Original Network ID',
 			name : 'nitoid',
 			width : 50
 		}, {
@@ -1152,14 +1170,22 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 		});
 		items.push(v);
 
+		v = new Ext.form.ComboBox({
+			name : 'diseqcrepeats',
+			fieldLabel : 'DiSEqC repeats',
+			editable : false,
+			allowBlank : false,
+			mode : 'remote',
+			triggerAction : 'all',
+			store : [ '0', '1', '2' ]
+		});
+		items.push(v);
+
 		v = new Ext.form.Checkbox({
 			fieldLabel : 'Turn off LNB when idle',
 			name : 'poweroff'
 		});
-		new Ext.form.Checkbox({
-			fieldLabel : 'Use SID as channel number during mapping',
-			name : 'sidtochan'
-		}), items.push(v);
+		items.push(v);
 	}
 
 	var confform = new Ext.FormPanel({
@@ -1226,6 +1252,8 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	var panel = new Ext.Panel({
 		title : 'General',
 		layout : 'column',
+		autoScroll : true,
+		autoHeight: true,
 		items : [ toolpanel, confform, infoPanel ]
 	});
 
@@ -1263,7 +1291,9 @@ tvheadend.dvb_dummy = function(title) {
 tvheadend.dvb_satconf = function(adapterId, lnbStore) {
 	var fm = Ext.form;
 
-	var cm = new Ext.grid.ColumnModel([ {
+	var cm = new Ext.grid.ColumnModel({
+  defaultSortable: true,
+  columns: [ {
 		header : "Name",
 		dataIndex : 'name',
 		width : 200,
@@ -1275,7 +1305,7 @@ tvheadend.dvb_satconf = function(adapterId, lnbStore) {
 		dataIndex : 'port',
 		editor : new fm.NumberField({
 			minValue : 0,
-			maxValue : 15
+			maxValue : 63
 		})
 	}, {
 		header : "LNB type",
@@ -1296,7 +1326,7 @@ tvheadend.dvb_satconf = function(adapterId, lnbStore) {
 		dataIndex : 'comment',
 		width : 400,
 		editor : new fm.TextField()
-	} ]);
+	} ]});
 
 	var rec = Ext.data.Record.create([ 'name', 'port', 'comment', 'lnb' ]);
 

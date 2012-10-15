@@ -4,23 +4,13 @@
 #include <stdint.h>
 #include <linux/dvb/frontend.h>
 
-
-struct diseqc_cmd {
-	struct dvb_diseqc_master_cmd cmd;
-	uint32_t wait;
-};
-
-
-extern int diseqc_send_msg(int fd, fe_sec_voltage_t v, struct diseqc_cmd **cmd,
-			   fe_sec_tone_mode_t t, fe_sec_mini_cmd_t b);
-
-
 /**
  *   set up the switch to position/voltage/tone
  */
-int diseqc_setup(int frontend_fd, int switch_pos, int voltage_18, int hiband,
-		 int diseqc_ver);
-
-int diseqc_voltage_off(int frontend_fd);
+int diseqc_send_msg(int fe_fd, __u8 framing_byte, __u8 address, __u8 cmd,
+                    __u8 data_1, __u8 data_2, __u8 data_3, __u8 msg_len);
+int diseqc_setup(int fe_fd, int lnb_num, int voltage, int band,
+                  uint32_t version, uint32_t repeats);
+int diseqc_voltage_off(int fe_fd);
 
 #endif

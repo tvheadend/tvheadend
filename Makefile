@@ -146,6 +146,7 @@ SRCS += src/muxer.c \
 SRCS-${CONFIG_LINUXDVB} += \
 	src/dvb/dvb.c \
 	src/dvb/dvb_support.c \
+	src/dvb/dvb_charset.c \
 	src/dvb/dvb_fe.c \
 	src/dvb/dvb_tables.c \
 	src/dvb/diseqc.c \
@@ -232,9 +233,8 @@ distclean: clean
 	rm -f ${CURDIR}/.config.mk
 
 # Create buildversion.h
-src/version.c: $(BUILDDIR)/buildversion.h
-$(BUILDDIR)/buildversion.h: FORCE
-	@$(CURDIR)/support/version.sh $(CURDIR) $@
+src/version.c: FORCE
+	@$(CURDIR)/support/version $@ > /dev/null
 FORCE:
 
 # Include dependency files if they exist.

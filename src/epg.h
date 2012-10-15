@@ -97,30 +97,38 @@ typedef enum epg_object_type
   EPG_BROADCAST,
   EPG_SERIESLINK
 } epg_object_type_t;
+#define EPG_TYPEMAX EPG_SERIESLINK
 
 /* Object */
 struct epg_object
 {
-  RB_ENTRY(epg_object)    uri_link;    ///< Global URI link
-  LIST_ENTRY(epg_object)  id_link;     ///< Global (ID) link
-  LIST_ENTRY(epg_object)  un_link;     ///< Global unref'd link
-  LIST_ENTRY(epg_object)  up_link;     ///< Global updated link
+  RB_ENTRY(epg_object)    uri_link;   ///< Global URI link
+  LIST_ENTRY(epg_object)  id_link;    ///< Global (ID) link
+  LIST_ENTRY(epg_object)  un_link;    ///< Global unref'd link
+  LIST_ENTRY(epg_object)  up_link;    ///< Global updated link
  
   epg_object_type_t       type;       ///< Specific object type
   uint32_t                id;         ///< Internal ID
   char                   *uri;        ///< Unique ID (from grabber)
+  time_t                  created;    ///< Time the object was created
+  time_t                  updated;    ///< Last time object was changed
 
   int                     _updated;   ///< Flag to indicate updated
   int                     refcount;   ///< Reference counting
   // Note: could use LIST_ENTRY field to determine this!
 
-  struct epggrab_module  *grabber;   ///< Originating grabber
+  struct epggrab_module  *grabber;    ///< Originating grabber
 
-  void (*getref)  ( void *o ); ///< Get a reference
-  void (*putref)  ( void *o ); ///< Release a reference
-  void (*destroy) ( void *o ); ///< Delete the object
-  void (*updated) ( void *o ); ///< Updated
+  void (*getref)  ( void *o );        ///< Get a reference
+  void (*putref)  ( void *o ); 	      ///< Release a reference
+  void (*destroy) ( void *o );        ///< Delete the object
+  void (*update)  ( void *o );        ///< Updated
 };
+
+/* Get an object by ID (special case usage) */
+epg_object_t *epg_object_find_by_id  ( uint32_t id, epg_object_type_t type );
+htsmsg_t     *epg_object_serialize   ( epg_object_t *eo );
+epg_object_t *epg_object_deserialize ( htsmsg_t *msg, int create, int *save );
 
 /* ************************************************************************
  * Brand - Represents a specific show
@@ -258,9 +266,10 @@ struct epg_episode
   epg_episode_num_t          epnum;         ///< Episode numbering
   // Note: do not use epnum directly! use the accessor routine
 
-  uint8_t                    is_bw;            ///< Is black and white
-  // TODO: certification and rating
-  // TODO: film/year
+  uint8_t                    is_bw;          ///< Is black and white
+  uint8_t                    star_rating;    ///< Star rating
+  uint8_t                    age_rating;     ///< Age certificate
+  time_t                     first_aired;    ///< Original airdate
 
   LIST_ENTRY(epg_episode)    blink;         ///< Brand link
   LIST_ENTRY(epg_episode)    slink;         ///< Season link
@@ -331,6 +340,15 @@ int epg_episode_set_title2
   __attribute__((warn_unused_result));
 int epg_episode_set_subtitle2
   ( epg_episode_t *e, const lang_str_t *str, struct epggrab_module *src )
+  __attribute__((warn_unused_result));
+int epg_episode_set_first_aired
+  ( epg_episode_t *e, time_t aired, struct epggrab_module *src )
+  __attribute__((warn_unused_result));
+int epg_episode_set_star_rating
+  ( epg_episode_t *e, uint8_t stars, struct epggrab_module *src )
+  __attribute__((warn_unused_result));
+int epg_episode_set_age_rating
+  ( epg_episode_t *e, uint8_t age, struct epggrab_module *src )
   __attribute__((warn_unused_result));
 
 // Note: this does NOT strdup the text field

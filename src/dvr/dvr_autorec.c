@@ -64,7 +64,6 @@ static int
 autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 {
   channel_tag_mapping_t *ctm;
-  epg_episode_num_t epnum;
   dvr_config_t *cfg;
 
   if (!e->channel) return 0;
@@ -78,11 +77,14 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
      (dae->dae_title == NULL ||
      dae->dae_title[0] == '\0') &&
      dae->dae_brand == NULL &&
-     dae->dae_season == NULL)
+     dae->dae_season == NULL &&
+     dae->dae_serieslink == NULL)
     return 0; // Avoid super wildcard match
 
   // Note: we always test season first, though it will only be set
   //       if configured
+  if(dae->dae_serieslink)
+    if (!e->serieslink || dae->dae_serieslink != e->serieslink) return 0;
   if(dae->dae_season)
     if (!e->episode->season || dae->dae_season != e->episode->season) return 0;
   if(dae->dae_brand)
@@ -126,12 +128,6 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     if(abs(mktime(&a_time) - mktime(&ev_time)) > 900)
       return 0;
   }
-
-  // Note: dae_epnum is unset then all values are 0 and this will
-  //       always return 1
-  epg_episode_get_epnum(e->episode, &epnum);
-  if(epg_episode_number_cmp(&dae->dae_epnum, &epnum) < 0)
-    return 0;
 
   if(dae->dae_weekdays != 0x7f) {
     struct tm tm;
@@ -206,9 +202,11 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae)
     LIST_REMOVE(dae, dae_channel_tag_link);
 
   if(dae->dae_brand)
-    dae->dae_brand->putref((epg_object_t*)dae->dae_brand);
+    dae->dae_brand->putref(dae->dae_brand);
   if(dae->dae_season)
-    dae->dae_season->putref((epg_object_t*)dae->dae_season);
+    dae->dae_season->putref(dae->dae_season);
+  if(dae->dae_serieslink)
+    dae->dae_serieslink->putref(dae->dae_serieslink);
   
 
   TAILQ_REMOVE(&autorec_entries, dae, dae_link);

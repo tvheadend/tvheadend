@@ -222,6 +222,9 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
       }
       break;
 
+    case SMT_SIGNAL_STATUS:
+      break;
+
     case SMT_NOSTART:
       tvhlog(LOG_DEBUG, "webui",  "Couldn't start stream for %s", hc->hc_url_orig);
       run = 0;

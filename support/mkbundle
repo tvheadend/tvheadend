@@ -125,7 +125,7 @@ def add_entry ( ents, path = "", name = "", idx = -1, next = -1 ):
   for k in ents:
     
     # File
-    if not ents[k]:
+    if ents[k] is None:
       output_file(d, k, idx+1, p)
       p = idx = idx + 1
       c = c + 1

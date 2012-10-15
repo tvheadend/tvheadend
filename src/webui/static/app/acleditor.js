@@ -37,7 +37,9 @@ tvheadend.acleditor = function() {
 		width : 100
 	});
 
-	var cm = new Ext.grid.ColumnModel([ enabledColumn, {
+	var cm = new Ext.grid.ColumnModel({
+  defaultSortable: true,
+  columns : [ enabledColumn, {
 		header : "Username",
 		dataIndex : 'username',
 		editor : new fm.TextField({
@@ -63,7 +65,7 @@ tvheadend.acleditor = function() {
 		dataIndex : 'comment',
 		width : 400,
 		editor : new fm.TextField({})
-	} ]);
+	} ]});
 
 	var UserRecord = Ext.data.Record.create([ 'enabled', 'streaming', 'dvr',
 		'dvrallcfg', 'admin', 'webui', 'username', 'prefix', 'password',

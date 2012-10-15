@@ -190,8 +190,8 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 		 "</div><br>"
 		 "&copy; 2006 - 2012 Andreas \303\226man, et al.<br><br>"
 		 "<img src=\"docresources/tvheadendlogo.png\"><br>"
-		 "<a href=\"http://www.lonelycoder.com/hts\">"
-		 "http://www.lonelycoder.com/hts</a><br><br>"
+		 "<a href=\"http://www.lonelycoder.com/tvheadend\">"
+		 "http://www.lonelycoder.com/tvheadend</a><br><br>"
 		 "Based on software from "
 		 "<a target=\"_blank\" href=\"http://www.extjs.com/\">ExtJS</a>. "
 		 "Icons from "
@@ -199,6 +199,13 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 		 "FamFamFam</a>"
 		 "<br><br>"
 		 "Build: %s"
+     "<p>"
+     "If you'd like to support the project, please consider a donation."
+     "<br/>"
+     "All proceeds are used to support server infrastructure and buy test "
+     "equipment."
+     "<br/>"
+     "<a href='https://www.paypal.com/cgi-bin/webscr?cmd=_donations&#38;business=andreas%%40lonelycoder%%2ecom&#38;item_name=Donation%%20to%%20the%%20Tvheadend%%20project&#38;currency_code=USD'><img src='https://www.paypal.com/en_US/i/btn/btn_donate_LG.gif' alt='' /></a>"
 		 "</center>",
 		 tvheadend_version,
 		 tvheadend_version);
@@ -391,20 +398,72 @@ extjs_channels_update(htsmsg_t *in)
 /**
  *
  */
-static int
-extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
+static htsmsg_t *
+build_record_channel ( channel_t *ch )
 {
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  htsmsg_t *array, *c;
-  channel_t *ch;
   char buf[1024];
   channel_tag_mapping_t *ctm;
-  const char *op        = http_arg_get(&hc->hc_req_args, "op");
-  const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
+  htsmsg_t *c;
   char *epggrabsrc;
   epggrab_module_t *mod;
   epggrab_channel_t *ec;
   epggrab_channel_link_t *ecl;
+
+  c = htsmsg_create_map();
+  htsmsg_add_str(c, "name", ch->ch_name);
+  htsmsg_add_u32(c, "chid", ch->ch_id);
+
+  if(ch->ch_icon != NULL)
+    htsmsg_add_str(c, "ch_icon", ch->ch_icon);
+
+  buf[0] = 0;
+  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
+	  snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
+		  "%s%d", strlen(buf) == 0 ? "" : ",",
+		  ctm->ctm_tag->ct_identifier);
+  }
+  htsmsg_add_str(c, "tags", buf);
+
+  htsmsg_add_s32(c, "epg_pre_start", ch->ch_dvr_extra_time_pre);
+  htsmsg_add_s32(c, "epg_post_end",  ch->ch_dvr_extra_time_post);
+  htsmsg_add_s32(c, "number",        ch->ch_number);
+
+  epggrabsrc = NULL;
+  LIST_FOREACH(mod, &epggrab_modules, link) {
+    if (mod->type != EPGGRAB_OTA && mod->channels) {
+      RB_FOREACH(ec, mod->channels, link) {
+        LIST_FOREACH(ecl, &ec->channels, link) {
+          if (ecl->channel == ch) {
+            char id[100];
+            sprintf(id, "%s|%s", mod->id, ec->id);
+            if (!epggrabsrc) {
+              epggrabsrc = strdup(id);
+            } else {
+              epggrabsrc = realloc(epggrabsrc, strlen(epggrabsrc) + 2 + strlen(id));
+              strcat(epggrabsrc, ",");
+              strcat(epggrabsrc, id);
+            }
+          }
+        }
+      }
+    }
+  }
+  if (epggrabsrc) htsmsg_add_str(c, "epggrabsrc", epggrabsrc);
+  free(epggrabsrc);
+  return c;
+}
+
+/**
+ *
+ */
+static int
+extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  htsmsg_t *array;
+  channel_t *ch;
+  const char *op        = http_arg_get(&hc->hc_req_args, "op");
+  const char *entries   = http_arg_get(&hc->hc_req_args, "entries");
 
   if(op == NULL)
     return 400;
@@ -420,52 +479,13 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
     array = htsmsg_create_list();
 
     RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-      c = htsmsg_create_map();
-      htsmsg_add_str(c, "name", ch->ch_name);
-      htsmsg_add_u32(c, "chid", ch->ch_id);
-      
-      if(ch->ch_icon != NULL)
-        htsmsg_add_str(c, "ch_icon", ch->ch_icon);
-
-      buf[0] = 0;
-      LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
-	snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
-		 "%s%d", strlen(buf) == 0 ? "" : ",",
-		 ctm->ctm_tag->ct_identifier);
-      }
-      htsmsg_add_str(c, "tags", buf);
-
-      htsmsg_add_s32(c, "epg_pre_start", ch->ch_dvr_extra_time_pre);
-      htsmsg_add_s32(c, "epg_post_end",  ch->ch_dvr_extra_time_post);
-      htsmsg_add_s32(c, "number",        ch->ch_number);
-
-      epggrabsrc = NULL;
-      LIST_FOREACH(mod, &epggrab_modules, link) {
-        if (mod->type != EPGGRAB_OTA && mod->channels) {
-          RB_FOREACH(ec, mod->channels, link) {
-            LIST_FOREACH(ecl, &ec->channels, link) {
-              if (ecl->channel == ch) {
-                char id[100];
-                sprintf(id, "%s|%s", mod->id, ec->id);
-                if (!epggrabsrc) {
-                  epggrabsrc = strdup(id);
-                } else {
-                  epggrabsrc = realloc(epggrabsrc, strlen(epggrabsrc) + 2 + strlen(id));
-                  strcat(epggrabsrc, ",");
-                  strcat(epggrabsrc, id);
-                }
-              }
-            }
-          }
-        }
-      }
-      if (epggrabsrc) htsmsg_add_str(c, "epggrabsrc", epggrabsrc);
-      free(epggrabsrc);
-
-      htsmsg_add_msg(array, NULL, c);
+      htsmsg_add_msg(array, NULL, build_record_channel(ch));
     }
     
     htsmsg_add_msg(out, "entries", array);
+
+  } else if(!strcmp(op, "create")) {
+    out = build_record_channel(channel_create());
 
   } else if(!strcmp(op, "delete") && in != NULL) {
     extjs_channels_delete(in);
@@ -1132,8 +1152,8 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     }
 
     dvr_entry_create(config_name,
-                     ch, start, stop, 0, 0, title, NULL, 0,
-                     hc->hc_representative, 
+                     ch, start, stop, 0, 0, title, NULL, NULL,
+                     0, hc->hc_representative, 
 		                 NULL, dvr_pri2val(pri));
 
     out = htsmsg_create_map();
@@ -1395,7 +1415,7 @@ service_update(htsmsg_t *in)
   uint32_t u32;
   const char *id;
   const char *chname;
-  const char *dvb_default_charset;
+  const char *dvb_charset;
 
   TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
     if((c = htsmsg_get_map_by_field(f)) == NULL ||
@@ -1411,8 +1431,8 @@ service_update(htsmsg_t *in)
     if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
       service_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
 
-    if((dvb_default_charset = htsmsg_get_str(c, "dvb_default_charset")) != NULL)
-      service_set_dvb_default_charset(t, dvb_default_charset);
+    if((dvb_charset = htsmsg_get_str(c, "dvb_charset")) != NULL)
+      service_set_dvb_charset(t, dvb_charset);
 
     if(!htsmsg_get_u32(c, "dvb_eit_enable", &u32))
       service_set_dvb_eit_enable(t, u32);
@@ -1497,8 +1517,8 @@ extjs_servicedetails(http_connection_t *hc,
 
   htsmsg_add_msg(out, "streams", streams);
 
-  if(t->s_dvb_default_charset != NULL)
-    htsmsg_add_str(out, "dvb_default_charset", t->s_dvb_default_charset);
+  if(t->s_dvb_charset != NULL)
+    htsmsg_add_str(out, "dvb_charset", t->s_dvb_charset);
 
   htsmsg_add_u32(out, "dvb_eit_enable", t->s_dvb_eit_enable);
 
@@ -1729,7 +1749,7 @@ extjs_service_update(htsmsg_t *in)
   uint32_t u32;
   const char *id;
   const char *chname;
-  const char *dvb_default_charset;
+  const char *dvb_charset;
 
   TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
     if((c = htsmsg_get_map_by_field(f)) == NULL ||
@@ -1745,8 +1765,8 @@ extjs_service_update(htsmsg_t *in)
     if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
       service_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
 
-    if((dvb_default_charset = htsmsg_get_str(c, "dvb_default_charset")) != NULL)
-      service_set_dvb_default_charset(t, dvb_default_charset);
+    if((dvb_charset = htsmsg_get_str(c, "dvb_charset")) != NULL)
+      service_set_dvb_charset(t, dvb_charset);
 
     if(!htsmsg_get_u32(c, "dvb_eit_enable", &u32))
       service_set_dvb_eit_enable(t, u32);

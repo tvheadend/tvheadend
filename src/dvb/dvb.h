@@ -42,7 +42,7 @@ TAILQ_HEAD(dvb_satconf_queue, dvb_satconf);
 typedef struct dvb_satconf {
   char *sc_id;
   TAILQ_ENTRY(dvb_satconf) sc_adapter_link;
-  int sc_port;                   // diseqc switchport (0 - 15)
+  int sc_port;                   // diseqc switchport (0 - 63)
 
   char *sc_name;
   char *sc_comment;
@@ -128,6 +128,7 @@ typedef struct th_dvb_mux_instance {
   /* Linked if tdmi_conf.dmc_satconf != NULL */
   LIST_ENTRY(th_dvb_mux_instance) tdmi_satconf_link;
 
+  uint32_t tdmi_network_id;
   uint16_t tdmi_transport_stream_id;
 
   char *tdmi_identifier;
@@ -184,6 +185,7 @@ typedef struct th_dvb_adapter {
   uint32_t tda_sidtochan;
   uint32_t tda_nitoid;
   uint32_t tda_diseqc_version;
+  uint32_t tda_diseqc_repeats;
   uint32_t tda_disable_pmt_monitor;
   char *tda_displayname;
 
@@ -215,7 +217,7 @@ typedef struct th_dvb_adapter {
   struct dvb_satconf_queue tda_satconfs;
 
 
-  struct th_dvb_mux_instance_list tda_mux_hash[TDA_MUX_HASH_WIDTH];
+  struct th_dvb_mux_instance_list tda_mux_list;
 
   uint32_t tda_dump_muxes;
 
@@ -313,6 +315,9 @@ void dvb_adapter_set_nitoid(th_dvb_adapter_t *tda, int nitoid);
 
 void dvb_adapter_set_diseqc_version(th_dvb_adapter_t *tda, unsigned int v);
 
+void dvb_adapter_set_diseqc_repeats(th_dvb_adapter_t *tda,
+                                    unsigned int repeats);
+
 void dvb_adapter_set_disable_pmt_monitor(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src);
@@ -354,7 +359,7 @@ void dvb_mux_destroy(th_dvb_mux_instance_t *tdmi);
 
 th_dvb_mux_instance_t *dvb_mux_create(th_dvb_adapter_t *tda,
 				      const struct dvb_mux_conf *dmc,
-				      uint16_t tsid, const char *network,
+				      uint16_t onid, uint16_t tsid, const char *network,
 				      const char *logprefix, int enabled,
 				      int initialscan, const char *identifier,
 				      dvb_satconf_t *satconf);
@@ -362,6 +367,8 @@ th_dvb_mux_instance_t *dvb_mux_create(th_dvb_adapter_t *tda,
 void dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *name);
 
 void dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid);
+
+void dvb_mux_set_onid(th_dvb_mux_instance_t *tdmi, uint16_t onid);
 
 void dvb_mux_set_enable(th_dvb_mux_instance_t *tdmi, int enabled);
 
@@ -393,13 +400,17 @@ int dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src,
 void dvb_mux_add_to_scan_queue (th_dvb_mux_instance_t *tdmi);
 
 th_dvb_mux_instance_t *dvb_mux_find
+<<<<<<< HEAD
   (th_dvb_adapter_t *tda, const char *netname, uint16_t nid, uint16_t tsid,
+=======
+  (th_dvb_adapter_t *tda, const char *netname, uint16_t onid, uint16_t tsid,
+>>>>>>> tvheadend/master
    int enabled );
 
 /**
  * DVB Transport (aka DVB service)
  */
-void dvb_transport_load(th_dvb_mux_instance_t *tdmi);
+void dvb_transport_load(th_dvb_mux_instance_t *tdmi, const char *tdmi_identifier);
 
 struct service *dvb_transport_find(th_dvb_mux_instance_t *tdmi,
 				   uint16_t sid, int pmt_pid,
@@ -411,7 +422,11 @@ struct service *dvb_transport_find2(th_dvb_mux_instance_t *tdmi,
 
 struct service *dvb_transport_find3
   (th_dvb_adapter_t *tda, th_dvb_mux_instance_t *tdmi,
+<<<<<<< HEAD
    const char *netname, uint16_t nid, uint16_t tsid, uint16_t sid,
+=======
+   const char *netname, uint16_t onid, uint16_t tsid, uint16_t sid,
+>>>>>>> tvheadend/master
    int enabled, int epgprimary);
 
 void dvb_transport_notify(struct service *t);

@@ -20,7 +20,9 @@ tvheadend.capmteditor = function() {
 		}
 	}
 
-	var cm = new Ext.grid.ColumnModel([ enabledColumn, {
+	var cm = new Ext.grid.ColumnModel({
+  defaultSortable: true,
+  columns: [ enabledColumn, {
 		header : "Camd.socket Filename",
 		dataIndex : 'camdfilename',
 		width : 200,
@@ -50,7 +52,7 @@ tvheadend.capmteditor = function() {
 			return value;
 		},
 		editor : new fm.TextField()
-	} ]);
+	} ]});
 
 	var rec = Ext.data.Record.create([ 'enabled', 'connected', 'camdfilename',
 		'port', 'comment' ]);

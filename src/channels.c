@@ -159,18 +159,22 @@ channel_set_name(channel_t *ch, const char *name)
  *
  */
 static channel_t *
-channel_create(const char *name, int number)
+channel_create2(const char *name, int number)
 {
   channel_t *ch, *x;
   int id;
-
-  if (!name || !*name) return NULL;
+  char buf[32];
 
   ch = RB_LAST(&channel_identifier_tree);
   if(ch == NULL) {
     id = 1;
   } else {
     id = ch->ch_id + 1;
+  }
+
+  if (!name || !*name) {
+    snprintf(buf, sizeof(buf), "Channel %d", id);
+    name = buf;
   }
 
   ch = calloc(1, sizeof(channel_t));
@@ -193,9 +197,20 @@ channel_create(const char *name, int number)
  *
  */
 channel_t *
+channel_create ( void )
+{
+  return channel_create2(NULL, 0);
+}
+
+/**
+ *
+ */
+channel_t *
 channel_find_by_name(const char *name, int create, int channel_number)
 {
   channel_t skel, *ch;
+
+  if (!name || !*name) return NULL;
 
   lock_assert(&global_lock);
 
@@ -203,7 +218,7 @@ channel_find_by_name(const char *name, int create, int channel_number)
   ch = RB_FIND(&channel_name_tree, &skel, ch_name_link, channelcmp);
   if(ch != NULL || create == 0)
     return ch;
-  return channel_create(name, channel_number);
+  return channel_create2(name, channel_number);
 }
 
 

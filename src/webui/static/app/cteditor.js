@@ -22,7 +22,9 @@ tvheadend.cteditor = function() {
 			+ 'on top of logo.'
 	});
 
-	var cm = new Ext.grid.ColumnModel([ enabledColumn, {
+	var cm = new Ext.grid.ColumnModel({
+  defaultSortable: true,
+  columns : [ enabledColumn, {
 		header : "Name",
 		dataIndex : 'name',
 		editor : new fm.TextField({
@@ -38,7 +40,7 @@ tvheadend.cteditor = function() {
 		dataIndex : 'comment',
 		width : 400,
 		editor : new fm.TextField({})
-	} ]);
+	} ]});
 
 	var ChannelTagRecord = Ext.data.Record.create([ 'enabled', 'name',
 		'internal', 'icon', 'comment', 'titledIcon' ]);

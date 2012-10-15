@@ -290,12 +290,18 @@ hts_settings_remove(const char *pathfmt, ...)
 {
   char fullpath[256];
   va_list ap;
+  struct stat st;
 
   va_start(ap, pathfmt);
    hts_settings_buildpath(fullpath, sizeof(fullpath),
                           pathfmt, ap, settingspath);
   va_end(ap);
-  unlink(fullpath);
+  if (stat(fullpath, &st) == 0) {
+    if (S_ISDIR(st.st_mode))
+      rmdir(fullpath);
+    else
+      unlink(fullpath);
+  }
 }
 
 /**
