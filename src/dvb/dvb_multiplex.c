@@ -865,6 +865,24 @@ dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid)
   notify_by_msg("dvbMux", m);
 }
 
+/**
+ *
+ */
+void
+dvb_mux_set_onid(th_dvb_mux_instance_t *tdmi, uint16_t onid)
+{
+  htsmsg_t *m;
+
+  tdmi->tdmi_network_id = onid;
+ 
+  dvb_mux_save(tdmi);
+
+  m = htsmsg_create_map();
+  htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
+  htsmsg_add_u32(m, "onid", tdmi->tdmi_network_id);
+  notify_by_msg("dvbMux", m);
+}
+
 
 /**
  *
@@ -1243,4 +1261,25 @@ void dvb_mux_add_to_scan_queue ( th_dvb_mux_instance_t *tdmi )
                                  : TDA_SCANQ_BAD;
   tdmi->tdmi_scan_queue = &tda->tda_scan_queues[ti];
   TAILQ_INSERT_TAIL(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
+}
+
+th_dvb_mux_instance_t *dvb_mux_find
+  ( th_dvb_adapter_t *tda, const char *netname, uint16_t onid, uint16_t tsid,
+    int enabled )
+{
+  th_dvb_mux_instance_t *tdmi;
+  if (tda) {
+    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+      if (enabled && !tdmi->tdmi_enabled) continue;
+      if (onid    && onid != tdmi->tdmi_network_id) continue;
+      if (tsid    && tsid != tdmi->tdmi_transport_stream_id) continue;
+      if (netname && strcmp(netname, tdmi->tdmi_network ?: "")) continue;
+      return tdmi;
+    }
+  } else {
+    TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link)
+      if ((tdmi = dvb_mux_find(tda, netname, onid, tsid, enabled)))
+        return tdmi;
+  }
+  return NULL;
 }

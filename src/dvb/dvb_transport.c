@@ -383,6 +383,41 @@ dvb_grace_period(service_t *t)
   return 10;
 }
 
+/*
+ * Find transport based on the DVB identification
+ */
+service_t *
+dvb_transport_find3
+  (th_dvb_adapter_t *tda, th_dvb_mux_instance_t *tdmi,
+   const char *netname, uint16_t onid, uint16_t tsid, uint16_t sid,
+   int enabled, int epgprimary)
+{
+  service_t *svc;
+  if (tdmi) {
+    LIST_FOREACH(svc, &tdmi->tdmi_transports, s_group_link) {
+      if (enabled    && !svc->s_enabled) continue;
+      if (epgprimary && !service_is_primary_epg(svc)) continue;
+      if (sid == svc->s_dvb_service_id) return svc;
+    }
+  } else if (tda) {
+    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+      if (enabled && !tdmi->tdmi_enabled) continue;
+      if (onid    && onid != tdmi->tdmi_network_id) continue;
+      if (tsid    && tsid != tdmi->tdmi_transport_stream_id) continue;
+      if (netname && strcmp(netname, tdmi->tdmi_network ?: "")) continue;
+      if ((svc = dvb_transport_find3(tda, tdmi, NULL, 0, 0, sid,
+                                     enabled, epgprimary)))
+        return svc;
+    }
+  } else {
+    TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link)
+      if ((svc = dvb_transport_find3(tda, NULL, netname, onid, tsid,
+                                     sid, enabled, epgprimary)))
+        return svc;
+  }
+  return NULL;
+}
+
 
 /**
  * Find a transport based on 'serviceid' on the given mux

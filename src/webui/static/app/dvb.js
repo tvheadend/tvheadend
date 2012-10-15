@@ -1087,8 +1087,9 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	var confreader = new Ext.data.JsonReader({
 		root : 'dvbadapters'
 	}, [ 'name', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion',
-		'qmon', 'skip_checksubscr', 'dumpmux', 'poweroff', 'sidtochan', 'nitoid',
-		'extrapriority', 'disable_pmt_monitor', 'idleclose' ]);
+		'diseqcrepeats', 'qmon', 'skip_checksubscr', 'dumpmux',
+		'poweroff', 'sidtochan', 'nitoid', 'extrapriority',
+		,'disable_pmt_monitor', 'idleclose' ]);
 
 	function saveConfForm() {
 		confform.getForm().submit({
@@ -1166,6 +1167,17 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 			mode : 'remote',
 			triggerAction : 'all',
 			store : [ 'DiSEqC 1.0 / 2.0', 'DiSEqC 1.1 / 2.1' ]
+		});
+		items.push(v);
+
+		v = new Ext.form.ComboBox({
+			name : 'diseqcrepeats',
+			fieldLabel : 'DiSEqC repeats',
+			editable : false,
+			allowBlank : false,
+			mode : 'remote',
+			triggerAction : 'all',
+			store : [ '0', '1', '2' ]
 		});
 		items.push(v);
 
@@ -1293,7 +1305,7 @@ tvheadend.dvb_satconf = function(adapterId, lnbStore) {
 		dataIndex : 'port',
 		editor : new fm.NumberField({
 			minValue : 0,
-			maxValue : 15
+			maxValue : 63
 		})
 	}, {
 		header : "LNB type",
