@@ -169,6 +169,8 @@ typedef struct htsp_subscription {
 
   int hs_dropstats[PKT_NTYPES];
 
+  int hs_90khz;
+
 } htsp_subscription_t;
 
 /* **************************************************************************
@@ -1099,7 +1101,7 @@ htsp_method_getTicket(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  uint32_t chid, sid, weight;
+  uint32_t chid, sid, weight, req90khz;
   channel_t *ch;
   htsp_subscription_t *hs;
 
@@ -1113,18 +1115,24 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("Requested channel does not exist");
 
   weight = htsmsg_get_u32_or_default(in, "weight", 150);
+  req90khz = htsmsg_get_u32_or_default(in, "90khz", 0);
 
   /*
    * We send the reply now to avoid the user getting the 'subscriptionStart'
    * async message before the reply to 'subscribe'.
    */
-  htsp_reply(htsp, in, htsmsg_create_map());
+  htsmsg_t *rep = htsmsg_create_map();
+  if(req90khz)
+    htsmsg_add_u32(rep, "90khz", 1);
+
+  htsp_reply(htsp, in, rep);
 
   /* Initialize the HTSP subscription structure */
 
   hs = calloc(1, sizeof(htsp_subscription_t));
 
   hs->hs_htsp = htsp;
+  hs->hs_90khz = req90khz;
   htsp_init_queue(&hs->hs_q, 0);
 
   hs->hs_sid = sid;
@@ -1753,16 +1761,16 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 
 
   if(pkt->pkt_pts != PTS_UNSET) {
-    int64_t pts = ts_rescale(pkt->pkt_pts, 1000000);
+    int64_t pts = hs->hs_90khz ? pkt->pkt_pts : ts_rescale(pkt->pkt_pts, 1000000);
     htsmsg_add_s64(m, "pts", pts);
   }
 
   if(pkt->pkt_dts != PTS_UNSET) {
-    int64_t dts = ts_rescale(pkt->pkt_dts, 1000000);
+    int64_t dts = hs->hs_90khz ? pkt->pkt_dts : ts_rescale(pkt->pkt_dts, 1000000);
     htsmsg_add_s64(m, "dts", dts);
   }
 
-  uint32_t dur = ts_rescale(pkt->pkt_duration, 1000000);
+  uint32_t dur = hs->hs_90khz ? pkt->pkt_duration : ts_rescale(pkt->pkt_duration, 1000000);
   htsmsg_add_u32(m, "duration", dur);
   
   pkt = pkt_merge_header(pkt);
