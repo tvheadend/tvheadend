@@ -35,7 +35,7 @@ tvheadend.statusTable = function(title, dtable, cm, rec, plugins, store,
 tvheadend.storeStatusUserlist = new Ext.data.JsonStore({
 	root : 'entries',
 	id : 'id',
-	url : '/status/userlist',
+	url : 'status/userlist',
 	baseParams : {
 		op : 'streamdata'
 	},
