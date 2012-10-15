@@ -36,7 +36,6 @@ typedef struct eit_table_status
 {
   LIST_ENTRY(eit_table_status) link;
   int                          tid;
-  uint16_t                     onid;
   uint16_t                     tsid;
   uint16_t                     sid;
   uint32_t                     sec[8];
@@ -56,8 +55,7 @@ typedef struct eit_status
 } eit_status_t;
 
 static eit_table_status_t *eit_status_find
-  ( eit_status_t *status, int tableid,
-    uint16_t onid, uint16_t tsid, uint16_t sid,
+  ( eit_status_t *status, int tableid, uint16_t tsid, uint16_t sid,
     uint8_t sec, uint8_t lst, uint8_t seg, uint8_t ver )
 {
   int i, sec_index;
@@ -66,8 +64,7 @@ static eit_table_status_t *eit_status_find
 
   /* Find */
   LIST_FOREACH(sta, &status->tables, link)
-    if (sta->tid == tableid && sta->tsid == tsid && sta->onid == onid &&
-        sta->sid == sid)
+    if (sta->tid == tableid && sta->tsid == tsid && sta->sid == sid)
       break;
 
   /* Already complete */
@@ -78,7 +75,6 @@ static eit_table_status_t *eit_status_find
     sta = calloc(1, sizeof(eit_table_status_t));
     LIST_INSERT_HEAD(&status->tables, sta, link);
     sta->tid  = tableid;
-    sta->onid = onid;
     sta->tsid = tsid;
     sta->sid  = sid;
     sta->ver  = 255; // Note: force update below
@@ -664,7 +660,7 @@ static int _eit_callback
   eit_status_t *sta;
   eit_table_status_t *tsta;
   int resched = 0, save = 0;
-  uint16_t onid, tsid, sid;
+  uint16_t tsid, sid;
   uint16_t sec, lst, seg, ver;
 
   /* Invalid */
@@ -686,22 +682,21 @@ static int _eit_callback
   /* Get table info */
   sid  = ptr[0] << 8 | ptr[1];
   tsid = ptr[5] << 8 | ptr[6];
-  onid = ptr[7] << 8 | ptr[8];
   sec  = ptr[3];
   lst  = ptr[4];
   seg  = ptr[9];
   ver  = (ptr[2] >> 1) & 0x1f;
 #ifdef EPG_EIT_TRACE
   tvhlog(LOG_DEBUG, mod->id,
-         "tid=0x%02X, onid=0x%04X, tsid=0x%04X, sid=0x%04X, sec=%3d/%3d, seg=%3d, ver=%2d, cur=%d",
-         tableid, onid, tsid, sid, sec, lst, seg, ver, ptr[2] & 1);
+         "tid=0x%02X, tsid=0x%04X, sid=0x%04X, sec=%3d/%3d, seg=%3d, ver=%2d, cur=%d",
+         tableid, tsid, sid, sec, lst, seg, ver, ptr[2] & 1);
 #endif
 
   /* Don't process */
   if((ptr[2] & 1) == 0) return 0;
 
   /* Current status */
-  tsta = eit_status_find(sta, tableid, onid, tsid, sid, sec, lst, seg, ver);
+  tsta = eit_status_find(sta, tableid, tsid, sid, sec, lst, seg, ver);
 #ifdef EPG_EIT_TRACE
   tvhlog(LOG_DEBUG, mod->id, tsta && tsta->state != EIT_STATUS_DONE ? "section process" : "section seen");
 #endif
@@ -714,18 +709,13 @@ static int _eit_callback
   if(tableid == 0x4f || tableid >= 0x60) {
     tda = tdmi->tdmi_adapter;
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
-      if(tdmi->tdmi_transport_stream_id == tsid &&
-         tdmi->tdmi_network_id == onid)
+      if(tdmi->tdmi_transport_stream_id == tsid)
         break;
   } else {
-    if (tdmi->tdmi_transport_stream_id != tsid ||
-        tdmi->tdmi_network_id != onid) {
-#ifdef EPG_EIT_TRACE
+    if (tdmi->tdmi_transport_stream_id != tsid) {
       tvhlog(LOG_DEBUG, mod->id,
-             "invalid transport id found tid 0x%02X, onid:tsid %d:%d != %d:%d",
-             tableid, tdmi->tdmi_network_id, tdmi->tdmi_transport_stream_id,
-             onid, tsid);
-#endif
+             "invalid transport id found (tid 0x%02X, tsid %d != %d",
+             tableid, tdmi->tdmi_transport_stream_id, tsid);
       tdmi = NULL;
     }
   }
@@ -781,9 +771,9 @@ done:
     LIST_FOREACH(tsta, &sta->tables, link) {
       total++;
       tvhlog(LOG_DEBUG, mod->id,
-             "  tid=0x%02X, onid=0x%04X, tsid=0x%04X, sid=0x%04X, ver=%02d, done=%d, "
+             "  tid=0x%02X, tsid=0x%04X, sid=0x%04X, ver=%02d, done=%d, "
              "mask=%08X|%08X|%08X|%08X|%08X|%08X|%08X|%08X", 
-             tsta->tid, tsta->onid, tsta->tsid, tsta->sid, tsta->ver,
+             tsta->tid, tsta->tsid, tsta->sid, tsta->ver,
              tsta->state == EIT_STATUS_DONE,
              tsta->sec[7], tsta->sec[6], tsta->sec[5], tsta->sec[4],
              tsta->sec[3], tsta->sec[2], tsta->sec[1], tsta->sec[0]);
