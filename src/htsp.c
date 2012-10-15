@@ -171,7 +171,11 @@ typedef struct htsp_subscription {
 
   int hs_90khz;
 
+  int hs_queue_depth;
+
 } htsp_subscription_t;
+
+#define HTSP_DEFAULT_QUEUE_DEPTH 500000
 
 /* **************************************************************************
  * Support routines
@@ -1133,6 +1137,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 
   hs->hs_htsp = htsp;
   hs->hs_90khz = req90khz;
+  hs->hs_queue_depth = htsmsg_get_u32_or_default(in, "queueDepth",
+						 HTSP_DEFAULT_QUEUE_DEPTH);
   htsp_init_queue(&hs->hs_q, 0);
 
   hs->hs_sid = sid;
@@ -1739,9 +1745,9 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   int64_t ts;
   int qlen = hs->hs_q.hmq_payload;
 
-  if((qlen > 500000 && pkt->pkt_frametype == PKT_B_FRAME) ||
-     (qlen > 750000 && pkt->pkt_frametype == PKT_P_FRAME) || 
-     (qlen > 1500000)) {
+  if((qlen > hs->hs_queue_depth     && pkt->pkt_frametype == PKT_B_FRAME) ||
+     (qlen > hs->hs_queue_depth * 2 && pkt->pkt_frametype == PKT_P_FRAME) || 
+     (qlen > hs->hs_queue_depth * 3)) {
 
     hs->hs_dropstats[pkt->pkt_frametype]++;
 
