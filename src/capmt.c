@@ -94,7 +94,7 @@ static pthread_cond_t capmt_config_changed;
 typedef struct capmt_descriptor {
   uint8_t cad_type;
   uint8_t cad_length;
-  uint8_t cad_data[16];
+  uint8_t cad_data[17];
 } __attribute__((packed)) capmt_descriptor_t;
 
 /**
@@ -120,6 +120,8 @@ typedef struct capmt_caid_ecm {
   uint16_t cce_caid;
   /** ecm pid */
   uint16_t cce_ecmpid;
+  /** provider id */
+  uint32_t cce_providerid;
   /** last ecm size */
   uint32_t cce_ecmsize;
   /** last ecm buffer */
@@ -569,6 +571,7 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
           cce             = calloc(1, sizeof(capmt_caid_ecm_t));
           cce->cce_caid   = c->caid;
           cce->cce_ecmpid = st->es_pid;
+          cce->cce_providerid = c->providerid;
           LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
         }
 
@@ -654,8 +657,34 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
             .cad_data = { 
               cce2->cce_caid   >> 8,        cce2->cce_caid   & 0xFF, 
               cce2->cce_ecmpid >> 8 | 0xE0, cce2->cce_ecmpid & 0xFF}};
+          if (cce2->cce_providerid) { //we need to add provider ID to the data
+            if (cce2->cce_caid >> 8 == 0x01) {
+              cad.cad_length = 0x11;
+              cad.cad_data[4] = cce2->cce_providerid >> 8;
+              cad.cad_data[5] = cce2->cce_providerid & 0xffffff;
+            } else if (cce2->cce_caid >> 8 == 0x05) {
+              cad.cad_length = 0x0f;
+              cad.cad_data[10] = 0x14;
+              cad.cad_data[11] = cce2->cce_providerid >> 24;
+              cad.cad_data[12] = cce2->cce_providerid >> 16;
+              cad.cad_data[13] = cce2->cce_providerid >> 8;
+              cad.cad_data[14] = cce2->cce_providerid & 0xffffff;
+            } else if (cce2->cce_caid >> 8 == 0x18) {
+              cad.cad_length = 0x07;
+              cad.cad_data[5] = cce2->cce_providerid >> 8;
+              cad.cad_data[6] = cce2->cce_providerid & 0xffffff;
+            } else if (cce2->cce_caid >> 8 == 0x4a) {
+              cad.cad_length = 0x05;
+              cad.cad_data[4] = cce2->cce_providerid & 0xffffff;
+            } else
+              tvhlog(LOG_WARNING, "capmt", "Unknown CAID type, don't know where to put provider ID");
+          }
           memcpy(&buf[pos], &cad, cad.cad_length + 2);
           pos += cad.cad_length + 2;
+          tvhlog(LOG_DEBUG, "capmt", "adding ECMPID=0x%X (%d), CAID=0x%X (%d) PROVID=0x%X (%d)",
+            cce2->cce_ecmpid, cce2->cce_ecmpid,
+            cce2->cce_caid, cce2->cce_caid,
+            cce2->cce_providerid, cce2->cce_providerid);
         }
 
         uint8_t end[] = { 
@@ -775,6 +804,7 @@ capmt_service_start(service_t *t)
       cce             = calloc(1, sizeof(capmt_caid_ecm_t));
       cce->cce_caid   = c->caid;
       cce->cce_ecmpid = st->es_pid;
+      cce->cce_providerid = c->providerid;
       LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
 
       /* sending request will be based on first seen caid */
