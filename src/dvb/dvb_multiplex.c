@@ -865,6 +865,24 @@ dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid)
   notify_by_msg("dvbMux", m);
 }
 
+/**
+ *
+ */
+void
+dvb_mux_set_onid(th_dvb_mux_instance_t *tdmi, uint16_t onid)
+{
+  htsmsg_t *m;
+
+  tdmi->tdmi_network_id = onid;
+ 
+  dvb_mux_save(tdmi);
+
+  m = htsmsg_create_map();
+  htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
+  htsmsg_add_u32(m, "onid", tdmi->tdmi_network_id);
+  notify_by_msg("dvbMux", m);
+}
+
 
 /**
  *

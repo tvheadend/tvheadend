@@ -364,6 +364,8 @@ void dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *name);
 
 void dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid);
 
+void dvb_mux_set_onid(th_dvb_mux_instance_t *tdmi, uint16_t onid);
+
 void dvb_mux_set_enable(th_dvb_mux_instance_t *tdmi, int enabled);
 
 void dvb_mux_set_satconf(th_dvb_mux_instance_t *tdmi, const char *scid,

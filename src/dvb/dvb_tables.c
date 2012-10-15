@@ -463,8 +463,10 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   tsid         = ptr[0] << 8 | ptr[1];
   onid         = ptr[5] << 8 | ptr[6];
   if (tableid == 0x42) {
-    if(tdmi->tdmi_transport_stream_id != tsid || tdmi->tdmi_network_id != onid)
+    if(tdmi->tdmi_transport_stream_id != tsid)
       return -1;
+    if(!tdmi->tdmi_network_id)
+      dvb_mux_set_onid(tdmi, onid);
   } else {
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
       if(tdmi->tdmi_transport_stream_id == tsid &&
