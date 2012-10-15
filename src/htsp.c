@@ -49,7 +49,7 @@
  * Datatypes and variables
  * *************************************************************************/
 
-static void *htsp_server;
+static void *htsp_server, *htsp_server_2;
 
 #define HTSP_PROTO_VERSION 6
 
@@ -1525,7 +1525,10 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source,
 void
 htsp_init(void)
 {
+  extern int htsp_port_extra;
   htsp_server = tcp_server_create(htsp_port, htsp_serve, NULL);
+  if(htsp_port_extra)
+    htsp_server_2 = tcp_server_create(htsp_port_extra, htsp_serve, NULL);
 }
 
 /* **************************************************************************

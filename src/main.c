@@ -75,6 +75,7 @@ int log_debug_to_console;
 
 int webui_port;
 int htsp_port;
+int htsp_port_extra;
 char *tvheadend_cwd;
 
 static void
@@ -278,7 +279,7 @@ main(int argc, char **argv)
   // make sure the timezone is set
   tzset();
 
-  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:sw:e:")) != -1) {
+  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:sw:e:E:")) != -1) {
     switch(c) {
     case 'a':
       adapter_mask = 0x0;
@@ -314,6 +315,9 @@ main(int argc, char **argv)
       break;
     case 'e':
       htsp_port = atoi(optarg);
+      break;
+    case 'E':
+      htsp_port_extra = atoi(optarg);
       break;
     case 'u':
       usernam = optarg;
