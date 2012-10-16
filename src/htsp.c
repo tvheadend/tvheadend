@@ -40,6 +40,7 @@
 #include "psi.h"
 #include "htsmsg_binary.h"
 #include "epg.h"
+#include "plumbing/tsfix.h"
 
 #include <sys/statvfs.h>
 #include "settings.h"
@@ -162,6 +163,7 @@ typedef struct htsp_subscription {
   th_subscription_t *hs_s; // Temporary
 
   streaming_target_t hs_input;
+  streaming_target_t *hs_tsfix;
 
   htsp_msg_q_t hs_q;
 
@@ -251,6 +253,8 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
 {
   LIST_REMOVE(hs, hs_link);
   subscription_unsubscribe(hs->hs_s);
+  if(hs->hs_tsfix != NULL)
+    tsfix_destroy(hs->hs_tsfix);
   htsp_flush_queue(htsp, &hs->hs_q);
   free(hs);
 }
@@ -1105,7 +1109,7 @@ htsp_method_getTicket(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  uint32_t chid, sid, weight, req90khz;
+  uint32_t chid, sid, weight, req90khz, normts;
   channel_t *ch;
   htsp_subscription_t *hs;
 
@@ -1120,14 +1124,21 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 
   weight = htsmsg_get_u32_or_default(in, "weight", 150);
   req90khz = htsmsg_get_u32_or_default(in, "90khz", 0);
+  normts = htsmsg_get_u32_or_default(in, "normts", 0);
 
   /*
    * We send the reply now to avoid the user getting the 'subscriptionStart'
    * async message before the reply to 'subscribe'.
+   *
+   * Send some opiotanl boolean flags back to the subscriber so it can infer
+   * if we support those
+   *
    */
   htsmsg_t *rep = htsmsg_create_map();
   if(req90khz)
     htsmsg_add_u32(rep, "90khz", 1);
+  if(normts)
+    htsmsg_add_u32(rep, "normts", 1);
 
   htsp_reply(htsp, in, rep);
 
@@ -1145,9 +1156,18 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
   streaming_target_init(&hs->hs_input, htsp_streaming_input, hs, 0);
 
+  streaming_target_t *st;
+
+  if(normts) {
+    hs->hs_tsfix = tsfix_create(&hs->hs_input);
+    st = hs->hs_tsfix;
+  } else {
+    st = &hs->hs_input;
+  }
+
   hs->hs_s = subscription_create_from_channel(ch, weight,
 					      htsp->htsp_logname,
-					      &hs->hs_input, 0);
+					      st, 0);
   return NULL;
 }
 
