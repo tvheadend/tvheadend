@@ -172,6 +172,7 @@ typedef struct capmt {
   int   capmt_port;
   char *capmt_comment;
   char *capmt_id;
+  int   capmt_oscam;
 
   /* capmt sockets */
   int   capmt_sock;
@@ -726,6 +727,7 @@ capmt_record_build(capmt_t *capmt)
 
   htsmsg_add_str(e, "camdfilename", capmt->capmt_sockfile ?: "");
   htsmsg_add_u32(e, "port", capmt->capmt_port);
+  htsmsg_add_u32(e, "oscam", !!capmt->capmt_oscam);
   htsmsg_add_str(e, "comment", capmt->capmt_comment ?: "");
   
   return e;
@@ -753,7 +755,10 @@ capmt_entry_update(void *opaque, const char *id, htsmsg_t *values, int maycreate
   
   if(!htsmsg_get_u32(values, "port", &u32))
     capmt->capmt_port = u32;
-  
+
+  if(!htsmsg_get_u32(values, "oscam", &u32)) 
+    capmt->capmt_oscam = u32;
+
   if((s = htsmsg_get_str(values, "comment")) != NULL) {
     free(capmt->capmt_comment);
     capmt->capmt_comment = strdup(s);
