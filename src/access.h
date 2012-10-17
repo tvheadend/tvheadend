@@ -19,6 +19,7 @@
 #ifndef ACCESS_H_
 #define ACCESS_H_
 
+#include "channels.h"
 
 TAILQ_HEAD(access_entry_queue, access_entry);
 
@@ -54,6 +55,20 @@ typedef struct access_ticket {
   gtimer_t at_timer;
   char *at_resource;
 } access_ticket_t;
+
+/* https://github.com/andyb2000 structure for access logging */
+typedef struct access_log {
+  char *al_id;
+  time_t al_startlog; /* First seen seconds */
+  time_t al_currlog;  /* Last seen seconds */
+  char *al_username;
+  char *al_type;
+  struct in_addr al_ip;
+  char *al_streamdata;
+  TAILQ_ENTRY(access_log) al_link;
+} access_log_t;
+TAILQ_HEAD(access_log_list, access_log);
+extern struct access_log_list access_log;
 
 #define ACCESS_ANONYMOUS       0x0
 #define ACCESS_STREAMING       0x1
@@ -100,5 +115,12 @@ uint32_t access_get_by_addr(struct sockaddr *src);
  *
  */
 void access_init(int createdefault);
+
+void access_log_show_all(void);
+
+void access_log_update(const char *username, const char *access_type, const char *al_streamdata, uint32_t ip);
+void access_log_remove(const char *username, uint32_t ip);
+void access_log_remove_bysub(uint32_t ip, const char *al_streamdata);
+void access_log_update_by_subscription_struct(char *title, channel_t *chanstr);
 
 #endif /* ACCESS_H_ */

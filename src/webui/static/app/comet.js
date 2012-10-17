@@ -10,6 +10,7 @@ Ext.extend(tvheadend.Comet = function() {
 		dvbSatConf : true,
 		logmessage : true,
 		channeltags : true,
+		statususerlist : true,
 		autorec : true,
 		dvrdb : true,
 		dvrconfig : true,

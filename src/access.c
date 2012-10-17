@@ -36,12 +36,171 @@
 #include "access.h"
 #include "dtable.h"
 #include "settings.h"
+#include <sys/time.h>
+#include "channels.h"
 
 struct access_entry_queue access_entries;
 struct access_ticket_queue access_tickets;
+struct access_log_list access_log;
 
 const char *superuser_username;
 const char *superuser_password;
+
+static access_log_t *
+access_log_find(const char *id, int create)
+{
+  access_log_t *al;
+  char buf[20];
+  static int tally;
+
+  tvhlog(LOG_DEBUG, "accesslogging", "Searching for ID %s with flag create %d",id,create);
+  if(id != NULL) {
+    TAILQ_FOREACH(al, &access_log, al_link)
+      if(!strcmp(al->al_id, id))
+        return al;
+  }
+
+  if(create == 0)
+    return NULL;
+
+  al = calloc(1, sizeof(access_log_t));
+  if(id == NULL) {
+    tally++;
+    snprintf(buf, sizeof(buf), "%d", tally);
+    id = buf;
+  } else {
+    tally = MAX(atoi(id), tally);
+  }
+
+  al->al_id = strdup(id);
+  al->al_username = strdup("*");
+  TAILQ_INSERT_TAIL(&access_log, al, al_link);
+  return al;
+}
+static access_log_t *
+access_log_search(const char *username)
+{
+  access_log_t *al;
+  TAILQ_FOREACH(al, &access_log, al_link)
+  if(strcmp(al->al_username, username) == 0)
+   return al;
+ return NULL;
+};
+static access_log_t *
+access_log_search_bysub(uint32_t ip, const char *al_streamdata)
+{
+  access_log_t *al;
+  TAILQ_FOREACH(al, &access_log, al_link) {
+  tvhlog(LOG_DEBUG, "accesslogging", "Searching by sub al_streamdata %s against db: %s",al_streamdata,al->al_streamdata);
+  if(al->al_streamdata != NULL) {
+   if(strcmp(al->al_streamdata, al_streamdata) == 0) {
+    return al;
+   };
+  };
+ };
+ return NULL;
+};
+
+void
+access_log_remove_bysub(uint32_t ip, const char *al_streamdata)
+{
+  access_log_t *al;
+  tvhlog(LOG_DEBUG, "accesslogging", "Removing access log by searching ip: %d and stream: %s",ip,al_streamdata);
+  if((al = access_log_search_bysub(ip,al_streamdata)) != NULL) {
+   free(al->al_id);
+   TAILQ_REMOVE(&access_log, al, al_link);
+   free(al);
+  };
+};
+
+void
+access_log_remove(const char *username, uint32_t ip)
+{
+  access_log_t *al;
+  tvhlog(LOG_DEBUG, "accesslogging", "Removing access log for user: %s at ip: %d",username,ip);
+  if((al = access_log_search(username)) != NULL) {
+   free(al->al_id);
+   TAILQ_REMOVE(&access_log, al, al_link);
+   free(al);
+  };
+};
+
+void
+access_log_update_by_subscription_struct(char *title, channel_t *chanstr)
+{
+  const char *token = "255.255.255.255", *token2 = NULL, *token4;
+  char token3[255] = "none";
+
+  /* we get title = "192.168.55.15 [ xbmc2 | XBMC Media Center ]"
+    and channel = "BBC 2 England" */
+
+  /* or we can get = "DVR: The Big Bang Theory" */
+  if (strstr(title, "DVR:")) {
+    /* Its passed by the DVR recording */
+    token4 = strtok(title, ": "); /*Strip the first before space*/
+    token2 = strdup(token4);
+    while (token4)
+    {
+      snprintf(token3, sizeof(token3), "%s %s", token3, token4);
+      token4 = strtok (NULL, " ");
+    };
+    tvhlog(LOG_DEBUG, "accesslogging", "update_by_subscription_struct oops, I calculate the chan for no reason %s",token3);
+  } else {
+    token = strtok(title, " "); /* token will be ip in string */
+    token2= strtok(NULL, " ");
+    token2= strtok(NULL, " ");
+  };
+  tvhlog(LOG_DEBUG, "accesslogging", "update_by_subscription_struct token(ip): %s, token2(username): %s and channel: %s",
+    token,token2,chanstr->ch_name);
+  if (token2 == NULL)
+    return;
+  access_log_update(token2,"htsp",strdup(chanstr->ch_name),inet_addr(token));
+};
+
+void
+access_log_update(const char *username, const char *access_type, const char *al_streamdata, uint32_t ip)
+{
+  access_log_t *al;
+  if((al = access_log_search(username)) == NULL) {
+	/* user not logged yet so create */
+        tvhlog(LOG_DEBUG, "accesslogging", "Creating access log for user: %s at ip: %d",username,ip);
+	al = access_log_find(NULL,1);
+	time(&al->al_startlog);
+	time(&al->al_currlog);
+	al->al_username=strdup(username);
+	al->al_ip.s_addr=ntohl(ip);
+	if (access_type != NULL)
+         al->al_type=strdup(access_type);
+	if (al_streamdata != NULL)
+	 al->al_streamdata=strdup(al_streamdata);
+  } else {
+	/* update user as already got a log entry */
+	time(&al->al_currlog);
+	al->al_ip.s_addr=ntohl(ip);
+	if (access_type != NULL)
+         al->al_type=strdup(access_type);
+	if (al_streamdata != NULL)
+         al->al_streamdata=strdup(al_streamdata);
+  };
+};
+
+
+void
+access_log_show_all(void)
+{
+  access_log_t *al = NULL;
+  TAILQ_FOREACH(al, &access_log, al_link) {
+    tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->id: %s",al->al_id);
+    tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->username: %s",al->al_username);
+    tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->startlog: %ld",al->al_startlog);
+    tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->currlog: %ld",al->al_currlog);
+    tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->ip: %s",inet_ntoa(al->al_ip));
+    if (al->al_type != NULL)
+      tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->type: %s",al->al_type);
+    if (al->al_streamdata != NULL)
+      tvhlog(LOG_DEBUG, "accesscontrol", "Logging structure al->streamdata: %s", al->al_streamdata);
+  };
+};
 
 /**
  *
@@ -160,12 +319,15 @@ access_verify(const char *username, const char *password,
   struct sockaddr_in *si = (struct sockaddr_in *)src;
   uint32_t b = ntohl(si->sin_addr.s_addr);
   access_entry_t *ae;
+  int auth_status = 0;
 
   if(username != NULL && superuser_username != NULL && 
      password != NULL && superuser_password != NULL && 
      !strcmp(username, superuser_username) &&
-     !strcmp(password, superuser_password))
+     !strcmp(password, superuser_password)) {
+    if (username) {access_log_update(username, "superuser", NULL, b);};
     return 0;
+  };
 
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
 
@@ -185,8 +347,15 @@ access_verify(const char *username, const char *password,
     if((b & ae->ae_netmask) != ae->ae_network)
       continue; /* IP based access mismatches */
 
+/* If we get here it was a valid authentication */
+    auth_status = 1;
     bits |= ae->ae_rights;
   }
+  if (auth_status == 0) {
+   tvhlog(LOG_WARNING, "accesscontrol", "Authentication failure for \"%s\" from \"%s\"", username, inet_ntoa(si->sin_addr));
+  } else {
+   if (username) {access_log_update(username, "http", NULL, b);};
+  };
   return (mask & bits) == mask ? 0 : -1;
 }
 
@@ -216,8 +385,10 @@ access_get_hashed(const char *username, const uint8_t digest[20],
     SHA1_Update(&shactx, challenge, 32);
     SHA1_Final(d, &shactx);
 
-    if(!strcmp(superuser_username, username) && !memcmp(d, digest, 20))
+    if(!strcmp(superuser_username, username) && !memcmp(d, digest, 20)) {
+      if (username) {access_log_update(username, "http", NULL, b);};
       return 0xffffffff;
+    };
   }
 
 
@@ -239,6 +410,7 @@ access_get_hashed(const char *username, const uint8_t digest[20],
       continue;
     match = 1;
     r |= ae->ae_rights;
+    if (username) {access_log_update(username, "http", NULL, b);};
   }
   if(entrymatch != NULL)
     *entrymatch = match;
@@ -355,8 +527,6 @@ access_entry_find(const char *id, int create)
   return ae;
 }
 
-
-
 /**
  *
  */
@@ -369,7 +539,6 @@ access_entry_destroy(access_entry_t *ae)
   TAILQ_REMOVE(&access_entries, ae, ae_link);
   free(ae);
 }
-
 
 /**
  *
@@ -428,7 +597,6 @@ access_record_get(void *opaque, const char *id)
     return NULL;
   return access_record_build(ae);
 }
-
 
 /**
  *
@@ -538,6 +706,7 @@ access_init(int createdefault)
   htsmsg_t *r, *m;
   access_entry_t *ae;
   const char *s;
+/*  access_log_t *al; */
 
   static struct {
     pid_t pid;
@@ -550,6 +719,14 @@ access_init(int createdefault)
 
   TAILQ_INIT(&access_entries);
   TAILQ_INIT(&access_tickets);
+  TAILQ_INIT(&access_log);
+
+  /* Initialise access_log */
+  tvhlog(LOG_INFO, "accesslogging", "Initialising access logging system");
+  access_log_find(NULL, 1);
+
+  /* dummy access entry */
+  access_log_show_all();
 
   dt = dtable_create(&access_dtc, "accesscontrol", NULL);
 

@@ -36,6 +36,7 @@
 #include "streaming.h"
 #include "channels.h"
 #include "service.h"
+#include "access.h"
 
 struct th_subscription_list subscriptions;
 static gtimer_t subscription_reschedule_timer;
@@ -46,6 +47,14 @@ static gtimer_t subscription_reschedule_timer;
 int
 subscriptions_active(void)
 {
+th_subscription_t *s;
+/* https://github.com/andyb2000/tvheadend */
+LIST_FOREACH(s, &subscriptions, ths_global_link) {
+	tvhlog(LOG_DEBUG, "subscriptions_active", "Active titles: %s", s->ths_title);
+	tvhlog(LOG_DEBUG, "subscriptions_active", "Active Channel: %s", s->ths_channel->ch_name);
+	tvhlog(LOG_DEBUG, "subscriptions_active", "Active Service: %s", s->ths_service->s_nicename);
+/*	tvhlog(LOG_DEBUG, "subscriptions_active", "Active Input: %s", s->ths_input->st_link);*/
+};
   return LIST_FIRST(&subscriptions) != NULL;
 }
 
@@ -171,6 +180,7 @@ subscription_reschedule(void)
 
     snprintf(buf, sizeof(buf), "Subscription \"%s\"", s->ths_title);
     t = service_find(s->ths_channel, s->ths_weight, buf, &error, skip);
+    if (s->ths_title) {access_log_update_by_subscription_struct(s->ths_title,s->ths_channel);};
 
     if(t == NULL) {
       /* No service available */
@@ -200,6 +210,8 @@ subscription_unsubscribe(th_subscription_t *s)
     LIST_REMOVE(s, ths_channel_link);
     tvhlog(LOG_INFO, "subscription", "\"%s\" unsubscribing from \"%s\"",
 	   s->ths_title, s->ths_channel->ch_name);
+    access_log_remove_bysub(0, s->ths_channel->ch_name);
+
   } else {
     tvhlog(LOG_INFO, "subscription", "\"%s\" unsubscribing",
 	   s->ths_title);

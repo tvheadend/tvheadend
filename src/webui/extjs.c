@@ -123,6 +123,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/tableeditor.js");
   extjs_load(hq, "static/app/cteditor.js");
   extjs_load(hq, "static/app/acleditor.js");
+  extjs_load(hq, "static/app/status_userlist.js");
   extjs_load(hq, "static/app/cwceditor.js");
   extjs_load(hq, "static/app/capmteditor.js");
   extjs_load(hq, "static/app/tvadapters.js");
@@ -1531,6 +1532,56 @@ extjs_servicedetails(http_connection_t *hc,
 }
 
 /**
+ * https://github.com/andyb2000 Userlist extjs addition
+ */
+static int
+extjs_status_userlist(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  htsmsg_t *out, *array, *e;
+  access_log_t *al = NULL;
+  struct tm a,b;
+  char startdate[255],enddate[255];
+
+  access_log_show_all();
+  out = htsmsg_create_map();
+  array = htsmsg_create_list();
+
+  TAILQ_FOREACH(al, &access_log, al_link) {
+    e = htsmsg_create_map();
+    htsmsg_add_str(e, "id", al->al_id);
+    htsmsg_add_str(e, "username", al->al_username);
+    localtime_r(&al->al_startlog, &a);
+    localtime_r(&al->al_currlog, &b);
+    snprintf(startdate, sizeof(startdate), "%02d:%02d:%02d %02d/%02d/%02d", 
+      a.tm_hour, a.tm_min, a.tm_sec, a.tm_mday, a.tm_mon, a.tm_year + 1900);
+    htsmsg_add_str(e, "startlog", startdate);
+    snprintf(enddate, sizeof(enddate), "%02d:%02d:%02d %02d/%02d/%02d", 
+      b.tm_hour, b.tm_min, b.tm_sec, b.tm_mday, b.tm_mon, b.tm_year + 1900);
+    htsmsg_add_str(e, "currlog", enddate);
+    htsmsg_add_str(e, "ip", inet_ntoa(al->al_ip));
+    if (al->al_type != NULL) {
+      htsmsg_add_str(e, "type", al->al_type);
+    } else {
+      htsmsg_add_str(e, "type", "");
+    };
+    if (al->al_streamdata != NULL) {
+      htsmsg_add_str(e, "streamdata", al->al_streamdata);
+    } else {
+      htsmsg_add_str(e, "streamdata", "");
+    };
+
+    htsmsg_add_msg(array, NULL, e);
+  };
+
+  htsmsg_add_msg(out, "entries", array);
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+};
+
+/**
  *
  */
 static int
@@ -1885,6 +1936,7 @@ extjs_start(void)
   http_path_add("/iptv/services",  NULL, extjs_iptvservices,   ACCESS_ADMIN);
   http_path_add("/servicedetails", NULL, extjs_servicedetails, ACCESS_ADMIN);
   http_path_add("/tv/adapter",     NULL, extjs_tvadapter,      ACCESS_ADMIN);
+  http_path_add("/status/userlist",NULL, extjs_status_userlist,ACCESS_ADMIN);
 
 #if ENABLE_LINUXDVB
   extjs_start_dvb();
