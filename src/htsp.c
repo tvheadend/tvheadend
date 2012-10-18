@@ -1167,7 +1167,10 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 
   hs->hs_s = subscription_create_from_channel(ch, weight,
 					      htsp->htsp_logname,
-					      st, 0);
+					      st, 0,
+					      htsp->htsp_peername,
+					      htsp->htsp_username,
+					      htsp->htsp_clientname);
   return NULL;
 }
 

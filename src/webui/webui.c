@@ -607,7 +607,8 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   }
 
   pthread_mutex_lock(&global_lock);
-  s = subscription_create_from_channel(ch, priority, "HTTP", st, flags);
+  s = subscription_create_from_channel(ch, priority, "HTTP", st, flags,
+				       NULL, NULL, NULL);
   pthread_mutex_unlock(&global_lock);
 
   if(s) {

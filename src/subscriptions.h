@@ -19,9 +19,14 @@
 #ifndef SUBSCRIPTIONS_H
 #define SUBSCRIPTIONS_H
 
+extern struct th_subscription_list subscriptions;
+
 #define SUBSCRIPTION_RAW_MPEGTS 0x1
 
 typedef struct th_subscription {
+
+  int ths_id;
+  
   LIST_ENTRY(th_subscription) ths_global_link;
   int ths_weight;
 
@@ -46,6 +51,7 @@ typedef struct th_subscription {
   char *ths_title; /* display title */
   time_t ths_start;  /* time when subscription started */
   int ths_total_err; /* total errors during entire subscription */
+  int ths_bytes;     // Reset every second to get aprox. bandwidth
 
   streaming_target_t ths_input;
 
@@ -55,12 +61,19 @@ typedef struct th_subscription {
 
   streaming_message_t *ths_start_message;
 
+  char *ths_hostname;
+  char *ths_username;
+  char *ths_client;
+
+
 } th_subscription_t;
 
 
 /**
  * Prototypes
  */
+void subscription_init(void);
+
 void subscription_unsubscribe(th_subscription_t *s);
 
 void subscription_set_weight(th_subscription_t *s, unsigned int weight);
@@ -71,7 +84,10 @@ th_subscription_t *subscription_create_from_channel(struct channel *ch,
 						    unsigned int weight,
 						    const char *name,
 						    streaming_target_t *st,
-						    int flags);
+						    int flags,
+						    const char *hostname,
+						    const char *username,
+						    const char *client);
 
 
 th_subscription_t *subscription_create_from_service(struct service *t,
@@ -88,5 +104,8 @@ void subscription_unlink_service(th_subscription_t *s, int reason);
 void subscription_dummy_join(const char *id, int first);
 
 int subscriptions_active(void);
+
+struct htsmsg;
+struct htsmsg *subscription_create_msg(th_subscription_t *s);
 
 #endif /* SUBSCRIPTIONS_H */

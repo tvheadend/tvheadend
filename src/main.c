@@ -415,6 +415,8 @@ main(int argc, char **argv)
 
   channels_init();
 
+  subscription_init();
+
   access_init(createdefault);
 
   tcp_server_init();
