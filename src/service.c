@@ -153,6 +153,8 @@ service_stop(service_t *t)
   TAILQ_FOREACH(st, &t->s_components, es_link)
     stream_clean(st);
 
+  sbuf_free(&t->s_tsbuf);
+
   t->s_status = SERVICE_IDLE;
 
   pthread_mutex_unlock(&t->s_stream_mutex);
