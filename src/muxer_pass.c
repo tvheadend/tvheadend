@@ -231,8 +231,7 @@ pass_muxer_write_pkt(muxer_t *m, void *data)
     break;
   }
 
-  if(!pm->pm_error)
-    pktbuf_ref_dec(pb);
+  pktbuf_ref_dec(pb);
 
   return pm->pm_error;
 }
