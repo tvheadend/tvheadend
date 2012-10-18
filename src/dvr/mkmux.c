@@ -899,8 +899,7 @@ mk_mux_write_pkt(mk_mux_t *mkm, struct th_pkt *pkt)
     mk_write_frame_i(mkm, t, pkt);
   }
   
-  if(!mkm->error)
-    pkt_ref_dec(pkt);
+  pkt_ref_dec(pkt);
 
   return mkm->error;
 }
