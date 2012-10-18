@@ -149,6 +149,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 {
   streaming_message_t *sm;
   int run = 1;
+  int started = 0;
   muxer_t *mux = NULL;
   int timeouts = 0;
   struct timespec ts;
@@ -213,6 +214,8 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
       http_output_content(hc, muxer_mime(mux, sm->sm_data));
       muxer_init(mux, sm->sm_data, name);
+
+      started = 1;
       break;
 
     case SMT_STOP:
@@ -256,7 +259,9 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     }
   }
 
-  muxer_close(mux);
+  if(started)
+    muxer_close(mux);
+
   muxer_destroy(mux);
 }
 
