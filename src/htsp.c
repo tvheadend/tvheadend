@@ -40,10 +40,10 @@
 #include "psi.h"
 #include "htsmsg_binary.h"
 #include "epg.h"
+#include "plumbing/tsfix.h"
 
 #if ENABLE_LIBAV
 #include "plumbing/transcode.h"
-#include "plumbing/tsfix.h"
 #endif
 
 #include <sys/statvfs.h>
@@ -167,10 +167,10 @@ typedef struct htsp_subscription {
   th_subscription_t *hs_s; // Temporary
 
   streaming_target_t hs_input;
+  streaming_target_t *hs_tsfix;
 
 #if ENABLE_LIBAV
   streaming_target_t *hs_transcoder;
-  streaming_target_t *hs_tsfix;
 #endif
 
   htsp_msg_q_t hs_q;
@@ -179,7 +179,13 @@ typedef struct htsp_subscription {
 
   int hs_dropstats[PKT_NTYPES];
 
+  int hs_90khz;
+
+  int hs_queue_depth;
+
 } htsp_subscription_t;
+
+#define HTSP_DEFAULT_QUEUE_DEPTH 500000
 
 /* **************************************************************************
  * Support routines
@@ -255,13 +261,13 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
 {
   LIST_REMOVE(hs, hs_link);
   subscription_unsubscribe(hs->hs_s);
+  if(hs->hs_tsfix != NULL)
+    tsfix_destroy(hs->hs_tsfix);
   htsp_flush_queue(htsp, &hs->hs_q);
 
 #if ENABLE_LIBAV
   if(hs->hs_transcoder != NULL)
     transcoder_destroy(hs->hs_transcoder);
-  if(hs->hs_tsfix != NULL)
-    tsfix_destroy(hs->hs_tsfix);
 #endif
 
   free(hs);
@@ -1117,7 +1123,7 @@ htsp_method_getTicket(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  uint32_t chid, sid, weight;
+  uint32_t chid, sid, weight, req90khz, normts;
   channel_t *ch;
   htsp_subscription_t *hs;
 
@@ -1136,6 +1142,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("Requested channel does not exist");
 
   weight = htsmsg_get_u32_or_default(in, "weight", 150);
+  req90khz = htsmsg_get_u32_or_default(in, "90khz", 0);
+  normts = htsmsg_get_u32_or_default(in, "normts", 0);
 
 #if ENABLE_LIBAV
   max_resolution = htsmsg_get_u32_or_default(in, "maxWidth", 0);
@@ -1147,37 +1155,55 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   /*
    * We send the reply now to avoid the user getting the 'subscriptionStart'
    * async message before the reply to 'subscribe'.
+   *
+   * Send some opiotanl boolean flags back to the subscriber so it can infer
+   * if we support those
+   *
    */
-  htsp_reply(htsp, in, htsmsg_create_map());
+  htsmsg_t *rep = htsmsg_create_map();
+  if(req90khz)
+    htsmsg_add_u32(rep, "90khz", 1);
+  if(normts)
+    htsmsg_add_u32(rep, "normts", 1);
+
+  htsp_reply(htsp, in, rep);
 
   /* Initialize the HTSP subscription structure */
 
   hs = calloc(1, sizeof(htsp_subscription_t));
 
   hs->hs_htsp = htsp;
+  hs->hs_90khz = req90khz;
+  hs->hs_queue_depth = htsmsg_get_u32_or_default(in, "queueDepth",
+						 HTSP_DEFAULT_QUEUE_DEPTH);
   htsp_init_queue(&hs->hs_q, 0);
 
   hs->hs_sid = sid;
   LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
   streaming_target_init(&hs->hs_input, htsp_streaming_input, hs, 0);
 
+  streaming_target_t *st = &hs->hs_input;
+
 #if ENABLE_LIBAV
   if(max_resolution) {
-    hs->hs_transcoder = transcoder_create(&hs->hs_input, 
+    hs->hs_transcoder = transcoder_create(st, 
 					  max_resolution,
 					  vcodec,
 					  acodec,
 					  scodec);
-    hs->hs_tsfix = tsfix_create(hs->hs_transcoder);
+    st = hs->hs_transcoder;
+    normts = 1;
   }
-  hs->hs_s = subscription_create_from_channel(ch, weight,
-					      htsp->htsp_logname,
-					      hs->hs_tsfix ?: &hs->hs_input, 0);
-#else
-  hs->hs_s = subscription_create_from_channel(ch, weight,
-					      htsp->htsp_logname,
-					      &hs->hs_input, 0);
 #endif
+
+  if(normts) {
+    hs->hs_tsfix = tsfix_create(st);
+    st = hs->hs_tsfix;
+  }
+
+  hs->hs_s = subscription_create_from_channel(ch, weight,
+					      htsp->htsp_logname,
+					      st, 0);
   return NULL;
 }
 
@@ -1775,9 +1801,9 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   int64_t ts;
   int qlen = hs->hs_q.hmq_payload;
 
-  if((qlen > 500000 && pkt->pkt_frametype == PKT_B_FRAME) ||
-     (qlen > 750000 && pkt->pkt_frametype == PKT_P_FRAME) || 
-     (qlen > 1500000)) {
+  if((qlen > hs->hs_queue_depth     && pkt->pkt_frametype == PKT_B_FRAME) ||
+     (qlen > hs->hs_queue_depth * 2 && pkt->pkt_frametype == PKT_P_FRAME) || 
+     (qlen > hs->hs_queue_depth * 3)) {
 
     hs->hs_dropstats[pkt->pkt_frametype]++;
 
@@ -1797,16 +1823,16 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 
 
   if(pkt->pkt_pts != PTS_UNSET) {
-    int64_t pts = ts_rescale(pkt->pkt_pts, 1000000);
+    int64_t pts = hs->hs_90khz ? pkt->pkt_pts : ts_rescale(pkt->pkt_pts, 1000000);
     htsmsg_add_s64(m, "pts", pts);
   }
 
   if(pkt->pkt_dts != PTS_UNSET) {
-    int64_t dts = ts_rescale(pkt->pkt_dts, 1000000);
+    int64_t dts = hs->hs_90khz ? pkt->pkt_dts : ts_rescale(pkt->pkt_dts, 1000000);
     htsmsg_add_s64(m, "dts", dts);
   }
 
-  uint32_t dur = ts_rescale(pkt->pkt_duration, 1000000);
+  uint32_t dur = hs->hs_90khz ? pkt->pkt_duration : ts_rescale(pkt->pkt_duration, 1000000);
   htsmsg_add_u32(m, "duration", dur);
   
   pkt = pkt_merge_header(pkt);
