@@ -278,6 +278,9 @@ subscription_input(void *opauqe, streaming_message_t *sm)
     if(pkt->pkt_err)
       s->ths_total_err++;
     s->ths_bytes += pkt->pkt_payload->pb_size;
+  } else if(sm->sm_type == SMT_MPEGTS) {
+    pktbuf_t *pb = sm->sm_data;
+    s->ths_bytes += pb->pb_size;
   }
 
   streaming_target_deliver(s->ths_output, sm);
