@@ -17,7 +17,7 @@
 		"tsid": 1111,
 		"onid": 1,
 		"charset": "PL_AUTO",
-		"sid": 7269,
+		"sid": 7296,
 		"description": "Astra 19.2E TV Trwam"
 	},
 	{
@@ -397,7 +397,7 @@
 		"charset": "PL_AUTO",
 		"sid": 13511,
 		"description": "Hotbird 13.0 Rebel TV"
-	}
+	},
 	{
 		"tsid": 15700,
 		"onid": 318,
