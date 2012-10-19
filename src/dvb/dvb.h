@@ -24,6 +24,8 @@
 #include <pthread.h>
 #include "htsmsg.h"
 
+struct service;
+
 #define DVB_VER_INT(maj,min) (((maj) << 16) + (min))
 
 #define DVB_VER_ATLEAST(maj, min) \
@@ -231,6 +233,9 @@ typedef struct th_dvb_adapter {
 
   uint32_t tda_extrapriority; // extra priority for choosing the best adapter/service
 
+  void (*tda_open_service)(struct th_dvb_adapter *tda, struct service *s);
+  void (*tda_close_service)(struct th_dvb_adapter *tda, struct service *s);
+
 } th_dvb_adapter_t;
 
 /**
@@ -335,6 +340,9 @@ htsmsg_t *dvb_fe_opts(th_dvb_adapter_t *tda, const char *which);
 void dvb_adapter_set_extrapriority(th_dvb_adapter_t *tda, int extrapriority);
 
 void dvb_adapter_poweroff(th_dvb_adapter_t *tda);
+
+void dvb_input_filtered_setup(th_dvb_adapter_t *tda);
+
 
 /**
  * DVB Multiplex

@@ -44,54 +44,6 @@
 #include "dvb_support.h"
 #include "notify.h"
 
-/**
- *
- */
-static void
-dvb_service_open_demuxers(th_dvb_adapter_t *tda, service_t *t)
-{
-  struct dmx_pes_filter_params dmx_param;
-  int fd;
-  elementary_stream_t *st;
-
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
-    if(st->es_pid >= 0x2000)
-      continue;
-
-    if(st->es_demuxer_fd != -1)
-      continue;
-
-    fd = tvh_open(tda->tda_demux_path, O_RDWR, 0);
-    st->es_cc_valid = 0;
-
-    if(fd == -1) {
-      st->es_demuxer_fd = -1;
-      tvhlog(LOG_ERR, "dvb",
-	     "\"%s\" unable to open demuxer \"%s\" for pid %d -- %s",
-	     t->s_identifier, tda->tda_demux_path, 
-	     st->es_pid, strerror(errno));
-      continue;
-    }
-
-    memset(&dmx_param, 0, sizeof(dmx_param));
-    dmx_param.pid = st->es_pid;
-    dmx_param.input = DMX_IN_FRONTEND;
-    dmx_param.output = DMX_OUT_TS_TAP;
-    dmx_param.pes_type = DMX_PES_OTHER;
-    dmx_param.flags = DMX_IMMEDIATE_START;
-
-    if(ioctl(fd, DMX_SET_PES_FILTER, &dmx_param)) {
-      tvhlog(LOG_ERR, "dvb",
-	     "\"%s\" unable to configure demuxer \"%s\" for pid %d -- %s",
-	     t->s_identifier, tda->tda_demux_path, 
-	     st->es_pid, strerror(errno));
-      close(fd);
-      fd = -1;
-    }
-
-    st->es_demuxer_fd = fd;
-  }
-}
 
 
 
@@ -140,7 +92,7 @@ dvb_service_start(service_t *t, unsigned int weight, int force_start)
   pthread_mutex_unlock(&tda->tda_delivery_mutex);
 
   if(!r)
-    dvb_service_open_demuxers(tda, t);
+    tda->tda_open_service(tda, t);
 
   dvb_table_add_pmt(t->s_dvb_mux_instance, t->s_pmt_pid);
 
@@ -155,7 +107,6 @@ static void
 dvb_service_stop(service_t *t)
 {
   th_dvb_adapter_t *tda = t->s_dvb_mux_instance->tdmi_adapter;
-  elementary_stream_t *st;
 
   lock_assert(&global_lock);
 
@@ -163,12 +114,8 @@ dvb_service_stop(service_t *t)
   LIST_REMOVE(t, s_active_link);
   pthread_mutex_unlock(&tda->tda_delivery_mutex);
 
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
-    if(st->es_demuxer_fd != -1) {
-      close(st->es_demuxer_fd);
-      st->es_demuxer_fd = -1;
-    }
-  }
+  tda->tda_close_service(tda, t);
+
   t->s_status = SERVICE_IDLE;
 }
 
@@ -182,7 +129,7 @@ dvb_service_refresh(service_t *t)
   th_dvb_adapter_t *tda = t->s_dvb_mux_instance->tdmi_adapter;
 
   lock_assert(&global_lock);
-  dvb_service_open_demuxers(tda, t);
+  tda->tda_open_service(tda, t);
 }
 
 
