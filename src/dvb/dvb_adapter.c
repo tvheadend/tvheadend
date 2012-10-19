@@ -88,6 +88,7 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "idlescan", tda->tda_idlescan);
   htsmsg_add_u32(m, "idleclose", tda->tda_idleclose);
   htsmsg_add_u32(m, "skip_checksubscr", tda->tda_skip_checksubscr);
+  htsmsg_add_u32(m, "sidtochan", tda->tda_sidtochan);
   htsmsg_add_u32(m, "qmon", tda->tda_qmon);
   htsmsg_add_u32(m, "dump_muxes", tda->tda_dump_muxes);
   htsmsg_add_u32(m, "poweroff", tda->tda_poweroff);
@@ -583,6 +584,7 @@ dvb_adapter_init(uint32_t adapter_mask)
       htsmsg_get_u32(c, "idlescan", &tda->tda_idlescan);
       htsmsg_get_u32(c, "idleclose", &tda->tda_idleclose);
       htsmsg_get_u32(c, "skip_checksubscr", &tda->tda_skip_checksubscr);
+      htsmsg_get_u32(c, "sidtochan", &tda->tda_sidtochan);
       htsmsg_get_u32(c, "qmon", &tda->tda_qmon);
       htsmsg_get_u32(c, "dump_muxes", &tda->tda_dump_muxes);
       htsmsg_get_u32(c, "poweroff", &tda->tda_poweroff);
