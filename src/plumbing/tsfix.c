@@ -153,6 +153,9 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
     return;
   }
 
+  pkt->pkt_dts &= PTS_MASK;
+  pkt->pkt_pts &= PTS_MASK;
+
   /* Subtract the transport wide start offset */
   dts = pkt->pkt_dts - tf->tf_tsref;
 
@@ -315,7 +318,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
   if(tf->tf_tsref == PTS_UNSET &&
      (!tf->tf_hasvideo ||
       (SCT_ISVIDEO(tfs->tfs_type) && pkt->pkt_frametype == PKT_I_FRAME))) {
-      tf->tf_tsref = pkt->pkt_dts;
+      tf->tf_tsref = pkt->pkt_dts & PTS_MASK;
       tsfixprintf("reference clock set to %"PRId64"\n", tf->tf_tsref);
   }
 
