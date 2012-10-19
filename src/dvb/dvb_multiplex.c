@@ -294,12 +294,14 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
   dvb_transport_load(tdmi, identifier);
   dvb_mux_notify(tdmi);
 
-  if(enabled && initialscan) {
-    tda->tda_initial_num_mux++;
-    tdmi->tdmi_table_initial = 1;
-    mux_link_initial(tda, tdmi);
-  } else {
-    dvb_mux_add_to_scan_queue(tdmi);
+  if(enabled) {
+    if(initialscan) {
+      tda->tda_initial_num_mux++;
+      tdmi->tdmi_table_initial = 1;
+      mux_link_initial(tda, tdmi);
+    } else {
+      dvb_mux_add_to_scan_queue(tdmi);
+    }
   }
 
   return tdmi;
