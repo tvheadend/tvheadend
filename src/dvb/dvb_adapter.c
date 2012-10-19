@@ -498,7 +498,9 @@ dvb_adapter_start ( th_dvb_adapter_t *tda )
 
   /* Start DVR thread */
   if (tda->tda_dvr_pipe[0] == -1) {
-    assert(pipe(tda->tda_dvr_pipe) != -1);
+    int err = pipe(tda->tda_dvr_pipe);
+    assert(err != -1);
+
     fcntl(tda->tda_dvr_pipe[0], F_SETFD, fcntl(tda->tda_dvr_pipe[0], F_GETFD) | FD_CLOEXEC);
     fcntl(tda->tda_dvr_pipe[0], F_SETFL, fcntl(tda->tda_dvr_pipe[0], F_GETFL) | O_NONBLOCK);
     fcntl(tda->tda_dvr_pipe[1], F_SETFD, fcntl(tda->tda_dvr_pipe[1], F_GETFD) | FD_CLOEXEC);
@@ -526,7 +528,8 @@ dvb_adapter_stop ( th_dvb_adapter_t *tda )
   /* Stop DVR thread */
   if (tda->tda_dvr_pipe[0] != -1) {
     tvhlog(LOG_DEBUG, "dvb", "%s stopping thread", tda->tda_rootpath);
-    assert(write(tda->tda_dvr_pipe[1], "", 1) == 1);
+    int err = write(tda->tda_dvr_pipe[1], "", 1);
+    assert(err != -1);
     pthread_join(tda->tda_dvr_thread, NULL);
     close(tda->tda_dvr_pipe[0]);
     close(tda->tda_dvr_pipe[1]);
