@@ -425,7 +425,7 @@ static void _opentv_parse_channels
     cnum = ((int)buf[i+5] << 8) | buf[i+6];
 
     /* Find the service */
-    svc = dvb_transport_find3(NULL, NULL, NULL, onid, tsid, sid, 1, 1);
+    svc = dvb_service_find3(NULL, NULL, NULL, onid, tsid, sid, 1, 1);
     if (svc && svc->s_ch) {
       ec  =_opentv_find_epggrab_channel(mod, cid, 1, &save);
       ecl = LIST_FIRST(&ec->channels);

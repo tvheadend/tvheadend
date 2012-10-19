@@ -504,7 +504,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     if(dllen > len)
       break;
 
-    if (!(t = dvb_transport_find(tdmi, service_id, 0, NULL))) {
+    if (!(t = dvb_service_find(tdmi, service_id, 0, NULL))) {
       len -= dllen;
       ptr += dllen;
       continue;
@@ -647,7 +647,7 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
     if(service != 0 && pmt != 0) {
       int save = 0;
-      dvb_transport_find2(tdmi, service, pmt, NULL, &save);
+      dvb_service_find2(tdmi, service, pmt, NULL, &save);
       if (save || !tda->tda_disable_pmt_monitor)
         dvb_table_add_pmt(tdmi, pmt);
     }
@@ -898,7 +898,7 @@ dvb_table_local_channel(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     chan = ((ptr[2] & 3) << 8) | ptr[3];
 
     if(chan != 0) {
-      t = dvb_transport_find(tdmi, sid, 0, NULL);
+      t = dvb_service_find(tdmi, sid, 0, NULL);
       if(t != NULL) {
 
 	if(t->s_channel_number != chan) {
@@ -1074,7 +1074,7 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       continue;
 
     service_id = (ptr[24] << 8) | ptr[25];
-    if((t = dvb_transport_find(tdmi, service_id, 0, NULL)) == NULL)
+    if((t = dvb_service_find(tdmi, service_id, 0, NULL)) == NULL)
       continue;
 
     atsc_stype = ptr[27] & 0x3f;

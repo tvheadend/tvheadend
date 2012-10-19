@@ -730,7 +730,7 @@ static int _eit_callback
   if(!tdmi) goto done;
 
   /* Get service */
-  svc = dvb_transport_find3(NULL, tdmi, NULL, 0, 0, sid, 1, 1);
+  svc = dvb_service_find3(NULL, tdmi, NULL, 0, 0, sid, 1, 1);
   if (!svc || !svc->s_ch) goto done;
 
   /* Register as interesting */

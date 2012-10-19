@@ -406,26 +406,26 @@ th_dvb_mux_instance_t *dvb_mux_find
 /**
  * DVB Transport (aka DVB service)
  */
-void dvb_transport_load(th_dvb_mux_instance_t *tdmi, const char *tdmi_identifier);
+void dvb_service_load(th_dvb_mux_instance_t *tdmi, const char *tdmi_identifier);
 
-struct service *dvb_transport_find(th_dvb_mux_instance_t *tdmi,
+struct service *dvb_service_find(th_dvb_mux_instance_t *tdmi,
 				   uint16_t sid, int pmt_pid,
 				   const char *identifier);
 
-struct service *dvb_transport_find2(th_dvb_mux_instance_t *tdmi,
+struct service *dvb_service_find2(th_dvb_mux_instance_t *tdmi,
 				   uint16_t sid, int pmt_pid,
 				   const char *identifier, int *save);
 
-struct service *dvb_transport_find3
+struct service *dvb_service_find3
   (th_dvb_adapter_t *tda, th_dvb_mux_instance_t *tdmi,
    const char *netname, uint16_t onid, uint16_t tsid, uint16_t sid,
    int enabled, int epgprimary);
 
-void dvb_transport_notify(struct service *t);
+void dvb_service_notify(struct service *t);
 
-void dvb_transport_notify_by_adapter(th_dvb_adapter_t *tda);
+void dvb_service_notify_by_adapter(th_dvb_adapter_t *tda);
 
-htsmsg_t *dvb_transport_build_msg(struct service *t);
+htsmsg_t *dvb_service_build_msg(struct service *t);
 
 /**
  * DVB Frontend

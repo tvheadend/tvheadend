@@ -436,7 +436,7 @@ extjs_dvbservices(http_connection_t *hc, const char *remain, void *opaque)
     qsort(tvec, count, sizeof(service_t *), transportcmp);
 
     for(i = 0; i < count; i++)
-      htsmsg_add_msg(array, NULL, dvb_transport_build_msg(tvec[i]));
+      htsmsg_add_msg(array, NULL, dvb_service_build_msg(tvec[i]));
 
     htsmsg_add_msg(out, "entries", array);
 

@@ -48,7 +48,7 @@
  *
  */
 static void
-dvb_transport_open_demuxers(th_dvb_adapter_t *tda, service_t *t)
+dvb_service_open_demuxers(th_dvb_adapter_t *tda, service_t *t)
 {
   struct dmx_pes_filter_params dmx_param;
   int fd;
@@ -103,7 +103,7 @@ dvb_transport_open_demuxers(th_dvb_adapter_t *tda, service_t *t)
  * transports that is subscribing to the adapter
  */
 static int
-dvb_transport_start(service_t *t, unsigned int weight, int force_start)
+dvb_service_start(service_t *t, unsigned int weight, int force_start)
 {
   int w, r;
   th_dvb_adapter_t *tda = t->s_dvb_mux_instance->tdmi_adapter;
@@ -140,7 +140,7 @@ dvb_transport_start(service_t *t, unsigned int weight, int force_start)
   pthread_mutex_unlock(&tda->tda_delivery_mutex);
 
   if(!r)
-    dvb_transport_open_demuxers(tda, t);
+    dvb_service_open_demuxers(tda, t);
 
   dvb_table_add_pmt(t->s_dvb_mux_instance, t->s_pmt_pid);
 
@@ -152,7 +152,7 @@ dvb_transport_start(service_t *t, unsigned int weight, int force_start)
  *
  */
 static void
-dvb_transport_stop(service_t *t)
+dvb_service_stop(service_t *t)
 {
   th_dvb_adapter_t *tda = t->s_dvb_mux_instance->tdmi_adapter;
   elementary_stream_t *st;
@@ -177,12 +177,12 @@ dvb_transport_stop(service_t *t)
  *
  */
 static void
-dvb_transport_refresh(service_t *t)
+dvb_service_refresh(service_t *t)
 {
   th_dvb_adapter_t *tda = t->s_dvb_mux_instance->tdmi_adapter;
 
   lock_assert(&global_lock);
-  dvb_transport_open_demuxers(tda, t);
+  dvb_service_open_demuxers(tda, t);
 }
 
 
@@ -190,7 +190,7 @@ dvb_transport_refresh(service_t *t)
  *
  */
 static void
-dvb_transport_save(service_t *t)
+dvb_service_save(service_t *t)
 {
   htsmsg_t *m = htsmsg_create_map();
 
@@ -230,7 +230,7 @@ dvb_transport_save(service_t *t)
 		    t->s_identifier);
 
   htsmsg_destroy(m);
-  dvb_transport_notify(t);
+  dvb_service_notify(t);
 }
 
 
@@ -238,7 +238,7 @@ dvb_transport_save(service_t *t)
  * Load config for the given mux
  */
 void
-dvb_transport_load(th_dvb_mux_instance_t *tdmi, const char *tdmi_identifier)
+dvb_service_load(th_dvb_mux_instance_t *tdmi, const char *tdmi_identifier)
 {
   htsmsg_t *l, *c;
   htsmsg_field_t *f;
@@ -269,7 +269,7 @@ dvb_transport_load(th_dvb_mux_instance_t *tdmi, const char *tdmi_identifier)
     if(htsmsg_get_u32(c, "pmt", &pmt))
       continue;
     
-    t = dvb_transport_find(tdmi, sid, pmt, f->hmf_name);
+    t = dvb_service_find(tdmi, sid, pmt, f->hmf_name);
 
     htsmsg_get_u32(c, "stype", &t->s_servicetype);
     if(htsmsg_get_u32(c, "scrambled", &u32))
@@ -311,7 +311,7 @@ dvb_transport_load(th_dvb_mux_instance_t *tdmi, const char *tdmi_identifier)
 
     /* HACK - force save for old config */
     if(old)
-      dvb_transport_save(t);
+      dvb_service_save(t);
   }
 
   /* HACK - remove old settings */
@@ -332,7 +332,7 @@ dvb_transport_load(th_dvb_mux_instance_t *tdmi, const char *tdmi_identifier)
  * return that value 
  */
 static int
-dvb_transport_quality(service_t *t)
+dvb_service_quality(service_t *t)
 {
   th_dvb_mux_instance_t *tdmi = t->s_dvb_mux_instance;
 
@@ -346,7 +346,7 @@ dvb_transport_quality(service_t *t)
  * Generate a descriptive name for the source
  */
 static void
-dvb_transport_setsourceinfo(service_t *t, struct source_info *si)
+dvb_service_setsourceinfo(service_t *t, struct source_info *si)
 {
   th_dvb_mux_instance_t *tdmi = t->s_dvb_mux_instance;
   char buf[100];
@@ -389,7 +389,7 @@ dvb_grace_period(service_t *t)
  * Find transport based on the DVB identification
  */
 service_t *
-dvb_transport_find3
+dvb_service_find3
   (th_dvb_adapter_t *tda, th_dvb_mux_instance_t *tdmi,
    const char *netname, uint16_t onid, uint16_t tsid, uint16_t sid,
    int enabled, int epgprimary)
@@ -407,13 +407,13 @@ dvb_transport_find3
       if (onid    && onid != tdmi->tdmi_network_id) continue;
       if (tsid    && tsid != tdmi->tdmi_transport_stream_id) continue;
       if (netname && strcmp(netname, tdmi->tdmi_network ?: "")) continue;
-      if ((svc = dvb_transport_find3(tda, tdmi, NULL, 0, 0, sid,
+      if ((svc = dvb_service_find3(tda, tdmi, NULL, 0, 0, sid,
                                      enabled, epgprimary)))
         return svc;
     }
   } else {
     TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link)
-      if ((svc = dvb_transport_find3(tda, NULL, netname, onid, tsid,
+      if ((svc = dvb_service_find3(tda, NULL, netname, onid, tsid,
                                      sid, enabled, epgprimary)))
         return svc;
   }
@@ -427,14 +427,14 @@ dvb_transport_find3
  * If it cannot be found we create it if 'pmt_pid' is also set
  */
 service_t *
-dvb_transport_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
+dvb_service_find(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
 		   const char *identifier)
 {
-  return dvb_transport_find2(tdmi, sid, pmt_pid, identifier, NULL);
+  return dvb_service_find2(tdmi, sid, pmt_pid, identifier, NULL);
 }
 
 service_t *
-dvb_transport_find2(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
+dvb_service_find2(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
 		   const char *identifier, int *save)
 {
   service_t *t;
@@ -465,12 +465,12 @@ dvb_transport_find2(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   t->s_dvb_service_id = sid;
   t->s_pmt_pid        = pmt_pid;
 
-  t->s_start_feed    = dvb_transport_start;
-  t->s_refresh_feed  = dvb_transport_refresh;
-  t->s_stop_feed     = dvb_transport_stop;
-  t->s_config_save   = dvb_transport_save;
-  t->s_setsourceinfo = dvb_transport_setsourceinfo;
-  t->s_quality_index = dvb_transport_quality;
+  t->s_start_feed    = dvb_service_start;
+  t->s_refresh_feed  = dvb_service_refresh;
+  t->s_stop_feed     = dvb_service_stop;
+  t->s_config_save   = dvb_service_save;
+  t->s_setsourceinfo = dvb_service_setsourceinfo;
+  t->s_quality_index = dvb_service_quality;
   t->s_grace_period  = dvb_grace_period;
 
   t->s_dvb_mux_instance = tdmi;
@@ -489,7 +489,7 @@ dvb_transport_find2(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
  *
  */
 htsmsg_t *
-dvb_transport_build_msg(service_t *t)
+dvb_service_build_msg(service_t *t)
 {
   th_dvb_mux_instance_t *tdmi = t->s_dvb_mux_instance;
   htsmsg_t *m = htsmsg_create_map();
@@ -529,7 +529,7 @@ dvb_transport_build_msg(service_t *t)
  *
  */
 void
-dvb_transport_notify_by_adapter(th_dvb_adapter_t *tda)
+dvb_service_notify_by_adapter(th_dvb_adapter_t *tda)
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "adapterId", tda->tda_identifier);
@@ -541,7 +541,7 @@ dvb_transport_notify_by_adapter(th_dvb_adapter_t *tda)
  *
  */
 void
-dvb_transport_notify(service_t *t)
+dvb_service_notify(service_t *t)
 {
   th_dvb_mux_instance_t *tdmi = t->s_dvb_mux_instance;
   htsmsg_t *m = htsmsg_create_map();
