@@ -45,15 +45,6 @@
 static int tdt_id_tally;
 
 /**
- * Helper for preparing a section filter parameter struct
- */
-struct dmx_sct_filter_params *
-dvb_fparams_alloc(void)
-{
-  return calloc(1, sizeof(struct dmx_sct_filter_params));
-}
-
-/**
  *
  */
 static void
@@ -107,7 +98,18 @@ tdt_open_fd(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
       close(tdt->tdt_fd);
       tdt->tdt_fd = -1;
     } else {
-      if(ioctl(tdt->tdt_fd, DMX_SET_FILTER, tdt->tdt_fparams)) {
+
+      struct dmx_sct_filter_params fp = {0};
+  
+      fp.filter.filter[0] = tdt->tdt_table;
+      fp.filter.mask[0]   = tdt->tdt_mask;
+
+      if(tdt->tdt_flags & TDT_CRC)
+	fp.flags |= DMX_CHECK_CRC;
+      fp.flags |= DMX_IMMEDIATE_START;
+      fp.pid = tdt->tdt_pid;
+
+      if(ioctl(tdt->tdt_fd, DMX_SET_FILTER, &fp)) {
 	close(tdt->tdt_fd);
 	tdt->tdt_fd = -1;
       }
@@ -265,7 +267,6 @@ dvb_tdt_destroy(th_dvb_adapter_t *tda, th_dvb_mux_instance_t *tdmi,
   }
 
   free(tdt->tdt_name);
-  free(tdt->tdt_fparams);
   free(tdt);
 }
 
@@ -276,7 +277,7 @@ dvb_tdt_destroy(th_dvb_adapter_t *tda, th_dvb_mux_instance_t *tdmi,
  * Add a new DVB table
  */
 void
-tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
+tdt_add(th_dvb_mux_instance_t *tdmi, int tableid, int mask,
 	int (*callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
 			 uint8_t tableid, void *opaque), void *opaque,
 	const char *name, int flags, int pid, th_dvb_table_t *tdt)
@@ -291,17 +292,9 @@ tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
     if(pid == t->tdt_pid && 
        t->tdt_callback == callback && t->tdt_opaque == opaque) {
       if (tdt)     free(tdt);
-      if (fparams) free(fparams);
       return;
     }
   }
-
-  if(fparams == NULL)
-    fparams = dvb_fparams_alloc();
-
-  if(flags & TDT_CRC) fparams->flags |= DMX_CHECK_CRC;
-  fparams->flags |= DMX_IMMEDIATE_START;
-  fparams->pid = pid;
 
 
   if(tdt == NULL)
@@ -312,7 +305,8 @@ tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
   tdt->tdt_opaque = opaque;
   tdt->tdt_pid = pid;
   tdt->tdt_flags = flags;
-  tdt->tdt_fparams = fparams;
+  tdt->tdt_table = tableid;
+  tdt->tdt_mask = mask;
   LIST_INSERT_HEAD(&tdmi->tdmi_tables, tdt, tdt_link);
   tdt->tdt_fd = -1;
   TAILQ_INSERT_TAIL(&tdmi->tdmi_table_queue, tdt, tdt_pending_link);
@@ -700,7 +694,7 @@ dvb_cat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       if(pid == 0)
 	break;
 
-      tdt_add(tdmi, NULL, dvb_ca_callback, (void *)caid, "CA", 
+      tdt_add(tdmi, 0, 0, dvb_ca_callback, (void *)caid, "CA", 
 	      TDT_CA, pid, NULL);
       break;
 
@@ -1140,24 +1134,21 @@ dvb_pmt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 static void
 dvb_table_add_default_dvb(th_dvb_mux_instance_t *tdmi)
 {
-  struct dmx_sct_filter_params *fp;
-
   /* Network Information Table */
 
-  fp = dvb_fparams_alloc();
+  int table;
 
   if(tdmi->tdmi_adapter->tda_nitoid) {
-    fp->filter.filter[0] = 0x41;
+    table = 0x41;
   } else {
-    fp->filter.filter[0] = 0x40;
+    table = 0x40;
   }
-  fp->filter.mask[0] = 0xff;
-  tdt_add(tdmi, fp, dvb_nit_callback, NULL, "nit", 
+  tdt_add(tdmi, table, 0xff, dvb_nit_callback, NULL, "nit", 
 	  TDT_QUICKREQ | TDT_CRC, 0x10, NULL);
 
   /* Service Descriptor Table and Bouqeut Allocation Table */
 
-  tdt_add(tdmi, NULL, dvb_pidx11_callback, NULL, "pidx11", 
+  tdt_add(tdmi, 0, 0, dvb_pidx11_callback, NULL, "pidx11", 
 	  TDT_QUICKREQ | TDT_CRC, 0x11, NULL);
 }
 
@@ -1168,7 +1159,6 @@ dvb_table_add_default_dvb(th_dvb_mux_instance_t *tdmi)
 static void
 dvb_table_add_default_atsc(th_dvb_mux_instance_t *tdmi)
 {
-  struct dmx_sct_filter_params *fp;
   int tableid;
 
   if(tdmi->tdmi_conf.dmc_fe_params.u.vsb.modulation == VSB_8) {
@@ -1177,11 +1167,7 @@ dvb_table_add_default_atsc(th_dvb_mux_instance_t *tdmi)
     tableid = 0xc9; // Cable
   }
 
-  /* Virtual Channel Table */
-  fp = dvb_fparams_alloc();
-  fp->filter.filter[0] = tableid;
-  fp->filter.mask[0] = 0xff;
-  tdt_add(tdmi, fp, atsc_vct_callback, NULL, "vct",
+  tdt_add(tdmi, tableid, 0xff, atsc_vct_callback, NULL, "vct",
 	  TDT_QUICKREQ | TDT_CRC, 0x1ffb, NULL);
 }
 
@@ -1194,22 +1180,12 @@ dvb_table_add_default_atsc(th_dvb_mux_instance_t *tdmi)
 void
 dvb_table_add_default(th_dvb_mux_instance_t *tdmi)
 {
-  struct dmx_sct_filter_params *fp;
-
   /* Program Allocation Table */
-
-  fp = dvb_fparams_alloc();
-  fp->filter.filter[0] = 0x00;
-  fp->filter.mask[0] = 0xff;
-  tdt_add(tdmi, fp, dvb_pat_callback, NULL, "pat", 
+  tdt_add(tdmi, 0x00, 0xff, dvb_pat_callback, NULL, "pat", 
 	  TDT_QUICKREQ | TDT_CRC, 0, NULL);
 
   /* Conditional Access Table */
-
-  fp = dvb_fparams_alloc();
-  fp->filter.filter[0] = 0x1;
-  fp->filter.mask[0] = 0xff;
-  tdt_add(tdmi, fp, dvb_cat_callback, NULL, "cat", 
+  tdt_add(tdmi, 0x1, 0xff, dvb_cat_callback, NULL, "cat", 
 	  TDT_CRC, 1, NULL);
 
 
@@ -1233,14 +1209,10 @@ dvb_table_add_default(th_dvb_mux_instance_t *tdmi)
 void
 dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid)
 {
-  struct dmx_sct_filter_params *fp;
   char pmtname[100];
 
   snprintf(pmtname, sizeof(pmtname), "PMT(%d)", pmt_pid);
-  fp = dvb_fparams_alloc();
-  fp->filter.filter[0] = 0x02;
-  fp->filter.mask[0] = 0xff;
-  tdt_add(tdmi, fp, dvb_pmt_callback, NULL, pmtname, 
+  tdt_add(tdmi, 0x2, 0xff, dvb_pmt_callback, NULL, pmtname, 
 	  TDT_CRC | TDT_QUICKREQ | TDT_TDT, pmt_pid, NULL);
 }
 

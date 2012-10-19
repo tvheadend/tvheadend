@@ -839,19 +839,19 @@ static void _eit_start
   /* Freesat (3002/3003) */
   if (!strcmp("uk_freesat", m->id)) {
 #ifdef IGNORE_TOO_SLOW
-    tdt_add(tdmi, NULL, dvb_pidx11_callback, m, m->id, TDT_CRC, 3840, NULL);
-    tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 3841, NULL);
+    tdt_add(tdmi, 0, 0, dvb_pidx11_callback, m, m->id, TDT_CRC, 3840, NULL);
+    tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 3841, NULL);
 #endif
-    tdt_add(tdmi, NULL, dvb_pidx11_callback, m, m->id, TDT_CRC, 3002, NULL);
-    tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 3003, NULL);
+    tdt_add(tdmi, 0, 0, dvb_pidx11_callback, m, m->id, TDT_CRC, 3002, NULL);
+    tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 3003, NULL);
 
   /* Viasat Baltic (0x39) */
   } else if (!strcmp("viasat_baltic", m->id)) {
-    tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 0x39, NULL);
+    tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 0x39, NULL);
 
   /* Standard (0x12) */
   } else {
-    tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 0x12, NULL);
+    tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 0x12, NULL);
   }
   tvhlog(LOG_DEBUG, m->id, "install table handlers");
 }

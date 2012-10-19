@@ -641,7 +641,6 @@ static void _opentv_start
   ( epggrab_module_ota_t *m, th_dvb_mux_instance_t *tdmi )
 {
   int *t;
-  struct dmx_sct_filter_params *fp;
   epggrab_ota_mux_t *ota;
   opentv_module_t *mod = (opentv_module_t*)m;
   opentv_status_t *sta;
@@ -668,33 +667,24 @@ static void _opentv_start
   /* Channels */
   t = mod->channel;
   while (*t) {
-    fp = dvb_fparams_alloc();
-    fp->filter.filter[0] = 0x4a;
-    fp->filter.mask[0]   = 0xff;
     // TODO: what about 0x46 (service description)
-    tdt_add(tdmi, fp, _opentv_channel_callback, m,
+    tdt_add(tdmi, 0x4a, 0xff, _opentv_channel_callback, m,
             m->id, TDT_CRC, *t++, NULL);
   }
 
   /* Titles */
   t = mod->title;
   while (*t) {
-    fp = dvb_fparams_alloc();
-    fp->filter.filter[0] = 0xa0;
-    fp->filter.mask[0]   = 0xfc;
     _opentv_status_get_pid(sta, *t);
-    tdt_add(tdmi, fp, _opentv_title_callback, m,
+    tdt_add(tdmi, 0xa0, 0xfc, _opentv_title_callback, m,
             m->id, TDT_CRC | TDT_TDT, *t++, NULL);
   }
 
   /* Summaries */
   t = mod->summary;
   while (*t) {
-    fp = dvb_fparams_alloc();
-    fp->filter.filter[0] = 0xa8;
-    fp->filter.mask[0]   = 0xfc;
     _opentv_status_get_pid(sta, *t);
-    tdt_add(tdmi, fp, _opentv_summary_callback, m,
+    tdt_add(tdmi, 0xa8, 0xfc, _opentv_summary_callback, m,
             m->id, TDT_CRC | TDT_TDT, *t++, NULL);
   }
 }

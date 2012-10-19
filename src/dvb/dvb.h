@@ -273,9 +273,11 @@ typedef struct th_dvb_table {
   int tdt_count;
   int tdt_pid;
 
-  struct dmx_sct_filter_params *tdt_fparams;
-
   int tdt_id;
+
+  int tdt_table;
+  int tdt_mask;
+
 
 } th_dvb_table_t;
 
@@ -456,13 +458,10 @@ void dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid);
 
 void dvb_table_rem_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid);
 
-struct dmx_sct_filter_params *dvb_fparams_alloc(void);
-
-void
-tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
-	int (*callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
-			 uint8_t tableid, void *opaque), void *opaque,
-	const char *name, int flags, int pid, th_dvb_table_t *tdt);
+void tdt_add(th_dvb_mux_instance_t *tdmi, int table, int mask,
+	     int (*callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
+			     uint8_t tableid, void *opaque), void *opaque,
+	     const char *name, int flags, int pid, th_dvb_table_t *tdt);
 
 int dvb_pidx11_callback
   (th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
