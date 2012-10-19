@@ -25,6 +25,8 @@
 #include "htsmsg.h"
 
 struct service;
+struct th_dvb_table;
+struct th_dvb_mux_instance;
 
 #define DVB_VER_INT(maj,min) (((maj) << 16) + (min))
 
@@ -235,6 +237,8 @@ typedef struct th_dvb_adapter {
 
   void (*tda_open_service)(struct th_dvb_adapter *tda, struct service *s);
   void (*tda_close_service)(struct th_dvb_adapter *tda, struct service *s);
+  void (*tda_open_table)(struct th_dvb_mux_instance *tdmi, struct th_dvb_table *s);
+  void (*tda_close_table)(struct th_dvb_mux_instance *tdmi, struct th_dvb_table *s);
 
 } th_dvb_adapter_t;
 
@@ -457,6 +461,8 @@ void dvb_table_flush_all(th_dvb_mux_instance_t *tdmi);
 void dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid);
 
 void dvb_table_rem_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid);
+
+void dvb_table_fastswitch(th_dvb_mux_instance_t *tdmi);
 
 void tdt_add(th_dvb_mux_instance_t *tdmi, int table, int mask,
 	     int (*callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,

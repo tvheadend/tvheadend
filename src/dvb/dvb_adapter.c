@@ -68,8 +68,6 @@ tda_alloc(void)
   tda->tda_allpids_dmx_fd = -1;
   tda->tda_dump_fd = -1;
 
-  dvb_input_filtered_setup(tda);
-
   return tda;
 }
 
@@ -479,8 +477,7 @@ tda_add(int adapter_num)
 
   TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
 
-
-  dvb_table_init(tda);
+  dvb_input_filtered_setup(tda);
 
   if(tda->tda_sat)
     dvb_satconf_init(tda);
