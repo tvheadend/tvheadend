@@ -1,6 +1,6 @@
 /*
  *  tvheadend, HTSP interface
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1114,7 +1114,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   htsp_subscription_t *hs;
 
   if(htsmsg_get_u32(in, "channelId", &chid))
-    return htsp_error("Missing argument 'channeId'");
+    return htsp_error("Missing argument 'channelId'");
 
   if(htsmsg_get_u32(in, "subscriptionId", &sid))
     return htsp_error("Missing argument 'subscriptionId'");
