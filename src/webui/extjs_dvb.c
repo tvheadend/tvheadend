@@ -153,7 +153,6 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(r, "idleclose", tda->tda_idleclose);
     htsmsg_add_u32(r, "skip_checksubscr", tda->tda_skip_checksubscr);
     htsmsg_add_u32(r, "qmon", tda->tda_qmon);
-    htsmsg_add_u32(r, "dumpmux", tda->tda_dump_muxes);
     htsmsg_add_u32(r, "poweroff", tda->tda_poweroff);
     htsmsg_add_u32(r, "sidtochan", tda->tda_sidtochan);
     htsmsg_add_u32(r, "nitoid", tda->tda_nitoid);
@@ -196,9 +195,6 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 
     s = http_arg_get(&hc->hc_req_args, "sidtochan");
     dvb_adapter_set_sidtochan(tda, !!s);
-
-    s = http_arg_get(&hc->hc_req_args, "dumpmux");
-    dvb_adapter_set_dump_muxes(tda, !!s);
 
     s = http_arg_get(&hc->hc_req_args, "disable_pmt_monitor");
     dvb_adapter_set_disable_pmt_monitor(tda, !!s);

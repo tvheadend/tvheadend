@@ -202,7 +202,6 @@ typedef struct th_dvb_adapter {
 
   char *tda_demux_path;
 
-  char     *tda_dvr_path;
   pthread_t tda_dvr_thread;
   int       tda_dvr_pipe[2];
 
@@ -223,11 +222,6 @@ typedef struct th_dvb_adapter {
 
   struct th_dvb_mux_instance_list tda_mux_list;
 
-  uint32_t tda_dump_muxes;
-
-  int tda_allpids_dmx_fd;
-  int tda_dump_fd;
-
   uint32_t tda_last_fec;
 
   int tda_unc_is_delta;  /* 1 if we believe FE_READ_UNCORRECTED_BLOCKS
@@ -239,6 +233,8 @@ typedef struct th_dvb_adapter {
   void (*tda_close_service)(struct th_dvb_adapter *tda, struct service *s);
   void (*tda_open_table)(struct th_dvb_mux_instance *tdmi, struct th_dvb_table *s);
   void (*tda_close_table)(struct th_dvb_mux_instance *tdmi, struct th_dvb_table *s);
+
+  int tda_rawmode;
 
 } th_dvb_adapter_t;
 
@@ -314,8 +310,6 @@ void dvb_adapter_set_skip_checksubscr(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_qmon(th_dvb_adapter_t *tda, int on);
 
-void dvb_adapter_set_dump_muxes(th_dvb_adapter_t *tda, int on);
-
 void dvb_adapter_set_idleclose(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_poweroff(th_dvb_adapter_t *tda, int on);
@@ -348,6 +342,9 @@ void dvb_adapter_set_extrapriority(th_dvb_adapter_t *tda, int extrapriority);
 void dvb_adapter_poweroff(th_dvb_adapter_t *tda);
 
 void dvb_input_filtered_setup(th_dvb_adapter_t *tda);
+
+void dvb_input_raw_setup(th_dvb_adapter_t *tda);
+
 
 
 /**

@@ -156,6 +156,7 @@ SRCS-${CONFIG_LINUXDVB} += \
 	src/dvb/dvb_preconf.c \
 	src/dvb/dvb_satconf.c \
 	src/dvb/dvb_input_filtered.c \
+	src/dvb/dvb_input_raw.c \
 	src/webui/extjs_dvb.c \
 
 # V4L

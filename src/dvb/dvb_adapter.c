@@ -64,10 +64,6 @@ tda_alloc(void)
     TAILQ_INIT(&tda->tda_scan_queues[i]);
   TAILQ_INIT(&tda->tda_initial_scan_queue);
   TAILQ_INIT(&tda->tda_satconfs);
-
-  tda->tda_allpids_dmx_fd = -1;
-  tda->tda_dump_fd = -1;
-
   return tda;
 }
 
@@ -90,7 +86,6 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "skip_checksubscr", tda->tda_skip_checksubscr);
   htsmsg_add_u32(m, "sidtochan", tda->tda_sidtochan);
   htsmsg_add_u32(m, "qmon", tda->tda_qmon);
-  htsmsg_add_u32(m, "dump_muxes", tda->tda_dump_muxes);
   htsmsg_add_u32(m, "poweroff", tda->tda_poweroff);
   htsmsg_add_u32(m, "nitoid", tda->tda_nitoid);
   htsmsg_add_u32(m, "diseqc_version", tda->tda_diseqc_version);
@@ -278,25 +273,6 @@ dvb_adapter_set_poweroff(th_dvb_adapter_t *tda, int on)
  *
  */
 void
-dvb_adapter_set_dump_muxes(th_dvb_adapter_t *tda, int on)
-{
-  if(tda->tda_dump_muxes == on)
-    return;
-
-  lock_assert(&global_lock);
-
-  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" dump of DVB mux input set to: %s",
-	 tda->tda_displayname, on ? "On" : "Off");
-
-  tda->tda_dump_muxes = on;
-  tda_save(tda);
-}
-
-
-/**
- *
- */
-void
 dvb_adapter_set_nitoid(th_dvb_adapter_t *tda, int nitoid)
 {
   lock_assert(&global_lock);
@@ -428,8 +404,6 @@ tda_add(int adapter_num)
   tda->tda_rootpath = strdup(path);
   tda->tda_demux_path = malloc(256);
   snprintf(tda->tda_demux_path, 256, "%s/demux0", path);
-  tda->tda_dvr_path = malloc(256);
-  snprintf(tda->tda_dvr_path, 256, "%s/dvr0", path);
   tda->tda_fe_path = strdup(fname);
   tda->tda_fe_fd       = -1;
   tda->tda_dvr_pipe[0] = -1;
@@ -588,7 +562,6 @@ dvb_adapter_init(uint32_t adapter_mask)
       htsmsg_get_u32(c, "skip_checksubscr", &tda->tda_skip_checksubscr);
       htsmsg_get_u32(c, "sidtochan", &tda->tda_sidtochan);
       htsmsg_get_u32(c, "qmon", &tda->tda_qmon);
-      htsmsg_get_u32(c, "dump_muxes", &tda->tda_dump_muxes);
       htsmsg_get_u32(c, "poweroff", &tda->tda_poweroff);
       htsmsg_get_u32(c, "nitoid", &tda->tda_nitoid);
       htsmsg_get_u32(c, "diseqc_version", &tda->tda_diseqc_version);
@@ -750,15 +723,49 @@ static void *
 dvb_adapter_input_dvr(void *aux)
 {
   th_dvb_adapter_t *tda = aux;
-  int fd, i, r, c, efd, nfds;
+  int fd, i, r, c, efd, nfds, dmx = -1;
   uint8_t tsb[188 * 10];
   service_t *t;
   struct epoll_event ev;
+  char path[256];
 
-  fd = tvh_open(tda->tda_dvr_path, O_RDONLY | O_NONBLOCK, 0);
+  snprintf(path, sizeof(path), "%s/dvr0", tda->tda_rootpath);
+
+  fd = tvh_open(path, O_RDONLY | O_NONBLOCK, 0);
   if(fd == -1) {
-    tvhlog(LOG_ALERT, "dvb", "%s: unable to open dvr", tda->tda_dvr_path);
+    tvhlog(LOG_ALERT, "dvb", "Unable to open %s -- %s", path, strerror(errno));
     return NULL;
+  }
+
+  if(tda->tda_rawmode) {
+
+    // Receive unfiltered raw transport stream
+
+    dmx = tvh_open(tda->tda_demux_path, O_RDWR, 0);
+    if(dmx == -1) {
+      tvhlog(LOG_ALERT, "dvb", "Unable to open %s -- %s", 
+	     tda->tda_demux_path, strerror(errno));
+      close(fd);
+      return NULL;
+    }
+
+    struct dmx_pes_filter_params dmx_param;
+
+    memset(&dmx_param, 0, sizeof(dmx_param));
+    dmx_param.pid = 0x2000;
+    dmx_param.input = DMX_IN_FRONTEND;
+    dmx_param.output = DMX_OUT_TS_TAP;
+    dmx_param.pes_type = DMX_PES_OTHER;
+    dmx_param.flags = DMX_IMMEDIATE_START;
+  
+    if(ioctl(dmx, DMX_SET_PES_FILTER, &dmx_param)) {
+      tvhlog(LOG_ERR, "dvb",
+	     "Unable to configure demuxer \"%s\" for all PIDs -- %s",
+	     tda->tda_demux_path, strerror(errno));
+      close(dmx);
+      close(fd);
+      return NULL;
+    }
   }
 
   /* Create poll */
@@ -790,18 +797,6 @@ dvb_adapter_input_dvr(void *aux)
     if (r < 188) continue;
 
     pthread_mutex_lock(&tda->tda_delivery_mutex);
-
-    /* debug */
-    if(tda->tda_dump_fd != -1) {
-      if(write(tda->tda_dump_fd, tsb, r) != r) {
-        tvhlog(LOG_ERR, "dvb",
-               "\"%s\" unable to write to mux dump file -- %s",
-               tda->tda_identifier, strerror(errno));
-        close(tda->tda_dump_fd);
-        tda->tda_dump_fd = -1;
-      }
-    }
-
     /* Process */
     while (r >= 188) {
   
@@ -828,6 +823,8 @@ dvb_adapter_input_dvr(void *aux)
     i = 0;
   }
 
+  if(dmx != -1)
+    close(dmx);
   close(efd);
   close(fd);
   return NULL;
