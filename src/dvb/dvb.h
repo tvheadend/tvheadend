@@ -23,6 +23,7 @@
 #include <linux/dvb/frontend.h>
 #include <pthread.h>
 #include "htsmsg.h"
+#include "psi.h"
 
 struct service;
 struct th_dvb_table;
@@ -107,6 +108,8 @@ typedef struct th_dvb_mux_instance {
 
 
   LIST_HEAD(, th_dvb_table) tdmi_tables;
+  int tdmi_num_tables;
+
   TAILQ_HEAD(, th_dvb_table) tdmi_table_queue;
   int tdmi_table_initial;
 
@@ -148,6 +151,22 @@ typedef struct th_dvb_mux_instance {
   TAILQ_HEAD(, epggrab_ota_mux) tdmi_epg_grab;
 
 } th_dvb_mux_instance_t;
+
+
+
+
+/**
+ * When in raw mode we need to enqueue raw TS packet
+ * to a different thread because we need to hold
+ * global_lock when doing delivery of the tables
+ */
+TAILQ_HEAD(dvb_table_feed_queue, dvb_table_feed);
+
+typedef struct dvb_table_feed {
+  TAILQ_ENTRY(dvb_table_feed) dtf_link;
+  uint8_t dtf_tsb[188];
+} dvb_table_feed_t;
+
 
 
 /**
@@ -236,6 +255,14 @@ typedef struct th_dvb_adapter {
 
   int tda_rawmode;
 
+
+  struct dvb_table_feed_queue tda_table_feed;
+  pthread_cond_t tda_table_feed_cond;  // Bound to tda_delivery_mutex
+
+  // PIDs that needs to be requeued and processed as tables
+  uint8_t tda_table_filter[8192];
+
+
 } th_dvb_adapter_t;
 
 /**
@@ -262,6 +289,7 @@ typedef struct th_dvb_table {
   int tdt_fd;
 
   LIST_ENTRY(th_dvb_table) tdt_link;
+  th_dvb_mux_instance_t *tdt_tdmi;
 
   char *tdt_name;
 
@@ -278,6 +306,10 @@ typedef struct th_dvb_table {
   int tdt_table;
   int tdt_mask;
 
+  int tdt_destroyed;
+  int tdt_refcount;
+
+  psi_section_t tdt_sect; // Manual reassembly
 
 } th_dvb_table_t;
 
@@ -459,12 +491,10 @@ void dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid);
 
 void dvb_table_rem_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid);
 
-void dvb_table_fastswitch(th_dvb_mux_instance_t *tdmi);
-
 void tdt_add(th_dvb_mux_instance_t *tdmi, int table, int mask,
 	     int (*callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
 			     uint8_t tableid, void *opaque), void *opaque,
-	     const char *name, int flags, int pid, th_dvb_table_t *tdt);
+	     const char *name, int flags, int pid);
 
 int dvb_pidx11_callback
   (th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
@@ -474,6 +504,10 @@ int dvb_pidx11_callback
 #define TDT_QUICKREQ      0x2
 #define TDT_CA		        0x4
 #define TDT_TDT           0x8
+
+void dvb_table_dispatch(uint8_t *sec, int r, th_dvb_table_t *tdt);
+
+void dvb_table_release(th_dvb_table_t *tdt);
 
 /**
  * Satellite configuration

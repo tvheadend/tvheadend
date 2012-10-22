@@ -842,16 +842,16 @@ static void _eit_start
     tdt_add(tdmi, 0, 0, dvb_pidx11_callback, m, m->id, TDT_CRC, 3840, NULL);
     tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 3841, NULL);
 #endif
-    tdt_add(tdmi, 0, 0, dvb_pidx11_callback, m, m->id, TDT_CRC, 3002, NULL);
-    tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 3003, NULL);
+    tdt_add(tdmi, 0, 0, dvb_pidx11_callback, m, m->id, TDT_CRC, 3002);
+    tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 3003);
 
   /* Viasat Baltic (0x39) */
   } else if (!strcmp("viasat_baltic", m->id)) {
-    tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 0x39, NULL);
+    tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 0x39);
 
   /* Standard (0x12) */
   } else {
-    tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 0x12, NULL);
+    tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 0x12);
   }
   tvhlog(LOG_DEBUG, m->id, "install table handlers");
 }

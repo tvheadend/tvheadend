@@ -669,7 +669,7 @@ static void _opentv_start
   while (*t) {
     // TODO: what about 0x46 (service description)
     tdt_add(tdmi, 0x4a, 0xff, _opentv_channel_callback, m,
-            m->id, TDT_CRC, *t++, NULL);
+            m->id, TDT_CRC, *t++);
   }
 
   /* Titles */
@@ -677,7 +677,7 @@ static void _opentv_start
   while (*t) {
     _opentv_status_get_pid(sta, *t);
     tdt_add(tdmi, 0xa0, 0xfc, _opentv_title_callback, m,
-            m->id, TDT_CRC | TDT_TDT, *t++, NULL);
+            m->id, TDT_CRC | TDT_TDT, *t++);
   }
 
   /* Summaries */
@@ -685,7 +685,7 @@ static void _opentv_start
   while (*t) {
     _opentv_status_get_pid(sta, *t);
     tdt_add(tdmi, 0xa8, 0xfc, _opentv_summary_callback, m,
-            m->id, TDT_CRC | TDT_TDT, *t++, NULL);
+            m->id, TDT_CRC | TDT_TDT, *t++);
   }
 }
 

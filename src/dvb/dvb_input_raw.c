@@ -42,6 +42,7 @@
 static void
 open_service(th_dvb_adapter_t *tda, service_t *s)
 {
+  // NOP -- We receive all PIDs anyway
 }
 
 
@@ -53,6 +54,7 @@ open_service(th_dvb_adapter_t *tda, service_t *s)
 static void
 close_service(th_dvb_adapter_t *tda, service_t *s)
 {
+  // NOP -- open_service() is a NOP
 }
 
 
@@ -62,6 +64,9 @@ close_service(th_dvb_adapter_t *tda, service_t *s)
 static void
 open_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
 {
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  assert(tdt->tdt_pid < 0x2000);
+  tda->tda_table_filter[tdt->tdt_pid] = 1;
 }
 
 
@@ -71,7 +76,83 @@ open_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
 static void
 close_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
 {
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  assert(tdt->tdt_pid < 0x2000);
+  tda->tda_table_filter[tdt->tdt_pid] = 0;
 }
+
+
+/**
+ *
+ */
+static void
+got_section(const uint8_t *data, size_t len, void *opaque)
+{
+  th_dvb_table_t *tdt = opaque;
+  dvb_table_dispatch((uint8_t *)data, len, tdt);
+}
+
+
+
+/**
+ * All the tables can be destroyed from any of the callbacks
+ * so we need to be a bit careful here
+ */
+static void
+dvb_table_raw_dispatch(th_dvb_mux_instance_t *tdmi,
+		       const dvb_table_feed_t *dtf)
+{
+  int pid = (dtf->dtf_tsb[1] & 0x1f) << 8 | dtf->dtf_tsb[2];
+  th_dvb_table_t *vec[tdmi->tdmi_num_tables], *tdt;
+  int i = 0;
+  LIST_FOREACH(tdt, &tdmi->tdmi_tables, tdt_link) {
+    vec[i++] = tdt;
+    tdt->tdt_refcount++;
+  }
+  assert(i == tdmi->tdmi_num_tables);
+  int len = tdmi->tdmi_num_tables; // can change during callbacks
+  for(i = 0; i < len; i++) {
+    tdt = vec[i];
+    if(!tdt->tdt_destroyed) {
+      if(tdt->tdt_pid == pid)
+	psi_section_reassemble(&tdt->tdt_sect, dtf->dtf_tsb,
+			       0, got_section, tdt);
+    }
+    dvb_table_release(tdt);
+  }
+}
+
+/**
+ *
+ */
+static void *
+dvb_table_input(void *aux)
+{
+  th_dvb_adapter_t *tda = aux;
+  th_dvb_mux_instance_t *tdmi;
+  dvb_table_feed_t *dtf;
+
+  while(1) {
+
+    pthread_mutex_lock(&tda->tda_delivery_mutex);
+  
+    while((dtf = TAILQ_FIRST(&tda->tda_table_feed)) == NULL)
+      pthread_cond_wait(&tda->tda_table_feed_cond, &tda->tda_delivery_mutex);
+    TAILQ_REMOVE(&tda->tda_table_feed, dtf, dtf_link);
+
+    pthread_mutex_unlock(&tda->tda_delivery_mutex);
+
+    pthread_mutex_lock(&global_lock);
+
+    if((tdmi = tda->tda_mux_current) != NULL)
+      dvb_table_raw_dispatch(tdmi, dtf);
+
+    pthread_mutex_unlock(&global_lock);
+    free(dtf);
+  }    
+  return NULL;
+}
+
 
 /**
  *
@@ -84,5 +165,12 @@ dvb_input_raw_setup(th_dvb_adapter_t *tda)
   tda->tda_close_service = close_service;
   tda->tda_open_table    = open_table;
   tda->tda_close_table   = close_table;
+
+  TAILQ_INIT(&tda->tda_table_feed);
+  pthread_cond_init(&tda->tda_table_feed_cond, NULL);
+
+  pthread_t ptid;
+  pthread_create(&ptid, NULL, dvb_table_input, tda);
+
 }
 

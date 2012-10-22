@@ -116,9 +116,6 @@ open_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
   struct epoll_event e;
   static int tdt_id_tally;
 
-  assert(tdt->tdt_fd == -1);
-  TAILQ_REMOVE(&tdmi->tdmi_table_queue, tdt, tdt_pending_link);
-
   tdt->tdt_fd = tvh_open(tda->tda_demux_path, O_RDWR, 0);
 
   if(tdt->tdt_fd != -1) {
@@ -173,47 +170,6 @@ tdt_close_fd(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
 }
 
 
-/**
- *
- */
-static void
-dvb_proc_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt, uint8_t *sec,
-	       int r)
-{
-  int chkcrc = tdt->tdt_flags & TDT_CRC;
-  int tableid, len;
-  uint8_t *ptr;
-  int ret;
-
-  /* It seems some hardware (or is it the dvb API?) does not
-     honour the DMX_CHECK_CRC flag, so we check it again */
-  if(chkcrc && tvh_crc32(sec, r, 0xffffffff))
-    return;
-      
-  r -= 3;
-  tableid = sec[0];
-  len = ((sec[1] & 0x0f) << 8) | sec[2];
-  
-  if(len < r)
-    return;
-
-  ptr = &sec[3];
-  if(chkcrc) len -= 4;   /* Strip trailing CRC */
-
-  if(tdt->tdt_flags & TDT_CA)
-    ret = tdt->tdt_callback((th_dvb_mux_instance_t *)tdt,
-                                sec, len + 3, tableid, tdt->tdt_opaque);
-  else if(tdt->tdt_flags & TDT_TDT)
-    ret = tdt->tdt_callback(tdmi, ptr, len, tableid, tdt);
-  else
-    ret = tdt->tdt_callback(tdmi, ptr, len, tableid, tdt->tdt_opaque);
-  
-  if(ret == 0)
-    tdt->tdt_count++;
-
-  if(tdt->tdt_flags & TDT_QUICKREQ)
-    dvb_table_fastswitch(tdmi);
-}
 
 /**
  *
@@ -250,7 +206,7 @@ dvb_table_input(void *aux)
 	    break;
 
 	if(tdt != NULL) {
-	  dvb_proc_table(tdmi, tdt, sec, r);
+	  dvb_table_dispatch(sec, r, tdt);
 
 	  /* Any tables pending (that wants a filter/fd), close this one */
 	  if(TAILQ_FIRST(&tdmi->tdmi_table_queue) != NULL &&
@@ -259,6 +215,7 @@ dvb_table_input(void *aux)
 	    cycle_barrier = getmonoclock() + 100000;
 	    tdt = TAILQ_FIRST(&tdmi->tdmi_table_queue);
 	    assert(tdt != NULL);
+	    TAILQ_REMOVE(&tdmi->tdmi_table_queue, tdt, tdt_pending_link);
 
 	    open_table(tdmi, tdt);
 	  }

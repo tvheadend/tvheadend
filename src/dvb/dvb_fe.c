@@ -226,6 +226,8 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
+  lock_assert(&global_lock);
+
   assert(tdmi == tda->tda_mux_current);
   tda->tda_mux_current = NULL;
 

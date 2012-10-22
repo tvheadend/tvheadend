@@ -46,7 +46,7 @@
 /**
  *
  */
-void
+static void
 dvb_table_fastswitch(th_dvb_mux_instance_t *tdmi)
 {
   th_dvb_table_t *tdt;
@@ -75,17 +75,79 @@ dvb_table_fastswitch(th_dvb_mux_instance_t *tdmi)
 /**
  *
  */
+void
+dvb_table_dispatch(uint8_t *sec, int r, th_dvb_table_t *tdt)
+{
+  if(tdt->tdt_destroyed)
+    return;
+
+  int chkcrc = tdt->tdt_flags & TDT_CRC;
+  int tableid, len;
+  uint8_t *ptr;
+  int ret;
+  th_dvb_mux_instance_t *tdmi = tdt->tdt_tdmi;
+
+  /* It seems some hardware (or is it the dvb API?) does not
+     honour the DMX_CHECK_CRC flag, so we check it again */
+  if(chkcrc && tvh_crc32(sec, r, 0xffffffff))
+    return;
+      
+  r -= 3;
+  tableid = sec[0];
+  len = ((sec[1] & 0x0f) << 8) | sec[2];
+  
+  if(len < r)
+    return;
+
+  if((tableid & tdt->tdt_mask) != tdt->tdt_table)
+    return;
+
+  ptr = &sec[3];
+  if(chkcrc) len -= 4;   /* Strip trailing CRC */
+
+  if(tdt->tdt_flags & TDT_CA)
+    ret = tdt->tdt_callback((th_dvb_mux_instance_t *)tdt,
+                                sec, len + 3, tableid, tdt->tdt_opaque);
+  else if(tdt->tdt_flags & TDT_TDT)
+    ret = tdt->tdt_callback(tdt->tdt_tdmi, ptr, len, tableid, tdt);
+  else
+    ret = tdt->tdt_callback(tdt->tdt_tdmi, ptr, len, tableid, tdt->tdt_opaque);
+  
+  if(ret == 0)
+    tdt->tdt_count++;
+
+  if(tdt->tdt_flags & TDT_QUICKREQ)
+    dvb_table_fastswitch(tdmi);
+}
+
+
+/**
+ *
+ */
+void
+dvb_table_release(th_dvb_table_t *tdt)
+{
+  if(--tdt->tdt_refcount == 0)
+    free(tdt);
+}
+
+
+/**
+ *
+ */
 static void
 dvb_tdt_destroy(th_dvb_adapter_t *tda, th_dvb_mux_instance_t *tdmi,
 		th_dvb_table_t *tdt)
 {
+  lock_assert(&global_lock);
+  assert(tdt->tdt_tdmi == tdmi);
   LIST_REMOVE(tdt, tdt_link);
+  tdmi->tdmi_num_tables--;
   tda->tda_close_table(tdmi, tdt);
   free(tdt->tdt_name);
-  free(tdt);
+  tdt->tdt_destroyed = 1;
+  dvb_table_release(tdt);
 }
-
-
 
 
 /**
@@ -95,7 +157,7 @@ void
 tdt_add(th_dvb_mux_instance_t *tdmi, int tableid, int mask,
 	int (*callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
 			 uint8_t tableid, void *opaque), void *opaque,
-	const char *name, int flags, int pid, th_dvb_table_t *tdt)
+	const char *name, int flags, int pid)
 {
   th_dvb_table_t *t;
 
@@ -106,15 +168,12 @@ tdt_add(th_dvb_mux_instance_t *tdmi, int tableid, int mask,
   LIST_FOREACH(t, &tdmi->tdmi_tables, tdt_link) {
     if(pid == t->tdt_pid && 
        t->tdt_callback == callback && t->tdt_opaque == opaque) {
-      if (tdt)     free(tdt);
       return;
     }
   }
 
-
-  if(tdt == NULL)
-    tdt = calloc(1, sizeof(th_dvb_table_t));
-
+  th_dvb_table_t *tdt = calloc(1, sizeof(th_dvb_table_t));
+  tdt->tdt_refcount = 1;
   tdt->tdt_name = strdup(name);
   tdt->tdt_callback = callback;
   tdt->tdt_opaque = opaque;
@@ -122,9 +181,10 @@ tdt_add(th_dvb_mux_instance_t *tdmi, int tableid, int mask,
   tdt->tdt_flags = flags;
   tdt->tdt_table = tableid;
   tdt->tdt_mask = mask;
+  tdt->tdt_tdmi = tdmi;
   LIST_INSERT_HEAD(&tdmi->tdmi_tables, tdt, tdt_link);
+  tdmi->tdmi_num_tables++;
   tdt->tdt_fd = -1;
-  TAILQ_INSERT_TAIL(&tdmi->tdmi_table_queue, tdt, tdt_pending_link);
 
   tdmi->tdmi_adapter->tda_open_table(tdmi, tdt);
 }
@@ -510,7 +570,7 @@ dvb_cat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 	break;
 
       tdt_add(tdmi, 0, 0, dvb_ca_callback, (void *)caid, "CA", 
-	      TDT_CA, pid, NULL);
+	      TDT_CA, pid);
       break;
 
     default:
@@ -959,12 +1019,12 @@ dvb_table_add_default_dvb(th_dvb_mux_instance_t *tdmi)
     table = 0x40;
   }
   tdt_add(tdmi, table, 0xff, dvb_nit_callback, NULL, "nit", 
-	  TDT_QUICKREQ | TDT_CRC, 0x10, NULL);
+	  TDT_QUICKREQ | TDT_CRC, 0x10);
 
   /* Service Descriptor Table and Bouqeut Allocation Table */
 
   tdt_add(tdmi, 0, 0, dvb_pidx11_callback, NULL, "pidx11", 
-	  TDT_QUICKREQ | TDT_CRC, 0x11, NULL);
+	  TDT_QUICKREQ | TDT_CRC, 0x11);
 }
 
 
@@ -983,7 +1043,7 @@ dvb_table_add_default_atsc(th_dvb_mux_instance_t *tdmi)
   }
 
   tdt_add(tdmi, tableid, 0xff, atsc_vct_callback, NULL, "vct",
-	  TDT_QUICKREQ | TDT_CRC, 0x1ffb, NULL);
+	  TDT_QUICKREQ | TDT_CRC, 0x1ffb);
 }
 
 
@@ -997,11 +1057,11 @@ dvb_table_add_default(th_dvb_mux_instance_t *tdmi)
 {
   /* Program Allocation Table */
   tdt_add(tdmi, 0x00, 0xff, dvb_pat_callback, NULL, "pat", 
-	  TDT_QUICKREQ | TDT_CRC, 0, NULL);
+	  TDT_QUICKREQ | TDT_CRC, 0);
 
   /* Conditional Access Table */
   tdt_add(tdmi, 0x1, 0xff, dvb_cat_callback, NULL, "cat", 
-	  TDT_CRC, 1, NULL);
+	  TDT_CRC, 1);
 
 
   switch(tdmi->tdmi_adapter->tda_type) {
@@ -1028,7 +1088,7 @@ dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid)
 
   snprintf(pmtname, sizeof(pmtname), "PMT(%d)", pmt_pid);
   tdt_add(tdmi, 0x2, 0xff, dvb_pmt_callback, NULL, pmtname, 
-	  TDT_CRC | TDT_QUICKREQ | TDT_TDT, pmt_pid, NULL);
+	  TDT_CRC | TDT_QUICKREQ | TDT_TDT, pmt_pid);
 }
 
 void
