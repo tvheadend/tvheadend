@@ -39,6 +39,7 @@
 #include "htsmsg.h"
 #include "notify.h"
 #include "atomic.h"
+#include "dvb/dvb.h"
 
 struct th_subscription_list subscriptions;
 static gtimer_t subscription_reschedule_timer;
@@ -215,6 +216,14 @@ subscription_unsubscribe(th_subscription_t *s)
   if(t != NULL)
     service_remove_subscriber(t, s, SM_CODE_OK);
 
+  if(s->ths_tdmi != NULL) {
+    LIST_REMOVE(s, ths_tdmi_link);
+    th_dvb_adapter_t *tda = s->ths_tdmi->tdmi_adapter;
+    pthread_mutex_lock(&tda->tda_delivery_mutex);
+    streaming_target_disconnect(&tda->tda_streaming_pad, &s->ths_input);
+    pthread_mutex_unlock(&tda->tda_delivery_mutex);
+  }
+
   if(s->ths_start_message != NULL) 
     streaming_msg_free(s->ths_start_message);
  
@@ -302,9 +311,9 @@ subscription_input_direct(void *opauqe, streaming_message_t *sm)
 /**
  *
  */
-static th_subscription_t *
+th_subscription_t *
 subscription_create(int weight, const char *name, streaming_target_t *st,
-		    int flags, int direct, const char *hostname,
+		    int flags, st_callback_t *cb, const char *hostname,
 		    const char *username, const char *client)
 {
   th_subscription_t *s = calloc(1, sizeof(th_subscription_t));
@@ -316,9 +325,8 @@ subscription_create(int weight, const char *name, streaming_target_t *st,
   else
     reject |= SMT_TO_MASK(SMT_MPEGTS);  // Reject raw mpegts
 
-
-  streaming_target_init(&s->ths_input, direct ? subscription_input_direct : 
-			subscription_input, s, reject);
+  streaming_target_init(&s->ths_input, 
+			cb ?: subscription_input_direct, s, reject);
 
   s->ths_weight            = weight;
   s->ths_title             = strdup(name);
@@ -348,8 +356,10 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
 				 int flags, const char *hostname,
 				 const char *username, const char *client)
 {
-  th_subscription_t *s = subscription_create(weight, name, st, flags, 0,
-					     hostname, username, client);
+  th_subscription_t *s;
+
+  s = subscription_create(weight, name, st, flags, subscription_input,
+			  hostname, username, client);
 
   s->ths_channel = ch;
   LIST_INSERT_HEAD(&ch->ch_subscriptions, s, ths_channel_link);
@@ -391,12 +401,15 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
  */
 th_subscription_t *
 subscription_create_from_service(service_t *t, const char *name,
-				   streaming_target_t *st, int flags)
+				 streaming_target_t *st, int flags)
 {
-  th_subscription_t *s = subscription_create(INT32_MAX, name, st, flags, 1,
-					     NULL, NULL, NULL);
+  th_subscription_t *s;
   source_info_t si;
   int r;
+
+  s = subscription_create(INT32_MAX, name, st, flags, 
+			  subscription_input_direct,
+			  NULL, NULL, NULL);
 
   if(t->s_status != SERVICE_RUNNING) {
     if((r = service_start(t, INT32_MAX, 1)) != 0) {

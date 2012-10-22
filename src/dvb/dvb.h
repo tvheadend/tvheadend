@@ -150,6 +150,8 @@ typedef struct th_dvb_mux_instance {
 
   TAILQ_HEAD(, epggrab_ota_mux) tdmi_epg_grab;
 
+  struct th_subscription_list tdmi_subscriptions;
+
 } th_dvb_mux_instance_t;
 
 
@@ -255,6 +257,10 @@ typedef struct th_dvb_adapter {
 
   int tda_rawmode;
 
+  // Full mux streaming, protected via the delivery mutex
+
+  streaming_pad_t tda_streaming_pad;
+
 
   struct dvb_table_feed_queue tda_table_feed;
   pthread_cond_t tda_table_feed_cond;  // Bound to tda_delivery_mutex
@@ -317,12 +323,12 @@ typedef struct th_dvb_table {
 extern struct th_dvb_adapter_queue dvb_adapters;
 extern struct th_dvb_mux_instance_tree dvb_muxes;
 
-void dvb_init(uint32_t adapter_mask);
+void dvb_init(uint32_t adapter_mask, const char *rawfile);
 
 /**
  * DVB Adapter
  */
-void dvb_adapter_init(uint32_t adapter_mask);
+void dvb_adapter_init(uint32_t adapter_mask, const char *rawfile);
 
 void dvb_adapter_mux_scanner(void *aux);
 
@@ -524,4 +530,14 @@ dvb_satconf_t *dvb_satconf_entry_find(th_dvb_adapter_t *tda,
 void dvb_lnb_get_frequencies(const char *id, 
 			     int *f_low, int *f_hi, int *f_switch);
 
+
+/**
+ * Raw demux
+ */
+struct th_subscription;
+struct th_subscription *dvb_subscription_create_from_tdmi(th_dvb_mux_instance_t *tdmi,
+							  const char *name,
+							  streaming_target_t *st);
+
 #endif /* DVB_H_ */
+

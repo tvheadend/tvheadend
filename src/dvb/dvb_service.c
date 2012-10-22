@@ -79,7 +79,10 @@ dvb_service_start(service_t *t, unsigned int weight, int force_start)
     if(w && w >= weight && !force_start)
       /* We are outranked by weight, cant use it */
       return SM_CODE_NOT_FREE;
-    
+
+    if(LIST_FIRST(&tdmi->tdmi_subscriptions) != NULL)
+      return SM_CODE_NOT_FREE;
+
     dvb_adapter_clean(tda);
   }
 

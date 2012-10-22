@@ -64,6 +64,7 @@ tda_alloc(void)
     TAILQ_INIT(&tda->tda_scan_queues[i]);
   TAILQ_INIT(&tda->tda_initial_scan_queue);
   TAILQ_INIT(&tda->tda_satconfs);
+  streaming_pad_init(&tda->tda_streaming_pad);
   return tda;
 }
 
@@ -459,6 +460,53 @@ tda_add(int adapter_num)
   gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 1);
 }
 
+
+/**
+ *
+ */
+static void
+tda_add_from_file(const char *filename)
+{
+  int i, r;
+  th_dvb_adapter_t *tda;
+  char buf[400];
+
+  tda = tda_alloc();
+
+  tda->tda_adapter_num = -1;
+  tda->tda_fe_fd       = -1;
+  tda->tda_dvr_pipe[0] = -1;
+
+  tda->tda_type = -1;
+
+  snprintf(buf, sizeof(buf), "%s", filename);
+
+  r = strlen(buf);
+  for(i = 0; i < r; i++)
+    if(!isalnum((int)buf[i]))
+      buf[i] = '_';
+
+  tda->tda_identifier = strdup(buf);
+  
+  tda->tda_autodiscovery = 0;
+  tda->tda_idlescan = 0;
+
+  tda->tda_sat = 0;
+
+  /* Come up with an initial displayname, user can change it and it will
+     be overridden by any stored settings later on */
+
+  tda->tda_displayname = strdup(filename);
+
+  TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
+
+  dvb_input_raw_setup(tda);
+}
+
+
+/**
+ *
+ */
 void
 dvb_adapter_start ( th_dvb_adapter_t *tda )
 {
@@ -515,7 +563,7 @@ dvb_adapter_stop ( th_dvb_adapter_t *tda )
  *
  */
 void
-dvb_adapter_init(uint32_t adapter_mask)
+dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
 {
   htsmsg_t *l, *c;
   htsmsg_field_t *f;
@@ -528,6 +576,10 @@ dvb_adapter_init(uint32_t adapter_mask)
   for(i = 0; i < 32; i++) 
     if ((1 << i) & adapter_mask) 
       tda_add(i);
+
+  if(rawfile)
+    tda_add_from_file(rawfile);
+
 
   l = hts_settings_load("dvbadapters");
   if(l != NULL) {
@@ -604,6 +656,10 @@ dvb_adapter_mux_scanner(void *aux)
   /* Someone is actively using */
   if(service_compute_weight(&tda->tda_transports) > 0)
     return;
+
+  if(tda->tda_mux_current != NULL &&
+     LIST_FIRST(&tda->tda_mux_current->tdmi_subscriptions) != NULL)
+    return; // Someone is doing full mux dump
 
   /* Check if we have muxes pending for quickscan, if so, choose them */
   if((tdmi = TAILQ_FIRST(&tda->tda_initial_scan_queue)) != NULL) {
@@ -804,7 +860,18 @@ dvb_adapter_input_dvr(void *aux)
   
       /* sync */
       if (tsb[i] == 0x47) {
-	
+
+	if(LIST_FIRST(&tda->tda_streaming_pad.sp_targets) != NULL) {
+	  streaming_message_t sm;
+	  pktbuf_t *pb = pktbuf_alloc(tsb, 188);
+	  memset(&sm, 0, sizeof(sm));
+	  sm.sm_type = SMT_MPEGTS;
+	  sm.sm_data = pb;
+	  streaming_pad_deliver(&tda->tda_streaming_pad, &sm);
+	  pktbuf_ref_dec(pb);
+	}
+
+
 	if(!(tsb[i+1] & 0x80)) { // Only dispatch to table parser if not error
 	  int pid = (tsb[i+1] & 0x1f) << 8 | tsb[i+2];
 	  if(tda->tda_table_filter[pid]) {

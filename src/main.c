@@ -262,6 +262,7 @@ main(int argc, char **argv)
   sigset_t set;
   const char *homedir;
   const char *rawts_input = NULL;
+  const char *dvb_rawts_input = NULL;
   const char *join_transport = NULL;
   const char *confpath = NULL;
   char *p, *endp;
@@ -279,7 +280,7 @@ main(int argc, char **argv)
   // make sure the timezone is set
   tzset();
 
-  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:sw:e:E:")) != -1) {
+  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:sw:e:E:R:")) != -1) {
     switch(c) {
     case 'a':
       adapter_mask = 0x0;
@@ -339,6 +340,9 @@ main(int argc, char **argv)
       break;
     case 'r':
       rawts_input = optarg;
+      break;
+    case 'R':
+      dvb_rawts_input = optarg;
       break;
     case 'j':
       join_transport = optarg;
@@ -421,7 +425,7 @@ main(int argc, char **argv)
 
   tcp_server_init();
 #if ENABLE_LINUXDVB
-  dvb_init(adapter_mask);
+  dvb_init(adapter_mask, dvb_rawts_input);
 #endif
   iptv_input_init();
 #if ENABLE_V4L

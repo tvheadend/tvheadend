@@ -42,6 +42,8 @@
 #include "plumbing/globalheaders.h"
 #include "epg.h"
 #include "muxer.h"
+#include "dvb/dvb.h"
+#include "dvb/dvb_support.h"
 
 /**
  *
@@ -262,6 +264,76 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
   muxer_destroy(mux);
 }
+
+
+
+/**
+ * HTTP stream loop
+ */
+static void
+http_stream_run2(http_connection_t *hc, streaming_queue_t *sq)
+{
+  streaming_message_t *sm;
+  int run = 1;
+  int timeouts = 0;
+  struct timespec ts;
+  struct timeval  tp;
+  int err = 0;
+  socklen_t errlen = sizeof(err);
+
+  /* reduce timeout on write() for streaming */
+  tp.tv_sec  = 5;
+  tp.tv_usec = 0;
+  setsockopt(hc->hc_fd, SOL_SOCKET, SO_SNDTIMEO, &tp, sizeof(tp));
+  http_output_content(hc, "application/octet-stream");
+
+  while(run) {
+    pthread_mutex_lock(&sq->sq_mutex);
+    sm = TAILQ_FIRST(&sq->sq_queue);
+    if(sm == NULL) {      
+      gettimeofday(&tp, NULL);
+      ts.tv_sec  = tp.tv_sec + 1;
+      ts.tv_nsec = tp.tv_usec * 1000;
+
+      if(pthread_cond_timedwait(&sq->sq_cond, &sq->sq_mutex, &ts) == ETIMEDOUT) {
+          timeouts++;
+
+          //Check socket status
+          getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen);  
+          if(err) {
+	    tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
+	    run = 0;
+          }else if(timeouts >= 20) {
+	    tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, timeout waiting for packets", hc->hc_url_orig);
+	    run = 0;
+          }
+      }
+      pthread_mutex_unlock(&sq->sq_mutex);
+      continue;
+    }
+
+    timeouts = 0; //Reset timeout counter
+    TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
+    pthread_mutex_unlock(&sq->sq_mutex);
+
+    pktbuf_t *pb;
+
+    switch(sm->sm_type) {
+    case SMT_MPEGTS:
+      pb = sm->sm_data;
+      if(write(hc->hc_fd, pb->pb_data, pb->pb_size) != pb->pb_size) {
+	tvhlog(LOG_DEBUG, "webui",  "Write error %s, stopping", hc->hc_url_orig);
+	run = 0;
+      }
+      break;
+    default:
+      break;
+    }
+
+    streaming_msg_free(sm);
+  }
+}
+
 
 
 /**
@@ -597,6 +669,34 @@ http_stream_service(http_connection_t *hc, service_t *service)
 
 
 /**
+ * Subscribes to a service and starts the streaming loop
+ */
+static int
+http_stream_tdmi(http_connection_t *hc, th_dvb_mux_instance_t *tdmi)
+{
+  th_subscription_t *s;
+  streaming_queue_t sq;
+
+  streaming_queue_init(&sq, SMT_PACKET);
+
+  pthread_mutex_lock(&global_lock);
+  s = dvb_subscription_create_from_tdmi(tdmi, "HTTP", &sq.sq_st);
+  pthread_mutex_unlock(&global_lock);
+
+  http_stream_run2(hc, &sq);
+
+
+  pthread_mutex_lock(&global_lock);
+  subscription_unsubscribe(s);
+  pthread_mutex_unlock(&global_lock);
+
+  streaming_queue_deinit(&sq);
+
+  return 0;
+}
+
+
+/**
  * Subscribes to a channel and starts the streaming loop
  */
 static int
@@ -668,6 +768,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
  * Handle the http request. http://tvheadend/stream/channelid/<chid>
  *                          http://tvheadend/stream/channel/<chname>
  *                          http://tvheadend/stream/service/<servicename>
+ *                          http://tvheadend/stream/mux/<muxid>
  */
 static int
 http_stream(http_connection_t *hc, const char *remain, void *opaque)
@@ -675,6 +776,7 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   char *components[2];
   channel_t *ch = NULL;
   service_t *service = NULL;
+  th_dvb_mux_instance_t *tdmi = NULL;
 
   hc->hc_keep_alive = 0;
 
@@ -698,14 +800,19 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
     ch = channel_find_by_name(components[1], 0, 0);
   } else if(!strcmp(components[0], "service")) {
     service = service_find_by_identifier(components[1]);
+  } else if(!strcmp(components[0], "mux")) {
+    tdmi = dvb_mux_find_by_identifier(components[1]);
   }
 
+  // bug here: We can't retain pointers to channels etc outside global_lock
   pthread_mutex_unlock(&global_lock);
 
   if(ch != NULL) {
     return http_stream_channel(hc, ch);
   } else if(service != NULL) {
     return http_stream_service(hc, service);
+  } else if(tdmi != NULL) {
+    return http_stream_tdmi(hc, tdmi);
   } else {
     http_error(hc, HTTP_STATUS_BAD_REQUEST);
     return HTTP_STATUS_BAD_REQUEST;

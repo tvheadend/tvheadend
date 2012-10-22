@@ -65,6 +65,10 @@ typedef struct th_subscription {
   char *ths_username;
   char *ths_client;
 
+  // Ugly ugly ugly to refer DVB code here
+
+  LIST_ENTRY(th_subscription) ths_tdmi_link;
+  struct th_dvb_mux_instance *ths_tdmi;
 
 } th_subscription_t;
 
@@ -95,9 +99,14 @@ th_subscription_t *subscription_create_from_service(struct service *t,
 						    streaming_target_t *st,
 						    int flags);
 
-void subscription_change_weight(th_subscription_t *s, int weight);
+th_subscription_t *subscription_create(int weight, const char *name,
+				       streaming_target_t *st,
+				       int flags, st_callback_t *cb,
+				       const char *hostname,
+				       const char *username,
+				       const char *client);
 
-void subscription_stop(th_subscription_t *s);
+void subscription_change_weight(th_subscription_t *s, int weight);
 
 void subscription_unlink_service(th_subscription_t *s, int reason);
 
