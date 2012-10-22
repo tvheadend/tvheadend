@@ -144,6 +144,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 {
   streaming_message_t *sm;
   int run = 1;
+  int started = 0;
   muxer_t *mux = NULL;
   int timeouts = 0;
   struct timespec ts;
@@ -180,10 +181,10 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
           //Check socket status
           getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen);  
           if(err) {
-	    tvhlog(LOG_DEBUG, "webui",  "Client hung up, exit streaming");
+	    tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
 	    run = 0;
           }else if(timeouts >= 20) {
-	    tvhlog(LOG_WARNING, "webui",  "Timeout waiting for packets");
+	    tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, timeout waiting for packets", hc->hc_url_orig);
 	    run = 0;
           }
       }
@@ -198,9 +199,8 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     switch(sm->sm_type) {
     case SMT_MPEGTS:
     case SMT_PACKET:
-      if(!muxer_write_pkt(mux, sm->sm_data))
-	sm->sm_data = NULL;
-
+      muxer_write_pkt(mux, sm->sm_data);
+      sm->sm_data = NULL;
       break;
 
     case SMT_START:
@@ -208,16 +208,23 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
 
       http_output_content(hc, muxer_mime(mux, sm->sm_data));
       muxer_init(mux, sm->sm_data, name);
+
+      started = 1;
       break;
 
     case SMT_STOP:
-      muxer_close(mux);
-      run = 0;
+      if(sm->sm_code == SM_CODE_SOURCE_RECONFIGURED) {
+	muxer_reconfigure(mux, sm->sm_data);
+      } else {
+	tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, %s", hc->hc_url_orig, 
+	       streaming_code2txt(sm->sm_code));
+	run = 0;
+      }
       break;
 
     case SMT_SERVICE_STATUS:
       if(getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, &err, &errlen)) {
-	tvhlog(LOG_DEBUG, "webui",  "Client hung up, exit streaming");
+	tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
 	run = 0;
       }
       break;
@@ -226,20 +233,28 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
       break;
 
     case SMT_NOSTART:
-      tvhlog(LOG_DEBUG, "webui",  "Couldn't start stream for %s", hc->hc_url_orig);
+      tvhlog(LOG_WARNING, "webui",  "Couldn't start streaming %s, %s", hc->hc_url_orig,
+	     streaming_code2txt(sm->sm_code));
       run = 0;
       break;
 
     case SMT_EXIT:
-      muxer_close(mux);
+      tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, %s", hc->hc_url_orig,
+	     streaming_code2txt(sm->sm_code));
       run = 0;
       break;
     }
+
     streaming_msg_free(sm);
 
-    if(mux->m_errors)
+    if(mux->m_errors) {
+      tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, muxer reported errors", hc->hc_url_orig);
       run = 0;
+    }
   }
+
+  if(started)
+    muxer_close(mux);
 
   muxer_destroy(mux);
 }
@@ -607,7 +622,8 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   }
 
   pthread_mutex_lock(&global_lock);
-  s = subscription_create_from_channel(ch, priority, "HTTP", st, flags);
+  s = subscription_create_from_channel(ch, priority, "HTTP", st, flags,
+				       NULL, NULL, NULL);
   pthread_mutex_unlock(&global_lock);
 
   if(s) {

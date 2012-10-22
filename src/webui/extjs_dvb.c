@@ -162,6 +162,9 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 		   ((const char *[]){"DiSEqC 1.0 / 2.0",
 				       "DiSEqC 1.1 / 2.1"})
 		   [tda->tda_diseqc_version % 2]);
+    htsmsg_add_str(r, "diseqcrepeats",
+		   ((const char *[]){"0", "1", "3"})
+		   [tda->tda_diseqc_repeats % 3]);
     htsmsg_add_u32(r, "extrapriority", tda->tda_extrapriority);
  
     out = json_single_record(r, "dvbadapters");
@@ -210,6 +213,14 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 	dvb_adapter_set_diseqc_version(tda, 1);
     }
 
+    if((s = http_arg_get(&hc->hc_req_args, "diseqcrepeats")) != NULL) {
+      if(!strcmp(s, "0"))
+        dvb_adapter_set_diseqc_repeats(tda, 0);
+      else if(!strcmp(s, "1"))
+        dvb_adapter_set_diseqc_repeats(tda, 1);
+      else if(!strcmp(s, "2"))
+        dvb_adapter_set_diseqc_repeats(tda, 2);
+    }
     if((s = http_arg_get(&hc->hc_req_args, "extrapriority")) != NULL)
       dvb_adapter_set_extrapriority(tda, atoi(s));
 

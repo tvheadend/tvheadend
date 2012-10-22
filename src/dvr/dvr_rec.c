@@ -86,7 +86,10 @@ dvr_rec_subscribe(dvr_entry_t *de)
   }
 
   de->de_s = subscription_create_from_channel(de->de_channel, weight,
-					      buf, st, flags);
+					      buf, st, flags,
+					      NULL, "DVR",
+					      lang_str_get(de->de_title,
+							   NULL));
 
   pthread_create(&de->de_thread, NULL, dvr_thread, de);
 }
@@ -442,8 +445,8 @@ dvr_thread(void *aux)
       if(dispatch_clock > de->de_start - (60 * de->de_start_extra)) {
 	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
 
-	if(!muxer_write_pkt(de->de_mux, sm->sm_data))
-	  sm->sm_data = NULL;
+	muxer_write_pkt(de->de_mux, sm->sm_data);
+	sm->sm_data = NULL;
       }
       break;
 
@@ -465,6 +468,8 @@ dvr_thread(void *aux)
 	       "dvr", "Recording completed: \"%s\"",
 	       de->de_filename ?: lang_str_get(de->de_title, NULL));
 
+      } else if(sm->sm_code == SM_CODE_SOURCE_RECONFIGURED) {
+	muxer_reconfigure(de->de_mux, sm->sm_data);
       } else {
 
 	if(de->de_last_error != sm->sm_code) {

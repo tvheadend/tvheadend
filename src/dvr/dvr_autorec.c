@@ -520,10 +520,8 @@ _dvr_autorec_add(const char *config_name,
   htsmsg_destroy(m);
 
   /* Notify web clients that we have messed with the tables */
-  
-  m = htsmsg_create_map();
-  htsmsg_add_u32(m, "reload", 1);
-  notify_by_msg("autorec", m);
+
+  notify_reload("autorec");
 
   dvr_autorec_changed(dae);
 }

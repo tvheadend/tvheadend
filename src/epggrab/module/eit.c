@@ -713,11 +713,8 @@ static int _eit_callback
   // Note: tableid=0x4f,0x60-0x6f is other TS
   //       so must find the tdmi
   if(tableid == 0x4f || tableid >= 0x60) {
-    tda = tdmi->tdmi_adapter;
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
-      if(tdmi->tdmi_transport_stream_id == tsid &&
-         tdmi->tdmi_network_id == onid)
-        break;
+    tda  = tdmi->tdmi_adapter;
+    tdmi = dvb_mux_find(tda, NULL, onid, tsid, 1);
   } else {
     if (tdmi->tdmi_transport_stream_id != tsid ||
         tdmi->tdmi_network_id != onid) {
@@ -733,11 +730,8 @@ static int _eit_callback
   if(!tdmi) goto done;
 
   /* Get service */
-  svc = dvb_transport_find(tdmi, sid, 0, NULL);
-  if (!svc || !svc->s_enabled || !svc->s_ch) goto done;
-
-  /* Ignore (not primary EPG service) */
-  if (!service_is_primary_epg(svc)) goto done;
+  svc = dvb_transport_find3(NULL, tdmi, NULL, 0, 0, sid, 1, 1);
+  if (!svc || !svc->s_ch) goto done;
 
   /* Register as interesting */
   if (tableid < 0x50)
@@ -829,6 +823,7 @@ static void _eit_start
   if (!m->enabled) return;
 
   /* Freeview (switch to EIT, ignore if explicitly enabled) */
+  // Note: do this as PID is the same
   if (!strcmp(m->id, "uk_freeview")) {
     m = (epggrab_module_ota_t*)epggrab_module_find_by_id("eit");
     if (m->enabled) return;
@@ -841,7 +836,7 @@ static void _eit_start
     ota->destroy = _eit_ota_destroy;
   }
 
-  /* Add PIDs (freesat uses non-standard) */
+  /* Freesat (3002/3003) */
   if (!strcmp("uk_freesat", m->id)) {
 #ifdef IGNORE_TOO_SLOW
     tdt_add(tdmi, NULL, dvb_pidx11_callback, m, m->id, TDT_CRC, 3840, NULL);
@@ -849,6 +844,12 @@ static void _eit_start
 #endif
     tdt_add(tdmi, NULL, dvb_pidx11_callback, m, m->id, TDT_CRC, 3002, NULL);
     tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 3003, NULL);
+
+  /* Viasat Baltic (0x39) */
+  } else if (!strcmp("viasat_baltic", m->id)) {
+    tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 0x39, NULL);
+
+  /* Standard (0x12) */
   } else {
     tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 0x12, NULL);
   }
@@ -891,6 +892,8 @@ void eit_init ( void )
   epggrab_module_ota_create(NULL, "uk_freesat", "UK: Freesat", 5,
                             _eit_start, _eit_enable, NULL);
   epggrab_module_ota_create(NULL, "uk_freeview", "UK: Freeview", 5,
+                            _eit_start, _eit_enable, NULL);
+  epggrab_module_ota_create(NULL, "viasat_baltic", "VIASAT: Baltic", 5,
                             _eit_start, _eit_enable, NULL);
 }
 

@@ -42,7 +42,7 @@ TAILQ_HEAD(dvb_satconf_queue, dvb_satconf);
 typedef struct dvb_satconf {
   char *sc_id;
   TAILQ_ENTRY(dvb_satconf) sc_adapter_link;
-  int sc_port;                   // diseqc switchport (0 - 15)
+  int sc_port;                   // diseqc switchport (0 - 63)
 
   char *sc_name;
   char *sc_comment;
@@ -185,6 +185,7 @@ typedef struct th_dvb_adapter {
   uint32_t tda_sidtochan;
   uint32_t tda_nitoid;
   uint32_t tda_diseqc_version;
+  uint32_t tda_diseqc_repeats;
   uint32_t tda_disable_pmt_monitor;
   char *tda_displayname;
 
@@ -314,6 +315,9 @@ void dvb_adapter_set_nitoid(th_dvb_adapter_t *tda, int nitoid);
 
 void dvb_adapter_set_diseqc_version(th_dvb_adapter_t *tda, unsigned int v);
 
+void dvb_adapter_set_diseqc_repeats(th_dvb_adapter_t *tda,
+                                    unsigned int repeats);
+
 void dvb_adapter_set_disable_pmt_monitor(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src);
@@ -364,6 +368,8 @@ void dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *name);
 
 void dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid);
 
+void dvb_mux_set_onid(th_dvb_mux_instance_t *tdmi, uint16_t onid);
+
 void dvb_mux_set_enable(th_dvb_mux_instance_t *tdmi, int enabled);
 
 void dvb_mux_set_satconf(th_dvb_mux_instance_t *tdmi, const char *scid,
@@ -393,6 +399,10 @@ int dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src,
 
 void dvb_mux_add_to_scan_queue (th_dvb_mux_instance_t *tdmi);
 
+th_dvb_mux_instance_t *dvb_mux_find
+  (th_dvb_adapter_t *tda, const char *netname, uint16_t onid, uint16_t tsid,
+   int enabled );
+
 /**
  * DVB Transport (aka DVB service)
  */
@@ -405,6 +415,11 @@ struct service *dvb_transport_find(th_dvb_mux_instance_t *tdmi,
 struct service *dvb_transport_find2(th_dvb_mux_instance_t *tdmi,
 				   uint16_t sid, int pmt_pid,
 				   const char *identifier, int *save);
+
+struct service *dvb_transport_find3
+  (th_dvb_adapter_t *tda, th_dvb_mux_instance_t *tdmi,
+   const char *netname, uint16_t onid, uint16_t tsid, uint16_t sid,
+   int enabled, int epgprimary);
 
 void dvb_transport_notify(struct service *t);
 

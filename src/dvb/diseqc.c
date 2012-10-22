@@ -5,34 +5,6 @@
 #include "tvheadend.h"
 #include "diseqc.h"
 
-//#define DISEQC_TRACE
-
-struct dvb_diseqc_master_cmd diseqc_commited_cmds[] = {
-  { { 0xe0, 0x10, 0x38, 0xf0, 0x00, 0x00 }, 4 },
-  { { 0xe0, 0x10, 0x38, 0xf1, 0x00, 0x00 }, 4 },
-  { { 0xe0, 0x10, 0x38, 0xf2, 0x00, 0x00 }, 4 },
-  { { 0xe0, 0x10, 0x38, 0xf3, 0x00, 0x00 }, 4 },
-  { { 0xe0, 0x10, 0x38, 0xf4, 0x00, 0x00 }, 4 },
-  { { 0xe0, 0x10, 0x38, 0xf5, 0x00, 0x00 }, 4 },
-  { { 0xe0, 0x10, 0x38, 0xf6, 0x00, 0x00 }, 4 },
-  { { 0xe0, 0x10, 0x38, 0xf7, 0x00, 0x00 }, 4 },
-  { { 0xe0, 0x10, 0x38, 0xf8, 0x00, 0x00 }, 4 },
-  { { 0xe0, 0x10, 0x38, 0xf9, 0x00, 0x00 }, 4 },
-  { { 0xe0, 0x10, 0x38, 0xfa, 0x00, 0x00 }, 4 },
-  { { 0xe0, 0x10, 0x38, 0xfb, 0x00, 0x00 }, 4 },
-  { { 0xe0, 0x10, 0x38, 0xfc, 0x00, 0x00 }, 4 },
-  { { 0xe0, 0x10, 0x38, 0xfd, 0x00, 0x00 }, 4 },
-  { { 0xe0, 0x10, 0x38, 0xfe, 0x00, 0x00 }, 4 },
-  { { 0xe0, 0x10, 0x38, 0xff, 0x00, 0x00 }, 4 }
-};
-
-struct dvb_diseqc_master_cmd diseqc_uncommited_cmds[] = {
-  { { 0xe0, 0x10, 0x39, 0xf0, 0x00, 0x00 }, 4 },
-  { { 0xe0, 0x10, 0x39, 0xf1, 0x00, 0x00 }, 4 },
-  { { 0xe0, 0x10, 0x39, 0xf2, 0x00, 0x00 }, 4 },
-  { { 0xe0, 0x10, 0x39, 0xf3, 0x00, 0x00 }, 4 }
-};
-
 /*--------------------------------------------------------------------------*/
 
 static inline void
@@ -45,19 +17,42 @@ msleep(uint32_t msec)
 }
 
 int
-diseqc_setup(int fe_fd, int input, int voltage, int band, int diseqc_ver)
+diseqc_send_msg(int fe_fd, __u8 framing_byte, __u8 address, __u8 cmd,
+                    __u8 data_1,  __u8 data_2, __u8 data_3, __u8 msg_len)
 {
-  int i = (input % 4) * 4 + voltage * 2 + (band ? 1 : 0);
-  int j = input / 4;
-  int err;
+  struct dvb_diseqc_master_cmd message;
 
-#ifdef DISEQC_TRACE
-  tvhlog(LOG_INFO, "diseqc",
-        "fe_fd %i, input %i, voltage %i, band %i, diseqc_ver %i, i %i, j %i",
-        fe_fd, input, voltage, band, diseqc_ver, i, j);
+#if DISEQC_TRACE
+  tvhlog(LOG_DEBUG, "diseqc", "sending %X %X %X %X %X %X",
+         framing_byte, address, cmd, data_1, data_2, data_3);
 #endif
-  /* check for invalid input number or diseqc command indexes */
-  if(input < 0 || input >=16 || i < 0 || i >= 16 || j < 0 || j >= 4)
+  
+  message.msg[0] = framing_byte;
+  message.msg[1] = address;
+  message.msg[2] = cmd;
+  message.msg[3] = data_1;
+  message.msg[4] = data_2;
+  message.msg[5] = data_3;
+  message.msg_len = msg_len;
+  return ioctl(fe_fd, FE_DISEQC_SEND_MASTER_CMD, &message);
+}
+
+int
+diseqc_setup(int fe_fd, int lnb_num, int voltage, int band,
+              uint32_t version, uint32_t repeats)
+{
+  int i = (lnb_num % 4) * 4 + voltage * 2 + (band ? 1 : 0);
+  int j = lnb_num / 4;
+  int k, err;
+
+#if DISEQC_TRACE
+  tvhlog(LOG_DEBUG, "diseqc",
+        "fe_fd %i, lnb_num %i, voltage %i, band %i, version %i, repeats %i",
+        fe_fd, lnb_num, voltage, band, version, repeats);
+#endif
+
+  /* verify lnb number and diseqc data */
+  if(lnb_num < 0 || lnb_num >=64 || i < 0 || i >= 16 || j < 0 || j >= 16)
     return -1;
 
   /* turn off continuous tone */
@@ -70,29 +65,34 @@ diseqc_setup(int fe_fd, int input, int voltage, int band, int diseqc_ver)
     return err;
   msleep(15);
 
-  /* send uncommited command */
-  if ((err = ioctl(fe_fd, FE_DISEQC_SEND_MASTER_CMD,
-                    &diseqc_uncommited_cmds[j])))
-    return err;
+  if (repeats == 0) { /* uncommited msg, wait 15ms, commited msg */
+    if ((err = diseqc_send_msg(fe_fd, 0xE0, 0x10, 0x39, 0xF0 | j, 0, 0, 4)))
+      return err;
+    msleep(15);
+    if ((err = diseqc_send_msg(fe_fd, 0xE0, 0x10, 0x38, 0xF0 | i, 0, 0, 4)))
+      return err;
+  } else { /* commited msg, 25ms, uncommited msg, 25ms, commited msg, etc */
+    if ((err = diseqc_send_msg(fe_fd, 0xE0, 0x10, 0x38, 0xF0 | i, 0, 0, 4)))
+      return err;
+    for (k = 0; k < repeats; k++) {
+      msleep(25);
+      if ((err = diseqc_send_msg(fe_fd, 0xE0, 0x10, 0x39, 0xF0 | j, 0, 0, 4)))
+        return err;
+      msleep(25);
+      if ((err = diseqc_send_msg(fe_fd, 0xE1, 0x10, 0x38, 0xF0 | i, 0, 0, 4)))
+        return err;
+    }
+  }
   msleep(15);
 
-  /* send commited command */
-  if ((err = ioctl(fe_fd, FE_DISEQC_SEND_MASTER_CMD,
-                    &diseqc_commited_cmds[i])))
-    return err;
-#ifdef DISEQC_TRACE
-  tvhlog(LOG_INFO, "diseqc", "E0 10 39 F%X - E0 10 38 F%X sent", j, i);
-#endif
-  msleep(15);
-
-  /* send toneburst command */
+  /* set toneburst */
   if ((err = ioctl(fe_fd, FE_DISEQC_SEND_BURST,
                     (i/4) % 2 ? SEC_MINI_B : SEC_MINI_A)))
     return err;
   msleep(15);
 
   /* set continuous tone */
-  if ((ioctl(fe_fd, FE_SET_TONE, i % 2 ? SEC_TONE_ON : SEC_TONE_OFF)))
+  if ((err = ioctl(fe_fd, FE_SET_TONE, i % 2 ? SEC_TONE_ON : SEC_TONE_OFF)))
     return err;
   return 0;
 }
