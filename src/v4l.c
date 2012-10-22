@@ -50,6 +50,27 @@ static void v4l_adapter_notify(v4l_adapter_t *va);
  *
  */
 static void
+ps_remux(service_t *t, const uint8_t *data, size_t length)
+{
+  streaming_message_t sm;
+  pktbuf_t *pb;
+
+  pb = pktbuf_alloc(data, length);
+
+  sm.sm_type = SMT_MPEGTS;
+  sm.sm_data = pb;
+  streaming_pad_deliver(&t->s_streaming_pad, &sm);
+
+  pktbuf_ref_dec(pb);
+
+  service_set_streaming_status_flags(t, TSS_PACKETS);
+}
+
+
+/**
+ *
+ */
+static void
 v4l_input(v4l_adapter_t *va)
 {
   service_t *t = va->va_current_service;
@@ -68,6 +89,9 @@ v4l_input(v4l_adapter_t *va)
 
   service_set_streaming_status_flags(t, 
 				       TSS_INPUT_HARDWARE | TSS_INPUT_SERVICE);
+
+  if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
+    ps_remux(t, buf, len);
 
   while(len > 0) {
 
@@ -103,7 +127,8 @@ v4l_input(v4l_adapter_t *va)
 
 	service_set_streaming_status_flags(t, TSS_MUX_PACKETS);
 
-	parse_mpeg_ps(t, st, pkt + 6, l - 6);
+	if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_PACKET))
+	  parse_mpeg_ps(t, st, pkt + 6, l - 6);
 
 	st->es_buf_ps.sb_size = 0;
 	va->va_startcode = 0;

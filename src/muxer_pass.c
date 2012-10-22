@@ -180,16 +180,16 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
 
 
 /**
- * Write TS packets to the file descriptor
+ * Write data to the file descriptor
  */
 static void
-pass_muxer_write(muxer_t *m, const void *ts, size_t len)
+pass_muxer_write(muxer_t *m, const uint8_t *data, size_t size)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
   if(pm->pm_error) {
     pm->m_errors++;
-  } else if(write(pm->pm_fd, ts, len) != len) {
+  } else if(write(pm->pm_fd, data, size) != size) {
     pm->pm_error = errno;
     tvhlog(LOG_ERR, "pass", "%s: Write failed -- %s", pm->pm_filename, 
 	   strerror(errno));
@@ -199,10 +199,11 @@ pass_muxer_write(muxer_t *m, const void *ts, size_t len)
 
 
 /**
- * Write TS packets to the file descriptor
+ * Write TS packets to the file descriptor and occasionally inject
+ * PMT and PAT packages
  */
 static void
-pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
+pass_muxer_write_ts(muxer_t *m, const uint8_t *data, size_t size)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
   int rem;
@@ -217,9 +218,9 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
     pm->pm_ic++;
   }
 
-  pass_muxer_write(m, pb->pb_data, pb->pb_size);
+  pass_muxer_write(m, data, size);
 
-  pm->pm_pc += (pb->pb_size / 188);
+  pm->pm_pc += (size / 188);
 }
 
 
@@ -234,8 +235,10 @@ pass_muxer_write_pkt(muxer_t *m, void *data)
 
   switch(pm->m_container) {
   case MC_MPEGTS:
-    pass_muxer_write_ts(m, pb);
+    pass_muxer_write_ts(m, pb->pb_data, pb->pb_size);
     break;
+  case MC_MPEGPS:
+    pass_muxer_write(m, pb->pb_data, pb->pb_size);
   default:
     //NOP
     break;
