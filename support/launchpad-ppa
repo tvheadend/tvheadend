@@ -5,9 +5,15 @@
 # environment variables
 #
 
+# Terminate
+function die
+{
+  echo $*
+  exit 1
+}
+
 # CMD
 CMD=$(basename $0)
-echo $CMD
 
 # Configuration
 TVH_ROOT=$(cd $(dirname $0)/..; pwd)
@@ -29,15 +35,14 @@ VERFILE=$TVH_ROOT/src/version.c
 VER=$($TVH_ROOT/support/version $VERFILE)
 
 # Fetch scan files
-./support/getmuxlist
+./support/getmuxlist || die "failed to fetch dvb-scan files"
 
 # For each distro
 for d in $TVH_DIST; do
   V=${VER}~${d}
-  echo $V
 
   # Create changelog
-  $TVH_ROOT/support/changelog "$CHANGELOG" "$d" "$VER"
+  $TVH_ROOT/support/changelog "$CHANGELOG" "$d" "$VER" || exit 1
   
   # Build source package
   dpkg-buildpackage -I.git* -S -sgpg -pgpg || exit 1
@@ -51,7 +56,7 @@ for d in $TVH_DIST; do
 
   # Upload
   else
-    dput tvh-$PPA ../tvheadend_${V}_source.changes || exit 1
+    dput $DPUT_OPT tvh-${PPA} ../tvheadend_${V}_source.changes || exit 1
   fi
 
 done
