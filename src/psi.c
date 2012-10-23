@@ -468,6 +468,10 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
   /* Mark all streams for deletion */
   if(delete) {
     TAILQ_FOREACH(st, &t->s_components, es_link) {
+
+      if(st->es_type == SCT_PMT)
+        continue;
+
       st->es_delete_me = 1;
 
       LIST_FOREACH(c, &st->es_caids, link)
