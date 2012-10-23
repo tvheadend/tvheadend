@@ -690,7 +690,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
     service_request_save(t, 0);
 
     // Only restart if something that our clients worry about did change
-    if(update & !(PMT_UPDATE_NEW_CA_STREAM |
+    if(update & ~(PMT_UPDATE_NEW_CA_STREAM |
 		  PMT_UPDATE_NEW_CAID |
 		  PMT_UPDATE_CA_PROVIDER_CHANGE | 
 		  PMT_UPDATE_CAID_DELETED)) {
