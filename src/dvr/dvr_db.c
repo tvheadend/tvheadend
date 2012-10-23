@@ -27,7 +27,7 @@
 #include "tvheadend.h"
 #include "dvr.h"
 #include "notify.h"
-#include "htsp.h"
+#include "htsp_server.h"
 #include "streaming.h"
 
 static int de_tally;
@@ -36,8 +36,6 @@ int dvr_iov_max;
 
 struct dvr_config_list dvrconfigs;
 struct dvr_entry_list dvrentries;
-
-static void dvr_entry_save(dvr_entry_t *de);
 
 static void dvr_timer_expire(void *aux);
 static void dvr_timer_start_recording(void *aux);
@@ -257,19 +255,6 @@ static dvr_entry_t *_dvr_entry_create (
   LIST_FOREACH(de, &ch->ch_dvrs, de_channel_link)
     if(de->de_start == start && de->de_sched_state != DVR_COMPLETED)
       return NULL;
-
-  /* Reject duplicate episodes (unless earlier) */
-  if (e && cfg->dvr_dup_detect_episode) {
-    de = dvr_entry_find_by_episode(e);
-    if (de) {
-      if (de->de_start > start) {
-        dvr_event_replaced(de->de_bcast, e);
-        return de;
-      } else {
-        return NULL;
-      }
-    }
-  }
 
   de = calloc(1, sizeof(dvr_entry_t));
   de->de_id = ++de_tally;
@@ -586,7 +571,7 @@ dvr_db_load(void)
 /**
  *
  */
-static void
+void
 dvr_entry_save(dvr_entry_t *de)
 {
   htsmsg_t *m = htsmsg_create_map();
@@ -1047,9 +1032,9 @@ dvr_init(void)
     }
   }
 
-  dvr_db_load();
-
   dvr_autorec_init();
+  dvr_db_load();
+  dvr_autorec_update();
 }
 
 /**
@@ -1312,6 +1297,22 @@ dvr_query_add_entry(dvr_query_result_t *dqr, dvr_entry_t *de)
   dqr->dqr_array[dqr->dqr_entries++] = de;
 }
 
+void
+dvr_query_filter(dvr_query_result_t *dqr, dvr_entry_filter filter)
+{
+  dvr_entry_t *de;
+
+  memset(dqr, 0, sizeof(dvr_query_result_t));
+
+  LIST_FOREACH(de, &dvrentries, de_global_link)
+    if (filter(de))
+      dvr_query_add_entry(dqr, de);
+}
+
+static int all_filter(dvr_entry_t *entry)
+{
+  return 1;
+}
 
 /**
  *
@@ -1319,14 +1320,8 @@ dvr_query_add_entry(dvr_query_result_t *dqr, dvr_entry_t *de)
 void
 dvr_query(dvr_query_result_t *dqr)
 {
-  dvr_entry_t *de;
-
-  memset(dqr, 0, sizeof(dvr_query_result_t));
-
-  LIST_FOREACH(de, &dvrentries, de_global_link)
-    dvr_query_add_entry(dqr, de);
+  return dvr_query_filter(dqr, all_filter);
 }
-
 
 /**
  *
@@ -1340,7 +1335,7 @@ dvr_query_free(dvr_query_result_t *dqr)
 /**
  * Sorting functions
  */
-static int
+int
 dvr_sort_start_descending(const void *A, const void *B)
 {
   dvr_entry_t *a = *(dvr_entry_t **)A;
@@ -1348,22 +1343,30 @@ dvr_sort_start_descending(const void *A, const void *B)
   return b->de_start - a->de_start;
 }
 
+int
+dvr_sort_start_ascending(const void *A, const void *B)
+{
+  return -dvr_sort_start_descending(A, B);
+}
+
 
 /**
  *
  */
 void
-dvr_query_sort(dvr_query_result_t *dqr)
+dvr_query_sort_cmp(dvr_query_result_t *dqr, dvr_entry_comparator sf)
 {
-  int (*sf)(const void *a, const void *b);
-
   if(dqr->dqr_array == NULL)
     return;
 
-  sf = dvr_sort_start_descending;
   qsort(dqr->dqr_array, dqr->dqr_entries, sizeof(dvr_entry_t *), sf);
 }  
 
+void
+dvr_query_sort(dvr_query_result_t *dqr)
+{
+  dvr_query_sort_cmp(dqr, dvr_sort_start_descending);
+}
 
 /**
  *

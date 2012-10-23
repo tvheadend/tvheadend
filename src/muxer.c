@@ -89,7 +89,7 @@ static struct strtab container_video_file_suffix[] = {
  * Get the mime type for a container
  */
 const char*
-muxer_container_mimetype(muxer_container_type_t mc, int video)
+muxer_container_type2mime(muxer_container_type_t mc, int video)
 {
   const char *str;
 
@@ -141,7 +141,7 @@ muxer_container_type2txt(muxer_container_type_t mc)
 
 
 /**
- * Convert a string to a container type
+ * Convert a container name to a container type
  */
 muxer_container_type_t
 muxer_container_txt2type(const char *str)
@@ -160,14 +160,36 @@ muxer_container_txt2type(const char *str)
 
 
 /**
+ * Convert a mime-string to a container type
+ */
+muxer_container_type_t
+muxer_container_mime2type(const char *str)
+{
+  muxer_container_type_t mc;
+
+  if(!str)
+    return MC_UNKNOWN;
+
+  mc = str2val(str, container_video_mime);
+  if(mc == -1)
+    mc = str2val(str, container_audio_mime);
+
+  if(mc == -1)
+    return MC_UNKNOWN;
+
+  return mc;
+}
+
+
+/**
  * Create a new muxer
  */
 muxer_t* 
-muxer_create(service_t *s, muxer_container_type_t mc)
+muxer_create(muxer_container_type_t mc)
 {
   muxer_t *m;
 
-  m = pass_muxer_create(s, mc);
+  m = pass_muxer_create(mc);
 
   if(!m)
     m = tvh_muxer_create(mc);
@@ -200,6 +222,7 @@ const char*
 muxer_suffix(muxer_t *m,  const struct streaming_start *ss)
 {
   const char *mime;
+  muxer_container_type_t mc;
   int video;
 
   if(!m || !ss)
@@ -207,8 +230,9 @@ muxer_suffix(muxer_t *m,  const struct streaming_start *ss)
 
   mime  = m->m_mime(m, ss);
   video = memcmp("audio", mime, 5);
+  mc = muxer_container_mime2type(mime);
 
-  return muxer_container_suffix(m->m_container, video);
+  return muxer_container_suffix(mc, video);
 }
 
 
@@ -308,12 +332,12 @@ muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
  * sanity wrapper arround m_write_pkt()
  */
 int
-muxer_write_pkt(muxer_t *m, void *data)
+muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 {
   if(!m || !data)
     return -1;
 
-  return m->m_write_pkt(m, data);
+  return m->m_write_pkt(m, smt, data);
 }
 
 

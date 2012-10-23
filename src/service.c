@@ -46,7 +46,7 @@
 #include "serviceprobe.h"
 #include "atomic.h"
 #include "dvb/dvb.h"
-#include "htsp.h"
+#include "htsp_server.h"
 #include "lang_codes.h"
 
 #define SERVICE_HASH_WIDTH 101
@@ -110,18 +110,21 @@ stream_clean(elementary_stream_t *st)
   st->es_global_data_len = 0;
 }
 
-
 /**
  *
  */
 void
-service_stream_destroy(service_t *t, elementary_stream_t *st)
+service_stream_destroy(service_t *t, elementary_stream_t *es)
 {
   if(t->s_status == SERVICE_RUNNING)
-    stream_clean(st);
-  TAILQ_REMOVE(&t->s_components, st, es_link);
-  free(st->es_nicename);
-  free(st);
+    stream_clean(es);
+
+  avgstat_flush(&es->es_rate);
+  avgstat_flush(&es->es_cc_errors);
+
+  TAILQ_REMOVE(&t->s_components, es, es_link);
+  free(es->es_nicename);
+  free(es);
 }
 
 /**
@@ -205,8 +208,10 @@ service_start(service_t *t, unsigned int weight, int force_start)
   if((r = t->s_start_feed(t, weight, force_start)))
     return r;
 
+#if ENABLE_CWC
   cwc_service_start(t);
   capmt_service_start(t);
+#endif
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
@@ -489,16 +494,16 @@ service_destroy(service_t *t)
   free(t->s_provider);
   free(t->s_dvb_charset);
 
-  while((st = TAILQ_FIRST(&t->s_components)) != NULL) {
-    TAILQ_REMOVE(&t->s_components, st, es_link);
-    free(st->es_nicename);
-    free(st);
-  }
+  while((st = TAILQ_FIRST(&t->s_components)) != NULL)
+    service_stream_destroy(t, st);
 
   free(t->s_pat_section);
   free(t->s_pmt_section);
 
   sbuf_free(&t->s_tsbuf);
+
+  avgstat_flush(&t->s_cc_errors);
+  avgstat_flush(&t->s_rate);
 
   service_unref(t);
 
@@ -763,6 +768,7 @@ static struct strtab stypetab[] = {
   { "SDTV",         ST_DN_SDTV },
   { "HDTV",         ST_DN_HDTV },
   { "SDTV",         ST_SK_SDTV },
+  { "SDTV",         ST_NE_SDTV },
   { "SDTV-AC",      ST_AC_SDTV },
   { "HDTV-AC",      ST_AC_HDTV },
 };
@@ -789,6 +795,7 @@ service_is_tv(service_t *t)
     t->s_servicetype == ST_DN_SDTV ||
     t->s_servicetype == ST_DN_HDTV ||
     t->s_servicetype == ST_SK_SDTV ||
+    t->s_servicetype == ST_NE_SDTV ||
     t->s_servicetype == ST_AC_SDTV ||
     t->s_servicetype == ST_AC_HDTV;
 }
@@ -902,12 +909,14 @@ service_build_stream_start(service_t *t)
     ssc->ssc_pid = st->es_pid;
     ssc->ssc_width = st->es_width;
     ssc->ssc_height = st->es_height;
+    ssc->ssc_frameduration = st->es_frame_duration;
   }
 
   t->s_setsourceinfo(t, &ss->ss_si);
 
   ss->ss_refcount = 1;
   ss->ss_pcr_pid = t->s_pcr_pid;
+  ss->ss_pmt_pid = t->s_pmt_pid;
   return ss;
 }
 
@@ -926,6 +935,15 @@ service_set_enable(service_t *t, int enabled)
   subscription_reschedule();
 }
 
+void
+service_set_prefcapid(service_t *t, uint32_t prefcapid)
+{
+  if(t->s_prefcapid == prefcapid)
+    return;
+
+  t->s_prefcapid = prefcapid;
+  t->s_config_save(t);
+}
 
 static pthread_mutex_t pending_save_mutex;
 static pthread_cond_t pending_save_cond;

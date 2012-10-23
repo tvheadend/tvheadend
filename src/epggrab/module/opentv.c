@@ -217,6 +217,8 @@ static char *_opentv_parse_string
   int ok = 0;
   char *ret, *tmp;
 
+  if (len <= 0) return NULL;
+
   // Note: unlikely decoded string will be longer (though its possible)
   ret = tmp = malloc(2*len);
   *ret = 0;
@@ -248,15 +250,17 @@ static int _opentv_parse_event_record
   if (rlen+2 <= len) {
     switch (rtag) {
       case 0xb5: // title
-        ev->start       = (((int)buf[2] << 9) | (buf[3] << 1))
-                        + mjd;
-        ev->stop        = (((int)buf[4] << 9) | (buf[5] << 1))
-                        + ev->start;
-        ev->cat         = buf[6];
-        if (prov->genre)
-          ev->cat = prov->genre->map[ev->cat];
-        if (!ev->title)
-          ev->title     = _opentv_parse_string(prov, buf+9, rlen-7);
+        if (rlen >= 7) {
+          ev->start       = (((int)buf[2] << 9) | (buf[3] << 1))
+                          + mjd;
+          ev->stop        = (((int)buf[4] << 9) | (buf[5] << 1))
+                          + ev->start;
+          ev->cat         = buf[6];
+          if (prov->genre)
+            ev->cat = prov->genre->map[ev->cat];
+          if (!ev->title)
+            ev->title     = _opentv_parse_string(prov, buf+9, rlen-7);
+        }
         break;
       case 0xb9: // summary
         if (!ev->summary)
@@ -425,7 +429,7 @@ static void _opentv_parse_channels
     cnum = ((int)buf[i+5] << 8) | buf[i+6];
 
     /* Find the service */
-    svc = dvb_transport_find3(NULL, NULL, NULL, onid, tsid, sid, 1, 1);
+    svc = dvb_service_find3(NULL, NULL, NULL, onid, tsid, sid, 1, 1);
     if (svc && svc->s_ch) {
       ec  =_opentv_find_epggrab_channel(mod, cid, 1, &save);
       ecl = LIST_FIRST(&ec->channels);
@@ -641,7 +645,6 @@ static void _opentv_start
   ( epggrab_module_ota_t *m, th_dvb_mux_instance_t *tdmi )
 {
   int *t;
-  struct dmx_sct_filter_params *fp;
   epggrab_ota_mux_t *ota;
   opentv_module_t *mod = (opentv_module_t*)m;
   opentv_status_t *sta;
@@ -668,34 +671,25 @@ static void _opentv_start
   /* Channels */
   t = mod->channel;
   while (*t) {
-    fp = dvb_fparams_alloc();
-    fp->filter.filter[0] = 0x4a;
-    fp->filter.mask[0]   = 0xff;
     // TODO: what about 0x46 (service description)
-    tdt_add(tdmi, fp, _opentv_channel_callback, m,
-            m->id, TDT_CRC, *t++, NULL);
+    tdt_add(tdmi, 0x4a, 0xff, _opentv_channel_callback, m,
+            m->id, TDT_CRC, *t++);
   }
 
   /* Titles */
   t = mod->title;
   while (*t) {
-    fp = dvb_fparams_alloc();
-    fp->filter.filter[0] = 0xa0;
-    fp->filter.mask[0]   = 0xfc;
     _opentv_status_get_pid(sta, *t);
-    tdt_add(tdmi, fp, _opentv_title_callback, m,
-            m->id, TDT_CRC | TDT_TDT, *t++, NULL);
+    tdt_add(tdmi, 0xa0, 0xfc, _opentv_title_callback, m,
+            m->id, TDT_CRC | TDT_TDT, *t++);
   }
 
   /* Summaries */
   t = mod->summary;
   while (*t) {
-    fp = dvb_fparams_alloc();
-    fp->filter.filter[0] = 0xa8;
-    fp->filter.mask[0]   = 0xfc;
     _opentv_status_get_pid(sta, *t);
-    tdt_add(tdmi, fp, _opentv_summary_callback, m,
-            m->id, TDT_CRC | TDT_TDT, *t++, NULL);
+    tdt_add(tdmi, 0xa8, 0xfc, _opentv_summary_callback, m,
+            m->id, TDT_CRC | TDT_TDT, *t++);
   }
 }
 

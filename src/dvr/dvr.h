@@ -247,6 +247,8 @@ void dvr_config_delete(const char *name);
 
 void dvr_entry_notify(dvr_entry_t *de);
 
+void dvr_entry_save(dvr_entry_t *de);
+
 const char *dvr_entry_status(dvr_entry_t *de);
 
 const char *dvr_entry_schedstatus(dvr_entry_t *de);
@@ -279,6 +281,8 @@ dvr_entry_t *dvr_entry_update
 void dvr_init(void);
 
 void dvr_autorec_init(void);
+
+void dvr_autorec_update(void);
 
 void dvr_destroy_by_channel(channel_t *ch);
 
@@ -331,9 +335,18 @@ typedef struct dvr_query_result {
   int dqr_alloced;
 } dvr_query_result_t;
 
+typedef int (dvr_entry_filter)(dvr_entry_t *entry);
+typedef int (dvr_entry_comparator)(const void *a, const void *b);
+
 void dvr_query(dvr_query_result_t *dqr);
+void dvr_query_filter(dvr_query_result_t *dqr, dvr_entry_filter filter);
 void dvr_query_free(dvr_query_result_t *dqr);
+
+void dvr_query_sort_cmp(dvr_query_result_t *dqr, dvr_entry_comparator cmp);
 void dvr_query_sort(dvr_query_result_t *dqr);
+
+int dvr_sort_start_descending(const void *A, const void *B);
+int dvr_sort_start_ascending(const void *A, const void *B);
 
 /**
  *

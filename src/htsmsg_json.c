@@ -25,54 +25,19 @@
 
 #include "htsmsg_json.h"
 #include "htsbuf.h"
+#include "misc/json.h"
+#include "misc/dbl.h"
+
 
 /**
  *
- */
-static void
-htsmsg_json_encode_string(const char *str, htsbuf_queue_t *hq)
-{
-  const char *s = str;
-
-  htsbuf_append(hq, "\"", 1);
-
-  while(*s != 0) {
-    if(*s == '"' || *s == '\\' || *s == '\n' || *s == '\t' || *s == '\r') {
-      htsbuf_append(hq, str, s - str);
-
-      if(*s == '"')
-	htsbuf_append(hq, "\\\"", 2);
-      else if(*s == '\n') 
-	htsbuf_append(hq, "\\n", 2);
-      else if(*s == '\t') 
-	htsbuf_append(hq, "\\t", 2);
-      else if(*s == '\r')
-	htsbuf_append(hq, "\\r", 2);
-      else
-	htsbuf_append(hq, "\\\\", 2);
-      s++;
-      str = s;
-    } else {
-      s++;
-    }
-  }
-  htsbuf_append(hq, str, s - str);
-  htsbuf_append(hq, "\"", 1);
-}
-
-
-/*
- * Note to future:
- * If your about to add support for numbers with decimal point,
- * remember to always serialize them with '.' as decimal point character
- * no matter what current locale says. This is according to the JSON spec.
  */
 static void
 htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
 		  int indent, int pretty)
 {
   htsmsg_field_t *f;
-  char buf[30];
+  char buf[100];
   static const char *indentor = "\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
 
   htsbuf_append(hq, isarray ? "[" : "{", 1);
@@ -83,7 +48,7 @@ htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
       htsbuf_append(hq, indentor, indent < 16 ? indent : 16);
 
     if(!isarray) {
-      htsmsg_json_encode_string(f->hmf_name ?: "noname", hq);
+      htsbuf_append_and_escape_jsonstr(hq, f->hmf_name ?: "noname");
       htsbuf_append(hq, ": ", 2);
     }
 
@@ -97,15 +62,20 @@ htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
       break;
 
     case HMF_STR:
-      htsmsg_json_encode_string(f->hmf_str, hq);
+      htsbuf_append_and_escape_jsonstr(hq, f->hmf_str);
       break;
 
     case HMF_BIN:
-      htsmsg_json_encode_string("binary", hq);
+      htsbuf_append_and_escape_jsonstr(hq, "binary");
       break;
 
     case HMF_S64:
       snprintf(buf, sizeof(buf), "%" PRId64, f->hmf_s64);
+      htsbuf_append(hq, buf, strlen(buf));
+      break;
+
+    case HMF_DBL:
+      my_double2str(buf, sizeof(buf), f->hmf_dbl);
       htsbuf_append(hq, buf, strlen(buf));
       break;
 
@@ -125,326 +95,102 @@ htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
 /**
  *
  */
-int
+void
 htsmsg_json_serialize(htsmsg_t *msg, htsbuf_queue_t *hq, int pretty)
 {
   htsmsg_json_write(msg, hq, msg->hm_islist, 2, pretty);
   if(pretty) 
     htsbuf_append(hq, "\n", 1);
-  return 0;
-}
-
-
-
-static const char *htsmsg_json_parse_value(const char *s, 
-					   htsmsg_t *parent, char *name);
-
-/**
- *
- */
-static char *
-htsmsg_json_parse_string(const char *s, const char **endp)
-{
-  const char *start;
-  char *r, *a, *b;
-  int l, esc = 0;
-
-  while(*s > 0 && *s < 33)
-    s++;
-
-  if(*s != '"')
-    return NULL;
-
-  s++;
-  start = s;
-
-  while(1) {
-    if(*s == 0)
-      return NULL;
-
-    if(*s == '\\') {
-      esc = 1;
-      /* skip the escape */
-      s++;
-      if (*s == 'u') s += 4;
-      // Note: we could detect the lack of support here!
-    } else if(*s == '"') {
-
-      *endp = s + 1;
-
-      /* End */
-      l = s - start;
-      r = malloc(l + 1);
-      memcpy(r, start, l);
-      r[l] = 0;
-
-      if(esc) {
-	/* Do deescaping inplace */
-
-	a = b = r;
-
-	while(*a) {
-	  if(*a == '\\') {
-	    a++;
-	    if(*a == 'b')
-	      *b++ = '\b';
-      else if(*a == '\\')
-        *b++ = '\\';
-	    else if(*a == 'f')
-	      *b++ = '\f';
-	    else if(*a == 'n')
-	      *b++ = '\n';
-	    else if(*a == 'r')
-	      *b++ = '\r';
-	    else if(*a == 't')
-	      *b++ = '\t';
-	    else if(*a == 'u') {
-	      /* 4 hexdigits: Not supported */
-	      free(r);
-	      return NULL;
-	    } else {
-	      *b++ = *a;
-	    }
-	    a++;
-	  } else {
-	    *b++ = *a++;
-	  }
-	}
-	*b = 0;
-      }
-      return r;
-    }
-    s++;
-  }
 }
 
 
 /**
  *
  */
-static htsmsg_t *
-htsmsg_json_parse_object(const char *s, const char **endp)
+char *
+htsmsg_json_serialize_to_str(htsmsg_t *msg, int pretty)
 {
-  char *name;
-  const char *s2;
-  htsmsg_t *r;
-
-  while(*s > 0 && *s < 33)
-    s++;
-
-  if(*s != '{')
-    return NULL;
-
-  s++;
-
-  r = htsmsg_create_map();
-  
-  while(*s > 0 && *s < 33)
-    s++;
-
-  if(*s != '}') while(1) {
-
-    if((name = htsmsg_json_parse_string(s, &s2)) == NULL) {
-      htsmsg_destroy(r);
-      return NULL;
-    }
-
-    s = s2;
-    
-    while(*s > 0 && *s < 33)
-      s++;
-
-    if(*s != ':') {
-      htsmsg_destroy(r);
-      free(name);
-      return NULL;
-    }
-    s++;
-
-    s2 = htsmsg_json_parse_value(s, r, name);
-    free(name);
-
-    if(s2 == NULL) {
-      htsmsg_destroy(r);
-      return NULL;
-    }
-
-    s = s2;
-
-    while(*s > 0 && *s < 33)
-      s++;
-
-    if(*s == '}')
-      break;
-
-    if(*s != ',') {
-      htsmsg_destroy(r);
-      return NULL;
-    }
-    s++;
-  }
-
-  s++;
-  *endp = s;
-  return r;
-}
-
-
-/**
- *
- */
-static htsmsg_t *
-htsmsg_json_parse_array(const char *s, const char **endp)
-{
-  const char *s2;
-  htsmsg_t *r;
-
-  while(*s > 0 && *s < 33)
-    s++;
-
-  if(*s != '[')
-    return NULL;
-
-  s++;
-
-  r = htsmsg_create_list();
-  
-  while(*s > 0 && *s < 33)
-    s++;
-
-  if(*s != ']') {
-
-    while(1) {
-
-      s2 = htsmsg_json_parse_value(s, r, NULL);
-
-      if(s2 == NULL) {
-	htsmsg_destroy(r);
-	return NULL;
-      }
-
-      s = s2;
-
-      while(*s > 0 && *s < 33)
-	s++;
-
-      if(*s == ']')
-	break;
-
-      if(*s != ',') {
-	htsmsg_destroy(r);
-	return NULL;
-      }
-      s++;
-    }
-  }
-  s++;
-  *endp = s;
-  return r;
-}
-
-/* 
- * locale independent strtod.
- * does not support hex floats as the standard strtod
- */
-static double
-_strntod(const char *s, char decimal_point_char, char **ep)
-{
-  static char locale_decimal_point_char = 0;
-  char buf[64];
-  const char *c;
-  double d;
-  
-  /* ugly but very portable way to get decimal point char */ 
-  if(locale_decimal_point_char == 0) {
-    snprintf(buf, sizeof(buf), "%f", 0.0);
-    locale_decimal_point_char = buf[1];
-    assert(locale_decimal_point_char != 0);
-  }
-  
-  for(c = s; 
-      *c != '\0' &&
-      ((*c > 0 && *c < 33) || /* skip whitespace */
-       (*c == decimal_point_char || strchr("+-0123456789", *c) != NULL)); c++)
-    ;
-  
-  strncpy(buf, s, c - s); 
-  buf[c - s] = '\0';
-  
-  /* replace if specified char is not same as current locale */
-  if(decimal_point_char != locale_decimal_point_char) {
-    char *r = strchr(buf, decimal_point_char);
-    if(r != NULL)
-      *r = locale_decimal_point_char;
-  }
-  
-  d = strtod(buf, ep);
-  
-  /* figure out offset in original string */
-  if(ep != NULL)
-    *ep = (char *)s + (*ep - buf);
-  
-  return d;
-}
-
-/**
- *
- */
-static char *
-htsmsg_json_parse_number(const char *s, double *dp)
-{
-  char *ep;
-  double d = _strntod(s, '.', &ep);
-
-  if(ep == s)
-    return NULL;
-
-  *dp = d;
-  return ep;
-}
-
-/**
- *
- */
-static const char *
-htsmsg_json_parse_value(const char *s, htsmsg_t *parent, char *name)
-{
-  const char *s2;
+  htsbuf_queue_t hq;
   char *str;
-  double d = 0;
-  htsmsg_t *c;
-
-  if((c = htsmsg_json_parse_object(s, &s2)) != NULL) {
-    htsmsg_add_msg(parent, name, c);
-    return s2;
-  } else if((c = htsmsg_json_parse_array(s, &s2)) != NULL) {
-    htsmsg_add_msg(parent, name, c);
-    return s2;
-  } else if((str = htsmsg_json_parse_string(s, &s2)) != NULL) {
-    htsmsg_add_str(parent, name, str);
-    free(str);
-    return s2;
-  } else if((s2 = htsmsg_json_parse_number(s, &d)) != NULL) {
-    htsmsg_add_s64(parent, name, d);
-    return s2;
-  }
-
-  if(!strncmp(s, "true", 4)) {
-    htsmsg_add_u32(parent, name, 1);
-    return s + 4;
-  }
-
-  if(!strncmp(s, "false", 5)) {
-    htsmsg_add_u32(parent, name, 0);
-    return s + 5;
-  }
-
-  if(!strncmp(s, "null", 4)) {
-    /* Don't add anything */
-    return s + 4;
-  }
-  return NULL;
+  htsbuf_queue_init(&hq, 0);
+  htsmsg_json_serialize(msg, &hq, pretty);
+  str = htsbuf_to_string(&hq);
+  htsbuf_queue_flush(&hq);
+  return str;
 }
+
+
+/**
+ *
+ */
+static void *
+create_map(void *opaque)
+{
+  return htsmsg_create_map();
+}
+
+static void *
+create_list(void *opaque)
+{
+  return htsmsg_create_list();
+}
+
+static void
+destroy_obj(void *opaque, void *obj)
+{
+  return htsmsg_destroy(obj);
+}
+
+static void
+add_obj(void *opaque, void *parent, const char *name, void *child)
+{
+  htsmsg_add_msg(parent, name, child);
+}
+
+static void 
+add_string(void *opaque, void *parent, const char *name,  char *str)
+{
+  htsmsg_add_str(parent, name, str);
+  free(str);
+}
+
+static void 
+add_long(void *opaque, void *parent, const char *name, long v)
+{
+  htsmsg_add_s64(parent, name, v);
+}
+
+static void 
+add_double(void *opaque, void *parent, const char *name, double v)
+{
+  htsmsg_add_dbl(parent, name, v);
+}
+
+static void 
+add_bool(void *opaque, void *parent, const char *name, int v)
+{
+  htsmsg_add_u32(parent, name, v);
+}
+
+static void 
+add_null(void *opaque, void *parent, const char *name)
+{
+}
+
+/**
+ *
+ */
+static const json_deserializer_t json_to_htsmsg = {
+  .jd_create_map      = create_map,
+  .jd_create_list     = create_list,
+  .jd_destroy_obj     = destroy_obj,
+  .jd_add_obj         = add_obj,
+  .jd_add_string      = add_string,
+  .jd_add_long        = add_long,
+  .jd_add_double      = add_double,
+  .jd_add_bool        = add_bool,
+  .jd_add_null        = add_null,
+};
 
 
 /**
@@ -453,15 +199,5 @@ htsmsg_json_parse_value(const char *s, htsmsg_t *parent, char *name)
 htsmsg_t *
 htsmsg_json_deserialize(const char *src)
 {
-  const char *end;
-  htsmsg_t *c;
-
-  if((c = htsmsg_json_parse_object(src, &end)) != NULL)
-    return c;
-
-  if((c = htsmsg_json_parse_array(src, &end)) != NULL) {
-      c->hm_islist = 1;
-      return c;
-  }
-  return NULL;
+  return json_deserialize(src, &json_to_htsmsg, NULL, NULL, 0);
 }

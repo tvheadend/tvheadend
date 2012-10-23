@@ -1,6 +1,6 @@
 /*
  *  Functions for manipulating HTS messages
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -27,10 +27,10 @@
 
 static void htsmsg_clear(htsmsg_t *msg);
 
-/*
+/**
  *
  */
-static void
+void
 htsmsg_field_destroy(htsmsg_t *msg, htsmsg_field_t *f)
 {
   TAILQ_REMOVE(&msg->hm_fields, f, hmf_link);
@@ -102,7 +102,7 @@ htsmsg_field_add(htsmsg_t *msg, const char *name, int type, int flags)
 /*
  *
  */
-static htsmsg_field_t *
+htsmsg_field_t *
 htsmsg_field_find(htsmsg_t *msg, const char *name)
 {
   htsmsg_field_t *f;
@@ -197,16 +197,6 @@ htsmsg_add_s64(htsmsg_t *msg, const char *name, int64_t s64)
 }
 
 /*
- * 
- */
-void
-htsmsg_add_u64(htsmsg_t *msg, const char *name, uint64_t u64)
-{
-  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_S64, HMF_NAME_ALLOCED);
-  f->hmf_s64 = u64;
-}
-
-/*
  *
  */
 void
@@ -214,6 +204,17 @@ htsmsg_add_s32(htsmsg_t *msg, const char *name, int32_t s32)
 {
   htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_S64, HMF_NAME_ALLOCED);
   f->hmf_s64 = s32;
+}
+
+
+/*
+ *
+ */
+void
+htsmsg_add_dbl(htsmsg_t *msg, const char *name, double dbl)
+{
+  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_DBL, HMF_NAME_ALLOCED);
+  f->hmf_dbl = dbl;
 }
 
 
@@ -267,8 +268,8 @@ htsmsg_add_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub)
 		       HMF_NAME_ALLOCED);
 
   assert(sub->hm_data == NULL);
-  TAILQ_MOVE(&f->hmf_msg.hm_fields, &sub->hm_fields, hmf_link);
   f->hmf_msg.hm_islist = sub->hm_islist;
+  TAILQ_MOVE(&f->hmf_msg.hm_fields, &sub->hm_fields, hmf_link);
   free(sub);
 }
 
@@ -312,9 +313,13 @@ htsmsg_get_s64(htsmsg_t *msg, const char *name, int64_t *s64p)
   case HMF_S64:
     *s64p = f->hmf_s64;
     break;
+  case HMF_DBL:
+    *s64p = f->hmf_dbl;
+    break;
   }
   return 0;
 }
+
 
 /**
  *
@@ -324,30 +329,6 @@ htsmsg_get_s64_or_default(htsmsg_t *msg, const char *name, int64_t def)
 {
   int64_t s64;
   return htsmsg_get_s64(msg, name, &s64) ? def : s64;
-}
-
-/**
- *
- */
-int
-htsmsg_get_u64(htsmsg_t *msg, const char *name, uint64_t *u64p)
-{
-  htsmsg_field_t *f;
-
-  if((f = htsmsg_field_find(msg, name)) == NULL)
-    return HTSMSG_ERR_FIELD_NOT_FOUND;
-
-  switch(f->hmf_type) {
-  default:
-    return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
-  case HMF_STR:
-    *u64p = strtoull(f->hmf_str, NULL, 0);
-    break;
-  case HMF_S64:
-    *u64p = f->hmf_s64;
-    break;
-  }
-  return 0;
 }
 
 
@@ -373,12 +354,25 @@ htsmsg_get_u32(htsmsg_t *msg, const char *name, uint32_t *u32p)
 /**
  *
  */
-uint32_t
+int
 htsmsg_get_u32_or_default(htsmsg_t *msg, const char *name, uint32_t def)
 {
   uint32_t u32;
   return htsmsg_get_u32(msg, name, &u32) ? def : u32;
 }
+
+
+/**
+ *
+ */
+int32_t
+htsmsg_get_s32_or_default(htsmsg_t *msg, const char *name, int32_t def)
+{
+  int32_t s32;
+  return htsmsg_get_s32(msg, name, &s32) ? def : s32;
+}
+
+
 
 /*
  *
@@ -396,6 +390,25 @@ htsmsg_get_s32(htsmsg_t *msg, const char *name, int32_t *s32p)
     return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
   
   *s32p = s64;
+  return 0;
+}
+
+
+/*
+ *
+ */
+int
+htsmsg_get_dbl(htsmsg_t *msg, const char *name, double *dblp)
+{
+  htsmsg_field_t *f;
+
+  if((f = htsmsg_field_find(msg, name)) == NULL)
+    return HTSMSG_ERR_FIELD_NOT_FOUND;
+
+  if(f->hmf_type != HMF_DBL)
+    return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
+
+  *dblp = f->hmf_dbl;
   return 0;
 }
 
@@ -457,13 +470,6 @@ htsmsg_get_str(htsmsg_t *msg, const char *name)
 
 }
 
-const char *
-htsmsg_get_str_or_default(htsmsg_t *msg, const char *name, const char *def)
-{
-  const char *str = htsmsg_get_str(msg, name);
-  return str ?: def;
-}
-
 /*
  *
  */
@@ -492,6 +498,32 @@ htsmsg_get_map_multi(htsmsg_t *msg, ...)
     msg = htsmsg_get_map(msg, n);
   return msg;
 }
+
+/**
+ *
+ */
+const char *
+htsmsg_get_str_multi(htsmsg_t *msg, ...)
+{
+  va_list ap;
+  const char *n;
+  htsmsg_field_t *f;
+  va_start(ap, msg);
+
+  while((n = va_arg(ap, char *)) != NULL) {
+    if((f = htsmsg_field_find(msg, n)) == NULL)
+      return NULL;
+    else if(f->hmf_type == HMF_STR)
+      return f->hmf_str;
+    else if(f->hmf_type == HMF_MAP)
+      msg = &f->hmf_msg;
+    else
+      return NULL;
+  }
+  return NULL;
+}
+
+
 
 /*
  *
@@ -565,6 +597,10 @@ htsmsg_print0(htsmsg_t *msg, int indent)
     case HMF_S64:
       printf("S64) = %" PRId64 "\n", f->hmf_s64);
       break;
+
+    case HMF_DBL:
+      printf("DBL) = %f\n", f->hmf_dbl);
+      break;
     }
   }
 } 
@@ -611,6 +647,10 @@ htsmsg_copy_i(htsmsg_t *src, htsmsg_t *dst)
     case HMF_BIN:
       htsmsg_add_bin(dst, f->hmf_name, f->hmf_bin, f->hmf_binsize);
       break;
+
+    case HMF_DBL:
+      htsmsg_add_dbl(dst, f->hmf_name, f->hmf_dbl);
+      break;
     }
   }
 }
@@ -623,6 +663,45 @@ htsmsg_copy(htsmsg_t *src)
   return dst;
 }
 
+/**
+ *
+ */
+htsmsg_t *
+htsmsg_get_map_in_list(htsmsg_t *m, int num)
+{
+  htsmsg_field_t *f;
+
+  HTSMSG_FOREACH(f, m) {
+    if(!--num)
+      return htsmsg_get_map_by_field(f);
+  }
+  return NULL;
+}
+
+
+/**
+ *
+ */
+htsmsg_t *
+htsmsg_get_map_by_field_if_name(htsmsg_field_t *f, const char *name)
+{
+  if(f->hmf_type != HMF_MAP)
+    return NULL;
+  if(strcmp(f->hmf_name, name))
+    return NULL;
+  return &f->hmf_msg;
+}
+
+
+/**
+ *
+ */
+const char *
+htsmsg_get_cdata(htsmsg_t *m, const char *field)
+{
+  return htsmsg_get_str_multi(m, field, "cdata", NULL);
+}
+
 
 /**
  *
@@ -633,3 +712,4 @@ htsmsg_dtor(htsmsg_t **mp)
   if(*mp != NULL)
     htsmsg_destroy(*mp);
 }
+

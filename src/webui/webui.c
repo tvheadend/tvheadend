@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <arpa/inet.h>
 
 #include <sys/stat.h>
 #include <sys/sendfile.h>
@@ -41,6 +42,8 @@
 #include "plumbing/globalheaders.h"
 #include "epg.h"
 #include "muxer.h"
+#include "dvb/dvb.h"
+#include "dvb/dvb_support.h"
 
 /**
  *
@@ -71,10 +74,21 @@ static int
 page_root(http_connection_t *hc, const char *remain, void *opaque)
 {
   if(is_client_simple(hc)) {
-    http_redirect(hc, "/simple.html");
+    http_redirect(hc, "simple.html");
   } else {
-    http_redirect(hc, "/extjs.html");
+    http_redirect(hc, "extjs.html");
   }
+  return 0;
+}
+
+static int
+page_root2(http_connection_t *hc, const char *remain, void *opaque)
+{
+  if (!tvheadend_webroot) return 1;
+  char *tmp = malloc(strlen(tvheadend_webroot) + 2);
+  sprintf(tmp, "%s/", tvheadend_webroot);
+  http_redirect(hc, tmp);
+  free(tmp);
   return 0;
 }
 
@@ -139,8 +153,8 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
  * HTTP stream loop
  */
 static void
-http_stream_run(http_connection_t *hc, streaming_queue_t *sq, 
-		th_subscription_t *s, muxer_container_type_t mc)
+http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
+		const char *name, muxer_container_type_t mc)
 {
   streaming_message_t *sm;
   int run = 1;
@@ -151,16 +165,10 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   struct timeval  tp;
   int err = 0;
   socklen_t errlen = sizeof(err);
-  const char *name;
 
-  mux = muxer_create(s->ths_service, mc);
+  mux = muxer_create(mc);
   if(muxer_open_stream(mux, hc->hc_fd))
     run = 0;
-
-  if(s->ths_channel)
-    name = s->ths_channel->ch_name;
-  else
-    name = "Live Stream";
 
   /* reduce timeout on write() for streaming */
   tp.tv_sec  = 5;
@@ -199,23 +207,28 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     switch(sm->sm_type) {
     case SMT_MPEGTS:
     case SMT_PACKET:
-      muxer_write_pkt(mux, sm->sm_data);
-      sm->sm_data = NULL;
+      if(started) {
+	muxer_write_pkt(mux, sm->sm_type, sm->sm_data);
+	sm->sm_data = NULL;
+      }
       break;
 
     case SMT_START:
-      tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
+      if(!started) {
+	tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
+	http_output_content(hc, muxer_mime(mux, sm->sm_data));
 
-      http_output_content(hc, muxer_mime(mux, sm->sm_data));
-      muxer_init(mux, sm->sm_data, name);
+	if(muxer_init(mux, sm->sm_data, name) < 0)
+	  run = 0;
 
-      started = 1;
+	started = 1;
+      } else if(muxer_reconfigure(mux, sm->sm_data) < 0) {
+	tvhlog(LOG_WARNING, "webui",  "Unable to reconfigure stream %s", hc->hc_url_orig);
+      }
       break;
 
     case SMT_STOP:
-      if(sm->sm_code == SM_CODE_SOURCE_RECONFIGURED) {
-	muxer_reconfigure(mux, sm->sm_data);
-      } else {
+      if(sm->sm_code != SM_CODE_SOURCE_RECONFIGURED) {
 	tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, %s", hc->hc_url_orig, 
 	       streaming_code2txt(sm->sm_code));
 	run = 0;
@@ -541,6 +554,9 @@ http_stream_service(http_connection_t *hc, service_t *service)
   dvr_config_t *cfg;
   muxer_container_type_t mc;
   int flags;
+  const char *str;
+  size_t qsize;
+  const char *name;
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN) {
@@ -548,29 +564,33 @@ http_stream_service(http_connection_t *hc, service_t *service)
     mc = cfg->dvr_mc;
   }
 
+  if ((str = http_arg_get(&hc->hc_req_args, "qsize")))
+    qsize = atoll(str);
+  else
+    qsize = 1500000;
+
   if(mc == MC_PASS) {
-    streaming_queue_init(&sq, SMT_PACKET);
+    streaming_queue_init2(&sq, SMT_PACKET, qsize);
     gh = NULL;
     tsfix = NULL;
     st = &sq.sq_st;
     flags = SUBSCRIPTION_RAW_MPEGTS;
   } else {
-    streaming_queue_init(&sq, 0);
+    streaming_queue_init2(&sq, 0, qsize);
     gh = globalheaders_create(&sq.sq_st);
     tsfix = tsfix_create(gh);
     st = tsfix;
     flags = 0;
   }
 
-  pthread_mutex_lock(&global_lock);
   s = subscription_create_from_service(service, "HTTP", st, flags);
-  pthread_mutex_unlock(&global_lock);
-
   if(s) {
-    http_stream_run(hc, &sq, s, mc);
+    name = strdupa(service->s_ch ?
+                   service->s_ch->ch_name : service->s_nicename);
+    pthread_mutex_unlock(&global_lock);
+    http_stream_run(hc, &sq, name, mc);
     pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
-    pthread_mutex_unlock(&global_lock);
   }
 
   if(gh)
@@ -583,6 +603,32 @@ http_stream_service(http_connection_t *hc, service_t *service)
 
   return 0;
 }
+
+
+/**
+ * Subscribes to a service and starts the streaming loop
+ */
+#if ENABLE_LINUXDVB
+static int
+http_stream_tdmi(http_connection_t *hc, th_dvb_mux_instance_t *tdmi)
+{
+  th_subscription_t *s;
+  streaming_queue_t sq;
+  const char *name;
+  streaming_queue_init(&sq, SMT_PACKET);
+
+  s = dvb_subscription_create_from_tdmi(tdmi, "HTTP", &sq.sq_st);
+  name = strdupa(tdmi->tdmi_identifier);
+  pthread_mutex_unlock(&global_lock);
+  http_stream_run(hc, &sq, name, MC_PASS);
+  pthread_mutex_lock(&global_lock);
+  subscription_unsubscribe(s);
+
+  streaming_queue_deinit(&sq);
+
+  return 0;
+}
+#endif
 
 
 /**
@@ -600,6 +646,9 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   int priority = 100;
   int flags;
   muxer_container_type_t mc;
+  char *str;
+  size_t qsize;
+  const char *name;
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN) {
@@ -607,30 +656,36 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
     mc = cfg->dvr_mc;
   }
 
+  if ((str = http_arg_get(&hc->hc_req_args, "qsize")))
+    qsize = atoll(str);
+  else
+    qsize = 1500000;
+
   if(mc == MC_PASS) {
-    streaming_queue_init(&sq, SMT_PACKET);
+    streaming_queue_init2(&sq, SMT_PACKET, qsize);
     gh = NULL;
     tsfix = NULL;
     st = &sq.sq_st;
     flags = SUBSCRIPTION_RAW_MPEGTS;
   } else {
-    streaming_queue_init(&sq, 0);
+    streaming_queue_init2(&sq, 0, qsize);
     gh = globalheaders_create(&sq.sq_st);
     tsfix = tsfix_create(gh);
     st = tsfix;
     flags = 0;
   }
 
-  pthread_mutex_lock(&global_lock);
   s = subscription_create_from_channel(ch, priority, "HTTP", st, flags,
-				       NULL, NULL, NULL);
-  pthread_mutex_unlock(&global_lock);
+				       inet_ntoa(hc->hc_peer->sin_addr),
+				       hc->hc_username,
+				       http_arg_get(&hc->hc_args, "User-Agent"));
 
   if(s) {
-    http_stream_run(hc, &sq, s, mc);
+    name = strdupa(ch->ch_name);
+    pthread_mutex_unlock(&global_lock);
+    http_stream_run(hc, &sq, name, mc);
     pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
-    pthread_mutex_unlock(&global_lock);
   }
 
   if(gh)
@@ -648,6 +703,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
  * Handle the http request. http://tvheadend/stream/channelid/<chid>
  *                          http://tvheadend/stream/channel/<chname>
  *                          http://tvheadend/stream/service/<servicename>
+ *                          http://tvheadend/stream/mux/<muxid>
  */
 static int
 http_stream(http_connection_t *hc, const char *remain, void *opaque)
@@ -655,6 +711,9 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   char *components[2];
   channel_t *ch = NULL;
   service_t *service = NULL;
+#if ENABLE_LINUXDVB
+  th_dvb_mux_instance_t *tdmi = NULL;
+#endif
 
   hc->hc_keep_alive = 0;
 
@@ -670,7 +729,7 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
 
   http_deescape(components[1]);
 
-  pthread_mutex_lock(&global_lock);
+  scopedgloballock();
 
   if(!strcmp(components[0], "channelid")) {
     ch = channel_find_by_identifier(atoi(components[1]));
@@ -678,14 +737,20 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
     ch = channel_find_by_name(components[1], 0, 0);
   } else if(!strcmp(components[0], "service")) {
     service = service_find_by_identifier(components[1]);
+#if ENABLE_LINUXDVB
+  } else if(!strcmp(components[0], "mux")) {
+    tdmi = dvb_mux_find_by_identifier(components[1]);
+#endif
   }
-
-  pthread_mutex_unlock(&global_lock);
 
   if(ch != NULL) {
     return http_stream_channel(hc, ch);
   } else if(service != NULL) {
     return http_stream_service(hc, service);
+#if ENABLE_LINUXDVB
+  } else if(tdmi != NULL) {
+    return http_stream_tdmi(hc, tdmi);
+#endif
   } else {
     http_error(hc, HTTP_STATUS_BAD_REQUEST);
     return HTTP_STATUS_BAD_REQUEST;
@@ -759,7 +824,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   fname = strdup(de->de_filename);
-  content = muxer_container_mimetype(de->de_mc, 1);
+  content = muxer_container_type2mime(de->de_mc, 1);
   postfix = muxer_container_suffix(de->de_mc, 1);
 
   pthread_mutex_unlock(&global_lock);
@@ -868,6 +933,7 @@ int page_statedump(http_connection_t *hc, const char *remain, void *opaque);
 void
 webui_init(void)
 {
+  http_path_add("", NULL, page_root2, ACCESS_WEB_INTERFACE);
   http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
 
   http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_WEB_INTERFACE);

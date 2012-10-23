@@ -471,6 +471,7 @@ iptv_service_setsourceinfo(service_t *t, struct source_info *si)
   char straddr[INET6_ADDRSTRLEN];
   memset(si, 0, sizeof(struct source_info));
 
+  si->si_type = S_MPEG_TS;
   si->si_adapter = t->s_iptv_iface ? strdup(t->s_iptv_iface) : NULL;
   if(t->s_iptv_group.s_addr != 0) {
     si->si_mux = strdup(inet_ntoa(t->s_iptv_group));

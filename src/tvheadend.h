@@ -36,6 +36,8 @@
 
 extern const char *tvheadend_version;
 extern char *tvheadend_cwd;
+extern const char *tvheadend_capabilities[];
+extern const char *tvheadend_webroot;
 
 #define PTS_UNSET INT64_C(0x8000000000000000)
 
@@ -53,6 +55,7 @@ typedef struct source_info {
   char *si_mux;
   char *si_provider;
   char *si_service;
+  int   si_type;
 } source_info_t;
 
 static inline void
@@ -332,9 +335,10 @@ typedef struct streaming_queue {
   
   streaming_target_t sq_st;
 
-  pthread_mutex_t sq_mutex;              /* Protects sp_queue */
-  pthread_cond_t  sq_cond;               /* Condvar for signalling new
-					    packets */
+  pthread_mutex_t sq_mutex;    /* Protects sp_queue */
+  pthread_cond_t  sq_cond;     /* Condvar for signalling new packets */
+
+  size_t          sq_maxsize;  /* Max queue size (bytes) */
   
   struct streaming_message_queue sq_queue;
 
@@ -430,9 +434,25 @@ extern void scopedunlock(pthread_mutex_t **mtxp);
 #define tvh_strlcatf(buf, size, fmt...) \
  snprintf((buf) + strlen(buf), (size) - strlen(buf), fmt)
 
+static inline const char *tvh_strbegins(const char *s1, const char *s2)
+{
+  while(*s2)
+    if(*s1++ != *s2++)
+      return NULL;
+  return s1;
+}
+
+typedef struct th_pipe
+{
+  int rd;
+  int wr;
+} th_pipe_t;
+
 int tvh_open(const char *pathname, int flags, mode_t mode);
 
 int tvh_socket(int domain, int type, int protocol);
+
+int tvh_pipe(int flags, th_pipe_t *pipe);
 
 void hexdump(const char *pfx, const uint8_t *data, int len);
 
@@ -469,6 +489,10 @@ void sbuf_put_be16(sbuf_t *sb, uint16_t u16);
 void sbuf_put_byte(sbuf_t *sb, uint8_t u8);
 
 char *md5sum ( const char *str );
+
+int makedirs ( const char *path, int mode );
+
+int rmtree ( const char *path );
 
 /* printing */
 #if __SIZEOF_LONG__ == 8

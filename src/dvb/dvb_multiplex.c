@@ -208,7 +208,7 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
     /* HACK - load old transports and remove old mux config */
     if(identifier) {
       save = 1;
-      dvb_transport_load(tdmi, identifier);
+      dvb_service_load(tdmi, identifier);
       hts_settings_remove("dvbmuxes/%s/%s",
 		      tda->tda_identifier, identifier);
     }
@@ -291,7 +291,7 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
     dvb_adapter_notify(tda);
   }
 
-  dvb_transport_load(tdmi, identifier);
+  dvb_service_load(tdmi, identifier);
   dvb_mux_notify(tdmi);
 
   if(enabled) {
@@ -328,7 +328,7 @@ dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
     service_destroy(t);
   }
 
-  dvb_transport_notify_by_adapter(tda);
+  dvb_service_notify_by_adapter(tda);
 
   if(tda->tda_mux_current == tdmi)
     dvb_fe_stop(tda->tda_mux_current, 0);
@@ -1201,7 +1201,7 @@ dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src,
     return -1; // Already exist
 
   LIST_FOREACH(t_src, &tdmi_src->tdmi_transports, s_group_link) {
-    t_dst = dvb_transport_find(tdmi_dst, 
+    t_dst = dvb_service_find(tdmi_dst, 
 			       t_src->s_dvb_service_id,
 			       t_src->s_pmt_pid, NULL);
 
@@ -1284,4 +1284,33 @@ th_dvb_mux_instance_t *dvb_mux_find
         return tdmi;
   }
   return NULL;
+}
+
+
+/**
+ *
+ */
+th_subscription_t *
+dvb_subscription_create_from_tdmi(th_dvb_mux_instance_t *tdmi,
+				  const char *name,
+				  streaming_target_t *st)
+{
+  th_subscription_t *s;
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+
+  s = subscription_create(INT32_MAX, name, st, SUBSCRIPTION_RAW_MPEGTS, 
+			  NULL, NULL, NULL, NULL);
+  
+
+  s->ths_tdmi = tdmi;
+  LIST_INSERT_HEAD(&tdmi->tdmi_subscriptions, s, ths_tdmi_link);
+
+  dvb_fe_tune(tdmi, "Full mux subscription");
+
+  pthread_mutex_lock(&tda->tda_delivery_mutex);
+  streaming_target_connect(&tda->tda_streaming_pad, &s->ths_input);
+  pthread_mutex_unlock(&tda->tda_delivery_mutex);
+
+  notify_reload("subscriptions");
+  return s;
 }
