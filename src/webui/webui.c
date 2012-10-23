@@ -209,18 +209,19 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
       break;
 
     case SMT_START:
-      tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
-
-      http_output_content(hc, muxer_mime(mux, sm->sm_data));
-      muxer_init(mux, sm->sm_data, name);
-
+      if(!started) {
+	tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
+	http_output_content(hc, muxer_mime(mux, sm->sm_data));
+	muxer_init(mux, sm->sm_data, name);
+      } else {
+	tvhlog(LOG_DEBUG, "webui",  "Reconfiguring streaming %s", hc->hc_url_orig);
+	muxer_reconfigure(mux, sm->sm_data);
+      }
       started = 1;
       break;
 
     case SMT_STOP:
-      if(sm->sm_code == SM_CODE_SOURCE_RECONFIGURED) {
-	muxer_reconfigure(mux, sm->sm_data);
-      } else {
+      if(sm->sm_code != SM_CODE_SOURCE_RECONFIGURED) {
 	tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, %s", hc->hc_url_orig, 
 	       streaming_code2txt(sm->sm_code));
 	run = 0;
