@@ -53,6 +53,7 @@ typedef struct source_info {
   char *si_mux;
   char *si_provider;
   char *si_service;
+  int   si_type;
 } source_info_t;
 
 static inline void
@@ -337,9 +338,10 @@ typedef struct streaming_queue {
   
   streaming_target_t sq_st;
 
-  pthread_mutex_t sq_mutex;              /* Protects sp_queue */
-  pthread_cond_t  sq_cond;               /* Condvar for signalling new
-					    packets */
+  pthread_mutex_t sq_mutex;    /* Protects sp_queue */
+  pthread_cond_t  sq_cond;     /* Condvar for signalling new packets */
+
+  size_t          sq_maxsize;  /* Max queue size (bytes) */
   
   struct streaming_message_queue sq_queue;
 

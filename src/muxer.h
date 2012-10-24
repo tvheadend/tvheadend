@@ -48,7 +48,9 @@ typedef struct muxer {
   int         (*m_close)      (struct muxer *);                         // Close the muxer
   void        (*m_destroy)    (struct muxer *);                         // Free the memory
   int         (*m_write_meta) (struct muxer *, struct epg_broadcast *); // Append epg data
-  int         (*m_write_pkt)  (struct muxer *, void *);                 // Append a media packet
+  int         (*m_write_pkt)  (struct muxer *,                          // Append a media packet
+			       streaming_message_type_t,
+			       void *);
 
   int                    m_errors;     // Number of errors
   muxer_container_type_t m_container;  // The type of the container
@@ -62,7 +64,7 @@ const char*            muxer_container_mimetype(muxer_container_type_t mc, int v
 const char*            muxer_container_suffix  (muxer_container_type_t mc, int video);
 
 // Muxer factory
-muxer_t *muxer_create(struct service *s, muxer_container_type_t mc);
+muxer_t *muxer_create(muxer_container_type_t mc);
 
 // Wrapper functions
 int         muxer_open_file   (muxer_t *m, const char *filename);
@@ -72,7 +74,7 @@ int         muxer_reconfigure (muxer_t *m, const struct streaming_start *ss);
 int         muxer_close       (muxer_t *m);
 int         muxer_destroy     (muxer_t *m);
 int         muxer_write_meta  (muxer_t *m, struct epg_broadcast *eb);
-int         muxer_write_pkt   (muxer_t *m, void *data);
+int         muxer_write_pkt   (muxer_t *m, streaming_message_type_t smt, void *data);
 const char* muxer_mime        (muxer_t *m, const struct streaming_start *ss);
 const char* muxer_suffix      (muxer_t *m, const struct streaming_start *ss);
 

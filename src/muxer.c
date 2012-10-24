@@ -171,11 +171,11 @@ muxer_container_txt2type(const char *str)
  * Create a new muxer
  */
 muxer_t* 
-muxer_create(service_t *s, muxer_container_type_t mc)
+muxer_create(muxer_container_type_t mc)
 {
   muxer_t *m;
 
-  m = pass_muxer_create(s, mc);
+  m = pass_muxer_create(mc);
 
   if(!m)
     m = tvh_muxer_create(mc);
@@ -321,12 +321,12 @@ muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
  * sanity wrapper arround m_write_pkt()
  */
 int
-muxer_write_pkt(muxer_t *m, void *data)
+muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 {
   if(!m || !data)
     return -1;
 
-  return m->m_write_pkt(m, data);
+  return m->m_write_pkt(m, smt, data);
 }
 
 

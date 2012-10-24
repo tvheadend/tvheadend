@@ -226,6 +226,7 @@ typedef struct service {
    */ 
   enum {
     S_MPEG_TS,
+    S_MPEG_PS,
     S_OTHER,
   } s_source_type;
 

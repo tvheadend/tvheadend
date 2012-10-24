@@ -296,6 +296,7 @@ dvb_lnblist_get(void)
   add_to_lnblist(array, "C-Band");
   add_to_lnblist(array, "C-Multi");
   add_to_lnblist(array, "Circular 10750");
+  add_to_lnblist(array, "Ku 11300");
   return array;
 }
 
@@ -336,6 +337,10 @@ dvb_lnb_get_frequencies(const char *id, int *f_low, int *f_hi, int *f_switch)
     *f_switch = 0;
   } else if(!strcmp(id, "Circular 10750")) {
     *f_low    = 10750000;
+    *f_hi     = 0;
+    *f_switch = 0;
+  } else if(!strcmp(id, "Ku 11300")) {
+    *f_low    = 11300000;
     *f_hi     = 0;
     *f_switch = 0;
   }

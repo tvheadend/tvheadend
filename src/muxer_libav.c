@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <unistd.h>
 #include <libavformat/avformat.h>
 #include <libavutil/mathematics.h>
@@ -372,7 +373,7 @@ lav_muxer_open_file(muxer_t *m, const char *filename)
  * Write a packet to the muxer
  */
 static int
-lav_muxer_write_pkt(muxer_t *m, void *data)
+lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 {
   int i;
   AVFormatContext *oc;
@@ -380,6 +381,8 @@ lav_muxer_write_pkt(muxer_t *m, void *data)
   AVPacket packet;
   th_pkt_t *pkt = (th_pkt_t*)data;
   lav_muxer_t *lm = (lav_muxer_t*)m;
+
+  assert(smt == SMT_PACKET);
 
   oc = lm->lm_oc;
 

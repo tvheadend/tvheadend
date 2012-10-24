@@ -158,7 +158,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   socklen_t errlen = sizeof(err);
   const char *name;
 
-  mux = muxer_create(s->ths_service, mc);
+  mux = muxer_create(mc);
   if(muxer_open_stream(mux, hc->hc_fd))
     run = 0;
 
@@ -204,7 +204,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     switch(sm->sm_type) {
     case SMT_MPEGTS:
     case SMT_PACKET:
-      muxer_write_pkt(mux, sm->sm_data);
+      muxer_write_pkt(mux, sm->sm_type, sm->sm_data);
       sm->sm_data = NULL;
       break;
 
@@ -212,12 +212,14 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
       if(!started) {
 	tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
 	http_output_content(hc, muxer_mime(mux, sm->sm_data));
-	muxer_init(mux, sm->sm_data, name);
-      } else {
-	tvhlog(LOG_DEBUG, "webui",  "Reconfiguring streaming %s", hc->hc_url_orig);
-	muxer_reconfigure(mux, sm->sm_data);
+
+	if(muxer_init(mux, sm->sm_data, name) < 0)
+	  run = 0;
+
+	started = 1;
+      } else if(muxer_reconfigure(mux, sm->sm_data) < 0) {
+	tvhlog(LOG_WARNING, "webui",  "Unable to reconfigure stream %s", hc->hc_url_orig);
       }
-      started = 1;
       break;
 
     case SMT_STOP:
@@ -547,6 +549,8 @@ http_stream_service(http_connection_t *hc, service_t *service)
   dvr_config_t *cfg;
   muxer_container_type_t mc;
   int flags;
+  const char *str;
+  size_t qsize ;
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN) {
@@ -554,14 +558,19 @@ http_stream_service(http_connection_t *hc, service_t *service)
     mc = cfg->dvr_mc;
   }
 
+  if ((str = http_arg_get(&hc->hc_req_args, "qsize")))
+    qsize = atoll(str);
+  else
+    qsize = 1500000;
+
   if(mc == MC_PASS) {
-    streaming_queue_init(&sq, SMT_PACKET);
+    streaming_queue_init2(&sq, SMT_PACKET, qsize);
     gh = NULL;
     tsfix = NULL;
     st = &sq.sq_st;
     flags = SUBSCRIPTION_RAW_MPEGTS;
   } else {
-    streaming_queue_init(&sq, 0);
+    streaming_queue_init2(&sq, 0, qsize);
     gh = globalheaders_create(&sq.sq_st);
     tsfix = tsfix_create(gh);
     st = tsfix;
@@ -606,6 +615,8 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   int priority = 100;
   int flags;
   muxer_container_type_t mc;
+  char *str;
+  size_t qsize;
 
 #if ENABLE_LIBAV
   streaming_target_t *tr;
@@ -633,14 +644,19 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
     mc = cfg->dvr_mc;
   }
 
+  if ((str = http_arg_get(&hc->hc_req_args, "qsize")))
+    qsize = atoll(str);
+  else
+    qsize = 1500000;
+
   if(mc == MC_PASS) {
-    streaming_queue_init(&sq, SMT_PACKET);
+    streaming_queue_init2(&sq, SMT_PACKET, qsize);
     gh = NULL;
     tsfix = NULL;
     st = &sq.sq_st;
     flags = SUBSCRIPTION_RAW_MPEGTS;
   } else {
-    streaming_queue_init(&sq, 0);
+    streaming_queue_init2(&sq, 0, qsize);
     gh = globalheaders_create(&sq.sq_st);
 #if ENABLE_LIBAV
     if(transcode) {

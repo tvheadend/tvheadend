@@ -49,6 +49,15 @@
       This module will communicate the received control-words back to
       Tvheadend via Port 9000
 
+  <dt>OSCam mode
+  <dd>If selected, connection will be made directly to oscam without using LD_PRELOAD hack.<br>
+      Port 9000 will be used automatically.<br>
+      The following lines are required in <b>[dvbapi]</b> section of oscam.conf file:
+      <dl>
+        <dt>boxtype = pc<br>
+        pmt_mode = 4
+      </dl>
+
   <dt>Comment
   <dd>Allows the administrator to set a comment only visible in this editor.
       It does not serve any active purpose.
