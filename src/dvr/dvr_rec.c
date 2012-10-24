@@ -327,7 +327,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   int i;
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
 
-  de->de_mux = muxer_create(de->de_s->ths_service, de->de_mc);
+  de->de_mux = muxer_create(de->de_mc);
   if(!de->de_mux) {
     dvr_rec_fatal_error(de, "Unable to create muxer");
     return;

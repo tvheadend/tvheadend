@@ -63,7 +63,7 @@ const char*            muxer_container_mimetype(muxer_container_type_t mc, int v
 const char*            muxer_container_suffix  (muxer_container_type_t mc, int video);
 
 // Muxer factory
-muxer_t *muxer_create(struct service *s, muxer_container_type_t mc);
+muxer_t *muxer_create(muxer_container_type_t mc);
 
 // Wrapper functions
 int         muxer_open_file   (muxer_t *m, const char *filename);
