@@ -355,6 +355,8 @@ dvb_transport_setsourceinfo(service_t *t, struct source_info *si)
 
   lock_assert(&global_lock);
 
+  si->si_type = S_MPEG_TS;
+
   if(tdmi->tdmi_adapter->tda_rootpath  != NULL)
     si->si_device = strdup(tdmi->tdmi_adapter->tda_rootpath);
 

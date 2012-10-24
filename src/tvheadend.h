@@ -53,6 +53,7 @@ typedef struct source_info {
   char *si_mux;
   char *si_provider;
   char *si_service;
+  int   si_type;
 } source_info_t;
 
 static inline void
