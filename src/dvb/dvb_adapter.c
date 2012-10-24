@@ -854,22 +854,26 @@ dvb_adapter_input_dvr(void *aux)
 
     int wakeup_table_feed = 0;  // Just wanna wakeup once
 
+
     pthread_mutex_lock(&tda->tda_delivery_mutex);
+
+    if(LIST_FIRST(&tda->tda_streaming_pad.sp_targets) != NULL) {
+      streaming_message_t sm;
+      pktbuf_t *pb = pktbuf_alloc(tsb, r);
+      memset(&sm, 0, sizeof(sm));
+      sm.sm_type = SMT_MPEGTS;
+      sm.sm_data = pb;
+      streaming_pad_deliver(&tda->tda_streaming_pad, &sm);
+      pktbuf_ref_dec(pb);
+    }
+
+
+
     /* Process */
     while (r >= 188) {
   
       /* sync */
       if (tsb[i] == 0x47) {
-
-	if(LIST_FIRST(&tda->tda_streaming_pad.sp_targets) != NULL) {
-	  streaming_message_t sm;
-	  pktbuf_t *pb = pktbuf_alloc(tsb, 188);
-	  memset(&sm, 0, sizeof(sm));
-	  sm.sm_type = SMT_MPEGTS;
-	  sm.sm_data = pb;
-	  streaming_pad_deliver(&tda->tda_streaming_pad, &sm);
-	  pktbuf_ref_dec(pb);
-	}
 
 
 	if(!(tsb[i+1] & 0x80)) { // Only dispatch to table parser if not error
