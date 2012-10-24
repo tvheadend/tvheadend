@@ -19,6 +19,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <assert.h>
 
 #include "tvheadend.h"
 #include "streaming.h"
@@ -227,17 +228,19 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
  * Write a packet directly to the file descriptor
  */
 static int
-pass_muxer_write_pkt(muxer_t *m, void *data)
+pass_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 {
   pktbuf_t *pb = (pktbuf_t*)data;
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
-  switch(pm->m_container) {
-  case MC_MPEGTS:
+  assert(smt == SMT_MPEGTS);
+
+  switch(smt) {
+  case SMT_MPEGTS:
     pass_muxer_write_ts(m, pb);
     break;
   default:
-    //NOP
+    //TODO: add support for v4l (MPEG-PS)
     break;
   }
 

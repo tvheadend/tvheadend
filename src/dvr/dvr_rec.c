@@ -445,7 +445,7 @@ dvr_thread(void *aux)
       if(dispatch_clock > de->de_start - (60 * de->de_start_extra)) {
 	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
 
-	muxer_write_pkt(de->de_mux, sm->sm_data);
+	muxer_write_pkt(de->de_mux, sm->sm_type, sm->sm_data);
 	sm->sm_data = NULL;
       }
       break;

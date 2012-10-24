@@ -16,6 +16,8 @@
  *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
+
 #include "tvheadend.h"
 #include "streaming.h"
 #include "epg.h"
@@ -132,10 +134,12 @@ tvh_muxer_open_file(muxer_t *m, const char *filename)
  * Write a packet to the muxer
  */
 static int
-tvh_muxer_write_pkt(muxer_t *m, void *data)
+tvh_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 {
   th_pkt_t *pkt = (th_pkt_t*)data;
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
+
+  assert(smt == SMT_PACKET);
 
   if(mk_mux_write_pkt(tm->tm_ref, pkt)) {
     tm->m_errors++;

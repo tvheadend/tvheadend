@@ -308,12 +308,12 @@ muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
  * sanity wrapper arround m_write_pkt()
  */
 int
-muxer_write_pkt(muxer_t *m, void *data)
+muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 {
   if(!m || !data)
     return -1;
 
-  return m->m_write_pkt(m, data);
+  return m->m_write_pkt(m, smt, data);
 }
 
 
