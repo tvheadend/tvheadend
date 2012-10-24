@@ -452,7 +452,7 @@ tda_add(int adapter_num)
 
   TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
 
-  dvb_input_raw_setup(tda);
+  dvb_input_filtered_setup(tda);
 
   if(tda->tda_sat)
     dvb_satconf_init(tda);
