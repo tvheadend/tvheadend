@@ -243,9 +243,9 @@ trap_init(const char *ver)
       char *m = malloc(st.st_size);
       if(m != NULL) {
 	if(read(fd, m, st.st_size) == st.st_size) {
-	  SHA_Init(&binsum);
-	  SHA_Update(&binsum, (void *)m, st.st_size);
-	  SHA_Final(digest, &binsum);
+	  SHA1_Init(&binsum);
+	  SHA1_Update(&binsum, (void *)m, st.st_size);
+	  SHA1_Final(digest, &binsum);
 	}
 	free(m);
       }
