@@ -908,6 +908,7 @@ service_build_stream_start(service_t *t)
 
   ss->ss_refcount = 1;
   ss->ss_pcr_pid = t->s_pcr_pid;
+  ss->ss_pmt_pid = t->s_pmt_pid;
   return ss;
 }
 
