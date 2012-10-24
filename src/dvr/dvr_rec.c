@@ -319,7 +319,7 @@ dvr_rec_set_state(dvr_entry_t *de, dvr_rs_state_t newstate, int error)
 /**
  *
  */
-static void
+static int
 dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 {
   const source_info_t *si = &ss->ss_si;
@@ -330,28 +330,28 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   de->de_mux = muxer_create(de->de_mc);
   if(!de->de_mux) {
     dvr_rec_fatal_error(de, "Unable to create muxer");
-    return;
+    return -1;
   }
 
   if(pvr_generate_filename(de, ss) != 0) {
     dvr_rec_fatal_error(de, "Unable to create directories");
-    return;
+    return -1;
   }
 
   if(muxer_open_file(de->de_mux, de->de_filename)) {
     dvr_rec_fatal_error(de, "Unable to open file");
-    return;
+    return -1;
   }
 
   if(muxer_init(de->de_mux, ss, lang_str_get(de->de_title, NULL))) {
     dvr_rec_fatal_error(de, "Unable to init file");
-    return;
+    return -1;
   }
 
   if(cfg->dvr_flags & DVR_TAG_FILES) {
     if(muxer_write_meta(de->de_mux, de->de_bcast)) {
       dvr_rec_fatal_error(de, "Unable to write meta data");
-      return;
+      return -1;
     }
   }
 
@@ -412,6 +412,8 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 	   ch,
 	   ssc->ssc_disabled ? "<disabled, no valid input>" : "");
   }
+
+  return 0;
 }
 
 
@@ -425,6 +427,7 @@ dvr_thread(void *aux)
   streaming_queue_t *sq = &de->de_sq;
   streaming_message_t *sm;
   int run = 1;
+  int started = 0;
 
   pthread_mutex_lock(&sq->sq_mutex);
 
@@ -451,10 +454,17 @@ dvr_thread(void *aux)
       break;
 
     case SMT_START:
-      pthread_mutex_lock(&global_lock);
-      dvr_rec_set_state(de, DVR_RS_WAIT_PROGRAM_START, 0);
-      dvr_rec_start(de, sm->sm_data);
-      pthread_mutex_unlock(&global_lock);
+      if(!started) {
+	pthread_mutex_lock(&global_lock);
+	dvr_rec_set_state(de, DVR_RS_WAIT_PROGRAM_START, 0);
+	if(dvr_rec_start(de, sm->sm_data) == 0)
+	  started = 1;
+	pthread_mutex_unlock(&global_lock);
+      } else if(muxer_reconfigure(de->de_mux, sm->sm_data) < 0) {
+	tvhlog(LOG_WARNING,
+	       "dvr", "Unable to reconfigure the recording \"%s\"",
+	       de->de_filename ?: lang_str_get(de->de_title, NULL));
+      }
       break;
 
     case SMT_STOP:
@@ -468,10 +478,7 @@ dvr_thread(void *aux)
 	       "dvr", "Recording completed: \"%s\"",
 	       de->de_filename ?: lang_str_get(de->de_title, NULL));
 
-      } else if(sm->sm_code == SM_CODE_SOURCE_RECONFIGURED) {
-	muxer_reconfigure(de->de_mux, sm->sm_data);
-      } else {
-
+      } else if(sm->sm_code != SM_CODE_SOURCE_RECONFIGURED) {
 	if(de->de_last_error != sm->sm_code) {
 	  dvr_rec_set_state(de, DVR_RS_ERROR, sm->sm_code);
 
