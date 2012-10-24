@@ -904,16 +904,18 @@ parse_mpeg2video_pic_start(service_t *t, elementary_stream_t *st, int *frametype
  *
  */
 void
-parser_set_stream_vsize(elementary_stream_t *st, int width, int height)
+parser_set_stream_vparam(elementary_stream_t *st, int width, int height,
+                         int duration)
 {
   int need_save = 0;
 
-  if(st->es_width == 0 && st->es_height == 0) {
+  if(st->es_width == 0 && st->es_height == 0 && st->es_frame_duration == 0) {
     need_save = 1;
     st->es_meta_change = 0;
 
-  } else if(st->es_width != width || st->es_height != height) {
-    
+  } else if(st->es_width != width || st->es_height != height ||
+            st->es_frame_duration != duration) {
+
     st->es_meta_change++;
     if(st->es_meta_change == 2)
       need_save = 1;
@@ -925,6 +927,7 @@ parser_set_stream_vsize(elementary_stream_t *st, int width, int height)
   if(need_save) {
     st->es_width = width;
     st->es_height = height;
+    st->es_frame_duration = duration;
     service_request_save(st->es_service, 1);
   }
 }
@@ -969,7 +972,7 @@ parse_mpeg2video_seq_start(service_t *t, elementary_stream_t *st,
   st->es_aspect_num = mpeg2_aspect[aspect][0];
   st->es_aspect_den = mpeg2_aspect[aspect][1];
 
-  st->es_frame_duration = mpeg2video_framedurations[read_bits(bs, 4)];
+  int duration = mpeg2video_framedurations[read_bits(bs, 4)];
 
   v = read_bits(bs, 18) * 400;
   skip_bits(bs, 1);
@@ -977,7 +980,7 @@ parse_mpeg2video_seq_start(service_t *t, elementary_stream_t *st,
   v = read_bits(bs, 10) * 16 * 1024 / 8;
   st->es_vbv_size = v;
 
-  parser_set_stream_vsize(st, width, height);
+  parser_set_stream_vparam(st, width, height, duration);
   return 0;
 }
 
@@ -1157,8 +1160,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
 {
   const uint8_t *buf = st->es_buf.sb_data + sc_offset;
   uint32_t sc = st->es_startcode;
-  int64_t d;
-  int l2, pkttype, duration, isfield;
+  int l2, pkttype, isfield;
   bitstream_t bs;
   int ret = 0;
 
@@ -1168,12 +1170,6 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
       uint16_t plen = buf[4] << 8 | buf[5];
       if(plen >= 0xffe9) st->es_incomplete =1;
       parse_pes_header(t, st, buf + 6, len - 6);
-    }
-    if(st->es_prevdts != PTS_UNSET && st->es_curdts != PTS_UNSET) {
-      d = (st->es_curdts - st->es_prevdts) & 0x1ffffffffLL;
-
-      if(d < 90000)
-	st->es_frame_duration = d;
     }
     st->es_prevdts = st->es_curdts;
     return 1;
@@ -1211,23 +1207,23 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
 
     case 5: /* IDR+SLICE */
     case 1:
-      if(st->es_curpkt != NULL || st->es_frame_duration == 0)
-	break;
-
       l2 = len - 3 > 64 ? 64 : len - 3;
       void *f = h264_nal_deescape(&bs, buf + 3, l2);
       /* we just want the first stuff */
 
-      if(h264_decode_slice_header(st, &bs, &pkttype, &duration, &isfield)) {
+      if(h264_decode_slice_header(st, &bs, &pkttype, &isfield)) {
 	free(f);
 	return 1;
       }
       free(f);
 
+      if(st->es_curpkt != NULL || st->es_frame_duration == 0)
+	break;
+
       st->es_curpkt = pkt_alloc(NULL, 0, st->es_curpts, st->es_curdts);
       st->es_curpkt->pkt_frametype = pkttype;
       st->es_curpkt->pkt_field = isfield;
-      st->es_curpkt->pkt_duration = duration ?: st->es_frame_duration;
+      st->es_curpkt->pkt_duration = st->es_frame_duration;
       st->es_curpkt->pkt_commercial = t->s_tt_commercial_advice;
       break;
 

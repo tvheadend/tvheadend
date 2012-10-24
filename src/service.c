@@ -902,6 +902,7 @@ service_build_stream_start(service_t *t)
     ssc->ssc_pid = st->es_pid;
     ssc->ssc_width = st->es_width;
     ssc->ssc_height = st->es_height;
+    ssc->ssc_frameduration = st->es_frame_duration;
   }
 
   t->s_setsourceinfo(t, &ss->ss_si);

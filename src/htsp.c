@@ -1880,9 +1880,12 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
 
     if(ssc->ssc_type == SCT_MPEG2VIDEO || ssc->ssc_type == SCT_H264) {
       if(ssc->ssc_width)
-	      htsmsg_add_u32(c, "width", ssc->ssc_width);
+        htsmsg_add_u32(c, "width", ssc->ssc_width);
       if(ssc->ssc_height)
-	      htsmsg_add_u32(c, "height", ssc->ssc_height);
+        htsmsg_add_u32(c, "height", ssc->ssc_height);
+      if(ssc->ssc_frameduration)
+        htsmsg_add_u32(c, "duration", hs->hs_90khz ? ssc->ssc_frameduration :
+                       ts_rescale(ssc->ssc_frameduration, 1000000));
       if (ssc->ssc_aspect_num)
         htsmsg_add_u32(c, "aspect_num", ssc->ssc_aspect_num);
       if (ssc->ssc_aspect_den)

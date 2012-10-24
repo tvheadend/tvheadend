@@ -998,6 +998,8 @@ psi_save_service_settings(htsmsg_t *m, service_t *t)
 	htsmsg_add_u32(sub, "width", st->es_width);
 	htsmsg_add_u32(sub, "height", st->es_height);
       }
+      if(st->es_frame_duration)
+        htsmsg_add_u32(sub, "duration", st->es_frame_duration);
     }
     
     htsmsg_add_msg(m, "stream", sub);
@@ -1141,6 +1143,9 @@ psi_load_service_settings(htsmsg_t *m, service_t *t)
 
       if(!htsmsg_get_u32(c, "height", &u32))
 	st->es_height = u32;
+
+      if(!htsmsg_get_u32(c, "duration", &u32))
+        st->es_frame_duration = u32;
     }
 
   }
