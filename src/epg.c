@@ -990,6 +990,7 @@ int epg_episode_set_genre
     g2 = LIST_NEXT(g1, link);
     if (!epg_genre_list_contains(genre, g1, 0)) {
       LIST_REMOVE(g1, link);
+      free(g1);
       save = 1;
     }
     g1 = g2;
@@ -1839,10 +1840,15 @@ epg_broadcast_t *epg_broadcast_deserialize
   if (!htsmsg_get_u32(m, "is_repeat", &u32))
     *save |= epg_broadcast_set_is_repeat(ebc, u32, NULL);
 
-  if ((ls = lang_str_deserialize(m, "summary")))
+  if ((ls = lang_str_deserialize(m, "summary"))) {
     *save |= epg_broadcast_set_summary2(ebc, ls, NULL);
-  if ((ls = lang_str_deserialize(m, "description")))
+    lang_str_destroy(ls);
+  }
+
+  if ((ls = lang_str_deserialize(m, "description"))) {
     *save |= epg_broadcast_set_description2(ebc, ls, NULL);
+    lang_str_destroy(ls);
+  }
 
   /* Series link */
   if ((str = htsmsg_get_str(m, "serieslink")))

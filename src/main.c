@@ -272,7 +272,7 @@ main(int argc, char **argv)
   htsp_port = 9982;
 
   /* Get current directory */
-  tvheadend_cwd = dirname(dirname(strdup(argv[0])));
+  tvheadend_cwd = dirname(dirname(tvh_strdupa(argv[0])));
 
   /* Set locale */
   setlocale(LC_ALL, "");
