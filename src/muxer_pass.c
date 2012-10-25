@@ -107,7 +107,8 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
   pass_muxer_t *pm = (pass_muxer_t*)m;
   const source_info_t *si = &ss->ss_si;
 
-  if(si->si_type == S_MPEG_TS) {
+  if(si->si_type == S_MPEG_TS && ss->ss_pmt_pid) {
+    pm->pm_pat = realloc(pm->pm_pat, 188);
     memset(pm->pm_pat, 0xff, 188);
     pm->pm_pat[0] = 0x47;
     pm->pm_pat[1] = 0x40;
@@ -120,6 +121,7 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
       return -1;
     }
 
+    pm->pm_pmt = realloc(pm->pm_pmt, 188);
     memset(pm->pm_pmt, 0xff, 188);
     pm->pm_pmt[0] = 0x47;
     pm->pm_pmt[1] = 0x40 | (ss->ss_pmt_pid >> 8);
@@ -216,14 +218,16 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
   pass_muxer_t *pm = (pass_muxer_t*)m;
   int rem;
 
-  // Inject pmt and pat into the stream
-  rem = pm->pm_pc % TS_INJECTION_RATE;
-  if(!rem) {
-    pm->pm_pat[3] = (pm->pm_pat[3] & 0xf0) | (pm->pm_ic & 0x0f);
-    pm->pm_pmt[3] = (pm->pm_pat[3] & 0xf0) | (pm->pm_ic & 0x0f);
-    pass_muxer_write(m, pm->pm_pmt, 188);
-    pass_muxer_write(m, pm->pm_pat, 188);
-    pm->pm_ic++;
+  if(pm->pm_pat != NULL) {
+    // Inject pmt and pat into the stream
+    rem = pm->pm_pc % TS_INJECTION_RATE;
+    if(!rem) {
+      pm->pm_pat[3] = (pm->pm_pat[3] & 0xf0) | (pm->pm_ic & 0x0f);
+      pm->pm_pmt[3] = (pm->pm_pat[3] & 0xf0) | (pm->pm_ic & 0x0f);
+      pass_muxer_write(m, pm->pm_pmt, 188);
+      pass_muxer_write(m, pm->pm_pat, 188);
+      pm->pm_ic++;
+    }
   }
 
   pass_muxer_write(m, pb->pb_data, pb->pb_size);
@@ -330,9 +334,6 @@ pass_muxer_create(muxer_container_type_t mc)
   pm->m_write_pkt    = pass_muxer_write_pkt;
   pm->m_close        = pass_muxer_close;
   pm->m_destroy      = pass_muxer_destroy;
-
-  pm->pm_pat = malloc(188);
-  pm->pm_pmt = malloc(188);
 
   return (muxer_t *)pm;
 }
