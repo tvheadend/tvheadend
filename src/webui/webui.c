@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <arpa/inet.h>
 
 #include <sys/stat.h>
 #include <sys/sendfile.h>
@@ -640,7 +641,9 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
 
   pthread_mutex_lock(&global_lock);
   s = subscription_create_from_channel(ch, priority, "HTTP", st, flags,
-				       NULL, NULL, NULL);
+				       inet_ntoa(hc->hc_peer->sin_addr),
+				       hc->hc_username,
+				       http_arg_get(&hc->hc_args, "User-Agent"));
   pthread_mutex_unlock(&global_lock);
 
   if(s) {
