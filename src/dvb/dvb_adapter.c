@@ -374,7 +374,38 @@ dvb_adapter_checkspeed(th_dvb_adapter_t *tda)
 
   snprintf(dev, sizeof(dev), "dvb/dvb%d.dvr0", tda->tda_adapter_num);
   tda->tda_hostconnection = get_device_connection(dev);
- }
+}
+
+
+
+
+/**
+ * Return 1 if an adapter is capable of receiving a full mux
+ */
+static int
+check_full_stream(th_dvb_adapter_t *tda)
+{
+  struct dmx_pes_filter_params dmx_param;
+  int r;
+
+  if(tda->tda_hostconnection == HOSTCONNECTION_USB12)
+    return 0; // Don't even bother, device <-> host interface is too slow
+
+  int fd = tvh_open(tda->tda_demux_path, O_RDWR, 0);
+  if(fd == -1)
+    return 0;
+
+  memset(&dmx_param, 0, sizeof(dmx_param));
+  dmx_param.pid = 0x2000;
+  dmx_param.input = DMX_IN_FRONTEND;
+  dmx_param.output = DMX_OUT_TS_TAP;
+  dmx_param.pes_type = DMX_PES_OTHER;
+  dmx_param.flags = DMX_IMMEDIATE_START;
+
+  r = ioctl(fd, DMX_SET_PES_FILTER, &dmx_param);
+  close(fd);
+  return !r;
+}
 
 
 /**
@@ -452,10 +483,11 @@ tda_add(int adapter_num)
 
   TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
 
-  if(0) {
-    // TBD
+  if(check_full_stream(tda)) {
+    tvhlog(LOG_INFO, "dvb", "Adapter %s will run in full mux mode", path);
     dvb_input_raw_setup(tda);
   } else {
+    tvhlog(LOG_INFO, "dvb", "Adapter %s will run in filtered mode", path);
     dvb_input_filtered_setup(tda);
   }
 
