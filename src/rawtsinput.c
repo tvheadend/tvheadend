@@ -164,7 +164,7 @@ got_pmt(struct service *t, elementary_stream_t *st,
     return;
 
   pthread_mutex_lock(&global_lock);
-  psi_parse_pmt(t, table + 3, table_len - 3, 1, 0);
+  psi_parse_pmt(t, table + 3, table_len - 3, 1, 1);
   pthread_mutex_unlock(&global_lock);
 }
 

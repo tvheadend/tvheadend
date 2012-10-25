@@ -352,7 +352,7 @@ h264_decode_pic_parameter_set(elementary_stream_t *st, bitstream_t *bs)
 
 int
 h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
-			 int *duration, int *isfield)
+			 int *isfield)
 {
   h264_private_t *p;
   int slice_type, pps_id, sps_id;
@@ -402,22 +402,20 @@ h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
 
   *isfield = field;
 
-  if(p->sps[sps_id].time_scale != 0) {
-    int d = timebase * p->sps[sps_id].units_in_tick / p->sps[sps_id].time_scale;
-    *duration = d;
-  } else {
-    *duration = 0;
-  }
+  int d = 0;
+  if(p->sps[sps_id].time_scale != 0)
+    d = timebase * p->sps[sps_id].units_in_tick / p->sps[sps_id].time_scale;
 
   if(p->sps[sps_id].cbpsize != 0)
     st->es_vbv_size = p->sps[sps_id].cbpsize;
 
   st->es_vbv_delay = -1;
 
-  if(p->sps[sps_id].width && p->sps[sps_id].height && !st->es_buf.sb_err)
-    parser_set_stream_vsize(st, p->sps[sps_id].width, 
-			    p->sps[sps_id].height *
-			    (2 - p->sps[sps_id].mbs_only_flag));
+  if(p->sps[sps_id].width && p->sps[sps_id].height && d && !st->es_buf.sb_err)
+    parser_set_stream_vparam(st, p->sps[sps_id].width,
+                             p->sps[sps_id].height *
+                             (2 - p->sps[sps_id].mbs_only_flag),
+                             d);
 
   if(p->sps[sps_id].aspect_num && p->sps[sps_id].aspect_den) {
 

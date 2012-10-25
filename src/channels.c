@@ -38,7 +38,7 @@
 #include "dtable.h"
 #include "notify.h"
 #include "dvr/dvr.h"
-#include "htsp.h"
+#include "htsp_server.h"
 
 struct channel_tree channel_name_tree;
 static struct channel_tree channel_identifier_tree;

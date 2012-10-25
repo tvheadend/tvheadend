@@ -1087,7 +1087,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	var confreader = new Ext.data.JsonReader({
 		root : 'dvbadapters'
 	}, [ 'name', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion',
-		'diseqcrepeats', 'qmon', 'skip_checksubscr', 'dumpmux',
+		'diseqcrepeats', 'qmon', 'skip_checksubscr', 
 		'poweroff', 'sidtochan', 'nitoid', 'extrapriority',
 		,'disable_pmt_monitor', 'idleclose' ]);
 
@@ -1138,16 +1138,6 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 		new Ext.form.Checkbox({
 			fieldLabel : 'Disable PMT monitoring',
 			name : 'disable_pmt_monitor'
-		}),
-		new Ext.form.Checkbox({
-			fieldLabel : 'Write full DVB MUX to disk',
-			name : 'dumpmux',
-			handler : function(s, v) {
-				if (v) Ext.MessageBox.alert('DVB Mux dump',
-					'Please note that keeping this '
-						+ 'option enabled can consume a lot '
-						+ 'of diskspace. You have been warned');
-			}
 		}), {
 			fieldLabel : 'Original Network ID',
 			name : 'nitoid',

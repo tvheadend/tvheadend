@@ -63,8 +63,8 @@ psi_section_reassemble0(psi_section_t *ps, const uint8_t *data,
   if(crc && tvh_crc32(ps->ps_data, tsize, 0xffffffff))
     return -1;
 
-  cb(ps->ps_data, tsize - (crc ? 4 : 0), opaque);
   ps->ps_offset = 0;
+  cb(ps->ps_data, tsize - (crc ? 4 : 0), opaque);
   return len - excess;
 }
 
@@ -468,6 +468,10 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
   /* Mark all streams for deletion */
   if(delete) {
     TAILQ_FOREACH(st, &t->s_components, es_link) {
+
+      if(st->es_type == SCT_PMT)
+        continue;
+
       st->es_delete_me = 1;
 
       LIST_FOREACH(c, &st->es_caids, link)
@@ -690,7 +694,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
     service_request_save(t, 0);
 
     // Only restart if something that our clients worry about did change
-    if(update & !(PMT_UPDATE_NEW_CA_STREAM |
+    if(update & ~(PMT_UPDATE_NEW_CA_STREAM |
 		  PMT_UPDATE_NEW_CAID |
 		  PMT_UPDATE_CA_PROVIDER_CHANGE | 
 		  PMT_UPDATE_CAID_DELETED)) {
@@ -1009,6 +1013,8 @@ psi_save_service_settings(htsmsg_t *m, service_t *t)
 	htsmsg_add_u32(sub, "width", st->es_width);
 	htsmsg_add_u32(sub, "height", st->es_height);
       }
+      if(st->es_frame_duration)
+        htsmsg_add_u32(sub, "duration", st->es_frame_duration);
     }
     
     htsmsg_add_msg(m, "stream", sub);
@@ -1152,6 +1158,9 @@ psi_load_service_settings(htsmsg_t *m, service_t *t)
 
       if(!htsmsg_get_u32(c, "height", &u32))
 	st->es_height = u32;
+
+      if(!htsmsg_get_u32(c, "duration", &u32))
+        st->es_frame_duration = u32;
     }
 
   }
