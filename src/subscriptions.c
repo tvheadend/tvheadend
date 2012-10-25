@@ -550,13 +550,16 @@ subscription_create_msg(th_subscription_t *s)
 
   htsmsg_add_str(m, "state", state);
 
-  if (s->ths_hostname && s->ths_username && s->ths_client) {
+  if(s->ths_hostname != NULL)
     htsmsg_add_str(m, "hostname", s->ths_hostname);
+
+  if(s->ths_username != NULL)
     htsmsg_add_str(m, "username", s->ths_username);
+
+  if(s->ths_client != NULL)
     htsmsg_add_str(m, "title", s->ths_client);
-  } else {
+  else if(s->ths_title != NULL)
     htsmsg_add_str(m, "title", s->ths_title);
-  }
   
   if(s->ths_channel != NULL)
     htsmsg_add_str(m, "channel", s->ths_channel->ch_name);
