@@ -196,8 +196,10 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     switch(sm->sm_type) {
     case SMT_MPEGTS:
     case SMT_PACKET:
-      muxer_write_pkt(mux, sm->sm_type, sm->sm_data);
-      sm->sm_data = NULL;
+      if(started) {
+	muxer_write_pkt(mux, sm->sm_type, sm->sm_data);
+	sm->sm_data = NULL;
+      }
       break;
 
     case SMT_START:
