@@ -88,7 +88,7 @@ SRCS =  src/main.c \
 	src/parser_latm.c \
 	src/tsdemux.c \
 	src/bitstream.c \
-	src/htsp.c \
+	src/htsp_server.c \
 	src/serviceprobe.c \
 	src/htsmsg.c \
 	src/htsmsg_binary.c \

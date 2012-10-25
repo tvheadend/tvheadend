@@ -27,7 +27,7 @@
 #include "tvheadend.h"
 #include "dvr.h"
 #include "notify.h"
-#include "htsp.h"
+#include "htsp_server.h"
 #include "streaming.h"
 
 static int de_tally;

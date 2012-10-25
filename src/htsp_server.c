@@ -35,7 +35,7 @@
 #include "tcp.h"
 #include "packet.h"
 #include "access.h"
-#include "htsp.h"
+#include "htsp_server.h"
 #include "streaming.h"
 #include "psi.h"
 #include "htsmsg_binary.h"

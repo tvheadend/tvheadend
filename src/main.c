@@ -49,7 +49,7 @@
 #include "cwc.h"
 #include "capmt.h"
 #include "dvr/dvr.h"
-#include "htsp.h"
+#include "htsp_server.h"
 #include "rawtsinput.h"
 #include "avahi.h"
 #include "iptv_input.h"

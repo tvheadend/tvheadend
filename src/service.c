@@ -46,7 +46,7 @@
 #include "serviceprobe.h"
 #include "atomic.h"
 #include "dvb/dvb.h"
-#include "htsp.h"
+#include "htsp_server.h"
 #include "lang_codes.h"
 
 #define SERVICE_HASH_WIDTH 101

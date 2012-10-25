@@ -30,7 +30,7 @@
 #include "settings.h"
 #include "epg.h"
 #include "dvr/dvr.h"
-#include "htsp.h"
+#include "htsp_server.h"
 #include "epggrab.h"
 
 /* Broadcast hashing */
