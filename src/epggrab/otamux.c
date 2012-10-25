@@ -136,6 +136,7 @@ void epggrab_ota_load ( void )
       if ((l = htsmsg_get_list_by_field(f)))
         _epggrab_ota_load_one((epggrab_module_ota_t*)mod, l);
     }
+    htsmsg_destroy(m);
   }
 }
 
@@ -171,6 +172,7 @@ void epggrab_ota_save ( void )
   }
 
   hts_settings_save(m, "epggrab/otamux");
+  htsmsg_destroy(m);
 }
 
 /* **************************************************************************
