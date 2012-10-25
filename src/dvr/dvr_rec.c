@@ -87,9 +87,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
 
   de->de_s = subscription_create_from_channel(de->de_channel, weight,
 					      buf, st, flags,
-					      NULL, "DVR",
-					      lang_str_get(de->de_title,
-							   NULL));
+					      NULL, NULL, NULL);
 
   pthread_create(&de->de_thread, NULL, dvr_thread, de);
 }
