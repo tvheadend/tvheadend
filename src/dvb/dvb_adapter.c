@@ -863,6 +863,7 @@ dvb_adapter_input_dvr(void *aux)
 
   /* Create poll */
   efd = epoll_create(2);
+  memset(&ev, 0, sizeof(ev));
   ev.events  = EPOLLIN;
   ev.data.fd = fd;
   epoll_ctl(efd, EPOLL_CTL_ADD, fd, &ev);
