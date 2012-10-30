@@ -1112,16 +1112,21 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   uint32_t chid, sid, weight, req90khz, normts;
   channel_t *ch;
   htsp_subscription_t *hs;
-
-  if(htsmsg_get_u32(in, "channelId", &chid))
-    return htsp_error("Missing argument 'channelId'");
-
+  const char *str;
   if(htsmsg_get_u32(in, "subscriptionId", &sid))
     return htsp_error("Missing argument 'subscriptionId'");
 
-  if((ch = channel_find_by_identifier(chid)) == NULL)
-    return htsp_error("Requested channel does not exist");
+  if(!htsmsg_get_u32(in, "channelId", &chid)) {
 
+    if((ch = channel_find_by_identifier(chid)) == NULL)
+      return htsp_error("Requested channel does not exist");
+  } else if((str = htsmsg_get_str(in, "channelName")) != NULL) {
+    if((ch = channel_find_by_name(str, 0, 0)) == NULL)
+      return htsp_error("Requested channel does not exist");
+
+  } else {
+    return htsp_error("Missing argument 'channelId' or 'channelName'");
+  }
   weight = htsmsg_get_u32_or_default(in, "weight", 150);
   req90khz = htsmsg_get_u32_or_default(in, "90khz", 0);
   normts = htsmsg_get_u32_or_default(in, "normts", 0);
