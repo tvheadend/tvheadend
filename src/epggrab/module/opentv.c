@@ -217,6 +217,8 @@ static char *_opentv_parse_string
   int ok = 0;
   char *ret, *tmp;
 
+  if (len <= 0) return NULL;
+
   // Note: unlikely decoded string will be longer (though its possible)
   ret = tmp = malloc(2*len);
   *ret = 0;
@@ -248,15 +250,17 @@ static int _opentv_parse_event_record
   if (rlen+2 <= len) {
     switch (rtag) {
       case 0xb5: // title
-        ev->start       = (((int)buf[2] << 9) | (buf[3] << 1))
-                        + mjd;
-        ev->stop        = (((int)buf[4] << 9) | (buf[5] << 1))
-                        + ev->start;
-        ev->cat         = buf[6];
-        if (prov->genre)
-          ev->cat = prov->genre->map[ev->cat];
-        if (!ev->title)
-          ev->title     = _opentv_parse_string(prov, buf+9, rlen-7);
+        if (rlen >= 7) {
+          ev->start       = (((int)buf[2] << 9) | (buf[3] << 1))
+                          + mjd;
+          ev->stop        = (((int)buf[4] << 9) | (buf[5] << 1))
+                          + ev->start;
+          ev->cat         = buf[6];
+          if (prov->genre)
+            ev->cat = prov->genre->map[ev->cat];
+          if (!ev->title)
+            ev->title     = _opentv_parse_string(prov, buf+9, rlen-7);
+        }
         break;
       case 0xb9: // summary
         if (!ev->summary)
