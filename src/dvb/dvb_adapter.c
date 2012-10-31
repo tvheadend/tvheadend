@@ -94,6 +94,7 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "extrapriority", tda->tda_extrapriority);
   htsmsg_add_u32(m, "skip_initialscan", tda->tda_skip_initialscan);
   htsmsg_add_u32(m, "disable_pmt_monitor", tda->tda_disable_pmt_monitor);
+  htsmsg_add_u32(m, "disable_full_mux_rx", tda->tda_disable_full_mux_rx);
   hts_settings_save(m, "dvbadapters/%s", tda->tda_identifier);
   htsmsg_destroy(m);
 }
@@ -367,6 +368,25 @@ dvb_adapter_set_disable_pmt_monitor(th_dvb_adapter_t *tda, int on)
 /**
  *
  */
+void
+dvb_adapter_set_disable_full_mux_rx(th_dvb_adapter_t *tda, int on)
+{
+  if(tda->tda_disable_full_mux_rx == on)
+    return;
+
+  lock_assert(&global_lock);
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" disabled full MUX receive set to: %s",
+	 tda->tda_displayname, on ? "On" : "Off");
+
+  tda->tda_disable_full_mux_rx = on;
+  tda_save(tda);
+}
+
+
+/**
+ *
+ */
 static void
 dvb_adapter_checkspeed(th_dvb_adapter_t *tda)
 {
@@ -387,6 +407,9 @@ check_full_stream(th_dvb_adapter_t *tda)
 {
   struct dmx_pes_filter_params dmx_param;
   int r;
+
+  if(tda->tda_disable_full_mux_rx)
+    return 0;
 
   if(tda->tda_hostconnection == HOSTCONNECTION_USB12)
     return 0; // Don't even bother, device <-> host interface is too slow
@@ -658,6 +681,7 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
       htsmsg_get_u32(c, "extrapriority", &tda->tda_extrapriority);
       htsmsg_get_u32(c, "skip_initialscan", &tda->tda_skip_initialscan);
       htsmsg_get_u32(c, "disable_pmt_monitor", &tda->tda_disable_pmt_monitor);
+      htsmsg_get_u32(c, "disable_full_mux_rx", &tda->tda_disable_full_mux_rx);
     }
     htsmsg_destroy(l);
   }

@@ -157,6 +157,7 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(r, "sidtochan", tda->tda_sidtochan);
     htsmsg_add_u32(r, "nitoid", tda->tda_nitoid);
     htsmsg_add_u32(r, "disable_pmt_monitor", tda->tda_disable_pmt_monitor);
+    htsmsg_add_u32(r, "disable_full_mux_rx", tda->tda_disable_full_mux_rx);
     htsmsg_add_str(r, "diseqcversion", 
 		   ((const char *[]){"DiSEqC 1.0 / 2.0",
 				       "DiSEqC 1.1 / 2.1"})
@@ -198,6 +199,9 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 
     s = http_arg_get(&hc->hc_req_args, "disable_pmt_monitor");
     dvb_adapter_set_disable_pmt_monitor(tda, !!s);
+
+    s = http_arg_get(&hc->hc_req_args, "disable_full_mux_rx");
+    dvb_adapter_set_disable_full_mux_rx(tda, !!s);
 
     if((s = http_arg_get(&hc->hc_req_args, "nitoid")) != NULL)
       dvb_adapter_set_nitoid(tda, atoi(s));
