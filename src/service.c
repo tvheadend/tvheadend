@@ -763,6 +763,7 @@ static struct strtab stypetab[] = {
   { "SDTV",         ST_DN_SDTV },
   { "HDTV",         ST_DN_HDTV },
   { "SDTV",         ST_SK_SDTV },
+  { "SDTV",         ST_NE_SDTV },
   { "SDTV-AC",      ST_AC_SDTV },
   { "HDTV-AC",      ST_AC_HDTV },
 };
@@ -789,6 +790,7 @@ service_is_tv(service_t *t)
     t->s_servicetype == ST_DN_SDTV ||
     t->s_servicetype == ST_DN_HDTV ||
     t->s_servicetype == ST_SK_SDTV ||
+    t->s_servicetype == ST_NE_SDTV ||
     t->s_servicetype == ST_AC_SDTV ||
     t->s_servicetype == ST_AC_HDTV;
 }
