@@ -208,7 +208,10 @@ static void parse_xmltv_dd_progid
   snprintf(buf, sizeof(buf)-1, "ddprogid://%s/%s", mod->id, s);
 
   /* SH - series without episode id so ignore */
-  if (strncmp("SH", s, 2)) *uri = strdup(buf);
+  if (strncmp("SH", s, 2))
+    *uri  = strdup(buf);
+  else
+    *suri = strdup(buf);
 
   /* Episode */
   if (!strncmp("EP", s, 2)) {
