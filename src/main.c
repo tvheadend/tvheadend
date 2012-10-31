@@ -270,6 +270,8 @@ main(int argc, char **argv)
   int crash = 0;
   webui_port = 9981;
   htsp_port = 9982;
+  gid_t gid;
+  uid_t uid;
 
   /* Get current directory */
   tvheadend_cwd = dirname(dirname(tvh_strdupa(argv[0])));
@@ -354,34 +356,52 @@ main(int argc, char **argv)
 
   signal(SIGPIPE, handle_sigpipe);
 
+  log_stderr   = 1;
+  log_decorate = isatty(2);
+
   if(forkaway) {
     grp  = getgrnam(groupnam ?: "video");
     pw   = usernam ? getpwnam(usernam) : NULL;
 
-    if(daemon(0, 0)) {
-      exit(2);
-    }
     pidfile = fopen(pidpath, "w+");
-    if(pidfile != NULL) {
-      fprintf(pidfile, "%d\n", getpid());
-      fclose(pidfile);
-    }
 
     if(grp != NULL) {
-      setgid(grp->gr_gid);
+      gid = grp->gr_gid;
     } else {
-      setgid(1);
+      gid = 1;
     }
 
     if (pw != NULL) {
-      gid_t glist[10];
-      int gnum = get_user_groups(pw, glist, 10);
-      setgroups(gnum, glist);
-      setuid(pw->pw_uid);
+      if (getuid() != pw->pw_uid) {
+        gid_t glist[10];
+        int gnum;
+        gnum = get_user_groups(pw, glist, 10);
+        if (setgroups(gnum, glist)) {
+          tvhlog(LOG_ALERT, "START", "setgroups() failed, do you have permission?");
+          return 1;
+        }
+      }
+      uid     = pw->pw_uid;
       homedir = pw->pw_dir;
       setenv("HOME", homedir, 1);
     } else {
-      setuid(1);
+      uid = 1;
+    }
+    if ((getgid() != gid) && setgid(gid)) {
+      tvhlog(LOG_ALERT, "START", "setgid() failed, do you have permission?");
+      return 1;
+    }
+    if ((getuid() != uid) && setuid(uid)) {
+      tvhlog(LOG_ALERT, "START", "setuid() failed, do you have permission?");
+      return 1;
+    }
+
+    if(daemon(0, 0)) {
+      exit(2);
+    }
+    if(pidfile != NULL) {
+      fprintf(pidfile, "%d\n", getpid());
+      fclose(pidfile);
     }
 
     umask(0);
