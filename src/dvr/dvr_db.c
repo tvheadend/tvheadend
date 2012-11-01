@@ -258,19 +258,6 @@ static dvr_entry_t *_dvr_entry_create (
     if(de->de_start == start && de->de_sched_state != DVR_COMPLETED)
       return NULL;
 
-  /* Reject duplicate episodes (unless earlier) */
-  if (e && cfg->dvr_dup_detect_episode) {
-    de = dvr_entry_find_by_episode(e);
-    if (de) {
-      if (de->de_start > start) {
-        dvr_event_replaced(de->de_bcast, e);
-        return de;
-      } else {
-        return NULL;
-      }
-    }
-  }
-
   de = calloc(1, sizeof(dvr_entry_t));
   de->de_id = ++de_tally;
 

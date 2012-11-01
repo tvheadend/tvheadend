@@ -324,6 +324,7 @@ typedef struct service {
     ST_HDTV       = 0x11,   /* HDTV (MPEG2) */
     ST_AC_SDTV    = 0x16,   /* Advanced codec SDTV */
     ST_AC_HDTV    = 0x19,   /* Advanced codec HDTV */
+    ST_NE_SDTV    = 0x80,   /* NET POA - Cabo SDTV */
     ST_EX_HDTV    = 0x91,   /* Bell TV HDTV */
     ST_EX_SDTV    = 0x96,   /* Bell TV SDTV */
     ST_EP_HDTV    = 0xA0,   /* Bell TV tiered HDTV */

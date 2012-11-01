@@ -17,7 +17,7 @@ CMD=$(basename $0)
 
 # Configuration
 TVH_ROOT=$(cd $(dirname $0)/..; pwd)
-[ -z "$TVH_DIST" ] && TVH_DIST="hardy lucid natty oneiric precise wheezy"
+[ -z "$TVH_DIST" ] && TVH_DIST="lucid natty oneiric precise quantal"
 [ -z "$TVH_ARCH" ] && TVH_ARCH="i386 amd64"
 
 # Options

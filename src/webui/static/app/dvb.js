@@ -1089,7 +1089,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	}, [ 'name', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion',
 		'diseqcrepeats', 'qmon', 'skip_checksubscr', 
 		'poweroff', 'sidtochan', 'nitoid', 'extrapriority',
-		,'disable_pmt_monitor', 'idleclose' ]);
+		,'disable_pmt_monitor', 'disable_full_mux_rx', 'idleclose' ]);
 
 	function saveConfForm() {
 		confform.getForm().submit({
@@ -1134,6 +1134,10 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 		new Ext.form.Checkbox({
 			fieldLabel : 'Monitor signal quality',
 			name : 'qmon'
+		}),
+		new Ext.form.Checkbox({
+			fieldLabel : 'Disable full MUX reception',
+			name : 'disable_full_mux_rx'
 		}),
 		new Ext.form.Checkbox({
 			fieldLabel : 'Disable PMT monitoring',

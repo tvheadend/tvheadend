@@ -562,14 +562,10 @@ void
 dvr_autorec_check_event(epg_broadcast_t *e)
 {
   dvr_autorec_entry_t *dae;
-  dvr_entry_t *existingde;
 
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
-    if(autorec_cmp(dae, e)) {
-      existingde = dvr_entry_find_by_event_fuzzy(e);
-      if (existingde == NULL)
-        dvr_entry_create_by_autorec(e, dae);
-    }
+    if(autorec_cmp(dae, e))
+      dvr_entry_create_by_autorec(e, dae);
   // Note: no longer updating event here as it will be done from EPG
   //       anyway
 }

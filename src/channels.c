@@ -210,14 +210,14 @@ channel_find_by_name(const char *name, int create, int channel_number)
 {
   channel_t skel, *ch;
 
-  if (!name || !*name) return NULL;
-
   lock_assert(&global_lock);
 
-  skel.ch_name = (char *)name;
-  ch = RB_FIND(&channel_name_tree, &skel, ch_name_link, channelcmp);
-  if(ch != NULL || create == 0)
-    return ch;
+  if (name) {
+    skel.ch_name = (char *)name;
+    ch = RB_FIND(&channel_name_tree, &skel, ch_name_link, channelcmp);
+    if(ch != NULL || create == 0)
+      return ch;
+  }
   return channel_create2(name, channel_number);
 }
 
