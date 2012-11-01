@@ -805,7 +805,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   fname = strdup(de->de_filename);
-  content = muxer_container_mimetype(de->de_mc, 1);
+  content = muxer_container_type2mime(de->de_mc, 1);
   postfix = muxer_container_suffix(de->de_mc, 1);
 
   pthread_mutex_unlock(&global_lock);

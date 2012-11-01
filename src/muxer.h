@@ -56,11 +56,14 @@ typedef struct muxer {
 } muxer_t;
 
 
-// type <==> txt converters
-const char *           muxer_container_type2txt(muxer_container_type_t mc);
-muxer_container_type_t muxer_container_txt2type(const char *str);
-const char*            muxer_container_mimetype(muxer_container_type_t mc, int video);
-const char*            muxer_container_suffix  (muxer_container_type_t mc, int video);
+// type <==> string converters
+const char *           muxer_container_type2txt  (muxer_container_type_t mc);
+const char*            muxer_container_type2mime (muxer_container_type_t mc, int video);
+
+muxer_container_type_t muxer_container_txt2type  (const char *str);
+muxer_container_type_t muxer_container_mime2type (const char *str);
+
+const char*            muxer_container_suffix(muxer_container_type_t mc, int video);
 
 // Muxer factory
 muxer_t *muxer_create(muxer_container_type_t mc);
