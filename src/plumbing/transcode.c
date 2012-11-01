@@ -381,7 +381,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
     }
 
     if(avcodec_open(ts->tctx, ts->tcodec) < 0) {
-      tvhlog(LOG_ERR, "transcode", "Unable to open %s decoder", ts->tcodec->name);
+      tvhlog(LOG_ERR, "transcode", "Unable to open %s encoder", ts->tcodec->name);
       // Disable the stream
       ts->sindex = 0;
       goto cleanup;
@@ -1052,11 +1052,61 @@ transcoder_destroy(streaming_target_t *st)
 }
 
 /**
+ *
+ */
+static void
+transcoder_log_callback(void *ptr, int level, const char *fmt, va_list vl)
+{
+    char message[8192];
+    char *nl;
+    char *l;
+
+    memset(message, 0, sizeof(message));
+    vsnprintf(message, sizeof(message), fmt, vl);
+
+    l = message;
+
+    if(level == AV_LOG_DEBUG)
+      level = LOG_DEBUG;
+    else if(level == AV_LOG_VERBOSE)
+      level = LOG_INFO;
+    else if(level == AV_LOG_INFO)
+      level = LOG_NOTICE;
+    else if(level == AV_LOG_WARNING)
+      level = LOG_WARNING;
+    else if(level == AV_LOG_ERROR)
+      level = LOG_ERR;
+    else if(level == AV_LOG_FATAL)
+      level = LOG_CRIT;
+    else if(level == AV_LOG_PANIC)
+      level = LOG_EMERG;
+
+    while(l < message + sizeof(message)) {
+      nl = strstr(l, "\n");
+      if(nl)
+	*nl = '\0';
+
+      if(!strlen(l))
+	break;
+
+      tvhlog(level, "libav", "%s", l);
+
+      l += strlen(message);
+
+      if(!nl)
+	break;
+    }
+}
+
+
+/**
  * 
  */ 
 void
 transcoder_init(void)
 {
+  av_log_set_callback(transcoder_log_callback);
+  av_log_set_level(AV_LOG_VERBOSE);
   av_register_all();
 }
 
