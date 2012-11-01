@@ -97,7 +97,7 @@ static struct strtab container_video_file_suffix[] = {
  * Get the mime type for a container
  */
 const char*
-muxer_container_mimetype(muxer_container_type_t mc, int video)
+muxer_container_type2mime(muxer_container_type_t mc, int video)
 {
   const char *str;
 
@@ -149,7 +149,7 @@ muxer_container_type2txt(muxer_container_type_t mc)
 
 
 /**
- * Convert a string to a container type
+ * Convert a container name to a container type
  */
 muxer_container_type_t
 muxer_container_txt2type(const char *str)
@@ -160,6 +160,28 @@ muxer_container_txt2type(const char *str)
     return MC_UNKNOWN;
 
   mc = str2val(str, container_name);
+  if(mc == -1)
+    return MC_UNKNOWN;
+
+  return mc;
+}
+
+
+/**
+ * Convert a mime-string to a container type
+ */
+muxer_container_type_t
+muxer_container_mime2type(const char *str)
+{
+  muxer_container_type_t mc;
+
+  if(!str)
+    return MC_UNKNOWN;
+
+  mc = str2val(str, container_video_mime);
+  if(mc == -1)
+    mc = str2val(str, container_audio_mime);
+
   if(mc == -1)
     return MC_UNKNOWN;
 
@@ -213,6 +235,7 @@ const char*
 muxer_suffix(muxer_t *m,  const struct streaming_start *ss)
 {
   const char *mime;
+  muxer_container_type_t mc;
   int video;
 
   if(!m || !ss)
@@ -220,8 +243,9 @@ muxer_suffix(muxer_t *m,  const struct streaming_start *ss)
 
   mime  = m->m_mime(m, ss);
   video = memcmp("audio", mime, 5);
+  mc = muxer_container_mime2type(mime);
 
-  return muxer_container_suffix(m->m_container, video);
+  return muxer_container_suffix(mc, video);
 }
 
 

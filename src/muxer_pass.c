@@ -90,11 +90,11 @@ pass_muxer_mime(muxer_t* m, const struct streaming_start *ss)
     mc = MC_UNKNOWN;
 
   if(has_video)
-    return muxer_container_mimetype(mc, 1);
+    return muxer_container_type2mime(mc, 1);
   else if(has_audio)
-    return muxer_container_mimetype(mc, 0);
+    return muxer_container_type2mime(mc, 0);
   else
-    return muxer_container_mimetype(MC_UNKNOWN, 0);
+    return muxer_container_type2mime(MC_UNKNOWN, 0);
 }
 
 
