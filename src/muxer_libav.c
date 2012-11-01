@@ -284,6 +284,8 @@ lav_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
  if(lm->m_container == MC_MPEGTS)
     lm->lm_h264_filter = av_bitstream_filter_init("h264_mp4toannexb");
 
+ oc->max_delay = 0.7 * AV_TIME_BASE;
+
   for(i=0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
 
