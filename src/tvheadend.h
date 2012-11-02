@@ -482,6 +482,8 @@ char *md5sum ( const char *str );
 
 int makedirs ( const char *path, int mode );
 
+int rmtree ( const char *path );
+
 /* printing */
 #if __SIZEOF_LONG__ == 8
   #define PRItime_t PRId64

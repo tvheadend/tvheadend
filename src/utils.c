@@ -22,6 +22,9 @@
 #include <assert.h>
 #include <openssl/md5.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <unistd.h>
 #include "tvheadend.h"
 
 /**
@@ -372,4 +375,31 @@ makedirs ( const char *inpath, int mode )
     x++;
   }
   return 0;
+}
+
+int
+rmtree ( const char *path )
+{
+  int err;
+  struct dirent de, *der;
+  struct stat st;
+  char buf[512];
+  DIR *dir = opendir(path);
+  if (!dir) return -1;
+  while (!readdir_r(dir, &de, &der) && der) {
+    if (!strcmp("..", de.d_name) || !strcmp(".", de.d_name))
+      continue;
+    snprintf(buf, sizeof(buf), "%s/%s", path, de.d_name);
+    err = stat(buf, &st);
+    if (err) break;
+    if (S_ISDIR(st.st_mode))
+      err = rmtree(buf);
+    else
+      err = unlink(buf);
+    if (err) break;
+  }
+  closedir(dir);
+  if (!err)
+    err = rmdir(path);
+  return err;
 }
