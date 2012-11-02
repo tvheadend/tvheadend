@@ -480,6 +480,8 @@ void sbuf_put_byte(sbuf_t *sb, uint8_t u8);
 
 char *md5sum ( const char *str );
 
+int makedirs ( const char *path, int mode );
+
 /* printing */
 #if __SIZEOF_LONG__ == 8
   #define PRItime_t PRId64

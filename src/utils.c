@@ -21,6 +21,7 @@
 #include <string.h>
 #include <assert.h>
 #include <openssl/md5.h>
+#include <sys/stat.h>
 #include "tvheadend.h"
 
 /**
@@ -336,4 +337,39 @@ md5sum ( const char *str )
   }
   ret[MD5_DIGEST_LENGTH*2] = '\0';
   return ret;
+}
+
+int
+makedirs ( const char *inpath, int mode )
+{
+  int err, ok;
+  size_t x;
+  struct stat st;
+  char path[512];
+
+  if (!inpath || !*inpath) return -1;
+
+  x  = 1;
+  ok = 1;
+  strcpy(path, inpath);
+  while(ok) {
+    ok = path[x];
+    if (path[x] == '/' || !path[x]) {
+      path[x] = 0;
+      if (stat(path, &st)) {
+        err = mkdir(path, mode);
+      } else {
+        err   = S_ISDIR(st.st_mode) ? 0 : 1;
+        errno = ENOTDIR;
+      }
+      if (err) {
+	      tvhlog(LOG_ALERT, "settings", "Unable to create dir \"%s\": %s",
+	             path, strerror(errno));
+	      return -1;
+      }
+      path[x] = '/';
+    }
+    x++;
+  }
+  return 0;
 }

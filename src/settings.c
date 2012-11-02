@@ -83,23 +83,18 @@ hts_settings_init(const char *confpath)
 int
 hts_settings_makedirs ( const char *inpath )
 {
-  size_t x;
-  struct stat st;
+  size_t x = strlen(inpath) - 1;
   char path[512];
-  size_t l = strlen(inpath);
   strcpy(path, inpath);
-  for(x = 0; x < l; x++) {
-    if(path[x] == '/' && x != 0) {
+
+  while (x) {
+    if (path[x] == '/') {
       path[x] = 0;
-      if(stat(path, &st) && mkdir(path, 0700)) {
-	      tvhlog(LOG_ALERT, "settings", "Unable to create dir \"%s\": %s",
-	             path, strerror(errno));
-	      return -1;
-      }
-      path[x] = '/';
+      break;
     }
+    x--;
   }
-  return 0;
+  return makedirs(path, 0700);
 }
 
 /**
