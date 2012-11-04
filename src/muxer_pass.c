@@ -223,7 +223,7 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
     rem = pm->pm_pc % TS_INJECTION_RATE;
     if(!rem) {
       pm->pm_pat[3] = (pm->pm_pat[3] & 0xf0) | (pm->pm_ic & 0x0f);
-      pm->pm_pmt[3] = (pm->pm_pat[3] & 0xf0) | (pm->pm_ic & 0x0f);
+      pm->pm_pmt[3] = (pm->pm_pmt[3] & 0xf0) | (pm->pm_ic & 0x0f);
       pass_muxer_write(m, pm->pm_pmt, 188);
       pass_muxer_write(m, pm->pm_pat, 188);
       pm->pm_ic++;
