@@ -506,19 +506,9 @@ tda_add(int adapter_num)
 
   TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
 
-  if(check_full_stream(tda)) {
-    tvhlog(LOG_INFO, "dvb", "Adapter %s will run in full mux mode", path);
-    dvb_input_raw_setup(tda);
-  } else {
-    tvhlog(LOG_INFO, "dvb", "Adapter %s will run in filtered mode", path);
-    dvb_input_filtered_setup(tda);
-  }
-
-  if(tda->tda_sat)
-    dvb_satconf_init(tda);
-
   gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 1);
 }
+
 
 
 /**
@@ -559,9 +549,22 @@ tda_add_from_file(const char *filename)
   tda->tda_displayname = strdup(filename);
 
   TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
-
-  dvb_input_raw_setup(tda);
 }
+
+/**
+ * Initiliase input
+ */
+static void tda_init_input (th_dvb_adapter_t *tda)
+{
+  if(tda->tda_type == -1 || check_full_stream(tda)) {
+    tvhlog(LOG_INFO, "dvb", "Adapter %s will run in full mux mode", tda->tda_rootpath);
+    dvb_input_raw_setup(tda);
+  } else {
+    tvhlog(LOG_INFO, "dvb", "Adapter %s will run in filtered mode", tda->tda_rootpath);
+    dvb_input_filtered_setup(tda);
+  }
+}
+
 
 
 /**
@@ -633,36 +636,37 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
 
   TAILQ_INIT(&dvb_adapters);
 
+  /* Initialise hardware */
   for(i = 0; i < 32; i++) 
     if ((1 << i) & adapter_mask) 
       tda_add(i);
 
+  /* Initialise rawts test file */
   if(rawfile)
     tda_add_from_file(rawfile);
 
-
+  /* Load configuration */
   l = hts_settings_load("dvbadapters");
   if(l != NULL) {
     HTSMSG_FOREACH(f, l) {
       if((c = htsmsg_get_map_by_field(f)) == NULL)
-	continue;
+        continue;
       
       name = htsmsg_get_str(c, "displayname");
 
       if((s = htsmsg_get_str(c, "type")) == NULL ||
-	 (type = dvb_str_to_adaptertype(s)) < 0)
-	continue;
+         (type = dvb_str_to_adaptertype(s)) < 0)
+        continue;
 
       if((tda = dvb_adapter_find_by_identifier(f->hmf_name)) == NULL) {
-	/* Not discovered by hardware, create it */
-
-	tda = tda_alloc();
-	tda->tda_identifier = strdup(f->hmf_name);
-	tda->tda_type = type;
-	TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
+        /* Not discovered by hardware, create it */
+        tda = tda_alloc();
+        tda->tda_identifier = strdup(f->hmf_name);
+        tda->tda_type = type;
+        TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
       } else {
-	if(type != tda->tda_type)
-	  continue; /* Something is wrong, ignore */
+        if(type != tda->tda_type)
+          continue; /* Something is wrong, ignore */
       }
 
       free(tda->tda_displayname);
@@ -686,8 +690,14 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
     htsmsg_destroy(l);
   }
 
-  TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link)
+  TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
+    tda_init_input(tda);
+
+    if(tda->tda_sat)
+      dvb_satconf_init(tda);
+
     dvb_mux_load(tda);
+  }
 }
 
 
