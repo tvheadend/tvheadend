@@ -924,7 +924,6 @@ dvb_adapter_input_dvr(void *aux)
 
     int wakeup_table_feed = 0;  // Just wanna wakeup once
 
-
     pthread_mutex_lock(&tda->tda_delivery_mutex);
 
     if(LIST_FIRST(&tda->tda_streaming_pad.sp_targets) != NULL) {
@@ -937,28 +936,26 @@ dvb_adapter_input_dvr(void *aux)
       pktbuf_ref_dec(pb);
     }
 
-
-
     /* Process */
     while (r >= 188) {
   
       /* sync */
       if (tsb[i] == 0x47) {
+	      int pid = (tsb[i+1] & 0x1f) << 8 | tsb[i+2];
 
+	      if(tda->tda_table_filter[pid]) {
+	        if(!(tsb[i+1] & 0x80)) { // Only dispatch to table parser if not error
+	          dvb_table_feed_t *dtf = malloc(sizeof(dvb_table_feed_t));
+	          memcpy(dtf->dtf_tsb, tsb + i, 188);
+	          TAILQ_INSERT_TAIL(&tda->tda_table_feed, dtf, dtf_link);
+	          wakeup_table_feed = 1;
+	        }
+	      } else {
+          LIST_FOREACH(t, &tda->tda_transports, s_active_link)
+            if(t->s_dvb_mux_instance == tda->tda_mux_current)
+              ts_recv_packet1(t, tsb + i, NULL);
+        }
 
-	if(!(tsb[i+1] & 0x80)) { // Only dispatch to table parser if not error
-	  int pid = (tsb[i+1] & 0x1f) << 8 | tsb[i+2];
-	  if(tda->tda_table_filter[pid]) {
-	    dvb_table_feed_t *dtf = malloc(sizeof(dvb_table_feed_t));
-	    memcpy(dtf->dtf_tsb, tsb + i, 188);
-	    TAILQ_INSERT_TAIL(&tda->tda_table_feed, dtf, dtf_link);
-	    wakeup_table_feed = 1;
-	  }
-	}
-
-        LIST_FOREACH(t, &tda->tda_transports, s_active_link)
-          if(t->s_dvb_mux_instance == tda->tda_mux_current)
-            ts_recv_packet1(t, tsb + i, NULL);
         i += 188;
         r -= 188;
 
