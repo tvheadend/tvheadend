@@ -906,8 +906,16 @@ dvb_adapter_input_dvr(void *aux)
     if (c < 0) {
       if (errno == EAGAIN || errno == EINTR)
         continue;
-      else
+      else if (errno == EOVERFLOW) {
+        tvhlog(LOG_WARNING, "dvb", "\"%s\" read() EOVERFLOW",
+               tda->tda_identifier);
+        continue;
+      } else {
+        // TODO: should we try to recover?
+        tvhlog(LOG_ERR, "dvb", "\"%s\" read() error %d",
+               tda->tda_identifier, errno);
         break;
+      }
     }
     r += c;
 
