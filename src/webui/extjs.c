@@ -46,6 +46,7 @@
 #include "epggrab/private.h"
 #include "config2.h"
 #include "lang_codes.h"
+#include "iconserve.h"
 
 /**
  *
@@ -1844,7 +1845,17 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
       save |= config_set_muxconfpath(str);
     if ((str = http_arg_get(&hc->hc_req_args, "language")))
       save |= config_set_language(str);
+    str = http_arg_get(&hc->hc_req_args, "iconserve");
+    if (str != NULL) {
+     save |= config_set_iconserve(str);
+    } else {
+     save |= config_set_iconserve("off");
+    };
+    if ((str = http_arg_get(&hc->hc_req_args, "serverip")))
+      save |= config_set_serverip(str);
     if (save) config_save();
+    /* trigger the iconserve init routine */
+    logo_loader();
     pthread_mutex_unlock(&global_lock);
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);

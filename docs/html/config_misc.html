@@ -20,5 +20,19 @@
   dvb-apps stores these in /usr/share/dvb/. Leave blank to use TVH's internal
   file set.
 
+  <dt>Cache channel icons:
+  <dd>
+  Enable the caching of channel icons. This will cause TVH to download channel
+  icons locally, and then when requested via HTSP clients the URL for the icon
+  (or logo) will be retrieved from the TVH web server rather than fetched each
+  time by the HTSP client.
+  This REQUIRES the TVH server IP address field to also be populated
+
+  <dt>TVH Server IP Address:
+  <dd>
+  Enter the IP address of the TVH server used for HTSP clients. This permits the
+  above cache channel icons to work (TVH Clients are directed to the IP address
+  entered here to retrieve channel icons from)
+
  </dl>  
 </div>

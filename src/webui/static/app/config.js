@@ -37,7 +37,7 @@ tvheadend.miscconf = function() {
 	 */
 	var confreader = new Ext.data.JsonReader({
 		root : 'config'
-	}, [ 'muxconfpath', 'language' ]);
+	}, [ 'muxconfpath', 'language', 'iconserve', 'serverip' ]);
 
 	/* ****************************************************************
 	 * Form Fields
@@ -49,6 +49,18 @@ tvheadend.miscconf = function() {
 		allowBlank : true,
 		width: 400
 	});
+
+        var iconServeConfig = new Ext.form.Checkbox({
+                name : 'iconserve',
+                fieldLabel : 'Cache channel icons'
+        });
+        var serveripConfig = new Ext.form.TextField({
+                fieldLabel : 'TVH Server IP address',
+                name : 'serverip',
+                allowBlank : true,
+                width: 150
+        });
+
 
 	var language = new Ext.ux.ItemSelector({
 		name: 'language',
@@ -95,7 +107,7 @@ tvheadend.miscconf = function() {
 		layout : 'form',
 		defaultType : 'textfield',
 		autoHeight : true,
-		items : [ language, dvbscanPath ],
+		items : [ language, dvbscanPath, iconServeConfig, serveripConfig ],
 		tbar : [ saveButton, '->', helpButton ]
 	});
 

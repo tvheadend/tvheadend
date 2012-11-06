@@ -40,6 +40,7 @@
 #include "psi.h"
 #include "htsmsg_binary.h"
 #include "epg.h"
+#include "iconserve.h"
 
 #include <sys/statvfs.h>
 #include "settings.h"
@@ -357,9 +358,9 @@ htsp_build_channel(channel_t *ch, const char *method)
   htsmsg_add_u32(out, "channelNumber", ch->ch_number);
 
   htsmsg_add_str(out, "channelName", ch->ch_name);
-  if(ch->ch_icon != NULL)
-    htsmsg_add_str(out, "channelIcon", ch->ch_icon);
-
+  if(ch->ch_icon != NULL) {
+    htsmsg_add_str(out, "channelIcon", logo_query(ch->ch_icon));
+  };
   now  = ch->ch_epg_now;
   next = ch->ch_epg_next;
   htsmsg_add_u32(out, "eventId", now ? now->id : 0);

@@ -19,7 +19,12 @@
 #ifndef ICONSERVE_H
 #define ICONSERVE_H
 
+#include "http.h"
+
 int page_logo(http_connection_t *hc, const char *remain, void *opaque);
+size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream);
+
+const char *logo_query(const char *ch_icon);
 
 void logo_loader(void);
 
