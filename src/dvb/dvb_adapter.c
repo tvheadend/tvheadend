@@ -94,7 +94,7 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "extrapriority", tda->tda_extrapriority);
   htsmsg_add_u32(m, "skip_initialscan", tda->tda_skip_initialscan);
   htsmsg_add_u32(m, "disable_pmt_monitor", tda->tda_disable_pmt_monitor);
-  htsmsg_add_u32(m, "disable_full_mux_rx", tda->tda_disable_full_mux_rx);
+  htsmsg_add_s32(m, "full_mux_rx", tda->tda_full_mux_rx);
   hts_settings_save(m, "dvbadapters/%s", tda->tda_identifier);
   htsmsg_destroy(m);
 }
@@ -369,17 +369,23 @@ dvb_adapter_set_disable_pmt_monitor(th_dvb_adapter_t *tda, int on)
  *
  */
 void
-dvb_adapter_set_disable_full_mux_rx(th_dvb_adapter_t *tda, int on)
+dvb_adapter_set_full_mux_rx(th_dvb_adapter_t *tda, int on)
 {
-  if(tda->tda_disable_full_mux_rx == on)
+  const char* label[] = { "Auto", "Off", "On" };
+  
+  if (on < -1) on = -1;
+  if (on >  1) on = 1;
+
+  if(tda->tda_full_mux_rx == on)
     return;
 
   lock_assert(&global_lock);
 
-  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" disabled full MUX receive set to: %s",
-	 tda->tda_displayname, on ? "On" : "Off");
+  tvhlog(LOG_NOTICE, "dvb",
+         "Adapter \"%s\" disabled full MUX receive set to: %s",
+	 tda->tda_displayname, label[on+1]);
 
-  tda->tda_disable_full_mux_rx = on;
+  tda->tda_full_mux_rx = on;
   tda_save(tda);
 }
 
@@ -408,11 +414,14 @@ check_full_stream(th_dvb_adapter_t *tda)
   struct dmx_pes_filter_params dmx_param;
   int r;
 
-  if(tda->tda_disable_full_mux_rx)
-    return 0;
+  if(tda->tda_full_mux_rx != -1)
+    return tda->tda_full_mux_rx;
 
   if(tda->tda_hostconnection == HOSTCONNECTION_USB12)
     return 0; // Don't even bother, device <-> host interface is too slow
+
+  if(tda->tda_hostconnection == HOSTCONNECTION_USB480)
+    return 0; // USB in general appears to have CPU loading issues?
 
   int fd = tvh_open(tda->tda_demux_path, O_RDWR, 0);
   if(fd == -1)
@@ -462,6 +471,7 @@ tda_add(int adapter_num)
   tda->tda_fe_path = strdup(fname);
   tda->tda_fe_fd       = -1;
   tda->tda_dvr_pipe[0] = -1;
+  tda->tda_full_mux_rx = -1;
 
   tda->tda_fe_info = malloc(sizeof(struct dvb_frontend_info));
 
@@ -542,6 +552,8 @@ tda_add_from_file(const char *filename)
   tda->tda_idlescan = 0;
 
   tda->tda_sat = 0;
+ 
+  tda->tda_full_mux_rx = 1;
 
   /* Come up with an initial displayname, user can change it and it will
      be overridden by any stored settings later on */
@@ -632,6 +644,7 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
   htsmsg_field_t *f;
   const char *name, *s;
   int i, type;
+  uint32_t u32;
   th_dvb_adapter_t *tda;
 
   TAILQ_INIT(&dvb_adapters);
@@ -685,7 +698,9 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
       htsmsg_get_u32(c, "extrapriority", &tda->tda_extrapriority);
       htsmsg_get_u32(c, "skip_initialscan", &tda->tda_skip_initialscan);
       htsmsg_get_u32(c, "disable_pmt_monitor", &tda->tda_disable_pmt_monitor);
-      htsmsg_get_u32(c, "disable_full_mux_rx", &tda->tda_disable_full_mux_rx);
+      if (htsmsg_get_s32(c, "full_mux_rx", &tda->tda_full_mux_rx))
+        if (!htsmsg_get_u32(c, "disable_full_mux_rx", &u32) && u32)
+          tda->tda_full_mux_rx = 0;
     }
     htsmsg_destroy(l);
   }
