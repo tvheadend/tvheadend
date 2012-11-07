@@ -746,13 +746,13 @@ static htsmsg_t *epg_episode_num_serialize ( epg_episode_num_t *num )
   if (num->e_cnt)
     htsmsg_add_u32(m, "e_cnt", num->e_cnt);
   if (num->s_num)
-    htsmsg_add_u32(m, "s_num", num->e_num);
+    htsmsg_add_u32(m, "s_num", num->s_num);
   if (num->s_cnt)
-    htsmsg_add_u32(m, "s_cnt", num->e_cnt);
+    htsmsg_add_u32(m, "s_cnt", num->s_cnt);
   if (num->p_num)
-    htsmsg_add_u32(m, "p_num", num->e_num);
+    htsmsg_add_u32(m, "p_num", num->p_num);
   if (num->p_cnt)
-    htsmsg_add_u32(m, "p_cnt", num->e_cnt);
+    htsmsg_add_u32(m, "p_cnt", num->p_cnt);
   if (num->text)
     htsmsg_add_str(m, "text", num->text);
   return m;
