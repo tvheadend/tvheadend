@@ -452,11 +452,7 @@ int dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src,
 void dvb_mux_add_to_scan_queue (th_dvb_mux_instance_t *tdmi);
 
 th_dvb_mux_instance_t *dvb_mux_find
-<<<<<<< HEAD
-  (th_dvb_adapter_t *tda, const char *netname, uint16_t nid, uint16_t tsid,
-=======
   (th_dvb_adapter_t *tda, const char *netname, uint16_t onid, uint16_t tsid,
->>>>>>> tvheadend/master
    int enabled );
 
 /**
@@ -474,11 +470,7 @@ struct service *dvb_service_find2(th_dvb_mux_instance_t *tdmi,
 
 struct service *dvb_service_find3
   (th_dvb_adapter_t *tda, th_dvb_mux_instance_t *tdmi,
-<<<<<<< HEAD
-   const char *netname, uint16_t nid, uint16_t tsid, uint16_t sid,
-=======
    const char *netname, uint16_t onid, uint16_t tsid, uint16_t sid,
->>>>>>> tvheadend/master
    int enabled, int epgprimary);
 
 void dvb_service_notify(struct service *t);
