@@ -520,10 +520,8 @@ _dvr_autorec_add(const char *config_name,
   htsmsg_destroy(m);
 
   /* Notify web clients that we have messed with the tables */
-  
-  m = htsmsg_create_map();
-  htsmsg_add_u32(m, "reload", 1);
-  notify_by_msg("autorec", m);
+
+  notify_reload("autorec");
 
   dvr_autorec_changed(dae);
 }
@@ -564,14 +562,10 @@ void
 dvr_autorec_check_event(epg_broadcast_t *e)
 {
   dvr_autorec_entry_t *dae;
-  dvr_entry_t *existingde;
 
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
-    if(autorec_cmp(dae, e)) {
-      existingde = dvr_entry_find_by_event_fuzzy(e);
-      if (existingde == NULL)
-        dvr_entry_create_by_autorec(e, dae);
-    }
+    if(autorec_cmp(dae, e))
+      dvr_entry_create_by_autorec(e, dae);
   // Note: no longer updating event here as it will be done from EPG
   //       anyway
 }

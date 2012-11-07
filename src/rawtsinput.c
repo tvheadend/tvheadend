@@ -164,7 +164,7 @@ got_pmt(struct service *t, elementary_stream_t *st,
     return;
 
   pthread_mutex_lock(&global_lock);
-  psi_parse_pmt(t, table + 3, table_len - 3, 1, 0);
+  psi_parse_pmt(t, table + 3, table_len - 3, 1, 1);
   pthread_mutex_unlock(&global_lock);
 }
 
@@ -267,7 +267,7 @@ process_ts_packet(rawts_t *rt, uint8_t *tsb)
 	  slp.tv_sec  =  d / 1000000;
 	  slp.tv_nsec = (d % 1000000) * 1000;
 	
-	  clock_nanosleep(CLOCK_MONOTONIC_COARSE, TIMER_ABSTIME, &slp, NULL);
+	  clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &slp, NULL);
 	  didsleep = 1;
 	}
 	t->s_pcr_last = pcr;

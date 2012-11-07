@@ -19,6 +19,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <assert.h>
 
 #include "tvheadend.h"
 #include "streaming.h"
@@ -50,7 +51,6 @@ typedef struct pass_muxer {
   /* TS muxing */
   uint8_t  *pm_pat;
   uint8_t  *pm_pmt;
-  uint16_t pm_pmt_pid;
   uint32_t pm_ic; // Injection counter
   uint32_t pm_pc; // Packet counter
 } pass_muxer_t;
@@ -65,8 +65,10 @@ pass_muxer_mime(muxer_t* m, const struct streaming_start *ss)
   int i;
   int has_audio;
   int has_video;
+  muxer_container_type_t mc;
   const streaming_start_component_t *ssc;
-  
+  const source_info_t *si = &ss->ss_si;
+
   has_audio = 0;
   has_video = 0;
 
@@ -80,41 +82,50 @@ pass_muxer_mime(muxer_t* m, const struct streaming_start *ss)
     has_audio |= SCT_ISAUDIO(ssc->ssc_type);
   }
 
-  if(has_video)
-    return muxer_container_mimetype(m->m_container, 1);
-  else if(has_audio)
-    return muxer_container_mimetype(m->m_container, 0);
+  if(si->si_type == S_MPEG_TS)
+    mc = MC_MPEGTS;
+  else if(si->si_type == S_MPEG_PS)
+    mc = MC_MPEGPS;
   else
-    return muxer_container_mimetype(MC_UNKNOWN, 0);
+    mc = MC_UNKNOWN;
+
+  if(has_video)
+    return muxer_container_type2mime(mc, 1);
+  else if(has_audio)
+    return muxer_container_type2mime(mc, 0);
+  else
+    return muxer_container_type2mime(MC_UNKNOWN, 0);
 }
 
 
 /**
- * Init the passthrough muxer with streams
+ * Generate the pmt and pat from a streaming start message
  */
 static int
-pass_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
+pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
+  const source_info_t *si = &ss->ss_si;
 
-  if(pm->m_container == MC_MPEGTS) {
-    
+  if(si->si_type == S_MPEG_TS && ss->ss_pmt_pid) {
+    pm->pm_pat = realloc(pm->pm_pat, 188);
     memset(pm->pm_pat, 0xff, 188);
     pm->pm_pat[0] = 0x47;
     pm->pm_pat[1] = 0x40;
     pm->pm_pat[2] = 0x00;
     pm->pm_pat[3] = 0x10;
     pm->pm_pat[4] = 0x00;
-    if(psi_build_pat(NULL, pm->pm_pat+5, 183, pm->pm_pmt_pid) < 0) {
+    if(psi_build_pat(NULL, pm->pm_pat+5, 183, ss->ss_pmt_pid) < 0) {
       pm->m_errors++;
       tvhlog(LOG_ERR, "pass", "%s: Unable to build pat", pm->pm_filename);
       return -1;
     }
 
+    pm->pm_pmt = realloc(pm->pm_pmt, 188);
     memset(pm->pm_pmt, 0xff, 188);
     pm->pm_pmt[0] = 0x47;
-    pm->pm_pmt[1] = 0x40 | (pm->pm_pmt_pid >> 8);
-    pm->pm_pmt[2] = 0x00 | (pm->pm_pmt_pid >> 0);
+    pm->pm_pmt[1] = 0x40 | (ss->ss_pmt_pid >> 8);
+    pm->pm_pmt[2] = 0x00 | (ss->ss_pmt_pid >> 0);
     pm->pm_pmt[3] = 0x10;
     pm->pm_pmt[4] = 0x00;
     if(psi_build_pmt(ss, pm->pm_pmt+5, 183, ss->ss_pcr_pid) < 0) {
@@ -125,6 +136,16 @@ pass_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
   }
 
   return 0;
+}
+
+
+/**
+ * Init the passthrough muxer with streams
+ */
+static int
+pass_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
+{
+  return pass_muxer_reconfigure(m, ss);
 }
 
 
@@ -197,14 +218,16 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
   pass_muxer_t *pm = (pass_muxer_t*)m;
   int rem;
 
-  // Inject pmt and pat into the stream
-  rem = pm->pm_pc % TS_INJECTION_RATE;
-  if(!rem) {
-    pm->pm_pat[3] = (pm->pm_pat[3] & 0xf0) | (pm->pm_ic & 0x0f);
-    pm->pm_pmt[3] = (pm->pm_pat[3] & 0xf0) | (pm->pm_ic & 0x0f);
-    pass_muxer_write(m, pm->pm_pmt, 188);
-    pass_muxer_write(m, pm->pm_pat, 188);
-    pm->pm_ic++;
+  if(pm->pm_pat != NULL) {
+    // Inject pmt and pat into the stream
+    rem = pm->pm_pc % TS_INJECTION_RATE;
+    if(!rem) {
+      pm->pm_pat[3] = (pm->pm_pat[3] & 0xf0) | (pm->pm_ic & 0x0f);
+      pm->pm_pmt[3] = (pm->pm_pat[3] & 0xf0) | (pm->pm_ic & 0x0f);
+      pass_muxer_write(m, pm->pm_pmt, 188);
+      pass_muxer_write(m, pm->pm_pat, 188);
+      pm->pm_ic++;
+    }
   }
 
   pass_muxer_write(m, pb->pb_data, pb->pb_size);
@@ -217,22 +240,23 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
  * Write a packet directly to the file descriptor
  */
 static int
-pass_muxer_write_pkt(muxer_t *m, void *data)
+pass_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 {
   pktbuf_t *pb = (pktbuf_t*)data;
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
-  switch(pm->m_container) {
-  case MC_MPEGTS:
+  assert(smt == SMT_MPEGTS);
+
+  switch(smt) {
+  case SMT_MPEGTS:
     pass_muxer_write_ts(m, pb);
     break;
   default:
-    //NOP
+    //TODO: add support for v4l (MPEG-PS)
     break;
   }
 
-  if(!pm->pm_error)
-    pktbuf_ref_dec(pb);
+  pktbuf_ref_dec(pb);
 
   return pm->pm_error;
 }
@@ -293,7 +317,7 @@ pass_muxer_destroy(muxer_t *m)
  * Create a new passthrough muxer
  */
 muxer_t*
-pass_muxer_create(service_t *s, muxer_container_type_t mc)
+pass_muxer_create(muxer_container_type_t mc)
 {
   pass_muxer_t *pm;
 
@@ -304,20 +328,12 @@ pass_muxer_create(service_t *s, muxer_container_type_t mc)
   pm->m_open_stream  = pass_muxer_open_stream;
   pm->m_open_file    = pass_muxer_open_file;
   pm->m_init         = pass_muxer_init;
+  pm->m_reconfigure  = pass_muxer_reconfigure;
   pm->m_mime         = pass_muxer_mime;
   pm->m_write_meta   = pass_muxer_write_meta;
   pm->m_write_pkt    = pass_muxer_write_pkt;
   pm->m_close        = pass_muxer_close;
   pm->m_destroy      = pass_muxer_destroy;
-
-  if(s->s_type == SERVICE_TYPE_V4L) {
-    pm->m_container = MC_MPEGPS;
-  } else {
-    pm->m_container = MC_MPEGTS;
-    pm->pm_pmt_pid = s->s_pmt_pid;
-    pm->pm_pat = malloc(188);
-    pm->pm_pmt = malloc(188);
-  }
 
   return (muxer_t *)pm;
 }

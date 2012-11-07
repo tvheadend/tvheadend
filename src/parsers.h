@@ -31,7 +31,8 @@ void parse_mpeg_ps(struct service *t, struct elementary_stream *st,
 void parser_enqueue_packet(struct service *t, struct elementary_stream *st,
 			   th_pkt_t *pkt);
 
-void parser_set_stream_vsize(struct elementary_stream *st, int width, int height);
+void parser_set_stream_vparam(struct elementary_stream *st, int width, int height,
+                              int duration);
 
 extern const unsigned int mpeg2video_framedurations[16];
 

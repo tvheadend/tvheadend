@@ -49,7 +49,7 @@
 #include "cwc.h"
 #include "capmt.h"
 #include "dvr/dvr.h"
-#include "htsp.h"
+#include "htsp_server.h"
 #include "rawtsinput.h"
 #include "avahi.h"
 #include "iptv_input.h"
@@ -262,6 +262,7 @@ main(int argc, char **argv)
   sigset_t set;
   const char *homedir;
   const char *rawts_input = NULL;
+  const char *dvb_rawts_input = NULL;
   const char *join_transport = NULL;
   const char *confpath = NULL;
   char *p, *endp;
@@ -269,9 +270,11 @@ main(int argc, char **argv)
   int crash = 0;
   webui_port = 9981;
   htsp_port = 9982;
+  gid_t gid;
+  uid_t uid;
 
   /* Get current directory */
-  tvheadend_cwd = dirname(dirname(strdup(argv[0])));
+  tvheadend_cwd = dirname(dirname(tvh_strdupa(argv[0])));
 
   /* Set locale */
   setlocale(LC_ALL, "");
@@ -279,7 +282,7 @@ main(int argc, char **argv)
   // make sure the timezone is set
   tzset();
 
-  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:sw:e:E:")) != -1) {
+  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:sw:e:E:R:")) != -1) {
     switch(c) {
     case 'a':
       adapter_mask = 0x0;
@@ -340,6 +343,9 @@ main(int argc, char **argv)
     case 'r':
       rawts_input = optarg;
       break;
+    case 'R':
+      dvb_rawts_input = optarg;
+      break;
     case 'j':
       join_transport = optarg;
       break;
@@ -350,34 +356,52 @@ main(int argc, char **argv)
 
   signal(SIGPIPE, handle_sigpipe);
 
+  log_stderr   = 1;
+  log_decorate = isatty(2);
+
   if(forkaway) {
     grp  = getgrnam(groupnam ?: "video");
     pw   = usernam ? getpwnam(usernam) : NULL;
 
-    if(daemon(0, 0)) {
-      exit(2);
-    }
     pidfile = fopen(pidpath, "w+");
-    if(pidfile != NULL) {
-      fprintf(pidfile, "%d\n", getpid());
-      fclose(pidfile);
-    }
 
     if(grp != NULL) {
-      setgid(grp->gr_gid);
+      gid = grp->gr_gid;
     } else {
-      setgid(1);
+      gid = 1;
     }
 
     if (pw != NULL) {
-      gid_t glist[10];
-      int gnum = get_user_groups(pw, glist, 10);
-      setgroups(gnum, glist);
-      setuid(pw->pw_uid);
+      if (getuid() != pw->pw_uid) {
+        gid_t glist[10];
+        int gnum;
+        gnum = get_user_groups(pw, glist, 10);
+        if (setgroups(gnum, glist)) {
+          tvhlog(LOG_ALERT, "START", "setgroups() failed, do you have permission?");
+          return 1;
+        }
+      }
+      uid     = pw->pw_uid;
       homedir = pw->pw_dir;
       setenv("HOME", homedir, 1);
     } else {
-      setuid(1);
+      uid = 1;
+    }
+    if ((getgid() != gid) && setgid(gid)) {
+      tvhlog(LOG_ALERT, "START", "setgid() failed, do you have permission?");
+      return 1;
+    }
+    if ((getuid() != uid) && setuid(uid)) {
+      tvhlog(LOG_ALERT, "START", "setuid() failed, do you have permission?");
+      return 1;
+    }
+
+    if(daemon(0, 0)) {
+      exit(2);
+    }
+    if(pidfile != NULL) {
+      fprintf(pidfile, "%d\n", getpid());
+      fclose(pidfile);
     }
 
     umask(0);
@@ -415,11 +439,13 @@ main(int argc, char **argv)
 
   channels_init();
 
+  subscription_init();
+
   access_init(createdefault);
 
   tcp_server_init();
 #if ENABLE_LINUXDVB
-  dvb_init(adapter_mask);
+  dvb_init(adapter_mask, dvb_rawts_input);
 #endif
   iptv_input_init();
 #if ENABLE_V4L
