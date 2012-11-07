@@ -110,18 +110,21 @@ stream_clean(elementary_stream_t *st)
   st->es_global_data_len = 0;
 }
 
-
 /**
  *
  */
 void
-service_stream_destroy(service_t *t, elementary_stream_t *st)
+service_stream_destroy(service_t *t, elementary_stream_t *es)
 {
   if(t->s_status == SERVICE_RUNNING)
-    stream_clean(st);
-  TAILQ_REMOVE(&t->s_components, st, es_link);
-  free(st->es_nicename);
-  free(st);
+    stream_clean(es);
+
+  avgstat_flush(&es->es_rate);
+  avgstat_flush(&es->es_cc_errors);
+
+  TAILQ_REMOVE(&t->s_components, es, es_link);
+  free(es->es_nicename);
+  free(es);
 }
 
 /**
@@ -489,16 +492,16 @@ service_destroy(service_t *t)
   free(t->s_provider);
   free(t->s_dvb_charset);
 
-  while((st = TAILQ_FIRST(&t->s_components)) != NULL) {
-    TAILQ_REMOVE(&t->s_components, st, es_link);
-    free(st->es_nicename);
-    free(st);
-  }
+  while((st = TAILQ_FIRST(&t->s_components)) != NULL)
+    service_stream_destroy(t, st);
 
   free(t->s_pat_section);
   free(t->s_pmt_section);
 
   sbuf_free(&t->s_tsbuf);
+
+  avgstat_flush(&t->s_cc_errors);
+  avgstat_flush(&t->s_rate);
 
   service_unref(t);
 
