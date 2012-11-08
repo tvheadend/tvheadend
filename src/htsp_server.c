@@ -1505,24 +1505,30 @@ htsp_write_scheduler(void *aux)
 
     r = htsmsg_binary_serialize(hm->hm_msg, &dptr, &dlen, INT32_MAX);
 
-#if 0
-    if(hm->hm_pktref) {
-      usleep(hm->hm_payloadsize * 3);
-    }
-#endif
     htsp_msg_destroy(hm);
-   
-    /* ignore return value */ 
-    r = write(htsp->htsp_fd, dptr, dlen);
-    if(r != dlen)
-      tvhlog(LOG_INFO, "htsp", "%s: Write error -- %s", 
-	     htsp->htsp_logname, strerror(errno));
-    free(dptr);
+
+    void *freeme = dptr;
+
+    while(dlen > 0) {
+      r = write(htsp->htsp_fd, dptr, dlen);
+      if(r < 1) {
+        tvhlog(LOG_INFO, "htsp", "%s: Write error -- %s",
+               htsp->htsp_logname, strerror(errno));
+        break;
+      }
+
+      dptr += r;
+      dlen -= r;
+    }
+
+    free(freeme);
     pthread_mutex_lock(&htsp->htsp_out_mutex);
-    if(r != dlen) 
+    if(dlen)
       break;
   }
+  // Shutdown socket to make receive thread terminate entire HTSP connection
 
+  shutdown(htsp->htsp_fd, SHUT_RDWR);
   pthread_mutex_unlock(&htsp->htsp_out_mutex);
   return NULL;
 }
@@ -1594,6 +1600,17 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source,
   pthread_mutex_unlock(&htsp.htsp_out_mutex);
 
   pthread_join(htsp.htsp_writer_thread, NULL);
+
+  htsp_msg_q_t *hmq;
+
+  TAILQ_FOREACH(hmq, &htsp.htsp_active_output_queues, hmq_link) {
+    htsp_msg_t *hm;
+    while((hm = TAILQ_FIRST(&hmq->hmq_q)) != NULL) {
+      TAILQ_REMOVE(&hmq->hmq_q, hm, hm_link);
+      htsp_msg_destroy(hm);
+    }
+  }
+
   close(fd);
 }
   

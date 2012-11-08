@@ -619,6 +619,7 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
             if ( str ) save |= epggrab_enable_module_by_id(str, u32);
           }
         }
+        htsmsg_destroy(array);
       }
     }
     if (save) epggrab_save();

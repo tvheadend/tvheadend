@@ -94,7 +94,7 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "extrapriority", tda->tda_extrapriority);
   htsmsg_add_u32(m, "skip_initialscan", tda->tda_skip_initialscan);
   htsmsg_add_u32(m, "disable_pmt_monitor", tda->tda_disable_pmt_monitor);
-  htsmsg_add_u32(m, "disable_full_mux_rx", tda->tda_disable_full_mux_rx);
+  htsmsg_add_s32(m, "full_mux_rx", tda->tda_full_mux_rx);
   hts_settings_save(m, "dvbadapters/%s", tda->tda_identifier);
   htsmsg_destroy(m);
 }
@@ -369,17 +369,23 @@ dvb_adapter_set_disable_pmt_monitor(th_dvb_adapter_t *tda, int on)
  *
  */
 void
-dvb_adapter_set_disable_full_mux_rx(th_dvb_adapter_t *tda, int on)
+dvb_adapter_set_full_mux_rx(th_dvb_adapter_t *tda, int on)
 {
-  if(tda->tda_disable_full_mux_rx == on)
+  const char* label[] = { "Auto", "Off", "On" };
+  
+  if (on < -1) on = -1;
+  if (on >  1) on = 1;
+
+  if(tda->tda_full_mux_rx == on)
     return;
 
   lock_assert(&global_lock);
 
-  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" disabled full MUX receive set to: %s",
-	 tda->tda_displayname, on ? "On" : "Off");
+  tvhlog(LOG_NOTICE, "dvb",
+         "Adapter \"%s\" disabled full MUX receive set to: %s",
+	 tda->tda_displayname, label[on+1]);
 
-  tda->tda_disable_full_mux_rx = on;
+  tda->tda_full_mux_rx = on;
   tda_save(tda);
 }
 
@@ -408,11 +414,14 @@ check_full_stream(th_dvb_adapter_t *tda)
   struct dmx_pes_filter_params dmx_param;
   int r;
 
-  if(tda->tda_disable_full_mux_rx)
-    return 0;
+  if(tda->tda_full_mux_rx != -1)
+    return tda->tda_full_mux_rx;
 
   if(tda->tda_hostconnection == HOSTCONNECTION_USB12)
     return 0; // Don't even bother, device <-> host interface is too slow
+
+  if(tda->tda_hostconnection == HOSTCONNECTION_USB480)
+    return 0; // USB in general appears to have CPU loading issues?
 
   int fd = tvh_open(tda->tda_demux_path, O_RDWR, 0);
   if(fd == -1)
@@ -462,6 +471,7 @@ tda_add(int adapter_num)
   tda->tda_fe_path = strdup(fname);
   tda->tda_fe_fd       = -1;
   tda->tda_dvr_pipe[0] = -1;
+  tda->tda_full_mux_rx = -1;
 
   tda->tda_fe_info = malloc(sizeof(struct dvb_frontend_info));
 
@@ -506,19 +516,9 @@ tda_add(int adapter_num)
 
   TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
 
-  if(check_full_stream(tda)) {
-    tvhlog(LOG_INFO, "dvb", "Adapter %s will run in full mux mode", path);
-    dvb_input_raw_setup(tda);
-  } else {
-    tvhlog(LOG_INFO, "dvb", "Adapter %s will run in filtered mode", path);
-    dvb_input_filtered_setup(tda);
-  }
-
-  if(tda->tda_sat)
-    dvb_satconf_init(tda);
-
   gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 1);
 }
+
 
 
 /**
@@ -552,6 +552,8 @@ tda_add_from_file(const char *filename)
   tda->tda_idlescan = 0;
 
   tda->tda_sat = 0;
+ 
+  tda->tda_full_mux_rx = 1;
 
   /* Come up with an initial displayname, user can change it and it will
      be overridden by any stored settings later on */
@@ -559,9 +561,22 @@ tda_add_from_file(const char *filename)
   tda->tda_displayname = strdup(filename);
 
   TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
-
-  dvb_input_raw_setup(tda);
 }
+
+/**
+ * Initiliase input
+ */
+static void tda_init_input (th_dvb_adapter_t *tda)
+{
+  if(tda->tda_type == -1 || check_full_stream(tda)) {
+    tvhlog(LOG_INFO, "dvb", "Adapter %s will run in full mux mode", tda->tda_rootpath);
+    dvb_input_raw_setup(tda);
+  } else {
+    tvhlog(LOG_INFO, "dvb", "Adapter %s will run in filtered mode", tda->tda_rootpath);
+    dvb_input_filtered_setup(tda);
+  }
+}
+
 
 
 /**
@@ -629,40 +644,42 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
   htsmsg_field_t *f;
   const char *name, *s;
   int i, type;
+  uint32_t u32;
   th_dvb_adapter_t *tda;
 
   TAILQ_INIT(&dvb_adapters);
 
+  /* Initialise hardware */
   for(i = 0; i < 32; i++) 
     if ((1 << i) & adapter_mask) 
       tda_add(i);
 
+  /* Initialise rawts test file */
   if(rawfile)
     tda_add_from_file(rawfile);
 
-
+  /* Load configuration */
   l = hts_settings_load("dvbadapters");
   if(l != NULL) {
     HTSMSG_FOREACH(f, l) {
       if((c = htsmsg_get_map_by_field(f)) == NULL)
-	continue;
+        continue;
       
       name = htsmsg_get_str(c, "displayname");
 
       if((s = htsmsg_get_str(c, "type")) == NULL ||
-	 (type = dvb_str_to_adaptertype(s)) < 0)
-	continue;
+         (type = dvb_str_to_adaptertype(s)) < 0)
+        continue;
 
       if((tda = dvb_adapter_find_by_identifier(f->hmf_name)) == NULL) {
-	/* Not discovered by hardware, create it */
-
-	tda = tda_alloc();
-	tda->tda_identifier = strdup(f->hmf_name);
-	tda->tda_type = type;
-	TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
+        /* Not discovered by hardware, create it */
+        tda = tda_alloc();
+        tda->tda_identifier = strdup(f->hmf_name);
+        tda->tda_type = type;
+        TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
       } else {
-	if(type != tda->tda_type)
-	  continue; /* Something is wrong, ignore */
+        if(type != tda->tda_type)
+          continue; /* Something is wrong, ignore */
       }
 
       free(tda->tda_displayname);
@@ -681,13 +698,21 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
       htsmsg_get_u32(c, "extrapriority", &tda->tda_extrapriority);
       htsmsg_get_u32(c, "skip_initialscan", &tda->tda_skip_initialscan);
       htsmsg_get_u32(c, "disable_pmt_monitor", &tda->tda_disable_pmt_monitor);
-      htsmsg_get_u32(c, "disable_full_mux_rx", &tda->tda_disable_full_mux_rx);
+      if (htsmsg_get_s32(c, "full_mux_rx", &tda->tda_full_mux_rx))
+        if (!htsmsg_get_u32(c, "disable_full_mux_rx", &u32) && u32)
+          tda->tda_full_mux_rx = 0;
     }
     htsmsg_destroy(l);
   }
 
-  TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link)
+  TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
+    tda_init_input(tda);
+
+    if(tda->tda_sat)
+      dvb_satconf_init(tda);
+
     dvb_mux_load(tda);
+  }
 }
 
 
@@ -906,8 +931,16 @@ dvb_adapter_input_dvr(void *aux)
     if (c < 0) {
       if (errno == EAGAIN || errno == EINTR)
         continue;
-      else
+      else if (errno == EOVERFLOW) {
+        tvhlog(LOG_WARNING, "dvb", "\"%s\" read() EOVERFLOW",
+               tda->tda_identifier);
+        continue;
+      } else {
+        // TODO: should we try to recover?
+        tvhlog(LOG_ERR, "dvb", "\"%s\" read() error %d",
+               tda->tda_identifier, errno);
         break;
+      }
     }
     r += c;
 
@@ -915,7 +948,6 @@ dvb_adapter_input_dvr(void *aux)
     if (r < 188) continue;
 
     int wakeup_table_feed = 0;  // Just wanna wakeup once
-
 
     pthread_mutex_lock(&tda->tda_delivery_mutex);
 
@@ -929,28 +961,26 @@ dvb_adapter_input_dvr(void *aux)
       pktbuf_ref_dec(pb);
     }
 
-
-
     /* Process */
     while (r >= 188) {
   
       /* sync */
       if (tsb[i] == 0x47) {
+	      int pid = (tsb[i+1] & 0x1f) << 8 | tsb[i+2];
 
+	      if(tda->tda_table_filter[pid]) {
+	        if(!(tsb[i+1] & 0x80)) { // Only dispatch to table parser if not error
+	          dvb_table_feed_t *dtf = malloc(sizeof(dvb_table_feed_t));
+	          memcpy(dtf->dtf_tsb, tsb + i, 188);
+	          TAILQ_INSERT_TAIL(&tda->tda_table_feed, dtf, dtf_link);
+	          wakeup_table_feed = 1;
+	        }
+	      } else {
+          LIST_FOREACH(t, &tda->tda_transports, s_active_link)
+            if(t->s_dvb_mux_instance == tda->tda_mux_current)
+              ts_recv_packet1(t, tsb + i, NULL);
+        }
 
-	if(!(tsb[i+1] & 0x80)) { // Only dispatch to table parser if not error
-	  int pid = (tsb[i+1] & 0x1f) << 8 | tsb[i+2];
-	  if(tda->tda_table_filter[pid]) {
-	    dvb_table_feed_t *dtf = malloc(sizeof(dvb_table_feed_t));
-	    memcpy(dtf->dtf_tsb, tsb + i, 188);
-	    TAILQ_INSERT_TAIL(&tda->tda_table_feed, dtf, dtf_link);
-	    wakeup_table_feed = 1;
-	  }
-	}
-
-        LIST_FOREACH(t, &tda->tda_transports, s_active_link)
-          if(t->s_dvb_mux_instance == tda->tda_mux_current)
-            ts_recv_packet1(t, tsb + i, NULL);
         i += 188;
         r -= 188;
 
