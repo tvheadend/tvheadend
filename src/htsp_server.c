@@ -1564,6 +1564,17 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source,
   pthread_mutex_unlock(&htsp.htsp_out_mutex);
 
   pthread_join(htsp.htsp_writer_thread, NULL);
+
+  htsp_msg_q_t *hmq;
+
+  TAILQ_FOREACH(hmq, &htsp.htsp_active_output_queues, hmq_link) {
+    htsp_msg_t *hm;
+    while((hm = TAILQ_FIRST(&hmq->hmq_q)) != NULL) {
+      TAILQ_REMOVE(&hmq->hmq_q, hm, hm_link);
+      htsp_msg_destroy(hm);
+    }
+  }
+
   close(fd);
 }
   
