@@ -23,6 +23,7 @@
 #include <string.h>
 #include <curl/curl.h>
 #include <curl/easy.h>
+#include <unistd.h>
 
 #include "settings.h"
 #include "tvheadend.h"
@@ -54,6 +55,8 @@ page_logo(http_connection_t *hc, const char *remain, void *opaque)
   char iconpath[100];
   pthread_mutex_lock(&global_lock);
   fb_file *fp;
+  ssize_t size;
+  char buf[4096];
 
   if(remain == NULL) {
     pthread_mutex_unlock(&global_lock);
@@ -97,8 +100,19 @@ page_logo(http_connection_t *hc, const char *remain, void *opaque)
     http_redirect(hc, "/static/icons/exclamation.png");
   } else {
     tvhlog(LOG_DEBUG, "page_logo", "File %s opened", iconpath);
+    size = fb_size(fp);
+    http_send_header(hc, 200, "gzip", size, NULL, NULL, 300, 0, NULL);
+    while (!fb_eof(fp)) {
+      ssize_t c = fb_read(fp, buf, sizeof(buf));
+      if (c < 0) {
+        break;
+      };
+      if (write(hc->hc_fd, buf, c) != c) {
+        break;
+      };
+    };
     fb_close(fp);
-    page_static_file(hc, remain, homepath);
+/*    page_static_file(hc, remain, homepath);*/
     pthread_mutex_unlock(&global_lock);
     return 0;
   };
