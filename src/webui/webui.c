@@ -866,14 +866,14 @@ webui_init(void)
 
   http_path_add("/stream",  NULL, http_stream,  ACCESS_STREAMING);
 
-  http_path_add("/logo", NULL, page_logo, ACCESS_WEB_INTERFACE);
+  http_path_add("/logo", NULL, page_logo, ACCESS_ANONYMOUS);
 
   webui_static_content("/static",        "src/webui/static");
   webui_static_content("/docs",          "docs/html");
   webui_static_content("/docresources",  "docs/docresources");
 
   snprintf(homepath, sizeof(homepath), "%s/icons", homedir);
-  webui_static_content("/iconstorage",   homepath);
+  http_path_add("/iconstorage", strdup(homepath), page_static_file, ACCESS_ANONYMOUS);
 
   simpleui_start();
   extjs_start();
