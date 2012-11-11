@@ -647,8 +647,7 @@ static int xmltv_channelupdate
   channel_service_id = dvb_transport_find3(NULL, NULL, NULL, 0, 0, cid, 1, 0);
   if (channel_service_id && channel_service_id->s_ch) {
   ec = channel_service_id->s_ch;
-  if (ec == NULL)
-    return -1;
+  if (ec == NULL) return -1;
   if (service_is_primary_epg(channel_service_id)) {
   if (epggrab_channel_renumber && (chan_number != NULL)) {
     tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
@@ -722,16 +721,14 @@ static int xmltv_parse_lineups
 
           if (strcmp(f->hmf_name, "dvb-channel") == 0) {
             if ((tag = htsmsg_get_map_by_field(f))) {
-              if((chandata = htsmsg_get_map(tag, "tags")) == NULL)
-                continue;
+              if((chandata = htsmsg_get_map(tag, "tags")) == NULL) continue;
                 chan_service_id = htsmsg_xml_get_cdata_str(chandata, "service-id");
             };
           };
           if (strcmp(f->hmf_name, "stb-channel") == 0) {
             if ((tag = htsmsg_get_map_by_field(f))) {
-              if((chandata = htsmsg_get_map(tag, "tags")) == NULL)
-                continue;
-                  stb_preset = htsmsg_xml_get_cdata_str(chandata, "service-id");
+              if((chandata = htsmsg_get_map(tag, "tags")) == NULL) continue;
+              stb_preset = htsmsg_xml_get_cdata_str(chandata, "stb-preset");
             };
           }; /* end of stb-channel */
         }; /* f lineups */
@@ -744,17 +741,11 @@ static int xmltv_parse_lineups
     cid = 0;
 
   /* Skip all radio channels for now */
-  if (strcmp(lineup_section, "Radio channels") == 0) {
-  #ifdef EPG_TRACE
-    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Skipping entry as its Radio channels");
-  #endif
-    continue;
-  };
+  if (strcmp(lineup_section, "Radio channels") == 0) continue;
 
   /* If we have stb_preset set then its a sky entry, 
      which dont give us service_id so try pattern match on the name */
   if (stb_preset) {
-    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "Calling stb_channel update function");
     changed_entry = stb_channel (chan_name, chan_number, logo);
     if (changed_entry == 1)
       update_counter++;
