@@ -340,12 +340,32 @@ function check_py_import
 {
   local hdr=$1
   local nam=$2
-  [ -z "$nam" ] && nam=$hdr
+  [ -z "$nam" ] && nam=py_${hdr}
 
   echo -ne "checking for py module $hdr ...${TAB}"
 
   # Enable if supported
   if check_py "import $hdr"; then
+    echo "ok"
+    enable $nam
+  else
+    echo "fail"
+    return 1
+  fi
+}
+
+# ###########################################################################
+# Binary checks
+# ###########################################################################
+
+function check_bin
+{
+  local bin=$1
+  local nam=$2
+  [ -z "$nam" ] && nam=bin_${bin}
+  echo -ne "checking for $bin ...${TAB}"
+
+  if which $bin &> /dev/null; then
     echo "ok"
     enable $nam
   else

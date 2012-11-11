@@ -16,6 +16,8 @@
  *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
+
 #include "tvheadend.h"
 #include "streaming.h"
 #include "epg.h"
@@ -54,11 +56,11 @@ tvh_muxer_mime(muxer_t* m, const struct streaming_start *ss)
   }
 
   if(has_video)
-    return muxer_container_mimetype(m->m_container, 1);
+    return muxer_container_type2mime(m->m_container, 1);
   else if(has_audio)
-    return muxer_container_mimetype(m->m_container, 0);
+    return muxer_container_type2mime(m->m_container, 0);
   else
-    return muxer_container_mimetype(MC_UNKNOWN, 0);
+    return muxer_container_type2mime(MC_UNKNOWN, 0);
 }
 
 
@@ -76,6 +78,21 @@ tvh_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
   }
 
   return 0;
+}
+
+
+/**
+ * Multisegment matroska files do exist but I am not sure if they are supported
+ * by many media players. For now, we'll treat it as an error.
+ */
+static int
+tvh_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
+{
+  tvh_muxer_t *tm = (tvh_muxer_t*)m;
+
+  tm->m_errors++;
+
+  return -1;
 }
 
 
@@ -117,9 +134,12 @@ tvh_muxer_open_file(muxer_t *m, const char *filename)
  * Write a packet to the muxer
  */
 static int
-tvh_muxer_write_pkt(muxer_t *m, struct th_pkt *pkt)
+tvh_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 {
+  th_pkt_t *pkt = (th_pkt_t*)data;
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
+
+  assert(smt == SMT_PACKET);
 
   if(mk_mux_write_pkt(tm->tm_ref, pkt)) {
     tm->m_errors++;
@@ -195,6 +215,7 @@ tvh_muxer_create(muxer_container_type_t mc)
   tm->m_open_file    = tvh_muxer_open_file;
   tm->m_mime         = tvh_muxer_mime;
   tm->m_init         = tvh_muxer_init;
+  tm->m_reconfigure  = tvh_muxer_reconfigure;
   tm->m_write_meta   = tvh_muxer_write_meta;
   tm->m_write_pkt    = tvh_muxer_write_pkt;
   tm->m_close        = tvh_muxer_close;

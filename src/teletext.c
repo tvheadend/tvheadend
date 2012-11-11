@@ -469,30 +469,29 @@ teletext_input(service_t *t, elementary_stream_t *st, const uint8_t *tsb)
  * Swedish TV4 rundown dump (page 192)
  *
 
-  Starttid Titel                L{ngd      | 20 83 53
- ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,   | 94 2c 2c
-  23:47:05 Reklam block         00:04:15   | 8d 83 32
+  Starttid Titel                L{ngd      | 3 3 53
+ ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,   | 14 2c 2c
+  19:00:00 TV4Nyheterna         00:14:00   | d 7 31
                                            | 20 20 20
- ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,   | 94 2c 2c
-  23:47:30 HV3 BENGT OCH PETRA  00:00:03   | 20 86 32
-  23:47:34 S-6/6 : Spoons I 6 ( 00:10:23   | 20 87 32
-  23:57:57 RV3 FOLK I TRAPPAN   00:00:03   | 20 86 32
-  23:59:36 Reklam block         00:02:50   | 20 83 32
-  00:00:01 LINEUP13 BENGT OCH P 00:00:13   | 20 86 30
-  00:00:14 AABILO6123           00:00:13   | 20 86 30
-  00:00:28 S-4/6 : Allo Allo IV 00:10:28   | 20 87 30
-  00:10:57 RV3 VITA RENA PRICKA 00:00:03   | 20 86 30
-  00:11:00 LOKAL REKLAM         00:01:31   | 20 81 30
-  00:16:37 Reklam block         00:04:25   | 20 83 30
-  00:16:58 HV3 BYGGLOV 2        00:00:03   | 20 86 30
-  00:17:51 Trailer block        00:01:20   | 20 82 30
-  00:18:21 S-4/6 : Allo Allo IV 00:14:14   | 20 87 30
-  00:32:36 AABILO6123           00:00:13   | 20 86 30
- ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,   | 94 2c 2c
- se {ven rundown.tv4.se                    | 83 73 65
-                                           | 83 20 20
-                                   23:43   | 83 20 20
-
+ ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,   | 14 2c 2c
+  19:14:00 Lokala nyheter       00:03:00   | 1 1 31
+  19:17:00 TV4Nyheterna 19.00 2 00:02:02   | 7 7 31
+  19:19:02 Vinjett              00:00:03   | 6 6 31
+  19:19:05 Reklam               00:02:30   | 3 3 31
+  19:21:35 Vinjett              00:00:06   | 6 6 31
+  19:21:41 LOKAL BILLBOARD      00:00:16   | 1 1 31
+  19:21:57 Lokalt v{der         00:01:00   | 1 1 31
+  19:22:57 S4NVMT1553           00:00:15   | 6 6 31
+  19:23:12 V{der                00:02:00   | 7 7 31
+  19:25:12 Trailer              00:01:00   | 2 2 31
+  19:26:12 Vinjett              00:00:03   | 6 6 31
+  19:26:15 Reklam               00:02:20   | 3 3 31
+  19:28:35 Vinjett              00:00:07   | 6 6 31
+  19:28:42 Hall} 16:9           00:00:30   | 7 7 31
+ ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,   | 14 2c 2c
+                                           | 20 20 20
+TV4                                        | 54 56 34
+                                           | 20 20 20
 */
 
 
@@ -521,9 +520,8 @@ teletext_rundown_copy(tt_private_t *ttp, tt_mag_t *ttm)
 {
   /* Sanity check */
   if(memcmp((char *)ttm->ttm_page + 2, "Starttid", strlen("Starttid")) ||
-     memcmp((char *)ttm->ttm_page + 11,"Titel", strlen("Titel")) ||
-     memcmp((char *)ttm->ttm_page + 20 * 40 + 9,
-	    "rundown.tv4.se", strlen("rundown.tv4.se")))
+     memcmp((char *)ttm->ttm_page + 11, "Titel", strlen("Titel")) ||
+     memcmp((char *)ttm->ttm_page + 21 * 40, "TV4", strlen("TV4")))
     return;
   
   memcpy(ttp->ttp_rundown, ttm->ttm_page, 23 * 40);
@@ -544,7 +542,7 @@ teletext_rundown_scan(service_t *t, tt_private_t *ttp)
 
   for(i = 0; i < 23; i++) {
     l = ttp->ttp_rundown + 40 * i;
-    if((l[1] & 0xf0) != 0x80 || !is_tt_clock(l + 32) || !is_tt_clock(l + 2))
+    if((l[1] & 0xf0) != 0x00 || !is_tt_clock(l + 32) || !is_tt_clock(l + 2))
       continue;
     
     if(!memcmp(l + 11, "Nyhetspuff", strlen("Nyhetspuff")))

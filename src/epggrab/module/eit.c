@@ -26,6 +26,7 @@
 #include "epg.h"
 #include "epggrab.h"
 #include "epggrab/private.h"
+#include "dvb/dvb_charset.h"
 
 /* ************************************************************************
  * Status handling
@@ -35,6 +36,7 @@ typedef struct eit_table_status
 {
   LIST_ENTRY(eit_table_status) link;
   int                          tid;
+  uint16_t                     onid;
   uint16_t                     tsid;
   uint16_t                     sid;
   uint32_t                     sec[8];
@@ -54,7 +56,8 @@ typedef struct eit_status
 } eit_status_t;
 
 static eit_table_status_t *eit_status_find
-  ( eit_status_t *status, int tableid, uint16_t tsid, uint16_t sid,
+  ( eit_status_t *status, int tableid,
+    uint16_t onid, uint16_t tsid, uint16_t sid,
     uint8_t sec, uint8_t lst, uint8_t seg, uint8_t ver )
 {
   int i, sec_index;
@@ -63,7 +66,8 @@ static eit_table_status_t *eit_status_find
 
   /* Find */
   LIST_FOREACH(sta, &status->tables, link)
-    if (sta->tid == tableid && sta->tsid == tsid && sta->sid == sid)
+    if (sta->tid == tableid && sta->tsid == tsid && sta->onid == onid &&
+        sta->sid == sid)
       break;
 
   /* Already complete */
@@ -74,6 +78,7 @@ static eit_table_status_t *eit_status_find
     sta = calloc(1, sizeof(eit_table_status_t));
     LIST_INSERT_HEAD(&status->tables, sta, link);
     sta->tid  = tableid;
+    sta->onid = onid;
     sta->tsid = tsid;
     sta->sid  = sid;
     sta->ver  = 255; // Note: force update below
@@ -149,7 +154,7 @@ typedef struct eit_event
   lang_str_t       *summary;
   lang_str_t       *desc;
 
-  char             *default_charset;
+  const char       *default_charset;
 
   htsmsg_t         *extra;
 
@@ -200,7 +205,7 @@ static dvb_string_conv_t _eit_freesat_conv[2] = {
 static int _eit_get_string_with_len
   ( epggrab_module_t *m,
     char *dst, size_t dstlen, 
-		const uint8_t *src, size_t srclen, char *charset )
+		const uint8_t *src, size_t srclen, const char *charset )
 {
   dvb_string_conv_t *cptr = NULL;
 
@@ -534,7 +539,16 @@ static int _eit_process_event
 
   /* Process tags */
   memset(&ev, 0, sizeof(ev));
-  ev.default_charset = svc->s_dvb_default_charset;
+  ev.default_charset = svc->s_dvb_charset;
+
+  /* Override */
+  if (!ev.default_charset) {
+    ev.default_charset
+      = dvb_charset_find(svc->s_dvb_mux_instance->tdmi_network_id,
+                         svc->s_dvb_mux_instance->tdmi_transport_stream_id,
+                         svc->s_dvb_service_id);
+  }
+
   while (dllen > 2) {
     int r;
     dtag = ptr[0];
@@ -651,7 +665,7 @@ static int _eit_callback
   eit_status_t *sta;
   eit_table_status_t *tsta;
   int resched = 0, save = 0;
-  uint16_t tsid, sid;
+  uint16_t onid, tsid, sid;
   uint16_t sec, lst, seg, ver;
 
   /* Invalid */
@@ -673,21 +687,22 @@ static int _eit_callback
   /* Get table info */
   sid  = ptr[0] << 8 | ptr[1];
   tsid = ptr[5] << 8 | ptr[6];
+  onid = ptr[7] << 8 | ptr[8];
   sec  = ptr[3];
   lst  = ptr[4];
   seg  = ptr[9];
   ver  = (ptr[2] >> 1) & 0x1f;
 #ifdef EPG_EIT_TRACE
   tvhlog(LOG_DEBUG, mod->id,
-         "tid=0x%02X, tsid=0x%04X, sid=0x%04X, sec=%3d/%3d, seg=%3d, ver=%2d, cur=%d",
-         tableid, tsid, sid, sec, lst, seg, ver, ptr[2] & 1);
+         "tid=0x%02X, onid=0x%04X, tsid=0x%04X, sid=0x%04X, sec=%3d/%3d, seg=%3d, ver=%2d, cur=%d",
+         tableid, onid, tsid, sid, sec, lst, seg, ver, ptr[2] & 1);
 #endif
 
   /* Don't process */
   if((ptr[2] & 1) == 0) return 0;
 
   /* Current status */
-  tsta = eit_status_find(sta, tableid, tsid, sid, sec, lst, seg, ver);
+  tsta = eit_status_find(sta, tableid, onid, tsid, sid, sec, lst, seg, ver);
 #ifdef EPG_EIT_TRACE
   tvhlog(LOG_DEBUG, mod->id, tsta && tsta->state != EIT_STATUS_DONE ? "section process" : "section seen");
 #endif
@@ -698,26 +713,25 @@ static int _eit_callback
   // Note: tableid=0x4f,0x60-0x6f is other TS
   //       so must find the tdmi
   if(tableid == 0x4f || tableid >= 0x60) {
-    tda = tdmi->tdmi_adapter;
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
-      if(tdmi->tdmi_transport_stream_id == tsid)
-        break;
+    tda  = tdmi->tdmi_adapter;
+    tdmi = dvb_mux_find(tda, NULL, onid, tsid, 1);
   } else {
-    if (tdmi->tdmi_transport_stream_id != tsid) {
+    if (tdmi->tdmi_transport_stream_id != tsid ||
+        tdmi->tdmi_network_id != onid) {
+#ifdef EPG_EIT_TRACE
       tvhlog(LOG_DEBUG, mod->id,
-             "invalid transport id found (tid 0x%02X, tsid %d != %d",
-             tableid, tdmi->tdmi_transport_stream_id, tsid);
+             "invalid transport id found tid 0x%02X, onid:tsid %d:%d != %d:%d",
+             tableid, tdmi->tdmi_network_id, tdmi->tdmi_transport_stream_id,
+             onid, tsid);
+#endif
       tdmi = NULL;
     }
   }
   if(!tdmi) goto done;
 
   /* Get service */
-  svc = dvb_transport_find(tdmi, sid, 0, NULL);
-  if (!svc || !svc->s_enabled || !svc->s_ch) goto done;
-
-  /* Ignore (not primary EPG service) */
-  if (!service_is_primary_epg(svc)) goto done;
+  svc = dvb_service_find3(NULL, tdmi, NULL, 0, 0, sid, 1, 1);
+  if (!svc || !svc->s_ch) goto done;
 
   /* Register as interesting */
   if (tableid < 0x50)
@@ -762,9 +776,9 @@ done:
     LIST_FOREACH(tsta, &sta->tables, link) {
       total++;
       tvhlog(LOG_DEBUG, mod->id,
-             "  tid=0x%02X, tsid=0x%04X, sid=0x%04X, ver=%02d, done=%d, "
+             "  tid=0x%02X, onid=0x%04X, tsid=0x%04X, sid=0x%04X, ver=%02d, done=%d, "
              "mask=%08X|%08X|%08X|%08X|%08X|%08X|%08X|%08X", 
-             tsta->tid, tsta->tsid, tsta->sid, tsta->ver,
+             tsta->tid, tsta->onid, tsta->tsid, tsta->sid, tsta->ver,
              tsta->state == EIT_STATUS_DONE,
              tsta->sec[7], tsta->sec[6], tsta->sec[5], tsta->sec[4],
              tsta->sec[3], tsta->sec[2], tsta->sec[1], tsta->sec[0]);
@@ -809,6 +823,7 @@ static void _eit_start
   if (!m->enabled) return;
 
   /* Freeview (switch to EIT, ignore if explicitly enabled) */
+  // Note: do this as PID is the same
   if (!strcmp(m->id, "uk_freeview")) {
     m = (epggrab_module_ota_t*)epggrab_module_find_by_id("eit");
     if (m->enabled) return;
@@ -821,16 +836,22 @@ static void _eit_start
     ota->destroy = _eit_ota_destroy;
   }
 
-  /* Add PIDs (freesat uses non-standard) */
+  /* Freesat (3002/3003) */
   if (!strcmp("uk_freesat", m->id)) {
 #ifdef IGNORE_TOO_SLOW
-    tdt_add(tdmi, NULL, dvb_pidx11_callback, m, m->id, TDT_CRC, 3840, NULL);
-    tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 3841, NULL);
+    tdt_add(tdmi, 0, 0, dvb_pidx11_callback, m, m->id, TDT_CRC, 3840, NULL);
+    tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 3841, NULL);
 #endif
-    tdt_add(tdmi, NULL, dvb_pidx11_callback, m, m->id, TDT_CRC, 3002, NULL);
-    tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 3003, NULL);
+    tdt_add(tdmi, 0, 0, dvb_pidx11_callback, m, m->id, TDT_CRC, 3002);
+    tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 3003);
+
+  /* Viasat Baltic (0x39) */
+  } else if (!strcmp("viasat_baltic", m->id)) {
+    tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 0x39);
+
+  /* Standard (0x12) */
   } else {
-    tdt_add(tdmi, NULL, _eit_callback, m, m->id, TDT_CRC, 0x12, NULL);
+    tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 0x12);
   }
   tvhlog(LOG_DEBUG, m->id, "install table handlers");
 }
@@ -871,6 +892,8 @@ void eit_init ( void )
   epggrab_module_ota_create(NULL, "uk_freesat", "UK: Freesat", 5,
                             _eit_start, _eit_enable, NULL);
   epggrab_module_ota_create(NULL, "uk_freeview", "UK: Freeview", 5,
+                            _eit_start, _eit_enable, NULL);
+  epggrab_module_ota_create(NULL, "viasat_baltic", "VIASAT: Baltic", 5,
                             _eit_start, _eit_enable, NULL);
 }
 

@@ -28,6 +28,6 @@ int h264_decode_seq_parameter_set(struct elementary_stream *st, bitstream_t *bs)
 int h264_decode_pic_parameter_set(struct elementary_stream *st, bitstream_t *bs);
 
 int h264_decode_slice_header(struct elementary_stream *st, bitstream_t *bs,
-			     int *pkttype, int *duration, int *isfield);
+			     int *pkttype, int *isfield);
 
 #endif /* PARSER_H264_H_ */

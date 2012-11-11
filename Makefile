@@ -88,7 +88,7 @@ SRCS =  src/main.c \
 	src/parser_latm.c \
 	src/tsdemux.c \
 	src/bitstream.c \
-	src/htsp.c \
+	src/htsp_server.c \
 	src/serviceprobe.c \
 	src/htsmsg.c \
 	src/htsmsg_binary.c \
@@ -148,14 +148,17 @@ SRCS += src/iconserve.c \
 SRCS-${CONFIG_LINUXDVB} += \
 	src/dvb/dvb.c \
 	src/dvb/dvb_support.c \
+	src/dvb/dvb_charset.c \
 	src/dvb/dvb_fe.c \
 	src/dvb/dvb_tables.c \
 	src/dvb/diseqc.c \
 	src/dvb/dvb_adapter.c \
 	src/dvb/dvb_multiplex.c \
-	src/dvb/dvb_transport.c \
+	src/dvb/dvb_service.c \
 	src/dvb/dvb_preconf.c \
 	src/dvb/dvb_satconf.c \
+	src/dvb/dvb_input_filtered.c \
+	src/dvb/dvb_input_raw.c \
 	src/webui/extjs_dvb.c \
 
 # V4L

@@ -226,6 +226,7 @@ typedef struct service {
    */ 
   enum {
     S_MPEG_TS,
+    S_MPEG_PS,
     S_OTHER,
   } s_source_type;
 
@@ -323,6 +324,7 @@ typedef struct service {
     ST_HDTV       = 0x11,   /* HDTV (MPEG2) */
     ST_AC_SDTV    = 0x16,   /* Advanced codec SDTV */
     ST_AC_HDTV    = 0x19,   /* Advanced codec HDTV */
+    ST_NE_SDTV    = 0x80,   /* NET POA - Cabo SDTV */
     ST_EX_HDTV    = 0x91,   /* Bell TV HDTV */
     ST_EX_SDTV    = 0x96,   /* Bell TV SDTV */
     ST_EP_HDTV    = 0xA0,   /* Bell TV tiered HDTV */
@@ -447,6 +449,13 @@ typedef struct service {
   elementary_stream_t *s_video;
   elementary_stream_t *s_audio;
  
+
+  /**
+   * When a subscription request SMT_MPEGTS, chunk them togeather 
+   * in order to recude load.
+   */
+  sbuf_t s_tsbuf;
+
   /**
    * Average continuity errors
    */
@@ -492,7 +501,7 @@ typedef struct service {
    * DVB default charset
    * 	used to overide the default ISO6937 per service
    */
-  char *s_dvb_default_charset;
+  char *s_dvb_charset;
 
   /**
    * Set if EIT grab is enabled for DVB service (the default).
@@ -584,7 +593,7 @@ int tss2errcode(int tss);
 
 uint16_t service_get_encryption(service_t *t);
 
-void service_set_dvb_default_charset(service_t *t, const char *dvb_default_charset);
+void service_set_dvb_charset(service_t *t, const char *dvb_charset);
 
 void service_set_dvb_eit_enable(service_t *t, int dvb_eit_enable);
 

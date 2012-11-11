@@ -76,6 +76,10 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 	}
 
 	cmlist.push({
+		header : "NetworkID",
+		dataIndex : 'onid',
+		width : 50
+	}, {
 		header : "MuxID",
 		dataIndex : 'muxid',
 		width : 50
@@ -86,7 +90,7 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
     defaultSortable: true});
 
 	var rec = Ext.data.Record.create([ 'id', 'enabled', 'network', 'freq',
-		'pol', 'satconf', 'muxid', 'quality', 'fe_status', 'mod' ]);
+		'pol', 'satconf', 'onid', 'muxid', 'quality', 'fe_status', 'mod' ]);
 
 	var store = new Ext.data.JsonStore({
 		root : 'entries',
@@ -444,28 +448,36 @@ tvheadend.dvb_services = function(adapterId) {
 			})
 		},
 		{
-			header : "DVB default charset",
-			dataIndex : 'dvb_default_charset',
+			header : "DVB charset",
+			dataIndex : 'dvb_charset',
 			width : 200,
 			renderer : function(value, metadata, record, row, col, store) {
 				return value ? value
-					: '<span class="tvh-grid-unset">ISO6937</span>';
+					: '<span class="tvh-grid-unset">auto</span>';
 			},
 			editor : new fm.ComboBox({
 				mode : 'local',
 				store : new Ext.data.SimpleStore({
 					fields : [ 'key', 'value' ],
-					data : [ [ 'ISO6937', 'default' ], [ 'ISO6937', 'ISO6937' ],
-						[ 'ISO8859-1', 'ISO8859-1' ], [ 'ISO8859-2', 'ISO8859-2' ],
-						[ 'ISO8859-3', 'ISO8859-3' ], [ 'ISO8859-4', 'ISO8859-4' ],
-						[ 'ISO8859-5', 'ISO8859-5' ], [ 'ISO8859-6', 'ISO8859-6' ],
-						[ 'ISO8859-7', 'ISO8859-7' ], [ 'ISO8859-8', 'ISO8859-8' ],
-						[ 'ISO8859-9', 'ISO8859-9' ], [ 'ISO8859-10', 'ISO8859-10' ],
+					data : [ 
+            [ null, 'auto' ],
+            [ 'ISO6937', 'ISO6937' ],
+						[ 'ISO8859-1', 'ISO8859-1' ],
+            [ 'ISO8859-2', 'ISO8859-2' ],
+						[ 'ISO8859-3', 'ISO8859-3' ],
+            [ 'ISO8859-4', 'ISO8859-4' ],
+						[ 'ISO8859-5', 'ISO8859-5' ],
+            [ 'ISO8859-6', 'ISO8859-6' ],
+						[ 'ISO8859-7', 'ISO8859-7' ],
+            [ 'ISO8859-8', 'ISO8859-8' ],
+						[ 'ISO8859-9', 'ISO8859-9' ],
+            [ 'ISO8859-10', 'ISO8859-10' ],
 						[ 'ISO8859-11', 'ISO8859-11' ],
 						[ 'ISO8859-12', 'ISO8859-12' ],
 						[ 'ISO8859-13', 'ISO8859-13' ],
 						[ 'ISO8859-14', 'ISO8859-14' ],
-						[ 'ISO8859-15', 'ISO8859-15' ] ]
+						[ 'ISO8859-15', 'ISO8859-15' ],
+            [ 'PL_AUTO', 'Polish Fixup' ] ]
 				}),
 				typeAhead : true,
 				lazyRender : true,
@@ -510,7 +522,7 @@ tvheadend.dvb_services = function(adapterId) {
 		root : 'entries',
 		fields : Ext.data.Record.create([ 'id', 'enabled', 'type', 'sid', 'pmt',
 			'pcr', 'svcname', 'network', 'provider', 'mux', 'channelname',
-			'dvb_default_charset', 'dvb_eit_enable' ]),
+			'dvb_charset', 'dvb_eit_enable' ]),
 		url : "dvb/services/" + adapterId,
 		autoLoad : true,
 		id : 'id',
@@ -1075,8 +1087,9 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	var confreader = new Ext.data.JsonReader({
 		root : 'dvbadapters'
 	}, [ 'name', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion',
-		'qmon', 'skip_checksubscr', 'dumpmux', 'poweroff', 'sidtochan', 'nitoid',
-		'extrapriority', 'disable_pmt_monitor', 'idleclose' ]);
+		'diseqcrepeats', 'qmon', 'skip_checksubscr', 
+		'poweroff', 'sidtochan', 'nitoid', 'extrapriority',
+		,'disable_pmt_monitor', 'full_mux_rx', 'idleclose' ]);
 
 	function saveConfForm() {
 		confform.getForm().submit({
@@ -1122,19 +1135,22 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 			fieldLabel : 'Monitor signal quality',
 			name : 'qmon'
 		}),
+		new Ext.form.ComboBox({
+			fieldLabel : 'Full mux reception',
+			name : 'full_mux_rx',
+                        hiddenName: 'full_mux_rx',
+                        displayField: 'num',
+                        valueField: 'str',
+                        editable : false,
+                        allowBlank : false,
+                        mode : 'remote',
+                        triggerAction : 'all',
+                        fields: [ 'num', 'str' ],
+                        store : [ [0, 'Auto'], [1, 'Off'], [2, 'On'] ]
+		}),
 		new Ext.form.Checkbox({
 			fieldLabel : 'Disable PMT monitoring',
 			name : 'disable_pmt_monitor'
-		}),
-		new Ext.form.Checkbox({
-			fieldLabel : 'Write full DVB MUX to disk',
-			name : 'dumpmux',
-			handler : function(s, v) {
-				if (v) Ext.MessageBox.alert('DVB Mux dump',
-					'Please note that keeping this '
-						+ 'option enabled can consume a lot '
-						+ 'of diskspace. You have been warned');
-			}
 		}), {
 			fieldLabel : 'Original Network ID',
 			name : 'nitoid',
@@ -1154,6 +1170,17 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 			mode : 'remote',
 			triggerAction : 'all',
 			store : [ 'DiSEqC 1.0 / 2.0', 'DiSEqC 1.1 / 2.1' ]
+		});
+		items.push(v);
+
+		v = new Ext.form.ComboBox({
+			name : 'diseqcrepeats',
+			fieldLabel : 'DiSEqC repeats',
+			editable : false,
+			allowBlank : false,
+			mode : 'remote',
+			triggerAction : 'all',
+			store : [ '0', '1', '2' ]
 		});
 		items.push(v);
 
@@ -1281,7 +1308,7 @@ tvheadend.dvb_satconf = function(adapterId, lnbStore) {
 		dataIndex : 'port',
 		editor : new fm.NumberField({
 			minValue : 0,
-			maxValue : 15
+			maxValue : 63
 		})
 	}, {
 		header : "LNB type",

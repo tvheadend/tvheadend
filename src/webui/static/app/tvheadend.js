@@ -244,6 +244,11 @@ function accessUpdate(o) {
 		tvheadend.rootTabPanel.add(tvheadend.confpanel);
 	}
 
+	if (o.admin == true && tvheadend.statuspanel == null) {
+		tvheadend.statuspanel = new tvheadend.status;
+		tvheadend.rootTabPanel.add(tvheadend.statuspanel);
+	}
+
 	if (tvheadend.aboutPanel == null) {
 		tvheadend.aboutPanel = new Ext.Panel({
 			border : false,
@@ -299,6 +304,7 @@ tvheadend.app = function() {
 				boxMaxHeight : 45,
 				boxMinHeight : 45,
 				border: false,
+        hidden: true,
 				html: '<div id="header"><h1>Tvheadend Web-Panel</h1></div>'
 			});
 			

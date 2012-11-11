@@ -324,6 +324,7 @@ v4l_service_setsourceinfo(service_t *t, struct source_info *si)
   char buf[64];
   memset(si, 0, sizeof(struct source_info));
 
+  si->si_type = S_MPEG_PS;
   si->si_adapter = strdup(t->s_v4l_adapter->va_displayname);
 
   snprintf(buf, sizeof(buf), "%d Hz", t->s_v4l_frequency);

@@ -1,6 +1,6 @@
 /*
- *  tvheadend, Notification framework
- *  Copyright (C) 2008 Andreas �man
+ *  tvheadend, dvb charset config
+ *  Copyright (C) 2012 Mariusz Białończyk
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,13 +16,22 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef NOTIFY_H_
-#define NOTIFY_H_
+#ifndef __TVH_DVB_CHARSET_H__
+#define __TVH_DVB_CHARSET_H__
 
-#include "htsmsg.h"
+typedef struct dvb_charset {
+  LIST_ENTRY(dvb_charset) link;
+ uint16_t onid;
+ uint16_t tsid;
+ uint16_t sid;
+ const char *charset;
+} dvb_charset_t;
 
-void notify_by_msg(const char *class, htsmsg_t *m);
+LIST_HEAD(,dvb_charset) dvb_charset_list;
 
-void notify_reload(const char *class);
+void dvb_charset_init ( void );
 
-#endif /* NOTIFY_H_ */
+const char *dvb_charset_find
+  (uint16_t onid, uint16_t tsid, uint16_t sid);
+
+#endif /* __TVH_DVB_CHARSET_H__ */

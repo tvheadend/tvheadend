@@ -257,6 +257,10 @@
   
   <dt>Switchport
   <dd>Port number to select for this configuration (numbering begins at 0).
+  <dd>In DiSEqC 1.0/2.0 mode, ports 0-3 are valid.
+  <dd>In DiSEqC 1.1/2.1 mode, ports 0-63 are valid.
+  <dd>Use numbers 0-3 for LNBs behind first input on the uncommited switch,
+      then 4-7 and so on to support up to 64 ports using DiSEqC 1.1/2.1.
   
   <dt>LNB type
   <dd>Select the LNB type from the list of supported LNBs. If your LNB

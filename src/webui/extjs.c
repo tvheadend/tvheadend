@@ -47,6 +47,7 @@
 #include "config2.h"
 #include "lang_codes.h"
 #include "iconserve.h"
+#include "subscriptions.h"
 
 /**
  *
@@ -139,6 +140,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/dvr.js");
   extjs_load(hq, "static/app/epggrab.js");
   extjs_load(hq, "static/app/config.js");
+  extjs_load(hq, "static/app/status.js");
 
   /**
    * Finally, the app itself
@@ -618,6 +620,7 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
             if ( str ) save |= epggrab_enable_module_by_id(str, u32);
           }
         }
+        htsmsg_destroy(array);
       }
     }
     if (save) epggrab_save();
@@ -1387,6 +1390,41 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+
+/**
+ *
+ */
+static int
+extjs_subscriptions(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  htsmsg_t *out, *array;
+  th_subscription_t *s;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(http_access_verify(hc, ACCESS_ADMIN)) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+
+  out = htsmsg_create_map();
+  array = htsmsg_create_list();
+
+  LIST_FOREACH(s, &subscriptions, ths_global_link)
+    htsmsg_add_msg(array, NULL, subscription_create_msg(s));
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_add_msg(out, "entries", array);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+}
+
+
 /**
  *
  */
@@ -1416,7 +1454,7 @@ service_update(htsmsg_t *in)
   uint32_t u32;
   const char *id;
   const char *chname;
-  const char *dvb_default_charset;
+  const char *dvb_charset;
 
   TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
     if((c = htsmsg_get_map_by_field(f)) == NULL ||
@@ -1432,8 +1470,8 @@ service_update(htsmsg_t *in)
     if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
       service_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
 
-    if((dvb_default_charset = htsmsg_get_str(c, "dvb_default_charset")) != NULL)
-      service_set_dvb_default_charset(t, dvb_default_charset);
+    if((dvb_charset = htsmsg_get_str(c, "dvb_charset")) != NULL)
+      service_set_dvb_charset(t, dvb_charset);
 
     if(!htsmsg_get_u32(c, "dvb_eit_enable", &u32))
       service_set_dvb_eit_enable(t, u32);
@@ -1518,8 +1556,8 @@ extjs_servicedetails(http_connection_t *hc,
 
   htsmsg_add_msg(out, "streams", streams);
 
-  if(t->s_dvb_default_charset != NULL)
-    htsmsg_add_str(out, "dvb_default_charset", t->s_dvb_default_charset);
+  if(t->s_dvb_charset != NULL)
+    htsmsg_add_str(out, "dvb_charset", t->s_dvb_charset);
 
   htsmsg_add_u32(out, "dvb_eit_enable", t->s_dvb_eit_enable);
 
@@ -1750,7 +1788,7 @@ extjs_service_update(htsmsg_t *in)
   uint32_t u32;
   const char *id;
   const char *chname;
-  const char *dvb_default_charset;
+  const char *dvb_charset;
 
   TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
     if((c = htsmsg_get_map_by_field(f)) == NULL ||
@@ -1766,8 +1804,8 @@ extjs_service_update(htsmsg_t *in)
     if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
       service_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
 
-    if((dvb_default_charset = htsmsg_get_str(c, "dvb_default_charset")) != NULL)
-      service_set_dvb_default_charset(t, dvb_default_charset);
+    if((dvb_charset = htsmsg_get_str(c, "dvb_charset")) != NULL)
+      service_set_dvb_charset(t, dvb_charset);
 
     if(!htsmsg_get_u32(c, "dvb_eit_enable", &u32))
       service_set_dvb_eit_enable(t, u32);
@@ -1889,6 +1927,7 @@ extjs_start(void)
   http_path_add("/epgobject",      NULL, extjs_epgobject,      ACCESS_WEB_INTERFACE);
   http_path_add("/dvr",            NULL, extjs_dvr,            ACCESS_WEB_INTERFACE);
   http_path_add("/dvrlist",        NULL, extjs_dvrlist,        ACCESS_WEB_INTERFACE);
+  http_path_add("/subscriptions",  NULL, extjs_subscriptions,  ACCESS_WEB_INTERFACE);
   http_path_add("/ecglist",        NULL, extjs_ecglist,        ACCESS_WEB_INTERFACE);
   http_path_add("/config",         NULL, extjs_config,         ACCESS_WEB_INTERFACE);
   http_path_add("/languages",      NULL, extjs_languages,      ACCESS_WEB_INTERFACE);

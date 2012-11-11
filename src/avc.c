@@ -186,8 +186,6 @@ avc_convert_pkt(th_pkt_t *src)
   pkt->pkt_header = NULL;
   pkt->pkt_payload = NULL;
 
-  pkt->pkt_payload = malloc(sizeof(pktbuf_t));
-  pkt->pkt_payload->pb_refcount=1;
   if (src->pkt_header) {
     sbuf_t headers;
     sbuf_init(&headers);

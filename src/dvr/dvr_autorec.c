@@ -77,11 +77,14 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
      (dae->dae_title == NULL ||
      dae->dae_title[0] == '\0') &&
      dae->dae_brand == NULL &&
-     dae->dae_season == NULL)
+     dae->dae_season == NULL &&
+     dae->dae_serieslink == NULL)
     return 0; // Avoid super wildcard match
 
   // Note: we always test season first, though it will only be set
   //       if configured
+  if(dae->dae_serieslink)
+    if (!e->serieslink || dae->dae_serieslink != e->serieslink) return 0;
   if(dae->dae_season)
     if (!e->episode->season || dae->dae_season != e->episode->season) return 0;
   if(dae->dae_brand)
@@ -199,9 +202,11 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae)
     LIST_REMOVE(dae, dae_channel_tag_link);
 
   if(dae->dae_brand)
-    dae->dae_brand->putref((epg_object_t*)dae->dae_brand);
+    dae->dae_brand->putref(dae->dae_brand);
   if(dae->dae_season)
-    dae->dae_season->putref((epg_object_t*)dae->dae_season);
+    dae->dae_season->putref(dae->dae_season);
+  if(dae->dae_serieslink)
+    dae->dae_serieslink->putref(dae->dae_serieslink);
   
 
   TAILQ_REMOVE(&autorec_entries, dae, dae_link);
@@ -515,10 +520,8 @@ _dvr_autorec_add(const char *config_name,
   htsmsg_destroy(m);
 
   /* Notify web clients that we have messed with the tables */
-  
-  m = htsmsg_create_map();
-  htsmsg_add_u32(m, "reload", 1);
-  notify_by_msg("autorec", m);
+
+  notify_reload("autorec");
 
   dvr_autorec_changed(dae);
 }
@@ -559,14 +562,10 @@ void
 dvr_autorec_check_event(epg_broadcast_t *e)
 {
   dvr_autorec_entry_t *dae;
-  dvr_entry_t *existingde;
 
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
-    if(autorec_cmp(dae, e)) {
-      existingde = dvr_entry_find_by_event_fuzzy(e);
-      if (existingde == NULL)
-        dvr_entry_create_by_autorec(e, dae);
-    }
+    if(autorec_cmp(dae, e))
+      dvr_entry_create_by_autorec(e, dae);
   // Note: no longer updating event here as it will be done from EPG
   //       anyway
 }

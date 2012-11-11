@@ -46,7 +46,7 @@
 #include "serviceprobe.h"
 #include "atomic.h"
 #include "dvb/dvb.h"
-#include "htsp.h"
+#include "htsp_server.h"
 #include "lang_codes.h"
 
 #define SERVICE_HASH_WIDTH 101
@@ -110,18 +110,21 @@ stream_clean(elementary_stream_t *st)
   st->es_global_data_len = 0;
 }
 
-
 /**
  *
  */
 void
-service_stream_destroy(service_t *t, elementary_stream_t *st)
+service_stream_destroy(service_t *t, elementary_stream_t *es)
 {
   if(t->s_status == SERVICE_RUNNING)
-    stream_clean(st);
-  TAILQ_REMOVE(&t->s_components, st, es_link);
-  free(st->es_nicename);
-  free(st);
+    stream_clean(es);
+
+  avgstat_flush(&es->es_rate);
+  avgstat_flush(&es->es_cc_errors);
+
+  TAILQ_REMOVE(&t->s_components, es, es_link);
+  free(es->es_nicename);
+  free(es);
 }
 
 /**
@@ -152,6 +155,8 @@ service_stop(service_t *t)
    */
   TAILQ_FOREACH(st, &t->s_components, es_link)
     stream_clean(st);
+
+  sbuf_free(&t->s_tsbuf);
 
   t->s_status = SERVICE_IDLE;
 
@@ -485,16 +490,18 @@ service_destroy(service_t *t)
   free(t->s_identifier);
   free(t->s_svcname);
   free(t->s_provider);
-  free(t->s_dvb_default_charset);
+  free(t->s_dvb_charset);
 
-  while((st = TAILQ_FIRST(&t->s_components)) != NULL) {
-    TAILQ_REMOVE(&t->s_components, st, es_link);
-    free(st->es_nicename);
-    free(st);
-  }
+  while((st = TAILQ_FIRST(&t->s_components)) != NULL)
+    service_stream_destroy(t, st);
 
   free(t->s_pat_section);
   free(t->s_pmt_section);
+
+  sbuf_free(&t->s_tsbuf);
+
+  avgstat_flush(&t->s_cc_errors);
+  avgstat_flush(&t->s_rate);
 
   service_unref(t);
 
@@ -524,9 +531,11 @@ service_create(const char *identifier, int type, int source_type)
   t->s_refcount = 1;
   t->s_enabled = 1;
   t->s_pcr_last = PTS_UNSET;
-  t->s_dvb_default_charset = NULL;
+  t->s_dvb_charset = NULL;
   t->s_dvb_eit_enable = 1;
   TAILQ_INIT(&t->s_components);
+
+  sbuf_init(&t->s_tsbuf);
 
   streaming_pad_init(&t->s_streaming_pad);
 
@@ -702,15 +711,15 @@ service_map_channel(service_t *t, channel_t *ch, int save)
  *
  */
 void
-service_set_dvb_default_charset(service_t *t, const char *dvb_default_charset)
+service_set_dvb_charset(service_t *t, const char *dvb_charset)
 {
   lock_assert(&global_lock);
 
-  if(t->s_dvb_default_charset != NULL && !strcmp(t->s_dvb_default_charset, dvb_default_charset))
+  if(t->s_dvb_charset != NULL && !strcmp(t->s_dvb_charset, dvb_charset))
     return;
 
-  free(t->s_dvb_default_charset);
-  t->s_dvb_default_charset = strdup(dvb_default_charset);
+  free(t->s_dvb_charset);
+  t->s_dvb_charset = strdup(dvb_charset);
   t->s_config_save(t);
 }
 
@@ -757,6 +766,7 @@ static struct strtab stypetab[] = {
   { "SDTV",         ST_DN_SDTV },
   { "HDTV",         ST_DN_HDTV },
   { "SDTV",         ST_SK_SDTV },
+  { "SDTV",         ST_NE_SDTV },
   { "SDTV-AC",      ST_AC_SDTV },
   { "HDTV-AC",      ST_AC_HDTV },
 };
@@ -783,6 +793,7 @@ service_is_tv(service_t *t)
     t->s_servicetype == ST_DN_SDTV ||
     t->s_servicetype == ST_DN_HDTV ||
     t->s_servicetype == ST_SK_SDTV ||
+    t->s_servicetype == ST_NE_SDTV ||
     t->s_servicetype == ST_AC_SDTV ||
     t->s_servicetype == ST_AC_HDTV;
 }
@@ -896,12 +907,14 @@ service_build_stream_start(service_t *t)
     ssc->ssc_pid = st->es_pid;
     ssc->ssc_width = st->es_width;
     ssc->ssc_height = st->es_height;
+    ssc->ssc_frameduration = st->es_frame_duration;
   }
 
   t->s_setsourceinfo(t, &ss->ss_si);
 
   ss->ss_refcount = 1;
   ss->ss_pcr_pid = t->s_pcr_pid;
+  ss->ss_pmt_pid = t->s_pmt_pid;
   return ss;
 }
 
@@ -1163,7 +1176,7 @@ service_is_primary_epg(service_t *svc)
   LIST_FOREACH(t, &svc->s_ch->ch_services, s_ch_link) {
     if (!t->s_dvb_mux_instance) continue;
     if (!t->s_enabled || !t->s_dvb_eit_enable) continue;
-    if (!ret || dvb_extra_prio(t->s_dvb_mux_instance->tdmi_adapter) > dvb_extra_prio(ret->s_dvb_mux_instance->tdmi_adapter))
+    if (!ret || service_get_prio(t) < service_get_prio(ret))
       ret = t;
   }
   return !ret ? 0 : (ret->s_dvb_service_id == svc->s_dvb_service_id);

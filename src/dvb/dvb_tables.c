@@ -42,16 +42,6 @@
 #include "notify.h"
 #include "cwc.h"
 
-static int tdt_id_tally;
-
-/**
- * Helper for preparing a section filter parameter struct
- */
-struct dmx_sct_filter_params *
-dvb_fparams_alloc(void)
-{
-  return calloc(1, sizeof(struct dmx_sct_filter_params));
-}
 
 /**
  *
@@ -85,69 +75,17 @@ dvb_table_fastswitch(th_dvb_mux_instance_t *tdmi)
 /**
  *
  */
-static void
-tdt_open_fd(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
+void
+dvb_table_dispatch(uint8_t *sec, int r, th_dvb_table_t *tdt)
 {
-  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-  struct epoll_event e;
-  
-  assert(tdt->tdt_fd == -1);
-  TAILQ_REMOVE(&tdmi->tdmi_table_queue, tdt, tdt_pending_link);
+  if(tdt->tdt_destroyed)
+    return;
 
-  tdt->tdt_fd = tvh_open(tda->tda_demux_path, O_RDWR, 0);
-
-  if(tdt->tdt_fd != -1) {
-
-    tdt->tdt_id = ++tdt_id_tally;
-
-    e.events = EPOLLIN;
-    e.data.u64 = ((uint64_t)tdt->tdt_fd << 32) | tdt->tdt_id;
-
-    if(epoll_ctl(tda->tda_table_epollfd, EPOLL_CTL_ADD, tdt->tdt_fd, &e)) {
-      close(tdt->tdt_fd);
-      tdt->tdt_fd = -1;
-    } else {
-      if(ioctl(tdt->tdt_fd, DMX_SET_FILTER, tdt->tdt_fparams)) {
-	close(tdt->tdt_fd);
-	tdt->tdt_fd = -1;
-      }
-    }
-  }
-
-  if(tdt->tdt_fd == -1)
-    TAILQ_INSERT_TAIL(&tdmi->tdmi_table_queue, tdt, tdt_pending_link);
-}
-
-
-/**
- * Close FD for the given table and put table on the pending list
- */
-static void
-tdt_close_fd(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
-{
-  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-
-  assert(tdt->tdt_fd != -1);
-
-  epoll_ctl(tda->tda_table_epollfd, EPOLL_CTL_DEL, tdt->tdt_fd, NULL);
-  close(tdt->tdt_fd);
-
-  tdt->tdt_fd = -1;
-  TAILQ_INSERT_TAIL(&tdmi->tdmi_table_queue, tdt, tdt_pending_link);
-}
-
-
-/**
- *
- */
-static void
-dvb_proc_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt, uint8_t *sec,
-	       int r)
-{
   int chkcrc = tdt->tdt_flags & TDT_CRC;
   int tableid, len;
   uint8_t *ptr;
   int ret;
+  th_dvb_mux_instance_t *tdmi = tdt->tdt_tdmi;
 
   /* It seems some hardware (or is it the dvb API?) does not
      honour the DMX_CHECK_CRC flag, so we check it again */
@@ -161,6 +99,9 @@ dvb_proc_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt, uint8_t *sec,
   if(len < r)
     return;
 
+  if((tableid & tdt->tdt_mask) != tdt->tdt_table)
+    return;
+
   ptr = &sec[3];
   if(chkcrc) len -= 4;   /* Strip trailing CRC */
 
@@ -168,9 +109,9 @@ dvb_proc_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt, uint8_t *sec,
     ret = tdt->tdt_callback((th_dvb_mux_instance_t *)tdt,
                                 sec, len + 3, tableid, tdt->tdt_opaque);
   else if(tdt->tdt_flags & TDT_TDT)
-    ret = tdt->tdt_callback(tdmi, ptr, len, tableid, tdt);
+    ret = tdt->tdt_callback(tdt->tdt_tdmi, ptr, len, tableid, tdt);
   else
-    ret = tdt->tdt_callback(tdmi, ptr, len, tableid, tdt->tdt_opaque);
+    ret = tdt->tdt_callback(tdt->tdt_tdmi, ptr, len, tableid, tdt->tdt_opaque);
   
   if(ret == 0)
     tdt->tdt_count++;
@@ -179,72 +120,15 @@ dvb_proc_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt, uint8_t *sec,
     dvb_table_fastswitch(tdmi);
 }
 
-/**
- *
- */
-static void *
-dvb_table_input(void *aux)
-{
-  th_dvb_adapter_t *tda = aux;
-  int r, i, tid, fd, x;
-  struct epoll_event ev[1];
-  uint8_t sec[4096];
-  th_dvb_mux_instance_t *tdmi;
-  th_dvb_table_t *tdt;
-  int64_t cycle_barrier = 0; 
-
-  while(1) {
-    x = epoll_wait(tda->tda_table_epollfd, ev, sizeof(ev) / sizeof(ev[0]), -1);
-
-    for(i = 0; i < x; i++) {
-    
-      tid = ev[i].data.u64 & 0xffffffff;
-      fd  = ev[i].data.u64 >> 32; 
-
-      if(!(ev[i].events & EPOLLIN))
-	continue;
-
-      if((r = read(fd, sec, sizeof(sec))) < 3)
-	continue;
-
-      pthread_mutex_lock(&global_lock);
-      if((tdmi = tda->tda_mux_current) != NULL) {
-	LIST_FOREACH(tdt, &tdmi->tdmi_tables, tdt_link)
-	  if(tdt->tdt_id == tid)
-	    break;
-
-	if(tdt != NULL) {
-	  dvb_proc_table(tdmi, tdt, sec, r);
-
-	  /* Any tables pending (that wants a filter/fd), close this one */
-	  if(TAILQ_FIRST(&tdmi->tdmi_table_queue) != NULL &&
-	     cycle_barrier < getmonoclock()) {
-	    tdt_close_fd(tdmi, tdt);
-	    cycle_barrier = getmonoclock() + 100000;
-	    tdt = TAILQ_FIRST(&tdmi->tdmi_table_queue);
-	    assert(tdt != NULL);
-
-	    tdt_open_fd(tdmi, tdt);
-	  }
-	}
-      }
-      pthread_mutex_unlock(&global_lock);
-    }
-  }
-  return NULL;
-}
-
-
 
 /**
  *
  */
 void
-dvb_table_init(th_dvb_adapter_t *tda)
+dvb_table_release(th_dvb_table_t *tdt)
 {
-  pthread_t ptid;
-  tda->tda_table_epollfd = epoll_create(50);
-  pthread_create(&ptid, NULL, dvb_table_input, tda);
+  if(--tdt->tdt_refcount == 0)
+    free(tdt);
 }
 
 
@@ -255,31 +139,25 @@ static void
 dvb_tdt_destroy(th_dvb_adapter_t *tda, th_dvb_mux_instance_t *tdmi,
 		th_dvb_table_t *tdt)
 {
+  lock_assert(&global_lock);
+  assert(tdt->tdt_tdmi == tdmi);
   LIST_REMOVE(tdt, tdt_link);
-
-  if(tdt->tdt_fd == -1) {
-    TAILQ_REMOVE(&tdmi->tdmi_table_queue, tdt, tdt_pending_link);
-  } else {
-    epoll_ctl(tda->tda_table_epollfd, EPOLL_CTL_DEL, tdt->tdt_fd, NULL);
-    close(tdt->tdt_fd);
-  }
-
+  tdmi->tdmi_num_tables--;
+  tda->tda_close_table(tdmi, tdt);
   free(tdt->tdt_name);
-  free(tdt->tdt_fparams);
-  free(tdt);
+  tdt->tdt_destroyed = 1;
+  dvb_table_release(tdt);
 }
-
-
 
 
 /**
  * Add a new DVB table
  */
 void
-tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
+tdt_add(th_dvb_mux_instance_t *tdmi, int tableid, int mask,
 	int (*callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
 			 uint8_t tableid, void *opaque), void *opaque,
-	const char *name, int flags, int pid, th_dvb_table_t *tdt)
+	const char *name, int flags, int pid)
 {
   th_dvb_table_t *t;
 
@@ -290,34 +168,25 @@ tdt_add(th_dvb_mux_instance_t *tdmi, struct dmx_sct_filter_params *fparams,
   LIST_FOREACH(t, &tdmi->tdmi_tables, tdt_link) {
     if(pid == t->tdt_pid && 
        t->tdt_callback == callback && t->tdt_opaque == opaque) {
-      if (tdt)     free(tdt);
-      if (fparams) free(fparams);
       return;
     }
   }
 
-  if(fparams == NULL)
-    fparams = dvb_fparams_alloc();
-
-  if(flags & TDT_CRC) fparams->flags |= DMX_CHECK_CRC;
-  fparams->flags |= DMX_IMMEDIATE_START;
-  fparams->pid = pid;
-
-
-  if(tdt == NULL)
-    tdt = calloc(1, sizeof(th_dvb_table_t));
-
+  th_dvb_table_t *tdt = calloc(1, sizeof(th_dvb_table_t));
+  tdt->tdt_refcount = 1;
   tdt->tdt_name = strdup(name);
   tdt->tdt_callback = callback;
   tdt->tdt_opaque = opaque;
   tdt->tdt_pid = pid;
   tdt->tdt_flags = flags;
-  tdt->tdt_fparams = fparams;
+  tdt->tdt_table = tableid;
+  tdt->tdt_mask = mask;
+  tdt->tdt_tdmi = tdmi;
   LIST_INSERT_HEAD(&tdmi->tdmi_tables, tdt, tdt_link);
+  tdmi->tdmi_num_tables++;
   tdt->tdt_fd = -1;
-  TAILQ_INSERT_TAIL(&tdmi->tdmi_table_queue, tdt, tdt_pending_link);
 
-  tdt_open_fd(tdmi, tdt);
+  tdmi->tdmi_adapter->tda_open_table(tdmi, tdt);
 }
 
 /**
@@ -366,7 +235,7 @@ dvb_bat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
 {
   int i, j, bdlen, tslen, tdlen;
   uint8_t dtag, dlen;
-  uint16_t tsid;
+  uint16_t tsid, onid;
   char crid[257];
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
@@ -391,6 +260,7 @@ dvb_bat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
   i = 0;
   while (i+6 < tslen) {
     tsid  = buf[i] << 8 | buf[i+1];
+    onid  = buf[i+2] << 8 | buf[i+3];
     tdlen = ((buf[i+4] & 0xf) << 8) | buf[i+5];
     if (tdlen+i+6 > tslen) break;
     i += 6;
@@ -398,7 +268,8 @@ dvb_bat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
 
     /* Find TDMI */
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
-      if(tdmi->tdmi_transport_stream_id == tsid)
+      if(tdmi->tdmi_transport_stream_id == tsid &&
+         tdmi->tdmi_network_id == onid)
         break;
 
     /* Descriptors */
@@ -441,7 +312,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 {
   service_t *t;
   uint16_t service_id;
-  uint16_t transport_stream_id;
+  uint16_t tsid, onid;
   int free_ca_mode;
   int dllen;
   uint8_t dtag, dlen;
@@ -458,13 +329,17 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   if(len < 8) return -1;
 
-  transport_stream_id         = ptr[0] << 8 | ptr[1];
+  tsid         = ptr[0] << 8 | ptr[1];
+  onid         = ptr[5] << 8 | ptr[6];
   if (tableid == 0x42) {
-    if(tdmi->tdmi_transport_stream_id != transport_stream_id)
+    if(tdmi->tdmi_transport_stream_id != tsid)
       return -1;
+    if(!tdmi->tdmi_network_id)
+      dvb_mux_set_onid(tdmi, onid);
   } else {
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
-      if(tdmi->tdmi_transport_stream_id == transport_stream_id)
+      if(tdmi->tdmi_transport_stream_id == tsid &&
+         tdmi->tdmi_network_id != onid)
         break;
     if (!tdmi) return 0;
   }
@@ -498,7 +373,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     if(dllen > len)
       break;
 
-    if (!(t = dvb_transport_find(tdmi, service_id, 0, NULL))) {
+    if (!(t = dvb_service_find(tdmi, service_id, 0, NULL))) {
       len -= dllen;
       ptr += dllen;
       continue;
@@ -623,14 +498,14 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   LIST_FOREACH(other, &tda->tda_muxes, tdmi_adapter_link)
     if(other != tdmi && 
        other->tdmi_conf.dmc_satconf == tdmi->tdmi_conf.dmc_satconf &&
-       other->tdmi_transport_stream_id == tsid)
+       other->tdmi_transport_stream_id == tsid &&
+       other->tdmi_network_id == tdmi->tdmi_network_id)
       return -1;
 
   if(tdmi->tdmi_transport_stream_id == 0xffff)
     dvb_mux_set_tsid(tdmi, tsid);
-  else if(tdmi->tdmi_transport_stream_id != tsid) {
+  else if (tdmi->tdmi_transport_stream_id != tsid)
     return -1; // TSID mismatches, skip packet, may be from another mux
-  }
 
   ptr += 5;
   len -= 5;
@@ -641,7 +516,7 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
     if(service != 0 && pmt != 0) {
       int save = 0;
-      dvb_transport_find2(tdmi, service, pmt, NULL, &save);
+      dvb_service_find2(tdmi, service, pmt, NULL, &save);
       if (save || !tda->tda_disable_pmt_monitor)
         dvb_table_add_pmt(tdmi, pmt);
     }
@@ -694,8 +569,8 @@ dvb_cat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       if(pid == 0)
 	break;
 
-      tdt_add(tdmi, NULL, dvb_ca_callback, (void *)caid, "CA", 
-	      TDT_CA, pid, NULL);
+      tdt_add(tdmi, 0, 0, dvb_ca_callback, (void *)caid, "CA", 
+	      TDT_CA, pid);
       break;
 
     default:
@@ -740,7 +615,7 @@ static const fe_modulation_t qam_tab [6] = {
  */
 static int
 dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
-			 uint16_t tsid)
+			 uint16_t tsid, uint16_t onid)
 {
   struct dvb_mux_conf dmc;
   int freq, symrate;
@@ -777,7 +652,7 @@ dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   dmc.dmc_fe_params.u.qam.fec_inner = fec_tab[ptr[10] & 0x07];
 
-  dvb_mux_create(tdmi->tdmi_adapter, &dmc, tsid, NULL,
+  dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, NULL,
 		 "automatic mux discovery", 1, 1, NULL, NULL);
   return 0;
 }
@@ -787,7 +662,7 @@ dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
  */
 static int
 dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
-		       uint16_t tsid)
+		       uint16_t tsid, uint16_t onid)
 {
   int freq, symrate;
   //  uint16_t orbital_pos;
@@ -862,7 +737,7 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   }
 
 #endif
-  dvb_mux_create(tdmi->tdmi_adapter, &dmc, tsid, NULL,
+  dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, NULL,
 		 "automatic mux discovery", 1, 1, NULL, tdmi->tdmi_conf.dmc_satconf);
   
   return 0;
@@ -874,14 +749,14 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
  */
 static void
 dvb_table_local_channel(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
-			uint16_t tsid)
+			uint16_t tsid, uint16_t onid)
 {
   uint16_t sid, chan;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   service_t *t;
 
   LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
-    if(tdmi->tdmi_transport_stream_id == tsid)
+    if(tdmi->tdmi_transport_stream_id == tsid && tdmi->tdmi_network_id == onid)
       break;
 
   if(tdmi == NULL)
@@ -892,7 +767,7 @@ dvb_table_local_channel(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     chan = ((ptr[2] & 3) << 8) | ptr[3];
 
     if(chan != 0) {
-      t = dvb_transport_find(tdmi, sid, 0, NULL);
+      t = dvb_service_find(tdmi, sid, 0, NULL);
       if(t != NULL) {
 
 	if(t->s_channel_number != chan) {
@@ -919,7 +794,7 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   uint8_t tag, tlen;
   int ntl;
   char networkname[256];
-  uint16_t tsid;
+  uint16_t tsid, onid;
   uint16_t network_id = (ptr[0] << 8) | ptr[1];
 
   if(tdmi->tdmi_adapter->tda_nitoid) {
@@ -981,6 +856,7 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   while(len >= 6) {
     tsid = ( ptr[0]        << 8) | ptr[1];
+    onid = ( ptr[2]        << 8) | ptr[3];
     ntl =  ((ptr[4] & 0xf) << 8) | ptr[5];
 
     ptr += 6;
@@ -997,14 +873,14 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       switch(tag) {
       case DVB_DESC_SAT:
         if(tdmi->tdmi_adapter->tda_type == FE_QPSK)
-          dvb_table_sat_delivery(tdmi, ptr, tlen, tsid);
+          dvb_table_sat_delivery(tdmi, ptr, tlen, tsid, onid);
         break;
       case DVB_DESC_CABLE:
         if(tdmi->tdmi_adapter->tda_type == FE_QAM)
-          dvb_table_cable_delivery(tdmi, ptr, tlen, tsid);
+          dvb_table_cable_delivery(tdmi, ptr, tlen, tsid, onid);
         break;
       case DVB_DESC_LOCAL_CHAN:
-        dvb_table_local_channel(tdmi, ptr, tlen, tsid);
+        dvb_table_local_channel(tdmi, ptr, tlen, tsid, onid);
         break;
       }
 
@@ -1031,7 +907,7 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   uint8_t atsc_stype;
   uint8_t stype;
   uint16_t service_id;
-  uint16_t transport_stream_id;
+  uint16_t tsid, onid;
   int dlen, dl;
   uint8_t *dptr;
 
@@ -1055,18 +931,19 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     if(dlen + 32 > len)
       return -1; // Corrupt table
 
-    transport_stream_id = (ptr[22] << 8) | ptr[23];
+    tsid = (ptr[22] << 8) | ptr[23];
+    onid = (ptr[24] << 8) | ptr[25];
     
     /* Search all muxes on adapter */
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
-      if(tdmi->tdmi_transport_stream_id == transport_stream_id)
+      if(tdmi->tdmi_transport_stream_id == tsid && tdmi->tdmi_network_id == onid);
 	break;
     
     if(tdmi == NULL)
       continue;
 
     service_id = (ptr[24] << 8) | ptr[25];
-    if((t = dvb_transport_find(tdmi, service_id, 0, NULL)) == NULL)
+    if((t = dvb_service_find(tdmi, service_id, 0, NULL)) == NULL)
       continue;
 
     atsc_stype = ptr[27] & 0x3f;
@@ -1132,25 +1009,22 @@ dvb_pmt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 static void
 dvb_table_add_default_dvb(th_dvb_mux_instance_t *tdmi)
 {
-  struct dmx_sct_filter_params *fp;
-
   /* Network Information Table */
 
-  fp = dvb_fparams_alloc();
+  int table;
 
   if(tdmi->tdmi_adapter->tda_nitoid) {
-    fp->filter.filter[0] = 0x41;
+    table = 0x41;
   } else {
-    fp->filter.filter[0] = 0x40;
+    table = 0x40;
   }
-  fp->filter.mask[0] = 0xff;
-  tdt_add(tdmi, fp, dvb_nit_callback, NULL, "nit", 
-	  TDT_QUICKREQ | TDT_CRC, 0x10, NULL);
+  tdt_add(tdmi, table, 0xff, dvb_nit_callback, NULL, "nit", 
+	  TDT_QUICKREQ | TDT_CRC, 0x10);
 
   /* Service Descriptor Table and Bouqeut Allocation Table */
 
-  tdt_add(tdmi, NULL, dvb_pidx11_callback, NULL, "pidx11", 
-	  TDT_QUICKREQ | TDT_CRC, 0x11, NULL);
+  tdt_add(tdmi, 0, 0, dvb_pidx11_callback, NULL, "pidx11", 
+	  TDT_QUICKREQ | TDT_CRC, 0x11);
 }
 
 
@@ -1160,7 +1034,6 @@ dvb_table_add_default_dvb(th_dvb_mux_instance_t *tdmi)
 static void
 dvb_table_add_default_atsc(th_dvb_mux_instance_t *tdmi)
 {
-  struct dmx_sct_filter_params *fp;
   int tableid;
 
   if(tdmi->tdmi_conf.dmc_fe_params.u.vsb.modulation == VSB_8) {
@@ -1169,12 +1042,8 @@ dvb_table_add_default_atsc(th_dvb_mux_instance_t *tdmi)
     tableid = 0xc9; // Cable
   }
 
-  /* Virtual Channel Table */
-  fp = dvb_fparams_alloc();
-  fp->filter.filter[0] = tableid;
-  fp->filter.mask[0] = 0xff;
-  tdt_add(tdmi, fp, atsc_vct_callback, NULL, "vct",
-	  TDT_QUICKREQ | TDT_CRC, 0x1ffb, NULL);
+  tdt_add(tdmi, tableid, 0xff, atsc_vct_callback, NULL, "vct",
+	  TDT_QUICKREQ | TDT_CRC, 0x1ffb);
 }
 
 
@@ -1186,23 +1055,13 @@ dvb_table_add_default_atsc(th_dvb_mux_instance_t *tdmi)
 void
 dvb_table_add_default(th_dvb_mux_instance_t *tdmi)
 {
-  struct dmx_sct_filter_params *fp;
-
   /* Program Allocation Table */
-
-  fp = dvb_fparams_alloc();
-  fp->filter.filter[0] = 0x00;
-  fp->filter.mask[0] = 0xff;
-  tdt_add(tdmi, fp, dvb_pat_callback, NULL, "pat", 
-	  TDT_QUICKREQ | TDT_CRC, 0, NULL);
+  tdt_add(tdmi, 0x00, 0xff, dvb_pat_callback, NULL, "pat", 
+	  TDT_QUICKREQ | TDT_CRC, 0);
 
   /* Conditional Access Table */
-
-  fp = dvb_fparams_alloc();
-  fp->filter.filter[0] = 0x1;
-  fp->filter.mask[0] = 0xff;
-  tdt_add(tdmi, fp, dvb_cat_callback, NULL, "cat", 
-	  TDT_CRC, 1, NULL);
+  tdt_add(tdmi, 0x1, 0xff, dvb_cat_callback, NULL, "cat", 
+	  TDT_CRC, 1);
 
 
   switch(tdmi->tdmi_adapter->tda_type) {
@@ -1225,15 +1084,11 @@ dvb_table_add_default(th_dvb_mux_instance_t *tdmi)
 void
 dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid)
 {
-  struct dmx_sct_filter_params *fp;
   char pmtname[100];
 
   snprintf(pmtname, sizeof(pmtname), "PMT(%d)", pmt_pid);
-  fp = dvb_fparams_alloc();
-  fp->filter.filter[0] = 0x02;
-  fp->filter.mask[0] = 0xff;
-  tdt_add(tdmi, fp, dvb_pmt_callback, NULL, pmtname, 
-	  TDT_CRC | TDT_QUICKREQ | TDT_TDT, pmt_pid, NULL);
+  tdt_add(tdmi, 0x2, 0xff, dvb_pmt_callback, NULL, pmtname, 
+	  TDT_CRC | TDT_QUICKREQ | TDT_TDT, pmt_pid);
 }
 
 void
