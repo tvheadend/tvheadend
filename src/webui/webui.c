@@ -85,7 +85,7 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
 /**
  * Static download of a file from the filesystem
  */
-static int
+int
 page_static_file(http_connection_t *hc, const char *remain, void *opaque)
 {
   int ret = 0;
@@ -915,9 +915,6 @@ int page_statedump(http_connection_t *hc, const char *remain, void *opaque);
 void
 webui_init(void)
 {
-  const char *homedir = hts_settings_get_root();
-  char homepath[254];
-
   http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
 
   http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_WEB_INTERFACE);
@@ -933,9 +930,6 @@ webui_init(void)
   webui_static_content("/static",        "src/webui/static");
   webui_static_content("/docs",          "docs/html");
   webui_static_content("/docresources",  "docs/docresources");
-
-  snprintf(homepath, sizeof(homepath), "%s/icons", homedir);
-  http_path_add("/iconstorage", strdup(homepath), page_static_file, ACCESS_ANONYMOUS);
 
   simpleui_start();
   extjs_start();

@@ -52,7 +52,6 @@ page_logo(http_connection_t *hc, const char *remain, void *opaque)
   const char *outpath = "none";
   char homepath[254];
   char iconpath[100];
-  char iconstore[100];
   pthread_mutex_lock(&global_lock);
   fb_file *fp;
 
@@ -66,7 +65,6 @@ page_logo(http_connection_t *hc, const char *remain, void *opaque)
    download it and serve that, otherwise serve the url direct */
   snprintf(homepath, sizeof(homepath), "%s/icons", homedir);
   snprintf(iconpath, sizeof(iconpath), "%s/%s", homepath, remain);
-  snprintf(iconstore, sizeof(iconstore), "/iconstorage/%s", remain);
   fp = fb_open(iconpath, 0, 1);
   if (!fp) {
     tvhlog(LOG_DEBUG, "page_logo", "failed to open %s", iconpath);
@@ -100,7 +98,7 @@ page_logo(http_connection_t *hc, const char *remain, void *opaque)
   } else {
     tvhlog(LOG_DEBUG, "page_logo", "File %s opened", iconpath);
     fb_close(fp);
-    http_redirect(hc, iconstore);
+    page_static_file(hc, remain, homepath);
     pthread_mutex_unlock(&global_lock);
     return 0;
   };
