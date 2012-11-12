@@ -368,6 +368,8 @@ handle_ca0(capmt_t* capmt) {
       } else if (*request == CA_SET_DESCR) {
         ca = (ca_descr_t *)&buffer[sizeof(int)];
         tvhlog(LOG_DEBUG, "capmt", "CA_SET_DESCR cai %d req %d par %d idx %d %02x%02x%02x%02x%02x%02x%02x%02x", cai, *request, ca->parity, ca->index, ca->cw[0], ca->cw[1], ca->cw[2], ca->cw[3], ca->cw[4], ca->cw[5], ca->cw[6], ca->cw[7]);
+        if (ca->index == -1)   // skipping removal request
+          continue;
 
         if(ca->parity==0) {
           memcpy(&ca_info[cai][ca->index][EVEN_OFF],ca->cw,KEY_SIZE); // even key
