@@ -48,7 +48,7 @@ int
 page_logo(http_connection_t *hc, const char *remain, void *opaque)
 {
   const char *homedir = hts_settings_get_root();
-  channel_t *ch;
+  channel_t *ch = NULL;
   char *inpath, *inpath2;
   const char *outpath = "none";
   char homepath[254];
@@ -61,43 +61,38 @@ page_logo(http_connection_t *hc, const char *remain, void *opaque)
   if(remain == NULL) {
     pthread_mutex_unlock(&global_lock);
     return 404;
-  }
+  };
 
-/* Check if we already have downloaded the logo to user folders
-   if we have, serve that. If we haven't, check if we should,
-   download it and serve that, otherwise serve the url direct */
+  if(strstr(remain, "..")) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_BAD_REQUEST;
+  };
+
+/* we get passed the channel number now, so calc the logo from that */
+  ch = channel_find_by_identifier(atoi(remain));
+  if (ch == NULL) {
+    pthread_mutex_unlock(&global_lock);
+    return 404;
+  };
+
   snprintf(homepath, sizeof(homepath), "%s/icons", homedir);
-  snprintf(iconpath, sizeof(iconpath), "%s/%s", homepath, remain);
+  inpath = NULL;
+  inpath2 = NULL;
+  outpath = NULL;
+  /* split icon to last component */
+  inpath = strdup(ch->ch_icon);
+  inpath2 = strtok(inpath, "/");
+  while (inpath2 != NULL) {
+    inpath2 = strtok(NULL, "/");
+    if (inpath2 != NULL) {
+      outpath = strdup(inpath2);
+    };
+  };
+  snprintf(iconpath, sizeof(iconpath), "%s/%s", homepath, outpath);
   fp = fb_open(iconpath, 0, 1);
   if (!fp) {
-    tvhlog(LOG_DEBUG, "page_logo", "failed to open %s", iconpath);
-    /* Here we check if we should grab the file, if not just redirect
-      to the location in the channel file */
-    RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-      if (ch->ch_icon != NULL) {
-        inpath = NULL;
-        inpath2 = NULL;
-        outpath = NULL;
-        /* split icon to last component */
-        inpath = strdup(ch->ch_icon);
-        inpath2 = strtok(inpath, "/");
-        while (inpath2 != NULL) {
-          inpath2 = strtok(NULL, "/");
-          if (inpath2 != NULL)
-            outpath = strdup(inpath2);
-        };
-        if (outpath != NULL) {
-          /* found just the icon, compare with what user requested */
-          if(strcmp(outpath, remain) == 0) {
-            tvhlog(LOG_DEBUG, "page_logo", "Channel with logo located %s",ch->ch_name);
-            http_redirect(hc, ch->ch_icon);
-            pthread_mutex_unlock(&global_lock);
-            return 0;
-          };
-        };
-      };
-    };
-    http_redirect(hc, "/static/icons/exclamation.png");
+    tvhlog(LOG_DEBUG, "page_logo", "failed to open %s redirecting to http link for icon (%s)", iconpath, ch->ch_icon);
+    http_redirect(hc, ch->ch_icon);
   } else {
     tvhlog(LOG_DEBUG, "page_logo", "File %s opened", iconpath);
     size = fb_size(fp);
@@ -112,9 +107,6 @@ page_logo(http_connection_t *hc, const char *remain, void *opaque)
       };
     };
     fb_close(fp);
-/*    page_static_file(hc, remain, homepath);*/
-    pthread_mutex_unlock(&global_lock);
-    return 0;
   };
 
   pthread_mutex_unlock(&global_lock);

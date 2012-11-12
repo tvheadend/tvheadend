@@ -40,7 +40,6 @@
 #include "psi.h"
 #include "htsmsg_binary.h"
 #include "epg.h"
-#include "iconserve.h"
 #include "plumbing/tsfix.h"
 
 #include <sys/statvfs.h>
@@ -358,6 +357,7 @@ htsp_build_channel(channel_t *ch, const char *method)
   channel_tag_mapping_t *ctm;
   channel_tag_t *ct;
   service_t *t;
+  char logourl[30];
   epg_broadcast_t *now, *next = NULL;
 
   htsmsg_t *out = htsmsg_create_map();
@@ -368,9 +368,10 @@ htsp_build_channel(channel_t *ch, const char *method)
   htsmsg_add_u32(out, "channelNumber", ch->ch_number);
 
   htsmsg_add_str(out, "channelName", ch->ch_name);
-  if(ch->ch_icon != NULL) {
-    htsmsg_add_str(out, "channelIcon", logo_query(ch->ch_icon));
-  };
+
+  snprintf(logourl, sizeof(logourl), "/channellogo/%d", ch->ch_id);
+  htsmsg_add_str(out, "channelIcon", logourl);
+
   now  = ch->ch_epg_now;
   next = ch->ch_epg_next;
   htsmsg_add_u32(out, "eventId", now ? now->id : 0);

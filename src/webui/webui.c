@@ -925,7 +925,7 @@ webui_init(void)
 
   http_path_add("/stream",  NULL, http_stream,  ACCESS_STREAMING);
 
-  http_path_add("/logo", NULL, page_logo, ACCESS_ANONYMOUS);
+  http_path_add("/channellogo", NULL, page_logo, ACCESS_ANONYMOUS);
 
   webui_static_content("/static",        "src/webui/static");
   webui_static_content("/docs",          "docs/html");
