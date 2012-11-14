@@ -1553,17 +1553,17 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source,
 
   pthread_mutex_unlock(&global_lock);
 
-  free(htsp.htsp_logname);
-  free(htsp.htsp_peername);
-  free(htsp.htsp_username);
-  free(htsp.htsp_clientname);
-
   pthread_mutex_lock(&htsp.htsp_out_mutex);
   htsp.htsp_writer_run = 0;
   pthread_cond_signal(&htsp.htsp_out_cond);
   pthread_mutex_unlock(&htsp.htsp_out_mutex);
 
   pthread_join(htsp.htsp_writer_thread, NULL);
+
+  free(htsp.htsp_logname);
+  free(htsp.htsp_peername);
+  free(htsp.htsp_username);
+  free(htsp.htsp_clientname);
 
   htsp_msg_q_t *hmq;
 
