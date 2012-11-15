@@ -359,6 +359,69 @@ htsp_generate_challenge(htsp_connection_t *htsp)
 }
 
 /* **************************************************************************
+ * File helpers
+ * *************************************************************************/
+
+/**
+ *
+ */
+static htsmsg_t *
+htsp_file_open(htsp_connection_t *htsp, const char *path)
+{
+  struct stat st;
+  int fd = open(path, O_RDONLY);
+  tvhlog(LOG_DEBUG, "HTSP", "Opening file %s -- %s", path, fd < 0 ? strerror(errno) : "OK");
+  if(fd == -1)
+    return htsp_error("Unable to open file");
+
+  htsp_file_t *hf = calloc(1, sizeof(htsp_file_t));
+  hf->hf_fd = fd;
+  hf->hf_id = ++htsp->htsp_file_id;
+  hf->hf_path = strdup(path);
+ LIST_INSERT_HEAD(&htsp->htsp_files, hf, hf_link);
+
+  htsmsg_t *rep = htsmsg_create_map();
+  htsmsg_add_u32(rep, "id", hf->hf_id);
+
+  if(!fstat(hf->hf_fd, &st)) {
+    htsmsg_add_u64(rep, "size", st.st_size);
+    htsmsg_add_u64(rep, "mtime", st.st_mtime);
+  }
+
+  return rep;
+}
+
+/**
+ *
+ */
+static htsp_file_t *
+htsp_file_find(const htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsp_file_t *hf;
+
+  int id = htsmsg_get_u32_or_default(in, "id", 0);
+
+  LIST_FOREACH(hf, &htsp->htsp_files, hf_link) {
+    if(hf->hf_id == id)
+      return hf;
+  }
+  return NULL;
+}
+
+/**
+ *
+ */
+static void
+htsp_file_destroy(htsp_file_t *hf)
+{
+  tvhlog(LOG_DEBUG, "HTSP", "Closed opened file %s", hf->hf_path);
+  free(hf->hf_path);
+  close(hf->hf_fd);
+  LIST_REMOVE(hf, hf_link);
+  free(hf);
+}
+
+/* **************************************************************************
  * Output message generators
  * *************************************************************************/
 
@@ -1249,37 +1312,6 @@ htsp_method_change_weight(htsp_connection_t *htsp, htsmsg_t *in)
   return NULL;
 }
 
-
-/**
- *
- */
-static htsmsg_t *
-htsp_method_open_path(htsp_connection_t *htsp, const char *path)
-{
-  struct stat st;
-  int fd = open(path, O_RDONLY);
-  tvhlog(LOG_DEBUG, "HTSP", "Opening file %s -- %s", path, fd < 0 ? strerror(errno) : "OK");
-  if(fd == -1)
-    return htsp_error("Unable to open file");
-
-  htsp_file_t *hf = calloc(1, sizeof(htsp_file_t));
-  hf->hf_fd = fd;
-  hf->hf_id = ++htsp->htsp_file_id;
-  hf->hf_path = strdup(path);
- LIST_INSERT_HEAD(&htsp->htsp_files, hf, hf_link);
-
-  htsmsg_t *rep = htsmsg_create_map();
-  htsmsg_add_u32(rep, "id", hf->hf_id);
-
-  if(!fstat(hf->hf_fd, &st)) {
-    htsmsg_add_u64(rep, "size", st.st_size);
-    htsmsg_add_u64(rep, "mtime", st.st_mtime);
-  }
-
-  return rep;
-}
-
-
 /**
  * Open file
  */
@@ -1304,27 +1336,8 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("Unknown file");
   }
 
-  return htsp_method_open_path(htsp, filename);
+  return htsp_file_open(htsp, filename);
 }
-
-/**
- *
- */
-static htsp_file_t *
-file_find(const htsp_connection_t *htsp, htsmsg_t *in)
-{
-  htsp_file_t *hf;
-
-  int id = htsmsg_get_u32_or_default(in, "id", 0);
-
-  LIST_FOREACH(hf, &htsp->htsp_files, hf_link) {
-    if(hf->hf_id == id)
-      return hf;
-  }
-  return NULL;
-}
-
-
 
 /**
  *
@@ -1332,22 +1345,22 @@ file_find(const htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_file_read(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  htsp_file_t *hf = file_find(htsp, in);
+  htsp_file_t *hf = htsp_file_find(htsp, in);
   uint64_t off;
-  uint32_t size;
-
-  if(htsmsg_get_u64(in, "offset", &off))
-    return htsp_error("Missing field 'offset'");
-
-  if(htsmsg_get_u32(in, "size", &size))
-    return htsp_error("Missing field 'size'");
+  uint64_t size;
 
   if(hf == NULL)
     return htsp_error("Unknown file id");
 
-  if(lseek(hf->hf_fd, off, SEEK_SET) != off)
-    return htsp_error("Seek error");
+  if(htsmsg_get_u64(in, "size", &size))
+    return htsp_error("Missing field 'size'");
 
+  /* Seek (optional) */
+  if (!htsmsg_get_u64(in, "offset", &off))
+    if(lseek(hf->hf_fd, off, SEEK_SET) != off)
+      return htsp_error("Seek error");
+
+  /* Read */
   void *m = malloc(size);
   if(m == NULL)
     return htsp_error("Too big segment");
@@ -1364,27 +1377,13 @@ htsp_method_file_read(htsp_connection_t *htsp, htsmsg_t *in)
   return rep;
 }
 
-
-/**
- *
- */
-static void
-htsp_file_destroy(htsp_file_t *hf)
-{
-  tvhlog(LOG_DEBUG, "HTSP", "Closed opened file %s", hf->hf_path);
-  free(hf->hf_path);
-  close(hf->hf_fd);
-  LIST_REMOVE(hf, hf_link);
-  free(hf);
-}
-
 /**
  *
  */
 static htsmsg_t *
 htsp_method_file_close(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  htsp_file_t *hf = file_find(htsp, in);
+  htsp_file_t *hf = htsp_file_find(htsp, in);
 
   if(hf == NULL)
     return htsp_error("Unknown file id");
@@ -1393,14 +1392,13 @@ htsp_method_file_close(htsp_connection_t *htsp, htsmsg_t *in)
   return htsmsg_create_map();
 }
 
-
 /**
  *
  */
 static htsmsg_t *
 htsp_method_file_stat(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  htsp_file_t *hf = file_find(htsp, in);
+  htsp_file_t *hf = htsp_file_find(htsp, in);
   struct stat st;
 
   if(hf == NULL)
@@ -1414,6 +1412,44 @@ htsp_method_file_stat(htsp_connection_t *htsp, htsmsg_t *in)
   return rep;
 }
 
+/**
+ *
+ */
+static htsmsg_t *
+htsp_method_file_seek(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsp_file_t *hf = htsp_file_find(htsp, in);
+  htsmsg_t *rep;
+  const char *str;
+  int64_t off;
+  int whence;
+
+  if(hf == NULL)
+    return htsp_error("Unknown file id");
+
+  if (htsmsg_get_s64(in, "offset", &off))
+    return htsp_error("Missing field 'offset'");
+
+  if ((str = htsmsg_get_str(in, "whence"))) {
+    if (!strcmp(str, "SEEK_SET"))
+      whence = SEEK_SET;
+    else if (!strcmp(str, "SEEK_CUR"))
+      whence = SEEK_CUR;
+    else if (!strcmp(str, "SEEK_END"))
+      whence = SEEK_END;
+    else
+      return htsp_error("Field 'whence' contained invalid value");
+  } else {
+    whence = SEEK_CUR;
+  }
+
+  if(lseek(hf->hf_fd, off, whence) != off)
+    return htsp_error("Seek error");
+
+  rep = htsmsg_create_map();
+  htsmsg_add_s64(rep, "offset", off);
+  return rep;
+}
 
 /**
  * HTSP methods
@@ -1440,10 +1476,11 @@ struct {
   { "subscribe",                htsp_method_subscribe,      ACCESS_STREAMING},
   { "unsubscribe",              htsp_method_unsubscribe,    ACCESS_STREAMING},
   { "subscriptionChangeWeight", htsp_method_change_weight,  ACCESS_STREAMING},
-  { "openFile",                 htsp_method_file_open,      ACCESS_RECORDER},
-  { "readFile",                 htsp_method_file_read,      ACCESS_RECORDER},
-  { "closeFile",                htsp_method_file_close,     ACCESS_RECORDER},
-  { "statFile",                 htsp_method_file_stat,      ACCESS_RECORDER},
+  { "fileOpen",                 htsp_method_file_open,      ACCESS_RECORDER},
+  { "fileRead",                 htsp_method_file_read,      ACCESS_RECORDER},
+  { "fileClose",                htsp_method_file_close,     ACCESS_RECORDER},
+  { "fileStat",                 htsp_method_file_stat,      ACCESS_RECORDER},
+  { "fileSeek",                 htsp_method_file_seek,      ACCESS_RECORDER},
 };
 
 #define NUM_METHODS (sizeof(htsp_methods) / sizeof(htsp_methods[0]))
