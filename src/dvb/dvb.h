@@ -98,7 +98,8 @@ typedef struct th_dvb_mux_instance {
   struct th_dvb_adapter *tdmi_adapter;
 
   uint16_t tdmi_snr, tdmi_signal;
-  uint32_t tdmi_ber, tdmi_uncorrected_blocks;
+  uint32_t tdmi_ber, tdmi_unc;
+  float tdmi_unc_avg;
 
 #define TDMI_FEC_ERR_HISTOGRAM_SIZE 10
   uint32_t tdmi_fec_err_histogram[TDMI_FEC_ERR_HISTOGRAM_SIZE];

@@ -1237,7 +1237,11 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 			+ '<h2 style="font-size: 150%">Status</h2>'
 			+ '<h3>Currently tuned to:</h3>{currentMux}&nbsp'
 			+ '<h3>Services:</h3>{services}' + '<h3>Muxes:</h3>{muxes}'
-			+ '<h3>Muxes awaiting initial scan:</h3>{initialMuxes}');
+			+ '<h3>Muxes awaiting initial scan:</h3>{initialMuxes}'
+			+ '<h3>Signal Strength:</h3>{signal}%'
+			+ '<h3>Bit Error Rate:</h3>{ber}/s'
+			+ '<h3>Uncorrected Bit Errors:</h3>{uncavg}/s'
+        );
 
 	var infoPanel = new Ext.Panel({
 		title : 'Information and capabilities',

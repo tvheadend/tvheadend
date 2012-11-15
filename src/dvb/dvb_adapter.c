@@ -1042,8 +1042,16 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "initialMuxes", tda->tda_initial_num_mux);
 
   if(tda->tda_mux_current != NULL) {
+    th_dvb_mux_instance_t *tdmi = tda->tda_mux_current;
+
     dvb_mux_nicename(buf, sizeof(buf), tda->tda_mux_current);
     htsmsg_add_str(m, "currentMux", buf);
+
+    htsmsg_add_u32(m, "signal", MIN(tdmi->tdmi_signal * 100 / 65535, 100));
+    htsmsg_add_u32(m, "snr", tdmi->tdmi_snr);
+    htsmsg_add_u32(m, "ber", tdmi->tdmi_ber);
+    htsmsg_add_u32(m, "unc", tdmi->tdmi_unc);
+    htsmsg_add_u32(m, "uncavg", tdmi->tdmi_unc_avg);
   }
 
   if(tda->tda_rootpath == NULL)
