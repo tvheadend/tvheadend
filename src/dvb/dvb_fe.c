@@ -133,7 +133,8 @@ dvb_fe_monitor(void *aux)
     /* Read FEC counter (delta) */
 
     fec = dvb_fe_get_unc(tda);
-    
+    tdmi->tdmi_uncorrected_blocks = fec;
+
     tdmi->tdmi_fec_err_histogram[tdmi->tdmi_fec_err_ptr++] = fec;
     if(tdmi->tdmi_fec_err_ptr == TDMI_FEC_ERR_HISTOGRAM_SIZE)
       tdmi->tdmi_fec_err_ptr = 0;
