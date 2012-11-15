@@ -432,6 +432,14 @@ extern void scopedunlock(pthread_mutex_t **mtxp);
 #define tvh_strlcatf(buf, size, fmt...) \
  snprintf((buf) + strlen(buf), (size) - strlen(buf), fmt)
 
+static inline const char *tvh_strbegins(const char *s1, const char *s2)
+{
+  while(*s2)
+    if(*s1++ != *s2++)
+      return NULL;
+  return s1;
+}
+
 int tvh_open(const char *pathname, int flags, mode_t mode);
 
 int tvh_socket(int domain, int type, int protocol);
