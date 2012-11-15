@@ -90,12 +90,15 @@ dvb_fe_monitor(void *aux)
 {
   th_dvb_adapter_t *tda = aux;
   fe_status_t fe_status;
-  int status, v, update = 0, vv, i, fec, q;
+  int status, v, vv, i, fec, q;
   th_dvb_mux_instance_t *tdmi = tda->tda_mux_current;
   char buf[50];
   signal_status_t sigstat;
   streaming_message_t sm;
   struct service *t;
+
+  int store = 0;
+  int notify = 0;
 
   gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 1);
 
@@ -133,7 +136,11 @@ dvb_fe_monitor(void *aux)
     /* Read FEC counter (delta) */
 
     fec = dvb_fe_get_unc(tda);
-    tdmi->tdmi_uncorrected_blocks = fec;
+
+    if(tdmi->tdmi_unc != fec) {
+      tdmi->tdmi_unc = fec;
+      notify = 1;
+    }
 
     tdmi->tdmi_fec_err_histogram[tdmi->tdmi_fec_err_ptr++] = fec;
     if(tdmi->tdmi_fec_err_ptr == TDMI_FEC_ERR_HISTOGRAM_SIZE)
@@ -145,7 +152,13 @@ dvb_fe_monitor(void *aux)
 	v++;
       vv += tdmi->tdmi_fec_err_histogram[i];
     }
-    vv = vv / TDMI_FEC_ERR_HISTOGRAM_SIZE;
+
+    float avg = (float)vv / TDMI_FEC_ERR_HISTOGRAM_SIZE;
+
+    if(tdmi->tdmi_unc_avg != avg) {
+      tdmi->tdmi_unc_avg = avg;
+      notify = 1;
+    }
 
     if(v == 0) {
       status = TDMI_FE_OK;
@@ -155,27 +168,35 @@ dvb_fe_monitor(void *aux)
       status = TDMI_FE_CONSTANT_FEC;
     }
 
+    int v;
     /* bit error rate */
-    if(ioctl(tda->tda_fe_fd, FE_READ_BER, &tdmi->tdmi_ber) == -1)
-      tdmi->tdmi_ber = -2;
+    if(ioctl(tda->tda_fe_fd, FE_READ_BER, &v) != -1 && v != tdmi->tdmi_ber) {
+      tdmi->tdmi_ber = v;
+      notify = 1;
+    }
 
     /* signal strength */
-    if(ioctl(tda->tda_fe_fd, FE_READ_SIGNAL_STRENGTH, &tdmi->tdmi_signal) == -1)
-      tdmi->tdmi_signal = -2;
+    if(ioctl(tda->tda_fe_fd, FE_READ_SIGNAL_STRENGTH, &v) != -1 && v != tdmi->tdmi_signal) {
+      tdmi->tdmi_signal = v;
+      notify = 1;
+    }
 
     /* signal/noise ratio */
-    if(ioctl(tda->tda_fe_fd, FE_READ_SNR, &tdmi->tdmi_snr) == -1)
-      tdmi->tdmi_snr = -2;
+    if(ioctl(tda->tda_fe_fd, FE_READ_SNR, &v) == -1 && v != tdmi->tdmi_snr) {
+      tdmi->tdmi_snr = v;
+      notify = 1;
+    }
   }
 
   if(status != tdmi->tdmi_fe_status) {
     tdmi->tdmi_fe_status = status;
 
     dvb_mux_nicename(buf, sizeof(buf), tdmi);
-    tvhlog(LOG_DEBUG, 
+    tvhlog(LOG_DEBUG,
 	   "dvb", "\"%s\" on adapter \"%s\", status changed to %s",
 	   buf, tda->tda_displayname, dvb_mux_status(tdmi));
-    update = 1;
+    store = 1;
+    notify = 1;
   }
 
   if(status != TDMI_FE_UNKNOWN) {
@@ -187,26 +208,40 @@ dvb_fe_monitor(void *aux)
     }
     if(q != tdmi->tdmi_quality) {
       tdmi->tdmi_quality = q;
-      update = 1;
+      store = 1;
+      notify = 1;
     }
-  } 
+  }
 
-  if(update) {
+  if(notify) {
     htsmsg_t *m = htsmsg_create_map();
-
     htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
     htsmsg_add_u32(m, "quality", tdmi->tdmi_quality);
+    htsmsg_add_u32(m, "signal", tdmi->tdmi_signal);
+    htsmsg_add_u32(m, "snr", tdmi->tdmi_snr);
+    htsmsg_add_u32(m, "ber", tdmi->tdmi_ber);
+    htsmsg_add_u32(m, "unc", tdmi->tdmi_unc);
     notify_by_msg("dvbMux", m);
 
-    dvb_mux_save(tdmi);
+    m = htsmsg_create_map();
+    htsmsg_add_str(m, "identifier", tda->tda_identifier);
+    htsmsg_add_u32(m, "signal", MIN(tdmi->tdmi_signal * 100 / 65535, 100));
+    htsmsg_add_u32(m, "snr", tdmi->tdmi_snr);
+    htsmsg_add_u32(m, "ber", tdmi->tdmi_ber);
+    htsmsg_add_u32(m, "unc", tdmi->tdmi_unc);
+    htsmsg_add_u32(m, "uncavg", tdmi->tdmi_unc_avg);
+    notify_by_msg("tvAdapter", m);
   }
+
+  if(store)
+    dvb_mux_save(tdmi);
 
   /* Streaming message */
   sigstat.status_text = dvb_mux_status(tdmi);
   sigstat.snr         = tdmi->tdmi_snr;
   sigstat.signal      = tdmi->tdmi_signal;
   sigstat.ber         = tdmi->tdmi_ber;
-  sigstat.unc         = tdmi->tdmi_uncorrected_blocks;
+  sigstat.unc         = tdmi->tdmi_unc;
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
   LIST_FOREACH(t, &tda->tda_transports, s_active_link)
