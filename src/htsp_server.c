@@ -1345,11 +1345,14 @@ htsp_method_file_read(htsp_connection_t *htsp, htsmsg_t *in)
   if(hf == NULL)
     return htsp_error("Unknown file id");
 
+  if(lseek(hf->hf_fd, off, SEEK_SET) != off)
+    return htsp_error("Seek error");
+
   void *m = malloc(size);
   if(m == NULL)
     return htsp_error("Too big segment");
 
-  int r = pread(hf->hf_fd, m, size, off);
+  int r = read(hf->hf_fd, m, size);
   if(r < 0) {
     free(m);
     return htsp_error("Read error");
