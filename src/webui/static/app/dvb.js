@@ -7,12 +7,6 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 
 	var fm = Ext.form;
 
-	var enabledColumn = new Ext.grid.CheckColumn({
-		header : "Enabled",
-		dataIndex : 'enabled',
-		width : 40
-	});
-
 	var qualityColumn = new Ext.ux.grid.ProgressColumn({
 		header : "Quality",
 		dataIndex : 'quality',
@@ -23,7 +17,13 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 
 	var cmlist = Array();
 
-	cmlist.push(enabledColumn, {
+  cmlist.push({
+    xtype: 'checkcolumn',
+		header : "Enabled",
+		dataIndex : 'enabled',
+		width : 40
+
+  }, {
 		header : "Network",
 		dataIndex : 'network',
 		width : 200
@@ -352,7 +352,7 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 	var grid = new Ext.grid.EditorGridPanel({
 		stripeRows : true,
 		title : 'Multiplexes',
-		plugins : [ enabledColumn, qualityColumn ],
+		plugins : [ qualityColumn ],
 		store : store,
 		clicksToEdit : 2,
 		cm : cm,
@@ -379,17 +379,6 @@ tvheadend.dvb_services = function(adapterId) {
 
 	var fm = Ext.form;
 
-	var enabledColumn = new Ext.grid.CheckColumn({
-		header : "Enabled",
-		dataIndex : 'enabled',
-		width : 45
-	});
-
-	var eitColumn = new Ext.grid.CheckColumn({
-		header : "EPG",
-		dataIndex : 'dvb_eit_enable',
-		width : 45
-	});
 
 	var actions = new Ext.ux.grid.RowActions({
 		header : '',
@@ -413,7 +402,12 @@ tvheadend.dvb_services = function(adapterId) {
 	var cm = new Ext.grid.ColumnModel({
   defaultSortable: true,
   columns: [
-		enabledColumn,
+    {
+      xtype: 'checkcolumn',
+      header : "Enabled",
+      dataIndex : 'enabled',
+      width : 45
+    },
 		{
 			header : "Service name",
 			dataIndex : 'svcname',
@@ -485,7 +479,12 @@ tvheadend.dvb_services = function(adapterId) {
 				displayField : 'value',
 				valueField : 'key'
 			})
-		}, eitColumn, {
+		}, {
+                  xtype: 'checkcolumn',
+    header : "EPG",
+    dataIndex : 'dvb_eit_enable',
+    width : 45
+  } , {
 			header : "Type",
 			dataIndex : 'type',
 			width : 50
@@ -608,7 +607,7 @@ tvheadend.dvb_services = function(adapterId) {
 	var grid = new Ext.grid.EditorGridPanel({
 		stripeRows : true,
 		title : 'Services',
-		plugins : [ enabledColumn, eitColumn, actions ],
+		plugins : [ actions ],
 		store : store,
 		clicksToEdit : 2,
 		cm : cm,
