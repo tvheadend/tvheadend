@@ -294,12 +294,10 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
   dvb_service_load(tdmi, identifier);
   dvb_mux_notify(tdmi);
 
-  if(enabled) {
-    if(initialscan) {
-      tda->tda_initial_num_mux++;
-      tdmi->tdmi_table_initial = 1;
-      mux_link_initial(tda, tdmi);
-    }
+  if(enabled && initialscan) {
+    tda->tda_initial_num_mux++;
+    tdmi->tdmi_table_initial = 1;
+    mux_link_initial(tda, tdmi);
   }
 
   return tdmi;
@@ -783,12 +781,9 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
     dmc.dmc_satconf = NULL;
 
   initscan = htsmsg_get_u32_or_default(m, "initialscan", 1);
-  if (!initscan && !tda->tda_skip_initialscan)
-    initscan = 1;
-
   tdmi = dvb_mux_create(tda, &dmc,
 			onid, tsid, htsmsg_get_str(m, "network"), NULL, enabled,
-      initscan,
+                        initscan,
 			identifier, NULL);
   if(tdmi != NULL) {
 
