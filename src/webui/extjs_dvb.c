@@ -47,7 +47,7 @@
  *
  */
 static int
-extjs_dvbnetworks(http_connection_t *hc, const char *remain, void *opaque)
+extjs_dvblocations(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   const char *s = http_arg_get(&hc->hc_req_args, "node");
@@ -691,8 +691,8 @@ extjs_list_dvb_adapters(htsmsg_t *array)
 void
 extjs_start_dvb(void)
 {
-  http_path_add("/dvbnetworks", 
-		NULL, extjs_dvbnetworks, ACCESS_WEB_INTERFACE);
+  http_path_add("/dvb/locations", 
+		NULL, extjs_dvblocations, ACCESS_WEB_INTERFACE);
 
   http_path_add("/dvb/adapter", 
 		NULL, extjs_dvbadapter, ACCESS_ADMIN);

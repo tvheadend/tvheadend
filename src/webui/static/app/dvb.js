@@ -668,7 +668,7 @@ tvheadend.addMuxByLocation = function(adapterData, satConfStore) {
 			baseParams : {
 				adapter : adapterData.identifier
 			},
-			dataUrl : 'dvbnetworks'
+			dataUrl : 'dvb/locations'
 		}),
 		root : new Ext.tree.AsyncTreeNode({
 			id : 'root'
