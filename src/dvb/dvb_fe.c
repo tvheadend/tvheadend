@@ -279,8 +279,6 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune)
 
   epggrab_mux_stop(tdmi, 0);
 
-  time(&tdmi->tdmi_lost_adapter);
-
   if (!retune) {
     gtimer_disarm(&tda->tda_fe_monitor_timer);
     dvb_adapter_stop(tda);

@@ -128,9 +128,6 @@ typedef struct th_dvb_mux_instance {
 
   int tdmi_enabled;
 
-  time_t tdmi_got_adapter;
-  time_t tdmi_lost_adapter;
-
   dvb_mux_conf_t tdmi_conf;
 
   /* Linked if tdmi_conf.dmc_satconf != NULL */
