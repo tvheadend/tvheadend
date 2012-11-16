@@ -277,12 +277,8 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune)
 
   assert(tdmi->tdmi_scan_queue == NULL);
 
-  if(tdmi->tdmi_enabled) {
-    dvb_mux_add_to_scan_queue(tdmi);
-  }
-  
   epggrab_mux_stop(tdmi, 0);
-  
+
   time(&tdmi->tdmi_lost_adapter);
 
   if (!retune) {
@@ -411,9 +407,14 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 
   lock_assert(&global_lock);
 
-  if(tda->tda_mux_current == tdmi)
+  free(tda->tda_tune_reason);
+  tda->tda_tune_reason = strdup(reason);
+
+  if(tda->tda_mux_current == tdmi) {
+    dvb_adapter_notify(tda);
     return 0;
-  
+  }
+
   if(tdmi->tdmi_scan_queue != NULL) {
     TAILQ_REMOVE(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
     tdmi->tdmi_scan_queue = NULL;

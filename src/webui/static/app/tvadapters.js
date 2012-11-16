@@ -7,7 +7,7 @@ tvheadend.tvAdapterStore = new Ext.data.JsonStore({
 	fields : [ 'identifier', 'type', 'name', 'path', 'devicename',
 		   'hostconnection', 'currentMux', 'services', 'muxes', 'initialMuxes',
 		   'satConf', 'deliverySystem', 'freqMin', 'freqMax', 'freqStep',
-		   'symrateMin', 'symrateMax',  'signal', 'snr', 'ber', 'unc', 'uncavg'],
+		   'symrateMin', 'symrateMax',  'signal', 'snr', 'ber', 'unc', 'uncavg', 'reason'],
 	autoLoad : true,
 	url : 'tv/adapter'
 });

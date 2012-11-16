@@ -1086,7 +1086,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 
 	var confreader = new Ext.data.JsonReader({
 		root : 'dvbadapters'
-	}, [ 'name', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion',
+	}, [ 'name', 'automux', 'skip_initialscan',  'diseqcversion',
 		'diseqcrepeats', 'qmon', 'skip_checksubscr', 
 		'poweroff', 'sidtochan', 'nitoid', 'extrapriority',
 		,'disable_pmt_monitor', 'full_mux_rx', 'idleclose' ]);
@@ -1114,10 +1114,6 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 		new Ext.form.Checkbox({
 			fieldLabel : 'Skip initial scan',
 			name : 'skip_initialscan'
-		}),
-		new Ext.form.Checkbox({
-			fieldLabel : 'Idle scanning',
-			name : 'idlescan'
 		}),
 		new Ext.form.Checkbox({
 			fieldLabel : 'Close device handle when idle',
@@ -1235,7 +1231,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 			+ '<h3>Symbolrate range:</h3>'
 			+ '{symrateMin} Baud - {symrateMax} Baud</tpl>'
 			+ '<h2 style="font-size: 150%">Status</h2>'
-			+ '<h3>Currently tuned to:</h3>{currentMux}&nbsp'
+			+ '<h3>Currently tuned to:</h3>{currentMux}&nbsp({reason})'
 			+ '<h3>Services:</h3>{services}' + '<h3>Muxes:</h3>{muxes}'
 			+ '<h3>Muxes awaiting initial scan:</h3>{initialMuxes}'
 			+ '<h3>Signal Strength:</h3>{signal}%'

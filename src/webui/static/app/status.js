@@ -162,6 +162,10 @@ tvheadend.status_adapters = function() {
 		dataIndex : 'currentMux'
         },{
 		width : 50,
+		header : "Used for",
+		dataIndex : 'reason'
+        },{
+		width : 50,
 		header : "Bit error rate",
 		dataIndex : 'ber'
         },{

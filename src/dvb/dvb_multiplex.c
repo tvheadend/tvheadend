@@ -299,8 +299,6 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
       tda->tda_initial_num_mux++;
       tdmi->tdmi_table_initial = 1;
       mux_link_initial(tda, tdmi);
-    } else {
-      dvb_mux_add_to_scan_queue(tdmi);
     }
   }
 
@@ -1253,16 +1251,6 @@ dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src,
   }
   dvb_mux_save(tdmi_dst);
   return 0;
-}
-
-void dvb_mux_add_to_scan_queue ( th_dvb_mux_instance_t *tdmi )
-{
-  int ti;
-  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-  ti = tdmi->tdmi_quality == 100 ? TDA_SCANQ_OK
-                                 : TDA_SCANQ_BAD;
-  tdmi->tdmi_scan_queue = &tda->tda_scan_queues[ti];
-  TAILQ_INSERT_TAIL(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
 }
 
 th_dvb_mux_instance_t *dvb_mux_find

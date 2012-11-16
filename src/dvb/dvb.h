@@ -177,23 +177,17 @@ typedef struct dvb_table_feed {
  */
 #define TDA_MUX_HASH_WIDTH 101
 
-#define TDA_SCANQ_BAD  0 ///< Bad muxes (monitor quality)
-#define TDA_SCANQ_OK   1 ///< OK muxes
-#define TDA_SCANQ_NUM  2
-
 typedef struct th_dvb_adapter {
 
   TAILQ_ENTRY(th_dvb_adapter) tda_global_link;
 
   struct th_dvb_mux_instance_list tda_muxes;
 
-  struct th_dvb_mux_instance_queue tda_scan_queues[TDA_SCANQ_NUM];
-  int tda_scan_selector;
-
   struct th_dvb_mux_instance_queue tda_initial_scan_queue;
   int tda_initial_num_mux;
 
   th_dvb_mux_instance_t *tda_mux_current;
+  char *tda_tune_reason; // Reason for last tune
 
   th_dvb_mux_instance_t *tda_mux_epg;
 
@@ -202,7 +196,6 @@ typedef struct th_dvb_adapter {
   const char *tda_rootpath;
   char *tda_identifier;
   uint32_t tda_autodiscovery;
-  uint32_t tda_idlescan;
   uint32_t tda_idleclose;
   uint32_t tda_skip_initialscan;
   uint32_t tda_skip_checksubscr;
@@ -344,8 +337,6 @@ void dvb_adapter_set_auto_discovery(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_skip_initialscan(th_dvb_adapter_t *tda, int on);
 
-void dvb_adapter_set_idlescan(th_dvb_adapter_t *tda, int on);
-
 void dvb_adapter_set_skip_checksubscr(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_qmon(th_dvb_adapter_t *tda, int on);
@@ -449,8 +440,6 @@ const char *dvb_mux_add_by_params(th_dvb_adapter_t *tda,
 
 int dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src,
 		 dvb_satconf_t *satconf);
-
-void dvb_mux_add_to_scan_queue (th_dvb_mux_instance_t *tdmi);
 
 th_dvb_mux_instance_t *dvb_mux_find
   (th_dvb_adapter_t *tda, const char *netname, uint16_t onid, uint16_t tsid,
