@@ -79,9 +79,14 @@ subscription_link_service(th_subscription_t *s, service_t *t)
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
-  if(TAILQ_FIRST(&t->s_components) != NULL)
+  if(TAILQ_FIRST(&t->s_components) != NULL) {
+
+    if(s->ths_start_message != NULL)
+      streaming_msg_free(s->ths_start_message);
+
     s->ths_start_message =
       streaming_msg_create_data(SMT_START, service_build_stream_start(t));
+  }
 
   // Link to service output
   streaming_target_connect(&t->s_streaming_pad, &s->ths_input);

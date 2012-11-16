@@ -1089,7 +1089,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	}, [ 'name', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion',
 		'diseqcrepeats', 'qmon', 'skip_checksubscr', 
 		'poweroff', 'sidtochan', 'nitoid', 'extrapriority',
-		,'disable_pmt_monitor', 'disable_full_mux_rx', 'idleclose' ]);
+		,'disable_pmt_monitor', 'full_mux_rx', 'idleclose' ]);
 
 	function saveConfForm() {
 		confform.getForm().submit({
@@ -1135,9 +1135,18 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 			fieldLabel : 'Monitor signal quality',
 			name : 'qmon'
 		}),
-		new Ext.form.Checkbox({
-			fieldLabel : 'Disable full MUX reception',
-			name : 'disable_full_mux_rx'
+		new Ext.form.ComboBox({
+			fieldLabel : 'Full mux reception',
+			name : 'full_mux_rx',
+                        hiddenName: 'full_mux_rx',
+                        displayField: 'num',
+                        valueField: 'str',
+                        editable : false,
+                        allowBlank : false,
+                        mode : 'remote',
+                        triggerAction : 'all',
+                        fields: [ 'num', 'str' ],
+                        store : [ [0, 'Auto'], [1, 'Off'], [2, 'On'] ]
 		}),
 		new Ext.form.Checkbox({
 			fieldLabel : 'Disable PMT monitoring',
@@ -1228,7 +1237,11 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 			+ '<h2 style="font-size: 150%">Status</h2>'
 			+ '<h3>Currently tuned to:</h3>{currentMux}&nbsp'
 			+ '<h3>Services:</h3>{services}' + '<h3>Muxes:</h3>{muxes}'
-			+ '<h3>Muxes awaiting initial scan:</h3>{initialMuxes}');
+			+ '<h3>Muxes awaiting initial scan:</h3>{initialMuxes}'
+			+ '<h3>Signal Strength:</h3>{signal}%'
+			+ '<h3>Bit Error Rate:</h3>{ber}/s'
+			+ '<h3>Uncorrected Bit Errors:</h3>{uncavg}/s'
+        );
 
 	var infoPanel = new Ext.Panel({
 		title : 'Information and capabilities',

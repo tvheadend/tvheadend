@@ -206,6 +206,11 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
 
   snprintf(path, sizeof(path), "%s", cfg->dvr_storage);
 
+  /* Remove trailing slash */
+
+  if (path[strlen(path)-1] == '/')
+    path[strlen(path)-1] = '\0';
+
   /* Append per-day directory */
 
   if(cfg->dvr_flags & DVR_DIR_PER_DAY) {

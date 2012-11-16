@@ -355,7 +355,7 @@ h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
 			 int *isfield)
 {
   h264_private_t *p;
-  int slice_type, pps_id, sps_id;
+  unsigned int slice_type, pps_id, sps_id;
 
   if((p = st->es_priv) == NULL)
     return -1;

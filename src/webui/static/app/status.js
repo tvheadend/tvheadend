@@ -1,7 +1,7 @@
 /**
  *
  */
-tvheadend.status = function() {
+tvheadend.status_subs = function() {
 
 	tvheadend.subsStore = new Ext.data.JsonStore({
 		root : 'entries',
@@ -117,7 +117,8 @@ tvheadend.status = function() {
 		renderer: renderBw
 	} ]);
 
-	var panel = new Ext.grid.GridPanel({
+	var subs = new Ext.grid.GridPanel({
+                border: false,
 		loadMask : true,
 		stripeRows : true,
 		disableSelection : true,
@@ -125,10 +126,80 @@ tvheadend.status = function() {
 		iconCls : 'eye',
 		store : tvheadend.subsStore,
 		cm : subsCm,
+                flex: 1,
 		viewConfig : {
 			forceFit : true
 		}
 	});
+        return subs;
+}
+
+
+/**
+ *
+ */
+tvheadend.status_adapters = function() {
+
+	var signal = new Ext.ux.grid.ProgressColumn({
+		header : "Signal Strength",
+		dataIndex : 'signal',
+		width : 85,
+		textPst : '%',
+		colored : true
+	});
+
+	var cm = new Ext.grid.ColumnModel([{
+		width : 50,
+		header : "Name",
+		dataIndex : 'name'
+        },{
+		width : 50,
+		header : "Hardware device",
+		dataIndex : 'path'
+        },{
+		width : 100,
+		header : "Currently tuned to",
+		dataIndex : 'currentMux'
+        },{
+		width : 50,
+		header : "Bit error rate",
+		dataIndex : 'ber'
+        },{
+		width : 50,
+		header : "Uncorrected bit error rate",
+		dataIndex : 'uncavg'
+        }, signal]);
+
+	var panel = new Ext.grid.GridPanel({
+                border: false,
+		loadMask : true,
+		stripeRows : true,
+		disableSelection : true,
+		title : 'Adapters',
+		iconCls : 'hardware',
+		store : tvheadend.tvAdapterStore,
+		cm : cm,
+                flex: 1,
+		viewConfig : {
+			forceFit : true
+		}
+	});
+        return panel;
+}
+
+
+
+
+tvheadend.status = function() {
+
+        var panel = new Ext.Panel({
+                border: false,
+		layout : 'vbox',
+		title : 'Status',
+		iconCls : 'eye',
+		items : [ new tvheadend.status_subs, new tvheadend.status_adapters ]
+        });
+
 	return panel;
 }
 

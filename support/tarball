@@ -1,0 +1,53 @@
+#!/bin/bash
+#
+# Build tarball of the current directory
+#
+
+# Exit
+function die
+{
+  echo "ERROR: $*"
+  exit 1
+}
+
+# Switch dir
+SRCDIR=$(dirname $0)/..
+cd $SRCDIR
+
+# Arguments
+REL=$1
+if [ ! -z "$REL" ]; then
+  git checkout $REL || die "could not checkout $REL"
+fi
+
+# Clean
+git checkout . || die "could not clean git tree"
+
+# Version
+VER=$(./support/version)
+echo $VER | grep -q dirty && die "git tree is not clean"
+VER1=$(echo $VER | sed 's/~.*//')
+echo $VER1
+
+# Temp directory
+TMPDIR=/tmp/tvhtar-$$
+mkdir -p $TMPDIR
+trap "rm -rf $TMPDIR" EXIT
+
+# Copy
+DSTDIR=$TMPDIR/tvheadend-$VER1
+mkdir $DSTDIR
+git archive HEAD | tar -x -C $DSTDIR
+
+# Remove stuff we don't need
+rm -rf $DSTDIR/.gitignore
+
+# Fix changelog (store version)
+$DSTDIR/support/changelog $DSTDIR/debian/changelog "" $VER
+
+# Build tarball
+TARFILE=$(cd $SRCDIR/..; pwd)/tvheadend-$VER1.tar.gz
+tar -C $TMPDIR -zcf $TARFILE tvheadend-$VER1
+
+# Done
+echo "Created $TARFILE"
