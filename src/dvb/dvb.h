@@ -105,9 +105,6 @@ typedef struct th_dvb_mux_instance {
   uint32_t tdmi_fec_err_histogram[TDMI_FEC_ERR_HISTOGRAM_SIZE];
   int      tdmi_fec_err_ptr;
 
-  time_t tdmi_time;
-
-
   LIST_HEAD(, th_dvb_table) tdmi_tables;
   int tdmi_num_tables;
 
