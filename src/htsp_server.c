@@ -1449,10 +1449,10 @@ htsp_method_file_seek(htsp_connection_t *htsp, htsmsg_t *in)
     else
       return htsp_error("Field 'whence' contained invalid value");
   } else {
-    whence = SEEK_CUR;
+    whence = SEEK_SET;
   }
 
-  if(lseek(hf->hf_fd, off, whence) != off)
+  if ((off = lseek(hf->hf_fd, off, whence)) < 0)
     return htsp_error("Seek error");
 
   rep = htsmsg_create_map();
