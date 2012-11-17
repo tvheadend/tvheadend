@@ -887,6 +887,7 @@ mk_mux_t *mk_mux_create(int webm)
   mk_mux_t *mkm = calloc(1, sizeof(struct mk_mux));
 
   mkm->webm = webm;
+  mkm->fd = -1;
 
   return mkm;
 }
