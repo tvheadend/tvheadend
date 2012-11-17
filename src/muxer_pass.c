@@ -318,6 +318,8 @@ pass_muxer_create(service_t *s, muxer_container_type_t mc)
     pm->pm_pmt = malloc(188);
   }
 
+  pm->pm_fd          = -1;
+  
   return (muxer_t *)pm;
 }
 
