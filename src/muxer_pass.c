@@ -334,7 +334,8 @@ pass_muxer_create(muxer_container_type_t mc)
   pm->m_write_pkt    = pass_muxer_write_pkt;
   pm->m_close        = pass_muxer_close;
   pm->m_destroy      = pass_muxer_destroy;
-
+  pm->pm_fd          = -1;
+  
   return (muxer_t *)pm;
 }
 
