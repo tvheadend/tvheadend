@@ -542,6 +542,7 @@ lav_muxer_create(muxer_container_type_t mc)
   lm->m_container    = mc;
   lm->lm_oc          = avformat_alloc_context();
   lm->lm_oc->oformat = fmt;
+  lm->lm_fd          = -1;
 
   return (muxer_t*)lm;
 }
