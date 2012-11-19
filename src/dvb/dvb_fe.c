@@ -182,9 +182,14 @@ dvb_fe_monitor(void *aux)
     }
 
     /* signal/noise ratio */
-    if(ioctl(tda->tda_fe_fd, FE_READ_SNR, &v) == -1 && v != tdmi->tdmi_snr) {
-      tdmi->tdmi_snr = v;
-      notify = 1;
+    if(tda->tda_snr_valid) {
+      if(ioctl(tda->tda_fe_fd, FE_READ_SNR, &v) != -1) {
+        float snr = v / 10.0;
+        if(tdmi->tdmi_snr != snr) {
+          tdmi->tdmi_snr = snr;
+          notify = 1;
+        }
+      }
     }
   }
 
@@ -218,7 +223,9 @@ dvb_fe_monitor(void *aux)
     htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
     htsmsg_add_u32(m, "quality", tdmi->tdmi_quality);
     htsmsg_add_u32(m, "signal", tdmi->tdmi_signal);
-    htsmsg_add_u32(m, "snr", tdmi->tdmi_snr);
+
+    if(tda->tda_snr_valid)
+      htsmsg_add_dbl(m, "snr", tdmi->tdmi_snr);
     htsmsg_add_u32(m, "ber", tdmi->tdmi_ber);
     htsmsg_add_u32(m, "unc", tdmi->tdmi_unc);
     notify_by_msg("dvbMux", m);
@@ -226,10 +233,11 @@ dvb_fe_monitor(void *aux)
     m = htsmsg_create_map();
     htsmsg_add_str(m, "identifier", tda->tda_identifier);
     htsmsg_add_u32(m, "signal", MIN(tdmi->tdmi_signal * 100 / 65535, 100));
-    htsmsg_add_u32(m, "snr", tdmi->tdmi_snr);
+    if(tda->tda_snr_valid)
+      htsmsg_add_dbl(m, "snr", tdmi->tdmi_snr);
     htsmsg_add_u32(m, "ber", tdmi->tdmi_ber);
     htsmsg_add_u32(m, "unc", tdmi->tdmi_unc);
-    htsmsg_add_u32(m, "uncavg", tdmi->tdmi_unc_avg);
+    htsmsg_add_dbl(m, "uncavg", tdmi->tdmi_unc_avg);
     notify_by_msg("tvAdapter", m);
   }
 

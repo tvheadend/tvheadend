@@ -510,9 +510,14 @@ tda_add(int adapter_num)
 
   dvb_adapter_checkspeed(tda);
 
+
+  if(!strcmp(tda->tda_fe_info->name, "Sony CXD2820R (DVB-T/T2)"))
+    tda->tda_snr_valid = 1;
+
   tvhlog(LOG_INFO, "dvb",
-	 "Found adapter %s (%s) via %s", path, tda->tda_fe_info->name,
-	 hostconnection2str(tda->tda_hostconnection));
+	 "Found adapter %s (%s) via %s%s", path, tda->tda_fe_info->name,
+	 hostconnection2str(tda->tda_hostconnection),
+         tda->tda_snr_valid ? ", Reports valid SNR values" : "");
 
   TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
 

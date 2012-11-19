@@ -75,6 +75,7 @@ TAILQ_HEAD(htsp_msg_queue, htsp_msg);
 TAILQ_HEAD(htsp_msg_q_queue, htsp_msg_q);
 
 static struct htsp_connection_list htsp_async_connections;
+static struct htsp_connection_list htsp_connections;
 
 static void htsp_streaming_input(void *opaque, streaming_message_t *sm);
 
@@ -111,6 +112,8 @@ typedef struct htsp_msg_q {
  *
  */
 typedef struct htsp_connection {
+  LIST_ENTRY(htsp_connection) htsp_link;
+
   int htsp_fd;
   struct sockaddr_in *htsp_peer;
 
@@ -392,14 +395,14 @@ htsp_file_open(htsp_connection_t *htsp, const char *path)
   hf->hf_fd = fd;
   hf->hf_id = ++htsp->htsp_file_id;
   hf->hf_path = strdup(path);
- LIST_INSERT_HEAD(&htsp->htsp_files, hf, hf_link);
+  LIST_INSERT_HEAD(&htsp->htsp_files, hf, hf_link);
 
   htsmsg_t *rep = htsmsg_create_map();
   htsmsg_add_u32(rep, "id", hf->hf_id);
 
   if(!fstat(hf->hf_fd, &st)) {
-    htsmsg_add_u64(rep, "size", st.st_size);
-    htsmsg_add_u64(rep, "mtime", st.st_mtime);
+    htsmsg_add_s64(rep, "size", st.st_size);
+    htsmsg_add_s64(rep, "mtime", st.st_mtime);
   }
 
   return rep;
@@ -848,7 +851,7 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
   
   if(htsmsg_get_u32(in, "eventId", &eventId))
     return htsp_error("Missing argument 'eventId'");
-  lang = htsmsg_get_str_or_default(in, "language", htsp->htsp_language);
+  lang = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
 
   if((e = epg_broadcast_find_by_id(eventId, NULL)) == NULL)
     return htsp_error("Event does not exist");
@@ -882,7 +885,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
   maxTime
     = htsmsg_get_s64_or_default(in, "maxTime", 0);
   lang
-    = htsmsg_get_str_or_default(in, "language", htsp->htsp_language);
+    = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
 
   /* Use event as starting point */
   if (e || ch) {
@@ -951,7 +954,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
     genre.code = u32;
     eg         = &genre;
   }
-  lang = htsmsg_get_str_or_default(in, "language", htsp->htsp_language);
+  lang = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
   full = htsmsg_get_u32_or_default(in, "full", 0);
 
   //do the query
@@ -1357,6 +1360,7 @@ htsp_method_change_weight(htsp_connection_t *htsp, htsmsg_t *in)
   return NULL;
 }
 
+
 /**
  * Open file
  */
@@ -1391,17 +1395,17 @@ static htsmsg_t *
 htsp_method_file_read(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsp_file_t *hf = htsp_file_find(htsp, in);
-  uint64_t off;
-  uint64_t size;
+  int64_t off;
+  int64_t size;
 
   if(hf == NULL)
     return htsp_error("Unknown file id");
 
-  if(htsmsg_get_u64(in, "size", &size))
+  if(htsmsg_get_s64(in, "size", &size))
     return htsp_error("Missing field 'size'");
 
   /* Seek (optional) */
-  if (!htsmsg_get_u64(in, "offset", &off))
+  if (!htsmsg_get_s64(in, "offset", &off))
     if(lseek(hf->hf_fd, off, SEEK_SET) != off)
       return htsp_error("Seek error");
 
@@ -1451,8 +1455,8 @@ htsp_method_file_stat(htsp_connection_t *htsp, htsmsg_t *in)
 
   htsmsg_t *rep = htsmsg_create_map();
   if(!fstat(hf->hf_fd, &st)) {
-    htsmsg_add_u64(rep, "size", st.st_size);
-    htsmsg_add_u64(rep, "mtime", st.st_mtime);
+    htsmsg_add_s64(rep, "size", st.st_size);
+    htsmsg_add_s64(rep, "mtime", st.st_mtime);
   }
   return rep;
 }
@@ -1741,12 +1745,17 @@ htsp_write_scheduler(void *aux)
 
     while(dlen > 0) {
       r = write(htsp->htsp_fd, dptr, dlen);
-      if(r < 1) {
+      if(r < 0) {
+        if(errno == EAGAIN || errno == EWOULDBLOCK)
+          continue;
         tvhlog(LOG_INFO, "htsp", "%s: Write error -- %s",
                htsp->htsp_logname, strerror(errno));
         break;
       }
-
+      if(r == 0) {
+        tvhlog(LOG_ERR, "htsp", "%s: write() returned 0",
+               htsp->htsp_logname);
+      }
       dptr += r;
       dlen -= r;
     }
@@ -1791,6 +1800,10 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source,
   htsp.htsp_peer = source;
   htsp.htsp_writer_run = 1;
 
+  pthread_mutex_lock(&global_lock);
+  LIST_INSERT_HEAD(&htsp_connections, &htsp, htsp_link);
+  pthread_mutex_unlock(&global_lock);
+
   pthread_create(&htsp.htsp_writer_thread, NULL, htsp_write_scheduler, &htsp);
 
   /**
@@ -1816,6 +1829,8 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source,
 
   if(htsp.htsp_async_mode)
     LIST_REMOVE(&htsp, htsp_async_link);
+
+  LIST_REMOVE(&htsp, htsp_link);
 
   pthread_mutex_unlock(&global_lock);
 

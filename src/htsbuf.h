@@ -1,6 +1,6 @@
 /*
  *  Buffer management functions
- *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2008 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,9 +20,10 @@
 #define HTSBUF_H__
 
 #include <stdarg.h>
-#include <stddef.h>
-#include "queue.h"
 #include <inttypes.h>
+
+#include "queue.h"
+
 
 TAILQ_HEAD(htsbuf_data_queue, htsbuf_data);
 
@@ -48,14 +49,11 @@ void htsbuf_queue_flush(htsbuf_queue_t *hq);
 
 void htsbuf_vqprintf(htsbuf_queue_t *hq, const char *fmt, va_list ap);
 
-void htsbuf_qprintf(htsbuf_queue_t *hq, const char *fmt, ...)
-  __attribute__((format(printf,2,3)));
+void htsbuf_qprintf(htsbuf_queue_t *hq, const char *fmt, ...);
 
 void htsbuf_append(htsbuf_queue_t *hq, const void *buf, size_t len);
 
 void htsbuf_append_prealloc(htsbuf_queue_t *hq, const void *buf, size_t len);
-
-void htsbuf_appendq(htsbuf_queue_t *hq, htsbuf_queue_t *src);
 
 void htsbuf_data_free(htsbuf_queue_t *hq, htsbuf_data_t *hd);
 
@@ -67,6 +65,21 @@ size_t htsbuf_drop(htsbuf_queue_t *hq, size_t len);
 
 size_t htsbuf_find(htsbuf_queue_t *hq, uint8_t v);
 
-uint32_t htsbuf_crc32(htsbuf_queue_t *q, uint32_t crc);
+void htsbuf_appendq(htsbuf_queue_t *hq, htsbuf_queue_t *src);
+
+void htsbuf_append_and_escape_xml(htsbuf_queue_t *hq, const char *str);
+
+void htsbuf_append_and_escape_url(htsbuf_queue_t *hq, const char *s);
+
+void htsbuf_append_and_escape_jsonstr(htsbuf_queue_t *hq, const char *s);
+
+void htsbuf_dump_raw_stderr(htsbuf_queue_t *hq);
+
+char *htsbuf_to_string(htsbuf_queue_t *hq);
+
+struct rstr;
+struct rstr *htsbuf_to_rstr(htsbuf_queue_t *hq, const char *prefix);
+
+void htsbuf_hexdump(htsbuf_queue_t *hq, const char *prefix);
 
 #endif /* HTSBUF_H__ */
