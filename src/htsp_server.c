@@ -1705,12 +1705,17 @@ htsp_write_scheduler(void *aux)
 
     while(dlen > 0) {
       r = write(htsp->htsp_fd, dptr, dlen);
-      if(r < 1) {
+      if(r < 0) {
+        if(errno == EAGAIN || errno == EWOULDBLOCK)
+          continue;
         tvhlog(LOG_INFO, "htsp", "%s: Write error -- %s",
                htsp->htsp_logname, strerror(errno));
         break;
       }
-
+      if(r == 0) {
+        tvhlog(LOG_ERR, "htsp", "%s: write() returned 0",
+               htsp->htsp_logname);
+      }
       dptr += r;
       dlen -= r;
     }
