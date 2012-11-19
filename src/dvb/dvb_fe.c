@@ -229,7 +229,7 @@ dvb_fe_monitor(void *aux)
     htsmsg_add_u32(m, "snr", tdmi->tdmi_snr);
     htsmsg_add_u32(m, "ber", tdmi->tdmi_ber);
     htsmsg_add_u32(m, "unc", tdmi->tdmi_unc);
-    htsmsg_add_u32(m, "uncavg", tdmi->tdmi_unc_avg);
+    htsmsg_add_dbl(m, "uncavg", tdmi->tdmi_unc_avg);
     notify_by_msg("tvAdapter", m);
   }
 
