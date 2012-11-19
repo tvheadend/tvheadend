@@ -71,6 +71,7 @@ TAILQ_HEAD(htsp_msg_queue, htsp_msg);
 TAILQ_HEAD(htsp_msg_q_queue, htsp_msg_q);
 
 static struct htsp_connection_list htsp_async_connections;
+static struct htsp_connection_list htsp_connections;
 
 static void htsp_streaming_input(void *opaque, streaming_message_t *sm);
 
@@ -107,6 +108,8 @@ typedef struct htsp_msg_q {
  *
  */
 typedef struct htsp_connection {
+  LIST_ENTRY(htsp_connection) htsp_link;
+
   int htsp_fd;
   struct sockaddr_in *htsp_peer;
 
@@ -1760,6 +1763,10 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source,
   htsp.htsp_peer = source;
   htsp.htsp_writer_run = 1;
 
+  pthread_mutex_lock(&global_lock);
+  LIST_INSERT_HEAD(&htsp_connections, &htsp, htsp_link);
+  pthread_mutex_unlock(&global_lock);
+
   pthread_create(&htsp.htsp_writer_thread, NULL, htsp_write_scheduler, &htsp);
 
   /**
@@ -1785,6 +1792,8 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source,
 
   if(htsp.htsp_async_mode)
     LIST_REMOVE(&htsp, htsp_async_link);
+
+  LIST_REMOVE(&htsp, htsp_link);
 
   pthread_mutex_unlock(&global_lock);
 
