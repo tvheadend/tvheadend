@@ -32,7 +32,7 @@ CFLAGS  += -Wmissing-prototypes -fms-extensions
 CFLAGS  += -g -funsigned-char -O2 
 CFLAGS  += -D_FILE_OFFSET_BITS=64
 CFLAGS  += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR}
-LDFLAGS += -lrt -ldl -lpthread
+LDFLAGS += -lrt -ldl -lpthread -lm
 
 #
 # Other config
