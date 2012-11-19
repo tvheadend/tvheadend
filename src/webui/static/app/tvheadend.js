@@ -235,11 +235,13 @@ function accessUpdate(o) {
 			autoScroll : true,
 			title : 'Configuration',
 			iconCls : 'wrench',
-			items : [ new tvheadend.miscconf, new tvheadend.chconf,
-				new tvheadend.epggrab, new tvheadend.cteditor,
-				new tvheadend.dvrsettings, new tvheadend.tvadapters,
-				new tvheadend.iptv, new tvheadend.acleditor,
-				new tvheadend.cwceditor, new tvheadend.capmteditor ]
+		  items : [ new tvheadend.dvb_networks,
+                            new tvheadend.miscconf, new tvheadend.chconf,
+				  new tvheadend.epggrab, new tvheadend.cteditor,
+				  new tvheadend.dvrsettings, new tvheadend.tvadapters,
+                                  
+				  new tvheadend.iptv, new tvheadend.acleditor,
+				  new tvheadend.cwceditor, new tvheadend.capmteditor ]
 		});
 		tvheadend.rootTabPanel.add(tvheadend.confpanel);
 	}

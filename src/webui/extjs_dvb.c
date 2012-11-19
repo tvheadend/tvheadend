@@ -686,6 +686,55 @@ extjs_list_dvb_adapters(htsmsg_t *array)
 
 
 /**
+ *
+ */
+static int
+extjs_dvbnetworks(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  const char *s = http_arg_get(&hc->hc_req_args, "node");
+  htsmsg_t *out = NULL;
+
+  if(s == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(http_access_verify(hc, ACCESS_ADMIN)) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+
+  printf("s=%s\n", s);
+
+  out = htsmsg_create_list();
+  if(!strcmp(s, "root")) {
+      htsmsg_t *n = htsmsg_create_map();
+      htsmsg_add_str(n, "text", "Network1");
+      htsmsg_add_str(n, "id", "net/1");
+      htsmsg_add_str(n, "cls", "folder");
+      htsmsg_add_str(n, "iconCls", "iptv");
+      htsmsg_add_msg(out, NULL, n);
+
+      n = htsmsg_create_map();
+      htsmsg_add_str(n, "text", "Network2");
+      htsmsg_add_str(n, "id", "net/2");
+      htsmsg_add_str(n, "cls", "folder");
+      htsmsg_add_msg(out, NULL, n);
+  }
+
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+}
+
+
+
+/**
  * DVB WEB user interface
  */
 void
@@ -693,6 +742,9 @@ extjs_start_dvb(void)
 {
   http_path_add("/dvb/locations", 
 		NULL, extjs_dvblocations, ACCESS_WEB_INTERFACE);
+
+  http_path_add("/dvb/networks", 
+		NULL, extjs_dvbnetworks, ACCESS_WEB_INTERFACE);
 
   http_path_add("/dvb/adapter", 
 		NULL, extjs_dvbadapter, ACCESS_ADMIN);

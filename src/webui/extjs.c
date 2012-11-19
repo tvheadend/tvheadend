@@ -130,6 +130,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/tvadapters.js");
 #if ENABLE_LINUXDVB
   extjs_load(hq, "static/app/dvb.js");
+  extjs_load(hq, "static/app/dvb_networks.js");
 #endif
   extjs_load(hq, "static/app/iptv.js");
 #if ENABLE_V4L
