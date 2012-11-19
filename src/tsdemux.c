@@ -206,6 +206,11 @@ ts_recv_packet1(service_t *t, const uint8_t *tsb, int64_t *pcrp)
 
   pid = (tsb[1] & 0x1f) << 8 | tsb[2];
 
+  if(pid==0x1FFF){  // ignore NULL stream
+    pthread_mutex_unlock(&t->s_stream_mutex);
+    return;
+  }
+
   st = service_stream_find(t, pid);
 
   /* Extract PCR */
