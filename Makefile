@@ -94,6 +94,8 @@ SRCS =  src/main.c \
 	src/htsmsg_binary.c \
 	src/htsmsg_json.c \
 	src/htsmsg_xml.c \
+	src/misc/dbl.c \
+	src/misc/json.c \
 	src/settings.c \
 	src/htsbuf.c \
 	src/trap.c \

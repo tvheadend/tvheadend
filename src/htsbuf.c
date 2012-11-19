@@ -1,6 +1,6 @@
 /*
  *  Buffer management functions
- *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2008 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,17 +22,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include "htsbuf.h"
+
 #include "tvheadend.h"
-
-#ifndef MIN
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#endif
-
-#ifndef MAX
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-#endif
-
+#include "htsbuf.h"
 
 /**
  *
@@ -206,6 +198,7 @@ htsbuf_peek(htsbuf_queue_t *hq, void *buf, size_t len)
     c = MIN(hd->hd_data_len - hd->hd_data_off, len);
     memcpy(buf, hd->hd_data + hd->hd_data_off, c);
 
+    r += c;
     buf += c;
     len -= c;
 
@@ -233,7 +226,7 @@ htsbuf_drop(htsbuf_queue_t *hq, size_t len)
     len -= c;
     hd->hd_data_off += c;
     hq->hq_size -= c;
-
+    r += c;
     if(hd->hd_data_off == hd->hd_data_len)
       htsbuf_data_free(hq, hd);
   }
@@ -314,19 +307,162 @@ htsbuf_appendq(htsbuf_queue_t *hq, htsbuf_queue_t *src)
 }
 
 
+void
+htsbuf_dump_raw_stderr(htsbuf_queue_t *hq)
+{
+  htsbuf_data_t *hd;
+  char n = '\n';
+
+  TAILQ_FOREACH(hd, &hq->hq_q, hd_link) {
+    if(write(2, hd->hd_data + hd->hd_data_off,
+	     hd->hd_data_len - hd->hd_data_off)
+       != hd->hd_data_len - hd->hd_data_off)
+      break;
+  }
+  if(write(2, &n, 1) != 1)
+    return;
+}
+
+
+void
+htsbuf_hexdump(htsbuf_queue_t *hq, const char *prefix)
+{
+  void *r = malloc(hq->hq_size);
+  htsbuf_peek(hq, r, hq->hq_size);
+  hexdump(prefix, r, hq->hq_size);
+  free(r);
+}
+
+
 /**
  *
  */
-uint32_t
-htsbuf_crc32(htsbuf_queue_t *hq, uint32_t crc)
+void
+htsbuf_append_and_escape_xml(htsbuf_queue_t *hq, const char *s)
 {
-  htsbuf_data_t *hd;
-  
-  TAILQ_FOREACH(hd, &hq->hq_q, hd_link)
-    crc = tvh_crc32(hd->hd_data     + hd->hd_data_off,
-		hd->hd_data_len - hd->hd_data_off,
-		crc);
-  return crc;
+  const char *c = s;
+  const char *e = s + strlen(s);
+  if(e == s)
+    return;
+
+  while(1) {
+    const char *esc;
+    switch(*c++) {
+    case '<':  esc = "&lt;";   break;
+    case '>':  esc = "&gt;";   break;
+    case '&':  esc = "&amp;";  break;
+    case '\'': esc = "&apos;"; break;
+    case '"':  esc = "&quot;"; break;
+    default:   esc = NULL;     break;
+    }
+    
+    if(esc != NULL) {
+      htsbuf_append(hq, s, c - s - 1);
+      htsbuf_append(hq, esc, strlen(esc));
+      s = c;
+    }
+    
+    if(c == e) {
+      htsbuf_append(hq, s, c - s);
+      break;
+    }
+  }
 }
 
+
+/**
+ *
+ */
+void
+htsbuf_append_and_escape_url(htsbuf_queue_t *hq, const char *s)
+{
+  const char *c = s;
+  const char *e = s + strlen(s);
+  char C;
+  if(e == s)
+    return;
+
+  while(1) {
+    const char *esc;
+    C = *c++;
+    
+    if((C >= '0' && C <= '9') ||
+       (C >= 'a' && C <= 'z') ||
+       (C >= 'A' && C <= 'Z') ||
+       C == '_' ||
+       C == '~' ||
+       C == '.' ||
+       C == '-') {
+      esc = NULL;
+    } else {
+      static const char hexchars[16] = "0123456789ABCDEF";
+      char buf[4];
+      buf[0] = '%';
+      buf[1] = hexchars[(C >> 4) & 0xf];
+      buf[2] = hexchars[C & 0xf];;
+      buf[3] = 0;
+      esc = buf;
+    }
+
+    if(esc != NULL) {
+      htsbuf_append(hq, s, c - s - 1);
+      htsbuf_append(hq, esc, strlen(esc));
+      s = c;
+    }
+    
+    if(c == e) {
+      htsbuf_append(hq, s, c - s);
+      break;
+    }
+  }
+}
+
+
+/**
+ *
+ */
+void
+htsbuf_append_and_escape_jsonstr(htsbuf_queue_t *hq, const char *str)
+{
+  const char *s = str;
+
+  htsbuf_append(hq, "\"", 1);
+
+  while(*s != 0) {
+    if(*s == '"' || *s == '\\' || *s == '\n' || *s == '\r' || *s == '\t') {
+      htsbuf_append(hq, str, s - str);
+
+      if(*s == '"')
+	htsbuf_append(hq, "\\\"", 2);
+      else if(*s == '\n') 
+	htsbuf_append(hq, "\\n", 2);
+      else if(*s == '\r') 
+	htsbuf_append(hq, "\\r", 2);
+      else if(*s == '\t') 
+	htsbuf_append(hq, "\\t", 2);
+      else
+	htsbuf_append(hq, "\\\\", 2);
+      s++;
+      str = s;
+    } else {
+      s++;
+    }
+  }
+  htsbuf_append(hq, str, s - str);
+  htsbuf_append(hq, "\"", 1);
+}
+
+
+
+/**
+ *
+ */
+char *
+htsbuf_to_string(htsbuf_queue_t *hq)
+{
+  char *r = malloc(hq->hq_size + 1);
+  r[hq->hq_size] = 0;
+  htsbuf_read(hq, r, hq->hq_size);
+  return r;
+}
 
