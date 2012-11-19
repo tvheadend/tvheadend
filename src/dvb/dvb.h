@@ -97,9 +97,10 @@ typedef struct th_dvb_mux_instance {
 
   struct th_dvb_adapter *tdmi_adapter;
 
-  uint16_t tdmi_snr, tdmi_signal;
+  uint16_t tdmi_signal;
   uint32_t tdmi_ber, tdmi_unc;
   float tdmi_unc_avg;
+  float tdmi_snr;
 
 #define TDMI_FEC_ERR_HISTOGRAM_SIZE 10
   uint32_t tdmi_fec_err_histogram[TDMI_FEC_ERR_HISTOGRAM_SIZE];
@@ -219,6 +220,7 @@ typedef struct th_dvb_adapter {
   char *tda_fe_path;
   int tda_fe_fd;
   int tda_type;
+  int tda_snr_valid;
   struct dvb_frontend_info *tda_fe_info;
 
   int tda_adapter_num;

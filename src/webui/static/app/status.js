@@ -168,6 +168,17 @@ tvheadend.status_adapters = function() {
 		width : 50,
 		header : "Uncorrected bit error rate",
 		dataIndex : 'uncavg'
+        },{
+		width : 50,
+		header : "SNR",
+		dataIndex : 'snr',
+                renderer: function(value) {
+                        if(value > 0) {
+                                return value.toFixed(1) + " dB";
+                        } else {
+                                return '<span class="tvh-grid-unset">Unknown</span>';
+                        }
+                }
         }, signal]);
 
 	var panel = new Ext.grid.GridPanel({
