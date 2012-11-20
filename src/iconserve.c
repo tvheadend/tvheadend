@@ -89,14 +89,15 @@ page_logo(http_connection_t *hc, const char *remain, void *opaque)
     };
   };
   snprintf(iconpath, sizeof(iconpath), "%s/%s", homepath, outpath);
-  fp = fb_open(iconpath, 0, 1);
+  fp = fb_open(iconpath, 1, 0);
   if (!fp) {
     tvhlog(LOG_DEBUG, "page_logo", "failed to open %s redirecting to http link for icon (%s)", iconpath, ch->ch_icon);
     http_redirect(hc, ch->ch_icon);
   } else {
     tvhlog(LOG_DEBUG, "page_logo", "File %s opened", iconpath);
     size = fb_size(fp);
-    http_send_header(hc, 200, "gzip", size, NULL, NULL, 300, 0, NULL);
+/*    http_send_header(hc, 200, "gzip", size, NULL, NULL, 300, 0, NULL);*/
+    http_send_header(hc, 200, NULL, size, NULL, NULL, 300, 0, NULL);
     while (!fb_eof(fp)) {
       ssize_t c = fb_read(fp, buf, sizeof(buf));
       if (c < 0) {
