@@ -24,6 +24,8 @@ tvheadend.comet.on('tvAdapter', function(m) {
 });
 
 tvheadend.tvadapters = function() {
+  tvheadend.tvAdapterStore.load();
+
 	var adapterSelection = new Ext.form.ComboBox({
 		loadingText : 'Loading...',
 		width : 300,
