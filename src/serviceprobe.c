@@ -81,7 +81,6 @@ serviceprobe_thread(void *aux)
   int was_doing_work = 0;
   streaming_queue_t sq;
   streaming_message_t *sm;
-  //  transport_feed_status_t status;
   int run;
   const char *err;
   channel_t *ch;
@@ -119,7 +118,7 @@ serviceprobe_thread(void *aux)
         t->s_sp_onqueue = 0;
         TAILQ_REMOVE(&serviceprobe_queue, t, s_sp_link);
         tvhlog(LOG_INFO, "serviceprobe", "%20s: could not subscribe",
-         t->s_svcname);
+        t->s_svcname);
         continue;
       }
     }

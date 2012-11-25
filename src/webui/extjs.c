@@ -1469,6 +1469,9 @@ service_update(htsmsg_t *in)
     if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
       service_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
 
+    if(!htsmsg_get_u32(c, "prefcapid", &u32))
+      service_set_prefcapid(t, u32);
+
     if((dvb_charset = htsmsg_get_str(c, "dvb_charset")) != NULL)
       service_set_dvb_charset(t, dvb_charset);
 
@@ -1799,6 +1802,9 @@ extjs_service_update(htsmsg_t *in)
 
     if(!htsmsg_get_u32(c, "enabled", &u32))
       service_set_enable(t, u32);
+
+    if(!htsmsg_get_u32(c, "prefcapid", &u32))
+      service_set_prefcapid(t, u32);
 
     if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
       service_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
