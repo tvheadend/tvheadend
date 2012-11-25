@@ -294,16 +294,26 @@ channels_load(void)
 {
   htsmsg_t *l, *c;
   htsmsg_field_t *f;
+  channel_t *ch; 
+  int cnt;
 
   if((l = hts_settings_load("channels")) != NULL) {
     HTSMSG_FOREACH(f, l) {
       if((c = htsmsg_get_map_by_field(f)) == NULL)
-	continue;
+    continue;
       channel_load_one(c, atoi(f->hmf_name));
     }
     htsmsg_destroy(l);
   }
-}
+  cnt = 0;
+  RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
+    cnt++;
+    if (ch->ch_number == cnt) continue;
+    ch->ch_number = cnt;
+    channel_save(ch);
+  }
+ 
+} 
 
 
 /**
