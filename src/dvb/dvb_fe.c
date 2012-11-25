@@ -100,7 +100,7 @@ dvb_fe_monitor(void *aux)
   int store = 0;
   int notify = 0;
 
-  gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 1);
+  gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 60);
 
   if(tdmi == NULL)
     return;

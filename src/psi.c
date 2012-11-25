@@ -308,10 +308,10 @@ psi_desc_ca(service_t *t, const uint8_t *buffer, int size)
     }
     break;
   case 0x4a00://DRECrypt
-    if (caid != 0x4aee) { // Bulcrypt
+    if (caid != 0x4aee && caid != 0x4ae1) { // Bulcrypt or Tricolor
       provid = size < 4 ? 0 : buffer[4];
-      break;
     }
+    break;
   default:
     provid = 0;
     break;
