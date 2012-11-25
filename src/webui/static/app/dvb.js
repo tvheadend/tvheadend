@@ -507,6 +507,11 @@ tvheadend.dvb_services = function(adapterId) {
 			width : 50,
 			hidden : true
 		}, {
+			header: "Preffered CA pid",
+			dataIndex: 'prefcapid',
+			width: 50,
+			editor: new fm.TextField({allowBlank: true})
+		}, {
 			header : "PMT PID",
 			dataIndex : 'pmt',
 			width : 50,
@@ -521,7 +526,7 @@ tvheadend.dvb_services = function(adapterId) {
 	var store = new Ext.data.JsonStore({
 		root : 'entries',
 		fields : Ext.data.Record.create([ 'id', 'enabled', 'type', 'sid', 'pmt',
-			'pcr', 'svcname', 'network', 'provider', 'mux', 'channelname',
+			'pcr', 'svcname', 'network', 'provider', 'mux', 'channelname', 'prefcapid',
 			'dvb_charset', 'dvb_eit_enable' ]),
 		url : "dvb/services/" + adapterId,
 		autoLoad : true,

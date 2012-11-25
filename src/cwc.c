@@ -27,7 +27,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <ctype.h>
-
 #include "tvheadend.h"
 #include "tcp.h"
 #include "psi.h"
@@ -38,7 +37,7 @@
 #include "atomic.h"
 #include "dtable.h"
 #include "subscriptions.h"
-
+#include "service.h"
 #include <openssl/des.h>
 
 /**
@@ -754,9 +753,9 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
 		 int len, int seq)
 {
   service_t *t = ct->cs_service;
+  ecm_pid_t *ep, *epn;
   cwc_service_t *ct2;
   cwc_t *cwc2;
-  ecm_pid_t *ep;
   char chaninfo[32];
   int i;
   int64_t delay = (getmonoclock() - es->es_time) / 1000LL; // in ms
@@ -772,9 +771,6 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
   if(len < 19) {
     
     /* ERROR */
-
-    if(ct->cs_okchannel == es->es_channel)
-      ct->cs_okchannel = -1;
 
     if (es->es_nok < 3)
       es->es_nok++;
@@ -829,6 +825,11 @@ forbid:
   } else {
 
     ct->cs_okchannel = es->es_channel;
+    tvhlog(LOG_DEBUG, "cwc",  "es->es_nok %d      t->tht_prefcapid %d", es->es_nok, t->s_prefcapid);
+    if(es->es_nok == 1 || t->s_prefcapid == 0) {
+      t->s_prefcapid = ct->cs_okchannel;
+      service_request_save(t, 0);
+    }
     es->es_nok = 0;
 
     tvhlog(LOG_DEBUG, "cwc",
@@ -865,6 +866,22 @@ forbid:
     ct->cs_keystate = CS_RESOLVED;
     memcpy(ct->cs_cw, msg + 3, 16);
     ct->cs_pending_cw_update = 1;
+
+    ep = LIST_FIRST(&ct->cs_pids);
+    while(ep != NULL) {
+      if (ct->cs_okchannel == ep->ep_pid) {
+        ep = LIST_NEXT(ep, ep_link);
+      }
+      else {
+        epn = LIST_NEXT(ep, ep_link);
+        for(i = 0; i < 256; i++)
+          free(ep->ep_sections[i]);
+        LIST_REMOVE(ep, ep_link);
+        tvhlog(LOG_WARNING, "cwc", "Delete ECMpid %d", ep->ep_pid);
+        free(ep);
+        ep = epn;
+      }
+    }
   }
 }
 
@@ -902,6 +919,10 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
       }
     }
     tvhlog(LOG_WARNING, "cwc", "Got unexpected ECM reply (seqno: %d)", seq);
+    LIST_FOREACH(ct, &cwc->cwc_services, cs_link) {
+      tvhlog(LOG_DEBUG, "cwc", "After got unexpected (ct->cs_okchannel: %d)", ct->cs_okchannel);
+      if (ct->cs_okchannel == -3) ct->cs_okchannel = -2;
+    }
     break;
   }
   return 0;
@@ -1592,9 +1613,28 @@ cwc_table_input(struct th_descrambler *td, struct service *t,
   }
 
   if(ep == NULL) {
-    ep = calloc(1, sizeof(ecm_pid_t));
-    ep->ep_pid = st->es_pid;
-    LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
+    if (ct->cs_okchannel == -2) {
+      t->s_prefcapid = 0;
+      ct->cs_okchannel = -1;
+      tvhlog(LOG_DEBUG, "cwc", "Insert after unexpected reply");
+    }
+
+    if (ct->cs_okchannel == -3 && t->s_prefcapid == st->es_pid) {
+      ep = calloc(1, sizeof(ecm_pid_t));
+      ep->ep_pid = t->s_prefcapid;
+      LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
+      tvhlog(LOG_DEBUG, "cwc", "Insert only one new ECM channel %d for service id %d", t->s_prefcapid, sid);
+    }
+
+    if (ct->cs_okchannel == -1 || (ct->cs_okchannel == -3 && t->s_prefcapid == 0)) {
+      ep = calloc(1, sizeof(ecm_pid_t));
+      ep->ep_pid = st->es_pid;
+      LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
+      tvhlog(LOG_DEBUG, "cwc", "Insert new ECM channel %d", st->es_pid);
+    }
+    else {
+      return;
+    }
   }
 
 
@@ -1626,6 +1666,9 @@ cwc_table_input(struct th_descrambler *td, struct service *t,
       section = 0;
     }
 
+    channel = st->es_pid;
+    snprintf(chaninfo, sizeof(chaninfo), " (channel %d)", channel);
+
     if(ep->ep_sections[section] == NULL)
       ep->ep_sections[section] = calloc(1, sizeof(ecm_section_t));
 
@@ -1650,7 +1693,7 @@ cwc_table_input(struct th_descrambler *td, struct service *t,
     memcpy(es->es_ecm, data, len);
     es->es_ecmsize = len;
 
-    if(ct->cs_okchannel != -1 && channel != -1 && 
+    if(ct->cs_okchannel >= 0 && channel != -1 &&
        ct->cs_okchannel != channel) {
       tvhlog(LOG_DEBUG, "cwc", "Filtering ECM channel %d", channel);
       return;
@@ -1988,7 +2031,7 @@ cwc_service_start(service_t *t)
     ct->cs_keys = get_key_struct();
     ct->cs_cwc = cwc;
     ct->cs_service = t;
-    ct->cs_okchannel = -1;
+    ct->cs_okchannel = -3;
 
     td = &ct->cs_head;
     td->td_stop       = cwc_service_destroy;
