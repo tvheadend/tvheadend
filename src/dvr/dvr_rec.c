@@ -544,6 +544,10 @@ dvr_thread(void *aux)
     pthread_mutex_lock(&sq->sq_mutex);
   }
   pthread_mutex_unlock(&sq->sq_mutex);
+
+  if(de->de_mux)
+    dvr_thread_epilog(de);
+
   return NULL;
 }
 
