@@ -81,6 +81,7 @@ serviceprobe_thread(void *aux)
   int was_doing_work = 0;
   streaming_queue_t sq;
   streaming_message_t *sm;
+  //  transport_feed_status_t status;
   int run;
   const char *err;
   channel_t *ch;

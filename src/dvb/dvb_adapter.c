@@ -500,7 +500,6 @@ tda_add(int adapter_num)
   
   tda->tda_autodiscovery = tda->tda_type != FE_QPSK;
   tda->tda_idlescan = 1;
-  tda->tda_skip_checksubscr = 1;
 
   tda->tda_sat = tda->tda_type == FE_QPSK;
 
