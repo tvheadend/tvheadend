@@ -458,17 +458,25 @@ dvr_thread(void *aux)
       break;
 
     case SMT_START:
+      if(started &&
+	 muxer_reconfigure(de->de_mux, sm->sm_data) < 0) {
+	tvhlog(LOG_WARNING,
+	       "dvr", "Unable to reconfigure \"%s\"",
+	       de->de_filename ?: lang_str_get(de->de_title, NULL));
+
+	// Try to restart the recording if the muxer doesn't
+	// support reconfiguration of the streams.
+	dvr_thread_epilog(de);
+	started = 0;
+      }
+
       if(!started) {
 	pthread_mutex_lock(&global_lock);
 	dvr_rec_set_state(de, DVR_RS_WAIT_PROGRAM_START, 0);
 	if(dvr_rec_start(de, sm->sm_data) == 0)
 	  started = 1;
 	pthread_mutex_unlock(&global_lock);
-      } else if(muxer_reconfigure(de->de_mux, sm->sm_data) < 0) {
-	tvhlog(LOG_WARNING,
-	       "dvr", "Unable to reconfigure the recording \"%s\"",
-	       de->de_filename ?: lang_str_get(de->de_title, NULL));
-      }
+      } 
       break;
 
     case SMT_STOP:
@@ -479,7 +487,6 @@ dvr_thread(void *aux)
 	 // Recording is completed
 
 	de->de_last_error = 0;
-
 	tvhlog(LOG_INFO, 
 	       "dvr", "Recording completed: \"%s\"",
 	       de->de_filename ?: lang_str_get(de->de_title, NULL));
