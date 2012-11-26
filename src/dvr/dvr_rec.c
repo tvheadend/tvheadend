@@ -472,9 +472,11 @@ dvr_thread(void *aux)
       break;
 
     case SMT_STOP:
+       if(sm->sm_code == SM_CODE_SOURCE_RECONFIGURED) {
+	 // Subscription is restarting, wait for SMT_START
 
-      if(sm->sm_code == 0) {
-	/* Completed */
+       } else if(sm->sm_code == 0) {
+	 // Recording is completed
 
 	de->de_last_error = 0;
 
@@ -482,18 +484,21 @@ dvr_thread(void *aux)
 	       "dvr", "Recording completed: \"%s\"",
 	       de->de_filename ?: lang_str_get(de->de_title, NULL));
 
-      } else if(sm->sm_code != SM_CODE_SOURCE_RECONFIGURED) {
-	if(de->de_last_error != sm->sm_code) {
-	  dvr_rec_set_state(de, DVR_RS_ERROR, sm->sm_code);
+	dvr_thread_epilog(de);
+	started = 0;
 
-	  tvhlog(LOG_ERR,
-		 "dvr", "Recording stopped: \"%s\": %s",
-		 de->de_filename ?: lang_str_get(de->de_title, NULL),
-		 streaming_code2txt(sm->sm_code));
-	}
+      }else if(de->de_last_error != sm->sm_code) {
+	 // Error during recording
+
+	 dvr_rec_set_state(de, DVR_RS_ERROR, sm->sm_code);
+	 tvhlog(LOG_ERR,
+		"dvr", "Recording stopped: \"%s\": %s",
+		de->de_filename ?: lang_str_get(de->de_title, NULL),
+		streaming_code2txt(sm->sm_code));
+
+	 dvr_thread_epilog(de);
+	 started = 0;
       }
-
-      dvr_thread_epilog(de);
       break;
 
     case SMT_SERVICE_STATUS:
