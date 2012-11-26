@@ -507,11 +507,11 @@ tvheadend.dvb_services = function(adapterId) {
 			width : 50,
 			hidden : true
 		}, {
-	    		header: "Preffered CA pid",
+			header: "Preffered CA pid",
 			dataIndex: 'prefcapid',
-	    		width: 50,
-            		editor: new fm.TextField({allowBlank: true})
-	        },{
+			width: 50,
+			editor: new fm.TextField({allowBlank: true})
+		}, {
 			header : "PMT PID",
 			dataIndex : 'pmt',
 			width : 50,
