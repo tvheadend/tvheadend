@@ -371,25 +371,32 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 
 
   tvhlog(LOG_INFO, "dvr",
-	 " # %-20s %-4s %-16s %-10s %-10s",
+	 " #  %-16s  %-4s  %-10s  %-12s  %-11s  %-8s",
 	 "type",
 	 "lang",
 	 "resolution",
-	 "samplerate",
+	 "aspect ratio",
+	 "sample rate",
 	 "channels");
 
   for(i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
 
-    char res[16];
+    char res[11];
+    char asp[6];
     char sr[6];
     char ch[7];
 
     if(SCT_ISAUDIO(ssc->ssc_type)) {
-      snprintf(sr, sizeof(sr), "%d", sri_to_rate(ssc->ssc_sri));
+      if(ssc->ssc_sri)
+	snprintf(sr, sizeof(sr), "%d", sri_to_rate(ssc->ssc_sri));
+      else
+	strcpy(sr, "?");
 
       if(ssc->ssc_channels == 6)
 	snprintf(ch, sizeof(ch), "5.1");
+      else if(ssc->ssc_channels == 0)
+	strcpy(ch, "?");
       else
 	snprintf(ch, sizeof(ch), "%d", ssc->ssc_channels);
     } else {
@@ -397,20 +404,33 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
       ch[0] = 0;
     }
 
-
     if(SCT_ISVIDEO(ssc->ssc_type)) {
-      snprintf(res, sizeof(res), "%d x %d", 
-	       ssc->ssc_width, ssc->ssc_height);
+      if(ssc->ssc_width && ssc->ssc_height)
+	snprintf(res, sizeof(res), "%dx%d",
+		 ssc->ssc_width, ssc->ssc_height);
+      else
+	strcpy(res, "?");
     } else {
       res[0] = 0;
     }
 
+    if(SCT_ISVIDEO(ssc->ssc_type)) {
+      if(ssc->ssc_aspect_num &&  ssc->ssc_aspect_den)
+	snprintf(asp, sizeof(asp), "%d:%d",
+		 ssc->ssc_aspect_num, ssc->ssc_aspect_den);
+      else
+	strcpy(asp, "?");
+    } else {
+      asp[0] = 0;
+    }
+
     tvhlog(LOG_INFO, "dvr",
-	   "%2d %-20s %-4s %-16s %-10s %-10s %s",
+	   "%2d  %-16s  %-4s  %-10s  %-12s  %-11s  %-8s  %s",
 	   ssc->ssc_index,
 	   streaming_component_type2txt(ssc->ssc_type),
 	   ssc->ssc_lang,
 	   res,
+	   asp,
 	   sr,
 	   ch,
 	   ssc->ssc_disabled ? "<disabled, no valid input>" : "");
