@@ -440,9 +440,17 @@ static inline const char *tvh_strbegins(const char *s1, const char *s2)
   return s1;
 }
 
+typedef struct th_pipe
+{
+  int rd;
+  int wr;
+} th_pipe_t;
+
 int tvh_open(const char *pathname, int flags, mode_t mode);
 
 int tvh_socket(int domain, int type, int protocol);
+
+int tvh_pipe(int flags, th_pipe_t *pipe);
 
 void hexdump(const char *pfx, const uint8_t *data, int len);
 
