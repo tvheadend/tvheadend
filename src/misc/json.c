@@ -62,7 +62,11 @@ json_parse_string(const char *s, const char **endp,
 
     if(*s == '\\') {
       esc = 1;
-    } else if(*s == '"' && s[-1] != '\\') {
+      /* skip the escape */
+      s++;
+      if (*s == 'u') s += 4;
+      // Note: we could detect the lack of support here!
+    } else if(*s == '"') {
 
       *endp = s + 1;
 
@@ -82,6 +86,8 @@ json_parse_string(const char *s, const char **endp,
 	    a++;
 	    if(*a == 'b')
 	      *b++ = '\b';
+      else if(*a == '\\')
+        *b++ = '\\';
 	    else if(*a == 'f')
 	      *b++ = '\f';
 	    else if(*a == 'n')

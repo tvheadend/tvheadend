@@ -8,7 +8,6 @@ tvheadend.tvAdapterStore = new Ext.data.JsonStore({
 		   'hostconnection', 'currentMux', 'services', 'muxes', 'initialMuxes',
 		   'satConf', 'deliverySystem', 'freqMin', 'freqMax', 'freqStep',
 		   'symrateMin', 'symrateMax',  'signal', 'snr', 'ber', 'unc', 'uncavg'],
-	autoLoad : true,
 	url : 'tv/adapter'
 });
 
@@ -25,6 +24,8 @@ tvheadend.comet.on('tvAdapter', function(m) {
 });
 
 tvheadend.tvadapters = function() {
+  tvheadend.tvAdapterStore.load();
+
 	var adapterSelection = new Ext.form.ComboBox({
 		loadingText : 'Loading...',
 		width : 300,
