@@ -42,11 +42,16 @@
 #include "tcp.h"
 #include "psi.h"
 #include "tsdemux.h"
-#include <dvbcsa/dvbcsa.h>
 #include "capmt.h"
 #include "notify.h"
 #include "subscriptions.h"
 #include "dtable.h"
+
+#if ENABLE_DVBCSA
+#include <dvbcsa/dvbcsa.h>
+#else
+#include "ffdecsa/FFdecsa.h"
+#endif
 
 // ca_pmt_list_management values:
 #define CAPMT_LIST_MORE   0x00    // append a 'MORE' CAPMT object the list and start receiving the next object
@@ -156,17 +161,23 @@ typedef struct capmt_service {
   } ct_keystate;
 
   /* buffers for keystructs */
+#if ENABLE_DVBCSA
   struct dvbcsa_bs_key_s *ct_key_even;
   struct dvbcsa_bs_key_s *ct_key_odd;
+#else
+  void                   *ct_keys;
+#endif
 
   /* CSA */
   int      ct_cluster_size;
   uint8_t *ct_tsbcluster;
+  int      ct_fill;
+#if ENABLE_DVBCSA
   struct dvbcsa_bs_batch_s *ct_tsbbatch_even;
   struct dvbcsa_bs_batch_s *ct_tsbbatch_odd;
-  int      ct_fill;
   int      ct_fill_even;
   int      ct_fill_odd;
+#endif
 
   /* current sequence number */
   uint16_t ct_seq;
@@ -364,10 +375,14 @@ capmt_service_destroy(th_descrambler_t *td)
 
   LIST_REMOVE(ct, ct_link);
 
+#if ENABLE_DVBCSA
   dvbcsa_bs_key_free(ct->ct_key_odd);
   dvbcsa_bs_key_free(ct->ct_key_even);
   free(ct->ct_tsbbatch_odd);
   free(ct->ct_tsbbatch_even);
+#else
+  free_key_struct(ct->ct_keys);
+#endif
   free(ct->ct_tsbcluster);
   free(ct);
 }
@@ -506,9 +521,17 @@ handle_ca0(capmt_t* capmt) {
         continue;
 
       if (memcmp(even, invalid, 8))
+#if ENABLE_DVBCSA
         dvbcsa_bs_key_set(even, ct->ct_key_even);
+#else
+        set_even_control_word(ct->ct_keys, even);
+#endif
       if (memcmp(odd, invalid, 8))
+#if ENABLE_DVBCSA
         dvbcsa_bs_key_set(odd, ct->ct_key_odd);
+#else
+        set_odd_control_word(ct->ct_keys, odd);
+#endif
 
       if(ct->ct_keystate != CT_RESOLVED)
         tvhlog(LOG_INFO, "capmt", "Obtained key for service \"%s\"",t->s_svcname);
@@ -842,6 +865,7 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
 /**
  *
  */
+#if ENABLE_DVBCSA
 static int
 capmt_descramble(th_descrambler_t *td, service_t *t, struct elementary_stream *st,
      const uint8_t *tsb)
@@ -926,6 +950,47 @@ capmt_descramble(th_descrambler_t *td, service_t *t, struct elementary_stream *s
   ct->ct_fill = 0;
   return 0;
 }
+#else
+static int
+capmt_descramble(th_descrambler_t *td, service_t *t, struct elementary_stream *st,
+     const uint8_t *tsb)
+{
+  capmt_service_t *ct = (capmt_service_t *)td;
+  int r, i;
+  unsigned char *vec[3];
+  uint8_t *t0;
+
+  if(ct->ct_keystate == CT_FORBIDDEN)
+    return 1;
+
+  if(ct->ct_keystate != CT_RESOLVED)
+    return -1;
+
+  memcpy(ct->ct_tsbcluster + ct->ct_fill * 188, tsb, 188);
+  ct->ct_fill++;
+
+  if(ct->ct_fill != ct->ct_cluster_size)
+    return 0;
+
+  ct->ct_fill = 0;
+
+  vec[0] = ct->ct_tsbcluster;
+  vec[1] = ct->ct_tsbcluster + ct->ct_cluster_size * 188;
+  vec[2] = NULL;
+
+  while(1) {
+    t0 = vec[0];
+    r = decrypt_packets(ct->ct_keys, vec);
+    if(r == 0)
+      break;
+    for(i = 0; i < r; i++) {
+      ts_recv_packet2(t, t0);
+      t0 += 188;
+    }
+  }
+  return 0;
+}
+#endif
 
 /**
  * Check if our CAID's matches, and if so, link
@@ -952,13 +1017,19 @@ capmt_service_start(service_t *t)
 
     /* create new capmt service */
     ct                   = calloc(1, sizeof(capmt_service_t));
+#if ENABLE_DVBCSA
     ct->ct_cluster_size  = dvbcsa_bs_batch_size();
+#else
+    ct->ct_cluster_size  = get_suggested_cluster_size();
+#endif
     ct->ct_tsbcluster    = malloc(ct->ct_cluster_size * 188);
+    ct->ct_seq           = capmt->capmt_seq++;
+#if ENABLE_DVBCSA
     ct->ct_tsbbatch_even = malloc((ct->ct_cluster_size + 1) *
                              sizeof(struct dvbcsa_bs_batch_s));
     ct->ct_tsbbatch_odd  = malloc((ct->ct_cluster_size + 1) *
                              sizeof(struct dvbcsa_bs_batch_s));
-    ct->ct_seq           = capmt->capmt_seq++;
+#endif
 
     TAILQ_FOREACH(st, &t->s_components, es_link) {
       caid_t *c;
@@ -981,8 +1052,12 @@ capmt_service_start(service_t *t)
       }
     }
 
+#if ENABLE_DVBCSA
     ct->ct_key_even   = dvbcsa_bs_key_alloc();
     ct->ct_key_odd    = dvbcsa_bs_key_alloc();
+#else
+    ct->ct_keys       = get_key_struct();
+#endif
     ct->ct_capmt      = capmt;
     ct->ct_service  = t;
 

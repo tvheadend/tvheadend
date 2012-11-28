@@ -27,18 +27,24 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <ctype.h>
+#include <openssl/des.h>
+
 #include "tvheadend.h"
 #include "tcp.h"
 #include "psi.h"
 #include "tsdemux.h"
-#include <dvbcsa/dvbcsa.h>
 #include "cwc.h"
 #include "notify.h"
 #include "atomic.h"
 #include "dtable.h"
 #include "subscriptions.h"
 #include "service.h"
-#include <openssl/des.h>
+
+#if ENABLE_DVBCSA
+#include <dvbcsa/dvbcsa.h>
+#else
+#include "ffdecsa/FFdecsa.h"
+#endif
 
 /**
  *
@@ -155,9 +161,12 @@ typedef struct cwc_service {
     CS_IDLE
   } cs_keystate;
 
+#if ENABLE_DVBCSA
   struct dvbcsa_bs_key_s *cs_key_even;
   struct dvbcsa_bs_key_s *cs_key_odd;
-
+#else
+  void *cs_keys;
+#endif
 
   uint8_t cs_cw[16];
   int cs_pending_cw_update;
@@ -167,11 +176,13 @@ typedef struct cwc_service {
    */
   int cs_cluster_size;
   uint8_t *cs_tsbcluster;
+  int cs_fill;
+#if ENABLE_DVBCSA
   struct dvbcsa_bs_batch_s *cs_tsbbatch_even;
   struct dvbcsa_bs_batch_s *cs_tsbbatch_odd;
-  int cs_fill;
   int cs_fill_even;
   int cs_fill_odd;
+#endif
 
   LIST_HEAD(, ecm_pid) cs_pids;
 
@@ -1889,13 +1900,21 @@ update_keys(cwc_service_t *ct)
   ct->cs_pending_cw_update = 0;
   for(i = 0; i < 8; i++)
     if(ct->cs_cw[i]) {
+#if ENABLE_DVBCSA
       dvbcsa_bs_key_set(ct->cs_cw, ct->cs_key_even);
+#else
+      set_even_control_word(ct->cs_keys, ct->cs_cw);
+#endif
       break;
     }
   
   for(i = 0; i < 8; i++)
     if(ct->cs_cw[8 + i]) {
+#if ENABLE_DVBCSA
       dvbcsa_bs_key_set(ct->cs_cw + 8, ct->cs_key_odd);
+#else
+      set_odd_control_word(ct->cs_keys, ct->cs_cw + 8);
+#endif
       break;
     }
 }
@@ -1904,6 +1923,7 @@ update_keys(cwc_service_t *ct)
 /**
  *
  */
+#if ENABLE_DVBCSA
 static int
 cwc_descramble(th_descrambler_t *td, service_t *t, struct elementary_stream *st,
 	       const uint8_t *tsb)
@@ -1997,6 +2017,66 @@ cwc_descramble(th_descrambler_t *td, service_t *t, struct elementary_stream *st,
 
   return 0;
 }
+#else
+static int
+cwc_descramble(th_descrambler_t *td, service_t *t, struct elementary_stream *st,
+	       const uint8_t *tsb)
+{
+  cwc_service_t *ct = (cwc_service_t *)td;
+  int r;
+  unsigned char *vec[3];
+
+  if(ct->cs_keystate == CS_FORBIDDEN)
+    return 1;
+
+  if(ct->cs_keystate != CS_RESOLVED)
+    return -1;
+
+  if(ct->cs_fill == 0 && ct->cs_pending_cw_update)
+    update_keys(ct);
+
+  memcpy(ct->cs_tsbcluster + ct->cs_fill * 188, tsb, 188);
+  ct->cs_fill++;
+
+  if(ct->cs_fill != ct->cs_cluster_size)
+    return 0;
+
+  while(1) {
+
+    vec[0] = ct->cs_tsbcluster;
+    vec[1] = ct->cs_tsbcluster + ct->cs_fill * 188;
+    vec[2] = NULL;
+    
+    r = decrypt_packets(ct->cs_keys, vec);
+    if(r > 0) {
+      int i;
+      const uint8_t *t0 = ct->cs_tsbcluster;
+
+      for(i = 0; i < r; i++) {
+	ts_recv_packet2(t, t0);
+	t0 += 188;
+      }
+
+      r = ct->cs_fill - r;
+      assert(r >= 0);
+
+      if(r > 0)
+	memmove(ct->cs_tsbcluster, t0, r * 188);
+      ct->cs_fill = r;
+
+      if(ct->cs_pending_cw_update && r > 0)
+	continue;
+    } else {
+      ct->cs_fill = 0;
+    }
+    break;
+  }
+  if(ct->cs_pending_cw_update)
+    update_keys(ct);
+
+  return 0;
+}
+#endif
 
 /**
  * cwc_mutex is held
@@ -2020,10 +2100,14 @@ cwc_service_destroy(th_descrambler_t *td)
 
   LIST_REMOVE(ct, cs_link);
 
+#if ENABLE_DVBCSA
   dvbcsa_bs_key_free(ct->cs_key_odd);
   dvbcsa_bs_key_free(ct->cs_key_even);
   free(ct->cs_tsbbatch_odd);
   free(ct->cs_tsbbatch_even);
+#else
+  free_key_struct(ct->cs_keys);
+#endif
   free(ct->cs_tsbcluster);
   free(ct);
 }
@@ -2067,19 +2151,26 @@ cwc_service_start(service_t *t)
     if(cwc_find_stream_by_caid(t, cwc->cwc_caid) == NULL)
       continue;
 
-    ct = calloc(1, sizeof(cwc_service_t));
-    ct->cs_cluster_size = dvbcsa_bs_batch_size();
-    ct->cs_tsbcluster = malloc(ct->cs_cluster_size * 188);
+    ct                   = calloc(1, sizeof(cwc_service_t));
+#if ENABLE_DVBCSA
+    ct->cs_cluster_size  = dvbcsa_bs_batch_size();
+#else
+    ct->cs_cluster_size  = get_suggested_cluster_size();
+#endif
+    ct->cs_tsbcluster    = malloc(ct->cs_cluster_size * 188);
+#if ENABLE_DVBCSA
     ct->cs_tsbbatch_even = malloc((ct->cs_cluster_size + 1) *
-                             sizeof(struct dvbcsa_bs_batch_s));
-    ct->cs_tsbbatch_odd = malloc((ct->cs_cluster_size + 1) *
-                            sizeof(struct dvbcsa_bs_batch_s));
-
-    ct->cs_key_even = dvbcsa_bs_key_alloc();
-    ct->cs_key_odd = dvbcsa_bs_key_alloc();
-    ct->cs_cwc = cwc;
-    ct->cs_service = t;
-    ct->cs_okchannel = -3;
+                                   sizeof(struct dvbcsa_bs_batch_s));
+    ct->cs_tsbbatch_odd  = malloc((ct->cs_cluster_size + 1) *
+                                   sizeof(struct dvbcsa_bs_batch_s));
+    ct->cs_key_even      = dvbcsa_bs_key_alloc();
+    ct->cs_key_odd       = dvbcsa_bs_key_alloc();
+#else
+    ct->cs_keys          = get_key_struct();
+#endif
+    ct->cs_cwc           = cwc;
+    ct->cs_service       = t;
+    ct->cs_okchannel     = -1;
 
     td = &ct->cs_head;
     td->td_stop       = cwc_service_destroy;
