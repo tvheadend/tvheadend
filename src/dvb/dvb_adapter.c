@@ -470,7 +470,7 @@ tda_add(int adapter_num)
   snprintf(tda->tda_demux_path, 256, "%s/demux0", path);
   tda->tda_fe_path = strdup(fname);
   tda->tda_fe_fd       = -1;
-  tda->tda_dvr_pipe[0] = -1;
+  tda->tda_dvr_pipe.rd = -1;
   tda->tda_full_mux_rx = -1;
 
   tda->tda_fe_info = malloc(sizeof(struct dvb_frontend_info));
@@ -540,7 +540,7 @@ tda_add_from_file(const char *filename)
 
   tda->tda_adapter_num = -1;
   tda->tda_fe_fd       = -1;
-  tda->tda_dvr_pipe[0] = -1;
+  tda->tda_dvr_pipe.rd = -1;
 
   tda->tda_type = -1;
 
@@ -598,13 +598,9 @@ dvb_adapter_start ( th_dvb_adapter_t *tda )
   }
 
   /* Start DVR thread */
-  if (tda->tda_dvr_pipe[0] == -1) {
-    int err = pipe(tda->tda_dvr_pipe);
+  if (tda->tda_dvr_pipe.rd == -1) {
+    int err = tvh_pipe(O_NONBLOCK, &tda->tda_dvr_pipe);
     assert(err != -1);
-
-    fcntl(tda->tda_dvr_pipe[0], F_SETFD, fcntl(tda->tda_dvr_pipe[0], F_GETFD) | FD_CLOEXEC);
-    fcntl(tda->tda_dvr_pipe[0], F_SETFL, fcntl(tda->tda_dvr_pipe[0], F_GETFL) | O_NONBLOCK);
-    fcntl(tda->tda_dvr_pipe[1], F_SETFD, fcntl(tda->tda_dvr_pipe[1], F_GETFD) | FD_CLOEXEC);
     pthread_create(&tda->tda_dvr_thread, NULL, dvb_adapter_input_dvr, tda);
     tvhlog(LOG_DEBUG, "dvb", "%s started dvr thread", tda->tda_rootpath);
   }
@@ -627,14 +623,14 @@ dvb_adapter_stop ( th_dvb_adapter_t *tda )
   }
 
   /* Stop DVR thread */
-  if (tda->tda_dvr_pipe[0] != -1) {
+  if (tda->tda_dvr_pipe.rd != -1) {
     tvhlog(LOG_DEBUG, "dvb", "%s stopping thread", tda->tda_rootpath);
-    int err = write(tda->tda_dvr_pipe[1], "", 1);
+    int err = write(tda->tda_dvr_pipe.wr, "", 1);
     assert(err != -1);
     pthread_join(tda->tda_dvr_thread, NULL);
-    close(tda->tda_dvr_pipe[0]);
-    close(tda->tda_dvr_pipe[1]);
-    tda->tda_dvr_pipe[0] = -1;
+    close(tda->tda_dvr_pipe.rd);
+    close(tda->tda_dvr_pipe.wr);
+    tda->tda_dvr_pipe.rd = -1;
     tvhlog(LOG_DEBUG, "dvb", "%s stopped thread", tda->tda_rootpath);
   }
 }
@@ -921,8 +917,8 @@ dvb_adapter_input_dvr(void *aux)
   ev.events  = EPOLLIN;
   ev.data.fd = fd;
   epoll_ctl(efd, EPOLL_CTL_ADD, fd, &ev);
-  ev.data.fd = tda->tda_dvr_pipe[0];
-  epoll_ctl(efd, EPOLL_CTL_ADD, tda->tda_dvr_pipe[0], &ev);
+  ev.data.fd = tda->tda_dvr_pipe.rd;
+  epoll_ctl(efd, EPOLL_CTL_ADD, tda->tda_dvr_pipe.rd, &ev);
 
   r = i = 0;
   while(1) {

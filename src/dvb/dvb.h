@@ -228,7 +228,7 @@ typedef struct th_dvb_adapter {
   char *tda_demux_path;
 
   pthread_t tda_dvr_thread;
-  int       tda_dvr_pipe[2];
+  th_pipe_t tda_dvr_pipe;
 
   int tda_hostconnection;
 
