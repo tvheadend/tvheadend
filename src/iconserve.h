@@ -21,10 +21,26 @@
 
 #include "http.h"
 
+/* Struct of entries for icon grabbing
+ * FIELD: chan_number
+ * FIELD: icon url
+ */
+typedef struct iconserve_grab_queue
+{
+  TAILQ_ENTRY(iconserve_grab_queue) link;
+  int chan_number;
+  char *icon_url;
+} iconserve_grab_queue_t;
+
+
 int page_logo(http_connection_t *hc, const char *remain, void *opaque);
 size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 const char *logo_query(const char *ch_icon);
+
+void *iconserve_thread ( void *aux );
+
+void iconserve_queue_add ( int chan_number, char *icon_url );
 
 void logo_loader(void);
 
