@@ -2170,7 +2170,7 @@ cwc_service_start(service_t *t)
 #endif
     ct->cs_cwc           = cwc;
     ct->cs_service       = t;
-    ct->cs_okchannel     = -1;
+    ct->cs_okchannel     = -3;
 
     td = &ct->cs_head;
     td->td_stop       = cwc_service_destroy;
