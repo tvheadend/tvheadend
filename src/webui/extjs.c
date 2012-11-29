@@ -1889,6 +1889,12 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
     } else {
      save |= config_set_iconserve("off");
     };
+    str = http_arg_get(&hc->hc_req_args, "iconserve_periodicdownload");
+    if (str != NULL) {
+     save |= config_set_iconserve_periodicdownload(str);
+    } else {
+     save |= config_set_iconserve_periodicdownload("off");
+    };
     if ((str = http_arg_get(&hc->hc_req_args, "serverip")))
       save |= config_set_serverip(str);
     if (save) config_save();

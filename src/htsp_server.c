@@ -41,7 +41,7 @@
 #include "htsmsg_binary.h"
 #include "epg.h"
 #include "plumbing/tsfix.h"
-#include "config2.h"
+#include "iconserve.h"
 
 #include <sys/statvfs.h>
 #include "settings.h"
@@ -358,9 +358,7 @@ htsp_build_channel(channel_t *ch, const char *method)
   channel_tag_mapping_t *ctm;
   channel_tag_t *ct;
   service_t *t;
-  char logourl[30];
   epg_broadcast_t *now, *next = NULL;
-  const char *serverip = config_get_serverip();
 
   htsmsg_t *out = htsmsg_create_map();
   htsmsg_t *tags = htsmsg_create_list();
@@ -371,8 +369,9 @@ htsp_build_channel(channel_t *ch, const char *method)
 
   htsmsg_add_str(out, "channelName", ch->ch_name);
 
-  snprintf(logourl, sizeof(logourl), "http://%s:%d/channellogo/%d", serverip, webui_port, ch->ch_id);
-  htsmsg_add_str(out, "channelIcon", logourl);
+  if(ch->ch_icon != NULL) {
+    htsmsg_add_str(out, "channelIcon", logo_query(ch->ch_id, ch->ch_icon));
+  };
 
   now  = ch->ch_epg_now;
   next = ch->ch_epg_next;

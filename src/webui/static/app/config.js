@@ -54,6 +54,10 @@ tvheadend.miscconf = function() {
                 name : 'iconserve',
                 fieldLabel : 'Cache channel icons'
         });
+	var iconPeriodicDownload = new Ext.form.Checkbox({
+		name : 'iconserve_periodicdownload',
+		fieldLabel : 'Periodically check for updated icons'
+	});
         var serveripConfig = new Ext.form.TextField({
                 fieldLabel : 'TVH Server IP address',
                 name : 'serverip',
@@ -107,7 +111,7 @@ tvheadend.miscconf = function() {
 		layout : 'form',
 		defaultType : 'textfield',
 		autoHeight : true,
-		items : [ language, dvbscanPath, iconServeConfig, serveripConfig ],
+		items : [ language, dvbscanPath, iconServeConfig, iconPeriodicDownload, serveripConfig ],
 		tbar : [ saveButton, '->', helpButton ]
 	});
 

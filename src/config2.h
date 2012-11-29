@@ -36,6 +36,10 @@ const char *config_get_iconserve ( void );
 int         config_set_iconserve ( const char *str )
   __attribute__((warn_unused_result));
 
+const char *config_get_iconserve_periodicdownload ( void );
+int         config_set_iconserve_periodicdownload ( const char *str )
+  __attribute__((warn_unused_result));
+
 const char *config_get_serverip ( void );
 int         config_set_serverip ( const char *str )
   __attribute__((warn_unused_result));

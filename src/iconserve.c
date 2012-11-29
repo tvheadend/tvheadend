@@ -18,6 +18,7 @@
 
 #define CURL_STATICLIB
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
@@ -26,6 +27,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "settings.h"
 #include "tvheadend.h"
@@ -38,17 +40,10 @@
 #include "queue.h"
 #include "spawn.h"
 
-size_t
-write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
-    size_t written;
-    written = fwrite(ptr, size, nmemb, stream);
-    return written;
-}
-
 /* Queue, Cond to signal data and Mutex to protect it */
-static TAILQ_HEAD(,iconserve_grab_queue) queue;
-static pthread_mutex_t                   mutex;
-static pthread_cond_t                    cond;
+static TAILQ_HEAD(,iconserve_grab_queue) iconserve_queue;
+static pthread_mutex_t                   iconserve_mutex;
+static pthread_cond_t                    iconserve_cond;
 
 /**
  * https://github.com/andyb2000 Function to provide local icon files
@@ -62,12 +57,10 @@ page_logo(http_connection_t *hc, const char *remain, void *opaque)
   const char *outpath = "none";
   char homepath[254];
   char iconpath[100];
-  char mime_test[254];
   pthread_mutex_lock(&global_lock);
   fb_file *fp;
   ssize_t size;
   char buf[4096];
-  int        outlen;
   char       *mimetest_outbuf;
 
   if(remain == NULL) {
@@ -103,22 +96,17 @@ page_logo(http_connection_t *hc, const char *remain, void *opaque)
   snprintf(iconpath, sizeof(iconpath), "%s/%s", homepath, outpath);
   fp = fb_open(iconpath, 1, 0);
   if (!fp) {
-    tvhlog(LOG_DEBUG, "page_logo", "failed to open %s redirecting to http link for icon (%s)", iconpath, ch->ch_icon);
+    tvhlog(LOG_DEBUG, "page_logo", 
+           "failed to open %s redirecting to http link for icon (%s)", 
+           iconpath, ch->ch_icon);
     http_redirect(hc, ch->ch_icon);
+    /* we will also add to the queue for next time */
+    iconserve_queue_add ( ch->ch_id, ch->ch_icon );
   } else {
     tvhlog(LOG_DEBUG, "page_logo", "File %s opened", iconpath);
     size = fb_size(fp);
-
-    snprintf(mime_test, sizeof(mime_test), "file -ib --mime-type %s | cut -d ';' -f1", iconpath);
-    outlen = spawn_and_store_stdout(mime_test, NULL, &mimetest_outbuf);
-    if ( outlen < 1 ) {
-      tvhlog(LOG_DEBUG, "page_logo", "Cannot determine mime type, defaulting to image/jpeg");
-      mimetest_outbuf = strdup("image/jpeg");
-    };
-/*    http_send_header(hc, 200, "gzip", size, NULL, NULL, 300, 0, NULL);*/
-/* 3rd is content */
+    mimetest_outbuf = strdup("image/jpeg");
     http_send_header(hc, 200, mimetest_outbuf, size, NULL, NULL, 300, 0, NULL);
-/*    http_send_header(hc, 200, "gzip", size, NULL, NULL, 300, 0, NULL);*/
     while (!fb_eof(fp)) {
       ssize_t c = fb_read(fp, buf, sizeof(buf));
       if (c < 0) {
@@ -140,31 +128,23 @@ page_logo(http_connection_t *hc, const char *remain, void *opaque)
 *   Will return local cache url instead of icon stored
 */
 const char
-*logo_query(const char *ch_icon)
+*logo_query(int ch_id, const char *ch_icon)
 {
   const char *setting = config_get_iconserve();
   const char *serverip = config_get_serverip();
-  char *inpath, *inpath2, *outpath;
   char outiconpath[255];
-  char *return_icon = NULL;
+  char *return_icon = strdup(ch_icon);
 
-  if (!setting || !*setting) {
-    tvhlog(LOG_DEBUG, "logo_query", "logo_query - Disabled by config, skipping");
-    return ch_icon;
+  if (!setting || !*setting || (strcmp(setting, "off") == 0)) {
+    return return_icon;
   };
+
   if (!serverip || !*serverip) {
-    tvhlog(LOG_DEBUG, "logo_query", "No server IP defined in config, skipping icon cache");
-    return ch_icon;
+    return return_icon;
   };
 
-  inpath = strdup(ch_icon);
-  inpath2 = strtok(inpath, "/");
-  while (inpath2 != NULL) {
-    inpath2 = strtok(NULL, "/");
-    if (inpath2 != NULL)
-      outpath = strdup(inpath2);
-  };
-  snprintf(outiconpath, sizeof(outiconpath), "http://%s:%d/logo/%s", serverip, webui_port, outpath);
+  snprintf(outiconpath, sizeof(outiconpath), 
+    "http://%s:%d/channellogo/%d", serverip, webui_port, ch_id);
   return_icon = strdup(outiconpath);
 return return_icon;
 };
@@ -175,28 +155,114 @@ return return_icon;
 void *iconserve_thread ( void *aux )
 {
   iconserve_grab_queue_t *qe;
-  pthread_mutex_lock(&mutex);
+  pthread_mutex_lock(&iconserve_mutex);
+  char *inpath, *inpath2;
+  const char *header_parse = NULL, *header_maxage = NULL;
+  const char *outpath = "none";
+  CURL *curl;
+  FILE *curl_fp, *curl_fp_header;
+  CURLcode res;
+  fb_file *fp;
+  char iconpath[100], iconpath_header[100];
+  char homepath[254];
+  const char *homedir = hts_settings_get_root();
+  struct stat fileStat;
+  int trigger_download = 0;
+  char buf[256];
+  int file = 0;
+  time_t seconds;
+  int dif, compare_seconds;
 
   tvhlog(LOG_INFO, "iconserve_thread", "Thread startup");
-
+  curl = curl_easy_init();
+  snprintf(homepath, sizeof(homepath), "%s/icons", homedir);
+  if(stat(homepath, &fileStat) == 0 || mkdir(homepath, 0700) == 0) {
+  if (curl) {
   while (1) {
 
     /* Get entry from queue */
-    qe = TAILQ_FIRST(&queue);
+    qe = TAILQ_FIRST(&iconserve_queue);
     if (!qe) { // Queue empty
-      pthread_cond_wait(&cond, &mutex); // Note: this will unlock mutex
-                                        //       on entry and lock on exit
-      continue;                         // Go back to get entry (or if exit)
+      pthread_cond_wait(&iconserve_cond, &iconserve_mutex);
+      continue;
     }
-    TAILQ_REMOVE(&queue, qe, link);     // Remove entry and we're done with Q
-    pthread_mutex_unlock(&mutex);       // now other threads can add while
-                                        // we process
+    TAILQ_REMOVE(&iconserve_queue, qe, iconserve_link);
+    pthread_mutex_unlock(&iconserve_mutex);
 
-    // TOOD: DO SOME WORK
-    printf("chan_number: %d\n", qe->chan_number);
-    printf("icon_url: %s\n", qe->icon_url);
-  }
-
+    inpath = NULL;
+    inpath2 = NULL;
+    outpath = NULL;
+    curl_fp = NULL;
+/* split icon to last component */
+    inpath = strdup(qe->icon_url);
+    inpath2 = strtok(inpath, "/");
+    while (inpath2 != NULL) {
+      inpath2 = strtok(NULL, "/");
+      if (inpath2 != NULL)
+        outpath = strdup(inpath2);
+    };
+    if (outpath != NULL) {
+      snprintf(iconpath, sizeof(iconpath), "%s/%s", homepath, outpath);
+      snprintf(iconpath_header, sizeof(iconpath_header), "%s/%s.head", 
+               homepath, outpath);
+      fp = fb_open(iconpath, 0, 1);
+      if (!fp) {
+        /* No file exists so grab immediately */
+        trigger_download = 1;
+      } else {
+        /* File exists so compare expiry times to re-grab */
+        fb_close(fp);
+        fp = fb_open(iconpath_header, 0, 0);
+        while (!fb_eof(fp)) {
+          memset(buf, 0, sizeof(buf));
+          if (!fb_gets(fp, buf, sizeof(buf) - 1)) break;
+          if (buf[strlen(buf) - 1] == '\n') {
+            buf[strlen(buf) - 1] = '\0';
+          };
+          if(strstr(buf, "Cache-Control: ")) {
+            header_parse = strtok(buf, "=");
+            header_parse = strtok ( NULL, "=");
+            header_maxage = strdup(header_parse);
+          };
+        };
+        fb_close(fp);
+        file=open(iconpath, O_RDONLY);
+        fstat(file,&fileStat);
+        seconds = time (NULL);
+        dif = difftime (seconds,fileStat.st_mtime);
+        compare_seconds=atoi(header_maxage);
+        if (dif > compare_seconds) {
+          tvhlog(LOG_DEBUG, "logo_loader", "File Cache expired - REFRESHING");
+          trigger_download = 1;
+        };
+        close(file);
+      };
+      if (trigger_download == 1) {
+        curl_fp=fopen(iconpath,"wb");
+        curl_fp_header=fopen(iconpath_header,"w");
+        curl_easy_setopt(curl, CURLOPT_URL, qe->icon_url);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, curl_fp);
+        curl_easy_setopt(curl, CURLOPT_WRITEHEADER, curl_fp_header);
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, "TVHeadend");
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 120);
+        curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+        res = curl_easy_perform(curl);
+        if (res == 0) {
+          tvhlog(LOG_INFO, "logo_loader", "Downloaded icon via curl (%s)", qe->icon_url);
+        } else {
+          tvhlog(LOG_WARNING, "logo_loader", "Error with icon download via curl (%s)", qe->icon_url);
+        };
+        fclose(curl_fp);
+        fclose(curl_fp_header);
+        trigger_download = 0;
+      };
+    };
+  }; /* while loop */
+  curl_easy_cleanup(curl);
+  } else {
+    tvhlog(LOG_WARNING, "iconserve", "CURL cannot initialise, aborting icon thread");
+  };
+  };
   return NULL;
 };
 
@@ -209,18 +275,15 @@ void *iconserve_thread ( void *aux )
 void iconserve_queue_add ( int chan_number, char *icon_url )
 {
   /* Create entry */
-  tvhlog(LOG_DEBUG, "iconserve_queue_add", "Function start");
+  tvhlog(LOG_DEBUG, "iconserve_queue_add", "Adding chan_number to queue: %i",chan_number);
   iconserve_grab_queue_t *qe = calloc(1, sizeof(iconserve_grab_queue_t));
   qe->chan_number = chan_number;
   qe->icon_url = strdup(icon_url);
 
-  tvhlog(LOG_DEBUG, "iconserve_queue_add", "Add to queue");
-  /* Insert */
-  pthread_mutex_lock(&mutex);
-  TAILQ_INSERT_TAIL(&queue, qe, link);
-  tvhlog(LOG_DEBUG, "iconserve_queue_add", "Added, now wake thread up");
-  pthread_cond_signal(&cond); // tell thread data is available
-  pthread_mutex_unlock(&mutex);
+  pthread_mutex_lock(&iconserve_mutex);
+  TAILQ_INSERT_TAIL(&iconserve_queue, qe, iconserve_link);
+  pthread_cond_signal(&iconserve_cond); // tell thread data is available
+  pthread_mutex_unlock(&iconserve_mutex);
 }
 
 
@@ -232,18 +295,8 @@ void
 logo_loader(void)
 {
   channel_t *ch;
-  char *inpath, *inpath2;
-  const char *outpath = "none";
-  const char *homedir = hts_settings_get_root();
-  char homepath[254];
-  char iconpath[100];
-  fb_file *fp;
-  CURL *curl;
-  FILE *curl_fp;
-  CURLcode res;
   const char *setting = config_get_iconserve();
   const char *serverip = config_get_serverip();
-  struct stat fileStat;
 
   if (!setting || !*setting || (strcmp(setting, "off") == 0)) {
     tvhlog(LOG_DEBUG, "logo_loader", "Disabled by config, skipping");
@@ -258,9 +311,9 @@ logo_loader(void)
 
   pthread_t tid; // you probably don't need to keep this
 
-  pthread_mutex_init(&mutex, NULL); // Use default config
-  pthread_cond_init(&cond, NULL);   // ditto
-
+  pthread_mutex_init(&iconserve_mutex, NULL); // Use default config
+  pthread_cond_init(&iconserve_cond, NULL);   // ditto
+  TAILQ_INIT(&iconserve_queue);
   /* Start thread - presumably permanently active */
   pthread_create(&tid, NULL, iconserve_thread, NULL); // last param is passed as aux
                                               // as this is single global 
@@ -270,51 +323,10 @@ logo_loader(void)
 
 
   tvhlog(LOG_INFO, "logo_loader", "Caching logos locally");
-  snprintf(homepath, sizeof(homepath), "%s/icons", homedir);
-  if(stat(homepath, &fileStat) == 0 || mkdir(homepath, 0700) == 0) {
-  curl = curl_easy_init();
-  if (curl) {
   /* loop through channels and load logo files */
   RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
     if (ch->ch_icon != NULL) {
-      tvhlog(LOG_DEBUG, "logo_loader", "Loading channel icon %s for ch_id %d", ch->ch_icon, ch->ch_id);
       iconserve_queue_add ( ch->ch_id, ch->ch_icon );
-      inpath = NULL;
-      inpath2 = NULL;
-      outpath = NULL;
-      curl_fp = NULL;
-      /* split icon to last component */
-      inpath = strdup(ch->ch_icon);
-      inpath2 = strtok(inpath, "/");
-      while (inpath2 != NULL) {
-        inpath2 = strtok(NULL, "/");
-        if (inpath2 != NULL)
-          outpath = strdup(inpath2);
-      };
-      if (outpath != NULL) {
-        snprintf(iconpath, sizeof(iconpath), "%s/%s", homepath, outpath);
-        fp = fb_open(iconpath, 0, 1);
-        if (!fp) {
-          curl_fp = fopen(iconpath,"wb");
-          curl_easy_setopt(curl, CURLOPT_URL, ch->ch_icon);
-          curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
-          curl_easy_setopt(curl, CURLOPT_WRITEDATA, curl_fp);
-          res = curl_easy_perform(curl);
-          if (res == 0) {
-            tvhlog(LOG_INFO, "logo_loader", "Downloaded icon via curl");
-          } else {
-            tvhlog(LOG_WARNING, "logo_loader", "Error with icon download via curl");
-          };
-          fclose(curl_fp);
-        } else {
-          fb_close(fp);
-        };
-      };
     };
-  };
-  curl_easy_cleanup(curl);
-  } else {
-    tvhlog(LOG_WARNING, "iconserve", "CURL cannot initialise, aborting icon loader");
-  };
   };
 };

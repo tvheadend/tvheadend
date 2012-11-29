@@ -27,7 +27,7 @@
  */
 typedef struct iconserve_grab_queue
 {
-  TAILQ_ENTRY(iconserve_grab_queue) link;
+  TAILQ_ENTRY(iconserve_grab_queue) iconserve_link;
   int chan_number;
   char *icon_url;
 } iconserve_grab_queue_t;
@@ -36,9 +36,9 @@ typedef struct iconserve_grab_queue
 int page_logo(http_connection_t *hc, const char *remain, void *opaque);
 size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream);
 
-const char *logo_query(const char *ch_icon);
-
 void *iconserve_thread ( void *aux );
+
+const char *logo_query(int ch_id, const char *ch_icon);
 
 void iconserve_queue_add ( int chan_number, char *icon_url );
 

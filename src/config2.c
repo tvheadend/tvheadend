@@ -90,6 +90,21 @@ int config_set_iconserve ( const char *setting )
   }
   return 0;
 }
+const char *config_get_iconserve_periodicdownload ( void )
+{
+  return htsmsg_get_str(config, "iconserve_periodicdownload");
+}
+
+int config_set_iconserve_periodicdownload ( const char *setting )
+{
+  const char *c = config_get_iconserve_periodicdownload(); 
+  if (!c || strcmp(c, setting)) {
+    if (c) htsmsg_delete_field(config, "iconserve_periodicdownload");
+    htsmsg_add_str(config, "iconserve_periodicdownload", setting);
+    return 1;
+  }
+  return 0;
+}
 
 const char *config_get_serverip ( void )
 {
