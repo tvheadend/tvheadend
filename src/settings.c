@@ -195,11 +195,13 @@ hts_settings_load_one(const char *filename)
   mem    = malloc(fb_size(fp)+1);
   n      = fb_read(fp, mem, fb_size(fp));
   if (n >= 0) mem[n] = 0;
-  fb_close(fp);
 
   /* Decode */
   if(n == fb_size(fp))
     r = htsmsg_json_deserialize(mem);
+
+  /* Close */
+  fb_close(fp);
   free(mem);
 
   return r;
