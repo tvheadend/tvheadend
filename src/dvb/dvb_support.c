@@ -95,10 +95,7 @@ static inline size_t conv_8859(int conv,
       (*dstlen)--;
       dst++;
     } else if (c <= 0x9f) {
-      // codes 0x80 - 0x9f (control codes) are mapped to ' '
-      *dst = ' ';
-      (*dstlen)--;
-      dst++;
+      // codes 0x80 - 0x9f (control codes) are ignored
     } else {
       // map according to character table, skipping
       // unmapped chars (value 0 in the table)
