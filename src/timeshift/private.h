@@ -39,7 +39,7 @@ typedef TAILQ_HEAD(timeshift_index_iframe_list,timeshift_index_iframe) timeshift
 typedef struct timeshift_index_data
 {
   off_t                             pos;    ///< Position in the file
-  void                             *data;   ///< Associated data
+  streaming_message_t              *data;   ///< Associated data
   TAILQ_ENTRY(timeshift_index_data) link;   ///< List entry
 } timeshift_index_data_t;
 
