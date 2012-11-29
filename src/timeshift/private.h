@@ -24,36 +24,45 @@
 /**
  * Indexes of import data in the stream
  */
-typedef struct timeshift_index
+typedef struct timeshift_index_iframe
 {
-  off_t                        pos;    ///< Position in the file
-  union {
-    int64_t                    time;   ///< Packet time
-    void                      *data;   ///< Associated data
-  };
-  TAILQ_ENTRY(timeshift_index) link;   ///< List entry
-} timeshift_index_t;
+  off_t                               pos;    ///< Position in the file
+  int64_t                             time;   ///< Packet time
+  TAILQ_ENTRY(timeshift_index_iframe) link;   ///< List entry
+} timeshift_index_iframe_t;
 
-typedef TAILQ_HEAD(timeshift_index_list,timeshift_index) timeshift_index_list_t;
+typedef TAILQ_HEAD(timeshift_index_iframe_list,timeshift_index_iframe) timeshift_index_iframe_list_t;
+
+/**
+ * Indexes of import data in the stream
+ */
+typedef struct timeshift_index_data
+{
+  off_t                             pos;    ///< Position in the file
+  void                             *data;   ///< Associated data
+  TAILQ_ENTRY(timeshift_index_data) link;   ///< List entry
+} timeshift_index_data_t;
+
+typedef TAILQ_HEAD(timeshift_index_data_list,timeshift_index_data) timeshift_index_data_list_t;
 
 /**
  * Timeshift file
  */
 typedef struct timeshift_file
 {
-  int                         fd;       ///< Write descriptor
-  char                        *path;    ///< Full path to file
+  int                           fd;       ///< Write descriptor
+  char                          *path;    ///< Full path to file
 
-  time_t                      time;     ///< Files coarse timestamp
-  size_t                      size;     ///< Current file size;
-  int64_t                     last;     ///< Latest timestamp
+  time_t                        time;     ///< Files coarse timestamp
+  size_t                        size;     ///< Current file size;
+  int64_t                       last;     ///< Latest timestamp
 
-  uint8_t                     bad;      ///< File is broken
+  uint8_t                       bad;      ///< File is broken
 
-  int                         refcount; ///< Reader ref count
+  int                           refcount; ///< Reader ref count
 
-  timeshift_index_list_t      iframes;  ///< I-frame indexing
-  timeshift_index_list_t      sstart;   ///< Stream start messages
+  timeshift_index_iframe_list_t iframes;  ///< I-frame indexing
+  timeshift_index_data_list_t   sstart;   ///< Stream start messages
 
   TAILQ_ENTRY(timeshift_file) link;     ///< List entry
 } timeshift_file_t;

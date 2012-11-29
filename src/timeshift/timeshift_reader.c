@@ -179,7 +179,7 @@ void *timeshift_reader ( void *p )
   int64_t now, deliver;
   streaming_message_t *sm = NULL, *ctrl;
   timeshift_file_t *cur_file = NULL, *tsi_file = NULL;
-  timeshift_index_t *tsi = NULL;
+  timeshift_index_iframe_t *tsi = NULL;
 
   /* Poll */
   struct epoll_event ev;
@@ -310,7 +310,7 @@ void *timeshift_reader ( void *p )
       if (cur_speed < 0) {
         if (!tsi) {
           TAILQ_FOREACH_REVERSE(tsi, &tsi_file->iframes,
-                                timeshift_index_list, link) {
+                                timeshift_index_iframe_list, link) {
             if (tsi->time < last_time) break;
           }
         }
@@ -377,7 +377,7 @@ void *timeshift_reader ( void *p )
 
         /* Next index */
         if (cur_speed < 0)
-          tsi = TAILQ_PREV(tsi, timeshift_index_list, link);
+          tsi = TAILQ_PREV(tsi, timeshift_index_iframe_list, link);
         else
           tsi = TAILQ_NEXT(tsi, link);
 

@@ -46,7 +46,8 @@ static void* timeshift_reaper_callback ( void *p )
 {
   char *dpath;
   timeshift_file_t *tsf;
-  timeshift_index_t *ti;
+  timeshift_index_iframe_t *ti;
+  timeshift_index_data_t *tid;
   streaming_message_t *sm;
   pthread_mutex_lock(&timeshift_reaper_lock);
   while (timeshift_reaper_run) {
@@ -77,11 +78,11 @@ static void* timeshift_reaper_callback ( void *p )
       TAILQ_REMOVE(&tsf->iframes, ti, link);
       free(ti);
     }
-    while ((ti = TAILQ_FIRST(&tsf->sstart))) {
-      TAILQ_REMOVE(&tsf->sstart, ti, link);
-      sm = ti->data;
+    while ((tid = TAILQ_FIRST(&tsf->sstart))) {
+      TAILQ_REMOVE(&tsf->sstart, tid, link);
+      sm = tid->data;
       streaming_msg_free(sm);
-      free(ti);
+      free(tid);
     }
     free(tsf->path);
     free(tsf);
@@ -161,7 +162,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
   int fd;
   struct timespec tp;
   timeshift_file_t *tsf_tl, *tsf_hd, *tsf_tmp;
-  timeshift_index_t *ti;
+  timeshift_index_data_t *ti;
   char path[512];
 
   /* Return last file */
@@ -218,13 +219,12 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
         TAILQ_INSERT_TAIL(&ts->files, tsf_tmp, link);
 
         /* Copy across last start message */
-        if (tsf_tl && (ti = TAILQ_LAST(&tsf_tl->sstart, timeshift_index_list))) {
+        if (tsf_tl && (ti = TAILQ_LAST(&tsf_tl->sstart, timeshift_index_data_list))) {
 #ifdef TSHFT_TRACE
           tvhlog(LOG_DEBUG, "timeshift", "ts %d copy smt_start to new file",
                  ts->id);
 #endif
-          timeshift_index_t *ti2 = calloc(1, sizeof(timeshift_index_t));
-          ti2->pos  = ti->pos;
+          timeshift_index_data_t *ti2 = calloc(1, sizeof(timeshift_index_data_t));
           ti2->data = streaming_msg_clone(ti->data);
           TAILQ_INSERT_TAIL(&tsf_tmp->sstart, ti2, link);
         }

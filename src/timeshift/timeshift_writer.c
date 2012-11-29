@@ -188,7 +188,7 @@ static inline ssize_t _process_msg0
   streaming_message_t *sm = *smp;
   if (sm->sm_type == SMT_START) {
     err = 0;
-    timeshift_index_t *ti = calloc(1, sizeof(timeshift_index_t));
+    timeshift_index_data_t *ti = calloc(1, sizeof(timeshift_index_data_t));
     ti->pos  = tsf->size;
     ti->data = sm;
     *smp = NULL;
@@ -209,7 +209,7 @@ static inline ssize_t _process_msg0
       /* Index video iframes */
       if (pkt->pkt_componentindex == ts->vididx &&
           pkt->pkt_frametype      == PKT_I_FRAME) {
-        timeshift_index_t *ti = calloc(1, sizeof(timeshift_index_t));
+        timeshift_index_iframe_t *ti = calloc(1, sizeof(timeshift_index_iframe_t));
         ti->pos  = tsf->size;
         ti->time = sm->sm_time;
         TAILQ_INSERT_TAIL(&tsf->iframes, ti, link);
