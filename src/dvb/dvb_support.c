@@ -132,10 +132,7 @@ static inline size_t conv_6937(const uint8_t *src, size_t srclen,
       (*dstlen)--;
       dst++;
     } else if (c <= 0x9f) {
-      // codes 0x80 - 0x9f (control codes) are mapped to ' '
-      *dst = ' ';
-      (*dstlen)--;
-      dst++;
+      // codes 0x80 - 0x9f (control codes) are ignored
     } else {
       uint16_t uc;
       if (c >= 0xc0 && c <= 0xcf) {
