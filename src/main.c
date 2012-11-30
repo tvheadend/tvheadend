@@ -48,6 +48,7 @@
 #include "serviceprobe.h"
 #include "cwc.h"
 #include "capmt.h"
+#include "ccw.h"
 #include "dvr/dvr.h"
 #include "htsp_server.h"
 #include "rawtsinput.h"
@@ -460,6 +461,8 @@ main(int argc, char **argv)
   cwc_init();
 
   capmt_init();
+
+  ccw_init();
 
   epggrab_init();
   epg_init();

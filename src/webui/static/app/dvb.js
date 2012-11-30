@@ -505,7 +505,7 @@ tvheadend.dvb_services = function(adapterId) {
 			header : "Service ID",
 			dataIndex : 'sid',
 			width : 50,
-			hidden : true
+			hidden : false
 		}, {
 			header: "Preffered CA pid",
 			dataIndex: 'prefcapid',
