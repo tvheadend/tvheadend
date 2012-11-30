@@ -172,6 +172,8 @@ void *iconserve_thread ( void *aux )
   int file = 0;
   time_t seconds;
   int dif, compare_seconds;
+  struct timespec timertrigger;
+  const char *periodic_download = config_get_iconserve_periodicdownload();
 
   tvhlog(LOG_INFO, "iconserve_thread", "Thread startup");
   curl = curl_easy_init();
@@ -183,7 +185,18 @@ void *iconserve_thread ( void *aux )
     /* Get entry from queue */
     qe = TAILQ_FIRST(&iconserve_queue);
     if (!qe) { // Queue empty
+    periodic_download = config_get_iconserve_periodicdownload();
+    tvhlog(LOG_DEBUG, "logo_loader", "Periodic_download flag %s", periodic_download);
+    if (!periodic_download || !*periodic_download ||
+        (strcmp(periodic_download, "off") == 0)) {
+      tvhlog(LOG_DEBUG, "logo_loader", "Setting signal wake-up only");
       pthread_cond_wait(&iconserve_cond, &iconserve_mutex);
+    } else {
+      tvhlog(LOG_DEBUG, "logo_loader", "Setting periodic timer wake-up");
+      timertrigger.tv_sec  = time(NULL) + 300;
+      timertrigger.tv_nsec = 0;
+      pthread_cond_timedwait(&iconserve_cond, &iconserve_mutex, &timertrigger);
+    };
       continue;
     }
     TAILQ_REMOVE(&iconserve_queue, qe, iconserve_link);
@@ -269,8 +282,6 @@ void *iconserve_thread ( void *aux )
 /*
  * Add data to the queue
  *
- * TODO: you can either have user pass in just the "data"
- *       or a full queue_entry_t but you'd need to define struct in header
  */
 void iconserve_queue_add ( int chan_number, char *icon_url )
 {

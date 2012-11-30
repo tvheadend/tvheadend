@@ -854,7 +854,7 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_str(m, "channel", ch->ch_name);
     htsmsg_add_u32(m, "channelid", ch->ch_id);
     if(ch->ch_icon != NULL)
-	    htsmsg_add_str(m, "chicon", ch->ch_icon);
+            htsmsg_add_str(m, "chicon", logo_query(ch->ch_id, ch->ch_icon));
 
     if((s = epg_episode_get_title(ee, lang)))
       htsmsg_add_str(m, "title", s);
@@ -936,7 +936,7 @@ extjs_epgrelated(http_connection_t *hc, const char *remain, void *opaque)
           m = htsmsg_create_map();
           htsmsg_add_u32(m, "id", ebc->id);
           if ( ch->ch_name ) htsmsg_add_str(m, "channel", ch->ch_name);
-          if ( ch->ch_icon ) htsmsg_add_str(m, "chicon", ch->ch_icon);
+          if ( ch->ch_icon ) htsmsg_add_str(m, "chicon", logo_query(ch->ch_id, ch->ch_icon));
           htsmsg_add_u32(m, "start", ebc->start);
           htsmsg_add_msg(array, NULL, m);
         }
@@ -1335,7 +1335,7 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
     if(de->de_channel != NULL) {
       htsmsg_add_str(m, "channel", de->de_channel->ch_name);
       if(de->de_channel->ch_icon != NULL)
-	htsmsg_add_str(m, "chicon", de->de_channel->ch_icon);
+	htsmsg_add_str(m, "chicon", logo_query(de->de_channel->ch_id, de->de_channel->ch_icon));
     }
 
     htsmsg_add_str(m, "config_name", de->de_config_name);
