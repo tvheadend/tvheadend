@@ -511,7 +511,7 @@ tda_add(int adapter_num)
   dvb_adapter_checkspeed(tda);
 
 
-  if(!strcmp(tda->tda_fe_info->name, "Sony CXD2820R (DVB-T/T2)"))
+  if(!strcmp(tda->tda_fe_info->name, "Sony CXD2820R"))
     tda->tda_snr_valid = 1;
 
   tvhlog(LOG_INFO, "dvb",
