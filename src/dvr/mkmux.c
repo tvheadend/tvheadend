@@ -801,6 +801,9 @@ mk_write_cues(mk_mux_t *mkm)
 mk_mux_t *mk_mux_create(void)
 {
   mk_mux_t *mkm = calloc(1, sizeof(struct mk_mux));
+
+  mkm->fd = -1;
+
   return mkm;
 }
 

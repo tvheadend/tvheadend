@@ -1,6 +1,6 @@
 /*
  *  Functions for manipulating HTS messages
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,9 +16,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HTSMSG_H_
-#define HTSMSG_H_
-
+#pragma once
+#include <stdlib.h>
 #include <inttypes.h>
 #include "queue.h"
 
@@ -50,6 +49,7 @@ typedef struct htsmsg {
 #define HMF_STR  3
 #define HMF_BIN  4
 #define HMF_LIST 5
+#define HMF_DBL  6
 
 typedef struct htsmsg_field {
   TAILQ_ENTRY(htsmsg_field) hmf_link;
@@ -68,6 +68,7 @@ typedef struct htsmsg_field {
       size_t len;
     } bin;
     htsmsg_t msg;
+    double dbl;
   } u;
 } htsmsg_field_t;
 
@@ -76,11 +77,12 @@ typedef struct htsmsg_field {
 #define hmf_str     u.str
 #define hmf_bin     u.bin.data
 #define hmf_binsize u.bin.len
+#define hmf_dbl     u.dbl
 
 #define htsmsg_get_map_by_field(f) \
  ((f)->hmf_type == HMF_MAP ? &(f)->hmf_msg : NULL)
 #define htsmsg_get_list_by_field(f) \
- ((f)->hmf_type == HMF_LIST ? &(f)->hmf_msg : NULL)
+  ((f)->hmf_type == HMF_LIST ? &(f)->hmf_msg : NULL)
 
 #define HTSMSG_FOREACH(f, msg) TAILQ_FOREACH(f, &(msg)->hm_fields, hmf_link)
 
@@ -93,6 +95,11 @@ htsmsg_t *htsmsg_create_map(void);
  * Create a new list
  */
 htsmsg_t *htsmsg_create_list(void);
+
+/**
+ * Remove a given field from a msg
+ */
+void htsmsg_field_destroy(htsmsg_t *msg, htsmsg_field_t *f);
 
 /**
  * Destroys a message (map or list)
@@ -110,11 +117,6 @@ void htsmsg_add_u32(htsmsg_t *msg, const char *name, uint32_t u32);
 void htsmsg_add_s32(htsmsg_t *msg, const char *name,  int32_t s32);
 
 /**
- * Add an integer field where source is unsigned 64 bit.
- */
-void htsmsg_add_u64(htsmsg_t *msg, const char *name,  uint64_t u64);
-
-/**
  * Add an integer field where source is signed 64 bit.
  */
 void htsmsg_add_s64(htsmsg_t *msg, const char *name,  int64_t s64);
@@ -128,6 +130,11 @@ void htsmsg_add_str(htsmsg_t *msg, const char *name, const char *str);
  * Add an field where source is a list or map message.
  */
 void htsmsg_add_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub);
+
+/**
+ * Add an field where source is a double
+ */
+void htsmsg_add_dbl(htsmsg_t *msg, const char *name, double dbl);
 
 /**
  * Add an field where source is a list or map message.
@@ -161,15 +168,6 @@ void htsmsg_add_binptr(htsmsg_t *msg, const char *name, const void *bin,
 int htsmsg_get_u32(htsmsg_t *msg, const char *name, uint32_t *u32p);
 
 /**
- * Return the field \p name as an u32.
- *
- * @return An unsigned 32 bit integer or def if the field can not be found
- *         or if conversion is not possible.
- */
-uint32_t htsmsg_get_u32_or_default
-  (htsmsg_t *msg, const char *name, uint32_t def);
-
-/**
  * Get an integer as an signed 32 bit integer.
  *
  * @return HTSMSG_ERR_FIELD_NOT_FOUND - Field does not exist
@@ -187,24 +185,11 @@ int htsmsg_get_s32(htsmsg_t *msg, const char *name,  int32_t *s32p);
  */
 int htsmsg_get_s64(htsmsg_t *msg, const char *name,  int64_t *s64p);
 
-
-/**
+/*
  * Return the field \p name as an s64.
- *
- * @return A signed 64 bit integer or def if the field can not be found
- *         or if conversion is not possible.
  */
-int64_t htsmsg_get_s64_or_default
-  (htsmsg_t *msg, const char *name, int64_t def);
+int64_t htsmsg_get_s64_or_default(htsmsg_t *msg, const char *name, int64_t def);
 
-/**
- * Get an integer as an unsigned 64 bit integer.
- *
- * @return HTSMSG_ERR_FIELD_NOT_FOUND - Field does not exist
- *         HTSMSG_ERR_CONVERSION_IMPOSSIBLE - Field is not an integer or
- *              out of range for the requested storage.
- */
-int htsmsg_get_u64(htsmsg_t *msg, const char *name,  uint64_t *u64p);
 
 /**
  * Get pointer to a binary field. No copying of data is performed.
@@ -237,15 +222,6 @@ htsmsg_t *htsmsg_get_list(htsmsg_t *msg, const char *name);
 const char *htsmsg_get_str(htsmsg_t *msg, const char *name);
 
 /**
- * Get a field of type 'string'. No copying is done.
- *
- * @return def if the field can not be found or not of string type.
- *         Otherwise a pointer to the data is returned.
- */
-const char *htsmsg_get_str_or_default
-  (htsmsg_t *msg, const char *name, const char *def);
-
-/**
  * Get a field of type 'map'. No copying is done.
  *
  * @return NULL if the field can not be found or not of map type.
@@ -256,13 +232,46 @@ htsmsg_t *htsmsg_get_map(htsmsg_t *msg, const char *name);
 /**
  * Traverse a hierarchy of htsmsg's to find a specific child.
  */
-htsmsg_t *htsmsg_get_map_multi(htsmsg_t *msg, ...);
+htsmsg_t *htsmsg_get_map_multi(htsmsg_t *msg, ...)
+  __attribute__((__sentinel__(0)));
+
+/**
+ * Traverse a hierarchy of htsmsg's to find a specific child.
+ */
+const char *htsmsg_get_str_multi(htsmsg_t *msg, ...)
+  __attribute__((__sentinel__(0)));
+
+/**
+ * Get a field of type 'double'.
+ *
+ * @return HTSMSG_ERR_FIELD_NOT_FOUND - Field does not exist
+ *         HTSMSG_ERR_CONVERSION_IMPOSSIBLE - Field is not an integer or
+ *              out of range for the requested storage.
+ */
+int htsmsg_get_dbl(htsmsg_t *msg, const char *name, double *dblp);
 
 /**
  * Given the field \p f, return a string if it is of type string, otherwise
  * return NULL
  */
 const char *htsmsg_field_get_string(htsmsg_field_t *f);
+
+/**
+ * Return the field \p name as an u32.
+ *
+ * @return An unsigned 32 bit integer or NULL if the field can not be found
+ *         or if conversion is not possible.
+ */
+int htsmsg_get_u32_or_default(htsmsg_t *msg, const char *name, uint32_t def);
+
+/**
+ * Return the field \p name as an s32.
+ *
+ * @return A signed 32 bit integer or NULL if the field can not be found
+ *         or if conversion is not possible.
+ */
+int32_t htsmsg_get_s32_or_default(htsmsg_t *msg, const char *name, 
+				  int32_t def);
 
 /**
  * Remove the given field called \p name from the message \p msg.
@@ -289,6 +298,12 @@ htsmsg_field_t *htsmsg_field_add(htsmsg_t *msg, const char *name,
 				 int type, int flags);
 
 /**
+ * Get a field, return NULL if it does not exist
+ */
+htsmsg_field_t *htsmsg_field_find(htsmsg_t *msg, const char *name);
+
+
+/**
  * Clone a message.
  */
 htsmsg_t *htsmsg_copy(htsmsg_t *src);
@@ -296,8 +311,15 @@ htsmsg_t *htsmsg_copy(htsmsg_t *src);
 #define HTSMSG_FOREACH(f, msg) TAILQ_FOREACH(f, &(msg)->hm_fields, hmf_link)
 
 
+/**
+ * Misc
+ */
+htsmsg_t *htsmsg_get_map_in_list(htsmsg_t *m, int num);
+
+htsmsg_t *htsmsg_get_map_by_field_if_name(htsmsg_field_t *f, const char *name);
+
+const char *htsmsg_get_cdata(htsmsg_t *m, const char *field);
+
 extern void htsmsg_dtor(htsmsg_t **mp);
 
 #define htsmsg_autodtor(n) htsmsg_t *n __attribute__((cleanup(htsmsg_dtor)))
-
-#endif /* HTSMSG_H_ */

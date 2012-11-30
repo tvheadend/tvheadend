@@ -471,8 +471,10 @@ main(int argc, char **argv)
 
   htsp_init();
 
+#if (!ENABLE_DVBCSA)
   ffdecsa_init();
-  
+#endif
+
   if(rawts_input != NULL)
     rawts_init(rawts_input);
 

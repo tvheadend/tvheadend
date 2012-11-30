@@ -470,7 +470,7 @@ tda_add(int adapter_num)
   snprintf(tda->tda_demux_path, 256, "%s/demux0", path);
   tda->tda_fe_path = strdup(fname);
   tda->tda_fe_fd       = -1;
-  tda->tda_dvr_pipe[0] = -1;
+  tda->tda_dvr_pipe.rd = -1;
   tda->tda_full_mux_rx = -1;
 
   tda->tda_fe_info = malloc(sizeof(struct dvb_frontend_info));
@@ -510,9 +510,14 @@ tda_add(int adapter_num)
 
   dvb_adapter_checkspeed(tda);
 
+
+  if(!strcmp(tda->tda_fe_info->name, "Sony CXD2820R (DVB-T/T2)"))
+    tda->tda_snr_valid = 1;
+
   tvhlog(LOG_INFO, "dvb",
-	 "Found adapter %s (%s) via %s", path, tda->tda_fe_info->name,
-	 hostconnection2str(tda->tda_hostconnection));
+	 "Found adapter %s (%s) via %s%s", path, tda->tda_fe_info->name,
+	 hostconnection2str(tda->tda_hostconnection),
+         tda->tda_snr_valid ? ", Reports valid SNR values" : "");
 
   TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
 
@@ -535,7 +540,7 @@ tda_add_from_file(const char *filename)
 
   tda->tda_adapter_num = -1;
   tda->tda_fe_fd       = -1;
-  tda->tda_dvr_pipe[0] = -1;
+  tda->tda_dvr_pipe.rd = -1;
 
   tda->tda_type = -1;
 
@@ -593,13 +598,9 @@ dvb_adapter_start ( th_dvb_adapter_t *tda )
   }
 
   /* Start DVR thread */
-  if (tda->tda_dvr_pipe[0] == -1) {
-    int err = pipe(tda->tda_dvr_pipe);
+  if (tda->tda_dvr_pipe.rd == -1) {
+    int err = tvh_pipe(O_NONBLOCK, &tda->tda_dvr_pipe);
     assert(err != -1);
-
-    fcntl(tda->tda_dvr_pipe[0], F_SETFD, fcntl(tda->tda_dvr_pipe[0], F_GETFD) | FD_CLOEXEC);
-    fcntl(tda->tda_dvr_pipe[0], F_SETFL, fcntl(tda->tda_dvr_pipe[0], F_GETFL) | O_NONBLOCK);
-    fcntl(tda->tda_dvr_pipe[1], F_SETFD, fcntl(tda->tda_dvr_pipe[1], F_GETFD) | FD_CLOEXEC);
     pthread_create(&tda->tda_dvr_thread, NULL, dvb_adapter_input_dvr, tda);
     tvhlog(LOG_DEBUG, "dvb", "%s started dvr thread", tda->tda_rootpath);
   }
@@ -622,14 +623,14 @@ dvb_adapter_stop ( th_dvb_adapter_t *tda )
   }
 
   /* Stop DVR thread */
-  if (tda->tda_dvr_pipe[0] != -1) {
+  if (tda->tda_dvr_pipe.rd != -1) {
     tvhlog(LOG_DEBUG, "dvb", "%s stopping thread", tda->tda_rootpath);
-    int err = write(tda->tda_dvr_pipe[1], "", 1);
+    int err = write(tda->tda_dvr_pipe.wr, "", 1);
     assert(err != -1);
     pthread_join(tda->tda_dvr_thread, NULL);
-    close(tda->tda_dvr_pipe[0]);
-    close(tda->tda_dvr_pipe[1]);
-    tda->tda_dvr_pipe[0] = -1;
+    close(tda->tda_dvr_pipe.rd);
+    close(tda->tda_dvr_pipe.wr);
+    tda->tda_dvr_pipe.rd = -1;
     tvhlog(LOG_DEBUG, "dvb", "%s stopped thread", tda->tda_rootpath);
   }
 }
@@ -916,8 +917,8 @@ dvb_adapter_input_dvr(void *aux)
   ev.events  = EPOLLIN;
   ev.data.fd = fd;
   epoll_ctl(efd, EPOLL_CTL_ADD, fd, &ev);
-  ev.data.fd = tda->tda_dvr_pipe[0];
-  epoll_ctl(efd, EPOLL_CTL_ADD, tda->tda_dvr_pipe[0], &ev);
+  ev.data.fd = tda->tda_dvr_pipe.rd;
+  epoll_ctl(efd, EPOLL_CTL_ADD, tda->tda_dvr_pipe.rd, &ev);
 
   r = i = 0;
   while(1) {
@@ -1042,8 +1043,16 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "initialMuxes", tda->tda_initial_num_mux);
 
   if(tda->tda_mux_current != NULL) {
+    th_dvb_mux_instance_t *tdmi = tda->tda_mux_current;
+
     dvb_mux_nicename(buf, sizeof(buf), tda->tda_mux_current);
     htsmsg_add_str(m, "currentMux", buf);
+
+    htsmsg_add_u32(m, "signal", MIN(tdmi->tdmi_signal * 100 / 65535, 100));
+    htsmsg_add_u32(m, "snr", tdmi->tdmi_snr);
+    htsmsg_add_u32(m, "ber", tdmi->tdmi_ber);
+    htsmsg_add_u32(m, "unc", tdmi->tdmi_unc);
+    htsmsg_add_u32(m, "uncavg", tdmi->tdmi_unc_avg);
   }
 
   if(tda->tda_rootpath == NULL)

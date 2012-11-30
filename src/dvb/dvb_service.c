@@ -259,6 +259,10 @@ dvb_service_load(th_dvb_mux_instance_t *tdmi, const char *tdmi_identifier)
     if(s && u32)
       service_map_channel(t, channel_find_by_name(s, 1, 0), 0);
 
+    if(htsmsg_get_u32(c, "prefcapid", &u32))
+      u32 = 0;
+    t->s_prefcapid = u32;
+
     /* HACK - force save for old config */
     if(old)
       dvb_service_save(t);
@@ -470,6 +474,8 @@ dvb_service_build_msg(service_t *t)
     htsmsg_add_str(m, "dvb_charset", t->s_dvb_charset);
 
   htsmsg_add_u32(m, "dvb_eit_enable", t->s_dvb_eit_enable);
+
+  htsmsg_add_u32(m, "prefcapid", t->s_prefcapid);
 
   return m;
 }

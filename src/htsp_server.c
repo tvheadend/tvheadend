@@ -28,6 +28,7 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
+#include <sys/stat.h>
 
 #include "tvheadend.h"
 #include "channels.h"
@@ -53,7 +54,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 6
+#define HTSP_PROTO_VERSION 7
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -65,11 +66,13 @@ extern char *dvr_storage;
 
 LIST_HEAD(htsp_connection_list, htsp_connection);
 LIST_HEAD(htsp_subscription_list, htsp_subscription);
+LIST_HEAD(htsp_file_list, htsp_file);
 
 TAILQ_HEAD(htsp_msg_queue, htsp_msg);
 TAILQ_HEAD(htsp_msg_q_queue, htsp_msg_q);
 
 static struct htsp_connection_list htsp_async_connections;
+static struct htsp_connection_list htsp_connections;
 
 static void htsp_streaming_input(void *opaque, streaming_message_t *sm);
 
@@ -106,6 +109,8 @@ typedef struct htsp_msg_q {
  *
  */
 typedef struct htsp_connection {
+  LIST_ENTRY(htsp_connection) htsp_link;
+
   int htsp_fd;
   struct sockaddr_in *htsp_peer;
 
@@ -139,10 +144,9 @@ typedef struct htsp_connection {
   htsp_msg_q_t htsp_hmq_epg;
   htsp_msg_q_t htsp_hmq_qstatus;
 
-  /**
-   *
-   */
   struct htsp_subscription_list htsp_subscriptions;
+  struct htsp_file_list htsp_files;
+  int htsp_file_id;
 
   uint32_t htsp_granted_access;
 
@@ -177,6 +181,19 @@ typedef struct htsp_subscription {
   int hs_queue_depth;
 
 } htsp_subscription_t;
+
+
+/**
+ *
+ */
+typedef struct htsp_file {
+  LIST_ENTRY(htsp_file) hf_link;
+  int hf_id;  // ID sent to client
+  int hf_fd;  // Our file descriptor
+  char *hf_path; // For logging
+} htsp_file_t;
+
+
 
 #define HTSP_DEFAULT_QUEUE_DEPTH 500000
 
@@ -346,6 +363,69 @@ htsp_generate_challenge(htsp_connection_t *htsp)
 }
 
 /* **************************************************************************
+ * File helpers
+ * *************************************************************************/
+
+/**
+ *
+ */
+static htsmsg_t *
+htsp_file_open(htsp_connection_t *htsp, const char *path)
+{
+  struct stat st;
+  int fd = open(path, O_RDONLY);
+  tvhlog(LOG_DEBUG, "HTSP", "Opening file %s -- %s", path, fd < 0 ? strerror(errno) : "OK");
+  if(fd == -1)
+    return htsp_error("Unable to open file");
+
+  htsp_file_t *hf = calloc(1, sizeof(htsp_file_t));
+  hf->hf_fd = fd;
+  hf->hf_id = ++htsp->htsp_file_id;
+  hf->hf_path = strdup(path);
+  LIST_INSERT_HEAD(&htsp->htsp_files, hf, hf_link);
+
+  htsmsg_t *rep = htsmsg_create_map();
+  htsmsg_add_u32(rep, "id", hf->hf_id);
+
+  if(!fstat(hf->hf_fd, &st)) {
+    htsmsg_add_s64(rep, "size", st.st_size);
+    htsmsg_add_s64(rep, "mtime", st.st_mtime);
+  }
+
+  return rep;
+}
+
+/**
+ *
+ */
+static htsp_file_t *
+htsp_file_find(const htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsp_file_t *hf;
+
+  int id = htsmsg_get_u32_or_default(in, "id", 0);
+
+  LIST_FOREACH(hf, &htsp->htsp_files, hf_link) {
+    if(hf->hf_id == id)
+      return hf;
+  }
+  return NULL;
+}
+
+/**
+ *
+ */
+static void
+htsp_file_destroy(htsp_file_t *hf)
+{
+  tvhlog(LOG_DEBUG, "HTSP", "Closed opened file %s", hf->hf_path);
+  free(hf->hf_path);
+  close(hf->hf_fd);
+  LIST_REMOVE(hf, hf_link);
+  free(hf);
+}
+
+/* **************************************************************************
  * Output message generators
  * *************************************************************************/
 
@@ -436,6 +516,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
 {
   htsmsg_t *out = htsmsg_create_map();
   const char *s = NULL, *error = NULL;
+  const char *p;
+  dvr_config_t *cfg;
 
   htsmsg_add_u32(out, "id", de->de_id);
   htsmsg_add_u32(out, "channel", de->de_channel->ch_id);
@@ -447,6 +529,13 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
     htsmsg_add_str(out, "title", s);
   if( de->de_desc && (s = lang_str_get(de->de_desc, NULL)))
     htsmsg_add_str(out, "description", s);
+
+  if( de->de_filename && de->de_config_name ) {
+    if ((cfg = dvr_config_find_by_name_default(de->de_config_name))) {
+      if ((p = tvh_strbegins(de->de_filename, cfg->dvr_storage)))
+        htsmsg_add_str(out, "path", p);
+    }
+  }
 
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:
@@ -751,7 +840,7 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
   
   if(htsmsg_get_u32(in, "eventId", &eventId))
     return htsp_error("Missing argument 'eventId'");
-  lang = htsmsg_get_str_or_default(in, "language", htsp->htsp_language);
+  lang = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
 
   if((e = epg_broadcast_find_by_id(eventId, NULL)) == NULL)
     return htsp_error("Event does not exist");
@@ -785,7 +874,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
   maxTime
     = htsmsg_get_s64_or_default(in, "maxTime", 0);
   lang
-    = htsmsg_get_str_or_default(in, "language", htsp->htsp_language);
+    = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
 
   /* Use event as starting point */
   if (e || ch) {
@@ -854,7 +943,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
     genre.code = u32;
     eg         = &genre;
   }
-  lang = htsmsg_get_str_or_default(in, "language", htsp->htsp_language);
+  lang = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
   full = htsmsg_get_u32_or_default(in, "full", 0);
 
   //do the query
@@ -1238,6 +1327,146 @@ htsp_method_change_weight(htsp_connection_t *htsp, htsmsg_t *in)
   return NULL;
 }
 
+
+/**
+ * Open file
+ */
+static htsmsg_t *
+htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  const char *str, *s2;
+  const char *filename = NULL;
+  if((str = htsmsg_get_str(in, "file")) == NULL)
+    return htsp_error("Missing argument 'file'");
+
+  if((s2 = tvh_strbegins(str, "dvr/")) != NULL) {
+    dvr_entry_t *de = dvr_entry_find_by_id(atoi(s2));
+    if(de == NULL)
+      return htsp_error("DVR entry does not exist");
+
+    if(de->de_filename == NULL)
+      return htsp_error("DVR entry does not have a file yet");
+
+    filename = de->de_filename;
+  } else {
+    return htsp_error("Unknown file");
+  }
+
+  return htsp_file_open(htsp, filename);
+}
+
+/**
+ *
+ */
+static htsmsg_t *
+htsp_method_file_read(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsp_file_t *hf = htsp_file_find(htsp, in);
+  int64_t off;
+  int64_t size;
+
+  if(hf == NULL)
+    return htsp_error("Unknown file id");
+
+  if(htsmsg_get_s64(in, "size", &size))
+    return htsp_error("Missing field 'size'");
+
+  /* Seek (optional) */
+  if (!htsmsg_get_s64(in, "offset", &off))
+    if(lseek(hf->hf_fd, off, SEEK_SET) != off)
+      return htsp_error("Seek error");
+
+  /* Read */
+  void *m = malloc(size);
+  if(m == NULL)
+    return htsp_error("Too big segment");
+
+  int r = read(hf->hf_fd, m, size);
+  if(r < 0) {
+    free(m);
+    return htsp_error("Read error");
+  }
+
+  htsmsg_t *rep = htsmsg_create_map();
+  htsmsg_add_bin(rep, "data", m, r);
+  free(m);
+  return rep;
+}
+
+/**
+ *
+ */
+static htsmsg_t *
+htsp_method_file_close(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsp_file_t *hf = htsp_file_find(htsp, in);
+
+  if(hf == NULL)
+    return htsp_error("Unknown file id");
+
+  htsp_file_destroy(hf);
+  return htsmsg_create_map();
+}
+
+/**
+ *
+ */
+static htsmsg_t *
+htsp_method_file_stat(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsp_file_t *hf = htsp_file_find(htsp, in);
+  struct stat st;
+
+  if(hf == NULL)
+    return htsp_error("Unknown file id");
+
+  htsmsg_t *rep = htsmsg_create_map();
+  if(!fstat(hf->hf_fd, &st)) {
+    htsmsg_add_s64(rep, "size", st.st_size);
+    htsmsg_add_s64(rep, "mtime", st.st_mtime);
+  }
+  return rep;
+}
+
+/**
+ *
+ */
+static htsmsg_t *
+htsp_method_file_seek(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsp_file_t *hf = htsp_file_find(htsp, in);
+  htsmsg_t *rep;
+  const char *str;
+  int64_t off;
+  int whence;
+
+  if(hf == NULL)
+    return htsp_error("Unknown file id");
+
+  if (htsmsg_get_s64(in, "offset", &off))
+    return htsp_error("Missing field 'offset'");
+
+  if ((str = htsmsg_get_str(in, "whence"))) {
+    if (!strcmp(str, "SEEK_SET"))
+      whence = SEEK_SET;
+    else if (!strcmp(str, "SEEK_CUR"))
+      whence = SEEK_CUR;
+    else if (!strcmp(str, "SEEK_END"))
+      whence = SEEK_END;
+    else
+      return htsp_error("Field 'whence' contained invalid value");
+  } else {
+    whence = SEEK_SET;
+  }
+
+  if ((off = lseek(hf->hf_fd, off, whence)) < 0)
+    return htsp_error("Seek error");
+
+  rep = htsmsg_create_map();
+  htsmsg_add_s64(rep, "offset", off);
+  return rep;
+}
+
 /**
  * HTSP methods
  */
@@ -1263,6 +1492,11 @@ struct {
   { "subscribe",                htsp_method_subscribe,      ACCESS_STREAMING},
   { "unsubscribe",              htsp_method_unsubscribe,    ACCESS_STREAMING},
   { "subscriptionChangeWeight", htsp_method_change_weight,  ACCESS_STREAMING},
+  { "fileOpen",                 htsp_method_file_open,      ACCESS_RECORDER},
+  { "fileRead",                 htsp_method_file_read,      ACCESS_RECORDER},
+  { "fileClose",                htsp_method_file_close,     ACCESS_RECORDER},
+  { "fileStat",                 htsp_method_file_stat,      ACCESS_RECORDER},
+  { "fileSeek",                 htsp_method_file_seek,      ACCESS_RECORDER},
 };
 
 #define NUM_METHODS (sizeof(htsp_methods) / sizeof(htsp_methods[0]))
@@ -1478,12 +1712,17 @@ htsp_write_scheduler(void *aux)
 
     while(dlen > 0) {
       r = write(htsp->htsp_fd, dptr, dlen);
-      if(r < 1) {
+      if(r < 0) {
+        if(errno == EAGAIN || errno == EWOULDBLOCK)
+          continue;
         tvhlog(LOG_INFO, "htsp", "%s: Write error -- %s",
                htsp->htsp_logname, strerror(errno));
         break;
       }
-
+      if(r == 0) {
+        tvhlog(LOG_ERR, "htsp", "%s: write() returned 0",
+               htsp->htsp_logname);
+      }
       dptr += r;
       dlen -= r;
     }
@@ -1528,6 +1767,10 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source,
   htsp.htsp_peer = source;
   htsp.htsp_writer_run = 1;
 
+  pthread_mutex_lock(&global_lock);
+  LIST_INSERT_HEAD(&htsp_connections, &htsp, htsp_link);
+  pthread_mutex_unlock(&global_lock);
+
   pthread_create(&htsp.htsp_writer_thread, NULL, htsp_write_scheduler, &htsp);
 
   /**
@@ -1554,12 +1797,9 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source,
   if(htsp.htsp_async_mode)
     LIST_REMOVE(&htsp, htsp_async_link);
 
-  pthread_mutex_unlock(&global_lock);
+  LIST_REMOVE(&htsp, htsp_link);
 
-  free(htsp.htsp_logname);
-  free(htsp.htsp_peername);
-  free(htsp.htsp_username);
-  free(htsp.htsp_clientname);
+  pthread_mutex_unlock(&global_lock);
 
   pthread_mutex_lock(&htsp.htsp_out_mutex);
   htsp.htsp_writer_run = 0;
@@ -1567,6 +1807,11 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source,
   pthread_mutex_unlock(&htsp.htsp_out_mutex);
 
   pthread_join(htsp.htsp_writer_thread, NULL);
+
+  free(htsp.htsp_logname);
+  free(htsp.htsp_peername);
+  free(htsp.htsp_username);
+  free(htsp.htsp_clientname);
 
   htsp_msg_q_t *hmq;
 
@@ -1578,9 +1823,13 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source,
     }
   }
 
+  htsp_file_t *hf;
+  while((hf = LIST_FIRST(&htsp.htsp_files)) != NULL)
+    htsp_file_destroy(hf);
+
   close(fd);
 }
-  
+
 /**
  *  Fire up HTSP server
  */

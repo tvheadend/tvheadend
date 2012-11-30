@@ -677,7 +677,7 @@ static void _xmltv_load_grabbers ( void )
         while ((de = readdir(dir))) {
           if (strstr(de->d_name, XMLTV_GRAB) != de->d_name) continue;
           snprintf(bin, sizeof(bin), "%s/%s", tmp, de->d_name);
-          if (lstat(bin, &st)) continue;
+          if (stat(bin, &st)) continue;
           if (!(st.st_mode & S_IEXEC)) continue;
           if (!S_ISREG(st.st_mode)) continue;
           if ((outlen = spawn_and_store_stdout(bin, argv, &outbuf)) > 0) {
