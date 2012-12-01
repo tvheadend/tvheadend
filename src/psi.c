@@ -710,7 +710,8 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
  * PMT generator
  */
 int
-psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid)
+psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
+	      int version, int pcrpid)
 {
   int c, tlen, dlen, l, i;
   uint8_t *buf, *buf1;
@@ -726,8 +727,10 @@ psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid
   buf[4] = 0x01;
 
   buf[5] = 0xc1; /* current_next_indicator + version */
-  buf[6] = 0;
-  buf[7] = 0;
+  buf[5] |= (version & 0x1F) << 1;
+
+  buf[6] = 0; /* section number */
+  buf[7] = 0; /* last section number */
 
   buf[8] = 0xe0 | (pcrpid >> 8);
   buf[9] =         pcrpid;
