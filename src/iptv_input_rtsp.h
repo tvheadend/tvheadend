@@ -19,7 +19,11 @@
 #ifndef IPTV_INPUT_RTSP_H
 #define	IPTV_INPUT_RTSP_H
 
-int iptv_open_rtsp(const char *uri);
+typedef struct iptv_rtsp_info iptv_rtsp_info_t;
+
+iptv_rtsp_info_t *iptv_rtsp_start(const char *uri);
+
+void iptv_rtsp_stop(iptv_rtsp_info_t *);
 
 int iptv_init_rtsp(void);
 #endif	/* IPTV_RTSP_INPUT_H */

@@ -25,6 +25,12 @@
 
 #include "tvheadend.h"
 
+struct iptv_rtsp_info
+{
+  CURL *curl;
+  const char *uri;
+};
+
 /**
  * Define a simple header value with name and value, without ending \r\n
  * The response code isn't included, since curl keeps it as an internal value.
@@ -108,15 +114,18 @@ clean_header_list(curl_response_t *response)
 static void
 set_curl_result_buffer(CURL *curl, curl_response_t *buffer)
 {
-  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_data_write_func);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, buffer);
-  curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, curl_header_write_func);
-  curl_easy_setopt(curl, CURLOPT_WRITEHEADER, buffer);
-  clean_header_list(buffer);
-  if(buffer->data)
+  if(buffer)
   {
-    free(buffer->data);
-    buffer->data = NULL;
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_data_write_func);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, buffer);
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, curl_header_write_func);
+    curl_easy_setopt(curl, CURLOPT_WRITEHEADER, buffer);
+    clean_header_list(buffer);
+    if(buffer->data)
+    {
+      free(buffer->data);
+      buffer->data = NULL;
+    }
   }
 }
 
@@ -237,41 +246,65 @@ create_response()
   return response;
 }
 
-int
-iptv_open_rtsp(const char *uri)
+static void
+destroy_response(curl_response_t *response)
+{
+  clean_header_list(response);
+  if(response->data)
+  {
+    free(response->data);
+    response->data = NULL;
+  }
+  free(response);
+  response = NULL;
+}
+
+iptv_rtsp_info_t *
+iptv_rtsp_start(const char *uri)
 {
   /* initialize this curl session */
   CURL *curl = curl_init();
   curl_response_t *response = create_response();
+  iptv_rtsp_info_t *rtsp_info;
   CURLcode result;
   
   result = curl_easy_setopt(curl, CURLOPT_URL, uri);
-  tvhlog(LOG_INFO, "IPTV", "cURL init : %d", result);
+  tvhlog(LOG_DEBUG, "IPTV", "cURL init : %d", result);
   
   result = rtsp_options(curl, uri, response);
   curl_header_t *header = response->header_head.lh_first->next.le_next;
-  tvhlog(LOG_INFO, "IPTV", "RTSP OPTIONS answer : %d, %s: %s", result, header->name, header->value);
+  tvhlog(LOG_DEBUG, "IPTV", "RTSP OPTIONS answer : %d, %s: %s", result, header->name, header->value);
   
   result = rtsp_describe(curl, response);
-  tvhlog(LOG_INFO, "IPTV", "RTSP DESCRIBE answer : %d, %s", result, response->data);
+  tvhlog(LOG_DEBUG, "IPTV", "RTSP DESCRIBE answer : %d, %s", result, response->data);
 
   result = rtsp_setup(curl, uri, "RTP/AVP;unicast;client_port=1234-1235", response);
   header = response->header_head.lh_first->next.le_next;
-  tvhlog(LOG_INFO, "IPTV", "RTSP SETUP answer : %d, %s: %s", result, header->name, header->value);
+  tvhlog(LOG_DEBUG, "IPTV", "RTSP SETUP answer : %d, %s: %s", result, header->name, header->value);
   
   result = rtsp_play(curl, uri, "0.000-", response);
   header = response->header_head.lh_first->next.le_next;
-  tvhlog(LOG_INFO, "IPTV", "RTSP PLAY answer : %d, %s: %s", result, header->name, header->value);
+  tvhlog(LOG_DEBUG, "IPTV", "RTSP PLAY answer : %d, %s: %s", result, header->name, header->value);
   
-/*
-  curl_easy_cleanup(curl);
-  curl = NULL;
-*/
-  free(response);
+  destroy_response(response);
   
-  return 0;
+  rtsp_info = malloc(sizeof(iptv_rtsp_info_t));
+  rtsp_info->curl = curl;
+  rtsp_info->uri = uri;
+  
+  return rtsp_info;
   
   result = rtsp_teardown(curl, uri, response);
+}
+
+void
+iptv_rtsp_stop(iptv_rtsp_info_t *rtsp_info)
+{
+  rtsp_teardown(rtsp_info->curl, rtsp_info->uri, NULL);
+  
+  curl_easy_cleanup(rtsp_info->curl);
+  free(rtsp_info);
+  rtsp_info = NULL;
 }
 
 int
