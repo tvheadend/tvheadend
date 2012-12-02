@@ -210,6 +210,24 @@ iptv_find_interface(service_t *service, struct ifreq *ifr, int fd)
 }
 
 static int
+is_rtsp(service_t *service)
+{
+  return strncmp(service->s_iptv_iface, "rtsp://", 7);
+}
+
+static int
+is_multicast_ipv4(service_t *service)
+{
+  return service->s_iptv_group.s_addr != 0;
+}
+
+static int
+is_multicast_ipv6(service_t *service)
+{
+  return service->s_iptv_group6.s6_addr != 0;
+}
+
+static int
 iptv_multicast_ipv4_start(service_t *service, int fd)
 {
   struct sockaddr_in sin;
@@ -324,22 +342,23 @@ iptv_service_start(service_t *t, unsigned int weight, int force_start)
     return -1;
   }
 
-  if(strncmp(t->s_iptv_iface, "rtsp://", 7) == 0)
+  if(is_rtsp(t))
   {
     tvhlog(LOG_WARNING, "IPTV",
 	   "Starting RTSP Streaming with %s", t->s_iptv_iface);
     if(!iptv_rtsp_start(t->s_iptv_iface))
     {
+      close(fd);
       return -1;
     }
-  } else if(t->s_iptv_group.s_addr!=0) {
-        /* Bind to IPv4 multicast group */
+  } else if(is_multicast_ipv4(t)) {
+    /* Bind to IPv4 multicast group */
     if(iptv_multicast_ipv4_start(t, fd) != 0)
     {
       close(fd);
       return -1;
     }
-  } else {
+  } else if(is_multicast_ipv6(t)) {
     /* Bind to IPv6 multicast group */
     if(iptv_multicast_ipv6_start(t, fd) != 0)
     {
