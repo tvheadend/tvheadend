@@ -37,6 +37,7 @@
 #include "htsmsg.h"
 #include "channels.h"
 #include "iptv_input.h"
+#include "iptv_input_rtsp.h"
 #include "tsdemux.h"
 #include "psi.h"
 #include "settings.h"
@@ -209,7 +210,7 @@ iptv_find_interface(service_t *service, struct ifreq *ifr, int fd)
 }
 
 static int
-iptv_open_multicast_ipv4(service_t *service, int fd)
+iptv_multicast_ipv4_start(service_t *service, int fd)
 {
   struct sockaddr_in sin;
   struct ip_mreqn m;
@@ -249,7 +250,7 @@ iptv_open_multicast_ipv4(service_t *service, int fd)
 }
 
 static int
-iptv_open_multicast_ipv6(service_t *service, int fd)
+iptv_multicast_ipv6_start(service_t *service, int fd)
 {
   char straddr[INET6_ADDRSTRLEN];
   struct sockaddr_in6 sin6;
@@ -323,16 +324,24 @@ iptv_service_start(service_t *t, unsigned int weight, int force_start)
     return -1;
   }
 
-  if(t->s_iptv_group.s_addr!=0) {
+  if(strncmp(t->s_iptv_iface, "rtsp://", 7) == 0)
+  {
+    tvhlog(LOG_WARNING, "IPTV",
+	   "Starting RTSP Streaming with %s", t->s_iptv_iface);
+    if(!iptv_rtsp_start(t->s_iptv_iface))
+    {
+      return -1;
+    }
+  } else if(t->s_iptv_group.s_addr!=0) {
         /* Bind to IPv4 multicast group */
-    if(iptv_open_multicast_ipv4(t, fd) != 0)
+    if(iptv_multicast_ipv4_start(t, fd) != 0)
     {
       close(fd);
       return -1;
     }
   } else {
     /* Bind to IPv6 multicast group */
-    if(iptv_open_multicast_ipv6(t, fd) != 0)
+    if(iptv_multicast_ipv6_start(t, fd) != 0)
     {
       close(fd);
       return -1;
@@ -676,4 +685,5 @@ iptv_input_init(void)
 {
   pthread_mutex_init(&iptv_recvmutex, NULL);
   iptv_service_load();
+  iptv_init_rtsp();
 }
