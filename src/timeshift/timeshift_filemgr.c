@@ -44,6 +44,7 @@ static pthread_cond_t        timeshift_reaper_cond;
 
 static void* timeshift_reaper_callback ( void *p )
 {
+  char *dpath;
   timeshift_file_t *tsf;
   timeshift_index_t *ti;
   streaming_message_t *sm;
@@ -65,6 +66,11 @@ static void* timeshift_reaper_callback ( void *p )
 
     /* Remove */
     unlink(tsf->path);
+    dpath = dirname(tsf->path);
+    if (rmdir(dpath) == -1)
+      if (errno != ENOTEMPTY)
+        tvhlog(LOG_ERR, "timeshift", "failed to remove %s [e=%s]",
+               dpath, strerror(errno));
 
     /* Free memory */
     while ((ti = TAILQ_FIRST(&tsf->iframes))) {
