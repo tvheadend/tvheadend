@@ -126,7 +126,6 @@ timeshift_destroy(streaming_target_t *pad)
   /* Wait for all threads */
   pthread_join(ts->rd_thread, NULL);
   pthread_join(ts->wr_thread, NULL);
-  pthread_join(ts->rm_thread, NULL);
 
   /* Shut stuff down */
   streaming_queue_deinit(&ts->wr_queue);

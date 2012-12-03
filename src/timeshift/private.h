@@ -88,9 +88,6 @@ typedef struct timeshift {
   pthread_t                   rd_thread;  ///< Reader thread
   th_pipe_t                   rd_pipe;    ///< Message passing to reader
 
-  pthread_t                   rm_thread;  ///< Reaper thread
-  timeshift_file_list_t       rm_list;    ///< Remove files
-
   pthread_mutex_t             rdwr_mutex; ///< Buffer protection
   timeshift_file_list_t       files;      ///< List of files
 
