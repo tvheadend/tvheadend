@@ -269,7 +269,7 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune)
 
   if(tdmi->tdmi_table_initial) {
     tdmi->tdmi_table_initial = 0;
-    tda->tda_initial_num_mux--;
+    tda->tda_dn->dn_initial_num_mux--;
     dvb_mux_save(tdmi);
   }
 
@@ -497,7 +497,7 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
     /* Remove from initial scan set */
     if(tdmi->tdmi_table_initial) {
       tdmi->tdmi_table_initial = 0;
-      tda->tda_initial_num_mux--;
+      tda->tda_dn->dn_initial_num_mux--;
     }
 
     /* Mark as bad */

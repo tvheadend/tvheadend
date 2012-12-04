@@ -57,9 +57,11 @@ static th_dvb_adapter_t *
 tda_alloc(void)
 {
   th_dvb_adapter_t *tda = calloc(1, sizeof(th_dvb_adapter_t));
+  dvb_network_t *dn = calloc(1, sizeof(dvb_network_t));
   pthread_mutex_init(&tda->tda_delivery_mutex, NULL);
 
-  TAILQ_INIT(&tda->tda_initial_scan_queue);
+  tda->tda_dn = dn;
+  TAILQ_INIT(&dn->dn_initial_scan_queue);
   TAILQ_INIT(&tda->tda_satconfs);
   streaming_pad_init(&tda->tda_streaming_pad);
   return tda;
@@ -711,7 +713,7 @@ dvb_adapter_mux_scanner(void *aux)
   gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 20);
 
   /* No muxes */
-  if(LIST_FIRST(&tda->tda_muxes) == NULL) {
+  if(LIST_FIRST(&tda->tda_dn->dn_muxes) == NULL) {
     dvb_adapter_poweroff(tda);
     return;
   }
@@ -725,7 +727,7 @@ dvb_adapter_mux_scanner(void *aux)
     return; // Someone is doing full mux dump
 
   /* Check if we have muxes pending for quickscan, if so, choose them */
-  if((tdmi = TAILQ_FIRST(&tda->tda_initial_scan_queue)) != NULL) {
+  if((tdmi = TAILQ_FIRST(&tda->tda_dn->dn_initial_scan_queue)) != NULL) {
     dvb_fe_tune(tdmi, "Initial autoscan");
     return;
   }
@@ -764,10 +766,10 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
 
   lock_assert(&global_lock);
 
-  while((tdmi_dst = LIST_FIRST(&dst->tda_muxes)) != NULL)
+  while((tdmi_dst = LIST_FIRST(&dst->tda_dn->dn_muxes)) != NULL)
     dvb_mux_destroy(tdmi_dst);
 
-  LIST_FOREACH(tdmi_src, &src->tda_muxes, tdmi_adapter_link)
+  LIST_FOREACH(tdmi_src, &src->tda_dn->dn_muxes, tdmi_adapter_link)
     dvb_mux_copy(dst, tdmi_src, NULL);
 
   tda_save(dst);
@@ -789,7 +791,7 @@ dvb_adapter_destroy(th_dvb_adapter_t *tda)
 
   hts_settings_remove("dvbadapters/%s", tda->tda_identifier);
 
-  while((tdmi = LIST_FIRST(&tda->tda_muxes)) != NULL)
+  while((tdmi = LIST_FIRST(&tda->tda_dn->dn_muxes)) != NULL)
     dvb_mux_destroy(tdmi);
   
   TAILQ_REMOVE(&dvb_adapters, tda, tda_global_link);
@@ -992,7 +994,7 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
   htsmsg_add_str(m, "name", tda->tda_displayname);
 
   // XXX: bad bad bad slow slow slow
-  LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+  LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link) {
     nummux++;
     LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
       numsvc++;
@@ -1003,7 +1005,7 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
 
   htsmsg_add_u32(m, "services", numsvc);
   htsmsg_add_u32(m, "muxes", nummux);
-  htsmsg_add_u32(m, "initialMuxes", tda->tda_initial_num_mux);
+  htsmsg_add_u32(m, "initialMuxes", tda->tda_dn->dn_initial_num_mux);
 
   if(tda->tda_mux_current != NULL) {
     th_dvb_mux_instance_t *tdmi = tda->tda_mux_current;

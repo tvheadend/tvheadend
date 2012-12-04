@@ -67,9 +67,9 @@ static void tdmi_set_enable(th_dvb_mux_instance_t *tdmi, int enabled);
 static void
 mux_link_initial(th_dvb_adapter_t *tda, th_dvb_mux_instance_t *tdmi)
 {
-  int was_empty = TAILQ_FIRST(&tda->tda_initial_scan_queue) == NULL;
+  int was_empty = TAILQ_FIRST(&tda->tda_dn->dn_initial_scan_queue) == NULL;
 
-  tdmi->tdmi_scan_queue = &tda->tda_initial_scan_queue;
+  tdmi->tdmi_scan_queue = &tda->tda_dn->dn_initial_scan_queue;
   TAILQ_INSERT_TAIL(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
 
   if(was_empty && (tda->tda_mux_current == NULL ||
@@ -163,7 +163,7 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
   lock_assert(&global_lock);
 
   /* HACK - we hash/compare based on 2KHz spacing and compare on +/-500Hz */
-  LIST_FOREACH(tdmi, &tda->tda_mux_list, tdmi_adapter_hash_link) {
+  LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link) {
     if(tdmi_compare_key(&tdmi->tdmi_conf, dmc))
       break; /* Mux already exist */
   }
@@ -280,8 +280,7 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
 		     tdmi, tdmi_satconf_link);
   }
 
-  LIST_INSERT_HEAD(&tda->tda_mux_list, tdmi, tdmi_adapter_hash_link);
-  LIST_INSERT_HEAD(&tda->tda_muxes, tdmi, tdmi_adapter_link);
+  LIST_INSERT_HEAD(&tda->tda_dn->dn_muxes, tdmi, tdmi_adapter_link);
   tdmi->tdmi_table_initial = initialscan;
 
   if(source != NULL) {
@@ -296,7 +295,7 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
   dvb_mux_notify(tdmi);
 
   if(enabled && tdmi->tdmi_table_initial) {
-    tda->tda_initial_num_mux++;
+    tda->tda_dn->dn_initial_num_mux++;
     mux_link_initial(tda, tdmi);
   }
 
@@ -334,13 +333,12 @@ dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
 
   RB_REMOVE(&dvb_muxes, tdmi, tdmi_global_link);
   LIST_REMOVE(tdmi, tdmi_adapter_link);
-  LIST_REMOVE(tdmi, tdmi_adapter_hash_link);
 
   if(tdmi->tdmi_scan_queue != NULL)
     TAILQ_REMOVE(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
 
   if(tdmi->tdmi_table_initial)
-    tda->tda_initial_num_mux--;
+    tda->tda_dn->dn_initial_num_mux--;
 
   epggrab_mux_delete(tdmi);
 
@@ -1254,7 +1252,7 @@ th_dvb_mux_instance_t *dvb_mux_find
 {
   th_dvb_mux_instance_t *tdmi;
   if (tda) {
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link) {
       if (enabled && !tdmi->tdmi_enabled) continue;
       if (onid    && onid != tdmi->tdmi_network_id) continue;
       if (tsid    && tsid != tdmi->tdmi_transport_stream_id) continue;

@@ -352,7 +352,7 @@ dvb_service_find3
       if (sid == svc->s_dvb_service_id) return svc;
     }
   } else if (tda) {
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link) {
       if (enabled && !tdmi->tdmi_enabled) continue;
       if (onid    && onid != tdmi->tdmi_network_id) continue;
       if (tsid    && tsid != tdmi->tdmi_transport_stream_id) continue;

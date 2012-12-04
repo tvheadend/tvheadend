@@ -237,7 +237,7 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     tvhlog(LOG_NOTICE, "web interface",
 	   "Service probe started on \"%s\"", tda->tda_displayname);
 
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link) {
       LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
 	if(t->s_enabled)
 	  serviceprobe_enqueue(t);
@@ -334,7 +334,7 @@ extjs_dvbmuxes(http_connection_t *hc, const char *remain, void *opaque)
   if(!strcmp(op, "get")) {
     array = htsmsg_create_list();
 
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link)
       htsmsg_add_msg(array, NULL, dvb_mux_build_msg(tdmi));
 
     htsmsg_add_msg(out, "entries", array);
@@ -415,7 +415,7 @@ extjs_dvbservices(http_connection_t *hc, const char *remain, void *opaque)
     out = htsmsg_create_map();
     array = htsmsg_create_list();
 
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link) {
       LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
 	count++;
       }
@@ -423,7 +423,7 @@ extjs_dvbservices(http_connection_t *hc, const char *remain, void *opaque)
 
     tvec = alloca(sizeof(service_t *) * count);
 
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link) {
       LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
 	tvec[i++] = t;
       }

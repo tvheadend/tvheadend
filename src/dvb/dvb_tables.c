@@ -61,7 +61,7 @@ dvb_table_fastswitch(th_dvb_mux_instance_t *tdmi)
       return;
 
   tdmi->tdmi_table_initial = 0;
-  tda->tda_initial_num_mux--;
+  tda->tda_dn->dn_initial_num_mux--;
   dvb_mux_save(tdmi);
 
 
@@ -267,7 +267,7 @@ dvb_bat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
     j = 0;
 
     /* Find TDMI */
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link)
       if(tdmi->tdmi_transport_stream_id == tsid &&
          tdmi->tdmi_network_id == onid)
         break;
@@ -337,7 +337,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     if(!tdmi->tdmi_network_id)
       dvb_mux_set_onid(tdmi, onid);
   } else {
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link)
       if(tdmi->tdmi_transport_stream_id == tsid &&
          tdmi->tdmi_network_id != onid)
         break;
@@ -495,7 +495,7 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   // Make sure this TSID is not already known on another mux
   // That might indicate that we have accedentally received a PAT
   // from another mux
-  LIST_FOREACH(other, &tda->tda_muxes, tdmi_adapter_link)
+  LIST_FOREACH(other, &tda->tda_dn->dn_muxes, tdmi_adapter_link)
     if(other != tdmi && 
        other->tdmi_conf.dmc_satconf == tdmi->tdmi_conf.dmc_satconf &&
        other->tdmi_transport_stream_id == tsid &&
@@ -755,7 +755,7 @@ dvb_table_local_channel(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   service_t *t;
 
-  LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
+  LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link)
     if(tdmi->tdmi_transport_stream_id == tsid && tdmi->tdmi_network_id == onid)
       break;
 
@@ -935,7 +935,7 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     onid = (ptr[24] << 8) | ptr[25];
     
     /* Search all muxes on adapter */
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link)
       if(tdmi->tdmi_transport_stream_id == tsid && tdmi->tdmi_network_id == onid);
 	break;
     

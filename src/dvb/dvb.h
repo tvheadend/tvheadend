@@ -93,7 +93,6 @@ typedef struct th_dvb_mux_instance {
   RB_ENTRY(th_dvb_mux_instance) tdmi_global_link;
 
   LIST_ENTRY(th_dvb_mux_instance) tdmi_adapter_link;
-  LIST_ENTRY(th_dvb_mux_instance) tdmi_adapter_hash_link;
 
   struct th_dvb_adapter *tdmi_adapter;
 
@@ -167,6 +166,21 @@ typedef struct dvb_table_feed {
 
 
 /**
+ *
+ */
+typedef struct dvb_network {
+
+  struct th_dvb_mux_instance_list dn_muxes;
+
+  struct th_dvb_mux_instance_queue dn_initial_scan_queue;
+  int dn_initial_num_mux;
+
+  int dn_fe_type;
+
+} dvb_network_t;
+
+
+/**
  * DVB Adapter (one of these per physical adapter)
  */
 #define TDA_MUX_HASH_WIDTH 101
@@ -175,10 +189,7 @@ typedef struct th_dvb_adapter {
 
   TAILQ_ENTRY(th_dvb_adapter) tda_global_link;
 
-  struct th_dvb_mux_instance_list tda_muxes;
-
-  struct th_dvb_mux_instance_queue tda_initial_scan_queue;
-  int tda_initial_num_mux;
+  dvb_network_t *tda_dn;
 
   th_dvb_mux_instance_t *tda_mux_current;
   char *tda_tune_reason; // Reason for last tune
@@ -203,10 +214,11 @@ typedef struct th_dvb_adapter {
   int32_t  tda_full_mux_rx;
   char *tda_displayname;
 
+  int tda_type;
+  struct dvb_frontend_info *tda_fe_info; // result of FE_GET_INFO ioctl()
+
   char *tda_fe_path;
   int tda_fe_fd;
-  int tda_type;
-  struct dvb_frontend_info *tda_fe_info;
 
   int tda_adapter_num;
 
@@ -229,8 +241,6 @@ typedef struct th_dvb_adapter {
 
   struct dvb_satconf_queue tda_satconfs;
 
-
-  struct th_dvb_mux_instance_list tda_mux_list;
 
   uint32_t tda_last_fec;
 
