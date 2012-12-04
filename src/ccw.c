@@ -138,7 +138,7 @@ ccw_table_input(struct th_descrambler *td, struct service *t,
     struct elementary_stream *st, const uint8_t *data, int len)
 {
 
-// CCW работает без ECM сюда мы попасть не должны никогда
+// CCW work without ECM, so never enter here
 
   tvhlog(LOG_INFO, "ccw",
             "ECM incoming for service \"%s\"",t->s_svcname);
