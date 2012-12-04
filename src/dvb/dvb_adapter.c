@@ -733,20 +733,21 @@ dvb_adapter_mux_scanner(void *aux)
   }
 
   /* Check EPG */
-  if (tda->tda_mux_epg) {
-    epggrab_mux_stop(tda->tda_mux_epg, 1); // timeout anything not complete
-    tda->tda_mux_epg = NULL; // skip this time
+  if (tda->tda_dn->dn_mux_epg) {
+    // timeout anything not complete
+    epggrab_mux_stop(tda->tda_dn->dn_mux_epg, 1);
+    tda->tda_dn->dn_mux_epg = NULL; // skip this time
   } else {
-    tda->tda_mux_epg = epggrab_mux_next(tda);
+    tda->tda_dn->dn_mux_epg = epggrab_mux_next(tda);
   }
 
   /* EPG */
-  if (tda->tda_mux_epg) {
-    int period = epggrab_mux_period(tda->tda_mux_epg);
+  if (tda->tda_dn->dn_mux_epg) {
+    int period = epggrab_mux_period(tda->tda_dn->dn_mux_epg);
     if (period > 20)
       gtimer_arm(&tda->tda_mux_scanner_timer,
                  dvb_adapter_mux_scanner, tda, period);
-    dvb_fe_tune(tda->tda_mux_epg, "EPG scan");
+    dvb_fe_tune(tda->tda_dn->dn_mux_epg, "EPG scan");
     return;
 
   }

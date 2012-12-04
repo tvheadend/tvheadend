@@ -175,7 +175,7 @@ typedef struct dvb_network {
   struct th_dvb_mux_instance_queue dn_initial_scan_queue;
   int dn_initial_num_mux;
 
-  int dn_fe_type;
+  th_dvb_mux_instance_t *dn_mux_epg;
 
 } dvb_network_t;
 
@@ -193,8 +193,6 @@ typedef struct th_dvb_adapter {
 
   th_dvb_mux_instance_t *tda_mux_current;
   char *tda_tune_reason; // Reason for last tune
-
-  th_dvb_mux_instance_t *tda_mux_epg;
 
   int tda_table_epollfd;
 
