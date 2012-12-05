@@ -681,8 +681,8 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
 
   tvh_str_update(&htsp->htsp_clientname, htsmsg_get_str(in, "clientname"));
 
-  tvhlog(LOG_INFO, "htsp", "%s: Welcomed client software: %s",
-	 htsp->htsp_logname, name);
+  tvhlog(LOG_INFO, "htsp", "%s: Welcomed client software: %s (HTSPv%d)",
+	 htsp->htsp_logname, name, v);
 
   htsmsg_add_u32(r, "htspversion", HTSP_PROTO_VERSION);
   htsmsg_add_str(r, "servername", "HTS Tvheadend");
