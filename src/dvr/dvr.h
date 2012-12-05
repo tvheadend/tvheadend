@@ -332,11 +332,17 @@ typedef struct dvr_query_result {
 } dvr_query_result_t;
 
 typedef int (dvr_entry_filter)(dvr_entry_t *entry);
+typedef int (dvr_entry_comparator)(const void *a, const void *b);
 
 void dvr_query(dvr_query_result_t *dqr);
 void dvr_query_filter(dvr_query_result_t *dqr, dvr_entry_filter filter);
 void dvr_query_free(dvr_query_result_t *dqr);
+
+void dvr_query_sort_cmp(dvr_query_result_t *dqr, dvr_entry_comparator cmp);
 void dvr_query_sort(dvr_query_result_t *dqr);
+
+int dvr_sort_start_descending(const void *A, const void *B);
+int dvr_sort_start_ascending(const void *A, const void *B);
 
 /**
  *

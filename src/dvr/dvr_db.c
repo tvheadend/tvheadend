@@ -1337,7 +1337,7 @@ dvr_query_free(dvr_query_result_t *dqr)
 /**
  * Sorting functions
  */
-static int
+int
 dvr_sort_start_descending(const void *A, const void *B)
 {
   dvr_entry_t *a = *(dvr_entry_t **)A;
@@ -1345,22 +1345,30 @@ dvr_sort_start_descending(const void *A, const void *B)
   return b->de_start - a->de_start;
 }
 
+int
+dvr_sort_start_ascending(const void *A, const void *B)
+{
+  return -dvr_sort_start_descending(A, B);
+}
+
 
 /**
  *
  */
 void
-dvr_query_sort(dvr_query_result_t *dqr)
+dvr_query_sort_cmp(dvr_query_result_t *dqr, dvr_entry_comparator sf)
 {
-  int (*sf)(const void *a, const void *b);
-
   if(dqr->dqr_array == NULL)
     return;
 
-  sf = dvr_sort_start_descending;
   qsort(dqr->dqr_array, dqr->dqr_entries, sizeof(dvr_entry_t *), sf);
 }  
 
+void
+dvr_query_sort(dvr_query_result_t *dqr)
+{
+  dvr_query_sort_cmp(dqr, dvr_sort_start_descending);
+}
 
 /**
  *

@@ -1287,7 +1287,8 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
  *
  */
 static int
-extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque, dvr_entry_filter filter)
+extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque,
+              dvr_entry_filter filter, dvr_entry_comparator cmp)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   htsmsg_t *out, *array, *m;
@@ -1319,7 +1320,7 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque, dvr_entry
 
   dvr_query_filter(&dqr, filter);
 
-  dvr_query_sort(&dqr);
+  dvr_query_sort_cmp(&dqr, cmp);
 
   htsmsg_add_u32(out, "totalCount", dqr.dqr_entries);
 
@@ -1407,13 +1408,13 @@ static int is_dvr_entry_new(dvr_entry_t *entry)
 static int
 extjs_dvrlist_old(http_connection_t *hc, const char *remain, void *opaque)
 {
-  return extjs_dvrlist(hc, remain, opaque, is_dvr_entry_old);
+  return extjs_dvrlist(hc, remain, opaque, is_dvr_entry_old, dvr_sort_start_descending);
 }
 
 static int
 extjs_dvrlist_new(http_connection_t *hc, const char *remain, void *opaque)
 {
-  return extjs_dvrlist(hc, remain, opaque, is_dvr_entry_new);
+  return extjs_dvrlist(hc, remain, opaque, is_dvr_entry_new, dvr_sort_start_ascending);
 }
 
 /**
