@@ -470,7 +470,7 @@ dvb_mux_nicefreq(char *buf, size_t size, const dvb_mux_t *dm)
 {
   char freq[50];
 
-  if(dm->dm_network->dn_fe_type == FE_QPSK) {
+  if(dm->dm_dn->dn_fe_type == FE_QPSK) {
     nicenum(freq, sizeof(freq), dm->dm_conf.dmc_fe_params.frequency);
     snprintf(buf, size, "%s kHz", freq);
   } else {
@@ -488,8 +488,8 @@ void
 dvb_mux_nicename(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
 {
   char freq[50];
-  const char *n = tdmi->tdmi_network;
   const dvb_mux_t *dm = tdmi->tdmi_mux;
+  const char *n = dm->dm_network_name;
 
   if(tdmi->tdmi_adapter->tda_fe_type == FE_QPSK) {
     nicenum(freq, sizeof(freq), dm->dm_conf.dmc_fe_params.frequency);

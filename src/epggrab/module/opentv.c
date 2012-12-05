@@ -651,7 +651,7 @@ static void _opentv_start
 
   /* Ignore */
   if (!m->enabled)  return;
-  if (mod->tsid != tdmi->tdmi_transport_stream_id) return;
+  if (mod->tsid != tdmi->tdmi_mux->dm_transport_stream_id) return;
 
   /* Create link */
   if (!(ota = epggrab_ota_create(m, tdmi))) return;

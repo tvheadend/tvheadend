@@ -475,7 +475,7 @@ static int _eit_desc_crid
         } else {
           char *defauth = svc->s_default_authority;
           if (!defauth)
-            defauth = svc->s_dvb_mux_instance->tdmi_default_authority;
+            defauth = svc->s_dvb_mux_instance->tdmi_mux->dm_default_authority;
           if (defauth)
             snprintf(crid, clen, "crid://%s%s", defauth, buf);
         }
@@ -544,8 +544,8 @@ static int _eit_process_event
   /* Override */
   if (!ev.default_charset) {
     ev.default_charset
-      = dvb_charset_find(svc->s_dvb_mux_instance->tdmi_network_id,
-                         svc->s_dvb_mux_instance->tdmi_transport_stream_id,
+      = dvb_charset_find(svc->s_dvb_mux_instance->tdmi_mux->dm_network_id,
+                         svc->s_dvb_mux_instance->tdmi_mux->dm_transport_stream_id,
                          svc->s_dvb_service_id);
   }
 
@@ -716,8 +716,8 @@ static int _eit_callback
     tda  = tdmi->tdmi_adapter;
     tdmi = dvb_mux_find(tda, NULL, onid, tsid, 1);
   } else {
-    if (tdmi->tdmi_transport_stream_id != tsid ||
-        tdmi->tdmi_network_id != onid) {
+    if (tdmi->tdmi_mux->dm_transport_stream_id != tsid ||
+        tdmi->tdmi_mux->dm_network_id != onid) {
 #ifdef EPG_EIT_TRACE
       tvhlog(LOG_DEBUG, mod->id,
              "invalid transport id found tid 0x%02X, onid:tsid %d:%d != %d:%d",

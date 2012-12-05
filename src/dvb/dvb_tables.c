@@ -268,8 +268,8 @@ dvb_bat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
 
     /* Find TDMI */
     LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link)
-      if(tdmi->tdmi_transport_stream_id == tsid &&
-         tdmi->tdmi_network_id == onid)
+      if(tdmi->tdmi_mux->dm_transport_stream_id == tsid &&
+         tdmi->tdmi_mux->dm_network_id == onid)
         break;
 
     /* Descriptors */
@@ -288,9 +288,9 @@ dvb_bat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
         }
         j += dlen;
       }
-      if (*crid && strcmp(tdmi->tdmi_default_authority ?: "", crid)) {
-        free(tdmi->tdmi_default_authority);
-        tdmi->tdmi_default_authority = strdup(crid);
+      if (*crid && strcmp(tdmi->tdmi_mux->dm_default_authority ?: "", crid)) {
+        free(tdmi->tdmi_mux->dm_default_authority);
+        tdmi->tdmi_mux->dm_default_authority = strdup(crid);
         save = 1;
       }
       if (save)
@@ -332,14 +332,14 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   tsid         = ptr[0] << 8 | ptr[1];
   onid         = ptr[5] << 8 | ptr[6];
   if (tableid == 0x42) {
-    if(tdmi->tdmi_transport_stream_id != tsid)
+    if(tdmi->tdmi_mux->dm_transport_stream_id != tsid)
       return -1;
-    if(!tdmi->tdmi_network_id)
+    if(!tdmi->tdmi_mux->dm_network_id)
       dvb_mux_set_onid(tdmi, onid);
   } else {
     LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link)
-      if(tdmi->tdmi_transport_stream_id == tsid &&
-         tdmi->tdmi_network_id != onid)
+      if(tdmi->tdmi_mux->dm_transport_stream_id == tsid &&
+         tdmi->tdmi_mux->dm_network_id != onid)
         break;
     if (!tdmi) return 0;
   }
@@ -497,13 +497,13 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   // from another mux
   LIST_FOREACH(other, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link)
     if(other != tdmi &&
-       other->tdmi_transport_stream_id == tsid &&
-       other->tdmi_network_id == tdmi->tdmi_network_id)
+       other->tdmi_mux->dm_transport_stream_id == tsid &&
+       other->tdmi_mux->dm_network_id == tdmi->tdmi_mux->dm_network_id)
       return -1;
 
-  if(tdmi->tdmi_transport_stream_id == 0xffff)
+  if(tdmi->tdmi_mux->dm_transport_stream_id == 0xffff)
     dvb_mux_set_tsid(tdmi, tsid);
-  else if (tdmi->tdmi_transport_stream_id != tsid)
+  else if (tdmi->tdmi_mux->dm_transport_stream_id != tsid)
     return -1; // TSID mismatches, skip packet, may be from another mux
 
   ptr += 5;
@@ -752,7 +752,8 @@ dvb_table_local_channel(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   service_t *t;
 
   LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link)
-    if(tdmi->tdmi_transport_stream_id == tsid && tdmi->tdmi_network_id == onid)
+    if(tdmi->tdmi_mux->dm_transport_stream_id == tsid &&
+       tdmi->tdmi_mux->dm_network_id == onid)
       break;
 
   if(tdmi == NULL)
@@ -830,7 +831,7 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       if(dvb_get_string(networkname, sizeof(networkname), ptr, tlen, NULL, NULL))
 	return -1;
 
-      if(strcmp(tdmi->tdmi_network ?: "", networkname))
+      if(strcmp(tdmi->tdmi_mux->dm_network_name ?: "", networkname))
 	dvb_mux_set_networkname(tdmi, networkname);
       break;
     }
@@ -932,7 +933,8 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     
     /* Search all muxes on adapter */
     LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link)
-      if(tdmi->tdmi_transport_stream_id == tsid && tdmi->tdmi_network_id == onid);
+      if(tdmi->tdmi_mux->dm_transport_stream_id == tsid &&
+         tdmi->tdmi_mux->dm_network_id == onid);
 	break;
     
     if(tdmi == NULL)

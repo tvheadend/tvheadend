@@ -147,12 +147,15 @@ static void _epggrab_ota_save_one ( htsmsg_t *m, epggrab_module_ota_t *mod )
   TAILQ_FOREACH(ota, &mod->muxes, grab_link) {
     if (!l) l = htsmsg_create_list();
     e = htsmsg_create_map();
-    htsmsg_add_u32(e, "onid",     ota->tdmi->tdmi_network_id);
-    htsmsg_add_u32(e, "tsid",     ota->tdmi->tdmi_transport_stream_id);
+
+    const dvb_mux_t *dm = ota->tdmi->tdmi_mux;
+
+    htsmsg_add_u32(e, "onid",     dm->dm_network_id);
+    htsmsg_add_u32(e, "tsid",     dm->dm_transport_stream_id);
     htsmsg_add_u32(e, "period",   ota->timeout);
     htsmsg_add_u32(e, "interval", ota->interval);
-    if (ota->tdmi->tdmi_network)
-      htsmsg_add_str(e, "networkname", ota->tdmi->tdmi_network);
+    if (dm->dm_network_name)
+      htsmsg_add_str(e, "networkname", dm->dm_network_name);
     htsmsg_add_msg(l, NULL, e);
   }
   if (l) htsmsg_add_msg(m, mod->id, l);
@@ -256,9 +259,11 @@ void epggrab_ota_create_and_register_by_id
   epggrab_ota_mux_t *ota;
   TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
     LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link) {
-      if (tdmi->tdmi_transport_stream_id != tsid) continue;
-      if (onid && tdmi->tdmi_network_id != onid) continue;
-      if (networkname && (!tdmi->tdmi_network || strcmp(networkname, tdmi->tdmi_network))) continue;
+      const dvb_mux_t *dm = tdmi->tdmi_mux;
+      if (dm->dm_transport_stream_id != tsid) continue;
+      if (onid && dm->dm_network_id != onid) continue;
+      if (networkname && (!dm->dm_network_name ||
+                          strcmp(networkname, dm->dm_network_name))) continue;
       ota = epggrab_ota_create(mod, tdmi);
       epggrab_ota_register(ota, period, interval);
     }

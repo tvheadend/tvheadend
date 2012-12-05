@@ -194,12 +194,12 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
       save = 1;
     }
 
-    if(tsid != 0xFFFF && tdmi->tdmi_transport_stream_id != tsid) {
-      tdmi->tdmi_transport_stream_id = tsid;
+    if(tsid != 0xFFFF && tdmi->tdmi_mux->dm_transport_stream_id != tsid) {
+      tdmi->tdmi_mux->dm_transport_stream_id = tsid;
       save = 1;
     }
-    if(onid && tdmi->tdmi_network_id != onid) {
-      tdmi->tdmi_network_id = onid;
+    if(onid && tdmi->tdmi_mux->dm_network_id != onid) {
+      tdmi->tdmi_mux->dm_network_id = onid;
       save = 1;
     }
 
@@ -223,11 +223,16 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
     return NULL;
   }
 
+  dvb_mux_t *dm = calloc(1, sizeof(dvb_mux_t));
+
+  dm->dm_network_id = onid;
+  dm->dm_transport_stream_id = tsid;
+  dm->dm_network_name = network ? strdup(network) : NULL;
+  dm->dm_dn = tda->tda_dn;
+
+
   tdmi = calloc(1, sizeof(th_dvb_mux_instance_t));
-
-  tdmi->tdmi_mux = calloc(1, sizeof(dvb_mux_t));
-
-  tdmi->tdmi_mux->dm_network = tda->tda_dn;
+  tdmi->tdmi_mux = dm;
 
   if(identifier == NULL) {
     char qpsktxt[20];
@@ -264,10 +269,8 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
   
   TAILQ_INIT(&tdmi->tdmi_table_queue);
 
-  tdmi->tdmi_network_id = onid;
-  tdmi->tdmi_transport_stream_id = tsid;
+
   tdmi->tdmi_adapter = tda;
-  tdmi->tdmi_network = network ? strdup(network) : NULL;
   tdmi->tdmi_quality = 100;
 
   memcpy(&tdmi->tdmi_mux->dm_conf, dmc, sizeof(struct dvb_mux_conf));
@@ -333,7 +336,7 @@ dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
 
   hts_settings_remove("dvbmuxes/%s", tdmi->tdmi_identifier);
 
-  free(tdmi->tdmi_network);
+  //  free(tdmi->tdmi_network_name); // XXX(dvbreorg)
   free(tdmi->tdmi_identifier);
   free(tdmi);
 
@@ -550,17 +553,17 @@ dvb_mux_save(th_dvb_mux_instance_t *tdmi)
   htsmsg_add_u32(m, "enabled", tdmi->tdmi_enabled);
   htsmsg_add_str(m, "status", dvb_mux_status(tdmi));
 
-  htsmsg_add_u32(m, "transportstreamid", tdmi->tdmi_transport_stream_id);
-  htsmsg_add_u32(m, "originalnetworkid", tdmi->tdmi_network_id);
-  if(tdmi->tdmi_network != NULL)
-    htsmsg_add_str(m, "network", tdmi->tdmi_network);
+  htsmsg_add_u32(m, "transportstreamid", tdmi->tdmi_mux->dm_transport_stream_id);
+  htsmsg_add_u32(m, "originalnetworkid", tdmi->tdmi_mux->dm_network_id);
+  if(tdmi->tdmi_mux->dm_network_name != NULL)
+    htsmsg_add_str(m, "network", tdmi->tdmi_mux->dm_network_name);
 
   htsmsg_add_u32(m, "frequency", f->frequency);
 
   htsmsg_add_u32(m, "initialscan", tdmi->tdmi_table_initial);
 
-  if(tdmi->tdmi_default_authority)
-    htsmsg_add_str(m, "default_authority", tdmi->tdmi_default_authority);
+  if(tdmi->tdmi_mux->dm_default_authority)
+    htsmsg_add_str(m, "default_authority", tdmi->tdmi_mux->dm_default_authority);
 
   switch(tdmi->tdmi_adapter->tda_fe_type) {
   case FE_OFDM:
@@ -774,7 +777,7 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
       tdmi->tdmi_quality = u32;
 
     if((s = htsmsg_get_str(m, "default_authority")))
-      tdmi->tdmi_default_authority = strdup(s);
+      tdmi->tdmi_mux->dm_default_authority = strdup(s);
   }
   return NULL;
 }
@@ -811,13 +814,13 @@ dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *networkname)
 {
   htsmsg_t *m;
 
-  free(tdmi->tdmi_network);
-  tdmi->tdmi_network = strdup(networkname);
+  free(tdmi->tdmi_mux->dm_network_name);
+  tdmi->tdmi_mux->dm_network_name = strdup(networkname);
   dvb_mux_save(tdmi);
 
   m = htsmsg_create_map();
   htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
-  htsmsg_add_str(m, "network", tdmi->tdmi_network ?: "");
+  htsmsg_add_str(m, "network", tdmi->tdmi_mux->dm_network_name ?: "");
   notify_by_msg("dvbMux", m);
 }
 
@@ -830,13 +833,13 @@ dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid)
 {
   htsmsg_t *m;
 
-  tdmi->tdmi_transport_stream_id = tsid;
+  tdmi->tdmi_mux->dm_transport_stream_id = tsid;
  
   dvb_mux_save(tdmi);
 
   m = htsmsg_create_map();
   htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
-  htsmsg_add_u32(m, "muxid", tdmi->tdmi_transport_stream_id);
+  htsmsg_add_u32(m, "muxid", tdmi->tdmi_mux->dm_transport_stream_id);
   notify_by_msg("dvbMux", m);
 }
 
@@ -848,13 +851,13 @@ dvb_mux_set_onid(th_dvb_mux_instance_t *tdmi, uint16_t onid)
 {
   htsmsg_t *m;
 
-  tdmi->tdmi_network_id = onid;
+  tdmi->tdmi_mux->dm_network_id = onid;
  
   dvb_mux_save(tdmi);
 
   m = htsmsg_create_map();
   htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
-  htsmsg_add_u32(m, "onid", tdmi->tdmi_network_id);
+  htsmsg_add_u32(m, "onid", tdmi->tdmi_mux->dm_network_id);
   notify_by_msg("dvbMux", m);
 }
 
@@ -986,7 +989,7 @@ dvb_mux_build_msg(th_dvb_mux_instance_t *tdmi)
 
   htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
   htsmsg_add_u32(m, "enabled",  tdmi->tdmi_enabled);
-  htsmsg_add_str(m, "network", tdmi->tdmi_network ?: "");
+  htsmsg_add_str(m, "network", tdmi->tdmi_mux->dm_network_name ?: "");
 
   dvb_mux_nicefreq(buf, sizeof(buf), tdmi->tdmi_mux);
   htsmsg_add_str(m, "freq",  buf);
@@ -1003,11 +1006,11 @@ dvb_mux_build_msg(th_dvb_mux_instance_t *tdmi)
   htsmsg_add_str(m, "pol", 
 		 dvb_polarisation_to_str_long(dmc->dmc_polarisation));
 
-  if(tdmi->tdmi_transport_stream_id != 0xffff)
-    htsmsg_add_u32(m, "muxid", tdmi->tdmi_transport_stream_id);
+  if(tdmi->tdmi_mux->dm_transport_stream_id != 0xffff)
+    htsmsg_add_u32(m, "muxid", tdmi->tdmi_mux->dm_transport_stream_id);
 
-  if(tdmi->tdmi_network_id)
-    htsmsg_add_u32(m, "onid", tdmi->tdmi_network_id);
+  if(tdmi->tdmi_mux->dm_network_id)
+    htsmsg_add_u32(m, "onid", tdmi->tdmi_mux->dm_network_id);
 
   htsmsg_add_u32(m, "quality", tdmi->tdmi_quality);
   return m;
@@ -1231,9 +1234,9 @@ th_dvb_mux_instance_t *dvb_mux_find
   if (tda) {
     LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link) {
       if (enabled && !tdmi->tdmi_enabled) continue;
-      if (onid    && onid != tdmi->tdmi_network_id) continue;
-      if (tsid    && tsid != tdmi->tdmi_transport_stream_id) continue;
-      if (netname && strcmp(netname, tdmi->tdmi_network ?: "")) continue;
+      if (onid    && onid != tdmi->tdmi_mux->dm_network_id) continue;
+      if (tsid    && tsid != tdmi->tdmi_mux->dm_transport_stream_id) continue;
+      if (netname && strcmp(netname, tdmi->tdmi_mux->dm_network_name ?: "")) continue;
       return tdmi;
     }
   } else {

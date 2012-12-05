@@ -109,11 +109,16 @@ typedef struct dvb_network {
 typedef struct dvb_mux {
 
   //  LIST_ENTRY(dvb_mux) dm_network_link;
-  dvb_network_t *dm_network;
+  dvb_network_t *dm_dn;
 
   struct service_list dm_services;
 
   dvb_mux_conf_t dm_conf;
+
+  uint32_t dm_network_id;
+  uint16_t dm_transport_stream_id;
+  char *dm_network_name;     /* Name of network, from NIT table */
+  char *dm_default_authority;
 
 } dvb_mux_t;
 
@@ -161,13 +166,8 @@ typedef struct th_dvb_mux_instance {
 
   int tdmi_enabled;
 
-  uint32_t tdmi_network_id;
-  uint16_t tdmi_transport_stream_id;
 
   char *tdmi_identifier;
-  char *tdmi_network;     /* Name of network, from NIT table */
-
-  char *tdmi_default_authority;
 
   TAILQ_ENTRY(th_dvb_mux_instance) tdmi_scan_link;
   struct th_dvb_mux_instance_queue *tdmi_scan_queue;

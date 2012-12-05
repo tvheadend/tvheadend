@@ -312,8 +312,8 @@ dvb_service_setsourceinfo(service_t *t, struct source_info *si)
 
   si->si_adapter = strdup(tdmi->tdmi_adapter->tda_displayname);
   
-  if(tdmi->tdmi_network != NULL)
-    si->si_network = strdup(tdmi->tdmi_network);
+  if(tdmi->tdmi_mux->dm_network_name != NULL)
+    si->si_network = strdup(tdmi->tdmi_mux->dm_network_name);
   
   dvb_mux_nicename(buf, sizeof(buf), tdmi);
   si->si_mux = strdup(buf);
@@ -354,9 +354,9 @@ dvb_service_find3
   } else if (tda) {
     LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link) {
       if (enabled && !tdmi->tdmi_enabled) continue;
-      if (onid    && onid != tdmi->tdmi_network_id) continue;
-      if (tsid    && tsid != tdmi->tdmi_transport_stream_id) continue;
-      if (netname && strcmp(netname, tdmi->tdmi_network ?: "")) continue;
+      if (onid    && onid != tdmi->tdmi_mux->dm_network_id) continue;
+      if (tsid    && tsid != tdmi->tdmi_mux->dm_transport_stream_id) continue;
+      if (netname && strcmp(netname, tdmi->tdmi_mux->dm_network_name ?: "")) continue;
       if ((svc = dvb_service_find3(tda, tdmi, NULL, 0, 0, sid,
                                      enabled, epgprimary)))
         return svc;
@@ -458,7 +458,7 @@ dvb_service_build_msg(service_t *t)
   htsmsg_add_str(m, "svcname", t->s_svcname ?: "");
   htsmsg_add_str(m, "provider", t->s_provider ?: "");
 
-  htsmsg_add_str(m, "network", tdmi->tdmi_network ?: "");
+  htsmsg_add_str(m, "network", tdmi->tdmi_mux->dm_network_name ?: "");
 
   dvb_mux_nicefreq(buf, sizeof(buf), tdmi->tdmi_mux);
   htsmsg_add_str(m, "mux", buf);
