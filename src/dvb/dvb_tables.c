@@ -51,24 +51,26 @@ dvb_table_fastswitch(th_dvb_mux_instance_t *tdmi)
 {
   th_dvb_table_t *tdt;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  dvb_mux_t *dm = tdmi->tdmi_mux;
+  dvb_network_t *dn = dm->dm_dn;
   char buf[100];
 
-  if(!tdmi->tdmi_table_initial)
+  if(!dm->dm_table_initial)
     return;
 
-  LIST_FOREACH(tdt, &tdmi->tdmi_tables, tdt_link)
+  LIST_FOREACH(tdt, &dm->dm_tables, tdt_link)
     if((tdt->tdt_flags & TDT_QUICKREQ) && tdt->tdt_count == 0)
       return;
 
-  tdmi->tdmi_table_initial = 0;
-  tda->tda_dn->dn_initial_num_mux--;
+  dm->dm_table_initial = 0;
+  dn->dn_initial_num_mux--;
   dvb_mux_save(tdmi);
 
 
   dvb_mux_nicename(buf, sizeof(buf), tdmi);
   tvhlog(LOG_DEBUG, "dvb", "\"%s\" initial scan completed for \"%s\"",
 	 tda->tda_rootpath, buf);
-  dvb_adapter_mux_scanner(tda);
+  dvb_network_mux_scanner(dn);
 }
 
 
@@ -140,11 +142,12 @@ static void
 dvb_tdt_destroy(th_dvb_adapter_t *tda, th_dvb_mux_instance_t *tdmi,
 		th_dvb_table_t *tdt)
 {
+  dvb_mux_t *dm = tdmi->tdmi_mux;
   lock_assert(&global_lock);
   assert(tdt->tdt_tdmi == tdmi);
   LIST_REMOVE(tdt, tdt_link);
-  tdmi->tdmi_num_tables--;
-  tda->tda_close_table(tdmi, tdt);
+  dm->dm_num_tables--;
+  tda->tda_close_table(dm, tdt);
   free(tdt->tdt_name);
   tdt->tdt_destroyed = 1;
   dvb_table_release(tdt);
@@ -167,7 +170,7 @@ tdt_add(dvb_mux_t *dm, int tableid, int mask,
   // TODO: this could mean reading the same data multiple times, and not
   //       sure how well this will work! I know Andreas has some thoughts on
   //       this
-  LIST_FOREACH(t, &tdmi->tdmi_tables, tdt_link) {
+  LIST_FOREACH(t, &dm->dm_tables, tdt_link) {
     if(pid == t->tdt_pid && 
        t->tdt_callback == callback && t->tdt_opaque == opaque) {
       return;
@@ -184,11 +187,11 @@ tdt_add(dvb_mux_t *dm, int tableid, int mask,
   tdt->tdt_table = tableid;
   tdt->tdt_mask = mask;
   tdt->tdt_tdmi = tdmi;
-  LIST_INSERT_HEAD(&tdmi->tdmi_tables, tdt, tdt_link);
-  tdmi->tdmi_num_tables++;
+  LIST_INSERT_HEAD(&dm->dm_tables, tdt, tdt_link);
+  dm->dm_num_tables++;
   tdt->tdt_fd = -1;
 
-  tdmi->tdmi_adapter->tda_open_table(tdmi, tdt);
+  tdmi->tdmi_adapter->tda_open_table(dm, tdt);
 }
 
 /**
@@ -1095,7 +1098,7 @@ dvb_table_rem_pmt(dvb_mux_t *dm, int pmt_pid)
   th_dvb_mux_instance_t *tdmi = dm->dm_tdmi;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   th_dvb_table_t *tdt = NULL;
-  LIST_FOREACH(tdt, &tdmi->tdmi_tables, tdt_link)
+  LIST_FOREACH(tdt, &dm->dm_tables, tdt_link)
     if (tdt->tdt_pid == pmt_pid && tdt->tdt_callback == dvb_pmt_callback)
       break;
   if (tdt)
@@ -1107,12 +1110,12 @@ dvb_table_rem_pmt(dvb_mux_t *dm, int pmt_pid)
  *
  */
 void
-dvb_table_flush_all(th_dvb_mux_instance_t *tdmi)
+dvb_table_flush_all(dvb_mux_t *dm)
 {
-  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  th_dvb_adapter_t *tda = dm->dm_tdmi->tdmi_adapter;
   th_dvb_table_t *tdt;
 
-  while((tdt = LIST_FIRST(&tdmi->tdmi_tables)) != NULL)
-    dvb_tdt_destroy(tda, tdmi, tdt);
+  while((tdt = LIST_FIRST(&dm->dm_tables)) != NULL)
+    dvb_tdt_destroy(tda, dm->dm_tdmi, tdt);
   
 }

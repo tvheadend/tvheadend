@@ -26,7 +26,7 @@
  * *************************************************************************/
 
 struct th_dvb_mux_instance;
-struct th_dvb_adapter;
+struct dvb_network;
 
 typedef struct epggrab_module       epggrab_module_t;
 typedef struct epggrab_module_int   epggrab_module_int_t;
@@ -263,7 +263,7 @@ void epggrab_mux_start  ( struct dvb_mux *tdmi );
 void epggrab_mux_stop   ( struct dvb_mux *tdmi, int timeout );
 void epggrab_mux_delete ( struct dvb_mux *tdmi );
 int  epggrab_mux_period ( struct dvb_mux *tdmi );
-struct dvb_mux *epggrab_mux_next ( struct th_dvb_adapter *tda );
+struct dvb_mux *epggrab_mux_next ( struct dvb_network *dn );
 
 /*
  * Re-schedule

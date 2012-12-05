@@ -153,6 +153,7 @@ SRCS-${CONFIG_LINUXDVB} += \
 	src/dvb/dvb_tables.c \
 	src/dvb/diseqc.c \
 	src/dvb/dvb_adapter.c \
+	src/dvb/dvb_network.c \
 	src/dvb/dvb_multiplex.c \
 	src/dvb/dvb_service.c \
 	src/dvb/dvb_preconf.c \

@@ -65,16 +65,12 @@ static void tdmi_set_enable(th_dvb_mux_instance_t *tdmi, int enabled);
  *
  */
 static void
-mux_link_initial(th_dvb_adapter_t *tda, th_dvb_mux_instance_t *tdmi)
+mux_link_initial(dvb_network_t *dn, dvb_mux_t *dm)
 {
-  int was_empty = TAILQ_FIRST(&tda->tda_dn->dn_initial_scan_queue) == NULL;
+  dm->dm_scan_queue = &dn->dn_initial_scan_queue;
+  TAILQ_INSERT_TAIL(dm->dm_scan_queue, dm, dm_scan_link);
 
-  tdmi->tdmi_scan_queue = &tda->tda_dn->dn_initial_scan_queue;
-  TAILQ_INSERT_TAIL(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
-
-  if(was_empty && (tda->tda_mux_current == NULL ||
-		   tda->tda_mux_current->tdmi_table_initial == 0))
-    gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 0);
+  gtimer_arm(&dn->dn_mux_scanner_timer, dvb_network_mux_scanner, dn, 0);
 }
 
 /**
@@ -155,6 +151,7 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
 	       uint16_t onid, uint16_t tsid, const char *network, const char *source,
 	       int enabled, int initialscan, const char *identifier)
 {
+  dvb_network_t *dn = tda->tda_dn;
   th_dvb_mux_instance_t *tdmi, *c;
   char buf[200];
 
@@ -229,6 +226,7 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
   dm->dm_transport_stream_id = tsid;
   dm->dm_network_name = network ? strdup(network) : NULL;
   TAILQ_INIT(&dm->dm_epg_grab);
+  TAILQ_INIT(&dm->dm_table_queue);
 
   dm->dm_dn = tda->tda_dn;
   LIST_INSERT_HEAD(&tda->tda_dn->dn_muxes, dm, dm_network_link);
@@ -269,7 +267,6 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
 
   tdmi->tdmi_enabled = enabled;
   
-  TAILQ_INIT(&tdmi->tdmi_table_queue);
 
 
   tdmi->tdmi_adapter = tda;
@@ -278,7 +275,7 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
   memcpy(&tdmi->tdmi_mux->dm_conf, dmc, sizeof(struct dvb_mux_conf));
 
   LIST_INSERT_HEAD(&tda->tda_dn->dn_mux_instances, tdmi, tdmi_adapter_link);
-  tdmi->tdmi_table_initial = initialscan;
+  dm->dm_table_initial = initialscan;
 
   if(source != NULL) {
     dvb_mux_nicename(buf, sizeof(buf), tdmi);
@@ -291,9 +288,9 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
   dvb_service_load(tdmi, identifier);
   dvb_mux_notify(tdmi);
 
-  if(enabled && tdmi->tdmi_table_initial) {
-    tda->tda_dn->dn_initial_num_mux++;
-    mux_link_initial(tda, tdmi);
+  if(enabled && dm->dm_table_initial) {
+    dn->dn_initial_num_mux++;
+    mux_link_initial(dn, dm);
   }
 
   return tdmi;
@@ -306,6 +303,7 @@ void
 dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  dvb_mux_t *dm = tdmi->tdmi_mux;
   service_t *t;
 
   lock_assert(&global_lock);
@@ -322,19 +320,19 @@ dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
 
   dvb_service_notify_by_adapter(tda);
 
-  if(tda->tda_mux_current == tdmi)
-    dvb_fe_stop(tda->tda_mux_current, 0);
+  if(tda->tda_current_tdmi == tdmi)
+    dvb_fe_stop(tda, 0);
 
   RB_REMOVE(&dvb_muxes, tdmi, tdmi_global_link);
   LIST_REMOVE(tdmi, tdmi_adapter_link);
 
-  if(tdmi->tdmi_scan_queue != NULL)
-    TAILQ_REMOVE(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
+  if(dm->dm_scan_queue != NULL)
+    TAILQ_REMOVE(dm->dm_scan_queue, dm, dm_scan_link);
 
-  if(tdmi->tdmi_table_initial)
-    tda->tda_dn->dn_initial_num_mux--;
+  if(dm->dm_table_initial)
+    dm->dm_dn->dn_initial_num_mux--;
 
-  epggrab_mux_delete(tdmi->tdmi_mux); // XXX(dvbreorg)
+  epggrab_mux_delete(dm);
 
   hts_settings_remove("dvbmuxes/%s", tdmi->tdmi_identifier);
 
@@ -562,7 +560,7 @@ dvb_mux_save(th_dvb_mux_instance_t *tdmi)
 
   htsmsg_add_u32(m, "frequency", f->frequency);
 
-  htsmsg_add_u32(m, "initialscan", tdmi->tdmi_table_initial);
+  htsmsg_add_u32(m, "initialscan", tdmi->tdmi_mux->dm_table_initial);
 
   if(tdmi->tdmi_mux->dm_default_authority)
     htsmsg_add_str(m, "default_authority", tdmi->tdmi_mux->dm_default_authority);
@@ -877,26 +875,27 @@ dvb_mux_set_onid(dvb_mux_t *dm, uint16_t onid)
 static void
 tdmi_set_enable(th_dvb_mux_instance_t *tdmi, int enabled)
 {
+  dvb_mux_t *dm = tdmi->tdmi_mux;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-  
+
   if(tdmi->tdmi_enabled == enabled)
     return;
 
   if(tdmi->tdmi_enabled) {
 
-    if(tda->tda_mux_current == tdmi)
-      dvb_fe_stop(tdmi, 0);
+    if(tda->tda_current_tdmi == tdmi)
+      dvb_fe_stop(tda, 0);
 
-    if(tdmi->tdmi_scan_queue != NULL) {
-      TAILQ_REMOVE(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
-      tdmi->tdmi_scan_queue = NULL;
+    if(dm->dm_scan_queue != NULL) {
+      TAILQ_REMOVE(dm->dm_scan_queue, dm, dm_scan_link);
+      dm->dm_scan_queue = NULL;
     }
   }
 
   tdmi->tdmi_enabled = enabled;
 
   if(enabled)
-    mux_link_initial(tda, tdmi);
+    mux_link_initial(tda->tda_dn, dm);
 
   subscription_reschedule();
 }
@@ -1275,7 +1274,7 @@ dvb_subscription_create_from_tdmi(th_dvb_mux_instance_t *tdmi,
   s->ths_tdmi = tdmi;
   LIST_INSERT_HEAD(&tdmi->tdmi_subscriptions, s, ths_tdmi_link);
 
-  dvb_fe_tune(tdmi, "Full mux subscription");
+  dvb_fe_tune(tdmi->tdmi_mux, "Full mux subscription");
 
   pthread_mutex_lock(&tda->tda_delivery_mutex);
   streaming_target_connect(&tda->tda_streaming_pad, &s->ths_input);

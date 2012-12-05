@@ -62,8 +62,9 @@ close_service(th_dvb_adapter_t *tda, service_t *s)
  *
  */
 static void
-open_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
+open_table(dvb_mux_t *dm, th_dvb_table_t *tdt)
 {
+  th_dvb_mux_instance_t *tdmi = dm->dm_current_tdmi;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   assert(tdt->tdt_pid < 0x2000);
   tda->tda_table_filter[tdt->tdt_pid] = 1;
@@ -74,8 +75,9 @@ open_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
  *
  */
 static void
-close_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
+close_table(dvb_mux_t *dm, th_dvb_table_t *tdt)
 {
+  th_dvb_mux_instance_t *tdmi = dm->dm_current_tdmi;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   assert(tdt->tdt_pid < 0x2000);
   tda->tda_table_filter[tdt->tdt_pid] = 0;
@@ -99,18 +101,17 @@ got_section(const uint8_t *data, size_t len, void *opaque)
  * so we need to be a bit careful here
  */
 static void
-dvb_table_raw_dispatch(th_dvb_mux_instance_t *tdmi,
-		       const dvb_table_feed_t *dtf)
+dvb_table_raw_dispatch(dvb_mux_t *dm, const dvb_table_feed_t *dtf)
 {
   int pid = (dtf->dtf_tsb[1] & 0x1f) << 8 | dtf->dtf_tsb[2];
-  th_dvb_table_t *vec[tdmi->tdmi_num_tables], *tdt;
+  th_dvb_table_t *vec[dm->dm_num_tables], *tdt;
   int i = 0;
-  LIST_FOREACH(tdt, &tdmi->tdmi_tables, tdt_link) {
+  LIST_FOREACH(tdt, &dm->dm_tables, tdt_link) {
     vec[i++] = tdt;
     tdt->tdt_refcount++;
   }
-  assert(i == tdmi->tdmi_num_tables);
-  int len = tdmi->tdmi_num_tables; // can change during callbacks
+  assert(i == dm->dm_num_tables);
+  int len = dm->dm_num_tables; // can change during callbacks
   for(i = 0; i < len; i++) {
     tdt = vec[i];
     if(!tdt->tdt_destroyed) {
@@ -144,8 +145,8 @@ dvb_table_input(void *aux)
 
     pthread_mutex_lock(&global_lock);
 
-    if((tdmi = tda->tda_mux_current) != NULL)
-      dvb_table_raw_dispatch(tdmi, dtf);
+    if((tdmi = tda->tda_current_tdmi) != NULL)
+      dvb_table_raw_dispatch(tdmi->tdmi_mux, dtf);
 
     pthread_mutex_unlock(&global_lock);
     free(dtf);

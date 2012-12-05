@@ -59,7 +59,7 @@ dvb_service_start(service_t *t, unsigned int weight, int force_start)
 {
   int w, r;
   th_dvb_adapter_t *tda = t->s_dvb_mux_instance->tdmi_adapter;
-  th_dvb_mux_instance_t *tdmi = tda->tda_mux_current;
+  th_dvb_mux_instance_t *tdmi = tda->tda_current_tdmi;
 
   lock_assert(&global_lock);
 
@@ -88,7 +88,7 @@ dvb_service_start(service_t *t, unsigned int weight, int force_start)
 
   pthread_mutex_lock(&tda->tda_delivery_mutex);
 
-  r = dvb_fe_tune(t->s_dvb_mux_instance, "Transport start");
+  r = dvb_fe_tune(t->s_dvb_mux_instance->tdmi_mux, "Transport start");
   if(!r)
     LIST_INSERT_HEAD(&tda->tda_transports, t, s_active_link);
 

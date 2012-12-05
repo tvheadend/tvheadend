@@ -40,6 +40,7 @@ TAILQ_HEAD(th_dvb_mux_instance_queue, th_dvb_mux_instance);
 LIST_HEAD(th_dvb_mux_instance_list, th_dvb_mux_instance);
 TAILQ_HEAD(dvb_satconf_queue, dvb_satconf);
 LIST_HEAD(dvb_mux_list, dvb_mux);
+TAILQ_HEAD(dvb_mux_queue, dvb_mux);
 
 /**
  * Satconf
@@ -90,7 +91,7 @@ typedef struct dvb_network {
 
   struct th_dvb_mux_instance_list dn_mux_instances; // Should go away
 
-  struct th_dvb_mux_instance_queue dn_initial_scan_queue;
+  struct dvb_mux_queue dn_initial_scan_queue;
   int dn_initial_num_mux;
 
   struct dvb_mux *dn_mux_epg;
@@ -98,6 +99,8 @@ typedef struct dvb_network {
   int dn_fe_type;  // Frontend types for this network (FE_QPSK, etc)
 
   struct dvb_mux_list dn_muxes;
+
+  gtimer_t dn_mux_scanner_timer;
 
 } dvb_network_t;
 
@@ -123,6 +126,17 @@ typedef struct dvb_mux {
   TAILQ_HEAD(, epggrab_ota_mux) dm_epg_grab;
 
   struct th_dvb_mux_instance *dm_tdmi; // wrong
+
+  TAILQ_ENTRY(dvb_mux) dm_scan_link;
+  struct dvb_mux_queue *dm_scan_queue;
+
+  LIST_HEAD(, th_dvb_table) dm_tables;
+  int dm_num_tables;
+
+  TAILQ_HEAD(, th_dvb_table) dm_table_queue;
+  int dm_table_initial;
+
+  struct th_dvb_mux_instance *dm_current_tdmi;
 
 } dvb_mux_t;
 
@@ -150,11 +164,6 @@ typedef struct th_dvb_mux_instance {
   uint32_t tdmi_fec_err_histogram[TDMI_FEC_ERR_HISTOGRAM_SIZE];
   int      tdmi_fec_err_ptr;
 
-  LIST_HEAD(, th_dvb_table) tdmi_tables;
-  int tdmi_num_tables;
-
-  TAILQ_HEAD(, th_dvb_table) tdmi_table_queue;
-  int tdmi_table_initial;
 
   enum {
     TDMI_FE_UNKNOWN,
@@ -172,9 +181,6 @@ typedef struct th_dvb_mux_instance {
 
 
   char *tdmi_identifier;
-
-  TAILQ_ENTRY(th_dvb_mux_instance) tdmi_scan_link;
-  struct th_dvb_mux_instance_queue *tdmi_scan_queue;
 
   struct th_subscription_list tdmi_subscriptions;
 
@@ -210,7 +216,7 @@ typedef struct th_dvb_adapter {
 
   dvb_network_t *tda_dn;
 
-  th_dvb_mux_instance_t *tda_mux_current;
+  th_dvb_mux_instance_t *tda_current_tdmi;
   char *tda_tune_reason; // Reason for last tune
 
   int tda_table_epollfd;
@@ -246,8 +252,6 @@ typedef struct th_dvb_adapter {
 
   int tda_hostconnection;
 
-  gtimer_t tda_mux_scanner_timer;
-
   pthread_mutex_t tda_delivery_mutex;
   struct service_list tda_transports; /* Currently bound transports */
 
@@ -268,8 +272,8 @@ typedef struct th_dvb_adapter {
 
   void (*tda_open_service)(struct th_dvb_adapter *tda, struct service *s);
   void (*tda_close_service)(struct th_dvb_adapter *tda, struct service *s);
-  void (*tda_open_table)(struct th_dvb_mux_instance *tdmi, struct th_dvb_table *s);
-  void (*tda_close_table)(struct th_dvb_mux_instance *tdmi, struct th_dvb_table *s);
+  void (*tda_open_table)(struct dvb_mux *dm, struct th_dvb_table *s);
+  void (*tda_close_table)(struct dvb_mux *dm, struct th_dvb_table *s);
 
   int tda_rawmode;
 
@@ -345,8 +349,6 @@ void dvb_init(uint32_t adapter_mask, const char *rawfile);
  * DVB Adapter
  */
 void dvb_adapter_init(uint32_t adapter_mask, const char *rawfile);
-
-void dvb_adapter_mux_scanner(void *aux);
 
 void dvb_adapter_start (th_dvb_adapter_t *tda);
 
@@ -493,9 +495,9 @@ htsmsg_t *dvb_service_build_msg(struct service *t);
 /**
  * DVB Frontend
  */
-int dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason);
+int dvb_fe_tune(dvb_mux_t *dm, const char *reason);
 
-void dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune);
+void dvb_fe_stop(th_dvb_adapter_t *tda, int retune);
 
 
 /**
@@ -505,7 +507,7 @@ void dvb_table_init(th_dvb_adapter_t *tda);
 
 void dvb_table_add_default(dvb_mux_t *dm);
 
-void dvb_table_flush_all(th_dvb_mux_instance_t *tdmi);
+void dvb_table_flush_all(dvb_mux_t *dm);
 
 void dvb_table_add_pmt(dvb_mux_t *dm, int pmt_pid);
 
@@ -527,6 +529,15 @@ int dvb_pidx11_callback(dvb_mux_t *dm, uint8_t *ptr, int len,
 void dvb_table_dispatch(uint8_t *sec, int r, th_dvb_table_t *tdt);
 
 void dvb_table_release(th_dvb_table_t *tdt);
+
+
+/**
+ *
+ */
+dvb_network_t *dvb_network_create(int fe_type);
+
+void dvb_network_mux_scanner(void *aux);
+
 
 /**
  * Satellite configuration

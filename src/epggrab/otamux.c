@@ -83,7 +83,7 @@ int epggrab_mux_period ( dvb_mux_t *dm )
   return period;
 }
 
-dvb_mux_t *epggrab_mux_next ( th_dvb_adapter_t *tda )
+dvb_mux_t *epggrab_mux_next ( dvb_network_t *dn )
 {
   time_t now;
   epggrab_ota_mux_t *ota;
@@ -91,7 +91,7 @@ dvb_mux_t *epggrab_mux_next ( th_dvb_adapter_t *tda )
   TAILQ_FOREACH(ota, &ota_mux_all, glob_link) {
     if (ota->interval + ota->completed > now) return NULL;
     if (!ota->is_reg) return NULL;
-    if (ota->dm->dm_tdmi->tdmi_adapter == tda) break;
+    if (ota->dm->dm_dn == dn) break;
   }
   return ota ? ota->dm : NULL;
 }
@@ -373,9 +373,9 @@ void epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
 
     /* All complete (bring timer forward) */
     if (!ota) {
-      th_dvb_mux_instance_t *tdmi = dm->dm_tdmi;
-      gtimer_arm(&tdmi->tdmi_adapter->tda_mux_scanner_timer,
-                 dvb_adapter_mux_scanner, tdmi->tdmi_adapter, 20);
+      dvb_network_t *dn = dm->dm_dn;
+      gtimer_arm(&dn->dn_mux_scanner_timer,
+                 dvb_network_mux_scanner, dn, 20);
     }
   }
 }
