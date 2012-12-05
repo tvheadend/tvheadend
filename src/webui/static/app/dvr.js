@@ -143,7 +143,7 @@ tvheadend.dvrDetails = function(entry) {
 /**
  *
  */
-tvheadend.dvrschedule = function() {
+tvheadend.dvrschedule = function(title, dvrStore) {
 
 	var actions = new Ext.ux.grid.RowActions({
 		header : '',
@@ -358,9 +358,9 @@ tvheadend.dvrschedule = function() {
 		loadMask : true,
 		stripeRows : true,
 		disableSelection : true,
-		title : 'Recorder schedule',
+		title : title,
 		iconCls : 'clock',
-		store : tvheadend.dvrStore,
+		store : dvrStore,
 		cm : dvrCm,
 		plugins : [ actions ],
 		viewConfig : {
@@ -378,7 +378,7 @@ tvheadend.dvrschedule = function() {
 			}
 		} ],
 		bbar : new Ext.PagingToolbar({
-			store : tvheadend.dvrStore,
+			store : dvrStore,
 			pageSize : 20,
 			displayInfo : true,
 			displayMsg : 'Programs {0} - {1} of {2}',
@@ -570,7 +570,8 @@ tvheadend.autoreceditor = function() {
  */
 tvheadend.dvr = function() {
 
-	tvheadend.dvrStore = new Ext.data.JsonStore({
+	function datastoreBuilder(url) {
+	    return new Ext.data.JsonStore({
 		root : 'entries',
 		totalProperty : 'totalCount',
 		fields : [ {
@@ -610,29 +611,47 @@ tvheadend.dvr = function() {
 		}, {
 			name : 'url'
 		} ],
-		url : 'dvrlist',
+		url : url,
 		autoLoad : true,
 		id : 'id',
 		remoteSort : true
-	});
+	    });
+	}
+	tvheadend.dvrStoreNew = datastoreBuilder('dvrlist_new');
+	tvheadend.dvrStoreOld = datastoreBuilder('dvrlist_old');
+
+
+	function updateDvrStore(store, r, m) {
+		r.data.status = m.status;
+		r.data.schedstate = m.schedstate;
+
+		store.afterEdit(r);
+		store.fireEvent('updated', store, r,
+			Ext.data.Record.COMMIT);
+	}
 
 	tvheadend.comet.on('dvrdb', function(m) {
 
-		if (m.reload != null) tvheadend.dvrStore.reload();
+		if (m.reload != null) {
+		       tvheadend.dvrStoreOld.reload();
+		       tvheadend.dvrStoreNew.reload();
+		}
 
 		if (m.updateEntry != null) {
-			r = tvheadend.dvrStore.getById(m.id)
-			if (typeof r === 'undefined') {
-				tvheadend.dvrStore.reload();
+			r = tvheadend.dvrStoreNew.getById(m.id);
+			if (typeof r !== 'undefined') {
+				updateDvrStore(tvheadend.dvrStoreNew, r, m);
 				return;
 			}
 
-			r.data.status = m.status;
-			r.data.schedstate = m.schedstate;
-
-			tvheadend.dvrStore.afterEdit(r);
-			tvheadend.dvrStore.fireEvent('updated', tvheadend.dvrStore, r,
-				Ext.data.Record.COMMIT);
+			r = tvheadend.dvrStoreOld.getById(m.id);
+			if (typeof r === 'undefined') {
+				updateDvrStore(tvheadend.dvrStoreOld, r, m);
+				return;
+			}
+				
+			tvheadend.dvrStoreNew.reload();
+			tvheadend.dvrStoreOld.reload();
 		}
 	});
 
@@ -661,7 +680,10 @@ tvheadend.dvr = function() {
 		autoScroll : true,
 		title : 'Digital Video Recorder',
 		iconCls : 'drive',
-		items : [ new tvheadend.dvrschedule, new tvheadend.autoreceditor ]
+		items : [ new tvheadend.dvrschedule('Finished recordings', tvheadend.dvrStoreOld),
+		          new tvheadend.dvrschedule('Recorder schedule', tvheadend.dvrStoreNew),
+		          new tvheadend.autoreceditor
+		        ]
 	});
 	return panel;
 }
