@@ -1287,7 +1287,8 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
  *
  */
 static int
-extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
+extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque,
+              dvr_entry_filter filter, dvr_entry_comparator cmp)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   htsmsg_t *out, *array, *m;
@@ -1317,9 +1318,9 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
   array = htsmsg_create_list();
 
 
-  dvr_query(&dqr);
+  dvr_query_filter(&dqr, filter);
 
-  dvr_query_sort(&dqr);
+  dvr_query_sort_cmp(&dqr, cmp);
 
   htsmsg_add_u32(out, "totalCount", dqr.dqr_entries);
 
@@ -1389,6 +1390,32 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+static int is_dvr_entry_old(dvr_entry_t *entry)
+{
+  dvr_entry_sched_state_t state = entry->de_sched_state;
+  switch (state) {
+  case DVR_COMPLETED: return 1;
+  case DVR_MISSED_TIME: return 1;
+  default: return 0;
+  }
+}
+
+static int is_dvr_entry_new(dvr_entry_t *entry)
+{
+  return !is_dvr_entry_old(entry);
+}
+
+static int
+extjs_dvrlist_old(http_connection_t *hc, const char *remain, void *opaque)
+{
+  return extjs_dvrlist(hc, remain, opaque, is_dvr_entry_old, dvr_sort_start_descending);
+}
+
+static int
+extjs_dvrlist_new(http_connection_t *hc, const char *remain, void *opaque)
+{
+  return extjs_dvrlist(hc, remain, opaque, is_dvr_entry_new, dvr_sort_start_ascending);
+}
 
 /**
  *
@@ -1921,7 +1948,8 @@ extjs_start(void)
   http_path_add("/epgrelated",     NULL, extjs_epgrelated,     ACCESS_WEB_INTERFACE);
   http_path_add("/epgobject",      NULL, extjs_epgobject,      ACCESS_WEB_INTERFACE);
   http_path_add("/dvr",            NULL, extjs_dvr,            ACCESS_WEB_INTERFACE);
-  http_path_add("/dvrlist",        NULL, extjs_dvrlist,        ACCESS_WEB_INTERFACE);
+  http_path_add("/dvrlist_new",    NULL, extjs_dvrlist_new,    ACCESS_WEB_INTERFACE);
+  http_path_add("/dvrlist_old",    NULL, extjs_dvrlist_old,    ACCESS_WEB_INTERFACE);
   http_path_add("/subscriptions",  NULL, extjs_subscriptions,  ACCESS_WEB_INTERFACE);
   http_path_add("/ecglist",        NULL, extjs_ecglist,        ACCESS_WEB_INTERFACE);
   http_path_add("/config",         NULL, extjs_config,         ACCESS_WEB_INTERFACE);
