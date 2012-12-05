@@ -161,9 +161,6 @@ typedef struct th_dvb_mux_instance {
 
   int tdmi_enabled;
 
-  /* Linked if tdmi_conf.dmc_satconf != NULL */
-  LIST_ENTRY(th_dvb_mux_instance) tdmi_satconf_link;
-
   uint32_t tdmi_network_id;
   uint16_t tdmi_transport_stream_id;
 
