@@ -1,6 +1,6 @@
 /*
  *  MPEG TS Program Specific Information code
- *  Copyright (C) 2007 - 2010 Andreas Öman
+ *  Copyright (C) 2007 - 2010 Andreas ï¿½man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -873,7 +873,8 @@ static struct strtab caidnametab[] = {
   { "CryptoWorks",	0x0D70 },
   { "CryptoWorks ICE",	0x0D96 },
   { "CryptoWorks ICE",	0x0D97 },
-  { "PowerVu",          0x0E00 }, 
+  { "PowerVu",          0x0E00 },
+  { "PowerVu",          0x0E11 },
   { "Sony",             0x0F00 }, 
   { "Tandberg",         0x1000 }, 
   { "Thompson",         0x1100 }, 
