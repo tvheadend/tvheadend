@@ -97,7 +97,7 @@ dvb_service_start(service_t *t, unsigned int weight, int force_start)
   if(!r)
     tda->tda_open_service(tda, t);
 
-  dvb_table_add_pmt(t->s_dvb_mux_instance, t->s_pmt_pid);
+  dvb_table_add_pmt(t->s_dvb_mux_instance->tdmi_mux, t->s_pmt_pid);
 
   return r;
 }

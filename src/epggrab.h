@@ -169,10 +169,10 @@ struct epggrab_module_ext
  */
 struct epggrab_ota_mux
 {
-  TAILQ_ENTRY(epggrab_ota_mux)       glob_link; ///< Grabber link
-  TAILQ_ENTRY(epggrab_ota_mux)       tdmi_link; ///< Link to mux
-  TAILQ_ENTRY(epggrab_ota_mux)       grab_link; ///< Link to grabber
-  struct th_dvb_mux_instance        *tdmi;     ///< Mux  instance
+  TAILQ_ENTRY(epggrab_ota_mux)       glob_link;///< Grabber link
+  TAILQ_ENTRY(epggrab_ota_mux)       dm_link;  ///< Link to dvb mux
+  TAILQ_ENTRY(epggrab_ota_mux)       grab_link;///< Link to grabber
+  struct dvb_mux                    *dm;       ///< Mux  instance
   epggrab_module_ota_t              *grab;     ///< Grab instance
 
   int                               timeout;   ///< Time out if this long
@@ -203,7 +203,7 @@ struct epggrab_module_ota
   TAILQ_HEAD(, epggrab_ota_mux)  muxes; ///< List of related muxes
 
   /* Transponder tuning */
-  void (*start) ( epggrab_module_ota_t *m, struct th_dvb_mux_instance *tdmi );
+  void (*start) ( epggrab_module_ota_t *m, struct dvb_mux *dm );
 };
 
 /*
@@ -259,11 +259,11 @@ void epggrab_channel_mod ( struct channel *ch );
 /*
  * Transport handling
  */
-void epggrab_mux_start  ( struct th_dvb_mux_instance *tdmi );
-void epggrab_mux_stop   ( struct th_dvb_mux_instance *tdmi, int timeout );
-void epggrab_mux_delete ( struct th_dvb_mux_instance *tdmi );
-int  epggrab_mux_period ( struct th_dvb_mux_instance *tdmi );
-struct th_dvb_mux_instance *epggrab_mux_next ( struct th_dvb_adapter *tda );
+void epggrab_mux_start  ( struct dvb_mux *tdmi );
+void epggrab_mux_stop   ( struct dvb_mux *tdmi, int timeout );
+void epggrab_mux_delete ( struct dvb_mux *tdmi );
+int  epggrab_mux_period ( struct dvb_mux *tdmi );
+struct dvb_mux *epggrab_mux_next ( struct th_dvb_adapter *tda );
 
 /*
  * Re-schedule

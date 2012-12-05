@@ -277,7 +277,7 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune)
 
   assert(tdmi->tdmi_scan_queue == NULL);
 
-  epggrab_mux_stop(tdmi, 0);
+  epggrab_mux_stop(tdmi->tdmi_mux, 0);
 
   if (!retune) {
     gtimer_disarm(&tda->tda_fe_monitor_timer);
@@ -512,8 +512,8 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
   gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 1);
 
 
-  dvb_table_add_default(tdmi);
-  epggrab_mux_start(tdmi);
+  dvb_table_add_default(tdmi->tdmi_mux);
+  epggrab_mux_start(tdmi->tdmi_mux);
 
   dvb_adapter_notify(tda);
   return 0;

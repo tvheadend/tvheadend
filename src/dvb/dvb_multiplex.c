@@ -228,11 +228,14 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
   dm->dm_network_id = onid;
   dm->dm_transport_stream_id = tsid;
   dm->dm_network_name = network ? strdup(network) : NULL;
-  dm->dm_dn = tda->tda_dn;
+  TAILQ_INIT(&dm->dm_epg_grab);
 
+  dm->dm_dn = tda->tda_dn;
+  LIST_INSERT_HEAD(&tda->tda_dn->dn_muxes, dm, dm_network_link);
 
   tdmi = calloc(1, sizeof(th_dvb_mux_instance_t));
   tdmi->tdmi_mux = dm;
+  dm->dm_tdmi = tdmi;
 
   if(identifier == NULL) {
     char qpsktxt[20];
@@ -263,7 +266,6 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
     return NULL;
   }
 
-  TAILQ_INIT(&tdmi->tdmi_epg_grab);
 
   tdmi->tdmi_enabled = enabled;
   
@@ -332,7 +334,7 @@ dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
   if(tdmi->tdmi_table_initial)
     tda->tda_dn->dn_initial_num_mux--;
 
-  epggrab_mux_delete(tdmi);
+  epggrab_mux_delete(tdmi->tdmi_mux); // XXX(dvbreorg)
 
   hts_settings_remove("dvbmuxes/%s", tdmi->tdmi_identifier);
 
@@ -810,12 +812,15 @@ dvb_mux_load(th_dvb_adapter_t *tda)
  *
  */
 void
-dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *networkname)
+dvb_mux_set_networkname(dvb_mux_t *dm, const char *networkname)
 {
   htsmsg_t *m;
 
-  free(tdmi->tdmi_mux->dm_network_name);
-  tdmi->tdmi_mux->dm_network_name = strdup(networkname);
+  free(dm->dm_network_name);
+  dm->dm_network_name = strdup(networkname);
+
+  th_dvb_mux_instance_t *tdmi = dm->dm_tdmi;
+
   dvb_mux_save(tdmi);
 
   m = htsmsg_create_map();
@@ -829,12 +834,14 @@ dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *networkname)
  *
  */
 void
-dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid)
+dvb_mux_set_tsid(dvb_mux_t *dm, uint16_t tsid)
 {
   htsmsg_t *m;
 
-  tdmi->tdmi_mux->dm_transport_stream_id = tsid;
- 
+  dm->dm_transport_stream_id = tsid;
+
+  th_dvb_mux_instance_t *tdmi = dm->dm_tdmi;
+
   dvb_mux_save(tdmi);
 
   m = htsmsg_create_map();
@@ -847,12 +854,14 @@ dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid)
  *
  */
 void
-dvb_mux_set_onid(th_dvb_mux_instance_t *tdmi, uint16_t onid)
+dvb_mux_set_onid(dvb_mux_t *dm, uint16_t onid)
 {
   htsmsg_t *m;
 
-  tdmi->tdmi_mux->dm_network_id = onid;
- 
+  dm->dm_network_id = onid;
+
+  th_dvb_mux_instance_t *tdmi = dm->dm_tdmi;
+
   dvb_mux_save(tdmi);
 
   m = htsmsg_create_map();

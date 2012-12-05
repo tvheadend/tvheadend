@@ -748,7 +748,7 @@ dvb_adapter_mux_scanner(void *aux)
     if (period > 20)
       gtimer_arm(&tda->tda_mux_scanner_timer,
                  dvb_adapter_mux_scanner, tda, period);
-    dvb_fe_tune(tda->tda_dn->dn_mux_epg, "EPG scan");
+    dvb_fe_tune(tda->tda_dn->dn_mux_epg->dm_tdmi, "EPG scan");
     return;
 
   }

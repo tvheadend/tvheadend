@@ -93,11 +93,11 @@ typedef struct dvb_network {
   struct th_dvb_mux_instance_queue dn_initial_scan_queue;
   int dn_initial_num_mux;
 
-  struct th_dvb_mux_instance *dn_mux_epg;
+  struct dvb_mux *dn_mux_epg;
 
   int dn_fe_type;  // Frontend types for this network (FE_QPSK, etc)
 
-  //  struct dvb_mux_list dn_muxes;
+  struct dvb_mux_list dn_muxes;
 
 } dvb_network_t;
 
@@ -108,7 +108,7 @@ typedef struct dvb_network {
  */
 typedef struct dvb_mux {
 
-  //  LIST_ENTRY(dvb_mux) dm_network_link;
+  LIST_ENTRY(dvb_mux) dm_network_link;
   dvb_network_t *dm_dn;
 
   struct service_list dm_services;
@@ -119,6 +119,10 @@ typedef struct dvb_mux {
   uint16_t dm_transport_stream_id;
   char *dm_network_name;     /* Name of network, from NIT table */
   char *dm_default_authority;
+
+  TAILQ_HEAD(, epggrab_ota_mux) dm_epg_grab;
+
+  struct th_dvb_mux_instance *dm_tdmi; // wrong
 
 } dvb_mux_t;
 
@@ -171,8 +175,6 @@ typedef struct th_dvb_mux_instance {
 
   TAILQ_ENTRY(th_dvb_mux_instance) tdmi_scan_link;
   struct th_dvb_mux_instance_queue *tdmi_scan_queue;
-
-  TAILQ_HEAD(, epggrab_ota_mux) tdmi_epg_grab;
 
   struct th_subscription_list tdmi_subscriptions;
 
@@ -314,7 +316,7 @@ typedef struct th_dvb_table {
   char *tdt_name;
 
   void *tdt_opaque;
-  int (*tdt_callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
+  int (*tdt_callback)(dvb_mux_t *dm, uint8_t *buf, int len,
 		      uint8_t tableid, void *opaque);
 
 
@@ -426,11 +428,11 @@ th_dvb_mux_instance_t *dvb_mux_create(th_dvb_adapter_t *tda,
 				      const char *logprefix, int enabled,
 				      int initialscan, const char *identifier);
 
-void dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *name);
+void dvb_mux_set_networkname(dvb_mux_t *dm, const char *name);
 
-void dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid);
+void dvb_mux_set_tsid(dvb_mux_t *dm, uint16_t tsid);
 
-void dvb_mux_set_onid(th_dvb_mux_instance_t *tdmi, uint16_t onid);
+void dvb_mux_set_onid(dvb_mux_t *mux, uint16_t onid);
 
 void dvb_mux_set_enable(th_dvb_mux_instance_t *tdmi, int enabled);
 
@@ -501,22 +503,21 @@ void dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune);
  */
 void dvb_table_init(th_dvb_adapter_t *tda);
 
-void dvb_table_add_default(th_dvb_mux_instance_t *tdmi);
+void dvb_table_add_default(dvb_mux_t *dm);
 
 void dvb_table_flush_all(th_dvb_mux_instance_t *tdmi);
 
-void dvb_table_add_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid);
+void dvb_table_add_pmt(dvb_mux_t *dm, int pmt_pid);
 
-void dvb_table_rem_pmt(th_dvb_mux_instance_t *tdmi, int pmt_pid);
+void dvb_table_rem_pmt(dvb_mux_t *dm, int pmt_pid);
 
-void tdt_add(th_dvb_mux_instance_t *tdmi, int table, int mask,
-	     int (*callback)(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
+void tdt_add(dvb_mux_t *dm, int table, int mask,
+	     int (*callback)(dvb_mux_t *dm, uint8_t *buf, int len,
 			     uint8_t tableid, void *opaque), void *opaque,
 	     const char *name, int flags, int pid);
 
-int dvb_pidx11_callback
-  (th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
-   uint8_t tableid, void *opaque);
+int dvb_pidx11_callback(dvb_mux_t *dm, uint8_t *ptr, int len,
+                        uint8_t tableid, void *opaque);
 
 #define TDT_CRC           0x1
 #define TDT_QUICKREQ      0x2

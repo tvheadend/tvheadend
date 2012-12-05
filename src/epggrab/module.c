@@ -457,7 +457,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
   ( epggrab_module_ota_t *skel,
     const char *id, const char *name, int priority,
     void (*start) (epggrab_module_ota_t*m,
-                   struct th_dvb_mux_instance *tdmi),
+                   struct dvb_mux *dm),
     int (*enable) (void *m, uint8_t e ),
     epggrab_channel_tree_t *channels )
 {

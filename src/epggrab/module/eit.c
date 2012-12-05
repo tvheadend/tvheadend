@@ -654,9 +654,9 @@ static int _eit_process_event
   return ret;
 }
 
-static int _eit_callback
-  ( th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len, 
-    uint8_t tableid, void *opaque )
+static int
+_eit_callback(dvb_mux_t *dm, uint8_t *ptr, int len,
+              uint8_t tableid, void *opaque)
 {
   epggrab_module_t *mod = opaque;
   epggrab_ota_mux_t *ota;
@@ -672,7 +672,7 @@ static int _eit_callback
   if(tableid < 0x4e || tableid > 0x6f || len < 11) return -1;
 
   /* Get OTA */
-  ota = epggrab_ota_find((epggrab_module_ota_t*)mod, tdmi);
+  ota = epggrab_ota_find((epggrab_module_ota_t*)mod, dm);
   if (!ota || !ota->status) return -1;
   sta = ota->status;
 
@@ -713,24 +713,26 @@ static int _eit_callback
   // Note: tableid=0x4f,0x60-0x6f is other TS
   //       so must find the tdmi
   if(tableid == 0x4f || tableid >= 0x60) {
-    tda  = tdmi->tdmi_adapter;
-    tdmi = dvb_mux_find(tda, NULL, onid, tsid, 1);
+    tda  = dm->dm_tdmi->tdmi_adapter;
+    th_dvb_mux_instance_t *tdmi = dvb_mux_find(tda, NULL, onid, tsid, 1);
+    dm = tdmi->tdmi_mux;
+
   } else {
-    if (tdmi->tdmi_mux->dm_transport_stream_id != tsid ||
-        tdmi->tdmi_mux->dm_network_id != onid) {
+    if (dm->dm_transport_stream_id != tsid ||
+        dm->dm_network_id != onid) {
 #ifdef EPG_EIT_TRACE
       tvhlog(LOG_DEBUG, mod->id,
              "invalid transport id found tid 0x%02X, onid:tsid %d:%d != %d:%d",
              tableid, tdmi->tdmi_network_id, tdmi->tdmi_transport_stream_id,
              onid, tsid);
 #endif
-      tdmi = NULL;
+      dm = NULL;
     }
   }
-  if(!tdmi) goto done;
+  if(!dm) goto done;
 
   /* Get service */
-  svc = dvb_service_find3(NULL, tdmi, NULL, 0, 0, sid, 1, 1);
+  svc = dvb_service_find3(NULL, dm->dm_tdmi, NULL, 0, 0, sid, 1, 1);
   if (!svc || !svc->s_ch) goto done;
 
   /* Register as interesting */
@@ -815,10 +817,9 @@ static void _eit_ota_destroy ( epggrab_ota_mux_t *ota )
 }
 
 static void _eit_start 
-  ( epggrab_module_ota_t *m, th_dvb_mux_instance_t *tdmi )
+  ( epggrab_module_ota_t *m, dvb_mux_t *dm )
 {
   epggrab_ota_mux_t *ota;
-
   /* Disabled */
   if (!m->enabled) return;
 
@@ -830,7 +831,7 @@ static void _eit_start
   }
 
   /* Register */
-  if (!(ota = epggrab_ota_create(m, tdmi))) return;
+  if (!(ota = epggrab_ota_create(m, dm))) return;
   if (!ota->status) {
     ota->status  = calloc(1, sizeof(eit_status_t));
     ota->destroy = _eit_ota_destroy;
@@ -842,16 +843,16 @@ static void _eit_start
     tdt_add(tdmi, 0, 0, dvb_pidx11_callback, m, m->id, TDT_CRC, 3840, NULL);
     tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 3841, NULL);
 #endif
-    tdt_add(tdmi, 0, 0, dvb_pidx11_callback, m, m->id, TDT_CRC, 3002);
-    tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 3003);
+    tdt_add(dm, 0, 0, dvb_pidx11_callback, m, m->id, TDT_CRC, 3002);
+    tdt_add(dm, 0, 0, _eit_callback, m, m->id, TDT_CRC, 3003);
 
   /* Viasat Baltic (0x39) */
   } else if (!strcmp("viasat_baltic", m->id)) {
-    tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 0x39);
+    tdt_add(dm, 0, 0, _eit_callback, m, m->id, TDT_CRC, 0x39);
 
   /* Standard (0x12) */
   } else {
-    tdt_add(tdmi, 0, 0, _eit_callback, m, m->id, TDT_CRC, 0x12);
+    tdt_add(dm, 0, 0, _eit_callback, m, m->id, TDT_CRC, 0x12);
   }
   tvhlog(LOG_DEBUG, m->id, "install table handlers");
 }
