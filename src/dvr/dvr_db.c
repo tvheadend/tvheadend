@@ -1299,6 +1299,22 @@ dvr_query_add_entry(dvr_query_result_t *dqr, dvr_entry_t *de)
   dqr->dqr_array[dqr->dqr_entries++] = de;
 }
 
+void
+dvr_query_filter(dvr_query_result_t *dqr, dvr_entry_filter filter)
+{
+  dvr_entry_t *de;
+
+  memset(dqr, 0, sizeof(dvr_query_result_t));
+
+  LIST_FOREACH(de, &dvrentries, de_global_link)
+    if (filter(de))
+      dvr_query_add_entry(dqr, de);
+}
+
+static int all_filter(dvr_entry_t *entry)
+{
+  return 1;
+}
 
 /**
  *
@@ -1306,14 +1322,8 @@ dvr_query_add_entry(dvr_query_result_t *dqr, dvr_entry_t *de)
 void
 dvr_query(dvr_query_result_t *dqr)
 {
-  dvr_entry_t *de;
-
-  memset(dqr, 0, sizeof(dvr_query_result_t));
-
-  LIST_FOREACH(de, &dvrentries, de_global_link)
-    dvr_query_add_entry(dqr, de);
+  return dvr_query_filter(dqr, all_filter);
 }
-
 
 /**
  *

@@ -331,7 +331,10 @@ typedef struct dvr_query_result {
   int dqr_alloced;
 } dvr_query_result_t;
 
+typedef int (dvr_entry_filter)(dvr_entry_t *entry);
+
 void dvr_query(dvr_query_result_t *dqr);
+void dvr_query_filter(dvr_query_result_t *dqr, dvr_entry_filter filter);
 void dvr_query_free(dvr_query_result_t *dqr);
 void dvr_query_sort(dvr_query_result_t *dqr);
 
