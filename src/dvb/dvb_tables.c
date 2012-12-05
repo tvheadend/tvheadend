@@ -267,7 +267,7 @@ dvb_bat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
     j = 0;
 
     /* Find TDMI */
-    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link)
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link)
       if(tdmi->tdmi_transport_stream_id == tsid &&
          tdmi->tdmi_network_id == onid)
         break;
@@ -337,7 +337,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     if(!tdmi->tdmi_network_id)
       dvb_mux_set_onid(tdmi, onid);
   } else {
-    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link)
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link)
       if(tdmi->tdmi_transport_stream_id == tsid &&
          tdmi->tdmi_network_id != onid)
         break;
@@ -495,9 +495,8 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   // Make sure this TSID is not already known on another mux
   // That might indicate that we have accedentally received a PAT
   // from another mux
-  LIST_FOREACH(other, &tda->tda_dn->dn_muxes, tdmi_adapter_link)
-    if(other != tdmi && 
-       other->tdmi_conf.dmc_satconf == tdmi->tdmi_conf.dmc_satconf &&
+  LIST_FOREACH(other, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link)
+    if(other != tdmi &&
        other->tdmi_transport_stream_id == tsid &&
        other->tdmi_network_id == tdmi->tdmi_network_id)
       return -1;
@@ -653,7 +652,7 @@ dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   dmc.dmc_fe_params.u.qam.fec_inner = fec_tab[ptr[10] & 0x07];
 
   dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, NULL,
-		 "automatic mux discovery", 1, 1, NULL, NULL);
+		 "automatic mux discovery", 1, 1, NULL);
   return 0;
 }
 
@@ -695,8 +694,6 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   dmc.dmc_fe_params.u.qam.fec_inner = fec_tab[ptr[10] & 0x0f];
 
   dmc.dmc_polarisation = (ptr[6] >> 5) & 0x03;
-   // Same satconf (lnb, switch, etc)
-  dmc.dmc_satconf = tdmi->tdmi_conf.dmc_satconf;
 
 #if DVB_API_VERSION >= 5
   int modulation = (ptr[6] & 0x03);
@@ -738,8 +735,7 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
 #endif
   dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, NULL,
-		 "automatic mux discovery", 1, 1, NULL, tdmi->tdmi_conf.dmc_satconf);
-  
+		 "automatic mux discovery", 1, 1, NULL);
   return 0;
 }
 
@@ -755,7 +751,7 @@ dvb_table_local_channel(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   service_t *t;
 
-  LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link)
+  LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link)
     if(tdmi->tdmi_transport_stream_id == tsid && tdmi->tdmi_network_id == onid)
       break;
 
@@ -872,11 +868,11 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
       switch(tag) {
       case DVB_DESC_SAT:
-        if(tdmi->tdmi_adapter->tda_type == FE_QPSK)
+        if(tdmi->tdmi_adapter->tda_fe_type == FE_QPSK)
           dvb_table_sat_delivery(tdmi, ptr, tlen, tsid, onid);
         break;
       case DVB_DESC_CABLE:
-        if(tdmi->tdmi_adapter->tda_type == FE_QAM)
+        if(tdmi->tdmi_adapter->tda_fe_type == FE_QAM)
           dvb_table_cable_delivery(tdmi, ptr, tlen, tsid, onid);
         break;
       case DVB_DESC_LOCAL_CHAN:
@@ -935,7 +931,7 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     onid = (ptr[24] << 8) | ptr[25];
     
     /* Search all muxes on adapter */
-    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link)
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link)
       if(tdmi->tdmi_transport_stream_id == tsid && tdmi->tdmi_network_id == onid);
 	break;
     
@@ -988,7 +984,7 @@ dvb_pmt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   service_t *t;
   th_dvb_table_t *tdt = opaque;
 
-  LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
+  LIST_FOREACH(t, &tdmi->tdmi_mux->dm_services, s_group_link) {
     pthread_mutex_lock(&t->s_stream_mutex);
     psi_parse_pmt(t, ptr, len, 1, 1);
     if (t->s_pmt_pid == tdt->tdt_pid && t->s_status == SERVICE_RUNNING)
@@ -1036,7 +1032,7 @@ dvb_table_add_default_atsc(th_dvb_mux_instance_t *tdmi)
 {
   int tableid;
 
-  if(tdmi->tdmi_conf.dmc_fe_params.u.vsb.modulation == VSB_8) {
+  if(tdmi->tdmi_mux->dm_conf.dmc_fe_params.u.vsb.modulation == VSB_8) {
     tableid = 0xc8; // Terrestrial
   } else {
     tableid = 0xc9; // Cable
@@ -1064,7 +1060,7 @@ dvb_table_add_default(th_dvb_mux_instance_t *tdmi)
 	  TDT_CRC, 1);
 
 
-  switch(tdmi->tdmi_adapter->tda_type) {
+  switch(tdmi->tdmi_adapter->tda_fe_type) {
   case FE_QPSK:
   case FE_OFDM:
   case FE_QAM:

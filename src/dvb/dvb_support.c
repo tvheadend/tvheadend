@@ -466,16 +466,16 @@ nicenum(char *x, size_t siz, unsigned int v)
  * 
  */
 void
-dvb_mux_nicefreq(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
+dvb_mux_nicefreq(char *buf, size_t size, const dvb_mux_t *dm)
 {
   char freq[50];
 
-  if(tdmi->tdmi_adapter->tda_type == FE_QPSK) {
-    nicenum(freq, sizeof(freq), tdmi->tdmi_conf.dmc_fe_params.frequency);
+  if(dm->dm_network->dn_fe_type == FE_QPSK) {
+    nicenum(freq, sizeof(freq), dm->dm_conf.dmc_fe_params.frequency);
     snprintf(buf, size, "%s kHz", freq);
   } else {
     nicenum(freq, sizeof(freq), 
-	    tdmi->tdmi_conf.dmc_fe_params.frequency / 1000);
+	    dm->dm_conf.dmc_fe_params.frequency / 1000);
     snprintf(buf, size, "%s kHz", freq);
   }
 }
@@ -489,16 +489,16 @@ dvb_mux_nicename(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
 {
   char freq[50];
   const char *n = tdmi->tdmi_network;
+  const dvb_mux_t *dm = tdmi->tdmi_mux;
 
-  if(tdmi->tdmi_adapter->tda_type == FE_QPSK) {
-    nicenum(freq, sizeof(freq), tdmi->tdmi_conf.dmc_fe_params.frequency);
-    snprintf(buf, size, "%s%s%s kHz %s (%s)", 
+  if(tdmi->tdmi_adapter->tda_fe_type == FE_QPSK) {
+    nicenum(freq, sizeof(freq), dm->dm_conf.dmc_fe_params.frequency);
+    snprintf(buf, size, "%s%s%s kHz %s",
 	     n?:"", n ? ": ":"", freq,
-	     dvb_polarisation_to_str_long(tdmi->tdmi_conf.dmc_polarisation),
-	     tdmi->tdmi_conf.dmc_satconf ? tdmi->tdmi_conf.dmc_satconf->sc_name : "No satconf");
+	     dvb_polarisation_to_str_long(dm->dm_conf.dmc_polarisation));
 
   } else {
-    nicenum(freq, sizeof(freq), tdmi->tdmi_conf.dmc_fe_params.frequency / 1000);
+    nicenum(freq, sizeof(freq), dm->dm_conf.dmc_fe_params.frequency / 1000);
     snprintf(buf, size, "%s%s%s kHz", n?:"", n ? ": ":"", freq);
   }
 }

@@ -346,13 +346,13 @@ dvb_service_find3
 {
   service_t *svc;
   if (tdmi) {
-    LIST_FOREACH(svc, &tdmi->tdmi_transports, s_group_link) {
+    LIST_FOREACH(svc, &tdmi->tdmi_mux->dm_services, s_group_link) {
       if (enabled    && !svc->s_enabled) continue;
       if (epgprimary && !service_is_primary_epg(svc)) continue;
       if (sid == svc->s_dvb_service_id) return svc;
     }
   } else if (tda) {
-    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link) {
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link) {
       if (enabled && !tdmi->tdmi_enabled) continue;
       if (onid    && onid != tdmi->tdmi_network_id) continue;
       if (tsid    && tsid != tdmi->tdmi_transport_stream_id) continue;
@@ -393,7 +393,7 @@ dvb_service_find2(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
 
   lock_assert(&global_lock);
 
-  LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
+  LIST_FOREACH(t, &tdmi->tdmi_mux->dm_services, s_group_link) {
     if(t->s_dvb_service_id == sid)
       return t;
   }
@@ -424,7 +424,7 @@ dvb_service_find2(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
   t->s_grace_period  = dvb_grace_period;
 
   t->s_dvb_mux_instance = tdmi;
-  LIST_INSERT_HEAD(&tdmi->tdmi_transports, t, s_group_link);
+  LIST_INSERT_HEAD(&tdmi->tdmi_mux->dm_services, t, s_group_link);
 
   pthread_mutex_lock(&t->s_stream_mutex); 
   service_make_nicename(t);
@@ -460,7 +460,7 @@ dvb_service_build_msg(service_t *t)
 
   htsmsg_add_str(m, "network", tdmi->tdmi_network ?: "");
 
-  dvb_mux_nicefreq(buf, sizeof(buf), tdmi);
+  dvb_mux_nicefreq(buf, sizeof(buf), tdmi->tdmi_mux);
   htsmsg_add_str(m, "mux", buf);
 
   if(t->s_ch != NULL)

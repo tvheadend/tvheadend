@@ -255,7 +255,7 @@ void epggrab_ota_create_and_register_by_id
   th_dvb_mux_instance_t *tdmi;
   epggrab_ota_mux_t *ota;
   TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
-    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link) {
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link) {
       if (tdmi->tdmi_transport_stream_id != tsid) continue;
       if (onid && tdmi->tdmi_network_id != onid) continue;
       if (networkname && (!tdmi->tdmi_network || strcmp(networkname, tdmi->tdmi_network))) continue;

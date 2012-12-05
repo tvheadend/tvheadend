@@ -134,14 +134,14 @@ dumpdvbadapters(htsbuf_queue_t *hq)
     htsbuf_qprintf(hq, "%s (%s)\n", tda->tda_displayname, tda->tda_identifier);
      
     outputtitle(hq, 4, "Multiplexes");
-    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link) {
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link) {
       char tdminame[64];
       dvb_mux_nicename(tdminame, sizeof(tdminame), tdmi);
       htsbuf_qprintf(hq, "      %s (%s)\n",
 		     tdminame, tdmi->tdmi_identifier);
       
       htsbuf_qprintf(hq, "\n");
-      dumptransports(hq, &tdmi->tdmi_transports, 8);
+      dumptransports(hq, &tdmi->tdmi_mux->dm_services, 8);
     }
   }
 }

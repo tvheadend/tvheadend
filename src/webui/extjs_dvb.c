@@ -72,7 +72,7 @@ extjs_dvblocations(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_unlock(&global_lock);
 
-  if((out = dvb_mux_preconf_get_node(tda->tda_type, s)) == NULL)
+  if((out = dvb_mux_preconf_get_node(tda->tda_fe_type, s)) == NULL)
     return 404;
 
   htsmsg_json_serialize(out, hq, 0);
@@ -110,7 +110,7 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_t *out, *array, *r;
   const char *op = http_arg_get(&hc->hc_req_args, "op");
   const char *sibling = http_arg_get(&hc->hc_req_args, "sibling");
-  const char *s, *sc;
+  const char *s;
   th_dvb_mux_instance_t *tdmi;
   service_t *t;
 
@@ -124,7 +124,7 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     array = htsmsg_create_list();
 
     TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
-      if(ref == NULL || (ref != tda && ref->tda_type == tda->tda_type))
+      if(ref == NULL || (ref != tda && ref->tda_fe_type == tda->tda_fe_type))
 	htsmsg_add_msg(array, NULL, dvb_adapter_build_msg(tda));
     }
     pthread_mutex_unlock(&global_lock);
@@ -224,10 +224,10 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(out, "success", 1);
   } else if(!strcmp(op, "addnetwork")) {
 
-    sc = http_arg_get(&hc->hc_req_args, "satconf");
+//    sc = http_arg_get(&hc->hc_req_args, "satconf");
 
     if((s = http_arg_get(&hc->hc_req_args, "network")) != NULL)
-      dvb_mux_preconf_add_network(tda, s, sc);
+      dvb_mux_preconf_add_network(tda, s);
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
@@ -237,8 +237,8 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     tvhlog(LOG_NOTICE, "web interface",
 	   "Service probe started on \"%s\"", tda->tda_displayname);
 
-    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link) {
-      LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link) {
+      LIST_FOREACH(t, &tdmi->tdmi_mux->dm_services, s_group_link) {
 	if(t->s_enabled)
 	  serviceprobe_enqueue(t);
       }
@@ -334,7 +334,7 @@ extjs_dvbmuxes(http_connection_t *hc, const char *remain, void *opaque)
   if(!strcmp(op, "get")) {
     array = htsmsg_create_list();
 
-    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link)
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link)
       htsmsg_add_msg(array, NULL, dvb_mux_build_msg(tdmi));
 
     htsmsg_add_msg(out, "entries", array);
@@ -415,16 +415,16 @@ extjs_dvbservices(http_connection_t *hc, const char *remain, void *opaque)
     out = htsmsg_create_map();
     array = htsmsg_create_list();
 
-    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link) {
-      LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link) {
+      LIST_FOREACH(t, &tdmi->tdmi_mux->dm_services, s_group_link) {
 	count++;
       }
     }
 
     tvec = alloca(sizeof(service_t *) * count);
 
-    LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link) {
-      LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
+    LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link) {
+      LIST_FOREACH(t, &tdmi->tdmi_mux->dm_services, s_group_link) {
 	tvec[i++] = t;
       }
     }
@@ -608,7 +608,7 @@ extjs_dvb_addmux(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
-
+#if 0
 /**
  *
  */
@@ -672,6 +672,7 @@ extjs_dvb_copymux(http_connection_t *hc, const char *remain, void *opaque)
 
   return 0;
 }
+#endif
 
 /**
  *
@@ -766,8 +767,9 @@ extjs_start_dvb(void)
 
   http_path_add("/dvb/addmux", 
 		NULL, extjs_dvb_addmux, ACCESS_ADMIN);
-
+#if 0 // XXX(dvbreorg)
   http_path_add("/dvb/copymux", 
 		NULL, extjs_dvb_copymux, ACCESS_ADMIN);
+#endif
 
 }

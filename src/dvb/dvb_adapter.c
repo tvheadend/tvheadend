@@ -78,7 +78,7 @@ tda_save(th_dvb_adapter_t *tda)
 
   lock_assert(&global_lock);
 
-  htsmsg_add_str(m, "type", dvb_adaptertype_to_str(tda->tda_type));
+  htsmsg_add_str(m, "type", dvb_adaptertype_to_str(tda->tda_fe_type));
   htsmsg_add_str(m, "displayname", tda->tda_displayname);
   htsmsg_add_u32(m, "autodiscovery", tda->tda_autodiscovery);
   htsmsg_add_u32(m, "idleclose", tda->tda_idleclose);
@@ -466,7 +466,8 @@ tda_add(int adapter_num)
   else
     close(fe);
 
-  tda->tda_type = tda->tda_fe_info->type;
+  tda->tda_fe_type = tda->tda_fe_info->type;
+  tda->tda_dn->dn_fe_type = tda->tda_fe_type;
 
   snprintf(buf, sizeof(buf), "%s_%s", tda->tda_rootpath,
 	   tda->tda_fe_info->name);
@@ -478,9 +479,9 @@ tda_add(int adapter_num)
 
   tda->tda_identifier = strdup(buf);
   
-  tda->tda_autodiscovery = tda->tda_type != FE_QPSK;
+  tda->tda_autodiscovery = tda->tda_fe_type != FE_QPSK;
 
-  tda->tda_sat = tda->tda_type == FE_QPSK;
+  tda->tda_sat = tda->tda_fe_type == FE_QPSK;
 
   /* Come up with an initial displayname, user can change it and it will
      be overridden by any stored settings later on */
@@ -516,7 +517,7 @@ tda_add_from_file(const char *filename)
   tda->tda_fe_fd       = -1;
   tda->tda_dvr_pipe[0] = -1;
 
-  tda->tda_type = -1;
+  tda->tda_fe_type = -1;
 
   snprintf(buf, sizeof(buf), "%s", filename);
 
@@ -546,7 +547,7 @@ tda_add_from_file(const char *filename)
  */
 static void tda_init_input (th_dvb_adapter_t *tda)
 {
-  if(tda->tda_type == -1 || check_full_stream(tda)) {
+  if(tda->tda_fe_type == -1 || check_full_stream(tda)) {
     tvhlog(LOG_INFO, "dvb", "Adapter %s will run in full mux mode", tda->tda_rootpath);
     dvb_input_raw_setup(tda);
   } else {
@@ -656,10 +657,10 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
         /* Not discovered by hardware, create it */
         tda = tda_alloc();
         tda->tda_identifier = strdup(f->hmf_name);
-        tda->tda_type = type;
+        tda->tda_fe_type = type;
         TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
       } else {
-        if(type != tda->tda_type)
+        if(type != tda->tda_fe_type)
           continue; /* Something is wrong, ignore */
       }
 
@@ -713,7 +714,7 @@ dvb_adapter_mux_scanner(void *aux)
   gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 20);
 
   /* No muxes */
-  if(LIST_FIRST(&tda->tda_dn->dn_muxes) == NULL) {
+  if(LIST_FIRST(&tda->tda_dn->dn_mux_instances) == NULL) {
     dvb_adapter_poweroff(tda);
     return;
   }
@@ -763,17 +764,17 @@ dvb_adapter_mux_scanner(void *aux)
 void
 dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
 {
+#if 0
   th_dvb_mux_instance_t *tdmi_src, *tdmi_dst;
 
   lock_assert(&global_lock);
 
-  while((tdmi_dst = LIST_FIRST(&dst->tda_dn->dn_muxes)) != NULL)
+  while((tdmi_dst = LIST_FIRST(&dst->tda_dn->dn_mux_instances)) != NULL)
     dvb_mux_destroy(tdmi_dst);
 
-  LIST_FOREACH(tdmi_src, &src->tda_dn->dn_muxes, tdmi_adapter_link)
-    dvb_mux_copy(dst, tdmi_src, NULL);
-
   tda_save(dst);
+#endif
+  abort(); // XXX(dvbreorg)
 }
 
 
@@ -792,7 +793,7 @@ dvb_adapter_destroy(th_dvb_adapter_t *tda)
 
   hts_settings_remove("dvbadapters/%s", tda->tda_identifier);
 
-  while((tdmi = LIST_FIRST(&tda->tda_dn->dn_muxes)) != NULL)
+  while((tdmi = LIST_FIRST(&tda->tda_dn->dn_mux_instances)) != NULL)
     dvb_mux_destroy(tdmi);
   
   TAILQ_REMOVE(&dvb_adapters, tda, tda_global_link);
@@ -995,9 +996,9 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
   htsmsg_add_str(m, "name", tda->tda_displayname);
 
   // XXX: bad bad bad slow slow slow
-  LIST_FOREACH(tdmi, &tda->tda_dn->dn_muxes, tdmi_adapter_link) {
+  LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link) {
     nummux++;
-    LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
+    LIST_FOREACH(t, &tdmi->tdmi_mux->dm_services, s_group_link) {
       numsvc++;
     }
   }
@@ -1046,11 +1047,11 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
   htsmsg_add_str(m, "devicename", tda->tda_fe_info->name);
 
   htsmsg_add_str(m, "deliverySystem", 
-		 dvb_adaptertype_to_str(tda->tda_type) ?: "");
+		 dvb_adaptertype_to_str(tda->tda_fe_type) ?: "");
 
   htsmsg_add_u32(m, "satConf", tda->tda_sat);
 
-  fdiv = tda->tda_type == FE_QPSK ? 1 : 1000;
+  fdiv = tda->tda_fe_type == FE_QPSK ? 1 : 1000;
 
   htsmsg_add_u32(m, "freqMin", tda->tda_fe_info->frequency_min / fdiv);
   htsmsg_add_u32(m, "freqMax", tda->tda_fe_info->frequency_max / fdiv);
@@ -1208,7 +1209,7 @@ dvb_adapter_poweroff(th_dvb_adapter_t *tda)
 {
   if (tda->tda_fe_fd == -1) return;
   lock_assert(&global_lock);
-  if (!tda->tda_poweroff || tda->tda_type != FE_QPSK)
+  if (!tda->tda_poweroff || tda->tda_fe_type != FE_QPSK)
     return;
   diseqc_voltage_off(tda->tda_fe_fd);
   tvhlog(LOG_DEBUG, "dvb", "\"%s\" is off", tda->tda_rootpath);

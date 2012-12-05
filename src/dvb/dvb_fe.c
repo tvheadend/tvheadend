@@ -396,7 +396,8 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
   // copy dmc, cause frequency may be change with FE_QPSK
-  dvb_mux_conf_t dmc = tdmi->tdmi_conf;
+  const dvb_mux_t *dm = tdmi->tdmi_mux;
+  dvb_mux_conf_t dmc = dm->dm_conf;
   dvb_frontend_parameters_t* p = &dmc.dmc_fe_params;
   
   char buf[256];
@@ -423,10 +424,9 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
   else
     dvb_adapter_start(tda);
       
-  if(tda->tda_type == FE_QPSK) {
+  if(tda->tda_fe_type == FE_QPSK) {
 	
     /* DVB-S */
-    dvb_satconf_t *sc;
     int port, lowfreq, hifreq, switchfreq, hiband, pol, dbsbs;
 
     lowfreq = 9750000;
@@ -434,8 +434,9 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
     switchfreq = 11700000;
     port = 0;
     dbsbs = 0;
-
-    if((sc = tdmi->tdmi_conf.dmc_satconf) != NULL) {
+#if 0
+    dvb_satconf_t *sc;
+    if((sc = dm->dm_conf.dmc_satconf) != NULL) {
       port = sc->sc_port;
 
       if(sc->sc_lnb != NULL)
@@ -443,18 +444,19 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
       if(!strcmp(sc->sc_id ?: "", "DBS Bandstacked"))
         dbsbs = 1;
     }
+#endif
 
     if(dbsbs) {
       hiband = 0;
-      if(tdmi->tdmi_conf.dmc_polarisation == POLARISATION_HORIZONTAL ||
-         tdmi->tdmi_conf.dmc_polarisation == POLARISATION_CIRCULAR_LEFT)
+      if(dm->dm_conf.dmc_polarisation == POLARISATION_HORIZONTAL ||
+         dm->dm_conf.dmc_polarisation == POLARISATION_CIRCULAR_LEFT)
         p->frequency = abs(p->frequency - hifreq);
       else
         p->frequency = abs(p->frequency - lowfreq);
       pol = POLARISATION_CIRCULAR_LEFT;
     } else {
       hiband = switchfreq && p->frequency > switchfreq;
-      pol = tdmi->tdmi_conf.dmc_polarisation;
+      pol = dm->dm_conf.dmc_polarisation;
       if(hiband)
         p->frequency = abs(p->frequency - hifreq);
       else
@@ -475,7 +477,7 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 
 
 #if DVB_API_VERSION >= 5
-  if (tda->tda_type == FE_QPSK) {
+  if (tda->tda_fe_type == FE_QPSK) {
     tvhlog(LOG_DEBUG, "dvb", "\"%s\" tuning via s2api to \"%s\" (%d, %d Baud, "
 	    "%s, %s, %s) for %s", tda->tda_rootpath, buf, p->frequency, p->u.qpsk.symbol_rate, 
       dvb_mux_fec2str(p->u.qpsk.fec_inner), dvb_mux_delsys2str(dmc.dmc_fe_delsys), 

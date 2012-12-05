@@ -87,14 +87,7 @@ dvb_satconf_entry_find(th_dvb_adapter_t *tda, const char *id, int create)
 static void
 satconf_destroy(th_dvb_adapter_t *tda, dvb_satconf_t *sc)
 {
-  th_dvb_mux_instance_t *tdmi;
-
-  while((tdmi = LIST_FIRST(&sc->sc_tdmis)) != NULL) {
-    tdmi->tdmi_conf.dmc_satconf = NULL;
-    LIST_REMOVE(tdmi, tdmi_satconf_link);
-  }
-
-  TAILQ_REMOVE(&tda->tda_satconfs, sc, sc_adapter_link);  
+  TAILQ_REMOVE(&tda->tda_satconfs, sc, sc_adapter_link);
   free(sc->sc_id);
   free(sc->sc_name);
   free(sc->sc_comment);

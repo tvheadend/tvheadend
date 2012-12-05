@@ -39,7 +39,7 @@ RB_HEAD(th_dvb_mux_instance_tree, th_dvb_mux_instance);
 TAILQ_HEAD(th_dvb_mux_instance_queue, th_dvb_mux_instance);
 LIST_HEAD(th_dvb_mux_instance_list, th_dvb_mux_instance);
 TAILQ_HEAD(dvb_satconf_queue, dvb_satconf);
-
+LIST_HEAD(dvb_mux_list, dvb_mux);
 
 /**
  * Satconf
@@ -53,10 +53,7 @@ typedef struct dvb_satconf {
   char *sc_comment;
   char *sc_lnb;
 
-  struct th_dvb_mux_instance_list sc_tdmis;
-
 } dvb_satconf_t;
-
 
 
 enum polarisation {
@@ -76,7 +73,7 @@ typedef struct dvb_frontend_parameters dvb_frontend_parameters_t;
 typedef struct dvb_mux_conf {
   dvb_frontend_parameters_t dmc_fe_params;
   int dmc_polarisation;
-  dvb_satconf_t *dmc_satconf;
+  //  dvb_satconf_t *dmc_satconf;
 #if DVB_API_VERSION >= 5
   fe_modulation_t dmc_fe_modulation;
   fe_delivery_system_t dmc_fe_delsys;
@@ -85,14 +82,54 @@ typedef struct dvb_mux_conf {
 } dvb_mux_conf_t;
 
 
+
+/**
+ *
+ */
+typedef struct dvb_network {
+
+  struct th_dvb_mux_instance_list dn_mux_instances; // Should go away
+
+  struct th_dvb_mux_instance_queue dn_initial_scan_queue;
+  int dn_initial_num_mux;
+
+  struct th_dvb_mux_instance *dn_mux_epg;
+
+  int dn_fe_type;  // Frontend types for this network (FE_QPSK, etc)
+
+  //  struct dvb_mux_list dn_muxes;
+
+} dvb_network_t;
+
+
+
+/**
+ *
+ */
+typedef struct dvb_mux {
+
+  //  LIST_ENTRY(dvb_mux) dm_network_link;
+  dvb_network_t *dm_network;
+
+  struct service_list dm_services;
+
+  dvb_mux_conf_t dm_conf;
+
+} dvb_mux_t;
+
+
+
+
 /**
  * DVB Mux instance
  */
 typedef struct th_dvb_mux_instance {
 
+  dvb_mux_t *tdmi_mux;
+
   RB_ENTRY(th_dvb_mux_instance) tdmi_global_link;
 
-  LIST_ENTRY(th_dvb_mux_instance) tdmi_adapter_link;
+  LIST_ENTRY(th_dvb_mux_instance) tdmi_adapter_link; // wrong
 
   struct th_dvb_adapter *tdmi_adapter;
 
@@ -124,8 +161,6 @@ typedef struct th_dvb_mux_instance {
 
   int tdmi_enabled;
 
-  dvb_mux_conf_t tdmi_conf;
-
   /* Linked if tdmi_conf.dmc_satconf != NULL */
   LIST_ENTRY(th_dvb_mux_instance) tdmi_satconf_link;
 
@@ -137,8 +172,6 @@ typedef struct th_dvb_mux_instance {
 
   char *tdmi_default_authority;
 
-  struct service_list tdmi_transports; /* via s_mux_link */
-
   TAILQ_ENTRY(th_dvb_mux_instance) tdmi_scan_link;
   struct th_dvb_mux_instance_queue *tdmi_scan_queue;
 
@@ -147,6 +180,7 @@ typedef struct th_dvb_mux_instance {
   struct th_subscription_list tdmi_subscriptions;
 
 } th_dvb_mux_instance_t;
+
 
 
 
@@ -164,20 +198,6 @@ typedef struct dvb_table_feed {
 } dvb_table_feed_t;
 
 
-
-/**
- *
- */
-typedef struct dvb_network {
-
-  struct th_dvb_mux_instance_list dn_muxes;
-
-  struct th_dvb_mux_instance_queue dn_initial_scan_queue;
-  int dn_initial_num_mux;
-
-  th_dvb_mux_instance_t *dn_mux_epg;
-
-} dvb_network_t;
 
 
 /**
@@ -212,7 +232,7 @@ typedef struct th_dvb_adapter {
   int32_t  tda_full_mux_rx;
   char *tda_displayname;
 
-  int tda_type;
+  int tda_fe_type;
   struct dvb_frontend_info *tda_fe_info; // result of FE_GET_INFO ioctl()
 
   char *tda_fe_path;
@@ -407,8 +427,7 @@ th_dvb_mux_instance_t *dvb_mux_create(th_dvb_adapter_t *tda,
 				      const struct dvb_mux_conf *dmc,
 				      uint16_t onid, uint16_t tsid, const char *network,
 				      const char *logprefix, int enabled,
-				      int initialscan, const char *identifier,
-				      dvb_satconf_t *satconf);
+				      int initialscan, const char *identifier);
 
 void dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *name);
 
@@ -439,9 +458,10 @@ const char *dvb_mux_add_by_params(th_dvb_adapter_t *tda,
 				  int fec,
 				  int polarisation,
 				  const char *satconf);
-
+#if 0
 int dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src,
 		 dvb_satconf_t *satconf);
+#endif
 
 th_dvb_mux_instance_t *dvb_mux_find
   (th_dvb_adapter_t *tda, const char *netname, uint16_t onid, uint16_t tsid,
