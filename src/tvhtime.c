@@ -1,3 +1,5 @@
+#define _ISOC9X_SOURCE
+
 #include <time.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
