@@ -357,8 +357,10 @@ iptv_rtsp_start(const char *uri, int *fd)
 void
 iptv_rtsp_stop(iptv_rtsp_info_t *rtsp_info)
 {
+  // BE CAREFUL !
+  // If the response isn't set to NULL, then you'll need to wait the command completion, otherwise the callback
+  // can segfault when easy_cleanup is called
   rtsp_teardown(rtsp_info->curl, rtsp_info->uri, NULL);
-  
   curl_easy_cleanup(rtsp_info->curl);
   free(rtsp_info);
   rtsp_info = NULL;
