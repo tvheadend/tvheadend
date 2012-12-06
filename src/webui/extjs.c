@@ -1298,6 +1298,7 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque,
   const char *s;
   off_t fsize;
   char buf[100];
+  channel_t *ch;
 
   if((s = http_arg_get(&hc->hc_req_args, "start")) != NULL)
     start = atoi(s);
@@ -1332,10 +1333,11 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque,
 
     m = htsmsg_create_map();
 
-    if(de->de_channel != NULL) {
-      htsmsg_add_str(m, "channel", de->de_channel->ch_name);
-      if(de->de_channel->ch_icon != NULL)
-	htsmsg_add_str(m, "chicon", de->de_channel->ch_icon);
+    htsmsg_add_str(m, "channel", de->de_channel_name);
+    ch = channel_find_by_name(de->de_channel_name, 0, 0);
+    if(ch != NULL) {
+      if(ch->ch_icon != NULL)
+	htsmsg_add_str(m, "chicon", ch->ch_icon);
     }
 
     htsmsg_add_str(m, "config_name", de->de_config_name);

@@ -58,8 +58,6 @@ typedef struct channel {
   int ch_number;  // User configurable number
   char *ch_icon;
 
-  struct dvr_entry_list ch_dvrs;
-  
   struct dvr_autorec_entry_list ch_autorecs;
 
   struct channel_tag_mapping_list ch_ctms;
