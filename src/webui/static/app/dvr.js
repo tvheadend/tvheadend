@@ -143,7 +143,7 @@ tvheadend.dvrDetails = function(entry) {
 /**
  *
  */
-tvheadend.dvrschedule = function(title, dvrStore) {
+tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 
 	var actions = new Ext.ux.grid.RowActions({
 		header : '',
@@ -359,7 +359,7 @@ tvheadend.dvrschedule = function(title, dvrStore) {
 		stripeRows : true,
 		disableSelection : true,
 		title : title,
-		iconCls : 'clock',
+		iconCls : iconCls,
 		store : dvrStore,
 		cm : dvrCm,
 		plugins : [ actions ],
@@ -685,9 +685,9 @@ tvheadend.dvr = function() {
 		title : 'Digital Video Recorder',
 		iconCls : 'drive',
 		items : [ 
-		          new tvheadend.dvrschedule('Upcoming recordings', tvheadend.dvrStoreUpcoming),
-		          new tvheadend.dvrschedule('Finished recordings', tvheadend.dvrStoreFinished),
-		          new tvheadend.dvrschedule('Failed recordings', tvheadend.dvrStoreFailed),
+		          new tvheadend.dvrschedule('Upcoming recordings', 'clock', tvheadend.dvrStoreUpcoming),
+		          new tvheadend.dvrschedule('Finished recordings', 'television', tvheadend.dvrStoreFinished),
+		          new tvheadend.dvrschedule('Failed recordings', 'exclamation', tvheadend.dvrStoreFailed),
 		          new tvheadend.autoreceditor
 		        ]
 	});
