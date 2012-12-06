@@ -617,8 +617,12 @@ tvheadend.dvr = function() {
 		remoteSort : true
 	    });
 	}
-	tvheadend.dvrStoreNew = datastoreBuilder('dvrlist_new');
-	tvheadend.dvrStoreOld = datastoreBuilder('dvrlist_old');
+	tvheadend.dvrStoreUpcoming = datastoreBuilder('dvrlist_upcoming');
+	tvheadend.dvrStoreFinished = datastoreBuilder('dvrlist_finished');
+	tvheadend.dvrStoreFailed = datastoreBuilder('dvrlist_failed');
+        tvheadend.dvrStores = [tvheadend.dvrStoreUpcoming,
+	                       tvheadend.dvrStoreFinished,
+	                       tvheadend.dvrStoreFailed];
 
 
 	function updateDvrStore(store, r, m) {
@@ -630,28 +634,28 @@ tvheadend.dvr = function() {
 			Ext.data.Record.COMMIT);
 	}
 
+	function reloadStores() {
+		for (var i = 0; i < tvheadend.dvrStores.length; i++) {
+			tvheadend.dvrStores[i].reload();
+		}
+	}
+
 	tvheadend.comet.on('dvrdb', function(m) {
 
 		if (m.reload != null) {
-		       tvheadend.dvrStoreOld.reload();
-		       tvheadend.dvrStoreNew.reload();
+		       reloadStores();
 		}
 
 		if (m.updateEntry != null) {
-			r = tvheadend.dvrStoreNew.getById(m.id);
-			if (typeof r !== 'undefined') {
-				updateDvrStore(tvheadend.dvrStoreNew, r, m);
-				return;
+			for (var i = 0; i < tvheadend.dvrStores.length; i++) {
+				var store = tvheadend.dvrStores[i];
+				r = tvheadend.dvrStoreUpcoming.getById(m.id);
+				if (typeof r !== 'undefined') {
+					updateDvrStore(store, r, m);
+					return;
+				}
 			}
-
-			r = tvheadend.dvrStoreOld.getById(m.id);
-			if (typeof r === 'undefined') {
-				updateDvrStore(tvheadend.dvrStoreOld, r, m);
-				return;
-			}
-				
-			tvheadend.dvrStoreNew.reload();
-			tvheadend.dvrStoreOld.reload();
+			reloadStores();
 		}
 	});
 
@@ -680,8 +684,10 @@ tvheadend.dvr = function() {
 		autoScroll : true,
 		title : 'Digital Video Recorder',
 		iconCls : 'drive',
-		items : [ new tvheadend.dvrschedule('Finished recordings', tvheadend.dvrStoreOld),
-		          new tvheadend.dvrschedule('Recorder schedule', tvheadend.dvrStoreNew),
+		items : [ 
+		          new tvheadend.dvrschedule('Upcoming recordings', tvheadend.dvrStoreUpcoming),
+		          new tvheadend.dvrschedule('Finished recordings', tvheadend.dvrStoreFinished),
+		          new tvheadend.dvrschedule('Failed recordings', tvheadend.dvrStoreFailed),
 		          new tvheadend.autoreceditor
 		        ]
 	});
