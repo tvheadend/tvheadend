@@ -274,8 +274,10 @@ destroy_response(curl_response_t *response)
 static int
 iptv_rtsp_bind(CURL *curl, int *fd)
 {
-  struct addrinfo hints, *resolved_address;
+  struct addrinfo hints;
   char *remote_address;
+  int client_port = -1;
+  int bind_tries = 10;
   
   curl_easy_getinfo(curl, CURLINFO_PRIMARY_IP, &remote_address);
 
@@ -284,27 +286,52 @@ iptv_rtsp_bind(CURL *curl, int *fd)
   hints.ai_socktype = SOCK_DGRAM;
   hints.ai_flags = AI_PASSIVE;     // fill in my IP for me
 
-  getaddrinfo(NULL, "12345", &hints, &resolved_address);
-  
-  *fd = tvh_socket(resolved_address->ai_family, resolved_address->ai_socktype, resolved_address->ai_protocol);
-  
-  int true = 1;
-  setsockopt(*fd, SOL_SOCKET, SO_REUSEADDR, &true, sizeof(true));
-
-  if (bind(*fd, resolved_address->ai_addr, resolved_address->ai_addrlen) == -1)
+  while(client_port % 2 && --bind_tries >= 0)
   {
-    int err = errno;
-    tvhlog(LOG_ERR, "IPTV", "RTSP cannot bind %s:%d on fd %d -- %s (%d)",
+    struct addrinfo *resolved_address;
+    // Try to find a free even port for RTP
+    getaddrinfo(NULL, "0", &hints, &resolved_address);
+
+    *fd = tvh_socket(resolved_address->ai_family, resolved_address->ai_socktype, resolved_address->ai_protocol);
+
+    int true = 1;
+    setsockopt(*fd, SOL_SOCKET, SO_REUSEADDR, &true, sizeof(true));
+
+    if (bind(*fd, resolved_address->ai_addr, resolved_address->ai_addrlen) == -1)
+    {
+      int err = errno;
+      tvhlog(LOG_ERR, "IPTV", "RTSP cannot bind %s:%d on fd %d -- %s (%d)",
+             inet_ntoa(((struct sockaddr_in *) resolved_address->ai_addr)->sin_addr),
+             ntohs(((struct sockaddr_in *) resolved_address->ai_addr)->sin_port),
+             *fd, strerror(err), err);
+
+      freeaddrinfo(resolved_address);
+      return -1;
+    }
+
+    // Get the bound port back
+    getsockname(*fd, resolved_address->ai_addr, &resolved_address->ai_addrlen);
+
+    switch (resolved_address->ai_family)
+    {
+    case AF_INET:
+      client_port = ntohs(((struct sockaddr_in *) resolved_address->ai_addr)->sin_port);
+      break;
+    case AF_INET6:
+      client_port = ntohs(((struct sockaddr_in6 *) resolved_address->ai_addr)->sin6_port);
+      break;
+    default:
+      tvhlog(LOG_ERR, "IPTV", "RTSP unknown socket family %d", resolved_address->ai_family);
+    }
+
+    tvhlog(LOG_DEBUG, "IPTV", "RTSP bound to %s:%d on fd %d",
            inet_ntoa(((struct sockaddr_in *) resolved_address->ai_addr)->sin_addr),
            ntohs(((struct sockaddr_in *) resolved_address->ai_addr)->sin_port),
-           *fd, strerror(err), err);
-    
+           *fd);
     freeaddrinfo(resolved_address);
-    return -1;
   }
   
-  freeaddrinfo(resolved_address);
-  return 0;
+  return client_port % 2 ? -1 : 0;
 }
 
 iptv_rtsp_info_t *
