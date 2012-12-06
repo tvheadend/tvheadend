@@ -379,6 +379,7 @@ typedef struct service {
   char *s_iptv_iface;
   struct in_addr s_iptv_group;
   struct in6_addr s_iptv_group6;
+  struct iptv_rtsp_info *s_iptv_rtsp_info;
   uint16_t s_iptv_port;
   int s_iptv_fd;
 
