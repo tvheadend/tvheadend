@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE
 #include <pthread.h>
 #include <assert.h>
 
@@ -511,7 +512,7 @@ tda_add(int adapter_num)
   dvb_adapter_checkspeed(tda);
 
 
-  if(!strcmp(tda->tda_fe_info->name, "Sony CXD2820R"))
+  if(strcasestr(tda->tda_fe_info->name, "Sony CXD2820R"))
     tda->tda_snr_valid = 1;
 
   tvhlog(LOG_INFO, "dvb",
