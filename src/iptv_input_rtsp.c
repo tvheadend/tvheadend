@@ -133,6 +133,11 @@ set_curl_result_buffer(CURL *curl, curl_response_t *buffer)
       free(buffer->data);
       buffer->data = NULL;
     }
+  } else {
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, NULL);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, NULL);
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, NULL);
+    curl_easy_setopt(curl, CURLOPT_WRITEHEADER, NULL);
   }
 }
 
