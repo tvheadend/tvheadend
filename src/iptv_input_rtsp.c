@@ -22,6 +22,13 @@
 #include <string.h>
 #include <ctype.h>
 #include <sys/queue.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h> 
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+
 
 #include "tvheadend.h"
 
@@ -259,8 +266,44 @@ destroy_response(curl_response_t *response)
   response = NULL;
 }
 
+static int
+iptv_rtsp_bind(CURL *curl, int *fd)
+{
+  struct addrinfo hints, *resolved_address;
+  char *remote_address;
+  
+  curl_easy_getinfo(curl, CURLINFO_PRIMARY_IP, &remote_address);
+
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = AF_UNSPEC;  // use IPv4 or IPv6, whichever
+  hints.ai_socktype = SOCK_DGRAM;
+  hints.ai_flags = AI_PASSIVE;     // fill in my IP for me
+
+  getaddrinfo(NULL, "12345", &hints, &resolved_address);
+  
+  *fd = tvh_socket(resolved_address->ai_family, resolved_address->ai_socktype, resolved_address->ai_protocol);
+  
+  int true = 1;
+  setsockopt(*fd, SOL_SOCKET, SO_REUSEADDR, &true, sizeof(true));
+
+  if (bind(*fd, resolved_address->ai_addr, resolved_address->ai_addrlen) == -1)
+  {
+    int err = errno;
+    tvhlog(LOG_ERR, "IPTV", "RTSP cannot bind %s:%d on fd %d -- %s (%d)",
+           inet_ntoa(((struct sockaddr_in *) resolved_address->ai_addr)->sin_addr),
+           ntohs(((struct sockaddr_in *) resolved_address->ai_addr)->sin_port),
+           *fd, strerror(err), err);
+    
+    freeaddrinfo(resolved_address);
+    return -1;
+  }
+  
+  freeaddrinfo(resolved_address);
+  return 0;
+}
+
 iptv_rtsp_info_t *
-iptv_rtsp_start(const char *uri)
+iptv_rtsp_start(const char *uri, int *fd)
 {
   /* initialize this curl session */
   CURL *curl = curl_init();
@@ -288,13 +331,22 @@ iptv_rtsp_start(const char *uri)
   
   destroy_response(response);
   
+  if(result != CURLE_OK)
+  {
+    tvhlog(LOG_ERR, "IPTV", "RTSP initialization failed for %s", uri);
+    return NULL;
+  }
+  
+  if(iptv_rtsp_bind(curl, fd) == -1)
+  {
+    return NULL;
+  }
+  
   rtsp_info = malloc(sizeof(iptv_rtsp_info_t));
   rtsp_info->curl = curl;
   rtsp_info->uri = uri;
   
   return rtsp_info;
-  
-  result = rtsp_teardown(curl, uri, response);
 }
 
 void

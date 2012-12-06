@@ -21,7 +21,7 @@
 
 typedef struct iptv_rtsp_info iptv_rtsp_info_t;
 
-iptv_rtsp_info_t *iptv_rtsp_start(const char *uri);
+iptv_rtsp_info_t *iptv_rtsp_start(const char *uri, int *fd);
 
 void iptv_rtsp_stop(iptv_rtsp_info_t *);
 
