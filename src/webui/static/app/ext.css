@@ -224,6 +224,10 @@
 	background-image: url(../icons/clock.png) !important;
 }
 
+.exclamation {
+	background-image: url(../icons/exclamation.png) !important;
+}
+
 .wrench {
 	background-image: url(../icons/wrench.png) !important;
 }
