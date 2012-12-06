@@ -20,6 +20,7 @@
 
 #include <curl/curl.h>
 #include <string.h>
+#include <unistd.h>
 #include <ctype.h>
 #include <sys/queue.h>
 #include <sys/types.h>
@@ -36,6 +37,8 @@ struct iptv_rtsp_info
 {
   CURL *curl;
   const char *uri;
+  int is_initialized;
+  int client_port;
 };
 
 /**
@@ -272,11 +275,10 @@ destroy_response(curl_response_t *response)
 }
 
 static int
-iptv_rtsp_bind(CURL *curl, int *fd)
+iptv_rtsp_bind(CURL *curl, iptv_rtsp_info_t* rtsp_info, int *fd)
 {
   struct addrinfo hints;
   char *remote_address;
-  int client_port = -1;
   int bind_tries = 10;
   
   curl_easy_getinfo(curl, CURLINFO_PRIMARY_IP, &remote_address);
@@ -286,11 +288,15 @@ iptv_rtsp_bind(CURL *curl, int *fd)
   hints.ai_socktype = SOCK_DGRAM;
   hints.ai_flags = AI_PASSIVE;     // fill in my IP for me
 
-  while(client_port % 2 && --bind_tries >= 0)
+  rtsp_info->client_port = -1;
+  while(rtsp_info->client_port % 2 && --bind_tries >= 0)
   {
     struct addrinfo *resolved_address;
     // Try to find a free even port for RTP
     getaddrinfo(NULL, "0", &hints, &resolved_address);
+    
+    // We need to close the descriptor first, in case we are in the second iteration
+    close(*fd);
 
     *fd = tvh_socket(resolved_address->ai_family, resolved_address->ai_socktype, resolved_address->ai_protocol);
 
@@ -315,10 +321,10 @@ iptv_rtsp_bind(CURL *curl, int *fd)
     switch (resolved_address->ai_family)
     {
     case AF_INET:
-      client_port = ntohs(((struct sockaddr_in *) resolved_address->ai_addr)->sin_port);
+      rtsp_info->client_port = ntohs(((struct sockaddr_in *) resolved_address->ai_addr)->sin_port);
       break;
     case AF_INET6:
-      client_port = ntohs(((struct sockaddr_in6 *) resolved_address->ai_addr)->sin6_port);
+      rtsp_info->client_port = ntohs(((struct sockaddr_in6 *) resolved_address->ai_addr)->sin6_port);
       break;
     default:
       tvhlog(LOG_ERR, "IPTV", "RTSP unknown socket family %d", resolved_address->ai_family);
@@ -331,7 +337,7 @@ iptv_rtsp_bind(CURL *curl, int *fd)
     freeaddrinfo(resolved_address);
   }
   
-  return client_port % 2 ? -1 : 0;
+  return rtsp_info->client_port % 2 ? -1 : 0;
 }
 
 iptv_rtsp_info_t *
@@ -343,6 +349,11 @@ iptv_rtsp_start(const char *uri, int *fd)
   iptv_rtsp_info_t *rtsp_info;
   CURLcode result;
   
+  rtsp_info = malloc(sizeof(iptv_rtsp_info_t));
+  rtsp_info->curl = curl;
+  rtsp_info->uri = uri;
+  rtsp_info->is_initialized = -1;
+  
   result = curl_easy_setopt(curl, CURLOPT_URL, uri);
   tvhlog(LOG_DEBUG, "IPTV", "cURL init : %d", result);
   
@@ -353,9 +364,26 @@ iptv_rtsp_start(const char *uri, int *fd)
   result = rtsp_describe(curl, response);
   tvhlog(LOG_DEBUG, "IPTV", "RTSP DESCRIBE answer : %d, %s", result, response->data);
 
-  result = rtsp_setup(curl, uri, "RTP/AVP;unicast;client_port=1234-1235", response);
+  if(iptv_rtsp_bind(curl, rtsp_info, fd) == -1)
+  {
+    iptv_rtsp_stop(rtsp_info);
+    return NULL;
+  }
+  
+  char* transport_format = (char*) "RTP/AVP;unicast;client_port=%d-%d";
+  /*
+   -4 for format string '%d'
+   +10 for max port size (5 digits)
+   +1 for ending \0
+   */
+  char transport[strlen(transport_format) + 7]; 
+  sprintf(transport, transport_format, rtsp_info->client_port, rtsp_info->client_port + 1);
+  
+  result = rtsp_setup(curl, uri, transport, response);
   header = response->header_head.lh_first->next.le_next;
   tvhlog(LOG_DEBUG, "IPTV", "RTSP SETUP answer : %d, %s: %s", result, header->name, header->value);
+  
+  // TODO: check that the server answer for client_port is correct
   
   result = rtsp_play(curl, uri, "0.000-", response);
   header = response->header_head.lh_first->next.le_next;
@@ -366,28 +394,24 @@ iptv_rtsp_start(const char *uri, int *fd)
   if(result != CURLE_OK)
   {
     tvhlog(LOG_ERR, "IPTV", "RTSP initialization failed for %s", uri);
+    iptv_rtsp_stop(rtsp_info);
     return NULL;
   }
   
-  if(iptv_rtsp_bind(curl, fd) == -1)
-  {
-    return NULL;
-  }
-  
-  rtsp_info = malloc(sizeof(iptv_rtsp_info_t));
-  rtsp_info->curl = curl;
-  rtsp_info->uri = uri;
-  
+  rtsp_info->is_initialized = 0;
   return rtsp_info;
 }
 
 void
 iptv_rtsp_stop(iptv_rtsp_info_t *rtsp_info)
 {
-  // BE CAREFUL !
-  // If the response isn't set to NULL, then you'll need to wait the command completion, otherwise the callback
-  // can segfault when easy_cleanup is called
-  rtsp_teardown(rtsp_info->curl, rtsp_info->uri, NULL);
+  if(rtsp_info->is_initialized)
+  { 
+    // BE CAREFUL !
+    // If the response isn't set to NULL, then you'll need to wait the command completion, otherwise the callback
+    // can segfault when easy_cleanup is called
+    rtsp_teardown(rtsp_info->curl, rtsp_info->uri, NULL);
+  }
   curl_easy_cleanup(rtsp_info->curl);
   free(rtsp_info);
   rtsp_info = NULL;
