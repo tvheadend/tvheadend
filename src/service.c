@@ -234,86 +234,6 @@ service_start(service_t *t, unsigned int weight, int force_start)
 /**
  *
  */
-static int
-dvb_extra_prio(th_dvb_adapter_t *tda)
-{
-  return tda->tda_extrapriority + tda->tda_hostconnection * 10;
-}
-
-/**
- * Return prio for the given service
- */
-static int
-service_get_prio(service_t *t)
-{
-  switch(t->s_type) {
-  case SERVICE_TYPE_DVB:
-    return (t->s_scrambled ? 300 : 100) + 
-      dvb_extra_prio(t->s_dvb_mux_instance->tdmi_adapter);
-
-  case SERVICE_TYPE_IPTV:
-    return 200;
-
-  case SERVICE_TYPE_V4L:
-    return 400;
-
-  default:
-    return 500;
-  }
-}
-
-/**
- * Return quality index for given service
- *
- * We invert the result (providers say that negative numbers are worse)
- *
- * But for sorting, we want low numbers first
- *
- * Also, we bias and trim with an offset of two to avoid counting any
- * transient errors.
- */
-
-static int
-service_get_quality(service_t *t)
-{
-  return t->s_quality_index ? -MIN(t->s_quality_index(t) + 2, 0) : 0;
-}
-
-
-
-
-/**
- *  a - b  -> lowest number first
- */
-static int
-servicecmp(const void *A, const void *B)
-{
-  service_t *a = *(service_t **)A;
-  service_t *b = *(service_t **)B;
-
-  /* only check quality if both adapters have the same prio
-   *
-   * there needs to be a much more sophisticated algorithm to take priority and quality into account
-   * additional, it may be problematic, since a higher priority value lowers the ranking
-   *
-   */
-  int prio_a = service_get_prio(a);
-  int prio_b = service_get_prio(b);
-  if (prio_a == prio_b) {
-
-    int q = service_get_quality(a) - service_get_quality(b);
-
-    if(q != 0)
-      return q; /* Quality precedes priority */
-  }
-
-  return prio_a - prio_b;
-}
-
-
-/**
- *
- */
 service_t *
 service_find(channel_t *ch, unsigned int weight, const char *loginfo,
 	       int *errorp, service_t *skip)
@@ -351,7 +271,7 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
   /* Sort services, lower priority should come come earlier in the vector
      (i.e. it will be more favoured when selecting a service */
 
-  qsort(vec, cnt, sizeof(service_t *), servicecmp);
+  //  qsort(vec, cnt, sizeof(service_t *), servicecmp);
 
   // Skip up to the service that the caller didn't want
   // If the sorting above is not stable that might mess up things
@@ -371,15 +291,6 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
     t = vec[i];
     if(t->s_status == SERVICE_RUNNING) 
       return t;
-    if(t->s_quality_index(t) < 10) {
-      if(loginfo != NULL) {
-         tvhlog(LOG_NOTICE, "Service",
-	       "%s: Skipping \"%s\" -- Quality below 10%%",
-	       loginfo, service_nicename(t));
-         err = SM_CODE_BAD_SIGNAL;
-      }
-      continue;
-    }
     tvhlog(LOG_DEBUG, "Service", "%s: Probing adapter \"%s\" without stealing for service \"%s\"",
 	     loginfo, service_adapter_nicename(t), service_nicename(t));
     if((r = service_start(t, 0, 0)) == 0)
@@ -487,7 +398,7 @@ service_destroy(service_t *t)
 
   t->s_status = SERVICE_ZOMBIE;
 
-  free(t->s_identifier);
+  free(t->s_uuid);
   free(t->s_svcname);
   free(t->s_provider);
   free(t->s_dvb_charset);
@@ -516,17 +427,16 @@ service_destroy(service_t *t)
  * Create and initialize a new service struct
  */
 service_t *
-service_create(const char *identifier, int type, int source_type)
+service_create(const char *uuid, int source_type)
 {
-  unsigned int hash = tvh_strhash(identifier, SERVICE_HASH_WIDTH);
+  unsigned int hash = tvh_strhash(uuid, SERVICE_HASH_WIDTH);
   service_t *t = calloc(1, sizeof(service_t));
 
   lock_assert(&global_lock);
 
   pthread_mutex_init(&t->s_stream_mutex, NULL);
   pthread_cond_init(&t->s_tss_cond, NULL);
-  t->s_identifier = strdup(identifier);
-  t->s_type = type;
+  t->s_uuid = strdup(uuid);
   t->s_source_type = source_type;
   t->s_refcount = 1;
   t->s_enabled = 1;
@@ -555,7 +465,7 @@ service_find_by_identifier(const char *identifier)
   lock_assert(&global_lock);
 
   LIST_FOREACH(t, &servicehash[hash], s_hash_link)
-    if(!strcmp(t->s_identifier, identifier))
+    if(!strcmp(t->s_uuid, identifier))
       break;
   return t;
 }
@@ -1061,25 +971,7 @@ service_component_nicename(elementary_stream_t *st)
 const char *
 service_adapter_nicename(service_t *t)
 {
-  switch(t->s_type) {
-  case SERVICE_TYPE_DVB:
-    if(t->s_dvb_mux_instance)
-      return t->s_dvb_mux_instance->tdmi_identifier;
-    else
-      return "Unknown adapter";
-
-  case SERVICE_TYPE_IPTV:
-    return t->s_iptv_iface;
-
-  case SERVICE_TYPE_V4L:
-    if(t->s_v4l_adapter)
-      return t->s_v4l_adapter->va_displayname;
-    else
-      return "Unknown adapter";
-
-  default:
-    return "Unknown adapter";
-  }
+  return "Adapter";
 }
 
 const char *
@@ -1141,6 +1033,45 @@ service_refresh_channel(service_t *t)
 
 
 /**
+ *
+ */
+static int
+ssc_cmp(const service_start_cand_t *a,
+        const service_start_cand_t *b)
+{
+  return a->ssc_prio - b->ssc_prio;
+}
+
+/**
+ *
+ */
+service_start_cand_t *
+service_find_cand(struct service_start_cand_list *sscl,
+                  struct service *s, int instance, int prio)
+{
+  service_start_cand_t *ssc;
+  LIST_FOREACH(ssc, sscl, ssc_link) {
+    if(ssc->ssc_s == s && ssc->ssc_instance == instance)
+      break;
+  }
+
+  if(ssc != NULL) {
+    ssc = calloc(1, sizeof(service_start_cand_t));
+    ssc->ssc_s = s;
+    service_ref(s);
+    ssc->ssc_instance = instance;
+  } else {
+    if(ssc->ssc_prio == prio)
+      return ssc;
+    LIST_REMOVE(ssc, ssc_link);
+  }
+  ssc->ssc_prio = prio;
+  LIST_INSERT_SORTED(sscl, ssc, ssc_link, ssc_cmp);
+  return ssc;
+}
+
+
+/**
  * Get the encryption CAID from a service
  * only the first CA stream in a service is returned
  */
@@ -1174,9 +1105,8 @@ service_is_primary_epg(service_t *svc)
   service_t *ret = NULL, *t;
   if (!svc || !svc->s_ch) return 0;
   LIST_FOREACH(t, &svc->s_ch->ch_services, s_ch_link) {
-    if (!t->s_dvb_mux_instance) continue;
     if (!t->s_enabled || !t->s_dvb_eit_enable) continue;
-    if (!ret || service_get_prio(t) < service_get_prio(ret))
+    if (!ret)
       ret = t;
   }
   return !ret ? 0 : (ret->s_dvb_service_id == svc->s_dvb_service_id);

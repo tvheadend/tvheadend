@@ -76,18 +76,15 @@ tda_save(th_dvb_adapter_t *tda)
 
   htsmsg_add_str(m, "type", dvb_adaptertype_to_str(tda->tda_fe_type));
   htsmsg_add_str(m, "displayname", tda->tda_displayname);
-  htsmsg_add_u32(m, "autodiscovery", tda->tda_autodiscovery);
   htsmsg_add_u32(m, "idleclose", tda->tda_idleclose);
   htsmsg_add_u32(m, "skip_checksubscr", tda->tda_skip_checksubscr);
   htsmsg_add_u32(m, "sidtochan", tda->tda_sidtochan);
   htsmsg_add_u32(m, "qmon", tda->tda_qmon);
   htsmsg_add_u32(m, "poweroff", tda->tda_poweroff);
-  htsmsg_add_u32(m, "nitoid", tda->tda_nitoid);
   htsmsg_add_u32(m, "diseqc_version", tda->tda_diseqc_version);
   htsmsg_add_u32(m, "diseqc_repeats", tda->tda_diseqc_repeats);
   htsmsg_add_u32(m, "extrapriority", tda->tda_extrapriority);
   htsmsg_add_u32(m, "skip_initialscan", tda->tda_skip_initialscan);
-  htsmsg_add_u32(m, "disable_pmt_monitor", tda->tda_disable_pmt_monitor);
   htsmsg_add_s32(m, "full_mux_rx", tda->tda_full_mux_rx);
   hts_settings_save(m, "dvbadapters/%s", tda->tda_identifier);
   htsmsg_destroy(m);
@@ -114,25 +111,6 @@ dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s)
   tda_save(tda);
 
   dvb_adapter_notify(tda);
-}
-
-
-/**
- *
- */
-void
-dvb_adapter_set_auto_discovery(th_dvb_adapter_t *tda, int on)
-{
-  if(tda->tda_autodiscovery == on)
-    return;
-
-  lock_assert(&global_lock);
-
-  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" mux autodiscovery set to: %s",
-	 tda->tda_displayname, on ? "On" : "Off");
-
-  tda->tda_autodiscovery = on;
-  tda_save(tda);
 }
 
 
@@ -247,26 +225,6 @@ dvb_adapter_set_poweroff(th_dvb_adapter_t *tda, int on)
 }
 
 
-/**
- *
- */
-void
-dvb_adapter_set_nitoid(th_dvb_adapter_t *tda, int nitoid)
-{
-  lock_assert(&global_lock);
-
-  if(tda->tda_nitoid == nitoid)
-    return;
-
-  tvhlog(LOG_NOTICE, "dvb", "NIT-o network id \"%d\" changed to \"%d\"",
-	 tda->tda_nitoid, nitoid);
-
-  tda->tda_nitoid = nitoid;
-  
-  tda_save(tda);
-
-}
-
 
 /**
  *
@@ -321,25 +279,6 @@ dvb_adapter_set_extrapriority(th_dvb_adapter_t *tda, int extrapriority)
   tda->tda_extrapriority = extrapriority;
   tda_save(tda);
 }
-
-/**
- *
- */
-void
-dvb_adapter_set_disable_pmt_monitor(th_dvb_adapter_t *tda, int on)
-{
-  if(tda->tda_disable_pmt_monitor == on)
-    return;
-
-  lock_assert(&global_lock);
-
-  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" disabled PMT monitoring set to: %s",
-	 tda->tda_displayname, on ? "On" : "Off");
-
-  tda->tda_disable_pmt_monitor = on;
-  tda_save(tda);
-}
-
 
 /**
  *
@@ -475,8 +414,6 @@ tda_add(int adapter_num)
 
   tda->tda_identifier = strdup(buf);
   
-  tda->tda_autodiscovery = tda->tda_fe_type != FE_QPSK;
-
   tda->tda_sat = tda->tda_fe_type == FE_QPSK;
 
   /* Come up with an initial displayname, user can change it and it will
@@ -521,11 +458,7 @@ tda_add_from_file(const char *filename)
       buf[i] = '_';
 
   tda->tda_identifier = strdup(buf);
-  
-  tda->tda_autodiscovery = 0;
-
   tda->tda_sat = 0;
- 
   tda->tda_full_mux_rx = 1;
 
   /* Come up with an initial displayname, user can change it and it will
@@ -661,18 +594,15 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
       free(tda->tda_displayname);
       tda->tda_displayname = strdup(name);
 
-      htsmsg_get_u32(c, "autodiscovery", &tda->tda_autodiscovery);
       htsmsg_get_u32(c, "idleclose", &tda->tda_idleclose);
       htsmsg_get_u32(c, "skip_checksubscr", &tda->tda_skip_checksubscr);
       htsmsg_get_u32(c, "sidtochan", &tda->tda_sidtochan);
       htsmsg_get_u32(c, "qmon", &tda->tda_qmon);
       htsmsg_get_u32(c, "poweroff", &tda->tda_poweroff);
-      htsmsg_get_u32(c, "nitoid", &tda->tda_nitoid);
       htsmsg_get_u32(c, "diseqc_version", &tda->tda_diseqc_version);
       htsmsg_get_u32(c, "diseqc_repeats", &tda->tda_diseqc_repeats);
       htsmsg_get_u32(c, "extrapriority", &tda->tda_extrapriority);
       htsmsg_get_u32(c, "skip_initialscan", &tda->tda_skip_initialscan);
-      htsmsg_get_u32(c, "disable_pmt_monitor", &tda->tda_disable_pmt_monitor);
       if (htsmsg_get_s32(c, "full_mux_rx", &tda->tda_full_mux_rx))
         if (!htsmsg_get_u32(c, "disable_full_mux_rx", &u32) && u32)
           tda->tda_full_mux_rx = 0;
@@ -685,8 +615,6 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
 
     if(tda->tda_sat)
       dvb_satconf_init(tda);
-
-    dvb_mux_load(tda);
   }
 }
 
@@ -776,6 +704,7 @@ dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
 /**
  * 
  */
+#if 0
 int
 dvb_adapter_destroy(th_dvb_adapter_t *tda)
 {
@@ -788,8 +717,8 @@ dvb_adapter_destroy(th_dvb_adapter_t *tda)
 
   hts_settings_remove("dvbadapters/%s", tda->tda_identifier);
 
-  while((tdmi = LIST_FIRST(&tda->tda_dn->dn_mux_instances)) != NULL)
-    dvb_mux_destroy(tdmi);
+  while((tdmi = LIST_FIRST(&tda->tda_tdmis)) != NULL)
+    dvb_tdmi_destroy(tdmi);
   
   TAILQ_REMOVE(&dvb_adapters, tda, tda_global_link);
 
@@ -801,6 +730,7 @@ dvb_adapter_destroy(th_dvb_adapter_t *tda)
 
   return 0;
 }
+#endif
 
 
 /**
@@ -940,8 +870,7 @@ dvb_adapter_input_dvr(void *aux)
 	        }
 	      } else {
           LIST_FOREACH(t, &tda->tda_transports, s_active_link)
-            if(t->s_dvb_mux_instance == tda->tda_current_tdmi)
-              ts_recv_packet1(t, tsb + i, NULL);
+            ts_recv_packet1(t, tsb + i, NULL);
         }
 
         i += 188;
@@ -981,33 +910,17 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
 {
   char buf[100];
   htsmsg_t *m = htsmsg_create_map();
-  th_dvb_mux_instance_t *tdmi;
-  service_t *t;
-  int nummux = 0;
-  int numsvc = 0;
   int fdiv;
 
   htsmsg_add_str(m, "identifier", tda->tda_identifier);
   htsmsg_add_str(m, "name", tda->tda_displayname);
 
-  // XXX: bad bad bad slow slow slow
-  LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link) {
-    nummux++;
-    LIST_FOREACH(t, &tdmi->tdmi_mux->dm_services, s_group_link) {
-      numsvc++;
-    }
-  }
-
   htsmsg_add_str(m, "type", "dvb");
-
-  htsmsg_add_u32(m, "services", numsvc);
-  htsmsg_add_u32(m, "muxes", nummux);
-  htsmsg_add_u32(m, "initialMuxes", tda->tda_dn->dn_initial_num_mux);
 
   if(tda->tda_current_tdmi != NULL) {
     th_dvb_mux_instance_t *tdmi = tda->tda_current_tdmi;
 
-    dvb_mux_nicename(buf, sizeof(buf), tda->tda_current_tdmi);
+    dvb_mux_nicename(buf, sizeof(buf), tda->tda_current_tdmi->tdmi_mux);
     htsmsg_add_str(m, "currentMux", buf);
 
     htsmsg_add_u32(m, "signal", MIN(tdmi->tdmi_signal * 100 / 65535, 100));

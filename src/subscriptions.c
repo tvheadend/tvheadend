@@ -385,14 +385,13 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
     tvhlog(LOG_INFO, "subscription", 
 	   "\"%s\" subscribing on \"%s\", weight: %d, adapter: \"%s\", "
 	   "network: \"%s\", mux: \"%s\", provider: \"%s\", "
-	   "service: \"%s\", quality: %d",
+	   "service: \"%s\"",
 	   s->ths_title, ch->ch_name, weight,
 	   si.si_adapter  ?: "<N/A>",
 	   si.si_network  ?: "<N/A>",
 	   si.si_mux      ?: "<N/A>",
 	   si.si_provider ?: "<N/A>",
-	   si.si_service  ?: "<N/A>",
-	   s->ths_service->s_quality_index(s->ths_service));
+	   si.si_service  ?: "<N/A>");
 
     service_source_info_free(&si);
   }
@@ -432,14 +431,13 @@ subscription_create_from_service(service_t *t, const char *name,
   tvhlog(LOG_INFO, "subscription", 
 	 "\"%s\" direct subscription to adapter: \"%s\", "
 	 "network: \"%s\", mux: \"%s\", provider: \"%s\", "
-	 "service: \"%s\", quality: %d",
+	 "service: \"%s\"",
 	 s->ths_title,
 	 si.si_adapter  ?: "<N/A>",
 	 si.si_network  ?: "<N/A>",
 	 si.si_mux      ?: "<N/A>",
 	 si.si_provider ?: "<N/A>",
-	 si.si_service  ?: "<N/A>",
-	 t->s_quality_index(t));
+	 si.si_service  ?: "<N/A>");
   service_source_info_free(&si);
 
   subscription_link_service(s, t);

@@ -64,10 +64,10 @@ dvb_table_fastswitch(th_dvb_mux_instance_t *tdmi)
 
   dm->dm_table_initial = 0;
   dn->dn_initial_num_mux--;
-  dvb_mux_save(tdmi);
+  dvb_mux_save(dm);
 
 
-  dvb_mux_nicename(buf, sizeof(buf), tdmi);
+  dvb_mux_nicename(buf, sizeof(buf), dm);
   tvhlog(LOG_DEBUG, "dvb", "\"%s\" initial scan completed for \"%s\"",
 	 tda->tda_rootpath, buf);
   dvb_network_mux_scanner(dn);
@@ -164,7 +164,8 @@ tdt_add(dvb_mux_t *dm, int tableid, int mask,
 	const char *name, int flags, int pid)
 {
   th_dvb_table_t *t;
-  th_dvb_mux_instance_t *tdmi = dm->dm_tdmi;
+  th_dvb_mux_instance_t *tdmi = dm->dm_current_tdmi;
+  assert(tdmi != NULL);
 
   // Allow multiple entries per PID, but only one per callback/opaque instance
   // TODO: this could mean reading the same data multiple times, and not
@@ -298,7 +299,7 @@ dvb_bat_callback(dvb_mux_t *dm, uint8_t *buf, int len,
         save = 1;
       }
       if (save)
-        dvb_mux_save(dm->dm_tdmi);
+        dvb_mux_save(dm);
     }
 
     i += tdlen;
@@ -377,7 +378,7 @@ dvb_sdt_callback(dvb_mux_t *dm, uint8_t *ptr, int len,
     if(dllen > len)
       break;
 
-    if (!(t = dvb_service_find(dm->dm_tdmi, service_id, 0, NULL))) {
+    if (!(t = dvb_service_find(dm, service_id, 0, NULL))) {
       len -= dllen;
       ptr += dllen;
       continue;
@@ -519,8 +520,8 @@ dvb_pat_callback(dvb_mux_t *dm, uint8_t *ptr, int len,
 
     if(service != 0 && pmt != 0) {
       int save = 0;
-      dvb_service_find2(dm->dm_tdmi, service, pmt, NULL, &save);
-      if (save || ! dm->dm_tdmi->tdmi_adapter->tda_disable_pmt_monitor)
+      dvb_service_find2(dm, service, pmt, NULL, &save);
+      if (save || ! dm->dm_dn->dn_disable_pmt_monitor)
         dvb_table_add_pmt(dm, pmt);
     }
     ptr += 4;
@@ -623,7 +624,7 @@ dvb_table_cable_delivery(dvb_mux_t *dm, uint8_t *ptr, int len,
   struct dvb_mux_conf dmc;
   int freq, symrate;
 
-  if(!dm->dm_tdmi->tdmi_adapter->tda_autodiscovery)
+  if(!dm->dm_dn->dn_autodiscovery)
     return -1;
 
   if(len < 11)
@@ -655,7 +656,7 @@ dvb_table_cable_delivery(dvb_mux_t *dm, uint8_t *ptr, int len,
 
   dmc.dmc_fe_params.u.qam.fec_inner = fec_tab[ptr[10] & 0x07];
 
-  dvb_mux_create(dm->dm_tdmi->tdmi_adapter, &dmc, onid, tsid, NULL,
+  dvb_mux_create(dm->dm_dn, &dmc, onid, tsid, NULL,
 		 "automatic mux discovery", 1, 1, NULL);
   return 0;
 }
@@ -671,7 +672,7 @@ dvb_table_sat_delivery(dvb_mux_t *dm, uint8_t *ptr, int len,
   //  uint16_t orbital_pos;
   struct dvb_mux_conf dmc;
 
-  if(!dm->dm_tdmi->tdmi_adapter->tda_autodiscovery)
+  if(!dm->dm_dn->dn_autodiscovery)
     return -1;
 
   if(len < 11)
@@ -738,7 +739,7 @@ dvb_table_sat_delivery(dvb_mux_t *dm, uint8_t *ptr, int len,
   }
 
 #endif
-  dvb_mux_create(dm->dm_tdmi->tdmi_adapter, &dmc, onid, tsid, NULL,
+  dvb_mux_create(dm->dm_dn, &dmc, onid, tsid, NULL,
 		 "automatic mux discovery", 1, 1, NULL);
   return 0;
 }
@@ -767,7 +768,7 @@ dvb_table_local_channel(dvb_mux_t *dm, uint8_t *ptr, int len,
     chan = ((ptr[2] & 3) << 8) | ptr[3];
 
     if(chan != 0) {
-      t = dvb_service_find(dm->dm_tdmi, sid, 0, NULL);
+      t = dvb_service_find(dm, sid, 0, NULL);
       if(t != NULL) {
 
 	if(t->s_channel_number != chan) {
@@ -797,11 +798,11 @@ dvb_nit_callback(dvb_mux_t *dm, uint8_t *ptr, int len,
   uint16_t tsid, onid;
   uint16_t network_id = (ptr[0] << 8) | ptr[1];
 
-  if(dm->dm_tdmi->tdmi_adapter->tda_nitoid) {
+  if(dm->dm_dn->dn_nitoid) {
     if(tableid != 0x41)
       return -1;
     
-    if(network_id != dm->dm_tdmi->tdmi_adapter->tda_nitoid)
+    if(network_id != dm->dm_dn->dn_nitoid)
       return -1;
 
   } else {
@@ -943,7 +944,7 @@ atsc_vct_callback(dvb_mux_t *dm, uint8_t *ptr, int len,
       continue;
 
     service_id = (ptr[24] << 8) | ptr[25];
-    if((t = dvb_service_find(dm->dm_tdmi, service_id, 0, NULL)) == NULL)
+    if((t = dvb_service_find(dm, service_id, 0, NULL)) == NULL)
       continue;
 
     atsc_stype = ptr[27] & 0x3f;
@@ -987,18 +988,18 @@ dvb_pmt_callback(dvb_mux_t *dm, uint8_t *ptr, int len,
   int active = 0;
   service_t *t;
   th_dvb_table_t *tdt = opaque;
-  th_dvb_mux_instance_t *tdmi = dm->dm_tdmi;
 
-  LIST_FOREACH(t, &tdmi->tdmi_mux->dm_services, s_group_link) {
+  LIST_FOREACH(t, &dm->dm_services, s_group_link) {
     pthread_mutex_lock(&t->s_stream_mutex);
     psi_parse_pmt(t, ptr, len, 1, 1);
     if (t->s_pmt_pid == tdt->tdt_pid && t->s_status == SERVICE_RUNNING)
       active = 1;
     pthread_mutex_unlock(&t->s_stream_mutex);
   }
-  
-  if (tdmi->tdmi_adapter->tda_disable_pmt_monitor && !active)
-    dvb_tdt_destroy(tdmi->tdmi_adapter, tdmi, tdt);
+
+  if (dm->dm_dn->dn_disable_pmt_monitor && !active)
+    dvb_tdt_destroy(dm->dm_current_tdmi->tdmi_adapter,
+                    dm->dm_current_tdmi, tdt);
 
   return 0;
 }
@@ -1014,7 +1015,7 @@ dvb_table_add_default_dvb(dvb_mux_t *dm)
 
   int table;
 
-  if(dm->dm_tdmi->tdmi_adapter->tda_nitoid) {
+  if(dm->dm_dn->dn_nitoid) {
     table = 0x41;
   } else {
     table = 0x40;
@@ -1095,7 +1096,7 @@ dvb_table_add_pmt(dvb_mux_t *dm, int pmt_pid)
 void
 dvb_table_rem_pmt(dvb_mux_t *dm, int pmt_pid)
 {
-  th_dvb_mux_instance_t *tdmi = dm->dm_tdmi;
+  th_dvb_mux_instance_t *tdmi = dm->dm_current_tdmi;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   th_dvb_table_t *tdt = NULL;
   LIST_FOREACH(tdt, &dm->dm_tables, tdt_link)
@@ -1112,10 +1113,10 @@ dvb_table_rem_pmt(dvb_mux_t *dm, int pmt_pid)
 void
 dvb_table_flush_all(dvb_mux_t *dm)
 {
-  th_dvb_adapter_t *tda = dm->dm_tdmi->tdmi_adapter;
+  th_dvb_mux_instance_t *tdmi = dm->dm_current_tdmi;
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   th_dvb_table_t *tdt;
 
   while((tdt = LIST_FIRST(&dm->dm_tables)) != NULL)
-    dvb_tdt_destroy(tda, dm->dm_tdmi, tdt);
-  
+    dvb_tdt_destroy(tda, tdmi, tdt);
 }

@@ -606,7 +606,7 @@ http_stream_tdmi(http_connection_t *hc, th_dvb_mux_instance_t *tdmi)
   streaming_queue_init(&sq, SMT_PACKET);
 
   s = dvb_subscription_create_from_tdmi(tdmi, "HTTP", &sq.sq_st);
-  name = strdupa(tdmi->tdmi_identifier);
+  name = strdupa(tdmi->tdmi_mux->dm_uuid);
   pthread_mutex_unlock(&global_lock);
   http_stream_run(hc, &sq, name, MC_PASS);
   pthread_mutex_lock(&global_lock);
@@ -723,7 +723,7 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   } else if(!strcmp(components[0], "service")) {
     service = service_find_by_identifier(components[1]);
   } else if(!strcmp(components[0], "mux")) {
-    tdmi = dvb_mux_find_by_identifier(components[1]);
+    tdmi = NULL; // dvb_mux_find_by_identifier(components[1]);
   }
 
   if(ch != NULL) {

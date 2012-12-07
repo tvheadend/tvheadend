@@ -289,7 +289,7 @@ v4l_service_save(service_t *t)
   pthread_mutex_unlock(&t->s_stream_mutex);
   
   hts_settings_save(m, "v4lservices/%s/%s",
-		    va->va_identifier, t->s_identifier);
+		    va->va_identifier, t->s_uuid);
 
   htsmsg_destroy(m);
 }
@@ -349,7 +349,7 @@ v4l_service_find(v4l_adapter_t *va, const char *id, int create)
       return NULL;
 
     LIST_FOREACH(t, &va->va_services, s_group_link)
-      if(!strcmp(t->s_identifier, id))
+      if(!strcmp(t->s_uuid, id))
 	return t;
   }
 
@@ -364,7 +364,7 @@ v4l_service_find(v4l_adapter_t *va, const char *id, int create)
     va->va_tally = MAX(atoi(id + vaidlen + 1), va->va_tally);
   }
 
-  t = service_create(id, SERVICE_TYPE_V4L, 0);
+  t = service_create(id, 0);
 
   t->s_start_feed    = v4l_service_start;
   t->s_refresh_feed  = v4l_service_refresh;

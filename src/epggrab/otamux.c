@@ -254,12 +254,11 @@ void epggrab_ota_create_and_register_by_id
   ( epggrab_module_ota_t *mod, int onid, int tsid, int period, int interval, 
     const char *networkname )
 {
-  th_dvb_adapter_t *tda;
-  th_dvb_mux_instance_t *tdmi;
+  dvb_network_t *dn;
+  dvb_mux_t *dm;
   epggrab_ota_mux_t *ota;
-  TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
-    LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link) {
-      dvb_mux_t *dm = tdmi->tdmi_mux;
+  LIST_FOREACH(dn, &dvb_networks, dn_global_link) {
+    LIST_FOREACH(dm, &dn->dn_muxes, dm_network_link) {
       if (dm->dm_transport_stream_id != tsid) continue;
       if (onid && dm->dm_network_id != onid) continue;
       if (networkname && (!dm->dm_network_name ||

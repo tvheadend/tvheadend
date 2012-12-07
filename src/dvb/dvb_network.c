@@ -21,7 +21,7 @@
 #include "dvb.h"
 #include "epggrab.h"
 
-
+struct dvb_network_list dvb_networks;
 
 /**
  *
@@ -33,9 +33,96 @@ dvb_network_create(int fe_type)
   dn->dn_fe_type = fe_type;
   TAILQ_INIT(&dn->dn_initial_scan_queue);
   gtimer_arm(&dn->dn_mux_scanner_timer, dvb_network_mux_scanner, dn, 1);
+
+  dn->dn_autodiscovery = fe_type != FE_QPSK;
+  LIST_INSERT_HEAD(&dvb_networks, dn, dn_global_link);
   return dn;
 }
 
+#if 0
+      htsmsg_get_u32(c, "autodiscovery", &tda->tda_autodiscovery);
+      htsmsg_get_u32(c, "nitoid", &tda->tda_nitoid);
+      htsmsg_get_u32(c, "disable_pmt_monitor", &tda->tda_disable_pmt_monitor);
+#endif
+
+#if 0
+/**
+ *
+ */
+static void
+dvb_network_save(dvb_network_t *dn)
+{
+  htsmsg_t *m = htsmsg_create_map();
+
+  lock_assert(&global_lock);
+
+  htsmsg_add_u32(m, "autodiscovery",       dn->dn_autodiscovery);
+  htsmsg_add_u32(m, "nitoid",              dn->dn_nitoid);
+  htsmsg_add_u32(m, "disable_pmt_monitor", dn->dn_disable_pmt_monitor);
+  abort();
+}
+#endif
+
+#if 0
+/**
+ *
+ */
+void
+dvb_network_set_auto_discovery(dvb_network_t *dn, int on)
+{
+  if(dn->dn_autodiscovery == on)
+    return;
+
+  lock_assert(&global_lock);
+
+  tvhlog(LOG_NOTICE, "dvb", "Network \"%s\" mux autodiscovery set to: %s",
+	 dn->dn_displayname, on ? "On" : "Off");
+
+  dn->dn_autodiscovery = on;
+  dvb_network_save(dn);
+}
+
+
+
+/**
+ *
+ */
+void
+dvb_network_set_nitoid(dvb_network_t *dn, int nitoid)
+{
+  lock_assert(&global_lock);
+
+  if(dn->dn_nitoid == nitoid)
+    return;
+
+  tvhlog(LOG_NOTICE, "dvb", "NIT-o network id \"%d\" changed to \"%d\"",
+	 dn->dn_nitoid, nitoid);
+
+  dn->dn_nitoid = nitoid;
+  dvb_network_save(dn);
+}
+
+
+
+/**
+ *
+ */
+void
+dvb_network_set_disable_pmt_monitor(th_dvb_network_t *dn, int on)
+{
+  if(dn->dn_disable_pmt_monitor == on)
+    return;
+
+  lock_assert(&global_lock);
+
+  tvhlog(LOG_NOTICE, "dvb", "Network \"%s\" disabled PMT monitoring set to: %s",
+	 dn->dn_displayname, on ? "On" : "Off");
+
+  dn->dn_disable_pmt_monitor = on;
+  dvb_network_save(dn);
+}
+
+#endif
 
 
 /**

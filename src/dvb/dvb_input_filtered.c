@@ -59,7 +59,7 @@ open_service(th_dvb_adapter_t *tda, service_t *s)
       st->es_demuxer_fd = -1;
       tvhlog(LOG_ERR, "dvb",
 	     "\"%s\" unable to open demuxer \"%s\" for pid %d -- %s",
-	     s->s_identifier, tda->tda_demux_path, 
+	     s->s_uuid, tda->tda_demux_path, 
 	     st->es_pid, strerror(errno));
       continue;
     }
@@ -74,7 +74,7 @@ open_service(th_dvb_adapter_t *tda, service_t *s)
     if(ioctl(fd, DMX_SET_PES_FILTER, &dmx_param)) {
       tvhlog(LOG_ERR, "dvb",
 	     "\"%s\" unable to configure demuxer \"%s\" for pid %d -- %s",
-	     s->s_identifier, tda->tda_demux_path, 
+	     s->s_uuid, tda->tda_demux_path, 
 	     st->es_pid, strerror(errno));
       close(fd);
       fd = -1;

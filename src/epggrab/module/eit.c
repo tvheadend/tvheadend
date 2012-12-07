@@ -475,7 +475,7 @@ static int _eit_desc_crid
         } else {
           char *defauth = svc->s_default_authority;
           if (!defauth)
-            defauth = svc->s_dvb_mux_instance->tdmi_mux->dm_default_authority;
+            defauth = svc->s_dvb_mux->dm_default_authority;
           if (defauth)
             snprintf(crid, clen, "crid://%s%s", defauth, buf);
         }
@@ -544,8 +544,8 @@ static int _eit_process_event
   /* Override */
   if (!ev.default_charset) {
     ev.default_charset
-      = dvb_charset_find(svc->s_dvb_mux_instance->tdmi_mux->dm_network_id,
-                         svc->s_dvb_mux_instance->tdmi_mux->dm_transport_stream_id,
+      = dvb_charset_find(svc->s_dvb_mux->dm_network_id,
+                         svc->s_dvb_mux->dm_transport_stream_id,
                          svc->s_dvb_service_id);
   }
 
@@ -660,7 +660,6 @@ _eit_callback(dvb_mux_t *dm, uint8_t *ptr, int len,
 {
   epggrab_module_t *mod = opaque;
   epggrab_ota_mux_t *ota;
-  th_dvb_adapter_t *tda;
   service_t *svc;
   eit_status_t *sta;
   eit_table_status_t *tsta;
@@ -713,9 +712,7 @@ _eit_callback(dvb_mux_t *dm, uint8_t *ptr, int len,
   // Note: tableid=0x4f,0x60-0x6f is other TS
   //       so must find the tdmi
   if(tableid == 0x4f || tableid >= 0x60) {
-    tda  = dm->dm_tdmi->tdmi_adapter;
-    th_dvb_mux_instance_t *tdmi = dvb_mux_find(tda, NULL, onid, tsid, 1);
-    dm = tdmi->tdmi_mux;
+    dm = dvb_mux_find(dm->dm_dn, NULL, onid, tsid, 1);
 
   } else {
     if (dm->dm_transport_stream_id != tsid ||
@@ -732,7 +729,7 @@ _eit_callback(dvb_mux_t *dm, uint8_t *ptr, int len,
   if(!dm) goto done;
 
   /* Get service */
-  svc = dvb_service_find3(NULL, dm->dm_tdmi, NULL, 0, 0, sid, 1, 1);
+  svc = dvb_service_find3(NULL, dm, NULL, 0, 0, sid, 1, 1);
   if (!svc || !svc->s_ch) goto done;
 
   /* Register as interesting */

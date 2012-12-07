@@ -43,6 +43,10 @@
 #include "dvb/dvb_preconf.h"
 #include "dvr/dvr.h"
 
+#if 0
+
+
+
 /**
  *
  */
@@ -685,6 +689,7 @@ extjs_list_dvb_adapters(htsmsg_t *array)
     htsmsg_add_msg(array, NULL, dvb_adapter_build_msg(tda));
 }
 
+#endif
 
 /**
  *
@@ -741,11 +746,12 @@ extjs_dvbnetworks(http_connection_t *hc, const char *remain, void *opaque)
 void
 extjs_start_dvb(void)
 {
+  http_path_add("/dvb/networks", 
+		NULL, extjs_dvbnetworks, ACCESS_WEB_INTERFACE);
+#if 0
   http_path_add("/dvb/locations", 
 		NULL, extjs_dvblocations, ACCESS_WEB_INTERFACE);
 
-  http_path_add("/dvb/networks", 
-		NULL, extjs_dvbnetworks, ACCESS_WEB_INTERFACE);
 
   http_path_add("/dvb/adapter", 
 		NULL, extjs_dvbadapter, ACCESS_ADMIN);
@@ -767,7 +773,6 @@ extjs_start_dvb(void)
 
   http_path_add("/dvb/addmux", 
 		NULL, extjs_dvb_addmux, ACCESS_ADMIN);
-#if 0 // XXX(dvbreorg)
   http_path_add("/dvb/copymux", 
 		NULL, extjs_dvb_copymux, ACCESS_ADMIN);
 #endif

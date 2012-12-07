@@ -35,7 +35,7 @@
  *
  */
 static void
-dvb_mux_preconf_add(th_dvb_adapter_t *tda, const network_t *net,
+dvb_mux_preconf_add(dvb_network_t *dn, const network_t *net,
 		    const char *source)
 {
   const mux_t *m;
@@ -48,7 +48,7 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, const network_t *net,
     dmc.dmc_fe_params.inversion = INVERSION_AUTO;
     dmc.dmc_fe_params.frequency = m->freq;
     
-    switch(tda->tda_fe_type) {
+    switch(dn->dn_fe_type) {
     case FE_OFDM:
       dmc.dmc_fe_params.u.ofdm.bandwidth             = m->bw;
       dmc.dmc_fe_params.u.ofdm.constellation         = m->constellation;
@@ -96,7 +96,7 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, const network_t *net,
       break;
     }
 
-    dvb_mux_create(tda, &dmc, 0, 0xffff, NULL, source, 1, 1, NULL);
+    dvb_mux_create(dn, &dmc, 0, 0xffff, NULL, source, 1, 1, NULL);
   }
 }
 
@@ -105,7 +105,7 @@ dvb_mux_preconf_add(th_dvb_adapter_t *tda, const network_t *net,
  *
  */
 int
-dvb_mux_preconf_add_network(th_dvb_adapter_t *tda, const char *id)
+dvb_mux_preconf_add_network(dvb_network_t *dn, const char *id)
 {
   region_list_t *list;
   const region_t *r;
@@ -114,7 +114,7 @@ dvb_mux_preconf_add_network(th_dvb_adapter_t *tda, const char *id)
 
   snprintf(source, sizeof(source), "built-in configuration from \"%s\"", id);
 
-  switch(tda->tda_fe_type) {
+  switch(dn->dn_fe_type) {
     case FE_QAM:
       list = &regions_DVBC;
       break;
@@ -134,7 +134,7 @@ dvb_mux_preconf_add_network(th_dvb_adapter_t *tda, const char *id)
   LIST_FOREACH(r, list, link) {
     LIST_FOREACH(n, &r->networks, link) {
       if(!strcmp(n->id, id)) {
-        dvb_mux_preconf_add(tda, n, source);
+        dvb_mux_preconf_add(dn, n, source);
         break;
       }
     }

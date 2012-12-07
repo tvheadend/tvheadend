@@ -56,6 +56,7 @@ typedef struct source_info {
   int   si_type;
 } source_info_t;
 
+
 static inline void
 lock_assert0(pthread_mutex_t *l, const char *file, int line)
 {

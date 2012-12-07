@@ -97,7 +97,6 @@ dvb_fe_monitor(void *aux)
   streaming_message_t sm;
   struct service *t;
 
-  int store = 0;
   int notify = 0;
 
   gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 1);
@@ -191,11 +190,10 @@ dvb_fe_monitor(void *aux)
   if(status != tdmi->tdmi_fe_status) {
     tdmi->tdmi_fe_status = status;
 
-    dvb_mux_nicename(buf, sizeof(buf), tdmi);
+    dvb_mux_nicename(buf, sizeof(buf), tdmi->tdmi_mux);
     tvhlog(LOG_DEBUG,
 	   "dvb", "\"%s\" on adapter \"%s\", status changed to %s",
 	   buf, tda->tda_displayname, dvb_mux_status(tdmi));
-    store = 1;
     notify = 1;
   }
 
@@ -208,12 +206,13 @@ dvb_fe_monitor(void *aux)
     }
     if(q != tdmi->tdmi_quality) {
       tdmi->tdmi_quality = q;
-      store = 1;
       notify = 1;
     }
   }
 
   if(notify) {
+
+#if 0 // XXX(dvbreorg)
     htsmsg_t *m = htsmsg_create_map();
     htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
     htsmsg_add_u32(m, "quality", tdmi->tdmi_quality);
@@ -222,8 +221,9 @@ dvb_fe_monitor(void *aux)
     htsmsg_add_u32(m, "ber", tdmi->tdmi_ber);
     htsmsg_add_u32(m, "unc", tdmi->tdmi_unc);
     notify_by_msg("dvbMux", m);
+#endif
 
-    m = htsmsg_create_map();
+    htsmsg_t *m = htsmsg_create_map();
     htsmsg_add_str(m, "identifier", tda->tda_identifier);
     htsmsg_add_u32(m, "signal", MIN(tdmi->tdmi_signal * 100 / 65535, 100));
     htsmsg_add_u32(m, "snr", tdmi->tdmi_snr);
@@ -233,8 +233,10 @@ dvb_fe_monitor(void *aux)
     notify_by_msg("tvAdapter", m);
   }
 
+#if 0 // XXX(dvbreorg)
   if(store)
     dvb_mux_save(tdmi);
+#endif
 
   /* Streaming message */
   sigstat.status_text = dvb_mux_status(tdmi);
@@ -244,14 +246,11 @@ dvb_fe_monitor(void *aux)
   sigstat.unc         = tdmi->tdmi_unc;
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
-  LIST_FOREACH(t, &tda->tda_transports, s_active_link)
-    if(t->s_dvb_mux_instance == tda->tda_current_tdmi &&
-       t->s_status == SERVICE_RUNNING ) {
-      pthread_mutex_lock(&t->s_stream_mutex);
-      streaming_pad_deliver(&t->s_streaming_pad, &sm);
-      pthread_mutex_unlock(&t->s_stream_mutex);
-    }
-
+  LIST_FOREACH(t, &tda->tda_transports, s_active_link) {
+    pthread_mutex_lock(&t->s_stream_mutex);
+    streaming_pad_deliver(&t->s_streaming_pad, &sm);
+    pthread_mutex_unlock(&t->s_stream_mutex);
+  }
 }
 
 
@@ -270,7 +269,7 @@ dvb_fe_stop(th_dvb_adapter_t *tda, int retune)
   if(dm->dm_table_initial) {
     dm->dm_table_initial = 0;
     dm->dm_dn->dn_initial_num_mux--;
-    dvb_mux_save(dm->dm_tdmi);
+    dvb_mux_save(dm);
   }
 
   dvb_table_flush_all(dm);
@@ -395,10 +394,10 @@ dvb_fe_tune_s2(th_dvb_mux_instance_t *tdmi, dvb_mux_conf_t *dmc)
 int
 dvb_fe_tune(dvb_mux_t *dm, const char *reason)
 {
-  th_dvb_adapter_t *tda = dm->dm_tdmi->tdmi_adapter;
   dvb_network_t *dn = dm->dm_dn;
 
-  th_dvb_mux_instance_t *tdmi = dm->dm_tdmi;
+  th_dvb_mux_instance_t *tdmi = NULL; // dm->dm_tdmi;
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
   // copy dmc, cause frequency may be change with FE_QPSK
   dvb_mux_conf_t dmc = dm->dm_conf;
@@ -475,7 +474,7 @@ dvb_fe_tune(dvb_mux_t *dm, const char *reason)
       tvhlog(LOG_ERR, "dvb", "diseqc setup failed %d\n", r);
     }
 
-  dvb_mux_nicename(buf, sizeof(buf), tdmi);
+  dvb_mux_nicename(buf, sizeof(buf), tdmi->tdmi_mux);
 
   tda->tda_fe_monitor_hold = 4;
 
@@ -507,9 +506,9 @@ dvb_fe_tune(dvb_mux_t *dm, const char *reason)
     }
 
     /* Mark as bad */
-    dvb_mux_set_enable(tdmi, 0);
+    tdmi->tdmi_tune_failed = 1;
     return SM_CODE_TUNING_FAILED;
-  }   
+  }
 
   tda->tda_current_tdmi = tdmi;
 

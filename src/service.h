@@ -167,18 +167,42 @@ typedef struct elementary_stream {
 } elementary_stream_t;
 
 
+LIST_HEAD(service_start_cand_list, service_start_cand);
+
+/**
+ *
+ */
+typedef struct service_start_cand {
+
+  LIST_ENTRY(service_start_cand) ssc_link;
+
+  int ssc_prio;
+
+  struct service *ssc_s;  // A reference is held
+  int ssc_instance;       // Discriminator when having multiple adapters, etc
+
+  int ssc_error_code;     // Set if we deem this cand to be broken
+  time_t ssc_err_time;    // Time we detected it was broken
+
+  int ssc_weight;         // Highest weight that holds this cand
+
+} service_start_cand_t;
+
+
+/**
+ *
+ */
+service_start_cand_t *service_find_cand(struct service_start_cand_list *sscl,
+                                        struct service *s,
+                                        int instance,
+                                        int prio);
+
 /**
  *
  */
 typedef struct service {
 
   LIST_ENTRY(service) s_hash_link;
-
-  enum {
-    SERVICE_TYPE_DVB,
-    SERVICE_TYPE_IPTV,
-    SERVICE_TYPE_V4L,
-  } s_type;
 
   enum {
     /**
@@ -262,6 +286,10 @@ typedef struct service {
 
   LIST_HEAD(, th_subscription) s_subscriptions;
 
+  void (*s_enlist)(struct service *s,
+                   struct service_start_cand_list *sscl);
+
+
   int (*s_start_feed)(struct service *t, unsigned int weight,
 			int force_start);
 
@@ -273,8 +301,6 @@ typedef struct service {
 
   void (*s_setsourceinfo)(struct service *t, struct source_info *si);
 
-  int (*s_quality_index)(struct service *t);
-
   int (*s_grace_period)(struct service *t);
 
   void (*s_dtor)(struct service *t);
@@ -282,12 +308,12 @@ typedef struct service {
   /*
    * Per source type structs
    */
-  struct th_dvb_mux_instance *s_dvb_mux_instance;
+  struct dvb_mux *s_dvb_mux;
 
   /**
-   * Unique identifer (used for storing on disk, etc)
+   * Unique identifer
    */
-  char *s_identifier;
+  char *s_uuid;
 
   /**
    * Name usable for displaying to user
@@ -520,8 +546,7 @@ unsigned int service_compute_weight(struct service_list *head);
 
 int service_start(service_t *t, unsigned int weight, int force_start);
 
-service_t *service_create(const char *identifier, int type,
-				 int source_type);
+service_t *service_create(const char *uuid, int source_type);
 
 void service_unref(service_t *t);
 
