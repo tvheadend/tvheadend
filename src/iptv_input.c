@@ -525,9 +525,7 @@ iptv_service_save(service_t *t)
 static int
 iptv_service_quality(service_t *t)
 {
-  if(t->s_iptv_iface == NULL || 
-     (t->s_iptv_group.s_addr == 0 && t->s_iptv_group6.s6_addr == 0) ||
-     t->s_iptv_port == 0)
+  if(!is_rtsp(t) && !is_multicast_ipv4(t) && !is_multicast_ipv6(t))
     return 0;
 
   return 100;
