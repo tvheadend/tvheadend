@@ -28,6 +28,8 @@
 #include <netdb.h> 
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <math.h>
+#include <zconf.h>
 
 
 
@@ -38,7 +40,9 @@ struct iptv_rtsp_info
   CURL *curl;
   const char *uri;
   int is_initialized;
+  struct addrinfo *client_addr;
   int client_port;
+  int server_port;
 };
 
 /**
@@ -275,14 +279,11 @@ destroy_response(curl_response_t *response)
 }
 
 static int
-iptv_rtsp_bind(CURL *curl, iptv_rtsp_info_t* rtsp_info, int *fd)
+iptv_rtsp_bind(iptv_rtsp_info_t* rtsp_info, int *fd, const char *service)
 {
   struct addrinfo hints;
-  char *remote_address;
   int bind_tries = 10;
   
-  curl_easy_getinfo(curl, CURLINFO_PRIMARY_IP, &remote_address);
-
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = AF_UNSPEC;  // use IPv4 or IPv6, whichever
   hints.ai_socktype = SOCK_DGRAM;
@@ -293,7 +294,7 @@ iptv_rtsp_bind(CURL *curl, iptv_rtsp_info_t* rtsp_info, int *fd)
   {
     struct addrinfo *resolved_address;
     // Try to find a free even port for RTP
-    getaddrinfo(NULL, "0", &hints, &resolved_address);
+    getaddrinfo(NULL, service, &hints, &resolved_address);
     
     // We need to close the descriptor first, in case we are in the second iteration
     close(*fd);
@@ -317,6 +318,8 @@ iptv_rtsp_bind(CURL *curl, iptv_rtsp_info_t* rtsp_info, int *fd)
 
     // Get the bound port back
     getsockname(*fd, resolved_address->ai_addr, &resolved_address->ai_addrlen);
+    
+    rtsp_info->client_addr = resolved_address;
 
     switch (resolved_address->ai_family)
     {
@@ -334,10 +337,73 @@ iptv_rtsp_bind(CURL *curl, iptv_rtsp_info_t* rtsp_info, int *fd)
            inet_ntoa(((struct sockaddr_in *) resolved_address->ai_addr)->sin_addr),
            ntohs(((struct sockaddr_in *) resolved_address->ai_addr)->sin_port),
            *fd);
-    freeaddrinfo(resolved_address);
   }
   
   return rtsp_info->client_port % 2 ? -1 : 0;
+}
+
+static int
+iptv_rtsp_check_client_port(iptv_rtsp_info_t* rtsp_info, int *fd)
+{
+  int result = 0;
+  int current_port = -1;
+  switch (rtsp_info->client_addr->ai_family)
+  {
+  case AF_INET:
+    current_port = ntohs(((struct sockaddr_in *) rtsp_info->client_addr->ai_addr)->sin_port);
+    break;
+  case AF_INET6:
+    current_port = ntohs(((struct sockaddr_in6 *) rtsp_info->client_addr->ai_addr)->sin6_port);
+    break;
+  default:
+    tvhlog(LOG_ERR, "IPTV", "RTSP unknown socket family %d", rtsp_info->client_addr->ai_family);
+  }
+  if(rtsp_info->client_port != -1 && rtsp_info->client_port != current_port)
+  {
+    // Rebind to the desired port
+    close(*fd);
+    char *service = malloc(sizeof(char) * (log10(rtsp_info->client_port) + 2));
+    sprintf(service, "%d", rtsp_info->client_port);
+    result = iptv_rtsp_bind(rtsp_info, fd, service);
+    free(service);
+  }
+  return result;
+}
+
+static int
+iptv_rtsp_parse_sdp_port(const char *data, const char *needle)
+{
+  int port = -1;
+  char *substr = strstr(data, needle);
+  if(substr)
+  {
+    substr += strlen(needle);
+    char *end = strchr(substr, '-');
+    if(end)
+    {
+      char *str_port = strndup(substr, end - substr);
+      port = atoi(str_port);
+      free(str_port);
+    }
+  }
+  return port;
+}
+
+static int
+iptv_rtsp_parse_setup(iptv_rtsp_info_t* rtsp_info, const curl_response_t *response)
+{
+  curl_header_t *header;
+  LIST_FOREACH(header, &response->header_head, next)
+  {
+    if(strcmp(header->name, "Transport") == 0)
+    {
+      rtsp_info->client_port = iptv_rtsp_parse_sdp_port(header->value, "client_port=");
+      rtsp_info->server_port = iptv_rtsp_parse_sdp_port(header->value, "server_port=");
+      break;
+    }
+  }
+  
+  return rtsp_info->client_port > 1024;
 }
 
 iptv_rtsp_info_t *
@@ -364,7 +430,8 @@ iptv_rtsp_start(const char *uri, int *fd)
   result = rtsp_describe(curl, response);
   tvhlog(LOG_DEBUG, "IPTV", "RTSP DESCRIBE answer : %d, %s", result, response->data);
 
-  if(iptv_rtsp_bind(curl, rtsp_info, fd) == -1)
+  // Bind with any free even port for now
+  if(iptv_rtsp_bind(rtsp_info, fd, "0") == -1)
   {
     iptv_rtsp_stop(rtsp_info);
     return NULL;
@@ -382,6 +449,11 @@ iptv_rtsp_start(const char *uri, int *fd)
   result = rtsp_setup(curl, uri, transport, response);
   header = response->header_head.lh_first->next.le_next;
   tvhlog(LOG_DEBUG, "IPTV", "RTSP SETUP answer : %d, %s: %s", result, header->name, header->value);
+  
+  iptv_rtsp_parse_setup(rtsp_info, response);
+  
+  // Now we check that the client port we received match. If not, reopen the socket
+  iptv_rtsp_check_client_port(rtsp_info, fd);
   
   // TODO: check that the server answer for client_port is correct
   
@@ -413,6 +485,8 @@ iptv_rtsp_stop(iptv_rtsp_info_t *rtsp_info)
     rtsp_teardown(rtsp_info->curl, rtsp_info->uri, NULL);
   }
   curl_easy_cleanup(rtsp_info->curl);
+  
+  freeaddrinfo(rtsp_info->client_addr);
   free(rtsp_info);
   rtsp_info = NULL;
 }
