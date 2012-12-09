@@ -168,8 +168,8 @@ void *iconserve_timer_thread ( void *aux )
       tvhlog(LOG_DEBUG, "logo_loader", "Disabling thread timer wakeup by condition");
       pthread_cond_wait(&iconserve_timer_cond, &iconserve_timer_mutex);
     } else {
-      tvhlog(LOG_DEBUG, "logo_loader", "Setting periodic timer wake-up");
-      timertrigger.tv_sec  = time(NULL) + 120;
+      tvhlog(LOG_DEBUG, "logo_loader", "Setting periodic timer wake-up (24hrs)");
+      timertrigger.tv_sec  = time(NULL) + 86400;
       timertrigger.tv_nsec = 0;
       pthread_cond_timedwait(&iconserve_timer_cond, &iconserve_timer_mutex, &timertrigger);
     };
