@@ -18,7 +18,6 @@
 
 #include "iptv_input_rtsp.h"
 
-#include <curl/curl.h>
 #include <string.h>
 #include <unistd.h>
 #include <ctype.h>
@@ -34,16 +33,6 @@
 
 
 #include "tvheadend.h"
-
-struct iptv_rtsp_info
-{
-  CURL *curl;
-  const char *uri;
-  int is_initialized;
-  struct addrinfo *client_addr;
-  int client_port;
-  int server_port;
-};
 
 /**
  * Define a simple header value with name and value, without ending \r\n

@@ -19,7 +19,17 @@
 #ifndef IPTV_INPUT_RTSP_H
 #define	IPTV_INPUT_RTSP_H
 
-typedef struct iptv_rtsp_info iptv_rtsp_info_t;
+#include <curl/curl.h>
+
+
+typedef struct iptv_rtsp_info {
+  CURL *curl;
+  const char *uri;
+  int is_initialized;
+  struct addrinfo *client_addr;
+  int client_port;
+  int server_port;
+} iptv_rtsp_info_t;
 
 iptv_rtsp_info_t *iptv_rtsp_start(const char *uri, int *fd);
 
