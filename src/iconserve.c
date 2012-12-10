@@ -44,8 +44,6 @@
 static TAILQ_HEAD(,iconserve_grab_queue) iconserve_queue;
 static pthread_mutex_t                   iconserve_mutex;
 static pthread_cond_t                    iconserve_cond;
-static pthread_mutex_t                   iconserve_timer_mutex;
-static pthread_cond_t                    iconserve_timer_cond;
 
 /**
  * https://github.com/andyb2000 Function to provide local icon files
@@ -75,7 +73,6 @@ page_logo(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_BAD_REQUEST;
   };
 
-/* we get passed the channel number now, so calc the logo from that */
   ch = channel_find_by_identifier(atoi(remain));
   if (ch == NULL || ch->ch_icon == NULL) {
     pthread_mutex_unlock(&global_lock);
@@ -102,7 +99,6 @@ page_logo(http_connection_t *hc, const char *remain, void *opaque)
            "failed to open %s redirecting to http link for icon (%s)", 
            iconpath, ch->ch_icon);
     http_redirect(hc, ch->ch_icon);
-    /* we will also add to the queue for next time */
     iconserve_queue_add ( ch->ch_id, ch->ch_icon );
   } else {
     tvhlog(LOG_DEBUG, "page_logo", "File %s opened", iconpath);
@@ -152,49 +148,6 @@ return return_icon;
 };
 
 /*
- * Iconserve automatic download timer thread
- */
-void *iconserve_timer_thread ( void *aux )
-{
-  const char *periodic_download = config_get_iconserve_periodicdownload();
-  struct timespec timertrigger;
-  channel_t *ch;
-
-  pthread_mutex_lock(&iconserve_timer_mutex);
-  while (1) {
-    periodic_download = config_get_iconserve_periodicdownload();
-    if (!periodic_download || !*periodic_download ||
-        (strcmp(periodic_download, "off") == 0)) {
-      tvhlog(LOG_DEBUG, "logo_loader", "Disabling thread timer wakeup by condition");
-      pthread_cond_wait(&iconserve_timer_cond, &iconserve_timer_mutex);
-    } else {
-      tvhlog(LOG_DEBUG, "logo_loader", "Setting periodic timer wake-up (24hrs)");
-      timertrigger.tv_sec  = time(NULL) + 86400;
-      timertrigger.tv_nsec = 0;
-      pthread_cond_timedwait(&iconserve_timer_cond, &iconserve_timer_mutex, &timertrigger);
-    };
-    tvhlog(LOG_DEBUG, "logo_loader", "Send trigger to main thread");
-    pthread_mutex_unlock(&iconserve_timer_mutex);
-    periodic_download = config_get_iconserve_periodicdownload();
-    if (!periodic_download || !*periodic_download ||
-        (strcmp(periodic_download, "off") == 0)) {
-      tvhlog(LOG_DEBUG, "logo_loader", "Disabling thread timer wakeup by condition");
-    } else {
-    /* Do an update to all icons stored */
-    /* loop through channels and load logo files */
-    RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
-      if (ch->ch_icon != NULL) {
-        iconserve_queue_add ( ch->ch_id, ch->ch_icon );
-      };
-    };
-  pthread_mutex_lock(&iconserve_mutex);
-  pthread_cond_signal(&iconserve_cond); // tell thread data is available
-  pthread_mutex_unlock(&iconserve_mutex);
-  };
-  };
-};
-
-/*
  * Icon grabber queue thread
  */
 void *iconserve_thread ( void *aux )
@@ -216,7 +169,10 @@ void *iconserve_thread ( void *aux )
   char buf[256];
   int file = 0;
   time_t seconds;
-  int dif, compare_seconds;
+  int dif, compare_seconds, rc;
+  const char *periodicdownload = config_get_iconserve_periodicdownload();
+  struct timespec timertrigger;
+  channel_t *ch;
 
   tvhlog(LOG_INFO, "iconserve_thread", "Thread startup");
   curl = curl_easy_init();
@@ -229,7 +185,29 @@ void *iconserve_thread ( void *aux )
     qe = TAILQ_FIRST(&iconserve_queue);
     /* Check for queue data */
     if (!qe) { /* Queue Empty */
-      pthread_cond_wait(&iconserve_cond, &iconserve_mutex);
+      periodicdownload = config_get_iconserve_periodicdownload();
+      if (!periodicdownload || !*periodicdownload || 
+         (strcmp(periodicdownload, "off") == 0)) {
+        tvhlog(LOG_DEBUG, "iconserve_thread", "Non-timer wakeup");
+        rc = pthread_cond_wait(&iconserve_cond, &iconserve_mutex);
+      } else {
+        tvhlog(LOG_DEBUG, "iconserve_thread", "Timer wakeup set");
+        timertrigger.tv_sec  = time(NULL) + 86400;
+        timertrigger.tv_nsec = 0;
+        rc = pthread_cond_timedwait(&iconserve_cond, 
+                             &iconserve_mutex, &timertrigger);
+      };
+      if (rc == ETIMEDOUT) {
+        tvhlog(LOG_INFO, "iconserve_thread", "Thread wakeup by timer");
+        RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
+          if (ch->ch_icon != NULL) {
+            iconserve_grab_queue_t *qe = calloc(1, sizeof(iconserve_grab_queue_t));
+            qe->chan_number = ch->ch_id;
+            qe->icon_url = ch->ch_icon;
+            TAILQ_INSERT_TAIL(&iconserve_queue, qe, iconserve_link);
+          };
+        };
+      };
       continue;
     }
     TAILQ_REMOVE(&iconserve_queue, qe, iconserve_link);
@@ -279,10 +257,10 @@ void *iconserve_thread ( void *aux )
         dif = difftime (seconds,fileStat.st_mtime);
         compare_seconds=atoi(header_maxage);
         if (dif > compare_seconds) {
-          tvhlog(LOG_DEBUG, "logo_loader", "Logo cache expired, downloading %s", outpath);
+          tvhlog(LOG_DEBUG, "logo_loader", "Logo expired, downloading %s", outpath);
           trigger_download = 1;
         } else {
-          tvhlog(LOG_INFO, "logo_loader", "Logo cached, not expired %s", outpath);
+          tvhlog(LOG_INFO, "logo_loader", "Logo not expired %s", outpath);
         };
         close(file);
       };
@@ -297,9 +275,11 @@ void *iconserve_thread ( void *aux )
         curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
         res = curl_easy_perform(curl);
         if (res == 0) {
-          tvhlog(LOG_INFO, "logo_loader", "Downloaded icon via curl (%s)", qe->icon_url);
+          tvhlog(LOG_INFO, "logo_loader", "Downloaded icon via curl (%s)", 
+                 qe->icon_url);
         } else {
-          tvhlog(LOG_WARNING, "logo_loader", "Error with icon download via curl (%s)", qe->icon_url);
+          tvhlog(LOG_WARNING, "logo_loader", "Error with curl download (%s)",
+                 qe->icon_url);
         };
         fclose(curl_fp);
         fclose(curl_fp_header);
@@ -309,7 +289,7 @@ void *iconserve_thread ( void *aux )
   }; /* while loop */
   curl_easy_cleanup(curl);
   } else {
-    tvhlog(LOG_WARNING, "iconserve", "CURL cannot initialise, aborting icon thread");
+    tvhlog(LOG_WARNING, "iconserve", "CURL cannot initialise");
   };
   };
   return NULL;
@@ -317,26 +297,25 @@ void *iconserve_thread ( void *aux )
 
 /*
  * Add data to the queue
- *
  */
 void iconserve_queue_add ( int chan_number, char *icon_url )
 {
   /* Create entry */
-  tvhlog(LOG_DEBUG, "iconserve_queue_add", "Adding chan_number to queue: %i",chan_number);
+  tvhlog(LOG_DEBUG, "iconserve_queue_add", "Adding chan_number to queue: %i",
+         chan_number);
   iconserve_grab_queue_t *qe = calloc(1, sizeof(iconserve_grab_queue_t));
   qe->chan_number = chan_number;
   qe->icon_url = strdup(icon_url);
 
   pthread_mutex_lock(&iconserve_mutex);
   TAILQ_INSERT_TAIL(&iconserve_queue, qe, iconserve_link);
-  pthread_cond_signal(&iconserve_cond); // tell thread data is available
+  pthread_cond_signal(&iconserve_cond);
   pthread_mutex_unlock(&iconserve_mutex);
 }
 
 
 /**
  * Loader for icons, check config params and pull them in one go
- * https://github.com/andyb2000
  */
 void
 logo_loader(void)
@@ -351,15 +330,14 @@ logo_loader(void)
   };
 
   if (!serverip || !*serverip) {
-    tvhlog(LOG_ALERT, "logo_loader", "No server IP defined in config, skipping icon cache");
+    tvhlog(LOG_ALERT, "logo_loader", "No server IP, skipping icon cache");
     return;
   };
 
 
-  pthread_t tid; // you probably don't need to keep this
-
-  pthread_mutex_init(&iconserve_mutex, NULL); // Use default config
-  pthread_cond_init(&iconserve_cond, NULL);   // ditto
+  pthread_t tid;
+  pthread_mutex_init(&iconserve_mutex, NULL);
+  pthread_cond_init(&iconserve_cond, NULL);
   TAILQ_INIT(&iconserve_queue);
   /* Start thread - presumably permanently active */
   pthread_create(&tid, NULL, iconserve_thread, NULL); // last param is passed as aux
@@ -367,12 +345,6 @@ logo_loader(void)
                                               // you can probably use global
                                               // vars
 
-  tvhlog(LOG_DEBUG, "logo_loader", "Starting timer wake-up thread");
-  /* second thread for timed wake-up */
-  pthread_t timer_tid;
-  pthread_mutex_init(&iconserve_timer_mutex, NULL);
-  pthread_cond_init(&iconserve_timer_cond, NULL);
-  pthread_create(&timer_tid, NULL, iconserve_timer_thread, NULL);
   tvhlog(LOG_INFO, "logo_loader", "Caching logos locally");
   /* loop through channels and load logo files */
   RB_FOREACH(ch, &channel_name_tree, ch_name_link) {

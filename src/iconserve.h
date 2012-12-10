@@ -37,7 +37,6 @@ int page_logo(http_connection_t *hc, const char *remain, void *opaque);
 size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 void *iconserve_thread ( void *aux );
-void *iconserve_timer_thread ( void *aux );
 
 const char *logo_query(int ch_id, const char *ch_icon);
 
