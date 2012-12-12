@@ -51,6 +51,7 @@ typedef struct pass_muxer {
   /* TS muxing */
   uint8_t  *pm_pat;
   uint8_t  *pm_pmt;
+  uint16_t  pm_pmt_version;
   uint32_t pm_ic; // Injection counter
   uint32_t pm_pc; // Packet counter
 } pass_muxer_t;
@@ -128,11 +129,13 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
     pm->pm_pmt[2] = 0x00 | (ss->ss_pmt_pid >> 0);
     pm->pm_pmt[3] = 0x10;
     pm->pm_pmt[4] = 0x00;
-    if(psi_build_pmt(ss, pm->pm_pmt+5, 183, ss->ss_pcr_pid) < 0) {
+    if(psi_build_pmt(ss, pm->pm_pmt+5, 183, pm->pm_pmt_version,
+		     ss->ss_pcr_pid) < 0) {
       pm->m_errors++;
       tvhlog(LOG_ERR, "pass", "%s: Unable to build pmt", pm->pm_filename);
       return -1;
     }
+    pm->pm_pmt_version++;
   }
 
   return 0;

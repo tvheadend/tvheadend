@@ -255,7 +255,7 @@ int main() {
  return 0;
 }
 EOF
-  $CC $TMPDIR/$$.c -o $TMPDIR/$$.bin $opt &> /dev/null
+  $CC $CFLAGS $LDFLAGS $TMPDIR/$$.c -o $TMPDIR/$$.bin $opt &> /dev/null
   RET=$?
   rm -f $TMPDIR/$$.{c,bin}
   return $RET
@@ -310,6 +310,25 @@ function check_cc_option
 
   # Enable if supported
   if check_cc "" -m${opt}; then
+    echo "ok"
+    enable $nam
+  else
+    echo "fail"
+    return 1
+  fi
+}
+
+# Check compiler library
+function check_cc_lib
+{
+  local opt=$1
+  local nam=$2
+  [ -z "$nam" ] && nam=$opt
+  
+  echo -ne "checking for cc -l$opt ...${TAB}"
+
+  # Enable if supported
+  if check_cc "" -l${opt}; then
     echo "ok"
     enable $nam
   else

@@ -166,20 +166,22 @@ SRCS-${CONFIG_V4L} += \
 	src/v4l.c \
 	src/webui/extjs_v4l.c \
 
-# CWC
-SRCS-${CONFIG_CWC} += src/cwc.c \
-	src/capmt.c \
-	src/ffdecsa/ffdecsa_interface.c \
-	src/ffdecsa/ffdecsa_int.c
-
 # Avahi
 SRCS-$(CONFIG_AVAHI) += src/avahi.c
 
-# Optimised code
+# CWC
+SRCS-${CONFIG_CWC} += src/cwc.c \
+	src/capmt.c
+
+# FFdecsa
+ifneq ($(CONFIG_DVBCSA),yes)
+SRCS-${CONFIG_CWC}  += src/ffdecsa/ffdecsa_interface.c \
+	src/ffdecsa/ffdecsa_int.c
 SRCS-${CONFIG_MMX}  += src/ffdecsa/ffdecsa_mmx.c
 SRCS-${CONFIG_SSE2} += src/ffdecsa/ffdecsa_sse2.c
 ${BUILDDIR}/src/ffdecsa/ffdecsa_mmx.o  : CFLAGS += -mmmx
 ${BUILDDIR}/src/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
+endif
 
 # File bundles
 SRCS-${CONFIG_BUNDLE}     += bundle.c
