@@ -280,6 +280,8 @@ void dvr_init(void);
 
 void dvr_autorec_init(void);
 
+void dvr_autorec_update(void);
+
 void dvr_destroy_by_channel(channel_t *ch);
 
 void dvr_rec_subscribe(dvr_entry_t *de);

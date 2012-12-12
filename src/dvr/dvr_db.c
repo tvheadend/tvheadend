@@ -1036,6 +1036,7 @@ dvr_init(void)
 
   dvr_autorec_init();
   dvr_db_load();
+  dvr_autorec_update();
 }
 
 /**

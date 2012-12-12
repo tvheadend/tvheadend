@@ -38,6 +38,8 @@ dtable_t *autorec_dt;
 
 TAILQ_HEAD(dvr_autorec_entry_queue, dvr_autorec_entry);
 
+static int dvr_autorec_in_init = 0;
+
 struct dvr_autorec_entry_queue autorec_entries;
 
 static void dvr_autorec_changed(dvr_autorec_entry_t *dae);
@@ -422,7 +424,8 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
     if (dae->dae_serieslink)
       dae->dae_serieslink->getref(dae->dae_serieslink);
   }
-  dvr_autorec_changed(dae);
+  if (!dvr_autorec_in_init)
+    dvr_autorec_changed(dae);
 
   return autorec_record_build(dae);
 }
@@ -465,7 +468,18 @@ dvr_autorec_init(void)
 {
   TAILQ_INIT(&autorec_entries);
   autorec_dt = dtable_create(&autorec_dtc, "autorec", NULL);
+  dvr_autorec_in_init = 1;
   dtable_load(autorec_dt);
+  dvr_autorec_in_init = 0;
+}
+
+void
+dvr_autorec_update(void)
+{
+  dvr_autorec_entry_t *dae;
+  TAILQ_FOREACH(dae, &autorec_entries, dae_link) {
+    dvr_autorec_changed(dae);
+  }
 }
 
 static void
