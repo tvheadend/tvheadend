@@ -352,7 +352,7 @@ extjs_channels_update(htsmsg_t *in)
 
     if((s = htsmsg_get_str(c, "epggrabsrc")) != NULL) {
       char *tmp = strdup(s);
-      char *sptr = NULL;
+      char *sptr, *sptr2;
       char *modecid  = strtok_r(tmp, ",", &sptr);
       char *modid, *ecid;
       epggrab_module_t *mod;
@@ -377,8 +377,8 @@ extjs_channels_update(htsmsg_t *in)
 
       /* Add new */
       while (modecid) {
-        modid    = strtok(modecid, "|");
-        ecid     = strtok(NULL, "|");
+        modid    = strtok_r(modecid, "|", &sptr2);
+        ecid     = strtok_r(NULL, "|", &sptr2);
         modecid  = strtok_r(NULL, ",", &sptr);
 
         if (!(mod = epggrab_module_find_by_id(modid)))

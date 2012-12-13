@@ -634,7 +634,7 @@ static void _xmltv_load_grabbers ( void )
   size_t i, p, n;
   char *outbuf;
   char name[1000];
-  char *tmp, *path;
+  char *tmp, *tmp2, *path;
 
   /* Load data */
   outlen = spawn_and_store_stdout(XMLTV_FIND, NULL, &outbuf);
@@ -668,7 +668,7 @@ static void _xmltv_load_grabbers ( void )
       NULL
     };
     path = strdup(tmp);
-    tmp  = strtok(path, ":");
+    tmp  = strtok_r(path, ":", &tmp2);
     while (tmp) {
       DIR *dir;
       struct dirent *de;
@@ -691,7 +691,7 @@ static void _xmltv_load_grabbers ( void )
         }
         closedir(dir);
       }
-      tmp = strtok(NULL, ":");
+      tmp = strtok_r(NULL, ":", &tmp2);
     }
     free(path);
   }
