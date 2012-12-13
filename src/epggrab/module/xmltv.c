@@ -634,7 +634,7 @@ static void _xmltv_load_grabbers ( void )
   size_t i, p, n;
   char *outbuf;
   char name[1000];
-  char *tmp, *tmp2, *path;
+  char *tmp, *tmp2 = NULL, *path;
 
   /* Load data */
   outlen = spawn_and_store_stdout(XMLTV_FIND, NULL, &outbuf);

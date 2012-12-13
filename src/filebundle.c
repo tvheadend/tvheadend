@@ -214,7 +214,7 @@ fb_dir *fb_opendir ( const char *path )
 
     /* Bundle */
 #if ENABLE_BUNDLE
-    char *tmp1, *tmp2, *tmp3;
+    char *tmp1, *tmp2, *tmp3 = NULL;
     *tmp1 = strdup(path);
     *tmp2 = strtok_r(tmp1, "/", &tmp3);
     filebundle_entry_t *fb = filebundle_root;

@@ -53,7 +53,7 @@ find_exec ( const char *name, char *out, size_t len )
 {
   int ret = 0;
   char bin[512];
-  char *path, *tmp, *tmp2;
+  char *path, *tmp, *tmp2 = NULL;
   DIR *dir;
   struct dirent *de;
   struct stat st;
