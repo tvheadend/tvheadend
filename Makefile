@@ -104,6 +104,7 @@ SRCS =  src/main.c \
 	src/rawtsinput.c \
 	src/iptv_input.c \
 	src/iptv_input_rtsp.c \
+	src/rtcp.c \
 	src/avc.c \
   src/huffman.c \
   src/filebundle.c \
