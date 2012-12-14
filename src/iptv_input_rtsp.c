@@ -30,9 +30,8 @@
 #include <math.h>
 #include <zconf.h>
 
-
-
 #include "tvheadend.h"
+#include "rtcp.h"
 
 /**
  * Define a simple header value with name and value, without ending \r\n
@@ -407,6 +406,8 @@ iptv_rtsp_start(const char *uri, int *fd)
   rtsp_info = malloc(sizeof(iptv_rtsp_info_t));
   rtsp_info->curl = curl;
   rtsp_info->uri = uri;
+  rtsp_info->client_addr = NULL;
+  rtsp_info->server_addr = NULL;
   rtsp_info->is_initialized = -1;
   
   result = curl_easy_setopt(curl, CURLOPT_URL, uri);
@@ -459,6 +460,9 @@ iptv_rtsp_start(const char *uri, int *fd)
     return NULL;
   }
   
+  // Init RTCP
+  rtcp_create(rtsp_info);
+  
   rtsp_info->is_initialized = 0;
   return rtsp_info;
 }
@@ -472,10 +476,12 @@ iptv_rtsp_stop(iptv_rtsp_info_t *rtsp_info)
     // If the response isn't set to NULL, then you'll need to wait the command completion, otherwise the callback
     // can segfault when easy_cleanup is called
     rtsp_teardown(rtsp_info->curl, rtsp_info->uri, NULL);
+    rtcp_destroy(rtsp_info);
   }
   curl_easy_cleanup(rtsp_info->curl);
   
   freeaddrinfo(rtsp_info->client_addr);
+  freeaddrinfo(rtsp_info->server_addr);
   free(rtsp_info);
   rtsp_info = NULL;
 }
