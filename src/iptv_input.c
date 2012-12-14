@@ -38,6 +38,7 @@
 #include "channels.h"
 #include "iptv_input.h"
 #include "iptv_input_rtsp.h"
+#include "rtcp.h"
 #include "tsdemux.h"
 #include "psi.h"
 #include "settings.h"
@@ -118,6 +119,24 @@ iptv_ts_input(service_t *t, const uint8_t *tsb)
   } 
 }
 
+static int
+is_rtsp(service_t *service)
+{
+  return strncmp(service->s_iptv_iface, "rtsp://", 7) == 0;
+}
+
+static int
+is_multicast_ipv4(service_t *service)
+{
+  return service->s_iptv_group.s_addr != 0;
+}
+
+static int
+is_multicast_ipv6(service_t *service)
+{
+  return service->s_iptv_group6.s6_addr != 0;
+}
+
 
 /**
  * Main epoll() based input thread for IPTV
@@ -186,6 +205,12 @@ iptv_thread(void *aux)
       if(t->s_iptv_fd != fd)
 	continue;
       
+      // RTP check OK, send this to RTCP if needed
+      if(is_rtsp(t))
+      {
+        rtcp_receiver_update(t, tsb);
+      }
+      
       for(j = 0; j < r; j += 188)
 	iptv_ts_input(t, buf + j);
     }
@@ -207,24 +232,6 @@ iptv_find_interface(service_t *service, struct ifreq *ifr, int fd)
   }
   
   return 0;
-}
-
-static int
-is_rtsp(service_t *service)
-{
-  return strncmp(service->s_iptv_iface, "rtsp://", 7) == 0;
-}
-
-static int
-is_multicast_ipv4(service_t *service)
-{
-  return service->s_iptv_group.s_addr != 0;
-}
-
-static int
-is_multicast_ipv6(service_t *service)
-{
-  return service->s_iptv_group6.s6_addr != 0;
 }
 
 static int
