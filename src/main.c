@@ -60,6 +60,7 @@
 #include "ffdecsa/FFdecsa.h"
 #include "muxes.h"
 #include "config2.h"
+#include "iconserve.h"
 
 int running;
 time_t dispatch_clock;
@@ -454,6 +455,8 @@ main(int argc, char **argv)
   http_server_init();
 
   webui_init();
+
+  logo_loader();
 
   serviceprobe_init();
 

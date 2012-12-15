@@ -42,6 +42,7 @@
 #include "plumbing/globalheaders.h"
 #include "epg.h"
 #include "muxer.h"
+#include "iconserve.h"
 #include "dvb/dvb.h"
 #include "dvb/dvb_support.h"
 
@@ -84,7 +85,7 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
 /**
  * Static download of a file from the filesystem
  */
-static int
+int
 page_static_file(http_connection_t *hc, const char *remain, void *opaque)
 {
   int ret = 0;
@@ -923,6 +924,8 @@ webui_init(void)
   http_path_add("/state", NULL, page_statedump, ACCESS_ADMIN);
 
   http_path_add("/stream",  NULL, http_stream,  ACCESS_STREAMING);
+
+  http_path_add("/channellogo", NULL, page_logo, ACCESS_ANONYMOUS);
 
   webui_static_content("/static",        "src/webui/static");
   webui_static_content("/docs",          "docs/html");

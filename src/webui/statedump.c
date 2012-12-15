@@ -29,6 +29,7 @@
 #include "access.h"
 #include "epg.h"
 #include "psi.h"
+#include "iconserve.h"
 #if ENABLE_LINUXDVB
 #include "dvr/dvr.h"
 #include "dvb/dvb.h"
@@ -71,7 +72,7 @@ dumpchannels(htsbuf_queue_t *hq)
 		   ch->ch_refcount,
 		   ch->ch_zombie,
 		   ch->ch_number,
-		   ch->ch_icon ?: "<none set>");
+		   logo_query(ch->ch_id, ch->ch_icon) ?: "<none set>");
   }
 }
 
