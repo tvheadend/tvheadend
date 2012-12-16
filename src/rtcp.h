@@ -153,11 +153,14 @@ typedef struct iptv_rtcp_info {
   int members;
   int senders;
   
-  /* File descriptor for the RTCP sending socket */
+  /* Server address for sendto() */
+  struct addrinfo *server_addr;
+  
+  /* File descriptor for sending RTCP packets */
   int fd;
 } iptv_rtcp_info_t;
 
-int rtcp_create(iptv_rtsp_info_t *);
+int rtcp_init(iptv_rtsp_info_t *);
 int rtcp_destroy(iptv_rtsp_info_t *);
 
 int rtcp_receiver_update(service_t *service, uint8_t *rtp_packet);
