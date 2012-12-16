@@ -182,17 +182,31 @@ rtcp_interval(int members, int senders, double rtcp_bw, int we_sent, double avg_
   return t;
 }
 
-/*
 static void
 rtcp_send_rr(service_t *service)
 {
+  return;
+  
+/*
   iptv_rtsp_info_t *rtsp_info = service->s_iptv_rtsp_info;
+  iptv_rtcp_info_t *rtcp_info = service->s_iptv_rtsp_info->rtcp_info;
+  
+  rtcp_rr_t report;
+  
+  // We don't compute this for now
+  report.fraction = 0;
+  report.lost = -1;
+  report.lsr = 0;
+  report.dlsr = 0;
+  
+  // TODO: see how to put something meaningful
+  report.jitter = 12;
+*/
   
 }
-*/
 
 static int
-rtcp_open_socket(iptv_rtsp_info_t *rtsp_info)
+rtcp_bind(iptv_rtsp_info_t *rtsp_info)
 {
   
   struct addrinfo hints, *resolved_address;
@@ -237,7 +251,9 @@ rtcp_init(iptv_rtsp_info_t *rtsp_info)
   info->last_ts = 0;
   info->members = 2;
   info->senders = 1;
-  info->fd = rtcp_open_socket(rtsp_info);
+  info->last_received_number = 0;
+  info->source_ssrc = 0;
+  info->fd = rtcp_bind(rtsp_info);
   info->average_packet_size = 52;
   rtsp_info->rtcp_info = info;
   info->server_addr = NULL;
@@ -283,22 +299,35 @@ rtcp_destroy(iptv_rtsp_info_t *rtsp_info)
 int
 rtcp_receiver_update(service_t *service, uint8_t *buffer)
 {
-  union {
-      uint8_t bytes[2];
-      uint16_t n;
-   } join;
-   join.bytes[0] = buffer[2];
-   join.bytes[1] = buffer[3]; 
-  uint16_t sequence_number = ntohs(join.n);
-  printf("Sequence number is %x (%d)\r", sequence_number, sequence_number);
-  
   iptv_rtcp_info_t *info = service->s_iptv_rtsp_info->rtcp_info;
+  union {
+    uint8_t bytes[2];
+    uint16_t n;
+  } join2;
+  join2.bytes[0] = buffer[2];
+  join2.bytes[1] = buffer[3];
+  info->last_received_number = ntohs(join2.n);
+
+  union {
+    uint8_t bytes[4];
+    uint32_t n;
+  } join4;
+  join4.bytes[0] = buffer[8];
+  join4.bytes[1] = buffer[9];
+  join4.bytes[2] = buffer[10];
+  join4.bytes[3] = buffer[11];
+  info->source_ssrc = ntohl(join4.n);
+  
+  printf("Source %x (%d) : Sequence number is %x (%d)\r",
+         info->source_ssrc, info->source_ssrc, info->last_received_number, info->last_received_number);
+  
   time_t current_time = time(NULL);
   double interval = rtcp_interval(info->members, info->senders, 12, 0, info->average_packet_size, info->last_ts == 0);
   time_t next_report = info->last_ts + interval;
   if(next_report < current_time)
   {
     // Re-send
+    rtcp_send_rr(service);
     
     // Re-schedule
     info->last_ts = current_time;
