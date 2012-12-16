@@ -183,15 +183,36 @@ rtcp_interval(int members, int senders, double rtcp_bw, int we_sent, double avg_
 }
 
 static void
+rtcp_send(iptv_rtcp_info_t *info, rtcp_t *packet)
+{
+  sbuf_t buffer;
+  sbuf_init(&buffer);
+  packet->common.version = 2;
+  packet->common.p = 0;
+  
+  sbuf_append(&buffer, &packet->common, sizeof(packet->common));
+  
+  // We don't care of the result right now
+  sendto(info->fd, buffer.sb_data, sizeof(buffer.sb_data), 0, info->server_addr->ai_addr, info->server_addr->ai_addrlen);
+}
+
+static void
 rtcp_send_rr(service_t *service)
 {
-  return;
-  
-/*
-  iptv_rtsp_info_t *rtsp_info = service->s_iptv_rtsp_info;
   iptv_rtcp_info_t *rtcp_info = service->s_iptv_rtsp_info->rtcp_info;
   
   rtcp_rr_t report;
+  
+  report.ssrc = rtcp_info->source_ssrc;
+  
+  // Fill in the extended last sequence
+  union {
+    uint16_t buffer[2];
+    uint32_t result;
+  } join2;
+  join2.buffer[0] = rtcp_info->sequence_cycle;
+  join2.buffer[1] = rtcp_info->last_received_sequence;
+  report.last_seq = join2.result;
   
   // We don't compute this for now
   report.fraction = 0;
@@ -201,8 +222,18 @@ rtcp_send_rr(service_t *service)
   
   // TODO: see how to put something meaningful
   report.jitter = 12;
-*/
   
+  // Build the full packet
+  rtcp_t packet;
+  packet.common.pt = RTCP_RR;
+  packet.common.count = 1;
+  // TODO : set the real length
+  packet.common.length = 7;
+  packet.r.rr.ssrc = rtcp_info->my_ssrc;
+  packet.r.rr.rr[0] = report;
+  
+  // Send it
+  rtcp_send(rtcp_info, &packet);
 }
 
 static int
@@ -251,7 +282,8 @@ rtcp_init(iptv_rtsp_info_t *rtsp_info)
   info->last_ts = 0;
   info->members = 2;
   info->senders = 1;
-  info->last_received_number = 0;
+  info->last_received_sequence = 0;
+  info->sequence_cycle = 1;
   info->source_ssrc = 0;
   info->fd = rtcp_bind(rtsp_info);
   info->average_packet_size = 52;
@@ -314,7 +346,12 @@ rtcp_receiver_update(service_t *service, uint8_t *buffer)
   } join2;
   join2.bytes[0] = buffer[2];
   join2.bytes[1] = buffer[3];
-  info->last_received_number = ntohs(join2.n);
+  int new_sequence = ntohs(join2.n);
+  
+  if(new_sequence < info->last_received_sequence)
+  {
+    ++info->sequence_cycle;
+  }
 
   union {
     uint8_t bytes[4];
@@ -327,7 +364,7 @@ rtcp_receiver_update(service_t *service, uint8_t *buffer)
   info->source_ssrc = ntohl(join4.n);
   
   printf("Source %x (%d) : Sequence number is %x (%d)\r",
-         info->source_ssrc, info->source_ssrc, info->last_received_number, info->last_received_number);
+         info->source_ssrc, info->source_ssrc, info->last_received_sequence, info->last_received_sequence);
   
   time_t current_time = time(NULL);
   double interval = rtcp_interval(info->members, info->senders, 12, 0, info->average_packet_size, info->last_ts == 0);
