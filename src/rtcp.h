@@ -62,7 +62,7 @@ typedef struct
   unsigned int p : 1;         /* padding flag */
   unsigned int count : 5;     /* varies by packet type */
   unsigned int pt : 8;        /* RTCP packet type */
-  u_int16_t length;           /* pkt len in words, w/o this word */
+  uint16_t length;           /* pkt len in words, w/o this word */
 } rtcp_common_t;
 
 
@@ -77,14 +77,14 @@ typedef struct
  */
 typedef struct
 {
-  u_int32_t ssrc;             /* data source being reported */
+  uint32_t ssrc;             /* data source being reported */
   unsigned int fraction : 8;  /* fraction lost since last SR/RR */
 
   int lost : 24;              /* cumul. no. pkts lost (signed!) */
-  u_int32_t last_seq;         /* extended last seq. no. received */
-  u_int32_t jitter;           /* interarrival jitter */
-  u_int32_t lsr;              /* last SR packet from this source */
-  u_int32_t dlsr;             /* delay since last SR packet */
+  uint32_t last_seq;         /* extended last seq. no. received */
+  uint32_t jitter;           /* interarrival jitter */
+  uint32_t lsr;              /* last SR packet from this source */
+  uint32_t dlsr;             /* delay since last SR packet */
 } rtcp_rr_t;
 
 /*
@@ -99,7 +99,7 @@ typedef struct
 
 typedef struct rtcp_sdes
 {
-  u_int32_t src;      /* first SSRC/CSRC */
+  uint32_t src;      /* first SSRC/CSRC */
   rtcp_sdes_item_t item[1]; /* list of SDES items */
 } rtcp_sdes_t;
 
@@ -116,19 +116,19 @@ typedef struct
     /* sender report (SR) */
     struct
     {
-      u_int32_t ssrc;     /* sender generating this report */
-      u_int32_t ntp_sec;  /* NTP timestamp */
-      u_int32_t ntp_frac;
-      u_int32_t rtp_ts;   /* RTP timestamp */
-      u_int32_t psent;    /* packets sent */
-      u_int32_t osent;    /* octets sent */
+      uint32_t ssrc;     /* sender generating this report */
+      uint32_t ntp_sec;  /* NTP timestamp */
+      uint32_t ntp_frac;
+      uint32_t rtp_ts;   /* RTP timestamp */
+      uint32_t psent;    /* packets sent */
+      uint32_t osent;    /* octets sent */
       rtcp_rr_t rr[1];  /* variable-length list */
     } sr;
 
     /* reception report (RR) */
     struct
     {
-      u_int32_t ssrc;     /* receiver generating this report */
+      uint32_t ssrc;     /* receiver generating this report */
       rtcp_rr_t rr[1];  /* variable-length list */
     } rr;
 
@@ -138,7 +138,7 @@ typedef struct
     /* BYE */
     struct
     {
-      u_int32_t src[1];   /* list of sources */
+      uint32_t src[1];   /* list of sources */
       /* can't express trailing text for reason */
     } bye;
   } r;
@@ -153,7 +153,8 @@ typedef struct iptv_rtcp_info {
   int members;
   int senders;
   
-  uint16_t last_received_number;
+  uint16_t last_received_sequence;
+  uint16_t sequence_cycle;
   
   /* Server address for sendto() */
   struct addrinfo *server_addr;
