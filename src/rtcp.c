@@ -258,6 +258,14 @@ rtcp_init(iptv_rtsp_info_t *rtsp_info)
   rtsp_info->rtcp_info = info;
   info->server_addr = NULL;
   
+  // Fill my SSRC
+  // TODO: have a better random?
+  unsigned int seed = 21 * time(NULL);
+  seed += 37 * clock();
+  seed += 97 * getpid();
+  srandom(seed);
+  info->my_ssrc = random();
+  
   // Now remember server address
   struct addrinfo hints, *resolved_address;
   char *primary_ip;
