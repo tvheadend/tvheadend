@@ -373,25 +373,6 @@ iptv_rtsp_parse_setup(iptv_rtsp_info_t* rtsp_info, const curl_response_t *respon
     }
   }
   
-  // Now remember server address
-  struct addrinfo hints, *resolved_address;
-  char *primary_ip;
-  char *service = malloc(sizeof(char) * (log10(rtsp_info->server_port) + 2));
-  
-  curl_easy_getinfo(rtsp_info->curl, CURLINFO_PRIMARY_IP, &primary_ip);
-  sprintf(service, "%d", rtsp_info->server_port + 1);
-  
-  memset(&hints, 0, sizeof(hints));
-  hints.ai_family = rtsp_info->client_addr->ai_family;  // use the same as what we already have
-  hints.ai_socktype = SOCK_DGRAM;
-
-  if(getaddrinfo(primary_ip, service, &hints, &resolved_address) != 0)
-  {
-    tvhlog(LOG_ERR, "IPTV", "RTSP : Unable to resolve resolve server address");
-    return -1;
-  }
-  rtsp_info->server_addr = resolved_address;
-  
   return rtsp_info->client_port > 1024;
 }
 
@@ -408,7 +389,6 @@ iptv_rtsp_start(const char *uri, int *fd)
   rtsp_info->curl = curl;
   rtsp_info->uri = uri;
   rtsp_info->client_addr = NULL;
-  rtsp_info->server_addr = NULL;
   rtsp_info->is_initialized = -1;
   
   result = curl_easy_setopt(curl, CURLOPT_URL, uri);
@@ -462,7 +442,7 @@ iptv_rtsp_start(const char *uri, int *fd)
   }
   
   // Init RTCP
-  rtcp_create(rtsp_info);
+  rtcp_init(rtsp_info);
   
   rtsp_info->is_initialized = 0;
   return rtsp_info;
@@ -482,7 +462,6 @@ iptv_rtsp_stop(iptv_rtsp_info_t *rtsp_info)
   curl_easy_cleanup(rtsp_info->curl);
   
   freeaddrinfo(rtsp_info->client_addr);
-  freeaddrinfo(rtsp_info->server_addr);
   free(rtsp_info);
   rtsp_info = NULL;
 }

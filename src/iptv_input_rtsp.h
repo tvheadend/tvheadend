@@ -27,7 +27,6 @@ typedef struct iptv_rtsp_info {
   const char *uri;
   int is_initialized;
   struct addrinfo *client_addr;
-  struct addrinfo *server_addr;
   int client_port;
   int server_port;
   struct iptv_rtcp_info *rtcp_info;
