@@ -242,8 +242,14 @@ rtcp_destroy(iptv_rtsp_info_t *rtsp_info)
 int
 rtcp_receiver_update(service_t *service, uint8_t *buffer)
 {
-  uint16_t sequence_number = ((uint16_t) buffer[2] * 0xff) + buffer[3];
-  printf("Sequence number is %x\n", sequence_number);
+  union {
+      uint8_t bytes[2];
+      uint16_t n;
+   } join;
+   join.bytes[0] = buffer[2];
+   join.bytes[1] = buffer[3]; 
+  uint16_t sequence_number = ntohs(join.n);
+  printf("Sequence number is %x (%d)\r", sequence_number, sequence_number);
   
   iptv_rtcp_info_t *info = service->s_iptv_rtsp_info->rtcp_info;
   time_t current_time = time(NULL);
