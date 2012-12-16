@@ -259,7 +259,7 @@ rtcp_init(iptv_rtsp_info_t *rtsp_info)
   info->server_addr = NULL;
   
   // Fill my SSRC
-  // TODO: have a better random?
+  // TODO: have a better random
   unsigned int seed = 21 * time(NULL);
   seed += 37 * clock();
   seed += 97 * getpid();
