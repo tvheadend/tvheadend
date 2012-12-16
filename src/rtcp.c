@@ -191,6 +191,7 @@ rtcp_send(iptv_rtcp_info_t *info, rtcp_t *packet)
   packet->common.p = 0;
   
   sbuf_append(&buffer, &packet->common, sizeof(packet->common));
+  sbuf_append(&buffer, &packet->r, sizeof(packet->r));
   
   // We don't care of the result right now
   sendto(info->fd, buffer.sb_data, sizeof(buffer.sb_data), 0, info->server_addr->ai_addr, info->server_addr->ai_addrlen);
@@ -203,7 +204,7 @@ rtcp_send_rr(service_t *service)
   
   rtcp_rr_t report;
   
-  report.ssrc = rtcp_info->source_ssrc;
+  report.ssrc = htonl(rtcp_info->source_ssrc);
   
   // Fill in the extended last sequence
   union {
@@ -212,24 +213,24 @@ rtcp_send_rr(service_t *service)
   } join2;
   join2.buffer[0] = rtcp_info->sequence_cycle;
   join2.buffer[1] = rtcp_info->last_received_sequence;
-  report.last_seq = join2.result;
+  report.last_seq = htonl(join2.result);
   
   // We don't compute this for now
   report.fraction = 0;
   report.lost = -1;
-  report.lsr = 0;
-  report.dlsr = 0;
+  report.lsr = htonl(0);
+  report.dlsr = htonl(0);
   
   // TODO: see how to put something meaningful
-  report.jitter = 12;
+  report.jitter = htonl(12);
   
   // Build the full packet
   rtcp_t packet;
   packet.common.pt = RTCP_RR;
   packet.common.count = 1;
   // TODO : set the real length
-  packet.common.length = 7;
-  packet.r.rr.ssrc = rtcp_info->my_ssrc;
+  packet.common.length = htons(7);
+  packet.r.rr.ssrc = htonl(rtcp_info->my_ssrc);
   packet.r.rr.rr[0] = report;
   
   // Send it
