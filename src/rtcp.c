@@ -194,23 +194,44 @@ rtcp_send_rr(service_t *service)
 static int
 rtcp_open_socket(iptv_rtsp_info_t *rtsp_info)
 {
-  struct addrinfo *addrinfo = rtsp_info->server_addr;
-  int fd = -1;
   
-  for(; fd == -1 && addrinfo->ai_next != NULL; addrinfo = addrinfo->ai_next)
+  struct addrinfo hints, *resolved_address;
+  char service[6];
+  
+  sprintf(service, "%d", rtsp_info->client_port + 1);
+  
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = AF_UNSPEC;  // use IPv4 or IPv6, whichever
+  hints.ai_socktype = SOCK_DGRAM;
+  hints.ai_flags = AI_PASSIVE;     // fill in my IP for me
+
+  getaddrinfo(NULL, service, &hints, &resolved_address);
+
+  int fd = tvh_socket(resolved_address->ai_family, resolved_address->ai_socktype, resolved_address->ai_protocol);
+  
+  // Try other addresses if it failed
+  struct addrinfo *other_address = resolved_address;
+  for(; fd == -1 && other_address->ai_next != NULL; other_address = other_address->ai_next)
   {
-    fd = tvh_socket(addrinfo->ai_family, addrinfo->ai_socktype, addrinfo->ai_protocol);
+    fd = tvh_socket(other_address->ai_family, other_address->ai_socktype, other_address->ai_protocol);
   }
-  if(fd == -1)
+  
+  int true = 1;
+  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &true, sizeof(true));
+
+  if (bind(fd, resolved_address->ai_addr, resolved_address->ai_addrlen) == -1)
   {
-    tvhlog(LOG_ERR, "IPTV", "Can't open RTCP socket");
+    tvhlog(LOG_ERR, "IPTV", "RTCP cannot bind");
+    freeaddrinfo(resolved_address);
+    return -1;
   }
-  printf("Bound to %d\n", fd);
+
+  freeaddrinfo(resolved_address);
   return fd;
 }
 
 int
-rtcp_create(iptv_rtsp_info_t *rtsp_info)
+rtcp_init(iptv_rtsp_info_t *rtsp_info)
 {
   iptv_rtcp_info_t *info = malloc(sizeof(iptv_rtcp_info_t));
   info->last_ts = 0;
@@ -219,6 +240,25 @@ rtcp_create(iptv_rtsp_info_t *rtsp_info)
   info->fd = rtcp_open_socket(rtsp_info);
   info->average_packet_size = 52;
   rtsp_info->rtcp_info = info;
+  info->server_addr = NULL;
+  
+  // Now remember server address
+  struct addrinfo hints, *resolved_address;
+  char *primary_ip;
+  char service[6];
+  
+  curl_easy_getinfo(rtsp_info->curl, CURLINFO_PRIMARY_IP, &primary_ip);
+  sprintf(service, "%d", rtsp_info->server_port + 1);
+  
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = rtsp_info->client_addr->ai_family;  // use the same as what we already have
+  hints.ai_socktype = SOCK_DGRAM;
+
+  if(getaddrinfo(primary_ip, service, &hints, &resolved_address) != 0)
+  {
+    tvhlog(LOG_ERR, "IPTV", "RTSP : Unable to resolve resolve server address");
+  }
+  info->server_addr = resolved_address;
   
   return 0;
 }
@@ -232,6 +272,7 @@ rtcp_destroy(iptv_rtsp_info_t *rtsp_info)
     close(info->fd);
   }
   free(info);
+  freeaddrinfo(info->server_addr);
   rtsp_info->rtcp_info = NULL;
   return 0;
 }
