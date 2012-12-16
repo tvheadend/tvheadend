@@ -381,6 +381,8 @@ static int
 iptv_rtsp_parse_setup(iptv_rtsp_info_t* rtsp_info, const curl_response_t *response)
 {
   curl_header_t *header;
+  
+  // First set client and server port
   LIST_FOREACH(header, &response->header_head, next)
   {
     if(strcmp(header->name, "Transport") == 0)
@@ -390,6 +392,25 @@ iptv_rtsp_parse_setup(iptv_rtsp_info_t* rtsp_info, const curl_response_t *respon
       break;
     }
   }
+  
+  // Now remember server address
+  struct addrinfo hints, *resolved_address;
+  char *primary_ip;
+  char *service = malloc(sizeof(char) * (log10(rtsp_info->server_port) + 2));
+  
+  curl_easy_getinfo(rtsp_info->curl, CURLINFO_PRIMARY_IP, &primary_ip);
+  sprintf(service, "%d", rtsp_info->server_port + 1);
+  
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = rtsp_info->client_addr->ai_family;  // use the same as what we already have
+  hints.ai_socktype = SOCK_DGRAM;
+
+  if(getaddrinfo(primary_ip, service, &hints, &resolved_address) != 0)
+  {
+    tvhlog(LOG_ERR, "IPTV", "RTSP : Unable to resolve resolve server address");
+    return -1;
+  }
+  rtsp_info->server_addr = resolved_address;
   
   return rtsp_info->client_port > 1024;
 }
