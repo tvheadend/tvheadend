@@ -309,17 +309,7 @@ iptv_rtsp_bind(iptv_rtsp_info_t* rtsp_info, int *fd, const char *service)
     
     rtsp_info->client_addr = resolved_address;
 
-    switch (resolved_address->ai_family)
-    {
-    case AF_INET:
-      rtsp_info->client_port = ntohs(((struct sockaddr_in *) resolved_address->ai_addr)->sin_port);
-      break;
-    case AF_INET6:
-      rtsp_info->client_port = ntohs(((struct sockaddr_in6 *) resolved_address->ai_addr)->sin6_port);
-      break;
-    default:
-      tvhlog(LOG_ERR, "IPTV", "RTSP unknown socket family %d", resolved_address->ai_family);
-    }
+    rtsp_info->client_port = tvh_get_port(resolved_address);
 
     tvhlog(LOG_DEBUG, "IPTV", "RTSP bound to %s:%d on fd %d",
            inet_ntoa(((struct sockaddr_in *) resolved_address->ai_addr)->sin_addr),
@@ -334,18 +324,8 @@ static int
 iptv_rtsp_check_client_port(iptv_rtsp_info_t* rtsp_info, int *fd)
 {
   int result = 0;
-  int current_port = -1;
-  switch (rtsp_info->client_addr->ai_family)
-  {
-  case AF_INET:
-    current_port = ntohs(((struct sockaddr_in *) rtsp_info->client_addr->ai_addr)->sin_port);
-    break;
-  case AF_INET6:
-    current_port = ntohs(((struct sockaddr_in6 *) rtsp_info->client_addr->ai_addr)->sin6_port);
-    break;
-  default:
-    tvhlog(LOG_ERR, "IPTV", "RTSP unknown socket family %d", rtsp_info->client_addr->ai_family);
-  }
+  int current_port = tvh_get_port(rtsp_info->client_addr);
+  
   if(rtsp_info->client_port != -1 && rtsp_info->client_port != current_port)
   {
     // Rebind to the desired port
