@@ -239,7 +239,8 @@ function accessUpdate(o) {
 				new tvheadend.epggrab, new tvheadend.cteditor,
 				new tvheadend.dvrsettings, new tvheadend.tvadapters,
 				new tvheadend.iptv, new tvheadend.acleditor,
-				new tvheadend.cwceditor, new tvheadend.capmteditor ]
+				new tvheadend.cwceditor, new tvheadend.capmteditor,
+				new tvheadend.ccweditor]
 		});
 		tvheadend.rootTabPanel.add(tvheadend.confpanel);
 	}

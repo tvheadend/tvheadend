@@ -42,6 +42,7 @@
 #include "channels.h"
 #include "cwc.h"
 #include "capmt.h"
+#include "ccw.h"
 #include "notify.h"
 #include "serviceprobe.h"
 #include "atomic.h"
@@ -210,6 +211,7 @@ service_start(service_t *t, unsigned int weight, int force_start)
 
   cwc_service_start(t);
   capmt_service_start(t);
+  ccw_service_start(t);
 
   pthread_mutex_lock(&t->s_stream_mutex);
 

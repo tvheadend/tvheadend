@@ -171,6 +171,7 @@ SRCS-$(CONFIG_AVAHI) += src/avahi.c
 
 # CWC
 SRCS-${CONFIG_CWC} += src/cwc.c \
+        src/ccw.c \
 	src/capmt.c
 
 # FFdecsa
