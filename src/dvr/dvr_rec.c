@@ -118,55 +118,6 @@ dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
 
 
 /**
- *
- */
-static int
-makedirs(const char *path)
-{
-  struct stat st;
-  char *p;
-  int l, r;
-
-  if(stat(path, &st) == 0 && S_ISDIR(st.st_mode)) 
-    return 0; /* Dir already there */
-
-  if(mkdir(path, 0777) == 0)
-    return 0; /* Dir created ok */
-
-  if(errno == ENOENT) {
-
-    /* Parent does not exist, try to create it */
-    /* Allocate new path buffer and strip off last directory component */
-
-    l = strlen(path);
-    p = alloca(l + 1);
-    memcpy(p, path, l);
-    p[l--] = 0;
-  
-    for(; l >= 0; l--)
-      if(p[l] == '/')
-	break;
-    if(l == 0) {
-      return ENOENT;
-    }
-    p[l] = 0;
-
-    if((r = makedirs(p)) != 0)
-      return r;
-  
-    /* Try again */
-    if(mkdir(path, 0777) == 0)
-      return 0; /* Dir created ok */
-  }
-  r = errno;
-
-  tvhlog(LOG_ERR, "dvr", "Unable to create directory \"%s\" -- %s",
-	 path, strerror(r));
-  return r;
-}
-
-
-/**
  * Replace various chars with a dash
  */
 static void
@@ -247,7 +198,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
 
 
   /* */
-  if(makedirs(path) != 0) {
+  if(makedirs(path, 0777) != 0) {
     return -1;
   }
   
