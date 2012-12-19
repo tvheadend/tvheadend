@@ -470,9 +470,13 @@ main(int argc, char **argv)
 
   serviceprobe_init();
 
+#if ENABLE_CWC
   cwc_init();
-
   capmt_init();
+#if (!ENABLE_DVBCSA)
+  ffdecsa_init();
+#endif
+#endif
 
   epggrab_init();
   epg_init();
@@ -480,10 +484,6 @@ main(int argc, char **argv)
   dvr_init();
 
   htsp_init();
-
-#if (!ENABLE_DVBCSA)
-  ffdecsa_init();
-#endif
 
   if(rawts_input != NULL)
     rawts_init(rawts_input);

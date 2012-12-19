@@ -208,8 +208,10 @@ service_start(service_t *t, unsigned int weight, int force_start)
   if((r = t->s_start_feed(t, weight, force_start)))
     return r;
 
+#if ENABLE_CWC
   cwc_service_start(t);
   capmt_service_start(t);
+#endif
 
   pthread_mutex_lock(&t->s_stream_mutex);
 

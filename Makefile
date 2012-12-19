@@ -177,8 +177,10 @@ SRCS-${CONFIG_CWC} += src/cwc.c \
 ifneq ($(CONFIG_DVBCSA),yes)
 SRCS-${CONFIG_CWC}  += src/ffdecsa/ffdecsa_interface.c \
 	src/ffdecsa/ffdecsa_int.c
+ifeq ($(CONFIG_CWC),yes)
 SRCS-${CONFIG_MMX}  += src/ffdecsa/ffdecsa_mmx.c
 SRCS-${CONFIG_SSE2} += src/ffdecsa/ffdecsa_sse2.c
+endif
 ${BUILDDIR}/src/ffdecsa/ffdecsa_mmx.o  : CFLAGS += -mmmx
 ${BUILDDIR}/src/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
 endif
