@@ -78,6 +78,19 @@ int htsp_port;
 int htsp_port_extra;
 char *tvheadend_cwd;
 
+const char *tvheadend_capabilities[] = {
+#if ENABLE_CWC
+  "cwc",
+#endif
+#if ENABLE_V4L
+  "v4l",
+#endif
+#if ENABLE_LINUXDVB
+  "linuxdvb",
+#endif
+  NULL
+};
+
 static void
 handle_sigpipe(int x)
 {

@@ -672,6 +672,7 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_t *l, *r = htsmsg_create_map();
   uint32_t v;
   const char *name;
+  int i = 0;
 
   if(htsmsg_get_u32(in, "htspversion", &v))
     return htsp_error("Missing argument 'htspversion'");
@@ -691,6 +692,10 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Capabilities */
   l = htsmsg_create_list();
+  while (tvheadend_capabilities[i]) {
+    htsmsg_add_str(l, NULL, tvheadend_capabilities[i]);
+    i++;
+  }
   htsmsg_add_msg(r, "servercapability", l);
 
   /* Set version to lowest num */

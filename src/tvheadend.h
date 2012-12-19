@@ -36,6 +36,7 @@
 
 extern const char *tvheadend_version;
 extern char *tvheadend_cwd;
+extern const char *tvheadend_capabilities[];
 
 #define PTS_UNSET INT64_C(0x8000000000000000)
 
