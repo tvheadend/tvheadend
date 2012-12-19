@@ -106,16 +106,16 @@ SRCS =  src/main.c \
 	src/avc.c \
   src/huffman.c \
   src/filebundle.c \
-  src/muxes.c \
   src/config2.c \
   src/lang_codes.c \
   src/lang_str.c \
 
 SRCS += src/epggrab/module.c\
   src/epggrab/channel.c\
-  src/epggrab/otamux.c\
   src/epggrab/module/pyepg.c\
   src/epggrab/module/xmltv.c\
+
+SRCS-$(CONFIG_LINUXDVB) += src/epggrab/otamux.c\
   src/epggrab/module/eit.c \
   src/epggrab/module/opentv.c \
   src/epggrab/support/freesat_huffman.c \
@@ -160,6 +160,7 @@ SRCS-${CONFIG_LINUXDVB} += \
 	src/dvb/dvb_input_filtered.c \
 	src/dvb/dvb_input_raw.c \
 	src/webui/extjs_dvb.c \
+	src/muxes.c \
 
 # V4L
 SRCS-${CONFIG_V4L} += \

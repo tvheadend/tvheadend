@@ -275,7 +275,9 @@ main(int argc, char **argv)
   sigset_t set;
   const char *homedir;
   const char *rawts_input = NULL;
+#if ENABLE_LINUXDVB
   const char *dvb_rawts_input = NULL;
+#endif
   const char *join_transport = NULL;
   const char *confpath = NULL;
   char *p, *endp;
@@ -356,9 +358,11 @@ main(int argc, char **argv)
     case 'r':
       rawts_input = optarg;
       break;
+#if ENABLE_LINUXDVB
     case 'R':
       dvb_rawts_input = optarg;
       break;
+#endif
     case 'j':
       join_transport = optarg;
       break;
@@ -446,8 +450,6 @@ main(int argc, char **argv)
 
   config_init();
 
-  muxes_init();
-
   service_init();
 
   channels_init();
@@ -456,16 +458,19 @@ main(int argc, char **argv)
 
   access_init(createdefault);
 
-  tcp_server_init();
 #if ENABLE_LINUXDVB
+  muxes_init();
   dvb_init(adapter_mask, dvb_rawts_input);
 #endif
+
   iptv_input_init();
+
 #if ENABLE_V4L
   v4l_init();
 #endif
-  http_server_init();
 
+  tcp_server_init();
+  http_server_init();
   webui_init();
 
   serviceprobe_init();

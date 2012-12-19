@@ -597,6 +597,7 @@ http_stream_service(http_connection_t *hc, service_t *service)
 /**
  * Subscribes to a service and starts the streaming loop
  */
+#if ENABLE_LINUXDVB
 static int
 http_stream_tdmi(http_connection_t *hc, th_dvb_mux_instance_t *tdmi)
 {
@@ -616,6 +617,7 @@ http_stream_tdmi(http_connection_t *hc, th_dvb_mux_instance_t *tdmi)
 
   return 0;
 }
+#endif
 
 
 /**
@@ -698,7 +700,9 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   char *components[2];
   channel_t *ch = NULL;
   service_t *service = NULL;
+#if ENABLE_LINUXDVB
   th_dvb_mux_instance_t *tdmi = NULL;
+#endif
 
   hc->hc_keep_alive = 0;
 
@@ -722,16 +726,20 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
     ch = channel_find_by_name(components[1], 0, 0);
   } else if(!strcmp(components[0], "service")) {
     service = service_find_by_identifier(components[1]);
+#if ENABLE_LINUXDVB
   } else if(!strcmp(components[0], "mux")) {
     tdmi = dvb_mux_find_by_identifier(components[1]);
+#endif
   }
 
   if(ch != NULL) {
     return http_stream_channel(hc, ch);
   } else if(service != NULL) {
     return http_stream_service(hc, service);
+#if ENABLE_LINUXDVB
   } else if(tdmi != NULL) {
     return http_stream_tdmi(hc, tdmi);
+#endif
   } else {
     http_error(hc, HTTP_STATUS_BAD_REQUEST);
     return HTTP_STATUS_BAD_REQUEST;
