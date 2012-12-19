@@ -1942,6 +1942,26 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
+ * Capability check
+ */
+static int
+extjs_capabilities(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  htsmsg_t *l;
+  int i = 0;
+  l = htsmsg_create_list();
+  while (tvheadend_capabilities[i]) {
+    htsmsg_add_str(l, NULL, tvheadend_capabilities[i]);
+    i++;
+  }
+  htsmsg_json_serialize(l, hq, 0);
+  htsmsg_destroy(l);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+}
+
+/**
  * WEB user interface
  */
 void
@@ -1949,6 +1969,7 @@ extjs_start(void)
 {
   http_path_add("/about.html",       NULL, page_about,             ACCESS_WEB_INTERFACE);
   http_path_add("/extjs.html",       NULL, extjs_root,             ACCESS_WEB_INTERFACE);
+  http_path_add("/capabilities",     NULL, extjs_capabilities,     ACCESS_WEB_INTERFACE);
   http_path_add("/tablemgr",         NULL, extjs_tablemgr,         ACCESS_WEB_INTERFACE);
   http_path_add("/channels",         NULL, extjs_channels,         ACCESS_WEB_INTERFACE);
   http_path_add("/epggrab",          NULL, extjs_epggrab,          ACCESS_WEB_INTERFACE);
