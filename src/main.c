@@ -77,6 +77,7 @@ int webui_port;
 int htsp_port;
 int htsp_port_extra;
 char *tvheadend_cwd;
+const char *tvheadend_webroot;
 
 const char *tvheadend_capabilities[] = {
 #if ENABLE_CWC
@@ -202,6 +203,7 @@ usage(const char *argv0)
   printf(" -s              Log debug to syslog\n");
   printf(" -w <portnumber> WebUI access port [default 9981]\n");
   printf(" -e <portnumber> HTSP access port [default 9982]\n");
+  printf(" -W <path>       WebUI context path [default /]\n");
   printf("\n");
   printf("Development options\n");
   printf("\n");
@@ -297,7 +299,7 @@ main(int argc, char **argv)
   // make sure the timezone is set
   tzset();
 
-  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:sw:e:E:R:")) != -1) {
+  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:sw:e:E:R:W:")) != -1) {
     switch(c) {
     case 'a':
       adapter_mask = 0x0;
@@ -365,6 +367,9 @@ main(int argc, char **argv)
 #endif
     case 'j':
       join_transport = optarg;
+      break;
+    case 'W':
+      tvheadend_webroot = optarg;
       break;
     default:
       usage(argv[0]);

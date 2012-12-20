@@ -34,7 +34,7 @@ tvheadend.help = function(title, pagename) {
  * General capabilities
  */
 Ext.Ajax.request({
-  url: '/capabilities',
+  url: 'capabilities',
   success: function(d)
   {
     if (d && d.responseText)
