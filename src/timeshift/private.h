@@ -80,6 +80,7 @@ typedef struct timeshift {
   int                         id;         ///< Reference number
   char                        *path;      ///< Directory containing buffer
   time_t                      max_time;   ///< Maximum period to shift
+  int                         ondemand;   ///< Whether this is an on-demand timeshift
 
   enum {
     TS_INIT,

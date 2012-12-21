@@ -270,6 +270,9 @@ function accessUpdate(o) {
       tvheadend.confpanel.add(new tvheadend.cwceditor);
       tvheadend.confpanel.add(new tvheadend.capmteditor);
     }
+    if (tvheadend.capabilities.indexOf('timeshift') != -1) {
+      tvheadend.confpanel.add(new tvheadend.timeshift);
+    }
     tvheadend.confpanel.doLayout();
   }
 
