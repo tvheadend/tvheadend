@@ -19,8 +19,17 @@
 #ifndef __TVH_TIMESHIFT_H__
 #define __TVH_TIMESHIFT_H__
 
+extern int       timeshift_enabled;
+extern int       timeshift_ondemand;
+extern char     *timeshift_path;
+extern int       timeshift_unlimited_period;
+extern uint32_t  timeshift_max_period;
+extern int       timeshift_unlimited_size;
+extern size_t    timeshift_max_size;
+
 void timeshift_init ( void );
 void timeshift_term ( void );
+void timeshift_save ( void );
 
 streaming_target_t *timeshift_create
   (streaming_target_t *out, time_t max_period);

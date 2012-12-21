@@ -48,6 +48,7 @@
 #include "lang_codes.h"
 #include "subscriptions.h"
 #include "imagecache.h"
+#include "timeshift.h"
 
 /**
  *
@@ -130,6 +131,9 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/iptv.js");
 #if ENABLE_V4L
   extjs_load(hq, "static/app/v4l.js");
+#endif
+#if ENABLE_TIMESHIFT
+  extjs_load(hq, "static/app/timeshift.js");
 #endif
   extjs_load(hq, "static/app/chconf.js");
   extjs_load(hq, "static/app/epg.js");
@@ -2035,6 +2039,79 @@ extjs_capabilities(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
+ *
+ */
+#if ENABLE_TIMESHIFT
+static int
+extjs_timeshift(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  const char *op = http_arg_get(&hc->hc_req_args, "op");
+  htsmsg_t *out, *m;
+  const char *str;
+
+  if(op == NULL)
+    return 400;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(http_access_verify(hc, ACCESS_ADMIN)) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  /* Basic settings (not the advanced schedule) */
+  if(!strcmp(op, "loadSettings")) {
+    pthread_mutex_lock(&global_lock);
+    m = htsmsg_create_map();
+    htsmsg_add_u32(m, "timeshift_enabled",  timeshift_enabled);
+    htsmsg_add_u32(m, "timeshift_ondemand", timeshift_ondemand);
+    if (timeshift_path)
+      htsmsg_add_str(m, "timeshift_path", timeshift_path);
+    htsmsg_add_u32(m, "timeshift_unlimited_period", timeshift_unlimited_period);
+    htsmsg_add_u32(m, "timeshift_max_period", timeshift_max_period);
+    htsmsg_add_u32(m, "timeshift_unlimited_size", timeshift_unlimited_size);
+    htsmsg_add_u32(m, "timeshift_max_size", timeshift_max_size / 1048576);
+    pthread_mutex_unlock(&global_lock);
+    out = json_single_record(m, "config");
+
+  /* Save settings */
+  } else if (!strcmp(op, "saveSettings") ) {
+    pthread_mutex_lock(&global_lock);
+    timeshift_enabled  = http_arg_get(&hc->hc_req_args, "timeshift_enabled")  ? 1 : 0;
+    timeshift_ondemand = http_arg_get(&hc->hc_req_args, "timeshift_ondemand") ? 1 : 0;
+    if ((str = http_arg_get(&hc->hc_req_args, "timeshift_path"))) {
+      if (timeshift_path)
+        free(timeshift_path);
+      timeshift_path = strdup(str);
+    }
+    timeshift_unlimited_period = http_arg_get(&hc->hc_req_args, "timeshift_unlimited_period") ? 1 : 0;
+    if ((str = http_arg_get(&hc->hc_req_args, "timeshift_max_period")))
+      timeshift_max_period = (uint32_t)atol(str);
+    timeshift_unlimited_size = http_arg_get(&hc->hc_req_args, "timeshift_unlimited_size") ? 1 : 0;
+    if ((str = http_arg_get(&hc->hc_req_args, "timeshift_max_size")))
+      timeshift_max_size   = atol(str) * 1048576LL;
+    timeshift_save();
+    pthread_mutex_unlock(&global_lock);
+
+    out = htsmsg_create_map();
+    htsmsg_add_u32(out, "success", 1);
+
+  } else {
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+
+  return 0;
+}
+#endif
+
+/**
  * WEB user interface
  */
 void
@@ -2064,6 +2141,9 @@ extjs_start(void)
   http_path_add("/iptv/services",    NULL, extjs_iptvservices,     ACCESS_ADMIN);
   http_path_add("/servicedetails",   NULL, extjs_servicedetails,   ACCESS_ADMIN);
   http_path_add("/tv/adapter",       NULL, extjs_tvadapter,        ACCESS_ADMIN);
+#if ENABLE_TIMESHIFT
+  http_path_add("/timeshift",        NULL, extjs_timeshift,        ACCESS_ADMIN);
+#endif
 
 #if ENABLE_LINUXDVB
   extjs_start_dvb();

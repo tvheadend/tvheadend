@@ -1264,7 +1264,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 
 #if ENABLE_TIMESHIFT
   timeshiftPeriod = htsmsg_get_u32_or_default(in, "timeshiftPeriod", 0);
-  timeshiftPeriod = MIN(timeshiftPeriod, config_get_timeshift_period());
+  if (!timeshift_unlimited_period)
+    timeshiftPeriod = MIN(timeshiftPeriod, timeshift_max_period);
 #endif
 
   /*
