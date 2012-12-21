@@ -105,6 +105,7 @@ void timeshift_save ( void )
 static void timeshift_input
   ( void *opaque, streaming_message_t *sm )
 {
+  int exit = 0;
   timeshift_t *ts = opaque;
 
   pthread_mutex_lock(&ts->state_mutex);
@@ -130,6 +131,11 @@ static void timeshift_input
       streaming_target_deliver2(ts->output, streaming_msg_clone(sm));
     }
 
+    /* Check for exit */
+    if (sm->sm_type == SMT_EXIT ||
+        (sm->sm_type == SMT_STOP && sm->sm_code == 0))
+      exit = 1;
+
     /* Buffer to disk */
     if (ts->state >= TS_LIVE) {
       sm->sm_time = getmonoclock();
@@ -138,8 +144,7 @@ static void timeshift_input
       streaming_msg_free(sm);
 
     /* Exit/Stop */
-    if (sm->sm_type == SMT_EXIT ||
-        (sm->sm_type == SMT_STOP && sm->sm_code == 0)) {
+    if (exit) {
       timeshift_write_exit(ts->rd_pipe.wr);
       ts->state = TS_EXIT;
     }
