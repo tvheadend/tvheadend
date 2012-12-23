@@ -29,6 +29,8 @@
 #include <string.h>
 #include <assert.h>
 
+//#define TSHFT_TRACE
+
 /* **************************************************************************
  * File Reading
  * *************************************************************************/
@@ -223,6 +225,10 @@ void *timeshift_reader ( void *p )
           if (speed > 3200)  speed = 3200;
           if (speed < -3200) speed = -3200;
 
+          /* Ignore negative */
+          if (ts->ondemand && (speed < 0))
+            speed = 0;
+
           /* Process */
           if (cur_speed != speed) {
 
@@ -241,7 +247,7 @@ void *timeshift_reader ( void *p )
                        ts->id);
                 timeshift_writer_flush(ts);
                 pthread_mutex_lock(&ts->rdwr_mutex);
-                if ((cur_file   = timeshift_filemgr_get(ts, 0))) {
+                if ((cur_file   = timeshift_filemgr_get(ts, ts->ondemand))) {
                   cur_off    = cur_file->size;
                   pause_time = cur_file->last;
                   last_time  = pause_time;
@@ -467,6 +473,10 @@ void *timeshift_reader ( void *p )
         ctrl      = streaming_msg_create_code(SMT_SPEED, cur_speed);
         streaming_target_deliver2(ts->output, ctrl);
 
+        /* Flush ALL files */
+        if (ts->ondemand)
+          timeshift_filemgr_flush(ts, NULL);
+
       /* Pause */
       } else if (cur_speed < 0) {
         tvhlog(LOG_DEBUG, "timeshift", "ts %d sob pause stream", ts->id);
@@ -475,6 +485,10 @@ void *timeshift_reader ( void *p )
         ctrl      = streaming_msg_create_code(SMT_SPEED, cur_speed);
         streaming_target_deliver2(ts->output, ctrl);
       }
+
+    /* Flush unwanted */
+    } else if (ts->ondemand && cur_file) {
+      timeshift_filemgr_flush(ts, cur_file);
     }
 
     pthread_mutex_unlock(&ts->rdwr_mutex);

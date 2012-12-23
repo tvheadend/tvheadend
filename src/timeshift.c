@@ -147,7 +147,7 @@ static void timeshift_input
       exit = 1;
 
     /* Buffer to disk */
-    if (ts->state >= TS_LIVE) {
+    if ((ts->state > TS_LIVE) || (!ts->ondemand && (ts->state == TS_LIVE))) {
       sm->sm_time = getmonoclock();
       streaming_target_deliver2(&ts->wr_queue.sq_st, sm);
     } else
@@ -170,7 +170,6 @@ void
 timeshift_destroy(streaming_target_t *pad)
 {
   timeshift_t *ts = (timeshift_t*)pad;
-  timeshift_file_t *tsf;
   streaming_message_t *sm;
 
   /* Must hold global lock */
@@ -193,8 +192,7 @@ timeshift_destroy(streaming_target_t *pad)
   close(ts->rd_pipe.wr);
 
   /* Flush files */
-  while ((tsf = TAILQ_FIRST(&ts->files)))
-    timeshift_filemgr_remove(ts, tsf, 1);
+  timeshift_filemgr_flush(ts, NULL);
 
   free(ts->path);
   free(ts);

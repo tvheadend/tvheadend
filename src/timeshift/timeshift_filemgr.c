@@ -117,9 +117,12 @@ static void timeshift_reaper_remove ( timeshift_file_t *tsf )
 static void timeshift_filemgr_get_root ( char *buf, size_t len )
 {
   const char *path = timeshift_path;
-  if (!path || !*path)
+  if (!path || !*path) {
     path = hts_settings_get_root();
-  snprintf(buf, len, "%s/timeshift/temp", path);
+    snprintf(buf, len, "%s/timeshift/buffer", path);
+  } else {
+    snprintf(buf, len, "%s/buffer", path);
+  }
 }
 
 /*
@@ -154,6 +157,18 @@ void timeshift_filemgr_remove
     close(tsf->fd);
   TAILQ_REMOVE(&ts->files, tsf, link);
   timeshift_reaper_remove(tsf);
+}
+
+/*
+ * Flush all files
+ */
+void timeshift_filemgr_flush ( timeshift_t *ts, timeshift_file_t *end )
+{
+  timeshift_file_t *tsf;
+  while ((tsf = TAILQ_FIRST(&ts->files))) {
+    if (tsf == end) break;
+    timeshift_filemgr_remove(ts, tsf, 1);
+  }
 }
 
 /*
@@ -216,6 +231,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
         tsf_tmp->fd       = fd;
         tsf_tmp->path     = strdup(path);
         tsf_tmp->refcount = 0;
+        tsf_tmp->last     = getmonoclock();
         TAILQ_INIT(&tsf_tmp->iframes);
         TAILQ_INIT(&tsf_tmp->sstart);
         TAILQ_INSERT_TAIL(&ts->files, tsf_tmp, link);
