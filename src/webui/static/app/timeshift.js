@@ -1,22 +1,24 @@
 tvheadend.timeshift = function() {
 
-	/* ****************************************************************
-	 * Data
-	 * ***************************************************************/
+  /* ****************************************************************
+   * Data
+   * ***************************************************************/
 
   var confreader = new Ext.data.JsonReader(
     {
-		  root: 'config'
-	  },
+      root: 'config'
+    },
     [
       'timeshift_enabled', 'timeshift_ondemand',
-      'timeshift_path', 'timeshift_max_period', 'timeshift_max_size'
+      'timeshift_path',
+      'timeshift_unlimited_period', 'timeshift_max_period',
+      'timeshift_unlimited_size', 'timeshift_max_size'
     ]
   );
   
-	/* ****************************************************************
-	 * Fields
-	 * ***************************************************************/
+  /* ****************************************************************
+   * Fields
+   * ***************************************************************/
 
   var timeshiftEnabled = new Ext.form.Checkbox({
     fieldLabel: 'Enabled',
@@ -44,6 +46,12 @@ tvheadend.timeshift = function() {
     width: 300
   });
 
+  var timeshiftUnlPeriod = new Ext.form.Checkbox({
+    fieldLabel: '  unlimited',
+    name: 'timeshift_unlimited_period',
+    Width: 300
+  });
+
   var timeshiftMaxSize = new Ext.form.NumberField({
     fieldLabel: 'Max. Size (MB)',
     name: 'timeshift_max_size',
@@ -51,47 +59,65 @@ tvheadend.timeshift = function() {
     width: 300
   });
 
+  var timeshiftUnlSize = new Ext.form.Checkbox({
+    fieldLabel: '  unlimited',
+    name: 'timeshift_unlimited_size',
+    Width: 300
+  });
 
-	/* ****************************************************************
-	 * Form
-	 * ***************************************************************/
+  /* ****************************************************************
+   * Events
+   * ***************************************************************/
 
-	var saveButton = new Ext.Button({
-		text : "Save configuration",
-		tooltip : 'Save changes made to configuration below',
-		iconCls : 'save',
-		handler : saveChanges
-	});
+  timeshiftUnlPeriod.on('check', function(e, c){
+    timeshiftMaxPeriod.setDisabled(c);
+  });
+  timeshiftUnlSize.on('check', function(e, c){
+    timeshiftMaxSize.setDisabled(c);
+  });
 
-	var helpButton = new Ext.Button({
-		text : 'Help',
-		handler : function() {
-			new tvheadend.help('Timeshift Configuration', 'config_timeshift.html');
-		}
-	});
+  /* ****************************************************************
+   * Form
+   * ***************************************************************/
 
-	var confpanel = new Ext.FormPanel({
-		title : 'Timeshift',
-		iconCls : 'clock',
-		border : false,
-		bodyStyle : 'padding:15px',
-		labelAlign : 'left',
-		labelWidth : 150,
-		waitMsgTarget : true,
-		reader : confreader,
-		layout : 'form',
-		defaultType : 'textfield',
-		autoHeight : true,
-		items : [ 
+  var saveButton = new Ext.Button({
+    text : "Save configuration",
+    tooltip : 'Save changes made to configuration below',
+    iconCls : 'save',
+    handler : saveChanges
+  });
+
+  var helpButton = new Ext.Button({
+    text : 'Help',
+    handler : function() {
+      new tvheadend.help('Timeshift Configuration', 'config_timeshift.html');
+    }
+  });
+
+  var confpanel = new Ext.FormPanel({
+    title : 'Timeshift',
+    iconCls : 'clock',
+    border : false,
+    bodyStyle : 'padding:15px',
+    labelAlign : 'left',
+    labelWidth : 150,
+    waitMsgTarget : true,
+    reader : confreader,
+    layout : 'form',
+    defaultType : 'textfield',
+    autoHeight : true,
+    items : [
       timeshiftEnabled, timeshiftOndemand,
-      timeshiftPath, timeshiftMaxPeriod, timeshiftMaxSize
+      timeshiftPath,
+      timeshiftMaxPeriod, timeshiftUnlPeriod,
+      timeshiftMaxSize, timeshiftUnlSize
     ],
-		tbar : [ saveButton, '->', helpButton ]
-	});
+    tbar : [ saveButton, '->', helpButton ]
+  });
 
-	/* ****************************************************************
-	 * Load/Save
-	 * ***************************************************************/
+  /* ****************************************************************
+   * Load/Save
+   * ***************************************************************/
 
   confpanel.on('render', function() {
     confpanel.getForm().load({
@@ -101,24 +127,26 @@ tvheadend.timeshift = function() {
       },
       success: function() {
         confpanel.enable();
+        timeshiftMaxPeriod.setDisabled(timeshiftUnlPeriod.getValue());
+        timeshiftMaxSize.setDisabled(timeshiftUnlSize.getValue());
       }
     });
   });
 
-	function saveChanges() {
-		confpanel.getForm().submit({
-			url : 'timeshift',
-			params : {
-				op : 'saveSettings',
-			},
-			waitMsg : 'Saving Data...',
-			success : function(form, action) {
-			},
-			failure : function(form, action) {
-				Ext.Msg.alert('Save failed', action.result.errormsg);
-			}
-		});
-	}
+  function saveChanges() {
+    confpanel.getForm().submit({
+      url : 'timeshift',
+      params : {
+        op : 'saveSettings',
+      },
+      waitMsg : 'Saving Data...',
+      success : function(form, action) {
+      },
+      failure : function(form, action) {
+        Ext.Msg.alert('Save failed', action.result.errormsg);
+      }
+    });
+  }
 
-	return confpanel;
+  return confpanel;
 }

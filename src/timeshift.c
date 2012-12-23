@@ -37,7 +37,9 @@ static int timeshift_index = 0;
 int       timeshift_enabled;
 int       timeshift_ondemand;
 char     *timeshift_path;
+int       timeshift_unlimited_period;
 uint32_t  timeshift_max_period;
+int       timeshift_unlimited_size;
 size_t    timeshift_max_size;
 
 /*
@@ -52,21 +54,28 @@ void timeshift_init ( void )
   timeshift_filemgr_init();
 
   /* Defaults */
-  timeshift_enabled    = 0;                // Disabled
-  timeshift_ondemand   = 0;                // Permanent
-  timeshift_path       = NULL;             // DVR sub-dir
-  timeshift_max_period = 3600;             // 1Hr
-  timeshift_max_size   = 10 * 1073741824l; // 10G
+  timeshift_enabled          = 0;                 // Disabled
+  timeshift_ondemand         = 0;                 // Permanent
+  timeshift_path             = NULL;              // DVR sub-dir
+  timeshift_unlimited_period = 0;
+  timeshift_max_period       = 3600;              // 1Hr
+  timeshift_unlimited_size   = 0;
+  timeshift_max_size         = 10000 * 1048576LL; // 10G
 
   /* Load settings */
   if ((m = hts_settings_load("timeshift/config"))) {
+  htsmsg_print(m);
     if (!htsmsg_get_u32(m, "enabled", &u32))
       timeshift_enabled = u32 ? 1 : 0;
     if (!htsmsg_get_u32(m, "ondemand", &u32))
       timeshift_ondemand = u32 ? 1 : 0;
     if ((str = htsmsg_get_str(m, "path")))
       timeshift_path = strdup(str);
+    if (!htsmsg_get_u32(m, "unlimited_period", &u32))
+      timeshift_unlimited_period = u32 ? 1 : 0;
     htsmsg_get_u32(m, "max_period", &timeshift_max_period);
+    if (!htsmsg_get_u32(m, "unlimited_size", &u32))
+      timeshift_unlimited_size = u32 ? 1 : 0;
     if (!htsmsg_get_u32(m, "max_size", &u32))
       timeshift_max_size = 1048576LL * u32;
     htsmsg_destroy(m);
@@ -93,7 +102,9 @@ void timeshift_save ( void )
   htsmsg_add_u32(m, "ondemand", timeshift_ondemand);
   if (timeshift_path)
     htsmsg_add_str(m, "path", timeshift_path);
+  htsmsg_add_u32(m, "unlimited_period", timeshift_unlimited_period);
   htsmsg_add_u32(m, "max_period", timeshift_max_period);
+  htsmsg_add_u32(m, "unlimited_size", timeshift_unlimited_size);
   htsmsg_add_u32(m, "max_size", timeshift_max_size / 1048576);
 
   hts_settings_save(m, "timeshift/config");

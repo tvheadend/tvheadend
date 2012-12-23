@@ -22,7 +22,9 @@
 extern int       timeshift_enabled;
 extern int       timeshift_ondemand;
 extern char     *timeshift_path;
+extern int       timeshift_unlimited_period;
 extern uint32_t  timeshift_max_period;
+extern int       timeshift_unlimited_size;
 extern size_t    timeshift_max_size;
 
 void timeshift_init ( void );

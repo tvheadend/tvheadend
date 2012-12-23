@@ -119,7 +119,7 @@ static void timeshift_filemgr_get_root ( char *buf, size_t len )
   const char *path = timeshift_path;
   if (!path || !*path)
     path = hts_settings_get_root();
-  snprintf(buf, len, "%s/timeshift", path);
+  snprintf(buf, len, "%s/timeshift/temp", path);
 }
 
 /*
