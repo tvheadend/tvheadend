@@ -88,16 +88,23 @@ tvh_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
 
 /**
  * Multisegment matroska files do exist but I am not sure if they are supported
- * by many media players. For now, we'll treat it as an error.
+ * by many media players. If we treat it as an error, the recording will be split
+ * into several files. If we ignore the error, the recording will only be one
+ * file, but we might miss new tracks, or 16:9 --> 4:3 changes. For now, we'll 
+ * just ignore the error.
  */
 static int
 tvh_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
 {
+#if 0
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
 
   tm->m_errors++;
 
   return -1;
+#else
+  return 0;
+#endif
 }
 
 
