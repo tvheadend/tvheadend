@@ -705,6 +705,9 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Capabilities */
   l = htsmsg_create_list();
+#if ENABLE_LIBAV
+  transcoder_get_codecs(l);
+#endif
   htsmsg_add_msg(r, "servercapability", l);
 
   /* Set version to lowest num */

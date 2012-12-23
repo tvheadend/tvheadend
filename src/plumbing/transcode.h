@@ -18,6 +18,7 @@
 #pragma once
 
 #include "tvheadend.h"
+#include "htsmsg.h"
 
 streaming_target_t *transcoder_create(streaming_target_t *output, 
 				      size_t max_resolution,
@@ -28,3 +29,5 @@ streaming_target_t *transcoder_create(streaming_target_t *output,
 void transcoder_set_network_speed(streaming_target_t *st, int speed);
 void transcoder_destroy(streaming_target_t *gh);
 void transcoder_init(void);
+
+int  transcoder_get_codecs(htsmsg_t *array);

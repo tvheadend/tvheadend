@@ -1110,3 +1110,60 @@ transcoder_init(void)
   av_register_all();
 }
 
+
+int
+transcoder_get_codecs(htsmsg_t *array)
+{
+  AVCodec *p = NULL;
+  const char *name;
+  streaming_component_type_t sct;
+
+  while((p = av_codec_next(p))) {
+
+    if (!p->encode && !p->encode2)
+      continue;
+
+    switch(p->id) {
+
+    case CODEC_ID_MP2:
+      sct = SCT_MPEG2AUDIO;
+      break;
+
+    case CODEC_ID_AAC:
+      sct = SCT_AAC;
+      break;
+
+    case CODEC_ID_VORBIS:
+      sct = SCT_VORBIS;
+      break;
+
+    case CODEC_ID_MPEG2VIDEO:
+      sct = SCT_MPEG2VIDEO;
+      break;
+
+    case CODEC_ID_MPEG4:
+      sct = SCT_MPEG4VIDEO;
+      break;
+
+   case CODEC_ID_VP8:
+      sct = SCT_VP8;
+      break;
+
+   case CODEC_ID_H264:
+      sct = SCT_H264;
+      break;
+
+    default:
+      sct = SCT_NONE;
+      break;
+    }
+
+    if(sct == SCT_NONE)
+      continue;
+
+    name = streaming_component_type2txt(sct);
+    htsmsg_add_str(array, NULL, name);
+  }
+
+  return 0;
+}
