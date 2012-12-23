@@ -482,10 +482,7 @@ tda_add(int adapter_num)
     free(tda);
     return;
   }
-  if (tda->tda_idlescan || !tda->tda_idleclose)
-    tda->tda_fe_fd = fe;
-  else
-    close(fe);
+  tda->tda_fe_fd = fe;
 
   tda->tda_type = tda->tda_fe_info->type;
 
@@ -709,6 +706,10 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
 
   TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
     tda_init_input(tda);
+    if (tda->tda_idlescan || !tda->tda_idleclose) {
+      close(tda->tda_fe_fd);
+      tda->tda_fe_fd = -1;
+    }
 
     if(tda->tda_sat)
       dvb_satconf_init(tda);

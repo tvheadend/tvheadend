@@ -380,7 +380,7 @@ makedirs ( const char *inpath, int mode )
 int
 rmtree ( const char *path )
 {
-  int err;
+  int err = 0;
   struct dirent de, *der;
   struct stat st;
   char buf[512];

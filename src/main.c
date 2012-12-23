@@ -78,6 +78,20 @@ int webui_port;
 int htsp_port;
 int htsp_port_extra;
 char *tvheadend_cwd;
+const char *tvheadend_webroot;
+
+const char *tvheadend_capabilities[] = {
+#if ENABLE_CWC
+  "cwc",
+#endif
+#if ENABLE_V4L
+  "v4l",
+#endif
+#if ENABLE_LINUXDVB
+  "linuxdvb",
+#endif
+  NULL
+};
 
 static void
 handle_sigpipe(int x)
@@ -190,6 +204,7 @@ usage(const char *argv0)
   printf(" -s              Log debug to syslog\n");
   printf(" -w <portnumber> WebUI access port [default 9981]\n");
   printf(" -e <portnumber> HTSP access port [default 9982]\n");
+  printf(" -W <path>       WebUI context path [default /]\n");
   printf("\n");
   printf("Development options\n");
   printf("\n");
@@ -263,7 +278,9 @@ main(int argc, char **argv)
   sigset_t set;
   const char *homedir;
   const char *rawts_input = NULL;
+#if ENABLE_LINUXDVB
   const char *dvb_rawts_input = NULL;
+#endif
   const char *join_transport = NULL;
   const char *confpath = NULL;
   char *p, *endp;
@@ -283,7 +300,7 @@ main(int argc, char **argv)
   // make sure the timezone is set
   tzset();
 
-  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:sw:e:E:R:")) != -1) {
+  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:sw:e:E:R:W:")) != -1) {
     switch(c) {
     case 'a':
       adapter_mask = 0x0;
@@ -344,11 +361,16 @@ main(int argc, char **argv)
     case 'r':
       rawts_input = optarg;
       break;
+#if ENABLE_LINUXDVB
     case 'R':
       dvb_rawts_input = optarg;
       break;
+#endif
     case 'j':
       join_transport = optarg;
+      break;
+    case 'W':
+      tvheadend_webroot = optarg;
       break;
     default:
       usage(argv[0]);
@@ -434,8 +456,6 @@ main(int argc, char **argv)
 
   config_init();
 
-  muxes_init();
-
   service_init();
 
   channels_init();
@@ -444,9 +464,8 @@ main(int argc, char **argv)
 
   access_init(createdefault);
 
-  tcp_server_init();
-
 #if ENABLE_LINUXDVB
+  muxes_init();
   dvb_init(adapter_mask, dvb_rawts_input);
 #endif
 
@@ -460,15 +479,19 @@ main(int argc, char **argv)
   transcoder_init();
 #endif
 
+  tcp_server_init();
   http_server_init();
-
   webui_init();
 
   serviceprobe_init();
 
+#if ENABLE_CWC
   cwc_init();
-
   capmt_init();
+#if (!ENABLE_DVBCSA)
+  ffdecsa_init();
+#endif
+#endif
 
   epggrab_init();
   epg_init();
@@ -476,10 +499,6 @@ main(int argc, char **argv)
   dvr_init();
 
   htsp_init();
-
-#if (!ENABLE_DVBCSA)
-  ffdecsa_init();
-#endif
 
   if(rawts_input != NULL)
     rawts_init(rawts_input);

@@ -534,7 +534,9 @@ static int
 dvb_ca_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		uint8_t tableid, void *opaque)
 {
+#if ENABLE_CWC
   cwc_emm(ptr, len, (uintptr_t)opaque, (void *)tdmi);
+#endif
   return 0;
 }
 
