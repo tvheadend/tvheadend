@@ -141,6 +141,7 @@ timeshift_file_t *timeshift_filemgr_next
   ( timeshift_file_t *ts, int *end, int keep );
 void timeshift_filemgr_remove
   ( timeshift_t *ts, timeshift_file_t *tsf, int force );
+void timeshift_filemgr_flush ( timeshift_t *ts, timeshift_file_t *end );
 void timeshift_filemgr_close ( timeshift_file_t *tsf );
 
 #endif /* __TVH_TIMESHIFT_PRIVATE_H__ */
