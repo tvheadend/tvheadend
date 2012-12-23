@@ -64,7 +64,6 @@ void timeshift_init ( void )
 
   /* Load settings */
   if ((m = hts_settings_load("timeshift/config"))) {
-  htsmsg_print(m);
     if (!htsmsg_get_u32(m, "enabled", &u32))
       timeshift_enabled = u32 ? 1 : 0;
     if (!htsmsg_get_u32(m, "ondemand", &u32))
