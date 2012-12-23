@@ -1251,7 +1251,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   normts = htsmsg_get_u32_or_default(in, "normts", 0);
 
 #if ENABLE_LIBAV
-  max_resolution = htsmsg_get_u32_or_default(in, "maxWidth", 0);
+  max_resolution = htsmsg_get_u32_or_default(in, "maxResolution", 0);
   vcodec = streaming_component_txt2type(htsmsg_get_str(in, "videoCodec"));
   acodec = streaming_component_txt2type(htsmsg_get_str(in, "audioCodec"));
   scodec = streaming_component_txt2type(htsmsg_get_str(in, "subtitleCodec"));
