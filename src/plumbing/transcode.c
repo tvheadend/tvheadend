@@ -1112,7 +1112,7 @@ transcoder_init(void)
 
 
 int
-transcoder_get_codecs(htsmsg_t *array)
+transcoder_get_encoders(htsmsg_t *array)
 {
   AVCodec *p = NULL;
   const char *name;

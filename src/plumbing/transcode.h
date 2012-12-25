@@ -30,4 +30,4 @@ void transcoder_set_network_speed(streaming_target_t *st, int speed);
 void transcoder_destroy(streaming_target_t *gh);
 void transcoder_init(void);
 
-int  transcoder_get_codecs(htsmsg_t *array);
+int  transcoder_get_encoders(htsmsg_t *array);

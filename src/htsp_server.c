@@ -1506,6 +1506,28 @@ htsp_method_file_seek(htsp_connection_t *htsp, htsmsg_t *in)
   return rep;
 }
 
+
+#if ENABLE_TRANSCODING
+/**
+ *
+ */
+static htsmsg_t *
+htsp_method_getCodecs(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *out, *l;
+
+  l = htsmsg_create_list();
+  transcoder_get_encoders(l);
+
+  out = htsmsg_create_map();
+  
+  htsmsg_add_msg(out, "encoders", l);
+
+  return out;
+}
+#endif
+
+
 /**
  * HTSP methods
  */
@@ -1523,6 +1545,9 @@ struct {
   { "getEvents",                htsp_method_getEvents,      ACCESS_STREAMING},
   { "epgQuery",                 htsp_method_epgQuery,       ACCESS_STREAMING},
   { "getEpgObject",             htsp_method_getEpgObject,   ACCESS_STREAMING},
+#if ENABLE_TRANSCODING
+  { "getCodecs",                htsp_method_getCodecs,      ACCESS_STREAMING},
+#endif
   { "addDvrEntry",              htsp_method_addDvrEntry,    ACCESS_RECORDER},
   { "updateDvrEntry",           htsp_method_updateDvrEntry, ACCESS_RECORDER},
   { "cancelDvrEntry",           htsp_method_cancelDvrEntry, ACCESS_RECORDER},
