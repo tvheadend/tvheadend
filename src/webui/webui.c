@@ -655,7 +655,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   size_t qsize;
   const char *name;
 
-#if ENABLE_LIBAV
+#if ENABLE_TRANSCODING
   streaming_target_t *tr;
   int transcode;
   int resolution;
@@ -695,7 +695,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   } else {
     streaming_queue_init2(&sq, 0, qsize);
     gh = globalheaders_create(&sq.sq_st);
-#if ENABLE_LIBAV
+#if ENABLE_TRANSCODING
     if(transcode) {
       tr = transcoder_create(gh, resolution, vcodec, acodec, scodec);
       tsfix = tsfix_create(tr);
@@ -722,7 +722,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   if(gh)
     globalheaders_destroy(gh);
 
-#if ENABLE_LIBAV
+#if ENABLE_TRANSCODING
   if(tr)
     transcoder_destroy(tr);
 #endif

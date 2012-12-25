@@ -24,6 +24,7 @@ OPTIONS=(
   "zlib:auto"
   "bundle:no"
   "libav:auto"
+  "transcoding:auto"
   "dvbcsa:no"
 )
 
@@ -123,6 +124,17 @@ if enabled_or_auto libav; then
     enable libav
   elif enabled libav; then
     die "libav development support not found (use --disable-libav)"
+  fi
+fi
+
+#
+# transcoding
+#
+if enabled_or_auto transcoding; then
+  if $has_libav; then
+    enable transcoding
+  elif enabled transcoding; then
+    die "transcoding require libav (use --disable-transcoding)"
   fi
 fi
 

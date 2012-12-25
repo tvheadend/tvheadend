@@ -84,6 +84,9 @@ const char *tvheadend_capabilities[] = {
 #if ENABLE_CWC
   "cwc",
 #endif
+#if ENABLE_TRANSCODING
+  "transcoding",
+#endif
 #if ENABLE_V4L
   "v4l",
 #endif
@@ -475,7 +478,7 @@ main(int argc, char **argv)
   v4l_init();
 #endif
 
-#if ENABLE_LIBAV
+#if ENABLE_TRANSCODING
   transcoder_init();
 #endif
 

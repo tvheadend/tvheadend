@@ -42,8 +42,7 @@
 #include "htsmsg_binary.h"
 #include "epg.h"
 #include "plumbing/tsfix.h"
-
-#if ENABLE_LIBAV
+#if ENABLE_TRANSCODING
 #include "plumbing/transcode.h"
 #endif
 
@@ -173,7 +172,7 @@ typedef struct htsp_subscription {
   streaming_target_t hs_input;
   streaming_target_t *hs_tsfix;
 
-#if ENABLE_LIBAV
+#if ENABLE_TRANSCODING
   streaming_target_t *hs_transcoder;
 #endif
 
@@ -282,7 +281,7 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
     tsfix_destroy(hs->hs_tsfix);
   htsp_flush_queue(htsp, &hs->hs_q);
 
-#if ENABLE_LIBAV
+#if ENABLE_TRANSCODING
   if(hs->hs_transcoder != NULL)
     transcoder_destroy(hs->hs_transcoder);
 #endif
@@ -706,10 +705,6 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Capabilities */
   l = htsmsg_create_list();
-
-#if ENABLE_LIBAV
-  transcoder_get_codecs(l);
-#endif
 
   while (tvheadend_capabilities[i]) {
     htsmsg_add_str(l, NULL, tvheadend_capabilities[i]);
@@ -1226,7 +1221,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   uint32_t chid, sid, weight, req90khz, normts;
   channel_t *ch;
   htsp_subscription_t *hs;
-#if ENABLE_LIBAV
+#if ENABLE_TRANSCODING
   uint32_t max_resolution;
   streaming_component_type_t acodec, vcodec, scodec;
 #endif
@@ -1250,7 +1245,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   req90khz = htsmsg_get_u32_or_default(in, "90khz", 0);
   normts = htsmsg_get_u32_or_default(in, "normts", 0);
 
-#if ENABLE_LIBAV
+#if ENABLE_TRANSCODING
   max_resolution = htsmsg_get_u32_or_default(in, "maxResolution", 0);
   vcodec = streaming_component_txt2type(htsmsg_get_str(in, "videoCodec"));
   acodec = streaming_component_txt2type(htsmsg_get_str(in, "audioCodec"));
@@ -1289,7 +1284,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 
   streaming_target_t *st = &hs->hs_input;
 
-#if ENABLE_LIBAV
+#if ENABLE_TRANSCODING
   if(max_resolution) {
     hs->hs_transcoder = transcoder_create(st, 
 					  max_resolution,
