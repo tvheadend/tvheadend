@@ -668,15 +668,25 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
 
     goto cleanup;
   }
-  
-  n = pkt_alloc(out, length, ts->enc_frame->pkt_pts, ts->enc_frame->pkt_dts);
 
-  if(ts->enc_frame->pict_type == AV_PICTURE_TYPE_I)
+  if(!ts->tctx->coded_frame)
+    goto cleanup;
+
+  n = pkt_alloc(out, length, ts->tctx->coded_frame->pkt_pts, ts->tctx->coded_frame->pkt_dts);
+
+  switch(ts->tctx->coded_frame->pict_type) {
+  case AV_PICTURE_TYPE_I:
     n->pkt_frametype = PKT_I_FRAME;
-  else if(ts->enc_frame->pict_type == AV_PICTURE_TYPE_P)
+    break;
+  case AV_PICTURE_TYPE_P:
     n->pkt_frametype = PKT_P_FRAME;
-  else if(ts->enc_frame->pict_type == AV_PICTURE_TYPE_B)
+    break;
+  case AV_PICTURE_TYPE_B:
     n->pkt_frametype = PKT_B_FRAME;
+    break;
+  default:
+    break;
+  }
 
   n->pkt_duration = pkt->pkt_duration;
 
