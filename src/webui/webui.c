@@ -527,6 +527,8 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
     r = http_tag_list_playlist(hc);
   else if(!strcmp(components[0], "channels"))
     r = http_channel_list_playlist(hc);
+  else if(!strcmp(components[0], "channels.m3u"))
+    r = http_channel_list_playlist(hc);
   else if(!strcmp(components[0], "recordings"))
     r = http_dvr_list_playlist(hc);
   else {
