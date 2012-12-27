@@ -247,6 +247,8 @@ void dvr_config_delete(const char *name);
 
 void dvr_entry_notify(dvr_entry_t *de);
 
+void dvr_entry_save(dvr_entry_t *de);
+
 const char *dvr_entry_status(dvr_entry_t *de);
 
 const char *dvr_entry_schedstatus(dvr_entry_t *de);
