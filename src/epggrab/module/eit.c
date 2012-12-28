@@ -494,20 +494,21 @@ static int _eit_desc_crid
  * Parse description and extract episode number.
  */
 static int _eit_extract_enum
-  ( epg_episode_t *episode, lang_str_t *text, epggrab_module_t *mod )
+  ( epg_episode_t *episode, lang_str_t *text, const char *keyword, 
+    epggrab_module_t *mod )
 {
     int save = 0;
     char *pos = 0;
-    const char *prefix = "Odcinek:";
 
     /* NOTE: Only first available language is checked. */
-    if ((pos = strstr(lang_str_get(text, NULL), prefix)) != 0) {
+    if (keyword && *keyword &&
+        (pos = strstr(lang_str_get(text, NULL), keyword)) != 0) {
         char *start, *end;
         char buf[16];
         epg_episode_num_t epnum;
         memset(&epnum, 0, sizeof(epnum));
 
-        pos += strlen(prefix);
+        pos += strlen(keyword);
         /* find first digit */
         while (*pos && !(*pos >= '0' && *pos <= '9')) pos++;
         start = pos;
@@ -664,10 +665,12 @@ static int _eit_process_event
   /* Update Episode */
   if (ee) {
     *save |= epg_episode_set_is_bw(ee, ev.bw, mod);
+    if ( ev.title )
+      *save |= _eit_extract_enum(ee, ev.title, svc->s_dvb_eit_keyword, mod);
     if ( ev.summary )
-      *save |= _eit_extract_enum(ee, ev.summary, mod);
+      *save |= _eit_extract_enum(ee, ev.summary, svc->s_dvb_eit_keyword, mod);
     if ( ev.desc )
-      *save |= _eit_extract_enum(ee, ev.desc, mod);
+      *save |= _eit_extract_enum(ee, ev.desc, svc->s_dvb_eit_keyword, mod);
     if ( ev.title )
       *save |= epg_episode_set_title2(ee, ev.title, mod);
     if ( ev.genre )
