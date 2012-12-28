@@ -32,7 +32,7 @@ CFLAGS  += -Wmissing-prototypes -fms-extensions
 CFLAGS  += -g -funsigned-char -O2 
 CFLAGS  += -D_FILE_OFFSET_BITS=64
 CFLAGS  += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR}
-LDFLAGS += -lrt -ldl -lpthread
+LDFLAGS += -lrt -ldl -lpthread -lm
 
 #
 # Other config
@@ -88,12 +88,14 @@ SRCS =  src/main.c \
 	src/parser_latm.c \
 	src/tsdemux.c \
 	src/bitstream.c \
-	src/htsp.c \
+	src/htsp_server.c \
 	src/serviceprobe.c \
 	src/htsmsg.c \
 	src/htsmsg_binary.c \
 	src/htsmsg_json.c \
 	src/htsmsg_xml.c \
+	src/misc/dbl.c \
+	src/misc/json.c \
 	src/settings.c \
 	src/htsbuf.c \
 	src/trap.c \
@@ -104,16 +106,16 @@ SRCS =  src/main.c \
 	src/avc.c \
   src/huffman.c \
   src/filebundle.c \
-  src/muxes.c \
   src/config2.c \
   src/lang_codes.c \
   src/lang_str.c \
 
 SRCS += src/epggrab/module.c\
   src/epggrab/channel.c\
-  src/epggrab/otamux.c\
   src/epggrab/module/pyepg.c\
   src/epggrab/module/xmltv.c\
+
+SRCS-$(CONFIG_LINUXDVB) += src/epggrab/otamux.c\
   src/epggrab/module/eit.c \
   src/epggrab/module/opentv.c \
   src/epggrab/support/freesat_huffman.c \
@@ -152,30 +154,37 @@ SRCS-${CONFIG_LINUXDVB} += \
 	src/dvb/diseqc.c \
 	src/dvb/dvb_adapter.c \
 	src/dvb/dvb_multiplex.c \
-	src/dvb/dvb_transport.c \
+	src/dvb/dvb_service.c \
 	src/dvb/dvb_preconf.c \
 	src/dvb/dvb_satconf.c \
+	src/dvb/dvb_input_filtered.c \
+	src/dvb/dvb_input_raw.c \
 	src/webui/extjs_dvb.c \
+	src/muxes.c \
 
 # V4L
 SRCS-${CONFIG_V4L} += \
 	src/v4l.c \
 	src/webui/extjs_v4l.c \
 
-# CWC
-SRCS-${CONFIG_CWC} += src/cwc.c \
-	src/capmt.c \
-	src/ffdecsa/ffdecsa_interface.c \
-	src/ffdecsa/ffdecsa_int.c
-
 # Avahi
 SRCS-$(CONFIG_AVAHI) += src/avahi.c
 
-# Optimised code
+# CWC
+SRCS-${CONFIG_CWC} += src/cwc.c \
+	src/capmt.c
+
+# FFdecsa
+ifneq ($(CONFIG_DVBCSA),yes)
+SRCS-${CONFIG_CWC}  += src/ffdecsa/ffdecsa_interface.c \
+	src/ffdecsa/ffdecsa_int.c
+ifeq ($(CONFIG_CWC),yes)
 SRCS-${CONFIG_MMX}  += src/ffdecsa/ffdecsa_mmx.c
 SRCS-${CONFIG_SSE2} += src/ffdecsa/ffdecsa_sse2.c
+endif
 ${BUILDDIR}/src/ffdecsa/ffdecsa_mmx.o  : CFLAGS += -mmmx
 ${BUILDDIR}/src/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
+endif
 
 # File bundles
 SRCS-${CONFIG_BUNDLE}     += bundle.c

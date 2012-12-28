@@ -198,6 +198,7 @@ serviceprobe_thread(void *aux)
           case ST_EX_SDTV:
           case ST_DN_SDTV:
           case ST_SK_SDTV:
+          case ST_NE_SDTV:
             str = "SDTV";
             break;
           case ST_HDTV:

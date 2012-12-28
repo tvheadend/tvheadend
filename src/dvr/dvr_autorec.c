@@ -38,12 +38,14 @@ dtable_t *autorec_dt;
 
 TAILQ_HEAD(dvr_autorec_entry_queue, dvr_autorec_entry);
 
+static int dvr_autorec_in_init = 0;
+
 struct dvr_autorec_entry_queue autorec_entries;
 
-static void dvr_autorec_changed(dvr_autorec_entry_t *dae);
+static void dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge);
 
 /**
- *
+ * Unlink - and remove any unstarted
  */
 static void
 dvr_autorec_purge_spawns(dvr_autorec_entry_t *dae)
@@ -53,7 +55,10 @@ dvr_autorec_purge_spawns(dvr_autorec_entry_t *dae)
   while((de = LIST_FIRST(&dae->dae_spawns)) != NULL) {
     LIST_REMOVE(de, de_autorec_link);
     de->de_autorec = NULL;
-    dvr_entry_cancel(de);
+    if (de->de_sched_state == DVR_SCHEDULED)
+      dvr_entry_cancel(de);
+    else
+      dvr_entry_save(de);
   }
 }
 
@@ -422,7 +427,8 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
     if (dae->dae_serieslink)
       dae->dae_serieslink->getref(dae->dae_serieslink);
   }
-  dvr_autorec_changed(dae);
+  if (!dvr_autorec_in_init)
+    dvr_autorec_changed(dae, 1);
 
   return autorec_record_build(dae);
 }
@@ -465,7 +471,18 @@ dvr_autorec_init(void)
 {
   TAILQ_INIT(&autorec_entries);
   autorec_dt = dtable_create(&autorec_dtc, "autorec", NULL);
+  dvr_autorec_in_init = 1;
   dtable_load(autorec_dt);
+  dvr_autorec_in_init = 0;
+}
+
+void
+dvr_autorec_update(void)
+{
+  dvr_autorec_entry_t *dae;
+  TAILQ_FOREACH(dae, &autorec_entries, dae_link) {
+    dvr_autorec_changed(dae, 0);
+  }
 }
 
 static void
@@ -523,7 +540,7 @@ _dvr_autorec_add(const char *config_name,
 
   notify_reload("autorec");
 
-  dvr_autorec_changed(dae);
+  dvr_autorec_changed(dae, 1);
 }
 
 void
@@ -562,14 +579,10 @@ void
 dvr_autorec_check_event(epg_broadcast_t *e)
 {
   dvr_autorec_entry_t *dae;
-  dvr_entry_t *existingde;
 
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
-    if(autorec_cmp(dae, e)) {
-      existingde = dvr_entry_find_by_event_fuzzy(e);
-      if (existingde == NULL)
-        dvr_entry_create_by_autorec(e, dae);
-    }
+    if(autorec_cmp(dae, e))
+      dvr_entry_create_by_autorec(e, dae);
   // Note: no longer updating event here as it will be done from EPG
   //       anyway
 }
@@ -596,12 +609,13 @@ void dvr_autorec_check_serieslink(epg_serieslink_t *s)
  *
  */
 static void
-dvr_autorec_changed(dvr_autorec_entry_t *dae)
+dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge)
 {
   channel_t *ch;
   epg_broadcast_t *e;
 
-  dvr_autorec_purge_spawns(dae);
+  if (purge)
+    dvr_autorec_purge_spawns(dae);
 
   RB_FOREACH(ch, &channel_name_tree, ch_name_link) {
     RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {

@@ -83,23 +83,18 @@ hts_settings_init(const char *confpath)
 int
 hts_settings_makedirs ( const char *inpath )
 {
-  size_t x;
-  struct stat st;
+  size_t x = strlen(inpath) - 1;
   char path[512];
-  size_t l = strlen(inpath);
   strcpy(path, inpath);
-  for(x = 0; x < l; x++) {
-    if(path[x] == '/' && x != 0) {
+
+  while (x) {
+    if (path[x] == '/') {
       path[x] = 0;
-      if(stat(path, &st) && mkdir(path, 0700)) {
-	      tvhlog(LOG_ALERT, "settings", "Unable to create dir \"%s\": %s",
-	             path, strerror(errno));
-	      return -1;
-      }
-      path[x] = '/';
+      break;
     }
+    x--;
   }
-  return 0;
+  return makedirs(path, 0700);
 }
 
 /**
@@ -200,11 +195,13 @@ hts_settings_load_one(const char *filename)
   mem    = malloc(fb_size(fp)+1);
   n      = fb_read(fp, mem, fb_size(fp));
   if (n >= 0) mem[n] = 0;
-  fb_close(fp);
 
   /* Decode */
   if(n == fb_size(fp))
     r = htsmsg_json_deserialize(mem);
+
+  /* Close */
+  fb_close(fp);
   free(mem);
 
   return r;

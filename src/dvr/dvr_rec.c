@@ -87,9 +87,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
 
   de->de_s = subscription_create_from_channel(de->de_channel, weight,
 					      buf, st, flags,
-					      NULL, "DVR",
-					      lang_str_get(de->de_title,
-							   NULL));
+					      NULL, NULL, NULL);
 
   pthread_create(&de->de_thread, NULL, dvr_thread, de);
 }
@@ -116,55 +114,6 @@ dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
     globalheaders_destroy(de->de_gh);
 
   de->de_last_error = stopcode;
-}
-
-
-/**
- *
- */
-static int
-makedirs(const char *path)
-{
-  struct stat st;
-  char *p;
-  int l, r;
-
-  if(stat(path, &st) == 0 && S_ISDIR(st.st_mode)) 
-    return 0; /* Dir already there */
-
-  if(mkdir(path, 0777) == 0)
-    return 0; /* Dir created ok */
-
-  if(errno == ENOENT) {
-
-    /* Parent does not exist, try to create it */
-    /* Allocate new path buffer and strip off last directory component */
-
-    l = strlen(path);
-    p = alloca(l + 1);
-    memcpy(p, path, l);
-    p[l--] = 0;
-  
-    for(; l >= 0; l--)
-      if(p[l] == '/')
-	break;
-    if(l == 0) {
-      return ENOENT;
-    }
-    p[l] = 0;
-
-    if((r = makedirs(p)) != 0)
-      return r;
-  
-    /* Try again */
-    if(mkdir(path, 0777) == 0)
-      return 0; /* Dir created ok */
-  }
-  r = errno;
-
-  tvhlog(LOG_ERR, "dvr", "Unable to create directory \"%s\" -- %s",
-	 path, strerror(r));
-  return r;
 }
 
 
@@ -208,6 +157,11 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
 
   snprintf(path, sizeof(path), "%s", cfg->dvr_storage);
 
+  /* Remove trailing slash */
+
+  if (path[strlen(path)-1] == '/')
+    path[strlen(path)-1] = '\0';
+
   /* Append per-day directory */
 
   if(cfg->dvr_flags & DVR_DIR_PER_DAY) {
@@ -244,7 +198,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
 
 
   /* */
-  if(makedirs(path) != 0) {
+  if(makedirs(path, 0777) != 0) {
     return -1;
   }
   
@@ -319,7 +273,7 @@ dvr_rec_set_state(dvr_entry_t *de, dvr_rs_state_t newstate, int error)
 /**
  *
  */
-static void
+static int
 dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 {
   const source_info_t *si = &ss->ss_si;
@@ -327,31 +281,31 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   int i;
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
 
-  de->de_mux = muxer_create(de->de_s->ths_service, de->de_mc);
+  de->de_mux = muxer_create(de->de_mc);
   if(!de->de_mux) {
     dvr_rec_fatal_error(de, "Unable to create muxer");
-    return;
+    return -1;
   }
 
   if(pvr_generate_filename(de, ss) != 0) {
     dvr_rec_fatal_error(de, "Unable to create directories");
-    return;
+    return -1;
   }
 
   if(muxer_open_file(de->de_mux, de->de_filename)) {
     dvr_rec_fatal_error(de, "Unable to open file");
-    return;
+    return -1;
   }
 
   if(muxer_init(de->de_mux, ss, lang_str_get(de->de_title, NULL))) {
     dvr_rec_fatal_error(de, "Unable to init file");
-    return;
+    return -1;
   }
 
-  if(cfg->dvr_flags & DVR_TAG_FILES) {
+  if(cfg->dvr_flags & DVR_TAG_FILES && de->de_bcast) {
     if(muxer_write_meta(de->de_mux, de->de_bcast)) {
       dvr_rec_fatal_error(de, "Unable to write meta data");
-      return;
+      return -1;
     }
   }
 
@@ -368,25 +322,32 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 
 
   tvhlog(LOG_INFO, "dvr",
-	 " # %-20s %-4s %-16s %-10s %-10s",
+	 " #  %-16s  %-4s  %-10s  %-12s  %-11s  %-8s",
 	 "type",
 	 "lang",
 	 "resolution",
-	 "samplerate",
+	 "aspect ratio",
+	 "sample rate",
 	 "channels");
 
   for(i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
 
-    char res[16];
+    char res[11];
+    char asp[6];
     char sr[6];
     char ch[7];
 
     if(SCT_ISAUDIO(ssc->ssc_type)) {
-      snprintf(sr, sizeof(sr), "%d", sri_to_rate(ssc->ssc_sri));
+      if(ssc->ssc_sri)
+	snprintf(sr, sizeof(sr), "%d", sri_to_rate(ssc->ssc_sri));
+      else
+	strcpy(sr, "?");
 
       if(ssc->ssc_channels == 6)
 	snprintf(ch, sizeof(ch), "5.1");
+      else if(ssc->ssc_channels == 0)
+	strcpy(ch, "?");
       else
 	snprintf(ch, sizeof(ch), "%d", ssc->ssc_channels);
     } else {
@@ -394,24 +355,39 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
       ch[0] = 0;
     }
 
-
     if(SCT_ISVIDEO(ssc->ssc_type)) {
-      snprintf(res, sizeof(res), "%d x %d", 
-	       ssc->ssc_width, ssc->ssc_height);
+      if(ssc->ssc_width && ssc->ssc_height)
+	snprintf(res, sizeof(res), "%dx%d",
+		 ssc->ssc_width, ssc->ssc_height);
+      else
+	strcpy(res, "?");
     } else {
       res[0] = 0;
     }
 
+    if(SCT_ISVIDEO(ssc->ssc_type)) {
+      if(ssc->ssc_aspect_num &&  ssc->ssc_aspect_den)
+	snprintf(asp, sizeof(asp), "%d:%d",
+		 ssc->ssc_aspect_num, ssc->ssc_aspect_den);
+      else
+	strcpy(asp, "?");
+    } else {
+      asp[0] = 0;
+    }
+
     tvhlog(LOG_INFO, "dvr",
-	   "%2d %-20s %-4s %-16s %-10s %-10s %s",
+	   "%2d  %-16s  %-4s  %-10s  %-12s  %-11s  %-8s  %s",
 	   ssc->ssc_index,
 	   streaming_component_type2txt(ssc->ssc_type),
 	   ssc->ssc_lang,
 	   res,
+	   asp,
 	   sr,
 	   ch,
 	   ssc->ssc_disabled ? "<disabled, no valid input>" : "");
   }
+
+  return 0;
 }
 
 
@@ -425,6 +401,7 @@ dvr_thread(void *aux)
   streaming_queue_t *sq = &de->de_sq;
   streaming_message_t *sm;
   int run = 1;
+  int started = 0;
 
   pthread_mutex_lock(&sq->sq_mutex);
 
@@ -442,47 +419,64 @@ dvr_thread(void *aux)
     switch(sm->sm_type) {
     case SMT_MPEGTS:
     case SMT_PACKET:
-      if(dispatch_clock > de->de_start - (60 * de->de_start_extra)) {
+      if(started &&
+	 dispatch_clock > de->de_start - (60 * de->de_start_extra)) {
 	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
 
-	muxer_write_pkt(de->de_mux, sm->sm_data);
+	muxer_write_pkt(de->de_mux, sm->sm_type, sm->sm_data);
 	sm->sm_data = NULL;
       }
       break;
 
     case SMT_START:
-      pthread_mutex_lock(&global_lock);
-      dvr_rec_set_state(de, DVR_RS_WAIT_PROGRAM_START, 0);
-      dvr_rec_start(de, sm->sm_data);
-      pthread_mutex_unlock(&global_lock);
+      if(started &&
+	 muxer_reconfigure(de->de_mux, sm->sm_data) < 0) {
+	tvhlog(LOG_WARNING,
+	       "dvr", "Unable to reconfigure \"%s\"",
+	       de->de_filename ?: lang_str_get(de->de_title, NULL));
+
+	// Try to restart the recording if the muxer doesn't
+	// support reconfiguration of the streams.
+	dvr_thread_epilog(de);
+	started = 0;
+      }
+
+      if(!started) {
+	pthread_mutex_lock(&global_lock);
+	dvr_rec_set_state(de, DVR_RS_WAIT_PROGRAM_START, 0);
+	if(dvr_rec_start(de, sm->sm_data) == 0)
+	  started = 1;
+	pthread_mutex_unlock(&global_lock);
+      } 
       break;
 
     case SMT_STOP:
+       if(sm->sm_code == SM_CODE_SOURCE_RECONFIGURED) {
+	 // Subscription is restarting, wait for SMT_START
 
-      if(sm->sm_code == 0) {
-	/* Completed */
+       } else if(sm->sm_code == 0) {
+	 // Recording is completed
 
 	de->de_last_error = 0;
-
 	tvhlog(LOG_INFO, 
 	       "dvr", "Recording completed: \"%s\"",
 	       de->de_filename ?: lang_str_get(de->de_title, NULL));
 
-      } else if(sm->sm_code == SM_CODE_SOURCE_RECONFIGURED) {
-	muxer_reconfigure(de->de_mux, sm->sm_data);
-      } else {
+	dvr_thread_epilog(de);
+	started = 0;
 
-	if(de->de_last_error != sm->sm_code) {
-	  dvr_rec_set_state(de, DVR_RS_ERROR, sm->sm_code);
+      }else if(de->de_last_error != sm->sm_code) {
+	 // Error during recording
 
-	  tvhlog(LOG_ERR,
-		 "dvr", "Recording stopped: \"%s\": %s",
-		 de->de_filename ?: lang_str_get(de->de_title, NULL),
-		 streaming_code2txt(sm->sm_code));
-	}
+	 dvr_rec_set_state(de, DVR_RS_ERROR, sm->sm_code);
+	 tvhlog(LOG_ERR,
+		"dvr", "Recording stopped: \"%s\": %s",
+		de->de_filename ?: lang_str_get(de->de_title, NULL),
+		streaming_code2txt(sm->sm_code));
+
+	 dvr_thread_epilog(de);
+	 started = 0;
       }
-
-      dvr_thread_epilog(de);
       break;
 
     case SMT_SERVICE_STATUS:
@@ -533,6 +527,10 @@ dvr_thread(void *aux)
     pthread_mutex_lock(&sq->sq_mutex);
   }
   pthread_mutex_unlock(&sq->sq_mutex);
+
+  if(de->de_mux)
+    dvr_thread_epilog(de);
+
   return NULL;
 }
 

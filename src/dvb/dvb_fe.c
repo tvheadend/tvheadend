@@ -90,12 +90,15 @@ dvb_fe_monitor(void *aux)
 {
   th_dvb_adapter_t *tda = aux;
   fe_status_t fe_status;
-  int status, v, update = 0, vv, i, fec, q;
+  int status, v, vv, i, fec, q;
   th_dvb_mux_instance_t *tdmi = tda->tda_mux_current;
   char buf[50];
   signal_status_t sigstat;
   streaming_message_t sm;
   struct service *t;
+
+  int store = 0;
+  int notify = 0;
 
   gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 1);
 
@@ -133,7 +136,12 @@ dvb_fe_monitor(void *aux)
     /* Read FEC counter (delta) */
 
     fec = dvb_fe_get_unc(tda);
-    
+
+    if(tdmi->tdmi_unc != fec) {
+      tdmi->tdmi_unc = fec;
+      notify = 1;
+    }
+
     tdmi->tdmi_fec_err_histogram[tdmi->tdmi_fec_err_ptr++] = fec;
     if(tdmi->tdmi_fec_err_ptr == TDMI_FEC_ERR_HISTOGRAM_SIZE)
       tdmi->tdmi_fec_err_ptr = 0;
@@ -144,7 +152,13 @@ dvb_fe_monitor(void *aux)
 	v++;
       vv += tdmi->tdmi_fec_err_histogram[i];
     }
-    vv = vv / TDMI_FEC_ERR_HISTOGRAM_SIZE;
+
+    float avg = (float)vv / TDMI_FEC_ERR_HISTOGRAM_SIZE;
+
+    if(tdmi->tdmi_unc_avg != avg) {
+      tdmi->tdmi_unc_avg = avg;
+      notify = 1;
+    }
 
     if(v == 0) {
       status = TDMI_FE_OK;
@@ -154,27 +168,40 @@ dvb_fe_monitor(void *aux)
       status = TDMI_FE_CONSTANT_FEC;
     }
 
+    int v;
     /* bit error rate */
-    if(ioctl(tda->tda_fe_fd, FE_READ_BER, &tdmi->tdmi_ber) == -1)
-      tdmi->tdmi_ber = -2;
+    if(ioctl(tda->tda_fe_fd, FE_READ_BER, &v) != -1 && v != tdmi->tdmi_ber) {
+      tdmi->tdmi_ber = v;
+      notify = 1;
+    }
 
     /* signal strength */
-    if(ioctl(tda->tda_fe_fd, FE_READ_SIGNAL_STRENGTH, &tdmi->tdmi_signal) == -1)
-      tdmi->tdmi_signal = -2;
+    if(ioctl(tda->tda_fe_fd, FE_READ_SIGNAL_STRENGTH, &v) != -1 && v != tdmi->tdmi_signal) {
+      tdmi->tdmi_signal = v;
+      notify = 1;
+    }
 
     /* signal/noise ratio */
-    if(ioctl(tda->tda_fe_fd, FE_READ_SNR, &tdmi->tdmi_snr) == -1)
-      tdmi->tdmi_snr = -2;
+    if(tda->tda_snr_valid) {
+      if(ioctl(tda->tda_fe_fd, FE_READ_SNR, &v) != -1) {
+        float snr = v / 10.0;
+        if(tdmi->tdmi_snr != snr) {
+          tdmi->tdmi_snr = snr;
+          notify = 1;
+        }
+      }
+    }
   }
 
   if(status != tdmi->tdmi_fe_status) {
     tdmi->tdmi_fe_status = status;
 
     dvb_mux_nicename(buf, sizeof(buf), tdmi);
-    tvhlog(LOG_DEBUG, 
+    tvhlog(LOG_DEBUG,
 	   "dvb", "\"%s\" on adapter \"%s\", status changed to %s",
 	   buf, tda->tda_displayname, dvb_mux_status(tdmi));
-    update = 1;
+    store = 1;
+    notify = 1;
   }
 
   if(status != TDMI_FE_UNKNOWN) {
@@ -186,26 +213,43 @@ dvb_fe_monitor(void *aux)
     }
     if(q != tdmi->tdmi_quality) {
       tdmi->tdmi_quality = q;
-      update = 1;
+      store = 1;
+      notify = 1;
     }
-  } 
+  }
 
-  if(update) {
+  if(notify) {
     htsmsg_t *m = htsmsg_create_map();
-
     htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
     htsmsg_add_u32(m, "quality", tdmi->tdmi_quality);
+    htsmsg_add_u32(m, "signal", tdmi->tdmi_signal);
+
+    if(tda->tda_snr_valid)
+      htsmsg_add_dbl(m, "snr", tdmi->tdmi_snr);
+    htsmsg_add_u32(m, "ber", tdmi->tdmi_ber);
+    htsmsg_add_u32(m, "unc", tdmi->tdmi_unc);
     notify_by_msg("dvbMux", m);
 
-    dvb_mux_save(tdmi);
+    m = htsmsg_create_map();
+    htsmsg_add_str(m, "identifier", tda->tda_identifier);
+    htsmsg_add_u32(m, "signal", MIN(tdmi->tdmi_signal * 100 / 65535, 100));
+    if(tda->tda_snr_valid)
+      htsmsg_add_dbl(m, "snr", tdmi->tdmi_snr);
+    htsmsg_add_u32(m, "ber", tdmi->tdmi_ber);
+    htsmsg_add_u32(m, "unc", tdmi->tdmi_unc);
+    htsmsg_add_dbl(m, "uncavg", tdmi->tdmi_unc_avg);
+    notify_by_msg("tvAdapter", m);
   }
+
+  if(store)
+    dvb_mux_save(tdmi);
 
   /* Streaming message */
   sigstat.status_text = dvb_mux_status(tdmi);
   sigstat.snr         = tdmi->tdmi_snr;
   sigstat.signal      = tdmi->tdmi_signal;
   sigstat.ber         = tdmi->tdmi_ber;
-  sigstat.unc         = tdmi->tdmi_uncorrected_blocks;
+  sigstat.unc         = tdmi->tdmi_unc;
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
   LIST_FOREACH(t, &tda->tda_transports, s_active_link)
@@ -226,18 +270,10 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
+  lock_assert(&global_lock);
+
   assert(tdmi == tda->tda_mux_current);
   tda->tda_mux_current = NULL;
-
-  if(tda->tda_allpids_dmx_fd != -1) {
-    close(tda->tda_allpids_dmx_fd);
-    tda->tda_allpids_dmx_fd = -1;
-  }
-
-  if(tda->tda_dump_fd != -1) {
-    close(tda->tda_dump_fd);
-    tda->tda_dump_fd = -1;
-  }
 
   if(tdmi->tdmi_table_initial) {
     tdmi->tdmi_table_initial = 0;
@@ -262,79 +298,6 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune)
     dvb_adapter_stop(tda);
   }
 }
-
-
-/**
- * Open a dump file which we write the entire mux output to
- */
-static void
-dvb_adapter_open_dump_file(th_dvb_adapter_t *tda)
-{
-  struct dmx_pes_filter_params dmx_param;
-  char fullname[1000];
-  char path[500];
-  const char *fname = tda->tda_mux_current->tdmi_identifier;
-
-  int fd = tvh_open(tda->tda_demux_path, O_RDWR, 0);
-  if(fd == -1)
-    return;
-
-  memset(&dmx_param, 0, sizeof(dmx_param));
-  dmx_param.pid = 0x2000;
-  dmx_param.input = DMX_IN_FRONTEND;
-  dmx_param.output = DMX_OUT_TS_TAP;
-  dmx_param.pes_type = DMX_PES_OTHER;
-  dmx_param.flags = DMX_IMMEDIATE_START;
-  
-  if(ioctl(fd, DMX_SET_PES_FILTER, &dmx_param)) {
-    tvhlog(LOG_ERR, "dvb",
-	   "\"%s\" unable to configure demuxer \"%s\" for all PIDs -- %s",
-	   fname, tda->tda_demux_path, 
-	   strerror(errno));
-    close(fd);
-    return;
-  }
-
-  snprintf(path, sizeof(path), "%s/muxdumps", 
-      dvr_config_find_by_name_default("")->dvr_storage);
-
-  if(mkdir(path, 0777) && errno != EEXIST) {
-    tvhlog(LOG_ERR, "dvb", "\"%s\" unable to create mux dump dir %s -- %s",
-	   fname, path, strerror(errno));
-    close(fd);
-    return;
-  }
-
-  int attempt = 1;
-
-  while(1) {
-    struct stat st;
-    snprintf(fullname, sizeof(fullname), "%s/%s.dump%d.ts",
-	     path, fname, attempt);
-
-    if(stat(fullname, &st) == -1)
-      break;
-    
-    attempt++;
-  }
-  
-  int f = open(fullname, O_CREAT | O_TRUNC | O_WRONLY, 0777);
-
-  if(f == -1) {
-    tvhlog(LOG_ERR, "dvb", "\"%s\" unable to create mux dump file %s -- %s",
-	   fname, fullname, strerror(errno));
-    close(fd);
-    return;
-  }
-	   
-  tvhlog(LOG_WARNING, "dvb", "\"%s\" writing to mux dump file %s",
-	 fname, fullname);
-
-  tda->tda_allpids_dmx_fd = fd;
-  tda->tda_dump_fd = f;
-}
-
-
 
 #if DVB_API_VERSION >= 5
 
@@ -552,9 +515,6 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
   }   
 
   tda->tda_mux_current = tdmi;
-
-  if(tda->tda_dump_muxes)
-    dvb_adapter_open_dump_file(tda);
 
   gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 1);
 
