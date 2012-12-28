@@ -241,9 +241,9 @@ rtcp_send_rr(service_t *service)
     uint16_t buffer[2];
     uint32_t result;
   } join2;
-  join2.buffer[0] = rtcp_info->sequence_cycle;
-  join2.buffer[1] = rtcp_info->last_received_sequence;
-  report.last_seq = htonl(join2.result);
+  join2.buffer[0] = htons(rtcp_info->sequence_cycle);
+  join2.buffer[1] = htons(rtcp_info->last_received_sequence);
+  report.last_seq = join2.result;
   
   // We don't compute this for now
   report.fraction = 0;
