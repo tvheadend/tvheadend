@@ -383,6 +383,7 @@ rtcp_receiver_update(service_t *service, uint8_t *buffer)
   {
     ++info->sequence_cycle;
   }
+  info->last_received_sequence = new_sequence;
 
   union {
     uint8_t bytes[4];
