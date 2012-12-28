@@ -211,11 +211,11 @@ rtcp_send(iptv_rtcp_info_t *info, rtcp_t *packet)
   sbuf_put_byte(&buffer, byte);
   
   // Set the lost number in 3 times
-  byte = (report.lost & 0xf00) >> 16;
+  byte = (report.lost & 0xff0000) >> 16;
   sbuf_put_byte(&buffer, byte);
-  byte = report.lost & 0x0f0;
+  byte = (report.lost & 0x00ff00) >> 8;
   sbuf_put_byte(&buffer, byte);
-  byte = report.lost & 0x00f;
+  byte = report.lost & 0x0000ff;
   sbuf_put_byte(&buffer, byte);
   
   sbuf_append(&buffer, &report.last_seq, sizeof(report.last_seq));
