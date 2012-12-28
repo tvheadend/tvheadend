@@ -223,7 +223,7 @@ typedef struct streaming_skip
   } type;
   union {
     off_t   size;
-    time_t  time;
+    int64_t time;
   };
 } streaming_skip_t;
 
