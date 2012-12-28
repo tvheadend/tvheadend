@@ -241,7 +241,7 @@ void *timeshift_reader ( void *p )
   off_t cur_off = 0;
   int cur_speed = 100, keyframe_mode = 0;
   int64_t pause_time = 0, play_time = 0, last_time = 0;
-  int64_t now, deliver, skip;
+  int64_t now, deliver, skip_time;
   streaming_message_t *sm = NULL, *ctrl;
   timeshift_index_iframe_t *tsi = NULL;
 
@@ -260,10 +260,10 @@ void *timeshift_reader ( void *p )
       nfds = epoll_wait(efd, &ev, 1, wait);
     else
       nfds = 0;
-    wait = -1;
-    end  = 0;
-    skip = 0;
-    now  = getmonoclock();
+    wait      = -1;
+    end       = 0;
+    skip_time = 0;
+    now       = getmonoclock();
 
     /* Control */
     pthread_mutex_lock(&ts->state_mutex);
@@ -351,7 +351,7 @@ void *timeshift_reader ( void *p )
 
         /* Skip/Seek */
         } else if (ctrl->sm_type == SMT_SKIP) {
-          streaming_skip_t *skip = ctrl->sm_data;
+          // TODO: implement this
 
         /* Ignore */
         } else {
@@ -380,15 +380,15 @@ void *timeshift_reader ( void *p )
     if (!sm) {
 
       /* Rewind or Fast forward (i-frame only) */
-      if (skip || keyframe_mode) {
+      if (skip_time || keyframe_mode) {
         timeshift_file_t *tsf = NULL;
         time_t req_time;
 
         /* Time */
-        if (!skip)
+        if (!skip_time)
           req_time = last_time + ((cur_speed < 0) ? -1 : 1);
         else
-          req_time = skip;
+          req_time = skip_time;
 
         /* Find */
         end = _timeshift_skip(ts, req_time, last_time,
@@ -445,7 +445,7 @@ void *timeshift_reader ( void *p )
     }
 
     /* Deliver */
-    if (sm && (skip ||
+    if (sm && (skip_time ||
                (((cur_speed < 0) && (sm->sm_time >= deliver)) ||
                ((cur_speed > 0) && (sm->sm_time <= deliver))))) {
 
