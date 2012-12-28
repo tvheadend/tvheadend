@@ -27,6 +27,11 @@
 
 #include "iptv_input_rtsp.h"
 
+#ifdef UNDEF
+/*
+ Part of RFC 3350.
+ Used to send SDES data
+ */
 static char *
 rtp_write_sdes(char *b, u_int32_t src, int argc,
                rtcp_sdes_type_t type[], char *value[],
@@ -65,6 +70,7 @@ rtp_write_sdes(char *b, u_int32_t src, int argc,
 
   return b;
 }
+#endif
 
 /*
  * From RFC3350
@@ -274,6 +280,8 @@ rtcp_send_rr(service_t *service)
   
   // Send it
   rtcp_send(rtcp_info, &network_buffer);
+  
+  // TODO : send also the SDES CNAME packet
 }
 
 static int
@@ -404,9 +412,6 @@ rtcp_receiver_update(service_t *service, uint8_t *buffer)
   join4.bytes[3] = buffer[11];
   info->source_ssrc = ntohl(join4.n);
   
-  printf("Source %x (%d) : Sequence number is %x (%d)\r",
-         info->source_ssrc, info->source_ssrc, info->last_received_sequence, info->last_received_sequence);
-  
   time_t current_time = time(NULL);
   double interval = rtcp_interval(info->members, info->senders, 12, 0, info->average_packet_size, info->last_ts == 0);
   time_t next_report = info->last_ts + interval;
@@ -417,9 +422,7 @@ rtcp_receiver_update(service_t *service, uint8_t *buffer)
     
     // Re-schedule
     info->last_ts = current_time;
-    printf("Timer expired at %sInterval is %f\n", ctime(&current_time), interval);
   }
   
   return 0;
-  rtp_write_sdes(NULL, 0, 0, NULL, NULL, NULL);
 }
