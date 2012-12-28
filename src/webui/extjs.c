@@ -1540,6 +1540,7 @@ service_update(htsmsg_t *in)
   const char *id;
   const char *chname;
   const char *dvb_charset;
+  const char *dvb_eit_keyword;
 
   TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
     if((c = htsmsg_get_map_by_field(f)) == NULL ||
@@ -1563,6 +1564,9 @@ service_update(htsmsg_t *in)
 
     if(!htsmsg_get_u32(c, "dvb_eit_enable", &u32))
       service_set_dvb_eit_enable(t, u32);
+
+    if((dvb_eit_keyword = htsmsg_get_str(c, "dvb_eit_keyword")) != NULL)
+      service_set_dvb_eit_keyword(t, dvb_eit_keyword);
   }
 }
 
@@ -1648,6 +1652,9 @@ extjs_servicedetails(http_connection_t *hc,
     htsmsg_add_str(out, "dvb_charset", t->s_dvb_charset);
 
   htsmsg_add_u32(out, "dvb_eit_enable", t->s_dvb_eit_enable);
+
+  if(t->s_dvb_eit_keyword != NULL && *t->s_dvb_eit_keyword != 0)
+    htsmsg_add_str(out, "dvb_eit_keyword", t->s_dvb_eit_keyword);
 
   pthread_mutex_unlock(&global_lock);
 
@@ -1877,6 +1884,7 @@ extjs_service_update(htsmsg_t *in)
   const char *id;
   const char *chname;
   const char *dvb_charset;
+  const char *dvb_eit_keyword;
 
   TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
     if((c = htsmsg_get_map_by_field(f)) == NULL ||
@@ -1900,6 +1908,9 @@ extjs_service_update(htsmsg_t *in)
 
     if(!htsmsg_get_u32(c, "dvb_eit_enable", &u32))
       service_set_dvb_eit_enable(t, u32);
+
+    if((dvb_eit_keyword = htsmsg_get_str(c, "dvb_eit_keyword")) != NULL)
+      service_set_dvb_eit_keyword(t, dvb_eit_keyword);
   }
 }
 
