@@ -183,48 +183,51 @@ rtcp_interval(int members, int senders, double rtcp_bw, int we_sent, double avg_
 }
 
 static void
-rtcp_send(iptv_rtcp_info_t *info, rtcp_t *packet)
+rtcp_append_headers(sbuf_t *buffer, rtcp_t *packet)
 {
-  sbuf_t buffer;
-  sbuf_init(&buffer);
   packet->common.version = 2;
   packet->common.p = 0;
   
   uint8_t byte = 0;
-  
-  // We don't use sbuf_putbe32 since htonl is already called on our values
-  
-  // First append the header
   byte |= packet->common.version << 6;
   byte |= packet->common.p << 5;
   byte |= packet->common.count;
-  sbuf_put_byte(&buffer, byte);
+  sbuf_put_byte(buffer, byte);
   byte = packet->common.pt;
-  sbuf_put_byte(&buffer, byte);
-  sbuf_append(&buffer, &packet->common.length, sizeof(packet->common.length));
-  
-  // Now append the report
-  sbuf_append(&buffer, &packet->r.rr.ssrc, sizeof(packet->r.rr.ssrc));
+  sbuf_put_byte(buffer, byte);
+  sbuf_append(buffer, &packet->common.length, sizeof(packet->common.length));
+}
+
+static void
+rtcp_append_rr(sbuf_t *buffer, rtcp_t *packet)
+{
+  uint8_t byte = 0;
   rtcp_rr_t report = packet->r.rr.rr[0];
-  sbuf_append(&buffer, &report.ssrc, sizeof(report.ssrc));
+  
+  sbuf_append(buffer, &packet->r.rr.ssrc, sizeof(packet->r.rr.ssrc));
+  sbuf_append(buffer, &report.ssrc, sizeof(report.ssrc));
   byte = report.fraction;
-  sbuf_put_byte(&buffer, byte);
+  sbuf_put_byte(buffer, byte);
   
   // Set the lost number in 3 times
   byte = (report.lost & 0xff0000) >> 16;
-  sbuf_put_byte(&buffer, byte);
+  sbuf_put_byte(buffer, byte);
   byte = (report.lost & 0x00ff00) >> 8;
-  sbuf_put_byte(&buffer, byte);
+  sbuf_put_byte(buffer, byte);
   byte = report.lost & 0x0000ff;
-  sbuf_put_byte(&buffer, byte);
+  sbuf_put_byte(buffer, byte);
   
-  sbuf_append(&buffer, &report.last_seq, sizeof(report.last_seq));
-  sbuf_append(&buffer, &report.jitter, sizeof(report.jitter));
-  sbuf_append(&buffer, &report.lsr, sizeof(report.lsr));
-  sbuf_append(&buffer, &report.dlsr, sizeof(report.dlsr));
-  
+  sbuf_append(buffer, &report.last_seq, sizeof(report.last_seq));
+  sbuf_append(buffer, &report.jitter, sizeof(report.jitter));
+  sbuf_append(buffer, &report.lsr, sizeof(report.lsr));
+  sbuf_append(buffer, &report.dlsr, sizeof(report.dlsr));
+}
+
+static void
+rtcp_send(iptv_rtcp_info_t *info, sbuf_t *buffer)
+{
   // We don't care of the result right now
-  sendto(info->fd, buffer.sb_data, buffer.sb_ptr, 0, info->server_addr->ai_addr, info->server_addr->ai_addrlen);
+  sendto(info->fd, buffer->sb_data, buffer->sb_ptr, 0, info->server_addr->ai_addr, info->server_addr->ai_addrlen);
 }
 
 static void
@@ -263,8 +266,14 @@ rtcp_send_rr(service_t *service)
   packet.r.rr.ssrc = htonl(rtcp_info->my_ssrc);
   packet.r.rr.rr[0] = report;
   
+  // Build the network packet
+  sbuf_t network_buffer;
+  sbuf_init(&network_buffer);
+  rtcp_append_headers(&network_buffer, &packet);
+  rtcp_append_rr(&network_buffer, &packet);
+  
   // Send it
-  rtcp_send(rtcp_info, &packet);
+  rtcp_send(rtcp_info, &network_buffer);
 }
 
 static int
