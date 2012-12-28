@@ -54,13 +54,13 @@ void timeshift_init ( void )
   timeshift_filemgr_init();
 
   /* Defaults */
-  timeshift_enabled          = 0;                 // Disabled
-  timeshift_ondemand         = 0;                 // Permanent
-  timeshift_path             = NULL;              // DVR sub-dir
+  timeshift_enabled          = 0;                       // Disabled
+  timeshift_ondemand         = 0;                       // Permanent
+  timeshift_path             = NULL;                    // setting dir
   timeshift_unlimited_period = 0;
-  timeshift_max_period       = 3600;              // 1Hr
+  timeshift_max_period       = 3600;                    // 1Hr
   timeshift_unlimited_size   = 0;
-  timeshift_max_size         = 10000 * 1048576LL; // 10G
+  timeshift_max_size         = 10000 * (size_t)1048576; // 10G
 
   /* Load settings */
   if ((m = hts_settings_load("timeshift/config"))) {
