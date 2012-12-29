@@ -37,8 +37,6 @@ int dvr_iov_max;
 struct dvr_config_list dvrconfigs;
 struct dvr_entry_list dvrentries;
 
-static void dvr_entry_save(dvr_entry_t *de);
-
 static void dvr_timer_expire(void *aux);
 static void dvr_timer_start_recording(void *aux);
 
@@ -573,7 +571,7 @@ dvr_db_load(void)
 /**
  *
  */
-static void
+void
 dvr_entry_save(dvr_entry_t *de)
 {
   htsmsg_t *m = htsmsg_create_map();
