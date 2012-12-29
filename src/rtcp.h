@@ -147,6 +147,8 @@ typedef struct
 typedef struct iptv_rtcp_info {
   /* Last transmitted packet timestamp */
   time_t last_ts;
+  /* Next scheduled packet sending timestamp */
+  time_t next_ts;
   
   double average_packet_size;
   

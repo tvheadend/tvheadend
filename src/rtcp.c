@@ -350,6 +350,7 @@ rtcp_init(iptv_rtsp_info_t *rtsp_info)
 {
   iptv_rtcp_info_t *info = malloc(sizeof(iptv_rtcp_info_t));
   info->last_ts = 0;
+  info->next_ts = 0;
   info->members = 2;
   info->senders = 1;
   info->last_received_sequence = 0;
@@ -435,14 +436,14 @@ rtcp_receiver_update(service_t *service, uint8_t *buffer)
   info->source_ssrc = ntohl(join4.n);
   
   time_t current_time = time(NULL);
-  double interval = rtcp_interval(info->members, info->senders, 12, 0, info->average_packet_size, info->last_ts == 0);
-  time_t next_report = info->last_ts + interval;
-  if(next_report < current_time)
+  if(info->next_ts < current_time)
   {
     // Re-send
     rtcp_send_rr(service);
     
     // Re-schedule
+    double interval = rtcp_interval(info->members, info->senders, 12, 0, info->average_packet_size, info->last_ts == 0);
+    info->next_ts = current_time + interval;
     info->last_ts = current_time;
   }
   
