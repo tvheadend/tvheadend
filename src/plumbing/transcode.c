@@ -511,6 +511,7 @@ transcoder_stream_video(transcoder_stream_t *ts, th_pkt_t *pkt)
   if(ts->tctx->codec_id == CODEC_ID_NONE) {
  
     // Common settings
+    ts->tctx->gop_size = 25;
     ts->tctx->time_base.den = 25;
     ts->tctx->time_base.num = 1;
     ts->tctx->has_b_frames = ts->sctx->has_b_frames;
