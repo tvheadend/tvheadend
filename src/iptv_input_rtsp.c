@@ -309,6 +309,8 @@ iptv_rtsp_bind(iptv_rtsp_info_t* rtsp_info, int *fd, const char *service)
 {
   struct addrinfo hints;
   int bind_tries = 10;
+  // Init fd to avoid close errors.
+  *fd = -1;
   
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = AF_UNSPEC;  // use IPv4 or IPv6, whichever
@@ -323,7 +325,10 @@ iptv_rtsp_bind(iptv_rtsp_info_t* rtsp_info, int *fd, const char *service)
     getaddrinfo(NULL, service, &hints, &resolved_address);
     
     // We need to close the descriptor first, in case we are in the second iteration
-    close(*fd);
+    if(*fd > -1)
+    {
+        close(*fd);
+    }
 
     *fd = tvh_socket(resolved_address->ai_family, resolved_address->ai_socktype, resolved_address->ai_protocol);
 
