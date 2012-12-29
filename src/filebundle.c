@@ -493,7 +493,8 @@ ssize_t fb_read ( fb_file *fp, void *buf, size_t count )
     memcpy(buf, fp->buf + fp->pos, count);
     fp->pos += count;
   } else if (fp->type == FB_DIRECT) {
-    fp->pos += fread(buf, 1, count, fp->d.cur);
+    count = fread(buf, 1, count, fp->d.cur);
+    fp->pos += count;
   } else {
     count = MIN(count, fp->b.root->f.size - fp->pos);
     memcpy(buf, fp->b.root->f.data + fp->pos, count);
