@@ -353,6 +353,11 @@ iptv_rtsp_bind(iptv_rtsp_info_t* rtsp_info, int *fd, const char *service)
     // Get the bound port back
     getsockname(*fd, resolved_address->ai_addr, &resolved_address->ai_addrlen);
     
+    // Clean the previous address if existing
+    if(rtsp_info->client_addr != NULL)
+    {
+      freeaddrinfo(rtsp_info->client_addr);
+    }
     rtsp_info->client_addr = resolved_address;
 
     rtsp_info->client_port = tvh_get_port(resolved_address);
@@ -442,7 +447,7 @@ iptv_rtsp_start(const char *uri, int *fd)
   rtsp_info->curl = curl;
   rtsp_info->uri = uri;
   rtsp_info->client_addr = NULL;
-  rtsp_info->is_initialized = -1;
+  rtsp_info->is_initialized = 0;
   
   result = curl_easy_setopt(curl, CURLOPT_URL, uri);
   tvhlog(LOG_DEBUG, "IPTV", "cURL init : %d", result);
@@ -497,7 +502,7 @@ iptv_rtsp_start(const char *uri, int *fd)
   // Init RTCP
   rtcp_init(rtsp_info);
   
-  rtsp_info->is_initialized = 0;
+  rtsp_info->is_initialized = 1;
   return rtsp_info;
 }
 
