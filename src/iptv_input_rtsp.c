@@ -118,6 +118,9 @@ clean_header_list(curl_response_t *response)
   {
     header = LIST_FIRST(&response->header_head);
     LIST_REMOVE(header, next);
+    // Name and value should be freed, since they are init using strndup
+    free(header->name);
+    free(header->value);
     free(header);
   }
 
