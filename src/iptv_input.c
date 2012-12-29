@@ -122,7 +122,8 @@ iptv_ts_input(service_t *t, const uint8_t *tsb)
 static int
 is_rtsp(service_t *service)
 {
-  return strncmp(service->s_iptv_iface, "rtsp://", 7) == 0;
+  return service->s_iptv_rtsp_info != NULL
+        || strncmp(service->s_iptv_iface, "rtsp://", 7) == 0;
 }
 
 static int
@@ -623,6 +624,7 @@ iptv_service_find(const char *id, int create)
   t->s_grace_period  = iptv_grace_period;
   t->s_dtor          = iptv_service_dtor;
   t->s_iptv_fd = -1;
+  t->s_iptv_rtsp_info = NULL;
 
   LIST_INSERT_HEAD(&iptv_all_services, t, s_group_link);
 
