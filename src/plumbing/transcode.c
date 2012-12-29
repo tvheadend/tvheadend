@@ -222,9 +222,11 @@ transcoder_stream_create(streaming_component_type_t stype, streaming_component_t
   ts->tcodec = tcodec;
 
   ts->sctx = avcodec_alloc_context();
+  avcodec_get_context_defaults3(ts->sctx, scodec);
   ts->sctx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
 
   ts->tctx = avcodec_alloc_context();
+  avcodec_get_context_defaults3(ts->tctx, tcodec);
   ts->tctx->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
 
   if(SCT_ISVIDEO(stype)) {
