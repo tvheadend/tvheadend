@@ -394,8 +394,8 @@ rtcp_destroy(iptv_rtsp_info_t *rtsp_info)
   {
     close(info->fd);
   }
-  free(info);
   freeaddrinfo(info->server_addr);
+  free(info);
   rtsp_info->rtcp_info = NULL;
   return 0;
 }
