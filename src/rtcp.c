@@ -296,6 +296,9 @@ rtcp_send_rr(service_t *service)
   rtcp_send(rtcp_info, &network_buffer);
   
   // TODO : send also the SDES CNAME packet
+  
+  // Cleanup
+  sbuf_free(&network_buffer);
 }
 
 /*
