@@ -389,7 +389,7 @@ transcoder_stream_audio(transcoder_stream_t *ts, th_pkt_t *pkt)
       goto cleanup;
     }
 
-    ts->enc_pts = pkt->pkt_pts;
+    ts->enc_pts = 0;
   }
 
   frame_bytes = av_get_bytes_per_sample(ts->tctx->sample_fmt) * 
