@@ -166,9 +166,22 @@ typedef struct iptv_rtcp_info {
   uint32_t my_ssrc;
 } iptv_rtcp_info_t;
 
+/*
+ Init rtcp_info field of the rtsp_info.
+ Return 0 if everything was OK.
+ rtcp_destroy must be called when rtsp_info is destroyed.
+ */
 int rtcp_init(iptv_rtsp_info_t *);
+
+/*
+ Destroy rtcp_info field of rtsp_info.
+ */
 int rtcp_destroy(iptv_rtsp_info_t *);
 
+/*
+ Update RTCP informations.
+ It can also send a RTCP RR packet if the timer has expired.
+ */
 int rtcp_receiver_update(service_t *service, uint8_t *rtp_packet);
 #endif	/* IPTV_RTCP_H */
 

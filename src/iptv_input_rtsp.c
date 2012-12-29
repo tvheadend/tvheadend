@@ -33,7 +33,7 @@
 #include "tvheadend.h"
 #include "rtcp.h"
 
-/**
+/*
  * Define a simple header value with name and value, without ending \r\n
  * The response code isn't included, since curl keeps it as an internal value.
  */
@@ -44,7 +44,7 @@ typedef struct curl_header
   LIST_ENTRY(curl_header) next;
 } curl_header_t;
 
-/**
+/*
  * The whole response, with a linked-list for headers and a raw string for data.
  */
 typedef struct curl_response
@@ -53,7 +53,10 @@ typedef struct curl_response
   char *data;
 } curl_response_t;
 
-/* the function to invoke as the data recieved */
+/*
+ Function to invoke to store received data.
+ userp MUST be a curl_response_t.
+ */
 size_t static
 curl_data_write_func(void *buffer, size_t size, size_t nmemb, void *userp)
 {
@@ -65,6 +68,10 @@ curl_data_write_func(void *buffer, size_t size, size_t nmemb, void *userp)
   return size * nmemb;
 }
 
+/*
+ Function to invoke to store received headers.
+ userp MUST be a curl_response_t.
+ */
 size_t static
 curl_header_write_func(void *buffer, size_t size, size_t nmemb, void *userp)
 {
@@ -100,6 +107,9 @@ curl_header_write_func(void *buffer, size_t size, size_t nmemb, void *userp)
   return used;
 }
 
+/*
+ Destroy header in a response.
+ */
 static void
 clean_header_list(curl_response_t *response)
 {
@@ -113,6 +123,10 @@ clean_header_list(curl_response_t *response)
 
 }
 
+/*
+ Prepare cURL handle to receive headers and data and store them in a curl_response_t.
+ Headers are wiped from the buffer first.
+ */
 static void
 set_curl_result_buffer(CURL *curl, curl_response_t *buffer)
 {
@@ -137,7 +151,9 @@ set_curl_result_buffer(CURL *curl, curl_response_t *buffer)
 }
 
  
-/* send RTSP OPTIONS request */ 
+/*
+ send RTSP OPTIONS request
+ */ 
 static CURLcode
 rtsp_options(CURL *curl, const char *uri, curl_response_t *response)
 {
@@ -156,7 +172,9 @@ rtsp_options(CURL *curl, const char *uri, curl_response_t *response)
   return curl_easy_perform(curl);
 }
  
-/* send RTSP DESCRIBE request */ 
+/*
+ send RTSP DESCRIBE request
+ */ 
 static CURLcode
 rtsp_describe(CURL *curl, curl_response_t *response)
 {
@@ -170,7 +188,9 @@ rtsp_describe(CURL *curl, curl_response_t *response)
   return curl_easy_perform(curl);
 }
  
-/* send RTSP SETUP request */ 
+/*
+ send RTSP SETUP request
+ */ 
 static CURLcode
 rtsp_setup(CURL *curl, const char *uri, const char *transport, curl_response_t *response)
 {
@@ -195,7 +215,9 @@ rtsp_setup(CURL *curl, const char *uri, const char *transport, curl_response_t *
 }
  
  
-/* send RTSP PLAY request */ 
+/*
+ send RTSP PLAY request
+ */ 
 static CURLcode
 rtsp_play(CURL *curl, const char *uri, const char *range, curl_response_t *response)
 {
@@ -220,7 +242,9 @@ rtsp_play(CURL *curl, const char *uri, const char *range, curl_response_t *respo
 }
  
  
-/* send RTSP TEARDOWN request */ 
+/*
+ send RTSP TEARDOWN request
+ */ 
 static CURLcode
 rtsp_teardown(CURL *curl, const char *uri, curl_response_t *response)
 {
@@ -234,6 +258,9 @@ rtsp_teardown(CURL *curl, const char *uri, curl_response_t *response)
   return curl_easy_perform(curl);
 }
 
+/*
+ Init a cURL handle.
+ */
 static CURL*
 curl_init()
 {
@@ -245,6 +272,9 @@ curl_init()
   return curl;
 }
 
+/*
+ Init a curl_response_t
+ */
 static curl_response_t *
 create_response()
 {
@@ -253,6 +283,9 @@ create_response()
   return response;
 }
 
+/*
+ Destroy a curl_response_t
+ */
 static void
 destroy_response(curl_response_t *response)
 {
@@ -266,6 +299,11 @@ destroy_response(curl_response_t *response)
   response = NULL;
 }
 
+/*
+ Bind to the RTSP client port.
+ If not provided, this function iterates 10 times to find a free even port.
+ The availability of the corresponding odd port for RTCP (+ 1) is NOT checked, we just count on luck.
+ */
 static int
 iptv_rtsp_bind(iptv_rtsp_info_t* rtsp_info, int *fd, const char *service)
 {
@@ -320,6 +358,9 @@ iptv_rtsp_bind(iptv_rtsp_info_t* rtsp_info, int *fd, const char *service)
   return rtsp_info->client_port % 2 ? -1 : 0;
 }
 
+/*
+ This function is called after the RTSP SETUP, to check that the server send us the correct port.
+ */
 static int
 iptv_rtsp_check_client_port(iptv_rtsp_info_t* rtsp_info, int *fd)
 {
@@ -338,6 +379,10 @@ iptv_rtsp_check_client_port(iptv_rtsp_info_t* rtsp_info, int *fd)
   return result;
 }
 
+/*
+ Helper to find port specs in SDP response.
+ The port should be in data in the form : needleXXXXX- where XXXXX is the port.
+ */
 static int
 iptv_rtsp_parse_sdp_port(const char *data, const char *needle)
 {

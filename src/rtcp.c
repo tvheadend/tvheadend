@@ -188,6 +188,10 @@ rtcp_interval(int members, int senders, double rtcp_bw, int we_sent, double avg_
   return t;
 }
 
+/*
+ Append RTCP header data to the buffer.
+ Version and padding are set to fixed values, i.e. 2 and 0;
+ */
 static void
 rtcp_append_headers(sbuf_t *buffer, rtcp_t *packet)
 {
@@ -204,6 +208,9 @@ rtcp_append_headers(sbuf_t *buffer, rtcp_t *packet)
   sbuf_append(buffer, &packet->common.length, sizeof(packet->common.length));
 }
 
+/*
+ Append RTCP receiver report data to the buffer.
+ */
 static void
 rtcp_append_rr(sbuf_t *buffer, rtcp_t *packet)
 {
@@ -229,6 +236,9 @@ rtcp_append_rr(sbuf_t *buffer, rtcp_t *packet)
   sbuf_append(buffer, &report.dlsr, sizeof(report.dlsr));
 }
 
+/*
+ Just send the buffer to the host in the rtcp_info.
+ */
 static void
 rtcp_send(iptv_rtcp_info_t *info, sbuf_t *buffer)
 {
@@ -236,6 +246,10 @@ rtcp_send(iptv_rtcp_info_t *info, sbuf_t *buffer)
   sendto(info->fd, buffer->sb_data, buffer->sb_ptr, 0, info->server_addr->ai_addr, info->server_addr->ai_addrlen);
 }
 
+/*
+ Send a complete receiver report (RR).
+ It uses the actual informations stored in rtcp_info.
+ */
 static void
 rtcp_send_rr(service_t *service)
 {
@@ -284,6 +298,11 @@ rtcp_send_rr(service_t *service)
   // TODO : send also the SDES CNAME packet
 }
 
+/*
+ Open the RTCP socket for sending.
+ In our case, bind might be uneeded, but we never know if in the future, we may listen
+ to RTCP from sender.
+ */
 static int
 rtcp_bind(iptv_rtsp_info_t *rtsp_info)
 {
@@ -381,7 +400,7 @@ rtcp_destroy(iptv_rtsp_info_t *rtsp_info)
   return 0;
 }
 
-/**
+/*
  * Buffer is a raw RTP buffer
  */
 int
