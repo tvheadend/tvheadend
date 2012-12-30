@@ -180,6 +180,7 @@ const lang_code_t lang_codes[] = {
   { "gor", NULL, NULL , "Gorontalo" },
   { "got", NULL, NULL , "Gothic" },
   { "grb", NULL, NULL , "Grebo" },
+  { "gre", "el", NULL , "Greek" },
   { "grn", "gn", NULL , "Guarani" },
   { "gsw", NULL, NULL , "Swiss German; Alemannic; Alsatian" },
   { "guj", "gu", NULL , "Gujarati" },
