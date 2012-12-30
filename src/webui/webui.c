@@ -44,7 +44,7 @@
 #include "muxer.h"
 #include "dvb/dvb.h"
 #include "dvb/dvb_support.h"
-#include "iconserve.h"
+#include "imagecache.h"
 
 /**
  *
@@ -868,7 +868,47 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+/**
+ * Fetch image cache image
+ */
+/**
+ * Static download of a file from the filesystem
+ */
+static int
+page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
+{
+  uint32_t id;
+  int fd;
+  char buf[8192];
+  struct stat st;
+  ssize_t c;
 
+  if(remain == NULL)
+    return 404;
+
+  if(sscanf(remain, "%d", &id) != 1)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  if ((fd = imagecache_open(id)) < 0)
+    return 404;
+  if (fstat(fd, &st)) {
+    close(fd);
+    return 404;
+  }
+
+  http_send_header(hc, 200, NULL, st.st_size, 0, NULL, 10, 0, NULL);
+
+  while (1) {
+    c = read(fd, buf, sizeof(buf));
+    if (c <= 0)
+      break;
+    if (tvh_write(hc->hc_fd, buf, c))
+      break;
+  }
+  close(fd);
+
+  return 0;
+}
 
 /**
  *
@@ -910,7 +950,7 @@ webui_init(void)
 
   http_path_add("/stream",  NULL, http_stream,  ACCESS_STREAMING);
 
-  http_path_add("/channellogo", NULL, page_logo, ACCESS_ANONYMOUS);
+  http_path_add("/imagecache", NULL, page_imagecache, ACCESS_ANONYMOUS);
 
   webui_static_content("/static",        "src/webui/static");
   webui_static_content("/docs",          "docs/html");

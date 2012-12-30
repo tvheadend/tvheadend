@@ -39,6 +39,7 @@
 #include "notify.h"
 #include "dvr/dvr.h"
 #include "htsp_server.h"
+#include "imagecache.h"
 
 struct channel_tree channel_name_tree;
 static struct channel_tree channel_identifier_tree;
@@ -268,6 +269,7 @@ channel_load_one(htsmsg_t *c, int id)
   epggrab_channel_add(ch);
 
   tvh_str_update(&ch->ch_icon, htsmsg_get_str(c, "icon"));
+  imagecache_get_id(ch->ch_icon);
 
   htsmsg_get_s32(c, "dvr_extra_time_pre",  &ch->ch_dvr_extra_time_pre);
   htsmsg_get_s32(c, "dvr_extra_time_post", &ch->ch_dvr_extra_time_post);
@@ -452,6 +454,7 @@ channel_set_icon(channel_t *ch, const char *icon)
 
   free(ch->ch_icon);
   ch->ch_icon = strdup(icon);
+  imagecache_get_id(icon);
   channel_save(ch);
   htsp_channel_update(ch);
 }

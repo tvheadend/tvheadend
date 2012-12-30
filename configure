@@ -20,6 +20,7 @@ OPTIONS=(
   "v4l:yes"
   "linuxdvb:yes"
   "dvbscan:yes"
+  "imagecache:auto"
   "avahi:auto"
   "zlib:auto"
   "bundle:no"
@@ -126,7 +127,17 @@ if enabled cwc && enabled dvbcsa; then
   die "Failed to find dvbcsa support (use --disable-dvbcsa)"
   LDFLAGS="$LDFLAGS -ldvbcsa"
 fi
-  
+
+#
+# Icon caching
+#
+if enabled_or_auto imagecache; then
+  if check_pkg libcurl; then
+    enable imagecache
+  elif enabled imagecache; then
+    die "Libcurl support not found (use --disable-imagecache)"
+  fi  
+fi
 
 # ###########################################################################
 # Write config

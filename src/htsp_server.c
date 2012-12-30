@@ -42,8 +42,7 @@
 #include "htsmsg_binary.h"
 #include "epg.h"
 #include "plumbing/tsfix.h"
-#include "iconserve.h"
-#include "config2.h"
+#include "imagecache.h"
 
 #include <sys/statvfs.h>
 #include "settings.h"
@@ -434,7 +433,7 @@ htsp_file_destroy(htsp_file_t *hf)
  *
  */
 static htsmsg_t *
-htsp_build_channel(channel_t *ch, const char *method)
+htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
 {
   channel_tag_mapping_t *ctm;
   channel_tag_t *ct;
@@ -449,10 +448,26 @@ htsp_build_channel(channel_t *ch, const char *method)
   htsmsg_add_u32(out, "channelNumber", ch->ch_number);
 
   htsmsg_add_str(out, "channelName", ch->ch_name);
-
   if(ch->ch_icon != NULL) {
-    htsmsg_add_str(out, "channelIcon", logo_query(ch->ch_id, ch->ch_icon));
-  };
+    uint32_t id = imagecache_get_id(ch->ch_icon);
+    if (id) {
+      size_t p = 0;
+      char url[256];
+      if (htsp->htsp_version <= 7) {
+        strcpy(url, "http://");
+        p = 7;
+        inet_ntop(AF_INET, &(htsp->htsp_peer->sin_addr), url+p, sizeof(url)-p);
+        p = strlen(url);
+        p += snprintf(url+p, sizeof(url)-p, ":%hd", webui_port);
+      }
+      if (tvheadend_webroot)
+        p += snprintf(url+p, sizeof(url)-p, "%s", tvheadend_webroot);
+      snprintf(url+p, sizeof(url)-p, "/imagecache/%d", id);
+      htsmsg_add_str(out, "channelIcon", url);
+    } else {
+      htsmsg_add_str(out, "channelIcon", ch->ch_icon);
+    }
+  }
 
   now  = ch->ch_epg_now;
   next = ch->ch_epg_next;
@@ -802,7 +817,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   
   /* Send all channels */
   RB_FOREACH(ch, &channel_name_tree, ch_name_link)
-    htsp_send_message(htsp, htsp_build_channel(ch, "channelAdd"), NULL);
+    htsp_send_message(htsp, htsp_build_channel(ch, "channelAdd", htsp), NULL);
     
   /* Send all enabled and external tags (now with channel mappings) */
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
@@ -1880,12 +1895,20 @@ htsp_channel_update_current(channel_t *ch)
 /**
  * Called from channel.c when a new channel is created
  */
+static void
+_htsp_channel_update(channel_t *ch, const char *msg)
+{
+  htsp_connection_t *htsp;
+  LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link)
+    if (htsp->htsp_async_mode & HTSP_ASYNC_ON)
+      htsp_send_message(htsp, htsp_build_channel(ch, msg, htsp), NULL);
+}
+
 void
 htsp_channel_add(channel_t *ch)
 {
-  htsp_async_send(htsp_build_channel(ch, "channelAdd"), HTSP_ASYNC_ON);
+  _htsp_channel_update(ch, "channelAdd");
 }
-
 
 /**
  * Called from channel.c when a channel is updated
@@ -1893,9 +1916,8 @@ htsp_channel_add(channel_t *ch)
 void
 htsp_channel_update(channel_t *ch)
 {
-  htsp_async_send(htsp_build_channel(ch, "channelUpdate"), HTSP_ASYNC_ON);
+  _htsp_channel_update(ch, "channelUpdate");
 }
-
 
 /**
  * Called from channel.c when a channel is deleted

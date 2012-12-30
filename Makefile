@@ -32,7 +32,7 @@ CFLAGS  += -Wmissing-prototypes -fms-extensions
 CFLAGS  += -g -funsigned-char -O2 
 CFLAGS  += -D_FILE_OFFSET_BITS=64
 CFLAGS  += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR}
-LDFLAGS += -lrt -ldl -lpthread -lm -lcurl
+LDFLAGS += -lrt -ldl -lpthread -lm
 
 #
 # Other config
@@ -109,6 +109,7 @@ SRCS =  src/main.c \
   src/config2.c \
   src/lang_codes.c \
   src/lang_str.c \
+  src/imagecache.c
 
 SRCS += src/epggrab/module.c\
   src/epggrab/channel.c\
@@ -139,8 +140,6 @@ SRCS += src/webui/webui.c \
 SRCS += src/muxer.c \
 	src/muxer_pass.c \
 	src/muxer_tvh.c \
-
-SRCS += src/iconserve.c \
 
 #
 # Optional code

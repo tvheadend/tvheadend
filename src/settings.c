@@ -101,7 +101,7 @@ hts_settings_makedirs ( const char *inpath )
  *
  */
 static void
-hts_settings_buildpath
+_hts_settings_buildpath
   (char *dst, size_t dstsize, const char *fmt, va_list ap, const char *prefix)
 {
   char tmp[256];
@@ -118,6 +118,18 @@ hts_settings_buildpath
       *n = '_';
     n++;
   }
+}
+
+int
+hts_settings_buildpath
+  (char *dst, size_t dstsize, const char *fmt, ...)
+{
+  va_list va;
+  va_start(va, fmt);
+  if (!settingspath)
+    return 1;
+  _hts_settings_buildpath(dst, dstsize, fmt, va, settingspath);
+  return 0;
 }
 
 /**
@@ -139,7 +151,7 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
 
   /* Clean the path */
   va_start(ap, pathfmt);
-  hts_settings_buildpath(path, sizeof(path), pathfmt, ap, settingspath);
+  _hts_settings_buildpath(path, sizeof(path), pathfmt, ap, settingspath);
   va_end(ap);
 
   /* Create directories */
@@ -261,16 +273,16 @@ hts_settings_load(const char *pathfmt, ...)
 
   /* Try normal path */
   va_start(ap, pathfmt);
-  hts_settings_buildpath(fullpath, sizeof(fullpath), 
-                         pathfmt, ap, settingspath);
+  _hts_settings_buildpath(fullpath, sizeof(fullpath), 
+                          pathfmt, ap, settingspath);
   va_end(ap);
   ret = _hts_settings_load(fullpath);
 
   /* Try bundle path */
   if (!ret && *pathfmt != '/') {
     va_start(ap, pathfmt);
-    hts_settings_buildpath(fullpath, sizeof(fullpath),
-                           pathfmt, ap, "data/conf");
+    _hts_settings_buildpath(fullpath, sizeof(fullpath),
+                            pathfmt, ap, "data/conf");
     va_end(ap);
     ret = _hts_settings_load(fullpath);
   }
@@ -289,7 +301,7 @@ hts_settings_remove(const char *pathfmt, ...)
   struct stat st;
 
   va_start(ap, pathfmt);
-   hts_settings_buildpath(fullpath, sizeof(fullpath),
+  _hts_settings_buildpath(fullpath, sizeof(fullpath),
                           pathfmt, ap, settingspath);
   va_end(ap);
   if (stat(fullpath, &st) == 0) {
@@ -311,7 +323,7 @@ hts_settings_open_file(int for_write, const char *pathfmt, ...)
 
   /* Build path */
   va_start(ap, pathfmt);
-  hts_settings_buildpath(path, sizeof(path), pathfmt, ap, settingspath);
+  _hts_settings_buildpath(path, sizeof(path), pathfmt, ap, settingspath);
   va_end(ap);
 
   /* Create directories */

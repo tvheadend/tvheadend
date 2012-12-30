@@ -60,7 +60,7 @@
 #include "ffdecsa/FFdecsa.h"
 #include "muxes.h"
 #include "config2.h"
-#include "iconserve.h"
+#include "imagecache.h"
 
 int running;
 time_t dispatch_clock;
@@ -89,6 +89,9 @@ const char *tvheadend_capabilities[] = {
 #endif
 #if ENABLE_LINUXDVB
   "linuxdvb",
+#endif
+#if ENABLE_IMAGECACHE
+  "imagecache",
 #endif
   NULL
 };
@@ -466,6 +469,8 @@ main(int argc, char **argv)
 
   config_init();
 
+  imagecache_init();
+
   service_init();
 
   channels_init();
@@ -488,8 +493,6 @@ main(int argc, char **argv)
   tcp_server_init();
   http_server_init();
   webui_init();
-
-  logo_loader();
 
   serviceprobe_init();
 
