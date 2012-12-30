@@ -98,12 +98,12 @@ page_root2(http_connection_t *hc, const char *remain, void *opaque)
 static int
 page_static_file(http_connection_t *hc, const char *remain, void *opaque)
 {
-  int ret = 0, r;
+  int ret = 0;
   const char *base = opaque;
   char path[500];
   ssize_t size;
   const char *content = NULL, *postfix;
-  char buf[4096], *p;
+  char buf[4096];
   const char *gzip;
 
   if(remain == NULL)
@@ -139,21 +139,7 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
       ret = 500;
       break;
     }
-    p = buf;
-    while(c > 0) {
-      r = write(hc->hc_fd, p, c);
-      if(r < 0) {
-        perror("page_static_file");
-        if(errno == EINTR) {
-          continue;
-        } else {
-          break;
-        }
-      }
-      c -= r;
-      p += r;
-    }
-    if (c != 0) {
+    if (tvh_write(hc->hc_fd, buf, c)) {
       ret = 500;
       break;
     }

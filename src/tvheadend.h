@@ -454,6 +454,8 @@ int tvh_socket(int domain, int type, int protocol);
 
 int tvh_pipe(int flags, th_pipe_t *pipe);
 
+int tvh_write(int fd, void *buf, size_t len);
+
 void hexdump(const char *pfx, const uint8_t *data, int len);
 
 uint32_t tvh_crc32(uint8_t *data, size_t datalen, uint32_t crc);

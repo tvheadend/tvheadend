@@ -48,3 +48,24 @@ tvh_pipe(int flags, th_pipe_t *p)
   pthread_mutex_unlock(&fork_lock);
   return err;
 }
+
+int
+tvh_write(int fd, void *buf, size_t len)
+{
+  ssize_t c;
+
+  while (len) {
+    c = write(fd, buf, len);
+    if (c < 0) {
+      if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) {
+        usleep(100);
+        continue;
+      }
+      break;
+    }
+    len -= c;
+    buf += c;
+  }
+
+  return len ? 1 : 0;
+}
