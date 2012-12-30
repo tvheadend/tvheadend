@@ -2067,7 +2067,7 @@ const static char frametypearray[PKT_NTYPES] = {
 static void
 htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 {
-  htsmsg_t *m, *n;
+  htsmsg_t *m;
   htsp_msg_t *hm;
   htsp_connection_t *htsp = hs->hs_htsp;
   int64_t ts;
@@ -2135,13 +2135,29 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
     
     pthread_mutex_lock(&htsp->htsp_out_mutex);
 
-    if(TAILQ_FIRST(&hs->hs_q.hmq_q) == NULL) {
-      htsmsg_add_s64(m, "delay", 0);
-    } else if((hm = TAILQ_FIRST(&hs->hs_q.hmq_q)) != NULL &&
-	      (n = hm->hm_msg) != NULL && !htsmsg_get_s64(n, "dts", &ts) &&
-	      pkt->pkt_dts != PTS_UNSET && ts != PTS_UNSET) {
-      htsmsg_add_s64(m, "delay", pkt->pkt_dts - ts);
+    int64_t min_dts = PTS_UNSET;
+    int64_t max_dts = PTS_UNSET;
+    TAILQ_FOREACH(hm, &hs->hs_q.hmq_q, hm_link) {
+      if(!hm->hm_msg)
+	continue;
+      if(htsmsg_get_s64(hm->hm_msg, "dts", &ts))
+	continue;
+      if(ts == PTS_UNSET)
+	continue;
+  
+      if(min_dts == PTS_UNSET)
+	min_dts = ts;
+      else
+	min_dts = MIN(ts, min_dts);
+
+      if(max_dts == PTS_UNSET)
+	max_dts = ts;
+      else
+	max_dts = MAX(ts, max_dts);
     }
+
+    htsmsg_add_s64(m, "delay", max_dts - min_dts);
+
     pthread_mutex_unlock(&htsp->htsp_out_mutex);
 
     htsmsg_add_u32(m, "Bdrops", hs->hs_dropstats[PKT_B_FRAME]);
