@@ -1078,8 +1078,8 @@ size_t epg_episode_number_format
     if ( cfmt && num.e_cnt )
       i+= snprintf(&buf[i], len-i, cfmt, num.e_cnt);
   } else if ( num.text ) {
-    strncpy(buf, num.text, len);
-    i = strlen(buf);
+    if (pre) i += snprintf(&buf[i], len-i, "%s", pre);
+    i += snprintf(&buf[i], len-i, "%s", num.text);
   }
   return i;
 }
