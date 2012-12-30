@@ -50,7 +50,7 @@ tvh_pipe(int flags, th_pipe_t *p)
 }
 
 int
-tvh_write(int fd, void *buf, size_t len)
+tvh_write(int fd, const void *buf, size_t len)
 {
   ssize_t c;
 
