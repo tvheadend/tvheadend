@@ -194,16 +194,16 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
 
 
 /**
- * Write TS packets to the file descriptor
+ * Write data to the file descriptor
  */
 static void
-pass_muxer_write(muxer_t *m, const void *ts, size_t len)
+pass_muxer_write(muxer_t *m, const void *data, size_t size)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
   if(pm->pm_error) {
     pm->m_errors++;
-  } else if(write(pm->pm_fd, ts, len) != len) {
+  } else if(tvh_write(pm->pm_fd, data, size)) {
     pm->pm_error = errno;
     tvhlog(LOG_ERR, "pass", "%s: Write failed -- %s", pm->pm_filename, 
 	   strerror(errno));
