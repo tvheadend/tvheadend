@@ -248,7 +248,7 @@ ts_recv_packet1(service_t *t, const uint8_t *tsb, int64_t *pcrp)
 	m++;
     }
 
-    if(!error) {
+    if(!error && t->s_scrambled != 0) {
       if(n == 0) {
 	service_set_streaming_status_flags(t, TSS_NO_DESCRAMBLER);
       } else if(m == n) {
