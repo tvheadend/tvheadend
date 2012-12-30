@@ -16,12 +16,12 @@ cd $SRCDIR
 
 # Arguments
 REL=$1
+
+# Checkout
 if [ ! -z "$REL" ]; then
   git checkout $REL || die "could not checkout $REL"
 fi
-
-# Clean
-git checkout . || die "could not clean git tree"
+git clean -dfx || die "could not clean git tree"
 
 # Version
 VER=$(./support/version)
