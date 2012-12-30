@@ -154,7 +154,7 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
  */
 static void
 http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
-		const char *name, muxer_container_type_t mc)
+    const char *name, muxer_container_type_t mc)
 {
   streaming_message_t *sm;
   int run = 1;
@@ -189,11 +189,11 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
           //Check socket status
           getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen);  
           if(err) {
-	    tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
-	    run = 0;
+      tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
+      run = 0;
           }else if(timeouts >= 20) {
-	    tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, timeout waiting for packets", hc->hc_url_orig);
-	    run = 0;
+      tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, timeout waiting for packets", hc->hc_url_orig);
+      run = 0;
           }
       }
       pthread_mutex_unlock(&sq->sq_mutex);
@@ -208,37 +208,38 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     case SMT_MPEGTS:
     case SMT_PACKET:
       if(started) {
-	muxer_write_pkt(mux, sm->sm_type, sm->sm_data);
-	sm->sm_data = NULL;
+        muxer_write_pkt(mux, sm->sm_type, sm->sm_data);
+        sm->sm_data = NULL;
       }
       break;
 
     case SMT_START:
       if(!started) {
-	tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
-	http_output_content(hc, muxer_mime(mux, sm->sm_data));
+        tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
+        http_output_content(hc, muxer_mime(mux, sm->sm_data));
 
-	if(muxer_init(mux, sm->sm_data, name) < 0)
-	  run = 0;
+        if(muxer_init(mux, sm->sm_data, name) < 0)
+          run = 0;
 
-	started = 1;
+        started = 1;
       } else if(muxer_reconfigure(mux, sm->sm_data) < 0) {
-	tvhlog(LOG_WARNING, "webui",  "Unable to reconfigure stream %s", hc->hc_url_orig);
+        tvhlog(LOG_WARNING, "webui",  "Unable to reconfigure stream %s", hc->hc_url_orig);
       }
       break;
 
     case SMT_STOP:
       if(sm->sm_code != SM_CODE_SOURCE_RECONFIGURED) {
-	tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, %s", hc->hc_url_orig, 
-	       streaming_code2txt(sm->sm_code));
-	run = 0;
+        tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, %s", hc->hc_url_orig, 
+               streaming_code2txt(sm->sm_code));
+        run = 0;
       }
       break;
 
     case SMT_SERVICE_STATUS:
       if(getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, &err, &errlen)) {
-	tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
-	run = 0;
+        tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up",
+               hc->hc_url_orig);
+        run = 0;
       }
       break;
 
@@ -246,14 +247,14 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
       break;
 
     case SMT_NOSTART:
-      tvhlog(LOG_WARNING, "webui",  "Couldn't start streaming %s, %s", hc->hc_url_orig,
-	     streaming_code2txt(sm->sm_code));
+      tvhlog(LOG_WARNING, "webui",  "Couldn't start streaming %s, %s",
+             hc->hc_url_orig, streaming_code2txt(sm->sm_code));
       run = 0;
       break;
 
     case SMT_EXIT:
       tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, %s", hc->hc_url_orig,
-	     streaming_code2txt(sm->sm_code));
+             streaming_code2txt(sm->sm_code));
       run = 0;
       break;
     }
@@ -291,7 +292,7 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
   htsbuf_qprintf(hq, "#EXTM3U\n");
   htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel->ch_name);
   htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
-		 access_ticket_create(buf));
+     access_ticket_create(buf));
 
   http_output_content(hc, "audio/x-mpegurl");
 
@@ -318,7 +319,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", ctm->ctm_channel->ch_id);
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ctm->ctm_channel->ch_name);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
-		   access_ticket_create(buf));
+       access_ticket_create(buf));
   }
 
   http_output_content(hc, "audio/x-mpegurl");
@@ -349,7 +350,7 @@ http_tag_list_playlist(http_connection_t *hc)
     snprintf(buf, sizeof(buf), "/playlist/tagid/%d", ct->ct_identifier);
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ct->ct_name);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
-		   access_ticket_create(buf));
+       access_ticket_create(buf));
   }
 
   http_output_content(hc, "audio/x-mpegurl");
@@ -378,7 +379,7 @@ http_channel_list_playlist(http_connection_t *hc)
 
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ch->ch_name);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
-		   access_ticket_create(buf));
+       access_ticket_create(buf));
   }
 
   http_output_content(hc, "audio/x-mpegurl");
@@ -425,7 +426,7 @@ http_dvr_list_playlist(http_connection_t *hc)
 
     snprintf(buf, sizeof(buf), "/dvrfile/%d", de->de_id);
     htsbuf_qprintf(hq, "http://%s%s?ticket=%s\n", host, buf, 
-		   access_ticket_create(buf));
+       access_ticket_create(buf));
   }
 
   http_output_content(hc, "audio/x-mpegurl");
@@ -678,9 +679,9 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   }
 
   s = subscription_create_from_channel(ch, priority, "HTTP", st, flags,
-				       inet_ntoa(hc->hc_peer->sin_addr),
-				       hc->hc_username,
-				       http_arg_get(&hc->hc_args, "User-Agent"));
+               inet_ntoa(hc->hc_peer->sin_addr),
+               hc->hc_username,
+               http_arg_get(&hc->hc_args, "User-Agent"));
 
   if(s) {
     name = strdupa(ch->ch_name);
@@ -759,45 +760,6 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   }
 }
 
-
-/**
- * Static download of a file from an embedded filebundle
- */
-#if 0
-static int
-page_static_bundle(http_connection_t *hc, const char *remain, void *opaque)
-{
-  const struct filebundle *fb = opaque;
-  const struct filebundle_entry *fbe;
-  const char *content = NULL, *postfix;
-
-  if(remain == NULL)
-    return 404;
-
-  postfix = strrchr(remain, '.');
-  if(postfix != NULL) {
-    postfix++;
-    if(!strcmp(postfix, "js"))
-      content = "text/javascript; charset=UTF-8";
-  }
-
-  for(fbe = fb->entries; fbe->filename != NULL; fbe++) {
-    if(!strcmp(fbe->filename, remain)) {
-
-      http_send_header(hc, 200, content, fbe->size, 
-		       fbe->original_size == -1 ? NULL : "gzip", NULL, 10, 0,
-		       NULL);
-      /* ignore return value */
-      if(write(hc->hc_fd, fbe->data, fbe->size) != fbe->size)
-	return -1;
-      return 0;
-    }
-  }
-  return 404;
-}
-#endif
-
-
 /**
  * Download a recorded file
  */
@@ -866,18 +828,18 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   content_len = file_end - file_start+1;
   
   sprintf(range_buf, "bytes %"PRId64"-%"PRId64"/%"PRId64"",
-	  file_start, file_end, st.st_size);
+    file_start, file_end, st.st_size);
 
   if(file_start > 0)
     lseek(fd, file_start, SEEK_SET);
 
   if(de->de_title != NULL) {
     snprintf(disposition, sizeof(disposition),
-	     "attachment; filename=%s.%s", lang_str_get(de->de_title, NULL), postfix);
+       "attachment; filename=%s.%s", lang_str_get(de->de_title, NULL), postfix);
     i = 20;
     while(disposition[i]) {
       if(disposition[i] == ' ')
-	disposition[i] = '_';
+  disposition[i] = '_';
       i++;
     }
     
@@ -886,17 +848,17 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   http_send_header(hc, range ? HTTP_STATUS_PARTIAL_CONTENT : HTTP_STATUS_OK,
-		   content, content_len, NULL, NULL, 10, 
-		   range ? range_buf : NULL,
-		   disposition[0] ? disposition : NULL);
+       content, content_len, NULL, NULL, 10, 
+       range ? range_buf : NULL,
+       disposition[0] ? disposition : NULL);
 
   if(!hc->hc_no_output) {
     while(content_len > 0) {
       chunk = MIN(1024 * 1024 * 1024, content_len);
       r = sendfile(hc->hc_fd, fd, NULL, chunk);
       if(r == -1) {
-	close(fd);
-	return -1;
+  close(fd);
+  return -1;
       }
       content_len -= r;
     }
@@ -913,7 +875,8 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 static void
 webui_static_content(const char *http_path, const char *source)
 {
-  http_path_add(http_path, strdup(source), page_static_file, ACCESS_WEB_INTERFACE);
+  http_path_add(http_path, strdup(source), page_static_file,
+    ACCESS_WEB_INTERFACE);
 }
 
 
