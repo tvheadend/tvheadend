@@ -253,7 +253,7 @@ v4l_service_stop(service_t *t)
 
   assert(va->va_current_service != NULL);
 
-  if(write(va->va_pipe[1], &c, 1) != 1)
+  if(tvh_write(va->va_pipe[1], &c, 1))
     tvhlog(LOG_ERR, "v4l", "Unable to close video thread -- %s",
 	   strerror(errno));
   

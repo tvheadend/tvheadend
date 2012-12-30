@@ -241,9 +241,8 @@ static int _epg_write ( int fd, htsmsg_t *m )
     int r = htsmsg_binary_serialize(m, &msgdata, &msglen, 0x10000);
     htsmsg_destroy(m);
     if (!r) {
-      ssize_t w = write(fd, msgdata, msglen);
+      ret = tvh_write(fd, msgdata, msglen);
       free(msgdata);
-      if(w == msglen) ret = 0;
     }
   } else {
     ret = 0;

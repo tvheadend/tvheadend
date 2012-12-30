@@ -1669,7 +1669,6 @@ static void *
 htsp_write_scheduler(void *aux)
 {
   htsp_connection_t *htsp = aux;
-  int r;
   htsp_msg_q_t *hmq;
   htsp_msg_t *hm;
   void *dptr;
@@ -1706,33 +1705,21 @@ htsp_write_scheduler(void *aux)
 
     pthread_mutex_unlock(&htsp->htsp_out_mutex);
 
-    r = htsmsg_binary_serialize(hm->hm_msg, &dptr, &dlen, INT32_MAX);
+    if (htsmsg_binary_serialize(hm->hm_msg, &dptr, &dlen, INT32_MAX) != 0) {
+      tvhlog(LOG_WARNING, "htsp", "%s: failed to serialize data",
+             htsp->htsp_logname);
+    }
 
     htsp_msg_destroy(hm);
 
-    void *freeme = dptr;
-
-    while(dlen > 0) {
-      r = write(htsp->htsp_fd, dptr, dlen);
-      if(r < 0) {
-        if(errno == EAGAIN || errno == EWOULDBLOCK)
-          continue;
-        tvhlog(LOG_INFO, "htsp", "%s: Write error -- %s",
-               htsp->htsp_logname, strerror(errno));
-        break;
-      }
-      if(r == 0) {
-        tvhlog(LOG_ERR, "htsp", "%s: write() returned 0",
-               htsp->htsp_logname);
-      }
-      dptr += r;
-      dlen -= r;
+    if (tvh_write(htsp->htsp_fd, dptr, dlen)) {
+      tvhlog(LOG_INFO, "htsp", "%s: Write error -- %s",
+             htsp->htsp_logname, strerror(errno));
+      break;
     }
 
-    free(freeme);
+    free(dptr);
     pthread_mutex_lock(&htsp->htsp_out_mutex);
-    if(dlen)
-      break;
   }
   // Shutdown socket to make receive thread terminate entire HTSP connection
 

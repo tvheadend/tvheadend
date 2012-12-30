@@ -158,8 +158,7 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
   htsbuf_queue_init(&hq, 0);
   htsmsg_json_serialize(record, &hq, 1);
   TAILQ_FOREACH(hd, &hq.hq_q, hd_link)
-    if(write(fd, hd->hd_data + hd->hd_data_off, hd->hd_data_len) != 
-       hd->hd_data_len) {
+    if(tvh_write(fd, hd->hd_data + hd->hd_data_off, hd->hd_data_len)) {
       tvhlog(LOG_ALERT, "settings", "Failed to write file \"%s\" - %s",
 	      tmppath, strerror(errno));
       ok = 0;

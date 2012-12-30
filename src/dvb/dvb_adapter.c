@@ -623,8 +623,8 @@ dvb_adapter_stop ( th_dvb_adapter_t *tda )
   /* Stop DVR thread */
   if (tda->tda_dvr_pipe.rd != -1) {
     tvhlog(LOG_DEBUG, "dvb", "%s stopping thread", tda->tda_rootpath);
-    int err = write(tda->tda_dvr_pipe.wr, "", 1);
-    assert(err != -1);
+    int err = tvh_write(tda->tda_dvr_pipe.wr, "", 1);
+    assert(!err);
     pthread_join(tda->tda_dvr_thread, NULL);
     close(tda->tda_dvr_pipe.rd);
     close(tda->tda_dvr_pipe.wr);
