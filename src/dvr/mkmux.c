@@ -480,8 +480,9 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc)
   if (ebc)               ee = ebc->episode;
   else if (de->de_bcast) ee = de->de_bcast->episode;
 
-  if (de) ch = de->de_channel;
-  else    ch = ebc->channel;
+  if (de) {
+    ch = channel_find_by_name(de->de_channel_name, 0, 0);
+  } else    ch = ebc->channel;
 
   snprintf(datestr, sizeof(datestr),
 	   "%04d-%02d-%02d %02d:%02d:%02d",

@@ -344,6 +344,7 @@ int
 channel_rename(channel_t *ch, const char *newname)
 {
   service_t *t;
+  dvr_entry_t *de;
 
   lock_assert(&global_lock);
 
@@ -354,6 +355,14 @@ channel_rename(channel_t *ch, const char *newname)
 
   tvhlog(LOG_NOTICE, "channels", "Channel \"%s\" renamed to \"%s\"",
 	 ch->ch_name, newname);
+
+  LIST_FOREACH(de, &dvrentries, de_global_link)
+    if (!strcmp(ch->ch_name, de->de_channel_name)) {
+      free(de->de_channel_name);
+      de->de_channel_name = strdup(newname);
+      dvr_entry_notify(de);
+    }
+
 
   RB_REMOVE(&channel_name_tree, ch, ch_name_link);
   channel_set_name(ch, newname);
