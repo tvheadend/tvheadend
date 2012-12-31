@@ -470,10 +470,10 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
   if(op == NULL)
     return 400;
 
-  htsmsg_autodtor(in) =
+  htsmsg_t *in =
     entries != NULL ? htsmsg_json_deserialize(entries) : NULL;
 
-  htsmsg_autodtor(out) = htsmsg_create_map();
+  htsmsg_t *out = htsmsg_create_map();
 
   scopedgloballock();
 
@@ -497,11 +497,15 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
     extjs_channels_update(in);
      
   } else {
+    htsmsg_destroy(in);
+    htsmsg_destroy(out);
     return 400;
   }
 
   htsmsg_json_serialize(out, hq, 0);
   http_output_content(hc, "text/x-json; charset=UTF-8");
+  htsmsg_destroy(in);
+  htsmsg_destroy(out);
   return 0;
 }
 
