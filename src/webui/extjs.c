@@ -487,6 +487,7 @@ extjs_channels(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_msg(out, "entries", array);
 
   } else if(!strcmp(op, "create")) {
+    htsmsg_destroy(out);
     out = build_record_channel(channel_create());
 
   } else if(!strcmp(op, "delete") && in != NULL) {
