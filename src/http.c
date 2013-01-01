@@ -607,16 +607,12 @@ http_path_add(const char *path, void *opaque, http_callback_t *callback,
 	      uint32_t accessmask)
 {
   http_path_t *hp = malloc(sizeof(http_path_t));
+  char *tmp;
 
   if (tvheadend_webroot) {
-    char *tmp; const char *pre = "";
     size_t len = strlen(tvheadend_webroot) + strlen(path) + 1;
-    if (*tvheadend_webroot != '/') {
-      len++;
-      pre = "/";
-    }
     hp->hp_path     = tmp = malloc(len);
-    sprintf(tmp, "%s%s%s", pre, tvheadend_webroot, path);
+    sprintf(tmp, "%s/%s", tvheadend_webroot, path);
   } else
     hp->hp_path     = strdup(path);
   hp->hp_len      = strlen(hp->hp_path);

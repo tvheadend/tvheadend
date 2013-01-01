@@ -35,7 +35,7 @@
 #include "redblack.h"
 
 extern const char *tvheadend_version;
-extern char *tvheadend_cwd;
+extern const char *tvheadend_cwd;
 extern const char *tvheadend_capabilities[];
 extern const char *tvheadend_webroot;
 
