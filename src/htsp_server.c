@@ -29,6 +29,9 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <sys/stat.h>
+#include <ifaddrs.h>
+#include <linux/if_link.h>
+#include <netdb.h>
 
 #include "tvheadend.h"
 #include "channels.h"
@@ -200,6 +203,44 @@ typedef struct htsp_file {
 /* **************************************************************************
  * Support routines
  * *************************************************************************/
+
+/*
+ *  Find adapter IP addresses
+ */
+static char *returnIpAddress()
+{
+  struct ifaddrs *ifaddr;
+  char *tmp1, *tmp2 = NULL;
+
+  if (getifaddrs(&ifaddr) == -1) {
+    return NULL;
+  }
+
+  struct ifaddrs *ifa = ifaddr;
+  for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+    if (ifa->ifa_addr != NULL) {
+      int family = ifa->ifa_addr->sa_family;
+      if (family == AF_INET) {
+        char ip_addr[NI_MAXHOST];
+        int s = getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in), 
+                     ip_addr, sizeof(ip_addr), NULL, 0, NI_NUMERICHOST);
+        if (s != 0) {
+          return NULL;
+        } else {
+          if (strcmp(ifa->ifa_name, "lo")) {
+            tmp1 = strdup(ip_addr);
+            tmp2 = strtok(tmp1, ".");
+            if (strcmp(tmp2, "192") || strcmp(tmp2, "10") || strcmp(tmp2, "172")) {
+              return strdup(ip_addr);
+            };
+          };
+        }
+      };
+    }
+  };
+  freeifaddrs(ifaddr);
+return NULL;
+}
 
 /**
  *
@@ -456,7 +497,13 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
       if (htsp->htsp_version <= 7) {
         strcpy(url, "http://");
         p = 7;
-        inet_ntop(AF_INET, &(htsp->htsp_peer->sin_addr), url+p, sizeof(url)-p);
+        char *ret_ip;
+        ret_ip = returnIpAddress();
+        if (ret_ip) {
+         snprintf(url, sizeof(url), "http://%s", ret_ip);
+        } else {
+         inet_ntop(AF_INET, &(htsp->htsp_peer->sin_addr), url+p, sizeof(url)-p);
+        };
         p = strlen(url);
         p += snprintf(url+p, sizeof(url)-p, ":%hd", webui_port);
       }
