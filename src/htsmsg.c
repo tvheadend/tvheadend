@@ -703,13 +703,4 @@ htsmsg_get_cdata(htsmsg_t *m, const char *field)
 }
 
 
-/**
- *
- */
-void
-htsmsg_dtor(htsmsg_t **mp)
-{
-  if(*mp != NULL)
-    htsmsg_destroy(*mp);
-}
 
