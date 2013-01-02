@@ -1371,7 +1371,8 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
   if (*str == '/')
     str++;
 
-  if((s2 = tvh_strbegins(str, "dvr/")) != NULL) {
+  if((s2 = tvh_strbegins(str, "dvr/")) != NULL ||
+     (s2 = tvh_strbegins(str, "dvrfile/")) != NULL) {
     dvr_entry_t *de = dvr_entry_find_by_id(atoi(s2));
     if(de == NULL)
       return htsp_error("DVR entry does not exist");
