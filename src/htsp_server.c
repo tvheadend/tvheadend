@@ -370,13 +370,16 @@ htsp_generate_challenge(htsp_connection_t *htsp)
  *
  */
 static htsmsg_t *
-htsp_file_open(htsp_connection_t *htsp, const char *path)
+htsp_file_open(htsp_connection_t *htsp, const char *path, int fd)
 {
   struct stat st;
-  int fd = open(path, O_RDONLY);
-  tvhlog(LOG_DEBUG, "HTSP", "Opening file %s -- %s", path, fd < 0 ? strerror(errno) : "OK");
-  if(fd == -1)
-    return htsp_error("Unable to open file");
+
+  if (fd <= 0) {
+    fd = open(path, O_RDONLY);
+    tvhlog(LOG_DEBUG, "HTSP", "Opening file %s -- %s", path, fd < 0 ? strerror(errno) : "OK");
+    if(fd == -1)
+      return htsp_error("Unable to open file");
+  }
 
   htsp_file_t *hf = calloc(1, sizeof(htsp_file_t));
   hf->hf_fd = fd;
@@ -449,19 +452,23 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
 
   htsmsg_add_str(out, "channelName", ch->ch_name);
   if(ch->ch_icon != NULL) {
-    uint32_t id = imagecache_get_id(ch->ch_icon);
-    if (id) {
+    uint32_t id;
+    struct sockaddr_in addr;
+    socklen_t addrlen;
+    if ((id = imagecache_get_id(ch->ch_icon))) {
       size_t p = 0;
       char url[256];
-      if (htsp->htsp_version <= 7) {
+      if (htsp->htsp_version < 7) {
+        addrlen = sizeof(addr);
+        getsockname(htsp->htsp_fd, (struct sockaddr*)&addr, &addrlen);
         strcpy(url, "http://");
-        p = 7;
-        inet_ntop(AF_INET, &(htsp->htsp_peer->sin_addr), url+p, sizeof(url)-p);
         p = strlen(url);
-        p += snprintf(url+p, sizeof(url)-p, ":%hd", webui_port);
+        inet_ntop(AF_INET, &addr.sin_addr, url+p, sizeof(url)-p);
+        p = strlen(url);
+        p += snprintf(url+p, sizeof(url)-p, ":%hd%s",
+                      webui_port,
+                      tvheadend_webroot ?: "");
       }
-      if (tvheadend_webroot)
-        p += snprintf(url+p, sizeof(url)-p, "%s", tvheadend_webroot);
       snprintf(url+p, sizeof(url)-p, "/imagecache/%d", id);
       htsmsg_add_str(out, "channelIcon", url);
     } else {
@@ -1360,6 +1367,10 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
   if((str = htsmsg_get_str(in, "file")) == NULL)
     return htsp_error("Missing argument 'file'");
 
+  // optional leading slash
+  if (*str == '/')
+    str++;
+
   if((s2 = tvh_strbegins(str, "dvr/")) != NULL) {
     dvr_entry_t *de = dvr_entry_find_by_id(atoi(s2));
     if(de == NULL)
@@ -1369,11 +1380,17 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
       return htsp_error("DVR entry does not have a file yet");
 
     filename = de->de_filename;
+    return htsp_file_open(htsp, filename, 0);
+
+  } else if ((s2 = tvh_strbegins(str, "imagecache/")) != NULL) {
+    int fd = imagecache_open(atoi(s2));
+    if (fd <= 0)
+      return htsp_error("failed to open image");
+    return htsp_file_open(htsp, NULL, fd);
+
   } else {
     return htsp_error("Unknown file");
   }
-
-  return htsp_file_open(htsp, filename);
 }
 
 /**
