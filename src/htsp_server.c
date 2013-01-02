@@ -456,9 +456,12 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
       if (htsp->htsp_version <= 7) {
         strcpy(url, "http://");
         p = 7;
-        inet_ntop(AF_INET, &(htsp->htsp_peer->sin_addr), url+p, sizeof(url)-p);
+        struct sockaddr_in ss;
+        unsigned int len;
+        getsockname(htsp->htsp_fd,(struct sockaddr*)&ss,&len);
         p = strlen(url);
-        p += snprintf(url+p, sizeof(url)-p, ":%hd", webui_port);
+        p += snprintf(url+p, sizeof(url)-p, "%s:%hd", 
+             inet_ntoa(ss.sin_addr),webui_port);
       }
       if (tvheadend_webroot)
         p += snprintf(url+p, sizeof(url)-p, "%s", tvheadend_webroot);
