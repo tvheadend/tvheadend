@@ -612,6 +612,32 @@ static const fe_modulation_t qam_tab [6] = {
 	 QAM_AUTO, QAM_16, QAM_32, QAM_64, QAM_128, QAM_256
 };
 
+static const fe_bandwidth_t bandwidth_tab [8] = {
+  BANDWIDTH_8_MHZ, BANDWIDTH_7_MHZ, BANDWIDTH_6_MHZ, BANDWIDTH_AUTO, 
+  BANDWIDTH_AUTO,  BANDWIDTH_AUTO,  BANDWIDTH_AUTO,  BANDWIDTH_AUTO
+};  
+
+static const fe_modulation_t constellation_tab [4] = {
+  QPSK, QAM_16, QAM_64, QAM_AUTO
+};
+
+static const fe_code_rate_t code_rate_tab [8] = {
+  FEC_1_2, FEC_2_3, FEC_3_4, FEC_5_6, FEC_7_8, FEC_AUTO, FEC_AUTO, FEC_AUTO
+};
+
+static const fe_guard_interval_t guard_interval_tab [4] = {
+  GUARD_INTERVAL_1_32, GUARD_INTERVAL_1_16, GUARD_INTERVAL_1_8, GUARD_INTERVAL_1_4
+};
+
+static const fe_transmit_mode_t transmission_mode_tab [4] = {
+  TRANSMISSION_MODE_2K, TRANSMISSION_MODE_8K, TRANSMISSION_MODE_4K, TRANSMISSION_MODE_AUTO
+};
+
+static const fe_hierarchy_t hierarchy_info_tab [8] = {
+  HIERARCHY_NONE, HIERARCHY_1, HIERARCHY_2, HIERARCHY_4,
+  HIERARCHY_NONE, HIERARCHY_1, HIERARCHY_2, HIERARCHY_4
+};
+
 /**
  * Cable delivery descriptor
  */
@@ -741,6 +767,46 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 #endif
   dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, NULL,
 		 "automatic mux discovery", 1, 1, NULL, tdmi->tdmi_conf.dmc_satconf);
+  
+  return 0;
+}
+
+
+/**
+ * Terrestrial delivery descriptor
+ */
+static int
+dvb_table_terr_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
+                        uint16_t tsid, uint16_t onid)
+{
+  struct dvb_mux_conf dmc;
+  int freq;
+
+  if(!tdmi->tdmi_adapter->tda_autodiscovery)
+    return -1;
+
+  if(len < 11)
+    return -1;
+
+  memset(&dmc, 0, sizeof(dmc));
+  dmc.dmc_fe_params.inversion = INVERSION_AUTO;
+
+  freq = ((ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3]) * 10;
+  
+  if(!freq)
+    return -1;
+
+  dmc.dmc_fe_params.frequency = freq;
+  dmc.dmc_fe_params.u.ofdm.bandwidth = bandwidth_tab[(ptr[4] & 0xe0) >> 5];
+  dmc.dmc_fe_params.u.ofdm.constellation=constellation_tab[(ptr[5] & 0xc0) >> 6];
+  dmc.dmc_fe_params.u.ofdm.hierarchy_information=hierarchy_info_tab[(ptr[5] & 0x38) >> 3];
+  dmc.dmc_fe_params.u.ofdm.code_rate_HP=code_rate_tab[ptr[5] & 0x3];
+  dmc.dmc_fe_params.u.ofdm.code_rate_LP=code_rate_tab[(ptr[6] & 0xe0) >> 5];
+  dmc.dmc_fe_params.u.ofdm.guard_interval=guard_interval_tab[(ptr[6] & 0x18) >> 3];
+  dmc.dmc_fe_params.u.ofdm.transmission_mode=transmission_mode_tab[(ptr[6] & 0x06) >> 1];
+
+  dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, NULL,
+                 "automatic mux discovery", 1, 1, NULL, NULL);
   
   return 0;
 }
@@ -880,6 +946,10 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       case DVB_DESC_CABLE:
         if(tdmi->tdmi_adapter->tda_type == FE_QAM)
           dvb_table_cable_delivery(tdmi, ptr, tlen, tsid, onid);
+        break;
+      case DVB_DESC_TERR:
+        if(tdmi->tdmi_adapter->tda_type == FE_OFDM)
+          dvb_table_terr_delivery(tdmi, ptr, tlen, tsid, onid);
         break;
       case DVB_DESC_LOCAL_CHAN:
         dvb_table_local_channel(tdmi, ptr, tlen, tsid, onid);
