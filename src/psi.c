@@ -874,6 +874,7 @@ static struct strtab caidnametab[] = {
   { "CryptoWorks ICE",	0x0D96 },
   { "CryptoWorks ICE",	0x0D97 },
   { "PowerVu",          0x0E00 }, 
+  { "PowerVu",          0x0E11 }, 
   { "Sony",             0x0F00 }, 
   { "Tandberg",         0x1000 }, 
   { "Thompson",         0x1100 }, 
