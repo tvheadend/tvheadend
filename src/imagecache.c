@@ -366,10 +366,12 @@ static void *_imagecache_thread ( void *p )
       ts.tv_sec += 60;
       err = pthread_cond_timedwait(&_imagecache_cond, &imagecache_mutex, &ts);
       if (err == ETIMEDOUT) {
+        uint32_t period;
         RB_FOREACH(img, &_imagecache_by_url, url_link) {
           if (img->state != IDLE) continue;
-          if ((ts.tv_sec - img->updated) >
-              (img->failed ? imagecache_fail_period : imagecache_ok_period))
+          period = img->failed ? imagecache_fail_period : imagecache_ok_period;
+          period *= 86400;
+          if (period && ((ts.tv_sec - img->updated) > period))
             _imagecache_add(img);
         }
       }
