@@ -54,7 +54,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 7
+#define HTSP_PROTO_VERSION 8
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -458,7 +458,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
     if ((id = imagecache_get_id(ch->ch_icon))) {
       size_t p = 0;
       char url[256];
-      if (htsp->htsp_version < 7) {
+      if (htsp->htsp_version < 8) {
         addrlen = sizeof(addr);
         getsockname(htsp->htsp_fd, (struct sockaddr*)&addr, &addrlen);
         strcpy(url, "http://");
