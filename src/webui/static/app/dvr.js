@@ -129,7 +129,6 @@ tvheadend.dvrDetails = function(entry) {
 
 			success : function(response, options) {
 				win.close();
-				v
 			},
 
 			failure : function(response, options) {
