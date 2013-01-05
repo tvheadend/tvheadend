@@ -716,6 +716,8 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_add_str(r, "servername", "HTS Tvheadend");
   htsmsg_add_str(r, "serverversion", tvheadend_version);
   htsmsg_add_bin(r, "challenge", htsp->htsp_challenge, 32);
+  if (tvheadend_webroot)
+    htsmsg_add_str(r, "webroot", tvheadend_webroot);
 
   /* Capabilities */
   htsmsg_add_msg(r, "servercapability", tvheadend_capabilities_list(1));
