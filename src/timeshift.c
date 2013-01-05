@@ -34,7 +34,7 @@
 
 static int timeshift_index = 0;
 
-int       timeshift_enabled;
+uint32_t  timeshift_enabled;
 int       timeshift_ondemand;
 char     *timeshift_path;
 int       timeshift_unlimited_period;

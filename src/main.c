@@ -129,6 +129,9 @@ const tvh_caps_t tvheadend_capabilities[] = {
 #if ENABLE_IMAGECACHE
   { "imagecache", &imagecache_enabled },
 #endif
+#if ENABLE_TIMESHIFT
+  { "timeshift", &timeshift_enabled },
+#endif
   { NULL, NULL }
 };
 
