@@ -19,7 +19,7 @@
 #ifndef __TVH_TIMESHIFT_H__
 #define __TVH_TIMESHIFT_H__
 
-extern int       timeshift_enabled;
+extern uint32_t  timeshift_enabled;
 extern int       timeshift_ondemand;
 extern char     *timeshift_path;
 extern int       timeshift_unlimited_period;
