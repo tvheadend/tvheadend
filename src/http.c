@@ -612,7 +612,7 @@ http_path_add(const char *path, void *opaque, http_callback_t *callback,
   if (tvheadend_webroot) {
     size_t len = strlen(tvheadend_webroot) + strlen(path) + 1;
     hp->hp_path     = tmp = malloc(len);
-    sprintf(tmp, "%s/%s", tvheadend_webroot, path);
+    sprintf(tmp, "%s%s", tvheadend_webroot, path);
   } else
     hp->hp_path     = strdup(path);
   hp->hp_len      = strlen(hp->hp_path);
