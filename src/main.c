@@ -79,21 +79,20 @@ int htsp_port;
 int htsp_port_extra;
 const char *tvheadend_cwd;
 const char *tvheadend_webroot;
-
-const char *tvheadend_capabilities[] = {
+const tvh_caps_t tvheadend_capabilities[] = {
 #if ENABLE_CWC
-  "cwc",
+  { "cwc", NULL },
 #endif
 #if ENABLE_V4L
-  "v4l",
+  { "v4l", NULL },
 #endif
 #if ENABLE_LINUXDVB
-  "linuxdvb",
+  { "linuxdvb", NULL },
 #endif
 #if ENABLE_IMAGECACHE
-  "imagecache",
+  { "imagecache", &imagecache_enabled },
 #endif
-  NULL
+  { NULL, NULL }
 };
 
 static void

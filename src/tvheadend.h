@@ -31,13 +31,32 @@
 #include "queue.h"
 #include "avg.h"
 #include "hts_strtab.h"
+#include "htsmsg.h"
 
 #include "redblack.h"
 
-extern const char *tvheadend_version;
-extern const char *tvheadend_cwd;
-extern const char *tvheadend_capabilities[];
-extern const char *tvheadend_webroot;
+typedef struct {
+  const char     *name;
+  const uint32_t *enabled;
+} tvh_caps_t;
+extern const char      *tvheadend_version;
+extern const char      *tvheadend_cwd;
+extern const char      *tvheadend_webroot;
+extern const tvh_caps_t tvheadend_capabilities[];
+
+static inline htsmsg_t *tvheadend_capabilities_list(int check)
+{
+  int i = 0;
+  htsmsg_t *r = htsmsg_create_list();
+  while (tvheadend_capabilities[i].name) {
+    if (!check ||
+        !tvheadend_capabilities[i].enabled ||
+        *tvheadend_capabilities[i].enabled)
+      htsmsg_add_str(r, NULL, tvheadend_capabilities[i].name);
+    i++;
+  }
+  return r;
+}
 
 #define PTS_UNSET INT64_C(0x8000000000000000)
 
@@ -369,6 +388,7 @@ static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 void tvh_str_set(char **strp, const char *src);
 int tvh_str_update(char **strp, const char *src);

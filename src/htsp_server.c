@@ -695,16 +695,17 @@ htsp_build_event
 static htsmsg_t *
 htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  htsmsg_t *l, *r = htsmsg_create_map();
+  htsmsg_t *r;
   uint32_t v;
   const char *name;
-  int i = 0;
 
   if(htsmsg_get_u32(in, "htspversion", &v))
     return htsp_error("Missing argument 'htspversion'");
 
   if((name = htsmsg_get_str(in, "clientname")) == NULL)
     return htsp_error("Missing argument 'clientname'");
+
+  r = htsmsg_create_map();
 
   tvh_str_update(&htsp->htsp_clientname, htsmsg_get_str(in, "clientname"));
 
@@ -717,12 +718,7 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_add_bin(r, "challenge", htsp->htsp_challenge, 32);
 
   /* Capabilities */
-  l = htsmsg_create_list();
-  while (tvheadend_capabilities[i]) {
-    htsmsg_add_str(l, NULL, tvheadend_capabilities[i]);
-    i++;
-  }
-  htsmsg_add_msg(r, "servercapability", l);
+  htsmsg_add_msg(r, "servercapability", tvheadend_capabilities_list(1));
 
   /* Set version to lowest num */
   htsp->htsp_version = MIN(HTSP_PROTO_VERSION, v);

@@ -1986,13 +1986,7 @@ static int
 extjs_capabilities(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
-  htsmsg_t *l;
-  int i = 0;
-  l = htsmsg_create_list();
-  while (tvheadend_capabilities[i]) {
-    htsmsg_add_str(l, NULL, tvheadend_capabilities[i]);
-    i++;
-  }
+  htsmsg_t *l = tvheadend_capabilities_list(0);
   htsmsg_json_serialize(l, hq, 0);
   htsmsg_destroy(l);
   http_output_content(hc, "text/x-json; charset=UTF-8");
