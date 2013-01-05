@@ -370,7 +370,7 @@ static void *_imagecache_thread ( void *p )
         RB_FOREACH(img, &_imagecache_by_url, url_link) {
           if (img->state != IDLE) continue;
           period = img->failed ? imagecache_fail_period : imagecache_ok_period;
-          period *= 86400;
+          period *= 3600;
           if (period && ((ts.tv_sec - img->updated) > period))
             _imagecache_add(img);
         }
