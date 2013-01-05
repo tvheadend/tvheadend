@@ -127,8 +127,6 @@ SRCS += src/plumbing/tsfix.c \
 SRCS += src/dvr/dvr_db.c \
 	src/dvr/dvr_rec.c \
 	src/dvr/dvr_autorec.c \
-	src/dvr/ebml.c \
-	src/dvr/mkmux.c \
 
 SRCS += src/webui/webui.c \
 	src/webui/comet.c \
@@ -138,8 +136,10 @@ SRCS += src/webui/webui.c \
 	src/webui/html.c\
 
 SRCS += src/muxer.c \
-	src/muxer_pass.c \
-	src/muxer_tvh.c \
+	src/muxer/muxer_pass.c \
+	src/muxer/muxer_tvh.c \
+	src/muxer/tvh/ebml.c \
+	src/muxer/tvh/mkmux.c \
 
 #
 # Optional code

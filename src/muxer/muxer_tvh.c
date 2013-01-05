@@ -22,8 +22,8 @@
 #include "streaming.h"
 #include "epg.h"
 #include "channels.h"
-#include "dvr/mkmux.h"
 #include "muxer_tvh.h"
+#include "tvh/mkmux.h"
 
 typedef struct tvh_muxer {
   muxer_t;

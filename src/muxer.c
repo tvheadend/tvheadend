@@ -21,8 +21,8 @@
 #include "tvheadend.h"
 #include "service.h"
 #include "muxer.h"
-#include "muxer_tvh.h"
-#include "muxer_pass.h"
+#include "muxer/muxer_tvh.h"
+#include "muxer/muxer_pass.h"
 
 
 /**

@@ -27,7 +27,7 @@
 
 #include "tvheadend.h"
 #include "streaming.h"
-#include "dvr.h"
+#include "dvr/dvr.h"
 #include "mkmux.h"
 #include "ebml.h"
 
