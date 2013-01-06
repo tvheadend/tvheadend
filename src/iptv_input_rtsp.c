@@ -49,6 +49,7 @@ typedef struct curl_header
  */
 typedef struct curl_response
 {
+  long code;
   LIST_HEAD(, curl_header) header_head;
   char *data;
 } curl_response_t;
@@ -108,6 +109,17 @@ curl_header_write_func(void *buffer, size_t size, size_t nmemb, void *userp)
 }
 
 /*
+ * Call to easy_curl_perform, and return non-0 if the HTTP code is higher than 400.
+ */
+static int
+curl_perform(CURL *curl, curl_response_t *response)
+{
+  int result = curl_easy_perform(curl);
+  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response->code);
+  return result ? result : response->code >= 400;
+}
+
+/*
  Destroy header in a response.
  */
 static void
@@ -145,6 +157,7 @@ set_curl_result_buffer(CURL *curl, curl_response_t *buffer)
       free(buffer->data);
       buffer->data = NULL;
     }
+    buffer->code = 0;
   } else {
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, NULL);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, NULL);
@@ -172,7 +185,7 @@ rtsp_options(CURL *curl, const char *uri, curl_response_t *response)
     return result;
   }
   set_curl_result_buffer(curl, response);
-  return curl_easy_perform(curl);
+  return curl_perform(curl, response);
 }
  
 /*
@@ -188,7 +201,7 @@ rtsp_describe(CURL *curl, curl_response_t *response)
     return result;
   }
   set_curl_result_buffer(curl, response);
-  return curl_easy_perform(curl);
+  return curl_perform(curl, response);
 }
  
 /*
@@ -214,7 +227,7 @@ rtsp_setup(CURL *curl, const char *uri, const char *transport, curl_response_t *
     return result;
   }
   set_curl_result_buffer(curl, response);
-  return curl_easy_perform(curl);
+  return curl_perform(curl, response);
 }
  
  
@@ -241,7 +254,7 @@ rtsp_play(CURL *curl, const char *uri, const char *range, curl_response_t *respo
     return result;
   }
   set_curl_result_buffer(curl, response);
-  return curl_easy_perform(curl);
+  return curl_perform(curl, response);
 }
  
  
@@ -258,7 +271,7 @@ rtsp_teardown(CURL *curl, const char *uri, curl_response_t *response)
     return result;
   }
   set_curl_result_buffer(curl, response);
-  return curl_easy_perform(curl);
+  return curl_perform(curl, response);
 }
 
 /*
@@ -451,13 +464,31 @@ iptv_rtsp_start(const char *uri, int *fd)
   
   result = curl_easy_setopt(curl, CURLOPT_URL, uri);
   tvhlog(LOG_DEBUG, "IPTV", "cURL init : %d", result);
+  if(result)
+  {
+    iptv_rtsp_stop(rtsp_info);
+    destroy_response(response);
+    return NULL;
+  }
   
   result = rtsp_options(curl, uri, response);
   curl_header_t *header = response->header_head.lh_first->next.le_next;
   tvhlog(LOG_DEBUG, "IPTV", "RTSP OPTIONS answer : %d, %s: %s", result, header->name, header->value);
+  if(result)
+  {
+    iptv_rtsp_stop(rtsp_info);
+    destroy_response(response);
+    return NULL;
+  }
   
   result = rtsp_describe(curl, response);
   tvhlog(LOG_DEBUG, "IPTV", "RTSP DESCRIBE answer : %d, %s", result, response->data);
+  if(result)
+  {
+    iptv_rtsp_stop(rtsp_info);
+    destroy_response(response);
+    return NULL;
+  }
 
   // Bind with any free even port for now
   if(iptv_rtsp_bind(rtsp_info, fd, "0") == -1)
@@ -478,6 +509,12 @@ iptv_rtsp_start(const char *uri, int *fd)
   result = rtsp_setup(curl, uri, transport, response);
   header = response->header_head.lh_first->next.le_next;
   tvhlog(LOG_DEBUG, "IPTV", "RTSP SETUP answer : %d, %s: %s", result, header->name, header->value);
+  if(result)
+  {
+    iptv_rtsp_stop(rtsp_info);
+    destroy_response(response);
+    return NULL;
+  }
   
   iptv_rtsp_parse_setup(rtsp_info, response);
   
