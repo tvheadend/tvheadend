@@ -11,8 +11,8 @@ if [ -d ".git" ]; then
     VER=$(cd $(dirname $0); git describe --dirty --match "v*" 2> /dev/null)
     if [ $? -ne 0 ]; then
         # Git describe failed, maybe "--dirty" option is not available
-        # Adding "--UNKNOWN" postfix to mark this situation
-        VER=$(cd $(dirname $0); git describe --match "v*" 2> /dev/null)--UNKNOWN
+        # Adding "-unknown" postfix to mark this situation
+        VER=$(cd $(dirname $0); git describe --match "v*" 2> /dev/null)-unknown
     fi
     VER=$(echo $VER | sed "s/^v//" | sed "s/-\([0-9]*\)-\(g[0-9a-f]*\)/.\1~\2/")
 else
