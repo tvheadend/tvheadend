@@ -476,6 +476,7 @@ iptv_rtsp_start(const char *uri, int *fd)
   tvhlog(LOG_DEBUG, "IPTV", "RTSP OPTIONS answer : %d, %s: %s", result, header->name, header->value);
   if(result)
   {
+    tvhlog(LOG_ERR, "IPTV", "RTSP OPTIONS failed with code %ld", response->code);
     iptv_rtsp_stop(rtsp_info);
     destroy_response(response);
     return NULL;
@@ -485,6 +486,7 @@ iptv_rtsp_start(const char *uri, int *fd)
   tvhlog(LOG_DEBUG, "IPTV", "RTSP DESCRIBE answer : %d, %s", result, response->data);
   if(result)
   {
+    tvhlog(LOG_ERR, "IPTV", "RTSP DESCRIBE failed with code %ld", response->code);
     iptv_rtsp_stop(rtsp_info);
     destroy_response(response);
     return NULL;
@@ -511,6 +513,7 @@ iptv_rtsp_start(const char *uri, int *fd)
   tvhlog(LOG_DEBUG, "IPTV", "RTSP SETUP answer : %d, %s: %s", result, header->name, header->value);
   if(result)
   {
+    tvhlog(LOG_ERR, "IPTV", "RTSP SETUP failed with code %ld", response->code);
     iptv_rtsp_stop(rtsp_info);
     destroy_response(response);
     return NULL;
