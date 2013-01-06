@@ -1009,6 +1009,10 @@ capmt_service_start(service_t *t)
   lock_assert(&global_lock);
 
   TAILQ_FOREACH(capmt, &capmts, capmt_link) {
+    /* skip, if we're not active */
+    if (!capmt->capmt_enabled)
+      continue;
+
     tvhlog(LOG_INFO, "capmt",
       "Starting capmt server for service \"%s\" on tuner %d", 
       t->s_svcname,
