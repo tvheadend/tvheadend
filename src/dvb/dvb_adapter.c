@@ -445,7 +445,7 @@ check_full_stream(th_dvb_adapter_t *tda)
  *
  */
 static void
-tda_add(int adapter_num)
+tda_add(int adapter_num, int frontend_num, int demux_num)
 {
   char path[200], fname[256];
   int fe, i, r;
@@ -453,7 +453,7 @@ tda_add(int adapter_num)
   char buf[400];
 
   snprintf(path, sizeof(path), "/dev/dvb/adapter%d", adapter_num);
-  snprintf(fname, sizeof(fname), "%s/frontend0", path);
+  snprintf(fname, sizeof(fname), "%s/frontend%d", path, frontend_num);
   
   fe = tvh_open(fname, O_RDWR | O_NONBLOCK, 0);
   if(fe == -1) {
@@ -468,7 +468,7 @@ tda_add(int adapter_num)
   tda->tda_adapter_num = adapter_num;
   tda->tda_rootpath = strdup(path);
   tda->tda_demux_path = malloc(256);
-  snprintf(tda->tda_demux_path, 256, "%s/demux0", path);
+  snprintf(tda->tda_demux_path, 256, "%s/demux%d", path, demux_num);
   tda->tda_fe_path = strdup(fname);
   tda->tda_fe_fd       = -1;
   tda->tda_dvr_pipe.rd = -1;
@@ -651,7 +651,7 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
   /* Initialise hardware */
   for(i = 0; i < 32; i++) 
     if ((1 << i) & adapter_mask) 
-      tda_add(i);
+      tda_add(i, 0, 0);
 
   /* Initialise rawts test file */
   if(rawfile)
