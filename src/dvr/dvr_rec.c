@@ -400,6 +400,7 @@ dvr_thread(void *aux)
   dvr_entry_t *de = aux;
   streaming_queue_t *sq = &de->de_sq;
   streaming_message_t *sm;
+  th_pkt_t *pkt;
   int run = 1;
   int started = 0;
 
@@ -417,8 +418,25 @@ dvr_thread(void *aux)
     pthread_mutex_unlock(&sq->sq_mutex);
 
     switch(sm->sm_type) {
-    case SMT_MPEGTS:
+
     case SMT_PACKET:
+	pkt = sm->sm_data;
+	if(pkt->pkt_commercial == COMMERCIAL_YES) {
+	  dvr_rec_set_state(de, DVR_RS_COMMERCIAL, 0);
+	  tsfix_set_comm_skip(de->de_tsfix, 1);
+	  break;
+	}
+
+	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
+	tsfix_set_comm_skip(de->de_tsfix, 0);
+
+	if(started) {
+	  muxer_write_pkt(de->de_mux, sm->sm_type, sm->sm_data);
+	  sm->sm_data = NULL;
+	}
+	break;
+
+    case SMT_MPEGTS:
       if(started) {
 	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
 	muxer_write_pkt(de->de_mux, sm->sm_type, sm->sm_data);

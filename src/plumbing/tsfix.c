@@ -40,6 +40,7 @@ typedef struct tfstream {
   int64_t tfs_dts_epoch;
 
   int64_t tfs_last_dts_in;
+  int64_t tfs_drops;
 
 } tfstream_t;
 
@@ -56,6 +57,7 @@ typedef struct tsfix {
   int tf_hasvideo;
   int64_t tf_tsref;
   time_t tf_start_time;
+  int tf_comm_skip;
 
   struct th_pktref_queue tf_ptsq;
 
@@ -159,6 +161,9 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 
   /* Subtract the transport wide start offset */
   dts = pkt->pkt_dts - tf->tf_tsref;
+
+  /* Subtract dropped packets due to commercial breaks */
+  dts -= tfs->tfs_drops;
 
   if(tfs->tfs_last_dts_norm == PTS_UNSET) {
     if(dts < 0) {
@@ -322,11 +327,11 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
       tsfixprintf("reference clock set to %"PRId64"\n", tf->tf_tsref);
   }
 
+  int pdur = pkt->pkt_duration >> pkt->pkt_field;
+
   if(pkt->pkt_dts == PTS_UNSET) {
-
-    int pdur = pkt->pkt_duration >> pkt->pkt_field;
-
     if(tfs->tfs_last_dts_in == PTS_UNSET) {
+      tfs->tfs_drops += pdur;
       pkt_ref_dec(pkt);
       return;
     }
@@ -337,6 +342,13 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
 		streaming_component_type2txt(tfs->tfs_type),
 		tfs->tfs_last_dts_in, pdur, pkt->pkt_dts);
   }
+
+  if(tf->tf_comm_skip && pkt->pkt_commercial == COMMERCIAL_YES) {
+    tfs->tfs_drops += pdur;
+    pkt_ref_dec(pkt);
+    return;
+  }
+
   tfs->tfs_last_dts_in = pkt->pkt_dts;
 
   compute_pts(tf, tfs, pkt);
@@ -401,6 +413,17 @@ void tsfix_set_start_time(streaming_target_t *pad, time_t start)
   tsfix_t *tf = (tsfix_t *)pad;
 
   tf->tf_start_time = start;
+}
+
+
+/**
+ *
+ */
+void
+tsfix_set_comm_skip(streaming_target_t *pad, int bool) {
+  tsfix_t *tf = (tsfix_t *)pad;
+
+  tf->tf_comm_skip = !!bool;
 }
 
 
