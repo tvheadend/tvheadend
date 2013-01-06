@@ -80,6 +80,7 @@ tda_save(th_dvb_adapter_t *tda)
 
   lock_assert(&global_lock);
 
+  htsmsg_add_u32(m, "enabled", tda->tda_enabled);
   htsmsg_add_str(m, "type", dvb_adaptertype_to_str(tda->tda_type));
   htsmsg_add_str(m, "displayname", tda->tda_displayname);
   htsmsg_add_u32(m, "autodiscovery", tda->tda_autodiscovery);
@@ -121,6 +122,25 @@ dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s)
   tda_save(tda);
 
   dvb_adapter_notify(tda);
+}
+
+
+/**
+ *
+ */
+void
+dvb_adapter_set_enabled(th_dvb_adapter_t *tda, uint32_t enabled)
+{
+  if(tda->tda_enabled == enabled)
+    return;
+
+  lock_assert(&global_lock);
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" enabled set to \"%s\"",
+         tda->tda_displayname, enabled ? "Enabled" : "Disabled");
+
+  tda->tda_enabled = enabled;
+  tda_save(tda);
 }
 
 
@@ -473,6 +493,7 @@ tda_add(int adapter_num, int frontend_num, int demux_num)
   tda->tda_fe_fd       = -1;
   tda->tda_dvr_pipe.rd = -1;
   tda->tda_full_mux_rx = -1;
+  tda->tda_enabled     =  0;
 
   tda->tda_fe_info = malloc(sizeof(struct dvb_frontend_info));
 
@@ -482,7 +503,9 @@ tda_add(int adapter_num, int frontend_num, int demux_num)
     free(tda);
     return;
   }
-  tda->tda_fe_fd = fe;
+
+  close(fe);
+  fe = -1;
 
   tda->tda_type = tda->tda_fe_info->type;
 
@@ -540,6 +563,8 @@ tda_add_from_file(const char *filename)
   tda->tda_fe_fd       = -1;
   tda->tda_dvr_pipe.rd = -1;
 
+  tda->tda_enabled = 1;
+
   tda->tda_type = -1;
 
   snprintf(buf, sizeof(buf), "%s", filename);
@@ -588,6 +613,11 @@ static void tda_init_input (th_dvb_adapter_t *tda)
 void
 dvb_adapter_start ( th_dvb_adapter_t *tda )
 {
+  if(tda->tda_enabled == 0) {
+    tvhlog(LOG_INFO, "dvb", "Adapter \"%s\" cannot be started - it's disabled", tda->tda_displayname);
+    return;
+  }
+
   /* Open front end */
   if (tda->tda_fe_fd == -1) {
     tda->tda_fe_fd = tvh_open(tda->tda_fe_path, O_RDWR | O_NONBLOCK, 0);
@@ -642,7 +672,7 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
   htsmsg_t *l, *c;
   htsmsg_field_t *f;
   const char *name, *s;
-  int i, type;
+  int i, j, type;
   uint32_t u32;
   th_dvb_adapter_t *tda;
 
@@ -651,7 +681,8 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
   /* Initialise hardware */
   for(i = 0; i < 32; i++) 
     if ((1 << i) & adapter_mask) 
-      tda_add(i, 0, 0);
+      for(j = 0; j < 32; j++)
+        tda_add(i, j, 0);
 
   /* Initialise rawts test file */
   if(rawfile)
@@ -675,6 +706,7 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
         tda = tda_alloc();
         tda->tda_identifier = strdup(f->hmf_name);
         tda->tda_type = type;
+        tda->tda_enabled = 0;
         TAILQ_INSERT_TAIL(&dvb_adapters, tda, tda_global_link);
       } else {
         if(type != tda->tda_type)
@@ -684,6 +716,7 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
       free(tda->tda_displayname);
       tda->tda_displayname = strdup(name);
 
+      htsmsg_get_u32(c, "enabled", &tda->tda_enabled);
       htsmsg_get_u32(c, "autodiscovery", &tda->tda_autodiscovery);
       htsmsg_get_u32(c, "idlescan", &tda->tda_idlescan);
       htsmsg_get_u32(c, "idleclose", &tda->tda_idleclose);
