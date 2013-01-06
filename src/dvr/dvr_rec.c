@@ -81,6 +81,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
     streaming_queue_init(&de->de_sq, 0);
     de->de_gh = globalheaders_create(&de->de_sq.sq_st);
     de->de_tsfix = tsfix_create(de->de_gh);
+    tsfix_set_start_time(de->de_tsfix, de->de_start - (60 * de->de_start_extra));
     st = de->de_tsfix;
     flags = 0;
   }
@@ -419,10 +420,8 @@ dvr_thread(void *aux)
     switch(sm->sm_type) {
     case SMT_MPEGTS:
     case SMT_PACKET:
-      if(started &&
-	 dispatch_clock > de->de_start - (60 * de->de_start_extra)) {
+      if(started) {
 	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
-
 	muxer_write_pkt(de->de_mux, sm->sm_type, sm->sm_data);
 	sm->sm_data = NULL;
       }

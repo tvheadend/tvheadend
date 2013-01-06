@@ -55,6 +55,7 @@ typedef struct tsfix {
   struct tfstream_list tf_streams;
   int tf_hasvideo;
   int64_t tf_tsref;
+  time_t tf_start_time;
 
   struct th_pktref_queue tf_ptsq;
 
@@ -309,11 +310,10 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
   tfstream_t *tfs = tfs_find(tf, pkt);
   streaming_msg_free(sm);
   
-  if(tfs == NULL) {
+  if(tfs == NULL || dispatch_clock < tf->tf_start_time) {
     pkt_ref_dec(pkt);
     return;
   }
-
 
   if(tf->tf_tsref == PTS_UNSET &&
      (!tf->tf_hasvideo ||
@@ -387,8 +387,20 @@ tsfix_create(streaming_target_t *output)
   TAILQ_INIT(&tf->tf_ptsq);
 
   tf->tf_output = output;
+  tf->tf_start_time = dispatch_clock;
+
   streaming_target_init(&tf->tf_input, tsfix_input, tf, 0);
   return &tf->tf_input;
+}
+
+/**
+ *
+ */
+void tsfix_set_start_time(streaming_target_t *pad, time_t start)
+{
+  tsfix_t *tf = (tsfix_t *)pad;
+
+  tf->tf_start_time = start;
 }
 
 
