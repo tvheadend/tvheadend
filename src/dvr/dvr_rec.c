@@ -79,10 +79,9 @@ dvr_rec_subscribe(dvr_entry_t *de)
     flags = SUBSCRIPTION_RAW_MPEGTS;
   } else {
     streaming_queue_init(&de->de_sq, 0);
-    de->de_gh = globalheaders_create(&de->de_sq.sq_st);
-    de->de_tsfix = tsfix_create(de->de_gh);
+    de->de_tsfix = tsfix_create(&de->de_sq.sq_st);
     tsfix_set_start_time(de->de_tsfix, de->de_start - (60 * de->de_start_extra));
-    st = de->de_tsfix;
+    st = de->de_gh = globalheaders_create(de->de_tsfix);
     flags = 0;
   }
 
