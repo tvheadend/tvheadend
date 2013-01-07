@@ -229,6 +229,7 @@ typedef struct th_dvb_adapter {
 
   char *tda_demux_path;
 
+  char *tda_dvr_path;
   pthread_t tda_dvr_thread;
   th_pipe_t tda_dvr_pipe;
 
@@ -344,7 +345,7 @@ void dvb_adapter_stop (th_dvb_adapter_t *tda);
 
 void dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s);
 
-void dvb_adapter_set_enabled(th_dvb_adapter_t *tda, uint32_t enabled);
+void dvb_adapter_set_enabled(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_auto_discovery(th_dvb_adapter_t *tda, int on);
 

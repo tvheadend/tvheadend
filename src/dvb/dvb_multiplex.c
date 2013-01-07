@@ -288,7 +288,6 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
     tvhlog(LOG_NOTICE, "dvb", "New mux \"%s\" created by %s", buf, source);
 
     dvb_mux_save(tdmi);
-    dvb_adapter_notify(tda);
   }
 
   dvb_service_load(tdmi, identifier);
@@ -303,6 +302,7 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
       dvb_mux_add_to_scan_queue(tdmi);
     }
   }
+  dvb_adapter_notify(tda);
 
   return tdmi;
 }
