@@ -101,7 +101,8 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
                        "<link rel=\"stylesheet\" type=\"text/css\" href=\""EXTJSPATH"/resources/css/ext-all-notheme-min.css\">\n");
   }
   
-  htsbuf_qprintf(hq, "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/livegrid/resources/css/ext-ux-livegrid.css\">\n"
+  htsbuf_qprintf(hq, "<link rel=\"stylesheet\" type=\"text/css\" href=\""EXTJSPATH"/resources/css/xtheme-blue.css\">\n"
+                     "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/livegrid/resources/css/ext-ux-livegrid.css\">\n"
                      "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/app/ext.css\">\n");
 
   extjs_exec(hq, "Ext.BLANK_IMAGE_URL = "
