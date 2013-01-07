@@ -1,6 +1,6 @@
 /*
  *  TVheadend
- *  Copyright (C) 2007 - 2010 Andreas Öman
+ *  Copyright (C) 2007 - 2010 Andreas ï¿½man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -78,6 +78,7 @@ int log_debug_to_syslog;
 int log_debug_to_console;
 
 int webui_port;
+int webui_debug;
 int htsp_port;
 int htsp_port_extra;
 const char *tvheadend_cwd;
@@ -206,14 +207,15 @@ usage(const char *argv0)
 	 "                 it will allow world-wide administrative access\n"
 	 "                 to your Tvheadend installation until you edit\n"
 	 "                 the access-control from within the Tvheadend UI\n");
-  printf(" -s              Log debug to syslog\n");
-  printf(" -w <portnumber> WebUI access port [default 9981]\n");
+  printf(" -w <portnumber> Web interface access port [default 9981]\n");
   printf(" -e <portnumber> HTSP access port [default 9982]\n");
-  printf(" -W <path>       WebUI context path [default /]\n");
+  printf(" -W <path>       Web interface context path [default /]\n");
   printf("\n");
   printf("Development options\n");
   printf("\n");
   printf(" -d              Log debug to console\n");
+  printf(" -s              Log debug to syslog\n");
+  printf(" -x              Run web interface in debug mode\n");
   printf(" -j <id>         Statically join the given transport id\n");
   printf(" -r <tsfile>     Read the given transport stream file and present\n"
 	 "                 found services as channels\n");
@@ -306,7 +308,7 @@ main(int argc, char **argv)
   // make sure the timezone is set
   tzset();
 
-  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:sw:e:E:R:W:")) != -1) {
+  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdxr:j:sw:e:E:R:W:")) != -1) {
     switch(c) {
     case 'a':
       adapter_mask = 0x0;
@@ -360,6 +362,9 @@ main(int argc, char **argv)
       break;
     case 's':
       log_debug_to_syslog = 1;
+      break;
+	case 'x':
+      webui_debug = 1;
       break;
     case 'C':
       createdefault = 1;
