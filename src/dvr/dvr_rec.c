@@ -420,21 +420,20 @@ dvr_thread(void *aux)
     switch(sm->sm_type) {
 
     case SMT_PACKET:
-	pkt = sm->sm_data;
-	if(pkt->pkt_commercial == COMMERCIAL_YES) {
-	  dvr_rec_set_state(de, DVR_RS_COMMERCIAL, 0);
-	  tsfix_set_comm_skip(de->de_tsfix, 1);
-	  break;
-	}
-
+      pkt = sm->sm_data;
+      if(pkt->pkt_commercial == COMMERCIAL_YES) {
+	dvr_rec_set_state(de, DVR_RS_COMMERCIAL, 0);
+	tsfix_set_comm_skip(de->de_tsfix, 1);
+      } else {
 	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
 	tsfix_set_comm_skip(de->de_tsfix, 0);
+      }
 
-	if(started) {
-	  muxer_write_pkt(de->de_mux, sm->sm_type, sm->sm_data);
-	  sm->sm_data = NULL;
-	}
-	break;
+      if(started) {
+	muxer_write_pkt(de->de_mux, sm->sm_type, sm->sm_data);
+	sm->sm_data = NULL;
+      }
+      break;
 
     case SMT_MPEGTS:
       if(started) {
