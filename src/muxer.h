@@ -19,6 +19,8 @@
 #ifndef MUXER_H_
 #define MUXER_H_
 
+#include "htsmsg.h"
+
 typedef enum {
   MC_UNKNOWN     = 0,
   MC_MATROSKA    = 1,
@@ -64,6 +66,8 @@ muxer_container_type_t muxer_container_txt2type  (const char *str);
 muxer_container_type_t muxer_container_mime2type (const char *str);
 
 const char*            muxer_container_suffix(muxer_container_type_t mc, int video);
+
+int muxer_container_list(htsmsg_t *array);
 
 // Muxer factory
 muxer_t *muxer_create(muxer_container_type_t mc);

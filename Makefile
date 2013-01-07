@@ -171,6 +171,10 @@ SRCS-${CONFIG_V4L} += \
 # Avahi
 SRCS-$(CONFIG_AVAHI) += src/avahi.c
 
+# libav
+SRCS-$(CONFIG_LIBAV) += src/libav.c \
+	src/muxer/muxer_libav.c
+
 # CWC
 SRCS-${CONFIG_CWC} += src/cwc.c \
 	src/capmt.c

@@ -736,6 +736,47 @@ skip:
 
 }
 
+
+/**
+ *
+ */
+static int
+extjs_dvr_containers(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  const char *op = http_arg_get(&hc->hc_req_args, "op");
+  htsmsg_t *out, *array;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(op != NULL && !strcmp(op, "list")) {
+
+    out = htsmsg_create_map();
+    array = htsmsg_create_list();
+
+    if (http_access_verify(hc, ACCESS_RECORDER_ALL))
+      goto skip;
+
+    muxer_container_list(array);
+
+skip:
+    htsmsg_add_msg(out, "entries", array);
+
+  } else {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+
+}
+
+
 /**
  *
  */
@@ -2018,6 +2059,7 @@ extjs_start(void)
   http_path_add("/dvrlist_upcoming", NULL, extjs_dvrlist_upcoming, ACCESS_WEB_INTERFACE);
   http_path_add("/dvrlist_finished", NULL, extjs_dvrlist_finished, ACCESS_WEB_INTERFACE);
   http_path_add("/dvrlist_failed",   NULL, extjs_dvrlist_failed,   ACCESS_WEB_INTERFACE);
+  http_path_add("/dvr_containers",   NULL, extjs_dvr_containers,   ACCESS_WEB_INTERFACE);
   http_path_add("/subscriptions",    NULL, extjs_subscriptions,    ACCESS_WEB_INTERFACE);
   http_path_add("/ecglist",          NULL, extjs_ecglist,          ACCESS_WEB_INTERFACE);
   http_path_add("/config",           NULL, extjs_config,           ACCESS_WEB_INTERFACE);

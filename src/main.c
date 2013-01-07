@@ -61,6 +61,9 @@
 #include "muxes.h"
 #include "config2.h"
 #include "imagecache.h"
+#if ENABLE_LIBAV
+#include "libav.h"
+#endif
 
 int running;
 time_t dispatch_clock;
@@ -465,6 +468,10 @@ main(int argc, char **argv)
   /**
    * Initialize subsystems
    */
+
+#if ENABLE_LIBAV
+  libav_init();
+#endif
 
   config_init();
 

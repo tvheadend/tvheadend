@@ -23,7 +23,9 @@
 #include "muxer.h"
 #include "muxer/muxer_tvh.h"
 #include "muxer/muxer_pass.h"
-
+#if CONFIG_LIBAV
+#include "muxer/muxer_libav.h"
+#endif
 
 /**
  * Mime type for containers containing only audio
@@ -141,6 +143,45 @@ muxer_container_type2txt(muxer_container_type_t mc)
 
 
 /**
+ * Get a list of supported containers
+ */
+int
+muxer_container_list(htsmsg_t *array)
+{
+  htsmsg_t *mc;
+  int c = 0;
+
+  mc = htsmsg_create_map();
+  htsmsg_add_str(mc, "name",        muxer_container_type2txt(MC_MATROSKA));
+  htsmsg_add_str(mc, "description", "Matroska");
+  htsmsg_add_msg(array, NULL, mc);
+  c++;
+  
+  mc = htsmsg_create_map();
+  htsmsg_add_str(mc, "name",        muxer_container_type2txt(MC_PASS));
+  htsmsg_add_str(mc, "description", "Same as source (pass through)");
+  htsmsg_add_msg(array, NULL, mc);
+  c++;
+
+#if ENABLE_LIBAV
+  mc = htsmsg_create_map();
+  htsmsg_add_str(mc, "name",        muxer_container_type2txt(MC_MPEGTS));
+  htsmsg_add_str(mc, "description", "MPEG-TS");
+  htsmsg_add_msg(array, NULL, mc);
+  c++;
+
+  mc = htsmsg_create_map();
+  htsmsg_add_str(mc, "name",        muxer_container_type2txt(MC_MPEGPS));
+  htsmsg_add_str(mc, "description", "MPEG-PS (DVD)");
+  htsmsg_add_msg(array, NULL, mc);
+  c++;
+#endif
+
+  return c;
+}
+
+
+/**
  * Convert a container name to a container type
  */
 muxer_container_type_t
@@ -193,6 +234,11 @@ muxer_create(muxer_container_type_t mc)
 
   if(!m)
     m = tvh_muxer_create(mc);
+
+#if CONFIG_LIBAV
+  if(!m)
+    m = lav_muxer_create(mc);
+#endif
 
   if(!m)
     tvhlog(LOG_ERR, "mux", "Can't find a muxer that supports '%s' container",

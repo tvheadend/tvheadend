@@ -23,6 +23,7 @@ OPTIONS=(
   "imagecache:auto"
   "avahi:auto"
   "zlib:auto"
+  "libav:auto"
   "bundle:no"
   "dvbcsa:no"
 )
@@ -99,6 +100,32 @@ if enabled_or_auto avahi; then
     die "Avahi development support not found (use --disable-avahi)"
   fi
 fi
+
+#
+# libav
+#
+if enabled_or_auto libav; then
+  has_libav=true
+
+  if $has_libav && ! check_pkg libavutil ">=50.43.0"; then
+    has_libav=false
+  fi
+
+  if $has_libav && ! check_pkg libavformat "<=55.0.0"; then
+    has_libav=false
+  fi
+
+  if $has_libav && ! check_pkg libavformat ">=50.43.0"; then
+    has_libav=false
+  fi
+
+  if $has_libav; then
+    enable libav
+  elif enabled libav; then
+    die "libav development support not found (use --disable-libav)"
+  fi
+fi
+
 
 #
 # DVB scan
