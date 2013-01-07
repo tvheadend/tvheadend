@@ -115,8 +115,13 @@ static int
 curl_perform(CURL *curl, curl_response_t *response)
 {
   int result = curl_easy_perform(curl);
-  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response->code);
-  return result ? result : response->code >= 400;
+  if(response != NULL)
+  {
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response->code);
+    return result ? result : response->code >= 400;
+  } else {
+    return result;
+  }
 }
 
 /*
