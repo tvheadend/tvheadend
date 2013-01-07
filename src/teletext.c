@@ -540,6 +540,11 @@ teletext_rundown_scan(service_t *t, tt_private_t *ttp)
   if(ttp->ttp_rundown_valid == 0)
     return;
 
+  if(t->s_svcname &&
+     strcmp("TV4", t->s_svcname) &&
+     strcmp("TV4 HD", t->s_svcname))
+    return;
+
   for(i = 0; i < 23; i++) {
     l = ttp->ttp_rundown + 40 * i;
     if((l[1] & 0xf0) != 0x00 || !is_tt_clock(l + 32) || !is_tt_clock(l + 2))
