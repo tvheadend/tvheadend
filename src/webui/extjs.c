@@ -87,12 +87,22 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
 
 #define EXTJSPATH "static/extjs"
 
-  htsbuf_qprintf(hq, "<html>\n"
-		 "<script type=\"text/javascript\" src=\""EXTJSPATH"/adapter/ext/ext-base.js\"></script>\n"
-		 "<script type=\"text/javascript\" src=\""EXTJSPATH"/ext-all-debug.js\"></script>\n"
-		 "<link rel=\"stylesheet\" type=\"text/css\" href=\""EXTJSPATH"/resources/css/ext-all.css\">\n"
-		 "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/livegrid/resources/css/ext-ux-livegrid.css\">\n"
-		 "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/app/ext.css\">\n");
+  htsbuf_qprintf(hq, "<html>\n");
+  
+  if(webui_debug) {
+    htsbuf_qprintf(hq, "<script type=\"text/javascript\" src=\""EXTJSPATH"/adapter/ext/ext-base-debug.js\"></script>\n"
+                       "<script type=\"text/javascript\" src=\""EXTJSPATH"/ext-all-debug.js\"></script>\n"
+                       "<link rel=\"stylesheet\" type=\"text/css\" href=\""EXTJSPATH"/resources/css/ext-all-notheme.css\">\n");
+    tvhlog(LOG_INFO, "webui", "Running web interface in debug mode");
+  }
+  else {
+    htsbuf_qprintf(hq, "<script type=\"text/javascript\" src=\""EXTJSPATH"/adapter/ext/ext-base.js\"></script>\n"
+                       "<script type=\"text/javascript\" src=\""EXTJSPATH"/ext-all.js\"></script>\n"
+                       "<link rel=\"stylesheet\" type=\"text/css\" href=\""EXTJSPATH"/resources/css/ext-all-notheme-min.css\">\n");
+  }
+  
+  htsbuf_qprintf(hq, "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/livegrid/resources/css/ext-ux-livegrid.css\">\n"
+                     "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/app/ext.css\">\n");
 
   extjs_exec(hq, "Ext.BLANK_IMAGE_URL = "
 	     "'"EXTJSPATH"/resources/images/default/s.gif';");

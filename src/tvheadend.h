@@ -65,6 +65,7 @@ extern pthread_mutex_t ffmpeg_lock;
 extern pthread_mutex_t fork_lock;
 
 extern int webui_port;
+extern int webui_debug;
 extern int htsp_port;
 
 typedef struct source_info {
