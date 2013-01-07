@@ -703,7 +703,7 @@ tvheadend.dvrsettings = function() {
 	}, [ 'storage', 'postproc', 'retention', 'dayDirs', 'channelDirs',
 		'channelInTitle', 'container', 'dateInTitle', 'timeInTitle',
 		'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 'titleDirs',
-		'episodeInTitle', 'cleanTitle', 'tagFiles' ]);
+		'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip' ]);
 
 	var confcombo = new Ext.form.ComboBox({
 		store : tvheadend.configNames,
@@ -793,6 +793,9 @@ tvheadend.dvrsettings = function() {
 		}), new Ext.form.Checkbox({
 			fieldLabel : 'Tag files with metadata',
 			name : 'tagFiles'
+		}), new Ext.form.Checkbox({
+			fieldLabel : 'Skip commercials',
+			name : 'commSkip'
 		}), {
 			width : 300,
 			fieldLabel : 'Post-processor command',

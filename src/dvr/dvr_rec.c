@@ -398,11 +398,13 @@ static void *
 dvr_thread(void *aux)
 {
   dvr_entry_t *de = aux;
+  dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
   streaming_queue_t *sq = &de->de_sq;
   streaming_message_t *sm;
   th_pkt_t *pkt;
   int run = 1;
   int started = 0;
+  int comm_skip = (cfg->dvr_flags & DVR_SKIP_COMMERCIALS);
 
   pthread_mutex_lock(&sq->sq_mutex);
 
@@ -423,7 +425,7 @@ dvr_thread(void *aux)
       pkt = sm->sm_data;
       if(pkt->pkt_commercial == COMMERCIAL_YES) {
 	dvr_rec_set_state(de, DVR_RS_COMMERCIAL, 0);
-	tsfix_set_comm_skip(de->de_tsfix, 1);
+	tsfix_set_comm_skip(de->de_tsfix, comm_skip);
       } else {
 	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
 	tsfix_set_comm_skip(de->de_tsfix, 0);
