@@ -200,6 +200,8 @@ typedef struct th_dvb_adapter {
 
   int tda_table_epollfd;
 
+  uint32_t tda_enabled;
+
   const char *tda_rootpath;
   char *tda_identifier;
   uint32_t tda_autodiscovery;
@@ -341,6 +343,8 @@ void dvb_adapter_start (th_dvb_adapter_t *tda);
 void dvb_adapter_stop (th_dvb_adapter_t *tda);
 
 void dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s);
+
+void dvb_adapter_set_enabled(th_dvb_adapter_t *tda, uint32_t enabled);
 
 void dvb_adapter_set_auto_discovery(th_dvb_adapter_t *tda, int on);
 
