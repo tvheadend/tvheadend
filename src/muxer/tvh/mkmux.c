@@ -50,6 +50,12 @@ typedef struct mk_track {
   int tracknum;
   int disabled;
   int64_t nextpts;
+
+  uint8_t channels;
+  uint8_t sri;
+
+  uint16_t aspect_num;
+  uint16_t aspect_den;
 } mk_track_t;
 
 /**
@@ -198,7 +204,11 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
       continue;
 
     mkm->tracks[i].index = ssc->ssc_index;
-    mkm->tracks[i].type  = ssc->ssc_type;
+    mkm->tracks[i].type = ssc->ssc_type;
+    mkm->tracks[i].channels = ssc->ssc_channels;
+    mkm->tracks[i].aspect_num = ssc->ssc_aspect_num;
+    mkm->tracks[i].aspect_den = ssc->ssc_aspect_den;
+    mkm->tracks[i].sri = ssc->ssc_sri;
     mkm->tracks[i].nextpts = PTS_UNSET;
 
     switch(ssc->ssc_type) {
@@ -998,7 +1008,7 @@ mk_mux_init(mk_mux_t *mkm, const char *title, const streaming_start_t *ss)
 int
 mk_mux_write_pkt(mk_mux_t *mkm, th_pkt_t *pkt)
 {
-  int i;
+  int i, mark;
   mk_track_t *t = NULL;
   for(i = 0; i < mkm->ntracks;i++) {
     if(mkm->tracks[i].index == pkt->pkt_componentindex &&
@@ -1008,11 +1018,40 @@ mk_mux_write_pkt(mk_mux_t *mkm, th_pkt_t *pkt)
     }
   }
   
-  if(t != NULL && !t->disabled) {
-    if(t->merge)
-      pkt = pkt_merge_header(pkt);
-    mk_write_frame_i(mkm, t, pkt);
+  if(t == NULL || t->disabled) {
+    pkt_ref_dec(pkt);
+    return mkm->error;
   }
+
+  mark = 0;
+  if(pkt->pkt_channels != t->channels &&
+     pkt->pkt_channels) {
+    mark = 1;
+    t->channels = pkt->pkt_channels;
+  }
+  if(pkt->pkt_aspect_num != t->aspect_num && 
+     pkt->pkt_aspect_num) {
+    mark = 1;
+    pkt->pkt_aspect_num = t->aspect_num;
+  }
+  if(pkt->pkt_aspect_den != t->aspect_den && 
+     pkt->pkt_aspect_den) {
+    mark = 1;
+    pkt->pkt_aspect_den = t->aspect_den;
+  }
+  if(pkt->pkt_sri != t->sri && 
+     pkt->pkt_sri) {
+    mark = 1;
+    t->sri = pkt->pkt_sri;
+  }
+
+  if(mark)
+    mk_mux_insert_chapter(mkm);
+
+  if(t->merge)
+    pkt = pkt_merge_header(pkt);
+
+  mk_write_frame_i(mkm, t, pkt);
 
   pkt_ref_dec(pkt);
 
