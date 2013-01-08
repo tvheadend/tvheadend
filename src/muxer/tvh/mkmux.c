@@ -1145,6 +1145,7 @@ mk_mux_destroy(mk_mux_t *mkm)
   mk_chapter_t *ch;
 
   while((ch = TAILQ_FIRST(&mkm->chapters)) != NULL) {
+    TAILQ_REMOVE(&mkm->chapters, ch, link);
     free(ch);
   }
 
