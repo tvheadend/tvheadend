@@ -245,6 +245,7 @@ void *timeshift_reader ( void *p )
   int64_t now, deliver, skip_time;
   streaming_message_t *sm = NULL, *ctrl;
   timeshift_index_iframe_t *tsi = NULL;
+  streaming_skip_t *skip;
 
   /* Poll */
   struct epoll_event ev;
@@ -264,6 +265,7 @@ void *timeshift_reader ( void *p )
     wait      = -1;
     end       = 0;
     skip_time = 0;
+    skip      = NULL;
     now       = getmonoclock();
 
     /* Control */
@@ -352,14 +354,27 @@ void *timeshift_reader ( void *p )
 
         /* Skip/Seek */
         } else if (ctrl->sm_type == SMT_SKIP) {
-          // TODO: implement this
-
+          skip = (streaming_skip_t *) ctrl->sm_data;
+          switch (skip->type) {
+            case SMT_SKIP_REL_TIME:
+              skip_time = last_time + skip->time;
+              break;
+            case SMT_SKIP_ABS_TIME:
+              skip_time = skip->time; // Wrong - need to use starttime of video too
+              break;
+            case SMT_SKIP_REL_SIZE:
+            case SMT_SKIP_ABS_SIZE:
+              tvhlog(LOG_DEBUG, "timeshift", "unsupported skip type: %d", skip->type);
+              break;
+            default:
+              tvhlog(LOG_ERR, "timeshift", "invalid skip type: %d", skip->type);
+          }
+          if (!skip_time)
+            streaming_msg_free(ctrl);
         /* Ignore */
         } else {
           streaming_msg_free(ctrl);
         }
-
-        ctrl = NULL;
       }
     }
 
@@ -394,6 +409,12 @@ void *timeshift_reader ( void *p )
         /* Find */
         end = _timeshift_skip(ts, req_time, last_time,
                               cur_file, &tsf, &tsi);
+
+        /* Adjust skip time to actual */
+        if (skip_time) {
+          skip->time += (tsi->time - skip_time);
+          streaming_target_deliver2(ts->output, ctrl);
+        }
 
         /* File changed (close) */
         if ((tsf != cur_file) && (fd != -1)) {
