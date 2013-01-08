@@ -50,26 +50,26 @@ typedef struct mk_track {
   int tracknum;
   int disabled;
   int64_t nextpts;
-} mk_track;
+} mk_track_t;
 
 /**
  *
  */
-struct mk_cue {
+typedef struct mk_cue {
   TAILQ_ENTRY(mk_cue) link;
   int64_t ts;
   int tracknum;
   off_t cluster_pos;
-};
+} mk_cue_t;
 
 /**
  *
  */
-struct mk_chapter {
+typedef struct mk_chapter {
   TAILQ_ENTRY(mk_chapter) link;
   int uuid;
   int64_t ts;
-};
+} mk_chapter_t;
 
 /**
  *
@@ -81,7 +81,7 @@ struct mk_mux {
   off_t fdpos; // Current position in file
   int seekable;
 
-  mk_track *tracks;
+  mk_track_t *tracks;
   int ntracks;
   int has_video;
 
@@ -177,7 +177,7 @@ mk_build_segment_info(mk_mux_t *mkm)
  *
  */
 static htsbuf_queue_t *
-mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
+mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
 {
   const streaming_start_component_t *ssc;
   const char *codec_id;
@@ -186,7 +186,7 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
   int tracknum = 0;
   uint8_t buf4[4];
 
-  mkm->tracks = calloc(1, sizeof(mk_track) * ss->ss_num_components);
+  mkm->tracks = calloc(1, sizeof(mk_track_t) * ss->ss_num_components);
   mkm->ntracks = ss->ss_num_components;
   
   for(i = 0; i < ss->ss_num_components; i++) {
@@ -428,7 +428,7 @@ mk_write_segment_header(mk_mux_t *mkm, int64_t size)
  *
  */
 static htsbuf_queue_t *
-mk_build_one_chapter(struct mk_chapter *ch)
+mk_build_one_chapter(mk_chapter_t *ch)
 {
   htsbuf_queue_t *q = htsbuf_queue_alloc(0);
 
@@ -447,7 +447,7 @@ mk_build_one_chapter(struct mk_chapter *ch)
 static htsbuf_queue_t *
 mk_build_edition_entry(mk_mux_t *mkm)
 {
-  struct mk_chapter *ch;
+  mk_chapter_t *ch;
   htsbuf_queue_t *q = htsbuf_queue_alloc(0);
 
   ebml_append_uint(q, 0x45bd, 0); //EditionFlagHidden
@@ -704,7 +704,7 @@ mk_write_metaseek(mk_mux_t *mkm, int first)
  */
 static htsbuf_queue_t *
 mk_build_segment(mk_mux_t *mkm, 
-		 const struct streaming_start *ss)
+		 const streaming_start_t *ss)
 {
   htsbuf_queue_t *p = htsbuf_queue_alloc(0);
 
@@ -730,7 +730,7 @@ mk_build_segment(mk_mux_t *mkm,
 static void
 addcue(mk_mux_t *mkm, int64_t pts, int tracknum)
 {
-  struct mk_cue *mc = malloc(sizeof(struct mk_cue));
+  mk_cue_t *mc = malloc(sizeof(mk_cue_t));
   mc->ts = pts;
   mc->tracknum = tracknum;
   mc->cluster_pos = mkm->cluster_pos;
@@ -744,7 +744,7 @@ addcue(mk_mux_t *mkm, int64_t pts, int tracknum)
 static void
 mk_add_chapter(mk_mux_t *mkm, int64_t ts)
 {
-  struct mk_chapter *ch;
+  mk_chapter_t *ch;
   int uuid;
 
   ch = TAILQ_LAST(&mkm->chapters, mk_chapter_queue);
@@ -760,7 +760,7 @@ mk_add_chapter(mk_mux_t *mkm, int64_t ts)
     uuid = 1;
   }
 
-  ch = malloc(sizeof(struct mk_chapter));
+  ch = malloc(sizeof(mk_chapter_t));
 
   ch->uuid = uuid;
   ch->ts = ts;
@@ -784,7 +784,7 @@ mk_close_cluster(mk_mux_t *mkm)
  *
  */
 static void
-mk_write_frame_i(mk_mux_t *mkm, mk_track *t, th_pkt_t *pkt)
+mk_write_frame_i(mk_mux_t *mkm, mk_track_t *t, th_pkt_t *pkt)
 {
   int64_t pts = pkt->pkt_pts, delta, nxt;
   unsigned char c_delta_flags[3];
@@ -877,7 +877,7 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track *t, th_pkt_t *pkt)
 static void
 mk_write_cues(mk_mux_t *mkm)
 {
-  struct mk_cue *mc;
+  mk_cue_t *mc;
   htsbuf_queue_t *q, *c, *p;
 
   if(TAILQ_FIRST(&mkm->cues) == NULL)
@@ -911,7 +911,7 @@ mk_write_cues(mk_mux_t *mkm)
  */
 mk_mux_t *mk_mux_create(void)
 {
-  mk_mux_t *mkm = calloc(1, sizeof(struct mk_mux));
+  mk_mux_t *mkm = calloc(1, sizeof(mk_mux_t));
 
   mkm->fd = -1;
 
@@ -962,7 +962,7 @@ mk_mux_open_file(mk_mux_t *mkm, const char *filename)
  * Init the muxer with a title and some tracks
  */
 int
-mk_mux_init(mk_mux_t *mkm, const char *title, const struct streaming_start *ss)
+mk_mux_init(mk_mux_t *mkm, const char *title, const streaming_start_t *ss)
 {
   htsbuf_queue_t q;
 
@@ -996,10 +996,10 @@ mk_mux_init(mk_mux_t *mkm, const char *title, const struct streaming_start *ss)
  * Append a packet to the muxer
  */
 int
-mk_mux_write_pkt(mk_mux_t *mkm, struct th_pkt *pkt)
+mk_mux_write_pkt(mk_mux_t *mkm, th_pkt_t *pkt)
 {
   int i;
-  mk_track *t = NULL;
+  mk_track_t *t = NULL;
   for(i = 0; i < mkm->ntracks;i++) {
     if(mkm->tracks[i].index == pkt->pkt_componentindex &&
        mkm->tracks[i].enabled) {
@@ -1103,7 +1103,7 @@ mk_mux_close(mk_mux_t *mkm)
 void
 mk_mux_destroy(mk_mux_t *mkm)
 {
-  struct mk_chapter *ch;
+  mk_chapter_t *ch;
 
   while((ch = TAILQ_FIRST(&mkm->chapters)) != NULL) {
     free(ch);
