@@ -155,7 +155,7 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
  */
 static void
 http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
-    const char *name, muxer_container_type_t mc)
+    const char *name, muxer_container_type_t mc, int raw)
 {
   streaming_message_t *sm;
   int run = 1;
@@ -167,9 +167,11 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   int err = 0;
   socklen_t errlen = sizeof(err);
 
-  mux = muxer_create(mc);
-  if(muxer_open_stream(mux, hc->hc_fd))
-    run = 0;
+  if (!raw) {
+    mux = muxer_create(mc);
+    if(muxer_open_stream(mux, hc->hc_fd))
+      run = 0;
+  }
 
   /* reduce timeout on write() for streaming */
   tp.tv_sec  = 5;
@@ -204,6 +206,16 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     timeouts = 0; //Reset timeout counter
     TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
     pthread_mutex_unlock(&sq->sq_mutex);
+
+    if (raw) {
+      if (sm->sm_type == SMT_MPEGTS) {
+        pktbuf_t *pb = sm->sm_data;
+        if (tvh_write(hc->hc_fd, pb->pb_data, pb->pb_size))
+          run = 0;
+      }
+      streaming_msg_free(sm);
+      continue;
+    }
 
     switch(sm->sm_type) {
     case SMT_MPEGTS:
@@ -268,10 +280,12 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
     }
   }
 
-  if(started)
-    muxer_close(mux);
 
-  muxer_destroy(mux);
+  if(mux != NULL){
+    if(started)
+      muxer_close(mux);
+    muxer_destroy(mux);
+  }
 }
 
 
@@ -592,7 +606,7 @@ http_stream_service(http_connection_t *hc, service_t *service)
     name = strdupa(service->s_ch ?
                    service->s_ch->ch_name : service->s_nicename);
     pthread_mutex_unlock(&global_lock);
-    http_stream_run(hc, &sq, name, mc);
+    http_stream_run(hc, &sq, name, mc, 0);
     pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
   }
@@ -624,7 +638,7 @@ http_stream_tdmi(http_connection_t *hc, th_dvb_mux_instance_t *tdmi)
   s = dvb_subscription_create_from_tdmi(tdmi, "HTTP", &sq.sq_st);
   name = strdupa(tdmi->tdmi_identifier);
   pthread_mutex_unlock(&global_lock);
-  http_stream_run(hc, &sq, name, MC_PASS);
+  http_stream_run(hc, &sq, name, MC_PASS, 1);
   pthread_mutex_lock(&global_lock);
   subscription_unsubscribe(s);
 
@@ -687,7 +701,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   if(s) {
     name = strdupa(ch->ch_name);
     pthread_mutex_unlock(&global_lock);
-    http_stream_run(hc, &sq, name, mc);
+    http_stream_run(hc, &sq, name, mc, 0);
     pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
   }
