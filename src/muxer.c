@@ -309,6 +309,18 @@ muxer_reconfigure(muxer_t *m, const struct streaming_start *ss)
 
 
 /**
+ * sanity wrapper arround m_add_marker()
+ */
+int
+muxer_add_marker(muxer_t *m)
+{
+  if(!m)
+    return -1;
+
+  return m->m_add_marker(m);
+}
+
+/**
  * sanity wrapper arround m_open_file()
  */
 int

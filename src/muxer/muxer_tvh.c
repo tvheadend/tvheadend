@@ -82,6 +82,23 @@ tvh_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
 
 
 /**
+ * Insert a new chapter at the current location
+ */
+static int
+tvh_muxer_add_marker(muxer_t* m)
+{
+  tvh_muxer_t *tm = (tvh_muxer_t*)m;
+
+  if(mk_mux_insert_chapter(tm->tm_ref)) {
+    tm->m_errors++;
+    return -1;
+  }
+
+  return 0;
+}
+
+
+/**
  * Multisegment matroska files do exist but I am not sure if they are supported
  * by many media players. For now, we'll treat it as an error.
  */
@@ -216,6 +233,7 @@ tvh_muxer_create(muxer_container_type_t mc)
   tm->m_mime         = tvh_muxer_mime;
   tm->m_init         = tvh_muxer_init;
   tm->m_reconfigure  = tvh_muxer_reconfigure;
+  tm->m_add_marker   = tvh_muxer_add_marker;
   tm->m_write_meta   = tvh_muxer_write_meta;
   tm->m_write_pkt    = tvh_muxer_write_pkt;
   tm->m_close        = tvh_muxer_close;
