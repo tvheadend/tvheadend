@@ -34,6 +34,7 @@
 extern int dvr_iov_max;
 
 TAILQ_HEAD(mk_cue_queue, mk_cue);
+TAILQ_HEAD(mk_chapter_queue, mk_chapter);
 
 #define MATROSKA_TIMESCALE 1000000 // in nS
 
@@ -59,6 +60,15 @@ struct mk_cue {
   int64_t ts;
   int tracknum;
   off_t cluster_pos;
+};
+
+/**
+ *
+ */
+struct mk_chapter {
+  TAILQ_ENTRY(mk_chapter) link;
+  int uuid;
+  int64_t ts;
 };
 
 /**
@@ -90,10 +100,12 @@ struct mk_mux {
   off_t trackinfo_pos;
   off_t metadata_pos;
   off_t cue_pos;
+  off_t chapters_pos;
 
   int addcue;
 
   struct mk_cue_queue cues;
+  struct mk_chapter_queue chapters;
 
   char uuid[16];
   char *title;
@@ -416,6 +428,70 @@ mk_write_segment_header(mk_mux_t *mkm, int64_t size)
  *
  */
 static htsbuf_queue_t *
+mk_build_one_chapter(struct mk_chapter *ch)
+{
+  htsbuf_queue_t *q = htsbuf_queue_alloc(0);
+
+  ebml_append_uint(q, 0x73C4, ch->uuid);
+  ebml_append_uint(q, 0x91, ch->ts * MATROSKA_TIMESCALE);
+  ebml_append_uint(q, 0x98, 0); //ChapterFlagHidden
+  ebml_append_uint(q, 0x4598, 1); //ChapterFlagEnabled
+
+  return q;
+}
+
+
+/**
+ *
+ */
+static htsbuf_queue_t *
+mk_build_edition_entry(mk_mux_t *mkm)
+{
+  struct mk_chapter *ch;
+  htsbuf_queue_t *q = htsbuf_queue_alloc(0);
+
+  ebml_append_uint(q, 0x45bd, 0); //EditionFlagHidden
+  ebml_append_uint(q, 0x45db, 1); //EditionFlagDefault
+
+  TAILQ_FOREACH(ch, &mkm->chapters, link) {
+    ebml_append_master(q, 0xB6, mk_build_one_chapter(ch));
+  }
+
+  return q;
+}
+
+
+/**
+ *
+ */
+static htsbuf_queue_t *
+mk_build_chapters(mk_mux_t *mkm)
+{
+  htsbuf_queue_t *q = htsbuf_queue_alloc(0);
+
+  ebml_append_master(q, 0x45b9, mk_build_edition_entry(mkm));
+
+  return q;
+}
+
+/**
+ *
+ */
+static void
+mk_write_chapters(mk_mux_t *mkm)
+{
+  if(TAILQ_FIRST(&mkm->chapters) == NULL)
+    return;
+
+  mkm->chapters_pos = mkm->fdpos;
+  mk_write_master(mkm, 0x1043a770, mk_build_chapters(mkm));
+}
+
+
+/**
+ *
+ */
+static htsbuf_queue_t *
 build_tag_string(const char *name, const char *value, const char *lang,
 		 int targettype, const char *targettypename)
 {
@@ -581,6 +657,11 @@ mk_build_metaseek(mk_mux_t *mkm)
     ebml_append_master(q, 0x4dbb, 
 		       mk_build_one_metaseek(mkm, 0x1c53bb6b,
 					     mkm->cue_pos));
+
+  if(mkm->chapters_pos)
+    ebml_append_master(q, 0x4dbb, 
+		       mk_build_one_metaseek(mkm, 0x1043a770,
+					     mkm->chapters_pos));
   return q;
 }
 
@@ -656,6 +737,29 @@ addcue(mk_mux_t *mkm, int64_t pts, int tracknum)
   TAILQ_INSERT_TAIL(&mkm->cues, mc, link);
 }
 
+
+/**
+ *
+ */
+static void
+mk_add_chapter(mk_mux_t *mkm, int64_t ts)
+{
+  struct mk_chapter *ch;
+  int uuid;
+
+  ch = TAILQ_LAST(&mkm->chapters, mk_chapter_queue);
+  if(ch)
+    uuid = ch->uuid + 1;
+  else
+    uuid = 1;
+
+  ch = malloc(sizeof(struct mk_chapter));
+
+  ch->uuid = uuid;
+  ch->ts = ts;
+
+  TAILQ_INSERT_TAIL(&mkm->chapters, ch, link);
+}
 
 /**
  *
@@ -863,6 +967,7 @@ mk_mux_init(mk_mux_t *mkm, const char *title, const struct streaming_start *ss)
     mkm->title = strdup(mkm->filename);
 
   TAILQ_INIT(&mkm->cues);
+  TAILQ_INIT(&mkm->chapters);
 
   htsbuf_queue_init(&q, 0);
 
@@ -901,7 +1006,7 @@ mk_mux_write_pkt(mk_mux_t *mkm, struct th_pkt *pkt)
       pkt = pkt_merge_header(pkt);
     mk_write_frame_i(mkm, t, pkt);
   }
-  
+
   pkt_ref_dec(pkt);
 
   return mkm->error;
@@ -929,6 +1034,19 @@ mk_mux_write_meta(mk_mux_t *mkm, const dvr_entry_t *de,
 
 
 /**
+ * Insert a new chapter at the current location
+ */
+int
+mk_mux_insert_chapter(mk_mux_t *mkm)
+{
+  if(mkm->totduration != PTS_UNSET)
+    mk_add_chapter(mkm, mkm->totduration);
+
+  return mkm->error;
+}
+
+
+/**
  * Close the muxer
  */
 int
@@ -937,6 +1055,7 @@ mk_mux_close(mk_mux_t *mkm)
   int64_t totsize;
   mk_close_cluster(mkm);
   mk_write_cues(mkm);
+  mk_write_chapters(mkm);
 
   mk_write_metaseek(mkm, 0);
   totsize = mkm->fdpos;
@@ -977,6 +1096,12 @@ mk_mux_close(mk_mux_t *mkm)
 void
 mk_mux_destroy(mk_mux_t *mkm)
 {
+  struct mk_chapter *ch;
+
+  while((ch = TAILQ_FIRST(&mkm->chapters)) != NULL) {
+    free(ch);
+  }
+
   free(mkm->filename);
   free(mkm->tracks);
   free(mkm->title);
