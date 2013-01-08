@@ -463,7 +463,6 @@ service_destroy(service_t *t)
 {
   elementary_stream_t *st;
   th_subscription_t *s;
-  channel_t *ch = t->s_ch;
 
   if(t->s_dtor != NULL)
     t->s_dtor(t);
@@ -506,11 +505,6 @@ service_destroy(service_t *t)
   avgstat_flush(&t->s_rate);
 
   service_unref(t);
-
-  if(ch != NULL) {
-    if(LIST_FIRST(&ch->ch_services) == NULL) 
-      channel_delete(ch);
-  }
 }
 
 
