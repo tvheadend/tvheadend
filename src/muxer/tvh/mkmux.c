@@ -748,10 +748,17 @@ mk_add_chapter(mk_mux_t *mkm, int64_t ts)
   int uuid;
 
   ch = TAILQ_LAST(&mkm->chapters, mk_chapter_queue);
-  if(ch)
+  if(ch) {
+    // don't add a new chapter if the previous one was
+    // added less than 10s ago
+    if(ts - ch->ts < 10000)
+      return;
+
     uuid = ch->uuid + 1;
-  else
+  }
+  else {
     uuid = 1;
+  }
 
   ch = malloc(sizeof(struct mk_chapter));
 
