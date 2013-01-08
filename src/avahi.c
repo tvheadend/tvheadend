@@ -133,7 +133,7 @@ create_services(AvahiClient *c)
     /* Add the service for HTSP */
     if ((ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC, 
 					     AVAHI_PROTO_UNSPEC, 0, name, 
-					     "_htsp._tcp", NULL, NULL,htsp_port,
+					     "_htsp._tcp", NULL, NULL,tvheadend_htsp_port,
 					     NULL)) < 0) {
 
       if (ret == AVAHI_ERR_COLLISION)
@@ -149,7 +149,7 @@ create_services(AvahiClient *c)
     /* Add the service for HTTP */
     if ((ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC, 
 					     AVAHI_PROTO_UNSPEC, 0, name, 
-					     "_http._tcp", NULL, NULL, webui_port,
+					     "_http._tcp", NULL, NULL, tvheadend_webui_port,
 					     "path=/",
 					     NULL)) < 0) {
 

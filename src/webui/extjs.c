@@ -94,9 +94,9 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
                      "<link rel=\"stylesheet\" type=\"text/css\" href=\""EXTJSPATH"/resources/css/xtheme-blue.css\">\n"
                      "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/livegrid/resources/css/ext-ux-livegrid.css\">\n"
                      "<link rel=\"stylesheet\" type=\"text/css\" href=\"static/app/ext.css\">\n",
-                     webui_debug ? "-debug" : "",
-                     webui_debug ? "-debug" : "",
-                     webui_debug ? ""       : "-min");
+                     tvheadend_webui_debug ? "-debug" : "",
+                     tvheadend_webui_debug ? "-debug" : "",
+                     tvheadend_webui_debug ? ""       : "-min");
   
   extjs_exec(hq, "Ext.BLANK_IMAGE_URL = " "'"EXTJSPATH"/resources/images/default/s.gif';");
 

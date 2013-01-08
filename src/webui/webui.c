@@ -939,7 +939,7 @@ int page_statedump(http_connection_t *hc, const char *remain, void *opaque);
 void
 webui_init(void)
 {
-  if (webui_debug)
+  if (tvheadend_webui_debug)
     tvhlog(LOG_INFO, "webui", "Running web interface in debug mode");
 
   http_path_add("", NULL, page_root2, ACCESS_WEB_INTERFACE);

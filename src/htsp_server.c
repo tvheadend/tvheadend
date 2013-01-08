@@ -466,7 +466,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
         inet_ntop(AF_INET, &addr.sin_addr, url+p, sizeof(url)-p);
         p = strlen(url);
         p += snprintf(url+p, sizeof(url)-p, ":%hd%s",
-                      webui_port,
+                      tvheadend_webui_port,
                       tvheadend_webroot ?: "");
       }
       snprintf(url+p, sizeof(url)-p, "/imagecache/%d", id);
@@ -1860,10 +1860,10 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source,
 void
 htsp_init(void)
 {
-  extern int htsp_port_extra;
-  htsp_server = tcp_server_create(htsp_port, htsp_serve, NULL);
-  if(htsp_port_extra)
-    htsp_server_2 = tcp_server_create(htsp_port_extra, htsp_serve, NULL);
+  extern int tvheadend_htsp_port_extra;
+  htsp_server = tcp_server_create(tvheadend_htsp_port, htsp_serve, NULL);
+  if(tvheadend_htsp_port_extra)
+    htsp_server_2 = tcp_server_create(tvheadend_htsp_port_extra, htsp_serve, NULL);
 }
 
 /* **************************************************************************
