@@ -1032,12 +1032,12 @@ mk_mux_write_pkt(mk_mux_t *mkm, th_pkt_t *pkt)
   if(pkt->pkt_aspect_num != t->aspect_num && 
      pkt->pkt_aspect_num) {
     mark = 1;
-    pkt->pkt_aspect_num = t->aspect_num;
+    t->aspect_num = pkt->pkt_aspect_num;
   }
   if(pkt->pkt_aspect_den != t->aspect_den && 
      pkt->pkt_aspect_den) {
     mark = 1;
-    pkt->pkt_aspect_den = t->aspect_den;
+    t->aspect_den = pkt->pkt_aspect_den;
   }
   if(pkt->pkt_sri != t->sri && 
      pkt->pkt_sri) {
