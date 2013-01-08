@@ -344,7 +344,7 @@ main(int argc, char **argv)
   log_debug_to_console      = 0;
   tvheadend_webui_port      = 9981;
   tvheadend_webroot         = NULL;
-  tvheadend_htsp_port       = 9992;
+  tvheadend_htsp_port       = 9982;
   tvheadend_htsp_port_extra = 0;
 
   /* Command line options */
