@@ -761,7 +761,7 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
             .cad_length = 0x08,
             .cad_data = { 0x00, 0x00, 0x00, 0x00, // enigma namespace goes here              
               transponder >> 8, transponder & 0xFF,
-              onid >> 8, onid & 0xFF,
+              onid >> 8, onid & 0xFF
             }};
           memcpy(&buf[pos], &prd, prd.cad_length + 2);
           pos += prd.cad_length + 2;
