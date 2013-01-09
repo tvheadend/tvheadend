@@ -638,7 +638,10 @@ http_stream_tdmi(http_connection_t *hc, th_dvb_mux_instance_t *tdmi)
   const char *name;
   streaming_queue_init(&sq, SMT_PACKET);
 
-  s = dvb_subscription_create_from_tdmi(tdmi, "HTTP", &sq.sq_st);
+  s = dvb_subscription_create_from_tdmi(tdmi, "HTTP", &sq.sq_st,
+					inet_ntoa(hc->hc_peer->sin_addr),
+					hc->hc_username,
+					http_arg_get(&hc->hc_args, "User-Agent"));
   name = strdupa(tdmi->tdmi_identifier);
   pthread_mutex_unlock(&global_lock);
   http_stream_run(hc, &sq, name, MC_PASS, 1);

@@ -548,7 +548,10 @@ void dvb_lnb_get_frequencies(const char *id,
 struct th_subscription;
 struct th_subscription *dvb_subscription_create_from_tdmi(th_dvb_mux_instance_t *tdmi,
 							  const char *name,
-							  streaming_target_t *st);
+							  streaming_target_t *st,
+							  const char *hostname,
+							  const char *username,
+							  const char *client);
 
 #endif /* DVB_H_ */
 

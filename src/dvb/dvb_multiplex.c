@@ -1293,13 +1293,16 @@ th_dvb_mux_instance_t *dvb_mux_find
 th_subscription_t *
 dvb_subscription_create_from_tdmi(th_dvb_mux_instance_t *tdmi,
 				  const char *name,
-				  streaming_target_t *st)
+				  streaming_target_t *st, 
+				  const char *hostname,
+				  const char *username, 
+				  const char *client)
 {
   th_subscription_t *s;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
   s = subscription_create(INT32_MAX, name, st, SUBSCRIPTION_RAW_MPEGTS, 
-			  NULL, NULL, NULL, NULL);
+			  NULL, hostname, username, client);
   
 
   s->ths_tdmi = tdmi;
