@@ -308,6 +308,17 @@ static void
 subscription_input_direct(void *opauqe, streaming_message_t *sm)
 {
   th_subscription_t *s = opauqe;
+
+ if(sm->sm_type == SMT_PACKET) {
+    th_pkt_t *pkt = sm->sm_data;
+    if(pkt->pkt_err)
+      s->ths_total_err++;
+    s->ths_bytes += pkt->pkt_payload->pb_size;
+  } else if(sm->sm_type == SMT_MPEGTS) {
+    pktbuf_t *pb = sm->sm_data;
+    s->ths_bytes += pb->pb_size;
+  }
+
   streaming_target_deliver(s->ths_output, sm);
 }
 
