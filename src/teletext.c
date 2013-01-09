@@ -534,10 +534,15 @@ teletext_rundown_scan(service_t *t, tt_private_t *ttp)
 {
   int i;
   uint8_t *l;
-  time_t now = t->s_tt_clock, start, stop, last = 0;
+  time_t now = t->s_tt_clock, start, stop;
   th_commercial_advice_t ca;
 
   if(ttp->ttp_rundown_valid == 0)
+    return;
+
+  if(t->s_svcname &&
+     strcmp("TV4", t->s_svcname) &&
+     strcmp("TV4 HD", t->s_svcname))
     return;
 
   for(i = 0; i < 23; i++) {
@@ -555,8 +560,5 @@ teletext_rundown_scan(service_t *t, tt_private_t *ttp)
     
     if(start <= now && stop > now)
       t->s_tt_commercial_advice = ca;
-    
-    if(start > now && ca != t->s_tt_commercial_advice && last == 0)
-      last = start;
   }
 }

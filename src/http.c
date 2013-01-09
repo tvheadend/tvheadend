@@ -612,7 +612,7 @@ http_path_add(const char *path, void *opaque, http_callback_t *callback,
   if (tvheadend_webroot) {
     size_t len = strlen(tvheadend_webroot) + strlen(path) + 1;
     hp->hp_path     = tmp = malloc(len);
-    sprintf(tmp, "%s/%s", tvheadend_webroot, path);
+    sprintf(tmp, "%s%s", tvheadend_webroot, path);
   } else
     hp->hp_path     = strdup(path);
   hp->hp_len      = strlen(hp->hp_path);
@@ -814,5 +814,5 @@ http_serve(int fd, void *opaque, struct sockaddr_in *peer,
 void
 http_server_init(void)
 {
-  http_server = tcp_server_create(webui_port, http_serve, NULL);
+  http_server = tcp_server_create(tvheadend_webui_port, http_serve, NULL);
 }

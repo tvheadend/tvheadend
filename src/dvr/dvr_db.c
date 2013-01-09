@@ -1000,6 +1000,9 @@ dvr_init(void)
       if(!htsmsg_get_u32(m, "tag-files", &u32) && !u32)
         cfg->dvr_flags &= ~DVR_TAG_FILES;
 
+      if(!htsmsg_get_u32(m, "skip-commercials", &u32) && !u32)
+        cfg->dvr_flags &= ~DVR_SKIP_COMMERCIALS;
+
       tvh_str_set(&cfg->dvr_postproc, htsmsg_get_str(m, "postproc"));
     }
 
@@ -1095,7 +1098,7 @@ dvr_config_create(const char *name)
   cfg->dvr_config_name = strdup(name);
   cfg->dvr_retention_days = 31;
   cfg->dvr_mc = MC_MATROSKA;
-  cfg->dvr_flags = DVR_TAG_FILES;
+  cfg->dvr_flags = DVR_TAG_FILES | DVR_SKIP_COMMERCIALS;
 
   /* series link support */
   cfg->dvr_sl_brand_lock   = 1; // use brand linking
@@ -1160,6 +1163,7 @@ dvr_save(dvr_config_t *cfg)
   htsmsg_add_u32(m, "episode-in-title", !!(cfg->dvr_flags & DVR_EPISODE_IN_TITLE));
   htsmsg_add_u32(m, "clean-title", !!(cfg->dvr_flags & DVR_CLEAN_TITLE));
   htsmsg_add_u32(m, "tag-files", !!(cfg->dvr_flags & DVR_TAG_FILES));
+  htsmsg_add_u32(m, "skip-commercials", !!(cfg->dvr_flags & DVR_SKIP_COMMERCIALS));
   if(cfg->dvr_postproc != NULL)
     htsmsg_add_str(m, "postproc", cfg->dvr_postproc);
 

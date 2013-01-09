@@ -1,6 +1,6 @@
-/**
- *  Timestamp fixup
- *  Copyright (C) 2010 Andreas Öman
+/*
+ *  tvheadend, libav utils
+ *  Copyright (C) 2012 John Törnblom
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,19 +13,19 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
  */
 
-#ifndef TSFIX_H__
-#define TSFIX_H__
+#ifndef LIBAV_H_
+#define LIBAV_H_
 
+
+#include <libavformat/avformat.h>
 #include "tvheadend.h"
 
-streaming_target_t *tsfix_create(streaming_target_t *output);
+enum CodecID streaming_component_type2codec_id(streaming_component_type_t type);
 
-void tsfix_set_start_time(streaming_target_t *pad, time_t start);
+void libav_init(void);
 
-void tsfix_destroy(streaming_target_t *gh);
+#endif
 
-
-#endif // TSFIX_H__

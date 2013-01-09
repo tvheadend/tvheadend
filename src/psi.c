@@ -864,11 +864,16 @@ static struct strtab caidnametab[] = {
   { "Jerroldgi",        0x0700 }, 
   { "Matra",            0x0800 }, 
   { "NDS",              0x0900 },
+<<<<<<< HEAD
   { "NDS",              0x0919 },
   { "NDS",              0x091F }, 
   { "NDS",              0x092B },
   { "NDS",              0x09AF }, 
   { "NDS",              0x09C4 },
+=======
+  { "NDS",              0x0960 },
+  { "NDS",              0x0963 }, 
+>>>>>>> upstream/master
   { "Nokia",            0x0A00 }, 
   { "Conax",            0x0B00 },
   { "Conax",            0x0BAA },
@@ -923,6 +928,7 @@ static struct strtab caidnametab[] = {
   { "DRECrypt2",        0x4ae1 },
   { "Bulcrypt",         0x4aee },
   { "Bulcrypt",         0x5581 },
+  { "Verimatrix",       0x5601 },
 };
 
 const char *

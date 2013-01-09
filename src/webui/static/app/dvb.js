@@ -1095,7 +1095,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 
 	var confreader = new Ext.data.JsonReader({
 		root : 'dvbadapters'
-	}, [ 'name', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion',
+	}, [ 'name', 'enabled', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion',
 		'diseqcrepeats', 'qmon', 'skip_checksubscr', 
 		'poweroff', 'sidtochan', 'nitoid', 'extrapriority',
 		,'disable_pmt_monitor', 'full_mux_rx', 'idleclose' ]);
@@ -1116,6 +1116,10 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 			name : 'name',
 			width : 250
 		},
+		new Ext.form.Checkbox({
+			fieldLabel : 'Enabled',
+			name : 'enabled'
+		}),
 		new Ext.form.Checkbox({
 			fieldLabel : 'Autodetect muxes',
 			name : 'automux'

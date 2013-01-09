@@ -8,7 +8,13 @@ FILE=$1
 
 # Calculate version
 if [ -d ".git" ]; then
-    VER=$(cd $(dirname $0); git describe --dirty --match "v*" 2> /dev/null | sed "s/^v//" | sed "s/-\([0-9]*\)-\(g[0-9a-f]*\)/.\1~\2/")
+    VER=$(cd $(dirname $0); git describe --dirty --match "v*" 2> /dev/null)
+    if [ $? -ne 0 ]; then
+        # Git describe failed, maybe "--dirty" option is not available
+        # Adding "-unknown" postfix to mark this situation
+        VER=$(cd $(dirname $0); git describe --match "v*" 2> /dev/null)-unknown
+    fi
+    VER=$(echo $VER | sed "s/^v//" | sed "s/-\([0-9]*\)-\(g[0-9a-f]*\)/.\1~\2/")
 else
     VER=$(head -1 $(dirname $0)/../debian/changelog | awk '{ print $2 }' | tr -d '()' | cut -d '-' -f 1)
 fi

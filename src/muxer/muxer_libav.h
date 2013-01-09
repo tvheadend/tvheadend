@@ -1,6 +1,6 @@
-/**
- *  Timestamp fixup
- *  Copyright (C) 2010 Andreas Öman
+/*
+ *  tvheadend, muxing of packets with libavformat
+ *  Copyright (C) 2012 John Törnblom
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -13,19 +13,14 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
  */
 
-#ifndef TSFIX_H__
-#define TSFIX_H__
+#ifndef LAV_MUXER_H_
+#define LAV_MUXER_H_
 
-#include "tvheadend.h"
+#include "muxer.h"
 
-streaming_target_t *tsfix_create(streaming_target_t *output);
+muxer_t* lav_muxer_create(muxer_container_type_t mc);
 
-void tsfix_set_start_time(streaming_target_t *pad, time_t start);
-
-void tsfix_destroy(streaming_target_t *gh);
-
-
-#endif // TSFIX_H__
+#endif

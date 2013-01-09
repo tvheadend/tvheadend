@@ -14,12 +14,19 @@ tvheadend.dvrprio = new Ext.data.SimpleStore({
 		[ 'unimportant', 'Unimportant' ] ]
 });
 
+
 //For the container configuration
-tvheadend.containers = new Ext.data.SimpleStore({
-	fields : [ 'identifier', 'name' ],
-	id : 0,
-	data : [ [ 'matroska', 'Matroska' ], [ 'pass', 'TS (Pass-through)' ] ]
+tvheadend.containers = new Ext.data.JsonStore({
+	autoLoad : true,
+	root : 'entries',
+	fields : [ 'name', 'description' ],
+	id : 'name',
+	url : 'dvr_containers',
+	baseParams : {
+		op : 'list'
+	}
 });
+
 
 /**
  * Configuration names
@@ -703,7 +710,7 @@ tvheadend.dvrsettings = function() {
 	}, [ 'storage', 'postproc', 'retention', 'dayDirs', 'channelDirs',
 		'channelInTitle', 'container', 'dateInTitle', 'timeInTitle',
 		'preExtraTime', 'postExtraTime', 'whitespaceInTitle', 'titleDirs',
-		'episodeInTitle', 'cleanTitle', 'tagFiles' ]);
+		'episodeInTitle', 'cleanTitle', 'tagFiles', 'commSkip' ]);
 
 	var confcombo = new Ext.form.ComboBox({
 		store : tvheadend.configNames,
@@ -743,11 +750,11 @@ tvheadend.dvrsettings = function() {
 		}, new Ext.form.ComboBox({
 			store : tvheadend.containers,
 			fieldLabel : 'Media container',
-			mode : 'local',
 			triggerAction : 'all',
-			displayField : 'name',
-			valueField : 'identifier',
+			displayField : 'description',
+			valueField : 'name',
 			editable : false,
+			width : 200,
 			hiddenName : 'container'
 		}), new Ext.form.NumberField({
 			allowNegative : false,
@@ -793,6 +800,9 @@ tvheadend.dvrsettings = function() {
 		}), new Ext.form.Checkbox({
 			fieldLabel : 'Tag files with metadata',
 			name : 'tagFiles'
+		}), new Ext.form.Checkbox({
+			fieldLabel : 'Skip commercials',
+			name : 'commSkip'
 		}), {
 			width : 300,
 			fieldLabel : 'Post-processor command',

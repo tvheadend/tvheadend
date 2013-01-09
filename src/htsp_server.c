@@ -466,7 +466,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
         inet_ntop(AF_INET, &addr.sin_addr, url+p, sizeof(url)-p);
         p = strlen(url);
         p += snprintf(url+p, sizeof(url)-p, ":%hd%s",
-                      webui_port,
+                      tvheadend_webui_port,
                       tvheadend_webroot ?: "");
       }
       snprintf(url+p, sizeof(url)-p, "/imagecache/%d", id);
@@ -695,16 +695,17 @@ htsp_build_event
 static htsmsg_t *
 htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  htsmsg_t *l, *r = htsmsg_create_map();
+  htsmsg_t *r;
   uint32_t v;
   const char *name;
-  int i = 0;
 
   if(htsmsg_get_u32(in, "htspversion", &v))
     return htsp_error("Missing argument 'htspversion'");
 
   if((name = htsmsg_get_str(in, "clientname")) == NULL)
     return htsp_error("Missing argument 'clientname'");
+
+  r = htsmsg_create_map();
 
   tvh_str_update(&htsp->htsp_clientname, htsmsg_get_str(in, "clientname"));
 
@@ -715,14 +716,11 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_add_str(r, "servername", "HTS Tvheadend");
   htsmsg_add_str(r, "serverversion", tvheadend_version);
   htsmsg_add_bin(r, "challenge", htsp->htsp_challenge, 32);
+  if (tvheadend_webroot)
+    htsmsg_add_str(r, "webroot", tvheadend_webroot);
 
   /* Capabilities */
-  l = htsmsg_create_list();
-  while (tvheadend_capabilities[i]) {
-    htsmsg_add_str(l, NULL, tvheadend_capabilities[i]);
-    i++;
-  }
-  htsmsg_add_msg(r, "servercapability", l);
+  htsmsg_add_msg(r, "servercapability", tvheadend_capabilities_list(1));
 
   /* Set version to lowest num */
   htsp->htsp_version = MIN(HTSP_PROTO_VERSION, v);
@@ -1862,10 +1860,10 @@ htsp_serve(int fd, void *opaque, struct sockaddr_in *source,
 void
 htsp_init(void)
 {
-  extern int htsp_port_extra;
-  htsp_server = tcp_server_create(htsp_port, htsp_serve, NULL);
-  if(htsp_port_extra)
-    htsp_server_2 = tcp_server_create(htsp_port_extra, htsp_serve, NULL);
+  extern int tvheadend_htsp_port_extra;
+  htsp_server = tcp_server_create(tvheadend_htsp_port, htsp_serve, NULL);
+  if(tvheadend_htsp_port_extra)
+    htsp_server_2 = tcp_server_create(tvheadend_htsp_port_extra, htsp_serve, NULL);
 }
 
 /* **************************************************************************
@@ -2069,7 +2067,7 @@ const static char frametypearray[PKT_NTYPES] = {
 static void
 htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 {
-  htsmsg_t *m, *n;
+  htsmsg_t *m;
   htsp_msg_t *hm;
   htsp_connection_t *htsp = hs->hs_htsp;
   int64_t ts;
@@ -2137,13 +2135,29 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
     
     pthread_mutex_lock(&htsp->htsp_out_mutex);
 
-    if(TAILQ_FIRST(&hs->hs_q.hmq_q) == NULL) {
-      htsmsg_add_s64(m, "delay", 0);
-    } else if((hm = TAILQ_FIRST(&hs->hs_q.hmq_q)) != NULL &&
-	      (n = hm->hm_msg) != NULL && !htsmsg_get_s64(n, "dts", &ts) &&
-	      pkt->pkt_dts != PTS_UNSET && ts != PTS_UNSET) {
-      htsmsg_add_s64(m, "delay", pkt->pkt_dts - ts);
+    int64_t min_dts = PTS_UNSET;
+    int64_t max_dts = PTS_UNSET;
+    TAILQ_FOREACH(hm, &hs->hs_q.hmq_q, hm_link) {
+      if(!hm->hm_msg)
+	continue;
+      if(htsmsg_get_s64(hm->hm_msg, "dts", &ts))
+	continue;
+      if(ts == PTS_UNSET)
+	continue;
+  
+      if(min_dts == PTS_UNSET)
+	min_dts = ts;
+      else
+	min_dts = MIN(ts, min_dts);
+
+      if(max_dts == PTS_UNSET)
+	max_dts = ts;
+      else
+	max_dts = MAX(ts, max_dts);
     }
+
+    htsmsg_add_s64(m, "delay", max_dts - min_dts);
+
     pthread_mutex_unlock(&htsp->htsp_out_mutex);
 
     htsmsg_add_u32(m, "Bdrops", hs->hs_dropstats[PKT_B_FRAME]);

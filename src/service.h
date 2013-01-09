@@ -339,7 +339,6 @@ typedef struct service {
    * Teletext...
    */
   th_commercial_advice_t s_tt_commercial_advice;
-  int s_tt_rundown_content_length;
   time_t s_tt_clock;   /* Network clock as determined by teletext decoder */
  
   /**

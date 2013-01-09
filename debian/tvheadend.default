@@ -29,6 +29,12 @@ TVH_ADAPTERS=""
 #   if set to "" will use binary default
 TVH_HTTP_PORT=""
 
+# TVH_HTTP_ROOT
+#   if set to "" will use binary default
+#   else will change the webui root context, useful for proxied
+#   servers
+TVH_HTTP_ROOT=""
+
 # TVH_HTSP_PORT
 #   if set to "" will use binary default
 TVH_HTSP_PORT=""
