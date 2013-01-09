@@ -228,13 +228,17 @@ DEPS       = ${OBJS:%.o=%.d}
 all: ${PROG}
 
 # Special
-.PHONY:	clean distclean check_config
+.PHONY:	clean distclean check_config reconfigure
 
 # Check configure output is valid
 check_config:
 	@test $(CURDIR)/.config.mk -nt $(CURDIR)/configure\
 		|| echo "./configure output is old, please re-run"
 	@test $(CURDIR)/.config.mk -nt $(CURDIR)/configure
+
+# Recreate configuration
+reconfigure:
+	$(CURDIR)/configure $(CONFIGURE_ARGS)
 
 # Binary
 ${PROG}: check_config $(OBJS) $(ALLDEPS)
