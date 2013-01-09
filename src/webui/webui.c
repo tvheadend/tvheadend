@@ -967,7 +967,7 @@ webui_init(void)
 
   http_path_add("/stream",  NULL, http_stream,  ACCESS_STREAMING);
 
-  http_path_add("/imagecache", NULL, page_imagecache, ACCESS_ANONYMOUS);
+  http_path_add("/imagecache", NULL, page_imagecache, ACCESS_WEB_INTERFACE);
 
   webui_static_content("/static",        "src/webui/static");
   webui_static_content("/docs",          "docs/html");
