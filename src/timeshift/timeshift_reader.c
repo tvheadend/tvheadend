@@ -137,7 +137,8 @@ static ssize_t _read_msg ( int fd, streaming_message_t **sm )
       }
       if (type == SMT_PACKET) {
         th_pkt_t *pkt = data;
-        pkt->pkt_payload = pkt->pkt_header = NULL;
+        pkt->pkt_payload  = pkt->pkt_header = NULL;
+        pkt->pkt_refcount = 0;
         *sm = streaming_msg_create_pkt(pkt);
         r   = _read_pktbuf(fd, &pkt->pkt_header);
         if (r < 0) {
