@@ -97,7 +97,10 @@ th_subscription_t *subscription_create_from_channel(struct channel *ch,
 th_subscription_t *subscription_create_from_service(struct service *t,
 						    const char *name,
 						    streaming_target_t *st,
-						    int flags);
+						    int flags,
+						    const char *hostname,
+						    const char *username,
+						    const char *client);
 
 th_subscription_t *subscription_create(int weight, const char *name,
 				       streaming_target_t *st,

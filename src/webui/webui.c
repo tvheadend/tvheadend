@@ -601,7 +601,10 @@ http_stream_service(http_connection_t *hc, service_t *service)
     flags = 0;
   }
 
-  s = subscription_create_from_service(service, "HTTP", st, flags);
+  s = subscription_create_from_service(service, "HTTP", st, flags,
+				       inet_ntoa(hc->hc_peer->sin_addr),
+				       hc->hc_username,
+				       http_arg_get(&hc->hc_args, "User-Agent"));
   if(s) {
     name = strdupa(service->s_ch ?
                    service->s_ch->ch_name : service->s_nicename);
