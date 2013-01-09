@@ -216,6 +216,7 @@ typedef struct signal_status {
 typedef struct streaming_skip
 {
   enum {
+    SMT_SKIP_ERROR,
     SMT_SKIP_REL_TIME,
     SMT_SKIP_ABS_TIME,
     SMT_SKIP_REL_SIZE,

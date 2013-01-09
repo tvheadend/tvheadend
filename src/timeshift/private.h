@@ -133,6 +133,8 @@ void timeshift_filemgr_init     ( void );
 void timeshift_filemgr_term     ( void );
 int  timeshift_filemgr_makedirs ( int ts_index, char *buf, size_t len );
 
+timeshift_file_t *timeshift_filemgr_last
+  ( timeshift_t *ts );
 timeshift_file_t *timeshift_filemgr_get
   ( timeshift_t *ts, int create );
 timeshift_file_t *timeshift_filemgr_prev

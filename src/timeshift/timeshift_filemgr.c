@@ -278,6 +278,15 @@ timeshift_file_t *timeshift_filemgr_prev
   return nxt;
 }
 
+/*
+ * Get the oldest file
+ */
+timeshift_file_t *timeshift_filemgr_last ( timeshift_t *ts )
+{
+  return TAILQ_FIRST(&ts->files);
+}
+
+
 /* **************************************************************************
  * Setup / Teardown
  * *************************************************************************/

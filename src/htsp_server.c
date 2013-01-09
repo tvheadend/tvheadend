@@ -1300,8 +1300,6 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 
   streaming_target_t *st = &hs->hs_input;
 
-  if(normts)
-    st = hs->hs_tsfix = tsfix_create(st);
 #if ENABLE_TIMESHIFT
   if (timeshiftPeriod != 0) {
     if (timeshiftPeriod == ~0)
@@ -1309,8 +1307,11 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
     else
       tvhlog(LOG_DEBUG, "htsp", "using timeshift buffer (%u mins)", timeshiftPeriod / 60);
     st = hs->hs_tshift = timeshift_create(st, timeshiftPeriod);
+    normts = 1;
   }
 #endif
+  if(normts)
+    st = hs->hs_tsfix = tsfix_create(st);
 
   hs->hs_s = subscription_create_from_channel(ch, weight,
 					      htsp->htsp_logname,
@@ -1619,6 +1620,7 @@ struct {
   { "subscribe",                htsp_method_subscribe,      ACCESS_STREAMING},
   { "unsubscribe",              htsp_method_unsubscribe,    ACCESS_STREAMING},
   { "subscriptionChangeWeight", htsp_method_change_weight,  ACCESS_STREAMING},
+  { "subscriptionSeek",         htsp_method_skip,           ACCESS_STREAMING},
   { "subscriptionSkip",         htsp_method_skip,           ACCESS_STREAMING},
   { "subscriptionSpeed",        htsp_method_speed,          ACCESS_STREAMING},
   { "fileOpen",                 htsp_method_file_open,      ACCESS_RECORDER},
@@ -2423,6 +2425,26 @@ htsp_subscription_speed(htsp_subscription_t *hs, int speed)
  *
  */
 static void
+htsp_subscription_skip(htsp_subscription_t *hs, streaming_skip_t *skip)
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "method", "subscriptionSkip");
+  htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
+  if (skip->type == SMT_SKIP_ABS_TIME || skip->type == SMT_SKIP_ABS_SIZE)
+    htsmsg_add_u32(m, "absolute", 1);
+  if (skip->type == SMT_SKIP_ERROR)
+    htsmsg_add_u32(m, "error", 1);
+  else if (skip->type == SMT_SKIP_ABS_TIME || skip->type == SMT_SKIP_REL_TIME)
+    htsmsg_add_s64(m, "time", skip->time);
+  else if (skip->type == SMT_SKIP_ABS_SIZE || skip->type == SMT_SKIP_REL_SIZE)
+    htsmsg_add_s64(m, "size", skip->size);
+  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+}
+
+/**
+ *
+ */
+static void
 htsp_streaming_input(void *opaque, streaming_message_t *sm)
 {
   htsp_subscription_t *hs = opaque;
@@ -2465,6 +2487,7 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
     abort();
 
   case SMT_SKIP:
+    htsp_subscription_skip(hs, sm->sm_data);
     break;
 
   case SMT_SPEED:
