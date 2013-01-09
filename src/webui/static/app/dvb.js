@@ -24,6 +24,14 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 	var cmlist = Array();
 
 	cmlist.push(enabledColumn, {
+		header : "Play",
+		dataIndex : 'id',
+		width : 50,
+		renderer : function(value, metadata, record, row, col, store) {
+			url = 'stream/mux/' + value
+			return '<a href="' + url + '">Play</a>'
+		}
+	}, {
 		header : "Network",
 		dataIndex : 'network',
 		width : 200
