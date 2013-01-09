@@ -20,11 +20,11 @@ OPTIONS=(
   "v4l:yes"
   "linuxdvb:yes"
   "dvbscan:yes"
+  "timeshift:yes"
   "imagecache:auto"
   "avahi:auto"
   "zlib:auto"
   "libav:auto"
-  "timeshift:no"
   "bundle:no"
   "dvbcsa:no"
 )
