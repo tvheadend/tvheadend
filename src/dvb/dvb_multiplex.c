@@ -1299,7 +1299,11 @@ dvb_subscription_create_from_tdmi(th_dvb_mux_instance_t *tdmi,
 				  const char *client)
 {
   th_subscription_t *s;
+  streaming_message_t *sm;
+  streaming_start_t *ss;
+  int r;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  char buf[100];
 
   s = subscription_create(INT32_MAX, name, st, SUBSCRIPTION_RAW_MPEGTS, 
 			  NULL, hostname, username, client);
@@ -1308,10 +1312,36 @@ dvb_subscription_create_from_tdmi(th_dvb_mux_instance_t *tdmi,
   s->ths_tdmi = tdmi;
   LIST_INSERT_HEAD(&tdmi->tdmi_subscriptions, s, ths_tdmi_link);
 
-  dvb_fe_tune(tdmi, "Full mux subscription");
+  r = dvb_fe_tune(tdmi, "Full mux subscription");
 
   pthread_mutex_lock(&tda->tda_delivery_mutex);
+
   streaming_target_connect(&tda->tda_streaming_pad, &s->ths_input);
+
+  if(r) {
+    sm = streaming_msg_create_code(SMT_NOSTART, SM_CODE_NO_INPUT);
+    streaming_target_deliver(s->ths_output, sm);
+  } else {
+    ss = calloc(1, sizeof(streaming_start_t));
+    ss->ss_num_components = 0;
+    ss->ss_refcount = 1;
+
+    ss->ss_si.si_type = S_MPEG_TS;
+    ss->ss_si.si_device = strdup(tdmi->tdmi_adapter->tda_rootpath);
+    ss->ss_si.si_adapter = strdup(tdmi->tdmi_adapter->tda_displayname);
+    ss->ss_si.si_service = strdup("Full mux subscription");
+
+    if(tdmi->tdmi_network != NULL)
+      ss->ss_si.si_network = strdup(tdmi->tdmi_network);
+    
+    dvb_mux_nicename(buf, sizeof(buf), tdmi);
+    ss->ss_si.si_mux = strdup(buf);
+
+
+    sm = streaming_msg_create_data(SMT_START, ss);
+    streaming_target_deliver(s->ths_output, sm);
+  }
+
   pthread_mutex_unlock(&tda->tda_delivery_mutex);
 
   notify_reload("subscriptions");

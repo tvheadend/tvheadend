@@ -36,6 +36,7 @@ static struct strtab container_audio_mime[] = {
   { "audio/x-mpegts",           MC_MPEGTS },
   { "audio/mpeg",               MC_MPEGPS },
   { "application/octet-stream", MC_PASS },
+  { "application/octet-stream", MC_RAW },
 };
 
 
@@ -48,6 +49,7 @@ static struct strtab container_video_mime[] = {
   { "video/x-mpegts",           MC_MPEGTS },
   { "video/mpeg",               MC_MPEGPS },
   { "application/octet-stream", MC_PASS },
+  { "application/octet-stream", MC_RAW },
 };
 
 
@@ -60,6 +62,7 @@ static struct strtab container_name[] = {
   { "mpegts",   MC_MPEGTS },
   { "mpegps",   MC_MPEGPS },
   { "pass",     MC_PASS },
+  { "raw",      MC_RAW },
 };
 
 
@@ -72,6 +75,7 @@ static struct strtab container_audio_file_suffix[] = {
   { "ts",   MC_MPEGTS },
   { "mpeg", MC_MPEGPS },
   { "bin",  MC_PASS },
+  { "bin",  MC_RAW },
 };
 
 
@@ -84,6 +88,7 @@ static struct strtab container_video_file_suffix[] = {
   { "ts",   MC_MPEGTS },
   { "mpeg", MC_MPEGPS },
   { "bin",  MC_PASS },
+  { "bin",  MC_RAW },
 };
 
 

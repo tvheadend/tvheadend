@@ -27,6 +27,7 @@ typedef enum {
   MC_MPEGTS      = 2,
   MC_MPEGPS      = 3,
   MC_PASS        = 4,
+  MC_RAW         = 5,
 } muxer_container_type_t;
 
 

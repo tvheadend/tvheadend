@@ -49,6 +49,7 @@ typedef struct pass_muxer {
   char *pm_filename;
 
   /* TS muxing */
+  uint8_t   pm_injection;
   uint8_t  *pm_pat;
   uint8_t  *pm_pmt;
   uint16_t  pm_pmt_version;
@@ -221,7 +222,9 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
   pass_muxer_t *pm = (pass_muxer_t*)m;
   int rem;
 
-  if(pm->pm_pat != NULL) {
+  if(pm->pm_pat != NULL &&
+     pm->pm_pmt != NULL &&
+     pm->pm_injection) {
     // Inject pmt and pat into the stream
     rem = pm->pm_pc % TS_INJECTION_RATE;
     if(!rem) {
@@ -324,7 +327,7 @@ pass_muxer_create(muxer_container_type_t mc)
 {
   pass_muxer_t *pm;
 
-  if(mc != MC_PASS)
+  if(mc != MC_PASS && mc != MC_RAW)
     return NULL;
 
   pm = calloc(1, sizeof(pass_muxer_t));
@@ -338,7 +341,8 @@ pass_muxer_create(muxer_container_type_t mc)
   pm->m_close        = pass_muxer_close;
   pm->m_destroy      = pass_muxer_destroy;
   pm->pm_fd          = -1;
-  
+  pm->pm_injection   = (mc == MC_PASS);
+
   return (muxer_t *)pm;
 }
 
