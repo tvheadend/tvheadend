@@ -490,6 +490,8 @@ main(int argc, char **argv)
     tvheadend_webroot = tmp;
   }
 
+  signal(SIGPIPE, handle_sigpipe); // will be redundant later
+
   /* Daemonise */
   if(opt_fork) {
     const char *homedir;
@@ -561,7 +563,8 @@ main(int argc, char **argv)
   time(&dispatch_clock);
 
   /* Signal handling */
-  signal(SIGPIPE, handle_sigpipe);
+  sigfillset(&set);
+  sigprocmask(SIG_BLOCK, &set, NULL);
   trap_init(argv[0]);
   
   /**
