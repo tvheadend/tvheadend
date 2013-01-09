@@ -998,6 +998,8 @@ mk_mux_init(mk_mux_t *mkm, const char *title, const streaming_start_t *ss)
  
   mk_write_queue(mkm, &q);
 
+  htsbuf_queue_flush(&q);
+
   return mkm->error;
 }
 
