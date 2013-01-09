@@ -396,7 +396,6 @@ void *timeshift_reader ( void *p )
                   } else {
                     tvhlog(LOG_ERR, "timeshift", "ts %d failed to get current file", ts->id);
                     skip = NULL;
-                    break;
                   }
                   pthread_mutex_unlock(&ts->rdwr_mutex);
                 } else {
