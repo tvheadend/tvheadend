@@ -1282,6 +1282,11 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   if(normts)
     htsmsg_add_u32(rep, "normts", 1);
 
+#if ENABLE_TIMESHIFT
+  if(timeshiftPeriod)
+    htsmsg_add_u32(rep, "timeshiftPeriod", timeshiftPeriod);
+#endif
+
   htsp_reply(htsp, in, rep);
 
   /* Initialize the HTSP subscription structure */
