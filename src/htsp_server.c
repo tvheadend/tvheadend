@@ -579,7 +579,9 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
     break;
   case DVR_COMPLETED:
     s = "completed";
-    if(de->de_last_error)
+    if(dvr_get_filesize(de) == -1)
+      error = "File missing";
+    else if(de->de_last_error)
       error = streaming_code2txt(de->de_last_error);
     break;
   case DVR_MISSED_TIME:

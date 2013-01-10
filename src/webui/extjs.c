@@ -1348,7 +1348,7 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque,
   dvr_entry_t *de;
   int start = 0, end, limit, i;
   const char *s;
-  off_t fsize;
+  int64_t fsize = 0;
   char buf[100];
 
   if((s = http_arg_get(&hc->hc_req_args, "start")) != NULL)
@@ -1418,15 +1418,13 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque,
 
     if(de->de_sched_state == DVR_COMPLETED) {
       fsize = dvr_get_filesize(de);
-      if(fsize > 0) {
-	char url[100];
-	htsmsg_add_s64(m, "filesize", fsize);
-
-	snprintf(url, sizeof(url), "dvrfile/%d", de->de_id);
-	htsmsg_add_str(m, "url", url);
+      if (fsize > 0) {
+        char url[100];
+        htsmsg_add_s64(m, "filesize", fsize);
+        snprintf(url, sizeof(url), "dvrfile/%d", de->de_id);
+        htsmsg_add_str(m, "url", url);
       }
     }
-
 
     htsmsg_add_msg(array, NULL, m);
   }
@@ -1446,7 +1444,7 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque,
 static int is_dvr_entry_finished(dvr_entry_t *entry)
 {
   dvr_entry_sched_state_t state = entry->de_sched_state;
-  return state == DVR_COMPLETED;
+  return state == DVR_COMPLETED && !entry->de_last_error && dvr_get_filesize(entry) != -1;
 }
 
 static int is_dvr_entry_upcoming(dvr_entry_t *entry)
@@ -1458,8 +1456,11 @@ static int is_dvr_entry_upcoming(dvr_entry_t *entry)
 
 static int is_dvr_entry_failed(dvr_entry_t *entry)
 {
-  dvr_entry_sched_state_t state = entry->de_sched_state;
-  return state == DVR_MISSED_TIME || state == DVR_NOSTATE;
+  if (is_dvr_entry_finished(entry))
+    return 0;
+  if (is_dvr_entry_upcoming(entry))
+    return 0;
+  return 1;
 }
 
 static int

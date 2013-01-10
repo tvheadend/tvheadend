@@ -182,6 +182,13 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 		}
 	}
 
+	function renderSize(value)
+	{
+		if (value == null)
+			return '';
+		return parseInt(value / 1000000) + ' MB';
+	}
+
 	function renderPri(value) {
 		return tvheadend.dvrprio.getById(value).data.name;
 	}
@@ -201,11 +208,12 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 		id : 'pri',
 		header : "Priority",
 		dataIndex : 'pri',
-		renderer : renderPri
+		renderer : renderPri,
+		hidden : iconCls != 'clock',
 	}, {
 		width : 100,
 		id : 'start',
-		header : "Start",
+		header : iconCls == 'clock' ? "Start" : "Date/Time",
 		dataIndex : 'start',
 		renderer : renderDate
 	}, {
@@ -221,6 +229,13 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 		header : "Duration",
 		dataIndex : 'duration',
 		renderer : renderDuration
+	}, {
+		width : 100,
+		id : 'filesize',
+		header : "Filesize",
+		dataIndex : 'filesize',
+		renderer : renderSize,
+		hidden : iconCls != 'television'
 	}, {
 		width : 250,
 		id : 'channel',
@@ -244,12 +259,14 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 				return value;
 			}
 		},
-		dataIndex : 'config_name'
+		dataIndex : 'config_name',
+		hidden: iconCls != 'clock'
 	}, {
 		width : 200,
 		id : 'status',
 		header : "Status",
-		dataIndex : 'status'
+		dataIndex : 'status',
+		hidden: iconCls != 'exclamation'
 	} ]);
 
 	function addEntry() {
@@ -608,6 +625,8 @@ tvheadend.dvr = function() {
 			name : 'status'
 		}, {
 			name : 'schedstate'
+		}, {
+			name : 'error'
 		}, {
 			name : 'creator'
 		}, {

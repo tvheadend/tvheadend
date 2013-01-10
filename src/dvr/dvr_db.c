@@ -68,6 +68,8 @@ dvr_entry_status(dvr_entry_t *de)
     }
 
   case DVR_COMPLETED:
+    if(dvr_get_filesize(de) == -1)
+      return "File Missing";
     if(de->de_last_error)
       return streaming_code2txt(de->de_last_error);
     else
@@ -97,7 +99,7 @@ dvr_entry_schedstatus(dvr_entry_t *de)
     else
       return "recording";
   case DVR_COMPLETED:
-    if(de->de_last_error)
+    if(de->de_last_error || dvr_get_filesize(de) == -1)
       return "completedError";
     else
       return "completed";
@@ -1375,16 +1377,16 @@ dvr_query_sort(dvr_query_result_t *dqr)
 /**
  *
  */
-off_t
+int64_t
 dvr_get_filesize(dvr_entry_t *de)
 {
   struct stat st;
 
   if(de->de_filename == NULL)
-    return 0;
+    return -1;
 
   if(stat(de->de_filename, &st) != 0)
-    return 0;
+    return -1;
 
   return st.st_size;
 }
