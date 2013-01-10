@@ -387,7 +387,7 @@ main(int argc, char **argv)
 	                      "to your Tvheadend installation until you edit\n"
 	                      "the access-control from within the Tvheadend UI",
       OPT_BOOL, &opt_firstrun },
-#ifdef ENABLE_LINUXDVB
+#if ENABLE_LINUXDVB
     { 'a', "adapters",  "Use only specified DVB adapters",
       OPT_STR, &opt_dvb_adapters },
 #endif
