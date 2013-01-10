@@ -148,24 +148,6 @@ if enabled_or_auto inotify; then
 fi
 
 #
-# DVB scan
-#
-if enabled linuxdvb && enabled dvbscan; then
-  if [ ! -d ${ROOTDIR}/data/dvb-scan ]; then
-    if ! enabled bin_bzip2; then
-      die "Bzip2 not found, fetch dvb-scan files (use --disable-dvbscan)"
-    fi
-    echo -n "Fetching dvb-scan files... "
-    if ${ROOTDIR}/support/getmuxlist &> /dev/null; then
-      echo "done"
-    else
-      echo
-      die "Failed to fetch dvb-scan files (use --disable-dvbscan to skip)"
-    fi
-  fi
-fi
-
-#
 # libdvbcsa
 #
 if enabled cwc && enabled dvbcsa; then
