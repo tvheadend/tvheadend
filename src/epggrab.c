@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <wordexp.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/un.h>

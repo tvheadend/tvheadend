@@ -1,6 +1,6 @@
-tvheadend (3.3) unstable; urgency=low
+tvheadend (3.3.324~gac22d71~precise) precise; urgency=low
 
   * The full changelog can be found at 
     http://www.lonelycoder.com/tvheadend/download
 
- -- Andreas Öman <andreas@lonelycoder.com>  Tue, 18 Sep 2012 12:45:49 +0100
+ -- Adam Sutton <dev@adamsutton.me.uk>  Thu, 10 Jan 2013 10:29:13 +0000
