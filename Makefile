@@ -170,6 +170,10 @@ SRCS-${CONFIG_LINUXDVB} += \
 	src/webui/extjs_dvb.c \
 	src/muxes.c \
 
+# Inotify
+SRCS-${CONFIG_INOTIFY} += \
+  src/dvr/dvr_inotify.c \
+
 # V4L
 SRCS-${CONFIG_V4L} += \
 	src/v4l.c \

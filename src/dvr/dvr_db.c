@@ -40,6 +40,18 @@ struct dvr_entry_list dvrentries;
 static void dvr_timer_expire(void *aux);
 static void dvr_timer_start_recording(void *aux);
 
+/*
+ * Completed
+ */
+static void
+_dvr_entry_completed(dvr_entry_t *de)
+{
+  de->de_sched_state = DVR_COMPLETED;
+#if ENABLE_INOTIFY
+  dvr_inotify_add(de);
+#endif
+}
+
 /**
  * Return printable status for a dvr entry
  */
@@ -224,7 +236,7 @@ dvr_entry_link(dvr_entry_t *de)
     if(de->de_filename == NULL)
       de->de_sched_state = DVR_MISSED_TIME;
     else
-      de->de_sched_state = DVR_COMPLETED;
+      _dvr_entry_completed(de);
     gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de, 
 	       de->de_stop + cfg->dvr_retention_days * 86400);
 
@@ -436,6 +448,10 @@ dvr_entry_remove(dvr_entry_t *de)
   hts_settings_remove("dvr/log/%d", de->de_id);
 
   htsp_dvr_entry_delete(de);
+  
+#if ENABLE_INOTIFY
+  dvr_inotify_del(de);
+#endif
 
   gtimer_disarm(&de->de_timer);
 
@@ -759,7 +775,7 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode)
   if (de->de_rec_state == DVR_RS_PENDING || de->de_rec_state == DVR_RS_WAIT_PROGRAM_START)
     de->de_sched_state = DVR_MISSED_TIME;
   else
-    de->de_sched_state = DVR_COMPLETED;
+    _dvr_entry_completed(de);
 
   dvr_rec_unsubscribe(de, stopcode);
 
@@ -1037,6 +1053,7 @@ dvr_init(void)
     }
   }
 
+  dvr_inotify_init();
   dvr_autorec_init();
   dvr_db_load();
   dvr_autorec_update();
@@ -1424,6 +1441,9 @@ void
 dvr_entry_delete(dvr_entry_t *de)
 {
   if(de->de_filename != NULL) {
+#if ENABLE_INOTIFY
+    dvr_inotify_del(de);
+#endif
     if(unlink(de->de_filename) && errno != ENOENT)
       tvhlog(LOG_WARNING, "dvr", "Unable to remove file '%s' from disk -- %s",
 	     de->de_filename, strerror(errno));

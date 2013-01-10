@@ -25,6 +25,7 @@ OPTIONS=(
   "avahi:auto"
   "zlib:auto"
   "libav:auto"
+  "inotify:auto"
   "bundle:no"
   "dvbcsa:no"
 )
@@ -135,6 +136,16 @@ if enabled_or_auto libav; then
   fi
 fi
 
+#
+# Inotify
+#
+if enabled_or_auto inotify; then
+  if check_cc_header "sys/inotify" inotify_h; then
+    enable inotify
+  elif enabled inotify; then
+    die "Inotify support not found (use --disable-inotify)"
+  fi
+fi
 
 #
 # DVB scan

@@ -189,6 +189,13 @@ typedef struct dvr_entry {
 
   struct muxer *de_mux;
 
+  /**
+   * Inotify
+   */
+#if ENABLE_INOTIFY
+  LIST_ENTRY(dvr_entry) de_inotify_link;
+#endif
+
 } dvr_entry_t;
 
 
@@ -377,5 +384,12 @@ dvr_autorec_entry_t *autorec_entry_find(const char *id, int create);
 dvr_prio_t dvr_pri2val(const char *s);
 
 const char *dvr_val2pri(dvr_prio_t v);
+
+/**
+ * Inotify support
+ */
+void dvr_inotify_init ( void );
+void dvr_inotify_add  ( dvr_entry_t *de );
+void dvr_inotify_del  ( dvr_entry_t *de );
 
 #endif /* DVR_H  */
