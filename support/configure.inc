@@ -43,7 +43,8 @@
 # ###########################################################################
 
 # Output
-TAB=" \\033[40G"
+TAB=" \\033[50G"
+TAB2=" \\033[50G"
 
 # Text conversion
 function toupper
@@ -224,14 +225,14 @@ function check_pkg
   local ver=$*
 
   # Version test
-  ver=$(echo $ver | sed 's/>=/ --atleast-version /'\
+  cver=$(echo $ver | sed 's/>=/ --atleast-version /'\
                   | sed 's/<=/ --max-version /'\
                   | sed 's/==/ --exact-version /')
 
-  echo -ne "checking for pkg $pkg $ver ...${TAB}"
+  echo -ne "checking for pkg $pkg $ver ...${TAB2}"
 
   # Check for package
-  if pkg-config $pkg $ver; then
+  if pkg-config $pkg $cver; then
     echo "ok"
     enable_pkg $pkg
   else
@@ -268,7 +269,7 @@ function check_cc_header
   local nam=$2
   [ -z "$nam" ] && nam=$hdr
 
-  echo -ne "checking for cc $hdr.h ...${TAB}"
+  echo -ne "checking for cc $hdr.h ...${TAB2}"
 
   # Enable if supported
   if check_cc "#include <$1.h>"; then
@@ -287,7 +288,7 @@ function check_cc_snippet
   local snp=$2
   local opt=$3
 
-  echo -ne "checking for cc $nam ...${TAB}"
+  echo -ne "checking for cc $nam ...${TAB2}"
 
   # Check if supported
   if check_cc "$snp" "$opt"; then
@@ -306,7 +307,7 @@ function check_cc_option
   local nam=$2
   [ -z "$nam" ] && nam=$opt
   
-  echo -ne "checking for cc -m$opt ...${TAB}"
+  echo -ne "checking for cc -m$opt ...${TAB2}"
 
   # Enable if supported
   if check_cc "" -m${opt}; then
@@ -325,7 +326,7 @@ function check_cc_lib
   local nam=$2
   [ -z "$nam" ] && nam=$opt
   
-  echo -ne "checking for cc -l$opt ...${TAB}"
+  echo -ne "checking for cc -l$opt ...${TAB2}"
 
   # Enable if supported
   if check_cc "" -l${opt}; then
@@ -361,7 +362,7 @@ function check_py_import
   local nam=$2
   [ -z "$nam" ] && nam=py_${hdr}
 
-  echo -ne "checking for py module $hdr ...${TAB}"
+  echo -ne "checking for py module $hdr ...${TAB2}"
 
   # Enable if supported
   if check_py "import $hdr"; then
@@ -382,7 +383,7 @@ function check_bin
   local bin=$1
   local nam=$2
   [ -z "$nam" ] && nam=bin_${bin}
-  echo -ne "checking for $bin ...${TAB}"
+  echo -ne "checking for $bin ...${TAB2}"
 
   if which $bin &> /dev/null; then
     echo "ok"
