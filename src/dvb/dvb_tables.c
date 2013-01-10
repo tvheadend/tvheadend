@@ -632,7 +632,7 @@ static const fe_guard_interval_t guard_interval_tab [4] = {
 static const fe_transmit_mode_t transmission_mode_tab [4] = {
   TRANSMISSION_MODE_2K,
   TRANSMISSION_MODE_8K,
-#if DVB_API_VERSION >= 5
+#if DVB_VER_ATLEAST(5,3)
   TRANSMISSION_MODE_4K, 
 #else
   TRANSMISSION_MODE_AUTO,  /* For older DVB API versions - hope the device can detect */
