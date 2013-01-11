@@ -175,11 +175,14 @@ timeshift_destroy(streaming_target_t *pad)
   /* Must hold global lock */
   lock_assert(&global_lock);
 
-  /* Ensure the thread exits */
+  /* Ensure the threads exits */
   // Note: this is a workaround for the fact the Q might have been flushed
   //       in reader thread (VERY unlikely)
+  pthread_mutex_lock(&ts->state_mutex);
   sm = streaming_msg_create(SMT_EXIT);
   streaming_target_deliver2(&ts->wr_queue.sq_st, sm);
+  timeshift_write_exit(ts->rd_pipe.wr);
+  pthread_mutex_unlock(&ts->state_mutex);
 
   /* Wait for all threads */
   pthread_join(ts->rd_thread, NULL);
