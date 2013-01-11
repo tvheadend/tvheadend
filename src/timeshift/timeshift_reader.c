@@ -268,6 +268,7 @@ void *timeshift_reader ( void *p )
   int cur_speed = 100, keyframe_mode = 0;
   int64_t pause_time = 0, play_time = 0, last_time = 0;
   int64_t now, deliver, skip_time = 0;
+  int64_t pts_delta = 0;
   streaming_message_t *sm = NULL, *ctrl = NULL;
   timeshift_index_iframe_t *tsi = NULL;
   streaming_skip_t *skip = NULL;
@@ -381,7 +382,17 @@ void *timeshift_reader ( void *p )
         /* Skip/Seek */
         } else if (ctrl->sm_type == SMT_SKIP) {
           skip = ctrl->sm_data;
+          skip->time = skip->time * 100 / 9; // Convert from PTS (90 kHz) to microseconds
           switch (skip->type) {
+            case SMT_SKIP_ABS_TIME:
+              if (!pts_delta) {
+                tvhlog(LOG_ERR, "timeshift", "ts %d not ready for absolute skip yet", ts->id);
+                skip = NULL;
+                break;
+              }
+              skip->time -= pts_delta;
+              skip->type = SMT_SKIP_REL_TIME;
+              /* intentional lack of break for fall through */
             case SMT_SKIP_REL_TIME:
               tvhlog(LOG_DEBUG, "timeshift", "ts %d skip %"PRId64" requested", ts->id, skip->time);
 
@@ -537,6 +548,11 @@ void *timeshift_reader ( void *p )
           wait     = 0;
         }
       }
+    }
+
+    if (sm && sm->sm_type == SMT_PACKET) {
+      th_pkt_t *pkt = sm->sm_data;
+      pts_delta = pkt->pkt_pts * 100 / 9 - sm->sm_time;
     }
 
     /* Send skip response */
