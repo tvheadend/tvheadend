@@ -43,8 +43,7 @@
 # ###########################################################################
 
 # Output
-TAB=" \\033[50G"
-TAB2=" \\033[50G"
+TAB=" %-50s"
 
 # Text conversion
 function toupper
@@ -148,36 +147,37 @@ function disabled_or_auto
 # Show help
 function show_help
 { 
-  local opt= val=
+  local opt= val= fmt="%-30s"
   echo "Usage: $0 [options]"
   echo ""
   echo "Miscellaneous"
-  echo -e "  --help${TAB}Print this message"
+  printf "  $fmt Print this message\n" "--help"
   echo ""
   echo "Installation Paths"
-  echo -e "  --prefix=DIR${TAB}Installation root [$prefix]"
-  echo -e "  --bindir=DIR${TAB}Install binaries in DIR [$bindir]"
-  echo -e "  --libdir=DIR${TAB}Install libraries in DIR [$libdir]"
-  echo -e "  --mandir=DIR${TAB}Install man pages in DIR [$mandir]"
-  echo -e "  --datadir=DIR${TAB}Install data files in DIR [$datadir]"
+  printf "  $fmt Installation root [$prefix]\n" "--prefix=DIR$"
+  printf "  $fmt Install binaries in DIR [$bindir]\n" "--bindir=DIR"
+  printf "  $fmt Install libraries in DIR [$libdir]\n" "--libdir=DIR"
+  printf "  $fmt Install man pages in DIR [$mandir]\n" "--mandir=DIR"
+  printf "  $fmt Install data files in DIR [$datadir]\n" "--datadir=DIR"
   echo ""
   echo "Compiler/Arch"
-  echo -e "  --cc=CC${TAB}Build using compile [$CC]"
-  echo -e "  --cpu=CPU${TAB}Build and optimize for specific CPU"
-  echo -e "  --arch=ARCH${TAB}Build for architecture [$ARCH]"
-  echo -e "  --platform=PLATFORM${TAB}Build for platform [$PLATFORM]"
-  echo -e "  --python=PYTHON${TAB}Use python binary [$PYTHON]"
+  printf "  $fmt Build using compiler [$CC]\n" "--cc=CC"
+  printf "  $fmt Build and optimize for specific CPU\n" "--cpu=CPU"
+  printf "  $fmt Build for architecture [$ARCH]\n" "--arch=ARCH"
+  printf "  $fmt Build for platform [$PLATFORM]\n" "--platform=PLATFORM"
+  printf "  $fmt Use python binary [$PYTHON]\n" "--python=PYTHON"
   echo ""
   echo "Options"
   for opt in ${OPTIONS[*]}; do
     val=${opt#*:}
     opt=${opt%:*}
     if [ "$val" == "yes" ]; then
-      echo -e "  --disable-${opt}${TAB}Enable $opt [$val]"
+      printf "  $fmt Disable ${opt} [${val}]\n" "--disable-${opt}"
     elif [ "$val" == "no" ]; then
-      echo -e "  --enable-${opt}${TAB}Enable $opt [$val]"
+      printf "  $fmt Enable ${opt} [${val}]\n" "--enable-${opt}"
     else
-      echo -e "  --(en|dis)able-${opt}${TAB}Enable $opt [$val]"
+      printf "  $fmt Disable ${opt} [${val}]\n" "--disable-${opt}"
+      printf "  $fmt Enable ${opt} [${val}]\n" "--enable-${opt}"
     fi
   done
   exit 0
@@ -229,7 +229,7 @@ function check_pkg
                   | sed 's/<=/ --max-version /'\
                   | sed 's/==/ --exact-version /')
 
-  echo -ne "checking for pkg $pkg $ver ...${TAB2}"
+  printf "$TAB" "checking for pkg $pkg $ver ..."
 
   # Check for package
   if pkg-config $pkg $cver; then
@@ -269,7 +269,7 @@ function check_cc_header
   local nam=$2
   [ -z "$nam" ] && nam=$hdr
 
-  echo -ne "checking for cc $hdr.h ...${TAB2}"
+  printf "$TAB" "checking for cc $hdr.h ..."
 
   # Enable if supported
   if check_cc "#include <$1.h>"; then
@@ -288,7 +288,7 @@ function check_cc_snippet
   local snp=$2
   local opt=$3
 
-  echo -ne "checking for cc $nam ...${TAB2}"
+  printf "$TAB" "checking for cc $nam ..."
 
   # Check if supported
   if check_cc "$snp" "$opt"; then
@@ -307,7 +307,7 @@ function check_cc_option
   local nam=$2
   [ -z "$nam" ] && nam=$opt
   
-  echo -ne "checking for cc -m$opt ...${TAB2}"
+  printf "$TAB" "checking for cc -m$opt ..."
 
   # Enable if supported
   if check_cc "" -m${opt}; then
@@ -326,7 +326,7 @@ function check_cc_lib
   local nam=$2
   [ -z "$nam" ] && nam=$opt
   
-  echo -ne "checking for cc -l$opt ...${TAB2}"
+  printf "$TAB" "checking for cc -l$opt ..."
 
   # Enable if supported
   if check_cc "" -l${opt}; then
@@ -362,7 +362,7 @@ function check_py_import
   local nam=$2
   [ -z "$nam" ] && nam=py_${hdr}
 
-  echo -ne "checking for py module $hdr ...${TAB2}"
+  printf "$TAB" "checking for py module $hdr ..."
 
   # Enable if supported
   if check_py "import $hdr"; then
@@ -383,7 +383,7 @@ function check_bin
   local bin=$1
   local nam=$2
   [ -z "$nam" ] && nam=bin_${bin}
-  echo -ne "checking for $bin ...${TAB2}"
+  printf "$TAB" "checking for $bin ..."
 
   if which $bin &> /dev/null; then
     echo "ok"
@@ -401,17 +401,17 @@ function check_bin
 # Print config
 function print_config
 {
-  local pkg=
+  local pkg= fmt="  %-40s %s\n"
 
   # Compiler settings
   echo ""
   echo "Compiler:"
-  echo -e "  Using C compiler:${TAB}${CC}"
-  echo -e "  Build for arch:${TAB}${ARCH}"
+  printf "$fmt" "Using C compiler:" "${CC}"
+  printf "$fmt" "Build for arch:" "${ARCH}"
   echo ""
 
   echo "Binaries:"
-  echo -e "  Using PYTHON:${TAB}${PYTHON}"
+  printf "$fmt" "Using PYTHON:" "${PYTHON}"
   echo ""
 
   # Options
@@ -420,9 +420,9 @@ function print_config
     k=${opt%:*}
     v=${opt#*:}
     if [ "$v" == "yes" ]; then
-      echo -e "  $k:${TAB}yes"
+      printf "$fmt" "$k" "yes"
     else
-      echo -e "  $k:${TAB}no"
+      printf "$fmt" "$k" "no"
     fi
   done
   echo ""
@@ -430,17 +430,17 @@ function print_config
   # Packages
   echo "Packages:"
   for pkg in ${PACKAGES[*]}; do
-    echo -e "  ${pkg}:${TAB}$(pkg-config --modversion $pkg)"
+    printf "$fmt" "${pkg}" "$(pkg-config --modversion $pkg)"
   done
   echo ""
   
   # Installation
   echo "Installation paths:"
-  echo -e "  Prefix:${TAB}${prefix}"
-  echo -e "  Binaries:${TAB}${bindir}"
-  echo -e "  Libraries:${TAB}${libdir}"
-  echo -e "  Data files:${TAB}${datadir}"
-  echo -e "  Man pages:${TAB}${mandir}"
+  printf "$fmt" "Prefix:" "${prefix}"
+  printf "$fmt" "Binaries:" "${bindir}"
+  printf "$fmt" "Libraries:" "${libdir}"
+  printf "$fmt" "Data files:" "${datadir}"
+  printf "$fmt" "Man pages:" "${mandir}"
   echo ""
 }
 

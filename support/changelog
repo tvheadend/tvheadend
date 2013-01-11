@@ -9,6 +9,7 @@ DIST=$2
 VER=$3
 
 # Defaults
+[ -z "$CHANGELOG"     ] && CHANGELOG=$(dirname $0)/../debian/changelog
 [ -z "$DEBEMAIL"      ] && DEBEMAIL="andreas@lonelycoder.com"
 [ -z "$DEBFULLNAME"   ] && DEBFULLNAME="Andreas Öman"
 [ -z "$VER"           ] && VER=$($(dirname $0)/version)

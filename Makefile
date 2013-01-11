@@ -52,9 +52,9 @@ MKBUNDLE = $(PYTHON) $(CURDIR)/support/mkbundle
 #
 
 ifndef V
-ECHO   = printf "$(1)\t\t%s\n" $(2)
+ECHO   = printf "%-16s%s\n" $(1) $(2)
 BRIEF  = CC MKBUNDLE CXX
-MSG    = $@
+MSG    = $(subst $(CURDIR)/,,$@)
 $(foreach VAR,$(BRIEF), \
     $(eval $(VAR) = @$$(call ECHO,$(VAR),$$(MSG)); $($(VAR))))
 endif
