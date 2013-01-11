@@ -41,6 +41,8 @@ parse_args $*
 # Checks
 # ###########################################################################
 
+echo "Checking support/features"
+
 #
 # Compiler
 #
@@ -166,6 +168,17 @@ if enabled_or_auto imagecache; then
   elif enabled imagecache; then
     die "Libcurl support not found (use --disable-imagecache)"
   fi  
+fi
+
+#
+# DVB scan
+#
+if enabled linuxdvb && enabled dvbscan; then
+  [ ! -d ${ROOTDIR}/data/dvb-scan/.git ] && rm -rf $ROOTDIR/data/dvb-scan/*
+  printf "${TAB}" "fetching dvb-scan files ..."
+  git submodule update --init &> /dev/null\
+    || die "failed (use --disable-dvbscan)"
+  echo "ok"
 fi
 
 # ###########################################################################
