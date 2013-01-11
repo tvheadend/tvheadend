@@ -269,9 +269,10 @@ static int _eit_desc_short_event
 static int _eit_desc_ext_event
   ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev )
 {
-  int r, nitem;
+  int r, ilen;
   char ikey[512], ival[512];
   char buf[512], lang[4];
+  uint8_t *iptr;
 
   if (len < 6) return -1;
 
@@ -286,28 +287,34 @@ static int _eit_desc_ext_event
   ptr += 3;
 
   /* Key/Value items */
-  nitem = *ptr;
+  ilen  = *ptr;
   len  -= 1;
   ptr  += 1;
-  if (len < (2 * nitem) + 1) return -1;
+  iptr  = ptr;
+  if (len < ilen) return -1;
 
-  while (nitem--) {
+  /* Skip past */
+  ptr += ilen;
+  len -= ilen;
+
+  /* Process */
+  while (ilen) {
 
     /* Key */
     if ( (r = _eit_get_string_with_len(mod, ikey, sizeof(ikey),
-                                       ptr, len, ev->default_charset)) < 0 )
-      return -1;
-
-    len -= r;
-    ptr += r;
+                                       iptr, ilen, ev->default_charset)) < 0 )
+      break;
+    
+    ilen -= r;
+    iptr += r;
 
     /* Value */
     if ( (r = _eit_get_string_with_len(mod, ival, sizeof(ival),
-                                       ptr, len, ev->default_charset)) < 0 )
-      return -1;
+                                       iptr, ilen, ev->default_charset)) < 0 )
+      break;
 
-    len -= r;
-    ptr += r;
+    ilen -= r;
+    iptr += r;
 
     /* Store */
     // TODO: extend existing?
@@ -323,9 +330,7 @@ static int _eit_desc_ext_event
   if ( _eit_get_string_with_len(mod,
                                 buf, sizeof(buf),
                                 ptr, len,
-                                ev->default_charset) < 0 ) {
-    return -1;
-  } else {
+                                ev->default_charset) > 0 ) {
     if (!ev->desc) ev->desc = lang_str_create();
     lang_str_append(ev->desc, buf, lang);
   }
