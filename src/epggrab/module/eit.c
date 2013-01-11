@@ -228,7 +228,7 @@ static int _eit_desc_short_event
 {
   int r;
   char lang[4];
-  char buf[256];
+  char buf[512];
 
   if ( len < 5 ) return -1;
 
@@ -270,8 +270,8 @@ static int _eit_desc_ext_event
   ( epggrab_module_t *mod, uint8_t *ptr, int len, eit_event_t *ev )
 {
   int r, nitem;
-  char ikey[256], ival[256];
-  char buf[256], lang[4];
+  char ikey[512], ival[512];
+  char buf[512], lang[4];
 
   if (len < 6) return -1;
 
@@ -441,7 +441,7 @@ static int _eit_desc_crid
 {
   int r;
   uint8_t type;
-  char buf[257], *crid;
+  char buf[512], *crid;
   int clen;
 
   while (len > 3) {
