@@ -282,7 +282,8 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
     tsfix_destroy(hs->hs_tsfix);
   htsp_flush_queue(htsp, &hs->hs_q);
 #if ENABLE_TIMESHIFT
-  if(hs->hs_tshift) timeshift_destroy(hs->hs_tshift);
+  if(hs->hs_tshift)
+    timeshift_destroy(hs->hs_tshift);
 #endif
   free(hs);
 }
@@ -1241,7 +1242,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 {
   uint32_t chid, sid, weight, req90khz, normts;
 #if ENABLE_TIMESHIFT
-  uint32_t timeshiftPeriod;
+  uint32_t timeshiftPeriod = 0;
 #endif
   channel_t *ch;
   htsp_subscription_t *hs;
@@ -1265,9 +1266,11 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   normts = htsmsg_get_u32_or_default(in, "normts", 0);
 
 #if ENABLE_TIMESHIFT
-  timeshiftPeriod = htsmsg_get_u32_or_default(in, "timeshiftPeriod", 0);
-  if (!timeshift_unlimited_period)
-    timeshiftPeriod = MIN(timeshiftPeriod, timeshift_max_period);
+  if (timeshift_enabled) {
+    timeshiftPeriod = htsmsg_get_u32_or_default(in, "timeshiftPeriod", 0);
+    if (!timeshift_unlimited_period)
+      timeshiftPeriod = MIN(timeshiftPeriod, timeshift_max_period);
+  }
 #endif
 
   /*
