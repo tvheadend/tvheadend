@@ -351,9 +351,10 @@ dvb_service_find3
   service_t *svc;
   if (tdmi) {
     LIST_FOREACH(svc, &tdmi->tdmi_transports, s_group_link) {
+      if (sid != svc->s_dvb_service_id) continue;
       if (enabled    && !svc->s_enabled) continue;
       if (epgprimary && !service_is_primary_epg(svc)) continue;
-      if (sid == svc->s_dvb_service_id) return svc;
+      return svc;
     }
   } else if (tda) {
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
