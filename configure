@@ -178,6 +178,7 @@ if enabled linuxdvb && enabled dvbscan; then
   if [ -d ${ROOTDIR}/data/dvb-scan/.git ]; then
     (cd ${ROOTDIR}/data/dvb-scan; git pull) &> /dev/null
   else
+    rm -rf ${ROOTDIR}/data/dvb-scan &> /dev/null
     URL=git://linuxtv.org/dtv-scan-tables.git
     git clone $URL ${ROOTDIR}/data/dvb-scan &> /dev/null
     if [ $? -ne 0 ]; then
