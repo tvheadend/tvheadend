@@ -1,3 +1,0 @@
-[submodule "data/dvb-scan"]
-	path = data/dvb-scan
-	url = git://linuxtv.org/dtv-scan-tables.git

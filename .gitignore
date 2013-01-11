@@ -3,6 +3,8 @@ build.*
 
 src/version.c
 
+data/dvb-scan
+
 .cproject
 .project
 .settings
