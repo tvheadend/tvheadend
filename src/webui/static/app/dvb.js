@@ -574,7 +574,6 @@ tvheadend.dvb_services = function(adapterId) {
 				'Please select at least one item to delete');
 		}
 	}
-	;
 
 	function saveChanges() {
 		var mr = store.getModifiedRecords();
@@ -600,6 +599,14 @@ tvheadend.dvb_services = function(adapterId) {
 		});
 	}
 
+	function mapSelected() {
+		grid.selModel.each(function(rec) {
+			if(!rec.get('channelname'))
+				rec.set('channelname', rec.get('svcname'));
+			return true;
+		});
+	}
+
 	var saveBtn = new Ext.Toolbar.Button({
 		tooltip : 'Save any changes made (Changed cells have red borders).',
 		iconCls : 'save',
@@ -618,8 +625,20 @@ tvheadend.dvb_services = function(adapterId) {
 		disabled : true
 	});
 
+	var mapBtn = new Ext.Toolbar.Button({
+		tooltip : 'Map selected services to channels based on their name. Does nothing if selected item is already mapped.',
+		iconCls : 'clone',
+		text : "Map selected",
+		handler : mapSelected,
+		disabled : true
+	});
+
 	var selModel = new Ext.grid.RowSelectionModel({
 		singleSelect : false
+	});
+
+	selModel.on('selectionchange', function(s) {
+		mapBtn.setDisabled(s.getCount() == 0);
 	});
 
 	var grid = new Ext.grid.EditorGridPanel({
@@ -633,7 +652,7 @@ tvheadend.dvb_services = function(adapterId) {
 			forceFit : true
 		},
 		selModel : selModel,
-		tbar : [ saveBtn, rejectBtn ]
+		tbar : [ saveBtn, rejectBtn, '-', mapBtn ]
 	});
 	return grid;
 }
