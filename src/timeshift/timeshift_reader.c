@@ -404,6 +404,8 @@ void *timeshift_reader ( void *p )
                 }
               }
 
+              tvhlog(LOG_DEBUG, "timeshift", "ts %d skip last_time %"PRId64, ts->id, last_time);
+
               /* OK */
               if (skip) {
                 /* Adjust time */
@@ -465,10 +467,13 @@ void *timeshift_reader ( void *p )
           req_time = last_time + ((cur_speed < 0) ? -1 : 1);
         else
           req_time = skip_time;
+        tvhlog(LOG_DEBUG, "timeshift", "ts %d skip to %"PRId64" from %"PRId64, ts->id, req_time, last_time);
 
         /* Find */
         end = _timeshift_skip(ts, req_time, last_time,
                               cur_file, &tsf, &tsi);
+        if (tsi)
+          tvhlog(LOG_DEBUG, "timeshift", "ts %d skip found pkt @ %"PRId64, ts->id, tsi->time);
 
         /* File changed (close) */
         if ((tsf != cur_file) && (fd != -1)) {
@@ -557,7 +562,9 @@ void *timeshift_reader ( void *p )
                ((cur_speed > 0) && (sm->sm_time <= deliver))))) {
 
       sm->sm_timeshift = now - sm->sm_time;
-#ifdef TSHFT_TRACE
+#ifndef TSHFT_TRACE
+      if (skip)
+#endif
       {
         time_t pts = 0;
         if (sm->sm_type == SMT_PACKET)
@@ -565,7 +572,6 @@ void *timeshift_reader ( void *p )
         tvhlog(LOG_DEBUG, "timeshift", "ts %d deliver %"PRItime_t" pts=%"PRItime_t " shift=%"PRIu64,
                ts->id, sm->sm_time, pts, sm->sm_timeshift );
       }
-#endif
       streaming_target_deliver2(ts->output, sm);
       last_time = sm->sm_time;
       sm        = NULL;
@@ -604,7 +610,7 @@ void *timeshift_reader ( void *p )
         tvhlog(LOG_DEBUG, "timeshift", "ts %d sob pause stream", ts->id);
         cur_speed  = 0;
         ts->state  = TS_PAUSE;
-        pause_time = now;
+        pause_time = last_time;
         ctrl       = streaming_msg_create_code(SMT_SPEED, cur_speed);
         streaming_target_deliver2(ts->output, ctrl);
       }
