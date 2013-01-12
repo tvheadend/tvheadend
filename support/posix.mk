@@ -13,7 +13,7 @@ install: ${PROG} ${MAN}
 		cp -r $$bundle/*  ${DESTDIR}${datadir}/tvheadend/$$bundle ;\
 	done
 
-	find ${DESTDIR} -name .git -exec rm -rf {} \;
+	find ${DESTDIR}${datadir}/tvheadend -name .git -exec rm -rf {} \; &>/dev/null || /bin/true
 
 uninstall:
 	rm -f ${DESTDIR}${bindir)/tvheadend
