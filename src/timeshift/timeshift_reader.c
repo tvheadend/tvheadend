@@ -460,7 +460,7 @@ void *timeshift_reader ( void *p )
       /* Rewind or Fast forward (i-frame only) */
       if (skip || keyframe_mode) {
         timeshift_file_t *tsf = NULL;
-        time_t req_time;
+        int64_t req_time;
 
         /* Time */
         if (!skip)
@@ -569,7 +569,7 @@ void *timeshift_reader ( void *p )
         time_t pts = 0;
         if (sm->sm_type == SMT_PACKET)
           pts = ((th_pkt_t*)sm->sm_data)->pkt_pts;
-        tvhlog(LOG_DEBUG, "timeshift", "ts %d deliver %"PRItime_t" pts=%"PRItime_t " shift=%"PRIu64,
+        tvhlog(LOG_DEBUG, "timeshift", "ts %d deliver %"PRId64" pts=%"PRItime_t " shift=%"PRIu64,
                ts->id, sm->sm_time, pts, sm->sm_timeshift );
       }
       streaming_target_deliver2(ts->output, sm);
