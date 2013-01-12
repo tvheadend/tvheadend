@@ -127,7 +127,7 @@ if enabled_or_auto libav; then
     has_libav=false
   fi
 
-  if $has_libav && ! check_pkg libavformat ">=50.43.0"; then
+  if $has_libav && ! check_pkg libavformat ">=53.10.0"; then
     has_libav=false
   fi
 
