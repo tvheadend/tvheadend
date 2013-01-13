@@ -495,6 +495,41 @@ static int _eit_desc_crid
   return 0;
 }
 
+/*
+ * Parse description and extract episode number.
+ */
+static int _eit_extract_enum
+  ( epg_episode_t *episode, lang_str_t *text, const char *keyword, 
+    epggrab_module_t *mod )
+{
+    int save = 0;
+    char *pos = 0;
+
+    /* NOTE: Only first available language is checked. */
+    if (keyword && *keyword &&
+        (pos = strstr(lang_str_get(text, NULL), keyword)) != 0) {
+        char *start, *end;
+        char buf[16];
+        epg_episode_num_t epnum;
+        memset(&epnum, 0, sizeof(epnum));
+
+        pos += strlen(keyword);
+        /* find first digit */
+        while (*pos && !(*pos >= '0' && *pos <= '9')) pos++;
+        start = pos;
+        /* find lsat digit */
+        while (*pos && *pos >= '0' && *pos <= '9') pos++;
+        end = pos;
+        /* copy number to buffer */
+        strncpy(buf, start, end - start);
+        buf[end - start] = 0;
+        epnum.text = buf;
+
+        save |= epg_episode_set_epnum(episode, &epnum, mod);
+    }
+    return save;
+}
+
 
 /* ************************************************************************
  * EIT Event
@@ -635,6 +670,12 @@ static int _eit_process_event
   /* Update Episode */
   if (ee) {
     *save |= epg_episode_set_is_bw(ee, ev.bw, mod);
+    if ( ev.title )
+      *save |= _eit_extract_enum(ee, ev.title, svc->s_dvb_eit_keyword, mod);
+    if ( ev.summary )
+      *save |= _eit_extract_enum(ee, ev.summary, svc->s_dvb_eit_keyword, mod);
+    if ( ev.desc )
+      *save |= _eit_extract_enum(ee, ev.desc, svc->s_dvb_eit_keyword, mod);
     if ( ev.title )
       *save |= epg_episode_set_title2(ee, ev.title, mod);
     if ( ev.genre )

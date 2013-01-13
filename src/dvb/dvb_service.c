@@ -168,6 +168,9 @@ dvb_service_save(service_t *t)
   
   htsmsg_add_u32(m, "dvb_eit_enable", t->s_dvb_eit_enable);
 
+  if(t->s_dvb_eit_keyword != NULL && *t->s_dvb_eit_keyword != 0)
+    htsmsg_add_str(m, "dvb_eit_keyword", t->s_dvb_eit_keyword);
+
   if(t->s_default_authority)
     htsmsg_add_str(m, "default_authority", t->s_default_authority);
 
@@ -251,6 +254,9 @@ dvb_service_load(th_dvb_mux_instance_t *tdmi, const char *tdmi_identifier)
     if(htsmsg_get_u32(c, "dvb_eit_enable", &u32))
       u32 = 1;
     t->s_dvb_eit_enable = u32;
+
+    s = htsmsg_get_str(c, "dvb_eit_keyword");
+    t->s_dvb_eit_keyword = s ? strdup(s) : NULL;
 
     s = htsmsg_get_str(c, "channelname");
     if(htsmsg_get_u32(c, "mapped", &u32))
@@ -479,6 +485,9 @@ dvb_service_build_msg(service_t *t)
     htsmsg_add_str(m, "dvb_charset", t->s_dvb_charset);
 
   htsmsg_add_u32(m, "dvb_eit_enable", t->s_dvb_eit_enable);
+
+  if(t->s_dvb_eit_keyword != NULL && *t->s_dvb_eit_keyword != 0)
+    htsmsg_add_str(m, "dvb_eit_keyword", t->s_dvb_eit_keyword);
 
   htsmsg_add_u32(m, "prefcapid", t->s_prefcapid);
 

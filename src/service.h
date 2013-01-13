@@ -508,6 +508,11 @@ typedef struct service {
    */
   int s_dvb_eit_enable;
 
+  /**
+   * Keyword for extraction of episode number from EIT description.
+   */
+  char *s_dvb_eit_keyword;
+
 } service_t;
 
 
@@ -596,6 +601,8 @@ uint16_t service_get_encryption(service_t *t);
 void service_set_dvb_charset(service_t *t, const char *dvb_charset);
 
 void service_set_dvb_eit_enable(service_t *t, int dvb_eit_enable);
+
+void service_set_dvb_eit_keyword(service_t *t, const char *eit_keyword);
 
 void service_set_prefcapid(service_t *t, uint32_t prefcapid);
 

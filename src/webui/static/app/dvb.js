@@ -494,6 +494,15 @@ tvheadend.dvb_services = function(adapterId) {
 				valueField : 'key'
 			})
 		}, eitColumn, {
+			header : "EP# Keyword",
+			dataIndex : 'dvb_eit_keyword',
+			width : 100,
+			renderer : function(value, metadata, record, row, col, store) {
+				return value ? value
+					: '<span class="tvh-grid-unset">none</span>';
+			},
+			editor : new fm.TextField({allowBlank: true})
+		}, {
 			header : "Type",
 			dataIndex : 'type',
 			width : 50
@@ -539,7 +548,7 @@ tvheadend.dvb_services = function(adapterId) {
 		root : 'entries',
 		fields : Ext.data.Record.create([ 'id', 'enabled', 'type', 'sid', 'pmt',
 			'pcr', 'svcname', 'network', 'provider', 'encryption', 'mux', 'channelname',
-			'prefcapid', 'dvb_charset', 'dvb_eit_enable' ]),
+			'prefcapid', 'dvb_charset', 'dvb_eit_enable', 'dvb_eit_keyword' ]),
 		url : "dvb/services/" + adapterId,
 		autoLoad : true,
 		id : 'id',

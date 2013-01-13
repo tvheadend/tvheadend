@@ -529,6 +529,7 @@ service_create(const char *identifier, int type, int source_type)
   t->s_pcr_last = PTS_UNSET;
   t->s_dvb_charset = NULL;
   t->s_dvb_eit_enable = 1;
+  t->s_dvb_eit_keyword = NULL;
   TAILQ_INIT(&t->s_components);
 
   sbuf_init(&t->s_tsbuf);
@@ -729,6 +730,22 @@ service_set_dvb_eit_enable(service_t *t, int dvb_eit_enable)
     return;
 
   t->s_dvb_eit_enable = dvb_eit_enable;
+  t->s_config_save(t);
+}
+
+/**
+ *
+ */
+void
+service_set_dvb_eit_keyword(service_t *t, const char *eit_keyword)
+{
+  lock_assert(&global_lock);
+
+  if(t->s_dvb_eit_keyword != NULL && !strcmp(t->s_dvb_eit_keyword, eit_keyword))
+    return;
+
+  free(t->s_dvb_eit_keyword);
+  t->s_dvb_eit_keyword = strdup(eit_keyword);
   t->s_config_save(t);
 }
 
