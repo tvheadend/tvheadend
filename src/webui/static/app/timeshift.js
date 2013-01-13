@@ -47,7 +47,7 @@ tvheadend.timeshift = function() {
   });
 
   var timeshiftUnlPeriod = new Ext.form.Checkbox({
-    fieldLabel: '  Unlimited',
+    fieldLabel: '&nbsp;&nbsp;&nbsp;(unlimited)',
     name: 'timeshift_unlimited_period',
     Width: 300
   });
@@ -56,13 +56,15 @@ tvheadend.timeshift = function() {
     fieldLabel: 'Max. Size (MB)',
     name: 'timeshift_max_size',
     allowBlank: false,
-    width: 300
+    width: 300,
+    hidden : true
   });
 
   var timeshiftUnlSize = new Ext.form.Checkbox({
-    fieldLabel: '  Unlimited',
+    fieldLabel: '&nbsp;&nbsp;&nbsp;(unlimited)',
     name: 'timeshift_unlimited_size',
-    Width: 300
+    Width: 300,
+    hidden : true
   });
 
   /* ****************************************************************

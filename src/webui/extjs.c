@@ -2072,7 +2072,7 @@ extjs_timeshift(http_connection_t *hc, const char *remain, void *opaque)
     if (timeshift_path)
       htsmsg_add_str(m, "timeshift_path", timeshift_path);
     htsmsg_add_u32(m, "timeshift_unlimited_period", timeshift_unlimited_period);
-    htsmsg_add_u32(m, "timeshift_max_period", timeshift_max_period);
+    htsmsg_add_u32(m, "timeshift_max_period", timeshift_max_period / 60);
     htsmsg_add_u32(m, "timeshift_unlimited_size", timeshift_unlimited_size);
     htsmsg_add_u32(m, "timeshift_max_size", timeshift_max_size / 1048576);
     pthread_mutex_unlock(&global_lock);
@@ -2090,7 +2090,7 @@ extjs_timeshift(http_connection_t *hc, const char *remain, void *opaque)
     }
     timeshift_unlimited_period = http_arg_get(&hc->hc_req_args, "timeshift_unlimited_period") ? 1 : 0;
     if ((str = http_arg_get(&hc->hc_req_args, "timeshift_max_period")))
-      timeshift_max_period = (uint32_t)atol(str);
+      timeshift_max_period = (uint32_t)atol(str) * 60;
     timeshift_unlimited_size = http_arg_get(&hc->hc_req_args, "timeshift_unlimited_size") ? 1 : 0;
     if ((str = http_arg_get(&hc->hc_req_args, "timeshift_max_size")))
       timeshift_max_size   = atol(str) * 1048576LL;
