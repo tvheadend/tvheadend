@@ -39,6 +39,12 @@ tvheadend.timeshift = function() {
     width: 300
   });
 
+  var timeshiftUnlPeriod = new Ext.form.Checkbox({
+    fieldLabel: '  Unlimited',
+    name: 'timeshift_unlimited_period',
+    Width: 300
+  });
+  
   var timeshiftMaxPeriod = new Ext.form.NumberField({
     fieldLabel: 'Max. Period (mins)',
     name: 'timeshift_max_period',
@@ -46,12 +52,12 @@ tvheadend.timeshift = function() {
     width: 300
   });
 
-  var timeshiftUnlPeriod = new Ext.form.Checkbox({
-    fieldLabel: '  unlimited',
-    name: 'timeshift_unlimited_period',
+  var timeshiftUnlSize = new Ext.form.Checkbox({
+    fieldLabel: '  Unlimited',
+    name: 'timeshift_unlimited_size',
     Width: 300
   });
-
+  
   var timeshiftMaxSize = new Ext.form.NumberField({
     fieldLabel: 'Max. Size (MB)',
     name: 'timeshift_max_size',
@@ -59,11 +65,6 @@ tvheadend.timeshift = function() {
     width: 300
   });
 
-  var timeshiftUnlSize = new Ext.form.Checkbox({
-    fieldLabel: '  unlimited',
-    name: 'timeshift_unlimited_size',
-    Width: 300
-  });
 
   /* ****************************************************************
    * Events
@@ -107,10 +108,13 @@ tvheadend.timeshift = function() {
     defaultType : 'textfield',
     autoHeight : true,
     items : [
-      timeshiftEnabled, timeshiftOndemand,
+      timeshiftEnabled, 
+      timeshiftOndemand,
       timeshiftPath,
-      timeshiftMaxPeriod, timeshiftUnlPeriod,
-      timeshiftMaxSize, timeshiftUnlSize
+      timeshiftUnlPeriod,
+      timeshiftMaxPeriod, 
+      timeshiftUnlSize,
+      timeshiftMaxSize
     ],
     tbar : [ saveButton, '->', helpButton ]
   });
