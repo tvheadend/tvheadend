@@ -1402,24 +1402,24 @@ htsp_method_skip(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsmsg_get_u32(in, "subscriptionId", &sid))
     return htsp_error("Missing argument 'subscriptionId'");
 
-  abs = htsmsg_get_u32_or_default(in, "absolute", 0);
-
-  if(!htsmsg_get_s64(in, "time", &s64)) {
-    skip.type = abs ? SMT_SKIP_ABS_TIME : SMT_SKIP_REL_TIME;
-    skip.time = s64;
-  } else if (!htsmsg_get_s64(in, "size", &s64)) {
-    skip.type = abs ? SMT_SKIP_ABS_SIZE : SMT_SKIP_REL_SIZE;
-    skip.size = s64;
-  } else {
-    return htsp_error("Missing argument 'time' or 'size'");
-  }
-
   LIST_FOREACH(hs, &htsp->htsp_subscriptions, hs_link)
     if(hs->hs_sid == sid)
       break;
 
   if(hs == NULL)
     return htsp_error("Requested subscription does not exist");
+
+  abs = htsmsg_get_u32_or_default(in, "absolute", 0);
+
+  if(!htsmsg_get_s64(in, "time", &s64)) {
+    skip.type = abs ? SMT_SKIP_ABS_TIME : SMT_SKIP_REL_TIME;
+    skip.time = hs->hs_90khz ? s64 : ts_rescale_i(s64, 1000000);
+  } else if (!htsmsg_get_s64(in, "size", &s64)) {
+    skip.type = abs ? SMT_SKIP_ABS_SIZE : SMT_SKIP_REL_SIZE;
+    skip.size = s64;
+  } else {
+    return htsp_error("Missing argument 'time' or 'size'");
+  }
 
   subscription_set_skip(hs->hs_s, &skip);
 
@@ -2445,7 +2445,7 @@ htsp_subscription_skip(htsp_subscription_t *hs, streaming_skip_t *skip)
   if (skip->type == SMT_SKIP_ERROR)
     htsmsg_add_u32(m, "error", 1);
   else if (skip->type == SMT_SKIP_ABS_TIME || skip->type == SMT_SKIP_REL_TIME)
-    htsmsg_add_s64(m, "time", skip->time);
+    htsmsg_add_s64(m, "time", hs->hs_90khz ? skip->time : ts_rescale(skip->time, 1000000));
   else if (skip->type == SMT_SKIP_ABS_SIZE || skip->type == SMT_SKIP_REL_SIZE)
     htsmsg_add_s64(m, "size", skip->size);
   htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);

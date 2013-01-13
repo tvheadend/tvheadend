@@ -382,12 +382,23 @@ void *timeshift_reader ( void *p )
         } else if (ctrl->sm_type == SMT_SKIP) {
           skip = ctrl->sm_data;
           switch (skip->type) {
+            case SMT_SKIP_ABS_TIME:
+              if (ts->pts_delta == PTS_UNSET) {
+                tvhlog(LOG_ERR, "timeshift", "ts %d abs skip not possible no PTS delta", ts->id);
+                skip = NULL;
+                break;
+              }
+              /* -fallthrough */
             case SMT_SKIP_REL_TIME:
               tvhlog(LOG_DEBUG, "timeshift", "ts %d skip %"PRId64" requested", ts->id, skip->time);
 
+              /* Convert */
+              skip_time =  ts_rescale(skip->time, 1000000);
+              skip_time += (skip->type == SMT_SKIP_ABS_TIME) ? ts->pts_delta : last_time;
+
               /* Must handle live playback case */
               if (ts->state == TS_LIVE) {
-                if (skip->time < 0) {
+                if (skip_time < now) {
                   pthread_mutex_lock(&ts->rdwr_mutex);
                   if ((cur_file   = timeshift_filemgr_get(ts, ts->ondemand))) {
                     ts->state  = TS_PLAY;
@@ -408,9 +419,10 @@ void *timeshift_reader ( void *p )
 
               /* OK */
               if (skip) {
+
                 /* Adjust time */
                 play_time  = now;
-                pause_time = skip_time = last_time + skip->time;
+                pause_time = skip_time;
                 tsi        = NULL;
 
                 /* Clear existing packet */

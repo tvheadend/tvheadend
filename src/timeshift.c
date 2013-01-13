@@ -146,6 +146,13 @@ static void timeshift_input
         (sm->sm_type == SMT_STOP && sm->sm_code == 0))
       exit = 1;
 
+    /* Record (one-off) PTS delta */
+    if (sm->sm_type == SMT_PACKET && ts->pts_delta == PTS_UNSET) {
+      th_pkt_t *pkt = sm->sm_data;
+      if (pkt->pkt_pts != PTS_UNSET)
+        ts->pts_delta = getmonoclock() - ts_rescale(pkt->pkt_pts, 1000000);
+    }
+
     /* Buffer to disk */
     if ((ts->state > TS_LIVE) || (!ts->ondemand && (ts->state == TS_LIVE))) {
       sm->sm_time = getmonoclock();
@@ -230,6 +237,7 @@ streaming_target_t *timeshift_create
   ts->vididx     = -1;
   ts->id         = timeshift_index;
   ts->ondemand   = timeshift_ondemand;
+  ts->pts_delta  = PTS_UNSET;
   pthread_mutex_init(&ts->rdwr_mutex, NULL);
   pthread_mutex_init(&ts->state_mutex, NULL);
 

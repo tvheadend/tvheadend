@@ -526,6 +526,11 @@ static inline int64_t ts_rescale(int64_t ts, int tb)
   return (ts * tb ) / 90000LL;
 }
 
+static inline int64_t ts_rescale_i(int64_t ts, int tb)
+{
+  return (ts * 90000LL) / tb;
+}
+
 void sbuf_init(sbuf_t *sb);
 
 void sbuf_free(sbuf_t *sb);
