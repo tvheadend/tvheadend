@@ -14,7 +14,6 @@
 [ -z "$CPU"      ] && CPU=generic
 [ -z "$ARCH"     ] && ARCH=`uname -m`
 [ -z "$OSENV"    ] && OSENV=posix
-[ -z "$CC"       ] && CC=cc
 [ -z "$PYTHON"   ] && PYTHON=python
 
 # Paths
@@ -162,6 +161,7 @@ function show_help
   echo ""
   echo "Compiler/Arch"
   printf "  $fmt Build using compiler [$CC]\n" "--cc=CC"
+  printf "  $fmt Build using C flags\n" "--cflags=CFLAGS"
   printf "  $fmt Build and optimize for specific CPU\n" "--cpu=CPU"
   printf "  $fmt Build for architecture [$ARCH]\n" "--arch=ARCH"
   printf "  $fmt Build for platform [$PLATFORM]\n" "--platform=PLATFORM"
@@ -198,7 +198,7 @@ function parse_args
       *dir|prefix)
         eval "$opt=$val"
         ;;
-      cc|arch|cpu|platform|python)
+      cc|cflags|arch|cpu|platform|python)
         eval "`toupper $opt`=$val"
         ;;
       enable-*)
@@ -407,6 +407,9 @@ function print_config
   echo ""
   echo "Compiler:"
   printf "$fmt" "Using C compiler:" "${CC}"
+  if [ "${CFLAGS}" != "" ]; then
+     printf "$fmt" "Using C flags:" "${CFLAGS}"
+  fi
   printf "$fmt" "Build for arch:" "${ARCH}"
   echo ""
 
