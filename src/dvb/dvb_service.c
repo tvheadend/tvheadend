@@ -171,6 +171,9 @@ dvb_service_save(service_t *t)
   if(t->s_default_authority)
     htsmsg_add_str(m, "default_authority", t->s_default_authority);
 
+  if(t->s_prefcapid)
+    htsmsg_add_u32(m, "prefcapid", t->s_prefcapid);
+
   pthread_mutex_lock(&t->s_stream_mutex);
   psi_save_service_settings(m, t);
   pthread_mutex_unlock(&t->s_stream_mutex);
