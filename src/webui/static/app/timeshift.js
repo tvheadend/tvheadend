@@ -47,7 +47,7 @@ tvheadend.timeshift = function() {
   });
 
   var timeshiftUnlPeriod = new Ext.form.Checkbox({
-    fieldLabel: '  unlimited',
+    fieldLabel: '  Unlimited',
     name: 'timeshift_unlimited_period',
     Width: 300
   });
@@ -60,7 +60,7 @@ tvheadend.timeshift = function() {
   });
 
   var timeshiftUnlSize = new Ext.form.Checkbox({
-    fieldLabel: '  unlimited',
+    fieldLabel: '  Unlimited',
     name: 'timeshift_unlimited_size',
     Width: 300
   });
