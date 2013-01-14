@@ -475,6 +475,9 @@ dvb_service_build_msg(service_t *t)
   dvb_mux_nicefreq(buf, sizeof(buf), tdmi);
   htsmsg_add_str(m, "mux", buf);
 
+  if(tdmi->tdmi_conf.dmc_satconf != NULL)
+    htsmsg_add_str(m, "satconf", tdmi->tdmi_conf.dmc_satconf->sc_id);
+
   if(t->s_ch != NULL)
     htsmsg_add_str(m, "channelname", t->s_ch->ch_name);
 
