@@ -181,6 +181,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
   timeshift_file_t *tsf_tl, *tsf_hd, *tsf_tmp;
   timeshift_index_data_t *ti;
   char path[512];
+  time_t time;
 
   /* Return last file */
   if (!create)
@@ -192,8 +193,9 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
 
   /* Store to file */
   clock_gettime(CLOCK_MONOTONIC_COARSE, &tp);
+  time   = tp.tv_sec / TIMESHIFT_FILE_PERIOD;
   tsf_tl = TAILQ_LAST(&ts->files, timeshift_file_list);
-  if (!tsf_tl || tsf_tl->time != tp.tv_sec) {
+  if (!tsf_tl || tsf_tl->time != time) {
     tsf_hd = TAILQ_FIRST(&ts->files);
 
     /* Close existing */
@@ -202,7 +204,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
 
     /* Check period */
     if (ts->max_time && tsf_hd && tsf_tl) {
-      time_t d = tsf_tl->time - tsf_hd->time;
+      time_t d = (tsf_tl->time - tsf_hd->time) * TIMESHIFT_FILE_PERIOD;
       if (d > (ts->max_time+5)) {
         if (!tsf_hd->refcount) {
           timeshift_filemgr_remove(ts, tsf_hd, 0);
@@ -221,13 +223,13 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
     /* Create new file */
     tsf_tmp = NULL;
     if (!ts->full) {
-      snprintf(path, sizeof(path), "%s/tvh-%"PRItime_t, ts->path, tp.tv_sec);
+      snprintf(path, sizeof(path), "%s/tvh-%"PRItime_t, ts->path, time);
 #ifdef TSHFT_TRACE
       tvhlog(LOG_DEBUG, "timeshift", "ts %d create file %s", ts->id, path);
 #endif
       if ((fd = open(path, O_WRONLY | O_CREAT, 0600)) > 0) {
         tsf_tmp = calloc(1, sizeof(timeshift_file_t));
-        tsf_tmp->time     = tp.tv_sec;
+        tsf_tmp->time     = time;
         tsf_tmp->fd       = fd;
         tsf_tmp->path     = strdup(path);
         tsf_tmp->refcount = 0;

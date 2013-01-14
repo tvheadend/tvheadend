@@ -194,7 +194,7 @@ static int _timeshift_skip
 {
   timeshift_index_iframe_t *tsi  = *iframe;
   timeshift_file_t         *tsf  = cur_file;
-  int64_t                   sec  = req_time / 1000000;
+  int64_t                   sec  = req_time / (1000000 * TIMESHIFT_FILE_PERIOD);
   int                       back = (req_time < cur_time) ? 1 : 0;
   int                       end  = 0;
 
@@ -575,7 +575,7 @@ void *timeshift_reader ( void *p )
     pthread_mutex_lock(&ts->rdwr_mutex);
 
     /* Calculate delivery time */
-    deliver = (now - play_time) + TS_PLAY_BUF;
+    deliver = (now - play_time) + TIMESHIFT_PLAY_BUF;
     deliver = (deliver * cur_speed) / 100;
     deliver = (deliver + pause_time);
 
