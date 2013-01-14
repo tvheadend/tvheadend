@@ -22,6 +22,7 @@
 #include "timeshift/private.h"
 #include "config2.h"
 #include "settings.h"
+#include "atomic.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -138,6 +139,12 @@ static void timeshift_input
 
     /* Pass-thru */
     if (ts->state <= TS_LIVE) {
+      if (sm->sm_type == SMT_START) {
+        if (ts->smt_start)
+          streaming_start_unref(ts->smt_start);
+        ts->smt_start = sm->sm_data;
+        atomic_add(&ts->smt_start->ss_refcount, 1);
+      }
       streaming_target_deliver2(ts->output, streaming_msg_clone(sm));
     }
 
@@ -203,6 +210,10 @@ timeshift_destroy(streaming_target_t *pad)
 
   /* Flush files */
   timeshift_filemgr_flush(ts, NULL);
+
+  /* Release SMT_START index */
+  if (ts->smt_start)
+    streaming_start_unref(ts->smt_start);
 
   free(ts->path);
   free(ts);

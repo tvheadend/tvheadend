@@ -92,6 +92,8 @@ typedef struct timeshift {
   }                           state;       ///< Play state
   pthread_mutex_t             state_mutex; ///< Protect state changes
   uint8_t                     full;        ///< Buffer is full
+  
+  streaming_start_t          *smt_start;   ///< Current stream makeup
 
   streaming_queue_t           wr_queue;   ///< Writer queue
   pthread_t                   wr_thread;  ///< Writer thread

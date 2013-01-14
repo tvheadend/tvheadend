@@ -20,6 +20,7 @@
 #include "streaming.h"
 #include "timeshift.h"
 #include "timeshift/private.h"
+#include "atomic.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -173,6 +174,19 @@ static ssize_t _read_msg ( int fd, streaming_message_t **sm )
  * Utilities
  * *************************************************************************/
 
+static streaming_message_t *_timeshift_find_sstart
+  ( timeshift_file_t *tsf, int64_t time )
+{
+  timeshift_index_data_t *ti;
+
+  /* Find the SMT_START message that relates (comes before) the given time */
+  ti = TAILQ_LAST(&tsf->sstart, timeshift_index_data_list);
+  while (ti && ti->data->sm_time > time)
+    ti = TAILQ_PREV(ti, timeshift_index_data_list, link);
+
+  return ti ? ti->data : NULL;
+}
+
 static int _timeshift_skip
   ( timeshift_t *ts, int64_t req_time, int64_t cur_time,
     timeshift_file_t *cur_file, timeshift_file_t **new_file,
@@ -290,10 +304,13 @@ static int _timeshift_read
 #endif
 
     /* Incomplete */
-    if (r == 0)
+    if (r == 0) {
       lseek(*fd, *cur_off, SEEK_SET);
-    else
-      *cur_off += r;
+      return 0;
+    }
+
+    /* Update */
+    *cur_off += r;
 
     /* Special case - EOF */
     if (r == sizeof(size_t) || *cur_off > (*cur_file)->size) {
@@ -302,6 +319,18 @@ static int _timeshift_read
       *cur_file = timeshift_filemgr_next(*cur_file, NULL, 0);
       *cur_off  = 0; // reset
       *wait     = 0;
+
+    /* Check SMT_START index */
+    } else {
+      streaming_message_t *ssm = _timeshift_find_sstart(*cur_file, (*sm)->sm_time);
+      if (ssm && ssm->sm_data != ts->smt_start) {
+        printf("SENDING NEW SMT_START MESSAGE\n");
+        streaming_target_deliver2(ts->output, streaming_msg_clone(ssm));
+        if (ts->smt_start)
+          streaming_start_unref(ts->smt_start);
+        ts->smt_start = ssm->sm_data;
+        atomic_add(&ts->smt_start->ss_refcount, 1);
+      }
     }
   }
   return 0;
