@@ -27,6 +27,9 @@ extern uint32_t  timeshift_max_period;
 extern int       timeshift_unlimited_size;
 extern size_t    timeshift_max_size;
 
+extern size_t          timeshift_total_size;
+extern pthread_mutex_t timeshift_size_lock;
+
 void timeshift_init ( void );
 void timeshift_term ( void );
 void timeshift_save ( void );

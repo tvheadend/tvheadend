@@ -56,15 +56,13 @@ tvheadend.timeshift = function() {
     fieldLabel: 'Max. Size (MB)',
     name: 'timeshift_max_size',
     allowBlank: false,
-    width: 300,
-    hidden : true
+    width: 300
   });
 
   var timeshiftUnlSize = new Ext.form.Checkbox({
     fieldLabel: '&nbsp;&nbsp;&nbsp;(unlimited)',
     name: 'timeshift_unlimited_size',
-    Width: 300,
-    hidden : true
+    Width: 300
   });
 
   /* ****************************************************************

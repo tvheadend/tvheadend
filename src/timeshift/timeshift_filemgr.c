@@ -38,6 +38,9 @@ static pthread_t             timeshift_reaper_thread;
 static pthread_mutex_t       timeshift_reaper_lock;
 static pthread_cond_t        timeshift_reaper_cond;
 
+pthread_mutex_t              timeshift_size_lock;
+size_t                       timeshift_total_size;
+
 /* **************************************************************************
  * File reaper thread
  * *************************************************************************/
@@ -72,6 +75,10 @@ static void* timeshift_reaper_callback ( void *p )
       if (errno != ENOTEMPTY)
         tvhlog(LOG_ERR, "timeshift", "failed to remove %s [e=%s]",
                dpath, strerror(errno));
+    pthread_mutex_lock(&timeshift_size_lock);
+    assert(tsf->size >= timeshift_total_size);
+    timeshift_total_size -= tsf->size;
+    pthread_mutex_unlock(&timeshift_size_lock);
 
     /* Free memory */
     while ((ti = TAILQ_FIRST(&tsf->iframes))) {
@@ -218,8 +225,13 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
     }
 
     /* Check size */
-    // TODO: need to implement this
-
+    pthread_mutex_lock(&timeshift_size_lock);
+    if (!timeshift_unlimited_size && timeshift_total_size >= timeshift_max_size) {
+      tvhlog(LOG_DEBUG, "timshift", "ts %d buffer full", ts->id);
+      ts->full = 1;
+    }
+    pthread_mutex_unlock(&timeshift_size_lock);
+      
     /* Create new file */
     tsf_tmp = NULL;
     if (!ts->full) {
@@ -303,6 +315,10 @@ void timeshift_filemgr_init ( void )
   /* Try to remove any rubbish left from last run */
   timeshift_filemgr_get_root(path, sizeof(path));
   rmtree(path);
+
+  /* Size processing */
+  timeshift_total_size = 0;
+  pthread_mutex_init(&timeshift_size_lock, NULL);
 
   /* Start the reaper thread */
   timeshift_reaper_run = 1;
