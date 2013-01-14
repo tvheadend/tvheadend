@@ -470,32 +470,36 @@ void *timeshift_reader ( void *p )
               }
               /* -fallthrough */
             case SMT_SKIP_REL_TIME:
-              tvhlog(LOG_DEBUG, "timeshift", "ts %d skip %"PRId64" requested", ts->id, skip->time);
 
               /* Convert */
               skip_time =  ts_rescale(skip->time, 1000000);
-              skip_time += (skip->type == SMT_SKIP_ABS_TIME) ? ts->pts_delta : last_time;
+              tvhlog(LOG_DEBUG, "timeshift", "ts %d skip %"PRId64" requested", ts->id, skip->time);
 
-              /* Must handle live playback case */
+              /* Live playback (stage1) */
               if (ts->state == TS_LIVE) {
-                if (skip_time < now) {
-                  pthread_mutex_lock(&ts->rdwr_mutex);
-                  if ((cur_file   = timeshift_filemgr_get(ts, ts->ondemand))) {
-                    ts->state  = TS_PLAY;
-                    cur_off    = cur_file->size;
-                    last_time  = cur_file->last;
-                  } else {
-                    tvhlog(LOG_ERR, "timeshift", "ts %d failed to get current file", ts->id);
-                    skip = NULL;
-                  }
-                  pthread_mutex_unlock(&ts->rdwr_mutex);
+                pthread_mutex_lock(&ts->rdwr_mutex);
+                if ((cur_file   = timeshift_filemgr_get(ts, ts->ondemand))) {
+                  cur_off    = cur_file->size;
+                  last_time  = cur_file->last;
                 } else {
-                  tvhlog(LOG_DEBUG, "timeshift", "ts %d skip ignored, already live", ts->id);
+                  tvhlog(LOG_ERR, "timeshift", "ts %d failed to get current file", ts->id);
                   skip = NULL;
                 }
+                pthread_mutex_unlock(&ts->rdwr_mutex);
               }
 
               tvhlog(LOG_DEBUG, "timeshift", "ts %d skip last_time %"PRId64, ts->id, last_time);
+              skip_time += (skip->type == SMT_SKIP_ABS_TIME) ? ts->pts_delta : last_time;
+
+              /* Live (stage2) */
+              if (ts->state == TS_LIVE) {
+                if (skip_time >= now) {
+                  tvhlog(LOG_DEBUG, "timeshift", "ts %d skip ignored, already live", ts->id);
+                  skip = NULL;
+                } else {
+                  ts->state = TS_PLAY;
+                }
+              }
 
               /* OK */
               if (skip) {
