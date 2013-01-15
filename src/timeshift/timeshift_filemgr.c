@@ -76,7 +76,7 @@ static void* timeshift_reaper_callback ( void *p )
         tvhlog(LOG_ERR, "timeshift", "failed to remove %s [e=%s]",
                dpath, strerror(errno));
     pthread_mutex_lock(&timeshift_size_lock);
-    assert(tsf->size >= timeshift_total_size);
+    assert(tsf->size <= timeshift_total_size);
     timeshift_total_size -= tsf->size;
     pthread_mutex_unlock(&timeshift_size_lock);
 
