@@ -347,6 +347,31 @@ tcp_read_timeout(int fd, void *buf, size_t len, int timeout)
 /**
  *
  */
+char *
+tcp_get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen)
+{
+  if(sa == NULL || s == NULL)
+    return NULL;
+
+  switch(sa->sa_family)
+  {
+    case AF_INET:
+      inet_ntop(AF_INET, &(((struct sockaddr_in*)sa)->sin_addr), s, maxlen);
+      break;
+    case AF_INET6:
+      inet_ntop(AF_INET6, &(((struct sockaddr_in6*)sa)->sin6_addr), s, maxlen);
+      break;
+    default:
+      strncpy(s, "Unknown AF", maxlen);
+      return NULL;
+  }
+
+  return s;
+}
+
+/**
+ *
+ */
 static int tcp_server_epoll_fd;
 
 typedef struct tcp_server {
