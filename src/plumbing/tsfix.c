@@ -371,6 +371,7 @@ tsfix_input(void *opaque, streaming_message_t *sm)
   case SMT_MPEGTS:
   case SMT_SPEED:
   case SMT_SKIP:
+  case SMT_TIMESHIFT_STATUS:
     break;
   }
 

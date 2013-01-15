@@ -23,6 +23,7 @@
 #include "packet.h"
 #include "atomic.h"
 #include "service.h"
+#include "timeshift.h"
 
 void
 streaming_pad_init(streaming_pad_t *sp)
@@ -139,7 +140,6 @@ streaming_msg_create(streaming_message_type_t type)
   sm->sm_type = type;
 #if ENABLE_TIMESHIFT
   sm->sm_time      = 0;
-  sm->sm_timeshift = 0;
 #endif
   return sm;
 }
@@ -195,7 +195,6 @@ streaming_msg_clone(streaming_message_t *src)
   dst->sm_type      = src->sm_type;
 #if ENABLE_TIMESHIFT
   dst->sm_time      = src->sm_time;
-  dst->sm_timeshift = src->sm_timeshift;
 #endif
 
   switch(src->sm_type) {
@@ -218,6 +217,11 @@ streaming_msg_clone(streaming_message_t *src)
   case SMT_SIGNAL_STATUS:
     dst->sm_data = malloc(sizeof(signal_status_t));
     memcpy(dst->sm_data, src->sm_data, sizeof(signal_status_t));
+    break;
+
+  case SMT_TIMESHIFT_STATUS:
+    dst->sm_data = malloc(sizeof(timeshift_status_t));
+    memcpy(dst->sm_data, src->sm_data, sizeof(timeshift_status_t));
     break;
 
   case SMT_SPEED:
@@ -286,6 +290,9 @@ streaming_msg_free(streaming_message_t *sm)
 
   case SMT_SKIP:
   case SMT_SIGNAL_STATUS:
+#if ENABLE_TIMESHIFT
+  case SMT_TIMESHIFT_STATUS:
+#endif
     free(sm->sm_data);
     break;
 

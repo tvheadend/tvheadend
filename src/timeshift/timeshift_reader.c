@@ -187,6 +187,36 @@ static streaming_message_t *_timeshift_find_sstart
   return ti ? ti->data : NULL;
 }
 
+static timeshift_index_iframe_t *_timeshift_first_frame
+  ( timeshift_t *ts )
+{ 
+  int end;
+  timeshift_index_iframe_t *tsi = NULL;
+  timeshift_file_t *tsf = timeshift_filemgr_last(ts);
+  while (tsf && !tsi) {
+    if (!(tsi = TAILQ_FIRST(&tsf->iframes)))
+      tsf = timeshift_filemgr_next(tsf, &end, 0);
+  }
+  if (tsf)
+    tsf->refcount--;
+  return tsi;
+}
+
+static timeshift_index_iframe_t *_timeshift_last_frame
+  ( timeshift_t *ts )
+{
+  int end;
+  timeshift_index_iframe_t *tsi = NULL;
+  timeshift_file_t *tsf = timeshift_filemgr_get(ts, ts->ondemand);
+  while (tsf && !tsi) {
+    if (!(tsi = TAILQ_LAST(&tsf->iframes, timeshift_index_iframe_list)))
+      tsf = timeshift_filemgr_prev(tsf, &end, 0);
+  }
+  if (tsf)
+    tsf->refcount--;
+  return tsi;
+}
+
 static int _timeshift_skip
   ( timeshift_t *ts, int64_t req_time, int64_t cur_time,
     timeshift_file_t *cur_file, timeshift_file_t **new_file,
@@ -351,15 +381,14 @@ static int _timeshift_flush_to_live
     if (!*sm) break;
     if ((*sm)->sm_type == SMT_PACKET) {
       pts = ((th_pkt_t*)(*sm)->sm_data)->pkt_pts;
-      tvhlog(LOG_DEBUG, "timeshift", "ts %d deliver %"PRId64" pts=%"PRItime_t " shift=%"PRIu64,
-             ts->id, (*sm)->sm_time, pts, (*sm)->sm_timeshift );
+      tvhlog(LOG_DEBUG, "timeshift", "ts %d deliver %"PRId64" pts=%"PRItime_t,
+             ts->id, (*sm)->sm_time, pts);
     }
     streaming_target_deliver2(ts->output, *sm);
     *sm = NULL;
   }
   return 0;
 }
-
 
 /* **************************************************************************
  * Thread
@@ -380,6 +409,7 @@ void *timeshift_reader ( void *p )
   streaming_message_t *sm = NULL, *ctrl = NULL;
   timeshift_index_iframe_t *tsi = NULL;
   streaming_skip_t *skip = NULL;
+  time_t last_status = 0;
 
   /* Poll */
   struct epoll_event ev = { 0 };
@@ -390,6 +420,11 @@ void *timeshift_reader ( void *p )
 
   /* Output */
   while (run) {
+
+    // Note: Previously we allowed unlimited wait, but we now must wake periodically
+    //       to output status message
+    if (wait < 0 || wait > 1000)
+      wait = 1000;
 
     /* Wait for data */
     if(wait)
@@ -565,6 +600,28 @@ void *timeshift_reader ( void *p )
       }
     }
 
+    /* Status message */
+    if (now >= (last_status + 1000000)) {
+      streaming_message_t *tsm;
+      timeshift_status_t *status;
+      timeshift_index_iframe_t *fst, *lst;
+      status = calloc(1, sizeof(timeshift_status_t));
+      fst    = _timeshift_first_frame(ts);
+      lst    = _timeshift_last_frame(ts);
+      status->full  = ts->full;
+      status->shift = ts->state <= TS_LIVE ? 0 : ts_rescale_i(now - last_time, 1000000);
+      if (lst && fst && lst != fst && ts->pts_delta != PTS_UNSET) {
+        status->pts_start = ts_rescale_i(fst->time - ts->pts_delta, 1000000);
+        status->pts_end   = ts_rescale_i(lst->time - ts->pts_delta, 1000000);
+      } else {
+        status->pts_start = PTS_UNSET;
+        status->pts_end   = PTS_UNSET;
+      }
+      tsm = streaming_msg_create_data(SMT_TIMESHIFT_STATUS, status);
+      streaming_target_deliver2(ts->output, tsm);
+      last_status = now;
+    }
+
     /* Done */
     if (!run || !cur_file || ((ts->state != TS_PLAY && !skip))) {
       pthread_mutex_unlock(&ts->state_mutex);
@@ -644,16 +701,16 @@ void *timeshift_reader ( void *p )
                (((cur_speed < 0) && (sm->sm_time >= deliver)) ||
                ((cur_speed > 0) && (sm->sm_time <= deliver))))) {
 
-      sm->sm_timeshift = now - sm->sm_time;
 #ifndef TSHFT_TRACE
       if (skip)
 #endif
       {
         time_t pts = 0;
+        int64_t delta = now - sm->sm_time;
         if (sm->sm_type == SMT_PACKET)
           pts = ((th_pkt_t*)sm->sm_data)->pkt_pts;
         tvhlog(LOG_DEBUG, "timeshift", "ts %d deliver %"PRId64" pts=%"PRItime_t " shift=%"PRIu64,
-               ts->id, sm->sm_time, pts, sm->sm_timeshift );
+               ts->id, sm->sm_time, pts, delta);
       }
       streaming_target_deliver2(ts->output, sm);
       last_time = sm->sm_time;

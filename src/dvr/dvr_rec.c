@@ -541,6 +541,7 @@ dvr_thread(void *aux)
     case SMT_SPEED:
     case SMT_SKIP:
     case SMT_SIGNAL_STATUS:
+    case SMT_TIMESHIFT_STATUS:
       break;
 
     case SMT_EXIT:

@@ -30,6 +30,14 @@ extern size_t    timeshift_max_size;
 extern size_t          timeshift_total_size;
 extern pthread_mutex_t timeshift_size_lock;
 
+typedef struct timeshift_status
+{
+  int     full;
+  int64_t shift;
+  int64_t pts_start;
+  int64_t pts_end;
+} timeshift_status_t;
+
 void timeshift_init ( void );
 void timeshift_term ( void );
 void timeshift_save ( void );

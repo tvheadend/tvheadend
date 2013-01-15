@@ -322,6 +322,11 @@ typedef enum {
    */
   SMT_SKIP,
 
+  /**
+   * Timeshift status
+   */
+  SMT_TIMESHIFT_STATUS,
+
 } streaming_message_type_t;
 
 #define SMT_TO_MASK(x) (1 << ((unsigned int)x))
@@ -359,7 +364,6 @@ typedef struct streaming_message {
   streaming_message_type_t sm_type;
 #if ENABLE_TIMESHIFT
   int64_t  sm_time;
-  uint64_t sm_timeshift;
 #endif
   union {
     void *sm_data;

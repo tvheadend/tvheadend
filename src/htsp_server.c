@@ -2169,11 +2169,7 @@ const static char frametypearray[PKT_NTYPES] = {
  * Build a htsmsg from a th_pkt and enqueue it on our HTSP service
  */
 static void
-#if ENABLE_TIMESHIFT
-htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt, uint64_t timeshift)
-#else
 htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
-#endif
 {
   htsmsg_t *m;
   htsp_msg_t *hm;
@@ -2200,12 +2196,6 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 
   htsmsg_add_u32(m, "stream", pkt->pkt_componentindex);
   htsmsg_add_u32(m, "com", pkt->pkt_commercial);
-
-#if ENABLE_TIMESHIFT
-  if (timeshift)
-    htsmsg_add_s64(m, "timeshift", timeshift);
-#endif
-
 
   if(pkt->pkt_pts != PTS_UNSET) {
     int64_t pts = hs->hs_90khz ? pkt->pkt_pts : ts_rescale(pkt->pkt_pts, 1000000);
@@ -2454,6 +2444,25 @@ htsp_subscription_skip(htsp_subscription_t *hs, streaming_skip_t *skip)
 /**
  *
  */
+#if ENABLE_TIMESHIFT
+static void
+htsp_subscription_timeshift_status(htsp_subscription_t *hs, timeshift_status_t *status)
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "method", "timeshiftStatus");
+  htsmsg_add_u32(m, "full", status->full);
+  htsmsg_add_s64(m, "shift", hs->hs_90khz ? status->shift : ts_rescale(status->shift, 1000000));
+  if (status->pts_start != PTS_UNSET)
+    htsmsg_add_s64(m, "start", hs->hs_90khz ? status->pts_start : ts_rescale(status->pts_start, 1000000)) ;
+  if (status->pts_end != PTS_UNSET)
+    htsmsg_add_s64(m, "end", hs->hs_90khz ? status->pts_end : ts_rescale(status->pts_end, 1000000)) ;
+  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+}
+#endif
+
+/**
+ *
+ */
 static void
 htsp_streaming_input(void *opaque, streaming_message_t *sm)
 {
@@ -2461,11 +2470,7 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
 
   switch(sm->sm_type) {
   case SMT_PACKET:
-#if ENABLE_TIMESHIFT
-    htsp_stream_deliver(hs, sm->sm_data, sm->sm_timeshift);
-#else
     htsp_stream_deliver(hs, sm->sm_data);
-#endif
     // reference is transfered
     sm->sm_data = NULL;
     break;
@@ -2502,6 +2507,12 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
 
   case SMT_SPEED:
     htsp_subscription_speed(hs, sm->sm_code);
+    break;
+
+  case SMT_TIMESHIFT_STATUS:
+#if ENABLE_TIMESHIFT
+    htsp_subscription_timeshift_status(hs, sm->sm_data);
+#endif
     break;
   }
   streaming_msg_free(sm);

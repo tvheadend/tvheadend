@@ -257,6 +257,7 @@ static void _process_msg
     /* Status */
     case SMT_NOSTART:
     case SMT_SERVICE_STATUS:
+    case SMT_TIMESHIFT_STATUS:
       break;
 
     /* Store */
