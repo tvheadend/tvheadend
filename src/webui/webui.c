@@ -45,6 +45,7 @@
 #include "dvb/dvb.h"
 #include "dvb/dvb_support.h"
 #include "imagecache.h"
+#include "tcp.h"
 
 /**
  *
@@ -564,6 +565,7 @@ http_stream_service(http_connection_t *hc, service_t *service)
   const char *str;
   size_t qsize;
   const char *name;
+  char addrbuf[50];
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN) {
@@ -590,8 +592,9 @@ http_stream_service(http_connection_t *hc, service_t *service)
     flags = 0;
   }
 
+  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
   s = subscription_create_from_service(service, "HTTP", st, flags,
-				       inet_ntoa(hc->hc_peer->sin_addr),
+				       addrbuf,
 				       hc->hc_username,
 				       http_arg_get(&hc->hc_args, "User-Agent"));
   if(s) {
@@ -625,10 +628,12 @@ http_stream_tdmi(http_connection_t *hc, th_dvb_mux_instance_t *tdmi)
   th_subscription_t *s;
   streaming_queue_t sq;
   const char *name;
+  char addrbuf[50];
   streaming_queue_init(&sq, SMT_PACKET);
 
+  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
   s = dvb_subscription_create_from_tdmi(tdmi, "HTTP", &sq.sq_st,
-					inet_ntoa(hc->hc_peer->sin_addr),
+					addrbuf,
 					hc->hc_username,
 					http_arg_get(&hc->hc_args, "User-Agent"));
   name = strdupa(tdmi->tdmi_identifier);
@@ -662,6 +667,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   char *str;
   size_t qsize;
   const char *name;
+  char addrbuf[50];
 
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN) {
@@ -688,8 +694,9 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
     flags = 0;
   }
 
+  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
   s = subscription_create_from_channel(ch, priority, "HTTP", st, flags,
-               inet_ntoa(hc->hc_peer->sin_addr),
+               addrbuf,
                hc->hc_username,
                http_arg_get(&hc->hc_args, "User-Agent"));
 

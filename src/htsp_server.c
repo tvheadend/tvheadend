@@ -115,7 +115,7 @@ typedef struct htsp_connection {
   LIST_ENTRY(htsp_connection) htsp_link;
 
   int htsp_fd;
-  struct sockaddr_in *htsp_peer;
+  struct sockaddr_storage *htsp_peer;
 
   uint32_t htsp_version;
 
@@ -464,19 +464,22 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
   htsmsg_add_str(out, "channelName", ch->ch_name);
   if(ch->ch_icon != NULL) {
     uint32_t id;
-    struct sockaddr_in addr;
+    struct sockaddr_storage addr;
     socklen_t addrlen;
     if ((id = imagecache_get_id(ch->ch_icon))) {
       size_t p = 0;
       char url[256];
+      char buf[50];
       if (htsp->htsp_version < 8) {
         addrlen = sizeof(addr);
         getsockname(htsp->htsp_fd, (struct sockaddr*)&addr, &addrlen);
+        tcp_get_ip_str((struct sockaddr*)&addr, buf, 50);
         strcpy(url, "http://");
         p = strlen(url);
-        inet_ntop(AF_INET, &addr.sin_addr, url+p, sizeof(url)-p);
-        p = strlen(url);
-        p += snprintf(url+p, sizeof(url)-p, ":%hd%s",
+        p += snprintf(url+p, sizeof(url)-p, "%s%s%s:%hd%s",
+                      (addr.ss_family == AF_INET6)?"[":"",
+                      buf,
+                      (addr.ss_family == AF_INET6)?"]":"",
                       tvheadend_webui_port,
                       tvheadend_webroot ?: "");
       }
@@ -1871,14 +1874,14 @@ htsp_write_scheduler(void *aux)
  *
  */
 static void
-htsp_serve(int fd, void *opaque, struct sockaddr_in *source,
-	   struct sockaddr_in *self)
+htsp_serve(int fd, void *opaque, struct sockaddr_storage *source,
+	   struct sockaddr_storage *self)
 {
   htsp_connection_t htsp;
-  char buf[30];
+  char buf[50];
   htsp_subscription_t *s;
 
-  snprintf(buf, sizeof(buf), "%s", inet_ntoa(source->sin_addr));
+  tcp_get_ip_str((struct sockaddr*)source, buf, 50);
 
   memset(&htsp, 0, sizeof(htsp_connection_t));
 

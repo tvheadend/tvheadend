@@ -32,6 +32,7 @@
 #include "http.h"
 #include "webui/webui.h"
 #include "access.h"
+#include "tcp.h"
 
 static pthread_mutex_t comet_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t comet_cond = PTHREAD_COND_INITIALIZER;
@@ -153,16 +154,24 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
 static void
 comet_serverIpPort(http_connection_t *hc, comet_mailbox_t *cmb)
 {
-  char buf[INET_ADDRSTRLEN + 1];
+  char buf[50];
+  uint32_t port;
 
-  inet_ntop(AF_INET, &hc->hc_self->sin_addr, buf, sizeof(buf));
+  tcp_get_ip_str((struct sockaddr*)hc->hc_self, buf, 50);
+
+  if(hc->hc_self->ss_family == AF_INET)
+    port = ((struct sockaddr_in*)hc->hc_self)->sin_port;
+  else if(hc->hc_self->ss_family == AF_INET6)
+    port = ((struct sockaddr_in6*)hc->hc_self)->sin6_port;
+  else
+    port = 0;
 
   htsmsg_t *m = htsmsg_create_map();
 
   htsmsg_add_str(m, "notificationClass", "setServerIpPort");
 
   htsmsg_add_str(m, "ip", buf);
-  htsmsg_add_u32(m, "port", ntohs(hc->hc_self->sin_port));
+  htsmsg_add_u32(m, "port", ntohs(port));
 
   if(cmb->cmb_messages == NULL)
     cmb->cmb_messages = htsmsg_create_list();
