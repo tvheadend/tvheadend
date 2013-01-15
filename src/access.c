@@ -203,11 +203,13 @@ netmask_verify(access_entry_t *ae, struct sockaddr *src)
       while(slen >= 8)
       {
         if(a8[apos] != m8[apos])
-          continue;
+          break;
 
         apos += 1;
         slen -= 8;
       }
+      if(slen >= 8)
+        continue;
 
       if(slen == 0 || (a8[apos] & lastMask) == (m8[apos] & lastMask))
         return 1;
