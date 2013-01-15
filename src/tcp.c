@@ -35,6 +35,7 @@
 #include "tcp.h"
 #include "tvheadend.h"
 
+int tcp_preferred_address_family = AF_INET;
 
 /**
  *
@@ -526,7 +527,7 @@ tcp_server_create(int port, tcp_server_callback_t *start, void *opaque)
   ressave = res;
   while(res)
   {
-    if(res->ai_family == AF_INET6)
+    if(res->ai_family == tcp_preferred_address_family)
     {
       use = res;
       break;
@@ -574,9 +575,12 @@ tcp_server_create(int port, tcp_server_callback_t *start, void *opaque)
  *
  */
 void
-tcp_server_init(void)
+tcp_server_init(int opt_ipv6)
 {
   pthread_t tid;
+
+  if(opt_ipv6)
+    tcp_preferred_address_family = AF_INET6;
 
   tcp_server_epoll_fd = epoll_create(10);
   pthread_create(&tid, NULL, tcp_server_loop, NULL);

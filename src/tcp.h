@@ -21,7 +21,9 @@
 
 #include "htsbuf.h"
 
-void tcp_server_init(void);
+extern int tcp_preferred_address_family;
+
+void tcp_server_init(int opt_ipv6);
 
 int tcp_connect(const char *hostname, int port, char *errbuf,
 		size_t errbufsize, int timeout);

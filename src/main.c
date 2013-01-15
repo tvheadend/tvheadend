@@ -359,7 +359,8 @@ main(int argc, char **argv)
               opt_debug        = 0,
               opt_syslog       = 0,
               opt_uidebug      = 0,
-              opt_abort        = 0;
+              opt_abort        = 0,
+              opt_ipv6         = 0;
   const char *opt_config       = NULL,
              *opt_user         = NULL,
              *opt_group        = NULL,
@@ -391,8 +392,8 @@ main(int argc, char **argv)
     { 'a', "adapters",  "Use only specified DVB adapters",
       OPT_STR, &opt_dvb_adapters },
 #endif
-
     {   0, NULL,         "Server Connectivity",    OPT_BOOL, NULL         },
+    { '6', "ipv6",       "Listen on IPv6",         OPT_BOOL, &opt_ipv6    },
     {   0, "http_port",  "Specify alternative http port",
       OPT_INT, &tvheadend_webui_port },
     {   0, "http_root",  "Specify alternative http webroot",
@@ -606,7 +607,7 @@ main(int argc, char **argv)
   timeshift_init();
 #endif
 
-  tcp_server_init();
+  tcp_server_init(opt_ipv6);
   http_server_init();
   webui_init();
 
