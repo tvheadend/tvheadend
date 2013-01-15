@@ -152,13 +152,75 @@ access_ticket_verify(const char *id, const char *resource)
 /**
  *
  */
+static int
+netmask_verify(access_entry_t *ae, struct sockaddr *src)
+{
+  int isv4v6 = 0;
+  uint32_t v4v6 = 0;
+  
+  if(src->sa_family == AF_INET6)
+  {
+    struct in6_addr *in6 = &(((struct sockaddr_in6 *)src)->sin6_addr);
+    uint32_t *a32 = (uint32_t*)in6->s6_addr;
+    if(a32[0] == 0 && a32[1] == 0 && ntohl(a32[2]) == 0x0000FFFFu)
+    {
+      isv4v6 = 1;
+      v4v6 = ntohl(a32[3]);
+    }
+  }
+
+  if(ae->ae_ipv6 == 0 && src->sa_family == AF_INET)
+  {
+    struct sockaddr_in *in4 = (struct sockaddr_in *)src;
+    uint32_t b = ntohl(in4->sin_addr.s_addr);
+    return (b & ae->ae_netmask) == ae->ae_network;
+  }
+  else if(ae->ae_ipv6 == 0 && isv4v6)
+  {
+    return (v4v6 & ae->ae_netmask) == ae->ae_network;
+  }
+  else if(ae->ae_ipv6 && isv4v6)
+  {
+    return 0;
+  }
+  else if(ae->ae_ipv6 && src->sa_family == AF_INET6)
+  {
+    struct in6_addr *in6 = &(((struct sockaddr_in6 *)src)->sin6_addr);
+    uint8_t *a8 = (uint8_t*)in6->s6_addr;
+    uint8_t *m8 = (uint8_t*)ae->ae_ip6.s6_addr;
+    int slen = ae->ae_prefixlen;
+    uint32_t apos = 0;
+    uint8_t lastMask = (0xFFu << (8 - (slen % 8)));
+
+    if(slen < 0 || slen > 128)
+      return 0;
+
+    while(slen >= 8)
+    {
+      if(a8[apos] != m8[apos])
+        return 0;
+
+      apos += 1;
+      slen -= 8;
+    }
+
+    if(slen == 0)
+      return 1;
+
+    return (a8[apos] & lastMask) == (m8[apos] & lastMask);
+  }
+
+  return 0;
+}
+
+/**
+ *
+ */
 int
 access_verify(const char *username, const char *password,
 	      struct sockaddr *src, uint32_t mask)
 {
   uint32_t bits = 0;
-  struct sockaddr_in *si = (struct sockaddr_in *)src;
-  uint32_t b = ntohl(si->sin_addr.s_addr);
   access_entry_t *ae;
 
   if(username != NULL && superuser_username != NULL && 
@@ -182,7 +244,7 @@ access_verify(const char *username, const char *password,
 	continue; /* username/password mismatch */
     }
 
-    if((b & ae->ae_netmask) != ae->ae_network)
+    if(!netmask_verify(ae, src))
       continue; /* IP based access mismatches */
 
     bits |= ae->ae_rights;
@@ -200,8 +262,6 @@ access_get_hashed(const char *username, const uint8_t digest[20],
 		  const uint8_t *challenge, struct sockaddr *src,
 		  int *entrymatch)
 {
-  struct sockaddr_in *si = (struct sockaddr_in *)src;
-  uint32_t b = ntohl(si->sin_addr.s_addr);
   access_entry_t *ae;
   SHA_CTX shactx;
   uint8_t d[20];
@@ -226,7 +286,7 @@ access_get_hashed(const char *username, const uint8_t digest[20],
     if(!ae->ae_enabled)
       continue;
 
-    if((b & ae->ae_netmask) != ae->ae_network)
+    if(!netmask_verify(ae, src))
       continue; /* IP based access mismatches */
 
     SHA1_Init(&shactx);
@@ -253,8 +313,6 @@ access_get_hashed(const char *username, const uint8_t digest[20],
 uint32_t
 access_get_by_addr(struct sockaddr *src)
 {
-  struct sockaddr_in *si = (struct sockaddr_in *)src;
-  uint32_t b = ntohl(si->sin_addr.s_addr);
   access_entry_t *ae;
   uint32_t r = 0;
 
@@ -263,7 +321,7 @@ access_get_by_addr(struct sockaddr *src)
     if(ae->ae_username[0] != '*')
       continue;
 
-    if((b & ae->ae_netmask) != ae->ae_network)
+    if(!netmask_verify(ae, src))
       continue; /* IP based access mismatches */
 
     r |= ae->ae_rights;
@@ -300,21 +358,50 @@ access_set_prefix(access_entry_t *ae, const char *prefix)
     return;
   
   strcpy(buf, prefix);
-  p = strchr(buf, '/');
-  if(p) {
-    *p++ = 0;
-    prefixlen = atoi(p);
-    if(prefixlen > 32)
-      return;
-  } else {
-    prefixlen = 32;
+
+  if(strchr(buf, ':') != NULL)
+    ae->ae_ipv6 = 1;
+  else
+    ae->ae_ipv6 = 0;
+
+  if(ae->ae_ipv6)
+  {
+    p = strchr(buf, '/');
+    if(p)
+    {
+      *p++ = 0;
+      prefixlen = atoi(p);
+      if(prefixlen > 128)
+        return;
+    } else {
+      prefixlen = 128;
+    }
+
+    ae->ae_prefixlen = prefixlen;
+    inet_pton(AF_INET6, buf, &ae->ae_ip6);
+
+    ae->ae_netmask = 0xffffffff;
+    ae->ae_network = 0x00000000;
   }
+  else
+  {
+    p = strchr(buf, '/');
+    if(p)
+    {
+      *p++ = 0;
+      prefixlen = atoi(p);
+      if(prefixlen > 32)
+        return;
+    } else {
+      prefixlen = 32;
+    }
 
-  ae->ae_ip.s_addr = inet_addr(buf);
-  ae->ae_prefixlen = prefixlen;
+    ae->ae_ip.s_addr = inet_addr(buf);
+    ae->ae_prefixlen = prefixlen;
 
-  ae->ae_netmask   = prefixlen ? 0xffffffff << (32 - prefixlen) : 0;
-  ae->ae_network   = ntohl(ae->ae_ip.s_addr) & ae->ae_netmask;
+    ae->ae_netmask   = prefixlen ? 0xffffffff << (32 - prefixlen) : 0;
+    ae->ae_network   = ntohl(ae->ae_ip.s_addr) & ae->ae_netmask;
+  }
 }
 
 
@@ -378,6 +465,7 @@ static htsmsg_t *
 access_record_build(access_entry_t *ae)
 {
   htsmsg_t *e = htsmsg_create_map();
+  char addrbuf[50];
   char buf[100];
 
   htsmsg_add_u32(e, "enabled",  !!ae->ae_enabled);
@@ -386,7 +474,13 @@ access_record_build(access_entry_t *ae)
   htsmsg_add_str(e, "password", ae->ae_password);
   htsmsg_add_str(e, "comment",  ae->ae_comment);
 
-  snprintf(buf, sizeof(buf), "%s/%d", inet_ntoa(ae->ae_ip), ae->ae_prefixlen);
+  if(ae->ae_ipv6)
+  {
+    inet_ntop(AF_INET6, &ae->ae_ip6, addrbuf, 50);
+    snprintf(buf, sizeof(buf), "%s/%d", addrbuf, ae->ae_prefixlen);
+  }
+  else
+    snprintf(buf, sizeof(buf), "%s/%d", inet_ntoa(ae->ae_ip), ae->ae_prefixlen);
   htsmsg_add_str(e, "prefix",   buf);
 
   htsmsg_add_u32(e, "streaming", ae->ae_rights & ACCESS_STREAMING     ? 1 : 0);
@@ -558,17 +652,33 @@ access_init(int createdefault)
     ae = access_entry_find(NULL, 1);
 
     free(ae->ae_comment);
-    ae->ae_comment = strdup("Default access entry");
+    ae->ae_comment = strdup("Default IPv6 access entry");
 
     ae->ae_enabled = 1;
     ae->ae_rights = 0xffffffff;
+
+    ae->ae_ipv6 = 1;
+
+    r = access_record_build(ae);
+    dtable_record_store(dt, ae->ae_id, r);
+    htsmsg_destroy(r);
+
+    ae = access_entry_find(NULL, 1);
+
+    free(ae->ae_comment);
+    ae->ae_comment = strdup("Default IPv4 access entry");
+
+    ae->ae_enabled = 1;
+    ae->ae_rights = 0xffffffff;
+
+    ae->ae_ipv6 = 0;
 
     r = access_record_build(ae);
     dtable_record_store(dt, ae->ae_id, r);
     htsmsg_destroy(r);
 
     tvhlog(LOG_WARNING, "accesscontrol",
-	   "Created default wide open access controle entry");
+	   "Created default wide open access controle entrys");
   }
 
   /* Load superuser account */

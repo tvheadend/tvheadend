@@ -31,7 +31,9 @@ typedef struct access_entry {
   char *ae_username;
   char *ae_password;
   char *ae_comment;
+  int ae_ipv6;
   struct in_addr ae_ip;
+  struct in6_addr ae_ip6;
   int ae_prefixlen;
   int ae_enabled;
   
