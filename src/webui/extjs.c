@@ -294,10 +294,10 @@ extjs_tablemgr(http_connection_t *hc, const char *remain, void *opaque)
   if(in != NULL)
     htsmsg_destroy(in);
 
-  if(out != NULL) {
-    htsmsg_json_serialize(out, hq, 0);
-    htsmsg_destroy(out);
-  }
+  if(out == NULL)
+    out = htsmsg_create_map();
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
