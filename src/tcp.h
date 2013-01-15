@@ -27,8 +27,8 @@ int tcp_connect(const char *hostname, int port, char *errbuf,
 		size_t errbufsize, int timeout);
 
 typedef void (tcp_server_callback_t)(int fd, void *opaque,
-				     struct sockaddr_in *peer,
-				     struct sockaddr_in *self);
+				     struct sockaddr_storage *peer,
+				     struct sockaddr_storage *self);
 
 void *tcp_server_create(int port, tcp_server_callback_t *start, void *opaque);
 

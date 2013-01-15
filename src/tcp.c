@@ -359,8 +359,8 @@ typedef struct tcp_server_launch_t {
   tcp_server_callback_t *start;
   void *opaque;
   int fd;
-  struct sockaddr_in peer;
-  struct sockaddr_in self;
+  struct sockaddr_storage peer;
+  struct sockaddr_storage self;
 } tcp_server_launch_t;
 
 
@@ -443,7 +443,7 @@ tcp_server_loop(void *aux)
 	tsl = malloc(sizeof(tcp_server_launch_t));
 	tsl->start  = ts->start;
 	tsl->opaque = ts->opaque;
-	slen = sizeof(struct sockaddr_in);
+	slen = sizeof(struct sockaddr_storage);
 
 	tsl->fd = accept(ts->serverfd, 
 			 (struct sockaddr *)&tsl->peer, &slen);
@@ -455,7 +455,7 @@ tcp_server_loop(void *aux)
 	}
 
 
-	slen = sizeof(struct sockaddr_in);
+	slen = sizeof(struct sockaddr_storage);
 	if(getsockname(tsl->fd, (struct sockaddr *)&tsl->self, &slen)) {
 	    close(tsl->fd);
 	    free(tsl);
