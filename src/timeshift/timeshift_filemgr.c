@@ -149,7 +149,12 @@ void timeshift_filemgr_close ( timeshift_file_t *tsf )
 {
   ssize_t r = timeshift_write_eof(tsf->fd);
   if (r > 0)
+  {
     tsf->size += r;
+    pthread_mutex_lock(&timeshift_size_lock);
+    timeshift_total_size += r;
+    pthread_mutex_unlock(&timeshift_size_lock);
+  }
   close(tsf->fd);
   tsf->fd = -1;
 }
