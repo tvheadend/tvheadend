@@ -2450,6 +2450,7 @@ htsp_subscription_timeshift_status(htsp_subscription_t *hs, timeshift_status_t *
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "timeshiftStatus");
+  htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
   htsmsg_add_u32(m, "full", status->full);
   htsmsg_add_s64(m, "shift", hs->hs_90khz ? status->shift : ts_rescale(status->shift, 1000000));
   if (status->pts_start != PTS_UNSET)
