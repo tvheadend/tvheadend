@@ -21,7 +21,7 @@
 
 
 typedef struct access_ipmask {
-  LIST_ENTRY(access_ipmask) ai_link;
+  TAILQ_ENTRY(access_ipmask) ai_link;
 
   int ai_ipv6;
 
@@ -50,7 +50,7 @@ typedef struct access_entry {
 
   uint32_t ae_rights;
 
-  LIST_HEAD(, access_ipmask) ae_ipmasks;
+  TAILQ_HEAD(, access_ipmask) ae_ipmasks;
 } access_entry_t;
 
 TAILQ_HEAD(access_ticket_queue, access_ticket);

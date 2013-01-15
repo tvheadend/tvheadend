@@ -170,7 +170,7 @@ netmask_verify(access_entry_t *ae, struct sockaddr *src)
     }
   }
 
-  LIST_FOREACH(ai, &ae->ae_ipmasks, ai_link)
+  TAILQ_FOREACH(ai, &ae->ae_ipmasks, ai_link)
   {
     if(ai->ai_ipv6 == 0 && src->sa_family == AF_INET)
     {
@@ -360,9 +360,9 @@ access_set_prefix(access_entry_t *ae, const char *prefix)
   char *p, *tok, *saveptr;
   access_ipmask_t *ai;
 
-  while((ai = LIST_FIRST(&ae->ae_ipmasks)) != NULL)
+  while((ai = TAILQ_FIRST(&ae->ae_ipmasks)) != NULL)
   {
-    LIST_REMOVE(ai, ai_link);
+    TAILQ_REMOVE(&ae->ae_ipmasks, ai, ai_link);
     free(ai);
   }
 
@@ -435,7 +435,7 @@ access_set_prefix(access_entry_t *ae, const char *prefix)
       ai->ai_network   = ntohl(ai->ai_ip.s_addr) & ai->ai_netmask;
     }
 
-    LIST_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
+    TAILQ_INSERT_TAIL(&ae->ae_ipmasks, ai, ai_link);
 
     tok = strtok_r(NULL, ",;| ", &saveptr);
   }
@@ -475,6 +475,7 @@ access_entry_find(const char *id, int create)
   ae->ae_username = strdup("*");
   ae->ae_password = strdup("*");
   ae->ae_comment = strdup("New entry");
+  TAILQ_INIT(&ae->ae_ipmasks);
   TAILQ_INSERT_TAIL(&access_entries, ae, ae_link);
   return ae;
 }
@@ -489,9 +490,9 @@ access_entry_destroy(access_entry_t *ae)
 {
   access_ipmask_t *ai;
 
-  while((ai = LIST_FIRST(&ae->ae_ipmasks)) != NULL)
+  while((ai = TAILQ_FIRST(&ae->ae_ipmasks)) != NULL)
   {
-    LIST_REMOVE(ai, ai_link);
+    TAILQ_REMOVE(&ae->ae_ipmasks, ai, ai_link);
     free(ai);
   }
 
@@ -523,7 +524,7 @@ access_record_build(access_entry_t *ae)
   htsmsg_add_str(e, "password", ae->ae_password);
   htsmsg_add_str(e, "comment",  ae->ae_comment);
 
-  LIST_FOREACH(ai, &ae->ae_ipmasks, ai_link)
+  TAILQ_FOREACH(ai, &ae->ae_ipmasks, ai_link)
   {
     if(sizeof(buf)-pos <= 0)
       break;
@@ -715,13 +716,15 @@ access_init(int createdefault)
     ae->ae_enabled = 1;
     ae->ae_rights = 0xffffffff;
 
-    ai = calloc(1, sizeof(access_ipmask_t));
-    ai->ai_ipv6 = 0;
-    LIST_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
+    TAILQ_INIT(&ae->ae_ipmasks);
 
     ai = calloc(1, sizeof(access_ipmask_t));
     ai->ai_ipv6 = 1;
-    LIST_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
+    TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
+
+    ai = calloc(1, sizeof(access_ipmask_t));
+    ai->ai_ipv6 = 0;
+    TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
 
     r = access_record_build(ae);
     dtable_record_store(dt, ae->ae_id, r);
