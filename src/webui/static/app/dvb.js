@@ -383,8 +383,10 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 /**
  * DVB service grid
  */
-tvheadend.dvb_services = function(adapterId) {
+tvheadend.dvb_services = function(adapterData, satConfStore) {
 
+	adapterId = adapterData.identifier;
+ 
 	var fm = Ext.form;
 
 	var enabledColumn = new Ext.grid.CheckColumn({
@@ -418,10 +420,10 @@ tvheadend.dvb_services = function(adapterId) {
 		} ]
 	});
 
-	var cm = new Ext.grid.ColumnModel({
-  defaultSortable: true,
-  columns: [
-		enabledColumn,
+
+	var cmlist = Array();
+
+	cmlist.push(enabledColumn,
 		{
 			header : "Service name",
 			dataIndex : 'svcname',
@@ -513,13 +515,44 @@ tvheadend.dvb_services = function(adapterId) {
 			header : "Multiplex",
 			dataIndex : 'mux',
 			width : 100
-		}, {
+		});
+
+	if (adapterData.satConf) {
+		// Include DVB-S specific stuff
+
+		satConfStore.on('update', function(s, r, c) {
+			if (grid.rendered) grid.getView().refresh();
+		});
+
+		satConfStore.on('load', function(s, r, o) {
+			if (grid.rendered) grid.getView().refresh();
+		});
+
+		tvheadend.comet.on('dvbSatConf', function(m) {
+			if (m.adapterId == adapterId) satConfStore.reload();
+		});
+
+		cmlist.push(
+			{
+				header : "Satellite config",
+				dataIndex : 'satconf',
+				width : 100,
+				renderer : function(value, metadata, record, row, col, store) {
+					r = satConfStore.getById(value);
+					return typeof r === 'undefined' ? '<span class="tvh-grid-unset">Unset</span>'
+					  : r.data.name;
+				}
+			});
+	}
+
+	cmlist.push(
+		{
 			header : "Service ID",
 			dataIndex : 'sid',
 			width : 50,
 			hidden : true
 		}, {
-			header: "Preffered CA pid",
+			header: "Preferred CA pid",
 			dataIndex: 'prefcapid',
 			width: 50,
 			editor: new fm.TextField({allowBlank: true})
@@ -533,13 +566,17 @@ tvheadend.dvb_services = function(adapterId) {
 			dataIndex : 'pcr',
 			width : 50,
 			hidden : true
-		}, actions ]});
+		}, actions );
+
+	var cm = new Ext.grid.ColumnModel({
+		columns: cmlist, 
+		defaultSortable: true});
 
 	var store = new Ext.data.JsonStore({
 		root : 'entries',
 		fields : Ext.data.Record.create([ 'id', 'enabled', 'type', 'sid', 'pmt',
-			'pcr', 'svcname', 'network', 'provider', 'encryption', 'mux', 'channelname',
-			'prefcapid', 'dvb_charset', 'dvb_eit_enable' ]),
+			'pcr', 'svcname', 'network', 'provider', 'encryption', 'mux', 'satconf',
+			'channelname', 'prefcapid', 'dvb_charset', 'dvb_eit_enable' ]),
 		url : "dvb/services/" + adapterId,
 		autoLoad : true,
 		id : 'id',
@@ -1408,7 +1445,7 @@ tvheadend.dvb_adapter = function(data) {
 
 	var items = [ new tvheadend.dvb_adapter_general(data, satConfStore),
 		new tvheadend.dvb_muxes(data, satConfStore),
-		new tvheadend.dvb_services(data.identifier) ];
+		new tvheadend.dvb_services(data, satConfStore) ];
 
 	if (data.satConf) items.push(new tvheadend.dvb_satconf(data.identifier,
 		lnbStore));
