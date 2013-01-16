@@ -347,9 +347,9 @@ psi_desc_teletext(service_t *t, const uint8_t *ptr, int size,
       if((st = service_stream_find(t, pid)) == NULL) {
 	r |= PMT_UPDATE_NEW_STREAM;
 	st = service_stream_create(t, pid, SCT_TEXTSUB);
+	st->es_delete_me = 1;
       }
 
-      st->es_delete_me = 0;
   
       lang = lang_code_get2((const char*)ptr, 3);
       if(memcmp(st->es_lang,lang,3)) {
@@ -362,10 +362,12 @@ psi_desc_teletext(service_t *t, const uint8_t *ptr, int size,
 	st->es_parent_pid = parent_pid;
       }
 
-      if(st->es_position != *position) {
+      // Check es_delete_me so we only compute position once per PMT update
+      if(st->es_position != *position && st->es_delete_me) {
 	st->es_position = *position;
 	r |= PMT_REORDERED;
       }
+      st->es_delete_me = 0;
       (*position)++;
     }
     ptr += 5;
