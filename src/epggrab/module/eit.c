@@ -330,7 +330,7 @@ static int _eit_desc_ext_event
   if ( _eit_get_string_with_len(mod,
                                 buf, sizeof(buf),
                                 ptr, len,
-                                ev->default_charset) > 0 ) {
+                                ev->default_charset) > 1 ) {
     if (!ev->desc) ev->desc = lang_str_create();
     lang_str_append(ev->desc, buf, lang);
   }
