@@ -242,7 +242,7 @@ static int _eit_desc_short_event
   if ( (r = _eit_get_string_with_len(mod, buf, sizeof(buf),
                                      ptr, len, ev->default_charset)) < 0 ) {
     return -1;
-  } else {
+  } else if ( r > 1 ) {
     if (!ev->title) ev->title = lang_str_create();
     lang_str_add(ev->title, buf, lang, 0);
   }
@@ -255,7 +255,7 @@ static int _eit_desc_short_event
   if ( (r = _eit_get_string_with_len(mod, buf, sizeof(buf),
                                      ptr, len, ev->default_charset)) < 0 ) {
     return -1;
-  } else {
+  } else if ( r > 1 ) {
     if (!ev->summary) ev->summary = lang_str_create();
     lang_str_add(ev->summary, buf, lang, 0);
   }
@@ -460,6 +460,7 @@ static int _eit_desc_crid
                                    ptr+1, len-1,
                                    ev->default_charset);
       if (r < 0) return -1;
+      if (r == 0) continue;
 
       /* Episode */
       if (type == 0x1 || type == 0x31) {
