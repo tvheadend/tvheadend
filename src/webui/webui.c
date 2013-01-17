@@ -606,7 +606,7 @@ http_stream_tdmi(http_connection_t *hc, th_dvb_mux_instance_t *tdmi)
   streaming_queue_init(&sq, SMT_PACKET);
 
   s = dvb_subscription_create_from_tdmi(tdmi, "HTTP", &sq.sq_st);
-  name = strdupa(tdmi->tdmi_mux->dm_uuid);
+  name = "foo"; // strdupa(tdmi->tdmi_mux->dm_uuid);  XXX(dvbreorg)
   pthread_mutex_unlock(&global_lock);
   http_stream_run(hc, &sq, name, MC_PASS);
   pthread_mutex_lock(&global_lock);

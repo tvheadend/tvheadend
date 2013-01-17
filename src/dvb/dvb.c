@@ -26,5 +26,6 @@ void
 dvb_init(uint32_t adapter_mask, const char *rawfile)
 {
   dvb_charset_init();
+  dvb_network_init();
   dvb_adapter_init(adapter_mask, rawfile);
 }

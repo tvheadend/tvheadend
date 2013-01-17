@@ -22,7 +22,7 @@
 #define PID_TELETEXT_BASE 0x2000
 
 #include "htsmsg.h"
-
+#include "idnode.h"
 
 
 /**
@@ -201,8 +201,7 @@ service_start_cand_t *service_find_cand(struct service_start_cand_list *sscl,
  *
  */
 typedef struct service {
-
-  LIST_ENTRY(service) s_hash_link;
+  idnode_t s_id;
 
   enum {
     /**
@@ -305,15 +304,12 @@ typedef struct service {
 
   void (*s_dtor)(struct service *t);
 
+  htsmsg_t *(*s_serialize)(struct service *s, int full);
+
   /*
    * Per source type structs
    */
   struct dvb_mux *s_dvb_mux;
-
-  /**
-   * Unique identifer
-   */
-  char *s_uuid;
 
   /**
    * Name usable for displaying to user

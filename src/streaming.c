@@ -401,8 +401,8 @@ streaming_code2txt(int code)
   case SM_CODE_SUBSCRIPTION_OVERRIDDEN:
     return "Subscription overridden";
 
-  case SM_CODE_NO_HW_ATTACHED:
-    return "No hardware present";
+  case SM_CODE_NO_FREE_ADAPTER:
+    return "No free adapter";
   case SM_CODE_MUX_NOT_ENABLED:
     return "Mux not enabled";
   case SM_CODE_NOT_FREE:

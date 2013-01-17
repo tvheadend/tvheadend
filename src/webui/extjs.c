@@ -1669,7 +1669,7 @@ build_record_iptv(service_t *t)
   htsmsg_t *r = htsmsg_create_map();
   char abuf[INET_ADDRSTRLEN];
   char abuf6[INET6_ADDRSTRLEN];
-  htsmsg_add_str(r, "id", t->s_uuid);
+  //  htsmsg_add_str(r, "id", t->s_uuid); // XXX(dvbreorg)
 
   htsmsg_add_str(r, "channelname", t->s_ch ? t->s_ch->ch_name : "");
   htsmsg_add_str(r, "interface", t->s_iptv_iface ?: "");
@@ -1828,7 +1828,7 @@ extjs_tvadapter(http_connection_t *hc, const char *remain, void *opaque)
   array = htsmsg_create_list();
 
 #if ENABLE_LINUXDVB
-  //  extjs_list_dvb_adapters(array);
+  extjs_list_dvb_adapters(array);
 #endif
 
 #if ENABLE_V4L

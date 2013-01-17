@@ -52,25 +52,21 @@ dvb_table_fastswitch(th_dvb_mux_instance_t *tdmi)
   th_dvb_table_t *tdt;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   dvb_mux_t *dm = tdmi->tdmi_mux;
-  dvb_network_t *dn = dm->dm_dn;
   char buf[100];
 
-  if(!dm->dm_table_initial)
+  if(dm->dm_scan_status == DM_SCAN_DONE)
     return;
 
   LIST_FOREACH(tdt, &dm->dm_tables, tdt_link)
     if((tdt->tdt_flags & TDT_QUICKREQ) && tdt->tdt_count == 0)
       return;
 
-  dm->dm_table_initial = 0;
-  dn->dn_initial_num_mux--;
   dvb_mux_save(dm);
-
 
   dvb_mux_nicename(buf, sizeof(buf), dm);
   tvhlog(LOG_DEBUG, "dvb", "\"%s\" initial scan completed for \"%s\"",
 	 tda->tda_rootpath, buf);
-  dvb_network_mux_scanner(dn);
+  dvb_mux_initial_scan_done(dm);
 }
 
 

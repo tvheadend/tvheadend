@@ -305,7 +305,7 @@ int fb_scandir ( const char *path, fb_dirent ***list )
       for (i = 0; i < ret; i++) {
         (*list)[i] = calloc(1, sizeof(fb_dirent));
         strcpy((*list)[i]->name, de[i]->d_name);
-        (*list)[i]->type = FB_DIRECT;
+        (*list)[i]->type = de[i]->d_type == DT_DIR ? FB_DIR : FB_FILE;
         free(de[i]);
       }
       free(de);

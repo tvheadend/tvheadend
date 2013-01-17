@@ -227,7 +227,7 @@ iptv_service_start(service_t *t, unsigned int weight, int force_start)
     fd = tvh_socket(AF_INET6, SOCK_DGRAM, 0);
   }
   if(fd == -1) {
-    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot open socket", t->s_uuid);
+    tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot open socket", t->s_nicename);
     return -1;
   }
 
@@ -237,7 +237,7 @@ iptv_service_start(service_t *t, unsigned int weight, int force_start)
   ifr.ifr_name[IFNAMSIZ - 1] = 0;
   if(ioctl(fd, SIOCGIFINDEX, &ifr)) {
     tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot find interface %s", 
-	   t->s_uuid, t->s_iptv_iface);
+	   t->s_nicename, t->s_iptv_iface);
     close(fd);
     return -1;
   }
@@ -251,7 +251,7 @@ iptv_service_start(service_t *t, unsigned int weight, int force_start)
     setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &m, sizeof(struct ip_mreqn));
     if(bind(fd, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
       tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot bind %s:%d -- %s",
-           t->s_uuid, inet_ntoa(sin.sin_addr), t->s_iptv_port,
+           t->s_nicename, inet_ntoa(sin.sin_addr), t->s_iptv_port,
            strerror(errno));
       close(fd);
       return -1;
@@ -265,7 +265,7 @@ iptv_service_start(service_t *t, unsigned int weight, int force_start)
       if(setsockopt(fd, SOL_IP, IP_ADD_MEMBERSHIP, &m,
                 sizeof(struct ip_mreqn)) == -1) {
       tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot join %s -- %s",
-           t->s_uuid, inet_ntoa(m.imr_multiaddr), strerror(errno));
+           t->s_nicename, inet_ntoa(m.imr_multiaddr), strerror(errno));
       close(fd);
       return -1;
     }
@@ -279,7 +279,7 @@ iptv_service_start(service_t *t, unsigned int weight, int force_start)
     if(bind(fd, (struct sockaddr *)&sin6, sizeof(sin6)) == -1) {
       inet_ntop(AF_INET6, &sin6.sin6_addr, straddr, sizeof(straddr));
       tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot bind %s:%d -- %s",
-           t->s_uuid, straddr, t->s_iptv_port,
+           t->s_nicename, straddr, t->s_iptv_port,
            strerror(errno));
       close(fd);
       return -1;
@@ -294,7 +294,7 @@ iptv_service_start(service_t *t, unsigned int weight, int force_start)
       inet_ntop(AF_INET6, m6.ipv6mr_multiaddr.s6_addr,
 		straddr, sizeof(straddr));
       tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot join %s -- %s",
-           t->s_uuid, straddr, strerror(errno));
+           t->s_nicename, straddr, strerror(errno));
       close(fd);
       return -1;
     }
@@ -312,7 +312,7 @@ iptv_service_start(service_t *t, unsigned int weight, int force_start)
   ev.data.fd = fd;
   if(epoll_ctl(iptv_epollfd, EPOLL_CTL_ADD, fd, &ev) == -1) {
     tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot add to epoll set -- %s", 
-	   t->s_uuid, strerror(errno));
+	   t->s_nicename, strerror(errno));
     close(fd);
     return -1;
   }
@@ -356,7 +356,7 @@ iptv_service_stop(service_t *t)
   ifr.ifr_name[IFNAMSIZ - 1] = 0;
   if(ioctl(t->s_iptv_fd, SIOCGIFINDEX, &ifr)) {
     tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot find interface %s",
-	   t->s_uuid, t->s_iptv_iface);
+	   t->s_nicename, t->s_iptv_iface);
   }
 
   if(t->s_iptv_group.s_addr != 0) {
@@ -371,7 +371,7 @@ iptv_service_stop(service_t *t)
     if(setsockopt(t->s_iptv_fd, SOL_IP, IP_DROP_MEMBERSHIP, &m,
 		  sizeof(struct ip_mreqn)) == -1) {
       tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot leave %s -- %s",
-	     t->s_uuid, inet_ntoa(m.imr_multiaddr), strerror(errno));
+	     t->s_nicename, inet_ntoa(m.imr_multiaddr), strerror(errno));
     }
   } else {
     char straddr[INET6_ADDRSTRLEN];
@@ -388,7 +388,7 @@ iptv_service_stop(service_t *t)
 		straddr, sizeof(straddr));
 
       tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot leave %s -- %s",
-	     t->s_uuid, straddr, strerror(errno));
+	     t->s_nicename, straddr, strerror(errno));
     }
 
 
@@ -440,8 +440,9 @@ iptv_service_save(service_t *t)
   psi_save_service_settings(m, t);
   pthread_mutex_unlock(&t->s_stream_mutex);
   
-  hts_settings_save(m, "iptvservices/%s",
-		    t->s_uuid);
+  abort(); // XXX(dvbreorg);
+
+  //  hts_settings_save(m, "iptvservices/%s", t->s_uuid);
 
   htsmsg_destroy(m);
 }
@@ -484,7 +485,8 @@ iptv_grace_period(service_t *t)
 static void
 iptv_service_dtor(service_t *t)
 {
-  hts_settings_remove("iptvservices/%s", t->s_uuid); 
+  abort(); // XXX(dvbreorg);
+  //  hts_settings_remove("iptvservices/%s", t->s_uuid); 
 }
 
 
@@ -504,7 +506,7 @@ iptv_service_find(const char *id, int create)
       return NULL;
 
     LIST_FOREACH(t, &iptv_all_services, s_group_link)
-      if(!strcmp(t->s_uuid, id))
+      if(!strcmp(t->s_nicename, id)) // XXX(dvbreorg)
 	return t;
   }
 

@@ -284,7 +284,7 @@ typedef enum {
 #define SM_CODE_SOURCE_DELETED            102
 #define SM_CODE_SUBSCRIPTION_OVERRIDDEN   103
 
-#define SM_CODE_NO_HW_ATTACHED            200
+#define SM_CODE_NO_FREE_ADAPTER           200
 #define SM_CODE_MUX_NOT_ENABLED           201
 #define SM_CODE_NOT_FREE                  202
 #define SM_CODE_TUNING_FAILED             203

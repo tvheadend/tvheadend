@@ -49,11 +49,14 @@
 #include "htsp_server.h"
 #include "lang_codes.h"
 
-#define SERVICE_HASH_WIDTH 101
-
-static struct service_list servicehash[SERVICE_HASH_WIDTH];
-
 static void service_data_timeout(void *aux);
+
+static htsmsg_t *service_serialize(struct idnode *self, int full);
+
+static const idclass_t service_class = {
+  .ic_class = "service",
+  .ic_serialize = service_serialize,
+};
 
 /**
  *
@@ -391,14 +394,14 @@ service_destroy(service_t *t)
   }
 
   LIST_REMOVE(t, s_group_link);
-  LIST_REMOVE(t, s_hash_link);
-  
+
+  idnode_unlink(&t->s_id);
+
   if(t->s_status != SERVICE_IDLE)
     service_stop(t);
 
   t->s_status = SERVICE_ZOMBIE;
 
-  free(t->s_uuid);
   free(t->s_svcname);
   free(t->s_provider);
   free(t->s_dvb_charset);
@@ -429,14 +432,12 @@ service_destroy(service_t *t)
 service_t *
 service_create(const char *uuid, int source_type)
 {
-  unsigned int hash = tvh_strhash(uuid, SERVICE_HASH_WIDTH);
   service_t *t = calloc(1, sizeof(service_t));
 
   lock_assert(&global_lock);
 
   pthread_mutex_init(&t->s_stream_mutex, NULL);
   pthread_cond_init(&t->s_tss_cond, NULL);
-  t->s_uuid = strdup(uuid);
   t->s_source_type = source_type;
   t->s_refcount = 1;
   t->s_enabled = 1;
@@ -449,7 +450,8 @@ service_create(const char *uuid, int source_type)
 
   streaming_pad_init(&t->s_streaming_pad);
 
-  LIST_INSERT_HEAD(&servicehash[hash], t, s_hash_link);
+  idnode_insert(&t->s_id, uuid, &service_class);
+
   return t;
 }
 
@@ -459,15 +461,8 @@ service_create(const char *uuid, int source_type)
 service_t *
 service_find_by_identifier(const char *identifier)
 {
-  service_t *t;
-  unsigned int hash = tvh_strhash(identifier, SERVICE_HASH_WIDTH);
-
-  lock_assert(&global_lock);
-
-  LIST_FOREACH(t, &servicehash[hash], s_hash_link)
-    if(!strcmp(t->s_uuid, identifier))
-      break;
-  return t;
+  idnode_t *id = idnode_find(identifier);
+  return id->in_class == &service_class ? (service_t *)id : NULL;
 }
 
 
@@ -1127,4 +1122,15 @@ htsmsg_t *servicetype_list ( void )
     htsmsg_add_msg(ret, NULL, e);
   }
   return ret;
+}
+
+
+/**
+ *
+ */
+static htsmsg_t *
+service_serialize(struct idnode *self, int full)
+{
+  service_t *s = (service_t *)self;
+  return s->s_serialize(s, full);
 }

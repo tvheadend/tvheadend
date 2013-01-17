@@ -16,36 +16,129 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
+
 #include "tvheadend.h"
 #include "packet.h"
 #include "dvb.h"
 #include "epggrab.h"
+#include "settings.h"
+#include "dvb_support.h"
 
 struct dvb_network_list dvb_networks;
+
+static htsmsg_t *dvb_network_serialize(struct idnode *self, int full);
+static idnode_t **dvb_network_get_childs(struct idnode *self);
+
+static const idclass_t dvb_network_class = {
+  .ic_class = "dvbnetwork",
+  .ic_serialize = dvb_network_serialize,
+  .ic_get_childs = dvb_network_get_childs,
+};
 
 /**
  *
  */
 dvb_network_t *
-dvb_network_create(int fe_type)
+dvb_network_create(int fe_type, const char *uuid)
 {
+  printf("Creating network %s\n", uuid);
   dvb_network_t *dn = calloc(1, sizeof(dvb_network_t));
+  if(idnode_insert(&dn->dn_id, uuid, &dvb_network_class)) {
+    free(dn);
+    return NULL;
+  }
+
+  printf("Added network %s\n", idnode_uuid_as_str(&dn->dn_id));
+
   dn->dn_fe_type = fe_type;
-  TAILQ_INIT(&dn->dn_initial_scan_queue);
-  gtimer_arm(&dn->dn_mux_scanner_timer, dvb_network_mux_scanner, dn, 1);
+  TAILQ_INIT(&dn->dn_initial_scan_pending_queue);
+  TAILQ_INIT(&dn->dn_initial_scan_current_queue);
 
   dn->dn_autodiscovery = fe_type != FE_QPSK;
   LIST_INSERT_HEAD(&dvb_networks, dn, dn_global_link);
   return dn;
 }
 
-#if 0
-      htsmsg_get_u32(c, "autodiscovery", &tda->tda_autodiscovery);
-      htsmsg_get_u32(c, "nitoid", &tda->tda_nitoid);
-      htsmsg_get_u32(c, "disable_pmt_monitor", &tda->tda_disable_pmt_monitor);
-#endif
 
-#if 0
+
+/**
+ *
+ */
+static htsmsg_t *
+dvb_network_serialize(struct idnode *self, int full)
+{
+  dvb_network_t *dn = (dvb_network_t *)self;
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "id", idnode_uuid_as_str(&dn->dn_id));
+  htsmsg_add_str(m, "text", idnode_uuid_as_str(&dn->dn_id));
+  return m;
+}
+
+
+/**
+ *
+ */
+static int
+muxsortcmp(const void *A, const void *B)
+{
+  const dvb_mux_t *a = *(dvb_mux_t **)A;
+  const dvb_mux_t *b = *(dvb_mux_t **)B;
+  if(a->dm_conf.dmc_fe_params.frequency < b->dm_conf.dmc_fe_params.frequency)
+    return -1;
+  if(a->dm_conf.dmc_fe_params.frequency > b->dm_conf.dmc_fe_params.frequency)
+    return 1;
+  return a->dm_conf.dmc_polarisation - b->dm_conf.dmc_polarisation;
+}
+
+
+/**
+ *
+ */
+static idnode_t **
+dvb_network_get_childs(struct idnode *self)
+{
+  dvb_network_t *dn = (dvb_network_t *)self;
+  dvb_mux_t *dm;
+  int cnt = 1;
+  LIST_FOREACH(dm, &dn->dn_muxes, dm_network_link)
+    cnt++;
+
+  idnode_t **v = malloc(sizeof(idnode_t *) * cnt);
+  cnt = 0;
+  LIST_FOREACH(dm, &dn->dn_muxes, dm_network_link)
+    v[cnt++] = (idnode_t *)dm;
+  qsort(v, cnt, sizeof(idnode_t *), muxsortcmp);
+  v[cnt] = NULL;
+  return v;
+}
+
+
+/**
+ *
+ */
+static void
+dvb_network_load(htsmsg_t *m, const char *uuid)
+{
+  uint32_t fetype;
+
+  if(htsmsg_get_u32(m, "fetype", &fetype))
+    return;
+
+  dvb_network_t *dn = dvb_network_create(fetype, uuid);
+  if(dn == NULL)
+    return;
+
+  htsmsg_get_u32(m, "autodiscovery",       &dn->dn_autodiscovery);
+  htsmsg_get_u32(m, "nitoid",              &dn->dn_nitoid);
+  htsmsg_get_u32(m, "disable_pmt_monitor", &dn->dn_disable_pmt_monitor);
+
+  dvb_mux_load(dn);
+
+  dvb_network_schedule_initial_scan(dn);
+}
+
+#if 1
 /**
  *
  */
@@ -56,12 +149,17 @@ dvb_network_save(dvb_network_t *dn)
 
   lock_assert(&global_lock);
 
+  htsmsg_add_u32(m, "fetype",              dn->dn_fe_type);
   htsmsg_add_u32(m, "autodiscovery",       dn->dn_autodiscovery);
   htsmsg_add_u32(m, "nitoid",              dn->dn_nitoid);
   htsmsg_add_u32(m, "disable_pmt_monitor", dn->dn_disable_pmt_monitor);
-  abort();
+
+  hts_settings_save(m, "dvb/networks/%s/config",
+                    idnode_uuid_as_str(&dn->dn_id));
+  htsmsg_destroy(m);
 }
 #endif
+
 
 #if 0
 /**
@@ -125,65 +223,82 @@ dvb_network_set_disable_pmt_monitor(th_dvb_network_t *dn, int on)
 #endif
 
 
+
 /**
  *
  */
-void
-dvb_network_mux_scanner(void *aux)
+static void
+dvb_network_initial_scan(void *aux)
 {
   dvb_network_t *dn = aux;
   dvb_mux_t *dm;
 
-  // default period
-  gtimer_arm(&dn->dn_mux_scanner_timer, dvb_network_mux_scanner, dn, 20);
-
-#if 0
-  /* No muxes */
-  if(LIST_FIRST(&dn->dn_mux_instances) == NULL) {
-    dvb_adapter_poweroff(tda);
-    return;
+  while((dm = TAILQ_FIRST(&dn->dn_initial_scan_pending_queue)) != NULL) {
+    assert(dm->dm_scan_status == DM_SCAN_PENDING);
+    if(dvb_fe_tune(dm, "initial scan", 1))
+      break;
+    assert(dm->dm_scan_status == DM_SCAN_CURRENT);
   }
-#endif
-#if 0
-  /* Someone is actively using */
-  if(service_compute_weight(&tda->tda_transports) > 0)
-    return;
-#endif
-#if 0
-  if(tda->tda_mux_current != NULL &&
-     LIST_FIRST(&tda->tda_mux_current->tdmi_subscriptions) != NULL)
-    return; // Someone is doing full mux dump
-#endif
+  gtimer_arm(&dn->dn_initial_scan_timer, dvb_network_initial_scan, dn, 10);
+}
 
-  /* Check if we have muxes pending for quickscan, if so, choose them */
-  if((dm = TAILQ_FIRST(&dn->dn_initial_scan_queue)) != NULL) {
-    dvb_fe_tune(dm, "Initial autoscan");
-    return;
-  }
+/**
+ *
+ */
+void
+dvb_network_schedule_initial_scan(dvb_network_t *dn)
+{
+  gtimer_arm(&dn->dn_initial_scan_timer, dvb_network_initial_scan, dn, 0);
+}
 
-  /* Check EPG */
-  if (dn->dn_mux_epg) {
-    // timeout anything not complete
-    epggrab_mux_stop(dn->dn_mux_epg, 1);
-    dn->dn_mux_epg = NULL; // skip this time
-  } else {
-    dn->dn_mux_epg = epggrab_mux_next(dn);
+/**
+ *
+ */
+void
+dvb_network_init(void)
+{
+  htsmsg_t *l, *c;
+  htsmsg_field_t *f;
+
+  if(0) {
+    dvb_network_save(dvb_network_create(FE_QAM, NULL));
+    exit(0);
   }
 
-  /* EPG */
-  if (dn->dn_mux_epg) {
-    int period = epggrab_mux_period(dn->dn_mux_epg);
-    if (period > 20)
-      gtimer_arm(&dn->dn_mux_scanner_timer,
-                 dvb_network_mux_scanner, dn, period);
-    dvb_fe_tune(dn->dn_mux_epg, "EPG scan");
+  if((l = hts_settings_load_r(1, "dvb/networks")) == NULL)
     return;
 
-  }
 
-#if 0
-  /* Ensure we stop current mux and power off (if required) */
-  if (tda->tda_mux_current)
-    dvb_fe_stop(tda->tda_mux_current, 0);
-#endif
+  htsmsg_print(l);
+
+  HTSMSG_FOREACH(f, l) {
+    if((c = htsmsg_get_map_by_field(f)) == NULL)
+      continue;
+
+    if((c = htsmsg_get_map(c, "config")) == NULL)
+      continue;
+
+    dvb_network_load(c, f->hmf_name);
+  }
+  htsmsg_destroy(l);
+}
+
+
+/**
+ *
+ */
+idnode_t **
+dvb_network_root(void)
+{
+  dvb_network_t *dn;
+  int cnt = 1;
+  LIST_FOREACH(dn, &dvb_networks, dn_global_link)
+    cnt++;
+
+  idnode_t **v = malloc(sizeof(idnode_t *) * cnt);
+  cnt = 0;
+  LIST_FOREACH(dn, &dvb_networks, dn_global_link)
+    v[cnt++] = &dn->dn_id;
+  v[cnt] = NULL;
+  return v;
 }

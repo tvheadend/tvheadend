@@ -369,13 +369,14 @@ void epggrab_ota_complete  ( epggrab_ota_mux_t *ota )
     TAILQ_FOREACH(ota, &dm->dm_epg_grab, dm_link) {
       if (ota->is_reg && ota->state == EPGGRAB_OTA_MUX_RUNNING) break;
     }
-
+#if 0  // XXX(dvbreorg)
     /* All complete (bring timer forward) */
     if (!ota) {
       dvb_network_t *dn = dm->dm_dn;
       gtimer_arm(&dn->dn_mux_scanner_timer,
                  dvb_network_mux_scanner, dn, 20);
     }
+#endif
   }
 }
 

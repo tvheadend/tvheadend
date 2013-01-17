@@ -60,6 +60,7 @@
 #include "ffdecsa/FFdecsa.h"
 #include "muxes.h"
 #include "config2.h"
+#include "idnode.h"
 
 int running;
 time_t dispatch_clock;
@@ -444,6 +445,9 @@ main(int argc, char **argv)
   access_init(createdefault);
 
   tcp_server_init();
+
+  idnode_init();
+
 #if ENABLE_LINUXDVB
   dvb_init(adapter_mask, dvb_rawts_input);
 #endif

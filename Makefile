@@ -63,6 +63,7 @@ endif
 # Core
 #
 SRCS =  src/main.c \
+	src/idnode.c \
 	src/utils.c \
 	src/wrappers.c \
 	src/version.c \

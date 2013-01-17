@@ -46,7 +46,6 @@
 #include "diseqc.h"
 
 struct th_dvb_adapter_queue dvb_adapters;
-struct th_dvb_mux_instance_tree dvb_muxes;
 static void *dvb_adapter_input_dvr(void *aux);
 
 
@@ -280,6 +279,20 @@ dvb_adapter_set_extrapriority(th_dvb_adapter_t *tda, int extrapriority)
   tda_save(tda);
 }
 
+
+/**
+ *
+ */
+static void
+dvb_adapter_set_network(th_dvb_adapter_t *tda, const char *uuid)
+{
+  dvb_network_t *dn = LIST_FIRST(&dvb_networks);
+  tda->tda_dn = dn;
+  LIST_INSERT_HEAD(&dn->dn_adapters, tda, tda_network_link);
+}
+
+
+
 /**
  *
  */
@@ -402,7 +415,7 @@ tda_add(int adapter_num)
     close(fe);
 
   tda->tda_fe_type = tda->tda_fe_info->type;
-  tda->tda_dn = dvb_network_create(tda->tda_fe_type);
+  dvb_adapter_set_network(tda, NULL);
 
   snprintf(buf, sizeof(buf), "%s_%s", tda->tda_rootpath,
 	   tda->tda_fe_info->name);

@@ -44,15 +44,7 @@
 #include "dvb_support.h"
 #include "notify.h"
 
-
-
-/**
- *
- */
-
-
-
-
+static htsmsg_t *dvb_service_serialize(service_t *s, int full);
 
 
 /**
@@ -110,7 +102,7 @@ dvb_service_start(service_t *t, unsigned int weight, int force_start)
 
   return r;
 #endif
-  return SM_CODE_NO_HW_ATTACHED;
+  return SM_CODE_NO_FREE_ADAPTER;
 }
 
 
@@ -193,7 +185,7 @@ dvb_service_save(service_t *t)
   dvb_mux_t *dm = t->s_dvb_mux;
 
   hts_settings_save(m, "dvb/networks/%s/muxes/%s/services/%04x",
-                    dm->dm_dn->dn_uuid,
+                    idnode_uuid_as_str(&dm->dm_dn->dn_id),
                     dm->dm_local_identifier,
                     t->s_dvb_service_id);
 
@@ -217,7 +209,8 @@ dvb_service_load(dvb_mux_t *dm)
   lock_assert(&global_lock);
 
   l = hts_settings_load("dvb/networks/%s/muxes/%s/services",
-                        dm->dm_dn->dn_uuid, dm->dm_local_identifier);
+                        idnode_uuid_as_str(&dm->dm_dn->dn_id),
+                        dm->dm_local_identifier);
   if(l == NULL)
     return;
 
@@ -398,6 +391,7 @@ dvb_service_find2(dvb_mux_t *dm, uint16_t sid, int pmt_pid,
   t->s_config_save   = dvb_service_save;
   t->s_setsourceinfo = dvb_service_setsourceinfo;
   t->s_grace_period  = dvb_grace_period;
+  t->s_serialize     = dvb_service_serialize;
 
   t->s_dvb_mux = dm;
   LIST_INSERT_HEAD(&dm->dm_services, t, s_group_link);
@@ -412,38 +406,44 @@ dvb_service_find2(dvb_mux_t *dm, uint16_t sid, int pmt_pid,
 /**
  *
  */
-htsmsg_t *
-dvb_service_build_msg(service_t *t)
+static htsmsg_t *
+dvb_service_serialize(service_t *s, int full)
 {
-  dvb_mux_t *dm = t->s_dvb_mux;
+  dvb_mux_t *dm = s->s_dvb_mux;
   htsmsg_t *m = htsmsg_create_map();
   char buf[100];
- 
-  htsmsg_add_str(m, "uuid", t->s_uuid);
-  htsmsg_add_u32(m, "enabled", t->s_enabled);
-  htsmsg_add_u32(m, "channel", t->s_channel_number);
 
-  htsmsg_add_u32(m, "sid", t->s_dvb_service_id);
-  htsmsg_add_u32(m, "pmt", t->s_pmt_pid);
-  htsmsg_add_u32(m, "pcr", t->s_pcr_pid);
-  
-  htsmsg_add_str(m, "type", service_servicetype_txt(t));
+  htsmsg_add_str(m, "id", idnode_uuid_as_str(&s->s_id));
 
-  htsmsg_add_str(m, "svcname", t->s_svcname ?: "");
-  htsmsg_add_str(m, "provider", t->s_provider ?: "");
+  snprintf(buf, sizeof(buf), "%s (0x%04x)",
+           s->s_svcname ?: "<noname>", s->s_dvb_service_id);
+  htsmsg_add_str(m, "text", buf);
+
+
+  htsmsg_add_u32(m, "enabled", s->s_enabled);
+  htsmsg_add_u32(m, "channel", s->s_channel_number);
+
+  htsmsg_add_u32(m, "sid", s->s_dvb_service_id);
+  htsmsg_add_u32(m, "pmt", s->s_pmt_pid);
+  htsmsg_add_u32(m, "pcr", s->s_pcr_pid);
+
+  htsmsg_add_str(m, "type", service_servicetype_txt(s));
+
+  htsmsg_add_str(m, "svcname", s->s_svcname ?: "");
+  htsmsg_add_str(m, "provider", s->s_provider ?: "");
 
   htsmsg_add_str(m, "network", dm->dm_network_name ?: "");
 
   dvb_mux_nicefreq(buf, sizeof(buf), dm);
   htsmsg_add_str(m, "mux", buf);
 
-  if(t->s_ch != NULL)
-    htsmsg_add_str(m, "channelname", t->s_ch->ch_name);
+  if(s->s_ch != NULL)
+    htsmsg_add_str(m, "channelname", s->s_ch->ch_name);
 
-  if(t->s_dvb_charset != NULL)
-    htsmsg_add_str(m, "dvb_charset", t->s_dvb_charset);
+  if(s->s_dvb_charset != NULL)
+    htsmsg_add_str(m, "dvb_charset", s->s_dvb_charset);
 
-  htsmsg_add_u32(m, "dvb_eit_enable", t->s_dvb_eit_enable);
+  htsmsg_add_u32(m, "dvb_eit_enable", s->s_dvb_eit_enable);
 
   return m;
 }
