@@ -162,14 +162,6 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
 
   lock_assert(&global_lock);
 
-  /* Reject out of range */
-  if ((dmc->dmc_fe_params.frequency < tda->tda_fe_info->frequency_min) ||
-      (dmc->dmc_fe_params.frequency > tda->tda_fe_info->frequency_max)) {
-    tvhlog(LOG_DEBUG, "dvb", "mux rejected with frequency %d",
-           dmc->dmc_fe_params.frequency);
-    return NULL;
-  }
-
   /* HACK - we hash/compare based on 2KHz spacing and compare on +/-500Hz */
   LIST_FOREACH(tdmi, &tda->tda_mux_list, tdmi_adapter_hash_link) {
     if(tdmi_compare_key(&tdmi->tdmi_conf, dmc))
@@ -1179,7 +1171,7 @@ dvb_mux_add_by_params(th_dvb_adapter_t *tda,
   tdmi = dvb_mux_create(tda, &dmc, 0, 0xffff, NULL, NULL, 1, 1, NULL, NULL);
 
   if(tdmi == NULL)
-    return "Mux already exists or bad parameters";
+    return "Mux already exist";
 
   return NULL;
 }
