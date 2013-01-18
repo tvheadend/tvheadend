@@ -207,7 +207,7 @@ static timeshift_index_iframe_t *_timeshift_last_frame
 {
   int end;
   timeshift_index_iframe_t *tsi = NULL;
-  timeshift_file_t *tsf = timeshift_filemgr_get(ts, ts->ondemand);
+  timeshift_file_t *tsf = timeshift_filemgr_get(ts, 0);
   while (tsf && !tsi) {
     if (!(tsi = TAILQ_LAST(&tsf->iframes, timeshift_index_iframe_list)))
       tsf = timeshift_filemgr_prev(tsf, &end, 0);
@@ -280,7 +280,7 @@ static int _timeshift_skip
       }
       end = -1;
     } else {
-      tsf = timeshift_filemgr_get(ts, ts->ondemand);
+      tsf = timeshift_filemgr_get(ts, 0);
       tsi = NULL;
       while (tsf && !tsi) {
         if (!(tsi = TAILQ_LAST(&tsf->iframes, timeshift_index_iframe_list)))
@@ -481,7 +481,7 @@ void *timeshift_reader ( void *p )
                        ts->id);
                 timeshift_writer_flush(ts);
                 pthread_mutex_lock(&ts->rdwr_mutex);
-                if ((cur_file   = timeshift_filemgr_get(ts, ts->ondemand))) {
+                if ((cur_file   = timeshift_filemgr_get(ts, 1))) {
                   cur_off    = cur_file->size;
                   pause_time = cur_file->last;
                   last_time  = pause_time;
@@ -542,7 +542,7 @@ void *timeshift_reader ( void *p )
               /* Live playback (stage1) */
               if (ts->state == TS_LIVE) {
                 pthread_mutex_lock(&ts->rdwr_mutex);
-                if ((cur_file   = timeshift_filemgr_get(ts, ts->ondemand))) {
+                if ((cur_file   = timeshift_filemgr_get(ts, !ts->ondemand))) {
                   cur_off    = cur_file->size;
                   last_time  = cur_file->last;
                 } else {
@@ -552,16 +552,19 @@ void *timeshift_reader ( void *p )
                 pthread_mutex_unlock(&ts->rdwr_mutex);
               }
 
-              tvhlog(LOG_DEBUG, "timeshift", "ts %d skip last_time %"PRId64, ts->id, last_time);
-              skip_time += (skip->type == SMT_SKIP_ABS_TIME) ? ts->pts_delta : last_time;
+              /* May have failed */
+              if (skip) {
+                tvhlog(LOG_DEBUG, "timeshift", "ts %d skip last_time %"PRId64, ts->id, last_time);
+                skip_time += (skip->type == SMT_SKIP_ABS_TIME) ? ts->pts_delta : last_time;
 
-              /* Live (stage2) */
-              if (ts->state == TS_LIVE) {
-                if (skip_time >= now) {
-                  tvhlog(LOG_DEBUG, "timeshift", "ts %d skip ignored, already live", ts->id);
-                  skip = NULL;
-                } else {
-                  ts->state = TS_PLAY;
+               /* Live (stage2) */
+                if (ts->state == TS_LIVE) {
+                  if (skip_time >= now) {
+                    tvhlog(LOG_DEBUG, "timeshift", "ts %d skip ignored, already live", ts->id);
+                    skip = NULL;
+                  } else {
+                    ts->state = TS_PLAY;
+                  }
                 }
               }
 
