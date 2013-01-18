@@ -215,7 +215,8 @@ timeshift_destroy(streaming_target_t *pad)
   if (ts->smt_start)
     streaming_start_unref(ts->smt_start);
 
-  free(ts->path);
+  if (ts->path)
+    free(ts->path);
   free(ts);
 }
 
@@ -228,20 +229,15 @@ timeshift_destroy(streaming_target_t *pad)
 streaming_target_t *timeshift_create
   (streaming_target_t *out, time_t max_time)
 {
-  char buf[512];
   timeshift_t *ts = calloc(1, sizeof(timeshift_t));
 
   /* Must hold global lock */
   lock_assert(&global_lock);
 
-  /* Create directories */
-  if (timeshift_filemgr_makedirs(timeshift_index, buf, sizeof(buf)))
-    return NULL;
-
   /* Setup structure */
   TAILQ_INIT(&ts->files);
   ts->output     = out;
-  ts->path       = strdup(buf);
+  ts->path       = NULL;
   ts->max_time   = max_time;
   ts->state      = TS_INIT;
   ts->full       = 0;

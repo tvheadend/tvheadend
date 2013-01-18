@@ -240,6 +240,15 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
     /* Create new file */
     tsf_tmp = NULL;
     if (!ts->full) {
+
+      /* Create directories */
+      if (!ts->path) {
+        if (timeshift_filemgr_makedirs(ts->id, path, sizeof(path)))
+          return NULL;
+        ts->path = strdup(path);
+      }
+
+      /* Create File */
       snprintf(path, sizeof(path), "%s/tvh-%"PRItime_t, ts->path, time);
 #ifdef TSHFT_TRACE
       tvhlog(LOG_DEBUG, "timeshift", "ts %d create file %s", ts->id, path);
