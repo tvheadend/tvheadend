@@ -339,6 +339,8 @@ dvb_service_setsourceinfo(service_t *t, struct source_info *si)
 static int
 dvb_grace_period(service_t *t)
 {
+  if (t->s_dvb_mux_instance && t->s_dvb_mux_instance->tdmi_adapter)
+    return t->s_dvb_mux_instance->tdmi_adapter->tda_grace_period ?: 10;
   return 10;
 }
 

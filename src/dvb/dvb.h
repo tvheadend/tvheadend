@@ -217,6 +217,7 @@ typedef struct th_dvb_adapter {
   uint32_t tda_diseqc_repeats;
   uint32_t tda_disable_pmt_monitor;
   int32_t  tda_full_mux_rx;
+  uint32_t tda_grace_period;
   char *tda_displayname;
 
   char *tda_fe_path;
@@ -373,6 +374,8 @@ void dvb_adapter_set_diseqc_repeats(th_dvb_adapter_t *tda,
 void dvb_adapter_set_disable_pmt_monitor(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_full_mux_rx(th_dvb_adapter_t *tda, int r);
+
+void dvb_adapter_set_grace_period(th_dvb_adapter_t *tda, uint32_t p);
 
 void dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src);
 

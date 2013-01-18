@@ -106,6 +106,7 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "skip_initialscan", tda->tda_skip_initialscan);
   htsmsg_add_u32(m, "disable_pmt_monitor", tda->tda_disable_pmt_monitor);
   htsmsg_add_s32(m, "full_mux_rx", tda->tda_full_mux_rx);
+  htsmsg_add_u32(m, "grace_period", tda->tda_grace_period);
   hts_settings_save(m, "dvbadapters/%s", tda->tda_identifier);
   htsmsg_destroy(m);
 }
@@ -421,6 +422,22 @@ dvb_adapter_set_full_mux_rx(th_dvb_adapter_t *tda, int on)
 	 tda->tda_displayname, label[on+1]);
 
   tda->tda_full_mux_rx = on;
+  tda_save(tda);
+}
+
+/**
+ *
+ */
+void
+dvb_adapter_set_grace_period(th_dvb_adapter_t *tda, uint32_t p)
+{
+  if (tda->tda_grace_period == p)
+    return;
+
+  tvhlog(LOG_NOTICE, "dvb",
+         "Adapter \"%s\" set grace period to %d", tda->tda_displayname, p);
+
+  tda->tda_grace_period = p;
   tda_save(tda);
 }
 
@@ -776,6 +793,8 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
       htsmsg_get_u32(c, "extrapriority",       &tda->tda_extrapriority);
       htsmsg_get_u32(c, "skip_initialscan",    &tda->tda_skip_initialscan);
       htsmsg_get_u32(c, "disable_pmt_monitor", &tda->tda_disable_pmt_monitor);
+      if (htsmsg_get_u32(c, "grace_period",        &tda->tda_grace_period))
+        tda->tda_grace_period = 10;
       if (htsmsg_get_s32(c, "full_mux_rx", &tda->tda_full_mux_rx))
         if (!htsmsg_get_u32(c, "disable_full_mux_rx", &u32) && u32)
           tda->tda_full_mux_rx = 0;

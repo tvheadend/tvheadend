@@ -1165,7 +1165,7 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	}, [ 'name', 'enabled', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion',
 		'diseqcrepeats', 'qmon', 'skip_checksubscr', 
 		'poweroff', 'sidtochan', 'nitoid', 'extrapriority',
-		,'disable_pmt_monitor', 'full_mux_rx', 'idleclose' ]);
+		,'disable_pmt_monitor', 'full_mux_rx', 'idleclose', 'grace_period' ]);
 
 	function saveConfForm() {
 		confform.getForm().submit({
@@ -1227,6 +1227,10 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
                         triggerAction : 'all',
                         fields: [ 'num', 'str' ],
                         store : [ [0, 'Auto'], [1, 'Off'], [2, 'On'] ]
+		}),
+		new Ext.form.NumberField({
+			fieldLabel: 'Grace Period',
+			name: 'grace_period'
 		}),
 		new Ext.form.Checkbox({
 			fieldLabel : 'Disable PMT monitoring',
