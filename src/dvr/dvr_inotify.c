@@ -60,6 +60,11 @@ void dvr_inotify_init ( void )
   pthread_t tid;
 
   _inot_fd = inotify_init();
+  if (_inot_fd == -1) {
+    tvhlog(LOG_ERR, "dvr", "failed to initialise inotify (err=%s)",
+           strerror(errno));
+    return;
+  }
 
   pthread_create(&tid, NULL, _dvr_inotify_thread, NULL);
 }
@@ -73,6 +78,9 @@ void dvr_inotify_add ( dvr_entry_t *de )
   dvr_inotify_entry_t *e;
   char *path;
   struct stat st;
+
+  if (_inot_fd == -1)
+    return;
 
   if (!de->de_filename || stat(de->de_filename, &st))
     return;
@@ -92,7 +100,13 @@ void dvr_inotify_add ( dvr_entry_t *de )
     skel    = NULL;
     e->path = strdup(e->path);
     e->fd   = inotify_add_watch(_inot_fd, e->path, EVENT_MASK);
-    assert(e->fd != -1);
+    if (e->fd == -1) {
+      tvhlog(LOG_ERR, "dvr", "failed to add inotify watch to %s (err=%s)",
+             e->path, strerror(errno));
+      free(path);
+      dvr_inotify_del(de);
+      return;
+    }
   }
 
   LIST_INSERT_HEAD(&e->entries, de, de_inotify_link);
