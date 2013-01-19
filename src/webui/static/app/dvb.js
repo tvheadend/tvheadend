@@ -120,6 +120,9 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 
 	tvheadend.comet.on('dvbMux', function(m) {
 
+		if(m.adapterId !== adapterId)
+			return;
+
 		r = store.getById(m.id)
 		if (typeof r === 'undefined') {
 			store.reload();
