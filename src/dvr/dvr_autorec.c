@@ -390,7 +390,8 @@ autorec_record_update(void *opaque, const char *id, htsmsg_t *values,
     }
   }
 
-  dae->dae_content_type.code = htsmsg_get_u32_or_default(values, "contenttype", 0);
+  if (!htsmsg_get_u32(values, "contenttype", &u32))
+    dae->dae_content_type.code = u32;
 
   if((s = htsmsg_get_str(values, "approx_time")) != NULL) {
     if(strchr(s, ':') != NULL) {
