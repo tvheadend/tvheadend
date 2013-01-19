@@ -1053,7 +1053,9 @@ dvr_init(void)
     }
   }
 
+#if ENABLE_INOTIFY
   dvr_inotify_init();
+#endif
   dvr_autorec_init();
   dvr_db_load();
   dvr_autorec_update();
