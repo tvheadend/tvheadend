@@ -304,6 +304,15 @@ v4l_service_quality(service_t *t)
   return 100;
 }
 
+/**
+ *
+ */
+static int
+v4l_service_is_enabled(service_t *t)
+{
+  return t->s_enabled;
+}
+
 
 /**
  *
@@ -372,6 +381,7 @@ v4l_service_find(v4l_adapter_t *va, const char *id, int create)
   t->s_config_save   = v4l_service_save;
   t->s_setsourceinfo = v4l_service_setsourceinfo;
   t->s_quality_index = v4l_service_quality;
+  t->s_is_enabled    = v4l_service_is_enabled;
   t->s_grace_period  = v4l_grace_period;
   t->s_iptv_fd = -1;
   t->s_v4l_adapter = va;

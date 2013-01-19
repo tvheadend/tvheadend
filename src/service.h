@@ -249,6 +249,7 @@ typedef struct service {
    * subscription scheduling.
    */
   int s_enabled;
+  int (*s_is_enabled)(struct service *t);
 
   /**
    * Last PCR seen, we use it for a simple clock for rawtsinput.c
