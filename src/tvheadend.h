@@ -561,6 +561,8 @@ int makedirs ( const char *path, int mode );
 
 int rmtree ( const char *path );
 
+char *regexp_escape ( const char *str );
+
 /* printing */
 #if __SIZEOF_LONG__ == 8
   #define PRItime_t PRId64

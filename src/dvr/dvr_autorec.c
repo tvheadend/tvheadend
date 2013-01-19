@@ -559,9 +559,11 @@ void dvr_autorec_add_series_link
   ( const char *dvr_config_name, epg_broadcast_t *event,
     const char *creator, const char *comment )
 {
+  char *title;
   if (!event || !event->episode) return;
+  title = regexp_escape(epg_broadcast_get_title(event, NULL));
   _dvr_autorec_add(dvr_config_name,
-                   epg_broadcast_get_title(event, NULL),
+                   title,
                    event->channel,
                    NULL, 0, // tag/content type
                    NULL,
@@ -569,6 +571,8 @@ void dvr_autorec_add_series_link
                    event->serieslink,
                    0, NULL,
                    creator, comment);
+  if (title)
+    free(title);
 }
 
 
