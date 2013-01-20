@@ -335,7 +335,7 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
   cnt = 0;
   LIST_FOREACH(t, &ch->ch_services, s_ch_link) {
 
-    if(!t->s_enabled) {
+    if(!t->s_is_enabled(t)) {
       if(loginfo != NULL) {
 	tvhlog(LOG_NOTICE, "Service", "%s: Skipping \"%s\" -- not enabled",
 	       loginfo, service_nicename(t));
@@ -1179,11 +1179,7 @@ service_is_primary_epg(service_t *svc)
   service_t *ret = NULL, *t;
   if (!svc || !svc->s_ch) return 0;
   LIST_FOREACH(t, &svc->s_ch->ch_services, s_ch_link) {
-    if (!t->s_dvb_mux_instance) continue;
-    if (!t->s_dvb_mux_instance->tdmi_enabled) continue;
-    if (!t->s_dvb_mux_instance->tdmi_adapter->tda_enabled) continue;
-    if (!t->s_dvb_mux_instance->tdmi_adapter->tda_rootpath) continue;
-    if (!t->s_enabled || !t->s_dvb_eit_enable) continue;
+    if (!t->s_is_enabled(t) || !t->s_dvb_eit_enable) continue;
     if (!ret || service_get_prio(t) < service_get_prio(ret))
       ret = t;
   }
