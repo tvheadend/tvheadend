@@ -643,6 +643,8 @@ subscription_set_speed ( th_subscription_t *s, int speed )
   streaming_message_t *sm;
   service_t *t = s->ths_service;
 
+  if (!t) return;
+
   pthread_mutex_lock(&t->s_stream_mutex);
 
   sm = streaming_msg_create_code(SMT_SPEED, speed);
@@ -660,6 +662,8 @@ subscription_set_skip ( th_subscription_t *s, const streaming_skip_t *skip )
 {
   streaming_message_t *sm;
   service_t *t = s->ths_service;
+
+  if (!t) return;
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
