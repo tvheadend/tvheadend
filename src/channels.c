@@ -190,6 +190,7 @@ channel_create2(const char *name, int number)
 
   epggrab_channel_add(ch);
 
+  channel_save(ch);
   htsp_channel_add(ch);
   return ch;
 }
