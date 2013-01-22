@@ -1880,18 +1880,14 @@ cwc_emm_bulcrypt(cwc_t *cwc, uint8_t *data, int len)
   int match = 0;
 
   switch (data[0]) {
-  case 0x82: /* unique */
-  case 0x85: /* unique */
+  case 0x82: /* unique - bulcrypt (1 card) */
+  case 0x8a: /* unique - polaris  (1 card) */
+  case 0x85: /* unique - bulcrypt (4 cards) */
+  case 0x8b: /* unique - polaris  (4 cards) */
     match = len >= 10 && memcmp(data + 3, cwc->cwc_ua + 2, 3) == 0;
     break;
-  case 0x84: /* shared */
+  case 0x84: /* shared - (1024 cards) */
     match = len >= 10 && memcmp(data + 3, cwc->cwc_ua + 2, 2) == 0;
-    break;
-  case 0x8b: /* shared-unknown */
-    match = len >= 10 && memcmp(data + 4, cwc->cwc_ua + 2, 2) == 0;
-    break;
-  case 0x8a: /* global */
-    match = len >= 10 && memcmp(data + 4, cwc->cwc_ua + 2, 1) == 0;
     break;
   }
 
