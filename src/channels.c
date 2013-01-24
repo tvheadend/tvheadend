@@ -200,7 +200,9 @@ channel_create2(const char *name, int number)
 channel_t *
 channel_create ( void )
 {
-  return channel_create2(NULL, 0);
+  channel_t *ch = channel_create2(NULL, 0);
+  channel_save(ch);
+  return ch;
 }
 
 /**
