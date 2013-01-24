@@ -1,12 +1,12 @@
 
 
 Tvheadend
-=============================
+====================================
 (c) 2006 - 2013 Andreas Öman, et al.
 
 
 What it is
------------
+----------
 
 Tvheadend is a lightly TV streaming server and digital video recorder supporting DVB-S, DVB-S2, DVB-C, DVB-T, DVB-T2, ATSC, IPTV, and Analog video (V4L) as input sources.
 
@@ -43,8 +43,7 @@ You must append all you want apply to configure command. Syntax is:
 
 	$ ./configure [option1] [option2] [option3] ...
   
-> Note:
-> On ARM machines, at least, might be useful enable **dvbcsa** to improve stream decoding performances.
+> Note: On ARM machines, at least, might be useful enable **dvbcsa** to improve stream decoding performances.
 
 
 Now, build the binary:
