@@ -254,7 +254,7 @@ show_usage
 {
   int i;
   char buf[256];
-  printf("Usage :- %s [options]\n\n", argv0);
+  printf("Usage: %s [options]\n\n", argv0);
   printf("Options\n");
   for (i = 0; i < num; i++) {
 
@@ -265,10 +265,10 @@ show_usage
 
     /* Option */
     } else {
-      char sopt[4];
+      char sopt[6];
       char *desc, *tok;
       if (opts[i].sopt)
-        snprintf(sopt, sizeof(sopt), "-%c/", opts[i].sopt);
+        snprintf(sopt, sizeof(sopt), "-%c | ", opts[i].sopt);
       else
         sopt[0] = 0;
       snprintf(buf, sizeof(buf), "  %s--%s", sopt, opts[i].lopt);
@@ -287,7 +287,7 @@ show_usage
   }
   printf("\n");
   printf("For more information read the man page or visit\n");
-  printf(" http://www.lonelycoder.com/hts/\n");
+  printf("http://www.lonelycoder.com/redmine/projects/tvheadend/wiki\n");
   printf("\n");
   exit(0);
 }
@@ -656,7 +656,7 @@ main(int argc, char **argv)
 
   pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 
-  tvhlog(LOG_NOTICE, "START", "HTS Tvheadend version %s started, "
+  tvhlog(LOG_NOTICE, "START", "Tvheadend version %s started, "
 	 "running as PID:%d UID:%d GID:%d, settings located in '%s'",
 	 tvheadend_version,
 	 getpid(), getuid(), getgid(), hts_settings_get_root());
@@ -672,7 +672,7 @@ main(int argc, char **argv)
   timeshift_term();
 #endif
 
-  tvhlog(LOG_NOTICE, "STOP", "Exiting HTS Tvheadend");
+  tvhlog(LOG_NOTICE, "STOP", "Exiting Tvheadend");
 
   if(opt_fork)
     unlink(opt_pidpath);
@@ -750,7 +750,7 @@ tvhlogv(int notify, int severity, const char *subsys, const char *fmt,
     } else {
       sgroff = "\033[0m";
     }
-    fprintf(stderr, "%s%s [%s]:%s%s\n", sgr, t, leveltxt, buf, sgroff);
+    fprintf(stderr, "%s%s [%s] %s%s\n", sgr, t, leveltxt, buf, sgroff);
   }
 }
 

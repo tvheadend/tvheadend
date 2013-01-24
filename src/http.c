@@ -164,7 +164,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 		 val2str(hc->hc_version, HTTP_versiontab),
 		 rc, http_rc2str(rc));
 
-  htsbuf_qprintf(&hdrs, "Server: HTS/tvheadend\r\n");
+  htsbuf_qprintf(&hdrs, "Server: Tvheadend\r\n");
 
   if(maxage == 0) {
     htsbuf_qprintf(&hdrs, "Cache-Control: no-cache\r\n");
