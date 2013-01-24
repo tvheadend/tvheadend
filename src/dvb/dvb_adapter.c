@@ -591,7 +591,8 @@ tda_add(int adapter_num)
     dvb_adapter_checkspeed(tda);
 
     /* Adapters known to provide valid SNR */
-    if(strcasestr(fe_info.name, "Sony CXD2820R"))
+    if(strcasestr(fe_info.name, "Sony CXD2820R") ||
+       strcasestr(fe_info.name, "stv090x"))
       tda->tda_snr_valid = 1;
 
     /* Store */
