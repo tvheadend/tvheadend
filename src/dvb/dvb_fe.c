@@ -282,6 +282,7 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune)
   }
 
   dvb_table_flush_all(tdmi);
+  dvb_adapter_stop_dvr(tda);
 
   assert(tdmi->tdmi_scan_queue == NULL);
 

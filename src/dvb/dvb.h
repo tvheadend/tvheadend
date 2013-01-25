@@ -344,6 +344,8 @@ void dvb_adapter_start (th_dvb_adapter_t *tda);
 
 void dvb_adapter_stop (th_dvb_adapter_t *tda);
 
+void dvb_adapter_stop_dvr (th_dvb_adapter_t *tda);
+
 void dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s);
 
 void dvb_adapter_set_enabled(th_dvb_adapter_t *tda, int on);
