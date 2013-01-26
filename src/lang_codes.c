@@ -529,9 +529,10 @@ static const lang_code_t *_lang_code_get ( const char *code, size_t len )
     if (i) {
       const lang_code_t *c = lang_codes;
       while (c->code2b) {
-        if ( !strcmp(tmp, c->code2b) )              return c;
-        if ( c->code1  && !strcmp(tmp, c->code1) )  return c;
-        if ( c->code2t && !strcmp(tmp, c->code2t) ) return c;
+        if( !strcmp(tmp, c->code2b) || 
+          ( c->code1  && !strcmp(tmp, c->code1) ) || 
+          ( c->code2t && !strcmp(tmp, c->code2t) ) )
+          return c;
         c++;
       }
     }
