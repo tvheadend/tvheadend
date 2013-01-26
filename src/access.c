@@ -324,6 +324,9 @@ access_get_by_addr(struct sockaddr *src)
 
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
 
+    if(!ae->ae_enabled)
+      continue;
+
     if(ae->ae_username[0] != '*')
       continue;
 
