@@ -332,22 +332,19 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   tsid         = ptr[0] << 8 | ptr[1];
   onid         = ptr[5] << 8 | ptr[6];
   if (tableid == 0x42) {
-    if(tdmi->tdmi_transport_stream_id != tsid)
+    if(tdmi->tdmi_transport_stream_id != tsid || tdmi->tdmi_network_id != onid)
       return -1;
-    if(!tdmi->tdmi_network_id)
-      dvb_mux_set_onid(tdmi, onid);
   } else {
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
       if(tdmi->tdmi_transport_stream_id == tsid &&
          tdmi->tdmi_network_id != onid)
         break;
-    if (!tdmi) return 0;
+    if (!tdmi) return -1;
   }
 
   //  version                     = ptr[2] >> 1 & 0x1f;
   //  section_number              = ptr[3];
   //  last_section_number         = ptr[4];
-  //  original_network_id         = ptr[5] << 8 | ptr[6];
   //  reserved                    = ptr[7];
 
   if((ptr[2] & 1) == 0) {
@@ -478,7 +475,6 @@ static int
 dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
-  th_dvb_mux_instance_t *other;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   uint16_t service, pmt, tsid;
 
@@ -491,21 +487,8 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   }
 
   tsid = (ptr[0] << 8) | ptr[1];
-
-  // Make sure this TSID is not already known on another mux
-  // That might indicate that we have accedentally received a PAT
-  // from another mux
-  LIST_FOREACH(other, &tda->tda_muxes, tdmi_adapter_link)
-    if(other != tdmi && 
-       other->tdmi_conf.dmc_satconf == tdmi->tdmi_conf.dmc_satconf &&
-       other->tdmi_transport_stream_id == tsid &&
-       other->tdmi_network_id == tdmi->tdmi_network_id)
-      return -1;
-
-  if(tdmi->tdmi_transport_stream_id == 0xffff)
-    dvb_mux_set_tsid(tdmi, tsid);
-  else if (tdmi->tdmi_transport_stream_id != tsid)
-    return -1; // TSID mismatches, skip packet, may be from another mux
+  if (tdmi->tdmi_transport_stream_id != tsid)
+    return -1;
 
   ptr += 5;
   len -= 5;
@@ -650,13 +633,10 @@ static const fe_hierarchy_t hierarchy_info_tab [8] = {
  */
 static int
 dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
-			 uint16_t tsid, uint16_t onid)
+			 uint16_t tsid, uint16_t onid, const char *netname)
 {
   struct dvb_mux_conf dmc;
   int freq, symrate;
-
-  if(!tdmi->tdmi_adapter->tda_autodiscovery)
-    return -1;
 
   if(len < 11)
     return -1;
@@ -687,8 +667,10 @@ dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   dmc.dmc_fe_params.u.qam.fec_inner = fec_tab[ptr[10] & 0x07];
 
-  dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, NULL,
-		 "automatic mux discovery", 1, 1, NULL, NULL);
+  dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, netname,
+		 "automatic mux discovery", 1, 1, NULL, NULL,
+     tdmi->tdmi_adapter->tda_autodiscovery);
+
   return 0;
 }
 
@@ -697,14 +679,11 @@ dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
  */
 static int
 dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
-		       uint16_t tsid, uint16_t onid)
+		       uint16_t tsid, uint16_t onid, const char *netname)
 {
   int freq, symrate;
   //  uint16_t orbital_pos;
   struct dvb_mux_conf dmc;
-
-  if(!tdmi->tdmi_adapter->tda_autodiscovery)
-    return -1;
 
   if(len < 11)
     return -1;
@@ -772,8 +751,10 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   }
 
 #endif
+
   dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, NULL,
-		 "automatic mux discovery", 1, 1, NULL, tdmi->tdmi_conf.dmc_satconf);
+		 "automatic mux discovery", 1, 1, NULL, tdmi->tdmi_conf.dmc_satconf,
+     tdmi->tdmi_adapter->tda_autodiscovery);
   
   return 0;
 }
@@ -784,13 +765,10 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
  */
 static int
 dvb_table_terr_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
-                        uint16_t tsid, uint16_t onid)
+                        uint16_t tsid, uint16_t onid, const char *netname)
 {
   struct dvb_mux_conf dmc;
   int freq;
-
-  if(!tdmi->tdmi_adapter->tda_autodiscovery)
-    return -1;
 
   if(len < 11)
     return -1;
@@ -812,8 +790,9 @@ dvb_table_terr_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   dmc.dmc_fe_params.u.ofdm.guard_interval=guard_interval_tab[(ptr[6] & 0x18) >> 3];
   dmc.dmc_fe_params.u.ofdm.transmission_mode=transmission_mode_tab[(ptr[6] & 0x06) >> 1];
 
-  dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, NULL,
-                 "automatic mux discovery", 1, 1, NULL, NULL);
+  dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, netname,
+                 "automatic mux discovery", 1, 1, NULL, NULL,
+                 tdmi->tdmi_adapter->tda_autodiscovery);
   
   return 0;
 }
@@ -866,107 +845,89 @@ static int
 dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		 uint8_t tableid, void *opaque)
 {
-  uint8_t tag, tlen;
-  int ntl;
-  char networkname[256];
+  uint8_t dtag, dlen;
+  uint16_t llen;
+  char netname[256];
   uint16_t tsid, onid;
   uint16_t network_id = (ptr[0] << 8) | ptr[1];
+  netname[0] = '\0';
 
-  if(tdmi->tdmi_adapter->tda_nitoid) {
-    if(tableid != 0x41)
-      return -1;
-    
-    if(network_id != tdmi->tdmi_adapter->tda_nitoid)
-      return -1;
-
-  } else {
-    if(tableid != 0x40)
-      return -1;
-  }
-
-  if((ptr[2] & 1) == 0) {
-    /* current_next_indicator == next, skip this */
-    return -1;
-  }
-
-  ptr += 5;
-  len -= 5;
-
-  ntl = ((ptr[0] & 0xf) << 8) | ptr[1];
-  ptr += 2;
-  len -= 2;
-  if(ntl > len)
+  /* Check NID */
+  if(tdmi->tdmi_adapter->tda_nitoid &&
+     tdmi->tdmi_adapter->tda_nitoid != network_id)
     return -1;
 
-  while(ntl > 2) {
-    tag = *ptr++;
-    tlen = *ptr++;
-    len -= 2;
-    ntl -= 2;
+  /* Ignore non-current */
+  if((ptr[2] & 1) == 0)
+    return -1;
 
-    switch(tag) {
-    case DVB_DESC_NETWORK_NAME:
-      if(dvb_get_string(networkname, sizeof(networkname), ptr, tlen, NULL, NULL))
-	return -1;
+  /* Network descriptors */
+  llen = ((ptr[5] & 0xf) << 8) | ptr[6];
+  ptr += 7;
+  len -= llen + 7;
+  if (len < 0)
+    return -1;
 
-      if(strcmp(tdmi->tdmi_network ?: "", networkname))
-	dvb_mux_set_networkname(tdmi, networkname);
-      break;
+  while(llen > 2) {
+    dtag = ptr[0];
+    dlen = ptr[1];
+
+    switch(dtag) {
+      case DVB_DESC_NETWORK_NAME:
+        if(dvb_get_string(netname, sizeof(netname), ptr+2, dlen, NULL, NULL))
+          return -1;
+        break;
     }
 
-    ptr += tlen;
-    len -= tlen;
-    ntl -= tlen;
+    ptr  += dlen + 2;
+    llen -= dlen + 2;
   }
-
-  if(len < 2)
+  if (llen)
     return -1;
 
-  ntl =  ((ptr[0] & 0xf) << 8) | ptr[1];
+  /* Transport loop */
+  llen = ((ptr[0] & 0xf) << 8) | ptr[1];
   ptr += 2;
   len -= 2;
-
-  if(len < ntl)
+  if (llen > len)
     return -1;
-
   while(len >= 6) {
     tsid = ( ptr[0]        << 8) | ptr[1];
     onid = ( ptr[2]        << 8) | ptr[3];
-    ntl =  ((ptr[4] & 0xf) << 8) | ptr[5];
+    llen = ((ptr[4] & 0xf) << 8) | ptr[5];
 
     ptr += 6;
-    len -= 6;
-    if(ntl > len)
-      break;
+    len -= llen + 6;
+    if(len < 0)
+      return -1;
 
-    while(ntl > 2) {
-      tag = *ptr++;
-      tlen = *ptr++;
-      len -= 2;
-      ntl -= 2;
+    while(llen > 2) {
+      dtag = ptr[0];
+      dlen = ptr[1];
 
-      switch(tag) {
-      case DVB_DESC_SAT:
-        if(tdmi->tdmi_adapter->tda_type == FE_QPSK)
-          dvb_table_sat_delivery(tdmi, ptr, tlen, tsid, onid);
-        break;
-      case DVB_DESC_CABLE:
-        if(tdmi->tdmi_adapter->tda_type == FE_QAM)
-          dvb_table_cable_delivery(tdmi, ptr, tlen, tsid, onid);
-        break;
-      case DVB_DESC_TERR:
-        if(tdmi->tdmi_adapter->tda_type == FE_OFDM)
-          dvb_table_terr_delivery(tdmi, ptr, tlen, tsid, onid);
-        break;
-      case DVB_DESC_LOCAL_CHAN:
-        dvb_table_local_channel(tdmi, ptr, tlen, tsid, onid);
-        break;
+      switch(dtag) {
+        case DVB_DESC_SAT:
+          if(tdmi->tdmi_adapter->tda_type == FE_QPSK)
+            dvb_table_sat_delivery(tdmi, ptr+2, dlen, tsid, onid, netname);
+          break;
+        case DVB_DESC_CABLE:
+          if(tdmi->tdmi_adapter->tda_type == FE_QAM)
+            dvb_table_cable_delivery(tdmi, ptr+2, dlen, tsid, onid, netname);
+          break;
+        case DVB_DESC_TERR:
+          if(tdmi->tdmi_adapter->tda_type == FE_OFDM)
+            dvb_table_terr_delivery(tdmi, ptr+2, dlen, tsid, onid, netname);
+          break;
+        case DVB_DESC_LOCAL_CHAN:
+          dvb_table_local_channel(tdmi, ptr+2, dlen, tsid, onid);
+          break;
       }
 
-      ptr += tlen;
-      len -= tlen;
-      ntl -= tlen;
+      llen -= dlen + 2;
+      ptr  += dlen + 2;
     }
+    if (llen)
+      return -1;
   }
   return 0;
 }
