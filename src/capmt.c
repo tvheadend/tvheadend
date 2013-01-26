@@ -264,6 +264,14 @@ capmt_send_msg(capmt_t *capmt, int sid, const uint8_t *buf, size_t len)
       tvhlog(LOG_DEBUG, "capmt", "%s: added: i=%d", __FUNCTION__, i);
     }
 
+    // check if the socket is still alive by writing 0 bytes
+    if (capmt->capmt_sock[i] > 0) {
+      if (write(capmt->capmt_sock[i], NULL, 0) < 0)
+        capmt->capmt_sock[i] = 0;
+      else if (found)
+        return 0;
+    }
+
     // opening socket and sending
     if (capmt->capmt_sock[i] == 0) {
       capmt->capmt_sock[i] = tvh_socket(AF_LOCAL, SOCK_STREAM, 0);
@@ -663,7 +671,6 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
   capmt_t *capmt = ct->ct_capmt;
   int adapter_num = t->s_dvb_mux_instance->tdmi_adapter->tda_adapter_num;
   int total_caids = 0, current_caid = 0;
-  int i;
 
   caid_t *c;
 
@@ -844,17 +851,7 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
           buf[9] = pmtversion;
           pmtversion = (pmtversion + 1) & 0x1F;
 
-          int found = 0;
-          if (capmt->capmt_oscam) {
-            for (i = 0; i < MAX_SOCKETS; i++) {
-              if (capmt->sids[i] == sid) {
-                found = 1;
-                break;
-              }
-            }
-          }
-          if ((capmt->capmt_oscam && !found) || !capmt->capmt_oscam)
-            capmt_send_msg(capmt, sid, buf, pos);
+          capmt_send_msg(capmt, sid, buf, pos);
           break;
         }
       default:
