@@ -53,6 +53,14 @@ struct th_dvb_mux_instance_tree dvb_muxes;
 static void *dvb_adapter_input_dvr(void *aux);
 static void tda_init(th_dvb_adapter_t *tda);
 
+/**
+ * Adapters that are known to have SNR support
+ */
+static const char* dvb_adapter_snr_whitelist[] = {
+  "Sony CXD2820R",
+  "stv090x",
+  NULL
+};
 
 /**
  *
@@ -503,6 +511,7 @@ tda_add(int adapter_num)
   th_dvb_adapter_t *tda;
   struct dvb_frontend_info fe_info;
   DIR *dirp;
+  const char **str;
 
   /* Check valid adapter */
   snprintf(path, sizeof(path), "/dev/dvb/adapter%d", adapter_num);
@@ -591,9 +600,14 @@ tda_add(int adapter_num)
     dvb_adapter_checkspeed(tda);
 
     /* Adapters known to provide valid SNR */
-    if(strcasestr(fe_info.name, "Sony CXD2820R") ||
-       strcasestr(fe_info.name, "stv090x"))
-      tda->tda_snr_valid = 1;
+    str = dvb_adapter_snr_whitelist;
+    while (*str) {
+      if (strcasestr(fe_info.name, *str)) {
+        tda->tda_snr_valid = 1;
+        break;
+      }
+      str++;
+    }
 
     /* Store */
     tvhlog(LOG_INFO, "dvb",
