@@ -451,6 +451,7 @@ access_set_prefix(access_entry_t *ae, const char *prefix)
 static access_entry_t *
 access_entry_find(const char *id, int create)
 {
+  access_ipmask_t *ai;
   access_entry_t *ae;
   char buf[20];
   static int tally;
@@ -478,6 +479,12 @@ access_entry_find(const char *id, int create)
   ae->ae_password = strdup("*");
   ae->ae_comment = strdup("New entry");
   TAILQ_INIT(&ae->ae_ipmasks);
+  ai = calloc(1, sizeof(access_ipmask_t));
+  ai->ai_ipv6 = 1;
+  TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
+  ai = calloc(1, sizeof(access_ipmask_t));
+  ai->ai_ipv6 = 0;
+  TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
   TAILQ_INSERT_TAIL(&access_entries, ae, ae_link);
   return ae;
 }
