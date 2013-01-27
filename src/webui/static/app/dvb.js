@@ -1163,9 +1163,9 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 	var confreader = new Ext.data.JsonReader({
 		root : 'dvbadapters'
 	}, [ 'name', 'enabled', 'automux', 'skip_initialscan', 'idlescan', 'diseqcversion',
-		'diseqcrepeats', 'qmon', 'skip_checksubscr', 
-		'poweroff', 'sidtochan', 'nitoid', 'extrapriority',
-		,'disable_pmt_monitor', 'full_mux_rx', 'idleclose', 'grace_period' ]);
+		'diseqcrepeats', 'qmon', 'skip_checksubscr', 'poweroff', 'rotor_lat',
+		'rotor_lng', 'rotor_delay', 'sidtochan', 'nitoid', 'extrapriority',
+		'disable_pmt_monitor', 'full_mux_rx', 'idleclose', 'grace_period' ]);
 
 	function saveConfForm() {
 		confform.getForm().submit({
@@ -1273,6 +1273,33 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 			name : 'poweroff'
 		});
 		items.push(v);
+
+		v = new Ext.form.NumberField({
+			fieldLabel : 'Rotor Latitude',
+			name : 'rotor_lat',
+			minValue : -90, 
+			maxValue : 90, 
+			decimalPrecision : 4,
+			width : 75 
+		});
+		items.push(v);
+
+		v = new Ext.form.NumberField({
+			fieldLabel : 'Rotor Longitude',
+			name : 'rotor_lng',
+			minValue : -180, 
+			maxValue : 180, 
+			decimalPrecision : 4,
+			width : 75 
+		});
+		items.push(v);
+		
+		v = new Ext.form.NumberField({
+			fieldLabel : 'Rotor Delay',
+			name : 'rotor_delay',
+			width : 50
+		});
+		items.push(v);
 	}
 
 	var confform = new Ext.FormPanel({
@@ -1376,10 +1403,20 @@ tvheadend.dvb_dummy = function(title) {
 	});
 }
 
+Ext.apply(Ext.form.VTypes, {
+  rotorPos: function(val, field) {
+    if (isNaN(val)) {
+      return false;
+    }
+    return (val >= -180.0 && val <= 180.0);
+  },
+  rotorPosText: 'Invalid rotor position (1 to 99 GOTOX, -180 to 180 USALS)'
+});
+
 /**
  *
  */
-tvheadend.dvb_satconf = function(adapterId, lnbStore) {
+tvheadend.dvb_satconf = function(adapterId, rotorTypeStore, lnbStore) {
 	var fm = Ext.form;
 
 	var cm = new Ext.grid.ColumnModel({
@@ -1397,6 +1434,27 @@ tvheadend.dvb_satconf = function(adapterId, lnbStore) {
 		editor : new fm.NumberField({
 			minValue : 0,
 			maxValue : 63
+		})
+	}, {
+		header : "Rotor type",
+		dataIndex : 'rotor_type',
+		width : 200,
+		editor : new fm.ComboBox({
+			store : rotorTypeStore,
+			editable : false,
+			allowBlank : false,
+			triggerAction : 'all',
+			mode : 'remote',
+			displayField : 'identifier',
+			valueField : 'identifier',
+			emptyText : 'Select Rotor type...'
+		})
+	}, {
+		header : "Rotor position",
+		dataIndex : 'rotor_pos',
+		editor : new fm.NumberField({
+			vtype : 'rotorPos',
+			decimalPrecision : 1 
 		})
 	}, {
 		header : "LNB type",
@@ -1419,7 +1477,7 @@ tvheadend.dvb_satconf = function(adapterId, lnbStore) {
 		editor : new fm.TextField()
 	} ]});
 
-	var rec = Ext.data.Record.create([ 'name', 'port', 'comment', 'lnb' ]);
+	var rec = Ext.data.Record.create([ 'name', 'rotor_type', 'rotor_pos', 'port', 'lnb', 'comment' ]);
 
 	return new tvheadend.tableEditor('Satellite config', 'dvbsatconf/'
 		+ adapterId, cm, rec, null, null, null);
@@ -1431,6 +1489,13 @@ tvheadend.dvb_satconf = function(adapterId, lnbStore) {
 tvheadend.dvb_adapter = function(data) {
 
 	if (data.satConf) {
+		var rotorTypeStore = new Ext.data.JsonStore({
+			root : 'entries',
+			autoload : true,
+			fields : [ 'identifier' ],
+			url : 'dvb/rotor_types'
+		});
+
 		var lnbStore = new Ext.data.JsonStore({
 			root : 'entries',
 			autoload : true,
@@ -1455,7 +1520,7 @@ tvheadend.dvb_adapter = function(data) {
 		new tvheadend.dvb_services(data, satConfStore) ];
 
 	if (data.satConf) items.push(new tvheadend.dvb_satconf(data.identifier,
-		lnbStore));
+		rotorTypeStore, lnbStore));
 
 	var panel = new Ext.TabPanel({
 		border : false,
