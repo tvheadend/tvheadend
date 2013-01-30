@@ -92,6 +92,15 @@ rawts_service_quality(service_t *t)
   return 100;
 }
 
+/**
+ *
+ */
+static int
+rawts_service_is_enabled(service_t *t)
+{
+  return 1;
+}
+
 
 /**
  * Generate a descriptive name for the source
@@ -133,6 +142,7 @@ rawts_service_add(rawts_t *rt, uint16_t sid, int pmt_pid)
   t->s_config_save = rawts_service_save;
   t->s_setsourceinfo = rawts_service_setsourceinfo;
   t->s_quality_index = rawts_service_quality;
+  t->s_is_enabled = rawts_service_is_enabled;
 
   t->s_svcname = strdup(tmp);
 
