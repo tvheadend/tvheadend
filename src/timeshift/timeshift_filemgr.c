@@ -31,6 +31,7 @@
 #include "timeshift/private.h"
 #include "config2.h"
 #include "settings.h"
+#include "atomic.h"
 
 static int                   timeshift_reaper_run;
 static timeshift_file_list_t timeshift_reaper_list;
@@ -38,7 +39,6 @@ static pthread_t             timeshift_reaper_thread;
 static pthread_mutex_t       timeshift_reaper_lock;
 static pthread_cond_t        timeshift_reaper_cond;
 
-pthread_mutex_t              timeshift_size_lock;
 size_t                       timeshift_total_size;
 
 /* **************************************************************************
@@ -75,10 +75,7 @@ static void* timeshift_reaper_callback ( void *p )
       if (errno != ENOTEMPTY)
         tvhlog(LOG_ERR, "timeshift", "failed to remove %s [e=%s]",
                dpath, strerror(errno));
-    pthread_mutex_lock(&timeshift_size_lock);
-    assert(tsf->size <= timeshift_total_size);
-    timeshift_total_size -= tsf->size;
-    pthread_mutex_unlock(&timeshift_size_lock);
+    atomic_add_u64(&timeshift_total_size, -tsf->size);
 
     /* Free memory */
     while ((ti = TAILQ_FIRST(&tsf->iframes))) {
@@ -151,9 +148,7 @@ void timeshift_filemgr_close ( timeshift_file_t *tsf )
   if (r > 0)
   {
     tsf->size += r;
-    pthread_mutex_lock(&timeshift_size_lock);
-    timeshift_total_size += r;
-    pthread_mutex_unlock(&timeshift_size_lock);
+    atomic_add_u64(&timeshift_total_size, r);
   }
   close(tsf->fd);
   tsf->fd = -1;
@@ -230,12 +225,11 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
     }
 
     /* Check size */
-    pthread_mutex_lock(&timeshift_size_lock);
-    if (!timeshift_unlimited_size && timeshift_total_size >= timeshift_max_size) {
+    if (!timeshift_unlimited_size &&
+        atomic_add_u64(&timeshift_total_size, 0) >= timeshift_max_size) {
       tvhlog(LOG_DEBUG, "timshift", "ts %d buffer full", ts->id);
       ts->full = 1;
     }
-    pthread_mutex_unlock(&timeshift_size_lock);
       
     /* Create new file */
     tsf_tmp = NULL;
@@ -332,7 +326,6 @@ void timeshift_filemgr_init ( void )
 
   /* Size processing */
   timeshift_total_size = 0;
-  pthread_mutex_init(&timeshift_size_lock, NULL);
 
   /* Start the reaper thread */
   timeshift_reaper_run = 1;

@@ -20,6 +20,7 @@
 #include "streaming.h"
 #include "timeshift.h"
 #include "timeshift/private.h"
+#include "atomic.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -224,9 +225,7 @@ static inline ssize_t _process_msg0
   if (err > 0) {
     tsf->last  = sm->sm_time;
     tsf->size += err;
-    pthread_mutex_lock(&timeshift_size_lock);
-    timeshift_total_size += err;
-    pthread_mutex_unlock(&timeshift_size_lock);
+    atomic_add_u64(&timeshift_total_size, err);
   }
   return err;
 }

@@ -29,3 +29,9 @@ atomic_exchange(volatile int *ptr, int new)
 {
   return  __sync_lock_test_and_set(ptr, new);
 }
+
+static inline uint64_t
+atomic_add_u64(volatile uint64_t *ptr, uint64_t incr)
+{
+  return __sync_fetch_and_add(ptr, incr);
+}
