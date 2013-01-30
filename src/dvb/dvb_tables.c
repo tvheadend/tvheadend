@@ -42,6 +42,13 @@
 #include "notify.h"
 #include "cwc.h"
 
+#if TDT_TRACE
+#define TRACE(_pre, _fmt, ...)\
+tvhlog(LOG_DEBUG, "tdt-"_pre, _fmt, __VA_ARGS__)
+#else
+#define TRACE(_pre, _fmt, ...) (void)0
+#endif
+
 
 /**
  *
@@ -321,6 +328,9 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   char provider[256];
   char chname0[256], *chname;
   uint8_t stype;
+#if TDT_TRACE
+  uint8_t running_status;
+#endif
   int l;
 
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
@@ -341,6 +351,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
         break;
     if (!tdmi) return -1;
   }
+  TRACE("sdt", "onid %04X tsid %04X", onid, tsid);
 
   //  version                     = ptr[2] >> 1 & 0x1f;
   //  section_number              = ptr[3];
@@ -360,9 +371,13 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     int save = 0;
     service_id                = ptr[0] << 8 | ptr[1];
     //    reserved                  = ptr[2];
-    //    running_status            = (ptr[3] >> 5) & 0x7;
+#if TDT_TRACE
+    running_status            = (ptr[3] >> 5) & 0x7;
+#endif
     free_ca_mode              = (ptr[3] >> 4) & 0x1;
     dllen                     = ((ptr[3] & 0x0f) << 8) | ptr[4];
+    TRACE("sdt", "  sid %04X running %d free_ca %d",
+          service_id, running_status, free_ca_mode);
 
     len -= 5;
     ptr += 5;
@@ -393,6 +408,8 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
           if(dvb_desc_service(ptr, dlen, &stype,
                               provider, sizeof(provider),
                               chname0, sizeof(chname0)) == 0) {
+            TRACE("sdt", "    stype = %d, provider = %s, name = %s",
+                  stype, provider, chname0);
             chname = chname0;
             /* Some providers insert spaces.
                Clean up that (both heading and trailing) */
@@ -652,6 +669,7 @@ dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     return -1;
 
   dmc.dmc_fe_params.frequency = freq * 100;
+  TRACE("nit", "  dvb-c frequency %d", dmc.dmc_fe_params.frequency);
 
   symrate =
     bcdtoint(ptr[7]) * 100000 + bcdtoint(ptr[8]) * 1000 + 
@@ -695,6 +713,7 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     bcdtoint(ptr[0]) * 1000000 + bcdtoint(ptr[1]) * 10000 + 
     bcdtoint(ptr[2]) * 100     + bcdtoint(ptr[3]);
   dmc.dmc_fe_params.frequency = freq * 10;
+  TRACE("nit", "  dvb-s frequency %d", dmc.dmc_fe_params.frequency);
 
   if(!freq)
     return -1;
@@ -782,6 +801,7 @@ dvb_table_terr_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     return -1;
 
   dmc.dmc_fe_params.frequency = freq;
+  TRACE("nit", "  dvb-t frequency %d", dmc.dmc_fe_params.frequency);
   dmc.dmc_fe_params.u.ofdm.bandwidth = bandwidth_tab[(ptr[4] & 0xe0) >> 5];
   dmc.dmc_fe_params.u.ofdm.constellation=constellation_tab[(ptr[5] & 0xc0) >> 6];
   dmc.dmc_fe_params.u.ofdm.hierarchy_information=hierarchy_info_tab[(ptr[5] & 0x38) >> 3];
@@ -895,6 +915,9 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     tsid = ( ptr[0]        << 8) | ptr[1];
     onid = ( ptr[2]        << 8) | ptr[3];
     llen = ((ptr[4] & 0xf) << 8) | ptr[5];
+
+    TRACE("nit", "netw %d/%s onid %04X tsid %04X",
+              network_id, netname, onid, tsid);
 
     ptr += 6;
     len -= llen + 6;
