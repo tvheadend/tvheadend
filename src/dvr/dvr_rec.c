@@ -32,6 +32,7 @@
 #include "service.h"
 #include "plumbing/tsfix.h"
 #include "plumbing/globalheaders.h"
+#include "htsp_server.h"
 
 #include "muxer.h"
 
@@ -465,11 +466,15 @@ dvr_thread(void *aux)
       }
 
       if(!started) {
-	pthread_mutex_lock(&global_lock);
-	dvr_rec_set_state(de, DVR_RS_WAIT_PROGRAM_START, 0);
-	if(dvr_rec_start(de, sm->sm_data) == 0)
-	  started = 1;
-	pthread_mutex_unlock(&global_lock);
+        pthread_mutex_lock(&global_lock);
+        dvr_rec_set_state(de, DVR_RS_WAIT_PROGRAM_START, 0);
+        if(dvr_rec_start(de, sm->sm_data) == 0) {
+          started = 1;
+          dvr_entry_notify(de);
+          htsp_dvr_entry_update(de);
+          dvr_entry_save(de);
+        }
+        pthread_mutex_unlock(&global_lock);
       } 
       break;
 
