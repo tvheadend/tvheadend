@@ -346,6 +346,7 @@ channel_save(channel_t *ch)
 int
 channel_rename(channel_t *ch, const char *newname)
 {
+  dvr_entry_t *de;
   service_t *t;
 
   lock_assert(&global_lock);
@@ -364,6 +365,11 @@ channel_rename(channel_t *ch, const char *newname)
 
   LIST_FOREACH(t, &ch->ch_services, s_ch_link)
     t->s_config_save(t);
+  
+  LIST_FOREACH(de, &ch->ch_dvrs, de_channel_link) {
+    dvr_entry_save(de);
+    dvr_entry_notify(de);
+  }
 
   channel_save(ch);
   htsp_channel_update(ch);

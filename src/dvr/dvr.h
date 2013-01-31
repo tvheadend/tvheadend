@@ -200,8 +200,7 @@ typedef struct dvr_entry {
 
 } dvr_entry_t;
 
-#define DVR_CH_NAME(e) ((e)->de_channel_name == NULL ? (e)-> de_channel->ch_name : (e)->de_channel_name)
-
+#define DVR_CH_NAME(e) ((e)->de_channel == NULL ? (e)->de_channel_name : (e)-> de_channel->ch_name)
 
 /**
  * Autorec entry

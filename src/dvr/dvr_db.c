@@ -240,10 +240,12 @@ dvr_entry_link(dvr_entry_t *de)
     gtimer_arm_abs(&de->de_timer, dvr_timer_expire, de, 
 	       de->de_stop + cfg->dvr_retention_days * 86400);
 
-  } else {
+  } else if (de->de_channel) {
     de->de_sched_state = DVR_SCHEDULED;
 
     gtimer_arm_abs(&de->de_timer, dvr_timer_start_recording, de, preamble);
+  } else {
+    de->de_sched_state = DVR_NOSTATE;
   }
   htsp_dvr_entry_add(de);
 }
@@ -473,7 +475,7 @@ static void
 dvr_db_load_one(htsmsg_t *c, int id)
 {
   dvr_entry_t *de;
-  const char *s, *creator;
+  const char *chname, *s, *creator;
   channel_t *ch;
   uint32_t start, stop, bcid;
   int d;
@@ -485,11 +487,10 @@ dvr_db_load_one(htsmsg_t *c, int id)
   if(htsmsg_get_u32(c, "stop", &stop))
     return;
 
-  if((s = htsmsg_get_str(c, "channel")) == NULL)
+  if((chname = htsmsg_get_str(c, "channel")) == NULL)
     return;
-  if((ch = channel_find_by_name(s, 0, 1)) == NULL)
-    return;
-
+  ch = channel_find_by_name(chname, 0, 0);
+    
   s = htsmsg_get_str(c, "config_name");
   cfg = dvr_config_find_by_name_default(s);
 
@@ -504,8 +505,12 @@ dvr_db_load_one(htsmsg_t *c, int id)
 
   de_tally = MAX(id, de_tally);
 
-  de->de_channel = ch;
-  LIST_INSERT_HEAD(&de->de_channel->ch_dvrs, de, de_channel_link);
+  if (ch) {
+    de->de_channel = ch;
+    LIST_INSERT_HEAD(&de->de_channel->ch_dvrs, de, de_channel_link);
+  } else {
+    de->de_channel_name = strdup(chname);
+  }
 
   de->de_start   = start;
   de->de_stop    = stop;
@@ -515,7 +520,7 @@ dvr_db_load_one(htsmsg_t *c, int id)
   de->de_pri     = dvr_pri2val(htsmsg_get_str(c, "pri"));
   
   if(htsmsg_get_s32(c, "start_extra", &d))
-    if (ch->ch_dvr_extra_time_pre)
+    if (ch && ch->ch_dvr_extra_time_pre)
       de->de_start_extra = ch->ch_dvr_extra_time_pre;
     else
       de->de_start_extra = cfg->dvr_extra_time_pre;
@@ -523,7 +528,7 @@ dvr_db_load_one(htsmsg_t *c, int id)
     de->de_start_extra = d;
 
   if(htsmsg_get_s32(c, "stop_extra", &d))
-    if (ch->ch_dvr_extra_time_post)
+    if (ch && ch->ch_dvr_extra_time_post)
       de->de_stop_extra = ch->ch_dvr_extra_time_post;
     else
       de->de_stop_extra = cfg->dvr_extra_time_post;
