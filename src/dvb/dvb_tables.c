@@ -771,7 +771,7 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
 #endif
 
-  dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, NULL,
+  dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, netname,
 		 "automatic mux discovery", 1, 1, NULL, tdmi->tdmi_conf.dmc_satconf,
      tdmi->tdmi_adapter->tda_autodiscovery);
   
