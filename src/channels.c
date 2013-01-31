@@ -114,7 +114,6 @@ chidcmp(const channel_t *a, const channel_t *b)
   return a->ch_id - b->ch_id;
 }
 
-
 /**
  *
  */

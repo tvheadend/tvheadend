@@ -557,7 +557,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   dvr_config_t *cfg;
 
   htsmsg_add_u32(out, "id", de->de_id);
-  htsmsg_add_u32(out, "channel", de->de_channel->ch_id);
+  if (de->de_channel)
+    htsmsg_add_u32(out, "channel", de->de_channel->ch_id);
 
   htsmsg_add_s64(out, "start", de->de_start);
   htsmsg_add_s64(out, "stop", de->de_stop);
