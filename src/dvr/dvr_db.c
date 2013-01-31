@@ -849,6 +849,8 @@ dvr_entry_find_by_event(epg_broadcast_t *e)
 {
   dvr_entry_t *de;
 
+  if(!e->channel) return NULL;
+
   LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link)
     if(de->de_bcast == e) return de;
   return NULL;
