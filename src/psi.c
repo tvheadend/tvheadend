@@ -89,15 +89,15 @@ psi_section_reassemble(psi_section_t *ps, const uint8_t *tsb, int crc,
     int len = tsb[off++];
     if(len > 0) {
       if(len > 188 - off) {
-	ps->ps_lock = 0;
-	return;
+	      ps->ps_lock = 0;
+	      return;
       }
       psi_section_reassemble0(ps, tsb + off, len, 0, crc, cb, opaque);
       off += len;
     }
   }
 
-  while(off < 188 && tsb[off] != 0xff) {
+  while(off < 188) {
     r = psi_section_reassemble0(ps, tsb + off, 188 - off, pusi, crc,
 				cb, opaque);
     if(r < 0) {
