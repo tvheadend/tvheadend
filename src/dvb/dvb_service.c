@@ -143,7 +143,7 @@ dvb_service_is_enabled(service_t *t)
 {
   th_dvb_mux_instance_t *tdmi = t->s_dvb_mux_instance;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-  return tda->tda_enabled && tdmi->tdmi_enabled && t->s_enabled;
+  return tda->tda_enabled && tdmi->tdmi_enabled && t->s_enabled && t->s_pmt_pid;
 }
 
 
@@ -416,12 +416,18 @@ dvb_service_find2(th_dvb_mux_instance_t *tdmi, uint16_t sid, int pmt_pid,
 
   LIST_FOREACH(t, &tdmi->tdmi_transports, s_group_link) {
     if(t->s_dvb_service_id == sid)
-      return t;
+      break;
+  }
+
+  /* Existing - updated PMT_PID if required */
+  if (t) {
+    if (pmt_pid && pmt_pid != t->s_pmt_pid) {
+      t->s_pmt_pid = pmt_pid;
+      *save = 1;
+    }
+    return t;
   }
   
-  if(pmt_pid == 0)
-    return NULL;
-
   if(identifier == NULL) {
     snprintf(tmp, sizeof(tmp), "%s_%04x", tdmi->tdmi_identifier, sid);
     identifier = tmp;
