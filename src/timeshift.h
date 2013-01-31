@@ -25,10 +25,8 @@ extern char     *timeshift_path;
 extern int       timeshift_unlimited_period;
 extern uint32_t  timeshift_max_period;
 extern int       timeshift_unlimited_size;
-extern size_t    timeshift_max_size;
-
-extern size_t          timeshift_total_size;
-extern pthread_mutex_t timeshift_size_lock;
+extern uint64_t  timeshift_max_size;
+extern uint64_t  timeshift_total_size;
 
 typedef struct timeshift_status
 {

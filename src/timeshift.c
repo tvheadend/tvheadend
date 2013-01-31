@@ -41,7 +41,7 @@ char     *timeshift_path;
 int       timeshift_unlimited_period;
 uint32_t  timeshift_max_period;
 int       timeshift_unlimited_size;
-size_t    timeshift_max_size;
+uint64_t  timeshift_max_size;
 
 /*
  * Intialise global file manager

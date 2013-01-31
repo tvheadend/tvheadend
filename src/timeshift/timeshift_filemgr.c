@@ -39,7 +39,7 @@ static pthread_t             timeshift_reaper_thread;
 static pthread_mutex_t       timeshift_reaper_lock;
 static pthread_cond_t        timeshift_reaper_cond;
 
-size_t                       timeshift_total_size;
+uint64_t                     timeshift_total_size;
 
 /* **************************************************************************
  * File reaper thread
