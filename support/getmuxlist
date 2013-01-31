@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+# Fetch DVB scan files
+#
+
+# Arguments
+DIR=$1
+[ -z "$DIR" ] && DIR=$(dirname $0)/../data/dvb-scan
+
+# Update
+if [ -d ${DIR}/.git ]; then
+  (cd ${DIR}; git pull) &> /dev/null
+
+# Fetch
+else
+  rm -rf ${DIR} &> /dev/null
+  URL=git://linuxtv.org/dtv-scan-tables.git
+  git clone $URL ${DIR} &> /dev/null
+fi

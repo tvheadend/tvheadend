@@ -175,16 +175,10 @@ fi
 #
 if enabled linuxdvb && enabled dvbscan; then
   printf "${TAB}" "fetching dvb-scan files ..."
-  if [ -d ${ROOTDIR}/data/dvb-scan/.git ]; then
-    (cd ${ROOTDIR}/data/dvb-scan; git pull) &> /dev/null
-  else
-    rm -rf ${ROOTDIR}/data/dvb-scan &> /dev/null
-    URL=git://linuxtv.org/dtv-scan-tables.git
-    git clone $URL ${ROOTDIR}/data/dvb-scan &> /dev/null
-    if [ $? -ne 0 ]; then
-      echo "fail"
-      die "Failed to fetch dvb-scan data (use --disable-dvbscan)"
-    fi
+  ${ROOTDIR}/support/getmuxlist
+  if [ $? -ne 0 ]; then
+    echo "fail"
+    die "Failed to fetch dvb-scan data (use --disable-dvbscan)"
   fi
   echo "ok"
 fi
