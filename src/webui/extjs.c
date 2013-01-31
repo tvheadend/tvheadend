@@ -1389,8 +1389,8 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque,
 
     m = htsmsg_create_map();
 
+    htsmsg_add_str(m, "channel", DVR_CH_NAME(de));
     if(de->de_channel != NULL) {
-      htsmsg_add_str(m, "channel", de->de_channel->ch_name);
       if (de->de_channel->ch_icon)
         htsmsg_add_imageurl(m, "chicon", "imagecache/%d",
                             de->de_channel->ch_icon);

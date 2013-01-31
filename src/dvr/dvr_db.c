@@ -174,7 +174,7 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
 
   if(cfg->dvr_flags & DVR_CHANNEL_IN_TITLE)
-    snprintf(output, outlen, "%s-", de->de_channel->ch_name);
+    snprintf(output, outlen, "%s-", DVR_CH_NAME(de));
   else
     output[0] = 0;
   
@@ -335,7 +335,7 @@ static dvr_entry_t *_dvr_entry_create (
 
   tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\" starting at %s, "
 	 "scheduled for recording by \"%s\"",
-	 lang_str_get(de->de_title, NULL), de->de_channel->ch_name, tbuf, creator);
+	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de), tbuf, creator);
 	 
   dvrdb_changed();
   dvr_entry_save(de);
@@ -458,6 +458,7 @@ dvr_entry_remove(dvr_entry_t *de)
   LIST_REMOVE(de, de_channel_link);
   LIST_REMOVE(de, de_global_link);
   de->de_channel = NULL;
+  free(de->de_channel_name);
 
   dvrdb_changed();
 
@@ -486,7 +487,7 @@ dvr_db_load_one(htsmsg_t *c, int id)
 
   if((s = htsmsg_get_str(c, "channel")) == NULL)
     return;
-  if((ch = channel_find_by_name(s, 0, 0)) == NULL)
+  if((ch = channel_find_by_name(s, 0, 1)) == NULL)
     return;
 
   s = htsmsg_get_str(c, "config_name");
@@ -596,7 +597,7 @@ dvr_entry_save(dvr_entry_t *de)
 
   lock_assert(&global_lock);
 
-  htsmsg_add_str(m, "channel", de->de_channel->ch_name);
+  htsmsg_add_str(m, "channel", DVR_CH_NAME(de));
   htsmsg_add_u32(m, "start", de->de_start);
   htsmsg_add_u32(m, "stop", de->de_stop);
  
@@ -715,7 +716,7 @@ static dvr_entry_t *_dvr_entry_update
     htsp_dvr_entry_update(de);
     dvr_entry_notify(de);
     tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": Updated Timer",
-           lang_str_get(de->de_title, NULL), de->de_channel->ch_name);
+           lang_str_get(de->de_title, NULL), DVR_CH_NAME(de));
   }
 
   return de;
@@ -781,7 +782,7 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode)
 
   tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": "
 	 "End of program: %s",
-	 lang_str_get(de->de_title, NULL), de->de_channel->ch_name,
+	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
 	 dvr_entry_status(de));
 
   dvr_entry_save(de);
@@ -816,7 +817,7 @@ dvr_timer_start_recording(void *aux)
   de->de_rec_state = DVR_RS_PENDING;
 
   tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\" recorder starting",
-	 lang_str_get(de->de_title, NULL), de->de_channel->ch_name);
+	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de));
 
   dvr_entry_notify(de);
   htsp_dvr_entry_update(de);
@@ -931,8 +932,6 @@ dvr_entry_purge(dvr_entry_t *de)
 {
   if(de->de_sched_state == DVR_RECORDING)
     dvr_stop_recording(de, SM_CODE_SOURCE_DELETED);
-
-  dvr_entry_remove(de);
 }
 
 /**
@@ -943,8 +942,12 @@ dvr_destroy_by_channel(channel_t *ch)
 {
   dvr_entry_t *de;
 
-  while((de = LIST_FIRST(&ch->ch_dvrs)) != NULL)
+  while((de = LIST_FIRST(&ch->ch_dvrs)) != NULL) {
+    LIST_REMOVE(de, de_channel_link);
+    de->de_channel = NULL;
+    de->de_channel_name = strdup(ch->ch_name);
     dvr_entry_purge(de);
+  }
 }
 
 /**
