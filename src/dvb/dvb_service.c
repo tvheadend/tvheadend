@@ -276,7 +276,6 @@ static void
 dvb_service_setsourceinfo(service_t *t, struct source_info *si)
 {
   dvb_mux_t *dm = t->s_dvb_mux;
-  char buf[100];
 
   memset(si, 0, sizeof(struct source_info));
 
@@ -287,8 +286,7 @@ dvb_service_setsourceinfo(service_t *t, struct source_info *si)
   if(dm->dm_network_name != NULL)
     si->si_network = strdup(dm->dm_network_name);
 
-  dvb_mux_nicename(buf, sizeof(buf), dm);
-  si->si_mux = strdup(buf);
+  si->si_mux = strdup(dvb_mux_nicename(dm));
 
   if(t->s_provider != NULL)
     si->si_provider = strdup(t->s_provider);
@@ -364,7 +362,6 @@ dvb_service_find2(dvb_mux_t *dm, uint16_t sid, int pmt_pid,
 		   const char *uuid, int *save)
 {
   service_t *t;
-  char buf[200];
 
   lock_assert(&global_lock);
 
@@ -376,8 +373,8 @@ dvb_service_find2(dvb_mux_t *dm, uint16_t sid, int pmt_pid,
   if(pmt_pid == 0)
     return NULL;
 
-  dvb_mux_nicename(buf, sizeof(buf), dm);
-  tvhlog(LOG_DEBUG, "dvb", "Add service \"0x%x\" on \"%s\"", sid, buf);
+  tvhlog(LOG_DEBUG, "dvb", "Add service \"0x%x\" on \"%s\"", sid,
+         dvb_mux_nicename(dm));
 
   t = service_create(uuid, S_MPEG_TS);
   if (save) *save = 1;
@@ -396,9 +393,9 @@ dvb_service_find2(dvb_mux_t *dm, uint16_t sid, int pmt_pid,
   t->s_dvb_mux = dm;
   LIST_INSERT_HEAD(&dm->dm_services, t, s_group_link);
 
-  pthread_mutex_lock(&t->s_stream_mutex); 
+  pthread_mutex_lock(&t->s_stream_mutex);
   service_make_nicename(t);
-  pthread_mutex_unlock(&t->s_stream_mutex); 
+  pthread_mutex_unlock(&t->s_stream_mutex);
   return t;
 }
 
@@ -434,8 +431,7 @@ dvb_service_serialize(service_t *s, int full)
 
   htsmsg_add_str(m, "network", dm->dm_network_name ?: "");
 
-  dvb_mux_nicefreq(buf, sizeof(buf), dm);
-  htsmsg_add_str(m, "mux", buf);
+  htsmsg_add_str(m, "mux", dvb_mux_nicefreq(dm));
 
   if(s->s_ch != NULL)
     htsmsg_add_str(m, "channelname", s->s_ch->ch_name);

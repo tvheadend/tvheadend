@@ -170,7 +170,7 @@ build_record_v4l(service_t *t)
 {
   htsmsg_t *r = htsmsg_create_map();
 
-  htsmsg_add_str(r, "id", t->s_identifier);
+  //  htsmsg_add_str(r, "id", t->s_identifier); // XXX(dvbreorg)
 
   htsmsg_add_str(r, "channelname", t->s_ch ? t->s_ch->ch_name : "");
   htsmsg_add_u32(r, "frequency", t->s_v4l_frequency);

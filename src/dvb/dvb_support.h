@@ -79,10 +79,11 @@ const char *dvb_polarisation_to_str(int pol);
 const char *dvb_polarisation_to_str_long(int pol);
 th_dvb_adapter_t *dvb_adapter_find_by_identifier(const char *identifier);
 th_dvb_mux_instance_t *dvb_mux_find_by_identifier(const char *identifier);
-void dvb_mux_nicename(char *buf, size_t size, dvb_mux_t *tdmi);
 int dvb_mux_badness(th_dvb_mux_instance_t *tdmi);
 const char *dvb_mux_status(th_dvb_mux_instance_t *tdmi);
-void dvb_mux_nicefreq(char *buf, size_t size, const dvb_mux_t *dm);
+
+const char *dvb_mux_nicefreq(const dvb_mux_t *dm);
+const char *dvb_mux_nicename(const dvb_mux_t *dm);
 
 void atsc_utf16_to_utf8(uint8_t *src, int len, char *buf, int buflen);
 

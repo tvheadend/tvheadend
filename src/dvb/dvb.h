@@ -450,6 +450,8 @@ dvb_mux_t *dvb_mux_create(dvb_network_t *tda,
                           const char *logprefix, int enabled,
                           int initialscan, const char *uuid);
 
+int dvb_mux_tune(dvb_mux_t *dm, const char *reason, int weight);
+
 void dvb_mux_set_networkname(dvb_mux_t *dm, const char *name);
 
 void dvb_mux_set_tsid(dvb_mux_t *dm, uint16_t tsid);
@@ -490,10 +492,8 @@ dvb_mux_t *dvb_mux_find(dvb_network_t *dn, const char *netname, uint16_t onid,
 
 void dvb_mux_initial_scan_done(dvb_mux_t *dm);
 
-/**
- * DVB Transport (aka DVB service)
- */
-void dvb_tdmi_destroy(th_dvb_mux_instance_t *tdmi);
+int dvb_fe_tune_tdmi(th_dvb_mux_instance_t *tdmi);
+
 
 /**
  * DVB Transport (aka DVB service)
@@ -521,7 +521,6 @@ void dvb_service_notify_by_adapter(th_dvb_adapter_t *tda);
 /**
  * DVB Frontend
  */
-int dvb_fe_tune(dvb_mux_t *dm, const char *reason, int weight);
 
 //void dvb_fe_stop(th_dvb_adapter_t *tda, int retune);
 

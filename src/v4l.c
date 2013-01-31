@@ -289,19 +289,9 @@ v4l_service_save(service_t *t)
   pthread_mutex_unlock(&t->s_stream_mutex);
   
   hts_settings_save(m, "v4lservices/%s/%s",
-		    va->va_identifier, t->s_uuid);
+		    va->va_identifier, idnode_uuid_as_str(&t->s_id));
 
   htsmsg_destroy(m);
-}
-
-
-/**
- *
- */
-static int
-v4l_service_quality(service_t *t)
-{
-  return 100;
 }
 
 
@@ -349,7 +339,7 @@ v4l_service_find(v4l_adapter_t *va, const char *id, int create)
       return NULL;
 
     LIST_FOREACH(t, &va->va_services, s_group_link)
-      if(!strcmp(t->s_uuid, id))
+      if(!strcmp(idnode_uuid_as_str(&t->s_id), id))
 	return t;
   }
 
@@ -371,7 +361,6 @@ v4l_service_find(v4l_adapter_t *va, const char *id, int create)
   t->s_stop_feed     = v4l_service_stop;
   t->s_config_save   = v4l_service_save;
   t->s_setsourceinfo = v4l_service_setsourceinfo;
-  t->s_quality_index = v4l_service_quality;
   t->s_grace_period  = v4l_grace_period;
   t->s_iptv_fd = -1;
   t->s_v4l_adapter = va;

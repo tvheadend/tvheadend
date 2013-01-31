@@ -235,7 +235,7 @@ dvb_network_initial_scan(void *aux)
 
   while((dm = TAILQ_FIRST(&dn->dn_initial_scan_pending_queue)) != NULL) {
     assert(dm->dm_scan_status == DM_SCAN_PENDING);
-    if(dvb_fe_tune(dm, "initial scan", 1))
+    if(dvb_mux_tune(dm, "initial scan", 1))
       break;
     assert(dm->dm_scan_status == DM_SCAN_CURRENT);
   }
