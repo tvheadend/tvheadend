@@ -628,6 +628,6 @@ dvr_thread_epilog(dvr_entry_t *de)
   de->de_mux = NULL;
 
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
-  if(cfg->dvr_postproc)
+  if(cfg->dvr_postproc && de->de_filename)
     dvr_spawn_postproc(de,cfg->dvr_postproc);
 }
