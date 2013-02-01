@@ -59,7 +59,7 @@ static void tda_init(th_dvb_adapter_t *tda);
 static const char* dvb_adapter_snr_whitelist[] = {
   "Sony CXD2820R",
   "stv090x",
-  "TBS 6981",
+  "TurboSight",
   NULL
 };
 
