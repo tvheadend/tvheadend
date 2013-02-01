@@ -342,6 +342,8 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   tsid         = ptr[0] << 8 | ptr[1];
   onid         = ptr[5] << 8 | ptr[6];
   if (tableid == 0x42) {
+    dvb_mux_set_tsid(tdmi, tsid, 0);
+    dvb_mux_set_onid(tdmi, onid, 0);
     if(tdmi->tdmi_transport_stream_id != tsid || tdmi->tdmi_network_id != onid)
       return -1;
   } else {
@@ -504,6 +506,7 @@ dvb_pat_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   }
 
   tsid = (ptr[0] << 8) | ptr[1];
+  dvb_mux_set_tsid(tdmi, tsid, 0);
   if (tdmi->tdmi_transport_stream_id != tsid)
     return -1;
 
@@ -844,11 +847,11 @@ dvb_table_local_channel(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       t = dvb_service_find(tdmi, sid, 0, NULL);
       if(t != NULL) {
 
-	if(t->s_channel_number != chan) {
-	  t->s_channel_number = chan;
-	  t->s_config_save(t);
-	  service_refresh_channel(t);
-	}
+        if(t->s_channel_number != chan) {
+          t->s_channel_number = chan;
+          t->s_config_save(t);
+          service_refresh_channel(t);
+        }
       }
     }
     ptr += 4;
@@ -999,8 +1002,9 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     
     /* Search all muxes on adapter */
     LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
-      if(tdmi->tdmi_transport_stream_id == tsid && tdmi->tdmi_network_id == onid);
-	break;
+      if(tdmi->tdmi_transport_stream_id == tsid &&
+         tdmi->tdmi_network_id          == onid);
+	      break;
     
     if(tdmi == NULL)
       continue;

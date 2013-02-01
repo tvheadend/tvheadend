@@ -169,12 +169,14 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
   }
 
   if(tdmi != NULL) {
+
     /* Update stuff ... */
     int save = 0;
     char buf2[1024];
     buf2[0] = 0;
 
-    if(tdmi_compare_conf(tda->tda_type, &tdmi->tdmi_conf, dmc)) {
+    if(tdmi->tdmi_adapter->tda_autodiscovery &&
+       tdmi_compare_conf(tda->tda_type, &tdmi->tdmi_conf, dmc)) {
 #if DVB_API_VERSION >= 5
       snprintf(buf2, sizeof(buf2), " (");
       if (tdmi->tdmi_conf.dmc_fe_modulation != dmc->dmc_fe_modulation)
@@ -861,9 +863,13 @@ dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *networkname)
  *
  */
 void
-dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid)
+dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid, int force)
 {
   htsmsg_t *m;
+
+  if (!force)
+    if (tdmi->tdmi_transport_stream_id != 0xFFFF || tsid == 0xFFFF)
+      return;
 
   tdmi->tdmi_transport_stream_id = tsid;
  
@@ -879,9 +885,13 @@ dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid)
  *
  */
 void
-dvb_mux_set_onid(th_dvb_mux_instance_t *tdmi, uint16_t onid)
+dvb_mux_set_onid(th_dvb_mux_instance_t *tdmi, uint16_t onid, int force)
 {
   htsmsg_t *m;
+
+  if (force)
+    if (tdmi->tdmi_network_id != 0 || onid == 0)
+      return;
 
   tdmi->tdmi_network_id = onid;
  

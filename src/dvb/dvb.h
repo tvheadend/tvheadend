@@ -429,9 +429,9 @@ th_dvb_mux_instance_t *dvb_mux_create(th_dvb_adapter_t *tda,
 
 void dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *name);
 
-void dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid);
+void dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid, int force);
 
-void dvb_mux_set_onid(th_dvb_mux_instance_t *tdmi, uint16_t onid);
+void dvb_mux_set_onid(th_dvb_mux_instance_t *tdmi, uint16_t onid, int force);
 
 void dvb_mux_set_enable(th_dvb_mux_instance_t *tdmi, int enabled);
 
