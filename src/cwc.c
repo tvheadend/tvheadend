@@ -2199,11 +2199,9 @@ cwc_service_start(service_t *t)
 static void
 cwc_destroy(cwc_t *cwc)
 {
-  pthread_mutex_lock(&cwc_mutex);
   TAILQ_REMOVE(&cwcs, cwc, cwc_link);  
   cwc->cwc_running = 0;
   pthread_cond_signal(&cwc->cwc_cond);
-  pthread_mutex_unlock(&cwc_mutex);
 }
 
 
