@@ -47,6 +47,7 @@
 #include "service.h"
 #include "epggrab.h"
 #include "diseqc.h"
+#include "atomic.h"
 
 struct th_dvb_adapter_queue dvb_adapters;
 struct th_dvb_mux_instance_tree dvb_muxes;
@@ -1063,6 +1064,7 @@ dvb_adapter_input_dvr(void *aux)
       }
     }
     r += c;
+    atomic_add(&tda->tda_bytes, c);
 
     /* not enough data */
     if (r < 188) continue;

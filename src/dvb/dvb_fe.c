@@ -41,6 +41,7 @@
 #include "dvr/dvr.h"
 #include "service.h"
 #include "streaming.h"
+#include "atomic.h"
 
 #include "epggrab.h"
 
@@ -90,7 +91,7 @@ dvb_fe_monitor(void *aux)
 {
   th_dvb_adapter_t *tda = aux;
   fe_status_t fe_status;
-  int status, v, vv, i, fec, q;
+  int status, v, vv, i, fec, q, bw;
   th_dvb_mux_instance_t *tdmi = tda->tda_mux_current;
   char buf[50];
   signal_status_t sigstat;
@@ -218,6 +219,8 @@ dvb_fe_monitor(void *aux)
     }
   }
 
+  bw = atomic_exchange(&tda->tda_bytes, 0);
+
   if(notify) {
     htsmsg_t *m = htsmsg_create_map();
     htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
@@ -238,6 +241,7 @@ dvb_fe_monitor(void *aux)
     htsmsg_add_u32(m, "ber", tdmi->tdmi_ber);
     htsmsg_add_u32(m, "unc", tdmi->tdmi_unc);
     htsmsg_add_dbl(m, "uncavg", tdmi->tdmi_unc_avg);
+    htsmsg_add_u32(m, "bw", bw);
     notify_by_msg("tvAdapter", m);
   }
 

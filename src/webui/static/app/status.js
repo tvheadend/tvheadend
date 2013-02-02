@@ -148,6 +148,10 @@ tvheadend.status_adapters = function() {
 		colored : true
 	});
 
+	function renderBw(value) {
+		return parseInt(value / 125);
+	}
+
 	var cm = new Ext.grid.ColumnModel([{
 		width : 50,
 		header : "Name",
@@ -160,6 +164,11 @@ tvheadend.status_adapters = function() {
 		width : 100,
 		header : "Currently tuned to",
 		dataIndex : 'currentMux'
+        },{
+		width : 100,
+		header : "Bandwidth (kb/s)",
+		dataIndex : 'bw',
+		renderer: renderBw
         },{
 		width : 50,
 		header : "Bit error rate",
@@ -197,9 +206,6 @@ tvheadend.status_adapters = function() {
 	});
         return panel;
 }
-
-
-
 
 tvheadend.status = function() {
 

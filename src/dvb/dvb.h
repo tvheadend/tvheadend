@@ -265,6 +265,8 @@ typedef struct th_dvb_adapter {
 
   int tda_rawmode;
 
+  int tda_bytes;
+
   // Full mux streaming, protected via the delivery mutex
 
   streaming_pad_t tda_streaming_pad;
