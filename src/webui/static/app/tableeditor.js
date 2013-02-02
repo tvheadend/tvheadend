@@ -13,12 +13,12 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
 				op : "get"
 			}
 		});
-
-		tvheadend.comet.on(dtable, function(m){
-			if (m.reload)
-				store.reload();
-		});
 	}
+
+	tvheadend.comet.on(dtable, function(m){
+		if (m.reload)
+			store.reload();
+	});
 
 	function addRecord() {
 		Ext.Ajax.request({
