@@ -346,7 +346,9 @@ static int _timeshift_read
     if (r == sizeof(size_t) || *cur_off > (*cur_file)->size) {
       close(*fd);
       *fd       = -1;
+      pthread_mutex_lock(&ts->rdwr_mutex);
       *cur_file = timeshift_filemgr_next(*cur_file, NULL, 0);
+      pthread_mutex_unlock(&ts->rdwr_mutex);
       *cur_off  = 0; // reset
       *wait     = 0;
 
@@ -631,9 +633,6 @@ void *timeshift_reader ( void *p )
       continue;
     }
 
-    /* File processing lock */
-    pthread_mutex_lock(&ts->rdwr_mutex);
-
     /* Calculate delivery time */
     deliver = (now - play_time) + TIMESHIFT_PLAY_BUF;
     deliver = (deliver * cur_speed) / 100;
@@ -655,8 +654,10 @@ void *timeshift_reader ( void *p )
         tvhlog(LOG_DEBUG, "timeshift", "ts %d skip to %"PRId64" from %"PRId64, ts->id, req_time, last_time);
 
         /* Find */
+        pthread_mutex_lock(&ts->rdwr_mutex);
         end = _timeshift_skip(ts, req_time, last_time,
                               cur_file, &tsf, &tsi);
+        pthread_mutex_unlock(&ts->rdwr_mutex);
         if (tsi)
           tvhlog(LOG_DEBUG, "timeshift", "ts %d skip found pkt @ %"PRId64, ts->id, tsi->time);
 
@@ -676,7 +677,6 @@ void *timeshift_reader ( void *p )
 
       /* Find packet */
       if (_timeshift_read(ts, &cur_file, &cur_off, &fd, &sm, &wait) == -1) {
-        pthread_mutex_unlock(&ts->rdwr_mutex);
         pthread_mutex_unlock(&ts->state_mutex);
         break;
       }
@@ -776,10 +776,12 @@ void *timeshift_reader ( void *p )
 
     /* Flush unwanted */
     } else if (ts->ondemand && cur_file) {
+      pthread_mutex_lock(&ts->rdwr_mutex);
+      timeshift_writer_flush(ts);
       timeshift_filemgr_flush(ts, cur_file);
+      pthread_mutex_unlock(&ts->rdwr_mutex);
     }
 
-    pthread_mutex_unlock(&ts->rdwr_mutex);
     pthread_mutex_unlock(&ts->state_mutex);
   }
 
