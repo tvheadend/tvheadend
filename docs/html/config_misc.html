@@ -19,20 +19,32 @@
   Select the path to use for DVB scan configuration files. Typically
   dvb-apps stores these in /usr/share/dvb/. Leave blank to use TVH's internal
   file set.
+ </dl>
 
-  <dt>Cache channel icons:
-  <dd>
-  Enable the caching of channel icons. This will cause TVH to download channel
-  icons locally, and then when requested via HTSP clients the URL for the icon
-  (or logo) will be retrieved from the TVH web server rather than fetched each
-  time by the HTSP client.
-  This REQUIRES the TVH server IP address field to also be populated
+ <p>
+ Icon caching - this will cache any channel icons or other images (such as
+ EPG metadata). These will then be served from the local webserver, this
+ can be useful for multi-client systems and generally to reduce hits on
+ upstream providers.
+ </p>
 
-  <dt>TVH Server IP Address:
+ <dl>
+
+  <dt>Enabled
   <dd>
-  Enter the IP address of the TVH server used for HTSP clients. This permits the
-  above cache channel icons to work (TVH Clients are directed to the IP address
-  entered here to retrieve channel icons from)
+  Select whether or not to enable caching. Note: even with this disabled
+  you can still specify local (file://) icons and these will be served by
+  the built-in webserver.
+  
+  <dt>Re-fetch period (hours)
+  <dd>
+  How frequently the upstream provider is checked for changes.
+  
+  <dt>Re-try period (hours)
+  <dd>
+  How frequently it will re-try fetching an image that has failed to be
+  fetched.
+ </dl>
 
  </dl>  
 </div>
