@@ -777,30 +777,40 @@ service_servicetype_txt(service_t *t)
  *
  */
 int
-service_is_tv(service_t *t)
+servicetype_is_tv(int servicetype)
 {
   return 
-    t->s_servicetype == ST_SDTV    ||
-    t->s_servicetype == ST_HDTV    ||
-    t->s_servicetype == ST_EX_HDTV ||
-    t->s_servicetype == ST_EX_SDTV ||
-    t->s_servicetype == ST_EP_HDTV ||
-    t->s_servicetype == ST_ET_HDTV ||
-    t->s_servicetype == ST_DN_SDTV ||
-    t->s_servicetype == ST_DN_HDTV ||
-    t->s_servicetype == ST_SK_SDTV ||
-    t->s_servicetype == ST_NE_SDTV ||
-    t->s_servicetype == ST_AC_SDTV ||
-    t->s_servicetype == ST_AC_HDTV;
+    servicetype == ST_SDTV    ||
+    servicetype == ST_HDTV    ||
+    servicetype == ST_EX_HDTV ||
+    servicetype == ST_EX_SDTV ||
+    servicetype == ST_EP_HDTV ||
+    servicetype == ST_ET_HDTV ||
+    servicetype == ST_DN_SDTV ||
+    servicetype == ST_DN_HDTV ||
+    servicetype == ST_SK_SDTV ||
+    servicetype == ST_NE_SDTV ||
+    servicetype == ST_AC_SDTV ||
+    servicetype == ST_AC_HDTV;
+}
+int
+service_is_tv(service_t *t)
+{
+  return servicetype_is_tv(t->s_servicetype);
 }
 
 /**
  *
  */
 int
+servicetype_is_radio(int servicetype)
+{
+  return servicetype == ST_RADIO;
+}
+int
 service_is_radio(service_t *t)
 {
-  return t->s_servicetype == ST_RADIO;
+  return servicetype_is_radio(t->s_servicetype);
 }
 
 /**

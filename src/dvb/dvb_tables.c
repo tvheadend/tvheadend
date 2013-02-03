@@ -387,12 +387,6 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     if(dllen > len)
       break;
 
-    if (!(t = dvb_service_find(tdmi, service_id, 0, NULL))) {
-      len -= dllen;
-      ptr += dllen;
-      continue;
-    }
-
     stype  = 0;
     chname = NULL;
     *crid  = 0;
@@ -436,7 +430,14 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       }
       len -= dlen; ptr += dlen; dllen -= dlen;
     }
+
+    if (!servicetype_is_tv(stype) &&
+        !servicetype_is_radio(stype))
+      continue;
           
+    if (!(t = dvb_service_find(tdmi, service_id, 0, NULL)))
+      continue;
+
     if(t->s_servicetype != stype ||
        t->s_scrambled != free_ca_mode) {
       t->s_servicetype = stype;

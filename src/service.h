@@ -551,6 +551,10 @@ int service_is_tv(service_t *t);
 
 int service_is_radio(service_t *t);
 
+int servicetype_is_tv(int st);
+
+int servicetype_is_radio(int st);
+
 void service_destroy(service_t *t);
 
 void service_remove_subscriber(service_t *t, struct th_subscription *s,
