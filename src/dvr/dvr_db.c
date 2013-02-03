@@ -457,7 +457,8 @@ dvr_entry_remove(dvr_entry_t *de)
 
   gtimer_disarm(&de->de_timer);
 
-  LIST_REMOVE(de, de_channel_link);
+  if (de->de_channel)
+    LIST_REMOVE(de, de_channel_link);
   LIST_REMOVE(de, de_global_link);
   de->de_channel = NULL;
   free(de->de_channel_name);
