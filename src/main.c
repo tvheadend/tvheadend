@@ -283,6 +283,7 @@ show_usage
         }
         tok = strtok(NULL, "\n");
       }
+      free(desc);
     }
   }
   printf("\n");

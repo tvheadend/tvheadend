@@ -520,6 +520,7 @@ tda_add(int adapter_num)
   dirp = opendir(path);
   if (!dirp)
     return;
+  closedir(dirp);
 
   /* Check each frontend */
   // Note: this algo will fail if there are really exotic variations

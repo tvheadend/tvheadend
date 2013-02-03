@@ -1857,7 +1857,8 @@ cwc_emm_cryptoworks(cwc_t *cwc, uint8_t *data, int len)
         cwc_send_msg(cwc, composed, elen + 12, 0, 1);
         free(composed);
         free(tmp);
-      }
+      } else if (tmp)
+        free(tmp);
       cwc->cwc_cryptoworks_emm.shared_emm = NULL;
       cwc->cwc_cryptoworks_emm.shared_len = 0;
     }
