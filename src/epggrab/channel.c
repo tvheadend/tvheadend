@@ -185,7 +185,7 @@ epggrab_channel_t *epggrab_channel_find
 
 htsmsg_t *epggrab_channel_list ( void )
 {
-  char name[100];
+  char name[500];
   epggrab_module_t *mod;
   epggrab_channel_t *ec;
   htsmsg_t *e, *m;
@@ -198,9 +198,10 @@ htsmsg_t *epggrab_channel_list ( void )
         htsmsg_add_str(e, "id",     ec->id);
         if (ec->name)
           htsmsg_add_str(e, "name",   ec->name);
-        sprintf(name, "%s|%s", mod->id, ec->id);
+        snprintf(name, sizeof(name), "%s|%s", mod->id, ec->id);
         htsmsg_add_str(e, "mod-id", name);
-        sprintf(name, "%s: %s (%s)", mod->name, ec->name, ec->id);
+        snprintf(name, sizeof(name), "%s: %s (%s)",
+                 mod->name, ec->name, ec->id);
         htsmsg_add_str(e, "mod-name", name);
         htsmsg_add_msg(m, NULL, e);
       }
