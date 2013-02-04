@@ -356,7 +356,7 @@ main(int argc, char **argv)
   int         opt_help         = 0,
               opt_version      = 0,
               opt_fork         = 0,
-              opt_firstrun     = 0,
+              opt_wideaccess     = 0,
               opt_debug        = 0,
               opt_syslog       = 0,
               opt_uidebug      = 0,
@@ -383,12 +383,12 @@ main(int argc, char **argv)
     { 'u', "user",      "Run as user",             OPT_STR,  &opt_user    },
     { 'g', "group",     "Run as group",            OPT_STR,  &opt_group   },
     { 'p', "pid",       "Alternate pid path",      OPT_STR,  &opt_pidpath },
-    { 'C', "firstrun",  "If no useraccount exist then create one with\n"
-	                      "no username and no password. Use with care as\n"
+    { 'C', "wideaccess",  "If any useraccount with no username and no password exist\n"
+	                      "then create one. Use with care as\n"
 	                      "it will allow world-wide administrative access\n"
 	                      "to your Tvheadend installation until you edit\n"
 	                      "the access-control from within the Tvheadend UI",
-      OPT_BOOL, &opt_firstrun },
+      OPT_BOOL, &opt_wideaccess },
 #if ENABLE_LINUXDVB
     { 'a', "adapters",  "Use only specified DVB adapters",
       OPT_STR, &opt_dvb_adapters },
@@ -591,7 +591,7 @@ main(int argc, char **argv)
 
   subscription_init();
 
-  access_init(opt_firstrun);
+  access_init(opt_wideaccess);
 
 #if ENABLE_LINUXDVB
   muxes_init();

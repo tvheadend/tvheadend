@@ -452,7 +452,7 @@ access_set_prefix(access_entry_t *ae, const char *prefix)
  *
  */
 static access_entry_t *
-access_entry_find(const char *id, int create)
+access_entry_find_by_id(const char *id, int create)
 {
   access_ipmask_t *ai;
   access_entry_t *ae;
@@ -490,6 +490,22 @@ access_entry_find(const char *id, int create)
   TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
   TAILQ_INSERT_TAIL(&access_entries, ae, ae_link);
   return ae;
+}
+
+/**
+ *
+ */
+static access_entry_t *
+access_entry_find_by_name(const char *username, const char *password)
+{
+  access_entry_t *ae;
+  
+  if(username && password) {
+    TAILQ_FOREACH(ae, &access_entries, ae_link)
+      if(!strcmp(ae->ae_username, username) && !strcmp(ae->ae_password, password))
+        return ae;
+  }
+  return NULL;
 }
 
 
@@ -588,7 +604,7 @@ access_record_get(void *opaque, const char *id)
 {
   access_entry_t *ae;
 
-  if((ae = access_entry_find(id, 0)) == NULL)
+  if((ae = access_entry_find_by_id(id, 0)) == NULL)
     return NULL;
   return access_record_build(ae);
 }
@@ -600,7 +616,7 @@ access_record_get(void *opaque, const char *id)
 static htsmsg_t *
 access_record_create(void *opaque)
 {
-  return access_record_build(access_entry_find(NULL, 1));
+  return access_record_build(access_entry_find_by_id(NULL, 1));
 }
 
 
@@ -615,7 +631,7 @@ access_record_update(void *opaque, const char *id, htsmsg_t *values,
   const char *s;
   uint32_t u32;
 
-  if((ae = access_entry_find(id, maycreate)) == NULL)
+  if((ae = access_entry_find_by_id(id, maycreate)) == NULL)
     return NULL;
   
   if((s = htsmsg_get_str(values, "username")) != NULL) {
@@ -671,7 +687,7 @@ access_record_delete(void *opaque, const char *id)
 {
   access_entry_t *ae;
 
-  if((ae = access_entry_find(id, 0)) == NULL)
+  if((ae = access_entry_find_by_id(id, 0)) == NULL)
     return -1;
   access_entry_destroy(ae);
   return 0;
@@ -718,9 +734,10 @@ access_init(int createdefault)
 
   dt = dtable_create(&access_dtc, "accesscontrol", NULL);
 
-  if(dtable_load(dt) == 0 && createdefault) {
-    /* No records available */
-    ae = access_entry_find(NULL, 1);
+  if( dtable_load(dt) == 0 ||
+      (createdefault && !access_entry_find_by_name("*","*")) ) {
+    
+    ae = access_entry_find_by_id(NULL, 1);
 
     free(ae->ae_comment);
     ae->ae_comment = strdup("Default access entry");
