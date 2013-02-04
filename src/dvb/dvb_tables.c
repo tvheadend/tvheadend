@@ -673,7 +673,7 @@ dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     return -1;
 
   dmc.dmc_fe_params.frequency = freq * 100;
-  TRACE("nit", "  dvb-c frequency %d", dmc.dmc_fe_params.frequency);
+  TRACE("nit", "    dvb-c frequency %d", dmc.dmc_fe_params.frequency);
 
   symrate =
     bcdtoint(ptr[7]) * 100000 + bcdtoint(ptr[8]) * 1000 + 
@@ -717,7 +717,7 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     bcdtoint(ptr[0]) * 1000000 + bcdtoint(ptr[1]) * 10000 + 
     bcdtoint(ptr[2]) * 100     + bcdtoint(ptr[3]);
   dmc.dmc_fe_params.frequency = freq * 10;
-  TRACE("nit", "  dvb-s frequency %d", dmc.dmc_fe_params.frequency);
+  TRACE("nit", "    dvb-s frequency %d", dmc.dmc_fe_params.frequency);
 
   if(!freq)
     return -1;
@@ -805,7 +805,7 @@ dvb_table_terr_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     return -1;
 
   dmc.dmc_fe_params.frequency = freq;
-  TRACE("nit", "  dvb-t frequency %d", dmc.dmc_fe_params.frequency);
+  TRACE("nit", "    dvb-t frequency %d", dmc.dmc_fe_params.frequency);
   dmc.dmc_fe_params.u.ofdm.bandwidth = bandwidth_tab[(ptr[4] & 0xe0) >> 5];
   dmc.dmc_fe_params.u.ofdm.constellation=constellation_tab[(ptr[5] & 0xc0) >> 6];
   dmc.dmc_fe_params.u.ofdm.hierarchy_information=hierarchy_info_tab[(ptr[5] & 0x38) >> 3];
@@ -906,6 +906,7 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     ptr  += dlen + 2;
     llen -= dlen + 2;
   }
+  TRACE("nit", "network %d/%s", network_id, netname);
   if (llen)
     return -1;
 
@@ -920,8 +921,7 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     onid = ( ptr[2]        << 8) | ptr[3];
     llen = ((ptr[4] & 0xf) << 8) | ptr[5];
 
-    TRACE("nit", "netw %d/%s onid %04X tsid %04X",
-              network_id, netname, onid, tsid);
+    TRACE("nit", "  onid %04X tsid %04X", onid, tsid);
 
     ptr += 6;
     len -= llen + 6;
