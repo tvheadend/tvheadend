@@ -102,14 +102,17 @@ tdmi_global_cmp(th_dvb_mux_instance_t *a, th_dvb_mux_instance_t *b)
  */
 static int
 tdmi_compare_key(const struct dvb_mux_conf *a,
-		 const struct dvb_mux_conf *b)
+                 const struct dvb_mux_conf *b,
+                 const dvb_satconf_t *satconf)
 {
   int32_t fd = (int32_t)a->dmc_fe_params.frequency
              - (int32_t)b->dmc_fe_params.frequency;
+  if (!satconf)
+    satconf = b->dmc_satconf;
   fd = labs(fd);
   return fd < 2000 &&
     a->dmc_polarisation             == b->dmc_polarisation &&
-    a->dmc_satconf                  == b->dmc_satconf;
+    a->dmc_satconf                  == satconf;
 }
 
 
@@ -162,9 +165,12 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
 
   lock_assert(&global_lock);
 
+  if (!satconf)
+    satconf = dmc->dmc_satconf;
+
   /* HACK - we hash/compare based on 2KHz spacing and compare on +/-500Hz */
   LIST_FOREACH(tdmi, &tda->tda_mux_list, tdmi_adapter_hash_link) {
-    if(tdmi_compare_key(&tdmi->tdmi_conf, dmc))
+    if(tdmi_compare_key(&tdmi->tdmi_conf, dmc, satconf))
       break; /* Mux already exist */
   }
 
@@ -248,9 +254,8 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
     
     snprintf(buf, sizeof(buf), "%s%d%s%s%s", 
 	     tda->tda_identifier, dmc->dmc_fe_params.frequency, qpsktxt,
-	     (satconf || dmc->dmc_satconf) ? "_satconf_" : "", 
-	     (satconf ? satconf->sc_id :
-	       (dmc->dmc_satconf ? dmc->dmc_satconf->sc_id : "")));
+	     satconf ? "_satconf_" : "", 
+	     satconf ? satconf->sc_id : "");
     
     tdmi->tdmi_identifier = strdup(buf);
   } else {
