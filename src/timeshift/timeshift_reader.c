@@ -777,7 +777,6 @@ void *timeshift_reader ( void *p )
     /* Flush unwanted */
     } else if (ts->ondemand && cur_file) {
       pthread_mutex_lock(&ts->rdwr_mutex);
-      timeshift_writer_flush(ts);
       timeshift_filemgr_flush(ts, cur_file);
       pthread_mutex_unlock(&ts->rdwr_mutex);
     }
