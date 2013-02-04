@@ -149,6 +149,8 @@ static int log_decorate;
 static LIST_HEAD(, gtimer) gtimers;
 static int log_debug_to_syslog;
 static int log_debug_to_console;
+static int log_debug_to_path;
+static char* log_path;
 
 static void
 handle_sigpipe(int x)
@@ -347,6 +349,8 @@ main(int argc, char **argv)
   log_decorate              = isatty(2);
   log_debug_to_syslog       = 0;
   log_debug_to_console      = 0;
+  log_debug_to_path         = 0;
+  log_path                  = NULL;
   tvheadend_webui_port      = 9981;
   tvheadend_webroot         = NULL;
   tvheadend_htsp_port       = 9982;
@@ -408,6 +412,7 @@ main(int argc, char **argv)
     { 'd', "debug",     "Enable all debug",        OPT_BOOL, &opt_debug   },
     { 's', "syslog",    "Enable debug to syslog",  OPT_BOOL, &opt_syslog  },
     {   0, "uidebug",   "Enable webUI debug",      OPT_BOOL, &opt_uidebug },
+    { 'l', "log",       "Log to file",             OPT_STR,  &log_path    },
     { 'A', "abort",     "Immediately abort",       OPT_BOOL, &opt_abort   },
 #if ENABLE_LINUXDVB
     { 'R', "dvbraw",    "Use rawts file to create virtual adapter",
@@ -459,7 +464,9 @@ main(int argc, char **argv)
   /* Additional cmdline processing */
   log_debug_to_console  = opt_debug;
   log_debug_to_syslog   = opt_syslog;
+  log_debug_to_path     = opt_debug;
   tvheadend_webui_debug = opt_debug || opt_uidebug;
+  tvhlog(LOG_INFO, "START", "initialising");
 #if ENABLE_LINUXDVB
   if (!opt_dvb_adapters) {
     adapter_mask = ~0;
@@ -707,6 +714,7 @@ tvhlogv(int notify, int severity, const char *subsys, const char *fmt,
   int l;
   struct tm tm;
   time_t now;
+  static int log_path_fail = 0;
 
   l = snprintf(buf, sizeof(buf), "%s: ", subsys);
 
@@ -751,7 +759,24 @@ tvhlogv(int notify, int severity, const char *subsys, const char *fmt,
     } else {
       sgroff = "\033[0m";
     }
-    fprintf(stderr, "%s%s [%s]:%s%s\n", sgr, t, leveltxt, buf, sgroff);
+    fprintf(stderr, "%s%s [%7s]:%s%s\n", sgr, t, leveltxt, buf, sgroff);
+  }
+
+  /**
+   * Write to file
+   */
+  if (log_path && (log_debug_to_path || severity < LOG_DEBUG)) {
+    const char *leveltxt = logtxtmeta[severity][0];
+    FILE *fp = fopen(log_path, "a");
+    if (fp) {
+      log_path_fail = 0;
+      fprintf(fp, "%s [%7s]:%s\n", t, leveltxt, buf);
+      fclose(fp);
+    } else {
+      if (!log_path_fail)
+        syslog(LOG_WARNING, "failed to write log file %s", log_path);
+      log_path_fail = 1;
+    }
   }
 }
 
