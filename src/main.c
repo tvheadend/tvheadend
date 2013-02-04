@@ -365,6 +365,7 @@ main(int argc, char **argv)
               opt_syslog       = 0,
               opt_uidebug      = 0,
               opt_abort        = 0,
+              opt_noacl        = 0,
               opt_ipv6         = 0;
   const char *opt_config       = NULL,
              *opt_user         = NULL,
@@ -414,6 +415,8 @@ main(int argc, char **argv)
     {   0, "uidebug",   "Enable webUI debug",      OPT_BOOL, &opt_uidebug },
     { 'l', "log",       "Log to file",             OPT_STR,  &log_path    },
     { 'A', "abort",     "Immediately abort",       OPT_BOOL, &opt_abort   },
+    {   0, "noacl",     "Disable all access control checks",
+      OPT_BOOL, &opt_noacl },
 #if ENABLE_LINUXDVB
     { 'R', "dvbraw",    "Use rawts file to create virtual adapter",
       OPT_STR, &opt_dvb_raw },
@@ -598,7 +601,7 @@ main(int argc, char **argv)
 
   subscription_init();
 
-  access_init(opt_firstrun);
+  access_init(opt_firstrun, opt_noacl);
 
 #if ENABLE_LINUXDVB
   muxes_init();

@@ -43,6 +43,8 @@ struct access_ticket_queue access_tickets;
 const char *superuser_username;
 const char *superuser_password;
 
+static int access_noacl;
+
 /**
  *
  */
@@ -229,6 +231,9 @@ access_verify(const char *username, const char *password,
   uint32_t bits = 0;
   access_entry_t *ae;
 
+  if (access_noacl)
+    return 0;
+
   if(username != NULL && superuser_username != NULL && 
      password != NULL && superuser_password != NULL && 
      !strcmp(username, superuser_username) &&
@@ -273,6 +278,9 @@ access_get_hashed(const char *username, const uint8_t digest[20],
   uint8_t d[20];
   uint32_t r = 0;
   int match = 0;
+
+  if(access_noacl)
+    return 0xffffffff;
 
   if(superuser_username != NULL && superuser_password != NULL) {
 
@@ -696,7 +704,7 @@ static const dtable_class_t access_dtc = {
  *
  */
 void
-access_init(int createdefault)
+access_init(int createdefault, int noacl)
 {
   dtable_t *dt;
   htsmsg_t *r, *m;
@@ -708,6 +716,10 @@ access_init(int createdefault)
     pid_t pid;
     struct timeval tv;
   } randseed;
+
+  access_noacl = noacl;
+  if (noacl)
+    tvhlog(LOG_WARNING, "access", "Access control checking disabled");
 
   randseed.pid = getpid();
   gettimeofday(&randseed.tv, NULL);
@@ -742,7 +754,7 @@ access_init(int createdefault)
     dtable_record_store(dt, ae->ae_id, r);
     htsmsg_destroy(r);
 
-    tvhlog(LOG_WARNING, "accesscontrol",
+    tvhlog(LOG_WARNING, "access",
 	   "Created default wide open access controle entry");
   }
 
