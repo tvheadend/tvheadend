@@ -967,6 +967,7 @@ static int
 atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		  uint8_t tableid, void *opaque)
 {
+  th_dvb_mux_instance_t *tdmi0 = tdmi;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   service_t *t;
   int numch;
@@ -1000,15 +1001,18 @@ atsc_vct_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
     tsid = (ptr[22] << 8) | ptr[23];
     onid = (ptr[24] << 8) | ptr[25];
-    
-    /* Search all muxes on adapter */
-    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link)
-      if(tdmi->tdmi_transport_stream_id == tsid &&
-         tdmi->tdmi_network_id          == onid);
-	      break;
-    
-    if(tdmi == NULL)
-      continue;
+
+    if(tsid == 0) {
+      tdmi = tdmi0;
+    } else {
+        /* Search all muxes on adapter */
+      LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+        if(tdmi->tdmi_transport_stream_id == tsid && tdmi->tdmi_network_id == onid)
+          break;
+      }
+      if(tdmi == NULL)
+        continue;
+    }
 
     service_id = (ptr[24] << 8) | ptr[25];
     if((t = dvb_service_find(tdmi, service_id, 0, NULL)) == NULL)
