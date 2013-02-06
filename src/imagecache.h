@@ -24,6 +24,7 @@
 extern uint32_t imagecache_enabled;
 extern uint32_t imagecache_ok_period;
 extern uint32_t imagecache_fail_period;
+extern uint32_t imagecache_ignore_sslcert;
 
 extern pthread_mutex_t imagecache_mutex;
 
@@ -36,6 +37,8 @@ int      imagecache_set_enabled     ( uint32_t e )
 int      imagecache_set_ok_period   ( uint32_t e )
   __attribute__((warn_unused_result));
 int      imagecache_set_fail_period ( uint32_t e )
+  __attribute__((warn_unused_result));
+int      imagecache_set_ignore_sslcert ( uint32_t e )
   __attribute__((warn_unused_result));
 
 // Note: will return 0 if invalid (must serve original URL)

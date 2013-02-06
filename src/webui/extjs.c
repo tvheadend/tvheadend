@@ -1982,6 +1982,7 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(m, "imagecache_enabled",     imagecache_enabled);
     htsmsg_add_u32(m, "imagecache_ok_period",   imagecache_ok_period);
     htsmsg_add_u32(m, "imagecache_fail_period", imagecache_fail_period);
+    htsmsg_add_u32(m, "imagecache_ignore_sslcert", imagecache_ignore_sslcert);
     pthread_mutex_unlock(&imagecache_mutex);
 #endif
 
@@ -2011,6 +2012,8 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
       save |= imagecache_set_ok_period(atoi(str));
     if ((str = http_arg_get(&hc->hc_req_args, "imagecache_fail_period")))
       save |= imagecache_set_fail_period(atoi(str));
+    str = http_arg_get(&hc->hc_req_args, "imagecache_ignore_sslcert");
+    save |= imagecache_set_ignore_sslcert(!!str);
     if (save)
       imagecache_save();
     pthread_mutex_unlock(&imagecache_mutex);

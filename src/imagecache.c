@@ -76,6 +76,7 @@ static void  _imagecache_save   ( imagecache_image_t *img );
 uint32_t                              imagecache_enabled;
 uint32_t                              imagecache_ok_period;
 uint32_t                              imagecache_fail_period;
+uint32_t                              imagecache_ignore_sslcert;
 
 static pthread_cond_t                 _imagecache_cond;
 static TAILQ_HEAD(, imagecache_image) _imagecache_queue;
@@ -106,11 +107,12 @@ void imagecache_init ( void )
   uint32_t id;
 
   /* Init vars */
-  _imagecache_id         = 0;
+  _imagecache_id            = 0;
 #if ENABLE_IMAGECACHE
-  imagecache_enabled     = 0;
-  imagecache_ok_period   = 24 * 7; // weekly
-  imagecache_fail_period = 24;     // daily
+  imagecache_enabled        = 0;
+  imagecache_ok_period      = 24 * 7; // weekly
+  imagecache_fail_period    = 24;     // daily
+  imagecache_ignore_sslcert = 0;
 #endif
 
   /* Create threads */
@@ -126,6 +128,7 @@ void imagecache_init ( void )
     htsmsg_get_u32(m, "enabled", &imagecache_enabled);
     htsmsg_get_u32(m, "ok_period", &imagecache_ok_period);
     htsmsg_get_u32(m, "fail_period", &imagecache_fail_period);
+    htsmsg_get_u32(m, "ignore_sslcert", &imagecache_ignore_sslcert);
     htsmsg_destroy(m);
   }
 #endif
@@ -173,9 +176,10 @@ void imagecache_init ( void )
 void imagecache_save ( void )
 {
   htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_u32(m, "enabled",     imagecache_enabled);
-  htsmsg_add_u32(m, "ok_period",   imagecache_ok_period);
-  htsmsg_add_u32(m, "fail_period", imagecache_fail_period);
+  htsmsg_add_u32(m, "enabled",        imagecache_enabled);
+  htsmsg_add_u32(m, "ok_period",      imagecache_ok_period);
+  htsmsg_add_u32(m, "fail_period",    imagecache_fail_period);
+  htsmsg_add_u32(m, "ignore_sslcert", imagecache_ignore_sslcert);
   hts_settings_save(m, "imagecache/config");
 }
 
@@ -211,6 +215,17 @@ int imagecache_set_fail_period ( uint32_t p )
   if (p == imagecache_fail_period)
     return 0;
   imagecache_fail_period = p;
+  return 1;
+}
+
+/*
+ * Set ignore SSL cert
+ */
+int imagecache_set_ignore_sslcert ( uint32_t p )
+{
+  if (p == imagecache_ignore_sslcert)
+    return 0;
+  imagecache_ignore_sslcert = p;
   return 1;
 }
 #endif
@@ -406,7 +421,8 @@ static int _imagecache_fetch ( imagecache_image_t *img )
   if (!(fp = fopen(tmp, "wb")))
     return 1;
   
-  /* Fetch file */
+  /* Build command */
+  pthread_mutex_lock(&imagecache_mutex);
   tvhlog(LOG_DEBUG, "imagecache", "fetch %s", img->url);
   curl = curl_easy_init();
   curl_easy_setopt(curl, CURLOPT_URL,         img->url);
@@ -415,6 +431,11 @@ static int _imagecache_fetch ( imagecache_image_t *img )
   curl_easy_setopt(curl, CURLOPT_TIMEOUT,     120);
   curl_easy_setopt(curl, CURLOPT_NOPROGRESS,  1);
   curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1);
+  if (imagecache_ignore_sslcert)
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
+  pthread_mutex_unlock(&imagecache_mutex);
+
+  /* Fetch */
   res = curl_easy_perform(curl);
   curl_easy_cleanup(curl);
   fclose(fp);

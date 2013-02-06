@@ -39,7 +39,7 @@ tvheadend.miscconf = function() {
 		root : 'config'
 	}, [ 'muxconfpath', 'language',
        'imagecache_enabled', 'imagecache_ok_period',
-       'imagecache_fail_period']);
+       'imagecache_fail_period', 'imagecache_ignore_sslcert']);
 
 	/* ****************************************************************
 	 * Form Fields
@@ -93,12 +93,18 @@ tvheadend.miscconf = function() {
     fieldLabel: 'Re-try period (hours)',
   });
 
+  var imagecacheIgnoreSSLCert = new Ext.form.Checkbox({
+    name: 'imagecache_ignore_sslcert',
+    fieldLabel: 'Ignore invalid SSL certificate'
+  });
+
   var imagecachePanel = new Ext.form.FieldSet({
     title: 'Image Caching',
     width: 700,
     autoHeight: true,
     collapsible: true,
-    items : [ imagecacheEnabled, imagecacheOkPeriod, imagecacheFailPeriod ]
+    items : [ imagecacheEnabled, imagecacheOkPeriod, imagecacheFailPeriod,
+              imagecacheIgnoreSSLCert ]
   });
   if (tvheadend.capabilities.indexOf('imagecache') == -1)
     imagecachePanel.hide();
