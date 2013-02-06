@@ -1169,7 +1169,7 @@ dvb_mux_add_by_params(th_dvb_adapter_t *tda,
     break;
 
   case FE_ATSC:
-    dmc.dmc_fe_params.frequency = freq;
+    dmc.dmc_fe_params.frequency = freq * 1000;
 
     if(!val2str(constellation, qamtab))
       return "Invalid VSB constellation";
