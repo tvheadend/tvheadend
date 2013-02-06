@@ -170,7 +170,7 @@ v4l_thread(void *aux)
  *
  */
 static int
-v4l_service_start(service_t *t, unsigned int weight, int force_start)
+v4l_service_start(service_t *t, int instance)
 {
   v4l_adapter_t *va = t->s_v4l_adapter;
   int frequency = t->s_v4l_frequency;

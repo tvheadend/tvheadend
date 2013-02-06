@@ -55,54 +55,48 @@ static htsmsg_t *dvb_service_serialize(service_t *s, int full);
  * transports that is subscribing to the adapter
  */
 static int
-dvb_service_start(service_t *t, unsigned int weight, int force_start)
+dvb_service_start(service_t *s, int instance)
 {
-#if 0
-  int w, r;
-  th_dvb_adapter_t *tda = t->s_dvb_mux_instance->tdmi_adapter;
-  th_dvb_mux_instance_t *tdmi = tda->tda_current_tdmi;
+  int r;
+  dvb_mux_t *dm = s->s_dvb_mux;
+  th_dvb_mux_instance_t *tdmi;
+
+  assert(s->s_status == SERVICE_IDLE);
 
   lock_assert(&global_lock);
 
-  if(tda->tda_rootpath == NULL)
-    return SM_CODE_NO_HW_ATTACHED;
+  LIST_FOREACH(tdmi, &dm->dm_tdmis, tdmi_mux_link)
+    if(tdmi->tdmi_adapter->tda_instance == instance)
+      break;
 
-  if(t->s_dvb_mux_instance && !t->s_dvb_mux_instance->tdmi_enabled)
-    return SM_CODE_MUX_NOT_ENABLED; /* Mux is disabled */
+  assert(tdmi != NULL); // We should always find this instance
 
-  /* Check if adapter is idle, or already tuned */
+  r = dvb_fe_tune_tdmi(tdmi, "service start");
 
-  if(tdmi != NULL && 
-     (tdmi != t->s_dvb_mux_instance ||
-      tda->tda_hostconnection == HOSTCONNECTION_USB12)) {
-
-    w = service_compute_weight(&tda->tda_transports);
-    if(w && w >= weight && !force_start)
-      /* We are outranked by weight, cant use it */
-      return SM_CODE_NOT_FREE;
-
-    if(LIST_FIRST(&tdmi->tdmi_subscriptions) != NULL)
-      return SM_CODE_NOT_FREE;
-
-    dvb_adapter_clean(tda);
+  if(!r) {
+    th_dvb_adapter_t *tda = dm->dm_current_tdmi->tdmi_adapter;
+    pthread_mutex_lock(&tda->tda_delivery_mutex);
+    LIST_INSERT_HEAD(&tda->tda_transports, s, s_active_link);
+    pthread_mutex_unlock(&tda->tda_delivery_mutex);
+    tda->tda_open_service(tda, s);
+    dvb_table_add_pmt(dm, s->s_pmt_pid);
   }
 
-  pthread_mutex_lock(&tda->tda_delivery_mutex);
-
-  r = dvb_fe_tune(t->s_dvb_mux_instance->tdmi_mux, "Transport start");
-  if(!r)
-    LIST_INSERT_HEAD(&tda->tda_transports, t, s_active_link);
-
-  pthread_mutex_unlock(&tda->tda_delivery_mutex);
-
-  if(!r)
-    tda->tda_open_service(tda, t);
-
-  dvb_table_add_pmt(t->s_dvb_mux_instance->tdmi_mux, t->s_pmt_pid);
-
   return r;
-#endif
-  return SM_CODE_NO_FREE_ADAPTER;
+}
+
+
+/**
+ *
+ */
+static th_dvb_adapter_t *
+dvb_service_get_tda(service_t *s)
+{
+  dvb_mux_t *dm = s->s_dvb_mux;
+  assert(dm->dm_current_tdmi != NULL);
+  th_dvb_adapter_t *tda = dm->dm_current_tdmi->tdmi_adapter;
+  assert(tda != NULL);
+  return tda;
 }
 
 
@@ -110,21 +104,18 @@ dvb_service_start(service_t *t, unsigned int weight, int force_start)
  *
  */
 static void
-dvb_service_stop(service_t *t)
+dvb_service_stop(service_t *s)
 {
-#if 0
-  th_dvb_adapter_t *tda = t->s_dvb_mux_instance->tdmi_adapter;
-
+  th_dvb_adapter_t *tda = dvb_service_get_tda(s);
   lock_assert(&global_lock);
 
   pthread_mutex_lock(&tda->tda_delivery_mutex);
-  LIST_REMOVE(t, s_active_link);
+  LIST_REMOVE(s, s_active_link);
   pthread_mutex_unlock(&tda->tda_delivery_mutex);
 
-  tda->tda_close_service(tda, t);
+  tda->tda_close_service(tda, s);
 
-  t->s_status = SERVICE_IDLE;
-#endif
+  s->s_status = SERVICE_IDLE;
 }
 
 
@@ -132,14 +123,32 @@ dvb_service_stop(service_t *t)
  *
  */
 static void
-dvb_service_refresh(service_t *t)
+dvb_service_refresh(service_t *s)
 {
-#if 0
-  th_dvb_adapter_t *tda = t->s_dvb_mux_instance->tdmi_adapter;
-
+  th_dvb_adapter_t *tda = dvb_service_get_tda(s);
   lock_assert(&global_lock);
-  tda->tda_open_service(tda, t);
-#endif
+  tda->tda_open_service(tda, s);
+}
+
+
+/**
+ *
+ */
+static void
+dvb_service_enlist(struct service *s, struct service_instance_list *sil)
+{
+  dvb_mux_t *dm = s->s_dvb_mux;
+  th_dvb_mux_instance_t *tdmi;
+
+  dvb_create_tdmis(dm);
+
+  LIST_FOREACH(tdmi, &dm->dm_tdmis, tdmi_mux_link) {
+    if(tdmi->tdmi_tune_failed)
+      continue; // The hardware is not able to tune to this frequency, never consider it
+
+    service_instance_add(sil, s, tdmi->tdmi_adapter->tda_instance, 100,
+                         tdmi_current_weight(tdmi));
+  }
 }
 
 
@@ -389,6 +398,7 @@ dvb_service_find2(dvb_mux_t *dm, uint16_t sid, int pmt_pid,
   t->s_setsourceinfo = dvb_service_setsourceinfo;
   t->s_grace_period  = dvb_grace_period;
   t->s_serialize     = dvb_service_serialize;
+  t->s_enlist        = dvb_service_enlist;
 
   t->s_dvb_mux = dm;
   LIST_INSERT_HEAD(&dm->dm_services, t, s_group_link);

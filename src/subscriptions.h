@@ -19,6 +19,8 @@
 #ifndef SUBSCRIPTIONS_H
 #define SUBSCRIPTIONS_H
 
+#include "service.h"
+
 extern struct th_subscription_list subscriptions;
 
 #define SUBSCRIPTION_RAW_MPEGTS 0x1
@@ -64,6 +66,12 @@ typedef struct th_subscription {
   char *ths_hostname;
   char *ths_username;
   char *ths_client;
+
+  /**
+   * This is the list of service candidates we have
+   */
+  struct service_instance_list ths_instances;
+  struct service_instance *ths_current_instance;
 
   // Ugly ugly ugly to refer DVB code here
 

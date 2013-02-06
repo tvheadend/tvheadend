@@ -254,32 +254,6 @@ dvb_fe_monitor(void *aux)
 }
 
 
-#if 0
-/**
- * Stop the given TDMI
- */
-void
-dvb_fe_stop(th_dvb_adapter_t *tda, int retune)
-{
-  lock_assert(&global_lock);
-
-  th_dvb_mux_instance_t *tdmi = tda->tda_current_tdmi;
-  assert(tdmi != NULL);
-  dvb_mux_t *dm = tdmi->tdmi_mux;
-
-  dvb_table_flush_all(dm);
-
-  epggrab_mux_stop(dm, 0);
-
-#if 0  /// XXX(dvbreorg)
-  if(!retune) {
-    gtimer_disarm(&tda->tda_fe_monitor_timer);
-    dvb_adapter_stop(tda);
-  }
-#endif
-}
-#endif
-
 
 
 #if DVB_API_VERSION >= 5
@@ -385,22 +359,41 @@ dvb_fe_tune_s2(th_dvb_adapter_t *tda, dvb_mux_conf_t *dmc)
 
 
 
+/**
+ *
+ */
 int
-dvb_fe_tune_tdmi(th_dvb_mux_instance_t *tdmi)
+dvb_fe_tune_tdmi(th_dvb_mux_instance_t *tdmi, const char *reason)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-  const dvb_mux_t *dm = tdmi->tdmi_mux;
+  dvb_mux_t *dm = tdmi->tdmi_mux;
   // copy dmc, cause frequency may be change with FE_QPSK
   dvb_mux_conf_t dmc = dm->dm_conf;
   dvb_frontend_parameters_t* p = &dmc.dmc_fe_params;
   int r;
   char buf[256];
 
+  if(tda->tda_current_tdmi != NULL) {
+
+    if(tda->tda_current_tdmi == tdmi)
+      return 0; // Already currently tuned
+
+    /*
+     * Adapter tuned to something else.
+     * But at this stage we're no longer caring about such things.
+     * That should have been sorted out by our callers.
+     * So let's just kick it out the current occupant
+      */
+    dvb_mux_stop(tda->tda_current_tdmi);
+  }
+
+  free(tda->tda_tune_reason);
+  tda->tda_tune_reason = strdup(reason);
+
   dvb_adapter_start(tda);
 
+  // Make sure dvb_mux_stop() did the right thing
   assert(tda->tda_current_tdmi == NULL);
-
-
 
   if(tda->tda_fe_type == FE_QPSK) {
 
@@ -467,8 +460,23 @@ dvb_fe_tune_tdmi(th_dvb_mux_instance_t *tdmi)
   }
 
 
-  if(!r)
+  if(!r) {
     gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 1);
+    tda->tda_current_tdmi = tdmi;
+    dm->dm_current_tdmi = tdmi;
+
+    dvb_table_add_default(dm);
+    epggrab_mux_start(dm);
+    dvb_adapter_notify(tda);
+
+  } else {
+
+    tvhlog(LOG_ERR, "dvb", "\"%s\" tuning to \"%s\""
+           " -- Front configuration failed -- %s",
+           tda->tda_rootpath, dvb_mux_nicename(dm), strerror(errno));
+    /* Mark as bad */
+    tdmi->tdmi_tune_failed = 1;
+  }
 
   return r;
 }

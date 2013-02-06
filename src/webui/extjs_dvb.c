@@ -221,23 +221,25 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
-#if 0
+
   } else if(!strcmp(op, "serviceprobe")) {
 
     tvhlog(LOG_NOTICE, "web interface",
 	   "Service probe started on \"%s\"", tda->tda_displayname);
 
-    LIST_FOREACH(tdmi, &tda->tda_dn->dn_mux_instances, tdmi_adapter_link) {
-      LIST_FOREACH(t, &tdmi->tdmi_mux->dm_services, s_group_link) {
-	if(t->s_enabled)
-	  serviceprobe_enqueue(t);
+    dvb_mux_t *dm;
+    service_t *s;
+
+    LIST_FOREACH(dm, &tda->tda_dn->dn_muxes, dm_network_link) {
+      LIST_FOREACH(s, &dm->dm_services, s_group_link) {
+        if(s->s_enabled)
+	  serviceprobe_enqueue(s);
       }
     }
 
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
-#endif
 
   } else {
     pthread_mutex_unlock(&global_lock);

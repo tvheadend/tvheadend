@@ -167,35 +167,49 @@ typedef struct elementary_stream {
 } elementary_stream_t;
 
 
-LIST_HEAD(service_start_cand_list, service_start_cand);
+LIST_HEAD(service_instance_list, service_instance);
 
 /**
  *
  */
-typedef struct service_start_cand {
+typedef struct service_instance {
 
-  LIST_ENTRY(service_start_cand) ssc_link;
+  LIST_ENTRY(service_instance) si_link;
 
-  int ssc_prio;
+  int si_prio;
 
-  struct service *ssc_s;  // A reference is held
-  int ssc_instance;       // Discriminator when having multiple adapters, etc
+  struct service *si_s; // A reference is held
+  int si_instance;       // Discriminator when having multiple adapters, etc
 
-  int ssc_error_code;     // Set if we deem this cand to be broken
-  time_t ssc_err_time;    // Time we detected it was broken
+  int si_error;        /* Set if subscription layer deem this cand
+                          to be broken. We typically set this if we
+                          have not seen any demuxed packets after
+                          the grace period has expired.
+                          The actual value is current time
+                       */
 
-  int ssc_weight;         // Highest weight that holds this cand
+  time_t si_error_time;
 
-} service_start_cand_t;
+
+  int si_weight;         // Highest weight that holds this cand
+
+  int si_mark;           // For mark & sweep
+
+} service_instance_t;
 
 
 /**
  *
  */
-service_start_cand_t *service_find_cand(struct service_start_cand_list *sscl,
-                                        struct service *s,
-                                        int instance,
-                                        int prio);
+service_instance_t *service_instance_add(struct service_instance_list *sil,
+                                         struct service *s,
+                                         int instance,
+                                         int prio,
+                                         int weight);
+
+void service_instance_destroy(service_instance_t *si);
+
+void service_instance_list_clear(struct service_instance_list *sil);
 
 /**
  *
@@ -285,12 +299,9 @@ typedef struct service {
 
   LIST_HEAD(, th_subscription) s_subscriptions;
 
-  void (*s_enlist)(struct service *s,
-                   struct service_start_cand_list *sscl);
+  void (*s_enlist)(struct service *s, struct service_instance_list *sil);
 
-
-  int (*s_start_feed)(struct service *t, unsigned int weight,
-			int force_start);
+  int (*s_start_feed)(struct service *s, int instance);
 
   void (*s_refresh_feed)(struct service *t);
 
@@ -540,7 +551,7 @@ void service_init(void);
 
 unsigned int service_compute_weight(struct service_list *head);
 
-int service_start(service_t *t, unsigned int weight, int force_start);
+int service_start(service_t *t, int instance);
 
 service_t *service_create(const char *uuid, int source_type);
 
@@ -552,9 +563,10 @@ service_t *service_find_by_identifier(const char *identifier);
 
 void service_map_channel(service_t *t, struct channel *ch, int save);
 
-service_t *service_find(struct channel *ch, unsigned int weight,
-			const char *loginfo, int *errorp,
-			service_t *skip);
+service_instance_t *service_find_instance(struct channel *ch,
+                                          struct service_instance_list *sil,
+                                          int *error,
+                                          int weight);
 
 elementary_stream_t *service_stream_find(service_t *t, int pid);
 

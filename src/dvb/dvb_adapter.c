@@ -47,7 +47,7 @@
 
 struct th_dvb_adapter_queue dvb_adapters;
 static void *dvb_adapter_input_dvr(void *aux);
-
+static int dvb_adapter_instance_generator;
 
 /**
  *
@@ -59,6 +59,7 @@ tda_alloc(void)
   pthread_mutex_init(&tda->tda_delivery_mutex, NULL);
   TAILQ_INIT(&tda->tda_satconfs);
   streaming_pad_init(&tda->tda_streaming_pad);
+  tda->tda_instance = ++dvb_adapter_instance_generator;
   return tda;
 }
 
@@ -631,87 +632,6 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
   }
 }
 
-#if 0
-/**
- * If nobody is subscribing, cycle thru all muxes to get some stats
- * and EIT updates
- */
-void
-dvb_adapter_mux_scanner(void *aux)
-{
-  th_dvb_adapter_t *tda = aux;
-  th_dvb_mux_instance_t *tdmi;
-
-  if(tda->tda_rootpath == NULL)
-    return; // No hardware
-
-  // default period
-  gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 20);
-
-  /* No muxes */
-  if(LIST_FIRST(&tda->tda_dn->dn_mux_instances) == NULL) {
-    dvb_adapter_poweroff(tda);
-    return;
-  }
-
-  /* Someone is actively using */
-  if(service_compute_weight(&tda->tda_transports) > 0)
-    return;
-
-  if(tda->tda_mux_current != NULL &&
-     LIST_FIRST(&tda->tda_mux_current->tdmi_subscriptions) != NULL)
-    return; // Someone is doing full mux dump
-
-  /* Check if we have muxes pending for quickscan, if so, choose them */
-  if((tdmi = TAILQ_FIRST(&tda->tda_dn->dn_initial_scan_queue)) != NULL) {
-    dvb_fe_tune(tdmi, "Initial autoscan");
-    return;
-  }
-
-  /* Check EPG */
-  if (tda->tda_dn->dn_mux_epg) {
-    // timeout anything not complete
-    epggrab_mux_stop(tda->tda_dn->dn_mux_epg, 1);
-    tda->tda_dn->dn_mux_epg = NULL; // skip this time
-  } else {
-    tda->tda_dn->dn_mux_epg = epggrab_mux_next(tda);
-  }
-
-  /* EPG */
-  if (tda->tda_dn->dn_mux_epg) {
-    int period = epggrab_mux_period(tda->tda_dn->dn_mux_epg);
-    if (period > 20)
-      gtimer_arm(&tda->tda_mux_scanner_timer,
-                 dvb_adapter_mux_scanner, tda, period);
-    dvb_fe_tune(tda->tda_dn->dn_mux_epg->dm_tdmi, "EPG scan");
-    return;
-
-  }
-
-  /* Ensure we stop current mux and power off (if required) */
-  if (tda->tda_mux_current)
-    dvb_fe_stop(tda->tda_mux_current, 0);
-}
-#endif
-
-/**
- * 
- */
-void
-dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src)
-{
-#if 0
-  th_dvb_mux_instance_t *tdmi_src, *tdmi_dst;
-
-  lock_assert(&global_lock);
-
-  while((tdmi_dst = LIST_FIRST(&dst->tda_dn->dn_mux_instances)) != NULL)
-    dvb_mux_destroy(tdmi_dst);
-
-  tda_save(dst);
-#endif
-  abort(); // XXX(dvbreorg)
-}
 
 
 /**
@@ -744,24 +664,6 @@ dvb_adapter_destroy(th_dvb_adapter_t *tda)
   return 0;
 }
 #endif
-
-
-/**
- *
- */
-void
-dvb_adapter_clean(th_dvb_adapter_t *tda)
-{
-  service_t *t;
-  
-  lock_assert(&global_lock);
-
-  while((t = LIST_FIRST(&tda->tda_transports)) != NULL)
-    /* Flush all subscribers */
-    service_remove_subscriber(t, NULL, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
-}
-
-
 
 
 /**
@@ -921,7 +823,6 @@ dvb_adapter_input_dvr(void *aux)
 htsmsg_t *
 dvb_adapter_build_msg(th_dvb_adapter_t *tda)
 {
-  char buf[100];
   htsmsg_t *m = htsmsg_create_map();
   int fdiv;
 
@@ -933,8 +834,8 @@ dvb_adapter_build_msg(th_dvb_adapter_t *tda)
   if(tda->tda_current_tdmi != NULL) {
     th_dvb_mux_instance_t *tdmi = tda->tda_current_tdmi;
 
-    dvb_mux_nicename(buf, sizeof(buf), tda->tda_current_tdmi->tdmi_mux);
-    htsmsg_add_str(m, "currentMux", buf);
+    htsmsg_add_str(m, "currentMux",
+                   dvb_mux_nicename(tda->tda_current_tdmi->tdmi_mux));
 
     htsmsg_add_u32(m, "signal", MIN(tdmi->tdmi_signal * 100 / 65535, 100));
     htsmsg_add_u32(m, "snr", tdmi->tdmi_snr);

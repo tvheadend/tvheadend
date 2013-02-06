@@ -199,8 +199,6 @@ typedef struct th_dvb_mux_instance {
   int tdmi_tune_failed; // Adapter failed to tune this frequency
                         // Don't try again
 
-  int tdmi_weight;
-
   struct th_subscription_list tdmi_subscriptions;
 
 } th_dvb_mux_instance_t;
@@ -230,6 +228,9 @@ typedef struct dvb_table_feed {
 #define TDA_MUX_HASH_WIDTH 101
 
 typedef struct th_dvb_adapter {
+
+  int tda_instance;
+
 
   TAILQ_ENTRY(th_dvb_adapter) tda_global_link;
 
@@ -403,8 +404,6 @@ void dvb_adapter_set_full_mux_rx(th_dvb_adapter_t *tda, int r);
 
 void dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src);
 
-void dvb_adapter_clean(th_dvb_adapter_t *tda);
-
 int dvb_adapter_destroy(th_dvb_adapter_t *tda);
 
 void dvb_adapter_notify(th_dvb_adapter_t *tda);
@@ -490,9 +489,15 @@ dvb_mux_t *dvb_mux_find(dvb_network_t *dn, const char *netname, uint16_t onid,
                         uint16_t tsid, int enabled);
 
 
+void dvb_mux_stop(th_dvb_mux_instance_t *tdmi);
+
 void dvb_mux_initial_scan_done(dvb_mux_t *dm);
 
-int dvb_fe_tune_tdmi(th_dvb_mux_instance_t *tdmi);
+int dvb_fe_tune_tdmi(th_dvb_mux_instance_t *tdmi, const char *reason);
+
+void dvb_create_tdmis(dvb_mux_t *dm);
+
+int tdmi_current_weight(const th_dvb_mux_instance_t *tdmi);
 
 
 /**

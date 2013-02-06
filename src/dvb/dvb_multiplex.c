@@ -1293,7 +1293,7 @@ dvb_mux_get_childs(struct idnode *self)
 /**
  * These are created on the fly
  */
-static void
+void
 dvb_create_tdmis(dvb_mux_t *dm)
 {
   th_dvb_mux_instance_t *tdmi;
@@ -1322,36 +1322,64 @@ dvb_create_tdmis(dvb_mux_t *dm)
 /**
  *
  */
-static void
+void
 dvb_mux_stop(th_dvb_mux_instance_t *tdmi)
 {
   dvb_mux_t *dm = tdmi->tdmi_mux;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  service_t *s;
+
   assert(dm->dm_current_tdmi == tdmi);
   assert(tda->tda_current_tdmi == tdmi);
+
+  lock_assert(&global_lock);
+
+  /* Flush all subscribers */
+  while((s = LIST_FIRST(&tda->tda_transports)) != NULL)
+    service_remove_subscriber(s, NULL, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
 
   dvb_table_flush_all(dm);
   epggrab_mux_stop(dm, 0);
 
-  assert(dm->dm_scan_status == DM_SCAN_DONE);
+  if(dm->dm_scan_status == DM_SCAN_CURRENT) {
+    /*
+     * If we were currently doing initial scan but lost the adapter
+     * before finishing, put us back on the pending queue
+     */
+    dvb_network_t *dn = dm->dm_dn;
+    TAILQ_REMOVE(&dn->dn_initial_scan_current_queue, dm, dm_scan_link);
+    dm->dm_scan_status = DM_SCAN_PENDING;
+    TAILQ_INSERT_TAIL(&dn->dn_initial_scan_pending_queue, dm, dm_scan_link);
+    dvb_network_schedule_initial_scan(dn);
+  }
 
   dm->dm_current_tdmi = NULL;
   tda->tda_current_tdmi = NULL;
-
-  printf("NEED TO TAKE CARE OF SERVICES in dvb_mux_stop\n");
 }
 
 
 /**
  *
  */
-static int
-tdmi_compute_weight(const th_dvb_mux_instance_t *tdmi)
+int
+tdmi_current_weight(const th_dvb_mux_instance_t *tdmi)
 {
-  const dvb_mux_t *dm = tdmi->tdmi_mux;
-  if(dm->dm_scan_status == DM_SCAN_CURRENT)
-    return 1;
-  return 0;
+  int w = 0;
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  const service_t *s;
+
+
+  // This max weight of all subscriptions could be kept in the adapter struct
+  pthread_mutex_lock(&tda->tda_delivery_mutex);
+  LIST_FOREACH(s, &tda->tda_transports, s_active_link) {
+    const th_subscription_t *ths;
+    LIST_FOREACH(ths, &s->s_subscriptions, ths_service_link)
+      w = MAX(w, ths->ths_weight);
+  }
+  pthread_mutex_unlock(&tda->tda_delivery_mutex);
+
+  w = MAX(w, tdmi->tdmi_mux->dm_scan_status == DM_SCAN_CURRENT);
+  return w;
 }
 
 
@@ -1379,61 +1407,44 @@ dvb_mux_tune(dvb_mux_t *dm, const char *reason, int weight)
   th_dvb_mux_instance_t *tdmi;
   int r;
 
-  assert(dm->dm_current_tdmi == NULL);
-
   lock_assert(&global_lock);
 
-  dvb_create_tdmis(dm);
+  if(dm->dm_current_tdmi == NULL) {
 
-  retry:
-  // Figure which adapter to use
-  LIST_FOREACH(tdmi, &dm->dm_tdmis, tdmi_mux_link)
-    if(!tdmi->tdmi_tune_failed && tdmi->tdmi_adapter->tda_current_tdmi == NULL)
-      break;
+    dvb_create_tdmis(dm);
 
-  if(tdmi == NULL) {
-    // None available, need to strike one out
-    LIST_FOREACH(tdmi, &dm->dm_tdmis, tdmi_mux_link) {
-      if(tdmi->tdmi_tune_failed)
-        continue;
+    while(1) {
+      // Figure which adapter to use
+      LIST_FOREACH(tdmi, &dm->dm_tdmis, tdmi_mux_link)
+        if(!tdmi->tdmi_tune_failed && tdmi->tdmi_adapter->tda_current_tdmi == NULL)
+          break;
 
-      th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-      th_dvb_mux_instance_t *t2 = tda->tda_current_tdmi;
-      assert(t2 != NULL);
-      assert(t2 != tdmi);
+      if(tdmi == NULL) {
+        // None available, need to strike one out
+        LIST_FOREACH(tdmi, &dm->dm_tdmis, tdmi_mux_link) {
+          if(tdmi->tdmi_tune_failed)
+            continue;
 
-      if(tdmi_compute_weight(t2) < weight) {
-        dvb_mux_stop(t2);
-        break;
+          th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+          th_dvb_mux_instance_t *t2 = tda->tda_current_tdmi;
+          assert(t2 != NULL);
+          assert(t2 != tdmi);
+
+          if(tdmi_current_weight(t2) < weight) {
+            break;
+          }
+        }
+
+        if(tdmi == NULL)
+          return SM_CODE_NO_FREE_ADAPTER;
       }
+
+      r = dvb_fe_tune_tdmi(tdmi, reason);
+      if(!r)
+        break;
     }
-
-    if(tdmi == NULL)
-      return SM_CODE_NO_FREE_ADAPTER;
-
   }
 
-  tdmi->tdmi_weight = weight;
-
-  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
-
-  free(tda->tda_tune_reason);
-  tda->tda_tune_reason = strdup(reason);
-
-  r = dvb_fe_tune_tdmi(tdmi);
-
-  if(r != 0) {
-    tvhlog(LOG_ERR, "dvb", "\"%s\" tuning to \"%s\""
-           " -- Front configuration failed -- %s",
-           tda->tda_rootpath, dvb_mux_nicename(dm), strerror(errno));
-
-    /* Mark as bad */
-    tdmi->tdmi_tune_failed = 1;
-    goto retry;
-  }
-
-  tda->tda_current_tdmi = tdmi;
-  dm->dm_current_tdmi = tdmi;
   if(dm->dm_scan_status == DM_SCAN_PENDING) {
     TAILQ_REMOVE(&dn->dn_initial_scan_pending_queue, dm, dm_scan_link);
     dm->dm_scan_status = DM_SCAN_CURRENT;
@@ -1442,9 +1453,5 @@ dvb_mux_tune(dvb_mux_t *dm, const char *reason, int weight)
     gtimer_arm(&dm->dm_initial_scan_timeout, dvb_mux_initial_scan_timeout, dm, 10);
   }
 
-  dvb_table_add_default(dm);
-  epggrab_mux_start(dm);
-
-  dvb_adapter_notify(tda);
   return 0;
 }

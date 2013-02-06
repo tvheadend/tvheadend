@@ -13,7 +13,12 @@ tvheadend.dvb_networks = function() {
     root : new Ext.tree.AsyncTreeNode({
       id : 'root',
       text: 'DVB Networks'
-    })
+    }),
+    listeners: {
+      click: function(n) {
+        Ext.Msg.alert('Navigation Tree Click', 'You clicked: "' + n.attributes.text + '"');
+      }
+    }
   });
 
 

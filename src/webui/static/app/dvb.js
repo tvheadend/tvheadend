@@ -1266,10 +1266,13 @@ tvheadend.dvb_adapter_general = function(adapterData, satConfStore) {
 		if (r.data.identifier != adapterId) return;
 		infoTemplate.overwrite(infoPanel.body, r.data);
 
+          serviceScanBtn.enable();
+
 		if (r.data.services > 0 && r.data.initialMuxes == 0) serviceScanBtn
 			.enable();
 		else serviceScanBtn.disable();
 	});
+  serviceScanBtn.enable();
 
 	return panel;
 }

@@ -176,7 +176,7 @@ service_stop(service_t *t)
  */
 void
 service_remove_subscriber(service_t *t, th_subscription_t *s,
-			    int reason)
+                          int reason)
 {
   lock_assert(&global_lock);
 
@@ -197,7 +197,7 @@ service_remove_subscriber(service_t *t, th_subscription_t *s,
  *
  */
 int
-service_start(service_t *t, unsigned int weight, int force_start)
+service_start(service_t *t, int instance)
 {
   elementary_stream_t *st;
   int r, timeout = 2;
@@ -208,7 +208,7 @@ service_start(service_t *t, unsigned int weight, int force_start)
   t->s_streaming_status = 0;
   t->s_pcr_drift = 0;
 
-  if((r = t->s_start_feed(t, weight, force_start)))
+  if((r = t->s_start_feed(t, instance)))
     return r;
 
   cwc_service_start(t);
@@ -234,12 +234,73 @@ service_start(service_t *t, unsigned int weight, int force_start)
   return 0;
 }
 
+
+/**
+ * Main entry point for starting a service based on a channel
+ */
+service_instance_t *
+service_find_instance(channel_t *ch, struct service_instance_list *sil,
+                      int *error, int weight)
+{
+  service_t *s;
+  service_instance_t *si, *next;
+
+  lock_assert(&global_lock);
+
+  // First, update list of candidates
+
+  LIST_FOREACH(si, sil, si_link)
+    si->si_mark = 1;
+
+  LIST_FOREACH(s, &ch->ch_services, s_ch_link)
+    s->s_enlist(s, sil);
+
+  for(si = LIST_FIRST(sil); si != NULL; si = next) {
+    next = LIST_NEXT(si, si_link);
+    if(si->si_mark)
+      service_instance_destroy(si);
+  }
+
+  printf("Service start, enlisted candidates\n");
+  LIST_FOREACH(si, sil, si_link)
+    printf("  %s i:%d w:%d p:%d\n", si->si_s->s_nicename, si->si_instance, si->si_weight, si->si_prio);
+
+
+  // Check if any service is already running, if so, use that
+  LIST_FOREACH(si, sil, si_link)
+    if(si->si_s->s_status == SERVICE_RUNNING)
+      return si;
+
+  // Check if any is idle
+  LIST_FOREACH(si, sil, si_link)
+    if(si->si_weight == 0 && si->si_error == 0)
+      break;
+
+  // Check if to kick someone out
+  if(si == NULL) {
+    LIST_FOREACH(si, sil, si_link) {
+      if(si->si_weight < weight && si->si_error == 0)
+        break;
+    }
+  }
+
+  if(si == NULL) {
+    *error = SM_CODE_NO_FREE_ADAPTER;
+    return NULL;
+  }
+
+  service_start(si->si_s, si->si_instance);
+  return NULL;
+}
+
+
+
+#if 0
 /**
  *
  */
 service_t *
-service_find(channel_t *ch, unsigned int weight, const char *loginfo,
-	       int *errorp, service_t *skip)
+service_enlist(channel_t *ch)
 {
   service_t *t, **vec;
   int cnt = 0, i, r, off;
@@ -321,6 +382,7 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
     *errorp = SM_CODE_NO_SERVICE;
   return NULL;
 }
+#endif
 
 
 /**
@@ -1031,38 +1093,66 @@ service_refresh_channel(service_t *t)
  *
  */
 static int
-ssc_cmp(const service_start_cand_t *a,
-        const service_start_cand_t *b)
+si_cmp(const service_instance_t *a, const service_instance_t *b)
 {
-  return a->ssc_prio - b->ssc_prio;
+  return a->si_prio - b->si_prio;
 }
 
 /**
  *
  */
-service_start_cand_t *
-service_find_cand(struct service_start_cand_list *sscl,
-                  struct service *s, int instance, int prio)
+service_instance_t *
+service_instance_add(struct service_instance_list *sil,
+                     struct service *s, int instance, int prio,
+                     int weight)
 {
-  service_start_cand_t *ssc;
-  LIST_FOREACH(ssc, sscl, ssc_link) {
-    if(ssc->ssc_s == s && ssc->ssc_instance == instance)
+  service_instance_t *si;
+  LIST_FOREACH(si, sil, si_link)
+    if(si->si_s == s && si->si_instance == instance)
       break;
-  }
 
-  if(ssc != NULL) {
-    ssc = calloc(1, sizeof(service_start_cand_t));
-    ssc->ssc_s = s;
+  if(si == NULL) {
+    si = calloc(1, sizeof(service_instance_t));
+    si->si_s = s;
     service_ref(s);
-    ssc->ssc_instance = instance;
+    si->si_instance = instance;
+    si->si_weight = weight;
   } else {
-    if(ssc->ssc_prio == prio)
-      return ssc;
-    LIST_REMOVE(ssc, ssc_link);
+    si->si_mark = 0;
+    if(si->si_prio == prio && si->si_weight == weight)
+      return si;
+    LIST_REMOVE(si, si_link);
   }
-  ssc->ssc_prio = prio;
-  LIST_INSERT_SORTED(sscl, ssc, ssc_link, ssc_cmp);
-  return ssc;
+  si->si_weight = weight;
+  si->si_prio = prio;
+  LIST_INSERT_SORTED(sil, si, si_link, si_cmp);
+  return si;
+}
+
+
+/**
+ *
+ */
+void
+service_instance_destroy(service_instance_t *si)
+{
+  LIST_REMOVE(si, si_link);
+  service_unref(si->si_s);
+  free(si);
+}
+
+
+/**
+ *
+ */
+void
+service_instance_list_clear(struct service_instance_list *sil)
+{
+  lock_assert(&global_lock);
+
+  service_instance_t *si;
+  while((si = LIST_FIRST(sil)) != NULL)
+    service_instance_destroy(si);
 }
 
 

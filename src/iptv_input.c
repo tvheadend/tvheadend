@@ -198,7 +198,7 @@ iptv_thread(void *aux)
  *
  */
 static int
-iptv_service_start(service_t *t, unsigned int weight, int force_start)
+iptv_service_start(service_t *t, int instance)
 {
   pthread_t tid;
   int fd;
