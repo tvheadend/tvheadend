@@ -109,7 +109,8 @@ SRCS =  src/main.c \
   src/config2.c \
   src/lang_codes.c \
   src/lang_str.c \
-  src/imagecache.c
+  src/imagecache.c \
+  src/tvhtime.c
 
 SRCS += src/epggrab/module.c\
   src/epggrab/channel.c\

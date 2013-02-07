@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <time.h>
 
 #include <linux/dvb/frontend.h>
 #include <linux/dvb/dmx.h>
@@ -41,6 +42,7 @@
 #include "psi.h"
 #include "notify.h"
 #include "cwc.h"
+#include "tvhtime.h"
 
 #if TDT_TRACE
 #define TRACE(_pre, _fmt, ...)\
@@ -1074,6 +1076,54 @@ dvb_pmt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   return 0;
 }
 
+/*
+ * Time Offset table handler
+ */
+static int
+dvb_tot_callback(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
+    uint8_t tableid, void *opaque)
+{
+  uint16_t mjd;
+  uint8_t hour, min, sec;
+  int year, mon, day;
+  struct tm utc;
+
+  if (tableid != 0x73)
+    return -1;
+
+  /* DVB format MJD, Hour, Min, Sec */
+  mjd  = (buf[0] << 8) | buf[1];
+  hour = bcdtoint(buf[2]);
+  min  = bcdtoint(buf[3]);
+  sec  = bcdtoint(buf[4]);
+
+  /* Convert MJD (using algo from EN 300 468 v1.13.1 Annex C) */
+  year = (int)((mjd - 15078.2) / 365.25);
+  mon  = (int)((mjd - 14956.1 - (int)(year * 365.25)) / 30.6001);
+  day  = mjd - 14956 - (int)(year * 365.25) - (int)(mon * 30.6001);
+  if (mon == 14 || mon == 15) {
+    year++;
+    mon -= 12;
+  }
+  mon--;
+
+  tvhlog(LOG_DEBUG, "tdt-tot", "time is %04d/%02d/%02d %02d:%02d:%02d",
+         year+1900, mon, day, hour, min, sec);
+
+  /* Convert to UTC time_t */
+  utc.tm_wday  = 0;
+  utc.tm_yday  = 0;
+  utc.tm_isdst = 0;
+  utc.tm_year  = year;
+  utc.tm_mon   = mon - 1;
+  utc.tm_mday  = day;
+  utc.tm_hour  = hour;
+  utc.tm_min   = min;
+  utc.tm_sec   = sec;
+  tvhtime_update(&utc);
+
+  return 0;
+}
 
 /**
  * Demux for default DVB tables that we want
@@ -1097,6 +1147,10 @@ dvb_table_add_default_dvb(th_dvb_mux_instance_t *tdmi)
 
   tdt_add(tdmi, 0, 0, dvb_pidx11_callback, NULL, "pidx11", 
 	  TDT_QUICKREQ | TDT_CRC, 0x11);
+
+  /* Time Offset Table */
+
+  tdt_add(tdmi, 0, 0, dvb_tot_callback, NULL, "tot", TDT_CRC, 0x14);
 }
 
 

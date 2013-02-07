@@ -49,6 +49,7 @@
 #include "subscriptions.h"
 #include "imagecache.h"
 #include "timeshift.h"
+#include "tvhtime.h"
 
 /**
  *
@@ -1974,6 +1975,12 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
     /* Misc */
     pthread_mutex_lock(&global_lock);
     m = config_get_all();
+
+    /* Time */
+    htsmsg_add_u32(m, "tvhtime_update_enabled", tvhtime_update_enabled);
+    htsmsg_add_u32(m, "tvhtime_ntp_enabled", tvhtime_ntp_enabled);
+    htsmsg_add_u32(m, "tvhtime_tolerance", tvhtime_tolerance);
+
     pthread_mutex_unlock(&global_lock);
 
     /* Image cache */
@@ -2001,6 +2008,15 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
       save |= config_set_language(str);
     if (save)
       config_save();
+
+    /* Time */
+    if ((str = http_arg_get(&hc->hc_req_args, "tvhtime_update_enabled")))
+      tvhtime_set_update_enabled(!!str);
+    if ((str = http_arg_get(&hc->hc_req_args, "tvhtime_ntp_enabled")))
+      tvhtime_set_ntp_enabled(!!str);
+    if ((str = http_arg_get(&hc->hc_req_args, "tvhtime_tolerance")))
+      tvhtime_set_tolerance(atoi(str));
+
     pthread_mutex_unlock(&global_lock);
   
     /* Image Cache */
