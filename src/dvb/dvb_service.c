@@ -44,7 +44,7 @@
 #include "dvb_support.h"
 #include "notify.h"
 
-static htsmsg_t *dvb_service_serialize(service_t *s, int full);
+static htsmsg_t *dvb_service_serialize(service_t *s);
 
 
 /**
@@ -414,18 +414,19 @@ dvb_service_find2(dvb_mux_t *dm, uint16_t sid, int pmt_pid,
  *
  */
 static htsmsg_t *
-dvb_service_serialize(service_t *s, int full)
+dvb_service_serialize(service_t *s)
 {
   dvb_mux_t *dm = s->s_dvb_mux;
   htsmsg_t *m = htsmsg_create_map();
   char buf[100];
 
-  htsmsg_add_str(m, "id", idnode_uuid_as_str(&s->s_id));
-
-  snprintf(buf, sizeof(buf), "%s (0x%04x)",
-           s->s_svcname ?: "<noname>", s->s_dvb_service_id);
-  htsmsg_add_str(m, "text", buf);
-
+  if(s->s_svcname) {
+    htsmsg_add_str(m, "text", s->s_svcname);
+  } else {
+    snprintf(buf, sizeof(buf), "Service-0x%04x",
+             s->s_dvb_service_id);
+    htsmsg_add_str(m, "text", buf);
+  }
 
   htsmsg_add_u32(m, "enabled", s->s_enabled);
   htsmsg_add_u32(m, "channel", s->s_channel_number);

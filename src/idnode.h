@@ -1,14 +1,17 @@
 #pragma once
 
 #include "tvheadend.h"
+#include "prop.h"
 
 struct htsmsg;
 struct idnode;
 
 typedef struct idclass {
   const char *ic_class;
-  struct htsmsg *(*ic_serialize)(struct idnode *self, int full);
+  struct htsmsg *(*ic_serialize)(struct idnode *self);
   struct idnode **(*ic_get_childs)(struct idnode *self);
+  const char *(*ic_get_title)(struct idnode *self);
+  const property_t ic_properties[];
 } idclass_t;
 
 
@@ -27,3 +30,5 @@ const char *idnode_uuid_as_str(const idnode_t *in);
 idnode_t *idnode_find(const char *uuid);
 
 void idnode_unlink(idnode_t *in);
+
+htsmsg_t *idnode_serialize(struct idnode *self);

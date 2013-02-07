@@ -315,7 +315,7 @@ typedef struct service {
 
   void (*s_dtor)(struct service *t);
 
-  htsmsg_t *(*s_serialize)(struct service *s, int full);
+  htsmsg_t *(*s_serialize)(struct service *s);
 
   /*
    * Per source type structs
@@ -548,8 +548,6 @@ typedef struct service {
 
 
 void service_init(void);
-
-unsigned int service_compute_weight(struct service_list *head);
 
 int service_start(service_t *t, int instance);
 

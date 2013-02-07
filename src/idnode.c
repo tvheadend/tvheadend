@@ -156,3 +156,29 @@ idnode_unlink(idnode_t *in)
 {
   RB_REMOVE(&idnodes, in, in_link);
 }
+
+
+/**
+ *
+ */
+htsmsg_t *
+idnode_serialize(struct idnode *self)
+{
+  const idclass_t *c = self->in_class;
+  htsmsg_t *m;
+  if(c->ic_serialize != NULL) {
+    m = c->ic_serialize(self);
+  } else {
+    m = htsmsg_create_map();
+
+    if(c->ic_get_title != NULL) {
+      htsmsg_add_str(m, "text", c->ic_get_title(self));
+    } else {
+      htsmsg_add_str(m, "text", idnode_uuid_as_str(self));
+    }
+    htsmsg_add_msg(m, "properties", prop_get_values(self, c->ic_properties));
+    htsmsg_add_msg(m, "propertynames", prop_get_names(c->ic_properties));
+    htsmsg_add_str(m, "id", idnode_uuid_as_str(self));
+  }
+  return m;
+}

@@ -51,7 +51,7 @@
 
 static void service_data_timeout(void *aux);
 
-static htsmsg_t *service_serialize(struct idnode *self, int full);
+static htsmsg_t *service_serialize(struct idnode *self);
 
 static const idclass_t service_class = {
   .ic_class = "service",
@@ -261,11 +261,6 @@ service_find_instance(channel_t *ch, struct service_instance_list *sil,
       service_instance_destroy(si);
   }
 
-  printf("Service start, enlisted candidates\n");
-  LIST_FOREACH(si, sil, si_link)
-    printf("  %s i:%d w:%d p:%d\n", si->si_s->s_nicename, si->si_instance, si->si_weight, si->si_prio);
-
-
   // Check if any service is already running, if so, use that
   LIST_FOREACH(si, sil, si_link)
     if(si->si_s->s_status == SERVICE_RUNNING)
@@ -384,27 +379,6 @@ service_enlist(channel_t *ch)
 }
 #endif
 
-
-/**
- *
- */
-unsigned int 
-service_compute_weight(struct service_list *head)
-{
-  service_t *t;
-  th_subscription_t *s;
-  int w = 0;
-
-  lock_assert(&global_lock);
-
-  LIST_FOREACH(t, head, s_active_link) {
-    LIST_FOREACH(s, &t->s_subscriptions, ths_service_link) {
-      if(s->ths_weight > w)
-	w = s->ths_weight;
-    }
-  }
-  return w;
-}
 
 
 /**
@@ -1219,8 +1193,8 @@ htsmsg_t *servicetype_list ( void )
  *
  */
 static htsmsg_t *
-service_serialize(struct idnode *self, int full)
+service_serialize(struct idnode *self)
 {
   service_t *s = (service_t *)self;
-  return s->s_serialize(s, full);
+  return s->s_serialize(s);
 }

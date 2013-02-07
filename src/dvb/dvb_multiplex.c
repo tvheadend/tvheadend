@@ -58,13 +58,18 @@ static struct strtab muxfestatustab[] = {
 
 
 
-static htsmsg_t *dvb_mux_serialize(struct idnode *self, int full);
 static idnode_t **dvb_mux_get_childs(struct idnode *self);
+static const char *dvb_mux_get_title(struct idnode *self);
 
 static const idclass_t dvb_mux_class = {
   .ic_class = "dvbmux",
-  .ic_serialize = dvb_mux_serialize,
+  .ic_get_title = dvb_mux_get_title,
   .ic_get_childs = dvb_mux_get_childs,
+  .ic_properties = {
+    {
+      "enabled", "Enabled", PT_BOOL,
+      offsetof(dvb_mux_t, dm_enabled)
+    }, {}}
 };
 
 
@@ -1244,14 +1249,10 @@ dvb_subscription_create_from_tdmi(th_dvb_mux_instance_t *tdmi,
 /**
  *
  */
-static htsmsg_t *
-dvb_mux_serialize(struct idnode *self, int full)
+static const char *
+dvb_mux_get_title(struct idnode *self)
 {
-  dvb_mux_t *dm = (dvb_mux_t *)self;
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "id", idnode_uuid_as_str(&dm->dm_id));
-  htsmsg_add_str(m, "text", dvb_mux_nicename(dm));
-  return m;
+  return dvb_mux_nicename((dvb_mux_t *)self);
 }
 
 /**

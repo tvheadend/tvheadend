@@ -27,13 +27,23 @@
 
 struct dvb_network_list dvb_networks;
 
-static htsmsg_t *dvb_network_serialize(struct idnode *self, int full);
 static idnode_t **dvb_network_get_childs(struct idnode *self);
 
 static const idclass_t dvb_network_class = {
   .ic_class = "dvbnetwork",
-  .ic_serialize = dvb_network_serialize,
   .ic_get_childs = dvb_network_get_childs,
+  .ic_properties = {
+    {
+      "autodiscovery", "Auto discovery", PT_BOOL,
+      offsetof(dvb_network_t, dn_autodiscovery)
+    }, {
+      "nitoid", "NIT OID", PT_INT,
+      offsetof(dvb_network_t, dn_nitoid)
+    }, {
+      "disable_pmt_monitor", "Disable PMT monitor", PT_BOOL,
+      offsetof(dvb_network_t, dn_disable_pmt_monitor)
+    }, {
+    }},
 };
 
 /**
@@ -42,14 +52,11 @@ static const idclass_t dvb_network_class = {
 dvb_network_t *
 dvb_network_create(int fe_type, const char *uuid)
 {
-  printf("Creating network %s\n", uuid);
   dvb_network_t *dn = calloc(1, sizeof(dvb_network_t));
   if(idnode_insert(&dn->dn_id, uuid, &dvb_network_class)) {
     free(dn);
     return NULL;
   }
-
-  printf("Added network %s\n", idnode_uuid_as_str(&dn->dn_id));
 
   dn->dn_fe_type = fe_type;
   TAILQ_INIT(&dn->dn_initial_scan_pending_queue);
@@ -60,20 +67,6 @@ dvb_network_create(int fe_type, const char *uuid)
   return dn;
 }
 
-
-
-/**
- *
- */
-static htsmsg_t *
-dvb_network_serialize(struct idnode *self, int full)
-{
-  dvb_network_t *dn = (dvb_network_t *)self;
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "id", idnode_uuid_as_str(&dn->dn_id));
-  htsmsg_add_str(m, "text", idnode_uuid_as_str(&dn->dn_id));
-  return m;
-}
 
 
 /**
@@ -161,68 +154,6 @@ dvb_network_save(dvb_network_t *dn)
 #endif
 
 
-#if 0
-/**
- *
- */
-void
-dvb_network_set_auto_discovery(dvb_network_t *dn, int on)
-{
-  if(dn->dn_autodiscovery == on)
-    return;
-
-  lock_assert(&global_lock);
-
-  tvhlog(LOG_NOTICE, "dvb", "Network \"%s\" mux autodiscovery set to: %s",
-	 dn->dn_displayname, on ? "On" : "Off");
-
-  dn->dn_autodiscovery = on;
-  dvb_network_save(dn);
-}
-
-
-
-/**
- *
- */
-void
-dvb_network_set_nitoid(dvb_network_t *dn, int nitoid)
-{
-  lock_assert(&global_lock);
-
-  if(dn->dn_nitoid == nitoid)
-    return;
-
-  tvhlog(LOG_NOTICE, "dvb", "NIT-o network id \"%d\" changed to \"%d\"",
-	 dn->dn_nitoid, nitoid);
-
-  dn->dn_nitoid = nitoid;
-  dvb_network_save(dn);
-}
-
-
-
-/**
- *
- */
-void
-dvb_network_set_disable_pmt_monitor(th_dvb_network_t *dn, int on)
-{
-  if(dn->dn_disable_pmt_monitor == on)
-    return;
-
-  lock_assert(&global_lock);
-
-  tvhlog(LOG_NOTICE, "dvb", "Network \"%s\" disabled PMT monitoring set to: %s",
-	 dn->dn_displayname, on ? "On" : "Off");
-
-  dn->dn_disable_pmt_monitor = on;
-  dvb_network_save(dn);
-}
-
-#endif
-
-
 
 /**
  *
@@ -267,9 +198,6 @@ dvb_network_init(void)
 
   if((l = hts_settings_load_r(1, "dvb/networks")) == NULL)
     return;
-
-
-  htsmsg_print(l);
 
   HTSMSG_FOREACH(f, l) {
     if((c = htsmsg_get_map_by_field(f)) == NULL)

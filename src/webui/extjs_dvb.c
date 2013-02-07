@@ -715,7 +715,7 @@ extjs_dvbnetworks(http_connection_t *hc, const char *remain, void *opaque)
 
   int i;
   for(i = 0; v[i] != NULL; i++) {
-    htsmsg_t *m = v[i]->in_class->ic_serialize(v[i], 0);
+    htsmsg_t *m = idnode_serialize(v[i]);
     if(v[i]->in_class->ic_get_childs == NULL)
       htsmsg_add_u32(m, "leaf", 1);
     htsmsg_add_msg(out, NULL, m);
