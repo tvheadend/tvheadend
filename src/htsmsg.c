@@ -180,6 +180,16 @@ htsmsg_destroy(htsmsg_t *msg)
  *
  */
 void
+htsmsg_add_bool(htsmsg_t *msg, const char *name, int b)
+{
+  htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_BOOL, HMF_NAME_ALLOCED);
+  f->hmf_bool = !!b;
+}
+
+/*
+ *
+ */
+void
 htsmsg_add_u32(htsmsg_t *msg, const char *name, uint32_t u32)
 {
   htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_S64, HMF_NAME_ALLOCED);
@@ -313,11 +323,25 @@ htsmsg_get_s64(htsmsg_t *msg, const char *name, int64_t *s64p)
   case HMF_S64:
     *s64p = f->hmf_s64;
     break;
+  case HMF_BOOL:
+    *s64p = f->hmf_bool;
+    break;
   case HMF_DBL:
     *s64p = f->hmf_dbl;
     break;
   }
   return 0;
+}
+
+
+/**
+ *
+ */
+int
+htsmsg_get_bool_or_default(htsmsg_t *msg, const char *name, int def)
+{
+  int64_t s64;
+  return htsmsg_get_s64(msg, name, &s64) ? def : s64;
 }
 
 
@@ -598,6 +622,10 @@ htsmsg_print0(htsmsg_t *msg, int indent)
       printf("S64) = %" PRId64 "\n", f->hmf_s64);
       break;
 
+    case HMF_BOOL:
+      printf("BOOL) = %s\n", f->hmf_bool ? "true" : "false");
+      break;
+
     case HMF_DBL:
       printf("DBL) = %f\n", f->hmf_dbl);
       break;
@@ -642,6 +670,10 @@ htsmsg_copy_i(htsmsg_t *src, htsmsg_t *dst)
 
     case HMF_S64:
       htsmsg_add_s64(dst, f->hmf_name, f->hmf_s64);
+      break;
+
+    case HMF_BOOL:
+      htsmsg_add_bool(dst, f->hmf_name, f->hmf_bool);
       break;
 
     case HMF_BIN:
