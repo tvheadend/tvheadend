@@ -52,7 +52,6 @@ dvb_table_fastswitch(th_dvb_mux_instance_t *tdmi)
   th_dvb_table_t *tdt;
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   dvb_mux_t *dm = tdmi->tdmi_mux;
-  char buf[100];
 
   if(dm->dm_scan_status == DM_SCAN_DONE)
     return;
@@ -63,9 +62,8 @@ dvb_table_fastswitch(th_dvb_mux_instance_t *tdmi)
 
   dvb_mux_save(dm);
 
-  dvb_mux_nicename(buf, sizeof(buf), dm);
   tvhlog(LOG_DEBUG, "dvb", "\"%s\" initial scan completed for \"%s\"",
-	 tda->tda_rootpath, buf);
+	 tda->tda_rootpath, dvb_mux_nicename(dm));
   dvb_mux_initial_scan_done(dm);
 }
 

@@ -52,7 +52,7 @@ typedef struct rawts {
  *
  */
 static int
-rawts_service_start(service_t *t, unsigned int weight, int force_start)
+rawts_service_start(service_t *t, int id)
 {
   return 0; // Always ok
 }
