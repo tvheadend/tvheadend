@@ -54,6 +54,11 @@ check_cc_option sse2
 check_cc_snippet getloadavg '#include <stdlib.h> 
 void test() { getloadavg(NULL,0); }'
 
+check_cc_snippet atomic64 '#include <stdint.h>
+uint64_t test(uint64_t *ptr){
+return __sync_fetch_and_add(ptr, 1);
+}'
+
 #
 # Python
 #

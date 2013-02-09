@@ -63,6 +63,7 @@ static inline htsmsg_t *tvheadend_capabilities_list(int check)
 extern pthread_mutex_t global_lock;
 extern pthread_mutex_t ffmpeg_lock;
 extern pthread_mutex_t fork_lock;
+extern pthread_mutex_t atomic_lock;
 
 extern int tvheadend_webui_port;
 extern int tvheadend_webui_debug;
