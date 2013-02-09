@@ -356,7 +356,6 @@ static int _timeshift_read
     } else {
       streaming_message_t *ssm = _timeshift_find_sstart(*cur_file, (*sm)->sm_time);
       if (ssm && ssm->sm_data != ts->smt_start) {
-        printf("SENDING NEW SMT_START MESSAGE\n");
         streaming_target_deliver2(ts->output, streaming_msg_clone(ssm));
         if (ts->smt_start)
           streaming_start_unref(ts->smt_start);

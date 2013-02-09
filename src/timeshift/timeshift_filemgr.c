@@ -226,7 +226,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
 
     /* Check size */
     if (!timeshift_unlimited_size &&
-        atomic_add_u64(&timeshift_total_size, 0) >= timeshift_max_size) {
+        atomic_pre_add_u64(&timeshift_total_size, 0) >= timeshift_max_size) {
       tvhlog(LOG_DEBUG, "timshift", "ts %d buffer full", ts->id);
       ts->full = 1;
     }

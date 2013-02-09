@@ -35,3 +35,15 @@ atomic_add_u64(volatile uint64_t *ptr, uint64_t incr)
 {
   return __sync_fetch_and_add(ptr, incr);
 }
+
+static inline uint64_t
+atomic_pre_add_u64(volatile uint64_t *ptr, uint64_t incr)
+{
+  return __sync_add_and_fetch(ptr, incr);
+}
+
+static inline uint64_t
+atomic_pre_add_u64(volatile uint64_t *ptr, uint64_t incr)
+{
+  return __sync_add_and_fetch(ptr, incr);
+}
