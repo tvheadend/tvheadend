@@ -22,11 +22,13 @@ script
   [ -z "$TVH_GROUP"     ] || ARGS="$ARGS -g $TVH_GROUP"
   [ -z "$TVH_CONF_DIR"  ] || ARGS="$ARGS -c $TVH_CONF_DIR"
   [ -z "$TVH_ADAPTERS"  ] || ARGS="$ARGS -a $TVH_ADAPTERS"
-  [ "$TVH_IPV6" == "1"  ] && ARGS="$ARGS -6"
+  [ "$TVH_IPV6" = "1"   ] && ARGS="$ARGS -6"
   [ -z "$TVH_HTTP_PORT" ] || ARGS="$ARGS --http_port $TVH_HTTP_PORT"
   [ -z "$TVH_HTTP_ROOT" ] || ARGS="$ARGS --http_root $TVH_HTTP_ROOT"
   [ -z "$TVH_HTSP_PORT" ] || ARGS="$ARGS --htsp_port $TVH_HTSP_PORT"
   [ "$TVH_DEBUG" = "1"  ] && ARGS="$ARGS -s"
+
+  [ ! -z "$TVH_DELAY" ] && sleep $TVH_DELAY
 
   exec tvheadend $ARGS $TVH_ARGS
 end script
