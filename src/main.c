@@ -514,7 +514,7 @@ main(int argc, char **argv)
     gid_t gid;
     uid_t uid;
     struct group  *grp = getgrnam(opt_group ?: "video");
-    struct passwd *pw  = getpwnam(opt_user) ?: NULL;
+    struct passwd *pw  = opt_user ? getpwnam(opt_user) : NULL;
     FILE   *pidfile    = fopen(opt_pidpath, "w+");
 
     if(grp != NULL) {
