@@ -256,7 +256,7 @@ show_usage
 {
   int i;
   char buf[256];
-  printf("Usage :- %s [options]\n\n", argv0);
+  printf("Usage: %s [options]\n\n", argv0);
   printf("Options\n");
   for (i = 0; i < num; i++) {
 
@@ -267,10 +267,10 @@ show_usage
 
     /* Option */
     } else {
-      char sopt[4];
+      char sopt[6];
       char *desc, *tok;
       if (opts[i].sopt)
-        snprintf(sopt, sizeof(sopt), "-%c/", opts[i].sopt);
+        snprintf(sopt, sizeof(sopt), "-%c | ", opts[i].sopt);
       else
         sopt[0] = 0;
       snprintf(buf, sizeof(buf), "  %s--%s", sopt, opts[i].lopt);
@@ -290,7 +290,7 @@ show_usage
   }
   printf("\n");
   printf("For more information read the man page or visit\n");
-  printf(" http://www.lonelycoder.com/hts/\n");
+  printf("http://www.lonelycoder.com/redmine/projects/tvheadend/wiki/\n");
   printf("\n");
   exit(0);
 }
@@ -762,7 +762,7 @@ tvhlogv(int notify, int severity, const char *subsys, const char *fmt,
     } else {
       sgroff = "\033[0m";
     }
-    fprintf(stderr, "%s%s [%7s]:%s%s\n", sgr, t, leveltxt, buf, sgroff);
+    fprintf(stderr, "%s%s [%7s] %s%s\n", sgr, t, leveltxt, buf, sgroff);
   }
 
   /**
