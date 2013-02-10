@@ -933,7 +933,7 @@ static void
 webui_static_content(const char *http_path, const char *source)
 {
   http_path_add(http_path, strdup(source), page_static_file,
-    ACCESS_WEB_INTERFACE);
+    ACCESS_WEBUI);
 }
 
 
@@ -958,18 +958,18 @@ webui_init(void)
   if (tvheadend_webui_debug)
     tvhlog(LOG_INFO, "webui", "Running web interface in debug mode");
 
-  http_path_add("", NULL, page_root2, ACCESS_WEB_INTERFACE);
-  http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
+  http_path_add("", NULL, page_root2, ACCESS_WEBUI);
+  http_path_add("/", NULL, page_root, ACCESS_WEBUI);
 
-  http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_WEB_INTERFACE);
-  http_path_add("/favicon.ico", NULL, favicon, ACCESS_WEB_INTERFACE);
-  http_path_add("/playlist", NULL, page_http_playlist, ACCESS_WEB_INTERFACE);
+  http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_WEBUI);
+  http_path_add("/favicon.ico", NULL, favicon, ACCESS_WEBUI);
+  http_path_add("/playlist", NULL, page_http_playlist, ACCESS_WEBUI);
 
   http_path_add("/state", NULL, page_statedump, ACCESS_ADMIN);
 
   http_path_add("/stream",  NULL, http_stream,  ACCESS_STREAMING);
 
-  http_path_add("/imagecache", NULL, page_imagecache, ACCESS_WEB_INTERFACE);
+  http_path_add("/imagecache", NULL, page_imagecache, ACCESS_WEBUI);
 
   webui_static_content("/static",        "src/webui/static");
   webui_static_content("/docs",          "docs/html");
