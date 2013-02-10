@@ -278,8 +278,8 @@ comet_mailbox_dbg(http_connection_t *hc, const char *remain, void *opaque)
 void
 comet_init(void)
 {
-  http_path_add("/comet/poll",  NULL, comet_mailbox_poll, ACCESS_WEB_INTERFACE);
-  http_path_add("/comet/debug", NULL, comet_mailbox_dbg,  ACCESS_WEB_INTERFACE);
+  http_path_add("/comet/poll",  NULL, comet_mailbox_poll, ACCESS_WEBUI);
+  http_path_add("/comet/debug", NULL, comet_mailbox_dbg,  ACCESS_WEBUI);
 }
 
 

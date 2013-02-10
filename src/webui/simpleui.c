@@ -33,7 +33,7 @@
 #include "config.h"
 
 #define ACCESS_SIMPLE \
-(ACCESS_WEB_INTERFACE | ACCESS_RECORDER)
+(ACCESS_WEBUI | ACCESS_RECORDER)
 
 static struct strtab recstatustxt[] = {
   { "Recording scheduled", DVR_SCHEDULED  },

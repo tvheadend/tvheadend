@@ -66,13 +66,13 @@ typedef struct access_ticket {
   char *at_resource;
 } access_ticket_t;
 
-#define ACCESS_ANONYMOUS       0x0
+#define ACCESS_PUBLIC          0x0
 #define ACCESS_STREAMING       0x1
-#define ACCESS_WEB_INTERFACE   0x2
+#define ACCESS_WEBUI           0x2
 #define ACCESS_RECORDER        0x4
 #define ACCESS_RECORDER_ALL    0x8
 #define ACCESS_ADMIN           0x10
-#define ACCESS_FULL 0x3f
+#define ACCESS_FULL            0x3f
 
 /**
  * Create a new ticket for the requested resource and generate a id for it

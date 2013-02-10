@@ -704,7 +704,7 @@ void
 extjs_start_dvb(void)
 {
   http_path_add("/dvbnetworks", 
-		NULL, extjs_dvbnetworks, ACCESS_WEB_INTERFACE);
+		NULL, extjs_dvbnetworks, ACCESS_WEBUI);
 
   http_path_add("/dvb/adapter", 
 		NULL, extjs_dvbadapter, ACCESS_ADMIN);

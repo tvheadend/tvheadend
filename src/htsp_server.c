@@ -1617,8 +1617,8 @@ struct {
   htsmsg_t *(*fn)(htsp_connection_t *htsp, htsmsg_t *in);
   int privmask;
 } htsp_methods[] = {
-  { "hello",                    htsp_method_hello,          ACCESS_ANONYMOUS},
-  { "authenticate",             htsp_method_authenticate,   ACCESS_ANONYMOUS},
+  { "hello",                    htsp_method_hello,          ACCESS_PUBLIC},
+  { "authenticate",             htsp_method_authenticate,   ACCESS_PUBLIC},
   { "getDiskSpace",             htsp_method_getDiskSpace,   ACCESS_STREAMING},
   { "getSysTime",               htsp_method_getSysTime,     ACCESS_STREAMING},
   { "enableAsyncMetadata",      htsp_method_async,          ACCESS_STREAMING},

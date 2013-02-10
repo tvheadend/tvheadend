@@ -564,7 +564,7 @@ access_record_build(access_entry_t *ae)
   htsmsg_add_u32(e, "streaming", ae->ae_rights & ACCESS_STREAMING     ? 1 : 0);
   htsmsg_add_u32(e, "dvr"      , ae->ae_rights & ACCESS_RECORDER      ? 1 : 0);
   htsmsg_add_u32(e, "dvrallcfg", ae->ae_rights & ACCESS_RECORDER_ALL  ? 1 : 0);
-  htsmsg_add_u32(e, "webui"    , ae->ae_rights & ACCESS_WEB_INTERFACE ? 1 : 0);
+  htsmsg_add_u32(e, "webui"    , ae->ae_rights & ACCESS_WEBUI         ? 1 : 0);
   htsmsg_add_u32(e, "admin"    , ae->ae_rights & ACCESS_ADMIN         ? 1 : 0);
 
 
@@ -665,7 +665,7 @@ access_record_update(void *opaque, const char *id, htsmsg_t *values,
     access_update_flag(ae, ACCESS_ADMIN, u32);
 
   if(!htsmsg_get_u32(values, "webui", &u32))
-    access_update_flag(ae, ACCESS_WEB_INTERFACE, u32);
+    access_update_flag(ae, ACCESS_WEBUI, u32);
 
   return access_record_build(ae);
 }
