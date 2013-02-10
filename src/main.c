@@ -388,14 +388,14 @@ main(int argc, char **argv)
     { 'u', "user",      "Run as user",             OPT_STR,  &opt_user    },
     { 'g', "group",     "Run as group",            OPT_STR,  &opt_group   },
     { 'p', "pid",       "Alternate pid path",      OPT_STR,  &opt_pidpath },
-    { 'C', "firstrun",  "If no useraccount exist then create one with\n"
+    { 'C', "firstrun",  "If no user account exists then create one with\n"
 	                      "no username and no password. Use with care as\n"
 	                      "it will allow world-wide administrative access\n"
 	                      "to your Tvheadend installation until you edit\n"
 	                      "the access-control from within the Tvheadend UI",
       OPT_BOOL, &opt_firstrun },
 #if ENABLE_LINUXDVB
-    { 'a', "adapters",  "Use only specified DVB adapters",
+    { 'a', "adapters",  "Only use specified DVB adapters (comma separated)",
       OPT_STR, &opt_dvb_adapters },
 #endif
     {   0, NULL,         "Server Connectivity",    OPT_BOOL, NULL         },
@@ -474,13 +474,16 @@ main(int argc, char **argv)
   if (!opt_dvb_adapters) {
     adapter_mask = ~0;
   } else {
-    char *p, *r, *e;
+    char *p, *e;
+    char *r = NULL;
+    char *dvb_adapters = strdup(opt_dvb_adapters);
     adapter_mask = 0x0;
-    p = strtok_r((char*)opt_dvb_adapters, ",", &r);
+    p = strtok_r(dvb_adapters, ",", &r);
     while (p) {
       int a = strtol(p, &e, 10);
       if (*e != 0 || a < 0 || a > 31) {
         tvhlog(LOG_ERR, "START", "Invalid adapter number '%s'", p);
+        free(dvb_adapters);
         return 1;
       }
       adapter_mask |= (1 << a);
@@ -488,8 +491,10 @@ main(int argc, char **argv)
     }
     if (!adapter_mask) {
       tvhlog(LOG_ERR, "START", "No adapters specified!");
+      free(dvb_adapters);
       return 1;
     }
+    free(dvb_adapters);
   }
 #endif
   if (tvheadend_webroot) {
