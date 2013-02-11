@@ -878,6 +878,11 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   uint16_t network_id = (ptr[0] << 8) | ptr[1];
   netname[0] = '\0';
 
+  TRACE("nit", "tableid 0x%02x", tableid);
+#if TDT_TRACE
+  hexdump("nit", ptr, len);
+#endif
+
   /* Check NID */
   if(tdmi->tdmi_adapter->tda_nitoid &&
      tdmi->tdmi_adapter->tda_nitoid != network_id)
@@ -898,10 +903,14 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     dtag = ptr[0];
     dlen = ptr[1];
 
+    TRACE("nit", "dtag %02X dlen %d", dtag, dlen);
+
     switch(dtag) {
       case DVB_DESC_NETWORK_NAME:
         if(dvb_get_string(netname, sizeof(netname), ptr+2, dlen, NULL, NULL))
           return -1;
+        if(tableid == 0x40 && (!tdmi->tdmi_network || *tdmi->tdmi_network == '\0'))
+          dvb_mux_set_networkname(tdmi, netname);
         break;
     }
 
@@ -933,6 +942,8 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     while(llen > 2) {
       dtag = ptr[0];
       dlen = ptr[1];
+
+      TRACE("nit", "    dtag %02X dlen %d", dtag, dlen);
 
       switch(dtag) {
         case DVB_DESC_SAT:
@@ -1133,14 +1144,7 @@ dvb_table_add_default_dvb(th_dvb_mux_instance_t *tdmi)
 {
   /* Network Information Table */
 
-  int table;
-
-  if(tdmi->tdmi_adapter->tda_nitoid) {
-    table = 0x41;
-  } else {
-    table = 0x40;
-  }
-  tdt_add(tdmi, table, 0xff, dvb_nit_callback, NULL, "nit", 
+  tdt_add(tdmi, 0, 0, dvb_nit_callback, NULL, "nit", 
 	  TDT_QUICKREQ | TDT_CRC, 0x10);
 
   /* Service Descriptor Table and Bouqeut Allocation Table */

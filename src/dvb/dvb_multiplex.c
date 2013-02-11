@@ -206,7 +206,7 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
       tdmi->tdmi_network_id = onid;
       save = 1;
     }
-    if(network && strcmp(tdmi->tdmi_network ?: "", network)) {
+    if(network && *network && strcmp(tdmi->tdmi_network ?: "", network)) {
       free(tdmi->tdmi_network);
       tdmi->tdmi_network = strdup(network);
       save = 1;
@@ -847,6 +847,9 @@ void
 dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *networkname)
 {
   htsmsg_t *m;
+
+  if (!networkname || !*networkname)
+    return;
 
   free(tdmi->tdmi_network);
   tdmi->tdmi_network = strdup(networkname);
