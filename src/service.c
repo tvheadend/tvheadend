@@ -940,6 +940,16 @@ service_set_enable(service_t *t, int enabled)
 }
 
 void
+service_set_name(service_t *t, const char* name)
+{
+  if( !strcmp(t->s_ch->ch_name, name) )
+    return;
+
+  t->s_ch->ch_name = strdup(name);
+  t->s_config_save(t);
+}
+
+void
 service_set_prefcapid(service_t *t, uint32_t prefcapid)
 {
   if(t->s_prefcapid == prefcapid)

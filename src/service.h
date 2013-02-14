@@ -602,6 +602,8 @@ void service_set_dvb_charset(service_t *t, const char *dvb_charset);
 
 void service_set_dvb_eit_enable(service_t *t, int dvb_eit_enable);
 
+void service_set_name(service_t *t, const char* name);
+
 void service_set_prefcapid(service_t *t, uint32_t prefcapid);
 
 int service_is_primary_epg (service_t *t);
