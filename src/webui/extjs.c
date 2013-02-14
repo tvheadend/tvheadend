@@ -1566,6 +1566,11 @@ service_update(htsmsg_t *in)
     {
       if( t->s_ch == NULL)
         service_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
+      else
+      {
+        channel_rename(t->s_ch,chname);
+        service_set_name(t,chname);
+      }
     } 
 
     if(!htsmsg_get_u32(c, "prefcapid", &u32))
