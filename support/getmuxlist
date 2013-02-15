@@ -12,8 +12,9 @@ if [ -d ${DIR}/.git ]; then
   (cd ${DIR}; git pull) &> /dev/null
 
 # Fetch
-else
-  rm -rf ${DIR} &> /dev/null
+elif [ ! -d ${DIR} ]; then
   URL=git://linuxtv.org/dtv-scan-tables.git
   git clone $URL ${DIR} &> /dev/null
 fi
+
+# Note: will not update existing set (if not .git)
