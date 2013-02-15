@@ -161,6 +161,7 @@ void timeshift_filemgr_remove
 {
   if (tsf->fd != -1)
     close(tsf->fd);
+  tvhlog(LOG_DEBUG, "timeshift", "ts %d remove %s\n", ts->id, tsf->path);
   TAILQ_REMOVE(&ts->files, tsf, link);
   atomic_add_u64(&timeshift_total_size, -tsf->size);
   timeshift_reaper_remove(tsf);
@@ -192,7 +193,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
 
   /* Return last file */
   if (!create)
-    return TAILQ_LAST(&ts->files, timeshift_file_list);
+    return timeshift_filemgr_newest(ts);
 
   /* No space */
   if (ts->full)
@@ -216,9 +217,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
         if (!tsf_hd->refcount) {
           timeshift_filemgr_remove(ts, tsf_hd, 0);
         } else {
-#ifdef TSHFT_TRACE
           tvhlog(LOG_DEBUG, "timeshift", "ts %d buffer full", ts->id);
-#endif
           ts->full = 1;
         }
       }
@@ -227,8 +226,16 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
     /* Check size */
     if (!timeshift_unlimited_size &&
         atomic_pre_add_u64(&timeshift_total_size, 0) >= timeshift_max_size) {
-      tvhlog(LOG_DEBUG, "timshift", "ts %d buffer full", ts->id);
-      ts->full = 1;
+
+      /* Remove the last file (if we can) */
+      if (!tsf_hd->refcount) {
+        timeshift_filemgr_remove(ts, tsf_hd, 0);
+
+      /* Full */
+      } else {
+        tvhlog(LOG_DEBUG, "timshift", "ts %d buffer full", ts->id);
+        ts->full = 1;
+      }
     }
       
     /* Create new file */
@@ -273,6 +280,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
     tsf_tl = tsf_tmp;
   }
 
+  tsf_tl->refcount++;
   return tsf_tl;
 }
 
@@ -303,11 +311,24 @@ timeshift_file_t *timeshift_filemgr_prev
 /*
  * Get the oldest file
  */
-timeshift_file_t *timeshift_filemgr_last ( timeshift_t *ts )
+timeshift_file_t *timeshift_filemgr_oldest ( timeshift_t *ts )
 {
-  return TAILQ_FIRST(&ts->files);
+  timeshift_file_t *tsf = TAILQ_FIRST(&ts->files);
+  if (tsf)
+    tsf->refcount++;
+  return tsf;
 }
 
+/*
+ * Get the newest file
+ */
+timeshift_file_t *timeshift_filemgr_newest ( timeshift_t *ts )
+{
+  timeshift_file_t *tsf = TAILQ_LAST(&ts->files, timeshift_file_list);
+  if (tsf)
+    tsf->refcount++;
+  return tsf;
+}
 
 /* **************************************************************************
  * Setup / Teardown
