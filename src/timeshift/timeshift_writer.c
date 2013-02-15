@@ -271,6 +271,7 @@ static void _process_msg
           tsf->bad = 1;
           ts->full = 1; ///< Stop any more writing
         }
+        tsf->refcount--;
       }
       pthread_mutex_unlock(&ts->rdwr_mutex);
       break;

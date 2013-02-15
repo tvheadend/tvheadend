@@ -192,10 +192,11 @@ static timeshift_index_iframe_t *_timeshift_first_frame
 { 
   int end;
   timeshift_index_iframe_t *tsi = NULL;
-  timeshift_file_t *tsf = timeshift_filemgr_last(ts);
+  timeshift_file_t *tsf = timeshift_filemgr_oldest(ts);
   while (tsf && !tsi) {
-    if (!(tsi = TAILQ_FIRST(&tsf->iframes)))
+    if (!(tsi = TAILQ_FIRST(&tsf->iframes))) {
       tsf = timeshift_filemgr_next(tsf, &end, 0);
+    }
   }
   if (tsf)
     tsf->refcount--;
@@ -209,8 +210,9 @@ static timeshift_index_iframe_t *_timeshift_last_frame
   timeshift_index_iframe_t *tsi = NULL;
   timeshift_file_t *tsf = timeshift_filemgr_get(ts, 0);
   while (tsf && !tsi) {
-    if (!(tsi = TAILQ_LAST(&tsf->iframes, timeshift_index_iframe_list)))
+    if (!(tsi = TAILQ_LAST(&tsf->iframes, timeshift_index_iframe_list))) {
       tsf = timeshift_filemgr_prev(tsf, &end, 0);
+    }
   }
   if (tsf)
     tsf->refcount--;
@@ -227,6 +229,10 @@ static int _timeshift_skip
   int64_t                   sec  = req_time / (1000000 * TIMESHIFT_FILE_PERIOD);
   int                       back = (req_time < cur_time) ? 1 : 0;
   int                       end  = 0;
+  
+  /* Hold local ref */
+  if (cur_file)
+    cur_file->refcount++;
 
   /* Coarse search */
   if (!tsi) {
@@ -272,7 +278,7 @@ static int _timeshift_skip
   /* Find start/end of buffer */
   if (end) {
     if (back) {
-      tsf = timeshift_filemgr_last(ts);
+      tsf = timeshift_filemgr_oldest(ts);
       tsi = NULL;
       while (tsf && !tsi) {
         if (!(tsi = TAILQ_FIRST(&tsf->iframes)))
@@ -289,6 +295,9 @@ static int _timeshift_skip
       end = 1;
     }
   }
+
+  if (cur_file)
+    cur_file->refcount--;
 
   /* Done */
   *new_file = tsf;
@@ -667,6 +676,8 @@ void *timeshift_reader ( void *p )
         }
 
         /* Position */
+        if (cur_file)
+          cur_file->refcount--;
         cur_file = tsf;
         if (tsi)
           cur_off = tsi->pos;
