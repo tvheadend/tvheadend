@@ -75,7 +75,6 @@ static void* timeshift_reaper_callback ( void *p )
       if (errno != ENOTEMPTY)
         tvhlog(LOG_ERR, "timeshift", "failed to remove %s [e=%s]",
                dpath, strerror(errno));
-    atomic_add_u64(&timeshift_total_size, -tsf->size);
 
     /* Free memory */
     while ((ti = TAILQ_FIRST(&tsf->iframes))) {
@@ -163,6 +162,7 @@ void timeshift_filemgr_remove
   if (tsf->fd != -1)
     close(tsf->fd);
   TAILQ_REMOVE(&ts->files, tsf, link);
+  atomic_add_u64(&timeshift_total_size, -tsf->size);
   timeshift_reaper_remove(tsf);
 }
 
