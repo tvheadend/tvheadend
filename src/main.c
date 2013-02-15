@@ -257,8 +257,7 @@ show_usage
 {
   int i;
   char buf[256];
-  printf("Usage :- %s [options]\n\n", argv0);
-  printf("Options\n");
+  printf("Usage: %s [OPTIONS]\n", argv0);
   for (i = 0; i < num; i++) {
 
     /* Section */
@@ -271,14 +270,14 @@ show_usage
       char sopt[4];
       char *desc, *tok;
       if (opts[i].sopt)
-        snprintf(sopt, sizeof(sopt), "-%c/", opts[i].sopt);
+        snprintf(sopt, sizeof(sopt), "-%c,", opts[i].sopt);
       else
-        sopt[0] = 0;
-      snprintf(buf, sizeof(buf), "  %s--%s", sopt, opts[i].lopt);
+        strcpy(sopt, "   ");
+      snprintf(buf, sizeof(buf), "  %s --%s", sopt, opts[i].lopt);
       desc = strdup(opts[i].desc);
       tok  = strtok(desc, "\n");
       while (tok) {
-        printf("%s\t\t%s\n", buf, tok);
+        printf("%-30s%s\n", buf, tok);
         tok = buf;
         while (*tok) {
           *tok = ' ';
@@ -290,8 +289,8 @@ show_usage
     }
   }
   printf("\n");
-  printf("For more information read the man page or visit\n");
-  printf(" http://www.lonelycoder.com/hts/\n");
+  printf("For more information please visit the Tvheadend website:\n");
+  printf("  http://www.lonelycoder.com/tvheadend/\n");
   printf("\n");
   exit(0);
 }
