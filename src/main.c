@@ -376,6 +376,7 @@ main(int argc, char **argv)
              *opt_dvb_raw      = NULL,
 #endif
              *opt_rawts        = NULL,
+             *opt_bindaddr     = NULL,
              *opt_subscribe    = NULL;
   cmdline_opt_t cmdline_opts[] = {
     {   0, NULL,        "Generic Options",         OPT_BOOL, NULL         },
@@ -383,6 +384,7 @@ main(int argc, char **argv)
     { 'v', "version",   "Show version infomation", OPT_BOOL, &opt_version },
 
     {   0, NULL,        "Service Configuration",   OPT_BOOL, NULL         },
+    { 'b', "bindaddr",  "Specify bind address",    OPT_STR,  &opt_bindaddr},
     { 'c', "config",    "Alternate config path",   OPT_STR,  &opt_config  },
     { 'f', "fork",      "Fork and run as daemon",  OPT_BOOL, &opt_fork    },
     { 'u', "user",      "Run as user",             OPT_STR,  &opt_user    },
@@ -625,7 +627,7 @@ main(int argc, char **argv)
 #endif
 
   tcp_server_init(opt_ipv6);
-  http_server_init();
+  http_server_init(opt_bindaddr);
   webui_init();
 
   serviceprobe_init();
@@ -643,7 +645,7 @@ main(int argc, char **argv)
 
   dvr_init();
 
-  htsp_init();
+  htsp_init(opt_bindaddr);
 
   if(opt_rawts != NULL)
     rawts_init(opt_rawts);

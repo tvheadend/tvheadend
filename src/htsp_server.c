@@ -1966,12 +1966,12 @@ htsp_serve(int fd, void *opaque, struct sockaddr_storage *source,
  *  Fire up HTSP server
  */
 void
-htsp_init(void)
+htsp_init(const char *bindaddr)
 {
   extern int tvheadend_htsp_port_extra;
-  htsp_server = tcp_server_create(tvheadend_htsp_port, htsp_serve, NULL);
+  htsp_server = tcp_server_create(bindaddr, tvheadend_htsp_port, htsp_serve, NULL);
   if(tvheadend_htsp_port_extra)
-    htsp_server_2 = tcp_server_create(tvheadend_htsp_port_extra, htsp_serve, NULL);
+    htsp_server_2 = tcp_server_create(bindaddr, tvheadend_htsp_port_extra, htsp_serve, NULL);
 }
 
 /* **************************************************************************
