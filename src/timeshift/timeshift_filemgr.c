@@ -161,7 +161,7 @@ void timeshift_filemgr_remove
 {
   if (tsf->fd != -1)
     close(tsf->fd);
-  tvhlog(LOG_DEBUG, "timeshift", "ts %d remove %s\n", ts->id, tsf->path);
+  tvhlog(LOG_DEBUG, "timeshift", "ts %d remove %s", ts->id, tsf->path);
   TAILQ_REMOVE(&ts->files, tsf, link);
   atomic_add_u64(&timeshift_total_size, -tsf->size);
   timeshift_reaper_remove(tsf);
@@ -216,6 +216,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
       if (d > (ts->max_time+5)) {
         if (!tsf_hd->refcount) {
           timeshift_filemgr_remove(ts, tsf_hd, 0);
+          tsf_hd = NULL;
         } else {
           tvhlog(LOG_DEBUG, "timeshift", "ts %d buffer full", ts->id);
           ts->full = 1;
@@ -228,12 +229,12 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
         atomic_pre_add_u64(&timeshift_total_size, 0) >= timeshift_max_size) {
 
       /* Remove the last file (if we can) */
-      if (!tsf_hd->refcount) {
+      if (tsf_hd && !tsf_hd->refcount) {
         timeshift_filemgr_remove(ts, tsf_hd, 0);
 
       /* Full */
       } else {
-        tvhlog(LOG_DEBUG, "timshift", "ts %d buffer full", ts->id);
+        tvhlog(LOG_DEBUG, "timeshift", "ts %d buffer full", ts->id);
         ts->full = 1;
       }
     }
