@@ -56,6 +56,8 @@ typedef struct mk_track {
 
   uint16_t aspect_num;
   uint16_t aspect_den;
+
+  uint8_t commercial;
 } mk_track_t;
 
 /**
@@ -208,6 +210,7 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
     mkm->tracks[i].channels = ssc->ssc_channels;
     mkm->tracks[i].aspect_num = ssc->ssc_aspect_num;
     mkm->tracks[i].aspect_den = ssc->ssc_aspect_den;
+    mkm->tracks[i].commercial = COMMERCIAL_UNKNOWN;
     mkm->tracks[i].sri = ssc->ssc_sri;
     mkm->tracks[i].nextpts = PTS_UNSET;
 
@@ -1045,6 +1048,11 @@ mk_mux_write_pkt(mk_mux_t *mkm, th_pkt_t *pkt)
      pkt->pkt_sri) {
     mark = 1;
     t->sri = pkt->pkt_sri;
+  }
+  if(pkt->pkt_commercial != t->commercial && 
+     pkt->pkt_commercial != COMMERCIAL_UNKNOWN) {
+    mark = 1;
+    t->commercial = pkt->pkt_commercial;
   }
 
   if(mark)
