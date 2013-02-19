@@ -1259,6 +1259,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(r, "titleDirs", !!(cfg->dvr_flags & DVR_DIR_PER_TITLE));
     htsmsg_add_u32(r, "episodeInTitle", !!(cfg->dvr_flags & DVR_EPISODE_IN_TITLE));
     htsmsg_add_u32(r, "cleanTitle", !!(cfg->dvr_flags & DVR_CLEAN_TITLE));
+    htsmsg_add_u32(r, "onlyAscii", !!(cfg->dvr_flags & DVR_ONLY_ASCII));
     htsmsg_add_u32(r, "tagFiles", !!(cfg->dvr_flags & DVR_TAG_FILES));
     htsmsg_add_u32(r, "commSkip", !!(cfg->dvr_flags & DVR_SKIP_COMMERCIALS));
 
@@ -1299,6 +1300,8 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
       flags |= DVR_CHANNEL_IN_TITLE;
     if(http_arg_get(&hc->hc_req_args, "cleanTitle") != NULL)
       flags |= DVR_CLEAN_TITLE;
+    if(http_arg_get(&hc->hc_req_args, "onlyAscii") != NULL)
+      flags |= DVR_ONLY_ASCII;
     if(http_arg_get(&hc->hc_req_args, "dateInTitle") != NULL)
       flags |= DVR_DATE_IN_TITLE;
     if(http_arg_get(&hc->hc_req_args, "timeInTitle") != NULL)
