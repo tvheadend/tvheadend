@@ -281,7 +281,8 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
     tsf_tl = tsf_tmp;
   }
 
-  tsf_tl->refcount++;
+  if (tsf_tl)
+    tsf_tl->refcount++;
   return tsf_tl;
 }
 
