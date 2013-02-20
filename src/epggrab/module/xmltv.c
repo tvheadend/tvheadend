@@ -593,8 +593,9 @@ static int _xmltv_parse_channel
   return save;
 }
 
-/** Sky STB parsing code, handles the Sky chan number parsing
- * https://github.com/andyb2000 Aug 2012
+/** 
+ *  Sky STB parsing code, handles the Sky chan number parsing
+ *
  */
 static int stb_channel
   (const char *chan_name, const char *chan_number, const char *logo)
@@ -634,8 +635,8 @@ return changed_entry;
 };
 
 /**
- * Normal channge update code (freesat/freeview) 
- * https://github.com/andyb2000 Aug 2012
+ * Channel update code (freesat/freeview)
+ *
  */
 static int xmltv_channelupdate
 (epggrab_module_t *mod, const int cid, const char *chan_name, const char *chan_number, const char *logo)
@@ -678,12 +679,11 @@ return changed_entry;
 
 /**
  * Parse the channels we get from a lineup xml
- * https://github.com/andyb2000 Aug 2012
+ *
  */
 static int xmltv_parse_lineups
   (epggrab_module_t *mod, htsmsg_t *body, epggrab_stats_t *stats)
 {
-  tvhlog(LOG_DEBUG, "xmltv_parse_lineups", "start function");
   htsmsg_field_t *e, *f, *g;
   htsmsg_t *lineups, *tag, *chandata;
   const char *chan_number = "0", *chan_name = "";
@@ -759,6 +759,8 @@ static int xmltv_parse_lineups
   }; /* stb_preset */
 }; /* HTSMSG_FOREACH e */
 
+  stats->channels.modified = update_counter;
+  stats->channels.total = update_counter;
   tvhlog(LOG_NOTICE, "xmltv", "Updated %d channel name/number/icons",update_counter);
   return 0;
 };
