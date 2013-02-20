@@ -1,6 +1,6 @@
 /*
  *  tvheadend, CWC interface
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1636,19 +1636,11 @@ cwc_table_input(struct th_descrambler *td, struct service *t,
     }
 
     if (ct->cs_okchannel == -3 && t->s_prefcapid != 0) {
-      if (t->s_prefcapid == st->es_pid) {
         ep = calloc(1, sizeof(ecm_pid_t));
         ep->ep_pid = t->s_prefcapid;
         LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
         tvhlog(LOG_DEBUG, "cwc", "Insert only one new ECM channel %d for service id %d", t->s_prefcapid, sid);
-      } else {
-        // check if prefcapid wrong
-        struct elementary_stream *prefca = service_stream_find(t, t->s_prefcapid);
-
-        if (!prefca || prefca->es_type != SCT_CA) {
-          t->s_prefcapid = 0;
-        }
-      }
+        ct->cs_okchannel = -4;
     }
 
     if (ct->cs_okchannel == -1 || (ct->cs_okchannel == -3 && t->s_prefcapid == 0)) {
