@@ -558,5 +558,10 @@ struct th_subscription *dvb_subscription_create_from_tdmi(th_dvb_mux_instance_t 
 							  const char *username,
 							  const char *client);
 
+struct service *dvb_transport_find3
+  (th_dvb_adapter_t *tda, th_dvb_mux_instance_t *tdmi,
+   const char *netname, uint16_t onid, uint16_t tsid, uint16_t sid,
+   int enabled, int epgprimary);
+
 #endif /* DVB_H_ */
 

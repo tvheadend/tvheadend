@@ -39,6 +39,11 @@
 #include "epggrab.h"
 #include "epggrab/private.h"
 
+#include "service.h"
+#include <linux/dvb/dmx.h>
+#include "dvb/dvb.h"
+
+
 #define XMLTV_FIND "tv_find_grabbers"
 #define XMLTV_GRAB "tv_grab_"
 
@@ -51,6 +56,7 @@ static epggrab_channel_t *_xmltv_channel_find
   return epggrab_channel_find(&_xmltv_channels, id, create, save,
                               _xmltv_module);
 }
+
 
 /* **************************************************************************
  * Parsing
@@ -587,6 +593,178 @@ static int _xmltv_parse_channel
   return save;
 }
 
+/** 
+ *  Sky STB parsing code, handles the Sky chan number parsing
+ *
+ */
+static int stb_channel
+  (const char *chan_name, const char *chan_number, const char *logo)
+{
+  channel_t *chan = 0;
+  int changed_entry = 0;
+  int save = 0;
+
+  if ((chan = channel_find_by_name(chan_name,0,0))) {
+  changed_entry = 0;
+  if (epggrab_channel_renumber) {
+  #ifdef EPG_TRACE
+    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
+      "SKY Updating chanid: (%d) name: (%s) Channel Number: (%s)",chan->ch_id, chan->ch_name,chan_number);
+  #endif
+    channel_set_number(chan, atoi(chan_number));
+    changed_entry = 1;
+  };
+  if (epggrab_channel_rename) {
+  #ifdef EPG_TRACE
+    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
+      "SKY Updating chanid: (%d) name: (%s) Channel Rename: (%s)",chan->ch_id, chan->ch_name,chan_name);
+  #endif
+    save |= channel_rename(chan, chan_name);
+    changed_entry = 1;
+  };
+  if (epggrab_channel_reicon) {
+  #ifdef EPG_TRACE
+    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
+      "SKY Updating chanid: (%d) name: (%s) Channel Icon: (%s)",chan->ch_id, chan->ch_name, logo);
+  #endif
+    channel_set_icon(chan, logo);
+    changed_entry = 1;
+  };
+};
+return changed_entry;
+};
+
+/**
+ * Channel update code (freesat/freeview)
+ *
+ */
+static int xmltv_channelupdate
+(epggrab_module_t *mod, const int cid, const char *chan_name, const char *chan_number, const char *logo)
+{
+  service_t *channel_service_id;
+  channel_t *ec;
+  int changed_entry = 0;
+
+  channel_service_id = dvb_transport_find3(NULL, NULL, NULL, 0, 0, cid, 1, 0);
+  if (channel_service_id && channel_service_id->s_ch) {
+  ec = channel_service_id->s_ch;
+  if (ec == NULL) return -1;
+  if (service_is_primary_epg(channel_service_id)) {
+  if (epggrab_channel_renumber && (chan_number != NULL)) {
+    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
+      "Updating channelid: (%d) name: (%s) Channel Number: (%s)",
+      channel_service_id->s_dvb_service_id, channel_service_id->s_nicename,chan_number);
+    channel_set_number(ec, atoi(chan_number));
+    changed_entry = 1;
+  };
+  };
+  if (epggrab_channel_rename && (chan_name != NULL)) {
+    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
+      "Updating channelid: (%d) name: (%s) Channel Name: (%s)",
+      channel_service_id->s_dvb_service_id, channel_service_id->s_nicename,chan_name);
+    channel_rename(ec, chan_name);
+    changed_entry = 1;
+  };
+  if (epggrab_channel_reicon && (logo != NULL)) {
+    tvhlog(LOG_DEBUG, "xmltv_parse_lineups", 
+    "Updating channelid: (%d) name: (%s) Channel Icon: (%s)",
+    channel_service_id->s_dvb_service_id, channel_service_id->s_nicename,logo);
+    channel_set_icon(ec, logo);
+    changed_entry = 1;
+  };
+};
+
+return changed_entry;
+};
+
+/**
+ * Parse the channels we get from a lineup xml
+ *
+ */
+static int xmltv_parse_lineups
+  (epggrab_module_t *mod, htsmsg_t *body, epggrab_stats_t *stats)
+{
+  htsmsg_field_t *e, *f, *g;
+  htsmsg_t *lineups, *tag, *chandata;
+  const char *chan_number = "0", *chan_name = "";
+  const char *logo = "", *chan_service_id = "0";
+  const char *lineup_section= "", *stb_preset = 0;
+
+  int changed_entry = 0;
+  int cid = 0;
+  int update_counter = 0;
+
+  if((lineups = htsmsg_get_map(body, "tags")) == NULL) return 0;
+  if((lineups = htsmsg_get_map(lineups, "xmltv-lineup")) == NULL) return 0;
+  if((lineups = htsmsg_get_map(lineups, "tags")) == NULL) return 0;
+
+  HTSMSG_FOREACH(e, lineups) {
+    if (strcmp(e->hmf_name, "lineup-entry") == 0) {
+      if ((tag = htsmsg_get_map_by_field(e))) {
+        if((lineups = htsmsg_get_map(tag, "tags")) == NULL) continue;
+        chan_number = htsmsg_xml_get_cdata_str(lineups, "preset");
+        lineup_section = htsmsg_xml_get_cdata_str(lineups, "section");
+        HTSMSG_FOREACH(f, lineups) {
+          if (strcmp(f->hmf_name, "station") == 0) {
+            if ((tag = htsmsg_get_map_by_field(f))) {
+	      chandata = htsmsg_get_map(tag, "tags");
+                chan_name = htsmsg_xml_get_cdata_str(chandata, "name");
+                HTSMSG_FOREACH(g, chandata) {
+                 if(!strcmp(g->hmf_name, "logo")) {
+                  if ((tag = htsmsg_get_map_by_field(g))) {
+                   logo = htsmsg_xml_get_attr_str(tag, "url");
+                  };
+                 };
+                };
+            }; /* tag = htsmsg_get_map_by_field */
+          }; /* strcmp station */
+
+          if (strcmp(f->hmf_name, "dvb-channel") == 0) {
+            if ((tag = htsmsg_get_map_by_field(f))) {
+              if((chandata = htsmsg_get_map(tag, "tags")) == NULL) continue;
+                chan_service_id = htsmsg_xml_get_cdata_str(chandata, "service-id");
+            };
+          };
+          if (strcmp(f->hmf_name, "stb-channel") == 0) {
+            if ((tag = htsmsg_get_map_by_field(f))) {
+              if((chandata = htsmsg_get_map(tag, "tags")) == NULL) continue;
+              stb_preset = htsmsg_xml_get_cdata_str(chandata, "stb-preset");
+            };
+          }; /* end of stb-channel */
+        }; /* f lineups */
+      }; /* htsmsg_get_map_by_field e */
+    }; /* strcmp lineup-entry */
+
+  cid = 0;
+  /* check if we got a valid entry and call the searcher routine */
+  if(sscanf(chan_service_id, "%d", &cid) <= 0)
+    cid = 0;
+
+  /* Skip all radio channels for now */
+  if (strcmp(lineup_section, "Radio channels") == 0) continue;
+
+  /* If we have stb_preset set then its a sky entry, 
+     which dont give us service_id so try pattern match on the name */
+  if (stb_preset) {
+    changed_entry = stb_channel (chan_name, chan_number, logo);
+    if (changed_entry == 1)
+      update_counter++;
+  } else {
+    /* Skipping Regional variations in the lineup for now */
+    if((cid != 0) && (strcmp(lineup_section, "Regional") != 0)) {
+      changed_entry = xmltv_channelupdate ( mod, cid, chan_name, chan_number, logo);
+      if (changed_entry == 1)
+        update_counter++;
+    }; /* lineup_section Regional */
+  }; /* stb_preset */
+}; /* HTSMSG_FOREACH e */
+
+  stats->channels.modified = update_counter;
+  stats->channels.total = update_counter;
+  tvhlog(LOG_NOTICE, "xmltv", "Updated %d channel name/number/icons",update_counter);
+  return 0;
+};
+
 /**
  *
  */
@@ -613,15 +791,22 @@ static int _xmltv_parse_tv
 static int _xmltv_parse
   ( void *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
-  htsmsg_t *tags, *tv;
+  htsmsg_t *tags, *tv, *lineup;
+	tvhlog(LOG_DEBUG, "xmltv_parse", "Begin of parser");
 
   if((tags = htsmsg_get_map(data, "tags")) == NULL)
     return 0;
 
-  if((tv = htsmsg_get_map(tags, "tv")) == NULL)
-    return 0;
+/* Processing logic, decide what to parse */
+  if((tv = htsmsg_get_map(tags, "tv")) != NULL) {
+   return _xmltv_parse_tv(mod, tv, stats);
+  } else if ((lineup = htsmsg_get_map(tags, "xmltv-lineups")) != NULL) {
+   tvhlog(LOG_DEBUG, "xmltv_parse", 
+    "Found xmltv-lineups in xml, calling xmltv_parse_lineups");
+   return xmltv_parse_lineups(mod, lineup, stats);
+  };
 
-  return _xmltv_parse_tv(mod, tv, stats);
+ return 0;
 }
 
 /* ************************************************************************
