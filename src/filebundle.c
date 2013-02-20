@@ -214,12 +214,13 @@ fb_dir *fb_opendir ( const char *path )
 
     /* Bundle */
 #if ENABLE_BUNDLE
-    char *tmp1 = strdup(path);
-    char *tmp2 = strtok(tmp1, "/");
+    char *tmp1, *tmp2, *tmp3 = NULL;
+    tmp1 = strdup(path);
+    tmp2 = strtok_r(tmp1, "/", &tmp3);
     filebundle_entry_t *fb = filebundle_root;
     while (fb && tmp2) {
       if (fb->type == FB_DIR && !strcmp(fb->name, tmp2)) {
-        tmp2 = strtok(NULL, "/");
+        tmp2 = strtok_r(NULL, "/", &tmp3);
         if (tmp2) fb = fb->d.child;
       } else {
         fb = fb->next;
@@ -383,7 +384,7 @@ fb_file *fb_open2
   } else {
     char path[512];
     snprintf(path, sizeof(path), "%s/%s", dir->d.root, name);
-    FILE *fp = fopen(path, "r");
+    FILE *fp = fopen(path, "rb");
     if (fp) {
       struct stat st;
       lstat(path, &st);
@@ -492,7 +493,8 @@ ssize_t fb_read ( fb_file *fp, void *buf, size_t count )
     memcpy(buf, fp->buf + fp->pos, count);
     fp->pos += count;
   } else if (fp->type == FB_DIRECT) {
-    fp->pos += fread(buf, 1, count, fp->d.cur);
+    count = fread(buf, 1, count, fp->d.cur);
+    fp->pos += count;
   } else {
     count = MIN(count, fp->b.root->f.size - fp->pos);
     memcpy(buf, fp->b.root->f.data + fp->pos, count);

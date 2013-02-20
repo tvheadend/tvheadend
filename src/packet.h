@@ -36,6 +36,14 @@ typedef struct pktbuf {
 #define PKT_B_FRAME 3
 #define PKT_NTYPES  4 
 
+static inline char pkt_frametype_to_char ( int frametype )
+{
+  if (frametype == PKT_I_FRAME) return 'I';
+  if (frametype == PKT_P_FRAME) return 'P';
+  if (frametype == PKT_B_FRAME) return 'B';
+  return ' ';
+}
+
 typedef struct th_pkt {
   int64_t pkt_dts;
   int64_t pkt_pts;

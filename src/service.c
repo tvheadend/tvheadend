@@ -208,8 +208,10 @@ service_start(service_t *t, unsigned int weight, int force_start)
   if((r = t->s_start_feed(t, weight, force_start)))
     return r;
 
+#if ENABLE_CWC
   cwc_service_start(t);
   capmt_service_start(t);
+#endif
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
@@ -333,7 +335,7 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
   cnt = 0;
   LIST_FOREACH(t, &ch->ch_services, s_ch_link) {
 
-    if(!t->s_enabled) {
+    if(!t->s_is_enabled(t)) {
       if(loginfo != NULL) {
 	tvhlog(LOG_NOTICE, "Service", "%s: Skipping \"%s\" -- not enabled",
 	       loginfo, service_nicename(t));
@@ -461,7 +463,6 @@ service_destroy(service_t *t)
 {
   elementary_stream_t *st;
   th_subscription_t *s;
-  channel_t *ch = t->s_ch;
 
   if(t->s_dtor != NULL)
     t->s_dtor(t);
@@ -504,11 +505,6 @@ service_destroy(service_t *t)
   avgstat_flush(&t->s_rate);
 
   service_unref(t);
-
-  if(ch != NULL) {
-    if(LIST_FIRST(&ch->ch_services) == NULL) 
-      channel_delete(ch);
-  }
 }
 
 
@@ -781,30 +777,40 @@ service_servicetype_txt(service_t *t)
  *
  */
 int
-service_is_tv(service_t *t)
+servicetype_is_tv(int servicetype)
 {
   return 
-    t->s_servicetype == ST_SDTV    ||
-    t->s_servicetype == ST_HDTV    ||
-    t->s_servicetype == ST_EX_HDTV ||
-    t->s_servicetype == ST_EX_SDTV ||
-    t->s_servicetype == ST_EP_HDTV ||
-    t->s_servicetype == ST_ET_HDTV ||
-    t->s_servicetype == ST_DN_SDTV ||
-    t->s_servicetype == ST_DN_HDTV ||
-    t->s_servicetype == ST_SK_SDTV ||
-    t->s_servicetype == ST_NE_SDTV ||
-    t->s_servicetype == ST_AC_SDTV ||
-    t->s_servicetype == ST_AC_HDTV;
+    servicetype == ST_SDTV    ||
+    servicetype == ST_HDTV    ||
+    servicetype == ST_EX_HDTV ||
+    servicetype == ST_EX_SDTV ||
+    servicetype == ST_EP_HDTV ||
+    servicetype == ST_ET_HDTV ||
+    servicetype == ST_DN_SDTV ||
+    servicetype == ST_DN_HDTV ||
+    servicetype == ST_SK_SDTV ||
+    servicetype == ST_NE_SDTV ||
+    servicetype == ST_AC_SDTV ||
+    servicetype == ST_AC_HDTV;
+}
+int
+service_is_tv(service_t *t)
+{
+  return servicetype_is_tv(t->s_servicetype);
 }
 
 /**
  *
  */
 int
+servicetype_is_radio(int servicetype)
+{
+  return servicetype == ST_RADIO;
+}
+int
 service_is_radio(service_t *t)
 {
-  return t->s_servicetype == ST_RADIO;
+  return servicetype_is_radio(t->s_servicetype);
 }
 
 /**
@@ -933,6 +939,15 @@ service_set_enable(service_t *t, int enabled)
   subscription_reschedule();
 }
 
+void
+service_set_prefcapid(service_t *t, uint32_t prefcapid)
+{
+  if(t->s_prefcapid == prefcapid)
+    return;
+
+  t->s_prefcapid = prefcapid;
+  t->s_config_save(t);
+}
 
 static pthread_mutex_t pending_save_mutex;
 static pthread_cond_t pending_save_cond;
@@ -1174,8 +1189,7 @@ service_is_primary_epg(service_t *svc)
   service_t *ret = NULL, *t;
   if (!svc || !svc->s_ch) return 0;
   LIST_FOREACH(t, &svc->s_ch->ch_services, s_ch_link) {
-    if (!t->s_dvb_mux_instance) continue;
-    if (!t->s_enabled || !t->s_dvb_eit_enable) continue;
+    if (!t->s_is_enabled(t) || !t->s_dvb_eit_enable) continue;
     if (!ret || service_get_prio(t) < service_get_prio(ret))
       ret = t;
   }

@@ -89,15 +89,15 @@ psi_section_reassemble(psi_section_t *ps, const uint8_t *tsb, int crc,
     int len = tsb[off++];
     if(len > 0) {
       if(len > 188 - off) {
-	ps->ps_lock = 0;
-	return;
+	      ps->ps_lock = 0;
+	      return;
       }
       psi_section_reassemble0(ps, tsb + off, len, 0, crc, cb, opaque);
       off += len;
     }
   }
 
-  while(off < 188 && tsb[off] != 0xff) {
+  while(off < 188) {
     r = psi_section_reassemble0(ps, tsb + off, 188 - off, pusi, crc,
 				cb, opaque);
     if(r < 0) {
@@ -347,9 +347,9 @@ psi_desc_teletext(service_t *t, const uint8_t *ptr, int size,
       if((st = service_stream_find(t, pid)) == NULL) {
 	r |= PMT_UPDATE_NEW_STREAM;
 	st = service_stream_create(t, pid, SCT_TEXTSUB);
+	st->es_delete_me = 1;
       }
 
-      st->es_delete_me = 0;
   
       lang = lang_code_get2((const char*)ptr, 3);
       if(memcmp(st->es_lang,lang,3)) {
@@ -362,10 +362,12 @@ psi_desc_teletext(service_t *t, const uint8_t *ptr, int size,
 	st->es_parent_pid = parent_pid;
       }
 
-      if(st->es_position != *position) {
+      // Check es_delete_me so we only compute position once per PMT update
+      if(st->es_position != *position && st->es_delete_me) {
 	st->es_position = *position;
 	r |= PMT_REORDERED;
       }
+      st->es_delete_me = 0;
       (*position)++;
     }
     ptr += 5;
@@ -710,7 +712,8 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
  * PMT generator
  */
 int
-psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid)
+psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
+	      int version, int pcrpid)
 {
   int c, tlen, dlen, l, i;
   uint8_t *buf, *buf1;
@@ -726,8 +729,10 @@ psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid
   buf[4] = 0x01;
 
   buf[5] = 0xc1; /* current_next_indicator + version */
-  buf[6] = 0;
-  buf[7] = 0;
+  buf[5] |= (version & 0x1F) << 1;
+
+  buf[6] = 0; /* section number */
+  buf[7] = 0; /* last section number */
 
   buf[8] = 0xe0 | (pcrpid >> 8);
   buf[9] =         pcrpid;
@@ -852,14 +857,27 @@ static struct strtab caidnametab[] = {
   { "Viaccess",         0x0500 }, 
   { "Irdeto",           0x0600 }, 
   { "Irdeto",           0x0602 }, 
-  { "Irdeto",           0x0604 }, 
+  { "Irdeto",           0x0603 },
+  { "Irdeto",           0x0604 },
+  { "Irdeto",		0x0622 },
   { "Irdeto",		0x0624 },
+  { "Irdeto",		0x0648 },
   { "Irdeto",		0x0666 },
   { "Jerroldgi",        0x0700 }, 
   { "Matra",            0x0800 }, 
-  { "NDS",              0x0900 }, 
+  { "NDS",              0x0900 },
+  { "NDS",              0x0919 },
+  { "NDS",              0x091F }, 
+  { "NDS",              0x092B },
+  { "NDS",              0x09AF }, 
+  { "NDS",              0x09C4 },
+  { "NDS",              0x0960 },
+  { "NDS",              0x0963 }, 
   { "Nokia",            0x0A00 }, 
-  { "Conax",            0x0B00 }, 
+  { "Conax",            0x0B00 },
+  { "Conax",            0x0B01 },
+  { "Conax",            0x0B02 }, 
+  { "Conax",            0x0BAA },
   { "NTL",              0x0C00 }, 
   { "CryptoWorks",	0x0D00 },
   { "CryptoWorks",	0x0D01 },
@@ -868,9 +886,11 @@ static struct strtab caidnametab[] = {
   { "CryptoWorks",	0x0D05 },
   { "CryptoWorks",	0x0D0F },
   { "CryptoWorks",	0x0D70 },
+  { "CryptoWorks ICE",	0x0D95 }, 
   { "CryptoWorks ICE",	0x0D96 },
   { "CryptoWorks ICE",	0x0D97 },
   { "PowerVu",          0x0E00 }, 
+  { "PowerVu",          0x0E11 }, 
   { "Sony",             0x0F00 }, 
   { "Tandberg",         0x1000 }, 
   { "Thompson",         0x1100 }, 
@@ -883,7 +903,16 @@ static struct strtab caidnametab[] = {
   { "BetaCrypt",        0x1702 }, 
   { "BetaCrypt",        0x1722 }, 
   { "BetaCrypt",        0x1762 }, 
-  { "NagraVision",      0x1800 }, 
+  { "NagraVision",      0x1800 },
+  { "NagraVision",      0x1803 },
+  { "Nagra Media Access",      0x1813 },
+  { "NagraVision",      0x1810 },
+  { "NagraVision",      0x1815 },
+  { "NagraVision",      0x1830 },
+  { "NagraVision",      0x1833 },
+  { "NagraVision",      0x1834 },
+  { "NagraVision",      0x183D },
+  { "NagraVision",      0x1861 },
   { "Titan",            0x1900 }, 
   { "Telefonica",       0x2000 }, 
   { "Stentor",          0x2100 }, 
@@ -898,6 +927,7 @@ static struct strtab caidnametab[] = {
   { "DRECrypt2",        0x4ae1 },
   { "Bulcrypt",         0x4aee },
   { "Bulcrypt",         0x5581 },
+  { "Verimatrix",       0x5601 },
 };
 
 const char *

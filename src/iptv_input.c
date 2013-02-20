@@ -461,6 +461,14 @@ iptv_service_quality(service_t *t)
   return 100;
 }
 
+/**
+ *
+ */
+static int
+iptv_service_is_enabled(service_t *t)
+{
+  return t->s_enabled;
+}
 
 /**
  * Generate a descriptive name for the source
@@ -543,6 +551,7 @@ iptv_service_find(const char *id, int create)
   t->s_config_save   = iptv_service_save;
   t->s_setsourceinfo = iptv_service_setsourceinfo;
   t->s_quality_index = iptv_service_quality;
+  t->s_is_enabled    = iptv_service_is_enabled;
   t->s_grace_period  = iptv_grace_period;
   t->s_dtor          = iptv_service_dtor;
   t->s_iptv_fd = -1;

@@ -22,8 +22,8 @@
 #include "streaming.h"
 #include "epg.h"
 #include "channels.h"
-#include "dvr/mkmux.h"
 #include "muxer_tvh.h"
+#include "tvh/mkmux.h"
 
 typedef struct tvh_muxer {
   muxer_t;
@@ -73,6 +73,23 @@ tvh_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
   tvh_muxer_t *tm = (tvh_muxer_t*)m;
 
   if(mk_mux_init(tm->tm_ref, name, ss)) {
+    tm->m_errors++;
+    return -1;
+  }
+
+  return 0;
+}
+
+
+/**
+ * Insert a new chapter at the current location
+ */
+static int
+tvh_muxer_add_marker(muxer_t* m)
+{
+  tvh_muxer_t *tm = (tvh_muxer_t*)m;
+
+  if(mk_mux_insert_chapter(tm->tm_ref)) {
     tm->m_errors++;
     return -1;
   }
@@ -216,6 +233,7 @@ tvh_muxer_create(muxer_container_type_t mc)
   tm->m_mime         = tvh_muxer_mime;
   tm->m_init         = tvh_muxer_init;
   tm->m_reconfigure  = tvh_muxer_reconfigure;
+  tm->m_add_marker   = tvh_muxer_add_marker;
   tm->m_write_meta   = tvh_muxer_write_meta;
   tm->m_write_pkt    = tvh_muxer_write_pkt;
   tm->m_close        = tvh_muxer_close;

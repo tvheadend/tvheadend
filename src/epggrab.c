@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <wordexp.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/un.h>
@@ -213,8 +212,10 @@ static void _epggrab_load ( void )
   }
  
   /* Load module config (channels) */
+#if ENABLE_LINUXDVB
   eit_load();
   opentv_load();
+#endif
   pyepg_load();
   xmltv_load();
 }
@@ -343,21 +344,27 @@ void epggrab_resched ( void )
 void epggrab_init ( void )
 {
   /* Lists */
+#if ENABLE_LINUXDVB
   extern TAILQ_HEAD(, epggrab_ota_mux) ota_mux_all;
   TAILQ_INIT(&ota_mux_all);
+#endif
 
   pthread_mutex_init(&epggrab_mutex, NULL);
   pthread_cond_init(&epggrab_cond, NULL);
   
   /* Initialise modules */
+#if ENABLE_LINUXDVB
   eit_init();
   opentv_init();
+#endif
   pyepg_init();
   xmltv_init();
 
   /* Load config */
   _epggrab_load();
+#if ENABLE_LINUXDVB
   epggrab_ota_load();
+#endif
 
   /* Start internal grab thread */
   pthread_t      tid;

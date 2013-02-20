@@ -114,7 +114,8 @@ serviceprobe_thread(void *aux)
       tvhlog(LOG_INFO, "serviceprobe", "%20s: checking...",
        t->s_svcname);
 
-      s = subscription_create_from_service(t, "serviceprobe", &sq.sq_st, 0);
+      s = subscription_create_from_service(t, "serviceprobe", &sq.sq_st, 0, 
+					   NULL, NULL, "serviceprobe");
       if(s == NULL) {
         t->s_sp_onqueue = 0;
         TAILQ_REMOVE(&serviceprobe_queue, t, s_sp_link);

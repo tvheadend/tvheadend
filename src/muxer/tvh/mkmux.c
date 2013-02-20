@@ -27,13 +27,14 @@
 
 #include "tvheadend.h"
 #include "streaming.h"
-#include "dvr.h"
+#include "dvr/dvr.h"
 #include "mkmux.h"
 #include "ebml.h"
 
 extern int dvr_iov_max;
 
 TAILQ_HEAD(mk_cue_queue, mk_cue);
+TAILQ_HEAD(mk_chapter_queue, mk_chapter);
 
 #define MATROSKA_TIMESCALE 1000000 // in nS
 
@@ -49,17 +50,32 @@ typedef struct mk_track {
   int tracknum;
   int disabled;
   int64_t nextpts;
-} mk_track;
+
+  uint8_t channels;
+  uint8_t sri;
+
+  uint16_t aspect_num;
+  uint16_t aspect_den;
+} mk_track_t;
 
 /**
  *
  */
-struct mk_cue {
+typedef struct mk_cue {
   TAILQ_ENTRY(mk_cue) link;
   int64_t ts;
   int tracknum;
   off_t cluster_pos;
-};
+} mk_cue_t;
+
+/**
+ *
+ */
+typedef struct mk_chapter {
+  TAILQ_ENTRY(mk_chapter) link;
+  int uuid;
+  int64_t ts;
+} mk_chapter_t;
 
 /**
  *
@@ -71,7 +87,7 @@ struct mk_mux {
   off_t fdpos; // Current position in file
   int seekable;
 
-  mk_track *tracks;
+  mk_track_t *tracks;
   int ntracks;
   int has_video;
 
@@ -90,10 +106,12 @@ struct mk_mux {
   off_t trackinfo_pos;
   off_t metadata_pos;
   off_t cue_pos;
+  off_t chapters_pos;
 
   int addcue;
 
   struct mk_cue_queue cues;
+  struct mk_chapter_queue chapters;
 
   char uuid[16];
   char *title;
@@ -165,7 +183,7 @@ mk_build_segment_info(mk_mux_t *mkm)
  *
  */
 static htsbuf_queue_t *
-mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
+mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
 {
   const streaming_start_component_t *ssc;
   const char *codec_id;
@@ -174,7 +192,7 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
   int tracknum = 0;
   uint8_t buf4[4];
 
-  mkm->tracks = calloc(1, sizeof(mk_track) * ss->ss_num_components);
+  mkm->tracks = calloc(1, sizeof(mk_track_t) * ss->ss_num_components);
   mkm->ntracks = ss->ss_num_components;
   
   for(i = 0; i < ss->ss_num_components; i++) {
@@ -186,7 +204,11 @@ mk_build_tracks(mk_mux_t *mkm, const struct streaming_start *ss)
       continue;
 
     mkm->tracks[i].index = ssc->ssc_index;
-    mkm->tracks[i].type  = ssc->ssc_type;
+    mkm->tracks[i].type = ssc->ssc_type;
+    mkm->tracks[i].channels = ssc->ssc_channels;
+    mkm->tracks[i].aspect_num = ssc->ssc_aspect_num;
+    mkm->tracks[i].aspect_den = ssc->ssc_aspect_den;
+    mkm->tracks[i].sri = ssc->ssc_sri;
     mkm->tracks[i].nextpts = PTS_UNSET;
 
     switch(ssc->ssc_type) {
@@ -416,6 +438,70 @@ mk_write_segment_header(mk_mux_t *mkm, int64_t size)
  *
  */
 static htsbuf_queue_t *
+mk_build_one_chapter(mk_chapter_t *ch)
+{
+  htsbuf_queue_t *q = htsbuf_queue_alloc(0);
+
+  ebml_append_uint(q, 0x73C4, ch->uuid);
+  ebml_append_uint(q, 0x91, ch->ts * MATROSKA_TIMESCALE);
+  ebml_append_uint(q, 0x98, 0); //ChapterFlagHidden
+  ebml_append_uint(q, 0x4598, 1); //ChapterFlagEnabled
+
+  return q;
+}
+
+
+/**
+ *
+ */
+static htsbuf_queue_t *
+mk_build_edition_entry(mk_mux_t *mkm)
+{
+  mk_chapter_t *ch;
+  htsbuf_queue_t *q = htsbuf_queue_alloc(0);
+
+  ebml_append_uint(q, 0x45bd, 0); //EditionFlagHidden
+  ebml_append_uint(q, 0x45db, 1); //EditionFlagDefault
+
+  TAILQ_FOREACH(ch, &mkm->chapters, link) {
+    ebml_append_master(q, 0xB6, mk_build_one_chapter(ch));
+  }
+
+  return q;
+}
+
+
+/**
+ *
+ */
+static htsbuf_queue_t *
+mk_build_chapters(mk_mux_t *mkm)
+{
+  htsbuf_queue_t *q = htsbuf_queue_alloc(0);
+
+  ebml_append_master(q, 0x45b9, mk_build_edition_entry(mkm));
+
+  return q;
+}
+
+/**
+ *
+ */
+static void
+mk_write_chapters(mk_mux_t *mkm)
+{
+  if(TAILQ_FIRST(&mkm->chapters) == NULL)
+    return;
+
+  mkm->chapters_pos = mkm->fdpos;
+  mk_write_master(mkm, 0x1043a770, mk_build_chapters(mkm));
+}
+
+
+/**
+ *
+ */
+static htsbuf_queue_t *
 build_tag_string(const char *name, const char *value, const char *lang,
 		 int targettype, const char *targettypename)
 {
@@ -581,6 +667,11 @@ mk_build_metaseek(mk_mux_t *mkm)
     ebml_append_master(q, 0x4dbb, 
 		       mk_build_one_metaseek(mkm, 0x1c53bb6b,
 					     mkm->cue_pos));
+
+  if(mkm->chapters_pos)
+    ebml_append_master(q, 0x4dbb, 
+		       mk_build_one_metaseek(mkm, 0x1043a770,
+					     mkm->chapters_pos));
   return q;
 }
 
@@ -623,7 +714,7 @@ mk_write_metaseek(mk_mux_t *mkm, int first)
  */
 static htsbuf_queue_t *
 mk_build_segment(mk_mux_t *mkm, 
-		 const struct streaming_start *ss)
+		 const streaming_start_t *ss)
 {
   htsbuf_queue_t *p = htsbuf_queue_alloc(0);
 
@@ -649,13 +740,43 @@ mk_build_segment(mk_mux_t *mkm,
 static void
 addcue(mk_mux_t *mkm, int64_t pts, int tracknum)
 {
-  struct mk_cue *mc = malloc(sizeof(struct mk_cue));
+  mk_cue_t *mc = malloc(sizeof(mk_cue_t));
   mc->ts = pts;
   mc->tracknum = tracknum;
   mc->cluster_pos = mkm->cluster_pos;
   TAILQ_INSERT_TAIL(&mkm->cues, mc, link);
 }
 
+
+/**
+ *
+ */
+static void
+mk_add_chapter(mk_mux_t *mkm, int64_t ts)
+{
+  mk_chapter_t *ch;
+  int uuid;
+
+  ch = TAILQ_LAST(&mkm->chapters, mk_chapter_queue);
+  if(ch) {
+    // don't add a new chapter if the previous one was
+    // added less than 10s ago
+    if(ts - ch->ts < 10000)
+      return;
+
+    uuid = ch->uuid + 1;
+  }
+  else {
+    uuid = 1;
+  }
+
+  ch = malloc(sizeof(mk_chapter_t));
+
+  ch->uuid = uuid;
+  ch->ts = ts;
+
+  TAILQ_INSERT_TAIL(&mkm->chapters, ch, link);
+}
 
 /**
  *
@@ -673,7 +794,7 @@ mk_close_cluster(mk_mux_t *mkm)
  *
  */
 static void
-mk_write_frame_i(mk_mux_t *mkm, mk_track *t, th_pkt_t *pkt)
+mk_write_frame_i(mk_mux_t *mkm, mk_track_t *t, th_pkt_t *pkt)
 {
   int64_t pts = pkt->pkt_pts, delta, nxt;
   unsigned char c_delta_flags[3];
@@ -766,7 +887,7 @@ mk_write_frame_i(mk_mux_t *mkm, mk_track *t, th_pkt_t *pkt)
 static void
 mk_write_cues(mk_mux_t *mkm)
 {
-  struct mk_cue *mc;
+  mk_cue_t *mc;
   htsbuf_queue_t *q, *c, *p;
 
   if(TAILQ_FIRST(&mkm->cues) == NULL)
@@ -800,7 +921,10 @@ mk_write_cues(mk_mux_t *mkm)
  */
 mk_mux_t *mk_mux_create(void)
 {
-  mk_mux_t *mkm = calloc(1, sizeof(struct mk_mux));
+  mk_mux_t *mkm = calloc(1, sizeof(mk_mux_t));
+
+  mkm->fd = -1;
+
   return mkm;
 }
 
@@ -848,7 +972,7 @@ mk_mux_open_file(mk_mux_t *mkm, const char *filename)
  * Init the muxer with a title and some tracks
  */
 int
-mk_mux_init(mk_mux_t *mkm, const char *title, const struct streaming_start *ss)
+mk_mux_init(mk_mux_t *mkm, const char *title, const streaming_start_t *ss)
 {
   htsbuf_queue_t q;
 
@@ -860,6 +984,7 @@ mk_mux_init(mk_mux_t *mkm, const char *title, const struct streaming_start *ss)
     mkm->title = strdup(mkm->filename);
 
   TAILQ_INIT(&mkm->cues);
+  TAILQ_INIT(&mkm->chapters);
 
   htsbuf_queue_init(&q, 0);
 
@@ -873,6 +998,8 @@ mk_mux_init(mk_mux_t *mkm, const char *title, const struct streaming_start *ss)
  
   mk_write_queue(mkm, &q);
 
+  htsbuf_queue_flush(&q);
+
   return mkm->error;
 }
 
@@ -881,10 +1008,10 @@ mk_mux_init(mk_mux_t *mkm, const char *title, const struct streaming_start *ss)
  * Append a packet to the muxer
  */
 int
-mk_mux_write_pkt(mk_mux_t *mkm, struct th_pkt *pkt)
+mk_mux_write_pkt(mk_mux_t *mkm, th_pkt_t *pkt)
 {
-  int i;
-  mk_track *t = NULL;
+  int i, mark;
+  mk_track_t *t = NULL;
   for(i = 0; i < mkm->ntracks;i++) {
     if(mkm->tracks[i].index == pkt->pkt_componentindex &&
        mkm->tracks[i].enabled) {
@@ -893,12 +1020,41 @@ mk_mux_write_pkt(mk_mux_t *mkm, struct th_pkt *pkt)
     }
   }
   
-  if(t != NULL && !t->disabled) {
-    if(t->merge)
-      pkt = pkt_merge_header(pkt);
-    mk_write_frame_i(mkm, t, pkt);
+  if(t == NULL || t->disabled) {
+    pkt_ref_dec(pkt);
+    return mkm->error;
   }
-  
+
+  mark = 0;
+  if(pkt->pkt_channels != t->channels &&
+     pkt->pkt_channels) {
+    mark = 1;
+    t->channels = pkt->pkt_channels;
+  }
+  if(pkt->pkt_aspect_num != t->aspect_num && 
+     pkt->pkt_aspect_num) {
+    mark = 1;
+    t->aspect_num = pkt->pkt_aspect_num;
+  }
+  if(pkt->pkt_aspect_den != t->aspect_den && 
+     pkt->pkt_aspect_den) {
+    mark = 1;
+    t->aspect_den = pkt->pkt_aspect_den;
+  }
+  if(pkt->pkt_sri != t->sri && 
+     pkt->pkt_sri) {
+    mark = 1;
+    t->sri = pkt->pkt_sri;
+  }
+
+  if(mark)
+    mk_mux_insert_chapter(mkm);
+
+  if(t->merge)
+    pkt = pkt_merge_header(pkt);
+
+  mk_write_frame_i(mkm, t, pkt);
+
   pkt_ref_dec(pkt);
 
   return mkm->error;
@@ -926,6 +1082,19 @@ mk_mux_write_meta(mk_mux_t *mkm, const dvr_entry_t *de,
 
 
 /**
+ * Insert a new chapter at the current location
+ */
+int
+mk_mux_insert_chapter(mk_mux_t *mkm)
+{
+  if(mkm->totduration != PTS_UNSET)
+    mk_add_chapter(mkm, mkm->totduration);
+
+  return mkm->error;
+}
+
+
+/**
  * Close the muxer
  */
 int
@@ -934,6 +1103,7 @@ mk_mux_close(mk_mux_t *mkm)
   int64_t totsize;
   mk_close_cluster(mkm);
   mk_write_cues(mkm);
+  mk_write_chapters(mkm);
 
   mk_write_metaseek(mkm, 0);
   totsize = mkm->fdpos;
@@ -974,6 +1144,13 @@ mk_mux_close(mk_mux_t *mkm)
 void
 mk_mux_destroy(mk_mux_t *mkm)
 {
+  mk_chapter_t *ch;
+
+  while((ch = TAILQ_FIRST(&mkm->chapters)) != NULL) {
+    TAILQ_REMOVE(&mkm->chapters, ch, link);
+    free(ch);
+  }
+
   free(mkm->filename);
   free(mkm->tracks);
   free(mkm->title);

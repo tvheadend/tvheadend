@@ -3,14 +3,16 @@ build.*
 
 src/version.c
 
+data/dvb-scan
+
 .cproject
 .project
 .settings
-data/dvb-scan
 
 *.pyc
 .*.sw[op]
 
+debian/changelog
 debian/files
 debian/tvheadend
 debian/tvheadend-dbg

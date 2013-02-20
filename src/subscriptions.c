@@ -308,6 +308,17 @@ static void
 subscription_input_direct(void *opauqe, streaming_message_t *sm)
 {
   th_subscription_t *s = opauqe;
+
+ if(sm->sm_type == SMT_PACKET) {
+    th_pkt_t *pkt = sm->sm_data;
+    if(pkt->pkt_err)
+      s->ths_total_err++;
+    s->ths_bytes += pkt->pkt_payload->pb_size;
+  } else if(sm->sm_type == SMT_MPEGTS) {
+    pktbuf_t *pb = sm->sm_data;
+    s->ths_bytes += pb->pb_size;
+  }
+
   streaming_target_deliver(s->ths_output, sm);
 }
 
@@ -406,7 +417,9 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
  */
 th_subscription_t *
 subscription_create_from_service(service_t *t, const char *name,
-				 streaming_target_t *st, int flags)
+				 streaming_target_t *st, int flags,
+				 const char *hostname, const char *username, 
+				 const char *client)
 {
   th_subscription_t *s;
   source_info_t si;
@@ -414,7 +427,7 @@ subscription_create_from_service(service_t *t, const char *name,
 
   s = subscription_create(INT32_MAX, name, st, flags, 
 			  subscription_input_direct,
-			  NULL, NULL, NULL);
+			  hostname, username, client);
 
   if(t->s_status != SERVICE_RUNNING) {
     if((r = service_start(t, INT32_MAX, 1)) != 0) {
@@ -526,13 +539,11 @@ subscription_dummy_join(const char *id, int first)
 
   st = calloc(1, sizeof(streaming_target_t));
   streaming_target_init(st, dummy_callback, NULL, 0);
-  subscription_create_from_service(t, "dummy", st, 0);
+  subscription_create_from_service(t, "dummy", st, 0, NULL, NULL, "dummy");
 
   tvhlog(LOG_NOTICE, "subscription", 
 	 "Dummy join %s ok", id);
 }
-
-
 
 /**
  *
@@ -621,4 +632,46 @@ void
 subscription_init(void)
 {
   gtimer_arm(&every_sec, every_sec_cb, NULL, 1);
+}
+
+/**
+ * Set speed
+ */
+void
+subscription_set_speed ( th_subscription_t *s, int speed )
+{
+  streaming_message_t *sm;
+  service_t *t = s->ths_service;
+
+  if (!t) return;
+
+  pthread_mutex_lock(&t->s_stream_mutex);
+
+  sm = streaming_msg_create_code(SMT_SPEED, speed);
+
+  streaming_target_deliver(s->ths_output, sm);
+
+  pthread_mutex_unlock(&t->s_stream_mutex);
+}
+
+/**
+ * Set skip
+ */
+void
+subscription_set_skip ( th_subscription_t *s, const streaming_skip_t *skip )
+{
+  streaming_message_t *sm;
+  service_t *t = s->ths_service;
+
+  if (!t) return;
+
+  pthread_mutex_lock(&t->s_stream_mutex);
+
+  sm = streaming_msg_create(SMT_SKIP);
+  sm->sm_data = malloc(sizeof(streaming_skip_t));
+  memcpy(sm->sm_data, skip, sizeof(streaming_skip_t));
+
+  streaming_target_deliver(s->ths_output, sm);
+
+  pthread_mutex_unlock(&t->s_stream_mutex);
 }

@@ -32,6 +32,7 @@
 #include "dvr/dvr.h"
 #include "htsp_server.h"
 #include "epggrab.h"
+#include "imagecache.h"
 
 /* Broadcast hashing */
 #define EPG_HASH_WIDTH 1024
@@ -459,8 +460,12 @@ int epg_brand_set_summary
 int epg_brand_set_image
   ( epg_brand_t *brand, const char *image, epggrab_module_t *src )
 {
+  int save;
   if (!brand || !image) return 0;
-  return _epg_object_set_str(brand, &brand->image, image, src);
+  save = _epg_object_set_str(brand, &brand->image, image, src);
+  if (save)
+    imagecache_get_id(image);
+  return save;
 }
 
 int epg_brand_set_season_count
@@ -628,8 +633,12 @@ int epg_season_set_summary
 int epg_season_set_image
   ( epg_season_t *season, const char *image, epggrab_module_t *src )
 {
+  int save;
   if (!season || !image) return 0;
-  return _epg_object_set_str(season, &season->image, image, src);
+  save = _epg_object_set_str(season, &season->image, image, src);
+  if (save)
+    imagecache_get_id(image);
+  return save;
 }
 
 int epg_season_set_episode_count
@@ -891,8 +900,12 @@ int epg_episode_set_description
 int epg_episode_set_image
   ( epg_episode_t *episode, const char *image, epggrab_module_t *src )
 {
+  int save;
   if (!episode || !image) return 0;
-  return _epg_object_set_str(episode, &episode->image, image, src);
+  save = _epg_object_set_str(episode, &episode->image, image, src);
+  if (save)
+    imagecache_get_id(image);
+  return save;
 }
 
 int epg_episode_set_number
@@ -1078,8 +1091,8 @@ size_t epg_episode_number_format
     if ( cfmt && num.e_cnt )
       i+= snprintf(&buf[i], len-i, cfmt, num.e_cnt);
   } else if ( num.text ) {
-    strncpy(buf, num.text, len);
-    i = strlen(buf);
+    if (pre) i += snprintf(&buf[i], len-i, "%s", pre);
+    i += snprintf(&buf[i], len-i, "%s", num.text);
   }
   return i;
 }
@@ -1872,153 +1885,153 @@ epg_broadcast_t *epg_broadcast_deserialize
 static const char *_epg_genre_names[16][16] = {
   { "" },
   {
-    "Movie/Drama",
-    "detective/thriller",
-    "adventure/western/war",
-    "science fiction/fantasy/horror",
-    "comedy",
-    "soap/melodrama/folkloric",
-    "romance",
-    "serious/classical/religious/historical movie/drama",
-    "adult movie/drama",
-    "adult movie/drama",
-    "adult movie/drama",
-    "adult movie/drama",
-    "adult movie/drama",
-    "adult movie/drama",
+    "Movie / Drama",
+    "Detective / Thriller",
+    "Adventure / Western / War",
+    "Science fiction / Fantasy / Horror",
+    "Comedy",
+    "Soap / Melodrama / Folkloric",
+    "Romance",
+    "Serious / Classical / Religious / Historical movie / Drama",
+    "Adult movie / Drama",
+    "Adult movie / Drama",
+    "Adult movie / Drama",
+    "Adult movie / Drama",
+    "Adult movie / Drama",
+    "Adult movie / Drama",
   },
   {
-    "News/Current affairs",
-    "news/weather report",
-    "news magazine",
-    "documentary",
-    "discussion/interview/debate",
-    "discussion/interview/debate",
-    "discussion/interview/debate",
-    "discussion/interview/debate",
-    "discussion/interview/debate",
-    "discussion/interview/debate",
-    "discussion/interview/debate",
-    "discussion/interview/debate",
-    "discussion/interview/debate",
-    "discussion/interview/debate",
+    "News / Current affairs",
+    "News / Weather report",
+    "News magazine",
+    "Documentary",
+    "Discussion / Interview / Debate",
+    "Discussion / Interview / Debate",
+    "Discussion / Interview / Debate",
+    "Discussion / Interview / Debate",
+    "Discussion / Interview / Debate",
+    "Discussion / Interview / Debate",
+    "Discussion / Interview / Debate",
+    "Discussion / Interview / Debate",
+    "Discussion / Interview / Debate",
+    "Discussion / Interview / Debate",
   },
   {
-    "Show/Game show",
-    "game show/quiz/contest",
-    "variety show",
-    "talk show",
-    "talk show",
-    "talk show",
-    "talk show",
-    "talk show",
-    "talk show",
-    "talk show",
-    "talk show",
-    "talk show",
-    "talk show",
-    "talk show",
+    "Show / Game show",
+    "Game show / Quiz / Contest",
+    "Variety show",
+    "Talk show",
+    "Talk show",
+    "Talk show",
+    "Talk show",
+    "Talk show",
+    "Talk show",
+    "Talk show",
+    "Talk show",
+    "Talk show",
+    "Talk show",
+    "Talk show",
   },
   {
     "Sports",
-    "special events (Olympic Games, World Cup, etc.)",
-    "sports magazines",
-    "football/soccer",
-    "tennis/squash",
-    "team sports (excluding football)",
-    "athletics",
-    "motor sport",
-    "water sport",
+    "Special events (Olympic Games, World Cup, etc.)",
+    "Sports magazines",
+    "Football / Soccer",
+    "Tennis / Squash",
+    "Team sports (excluding football)",
+    "Athletics",
+    "Motor sport",
+    "Water sport",
   },
   {
-    "Children's/Youth programmes",
-    "pre-school children's programmes",
-    "entertainment programmes for 6 to14",
-    "entertainment programmes for 10 to 16",
-    "informational/educational/school programmes",
-    "cartoons/puppets",
-    "cartoons/puppets",
-    "cartoons/puppets",
-    "cartoons/puppets",
-    "cartoons/puppets",
-    "cartoons/puppets",
-    "cartoons/puppets",
-    "cartoons/puppets",
-    "cartoons/puppets",
+    "Children's / Youth programmes",
+    "Pre-school children's programmes",
+    "Entertainment programmes for 6 to 14",
+    "Entertainment programmes for 10 to 16",
+    "Informational / Educational / School programmes",
+    "Cartoons / Puppets",
+    "Cartoons / Puppets",
+    "Cartoons / Puppets",
+    "Cartoons / Puppets",
+    "Cartoons / Puppets",
+    "Cartoons / Puppets",
+    "Cartoons / Puppets",
+    "Cartoons / Puppets",
+    "Cartoons / Puppets",
   },
   {
-    "Music/Ballet/Dance",
-    "rock/pop",
-    "serious music/classical music",
-    "folk/traditional music",
-    "jazz",
-    "musical/opera",
-    "musical/opera",
-    "musical/opera",
-    "musical/opera",
-    "musical/opera",
-    "musical/opera",
-    "musical/opera",
-    "musical/opera",
+    "Music / Ballet / Dance",
+    "Rock / Pop",
+    "Serious music / Classical music",
+    "Folk / Traditional music",
+    "Jazz",
+    "Musical / Opera",
+    "Musical / Opera",
+    "Musical / Opera",
+    "Musical / Opera",
+    "Musical / Opera",
+    "Musical / Opera",
+    "Musical / Opera",
+    "Musical / Opera",
   },
   {
-    "Arts/Culture (without music)",
-    "performing arts",
-    "fine arts",
-    "religion",
-    "popular culture/traditional arts",
-    "literature",
-    "film/cinema",
-    "experimental film/video",
-    "broadcasting/press",
+    "Arts / Culture (without music)",
+    "Performing arts",
+    "Fine arts",
+    "Religion",
+    "Popular culture / Traditional arts",
+    "Literature",
+    "Film / Cinema",
+    "Experimental film / Video",
+    "Broadcasting / Press",
   },
   {
-    "Social/Political issues/Economics",
-    "magazines/reports/documentary",
-    "economics/social advisory",
-    "remarkable people",
-    "remarkable people",
-    "remarkable people",
-    "remarkable people",
-    "remarkable people",
-    "remarkable people",
-    "remarkable people",
-    "remarkable people",
-    "remarkable people",
-    "remarkable people",
-    "remarkable people",
+    "Social / Political issues / Economics",
+    "Magazines / Reports / Documentary",
+    "Economics / Social advisory",
+    "Remarkable people",
+    "Remarkable people",
+    "Remarkable people",
+    "Remarkable people",
+    "Remarkable people",
+    "Remarkable people",
+    "Remarkable people",
+    "Remarkable people",
+    "Remarkable people",
+    "Remarkable people",
+    "Remarkable people",
   },
   {
-    "Education/Science/Factual topics",
-    "nature/animals/environment",
-    "technology/natural sciences",
-    "medicine/physiology/psychology",
-    "foreign countries/expeditions",
-    "social/spiritual sciences",
-    "further education",
-    "languages",
-    "languages",
-    "languages",
-    "languages",
-    "languages",
-    "languages",
-    "languages",
+    "Education / Science / Factual topics",
+    "Nature / Animals / Environment",
+    "Technology / Natural sciences",
+    "Medicine / Physiology / Psychology",
+    "Foreign countries / Expeditions",
+    "Social / Spiritual sciences",
+    "Further education",
+    "Languages",
+    "Languages",
+    "Languages",
+    "Languages",
+    "Languages",
+    "Languages",
+    "Languages",
   },
   {
     "Leisure hobbies",
-    "tourism/travel",
-    "handicraft",
-    "motoring",
-    "fitness and health",
-    "cooking",
-    "advertisement/shopping",
-    "gardening",
-    "gardening",
-    "gardening",
-    "gardening",
-    "gardening",
-    "gardening",
-    "gardening",
+    "Tourism / Travel",
+    "Handicraft",
+    "Motoring",
+    "Fitness and health",
+    "Cooking",
+    "Advertisement / Shopping",
+    "Gardening",
+    "Gardening",
+    "Gardening",
+    "Gardening",
+    "Gardening",
+    "Gardening",
+    "Gardening",
   }
 };
 

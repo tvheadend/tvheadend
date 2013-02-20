@@ -26,10 +26,13 @@ TVH_ROOT=$(cd $(dirname $0)/..; pwd)
 
 # Setup
 cd $TVH_ROOT || exit 1
-git checkout $1 && git checkout . || exit 1
 NOW=`date -R`
 CHANGELOG=$TVH_ROOT/debian/changelog
 VERFILE=$TVH_ROOT/src/version.c
+
+# Checkout
+git checkout $REL || die "could not checkout $REL"
+git clean -dfx || die "could not clean git tree"
 
 # Create version file
 VER=$($TVH_ROOT/support/version $VERFILE)

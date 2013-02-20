@@ -145,6 +145,7 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
   if(!strcmp(op, "load")) {
     r = htsmsg_create_map();
     htsmsg_add_str(r, "id", tda->tda_identifier);
+    htsmsg_add_u32(r, "enabled", tda->tda_enabled);
     htsmsg_add_str(r, "device", tda->tda_rootpath ?: "No hardware attached");
     htsmsg_add_str(r, "name", tda->tda_displayname);
     htsmsg_add_u32(r, "automux", tda->tda_autodiscovery);
@@ -157,7 +158,8 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(r, "sidtochan", tda->tda_sidtochan);
     htsmsg_add_u32(r, "nitoid", tda->tda_nitoid);
     htsmsg_add_u32(r, "disable_pmt_monitor", tda->tda_disable_pmt_monitor);
-    htsmsg_add_u32(r, "disable_full_mux_rx", tda->tda_disable_full_mux_rx);
+    htsmsg_add_u32(r, "full_mux_rx", tda->tda_full_mux_rx+1);
+    htsmsg_add_u32(r, "grace_period", tda->tda_grace_period);
     htsmsg_add_str(r, "diseqcversion", 
 		   ((const char *[]){"DiSEqC 1.0 / 2.0",
 				       "DiSEqC 1.1 / 2.1"})
@@ -172,6 +174,9 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 
     if((s = http_arg_get(&hc->hc_req_args, "name")) != NULL)
       dvb_adapter_set_displayname(tda, s);
+
+    s = http_arg_get(&hc->hc_req_args, "enabled");
+    dvb_adapter_set_enabled(tda, !!s);
 
     s = http_arg_get(&hc->hc_req_args, "automux");
     dvb_adapter_set_auto_discovery(tda, !!s);
@@ -200,8 +205,11 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     s = http_arg_get(&hc->hc_req_args, "disable_pmt_monitor");
     dvb_adapter_set_disable_pmt_monitor(tda, !!s);
 
-    s = http_arg_get(&hc->hc_req_args, "disable_full_mux_rx");
-    dvb_adapter_set_disable_full_mux_rx(tda, !!s);
+    s = http_arg_get(&hc->hc_req_args, "full_mux_rx");
+    dvb_adapter_set_full_mux_rx(tda, atoi(s)-1);
+
+    s = http_arg_get(&hc->hc_req_args, "grace_period");
+    dvb_adapter_set_grace_period(tda, atoi(s));
 
     if((s = http_arg_get(&hc->hc_req_args, "nitoid")) != NULL)
       dvb_adapter_set_nitoid(tda, atoi(s));

@@ -19,12 +19,15 @@
 #ifndef MUXER_H_
 #define MUXER_H_
 
+#include "htsmsg.h"
+
 typedef enum {
   MC_UNKNOWN     = 0,
   MC_MATROSKA    = 1,
   MC_MPEGTS      = 2,
   MC_MPEGPS      = 3,
   MC_PASS        = 4,
+  MC_RAW         = 5,
 } muxer_container_type_t;
 
 
@@ -50,6 +53,7 @@ typedef struct muxer {
   int         (*m_write_pkt)  (struct muxer *,                          // Append a media packet
 			       streaming_message_type_t,
 			       void *);
+  int         (*m_add_marker) (struct muxer *);                         // Add a marker (or chapter)
 
   int                    m_errors;     // Number of errors
   muxer_container_type_t m_container;  // The type of the container
@@ -65,6 +69,8 @@ muxer_container_type_t muxer_container_mime2type (const char *str);
 
 const char*            muxer_container_suffix(muxer_container_type_t mc, int video);
 
+int muxer_container_list(htsmsg_t *array);
+
 // Muxer factory
 muxer_t *muxer_create(muxer_container_type_t mc);
 
@@ -73,6 +79,7 @@ int         muxer_open_file   (muxer_t *m, const char *filename);
 int         muxer_open_stream (muxer_t *m, int fd);
 int         muxer_init        (muxer_t *m, const struct streaming_start *ss, const char *name);
 int         muxer_reconfigure (muxer_t *m, const struct streaming_start *ss);
+int         muxer_add_marker  (muxer_t *m);
 int         muxer_close       (muxer_t *m);
 int         muxer_destroy     (muxer_t *m);
 int         muxer_write_meta  (muxer_t *m, struct epg_broadcast *eb);

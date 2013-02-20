@@ -322,7 +322,7 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
 	      a.tm_hour, a.tm_min, b.tm_hour, b.tm_min);
 
   htsbuf_qprintf(hq, "<hr><b>\"%s\": \"%s\"</b><br><br>",
-	      de->de_channel->ch_name, lang_str_get(de->de_title, NULL));
+	      DVR_CH_NAME(de), lang_str_get(de->de_title, NULL));
   
   if((rstatus = val2str(de->de_sched_state, recstatustxt)) != NULL)
     htsbuf_qprintf(hq, "Recording status: %s<br>", rstatus);
@@ -482,7 +482,5 @@ simpleui_start(void)
   http_path_add("/simple.html", NULL, page_simple,  ACCESS_SIMPLE);
   http_path_add("/eventinfo",   NULL, page_einfo,   ACCESS_SIMPLE);
   http_path_add("/pvrinfo",     NULL, page_pvrinfo, ACCESS_SIMPLE);
-  http_path_add("/status.xml",  NULL, page_status,  ACCESS_SIMPLE);  
+  http_path_add("/status.xml",  NULL, page_status,  ACCESS_SIMPLE);
 }
-
-

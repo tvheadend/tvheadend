@@ -97,7 +97,10 @@ th_subscription_t *subscription_create_from_channel(struct channel *ch,
 th_subscription_t *subscription_create_from_service(struct service *t,
 						    const char *name,
 						    streaming_target_t *st,
-						    int flags);
+						    int flags,
+						    const char *hostname,
+						    const char *username,
+						    const char *client);
 
 th_subscription_t *subscription_create(int weight, const char *name,
 				       streaming_target_t *st,
@@ -107,6 +110,14 @@ th_subscription_t *subscription_create(int weight, const char *name,
 				       const char *client);
 
 void subscription_change_weight(th_subscription_t *s, int weight);
+
+void subscription_set_speed
+  (th_subscription_t *s, int32_t speed );
+
+void subscription_set_skip
+  (th_subscription_t *s, const streaming_skip_t *skip);
+
+void subscription_stop(th_subscription_t *s);
 
 void subscription_unlink_service(th_subscription_t *s, int reason);
 

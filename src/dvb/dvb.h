@@ -97,8 +97,10 @@ typedef struct th_dvb_mux_instance {
 
   struct th_dvb_adapter *tdmi_adapter;
 
-  uint16_t tdmi_snr, tdmi_signal;
-  uint32_t tdmi_ber, tdmi_uncorrected_blocks;
+  uint16_t tdmi_signal;
+  uint32_t tdmi_ber, tdmi_unc;
+  float tdmi_unc_avg;
+  float tdmi_snr;
 
 #define TDMI_FEC_ERR_HISTOGRAM_SIZE 10
   uint32_t tdmi_fec_err_histogram[TDMI_FEC_ERR_HISTOGRAM_SIZE];
@@ -198,6 +200,8 @@ typedef struct th_dvb_adapter {
 
   int tda_table_epollfd;
 
+  uint32_t tda_enabled;
+
   const char *tda_rootpath;
   char *tda_identifier;
   uint32_t tda_autodiscovery;
@@ -212,20 +216,23 @@ typedef struct th_dvb_adapter {
   uint32_t tda_diseqc_version;
   uint32_t tda_diseqc_repeats;
   uint32_t tda_disable_pmt_monitor;
-  uint32_t tda_disable_full_mux_rx;
+  int32_t  tda_full_mux_rx;
+  uint32_t tda_grace_period;
   char *tda_displayname;
 
   char *tda_fe_path;
   int tda_fe_fd;
   int tda_type;
+  int tda_snr_valid;
   struct dvb_frontend_info *tda_fe_info;
 
   int tda_adapter_num;
 
   char *tda_demux_path;
 
+  char *tda_dvr_path;
   pthread_t tda_dvr_thread;
-  int       tda_dvr_pipe[2];
+  th_pipe_t tda_dvr_pipe;
 
   int tda_hostconnection;
 
@@ -257,6 +264,8 @@ typedef struct th_dvb_adapter {
   void (*tda_close_table)(struct th_dvb_mux_instance *tdmi, struct th_dvb_table *s);
 
   int tda_rawmode;
+
+  int tda_bytes;
 
   // Full mux streaming, protected via the delivery mutex
 
@@ -339,6 +348,8 @@ void dvb_adapter_stop (th_dvb_adapter_t *tda);
 
 void dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s);
 
+void dvb_adapter_set_enabled(th_dvb_adapter_t *tda, int on);
+
 void dvb_adapter_set_auto_discovery(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_skip_initialscan(th_dvb_adapter_t *tda, int on);
@@ -364,7 +375,9 @@ void dvb_adapter_set_diseqc_repeats(th_dvb_adapter_t *tda,
 
 void dvb_adapter_set_disable_pmt_monitor(th_dvb_adapter_t *tda, int on);
 
-void dvb_adapter_set_disable_full_mux_rx(th_dvb_adapter_t *tda, int on);
+void dvb_adapter_set_full_mux_rx(th_dvb_adapter_t *tda, int r);
+
+void dvb_adapter_set_grace_period(th_dvb_adapter_t *tda, uint32_t p);
 
 void dvb_adapter_clone(th_dvb_adapter_t *dst, th_dvb_adapter_t *src);
 
@@ -414,13 +427,13 @@ th_dvb_mux_instance_t *dvb_mux_create(th_dvb_adapter_t *tda,
 				      uint16_t onid, uint16_t tsid, const char *network,
 				      const char *logprefix, int enabled,
 				      int initialscan, const char *identifier,
-				      dvb_satconf_t *satconf);
+				      dvb_satconf_t *satconf, int create);
 
 void dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *name);
 
-void dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid);
+void dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid, int force);
 
-void dvb_mux_set_onid(th_dvb_mux_instance_t *tdmi, uint16_t onid);
+void dvb_mux_set_onid(th_dvb_mux_instance_t *tdmi, uint16_t onid, int force);
 
 void dvb_mux_set_enable(th_dvb_mux_instance_t *tdmi, int enabled);
 
@@ -540,7 +553,10 @@ void dvb_lnb_get_frequencies(const char *id,
 struct th_subscription;
 struct th_subscription *dvb_subscription_create_from_tdmi(th_dvb_mux_instance_t *tdmi,
 							  const char *name,
-							  streaming_target_t *st);
+							  streaming_target_t *st,
+							  const char *hostname,
+							  const char *username,
+							  const char *client);
 
 struct service *dvb_transport_find3
   (th_dvb_adapter_t *tda, th_dvb_mux_instance_t *tdmi,

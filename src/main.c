@@ -1,6 +1,6 @@
 /*
  *  TVheadend
- *  Copyright (C) 2007 - 2010 Andreas Öman
+ *  Copyright (C) 2007 - 2010 Andreas ï¿½man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -60,23 +60,98 @@
 #include "ffdecsa/FFdecsa.h"
 #include "muxes.h"
 #include "config2.h"
+#include "imagecache.h"
+#include "timeshift.h"
+#if ENABLE_LIBAV
+#include "libav.h"
+#endif
 
-int running;
+/* Command line option struct */
+typedef struct {
+  const char  sopt;
+  const char *lopt;
+  const char *desc;
+  enum {
+    OPT_STR,
+    OPT_INT,
+    OPT_BOOL
+  }          type;
+  void       *param;
+} cmdline_opt_t;
+
+static cmdline_opt_t* cmdline_opt_find
+  ( cmdline_opt_t *opts, int num, const char *arg )
+{
+  int i;
+  int isshort = 0;
+
+  if (strlen(arg) < 2 || *arg != '-')
+    return NULL;
+  arg++;
+
+  if (strlen(arg) == 1)
+    isshort = 1;
+  else if (*arg == '-')
+    arg++;
+  else
+    return NULL;
+
+  for (i = 0; i < num; i++) {
+    if (!opts[i].lopt) continue;
+    if (isshort && opts[i].sopt == *arg)
+      return &opts[i];
+    if (!isshort && !strcmp(opts[i].lopt, arg))
+      return &opts[i];
+  }
+
+  return NULL;
+}
+
+/*
+ * Globals
+ */
+int              tvheadend_webui_port;
+int              tvheadend_webui_debug;
+int              tvheadend_htsp_port;
+int              tvheadend_htsp_port_extra;
+const char      *tvheadend_cwd;
+const char      *tvheadend_webroot;
+const tvh_caps_t tvheadend_capabilities[] = {
+#if ENABLE_CWC
+  { "cwc", NULL },
+#endif
+#if ENABLE_V4L
+  { "v4l", NULL },
+#endif
+#if ENABLE_LINUXDVB
+  { "linuxdvb", NULL },
+#endif
+#if ENABLE_IMAGECACHE
+  { "imagecache", &imagecache_enabled },
+#endif
+#if ENABLE_TIMESHIFT
+  { "timeshift", &timeshift_enabled },
+#endif
+  { NULL, NULL }
+};
+
 time_t dispatch_clock;
-static LIST_HEAD(, gtimer) gtimers;
 pthread_mutex_t global_lock;
 pthread_mutex_t ffmpeg_lock;
 pthread_mutex_t fork_lock;
+pthread_mutex_t atomic_lock;
+
+/*
+ * Locals
+ */
+static int running;
 static int log_stderr;
 static int log_decorate;
-
-int log_debug_to_syslog;
-int log_debug_to_console;
-
-int webui_port;
-int htsp_port;
-int htsp_port_extra;
-char *tvheadend_cwd;
+static LIST_HEAD(, gtimer) gtimers;
+static int log_debug_to_syslog;
+static int log_debug_to_console;
+static int log_debug_to_path;
+static char* log_path;
 
 static void
 handle_sigpipe(int x)
@@ -164,46 +239,60 @@ gtimer_disarm(gtimer_t *gti)
 }
 
 /**
+ * Show version info
+ */
+static void
+show_version(const char *argv0)
+{
+  printf("%s: version %s\n", argv0, tvheadend_version);
+  exit(0);
+}
+
+/**
  *
  */
 static void
-usage(const char *argv0)
+show_usage
+  (const char *argv0, cmdline_opt_t *opts, int num, const char *err, ...)
 {
-  printf("HTS Tvheadend %s\n", tvheadend_version);
-  printf("usage: %s [options]\n", argv0);
+  int i;
+  char buf[256];
+  printf("Usage: %s [OPTIONS]\n", argv0);
+  for (i = 0; i < num; i++) {
+
+    /* Section */
+    if (!opts[i].lopt) {
+      printf("\n%s\n\n",
+            opts[i].desc);
+
+    /* Option */
+    } else {
+      char sopt[4];
+      char *desc, *tok;
+      if (opts[i].sopt)
+        snprintf(sopt, sizeof(sopt), "-%c,", opts[i].sopt);
+      else
+        strcpy(sopt, "   ");
+      snprintf(buf, sizeof(buf), "  %s --%s", sopt, opts[i].lopt);
+      desc = strdup(opts[i].desc);
+      tok  = strtok(desc, "\n");
+      while (tok) {
+        printf("%-30s%s\n", buf, tok);
+        tok = buf;
+        while (*tok) {
+          *tok = ' ';
+          tok++;
+        }
+        tok = strtok(NULL, "\n");
+      }
+      free(desc);
+    }
+  }
   printf("\n");
-  printf(" -a <adapters>   Use only DVB adapters specified (csv)\n");
-  printf(" -c <directory>  Alternate configuration path.\n"
-	 "                 Defaults to [$HOME/.hts/tvheadend]\n");
-  printf(" -m <directory>  Alternate mux configuration directory\n");
-  printf(" -f              Fork and daemonize\n");
-  printf(" -p <pidfile>    Write pid to <pidfile> instead of /var/run/tvheadend.pid,\n"
-        "                 only works with -f\n");
-  printf(" -u <username>   Run as user <username>, only works with -f\n");
-  printf(" -g <groupname>  Run as group <groupname>, only works with -f\n");
-  printf(" -C              If no useraccount exist then create one with\n"
-	 "                 no username and no password. Use with care as\n"
-	 "                 it will allow world-wide administrative access\n"
-	 "                 to your Tvheadend installation until you edit\n"
-	 "                 the access-control from within the Tvheadend UI\n");
-  printf(" -s              Log debug to syslog\n");
-  printf(" -w <portnumber> WebUI access port [default 9981]\n");
-  printf(" -e <portnumber> HTSP access port [default 9982]\n");
-  printf("\n");
-  printf("Development options\n");
-  printf("\n");
-  printf(" -d              Log debug to console\n");
-  printf(" -j <id>         Statically join the given transport id\n");
-  printf(" -r <tsfile>     Read the given transport stream file and present\n"
-	 "                 found services as channels\n");
-  printf(" -A              Immediately call abort()\n");
-	 
-  printf("\n");
-  printf("For more information read the man page or visit\n");
-  printf(" http://www.lonelycoder.com/hts/\n");
+  printf("For more information please visit the Tvheadend website:\n");
+  printf("  http://www.lonelycoder.com/tvheadend/\n");
   printf("\n");
   exit(0);
- 
 }
 
 
@@ -249,29 +338,94 @@ mainloop(void)
 int
 main(int argc, char **argv)
 {
-  int c;
-  int forkaway = 0;
-  FILE *pidfile;
-  const char *pidpath = "/var/run/tvheadend.pid";
-  struct group *grp;
-  struct passwd *pw;
-  const char *usernam = NULL;
-  const char *groupnam = NULL;
-  int logfacility = LOG_DAEMON;
-  int createdefault = 0;
+  int i;
   sigset_t set;
-  const char *homedir;
-  const char *rawts_input = NULL;
-  const char *dvb_rawts_input = NULL;
-  const char *join_transport = NULL;
-  const char *confpath = NULL;
-  char *p, *endp;
-  uint32_t adapter_mask = 0xffffffff;
-  int crash = 0;
-  webui_port = 9981;
-  htsp_port = 9982;
-  gid_t gid;
-  uid_t uid;
+#if ENABLE_LINUXDVB
+  uint32_t adapter_mask;
+#endif
+
+  /* Defaults */
+  log_stderr                = 1;
+  log_decorate              = isatty(2);
+  log_debug_to_syslog       = 0;
+  log_debug_to_console      = 0;
+  log_debug_to_path         = 0;
+  log_path                  = NULL;
+  tvheadend_webui_port      = 9981;
+  tvheadend_webroot         = NULL;
+  tvheadend_htsp_port       = 9982;
+  tvheadend_htsp_port_extra = 0;
+
+  /* Command line options */
+  int         opt_help         = 0,
+              opt_version      = 0,
+              opt_fork         = 0,
+              opt_firstrun     = 0,
+              opt_debug        = 0,
+              opt_syslog       = 0,
+              opt_uidebug      = 0,
+              opt_abort        = 0,
+              opt_noacl        = 0,
+              opt_ipv6         = 0;
+  const char *opt_config       = NULL,
+             *opt_user         = NULL,
+             *opt_group        = NULL,
+             *opt_pidpath      = "/var/run/tvheadend.pid",
+#if ENABLE_LINUXDVB
+             *opt_dvb_adapters = NULL,
+             *opt_dvb_raw      = NULL,
+#endif
+             *opt_rawts        = NULL,
+             *opt_subscribe    = NULL;
+  cmdline_opt_t cmdline_opts[] = {
+    {   0, NULL,        "Generic Options",         OPT_BOOL, NULL         },
+    { 'h', "help",      "Show this page",          OPT_BOOL, &opt_help    },
+    { 'v', "version",   "Show version infomation", OPT_BOOL, &opt_version },
+
+    {   0, NULL,        "Service Configuration",   OPT_BOOL, NULL         },
+    { 'c', "config",    "Alternate config path",   OPT_STR,  &opt_config  },
+    { 'f', "fork",      "Fork and run as daemon",  OPT_BOOL, &opt_fork    },
+    { 'u', "user",      "Run as user",             OPT_STR,  &opt_user    },
+    { 'g', "group",     "Run as group",            OPT_STR,  &opt_group   },
+    { 'p', "pid",       "Alternate pid path",      OPT_STR,  &opt_pidpath },
+    { 'C', "firstrun",  "If no user account exists then create one with\n"
+	                      "no username and no password. Use with care as\n"
+	                      "it will allow world-wide administrative access\n"
+	                      "to your Tvheadend installation until you edit\n"
+	                      "the access-control from within the Tvheadend UI",
+      OPT_BOOL, &opt_firstrun },
+#if ENABLE_LINUXDVB
+    { 'a', "adapters",  "Only use specified DVB adapters (comma separated)",
+      OPT_STR, &opt_dvb_adapters },
+#endif
+    {   0, NULL,         "Server Connectivity",    OPT_BOOL, NULL         },
+    { '6', "ipv6",       "Listen on IPv6",         OPT_BOOL, &opt_ipv6    },
+    {   0, "http_port",  "Specify alternative http port",
+      OPT_INT, &tvheadend_webui_port },
+    {   0, "http_root",  "Specify alternative http webroot",
+      OPT_STR, &tvheadend_webroot },
+    {   0, "htsp_port",  "Specify alternative htsp port",
+      OPT_INT, &tvheadend_htsp_port },
+    {   0, "htsp_port2", "Specify extra htsp port",
+      OPT_INT, &tvheadend_htsp_port_extra },
+
+    {   0, NULL,        "Debug Options",           OPT_BOOL, NULL         },
+    { 'd', "debug",     "Enable all debug",        OPT_BOOL, &opt_debug   },
+    { 's', "syslog",    "Enable debug to syslog",  OPT_BOOL, &opt_syslog  },
+    {   0, "uidebug",   "Enable webUI debug",      OPT_BOOL, &opt_uidebug },
+    { 'l', "log",       "Log to file",             OPT_STR,  &log_path    },
+    { 'A', "abort",     "Immediately abort",       OPT_BOOL, &opt_abort   },
+    {   0, "noacl",     "Disable all access control checks",
+      OPT_BOOL, &opt_noacl },
+#if ENABLE_LINUXDVB
+    { 'R', "dvbraw",    "Use rawts file to create virtual adapter",
+      OPT_STR, &opt_dvb_raw },
+#endif
+    { 'r', "rawts",     "Use rawts file to generate virtual services",
+      OPT_STR, &opt_rawts },
+    { 'j', "join",      "Subscribe to a service permanently",
+      OPT_STR, &opt_subscribe }
+  };
 
   /* Get current directory */
   tvheadend_cwd = dirname(dirname(tvh_strdupa(argv[0])));
@@ -279,91 +433,94 @@ main(int argc, char **argv)
   /* Set locale */
   setlocale(LC_ALL, "");
 
-  // make sure the timezone is set
+  /* make sure the timezone is set */
   tzset();
 
-  while((c = getopt(argc, argv, "Aa:fp:u:g:c:Chdr:j:sw:e:E:R:")) != -1) {
-    switch(c) {
-    case 'a':
-      adapter_mask = 0x0;
-      p = strtok(optarg, ",");
-      if (p != NULL) {
-        do {
-          int adapter = strtol(p, &endp, 10);
-          if (*endp != 0 || adapter < 0 || adapter > 31) {
-              fprintf(stderr, "Invalid adapter number '%s'\n", p);
-              return 1;
-          }
-          adapter_mask |= (1 << adapter);
-        } while ((p = strtok(NULL, ",")) != NULL);
-        if (adapter_mask == 0x0) {
-          fprintf(stderr, "No adapters specified!\n");
-          return 1;
-        }
-      } else {
-        usage(argv[0]);
-      }
-      break;
-    case 'A':
-      crash = 1;
-      break;
-    case 'f':
-      forkaway = 1;
-      break;
-    case 'p':
-      pidpath = optarg;
-      break;
-    case 'w':
-      webui_port = atoi(optarg);
-      break;
-    case 'e':
-      htsp_port = atoi(optarg);
-      break;
-    case 'E':
-      htsp_port_extra = atoi(optarg);
-      break;
-    case 'u':
-      usernam = optarg;
-      break;
-    case 'g':
-      groupnam = optarg;
-      break;
-    case 'c':
-      confpath = optarg;
-      break;
-    case 'd':
-      log_debug_to_console = 1;
-      break;
-    case 's':
-      log_debug_to_syslog = 1;
-      break;
-    case 'C':
-      createdefault = 1;
-      break;
-    case 'r':
-      rawts_input = optarg;
-      break;
-    case 'R':
-      dvb_rawts_input = optarg;
-      break;
-    case 'j':
-      join_transport = optarg;
-      break;
-    default:
-      usage(argv[0]);
-    }
+  /* Process command line */
+  for (i = 1; i < argc; i++) {
+
+    /* Find option */
+    cmdline_opt_t *opt
+      = cmdline_opt_find(cmdline_opts, ARRAY_SIZE(cmdline_opts), argv[i]);
+    if (!opt)
+      show_usage(argv[0], cmdline_opts, ARRAY_SIZE(cmdline_opts),
+                 "invalid option specified [%s]", argv[i]);
+
+    /* Process */
+    if (opt->type == OPT_BOOL)
+      *((int*)opt->param) = 1;
+    else if (++i == argc)
+      show_usage(argv[0], cmdline_opts, ARRAY_SIZE(cmdline_opts),
+                 "option %s requires a value", opt->lopt);
+    else if (opt->type == OPT_INT)
+      *((int*)opt->param) = atoi(argv[i]);
+    else
+      *((char**)opt->param) = argv[i];
+
+    /* Stop processing */
+    if (opt_help)
+      show_usage(argv[0], cmdline_opts, ARRAY_SIZE(cmdline_opts), NULL);
+    if (opt_version)
+      show_version(argv[0]);
   }
 
-  signal(SIGPIPE, handle_sigpipe);
+  /* Additional cmdline processing */
+  log_debug_to_console  = opt_debug;
+  log_debug_to_syslog   = opt_syslog;
+  log_debug_to_path     = opt_debug;
+  tvheadend_webui_debug = opt_debug || opt_uidebug;
+  tvhlog(LOG_INFO, "START", "initialising");
+#if ENABLE_LINUXDVB
+  if (!opt_dvb_adapters) {
+    adapter_mask = ~0;
+  } else {
+    char *p, *e;
+    char *r = NULL;
+    char *dvb_adapters = strdup(opt_dvb_adapters);
+    adapter_mask = 0x0;
+    p = strtok_r(dvb_adapters, ",", &r);
+    while (p) {
+      int a = strtol(p, &e, 10);
+      if (*e != 0 || a < 0 || a > 31) {
+        tvhlog(LOG_ERR, "START", "Invalid adapter number '%s'", p);
+        free(dvb_adapters);
+        return 1;
+      }
+      adapter_mask |= (1 << a);
+      p = strtok_r(NULL, ",", &r);
+    }
+    if (!adapter_mask) {
+      tvhlog(LOG_ERR, "START", "No adapters specified!");
+      free(dvb_adapters);
+      return 1;
+    }
+    free(dvb_adapters);
+  }
+#endif
+  if (tvheadend_webroot) {
+    char *tmp;
+    if (*tvheadend_webroot == '/')
+      tmp = strdup(tvheadend_webroot);
+    else {
+      tmp = malloc(strlen(tvheadend_webroot)+1);
+      *tmp = '/';
+      strcpy(tmp+1, tvheadend_webroot);
+    }
+    if (tmp[strlen(tmp)-1] == '/')
+      tmp[strlen(tmp)-1] = '\0';
+    tvheadend_webroot = tmp;
+  }
 
-  log_stderr   = 1;
-  log_decorate = isatty(2);
+  signal(SIGPIPE, handle_sigpipe); // will be redundant later
 
-  if(forkaway) {
-    grp  = getgrnam(groupnam ?: "video");
-    pw   = usernam ? getpwnam(usernam) : NULL;
-
-    pidfile = fopen(pidpath, "w+");
+  /* Daemonise */
+  if(opt_fork) {
+    const char *homedir;
+    gid_t gid;
+    uid_t uid;
+    struct group  *grp = getgrnam(opt_group ?: "video");
+    struct passwd *pw  = opt_user ? getpwnam(opt_user) : NULL;
+    FILE   *pidfile    = fopen(opt_pidpath, "w+");
 
     if(grp != NULL) {
       gid = grp->gr_gid;
@@ -377,7 +534,8 @@ main(int argc, char **argv)
         int gnum;
         gnum = get_user_groups(pw, glist, 10);
         if (setgroups(gnum, glist)) {
-          tvhlog(LOG_ALERT, "START", "setgroups() failed, do you have permission?");
+          tvhlog(LOG_ALERT, "START",
+                 "setgroups() failed, do you have permission?");
           return 1;
         }
       }
@@ -388,11 +546,13 @@ main(int argc, char **argv)
       uid = 1;
     }
     if ((getgid() != gid) && setgid(gid)) {
-      tvhlog(LOG_ALERT, "START", "setgid() failed, do you have permission?");
+      tvhlog(LOG_ALERT, "START",
+             "setgid() failed, do you have permission?");
       return 1;
     }
     if ((getuid() != uid) && setuid(uid)) {
-      tvhlog(LOG_ALERT, "START", "setuid() failed, do you have permission?");
+      tvhlog(LOG_ALERT, "START",
+             "setuid() failed, do you have permission?");
       return 1;
     }
 
@@ -407,33 +567,39 @@ main(int argc, char **argv)
     umask(0);
   }
 
-  log_stderr = !forkaway;
+  /* Setup logging */
+  log_stderr   = !opt_fork;
   log_decorate = isatty(2);
+  openlog("tvheadend", LOG_PID, LOG_DAEMON);
 
-  sigfillset(&set);
-  sigprocmask(SIG_BLOCK, &set, NULL);
+  /* Initialise configuration */
+  hts_settings_init(opt_config);
 
-  openlog("tvheadend", LOG_PID, logfacility);
-
-  hts_settings_init(confpath);
-
+  /* Setup global mutexes */
   pthread_mutex_init(&ffmpeg_lock, NULL);
   pthread_mutex_init(&fork_lock, NULL);
   pthread_mutex_init(&global_lock, NULL);
-
+  pthread_mutex_init(&atomic_lock, NULL);
   pthread_mutex_lock(&global_lock);
 
   time(&dispatch_clock);
 
+  /* Signal handling */
+  sigfillset(&set);
+  sigprocmask(SIG_BLOCK, &set, NULL);
   trap_init(argv[0]);
   
   /**
    * Initialize subsystems
    */
 
+#if ENABLE_LIBAV
+  libav_init();
+#endif
+
   config_init();
 
-  muxes_init();
+  imagecache_init();
 
   service_init();
 
@@ -441,25 +607,36 @@ main(int argc, char **argv)
 
   subscription_init();
 
-  access_init(createdefault);
+  access_init(opt_firstrun, opt_noacl);
 
-  tcp_server_init();
 #if ENABLE_LINUXDVB
-  dvb_init(adapter_mask, dvb_rawts_input);
+  muxes_init();
+  dvb_init(adapter_mask, opt_dvb_raw);
 #endif
+
   iptv_input_init();
+
 #if ENABLE_V4L
   v4l_init();
 #endif
-  http_server_init();
 
+#if ENABLE_TIMESHIFT
+  timeshift_init();
+#endif
+
+  tcp_server_init(opt_ipv6);
+  http_server_init();
   webui_init();
 
   serviceprobe_init();
 
+#if ENABLE_CWC
   cwc_init();
-
   capmt_init();
+#if (!ENABLE_DVBCSA)
+  ffdecsa_init();
+#endif
+#endif
 
   epggrab_init();
   epg_init();
@@ -468,13 +645,11 @@ main(int argc, char **argv)
 
   htsp_init();
 
-  ffdecsa_init();
-  
-  if(rawts_input != NULL)
-    rawts_init(rawts_input);
+  if(opt_rawts != NULL)
+    rawts_init(opt_rawts);
 
-  if(join_transport != NULL)
-    subscription_dummy_join(join_transport, 1);
+  if(opt_subscribe != NULL)
+    subscription_dummy_join(opt_subscribe, 1);
 
 #ifdef CONFIG_AVAHI
   avahi_init();
@@ -483,7 +658,6 @@ main(int argc, char **argv)
   epg_updated(); // cleanup now all prev ref's should have been created
 
   pthread_mutex_unlock(&global_lock);
-
 
   /**
    * Wait for SIGTERM / SIGINT, but only in this thread
@@ -504,17 +678,21 @@ main(int argc, char **argv)
 	 tvheadend_version,
 	 getpid(), getuid(), getgid(), hts_settings_get_root());
 
-  if(crash)
+  if(opt_abort)
     abort();
 
   mainloop();
 
   epg_save();
 
+#if ENABLE_TIMESHIFT
+  timeshift_term();
+#endif
+
   tvhlog(LOG_NOTICE, "STOP", "Exiting HTS Tvheadend");
 
-  if(forkaway)
-    unlink("/var/run/tvheadend.pid");
+  if(opt_fork)
+    unlink(opt_pidpath);
 
   return 0;
 
@@ -545,6 +723,7 @@ tvhlogv(int notify, int severity, const char *subsys, const char *fmt,
   int l;
   struct tm tm;
   time_t now;
+  static int log_path_fail = 0;
 
   l = snprintf(buf, sizeof(buf), "%s: ", subsys);
 
@@ -589,7 +768,24 @@ tvhlogv(int notify, int severity, const char *subsys, const char *fmt,
     } else {
       sgroff = "\033[0m";
     }
-    fprintf(stderr, "%s%s [%s]:%s%s\n", sgr, t, leveltxt, buf, sgroff);
+    fprintf(stderr, "%s%s [%7s]:%s%s\n", sgr, t, leveltxt, buf, sgroff);
+  }
+
+  /**
+   * Write to file
+   */
+  if (log_path && (log_debug_to_path || severity < LOG_DEBUG)) {
+    const char *leveltxt = logtxtmeta[severity][0];
+    FILE *fp = fopen(log_path, "a");
+    if (fp) {
+      log_path_fail = 0;
+      fprintf(fp, "%s [%7s]:%s\n", t, leveltxt, buf);
+      fclose(fp);
+    } else {
+      if (!log_path_fail)
+        syslog(LOG_WARNING, "failed to write log file %s", log_path);
+      log_path_fail = 1;
+    }
   }
 }
 

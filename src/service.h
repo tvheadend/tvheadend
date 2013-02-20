@@ -249,6 +249,7 @@ typedef struct service {
    * subscription scheduling.
    */
   int s_enabled;
+  int (*s_is_enabled)(struct service *t);
 
   /**
    * Last PCR seen, we use it for a simple clock for rawtsinput.c
@@ -339,7 +340,6 @@ typedef struct service {
    * Teletext...
    */
   th_commercial_advice_t s_tt_commercial_advice;
-  int s_tt_rundown_content_length;
   time_t s_tt_clock;   /* Network clock as determined by teletext decoder */
  
   /**
@@ -474,6 +474,7 @@ typedef struct service {
   int s_scrambled;
   int s_scrambled_seen;
   int s_caid;
+  uint16_t s_prefcapid;
 
   /**
    * PCR drift compensation. This should really be per-packet.
@@ -550,6 +551,10 @@ int service_is_tv(service_t *t);
 
 int service_is_radio(service_t *t);
 
+int servicetype_is_tv(int st);
+
+int servicetype_is_radio(int st);
+
 void service_destroy(service_t *t);
 
 void service_remove_subscriber(service_t *t, struct th_subscription *s,
@@ -596,6 +601,8 @@ uint16_t service_get_encryption(service_t *t);
 void service_set_dvb_charset(service_t *t, const char *dvb_charset);
 
 void service_set_dvb_eit_enable(service_t *t, int dvb_eit_enable);
+
+void service_set_prefcapid(service_t *t, uint32_t prefcapid);
 
 int service_is_primary_epg (service_t *t);
 

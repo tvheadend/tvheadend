@@ -15,6 +15,11 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
 		});
 	}
 
+	tvheadend.comet.on(dtable, function(m){
+		if (m.reload)
+			store.reload();
+	});
+
 	function addRecord() {
 		Ext.Ajax.request({
 			url : "tablemgr",
@@ -65,7 +70,6 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
 					Ext.MessageBox.alert('Server Error', 'Unable to delete');
 				},
 				success : function(response, options) {
-					store.reload();
 				}
 			})
 		}
@@ -88,6 +92,7 @@ tvheadend.tableEditor = function(title, dtable, cm, rec, plugins, store,
 				entries : Ext.encode(out)
 			},
 			success : function(response, options) {
+				// Note: this call is mostly redundant (comet update will pick it up anyway)
 				store.commitChanges();
 			},
 			failure : function(response, options) {
