@@ -13,21 +13,69 @@ Media player.
 .SH OPTIONS
 All arguments are optional.
 .TP
-\fB\-f
-Fork and become a background process (deamon). Default no.
+\fB\-A\fR, \fB\-\-abort\fR
+Immediately abort on startup (for debug).
 .TP
-\fB\-u \fR\fIusername\fR
-Run as user \fIusername\fR. Only applicable if daemonizing. Default is to
-use the uid of 1 (daemon on most systems).
+\fB\-a\fR, \fB\-\-adapters\fR
+Only use specified DVB adapters (comma separated).
 .TP
-\fB\-g \fR\fIgroupname\fR
-Run as group \fR\fIgroupname\fR. Only applicable if daemonizing. Default is to use the 'video' group. If the 'video' group does not exist, gid 1 (daemon) will be used.
+\fB\-c\fR, \fB\-\-config\fR
+Specify an alternate config path; the default is \fI${HOME}/.hts\fR
 .TP
-\fB\-C 
+\fB\-C\fR, \fB\-\-firstrun\fR
 If no useraccount exist then create one with no username and no
 password. Use with care as it will allow world-wide administrative
 access to your Tvheadend installation until you edit the
 access-control from within the Tvheadend UI.
+.TP
+\fB\-d\fR, \fB\-\-debug\fR
+Enable all debug.
+.TP
+\fB\-f
+Fork and become a background process (deamon). Default no.
+.TP
+\fB\-g\fR \fIgroupname\fR, \fB\-\-group \fR\fIgroupname\fR
+Run as group \fR\fIgroupname\fR. Only applicable if daemonizing. Default is to use the 'video' group. If the 'video' group does not exist, gid 1 (daemon) will be used.
+.TP
+\fB\-\-http_port
+Specify alternative http port (default 9881).
+.TP
+\fB\-\-http_root
+Specify alternative http webroot.
+.TP
+\fB\-\-htsp_port
+Specify alternative htsp port (default 9882).
+.TP
+\fB\-\-htsp_port2
+Specify extra htsp port.
+.TP
+\fB\-j\fR, \fB\-\-join\fR
+Subscribe to a service permanently.
+.TP
+\fB\-l\fR, \fB\-\-log\fR
+Log to file.
+.TP
+\fB\-r\fR, \fB\-\-rawts\fR
+Use rawts file to generate virtual services.
+.TP
+\fB\-R\fR, \fB\-\-dvbraw\fR
+Use rawts file to create virtual adapter.
+.TP
+\fB\-s\fR, \fB\-\-syslog\fR
+Enable debug to syslog.
+.TP
+\fB\-\-uidebug
+Enable web UI debug.
+.TP
+\fB\-u\fR \fIusername\fR, \fB\-\-user\fR \fIusername\fR
+Run as user \fIusername\fR. Only applicable if daemonizing. Default is to
+use the uid of 1 (daemon on most systems).
+.TP
+\fB\-6\fR, \fB\-\-ipv6\fR
+Listen on IPv6.
+.TP
+\fB\-v
+Show version information.
 .SH "LOGGING"
 All activity inside tvheadend is logged to syslog using log facility
 \fBLOG_DAEMON\fR.
