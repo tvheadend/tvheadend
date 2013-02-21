@@ -816,7 +816,7 @@ http_serve(int fd, void *opaque, struct sockaddr_storage *peer,
  *  Fire up HTTP server
  */
 void
-http_server_init(void)
+http_server_init(const char *bindaddr)
 {
-  http_server = tcp_server_create(tvheadend_webui_port, http_serve, NULL);
+  http_server = tcp_server_create(bindaddr, tvheadend_webui_port, http_serve, NULL);
 }
