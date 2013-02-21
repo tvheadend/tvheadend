@@ -755,7 +755,7 @@ access_init(int createdefault, int noacl)
     htsmsg_destroy(r);
 
     tvhlog(LOG_WARNING, "access",
-	   "Created default wide open access controle entry");
+	   "Created default wide open access control entry");
   }
 
   /* Load superuser account */
