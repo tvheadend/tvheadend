@@ -149,7 +149,16 @@ typedef struct cwc_service {
 
   LIST_ENTRY(cwc_service) cs_link;
 
-  int cs_okchannel;
+  int cs_channel;
+
+  /**
+   * ECM Status
+   */
+  enum {
+    ECM_INIT,
+    ECM_VALID,
+    ECM_RESET
+  } ecm_state;
 
   /**
    * Status of the key(s) in cs_keys
@@ -829,23 +838,23 @@ forbid:
 	   "Can not descramble service \"%s\", access denied (seqno: %d "
 	   "Req delay: %"PRId64" ms)",
 	   t->s_svcname, seq, delay);
-    ct->cs_keystate = CS_FORBIDDEN;
 
-    /* reset prefcapid if descrambling fails */
-    t->s_prefcapid = 0;
-    service_request_save(t, 0);
+    ct->cs_keystate = CS_FORBIDDEN;
+    ct->ecm_state = ECM_RESET;
 
     return;
 
   } else {
 
-    ct->cs_okchannel = es->es_channel;
-    if(es->es_nok == 1 || t->s_prefcapid == 0) {
-      t->s_prefcapid = ct->cs_okchannel;
+    es->es_nok = 0;
+    ct->cs_channel = es->es_channel;
+    ct->ecm_state = ECM_VALID;
+
+    if(t->s_prefcapid == 0 || t->s_prefcapid != ct->cs_channel) {
+      t->s_prefcapid = ct->cs_channel;
       tvhlog(LOG_DEBUG, "cwc", "Saving prefered PID %d", t->s_prefcapid);
       service_request_save(t, 0);
     }
-    es->es_nok = 0;
 
     tvhlog(LOG_DEBUG, "cwc",
 	   "Received ECM reply%s for service \"%s\" "
@@ -884,7 +893,7 @@ forbid:
 
     ep = LIST_FIRST(&ct->cs_pids);
     while(ep != NULL) {
-      if (ct->cs_okchannel == ep->ep_pid) {
+      if (ct->cs_channel == ep->ep_pid) {
         ep = LIST_NEXT(ep, ep_link);
       }
       else {
@@ -935,8 +944,7 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
     }
     tvhlog(LOG_WARNING, "cwc", "Got unexpected ECM reply (seqno: %d)", seq);
     LIST_FOREACH(ct, &cwc->cwc_services, cs_link) {
-      tvhlog(LOG_DEBUG, "cwc", "After got unexpected (ct->cs_okchannel: %d)", ct->cs_okchannel);
-      if (ct->cs_okchannel == -3) ct->cs_okchannel = -2;
+      ct->ecm_state = ECM_RESET;
     }
     break;
   }
@@ -1629,31 +1637,40 @@ cwc_table_input(struct th_descrambler *td, struct service *t,
   }
 
   if(ep == NULL) {
-    if (ct->cs_okchannel == -2) {
+    if (ct->ecm_state == ECM_RESET) {
+      ct->ecm_state = ECM_INIT;
+      ct->cs_channel = -1;
       t->s_prefcapid = 0;
-      ct->cs_okchannel = -1;
-      tvhlog(LOG_DEBUG, "cwc", "Reset after unexpected reply for service \"%s\"", t->s_svcname);
+      tvhlog(LOG_DEBUG, "cwc", "Reset after unexpected or no reply for service \"%s\"", t->s_svcname);
     }
 
-    if (ct->cs_okchannel == -3 && t->s_prefcapid != 0) {
+    if (ct->ecm_state == ECM_INIT) {
+      // Validate prefered ECM PID
+      if(t->s_prefcapid != 0) {
+        struct elementary_stream *prefca = service_stream_find(t, t->s_prefcapid);
+        if (!prefca || prefca->es_type != SCT_CA) {
+          tvhlog(LOG_DEBUG, "cwc", "Invalid prefered ECM (PID %d) found for service \"%s\"", t->s_prefcapid, t->s_svcname);
+          t->s_prefcapid = 0;
+        }
+      }
+
+      if(t->s_prefcapid == st->es_pid) {
         ep = calloc(1, sizeof(ecm_pid_t));
         ep->ep_pid = t->s_prefcapid;
         LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
         tvhlog(LOG_DEBUG, "cwc", "Insert prefered ECM (PID %d) for service \"%s\"", t->s_prefcapid, t->s_svcname);
-        ct->cs_okchannel = -4;
-    }
-
-    if (ct->cs_okchannel == -1 || (ct->cs_okchannel == -3 && t->s_prefcapid == 0)) {
-      ep = calloc(1, sizeof(ecm_pid_t));
-      ep->ep_pid = st->es_pid;
-      LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
-      tvhlog(LOG_DEBUG, "cwc", "Insert new ECM (PID %d) for service \"%s\"", st->es_pid, t->s_svcname);
-    }
-    else {
-      return;
+      }
+      else if(t->s_prefcapid == 0) {
+          ep = calloc(1, sizeof(ecm_pid_t));
+          ep->ep_pid = st->es_pid;
+          LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
+          tvhlog(LOG_DEBUG, "cwc", "Insert new ECM (PID %d) for service \"%s\"", st->es_pid, t->s_svcname);
+      }
     }
   }
 
+  if(ep == NULL)
+    return;
 
   LIST_FOREACH(c, &st->es_caids, link) {
     if(cwc->cwc_caid == c->caid)
@@ -1706,8 +1723,8 @@ cwc_table_input(struct th_descrambler *td, struct service *t,
     memcpy(es->es_ecm, data, len);
     es->es_ecmsize = len;
 
-    if(ct->cs_okchannel >= 0 && channel != -1 &&
-       ct->cs_okchannel != channel) {
+    if(ct->cs_channel >= 0 && channel != -1 &&
+       ct->cs_channel != channel) {
       tvhlog(LOG_DEBUG, "cwc", "Filtering ECM (PID %d)", channel);
       return;
     }
@@ -2163,7 +2180,8 @@ cwc_service_start(service_t *t)
 #endif
     ct->cs_cwc           = cwc;
     ct->cs_service       = t;
-    ct->cs_okchannel     = -3;
+    ct->cs_channel       = -1;
+    ct->ecm_state        = ECM_INIT;
 
     td = &ct->cs_head;
     td->td_stop       = cwc_service_destroy;
