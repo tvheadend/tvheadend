@@ -422,8 +422,10 @@ build_record_channel ( channel_t *ch )
   htsmsg_add_str(c, "name", ch->ch_name);
   htsmsg_add_u32(c, "chid", ch->ch_id);
 
-  if(ch->ch_icon != NULL)
-    htsmsg_add_imageurl(c, "ch_icon", "imagecache/%d", ch->ch_icon);
+  if(ch->ch_icon != NULL) {
+    htsmsg_add_imageurl(c, "chicon", "imagecache/%d", ch->ch_icon);
+    htsmsg_add_str(c, "ch_icon", ch->ch_icon);
+  }
 
   buf[0] = 0;
   LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
