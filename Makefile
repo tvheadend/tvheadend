@@ -211,7 +211,7 @@ SRCS-${CONFIG_BUNDLE}     += bundle.c
 BUNDLES-yes               += docs/html docs/docresources src/webui/static
 BUNDLES-yes               += data/conf
 BUNDLES-${CONFIG_DVBSCAN} += data/dvb-scan
-BUNDLES                    = $(BUNDLES-yes:%=$(ROOTDIR)/%)
+BUNDLES                    = $(BUNDLES-yes)
 
 #
 # Add-on modules
@@ -272,6 +272,7 @@ distclean: clean
 	rm -f ${ROOTDIR}/.config.mk
 
 # Create version
+$(BUILDDIR)/src/version.o: $(ROOTDIR)/src/version.c
 $(ROOTDIR)/src/version.c: FORCE
 	@$(ROOTDIR)/support/version $@ > /dev/null
 FORCE:
@@ -289,4 +290,4 @@ $(BUILDDIR)/bundle.o: $(BUILDDIR)/bundle.c
 
 $(BUILDDIR)/bundle.c:
 	@mkdir -p $(dir $@)
-	$(MKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d $(BUNDLE_FLAGS) $(BUNDLES)
+	$(MKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d $(BUNDLE_FLAGS) $(BUNDLES:%=$(ROOTDIR)/%)
