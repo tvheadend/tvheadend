@@ -835,12 +835,17 @@ forbid:
 	   "Req delay: %"PRId64" ms)",
 	   t->s_svcname, seq, delay);
     ct->cs_keystate = CS_FORBIDDEN;
+
+    /* reset prefcapid if descrambling fails */
+    t->s_prefcapid = 0;
+    service_request_save(t, 0);
+
     return;
 
   } else {
 
     ct->cs_okchannel = es->es_channel;
-    tvhlog(LOG_DEBUG, "cwc",  "es->es_nok %d      t->tht_prefcapid %d", es->es_nok, t->s_prefcapid);
+    tvhlog(LOG_DEBUG, "cwc", "es->es_nok %d, t->tht_prefcapid %d", es->es_nok, t->s_prefcapid);
     if(es->es_nok == 1 || t->s_prefcapid == 0) {
       t->s_prefcapid = ct->cs_okchannel;
       service_request_save(t, 0);
