@@ -20,8 +20,8 @@
 # Configuration
 #
 
-include ${CURDIR}/.config.mk
-PROG = ${BUILDDIR}/tvheadend
+include $(dir $(lastword $(MAKEFILE_LIST))).config.mk
+PROG    := $(BUILDDIR)/tvheadend
 
 #
 # Common compiler flags
@@ -31,8 +31,11 @@ CFLAGS  += -Wall -Werror -Wwrite-strings -Wno-deprecated-declarations
 CFLAGS  += -Wmissing-prototypes -fms-extensions
 CFLAGS  += -g -funsigned-char -O2 
 CFLAGS  += -D_FILE_OFFSET_BITS=64
-CFLAGS  += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR}
+CFLAGS  += -I${BUILDDIR} -I${ROOTDIR}/src -I${ROOTDIR}
 LDFLAGS += -lrt -ldl -lpthread -lm
+
+vpath %.c $(ROOTDIR)
+vpath %.h $(ROOTDIR)
 
 #
 # Other config
@@ -45,7 +48,7 @@ BUNDLE_FLAGS = ${BUNDLE_FLAGS-yes}
 # Binaries/Scripts
 #
 
-MKBUNDLE = $(PYTHON) $(CURDIR)/support/mkbundle
+MKBUNDLE = $(PYTHON) $(ROOTDIR)/support/mkbundle
 
 #
 # Debug/Output
@@ -54,7 +57,7 @@ MKBUNDLE = $(PYTHON) $(CURDIR)/support/mkbundle
 ifndef V
 ECHO   = printf "%-16s%s\n" $(1) $(2)
 BRIEF  = CC MKBUNDLE CXX
-MSG    = $(subst $(CURDIR)/,,$@)
+MSG    = $(subst $(BUILDDIR)/,,$@)
 $(foreach VAR,$(BRIEF), \
     $(eval $(VAR) = @$$(call ECHO,$(VAR),$$(MSG)); $($(VAR))))
 endif
@@ -62,10 +65,10 @@ endif
 #
 # Core
 #
-SRCS =  src/main.c \
+SRCS =  src/version.c \
+	src/main.c \
 	src/utils.c \
 	src/wrappers.c \
-	src/version.c \
 	src/access.c \
 	src/dtable.c \
 	src/tcp.c \
@@ -208,7 +211,7 @@ SRCS-${CONFIG_BUNDLE}     += bundle.c
 BUNDLES-yes               += docs/html docs/docresources src/webui/static
 BUNDLES-yes               += data/conf
 BUNDLES-${CONFIG_DVBSCAN} += data/dvb-scan
-BUNDLES                    = $(BUNDLES-yes)
+BUNDLES                    = $(BUNDLES-yes:%=$(ROOTDIR)/%)
 
 #
 # Add-on modules
@@ -237,13 +240,13 @@ all: ${PROG}
 
 # Check configure output is valid
 check_config:
-	@test $(CURDIR)/.config.mk -nt $(CURDIR)/configure\
+	@test $(ROOTDIR)/.config.mk -nt $(ROOTDIR)/configure\
 		|| echo "./configure output is old, please re-run"
-	@test $(CURDIR)/.config.mk -nt $(CURDIR)/configure
+	@test $(ROOTDIR)/.config.mk -nt $(ROOTDIR)/configure
 
 # Recreate configuration
 reconfigure:
-	$(CURDIR)/configure $(CONFIGURE_ARGS)
+	$(ROOTDIR)/configure $(CONFIGURE_ARGS)
 
 # Binary
 ${PROG}: check_config $(OBJS) $(ALLDEPS)
@@ -252,7 +255,7 @@ ${PROG}: check_config $(OBJS) $(ALLDEPS)
 # Object
 ${BUILDDIR}/%.o: %.c
 	@mkdir -p $(dir $@)
-	$(CC) -MD -MP $(CFLAGS) -c -o $@ $(CURDIR)/$<
+	$(CC) -MD -MP $(CFLAGS) -c -o $@ $<
 
 # Add-on
 ${BUILDDIR}/%.so: ${SRCS_EXTRA}
@@ -265,24 +268,24 @@ clean:
 	find . -name "*~" | xargs rm -f
 
 distclean: clean
-	rm -rf ${CURDIR}/build.*
-	rm -f ${CURDIR}/.config.mk
+	rm -rf ${ROOTDIR}/build.*
+	rm -f ${ROOTDIR}/.config.mk
 
-# Create buildversion.h
-src/version.c: FORCE
-	@$(CURDIR)/support/version $@ > /dev/null
+# Create version
+$(ROOTDIR)/src/version.c: FORCE
+	@$(ROOTDIR)/support/version $@ > /dev/null
 FORCE:
 
 # Include dependency files if they exist.
 -include $(DEPS)
 
 # Include OS specific targets
-include support/${OSENV}.mk
+include ${ROOTDIR}/support/${OSENV}.mk
 
 # Bundle files
 $(BUILDDIR)/bundle.o: $(BUILDDIR)/bundle.c
 	@mkdir -p $(dir $@)
-	$(CC) -I${CURDIR}/src -c -o $@ $<
+	$(CC) -I${ROOTDIR}/src -c -o $@ $<
 
 $(BUILDDIR)/bundle.c:
 	@mkdir -p $(dir $@)
