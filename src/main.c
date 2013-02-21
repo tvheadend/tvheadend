@@ -376,6 +376,7 @@ main(int argc, char **argv)
              *opt_dvb_raw      = NULL,
 #endif
              *opt_rawts        = NULL,
+             *opt_bindaddr     = NULL,
              *opt_subscribe    = NULL;
   cmdline_opt_t cmdline_opts[] = {
     {   0, NULL,        "Generic Options",         OPT_BOOL, NULL         },
@@ -400,6 +401,7 @@ main(int argc, char **argv)
 #endif
     {   0, NULL,         "Server Connectivity",    OPT_BOOL, NULL         },
     { '6', "ipv6",       "Listen on IPv6",         OPT_BOOL, &opt_ipv6    },
+    { 'b', "bindaddr",   "Specify bind address",   OPT_STR,  &opt_bindaddr},
     {   0, "http_port",  "Specify alternative http port",
       OPT_INT, &tvheadend_webui_port },
     {   0, "http_root",  "Specify alternative http webroot",
@@ -625,7 +627,7 @@ main(int argc, char **argv)
 #endif
 
   tcp_server_init(opt_ipv6);
-  http_server_init();
+  http_server_init(opt_bindaddr);
   webui_init();
 
   serviceprobe_init();
@@ -643,7 +645,7 @@ main(int argc, char **argv)
 
   dvr_init();
 
-  htsp_init();
+  htsp_init(opt_bindaddr);
 
   if(opt_rawts != NULL)
     rawts_init(opt_rawts);

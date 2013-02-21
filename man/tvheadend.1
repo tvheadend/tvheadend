@@ -13,14 +13,27 @@ Media player.
 .SH OPTIONS
 All arguments are optional.
 .TP
-\fB\-A\fR, \fB\-\-abort\fR
-Immediately abort on startup (for debug).
+\fB\-v\fR, \fB\-\-version\fR
+Show version information.
 .TP
-\fB\-a\fR, \fB\-\-adapters\fR
-Only use specified DVB adapters (comma separated).
+\fB\-h\fR, \fB\-\-help\fR
+Show built-in help information (may be more up to date).
 .TP
 \fB\-c\fR, \fB\-\-config\fR
 Specify an alternate config path; the default is \fI${HOME}/.hts\fR
+.TP
+\fB\-f
+Fork and become a background process (deamon). Default no.
+.TP
+\fB\-u\fR \fIusername\fR, \fB\-\-user\fR \fIusername\fR
+Run as user \fIusername\fR. Only applicable if daemonizing. Default is to
+use the uid of 1 (daemon on most systems).
+.TP
+\fB\-g\fR \fIgroupname\fR, \fB\-\-group \fR\fIgroupname\fR
+Run as group \fR\fIgroupname\fR. Only applicable if daemonizing. Default is to use the 'video' group. If the 'video' group does not exist, gid 1 (daemon) will be used.
+.TP
+\fB\-p\fR \fIpidpath\fR, \fB\-\-pid \fR\fIpidpath\fR
+Specify alternative PID path file (default /var/run/tvheadend.pid).
 .TP
 \fB\-C\fR, \fB\-\-firstrun\fR
 If no useraccount exist then create one with no username and no
@@ -28,14 +41,15 @@ password. Use with care as it will allow world-wide administrative
 access to your Tvheadend installation until you edit the
 access-control from within the Tvheadend UI.
 .TP
-\fB\-d\fR, \fB\-\-debug\fR
-Enable all debug.
+\fB\-a\fR, \fB\-\-adapters\fR
+Only use specified DVB adapters (comma separated).
 .TP
-\fB\-f
-Fork and become a background process (deamon). Default no.
+\fB\-6\fR, \fB\-\-ipv6\fR
+Listen on IPv6.
 .TP
-\fB\-g\fR \fIgroupname\fR, \fB\-\-group \fR\fIgroupname\fR
-Run as group \fR\fIgroupname\fR. Only applicable if daemonizing. Default is to use the 'video' group. If the 'video' group does not exist, gid 1 (daemon) will be used.
+\fB\-b\fR \fIaddress\fR, \fB\-\-bindaddr\fR \fIaddress\fR
+Specify an interface IP address on which incoming HTTP and HTSP connections
+will be accepted. By default, connections are accepted on all interfaces.
 .TP
 \fB\-\-http_port
 Specify alternative http port (default 9881).
@@ -49,17 +63,8 @@ Specify alternative htsp port (default 9882).
 \fB\-\-htsp_port2
 Specify extra htsp port.
 .TP
-\fB\-j\fR, \fB\-\-join\fR
-Subscribe to a service permanently.
-.TP
-\fB\-l\fR, \fB\-\-log\fR
-Log to file.
-.TP
-\fB\-r\fR, \fB\-\-rawts\fR
-Use rawts file to generate virtual services.
-.TP
-\fB\-R\fR, \fB\-\-dvbraw\fR
-Use rawts file to create virtual adapter.
+\fB\-d\fR, \fB\-\-debug\fR
+Enable all debug.
 .TP
 \fB\-s\fR, \fB\-\-syslog\fR
 Enable debug to syslog.
@@ -67,15 +72,23 @@ Enable debug to syslog.
 \fB\-\-uidebug
 Enable web UI debug.
 .TP
-\fB\-u\fR \fIusername\fR, \fB\-\-user\fR \fIusername\fR
-Run as user \fIusername\fR. Only applicable if daemonizing. Default is to
-use the uid of 1 (daemon on most systems).
+\fB\-l\fR, \fB\-\-log\fR
+Log to file.
 .TP
-\fB\-6\fR, \fB\-\-ipv6\fR
-Listen on IPv6.
+\fB\-A\fR, \fB\-\-abort\fR
+Immediately abort on startup (for debug).
 .TP
-\fB\-v
-Show version information.
+\fB\-\-noacl
+Do not perform any access control checking.
+.TP
+\fB\-R\fR, \fB\-\-dvbraw\fR
+Use rawts file to create virtual adapter.
+.TP
+\fB\-r\fR, \fB\-\-rawts\fR
+Use rawts file to generate virtual services.
+.TP
+\fB\-j\fR, \fB\-\-join\fR
+Subscribe to a service permanently.
 .SH "LOGGING"
 All activity inside tvheadend is logged to syslog using log facility
 \fBLOG_DAEMON\fR.

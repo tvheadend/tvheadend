@@ -499,7 +499,7 @@ tcp_server_loop(void *aux)
  *
  */
 void *
-tcp_server_create(int port, tcp_server_callback_t *start, void *opaque)
+tcp_server_create(const char *bindaddr, int port, tcp_server_callback_t *start, void *opaque)
 {
   int fd, x;
   struct epoll_event e;
@@ -515,14 +515,19 @@ tcp_server_create(int port, tcp_server_callback_t *start, void *opaque)
 
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_flags = AI_PASSIVE;
+  if (bindaddr != NULL)
+      hints.ai_flags |= AI_NUMERICHOST;
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
 
-  x = getaddrinfo(NULL, portBuf, &hints, &res);
+  x = getaddrinfo(bindaddr, portBuf, &hints, &res);
   free(portBuf);
 
-  if(x != 0)
+  if(x != 0) {
+    tvhlog(LOG_ERR, "tcp", "getaddrinfo: %s: %s", bindaddr != NULL ? bindaddr : "*",
+      x == EAI_SYSTEM ? strerror(errno) : gai_strerror(x));
     return NULL;
+  }
 
   ressave = res;
   while(res)
@@ -553,6 +558,7 @@ tcp_server_create(int port, tcp_server_callback_t *start, void *opaque)
 
   if(x != 0)
   {
+    tvhlog(LOG_ERR, "tcp", "bind: %s: %s", bindaddr != NULL ? bindaddr : "*", strerror(errno));
     close(fd);
     return NULL;
   }
