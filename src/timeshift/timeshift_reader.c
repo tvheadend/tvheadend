@@ -322,12 +322,10 @@ static int _timeshift_read
 #endif
       *fd = open((*cur_file)->path, O_RDONLY);
     }
-    if (*cur_off) {
 #ifdef TSHFT_TRACE
-      tvhlog(LOG_DEBUG, "timeshift", "ts %d seek to %lu", ts->id, *cur_off);
+    tvhlog(LOG_DEBUG, "timeshift", "ts %d seek to %lu", ts->id, *cur_off);
 #endif
-      lseek(*fd, *cur_off, SEEK_SET);
-    }
+    lseek(*fd, *cur_off, SEEK_SET);
 
     /* Read msg */
     ssize_t r = _read_msg(*fd, sm);
