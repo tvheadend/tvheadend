@@ -29,6 +29,7 @@ OPTIONS=(
   "inotify:auto"
   "bundle:no"
   "dvbcsa:no"
+  "atomic64:auto"
   "epoll:yes"
   "kqueue:no"
 )
@@ -57,10 +58,16 @@ check_cc_option sse2
 check_cc_snippet getloadavg '#include <stdlib.h> 
 void test() { getloadavg(NULL,0); }'
 
-check_cc_snippet atomic64 '#include <stdint.h>
+if enabled_or_auto atomic64; then
+  if check_cc_snippet atomic64 '#include <stdint.h>
 uint64_t test(uint64_t *ptr){
 return __sync_fetch_and_add(ptr, 1);
-}'
+}' ; then
+    enable atomic64
+  elif enabled atomic64; then
+    die "Atomic64 support not found (use --disable-atomic64)"
+  fi
+fi
 
 #
 # Python
