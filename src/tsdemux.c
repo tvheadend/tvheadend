@@ -76,6 +76,10 @@ ts_recv_packet0(service_t *t, elementary_stream_t *st, const uint8_t *tsb)
   if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
     ts_remux(t, tsb);
 
+  /* If this was a PAT/PMT packet, st is NULL, so we do no more */
+  if (!st)
+    return;
+
   error = !!(tsb[1] & 0x80);
   pusi  = !!(tsb[1] & 0x40);
 
@@ -211,7 +215,7 @@ ts_recv_packet1(service_t *t, const uint8_t *tsb, int64_t *pcrp)
   if(tsb[3] & 0x20 && tsb[4] > 0 && tsb[5] & 0x10 && !error)
     ts_extract_pcr(t, st, tsb, pcrp);
 
-  if(st == NULL) {
+  if((st == NULL) && (pid != 0) && (pid != t->s_pmt_pid)) {
     pthread_mutex_unlock(&t->s_stream_mutex);
     return;
   }
