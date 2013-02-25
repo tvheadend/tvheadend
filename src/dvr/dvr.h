@@ -260,6 +260,8 @@ void dvr_entry_notify(dvr_entry_t *de);
 
 void dvr_entry_save(dvr_entry_t *de);
 
+htsmsg_t *dvr_entry_rename_file(dvr_entry_t *de, const char *filename);
+
 const char *dvr_entry_status(dvr_entry_t *de);
 
 const char *dvr_entry_schedstatus(dvr_entry_t *de);
