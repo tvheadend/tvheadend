@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <ctype.h>
 #include <libgen.h> /* basename */
 
 #include "htsstr.h"
@@ -117,6 +118,15 @@ dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode)
   de->de_last_error = stopcode;
 }
 
+static const char UNCLEAN_CHARS[] = ":\\<>|*?'\"";
+static inline int is_unclean(char c)
+{
+  if (c < 32) return 1;
+  if (122 < c && c <= 127) return 1;
+  if (strchr(UNCLEAN_CHARS, c) != NULL) return 1;
+  return 0;
+}
+
 
 /**
  * Replace various chars with a dash
@@ -134,9 +144,8 @@ cleanupfilename(char *s, int dvr_flags)
             (s[i] == ' ' || s[i] == '\t'))
       s[i] = '-';	
 
-    else if((dvr_flags & DVR_CLEAN_TITLE) &&
-            ((s[i] < 32) || (s[i] > 122) ||
-             (strchr("/:\\<>|*?'\"", s[i]) != NULL)))
+    else if(((dvr_flags & DVR_CLEAN_TITLE) && is_unclean(s[i])) ||
+            ((dvr_flags & DVR_ONLY_ASCII) && !isascii(s[i])))
       s[i] = '-';
   }
 }

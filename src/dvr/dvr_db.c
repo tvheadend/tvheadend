@@ -170,7 +170,6 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
 {
   struct tm tm;
   char buf[40];
-  int i;
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
 
   if(cfg->dvr_flags & DVR_CHANNEL_IN_TITLE)
@@ -199,19 +198,6 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
                                 output + strlen(output),
                                 outlen - strlen(output),
                                 ".", "S%02d", NULL, "E%02d", NULL);
-  }
-
-  if(cfg->dvr_flags & DVR_CLEAN_TITLE) {
-        for (i=0;i<strlen(output);i++) {
-                if (
-                        output[i]<32 ||
-                        output[i]>122 ||
-                        output[i]==34 ||
-                        output[i]==39 ||
-                        output[i]==92 ||
-                        output[i]==58
-                        ) output[i]='_';
-        }
   }
 }
 
@@ -1026,6 +1012,9 @@ dvr_init(void)
       if(!htsmsg_get_u32(m, "clean-title", &u32) && u32)
         cfg->dvr_flags |= DVR_CLEAN_TITLE;
 
+      if(!htsmsg_get_u32(m, "only-ascii", &u32) && u32)
+        cfg->dvr_flags |= DVR_ONLY_ASCII;
+
       if(!htsmsg_get_u32(m, "tag-files", &u32) && !u32)
         cfg->dvr_flags &= ~DVR_TAG_FILES;
 
@@ -1130,7 +1119,7 @@ dvr_config_create(const char *name)
   cfg->dvr_config_name = strdup(name);
   cfg->dvr_retention_days = 31;
   cfg->dvr_mc = MC_MATROSKA;
-  cfg->dvr_flags = DVR_TAG_FILES | DVR_SKIP_COMMERCIALS;
+  cfg->dvr_flags = DVR_TAG_FILES | DVR_SKIP_COMMERCIALS | DVR_ONLY_ASCII;
 
   /* series link support */
   cfg->dvr_sl_brand_lock   = 1; // use brand linking
@@ -1194,6 +1183,7 @@ dvr_save(dvr_config_t *cfg)
   htsmsg_add_u32(m, "title-dir", !!(cfg->dvr_flags & DVR_DIR_PER_TITLE));
   htsmsg_add_u32(m, "episode-in-title", !!(cfg->dvr_flags & DVR_EPISODE_IN_TITLE));
   htsmsg_add_u32(m, "clean-title", !!(cfg->dvr_flags & DVR_CLEAN_TITLE));
+  htsmsg_add_u32(m, "only-ascii", !!(cfg->dvr_flags & DVR_ONLY_ASCII));
   htsmsg_add_u32(m, "tag-files", !!(cfg->dvr_flags & DVR_TAG_FILES));
   htsmsg_add_u32(m, "skip-commercials", !!(cfg->dvr_flags & DVR_SKIP_COMMERCIALS));
   if(cfg->dvr_postproc != NULL)
