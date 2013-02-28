@@ -21,6 +21,6 @@
 
 #include "muxer.h"
 
-muxer_t* pass_muxer_create(muxer_container_type_t mc);
+muxer_t* pass_muxer_create(muxer_container_type_t mc, muxer_config_t* m_cfg);
 
 #endif

@@ -30,6 +30,12 @@ typedef enum {
   MC_RAW         = 5,
 } muxer_container_type_t;
 
+/* Muxer configuration used when creating a muxer. */
+typedef struct muxer_config {
+  /* Options only for passthrough muxer */
+  int rewrite_patpmt;
+
+} muxer_config_t;
 
 struct muxer;
 struct streaming_start;
@@ -72,7 +78,7 @@ const char*            muxer_container_suffix(muxer_container_type_t mc, int vid
 int muxer_container_list(htsmsg_t *array);
 
 // Muxer factory
-muxer_t *muxer_create(muxer_container_type_t mc);
+muxer_t *muxer_create(muxer_container_type_t mc, muxer_config_t *m_cfg);
 
 // Wrapper functions
 int         muxer_open_file   (muxer_t *m, const char *filename);

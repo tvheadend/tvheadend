@@ -156,7 +156,7 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
  */
 static void
 http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
-		const char *name, muxer_container_type_t mc)
+		const char *name, muxer_container_type_t mc, muxer_config_t *mcfg)
 {
   streaming_message_t *sm;
   int run = 1;
@@ -168,7 +168,7 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   int err = 0;
   socklen_t errlen = sizeof(err);
 
-  mux = muxer_create(mc);
+  mux = muxer_create(mc, mcfg);
   if(muxer_open_stream(mux, hc->hc_fd))
     run = 0;
 
@@ -549,29 +549,32 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
 
 
 /**
- * Subscribes to a service and starts the streaming loop
+ * Subscribes to a channel or service and starts the streaming loop
  */
 static int
-http_stream_service(http_connection_t *hc, service_t *service)
+http_stream_channel_or_service(http_connection_t *hc, channel_t *ch, service_t *service)
 {
   streaming_queue_t sq;
   th_subscription_t *s;
   streaming_target_t *gh;
   streaming_target_t *tsfix;
   streaming_target_t *st;
-  dvr_config_t *cfg;
+  dvr_config_t *cfg = dvr_config_find_by_name_default("");;
   muxer_container_type_t mc;
+  int priority = 100;
   int flags;
   const char *str;
   size_t qsize;
   const char *name;
   char addrbuf[50];
+  muxer_config_t m_cfg;
 
+  /* Build muxer config - this takes the defaults from the default dvr config, which is a hack */
   mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
   if(mc == MC_UNKNOWN) {
-    cfg = dvr_config_find_by_name_default("");
     mc = cfg->dvr_mc;
   }
+  m_cfg.rewrite_patpmt = !!(cfg->dvr_flags & DVR_REWRITE_PATPMT);
 
   if ((str = http_arg_get(&hc->hc_req_args, "qsize")))
     qsize = atoll(str);
@@ -593,15 +596,28 @@ http_stream_service(http_connection_t *hc, service_t *service)
   }
 
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
-  s = subscription_create_from_service(service, "HTTP", st, flags,
-				       addrbuf,
-				       hc->hc_username,
-				       http_arg_get(&hc->hc_args, "User-Agent"));
-  if(s) {
-    name = strdupa(service->s_ch ?
-                   service->s_ch->ch_name : service->s_nicename);
+  if (service) {
+    s = subscription_create_from_service(service, "HTTP", st, flags,
+                                         addrbuf,
+                                         hc->hc_username,
+                                         http_arg_get(&hc->hc_args, "User-Agent"));
+  } else {
+    s = subscription_create_from_channel(ch, priority, "HTTP", st, flags,
+                                         addrbuf,
+                                         hc->hc_username,
+                                         http_arg_get(&hc->hc_args, "User-Agent"));
+  }
+
+  if (s) {
+    if (service) {
+      name = strdupa(service->s_ch ?
+                     service->s_ch->ch_name : service->s_nicename);
+    } else {
+      name = strdupa(ch->ch_name);
+    }
+
     pthread_mutex_unlock(&global_lock);
-    http_stream_run(hc, &sq, name, mc);
+    http_stream_run(hc, &sq, name, mc, &m_cfg);
     pthread_mutex_lock(&global_lock);
     subscription_unsubscribe(s);
   }
@@ -638,7 +654,7 @@ http_stream_tdmi(http_connection_t *hc, th_dvb_mux_instance_t *tdmi)
 					http_arg_get(&hc->hc_args, "User-Agent"));
   name = strdupa(tdmi->tdmi_identifier);
   pthread_mutex_unlock(&global_lock);
-  http_stream_run(hc, &sq, name, MC_RAW);
+  http_stream_run(hc, &sq, name, MC_RAW, NULL);
   pthread_mutex_lock(&global_lock);
   subscription_unsubscribe(s);
 
@@ -647,76 +663,6 @@ http_stream_tdmi(http_connection_t *hc, th_dvb_mux_instance_t *tdmi)
   return 0;
 }
 #endif
-
-
-/**
- * Subscribes to a channel and starts the streaming loop
- */
-static int
-http_stream_channel(http_connection_t *hc, channel_t *ch)
-{
-  streaming_queue_t sq;
-  th_subscription_t *s;
-  streaming_target_t *gh;
-  streaming_target_t *tsfix;
-  streaming_target_t *st;
-  dvr_config_t *cfg;
-  int priority = 100;
-  int flags;
-  muxer_container_type_t mc;
-  char *str;
-  size_t qsize;
-  const char *name;
-  char addrbuf[50];
-
-  mc = muxer_container_txt2type(http_arg_get(&hc->hc_req_args, "mux"));
-  if(mc == MC_UNKNOWN) {
-    cfg = dvr_config_find_by_name_default("");
-    mc = cfg->dvr_mc;
-  }
-
-  if ((str = http_arg_get(&hc->hc_req_args, "qsize")))
-    qsize = atoll(str);
-  else
-    qsize = 1500000;
-
-  if(mc == MC_PASS || mc == MC_RAW) {
-    streaming_queue_init2(&sq, SMT_PACKET, qsize);
-    gh = NULL;
-    tsfix = NULL;
-    st = &sq.sq_st;
-    flags = SUBSCRIPTION_RAW_MPEGTS;
-  } else {
-    streaming_queue_init2(&sq, 0, qsize);
-    gh = globalheaders_create(&sq.sq_st);
-    tsfix = tsfix_create(gh);
-    st = tsfix;
-    flags = 0;
-  }
-
-  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
-  s = subscription_create_from_channel(ch, priority, "HTTP", st, flags,
-               addrbuf,
-               hc->hc_username,
-               http_arg_get(&hc->hc_args, "User-Agent"));
-
-  if(s) {
-    name = strdupa(ch->ch_name);
-    pthread_mutex_unlock(&global_lock);
-    http_stream_run(hc, &sq, name, mc);
-    pthread_mutex_lock(&global_lock);
-    subscription_unsubscribe(s);
-  }
-
-  if(gh)
-    globalheaders_destroy(gh);
-  if(tsfix)
-    tsfix_destroy(tsfix);
-
-  streaming_queue_deinit(&sq);
-
-  return 0;
-}
 
 
 /**
@@ -763,10 +709,8 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
 #endif
   }
 
-  if(ch != NULL) {
-    return http_stream_channel(hc, ch);
-  } else if(service != NULL) {
-    return http_stream_service(hc, service);
+  if ((ch != NULL) || (service != NULL)) {
+    return http_stream_channel_or_service(hc, ch, service);
 #if ENABLE_LINUXDVB
   } else if(tdmi != NULL) {
     return http_stream_tdmi(hc, tdmi);
