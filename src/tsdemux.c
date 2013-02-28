@@ -226,7 +226,7 @@ ts_recv_packet1(service_t *t, const uint8_t *tsb, int64_t *pcrp)
   avgstat_add(&t->s_rate, 188, dispatch_clock);
 
   if((tsb[3] & 0xc0) ||
-      (t->s_scrambled_seen && st->es_type != SCT_CA &&
+      (t->s_scrambled_seen && st && st->es_type != SCT_CA &&
        st->es_type != SCT_PMT)) {
 
     /**
