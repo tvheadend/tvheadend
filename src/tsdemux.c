@@ -103,7 +103,6 @@ ts_recv_packet0(service_t *t, elementary_stream_t *st, const uint8_t *tsb)
   switch(st->es_type) {
 
   case SCT_CA:
-  case SCT_PAT:
   case SCT_PMT:
     if(st->es_section == NULL)
       st->es_section = calloc(1, sizeof(struct psi_section));
@@ -224,7 +223,7 @@ ts_recv_packet1(service_t *t, const uint8_t *tsb, int64_t *pcrp)
 
   if((tsb[3] & 0xc0) ||
       (t->s_scrambled_seen && st->es_type != SCT_CA &&
-       st->es_type != SCT_PAT && st->es_type != SCT_PMT)) {
+       st->es_type != SCT_PMT)) {
 
     /**
      * Lock for descrambling, but only if packet was not in error

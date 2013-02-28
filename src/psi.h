@@ -37,9 +37,6 @@ typedef struct psi_section {
 void psi_section_reassemble(psi_section_t *ps, const uint8_t *tsb, int crc,
 			    section_handler_t *cb, void *opaque);
 
-int psi_parse_pat(struct service *t, uint8_t *ptr, int len,
-		  pid_section_callback_t *pmt_callback);
-
 int psi_parse_pmt(struct service *t, const uint8_t *ptr, int len, int chksvcid,
 		  int delete);
 
