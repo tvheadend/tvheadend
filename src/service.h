@@ -608,4 +608,7 @@ int service_is_primary_epg (service_t *t);
 
 htsmsg_t *servicetype_list (void);
 
+service_t **service_get_sorted_list(struct channel *ch, int *count);
+
+
 #endif // SERVICE_H__
