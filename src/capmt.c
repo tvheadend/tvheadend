@@ -1018,6 +1018,10 @@ capmt_service_start(service_t *t)
     if (!capmt->capmt_enabled)
       continue;
 
+
+    if (!(t->s_dvb_mux_instance && t->s_dvb_mux_instance->tdmi_adapter))
+      continue;
+
     tvhlog(LOG_INFO, "capmt",
       "Starting capmt server for service \"%s\" on tuner %d", 
       t->s_svcname,

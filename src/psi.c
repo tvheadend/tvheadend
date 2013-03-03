@@ -110,44 +110,6 @@ psi_section_reassemble(psi_section_t *ps, const uint8_t *tsb, int crc,
 }
 
 
-/** 
- * PAT parser, from ISO 13818-1
- */
-int
-psi_parse_pat(service_t *t, uint8_t *ptr, int len,
-	      pid_section_callback_t *pmt_callback)
-{
-  uint16_t prognum;
-  uint16_t pid;
-  elementary_stream_t *st;
-
-  lock_assert(&t->s_stream_mutex);
-
-  if(len < 5)
-    return -1;
-
-  ptr += 5;
-  len -= 5;
-
-  while(len >= 4) {
-    
-    prognum =  ptr[0]         << 8 | ptr[1];
-    pid     = (ptr[2] & 0x1f) << 8 | ptr[3];
-
-    if(prognum != 0) {
-      if(service_stream_find(t, pid) == NULL) {
-	st = service_stream_create(t, pid, SCT_PMT);
-	st->es_section_docrc = 1;
-	st->es_got_section = pmt_callback;
-      }
-    }
-    ptr += 4;
-    len -= 4;
-  }
-  return 0;
-}
-
-
 /**
  * Append CRC
  */
@@ -954,7 +916,6 @@ static struct strtab streamtypetab[] = {
   { "DVBSUB",     SCT_DVBSUB },
   { "CA",         SCT_CA },
   { "PMT",        SCT_PMT },
-  { "PAT",        SCT_PAT },
   { "AAC",        SCT_AAC },
   { "MPEGTS",     SCT_MPEGTS },
   { "TEXTSUB",    SCT_TEXTSUB },
