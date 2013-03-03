@@ -85,12 +85,40 @@ tvheadend.epgDetails = function(event) {
 		}), new Ext.Button({
 			handler : recordSeries,
 			text : event.serieslink ? "Record series" : "Autorec"
+		}), new Ext.Button({
+			handler : checkConflict,
+			text : "Check for conflict"
 		}) ],
 		buttonAlign : 'center',
 		html : content
 	});
 	win.show();
 
+        function checkConflict() {
+            	Ext.Ajax.request({
+			url : 'dvr',
+			params : {
+				eventId : event.id,
+				op : "checkConflictEvent",
+				config_name : confcombo.getValue()
+			},
+
+			success : function(response, options) {
+                                var r = Ext.util.JSON.decode(response.responseText);
+                                
+				console.log(response.responseText);
+                                if (r.conflict) {
+                                    Ext.MessageBox.alert('DVR', "Conflict Detected!");    
+                                }
+                                win.close();
+			},
+
+			failure : function(response, options) {
+				Ext.MessageBox.alert('DVR', response.statusText);
+			}
+		});
+        }
+        
 	function recordEvent() {
 		record('recordEvent');
 	}

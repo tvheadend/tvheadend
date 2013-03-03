@@ -50,6 +50,7 @@
 #include "imagecache.h"
 #include "timeshift.h"
 #include "tvhtime.h"
+#include "conflict.h"
 
 /**
  *
@@ -1073,6 +1074,69 @@ extjs_epgobject(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+static htsmsg_t *
+extjs_dqr_to_msg(dvr_query_result_t *dqr, int start, int end)
+{
+  int i;
+  htsmsg_t *array, *m;
+  dvr_entry_t *de;
+  int64_t fsize = 0;
+  char buf[100];
+  
+  array = htsmsg_create_list();
+  
+  for(i = start; i < end; i++) {
+    de = dqr->dqr_array[i];
+
+    m = htsmsg_create_map();
+
+    htsmsg_add_str(m, "channel", DVR_CH_NAME(de));
+    if(de->de_channel != NULL) {
+      if (de->de_channel->ch_icon)
+        htsmsg_add_imageurl(m, "chicon", "imagecache/%d",
+                            de->de_channel->ch_icon);
+    }
+
+    htsmsg_add_str(m, "config_name", de->de_config_name);
+
+    if(de->de_title != NULL)
+      htsmsg_add_str(m, "title", lang_str_get(de->de_title, NULL));
+
+    if(de->de_desc != NULL)
+      htsmsg_add_str(m, "description", lang_str_get(de->de_desc, NULL));
+
+    if (de->de_bcast && de->de_bcast->episode)
+      if (epg_episode_number_format(de->de_bcast->episode, buf, 100, NULL, "Season %d", ".", "Episode %d", "/%d"))
+        htsmsg_add_str(m, "episode", buf);
+
+    htsmsg_add_u32(m, "id", de->de_id);
+    htsmsg_add_u32(m, "start", de->de_start);
+    htsmsg_add_u32(m, "end", de->de_stop);
+    htsmsg_add_u32(m, "duration", de->de_stop - de->de_start);
+    
+    htsmsg_add_str(m, "creator", de->de_creator);
+
+    htsmsg_add_str(m, "pri", dvr_val2pri(de->de_pri));
+
+    htsmsg_add_str(m, "status", dvr_entry_status(de));
+    htsmsg_add_str(m, "schedstate", dvr_entry_schedstatus(de));
+
+
+    if(de->de_sched_state == DVR_COMPLETED) {
+      fsize = dvr_get_filesize(de);
+      if (fsize > 0) {
+        char url[100];
+        htsmsg_add_s64(m, "filesize", fsize);
+        snprintf(url, sizeof(url), "dvrfile/%d", de->de_id);
+        htsmsg_add_str(m, "url", url);
+      }
+    }
+
+    htsmsg_add_msg(array, NULL, m);
+  }
+  return array;
+}
+
 /**
  *
  */
@@ -1325,7 +1389,30 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
-
+  
+  } else if (!strcmp(op,"checkConflictEvent")){
+    dvr_query_result_t dqr;
+    s = http_arg_get(&hc->hc_req_args, "eventId");
+    if((e = epg_broadcast_find_by_id(atoi(s), NULL)) == NULL) {
+      pthread_mutex_unlock(&global_lock);
+      return HTTP_STATUS_BAD_REQUEST;
+    }
+    
+    out = htsmsg_create_map();
+    
+    if (conflict_check_epg(e, &dqr))
+    {
+        htsmsg_t *array = extjs_dqr_to_msg(&dqr, 0, dqr.dqr_entries);
+        
+        htsmsg_add_msg(out, "entries", array);
+        dvr_query_free(&dqr);
+        htsmsg_add_u32(out, "conflict", 1);
+    }
+    else
+    {
+        htsmsg_add_u32(out, "conflict", 0);
+    }
+      
   } else {
 
     pthread_mutex_unlock(&global_lock);
