@@ -226,6 +226,9 @@ void epg_init ( void )
   /* Close file */
   munmap(mem, st.st_size);
   close(fd);
+
+  /* Create timer thread */
+
 }
 
 /* **************************************************************************
