@@ -483,4 +483,5 @@ simpleui_start(void)
   http_path_add("/eventinfo",   NULL, page_einfo,   ACCESS_SIMPLE);
   http_path_add("/pvrinfo",     NULL, page_pvrinfo, ACCESS_SIMPLE);
   http_path_add("/status.xml",  NULL, page_status,  ACCESS_SIMPLE);
+  http_path_add("/epgflush",	NULL, epg_save,     ACCESS_SIMPLE);
 }
