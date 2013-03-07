@@ -487,6 +487,7 @@ main(int argc, char **argv)
 
   /* Set locale */
   setlocale(LC_ALL, "");
+  setlocale(LC_NUMERIC, "C");
 
   /* make sure the timezone is set */
   tzset();

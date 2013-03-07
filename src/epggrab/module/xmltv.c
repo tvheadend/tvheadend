@@ -354,14 +354,22 @@ static int _xmltv_parse_previously_shown
  * Star rating
  */
 static int _xmltv_parse_star_rating
-  ( epggrab_module_t *mod, epg_episode_t *ee, htsmsg_t *tags )
+  ( epggrab_module_t *mod, epg_episode_t *ee, htsmsg_t *body )
 {
-  int a, b;
-  const char *stars;
-  if (!mod || !ee || !tags) return 0;
-  if (!(stars = htsmsg_xml_get_cdata_str(tags, "star-rating"))) return 0;
-  if (sscanf(stars, "%d/%d", &a, &b) != 2) return 0;
-  return epg_episode_set_star_rating(ee, (5 * a) / b, mod);
+  double a, b;
+  htsmsg_t *stars, *tags;
+  const char *s1, *s2;
+
+  if (!mod || !ee || !body) return 0;
+  if (!(stars = htsmsg_get_map(body, "star-rating"))) return 0;
+  if (!(tags  = htsmsg_get_map(stars, "tags"))) return 0;
+  if (!(s1 = htsmsg_xml_get_cdata_str(tags, "value"))) return 0;
+  if (!(s2 = strstr(s1, "/"))) return 0;
+
+  a = atof(s1);
+  b = atof(s2 + 1);
+
+  return epg_episode_set_star_rating(ee, (100 * a) / b, mod);
 }
 
 /*
