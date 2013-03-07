@@ -148,14 +148,14 @@ static void *_epgdbsave_thread ( void *p )
   ts.tv_nsec = 0;
   tvhlog(LOG_DEBUG, "epgdb", "epgdbsave setting: %i", epggrab_epgdb_periodicsave);
   while (1) {
-    if (epggrab_epgdb_periodicsave) {
+    if (epggrab_epgdb_periodicsave != 0) {
       tvhlog(LOG_DEBUG, "epgdb", "epgdbsave setting: %i", 
              epggrab_epgdb_periodicsave);
       epg_save();
     };
     pthread_mutex_lock(&epgdbsave_mutex);
     time(&ts.tv_sec);
-    ts.tv_sec += 28800; /* Every 8 hours */
+    ts.tv_sec += epggrab_epgdb_periodicsave * 3600; /* User defined in hours */
     pthread_cond_timedwait(&_epgdbsave_cond, &epgdbsave_mutex, &ts);
     pthread_mutex_unlock(&epgdbsave_mutex);
   };

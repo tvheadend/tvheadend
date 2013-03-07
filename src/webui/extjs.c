@@ -620,8 +620,8 @@ extjs_epggrab(http_connection_t *hc, const char *remain, void *opaque)
     save |= epggrab_set_channel_renumber(str ? 1 : 0);
     str = http_arg_get(&hc->hc_req_args, "channel_reicon");
     save |= epggrab_set_channel_reicon(str ? 1 : 0);
-    str = http_arg_get(&hc->hc_req_args, "epgdb_periodicsave");
-    save |= epggrab_set_periodicsave(str ? 1 : 0);
+    if ( (str = http_arg_get(&hc->hc_req_args, "epgdb_periodicsave")) )
+      save |= epggrab_set_periodicsave(atoi(str));
     if ( (str = http_arg_get(&hc->hc_req_args, "interval")) )
       save |= epggrab_set_interval(atoi(str));
     if ( (str = http_arg_get(&hc->hc_req_args, "module")) )
