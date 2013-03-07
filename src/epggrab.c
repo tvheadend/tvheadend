@@ -49,6 +49,7 @@ epggrab_module_list_t epggrab_modules;
 uint32_t              epggrab_channel_rename;
 uint32_t              epggrab_channel_renumber;
 uint32_t              epggrab_channel_reicon;
+uint32_t              epggrab_epgdb_periodicsave;
 
 /* **************************************************************************
  * Internal Grab Thread
@@ -138,6 +139,7 @@ static void _epggrab_load ( void )
     htsmsg_get_u32(m, "channel_rename",   &epggrab_channel_rename);
     htsmsg_get_u32(m, "channel_renumber", &epggrab_channel_renumber);
     htsmsg_get_u32(m, "channel_reicon",   &epggrab_channel_reicon);
+    htsmsg_get_u32(m, "epgdb_periodicsave", &epggrab_epgdb_periodicsave);
     if (!htsmsg_get_u32(m, old ? "grab-interval" : "interval",
                         &epggrab_interval)) {
       if (old) epggrab_interval *= 3600;
@@ -234,6 +236,7 @@ void epggrab_save ( void )
   htsmsg_add_u32(m, "channel_rename", epggrab_channel_rename);
   htsmsg_add_u32(m, "channel_renumber", epggrab_channel_renumber);
   htsmsg_add_u32(m, "channel_reicon", epggrab_channel_reicon);
+  htsmsg_add_u32(m, "epgdb_periodicsave", epggrab_epgdb_periodicsave);
   htsmsg_add_u32(m, "interval",   epggrab_interval);
   if ( epggrab_module )
     htsmsg_add_str(m, "module", epggrab_module->id);
@@ -294,6 +297,19 @@ int epggrab_set_channel_renumber ( uint32_t e )
   int save = 0;
   if ( e != epggrab_channel_renumber ) {
     epggrab_channel_renumber = e;
+    save = 1;
+  }
+  return save;
+}
+
+/*
+ * Config from the webui for period save of db to disk
+ */
+int epggrab_set_periodicsave ( uint32_t e )
+{
+  int save = 0;
+  if ( e != epggrab_epgdb_periodicsave ) {
+    epggrab_epgdb_periodicsave = e;
     save = 1;
   }
   return save;
