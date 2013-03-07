@@ -471,6 +471,25 @@ page_status(http_connection_t *hc,
   return 0;
 }
 
+/**
+ * flush epgdb to disk on call
+ */
+static int
+page_epgsave(http_connection_t *hc,
+	    const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+
+  htsbuf_qprintf(hq, "<?xml version=\"1.0\"?>\n"
+                 "<epgflush>1</epgflush>\n");
+
+  epg_save();
+
+  http_output_content(hc, "text/xml");
+
+  return 0;
+}
+
 
 
 /**
@@ -483,4 +502,5 @@ simpleui_start(void)
   http_path_add("/eventinfo",   NULL, page_einfo,   ACCESS_SIMPLE);
   http_path_add("/pvrinfo",     NULL, page_pvrinfo, ACCESS_SIMPLE);
   http_path_add("/status.xml",  NULL, page_status,  ACCESS_SIMPLE);
+  http_path_add("/epgsave",	NULL, page_epgsave,     ACCESS_SIMPLE);
 }
