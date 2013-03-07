@@ -82,6 +82,11 @@ tvhtime_update ( struct tm *tm )
   ntp_shm_t *ntp_shm;
   int64_t t1, t2;
 
+#if TIME_TRACE
+ tvhlog(LOG_DEBUG, "time", "current time is %04d/%02d/%02d %02d:%02d:%02d",
+         tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
+#endif
+
   /* Current and reported time */
   now = mktime(tm);
   gettimeofday(&tv, NULL);
@@ -89,20 +94,23 @@ tvhtime_update ( struct tm *tm )
   /* Delta */
   t1 = now * 1000000;
   t2 = tv.tv_sec * 1000000 + tv.tv_usec;
-#if NTP_TRACE
-  tvhlog(LOG_DEBUG, "ntp", "delta = %"PRId64" us\n", t2 - t1);
-#endif
 
   /* Update local clock */
-  if (tvhtime_update_enabled)
-    if (llabs(t2 - t1) > tvhtime_tolerance)
+  if (tvhtime_update_enabled) {
+    if (llabs(t2 - t1) > tvhtime_tolerance) {
+      tvhlog(LOG_DEBUG, "time", "updated system clock");
       stime(&now);
+    }
+  }
 
   /* NTP */
   if (tvhtime_ntp_enabled) {
     if (!(ntp_shm = ntp_shm_init()))
       return;
 
+#if TIME_TRACE
+    tvhlog(LOG_DEBUG, "time", "ntp delta = %"PRId64" us\n", t2 - t1);
+#endif
     ntp_shm->valid = 0;
     ntp_shm->count++;
     ntp_shm->clockTimeStampSec    = now;
