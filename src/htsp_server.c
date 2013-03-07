@@ -267,6 +267,10 @@ htsp_flush_queue(htsp_connection_t *htsp, htsp_msg_q_t *hmq)
     TAILQ_REMOVE(&hmq->hmq_q, hm, hm_link);
     htsp_msg_destroy(hm);
   }
+
+  // reset
+  hmq->hmq_length = 0;
+  hmq->hmq_payload = 0;
   pthread_mutex_unlock(&htsp->htsp_out_mutex);
 }
 
@@ -2434,6 +2438,11 @@ htsp_subscription_skip(htsp_subscription_t *hs, streaming_skip_t *skip)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "subscriptionSkip");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
+
+  /* Flush pkt buffers */
+  if (skip->type != SMT_SKIP_ERROR)
+    htsp_flush_queue(hs->hs_htsp, &hs->hs_q);
+
   if (skip->type == SMT_SKIP_ABS_TIME || skip->type == SMT_SKIP_ABS_SIZE)
     htsmsg_add_u32(m, "absolute", 1);
   if (skip->type == SMT_SKIP_ERROR)

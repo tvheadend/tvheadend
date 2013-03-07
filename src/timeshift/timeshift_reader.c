@@ -545,7 +545,7 @@ void *timeshift_reader ( void *p )
 
               /* Convert */
               skip_time =  ts_rescale(skip->time, 1000000);
-              tvhlog(LOG_DEBUG, "timeshift", "ts %d skip %"PRId64" requested", ts->id, skip->time);
+              tvhlog(LOG_DEBUG, "timeshift", "ts %d skip %"PRId64" requested %"PRId64, ts->id, skip_time, skip->time);
 
               /* Live playback (stage1) */
               if (ts->state == TS_LIVE) {
@@ -562,7 +562,8 @@ void *timeshift_reader ( void *p )
 
               /* May have failed */
               if (skip) {
-                tvhlog(LOG_DEBUG, "timeshift", "ts %d skip last_time %"PRId64, ts->id, last_time);
+                tvhlog(LOG_DEBUG, "timeshift", "ts %d skip last_time %"PRId64" pts_delta %"PRId64,
+                       ts->id, last_time, ts->pts_delta);
                 skip_time += (skip->type == SMT_SKIP_ABS_TIME) ? ts->pts_delta : last_time;
 
                /* Live (stage2) */
