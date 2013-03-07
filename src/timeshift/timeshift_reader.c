@@ -534,6 +534,27 @@ void *timeshift_reader ( void *p )
         } else if (ctrl->sm_type == SMT_SKIP) {
           skip = ctrl->sm_data;
           switch (skip->type) {
+            case SMT_SKIP_LIVE:
+              if (ts->state != TS_LIVE) {
+
+                /* Reset */
+                if (ts->full) {
+                  pthread_mutex_lock(&ts->rdwr_mutex);
+                  timeshift_filemgr_flush(ts, NULL);
+                  ts->full = 0;
+                  pthread_mutex_unlock(&ts->rdwr_mutex);
+                }
+
+                /* Release */
+                if (sm)
+                  streaming_msg_free(sm);
+
+                /* Find end */
+                skip_time = 0x7fffffffffffffff;
+                // TODO: change this sometime!
+              }
+              break;
+
             case SMT_SKIP_ABS_TIME:
               if (ts->pts_delta == PTS_UNSET) {
                 tvhlog(LOG_ERR, "timeshift", "ts %d abs skip not possible no PTS delta", ts->id);
@@ -745,8 +766,8 @@ void *timeshift_reader ( void *p )
       if (!end)
         end = (cur_speed > 0) ? 1 : -1;
 
-      /* Back to live */
-      if (end == 1) {
+      /* Back to live (unless buffer is full) */
+      if (end == 1 && !ts->full) {
         tvhlog(LOG_DEBUG, "timeshift", "ts %d eob revert to live mode", ts->id);
         ts->state = TS_LIVE;
         cur_speed = 100;

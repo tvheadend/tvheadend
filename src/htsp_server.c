@@ -57,7 +57,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 8
+#define HTSP_PROTO_VERSION 9
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -1463,6 +1463,33 @@ htsp_method_speed(htsp_connection_t *htsp, htsmsg_t *in)
   return NULL;
 }
 
+/*
+ * Revert to live
+ */
+static htsmsg_t *
+htsp_method_live(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsp_subscription_t *hs;
+  uint32_t sid;
+  streaming_skip_t skip;
+
+  if(htsmsg_get_u32(in, "subscriptionId", &sid))
+    return htsp_error("Missing argument 'subscriptionId'");
+
+  LIST_FOREACH(hs, &htsp->htsp_subscriptions, hs_link)
+    if(hs->hs_sid == sid)
+      break;
+
+  if(hs == NULL)
+    return htsp_error("Requested subscription does not exist");
+
+  skip.type = SMT_SKIP_LIVE;
+  subscription_set_skip(hs->hs_s, &skip);
+
+  htsp_reply(htsp, in, htsmsg_create_map());
+  return NULL;
+}
+
 /**
  * Open file
  */
@@ -1641,6 +1668,7 @@ struct {
   { "subscriptionSeek",         htsp_method_skip,           ACCESS_STREAMING},
   { "subscriptionSkip",         htsp_method_skip,           ACCESS_STREAMING},
   { "subscriptionSpeed",        htsp_method_speed,          ACCESS_STREAMING},
+  { "subscriptionLive",         htsp_method_live,           ACCESS_STREAMING},
   { "fileOpen",                 htsp_method_file_open,      ACCESS_RECORDER},
   { "fileRead",                 htsp_method_file_read,      ACCESS_RECORDER},
   { "fileClose",                htsp_method_file_close,     ACCESS_RECORDER},
