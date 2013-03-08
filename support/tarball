@@ -3,16 +3,16 @@
 # Build tarball of the current directory
 #
 
-# Exit
+# Terminate
 function die
 {
-  echo "ERROR: $*"
+  echo >&2 "ERROR: $@"
   exit 1
 }
 
 # Switch dir
-SRCDIR=$(dirname $0)/..
-cd $SRCDIR
+SRCDIR=$(dirname "$0")/..
+cd "$SRCDIR"
 
 # Arguments
 REL=$1
@@ -46,8 +46,8 @@ rm -rf $DSTDIR/.gitignore
 $DSTDIR/support/changelog $DSTDIR/debian/changelog "" $VER
 
 # Build tarball
-TARFILE=$(cd $SRCDIR/..; pwd)/tvheadend-$VER1.tar.gz
-tar -C $TMPDIR -zcf $TARFILE tvheadend-$VER1
+TARFILE=$(cd "$SRCDIR"/..; pwd)/tvheadend-$VER1.tar.gz
+tar -C $TMPDIR -zcf "$TARFILE" tvheadend-$VER1
 
 # Done
 echo "Created $TARFILE"
