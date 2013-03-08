@@ -13,7 +13,7 @@ if [ -d "${DIR}/.git" ]; then
 
 # Fetch
 elif [ ! -d "${DIR}" ]; then
-  URL=git://linuxtv.org/dtv-scan-tables.git
+  URL=http://linuxtv.org/git/dtv-scan-tables.git
   git clone $URL "${DIR}" &> /dev/null
 fi
 
