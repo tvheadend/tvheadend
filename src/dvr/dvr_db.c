@@ -828,6 +828,8 @@ void dvr_event_updated ( epg_broadcast_t *e )
     _dvr_entry_update(de, e, NULL, NULL, NULL, 0, 0, 0, 0);
   else {
     LIST_FOREACH(de, &dvrentries, de_global_link) {
+      if (de->de_bcast) continue;
+      if (de->de_channel != e->channel) continue;
       if (dvr_entry_fuzzy_match(de, e)) {
         e->getref(e);
         de->de_bcast = e;
