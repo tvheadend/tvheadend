@@ -20,6 +20,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "tvheadend.h"
 #include "queue.h"
@@ -35,6 +36,9 @@ extern epg_object_tree_t epg_brands;
 extern epg_object_tree_t epg_seasons;
 extern epg_object_tree_t epg_episodes;
 extern epg_object_tree_t epg_serieslinks;
+static pthread_cond_t _epgdbsave_cond;
+static void* _epgdbsave_thread ( void *p );
+pthread_mutex_t epgdbsave_mutex;
 
 /* **************************************************************************
  * Load
@@ -136,6 +140,29 @@ static void _epgdb_v2_process ( htsmsg_t *m, epggrab_stats_t *stats )
 }
 
 /*
+ * Thread functions
+ */
+static void *_epgdbsave_thread ( void *p )
+{
+  struct timespec ts;
+  ts.tv_nsec = 0;
+  tvhlog(LOG_DEBUG, "epgdb", "epgdbsave setting: %i", epggrab_epgdb_periodicsave);
+  while (1) {
+    if (epggrab_epgdb_periodicsave != 0) {
+      tvhlog(LOG_DEBUG, "epgdb", "epgdbsave setting: %i", 
+             epggrab_epgdb_periodicsave);
+      epg_save();
+    };
+    pthread_mutex_lock(&epgdbsave_mutex);
+    time(&ts.tv_sec);
+    ts.tv_sec += epggrab_epgdb_periodicsave * 3600; /* User defined in hours */
+    pthread_cond_timedwait(&_epgdbsave_cond, &epgdbsave_mutex, &ts);
+    pthread_mutex_unlock(&epgdbsave_mutex);
+  };
+return NULL;
+}
+
+/*
  * Load data
  */
 void epg_init ( void )
@@ -226,6 +253,13 @@ void epg_init ( void )
   /* Close file */
   munmap(mem, st.st_size);
   close(fd);
+
+  /* Create thread */
+  pthread_mutex_init(&epgdbsave_mutex, NULL);
+  pthread_cond_init(&_epgdbsave_cond, NULL);
+  /* Start thread */
+  pthread_t tid;
+  pthread_create(&tid, NULL, _epgdbsave_thread, NULL);
 }
 
 /* **************************************************************************
