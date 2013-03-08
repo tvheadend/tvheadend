@@ -8,15 +8,15 @@
 # Terminate
 function die
 {
-  echo $*
+  echo >&2 "ERROR: $@"
   exit 1
 }
 
 # CMD
-CMD=$(basename $0)
+CMD=$(basename "$0")
 
 # Configuration
-TVH_ROOT=$(cd $(dirname $0)/..; pwd)
+TVH_ROOT=$(cd "$(dirname "$0")"/..; pwd)
 [ -z "$TVH_DIST" ] && TVH_DIST="lucid natty oneiric precise quantal"
 [ -z "$TVH_ARCH" ] && TVH_ARCH="i386 amd64"
 
@@ -25,7 +25,7 @@ TVH_ROOT=$(cd $(dirname $0)/..; pwd)
 [ ! -z "$2" ] && PPA=$2 || PPA=unstable
 
 # Setup
-cd $TVH_ROOT || exit 1
+cd "$TVH_ROOT" || exit 1
 NOW=`date -R`
 CHANGELOG=$TVH_ROOT/debian/changelog
 VERFILE=$TVH_ROOT/src/version.c
@@ -35,7 +35,7 @@ git checkout $REL || die "could not checkout $REL"
 git clean -dfx || die "could not clean git tree"
 
 # Create version file
-VER=$($TVH_ROOT/support/version $VERFILE)
+VER=$("$TVH_ROOT/support/version" $VERFILE)
 
 # Fetch scan files
 ./support/getmuxlist || die "failed to fetch dvb-scan files"

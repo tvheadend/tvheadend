@@ -9,7 +9,7 @@
 # Setup
 # ###########################################################################
 
-ROOTDIR=$(cd $(dirname $0); pwd)
+ROOTDIR=$(cd "$(dirname "$0")"; pwd)
 
 #
 # Options
@@ -34,7 +34,7 @@ OPTIONS=(
 # Begin
 #
 
-. $ROOTDIR/support/configure.inc
+. "$ROOTDIR/support/configure.inc"
 parse_args $*
 
 # ###########################################################################
@@ -180,7 +180,7 @@ fi
 #
 if enabled linuxdvb && enabled dvbscan; then
   printf "${TAB}" "fetching dvb-scan files ..."
-  ${ROOTDIR}/support/getmuxlist
+  "${ROOTDIR}/support/getmuxlist"
   if [ $? -ne 0 ]; then
     echo "fail"
     die "Failed to fetch dvb-scan data (use --disable-dvbscan)"
@@ -194,7 +194,7 @@ fi
 
 # Write config
 write_config
-cat >> ${CONFIG_H} <<EOF
+cat >> "${CONFIG_H}" <<EOF
 #define TVHEADEND_DATADIR "$(eval echo ${datadir})/tvheadend"
 EOF
 
