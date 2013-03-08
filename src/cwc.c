@@ -1816,7 +1816,6 @@ cwc_emm_cryptoworks(cwc_t *cwc, uint8_t *data, int len)
       if (cwc->cwc_cryptoworks_emm.shared_emm) {
         free(cwc->cwc_cryptoworks_emm.shared_emm);
         cwc->cwc_cryptoworks_emm.shared_len = 0;
-        cwc->cwc_cryptoworks_emm.shared_emm = (uint8_t *)malloc(len);
       }
       cwc->cwc_cryptoworks_emm.shared_emm = malloc(len);
       if (cwc->cwc_cryptoworks_emm.shared_emm) {
