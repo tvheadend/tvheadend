@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-Dump EPG in human readable format for analysis
+Dump Electronic Program Guide (EPG) in human readable format for analysis
 """
 
 # System libs
@@ -25,6 +25,12 @@ import pprint
 # Tvheadend libs
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'lib', 'py'))
 import tvh.htsmsg as htsmsg
+
+if len(sys.argv) < 2:
+  sys.exit('Usage: %s epg-path' % sys.argv[0])
+
+if not os.path.exists(sys.argv[1]):
+  sys.exit('ERROR: epg "%s" was not found!' % sys.argv[1])
 
 # Open file
 fp = open(sys.argv[1], 'rb')
