@@ -137,6 +137,8 @@ typedef struct dvr_entry {
   lang_str_t *de_desc;       /* Description in UTF-8 (from EPG) */
   epg_genre_t de_content_type; /* Content type (from EPG) */
 
+  uint16_t de_dvb_eid;
+
   dvr_prio_t de_pri;
 
   uint32_t de_dont_reschedule;
