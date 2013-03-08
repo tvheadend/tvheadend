@@ -483,7 +483,9 @@ page_epgsave(http_connection_t *hc,
   htsbuf_qprintf(hq, "<?xml version=\"1.0\"?>\n"
                  "<epgflush>1</epgflush>\n");
 
-  epg_save();
+  pthread_mutex_lock(&global_lock);
+  epg_save(NULL);
+  pthread_mutex_unlock(&global_lock);
 
   http_output_content(hc, "text/xml");
 

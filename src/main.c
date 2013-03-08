@@ -686,11 +686,15 @@ main(int argc, char **argv)
 
   mainloop();
 
-  epg_save();
+  // Note: the locking is obviously a bit redundant, but without
+  //       we need to disable the gtimer_arm call in epg_save()
+  pthread_mutex_lock(&global_lock);
+  epg_save(NULL);
 
 #if ENABLE_TIMESHIFT
   timeshift_term();
 #endif
+  pthread_mutex_unlock(&global_lock);
 
   tvhlog(LOG_NOTICE, "STOP", "Exiting HTS Tvheadend");
 

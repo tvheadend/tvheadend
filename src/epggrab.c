@@ -38,9 +38,9 @@
 #include "service.h"
 
 /* Thread protection */
-static int                   epggrab_confver;
+static int            epggrab_confver;
 pthread_mutex_t       epggrab_mutex;
-static pthread_cond_t        epggrab_cond;
+static pthread_cond_t epggrab_cond;
 
 /* Config */
 uint32_t              epggrab_interval;
@@ -50,6 +50,8 @@ uint32_t              epggrab_channel_rename;
 uint32_t              epggrab_channel_renumber;
 uint32_t              epggrab_channel_reicon;
 uint32_t              epggrab_epgdb_periodicsave;
+
+gtimer_t              epggrab_save_timer;
 
 /* **************************************************************************
  * Internal Grab Thread
@@ -140,6 +142,9 @@ static void _epggrab_load ( void )
     htsmsg_get_u32(m, "channel_renumber", &epggrab_channel_renumber);
     htsmsg_get_u32(m, "channel_reicon",   &epggrab_channel_reicon);
     htsmsg_get_u32(m, "epgdb_periodicsave", &epggrab_epgdb_periodicsave);
+    if (epggrab_epgdb_periodicsave)
+      gtimer_arm(&epggrab_save_timer, epg_save, NULL,
+                 epggrab_epgdb_periodicsave);
     if (!htsmsg_get_u32(m, old ? "grab-interval" : "interval",
                         &epggrab_interval)) {
       if (old) epggrab_interval *= 3600;
@@ -310,6 +315,12 @@ int epggrab_set_periodicsave ( uint32_t e )
   int save = 0;
   if ( e != epggrab_epgdb_periodicsave ) {
     epggrab_epgdb_periodicsave = e;
+    pthread_mutex_lock(&global_lock);
+    if (!e)
+      gtimer_disarm(&epggrab_save_timer);
+    else
+      epg_save(NULL); // will arm the timer
+    pthread_mutex_unlock(&global_lock);
     save = 1;
   }
   return save;
@@ -359,6 +370,14 @@ void epggrab_resched ( void )
  */
 void epggrab_init ( void )
 {
+  /* Defaults */
+  epggrab_interval           = 0;
+  epggrab_module             = NULL;
+  epggrab_channel_rename     = 0;
+  epggrab_channel_renumber   = 0;
+  epggrab_channel_reicon     = 0;
+  epggrab_epgdb_periodicsave = 0;
+
   /* Lists */
 #if ENABLE_LINUXDVB
   extern TAILQ_HEAD(, epggrab_ota_mux) ota_mux_all;
