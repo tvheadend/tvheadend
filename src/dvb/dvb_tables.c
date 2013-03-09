@@ -1118,9 +1118,6 @@ dvb_tot_callback(th_dvb_mux_instance_t *tdmi, uint8_t *buf, int len,
   }
   mon--;
 
-  tvhlog(LOG_DEBUG, "tdt-tot", "time is %04d/%02d/%02d %02d:%02d:%02d",
-         year+1900, mon, day, hour, min, sec);
-
   /* Convert to UTC time_t */
   utc.tm_wday  = 0;
   utc.tm_yday  = 0;

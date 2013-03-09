@@ -220,7 +220,8 @@ typedef struct streaming_skip
     SMT_SKIP_REL_TIME,
     SMT_SKIP_ABS_TIME,
     SMT_SKIP_REL_SIZE,
-    SMT_SKIP_ABS_SIZE
+    SMT_SKIP_ABS_SIZE,
+    SMT_SKIP_LIVE
   } type;
   union {
     off_t   size;

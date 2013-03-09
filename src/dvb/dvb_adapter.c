@@ -716,6 +716,22 @@ dvb_adapter_start ( th_dvb_adapter_t *tda )
 }
 
 void
+dvb_adapter_stop_dvr ( th_dvb_adapter_t *tda )
+{
+  /* Stop DVR thread */
+  if (tda->tda_dvr_pipe.rd != -1) {
+    tvhlog(LOG_DEBUG, "dvb", "%s stopping thread", tda->tda_rootpath);
+    int err = tvh_write(tda->tda_dvr_pipe.wr, "", 1);
+    assert(!err);
+    pthread_join(tda->tda_dvr_thread, NULL);
+    close(tda->tda_dvr_pipe.rd);
+    close(tda->tda_dvr_pipe.wr);
+    tda->tda_dvr_pipe.rd = -1;
+    tvhlog(LOG_DEBUG, "dvb", "%s stopped thread", tda->tda_rootpath);
+  }
+}
+
+void
 dvb_adapter_stop ( th_dvb_adapter_t *tda )
 {
   /* Poweroff */
@@ -731,18 +747,8 @@ dvb_adapter_stop ( th_dvb_adapter_t *tda )
     tda->tda_fe_fd = -1;
   }
 
-  /* Stop DVR thread */
-  if (tda->tda_dvr_pipe.rd != -1) {
-    tvhlog(LOG_DEBUG, "dvb", "%s stopping thread", tda->tda_rootpath);
-    int err = tvh_write(tda->tda_dvr_pipe.wr, "", 1);
-    assert(!err);
-    pthread_join(tda->tda_dvr_thread, NULL);
-    close(tda->tda_dvr_pipe.rd);
-    close(tda->tda_dvr_pipe.wr);
-    tda->tda_dvr_pipe.rd = -1;
-    tvhlog(LOG_DEBUG, "dvb", "%s stopped thread", tda->tda_rootpath);
-  }
-
+  dvb_adapter_stop_dvr(tda);
+  
   dvb_adapter_notify(tda);
 }
 

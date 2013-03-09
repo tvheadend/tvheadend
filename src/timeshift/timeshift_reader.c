@@ -534,6 +534,27 @@ void *timeshift_reader ( void *p )
         } else if (ctrl->sm_type == SMT_SKIP) {
           skip = ctrl->sm_data;
           switch (skip->type) {
+            case SMT_SKIP_LIVE:
+              if (ts->state != TS_LIVE) {
+
+                /* Reset */
+                if (ts->full) {
+                  pthread_mutex_lock(&ts->rdwr_mutex);
+                  timeshift_filemgr_flush(ts, NULL);
+                  ts->full = 0;
+                  pthread_mutex_unlock(&ts->rdwr_mutex);
+                }
+
+                /* Release */
+                if (sm)
+                  streaming_msg_free(sm);
+
+                /* Find end */
+                skip_time = 0x7fffffffffffffff;
+                // TODO: change this sometime!
+              }
+              break;
+
             case SMT_SKIP_ABS_TIME:
               if (ts->pts_delta == PTS_UNSET) {
                 tvhlog(LOG_ERR, "timeshift", "ts %d abs skip not possible no PTS delta", ts->id);
@@ -545,7 +566,7 @@ void *timeshift_reader ( void *p )
 
               /* Convert */
               skip_time =  ts_rescale(skip->time, 1000000);
-              tvhlog(LOG_DEBUG, "timeshift", "ts %d skip %"PRId64" requested", ts->id, skip->time);
+              tvhlog(LOG_DEBUG, "timeshift", "ts %d skip %"PRId64" requested %"PRId64, ts->id, skip_time, skip->time);
 
               /* Live playback (stage1) */
               if (ts->state == TS_LIVE) {
@@ -562,7 +583,8 @@ void *timeshift_reader ( void *p )
 
               /* May have failed */
               if (skip) {
-                tvhlog(LOG_DEBUG, "timeshift", "ts %d skip last_time %"PRId64, ts->id, last_time);
+                tvhlog(LOG_DEBUG, "timeshift", "ts %d skip last_time %"PRId64" pts_delta %"PRId64,
+                       ts->id, last_time, ts->pts_delta);
                 skip_time += (skip->type == SMT_SKIP_ABS_TIME) ? ts->pts_delta : last_time;
 
                /* Live (stage2) */
@@ -744,8 +766,8 @@ void *timeshift_reader ( void *p )
       if (!end)
         end = (cur_speed > 0) ? 1 : -1;
 
-      /* Back to live */
-      if (end == 1) {
+      /* Back to live (unless buffer is full) */
+      if (end == 1 && !ts->full) {
         tvhlog(LOG_DEBUG, "timeshift", "ts %d eob revert to live mode", ts->id);
         ts->state = TS_LIVE;
         cur_speed = 100;

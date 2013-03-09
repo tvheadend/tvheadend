@@ -61,6 +61,12 @@
    <dt>Update channel name
    <dd>Automatically update channel icons using information provided
        by the enabled EPG providers.
+   <dt>Periodic save EPG to disk Interval
+   <dd>Writes the current in-memory EPG database to disk every x Hours
+       (user defined), so should a crash/unexpected shutdown occur EPG
+       data is saved periodically to the database (Re-read on
+       next startup)
+       Set to 0 to disable.
  </dl>
  
  <h3>Internal Grabber</h3>

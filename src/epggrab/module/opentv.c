@@ -19,6 +19,7 @@
 #include <string.h>
 #include <assert.h>
 #include <unistd.h>
+#include <regex.h>
 #include <linux/dvb/dmx.h>
 #include "tvheadend.h"
 #include "dvb/dvb.h"
@@ -396,6 +397,25 @@ static int _opentv_parse_event_section
         epg_genre_list_add_by_eit(egl, ev.cat);
         save |= epg_episode_set_genre(ee, egl, src);
         epg_genre_list_destroy(egl);
+      }
+      if (ev.summary) {
+        regex_t preg;
+        regmatch_t match[3];
+
+        /* Parse Series/Episode
+         * TODO: HACK: this needs doing properly */
+        regcomp(&preg, " *\\(S ?([0-9]+),? Ep? ?([0-9]+)\\)$",
+                REG_ICASE | REG_EXTENDED);
+        if (!regexec(&preg, ev.summary, 3, match, 0)) {
+          epg_episode_num_t en;
+          memset(&en, 0, sizeof(en));
+          if (match[1].rm_so != -1)
+            en.s_num = atoi(ev.summary + match[1].rm_so);
+          if (match[2].rm_so != -1)
+            en.e_num = atoi(ev.summary + match[2].rm_so);
+          save |= epg_episode_set_epnum(ee, &en, src);
+        }
+        regfree(&preg);
       }
     }
 

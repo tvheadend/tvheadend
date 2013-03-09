@@ -226,6 +226,7 @@ extern epggrab_module_int_t* epggrab_module;
 extern uint32_t              epggrab_channel_rename;
 extern uint32_t              epggrab_channel_renumber;
 extern uint32_t              epggrab_channel_reicon;
+extern uint32_t              epggrab_epgdb_periodicsave;
 
 /*
  * Set configuration
@@ -236,6 +237,7 @@ int  epggrab_set_module_by_id     ( const char *id );
 int  epggrab_set_channel_rename   ( uint32_t e );
 int  epggrab_set_channel_renumber ( uint32_t e );
 int  epggrab_set_channel_reicon   ( uint32_t e );
+int  epggrab_set_periodicsave     ( uint32_t e );
 int  epggrab_enable_module        ( epggrab_module_t *mod, uint8_t e );
 int  epggrab_enable_module_by_id  ( const char *id, uint8_t e );
 
