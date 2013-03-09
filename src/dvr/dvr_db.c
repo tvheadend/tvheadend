@@ -1399,7 +1399,7 @@ dvr_extra_time_post_set(dvr_config_t *cfg, int d)
 /**
  *
  */
-static void
+void
 dvr_query_add_entry(dvr_query_result_t *dqr, dvr_entry_t *de)
 {
   if(dqr->dqr_entries == dqr->dqr_alloced) {
