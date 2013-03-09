@@ -351,6 +351,7 @@ typedef int (dvr_entry_comparator)(const void *a, const void *b);
 
 void dvr_query(dvr_query_result_t *dqr);
 void dvr_query_filter(dvr_query_result_t *dqr, dvr_entry_filter filter);
+void dvr_query_add_entry(dvr_query_result_t *dqr, dvr_entry_t *de);
 void dvr_query_free(dvr_query_result_t *dqr);
 
 void dvr_query_sort_cmp(dvr_query_result_t *dqr, dvr_entry_comparator cmp);
