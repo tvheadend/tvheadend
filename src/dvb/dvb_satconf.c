@@ -111,10 +111,12 @@ satconf_record_build(dvb_satconf_t *sc)
   htsmsg_t *m = htsmsg_create_map();
 
   htsmsg_add_str(m, "id", sc->sc_id);
-  htsmsg_add_u32(m, "port", sc->sc_port);
   htsmsg_add_str(m, "name", sc->sc_name ?: "");
-  htsmsg_add_str(m, "comment", sc->sc_comment ?: "");
+  htsmsg_add_str(m, "rotor_type", sc->sc_rotor_type ?: "None");
+  htsmsg_add_dbl(m, "rotor_pos", sc->sc_rotor_pos);
+  htsmsg_add_u32(m, "port", sc->sc_port);
   htsmsg_add_str(m, "lnb", sc->sc_lnb);
+  htsmsg_add_str(m, "comment", sc->sc_comment ?: "");
   return m;
 }
 
@@ -127,6 +129,7 @@ satconf_entry_update(void *opaque, const char *id, htsmsg_t *values,
 		     int maycreate)
 {
   th_dvb_adapter_t *tda = opaque;
+  double dbl;
   uint32_t u32;
   dvb_satconf_t *sc;
 
@@ -136,11 +139,16 @@ satconf_entry_update(void *opaque, const char *id, htsmsg_t *values,
   lock_assert(&global_lock);
   
   tvh_str_update(&sc->sc_name, htsmsg_get_str(values, "name"));
-  tvh_str_update(&sc->sc_comment, htsmsg_get_str(values, "comment"));
-  tvh_str_update(&sc->sc_lnb, htsmsg_get_str(values, "lnb"));
+  tvh_str_update(&sc->sc_rotor_type, htsmsg_get_str(values, "rotor_type"));
+
+  if(!htsmsg_get_dbl(values, "rotor_pos", &dbl))
+    sc->sc_rotor_pos = dbl;
   
   if(!htsmsg_get_u32(values, "port", &u32))
     sc->sc_port = u32;
+
+  tvh_str_update(&sc->sc_lnb, htsmsg_get_str(values, "lnb"));
+  tvh_str_update(&sc->sc_comment, htsmsg_get_str(values, "comment"));
 
   satconf_notify(tda);
 
@@ -264,6 +272,33 @@ dvb_satconf_list(th_dvb_adapter_t *tda)
     htsmsg_add_str(m, "name", sc->sc_name ?: "");
     htsmsg_add_msg(array, NULL, m);
   }
+  return array;
+}
+
+
+/**
+ *
+ */
+static void 
+add_to_rotor_type_list(htsmsg_t *array, const char *n)
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "identifier", n);
+  htsmsg_add_msg(array, NULL, m);
+}
+
+
+/**
+ *
+ */
+htsmsg_t *
+dvb_rotor_type_list_get(void)
+{
+  htsmsg_t *array = htsmsg_create_list();
+
+  add_to_rotor_type_list(array, "None");
+  add_to_rotor_type_list(array, "GOTOX");
+  add_to_rotor_type_list(array, "USALS");
   return array;
 }
 

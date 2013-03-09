@@ -47,11 +47,13 @@ TAILQ_HEAD(dvb_satconf_queue, dvb_satconf);
 typedef struct dvb_satconf {
   char *sc_id;
   TAILQ_ENTRY(dvb_satconf) sc_adapter_link;
-  int sc_port;                   // diseqc switchport (0 - 63)
 
   char *sc_name;
-  char *sc_comment;
+  char *sc_rotor_type;
+  double sc_rotor_pos;
+  int sc_port;                   // diseqc switchport (0 - 63)
   char *sc_lnb;
+  char *sc_comment;
 
   struct th_dvb_mux_instance_list sc_tdmis;
 
@@ -211,6 +213,9 @@ typedef struct th_dvb_adapter {
   uint32_t tda_skip_checksubscr;
   uint32_t tda_qmon;
   uint32_t tda_poweroff;
+  double tda_rotor_lat;
+  double tda_rotor_lng;
+  uint32_t tda_rotor_delay;
   uint32_t tda_sidtochan;
   uint32_t tda_nitoid;
   uint32_t tda_diseqc_version;
@@ -240,6 +245,9 @@ typedef struct th_dvb_adapter {
 
   pthread_mutex_t tda_delivery_mutex;
   struct service_list tda_transports; /* Currently bound transports */
+
+  gtimer_t tda_fe_rotor_delay_timer;
+  char *tda_fe_tune_reason;
 
   gtimer_t tda_fe_monitor_timer;
   int tda_fe_monitor_hold;
@@ -365,6 +373,12 @@ void dvb_adapter_set_qmon(th_dvb_adapter_t *tda, int on);
 void dvb_adapter_set_idleclose(th_dvb_adapter_t *tda, int on);
 
 void dvb_adapter_set_poweroff(th_dvb_adapter_t *tda, int on);
+
+void dvb_adapter_set_rotor_lat(th_dvb_adapter_t *tda, double lat);
+
+void dvb_adapter_set_rotor_lng(th_dvb_adapter_t *tda, double lng);
+
+void dvb_adapter_set_rotor_delay(th_dvb_adapter_t *tda, uint32_t delay);
 
 void dvb_adapter_set_sidtochan(th_dvb_adapter_t *tda, int on);
 
@@ -499,6 +513,10 @@ htsmsg_t *dvb_service_build_msg(struct service *t);
  */
 int dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason);
 
+int dvb_fe_tune_pre(th_dvb_mux_instance_t *tdmi, const char *reason);
+
+int dvb_fe_tune_post(th_dvb_mux_instance_t *tdmi, const char *reason);
+
 void dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune);
 
 
@@ -539,6 +557,8 @@ void dvb_table_release(th_dvb_table_t *tdt);
 void dvb_satconf_init(th_dvb_adapter_t *tda);
 
 htsmsg_t *dvb_satconf_list(th_dvb_adapter_t *tda);
+
+htsmsg_t *dvb_rotor_type_list_get(void);
 
 htsmsg_t *dvb_lnblist_get(void);
 

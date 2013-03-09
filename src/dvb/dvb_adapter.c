@@ -109,6 +109,9 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_u32(m, "sidtochan", tda->tda_sidtochan);
   htsmsg_add_u32(m, "qmon", tda->tda_qmon);
   htsmsg_add_u32(m, "poweroff", tda->tda_poweroff);
+  htsmsg_add_dbl(m, "rotor_lat", tda->tda_rotor_lat);
+  htsmsg_add_dbl(m, "rotor_lng", tda->tda_rotor_lng);
+  htsmsg_add_u32(m, "rotor_delay", tda->tda_rotor_delay);
   htsmsg_add_u32(m, "nitoid", tda->tda_nitoid);
   htsmsg_add_u32(m, "diseqc_version", tda->tda_diseqc_version);
   htsmsg_add_u32(m, "diseqc_repeats", tda->tda_diseqc_repeats);
@@ -313,6 +316,61 @@ dvb_adapter_set_poweroff(th_dvb_adapter_t *tda, int on)
 	 tda->tda_displayname, on ? "On" : "Off");
 
   tda->tda_poweroff = on;
+  tda_save(tda);
+}
+
+
+/**
+ *
+ */
+void
+dvb_adapter_set_rotor_lat(th_dvb_adapter_t *tda, double lat)
+{
+  if(tda->tda_rotor_lat == lat)
+    return;
+
+  lock_assert(&global_lock);
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" rotor latitude set to: %.4f",
+	 tda->tda_displayname, lat);
+
+  tda->tda_rotor_lat = lat;
+  tda_save(tda);
+}
+
+
+/**
+ *
+ */
+void
+dvb_adapter_set_rotor_lng(th_dvb_adapter_t *tda, double lng)
+{
+  if(tda->tda_rotor_lng == lng)
+    return;
+
+  lock_assert(&global_lock);
+
+  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" rotor longitude set to: %.4f",
+	 tda->tda_displayname, lng);
+
+  tda->tda_rotor_lng = lng;
+  tda_save(tda);
+}
+
+
+/**
+ *
+ */
+void
+dvb_adapter_set_rotor_delay(th_dvb_adapter_t *tda, uint32_t delay)
+{
+  if (tda->tda_rotor_delay == delay)
+    return;
+
+  tvhlog(LOG_NOTICE, "dvb",
+         "Adapter \"%s\" rotor delay set to %d", tda->tda_displayname, delay);
+
+  tda->tda_rotor_delay = delay;
   tda_save(tda);
 }
 
@@ -811,6 +869,10 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
       htsmsg_get_u32(c, "sidtochan",           &tda->tda_sidtochan);
       htsmsg_get_u32(c, "qmon",                &tda->tda_qmon);
       htsmsg_get_u32(c, "poweroff",            &tda->tda_poweroff);
+      htsmsg_get_dbl(c, "rotor_lat",           &tda->tda_rotor_lat);
+      htsmsg_get_dbl(c, "rotor_lng",           &tda->tda_rotor_lng);
+      if (htsmsg_get_u32(c, "rotor_delay",     &tda->tda_rotor_delay))
+        tda->tda_rotor_delay = 20;
       htsmsg_get_u32(c, "nitoid",              &tda->tda_nitoid);
       htsmsg_get_u32(c, "diseqc_version",      &tda->tda_diseqc_version);
       htsmsg_get_u32(c, "diseqc_repeats",      &tda->tda_diseqc_repeats);
@@ -848,6 +910,7 @@ dvb_adapter_mux_scanner(void *aux)
   th_dvb_adapter_t *tda = aux;
   th_dvb_mux_instance_t *tdmi;
   int i;
+  int period;
 
   if(tda->tda_rootpath == NULL)
     return; // No hardware
@@ -856,7 +919,21 @@ dvb_adapter_mux_scanner(void *aux)
     return; // disabled
 
   // default period
-  gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, 20);
+  period = 20;
+
+  if((tdmi = TAILQ_FIRST(&tda->tda_initial_scan_queue)) != NULL) {
+    dvb_satconf_t *sc;
+
+    if((sc = tdmi->tdmi_conf.dmc_satconf) != NULL) {
+      if ((sc->sc_rotor_type != NULL) && (strlen(sc->sc_rotor_type) > 0)) {
+        if (strncmp("None", sc->sc_rotor_type, 4)) {
+          period += tda->tda_rotor_delay;
+        }
+      }
+    }
+  }
+
+  gtimer_arm(&tda->tda_mux_scanner_timer, dvb_adapter_mux_scanner, tda, period);
 
   /* No muxes */
   if(LIST_FIRST(&tda->tda_muxes) == NULL) {
@@ -888,7 +965,7 @@ dvb_adapter_mux_scanner(void *aux)
 
   /* EPG */
   if (tda->tda_mux_epg) {
-    int period = epggrab_mux_period(tda->tda_mux_epg);
+    period = epggrab_mux_period(tda->tda_mux_epg);
     if (period > 20)
       gtimer_arm(&tda->tda_mux_scanner_timer,
                  dvb_adapter_mux_scanner, tda, period);

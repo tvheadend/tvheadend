@@ -405,10 +405,20 @@ htsmsg_get_dbl(htsmsg_t *msg, const char *name, double *dblp)
   if((f = htsmsg_field_find(msg, name)) == NULL)
     return HTSMSG_ERR_FIELD_NOT_FOUND;
 
-  if(f->hmf_type != HMF_DBL)
+  switch(f->hmf_type) {
+  default:
     return HTSMSG_ERR_CONVERSION_IMPOSSIBLE;
+  case HMF_DBL:
+    *dblp = f->hmf_dbl;
+    break;
+  case HMF_S64:
+    *dblp = f->hmf_s64;
+    break;
+  case HMF_STR:
+    *dblp = strtod(f->hmf_str, NULL);
+    break;
+  }
 
-  *dblp = f->hmf_dbl;
   return 0;
 }
 

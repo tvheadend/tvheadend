@@ -155,6 +155,9 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_u32(r, "skip_checksubscr", tda->tda_skip_checksubscr);
     htsmsg_add_u32(r, "qmon", tda->tda_qmon);
     htsmsg_add_u32(r, "poweroff", tda->tda_poweroff);
+    htsmsg_add_dbl(r, "rotor_lat", tda->tda_rotor_lat);
+    htsmsg_add_dbl(r, "rotor_lng", tda->tda_rotor_lng);
+    htsmsg_add_u32(r, "rotor_delay", tda->tda_rotor_delay);
     htsmsg_add_u32(r, "sidtochan", tda->tda_sidtochan);
     htsmsg_add_u32(r, "nitoid", tda->tda_nitoid);
     htsmsg_add_u32(r, "disable_pmt_monitor", tda->tda_disable_pmt_monitor);
@@ -198,6 +201,15 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 
     s = http_arg_get(&hc->hc_req_args, "poweroff");
     dvb_adapter_set_poweroff(tda, !!s);
+
+    s = http_arg_get(&hc->hc_req_args, "rotor_lat");
+    dvb_adapter_set_rotor_lat(tda, strtod(s, NULL));
+
+    s = http_arg_get(&hc->hc_req_args, "rotor_lng");
+    dvb_adapter_set_rotor_lng(tda, strtod(s, NULL));
+
+    s = http_arg_get(&hc->hc_req_args, "rotor_delay");
+    dvb_adapter_set_rotor_delay(tda, atoi(s));
 
     s = http_arg_get(&hc->hc_req_args, "sidtochan");
     dvb_adapter_set_sidtochan(tda, !!s);
@@ -474,6 +486,25 @@ extjs_dvbservices(http_connection_t *hc, const char *remain, void *opaque)
  *
  */
 static int
+extjs_rotor_types(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  htsmsg_t *out;
+
+  out = htsmsg_create_map();
+
+  htsmsg_add_msg(out, "entries", dvb_rotor_type_list_get());
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+}  
+
+/**
+ *
+ */
+static int
 extjs_lnbtypes(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
@@ -714,6 +745,9 @@ extjs_start_dvb(void)
 
   http_path_add("/dvb/services", 
 		NULL, extjs_dvbservices, ACCESS_ADMIN);
+
+  http_path_add("/dvb/rotor_types", 
+		NULL, extjs_rotor_types, ACCESS_ADMIN);
 
   http_path_add("/dvb/lnbtypes", 
 		NULL, extjs_lnbtypes, ACCESS_ADMIN);

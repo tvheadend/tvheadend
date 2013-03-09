@@ -26,7 +26,6 @@
 #include "htsmsg_json.h"
 #include "htsbuf.h"
 #include "misc/json.h"
-#include "misc/dbl.h"
 
 
 /**
@@ -75,7 +74,7 @@ htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
       break;
 
     case HMF_DBL:
-      my_double2str(buf, sizeof(buf), f->hmf_dbl);
+      snprintf(buf, sizeof(buf), "%f", f->hmf_dbl);
       htsbuf_append(hq, buf, strlen(buf));
       break;
 

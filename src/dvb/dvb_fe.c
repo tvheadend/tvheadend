@@ -80,6 +80,21 @@ dvb_fe_get_unc(th_dvb_adapter_t *tda)
 }
 
 
+/**
+ * Front end rotor delay
+ *
+ * Continue tuning after rotor delay
+ */
+
+static void
+dvb_fe_rotor_delay (void *aux)
+{
+	th_dvb_mux_instance_t *tdmi = aux;
+	th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+
+	dvb_fe_tune_post(tdmi, tda->tda_fe_tune_reason);
+}
+
 
 /**
  * Front end monitor
@@ -406,21 +421,24 @@ dvb_fe_tune_s2(th_dvb_mux_instance_t *tdmi, dvb_mux_conf_t *dmc)
 
 #endif
 
+
 /**
  *
  */
 int
 dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 {
-  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+	return dvb_fe_tune_pre(tdmi, reason);
+}
 
-  // copy dmc, cause frequency may be change with FE_QPSK
-  dvb_mux_conf_t dmc = tdmi->tdmi_conf;
-  dvb_frontend_parameters_t* p = &dmc.dmc_fe_params;
-  
-  char buf[256];
-  int r;
- 
+
+/**
+ *
+ */
+int
+dvb_fe_tune_pre(th_dvb_mux_instance_t *tdmi, const char *reason)
+{
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
   lock_assert(&global_lock);
 
@@ -436,6 +454,51 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
     dvb_fe_stop(tda->tda_mux_current, 1);
   else
     dvb_adapter_start(tda);
+
+  dvb_satconf_t *sc;
+
+  if((sc = tdmi->tdmi_conf.dmc_satconf) != NULL) {
+    if ((sc->sc_rotor_type != NULL) && (strlen(sc->sc_rotor_type) > 0)) {
+      if (strncmp("None", sc->sc_rotor_type, 4)) {
+    	if (!strncmp("GOTOX", sc->sc_rotor_type, 5)) {
+          diseqc_rotor_gotox(tda->tda_fe_fd, (int)sc->sc_rotor_pos);
+    	}
+    	else {
+          diseqc_rotor_usals(tda->tda_fe_fd, tda->tda_rotor_lat, tda->tda_rotor_lng,
+            sc->sc_rotor_pos);
+    	}
+
+    	if (tda->tda_rotor_delay > 0) {
+           tvhlog(LOG_DEBUG, "dvb", "waiting for \"%s\" rotor delay (%ds)", sc->sc_rotor_type,
+              tda->tda_rotor_delay);
+
+  	       tda->tda_fe_tune_reason = (char*)reason;
+
+           gtimer_arm(&tda->tda_fe_rotor_delay_timer, dvb_fe_rotor_delay, tdmi, tda->tda_rotor_delay);
+
+           return 0;
+    	}
+      }
+    }
+  }
+
+  return dvb_fe_tune_post(tdmi, reason);
+}
+
+
+/**
+ *
+ */
+int
+dvb_fe_tune_post(th_dvb_mux_instance_t *tdmi, const char *reason)
+{
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+
+  dvb_mux_conf_t dmc = tdmi->tdmi_conf;
+  dvb_frontend_parameters_t* p = &dmc.dmc_fe_params;
+
+  char buf[256];
+  int r;
       
   if(tda->tda_type == FE_QPSK) {
 	
@@ -523,7 +586,6 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
   tda->tda_mux_current = tdmi;
 
   gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 1);
-
 
   dvb_table_add_default(tdmi);
   epggrab_mux_start(tdmi);
