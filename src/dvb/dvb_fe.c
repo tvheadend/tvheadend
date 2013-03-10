@@ -434,8 +434,7 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 
   if(tda->tda_mux_current != NULL)
     dvb_fe_stop(tda->tda_mux_current, 1);
-  else
-    dvb_adapter_start(tda);
+  dvb_adapter_start(tda);
       
   if(tda->tda_type == FE_QPSK) {
 	
