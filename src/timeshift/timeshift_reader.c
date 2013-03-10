@@ -550,7 +550,7 @@ void *timeshift_reader ( void *p )
                   streaming_msg_free(sm);
 
                 /* Find end */
-                skip_time = 0x7fffffffffffffff;
+                skip_time = 0x7fffffffffffffffLL;
                 // TODO: change this sometime!
               }
               break;
