@@ -51,6 +51,8 @@
 #include "timeshift.h"
 #include "tvhtime.h"
 
+#include <sys/statvfs.h>
+
 /**
  *
  */
@@ -530,6 +532,32 @@ extjs_ecglist(http_connection_t *hc, const char *remain, void *opaque)
   out   = htsmsg_create_map();
   array = epg_genres_list_all(1, 0);
   htsmsg_add_msg(out, "entries", array);
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+}
+
+/**
+ * disk space
+ */
+static int
+extjs_diskspace(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  htsmsg_t *out;
+  struct statvfs diskdata;
+  dvr_config_t *cfg = dvr_config_find_by_name_default("");
+
+  if(statvfs(cfg->dvr_storage,&diskdata) == -1)
+    return HTTP_STATUS_BAD_REQUEST;
+  
+  out = htsmsg_create_map();
+  htsmsg_add_s64(out, "freediskspace",
+		 diskdata.f_bsize * (int64_t)diskdata.f_bavail);
+  htsmsg_add_s64(out, "totaldiskspace",
+		 diskdata.f_bsize * (int64_t)diskdata.f_blocks);
+
   htsmsg_json_serialize(out, hq, 0);
   htsmsg_destroy(out);
   http_output_content(hc, "text/x-json; charset=UTF-8");
@@ -2166,6 +2194,7 @@ extjs_start(void)
   http_path_add("/subscriptions",    NULL, extjs_subscriptions,    ACCESS_WEB_INTERFACE);
   http_path_add("/ecglist",          NULL, extjs_ecglist,          ACCESS_WEB_INTERFACE);
   http_path_add("/config",           NULL, extjs_config,           ACCESS_WEB_INTERFACE);
+  http_path_add("/diskspace",        NULL, extjs_diskspace,        ACCESS_WEB_INTERFACE);
   http_path_add("/languages",        NULL, extjs_languages,        ACCESS_WEB_INTERFACE);
   http_path_add("/mergechannel",     NULL, extjs_mergechannel,     ACCESS_ADMIN);
   http_path_add("/iptv/services",    NULL, extjs_iptvservices,     ACCESS_ADMIN);
