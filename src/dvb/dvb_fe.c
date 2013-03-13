@@ -273,6 +273,7 @@ void
 dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  dvb_table_feed_t *dtf;
 
   lock_assert(&global_lock);
 
@@ -285,8 +286,13 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune)
     dvb_mux_save(tdmi);
   }
 
-  dvb_adapter_stop_dvr(tda);
+  dvb_adapter_stop(tda, TDA_OPT_DVR);
+  pthread_mutex_lock(&tda->tda_delivery_mutex);
+  while((dtf = TAILQ_FIRST(&tda->tda_table_feed)))
+    TAILQ_REMOVE(&tda->tda_table_feed, dtf, dtf_link);
+  pthread_mutex_unlock(&tda->tda_delivery_mutex);
   dvb_table_flush_all(tdmi);
+  tda->tda_locked      = 0;
 
   assert(tdmi->tdmi_scan_queue == NULL);
 
@@ -300,7 +306,7 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune)
 
   if (!retune) {
     gtimer_disarm(&tda->tda_fe_monitor_timer);
-    dvb_adapter_stop(tda);
+    dvb_adapter_stop(tda, TDA_OPT_ALL);
   }
 }
 
@@ -421,8 +427,10 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
   char buf[256];
   int r;
  
-
   lock_assert(&global_lock);
+
+  if(tda->tda_enabled == 0)
+    return SM_CODE_TUNING_FAILED;
 
   if(tda->tda_mux_current == tdmi)
     return 0;
@@ -434,7 +442,8 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 
   if(tda->tda_mux_current != NULL)
     dvb_fe_stop(tda->tda_mux_current, 1);
-  dvb_adapter_start(tda);
+
+  dvb_adapter_start(tda, TDA_OPT_FE | TDA_OPT_PWR);
       
   if(tda->tda_type == FE_QPSK) {
 	
@@ -486,7 +495,6 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 
   tda->tda_fe_monitor_hold = 4;
 
-
 #if DVB_API_VERSION >= 5
   if (tda->tda_type == FE_QPSK) {
     tvhlog(LOG_DEBUG, "dvb", "\"%s\" tuning via s2api to \"%s\" (%d, %d Baud, "
@@ -517,15 +525,18 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
     if (errno == EINVAL)
       dvb_mux_set_enable(tdmi, 0);
     return SM_CODE_TUNING_FAILED;
-  }   
+  }
 
   tda->tda_mux_current = tdmi;
 
+  dvb_adapter_start(tda, TDA_OPT_ALL);
+
   gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 1);
 
-
+#if 0
   dvb_table_add_default(tdmi);
   epggrab_mux_start(tdmi);
+#endif
 
   dvb_adapter_notify(tda);
   return 0;

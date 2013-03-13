@@ -29,6 +29,12 @@ struct service;
 struct th_dvb_table;
 struct th_dvb_mux_instance;
 
+#define TDA_OPT_FE  0x1
+#define TDA_OPT_DVR 0x2
+#define TDA_OPT_DMX 0x4
+#define TDA_OPT_PWR 0x8
+#define TDA_OPT_ALL (TDA_OPT_FE | TDA_OPT_DVR | TDA_OPT_DMX | TDA_OPT_PWR)
+
 #define DVB_VER_INT(maj,min) (((maj) << 16) + (min))
 
 #define DVB_VER_ATLEAST(maj, min) \
@@ -202,6 +208,8 @@ typedef struct th_dvb_adapter {
 
   uint32_t tda_enabled;
 
+  int tda_locked;
+
   const char *tda_rootpath;
   char *tda_identifier;
   uint32_t tda_autodiscovery;
@@ -342,11 +350,9 @@ void dvb_adapter_init(uint32_t adapter_mask, const char *rawfile);
 
 void dvb_adapter_mux_scanner(void *aux);
 
-void dvb_adapter_start (th_dvb_adapter_t *tda);
+void dvb_adapter_start (th_dvb_adapter_t *tda, int opt);
 
-void dvb_adapter_stop (th_dvb_adapter_t *tda);
-
-void dvb_adapter_stop_dvr (th_dvb_adapter_t *tda);
+void dvb_adapter_stop (th_dvb_adapter_t *tda, int opt);
 
 void dvb_adapter_set_displayname(th_dvb_adapter_t *tda, const char *s);
 
