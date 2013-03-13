@@ -882,7 +882,7 @@ forbid:
     }
     
     if(ct->cs_keystate != CS_RESOLVED)
-      tvhlog(LOG_INFO, "cwc",
+      tvhlog(LOG_DEBUG, "cwc",
 	     "Obtained key for service \"%s\" in %"PRId64" ms, from %s:%i",
 	     t->s_svcname, delay, ct->cs_cwc->cwc_hostname,
 	     ct->cs_cwc->cwc_port);
