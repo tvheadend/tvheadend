@@ -141,7 +141,7 @@ dvb_adapter_set_enabled(th_dvb_adapter_t *tda, int on)
     gtimer_disarm(&tda->tda_mux_scanner_timer);
     if (tda->tda_mux_current)
       dvb_fe_stop(tda->tda_mux_current, 0);
-    dvb_adapter_stop(tda);
+    dvb_adapter_stop(tda, TDA_OPT_ALL);
   } else {
     tda_init(tda);
   }
@@ -692,22 +692,26 @@ static void tda_init (th_dvb_adapter_t *tda)
  *
  */
 void
-dvb_adapter_start ( th_dvb_adapter_t *tda )
+dvb_adapter_start ( th_dvb_adapter_t *tda, int opt )
 {
   if(tda->tda_enabled == 0) {
     tvhlog(LOG_INFO, "dvb", "Adapter \"%s\" cannot be started - it's disabled", tda->tda_displayname);
     return;
   }
+  
+  /* Default to ALL */
+  if (!opt)
+    opt = TDA_OPT_ALL;
 
   /* Open front end */
-  if (tda->tda_fe_fd == -1) {
+  if ((opt & TDA_OPT_FE) && (tda->tda_fe_fd == -1)) {
     tda->tda_fe_fd = tvh_open(tda->tda_fe_path, O_RDWR | O_NONBLOCK, 0);
     if (tda->tda_fe_fd == -1) return;
     tvhlog(LOG_DEBUG, "dvb", "%s opened frontend %s", tda->tda_rootpath, tda->tda_fe_path);
   }
 
   /* Start DVR thread */
-  if (tda->tda_dvr_pipe.rd == -1) {
+  if ((opt & TDA_OPT_DVR) && (tda->tda_dvr_pipe.rd == -1)) {
     int err = tvh_pipe(O_NONBLOCK, &tda->tda_dvr_pipe);
     assert(err != -1);
     pthread_create(&tda->tda_dvr_thread, NULL, dvb_adapter_input_dvr, tda);
@@ -716,10 +720,14 @@ dvb_adapter_start ( th_dvb_adapter_t *tda )
 }
 
 void
-dvb_adapter_stop_dvr ( th_dvb_adapter_t *tda )
+dvb_adapter_stop ( th_dvb_adapter_t *tda, int opt )
 {
+  /* Poweroff */
+  if (opt & TDA_OPT_PWR)
+    dvb_adapter_poweroff(tda);
+
   /* Stop DVR thread */
-  if (tda->tda_dvr_pipe.rd != -1) {
+  if ((opt & TDA_OPT_DVR) && (tda->tda_dvr_pipe.rd != -1)) {
     tvhlog(LOG_DEBUG, "dvb", "%s stopping thread", tda->tda_rootpath);
     int err = tvh_write(tda->tda_dvr_pipe.wr, "", 1);
     assert(!err);
@@ -729,26 +737,17 @@ dvb_adapter_stop_dvr ( th_dvb_adapter_t *tda )
     tda->tda_dvr_pipe.rd = -1;
     tvhlog(LOG_DEBUG, "dvb", "%s stopped thread", tda->tda_rootpath);
   }
-}
 
-void
-dvb_adapter_stop ( th_dvb_adapter_t *tda )
-{
-  /* Poweroff */
-  dvb_adapter_poweroff(tda);
-
-  /* Don't stop/close */
+  /* Don't close FE */
   if (!tda->tda_idleclose && tda->tda_enabled) return;
 
   /* Close front end */
-  if (tda->tda_fe_fd != -1) {
+  if ((opt & TDA_OPT_FE) && (tda->tda_fe_fd != -1)) {
     tvhlog(LOG_DEBUG, "dvb", "%s closing frontend", tda->tda_rootpath);
     close(tda->tda_fe_fd);
     tda->tda_fe_fd = -1;
   }
 
-  dvb_adapter_stop_dvr(tda);
-  
   dvb_adapter_notify(tda);
 }
 
@@ -980,8 +979,39 @@ dvb_adapter_clean(th_dvb_adapter_t *tda)
     service_remove_subscriber(t, NULL, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
 }
 
+/**
+ * Install RAW PES filter
+ */
+static int
+dvb_adapter_raw_filter(th_dvb_adapter_t *tda)
+{
+  int dmx = -1;
+  struct dmx_pes_filter_params dmx_param;
 
+  dmx = tvh_open(tda->tda_demux_path, O_RDWR, 0);
+  if(dmx == -1) {
+    tvhlog(LOG_ALERT, "dvb", "Unable to open %s -- %s",
+           tda->tda_demux_path, strerror(errno));
+    return -1;
+  }
 
+  memset(&dmx_param, 0, sizeof(dmx_param));
+  dmx_param.pid      = 0x2000;
+  dmx_param.input    = DMX_IN_FRONTEND;
+  dmx_param.output   = DMX_OUT_TS_TAP;
+  dmx_param.pes_type = DMX_PES_OTHER;
+  dmx_param.flags    = DMX_IMMEDIATE_START;
+
+  if(ioctl(dmx, DMX_SET_PES_FILTER, &dmx_param) == -1) {
+    tvhlog(LOG_ERR, "dvb",
+    "Unable to configure demuxer \"%s\" for all PIDs -- %s",
+    tda->tda_demux_path, strerror(errno));
+    close(dmx);
+    return -1;
+  }
+
+  return dmx;
+}
 
 /**
  *
@@ -990,54 +1020,18 @@ static void *
 dvb_adapter_input_dvr(void *aux)
 {
   th_dvb_adapter_t *tda = aux;
-  int fd, i, r, c, efd, nfds, dmx = -1;
+  th_dvb_mux_instance_t *tdmi;
+  int fd = -1, i, r, c, efd, nfds, dmx = -1;
   uint8_t tsb[188 * 10];
   service_t *t;
   struct epoll_event ev;
-
-  fd = tvh_open(tda->tda_dvr_path, O_RDONLY | O_NONBLOCK, 0);
-  if(fd == -1) {
-    tvhlog(LOG_ALERT, "dvb", "Unable to open %s -- %s", tda->tda_dvr_path, strerror(errno));
-    return NULL;
-  }
-
-  if(tda->tda_rawmode) {
-
-    // Receive unfiltered raw transport stream
-
-    dmx = tvh_open(tda->tda_demux_path, O_RDWR, 0);
-    if(dmx == -1) {
-      tvhlog(LOG_ALERT, "dvb", "Unable to open %s -- %s", 
-	     tda->tda_demux_path, strerror(errno));
-      close(fd);
-      return NULL;
-    }
-
-    struct dmx_pes_filter_params dmx_param;
-
-    memset(&dmx_param, 0, sizeof(dmx_param));
-    dmx_param.pid = 0x2000;
-    dmx_param.input = DMX_IN_FRONTEND;
-    dmx_param.output = DMX_OUT_TS_TAP;
-    dmx_param.pes_type = DMX_PES_OTHER;
-    dmx_param.flags = DMX_IMMEDIATE_START;
-  
-    if(ioctl(dmx, DMX_SET_PES_FILTER, &dmx_param)) {
-      tvhlog(LOG_ERR, "dvb",
-	     "Unable to configure demuxer \"%s\" for all PIDs -- %s",
-	     tda->tda_demux_path, strerror(errno));
-      close(dmx);
-      close(fd);
-      return NULL;
-    }
-  }
+  int delay = 10, locked = 0;
+  fe_status_t festat;
 
   /* Create poll */
   efd = epoll_create(2);
   memset(&ev, 0, sizeof(ev));
   ev.events  = EPOLLIN;
-  ev.data.fd = fd;
-  epoll_ctl(efd, EPOLL_CTL_ADD, fd, &ev);
   ev.data.fd = tda->tda_dvr_pipe.rd;
   epoll_ctl(efd, EPOLL_CTL_ADD, tda->tda_dvr_pipe.rd, &ev);
 
@@ -1045,10 +1039,65 @@ dvb_adapter_input_dvr(void *aux)
   while(1) {
 
     /* Wait for input */
-    nfds = epoll_wait(efd, &ev, 1, -1);
-    if (nfds < 1) continue;
-    if (ev.data.fd != fd) break;
+    nfds = epoll_wait(efd, &ev, 1, delay);
 
+    /* Exit */
+    if ((nfds > 0) && (ev.data.fd != fd)) break;
+
+    /* Check for lock */
+    if (!locked) {
+      if (ioctl(tda->tda_fe_fd, FE_READ_STATUS, &festat))
+        continue;
+      if (!(festat & FE_HAS_LOCK))
+        continue;
+
+      /* Open DVR */
+      fd = tvh_open(tda->tda_dvr_path, O_RDONLY | O_NONBLOCK, 0);
+      if (fd == -1) {
+        tvhlog(LOG_ALERT, "dvb", "Unable to open %s -- %s",
+               tda->tda_dvr_path, strerror(errno));
+        break;
+      }
+      ev.data.fd = fd;
+      epoll_ctl(efd, EPOLL_CTL_ADD, fd, &ev);
+
+      /* Note: table handlers must be installed with global lock */
+      pthread_mutex_lock(&global_lock);
+      tda->tda_locked = locked = 1;
+      delay           = -1;
+      if ((tdmi = tda->tda_mux_current)) {
+
+        /* Install table handlers */
+        dvb_table_add_default(tdmi);
+        epggrab_mux_start(tdmi);
+
+        /* Raw filter */
+        if(tda->tda_rawmode)
+          dmx = dvb_adapter_raw_filter(tda);
+
+        /* Service filters */
+        pthread_mutex_lock(&tda->tda_delivery_mutex);
+        LIST_FOREACH(t, &tda->tda_transports, s_active_link) {
+          if (t->s_dvb_mux_instance == tdmi) {
+            tda->tda_open_service(tda, t);
+            dvb_table_add_pmt(tdmi, t->s_pmt_pid);
+          }
+        }
+        pthread_mutex_unlock(&tda->tda_delivery_mutex);
+      }
+      pthread_mutex_unlock(&global_lock);
+
+      /* Error */
+      if (tda->tda_rawmode && (dmx == -1)) {
+        tvhlog(LOG_ALERT, "dvb", "Unable to install raw mux filter");
+        break;
+      }
+    }
+
+    /* No data */
+    if (nfds < 1) continue;
+
+    /* Read data */
     c = read(fd, tsb+r, sizeof(tsb)-r);
     if (c < 0) {
       if (errno == EAGAIN || errno == EINTR)
