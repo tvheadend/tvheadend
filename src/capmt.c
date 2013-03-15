@@ -547,7 +547,7 @@ handle_ca0(capmt_t* capmt) {
 #endif
 
       if(ct->ct_keystate != CT_RESOLVED)
-        tvhlog(LOG_INFO, "capmt", "Obtained key for service \"%s\"",t->s_svcname);
+        tvhlog(LOG_DEBUG, "capmt", "Obtained key for service \"%s\"",t->s_svcname);
 
       ct->ct_keystate = CT_RESOLVED;
     }
@@ -851,7 +851,7 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
           cce->cce_ecmsize = len;
 
           if(ct->ct_keystate != CT_RESOLVED)
-            tvhlog(LOG_INFO, "capmt",
+            tvhlog(LOG_DEBUG, "capmt",
               "Trying to obtain key for service \"%s\"",t->s_svcname);
 
           buf[9] = pmtversion;

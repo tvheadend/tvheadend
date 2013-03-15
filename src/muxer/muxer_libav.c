@@ -397,6 +397,10 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 	return -1;
     }
 
+    // h264_mp4toannexb filter might allocate new data.
+    if(packet.data != pktbuf_ptr(pkt->pkt_payload))
+      av_free(packet.data);
+
     break;
   }
 
