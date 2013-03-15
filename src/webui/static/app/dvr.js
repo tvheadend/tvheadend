@@ -60,6 +60,7 @@ tvheadend.dvrDetails = function(entry) {
 		+ entry.chicon + '">';
 
 	content += '<div class="x-epg-title">' + entry.title + '</div>';
+	content += '<div class="x-epg-subtitle">' + entry.subtitle + '</div>';
 	content += '<div class="x-epg-desc">' + entry.description + '</div>';
 	content += '<hr>'
 	content += '<div class="x-epg-meta">Status: ' + entry.status + '</div>';
@@ -203,6 +204,11 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 		id : 'episode',
 		header : "Episode",
 		dataIndex : 'episode'
+	}, {
+		width : 100,
+		id : 'subtitle',
+		header : "Subtitle",
+		dataIndex : 'subtitle'
 	}, {
 		width : 100,
 		id : 'pri',

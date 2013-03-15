@@ -1193,6 +1193,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     const char *config_name = http_arg_get(&hc->hc_req_args, "config_name");
     const char *title    = http_arg_get(&hc->hc_req_args, "title");
+    const char *subtitle = http_arg_get(&hc->hc_req_args, "subtitle");
     const char *datestr  = http_arg_get(&hc->hc_req_args, "date");
     const char *startstr = http_arg_get(&hc->hc_req_args, "starttime");
     const char *stopstr  = http_arg_get(&hc->hc_req_args, "stoptime");
@@ -1242,7 +1243,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     }
 
     dvr_entry_create(config_name,
-                     ch, start, stop, 0, 0, title, NULL, NULL,
+                     ch, start, stop, 0, 0, title, subtitle, NULL, NULL,
                      0, hc->hc_representative, 
 		                 NULL, dvr_pri2val(pri));
 
@@ -1437,6 +1438,9 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque,
 
     if(de->de_desc != NULL)
       htsmsg_add_str(m, "description", lang_str_get(de->de_desc, NULL));
+      
+    if(de->de_subtitle != NULL)
+      htsmsg_add_str(m, "subtitle", lang_str_get(de->de_subtitle, NULL));
 
     if (de->de_bcast && de->de_bcast->episode)
       if (epg_episode_number_format(de->de_bcast->episode, buf, 100, NULL, "Season %d", ".", "Episode %d", "/%d"))
