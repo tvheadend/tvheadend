@@ -25,6 +25,8 @@
 #include "idnode.h"
 
 
+extern const idclass_t service_class;
+
 /**
  * Descrambler superclass
  *
@@ -315,8 +317,6 @@ typedef struct service {
 
   void (*s_dtor)(struct service *t);
 
-  htsmsg_t *(*s_serialize)(struct service *s);
-
   /*
    * Per source type structs
    */
@@ -551,7 +551,7 @@ void service_init(void);
 
 int service_start(service_t *t, int instance);
 
-service_t *service_create(const char *uuid, int source_type);
+service_t *service_create(const char *uuid, int source_type, const idclass_t *idc);
 
 void service_unref(service_t *t);
 

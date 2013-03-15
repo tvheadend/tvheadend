@@ -48,6 +48,11 @@ static pthread_mutex_t iptv_recvmutex;
 struct service_list iptv_all_services; /* All IPTV services */
 static struct service_list iptv_active_services; /* Currently enabled */
 
+const idclass_t iptv_class = {
+  .ic_super = &service_class,
+  .ic_class = "iptv",
+};
+
 /**
  * PAT parser. We only parse a single program. CRC has already been verified
  */
@@ -496,32 +501,19 @@ iptv_service_dtor(service_t *t)
 service_t *
 iptv_service_find(const char *id, int create)
 {
-  static int tally;
   service_t *t;
-  char buf[20];
 
   if(id != NULL) {
 
-    if(strncmp(id, "iptv_", 5))
-      return NULL;
-
-    LIST_FOREACH(t, &iptv_all_services, s_group_link)
-      if(!strcmp(t->s_nicename, id)) // XXX(dvbreorg)
-	return t;
+    t = idnode_find(id, &iptv_class);
+    if(t != NULL)
+      return t;
   }
 
   if(create == 0)
     return NULL;
-  
-  if(id == NULL) {
-    tally++;
-    snprintf(buf, sizeof(buf), "iptv_%d", tally);
-    id = buf;
-  } else {
-    tally = MAX(atoi(id + 5), tally);
-  }
 
-  t = service_create(id, S_MPEG_TS);
+  t = service_create(id, S_MPEG_TS, &iptv_class);
 
   t->s_servicetype   = ST_SDTV;
   t->s_start_feed    = iptv_service_start;

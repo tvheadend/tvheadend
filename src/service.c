@@ -50,12 +50,23 @@
 #include "lang_codes.h"
 
 static void service_data_timeout(void *aux);
+static const char *service_channel_get(void *obj);
+static void service_channel_set(void *obj, const char *str);
 
-static htsmsg_t *service_serialize(struct idnode *self);
 
-static const idclass_t service_class = {
+const idclass_t service_class = {
   .ic_class = "service",
-  .ic_serialize = service_serialize,
+  .ic_properties = (const property_t[]){
+    {
+      "channel", "Channel", PT_STR,
+
+      .str_get = service_channel_get,
+      .str_set = service_channel_set,
+    }, {
+      "enabled", "Enabled", PT_BOOL,
+      offsetof(service_t, s_enabled)
+    }, {
+    }}
 };
 
 /**
@@ -70,7 +81,7 @@ stream_init(elementary_stream_t *st)
   st->es_curdts = PTS_UNSET;
   st->es_curpts = PTS_UNSET;
   st->es_prevdts = PTS_UNSET;
-  
+
   st->es_pcr_real_last = PTS_UNSET;
   st->es_pcr_last      = PTS_UNSET;
   st->es_pcr_drift     = 0;
@@ -466,7 +477,7 @@ service_destroy(service_t *t)
  * Create and initialize a new service struct
  */
 service_t *
-service_create(const char *uuid, int source_type)
+service_create(const char *uuid, int source_type, const idclass_t *idc)
 {
   service_t *t = calloc(1, sizeof(service_t));
 
@@ -486,7 +497,7 @@ service_create(const char *uuid, int source_type)
 
   streaming_pad_init(&t->s_streaming_pad);
 
-  idnode_insert(&t->s_id, uuid, &service_class);
+  idnode_insert(&t->s_id, uuid, idc);
 
   return t;
 }
@@ -497,8 +508,7 @@ service_create(const char *uuid, int source_type)
 service_t *
 service_find_by_identifier(const char *identifier)
 {
-  idnode_t *id = idnode_find(identifier);
-  return id->in_class == &service_class ? (service_t *)id : NULL;
+  return idnode_find(identifier, &service_class);
 }
 
 
@@ -647,6 +657,27 @@ service_map_channel(service_t *t, channel_t *ch, int save)
   if(save)
     t->s_config_save(t);
 }
+
+
+/**
+ *
+ */
+static const char *service_channel_get(void *obj)
+{
+  service_t *s = obj;
+  return s->s_ch ? s->s_ch->ch_name : NULL;
+}
+
+
+/**
+ *
+ */
+static void
+service_channel_set(void *obj, const char *str)
+{
+  service_map_channel(obj, str ? channel_find_by_name(str, 1, 0) : NULL, 1);
+}
+
 
 /**
  *
@@ -1186,15 +1217,4 @@ htsmsg_t *servicetype_list ( void )
     htsmsg_add_msg(ret, NULL, e);
   }
   return ret;
-}
-
-
-/**
- *
- */
-static htsmsg_t *
-service_serialize(struct idnode *self)
-{
-  service_t *s = (service_t *)self;
-  return s->s_serialize(s);
 }

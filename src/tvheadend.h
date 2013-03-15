@@ -27,6 +27,7 @@
 #include <netinet/in.h>
 #include <sys/time.h>
 #include <libgen.h>
+#include <string.h>
 
 #include "queue.h"
 #include "avg.h"
@@ -439,6 +440,12 @@ static inline const char *tvh_strbegins(const char *s1, const char *s2)
     if(*s1++ != *s2++)
       return NULL;
   return s1;
+}
+
+static inline void mystrset(char **p, const char *s)
+{
+  free(*p);
+  *p = s ? strdup(s) : NULL;
 }
 
 int tvh_open(const char *pathname, int flags, mode_t mode);

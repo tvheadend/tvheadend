@@ -151,7 +151,6 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
     htsmsg_add_str(r, "name", tda->tda_displayname);
     htsmsg_add_u32(r, "skip_initialscan", tda->tda_skip_initialscan);
     htsmsg_add_u32(r, "idleclose", tda->tda_idleclose);
-    htsmsg_add_u32(r, "skip_checksubscr", tda->tda_skip_checksubscr);
     htsmsg_add_u32(r, "qmon", tda->tda_qmon);
     htsmsg_add_u32(r, "poweroff", tda->tda_poweroff);
     htsmsg_add_u32(r, "sidtochan", tda->tda_sidtochan);
@@ -176,9 +175,6 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
 
     s = http_arg_get(&hc->hc_req_args, "idleclose");
     dvb_adapter_set_idleclose(tda, !!s);
-
-    s = http_arg_get(&hc->hc_req_args, "skip_checksubscr");
-    dvb_adapter_set_skip_checksubscr(tda, !!s);
 
     s = http_arg_get(&hc->hc_req_args, "qmon");
     dvb_adapter_set_qmon(tda, !!s);
@@ -708,17 +704,19 @@ extjs_dvbnetworks(http_connection_t *hc, const char *remain, void *opaque)
   if(!strcmp(s, "root")) {
     v = dvb_network_root();
   } else {
-    idnode_t *n = idnode_find(s);
-    v = n != NULL && n->in_class->ic_get_childs != NULL ? 
+    idnode_t *n = idnode_find(s, NULL);
+    v = n != NULL && n->in_class->ic_get_childs != NULL ?
       n->in_class->ic_get_childs(n) : NULL;
   }
 
-  int i;
-  for(i = 0; v[i] != NULL; i++) {
-    htsmsg_t *m = idnode_serialize(v[i]);
-    if(v[i]->in_class->ic_get_childs == NULL)
-      htsmsg_add_u32(m, "leaf", 1);
-    htsmsg_add_msg(out, NULL, m);
+  if(v != NULL) {
+    int i;
+    for(i = 0; v[i] != NULL; i++) {
+      htsmsg_t *m = idnode_serialize(v[i]);
+      if(v[i]->in_class->ic_get_childs == NULL)
+        htsmsg_add_u32(m, "leaf", 1);
+      htsmsg_add_msg(out, NULL, m);
+    }
   }
 
   pthread_mutex_unlock(&global_lock);

@@ -44,7 +44,20 @@
 #include "dvb_support.h"
 #include "notify.h"
 
-static htsmsg_t *dvb_service_serialize(service_t *s);
+static const char *dvb_service_get_title(struct idnode *self);
+
+const idclass_t dvb_service_class = {
+  .ic_super = &service_class,
+  .ic_class = "dvbservice",
+  .ic_get_title = dvb_service_get_title,
+  //  .ic_get_childs = dvb_service_get_childs,
+  .ic_properties = (const property_t[]){
+    {
+      "dvb_eit_enable", "Use EPG", PT_BOOL,
+      offsetof(service_t, s_dvb_eit_enable)
+    }, {
+    }}
+};
 
 
 /**
@@ -385,7 +398,8 @@ dvb_service_find2(dvb_mux_t *dm, uint16_t sid, int pmt_pid,
   tvhlog(LOG_DEBUG, "dvb", "Add service \"0x%x\" on \"%s\"", sid,
          dvb_mux_nicename(dm));
 
-  t = service_create(uuid, S_MPEG_TS);
+  t = service_create(uuid, S_MPEG_TS, &dvb_service_class);
+
   if (save) *save = 1;
 
   t->s_dvb_service_id = sid;
@@ -397,7 +411,6 @@ dvb_service_find2(dvb_mux_t *dm, uint16_t sid, int pmt_pid,
   t->s_config_save   = dvb_service_save;
   t->s_setsourceinfo = dvb_service_setsourceinfo;
   t->s_grace_period  = dvb_grace_period;
-  t->s_serialize     = dvb_service_serialize;
   t->s_enlist        = dvb_service_enlist;
 
   t->s_dvb_mux = dm;
@@ -409,7 +422,7 @@ dvb_service_find2(dvb_mux_t *dm, uint16_t sid, int pmt_pid,
   return t;
 }
 
-
+#if 0
 /**
  *
  */
@@ -453,6 +466,25 @@ dvb_service_serialize(service_t *s)
   htsmsg_add_u32(m, "dvb_eit_enable", s->s_dvb_eit_enable);
 
   return m;
+}
+#endif
+
+
+/**
+ *
+ */
+static const char *
+dvb_service_get_title(struct idnode *self)
+{
+  service_t *s = (service_t *)self;
+  static char buf[100];
+
+  if(s->s_svcname) {
+    return s->s_svcname;
+  } else {
+    snprintf(buf, sizeof(buf), "Service-0x%04x", s->s_dvb_service_id);
+    return buf;
+  }
 }
 
 

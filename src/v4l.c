@@ -45,6 +45,10 @@ struct v4l_adapter_queue v4l_adapters;
 
 static void v4l_adapter_notify(v4l_adapter_t *va);
 
+const idclass_t v4l_class = {
+  .ic_super = &service_class,
+  .ic_class = "v4l",
+};
 
 /**
  *
@@ -354,7 +358,7 @@ v4l_service_find(v4l_adapter_t *va, const char *id, int create)
     va->va_tally = MAX(atoi(id + vaidlen + 1), va->va_tally);
   }
 
-  t = service_create(id, 0);
+  t = service_create(id, 0, &v4l_class);
 
   t->s_start_feed    = v4l_service_start;
   t->s_refresh_feed  = v4l_service_refresh;

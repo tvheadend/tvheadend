@@ -109,7 +109,7 @@ serviceprobe_thread(void *aux)
     }
 
     // XXX(dvbreorg)
-    checksubscr = 1; // !t->s_dvb_mux->tdmi_adapter->tda_skip_checksubscr;
+    checksubscr = !t->s_dvb_mux->dm_dn->dn_skip_checksubscr;
 
     if (checksubscr) {
       tvhlog(LOG_INFO, "serviceprobe", "%20s: checking...",

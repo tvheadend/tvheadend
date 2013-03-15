@@ -48,6 +48,11 @@ typedef struct rawts {
 } rawts_t;
 
 
+const idclass_t rawts_class = {
+  .ic_super = &service_class,
+  .ic_class = "rawts",
+};
+
 /**
  *
  */
@@ -112,7 +117,7 @@ rawts_service_add(rawts_t *rt, uint16_t sid, int pmt_pid)
   
   snprintf(tmp, sizeof(tmp), "%s_%04x", rt->rt_identifier, sid);
 
-  t = service_create(tmp, S_MPEG_TS);
+  t = service_create(NULL, S_MPEG_TS, &rawts_class);
   t->s_flags |= S_DEBUG;
 
   t->s_dvb_service_id = sid;

@@ -136,14 +136,22 @@ idnode_uuid_as_str(const idnode_t *in)
 /**
  *
  */
-idnode_t *
-idnode_find(const char *uuid)
+void *
+idnode_find(const char *uuid, const idclass_t *idc)
 {
   idnode_t skel, *r;
 
   if(hex2bin(skel.in_uuid, 16, uuid))
     return NULL;
   r = RB_FIND(&idnodes, &skel, in_link, in_cmp);
+  if(r != NULL && idc != NULL) {
+    const idclass_t *c = r->in_class;
+    for(;c != NULL; c = c->ic_super) {
+      if(idc == c)
+        return r;
+    }
+    return NULL;
+  }
   return r;
 }
 
@@ -171,13 +179,23 @@ idnode_serialize(struct idnode *self)
   } else {
     m = htsmsg_create_map();
 
+    htsmsg_t *p  = htsmsg_create_map();
+    htsmsg_t *pn = htsmsg_create_map();
+
     if(c->ic_get_title != NULL) {
       htsmsg_add_str(m, "text", c->ic_get_title(self));
     } else {
       htsmsg_add_str(m, "text", idnode_uuid_as_str(self));
     }
-    htsmsg_add_msg(m, "properties", prop_get_values(self, c->ic_properties));
-    htsmsg_add_msg(m, "propertynames", prop_get_names(c->ic_properties));
+
+    for(;c != NULL; c = c->ic_super) {
+      prop_read_values(self, c->ic_properties, p);
+      prop_read_names(c->ic_properties, pn);
+    }
+
+    htsmsg_add_msg(m, "properties", p);
+    htsmsg_add_msg(m, "propertynames", pn);
+
     htsmsg_add_str(m, "id", idnode_uuid_as_str(self));
   }
   return m;

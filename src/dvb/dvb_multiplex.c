@@ -65,7 +65,7 @@ static const idclass_t dvb_mux_class = {
   .ic_class = "dvbmux",
   .ic_get_title = dvb_mux_get_title,
   .ic_get_childs = dvb_mux_get_childs,
-  .ic_properties = {
+  .ic_properties = (const property_t[]){
     {
       "enabled", "Enabled", PT_BOOL,
       offsetof(dvb_mux_t, dm_enabled)

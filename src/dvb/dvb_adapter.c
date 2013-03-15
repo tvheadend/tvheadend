@@ -77,7 +77,6 @@ tda_save(th_dvb_adapter_t *tda)
   htsmsg_add_str(m, "type", dvb_adaptertype_to_str(tda->tda_fe_type));
   htsmsg_add_str(m, "displayname", tda->tda_displayname);
   htsmsg_add_u32(m, "idleclose", tda->tda_idleclose);
-  htsmsg_add_u32(m, "skip_checksubscr", tda->tda_skip_checksubscr);
   htsmsg_add_u32(m, "sidtochan", tda->tda_sidtochan);
   htsmsg_add_u32(m, "qmon", tda->tda_qmon);
   htsmsg_add_u32(m, "poweroff", tda->tda_poweroff);
@@ -148,25 +147,6 @@ dvb_adapter_set_idleclose(th_dvb_adapter_t *tda, int on)
 	 tda->tda_displayname, on ? "On" : "Off");
 
   tda->tda_idleclose = on;
-  tda_save(tda);
-}
-
-
-/**
- *
- */
-void
-dvb_adapter_set_skip_checksubscr(th_dvb_adapter_t *tda, int on)
-{
-  if(tda->tda_skip_checksubscr == on)
-    return;
-
-  lock_assert(&global_lock);
-
-  tvhlog(LOG_NOTICE, "dvb", "Adapter \"%s\" skip service availability check when mapping set to: %s",
-   tda->tda_displayname, on ? "On" : "Off");
-
-  tda->tda_skip_checksubscr = on;
   tda_save(tda);
 }
 
@@ -609,7 +589,6 @@ dvb_adapter_init(uint32_t adapter_mask, const char *rawfile)
       tda->tda_displayname = strdup(name);
 
       htsmsg_get_u32(c, "idleclose", &tda->tda_idleclose);
-      htsmsg_get_u32(c, "skip_checksubscr", &tda->tda_skip_checksubscr);
       htsmsg_get_u32(c, "sidtochan", &tda->tda_sidtochan);
       htsmsg_get_u32(c, "qmon", &tda->tda_qmon);
       htsmsg_get_u32(c, "poweroff", &tda->tda_poweroff);

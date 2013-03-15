@@ -108,6 +108,7 @@ typedef struct dvb_network {
   uint32_t dn_disable_pmt_monitor;
   uint32_t dn_autodiscovery;
   uint32_t dn_nitoid;
+  uint32_t dn_skip_checksubscr;
 
   struct th_dvb_adapter_list dn_adapters;
 
@@ -248,7 +249,6 @@ typedef struct th_dvb_adapter {
   char *tda_identifier;
   uint32_t tda_idleclose;
   uint32_t tda_skip_initialscan;
-  uint32_t tda_skip_checksubscr;
   uint32_t tda_qmon;
   uint32_t tda_poweroff;
   uint32_t tda_sidtochan;

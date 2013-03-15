@@ -32,13 +32,16 @@ static idnode_t **dvb_network_get_childs(struct idnode *self);
 static const idclass_t dvb_network_class = {
   .ic_class = "dvbnetwork",
   .ic_get_childs = dvb_network_get_childs,
-  .ic_properties = {
+  .ic_properties = (const property_t[]){
     {
       "autodiscovery", "Auto discovery", PT_BOOL,
       offsetof(dvb_network_t, dn_autodiscovery)
     }, {
       "nitoid", "NIT OID", PT_INT,
       offsetof(dvb_network_t, dn_nitoid)
+    }, {
+      "disable_pmt_monitor", "Disable PMT monitor", PT_BOOL,
+      offsetof(dvb_network_t, dn_disable_pmt_monitor)
     }, {
       "disable_pmt_monitor", "Disable PMT monitor", PT_BOOL,
       offsetof(dvb_network_t, dn_disable_pmt_monitor)
@@ -122,16 +125,12 @@ dvb_network_load(htsmsg_t *m, const char *uuid)
   if(dn == NULL)
     return;
 
-  htsmsg_get_u32(m, "autodiscovery",       &dn->dn_autodiscovery);
-  htsmsg_get_u32(m, "nitoid",              &dn->dn_nitoid);
-  htsmsg_get_u32(m, "disable_pmt_monitor", &dn->dn_disable_pmt_monitor);
-
+  prop_write_values(dn, dvb_network_class.ic_properties, m);
   dvb_mux_load(dn);
-
   dvb_network_schedule_initial_scan(dn);
 }
 
-#if 1
+
 /**
  *
  */
@@ -142,17 +141,12 @@ dvb_network_save(dvb_network_t *dn)
 
   lock_assert(&global_lock);
 
-  htsmsg_add_u32(m, "fetype",              dn->dn_fe_type);
-  htsmsg_add_u32(m, "autodiscovery",       dn->dn_autodiscovery);
-  htsmsg_add_u32(m, "nitoid",              dn->dn_nitoid);
-  htsmsg_add_u32(m, "disable_pmt_monitor", dn->dn_disable_pmt_monitor);
+  prop_read_values(dn, dvb_network_class.ic_properties, m);
 
   hts_settings_save(m, "dvb/networks/%s/config",
                     idnode_uuid_as_str(&dn->dn_id));
   htsmsg_destroy(m);
 }
-#endif
-
 
 
 /**

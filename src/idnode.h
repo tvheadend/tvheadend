@@ -7,11 +7,12 @@ struct htsmsg;
 struct idnode;
 
 typedef struct idclass {
+  const struct idclass *ic_super;
   const char *ic_class;
   struct htsmsg *(*ic_serialize)(struct idnode *self);
   struct idnode **(*ic_get_childs)(struct idnode *self);
   const char *(*ic_get_title)(struct idnode *self);
-  const property_t ic_properties[];
+  const property_t *ic_properties;
 } idclass_t;
 
 
@@ -27,7 +28,7 @@ int idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class);
 
 const char *idnode_uuid_as_str(const idnode_t *in);
 
-idnode_t *idnode_find(const char *uuid);
+void *idnode_find(const char *uuid, const idclass_t *class);
 
 void idnode_unlink(idnode_t *in);
 
