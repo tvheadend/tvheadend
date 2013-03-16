@@ -1221,6 +1221,22 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
 
+  } else if(!strcmp(op, "entryFile")) {
+    s = http_arg_get(&hc->hc_req_args, "entryId");
+
+    if(s == NULL || (de = dvr_entry_find_by_id(atoi(s))) == NULL) {
+      pthread_mutex_unlock(&global_lock);
+      return HTTP_STATUS_BAD_REQUEST;
+    }
+
+    s = http_arg_get(&hc->hc_req_args, "filename");
+    if (s == NULL) {
+      pthread_mutex_unlock(&global_lock);
+      return HTTP_STATUS_BAD_REQUEST;
+    }
+
+    out = dvr_entry_rename_file(de, s);
+
   } else if(!strcmp(op, "createAutoRec")) {
     epg_genre_t genre, *eg = NULL;
     if ((s = http_arg_get(&hc->hc_req_args, "contenttype"))) {

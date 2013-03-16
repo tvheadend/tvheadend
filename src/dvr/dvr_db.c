@@ -18,6 +18,7 @@
 
 #include <pthread.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <assert.h>
 #include <string.h>
@@ -686,6 +687,63 @@ dvr_entry_save(dvr_entry_t *de)
   htsmsg_destroy(m);
 }
 
+htsmsg_t *dvr_entry_rename_file(dvr_entry_t *de, const char *filename)
+{
+  htsmsg_t *res = htsmsg_create_map();
+  if (de->de_filename == NULL) {
+    htsmsg_add_u32(res, "status", 1);
+    htsmsg_add_str(res, "message", "no filename defined for recording");
+    return res;
+  }
+
+  if (!strcmp(de->de_filename, filename)) {
+    htsmsg_add_u32(res, "status", 0);
+    htsmsg_add_str(res, "message", "nothing to do - filename already set to this");
+    return res;
+  }
+
+  dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
+  if (cfg == NULL || cfg->dvr_storage == NULL) {
+    htsmsg_add_u32(res, "status", 1);
+    htsmsg_add_str(res, "message", "no storage path defined");
+    return res;
+  }
+
+  if (strncmp(filename, cfg->dvr_storage, strlen(cfg->dvr_storage))) {
+    htsmsg_add_u32(res, "status", 2);
+    htsmsg_add_str(res, "message", "may not link outside of storage path");
+    htsmsg_add_str(res, "filename", filename);
+    htsmsg_add_str(res, "storage", cfg->dvr_storage);
+    return res;
+  }
+
+  if (strstr(filename, "/../")) {
+    htsmsg_add_u32(res, "status", 3);
+    htsmsg_add_str(res, "message", "may not use relative paths");
+    return res;
+  }
+
+  int fd = open(filename, O_RDONLY);
+  if (fd < 0) {
+    htsmsg_add_u32(res, "status", 4);
+    htsmsg_add_str(res, "message", "file not found");
+    return res;
+  }
+  close(fd);
+
+  tvhlog(LOG_INFO, "dvr", "renamed entry %d from \"%s\" to \"%s\"",
+         de->de_id, de->de_filename, filename);
+
+  free(de->de_filename);
+  de->de_filename = strdup(filename);
+
+  dvr_entry_save(de);
+  htsp_dvr_entry_update(de);
+  dvr_entry_notify(de);
+
+  htsmsg_add_u32(res, "status", 0);
+  return res;
+}
 
 /**
  *
