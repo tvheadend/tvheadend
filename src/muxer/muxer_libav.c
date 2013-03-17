@@ -378,14 +378,15 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
       pkt = pkt_merge_header(pkt);
 
     if(lm->lm_h264_filter && st->codec->codec_id == CODEC_ID_H264) {
-         av_bitstream_filter_filter(lm->lm_h264_filter, 
+      if(av_bitstream_filter_filter(lm->lm_h264_filter,
 				    st->codec, 
 				    NULL, 
 				    &packet.data, 
 				    &packet.size, 
 				    pktbuf_ptr(pkt->pkt_payload), 
 				    pktbuf_len(pkt->pkt_payload), 
-				    pkt->pkt_frametype < PKT_P_FRAME);
+				    pkt->pkt_frametype < PKT_P_FRAME) < 0)
+	tvhlog(LOG_WARNING, "libav",  "Failed to filter bitstream");
     } else {
       packet.data = pktbuf_ptr(pkt->pkt_payload);
       packet.size = pktbuf_len(pkt->pkt_payload);
