@@ -349,6 +349,7 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
   AVPacket packet;
   th_pkt_t *pkt = (th_pkt_t*)data;
   lav_muxer_t *lm = (lav_muxer_t*)m;
+  int rc = 0;
 
   assert(smt == SMT_PACKET);
 
@@ -356,14 +357,14 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 
   if(!oc->nb_streams) {
     tvhlog(LOG_ERR, "libav", "No streams to mux");
-    lm->m_errors++;
-    return -1;
+    rc = -1;
+    goto ret;
   }
 
   if(!lm->lm_init) {
     tvhlog(LOG_ERR, "libav", "Muxer not initialized correctly");
-    lm->m_errors++;
-    return -1;
+    rc = -1;
+    goto ret;
   }
 
   for(i=0; i<oc->nb_streams; i++) {
@@ -401,11 +402,8 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
     if(pkt->pkt_frametype < PKT_P_FRAME)
       packet.flags |= AV_PKT_FLAG_KEY;
 
-    if (av_interleaved_write_frame(oc, &packet) != 0) {
-        tvhlog(LOG_WARNING, "libav",  "Failed to write frame");
-	lm->m_errors++;
-	return -1;
-    }
+    if((rc = av_interleaved_write_frame(oc, &packet)))
+      tvhlog(LOG_WARNING, "libav",  "Failed to write frame");
 
     // h264_mp4toannexb filter might allocate new data.
     if(packet.data != pktbuf_ptr(pkt->pkt_payload))
@@ -414,9 +412,11 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
     break;
   }
 
+ ret:
+  lm->m_errors += (rc != 0);
   pkt_ref_dec(pkt);
 
-  return 0;
+  return rc;
 }
 
 
