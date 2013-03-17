@@ -205,7 +205,7 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 		header : "Episode",
 		dataIndex : 'episode'
 	}, {
-		width : 100,
+		width : 150,
 		id : 'subtitle',
 		header : "Subtitle",
 		dataIndex : 'subtitle'
@@ -243,7 +243,7 @@ tvheadend.dvrschedule = function(title, iconCls, dvrStore) {
 		renderer : renderSize,
 		hidden : iconCls != 'television'
 	}, {
-		width : 250,
+		width : 200,
 		id : 'channel',
 		header : "Channel",
 		dataIndex : 'channel'
@@ -609,6 +609,8 @@ tvheadend.dvr = function() {
 			name : 'channel'
 		}, {
 			name : 'title'
+		}, {
+			name : 'subtitle'
 		}, {
 			name : 'episode'
 		}, {

@@ -946,8 +946,11 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     if((s = epg_episode_get_subtitle(ee, lang)))
       htsmsg_add_str(m, "subtitle", s);
 
-    if((s = epg_broadcast_get_description(e, lang)))
+    if((s = epg_broadcast_get_description(e, lang))) {
       htsmsg_add_str(m, "description", s);
+      if((s = epg_broadcast_get_summary(e, lang)))
+         htsmsg_add_str(m, "subtitle", s);
+    }
     else if((s = epg_broadcast_get_summary(e, lang)))
       htsmsg_add_str(m, "description", s);
 

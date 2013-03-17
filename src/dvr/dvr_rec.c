@@ -129,6 +129,9 @@ cleanupfilename(char *s, int dvr_flags)
 
     if(s[i] == '/')
       s[i] = '-';
+      
+    else if (strchr("/:\\<>|*?'\"", s[i]) != NULL)
+      s[i] = '-';
 
     else if((dvr_flags & DVR_WHITESPACE_IN_TITLE) &&
             (s[i] == ' ' || s[i] == '\t'))
