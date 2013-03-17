@@ -33,6 +33,7 @@ typedef struct lav_muxer {
   AVFormatContext *lm_oc;
   AVBitStreamFilterContext *lm_h264_filter;
   int lm_fd;
+  int lm_init;
 } lav_muxer_t;
 
 #define MUX_BUF_SIZE 4096
@@ -276,6 +277,8 @@ lav_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
     return -1;
   }
 
+  lm->lm_init = 1;
+
   return 0;
 }
 
@@ -353,6 +356,12 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 
   if(!oc->nb_streams) {
     tvhlog(LOG_ERR, "libav",  "No streams to mux");
+    lm->m_errors++;
+    return -1;
+  }
+
+  if(!lm->lm_init) {
+    tvhlog(LOG_ERR, "libav", "Muxer not initialized correctly");
     lm->m_errors++;
     return -1;
   }
@@ -440,7 +449,7 @@ lav_muxer_close(muxer_t *m)
   int ret = 0;
   lav_muxer_t *lm = (lav_muxer_t*)m;
 
-  if(lm->lm_oc->nb_streams && av_write_trailer(lm->lm_oc) < 0) {
+  if(lm->lm_init && av_write_trailer(lm->lm_oc) < 0) {
     tvhlog(LOG_WARNING, "libav",  "Failed to write %s trailer", 
 	   muxer_container_type2txt(lm->m_container));
     lm->m_errors++;
@@ -517,6 +526,7 @@ lav_muxer_create(muxer_container_type_t mc)
   lm->lm_oc          = avformat_alloc_context();
   lm->lm_oc->oformat = fmt;
   lm->lm_fd          = -1;
+  lm->lm_init        = 0;
 
   return (muxer_t*)lm;
 }
