@@ -355,7 +355,7 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
   oc = lm->lm_oc;
 
   if(!oc->nb_streams) {
-    tvhlog(LOG_ERR, "libav",  "No streams to mux");
+    tvhlog(LOG_ERR, "libav", "No streams to mux");
     lm->m_errors++;
     return -1;
   }
