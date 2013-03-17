@@ -386,8 +386,10 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 				    &packet.size, 
 				    pktbuf_ptr(pkt->pkt_payload), 
 				    pktbuf_len(pkt->pkt_payload), 
-				    pkt->pkt_frametype < PKT_P_FRAME) < 0)
+				    pkt->pkt_frametype < PKT_P_FRAME) < 0) {
 	tvhlog(LOG_WARNING, "libav",  "Failed to filter bitstream");
+	break;
+      }
     } else {
       packet.data = pktbuf_ptr(pkt->pkt_payload);
       packet.size = pktbuf_len(pkt->pkt_payload);
