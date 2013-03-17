@@ -421,6 +421,16 @@ lav_muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
 
 
 /**
+ * NOP
+ */
+static int
+lav_muxer_add_marker(muxer_t* m)
+{
+  return 0;
+}
+
+
+/**
  * Close the muxer and append trailer to output
  */
 static int
@@ -498,6 +508,7 @@ lav_muxer_create(muxer_container_type_t mc)
   lm->m_init         = lav_muxer_init;
   lm->m_reconfigure  = lav_muxer_reconfigure;
   lm->m_mime         = lav_muxer_mime;
+  lm->m_add_marker   = lav_muxer_add_marker;
   lm->m_write_meta   = lav_muxer_write_meta;
   lm->m_write_pkt    = lav_muxer_write_pkt;
   lm->m_close        = lav_muxer_close;
