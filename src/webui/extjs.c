@@ -1442,7 +1442,11 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque,
     if(de->de_desc != NULL)
       htsmsg_add_str(m, "description", lang_str_get(de->de_desc, NULL));
       
+<<<<<<< HEAD:src/webui/extjs.c
     if(de->de_subtitle != NULL)
+=======
+    if(de->de_subtitle != NULL && lang_str_get(de->de_subtitle, NULL) != NULL)
+>>>>>>> dffe709... bugfix:src/webui/extjs.c
       htsmsg_add_str(m, "subtitle", lang_str_get(de->de_subtitle, NULL));
 
     if (de->de_bcast && de->de_bcast->episode)
