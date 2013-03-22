@@ -152,6 +152,7 @@ static int log_debug_to_syslog;
 static int log_debug_to_console;
 static int log_debug_to_path;
 static char* log_path;
+static pthread_cond_t gtimer_cond;
 
 static void
 handle_sigpipe(int x)
@@ -187,31 +188,50 @@ get_user_groups (const struct passwd *pw, gid_t* glist, size_t gmax)
 static int
 gtimercmp(gtimer_t *a, gtimer_t *b)
 {
-  if(a->gti_expire < b->gti_expire)
+  if(a->gti_expire.tv_sec  < b->gti_expire.tv_sec)
     return -1;
-  else if(a->gti_expire > b->gti_expire)
+  if(a->gti_expire.tv_sec  > b->gti_expire.tv_sec)
     return 1;
- return 0;
+  if(a->gti_expire.tv_nsec < b->gti_expire.tv_nsec)
+    return -1;
+  if(a->gti_expire.tv_nsec > b->gti_expire.tv_nsec)
+    return 1;
+ return -1;
 }
-
 
 /**
  *
  */
 void
-gtimer_arm_abs(gtimer_t *gti, gti_callback_t *callback, void *opaque,
-	       time_t when)
+gtimer_arm_abs2
+  (gtimer_t *gti, gti_callback_t *callback, void *opaque, struct timespec *when)
 {
   lock_assert(&global_lock);
 
-  if(gti->gti_callback != NULL)
+  if (gti->gti_callback != NULL)
     LIST_REMOVE(gti, gti_link);
-    
+
   gti->gti_callback = callback;
-  gti->gti_opaque = opaque;
-  gti->gti_expire = when;
+  gti->gti_opaque   = opaque;
+  gti->gti_expire   = *when;
 
   LIST_INSERT_SORTED(&gtimers, gti, gti_link, gtimercmp);
+
+  if (LIST_FIRST(&gtimers) == gti)
+    pthread_cond_signal(&gtimer_cond); // force timer re-check
+}
+
+/**
+ *
+ */
+void
+gtimer_arm_abs
+  (gtimer_t *gti, gti_callback_t *callback, void *opaque, time_t when)
+{
+  struct timespec ts;
+  ts.tv_nsec = 0;
+  ts.tv_sec  = when;
+  gtimer_arm_abs2(gti, callback, opaque, &ts);
 }
 
 /**
@@ -220,10 +240,22 @@ gtimer_arm_abs(gtimer_t *gti, gti_callback_t *callback, void *opaque,
 void
 gtimer_arm(gtimer_t *gti, gti_callback_t *callback, void *opaque, int delta)
 {
-  time_t now;
-  time(&now);
-  
-  gtimer_arm_abs(gti, callback, opaque, now + delta);
+  gtimer_arm_abs(gti, callback, opaque, dispatch_clock + delta);
+}
+
+/**
+ *
+ */
+void
+gtimer_arm_ms
+  (gtimer_t *gti, gti_callback_t *callback, void *opaque, long delta_ms )
+{
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
+  ts.tv_nsec += (1000000 * delta_ms);
+  ts.tv_sec  += (ts.tv_nsec / 1000000000);
+  ts.tv_nsec %= 1000000000;
+  gtimer_arm_abs2(gti, callback, opaque, &ts);
 }
 
 /**
@@ -305,28 +337,51 @@ mainloop(void)
 {
   gtimer_t *gti;
   gti_callback_t *cb;
+  struct timespec ts;
 
   while(running) {
-    sleep(1);
-    spawn_reaper();
+    clock_gettime(CLOCK_REALTIME, &ts);
+    //tvhlog(LOG_INFO, "main", "loop");
 
-    time(&dispatch_clock);
+    /* 1sec stuff */
+    if (ts.tv_sec > dispatch_clock) {
+      dispatch_clock = ts.tv_sec;
 
-    comet_flush(); /* Flush idle comet mailboxes */
+      spawn_reaper(); /* reap spawned processes */
 
+      comet_flush(); /* Flush idle comet mailboxes */
+    }
+
+    /* Global timers */
     pthread_mutex_lock(&global_lock);
+
+    // TODO: there is a risk that if timers re-insert themselves to
+    //       the top of the list with a 0 offset we could loop indefinitely
     
     while((gti = LIST_FIRST(&gtimers)) != NULL) {
-      if(gti->gti_expire > dispatch_clock)
-	break;
-      
+      if ((gti->gti_expire.tv_sec > ts.tv_sec) ||
+          ((gti->gti_expire.tv_sec == ts.tv_sec) &&
+           (gti->gti_expire.tv_nsec > ts.tv_nsec))) {
+        ts = gti->gti_expire;
+        break;
+      }
+
       cb = gti->gti_callback;
+
       LIST_REMOVE(gti, gti_link);
       gti->gti_callback = NULL;
 
       cb(gti->gti_opaque);
-      
     }
+
+    /* Bound wait */
+    if ((LIST_FIRST(&gtimers) == NULL) || (ts.tv_sec > (dispatch_clock + 1))) {
+      ts.tv_sec  = dispatch_clock + 1;
+      ts.tv_nsec = 0;
+    }
+
+    /* Wait */
+    pthread_cond_timedwait(&gtimer_cond, &global_lock, &ts);
     pthread_mutex_unlock(&global_lock);
   }
 }
@@ -584,6 +639,7 @@ main(int argc, char **argv)
   pthread_mutex_init(&global_lock, NULL);
   pthread_mutex_init(&atomic_lock, NULL);
   pthread_mutex_lock(&global_lock);
+  pthread_cond_init(&gtimer_cond, NULL);
 
   time(&dispatch_clock);
 
@@ -726,11 +782,12 @@ tvhlogv(int notify, int severity, const char *subsys, const char *fmt,
 {
   char buf[2048];
   char buf2[2048];
-  char t[50];
-  int l;
+  char t[64];
+  int l, ms;
   struct tm tm;
-  time_t now;
+  struct timeval now;
   static int log_path_fail = 0;
+  size_t c;
 
   l = snprintf(buf, sizeof(buf), "%s: ", subsys);
 
@@ -742,16 +799,17 @@ tvhlogv(int notify, int severity, const char *subsys, const char *fmt,
   /**
    * Get time (string)
    */
-  time(&now);
-  localtime_r(&now, &tm);
-  strftime(t, sizeof(t), "%b %d %H:%M:%S", &tm);
+  gettimeofday(&now, NULL);
+  localtime_r(&now.tv_sec, &tm);
+  ms = now.tv_usec / 1000;
+  c = strftime(t, sizeof(t), "%b %d %H:%M:%S", &tm);
+  snprintf(t+c, sizeof(t)-c, ".%03d", ms);
 
   /**
    * Send notification to Comet (Push interface to web-clients)
    */
   if(notify) {
     htsmsg_t *m;
-
     snprintf(buf2, sizeof(buf2), "%s %s", t, buf);
     m = htsmsg_create_map();
     htsmsg_add_str(m, "notificationClass", "logmessage");
