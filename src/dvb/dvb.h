@@ -209,6 +209,7 @@ typedef struct th_dvb_adapter {
   uint32_t tda_enabled;
 
   int tda_locked;
+  time_t tda_monitor;
 
   const char *tda_rootpath;
   char *tda_identifier;
@@ -250,7 +251,6 @@ typedef struct th_dvb_adapter {
   struct service_list tda_transports; /* Currently bound transports */
 
   gtimer_t tda_fe_monitor_timer;
-  int tda_fe_monitor_hold;
 
   int tda_sat; // Set if this adapter is a satellite receiver (DVB-S, etc) 
 
