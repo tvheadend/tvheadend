@@ -1020,13 +1020,25 @@ static void *
 dvb_adapter_input_dvr(void *aux)
 {
   th_dvb_adapter_t *tda = aux;
-  th_dvb_mux_instance_t *tdmi;
   int fd = -1, i, r, c, efd, nfds, dmx = -1;
   uint8_t tsb[188 * 10];
   service_t *t;
   struct epoll_event ev;
-  int delay = 10, locked = 0;
-  fe_status_t festat;
+  int delay = 10;
+
+  /* Install RAW demux */
+  if (tda->tda_rawmode) {
+    if ((dmx = dvb_adapter_raw_filter(tda)) == -1) {
+      tvhlog(LOG_ALERT, "dvb", "Unable to install raw mux filter");
+      return NULL;
+    }
+  }
+
+  /* Open DVR */
+  if ((fd = tvh_open(tda->tda_dvr_path, O_RDONLY | O_NONBLOCK, 0)) == -1) {
+    close(dmx);
+    return NULL;
+  }
 
   /* Create poll */
   efd = epoll_create(2);
@@ -1034,6 +1046,8 @@ dvb_adapter_input_dvr(void *aux)
   ev.events  = EPOLLIN;
   ev.data.fd = tda->tda_dvr_pipe.rd;
   epoll_ctl(efd, EPOLL_CTL_ADD, tda->tda_dvr_pipe.rd, &ev);
+  ev.data.fd = fd;
+  epoll_ctl(efd, EPOLL_CTL_ADD, fd, &ev);
 
   r = i = 0;
   while(1) {
@@ -1041,61 +1055,11 @@ dvb_adapter_input_dvr(void *aux)
     /* Wait for input */
     nfds = epoll_wait(efd, &ev, 1, delay);
 
-    /* Exit */
-    if ((nfds > 0) && (ev.data.fd != fd)) break;
-
-    /* Check for lock */
-    if (!locked) {
-      if (ioctl(tda->tda_fe_fd, FE_READ_STATUS, &festat))
-        continue;
-      if (!(festat & FE_HAS_LOCK))
-        continue;
-
-      /* Open DVR */
-      fd = tvh_open(tda->tda_dvr_path, O_RDONLY | O_NONBLOCK, 0);
-      if (fd == -1) {
-        tvhlog(LOG_ALERT, "dvb", "Unable to open %s -- %s",
-               tda->tda_dvr_path, strerror(errno));
-        break;
-      }
-      ev.data.fd = fd;
-      epoll_ctl(efd, EPOLL_CTL_ADD, fd, &ev);
-
-      /* Note: table handlers must be installed with global lock */
-      pthread_mutex_lock(&global_lock);
-      tda->tda_locked = locked = 1;
-      delay           = -1;
-      if ((tdmi = tda->tda_mux_current)) {
-
-        /* Install table handlers */
-        dvb_table_add_default(tdmi);
-        epggrab_mux_start(tdmi);
-
-        /* Raw filter */
-        if(tda->tda_rawmode)
-          dmx = dvb_adapter_raw_filter(tda);
-
-        /* Service filters */
-        pthread_mutex_lock(&tda->tda_delivery_mutex);
-        LIST_FOREACH(t, &tda->tda_transports, s_active_link) {
-          if (t->s_dvb_mux_instance == tdmi) {
-            tda->tda_open_service(tda, t);
-            dvb_table_add_pmt(tdmi, t->s_pmt_pid);
-          }
-        }
-        pthread_mutex_unlock(&tda->tda_delivery_mutex);
-      }
-      pthread_mutex_unlock(&global_lock);
-
-      /* Error */
-      if (tda->tda_rawmode && (dmx == -1)) {
-        tvhlog(LOG_ALERT, "dvb", "Unable to install raw mux filter");
-        break;
-      }
-    }
-
     /* No data */
     if (nfds < 1) continue;
+
+    /* Exit */
+    if (ev.data.fd != fd) break;
 
     /* Read data */
     c = read(fd, tsb+r, sizeof(tsb)-r);

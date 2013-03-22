@@ -101,8 +101,6 @@ dvb_fe_monitor(void *aux)
   int store = 0;
   int notify = 0;
 
-  gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 1);
-
   if(tdmi == NULL)
     return;
 
@@ -110,9 +108,8 @@ dvb_fe_monitor(void *aux)
    * Read out front end status
    */
   if(ioctl(tda->tda_fe_fd, FE_READ_STATUS, &fe_status))
-    fe_status = 0;
-
-  if(fe_status & FE_HAS_LOCK)
+    status = TDMI_FE_UNKNOWN;
+  else if(fe_status & FE_HAS_LOCK)
     status = -1;
   else if(fe_status & (FE_HAS_SYNC | FE_HAS_VITERBI | FE_HAS_CARRIER))
     status = TDMI_FE_BAD_SIGNAL;
@@ -121,18 +118,34 @@ dvb_fe_monitor(void *aux)
   else
     status = TDMI_FE_NO_SIGNAL;
 
-  if(tda->tda_fe_monitor_hold > 0) {
-    /* Post tuning threshold */
-    if(status == -1) { /* We have a lock, don't hold off */
-      tda->tda_fe_monitor_hold = 0; 
-      /* Reset FEC counter */
-      dvb_fe_get_unc(tda);
+  /**
+   * Waiting for initial lock
+   */
+  if(tda->tda_locked == 0) {
+
+    /* Read */
+    if (status == -1) {
+      tda->tda_locked = 1;
+      dvb_adapter_start(tda, TDA_OPT_ALL);
+      gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 1);
+
+    /* Re-arm (50ms) */
     } else {
-      tda->tda_fe_monitor_hold--;
-      return;
+      gtimer_arm_ms(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 50);
+
+      /* Monitor (1 per sec) */
+      if (dispatch_clock < tda->tda_monitor)  
+        return;
+      tda->tda_monitor = dispatch_clock + 1;
     }
+
+  } else {
+    gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 1);
   }
 
+  /*
+   * Update stats 
+   */
   if(status == -1) {
     /* Read FEC counter (delta) */
 
@@ -312,46 +325,6 @@ dvb_fe_stop(th_dvb_mux_instance_t *tdmi, int retune)
 
 #if DVB_API_VERSION >= 5
 
-static int check_frontend (int fe_fd, int dvr, int human_readable) {
-  (void)dvr;
-  fe_status_t status;
-  uint16_t snr, signal;
-  uint32_t ber;
-  int timeout = 0;
-
-  do {
-    if (ioctl(fe_fd, FE_READ_STATUS, &status) == -1)
-      perror("FE_READ_STATUS failed");
-    /* some frontends might not support all these ioctls, thus we
-     * avoid printing errors
-     */
-    if (ioctl(fe_fd, FE_READ_SIGNAL_STRENGTH, &signal) == -1)
-      signal = -2;
-    if (ioctl(fe_fd, FE_READ_SNR, &snr) == -1)
-      snr = -2;
-    if (ioctl(fe_fd, FE_READ_BER, &ber) == -1)
-      ber = -2;
-
-    if (human_readable) {
-      printf ("status %02x | signal %3u%% | snr %3u%% | ber %d | ",
-          status, (signal * 100) / 0xffff, (snr * 100) / 0xffff, ber);
-    } else {
-      printf ("status %02x | signal %04x | snr %04x | ber %08x | ",
-          status, signal, snr, ber);
-    }
-    if (status & FE_HAS_LOCK)
-      printf("FE_HAS_LOCK");
-    printf("\n");
-
-    if ((status & FE_HAS_LOCK) || (++timeout >= 10))
-      break;
-
-    usleep(1000000);
-  } while (1);
-
-  return 0;
-}
-
 static struct dtv_property clear_p[] = {
   { .cmd = DTV_CLEAR },
 };
@@ -360,7 +333,6 @@ static struct dtv_properties clear_cmdseq = {
   .num = 1,
   .props = clear_p
 };
-
 
 /**
  *
@@ -404,8 +376,6 @@ dvb_fe_tune_s2(th_dvb_mux_instance_t *tdmi, dvb_mux_conf_t *dmc)
   /* do tuning now */
   r = ioctl(tda->tda_fe_fd, FE_SET_PROPERTY, &_dvbs_cmdseq);
 
-  if(0)
-    check_frontend (tda->tda_fe_fd, 0, 1);
   return r;
 
 }
@@ -493,8 +463,6 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
 
   dvb_mux_nicename(buf, sizeof(buf), tdmi);
 
-  tda->tda_fe_monitor_hold = 4;
-
 #if DVB_API_VERSION >= 5
   if (tda->tda_type == FE_QPSK) {
     tvhlog(LOG_DEBUG, "dvb", "\"%s\" tuning via s2api to \"%s\" (%d, %d Baud, "
@@ -524,19 +492,16 @@ dvb_fe_tune(th_dvb_mux_instance_t *tdmi, const char *reason)
     /* Mark as bad */
     if (errno == EINVAL)
       dvb_mux_set_enable(tdmi, 0);
+
+    dvb_adapter_stop(tda, TDA_OPT_ALL);
     return SM_CODE_TUNING_FAILED;
   }
 
   tda->tda_mux_current = tdmi;
 
-  dvb_adapter_start(tda, TDA_OPT_ALL);
-
-  gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 1);
-
-#if 0
-  dvb_table_add_default(tdmi);
-  epggrab_mux_start(tdmi);
-#endif
+  time(&tda->tda_monitor);
+  tda->tda_monitor += 4; // wait a few secs before monitoring (unlocked)
+  gtimer_arm_ms(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 50);
 
   dvb_adapter_notify(tda);
   return 0;
