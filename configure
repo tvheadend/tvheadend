@@ -24,7 +24,7 @@ OPTIONS=(
   "imagecache:auto"
   "avahi:auto"
   "zlib:auto"
-  "libav:auto"
+  "libav:no"
   "inotify:auto"
   "bundle:no"
   "dvbcsa:no"
