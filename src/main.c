@@ -527,7 +527,6 @@ main(int argc, char **argv)
   log_debug_to_syslog   = opt_syslog;
   log_debug_to_path     = opt_debug;
   tvheadend_webui_debug = opt_debug || opt_uidebug;
-  tvhlog(LOG_INFO, "START", "initialising");
 #if ENABLE_LINUXDVB
   if (!opt_dvb_adapters) {
     adapter_mask = ~0;
