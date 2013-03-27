@@ -165,6 +165,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 		 rc, http_rc2str(rc));
 
   htsbuf_qprintf(&hdrs, "Server: HTS/tvheadend\r\n");
+  htsbuf_qprintf(&hdrs, "Access-Control-Allow-Origin: *\r\n"); 
 
   if(maxage == 0) {
     htsbuf_qprintf(&hdrs, "Cache-Control: no-cache\r\n");
