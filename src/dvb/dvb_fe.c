@@ -129,6 +129,20 @@ dvb_fe_monitor(void *aux)
       dvb_adapter_start(tda, TDA_OPT_ALL);
       gtimer_arm(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 1);
 
+      /* Install table handlers */
+      dvb_table_add_default(tdmi);
+      epggrab_mux_start(tdmi);
+
+      /* Service filters */
+      pthread_mutex_lock(&tda->tda_delivery_mutex);
+      LIST_FOREACH(t, &tda->tda_transports, s_active_link) {
+        if (t->s_dvb_mux_instance == tdmi) {
+          tda->tda_open_service(tda, t);
+          dvb_table_add_pmt(tdmi, t->s_pmt_pid);
+        }
+      }
+      pthread_mutex_unlock(&tda->tda_delivery_mutex);
+
     /* Re-arm (50ms) */
     } else {
       gtimer_arm_ms(&tda->tda_fe_monitor_timer, dvb_fe_monitor, tda, 50);
