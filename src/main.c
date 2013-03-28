@@ -251,7 +251,7 @@ gtimer_arm_ms
   (gtimer_t *gti, gti_callback_t *callback, void *opaque, long delta_ms )
 {
   struct timespec ts;
-  clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
+  clock_gettime(CLOCK_REALTIME, &ts);
   ts.tv_nsec += (1000000 * delta_ms);
   ts.tv_sec  += (ts.tv_nsec / 1000000000);
   ts.tv_nsec %= 1000000000;
@@ -341,7 +341,6 @@ mainloop(void)
 
   while(running) {
     clock_gettime(CLOCK_REALTIME, &ts);
-    //tvhlog(LOG_INFO, "main", "loop");
 
     /* 1sec stuff */
     if (ts.tv_sec > dispatch_clock) {
