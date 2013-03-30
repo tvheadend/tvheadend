@@ -448,17 +448,30 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
     if (chname && (strcmp(t->s_provider ?: "", provider) ||
                    strcmp(t->s_svcname  ?: "", chname))) {
-      free(t->s_provider);
-      t->s_provider = strdup(provider);
+      int save2 = 0;
+      int master = 0;
+      if (t->s_dvb_mux_instance && t->s_dvb_mux_instance->tdmi_network_id &&
+          t->s_dvb_mux_instance->tdmi_network_id == tdmi->tdmi_network_id)
+        master = 1;
+
+      if (!t->s_provider || master) {
+        free(t->s_provider);
+        t->s_provider = strdup(provider);
+        save2 = 1;
+      }
       
-      free(t->s_svcname);
-      t->s_svcname = strdup(chname);
+      if (!t->s_svcname || master) {
+        free(t->s_svcname);
+        t->s_svcname = strdup(chname);
+        save2 = 1;
+      }
 
-      pthread_mutex_lock(&t->s_stream_mutex); 
-      service_make_nicename(t);
-      pthread_mutex_unlock(&t->s_stream_mutex); 
-
-      save = 1;
+      if (save2) {
+        pthread_mutex_lock(&t->s_stream_mutex); 
+        service_make_nicename(t);
+        pthread_mutex_unlock(&t->s_stream_mutex); 
+        save = 1;
+      }
     }
 
     if (*crid && strcmp(t->s_default_authority ?: "", crid)) {
@@ -692,7 +705,7 @@ dvb_table_cable_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, netname,
 		 "automatic mux discovery", 1, 1, NULL, NULL,
-     tdmi->tdmi_adapter->tda_autodiscovery);
+     tdmi->tdmi_adapter->tda_autodiscovery, tdmi);
 
   return 0;
 }
@@ -778,7 +791,7 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, netname,
 		 "automatic mux discovery", 1, 1, NULL, tdmi->tdmi_conf.dmc_satconf,
-     tdmi->tdmi_adapter->tda_autodiscovery);
+     tdmi->tdmi_adapter->tda_autodiscovery, tdmi);
   
   return 0;
 }
@@ -817,7 +830,7 @@ dvb_table_terr_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   dvb_mux_create(tdmi->tdmi_adapter, &dmc, onid, tsid, netname,
                  "automatic mux discovery", 1, 1, NULL, NULL,
-                 tdmi->tdmi_adapter->tda_autodiscovery);
+                 tdmi->tdmi_adapter->tda_autodiscovery, tdmi);
   
   return 0;
 }
