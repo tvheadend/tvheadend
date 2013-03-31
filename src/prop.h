@@ -18,6 +18,8 @@ typedef struct property {
   const char *(*str_get)(void *ptr);
   void (*str_set)(void *ptr, const char *str);
 
+  void (*notify)(void *ptr);
+
 } property_t;
 
 

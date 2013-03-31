@@ -190,9 +190,9 @@ prop_seti(void *obj, const property_t *p, const char *value)
       mystrset(val, value);
     break;
   }
-
+  if(p->notify)
+    p->notify(obj);
   return 1;
-
 }
 
 

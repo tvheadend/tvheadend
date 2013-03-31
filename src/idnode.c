@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include "idnode.h"
+#include "notify.h"
 
 static int randfd = 0;
 
@@ -190,6 +191,21 @@ add_descriptors(struct idnode *self, const idclass_t *ic, htsmsg_t *p)
 /**
  *
  */
+static const char *
+idnode_get_title(idnode_t *in)
+{
+  if(in->in_class->ic_get_title != NULL) {
+    return in->in_class->ic_get_title(in);
+  } else {
+    return idnode_uuid_as_str(in);
+  }
+}
+
+
+
+/**
+ *
+ */
 htsmsg_t *
 idnode_serialize(struct idnode *self)
 {
@@ -199,12 +215,7 @@ idnode_serialize(struct idnode *self)
     m = c->ic_serialize(self);
   } else {
     m = htsmsg_create_map();
-
-    if(c->ic_get_title != NULL) {
-      htsmsg_add_str(m, "text", c->ic_get_title(self));
-    } else {
-      htsmsg_add_str(m, "text", idnode_uuid_as_str(self));
-    }
+    htsmsg_add_str(m, "text", idnode_get_title(self));
 
     htsmsg_t *p  = htsmsg_create_list();
     add_descriptors(self, c, p);
@@ -223,12 +234,24 @@ static void
 idnode_save(idnode_t *in)
 {
   const idclass_t *ic = in->in_class;
+
   for(; ic != NULL; ic = ic->ic_super) {
     if(ic->ic_save != NULL) {
       ic->ic_save(in);
-      return;
+      break;
     }
   }
+
+  // Tell about updated descriptors
+
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "id", idnode_uuid_as_str(in));
+
+  htsmsg_t *p  = htsmsg_create_list();
+  add_descriptors(in, in->in_class, p);
+  htsmsg_add_msg(m, "descriptors", p);
+
+  notify_by_msg("idnodeDescriptorsChanged", m);
 }
 
 
@@ -266,4 +289,18 @@ idnode_update_all_props(idnode_t *in,
     do_save |= prop_update_all(in, ic->ic_properties, getvalue, opaque);
   if(do_save)
     idnode_save(in);
+}
+
+
+/**
+ *
+ */
+void
+idnode_notify_title_changed(void *obj)
+{
+  idnode_t *in = obj;
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "id", idnode_uuid_as_str(in));
+  htsmsg_add_str(m, "text", idnode_get_title(in));
+  notify_by_msg("idnodeNameChanged", m);
 }

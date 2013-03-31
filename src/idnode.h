@@ -42,3 +42,6 @@ void idnode_update_all_props(idnode_t *in,
                              const char *(*getvalue)(void *opaque,
                                                      const char *key),
                              void *opaque);
+
+void idnode_notify_title_changed(void *obj);
+

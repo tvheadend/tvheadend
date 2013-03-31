@@ -2,7 +2,7 @@
 tvheadend.item_editor = function(item) {
 
   var fields = []
-  console.log(fields);
+
   for (var idx in item.descriptors) {
     var f = item.descriptors[idx];
     switch(f.type) {
@@ -96,6 +96,20 @@ tvheadend.dvb_networks = function() {
         panel.doLayout();
       }
     }
+  });
+
+  tvheadend.comet.on('idnodeNameChanged', function(o) {
+    var n = tree.getNodeById(o.id);
+    if(n) {
+      n.setText(o.text);
+    }
+  });
+
+  tvheadend.comet.on('idnodeDescriptorsChanged', function(o) {
+    var n = tree.getNodeById(o.id);
+    if(n) {
+      n.attributes.descriptors = o.descriptors;
+   }
   });
 
 
