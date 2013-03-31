@@ -387,8 +387,7 @@ static int
 http_cmd_post(http_connection_t *hc, htsbuf_queue_t *spill)
 {
   http_path_t *hp;
-  char *remain, *args, *v, *argv[2];
-  int n;
+  char *remain, *args, *v;
 
   /* Set keep-alive status */
   v = http_arg_get(&hc->hc_args, "Content-Length");
@@ -415,18 +414,17 @@ http_cmd_post(http_connection_t *hc, htsbuf_queue_t *spill)
 
  /* Parse content-type */
   v = http_arg_get(&hc->hc_args, "Content-Type");
-  if(v == NULL) {
-    http_error(hc, HTTP_STATUS_BAD_REQUEST);
-    return 0;
-  }
-  n = http_tokenize(v, argv, 2, ';');
-  if(n == 0) {
-    http_error(hc, HTTP_STATUS_BAD_REQUEST);
-    return 0;
-  }
+  if(v != NULL) {
+    char  *argv[2];
+    int n = http_tokenize(v, argv, 2, ';');
+    if(n == 0) {
+      http_error(hc, HTTP_STATUS_BAD_REQUEST);
+      return 0;
+    }
 
-  if(!strcmp(argv[0], "application/x-www-form-urlencoded"))
-    http_parse_get_args(hc, hc->hc_post_data);
+    if(!strcmp(argv[0], "application/x-www-form-urlencoded"))
+      http_parse_get_args(hc, hc->hc_post_data);
+  }
 
   hp = http_resolve(hc, &remain, &args);
   if(hp == NULL) {
