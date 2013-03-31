@@ -162,7 +162,6 @@ audioes_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 
   assert(smt == SMT_PACKET);
 
-fprintf(stderr,"audioes_muxer_write_pkt - index=%d, length=%d\n",pkt->pkt_componentindex, (int)pktbuf_len(pkt->pkt_payload));
   // TODO: pkt->pkt_componentindex
 
   if(pkt->pkt_componentindex != am->am_index) {
