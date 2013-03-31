@@ -175,6 +175,7 @@ dvb_service_save(service_t *t)
 
   lock_assert(&global_lock);
 
+  htsmsg_add_str(m, "uuid",  idnode_uuid_as_str(&t->s_id));
   htsmsg_add_u32(m, "service_id", t->s_dvb_service_id);
   htsmsg_add_u32(m, "pmt", t->s_pmt_pid);
   htsmsg_add_u32(m, "stype", t->s_servicetype);
@@ -246,7 +247,8 @@ dvb_service_load(dvb_mux_t *dm)
     if(htsmsg_get_u32(c, "pmt", &pmt))
       continue;
 
-    t = dvb_service_find(dm, sid, pmt, f->hmf_name);
+    const char *uuid = htsmsg_get_str(c, "uuid");
+    t = dvb_service_find(dm, sid, pmt, uuid);
 
     htsmsg_get_u32(c, "stype", &t->s_servicetype);
     if(htsmsg_get_u32(c, "scrambled", &u32))
@@ -285,6 +287,12 @@ dvb_service_load(dvb_mux_t *dm)
 
     if(s && u32)
       service_map_channel(t, channel_find_by_name(s, 1, 0), 0);
+
+    if(uuid == NULL) {
+      // If service config on disk lacked UUID (for whatever reason),
+      // write it back
+      dvb_service_save(t);
+    }
   }
   htsmsg_destroy(l);
 }
@@ -421,53 +429,6 @@ dvb_service_find2(dvb_mux_t *dm, uint16_t sid, int pmt_pid,
   pthread_mutex_unlock(&t->s_stream_mutex);
   return t;
 }
-
-#if 0
-/**
- *
- */
-static htsmsg_t *
-dvb_service_serialize(service_t *s)
-{
-  dvb_mux_t *dm = s->s_dvb_mux;
-  htsmsg_t *m = htsmsg_create_map();
-  char buf[100];
-
-  if(s->s_svcname) {
-    htsmsg_add_str(m, "text", s->s_svcname);
-  } else {
-    snprintf(buf, sizeof(buf), "Service-0x%04x",
-             s->s_dvb_service_id);
-    htsmsg_add_str(m, "text", buf);
-  }
-
-  htsmsg_add_u32(m, "enabled", s->s_enabled);
-  htsmsg_add_u32(m, "channel", s->s_channel_number);
-
-  htsmsg_add_u32(m, "sid", s->s_dvb_service_id);
-  htsmsg_add_u32(m, "pmt", s->s_pmt_pid);
-  htsmsg_add_u32(m, "pcr", s->s_pcr_pid);
-
-  htsmsg_add_str(m, "type", service_servicetype_txt(s));
-
-  htsmsg_add_str(m, "svcname", s->s_svcname ?: "");
-  htsmsg_add_str(m, "provider", s->s_provider ?: "");
-
-  htsmsg_add_str(m, "network", dm->dm_network_name ?: "");
-
-  htsmsg_add_str(m, "mux", dvb_mux_nicefreq(dm));
-
-  if(s->s_ch != NULL)
-    htsmsg_add_str(m, "channelname", s->s_ch->ch_name);
-
-  if(s->s_dvb_charset != NULL)
-    htsmsg_add_str(m, "dvb_charset", s->s_dvb_charset);
-
-  htsmsg_add_u32(m, "dvb_eit_enable", s->s_dvb_eit_enable);
-
-  return m;
-}
-#endif
 
 
 /**

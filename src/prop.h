@@ -22,8 +22,14 @@ typedef struct property {
 
 
 
-void prop_read_values(void *ptr, const property_t *p, htsmsg_t *m);
-htsmsg_t *prop_get_values(void *ptr, const property_t *p);
-void prop_read_names(const property_t *p, htsmsg_t *m);
-htsmsg_t *prop_get_names(const property_t *p);
+void prop_add_descriptors_to_msg(void *obj, const property_t *p, htsmsg_t *msg);
+
 void prop_write_values(void *ptr, const property_t *pl, htsmsg_t *m);
+
+void prop_read_values(void *obj, const property_t *p, htsmsg_t *m);
+
+int prop_set(void *obj, const property_t *p, const char *key, const char *val);
+
+int prop_update_all(void *obj, const property_t *p,
+                     const char *(*getvalue)(void *opaque, const char *key),
+                     void *opaque);

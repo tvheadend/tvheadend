@@ -684,51 +684,8 @@ extjs_list_dvb_adapters(htsmsg_t *array)
 static int
 extjs_dvbnetworks(http_connection_t *hc, const char *remain, void *opaque)
 {
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  const char *s = http_arg_get(&hc->hc_req_args, "node");
-  htsmsg_t *out = NULL;
-
-  if(s == NULL)
-    return HTTP_STATUS_BAD_REQUEST;
-
-  pthread_mutex_lock(&global_lock);
-
-  if(http_access_verify(hc, ACCESS_ADMIN)) {
-    pthread_mutex_unlock(&global_lock);
-    return HTTP_STATUS_UNAUTHORIZED;
-  }
-
-  out = htsmsg_create_list();
-  idnode_t **v;
-
-  if(!strcmp(s, "root")) {
-    v = dvb_network_root();
-  } else {
-    idnode_t *n = idnode_find(s, NULL);
-    v = n != NULL && n->in_class->ic_get_childs != NULL ?
-      n->in_class->ic_get_childs(n) : NULL;
-  }
-
-  if(v != NULL) {
-    int i;
-    for(i = 0; v[i] != NULL; i++) {
-      htsmsg_t *m = idnode_serialize(v[i]);
-      if(v[i]->in_class->ic_get_childs == NULL)
-        htsmsg_add_u32(m, "leaf", 1);
-      htsmsg_add_msg(out, NULL, m);
-    }
-  }
-
-  pthread_mutex_unlock(&global_lock);
-
-  free(v);
-
-  htsmsg_json_serialize(out, hq, 0);
-  htsmsg_destroy(out);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;
+  return extjs_get_idnode(hc, remain, opaque, &dvb_network_root);
 }
-
 
 
 /**

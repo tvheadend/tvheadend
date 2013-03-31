@@ -25,13 +25,24 @@
 #include "settings.h"
 #include "dvb_support.h"
 
+
+const static struct strtab typetab[] = {
+  {"DVB-T", FE_OFDM},
+  {"DVB-C", FE_QAM},
+  {"DVB-S", FE_QPSK},
+  {"ATSC",  FE_ATSC},
+};
+
+
 struct dvb_network_list dvb_networks;
 
 static idnode_t **dvb_network_get_childs(struct idnode *self);
+static void dvb_network_save(idnode_t *in);
 
 static const idclass_t dvb_network_class = {
   .ic_class = "dvbnetwork",
   .ic_get_childs = dvb_network_get_childs,
+  .ic_save = dvb_network_save,
   .ic_properties = (const property_t[]){
     {
       "autodiscovery", "Auto discovery", PT_BOOL,
@@ -42,11 +53,7 @@ static const idclass_t dvb_network_class = {
     }, {
       "disable_pmt_monitor", "Disable PMT monitor", PT_BOOL,
       offsetof(dvb_network_t, dn_disable_pmt_monitor)
-    }, {
-      "disable_pmt_monitor", "Disable PMT monitor", PT_BOOL,
-      offsetof(dvb_network_t, dn_disable_pmt_monitor)
-    }, {
-    }},
+    }, {}},
 };
 
 /**
@@ -116,15 +123,19 @@ dvb_network_get_childs(struct idnode *self)
 static void
 dvb_network_load(htsmsg_t *m, const char *uuid)
 {
-  uint32_t fetype;
+  const char *s = htsmsg_get_str(m, "type");
+  if(s == NULL)
+    return;
 
-  if(htsmsg_get_u32(m, "fetype", &fetype))
+  int fetype = str2val(s, typetab);
+  if(fetype == -1)
     return;
 
   dvb_network_t *dn = dvb_network_create(fetype, uuid);
   if(dn == NULL)
     return;
 
+  htsmsg_delete_field(m, "type");
   prop_write_values(dn, dvb_network_class.ic_properties, m);
   dvb_mux_load(dn);
   dvb_network_schedule_initial_scan(dn);
@@ -135,16 +146,19 @@ dvb_network_load(htsmsg_t *m, const char *uuid)
  *
  */
 static void
-dvb_network_save(dvb_network_t *dn)
+dvb_network_save(idnode_t *in)
 {
+  dvb_network_t *dn = (dvb_network_t *)in;
   htsmsg_t *m = htsmsg_create_map();
 
   lock_assert(&global_lock);
 
-  prop_read_values(dn, dvb_network_class.ic_properties, m);
+  htsmsg_add_str(m, "type", val2str(dn->dn_fe_type, typetab));
+  prop_read_values(in, dvb_network_class.ic_properties, m);
 
   hts_settings_save(m, "dvb/networks/%s/config",
-                    idnode_uuid_as_str(&dn->dn_id));
+                    idnode_uuid_as_str(in));
+
   htsmsg_destroy(m);
 }
 
@@ -184,11 +198,6 @@ dvb_network_init(void)
 {
   htsmsg_t *l, *c;
   htsmsg_field_t *f;
-
-  if(0) {
-    dvb_network_save(dvb_network_create(FE_QAM, NULL));
-    exit(0);
-  }
 
   if((l = hts_settings_load_r(1, "dvb/networks")) == NULL)
     return;

@@ -65,6 +65,7 @@ static const idclass_t dvb_mux_class = {
   .ic_class = "dvbmux",
   .ic_get_title = dvb_mux_get_title,
   .ic_get_childs = dvb_mux_get_childs,
+  .ic_save = (void *)dvb_mux_save,
   .ic_properties = (const property_t[]){
     {
       "enabled", "Enabled", PT_BOOL,
@@ -517,6 +518,7 @@ dvb_mux_save(dvb_mux_t *dm)
   htsmsg_t *m = htsmsg_create_map();
 
   htsmsg_add_u32(m, "enabled", dm->dm_enabled);
+  htsmsg_add_str(m, "uuid",  idnode_uuid_as_str(&dm->dm_id));
 
   htsmsg_add_u32(m, "transportstreamid", dm->dm_transport_stream_id);
   htsmsg_add_u32(m, "originalnetworkid", dm->dm_network_id);
@@ -727,14 +729,20 @@ dvb_mux_create_by_msg(dvb_network_t *dn, htsmsg_t *m, const char *fname)
   if(htsmsg_get_u32(m, "enabled", &enabled))
     enabled = 1;
 
+  const char *uuid = htsmsg_get_str(m, "uuid");
   dm = dvb_mux_create(dn, &dmc,
                       onid, tsid, htsmsg_get_str(m, "network"), NULL, enabled,
                       htsmsg_get_u32_or_default(m, "needscan", 1),
-                      htsmsg_get_str(m, "uuid"));
+                      uuid);
   if(dm != NULL) {
 
     if((s = htsmsg_get_str(m, "default_authority")))
       dm->dm_default_authority = strdup(s);
+
+
+    if(uuid == NULL)
+      // If mux didn't have UUID, write it to make sure UUID is stable
+      dvb_mux_save(dm);
   }
   return NULL;
 }

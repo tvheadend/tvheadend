@@ -1900,6 +1900,103 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+
+/**
+ *
+ */
+int
+extjs_get_idnode(http_connection_t *hc, const char *remain, void *opaque,
+                 idnode_t **(*rootfn)(void))
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  const char *s = http_arg_get(&hc->hc_req_args, "node");
+  htsmsg_t *out = NULL;
+
+  if(s == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(http_access_verify(hc, ACCESS_ADMIN)) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+
+  out = htsmsg_create_list();
+  idnode_t **v;
+
+  if(!strcmp(s, "root")) {
+    v = rootfn();
+  } else {
+    idnode_t *n = idnode_find(s, NULL);
+    v = n != NULL && n->in_class->ic_get_childs != NULL ?
+      n->in_class->ic_get_childs(n) : NULL;
+  }
+
+  if(v != NULL) {
+    int i;
+    for(i = 0; v[i] != NULL; i++) {
+      htsmsg_t *m = idnode_serialize(v[i]);
+      if(v[i]->in_class->ic_get_childs == NULL)
+        htsmsg_add_u32(m, "leaf", 1);
+      htsmsg_add_msg(out, NULL, m);
+    }
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  free(v);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+}
+
+
+static const char *
+get_prop_value(void *opaque, const char *key)
+{
+  http_connection_t *hc = opaque;
+  return http_arg_get(&hc->hc_req_args, key);
+}
+
+/**
+ *
+ */
+static int
+extjs_item_update(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  htsmsg_t *out = NULL;
+
+  if(remain == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  pthread_mutex_lock(&global_lock);
+
+  idnode_t *n = idnode_find(remain, NULL);
+
+  if(n == NULL) {
+    pthread_mutex_unlock(&global_lock);
+    return 404;
+  }
+
+  idnode_update_all_props(n, get_prop_value, hc);
+
+  pthread_mutex_unlock(&global_lock);
+
+  out = htsmsg_create_map();
+  htsmsg_add_u32(out, "success", 1);
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+}
+
+
+
+
 /**
  * WEB user interface
  */
@@ -1926,6 +2023,7 @@ extjs_start(void)
   http_path_add("/iptv/services",  NULL, extjs_iptvservices,   ACCESS_ADMIN);
   http_path_add("/servicedetails", NULL, extjs_servicedetails, ACCESS_ADMIN);
   http_path_add("/tv/adapter",     NULL, extjs_tvadapter,      ACCESS_ADMIN);
+  http_path_add("/item/update",    NULL, extjs_item_update,    ACCESS_ADMIN);
 
 #if ENABLE_LINUXDVB
   extjs_start_dvb();

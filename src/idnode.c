@@ -167,6 +167,27 @@ idnode_unlink(idnode_t *in)
 
 
 /**
+ * Recursive to get superclass nodes first
+ */
+static void
+add_descriptors(struct idnode *self, const idclass_t *ic, htsmsg_t *p)
+{
+  if(ic->ic_super != NULL)
+    add_descriptors(self, ic->ic_super, p);
+
+  if(TAILQ_FIRST(&p->hm_fields) != NULL) {
+    // Only add separator if not empty
+    htsmsg_t *m = htsmsg_create_map();
+    htsmsg_add_str(m, "caption", ic->ic_caption ?: ic->ic_class);
+    htsmsg_add_str(m, "type", "separator");
+    htsmsg_add_msg(p, NULL, m);
+  }
+
+  prop_add_descriptors_to_msg(self, ic->ic_properties, p);
+}
+
+
+/**
  *
  */
 htsmsg_t *
@@ -179,24 +200,70 @@ idnode_serialize(struct idnode *self)
   } else {
     m = htsmsg_create_map();
 
-    htsmsg_t *p  = htsmsg_create_map();
-    htsmsg_t *pn = htsmsg_create_map();
-
     if(c->ic_get_title != NULL) {
       htsmsg_add_str(m, "text", c->ic_get_title(self));
     } else {
       htsmsg_add_str(m, "text", idnode_uuid_as_str(self));
     }
 
-    for(;c != NULL; c = c->ic_super) {
-      prop_read_values(self, c->ic_properties, p);
-      prop_read_names(c->ic_properties, pn);
-    }
+    htsmsg_t *p  = htsmsg_create_list();
+    add_descriptors(self, c, p);
 
-    htsmsg_add_msg(m, "properties", p);
-    htsmsg_add_msg(m, "propertynames", pn);
+    htsmsg_add_msg(m, "descriptors", p);
 
     htsmsg_add_str(m, "id", idnode_uuid_as_str(self));
   }
   return m;
+}
+
+/**
+ *
+ */
+static void
+idnode_save(idnode_t *in)
+{
+  const idclass_t *ic = in->in_class;
+  for(; ic != NULL; ic = ic->ic_super) {
+    if(ic->ic_save != NULL) {
+      ic->ic_save(in);
+      return;
+    }
+  }
+}
+
+
+/**
+ *
+ */
+void
+idnode_set_prop(idnode_t *in, const char *key, const char *value)
+{
+  const idclass_t *ic = in->in_class;
+  int do_save = 0;
+  for(;ic != NULL; ic = ic->ic_super) {
+    int x = prop_set(in, ic->ic_properties, key, value);
+    if(x == -1)
+      continue;
+    do_save |= x;
+    break;
+  }
+  if(do_save)
+    idnode_save(in);
+}
+
+
+/**
+ *
+ */
+void
+idnode_update_all_props(idnode_t *in,
+                        const char *(*getvalue)(void *opaque, const char *key),
+                        void *opaque)
+{
+  const idclass_t *ic = in->in_class;
+  int do_save = 0;
+  for(;ic != NULL; ic = ic->ic_super)
+    do_save |= prop_update_all(in, ic->ic_properties, getvalue, opaque);
+  if(do_save)
+    idnode_save(in);
 }

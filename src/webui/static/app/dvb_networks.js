@@ -1,14 +1,66 @@
 
-
-
 tvheadend.item_editor = function(item) {
-  var propsGrid = new Ext.grid.PropertyGrid({
-    flex:1,
-    padding: 5,
-    propertyNames: item.propertynames,
-    source: item.properties
+
+  var fields = []
+  console.log(fields);
+  for (var idx in item.descriptors) {
+    var f = item.descriptors[idx];
+    switch(f.type) {
+    case 'str':
+      fields.push({
+        fieldLabel: f.caption,
+        name: f.id,
+        value: f.value
+      });
+      break;
+
+    case 'bool':
+      fields.push({
+        xtype: 'checkbox',
+        fieldLabel: f.caption,
+        name: f.id,
+        checked: f.value
+      });
+      break;
+
+    case 'separator':
+      fields.push({
+        xtype: 'label',
+        fieldLabel: f.caption,
+      });
+      break;
+    }
+  }
+
+  var panel = new Ext.FormPanel({
+    labelWidth: 75, // label settings here cascade unless overridden
+    url:'save-form.php',
+    frame:true,
+    title: 'Parameters',
+    bodyStyle:'padding:5px 5px 0',
+    width: 350,
+    defaults: {width: 230},
+    defaultType: 'textfield',
+    items: fields,
+
+    buttons: [{
+      text: 'Save',
+      handler: function(){
+        if(panel.getForm().isValid()){
+          panel.getForm().submit({
+            url: 'item/update/' + item.id,
+	    waitMsg : 'Saving Data...'
+          });
+        }
+      }
+    },{
+      text: 'Reset',
+      handler: function(){
+        panel.getForm().reset();
+      }
+    }]
   });
-  return propsGrid;
+  return panel;
 }
 
 

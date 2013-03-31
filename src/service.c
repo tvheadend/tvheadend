@@ -52,10 +52,12 @@
 static void service_data_timeout(void *aux);
 static const char *service_channel_get(void *obj);
 static void service_channel_set(void *obj, const char *str);
-
+static void service_save(struct idnode *self);
 
 const idclass_t service_class = {
   .ic_class = "service",
+  .ic_caption = "Service",
+  .ic_save = service_save,
   .ic_properties = (const property_t[]){
     {
       "channel", "Channel", PT_STR,
@@ -675,7 +677,7 @@ static const char *service_channel_get(void *obj)
 static void
 service_channel_set(void *obj, const char *str)
 {
-  service_map_channel(obj, str ? channel_find_by_name(str, 1, 0) : NULL, 1);
+  service_map_channel(obj, str ? channel_find_by_name(str, 1, 0) : NULL, 0);
 }
 
 
@@ -930,6 +932,16 @@ service_request_save(service_t *t, int restart)
   pthread_mutex_unlock(&pending_save_mutex);
 }
 
+
+/**
+ *
+ */
+static void
+service_save(struct idnode *self)
+{
+  service_t *s = (service_t *)self;
+  s->s_config_save(s);
+}
 
 /**
  *
