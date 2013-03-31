@@ -110,6 +110,8 @@ typedef struct dvb_network {
   uint32_t dn_nitoid;
   uint32_t dn_skip_checksubscr;
 
+  char *dn_name; // User configured name
+
   struct th_dvb_adapter_list dn_adapters;
 
 } dvb_network_t;

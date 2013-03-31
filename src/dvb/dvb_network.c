@@ -37,14 +37,20 @@ const static struct strtab typetab[] = {
 struct dvb_network_list dvb_networks;
 
 static idnode_t **dvb_network_get_childs(struct idnode *self);
+static const char *dvb_network_get_title(struct idnode *self);
 static void dvb_network_save(idnode_t *in);
 
 static const idclass_t dvb_network_class = {
   .ic_class = "dvbnetwork",
   .ic_get_childs = dvb_network_get_childs,
+  .ic_get_title = dvb_network_get_title,
   .ic_save = dvb_network_save,
   .ic_properties = (const property_t[]){
     {
+      "name", "Name", PT_STR,
+      offsetof(dvb_network_t, dn_name),
+      .notify = &idnode_notify_title_changed,
+    }, {
       "autodiscovery", "Auto discovery", PT_BOOL,
       offsetof(dvb_network_t, dn_autodiscovery)
     }, {
@@ -62,6 +68,7 @@ static const idclass_t dvb_network_class = {
 dvb_network_t *
 dvb_network_create(int fe_type, const char *uuid)
 {
+  char defname[64];
   dvb_network_t *dn = calloc(1, sizeof(dvb_network_t));
   if(idnode_insert(&dn->dn_id, uuid, &dvb_network_class)) {
     free(dn);
@@ -73,10 +80,23 @@ dvb_network_create(int fe_type, const char *uuid)
   TAILQ_INIT(&dn->dn_initial_scan_current_queue);
 
   dn->dn_autodiscovery = fe_type != FE_QPSK;
+  snprintf(defname, sizeof(defname), "%s network", val2str(fe_type, typetab));
+  dn->dn_name = strdup(defname);
   LIST_INSERT_HEAD(&dvb_networks, dn, dn_global_link);
   return dn;
 }
 
+
+
+/**
+ *
+ */
+static const char *
+dvb_network_get_title(struct idnode *self)
+{
+  dvb_network_t *dn = (dvb_network_t *)self;
+  return dn->dn_name;
+}
 
 
 /**
