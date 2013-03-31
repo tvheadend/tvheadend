@@ -23,6 +23,7 @@
 #include "muxer.h"
 #include "muxer/muxer_tvh.h"
 #include "muxer/muxer_pass.h"
+#include "muxer/muxer_audioes.h"
 #if CONFIG_LIBAV
 #include "muxer/muxer_libav.h"
 #endif
@@ -37,6 +38,7 @@ static struct strtab container_audio_mime[] = {
   { "audio/mpeg",               MC_MPEGPS },
   { "application/octet-stream", MC_PASS },
   { "application/octet-stream", MC_RAW },
+  { "audio/mpeg",               MC_AUDIOES },
 };
 
 
@@ -63,6 +65,7 @@ static struct strtab container_name[] = {
   { "mpegps",   MC_MPEGPS },
   { "pass",     MC_PASS },
   { "raw",      MC_RAW },
+  { "audioes",  MC_AUDIOES },
 };
 
 
@@ -76,6 +79,7 @@ static struct strtab container_audio_file_suffix[] = {
   { "mpeg", MC_MPEGPS },
   { "bin",  MC_PASS },
   { "bin",  MC_RAW },
+  { "mp2",  MC_AUDIOES }, /* Or maybe ac3 or adts */
 };
 
 
@@ -89,6 +93,7 @@ static struct strtab container_video_file_suffix[] = {
   { "mpeg", MC_MPEGPS },
   { "bin",  MC_PASS },
   { "bin",  MC_RAW },
+  { NULL,   MC_AUDIOES },
 };
 
 
@@ -182,6 +187,13 @@ muxer_container_list(htsmsg_t *array)
   c++;
 #endif
 
+  mc = htsmsg_create_map();
+  htsmsg_add_str(mc, "name",        muxer_container_type2txt(MC_AUDIOES));
+  htsmsg_add_str(mc, "description", "Audio-only (raw mp2/ac3/adts stream)");
+  htsmsg_add_msg(array, NULL, mc);
+  c++;
+
+
   return c;
 }
 
@@ -244,6 +256,9 @@ muxer_create(muxer_container_type_t mc)
   if(!m)
     m = lav_muxer_create(mc);
 #endif
+
+  if(!m)
+    m = audioes_muxer_create(mc);
 
   if(!m)
     tvhlog(LOG_ERR, "mux", "Can't find a muxer that supports '%s' container",
