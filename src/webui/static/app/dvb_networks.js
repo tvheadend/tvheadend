@@ -3,8 +3,8 @@ tvheadend.item_editor = function(item) {
 
   var fields = []
 
-  for (var idx in item.descriptors) {
-    var f = item.descriptors[idx];
+  for (var idx in item.params) {
+    var f = item.params[idx];
     switch(f.type) {
     case 'str':
       fields.push({
@@ -105,10 +105,10 @@ tvheadend.dvb_networks = function() {
     }
   });
 
-  tvheadend.comet.on('idnodeDescriptorsChanged', function(o) {
+  tvheadend.comet.on('idnodeParamsChanged', function(o) {
     var n = tree.getNodeById(o.id);
     if(n) {
-      n.attributes.descriptors = o.descriptors;
+      n.attributes.params = o.params;
    }
   });
 

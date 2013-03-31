@@ -171,10 +171,10 @@ idnode_unlink(idnode_t *in)
  * Recursive to get superclass nodes first
  */
 static void
-add_descriptors(struct idnode *self, const idclass_t *ic, htsmsg_t *p)
+add_params(struct idnode *self, const idclass_t *ic, htsmsg_t *p)
 {
   if(ic->ic_super != NULL)
-    add_descriptors(self, ic->ic_super, p);
+    add_params(self, ic->ic_super, p);
 
   if(TAILQ_FIRST(&p->hm_fields) != NULL) {
     // Only add separator if not empty
@@ -184,7 +184,7 @@ add_descriptors(struct idnode *self, const idclass_t *ic, htsmsg_t *p)
     htsmsg_add_msg(p, NULL, m);
   }
 
-  prop_add_descriptors_to_msg(self, ic->ic_properties, p);
+  prop_add_params_to_msg(self, ic->ic_properties, p);
 }
 
 
@@ -218,9 +218,9 @@ idnode_serialize(struct idnode *self)
     htsmsg_add_str(m, "text", idnode_get_title(self));
 
     htsmsg_t *p  = htsmsg_create_list();
-    add_descriptors(self, c, p);
+    add_params(self, c, p);
 
-    htsmsg_add_msg(m, "descriptors", p);
+    htsmsg_add_msg(m, "params", p);
 
     htsmsg_add_str(m, "id", idnode_uuid_as_str(self));
   }
@@ -242,16 +242,16 @@ idnode_save(idnode_t *in)
     }
   }
 
-  // Tell about updated descriptors
+  // Tell about updated parameters
 
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "id", idnode_uuid_as_str(in));
 
   htsmsg_t *p  = htsmsg_create_list();
-  add_descriptors(in, in->in_class, p);
-  htsmsg_add_msg(m, "descriptors", p);
+  add_params(in, in->in_class, p);
+  htsmsg_add_msg(m, "params", p);
 
-  notify_by_msg("idnodeDescriptorsChanged", m);
+  notify_by_msg("idnodeParamsChanged", m);
 }
 
 

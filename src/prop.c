@@ -135,7 +135,7 @@ const static struct strtab typetab[] = {
  *
  */
 void
-prop_add_descriptors_to_msg(void *obj, const property_t *p, htsmsg_t *msg)
+prop_add_params_to_msg(void *obj, const property_t *p, htsmsg_t *msg)
 {
   if(p == NULL)
     return;

@@ -24,7 +24,7 @@ typedef struct property {
 
 
 
-void prop_add_descriptors_to_msg(void *obj, const property_t *p, htsmsg_t *msg);
+void prop_add_params_to_msg(void *obj, const property_t *p, htsmsg_t *msg);
 
 void prop_write_values(void *ptr, const property_t *pl, htsmsg_t *m);
 
