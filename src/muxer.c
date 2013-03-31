@@ -189,7 +189,7 @@ muxer_container_list(htsmsg_t *array)
 
   mc = htsmsg_create_map();
   htsmsg_add_str(mc, "name",        muxer_container_type2txt(MC_AUDIOES));
-  htsmsg_add_str(mc, "description", "Audio-only (raw mp2/ac3/adts stream)");
+  htsmsg_add_str(mc, "description", "Audio-only (raw mp2/ac3/adts)");
   htsmsg_add_msg(array, NULL, mc);
   c++;
 
