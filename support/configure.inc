@@ -175,12 +175,12 @@ function show_help
     val=${opt#*:}
     opt=${opt%:*}
     if [ "$val" == "yes" ]; then
-      printf "  $fmt Disable ${opt} [${val}]\n" "--disable-${opt}"
+      printf "  $fmt Disable ${opt}\n" "--disable-${opt}"
     elif [ "$val" == "no" ]; then
-      printf "  $fmt Enable ${opt} [${val}]\n" "--enable-${opt}"
+      printf "  $fmt Enable ${opt}\n" "--enable-${opt}"
     else
-      printf "  $fmt Disable ${opt} [${val}]\n" "--disable-${opt}"
-      printf "  $fmt Enable ${opt} [${val}]\n" "--enable-${opt}"
+      printf "  $fmt Disable ${opt}\n" "--disable-${opt}"
+      printf "  $fmt Enable ${opt}\n" "--enable-${opt}"
     fi
   done
   exit 0

@@ -58,9 +58,6 @@ static struct strtab muxfestatustab[] = {
   { "OK",           TDMI_FE_OK },
 };
 
-static void tdmi_set_enable(th_dvb_mux_instance_t *tdmi, int enabled);
-
-
 /**
  *
  */
@@ -856,6 +853,9 @@ dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *networkname)
   if (!networkname || !*networkname)
     return;
 
+  if (!strcmp(tdmi->tdmi_network ?: "", networkname))
+    return;
+
   free(tdmi->tdmi_network);
   tdmi->tdmi_network = strdup(networkname);
   dvb_mux_save(tdmi);
@@ -879,8 +879,9 @@ dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid, int force)
     if (tdmi->tdmi_transport_stream_id != 0xFFFF || tsid == 0xFFFF)
       return;
 
-  tdmi->tdmi_transport_stream_id = tsid;
- 
+  if (tdmi->tdmi_transport_stream_id == tsid)
+    return;
+
   dvb_mux_save(tdmi);
 
   m = htsmsg_create_map();
@@ -900,6 +901,9 @@ dvb_mux_set_onid(th_dvb_mux_instance_t *tdmi, uint16_t onid, int force)
   if (force)
     if (tdmi->tdmi_network_id != 0 || onid == 0)
       return;
+  
+  if (tdmi->tdmi_network_id == onid)
+    return;
 
   tdmi->tdmi_network_id = onid;
  
@@ -915,13 +919,13 @@ dvb_mux_set_onid(th_dvb_mux_instance_t *tdmi, uint16_t onid, int force)
 /**
  *
  */
-static void
+static int
 tdmi_set_enable(th_dvb_mux_instance_t *tdmi, int enabled)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   
   if(tdmi->tdmi_enabled == enabled)
-    return;
+    return 0;
 
   if(tdmi->tdmi_enabled) {
 
@@ -940,6 +944,7 @@ tdmi_set_enable(th_dvb_mux_instance_t *tdmi, int enabled)
     mux_link_initial(tda, tdmi);
 
   subscription_reschedule();
+  return 1;
 }
 
 /**
@@ -948,8 +953,8 @@ tdmi_set_enable(th_dvb_mux_instance_t *tdmi, int enabled)
 void
 dvb_mux_set_enable(th_dvb_mux_instance_t *tdmi, int enabled)
 {
-  tdmi_set_enable(tdmi, enabled);
-  dvb_mux_save(tdmi);
+  if (tdmi_set_enable(tdmi, enabled))
+    dvb_mux_save(tdmi);
 }
 
 

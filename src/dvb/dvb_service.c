@@ -86,18 +86,21 @@ dvb_service_start(service_t *t, unsigned int weight, int force_start)
     dvb_adapter_clean(tda);
   }
 
+  r = dvb_fe_tune(t->s_dvb_mux_instance, "Transport start");
+
   pthread_mutex_lock(&tda->tda_delivery_mutex);
 
-  r = dvb_fe_tune(t->s_dvb_mux_instance, "Transport start");
   if(!r)
     LIST_INSERT_HEAD(&tda->tda_transports, t, s_active_link);
 
   pthread_mutex_unlock(&tda->tda_delivery_mutex);
 
-  if(!r)
-    tda->tda_open_service(tda, t);
+  if (tda->tda_locked) {
+    if(!r)
+      tda->tda_open_service(tda, t);
 
-  dvb_table_add_pmt(t->s_dvb_mux_instance, t->s_pmt_pid);
+    dvb_table_add_pmt(t->s_dvb_mux_instance, t->s_pmt_pid);
+  }
 
   return r;
 }

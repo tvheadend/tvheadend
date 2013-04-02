@@ -113,14 +113,20 @@ typedef struct gtimer {
   LIST_ENTRY(gtimer) gti_link;
   gti_callback_t *gti_callback;
   void *gti_opaque;
-  time_t gti_expire;
+  struct timespec gti_expire;
 } gtimer_t;
 
 void gtimer_arm(gtimer_t *gti, gti_callback_t *callback, void *opaque,
 		int delta);
 
+void gtimer_arm_ms(gtimer_t *gti, gti_callback_t *callback, void *opaque,
+  long delta_ms);
+
 void gtimer_arm_abs(gtimer_t *gti, gti_callback_t *callback, void *opaque,
 		    time_t when);
+
+void gtimer_arm_abs2(gtimer_t *gti, gti_callback_t *callback, void *opaque,
+  struct timespec *when);
 
 void gtimer_disarm(gtimer_t *gti);
 
