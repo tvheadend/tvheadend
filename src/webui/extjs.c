@@ -1395,8 +1395,8 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     out = htsmsg_create_map();
     htsmsg_add_u32(out, "success", 1);
   
-  } else if (!strcmp(op,"checkConflictEvent")){
-    dvr_query_result_t dqr;
+  } else if (!strcmp(op,"checkConflictEvent")) {
+    conflict_state_t conflict_state;
     s = http_arg_get(&hc->hc_req_args, "eventId");
     if((e = epg_broadcast_find_by_id(atoi(s), NULL)) == NULL) {
       pthread_mutex_unlock(&global_lock);
@@ -1404,20 +1404,25 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     }
     
     out = htsmsg_create_map();
+    conflict_check_epg( e, &conflict_state);
     
-    if (conflict_check_epg(e, &dqr))
-    {
-        htsmsg_t *array = extjs_dqr_to_msg(&dqr, 0, dqr.dqr_entries);
-        
-        htsmsg_add_msg(out, "entries", array);
-        dvr_query_free(&dqr);
-        htsmsg_add_u32(out, "conflict", 1);
-    }
-    else
-    {
-        htsmsg_add_u32(out, "conflict", 0);
-    }
+    if (conflict_state.status != CONFLICT_NO_CONFLICT) {
       
+      htsmsg_t *suggestion = htsmsg_create_list();
+      int c;
+      for (c = 0; c  < conflict_state.suggestion_count; c ++) {
+          htsmsg_t *array = extjs_dqr_to_msg(&conflict_state.suggestions[c], 0, 
+                                             conflict_state.suggestions[c].dqr_entries);
+          htsmsg_add_msg(suggestion, NULL, array);
+      }
+      htsmsg_add_msg(out, "suggestions", suggestion);
+      htsmsg_add_u32(out, "conflict", 1);
+    } else {
+        
+      htsmsg_add_u32(out, "conflict", 0);
+    }
+    
+    conflict_free_state(&conflict_state);
   } else {
 
     pthread_mutex_unlock(&global_lock);

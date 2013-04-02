@@ -30,6 +30,7 @@
 #include "queue.h"
 #include "service.h"
 #include "dvb/dvb.h"
+#include "dvr/dvr.h"
 
 struct device{
     LIST_ENTRY(device) link;
@@ -38,11 +39,13 @@ struct device{
     
     service_t **services;
     int service_count;
+    
+    dvr_query_result_t entries;
 };
 
 LIST_HEAD(device_list, device);
 
-struct conflict_state{
+struct channel_alloc_state{
     struct device ip_dev;
     struct device_list v4l_devs;
     struct device_list dvb_devs;
@@ -106,11 +109,10 @@ static void conflict_dev_add_service(struct device *dev, service_t *service)
     dev->services[dev->service_count - 1] = service;
 }
 
-static bool conflict_dev_dvb_alloc(struct device_list *dev_list, service_t *service)
+static struct device *conflict_dev_dvb_alloc(struct device_list *dev_list, service_t *service)
 {
-    struct device *device;
+    struct device *device = NULL, *result=NULL;
     bool found = false;
-    bool allocated = false;
 
     LIST_FOREACH(device, dev_list, link)
     {
@@ -120,7 +122,7 @@ static bool conflict_dev_dvb_alloc(struct device_list *dev_list, service_t *serv
             if (device->services[0]->s_dvb_mux_instance == service->s_dvb_mux_instance)
             {
                 conflict_dev_add_service(device, service);
-                allocated = true;
+                result = device;
             }
             break;
         }
@@ -128,23 +130,21 @@ static bool conflict_dev_dvb_alloc(struct device_list *dev_list, service_t *serv
     
     if (!found)
     {
-        device = calloc(1, sizeof(struct device));
-        device->device_ptr = service->s_dvb_mux_instance->tdmi_adapter;
-        device->service_count = 1;
-        device->services = calloc(1, sizeof(service_t *));
-        device->services[0] = service;
-        LIST_INSERT_HEAD(dev_list, device, link);
-        allocated = true;
+        result = calloc(1, sizeof(struct device));
+        result->device_ptr = service->s_dvb_mux_instance->tdmi_adapter;
+        result->service_count = 1;
+        result->services = calloc(1, sizeof(service_t *));
+        result->services[0] = service;
+        LIST_INSERT_HEAD(dev_list, result, link);
     }
-    return allocated;
+    return result;
     
 }
 
-static bool conflict_dev_v4l_alloc(struct device_list *dev_list, service_t *service)
+static struct device *conflict_dev_v4l_alloc(struct device_list *dev_list, service_t *service)
 {
-    struct device *device;
+    struct device *device = NULL;
     bool found = false;
-    bool allocated = false;
     
     LIST_FOREACH(device, dev_list, link)
     {
@@ -163,52 +163,103 @@ static bool conflict_dev_v4l_alloc(struct device_list *dev_list, service_t *serv
         device->services = calloc(1, sizeof(service_t *));
         device->services[0] = service;
         LIST_INSERT_HEAD(dev_list, device, link);
-        allocated = true;
     }
-    return allocated;
+    return device;
 }
 
-static bool conflict_allocate_service(struct conflict_state *state, channel_t *channel)
+static struct device *conflict_allocate_service(struct channel_alloc_state *state, channel_t *channel)
 {
     service_t **services;
     int service_cnt = 0, i = 0;
-    bool allocated = false;
+    struct device *device = NULL;
     
     
     services = service_get_sorted_list(channel, &service_cnt);
     for (i = 0;i < service_cnt; i ++)
     {
-        bool dev_found = false;
         switch (services[i]->s_type)
         {
             case SERVICE_TYPE_DVB:
-                dev_found = conflict_dev_dvb_alloc(&state->dvb_devs, services[i]);
+                device = conflict_dev_dvb_alloc(&state->dvb_devs, services[i]);
                 break;
             case SERVICE_TYPE_IPTV:
                 conflict_dev_add_service(&state->ip_dev, services[i]);
-                dev_found = true;
+                device = &state->ip_dev;
                 break;
             case SERVICE_TYPE_V4L:
-                dev_found = conflict_dev_v4l_alloc(&state->v4l_devs, services[i]);
+                device = conflict_dev_v4l_alloc(&state->v4l_devs, services[i]);
                 break;
         }
-        if (dev_found)
+        if (device)
         {
-            allocated = true;
             break;
         }
     }
     free(services);
     
-    return allocated;
+    return device;
 }
 
-static void conflict_free_state(struct conflict_state *state)
+static void conflict_add_suggestion(conflict_state_t *state, dvr_query_result_t *dqr)
+{
+    state->suggestion_count ++;
+    state->suggestions = realloc(state->suggestions, sizeof(dvr_query_result_t) * state->suggestion_count);
+    state->suggestions[state->suggestion_count - 1] = *dqr;
+    /* We've taken over the entries for the suggestions, so ensure we don't free
+     * the array when cleaning up.
+     */
+    dqr->dqr_alloced = 0;
+    dqr->dqr_array= NULL;
+    dqr->dqr_entries = 0;
+}
+
+static void conflict_generate_suggestions(struct channel_alloc_state *alloc_state, conflict_state_t *state, channel_t *channel)
+{
+    service_t **services;
+    int service_cnt = 0, i = 0;
+    struct device *device = NULL;
+    
+    
+    services = service_get_sorted_list(channel, &service_cnt);
+    for (i = 0;i < service_cnt; i ++)
+    {
+        switch (services[i]->s_type)
+        {
+            case SERVICE_TYPE_DVB:
+                LIST_FOREACH(device, &alloc_state->dvb_devs, link)
+                {
+                    if (device->device_ptr == services[i]->s_dvb_mux_instance->tdmi_adapter)
+                    {
+                        conflict_add_suggestion(state, &device->entries);
+                        break;
+                    }
+                }
+                break;
+
+            case SERVICE_TYPE_IPTV:
+                break;
+
+            case SERVICE_TYPE_V4L:
+                LIST_FOREACH(device, &alloc_state->v4l_devs, link)
+                {
+                    if (device->device_ptr == services[i]->s_v4l_adapter)
+                    {
+                        conflict_add_suggestion(state, &device->entries);
+                        break;
+                    }
+                }
+                break;
+        }
+    }
+}
+
+static void conflict_free_alloc_state(struct channel_alloc_state *state)
 {
     struct device *device;
     
     if (state->ip_dev.services)
     {
+        dvr_query_free(&state->ip_dev.entries);
         free(state->ip_dev.services);
     }
     
@@ -216,6 +267,7 @@ static void conflict_free_state(struct conflict_state *state)
     while(device)
     {
         struct device *next;
+        dvr_query_free(&device->entries);
         free(device->services);
         next = LIST_NEXT(device, link);
         free(device);
@@ -226,6 +278,7 @@ static void conflict_free_state(struct conflict_state *state)
     while(device)
     {
         struct device *next;
+        dvr_query_free(&device->entries);
         free(device->services);
         next = LIST_NEXT(device, link);
         free(device);
@@ -233,13 +286,13 @@ static void conflict_free_state(struct conflict_state *state)
     }
 }
 
-bool conflict_check_epg(epg_broadcast_t *broadcast, dvr_query_result_t *dqr)
+void conflict_check_epg(epg_broadcast_t *broadcast, conflict_state_t *state)
 {
     dvr_query_result_t overlaps;
-    bool result = false;
-    struct conflict_state state;
-    memset(dqr, 0, sizeof(dvr_query_result_t));
-    memset(&state, 0, sizeof(state));
+    struct channel_alloc_state alloc_state;
+    struct device *device;
+    memset(state, 0, sizeof(conflict_state_t));
+    memset(&alloc_state, 0, sizeof(alloc_state));
     
     conflict_find_overlaps(broadcast->start, broadcast->stop, &overlaps);
     if (overlaps.dqr_entries)
@@ -250,26 +303,44 @@ bool conflict_check_epg(epg_broadcast_t *broadcast, dvr_query_result_t *dqr)
             /* Don't worry about existing conflicts, we only care if the 
              * specified event can not be recorded.
              */
-            (void)conflict_allocate_service(&state, overlaps.dqr_array[i]->de_channel);
+            device = conflict_allocate_service(&alloc_state, overlaps.dqr_array[i]->de_channel);
+            tvhlog(LOG_INFO, "CONFLICT", "Entry: %s (%s) => %p", lang_str_get(overlaps.dqr_array[i]->de_title, "EN"), overlaps.dqr_array[i]->de_channel->ch_name, device);
+            if (device)
+            {
+                dvr_query_add_entry(&device->entries, overlaps.dqr_array[i]);
+            }
         }
-        if (!conflict_allocate_service(&state, broadcast->channel))
+        tvhlog(LOG_INFO, "CONFLICT", "EPG: %s", broadcast->channel->ch_name);
+        if (!conflict_allocate_service(&alloc_state, broadcast->channel))
         {
-            result = true;
-            *dqr = overlaps;
+            tvhlog(LOG_INFO, "CONFLICT", "Conflict detected");
+            state->status = CONFLICT_CONFLICT_LOSER;
+            conflict_generate_suggestions(&alloc_state, state, broadcast->channel);
         }
         else
         {
+            tvhlog(LOG_INFO, "CONFLICT", "No conflict detected");
             dvr_query_free(&overlaps);
         }
-        conflict_free_state(&state);
+        conflict_free_alloc_state(&alloc_state);
     }
-    
-    return result;
 }
 
-enum conflict_status conflict_check_dvr(dvr_entry_t *entry, dvr_query_result_t *dqr)
+void conflict_check_dvr(dvr_entry_t *entry, conflict_state_t *state)
 {
-    memset(dqr, 0, sizeof(dvr_query_result_t));
-    
-    return CONFLICT_NO_CONFLICT;
+    memset(state, 0, sizeof(conflict_state_t));
+
+}
+
+void conflict_free_state(conflict_state_t *state)
+{
+    int i;
+    if (state->suggestions)
+    {
+        for (i = 0; i < state->suggestion_count; i ++)
+        {
+            dvr_query_free(&state->suggestions[i]);
+        }
+        free(state->suggestions);
+    }
 }
