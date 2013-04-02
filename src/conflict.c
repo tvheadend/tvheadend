@@ -286,15 +286,16 @@ static void conflict_free_alloc_state(struct channel_alloc_state *state)
     }
 }
 
-void conflict_check_epg(epg_broadcast_t *broadcast, conflict_state_t *state)
+void conflict_check(channel_t *channel, time_t start, time_t stop, 
+                    conflict_state_t *state)
 {
     dvr_query_result_t overlaps;
     struct channel_alloc_state alloc_state;
     struct device *device;
     memset(state, 0, sizeof(conflict_state_t));
     memset(&alloc_state, 0, sizeof(alloc_state));
-    
-    conflict_find_overlaps(broadcast->start, broadcast->stop, &overlaps);
+
+    conflict_find_overlaps(start, stop, &overlaps);
     if (overlaps.dqr_entries)
     {
         int i;
@@ -303,19 +304,22 @@ void conflict_check_epg(epg_broadcast_t *broadcast, conflict_state_t *state)
             /* Don't worry about existing conflicts, we only care if the 
              * specified event can not be recorded.
              */
-            device = conflict_allocate_service(&alloc_state, overlaps.dqr_array[i]->de_channel);
-            tvhlog(LOG_INFO, "CONFLICT", "Entry: %s (%s) => %p", lang_str_get(overlaps.dqr_array[i]->de_title, "EN"), overlaps.dqr_array[i]->de_channel->ch_name, device);
+            device = conflict_allocate_service(&alloc_state, 
+                                               overlaps.dqr_array[i]->de_channel);
+            tvhlog(LOG_INFO, "CONFLICT", "Entry: %s (%s) => %p", 
+                    lang_str_get(overlaps.dqr_array[i]->de_title, "EN"), 
+                    overlaps.dqr_array[i]->de_channel->ch_name, device);
             if (device)
             {
                 dvr_query_add_entry(&device->entries, overlaps.dqr_array[i]);
             }
         }
-        tvhlog(LOG_INFO, "CONFLICT", "EPG: %s", broadcast->channel->ch_name);
-        if (!conflict_allocate_service(&alloc_state, broadcast->channel))
+        
+        if (!conflict_allocate_service(&alloc_state, channel))
         {
             tvhlog(LOG_INFO, "CONFLICT", "Conflict detected");
-            state->status = CONFLICT_CONFLICT_LOSER;
-            conflict_generate_suggestions(&alloc_state, state, broadcast->channel);
+            state->status = CONFLICT_CONFLICT_DETECTED;
+            conflict_generate_suggestions(&alloc_state, state, channel);
         }
         else
         {
@@ -324,12 +328,12 @@ void conflict_check_epg(epg_broadcast_t *broadcast, conflict_state_t *state)
         }
         conflict_free_alloc_state(&alloc_state);
     }
+
 }
 
-void conflict_check_dvr(dvr_entry_t *entry, conflict_state_t *state)
+void conflict_check_epg(epg_broadcast_t *broadcast, conflict_state_t *state)
 {
-    memset(state, 0, sizeof(conflict_state_t));
-
+    conflict_check(broadcast->channel, broadcast->start, broadcast->stop, state);
 }
 
 void conflict_free_state(conflict_state_t *state)

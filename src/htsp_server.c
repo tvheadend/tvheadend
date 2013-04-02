@@ -565,6 +565,9 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   if (de->de_channel)
     htsmsg_add_u32(out, "channel", de->de_channel->ch_id);
 
+  if (de->de_bcast)
+    htsmsg_add_u32(out, "eventId", de->de_bcast->id);
+
   htsmsg_add_s64(out, "start", de->de_start);
   htsmsg_add_s64(out, "stop", de->de_stop);
 
@@ -1224,19 +1227,31 @@ htsp_method_checkConflict(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_t *out;
   uint32_t id;
   conflict_state_t conflict_state;
-  epg_broadcast_t *e;
   
   /* Required fields */
-  if (htsmsg_get_u32(in, "eventId", &id))
-    return htsp_error("Missing argument: eventId");
-  printf("Checking for conflict with %d\n", id);
-  if((e = epg_broadcast_find_by_id(id, NULL)) == NULL)
-    return htsp_error("Invalid EPG Object specified");
+  if (!htsmsg_get_u32(in, "eventId", &id)){
+    epg_broadcast_t *e;
+    
+    if((e = epg_broadcast_find_by_id(id, NULL)) == NULL)
+      return htsp_error("Invalid EPG Object specified");
+    
+    conflict_check_epg( e, &conflict_state);
+  
+  } else if (!htsmsg_get_u32(in, "channelId", &id)){
+    channel_t *channel; 
+    time_t start, stop;    
+    channel = channel_find_by_identifier(id);
+    start = htsmsg_get_u32_or_default(in, "start", 0);
+    stop  = htsmsg_get_u32_or_default(in, "stop",  0);
+    
+    conflict_check(channel, start, stop, &conflict_state);;
+  
+  } else {
+    return htsp_error("Missing arguments");
+  }
 
   out = htsmsg_create_map();
   
-  conflict_check_epg( e, &conflict_state);
-
   if (conflict_state.status != CONFLICT_NO_CONFLICT) {
     htsmsg_t *suggestion = htsmsg_create_list();
     int c;
@@ -1253,12 +1268,13 @@ htsp_method_checkConflict(htsp_connection_t *htsp, htsmsg_t *in)
 
     htsmsg_add_msg(out, "suggestions", suggestion);
     htsmsg_add_u32(out, "conflict", 1);
+  
   } else {
      htsmsg_add_u32(out, "conflict", 0);
   }
   
   conflict_free_state(&conflict_state);
-  printf("Finished conflict check\n");
+ 
   return out;
 }
 
