@@ -28,31 +28,45 @@ extern "C" {
 #include "epg.h"
 
 enum conflict_status {
-    CONFLICT_NO_CONFLICT,     /*< No conflict detected */
-    CONFLICT_CONFLICT_WINNER, /*< Conflict detected and the item being checked would be recorded (based on weight) */
-    CONFLICT_CONFLICT_LOSER,  /*< Conflict detected and the item being checked would not be recorded (based on weight) */
+    CONFLICT_NO_CONFLICT = 0, /**< No conflict detected */
+    CONFLICT_CONFLICT_WINNER, /**< Conflict detected and the item being checked would be recorded (based on weight) */
+    CONFLICT_CONFLICT_LOSER,  /**< Conflict detected and the item being checked would not be recorded (based on weight) */
 };
     
+struct conflict_state {
+    enum conflict_status status; /**< Result of the check */
+    
+    int suggestion_count; /**< Number of suggestion lists */
+    dvr_query_result_t *suggestions; /**< List of dvr entries that if removed would allow the checked item to be recorded.*/
+};
+typedef struct conflict_state conflict_state_t;
+
 /**
  * Check to see if the specified EPG broadcast would clash with any existing
  * scheduled recordings.
  * 
  * @param broadcast The EPG broadcast to check.
- * @param dqr A list of scheduled recordings that clash/conflict with the broadcast.
- * @return true if a conflict is detected, false otherwise. 
+ * @param state The result of the conflict check, including any suggested removals
+ *              to resolve the conflict.
  */
-bool conflict_check_epg(epg_broadcast_t *broadcast, dvr_query_result_t *dqr);
+void conflict_check_epg(epg_broadcast_t *broadcast, conflict_state_t *state);
 
 /**
  * Check to see if the specified scheduled recording conflicts with any other 
  * scheduled recordings.
  * 
  * @param entry The scheduled recording to check against.
- * @param dqr A list of scheduled recordings that clash/conflict with the broadcast.
- * @return Conflict status of the scheduled recording.
+ * @param state The result of the conflict check, including any suggested removals
+ *              to resolve the conflict.
  */
-enum conflict_status conflict_check_dvr(dvr_entry_t *entry, dvr_query_result_t *dqr);
+void conflict_check_dvr(dvr_entry_t *entry, conflict_state_t *state);
 
+/**
+ * Frees memory related to a conflict check,
+ * 
+ * @param state The contents of the structure to free.
+ */
+void conflict_free_state(conflict_state_t *state);
 
 #ifdef	__cplusplus
 }

@@ -46,6 +46,7 @@
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
 #endif
+#include "conflict.h"
 
 #include <sys/statvfs.h>
 #include "settings.h"
@@ -1214,6 +1215,54 @@ htsp_method_deleteDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 }
 
 /**
+ * check for a conflict with an existing dvr entry
+
+ */
+static htsmsg_t *
+htsp_method_checkConflict(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *out;
+  uint32_t id;
+  conflict_state_t conflict_state;
+  epg_broadcast_t *e;
+  
+  /* Required fields */
+  if (htsmsg_get_u32(in, "eventId", &id))
+    return htsp_error("Missing argument: eventId");
+  printf("Checking for conflict with %d\n", id);
+  if((e = epg_broadcast_find_by_id(id, NULL)) == NULL)
+    return htsp_error("Invalid EPG Object specified");
+
+  out = htsmsg_create_map();
+  
+  conflict_check_epg( e, &conflict_state);
+
+  if (conflict_state.status != CONFLICT_NO_CONFLICT) {
+    htsmsg_t *suggestion = htsmsg_create_list();
+    int c;
+    for (c = 0; c  < conflict_state.suggestion_count; c ++) {
+        dvr_query_result_t *dqr = &conflict_state.suggestions[c];
+        int dqr_idx;
+       
+       htsmsg_t *array = htsmsg_create_list();
+       for (dqr_idx = 0; dqr_idx < dqr->dqr_entries; dqr_idx ++){
+           htsmsg_add_u32(array, NULL, dqr->dqr_array[dqr_idx]->de_id);
+       }
+       htsmsg_add_msg(suggestion, NULL, array);
+    }
+
+    htsmsg_add_msg(out, "suggestions", suggestion);
+    htsmsg_add_u32(out, "conflict", 1);
+  } else {
+     htsmsg_add_u32(out, "conflict", 0);
+  }
+  
+  conflict_free_state(&conflict_state);
+  printf("Finished conflict check\n");
+  return out;
+}
+
+/**
  * Request a ticket for a http url pointing to a channel or dvr
  */
 static htsmsg_t *
@@ -1661,6 +1710,7 @@ struct {
   { "updateDvrEntry",           htsp_method_updateDvrEntry, ACCESS_RECORDER},
   { "cancelDvrEntry",           htsp_method_cancelDvrEntry, ACCESS_RECORDER},
   { "deleteDvrEntry",           htsp_method_deleteDvrEntry, ACCESS_RECORDER},
+  { "checkConflict",            htsp_method_checkConflict,  ACCESS_RECORDER},
   { "getTicket",                htsp_method_getTicket,      ACCESS_STREAMING},
   { "subscribe",                htsp_method_subscribe,      ACCESS_STREAMING},
   { "unsubscribe",              htsp_method_unsubscribe,    ACCESS_STREAMING},
