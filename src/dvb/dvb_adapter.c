@@ -1272,16 +1272,16 @@ dvb_fe_opts(th_dvb_adapter_t *tda, const char *which)
     return a;
   }
 
-#if DVB_API_VERSION >= 5
   if(!strcmp(which, "delsys")) {
+#if DVB_API_VERSION >= 5
     if(c & FE_CAN_QPSK) {
       fe_opts_add(a, "SYS_DVBS",     SYS_DVBS);
       fe_opts_add(a, "SYS_DVBS2",    SYS_DVBS2);
     } else
+#endif
       fe_opts_add(a, "SYS_UNDEFINED",    SYS_UNDEFINED);
     return a;
   }
-#endif
 
   if(!strcmp(which, "transmissionmodes")) {
     if(c & FE_CAN_TRANSMISSION_MODE_AUTO) 
