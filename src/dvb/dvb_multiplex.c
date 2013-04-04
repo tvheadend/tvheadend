@@ -882,6 +882,8 @@ dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid, int force)
   if (tdmi->tdmi_transport_stream_id == tsid)
     return;
 
+  tdmi->tdmi_transport_stream_id = tsid;
+
   dvb_mux_save(tdmi);
 
   m = htsmsg_create_map();
@@ -898,7 +900,7 @@ dvb_mux_set_onid(th_dvb_mux_instance_t *tdmi, uint16_t onid, int force)
 {
   htsmsg_t *m;
 
-  if (force)
+  if (!force)
     if (tdmi->tdmi_network_id != 0 || onid == 0)
       return;
   
