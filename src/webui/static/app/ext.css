@@ -334,6 +334,11 @@
 	font-weight: bold;
 }
 
+.conflict-separator{
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
 /** vim: ts=4:sw=4:nu:fdc=4:nospell 
  *
  * Ext.ux.grid.RowActions.css 
