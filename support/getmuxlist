@@ -10,10 +10,9 @@ DIR=$1
 # Update
 if [ -d "${DIR}/.git" ]; then
   (cd "${DIR}"; git pull) &> /dev/null
-
 # Fetch
 elif [ ! -d "${DIR}" ]; then
-  URL=http://linuxtv.org/git/dtv-scan-tables.git
+  URL=git://linuxtv.org/dtv-scan-tables.git
   git clone $URL "${DIR}" &> /dev/null
 fi
 
