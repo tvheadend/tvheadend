@@ -100,8 +100,8 @@ void epg_updated ( void )
 
   /* Remove unref'd */
   while ((eo = LIST_FIRST(&epg_object_unref))) {
-    tvhlog(LOG_DEBUG, "epg",
-           "unref'd object %u (%s) created during update", eo->id, eo->uri);
+    tvhtrace("epg",
+             "unref'd object %u (%s) created during update", eo->id, eo->uri);
     LIST_REMOVE(eo, un_link);
     eo->destroy(eo);
   }
@@ -1377,8 +1377,8 @@ static void _epg_channel_timer_callback ( void *p )
 
     /* Expire */
     if ( ebc->stop <= dispatch_clock ) {
-      tvhlog(LOG_DEBUG, "epg", "expire event %u from %s",
-             ebc->id, ch->ch_name);
+      tvhlog(LOG_DEBUG, "epg", "expire event %u (%s) from %s",
+             ebc->id, epg_broadcast_get_title(ebc, NULL), ch->ch_name);
       _epg_channel_rem_broadcast(ch, ebc, NULL);
       continue; // skip to next
 
@@ -1447,6 +1447,8 @@ static epg_broadcast_t *_epg_channel_add_broadcast
       _epg_object_create(ret);
       // Note: sets updated
       _epg_object_getref(ret);
+      tvhtrace("epg", "added event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
+               ret->id, epg_broadcast_get_title(ret, NULL), ch->ch_name, ret->start, ret->stop);
 
     /* Existing */
     } else {
@@ -1460,6 +1462,8 @@ static epg_broadcast_t *_epg_channel_add_broadcast
       } else {
         ret->stop = (*bcast)->stop;
         _epg_object_set_updated(ret);
+        tvhtrace("epg", "updated event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
+                 ret->id, epg_broadcast_get_title(ret, NULL), ch->ch_name, ret->start, ret->stop);
       }
     }
   }
@@ -1470,12 +1474,16 @@ static epg_broadcast_t *_epg_channel_add_broadcast
   /* Remove overlapping (before) */
   while ( (ebc = RB_PREV(ret, sched_link)) != NULL ) {
     if ( ebc->stop <= ret->start ) break;
+    tvhtrace("epg", "remove overlap (b) event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
+             ebc->id, epg_broadcast_get_title(ebc, NULL), ch->ch_name, ebc->start, ebc->stop);
     _epg_channel_rem_broadcast(ch, ebc, ret);
   }
 
   /* Remove overlapping (after) */
   while ( (ebc = RB_NEXT(ret, sched_link)) != NULL ) {
     if ( ebc->start >= ret->stop ) break;
+    tvhtrace("epg", "remove overlap (a) event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
+             ebc->id, epg_broadcast_get_title(ebc, NULL), ch->ch_name, ebc->start, ebc->stop);
     _epg_channel_rem_broadcast(ch, ebc, ret);
   }
 

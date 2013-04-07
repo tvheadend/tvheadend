@@ -215,18 +215,11 @@ dvr_make_title(char *output, size_t outlen, dvr_entry_t *de)
   }
 }
 
-/**
- *
- */
 static void
-dvr_entry_link(dvr_entry_t *de)
+dvr_entry_set_timer(dvr_entry_t *de)
 {
   time_t now, preamble;
   dvr_config_t *cfg = dvr_config_find_by_name_default(de->de_config_name);
-
-  de->de_refcnt = 1;
-
-  LIST_INSERT_HEAD(&dvrentries, de, de_global_link);
 
   time(&now);
 
@@ -243,10 +236,25 @@ dvr_entry_link(dvr_entry_t *de)
   } else if (de->de_channel) {
     de->de_sched_state = DVR_SCHEDULED;
 
+    tvhtrace("dvr", "entry timer scheduled for %"PRItime_t, preamble);
     gtimer_arm_abs(&de->de_timer, dvr_timer_start_recording, de, preamble);
   } else {
     de->de_sched_state = DVR_NOSTATE;
   }
+}
+
+/**
+ *
+ */
+static void
+dvr_entry_link(dvr_entry_t *de)
+{
+  de->de_refcnt = 1;
+
+  LIST_INSERT_HEAD(&dvrentries, de, de_global_link);
+
+  dvr_entry_set_timer(de);
+
   htsp_dvr_entry_add(de);
 }
 
@@ -369,8 +377,9 @@ static dvr_entry_t *_dvr_entry_create (
     LIST_INSERT_HEAD(&dae->dae_spawns, de, de_autorec_link);
   }
 
-  tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\" starting at %s, "
+  tvhlog(LOG_INFO, "dvr", "entry %d \"%s\" on \"%s\" starting at %s, "
 	 "scheduled for recording by \"%s\"",
+   de->de_id,
 	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de), tbuf, creator);
 	 
   dvrdb_changed();
@@ -726,6 +735,8 @@ static dvr_entry_t *_dvr_entry_update
     de->de_stop_extra = stop_extra;
     save = 1;
   }
+  if (save)
+    dvr_entry_set_timer(de);
 
   /* Title */ 
   if (e && e->episode && e->episode->title) {
@@ -803,6 +814,11 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
 
   /* Existing entry */
   if ((de = dvr_entry_find_by_event(e))) {
+    tvhtrace("dvr",
+             "dvr entry %d event replaced %s on %s @ %"PRItime_t
+             " to %"PRItime_t,
+             de->de_id, epg_broadcast_get_title(e, NULL), e->channel->ch_name,
+             e->start, e->stop);
 
     /* Unlink the broadcast */
     e->putref(e);
@@ -811,6 +827,11 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
     /* Find match */
     RB_FOREACH(e, &e->channel->ch_epg_schedule, sched_link) {
       if (dvr_entry_fuzzy_match(de, e)) {
+        tvhtrace("dvr",
+                 "  replacement event %s on %s @ %"PRItime_t
+                 " to %"PRItime_t,
+                 epg_broadcast_get_title(e, NULL), e->channel->ch_name,
+                 e->start, e->stop);
         e->getref(e);
         de->de_bcast = e;
         _dvr_entry_update(de, e, NULL, NULL, NULL, 0, 0, 0, 0);
@@ -832,6 +853,12 @@ void dvr_event_updated ( epg_broadcast_t *e )
       if (de->de_bcast) continue;
       if (de->de_channel != e->channel) continue;
       if (dvr_entry_fuzzy_match(de, e)) {
+        tvhtrace("dvr",
+                 "dvr entry %d link to event %s on %s @ %"PRItime_t
+                 " to %"PRItime_t,
+                 de->de_id, epg_broadcast_get_title(e, NULL),
+                 e->channel->ch_name,
+                 e->start, e->stop);
         e->getref(e);
         de->de_bcast = e;
         _dvr_entry_update(de, e, NULL, NULL, NULL, 0, 0, 0, 0);
