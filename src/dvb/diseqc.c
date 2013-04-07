@@ -22,10 +22,8 @@ diseqc_send_msg(int fe_fd, __u8 framing_byte, __u8 address, __u8 cmd,
 {
   struct dvb_diseqc_master_cmd message;
 
-#if DISEQC_TRACE
-  tvhlog(LOG_DEBUG, "diseqc", "sending %X %X %X %X %X %X",
-         framing_byte, address, cmd, data_1, data_2, data_3);
-#endif
+  tvhtrace("diseqc", "sending %X %X %X %X %X %X",
+           framing_byte, address, cmd, data_1, data_2, data_3);
   
   message.msg[0] = framing_byte;
   message.msg[1] = address;
@@ -45,11 +43,9 @@ diseqc_setup(int fe_fd, int lnb_num, int voltage, int band,
   int j = lnb_num / 4;
   int k, err;
 
-#if DISEQC_TRACE
-  tvhlog(LOG_DEBUG, "diseqc",
-        "fe_fd %i, lnb_num %i, voltage %i, band %i, version %i, repeats %i",
-        fe_fd, lnb_num, voltage, band, version, repeats);
-#endif
+  tvhtrace("diseqc",
+           "fe_fd %i, lnb_num %i, voltage %i, band %i, version %i, repeats %i",
+           fe_fd, lnb_num, voltage, band, version, repeats);
 
   /* verify lnb number and diseqc data */
   if(lnb_num < 0 || lnb_num >=64 || i < 0 || i >= 16 || j < 0 || j >= 16)

@@ -82,10 +82,8 @@ tvhtime_update ( struct tm *tm )
   ntp_shm_t *ntp_shm;
   int64_t t1, t2;
 
-#if TIME_TRACE
- tvhlog(LOG_DEBUG, "time", "current time is %04d/%02d/%02d %02d:%02d:%02d",
+ tvhtrace("time", "current time is %04d/%02d/%02d %02d:%02d:%02d",
          tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
-#endif
 
   /* Current and reported time */
   now = mktime(tm);
@@ -108,9 +106,7 @@ tvhtime_update ( struct tm *tm )
     if (!(ntp_shm = ntp_shm_init()))
       return;
 
-#if TIME_TRACE
-    tvhlog(LOG_DEBUG, "time", "ntp delta = %"PRId64" us\n", t2 - t1);
-#endif
+    tvhtrace("time", "ntp delta = %"PRId64" us\n", t2 - t1);
     ntp_shm->valid = 0;
     ntp_shm->count++;
     ntp_shm->clockTimeStampSec    = now;

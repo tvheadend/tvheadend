@@ -533,10 +533,8 @@ static int _eit_process_event
 
   /* Find broadcast */
   ebc  = epg_broadcast_find_by_time(svc->s_ch, start, stop, eid, 1, &save2);
-#ifdef EPG_EIT_TRACE
-  tvhlog(LOG_DEBUG, mod->id, "eid=%5d, start=%lu, stop=%lu, ebc=%p",
+  tvhtrace("eit", "eid=%5d, start=%lu, stop=%lu, ebc=%p",
          eid, start, stop, ebc);
-#endif
   if (!ebc) return dllen + 12;
 
   /* Mark re-schedule detect (only now/next) */
@@ -698,20 +696,17 @@ static int _eit_callback
   lst  = ptr[4];
   seg  = ptr[9];
   ver  = (ptr[2] >> 1) & 0x1f;
-#ifdef EPG_EIT_TRACE
-  tvhlog(LOG_DEBUG, mod->id,
-         "tid=0x%02X, onid=0x%04X, tsid=0x%04X, sid=0x%04X, sec=%3d/%3d, seg=%3d, ver=%2d, cur=%d",
-         tableid, onid, tsid, sid, sec, lst, seg, ver, ptr[2] & 1);
-#endif
+  tvhtrace("eit",
+           "tid=0x%02X, onid=0x%04X, tsid=0x%04X, sid=0x%04X"
+           ", sec=%3d/%3d, seg=%3d, ver=%2d, cur=%d",
+           tableid, onid, tsid, sid, sec, lst, seg, ver, ptr[2] & 1);
 
   /* Don't process */
   if((ptr[2] & 1) == 0) return 0;
 
   /* Current status */
   tsta = eit_status_find(sta, tableid, onid, tsid, sid, sec, lst, seg, ver);
-#ifdef EPG_EIT_TRACE
-  tvhlog(LOG_DEBUG, mod->id, tsta && tsta->state != EIT_STATUS_DONE ? "section process" : "section seen");
-#endif
+  tvhtrace("eit", tsta && tsta->state != EIT_STATUS_DONE ? "section process" : "section seen");
   if (!tsta) return 0; // already seen, no state change
   if (tsta->state == EIT_STATUS_DONE) goto done;
 
@@ -724,12 +719,10 @@ static int _eit_callback
   } else {
     if (tdmi->tdmi_transport_stream_id != tsid ||
         tdmi->tdmi_network_id != onid) {
-#ifdef EPG_EIT_TRACE
-      tvhlog(LOG_DEBUG, mod->id,
-             "invalid transport id found tid 0x%02X, onid:tsid %d:%d != %d:%d",
-             tableid, tdmi->tdmi_network_id, tdmi->tdmi_transport_stream_id,
-             onid, tsid);
-#endif
+      tvhtrace("eit",
+               "invalid tsid found tid 0x%02X, onid:tsid %d:%d != %d:%d",
+               tableid, tdmi->tdmi_network_id, tdmi->tdmi_transport_stream_id,
+               onid, tsid);
       tdmi = NULL;
     }
   }
@@ -773,7 +766,7 @@ done:
       if (!tsta) epggrab_ota_complete(ota);
     }
   }
-#ifdef EPG_EIT_TRACE
+#if ENABLE_TRACE
   if (ota->state != EPGGRAB_OTA_MUX_COMPLETE)
   {
     int total = 0;
@@ -781,16 +774,17 @@ done:
     tvhlog(LOG_DEBUG, mod->id, "scan status");
     LIST_FOREACH(tsta, &sta->tables, link) {
       total++;
-      tvhlog(LOG_DEBUG, mod->id,
-             "  tid=0x%02X, onid=0x%04X, tsid=0x%04X, sid=0x%04X, ver=%02d, done=%d, "
-             "mask=%08X|%08X|%08X|%08X|%08X|%08X|%08X|%08X", 
-             tsta->tid, tsta->onid, tsta->tsid, tsta->sid, tsta->ver,
-             tsta->state == EIT_STATUS_DONE,
-             tsta->sec[7], tsta->sec[6], tsta->sec[5], tsta->sec[4],
-             tsta->sec[3], tsta->sec[2], tsta->sec[1], tsta->sec[0]);
+      tvhtrace("eit",
+               "  tid=0x%02X, onid=0x%04X, tsid=0x%04X, sid=0x%04X, ver=%02d"
+               ", done=%d, "
+               "mask=%08X|%08X|%08X|%08X|%08X|%08X|%08X|%08X", 
+               tsta->tid, tsta->onid, tsta->tsid, tsta->sid, tsta->ver,
+               tsta->state == EIT_STATUS_DONE,
+               tsta->sec[7], tsta->sec[6], tsta->sec[5], tsta->sec[4],
+               tsta->sec[3], tsta->sec[2], tsta->sec[1], tsta->sec[0]);
       if (tsta->state == EIT_STATUS_DONE) finished++;
     }
-    tvhlog(LOG_DEBUG, mod->id, "  completed %d of %d", finished, total);
+    tvhtrace("eit", "  completed %d of %d", finished, total);
   }
 #endif
   
