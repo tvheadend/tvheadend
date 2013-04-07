@@ -455,13 +455,13 @@ void tvhlog_spawn(int severity, const char *subsys, const char *fmt, ...)
 #define	LOG_INFO	6	/* informational */
 #define	LOG_DEBUG	7	/* debug-level messages */
 
+#ifndef ENABLE_TRACE
+#define tvhtrace(...) ((void)0)
+#else
+void tvhtrace(const char *subsys, const char *fmt, ...);
+#endif
+
 extern int log_debug;
-
-#define DEBUGLOG(subsys, fmt...) do { \
- if(log_debug) \
-  tvhlog(LOG_DEBUG, subsys, fmt); \
-} while(0)
-
 
 #ifndef CLOCK_MONOTONIC_COARSE
 #define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC

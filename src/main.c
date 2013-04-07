@@ -151,6 +151,7 @@ static LIST_HEAD(, gtimer) gtimers;
 static int log_debug_to_syslog;
 static int log_debug_to_console;
 static int log_debug_to_path;
+static htsmsg_t* log_debug_trace;
 static char* log_path;
 static pthread_cond_t gtimer_cond;
 
@@ -404,6 +405,7 @@ main(int argc, char **argv)
   log_debug_to_syslog       = 0;
   log_debug_to_console      = 0;
   log_debug_to_path         = 0;
+  log_debug_trace           = NULL;
   log_path                  = NULL;
   tvheadend_webui_port      = 9981;
   tvheadend_webroot         = NULL;
@@ -429,6 +431,7 @@ main(int argc, char **argv)
              *opt_dvb_adapters = NULL,
              *opt_dvb_raw      = NULL,
 #endif
+             *opt_trace        = NULL,
              *opt_rawts        = NULL,
              *opt_bindaddr     = NULL,
              *opt_subscribe    = NULL;
@@ -470,6 +473,9 @@ main(int argc, char **argv)
     { 's', "syslog",    "Enable debug to syslog",  OPT_BOOL, &opt_syslog  },
     {   0, "uidebug",   "Enable webUI debug",      OPT_BOOL, &opt_uidebug },
     { 'l', "log",       "Log to file",             OPT_STR,  &log_path    },
+#if ENABLE_TRACE
+    {   0, "trace",     "Enable low level debug",  OPT_STR,  &opt_trace   },
+#endif
     { 'A', "abort",     "Immediately abort",       OPT_BOOL, &opt_abort   },
     {   0, "noacl",     "Disable all access control checks",
       OPT_BOOL, &opt_noacl },
@@ -522,10 +528,25 @@ main(int argc, char **argv)
   }
 
   /* Additional cmdline processing */
+  opt_debug            |= (opt_trace != NULL);
   log_debug_to_console  = opt_debug;
   log_debug_to_syslog   = opt_syslog;
   log_debug_to_path     = opt_debug;
   tvheadend_webui_debug = opt_debug || opt_uidebug;
+  if (opt_trace) {
+    log_debug_trace = htsmsg_create_map();
+    htsmsg_add_u32(log_debug_trace, "START", 1);
+    uint32_t u32;
+    char *trace = strdup(opt_trace);
+    char *p, *r = NULL;
+    p = strtok_r(trace, ",", &r);
+    while (p) {
+      if (htsmsg_get_u32(log_debug_trace, p, &u32))
+        htsmsg_add_u32(log_debug_trace, p, 1);
+      p = strtok_r(NULL, ",", &r);
+    }
+    free(trace);
+  }
 #if ENABLE_LINUXDVB
   if (!opt_dvb_adapters) {
     adapter_mask = ~0;
@@ -545,12 +566,11 @@ main(int argc, char **argv)
       adapter_mask |= (1 << a);
       p = strtok_r(NULL, ",", &r);
     }
+    free(dvb_adapters);
     if (!adapter_mask) {
       tvhlog(LOG_ERR, "START", "No adapters specified!");
-      free(dvb_adapters);
       return 1;
     }
-    free(dvb_adapters);
   }
 #endif
   if (tvheadend_webroot) {
@@ -734,6 +754,7 @@ main(int argc, char **argv)
 	 "running as PID:%d UID:%d GID:%d, settings located in '%s'",
 	 tvheadend_version,
 	 getpid(), getuid(), getgid(), hts_settings_get_root());
+  tvhtrace("START", "TRACE debug enabled");
 
   if(opt_abort)
     abort();
@@ -865,6 +886,24 @@ tvhlog(int severity, const char *subsys, const char *fmt, ...)
   va_end(ap);
 }
 
+/**
+ * TVH trace
+ */
+#ifdef ENABLE_TRACE
+void
+tvhtrace(const char *subsys, const char *fmt, ...)
+{
+  va_list ap;
+  if (!log_debug_trace)
+    return;
+  if (!htsmsg_get_u32_or_default(log_debug_trace, "all", 0))
+    if (!htsmsg_get_u32_or_default(log_debug_trace, subsys, 0))
+      return;
+  va_start(ap, fmt);
+  tvhlogv(0, LOG_DEBUG, subsys, fmt, ap);
+  va_end(ap);
+}
+#endif
 
 /**
  * May be invoked from a forked process so we can't do any notification
