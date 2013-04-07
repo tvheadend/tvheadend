@@ -27,6 +27,7 @@ script
   [ -z "$TVH_HTTP_ROOT" ] || ARGS="$ARGS --http_root $TVH_HTTP_ROOT"
   [ -z "$TVH_HTSP_PORT" ] || ARGS="$ARGS --htsp_port $TVH_HTSP_PORT"
   [ "$TVH_DEBUG" = "1"  ] && ARGS="$ARGS -s"
+  [ -z "$TVH_TRACE"     ] || ARGS="$ARGS --trace $TVH_TRACE"
 
   [ ! -z "$TVH_DELAY" ] && sleep $TVH_DELAY
 
