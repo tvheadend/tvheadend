@@ -19,7 +19,7 @@ OPTIONS=(
   "cwc:yes"
   "v4l:yes"
   "linuxdvb:yes"
-  "dvbscan:yes"
+  "dvbscan:auto"
   "timeshift:yes"
   "trace:yes"
   "imagecache:auto"
@@ -179,12 +179,22 @@ fi
 #
 # DVB scan
 #
-if enabled linuxdvb && enabled dvbscan; then
-  printf "${TAB}" "fetching dvb-scan files ..."
-  "${ROOTDIR}/support/getmuxlist"
-  if [ $? -ne 0 ]; then
-    echo "fail"
-    die "Failed to fetch dvb-scan data (use --disable-dvbscan)"
+if enabled linuxdvb && enabled_or_auto dvbscan; then
+  if [ ! -d /usr/share/dvb/ ]; then
+    if [ ! -d ${ROOTDIR}/data/dvb-scan ]; then
+      printf "${TAB}" "Fetching dvb-scan files... "
+      "${ROOTDIR}/support/getmuxlist"
+      if [ $? -ne 0 ]; then
+        echo "fail"
+        die "Failed to fetch dvb-scan data (use --disable-dvbscan)"
+      fi
+      enable dvbscan
+      echo "done"
+    fi
+  else
+    echo -n "Found '/usr/share/dvb/' using '/usr/share/dvb/ "
+    disable dvbscan
+    echo "done"
   fi
   echo "ok"
 fi
