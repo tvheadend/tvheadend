@@ -738,6 +738,8 @@ dvb_adapter_stop ( th_dvb_adapter_t *tda, int opt )
     tvhlog(LOG_DEBUG, "dvb", "%s stopped thread", tda->tda_rootpath);
   }
 
+  dvb_adapter_notify(tda);
+
   /* Don't close FE */
   if (!tda->tda_idleclose && tda->tda_enabled) return;
 
@@ -747,8 +749,6 @@ dvb_adapter_stop ( th_dvb_adapter_t *tda, int opt )
     close(tda->tda_fe_fd);
     tda->tda_fe_fd = -1;
   }
-
-  dvb_adapter_notify(tda);
 }
 
 /**
