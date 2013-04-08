@@ -804,17 +804,27 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
   /* Existing entry */
   if ((de = dvr_entry_find_by_event(e))) {
 
+    /* Ignore - already in progress */
+    if (de->de_sched_state != DVR_SCHEDULED)
+      return;
+
     /* Unlink the broadcast */
     e->putref(e);
     de->de_bcast = NULL;
 
+    /* If this was craeted by autorec - just remove it, it'll get recreated */
+    if (de->de_autorec) {
+      dvr_entry_remove(de);
+
     /* Find match */
-    RB_FOREACH(e, &e->channel->ch_epg_schedule, sched_link) {
-      if (dvr_entry_fuzzy_match(de, e)) {
-        e->getref(e);
-        de->de_bcast = e;
-        _dvr_entry_update(de, e, NULL, NULL, NULL, 0, 0, 0, 0);
-        break;
+    } else {
+      RB_FOREACH(e, &e->channel->ch_epg_schedule, sched_link) {
+        if (dvr_entry_fuzzy_match(de, e)) {
+          e->getref(e);
+          de->de_bcast = e;
+          _dvr_entry_update(de, e, NULL, NULL, NULL, 0, 0, 0, 0);
+          break;
+        }
       }
     }
   }
