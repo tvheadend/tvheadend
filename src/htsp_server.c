@@ -2347,7 +2347,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
       if(ssc->ssc_width)
         htsmsg_add_u32(c, "width", ssc->ssc_width);
       if(ssc->ssc_height)
-        htsmsg_add_u32(c, "height", ssc->ssc_height);
+        htsmsg_add_u32(c, "height", ssc->ssc_height == 1088 ? 1080 : ssc->ssc_height);
       if(ssc->ssc_frameduration)
         htsmsg_add_u32(c, "duration", hs->hs_90khz ? ssc->ssc_frameduration :
                        ts_rescale(ssc->ssc_frameduration, 1000000));

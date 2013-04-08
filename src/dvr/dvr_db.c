@@ -337,14 +337,20 @@ static dvr_entry_t *_dvr_entry_create (
     de->de_dvb_eid = e->dvb_eid;
     if (e->episode && e->episode->title)
       de->de_title = lang_str_copy(e->episode->title);
-    if (e->description)
+    if (e->description) {
       de->de_desc  = lang_str_copy(e->description);
+      if (e->summary)
+        de->de_subtitle = lang_str_copy(e->summary);
+    }
     else if (e->episode && e->episode->description)
       de->de_desc = lang_str_copy(e->episode->description);
     else if (e->summary)
       de->de_desc = lang_str_copy(e->summary);
     else if (e->episode && e->episode->summary)
       de->de_desc = lang_str_copy(e->episode->summary);
+    if (e->episode && e->episode->subtitle) {
+      de->de_subtitle = lang_str_copy(e->episode->subtitle);
+    }
   } else if (title) {
     de->de_title = lang_str_create();
     lang_str_add(de->de_title, title, lang, 0);
@@ -352,13 +358,10 @@ static dvr_entry_t *_dvr_entry_create (
       de->de_desc = lang_str_create();
       lang_str_add(de->de_desc, description, lang, 0);
     }
-  }
-  if (e && e->episode && e->episode->subtitle) {
-  	de->de_subtitle = lang_str_copy(e->episode->subtitle);
-  }
-  else {
-  	de->de_subtitle = lang_str_create();
-  	lang_str_add(de->de_subtitle, subtitle, lang, 0);
+    if (subtitle) {
+      de->de_subtitle = lang_str_create();
+      lang_str_add(de->de_subtitle, subtitle, lang, 0);
+    }
   }
   if (content_type) de->de_content_type = *content_type;
   de->de_bcast   = e;
@@ -765,6 +768,13 @@ static dvr_entry_t *_dvr_entry_update
   }
 
   // TODO: description
+  if (e && e->description) {
+    if (de->de_desc) lang_str_destroy(de->de_desc);
+    de->de_desc = lang_str_copy(e->description);
+  } else if (desc) {
+    if (!de->de_desc) de->de_desc = lang_str_create();
+    save = lang_str_add(de->de_desc, desc, lang, 1);
+  }
 
   /* Genre */
   if (e && e->episode) {
