@@ -47,6 +47,10 @@ TVH_HTSP_PORT=""
 #   if set to 1 will output debug to syslog
 TVH_DEBUG=0
 
+# TVH_TRACE
+#   enable trace in subsystems
+TVH_TRACE=""
+
 # TVH_DELAY
 #   if set startup will be delayed N seconds to allow hardware init
 TVH_DELAY=""

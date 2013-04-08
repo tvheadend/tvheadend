@@ -100,8 +100,8 @@ void epg_updated ( void )
 
   /* Remove unref'd */
   while ((eo = LIST_FIRST(&epg_object_unref))) {
-    tvhlog(LOG_DEBUG, "epg",
-           "unref'd object %u (%s) created during update", eo->id, eo->uri);
+    tvhtrace("epg",
+             "unref'd object %u (%s) created during update", eo->id, eo->uri);
     LIST_REMOVE(eo, un_link);
     eo->destroy(eo);
   }
@@ -126,10 +126,8 @@ static void _epg_object_destroy
   ( epg_object_t *eo, epg_object_tree_t *tree )
 {
   assert(eo->refcount == 0);
-#ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, "epg", "eo [%p, %u, %d, %s] destroy",
-         eo, eo->id, eo->type, eo->uri);
-#endif
+  tvhtrace("epg", "eo [%p, %u, %d, %s] destroy",
+           eo, eo->id, eo->type, eo->uri);
   if (eo->uri) free(eo->uri);
   if (tree) RB_REMOVE(tree, eo, uri_link);
   if (eo->_updated) LIST_REMOVE(eo, up_link);
@@ -139,10 +137,8 @@ static void _epg_object_destroy
 static void _epg_object_getref ( void *o )
 {
   epg_object_t *eo = o;
-#ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, "epg", "eo [%p, %u, %d, %s] getref %d",
-         eo, eo->id, eo->type, eo->uri, eo->refcount+1);
-#endif
+  tvhtrace("epg", "eo [%p, %u, %d, %s] getref %d",
+           eo, eo->id, eo->type, eo->uri, eo->refcount+1);
   if (eo->refcount == 0) LIST_REMOVE(eo, un_link);
   eo->refcount++;
 }
@@ -150,10 +146,8 @@ static void _epg_object_getref ( void *o )
 static void _epg_object_putref ( void *o )
 {
   epg_object_t *eo = o;
-#ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, "epg", "eo [%p, %u, %d, %s] putref %d",
-         eo, eo->id, eo->type, eo->uri, eo->refcount-1);
-#endif
+  tvhtrace("epg", "eo [%p, %u, %d, %s] putref %d",
+           eo, eo->id, eo->type, eo->uri, eo->refcount-1);
   assert(eo->refcount>0);
   eo->refcount--;
   if (!eo->refcount) eo->destroy(eo);
@@ -163,10 +157,8 @@ static void _epg_object_set_updated ( void *o )
 {
   epg_object_t *eo = o;
   if (!eo->_updated) {
-#ifdef EPG_TRACE
-    tvhlog(LOG_DEBUG, "epg", "eo [%p, %u, %d, %s] updated",
-           eo, eo->id, eo->type, eo->uri);
-#endif
+    tvhtrace("epg", "eo [%p, %u, %d, %s] updated",
+             eo, eo->id, eo->type, eo->uri);
     eo->_updated = 1;
     eo->updated  = dispatch_clock;
     LIST_INSERT_HEAD(&epg_object_updated, eo, up_link);
@@ -180,10 +172,8 @@ static void _epg_object_create ( void *o )
   else if (eo->id > _epg_object_idx) _epg_object_idx = eo->id;
   if (!eo->getref) eo->getref = _epg_object_getref;
   if (!eo->putref) eo->putref = _epg_object_putref;
-#ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, "epg", "eo [%p, %u, %d, %s] created",
-         eo, eo->id, eo->type, eo->uri);
-#endif
+  tvhtrace("epg", "eo [%p, %u, %d, %s] created",
+           eo, eo->id, eo->type, eo->uri);
   _epg_object_set_updated(eo);
   LIST_INSERT_HEAD(&epg_object_unref, eo, un_link);
   LIST_INSERT_HEAD(&epg_objects[eo->id & EPG_HASH_MASK], eo, id_link);
@@ -231,10 +221,8 @@ epg_object_t *epg_object_find_by_id ( uint32_t id, epg_object_type_t type )
 static htsmsg_t * _epg_object_serialize ( void *o )
 {
   epg_object_t *eo = o;
-#ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, "epg", "eo [%p, %u, %d, %s] serialize",
-         eo, eo->id, eo->type, eo->uri);
-#endif
+  tvhtrace("epg", "eo [%p, %u, %d, %s] serialize",
+           eo, eo->id, eo->type, eo->uri);
   htsmsg_t *m;
   if ( !eo->id || !eo->type ) return NULL;
   m = htsmsg_create_map();
@@ -263,10 +251,8 @@ static epg_object_t *_epg_object_deserialize ( htsmsg_t *m, epg_object_t *eo )
     _epg_object_set_updated(eo);
     eo->updated = s64;
   }
-#ifdef EPG_TRACE
-  tvhlog(LOG_DEBUG, "epg", "eo [%p, %u, %d, %s] deserialize",
-         eo, eo->id, eo->type, eo->uri);
-#endif
+  tvhtrace("epg", "eo [%p, %u, %d, %s] deserialize",
+           eo, eo->id, eo->type, eo->uri);
   return eo;
 }
 
@@ -1391,8 +1377,8 @@ static void _epg_channel_timer_callback ( void *p )
 
     /* Expire */
     if ( ebc->stop <= dispatch_clock ) {
-      tvhlog(LOG_DEBUG, "epg", "expire event %u from %s",
-             ebc->id, ch->ch_name);
+      tvhlog(LOG_DEBUG, "epg", "expire event %u (%s) from %s",
+             ebc->id, epg_broadcast_get_title(ebc, NULL), ch->ch_name);
       _epg_channel_rem_broadcast(ch, ebc, NULL);
       continue; // skip to next
 
@@ -1461,6 +1447,8 @@ static epg_broadcast_t *_epg_channel_add_broadcast
       _epg_object_create(ret);
       // Note: sets updated
       _epg_object_getref(ret);
+      tvhtrace("epg", "added event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
+               ret->id, epg_broadcast_get_title(ret, NULL), ch->ch_name, ret->start, ret->stop);
 
     /* Existing */
     } else {
@@ -1474,6 +1462,8 @@ static epg_broadcast_t *_epg_channel_add_broadcast
       } else {
         ret->stop = (*bcast)->stop;
         _epg_object_set_updated(ret);
+        tvhtrace("epg", "updated event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
+                 ret->id, epg_broadcast_get_title(ret, NULL), ch->ch_name, ret->start, ret->stop);
       }
     }
   }
@@ -1484,12 +1474,16 @@ static epg_broadcast_t *_epg_channel_add_broadcast
   /* Remove overlapping (before) */
   while ( (ebc = RB_PREV(ret, sched_link)) != NULL ) {
     if ( ebc->stop <= ret->start ) break;
+    tvhtrace("epg", "remove overlap (b) event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
+             ebc->id, epg_broadcast_get_title(ebc, NULL), ch->ch_name, ebc->start, ebc->stop);
     _epg_channel_rem_broadcast(ch, ebc, ret);
   }
 
   /* Remove overlapping (after) */
   while ( (ebc = RB_NEXT(ret, sched_link)) != NULL ) {
     if ( ebc->start >= ret->stop ) break;
+    tvhtrace("epg", "remove overlap (a) event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
+             ebc->id, epg_broadcast_get_title(ebc, NULL), ch->ch_name, ebc->start, ebc->stop);
     _epg_channel_rem_broadcast(ch, ebc, ret);
   }
 

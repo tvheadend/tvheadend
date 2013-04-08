@@ -21,6 +21,7 @@ OPTIONS=(
   "linuxdvb:yes"
   "dvbscan:yes"
   "timeshift:yes"
+  "trace:yes"
   "imagecache:auto"
   "avahi:auto"
   "zlib:auto"

@@ -30,8 +30,6 @@
 #include <string.h>
 #include <assert.h>
 
-//#define TSHFT_TRACE
-
 /* **************************************************************************
  * File Reading
  * *************************************************************************/
@@ -316,15 +314,11 @@ static int _timeshift_read
 
     /* Open file */
     if (*fd == -1) {
-#ifdef TSHFT_TRACE
-      tvhlog(LOG_DEBUG, "timeshift", "ts %d open file %s",
-             ts->id, (*cur_file)->path);
-#endif
+      tvhtrace("timeshift", "ts %d open file %s",
+               ts->id, (*cur_file)->path);
       *fd = open((*cur_file)->path, O_RDONLY);
     }
-#ifdef TSHFT_TRACE
-    tvhlog(LOG_DEBUG, "timeshift", "ts %d seek to %lu", ts->id, *cur_off);
-#endif
+    tvhtrace("timeshift", "ts %d seek to %lu", ts->id, *cur_off);
     lseek(*fd, *cur_off, SEEK_SET);
 
     /* Read msg */
@@ -335,10 +329,8 @@ static int _timeshift_read
       tvhlog(LOG_ERR, "timeshift", "ts %d could not read buffer", ts->id);
       return -1;
     }
-#ifdef TSHFT_TRACE
-    tvhlog(LOG_DEBUG, "timeshift", "ts %d read msg %p (%ld)",
-           ts->id, *sm, r);
-#endif
+    tvhtrace("timeshift", "ts %d read msg %p (%ld)",
+             ts->id, *sm, r);
 
     /* Incomplete */
     if (r == 0) {
@@ -451,9 +443,7 @@ void *timeshift_reader ( void *p )
 
         /* Exit */
         if (ctrl->sm_type == SMT_EXIT) {
-#ifdef TSHFT_TRACE
-          tvhlog(LOG_DEBUG, "timeshift", "ts %d read exit request", ts->id);
-#endif
+          tvhtrace("timeshift", "ts %d read exit request", ts->id);
           run = 0;
           streaming_msg_free(ctrl);
           ctrl = NULL;
@@ -734,7 +724,7 @@ void *timeshift_reader ( void *p )
                (((cur_speed < 0) && (sm->sm_time >= deliver)) ||
                ((cur_speed > 0) && (sm->sm_time <= deliver))))) {
 
-#ifndef TSHFT_TRACE
+#if (!ENABLE_TRACE)
       if (skip)
 #endif
       {
@@ -742,7 +732,7 @@ void *timeshift_reader ( void *p )
         int64_t delta = now - sm->sm_time;
         if (sm->sm_type == SMT_PACKET)
           pts = ((th_pkt_t*)sm->sm_data)->pkt_pts;
-        tvhlog(LOG_DEBUG, "timeshift", "ts %d deliver %"PRId64" pts=%"PRItime_t " shift=%"PRIu64,
+        tvhtrace("timeshift", "ts %d deliver %"PRId64" pts=%"PRItime_t " shift=%"PRIu64,
                ts->id, sm->sm_time, pts, delta);
       }
       streaming_target_deliver2(ts->output, sm);
@@ -755,10 +745,8 @@ void *timeshift_reader ( void *p )
       else
         wait = (deliver - sm->sm_time) / 1000;
       if (wait == 0) wait = 1;
-#ifdef TSHFT_TRACE
-      tvhlog(LOG_DEBUG, "timeshift", "ts %d wait %d",
-             ts->id, wait);
-#endif
+      tvhtrace("timeshift", "ts %d wait %d",
+               ts->id, wait);
     }
 
     /* Terminate */
@@ -818,9 +806,7 @@ void *timeshift_reader ( void *p )
   if (fd != -1) close(fd);
   if (sm)       streaming_msg_free(sm);
   if (ctrl)     streaming_msg_free(ctrl);
-#ifdef TSHFT_TRACE
-  tvhlog(LOG_DEBUG, "timeshift", "ts %d exit reader thread", ts->id);
-#endif
+  tvhtrace("timeshift", "ts %d exit reader thread", ts->id);
 
   return NULL;
 }

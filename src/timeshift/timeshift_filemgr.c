@@ -64,9 +64,7 @@ static void* timeshift_reaper_callback ( void *p )
     TAILQ_REMOVE(&timeshift_reaper_list, tsf, link);
     pthread_mutex_unlock(&timeshift_reaper_lock);
 
-#ifdef TSHFT_TRACE
-    tvhlog(LOG_DEBUG, "timeshift", "remove file %s", tsf->path);
-#endif
+    tvhtrace("timeshift", "remove file %s", tsf->path);
 
     /* Remove */
     unlink(tsf->path);
@@ -91,17 +89,13 @@ static void* timeshift_reaper_callback ( void *p )
     free(tsf);
   }
   pthread_mutex_unlock(&timeshift_reaper_lock);
-#ifdef TSHFT_TRACE
-  tvhlog(LOG_DEBUG, "timeshift", "reaper thread exit");
-#endif
+  tvhtrace("timeshift", "reaper thread exit");
   return NULL;
 }
 
 static void timeshift_reaper_remove ( timeshift_file_t *tsf )
 {
-#ifdef TSHFT_TRACE
-  tvhlog(LOG_DEBUG, "timeshift", "queue file for removal %s", tsf->path);
-#endif
+  tvhtrace("timeshift", "queue file for removal %s", tsf->path);
   pthread_mutex_lock(&timeshift_reaper_lock);
   TAILQ_INSERT_TAIL(&timeshift_reaper_list, tsf, link);
   pthread_cond_signal(&timeshift_reaper_cond);
@@ -252,9 +246,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
 
       /* Create File */
       snprintf(path, sizeof(path), "%s/tvh-%"PRItime_t, ts->path, time);
-#ifdef TSHFT_TRACE
-      tvhlog(LOG_DEBUG, "timeshift", "ts %d create file %s", ts->id, path);
-#endif
+      tvhtrace("timeshift", "ts %d create file %s", ts->id, path);
       if ((fd = open(path, O_WRONLY | O_CREAT, 0600)) > 0) {
         tsf_tmp = calloc(1, sizeof(timeshift_file_t));
         tsf_tmp->time     = time;
@@ -268,10 +260,8 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
 
         /* Copy across last start message */
         if (tsf_tl && (ti = TAILQ_LAST(&tsf_tl->sstart, timeshift_index_data_list))) {
-#ifdef TSHFT_TRACE
-          tvhlog(LOG_DEBUG, "timeshift", "ts %d copy smt_start to new file",
-                 ts->id);
-#endif
+          tvhtrace("timeshift", "ts %d copy smt_start to new file",
+                   ts->id);
           timeshift_index_data_t *ti2 = calloc(1, sizeof(timeshift_index_data_t));
           ti2->data = streaming_msg_clone(ti->data);
           TAILQ_INSERT_TAIL(&tsf_tmp->sstart, ti2, link);

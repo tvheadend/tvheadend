@@ -14,10 +14,11 @@ function die
 
 # CMD
 CMD=$(basename "$0")
+DIR=$(cd $(dirname "$0"); pwd)
 
 # Configuration
 TVH_ROOT=$(cd "$(dirname "$0")"/..; pwd)
-[ -z "$TVH_DIST" ] && TVH_DIST="lucid natty oneiric precise quantal"
+[ -z "$TVH_DIST" ] && TVH_DIST="wheezy lucid natty oneiric precise quantal"
 [ -z "$TVH_ARCH" ] && TVH_ARCH="i386 amd64"
 
 # Options
@@ -27,25 +28,35 @@ TVH_ROOT=$(cd "$(dirname "$0")"/..; pwd)
 # Setup
 cd "$TVH_ROOT" || exit 1
 NOW=`date -R`
-CHANGELOG=$TVH_ROOT/debian/changelog
-VERFILE=$TVH_ROOT/src/version.c
+CHANGELOG=./debian/changelog
+VERFILE=./src/version.c
 
 # Checkout
 git checkout $REL || die "could not checkout $REL"
-git clean -dfx || die "could not clean git tree"
 
-# Create version file
-VER=$("$TVH_ROOT/support/version" $VERFILE)
+# Get version
+VER=$("./support/version" $VERFILE)
+
+# Export git tree
+TMPDIR=/tmp/$CMD-$$
+trap "rm -rf $TMPDIR" EXIT
+mkdir -p "$TMPDIR"
+git archive --prefix=tvheadend/ HEAD | tar -C "${TMPDIR}" -x ||\
+  die "failed to archive git tree"
+cd "$TMPDIR/tvheadend" || die "failed to enter archived tree"
 
 # Fetch scan files
 ./support/getmuxlist || die "failed to fetch dvb-scan files"
+cd ..
 
 # For each distro
 for d in $TVH_DIST; do
   V=${VER}~${d}
+  mv tvheadend "tvheadend-${V}"
+  cd "tvheadend-${V}"
 
   # Create changelog
-  $TVH_ROOT/support/changelog "$CHANGELOG" "$d" "$VER" || exit 1
+  ./support/changelog "$CHANGELOG" "$d" "$VER" || exit 1
   
   # Build source package
   dpkg-buildpackage -I.git* -S -sgpg -pgpg || exit 1
@@ -59,10 +70,11 @@ for d in $TVH_DIST; do
 
   # Upload
   else
+    [ ! -f "$HOME/.dput.cf" ] && DPUT_OPT="$DPUT_OPT -c $DIR/dput.cf"
     dput $DPUT_OPT tvh-${PPA} ../tvheadend_${V}_source.changes || exit 1
   fi
 
+  # Rename back
+  cd ..
+  mv "tvheadend-${V}" tvheadend
 done
-
-# Cleanup
-git checkout .
