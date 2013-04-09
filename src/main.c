@@ -145,14 +145,7 @@ pthread_mutex_t atomic_lock;
  * Locals
  */
 static int running;
-static int log_stderr;
-static int log_decorate;
 static LIST_HEAD(, gtimer) gtimers;
-static int log_debug_to_syslog;
-static int log_debug_to_console;
-static int log_debug_to_path;
-static htsmsg_t* log_debug_trace;
-static char* log_path;
 static pthread_cond_t gtimer_cond;
 
 static void
@@ -398,15 +391,11 @@ main(int argc, char **argv)
 #if ENABLE_LINUXDVB
   uint32_t adapter_mask;
 #endif
+  int  log_level   = LOG_INFO;
+  int  log_options = TVHLOG_OPT_MILLIS | TVHLOG_OPT_STDERR | TVHLOG_OPT_SYSLOG;
+  const char *log_subsys = NULL;
 
   /* Defaults */
-  log_stderr                = 1;
-  log_decorate              = isatty(2);
-  log_debug_to_syslog       = 0;
-  log_debug_to_console      = 0;
-  log_debug_to_path         = 0;
-  log_debug_trace           = NULL;
-  log_path                  = NULL;
   tvheadend_webui_port      = 9981;
   tvheadend_webroot         = NULL;
   tvheadend_htsp_port       = 9982;
@@ -417,21 +406,24 @@ main(int argc, char **argv)
               opt_version      = 0,
               opt_fork         = 0,
               opt_firstrun     = 0,
-              opt_debug        = 0,
+              opt_stderr       = 0,
               opt_syslog       = 0,
               opt_uidebug      = 0,
               opt_abort        = 0,
               opt_noacl        = 0,
+              opt_trace        = 0,
+              opt_fileline     = 0,
               opt_ipv6         = 0;
   const char *opt_config       = NULL,
              *opt_user         = NULL,
              *opt_group        = NULL,
+             *opt_logpath      = NULL,
+             *opt_log_subsys   = NULL,
              *opt_pidpath      = "/var/run/tvheadend.pid",
 #if ENABLE_LINUXDVB
              *opt_dvb_adapters = NULL,
              *opt_dvb_raw      = NULL,
 #endif
-             *opt_trace        = NULL,
              *opt_rawts        = NULL,
              *opt_bindaddr     = NULL,
              *opt_subscribe    = NULL;
@@ -469,13 +461,15 @@ main(int argc, char **argv)
       OPT_INT, &tvheadend_htsp_port_extra },
 
     {   0, NULL,        "Debug Options",           OPT_BOOL, NULL         },
-    { 'd', "debug",     "Enable all debug",        OPT_BOOL, &opt_debug   },
+    { 'd', "stderr",    "Enable debug on stderr",  OPT_BOOL, &opt_stderr  },
     { 's', "syslog",    "Enable debug to syslog",  OPT_BOOL, &opt_syslog  },
-    {   0, "uidebug",   "Enable webUI debug",      OPT_BOOL, &opt_uidebug },
-    { 'l', "log",       "Log to file",             OPT_STR,  &log_path    },
+    { 'l', "logfile",   "Enable debug to file",    OPT_STR,  &opt_logpath },
+    {   0, "subsys",    "Enable debug subsystems", OPT_STR,  &opt_log_subsys },
+    {   0, "fileline",  "Add file and line numbers to debug", OPT_BOOL, &opt_fileline },
 #if ENABLE_TRACE
-    {   0, "trace",     "Enable low level debug",  OPT_STR,  &opt_trace   },
+    {   0, "trace",     "Enable low level debug",  OPT_BOOL, &opt_trace   },
 #endif
+    {   0, "uidebug",   "Enable webUI debug (non-minified JS)", OPT_BOOL, &opt_uidebug },
     { 'A', "abort",     "Immediately abort",       OPT_BOOL, &opt_abort   },
     {   0, "noacl",     "Disable all access control checks",
       OPT_BOOL, &opt_noacl },
@@ -528,25 +522,6 @@ main(int argc, char **argv)
   }
 
   /* Additional cmdline processing */
-  opt_debug            |= (opt_trace != NULL);
-  log_debug_to_console  = opt_debug;
-  log_debug_to_syslog   = opt_syslog;
-  log_debug_to_path     = opt_debug;
-  tvheadend_webui_debug = opt_debug || opt_uidebug;
-  if (opt_trace) {
-    log_debug_trace = htsmsg_create_map();
-    htsmsg_add_u32(log_debug_trace, "START", 1);
-    uint32_t u32;
-    char *trace = strdup(opt_trace);
-    char *p, *r = NULL;
-    p = strtok_r(trace, ",", &r);
-    while (p) {
-      if (htsmsg_get_u32(log_debug_trace, p, &u32))
-        htsmsg_add_u32(log_debug_trace, p, 1);
-      p = strtok_r(NULL, ",", &r);
-    }
-    free(trace);
-  }
 #if ENABLE_LINUXDVB
   if (!opt_dvb_adapters) {
     adapter_mask = ~0;
@@ -587,6 +562,29 @@ main(int argc, char **argv)
     tvheadend_webroot = tmp;
   }
 
+  /* Setup logging */
+  if (isatty(2))
+    log_options |= TVHLOG_OPT_DECORATE;
+  if (opt_stderr || opt_syslog || opt_logpath) {
+    log_subsys     = "all";
+    log_level      = LOG_DEBUG;
+    if (opt_stderr)
+      log_options   |= TVHLOG_OPT_DBG_STDERR;
+    if (opt_syslog)
+      log_options   |= TVHLOG_OPT_DBG_SYSLOG;
+    if (opt_logpath)
+      log_options   |= TVHLOG_OPT_DBG_FILE;
+  }
+  if (opt_fileline)
+    log_options |= TVHLOG_OPT_FILELINE;
+  if (opt_trace)
+    log_level  = LOG_TRACE;
+  if (opt_log_subsys)
+    log_subsys = opt_log_subsys;
+    
+  tvhlog_init(log_level, log_options, opt_logpath);
+  tvhlog_set_subsys(log_subsys);
+ 
   signal(SIGPIPE, handle_sigpipe); // will be redundant later
 
   /* Daemonise */
@@ -643,11 +641,12 @@ main(int argc, char **argv)
     umask(0);
   }
 
-  /* Setup logging */
-  log_stderr   = !opt_fork;
-  log_decorate = isatty(2);
-  openlog("tvheadend", LOG_PID, LOG_DAEMON);
-
+  /* Alter logging */
+  if (opt_fork)
+    tvhlog_options &= ~TVHLOG_OPT_STDERR;
+  if (!isatty(2))
+    tvhlog_options &= ~TVHLOG_OPT_DECORATE;
+  
   /* Initialise configuration */
   hts_settings_init(opt_config);
 
@@ -754,7 +753,6 @@ main(int argc, char **argv)
 	 "running as PID:%d UID:%d GID:%d, settings located in '%s'",
 	 tvheadend_version,
 	 getpid(), getuid(), getgid(), hts_settings_get_root());
-  tvhtrace("START", "TRACE debug enabled");
 
   if(opt_abort)
     abort();
@@ -779,147 +777,6 @@ main(int argc, char **argv)
   return 0;
 
 }
-
-
-static const char *logtxtmeta[8][2] = {
-  {"EMERGENCY", "\033[31m"},
-  {"ALERT",     "\033[31m"},
-  {"CRITICAL",  "\033[31m"},
-  {"ERROR",     "\033[31m"},
-  {"WARNING",   "\033[33m"},
-  {"NOTICE",    "\033[36m"},
-  {"INFO",      "\033[32m"},
-  {"DEBUG",     "\033[32m"},
-};
-
-/**
- * Internal log function
- */
-static void
-tvhlogv(int notify, int severity, const char *subsys, const char *fmt, 
-	va_list ap)
-{
-  char buf[2048];
-  char buf2[2048];
-  char t[64];
-  int l, ms;
-  struct tm tm;
-  struct timeval now;
-  static int log_path_fail = 0;
-  size_t c;
-
-  l = snprintf(buf, sizeof(buf), "%s: ", subsys);
-
-  vsnprintf(buf + l, sizeof(buf) - l, fmt, ap);
-
-  if(log_debug_to_syslog || severity < LOG_DEBUG)
-    syslog(severity, "%s", buf);
-
-  /**
-   * Get time (string)
-   */
-  gettimeofday(&now, NULL);
-  localtime_r(&now.tv_sec, &tm);
-  ms = now.tv_usec / 1000;
-  c = strftime(t, sizeof(t), "%b %d %H:%M:%S", &tm);
-  snprintf(t+c, sizeof(t)-c, ".%03d", ms);
-
-  /**
-   * Send notification to Comet (Push interface to web-clients)
-   */
-  if(notify) {
-    htsmsg_t *m;
-    snprintf(buf2, sizeof(buf2), "%s %s", t, buf);
-    m = htsmsg_create_map();
-    htsmsg_add_str(m, "notificationClass", "logmessage");
-    htsmsg_add_str(m, "logtxt", buf2);
-    comet_mailbox_add_message(m, severity == LOG_DEBUG);
-    htsmsg_destroy(m);
-  }
-
-  /**
-   * Write to stderr
-   */
-  
-  if(log_stderr && (log_debug_to_console || severity < LOG_DEBUG)) {
-    const char *leveltxt = logtxtmeta[severity][0];
-    const char *sgr      = logtxtmeta[severity][1];
-    const char *sgroff;
-
-    if(!log_decorate) {
-      sgr = "";
-      sgroff = "";
-    } else {
-      sgroff = "\033[0m";
-    }
-    fprintf(stderr, "%s%s [%7s]:%s%s\n", sgr, t, leveltxt, buf, sgroff);
-  }
-
-  /**
-   * Write to file
-   */
-  if (log_path && (log_debug_to_path || severity < LOG_DEBUG)) {
-    const char *leveltxt = logtxtmeta[severity][0];
-    FILE *fp = fopen(log_path, "a");
-    if (fp) {
-      log_path_fail = 0;
-      fprintf(fp, "%s [%7s]:%s\n", t, leveltxt, buf);
-      fclose(fp);
-    } else {
-      if (!log_path_fail)
-        syslog(LOG_WARNING, "failed to write log file %s", log_path);
-      log_path_fail = 1;
-    }
-  }
-}
-
-
-/**
- *
- */
-void
-tvhlog(int severity, const char *subsys, const char *fmt, ...)
-{
-  va_list ap;
-  va_start(ap, fmt);
-  tvhlogv(1, severity, subsys, fmt, ap);
-  va_end(ap);
-}
-
-/**
- * TVH trace
- */
-#ifdef ENABLE_TRACE
-void
-tvhtrace(const char *subsys, const char *fmt, ...)
-{
-  va_list ap;
-  if (!log_debug_trace)
-    return;
-  if (!htsmsg_get_u32_or_default(log_debug_trace, "all", 0))
-    if (!htsmsg_get_u32_or_default(log_debug_trace, subsys, 0))
-      return;
-  va_start(ap, fmt);
-  tvhlogv(0, LOG_DEBUG, subsys, fmt, ap);
-  va_end(ap);
-}
-#endif
-
-/**
- * May be invoked from a forked process so we can't do any notification
- * to comet directly.
- *
- * @todo Perhaps do it via a pipe?
- */
-void
-tvhlog_spawn(int severity, const char *subsys, const char *fmt, ...)
-{
-  va_list ap;
-  va_start(ap, fmt);
-  tvhlogv(0, severity, subsys, fmt, ap);
-  va_end(ap);
-}
-
 
 /**
  *
