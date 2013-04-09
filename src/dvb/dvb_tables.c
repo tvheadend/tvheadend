@@ -326,6 +326,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   uint8_t running_status;
 #endif
   int l;
+  uint8_t *dlptr, *dptr;
 
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
@@ -348,6 +349,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     if (!tdmi) return -1;
   }
   tvhtrace("sdt", "onid %04X tsid %04X", onid, tsid);
+  //hexdump("sdt", ptr, len);
 
   //  version                     = ptr[2] >> 1 & 0x1f;
   //  section_number              = ptr[3];
@@ -362,7 +364,6 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   len -= 8;
   ptr += 8;
 
-
   while(len >= 5) {
     int save = 0;
     service_id                = ptr[0] << 8 | ptr[1];
@@ -372,13 +373,13 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 #endif
     free_ca_mode              = (ptr[3] >> 4) & 0x1;
     dllen                     = ((ptr[3] & 0x0f) << 8) | ptr[4];
-    tvhtrace("sdt", "  sid %04X running %d free_ca %d",
-             service_id, running_status, free_ca_mode);
+    dlptr                     = ptr + 5;
+    tvhtrace("sdt", "  sid %04X running %d free_ca %d dllen %d",
+             service_id, running_status, free_ca_mode, dllen);
 
-    len -= 5;
-    ptr += 5;
-
-    if(dllen > len)
+    ptr += (5 + dllen);
+    len -= (5 + dllen);
+    if (len < 0)
       break;
 
     stype  = 0;
@@ -386,16 +387,18 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     *crid  = 0;
 
     while(dllen > 2) {
-      dtag = ptr[0];
-      dlen = ptr[1];
+      dtag = dlptr[0];
+      dlen = dlptr[1];
+      dptr = dlptr + 2;
 
-      len -= 2; ptr += 2; dllen -= 2; 
+      dlptr += (2 + dlen); 
+      dllen -= (2 + dlen); 
 
-      if(dlen > len) break;
+      if(dllen < 0) break;
 
       switch(dtag) {
         case DVB_DESC_SERVICE:
-          if(dvb_desc_service(ptr, dlen, &stype,
+          if(dvb_desc_service(dptr, dlen, &stype,
                               provider, sizeof(provider),
                               chname0, sizeof(chname0)) == 0) {
             tvhtrace("sdt", "    stype = %d, provider = %s, name = %s",
@@ -419,10 +422,9 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
           }
           break;
         case DVB_DESC_DEF_AUTHORITY:
-          dvb_desc_def_authority(ptr, dlen, crid, sizeof(crid));
+          dvb_desc_def_authority(dptr, dlen, crid, sizeof(crid));
           break;
       }
-      len -= dlen; ptr += dlen; dllen -= dlen;
     }
 
     if (!servicetype_is_tv(stype) &&
