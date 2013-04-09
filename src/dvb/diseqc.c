@@ -34,8 +34,8 @@ diseqc_send_msg(int fe_fd, __u8 framing_byte, __u8 address, __u8 cmd,
   message.msg[5] = data_3;
   message.msg_len = msg_len;
   if ((err = ioctl(fe_fd, FE_DISEQC_SEND_MASTER_CMD, &message))) {
+	tvhlog(LOG_ERR, "diseqc", "error sending diseqc command");
     return err;
-	tvhtrace("diseqc", "Error sending diseqc command");
   }
   return 0;
 }
@@ -49,7 +49,7 @@ diseqc_setup(int fe_fd, int lnb_num, int voltage, int band,
   int k, err;
 
   tvhtrace("diseqc",
-           "diseqc_setup() called with: fe_fd=%i, lnb_num=%i, voltage=%i, band=%i, version=%i, repeats=%i",
+           "fe_fd=%i, lnb_num=%i, voltage=%i, band=%i, version=%i, repeats=%i",
            fe_fd, lnb_num, voltage, band, version, repeats);
 
   /* verify lnb number and diseqc data */
@@ -57,16 +57,16 @@ diseqc_setup(int fe_fd, int lnb_num, int voltage, int band,
     return -1;
 
   /* turn off continuous tone */
-  tvhtrace("diseqc", "Turning off continuous tone");
+  tvhtrace("diseqc", "disabling continuous tone");
   if ((err = ioctl(fe_fd, FE_SET_TONE, SEC_TONE_OFF))) {
-	tvhtrace("diseqc", "Error trying to turn off continuous tone");
+	tvhlog(LOG_ERR, "diseqc", "error trying to turn off continuous tone");
     return err;
   }
 
   /* set lnb voltage */
-  tvhtrace("diseqc", "Setting lnb voltage to %iV", (i/2) % 2 ? 18 : 13);
+  tvhtrace("diseqc", "setting lnb voltage to %iV", (i/2) % 2 ? 18 : 13);
   if ((err = ioctl(fe_fd, FE_SET_VOLTAGE, (i/2) % 2 ? SEC_VOLTAGE_18 : SEC_VOLTAGE_13))) {
-	tvhtrace("diseqc", "Error setting lnb voltage");
+	tvhlog(LOG_ERR, "diseqc", "error setting lnb voltage");
     return err;
   }
   msleep(15);
@@ -92,17 +92,17 @@ diseqc_setup(int fe_fd, int lnb_num, int voltage, int band,
   msleep(15);
 
   /* set toneburst */
-  tvhtrace("diseqc", (i/4) % 2 ? "Sending mini diseqc B" : "Sending mini diseqc A");
+  tvhtrace("diseqc", (i/4) % 2 ? "sending mini diseqc B" : "sending mini diseqc A");
   if ((err = ioctl(fe_fd, FE_DISEQC_SEND_BURST, (i/4) % 2 ? SEC_MINI_B : SEC_MINI_A))) {
-	tvhtrace("diseqc", "Error sending mini diseqc command");
+	tvhlog(LOG_ERR, "diseqc", "error sending mini diseqc command");
     return err;
   }
   msleep(15);
 
   /* set continuous tone */
-  tvhtrace("diseqc", i % 2 ? "Setting continous 22KHz to on" : "Setting continous 22KHz to off");
+  tvhtrace("diseqc", i % 2 ? "enabling continous tone" : "disabling continuous tone");
   if ((err = ioctl(fe_fd, FE_SET_TONE, i % 2 ? SEC_TONE_ON : SEC_TONE_OFF))) {
-	tvhtrace("diseqc", "Error setting continuous tone");
+	tvhlog(LOG_ERR, "diseqc", "error setting continuous tone");
     return err;
   }
   return 0;
@@ -113,9 +113,9 @@ diseqc_voltage_off(int fe_fd)
 {
   int err;
   
-  tvhtrace("diseqc", "Sending diseqc voltage off command");
+  tvhtrace("diseqc", "sending diseqc voltage off command");
   if ((err = ioctl(fe_fd, FE_SET_VOLTAGE, SEC_VOLTAGE_OFF))) {
-    tvhtrace("diseqc", "Error sending diseqc voltage off command");
+    tvhlog(LOG_ERR, "diseqc", "error sending diseqc voltage off command");
     return err;
   }
   return 0;
