@@ -1,0 +1,11 @@
+[Unit]
+Description=tvheadend
+Wants=network.target
+
+[Service]
+Type=forking
+PIDFile=/run/tvheadend.pid
+ExecStart=/usr/bin/tvheadend -f -u hts -g video -C
+
+[Install]
+WantedBy=multi-user.target
