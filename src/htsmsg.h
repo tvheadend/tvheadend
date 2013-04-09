@@ -112,6 +112,11 @@ void htsmsg_destroy(htsmsg_t *msg);
 void htsmsg_add_u32(htsmsg_t *msg, const char *name, uint32_t u32);
 
 /**
+ * Add/update an integer field
+ */
+int  htsmsg_set_u32(htsmsg_t *msg, const char *name, uint32_t u32);
+
+/**
  * Add an integer field where source is signed 32 bit.
  */
 void htsmsg_add_s32(htsmsg_t *msg, const char *name,  int32_t s32);
