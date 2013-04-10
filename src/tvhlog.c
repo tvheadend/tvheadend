@@ -74,6 +74,7 @@ void tvhlog_set_subsys ( const char *subsys )
   while ( t ) {
     subsys = NULL;
     a      = 1;
+    if (!*t) goto next;
     if (t[0] == '+' || t[0] == '-') {
       a = t[0] == '+';
       t++;
@@ -86,6 +87,7 @@ void tvhlog_set_subsys ( const char *subsys )
     if (!tvhlog_subsys)
       tvhlog_subsys = htsmsg_create_map();
     htsmsg_set_u32(tvhlog_subsys, t, a);
+next:
     t = strtok_r(NULL, ",", &r);
   }
   free(s);
