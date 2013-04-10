@@ -195,7 +195,51 @@ void _tvhlog ( const char *file, int line,
                const char *subsys, const char *fmt, ... )
 {
   va_list args;
+  pthread_mutex_lock(&tvhlog_mutex);
   va_start(args, fmt);
   tvhlogv(file, line, notify, severity, subsys, fmt, args);
   va_end(args);
+  pthread_mutex_unlock(&tvhlog_mutex);
 }
+
+/*
+ * Log a hexdump
+ */
+#define HEXDUMP_WIDTH 16
+void
+_tvhlog_hexdump(const char *file, int line,
+                int notify, int severity,
+                const char *subsys,
+                const uint8_t *data, ssize_t len)
+{
+  int i, c;
+  char str[1024];
+  va_list args;
+
+  pthread_mutex_lock(&tvhlog_mutex);
+  while (len > 0) {
+    c = 0;
+    for (i = 0; i < HEXDUMP_WIDTH; i++) {
+      if (i >= len)
+        c += snprintf(str+c, sizeof(str)-c, "   ");
+      else
+        c += snprintf(str+c, sizeof(str)-c, "%02X ", data[i]);
+    }
+    for (i = 0; i < HEXDUMP_WIDTH; i++) {
+      if (i < len) {
+        if (data[i] < ' ' || data[i] > '~')
+          str[c] = '.';
+        else
+          str[c] = data[i];
+      } else
+        str[c] = ' ';
+      c++;
+    }
+    str[c] = '\0';
+    tvhlogv(file, line, notify, severity, subsys, str, args);
+    len  -= HEXDUMP_WIDTH;
+    data += HEXDUMP_WIDTH;
+  }
+  pthread_mutex_unlock(&tvhlog_mutex);
+}
+

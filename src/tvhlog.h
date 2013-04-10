@@ -41,6 +41,10 @@ void _tvhlog           ( const char *file, int line,
                          int notify, int severity,
                          const char *subsys, const char *fmt, ... )
   __attribute__((format(printf,6,7)));
+void _tvhlog_hexdump   ( const char *file, int line,
+                         int notify, int severity,
+                         const char *subsys,
+                         const uint8_t *data, ssize_t len );
 
 
 /* Options */
@@ -67,8 +71,11 @@ void _tvhlog           ( const char *file, int line,
 #if ENABLE_TRACE
 #define tvhtrace(subsys, fmt, ...)\
   _tvhlog(__FILE__, __LINE__, 0, LOG_TRACE, subsys, fmt, ##__VA_ARGS__)
+#define tvhlog_hexdump(subsys, data, len)\
+  _tvhlog_hexdump(__FILE__, __LINE__, 0, LOG_TRACE, subsys, (uint8_t*)data, len)
 #else
 #define tvhtrace(...) (void)0
+#define tvhlog_hexdump(...) (void)0
 #endif
 
 #endif /* __TVH_LOGGING_H__ */
