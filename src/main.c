@@ -132,6 +132,9 @@ const tvh_caps_t tvheadend_capabilities[] = {
 #if ENABLE_TIMESHIFT
   { "timeshift", &timeshift_enabled },
 #endif
+#if ENABLE_TRACE
+  { "trace",     NULL },
+#endif
   { NULL, NULL }
 };
 

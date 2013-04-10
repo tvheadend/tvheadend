@@ -56,6 +56,25 @@ tvhlog_init ( int level, int options, const char *path )
   pthread_mutex_init(&tvhlog_mutex, NULL);
 }
 
+/* Get subsys */
+void tvhlog_get_subsys ( char *subsys, size_t len )
+{
+  size_t c = 0;
+  int first = 1;
+  htsmsg_field_t *f;
+  *subsys = '\0';
+  if (tvhlog_subsys) {
+    HTSMSG_FOREACH(f, tvhlog_subsys) {
+      if (f->hmf_type != HMF_S64) continue;
+      c += snprintf(subsys+c, len-c, "%c%s%s",
+                    f->hmf_s64 ? '+' : '-',
+                    f->hmf_name,
+                    first ? "" : ",");
+      first = 0;
+    }
+  }
+}
+
 /* Set subsys */
 void tvhlog_set_subsys ( const char *subsys )
 {
