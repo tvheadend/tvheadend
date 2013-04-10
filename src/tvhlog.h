@@ -44,7 +44,7 @@ void _tvhlog           ( const char *file, int line,
 void _tvhlog_hexdump   ( const char *file, int line,
                          int notify, int severity,
                          const char *subsys,
-                         const uint8_t *data, ssize_t len );
+                         const uint8_t *data, ssize_t len, ... );
 
 
 /* Options */

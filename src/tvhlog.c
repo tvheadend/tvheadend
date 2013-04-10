@@ -60,7 +60,7 @@ tvhlog_init ( int level, int options, const char *path )
 void tvhlog_set_subsys ( const char *subsys )
 {
   uint32_t a;
-  char *t, *r, *s;
+  char *t, *r = NULL, *s;
 
   if (tvhlog_subsys)
     htsmsg_destroy(tvhlog_subsys);
@@ -212,11 +212,12 @@ void
 _tvhlog_hexdump(const char *file, int line,
                 int notify, int severity,
                 const char *subsys,
-                const uint8_t *data, ssize_t len)
+                const uint8_t *data, ssize_t len, ...)
 {
   int i, c;
   char str[1024];
   va_list args;
+  va_start(args, len);
 
   pthread_mutex_lock(&tvhlog_mutex);
   while (len > 0) {
