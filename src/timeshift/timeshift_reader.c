@@ -724,9 +724,8 @@ void *timeshift_reader ( void *p )
                (((cur_speed < 0) && (sm->sm_time >= deliver)) ||
                ((cur_speed > 0) && (sm->sm_time <= deliver))))) {
 
-#if (!ENABLE_TRACE)
+#if ENABLE_TRACE
       if (skip)
-#endif
       {
         time_t pts = 0;
         int64_t delta = now - sm->sm_time;
@@ -735,6 +734,7 @@ void *timeshift_reader ( void *p )
         tvhtrace("timeshift", "ts %d deliver %"PRId64" pts=%"PRItime_t " shift=%"PRIu64,
                ts->id, sm->sm_time, pts, delta);
       }
+#endif
       streaming_target_deliver2(ts->output, sm);
       last_time = sm->sm_time;
       sm        = NULL;
