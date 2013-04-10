@@ -549,10 +549,22 @@ int rmtree ( const char *path );
 char *regexp_escape ( const char *str );
 
 /* printing */
-#if __SIZEOF_LONG__ == 8
-  #define PRItime_t PRId64
+# if __WORDSIZE == 64
+#define PRIsword_t      PRId64
+#define PRIuword_t      PRIu64
 #else
-  #define PRItime_t "l" PRId32
+#define PRIsword_t      PRId32
+#define PRIuword_t      PRIu32
+#endif
+#define PRIslongword_t  "ld"
+#define PRIulongword_t  "lu"
+#define PRIsize_t       PRIuword_t
+#define PRIssize_t      PRIsword_t
+#define PRItime_t       PRIslongword_t
+#if _FILE_OFFSET_BITS == 64
+#define PRIoff_t        PRId64
+#else
+#define PRIoff_t        PRIslongword_t
 #endif
 
 #endif /* TV_HEAD_H */
