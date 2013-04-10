@@ -349,7 +349,7 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
     if (!tdmi) return -1;
   }
   tvhtrace("sdt", "onid %04X tsid %04X", onid, tsid);
-  //hexdump("sdt", ptr, len);
+  tvhlog_hexdump("sdt", ptr, len);
 
   //  version                     = ptr[2] >> 1 & 0x1f;
   //  section_number              = ptr[3];
@@ -873,6 +873,7 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   netname[0] = '\0';
 
   tvhtrace("nit", "tableid 0x%02x", tableid);
+  tvhlog_hexdump("nit", ptr, len);
 
   /* Check NID */
   if(tdmi->tdmi_adapter->tda_nitoid &&
