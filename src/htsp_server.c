@@ -1521,7 +1521,7 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
     int fd = imagecache_open(atoi(s2));
     if (fd <= 0)
       return htsp_error("failed to open image");
-    return htsp_file_open(htsp, NULL, fd);
+    return htsp_file_open(htsp, str, fd);
 
   } else {
     return htsp_error("Unknown file");
