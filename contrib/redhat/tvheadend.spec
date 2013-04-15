@@ -1,14 +1,14 @@
 Name: tvheadend
 Summary: TV streaming server
-Version: 2.12.cae47cf
+Version: 3.2.18
 Release: 1%{dist}
 License: GPL
 Group: Applications/Multimedia
 URL: http://www.lonelycoder.com/tvheadend
 Packager: Jouk Hettema
-Source: tvheadend-%{version}.tar.bz2
+Source: tvheadend-%{version}.tar.gz
 Prefix: /usr
-BuildRequires: avahi-devel, openssl, glibc, zlib
+BuildRequires: avahi-devel, openssl, openssl-devel, glibc, zlib
 
 %description
 Tvheadend is a TV streaming server for Linux supporting DVB-S, DVB-S2, 
@@ -32,7 +32,7 @@ mkdir -p $RPM_BUILD_ROOT/%{prefix}
 %{__install} -d -m0755 %{buildroot}/etc/rc.d/init.d
 %{__install} -d -m0755 %{buildroot}%{prefix}/shared/man/man1
 
-%{__install} -m0755 build.Linux/tvheadend %{buildroot}%{prefix}/bin/
+%{__install} -m0755 build.linux/tvheadend %{buildroot}%{prefix}/bin/
 %{__install} -m0755 man/tvheadend.1 %{buildroot}%{prefix}/shared/man/man1
 %{__install} -m0755 contrib/redhat/tvheadend %{buildroot}/etc/rc.d/init.d
 
