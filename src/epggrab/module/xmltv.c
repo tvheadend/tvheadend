@@ -184,8 +184,8 @@ static const char *xmltv_ns_get_parse_num
 
 
  out:
-  if(ap) *ap = a + 1;
-  if(bp) *bp = b + 1;
+  if(ap && a >= 0) *ap = a + 1;
+  if(bp && b >= 0) *bp = b;
   return s;
 }
 
