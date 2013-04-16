@@ -28,7 +28,6 @@
 int              tvhlog_level;
 int              tvhlog_options;
 char            *tvhlog_path;
-int              tvhlog_path_fail;
 htsmsg_t        *tvhlog_subsys;
 pthread_mutex_t  tvhlog_mutex;
 
@@ -120,9 +119,11 @@ void tvhlogv ( const char *file, int line,
   struct timeval now;
   struct tm tm;
   char t[128], buf[2048], buf2[2048];
-  uint32_t a;
   size_t l;
   int s;
+  int options;
+  char *path = NULL;
+  int skip = 0;
 
   /* Map down */
   if (severity > LOG_DEBUG)
@@ -130,35 +131,46 @@ void tvhlogv ( const char *file, int line,
   else
     s = severity;
 
-  /* Check debug enabled */
+  /* Check debug enabled (and cache config) */
+  pthread_mutex_lock(&tvhlog_mutex);
   if (severity >= LOG_DEBUG) {
     if (!tvhlog_subsys)
-      return;
-    if (severity > tvhlog_level)
-      return;
-    a = htsmsg_get_u32_or_default(tvhlog_subsys, "all", 0);
-    if (!htsmsg_get_u32_or_default(tvhlog_subsys, subsys, a))
-      return;
+      skip = 1;
+    else if (severity > tvhlog_level)
+      skip = 1;
+    else {
+      uint32_t a = htsmsg_get_u32_or_default(tvhlog_subsys, "all", 0);
+      if (!htsmsg_get_u32_or_default(tvhlog_subsys, subsys, a))
+        skip = 1;
+    }
   }
+  if (!skip) {
+    if (tvhlog_path)
+      path = strdup(tvhlog_path);
+    options = tvhlog_options;
+  }
+  pthread_mutex_unlock(&tvhlog_mutex);
+  if (skip)
+    return;
 
   /* Get time */
   gettimeofday(&now, NULL);
   localtime_r(&now.tv_sec, &tm);
   l = strftime(t, sizeof(t), "%b %d %H:%M:%S", &tm);
-  if (tvhlog_options & TVHLOG_OPT_MILLIS) {
+  if (options & TVHLOG_OPT_MILLIS) {
     int ms = now.tv_usec / 1000;
     snprintf(t+l, sizeof(t)-l, ".%03d", ms);
   }
 
   /* Basic message */
   l = snprintf(buf, sizeof(buf), "%s: ", subsys);
-  if (tvhlog_options & TVHLOG_OPT_FILELINE && severity >= LOG_DEBUG)
+  if (options & TVHLOG_OPT_FILELINE && severity >= LOG_DEBUG)
     l += snprintf(buf + l, sizeof(buf) - l, "(%s:%d) ", file, line);
   l += vsnprintf(buf + l, sizeof(buf) - l, fmt, args);
 
   /* Syslog */
-  if (tvhlog_options & TVHLOG_OPT_SYSLOG) {
-    if (tvhlog_options & TVHLOG_OPT_DBG_SYSLOG || severity < LOG_DEBUG) {
+  if (options & TVHLOG_OPT_SYSLOG) {
+    if (options & TVHLOG_OPT_DBG_SYSLOG || severity < LOG_DEBUG) {
       syslog(s, "%s", buf);
     }
   } 
@@ -174,13 +186,13 @@ void tvhlogv ( const char *file, int line,
   }
 
   /* Console */
-  if (tvhlog_options & TVHLOG_OPT_STDERR) {
-    if (tvhlog_options & TVHLOG_OPT_DBG_STDERR || severity < LOG_DEBUG) {
+  if (options & TVHLOG_OPT_STDERR) {
+    if (options & TVHLOG_OPT_DBG_STDERR || severity < LOG_DEBUG) {
       const char *leveltxt = logtxtmeta[severity][0];
       const char *sgr      = logtxtmeta[severity][1];
       const char *sgroff;
     
-      if (tvhlog_options & TVHLOG_OPT_DECORATE)
+      if (options & TVHLOG_OPT_DECORATE)
         sgroff = "\033[0m";
       else {
         sgr    = "";
@@ -191,20 +203,16 @@ void tvhlogv ( const char *file, int line,
   }
 
   /* File */
-  if (tvhlog_path) {
-    if (tvhlog_options & TVHLOG_OPT_DBG_FILE || severity < LOG_DEBUG) {
+  if (path) {
+    if (options & TVHLOG_OPT_DBG_FILE || severity < LOG_DEBUG) {
       const char *leveltxt = logtxtmeta[severity][0];
-      FILE *fp = fopen(tvhlog_path, "a");
+      FILE *fp = fopen(path, "a");
       if (fp) {
-        tvhlog_path_fail = 0;
         fprintf(fp, "%s [%7s]:%s\n", t, leveltxt, buf);
         fclose(fp);
-      } else {
-        if (!tvhlog_path_fail)
-          syslog(LOG_WARNING, "failed to write log file %s", tvhlog_path);
-        tvhlog_path_fail = 1;
       }
     }
+    free(path);
   }
 }
 
@@ -216,11 +224,11 @@ void _tvhlog ( const char *file, int line,
                const char *subsys, const char *fmt, ... )
 {
   va_list args;
-  pthread_mutex_lock(&tvhlog_mutex);
+  //pthread_mutex_lock(&tvhlog_mutex);
   va_start(args, fmt);
   tvhlogv(file, line, notify, severity, subsys, fmt, args);
   va_end(args);
-  pthread_mutex_unlock(&tvhlog_mutex);
+  //pthread_mutex_unlock(&tvhlog_mutex);
 }
 
 /*
@@ -238,7 +246,7 @@ _tvhlog_hexdump(const char *file, int line,
   va_list args;
   va_start(args, len);
 
-  pthread_mutex_lock(&tvhlog_mutex);
+  //pthread_mutex_lock(&tvhlog_mutex);
   while (len > 0) {
     c = 0;
     for (i = 0; i < HEXDUMP_WIDTH; i++) {
@@ -262,6 +270,6 @@ _tvhlog_hexdump(const char *file, int line,
     len  -= HEXDUMP_WIDTH;
     data += HEXDUMP_WIDTH;
   }
-  pthread_mutex_unlock(&tvhlog_mutex);
+  //pthread_mutex_unlock(&tvhlog_mutex);
 }
 
