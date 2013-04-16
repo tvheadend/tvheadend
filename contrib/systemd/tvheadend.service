@@ -1,11 +1,16 @@
 [Unit]
 Description=tvheadend
-Wants=network.target
+After=network.target
+Wants=oscam.service
+After=oscam.service
 
 [Service]
 Type=forking
 PIDFile=/run/tvheadend.pid
-ExecStart=/usr/bin/tvheadend -f -u hts -g video -C
+ExecStart=/usr/bin/tvheadend -f -p /run/tvheadend.pid -C -u hts -g video
+ExecStop=/usr/bin/rm /run/tvheadend.pid
+Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
