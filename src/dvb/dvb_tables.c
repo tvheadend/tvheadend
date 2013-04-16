@@ -336,6 +336,11 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 
   tsid         = ptr[0] << 8 | ptr[1];
   onid         = ptr[5] << 8 | ptr[6];
+
+  tvhtrace("sdt", "onid %04X tsid %04X", onid, tsid);
+  tvhlog_hexdump("sdt", ptr, len);
+
+  /* Find Transport Stream */
   if (tableid == 0x42) {
     dvb_mux_set_tsid(tdmi, tsid, 0);
     dvb_mux_set_onid(tdmi, onid, 0);
@@ -348,8 +353,6 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
         break;
     if (!tdmi) return -1;
   }
-  tvhtrace("sdt", "onid %04X tsid %04X", onid, tsid);
-  tvhlog_hexdump("sdt", ptr, len);
 
   //  version                     = ptr[2] >> 1 & 0x1f;
   //  section_number              = ptr[3];
@@ -427,12 +430,14 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       }
     }
 
-    if (!servicetype_is_tv(stype) &&
-        !servicetype_is_radio(stype))
-      continue;
+    if (!(t = dvb_service_find3(NULL, tdmi, NULL, 0, 0, service_id, 0, 0))) {
+      if (!servicetype_is_tv(stype) &&
+          !servicetype_is_radio(stype))
+        continue;
           
-    if (!(t = dvb_service_find(tdmi, service_id, 0, NULL)))
-      continue;
+      if (!(t = dvb_service_find(tdmi, service_id, 0, NULL)))
+        continue;
+    }
 
     if(t->s_servicetype != stype ||
        t->s_scrambled != free_ca_mode) {
