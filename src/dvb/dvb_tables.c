@@ -875,6 +875,9 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   tvhtrace("nit", "tableid 0x%02x", tableid);
   tvhlog_hexdump("nit", ptr, len);
 
+  /* Ignore other network */
+  if(tableid != 0x40) return -1;
+
   /* Check NID */
   if(tdmi->tdmi_adapter->tda_nitoid &&
      tdmi->tdmi_adapter->tda_nitoid != network_id)
@@ -901,7 +904,7 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       case DVB_DESC_NETWORK_NAME:
         if(dvb_get_string(netname, sizeof(netname), ptr+2, dlen, NULL, NULL))
           return -1;
-        if(tableid == 0x40 && (!tdmi->tdmi_network || *tdmi->tdmi_network == '\0'))
+        if(!tdmi->tdmi_network || *tdmi->tdmi_network == '\0')
           dvb_mux_set_networkname(tdmi, netname);
         break;
     }
