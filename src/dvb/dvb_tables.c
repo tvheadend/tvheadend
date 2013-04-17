@@ -718,8 +718,10 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
 		       uint16_t tsid, uint16_t onid, const char *netname)
 {
   int freq, symrate;
-  //  uint16_t orbital_pos;
   struct dvb_mux_conf dmc;
+#if ENABLE_TRACE
+  uint16_t orbital_pos;
+#endif
 
   if(len < 11)
     return -1;
@@ -733,10 +735,15 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   dmc.dmc_fe_params.frequency = freq * 10;
   tvhtrace("nit", "    dvb-s frequency %d", dmc.dmc_fe_params.frequency);
 
-  if(!freq)
+  if(!freq) {
+    tvhlog(LOG_ERR, "nit", "invalid frequency (%d)", freq);
     return -1;
+  }
 
-  //  orbital_pos = bcdtoint(ptr[4]) * 100 + bcdtoint(ptr[5]);
+#if ENABLE_TRACE
+  orbital_pos = bcdtoint(ptr[4]) * 100 + bcdtoint(ptr[5]);
+#endif
+  tvhtrace("nit", "    orbital pos %d", orbital_pos);
 
   symrate =
     bcdtoint(ptr[7]) * 100000 + bcdtoint(ptr[8]) * 1000 + 
@@ -783,7 +790,7 @@ dvb_table_sat_delivery(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   }
 
   if (dmc.dmc_fe_delsys == SYS_DVBS && dmc.dmc_fe_rolloff != ROLLOFF_35) {
-    printf ("error descriptor\n");
+    tvhlog(LOG_ERR, "nit", "error descriptor");
     return -1;
   }
 
@@ -922,7 +929,7 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       case DVB_DESC_NETWORK_NAME:
         if(dvb_get_string(netname, sizeof(netname), ptr+2, dlen, NULL, NULL))
           return -1;
-        if(!tdmi->tdmi_network || *tdmi->tdmi_network == '\0')
+        if((tableid == 0x40) && (!tdmi->tdmi_network || *tdmi->tdmi_network == '\0'))
           dvb_mux_set_networkname(tdmi, netname);
         break;
     }
