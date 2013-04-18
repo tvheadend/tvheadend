@@ -37,7 +37,7 @@ void tvhlog_set_subsys ( const char *subsys );
 void tvhlog_get_subsys ( char *subsys, size_t len );
 void tvhlogv           ( const char *file, int line,
                          int notify, int severity,
-                         const char *subsys, const char *fmt, va_list args, int noargs );
+                         const char *subsys, const char *fmt, va_list args );
 void _tvhlog           ( const char *file, int line,
                          int notify, int severity,
                          const char *subsys, const char *fmt, ... )
