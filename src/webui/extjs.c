@@ -198,10 +198,10 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 		 "<div class=\"about-title\">"
 		 "HTS Tvheadend %s"
 		 "</div><br>"
-		 "&copy; 2006 - 2012 Andreas \303\226man, et al.<br><br>"
+		 "&copy; 2006 - 2013 Andreas \303\226man, et al.<br><br>"
 		 "<img src=\"docresources/tvheadendlogo.png\"><br>"
-		 "<a href=\"http://www.lonelycoder.com/tvheadend\">"
-		 "http://www.lonelycoder.com/tvheadend</a><br><br>"
+		 "<a href=\"https://tvheadend.org\">"
+		 "https://tvheadend.org</a><br><br>"
 		 "Based on software from "
 		 "<a target=\"_blank\" href=\"http://www.extjs.com/\">ExtJS</a>. "
 		 "Icons from "
@@ -215,7 +215,7 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
      "All proceeds are used to support server infrastructure and buy test "
      "equipment."
      "<br/>"
-     "<a href='https://www.paypal.com/cgi-bin/webscr?cmd=_donations&#38;business=andreas%%40lonelycoder%%2ecom&#38;item_name=Donation%%20to%%20the%%20Tvheadend%%20project&#38;currency_code=USD'><img src='https://www.paypal.com/en_US/i/btn/btn_donate_LG.gif' alt='' /></a>"
+     "<a href='https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=3Z87UEHP3WZK2'><img src='https://www.paypalobjects.com/en_US/GB/i/btn/btn_donateCC_LG.gif' alt='' /></a>"
 		 "</center>",
 		 tvheadend_version,
 		 tvheadend_version);

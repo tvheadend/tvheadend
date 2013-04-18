@@ -319,7 +319,7 @@ show_usage
   }
   printf("\n");
   printf("For more information please visit the Tvheadend website:\n");
-  printf("  http://www.lonelycoder.com/tvheadend/\n");
+  printf("  https://tvheadend.org\n");
   printf("\n");
   exit(0);
 }
