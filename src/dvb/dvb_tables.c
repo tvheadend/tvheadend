@@ -430,14 +430,8 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       }
     }
 
-    if (!(t = dvb_service_find3(NULL, tdmi, NULL, 0, 0, service_id, 0, 0))) {
-      if (!servicetype_is_tv(stype) &&
-          !servicetype_is_radio(stype))
-        continue;
-          
-      if (!(t = dvb_service_find(tdmi, service_id, 0, NULL)))
-        continue;
-    }
+    if (!(t = dvb_service_find(tdmi, service_id, 0, NULL)))
+      continue;
 
     if(t->s_servicetype != stype ||
        t->s_scrambled != free_ca_mode) {
