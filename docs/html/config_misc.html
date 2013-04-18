@@ -44,7 +44,35 @@
   <dd>
   How frequently it will re-try fetching an image that has failed to be
   fetched.
+
+  <dt>Ignore invalid SSL certificates
+  <dd>Ignore invalid/unverifiable (expired, self-certified, etc.) certificates
+
  </dl>
+
+ <p>
+ Time Update - TVH now has a built-in capability to update the systme time.
+ However you should bare in mind that DVB time is not highly accurate and is
+ prone to both jitter and variation between different transponders.
+ <br/>
+ Where possible its probably still better to use an internet based NTP source
+ to synchronise the system clock.
+ </p>
+
+ <dl>
+ <dt>Update time
+ <dd>Enable system time updates, this will only work if the user
+ running TVH has rights to update the system clock (normally only root).
+ 
+ <dt>Enable NTP driver
+ <dd>This will create an NTP driver (using shmem interface) that you can feed
+ into ntpd. This can be run without root priviledges, but generally the 
+ performance is not that great.
+  
+ <dt>Update tolerance (milliseconds)
+ <dd>Only update the system clock (doesn't affect NTP driver) if the delta
+ between the system clock and DVB time is greater than this. This can help
+ stop horrible oscillations on the system clock.
 
  </dl>  
 </div>
