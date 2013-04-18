@@ -28,6 +28,6 @@ Further information
 -------------------
 
 For more information about building, including generating packages please visit:
-> https://www.lonelycoder.com/redmine/projects/tvheadend/wiki/Building
-> https://www.lonelycoder.com/redmine/projects/tvheadend/wiki/Packaging
-> https://www.lonelycoder.com/redmine/projects/tvheadend/wiki/Git
+> https://tvheadend.org/projects/tvheadend/wiki/Building
+> https://tvheadend.org/projects/tvheadend/wiki/Packaging
+> https://tvheadend.org/projects/tvheadend/wiki/Git
