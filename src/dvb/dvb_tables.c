@@ -435,10 +435,6 @@ dvb_sdt_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
       }
     }
 
-    if (!servicetype_is_tv(stype) &&
-        !servicetype_is_radio(stype))
-      continue;
-          
     if (!(t = dvb_service_find(tdmi, service_id, 0, NULL)))
       continue;
 
