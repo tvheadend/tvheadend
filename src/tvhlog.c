@@ -114,7 +114,7 @@ next:
 /* Log */
 void tvhlogv ( const char *file, int line,
                int notify, int severity,
-               const char *subsys, const char *fmt, va_list args )
+               const char *subsys, const char *fmt, va_list *args )
 {
   struct timeval now;
   struct tm tm;
@@ -167,7 +167,7 @@ void tvhlogv ( const char *file, int line,
   if (options & TVHLOG_OPT_FILELINE && severity >= LOG_DEBUG)
     l += snprintf(buf + l, sizeof(buf) - l, "(%s:%d) ", file, line);
   if (args)
-    l += vsnprintf(buf + l, sizeof(buf) - l, fmt, args);
+    l += vsnprintf(buf + l, sizeof(buf) - l, fmt, *args);
   else
     l += snprintf(buf + l, sizeof(buf) - l, "%s", fmt);
 
@@ -227,11 +227,9 @@ void _tvhlog ( const char *file, int line,
                const char *subsys, const char *fmt, ... )
 {
   va_list args;
-  //pthread_mutex_lock(&tvhlog_mutex);
   va_start(args, fmt);
-  tvhlogv(file, line, notify, severity, subsys, fmt, args);
+  tvhlogv(file, line, notify, severity, subsys, fmt, &args);
   va_end(args);
-  //pthread_mutex_unlock(&tvhlog_mutex);
 }
 
 /*
@@ -247,7 +245,6 @@ _tvhlog_hexdump(const char *file, int line,
   int i, c;
   char str[1024];
 
-  //pthread_mutex_lock(&tvhlog_mutex);
   while (len > 0) {
     c = 0;
     for (i = 0; i < HEXDUMP_WIDTH; i++) {
@@ -271,6 +268,5 @@ _tvhlog_hexdump(const char *file, int line,
     len  -= HEXDUMP_WIDTH;
     data += HEXDUMP_WIDTH;
   }
-  //pthread_mutex_unlock(&tvhlog_mutex);
 }
 
