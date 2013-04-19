@@ -148,6 +148,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   extjs_load(hq, "static/app/dvr.js");
   extjs_load(hq, "static/app/epggrab.js");
   extjs_load(hq, "static/app/config.js");
+  extjs_load(hq, "static/app/tvhlog.js");
   extjs_load(hq, "static/app/status.js");
 
   /**
@@ -199,10 +200,10 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 		 "<div class=\"about-title\">"
 		 "HTS Tvheadend %s"
 		 "</div><br>"
-		 "&copy; 2006 - 2012 Andreas \303\226man, et al.<br><br>"
+		 "&copy; 2006 - 2013 Andreas \303\226man, et al.<br><br>"
 		 "<img src=\"docresources/tvheadendlogo.png\"><br>"
-		 "<a href=\"http://www.lonelycoder.com/tvheadend\">"
-		 "http://www.lonelycoder.com/tvheadend</a><br><br>"
+		 "<a href=\"https://tvheadend.org\">"
+		 "https://tvheadend.org</a><br><br>"
 		 "Based on software from "
 		 "<a target=\"_blank\" href=\"http://www.extjs.com/\">ExtJS</a>. "
 		 "Icons from "
@@ -216,7 +217,7 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
      "All proceeds are used to support server infrastructure and buy test "
      "equipment."
      "<br/>"
-     "<a href='https://www.paypal.com/cgi-bin/webscr?cmd=_donations&#38;business=andreas%%40lonelycoder%%2ecom&#38;item_name=Donation%%20to%%20the%%20Tvheadend%%20project&#38;currency_code=USD'><img src='https://www.paypal.com/en_US/i/btn/btn_donate_LG.gif' alt='' /></a>"
+     "<a href='https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=3Z87UEHP3WZK2'><img src='https://www.paypalobjects.com/en_US/GB/i/btn/btn_donateCC_LG.gif' alt='' /></a>"
 		 "</center>",
 		 tvheadend_version,
 		 tvheadend_version);
@@ -2090,6 +2091,89 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
+ *
+ */
+static int
+extjs_tvhlog(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  const char *op = http_arg_get(&hc->hc_req_args, "op");
+  htsmsg_t *out, *m;
+
+  if(op == NULL)
+    return 400;
+
+  pthread_mutex_lock(&global_lock);
+
+  if(http_access_verify(hc, ACCESS_ADMIN)) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  /* Basic settings */
+  if(!strcmp(op, "loadSettings")) {
+    char str[2048];
+
+    /* Get config */
+    pthread_mutex_lock(&tvhlog_mutex);
+    m = htsmsg_create_map();
+    htsmsg_add_u32(m, "tvhlog_level",      tvhlog_level);
+    htsmsg_add_u32(m, "tvhlog_trace",      tvhlog_level > LOG_DEBUG);
+    tvhlog_get_subsys(str, sizeof(str));
+    htsmsg_add_str(m, "tvhlog_subsys",     str);
+    htsmsg_add_str(m, "tvhlog_path",       tvhlog_path ?: "");
+    htsmsg_add_u32(m, "tvhlog_options",    tvhlog_options);
+    htsmsg_add_u32(m, "tvhlog_dbg_syslog",
+                   tvhlog_options & TVHLOG_OPT_DBG_SYSLOG);
+    pthread_mutex_unlock(&tvhlog_mutex);
+    
+    if (!m) return HTTP_STATUS_BAD_REQUEST;
+    out = json_single_record(m, "config");
+
+  /* Save settings */
+  } else if (!strcmp(op, "saveSettings") ) {
+    const char *str;
+
+    pthread_mutex_lock(&tvhlog_mutex);
+    if ((str = http_arg_get(&hc->hc_req_args, "tvhlog_level")))
+      tvhlog_level = atoi(str);
+    if ((str = http_arg_get(&hc->hc_req_args, "tvhlog_trace")))
+      tvhlog_level = LOG_TRACE;
+    else
+      tvhlog_level = LOG_DEBUG;
+    if ((str = http_arg_get(&hc->hc_req_args, "tvhlog_path"))) {
+      free(tvhlog_path);
+      if (*str)
+        tvhlog_path  = strdup(str);
+      else
+        tvhlog_path  = NULL;
+    }
+    if ((str = http_arg_get(&hc->hc_req_args, "tvhlog_options")))
+      tvhlog_options = atoi(str);
+    if ((str = http_arg_get(&hc->hc_req_args, "tvhlog_dbg_syslog")))
+      tvhlog_options |= TVHLOG_OPT_DBG_SYSLOG;
+    else
+      tvhlog_options &= ~TVHLOG_OPT_DBG_SYSLOG;
+    tvhlog_set_subsys(http_arg_get(&hc->hc_req_args, "tvhlog_subsys"));
+    pthread_mutex_unlock(&tvhlog_mutex);
+  
+    out = htsmsg_create_map();
+    htsmsg_add_u32(out, "success", 1);
+
+  } else {
+    return HTTP_STATUS_BAD_REQUEST;
+  }
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+
+  return 0;
+}
+
+/**
  * Capability check
  */
 static int
@@ -2210,6 +2294,7 @@ extjs_start(void)
 #if ENABLE_TIMESHIFT
   http_path_add("/timeshift",        NULL, extjs_timeshift,        ACCESS_ADMIN);
 #endif
+  http_path_add("/tvhlog",           NULL, extjs_tvhlog,           ACCESS_ADMIN);
 
 #if ENABLE_LINUXDVB
   extjs_start_dvb();

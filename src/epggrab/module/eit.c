@@ -771,7 +771,7 @@ done:
   {
     int total = 0;
     int finished = 0;
-    tvhlog(LOG_DEBUG, mod->id, "scan status");
+    tvhtrace("eit", "scan status:");
     LIST_FOREACH(tsta, &sta->tables, link) {
       total++;
       tvhtrace("eit",

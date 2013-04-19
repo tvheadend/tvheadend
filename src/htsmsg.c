@@ -189,6 +189,21 @@ htsmsg_add_u32(htsmsg_t *msg, const char *name, uint32_t u32)
 /*
  *
  */
+int
+htsmsg_set_u32(htsmsg_t *msg, const char *name, uint32_t u32)
+{
+  htsmsg_field_t *f = htsmsg_field_find(msg, name);
+  if (!f)
+    f = htsmsg_field_add(msg, name, HMF_S64, HMF_NAME_ALLOCED);
+  if (f->hmf_type != HMF_S64)
+    return 1;
+  f->hmf_s64 = u32;
+  return 0;
+}
+
+/*
+ *
+ */
 void
 htsmsg_add_s64(htsmsg_t *msg, const char *name, int64_t s64)
 {

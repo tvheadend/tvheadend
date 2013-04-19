@@ -435,7 +435,7 @@ th_dvb_mux_instance_t *dvb_mux_create(th_dvb_adapter_t *tda,
 				      uint16_t onid, uint16_t tsid, const char *network,
 				      const char *logprefix, int enabled,
 				      int initialscan, const char *identifier,
-				      dvb_satconf_t *satconf, int create);
+				      dvb_satconf_t *satconf, int create, th_dvb_mux_instance_t *src);
 
 void dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *name);
 

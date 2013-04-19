@@ -763,8 +763,8 @@ static struct strtab stypetab[] = {
   { "HDTV",         ST_DN_HDTV },
   { "SDTV",         ST_SK_SDTV },
   { "SDTV",         ST_NE_SDTV },
-  { "SDTV-AC",      ST_AC_SDTV },
-  { "HDTV-AC",      ST_AC_HDTV },
+  { "SDTV",         ST_AC_SDTV },
+  { "HDTV",         ST_AC_HDTV },
 };
 
 const char *

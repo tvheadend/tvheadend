@@ -320,6 +320,9 @@ function accessUpdate(o) {
       tabs1.push(tvheadend.conf_csa);
     }
 
+    /* Debug */
+    tabs1.push(new tvheadend.tvhlog);
+
     tvheadend.confpanel = new Ext.TabPanel({
       activeTab : 0,
       autoScroll : true,

@@ -67,6 +67,7 @@ endif
 #
 SRCS =  src/version.c \
 	src/main.c \
+	src/tvhlog.c \
 	src/utils.c \
 	src/wrappers.c \
 	src/access.c \

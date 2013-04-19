@@ -32,6 +32,7 @@
 #include "avg.h"
 #include "hts_strtab.h"
 #include "htsmsg.h"
+#include "tvhlog.h"
 
 #include "redblack.h"
 
@@ -440,29 +441,6 @@ static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 void tvh_str_set(char **strp, const char *src);
 int tvh_str_update(char **strp, const char *src);
 
-void tvhlog(int severity, const char *subsys, const char *fmt, ...)
-  __attribute__((format(printf,3,4)));
-
-void tvhlog_spawn(int severity, const char *subsys, const char *fmt, ...)
-  __attribute__((format(printf,3,4)));
-
-#define	LOG_EMERG	0	/* system is unusable */
-#define	LOG_ALERT	1	/* action must be taken immediately */
-#define	LOG_CRIT	2	/* critical conditions */
-#define	LOG_ERR		3	/* error conditions */
-#define	LOG_WARNING	4	/* warning conditions */
-#define	LOG_NOTICE	5	/* normal but significant condition */
-#define	LOG_INFO	6	/* informational */
-#define	LOG_DEBUG	7	/* debug-level messages */
-
-#ifndef ENABLE_TRACE
-#define tvhtrace(...) ((void)0)
-#else
-void tvhtrace(const char *subsys, const char *fmt, ...);
-#endif
-
-extern int log_debug;
-
 #ifndef CLOCK_MONOTONIC_COARSE
 #define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
 #endif
@@ -571,10 +549,22 @@ int rmtree ( const char *path );
 char *regexp_escape ( const char *str );
 
 /* printing */
-#if __SIZEOF_LONG__ == 8
-  #define PRItime_t PRId64
+# if __WORDSIZE == 64
+#define PRIsword_t      PRId64
+#define PRIuword_t      PRIu64
 #else
-  #define PRItime_t "l" PRId32
+#define PRIsword_t      PRId32
+#define PRIuword_t      PRIu32
+#endif
+#define PRIslongword_t  "ld"
+#define PRIulongword_t  "lu"
+#define PRIsize_t       PRIuword_t
+#define PRIssize_t      PRIsword_t
+#define PRItime_t       PRIslongword_t
+#if _FILE_OFFSET_BITS == 64
+#define PRIoff_t        PRId64
+#else
+#define PRIoff_t        PRIslongword_t
 #endif
 
 #endif /* TV_HEAD_H */
