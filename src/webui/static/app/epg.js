@@ -85,12 +85,71 @@ tvheadend.epgDetails = function(event) {
 		}), new Ext.Button({
 			handler : recordSeries,
 			text : event.serieslink ? "Record series" : "Autorec"
+		}), new Ext.Button({
+			handler : checkConflict,
+			text : "Check for conflict"
 		}) ],
 		buttonAlign : 'center',
 		html : content
 	});
 	win.show();
 
+        function checkConflict() {
+            	Ext.Ajax.request({
+			url : 'dvr',
+			params : {
+				eventId : event.id,
+				op : "checkConflictEvent",
+				config_name : confcombo.getValue()
+			},
+
+			success : function(response, options) {
+                                var r = Ext.util.JSON.decode(response.responseText);
+                                
+				console.log(response.responseText);
+                                if (r.conflict) {
+                                    var start = new Date(event.start);
+                                    var contents = 
+                                        '<div>'+start.format('D j M H:i') + 
+                                        '&nbsp;-&nbsp;' + event.channel +
+                                        '&nbsp;-&nbsp;' + event.title + '</div>' +
+                                        '<div class="conflict-separator">Conflicts with:</div>';
+                                    
+                                    for (var s=0;s < r.suggestions.length; s++){
+                                        
+                                        for (var d=0;d<r.suggestions[s].length; d++){
+                                            var item = r.suggestions[s][d];
+                                            start  = new Date(item.start * 1000);
+                                            contents += '<div>' + 
+                                                start.format('D j M H:i') + 
+                                                '&nbsp;-&nbsp;' +
+                                                item.channel +
+                                                '&nbsp;-&nbsp;' + item.title + '</div>';
+                                        }
+                                        
+                                        if (s + 1 < r.suggestions.length){
+                                            contents += '<div class="conflict-separator">Or:</div>';
+                                        }
+                                    }
+                                    Ext.MessageBox.show({
+                                           title:'Conflict Check',
+                                           msg: contents,
+                                           buttons: Ext.MessageBox.OK,
+                                           width: 600
+                                        });
+                                } else {
+                                    Ext.MessageBox.alert('Conflict Check', 
+                                                         "No conflicts detected.");
+                                }
+                                win.close();
+			},
+
+			failure : function(response, options) {
+				Ext.MessageBox.alert('Conflict Check', response.statusText);
+			}
+		});
+        }
+        
 	function recordEvent() {
 		record('recordEvent');
 	}

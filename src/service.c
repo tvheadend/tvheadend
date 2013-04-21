@@ -312,6 +312,33 @@ servicecmp(const void *A, const void *B)
   return prio_a - prio_b;
 }
 
+/**
+ * 
+ */
+service_t **
+service_get_sorted_list(channel_t *ch, int *count)
+{
+    service_t *t, **vec;  
+    int cnt = 0;
+    
+    LIST_FOREACH(t, &ch->ch_services, s_ch_link)
+        cnt++;
+
+    vec = calloc(cnt, sizeof(service_t *));
+
+    cnt = 0;
+    LIST_FOREACH(t, &ch->ch_services, s_ch_link) {
+
+      if(!t->s_is_enabled(t)) {
+        continue;
+      }
+      vec[cnt] = t;
+      cnt++;
+    }
+    qsort(vec, cnt, sizeof(service_t *), servicecmp);
+    *count = cnt;
+    return vec;
+}
 
 /**
  *

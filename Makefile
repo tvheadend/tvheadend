@@ -132,6 +132,7 @@ SRCS += src/plumbing/tsfix.c \
 SRCS += src/dvr/dvr_db.c \
 	src/dvr/dvr_rec.c \
 	src/dvr/dvr_autorec.c \
+        src/conflict.c
 
 SRCS += src/webui/webui.c \
 	src/webui/comet.c \
