@@ -298,7 +298,7 @@ static dvr_entry_t *_dvr_entry_create (
   const char *config_name, epg_broadcast_t *e,
   channel_t *ch, time_t start, time_t stop, 
   time_t start_extra, time_t stop_extra,
-	const char *title, const char *description, const char *lang,
+	const char *title, const char *subtitle, const char *description, const char *lang,
   epg_genre_t *content_type,
 	const char *creator, dvr_autorec_entry_t *dae,
 	dvr_prio_t pri)
@@ -345,20 +345,30 @@ static dvr_entry_t *_dvr_entry_create (
     de->de_dvb_eid = e->dvb_eid;
     if (e->episode && e->episode->title)
       de->de_title = lang_str_copy(e->episode->title);
-    if (e->description)
+    if (e->description) {
       de->de_desc  = lang_str_copy(e->description);
+      if (e->summary)
+        de->de_subtitle = lang_str_copy(e->summary);
+    }
     else if (e->episode && e->episode->description)
       de->de_desc = lang_str_copy(e->episode->description);
     else if (e->summary)
       de->de_desc = lang_str_copy(e->summary);
     else if (e->episode && e->episode->summary)
       de->de_desc = lang_str_copy(e->episode->summary);
+    if (e->episode && e->episode->subtitle) {
+      de->de_subtitle = lang_str_copy(e->episode->subtitle);
+    }
   } else if (title) {
     de->de_title = lang_str_create();
     lang_str_add(de->de_title, title, lang, 0);
     if (description) {
       de->de_desc = lang_str_create();
       lang_str_add(de->de_desc, description, lang, 0);
+    }
+    if (subtitle) {
+      de->de_subtitle = lang_str_create();
+      lang_str_add(de->de_subtitle, subtitle, lang, 0);
     }
   }
   if (content_type) de->de_content_type = *content_type;
@@ -395,14 +405,14 @@ dvr_entry_t *
 dvr_entry_create(const char *config_name,
                  channel_t *ch, time_t start, time_t stop, 
                  time_t start_extra, time_t stop_extra,
-		             const char *title, const char *description, const char *lang,
+		             const char *title, const char *subtitle, const char *description, const char *lang,
                  epg_genre_t *content_type,
 		             const char *creator, dvr_autorec_entry_t *dae,
                  dvr_prio_t pri)
 {
   return _dvr_entry_create(config_name, NULL,
                            ch, start, stop, start_extra, stop_extra,
-                           title, description, lang, content_type,
+                           title, subtitle, description, lang, content_type,
                            creator, dae, pri);
 }
 
@@ -422,7 +432,7 @@ dvr_entry_create_by_event(const char *config_name,
   return _dvr_entry_create(config_name, e,
                            e->channel, e->start, e->stop,
                            start_extra, stop_extra,
-                           NULL, NULL, NULL,
+                           NULL, NULL, NULL, NULL,
                            LIST_FIRST(&e->episode->genre),
                            creator, dae, pri);
 }
@@ -475,6 +485,7 @@ dvr_entry_dec_ref(dvr_entry_t *de)
   free(de->de_config_name);
   free(de->de_creator);
   if (de->de_title) lang_str_destroy(de->de_title);
+  if (de->de_subtitle) lang_str_destroy(de->de_subtitle);
   if (de->de_desc)  lang_str_destroy(de->de_desc);
   if(de->de_bcast) de->de_bcast->putref((epg_object_t*)de->de_bcast);
 
@@ -582,6 +593,8 @@ dvr_db_load_one(htsmsg_t *c, int id)
     de->de_stop_extra = d;
 
 
+  if ((ls = lang_str_deserialize(c, "subtitle")))
+    de->de_subtitle = ls;
   if ((ls = lang_str_deserialize(c, "description")))
     de->de_desc = ls;
   tvh_str_set(&de->de_filename, htsmsg_get_str(c, "filename"));
@@ -667,6 +680,9 @@ dvr_entry_save(dvr_entry_t *de)
   if(de->de_dvb_eid)
     htsmsg_add_u32(m, "dvb_eid", de->de_dvb_eid);
 
+  if(de->de_subtitle != NULL)
+    lang_str_serialize(de->de_subtitle, m, "subtitle");
+
   if(de->de_desc != NULL)
     lang_str_serialize(de->de_desc, m, "description");
 
@@ -709,7 +725,7 @@ dvr_timer_expire(void *aux)
 
 static dvr_entry_t *_dvr_entry_update
   ( dvr_entry_t *de, epg_broadcast_t *e,
-    const char *title, const char *desc, const char *lang, 
+    const char *title, const char *subtitle, const char *desc, const char *lang, 
     time_t start, time_t stop, time_t start_extra, time_t stop_extra )
 {
   int save = 0;
@@ -747,6 +763,15 @@ static dvr_entry_t *_dvr_entry_update
     save = lang_str_add(de->de_title, title, lang, 1);
   }
   
+  /* Subtitle */ 
+  if (e && e->episode && e->episode->subtitle) {
+    if (de->de_subtitle) lang_str_destroy(de->de_subtitle);
+    de->de_subtitle = lang_str_copy(e->episode->subtitle);
+  } else if (subtitle) {
+    if (!de->de_subtitle) de->de_subtitle = lang_str_create();
+    save = lang_str_add(de->de_subtitle, subtitle, lang, 1);
+  }
+  
   /* EID */
   if (e && e->dvb_eid != de->de_dvb_eid) {
     de->de_dvb_eid = e->dvb_eid;
@@ -754,6 +779,13 @@ static dvr_entry_t *_dvr_entry_update
   }
 
   // TODO: description
+  if (e && e->description) {
+    if (de->de_desc) lang_str_destroy(de->de_desc);
+    de->de_desc = lang_str_copy(e->description);
+  } else if (desc) {
+    if (!de->de_desc) de->de_desc = lang_str_create();
+    save = lang_str_add(de->de_desc, desc, lang, 1);
+  }
 
   /* Genre */
   if (e && e->episode) {
@@ -791,11 +823,11 @@ static dvr_entry_t *_dvr_entry_update
 dvr_entry_t * 
 dvr_entry_update
   (dvr_entry_t *de,
-   const char* de_title, const char *de_desc, const char *lang,
+   const char* de_title, const char* de_subtitle, const char *de_desc, const char *lang,
    time_t de_start, time_t de_stop,
    time_t de_start_extra, time_t de_stop_extra) 
 {
-  return _dvr_entry_update(de, NULL, de_title, de_desc, lang, 
+  return _dvr_entry_update(de, NULL, de_title, de_subtitle, de_desc, lang, 
                            de_start, de_stop, de_start_extra, de_stop_extra);
 }
 
@@ -833,6 +865,17 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
       dvr_entry_remove(de);
 
     /* Find match */
+    RB_FOREACH(e, &e->channel->ch_epg_schedule, sched_link) {
+      if (dvr_entry_fuzzy_match(de, e)) {
+        tvhtrace("dvr",
+                 "  replacement event %s on %s @ %"PRItime_t
+                 " to %"PRItime_t,
+                 epg_broadcast_get_title(e, NULL), e->channel->ch_name,
+                 e->start, e->stop);
+        e->getref(e);
+        de->de_bcast = e;
+        _dvr_entry_update(de, e, NULL, NULL, NULL, NULL, 0, 0, 0, 0);
+        break;
     } else {
       RB_FOREACH(e, &e->channel->ch_epg_schedule, sched_link) {
         if (dvr_entry_fuzzy_match(de, e)) {
@@ -843,7 +886,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
                    e->start, e->stop);
           e->getref(e);
           de->de_bcast = e;
-          _dvr_entry_update(de, e, NULL, NULL, NULL, 0, 0, 0, 0);
+          _dvr_entry_update(de, e, NULL, NULL, NULL, NULL, 0, 0, 0, 0);
           break;
         }
       }
@@ -856,7 +899,7 @@ void dvr_event_updated ( epg_broadcast_t *e )
   dvr_entry_t *de;
   de = dvr_entry_find_by_event(e);
   if (de)
-    _dvr_entry_update(de, e, NULL, NULL, NULL, 0, 0, 0, 0);
+    _dvr_entry_update(de, e, NULL, NULL, NULL, NULL, 0, 0, 0, 0);
   else {
     LIST_FOREACH(de, &dvrentries, de_global_link) {
       if (de->de_sched_state != DVR_SCHEDULED) continue;
@@ -871,7 +914,7 @@ void dvr_event_updated ( epg_broadcast_t *e )
                  e->start, e->stop);
         e->getref(e);
         de->de_bcast = e;
-        _dvr_entry_update(de, e, NULL, NULL, NULL, 0, 0, 0, 0);
+        _dvr_entry_update(de, e, NULL, NULL, NULL, NULL, 0, 0, 0, 0);
         break;
       }
     }

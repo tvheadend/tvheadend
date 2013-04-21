@@ -51,6 +51,8 @@
 #include "timeshift.h"
 #include "tvhtime.h"
 
+#include <sys/statvfs.h>
+
 /**
  *
  */
@@ -538,6 +540,32 @@ extjs_ecglist(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
+ * disk space
+ */
+static int
+extjs_diskspace(http_connection_t *hc, const char *remain, void *opaque)
+{
+  htsbuf_queue_t *hq = &hc->hc_reply;
+  htsmsg_t *out;
+  struct statvfs diskdata;
+  dvr_config_t *cfg = dvr_config_find_by_name_default("");
+
+  if(statvfs(cfg->dvr_storage,&diskdata) == -1)
+    return HTTP_STATUS_BAD_REQUEST;
+  
+  out = htsmsg_create_map();
+  htsmsg_add_s64(out, "freediskspace",
+		 diskdata.f_bsize * (int64_t)diskdata.f_bavail);
+  htsmsg_add_s64(out, "totaldiskspace",
+		 diskdata.f_bsize * (int64_t)diskdata.f_blocks);
+
+  htsmsg_json_serialize(out, hq, 0);
+  htsmsg_destroy(out);
+  http_output_content(hc, "text/x-json; charset=UTF-8");
+  return 0;
+}
+
+/**
  *
  */
 static htsmsg_t *
@@ -919,8 +947,11 @@ extjs_epg(http_connection_t *hc, const char *remain, void *opaque)
     if((s = epg_episode_get_subtitle(ee, lang)))
       htsmsg_add_str(m, "subtitle", s);
 
-    if((s = epg_broadcast_get_description(e, lang)))
+    if((s = epg_broadcast_get_description(e, lang))) {
       htsmsg_add_str(m, "description", s);
+      if((s = epg_broadcast_get_summary(e, lang)))
+         htsmsg_add_str(m, "subtitle", s);
+    }
     else if((s = epg_broadcast_get_summary(e, lang)))
       htsmsg_add_str(m, "description", s);
 
@@ -1166,6 +1197,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
 
     const char *config_name = http_arg_get(&hc->hc_req_args, "config_name");
     const char *title    = http_arg_get(&hc->hc_req_args, "title");
+    const char *subtitle = http_arg_get(&hc->hc_req_args, "subtitle");
     const char *datestr  = http_arg_get(&hc->hc_req_args, "date");
     const char *startstr = http_arg_get(&hc->hc_req_args, "starttime");
     const char *stopstr  = http_arg_get(&hc->hc_req_args, "stoptime");
@@ -1215,7 +1247,7 @@ extjs_dvr(http_connection_t *hc, const char *remain, void *opaque)
     }
 
     dvr_entry_create(config_name,
-                     ch, start, stop, 0, 0, title, NULL, NULL,
+                     ch, start, stop, 0, 0, title, subtitle, NULL, NULL,
                      0, hc->hc_representative, 
 		                 NULL, dvr_pri2val(pri));
 
@@ -1410,6 +1442,9 @@ extjs_dvrlist(http_connection_t *hc, const char *remain, void *opaque,
 
     if(de->de_desc != NULL)
       htsmsg_add_str(m, "description", lang_str_get(de->de_desc, NULL));
+      
+    if(de->de_subtitle != NULL && lang_str_get(de->de_subtitle, NULL) != NULL)
+      htsmsg_add_str(m, "subtitle", lang_str_get(de->de_subtitle, NULL));
 
     if (de->de_bcast && de->de_bcast->episode)
       if (epg_episode_number_format(de->de_bcast->episode, buf, 100, NULL, "Season %d", ".", "Episode %d", "/%d"))
@@ -2250,6 +2285,7 @@ extjs_start(void)
   http_path_add("/subscriptions",    NULL, extjs_subscriptions,    ACCESS_WEB_INTERFACE);
   http_path_add("/ecglist",          NULL, extjs_ecglist,          ACCESS_WEB_INTERFACE);
   http_path_add("/config",           NULL, extjs_config,           ACCESS_WEB_INTERFACE);
+  http_path_add("/diskspace",        NULL, extjs_diskspace,        ACCESS_WEB_INTERFACE);
   http_path_add("/languages",        NULL, extjs_languages,        ACCESS_WEB_INTERFACE);
   http_path_add("/mergechannel",     NULL, extjs_mergechannel,     ACCESS_ADMIN);
   http_path_add("/iptv/services",    NULL, extjs_iptvservices,     ACCESS_ADMIN);

@@ -134,6 +134,7 @@ typedef struct dvr_entry {
   char *de_filename;   /* Initially null if no filename has been
 			  generated yet */
   lang_str_t *de_title;      /* Title in UTF-8 (from EPG) */
+  lang_str_t *de_subtitle;   /* Subtitle in UTF-8 (from EPG) */
   lang_str_t *de_desc;       /* Description in UTF-8 (from EPG) */
   epg_genre_t de_content_type; /* Content type (from EPG) */
 
@@ -280,14 +281,14 @@ dvr_entry_t *dvr_entry_create
   (const char *dvr_config_name,
    channel_t *ch, time_t start, time_t stop, 
    time_t start_extra, time_t stop_extra,
-	 const char *title, const char *description, const char *lang,
+	 const char *title, const char *subtitle, const char *description, const char *lang,
    epg_genre_t *content_type,
 	 const char *creator, dvr_autorec_entry_t *dae,
 	 dvr_prio_t pri);
 
 dvr_entry_t *dvr_entry_update
   (dvr_entry_t *de,
-   const char* de_title, const char *de_desc, const char *lang, 
+   const char *de_title, const char *de_subtitle, const char *de_desc, const char *lang, 
    time_t de_start, time_t de_stop,
    time_t de_start_extra, time_t de_stop_extra );
 
