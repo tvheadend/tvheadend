@@ -47,6 +47,7 @@
 #include "config2.h"
 #include "lang_codes.h"
 #include "subscriptions.h"
+#include "tvadapters.h"
 
 /**
  *
@@ -1813,6 +1814,7 @@ extjs_service_update(htsmsg_t *in)
   }
 }
 
+#if 0
 /**
  *
  */
@@ -1844,6 +1846,7 @@ extjs_tvadapter(http_connection_t *hc, const char *remain, void *opaque)
   http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
+#endif
 
 /**
  *
@@ -1928,17 +1931,14 @@ extjs_get_idnode(http_connection_t *hc, const char *remain, void *opaque,
   if(!strcmp(s, "root")) {
     v = rootfn();
   } else {
-    idnode_t *n = idnode_find(s, NULL);
-    v = n != NULL && n->in_class->ic_get_childs != NULL ?
-      n->in_class->ic_get_childs(n) : NULL;
+    v = idnode_get_childs(idnode_find(s, NULL));
   }
 
   if(v != NULL) {
     int i;
     for(i = 0; v[i] != NULL; i++) {
       htsmsg_t *m = idnode_serialize(v[i]);
-      if(v[i]->in_class->ic_get_childs == NULL)
-        htsmsg_add_u32(m, "leaf", 1);
+      htsmsg_add_u32(m, "leaf", idnode_is_leaf(v[i]));
       htsmsg_add_msg(out, NULL, m);
     }
   }
@@ -1995,6 +1995,15 @@ extjs_item_update(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 
+/**
+ *
+ */
+static int
+extjs_tvadapters(http_connection_t *hc, const char *remain, void *opaque)
+{
+  return extjs_get_idnode(hc, remain, opaque, &tv_adapters_root);
+}
+
 
 
 /**
@@ -2022,8 +2031,11 @@ extjs_start(void)
   http_path_add("/mergechannel",   NULL, extjs_mergechannel,   ACCESS_ADMIN);
   http_path_add("/iptv/services",  NULL, extjs_iptvservices,   ACCESS_ADMIN);
   http_path_add("/servicedetails", NULL, extjs_servicedetails, ACCESS_ADMIN);
-  http_path_add("/tv/adapter",     NULL, extjs_tvadapter,      ACCESS_ADMIN);
+  //  http_path_add("/tv/adapter",     NULL, extjs_tvadapter,      ACCESS_ADMIN);
   http_path_add("/item/update",    NULL, extjs_item_update,    ACCESS_ADMIN);
+
+  http_path_add("/tvadapters",
+		NULL, extjs_tvadapters, ACCESS_ADMIN);
 
 #if ENABLE_LINUXDVB
   extjs_start_dvb();

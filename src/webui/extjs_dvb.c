@@ -45,7 +45,7 @@
 
 
 
-
+#if 0
 /**
  *
  */
@@ -83,8 +83,10 @@ extjs_dvblocations(http_connection_t *hc, const char *remain, void *opaque)
   http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
+#endif
 
 
+#if 0
 /**
  *
  */
@@ -100,7 +102,6 @@ json_single_record(htsmsg_t *rec, const char *root)
   htsmsg_add_msg(out, root, array);
   return out;
 }
-
 
 
 /**
@@ -249,6 +250,7 @@ extjs_dvbadapter(http_connection_t *hc, const char *remain, void *opaque)
   http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;  
 }
+#endif
 
 #if 0
 
@@ -669,18 +671,6 @@ extjs_dvb_copymux(http_connection_t *hc, const char *remain, void *opaque)
 /**
  *
  */
-void
-extjs_list_dvb_adapters(htsmsg_t *array)
-{
-  th_dvb_adapter_t *tda;
-  TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link)
-    htsmsg_add_msg(array, NULL, dvb_adapter_build_msg(tda));
-}
-
-
-/**
- *
- */
 static int
 extjs_dvbnetworks(http_connection_t *hc, const char *remain, void *opaque)
 {
@@ -696,13 +686,13 @@ extjs_start_dvb(void)
 {
   http_path_add("/dvb/networks", 
 		NULL, extjs_dvbnetworks, ACCESS_WEB_INTERFACE);
+#if 0
   http_path_add("/dvb/locations", 
 		NULL, extjs_dvblocations, ACCESS_WEB_INTERFACE);
 
   http_path_add("/dvb/adapter", 
 		NULL, extjs_dvbadapter, ACCESS_ADMIN);
 
-#if 0
 
   http_path_add("/dvb/muxes", 
 		NULL, extjs_dvbmuxes, ACCESS_ADMIN);

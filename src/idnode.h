@@ -10,6 +10,7 @@ typedef struct idclass {
   const struct idclass *ic_super;
   const char *ic_class;
   const char *ic_caption;
+  int ic_leaf;
   struct htsmsg *(*ic_serialize)(struct idnode *self);
   struct idnode **(*ic_get_childs)(struct idnode *self);
   const char *(*ic_get_title)(struct idnode *self);
@@ -32,6 +33,10 @@ const char *idnode_uuid_as_str(const idnode_t *in);
 
 void *idnode_find(const char *uuid, const idclass_t *class);
 
+idnode_t **idnode_get_childs(idnode_t *in);
+
+int idnode_is_leaf(idnode_t *in);
+
 void idnode_unlink(idnode_t *in);
 
 htsmsg_t *idnode_serialize(struct idnode *self);
@@ -44,4 +49,5 @@ void idnode_update_all_props(idnode_t *in,
                              void *opaque);
 
 void idnode_notify_title_changed(void *obj);
+
 

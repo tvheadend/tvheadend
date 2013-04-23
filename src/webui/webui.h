@@ -33,12 +33,10 @@ size_t html_escaped_len(const char *src);
 const char* html_escape(char *dst, const char *src, size_t len);
 
 #if ENABLE_LINUXDVB
-void extjs_list_dvb_adapters(htsmsg_t *array);
 void extjs_start_dvb(void);
 #endif
 
 #if ENABLE_V4L
-void extjs_list_v4l_adapters(htsmsg_t *array);
 void extjs_start_v4l(void);
 #endif
 

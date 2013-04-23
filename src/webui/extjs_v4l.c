@@ -265,6 +265,7 @@ extjs_v4lservices(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+#if 0
 
 /**
  *
@@ -277,6 +278,7 @@ extjs_list_v4l_adapters(htsmsg_t *array)
   TAILQ_FOREACH(va, &v4l_adapters, va_global_link) 
     htsmsg_add_msg(array, NULL, v4l_adapter_build_msg(va));
 }
+#endif
 
 
 /**

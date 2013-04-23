@@ -541,7 +541,6 @@ capmt_thread(void *aux)
   capmt_t *capmt = aux;
   struct timespec ts;
   int d, i, bind_ok = 0;
-  th_dvb_adapter_t *tda;
 
   while (capmt->capmt_running) {
     for (i = 0; i < MAX_CA; i++)
@@ -574,6 +573,9 @@ capmt_thread(void *aux)
       if (!capmt->capmt_oscam) {
         bind_ok = capmt_create_udp_socket(&capmt->capmt_sock_ca0[0], capmt->capmt_port);
       } else {
+
+#if 0
+  th_dvb_adapter_t *tda;
         TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
           if (tda->tda_rootpath) {          //if rootpath is NULL then can't rely on tda_adapter_num because it is always 0
             if (tda->tda_adapter_num > MAX_CA) {
@@ -584,6 +586,7 @@ capmt_thread(void *aux)
             bind_ok = capmt_create_udp_socket(&capmt->capmt_sock_ca0[tda->tda_adapter_num], 9000 + tda->tda_adapter_num);
           }
         }
+#endif
       }
       if (bind_ok)
         handle_ca0(capmt);

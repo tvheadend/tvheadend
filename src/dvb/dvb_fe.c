@@ -390,7 +390,7 @@ dvb_fe_tune_tdmi(th_dvb_mux_instance_t *tdmi, const char *reason)
   free(tda->tda_tune_reason);
   tda->tda_tune_reason = strdup(reason);
 
-  dvb_adapter_start(tda);
+  abort(); // dvb_adapter_start(tda);
 
   // Make sure dvb_mux_stop() did the right thing
   assert(tda->tda_current_tdmi == NULL);

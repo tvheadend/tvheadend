@@ -65,6 +65,7 @@ endif
 SRCS =  src/main.c \
 	src/idnode.c \
 	src/prop.c \
+	src/tvadapters.c \
 	src/utils.c \
 	src/wrappers.c \
 	src/version.c \
@@ -154,7 +155,8 @@ SRCS-${CONFIG_LINUXDVB} += \
 	src/dvb/dvb_fe.c \
 	src/dvb/dvb_tables.c \
 	src/dvb/diseqc.c \
-	src/dvb/dvb_adapter.c \
+	src/dvb/dvb_linux.c \
+	src/dvb/dvb_hardware.c \
 	src/dvb/dvb_network.c \
 	src/dvb/dvb_multiplex.c \
 	src/dvb/dvb_service.c \

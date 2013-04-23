@@ -194,11 +194,47 @@ add_params(struct idnode *self, const idclass_t *ic, htsmsg_t *p)
 static const char *
 idnode_get_title(idnode_t *in)
 {
-  if(in->in_class->ic_get_title != NULL) {
-    return in->in_class->ic_get_title(in);
-  } else {
-    return idnode_uuid_as_str(in);
+  const idclass_t *ic = in->in_class;
+  for(; ic != NULL; ic = ic->ic_super) {
+    if(ic->ic_get_title != NULL)
+      return ic->ic_get_title(in);
   }
+  return idnode_uuid_as_str(in);
+}
+
+
+/**
+ *
+ */
+idnode_t **
+idnode_get_childs(idnode_t *in)
+{
+  if(in == NULL)
+    return NULL;
+
+  const idclass_t *ic = in->in_class;
+  for(; ic != NULL; ic = ic->ic_super) {
+    if(ic->ic_get_childs != NULL)
+      return ic->ic_get_childs(in);
+  }
+  return NULL;
+}
+
+
+/**
+ *
+ */
+int
+idnode_is_leaf(idnode_t *in)
+{
+  const idclass_t *ic = in->in_class;
+  if(ic->ic_leaf)
+    return 1;
+  for(; ic != NULL; ic = ic->ic_super) {
+    if(ic->ic_get_childs != NULL)
+      return 0;
+  }
+  return 1;
 }
 
 

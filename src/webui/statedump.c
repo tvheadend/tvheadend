@@ -75,7 +75,6 @@ dumpchannels(htsbuf_queue_t *hq)
   }
 }
 
-#if ENABLE_LINUXDVB
 #if 0
 static void
 dumptransports(htsbuf_queue_t *hq, struct service_list *l, int indent)
@@ -120,7 +119,6 @@ dumptransports(htsbuf_queue_t *hq, struct service_list *l, int indent)
 
   }
 }
-#endif
 
 
 
@@ -171,10 +169,6 @@ page_statedump(http_connection_t *hc, const char *remain, void *opaque)
 		 tvh_binshasum[19]);
 
   dumpchannels(hq);
-  
-#if ENABLE_LINUXDVB
-  dumpdvbadapters(hq);
-#endif 
 
   http_output_content(hc, "text/plain; charset=UTF-8");
   return 0;

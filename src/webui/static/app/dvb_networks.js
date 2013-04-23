@@ -33,13 +33,12 @@ tvheadend.item_editor = function(item) {
   }
 
   var panel = new Ext.FormPanel({
-    labelWidth: 75, // label settings here cascade unless overridden
-    url:'save-form.php',
+    labelWidth: 150, // label settings here cascade unless overridden
     frame:true,
     title: 'Parameters',
     bodyStyle:'padding:5px 5px 0',
-    width: 350,
-    defaults: {width: 230},
+    width: 500,
+    defaults: {width: 330},
     defaultType: 'textfield',
     items: fields,
 
@@ -72,12 +71,12 @@ tvheadend.item_editor = function(item) {
 /**
  *
  */
-tvheadend.dvb_networks = function() {
+tvheadend.item_browser = function(url, title) {
 
   var current = null;
 
   var loader = new Ext.tree.TreeLoader({
-    dataUrl: 'dvb/networks'
+    dataUrl: url
   });
 
   var tree = new Ext.tree.TreePanel({
@@ -86,7 +85,7 @@ tvheadend.dvb_networks = function() {
     border: false,
     root : new Ext.tree.AsyncTreeNode({
       id : 'root',
-      text: 'DVB Networks'
+      text: title
     }),
     listeners: {
       click: function(n) {
@@ -114,7 +113,7 @@ tvheadend.dvb_networks = function() {
 
 
   var panel = new Ext.Panel({
-    title: 'DVB Networks',
+    title: title,
     layout: 'hbox',
     flex: 1,
     padding: 5,
@@ -132,3 +131,12 @@ tvheadend.dvb_networks = function() {
 
   return panel;
 }
+
+
+/**
+ *
+ */
+tvheadend.dvb_networks = function() {
+  return tvheadend.item_browser('/dvb/networks', 'DVB Networks');
+}
+

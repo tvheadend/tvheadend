@@ -1233,7 +1233,7 @@ dvb_subscription_create_from_tdmi(th_dvb_mux_instance_t *tdmi,
 				  streaming_target_t *st)
 {
   th_subscription_t *s;
-  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  //  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
   s = subscription_create(INT32_MAX, name, st, SUBSCRIPTION_RAW_MPEGTS, 
 			  NULL, NULL, NULL, NULL);
@@ -1244,10 +1244,11 @@ dvb_subscription_create_from_tdmi(th_dvb_mux_instance_t *tdmi,
 
   dvb_mux_tune(tdmi->tdmi_mux, "Full mux subscription", 99999);
   abort();
+#if 0
   pthread_mutex_lock(&tda->tda_delivery_mutex);
   streaming_target_connect(&tda->tda_streaming_pad, &s->ths_input);
   pthread_mutex_unlock(&tda->tda_delivery_mutex);
-
+#endif
   notify_reload("subscriptions");
   return s;
 }

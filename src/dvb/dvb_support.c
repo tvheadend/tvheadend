@@ -429,18 +429,6 @@ dvb_polarisation_to_str_long(int pol)
 }
 
 
-th_dvb_adapter_t *
-dvb_adapter_find_by_identifier(const char *identifier)
-{
-  th_dvb_adapter_t *tda;
-
-  TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link)
-    if(!strcmp(identifier, tda->tda_identifier))
-      return tda;
-  return NULL;
-}
-
-
 /**
  *
  */

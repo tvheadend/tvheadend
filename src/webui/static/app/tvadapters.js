@@ -1,6 +1,7 @@
 /**
  * Datastore for adapters
  */
+/*
 tvheadend.tvAdapterStore = new Ext.data.JsonStore({
 	root : 'entries',
 	id : 'identifier',
@@ -71,10 +72,11 @@ tvheadend.tvadapters = function() {
 
 	return panel;
 }
-
+*/
 /**
  *
  */
+/*
 tvheadend.showTransportDetails = function(data) {
 	html = '';
 
@@ -105,4 +107,9 @@ tvheadend.showTransportDetails = function(data) {
 		html : html
 	});
 	win.show();
+}
+*/
+
+tvheadend.tvadapters = function() {
+  return tvheadend.item_browser('/tvadapters', 'TV Adapters');
 }
