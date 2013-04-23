@@ -45,6 +45,10 @@ struct v4l_adapter_queue v4l_adapters;
 
 static void v4l_adapter_notify(v4l_adapter_t *va);
 
+const idclass_t v4l_class = {
+  .ic_super = &service_class,
+  .ic_class = "v4l",
+};
 
 /**
  *
@@ -170,7 +174,7 @@ v4l_thread(void *aux)
  *
  */
 static int
-v4l_service_start(service_t *t, unsigned int weight, int force_start)
+v4l_service_start(service_t *t, int instance)
 {
   v4l_adapter_t *va = t->s_v4l_adapter;
   int frequency = t->s_v4l_frequency;
@@ -289,20 +293,11 @@ v4l_service_save(service_t *t)
   pthread_mutex_unlock(&t->s_stream_mutex);
   
   hts_settings_save(m, "v4lservices/%s/%s",
-		    va->va_identifier, t->s_identifier);
+		    va->va_identifier, idnode_uuid_as_str(&t->s_id));
 
   htsmsg_destroy(m);
 }
 
-
-/**
- *
- */
-static int
-v4l_service_quality(service_t *t)
-{
-  return 100;
-}
 
 /**
  *
@@ -358,7 +353,7 @@ v4l_service_find(v4l_adapter_t *va, const char *id, int create)
       return NULL;
 
     LIST_FOREACH(t, &va->va_services, s_group_link)
-      if(!strcmp(t->s_identifier, id))
+      if(!strcmp(idnode_uuid_as_str(&t->s_id), id))
 	return t;
   }
 
@@ -373,14 +368,13 @@ v4l_service_find(v4l_adapter_t *va, const char *id, int create)
     va->va_tally = MAX(atoi(id + vaidlen + 1), va->va_tally);
   }
 
-  t = service_create(id, SERVICE_TYPE_V4L, 0);
+  t = service_create(id, 0, &v4l_class);
 
   t->s_start_feed    = v4l_service_start;
   t->s_refresh_feed  = v4l_service_refresh;
   t->s_stop_feed     = v4l_service_stop;
   t->s_config_save   = v4l_service_save;
   t->s_setsourceinfo = v4l_service_setsourceinfo;
-  t->s_quality_index = v4l_service_quality;
   t->s_is_enabled    = v4l_service_is_enabled;
   t->s_grace_period  = v4l_grace_period;
   t->s_iptv_fd = -1;

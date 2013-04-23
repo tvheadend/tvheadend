@@ -27,6 +27,7 @@
 #include <netinet/in.h>
 #include <sys/time.h>
 #include <libgen.h>
+#include <string.h>
 
 #include "queue.h"
 #include "avg.h"
@@ -79,6 +80,7 @@ typedef struct source_info {
   char *si_service;
   int   si_type;
 } source_info_t;
+
 
 static inline void
 lock_assert0(pthread_mutex_t *l, const char *file, int line)
@@ -349,7 +351,7 @@ typedef enum {
 #define SM_CODE_SOURCE_DELETED            102
 #define SM_CODE_SUBSCRIPTION_OVERRIDDEN   103
 
-#define SM_CODE_NO_HW_ATTACHED            200
+#define SM_CODE_NO_FREE_ADAPTER           200
 #define SM_CODE_MUX_NOT_ENABLED           201
 #define SM_CODE_NOT_FREE                  202
 #define SM_CODE_TUNING_FAILED             203
@@ -492,6 +494,12 @@ typedef struct th_pipe
   int rd;
   int wr;
 } th_pipe_t;
+
+static inline void mystrset(char **p, const char *s)
+{
+  free(*p);
+  *p = s ? strdup(s) : NULL;
+}
 
 int tvh_open(const char *pathname, int flags, mode_t mode);
 

@@ -60,6 +60,7 @@
 #include "ffdecsa/FFdecsa.h"
 #include "muxes.h"
 #include "config2.h"
+#include "idnode.h"
 #include "imagecache.h"
 #include "timeshift.h"
 #if ENABLE_LIBAV

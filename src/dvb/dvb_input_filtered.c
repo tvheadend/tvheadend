@@ -59,7 +59,7 @@ open_service(th_dvb_adapter_t *tda, service_t *s)
       st->es_demuxer_fd = -1;
       tvhlog(LOG_ERR, "dvb",
 	     "\"%s\" unable to open demuxer \"%s\" for pid %d -- %s",
-	     s->s_identifier, tda->tda_demux_path, 
+	     s->s_nicename, tda->tda_demux_path, 
 	     st->es_pid, strerror(errno));
       continue;
     }
@@ -74,7 +74,7 @@ open_service(th_dvb_adapter_t *tda, service_t *s)
     if(ioctl(fd, DMX_SET_PES_FILTER, &dmx_param)) {
       tvhlog(LOG_ERR, "dvb",
 	     "\"%s\" unable to configure demuxer \"%s\" for pid %d -- %s",
-	     s->s_identifier, tda->tda_demux_path, 
+	     s->s_nicename, tda->tda_demux_path, 
 	     st->es_pid, strerror(errno));
       close(fd);
       fd = -1;
@@ -110,9 +110,9 @@ close_service(th_dvb_adapter_t *tda, service_t *s)
  *
  */
 static void
-open_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
+open_table(dvb_mux_t *dm, th_dvb_table_t *tdt)
 {
-  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  th_dvb_adapter_t *tda = dm->dm_current_tdmi->tdmi_adapter;
   struct epoll_event e;
   static int tdt_id_tally;
 
@@ -148,7 +148,7 @@ open_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
   }
 
   if(tdt->tdt_fd == -1)
-    TAILQ_INSERT_TAIL(&tdmi->tdmi_table_queue, tdt, tdt_pending_link);
+    TAILQ_INSERT_TAIL(&dm->dm_table_queue, tdt, tdt_pending_link);
 }
 
 
@@ -156,9 +156,9 @@ open_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
  * Close FD for the given table and put table on the pending list
  */
 static void
-tdt_close_fd(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
+tdt_close_fd(dvb_mux_t *dm, th_dvb_table_t *tdt)
 {
-  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  th_dvb_adapter_t *tda = dm->dm_current_tdmi->tdmi_adapter;
 
   assert(tdt->tdt_fd != -1);
 
@@ -166,7 +166,7 @@ tdt_close_fd(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
   close(tdt->tdt_fd);
 
   tdt->tdt_fd = -1;
-  TAILQ_INSERT_TAIL(&tdmi->tdmi_table_queue, tdt, tdt_pending_link);
+  TAILQ_INSERT_TAIL(&dm->dm_table_queue, tdt, tdt_pending_link);
 }
 
 
@@ -181,7 +181,7 @@ dvb_table_input(void *aux)
   int r, i, tid, fd, x;
   struct epoll_event ev[1];
   uint8_t sec[4096];
-  th_dvb_mux_instance_t *tdmi;
+  dvb_mux_t *dm;
   th_dvb_table_t *tdt;
   int64_t cycle_barrier = 0; 
 
@@ -200,8 +200,8 @@ dvb_table_input(void *aux)
 	continue;
 
       pthread_mutex_lock(&global_lock);
-      if((tdmi = tda->tda_mux_current) != NULL) {
-	LIST_FOREACH(tdt, &tdmi->tdmi_tables, tdt_link)
+      if((dm = tda->tda_current_tdmi->tdmi_mux) != NULL) {
+	LIST_FOREACH(tdt, &dm->dm_tables, tdt_link)
 	  if(tdt->tdt_id == tid)
 	    break;
 
@@ -209,15 +209,15 @@ dvb_table_input(void *aux)
 	  dvb_table_dispatch(sec, r, tdt);
 
 	  /* Any tables pending (that wants a filter/fd), close this one */
-	  if(TAILQ_FIRST(&tdmi->tdmi_table_queue) != NULL &&
+	  if(TAILQ_FIRST(&dm->dm_table_queue) != NULL &&
 	     cycle_barrier < getmonoclock()) {
-	    tdt_close_fd(tdmi, tdt);
+	    tdt_close_fd(dm, tdt);
 	    cycle_barrier = getmonoclock() + 100000;
-	    tdt = TAILQ_FIRST(&tdmi->tdmi_table_queue);
+	    tdt = TAILQ_FIRST(&dm->dm_table_queue);
 	    assert(tdt != NULL);
-	    TAILQ_REMOVE(&tdmi->tdmi_table_queue, tdt, tdt_pending_link);
+	    TAILQ_REMOVE(&dm->dm_table_queue, tdt, tdt_pending_link);
 
-	    open_table(tdmi, tdt);
+	    open_table(dm, tdt);
 	  }
 	}
       }
@@ -229,13 +229,15 @@ dvb_table_input(void *aux)
 
 
 static void
-close_table(th_dvb_mux_instance_t *tdmi, th_dvb_table_t *tdt)
+close_table(dvb_mux_t *dm, th_dvb_table_t *tdt)
 {
-  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
 
   if(tdt->tdt_fd == -1) {
-    TAILQ_REMOVE(&tdmi->tdmi_table_queue, tdt, tdt_pending_link);
+    TAILQ_REMOVE(&dm->dm_table_queue, tdt, tdt_pending_link);
   } else {
+    th_dvb_mux_instance_t *tdmi = dm->dm_current_tdmi;
+    th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+
     epoll_ctl(tda->tda_table_epollfd, EPOLL_CTL_DEL, tdt->tdt_fd, NULL);
     close(tdt->tdt_fd);
   }

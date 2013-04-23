@@ -170,7 +170,7 @@ build_record_v4l(service_t *t)
 {
   htsmsg_t *r = htsmsg_create_map();
 
-  htsmsg_add_str(r, "id", t->s_identifier);
+  //  htsmsg_add_str(r, "id", t->s_identifier); // XXX(dvbreorg)
 
   htsmsg_add_str(r, "channelname", t->s_ch ? t->s_ch->ch_name : "");
   htsmsg_add_u32(r, "frequency", t->s_v4l_frequency);
@@ -265,6 +265,7 @@ extjs_v4lservices(http_connection_t *hc, const char *remain, void *opaque)
   return 0;
 }
 
+#if 0
 
 /**
  *
@@ -277,6 +278,7 @@ extjs_list_v4l_adapters(htsmsg_t *array)
   TAILQ_FOREACH(va, &v4l_adapters, va_global_link) 
     htsmsg_add_msg(array, NULL, v4l_adapter_build_msg(va));
 }
+#endif
 
 
 /**

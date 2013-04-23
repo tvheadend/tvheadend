@@ -155,9 +155,8 @@ void
 subscription_reschedule(void)
 {
   th_subscription_t *s;
-  service_t *t, *skip;
+  service_instance_t *si;
   streaming_message_t *sm;
-  char buf[128];
   int error;
 
   lock_assert(&global_lock);
@@ -173,19 +172,20 @@ subscription_reschedule(void)
       /* Already got a service */
 
       if(s->ths_state != SUBSCRIPTION_BAD_SERVICE)
-	continue; /* And it seems to work ok, so we're happy */
-      skip = s->ths_service;
-      error = s->ths_testing_error;
-      service_remove_subscriber(s->ths_service, s, s->ths_testing_error);
-    } else {
-      error = 0;
-      skip = NULL;
+	continue; /* And it not bad, so we're happy */
+
+      si = s->ths_current_instance;
+
+      assert(si != NULL);
+      si->si_error = s->ths_testing_error;
+      time(&si->si_error_time);
     }
 
-    snprintf(buf, sizeof(buf), "Subscription \"%s\"", s->ths_title);
-    t = service_find(s->ths_channel, s->ths_weight, buf, &error, skip);
+    si = service_find_instance(s->ths_channel, &s->ths_instances, &error,
+                               s->ths_weight);
+    s->ths_current_instance = si;
 
-    if(t == NULL) {
+    if(si == NULL) {
       /* No service available */
 
       sm = streaming_msg_create_code(SMT_NOSTART, error);
@@ -193,7 +193,7 @@ subscription_reschedule(void)
       continue;
     }
 
-    subscription_link_service(s, t);
+    subscription_link_service(s, si->si_s);
   }
 }
 
@@ -206,6 +206,8 @@ subscription_unsubscribe(th_subscription_t *s)
   service_t *t = s->ths_service;
 
   lock_assert(&global_lock);
+
+  service_instance_list_clear(&s->ths_instances);
 
   LIST_REMOVE(s, ths_global_link);
 
@@ -396,14 +398,13 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
     tvhlog(LOG_INFO, "subscription", 
 	   "\"%s\" subscribing on \"%s\", weight: %d, adapter: \"%s\", "
 	   "network: \"%s\", mux: \"%s\", provider: \"%s\", "
-	   "service: \"%s\", quality: %d",
+	   "service: \"%s\"",
 	   s->ths_title, ch->ch_name, weight,
 	   si.si_adapter  ?: "<N/A>",
 	   si.si_network  ?: "<N/A>",
 	   si.si_mux      ?: "<N/A>",
 	   si.si_provider ?: "<N/A>",
-	   si.si_service  ?: "<N/A>",
-	   s->ths_service->s_quality_index(s->ths_service));
+	   si.si_service  ?: "<N/A>");
 
     service_source_info_free(&si);
   }
@@ -421,6 +422,7 @@ subscription_create_from_service(service_t *t, const char *name,
 				 const char *hostname, const char *username, 
 				 const char *client)
 {
+#if 0
   th_subscription_t *s;
   source_info_t si;
   int r;
@@ -445,19 +447,20 @@ subscription_create_from_service(service_t *t, const char *name,
   tvhlog(LOG_INFO, "subscription", 
 	 "\"%s\" direct subscription to adapter: \"%s\", "
 	 "network: \"%s\", mux: \"%s\", provider: \"%s\", "
-	 "service: \"%s\", quality: %d",
+	 "service: \"%s\"",
 	 s->ths_title,
 	 si.si_adapter  ?: "<N/A>",
 	 si.si_network  ?: "<N/A>",
 	 si.si_mux      ?: "<N/A>",
 	 si.si_provider ?: "<N/A>",
-	 si.si_service  ?: "<N/A>",
-	 t->s_quality_index(t));
+	 si.si_service  ?: "<N/A>");
   service_source_info_free(&si);
 
   subscription_link_service(s, t);
   notify_reload("subscriptions");
   return s;
+#endif
+  abort();
 }
 
 

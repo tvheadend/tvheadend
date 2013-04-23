@@ -50,6 +50,7 @@ typedef struct htsmsg {
 #define HMF_BIN  4
 #define HMF_LIST 5
 #define HMF_DBL  6
+#define HMF_BOOL 7
 
 typedef struct htsmsg_field {
   TAILQ_ENTRY(htsmsg_field) hmf_link;
@@ -69,6 +70,7 @@ typedef struct htsmsg_field {
     } bin;
     htsmsg_t msg;
     double dbl;
+    int bool;
   } u;
 } htsmsg_field_t;
 
@@ -78,6 +80,7 @@ typedef struct htsmsg_field {
 #define hmf_bin     u.bin.data
 #define hmf_binsize u.bin.len
 #define hmf_dbl     u.dbl
+#define hmf_bool    u.bool
 
 #define htsmsg_get_map_by_field(f) \
  ((f)->hmf_type == HMF_MAP ? &(f)->hmf_msg : NULL)
@@ -105,6 +108,8 @@ void htsmsg_field_destroy(htsmsg_t *msg, htsmsg_field_t *f);
  * Destroys a message (map or list)
  */
 void htsmsg_destroy(htsmsg_t *msg);
+
+void htsmsg_add_bool(htsmsg_t *msg, const char *name, int b);
 
 /**
  * Add an integer field where source is unsigned 32 bit.
@@ -194,6 +199,8 @@ int htsmsg_get_s64(htsmsg_t *msg, const char *name,  int64_t *s64p);
  * Return the field \p name as an s64.
  */
 int64_t htsmsg_get_s64_or_default(htsmsg_t *msg, const char *name, int64_t def);
+
+int htsmsg_get_bool_or_default(htsmsg_t *msg, const char *name, int def);
 
 
 /**

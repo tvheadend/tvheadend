@@ -423,77 +423,57 @@ dvb_polarisation_to_str_long(int pol)
 }
 
 
-th_dvb_adapter_t *
-dvb_adapter_find_by_identifier(const char *identifier)
+/**
+ *
+ */
+static void
+nicenum(char *x, size_t siz, unsigned int v, const char *postfix)
 {
-  th_dvb_adapter_t *tda;
-
-  TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link)
-    if(!strcmp(identifier, tda->tda_identifier))
-      return tda;
-  return NULL;
+  if(v < 1000)
+    snprintf(x, siz, "%d%s", v, postfix);
+  else if(v < 1000000)
+    snprintf(x, siz, "%d,%03d%s", v / 1000, v % 1000, postfix);
+  else if(v < 1000000000)
+    snprintf(x, siz, "%d,%03d,%03d%s",
+	     v / 1000000, (v % 1000000) / 1000, v % 1000, postfix);
+  else
+    snprintf(x, siz, "%d,%03d,%03d,%03d%s",
+	     v / 1000000000, (v % 1000000000) / 1000000,
+	     (v % 1000000) / 1000, v % 1000, postfix);
 }
 
 
 /**
  *
  */
-static const char *
-nicenum(char *x, size_t siz, unsigned int v)
+const char *
+dvb_mux_nicefreq(const dvb_mux_t *dm)
 {
-  if(v < 1000)
-    snprintf(x, siz, "%d", v);
-  else if(v < 1000000)
-    snprintf(x, siz, "%d,%03d", v / 1000, v % 1000);
-  else if(v < 1000000000)
-    snprintf(x, siz, "%d,%03d,%03d", 
-	     v / 1000000, (v % 1000000) / 1000, v % 1000);
-  else 
-    snprintf(x, siz, "%d,%03d,%03d,%03d", 
-	     v / 1000000000, (v % 1000000000) / 1000000,
-	     (v % 1000000) / 1000, v % 1000);
-  return x;
+  static char ret[100];
+  int f = dm->dm_conf.dmc_fe_params.frequency;
+  nicenum(ret, sizeof(ret), dm->dm_dn->dn_fe_type == FE_QPSK ? f : f / 1000,
+          " kHz");
+  return ret;
 }
 
 
 /**
- * 
+ *
  */
-void
-dvb_mux_nicefreq(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
+const char *
+dvb_mux_nicename(const dvb_mux_t *dm)
 {
-  char freq[50];
+  static char ret[100];
+  const char *n = dm->dm_network_name;
 
-  if(tdmi->tdmi_adapter->tda_type == FE_QPSK) {
-    nicenum(freq, sizeof(freq), tdmi->tdmi_conf.dmc_fe_params.frequency);
-    snprintf(buf, size, "%s kHz", freq);
-  } else {
-    nicenum(freq, sizeof(freq), 
-	    tdmi->tdmi_conf.dmc_fe_params.frequency / 1000);
-    snprintf(buf, size, "%s kHz", freq);
-  }
-}
-
-
-/**
- * 
- */
-void
-dvb_mux_nicename(char *buf, size_t size, th_dvb_mux_instance_t *tdmi)
-{
-  char freq[50];
-  const char *n = tdmi->tdmi_network;
-
-  if(tdmi->tdmi_adapter->tda_type == FE_QPSK) {
-    nicenum(freq, sizeof(freq), tdmi->tdmi_conf.dmc_fe_params.frequency);
-    snprintf(buf, size, "%s%s%s kHz %s (%s)", 
-	     n?:"", n ? ": ":"", freq,
-	     dvb_polarisation_to_str_long(tdmi->tdmi_conf.dmc_polarisation),
-	     tdmi->tdmi_conf.dmc_satconf ? tdmi->tdmi_conf.dmc_satconf->sc_name : "No satconf");
-
-  } else {
-    nicenum(freq, sizeof(freq), tdmi->tdmi_conf.dmc_fe_params.frequency / 1000);
-    snprintf(buf, size, "%s%s%s kHz", n?:"", n ? ": ":"", freq);
-  }
+  snprintf(ret, sizeof(ret), "%s%s%s%s%s",
+           n ?: "",
+           n ? ": " : "",
+           dvb_mux_nicefreq(dm),
+           dm->dm_dn->dn_fe_type == FE_QPSK ? " " : "",
+           dm->dm_dn->dn_fe_type == FE_QPSK ?
+           dvb_polarisation_to_str_long(dm->dm_conf.dmc_polarisation) : 
+           "");
+  return ret;
 }
 

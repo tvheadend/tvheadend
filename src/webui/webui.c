@@ -621,24 +621,23 @@ http_stream_service(http_connection_t *hc, service_t *service)
 /**
  * Subscribes to a service and starts the streaming loop
  */
-#if ENABLE_LINUXDVB
+#if 0//ENABLE_LINUXDVB
 static int
-http_stream_tdmi(http_connection_t *hc, th_dvb_mux_instance_t *tdmi)
+http_stream_tdmi(http_connection_t *hc, dvb_mux_t *dm)
 {
   th_subscription_t *s;
   streaming_queue_t sq;
-  const char *name;
   char addrbuf[50];
   streaming_queue_init(&sq, SMT_PACKET);
 
   tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrbuf, 50);
-  s = dvb_subscription_create_from_tdmi(tdmi, "HTTP", &sq.sq_st,
+  s = dvb_subscription_create_from_tdmi(dm, "HTTP", &sq.sq_st,
 					addrbuf,
 					hc->hc_username,
 					http_arg_get(&hc->hc_args, "User-Agent"));
-  name = strdupa(tdmi->tdmi_identifier);
+  //name = strdupa(dm->dm_id.in_uuid);
   pthread_mutex_unlock(&global_lock);
-  http_stream_run(hc, &sq, name, MC_RAW);
+  http_stream_run(hc, &sq, "foobar", MC_RAW);
   pthread_mutex_lock(&global_lock);
   subscription_unsubscribe(s);
 
@@ -731,8 +730,8 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
   char *components[2];
   channel_t *ch = NULL;
   service_t *service = NULL;
-#if ENABLE_LINUXDVB
-  th_dvb_mux_instance_t *tdmi = NULL;
+#if 0//ENABLE_LINUXDVB
+  dvb_mux_t *dm = NULL;
 #endif
 
   hc->hc_keep_alive = 0;
@@ -757,9 +756,9 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
     ch = channel_find_by_name(components[1], 0, 0);
   } else if(!strcmp(components[0], "service")) {
     service = service_find_by_identifier(components[1]);
-#if ENABLE_LINUXDVB
+#if 0//ENABLE_LINUXDVB
   } else if(!strcmp(components[0], "mux")) {
-    tdmi = dvb_mux_find_by_identifier(components[1]);
+    dm = dvb_mux_find_by_identifier(components[1]);
 #endif
   }
 
@@ -767,9 +766,9 @@ http_stream(http_connection_t *hc, const char *remain, void *opaque)
     return http_stream_channel(hc, ch);
   } else if(service != NULL) {
     return http_stream_service(hc, service);
-#if ENABLE_LINUXDVB
-  } else if(tdmi != NULL) {
-    return http_stream_tdmi(hc, tdmi);
+#if 0//ENABLE_LINUXDVB
+  } else if(dm != NULL) {
+    return http_stream_tdmi(hc, dm);
 #endif
   } else {
     http_error(hc, HTTP_STATUS_BAD_REQUEST);

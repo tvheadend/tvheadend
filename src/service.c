@@ -49,11 +49,27 @@
 #include "htsp_server.h"
 #include "lang_codes.h"
 
-#define SERVICE_HASH_WIDTH 101
-
-static struct service_list servicehash[SERVICE_HASH_WIDTH];
-
 static void service_data_timeout(void *aux);
+static const char *service_channel_get(void *obj);
+static void service_channel_set(void *obj, const char *str);
+static void service_save(struct idnode *self);
+
+const idclass_t service_class = {
+  .ic_class = "service",
+  .ic_caption = "Service",
+  .ic_save = service_save,
+  .ic_properties = (const property_t[]){
+    {
+      "channel", "Channel", PT_STR,
+
+      .str_get = service_channel_get,
+      .str_set = service_channel_set,
+    }, {
+      "enabled", "Enabled", PT_BOOL,
+      offsetof(service_t, s_enabled)
+    }, {
+    }}
+};
 
 /**
  *
@@ -67,7 +83,7 @@ stream_init(elementary_stream_t *st)
   st->es_curdts = PTS_UNSET;
   st->es_curpts = PTS_UNSET;
   st->es_prevdts = PTS_UNSET;
-  
+
   st->es_pcr_real_last = PTS_UNSET;
   st->es_pcr_last      = PTS_UNSET;
   st->es_pcr_drift     = 0;
@@ -173,7 +189,7 @@ service_stop(service_t *t)
  */
 void
 service_remove_subscriber(service_t *t, th_subscription_t *s,
-			    int reason)
+                          int reason)
 {
   lock_assert(&global_lock);
 
@@ -194,7 +210,7 @@ service_remove_subscriber(service_t *t, th_subscription_t *s,
  *
  */
 int
-service_start(service_t *t, unsigned int weight, int force_start)
+service_start(service_t *t, int instance)
 {
   elementary_stream_t *st;
   int r, timeout = 2;
@@ -205,7 +221,7 @@ service_start(service_t *t, unsigned int weight, int force_start)
   t->s_streaming_status = 0;
   t->s_pcr_drift = 0;
 
-  if((r = t->s_start_feed(t, weight, force_start)))
+  if((r = t->s_start_feed(t, instance)))
     return r;
 
 #if ENABLE_CWC
@@ -233,92 +249,68 @@ service_start(service_t *t, unsigned int weight, int force_start)
   return 0;
 }
 
-/**
- *
- */
-static int
-dvb_extra_prio(th_dvb_adapter_t *tda)
-{
-  return tda->tda_extrapriority + tda->tda_hostconnection * 10;
-}
 
 /**
- * Return prio for the given service
+ * Main entry point for starting a service based on a channel
  */
-static int
-service_get_prio(service_t *t)
+service_instance_t *
+service_find_instance(channel_t *ch, struct service_instance_list *sil,
+                      int *error, int weight)
 {
-  switch(t->s_type) {
-  case SERVICE_TYPE_DVB:
-    return (t->s_scrambled ? 300 : 100) + 
-      dvb_extra_prio(t->s_dvb_mux_instance->tdmi_adapter);
+  service_t *s;
+  service_instance_t *si, *next;
 
-  case SERVICE_TYPE_IPTV:
-    return 200;
+  lock_assert(&global_lock);
 
-  case SERVICE_TYPE_V4L:
-    return 400;
+  // First, update list of candidates
 
-  default:
-    return 500;
-  }
-}
+  LIST_FOREACH(si, sil, si_link)
+    si->si_mark = 1;
 
-/**
- * Return quality index for given service
- *
- * We invert the result (providers say that negative numbers are worse)
- *
- * But for sorting, we want low numbers first
- *
- * Also, we bias and trim with an offset of two to avoid counting any
- * transient errors.
- */
+  LIST_FOREACH(s, &ch->ch_services, s_ch_link)
+    s->s_enlist(s, sil);
 
-static int
-service_get_quality(service_t *t)
-{
-  return t->s_quality_index ? -MIN(t->s_quality_index(t) + 2, 0) : 0;
-}
-
-
-
-
-/**
- *  a - b  -> lowest number first
- */
-static int
-servicecmp(const void *A, const void *B)
-{
-  service_t *a = *(service_t **)A;
-  service_t *b = *(service_t **)B;
-
-  /* only check quality if both adapters have the same prio
-   *
-   * there needs to be a much more sophisticated algorithm to take priority and quality into account
-   * additional, it may be problematic, since a higher priority value lowers the ranking
-   *
-   */
-  int prio_a = service_get_prio(a);
-  int prio_b = service_get_prio(b);
-  if (prio_a == prio_b) {
-
-    int q = service_get_quality(a) - service_get_quality(b);
-
-    if(q != 0)
-      return q; /* Quality precedes priority */
+  for(si = LIST_FIRST(sil); si != NULL; si = next) {
+    next = LIST_NEXT(si, si_link);
+    if(si->si_mark)
+      service_instance_destroy(si);
   }
 
-  return prio_a - prio_b;
+  // Check if any service is already running, if so, use that
+  LIST_FOREACH(si, sil, si_link)
+    if(si->si_s->s_status == SERVICE_RUNNING)
+      return si;
+
+  // Check if any is idle
+  LIST_FOREACH(si, sil, si_link)
+    if(si->si_weight == 0 && si->si_error == 0)
+      break;
+
+  // Check if to kick someone out
+  if(si == NULL) {
+    LIST_FOREACH(si, sil, si_link) {
+      if(si->si_weight < weight && si->si_error == 0)
+        break;
+    }
+  }
+
+  if(si == NULL) {
+    *error = SM_CODE_NO_FREE_ADAPTER;
+    return NULL;
+  }
+
+  service_start(si->si_s, si->si_instance);
+  return NULL;
 }
 
 
+
+#if 0
 /**
  *
  */
 service_t *
-service_find(channel_t *ch, unsigned int weight, const char *loginfo,
-	       int *errorp, service_t *skip)
+service_enlist(channel_t *ch)
 {
   service_t *t, **vec;
   int cnt = 0, i, r, off;
@@ -353,7 +345,7 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
   /* Sort services, lower priority should come come earlier in the vector
      (i.e. it will be more favoured when selecting a service */
 
-  qsort(vec, cnt, sizeof(service_t *), servicecmp);
+  //  qsort(vec, cnt, sizeof(service_t *), servicecmp);
 
   // Skip up to the service that the caller didn't want
   // If the sorting above is not stable that might mess up things
@@ -373,15 +365,6 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
     t = vec[i];
     if(t->s_status == SERVICE_RUNNING) 
       return t;
-    if(t->s_quality_index(t) < 10) {
-      if(loginfo != NULL) {
-         tvhlog(LOG_NOTICE, "Service",
-	       "%s: Skipping \"%s\" -- Quality below 10%%",
-	       loginfo, service_nicename(t));
-         err = SM_CODE_BAD_SIGNAL;
-      }
-      continue;
-    }
     tvhlog(LOG_DEBUG, "Service", "%s: Probing adapter \"%s\" without stealing for service \"%s\"",
 	     loginfo, service_adapter_nicename(t), service_nicename(t));
     if((r = service_start(t, 0, 0)) == 0)
@@ -409,28 +392,8 @@ service_find(channel_t *ch, unsigned int weight, const char *loginfo,
     *errorp = SM_CODE_NO_SERVICE;
   return NULL;
 }
+#endif
 
-
-/**
- *
- */
-unsigned int 
-service_compute_weight(struct service_list *head)
-{
-  service_t *t;
-  th_subscription_t *s;
-  int w = 0;
-
-  lock_assert(&global_lock);
-
-  LIST_FOREACH(t, head, s_active_link) {
-    LIST_FOREACH(s, &t->s_subscriptions, ths_service_link) {
-      if(s->ths_weight > w)
-	w = s->ths_weight;
-    }
-  }
-  return w;
-}
 
 
 /**
@@ -481,14 +444,14 @@ service_destroy(service_t *t)
   }
 
   LIST_REMOVE(t, s_group_link);
-  LIST_REMOVE(t, s_hash_link);
-  
+
+  idnode_unlink(&t->s_id);
+
   if(t->s_status != SERVICE_IDLE)
     service_stop(t);
 
   t->s_status = SERVICE_ZOMBIE;
 
-  free(t->s_identifier);
   free(t->s_svcname);
   free(t->s_provider);
   free(t->s_dvb_charset);
@@ -512,17 +475,14 @@ service_destroy(service_t *t)
  * Create and initialize a new service struct
  */
 service_t *
-service_create(const char *identifier, int type, int source_type)
+service_create(const char *uuid, int source_type, const idclass_t *idc)
 {
-  unsigned int hash = tvh_strhash(identifier, SERVICE_HASH_WIDTH);
   service_t *t = calloc(1, sizeof(service_t));
 
   lock_assert(&global_lock);
 
   pthread_mutex_init(&t->s_stream_mutex, NULL);
   pthread_cond_init(&t->s_tss_cond, NULL);
-  t->s_identifier = strdup(identifier);
-  t->s_type = type;
   t->s_source_type = source_type;
   t->s_refcount = 1;
   t->s_enabled = 1;
@@ -535,7 +495,8 @@ service_create(const char *identifier, int type, int source_type)
 
   streaming_pad_init(&t->s_streaming_pad);
 
-  LIST_INSERT_HEAD(&servicehash[hash], t, s_hash_link);
+  idnode_insert(&t->s_id, uuid, idc);
+
   return t;
 }
 
@@ -545,15 +506,7 @@ service_create(const char *identifier, int type, int source_type)
 service_t *
 service_find_by_identifier(const char *identifier)
 {
-  service_t *t;
-  unsigned int hash = tvh_strhash(identifier, SERVICE_HASH_WIDTH);
-
-  lock_assert(&global_lock);
-
-  LIST_FOREACH(t, &servicehash[hash], s_hash_link)
-    if(!strcmp(t->s_identifier, identifier))
-      break;
-  return t;
+  return idnode_find(identifier, &service_class);
 }
 
 
@@ -702,6 +655,27 @@ service_map_channel(service_t *t, channel_t *ch, int save)
   if(save)
     t->s_config_save(t);
 }
+
+
+/**
+ *
+ */
+static const char *service_channel_get(void *obj)
+{
+  service_t *s = obj;
+  return s->s_ch ? s->s_ch->ch_name : NULL;
+}
+
+
+/**
+ *
+ */
+static void
+service_channel_set(void *obj, const char *str)
+{
+  service_map_channel(obj, str ? channel_find_by_name(str, 1, 0) : NULL, 0);
+}
+
 
 /**
  *
@@ -977,6 +951,16 @@ service_request_save(service_t *t, int restart)
 /**
  *
  */
+static void
+service_save(struct idnode *self)
+{
+  service_t *s = (service_t *)self;
+  s->s_config_save(s);
+}
+
+/**
+ *
+ */
 static void *
 service_saver(void *aux)
 {
@@ -1076,25 +1060,7 @@ service_component_nicename(elementary_stream_t *st)
 const char *
 service_adapter_nicename(service_t *t)
 {
-  switch(t->s_type) {
-  case SERVICE_TYPE_DVB:
-    if(t->s_dvb_mux_instance)
-      return t->s_dvb_mux_instance->tdmi_identifier;
-    else
-      return "Unknown adapter";
-
-  case SERVICE_TYPE_IPTV:
-    return t->s_iptv_iface;
-
-  case SERVICE_TYPE_V4L:
-    if(t->s_v4l_adapter)
-      return t->s_v4l_adapter->va_displayname;
-    else
-      return "Unknown adapter";
-
-  default:
-    return "Unknown adapter";
-  }
+  return "Adapter";
 }
 
 const char *
@@ -1156,6 +1122,73 @@ service_refresh_channel(service_t *t)
 
 
 /**
+ *
+ */
+static int
+si_cmp(const service_instance_t *a, const service_instance_t *b)
+{
+  return a->si_prio - b->si_prio;
+}
+
+/**
+ *
+ */
+service_instance_t *
+service_instance_add(struct service_instance_list *sil,
+                     struct service *s, int instance, int prio,
+                     int weight)
+{
+  service_instance_t *si;
+  LIST_FOREACH(si, sil, si_link)
+    if(si->si_s == s && si->si_instance == instance)
+      break;
+
+  if(si == NULL) {
+    si = calloc(1, sizeof(service_instance_t));
+    si->si_s = s;
+    service_ref(s);
+    si->si_instance = instance;
+    si->si_weight = weight;
+  } else {
+    si->si_mark = 0;
+    if(si->si_prio == prio && si->si_weight == weight)
+      return si;
+    LIST_REMOVE(si, si_link);
+  }
+  si->si_weight = weight;
+  si->si_prio = prio;
+  LIST_INSERT_SORTED(sil, si, si_link, si_cmp);
+  return si;
+}
+
+
+/**
+ *
+ */
+void
+service_instance_destroy(service_instance_t *si)
+{
+  LIST_REMOVE(si, si_link);
+  service_unref(si->si_s);
+  free(si);
+}
+
+
+/**
+ *
+ */
+void
+service_instance_list_clear(struct service_instance_list *sil)
+{
+  lock_assert(&global_lock);
+
+  service_instance_t *si;
+  while((si = LIST_FIRST(sil)) != NULL)
+    service_instance_destroy(si);
+}
+
+
+/**
  * Get the encryption CAID from a service
  * only the first CA stream in a service is returned
  */
@@ -1190,7 +1223,7 @@ service_is_primary_epg(service_t *svc)
   if (!svc || !svc->s_ch) return 0;
   LIST_FOREACH(t, &svc->s_ch->ch_services, s_ch_link) {
     if (!t->s_is_enabled(t) || !t->s_dvb_eit_enable) continue;
-    if (!ret || service_get_prio(t) < service_get_prio(ret))
+    if (!ret)
       ret = t;
   }
   return !ret ? 0 : (ret->s_dvb_service_id == svc->s_dvb_service_id);

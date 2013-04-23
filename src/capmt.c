@@ -617,7 +617,7 @@ capmt_thread(void *aux)
       if (!capmt->capmt_oscam) {
         bind_ok = capmt_create_udp_socket(&capmt->capmt_sock_ca0[0], capmt->capmt_port);
       } else {
-#if ENABLE_LINUXDVB
+#if TODO_FIX_THIS //ENABLE_LINUXDVB
         th_dvb_adapter_t *tda;
         TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link) {
           if (!tda->tda_enabled)
@@ -677,7 +677,7 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
 {
   capmt_service_t *ct = (capmt_service_t *)td;
   capmt_t *capmt = ct->ct_capmt;
-  int adapter_num = t->s_dvb_mux_instance->tdmi_adapter->tda_adapter_num;
+  int adapter_num = t->s_dvb_mux->dm_current_tdmi->tdmi_adapter->tda_adapter_num;
   int total_caids = 0, current_caid = 0;
 
   caid_t *c;
@@ -734,9 +734,12 @@ capmt_table_input(struct th_descrambler *td, struct service *t,
 
           uint16_t sid = t->s_dvb_service_id;
           uint16_t ecmpid = st->es_pid;
+#if TODO_FIX_THIS
           uint16_t transponder = t->s_dvb_mux_instance->tdmi_transport_stream_id;
           uint16_t onid = t->s_dvb_mux_instance->tdmi_network_id;
-          
+#else
+          uint16_t transponder = 0, onid = 0;
+#endif
 
           /* don't do too much requests */
           if (current_caid == total_caids && caid != ct->ct_caid_last)
@@ -1020,14 +1023,15 @@ capmt_service_start(service_t *t)
     if (!capmt->capmt_enabled)
       continue;
 
-
+#if TODO_FIX_THIS
     if (!(t->s_dvb_mux_instance && t->s_dvb_mux_instance->tdmi_adapter))
       continue;
+#endif
 
     tvhlog(LOG_INFO, "capmt",
       "Starting capmt server for service \"%s\" on tuner %d", 
       t->s_svcname,
-      t->s_dvb_mux_instance->tdmi_adapter->tda_adapter_num);
+      t->s_dvb_mux->dm_current_tdmi->tdmi_adapter->tda_adapter_num);
 
     elementary_stream_t *st;
 

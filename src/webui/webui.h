@@ -20,6 +20,7 @@
 #define WEBUI_H_
 
 #include "htsmsg.h"
+#include "idnode.h"
 #include "http.h"
 
 void webui_init(void);
@@ -34,12 +35,10 @@ const char* html_escape(char *dst, const char *src, size_t len);
 int page_static_file(http_connection_t *hc, const char *remain, void *opaque);
 
 #if ENABLE_LINUXDVB
-void extjs_list_dvb_adapters(htsmsg_t *array);
 void extjs_start_dvb(void);
 #endif
 
 #if ENABLE_V4L
-void extjs_list_v4l_adapters(htsmsg_t *array);
 void extjs_start_v4l(void);
 #endif
 
@@ -47,6 +46,9 @@ void extjs_service_update(htsmsg_t *in);
 
 void extjs_service_delete(htsmsg_t *in);
 
+
+int extjs_get_idnode(http_connection_t *hc, const char *remain, void *opaque,
+                     idnode_t **(*rootfn)(void));
 
 /**
  *

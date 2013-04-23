@@ -22,8 +22,10 @@
 #define PID_TELETEXT_BASE 0x2000
 
 #include "htsmsg.h"
+#include "idnode.h"
 
 
+extern const idclass_t service_class;
 
 /**
  * Descrambler superclass
@@ -167,18 +169,55 @@ typedef struct elementary_stream {
 } elementary_stream_t;
 
 
+LIST_HEAD(service_instance_list, service_instance);
+
+/**
+ *
+ */
+typedef struct service_instance {
+
+  LIST_ENTRY(service_instance) si_link;
+
+  int si_prio;
+
+  struct service *si_s; // A reference is held
+  int si_instance;       // Discriminator when having multiple adapters, etc
+
+  int si_error;        /* Set if subscription layer deem this cand
+                          to be broken. We typically set this if we
+                          have not seen any demuxed packets after
+                          the grace period has expired.
+                          The actual value is current time
+                       */
+
+  time_t si_error_time;
+
+
+  int si_weight;         // Highest weight that holds this cand
+
+  int si_mark;           // For mark & sweep
+
+} service_instance_t;
+
+
+/**
+ *
+ */
+service_instance_t *service_instance_add(struct service_instance_list *sil,
+                                         struct service *s,
+                                         int instance,
+                                         int prio,
+                                         int weight);
+
+void service_instance_destroy(service_instance_t *si);
+
+void service_instance_list_clear(struct service_instance_list *sil);
+
 /**
  *
  */
 typedef struct service {
-
-  LIST_ENTRY(service) s_hash_link;
-
-  enum {
-    SERVICE_TYPE_DVB,
-    SERVICE_TYPE_IPTV,
-    SERVICE_TYPE_V4L,
-  } s_type;
+  idnode_t s_id;
 
   enum {
     /**
@@ -263,8 +302,9 @@ typedef struct service {
 
   LIST_HEAD(, th_subscription) s_subscriptions;
 
-  int (*s_start_feed)(struct service *t, unsigned int weight,
-			int force_start);
+  void (*s_enlist)(struct service *s, struct service_instance_list *sil);
+
+  int (*s_start_feed)(struct service *s, int instance);
 
   void (*s_refresh_feed)(struct service *t);
 
@@ -274,8 +314,6 @@ typedef struct service {
 
   void (*s_setsourceinfo)(struct service *t, struct source_info *si);
 
-  int (*s_quality_index)(struct service *t);
-
   int (*s_grace_period)(struct service *t);
 
   void (*s_dtor)(struct service *t);
@@ -283,12 +321,7 @@ typedef struct service {
   /*
    * Per source type structs
    */
-  struct th_dvb_mux_instance *s_dvb_mux_instance;
-
-  /**
-   * Unique identifer (used for storing on disk, etc)
-   */
-  char *s_identifier;
+  struct dvb_mux *s_dvb_mux;
 
   /**
    * Name usable for displaying to user
@@ -517,12 +550,9 @@ typedef struct service {
 
 void service_init(void);
 
-unsigned int service_compute_weight(struct service_list *head);
+int service_start(service_t *t, int instance);
 
-int service_start(service_t *t, unsigned int weight, int force_start);
-
-service_t *service_create(const char *identifier, int type,
-				 int source_type);
+service_t *service_create(const char *uuid, int source_type, const idclass_t *idc);
 
 void service_unref(service_t *t);
 
@@ -532,9 +562,10 @@ service_t *service_find_by_identifier(const char *identifier);
 
 void service_map_channel(service_t *t, struct channel *ch, int save);
 
-service_t *service_find(struct channel *ch, unsigned int weight,
-			const char *loginfo, int *errorp,
-			service_t *skip);
+service_instance_t *service_find_instance(struct channel *ch,
+                                          struct service_instance_list *sil,
+                                          int *error,
+                                          int weight);
 
 elementary_stream_t *service_stream_find(service_t *t, int pid);
 

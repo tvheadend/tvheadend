@@ -1,6 +1,6 @@
 /*
- *  TV Input - Linux DVB interface
- *  Copyright (C) 2007 Andreas Öman
+ *  TV Adapters
+ *  Copyright (C) 2013 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,17 +16,25 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include "tvheadend.h"
-#include "dvb.h"
-#include "dvb_support.h"
-#include "dvb_charset.h"
+#include "tvadapters.h"
+#include "dvb/dvb.h"
 
-void
-dvb_init(uint32_t adapter_mask, const char *rawfile)
+/**
+ *
+ */
+idnode_t **
+tv_adapters_root(void)
 {
-  TAILQ_INIT(&dvb_adapters);
-  dvb_charset_init();
-  dvb_network_init();
-  dvb_linux_init();
+  dvb_hardware_t *dh;
+  int cnt = 1;
+  TAILQ_FOREACH(dh, &dvb_adapters, dh_parent_link)
+    cnt++;
+
+  idnode_t **v = malloc(sizeof(idnode_t *) * cnt);
+  cnt = 0;
+  TAILQ_FOREACH(dh, &dvb_adapters, dh_parent_link)
+    v[cnt++] = &dh->dh_id;
+  v[cnt] = NULL;
+  return v;
 }

@@ -48,11 +48,16 @@ typedef struct rawts {
 } rawts_t;
 
 
+const idclass_t rawts_class = {
+  .ic_super = &service_class,
+  .ic_class = "rawts",
+};
+
 /**
  *
  */
 static int
-rawts_service_start(service_t *t, unsigned int weight, int force_start)
+rawts_service_start(service_t *t, int id)
 {
   return 0; // Always ok
 }
@@ -80,16 +85,6 @@ rawts_service_save(service_t *t)
   //htsmsg_print(m);
   htsmsg_destroy(m);
 
-}
-
-
-/**
- *
- */
-static int
-rawts_service_quality(service_t *t)
-{
-  return 100;
 }
 
 /**
@@ -131,7 +126,7 @@ rawts_service_add(rawts_t *rt, uint16_t sid, int pmt_pid)
   
   snprintf(tmp, sizeof(tmp), "%s_%04x", rt->rt_identifier, sid);
 
-  t = service_create(tmp, SERVICE_TYPE_DVB, S_MPEG_TS);
+  t = service_create(NULL, S_MPEG_TS, &rawts_class);
   t->s_flags |= S_DEBUG;
 
   t->s_dvb_service_id = sid;
@@ -141,7 +136,6 @@ rawts_service_add(rawts_t *rt, uint16_t sid, int pmt_pid)
   t->s_stop_feed  = rawts_service_stop;
   t->s_config_save = rawts_service_save;
   t->s_setsourceinfo = rawts_service_setsourceinfo;
-  t->s_quality_index = rawts_service_quality;
   t->s_is_enabled = rawts_service_is_enabled;
 
   t->s_svcname = strdup(tmp);

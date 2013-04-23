@@ -1,13 +1,15 @@
 /**
  * Datastore for adapters
  */
+/*
 tvheadend.tvAdapterStore = new Ext.data.JsonStore({
 	root : 'entries',
 	id : 'identifier',
 	fields : [ 'identifier', 'type', 'name', 'path', 'devicename',
 		   'hostconnection', 'currentMux', 'services', 'muxes', 'initialMuxes',
 		   'satConf', 'deliverySystem', 'freqMin', 'freqMax', 'freqStep',
-		   'symrateMin', 'symrateMax',  'signal', 'snr', 'ber', 'unc', 'uncavg', 'bw'],
+		   'symrateMin', 'symrateMax',  'signal', 'snr', 'ber', 'unc', 'uncavg', 'bw', 'reason'],
+	autoLoad : true,
 	url : 'tv/adapter'
 });
 
@@ -72,10 +74,11 @@ tvheadend.tvadapters = function() {
 
 	return panel;
 }
-
+*/
 /**
  *
  */
+/*
 tvheadend.showTransportDetails = function(data) {
 	html = '';
 
@@ -106,4 +109,9 @@ tvheadend.showTransportDetails = function(data) {
 		html : html
 	});
 	win.show();
+}
+*/
+
+tvheadend.tvadapters = function() {
+  return tvheadend.item_browser('/tvadapters', 'TV Adapters');
 }

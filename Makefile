@@ -68,6 +68,9 @@ endif
 SRCS =  src/version.c \
 	src/main.c \
 	src/tvhlog.c \
+	src/idnode.c \
+	src/prop.c \
+	src/tvadapters.c \
 	src/utils.c \
 	src/wrappers.c \
 	src/access.c \
@@ -160,12 +163,15 @@ SRCS-${CONFIG_TIMESHIFT} += \
 # DVB
 SRCS-${CONFIG_LINUXDVB} += \
 	src/dvb/dvb.c \
+  src/dvb/dvb_adapter.c \
 	src/dvb/dvb_support.c \
 	src/dvb/dvb_charset.c \
 	src/dvb/dvb_fe.c \
 	src/dvb/dvb_tables.c \
 	src/dvb/diseqc.c \
-	src/dvb/dvb_adapter.c \
+	src/dvb/dvb_linux.c \
+	src/dvb/dvb_hardware.c \
+	src/dvb/dvb_network.c \
 	src/dvb/dvb_multiplex.c \
 	src/dvb/dvb_service.c \
 	src/dvb/dvb_preconf.c \

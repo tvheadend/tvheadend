@@ -23,7 +23,6 @@
 
 htsmsg_t *dvb_mux_preconf_get_node(int fetype, const char *node);
 
-int dvb_mux_preconf_add_network(th_dvb_adapter_t *tda, const char *id,
-				const char *satconf);
+int dvb_mux_preconf_add_network(dvb_network_t *dn, const char *id);
 
 #endif /* DVB_MUXCONFIG_H */

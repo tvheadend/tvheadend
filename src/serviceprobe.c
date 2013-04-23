@@ -108,8 +108,8 @@ serviceprobe_thread(void *aux)
       was_doing_work = 1;
     }
 
-    if (t->s_dvb_mux_instance)
-      checksubscr = !t->s_dvb_mux_instance->tdmi_adapter->tda_skip_checksubscr;
+    if (t->s_dvb_mux->dm_dn)
+      checksubscr = !t->s_dvb_mux->dm_dn->dn_skip_checksubscr;
     else
       checksubscr = 1;
 
@@ -180,10 +180,10 @@ serviceprobe_thread(void *aux)
       } else if(t->s_ch == NULL) {
         int channum = t->s_channel_number;
         const char *str;
-        
+#if 0 // XXX(dvbreorg)
         if (!channum && t->s_dvb_mux_instance->tdmi_adapter->tda_sidtochan)
           channum = t->s_dvb_service_id;
-
+#endif
         ch = channel_find_by_name(t->s_svcname, 1, channum);
         service_map_channel(t, ch, 1);
       
