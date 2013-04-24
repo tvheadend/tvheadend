@@ -50,4 +50,10 @@ void idnode_update_all_props(idnode_t *in,
 
 void idnode_notify_title_changed(void *obj);
 
+void idnode_save ( idnode_t *self, const char *path );
 
+idnode_t *idnode_load ( htsmsg_field_t *cfg, void*(*create)(const char*) );
+
+void idnode_load_all ( const char *path, void *(*create)(const char*) );
+
+idnode_t *idnode_create ( size_t alloc, const idclass_t *class, const char *uuid )

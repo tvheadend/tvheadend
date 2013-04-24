@@ -6,6 +6,7 @@
 
 #include "idnode.h"
 #include "notify.h"
+#include "settings.h"
 
 static int randfd = 0;
 
@@ -267,7 +268,7 @@ idnode_serialize(struct idnode *self)
  *
  */
 static void
-idnode_save(idnode_t *in)
+idnode_updated(idnode_t *in)
 {
   const idclass_t *ic = in->in_class;
 
@@ -307,7 +308,7 @@ idnode_set_prop(idnode_t *in, const char *key, const char *value)
     break;
   }
   if(do_save)
-    idnode_save(in);
+    idnode_updated(in);
 }
 
 
@@ -324,7 +325,7 @@ idnode_update_all_props(idnode_t *in,
   for(;ic != NULL; ic = ic->ic_super)
     do_save |= prop_update_all(in, ic->ic_properties, getvalue, opaque);
   if(do_save)
-    idnode_save(in);
+    idnode_updated(in);
 }
 
 
@@ -339,4 +340,40 @@ idnode_notify_title_changed(void *obj)
   htsmsg_add_str(m, "id", idnode_uuid_as_str(in));
   htsmsg_add_str(m, "text", idnode_get_title(in));
   notify_by_msg("idnodeNameChanged", m);
+}
+
+inode_t *
+idnode_create ( size_t alloc, const idclass_t *class, const char *uuid )
+{
+  idnode_t *self = calloc(1, alloc);
+  idnode_insert(self, uuid, class);
+  return self;
+}
+
+void
+idnode_save ( idnode_t *self, const char *path )
+{
+  // serialize
+  // save
+}
+
+idnode_t *
+idnode_load ( htsmsg_field_t *cfg, void*(*create)(const char*) )
+{
+  htsmsg_t *m;
+  idnode_t *self;
+  if (!(m    = htsmsg_get_map_by_field(cfg))) return NULL;
+  if (!(self = create(cfg->hmf_name)))          return NULL;
+  // todo deserialize settings
+  return self;
+}
+
+void
+idnode_load_all ( const char *path, void*(*create)(const char *) )
+{
+  htsmsg_t *m;
+  htsmsg_field_t *f;
+  if ((m = hts_settings_load(path)))
+    HTSMSG_FOREACH(f, m)
+      idnode_load(f, create);
 }

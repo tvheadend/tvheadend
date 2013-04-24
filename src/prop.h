@@ -23,7 +23,6 @@ typedef struct property {
 } property_t;
 
 
-
 void prop_add_params_to_msg(void *obj, const property_t *p, htsmsg_t *msg);
 
 void prop_write_values(void *ptr, const property_t *pl, htsmsg_t *m);
@@ -35,3 +34,10 @@ int prop_set(void *obj, const property_t *p, const char *key, const char *val);
 int prop_update_all(void *obj, const property_t *p,
                      const char *(*getvalue)(void *opaque, const char *key),
                      void *opaque);
+
+#define PROPDEF1(_i, _n, _t, _o, _v)\
+  .id      = _i,\
+  .name    = _n,\
+  .type    = _t,\
+  .off     = offsetof(_o, _v)
+

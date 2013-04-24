@@ -66,6 +66,7 @@
 #if ENABLE_LIBAV
 #include "libav.h"
 #endif
+#include "test.h"
 
 /* Command line option struct */
 typedef struct {
@@ -652,7 +653,10 @@ main(int argc, char **argv)
     tvhlog_options &= ~TVHLOG_OPT_DECORATE;
   
   /* Initialise configuration */
+  idnode_init();
   hts_settings_init(opt_config);
+  obj_b_t *b = obj_b_create(NULL);
+  b->a_func1(b);
 
   /* Setup global mutexes */
   pthread_mutex_init(&ffmpeg_lock, NULL);
