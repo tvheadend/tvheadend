@@ -19,54 +19,11 @@
 #ifndef SERVICE_H__
 #define SERVICE_H__
 
-#define PID_TELETEXT_BASE 0x2000
-
 #include "htsmsg.h"
 #include "idnode.h"
-
+#include "descrambler.h"
 
 extern const idclass_t service_class;
-
-/**
- * Descrambler superclass
- *
- * Created/Destroyed on per-transport basis upon transport start/stop
- */
-typedef struct th_descrambler {
-  LIST_ENTRY(th_descrambler) td_service_link;
-
-  void (*td_table)(struct th_descrambler *d, struct service *t,
-		   struct elementary_stream *st, 
-		   const uint8_t *section, int section_len);
-
-  int (*td_descramble)(struct th_descrambler *d, struct service *t,
-		       struct elementary_stream *st, const uint8_t *tsb);
-
-  void (*td_stop)(struct th_descrambler *d);
-
-} th_descrambler_t;
-
-
-/*
- * Section callback, called when a PSI table is fully received
- */
-typedef void (pid_section_callback_t)(struct service *t,
-				      struct elementary_stream *pi,
-				      const uint8_t *section, int section_len);
-
-
-LIST_HEAD(caid_list, caid);
-/**
- *
- */
-typedef struct caid {
-  LIST_ENTRY(caid) link;
-
-  uint8_t delete_me;
-  uint16_t caid;
-  uint32_t providerid;
-
-} caid_t;
 
 /**
  * Stream, one media component for a service.
@@ -103,7 +60,9 @@ typedef struct elementary_stream {
 
   struct psi_section *es_section;
   int es_section_docrc;           /* Set if we should verify CRC on tables */
+#ifdef TODO_CAN_THIS_BE_REMOVED
   pid_section_callback_t *es_got_section;
+#endif
   void *es_got_section_opaque;
 
   /* PCR recovery */
@@ -270,19 +229,7 @@ typedef struct service {
   } s_source_type;
 
  
-  /**
-   * PID carrying the programs PCR.
-   * XXX: We don't support transports that does not carry
-   * the PCR in one of the content streams.
-   */
-  uint16_t s_pcr_pid;
-
-  /**
-   * PID for the PMT of this MPEG-TS stream.
-   */
-  uint16_t s_pmt_pid;
-
-  /**
+    /**
    * Set if transport is enabled (the default).  If disabled it should
    * not be considered when chasing for available transports during
    * subscription scheduling.
@@ -290,11 +237,13 @@ typedef struct service {
   int s_enabled;
   int (*s_is_enabled)(struct service *t);
 
+#ifdef MOVE_TO_RAWTS
   /**
    * Last PCR seen, we use it for a simple clock for rawtsinput.c
    */
   int64_t s_pcr_last;
   int64_t s_pcr_last_realtime;
+#endif
   
   LIST_ENTRY(service) s_group_link;
 
@@ -318,56 +267,10 @@ typedef struct service {
 
   void (*s_dtor)(struct service *t);
 
-  /*
-   * Per source type structs
-   */
-  struct dvb_mux *s_dvb_mux;
-
   /**
    * Name usable for displaying to user
    */
   char *s_nicename;
-
-  /**
-   * Service ID according to EN 300 468
-   */
-  uint16_t s_dvb_service_id;
-
-  uint16_t s_channel_number;
-
-  /**
-   * Service name (eg. DVB service name as specified by EN 300 468)
-   */
-  char *s_svcname;
-
-  /**
-   * Provider name (eg. DVB provider name as specified by EN 300 468)
-   */
-  char *s_provider;
-
-  /**
-   * Default authority
-   */
-  char *s_default_authority;
-
-  enum {
-    /* Service types defined in EN 300 468 */
-
-    ST_SDTV       = 0x1,    /* SDTV (MPEG2) */
-    ST_RADIO      = 0x2,
-    ST_HDTV       = 0x11,   /* HDTV (MPEG2) */
-    ST_AC_SDTV    = 0x16,   /* Advanced codec SDTV */
-    ST_AC_HDTV    = 0x19,   /* Advanced codec HDTV */
-    ST_NE_SDTV    = 0x80,   /* NET POA - Cabo SDTV */
-    ST_EX_HDTV    = 0x91,   /* Bell TV HDTV */
-    ST_EX_SDTV    = 0x96,   /* Bell TV SDTV */
-    ST_EP_HDTV    = 0xA0,   /* Bell TV tiered HDTV */
-    ST_ET_HDTV    = 0xA6,   /* Bell TV tiered HDTV */
-    ST_DN_SDTV    = 0xA8,   /* DN advanced SDTV */
-    ST_DN_HDTV    = 0xA4,   /* DN HDTV */
-    ST_SK_SDTV    = 0xd3    /* SKY TV SDTV */
-  } s_servicetype;
-
 
   /**
    * Teletext...
@@ -406,6 +309,7 @@ typedef struct service {
    */
   gtimer_t s_receive_timer;
 
+#ifdef MOVE_TO_IPTV
   /**
    * IPTV members
    */
@@ -421,13 +325,17 @@ typedef struct service {
    */
   struct psi_section *s_pat_section;
   struct psi_section *s_pmt_section;
+  // Note: are the above still required!
+#endif
 
   /**
    * V4l members
    */
 
+#ifdef MOVE_TO_V4L
   struct v4l_adapter *s_v4l_adapter;
   int s_v4l_frequency; // In Hz
+#endif
   
 
   /*********************************************************
@@ -479,21 +387,11 @@ typedef struct service {
    * For simple streaming sources (such as video4linux) keeping
    * track of the video and audio stream is convenient.
    */
+#ifdef MOVE_TO_V4L
   elementary_stream_t *s_video;
   elementary_stream_t *s_audio;
+#endif
  
-
-  /**
-   * When a subscription request SMT_MPEGTS, chunk them togeather 
-   * in order to recude load.
-   */
-  sbuf_t s_tsbuf;
-
-  /**
-   * Average continuity errors
-   */
-  avgstat_t s_cc_errors;
-
   /**
    * Average bitrate
    */
@@ -508,11 +406,6 @@ typedef struct service {
   int s_scrambled_seen;
   int s_caid;
   uint16_t s_prefcapid;
-
-  /**
-   * PCR drift compensation. This should really be per-packet.
-   */
-  int64_t  s_pcr_drift;
 
   /**
    * List of all components.
@@ -530,17 +423,6 @@ typedef struct service {
 
 
   int64_t s_current_pts;
-
-  /**
-   * DVB default charset
-   * 	used to overide the default ISO6937 per service
-   */
-  char *s_dvb_charset;
-
-  /**
-   * Set if EIT grab is enabled for DVB service (the default).
-   */
-  int s_dvb_eit_enable;
 
 } service_t;
 

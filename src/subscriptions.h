@@ -73,10 +73,12 @@ typedef struct th_subscription {
   struct service_instance_list ths_instances;
   struct service_instance *ths_current_instance;
 
+#ifdef TODO_NEED_A_BETTER_SOLUTION
   // Ugly ugly ugly to refer DVB code here
 
   LIST_ENTRY(th_subscription) ths_tdmi_link;
   struct th_dvb_mux_instance *ths_tdmi;
+#endif
 
 } th_subscription_t;
 

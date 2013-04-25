@@ -24,8 +24,10 @@
 #include "tvheadend.h"
 #include "streaming.h"
 #include "epg.h"
-#include "psi.h"
+#include "service.h"
+#include "input/mpegts/dvb.h"
 #include "muxer_pass.h"
+
 
 #define TS_INJECTION_RATE 1000
 
@@ -57,6 +59,199 @@ typedef struct pass_muxer {
   uint32_t pm_pc; // Packet counter
 } pass_muxer_t;
 
+/**
+ * Append CRC
+ */
+static int
+pass_muxer_append_crc32(uint8_t *buf, int offset, int maxlen)
+{
+  uint32_t crc;
+
+  if(offset + 4 > maxlen)
+    return -1;
+
+  crc = tvh_crc32(buf, offset, 0xffffffff);
+
+  buf[offset + 0] = crc >> 24;
+  buf[offset + 1] = crc >> 16;
+  buf[offset + 2] = crc >> 8;
+  buf[offset + 3] = crc;
+
+  assert(tvh_crc32(buf, offset + 4, 0xffffffff) == 0);
+
+  return offset + 4;
+}
+
+/** 
+ * PAT generator
+ */
+
+static int
+pass_muxer_build_pat(service_t *t, uint8_t *buf, int maxlen, int pmtpid)
+{
+  if(maxlen < 12)
+    return -1;
+
+  buf[0] = 0;
+  buf[1] = 0xb0;       /* reserved */
+  buf[2] = 12 + 4 - 3; /* Length */
+
+  buf[3] = 0x00; /* transport stream id */
+  buf[4] = 0x01;
+
+  buf[5] = 0xc1; /* reserved + current_next_indicator + version */
+  buf[6] = 0;
+  buf[7] = 0;
+
+  buf[8] = 0;    /* Program number, we only have one program */
+  buf[9] = 1;
+
+  buf[10] = 0xe0 | (pmtpid >> 8);
+  buf[11] =         pmtpid;
+
+  return pass_muxer_append_crc32(buf, 12, maxlen);
+}
+
+
+
+/** 
+ * PMT generator
+ */
+static int
+pass_muxer_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
+	      int version, int pcrpid)
+{
+  int c, tlen, dlen, l, i;
+  uint8_t *buf, *buf1;
+
+  buf = buf0;
+
+  if(maxlen < 12)
+    return -1;
+
+  buf[0] = 2; /* table id, always 2 */
+
+  buf[3] = 0x00; /* program id */
+  buf[4] = 0x01;
+
+  buf[5] = 0xc1; /* current_next_indicator + version */
+  buf[5] |= (version & 0x1F) << 1;
+
+  buf[6] = 0; /* section number */
+  buf[7] = 0; /* last section number */
+
+  buf[8] = 0xe0 | (pcrpid >> 8);
+  buf[9] =         pcrpid;
+
+  buf[10] = 0xf0; /* Program info length */
+  buf[11] = 0x00; /* We dont have any such things atm */
+
+  buf += 12;
+  tlen = 12;
+
+  for(i = 0; i < ss->ss_num_components; i++) {
+    const streaming_start_component_t *ssc = &ss->ss_components[i];
+
+    switch(ssc->ssc_type) {
+    case SCT_MPEG2VIDEO:
+      c = 0x02;
+      break;
+
+    case SCT_MPEG2AUDIO:
+      c = 0x04;
+      break;
+
+    case SCT_EAC3:
+    case SCT_DVBSUB:
+      c = 0x06;
+      break;
+
+    case SCT_MP4A:
+    case SCT_AAC:
+      c = 0x11;
+      break;
+
+    case SCT_H264:
+      c = 0x1b;
+      break;
+
+    case SCT_AC3:
+      c = 0x81;
+      break;
+
+    default:
+      continue;
+    }
+
+
+    buf[0] = c;
+    buf[1] = 0xe0 | (ssc->ssc_pid >> 8);
+    buf[2] =         ssc->ssc_pid;
+
+    buf1 = &buf[3];
+    tlen += 5;
+    buf  += 5;
+    dlen = 0;
+
+    switch(ssc->ssc_type) {
+    case SCT_MPEG2AUDIO:
+    case SCT_MP4A:
+    case SCT_AAC:
+      buf[0] = DVB_DESC_LANGUAGE;
+      buf[1] = 4;
+      memcpy(&buf[2],ssc->ssc_lang,3);
+      buf[5] = 0; /* Main audio */
+      dlen = 6;
+      break;
+    case SCT_DVBSUB:
+      buf[0] = DVB_DESC_SUBTITLE;
+      buf[1] = 8;
+      memcpy(&buf[2],ssc->ssc_lang,3);
+      buf[5] = 16; /* Subtitling type */
+      buf[6] = ssc->ssc_composition_id >> 8; 
+      buf[7] = ssc->ssc_composition_id;
+      buf[8] = ssc->ssc_ancillary_id >> 8; 
+      buf[9] = ssc->ssc_ancillary_id;
+      dlen = 10;
+      break;
+    case SCT_AC3:
+      buf[0] = DVB_DESC_LANGUAGE;
+      buf[1] = 4;
+      memcpy(&buf[2],ssc->ssc_lang,3);
+      buf[5] = 0; /* Main audio */
+      buf[6] = DVB_DESC_AC3;
+      buf[7] = 1;
+      buf[8] = 0; /* XXX: generate real AC3 desc */
+      dlen = 9;
+      break;
+    case SCT_EAC3:
+      buf[0] = DVB_DESC_LANGUAGE;
+      buf[1] = 4;
+      memcpy(&buf[2],ssc->ssc_lang,3);
+      buf[5] = 0; /* Main audio */
+      buf[6] = DVB_DESC_EAC3;
+      buf[7] = 1;
+      buf[8] = 0; /* XXX: generate real EAC3 desc */
+      dlen = 9;
+      break;
+    default:
+      break;
+    }
+
+    tlen += dlen;
+    buf  += dlen;
+
+    buf1[0] = 0xf0 | (dlen >> 8);
+    buf1[1] =         dlen;
+  }
+
+  l = tlen - 3 + 4;
+
+  buf0[1] = 0xb0 | (l >> 8);
+  buf0[2] =         l;
+
+  return pass_muxer_append_crc32(buf0, tlen, maxlen);
+}
 
 /**
  * Figure out the mime-type for the muxed data stream
@@ -117,7 +312,7 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
     pm->pm_pat[2] = 0x00;
     pm->pm_pat[3] = 0x10;
     pm->pm_pat[4] = 0x00;
-    if(psi_build_pat(NULL, pm->pm_pat+5, 183, ss->ss_pmt_pid) < 0) {
+    if(pass_muxer_build_pat(NULL, pm->pm_pat+5, 183, ss->ss_pmt_pid) < 0) {
       pm->m_errors++;
       tvhlog(LOG_ERR, "pass", "%s: Unable to build pat", pm->pm_filename);
       return -1;
@@ -130,7 +325,7 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
     pm->pm_pmt[2] = 0x00 | (ss->ss_pmt_pid >> 0);
     pm->pm_pmt[3] = 0x10;
     pm->pm_pmt[4] = 0x00;
-    if(psi_build_pmt(ss, pm->pm_pmt+5, 183, pm->pm_pmt_version,
+    if(pass_muxer_build_pmt(ss, pm->pm_pmt+5, 183, pm->pm_pmt_version,
 		     ss->ss_pcr_pid) < 0) {
       pm->m_errors++;
       tvhlog(LOG_ERR, "pass", "%s: Unable to build pmt", pm->pm_filename);

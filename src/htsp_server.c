@@ -38,11 +38,11 @@
 #include "access.h"
 #include "htsp_server.h"
 #include "streaming.h"
-#include "psi.h"
 #include "htsmsg_binary.h"
 #include "epg.h"
 #include "plumbing/tsfix.h"
 #include "imagecache.h"
+#include "descrambler.h"
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
 #endif
@@ -509,10 +509,12 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
     htsmsg_t *svcmsg = htsmsg_create_map();
     uint16_t caid;
     htsmsg_add_str(svcmsg, "name", service_nicename(t));
+#ifdef TODO_FIX_THIS
     htsmsg_add_str(svcmsg, "type", service_servicetype_txt(t));
+#endif
     if((caid = service_get_encryption(t)) != 0) {
       htsmsg_add_u32(svcmsg, "caid", caid);
-      htsmsg_add_str(svcmsg, "caname", psi_caid2name(caid));
+      htsmsg_add_str(svcmsg, "caname", descrambler_caid2name(caid));
     }
     htsmsg_add_msg(services, NULL, svcmsg);
   }

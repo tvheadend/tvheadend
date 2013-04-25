@@ -19,7 +19,9 @@
 #ifndef TELETEXT_H
 #define TELETEXT_H
 
-void teletext_input(struct service *t, struct elementary_stream *st,
+#define PID_TELETEXT_BASE 0x2000
+
+void teletext_input(struct mpegts_service *t, struct elementary_stream *st,
 		    const uint8_t *tsb);
 
 #endif /* TELETEXT_H */

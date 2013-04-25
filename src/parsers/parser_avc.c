@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avc.h"
+#include "parser_avc.h"
 
 static const uint8_t *
 avc_find_startcode(const uint8_t *p, const uint8_t *end)

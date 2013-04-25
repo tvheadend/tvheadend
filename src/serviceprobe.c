@@ -30,7 +30,9 @@
 #include "serviceprobe.h"
 #include "streaming.h"
 #include "service.h"
-#include "dvb/dvb.h"
+
+// TODO: HACK: FIXME !!!
+#define s_svcname s_nicename
 
 /* List of transports to be probed, protected with global_lock */
 static struct service_queue serviceprobe_queue;  
@@ -108,9 +110,11 @@ serviceprobe_thread(void *aux)
       was_doing_work = 1;
     }
 
+#ifdef TODO_NEED_TO_SORT_THIS
     if (t->s_dvb_mux->dm_dn)
       checksubscr = !t->s_dvb_mux->dm_dn->dn_skip_checksubscr;
     else
+#endif
       checksubscr = 1;
 
     if (checksubscr) {
@@ -178,8 +182,8 @@ serviceprobe_thread(void *aux)
         tvhlog(LOG_INFO, "serviceprobe", "%20s: skipped: %s",
         t->s_svcname, err);
       } else if(t->s_ch == NULL) {
-        int channum = t->s_channel_number;
-        const char *str;
+        int channum = 0;//TODO: HACK: FIXME t->s_channel_number;
+        //const char *str;
 #if 0 // XXX(dvbreorg)
         if (!channum && t->s_dvb_mux_instance->tdmi_adapter->tda_sidtochan)
           channum = t->s_dvb_service_id;
@@ -196,6 +200,7 @@ serviceprobe_thread(void *aux)
                  t->s_svcname, "TV channels");
         }
 
+#if TODO_FIX_THIS
         switch(t->s_servicetype) {
           case ST_SDTV:
           case ST_AC_SDTV:
@@ -231,6 +236,8 @@ serviceprobe_thread(void *aux)
           tvhlog(LOG_INFO, "serviceprobe", "%20s: joined tag \"%s\"",
                  t->s_svcname, t->s_provider);
         }
+#endif
+
         channel_save(ch);
       }
 
@@ -254,3 +261,6 @@ serviceprobe_init(void)
   TAILQ_INIT(&serviceprobe_queue);
   pthread_create(&ptid, NULL, serviceprobe_thread, NULL);
 }
+
+// TODO: HACK: FIXME !!!
+#undef s_svcname

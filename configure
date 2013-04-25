@@ -19,6 +19,7 @@ OPTIONS=(
   "cwc:yes"
   "v4l:yes"
   "linuxdvb:yes"
+  "iptv:yes"
   "dvbscan:yes"
   "timeshift:yes"
   "trace:yes"
@@ -187,6 +188,19 @@ if enabled linuxdvb && enabled dvbscan; then
     die "Failed to fetch dvb-scan data (use --disable-dvbscan)"
   fi
   echo "ok"
+fi
+
+#
+# MPEGTS/PS support
+#
+disable mpegts
+disable mpegps
+if enabled linuxdvb || enabled iptv; then
+  enable mpegts
+fi
+
+if enabled v4l; then
+  enable mpegps
 fi
 
 # ###########################################################################

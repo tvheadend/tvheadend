@@ -342,7 +342,7 @@ idnode_notify_title_changed(void *obj)
   notify_by_msg("idnodeNameChanged", m);
 }
 
-inode_t *
+idnode_t *
 idnode_create ( size_t alloc, const idclass_t *class, const char *uuid )
 {
   idnode_t *self = calloc(1, alloc);

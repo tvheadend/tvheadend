@@ -21,7 +21,7 @@
 
 #include "htsmsg.h"
 #include "streaming.h"
-#include "service.h"
+#include "mpegts_service.h"
 
 #define PSI_SECTION_SIZE 5000
 
@@ -37,17 +37,12 @@ typedef struct psi_section {
 void psi_section_reassemble(psi_section_t *ps, const uint8_t *tsb, int crc,
 			    section_handler_t *cb, void *opaque);
 
-int psi_parse_pmt(struct service *t, const uint8_t *ptr, int len, int chksvcid,
+int psi_parse_pmt(struct mpegts_service *t, const uint8_t *ptr, int len, int chksvcid,
 		  int delete);
-
-int psi_build_pat(struct service *t, uint8_t *buf, int maxlen, int pmtpid);
-
-int psi_build_pmt(const streaming_start_t *ss, uint8_t *buf, int maxlen, 
-		  int version, int pcrpid);
 
 const char *psi_caid2name(uint16_t caid);
 
-void psi_load_service_settings(htsmsg_t *m, struct service *t);
-void psi_save_service_settings(htsmsg_t *m, struct service *t);
+void psi_load_service_settings(htsmsg_t *m, struct mpegts_service *t);
+void psi_save_service_settings(htsmsg_t *m, struct mpegts_service *t);
 
 #endif /* PSI_H_ */

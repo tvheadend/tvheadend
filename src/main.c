@@ -41,23 +41,21 @@
 #include "access.h"
 #include "http.h"
 #include "webui/webui.h"
-#include "dvb/dvb.h"
 #include "epggrab.h"
 #include "spawn.h"
 #include "subscriptions.h"
 #include "serviceprobe.h"
-#include "cwc.h"
-#include "capmt.h"
+#include "descrambler.h"
 #include "dvr/dvr.h"
 #include "htsp_server.h"
-#include "rawtsinput.h"
+//#include "rawtsinput.h"
 #include "avahi.h"
-#include "iptv_input.h"
+//#include "input/mpegts/linuxdvb.h"
+#include "input/mpegts/iptv.h"
+#include "input/mpegps/v4l.h"
 #include "service.h"
-#include "v4l.h"
 #include "trap.h"
 #include "settings.h"
-#include "ffdecsa/FFdecsa.h"
 #include "muxes.h"
 #include "config2.h"
 #include "idnode.h"
@@ -66,7 +64,6 @@
 #if ENABLE_LIBAV
 #include "libav.h"
 #endif
-#include "test.h"
 
 /* Command line option struct */
 typedef struct {
@@ -655,8 +652,6 @@ main(int argc, char **argv)
   /* Initialise configuration */
   idnode_init();
   hts_settings_init(opt_config);
-  obj_b_t *b = obj_b_create(NULL);
-  b->a_func1(b);
 
   /* Setup global mutexes */
   pthread_mutex_init(&ffmpeg_lock, NULL);
@@ -698,7 +693,9 @@ main(int argc, char **argv)
   dvb_init(adapter_mask, opt_dvb_raw);
 #endif
 
+#if ENABLE_IPTV
   iptv_input_init();
+#endif
 
 #if ENABLE_V4L
   v4l_init();
@@ -714,13 +711,7 @@ main(int argc, char **argv)
 
   serviceprobe_init();
 
-#if ENABLE_CWC
-  cwc_init();
-  capmt_init();
-#if (!ENABLE_DVBCSA)
-  ffdecsa_init();
-#endif
-#endif
+  descrambler_init();
 
   epggrab_init();
   epg_init();
@@ -730,7 +721,7 @@ main(int argc, char **argv)
   htsp_init(opt_bindaddr);
 
   if(opt_rawts != NULL)
-    rawts_init(opt_rawts);
+    printf("TODO: rawts_init(opt_rawts);\n");
 
   if(opt_subscribe != NULL)
     subscription_dummy_join(opt_subscribe, 1);

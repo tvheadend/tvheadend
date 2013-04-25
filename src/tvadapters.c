@@ -18,7 +18,7 @@
 
 #include "tvheadend.h"
 #include "tvadapters.h"
-#include "dvb/dvb.h"
+#include "input/mepgts/linuxdvb.h"
 
 /**
  *

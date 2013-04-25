@@ -31,7 +31,6 @@
 #include "settings.h"
 
 #include "tvheadend.h"
-#include "psi.h"
 #include "epg.h"
 #include "epggrab.h"
 #include "channels.h"

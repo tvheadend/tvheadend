@@ -35,14 +35,12 @@
 #include "access.h"
 #include "dtable.h"
 #include "channels.h"
-#include "psi.h"
 
 #include "dvr/dvr.h"
 #include "serviceprobe.h"
 #include "epggrab.h"
 #include "epg.h"
 #include "muxer.h"
-#include "iptv_input.h"
 #include "epggrab/private.h"
 #include "config2.h"
 #include "lang_codes.h"
@@ -50,7 +48,13 @@
 #include "imagecache.h"
 #include "timeshift.h"
 #include "tvhtime.h"
+
+#include "input/mpegts/iptv.h"
+#include "input/mpegts/linuxdvb.h"
+
+#if 0
 #include "tvadapters.h"
+#endif
 
 /**
  *
@@ -1550,6 +1554,7 @@ extjs_service_delete(htsmsg_t *in)
 /**
  *
  */
+#ifdef TODO_FIX_THIS
 static void
 service_update(htsmsg_t *in)
 {
@@ -1585,6 +1590,7 @@ service_update(htsmsg_t *in)
       service_set_dvb_eit_enable(t, u32);
   }
 }
+#endif
 
 /**
  *
@@ -1627,7 +1633,7 @@ extjs_servicedetails(http_connection_t *hc,
       LIST_FOREACH(ca, &st->es_caids, link) {
 	snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), 
 		 "%s (0x%04x) [0x%08x]",
-		 psi_caid2name(ca->caid), ca->caid, ca->providerid);
+		 "TODO"/*psi_caid2name(ca->caid)*/, ca->caid, ca->providerid);
       }
 
       htsmsg_add_str(c, "details", buf);
@@ -1660,14 +1666,18 @@ extjs_servicedetails(http_connection_t *hc,
   }
 
   out = htsmsg_create_map();
+#ifdef TODO_FIX_THIS
   htsmsg_add_str(out, "title", t->s_svcname ?: "unnamed service");
+#endif
 
   htsmsg_add_msg(out, "streams", streams);
 
+#ifdef TODO_FIX_THIS
   if(t->s_dvb_charset != NULL)
     htsmsg_add_str(out, "dvb_charset", t->s_dvb_charset);
 
   htsmsg_add_u32(out, "dvb_eit_enable", t->s_dvb_eit_enable);
+#endif
 
   pthread_mutex_unlock(&global_lock);
 
@@ -1723,6 +1733,7 @@ extjs_mergechannel(http_connection_t *hc, const char *remain, void *opaque)
 /**
  *
  */
+#if ENABLE_IPTV
 static void
 service_update_iptv(htsmsg_t *in)
 {
@@ -1883,6 +1894,7 @@ extjs_iptvservices(http_connection_t *hc, const char *remain, void *opaque)
   http_output_content(hc, "text/x-json; charset=UTF-8");
   return 0;
 }
+#endif
 
 /**
  *
@@ -1896,7 +1908,9 @@ extjs_service_update(htsmsg_t *in)
   uint32_t u32;
   const char *id;
   const char *chname;
+#ifdef TODO_FIX_THIS
   const char *dvb_charset;
+#endif
 
   TAILQ_FOREACH(f, &in->hm_fields, hmf_link) {
     if((c = htsmsg_get_map_by_field(f)) == NULL ||
@@ -1915,11 +1929,13 @@ extjs_service_update(htsmsg_t *in)
     if((chname = htsmsg_get_str(c, "channelname")) != NULL) 
       service_map_channel(t, channel_find_by_name(chname, 1, 0), 1);
 
+#ifdef TODO_FIX_THIS
     if((dvb_charset = htsmsg_get_str(c, "dvb_charset")) != NULL)
       service_set_dvb_charset(t, dvb_charset);
 
     if(!htsmsg_get_u32(c, "dvb_eit_enable", &u32))
       service_set_dvb_eit_enable(t, u32);
+#endif
   }
 }
 
@@ -2238,11 +2254,13 @@ extjs_item_update(http_connection_t *hc, const char *remain, void *opaque)
 /**
  *
  */
+#ifdef TODO_FIX_THIS
 static int
 extjs_tvadapters(http_connection_t *hc, const char *remain, void *opaque)
 {
   return extjs_get_idnode(hc, remain, opaque, &tv_adapters_root);
 }
+#endif
 
 
 
@@ -2360,7 +2378,9 @@ extjs_start(void)
   http_path_add("/config",           NULL, extjs_config,           ACCESS_WEB_INTERFACE);
   http_path_add("/languages",        NULL, extjs_languages,        ACCESS_WEB_INTERFACE);
   http_path_add("/mergechannel",     NULL, extjs_mergechannel,     ACCESS_ADMIN);
+#if ENABLE_IPTV
   http_path_add("/iptv/services",    NULL, extjs_iptvservices,     ACCESS_ADMIN);
+#endif
   http_path_add("/servicedetails",   NULL, extjs_servicedetails,   ACCESS_ADMIN);
 //  http_path_add("/tv/adapter",       NULL, extjs_tvadapter,        ACCESS_ADMIN);
 #if ENABLE_TIMESHIFT
@@ -2369,8 +2389,10 @@ extjs_start(void)
   http_path_add("/tvhlog",           NULL, extjs_tvhlog,           ACCESS_ADMIN);
   http_path_add("/item/update",    NULL, extjs_item_update,    ACCESS_ADMIN);
 
+#ifdef TODO_FIX_THIS
   http_path_add("/tvadapters",
 		NULL, extjs_tvadapters, ACCESS_ADMIN);
+#endif
 
 #if ENABLE_LINUXDVB
   extjs_start_dvb();

@@ -492,3 +492,32 @@ streaming_start_component_find_by_index(streaming_start_t *ss, int idx)
   }
   return NULL;
 }
+
+/**
+ *
+ */
+static struct strtab streamtypetab[] = {
+  { "MPEG2VIDEO", SCT_MPEG2VIDEO },
+  { "MPEG2AUDIO", SCT_MPEG2AUDIO },
+  { "H264",       SCT_H264 },
+  { "AC3",        SCT_AC3 },
+  { "TELETEXT",   SCT_TELETEXT },
+  { "DVBSUB",     SCT_DVBSUB },
+  { "CA",         SCT_CA },
+  { "PMT",        SCT_PMT },
+  { "AAC",        SCT_AAC },
+  { "MPEGTS",     SCT_MPEGTS },
+  { "TEXTSUB",    SCT_TEXTSUB },
+  { "EAC3",       SCT_EAC3 },
+  { "AAC",       SCT_MP4A },
+};
+
+
+/**
+ *
+ */
+const char *
+streaming_component_type2txt(streaming_component_type_t s)
+{
+  return val2str(s, streamtypetab) ?: "INVALID";
+}

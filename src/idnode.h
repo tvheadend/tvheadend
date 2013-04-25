@@ -56,4 +56,5 @@ idnode_t *idnode_load ( htsmsg_field_t *cfg, void*(*create)(const char*) );
 
 void idnode_load_all ( const char *path, void *(*create)(const char*) );
 
-idnode_t *idnode_create ( size_t alloc, const idclass_t *class, const char *uuid )
+idnode_t *idnode_create 
+  ( size_t alloc, const idclass_t *class, const char *uuid );

@@ -33,16 +33,17 @@
 #include <string.h>
 
 #include "tvheadend.h"
-#include "teletext.h"
 #include "subscriptions.h"
 #include "psi.h"
 #include "tsdemux.h"
 #include "parsers.h"
 #include "streaming.h"
+#include "mpegts_service.h"
+#include "parsers/parser_teletext.h"
 
 #define TS_REMUX_BUFSIZE (188 * 100)
 
-static void ts_remux(service_t *t, const uint8_t *tsb);
+static void ts_remux(mpegts_service_t *t, const uint8_t *tsb);
 
 /**
  * Code for dealing with a complete section
@@ -52,13 +53,16 @@ got_section(const uint8_t *data, size_t len, void *opaque)
 {
   th_descrambler_t *td;
   elementary_stream_t *st = opaque;
-  service_t *t = st->es_service;
+  assert(st->es_service->s_source_type == S_MPEG_TS);
+  mpegts_service_t *t = (mpegts_service_t*)st->es_service;
 
   if(st->es_type == SCT_CA) {
     LIST_FOREACH(td, &t->s_descramblers, td_service_link)
-      td->td_table(td, t, st, data, len);
+      td->td_table(td, (service_t*)t, st, data, len);
+#if TODO_FIXME
   } else if(st->es_got_section != NULL) {
     st->es_got_section(t, st, data, len);
+#endif
   }
 }
 
@@ -67,11 +71,11 @@ got_section(const uint8_t *data, size_t len, void *opaque)
  * Continue processing of transport stream packets
  */
 static void
-ts_recv_packet0(service_t *t, elementary_stream_t *st, const uint8_t *tsb)
+ts_recv_packet0(mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb)
 {
   int off, pusi, cc, error;
 
-  service_set_streaming_status_flags(t, TSS_MUX_PACKETS);
+  service_set_streaming_status_flags((service_t*)t, TSS_MUX_PACKETS);
 
   if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
     ts_remux(t, tsb);
@@ -122,7 +126,7 @@ ts_recv_packet0(service_t *t, elementary_stream_t *st, const uint8_t *tsb)
       break;
 
     if(t->s_status == SERVICE_RUNNING)
-      parse_mpeg_ts(t, st, tsb + off, 188 - off, pusi, error);
+      parse_mpeg_ts((service_t*)t, st, tsb + off, 188 - off, pusi, error);
     break;
   }
 }
@@ -134,7 +138,7 @@ ts_recv_packet0(service_t *t, elementary_stream_t *st, const uint8_t *tsb)
  * than the stream PCR
  */
 static void
-ts_extract_pcr(service_t *t, elementary_stream_t *st, const uint8_t *tsb, 
+ts_extract_pcr(mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb, 
 	       int64_t *pcrp)
 {
   int64_t real, pcr, d;
@@ -182,7 +186,7 @@ ts_extract_pcr(service_t *t, elementary_stream_t *st, const uint8_t *tsb,
  * Process service stream packets, extract PCR and optionally descramble
  */
 void
-ts_recv_packet1(service_t *t, const uint8_t *tsb, int64_t *pcrp)
+ts_recv_packet1(mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp)
 {
   elementary_stream_t *st;
   int pid, n, m, r;
@@ -194,18 +198,18 @@ ts_recv_packet1(service_t *t, const uint8_t *tsb, int64_t *pcrp)
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
-  service_set_streaming_status_flags(t, TSS_INPUT_HARDWARE);
+  service_set_streaming_status_flags((service_t*)t, TSS_INPUT_HARDWARE);
 
   if(tsb[1] & 0x80) {
     /* Transport Error Indicator */
-    limitedlog(&t->s_loglimit_tei, "TS", service_nicename(t),
+    limitedlog(&t->s_loglimit_tei, "TS", service_nicename((service_t*)t),
 	       "Transport error indicator");
     error = 1;
   }
 
   pid = (tsb[1] & 0x1f) << 8 | tsb[2];
 
-  st = service_stream_find(t, pid);
+  st = service_stream_find((service_t*)t, pid);
 
   /* Extract PCR */
   if(tsb[3] & 0x20 && tsb[4] > 0 && tsb[5] & 0x10 && !error)
@@ -217,7 +221,7 @@ ts_recv_packet1(service_t *t, const uint8_t *tsb, int64_t *pcrp)
   }
 
   if(!error)
-    service_set_streaming_status_flags(t, TSS_INPUT_SERVICE);
+    service_set_streaming_status_flags((service_t*)t, TSS_INPUT_SERVICE);
 
   avgstat_add(&t->s_rate, 188, dispatch_clock);
 
@@ -237,7 +241,7 @@ ts_recv_packet1(service_t *t, const uint8_t *tsb, int64_t *pcrp)
     LIST_FOREACH(td, &t->s_descramblers, td_service_link) {
       n++;
       
-      r = td->td_descramble(td, t, st, tsb);
+      r = td->td_descramble(td, (service_t*)t, st, tsb);
       if(r == 0) {
 	pthread_mutex_unlock(&t->s_stream_mutex);
 	return;
@@ -249,9 +253,9 @@ ts_recv_packet1(service_t *t, const uint8_t *tsb, int64_t *pcrp)
 
     if(!error && t->s_scrambled != 0) {
       if(n == 0) {
-	service_set_streaming_status_flags(t, TSS_NO_DESCRAMBLER);
+	service_set_streaming_status_flags((service_t*)t, TSS_NO_DESCRAMBLER);
       } else if(m == n) {
-	service_set_streaming_status_flags(t, TSS_NO_ACCESS);
+	service_set_streaming_status_flags((service_t*)t, TSS_NO_ACCESS);
       }
     }
 
@@ -266,12 +270,12 @@ ts_recv_packet1(service_t *t, const uint8_t *tsb, int64_t *pcrp)
  * Process transport stream packets, simple version
  */
 void
-ts_recv_packet2(service_t *t, const uint8_t *tsb)
+ts_recv_packet2(mpegts_service_t *t, const uint8_t *tsb)
 {
   elementary_stream_t *st;
   int pid = (tsb[1] & 0x1f) << 8 | tsb[2];
 
-  if((st = service_stream_find(t, pid)) != NULL)
+  if((st = service_stream_find((service_t*)t, pid)) != NULL)
     ts_recv_packet0(t, st, tsb);
 }
 
@@ -280,7 +284,7 @@ ts_recv_packet2(service_t *t, const uint8_t *tsb)
  *
  */
 static void
-ts_remux(service_t *t, const uint8_t *src)
+ts_remux(mpegts_service_t *t, const uint8_t *src)
 {
   streaming_message_t sm;
   pktbuf_t *pb;
@@ -299,7 +303,7 @@ ts_remux(service_t *t, const uint8_t *src)
 
   pktbuf_ref_dec(pb);
 
-  service_set_streaming_status_flags(t, TSS_PACKETS);
+  service_set_streaming_status_flags((service_t*)t, TSS_PACKETS);
 
   sbuf_reset(sb);
 }

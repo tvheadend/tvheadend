@@ -21,8 +21,8 @@
 
 int ts_resync ( const uint8_t *tsb, int *len, int *idx );
 
-void ts_recv_packet1(struct service *t, const uint8_t *tsb, int64_t *pcrp);
+void ts_recv_packet1(struct mpegts_service *t, const uint8_t *tsb, int64_t *pcrp);
 
-void ts_recv_packet2(struct service *t, const uint8_t *tsb);
+void ts_recv_packet2(struct mpegts_service *t, const uint8_t *tsb);
 
 #endif /* TSDEMUX_H */

@@ -24,9 +24,10 @@
 
 #include "tvheadend.h"
 #include "psi.h"
-#include "dvb/dvb_support.h"
+#include "dvb.h"
 #include "tsdemux.h"
 #include "parsers.h"
+#include "parsers/parser_teletext.h"
 #include "lang_codes.h"
 
 static int
@@ -110,61 +111,6 @@ psi_section_reassemble(psi_section_t *ps, const uint8_t *tsb, int crc,
 }
 
 
-/**
- * Append CRC
- */
-
-static int
-psi_append_crc32(uint8_t *buf, int offset, int maxlen)
-{
-  uint32_t crc;
-
-  if(offset + 4 > maxlen)
-    return -1;
-
-  crc = tvh_crc32(buf, offset, 0xffffffff);
-
-  buf[offset + 0] = crc >> 24;
-  buf[offset + 1] = crc >> 16;
-  buf[offset + 2] = crc >> 8;
-  buf[offset + 3] = crc;
-
-  assert(tvh_crc32(buf, offset + 4, 0xffffffff) == 0);
-
-  return offset + 4;
-}
-
-
-/** 
- * PAT generator
- */
-
-int
-psi_build_pat(service_t *t, uint8_t *buf, int maxlen, int pmtpid)
-{
-  if(maxlen < 12)
-    return -1;
-
-  buf[0] = 0;
-  buf[1] = 0xb0;       /* reserved */
-  buf[2] = 12 + 4 - 3; /* Length */
-
-  buf[3] = 0x00; /* transport stream id */
-  buf[4] = 0x01;
-
-  buf[5] = 0xc1; /* reserved + current_next_indicator + version */
-  buf[6] = 0;
-  buf[7] = 0;
-
-  buf[8] = 0;    /* Program number, we only have one program */
-  buf[9] = 1;
-
-  buf[10] = 0xe0 | (pmtpid >> 8);
-  buf[11] =         pmtpid;
-
-  return psi_append_crc32(buf, 12, maxlen);
-}
-
 
 /**
  * PMT update reason flags
@@ -187,14 +133,14 @@ psi_build_pat(service_t *t, uint8_t *buf, int maxlen, int pmtpid)
  * Add a CA descriptor
  */
 static int
-psi_desc_add_ca(service_t *t, uint16_t caid, uint32_t provid, uint16_t pid)
+psi_desc_add_ca(mpegts_service_t *t, uint16_t caid, uint32_t provid, uint16_t pid)
 {
   elementary_stream_t *st;
   caid_t *c;
   int r = 0;
 
-  if((st = service_stream_find(t, pid)) == NULL) {
-    st = service_stream_create(t, pid, SCT_CA);
+  if((st = service_stream_find((service_t*)t, pid)) == NULL) {
+    st = service_stream_create((service_t*)t, pid, SCT_CA);
     r |= PMT_UPDATE_NEW_CA_STREAM;
   }
 
@@ -229,7 +175,7 @@ psi_desc_add_ca(service_t *t, uint16_t caid, uint32_t provid, uint16_t pid)
  * Parser for CA descriptors
  */
 static int 
-psi_desc_ca(service_t *t, const uint8_t *buffer, int size)
+psi_desc_ca(mpegts_service_t *t, const uint8_t *buffer, int size)
 {
   int r = 0;
   int i;
@@ -288,7 +234,7 @@ psi_desc_ca(service_t *t, const uint8_t *buffer, int size)
  * Parser for teletext descriptor
  */
 static int
-psi_desc_teletext(service_t *t, const uint8_t *ptr, int size,
+psi_desc_teletext(mpegts_service_t *t, const uint8_t *ptr, int size,
 		  int parent_pid, int *position)
 {
   int r = 0;
@@ -306,9 +252,9 @@ psi_desc_teletext(service_t *t, const uint8_t *ptr, int size,
       // higher than normal MPEG TS (0x2000 ++)
       int pid = PID_TELETEXT_BASE + page;
     
-      if((st = service_stream_find(t, pid)) == NULL) {
+      if((st = service_stream_find((service_t*)t, pid)) == NULL) {
 	r |= PMT_UPDATE_NEW_STREAM;
-	st = service_stream_create(t, pid, SCT_TEXTSUB);
+	st = service_stream_create((service_t*)t, pid, SCT_TEXTSUB);
 	st->es_delete_me = 1;
       }
 
@@ -355,7 +301,7 @@ pidcmp(const void *A, const void *B)
  *
  */
 static void
-sort_pids(service_t *t)
+sort_pids(mpegts_service_t *t)
 {
   elementary_stream_t *st, **v;
   int num = 0, i = 0;
@@ -379,7 +325,7 @@ sort_pids(service_t *t)
  * PMT parser, from ISO 13818-1 and ETSI EN 300 468
  */
 int
-psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
+psi_parse_pmt(mpegts_service_t *t, const uint8_t *ptr, int len, int chksvcid,
 	      int delete)
 {
   uint16_t pcr_pid, pid;
@@ -579,9 +525,9 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 
     if(hts_stream_type != SCT_UNKNOWN) {
 
-      if((st = service_stream_find(t, pid)) == NULL) {
+      if((st = service_stream_find((service_t*)t, pid)) == NULL) {
 	update |= PMT_UPDATE_NEW_STREAM;
-	st = service_stream_create(t, pid, hts_stream_type);
+	st = service_stream_create((service_t*)t, pid, hts_stream_type);
       }
 
       // Jernej: I don't know why. But it seems that sometimes the stream is created with a wrong es_type??
@@ -629,7 +575,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 
 
     if(st->es_delete_me) {
-      service_stream_destroy(t, st);
+      service_stream_destroy((service_t*)t, st);
       update |= PMT_UPDATE_STREAM_DELETED;
     }
   }
@@ -640,7 +586,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
   if(update) {
     tvhlog(LOG_DEBUG, "PSI", "Service \"%s\" PMT (version %d) updated"
 	   "%s%s%s%s%s%s%s%s%s%s%s%s%s",
-	   service_nicename(t), version,
+	   service_nicename((service_t*)t), version,
 	   update&PMT_UPDATE_PCR               ? ", PCR PID changed":"",
 	   update&PMT_UPDATE_NEW_STREAM        ? ", New elementary stream":"",
 	   update&PMT_UPDATE_LANGUAGE          ? ", Language changed":"",
@@ -655,7 +601,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 	   update&PMT_UPDATE_CAID_DELETED      ? ", CAID deleted":"",
 	   update&PMT_REORDERED                ? ", PIDs reordered":"");
     
-    service_request_save(t, 0);
+    service_request_save((service_t*)t, 0);
 
     // Only restart if something that our clients worry about did change
     if(update & ~(PMT_UPDATE_NEW_CA_STREAM |
@@ -663,282 +609,17 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 		  PMT_UPDATE_CA_PROVIDER_CHANGE | 
 		  PMT_UPDATE_CAID_DELETED)) {
       if(t->s_status == SERVICE_RUNNING)
-	service_restart(t, had_components);
+	service_restart((service_t*)t, had_components);
     }
   }
   return 0;
 }
 
-
-/** 
- * PMT generator
- */
-int
-psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
-	      int version, int pcrpid)
-{
-  int c, tlen, dlen, l, i;
-  uint8_t *buf, *buf1;
-
-  buf = buf0;
-
-  if(maxlen < 12)
-    return -1;
-
-  buf[0] = 2; /* table id, always 2 */
-
-  buf[3] = 0x00; /* program id */
-  buf[4] = 0x01;
-
-  buf[5] = 0xc1; /* current_next_indicator + version */
-  buf[5] |= (version & 0x1F) << 1;
-
-  buf[6] = 0; /* section number */
-  buf[7] = 0; /* last section number */
-
-  buf[8] = 0xe0 | (pcrpid >> 8);
-  buf[9] =         pcrpid;
-
-  buf[10] = 0xf0; /* Program info length */
-  buf[11] = 0x00; /* We dont have any such things atm */
-
-  buf += 12;
-  tlen = 12;
-
-  for(i = 0; i < ss->ss_num_components; i++) {
-    const streaming_start_component_t *ssc = &ss->ss_components[i];
-
-    switch(ssc->ssc_type) {
-    case SCT_MPEG2VIDEO:
-      c = 0x02;
-      break;
-
-    case SCT_MPEG2AUDIO:
-      c = 0x04;
-      break;
-
-    case SCT_EAC3:
-    case SCT_DVBSUB:
-      c = 0x06;
-      break;
-
-    case SCT_MP4A:
-    case SCT_AAC:
-      c = 0x11;
-      break;
-
-    case SCT_H264:
-      c = 0x1b;
-      break;
-
-    case SCT_AC3:
-      c = 0x81;
-      break;
-
-    default:
-      continue;
-    }
-
-
-    buf[0] = c;
-    buf[1] = 0xe0 | (ssc->ssc_pid >> 8);
-    buf[2] =         ssc->ssc_pid;
-
-    buf1 = &buf[3];
-    tlen += 5;
-    buf  += 5;
-    dlen = 0;
-
-    switch(ssc->ssc_type) {
-    case SCT_MPEG2AUDIO:
-    case SCT_MP4A:
-    case SCT_AAC:
-      buf[0] = DVB_DESC_LANGUAGE;
-      buf[1] = 4;
-      memcpy(&buf[2],ssc->ssc_lang,3);
-      buf[5] = 0; /* Main audio */
-      dlen = 6;
-      break;
-    case SCT_DVBSUB:
-      buf[0] = DVB_DESC_SUBTITLE;
-      buf[1] = 8;
-      memcpy(&buf[2],ssc->ssc_lang,3);
-      buf[5] = 16; /* Subtitling type */
-      buf[6] = ssc->ssc_composition_id >> 8; 
-      buf[7] = ssc->ssc_composition_id;
-      buf[8] = ssc->ssc_ancillary_id >> 8; 
-      buf[9] = ssc->ssc_ancillary_id;
-      dlen = 10;
-      break;
-    case SCT_AC3:
-      buf[0] = DVB_DESC_LANGUAGE;
-      buf[1] = 4;
-      memcpy(&buf[2],ssc->ssc_lang,3);
-      buf[5] = 0; /* Main audio */
-      buf[6] = DVB_DESC_AC3;
-      buf[7] = 1;
-      buf[8] = 0; /* XXX: generate real AC3 desc */
-      dlen = 9;
-      break;
-    case SCT_EAC3:
-      buf[0] = DVB_DESC_LANGUAGE;
-      buf[1] = 4;
-      memcpy(&buf[2],ssc->ssc_lang,3);
-      buf[5] = 0; /* Main audio */
-      buf[6] = DVB_DESC_EAC3;
-      buf[7] = 1;
-      buf[8] = 0; /* XXX: generate real EAC3 desc */
-      dlen = 9;
-      break;
-    default:
-      break;
-    }
-
-    tlen += dlen;
-    buf  += dlen;
-
-    buf1[0] = 0xf0 | (dlen >> 8);
-    buf1[1] =         dlen;
-  }
-
-  l = tlen - 3 + 4;
-
-  buf0[1] = 0xb0 | (l >> 8);
-  buf0[2] =         l;
-
-  return psi_append_crc32(buf0, tlen, maxlen);
-}
-
-
-
-static struct strtab caidnametab[] = {
-  { "Seca",             0x0100 }, 
-  { "CCETT",            0x0200 }, 
-  { "Deutsche Telecom", 0x0300 }, 
-  { "Eurodec",          0x0400 }, 
-  { "Viaccess",         0x0500 }, 
-  { "Irdeto",           0x0600 }, 
-  { "Irdeto",           0x0602 }, 
-  { "Irdeto",           0x0603 },
-  { "Irdeto",           0x0604 },
-  { "Irdeto",		0x0622 },
-  { "Irdeto",		0x0624 },
-  { "Irdeto",		0x0648 },
-  { "Irdeto",		0x0666 },
-  { "Jerroldgi",        0x0700 }, 
-  { "Matra",            0x0800 }, 
-  { "NDS",              0x0900 },
-  { "NDS",              0x0919 },
-  { "NDS",              0x091F }, 
-  { "NDS",              0x092B },
-  { "NDS",              0x09AF }, 
-  { "NDS",              0x09C4 },
-  { "NDS",              0x0960 },
-  { "NDS",              0x0963 }, 
-  { "Nokia",            0x0A00 }, 
-  { "Conax",            0x0B00 },
-  { "Conax",            0x0B01 },
-  { "Conax",            0x0B02 }, 
-  { "Conax",            0x0BAA },
-  { "NTL",              0x0C00 }, 
-  { "CryptoWorks",	0x0D00 },
-  { "CryptoWorks",	0x0D01 },
-  { "CryptoWorks",	0x0D02 },
-  { "CryptoWorks",	0x0D03 },
-  { "CryptoWorks",	0x0D05 },
-  { "CryptoWorks",	0x0D0F },
-  { "CryptoWorks",	0x0D70 },
-  { "CryptoWorks ICE",	0x0D95 }, 
-  { "CryptoWorks ICE",	0x0D96 },
-  { "CryptoWorks ICE",	0x0D97 },
-  { "PowerVu",          0x0E00 }, 
-  { "PowerVu",          0x0E11 }, 
-  { "Sony",             0x0F00 }, 
-  { "Tandberg",         0x1000 }, 
-  { "Thompson",         0x1100 }, 
-  { "TV-Com",           0x1200 }, 
-  { "HPT",              0x1300 }, 
-  { "HRT",              0x1400 }, 
-  { "IBM",              0x1500 }, 
-  { "Nera",             0x1600 }, 
-  { "BetaCrypt",        0x1700 }, 
-  { "BetaCrypt",        0x1702 }, 
-  { "BetaCrypt",        0x1722 }, 
-  { "BetaCrypt",        0x1762 }, 
-  { "NagraVision",      0x1800 },
-  { "NagraVision",      0x1803 },
-  { "Nagra Media Access",      0x1813 },
-  { "NagraVision",      0x1810 },
-  { "NagraVision",      0x1815 },
-  { "NagraVision",      0x1830 },
-  { "NagraVision",      0x1833 },
-  { "NagraVision",      0x1834 },
-  { "NagraVision",      0x183D },
-  { "NagraVision",      0x1861 },
-  { "Titan",            0x1900 }, 
-  { "Telefonica",       0x2000 }, 
-  { "Stentor",          0x2100 }, 
-  { "Tadiran Scopus",   0x2200 }, 
-  { "BARCO AS",         0x2300 }, 
-  { "StarGuide",        0x2400 }, 
-  { "Mentor",           0x2500 }, 
-  { "EBU",              0x2600 }, 
-  { "GI",               0x4700 }, 
-  { "Telemann",         0x4800 },
-  { "DRECrypt",         0x4ae0 },
-  { "DRECrypt2",        0x4ae1 },
-  { "Bulcrypt",         0x4aee },
-  { "Bulcrypt",         0x5581 },
-  { "Verimatrix",       0x5601 },
-};
-
-const char *
-psi_caid2name(uint16_t caid)
-{
-  const char *s = val2str(caid, caidnametab);
-  static char buf[20];
-
-  if(s != NULL)
-    return s;
-  snprintf(buf, sizeof(buf), "0x%x", caid);
-  return buf;
-}
-
-/**
- *
- */
-static struct strtab streamtypetab[] = {
-  { "MPEG2VIDEO", SCT_MPEG2VIDEO },
-  { "MPEG2AUDIO", SCT_MPEG2AUDIO },
-  { "H264",       SCT_H264 },
-  { "AC3",        SCT_AC3 },
-  { "TELETEXT",   SCT_TELETEXT },
-  { "DVBSUB",     SCT_DVBSUB },
-  { "CA",         SCT_CA },
-  { "PMT",        SCT_PMT },
-  { "AAC",        SCT_AAC },
-  { "MPEGTS",     SCT_MPEGTS },
-  { "TEXTSUB",    SCT_TEXTSUB },
-  { "EAC3",       SCT_EAC3 },
-  { "AAC",       SCT_MP4A },
-};
-
-
-/**
- *
- */
-const char *
-streaming_component_type2txt(streaming_component_type_t s)
-{
-  return val2str(s, streamtypetab) ?: "INVALID";
-}
-
-
 /**
  * Store service settings into message
  */
 void
-psi_save_service_settings(htsmsg_t *m, service_t *t)
+psi_save_service_settings(htsmsg_t *m, mpegts_service_t *t)
 {
   elementary_stream_t *st;
   htsmsg_t *sub;
@@ -953,7 +634,9 @@ psi_save_service_settings(htsmsg_t *m, service_t *t)
     sub = htsmsg_create_map();
 
     htsmsg_add_u32(sub, "pid", st->es_pid);
+#ifdef TODO_FIXME
     htsmsg_add_str(sub, "type", val2str(st->es_type, streamtypetab) ?: "?");
+#endif
     htsmsg_add_u32(sub, "position", st->es_position);
 
     if(st->es_lang[0])
@@ -1018,6 +701,7 @@ add_caid(elementary_stream_t *st, uint16_t caid, uint32_t providerid)
 static void
 load_legacy_caid(htsmsg_t *c, elementary_stream_t *st)
 {
+#if TODO_FIXME
   uint32_t a, b;
   const char *v;
 
@@ -1034,6 +718,7 @@ load_legacy_caid(htsmsg_t *c, elementary_stream_t *st)
   }
 
   add_caid(st, a, b);
+#endif
 }
 
 
@@ -1070,13 +755,13 @@ load_caid(htsmsg_t *m, elementary_stream_t *st)
  * Load service info from htsmsg
  */
 void
-psi_load_service_settings(htsmsg_t *m, service_t *t)
+psi_load_service_settings(htsmsg_t *m, mpegts_service_t *t)
 {
   htsmsg_t *c;
   htsmsg_field_t *f;
   uint32_t u32, pid;
   elementary_stream_t *st;
-  streaming_component_type_t type;
+  streaming_component_type_t type = 0; // TODO: FIXME
   const char *v;
 
   if(!htsmsg_get_u32(m, "pcr", &u32))
@@ -1097,14 +782,16 @@ psi_load_service_settings(htsmsg_t *m, service_t *t)
     if((v = htsmsg_get_str(c, "type")) == NULL)
       continue;
 
+#ifdef TODO_FIXME
     type = str2val(v, streamtypetab);
     if(type == -1)
       continue;
+#endif
 
     if(htsmsg_get_u32(c, "pid", &pid))
       continue;
 
-    st = service_stream_create(t, pid, type);
+    st = service_stream_create((service_t*)t, pid, type);
     
     if((v = htsmsg_get_str(c, "language")) != NULL)
       strncpy(st->es_lang, lang_code_get(v), 3);

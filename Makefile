@@ -59,19 +59,17 @@ ECHO   = printf "%-16s%s\n" $(1) $(2)
 BRIEF  = CC MKBUNDLE CXX
 MSG    = $(subst $(BUILDDIR)/,,$@)
 $(foreach VAR,$(BRIEF), \
-    $(eval $(VAR) = @$$(call ECHO,$(VAR),$$(MSG)); $($(VAR))))
+	$(eval $(VAR) = @$$(call ECHO,$(VAR),$$(MSG)); $($(VAR))))
 endif
 
 #
 # Core
 #
 SRCS =  src/version.c \
-  src/test.c \
 	src/main.c \
 	src/tvhlog.c \
 	src/idnode.c \
 	src/prop.c \
-	src/tvadapters.c \
 	src/utils.c \
 	src/wrappers.c \
 	src/access.c \
@@ -86,18 +84,10 @@ SRCS =  src/version.c \
 	src/spawn.c \
 	src/packet.c \
 	src/streaming.c \
-	src/teletext.c \
 	src/channels.c \
 	src/subscriptions.c \
 	src/service.c \
-	src/psi.c \
-	src/parsers.c \
-	src/parser_h264.c \
-	src/parser_latm.c \
-	src/tsdemux.c \
-	src/bitstream.c \
 	src/htsp_server.c \
-	src/serviceprobe.c \
 	src/htsmsg.c \
 	src/htsmsg_binary.c \
 	src/htsmsg_json.c \
@@ -109,26 +99,28 @@ SRCS =  src/version.c \
 	src/trap.c \
 	src/avg.c \
 	src/htsstr.c \
-	src/rawtsinput.c \
-	src/iptv_input.c \
-	src/avc.c \
-  src/huffman.c \
-  src/filebundle.c \
-  src/config2.c \
-  src/lang_codes.c \
-  src/lang_str.c \
-  src/imagecache.c \
-  src/tvhtime.c
+	src/huffman.c \
+	src/filebundle.c \
+	src/config2.c \
+	src/lang_codes.c \
+	src/lang_str.c \
+	src/imagecache.c \
+	src/tvhtime.c \
+	src/descrambler/descrambler.c \
+	src/serviceprobe.c \
+
+SRCS += \
+	src/parsers/parsers.c \
+	src/parsers/bitstream.c \
+	src/parsers/parser_h264.c \
+	src/parsers/parser_latm.c \
+	src/parsers/parser_avc.c \
+	src/parsers/parser_teletext.c \
 
 SRCS += src/epggrab/module.c\
-  src/epggrab/channel.c\
-  src/epggrab/module/pyepg.c\
-  src/epggrab/module/xmltv.c\
-
-SRCS-$(CONFIG_LINUXDVB) += src/epggrab/otamux.c\
-  src/epggrab/module/eit.c \
-  src/epggrab/module/opentv.c \
-  src/epggrab/support/freesat_huffman.c \
+	src/epggrab/channel.c\
+	src/epggrab/module/pyepg.c\
+	src/epggrab/module/xmltv.c\
 
 SRCS += src/plumbing/tsfix.c \
 	src/plumbing/globalheaders.c
@@ -154,17 +146,37 @@ SRCS += src/muxer.c \
 # Optional code
 #
 
+# MPEGTS
+SRCS-$(CONFIG_MPEGTS) += \
+	src/input/mpegts/psi.c \
+	src/input/mpegts/tsdemux.c \
+
+# MPEGTS EPG
+#SRCS-$(CONFIG_MPEGTS) += \
+	src/epggrab/otamux.c\
+	src/epggrab/module/eit.c \
+	src/epggrab/module/opentv.c \
+	src/epggrab/support/freesat_huffman.c \
+
 # Timeshift
 SRCS-${CONFIG_TIMESHIFT} += \
-  src/timeshift.c \
-  src/timeshift/timeshift_filemgr.c \
-  src/timeshift/timeshift_writer.c \
-  src/timeshift/timeshift_reader.c \
+	src/timeshift.c \
+	src/timeshift/timeshift_filemgr.c \
+	src/timeshift/timeshift_writer.c \
+	src/timeshift/timeshift_reader.c \
+
+# IPTV
+SRCS-${CONFIG_IPTV} += \
+	src/input/mepgts/iptv.c
+
+# RawTS
+SRCS-${CONFIG_RAWTS} += \
+	src/input/mpegts/rawts/rawts.c
 
 # DVB
 SRCS-${CONFIG_LINUXDVB} += \
 	src/dvb/dvb.c \
-  src/dvb/dvb_adapter.c \
+	src/dvb/dvb_adapter.c \
 	src/dvb/dvb_support.c \
 	src/dvb/dvb_charset.c \
 	src/dvb/dvb_fe.c \
@@ -181,10 +193,11 @@ SRCS-${CONFIG_LINUXDVB} += \
 	src/dvb/dvb_input_raw.c \
 	src/webui/extjs_dvb.c \
 	src/muxes.c \
+	src/tvadapters.c \
 
 # Inotify
 SRCS-${CONFIG_INOTIFY} += \
-  src/dvr/dvr_inotify.c \
+	src/dvr/dvr_inotify.c \
 
 # V4L
 SRCS-${CONFIG_V4L} += \
@@ -199,19 +212,21 @@ SRCS-$(CONFIG_LIBAV) += src/libav.c \
 	src/muxer/muxer_libav.c
 
 # CWC
-SRCS-${CONFIG_CWC} += src/cwc.c \
+SRCS-${CONFIG_CWC} += \
+	src/cwc.c \
 	src/capmt.c
 
 # FFdecsa
 ifneq ($(CONFIG_DVBCSA),yes)
-SRCS-${CONFIG_CWC}  += src/ffdecsa/ffdecsa_interface.c \
-	src/ffdecsa/ffdecsa_int.c
+SRCS-${CONFIG_CWC}  += \
+	src/descrambler/ffdecsa/ffdecsa_interface.c \
+	src/descrambler/ffdecsa/ffdecsa_int.c
 ifeq ($(CONFIG_CWC),yes)
-SRCS-${CONFIG_MMX}  += src/ffdecsa/ffdecsa_mmx.c
-SRCS-${CONFIG_SSE2} += src/ffdecsa/ffdecsa_sse2.c
+SRCS-${CONFIG_MMX}  += src/descrambler/ffdecsa/ffdecsa_mmx.c
+SRCS-${CONFIG_SSE2} += src/descrambler/ffdecsa/ffdecsa_sse2.c
 endif
-${BUILDDIR}/src/ffdecsa/ffdecsa_mmx.o  : CFLAGS += -mmmx
-${BUILDDIR}/src/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
+${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_mmx.o  : CFLAGS += -mmmx
+${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
 endif
 
 # File bundles

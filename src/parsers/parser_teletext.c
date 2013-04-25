@@ -28,12 +28,15 @@
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
+#include <stdint.h>
+#include <assert.h>
 
 #include "tvheadend.h"
-#include "teletext.h"
 #include "packet.h"
 #include "streaming.h"
 #include "service.h"
+#include "input/mpegts/mpegts_service.h"
+#include "parser_teletext.h"
 
 /**
  *
@@ -60,7 +63,7 @@ typedef struct tt_private {
 
 static void teletext_rundown_copy(tt_private_t *ttp, tt_mag_t *ttm);
 
-static void teletext_rundown_scan(service_t *t, tt_private_t *ttp);
+static void teletext_rundown_scan(mpegts_service_t *t, tt_private_t *ttp);
 
 #define bitreverse(b) \
 (((b) * 0x0202020202ULL & 0x010884422010ULL) % 1023)
@@ -235,7 +238,7 @@ is_tt_clock(const uint8_t *str)
  *
  */
 static int
-update_tt_clock(service_t *t, const uint8_t *buf)
+update_tt_clock(mpegts_service_t *t, const uint8_t *buf)
 {
   uint8_t str[10];
   int i;
@@ -259,7 +262,7 @@ update_tt_clock(service_t *t, const uint8_t *buf)
 
 
 static void
-extract_subtitle(service_t *t, elementary_stream_t *st,
+extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
 		 tt_mag_t *ttm, int64_t pts)
 {
   int i, j, off = 0;
@@ -353,7 +356,7 @@ dump_page(tt_mag_t *ttm)
 
 
 static void
-tt_subtitle_deliver(service_t *t, elementary_stream_t *parent, tt_mag_t *ttm)
+tt_subtitle_deliver(mpegts_service_t *t, elementary_stream_t *parent, tt_mag_t *ttm)
 {
   elementary_stream_t *st;
 
@@ -372,7 +375,7 @@ tt_subtitle_deliver(service_t *t, elementary_stream_t *parent, tt_mag_t *ttm)
  *
  */
 static void
-tt_decode_line(service_t *t, elementary_stream_t *st, uint8_t *buf)
+tt_decode_line(mpegts_service_t *t, elementary_stream_t *st, uint8_t *buf)
 {
   uint8_t mpag, line, s12, c;
   int page, magidx, i;
@@ -446,7 +449,7 @@ tt_decode_line(service_t *t, elementary_stream_t *st, uint8_t *buf)
  *
  */
 void
-teletext_input(service_t *t, elementary_stream_t *st, const uint8_t *tsb)
+teletext_input(mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb)
 {
   int i, j;
   const uint8_t *x;
@@ -530,7 +533,7 @@ teletext_rundown_copy(tt_private_t *ttp, tt_mag_t *ttm)
 
 
 static void
-teletext_rundown_scan(service_t *t, tt_private_t *ttp)
+teletext_rundown_scan(mpegts_service_t *t, tt_private_t *ttp)
 {
   int i;
   uint8_t *l;

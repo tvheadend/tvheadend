@@ -34,18 +34,12 @@
 #include "tvheadend.h"
 #include "service.h"
 #include "subscriptions.h"
-#include "tsdemux.h"
 #include "streaming.h"
-#include "v4l.h"
-#include "psi.h"
 #include "packet.h"
 #include "channels.h"
-#include "cwc.h"
-#include "capmt.h"
 #include "notify.h"
 #include "serviceprobe.h"
 #include "atomic.h"
-#include "dvb/dvb.h"
 #include "htsp_server.h"
 #include "lang_codes.h"
 
@@ -172,7 +166,9 @@ service_stop(service_t *t)
   TAILQ_FOREACH(st, &t->s_components, es_link)
     stream_clean(st);
 
+#ifdef MOVE_TO_MPEGTS
   sbuf_free(&t->s_tsbuf);
+#endif
 
   t->s_status = SERVICE_IDLE;
 
@@ -219,15 +215,14 @@ service_start(service_t *t, int instance)
 
   assert(t->s_status != SERVICE_RUNNING);
   t->s_streaming_status = 0;
+#ifdef MOVE_TO_V4L
   t->s_pcr_drift = 0;
+#endif
 
   if((r = t->s_start_feed(t, instance)))
     return r;
 
-#if ENABLE_CWC
-  cwc_service_start(t);
-  capmt_service_start(t);
-#endif
+  descrambler_service_start(t);
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
@@ -432,7 +427,9 @@ service_destroy(service_t *t)
 
   lock_assert(&global_lock);
 
+#ifdef TODO_FIX_THIS
   serviceprobe_delete(t);
+#endif
 
   while((s = LIST_FIRST(&t->s_subscriptions)) != NULL) {
     subscription_unlink_service(s, SM_CODE_SOURCE_DELETED);
@@ -452,19 +449,26 @@ service_destroy(service_t *t)
 
   t->s_status = SERVICE_ZOMBIE;
 
+#ifdef MOVE_TO_MPEGTS
   free(t->s_svcname);
   free(t->s_provider);
   free(t->s_dvb_charset);
+#endif
 
   while((st = TAILQ_FIRST(&t->s_components)) != NULL)
     service_stream_destroy(t, st);
 
+#ifdef MOVE_TO_TODO
   free(t->s_pat_section);
   free(t->s_pmt_section);
+#endif
 
+
+#ifdef MOVE_TO_MPEGTS
   sbuf_free(&t->s_tsbuf);
 
   avgstat_flush(&t->s_cc_errors);
+#endif
   avgstat_flush(&t->s_rate);
 
   service_unref(t);
@@ -486,12 +490,18 @@ service_create(const char *uuid, int source_type, const idclass_t *idc)
   t->s_source_type = source_type;
   t->s_refcount = 1;
   t->s_enabled = 1;
+#ifdef MOVE_TO_TODO
   t->s_pcr_last = PTS_UNSET;
+#endif
+#ifdef MOVE_TO_MPEGTS
   t->s_dvb_charset = NULL;
   t->s_dvb_eit_enable = 1;
+#endif
   TAILQ_INIT(&t->s_components);
 
+#ifdef MOVE_TO_MPEGTS
   sbuf_init(&t->s_tsbuf);
+#endif
 
   streaming_pad_init(&t->s_streaming_pad);
 
@@ -644,7 +654,9 @@ service_map_channel(service_t *t, channel_t *ch, int save)
 
   if(ch != NULL) {
 
+#ifdef MOVE_TO_MPEGTS
     avgstat_init(&t->s_cc_errors, 3600);
+#endif
     avgstat_init(&t->s_rate, 10);
 
     t->s_ch = ch;
@@ -680,6 +692,7 @@ service_channel_set(void *obj, const char *str)
 /**
  *
  */
+#ifdef MOVE_TO_MPEGTS
 void
 service_set_dvb_charset(service_t *t, const char *dvb_charset)
 {
@@ -705,6 +718,7 @@ service_set_dvb_eit_enable(service_t *t, int dvb_eit_enable)
   t->s_dvb_eit_enable = dvb_eit_enable;
   t->s_config_save(t);
 }
+#endif
 
 /**
  *
@@ -725,6 +739,7 @@ service_data_timeout(void *aux)
 /**
  *
  */
+#ifdef TODO_REMOVED
 static struct strtab stypetab[] = {
   { "SDTV",         ST_SDTV },
   { "Radio",        ST_RADIO },
@@ -746,10 +761,12 @@ service_servicetype_txt(service_t *t)
 {
   return val2str(t->s_servicetype, stypetab) ?: "Other";
 }
+#endif
 
 /**
  *
  */
+#if 0
 int
 servicetype_is_tv(int servicetype)
 {
@@ -767,24 +784,33 @@ servicetype_is_tv(int servicetype)
     servicetype == ST_AC_SDTV ||
     servicetype == ST_AC_HDTV;
 }
+#endif
 int
 service_is_tv(service_t *t)
 {
+  return 0;
+#ifdef TODO_USE_ES
   return servicetype_is_tv(t->s_servicetype);
+#endif
 }
 
 /**
  *
  */
+#if 0
 int
 servicetype_is_radio(int servicetype)
 {
   return servicetype == ST_RADIO;
 }
+#endif
 int
 service_is_radio(service_t *t)
 {
+  return 0;
+#ifdef TODO_USE_ES
   return servicetype_is_radio(t->s_servicetype);
+#endif
 }
 
 /**
@@ -893,8 +919,10 @@ service_build_stream_start(service_t *t)
   t->s_setsourceinfo(t, &ss->ss_si);
 
   ss->ss_refcount = 1;
+#ifdef MOVE_TO_MPEGTS
   ss->ss_pcr_pid = t->s_pcr_pid;
   ss->ss_pmt_pid = t->s_pmt_pid;
+#endif
   return ss;
 }
 
@@ -1216,6 +1244,7 @@ service_get_encryption(service_t *t)
  * Find the primary EPG service (to stop EPG trying to update
  * from multiple OTA sources)
  */
+#ifdef MOVE_TO_MPEGTS
 int
 service_is_primary_epg(service_t *svc)
 {
@@ -1228,20 +1257,23 @@ service_is_primary_epg(service_t *svc)
   }
   return !ret ? 0 : (ret->s_dvb_service_id == svc->s_dvb_service_id);
 }
+#endif
 
 /*
  * list of known service types
  */
 htsmsg_t *servicetype_list ( void )
 {
-  htsmsg_t *ret, *e;
-  int i;
+  htsmsg_t *ret;//, *e;
+  //int i;
   ret = htsmsg_create_list();
-  for (i = 0; i < sizeof(stypetab) / sizeof(stypetab[0]); i++ ) {
+#ifdef TODO_FIX_THIS
+ for (i = 0; i < sizeof(stypetab) / sizeof(stypetab[0]); i++ ) {
     e = htsmsg_create_map();
     htsmsg_add_u32(e, "val", stypetab[i].val);
     htsmsg_add_str(e, "str", stypetab[i].str);
     htsmsg_add_msg(ret, NULL, e);
   }
+#endif
   return ret;
 }

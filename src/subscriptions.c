@@ -39,7 +39,6 @@
 #include "htsmsg.h"
 #include "notify.h"
 #include "atomic.h"
-#include "dvb/dvb.h"
 
 struct th_subscription_list subscriptions;
 static gtimer_t subscription_reschedule_timer;
@@ -223,6 +222,7 @@ subscription_unsubscribe(th_subscription_t *s)
   if(t != NULL)
     service_remove_subscriber(t, s, SM_CODE_OK);
 
+#ifdef TODO_NEED_A_BETTER_SOLUTION
   if(s->ths_tdmi != NULL) {
     LIST_REMOVE(s, ths_tdmi_link);
     th_dvb_adapter_t *tda = s->ths_tdmi->tdmi_adapter;
@@ -230,6 +230,7 @@ subscription_unsubscribe(th_subscription_t *s)
     streaming_target_disconnect(&tda->tda_streaming_pad, &s->ths_input);
     pthread_mutex_unlock(&tda->tda_delivery_mutex);
   }
+#endif
 
   if(s->ths_start_message != NULL) 
     streaming_msg_free(s->ths_start_message);
