@@ -18,6 +18,8 @@
 
 #include "input/mpegts.h"
 
+#include <assert.h>
+
 const idclass_t mpegts_network_class =
 {
   .ic_class      = "mpegts_network",
@@ -26,6 +28,27 @@ const idclass_t mpegts_network_class =
   }
 };
 
+static void
+mpegts_network_initial_scan(void *aux)
+{
+  mpegts_network_t *mn = aux;
+  mpegts_mux_t     *mm;
+
+  printf("mpegts_network_initial_scan(%p)\n", aux);
+  while((mm = TAILQ_FIRST(&mn->mn_initial_scan_pending_queue)) != NULL) {
+    assert(mm->mm_initial_scan_status == MM_SCAN_PENDING);
+    if (mm->mm_start(mm, "initial scan", 1))
+      break;
+    assert(mm->mm_initial_scan_status == MM_SCAN_CURRENT);
+  }
+  gtimer_arm(&mn->mn_initial_scan_timer, mpegts_network_initial_scan, mn, 10);
+}
+
+void
+mpegts_network_schedule_initial_scan ( mpegts_network_t *mn )
+{
+  gtimer_arm(&mn->mn_initial_scan_timer, mpegts_network_initial_scan, mn, 0);
+}
 
 mpegts_network_t *
 mpegts_network_create0

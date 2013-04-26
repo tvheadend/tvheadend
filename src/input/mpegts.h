@@ -177,6 +177,12 @@ struct mpegts_mux
    */
 
   LIST_HEAD(, mpegts_mux_instance) mm_instances;
+
+  /*
+   * Functions
+   */
+
+  int (*mm_start) ( mpegts_mux_t *mm, const char *reason, int weight );
   
 #if 0
   dvb_mux_conf_t dm_conf;
@@ -302,6 +308,7 @@ struct mpegts_mux_instance
   mpegts_mux_t   *mmi_mux;
   mpegts_input_t *mmi_input;
 
+  // TODO: remove this
   int             mmi_tune_failed; // this is really DVB
 };
 
@@ -344,8 +351,16 @@ mpegts_input_t *mpegts_input_create0
 mpegts_network_t *mpegts_network_create0
   ( const char *uuid, const char *name );
 
+void mpegts_network_schedule_initial_scan
+  ( mpegts_network_t *mm );
+
 mpegts_mux_t *mpegts_mux_create0
   ( const char *uuid, mpegts_network_t *net, uint16_t onid, uint16_t tsid );
+
+mpegts_mux_instance_t *mpegts_mux_instance_create0
+  ( size_t alloc, const char *uuid, mpegts_input_t *mi, mpegts_mux_t *mm );
+
+void mpegts_mux_initial_scan_done ( mpegts_mux_t *mm );
 
 void mpegts_input_recv_packets
   (mpegts_input_t *mi, const uint8_t *tsb, size_t len,

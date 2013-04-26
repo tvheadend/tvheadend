@@ -21,6 +21,41 @@
 #include "queue.h"
 #include "input/mpegts.h"
 
+#include <assert.h>
+
+const idclass_t mpegts_mux_instance_class =
+{
+  .ic_class      = "mpegts_mux_instance",
+  .ic_caption    = "MPEGTS Multiplex Phy",
+  .ic_properties = (const property_t[]){
+  }
+};
+
+static int
+mpegts_mux_instance_weight ( mpegts_mux_instance_t *mmi )
+{
+  return 0;
+}
+
+mpegts_mux_instance_t *
+mpegts_mux_instance_create0
+  ( size_t alloc, const char *uuid, mpegts_input_t *mi, mpegts_mux_t *mm )
+{
+  mpegts_mux_instance_t *mmi;
+
+  /* Create */
+  mmi = (mpegts_mux_instance_t*)idnode_create0(alloc, &mpegts_mux_instance_class, uuid);
+
+  /* Setup links */
+  mmi->mmi_mux   = mm;
+  mmi->mmi_input = mi; // TODO: is this required?
+
+  LIST_INSERT_HEAD(&mm->mm_instances, mmi, mmi_mux_link);
+  printf("added to mm_instances\n");
+
+  return mmi;
+}
+
 const idclass_t mpegts_mux_class =
 {
   .ic_class      = "mpegts_mux",
@@ -28,6 +63,103 @@ const idclass_t mpegts_mux_class =
   .ic_properties = (const property_t[]){
   }
 };
+
+static void
+mpegts_mux_initial_scan_link ( mpegts_mux_t *mm )
+{
+  mpegts_network_t *mn = mm->mm_network;
+
+  assert(mn != NULL);
+  assert(mm->mm_initial_scan_status == MM_SCAN_DONE);
+
+  mm->mm_initial_scan_status = MM_SCAN_PENDING;
+  TAILQ_INSERT_TAIL(&mn->mn_initial_scan_pending_queue, mm,
+                    mm_initial_scan_link);
+  mn->mn_initial_scan_num++;
+  printf("initial_scan_num = %d\n", mn->mn_initial_scan_num);
+  mpegts_network_schedule_initial_scan(mn);
+}
+
+static void
+mpegts_mux_initial_scan_timeout ( void *aux )
+{
+  mpegts_mux_t *mm = aux;
+  tvhlog(LOG_DEBUG, "mpegts", "Initial scan timed out for %s", "TODO");
+  mpegts_mux_initial_scan_done(mm);
+}
+
+void
+mpegts_mux_initial_scan_done ( mpegts_mux_t *mm )
+{
+  mpegts_network_t *mn = mm->mm_network;
+  gtimer_disarm(&mm->mm_initial_scan_timeout);
+  assert(mm->mm_initial_scan_status == MM_SCAN_CURRENT);
+  mn->mn_initial_scan_num--;
+  mm->mm_initial_scan_status = MM_SCAN_DONE;
+  TAILQ_REMOVE(&mn->mn_initial_scan_current_queue, mm, mm_initial_scan_link);
+  mpegts_network_schedule_initial_scan(mn);
+  // TODO: save
+}
+
+static int
+mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
+{
+  mpegts_network_t      *mn = mm->mm_network;
+  mpegts_mux_instance_t *mmi;
+
+  printf("mpegts_mux_start(%p, %s, %d)\n", mm, reason, weight);
+
+  /* Already tuned */
+  LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link)
+    if (mmi->mmi_input->mi_mux_current == mmi)
+      return 0;
+  printf("not already tuned\n");
+
+  /* Find */
+  // TODO: don't like this is unbounded, if for some reason mi_start_mux()
+  //       constantly fails this will lock
+  while (1) {
+    
+    /* Find free input */
+    LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link)
+      if (!mmi->mmi_tune_failed &&
+          !mmi->mmi_input->mi_mux_current)
+        break;
+    printf("free input = %p\n", mmi);
+
+    /* Try and remove a lesser instance */
+    if (!mmi) {
+      LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
+
+        /* Bad */
+        if (mmi->mmi_tune_failed)
+          continue;
+
+        /* Found */
+        if (mpegts_mux_instance_weight(mmi->mmi_input->mi_mux_current) < weight)
+          break;
+      }
+
+      /* No free input */
+      if (!mmi)
+        return SM_CODE_NO_FREE_ADAPTER;
+    }
+    
+    /* Tune */
+    if (!mmi->mmi_input->mi_start_mux(mmi->mmi_input, mmi))
+      break;
+  }
+
+  /* Initial scanning */
+  if (mm->mm_initial_scan_status == MM_SCAN_PENDING) {
+    TAILQ_REMOVE(&mn->mn_initial_scan_pending_queue, mm, mm_initial_scan_link);
+    mm->mm_initial_scan_status = MM_SCAN_CURRENT;
+    TAILQ_INSERT_TAIL(&mn->mn_initial_scan_current_queue, mm, mm_initial_scan_link);
+    gtimer_arm(&mm->mm_initial_scan_timeout, mpegts_mux_initial_scan_timeout, mm, 10);
+  }
+
+  return 0;
+}
 
 mpegts_mux_t *
 mpegts_mux_create0  
@@ -41,9 +173,8 @@ mpegts_mux_create0
 
   /* Add to network */
   mm->mm_network             = net;
-  mm->mm_initial_scan_status = MM_SCAN_PENDING;
-  TAILQ_INSERT_TAIL(&net->mn_initial_scan_pending_queue, mm,
-                    mm_initial_scan_link);
+  mm->mm_start               = mpegts_mux_start;
+  mpegts_mux_initial_scan_link(mm);
 
   return mm;
 }

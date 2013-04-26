@@ -30,17 +30,15 @@ void tsfile_init ( int tuners )
 {
   int i;
   mpegts_input_t *mi;
-printf("tsfile_init(%d)\n", tuners);
 
   /* Shared network */
-printf("create network\n");
   tsfile_network = mpegts_network_create0(NULL, "tsfile network");
 
   /* Create inputs */
-printf("create inputs\n");
   for (i = 0; i < tuners; i++) {
     mi = tsfile_input_create(); 
     mi->mi_network = tsfile_network;
+    LIST_INSERT_HEAD(&tsfile_inputs, mi, mi_global_link);
   }
 }
 
@@ -54,10 +52,8 @@ void tsfile_add_file ( const char *path )
 printf("tsfile_add_file(%s)\n", path);
 
   /* Create logical instance */
-printf("create logical mux\n");
   mm = mpegts_mux_create0(NULL, tsfile_network, MM_ONID_NONE, MM_TSID_NONE);
   
-printf("create physical mux\n");
   /* Create physical instance (for each tuner) */
   LIST_FOREACH(mi, &tsfile_inputs, mi_global_link)
     tsfile_mux_instance_create(path, mi, mm);

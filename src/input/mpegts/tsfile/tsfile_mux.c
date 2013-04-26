@@ -23,11 +23,11 @@ tsfile_mux_instance_t *
 tsfile_mux_instance_create
   ( const char *path, mpegts_input_t *mi, mpegts_mux_t *mm )
 {
-  tsfile_mux_instance_t *mmi = NULL;
-  // super constructor
-#if 0
+  tsfile_mux_instance_t *mmi = (tsfile_mux_instance_t*)
+    mpegts_mux_instance_create0(sizeof(tsfile_mux_instance_t),
+                                NULL, mi, mm);
   mmi->mmi_tsfile_path = strdup(path);
-#endif
+  printf("mmi craeated %p path %s\n", mmi, mmi->mmi_tsfile_path);
   return mmi;
 }
 

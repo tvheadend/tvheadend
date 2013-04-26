@@ -152,14 +152,19 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
 {
   struct stat st;
   tsfile_mux_instance_t *mmi = (tsfile_mux_instance_t*)t;
+  printf("tsfile_input_start_mux(%p, %p)\n", mi, t);
 
   /* Check file is accessible */
-  if (lstat(mmi->mmi_tsfile_path, &st))
+  if (lstat(mmi->mmi_tsfile_path, &st)) {
+    printf("could not stat %s\n", mmi->mmi_tsfile_path);
+    mmi->mmi_tune_failed = 1;
     return SM_CODE_TUNING_FAILED;
+  }
 
   /* Start thread */
   if (mi->mi_thread_pipe.rd == -1) {
     if (tvh_pipe(O_NONBLOCK, &mi->mi_thread_pipe)) {
+      mmi->mmi_tune_failed = 1;
       tvhlog(LOG_ERR, "tsfile", "failed to create thread pipe");
       return SM_CODE_TUNING_FAILED;
     }
