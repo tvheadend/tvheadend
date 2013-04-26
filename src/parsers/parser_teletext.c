@@ -35,7 +35,7 @@
 #include "packet.h"
 #include "streaming.h"
 #include "service.h"
-#include "input/mpegts/mpegts_service.h"
+#include "input/mpegts.h"
 #include "parser_teletext.h"
 
 /**
@@ -543,9 +543,9 @@ teletext_rundown_scan(mpegts_service_t *t, tt_private_t *ttp)
   if(ttp->ttp_rundown_valid == 0)
     return;
 
-  if(t->s_svcname &&
-     strcmp("TV4", t->s_svcname) &&
-     strcmp("TV4 HD", t->s_svcname))
+  if(t->s_dvb_svcname &&
+     strcmp("TV4", t->s_dvb_svcname) &&
+     strcmp("TV4 HD", t->s_dvb_svcname))
     return;
 
   for(i = 0; i < 23; i++) {

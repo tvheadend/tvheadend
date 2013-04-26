@@ -49,9 +49,6 @@
 #include "timeshift.h"
 #include "tvhtime.h"
 
-#include "input/mpegts/iptv.h"
-#include "input/mpegts/linuxdvb.h"
-
 #if 0
 #include "tvadapters.h"
 #endif

@@ -146,8 +146,11 @@ SRCS += src/muxer.c \
 # Optional code
 #
 
-# MPEGTS
+# MPEGTS core
 SRCS-$(CONFIG_MPEGTS) += \
+  src/input/mpegts/mpegts_input.c \
+  src/input/mpegts/mpegts_mux.c \
+  src/input/mpegts/mpegts_service.c \
 	src/input/mpegts/psi.c \
 	src/input/mpegts/tsdemux.c \
 

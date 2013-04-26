@@ -235,7 +235,6 @@ typedef struct service {
    * subscription scheduling.
    */
   int s_enabled;
-  int (*s_is_enabled)(struct service *t);
 
 #ifdef MOVE_TO_RAWTS
   /**
@@ -250,6 +249,8 @@ typedef struct service {
   LIST_ENTRY(service) s_active_link;
 
   LIST_HEAD(, th_subscription) s_subscriptions;
+
+  int (*s_is_enabled)(struct service *t);
 
   void (*s_enlist)(struct service *s, struct service_instance_list *sil);
 

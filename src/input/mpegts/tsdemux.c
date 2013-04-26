@@ -38,7 +38,7 @@
 #include "tsdemux.h"
 #include "parsers.h"
 #include "streaming.h"
-#include "mpegts_service.h"
+#include "input/mpegts.h"
 #include "parsers/parser_teletext.h"
 
 #define TS_REMUX_BUFSIZE (188 * 100)

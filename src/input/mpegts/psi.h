@@ -21,7 +21,7 @@
 
 #include "htsmsg.h"
 #include "streaming.h"
-#include "mpegts_service.h"
+#include "input/mpegts.h"
 
 #define PSI_SECTION_SIZE 5000
 
@@ -37,8 +37,9 @@ typedef struct psi_section {
 void psi_section_reassemble(psi_section_t *ps, const uint8_t *tsb, int crc,
 			    section_handler_t *cb, void *opaque);
 
-int psi_parse_pmt(struct mpegts_service *t, const uint8_t *ptr, int len, int chksvcid,
-		  int delete);
+int psi_parse_pmt
+  (struct mpegts_service *t, const uint8_t *ptr, int len, int chksvcid,
+   int delete);
 
 const char *psi_caid2name(uint16_t caid);
 

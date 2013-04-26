@@ -1,6 +1,6 @@
 /*
- *  Teletext parsing functions
- *  Copyright (C) 2007 Andreas Öman
+ *  Tvheadend - MPEGTS input source
+ *  Copyright (C) 2013 Adam Sutton
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,14 +16,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TELETEXT_H
-#define TELETEXT_H
+#include "mpegts_input.h"
 
-#define PID_TELETEXT_BASE 0x2000
-
-#include "input/mpegts.h"
-
-void teletext_input(struct mpegts_service *t, struct elementary_stream *st,
-		    const uint8_t *tsb);
-
-#endif /* TELETEXT_H */
+/******************************************************************************
+ * Editor Configuration
+ *
+ * vim:sts=2:ts=2:sw=2:et
+ *****************************************************************************/
