@@ -343,7 +343,7 @@ idnode_notify_title_changed(void *obj)
 }
 
 idnode_t *
-idnode_create ( size_t alloc, const idclass_t *class, const char *uuid )
+idnode_create0 ( size_t alloc, const idclass_t *class, const char *uuid )
 {
   idnode_t *self = calloc(1, alloc);
   idnode_insert(self, uuid, class);

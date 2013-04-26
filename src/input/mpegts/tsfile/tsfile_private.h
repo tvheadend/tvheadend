@@ -1,5 +1,5 @@
 /*
- *  Tvheadend - MPEGTS multiplex
+ *  Tvheadend - TS file private data
  *
  *  Copyright (C) 2013 Adam Sutton
  *
@@ -17,37 +17,40 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "idnode.h"
-#include "queue.h"
+#ifndef __TVH_TSFILE_PRIVATE_H__
+#define __TVH_TSFILE_PRIVATE_H__
+
 #include "input/mpegts.h"
 
-const idclass_t mpegts_mux_class =
+/*
+ * Typedefs
+ */
+typedef struct tsfile_mux_instance tsfile_mux_instance_t;
+
+/*
+ * Mux instance
+ */
+struct tsfile_mux_instance
 {
-  .ic_class      = "mpegts_mux",
-  .ic_caption    = "MPEGTS Multiplex",
-  .ic_properties = (const property_t[]){
-  }
+  mpegts_mux_instance_t; ///< Parent obj
+
+  /*
+   * File input
+   */
+  
+  char     *mmi_tsfile_path; ///< Source file path
+  th_pipe_t mmi_tsfile_pipe; ///< Thread control pipe
 };
 
-mpegts_mux_t *
-mpegts_mux_create0  
-  ( const char *uuid, mpegts_network_t *net, uint16_t onid, uint16_t tsid )
-{
-  mpegts_mux_t *mm = idnode_create(mpegts_mux, uuid);
+/*
+ * Prototypes
+ */
+mpegts_input_t        *tsfile_input_create ( void );
 
-  /* Identification */
-  mm->mm_onid                = onid;
-  mm->mm_tsid                = tsid;
+tsfile_mux_instance_t *tsfile_mux_instance_create
+  ( const char *path, mpegts_input_t *mi, mpegts_mux_t *mm );
 
-  /* Add to network */
-  mm->mm_network             = net;
-  mm->mm_initial_scan_status = MM_SCAN_PENDING;
-  TAILQ_INSERT_TAIL(&net->mn_initial_scan_pending_queue, mm,
-                    mm_initial_scan_link);
-
-  return mm;
-}
-
+#endif /* __TVH_TSFILE_PRIVATE_H__ */
 
 /******************************************************************************
  * Editor Configuration

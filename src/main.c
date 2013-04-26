@@ -48,11 +48,8 @@
 #include "descrambler.h"
 #include "dvr/dvr.h"
 #include "htsp_server.h"
-//#include "rawtsinput.h"
 #include "avahi.h"
-//#include "input/mpegts/linuxdvb.h"
-#include "input/mpegts/iptv.h"
-#include "input/mpegps/v4l.h"
+#include "input.h"
 #include "service.h"
 #include "trap.h"
 #include "settings.h"
@@ -66,6 +63,12 @@
 #endif
 
 /* Command line option struct */
+typedef struct str_list
+{
+  int max;
+  int num;
+  char **str;
+} str_list_t;
 typedef struct {
   const char  sopt;
   const char *lopt;
@@ -73,7 +76,8 @@ typedef struct {
   enum {
     OPT_STR,
     OPT_INT,
-    OPT_BOOL
+    OPT_BOOL, 
+    OPT_STR_LIST,
   }          type;
   void       *param;
 } cmdline_opt_t;
@@ -415,7 +419,8 @@ main(int argc, char **argv)
               opt_noacl        = 0,
               opt_trace        = 0,
               opt_fileline     = 0,
-              opt_ipv6         = 0;
+              opt_ipv6         = 0,
+              opt_tsfile_tuner = 0;
   const char *opt_config       = NULL,
              *opt_user         = NULL,
              *opt_group        = NULL,
@@ -426,9 +431,9 @@ main(int argc, char **argv)
              *opt_dvb_adapters = NULL,
              *opt_dvb_raw      = NULL,
 #endif
-             *opt_rawts        = NULL,
              *opt_bindaddr     = NULL,
              *opt_subscribe    = NULL;
+  str_list_t  opt_tsfile       = { .max = 10, .num = 0, .str = calloc(10, sizeof(char*)) };
   cmdline_opt_t cmdline_opts[] = {
     {   0, NULL,        "Generic Options",         OPT_BOOL, NULL         },
     { 'h', "help",      "Show this page",          OPT_BOOL, &opt_help    },
@@ -475,14 +480,14 @@ main(int argc, char **argv)
     { 'A', "abort",     "Immediately abort",       OPT_BOOL, &opt_abort   },
     {   0, "noacl",     "Disable all access control checks",
       OPT_BOOL, &opt_noacl },
-#if ENABLE_LINUXDVB
-    { 'R', "dvbraw",    "Use rawts file to create virtual adapter",
-      OPT_STR, &opt_dvb_raw },
-#endif
-    { 'r', "rawts",     "Use rawts file to generate virtual services",
-      OPT_STR, &opt_rawts },
     { 'j', "join",      "Subscribe to a service permanently",
-      OPT_STR, &opt_subscribe }
+      OPT_STR, &opt_subscribe },
+
+
+    { 0, NULL, "TODO: testing", OPT_BOOL, NULL },
+    { 0, "tsfile_tuners", "Number of tsfile tuners", OPT_INT, &opt_tsfile_tuner },
+    { 0, "tsfile", "tsfile input (mux file)", OPT_STR_LIST, &opt_tsfile },
+
   };
 
   /* Get current directory */
@@ -513,6 +518,11 @@ main(int argc, char **argv)
                  "option %s requires a value", opt->lopt);
     else if (opt->type == OPT_INT)
       *((int*)opt->param) = atoi(argv[i]);
+    else if (opt->type == OPT_STR_LIST) {
+      str_list_t *strl = opt->param;
+      if (strl->num < strl->max)
+        strl->str[strl->num++] = argv[i];
+    }
     else
       *((char**)opt->param) = argv[i];
 
@@ -720,8 +730,11 @@ main(int argc, char **argv)
 
   htsp_init(opt_bindaddr);
 
-  if(opt_rawts != NULL)
-    printf("TODO: rawts_init(opt_rawts);\n");
+  if(opt_tsfile.num) {
+    tsfile_init(opt_tsfile_tuner ?: opt_tsfile.num);
+    for (i = 0; i < opt_tsfile.num; i++)
+      tsfile_add_file(opt_tsfile.str[i]);
+  }
 
   if(opt_subscribe != NULL)
     subscription_dummy_join(opt_subscribe, 1);

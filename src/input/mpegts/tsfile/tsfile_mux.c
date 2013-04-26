@@ -1,5 +1,5 @@
 /*
- *  Tvheadend - MPEGTS multiplex
+ *  Tvheadend - TS file input system
  *
  *  Copyright (C) 2013 Adam Sutton
  *
@@ -17,35 +17,18 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "idnode.h"
-#include "queue.h"
-#include "input/mpegts.h"
+#include "tsfile_private.h"
 
-const idclass_t mpegts_mux_class =
+tsfile_mux_instance_t *
+tsfile_mux_instance_create
+  ( const char *path, mpegts_input_t *mi, mpegts_mux_t *mm )
 {
-  .ic_class      = "mpegts_mux",
-  .ic_caption    = "MPEGTS Multiplex",
-  .ic_properties = (const property_t[]){
-  }
-};
-
-mpegts_mux_t *
-mpegts_mux_create0  
-  ( const char *uuid, mpegts_network_t *net, uint16_t onid, uint16_t tsid )
-{
-  mpegts_mux_t *mm = idnode_create(mpegts_mux, uuid);
-
-  /* Identification */
-  mm->mm_onid                = onid;
-  mm->mm_tsid                = tsid;
-
-  /* Add to network */
-  mm->mm_network             = net;
-  mm->mm_initial_scan_status = MM_SCAN_PENDING;
-  TAILQ_INSERT_TAIL(&net->mn_initial_scan_pending_queue, mm,
-                    mm_initial_scan_link);
-
-  return mm;
+  tsfile_mux_instance_t *mmi = NULL;
+  // super constructor
+#if 0
+  mmi->mmi_tsfile_path = strdup(path);
+#endif
+  return mmi;
 }
 
 

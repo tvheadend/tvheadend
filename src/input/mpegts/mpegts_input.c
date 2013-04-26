@@ -16,7 +16,38 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mpegts_input.h"
+#include "input/mpegts.h"
+
+#include <pthread.h>
+
+const idclass_t mpegts_input_class =
+{
+  .ic_class      = "mpegts_input",
+  .ic_caption    = "MPEGTS Input",
+  .ic_properties = (const property_t[]){
+  }
+};
+
+void
+mpegts_input_recv_packets
+  ( mpegts_input_t *mi, const uint8_t *tsb, size_t len,
+    int64_t *pcr, uint16_t *pcr_pid )
+{
+}
+
+mpegts_input_t*
+mpegts_input_create0 ( const char *uuid )
+{
+  mpegts_input_t *mi = idnode_create(mpegts_input, uuid);
+
+  /* Init mutex */
+  pthread_mutex_init(&mi->mi_delivery_mutex, NULL);
+
+  /* Init input thread control */
+  mi->mi_thread_pipe.rd = mi->mi_thread_pipe.wr = -1;
+
+  return mi;
+}
 
 /******************************************************************************
  * Editor Configuration

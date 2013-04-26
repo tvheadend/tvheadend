@@ -149,6 +149,7 @@ SRCS += src/muxer.c \
 # MPEGTS core
 SRCS-$(CONFIG_MPEGTS) += \
   src/input/mpegts/mpegts_input.c \
+  src/input/mpegts/mpegts_network.c \
   src/input/mpegts/mpegts_mux.c \
   src/input/mpegts/mpegts_service.c \
 	src/input/mpegts/psi.c \
@@ -167,14 +168,6 @@ SRCS-${CONFIG_TIMESHIFT} += \
 	src/timeshift/timeshift_filemgr.c \
 	src/timeshift/timeshift_writer.c \
 	src/timeshift/timeshift_reader.c \
-
-# IPTV
-SRCS-${CONFIG_IPTV} += \
-	src/input/mepgts/iptv.c
-
-# RawTS
-SRCS-${CONFIG_RAWTS} += \
-	src/input/mpegts/rawts/rawts.c
 
 # DVB
 SRCS-${CONFIG_LINUXDVB} += \
@@ -197,6 +190,16 @@ SRCS-${CONFIG_LINUXDVB} += \
 	src/webui/extjs_dvb.c \
 	src/muxes.c \
 	src/tvadapters.c \
+
+# IPTV
+SRCS-${CONFIG_IPTV} += \
+	src/input/mepgts/iptv.c
+
+# TSfile
+SRCS-$(CONFIG_TSFILE) += \
+  src/input/mpegts/tsfile/tsfile.c \
+  src/input/mpegts/tsfile/tsfile_input.c \
+  src/input/mpegts/tsfile/tsfile_mux.c \
 
 # Inotify
 SRCS-${CONFIG_INOTIFY} += \

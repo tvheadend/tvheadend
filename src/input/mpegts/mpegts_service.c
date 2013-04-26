@@ -92,12 +92,19 @@ mpegts_service_start(service_t *t, int instance)
   if (mi == NULL)
     return SM_CODE_UNDEFINED_ERROR;
 
+  /* Start Mux */
+  r = mi->mmi_input->mi_start_mux(mi->mmi_input, mi);
+
   /* Start */
-  if (!(r = mi->mmi_input->mi_start_mux(mi->mmi_input, mi))) {
+  if (!r) {
+
+    /* Add to active set */
     pthread_mutex_lock(&mi->mmi_input->mi_delivery_mutex);
     LIST_INSERT_HEAD(&mi->mmi_input->mi_transports, t, s_active_link);
     s->s_dvb_active_input = mi->mmi_input;
     pthread_mutex_unlock(&mi->mmi_input->mi_delivery_mutex);
+
+    /* Open service */
     mi->mmi_input->mi_open_service(mi->mmi_input, s);
     // TODO: revisit this
   }

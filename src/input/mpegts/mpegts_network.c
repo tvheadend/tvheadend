@@ -1,6 +1,5 @@
 /*
- *  Tvheadend - MPEGTS multiplex
- *
+ *  Tvheadend - MPEGTS input source
  *  Copyright (C) 2013 Adam Sutton
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,37 +16,27 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "idnode.h"
-#include "queue.h"
 #include "input/mpegts.h"
 
-const idclass_t mpegts_mux_class =
+const idclass_t mpegts_network_class =
 {
-  .ic_class      = "mpegts_mux",
-  .ic_caption    = "MPEGTS Multiplex",
+  .ic_class      = "mpegts_network",
+  .ic_caption    = "MPEGTS Network",
   .ic_properties = (const property_t[]){
   }
 };
 
-mpegts_mux_t *
-mpegts_mux_create0  
-  ( const char *uuid, mpegts_network_t *net, uint16_t onid, uint16_t tsid )
+
+mpegts_network_t *
+mpegts_network_create0
+  ( const char *uuid, const char *netname )
 {
-  mpegts_mux_t *mm = idnode_create(mpegts_mux, uuid);
-
-  /* Identification */
-  mm->mm_onid                = onid;
-  mm->mm_tsid                = tsid;
-
-  /* Add to network */
-  mm->mm_network             = net;
-  mm->mm_initial_scan_status = MM_SCAN_PENDING;
-  TAILQ_INSERT_TAIL(&net->mn_initial_scan_pending_queue, mm,
-                    mm_initial_scan_link);
-
-  return mm;
+  mpegts_network_t *mn = idnode_create(mpegts_network, uuid);
+  mn->mn_network_name = strdup(netname);
+  TAILQ_INIT(&mn->mn_initial_scan_pending_queue);
+  TAILQ_INIT(&mn->mn_initial_scan_current_queue);
+  return mn;
 }
-
 
 /******************************************************************************
  * Editor Configuration

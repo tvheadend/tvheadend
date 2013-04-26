@@ -22,6 +22,9 @@
 
 #include "service.h"
 
+#define MM_ONID_NONE 0xFFFF
+#define MM_TSID_NONE 0xFFFF
+
 /* Types */
 typedef struct mpegts_table         mpegts_table_t;
 typedef struct mpegts_network       mpegts_network_t;
@@ -100,7 +103,7 @@ struct mpegts_network
    */
 
   char                    *mn_network_name;
-  uint16_t                mn_network_id; // ONID/NID??
+  //uint16_t                mn_network_id; // ONID/NID??
 
   /*
    * Scanning
@@ -139,7 +142,8 @@ struct mpegts_mux
   
   LIST_ENTRY(mpegts_mux)  mm_network_link;
   mpegts_network_t        *mm_network;
-  uint16_t                mm_mux_id;
+  uint16_t                mm_onid;
+  uint16_t                mm_tsid;
 
   /*
    * Services
@@ -287,16 +291,11 @@ mpegts_service_t * mpegts_service_create0
  * Physical Network
  * *************************************************************************/
 
-// TODO: do we need the concept of multiple physical networks that provide
-//       the same logical network (this is common for DVB-T)
-
-struct mpegts_phy_network
-{
-};
-
 /* Physical mux instance */
 struct mpegts_mux_instance
 {
+  idnode_t mmi_id;
+
   LIST_ENTRY(mpegts_mux_instance) mmi_mux_link;
   LIST_ENTRY(mpegts_mux_instance) mmi_active_link;
   
@@ -309,13 +308,24 @@ struct mpegts_mux_instance
 /* Input source */
 struct mpegts_input
 {
+  idnode_t mi_id;
+
   int mi_instance;
+
+  LIST_ENTRY(mpegts_input) mi_global_link;
 
   LIST_HEAD(,service) mi_transports;
 
   pthread_mutex_t mi_delivery_mutex;
+
+  mpegts_network_t *mi_network; // TODO: this may need altering for DVB-S
+  mpegts_mux_instance_t *mi_mux_current;
+
+  pthread_t mi_thread_id;
+  th_pipe_t mi_thread_pipe;
   
   int  (*mi_start_mux)     (mpegts_input_t*,mpegts_mux_instance_t*);
+  void (*mi_stop_mux)      (mpegts_input_t*);
   void (*mi_open_service)  (mpegts_input_t*,mpegts_service_t*);
   void (*mi_close_service) (mpegts_input_t*,mpegts_service_t*);
   void (*mi_open_table)    (mpegts_input_t*,mpegts_table_t*);
@@ -323,6 +333,23 @@ struct mpegts_input
 };
 
 #endif /* __TVH_MPEGTS_H__ */
+
+/* ****************************************************************************
+ * Functions
+ * ***************************************************************************/
+
+mpegts_input_t *mpegts_input_create0
+  ( const char *uuid );
+
+mpegts_network_t *mpegts_network_create0
+  ( const char *uuid, const char *name );
+
+mpegts_mux_t *mpegts_mux_create0
+  ( const char *uuid, mpegts_network_t *net, uint16_t onid, uint16_t tsid );
+
+void mpegts_input_recv_packets
+  (mpegts_input_t *mi, const uint8_t *tsb, size_t len,
+   int64_t *pcr, uint16_t *pcr_pid);
 
 /******************************************************************************
  * Editor Configuration
