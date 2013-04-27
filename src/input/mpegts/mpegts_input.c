@@ -23,6 +23,7 @@
 #include "atomic.h"
 
 #include <pthread.h>
+#include <assert.h>
 
 const idclass_t mpegts_input_class =
 {
@@ -34,11 +35,14 @@ const idclass_t mpegts_input_class =
 
 size_t
 mpegts_input_recv_packets
-  ( mpegts_input_t *mi, uint8_t *tsb, size_t l,
-    int64_t *pcr, uint16_t *pcr_pid )
+  ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi,
+    uint8_t *tsb, size_t l, int64_t *pcr, uint16_t *pcr_pid )
 {
   int len = l; // TODO: fix ts_resync() to remove this
   int i = 0, table_wakeup = 0;
+  mpegts_mux_t *mm = mmi->mmi_mux;
+  assert(mmi->mmi_input == mi);
+  assert(mm != NULL);
   tvhtrace("mpegts", "recv_packets tsb=%p, len=%d, pcr=%p, pcr_pid=%p",
            tsb, (int)len, pcr, pcr_pid);
   
@@ -49,13 +53,13 @@ mpegts_input_recv_packets
   pthread_mutex_lock(&mi->mi_delivery_mutex);
 
   /* Raw stream */
-  if (LIST_FIRST(&mi->mi_streaming_pad.sp_targets) != NULL) {
+  if (LIST_FIRST(&mmi->mmi_streaming_pad.sp_targets) != NULL) {
     streaming_message_t sm;
     pktbuf_t *pb = pktbuf_alloc(tsb, len);
     memset(&sm, 0, sizeof(sm));
     sm.sm_type = SMT_MPEGTS;
     sm.sm_data = pb;
-    streaming_pad_deliver(&mi->mi_streaming_pad, &sm);
+    streaming_pad_deliver(&mmi->mmi_streaming_pad, &sm);
     pktbuf_ref_dec(pb);
   }
   
@@ -68,11 +72,12 @@ mpegts_input_recv_packets
       int pid = ((tsb[i+1] & 0x1f) << 8) | tsb[i+2];
 
       /* SI data */
-      if (mi->mi_table_filter[pid]) {
+      if (mm->mm_table_filter[pid]) {
         printf("pid = %04X\n", pid);
         if (!(tsb[i+1] & 0x80)) {
           mpegts_table_feed_t *mtf = malloc(sizeof(mpegts_table_feed_t));
           memcpy(mtf->mtf_tsb, tsb+i, 188);
+          mtf->mtf_mux = mm;
           TAILQ_INSERT_TAIL(&mi->mi_table_feed, mtf, mtf_link);
           table_wakeup = 1;
         }
@@ -121,6 +126,55 @@ mpegts_input_recv_packets
   if (len) memmove(tsb, tsb+i, len);
 
   return len;
+}
+
+static void
+mpegts_input_table_dispatch ( mpegts_mux_t *mm, mpegts_table_feed_t *mtf )
+{
+  int      i   = 0;
+  int      len = mm->mm_num_tables;
+  uint16_t pid = ((mtf->mtf_tsb[1] & 0x1f) << 8) | mtf->mtf_tsb[2];
+  mpegts_table_t *mt, *vec[len];
+
+  /* Collate - tables may be removed during callbacks */
+  LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
+    vec[i++] = mt;
+    mt->mt_refcount++;
+  }
+  assert(i == len);
+
+  /* Process */
+  for (i = 0; i < len; i++) {
+    mt = vec[i];
+    if (!mt->mt_destroyed && mt->mt_pid == pid)
+      psi_section_reassemble(&mt->mt_sect, mtf->mtf_tsb, 0, NULL, mt);
+    mpegts_table_release(mt);
+  }
+}
+
+void *
+mpegts_input_table_thread ( void *aux )
+{
+  mpegts_table_feed_t   *mtf;
+  mpegts_input_t        *mi = aux;
+
+  while (1) {
+
+    /* Wait for data */
+    pthread_mutex_lock(&mi->mi_delivery_mutex);
+    while(!(mtf = TAILQ_FIRST(&mi->mi_table_feed)))
+      pthread_cond_wait(&mi->mi_table_feed_cond, &mi->mi_delivery_mutex);
+    TAILQ_REMOVE(&mi->mi_table_feed, mtf, mtf_link);
+    pthread_mutex_unlock(&mi->mi_delivery_mutex);
+
+    /* Process */
+    pthread_mutex_lock(&global_lock);
+    // TODO: should we check the mux is active
+    mpegts_input_table_dispatch(mtf->mtf_mux, mtf);
+    pthread_mutex_unlock(&global_lock);
+    free(mtf);
+  }
+  return NULL;
 }
 
 mpegts_input_t*

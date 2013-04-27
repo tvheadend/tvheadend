@@ -31,11 +31,13 @@ const idclass_t mpegts_mux_instance_class =
   }
 };
 
+#if 0
 static int
 mpegts_mux_instance_weight ( mpegts_mux_instance_t *mmi )
 {
   return 0;
 }
+#endif
 
 mpegts_mux_instance_t *
 mpegts_mux_instance_create0
@@ -121,8 +123,8 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
     
     /* Find free input */
     LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link)
-      if (!mmi->mmi_tune_failed &&
-          !mmi->mmi_input->mi_mux_current)
+      if (!mmi->mmi_tune_failed /*TODO&&
+          !mmi->mmi_input->mi_mux_current*/)
         break;
     printf("free input = %p\n", mmi);
 
@@ -135,7 +137,7 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
           continue;
 
         /* Found */
-        if (mpegts_mux_instance_weight(mmi->mmi_input->mi_mux_current) < weight)
+        if (100 < weight)//TODO:mpegts_mux_instance_weight(mmi->mmi_input->mi_mux_current) < weight)
           break;
       }
 
@@ -160,6 +162,23 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
   return 0;
 }
 
+static void
+mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
+{
+  if (mt->mt_pid >= 0x2000)
+    return;
+  mm->mm_table_filter[mt->mt_pid] = 1;
+  printf("table opened %04X\n", mt->mt_pid);
+}
+
+static void
+mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
+{
+  if (mt->mt_pid >= 0x2000)
+    return;
+  mm->mm_table_filter[mt->mt_pid] = 0;
+}
+
 mpegts_mux_t *
 mpegts_mux_create0  
   ( const char *uuid, mpegts_network_t *net, uint16_t onid, uint16_t tsid )
@@ -174,6 +193,11 @@ mpegts_mux_create0
   mm->mm_network             = net;
   mm->mm_start               = mpegts_mux_start;
   mpegts_mux_initial_scan_link(mm);
+
+  /* Table processing */
+  mm->mm_open_table          = mpegts_mux_open_table;
+  mm->mm_close_table         = mpegts_mux_close_table;
+  TAILQ_INIT(&mm->mm_table_queue);
 
   return mm;
 }

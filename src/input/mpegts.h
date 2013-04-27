@@ -73,7 +73,7 @@ struct mpegts_table
   int mt_fd;
 
   LIST_ENTRY(mpegts_table) mt_link;
-  mpegts_mux_instance_t *mt_mux;
+  mpegts_mux_t *mt_mux;
 
   char *mt_name;
 
@@ -106,6 +106,7 @@ struct mpegts_table
 struct mpegts_table_feed {
   TAILQ_ENTRY(mpegts_table_feed) mtf_link;
   uint8_t mtf_tsb[188];
+  mpegts_mux_t *mtf_mux;
 };
 
 
@@ -198,13 +199,15 @@ struct mpegts_mux
   int                         mm_num_tables;
   LIST_HEAD(, mpegts_table)   mm_tables;
   TAILQ_HEAD(, mpegts_table)  mm_table_queue;
-  uint8_t                     mm_table_filter;
+  uint8_t                     mm_table_filter[8192];
 
   /*
    * Functions
    */
 
-  int (*mm_start) ( mpegts_mux_t *mm, const char *reason, int weight );
+  int  (*mm_start)         ( mpegts_mux_t *mm, const char *reason, int weight );
+  void (*mm_open_table)    (mpegts_mux_t*,mpegts_table_t*);
+  void (*mm_close_table)   (mpegts_mux_t*,mpegts_table_t*);
   
 #if 0
   dvb_mux_conf_t dm_conf;
@@ -326,6 +329,8 @@ struct mpegts_mux_instance
 
   LIST_ENTRY(mpegts_mux_instance) mmi_mux_link;
   LIST_ENTRY(mpegts_mux_instance) mmi_active_link;
+
+  streaming_pad_t mmi_streaming_pad;
   
   mpegts_mux_t   *mmi_mux;
   mpegts_input_t *mmi_input;
@@ -345,7 +350,7 @@ struct mpegts_input
 
 
   mpegts_network_t *mi_network; // TODO: this may need altering for DVB-S
-  mpegts_mux_instance_t *mi_mux_current;
+  //mpegts_mux_instance_t *mi_mux_current;
 
   /*
    * Input processing
@@ -358,9 +363,6 @@ struct mpegts_input
 
   int mi_bytes;
 
-  // Full mux streaming, protected via the delivery mutex
-
-  streaming_pad_t mi_streaming_pad;
 
 
   struct mpegts_table_feed_queue mi_table_feed;
@@ -378,8 +380,6 @@ struct mpegts_input
   void (*mi_stop_mux)      (mpegts_input_t*);
   void (*mi_open_service)  (mpegts_input_t*,mpegts_service_t*);
   void (*mi_close_service) (mpegts_input_t*,mpegts_service_t*);
-  void (*mi_open_table)    (mpegts_input_t*,mpegts_table_t*);
-  void (*mi_close_table)   (mpegts_input_t*,mpegts_table_t*);
 };
 
 #endif /* __TVH_MPEGTS_H__ */
@@ -406,8 +406,10 @@ mpegts_mux_instance_t *mpegts_mux_instance_create0
 void mpegts_mux_initial_scan_done ( mpegts_mux_t *mm );
 
 size_t mpegts_input_recv_packets
-  (mpegts_input_t *mi, uint8_t *tsb, size_t len,
+  (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, uint8_t *tsb, size_t len,
    int64_t *pcr, uint16_t *pcr_pid);
+
+void *mpegts_input_table_thread ( void *aux );
 
 void mpegts_table_dispatch
   (mpegts_table_t *mt, const uint8_t *sec, int r);
