@@ -19,6 +19,8 @@
 
 #include "tvheadend.h"
 #include "tsfile_private.h"
+#include "input.h"
+#include "input/mpegts/psi.h"
 
 #include <sys/epoll.h>
 #include <sys/types.h>
@@ -31,7 +33,7 @@
 static void *
 tsfile_input_thread ( void *aux )
 {
-  int fd = -1, efd, nfds;
+  int pos = 0, fd = -1, efd, nfds;
   size_t len, rem;
   ssize_t c;
   struct epoll_event ev;
@@ -43,7 +45,10 @@ tsfile_input_thread ( void *aux )
   tsfile_mux_instance_t *mmi;
 
   /* Open file */
+printf("waiting for lock..\n");
   pthread_mutex_lock(&global_lock);
+printf("got lock\n");
+printf("cur mux = %p\n", mi->mi_mux_current);
   if (mi->mi_mux_current) {
     mmi = (tsfile_mux_instance_t*)mi->mi_mux_current;
     fd  = tvh_open(mmi->mmi_tsfile_path, O_RDONLY | O_NONBLOCK, 0);
@@ -54,6 +59,7 @@ tsfile_input_thread ( void *aux )
   }
   pthread_mutex_unlock(&global_lock);
   if (fd == -1) return NULL;
+  printf("file opened = %d\n", fd);
   
   /* Polling */
   memset(&ev, 0, sizeof(ev));
@@ -72,6 +78,7 @@ tsfile_input_thread ( void *aux )
   /* Check for extra (incomplete) packet at end */
   rem = st.st_size % 188;
   len = 0;
+printf("file size = %lu, rem = %lu\n", st.st_size, rem);
   
   /* Process input */
   while (1) {
@@ -81,7 +88,7 @@ tsfile_input_thread ( void *aux )
     if (nfds == 1) break;
     
     /* Read */
-    c = read(fd, tsb, sizeof(tsb));
+    c = read(fd, tsb+pos, sizeof(tsb)-pos);
     if (c < 0) {
       if (errno == EAGAIN || errno == EINTR)
         continue;
@@ -102,7 +109,7 @@ tsfile_input_thread ( void *aux )
     /* Process */
     if (c >= 0) {
       pcr = PTS_UNSET;
-      mpegts_input_recv_packets(mi, tsb, c, &pcr, &pcr_pid);
+      pos = mpegts_input_recv_packets(mi, mmi, tsb, c, &pcr, &pcr_pid);
 
       /* Delay */
       if (pcr != PTS_UNSET) {
@@ -145,14 +152,21 @@ tsfile_input_stop_mux ( mpegts_input_t *mi )
     tvh_pipe_close(&mi->mi_thread_pipe);
     tvhtrace("tsfile", "adapter %d stopped thread", mi->mi_instance);
   }
+
+  mi->mi_mux_current->mmi_mux->mm_active = NULL;
+  mi->mi_mux_current = NULL;
 }
 
 static int
 tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
 {
   struct stat st;
+  mpegts_mux_t          *mm  = t->mmi_mux;
   tsfile_mux_instance_t *mmi = (tsfile_mux_instance_t*)t;
   printf("tsfile_input_start_mux(%p, %p)\n", mi, t);
+
+  /* Already tuned */
+  assert(mmi->mmi_mux->mm_active == NULL);
 
   /* Check file is accessible */
   if (lstat(mmi->mmi_tsfile_path, &st)) {
@@ -172,8 +186,21 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
     pthread_create(&mi->mi_thread_id, NULL, tsfile_input_thread, mi);
   }
 
+  /* Current */
+  mi->mi_mux_current = mmi->mmi_mux->mm_active = t;
+
+  /* Install table handlers */
+  mpegts_table_add(mm, 0x0, 0xff, psi_pat_callback, NULL, "pat",
+                   MT_QUICKREQ| MT_CRC, 0);
+#if 0
+  mpegts_table_add(mm, 0x1, 0xff, dvb_cat_callback, NULL, "cat",
+                   MT_CRC, 1);
+#endif
+
   return 0;
 }
+
+/* TODO: I think most of these can be moved to mpegts */
 
 static void
 tsfile_input_open_service ( mpegts_input_t *mi, mpegts_service_t *t )
@@ -188,17 +215,77 @@ tsfile_input_close_service ( mpegts_input_t *mi, mpegts_service_t *t )
 static void
 tsfile_input_open_table ( mpegts_input_t *mi, mpegts_table_t *mt )
 {
+  if (mt->mt_pid >= 0x2000)
+    return;
+  mi->mi_table_filter[mt->mt_pid] = 1;
+  printf("table opened %04X\n", mt->mt_pid);
 }
 
 static void
 tsfile_input_close_table ( mpegts_input_t *mi, mpegts_table_t *mt )
 {
+  if (mt->mt_pid >= 0x2000)
+    return;
+  mi->mi_table_filter[mt->mt_pid] = 0;
+}
+
+static void
+tsfile_table_dispatch ( mpegts_mux_t *mm, mpegts_table_feed_t *mtf )
+{
+  int      i   = 0;
+  int      len = mm->mm_num_tables;
+  uint16_t pid = ((mtf->mtf_tsb[1] & 0x1f) << 8) | mtf->mtf_tsb[2];
+  mpegts_table_t *mt, *vec[len];
+
+  /* Collate - tables may be removed during callbacks */
+  LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
+    vec[i++] = mt;
+    mt->mt_refcount++;
+  }
+  assert(i == len);
+
+  /* Process */
+  for (i = 0; i < len; i++) {
+    mt = vec[i];
+    if (!mt->mt_destroyed && mt->mt_pid == pid)
+      psi_section_reassemble(&mt->mt_sect, mtf->mtf_tsb, 0, NULL, mt);
+    mpegts_table_release(mt);
+  }
+}
+
+static void *
+tsfile_table_thread ( void *aux )
+{
+  mpegts_table_feed_t   *mtf;
+  mpegts_mux_instance_t *mmi;
+  mpegts_input_t        *mi = aux;
+
+  while (1) {
+
+    /* Wait for data */
+    pthread_mutex_lock(&mi->mi_delivery_mutex);
+    while(!(mtf = TAILQ_FIRST(&mi->mi_table_feed)))
+      pthread_cond_wait(&mi->mi_table_feed_cond, &mi->mi_delivery_mutex);
+    TAILQ_REMOVE(&mi->mi_table_feed, mtf, mtf_link);
+    pthread_mutex_unlock(&mi->mi_delivery_mutex);
+
+    /* Process */
+    pthread_mutex_lock(&global_lock);
+    if ((mmi = mi->mi_mux_current))
+      tsfile_table_dispatch(mmi->mmi_mux, mtf);
+    pthread_mutex_unlock(&global_lock);
+    free(mtf);
+  }
+  return NULL;
 }
 
 mpegts_input_t *
 tsfile_input_create ( void )
 {
+  pthread_t tid;
   mpegts_input_t *mi;
+
+  /* Create object */
   mi = mpegts_input_create0(NULL);
   mi->mi_start_mux     = tsfile_input_start_mux;
   mi->mi_stop_mux      = tsfile_input_stop_mux;
@@ -206,6 +293,9 @@ tsfile_input_create ( void )
   mi->mi_close_table   = tsfile_input_close_table;
   mi->mi_open_service  = tsfile_input_open_service;
   mi->mi_close_service = tsfile_input_close_service;
+
+  /* Start table thread */
+  pthread_create(&tid, NULL, tsfile_table_thread, mi);
   return mi;
 }
 

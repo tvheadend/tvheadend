@@ -21,9 +21,12 @@
 
 #include "htsmsg.h"
 #include "streaming.h"
-#include "input/mpegts.h"
 
 #define PSI_SECTION_SIZE 5000
+
+// TODO: tidy this up
+struct mpegts_service;
+struct mpegts_table;
 
 typedef void (section_handler_t)(const uint8_t *data, size_t len, void *opaque);
 
@@ -45,5 +48,8 @@ const char *psi_caid2name(uint16_t caid);
 
 void psi_load_service_settings(htsmsg_t *m, struct mpegts_service *t);
 void psi_save_service_settings(htsmsg_t *m, struct mpegts_service *t);
+
+int psi_pat_callback
+  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
 
 #endif /* PSI_H_ */

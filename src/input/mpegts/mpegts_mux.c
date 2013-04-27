@@ -110,9 +110,8 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
   printf("mpegts_mux_start(%p, %s, %d)\n", mm, reason, weight);
 
   /* Already tuned */
-  LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link)
-    if (mmi->mmi_input->mi_mux_current == mmi)
-      return 0;
+  if (mm->mm_active)
+    return 0;
   printf("not already tuned\n");
 
   /* Find */

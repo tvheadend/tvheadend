@@ -30,6 +30,66 @@
 #include "parsers/parser_teletext.h" // TODO: only for PID
 #include "lang_codes.h"
 
+int
+psi_pat_callback
+  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
+{
+  uint16_t sid, pid, tsid;
+  //mpegts_mux_instance_t *mmi = mt->mt_mux;
+  //mpegts_mux_t          *mm  = mmi->mmi_mux;
+
+  /* Not enough data */
+  if(len < 5)
+    return -1;
+
+  /* Ignore next */
+  if((ptr[2] & 1) == 0)
+    return -1;
+
+  /* Multiplex */
+  tsid = (ptr[0] << 8) | ptr[1];
+  printf("tsid = %04X\n", tsid);
+#if 0 // TODO: process this
+  mpegts_mux_set_tsid(mm, tsid, 0);
+  if (mm->mm_tsid != tsid)
+    return -1;
+#endif
+  
+  /* Process each programme */
+  ptr += 5;
+  len -= 5;
+  while(len >= 4) {
+    sid = ptr[0]         << 8 | ptr[1];
+    pid = (ptr[2] & 0x1f) << 8 | ptr[3];
+
+    /* NIT PID */
+    if (sid == 0) {
+      printf("NIT on pid %04X\n", pid);
+#if 0
+      if (pid != 0x10 && pid != 0x00)
+        mpegts_table_add(mm, 0, 0, psi_nit_callback, NULL, "nit",
+                         TDT_CRC | TDT_QUICKREQ, pid)
+#endif
+
+    /* Service */
+    } else if (pid) {
+      printf("SID %04X on pid %04X\n", sid, pid);
+#if 0
+      int save = 0;
+      mpegts_service_find(mm, sid, pid, NULL, &save);
+      // TODO: option to disable PMT monitor
+      if (save)
+        psi_table_add_pmt(mm, pid);
+#endif
+    }
+
+    /* Next */
+    ptr += 4;
+    len -= 4;
+  }
+  return 0;
+}
+
 static int
 psi_section_reassemble0(psi_section_t *ps, const uint8_t *data, 
 			int len, int start, int crc,

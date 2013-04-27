@@ -513,7 +513,7 @@ int tvh_write(int fd, const void *buf, size_t len);
 
 void hexdump(const char *pfx, const uint8_t *data, int len);
 
-uint32_t tvh_crc32(uint8_t *data, size_t datalen, uint32_t crc);
+uint32_t tvh_crc32(const uint8_t *data, size_t datalen, uint32_t crc);
 
 int base64_decode(uint8_t *out, const char *in, int out_size);
 

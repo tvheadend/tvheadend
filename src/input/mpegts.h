@@ -21,6 +21,7 @@
 #define __TVH_MPEGTS_H__
 
 #include "service.h"
+#include "src/input/mpegts/psi.h"
 
 #define MM_ONID_NONE 0xFFFF
 #define MM_TSID_NONE 0xFFFF
@@ -32,14 +33,19 @@ typedef struct mpegts_mux           mpegts_mux_t;
 typedef struct mpegts_service       mpegts_service_t;
 typedef struct mpegts_mux_instance  mpegts_mux_instance_t;
 typedef struct mpegts_input         mpegts_input_t;
+typedef struct mpegts_table_feed    mpegts_table_feed_t;
 
 /* Lists */
 typedef TAILQ_HEAD(mpegts_mux_queue,mpegts_mux) mpegts_mux_queue_t;
 typedef LIST_HEAD (mpegts_mux_list,mpegts_mux)  mpegts_mux_list_t;
+TAILQ_HEAD(mpegts_table_feed_queue, mpegts_table_feed);
 
 /* **************************************************************************
  * SI processing
  * *************************************************************************/
+
+typedef int (*mpegts_table_callback)
+  ( mpegts_table_t*, const uint8_t *buf, int len, int tableid );
 
 struct mpegts_table
 {
@@ -48,6 +54,10 @@ struct mpegts_table
    * We inspect it without holding global_lock
    */
   int mt_flags;
+
+#define MT_CRC      0x1
+#define MT_FULL     0x2
+#define MT_QUICKREQ 0x4
 
   /**
    * Cycle queue
@@ -63,13 +73,12 @@ struct mpegts_table
   int mt_fd;
 
   LIST_ENTRY(mpegts_table) mt_link;
-  mpegts_mux_t *mt_mux;
+  mpegts_mux_instance_t *mt_mux;
 
   char *mt_name;
 
   void *mt_opaque;
-  int (*mt_callback)(mpegts_mux_t *m, uint8_t *buf, int len,
-		      uint8_t tableid, void *opaque);
+  mpegts_table_callback mt_callback;
 
 
   // TODO: remind myself of what each field is for
@@ -84,9 +93,21 @@ struct mpegts_table
   int mt_destroyed; // Refcounting
   int mt_refcount;
 
-  //psi_section_t mt_sect; // Manual reassembly
+  psi_section_t mt_sect; // Manual reassembly
 
 };
+
+/**
+ * When in raw mode we need to enqueue raw TS packet
+ * to a different thread because we need to hold
+ * global_lock when doing delivery of the tables
+ */
+
+struct mpegts_table_feed {
+  TAILQ_ENTRY(mpegts_table_feed) mtf_link;
+  uint8_t mtf_tsb[188];
+};
+
 
 /* **************************************************************************
  * Logical network
@@ -164,19 +185,20 @@ struct mpegts_mux
   }                       mm_initial_scan_status;
 
   /*
-   * Input processing
-   */
-  
-  int                         mm_num_tables;
-  LIST_HEAD(, mpegts_table)   mm_tables;
-  TAILQ_HEAD(, mpegts_table)  mm_table_queue;
-  // TODO: remind myself of what the queue/list's are for
-
-  /*
    * Physical instances
    */
 
   LIST_HEAD(, mpegts_mux_instance) mm_instances;
+  mpegts_mux_instance_t *mm_active;
+
+  /*
+   * Table processing
+   */
+
+  int                         mm_num_tables;
+  LIST_HEAD(, mpegts_table)   mm_tables;
+  TAILQ_HEAD(, mpegts_table)  mm_table_queue;
+  uint8_t                     mm_table_filter;
 
   /*
    * Functions
@@ -321,15 +343,36 @@ struct mpegts_input
 
   LIST_ENTRY(mpegts_input) mi_global_link;
 
-  LIST_HEAD(,service) mi_transports;
-
-  pthread_mutex_t mi_delivery_mutex;
 
   mpegts_network_t *mi_network; // TODO: this may need altering for DVB-S
   mpegts_mux_instance_t *mi_mux_current;
 
+  /*
+   * Input processing
+   */
+
+  pthread_mutex_t mi_delivery_mutex;
+
+  LIST_HEAD(,service) mi_transports;
+
+
+  int mi_bytes;
+
+  // Full mux streaming, protected via the delivery mutex
+
+  streaming_pad_t mi_streaming_pad;
+
+
+  struct mpegts_table_feed_queue mi_table_feed;
+  pthread_cond_t mi_table_feed_cond;  // Bound to mi_delivery_mutex
+
+
   pthread_t mi_thread_id;
   th_pipe_t mi_thread_pipe;
+
+  /*
+   * Functions
+   */
   
   int  (*mi_start_mux)     (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_stop_mux)      (mpegts_input_t*);
@@ -362,9 +405,20 @@ mpegts_mux_instance_t *mpegts_mux_instance_create0
 
 void mpegts_mux_initial_scan_done ( mpegts_mux_t *mm );
 
-void mpegts_input_recv_packets
-  (mpegts_input_t *mi, const uint8_t *tsb, size_t len,
+size_t mpegts_input_recv_packets
+  (mpegts_input_t *mi, uint8_t *tsb, size_t len,
    int64_t *pcr, uint16_t *pcr_pid);
+
+void mpegts_table_dispatch
+  (mpegts_table_t *mt, const uint8_t *sec, int r);
+void mpegts_table_release
+  (mpegts_table_t *mt);
+void mpegts_table_add
+  (mpegts_mux_t *mm, int tableid, int mask,
+   mpegts_table_callback callback, void *opaque,
+   const char *name, int flags, int pid);
+void mpegts_table_flush_all
+  (mpegts_mux_t *mm);
 
 /******************************************************************************
  * Editor Configuration

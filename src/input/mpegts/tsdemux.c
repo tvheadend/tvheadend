@@ -138,20 +138,10 @@ ts_recv_packet0(mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb
  * than the stream PCR
  */
 static void
-ts_extract_pcr(mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb, 
-	       int64_t *pcrp)
+ts_process_pcr(mpegts_service_t *t, elementary_stream_t *st, int64_t pcr)
 {
-  int64_t real, pcr, d;
-
-  pcr  = (uint64_t)tsb[6] << 25;
-  pcr |= (uint64_t)tsb[7] << 17;
-  pcr |= (uint64_t)tsb[8] << 9;
-  pcr |= (uint64_t)tsb[9] << 1;
-  pcr |= ((uint64_t)tsb[10] >> 7) & 0x01;
+  int64_t real, d;
   
-  if(pcrp != NULL)
-    *pcrp = pcr;
-
   if(st == NULL)
     return;
 
@@ -192,7 +182,31 @@ ts_recv_packet1(mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp)
   int pid, n, m, r;
   th_descrambler_t *td;
   int error = 0;
+  int64_t pcr = PTS_UNSET;
+  
+  /* Error */
+  if (tsb[1] & 0x80)
+    error = 1;
 
+#if 0
+  printf("%02X %02X %02X %02X %02X %02X\n",
+         tsb[0], tsb[1], tsb[2], tsb[3], tsb[4], tsb[5]);
+#endif
+
+  /* Extract PCR (do this early for tsfile) */
+  if(tsb[3] & 0x20 && tsb[4] > 0 && tsb[5] & 0x10 && !error) {
+    pcr  = (uint64_t)tsb[6] << 25;
+    pcr |= (uint64_t)tsb[7] << 17;
+    pcr |= (uint64_t)tsb[8] << 9;
+    pcr |= (uint64_t)tsb[9] << 1;
+    pcr |= ((uint64_t)tsb[10] >> 7) & 0x01;
+    if (*pcrp) *pcrp = pcr;
+  }
+
+  /* Nothing - special case for tsfile to get PCR */
+  if (!t) return;
+
+  /* Service inactive - ignore */
   if(t->s_status != SERVICE_RUNNING)
     return;
 
@@ -200,11 +214,10 @@ ts_recv_packet1(mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp)
 
   service_set_streaming_status_flags((service_t*)t, TSS_INPUT_HARDWARE);
 
-  if(tsb[1] & 0x80) {
+  if(error) {
     /* Transport Error Indicator */
     limitedlog(&t->s_loglimit_tei, "TS", service_nicename((service_t*)t),
 	       "Transport error indicator");
-    error = 1;
   }
 
   pid = (tsb[1] & 0x1f) << 8 | tsb[2];
@@ -212,8 +225,8 @@ ts_recv_packet1(mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp)
   st = service_stream_find((service_t*)t, pid);
 
   /* Extract PCR */
-  if(tsb[3] & 0x20 && tsb[4] > 0 && tsb[5] & 0x10 && !error)
-    ts_extract_pcr(t, st, tsb, pcrp);
+  if (pcr != PTS_UNSET)
+    ts_process_pcr(t, st, pcr);
 
   if(st == NULL) {
     pthread_mutex_unlock(&t->s_stream_mutex);

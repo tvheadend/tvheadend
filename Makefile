@@ -152,6 +152,7 @@ SRCS-$(CONFIG_MPEGTS) += \
   src/input/mpegts/mpegts_network.c \
   src/input/mpegts/mpegts_mux.c \
   src/input/mpegts/mpegts_service.c \
+  src/input/mpegts/mpegts_table.c \
 	src/input/mpegts/psi.c \
 	src/input/mpegts/tsdemux.c \
 
