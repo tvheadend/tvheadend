@@ -58,6 +58,24 @@ const idclass_t mpegts_mux_class =
   }
 };
 
+void mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid, int force )
+{
+  if (onid == mm->mm_onid)
+    return;
+  if (!force && mm->mm_onid != MM_ONID_NONE)
+    return;
+  mm->mm_onid = onid;
+}
+
+void mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force )
+{
+  if (tsid == mm->mm_tsid)
+    return;
+  if (!force && mm->mm_tsid != MM_ONID_NONE)
+    return;
+  mm->mm_tsid = tsid;
+}
+
 static void
 mpegts_mux_initial_scan_link ( mpegts_mux_t *mm )
 {

@@ -244,8 +244,6 @@ typedef struct service {
   int64_t s_pcr_last_realtime;
 #endif
   
-  LIST_ENTRY(service) s_group_link;
-
   LIST_ENTRY(service) s_active_link;
 
   LIST_HEAD(, th_subscription) s_subscriptions;
@@ -435,7 +433,11 @@ void service_init(void);
 
 int service_start(service_t *t, int instance);
 
-service_t *service_create(const char *uuid, int source_type, const idclass_t *idc);
+service_t *service_create0(size_t alloc, const char *uuid, const idclass_t *idc, int source_type);
+
+#define service_create(t, u, s)\
+  (struct t*)service_create0(sizeof(struct t), u, &t##_class, s)
+
 
 void service_unref(service_t *t);
 

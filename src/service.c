@@ -440,7 +440,9 @@ service_destroy(service_t *t)
     LIST_REMOVE(t, s_ch_link);
   }
 
+#ifdef TODO_MOVE_TO_MPEGTS
   LIST_REMOVE(t, s_group_link);
+#endif
 
   idnode_unlink(&t->s_id);
 
@@ -479,9 +481,9 @@ service_destroy(service_t *t)
  * Create and initialize a new service struct
  */
 service_t *
-service_create(const char *uuid, int source_type, const idclass_t *idc)
+service_create0(size_t alloc, const char *uuid, const idclass_t *idc, int source_type)
 {
-  service_t *t = calloc(1, sizeof(service_t));
+  service_t *t = calloc(1, alloc);
 
   lock_assert(&global_lock);
 
@@ -492,10 +494,6 @@ service_create(const char *uuid, int source_type, const idclass_t *idc)
   t->s_enabled = 1;
 #ifdef MOVE_TO_TODO
   t->s_pcr_last = PTS_UNSET;
-#endif
-#ifdef MOVE_TO_MPEGTS
-  t->s_dvb_charset = NULL;
-  t->s_dvb_eit_enable = 1;
 #endif
   TAILQ_INIT(&t->s_components);
 

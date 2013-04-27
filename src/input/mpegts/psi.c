@@ -57,11 +57,9 @@ psi_pat_callback
   /* Multiplex */
   tsid = (ptr[0] << 8) | ptr[1];
   tvhtrace("pat", "tsid %04X (%d)", tsid, tsid);
-#if 0 // TODO: process this
   mpegts_mux_set_tsid(mm, tsid, 0);
   if (mm->mm_tsid != tsid)
     return -1;
-#endif
   
   /* Process each programme */
   ptr += 5;
@@ -81,13 +79,11 @@ psi_pat_callback
 
     /* Service */
     } else if (pid) {
-      tvhtrace("pat", "SID %04X (%d) on PID %04X (%d)", sid, sid, pid, pid);
-#if 0
       int save = 0;
+      tvhtrace("pat", "SID %04X (%d) on PID %04X (%d)", sid, sid, pid, pid);
       mpegts_service_find(mm, sid, pid, NULL, &save);
       // TODO: option to disable PMT monitor
-      if (save)
-#endif
+      //if (save)
         psi_table_add_pmt(mm, pid);
     }
 
@@ -107,19 +103,18 @@ psi_pmt_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
   mpegts_mux_t *mm = mt->mt_mux;
-  service_t *t;
+  mpegts_service_t *s;
   tvhtrace("pmt", "tableid %d len %d", tableid, len);
   tvhlog_hexdump("pmt", ptr, len);
 
-  LIST_FOREACH(t, &mm->mm_services, s_group_link) {
-    mpegts_service_t *s = (mpegts_service_t*)t;
-    pthread_mutex_lock(&t->s_stream_mutex);
+  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
+    pthread_mutex_lock(&s->s_stream_mutex);
     psi_parse_pmt(s, ptr, len, 1, 1);
 #if 0
     if (s->s_pmt_pid == mt->mt_pid && t->s_status == SERVICE_RUNNING)
       active = 1;
 #endif
-    pthread_mutex_unlock(&t->s_stream_mutex);
+    pthread_mutex_unlock(&s->s_stream_mutex);
   }
   mpegts_table_destroy(mt);
 #if 0

@@ -171,7 +171,7 @@ struct mpegts_mux
    * Services
    */
   
-  struct service_list     mm_services;
+  LIST_HEAD(,mpegts_service) mm_services;
 
   /*
    * Scanning
@@ -271,8 +271,9 @@ struct mpegts_service
    * Link to carrying multiplex and active adapter
    */
 
-  mpegts_mux_t    *s_dvb_mux;
-  mpegts_input_t  *s_dvb_active_input;
+  LIST_ENTRY(mpegts_service) s_dvb_mux_link;
+  mpegts_mux_t               *s_dvb_mux;
+  mpegts_input_t             *s_dvb_active_input;
 
   /*
    * Streaming elements
@@ -406,6 +407,10 @@ mpegts_mux_instance_t *mpegts_mux_instance_create0
 
 void mpegts_mux_initial_scan_done ( mpegts_mux_t *mm );
 
+void mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force );
+
+void mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid, int force );
+
 size_t mpegts_input_recv_packets
   (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, uint8_t *tsb, size_t len,
    int64_t *pcr, uint16_t *pcr_pid);
@@ -427,6 +432,8 @@ void mpegts_table_add
 void mpegts_table_flush_all
   (mpegts_mux_t *mm);
 void mpegts_table_destroy ( mpegts_table_t *mt );
+
+mpegts_service_t *mpegts_service_find ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, const char *uuid, int *save );
 
 
 /******************************************************************************
