@@ -426,6 +426,8 @@ void mpegts_table_add
    const char *name, int flags, int pid);
 void mpegts_table_flush_all
   (mpegts_mux_t *mm);
+void mpegts_table_destroy ( mpegts_table_t *mt );
+
 
 /******************************************************************************
  * Editor Configuration

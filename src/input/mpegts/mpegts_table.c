@@ -80,7 +80,7 @@ mpegts_table_release ( mpegts_table_t *mt )
   }
 }
 
-static void
+void
 mpegts_table_destroy ( mpegts_table_t *mt )
 {
   LIST_REMOVE(mt, mt_link);

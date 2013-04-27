@@ -30,13 +30,21 @@
 #include "parsers/parser_teletext.h" // TODO: only for PID
 #include "lang_codes.h"
 
+static void
+psi_table_add_pmt(mpegts_mux_t *dm, int pmt_pid);
+
+/*
+ * PAT processing
+ */
+
 int
 psi_pat_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
   uint16_t sid, pid, tsid;
-  //mpegts_mux_instance_t *mmi = mt->mt_mux;
-  //mpegts_mux_t          *mm  = mmi->mmi_mux;
+  mpegts_mux_t          *mm  = mt->mt_mux;
+  tvhtrace("pat", "tableid %d len %d", tableid, len);
+  tvhlog_hexdump("pat", ptr, len);
 
   /* Not enough data */
   if(len < 5)
@@ -48,7 +56,7 @@ psi_pat_callback
 
   /* Multiplex */
   tsid = (ptr[0] << 8) | ptr[1];
-  printf("tsid = %04X\n", tsid);
+  tvhtrace("pat", "tsid %04X (%d)", tsid, tsid);
 #if 0 // TODO: process this
   mpegts_mux_set_tsid(mm, tsid, 0);
   if (mm->mm_tsid != tsid)
@@ -64,7 +72,7 @@ psi_pat_callback
 
     /* NIT PID */
     if (sid == 0) {
-      printf("NIT on pid %04X\n", pid);
+      tvhtrace("pat", "NIT on PID %04X (%d)", pid, pid);
 #if 0
       if (pid != 0x10 && pid != 0x00)
         mpegts_table_add(mm, 0, 0, psi_nit_callback, NULL, "nit",
@@ -73,14 +81,14 @@ psi_pat_callback
 
     /* Service */
     } else if (pid) {
-      printf("SID %04X on pid %04X\n", sid, pid);
+      tvhtrace("pat", "SID %04X (%d) on PID %04X (%d)", sid, sid, pid, pid);
 #if 0
       int save = 0;
       mpegts_service_find(mm, sid, pid, NULL, &save);
       // TODO: option to disable PMT monitor
       if (save)
-        psi_table_add_pmt(mm, pid);
 #endif
+        psi_table_add_pmt(mm, pid);
     }
 
     /* Next */
@@ -89,6 +97,68 @@ psi_pat_callback
   }
   return 0;
 }
+
+/*
+ * PMT processing
+ */
+
+static int
+psi_pmt_callback
+  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
+{
+  mpegts_mux_t *mm = mt->mt_mux;
+  service_t *t;
+  tvhtrace("pmt", "tableid %d len %d", tableid, len);
+  tvhlog_hexdump("pmt", ptr, len);
+
+  LIST_FOREACH(t, &mm->mm_services, s_group_link) {
+    mpegts_service_t *s = (mpegts_service_t*)t;
+    pthread_mutex_lock(&t->s_stream_mutex);
+    psi_parse_pmt(s, ptr, len, 1, 1);
+#if 0
+    if (s->s_pmt_pid == mt->mt_pid && t->s_status == SERVICE_RUNNING)
+      active = 1;
+#endif
+    pthread_mutex_unlock(&t->s_stream_mutex);
+  }
+  mpegts_table_destroy(mt);
+#if 0
+  if (dm->dm_dn->dn_disable_pmt_monitor && !active)
+    dvb_tdt_destroy(dm->dm_current_tdmi->tdmi_adapter,
+                    dm->dm_current_tdmi, tdt);
+#endif
+
+  return 0;
+}
+
+static void
+psi_table_add_pmt(mpegts_mux_t *mm, int pmt_pid)
+{
+  char pmtname[100];
+  snprintf(pmtname, sizeof(pmtname), "PMT(%d)", pmt_pid);
+  mpegts_table_add(mm, 0x2, 0xff, psi_pmt_callback, NULL, pmtname,
+	                 MT_CRC | MT_QUICKREQ, pmt_pid);
+}
+
+#if 0
+void
+dvb_table_rem_pmt(dvb_mux_t *dm, int pmt_pid)
+{
+  th_dvb_mux_instance_t *tdmi = dm->dm_current_tdmi;
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  th_dvb_table_t *tdt = NULL;
+  LIST_FOREACH(tdt, &dm->dm_tables, tdt_link)
+    if (tdt->tdt_pid == pmt_pid && tdt->tdt_callback == dvb_pmt_callback)
+      break;
+  if (tdt)
+    dvb_tdt_destroy(tda, tdmi, tdt);
+}
+#endif
+
+
+/*
+ * Section assembly
+ */
 
 static int
 psi_section_reassemble0(psi_section_t *ps, const uint8_t *data, 

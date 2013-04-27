@@ -74,7 +74,6 @@ mpegts_input_recv_packets
 
       /* SI data */
       if (mm->mm_table_filter[pid]) {
-        printf("pid = %04X\n", pid);
         if (!(tsb[i+1] & 0x80)) {
           mpegts_table_feed_t *mtf = malloc(sizeof(mpegts_table_feed_t));
           memcpy(mtf->mtf_tsb, tsb+i, 188);
