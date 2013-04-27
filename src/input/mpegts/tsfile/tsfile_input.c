@@ -48,17 +48,14 @@ tsfile_input_thread ( void *aux )
 printf("waiting for lock..\n");
   pthread_mutex_lock(&global_lock);
 printf("got lock\n");
-#if 0
-printf("cur mux = %p\n", mi->mi_mux_current);
-  if (mi->mi_mux_current) {
-    mmi = (tsfile_mux_instance_t*)mi->mi_mux_current;
-    fd  = tvh_open(mmi->mmi_tsfile_path, O_RDONLY | O_NONBLOCK, 0);
-    if (fd == -1) {
+
+  if ((mmi = LIST_FIRST(&mi->mi_mux_active))) {
+    tsfile_mux_instance_t *tmi = (tsfile_mux_instance_t*)mmi;
+    fd  = tvh_open(tmi->mmi_tsfile_path, O_RDONLY | O_NONBLOCK, 0);
+    if (fd == -1)
       tvhlog(LOG_ERR, "tsfile", "open(%s) failed %d (%s)",
-             mmi->mmi_tsfile_path, errno, strerror(errno));
-    }
+             tmi->mmi_tsfile_path, errno, strerror(errno));
   }
-#endif
   pthread_mutex_unlock(&global_lock);
   if (fd == -1) return NULL;
   printf("file opened = %d\n", fd);
@@ -144,6 +141,8 @@ static void
 tsfile_input_stop_mux ( mpegts_input_t *mi )
 {
   int err;
+  mpegts_mux_instance_t *mmi = LIST_FIRST(&mi->mi_mux_active);
+  assert(mmi != NULL);
 
   /* Stop thread */
   if (mi->mi_thread_pipe.rd != -1) {
@@ -155,10 +154,8 @@ tsfile_input_stop_mux ( mpegts_input_t *mi )
     tvhtrace("tsfile", "adapter %d stopped thread", mi->mi_instance);
   }
 
-#if 0
-  mi->mi_mux_current->mmi_mux->mm_active = NULL;
-  mi->mi_mux_current = NULL;
-#endif
+  mmi->mmi_mux->mm_active = NULL;
+  LIST_REMOVE(mmi, mmi_active_link);
 }
 
 static int
@@ -171,6 +168,7 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
 
   /* Already tuned */
   assert(mmi->mmi_mux->mm_active == NULL);
+  assert(LIST_FIRST(&mi->mi_mux_active) == NULL);
 
   /* Check file is accessible */
   if (lstat(mmi->mmi_tsfile_path, &st)) {
@@ -191,7 +189,8 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
   }
 
   /* Current */
-  //mi->mi_mux_current = mmi->mmi_mux->mm_active = t;
+  mmi->mmi_mux->mm_active = t;
+  LIST_INSERT_HEAD(&mi->mi_mux_active, t, mmi_active_link);
 
   /* Install table handlers */
   mpegts_table_add(mm, 0x0, 0xff, psi_pat_callback, NULL, "pat",

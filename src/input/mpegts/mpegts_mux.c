@@ -31,14 +31,6 @@ const idclass_t mpegts_mux_instance_class =
   }
 };
 
-#if 0
-static int
-mpegts_mux_instance_weight ( mpegts_mux_instance_t *mmi )
-{
-  return 0;
-}
-#endif
-
 mpegts_mux_instance_t *
 mpegts_mux_instance_create0
   ( size_t alloc, const char *uuid, mpegts_input_t *mi, mpegts_mux_t *mm )
@@ -122,9 +114,10 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
   while (1) {
 
     /* Find free input */
+    printf("checking for free input\n");
     LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link)
       if (!mmi->mmi_tune_failed &&
-          !mmi->mmi_input->mi_is_free(mmi->mmi_input));
+          !mmi->mmi_input->mi_is_free(mmi->mmi_input))
         break;
     printf("free input ?= %p\n", mmi);
 

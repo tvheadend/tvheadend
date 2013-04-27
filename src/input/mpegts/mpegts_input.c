@@ -181,7 +181,10 @@ mpegts_input_table_thread ( void *aux )
 int
 mpegts_input_is_free ( mpegts_input_t *mi )
 {
-  return LIST_FIRST(&mi->mi_mux_active) == NULL;
+  int r;
+  r = (LIST_FIRST(&mi->mi_mux_active) == NULL);
+  printf("mpegts_input_is_free(%p) = %d\n", mi, r);
+  return r;
 }
 
 int
