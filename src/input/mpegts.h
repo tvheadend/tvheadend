@@ -350,7 +350,8 @@ struct mpegts_input
 
 
   mpegts_network_t *mi_network; // TODO: this may need altering for DVB-S
-  //mpegts_mux_instance_t *mi_mux_current;
+
+  LIST_HEAD(,mpegts_mux_instance) mi_mux_active;
 
   /*
    * Input processing
@@ -363,8 +364,6 @@ struct mpegts_input
 
   int mi_bytes;
 
-
-
   struct mpegts_table_feed_queue mi_table_feed;
   pthread_cond_t mi_table_feed_cond;  // Bound to mi_delivery_mutex
 
@@ -376,10 +375,12 @@ struct mpegts_input
    * Functions
    */
   
-  int  (*mi_start_mux)     (mpegts_input_t*,mpegts_mux_instance_t*);
-  void (*mi_stop_mux)      (mpegts_input_t*);
-  void (*mi_open_service)  (mpegts_input_t*,mpegts_service_t*);
-  void (*mi_close_service) (mpegts_input_t*,mpegts_service_t*);
+  int  (*mi_start_mux)      (mpegts_input_t*,mpegts_mux_instance_t*);
+  void (*mi_stop_mux)       (mpegts_input_t*);
+  void (*mi_open_service)   (mpegts_input_t*,mpegts_service_t*);
+  void (*mi_close_service)  (mpegts_input_t*,mpegts_service_t*);
+  int  (*mi_is_free)        (mpegts_input_t*);
+  int  (*mi_current_weight) (mpegts_input_t*);
 };
 
 #endif /* __TVH_MPEGTS_H__ */
@@ -410,6 +411,10 @@ size_t mpegts_input_recv_packets
    int64_t *pcr, uint16_t *pcr_pid);
 
 void *mpegts_input_table_thread ( void *aux );
+
+int mpegts_input_is_free ( mpegts_input_t *mi );
+
+int mpegts_input_current_weight ( mpegts_input_t *mi );
 
 void mpegts_table_dispatch
   (mpegts_table_t *mt, const uint8_t *sec, int r);

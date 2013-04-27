@@ -224,10 +224,12 @@ tsfile_input_create ( void )
 
   /* Create object */
   mi = mpegts_input_create0(NULL);
-  mi->mi_start_mux     = tsfile_input_start_mux;
-  mi->mi_stop_mux      = tsfile_input_stop_mux;
-  mi->mi_open_service  = tsfile_input_open_service;
-  mi->mi_close_service = tsfile_input_close_service;
+  mi->mi_start_mux      = tsfile_input_start_mux;
+  mi->mi_stop_mux       = tsfile_input_stop_mux;
+  mi->mi_open_service   = tsfile_input_open_service;
+  mi->mi_close_service  = tsfile_input_close_service;
+  mi->mi_is_free        = mpegts_input_is_free;
+  mi->mi_current_weight = mpegts_input_current_weight;
 
   /* Start table thread */
   pthread_create(&tid, NULL, mpegts_input_table_thread, mi);

@@ -120,24 +120,24 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
   // TODO: don't like this is unbounded, if for some reason mi_start_mux()
   //       constantly fails this will lock
   while (1) {
-    
+
     /* Find free input */
     LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link)
-      if (!mmi->mmi_tune_failed /*TODO&&
-          !mmi->mmi_input->mi_mux_current*/)
+      if (!mmi->mmi_tune_failed &&
+          !mmi->mmi_input->mi_is_free(mmi->mmi_input));
         break;
-    printf("free input = %p\n", mmi);
+    printf("free input ?= %p\n", mmi);
 
     /* Try and remove a lesser instance */
     if (!mmi) {
       LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link) {
 
-        /* Bad */
+        /* Bad - skip */
         if (mmi->mmi_tune_failed)
           continue;
 
         /* Found */
-        if (100 < weight)//TODO:mpegts_mux_instance_weight(mmi->mmi_input->mi_mux_current) < weight)
+        if (weight > mmi->mmi_input->mi_current_weight(mmi->mmi_input))
           break;
       }
 

@@ -20,6 +20,7 @@
 #include "tsdemux.h"
 #include "packet.h"
 #include "streaming.h"
+#include "subscriptions.h"
 #include "atomic.h"
 
 #include <pthread.h>
@@ -175,6 +176,28 @@ mpegts_input_table_thread ( void *aux )
     free(mtf);
   }
   return NULL;
+}
+
+int
+mpegts_input_is_free ( mpegts_input_t *mi )
+{
+  return LIST_FIRST(&mi->mi_mux_active) == NULL;
+}
+
+int
+mpegts_input_current_weight ( mpegts_input_t *mi )
+{
+  const service_t *s;
+  const th_subscription_t *ths;
+  int w = 0;
+
+  pthread_mutex_lock(&mi->mi_delivery_mutex);
+  LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
+    LIST_FOREACH(ths, &s->s_subscriptions, ths_service_link)
+      w = MAX(w, ths->ths_weight);
+  }
+  pthread_mutex_unlock(&mi->mi_delivery_mutex);
+  return w;
 }
 
 mpegts_input_t*
