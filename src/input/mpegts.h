@@ -417,7 +417,7 @@ int mpegts_input_is_free ( mpegts_input_t *mi );
 int mpegts_input_current_weight ( mpegts_input_t *mi );
 
 void mpegts_table_dispatch
-  (mpegts_table_t *mt, const uint8_t *sec, int r);
+  (const uint8_t *sec, size_t r, void *mt);
 void mpegts_table_release
   (mpegts_table_t *mt);
 void mpegts_table_add

@@ -125,7 +125,8 @@ psi_section_reassemble0(psi_section_t *ps, const uint8_t *data,
     return -1;
 
   ps->ps_offset = 0;
-  cb(ps->ps_data, tsize - (crc ? 4 : 0), opaque);
+  if (cb)
+    cb(ps->ps_data, tsize - (crc ? 4 : 0), opaque);
   return len - excess;
 }
 

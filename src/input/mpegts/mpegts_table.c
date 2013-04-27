@@ -23,9 +23,10 @@
 
 void
 mpegts_table_dispatch
-  ( mpegts_table_t *mt, const uint8_t *sec, int r )
+  ( const uint8_t *sec, size_t r, void *aux )
 {
   int tid, len, ret;
+  mpegts_table_t *mt = aux;
   int chkcrc = mt->mt_flags & MT_CRC;
 
   if(mt->mt_destroyed)
