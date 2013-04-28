@@ -317,6 +317,9 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     }
   }
 
+  dvr_thread_prolog(de);
+ 
+
   tvhlog(LOG_INFO, "dvr", "%s from "
 	 "adapter: \"%s\", "
 	 "network: \"%s\", mux: \"%s\", provider: \"%s\", "
@@ -415,7 +418,7 @@ dvr_thread(void *aux)
   int comm_skip = (cfg->dvr_flags & DVR_SKIP_COMMERCIALS);
   int commercial = COMMERCIAL_UNKNOWN;
 
-  dvr_thread_prolog(de);
+ 
 
   pthread_mutex_lock(&sq->sq_mutex);
 
