@@ -35,6 +35,11 @@ struct tsfile_mux_instance
   mpegts_mux_instance_t; ///< Parent obj
 
   /*
+   * Timing
+   */
+  
+
+  /*
    * File input
    */
   
@@ -49,6 +54,10 @@ mpegts_input_t        *tsfile_input_create ( void );
 
 tsfile_mux_instance_t *tsfile_mux_instance_create
   ( const char *path, mpegts_input_t *mi, mpegts_mux_t *mm );
+
+struct mpegts_mux *
+tsfile_mux_create0
+  ( const char *uuid, struct mpegts_network *mn, uint16_t onid, uint16_t tsid );
 
 #endif /* __TVH_TSFILE_PRIVATE_H__ */
 

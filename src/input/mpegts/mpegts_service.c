@@ -204,34 +204,17 @@ mpegts_service_setsourceinfo(service_t *t, source_info_t *si)
 }
 
 /*
- * Find service
+ * Create service
  */
 mpegts_service_t *
-mpegts_service_find
-  ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, const char *uuid, int *save )
+mpegts_service_create0
+  ( size_t alloc, const idclass_t *class, const char *uuid,
+    mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
 {
-  mpegts_service_t *s;
-
-  /* Validate */
-  lock_assert(&global_lock);
-
-  /* Find existing service */
-  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
-    if (s->s_dvb_service_id == sid) {
-      if (pmt_pid && pmt_pid != s->s_pmt_pid) {
-        s->s_pmt_pid = pmt_pid;
-        if (save) *save = 1;
-      }
-      return s;
-    }
-
-  /* Ignore */
-  if (!pmt_pid)
-    return NULL;
+  mpegts_service_t *s = (mpegts_service_t*)idnode_create0(alloc, class, uuid);
 
   /* Create */
   tvhlog(LOG_DEBUG, "mpegts", "Add service %04X on %s", sid, "TODO");
-  s = service_create(mpegts_service, uuid, S_MPEG_TS);
 
   sbuf_init(&s->s_tsbuf);
 
@@ -254,6 +237,40 @@ mpegts_service_find
   pthread_mutex_lock(&s->s_stream_mutex);
   // TODO: nice name
   pthread_mutex_unlock(&s->s_stream_mutex);
+
+  return s;
+}
+
+/*
+ * Find service
+ */
+mpegts_service_t *
+mpegts_service_find
+  ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, 
+    const char *uuid, int *save )
+{
+  mpegts_service_t *s;
+
+  /* Validate */
+  lock_assert(&global_lock);
+
+  /* Find existing service */
+  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
+    if (s->s_dvb_service_id == sid) {
+      if (pmt_pid && pmt_pid != s->s_pmt_pid) {
+        s->s_pmt_pid = pmt_pid;
+        if (save) *save = 1;
+      }
+      return s;
+    }
+
+  /* Ignore */
+  if (!pmt_pid)
+    return NULL;
+
+  /* Create */
+  s = mm->mm_network->mn_create_service(mm, sid, pmt_pid);
+  if (save) *save = 1;
   
   return s;
 }

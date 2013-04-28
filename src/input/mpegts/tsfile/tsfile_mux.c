@@ -17,7 +17,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "tsfile.h"
 #include "tsfile_private.h"
+
+extern const idclass_t mpegts_mux_class;
+extern const idclass_t mpegts_service_class;
 
 tsfile_mux_instance_t *
 tsfile_mux_instance_create
@@ -29,6 +33,14 @@ tsfile_mux_instance_create
   mmi->mmi_tsfile_path = strdup(path);
   printf("mmi craeated %p path %s\n", mmi, mmi->mmi_tsfile_path);
   return mmi;
+}
+
+mpegts_mux_t *
+tsfile_mux_create0
+  ( const char *uuid, mpegts_network_t *mn, uint16_t onid, uint16_t tsid )
+{
+  mpegts_mux_t *mm = mpegts_mux_create0(NULL, mn, onid, tsid);
+  return mm;
 }
 
 

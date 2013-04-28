@@ -140,6 +140,18 @@ struct mpegts_network
    */
   mpegts_mux_list_t       mn_muxes;
 
+  /*
+   * Functions
+   */
+  mpegts_mux_t*     (*mn_create_mux)
+    (mpegts_mux_t*, uint16_t onid, uint16_t tsid, void *aux);
+  mpegts_service_t* (*mn_create_service)
+    (mpegts_mux_t*, uint16_t sid, uint16_t pmt_pid);
+
+  // Note: the above are slightly odd in that they take mux instead of
+  //       network as initial param. This is intentional as we need to
+  //       know the mux and can easily get to network from there
+
 #if 0 // TODO: FIXME
   int dn_fe_type;  // Frontend types for this network (FE_QPSK, etc)
 #endif
@@ -208,6 +220,7 @@ struct mpegts_mux
   int  (*mm_start)         ( mpegts_mux_t *mm, const char *reason, int weight );
   void (*mm_open_table)    (mpegts_mux_t*,mpegts_table_t*);
   void (*mm_close_table)   (mpegts_mux_t*,mpegts_table_t*);
+
   
 #if 0
   dvb_mux_conf_t dm_conf;
@@ -310,14 +323,6 @@ struct mpegts_service
   int64_t  s_pcr_drift;
 
 };
-
-/* Create */
-mpegts_service_t * mpegts_service_create0
-  ( size_t alloc, const idclass_t *class, const char *uuid );
-#define mpegts_service_create(uuid)\
-  mpegts_service_create0(sizeof(mpegts_service_t), &mpegts_service_class, uuid)
-#define mpegts_service_create1(type, uuid)\
-  (type##_t*)mpegts_service_create0(sizeof(type##_t), &type##_class, uuid)
 
 /* **************************************************************************
  * Physical Network
@@ -432,6 +437,14 @@ void mpegts_table_add
 void mpegts_table_flush_all
   (mpegts_mux_t *mm);
 void mpegts_table_destroy ( mpegts_table_t *mt );
+
+mpegts_service_t *mpegts_service_create0
+  ( size_t alloc, const idclass_t *class, const char *uuid,
+    mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid );
+
+/* Create */
+#define mpegts_service_create(t, u, m, s, p)\
+  (struct t*)mpegts_service_create0(sizeof(struct t), &t##_class, u, m, s, p)
 
 mpegts_service_t *mpegts_service_find ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, const char *uuid, int *save );
 

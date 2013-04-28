@@ -20,6 +20,11 @@
 #ifndef __TVH_TSFILE_H__
 #define __TVH_TSFILE_H__
 
+#include <stdint.h>
+
+struct mpegts_mux;
+struct mpegts_network;
+
 /* Initialise system (with N tuners) */
 void tsfile_init ( int tuners );
 
