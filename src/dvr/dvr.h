@@ -328,6 +328,8 @@ void dvr_container_set(dvr_config_t *cfg, const char *container);
 
 void dvr_postproc_set(dvr_config_t *cfg, const char *postproc);
 
+void dvr_prerecord_set(dvr_config_t *cfg, const char *prerecord);
+
 void dvr_retention_set(dvr_config_t *cfg, int days);
 
 void dvr_flags_set(dvr_config_t *cfg, int flags);
