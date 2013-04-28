@@ -178,8 +178,9 @@ mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
   if (mt->mt_pid >= 0x2000)
     return;
+  if (!mm->mm_table_filter[mt->mt_pid])
+    printf("table opened %04X\n", mt->mt_pid);
   mm->mm_table_filter[mt->mt_pid] = 1;
-  printf("table opened %04X\n", mt->mt_pid);
 }
 
 static void
@@ -188,6 +189,7 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
   if (mt->mt_pid >= 0x2000)
     return;
   mm->mm_table_filter[mt->mt_pid] = 0;
+  printf("table closed %04X\n", mt->mt_pid);
 }
 
 mpegts_mux_t *

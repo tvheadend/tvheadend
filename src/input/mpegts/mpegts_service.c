@@ -211,7 +211,8 @@ mpegts_service_create0
   ( size_t alloc, const idclass_t *class, const char *uuid,
     mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
 {
-  mpegts_service_t *s = (mpegts_service_t*)idnode_create0(alloc, class, uuid);
+  mpegts_service_t *s = (mpegts_service_t*)service_create0(alloc, uuid, class, S_MPEG_TS);
+  printf("mpegts_service_create0 = %p\n", s);
 
   /* Create */
   tvhlog(LOG_DEBUG, "mpegts", "Add service %04X on %s", sid, "TODO");
@@ -255,7 +256,7 @@ mpegts_service_find
   lock_assert(&global_lock);
 
   /* Find existing service */
-  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
+  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
     if (s->s_dvb_service_id == sid) {
       if (pmt_pid && pmt_pid != s->s_pmt_pid) {
         s->s_pmt_pid = pmt_pid;
@@ -263,6 +264,7 @@ mpegts_service_find
       }
       return s;
     }
+  }
 
   /* Ignore */
   if (!pmt_pid)

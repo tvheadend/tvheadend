@@ -483,7 +483,8 @@ service_destroy(service_t *t)
 service_t *
 service_create0(size_t alloc, const char *uuid, const idclass_t *idc, int source_type)
 {
-  service_t *t = calloc(1, alloc);
+  service_t *t = (service_t*)idnode_create0(alloc, idc, uuid);
+printf("service_create0 = %p\n", t);
 
   lock_assert(&global_lock);
 
@@ -502,8 +503,6 @@ service_create0(size_t alloc, const char *uuid, const idclass_t *idc, int source
 #endif
 
   streaming_pad_init(&t->s_streaming_pad);
-
-  idnode_insert(&t->s_id, uuid, idc);
 
   return t;
 }

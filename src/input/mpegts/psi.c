@@ -81,10 +81,10 @@ psi_pat_callback
     } else if (pid) {
       int save = 0;
       tvhtrace("pat", "SID %04X (%d) on PID %04X (%d)", sid, sid, pid, pid);
-      mpegts_service_find(mm, sid, pid, NULL, &save);
-      // TODO: option to disable PMT monitor
-      //if (save)
-        psi_table_add_pmt(mm, pid);
+      if (mpegts_service_find(mm, sid, pid, NULL, &save))
+        if (save)
+          psi_table_add_pmt(mm, pid);
+      // TODO: make PMT monitoring optional
     }
 
     /* Next */
