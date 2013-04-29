@@ -200,7 +200,7 @@ ts_recv_packet1(mpegts_service_t *t, const uint8_t *tsb, int64_t *pcrp)
     pcr |= (uint64_t)tsb[8] << 9;
     pcr |= (uint64_t)tsb[9] << 1;
     pcr |= ((uint64_t)tsb[10] >> 7) & 0x01;
-    if (*pcrp) *pcrp = pcr;
+    if (pcrp) *pcrp = pcr;
   }
 
   /* Nothing - special case for tsfile to get PCR */
