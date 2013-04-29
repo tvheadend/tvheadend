@@ -167,8 +167,10 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
   printf("tsfile_input_start_mux(%p, %p)\n", mi, t);
 
   /* Already tuned */
+#if 0
   assert(mmi->mmi_mux->mm_active == NULL);
   assert(LIST_FIRST(&mi->mi_mux_active) == NULL);
+#endif
 
   /* Check file is accessible */
   if (lstat(mmi->mmi_tsfile_path, &st)) {

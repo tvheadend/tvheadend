@@ -17,7 +17,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "tvheadend.h"
 #include "input.h"
+#include "channels.h"
 #include "tsfile.h"
 #include "tsfile_private.h"
 
@@ -43,9 +45,16 @@ static mpegts_service_t *
 tsfile_network_create_service
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
 {
+  static int t = 0;
   mpegts_service_t *s = mpegts_service_create0(sizeof(mpegts_service_t),
                                                &mpegts_service_class,
                                                NULL, mm, sid, pmt_pid);
+  if (s) {
+    char buf[128];
+    sprintf(buf, "channel-%d", t);
+    channel_t *c = channel_find_by_name(buf, 1, t);
+    service_map_channel((service_t*)s, c, 1);
+  }
   return s;
 }
 
