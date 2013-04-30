@@ -180,6 +180,7 @@ subscription_reschedule(void)
       time(&si->si_error_time);
     }
 
+    tvhtrace("subscription", "find service for %s weight %d", s->ths_channel->ch_name, s->ths_weight);
     si = service_find_instance(s->ths_channel, &s->ths_instances, &error,
                                s->ths_weight);
     s->ths_current_instance = si;
@@ -377,6 +378,8 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
 {
   th_subscription_t *s;
 
+  tvhtrace("subscription", "creating subscription for %s weight %d",
+           ch->ch_name, weight);
   s = subscription_create(weight, name, st, flags, subscription_input,
 			  hostname, username, client);
 

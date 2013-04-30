@@ -295,7 +295,7 @@ service_find_instance(channel_t *ch, struct service_instance_list *sil,
   }
 
   service_start(si->si_s, si->si_instance);
-  return NULL;
+  return si;
 }
 
 
