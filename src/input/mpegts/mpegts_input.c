@@ -34,6 +34,16 @@ const idclass_t mpegts_input_class =
   }
 };
 
+static void
+mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s )
+{
+}
+
+static void
+mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
+{
+}
+
 size_t
 mpegts_input_recv_packets
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi,
@@ -208,6 +218,14 @@ mpegts_input_create0
   ( mpegts_input_t *mi, const idclass_t *class, const char *uuid )
 {
   idnode_insert(&mi->mi_id, uuid, class);
+  
+  /* Defaults */
+  mi->mi_start_mux      = NULL;
+  mi->mi_stop_mux       = NULL;
+  mi->mi_open_service   = mpegts_input_open_service;
+  mi->mi_close_service  = mpegts_input_close_service;
+  mi->mi_is_free        = mpegts_input_is_free;
+  mi->mi_current_weight = mpegts_input_current_weight;
 
   /* Init mutex */
   pthread_mutex_init(&mi->mi_delivery_mutex, NULL);

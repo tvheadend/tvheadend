@@ -36,8 +36,9 @@ typedef struct mpegts_input         mpegts_input_t;
 typedef struct mpegts_table_feed    mpegts_table_feed_t;
 
 /* Lists */
-typedef TAILQ_HEAD(mpegts_mux_queue,mpegts_mux) mpegts_mux_queue_t;
-typedef LIST_HEAD (mpegts_mux_list,mpegts_mux)  mpegts_mux_list_t;
+typedef LIST_HEAD (mpegts_input_list,mpegts_input) mpegts_input_list_t;
+typedef TAILQ_HEAD(mpegts_mux_queue,mpegts_mux)    mpegts_mux_queue_t;
+typedef LIST_HEAD (mpegts_mux_list,mpegts_mux)     mpegts_mux_list_t;
 TAILQ_HEAD(mpegts_table_feed_queue, mpegts_table_feed);
 
 /* **************************************************************************
@@ -125,7 +126,6 @@ struct mpegts_network
    */
 
   char                    *mn_network_name;
-  //uint16_t                mn_network_id; // ONID/NID??
 
   /*
    * Scanning
@@ -134,6 +134,11 @@ struct mpegts_network
   mpegts_mux_queue_t      mn_initial_scan_current_queue;
   int                     mn_initial_scan_num;
   gtimer_t                mn_initial_scan_timer;
+
+  /*
+   * Inputs
+   */
+  mpegts_input_list_t     mn_inputs;
 
   /*
    * Multiplexes
@@ -354,8 +359,8 @@ struct mpegts_input
 
   LIST_ENTRY(mpegts_input) mi_global_link;
 
-
-  mpegts_network_t *mi_network; // TODO: this may need altering for DVB-S
+  mpegts_network_t *mi_network;
+  LIST_ENTRY(mpegts_input) mi_network_link;
 
   LIST_HEAD(,mpegts_mux_instance) mi_mux_active;
 
@@ -382,7 +387,7 @@ struct mpegts_input
    */
   
   int  (*mi_start_mux)      (mpegts_input_t*,mpegts_mux_instance_t*);
-  void (*mi_stop_mux)       (mpegts_input_t*);
+  void (*mi_stop_mux)       (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_open_service)   (mpegts_input_t*,mpegts_service_t*);
   void (*mi_close_service)  (mpegts_input_t*,mpegts_service_t*);
   int  (*mi_is_free)        (mpegts_input_t*);
@@ -410,6 +415,8 @@ mpegts_network_t *mpegts_network_create0
   
 void mpegts_network_schedule_initial_scan
   ( mpegts_network_t *mm );
+
+void mpegts_network_add_input ( mpegts_network_t *mn, mpegts_input_t *mi );
 
 mpegts_mux_t *mpegts_mux_create0
   ( mpegts_mux_t *mm, const idclass_t *class, const char *uuid,

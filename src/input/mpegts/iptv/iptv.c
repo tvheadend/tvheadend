@@ -161,7 +161,7 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 }
 
 static void
-iptv_input_stop_mux ( mpegts_input_t *mi )
+iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
 }
 
@@ -246,11 +246,19 @@ const idclass_t iptv_network_class = {
   }
 };
 
+static mpegts_mux_t *
+iptv_network_create_mux
+  ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid, void *aux )
+{
+  return NULL;
+}
+
 static mpegts_service_t *
 iptv_network_create_service
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
 {
-  return NULL;
+  return (mpegts_service_t*)
+    iptv_service_create(NULL, (iptv_mux_t*)mm, sid, pmt_pid);
 }
 
 /*
@@ -259,30 +267,22 @@ iptv_network_create_service
 void iptv_init ( void )
 {
   /* Init Input */
-#if 0
-  mpegts_input_init((mpegts_input_t*)&iptv_input,
-                    &itpv_input_class, NULL);
-#endif
+  mpegts_input_create0((mpegts_input_t*)&iptv_input,
+                       &iptv_input_class, NULL);
   iptv_input.mi_start_mux      = iptv_input_start_mux;
   iptv_input.mi_stop_mux       = iptv_input_stop_mux;
   iptv_input.mi_is_free        = iptv_input_is_free;
   iptv_input.mi_current_weight = iptv_input_current_weight;
-#if 0 // Use defaults
-  iptv_input.mi_open_service = iptv_input_open_service;
-  iptv_input.mi_close_sevice = iptv_input_close_service;
-#endif
 
   /* Init Network */
-#if 0
-  mpegts_network_init((mpegts_network_t*)&iptv_network,
-                      &iptv_network_class, NULL);
-#endif
-  iptv_network.mn_network_name   = strdup("IPTV Network");
+  mpegts_network_create0((mpegts_network_t*)&iptv_network,
+                         &iptv_network_class, NULL, "IPTV Network");
+  iptv_network.mn_create_mux     = iptv_network_create_mux;
   iptv_network.mn_create_service = iptv_network_create_service;
 
   /* Link */
-  iptv_input.mi_network = (mpegts_network_t*)&iptv_network;
-  //iptv_network.mn_input = (mpegts_input_t*)&iptv_input;
+  mpegts_network_add_input((mpegts_network_t*)&iptv_network,
+                           (mpegts_input_t*)&iptv_input);
 
   /* Setup thread */
   // TODO: could set this up only when needed

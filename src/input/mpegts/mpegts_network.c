@@ -50,6 +50,13 @@ mpegts_network_schedule_initial_scan ( mpegts_network_t *mn )
   gtimer_arm(&mn->mn_initial_scan_timer, mpegts_network_initial_scan, mn, 0);
 }
 
+void
+mpegts_network_add_input ( mpegts_network_t *mn, mpegts_input_t *mi )
+{
+  mi->mi_network = mn;
+  LIST_INSERT_HEAD(&mn->mn_inputs, mi, mi_network_link);
+}
+
 mpegts_network_t *
 mpegts_network_create0
   ( mpegts_network_t *mn, const idclass_t *idc, const char *uuid,
