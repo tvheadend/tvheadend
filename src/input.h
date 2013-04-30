@@ -25,7 +25,8 @@
 
 #if ENABLE_MPEGTS
 #include "input/mpegts.h"
-#include "input/mpegts/tsfile/tsfile.h" // TODO: move
 #endif
+
+void input_init ( void );
 
 #endif /* __TVH_INPUT_H__ */

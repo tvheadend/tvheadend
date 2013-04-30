@@ -204,9 +204,10 @@ mpegts_input_current_weight ( mpegts_input_t *mi )
 }
 
 mpegts_input_t*
-mpegts_input_create0 ( const char *uuid )
+mpegts_input_create0  
+  ( mpegts_input_t *mi, const idclass_t *class, const char *uuid )
 {
-  mpegts_input_t *mi = idnode_create(mpegts_input, uuid);
+  idnode_insert(&mi->mi_id, uuid, class);
 
   /* Init mutex */
   pthread_mutex_init(&mi->mi_delivery_mutex, NULL);

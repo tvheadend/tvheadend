@@ -33,12 +33,10 @@ const idclass_t mpegts_mux_instance_class =
 
 mpegts_mux_instance_t *
 mpegts_mux_instance_create0
-  ( size_t alloc, const char *uuid, mpegts_input_t *mi, mpegts_mux_t *mm )
+  ( mpegts_mux_instance_t *mmi, const idclass_t *class, const char *uuid,
+    mpegts_input_t *mi, mpegts_mux_t *mm )
 {
-  mpegts_mux_instance_t *mmi;
-
-  /* Create */
-  mmi = (mpegts_mux_instance_t*)idnode_create0(alloc, &mpegts_mux_instance_class, uuid);
+  idnode_insert(&mmi->mmi_id, uuid, class);
 
   /* Setup links */
   mmi->mmi_mux   = mm;
@@ -55,6 +53,11 @@ const idclass_t mpegts_mux_class =
   .ic_class      = "mpegts_mux",
   .ic_caption    = "MPEGTS Multiplex",
   .ic_properties = (const property_t[]){
+    {  PROPDEF1("onid", "Original Network ID",
+               PT_INT, mpegts_mux_t, mm_onid) },
+    {  PROPDEF1("tsid", "Transport Stream ID",
+               PT_INT, mpegts_mux_t, mm_tsid) },
+
   }
 };
 
@@ -192,11 +195,26 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
   printf("table closed %04X\n", mt->mt_pid);
 }
 
-mpegts_mux_t *
-mpegts_mux_create0  
-  ( const char *uuid, mpegts_network_t *net, uint16_t onid, uint16_t tsid )
+void
+mpegts_mux_load_one ( mpegts_mux_t *mm, htsmsg_t *c )
 {
-  mpegts_mux_t *mm = idnode_create(mpegts_mux, uuid);
+  uint32_t u32;
+  
+  /* ONID */
+  if (!htsmsg_get_u32(c, "onid", &u32))
+    mm->mm_onid = u32;
+
+  /* TSID */
+  if (!htsmsg_get_u32(c, "tsid", &u32))
+    mm->mm_tsid = u32;
+}
+
+mpegts_mux_t *
+mpegts_mux_create0
+  ( mpegts_mux_t *mm, const idclass_t *class, const char *uuid,
+    mpegts_network_t *net, uint16_t onid, uint16_t tsid )
+{
+  idnode_insert(&mm->mm_id, uuid, class);
 
   /* Identification */
   mm->mm_onid                = onid;

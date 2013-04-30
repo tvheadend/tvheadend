@@ -342,38 +342,9 @@ idnode_notify_title_changed(void *obj)
   notify_by_msg("idnodeNameChanged", m);
 }
 
-idnode_t *
-idnode_create0 ( size_t alloc, const idclass_t *class, const char *uuid )
+int
+idnode_load_one
+  ( idnode_t *self, htsmsg_t *m )
 {
-  idnode_t *self = calloc(1, alloc);
-  idnode_insert(self, uuid, class);
-  return self;
-}
-
-void
-idnode_save ( idnode_t *self, const char *path )
-{
-  // serialize
-  // save
-}
-
-idnode_t *
-idnode_load ( htsmsg_field_t *cfg, void*(*create)(const char*) )
-{
-  htsmsg_t *m;
-  idnode_t *self;
-  if (!(m    = htsmsg_get_map_by_field(cfg))) return NULL;
-  if (!(self = create(cfg->hmf_name)))          return NULL;
-  // todo deserialize settings
-  return self;
-}
-
-void
-idnode_load_all ( const char *path, void*(*create)(const char *) )
-{
-  htsmsg_t *m;
-  htsmsg_field_t *f;
-  if ((m = hts_settings_load(path)))
-    HTSMSG_FOREACH(f, m)
-      idnode_load(f, create);
+  return 0;
 }

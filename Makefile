@@ -108,6 +108,7 @@ SRCS =  src/version.c \
 	src/tvhtime.c \
 	src/descrambler/descrambler.c \
 	src/serviceprobe.c \
+  src/input.c \
 
 SRCS += \
 	src/parsers/parsers.c \
@@ -194,7 +195,9 @@ SRCS-${CONFIG_LINUXDVB} += \
 
 # IPTV
 SRCS-${CONFIG_IPTV} += \
-	src/input/mepgts/iptv.c
+	src/input/mpegts/iptv/iptv.c \
+  src/input/mpegts/iptv/iptv_mux.c \
+  src/input/mpegts/iptv/iptv_service.c \
 
 # TSfile
 SRCS-$(CONFIG_TSFILE) += \

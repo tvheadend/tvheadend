@@ -52,9 +52,10 @@ mpegts_network_schedule_initial_scan ( mpegts_network_t *mn )
 
 mpegts_network_t *
 mpegts_network_create0
-  ( const char *uuid, const char *netname )
+  ( mpegts_network_t *mn, const idclass_t *idc, const char *uuid,
+    const char *netname )
 {
-  mpegts_network_t *mn = idnode_create(mpegts_network, uuid);
+  idnode_insert(&mn->mn_id, uuid, idc);
   mn->mn_network_name = strdup(netname);
   TAILQ_INIT(&mn->mn_initial_scan_pending_queue);
   TAILQ_INIT(&mn->mn_initial_scan_current_queue);

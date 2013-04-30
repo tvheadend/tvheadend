@@ -698,18 +698,7 @@ main(int argc, char **argv)
 
   access_init(opt_firstrun, opt_noacl);
 
-#if ENABLE_LINUXDVB
-  muxes_init();
-  dvb_init(adapter_mask, opt_dvb_raw);
-#endif
-
-#if ENABLE_IPTV
-  iptv_input_init();
-#endif
-
-#if ENABLE_V4L
-  v4l_init();
-#endif
+  input_init();
 
 #if ENABLE_TIMESHIFT
   timeshift_init();
@@ -730,11 +719,13 @@ main(int argc, char **argv)
 
   htsp_init(opt_bindaddr);
 
+#if 0
   if(opt_tsfile.num) {
     tsfile_init(opt_tsfile_tuner ?: opt_tsfile.num);
     for (i = 0; i < opt_tsfile.num; i++)
       tsfile_add_file(opt_tsfile.str[i]);
   }
+#endif
 
   if(opt_subscribe != NULL)
     subscription_dummy_join(opt_subscribe, 1);

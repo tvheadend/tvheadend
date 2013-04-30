@@ -204,14 +204,50 @@ mpegts_service_setsourceinfo(service_t *t, source_info_t *si)
 }
 
 /*
+ * Load
+ */
+void
+mpegts_service_load_one
+  ( mpegts_service_t *ms, htsmsg_t *c )
+{
+  uint32_t u32;
+  const char *str;
+
+  /* Load core */
+  service_load_one((service_t*)ms, c);
+
+  /* Load local */
+  if (!htsmsg_get_u32(c, "pcr_pid", &u32))
+    ms->s_pcr_pid = u32;
+  if (!htsmsg_get_u32(c, "pmt_pid", &u32))
+    ms->s_pmt_pid = u32;
+  if (!htsmsg_get_u32(c, "sid", &u32))
+    ms->s_dvb_service_id = u32;
+  if (!htsmsg_get_u32(c, "channel_num", &u32))
+    ms->s_dvb_channel_num = u32;
+  if ((str = htsmsg_get_str(c, "svcname")))
+    tvh_str_update(&ms->s_dvb_svcname, str);
+  if ((str = htsmsg_get_str(c, "provider")))
+    tvh_str_update(&ms->s_dvb_provider, str);
+  if ((str = htsmsg_get_str(c, "default_authority")))
+    tvh_str_update(&ms->s_dvb_default_authority, str);
+  if (!htsmsg_get_u32(c, "servicetype", &u32))
+    ms->s_dvb_servicetype = u32;
+  if ((str = htsmsg_get_str(c, "charset")))
+    tvh_str_update(&ms->s_dvb_charset, str);
+  if (!htsmsg_get_u32(c, "eit_enable", &u32))
+    ms->s_dvb_eit_enable = u32 ? 1 : 0;
+}
+
+/*
  * Create service
  */
 mpegts_service_t *
 mpegts_service_create0
-  ( size_t alloc, const idclass_t *class, const char *uuid,
+  ( mpegts_service_t *s, const idclass_t *class, const char *uuid,
     mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
 {
-  mpegts_service_t *s = (mpegts_service_t*)service_create0(alloc, uuid, class, S_MPEG_TS);
+  service_create0((service_t*)s, class, uuid, S_MPEG_TS);
   printf("mpegts_service_create0 = %p\n", s);
 
   /* Create */

@@ -433,11 +433,10 @@ void service_init(void);
 
 int service_start(service_t *t, int instance);
 
-service_t *service_create0(size_t alloc, const char *uuid, const idclass_t *idc, int source_type);
+service_t *service_create0(service_t *t, const idclass_t *idc, const char *uuid, int source_type);
 
-#define service_create(t, u, s)\
-  (struct t*)service_create0(sizeof(struct t), u, &t##_class, s)
-
+#define service_create(t, c, u, s)\
+  (struct t*)service_create0(calloc(1, sizeof(struct t), &t##_class, c, u, s)
 
 void service_unref(service_t *t);
 
@@ -523,5 +522,7 @@ void service_set_prefcapid(service_t *t, uint32_t prefcapid);
 int service_is_primary_epg (service_t *t);
 
 htsmsg_t *servicetype_list (void);
+
+void service_load_one ( service_t *s, htsmsg_t *c );
 
 #endif // SERVICE_H__

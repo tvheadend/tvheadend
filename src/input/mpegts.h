@@ -396,21 +396,42 @@ struct mpegts_input
  * ***************************************************************************/
 
 mpegts_input_t *mpegts_input_create0
-  ( const char *uuid );
+  ( mpegts_input_t *mi, const idclass_t *idc, const char *uuid );
+
+#define mpegts_input_create(t, u)\
+  (struct t*)mpegts_input_create0(calloc(1, sizeof(struct t)), t##_class, u)
 
 mpegts_network_t *mpegts_network_create0
-  ( const char *uuid, const char *name );
+  ( mpegts_network_t *mn, const idclass_t *idc, const char *uuid,
+    const char *name );
 
+#define mpegts_network_create(t, u, n)\
+  (struct t*)mpegts_network_create0(calloc(1, sizeof(struct t)), t##_class, u, n)
+  
 void mpegts_network_schedule_initial_scan
   ( mpegts_network_t *mm );
 
 mpegts_mux_t *mpegts_mux_create0
-  ( const char *uuid, mpegts_network_t *net, uint16_t onid, uint16_t tsid );
+  ( mpegts_mux_t *mm, const idclass_t *class, const char *uuid,
+    mpegts_network_t *mn, uint16_t onid, uint16_t tsid );
 
-mpegts_mux_instance_t *mpegts_mux_instance_create0
-  ( size_t alloc, const char *uuid, mpegts_input_t *mi, mpegts_mux_t *mm );
+#define mpegts_mux_create(type, uuid, mn, onid, tsid)\
+  (struct type*)mpegts_mux_create0(calloc(1, sizeof(struct type)),\
+                                   &type##_class, uuid,\
+                                   mn, onid, tsid)
 
 void mpegts_mux_initial_scan_done ( mpegts_mux_t *mm );
+
+void mpegts_mux_load_one ( mpegts_mux_t *mm, htsmsg_t *c );
+
+mpegts_mux_instance_t *mpegts_mux_instance_create0
+  ( mpegts_mux_instance_t *mmi, const idclass_t *class, const char *uuid,
+    mpegts_input_t *mi, mpegts_mux_t *mm );
+
+#define mpegts_mux_instance_create(type, uuid, mi, mm)\
+  (struct type*)mpegts_mux_instance_create0(calloc(1, sizeof(struct type)),\
+                                            &type##_class, uuid,\
+                                            mi, mm);
 
 void mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force );
 
@@ -439,12 +460,15 @@ void mpegts_table_flush_all
 void mpegts_table_destroy ( mpegts_table_t *mt );
 
 mpegts_service_t *mpegts_service_create0
-  ( size_t alloc, const idclass_t *class, const char *uuid,
+  ( mpegts_service_t *ms, const idclass_t *class, const char *uuid,
     mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid );
 
 /* Create */
 #define mpegts_service_create(t, u, m, s, p)\
-  (struct t*)mpegts_service_create0(sizeof(struct t), &t##_class, u, m, s, p)
+  (struct t*)mpegts_service_create0(calloc(1, sizeof(struct t)),\
+                                    &t##_class, u, m, s, p)
+
+void mpegts_service_load_one ( mpegts_service_t *ms, htsmsg_t *c );
 
 mpegts_service_t *mpegts_service_find ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, const char *uuid, int *save );
 

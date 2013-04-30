@@ -61,3 +61,5 @@ idnode_t *idnode_create0
 
 #define idnode_create(c, uuid)\
   (struct c*)idnode_create0(sizeof(struct c), &c##_class, uuid)
+
+int idnode_load_one(idnode_t *self, htsmsg_t *cfg);

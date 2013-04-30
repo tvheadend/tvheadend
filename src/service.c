@@ -481,10 +481,10 @@ service_destroy(service_t *t)
  * Create and initialize a new service struct
  */
 service_t *
-service_create0(size_t alloc, const char *uuid, const idclass_t *idc, int source_type)
+service_create0
+  ( service_t *t, const idclass_t *class, const char *uuid, int source_type)
 {
-  service_t *t = (service_t*)idnode_create0(alloc, idc, uuid);
-printf("service_create0 = %p\n", t);
+  idnode_insert(&t->s_id, uuid, class);
 
   lock_assert(&global_lock);
 
@@ -1273,4 +1273,8 @@ htsmsg_t *servicetype_list ( void )
   }
 #endif
   return ret;
+}
+
+void service_load_one ( service_t *s, htsmsg_t *c )
+{
 }

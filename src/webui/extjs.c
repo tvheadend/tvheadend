@@ -1730,7 +1730,7 @@ extjs_mergechannel(http_connection_t *hc, const char *remain, void *opaque)
 /**
  *
  */
-#if ENABLE_IPTV
+#if 0//ENABLE_IPTV
 static void
 service_update_iptv(htsmsg_t *in)
 {
@@ -2375,7 +2375,7 @@ extjs_start(void)
   http_path_add("/config",           NULL, extjs_config,           ACCESS_WEB_INTERFACE);
   http_path_add("/languages",        NULL, extjs_languages,        ACCESS_WEB_INTERFACE);
   http_path_add("/mergechannel",     NULL, extjs_mergechannel,     ACCESS_ADMIN);
-#if ENABLE_IPTV
+#if 0//ENABLE_IPTV
   http_path_add("/iptv/services",    NULL, extjs_iptvservices,     ACCESS_ADMIN);
 #endif
   http_path_add("/servicedetails",   NULL, extjs_servicedetails,   ACCESS_ADMIN);
