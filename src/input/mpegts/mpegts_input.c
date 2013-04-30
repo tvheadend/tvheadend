@@ -96,19 +96,12 @@ mpegts_input_recv_packets
       /* Other */
       } else {
         service_t *s;
-        int64_t tpcr = PTS_UNSET;
+        int64_t *ppcr = (pcr_pid && *pcr_pid == pid) ? pcr : NULL;
         LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
-          ts_recv_packet1((mpegts_service_t*)s, tsb+i, NULL);
+          ts_recv_packet1((mpegts_service_t*)s, tsb+i, ppcr);
         }
-        if (tpcr != PTS_UNSET) {
- //         printf("pcr = %p, %"PRId64" pcr_pid == %p, %d, pid = %d\n", pcr, tpcr, pcr_pid, *pcr_pid, pid);
-          if (pcr && pcr_pid){// && (*pcr_pid == 0 || *pcr_pid == pid)) {
-            printf("SET\n");
-            *pcr_pid = pid;
-            *pcr     = tpcr;
-            printf("pcr set to %"PRId64"\n", tpcr);
-          }
-        }
+        if (ppcr && *ppcr == PTS_UNSET)
+          ts_recv_packet1(NULL, tsb+i, ppcr);
       }
 
       i   += 188;

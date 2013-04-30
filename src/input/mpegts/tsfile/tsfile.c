@@ -25,6 +25,7 @@
 /*
  * Globals
  */
+pthread_mutex_t          tsfile_lock;
 mpegts_network_t         tsfile_network;
 mpegts_input_list_t      tsfile_inputs;
 
@@ -39,7 +40,9 @@ tsfile_network_create_service
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
 {
   static int t = 0;
+  pthread_mutex_lock(&tsfile_lock);
   mpegts_service_t *s = mpegts_service_create1(NULL, mm, sid, pmt_pid);
+  pthread_mutex_unlock(&tsfile_lock);
 
   // TODO: HACK: REMOVE ME
   if (s) {
@@ -58,6 +61,9 @@ void tsfile_init ( int tuners )
 {
   int i;
   mpegts_input_t *mi;
+
+  /* Mutex - used for minor efficiency in service processing */
+  pthread_mutex_init(&tsfile_lock, NULL);
 
   /* Shared network */
   mpegts_network_create0(&tsfile_network, &mpegts_network_class, NULL,

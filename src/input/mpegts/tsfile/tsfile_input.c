@@ -33,6 +33,7 @@
 
 extern const idclass_t mpegts_input_class;
 
+
 static void *
 tsfile_input_thread ( void *aux )
 {
@@ -84,6 +85,17 @@ tsfile_input_thread ( void *aux )
   
   /* Process input */
   while (1) {
+      
+    /* Find PCR PID */
+    if (!tmi->mmi_tsfile_pcr_pid) { 
+      mpegts_service_t *s;
+      pthread_mutex_lock(&tsfile_lock);
+      LIST_FOREACH(s, &tmi->mmi_mux->mm_services, s_dvb_mux_link) {
+        if (s->s_pcr_pid)
+          tmi->mmi_tsfile_pcr_pid = s->s_pcr_pid;
+      }
+      pthread_mutex_unlock(&tsfile_lock);
+    }
     
     /* Check for terminate */
     nfds = epoll_wait(efd, &ev, 1, 0);
@@ -113,7 +125,6 @@ tsfile_input_thread ( void *aux )
     if (c >= 0) {
       pcr = PTS_UNSET;
       pos = mpegts_input_recv_packets(mi, mmi, tsb, c, &pcr, &tmi->mmi_tsfile_pcr_pid);
-      printf("pcr = %lu, pcr_pid = %d\n", pcr, tmi->mmi_tsfile_pcr_pid);
 
       /* Delay */
       if (pcr != PTS_UNSET) {
