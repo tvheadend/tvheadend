@@ -271,7 +271,7 @@ mpegts_service_create0
 #endif
 
   pthread_mutex_lock(&s->s_stream_mutex);
-  // TODO: nice name
+  service_make_nicename((service_t*)s);
   pthread_mutex_unlock(&s->s_stream_mutex);
 
   return s;

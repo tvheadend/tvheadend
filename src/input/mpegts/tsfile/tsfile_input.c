@@ -116,7 +116,7 @@ tsfile_input_thread ( void *aux )
     if (len == st.st_size) {
       len = 0;
       c -= rem;
-      //tvhtrace("tsfile", "adapter %d reached eof, resetting", mi->mi_instance);
+      tvhtrace("tsfile", "adapter %d reached eof, resetting", mi->mi_instance);
       lseek(fd, 0, SEEK_SET);
       pcr_last = PTS_UNSET;
     }
