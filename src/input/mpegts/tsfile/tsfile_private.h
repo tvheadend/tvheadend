@@ -23,6 +23,12 @@
 #include "input/mpegts.h"
 
 /*
+ * Globals
+ */
+extern mpegts_network_t    tsfile_network;
+extern mpegts_input_list_t tsfile_inputs;
+
+/*
  * Typedefs
  */
 typedef struct tsfile_mux_instance tsfile_mux_instance_t;
@@ -43,21 +49,22 @@ struct tsfile_mux_instance
    * File input
    */
   
-  char     *mmi_tsfile_path; ///< Source file path
-  th_pipe_t mmi_tsfile_pipe; ///< Thread control pipe
+  char     *mmi_tsfile_path;    ///< Source file path
+  th_pipe_t mmi_tsfile_pipe;    ///< Thread control pipe
+  uint16_t  mmi_tsfile_pcr_pid; ///< Timing control
+  
 };
 
 /*
  * Prototypes
  */
-mpegts_input_t        *tsfile_input_create ( void );
+mpegts_input_t        *tsfile_input_create ( int idx );
 
 tsfile_mux_instance_t *tsfile_mux_instance_create
   ( const char *path, mpegts_input_t *mi, mpegts_mux_t *mm );
 
-struct mpegts_mux *
-tsfile_mux_create0
-  ( const char *uuid, struct mpegts_network *mn, uint16_t onid, uint16_t tsid );
+mpegts_mux_t *
+tsfile_mux_create ( mpegts_network_t *mn );
 
 #endif /* __TVH_TSFILE_PRIVATE_H__ */
 

@@ -43,7 +43,6 @@ mpegts_mux_instance_create0
   mmi->mmi_input = mi; // TODO: is this required?
 
   LIST_INSERT_HEAD(&mm->mm_instances, mmi, mmi_mux_link);
-  printf("added to mm_instances\n");
 
   return mmi;
 }
@@ -65,7 +64,7 @@ void mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid, int force )
 {
   if (onid == mm->mm_onid)
     return;
-  if (!force && mm->mm_onid != MM_ONID_NONE)
+  if (!force && mm->mm_onid != MPEGTS_ONID_NONE)
     return;
   mm->mm_onid = onid;
 }
@@ -74,7 +73,7 @@ void mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force )
 {
   if (tsid == mm->mm_tsid)
     return;
-  if (!force && mm->mm_tsid != MM_ONID_NONE)
+  if (!force && mm->mm_tsid != MPEGTS_TSID_NONE)
     return;
   mm->mm_tsid = tsid;
 }
@@ -91,7 +90,8 @@ mpegts_mux_initial_scan_link ( mpegts_mux_t *mm )
   TAILQ_INSERT_TAIL(&mn->mn_initial_scan_pending_queue, mm,
                     mm_initial_scan_link);
   mn->mn_initial_scan_num++;
-  printf("initial_scan_num = %d\n", mn->mn_initial_scan_num);
+  tvhtrace("mpegts", "added mm %p to initial scan for mn %p pending %d",
+           mm, mn, mn->mn_initial_scan_num);
   mpegts_network_schedule_initial_scan(mn);
 }
 
@@ -99,7 +99,7 @@ static void
 mpegts_mux_initial_scan_timeout ( void *aux )
 {
   mpegts_mux_t *mm = aux;
-  tvhlog(LOG_DEBUG, "mpegts", "Initial scan timed out for %s", "TODO");
+  tvhlog(LOG_DEBUG, "mpegts", "initial scan timed out for mm %p", mm);
   mpegts_mux_initial_scan_done(mm);
 }
 
@@ -122,12 +122,14 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
   mpegts_network_t      *mn = mm->mm_network;
   mpegts_mux_instance_t *mmi;
 
-  printf("mpegts_mux_start(%p, %s, %d)\n", mm, reason, weight);
+  tvhtrace("mpegts", "mm %p starting for '%s' (weight %d)",
+           mm, reason, weight); 
 
   /* Already tuned */
-  if (mm->mm_active)
+  if (mm->mm_active) {
+    tvhtrace("mpegts", "mm %p already active", mm);
     return 0;
-  printf("not already tuned\n");
+  }
 
   /* Find */
   // TODO: don't like this is unbounded, if for some reason mi_start_mux()
@@ -135,12 +137,12 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
   while (1) {
 
     /* Find free input */
-    printf("checking for free input\n");
     LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link)
       if (!mmi->mmi_tune_failed &&
-          !mmi->mmi_input->mi_is_free(mmi->mmi_input))
+          mmi->mmi_input->mi_is_free(mmi->mmi_input))
         break;
-    printf("free input ?= %p\n", mmi);
+    if (mmi)
+      tvhtrace("mpegts", "found free mmi %p", mmi);
 
     /* Try and remove a lesser instance */
     if (!mmi) {
@@ -154,6 +156,9 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
         if (weight > mmi->mmi_input->mi_current_weight(mmi->mmi_input))
           break;
       }
+
+      if (mmi)
+        tvhtrace("mpegts", "found mmi %p to boot", mmi);
 
       /* No free input */
       if (!mmi)
@@ -182,7 +187,8 @@ mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
   if (mt->mt_pid >= 0x2000)
     return;
   if (!mm->mm_table_filter[mt->mt_pid])
-    printf("table opened %04X\n", mt->mt_pid);
+    tvhtrace("mpegts", "mm %p opened table pid %04X (%d)",
+             mm, mt->mt_pid, mt->mt_pid);
   mm->mm_table_filter[mt->mt_pid] = 1;
 }
 
@@ -191,8 +197,9 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
   if (mt->mt_pid >= 0x2000)
     return;
+  tvhtrace("mpegts", "mm %p closed table pid %04X (%d)",
+           mm, mt->mt_pid, mt->mt_pid);
   mm->mm_table_filter[mt->mt_pid] = 0;
-  printf("table closed %04X\n", mt->mt_pid);
 }
 
 void

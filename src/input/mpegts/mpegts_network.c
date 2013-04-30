@@ -28,13 +28,19 @@ const idclass_t mpegts_network_class =
   }
 };
 
+static mpegts_mux_t *
+mpegts_network_create_mux
+  ( mpegts_mux_t *mm, uint16_t sid, uint16_t tsid, void *aux )
+{
+  return NULL;
+}
+
 static void
 mpegts_network_initial_scan(void *aux)
 {
   mpegts_network_t *mn = aux;
   mpegts_mux_t     *mm;
 
-  printf("mpegts_network_initial_scan(%p)\n", aux);
   while((mm = TAILQ_FIRST(&mn->mn_initial_scan_pending_queue)) != NULL) {
     assert(mm->mm_initial_scan_status == MM_SCAN_PENDING);
     if (mm->mm_start(mm, "initial scan", 1))
@@ -63,6 +69,7 @@ mpegts_network_create0
     const char *netname )
 {
   idnode_insert(&mn->mn_id, uuid, idc);
+  mn->mn_create_mux   = mpegts_network_create_mux;
   mn->mn_network_name = strdup(netname);
   TAILQ_INIT(&mn->mn_initial_scan_pending_queue);
   TAILQ_INIT(&mn->mn_initial_scan_current_queue);

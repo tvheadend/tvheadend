@@ -719,7 +719,7 @@ main(int argc, char **argv)
 
   htsp_init(opt_bindaddr);
 
-#if 0
+#if ENABLE_TSFILE
   if(opt_tsfile.num) {
     tsfile_init(opt_tsfile_tuner ?: opt_tsfile.num);
     for (i = 0; i < opt_tsfile.num; i++)

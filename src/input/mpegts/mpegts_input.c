@@ -54,7 +54,7 @@ mpegts_input_recv_packets
   mpegts_mux_t *mm = mmi->mmi_mux;
   assert(mmi->mmi_input == mi);
   assert(mm != NULL);
-  tvhtrace("mpegts", "recv_packets tsb=%p, len=%d, pcr=%p, pcr_pid=%p",
+  tvhtrace("tsdemux", "recv_packets tsb=%p, len=%d, pcr=%p, pcr_pid=%p",
            tsb, (int)len, pcr, pcr_pid);
   
   /* Not enough data */
@@ -81,6 +81,7 @@ mpegts_input_recv_packets
     /* Sync */
     if ( tsb[i] == 0x47 ) {
       int pid = ((tsb[i+1] & 0x1f) << 8) | tsb[i+2];
+      tvhtrace("tsdemux", "recv_packet for pid %04X (%d)", pid, pid);
 
       /* SI data */
       if (mm->mm_table_filter[pid]) {
@@ -116,9 +117,9 @@ mpegts_input_recv_packets
     /* Re-sync */
     } else {
       // TODO: set flag (to avoid spam)
-      tvhlog(LOG_DEBUG, "mpegts", "%s ts sync lost", "TODO");
+      tvhlog(LOG_DEBUG, "tsdemux", "%s ts sync lost", "TODO");
       if (ts_resync(tsb, &len, &i)) break;
-      tvhlog(LOG_DEBUG, "mpegts", "%s ts sync found", "TODO");
+      tvhlog(LOG_DEBUG, "tsdemux", "%s ts sync found", "TODO");
     }
 
   }
@@ -191,10 +192,8 @@ mpegts_input_table_thread ( void *aux )
 int
 mpegts_input_is_free ( mpegts_input_t *mi )
 {
-  int r;
-  r = (LIST_FIRST(&mi->mi_mux_active) == NULL);
-  printf("mpegts_input_is_free(%p) = %d\n", mi, r);
-  return r;
+  mpegts_mux_instance_t *mmi = LIST_FIRST(&mi->mi_mux_active);
+  return mmi ? 0 : 1;
 }
 
 int

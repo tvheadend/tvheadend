@@ -25,6 +25,9 @@
 
 #if ENABLE_MPEGTS
 #include "input/mpegts.h"
+#if ENABLE_TSFILE
+#include "input/mpegts/tsfile.h"
+#endif
 #endif
 
 void input_init ( void );

@@ -23,8 +23,8 @@
 #include "service.h"
 #include "src/input/mpegts/psi.h"
 
-#define MM_ONID_NONE 0xFFFF
-#define MM_TSID_NONE 0xFFFF
+#define MPEGTS_ONID_NONE 0xFFFF
+#define MPEGTS_TSID_NONE 0xFFFF
 
 /* Types */
 typedef struct mpegts_table         mpegts_table_t;
@@ -406,6 +406,11 @@ mpegts_input_t *mpegts_input_create0
 #define mpegts_input_create(t, u)\
   (struct t*)mpegts_input_create0(calloc(1, sizeof(struct t)), t##_class, u)
 
+#define mpegts_input_create1(u)\
+  mpegts_input_create0(calloc(1, sizeof(mpegts_input_t)),\
+                       &mpegts_input_class, u)
+                 
+
 mpegts_network_t *mpegts_network_create0
   ( mpegts_network_t *mn, const idclass_t *idc, const char *uuid,
     const char *name );
@@ -426,6 +431,9 @@ mpegts_mux_t *mpegts_mux_create0
   (struct type*)mpegts_mux_create0(calloc(1, sizeof(struct type)),\
                                    &type##_class, uuid,\
                                    mn, onid, tsid)
+#define mpegts_mux_create1(uuid, mn, onid, tsid)\
+  mpegts_mux_create0(calloc(1, sizeof(mpegts_mux_t)), &mpegts_mux_class, uuid,\
+                     mn, onid, tsid)
 
 void mpegts_mux_initial_scan_done ( mpegts_mux_t *mm );
 
@@ -470,10 +478,13 @@ mpegts_service_t *mpegts_service_create0
   ( mpegts_service_t *ms, const idclass_t *class, const char *uuid,
     mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid );
 
-/* Create */
 #define mpegts_service_create(t, u, m, s, p)\
   (struct t*)mpegts_service_create0(calloc(1, sizeof(struct t)),\
                                     &t##_class, u, m, s, p)
+
+#define mpegts_service_create1(u, m, s, p)\
+  mpegts_service_create0(calloc(1, sizeof(mpegts_service_t)),\
+                         &mpegts_service_class, u, m, s, p)
 
 void mpegts_service_load_one ( mpegts_service_t *ms, htsmsg_t *c );
 

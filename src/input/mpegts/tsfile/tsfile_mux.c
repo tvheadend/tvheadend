@@ -17,29 +17,31 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "tsfile.h"
 #include "tsfile_private.h"
 
 extern const idclass_t mpegts_mux_class;
-extern const idclass_t mpegts_service_class;
+extern const idclass_t mpegts_mux_instance_class;
 
 tsfile_mux_instance_t *
 tsfile_mux_instance_create
   ( const char *path, mpegts_input_t *mi, mpegts_mux_t *mm )
 {
-  tsfile_mux_instance_t *mmi = (tsfile_mux_instance_t*)
-    mpegts_mux_instance_create0(sizeof(tsfile_mux_instance_t),
-                                NULL, mi, mm);
-  mmi->mmi_tsfile_path = strdup(path);
-  printf("mmi craeated %p path %s\n", mmi, mmi->mmi_tsfile_path);
+#define tsfile_mux_instance_class mpegts_mux_instance_class
+  tsfile_mux_instance_t *mmi =
+    mpegts_mux_instance_create(tsfile_mux_instance, NULL, mi, mm);
+#undef tsfile_mux_instance_class
+  mmi->mmi_tsfile_path    = strdup(path);
+  mmi->mmi_tsfile_pcr_pid = 0;
+  tvhtrace("tsfile", "mmi created %p path %s", mmi, mmi->mmi_tsfile_path);
   return mmi;
 }
 
 mpegts_mux_t *
-tsfile_mux_create0
-  ( const char *uuid, mpegts_network_t *mn, uint16_t onid, uint16_t tsid )
+tsfile_mux_create ( mpegts_network_t *mn )
 {
-  mpegts_mux_t *mm = mpegts_mux_create0(NULL, mn, onid, tsid);
+  mpegts_mux_t *mm 
+    = mpegts_mux_create1(NULL, mn, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE);
+  tvhtrace("tsfile", "mm created %p", mm);
   return mm;
 }
 

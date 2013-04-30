@@ -21,6 +21,26 @@
 
 #include <assert.h>
 
+static void
+mpegts_table_fastswitch ( mpegts_mux_t *mm )
+{
+  mpegts_table_t   *mt;
+
+  if(mm->mm_initial_scan_status == MM_SCAN_DONE)
+    return;
+
+  LIST_FOREACH(mt, &mm->mm_tables, mt_link)
+    if((mt->mt_flags & MT_QUICKREQ) && mt->mt_count == 0)
+      return;
+
+  // TODO:
+  //dvb_mux_save(dm);
+
+  tvhlog(LOG_DEBUG, "mpegts", "initial scan for mm %p done", mm);
+  mpegts_mux_initial_scan_done(mm);
+}
+
+
 void
 mpegts_table_dispatch
   ( const uint8_t *sec, size_t r, void *aux )
@@ -65,10 +85,8 @@ mpegts_table_dispatch
   if(ret == 0)
     mt->mt_count++;
 
-  /* TODO
-  if(mt->mt_flags & TDT_QUICKREQ)
-    dvb_table_fastswitch(tdmi);
-  */
+  if(mt->mt_flags & MT_QUICKREQ)
+    mpegts_table_fastswitch(mt->mt_mux);
 }
 
 void
@@ -108,6 +126,9 @@ mpegts_table_add
          mt->mt_callback == callback &&
          mt->mt_opaque   == opaque )
       return;
+
+  tvhtrace("mpegts", "add %s table %02X/%02X (%d) pid %04X (%d)",
+           name, tableid, mask, tableid, pid, pid);
 
   /* Create */
   mt = calloc(1, sizeof(mpegts_table_t));

@@ -29,6 +29,9 @@
 #include <unistd.h>
 #include <errno.h>
 #include <assert.h>
+#include <sched.h>
+
+extern const idclass_t mpegts_input_class;
 
 static void *
 tsfile_input_thread ( void *aux )
@@ -40,25 +43,24 @@ tsfile_input_thread ( void *aux )
   struct stat st;
   uint8_t tsb[188*10];
   int64_t pcr, pcr_last = PTS_UNSET, pcr_last_realtime = 0;
-  uint16_t pcr_pid = 0;
   mpegts_input_t *mi = aux;
   mpegts_mux_instance_t *mmi;
+  tsfile_mux_instance_t *tmi;
 
   /* Open file */
-printf("waiting for lock..\n");
   pthread_mutex_lock(&global_lock);
-printf("got lock\n");
 
   if ((mmi = LIST_FIRST(&mi->mi_mux_active))) {
-    tsfile_mux_instance_t *tmi = (tsfile_mux_instance_t*)mmi;
+    tmi = (tsfile_mux_instance_t*)mmi;
     fd  = tvh_open(tmi->mmi_tsfile_path, O_RDONLY | O_NONBLOCK, 0);
     if (fd == -1)
       tvhlog(LOG_ERR, "tsfile", "open(%s) failed %d (%s)",
              tmi->mmi_tsfile_path, errno, strerror(errno));
+    else
+      tvhtrace("tsfile", "adapter %d opened %s", mi->mi_instance, tmi->mmi_tsfile_path);
   }
   pthread_mutex_unlock(&global_lock);
   if (fd == -1) return NULL;
-  printf("file opened = %d\n", fd);
   
   /* Polling */
   memset(&ev, 0, sizeof(ev));
@@ -77,7 +79,8 @@ printf("got lock\n");
   /* Check for extra (incomplete) packet at end */
   rem = st.st_size % 188;
   len = 0;
-printf("file size = %lu, rem = %lu\n", st.st_size, rem);
+  tvhtrace("tsfile", "adapter %d file size %"PRIsize_t " rem %"PRIsize_t,
+           mi->mi_instance, st.st_size, rem);
   
   /* Process input */
   while (1) {
@@ -101,6 +104,7 @@ printf("file size = %lu, rem = %lu\n", st.st_size, rem);
     if (len == st.st_size) {
       len = 0;
       c -= rem;
+      //tvhtrace("tsfile", "adapter %d reached eof, resetting", mi->mi_instance);
       lseek(fd, 0, SEEK_SET);
       pcr_last = PTS_UNSET;
     }
@@ -108,7 +112,8 @@ printf("file size = %lu, rem = %lu\n", st.st_size, rem);
     /* Process */
     if (c >= 0) {
       pcr = PTS_UNSET;
-      pos = mpegts_input_recv_packets(mi, mmi, tsb, c, &pcr, &pcr_pid);
+      pos = mpegts_input_recv_packets(mi, mmi, tsb, c, &pcr, &tmi->mmi_tsfile_pcr_pid);
+      printf("pcr = %lu, pcr_pid = %d\n", pcr, tmi->mmi_tsfile_pcr_pid);
 
       /* Delay */
       if (pcr != PTS_UNSET) {
@@ -129,6 +134,7 @@ printf("file size = %lu, rem = %lu\n", st.st_size, rem);
         pcr_last_realtime = getmonoclock();
       }
     }
+    sched_yield();
   }
 
 exit:
@@ -138,11 +144,9 @@ exit:
 }
 
 static void
-tsfile_input_stop_mux ( mpegts_input_t *mi )
+tsfile_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   int err;
-  mpegts_mux_instance_t *mmi = LIST_FIRST(&mi->mi_mux_active);
-  assert(mmi != NULL);
 
   /* Stop thread */
   if (mi->mi_thread_pipe.rd != -1) {
@@ -164,17 +168,20 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
   struct stat st;
   mpegts_mux_t          *mm  = t->mmi_mux;
   tsfile_mux_instance_t *mmi = (tsfile_mux_instance_t*)t;
-  printf("tsfile_input_start_mux(%p, %p)\n", mi, t);
+  tvhtrace("tsfile", "adapter %d starting mmi %p", mi->mi_instance, mmi);
 
   /* Already tuned */
-#if 0
+  if (mmi->mmi_mux->mm_active == t) {
+    tvhtrace("tsfile", "mmi %p is already active", mmi);
+    return 0;
+  }
   assert(mmi->mmi_mux->mm_active == NULL);
   assert(LIST_FIRST(&mi->mi_mux_active) == NULL);
-#endif
 
   /* Check file is accessible */
   if (lstat(mmi->mmi_tsfile_path, &st)) {
-    printf("could not stat %s\n", mmi->mmi_tsfile_path);
+    tvhlog(LOG_ERR, "tsfile", "mmi %p could not stat %s",
+           mmi, mmi->mmi_tsfile_path);
     mmi->mmi_tune_failed = 1;
     return SM_CODE_TUNING_FAILED;
   }
@@ -205,32 +212,18 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
   return 0;
 }
 
-/* TODO: I think most of these can be moved to mpegts */
-
-static void
-tsfile_input_open_service ( mpegts_input_t *mi, mpegts_service_t *t )
-{
-}
-
-static void
-tsfile_input_close_service ( mpegts_input_t *mi, mpegts_service_t *t )
-{
-}
-
 mpegts_input_t *
-tsfile_input_create ( void )
+tsfile_input_create ( int idx )
 {
   pthread_t tid;
   mpegts_input_t *mi;
 
   /* Create object */
-  mi = mpegts_input_create0(NULL);
+  mi = mpegts_input_create1(NULL);
+  mi->mi_instance       = idx;
   mi->mi_start_mux      = tsfile_input_start_mux;
   mi->mi_stop_mux       = tsfile_input_stop_mux;
-  mi->mi_open_service   = tsfile_input_open_service;
-  mi->mi_close_service  = tsfile_input_close_service;
-  mi->mi_is_free        = mpegts_input_is_free;
-  mi->mi_current_weight = mpegts_input_current_weight;
+  LIST_INSERT_HEAD(&tsfile_inputs, mi, mi_global_link);
 
   /* Start table thread */
   pthread_create(&tid, NULL, mpegts_input_table_thread, mi);

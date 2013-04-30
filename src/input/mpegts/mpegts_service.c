@@ -248,7 +248,6 @@ mpegts_service_create0
     mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
 {
   service_create0((service_t*)s, class, uuid, S_MPEG_TS);
-  printf("mpegts_service_create0 = %p\n", s);
 
   /* Create */
   tvhlog(LOG_DEBUG, "mpegts", "Add service %04X on %s", sid, "TODO");
