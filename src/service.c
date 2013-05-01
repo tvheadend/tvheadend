@@ -916,10 +916,8 @@ service_build_stream_start(service_t *t)
   t->s_setsourceinfo(t, &ss->ss_si);
 
   ss->ss_refcount = 1;
-#ifdef MOVE_TO_MPEGTS
   ss->ss_pcr_pid = t->s_pcr_pid;
   ss->ss_pmt_pid = t->s_pmt_pid;
-#endif
   return ss;
 }
 

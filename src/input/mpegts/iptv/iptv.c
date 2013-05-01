@@ -24,7 +24,7 @@
 #include <sys/epoll.h>
 #include <assert.h>
 #include <regex.h>
-
+#include <unistd.h>
 
 /*
  * Globals
@@ -34,6 +34,10 @@ iptv_network_t  iptv_network;
 int             iptv_poll_fd;
 pthread_t       iptv_thread;
 pthread_mutex_t iptv_lock;
+
+/*
+ * URL processing - TODO: move to a library
+ */
 
 typedef struct url
 {
@@ -67,56 +71,62 @@ url_parse ( url_t *up, const char *urlstr )
 
   /* Port */
   up->port = 0;
-  if (!(t2 = strstr(up->host, "::"))) {
+  if (!(t2 = strstr(up->host, ":"))) {
     if (!strcmp(up->scheme, "https"))
       up->port = 443;
     else if (!strcmp(up->scheme, "http"))
       up->port = 80;
+  } else {
+    *t2 = 0;
+    up->port = atoi(t2+1);
   }
 
   return 0;
 }
 
-static int http_connect (const char *urlstr, htsbuf_queue_t *spill)
+/*
+ * HTTP client
+ */
+
+static int http_connect (const char *urlstr)
 {
-  int fd, c;
+  int fd, c, i;
   char buf[1024];
   url_t url;
   if (url_parse(&url, urlstr))
     return -1;
 
   /* Make connection */
+  // TODO: move connection to thread
+  // TODO: this is really only for testing and to allow use of TVH webserver as input
+  tvhlog(LOG_DEBUG, "iptv", "connecting to http %s %d", url.host, url.port);
   fd = tcp_connect(url.host, url.port, buf, sizeof(buf), 10);
-  if (!fd)
+  if (fd < 0) {
+    tvhlog(LOG_ERR, "iptv", "tcp_connect() failed %s", buf);
     return -1;
+  }
 
   /* Send request (VERY basic) */
-  c = snprintf(buf, sizeof(buf), "GET %s HTTP/1.1\r\n", urlstr);
+  c = snprintf(buf, sizeof(buf), "GET /%s HTTP/1.1\r\n", url.path);
   tvh_write(fd, buf, c);
   c = snprintf(buf, sizeof(buf), "Hostname: %s\r\n", url.host);
   tvh_write(fd, buf, c);
   tvh_write(fd, "\r\n", 2);
 
   /* Read back header */
-  htsbuf_queue_flush(spill);
-  while ((c = tcp_read_line(fd, buf, sizeof(buf), spill)))
-    if (!*buf) break;
+  // TODO: do this properly
+  i = 0;
+  while (1) {
+    if (!(c = read(fd, buf+i, 1)))
+      continue;
+    i++;
+    if (i == 4 && !strncmp(buf, "\r\n\r\n", 4))
+      break;
+    memmove(buf, buf+1, 3); i = 3;
+  }
+  printf("DONE\n");
 
   return fd;
-}
-
-/*
- * HTTP
- */
-static int
-iptv_input_start_http ( iptv_mux_t *im )
-{
-  int ret = SM_CODE_TUNING_FAILED;
-  
-  /* Setup connection */
-  im->mm_iptv_fd = http_connect(im->mm_iptv_url, &im->mm_iptv_spill);
-
-  return ret;
 }
 
 /*
@@ -131,6 +141,18 @@ const idclass_t iptv_input_class = {
   }
 };
 
+/*
+ * HTTP
+ */
+static int
+iptv_input_start_http ( iptv_mux_t *im )
+{
+  /* Setup connection */
+  im->mm_iptv_fd = http_connect(im->mm_iptv_url);
+
+  return im->mm_iptv_fd <= 0 ? SM_CODE_TUNING_FAILED : 0;
+}
+
 static int
 iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
@@ -142,7 +164,8 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   if (!im->mm_active) {
     
     /* HTTP */
-    if (!strcmp(im->mm_iptv_url, "http"))
+    // TODO: this needs to happen in a thread
+    if (!strncmp(im->mm_iptv_url, "http", 4))
       ret = iptv_input_start_http(im);
 
     /* OK */
@@ -153,6 +176,12 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
       ev.data.fd = im->mm_iptv_fd;
       epoll_ctl(iptv_poll_fd, EPOLL_CTL_ADD, im->mm_iptv_fd, &ev);
       im->mm_active = mmi;
+
+      /* Install table handlers */
+      mpegts_table_add(mmi->mmi_mux, 0x0, 0xff, psi_pat_callback, NULL, "pat",
+                       MT_QUICKREQ| MT_CRC, 0);
+
+      // TODO: need to fire mux start event
     }
   }
   pthread_mutex_unlock(&iptv_lock);
@@ -163,6 +192,19 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 static void
 iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
+  iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
+  assert(mmi == &im->mm_iptv_instance);
+  
+  pthread_mutex_lock(&iptv_lock);
+  if (im->mm_active) {
+
+    // TODO: multicast will require additional work
+
+    close(im->mm_iptv_fd); // removes from epoll
+    im->mm_iptv_fd = -1;
+    
+  }
+  pthread_mutex_unlock(&iptv_lock);
 }
 
 static int
@@ -180,8 +222,7 @@ iptv_input_current_weight ( mpegts_input_t *mi )
 static void *
 iptv_input_thread ( void *aux )
 {
-#if 0
-  int nfds, fd;
+  int nfds, fd, r, pos = 0;
   uint8_t tsb[65536];
   struct epoll_event ev;
   iptv_mux_t *im;
@@ -200,7 +241,7 @@ iptv_input_thread ( void *aux )
 
     /* Read data */
     fd = ev.data.fd;
-    r  = read(fd, tsb+c, sizeof(tsb)-c);
+    r  = read(fd, tsb+pos, sizeof(tsb)-pos);
 
     /* Error */
     if (r < 0) {
@@ -212,9 +253,10 @@ iptv_input_thread ( void *aux )
     pthread_mutex_lock(&iptv_lock);
 
     /* Find mux */
-    LIST_FOREACH(mm, &iptv_network.mn_muxes, mm_network_link)
-      if (((iptv_mux_t*)mm)->im_fd == fd)
+    LIST_FOREACH(mm, &iptv_network.mn_muxes, mm_network_link) {
+      if (((iptv_mux_t*)mm)->mm_iptv_fd == fd)
         break;
+    }
     if (!mm) {
       pthread_mutex_unlock(&iptv_lock);
       continue;
@@ -223,14 +265,13 @@ iptv_input_thread ( void *aux )
 
     /* Raw TS */
     if (!strncmp(im->mm_iptv_url, "http", 4)) {
-      mpegts_input_recv_packets((mpegts_input_t*)&iptv_input,
-                                &im->mm_mux_instance,
-                                tsb, c, NULL, NULL);
+      pos = mpegts_input_recv_packets((mpegts_input_t*)&iptv_input,
+                                      &im->mm_iptv_instance,
+                                      tsb, r, NULL, NULL);
     }
 
-    pthread_mutex_lock(&iptv_unlock);
+    pthread_mutex_unlock(&iptv_lock);
   }
-#endif
   return NULL;
 }
 
@@ -266,6 +307,8 @@ iptv_network_create_service
  */
 void iptv_init ( void )
 {
+  pthread_t tid;
+
   /* Init Input */
   mpegts_input_create0((mpegts_input_t*)&iptv_input,
                        &iptv_input_class, NULL);
@@ -284,7 +327,10 @@ void iptv_init ( void )
   mpegts_network_add_input((mpegts_network_t*)&iptv_network,
                            (mpegts_input_t*)&iptv_input);
 
-  /* Setup thread */
+  /* Set table thread */
+  pthread_create(&tid, NULL, mpegts_input_table_thread, &iptv_input);
+
+  /* Setup TS thread */
   // TODO: could set this up only when needed
   iptv_poll_fd = epoll_create(10);
   pthread_mutex_init(&iptv_lock, NULL);

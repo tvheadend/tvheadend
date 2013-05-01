@@ -108,7 +108,6 @@ SRCS =  src/version.c \
 	src/tvhtime.c \
 	src/descrambler/descrambler.c \
 	src/serviceprobe.c \
-  src/input.c \
 
 SRCS += \
 	src/parsers/parsers.c \

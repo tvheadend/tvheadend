@@ -51,10 +51,9 @@ iptv_mux_create ( const char *uuid, const char *url )
   iptv_mux_t *im =
     mpegts_mux_create(iptv_mux, NULL,
                       (mpegts_network_t*)&iptv_network,
-                      MM_ONID_NONE, MM_TSID_NONE);
+                      MPEGTS_ONID_NONE, MPEGTS_TSID_NONE);
   if (url)
     im->mm_iptv_url = strdup(url);
-  htsbuf_queue_init(&im->mm_iptv_spill, 65536);
 
   /* Create Instance */
   mpegts_mux_instance_create0(&im->mm_iptv_instance,
@@ -78,7 +77,7 @@ iptv_mux_load_one ( iptv_mux_t *im, htsmsg_t *c )
   mpegts_mux_load_one((mpegts_mux_t*)im, c);
 
   /* URL */
-  if ((str = htsmsg_get_str(c, "url")))
+  if ((str = htsmsg_get_str(c, "iptv_url")))
     tvh_str_update(&im->mm_iptv_url, str);
 }
 
@@ -91,10 +90,13 @@ iptv_mux_load_all ( void )
 
   if ((s = hts_settings_load_r(1, "input/mpegts/iptv/muxes"))) {
     HTSMSG_FOREACH(f, s) {
-      if (!(m = htsmsg_get_map_by_field(f))) {
+      if (!(m = htsmsg_get_map_by_field(f)) || !(m = htsmsg_get_map(m, "config"))) {
         tvhlog(LOG_ERR, "iptv", "failed to load mux config %s", f->hmf_name);
         continue;
       }
+      printf("UUID: %s\n", f->hmf_name);
+      printf("CONFIG:\n");
+      htsmsg_print(m);
 
       /* Create */
       im = iptv_mux_create(f->hmf_name, NULL);

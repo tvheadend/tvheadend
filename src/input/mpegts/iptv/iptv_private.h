@@ -44,7 +44,6 @@ struct iptv_mux
   mpegts_mux_t;
 
   int                   mm_iptv_fd;
-  htsbuf_queue_t        mm_iptv_spill;
   mpegts_mux_instance_t mm_iptv_instance;
   char                 *mm_iptv_url;
 };

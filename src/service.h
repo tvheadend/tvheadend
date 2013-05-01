@@ -228,22 +228,27 @@ typedef struct service {
     S_OTHER,
   } s_source_type;
 
- 
-    /**
+// TODO: should this really be here?
+
+  /**
+   * PID carrying the programs PCR.
+   * XXX: We don't support transports that does not carry
+   * the PCR in one of the content streams.
+   */
+  uint16_t s_pcr_pid;
+
+  /**
+   * PID for the PMT of this MPEG-TS stream.
+   */
+  uint16_t s_pmt_pid;
+
+  /**
    * Set if transport is enabled (the default).  If disabled it should
    * not be considered when chasing for available transports during
    * subscription scheduling.
    */
   int s_enabled;
 
-#ifdef MOVE_TO_RAWTS
-  /**
-   * Last PCR seen, we use it for a simple clock for rawtsinput.c
-   */
-  int64_t s_pcr_last;
-  int64_t s_pcr_last_realtime;
-#endif
-  
   LIST_ENTRY(service) s_active_link;
 
   LIST_HEAD(, th_subscription) s_subscriptions;

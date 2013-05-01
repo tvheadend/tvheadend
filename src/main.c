@@ -698,8 +698,6 @@ main(int argc, char **argv)
 
   access_init(opt_firstrun, opt_noacl);
 
-  input_init();
-
 #if ENABLE_TIMESHIFT
   timeshift_init();
 #endif
@@ -725,6 +723,9 @@ main(int argc, char **argv)
     for (i = 0; i < opt_tsfile.num; i++)
       tsfile_add_file(opt_tsfile.str[i]);
   }
+#endif
+#if ENABLE_IPTV
+  iptv_init();
 #endif
 
   if(opt_subscribe != NULL)

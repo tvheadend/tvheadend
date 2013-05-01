@@ -28,6 +28,12 @@
 #if ENABLE_TSFILE
 #include "input/mpegts/tsfile.h"
 #endif
+#if ENABLE_IPTV
+#include "input/mpegts/iptv.h"
+#endif
+#if ENABLE_LINUXDVB
+#include "input/mpegts/linuxdvb.h"
+#endif
 #endif
 
 void input_init ( void );

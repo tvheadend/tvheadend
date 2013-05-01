@@ -168,6 +168,7 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
     /* Tune */
     if (!mmi->mmi_input->mi_start_mux(mmi->mmi_input, mmi))
       break;
+    tvhtrace("mpegts", "failed to run mmi %p", mmi);
   }
 
   /* Initial scanning */
@@ -219,7 +220,7 @@ mpegts_mux_load_one ( mpegts_mux_t *mm, htsmsg_t *c )
 mpegts_mux_t *
 mpegts_mux_create0
   ( mpegts_mux_t *mm, const idclass_t *class, const char *uuid,
-    mpegts_network_t *net, uint16_t onid, uint16_t tsid )
+    mpegts_network_t *mn, uint16_t onid, uint16_t tsid )
 {
   idnode_insert(&mm->mm_id, uuid, class);
 
@@ -228,7 +229,8 @@ mpegts_mux_create0
   mm->mm_tsid                = tsid;
 
   /* Add to network */
-  mm->mm_network             = net;
+  LIST_INSERT_HEAD(&mn->mn_muxes, mm, mm_network_link);
+  mm->mm_network             = mn;
   mm->mm_start               = mpegts_mux_start;
   mpegts_mux_initial_scan_link(mm);
 

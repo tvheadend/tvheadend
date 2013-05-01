@@ -255,6 +255,7 @@ struct mpegts_service
 {
   service_t; // Parent
 
+#if 0 // TODO: temporarily moved to service_t
   /**
    * PID carrying the programs PCR.
    * XXX: We don't support transports that does not carry
@@ -266,6 +267,7 @@ struct mpegts_service
    * PID for the PMT of this MPEG-TS stream.
    */
   uint16_t s_pmt_pid;
+#endif
 
   /*
    * Fields defined by DVB standard EN 300 468
