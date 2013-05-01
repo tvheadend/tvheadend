@@ -75,11 +75,11 @@ mpegts_table_dispatch
   
   /* Pass with tableid / len in data */
   if (mt->mt_flags & MT_FULL)
-    ret = mt->mt_callback(mt, sec, len, tid);
+    ret = mt->mt_callback(mt, sec, len+3, tid);
 
   /* Pass w/out tableid/len in data */
   else
-    ret = mt->mt_callback(mt, sec+3, len-3, tid);
+    ret = mt->mt_callback(mt, sec+3, len, tid);
   
   /* Good */
   if(ret == 0)
