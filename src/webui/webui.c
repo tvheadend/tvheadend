@@ -29,7 +29,6 @@
 #include <arpa/inet.h>
 
 #include <sys/stat.h>
-#include <sys/sendfile.h>
 
 #include "tvheadend.h"
 #include "access.h"
@@ -47,6 +46,14 @@
 #include "dvb/dvb_support.h"
 #include "imagecache.h"
 #include "tcp.h"
+
+#if defined(PLATFORM_LINUX)
+#include <sys/sendfile.h>
+#elif defined(PLATFORM_FREEBSD)
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/uio.h>
+#endif
 
 /**
  *
@@ -931,7 +938,11 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   if(!hc->hc_no_output) {
     while(content_len > 0) {
       chunk = MIN(1024 * 1024 * 1024, content_len);
+#if defined(PLATFORM_LINUX)
       r = sendfile(hc->hc_fd, fd, NULL, chunk);
+#elif defined(PLATFORM_FREEBSD)
+      sendfile(fd, hc->hc_fd, 0, chunk, NULL, &r, 0);
+#endif
       if(r == -1) {
   close(fd);
   return -1;
