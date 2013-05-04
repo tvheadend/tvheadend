@@ -99,7 +99,11 @@ tvhtime_update ( struct tm *tm )
   if (tvhtime_update_enabled) {
     if (llabs(t2 - t1) > tvhtime_tolerance) {
       tvhlog(LOG_DEBUG, "time", "updated system clock");
+#ifdef stime
       stime(&now);
+#else
+      tvhlog(LOG_NOTICE, "time", "stime(2) not implemented");
+#endif
     }
   }
 
