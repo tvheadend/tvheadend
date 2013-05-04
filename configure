@@ -29,6 +29,8 @@ OPTIONS=(
   "inotify:auto"
   "bundle:no"
   "dvbcsa:no"
+  "epoll:yes"
+  "kqueue:no"
 )
 
 #
@@ -187,6 +189,20 @@ if enabled linuxdvb && enabled dvbscan; then
     die "Failed to fetch dvb-scan data (use --disable-dvbscan)"
   fi
   echo "ok"
+fi
+
+#
+# epoll
+#
+if [ ${PLATFORM} != "linux" ]; then
+  disable epoll
+fi
+
+#
+# kqueue
+#
+if [ ${PLATFORM} = "freebsd" ]; then
+  enable kqueue
 fi
 
 # ###########################################################################
