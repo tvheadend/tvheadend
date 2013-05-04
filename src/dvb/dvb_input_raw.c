@@ -28,7 +28,6 @@
 #include <fcntl.h>
 #include <linux/dvb/frontend.h>
 #include <linux/dvb/dmx.h>
-#include <sys/epoll.h>
 
 #include "tvheadend.h"
 #include "dvb.h"
