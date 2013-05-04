@@ -74,7 +74,10 @@ check_bin bzip2 || echo 'WARN: no bzip2 binary found'
 #
 # SSL
 #
-if check_pkg openssl || check_pkg libssl; then
+if [ ${PLATFORM} = "freebsd" ]; then
+  # FreeBSD has libssl in base
+  enable ssl
+elif check_pkg openssl || check_pkg libssl; then
   enable ssl
 else
   die "SSL development support not found"
