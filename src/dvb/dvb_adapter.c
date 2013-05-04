@@ -23,7 +23,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <sys/epoll.h>
 #include <sys/types.h>
 #include <dirent.h>
 #include <fcntl.h>
@@ -48,6 +47,13 @@
 #include "epggrab.h"
 #include "diseqc.h"
 #include "atomic.h"
+
+#ifdef ENABLE_EPOLL
+#include <sys/epoll.h>
+#elif ENABLE_KQUEUE
+#include <sys/event.h>
+#include <sys/time.h>
+#endif
 
 struct th_dvb_adapter_queue dvb_adapters;
 struct th_dvb_mux_instance_tree dvb_muxes;
@@ -1020,11 +1026,17 @@ static void *
 dvb_adapter_input_dvr(void *aux)
 {
   th_dvb_adapter_t *tda = aux;
-  int fd = -1, i, r, c, efd, nfds, dmx = -1;
+  int fd = -1, i, r, c, nfds, dmx = -1;
   uint8_t tsb[188 * 10];
   service_t *t;
-  struct epoll_event ev;
+#ifdef ENABLE_EPOLL
   int delay = 10;
+  int efd;
+  struct epoll_event ev;
+#elif ENABLE_KQUEUE
+  int kfd;
+  struct kevent ke;
+#endif
 
   /* Install RAW demux */
   if (tda->tda_rawmode) {
@@ -1040,6 +1052,7 @@ dvb_adapter_input_dvr(void *aux)
     return NULL;
   }
 
+#ifdef ENABLE_EPOLL
   /* Create poll */
   efd = epoll_create(2);
   memset(&ev, 0, sizeof(ev));
@@ -1048,11 +1061,20 @@ dvb_adapter_input_dvr(void *aux)
   epoll_ctl(efd, EPOLL_CTL_ADD, tda->tda_dvr_pipe.rd, &ev);
   ev.data.fd = fd;
   epoll_ctl(efd, EPOLL_CTL_ADD, fd, &ev);
+#elif ENABLE_KQUEUE
+  /* Create kqueue */
+  kfd = kqueue();
+  EV_SET(&ke, tda->tda_dvr_pipe.rd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+  kevent(kfd, &ke, 1, NULL, 0, NULL);
+  EV_SET(&ke, fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+  kevent(kfd, &ke, 1, NULL, 0, NULL);
+#endif
 
   r = i = 0;
   while(1) {
 
     /* Wait for input */
+#ifdef ENABLE_EPOLL
     nfds = epoll_wait(efd, &ev, 1, delay);
 
     /* No data */
@@ -1060,6 +1082,10 @@ dvb_adapter_input_dvr(void *aux)
 
     /* Exit */
     if (ev.data.fd != fd) break;
+#elif ENABLE_KQUEUE
+    nfds = kevent(kfd, NULL, 0, &ke, 1, NULL);
+    if (nfds < 1) continue;
+#endif
 
     /* Read data */
     c = read(fd, tsb+r, sizeof(tsb)-r);
@@ -1140,7 +1166,11 @@ dvb_adapter_input_dvr(void *aux)
 
   if(dmx != -1)
     close(dmx);
+#ifdef ENABLE_EPOLL
   close(efd);
+#elif ENABLE_KQUEUE
+  close(kfd);
+#endif
   close(fd);
   return NULL;
 }
