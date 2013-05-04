@@ -647,7 +647,7 @@ http_stream_service(http_connection_t *hc, service_t *service)
 				       hc->hc_username,
 				       http_arg_get(&hc->hc_args, "User-Agent"));
   if(s) {
-    name = strdupa(service->s_ch ?
+    name = tvh_strdupa(service->s_ch ?
                    service->s_ch->ch_name : service->s_nicename);
     pthread_mutex_unlock(&global_lock);
     http_stream_run(hc, &sq, name, mc);
@@ -685,7 +685,7 @@ http_stream_tdmi(http_connection_t *hc, th_dvb_mux_instance_t *tdmi)
 					addrbuf,
 					hc->hc_username,
 					http_arg_get(&hc->hc_args, "User-Agent"));
-  name = strdupa(tdmi->tdmi_identifier);
+  name = tvh_strdupa(tdmi->tdmi_identifier);
   pthread_mutex_unlock(&global_lock);
   http_stream_run(hc, &sq, name, MC_RAW);
   pthread_mutex_lock(&global_lock);
@@ -761,7 +761,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
                http_arg_get(&hc->hc_args, "User-Agent"));
 
   if(s) {
-    name = strdupa(ch->ch_name);
+    name = tvh_strdupa(ch->ch_name);
     pthread_mutex_unlock(&global_lock);
     http_stream_run(hc, &sq, name, mc);
     pthread_mutex_lock(&global_lock);
