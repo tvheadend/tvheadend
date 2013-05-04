@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
 #include <openssl/sha.h>
 
 #include "htsmsg.h"
