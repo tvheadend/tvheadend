@@ -5,8 +5,10 @@ INSTICON= ${DESTDIR}$(prefix)/share/icons/hicolor/scalable/apps
 
 
 install: ${PROG} ${MAN}
-	install -D ${PROG} ${DESTDIR}${bindir}/tvheadend
-	install -D ${MAN} ${DESTDIR}${mandir}/tvheadend.1
+	install -d ${DESTDIR}${bindir}
+	install ${PROG} ${DESTDIR}${bindir}/tvheadend
+	install -d ${DESTDIR}${mandir}
+	install ${MAN} ${DESTDIR}${mandir}/tvheadend.1
 
 	for bundle in ${BUNDLES}; do \
 		mkdir -p ${DESTDIR}${datadir}/tvheadend/$$bundle ;\
