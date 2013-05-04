@@ -23,7 +23,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <sys/epoll.h>
 #include <sys/types.h>
 #include <dirent.h>
 #include <fcntl.h>
@@ -48,6 +47,7 @@
 #include "epggrab.h"
 #include "diseqc.h"
 #include "atomic.h"
+#include "tvhpoll.h"
 
 struct th_dvb_adapter_queue dvb_adapters;
 struct th_dvb_mux_instance_tree dvb_muxes;
@@ -1020,11 +1020,11 @@ static void *
 dvb_adapter_input_dvr(void *aux)
 {
   th_dvb_adapter_t *tda = aux;
-  int fd = -1, i, r, c, efd, nfds, dmx = -1;
+  int fd = -1, i, r, c, nfds, dmx = -1;
   uint8_t tsb[188 * 10];
   service_t *t;
-  struct epoll_event ev;
-  int delay = 10;
+  tvhpoll_t *pd;
+  tvhpoll_event_t ev[2];
 
   /* Install RAW demux */
   if (tda->tda_rawmode) {
@@ -1040,26 +1040,25 @@ dvb_adapter_input_dvr(void *aux)
     return NULL;
   }
 
-  /* Create poll */
-  efd = epoll_create(2);
-  memset(&ev, 0, sizeof(ev));
-  ev.events  = EPOLLIN;
-  ev.data.fd = tda->tda_dvr_pipe.rd;
-  epoll_ctl(efd, EPOLL_CTL_ADD, tda->tda_dvr_pipe.rd, &ev);
-  ev.data.fd = fd;
-  epoll_ctl(efd, EPOLL_CTL_ADD, fd, &ev);
+  pd = tvhpoll_create(2);
+  memset(ev, 0, sizeof(ev));
+  ev[0].data.fd = ev[0].fd = tda->tda_dvr_pipe.rd;
+  ev[0].events  = TVHPOLL_IN;
+  ev[1].data.fd = ev[1].fd = fd;
+  ev[1].events  = TVHPOLL_IN;
+  tvhpoll_add(pd, ev, 2);
 
   r = i = 0;
   while(1) {
 
     /* Wait for input */
-    nfds = epoll_wait(efd, &ev, 1, delay);
+    nfds = tvhpoll_wait(pd, ev, 1, -1);
 
     /* No data */
     if (nfds < 1) continue;
 
     /* Exit */
-    if (ev.data.fd != fd) break;
+    if (ev[0].data.fd != fd) break;
 
     /* Read data */
     c = read(fd, tsb+r, sizeof(tsb)-r);
@@ -1140,7 +1139,7 @@ dvb_adapter_input_dvr(void *aux)
 
   if(dmx != -1)
     close(dmx);
-  close(efd);
+  tvhpoll_destroy(pd);
   close(fd);
   return NULL;
 }

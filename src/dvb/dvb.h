@@ -24,6 +24,7 @@
 #include <pthread.h>
 #include "htsmsg.h"
 #include "psi.h"
+#include "tvhpoll.h"
 
 struct service;
 struct th_dvb_table;
@@ -204,7 +205,7 @@ typedef struct th_dvb_adapter {
 
   th_dvb_mux_instance_t *tda_mux_epg;
 
-  int tda_table_epollfd;
+  tvhpoll_t *tda_table_pd;
 
   uint32_t tda_enabled;
 

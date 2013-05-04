@@ -18,7 +18,6 @@
 
 #include <pthread.h>
 #include <netdb.h>
-#include <sys/epoll.h>
 #include <poll.h>
 #include <assert.h>
 #include <stdio.h>
@@ -34,6 +33,7 @@
 
 #include "tcp.h"
 #include "tvheadend.h"
+#include "tvhpoll.h"
 
 int tcp_preferred_address_family = AF_INET;
 
@@ -144,16 +144,16 @@ tcp_connect(const char *hostname, int port, char *errbuf, size_t errbufsize,
 
       r = poll(&pfd, 1, timeout * 1000);
       if(r == 0) {
-	/* Timeout */
-	snprintf(errbuf, errbufsize, "Connection attempt timed out");
-	close(fd);
-	return -1;
+	      /* Timeout */
+      	snprintf(errbuf, errbufsize, "Connection attempt timed out");
+      	close(fd);
+      	return -1;
       }
       
       if(r == -1) {
-	snprintf(errbuf, errbufsize, "poll() error: %s", strerror(errno));
-	close(fd);
-	return -1;
+      	snprintf(errbuf, errbufsize, "poll() error: %s", strerror(errno));
+      	close(fd);
+      	return -1;
       }
 
       getsockopt(fd, SOL_SOCKET, SO_ERROR, (void *)&err, &errlen);
@@ -331,7 +331,7 @@ tcp_read_timeout(int fd, void *buf, size_t len, int timeout)
     x = recv(fd, buf + tot, len - tot, MSG_DONTWAIT);
     if(x == -1) {
       if(errno == EAGAIN)
-	continue;
+	      continue;
       return errno;
     }
 
@@ -373,7 +373,7 @@ tcp_get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen)
 /**
  *
  */
-static int tcp_server_epoll_fd;
+static tvhpoll_t *tcp_server_poll;
 
 typedef struct tcp_server {
   tcp_server_callback_t *start;
@@ -438,8 +438,8 @@ tcp_server_start(void *aux)
 static void *
 tcp_server_loop(void *aux)
 {
-  int r, i;
-  struct epoll_event ev[1];
+  int r;
+  tvhpoll_event_t ev;
   tcp_server_t *ts;
   tcp_server_launch_t *tsl;
   pthread_attr_t attr;
@@ -450,46 +450,45 @@ tcp_server_loop(void *aux)
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
   while(1) {
-    r = epoll_wait(tcp_server_epoll_fd, ev, sizeof(ev) / sizeof(ev[0]), -1);
+    r = tvhpoll_wait(tcp_server_poll, &ev, 1, -1);
     if(r == -1) {
-      perror("tcp_server: epoll_wait");
+      perror("tcp_server: tchpoll_wait");
       continue;
     }
 
-    for(i = 0; i < r; i++) {
-      ts = ev[i].data.ptr;
+    if (r == 0) continue;
 
-      if(ev[i].events & EPOLLHUP) {
-	close(ts->serverfd);
-	free(ts);
-	continue;
-      }
+    ts = ev.data.ptr;
 
-      if(ev[i].events & EPOLLIN) {
-	tsl = malloc(sizeof(tcp_server_launch_t));
-	tsl->start  = ts->start;
-	tsl->opaque = ts->opaque;
-	slen = sizeof(struct sockaddr_storage);
+    if(ev.events & TVHPOLL_HUP) {
+	    close(ts->serverfd);
+    	free(ts);
+      continue;
+    } 
 
-	tsl->fd = accept(ts->serverfd, 
-			 (struct sockaddr *)&tsl->peer, &slen);
-	if(tsl->fd == -1) {
-	  perror("accept");
-	  free(tsl);
-	  sleep(1);
-	  continue;
-	}
+    if(ev.events & TVHPOLL_IN) {
+	    tsl = malloc(sizeof(tcp_server_launch_t));
+      tsl->start  = ts->start;
+      tsl->opaque = ts->opaque;
+      slen = sizeof(struct sockaddr_storage);
 
+      tsl->fd = accept(ts->serverfd, 
+			                 (struct sockaddr *)&tsl->peer, &slen);
+     	if(tsl->fd == -1) {
+     	  perror("accept");
+     	  free(tsl);
+     	  sleep(1);
+     	  continue;
+     	}
 
-	slen = sizeof(struct sockaddr_storage);
-	if(getsockname(tsl->fd, (struct sockaddr *)&tsl->self, &slen)) {
-	    close(tsl->fd);
-	    free(tsl);
-	    continue;
-	}
+     	slen = sizeof(struct sockaddr_storage);
+	    if(getsockname(tsl->fd, (struct sockaddr *)&tsl->self, &slen)) {
+        close(tsl->fd);
+        free(tsl);
+        continue;
+     	}
 
-	pthread_create(&tid, &attr, tcp_server_start, tsl);
-      }
+     	pthread_create(&tid, &attr, tcp_server_start, tsl);
     }
   }
   return NULL;
@@ -502,14 +501,14 @@ void *
 tcp_server_create(const char *bindaddr, int port, tcp_server_callback_t *start, void *opaque)
 {
   int fd, x;
-  struct epoll_event e;
+  tvhpoll_event_t ev;
   tcp_server_t *ts;
   struct addrinfo hints, *res, *ressave, *use = NULL;
   char *portBuf = (char*)malloc(6);
   int one = 1;
   int zero = 0;
 
-  memset(&e, 0, sizeof(e));
+  memset(&ev, 0, sizeof(ev));
 
   snprintf(portBuf, 6, "%d", port);
 
@@ -570,9 +569,10 @@ tcp_server_create(const char *bindaddr, int port, tcp_server_callback_t *start, 
   ts->start = start;
   ts->opaque = opaque;
 
-  e.events = EPOLLIN;
-  e.data.ptr = ts;
-  epoll_ctl(tcp_server_epoll_fd, EPOLL_CTL_ADD, fd, &e);
+  ev.fd       = fd;
+  ev.events   = TVHPOLL_IN;
+  ev.data.ptr = ts;
+  tvhpoll_add(tcp_server_poll, &ev, 1);
 
   return ts;
 }
@@ -588,7 +588,7 @@ tcp_server_init(int opt_ipv6)
   if(opt_ipv6)
     tcp_preferred_address_family = AF_INET6;
 
-  tcp_server_epoll_fd = epoll_create(10);
+  tcp_server_poll = tvhpoll_create(10);
   pthread_create(&tid, NULL, tcp_server_loop, NULL);
 }
 

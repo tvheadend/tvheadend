@@ -21,7 +21,6 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
-#include <sys/epoll.h>
 #include <fcntl.h>
 #include <assert.h>
 
@@ -40,6 +39,7 @@
 #include "tsdemux.h"
 #include "psi.h"
 #include "settings.h"
+#include "tvhpoll.h"
 
 #if defined(PLATFORM_LINUX)
 #include <linux/netdevice.h>
@@ -52,8 +52,8 @@
 #  endif
 #endif
 
-static int iptv_thread_running;
-static int iptv_epollfd;
+static int             iptv_thread_running;
+static tvhpoll_t      *iptv_poll;
 static pthread_mutex_t iptv_recvmutex;
 
 struct service_list iptv_all_services; /* All IPTV services */
@@ -137,11 +137,11 @@ iptv_thread(void *aux)
 {
   int nfds, fd, r, j, hlen;
   uint8_t tsb[65536], *buf;
-  struct epoll_event ev;
+  tvhpoll_event_t ev;
   service_t *t;
 
   while(1) {
-    nfds = epoll_wait(iptv_epollfd, &ev, 1, -1);
+    nfds = tvhpoll_wait(iptv_poll, &ev, 1, -1);
     if(nfds == -1) {
       tvhlog(LOG_ERR, "IPTV", "epoll() error -- %s, sleeping 1 second",
 	     strerror(errno));
@@ -220,13 +220,13 @@ iptv_service_start(service_t *t, unsigned int weight, int force_start)
   struct sockaddr_in sin;
   struct sockaddr_in6 sin6;
   struct ifreq ifr;
-  struct epoll_event ev;
+  tvhpoll_event_t ev;
 
   assert(t->s_iptv_fd == -1);
 
   if(iptv_thread_running == 0) {
     iptv_thread_running = 1;
-    iptv_epollfd = epoll_create(10);
+    iptv_poll = tvhpoll_create(10);
     pthread_create(&tid, NULL, iptv_thread, NULL);
   }
 
@@ -345,9 +345,10 @@ iptv_service_start(service_t *t, unsigned int weight, int force_start)
 	   resize, strerror(errno));
 
   memset(&ev, 0, sizeof(ev));
-  ev.events = EPOLLIN;
+  ev.events  = TVHPOLL_IN;
+  ev.fd      = fd;
   ev.data.fd = fd;
-  if(epoll_ctl(iptv_epollfd, EPOLL_CTL_ADD, fd, &ev) == -1) {
+  if(tvhpoll_add(iptv_poll, &ev, 1) == -1) {
     tvhlog(LOG_ERR, "IPTV", "\"%s\" cannot add to epoll set -- %s", 
 	   t->s_identifier, strerror(errno));
     close(fd);
@@ -451,6 +452,7 @@ iptv_service_stop(service_t *t)
 #endif
   }
   close(t->s_iptv_fd); // Automatically removes fd from epoll set
+  // TODO: this is an issue
 
   t->s_iptv_fd = -1;
 }
