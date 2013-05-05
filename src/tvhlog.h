@@ -18,6 +18,7 @@
 #ifndef __TVH_LOGGING_H__
 #define __TVH_LOGGING_H__
 
+#include <sys/types.h>
 #include <sys/syslog.h>
 #include <pthread.h>
 #include <stdarg.h>
