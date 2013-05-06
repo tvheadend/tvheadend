@@ -482,7 +482,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
         tcp_get_ip_str((struct sockaddr*)&addr, buf, 50);
         strcpy(url, "http://");
         p = strlen(url);
-        p += snprintf(url+p, sizeof(url)-p, "%s%s%s:%hd%s",
+        p += snprintf(url+p, sizeof(url)-p, "%s%s%s:%d%s",
                       (addr.ss_family == AF_INET6)?"[":"",
                       buf,
                       (addr.ss_family == AF_INET6)?"]":"",
