@@ -798,7 +798,11 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   char range_buf[255];
   char disposition[256];
   off_t content_len, file_start, file_end, chunk;
+#if defined(PLATFORM_LINUX)
   ssize_t r;
+#elif defined(PLATFORM_FREEBSD)
+  off_t r;
+#endif
   
   if(remain == NULL)
     return 404;
