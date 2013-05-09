@@ -17,6 +17,8 @@
  */
 
 #include <string.h>
+#include <sys/types.h>
+#include <regex.h>
 
 #include "tvheadend.h"
 #include "channels.h"
@@ -640,6 +642,30 @@ static int _eit_process_event
     if ( ev.extra )
       *save |= epg_episode_set_extra(ee, extra, mod);
 #endif
+    if ( ev.desc ) {
+      regex_t preg;
+      regmatch_t match[4];
+      epg_episode_num_t en;
+      const char *src = lang_str_get(ev.desc, NULL);
+
+      memset(&en, 0, sizeof(en));
+#define COMHEM_EXPR "\\. (Säsong [0-9]+\\. )?(Del [0-9]+)( av [0-9]+)?\\.$"
+      regcomp(&preg, COMHEM_EXPR, REG_ICASE | REG_EXTENDED);
+
+      if (!regexec(&preg, src, 4, match, 0)) {
+	if (match[1].rm_so != -1)
+	  en.s_num = atoi(src + 8 + match[1].rm_so);
+
+	if (match[2].rm_so != -1)
+	  en.e_num = atoi(src + 4 + match[2].rm_so);
+ 
+	if (match[3].rm_so != -1 && match[2].rm_so != -1)
+	  en.e_cnt = atoi(src + 4 + match[3].rm_so);
+
+	*save |= epg_episode_set_epnum(ee, &en, mod);
+      }
+      regfree(&preg);
+    }
   }
 
   /* Tidy up */
