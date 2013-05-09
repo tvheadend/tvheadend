@@ -256,7 +256,7 @@ dvb_desc_terr_del
   dmc.dmc_fe_params.u.ofdm.transmission_mode     = ttab[(ptr[6] >> 1) & 0x3];
 
   /* Debug */
-  tvhtrace("nit", "    dvb-t freq %d bw %s cons %s hier %s code_rate %s %s guard %s trans %s",
+  tvhtrace("nit", "    dvb-t freq %d bw %s cons %s hier %s code_rate %s:%s guard %s trans %s",
            frequency,
            dvb_bw2str(dmc.dmc_fe_params.u.ofdm.bandwidth),
            dvb_qam2str(dmc.dmc_fe_params.u.ofdm.constellation),
@@ -315,20 +315,18 @@ dvb_pat_callback
     /* NIT PID */
     if (sid == 0) {
       if (pid) {
-        tvhtrace("pat", "NIT on PID %04X (%d)", pid, pid);
+        tvhtrace("pat", "  nit on pid %04X (%d)", pid, pid);
         nit_pid = pid;
       }
 
     /* Service */
     } else if (pid) {
-      tvhtrace("pat", "SID %04X (%d) on PID %04X (%d)", sid, sid, pid, pid);
-#if 0
+      tvhtrace("pat", "  sid %04X (%d) on pid %04X (%d)", sid, sid, pid, pid);
       int save = 0;
       if (mpegts_service_find(mm, sid, pid, NULL, &save))
         if (save)
           mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK, dvb_pmt_callback,
                            NULL, "pmt", MT_CRC | MT_QUICKREQ, pid);
-#endif
     }
 
     /* Next */
@@ -436,10 +434,10 @@ dvb_nit_callback
     mux   = NULL;
     tsid  = (ptr[0] << 8) | ptr[1];
     onid  = (ptr[2] << 8) | ptr[3];
-
     tvhtrace("nit", "  onid %04X (%d) tsid %04X (%d)", onid, onid, tsid, tsid);
 
     FOREACH_DVB_DESC(ptr, len, 4, dllen, dtag, dlen) {
+      llen -= 2 + dlen;
       tvhtrace("nit", "    dtag %02X dlen %d", dtag, dlen);
       //tvhlog_hexdump("nit", ptr, dlen);
 
