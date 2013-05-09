@@ -908,6 +908,8 @@ psi_caid2name(uint16_t caid)
  *
  */
 static struct strtab streamtypetab[] = {
+  { "NONE",       SCT_NONE },
+  { "UNKNOWN",    SCT_UNKNOWN },
   { "MPEG2VIDEO", SCT_MPEG2VIDEO },
   { "MPEG2AUDIO", SCT_MPEG2AUDIO },
   { "H264",       SCT_H264 },
@@ -920,7 +922,7 @@ static struct strtab streamtypetab[] = {
   { "MPEGTS",     SCT_MPEGTS },
   { "TEXTSUB",    SCT_TEXTSUB },
   { "EAC3",       SCT_EAC3 },
-  { "AAC",       SCT_MP4A },
+  { "AAC",        SCT_MP4A },
 };
 
 
@@ -933,6 +935,14 @@ streaming_component_type2txt(streaming_component_type_t s)
   return val2str(s, streamtypetab) ?: "INVALID";
 }
 
+/**
+ *
+ */
+streaming_component_type_t
+streaming_component_txt2type(const char *str)
+{
+  return str ? str2val(str, streamtypetab) : SCT_UNKNOWN;
+}
 
 /**
  * Store service settings into message

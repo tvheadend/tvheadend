@@ -46,7 +46,9 @@
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
 #endif
-
+#if ENABLE_LIBAV
+#include "plumbing/transcoding.h"
+#endif
 #include <sys/statvfs.h>
 #include "settings.h"
 #include <sys/time.h>
@@ -177,6 +179,10 @@ typedef struct htsp_subscription {
   streaming_target_t *hs_tshift;
 #endif
 
+#if ENABLE_LIBAV
+streaming_target_t *hs_transcoder;
+#endif
+
   htsp_msg_q_t hs_q;
 
   time_t hs_last_report; /* Last queue status report sent */
@@ -282,13 +288,23 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
 {
   LIST_REMOVE(hs, hs_link);
   subscription_unsubscribe(hs->hs_s);
+
   if(hs->hs_tsfix != NULL)
     tsfix_destroy(hs->hs_tsfix);
+
+#if ENABLE_LIBAV
+  if(hs->hs_transcoder != NULL)
+    transcoder_destroy(hs->hs_transcoder);
+#endif
+
   htsp_flush_queue(htsp, &hs->hs_q);
+
 #if ENABLE_TIMESHIFT
   if(hs->hs_tshift)
     timeshift_destroy(hs->hs_tshift);
 #endif
+
+
   free(hs);
 }
 
@@ -1328,6 +1344,32 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
     normts = 1;
   }
 #endif
+
+#if ENABLE_LIBAV
+  if (transcoding_enabled) {
+    transcoder_props_t props;
+
+    props.tp_vcodec = streaming_component_txt2type(htsmsg_get_str(in, "videoCodec"));
+    props.tp_acodec = streaming_component_txt2type(htsmsg_get_str(in, "audioCodec"));
+    props.tp_scodec = streaming_component_txt2type(htsmsg_get_str(in, "subtitleCodec"));
+
+    props.tp_resolution = htsmsg_get_u32_or_default(in, "maxResolution", 0);
+    props.tp_channels   = htsmsg_get_u32_or_default(in, "channels", 0);
+    props.tp_bandwidth  = htsmsg_get_u32_or_default(in, "bandwidth", 0);
+
+    if ((str = htsmsg_get_str(in, "language")))
+      strncpy(props.tp_language, str, 3);
+
+    if(props.tp_vcodec != SCT_UNKNOWN ||
+       props.tp_acodec != SCT_UNKNOWN ||
+       props.tp_scodec != SCT_UNKNOWN) {
+      st = hs->hs_transcoder = transcoder_create(st);
+      transcoder_set_properties(st, &props);
+      normts = 1;
+    }
+  }
+#endif
+
   if(normts)
     st = hs->hs_tsfix = tsfix_create(st);
 
@@ -1640,6 +1682,28 @@ htsp_method_file_seek(htsp_connection_t *htsp, htsmsg_t *in)
   return rep;
 }
 
+
+#if ENABLE_LIBAV
+/**
+ *
+ */
+static htsmsg_t *
+htsp_method_getCodecs(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *out, *l;
+
+  l = htsmsg_create_list();
+  transcoder_get_capabilities(l);
+
+  out = htsmsg_create_map();
+
+  htsmsg_add_msg(out, "encoders", l);
+
+  return out;
+}
+#endif
+
+
 /**
  * HTSP methods
  */
@@ -1669,6 +1733,9 @@ struct {
   { "subscriptionSkip",         htsp_method_skip,           ACCESS_STREAMING},
   { "subscriptionSpeed",        htsp_method_speed,          ACCESS_STREAMING},
   { "subscriptionLive",         htsp_method_live,           ACCESS_STREAMING},
+#if ENABLE_LIBAV
+  { "getCodecs",                htsp_method_getCodecs,      ACCESS_STREAMING},
+#endif
   { "fileOpen",                 htsp_method_file_open,      ACCESS_RECORDER},
   { "fileRead",                 htsp_method_file_read,      ACCESS_RECORDER},
   { "fileClose",                htsp_method_file_close,     ACCESS_RECORDER},

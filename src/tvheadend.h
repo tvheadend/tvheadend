@@ -184,6 +184,7 @@ int get_device_connection(const char *dev);
  * Stream component types
  */
 typedef enum {
+  SCT_NONE = -1,
   SCT_UNKNOWN = 0,
   SCT_MPEG2VIDEO = 1,
   SCT_MPEG2AUDIO,
@@ -423,7 +424,7 @@ typedef struct sbuf {
 } sbuf_t;
 
 
-
+streaming_component_type_t streaming_component_txt2type(const char *str);
 const char *streaming_component_type2txt(streaming_component_type_t s);
 
 static inline unsigned int tvh_strhash(const char *s, unsigned int mod)

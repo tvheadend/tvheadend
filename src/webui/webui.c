@@ -40,6 +40,7 @@
 #include "psi.h"
 #include "plumbing/tsfix.h"
 #include "plumbing/globalheaders.h"
+#include "plumbing/transcoding.h"
 #include "epg.h"
 #include "muxer.h"
 #include "dvb/dvb.h"
@@ -548,6 +549,47 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 
+#if ENABLE_LIBAV
+static int
+http_get_transcoder_properties(struct http_arg_list *args, 
+			       transcoder_props_t *props)
+{
+  int transcode;
+  const char *s;
+
+  memset(props, 0, sizeof(transcoder_props_t));
+
+  if ((s = http_arg_get(args, "transcode")))
+    transcode = atoi(s);
+  else
+    transcode = 0;
+
+  if ((s = http_arg_get(args, "resolution")))
+    props->tp_resolution = atoi(s);
+ 
+  if ((s = http_arg_get(args, "channels")))
+    props->tp_channels = atoi(s);
+ 
+  if ((s = http_arg_get(args, "bandwidth")))
+    props->tp_bandwidth = atoi(s);
+
+  if ((s = http_arg_get(args, "language")))
+    strncpy(props->tp_language, s, 3);
+
+  if ((s = http_arg_get(args, "vcodec")))
+    props->tp_vcodec = streaming_component_txt2type(s);
+
+  if ((s = http_arg_get(args, "acodec")))
+    props->tp_acodec = streaming_component_txt2type(s);
+
+  if ((s = http_arg_get(args, "scodec")))
+    props->tp_scodec = streaming_component_txt2type(s);
+
+  return transcode && transcoding_enabled;
+}
+#endif
+
+
 /**
  * Subscribes to a service and starts the streaming loop
  */
@@ -660,6 +702,9 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   streaming_target_t *gh;
   streaming_target_t *tsfix;
   streaming_target_t *st;
+#if ENABLE_LIBAV
+  streaming_target_t *tr = NULL;
+#endif
   dvr_config_t *cfg;
   int priority = 100;
   int flags;
@@ -689,6 +734,14 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
   } else {
     streaming_queue_init2(&sq, 0, qsize);
     gh = globalheaders_create(&sq.sq_st);
+#if ENABLE_LIBAV
+    transcoder_props_t props;
+    if(http_get_transcoder_properties(&hc->hc_req_args, &props)) {
+      tr = transcoder_create(gh);
+      transcoder_set_properties(tr, &props);
+      tsfix = tsfix_create(tr);
+    } else
+#endif
     tsfix = tsfix_create(gh);
     st = tsfix;
     flags = 0;
@@ -710,6 +763,12 @@ http_stream_channel(http_connection_t *hc, channel_t *ch)
 
   if(gh)
     globalheaders_destroy(gh);
+
+#if ENABLE_LIBAV
+  if(tr)
+    transcoder_destroy(tr);
+#endif
+
   if(tsfix)
     tsfix_destroy(tsfix);
 
