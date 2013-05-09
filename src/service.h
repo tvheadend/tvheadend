@@ -58,13 +58,6 @@ typedef struct elementary_stream {
   int es_demuxer_fd;
   int es_peak_presentation_delay; /* Max seen diff. of DTS and PTS */
 
-  struct psi_section *es_section;
-  int es_section_docrc;           /* Set if we should verify CRC on tables */
-#ifdef TODO_CAN_THIS_BE_REMOVED
-  pid_section_callback_t *es_got_section;
-#endif
-  void *es_got_section_opaque;
-
   /* PCR recovery */
 
   int es_pcr_recovery_fails;
@@ -322,14 +315,6 @@ typedef struct service {
   struct in6_addr s_iptv_group6;
   uint16_t s_iptv_port;
   int s_iptv_fd;
-
-  /**
-   * For per-transport PAT/PMT parsers, allocated on demand
-   * Free'd by transport_destroy
-   */
-  struct psi_section *s_pat_section;
-  struct psi_section *s_pmt_section;
-  // Note: are the above still required!
 #endif
 
   /**

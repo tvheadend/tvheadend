@@ -20,7 +20,7 @@
 #include "tvheadend.h"
 #include "tsfile_private.h"
 #include "input.h"
-#include "input/mpegts/psi.h"
+#include "input/mpegts/dvb.h"
 
 #include <sys/epoll.h>
 #include <sys/types.h>
@@ -213,8 +213,8 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
   LIST_INSERT_HEAD(&mi->mi_mux_active, t, mmi_active_link);
 
   /* Install table handlers */
-  mpegts_table_add(mm, 0x0, 0xff, psi_pat_callback, NULL, "pat",
-                   MT_QUICKREQ| MT_CRC, 0);
+  mpegts_table_add(mm, DVB_PAT_BASE, DVB_PAT_MASK, dvb_pat_callback,
+                   NULL, "pat", MT_QUICKREQ| MT_CRC, 0);
 #if 0
   mpegts_table_add(mm, 0x1, 0xff, dvb_cat_callback, NULL, "cat",
                    MT_CRC, 1);

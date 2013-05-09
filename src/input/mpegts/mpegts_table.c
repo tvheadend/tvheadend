@@ -115,7 +115,7 @@ mpegts_table_destroy ( mpegts_table_t *mt )
 void
 mpegts_table_add
   ( mpegts_mux_t *mm, int tableid, int mask,
-    mpegts_table_callback callback, void *opaque,
+    mpegts_table_callback_t callback, void *opaque,
     const char *name, int flags, int pid )
 {
   mpegts_table_t *mt;
@@ -159,6 +159,94 @@ mpegts_table_flush_all ( mpegts_mux_t *mm )
   while ((mt = LIST_FIRST(&mm->mm_tables)))
     mpegts_table_destroy(mt);
 }
+
+/*
+ * Section assembly
+ */
+static int
+mpegts_psi_section_reassemble0
+  ( mpegts_psi_section_t *ps, const uint8_t *data, 
+    int len, int start, int crc,
+    mpegts_psi_section_callback_t cb, void *opaque)
+{
+  int excess, tsize;
+
+  if(start) {
+    // Payload unit start indicator
+    ps->ps_offset = 0;
+    ps->ps_lock = 1;
+  }
+
+  if(!ps->ps_lock)
+    return -1;
+
+  memcpy(ps->ps_data + ps->ps_offset, data, len);
+  ps->ps_offset += len;
+
+  if(ps->ps_offset < 3) {
+    /* We don't know the total length yet */
+    return len;
+  }
+
+  tsize = 3 + (((ps->ps_data[1] & 0xf) << 8) | ps->ps_data[2]);
+ 
+  if(ps->ps_offset < tsize)
+    return len; // Not there yet
+  
+  excess = ps->ps_offset - tsize;
+
+  if(crc && tvh_crc32(ps->ps_data, tsize, 0xffffffff))
+    return -1;
+
+  ps->ps_offset = 0;
+  if (cb)
+    cb(ps->ps_data, tsize - (crc ? 4 : 0), opaque);
+  return len - excess;
+}
+
+
+/**
+ *
+ */
+void
+mpegts_psi_section_reassemble
+  (mpegts_psi_section_t *ps, const uint8_t *tsb, int crc,
+   mpegts_psi_section_callback_t cb, void *opaque)
+{
+  int off  = tsb[3] & 0x20 ? tsb[4] + 5 : 4;
+  int pusi = tsb[1] & 0x40;
+  int r;
+
+  if(off >= 188) {
+    ps->ps_lock = 0;
+    return;
+  }
+  
+  if(pusi) {
+    int len = tsb[off++];
+    if(len > 0) {
+      if(len > 188 - off) {
+        ps->ps_lock = 0;
+        return;
+      }
+      mpegts_psi_section_reassemble0(ps, tsb + off, len, 0, crc, cb, opaque);
+      off += len;
+    }
+  }
+
+  while(off < 188) {
+    r = mpegts_psi_section_reassemble0(ps, tsb + off, 188 - off, pusi, crc,
+        cb, opaque);
+    if(r < 0) {
+      ps->ps_lock = 0;
+      break;
+    }
+    off += r;
+    pusi = 0;
+  }
+}
+
+
 
 /******************************************************************************
  * Editor Configuration

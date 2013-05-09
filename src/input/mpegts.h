@@ -21,13 +21,15 @@
 #define __TVH_MPEGTS_H__
 
 #include "service.h"
-#include "src/input/mpegts/psi.h"
+#include "mpegts/dvb.h"
 
-#define MPEGTS_ONID_NONE 0xFFFF
-#define MPEGTS_TSID_NONE 0xFFFF
+#define MPEGTS_ONID_NONE        0xFFFF
+#define MPEGTS_TSID_NONE        0xFFFF
+#define MPEGTS_PSI_SECTION_SIZE 5000
 
 /* Types */
 typedef struct mpegts_table         mpegts_table_t;
+typedef struct mpegts_psi_section   mpegts_psi_section_t;
 typedef struct mpegts_network       mpegts_network_t;
 typedef struct mpegts_mux           mpegts_mux_t;
 typedef struct mpegts_service       mpegts_service_t;
@@ -45,8 +47,18 @@ TAILQ_HEAD(mpegts_table_feed_queue, mpegts_table_feed);
  * SI processing
  * *************************************************************************/
 
-typedef int (*mpegts_table_callback)
+typedef int (*mpegts_table_callback_t)
   ( mpegts_table_t*, const uint8_t *buf, int len, int tableid );
+
+typedef void (*mpegts_psi_section_callback_t)
+  ( const uint8_t *tsb, size_t len, void *opaque );
+
+struct mpegts_psi_section
+{
+  int     ps_offset;
+  int     ps_lock;
+  uint8_t ps_data[MPEGTS_PSI_SECTION_SIZE];
+};
 
 struct mpegts_table
 {
@@ -79,7 +91,7 @@ struct mpegts_table
   char *mt_name;
 
   void *mt_opaque;
-  mpegts_table_callback mt_callback;
+  mpegts_table_callback_t mt_callback;
 
 
   // TODO: remind myself of what each field is for
@@ -94,8 +106,7 @@ struct mpegts_table
   int mt_destroyed; // Refcounting
   int mt_refcount;
 
-  psi_section_t mt_sect; // Manual reassembly
-
+  mpegts_psi_section_t mt_sect;
 };
 
 /**
@@ -110,6 +121,12 @@ struct mpegts_table_feed {
   mpegts_mux_t *mtf_mux;
 };
 
+/*
+ * Assemble SI section
+ */
+void mpegts_psi_section_reassemble
+  ( mpegts_psi_section_t *ps, const uint8_t *tsb, int crc,
+    mpegts_psi_section_callback_t cb, void *opaque );
 
 /* **************************************************************************
  * Logical network
@@ -149,7 +166,7 @@ struct mpegts_network
    * Functions
    */
   mpegts_mux_t*     (*mn_create_mux)
-    (mpegts_mux_t*, uint16_t onid, uint16_t tsid, void *aux);
+    (mpegts_mux_t*, uint16_t onid, uint16_t tsid, dvb_mux_conf_t *conf);
   mpegts_service_t* (*mn_create_service)
     (mpegts_mux_t*, uint16_t sid, uint16_t pmt_pid);
 
@@ -160,6 +177,8 @@ struct mpegts_network
 #if 0 // TODO: FIXME
   int dn_fe_type;  // Frontend types for this network (FE_QPSK, etc)
 #endif
+
+  uint32_t mn_nid; // limit scope of scanning
 
 #if 0 // TODO: FIXME CONFIG
   uint32_t dn_disable_pmt_monitor;
@@ -470,7 +489,7 @@ void mpegts_table_release
   (mpegts_table_t *mt);
 void mpegts_table_add
   (mpegts_mux_t *mm, int tableid, int mask,
-   mpegts_table_callback callback, void *opaque,
+   mpegts_table_callback_t callback, void *opaque,
    const char *name, int flags, int pid);
 void mpegts_table_flush_all
   (mpegts_mux_t *mm);

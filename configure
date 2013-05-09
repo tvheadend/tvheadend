@@ -83,6 +83,11 @@ else
 fi
 
 #
+# DVB API
+#
+check_cc_header 'linux/dvb/version' dvbapi
+
+#
 # Gzip
 #
 if enabled_or_auto zlib; then

@@ -48,6 +48,7 @@ static void ts_remux(mpegts_service_t *t, const uint8_t *tsb);
 /**
  * Code for dealing with a complete section
  */
+#if TODO_MOVE_THIS
 static void
 got_section(const uint8_t *data, size_t len, void *opaque)
 {
@@ -65,6 +66,7 @@ got_section(const uint8_t *data, size_t len, void *opaque)
 #endif
   }
 }
+#endif
 
 
 /**
@@ -108,11 +110,14 @@ ts_recv_packet0(mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb
 
   case SCT_CA:
   case SCT_PMT:
+#if TODO_MOVE_THIS
+    break; // TODO: we should not receive these
     if(st->es_section == NULL)
       st->es_section = calloc(1, sizeof(struct psi_section));
 
     psi_section_reassemble(st->es_section, tsb, st->es_section_docrc,
 			   got_section, st);
+#endif
     break;
 
   default:

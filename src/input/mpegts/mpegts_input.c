@@ -151,8 +151,8 @@ mpegts_input_table_dispatch ( mpegts_mux_t *mm, mpegts_table_feed_t *mtf )
   for (i = 0; i < len; i++) {
     mt = vec[i];
     if (!mt->mt_destroyed && mt->mt_pid == pid)
-      psi_section_reassemble(&mt->mt_sect, mtf->mtf_tsb, 0,
-                             mpegts_table_dispatch, mt);
+      mpegts_psi_section_reassemble(&mt->mt_sect, mtf->mtf_tsb, 0,
+                                    mpegts_table_dispatch, mt);
     mpegts_table_release(mt);
   }
 }

@@ -1,5 +1,5 @@
 /*
- *  TV Input - DVB - Support functions
+ *  TV Input - DVB - Support/Conversion functions
  *  Copyright (C) 2007 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,8 +16,6 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <pthread.h>
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
@@ -31,7 +29,6 @@
 #include <linux/dvb/frontend.h>
 
 #include "tvheadend.h"
-#include "dvb_support.h"
 #include "dvb.h"
 #include "dvb_charset_tables.h"
 
@@ -196,7 +193,9 @@ static inline size_t dvb_convert(int conv,
  */
 
 int
-dvb_get_string(char *dst, size_t dstlen, const uint8_t *src, size_t srclen, const char *dvb_charset, dvb_string_conv_t *conv)
+dvb_get_string
+  (char *dst, size_t dstlen, const uint8_t *src, size_t srclen, 
+   const char *dvb_charset, dvb_string_conv_t *conv)
 {
   int ic;
   size_t len, outlen;
@@ -327,10 +326,6 @@ atsc_utf16_to_utf8(uint8_t *src, int len, char *buf, int buflen)
   *buf = 0;
 }
 
-
-
-
-
 /*
  * DVB time and date functions
  */
@@ -375,105 +370,140 @@ dvb_convert_date(uint8_t *dvb_buf)
   return (timegm(&dvb_time));
 }
 
-/**
- *
+/*
+ * DVB API helpers
  */
-static struct strtab adaptertype[] = {
-  { "DVB-S",  FE_QPSK },
-  { "DVB-C",  FE_QAM },
-  { "DVB-T",  FE_OFDM },
-  { "ATSC",   FE_ATSC },
+#if ENABLE_DVBAPI
+
+#define dvb_str2val(p)\
+const char *dvb_##p##2str (int p)         { return val2str(p, p##tab); }\
+int         dvb_str2##p   (const char *p) { return str2val(p, p##tab); }
+
+static struct strtab rollofftab[] = {
+#if DVB_API_VERSION >= 5
+  { "ROLLOFF_35",           ROLLOFF_35 },
+  { "ROLLOFF_20",           ROLLOFF_20 },
+  { "ROLLOFF_25",           ROLLOFF_25 },
+  { "ROLLOFF_AUTO",         ROLLOFF_AUTO }
+#endif
 };
+dvb_str2val(rolloff);
 
+static struct strtab delsystab[] = {
+#if DVB_API_VERSION >= 5
+  { "SYS_UNDEFINED",        SYS_UNDEFINED },
+  { "SYS_DVBC_ANNEX_AC",    SYS_DVBC_ANNEX_AC },
+  { "SYS_DVBC_ANNEX_B",     SYS_DVBC_ANNEX_B },
+  { "SYS_DVBT",             SYS_DVBT },
+  { "SYS_DSS",              SYS_DSS },
+  { "SYS_DVBS",             SYS_DVBS },
+  { "SYS_DVBS2",            SYS_DVBS2 },
+  { "SYS_DVBH",             SYS_DVBH },
+  { "SYS_ISDBT",            SYS_ISDBT },
+  { "SYS_ISDBS",            SYS_ISDBS },
+  { "SYS_ISDBC",            SYS_ISDBC },
+  { "SYS_ATSC",             SYS_ATSC },
+  { "SYS_ATSCMH",           SYS_ATSCMH },
+  { "SYS_DMBTH",            SYS_DMBTH },
+  { "SYS_CMMB",             SYS_CMMB },
+  { "SYS_DAB",              SYS_DAB }
+#endif
+};
+dvb_str2val(delsys);
 
-int
-dvb_str_to_adaptertype(const char *str)
-{
-  return str2val(str, adaptertype);
-}
+static struct strtab fectab[] = {
+  { "NONE",                 FEC_NONE },
+  { "1/2",                  FEC_1_2 },
+  { "2/3",                  FEC_2_3 },
+  { "3/4",                  FEC_3_4 },
+  { "4/5",                  FEC_4_5 },
+  { "5/6",                  FEC_5_6 },
+  { "6/7",                  FEC_6_7 },
+  { "7/8",                  FEC_7_8 },
+  { "8/9",                  FEC_8_9 },
+  { "AUTO",                 FEC_AUTO },
+#if DVB_API_VERSION >= 5
+  { "3/5",                  FEC_3_5 },
+  { "9/10",                 FEC_9_10 }
+#endif
+};
+dvb_str2val(fec);
 
-const char *
-dvb_adaptertype_to_str(int type)
-{
-  return val2str(type, adaptertype) ?: "invalid";
-}
+static struct strtab qamtab[] = {
+  { "QPSK",                 QPSK },
+  { "QAM16",                QAM_16 },
+  { "QAM32",                QAM_32 },
+  { "QAM64",                QAM_64 },
+  { "QAM128",               QAM_128 },
+  { "QAM256",               QAM_256 },
+  { "AUTO",                 QAM_AUTO },
+  { "8VSB",                 VSB_8 },
+  { "16VSB",                VSB_16 },
+#if DVB_API_VERSION >= 5
+  { "PSK_8",                PSK_8 },
+  { "APSK_16",              APSK_16 },
+  { "APSK_32",              APSK_32 },
+  { "DQPSK",                DQPSK }
+#endif
+};
+dvb_str2val(qam);
 
-const char *
-dvb_polarisation_to_str(int pol)
-{
-  switch(pol) {
-  case POLARISATION_VERTICAL:       return "V";
-  case POLARISATION_HORIZONTAL:     return "H";
-  case POLARISATION_CIRCULAR_LEFT:  return "L";
-  case POLARISATION_CIRCULAR_RIGHT: return "R";
-  default:                          return "X";
-  }
-}
+static struct strtab bwtab[] = {
+  { "8MHz",                 BANDWIDTH_8_MHZ },
+  { "7MHz",                 BANDWIDTH_7_MHZ },
+  { "6MHz",                 BANDWIDTH_6_MHZ },
+  { "AUTO",                 BANDWIDTH_AUTO },
+#if DVB_API_VERSION >= 5
+  { "5MHz",                 BANDWIDTH_5_MHZ },
+  { "10MHz",                BANDWIDTH_10_MHZ },
+  { "1712kHz",              BANDWIDTH_1_712_MHZ},
+#endif
+};
+dvb_str2val(bw);
 
-const char *
-dvb_polarisation_to_str_long(int pol)
-{
-  switch(pol) {
-  case POLARISATION_VERTICAL:        return "Vertical";
-  case POLARISATION_HORIZONTAL:      return "Horizontal";
-  case POLARISATION_CIRCULAR_LEFT:   return "Left";
-  case POLARISATION_CIRCULAR_RIGHT:  return "Right";
-  default:                           return "??";
-  }
-}
+static struct strtab modetab[] = {
+  { "2k",                   TRANSMISSION_MODE_2K },
+  { "8k",                   TRANSMISSION_MODE_8K },
+  { "AUTO",                 TRANSMISSION_MODE_AUTO },
+#if DVB_API_VERSION >= 5
+  { "1k",                   TRANSMISSION_MODE_1K },
+  { "2k",                   TRANSMISSION_MODE_16K },
+  { "32k",                  TRANSMISSION_MODE_32K },
+#endif
+};
+dvb_str2val(mode);
 
+static struct strtab guardtab[] = {
+  { "1/32",                 GUARD_INTERVAL_1_32 },
+  { "1/16",                 GUARD_INTERVAL_1_16 },
+  { "1/8",                  GUARD_INTERVAL_1_8 },
+  { "1/4",                  GUARD_INTERVAL_1_4 },
+  { "AUTO",                 GUARD_INTERVAL_AUTO },
+#if DVB_API_VERSION >= 5
+  { "1/128",                GUARD_INTERVAL_1_128 },
+  { "19/128",               GUARD_INTERVAL_19_128 },
+  { "19/256",               GUARD_INTERVAL_19_256},
+#endif
+};
+dvb_str2val(guard);
 
-/**
- *
- */
-static void
-nicenum(char *x, size_t siz, unsigned int v, const char *postfix)
-{
-  if(v < 1000)
-    snprintf(x, siz, "%d%s", v, postfix);
-  else if(v < 1000000)
-    snprintf(x, siz, "%d,%03d%s", v / 1000, v % 1000, postfix);
-  else if(v < 1000000000)
-    snprintf(x, siz, "%d,%03d,%03d%s",
-	     v / 1000000, (v % 1000000) / 1000, v % 1000, postfix);
-  else
-    snprintf(x, siz, "%d,%03d,%03d,%03d%s",
-	     v / 1000000000, (v % 1000000000) / 1000000,
-	     (v % 1000000) / 1000, v % 1000, postfix);
-}
+static struct strtab hiertab[] = {
+  { "NONE",                 HIERARCHY_NONE },
+  { "1",                    HIERARCHY_1 },
+  { "2",                    HIERARCHY_2 },
+  { "4",                    HIERARCHY_4 },
+  { "AUTO",                 HIERARCHY_AUTO }
+};
+dvb_str2val(hier);
 
+static struct strtab poltab[] = {
+  { "Vertical",             POLARISATION_VERTICAL },
+  { "Horizontal",           POLARISATION_HORIZONTAL },
+  { "Left",                 POLARISATION_CIRCULAR_LEFT },
+  { "Right",                POLARISATION_CIRCULAR_RIGHT },
+};
+dvb_str2val(pol);
 
-/**
- *
- */
-const char *
-dvb_mux_nicefreq(const dvb_mux_t *dm)
-{
-  static char ret[100];
-  int f = dm->dm_conf.dmc_fe_params.frequency;
-  nicenum(ret, sizeof(ret), dm->dm_dn->dn_fe_type == FE_QPSK ? f : f / 1000,
-          " kHz");
-  return ret;
-}
+#undef dvb_str2val
 
-
-/**
- *
- */
-const char *
-dvb_mux_nicename(const dvb_mux_t *dm)
-{
-  static char ret[100];
-  const char *n = dm->dm_network_name;
-
-  snprintf(ret, sizeof(ret), "%s%s%s%s%s",
-           n ?: "",
-           n ? ": " : "",
-           dvb_mux_nicefreq(dm),
-           dm->dm_dn->dn_fe_type == FE_QPSK ? " " : "",
-           dm->dm_dn->dn_fe_type == FE_QPSK ?
-           dvb_polarisation_to_str_long(dm->dm_conf.dmc_polarisation) : 
-           "");
-  return ret;
-}
-
+#endif /* ENABLE_DVBAPI */

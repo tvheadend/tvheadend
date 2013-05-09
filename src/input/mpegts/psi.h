@@ -28,18 +28,6 @@
 struct mpegts_service;
 struct mpegts_table;
 
-typedef void (section_handler_t)(const uint8_t *data, size_t len, void *opaque);
-
-typedef struct psi_section {
-  int ps_offset;
-  int ps_lock;
-  uint8_t ps_data[PSI_SECTION_SIZE];
-} psi_section_t;
-
-
-void psi_section_reassemble(psi_section_t *ps, const uint8_t *tsb, int crc,
-			    section_handler_t *cb, void *opaque);
-
 int psi_parse_pmt
   (struct mpegts_service *t, const uint8_t *ptr, int len, int chksvcid,
    int delete);
