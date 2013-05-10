@@ -336,6 +336,35 @@ dvb_desc_service_list
   return 0;
 }
 
+static int
+dvb_desc_local_channel
+  ( const char *dstr, const uint8_t *ptr, int len, mpegts_mux_t *mm )
+{
+  int save = 0;
+  uint16_t sid, lcn;
+
+  while(len >= 4) {
+    sid = (ptr[0] << 8) | ptr[1];
+    lcn = ((ptr[2] & 3) << 8) | ptr[3];
+    tvhtrace(dstr, "    sid %d lcn %d", sid, lcn);
+    if (lcn && mm) {
+      mpegts_service_t *s = mpegts_service_find(mm, sid, 0, NULL, &save);
+      if (s) {
+        if (s->s_dvb_channel_num != lcn) {
+          s->s_dvb_channel_num = lcn;
+          s->s_config_save((service_t*)s);
+          service_refresh_channel((service_t*)s);
+        }
+      }
+    }
+    ptr += 4;
+    len -= 4;
+  }
+  return 0;
+}
+
+
+
 /* **************************************************************************
  * Tables
  * *************************************************************************/
@@ -550,6 +579,8 @@ dvb_nit_callback
             mpegts_mux_set_default_authority(mux, dauth);
           break;
         case DVB_DESC_LOCAL_CHAN:
+          if (dvb_desc_local_channel(dstr, dptr, dlen, mux))
+            return -1;
           break;
         case DVB_DESC_SERVICE_LIST:
           if (dvb_desc_service_list(dstr, dptr, dlen, mux))
