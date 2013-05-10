@@ -30,6 +30,12 @@ struct mpegts_table;
 
 /* Defaults */
 
+/* PIDs */
+
+#define DVB_PAT_PID                   0x00
+#define DVB_NIT_PID                   0x10
+#define DVB_SDT_PID                   0x11
+#define DVB_BAT_PID                   0x11
 
 /* Tables */
 
@@ -63,6 +69,7 @@ struct mpegts_table;
 #define DVB_DESC_SERVICE_LIST         0x41
 #define DVB_DESC_SAT_DEL              0x43
 #define DVB_DESC_CABLE_DEL            0x44
+#define DVB_DESC_BOUQUET_NAME         0x47
 #define DVB_DESC_SHORT_EVENT          0x4D
 #define DVB_DESC_EXT_EVENT            0x4E
 #define DVB_DESC_SERVICE              0x48
@@ -109,23 +116,34 @@ void atsc_utf16_to_utf8(uint8_t *src, int len, char *buf, int buflen);
  * PSI processing
  */
 
-#define FOREACH_DVB_LOOP0(ptr,len,off,min,inc,llen) \
-  for ( llen = (ptr[off] & 0xF) << 8 | ptr[off+1],\
-        ptr += off + 2,\
-        len -= off + 2;\
-        (llen > min);\
-        ptr += inc, llen -= inc + min )\
-    if      (llen > len)       return -1;\
+#define DVB_LOOP_INIT(ptr, len, off, lptr, llen)\
+do {\
+  llen = ((ptr[off] & 0xF) << 8) | ptr[off+1];\
+  lptr = 2 + off + ptr;\
+  ptr += 2 + off + llen;\
+  len -= 2 + off + llen;\
+  if (len < 0) {tvhtrace("psi", "len < 0"); return -1; }\
+} while(0)
+
+#define DVB_LOOP_EACH(ptr, len, min)\
+  for ( ; len > min ; )\
+
+#define DVB_LOOP_FOREACH(ptr, len, off, lptr, llen, min)\
+  DVB_LOOP_INIT(ptr, len, off, lptr, llen);\
+  DVB_LOOP_EACH(lptr, llen, min)
+
+#define DVB_DESC_EACH(ptr, len, dtag, dlen, dptr)\
+  DVB_LOOP_EACH(ptr, len, 2)\
+    if      (!(dtag  = ptr[0]))      {tvhtrace("psi", "1");return -1;}\
+    else if ((dlen  = ptr[1]) < 0)   {tvhtrace("psi", "2");return -1;}\
+    else if (!(dptr  = ptr+2))       {tvhtrace("psi", "3");return -1;}\
+    else if ( (len -= 2 + dlen) < 0) {tvhtrace("psi", "4");return -1;}\
+    else if (!(ptr += 2 + dlen))     {tvhtrace("psi", "5");return -1;}\
     else
 
-#define FOREACH_DVB_LOOP(ptr,len,off,min,llen)\
-  FOREACH_DVB_LOOP0(ptr,len,off,min,0,llen)
-
-#define FOREACH_DVB_DESC(ptr,len,off,llen,dtag,dlen) \
-  FOREACH_DVB_LOOP0(ptr,len,off,2,dlen,llen)\
-    if      (!(dtag = *ptr++)) return -1;\
-    else if ((dlen = *ptr++) > llen - 2) return -1;\
-    else
+#define DVB_DESC_FOREACH(ptr, len, off, lptr, llen, dtag, dlen, dptr)\
+  DVB_LOOP_INIT(ptr, len, off, lptr, llen);\
+  DVB_DESC_EACH(lptr, llen, dtag, dlen, dptr)\
 
 /* PSI descriptors */
 

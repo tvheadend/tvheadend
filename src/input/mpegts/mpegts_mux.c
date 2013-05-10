@@ -60,22 +60,35 @@ const idclass_t mpegts_mux_class =
   }
 };
 
-void mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid, int force )
+int
+mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid, int force )
 {
   if (onid == mm->mm_onid)
-    return;
+    return 0;
   if (!force && mm->mm_onid != MPEGTS_ONID_NONE)
-    return;
+    return 0;
   mm->mm_onid = onid;
+  return 1;
 }
 
-void mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force )
+int
+mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force )
 {
   if (tsid == mm->mm_tsid)
-    return;
+    return 0;
   if (!force && mm->mm_tsid != MPEGTS_TSID_NONE)
-    return;
+    return 0;
   mm->mm_tsid = tsid;
+  return 1;
+}
+
+int 
+mpegts_mux_set_default_authority ( mpegts_mux_t *mm, const char *defauth )
+{
+  if (defauth && !strcmp(defauth, mm->mm_dvb_default_authority ?: ""))
+    return 0;
+  tvh_str_update(&mm->mm_dvb_default_authority, defauth);
+  return 1;
 }
 
 static void

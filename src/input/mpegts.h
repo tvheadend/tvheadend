@@ -169,6 +169,7 @@ struct mpegts_network
     (mpegts_mux_t*, uint16_t onid, uint16_t tsid, dvb_mux_conf_t *conf);
   mpegts_service_t* (*mn_create_service)
     (mpegts_mux_t*, uint16_t sid, uint16_t pmt_pid);
+  void              (*mn_config_save) (mpegts_network_t*);
 
   // Note: the above are slightly odd in that they take mux instead of
   //       network as initial param. This is intentional as we need to
@@ -245,6 +246,10 @@ struct mpegts_mux
   void (*mm_open_table)    (mpegts_mux_t*,mpegts_table_t*);
   void (*mm_close_table)   (mpegts_mux_t*,mpegts_table_t*);
 
+  /*
+   * Fields
+   */
+  char *mm_dvb_default_authority;
   
 #if 0
   dvb_mux_conf_t dm_conf;
@@ -444,6 +449,9 @@ void mpegts_network_schedule_initial_scan
 
 void mpegts_network_add_input ( mpegts_network_t *mn, mpegts_input_t *mi );
 
+int mpegts_network_set_nid          ( mpegts_network_t *mn, uint16_t nid );
+int mpegts_network_set_network_name ( mpegts_network_t *mn, const char *name );
+
 mpegts_mux_t *mpegts_mux_create0
   ( mpegts_mux_t *mm, const idclass_t *class, const char *uuid,
     mpegts_network_t *mn, uint16_t onid, uint16_t tsid );
@@ -469,9 +477,9 @@ mpegts_mux_instance_t *mpegts_mux_instance_create0
                                             &type##_class, uuid,\
                                             mi, mm);
 
-void mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force );
-
-void mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid, int force );
+int mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force );
+int mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid, int force );
+int mpegts_mux_set_default_authority ( mpegts_mux_t *mm, const char *defauth );
 
 size_t mpegts_input_recv_packets
   (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, uint8_t *tsb, size_t len,

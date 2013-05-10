@@ -28,6 +28,12 @@ const idclass_t mpegts_network_class =
   }
 };
 
+static void
+mpegts_network_config_save
+  ( mpegts_network_t *mn )
+{
+}
+
 static mpegts_mux_t *
 mpegts_network_create_mux
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t tsid, dvb_mux_conf_t *aux )
@@ -70,10 +76,31 @@ mpegts_network_create0
 {
   idnode_insert(&mn->mn_id, uuid, idc);
   mn->mn_create_mux   = mpegts_network_create_mux;
+  mn->mn_config_save  = mpegts_network_config_save;
   mn->mn_network_name = strdup(netname);
   TAILQ_INIT(&mn->mn_initial_scan_pending_queue);
   TAILQ_INIT(&mn->mn_initial_scan_current_queue);
   return mn;
+}
+
+int
+mpegts_network_set_nid
+  ( mpegts_network_t *mn, uint16_t nid )
+{
+  if (mn->mn_nid == nid)
+    return 0;
+  mn->mn_nid = nid;
+  return 1;
+}
+
+int
+mpegts_network_set_network_name
+  ( mpegts_network_t *mn, const char *name )
+{
+  if (!name || !strcmp(name, mn->mn_network_name))
+    return 0;
+  tvh_str_update(&mn->mn_network_name, name);
+  return 1;
 }
 
 /******************************************************************************

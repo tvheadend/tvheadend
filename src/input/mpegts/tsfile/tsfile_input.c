@@ -214,7 +214,11 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
 
   /* Install table handlers */
   mpegts_table_add(mm, DVB_PAT_BASE, DVB_PAT_MASK, dvb_pat_callback,
-                   NULL, "pat", MT_QUICKREQ| MT_CRC, 0);
+                   NULL, "pat", MT_QUICKREQ | MT_CRC, DVB_PAT_PID);
+  mpegts_table_add(mm, DVB_SDT_BASE, DVB_SDT_MASK, dvb_sdt_callback,
+                   NULL, "sdt", MT_QUICKREQ | MT_CRC, DVB_SDT_PID);
+  mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback,
+                   NULL, "bat", MT_CRC, DVB_BAT_PID);
 #if 0
   mpegts_table_add(mm, 0x1, 0xff, dvb_cat_callback, NULL, "cat",
                    MT_CRC, 1);
