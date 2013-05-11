@@ -142,6 +142,7 @@ SRCS += src/webui/webui.c \
 
 SRCS += src/muxer.c \
 	src/muxer/muxer_pass.c \
+	src/muxer/muxer_audioes.c \
 	src/muxer/muxer_tvh.c \
 	src/muxer/tvh/ebml.c \
 	src/muxer/tvh/mkmux.c \
