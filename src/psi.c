@@ -912,6 +912,20 @@ psi_caid2name(uint16_t caid)
   return buf;
 }
 
+const char *
+psi_audio_type2desc(uint8_t audio_type)
+{
+  /* From ISO 13818-1 - ISO 639 language descriptor */
+  switch(audio_type) {
+    case 0: return ""; /* "Undefined" in the standard, but used for normal audio */
+    case 1: return "Clean effects";
+    case 2: return "Hearing impaired";
+    case 3: return "Visually impaired commentary";
+  }
+
+  return "Reserved";
+}
+
 /**
  *
  */
@@ -976,6 +990,9 @@ psi_save_service_settings(htsmsg_t *m, service_t *t)
 
     if(st->es_lang[0])
       htsmsg_add_str(sub, "language", st->es_lang);
+
+    if (SCT_ISAUDIO(st->es_type))
+      htsmsg_add_u32(sub, "audio_type", st->es_audio_type);
 
     if(st->es_type == SCT_CA) {
 
@@ -1126,6 +1143,11 @@ psi_load_service_settings(htsmsg_t *m, service_t *t)
     
     if((v = htsmsg_get_str(c, "language")) != NULL)
       strncpy(st->es_lang, lang_code_get(v), 3);
+
+    if (SCT_ISAUDIO(type)) {
+      if(!htsmsg_get_u32(c, "audio_type", &u32))
+        st->es_audio_type = u32;
+    }
 
     if(!htsmsg_get_u32(c, "position", &u32))
       st->es_position = u32;

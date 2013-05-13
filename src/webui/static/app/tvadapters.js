@@ -99,7 +99,7 @@ tvheadend.showTransportDetails = function(data) {
 	win = new Ext.Window({
 		title : 'Service details for ' + data.title,
 		layout : 'fit',
-		width : 400,
+		width : 450,
 		height : 400,
 		plain : true,
 		bodyStyle : 'padding: 5px',
