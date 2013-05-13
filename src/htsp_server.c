@@ -2421,6 +2421,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
 
     if (SCT_ISAUDIO(ssc->ssc_type))
     {
+      htsmsg_add_u32(c, "audio_type", ssc->ssc_audio_type);
       if (ssc->ssc_channels)
         htsmsg_add_u32(c, "channels", ssc->ssc_channels);
       if (ssc->ssc_sri)

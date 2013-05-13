@@ -172,16 +172,17 @@ psi_build_pat(service_t *t, uint8_t *buf, int maxlen, int pmtpid)
 #define PMT_UPDATE_PCR                0x1
 #define PMT_UPDATE_NEW_STREAM         0x2
 #define PMT_UPDATE_LANGUAGE           0x4
-#define PMT_UPDATE_FRAME_DURATION     0x8
-#define PMT_UPDATE_COMPOSITION_ID     0x10
-#define PMT_UPDATE_ANCILLARY_ID       0x20
-#define PMT_UPDATE_STREAM_DELETED     0x40
-#define PMT_UPDATE_NEW_CA_STREAM      0x80
-#define PMT_UPDATE_NEW_CAID           0x100
-#define PMT_UPDATE_CA_PROVIDER_CHANGE 0x200
-#define PMT_UPDATE_PARENT_PID         0x400
-#define PMT_UPDATE_CAID_DELETED       0x800
-#define PMT_REORDERED                 0x1000
+#define PMT_UPDATE_AUDIO_TYPE         0x8
+#define PMT_UPDATE_FRAME_DURATION     0x10
+#define PMT_UPDATE_COMPOSITION_ID     0x20
+#define PMT_UPDATE_ANCILLARY_ID       0x40
+#define PMT_UPDATE_STREAM_DELETED     0x80
+#define PMT_UPDATE_NEW_CA_STREAM      0x100
+#define PMT_UPDATE_NEW_CAID           0x200
+#define PMT_UPDATE_CA_PROVIDER_CHANGE 0x400
+#define PMT_UPDATE_PARENT_PID         0x800
+#define PMT_UPDATE_CAID_DELETED       0x1000
+#define PMT_REORDERED                 0x2000
 
 /**
  * Add a CA descriptor
@@ -397,6 +398,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
   int position = 0;
   int tt_position = 1000;
   const char *lang = NULL;
+  uint8_t audio_type = 0;
 
   caid_t *c, *cn;
 
@@ -529,6 +531,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 
       case DVB_DESC_LANGUAGE:
         lang = lang_code_get2((const char*)ptr, 3);
+        audio_type = ptr[3];
 	      break;
 
       case DVB_DESC_TELETEXT:
@@ -599,6 +602,11 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
       if(lang && memcmp(st->es_lang, lang, 3)) {
         update |= PMT_UPDATE_LANGUAGE;
         memcpy(st->es_lang, lang, 4);
+      }
+
+      if(st->es_audio_type != audio_type) {
+        update |= PMT_UPDATE_AUDIO_TYPE;
+        st->es_audio_type = audio_type;
       }
 
       if(composition_id != -1 && st->es_composition_id != composition_id) {
@@ -756,7 +764,7 @@ psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
       buf[0] = DVB_DESC_LANGUAGE;
       buf[1] = 4;
       memcpy(&buf[2],ssc->ssc_lang,3);
-      buf[5] = 0; /* Main audio */
+      buf[5] = ssc->ssc_audio_type;
       dlen = 6;
       break;
     case SCT_DVBSUB:
