@@ -227,7 +227,7 @@ page_static_file(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 static pid_t
-http_stream_transcode(http_connection_t *hc, muxer_t *mux)
+http_stream_transcode(http_connection_t *hc, muxer_t *mux, char *mime, int *mime_size)
 {
   pid_t pid = 0;
   int fd_pipe[2];
@@ -246,6 +246,22 @@ http_stream_transcode(http_connection_t *hc, muxer_t *mux)
   if(strstr(transcoder, "..") != 0 || strstr(transcoder, "/") != 0) {
     tvhlog(LOG_ERR, "webui", "Transcode-Script breakout attempt detected");
     return 0;
+  }
+
+  if(snprintf(tr_bin_path, sizeof(tr_bin_path), "%s/%s/%s.mime", base_path, subdir, transcoder) <= 0) {
+    tvhlog(LOG_ERR, "webui", "snprintf failed!");
+    return 0;
+  }
+
+  if(access(tr_bin_path, R_OK) == 0) {
+    FILE *fp = fopen(tr_bin_path, "r");
+    if(fp != NULL) {
+      if(fgets(mime, *mime_size, fp) == NULL)
+        *mime_size = 0;
+      fclose(fp);
+    }
+  } else {
+    *mime_size = 0;
   }
 
   if(snprintf(tr_bin_path, sizeof(tr_bin_path), "%s/%s/%s", base_path, subdir, transcoder) <= 0) {
@@ -327,15 +343,19 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
   pid_t transcode_child = 0;
   socklen_t errlen = sizeof(err);
   fd_set wfds;
+  char mime[128];
+  int mime_size = sizeof(mime);
 
   mux = muxer_create(mc, mcfg);
   if(muxer_open_stream(mux, hc->hc_fd))
     run = 0;
 
   if(http_arg_get(&hc->hc_req_args, "transcoder") != NULL) {
-    if((transcode_child = http_stream_transcode(hc, mux)) == 0)
+    if((transcode_child = http_stream_transcode(hc, mux, mime, &mime_size)) == 0) {
       run = 0;
+    }
   } else {
+    mime_size = 0;
     if(muxer_open_stream(mux, hc->hc_fd))
       run = 0;
   }
@@ -446,7 +466,10 @@ http_stream_run(http_connection_t *hc, streaming_queue_t *sq,
       grace = 10;
       if(!started) {
         tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
-        http_output_content(hc, muxer_mime(mux, sm->sm_data));
+        if(mime_size > 0)
+          http_output_content(hc, mime);
+        else
+          http_output_content(hc, muxer_mime(mux, sm->sm_data));
 
         if(muxer_init(mux, sm->sm_data, name) < 0)
           run = 0;
