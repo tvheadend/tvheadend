@@ -196,6 +196,47 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
 }
 
 static void
+mpegts_mux_stop ( mpegts_mux_t *mm )
+{
+  service_t *s, *t;
+  mpegts_mux_instance_t *mmi = mm->mm_active;
+  mpegts_input_t *mi;
+
+  /* Flush all subscribers */
+  if (mmi) {
+    mi = mmi->mmi_input;
+    s = LIST_FIRST(&mi->mi_transports);
+    while (s) {
+      t = s;
+      s = LIST_NEXT(t, s_active_link);
+      if (((mpegts_service_t*)s)->s_dvb_mux != mm)
+        continue;
+      service_remove_subscriber(s, NULL, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
+    }
+  }
+
+  /* Flush all tables */
+  mpegts_table_flush_all(mm);
+
+  /* Alert listeners */
+  // TODO
+
+  /* Scanning */
+  if (mm->mm_initial_scan_status == MM_SCAN_CURRENT) {
+    mpegts_network_t *mn = mm->mm_network;
+    TAILQ_REMOVE(&mn->mn_initial_scan_current_queue, mm, mm_initial_scan_link);
+    mm->mm_initial_scan_status = MM_SCAN_PENDING;
+    TAILQ_INSERT_TAIL(&mn->mn_initial_scan_pending_queue, mm, mm_initial_scan_link);
+    mpegts_network_schedule_initial_scan(mn);
+  }
+
+  /* Clear */
+  mm->mm_active = NULL;
+  
+    
+}
+
+static void
 mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
   if (mt->mt_pid >= 0x2000)
@@ -245,6 +286,7 @@ mpegts_mux_create0
   LIST_INSERT_HEAD(&mn->mn_muxes, mm, mm_network_link);
   mm->mm_network             = mn;
   mm->mm_start               = mpegts_mux_start;
+  mm->mm_stop                = mpegts_mux_stop;
   mpegts_mux_initial_scan_link(mm);
 
   /* Table processing */

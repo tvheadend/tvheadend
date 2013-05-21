@@ -2391,7 +2391,7 @@ extjs_start(void)
 		NULL, extjs_tvadapters, ACCESS_ADMIN);
 #endif
 
-#if ENABLE_LINUXDVB
+#if 0//ENABLE_LINUXDVB
   extjs_start_dvb();
 #endif
 

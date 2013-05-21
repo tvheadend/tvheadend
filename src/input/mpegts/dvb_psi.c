@@ -490,6 +490,8 @@ dvb_nit_callback
   if (len < 7)
     return -1;
 
+  tvhtrace(dstr, "  section %d last %d current %d", ptr[3], ptr[4], ptr[2]&1);
+
   /* Ignore "next" */
   if (!(ptr[2] & 0x01))
     return -1;
@@ -612,6 +614,8 @@ dvb_sdt_callback
   /* Not enough data */
   if(len < 8)
     return -1;
+
+  tvhtrace("sdt", "  section %d last %d current %d", ptr[3], ptr[4], ptr[2]&1);
 
   /* Ignore next */
   if((ptr[2] & 1) == 0)

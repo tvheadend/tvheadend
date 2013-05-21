@@ -219,7 +219,7 @@ static void _epggrab_load ( void )
   }
  
   /* Load module config (channels) */
-#if ENABLE_LINUXDVB
+#if 0//ENABLE_LINUXDVB
   eit_load();
   opentv_load();
 #endif
@@ -379,7 +379,7 @@ void epggrab_init ( void )
   epggrab_epgdb_periodicsave = 0;
 
   /* Lists */
-#if ENABLE_LINUXDVB
+#if 0//ENABLE_LINUXDVB
   extern TAILQ_HEAD(, epggrab_ota_mux) ota_mux_all;
   TAILQ_INIT(&ota_mux_all);
 #endif
@@ -388,7 +388,7 @@ void epggrab_init ( void )
   pthread_cond_init(&epggrab_cond, NULL);
   
   /* Initialise modules */
-#if ENABLE_LINUXDVB
+#if 0//ENABLE_LINUXDVB
   eit_init();
   opentv_init();
 #endif
@@ -397,7 +397,7 @@ void epggrab_init ( void )
 
   /* Load config */
   _epggrab_load();
-#if ENABLE_LINUXDVB
+#if 0//ENABLE_LINUXDVB
   epggrab_ota_load();
 #endif
 

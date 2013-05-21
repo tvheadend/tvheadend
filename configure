@@ -86,6 +86,13 @@ fi
 # DVB API
 #
 check_cc_header 'linux/dvb/version' dvbapi
+if enabled_or_auto linuxdvb; then
+  if enabled dvbapi; then
+    enable linuxdvb
+  elif enabled linuxdvb; then
+    die "Linux DVB API not found (use --disable-linuxdvb)"
+  fi
+fi
 
 #
 # Gzip

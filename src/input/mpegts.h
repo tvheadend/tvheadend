@@ -242,7 +242,8 @@ struct mpegts_mux
    * Functions
    */
 
-  int  (*mm_start)         ( mpegts_mux_t *mm, const char *reason, int weight );
+  int  (*mm_start)         (mpegts_mux_t *mm, const char *reason, int weight);
+  void (*mm_stop)          (mpegts_mux_t *mm);
   void (*mm_open_table)    (mpegts_mux_t*,mpegts_table_t*);
   void (*mm_close_table)   (mpegts_mux_t*,mpegts_table_t*);
 

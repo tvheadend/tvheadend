@@ -29,11 +29,6 @@
 #include "access.h"
 #include "epg.h"
 #include "channels.h"
-#if ENABLE_LINUXDVB
-#include "dvr/dvr.h"
-#include "dvb/dvb.h"
-#include "dvb/dvb_support.h"
-#endif
 
 extern char tvh_binshasum[20];
 

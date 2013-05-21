@@ -429,7 +429,6 @@ main(int argc, char **argv)
              *opt_pidpath      = "/var/run/tvheadend.pid",
 #if ENABLE_LINUXDVB
              *opt_dvb_adapters = NULL,
-             *opt_dvb_raw      = NULL,
 #endif
              *opt_bindaddr     = NULL,
              *opt_subscribe    = NULL;
@@ -726,6 +725,9 @@ main(int argc, char **argv)
 #endif
 #if ENABLE_IPTV
   iptv_init();
+#endif
+#if ENABLE_LINUXDVB
+  linuxdvb_init(adapter_mask);
 #endif
 
   if(opt_subscribe != NULL)

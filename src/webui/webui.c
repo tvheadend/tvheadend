@@ -42,10 +42,6 @@
 #include "plumbing/globalheaders.h"
 #include "epg.h"
 #include "muxer.h"
-#if ENABLE_LINUXDVB
-#include "dvb/dvb.h"
-#include "dvb/dvb_support.h"
-#endif
 #include "imagecache.h"
 #include "tcp.h"
 

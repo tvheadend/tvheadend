@@ -164,34 +164,15 @@ SRCS-$(CONFIG_MPEGTS) += \
 	src/epggrab/module/opentv.c \
 	src/epggrab/support/freesat_huffman.c \
 
-# Timeshift
-SRCS-${CONFIG_TIMESHIFT} += \
-	src/timeshift.c \
-	src/timeshift/timeshift_filemgr.c \
-	src/timeshift/timeshift_writer.c \
-	src/timeshift/timeshift_reader.c \
-
 # DVB
 SRCS-${CONFIG_LINUXDVB} += \
-	src/dvb/dvb.c \
-	src/dvb/dvb_adapter.c \
-	src/dvb/dvb_support.c \
-	src/dvb/dvb_charset.c \
-	src/dvb/dvb_fe.c \
-	src/dvb/dvb_tables.c \
-	src/dvb/diseqc.c \
-	src/dvb/dvb_linux.c \
-	src/dvb/dvb_hardware.c \
-	src/dvb/dvb_network.c \
-	src/dvb/dvb_multiplex.c \
-	src/dvb/dvb_service.c \
-	src/dvb/dvb_preconf.c \
-	src/dvb/dvb_satconf.c \
-	src/dvb/dvb_input_filtered.c \
-	src/dvb/dvb_input_raw.c \
-	src/webui/extjs_dvb.c \
-	src/muxes.c \
-	src/tvadapters.c \
+  src/input/mpegts/linuxdvb/linuxdvb.c \
+  src/input/mpegts/linuxdvb/linuxdvb_adapter.c \
+
+#  src/input/mpegts/linuxdvb/linuxdvb_input.c \
+#  src/input/mpegts/linuxdvb/linuxdvb_network.c \
+#  src/input/mpegts/linuxdvb/linuxdvb_mux.c \
+#  src/input/mpegts/linuxdvb/linuxdvb_service.c \
 
 # IPTV
 SRCS-${CONFIG_IPTV} += \
@@ -204,6 +185,13 @@ SRCS-$(CONFIG_TSFILE) += \
   src/input/mpegts/tsfile/tsfile.c \
   src/input/mpegts/tsfile/tsfile_input.c \
   src/input/mpegts/tsfile/tsfile_mux.c \
+
+# Timeshift
+SRCS-${CONFIG_TIMESHIFT} += \
+	src/timeshift.c \
+	src/timeshift/timeshift_filemgr.c \
+	src/timeshift/timeshift_writer.c \
+	src/timeshift/timeshift_reader.c \
 
 # Inotify
 SRCS-${CONFIG_INOTIFY} += \
@@ -286,7 +274,7 @@ ${PROG}: check_config $(OBJS) $(ALLDEPS)
 	$(CC) -o $@ $(OBJS) $(CFLAGS) $(LDFLAGS)
 
 # Object
-${BUILDDIR}/%.o: %.c
+${BUILDDIR}/%.o: %.c $(BUILDDIR)
 	@mkdir -p $(dir $@)
 	$(CC) -MD -MP $(CFLAGS) -c -o $@ $<
 
