@@ -2161,13 +2161,13 @@ htsp_async_send(htsmsg_t *m, int mode)
 
 
 /**
- * EPG subsystem calls this function when the current event
+ * EPG subsystem calls this function when the current/next event
  * changes for a channel, e may be NULL if there is no current event.
  *
  * global_lock is held
  */
 void
-htsp_channel_update_current(channel_t *ch)
+htsp_channel_update_nownext(channel_t *ch)
 {
   epg_broadcast_t *now, *next;
   htsmsg_t *m;

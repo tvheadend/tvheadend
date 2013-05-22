@@ -1396,25 +1396,22 @@ static void _epg_channel_timer_callback ( void *p )
     break;
   }
   
-  /* Change */
-  if (cur != ch->ch_epg_now || nxt != ch->ch_epg_next)
+  /* Change (update HTSP) */
+  if (cur != ch->ch_epg_now || nxt != ch->ch_epg_next) {
     tvhlog(LOG_DEBUG, "epg", "now/next %u/%u set on %s",
            ch->ch_epg_now  ? ch->ch_epg_now->id : 0,
            ch->ch_epg_next ? ch->ch_epg_next->id : 0,
            ch->ch_name);
+    tvhlog(LOG_DEBUG, "epg", "inform HTSP of now event change on %s",
+           ch->ch_name);
+    htsp_channel_update_nownext(ch);
+  }
 
   /* re-arm */
   if ( next ) {
     tvhlog(LOG_DEBUG, "epg", "arm channel timer @ %"PRItime_t" for %s",
            next, ch->ch_name);
     gtimer_arm_abs(&ch->ch_epg_timer, _epg_channel_timer_callback, ch, next);
-  }
-
-  /* Update HTSP */
-  if ( cur != ch->ch_epg_now ) {
-    tvhlog(LOG_DEBUG, "epg", "inform HTSP of now event change on %s",
-           ch->ch_name);
-    htsp_channel_update_current(ch);
   }
 
   /* Remove refs */
