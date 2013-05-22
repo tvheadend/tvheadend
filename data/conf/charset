@@ -595,6 +595,97 @@
 		"description": "Hotbird 13.0 Disco TV"
 	},
 	{
+		"tsid": 1,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 2,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 3,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 4,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 5,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 6,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 7,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 8,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 9,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 10,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 11,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 12,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
+		"tsid": 13,
+		"onid": 1,
+		"charset": "ISO8859-2",
+		"sid": 0,
+		"description": "Intelsat/Thor 1W RCS DigiTV"
+	},
+	{
 		"tsid": 20400,
 		"onid": 126,
 		"charset": "ISO8859-9",
