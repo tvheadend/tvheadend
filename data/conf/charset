@@ -30,9 +30,23 @@
 	{
 		"tsid": 200,
 		"onid": 318,
+		"charset": "ISO8859-7",
+		"sid": 13805,
+		"description": "Hotbird 13.0 Eutelsat Eurosport GR"
+	},
+	{
+		"tsid": 200,
+		"onid": 318,
 		"charset": "PL_AUTO",
 		"sid": 13834,
 		"description": "Hotbird 13.0 Eutelsat Eurosport PL"
+	},
+	{
+		"tsid": 200,
+		"onid": 318,
+		"charset": "ISO8859-7",
+		"sid": 13840,
+		"description": "Hotbird 13.0 Eutelsat Eurosport GR"
 	},
 	{
 		"tsid": 200,
@@ -189,6 +203,34 @@
 		"description": "Hotbird 13.0 Polo TV"
 	},
 	{
+		"tsid": 5500,
+		"onid": 318,
+		"charset": "ISO8859-7",
+		"sid": 0,
+		"description": "Hotbird 13.0 Nova GR"
+	},
+	{
+		"tsid": 6100,
+		"onid": 318,
+		"charset": "ISO8859-7",
+		"sid": 0,
+		"description": "Hotbird 13.0 Nova GR"
+	},
+	{
+		"tsid": 7100,
+		"onid": 318,
+		"charset": "ISO8859-7",
+		"sid": 0,
+		"description": "Hotbird 13.0 Nova GR"
+	},
+	{
+		"tsid": 7300,
+		"onid": 318,
+		"charset": "ISO8859-7",
+		"sid": 0,
+		"description": "Hotbird 13.0 Nova GR"
+	},
+	{
 		"tsid": 7400,
 		"onid": 113,
 		"charset": "PL_AUTO",
@@ -313,6 +355,13 @@
 		"charset": "PL_AUTO",
 		"sid": 0,
 		"description": "Hotbird 13.0 Polsat Cyfrowy"
+	},
+	{
+		"tsid": 12100,
+		"onid": 318,
+		"charset": "ISO8859-7",
+		"sid": 0,
+		"description": "Hotbird 13.0 Nova GR"
 	},
 	{
 		"tsid": 12200,
