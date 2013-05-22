@@ -105,6 +105,20 @@
 		"description": "Astra 19.2E TVP"
 	},
 	{
+		"tsid": 3218,
+		"onid": 3,
+		"charset": "ISO8859-5",
+		"sid": 0,
+		"description": "Astra 23.5E Satellite BG 12051.00 V"
+	},
+	{
+		"tsid": 3226,
+		"onid": 3,
+		"charset": "ISO8859-5",
+		"sid": 0,
+		"description": "Astra 23.5E Satellite BG 12207.00 V"
+	},
+	{
 		"tsid": 8100,
 		"onid": 156,
 		"charset": "PL_AUTO",
