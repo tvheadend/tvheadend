@@ -274,7 +274,7 @@ ${PROG}: check_config $(OBJS) $(ALLDEPS)
 	$(CC) -o $@ $(OBJS) $(CFLAGS) $(LDFLAGS)
 
 # Object
-${BUILDDIR}/%.o: %.c $(BUILDDIR)
+${BUILDDIR}/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CC) -MD -MP $(CFLAGS) -c -o $@ $<
 
