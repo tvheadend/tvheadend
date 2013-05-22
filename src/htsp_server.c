@@ -193,6 +193,10 @@ streaming_target_t *hs_transcoder;
 
   int hs_queue_depth;
 
+#define NUM_FILTERED_STREAMS (32*16)
+
+  uint32_t hs_filtered_streams[16]; // one bit per stream
+
 } htsp_subscription_t;
 
 
@@ -213,6 +217,31 @@ typedef struct htsp_file {
 /* **************************************************************************
  * Support routines
  * *************************************************************************/
+
+static void
+htsp_disable_stream(htsp_subscription_t *hs, unsigned int id)
+{
+  if(id < NUM_FILTERED_STREAMS)
+    hs->hs_filtered_streams[id / 32] |= 1 << (id & 31);
+}
+
+
+static void
+htsp_enable_stream(htsp_subscription_t *hs, unsigned int id)
+{
+  if(id < NUM_FILTERED_STREAMS)
+    hs->hs_filtered_streams[id / 32] &= ~(1 << (id & 31));
+}
+
+
+static inline int
+htsp_is_stream_enabled(htsp_subscription_t *hs, unsigned int id)
+{
+  if(id < NUM_FILTERED_STREAMS)
+    return !(hs->hs_filtered_streams[id / 32] & (1 << (id & 31)));
+  return 1;
+}
+
 
 /**
  *
@@ -664,6 +693,8 @@ htsp_build_event
   htsmsg_add_s64(out, "stop", e->stop);
   if ((str = epg_broadcast_get_title(e, lang)))
     htsmsg_add_str(out, "title", str);
+  if ((str = epg_broadcast_get_subtitle(e, lang)))
+    htsmsg_add_str(out, "subtitle", str);
   if ((str = epg_broadcast_get_description(e, lang))) {
     htsmsg_add_str(out, "description", str);
     if ((str = epg_broadcast_get_summary(e, lang)))
@@ -1533,6 +1564,44 @@ htsp_method_live(htsp_connection_t *htsp, htsmsg_t *in)
 }
 
 /**
+ * Change filters for a subscription
+ */
+static htsmsg_t *
+htsp_method_filter_stream(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsp_subscription_t *hs;
+  uint32_t sid;
+  htsmsg_t *l;
+  if(htsmsg_get_u32(in, "subscriptionId", &sid))
+    return htsp_error("Missing argument 'subscriptionId'");
+
+  LIST_FOREACH(hs, &htsp->htsp_subscriptions, hs_link)
+    if(hs->hs_sid == sid)
+      break;
+
+  if(hs == NULL)
+    return htsp_error("Requested subscription does not exist");
+
+  if((l = htsmsg_get_list(in, "enable")) != NULL) {
+    htsmsg_field_t *f;
+    HTSMSG_FOREACH(f, l) {
+      if(f->hmf_type == HMF_S64)
+        htsp_enable_stream(hs, f->hmf_s64);
+    }
+  }
+
+  if((l = htsmsg_get_list(in, "disable")) != NULL) {
+    htsmsg_field_t *f;
+    HTSMSG_FOREACH(f, l) {
+      if(f->hmf_type == HMF_S64)
+        htsp_disable_stream(hs, f->hmf_s64);
+    }
+  }
+  return htsmsg_create_map();
+}
+
+
+/**
  * Open file
  */
 static htsmsg_t *
@@ -1733,6 +1802,7 @@ struct {
   { "subscriptionSkip",         htsp_method_skip,           ACCESS_STREAMING},
   { "subscriptionSpeed",        htsp_method_speed,          ACCESS_STREAMING},
   { "subscriptionLive",         htsp_method_live,           ACCESS_STREAMING},
+  { "subscriptionFilterStream", htsp_method_filter_stream,  ACCESS_STREAMING},
 #if ENABLE_LIBAV
   { "getCodecs",                htsp_method_getCodecs,      ACCESS_STREAMING},
 #endif
@@ -2279,6 +2349,11 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   htsp_connection_t *htsp = hs->hs_htsp;
   int64_t ts;
   int qlen = hs->hs_q.hmq_payload;
+
+  if(!htsp_is_stream_enabled(hs, pkt->pkt_componentindex)) {
+    pkt_ref_dec(pkt);
+    return;
+  }
 
   if((qlen > hs->hs_queue_depth     && pkt->pkt_frametype == PKT_B_FRAME) ||
      (qlen > hs->hs_queue_depth * 2 && pkt->pkt_frametype == PKT_P_FRAME) || 
