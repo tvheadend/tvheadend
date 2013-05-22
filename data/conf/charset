@@ -593,5 +593,138 @@
 		"charset": "ISO8859-15",
 		"sid": 0,
 		"description": "Astra 19.2E Sky Germany 12480.00 V"
+	},
+	{
+		"tsid": 20400,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 10762.00 V"
+	},
+	{
+		"tsid": 20600,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 10803.75 V"
+	},
+	{
+		"tsid": 20700,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 10845.00 H"
+	},
+	{
+		"tsid": 20800,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 10845.25 V"
+	},
+	{
+		"tsid": 20900,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 108877.00 H"
+	},
+	{
+		"tsid": 21000,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 10928.00 H"
+	},
+	{
+		"tsid": 21100,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 10887.00 V"
+	},
+	{
+		"tsid": 21200,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 10928.00 V"
+	},
+	{
+		"tsid": 41200,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11455.50 V"
+	},
+	{
+		"tsid": 50100,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11471.00 H"
+	},
+	{
+		"tsid": 50200,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11492.00 V"
+	},
+	{
+		"tsid": 50300,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11673.00 H"
+	},
+	{
+		"tsid": 50400,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11534.00 V"
+	},
+	{
+		"tsid": 50500,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11554.00 H"
+	},
+	{
+		"tsid": 50600,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11575.00 V"
+	},
+	{
+		"tsid": 50700,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11596.00 H"
+	},
+	{
+		"tsid": 50800,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11679.00 H"
+	},
+	{
+		"tsid": 50900,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11513.00 H"
+	},
+	{
+		"tsid": 51000,
+		"onid": 126,
+		"charset": "ISO8859-9",
+		"sid": 0,
+		"description": "Turksat 7E Digitürk 11617.00 V"
 	}
 ]
