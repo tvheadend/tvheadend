@@ -21,9 +21,11 @@
 #include "tvheadend.h"
 #include "service.h"
 #include "muxer.h"
-#include "muxer_tvh.h"
-#include "muxer_pass.h"
-
+#include "muxer/muxer_tvh.h"
+#include "muxer/muxer_pass.h"
+#if CONFIG_LIBAV
+#include "muxer/muxer_libav.h"
+#endif
 
 /**
  * Mime type for containers containing only audio
@@ -34,6 +36,7 @@ static struct strtab container_audio_mime[] = {
   { "audio/x-mpegts",           MC_MPEGTS },
   { "audio/mpeg",               MC_MPEGPS },
   { "application/octet-stream", MC_PASS },
+  { "application/octet-stream", MC_RAW },
 };
 
 
@@ -46,6 +49,7 @@ static struct strtab container_video_mime[] = {
   { "video/x-mpegts",           MC_MPEGTS },
   { "video/mpeg",               MC_MPEGPS },
   { "application/octet-stream", MC_PASS },
+  { "application/octet-stream", MC_RAW },
 };
 
 
@@ -58,6 +62,7 @@ static struct strtab container_name[] = {
   { "mpegts",   MC_MPEGTS },
   { "mpegps",   MC_MPEGPS },
   { "pass",     MC_PASS },
+  { "raw",      MC_RAW },
 };
 
 
@@ -70,6 +75,7 @@ static struct strtab container_audio_file_suffix[] = {
   { "ts",   MC_MPEGTS },
   { "mpeg", MC_MPEGPS },
   { "bin",  MC_PASS },
+  { "bin",  MC_RAW },
 };
 
 
@@ -82,6 +88,7 @@ static struct strtab container_video_file_suffix[] = {
   { "ts",   MC_MPEGTS },
   { "mpeg", MC_MPEGPS },
   { "bin",  MC_PASS },
+  { "bin",  MC_RAW },
 };
 
 
@@ -89,7 +96,7 @@ static struct strtab container_video_file_suffix[] = {
  * Get the mime type for a container
  */
 const char*
-muxer_container_mimetype(muxer_container_type_t mc, int video)
+muxer_container_type2mime(muxer_container_type_t mc, int video)
 {
   const char *str;
 
@@ -141,7 +148,46 @@ muxer_container_type2txt(muxer_container_type_t mc)
 
 
 /**
- * Convert a string to a container type
+ * Get a list of supported containers
+ */
+int
+muxer_container_list(htsmsg_t *array)
+{
+  htsmsg_t *mc;
+  int c = 0;
+
+  mc = htsmsg_create_map();
+  htsmsg_add_str(mc, "name",        muxer_container_type2txt(MC_MATROSKA));
+  htsmsg_add_str(mc, "description", "Matroska");
+  htsmsg_add_msg(array, NULL, mc);
+  c++;
+  
+  mc = htsmsg_create_map();
+  htsmsg_add_str(mc, "name",        muxer_container_type2txt(MC_PASS));
+  htsmsg_add_str(mc, "description", "Same as source (pass through)");
+  htsmsg_add_msg(array, NULL, mc);
+  c++;
+
+#if ENABLE_LIBAV
+  mc = htsmsg_create_map();
+  htsmsg_add_str(mc, "name",        muxer_container_type2txt(MC_MPEGTS));
+  htsmsg_add_str(mc, "description", "MPEG-TS");
+  htsmsg_add_msg(array, NULL, mc);
+  c++;
+
+  mc = htsmsg_create_map();
+  htsmsg_add_str(mc, "name",        muxer_container_type2txt(MC_MPEGPS));
+  htsmsg_add_str(mc, "description", "MPEG-PS (DVD)");
+  htsmsg_add_msg(array, NULL, mc);
+  c++;
+#endif
+
+  return c;
+}
+
+
+/**
+ * Convert a container name to a container type
  */
 muxer_container_type_t
 muxer_container_txt2type(const char *str)
@@ -160,17 +206,44 @@ muxer_container_txt2type(const char *str)
 
 
 /**
+ * Convert a mime-string to a container type
+ */
+muxer_container_type_t
+muxer_container_mime2type(const char *str)
+{
+  muxer_container_type_t mc;
+
+  if(!str)
+    return MC_UNKNOWN;
+
+  mc = str2val(str, container_video_mime);
+  if(mc == -1)
+    mc = str2val(str, container_audio_mime);
+
+  if(mc == -1)
+    return MC_UNKNOWN;
+
+  return mc;
+}
+
+
+/**
  * Create a new muxer
  */
 muxer_t* 
-muxer_create(service_t *s, muxer_container_type_t mc)
+muxer_create(muxer_container_type_t mc)
 {
   muxer_t *m;
 
-  m = pass_muxer_create(s, mc);
+  m = pass_muxer_create(mc);
 
   if(!m)
     m = tvh_muxer_create(mc);
+
+#if CONFIG_LIBAV
+  if(!m)
+    m = lav_muxer_create(mc);
+#endif
 
   if(!m)
     tvhlog(LOG_ERR, "mux", "Can't find a muxer that supports '%s' container",
@@ -200,6 +273,7 @@ const char*
 muxer_suffix(muxer_t *m,  const struct streaming_start *ss)
 {
   const char *mime;
+  muxer_container_type_t mc;
   int video;
 
   if(!m || !ss)
@@ -207,8 +281,9 @@ muxer_suffix(muxer_t *m,  const struct streaming_start *ss)
 
   mime  = m->m_mime(m, ss);
   video = memcmp("audio", mime, 5);
+  mc = muxer_container_mime2type(mime);
 
-  return muxer_container_suffix(m->m_container, video);
+  return muxer_container_suffix(mc, video);
 }
 
 
@@ -224,6 +299,31 @@ muxer_init(muxer_t *m, const struct streaming_start *ss, const char *name)
   return m->m_init(m, ss, name);
 }
 
+
+/**
+ * sanity wrapper arround m_reconfigure()
+ */
+int
+muxer_reconfigure(muxer_t *m, const struct streaming_start *ss)
+{
+  if(!m || !ss)
+    return -1;
+
+  return m->m_reconfigure(m, ss);
+}
+
+
+/**
+ * sanity wrapper arround m_add_marker()
+ */
+int
+muxer_add_marker(muxer_t *m)
+{
+  if(!m)
+    return -1;
+
+  return m->m_add_marker(m);
+}
 
 /**
  * sanity wrapper arround m_open_file()
@@ -295,12 +395,12 @@ muxer_write_meta(muxer_t *m, struct epg_broadcast *eb)
  * sanity wrapper arround m_write_pkt()
  */
 int
-muxer_write_pkt(muxer_t *m, void *data)
+muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 {
   if(!m || !data)
     return -1;
 
-  return m->m_write_pkt(m, data);
+  return m->m_write_pkt(m, smt, data);
 }
 
 

@@ -58,9 +58,6 @@ static struct strtab muxfestatustab[] = {
   { "OK",           TDMI_FE_OK },
 };
 
-static void tdmi_set_enable(th_dvb_mux_instance_t *tdmi, int enabled);
-
-
 /**
  *
  */
@@ -102,14 +99,17 @@ tdmi_global_cmp(th_dvb_mux_instance_t *a, th_dvb_mux_instance_t *b)
  */
 static int
 tdmi_compare_key(const struct dvb_mux_conf *a,
-		 const struct dvb_mux_conf *b)
+                 const struct dvb_mux_conf *b,
+                 const dvb_satconf_t *satconf)
 {
   int32_t fd = (int32_t)a->dmc_fe_params.frequency
              - (int32_t)b->dmc_fe_params.frequency;
+  if (!satconf)
+    satconf = b->dmc_satconf;
   fd = labs(fd);
   return fd < 2000 &&
     a->dmc_polarisation             == b->dmc_polarisation &&
-    a->dmc_satconf                  == b->dmc_satconf;
+    a->dmc_satconf                  == satconf;
 }
 
 
@@ -155,26 +155,59 @@ th_dvb_mux_instance_t *
 dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
 	       uint16_t onid, uint16_t tsid, const char *network, const char *source,
 	       int enabled, int initialscan, const char *identifier,
-	       dvb_satconf_t *satconf)
+	       dvb_satconf_t *satconf, int create, th_dvb_mux_instance_t *src)
 {
   th_dvb_mux_instance_t *tdmi, *c;
   char buf[200];
 
   lock_assert(&global_lock);
 
+  if (!satconf)
+    satconf = dmc->dmc_satconf;
+
   /* HACK - we hash/compare based on 2KHz spacing and compare on +/-500Hz */
   LIST_FOREACH(tdmi, &tda->tda_mux_list, tdmi_adapter_hash_link) {
-    if(tdmi_compare_key(&tdmi->tdmi_conf, dmc))
+    if(tdmi_compare_key(&tdmi->tdmi_conf, dmc, satconf))
       break; /* Mux already exist */
   }
 
   if(tdmi != NULL) {
+
     /* Update stuff ... */
     int save = 0;
     char buf2[1024];
     buf2[0] = 0;
+    int master = 0;
+    if (!src) 
+      master = 1;
+    else if (src->tdmi_network_id == tdmi->tdmi_network_id)
+      master = 1;
 
-    if(tdmi_compare_conf(tda->tda_type, &tdmi->tdmi_conf, dmc)) {
+    /* Network ID */
+    if(tsid != 0xFFFF && tdmi->tdmi_transport_stream_id != tsid) {
+      if (tdmi->tdmi_transport_stream_id == 0xFFFF || master) {
+        tdmi->tdmi_transport_stream_id = tsid;
+        save = 1;
+      }
+    }
+    if(onid && tdmi->tdmi_network_id != onid) {
+      if (!tdmi->tdmi_network_id || master) {
+        tdmi->tdmi_network_id = onid;
+        save = 1;
+      }
+    }
+    if(network && *network && strcmp(tdmi->tdmi_network ?: "", network)) {
+      if (!tdmi->tdmi_network || master) {
+        free(tdmi->tdmi_network);
+        tdmi->tdmi_network = strdup(network);
+        save = 1;
+      }
+    }
+
+    /* Tuning Info */
+    // TODO: same protection here?
+    if(tdmi->tdmi_adapter->tda_autodiscovery &&
+       tdmi_compare_conf(tda->tda_type, &tdmi->tdmi_conf, dmc)) {
 #if DVB_API_VERSION >= 5
       snprintf(buf2, sizeof(buf2), " (");
       if (tdmi->tdmi_conf.dmc_fe_modulation != dmc->dmc_fe_modulation)
@@ -196,19 +229,10 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
       save = 1;
     }
 
-    if(tsid != 0xFFFF && tdmi->tdmi_transport_stream_id != tsid) {
-      tdmi->tdmi_transport_stream_id = tsid;
-      save = 1;
-    }
-    if(onid && tdmi->tdmi_network_id != onid) {
-      tdmi->tdmi_network_id = onid;
-      save = 1;
-    }
-
     /* HACK - load old transports and remove old mux config */
     if(identifier) {
       save = 1;
-      dvb_transport_load(tdmi, identifier);
+      dvb_service_load(tdmi, identifier);
       hts_settings_remove("dvbmuxes/%s/%s",
 		      tda->tda_identifier, identifier);
     }
@@ -225,6 +249,9 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
     return NULL;
   }
 
+  if (!create)
+    return NULL;
+
   tdmi = calloc(1, sizeof(th_dvb_mux_instance_t));
 
   if(identifier == NULL) {
@@ -238,9 +265,8 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
     
     snprintf(buf, sizeof(buf), "%s%d%s%s%s", 
 	     tda->tda_identifier, dmc->dmc_fe_params.frequency, qpsktxt,
-	     (satconf || dmc->dmc_satconf) ? "_satconf_" : "", 
-	     (satconf ? satconf->sc_id :
-	       (dmc->dmc_satconf ? dmc->dmc_satconf->sc_id : "")));
+	     satconf ? "_satconf_" : "", 
+	     satconf ? satconf->sc_id : "");
     
     tdmi->tdmi_identifier = strdup(buf);
   } else {
@@ -288,19 +314,21 @@ dvb_mux_create(th_dvb_adapter_t *tda, const struct dvb_mux_conf *dmc,
     tvhlog(LOG_NOTICE, "dvb", "New mux \"%s\" created by %s", buf, source);
 
     dvb_mux_save(tdmi);
-    dvb_adapter_notify(tda);
   }
 
-  dvb_transport_load(tdmi, identifier);
+  dvb_service_load(tdmi, identifier);
   dvb_mux_notify(tdmi);
 
-  if(enabled && initialscan) {
-    tda->tda_initial_num_mux++;
-    tdmi->tdmi_table_initial = 1;
-    mux_link_initial(tda, tdmi);
-  } else {
-    dvb_mux_add_to_scan_queue(tdmi);
+  if(enabled) {
+    if(initialscan) {
+      tda->tda_initial_num_mux++;
+      tdmi->tdmi_table_initial = 1;
+      mux_link_initial(tda, tdmi);
+    } else {
+      dvb_mux_add_to_scan_queue(tdmi);
+    }
   }
+  dvb_adapter_notify(tda);
 
   return tdmi;
 }
@@ -326,7 +354,7 @@ dvb_mux_destroy(th_dvb_mux_instance_t *tdmi)
     service_destroy(t);
   }
 
-  dvb_transport_notify_by_adapter(tda);
+  dvb_service_notify_by_adapter(tda);
 
   if(tda->tda_mux_current == tdmi)
     dvb_fe_stop(tda->tda_mux_current, 0);
@@ -789,7 +817,7 @@ tdmi_create_by_msg(th_dvb_adapter_t *tda, htsmsg_t *m, const char *identifier)
   tdmi = dvb_mux_create(tda, &dmc,
 			onid, tsid, htsmsg_get_str(m, "network"), NULL, enabled,
       initscan,
-			identifier, NULL);
+			identifier, NULL, 1, NULL);
   if(tdmi != NULL) {
 
     if((s = htsmsg_get_str(m, "status")) != NULL)
@@ -836,6 +864,12 @@ dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *networkname)
 {
   htsmsg_t *m;
 
+  if (!networkname || !*networkname)
+    return;
+
+  if (!strcmp(tdmi->tdmi_network ?: "", networkname))
+    return;
+
   free(tdmi->tdmi_network);
   tdmi->tdmi_network = strdup(networkname);
   dvb_mux_save(tdmi);
@@ -851,12 +885,19 @@ dvb_mux_set_networkname(th_dvb_mux_instance_t *tdmi, const char *networkname)
  *
  */
 void
-dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid)
+dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid, int force)
 {
   htsmsg_t *m;
 
+  if (!force)
+    if (tdmi->tdmi_transport_stream_id != 0xFFFF || tsid == 0xFFFF)
+      return;
+
+  if (tdmi->tdmi_transport_stream_id == tsid)
+    return;
+
   tdmi->tdmi_transport_stream_id = tsid;
- 
+
   dvb_mux_save(tdmi);
 
   m = htsmsg_create_map();
@@ -865,17 +906,42 @@ dvb_mux_set_tsid(th_dvb_mux_instance_t *tdmi, uint16_t tsid)
   notify_by_msg("dvbMux", m);
 }
 
+/**
+ *
+ */
+void
+dvb_mux_set_onid(th_dvb_mux_instance_t *tdmi, uint16_t onid, int force)
+{
+  htsmsg_t *m;
+
+  if (!force)
+    if (tdmi->tdmi_network_id != 0 || onid == 0)
+      return;
+  
+  if (tdmi->tdmi_network_id == onid)
+    return;
+
+  tdmi->tdmi_network_id = onid;
+ 
+  dvb_mux_save(tdmi);
+
+  m = htsmsg_create_map();
+  htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
+  htsmsg_add_u32(m, "onid", tdmi->tdmi_network_id);
+  notify_by_msg("dvbMux", m);
+}
+
 
 /**
  *
  */
-static void
+static int
 tdmi_set_enable(th_dvb_mux_instance_t *tdmi, int enabled)
 {
   th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
   
   if(tdmi->tdmi_enabled == enabled)
-    return;
+    return 0;
 
   if(tdmi->tdmi_enabled) {
 
@@ -894,6 +960,7 @@ tdmi_set_enable(th_dvb_mux_instance_t *tdmi, int enabled)
     mux_link_initial(tda, tdmi);
 
   subscription_reschedule();
+  return 1;
 }
 
 /**
@@ -902,8 +969,8 @@ tdmi_set_enable(th_dvb_mux_instance_t *tdmi, int enabled)
 void
 dvb_mux_set_enable(th_dvb_mux_instance_t *tdmi, int enabled)
 {
-  tdmi_set_enable(tdmi, enabled);
-  dvb_mux_save(tdmi);
+  if (tdmi_set_enable(tdmi, enabled))
+    dvb_mux_save(tdmi);
 }
 
 
@@ -989,6 +1056,8 @@ dvb_mux_build_msg(th_dvb_mux_instance_t *tdmi)
 {
   htsmsg_t *m = htsmsg_create_map();
   char buf[100];
+
+  htsmsg_add_str(m, "adapterId", tdmi->tdmi_adapter->tda_identifier);
 
   htsmsg_add_str(m, "id", tdmi->tdmi_identifier);
   htsmsg_add_u32(m, "enabled",  tdmi->tdmi_enabled);
@@ -1129,7 +1198,7 @@ dvb_mux_add_by_params(th_dvb_adapter_t *tda,
     break;
 
   case FE_ATSC:
-    dmc.dmc_fe_params.frequency = freq;
+    dmc.dmc_fe_params.frequency = freq * 1000;
 
     if(!val2str(constellation, qamtab))
       return "Invalid VSB constellation";
@@ -1148,7 +1217,7 @@ dvb_mux_add_by_params(th_dvb_adapter_t *tda,
   }
   dmc.dmc_polarisation = polarisation;
 
-  tdmi = dvb_mux_create(tda, &dmc, 0, 0xffff, NULL, NULL, 1, 1, NULL, NULL);
+  tdmi = dvb_mux_create(tda, &dmc, 0, 0xffff, NULL, NULL, 1, 1, NULL, NULL, 1, NULL);
 
   if(tdmi == NULL)
     return "Mux already exist";
@@ -1175,13 +1244,13 @@ dvb_mux_copy(th_dvb_adapter_t *dst, th_dvb_mux_instance_t *tdmi_src,
 			    tdmi_src->tdmi_transport_stream_id,
 			    tdmi_src->tdmi_network,
 			    "copy operation", tdmi_src->tdmi_enabled,
-			    1, NULL, satconf);
+			    1, NULL, satconf, 1, tdmi_src);
 
   if(tdmi_dst == NULL)
     return -1; // Already exist
 
   LIST_FOREACH(t_src, &tdmi_src->tdmi_transports, s_group_link) {
-    t_dst = dvb_transport_find(tdmi_dst, 
+    t_dst = dvb_service_find(tdmi_dst, 
 			       t_src->s_dvb_service_id,
 			       t_src->s_pmt_pid, NULL);
 
@@ -1243,4 +1312,87 @@ void dvb_mux_add_to_scan_queue ( th_dvb_mux_instance_t *tdmi )
                                  : TDA_SCANQ_BAD;
   tdmi->tdmi_scan_queue = &tda->tda_scan_queues[ti];
   TAILQ_INSERT_TAIL(tdmi->tdmi_scan_queue, tdmi, tdmi_scan_link);
+}
+
+th_dvb_mux_instance_t *dvb_mux_find
+  ( th_dvb_adapter_t *tda, const char *netname, uint16_t onid, uint16_t tsid,
+    int enabled )
+{
+  th_dvb_mux_instance_t *tdmi;
+  if (tda) {
+    LIST_FOREACH(tdmi, &tda->tda_muxes, tdmi_adapter_link) {
+      if (enabled && !tdmi->tdmi_enabled) continue;
+      if (onid    && onid != tdmi->tdmi_network_id) continue;
+      if (tsid    && tsid != tdmi->tdmi_transport_stream_id) continue;
+      if (netname && strcmp(netname, tdmi->tdmi_network ?: "")) continue;
+      return tdmi;
+    }
+  } else {
+    TAILQ_FOREACH(tda, &dvb_adapters, tda_global_link)
+      if ((tdmi = dvb_mux_find(tda, netname, onid, tsid, enabled)))
+        return tdmi;
+  }
+  return NULL;
+}
+
+
+/**
+ *
+ */
+th_subscription_t *
+dvb_subscription_create_from_tdmi(th_dvb_mux_instance_t *tdmi,
+				  const char *name,
+				  streaming_target_t *st, 
+				  const char *hostname,
+				  const char *username, 
+				  const char *client)
+{
+  th_subscription_t *s;
+  streaming_message_t *sm;
+  streaming_start_t *ss;
+  int r;
+  th_dvb_adapter_t *tda = tdmi->tdmi_adapter;
+  char buf[100];
+
+  s = subscription_create(INT32_MAX, name, st, SUBSCRIPTION_RAW_MPEGTS, 
+			  NULL, hostname, username, client);
+  
+
+  s->ths_tdmi = tdmi;
+  LIST_INSERT_HEAD(&tdmi->tdmi_subscriptions, s, ths_tdmi_link);
+
+  r = dvb_fe_tune(tdmi, "Full mux subscription");
+
+  pthread_mutex_lock(&tda->tda_delivery_mutex);
+
+  streaming_target_connect(&tda->tda_streaming_pad, &s->ths_input);
+
+  if(r) {
+    sm = streaming_msg_create_code(SMT_NOSTART, SM_CODE_NO_INPUT);
+    streaming_target_deliver(s->ths_output, sm);
+  } else {
+    ss = calloc(1, sizeof(streaming_start_t));
+    ss->ss_num_components = 0;
+    ss->ss_refcount = 1;
+
+    ss->ss_si.si_type = S_MPEG_TS;
+    ss->ss_si.si_device = strdup(tdmi->tdmi_adapter->tda_rootpath);
+    ss->ss_si.si_adapter = strdup(tdmi->tdmi_adapter->tda_displayname);
+    ss->ss_si.si_service = strdup("Full mux subscription");
+
+    if(tdmi->tdmi_network != NULL)
+      ss->ss_si.si_network = strdup(tdmi->tdmi_network);
+    
+    dvb_mux_nicename(buf, sizeof(buf), tdmi);
+    ss->ss_si.si_mux = strdup(buf);
+
+
+    sm = streaming_msg_create_data(SMT_START, ss);
+    streaming_target_deliver(s->ths_output, sm);
+  }
+
+  pthread_mutex_unlock(&tda->tda_delivery_mutex);
+
+  notify_reload("subscriptions");
+  return s;
 }

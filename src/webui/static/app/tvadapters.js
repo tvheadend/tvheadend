@@ -5,9 +5,9 @@ tvheadend.tvAdapterStore = new Ext.data.JsonStore({
 	root : 'entries',
 	id : 'identifier',
 	fields : [ 'identifier', 'type', 'name', 'path', 'devicename',
-		'hostconnection', 'currentMux', 'services', 'muxes', 'initialMuxes',
-		'satConf', 'deliverySystem', 'freqMin', 'freqMax', 'freqStep',
-		'symrateMin', 'symrateMax' ],
+		   'hostconnection', 'currentMux', 'services', 'muxes', 'initialMuxes',
+		   'satConf', 'deliverySystem', 'freqMin', 'freqMax', 'freqStep',
+		   'symrateMin', 'symrateMax',  'signal', 'snr', 'ber', 'unc', 'uncavg', 'bw'],
 	url : 'tv/adapter'
 });
 
@@ -24,6 +24,8 @@ tvheadend.comet.on('tvAdapter', function(m) {
 });
 
 tvheadend.tvadapters = function() {
+  tvheadend.tvAdapterStore.load();
+
 	var adapterSelection = new Ext.form.ComboBox({
 		loadingText : 'Loading...',
 		width : 300,
@@ -97,7 +99,7 @@ tvheadend.showTransportDetails = function(data) {
 	win = new Ext.Window({
 		title : 'Service details for ' + data.title,
 		layout : 'fit',
-		width : 400,
+		width : 450,
 		height : 400,
 		plain : true,
 		bodyStyle : 'padding: 5px',

@@ -53,13 +53,13 @@ find_exec ( const char *name, char *out, size_t len )
 {
   int ret = 0;
   char bin[512];
-  char *path, *tmp;
+  char *path, *tmp, *tmp2 = NULL;
   DIR *dir;
   struct dirent *de;
   struct stat st;
   if (!(path = getenv("PATH"))) return 0;
   path = strdup(path);
-  tmp  = strtok(path, ":");
+  tmp  = strtok_r(path, ":", &tmp2);
   while (tmp && !ret) {
     if ((dir = opendir(tmp))) {
       while ((de = readdir(dir))) {
@@ -73,7 +73,7 @@ find_exec ( const char *name, char *out, size_t len )
       }
       closedir(dir);
     }
-    tmp = strtok(NULL, ":");
+    tmp = strtok_r(NULL, ":", &tmp2);
   }
   free(path);
   return ret;

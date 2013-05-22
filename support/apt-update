@@ -1,0 +1,80 @@
+#!/bin/bash
+#
+# Upload packages to launchpad. Note: you must configure dput for tvh-X
+# as target PPA, and you should also define DEBFULLNAME and DEBEMAIL 
+# environment variables
+#
+
+# Terminate
+function die
+{
+  echo >&2 "ERROR: $@"
+  exit 1
+}
+
+# CMD
+CMD=$(basename "$0")
+DIR=$(cd $(dirname "$0"); pwd)
+
+# Configuration
+TVH_ROOT=$(cd "$(dirname "$0")"/..; pwd)
+[ -z "$TVH_DIST" ] && TVH_DIST="wheezy lucid oneiric precise quantal raring"
+[ -z "$TVH_ARCH" ] && TVH_ARCH="i386 amd64"
+
+# Options
+[ ! -z "$1" ] && REL=$1 || REL=master
+[ ! -z "$2" ] && PPA=$2 || PPA=unstable
+
+# Setup
+cd "$TVH_ROOT" || exit 1
+NOW=`date -R`
+CHANGELOG=./debian/changelog
+VERFILE=./src/version.c
+
+# Checkout
+git checkout $REL || die "could not checkout $REL"
+
+# Get version
+VER=$("./support/version" $VERFILE)
+
+# Export git tree
+TMPDIR=/tmp/$CMD-$$
+trap "rm -rf $TMPDIR" EXIT
+mkdir -p "$TMPDIR"
+git archive --prefix=tvheadend/ HEAD | tar -C "${TMPDIR}" -x ||\
+  die "failed to archive git tree"
+cd "$TMPDIR/tvheadend" || die "failed to enter archived tree"
+
+# Fetch scan files
+./support/getmuxlist || die "failed to fetch dvb-scan files"
+cd ..
+
+# For each distro
+for d in $TVH_DIST; do
+  V=${VER}~${d}
+  mv tvheadend "tvheadend-${V}"
+  cd "tvheadend-${V}"
+
+  # Create changelog
+  ./support/changelog "$CHANGELOG" "$d" "$VER" || exit 1
+  
+  # Build source package
+  dpkg-buildpackage -I.git* -S -sgpg -pgpg || exit 1
+
+  # Build
+  if [ "$CMD" == "pbuilder" ]; then
+  
+    for a in $TVH_ARCH; do
+      pbuilder-dist $d $a ../tvheadend_${V}.dsc
+    done
+
+  # Upload
+  else
+    [ ! -f "$HOME/.dput.cf" ] && DPUT_OPT="$DPUT_OPT -c $DIR/dput.cf"
+    dput $DPUT_OPT tvh-${PPA} ../tvheadend_${V}_source.changes || exit 1
+  fi
+
+  # Rename back
+  cd ..
+  mv "tvheadend-${V}" tvheadend
+done

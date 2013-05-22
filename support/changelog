@@ -9,17 +9,18 @@ DIST=$2
 VER=$3
 
 # Defaults
-[ -z "$DEBEMAIL"      ] && DEBEMAIL="andreas@lonelycoder.com"
+[ -z "$CHANGELOG"     ] && CHANGELOG=$(dirname "$0")/../debian/changelog
+[ -z "$DEBEMAIL"      ] && DEBEMAIL="andreas@tvheadend.org"
 [ -z "$DEBFULLNAME"   ] && DEBFULLNAME="Andreas Öman"
-[ -z "$VER"           ] && VER=$($(dirname $0)/version)
+[ -z "$VER"           ] && VER=$("$(dirname "$0")"/version)
 [ ! -z "$DIST"        ] && VER=${VER}~${DIST}
 [ -z "$DIST"          ] && DIST=unstable
 
 # Output
 NOW=$(date -R)
-echo >${CHANGELOG} "tvheadend (${VER}) ${DIST}; urgency=low"
-echo >>${CHANGELOG}
-echo >>${CHANGELOG} "  * The full changelog can be found at "
-echo >>${CHANGELOG} "    http://www.lonelycoder.com/tvheadend/download"
-echo >>${CHANGELOG}
-echo >>${CHANGELOG} " -- ${DEBFULLNAME} <${DEBEMAIL}>  ${NOW}"
+echo >"${CHANGELOG}"  "tvheadend (${VER}) ${DIST}; urgency=low"
+echo >>"${CHANGELOG}"
+echo >>"${CHANGELOG}" "  * The full changelog can be found at "
+echo >>"${CHANGELOG}" "    https://tvheadend.org/projects/tvheadend/wiki/Releases"
+echo >>"${CHANGELOG}"
+echo >>"${CHANGELOG}" " -- ${DEBFULLNAME} <${DEBEMAIL}>  ${NOW}"

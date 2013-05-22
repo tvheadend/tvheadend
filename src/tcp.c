@@ -35,6 +35,7 @@
 #include "tcp.h"
 #include "tvheadend.h"
 
+int tcp_preferred_address_family = AF_INET;
 
 /**
  *
@@ -182,14 +183,15 @@ tcp_write_queue(int fd, htsbuf_queue_t *q)
 {
   htsbuf_data_t *hd;
   int l, r = 0;
+  void *p;
 
   while((hd = TAILQ_FIRST(&q->hq_q)) != NULL) {
-    TAILQ_REMOVE(&q->hq_q, hd, hd_link);
-
-    l = hd->hd_data_len - hd->hd_data_off;
-    r |= !!write(fd, hd->hd_data + hd->hd_data_off, l);
-    free(hd->hd_data);
-    free(hd);
+    if (!r) {
+      l = hd->hd_data_len - hd->hd_data_off;
+      p = hd->hd_data + hd->hd_data_off;
+      r = tvh_write(fd, p, l);
+    }
+    htsbuf_data_free(q, hd);
   }
   q->hq_size = 0;
   return r;
@@ -346,6 +348,31 @@ tcp_read_timeout(int fd, void *buf, size_t len, int timeout)
 /**
  *
  */
+char *
+tcp_get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen)
+{
+  if(sa == NULL || s == NULL)
+    return NULL;
+
+  switch(sa->sa_family)
+  {
+    case AF_INET:
+      inet_ntop(AF_INET, &(((struct sockaddr_in*)sa)->sin_addr), s, maxlen);
+      break;
+    case AF_INET6:
+      inet_ntop(AF_INET6, &(((struct sockaddr_in6*)sa)->sin6_addr), s, maxlen);
+      break;
+    default:
+      strncpy(s, "Unknown AF", maxlen);
+      return NULL;
+  }
+
+  return s;
+}
+
+/**
+ *
+ */
 static int tcp_server_epoll_fd;
 
 typedef struct tcp_server {
@@ -358,8 +385,8 @@ typedef struct tcp_server_launch_t {
   tcp_server_callback_t *start;
   void *opaque;
   int fd;
-  struct sockaddr_in peer;
-  struct sockaddr_in self;
+  struct sockaddr_storage peer;
+  struct sockaddr_storage self;
 } tcp_server_launch_t;
 
 
@@ -442,7 +469,7 @@ tcp_server_loop(void *aux)
 	tsl = malloc(sizeof(tcp_server_launch_t));
 	tsl->start  = ts->start;
 	tsl->opaque = ts->opaque;
-	slen = sizeof(struct sockaddr_in);
+	slen = sizeof(struct sockaddr_storage);
 
 	tsl->fd = accept(ts->serverfd, 
 			 (struct sockaddr *)&tsl->peer, &slen);
@@ -454,7 +481,7 @@ tcp_server_loop(void *aux)
 	}
 
 
-	slen = sizeof(struct sockaddr_in);
+	slen = sizeof(struct sockaddr_storage);
 	if(getsockname(tsl->fd, (struct sockaddr *)&tsl->self, &slen)) {
 	    close(tsl->fd);
 	    free(tsl);
@@ -472,26 +499,66 @@ tcp_server_loop(void *aux)
  *
  */
 void *
-tcp_server_create(int port, tcp_server_callback_t *start, void *opaque)
+tcp_server_create(const char *bindaddr, int port, tcp_server_callback_t *start, void *opaque)
 {
   int fd, x;
   struct epoll_event e;
   tcp_server_t *ts;
-  struct sockaddr_in s;
+  struct addrinfo hints, *res, *ressave, *use = NULL;
+  char *portBuf = (char*)malloc(6);
   int one = 1;
+  int zero = 0;
+
   memset(&e, 0, sizeof(e));
-  fd = tvh_socket(AF_INET, SOCK_STREAM, 0);
+
+  snprintf(portBuf, 6, "%d", port);
+
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_flags = AI_PASSIVE;
+  if (bindaddr != NULL)
+      hints.ai_flags |= AI_NUMERICHOST;
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
+
+  x = getaddrinfo(bindaddr, portBuf, &hints, &res);
+  free(portBuf);
+
+  if(x != 0) {
+    tvhlog(LOG_ERR, "tcp", "getaddrinfo: %s: %s", bindaddr != NULL ? bindaddr : "*",
+      x == EAI_SYSTEM ? strerror(errno) : gai_strerror(x));
+    return NULL;
+  }
+
+  ressave = res;
+  while(res)
+  {
+    if(res->ai_family == tcp_preferred_address_family)
+    {
+      use = res;
+      break;
+    }
+    else if(use == NULL)
+    {
+      use = res;
+    }
+    res = res->ai_next;
+  }
+
+  fd = tvh_socket(use->ai_family, use->ai_socktype, use->ai_protocol);
   if(fd == -1)
     return NULL;
 
-  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
+  if(use->ai_family == AF_INET6)
+    setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &zero, sizeof(int));
 
-  memset(&s, 0, sizeof(s));
-  s.sin_family = AF_INET;
-  s.sin_port = htons(port);
+  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
   
-  x = bind(fd, (struct sockaddr *)&s, sizeof(s));
-  if(x < 0) {
+  x = bind(fd, use->ai_addr, use->ai_addrlen);
+  freeaddrinfo(ressave);
+
+  if(x != 0)
+  {
+    tvhlog(LOG_ERR, "tcp", "bind: %s: %s", bindaddr != NULL ? bindaddr : "*", strerror(errno));
     close(fd);
     return NULL;
   }
@@ -503,11 +570,10 @@ tcp_server_create(int port, tcp_server_callback_t *start, void *opaque)
   ts->start = start;
   ts->opaque = opaque;
 
-  
   e.events = EPOLLIN;
   e.data.ptr = ts;
-
   epoll_ctl(tcp_server_epoll_fd, EPOLL_CTL_ADD, fd, &e);
+
   return ts;
 }
 
@@ -515,9 +581,12 @@ tcp_server_create(int port, tcp_server_callback_t *start, void *opaque)
  *
  */
 void
-tcp_server_init(void)
+tcp_server_init(int opt_ipv6)
 {
   pthread_t tid;
+
+  if(opt_ipv6)
+    tcp_preferred_address_family = AF_INET6;
 
   tcp_server_epoll_fd = epoll_create(10);
   pthread_create(&tid, NULL, tcp_server_loop, NULL);

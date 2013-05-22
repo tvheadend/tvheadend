@@ -82,7 +82,7 @@ tvheadend.epggrab = function() {
 	var confreader = new Ext.data.JsonReader({
 		root : 'epggrabSettings'
 	}, [ 'module', 'interval', 'channel_rename', 'channel_renumber',
-		'channel_reicon' ]);
+		'channel_reicon', 'epgdb_periodicsave' ]);
 
 	/* ****************************************************************
 	 * Basic Fields
@@ -184,6 +184,17 @@ tvheadend.epggrab = function() {
 		fieldLabel : 'Update channel icon'
 	});
 
+	var epgPeriodicSave = new Ext.form.NumberField({
+                width : 30,
+                allowNegative : false,
+                allowDecimals : false,
+                minValue : 0,
+                maxValue : 24,
+                value : 0,
+                fieldLabel : 'Periodic save EPG to disk',
+                name : 'epgdb_periodicsave',
+        });
+
 	/*
 	 * Simple fields
 	 */
@@ -192,7 +203,7 @@ tvheadend.epggrab = function() {
 		width : 700,
 		autoHeight : true,
 		collapsible : true,
-		items : [ channelRename, channelRenumber, channelReicon ]
+		items : [ channelRename, channelRenumber, channelReicon, epgPeriodicSave ]
 	});
 
 	/*

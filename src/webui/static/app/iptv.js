@@ -1,18 +1,18 @@
-tvheadend.servicetypeStore = new Ext.data.JsonStore({
-	root : 'entries',
-	id : 'val',
-	url : '/iptv/services',
-	baseParams : {
-		op : 'servicetypeList'
-	},
-	fields : [ 'val', 'str' ],
-	autoLoad : true
-});
-
 /**
  * IPTV service grid
  */
 tvheadend.iptv = function(adapterId) {
+
+  var servicetypeStore = new Ext.data.JsonStore({
+	  root : 'entries',
+	  id : 'val',
+	  url : '/iptv/services',
+	  baseParams : {
+		  op : 'servicetypeList'
+	  },
+	  fields : [ 'val', 'str' ],
+	  autoLoad : false
+  });
 
 	var fm = Ext.form;
 
@@ -113,10 +113,10 @@ tvheadend.iptv = function(adapterId) {
 				editable : false,
 				mode : 'local',
 				triggerAction : 'all',
-				store : tvheadend.servicetypeStore
+				store : servicetypeStore
 			}),
 			renderer : function(value, metadata, record, row, col, store) {
-				var val = value ? tvheadend.servicetypeStore.getById(value) : null;
+				var val = value ? servicetypeStore.getById(value) : null;
 				return val ? val.get('str')
 					: '<span class="tvh-grid-unset">Unset</span>';
 			}

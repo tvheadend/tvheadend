@@ -173,18 +173,18 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 
     tm = gmtime_r(&t, &tm0);
     htsbuf_qprintf(&hdrs, 
-		"Last-Modified: %s, %02d %s %d %02d:%02d:%02d GMT\r\n",
-		cachedays[tm->tm_wday],	tm->tm_year + 1900,
-		cachemonths[tm->tm_mon], tm->tm_mday,
-		tm->tm_hour, tm->tm_min, tm->tm_sec);
+                "Last-Modified: %s, %d %s %02d %02d:%02d:%02d GMT\r\n",
+                cachedays[tm->tm_wday], tm->tm_mday, 
+                cachemonths[tm->tm_mon], tm->tm_year + 1900,
+                tm->tm_hour, tm->tm_min, tm->tm_sec);
 
     t += maxage;
 
     tm = gmtime_r(&t, &tm0);
     htsbuf_qprintf(&hdrs, 
-		"Expires: %s, %02d %s %d %02d:%02d:%02d GMT\r\n",
-		cachedays[tm->tm_wday],	tm->tm_year + 1900,
-		cachemonths[tm->tm_mon], tm->tm_mday,
+		"Expires: %s, %d %s %02d %02d:%02d:%02d GMT\r\n",
+		cachedays[tm->tm_wday],	tm->tm_mday,
+                cachemonths[tm->tm_mon], tm->tm_year + 1900,
 		tm->tm_hour, tm->tm_min, tm->tm_sec);
       
     htsbuf_qprintf(&hdrs, "Cache-Control: max-age=%d\r\n", maxage);
@@ -247,9 +247,12 @@ void
 http_error(http_connection_t *hc, int error)
 {
   const char *errtxt = http_rc2str(error);
+  char *addrstr = (char*)malloc(50);
+  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
 
   tvhlog(LOG_ERR, "HTTP", "%s: %s -- %d", 
-	 inet_ntoa(hc->hc_peer->sin_addr), hc->hc_url, error);
+	 addrstr, hc->hc_url, error);
+  free(addrstr);
 
   htsbuf_queue_flush(&hc->hc_reply);
 
@@ -315,10 +318,13 @@ http_access_verify(http_connection_t *hc, int mask)
 {
   const char *ticket_id = http_arg_get(&hc->hc_req_args, "ticket");
 
-  if(!access_ticket_verify(ticket_id, hc->hc_url)) {
+  if(!access_ticket_verify(ticket_id, hc->hc_url))
+  {
+    char *addrstr = (char*)malloc(50);
+    tcp_get_ip_str((struct sockaddr*)hc->hc_peer, addrstr, 50);
     tvhlog(LOG_INFO, "HTTP", "%s: using ticket %s for %s", 
-	   inet_ntoa(hc->hc_peer->sin_addr), ticket_id,
-	   hc->hc_url);
+	   addrstr, ticket_id, hc->hc_url);
+    free(addrstr);
     return 0;
   }
 
@@ -504,11 +510,9 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   if(hc->hc_username != NULL) {
     hc->hc_representative = strdup(hc->hc_username);
   } else {
-    hc->hc_representative = malloc(30);
+    hc->hc_representative = malloc(50);
     /* Not threadsafe ? */
-    snprintf(hc->hc_representative, 30,
-	     "%s", inet_ntoa(hc->hc_peer->sin_addr));
-
+    tcp_get_ip_str((struct sockaddr*)hc->hc_peer, hc->hc_representative, 50);
   }
 
   switch(hc->hc_version) {
@@ -607,9 +611,15 @@ http_path_add(const char *path, void *opaque, http_callback_t *callback,
 	      uint32_t accessmask)
 {
   http_path_t *hp = malloc(sizeof(http_path_t));
+  char *tmp;
 
-  hp->hp_len      = strlen(path);
-  hp->hp_path     = strdup(path);
+  if (tvheadend_webroot) {
+    size_t len = strlen(tvheadend_webroot) + strlen(path) + 1;
+    hp->hp_path     = tmp = malloc(len);
+    sprintf(tmp, "%s%s", tvheadend_webroot, path);
+  } else
+    hp->hp_path     = strdup(path);
+  hp->hp_len      = strlen(hp->hp_path);
   hp->hp_opaque   = opaque;
   hp->hp_callback = callback;
   hp->hp_accessmask = accessmask;
@@ -771,8 +781,8 @@ http_serve_requests(http_connection_t *hc, htsbuf_queue_t *spill)
  *
  */
 static void
-http_serve(int fd, void *opaque, struct sockaddr_in *peer, 
-	   struct sockaddr_in *self)
+http_serve(int fd, void *opaque, struct sockaddr_storage *peer, 
+	   struct sockaddr_storage *self)
 {
   htsbuf_queue_t spill;
   http_connection_t hc;
@@ -806,7 +816,7 @@ http_serve(int fd, void *opaque, struct sockaddr_in *peer,
  *  Fire up HTTP server
  */
 void
-http_server_init(void)
+http_server_init(const char *bindaddr)
 {
-  http_server = tcp_server_create(webui_port, http_serve, NULL);
+  http_server = tcp_server_create(bindaddr, tvheadend_webui_port, http_serve, NULL);
 }

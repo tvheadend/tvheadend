@@ -53,6 +53,10 @@ try:
   msg  = htsp.hello()
   log.info('connected to %s [%s]' % (msg['servername'], msg['serverversion']))
   log.info('using protocol v%d' % htsp._version)
+  cap = []
+  if 'servercapability' in msg:
+    cap = msg['servercapability']
+  log.info('capabilities [%s]' % ','.join(cap))
 
   # Authenticate
   if opts.user:

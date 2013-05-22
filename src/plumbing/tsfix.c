@@ -55,6 +55,7 @@ typedef struct tsfix {
   struct tfstream_list tf_streams;
   int tf_hasvideo;
   int64_t tf_tsref;
+  time_t tf_start_time;
 
   struct th_pktref_queue tf_ptsq;
 
@@ -152,6 +153,9 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
     pkt_ref_dec(pkt);
     return;
   }
+
+  pkt->pkt_dts &= PTS_MASK;
+  pkt->pkt_pts &= PTS_MASK;
 
   /* Subtract the transport wide start offset */
   dts = pkt->pkt_dts - tf->tf_tsref;
@@ -306,23 +310,21 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
   tfstream_t *tfs = tfs_find(tf, pkt);
   streaming_msg_free(sm);
   
-  if(tfs == NULL) {
+  if(tfs == NULL || dispatch_clock < tf->tf_start_time) {
     pkt_ref_dec(pkt);
     return;
   }
 
-
   if(tf->tf_tsref == PTS_UNSET &&
      (!tf->tf_hasvideo ||
       (SCT_ISVIDEO(tfs->tfs_type) && pkt->pkt_frametype == PKT_I_FRAME))) {
-      tf->tf_tsref = pkt->pkt_dts;
+      tf->tf_tsref = pkt->pkt_dts & PTS_MASK;
       tsfixprintf("reference clock set to %"PRId64"\n", tf->tf_tsref);
   }
 
+  int pdur = pkt->pkt_duration >> pkt->pkt_field;
+
   if(pkt->pkt_dts == PTS_UNSET) {
-
-    int pdur = pkt->pkt_duration >> pkt->pkt_field;
-
     if(tfs->tfs_last_dts_in == PTS_UNSET) {
       pkt_ref_dec(pkt);
       return;
@@ -334,6 +336,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
 		streaming_component_type2txt(tfs->tfs_type),
 		tfs->tfs_last_dts_in, pdur, pkt->pkt_dts);
   }
+
   tfs->tfs_last_dts_in = pkt->pkt_dts;
 
   compute_pts(tf, tfs, pkt);
@@ -366,6 +369,9 @@ tsfix_input(void *opaque, streaming_message_t *sm)
   case SMT_SIGNAL_STATUS:
   case SMT_NOSTART:
   case SMT_MPEGTS:
+  case SMT_SPEED:
+  case SMT_SKIP:
+  case SMT_TIMESHIFT_STATUS:
     break;
   }
 
@@ -384,8 +390,20 @@ tsfix_create(streaming_target_t *output)
   TAILQ_INIT(&tf->tf_ptsq);
 
   tf->tf_output = output;
+  tf->tf_start_time = dispatch_clock;
+
   streaming_target_init(&tf->tf_input, tsfix_input, tf, 0);
   return &tf->tf_input;
+}
+
+/**
+ *
+ */
+void tsfix_set_start_time(streaming_target_t *pad, time_t start)
+{
+  tsfix_t *tf = (tsfix_t *)pad;
+
+  tf->tf_start_time = start;
 }
 
 

@@ -20,7 +20,7 @@ tvheadend.contentGroupLookupName = function(code) {
 	ret = "";
 	tvheadend.ContentGroupStore.each(function(r) {
 		if (r.data.code == code) ret = r.data.name;
-		else if (ret == "" && r.data.code == code & 0xF0) ret = r.data.name;
+		else if (ret == "" && r.data.code == (code & 0xF0)) ret = r.data.name;
 	});
 	return ret;
 }

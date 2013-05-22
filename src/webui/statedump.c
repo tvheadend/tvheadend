@@ -29,6 +29,7 @@
 #include "access.h"
 #include "epg.h"
 #include "psi.h"
+#include "channels.h"
 #if ENABLE_LINUXDVB
 #include "dvr/dvr.h"
 #include "dvb/dvb.h"

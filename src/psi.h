@@ -37,17 +37,16 @@ typedef struct psi_section {
 void psi_section_reassemble(psi_section_t *ps, const uint8_t *tsb, int crc,
 			    section_handler_t *cb, void *opaque);
 
-int psi_parse_pat(struct service *t, uint8_t *ptr, int len,
-		  pid_section_callback_t *pmt_callback);
-
 int psi_parse_pmt(struct service *t, const uint8_t *ptr, int len, int chksvcid,
 		  int delete);
 
 int psi_build_pat(struct service *t, uint8_t *buf, int maxlen, int pmtpid);
 
-int psi_build_pmt(const streaming_start_t *ss, uint8_t *buf, int maxlen, int pcrpid);
+int psi_build_pmt(const streaming_start_t *ss, uint8_t *buf, int maxlen, 
+		  int version, int pcrpid);
 
 const char *psi_caid2name(uint16_t caid);
+const char *psi_audio_type2desc(uint8_t audio_type);
 
 void psi_load_service_settings(htsmsg_t *m, struct service *t);
 void psi_save_service_settings(htsmsg_t *m, struct service *t);

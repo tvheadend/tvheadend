@@ -1,3 +1,10 @@
+tvheadend.accessupdate = null;
+tvheadend.capabilties  = null;
+tvheadend.conf_chepg   = null;
+tvheadend.conf_dvbin   = null;
+tvheadend.conf_tsdvr   = null;
+tvheadend.conf_csa     = null;
+
 /**
  * Displays a help popup window
  */
@@ -26,6 +33,21 @@ tvheadend.help = function(title, pagename) {
 		}
 	});
 }
+
+/*
+ * General capabilities
+ */
+Ext.Ajax.request({
+  url: 'capabilities',
+  success: function(d)
+  {
+    if (d && d.responseText)
+      tvheadend.capabilities = Ext.util.JSON.decode(d.responseText);
+    if (tvheadend.capabilities && tvheadend.accessupdate)
+      accessUpdate(tvheadend.accessUpdate);
+    
+  }
+});
 
 /**
  * Displays a mediaplayer using VLC plugin
@@ -223,39 +245,113 @@ tvheadend.VLC = function(url) {
  * Obviosuly, access is verified in the server too.
  */
 function accessUpdate(o) {
+  tvheadend.accessUpdate = o;
+  if (!tvheadend.capabilities)
+    return;
 
-	if (o.dvr == true && tvheadend.dvrpanel == null) {
-		tvheadend.dvrpanel = new tvheadend.dvr;
-		tvheadend.rootTabPanel.add(tvheadend.dvrpanel);
-	}
+  if (o.dvr == true && tvheadend.dvrpanel == null) {
+    tvheadend.dvrpanel = new tvheadend.dvr;
+    tvheadend.rootTabPanel.add(tvheadend.dvrpanel);
+  }
 
-	if (o.admin == true && tvheadend.confpanel == null) {
-		tvheadend.confpanel = new Ext.TabPanel({
-			activeTab : 0,
-			autoScroll : true,
-			title : 'Configuration',
-			iconCls : 'wrench',
-			items : [ new tvheadend.miscconf, new tvheadend.chconf,
-				new tvheadend.epggrab, new tvheadend.cteditor,
-				new tvheadend.dvrsettings, new tvheadend.tvadapters,
-				new tvheadend.iptv, new tvheadend.acleditor,
-				new tvheadend.cwceditor, new tvheadend.capmteditor ]
-		});
-		tvheadend.rootTabPanel.add(tvheadend.confpanel);
-	}
+  if (o.admin == true && tvheadend.confpanel == null) {
+    var tabs1 = [
+      new tvheadend.miscconf,
+      new tvheadend.acleditor
+    ]
+    var tabs2;
 
-	if (tvheadend.aboutPanel == null) {
-		tvheadend.aboutPanel = new Ext.Panel({
-			border : false,
-			layout : 'fit',
-			title : 'About',
-			iconCls : 'info',
-			autoLoad : 'about.html'
-		});
-		tvheadend.rootTabPanel.add(tvheadend.aboutPanel);
-	}
+    /* DVB inputs */
+    tabs2 = [];
+    if (tvheadend.capabilities.indexOf('linuxdvb') != -1 ||
+        tvheadend.capabilities.indexOf('v4l')      != -1) {
+      tabs2.push(new tvheadend.tvadapters);
+    }
+    tabs2.push(new tvheadend.iptv);
+    tvheadend.conf_dvbin = new Ext.TabPanel({
+      activeTab: 0,
+      autoScroll: true,
+      title: 'DVB Inputs',
+      iconCls: 'hardware',
+      items : tabs2
+    });
+    tabs1.push(tvheadend.conf_dvbin);
 
-	tvheadend.rootTabPanel.doLayout();
+    /* Channel / EPG */
+    tvheadend.conf_chepg = new Ext.TabPanel({
+      activeTab: 0,
+      autoScroll: true,
+      title : 'Channel / EPG',
+      iconCls : 'television',
+      items : [
+        new tvheadend.chconf,
+        new tvheadend.cteditor,
+        new tvheadend.epggrab
+      ]
+    });
+    tabs1.push(tvheadend.conf_chepg);
+
+    /* DVR / Timeshift */
+    tabs2 = [ new tvheadend.dvrsettings ];
+    if (tvheadend.capabilities.indexOf('timeshift') != -1) {
+      tabs2.push(new tvheadend.timeshift)
+    }
+    tvheadend.conf_tsdvr = new Ext.TabPanel({
+      activeTab: 0,
+      autoScroll: true,
+      title: 'Recording',
+      iconCls: 'drive',
+      items : tabs2
+    });
+    tabs1.push(tvheadend.conf_tsdvr);
+
+    /* CSA */
+    if (tvheadend.capabilities.indexOf('cwc')      != -1) {
+      tvheadend.conf_csa = new Ext.TabPanel({
+        activeTab: 0,
+        autoScroll: true,
+        title: 'CSA',
+        iconCls: 'key',
+        items: [
+          new tvheadend.cwceditor,
+          new tvheadend.capmteditor
+        ]
+      });
+      tabs1.push(tvheadend.conf_csa);
+    }
+
+    /* Debug */
+    tabs1.push(new tvheadend.tvhlog);
+
+    tvheadend.confpanel = new Ext.TabPanel({
+      activeTab : 0,
+      autoScroll : true,
+      title : 'Configuration',
+      iconCls : 'wrench',
+      items : tabs1
+    });
+
+    tvheadend.rootTabPanel.add(tvheadend.confpanel);
+    tvheadend.confpanel.doLayout();
+  }
+
+  if (o.admin == true && tvheadend.statuspanel == null) {
+    tvheadend.statuspanel = new tvheadend.status;
+    tvheadend.rootTabPanel.add(tvheadend.statuspanel);
+  }
+
+  if (tvheadend.aboutPanel == null) {
+    tvheadend.aboutPanel = new Ext.Panel({
+      border : false,
+      layout : 'fit',
+      title : 'About',
+      iconCls : 'info',
+      autoLoad : 'about.html'
+    });
+    tvheadend.rootTabPanel.add(tvheadend.aboutPanel);
+  }
+
+  tvheadend.rootTabPanel.doLayout();
 }
 
 /**

@@ -65,6 +65,7 @@ extern struct dvr_entry_list dvrentries;
 #define DVR_EPISODE_IN_TITLE	0x80
 #define DVR_CLEAN_TITLE	        0x100
 #define DVR_TAG_FILES           0x200
+#define DVR_SKIP_COMMERCIALS    0x400
 
 typedef enum {
   DVR_PRIO_IMPORTANT,
@@ -113,6 +114,8 @@ typedef struct dvr_entry {
   channel_t *de_channel;
   LIST_ENTRY(dvr_entry) de_channel_link;
 
+  char *de_channel_name;
+
   gtimer_t de_timer;
 
   /**
@@ -133,6 +136,8 @@ typedef struct dvr_entry {
   lang_str_t *de_title;      /* Title in UTF-8 (from EPG) */
   lang_str_t *de_desc;       /* Description in UTF-8 (from EPG) */
   epg_genre_t de_content_type; /* Content type (from EPG) */
+
+  uint16_t de_dvb_eid;
 
   dvr_prio_t de_pri;
 
@@ -188,8 +193,16 @@ typedef struct dvr_entry {
 
   struct muxer *de_mux;
 
+  /**
+   * Inotify
+   */
+#if ENABLE_INOTIFY
+  LIST_ENTRY(dvr_entry) de_inotify_link;
+#endif
+
 } dvr_entry_t;
 
+#define DVR_CH_NAME(e) ((e)->de_channel == NULL ? (e)->de_channel_name : (e)-> de_channel->ch_name)
 
 /**
  * Autorec entry
@@ -247,6 +260,8 @@ void dvr_config_delete(const char *name);
 
 void dvr_entry_notify(dvr_entry_t *de);
 
+void dvr_entry_save(dvr_entry_t *de);
+
 const char *dvr_entry_status(dvr_entry_t *de);
 
 const char *dvr_entry_schedstatus(dvr_entry_t *de);
@@ -280,6 +295,8 @@ void dvr_init(void);
 
 void dvr_autorec_init(void);
 
+void dvr_autorec_update(void);
+
 void dvr_destroy_by_channel(channel_t *ch);
 
 void dvr_rec_subscribe(dvr_entry_t *de);
@@ -298,7 +315,7 @@ dvr_entry_t *dvr_entry_find_by_event_fuzzy(epg_broadcast_t *e);
 
 dvr_entry_t *dvr_entry_find_by_episode(epg_broadcast_t *e);
 
-off_t dvr_get_filesize(dvr_entry_t *de);
+int64_t dvr_get_filesize(dvr_entry_t *de);
 
 dvr_entry_t *dvr_entry_cancel(dvr_entry_t *de);
 
@@ -331,9 +348,18 @@ typedef struct dvr_query_result {
   int dqr_alloced;
 } dvr_query_result_t;
 
+typedef int (dvr_entry_filter)(dvr_entry_t *entry);
+typedef int (dvr_entry_comparator)(const void *a, const void *b);
+
 void dvr_query(dvr_query_result_t *dqr);
+void dvr_query_filter(dvr_query_result_t *dqr, dvr_entry_filter filter);
 void dvr_query_free(dvr_query_result_t *dqr);
+
+void dvr_query_sort_cmp(dvr_query_result_t *dqr, dvr_entry_comparator cmp);
 void dvr_query_sort(dvr_query_result_t *dqr);
+
+int dvr_sort_start_descending(const void *A, const void *B);
+int dvr_sort_start_ascending(const void *A, const void *B);
 
 /**
  *
@@ -363,5 +389,12 @@ dvr_autorec_entry_t *autorec_entry_find(const char *id, int create);
 dvr_prio_t dvr_pri2val(const char *s);
 
 const char *dvr_val2pri(dvr_prio_t v);
+
+/**
+ * Inotify support
+ */
+void dvr_inotify_init ( void );
+void dvr_inotify_add  ( dvr_entry_t *de );
+void dvr_inotify_del  ( dvr_entry_t *de );
 
 #endif /* DVR_H  */

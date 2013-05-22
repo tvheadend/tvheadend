@@ -37,11 +37,19 @@ tvheadend.miscconf = function() {
 	 */
 	var confreader = new Ext.data.JsonReader({
 		root : 'config'
-	}, [ 'muxconfpath', 'language' ]);
+	}, [ 'muxconfpath', 'language',
+       'imagecache_enabled', 'imagecache_ok_period',
+       'imagecache_fail_period', 'imagecache_ignore_sslcert',
+       'tvhtime_update_enabled', 'tvhtime_ntp_enabled',
+       'tvhtime_tolerance']);
 
 	/* ****************************************************************
 	 * Form Fields
 	 * ***************************************************************/
+
+  /*
+   * DVB path
+   */
 
 	var dvbscanPath = new Ext.form.TextField({
 		fieldLabel : 'DVB scan files path',
@@ -49,6 +57,10 @@ tvheadend.miscconf = function() {
 		allowBlank : true,
 		width: 400
 	});
+
+  /*
+   * Language
+   */
 
 	var language = new Ext.ux.ItemSelector({
 		name: 'language',
@@ -64,6 +76,66 @@ tvheadend.miscconf = function() {
 		toLegend: 'Selected',
 		fromLegend: 'Available'
 	});
+
+  /*
+   * Time/Date
+   */
+  var tvhtimeUpdateEnabled = new Ext.form.Checkbox({
+    name: 'tvhtime_update_enabled',
+    fieldLabel: 'Update time'
+  });
+  
+  var tvhtimeNtpEnabled = new Ext.form.Checkbox({
+    name: 'tvhtime_ntp_enabled',
+    fieldLabel: 'Enable NTP driver'
+  });
+
+  var tvhtimeTolerance = new Ext.form.NumberField({
+    name: 'tvhtime_tolerance',
+    fieldLabel: 'Update tolerance (ms)'
+  });
+
+  var tvhtimePanel = new Ext.form.FieldSet({
+    title: 'Time Update',
+    width: 700,
+    autoHeight: true,
+    collapsible: true,
+    items : [ tvhtimeUpdateEnabled, tvhtimeNtpEnabled, tvhtimeTolerance ]
+  });
+
+  /*
+   * Image cache
+   */
+  var imagecacheEnabled = new Ext.form.Checkbox({
+    name: 'imagecache_enabled',
+    fieldLabel: 'Enabled',
+  });
+
+  var imagecacheOkPeriod = new Ext.form.NumberField({
+    name: 'imagecache_ok_period',
+    fieldLabel: 'Re-fetch period (hours)'
+  });
+
+  var imagecacheFailPeriod = new Ext.form.NumberField({
+    name: 'imagecache_fail_period',
+    fieldLabel: 'Re-try period (hours)',
+  });
+
+  var imagecacheIgnoreSSLCert = new Ext.form.Checkbox({
+    name: 'imagecache_ignore_sslcert',
+    fieldLabel: 'Ignore invalid SSL certificate'
+  });
+
+  var imagecachePanel = new Ext.form.FieldSet({
+    title: 'Image Caching',
+    width: 700,
+    autoHeight: true,
+    collapsible: true,
+    items : [ imagecacheEnabled, imagecacheOkPeriod, imagecacheFailPeriod,
+              imagecacheIgnoreSSLCert ]
+  });
+  if (tvheadend.capabilities.indexOf('imagecache') == -1)
+    imagecachePanel.hide();
 
 	/* ****************************************************************
 	 * Form
@@ -89,13 +161,14 @@ tvheadend.miscconf = function() {
 		border : false,
 		bodyStyle : 'padding:15px',
 		labelAlign : 'left',
-		labelWidth : 150,
+		labelWidth : 200,
 		waitMsgTarget : true,
 		reader : confreader,
 		layout : 'form',
 		defaultType : 'textfield',
 		autoHeight : true,
-		items : [ language, dvbscanPath ],
+		items : [ language, dvbscanPath,
+              imagecachePanel, tvhtimePanel ],
 		tbar : [ saveButton, '->', helpButton ]
 	});
 

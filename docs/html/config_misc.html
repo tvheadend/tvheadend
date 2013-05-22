@@ -19,6 +19,60 @@
   Select the path to use for DVB scan configuration files. Typically
   dvb-apps stores these in /usr/share/dvb/. Leave blank to use TVH's internal
   file set.
+ </dl>
+
+ <p>
+ Icon caching - this will cache any channel icons or other images (such as
+ EPG metadata). These will then be served from the local webserver, this
+ can be useful for multi-client systems and generally to reduce hits on
+ upstream providers.
+ </p>
+
+ <dl>
+
+  <dt>Enabled
+  <dd>
+  Select whether or not to enable caching. Note: even with this disabled
+  you can still specify local (file://) icons and these will be served by
+  the built-in webserver.
+  
+  <dt>Re-fetch period (hours)
+  <dd>
+  How frequently the upstream provider is checked for changes.
+  
+  <dt>Re-try period (hours)
+  <dd>
+  How frequently it will re-try fetching an image that has failed to be
+  fetched.
+
+  <dt>Ignore invalid SSL certificates
+  <dd>Ignore invalid/unverifiable (expired, self-certified, etc.) certificates
+
+ </dl>
+
+ <p>
+ Time Update - TVH now has a built-in capability to update the systme time.
+ However you should bare in mind that DVB time is not highly accurate and is
+ prone to both jitter and variation between different transponders.
+ <br/>
+ Where possible its probably still better to use an internet based NTP source
+ to synchronise the system clock.
+ </p>
+
+ <dl>
+ <dt>Update time
+ <dd>Enable system time updates, this will only work if the user
+ running TVH has rights to update the system clock (normally only root).
+ 
+ <dt>Enable NTP driver
+ <dd>This will create an NTP driver (using shmem interface) that you can feed
+ into ntpd. This can be run without root priviledges, but generally the 
+ performance is not that great.
+  
+ <dt>Update tolerance (milliseconds)
+ <dd>Only update the system clock (doesn't affect NTP driver) if the delta
+ between the system clock and DVB time is greater than this. This can help
+ stop horrible oscillations on the system clock.
 
  </dl>  
 </div>

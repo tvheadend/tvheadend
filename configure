@@ -9,7 +9,7 @@
 # Setup
 # ###########################################################################
 
-ROOTDIR=$(dirname $0)
+ROOTDIR=$(cd "$(dirname "$0")"; pwd)
 
 #
 # Options
@@ -20,21 +20,29 @@ OPTIONS=(
   "v4l:yes"
   "linuxdvb:yes"
   "dvbscan:yes"
+  "timeshift:yes"
+  "trace:yes"
+  "imagecache:auto"
   "avahi:auto"
   "zlib:auto"
+  "libav:auto"
+  "inotify:auto"
   "bundle:no"
+  "dvbcsa:no"
 )
 
 #
 # Begin
 #
 
-. $ROOTDIR/support/configure.inc
+. "$ROOTDIR/support/configure.inc"
 parse_args $*
 
 # ###########################################################################
 # Checks
 # ###########################################################################
+
+echo "Checking support/features"
 
 #
 # Compiler
@@ -46,6 +54,11 @@ check_cc_option sse2
 
 check_cc_snippet getloadavg '#include <stdlib.h> 
 void test() { getloadavg(NULL,0); }'
+
+check_cc_snippet atomic64 '#include <stdint.h>
+uint64_t test(uint64_t *ptr){
+return __sync_fetch_and_add(ptr, 1);
+}'
 
 #
 # Python
@@ -99,21 +112,85 @@ if enabled_or_auto avahi; then
 fi
 
 #
+# libav
+#
+if enabled_or_auto libav; then
+  has_libav=true
+
+  if $has_libav && ! check_pkg libavcodec "<=55.0.0"; then
+    has_libav=false
+  fi
+
+  if $has_libav && ! check_pkg libavcodec ">=52.96.0"; then
+    has_libav=false
+  fi
+
+  if $has_libav && ! check_pkg libavutil ">=50.43.0"; then
+    has_libav=false
+  fi
+
+  if $has_libav && ! check_pkg libavformat "<=55.0.0"; then
+    has_libav=false
+  fi
+
+  if $has_libav && ! check_pkg libavformat ">=53.10.0"; then
+    has_libav=false
+  fi
+
+  if $has_libav && ! check_pkg libswscale ">=0.13.0"; then
+    has_libav=false
+  fi
+
+  if $has_libav; then
+    enable libav
+  elif enabled libav; then
+    die "libav development support not found (use --disable-libav)"
+  fi
+fi
+
+#
+# Inotify
+#
+if enabled_or_auto inotify; then
+  if check_cc_header "sys/inotify" inotify_h; then
+    enable inotify
+  elif enabled inotify; then
+    die "Inotify support not found (use --disable-inotify)"
+  fi
+fi
+
+#
+# libdvbcsa
+#
+if enabled cwc && enabled dvbcsa; then
+  (check_cc_header "dvbcsa/dvbcsa" dvbcsa_h &&\
+   check_cc_lib    dvbcsa dvbcsa_l) ||\
+  die "Failed to find dvbcsa support (use --disable-dvbcsa)"
+  LDFLAGS="$LDFLAGS -ldvbcsa"
+fi
+
+#
+# Icon caching
+#
+if enabled_or_auto imagecache; then
+  if check_pkg libcurl; then
+    enable imagecache
+  elif enabled imagecache; then
+    die "Libcurl support not found (use --disable-imagecache)"
+  fi  
+fi
+
+#
 # DVB scan
 #
 if enabled linuxdvb && enabled dvbscan; then
-  if [ ! -d ${ROOTDIR}/data/dvb-scan ]; then
-    if ! enabled bin_bzip2; then
-      die "Bzip2 not found, fetch dvb-scan files (use --disable-dvbscan)"
-    fi
-    echo -n "Fetching dvb-scan files... "
-    if ${ROOTDIR}/support/getmuxlist &> /dev/null; then
-      echo "done"
-    else
-      echo
-      die "Failed to fetch dvb-scan files (use --disable-dvbscan to skip)"
-    fi
+  printf "${TAB}" "fetching dvb-scan files ..."
+  "${ROOTDIR}/support/getmuxlist"
+  if [ $? -ne 0 ]; then
+    echo "fail"
+    die "Failed to fetch dvb-scan data (use --disable-dvbscan)"
   fi
+  echo "ok"
 fi
 
 # ###########################################################################
@@ -122,7 +199,7 @@ fi
 
 # Write config
 write_config
-cat >> ${CONFIG_H} <<EOF
+cat >> "${CONFIG_H}" <<EOF
 #define TVHEADEND_DATADIR "$(eval echo ${datadir})/tvheadend"
 EOF
 

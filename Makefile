@@ -20,8 +20,8 @@
 # Configuration
 #
 
-include ${CURDIR}/.config.mk
-PROG = ${BUILDDIR}/tvheadend
+include $(dir $(lastword $(MAKEFILE_LIST))).config.mk
+PROG    := $(BUILDDIR)/tvheadend
 
 #
 # Common compiler flags
@@ -31,8 +31,11 @@ CFLAGS  += -Wall -Werror -Wwrite-strings -Wno-deprecated-declarations
 CFLAGS  += -Wmissing-prototypes -fms-extensions
 CFLAGS  += -g -funsigned-char -O2 
 CFLAGS  += -D_FILE_OFFSET_BITS=64
-CFLAGS  += -I${BUILDDIR} -I${CURDIR}/src -I${CURDIR}
-LDFLAGS += -lrt -ldl -lpthread
+CFLAGS  += -I${BUILDDIR} -I${ROOTDIR}/src -I${ROOTDIR}
+LDFLAGS += -lrt -ldl -lpthread -lm
+
+vpath %.c $(ROOTDIR)
+vpath %.h $(ROOTDIR)
 
 #
 # Other config
@@ -45,16 +48,16 @@ BUNDLE_FLAGS = ${BUNDLE_FLAGS-yes}
 # Binaries/Scripts
 #
 
-MKBUNDLE = $(PYTHON) $(CURDIR)/support/mkbundle
+MKBUNDLE = $(PYTHON) $(ROOTDIR)/support/mkbundle
 
 #
 # Debug/Output
 #
 
 ifndef V
-ECHO   = printf "$(1)\t\t%s\n" $(2)
+ECHO   = printf "%-16s%s\n" $(1) $(2)
 BRIEF  = CC MKBUNDLE CXX
-MSG    = $@
+MSG    = $(subst $(BUILDDIR)/,,$@)
 $(foreach VAR,$(BRIEF), \
     $(eval $(VAR) = @$$(call ECHO,$(VAR),$$(MSG)); $($(VAR))))
 endif
@@ -62,10 +65,11 @@ endif
 #
 # Core
 #
-SRCS =  src/main.c \
+SRCS =  src/version.c \
+	src/main.c \
+	src/tvhlog.c \
 	src/utils.c \
 	src/wrappers.c \
-	src/version.c \
 	src/access.c \
 	src/dtable.c \
 	src/tcp.c \
@@ -88,12 +92,14 @@ SRCS =  src/main.c \
 	src/parser_latm.c \
 	src/tsdemux.c \
 	src/bitstream.c \
-	src/htsp.c \
+	src/htsp_server.c \
 	src/serviceprobe.c \
 	src/htsmsg.c \
 	src/htsmsg_binary.c \
 	src/htsmsg_json.c \
 	src/htsmsg_xml.c \
+	src/misc/dbl.c \
+	src/misc/json.c \
 	src/settings.c \
 	src/htsbuf.c \
 	src/trap.c \
@@ -104,28 +110,28 @@ SRCS =  src/main.c \
 	src/avc.c \
   src/huffman.c \
   src/filebundle.c \
-  src/muxes.c \
   src/config2.c \
   src/lang_codes.c \
   src/lang_str.c \
+  src/imagecache.c \
+  src/tvhtime.c
 
 SRCS += src/epggrab/module.c\
   src/epggrab/channel.c\
-  src/epggrab/otamux.c\
   src/epggrab/module/pyepg.c\
   src/epggrab/module/xmltv.c\
+
+SRCS-$(CONFIG_LINUXDVB) += src/epggrab/otamux.c\
   src/epggrab/module/eit.c \
   src/epggrab/module/opentv.c \
   src/epggrab/support/freesat_huffman.c \
 
 SRCS += src/plumbing/tsfix.c \
-	src/plumbing/globalheaders.c \
+	src/plumbing/globalheaders.c
 
 SRCS += src/dvr/dvr_db.c \
 	src/dvr/dvr_rec.c \
 	src/dvr/dvr_autorec.c \
-	src/dvr/ebml.c \
-	src/dvr/mkmux.c \
 
 SRCS += src/webui/webui.c \
 	src/webui/comet.c \
@@ -135,12 +141,21 @@ SRCS += src/webui/webui.c \
 	src/webui/html.c\
 
 SRCS += src/muxer.c \
-	src/muxer_pass.c \
-	src/muxer_tvh.c \
+	src/muxer/muxer_pass.c \
+	src/muxer/muxer_tvh.c \
+	src/muxer/tvh/ebml.c \
+	src/muxer/tvh/mkmux.c \
 
 #
 # Optional code
 #
+
+# Timeshift
+SRCS-${CONFIG_TIMESHIFT} += \
+  src/timeshift.c \
+  src/timeshift/timeshift_filemgr.c \
+  src/timeshift/timeshift_writer.c \
+  src/timeshift/timeshift_reader.c \
 
 # DVB
 SRCS-${CONFIG_LINUXDVB} += \
@@ -152,30 +167,46 @@ SRCS-${CONFIG_LINUXDVB} += \
 	src/dvb/diseqc.c \
 	src/dvb/dvb_adapter.c \
 	src/dvb/dvb_multiplex.c \
-	src/dvb/dvb_transport.c \
+	src/dvb/dvb_service.c \
 	src/dvb/dvb_preconf.c \
 	src/dvb/dvb_satconf.c \
+	src/dvb/dvb_input_filtered.c \
+	src/dvb/dvb_input_raw.c \
 	src/webui/extjs_dvb.c \
+	src/muxes.c \
+
+# Inotify
+SRCS-${CONFIG_INOTIFY} += \
+  src/dvr/dvr_inotify.c \
 
 # V4L
 SRCS-${CONFIG_V4L} += \
 	src/v4l.c \
 	src/webui/extjs_v4l.c \
 
-# CWC
-SRCS-${CONFIG_CWC} += src/cwc.c \
-	src/capmt.c \
-	src/ffdecsa/ffdecsa_interface.c \
-	src/ffdecsa/ffdecsa_int.c
-
 # Avahi
 SRCS-$(CONFIG_AVAHI) += src/avahi.c
 
-# Optimised code
+# libav
+SRCS-$(CONFIG_LIBAV) += src/libav.c \
+	src/muxer/muxer_libav.c \
+	src/plumbing/transcoding.c \
+
+# CWC
+SRCS-${CONFIG_CWC} += src/cwc.c \
+	src/capmt.c
+
+# FFdecsa
+ifneq ($(CONFIG_DVBCSA),yes)
+SRCS-${CONFIG_CWC}  += src/ffdecsa/ffdecsa_interface.c \
+	src/ffdecsa/ffdecsa_int.c
+ifeq ($(CONFIG_CWC),yes)
 SRCS-${CONFIG_MMX}  += src/ffdecsa/ffdecsa_mmx.c
 SRCS-${CONFIG_SSE2} += src/ffdecsa/ffdecsa_sse2.c
+endif
 ${BUILDDIR}/src/ffdecsa/ffdecsa_mmx.o  : CFLAGS += -mmmx
 ${BUILDDIR}/src/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
+endif
 
 # File bundles
 SRCS-${CONFIG_BUNDLE}     += bundle.c
@@ -207,16 +238,26 @@ DEPS       = ${OBJS:%.o=%.d}
 all: ${PROG}
 
 # Special
-.PHONY:	clean distclean
+.PHONY:	clean distclean check_config reconfigure
+
+# Check configure output is valid
+check_config:
+	@test $(ROOTDIR)/.config.mk -nt $(ROOTDIR)/configure\
+		|| echo "./configure output is old, please re-run"
+	@test $(ROOTDIR)/.config.mk -nt $(ROOTDIR)/configure
+
+# Recreate configuration
+reconfigure:
+	$(ROOTDIR)/configure $(CONFIGURE_ARGS)
 
 # Binary
-${PROG}: $(OBJS) $(ALLDEPS)
+${PROG}: check_config $(OBJS) $(ALLDEPS)
 	$(CC) -o $@ $(OBJS) $(CFLAGS) $(LDFLAGS)
 
 # Object
 ${BUILDDIR}/%.o: %.c
 	@mkdir -p $(dir $@)
-	$(CC) -MD -MP $(CFLAGS) -c -o $@ $(CURDIR)/$<
+	$(CC) -MD -MP $(CFLAGS) -c -o $@ $<
 
 # Add-on
 ${BUILDDIR}/%.so: ${SRCS_EXTRA}
@@ -229,25 +270,26 @@ clean:
 	find . -name "*~" | xargs rm -f
 
 distclean: clean
-	rm -rf ${CURDIR}/build.*
-	rm -f ${CURDIR}/.config.mk
+	rm -rf ${ROOTDIR}/build.*
+	rm -f ${ROOTDIR}/.config.mk
 
-# Create buildversion.h
-src/version.c: FORCE
-	@$(CURDIR)/support/version $@ > /dev/null
+# Create version
+$(BUILDDIR)/src/version.o: $(ROOTDIR)/src/version.c
+$(ROOTDIR)/src/version.c: FORCE
+	@$(ROOTDIR)/support/version $@ > /dev/null
 FORCE:
 
 # Include dependency files if they exist.
 -include $(DEPS)
 
 # Include OS specific targets
-include support/${OSENV}.mk
+include ${ROOTDIR}/support/${OSENV}.mk
 
 # Bundle files
 $(BUILDDIR)/bundle.o: $(BUILDDIR)/bundle.c
 	@mkdir -p $(dir $@)
-	$(CC) -I${CURDIR}/src -c -o $@ $<
+	$(CC) -I${ROOTDIR}/src -c -o $@ $<
 
 $(BUILDDIR)/bundle.c:
 	@mkdir -p $(dir $@)
-	$(MKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d $(BUNDLE_FLAGS) $(BUNDLES)
+	$(MKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d $(BUNDLE_FLAGS) $(BUNDLES:%=$(ROOTDIR)/%)

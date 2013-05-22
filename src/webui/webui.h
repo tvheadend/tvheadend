@@ -20,6 +20,7 @@
 #define WEBUI_H_
 
 #include "htsmsg.h"
+#include "http.h"
 
 void webui_init(void);
 
@@ -29,6 +30,8 @@ void extjs_start(void);
 
 size_t html_escaped_len(const char *src);
 const char* html_escape(char *dst, const char *src, size_t len);
+
+int page_static_file(http_connection_t *hc, const char *remain, void *opaque);
 
 #if ENABLE_LINUXDVB
 void extjs_list_dvb_adapters(htsmsg_t *array);
@@ -53,6 +56,5 @@ void comet_init(void);
 void comet_mailbox_add_message(htsmsg_t *m, int isdebug);
 
 void comet_flush(void);
-
 
 #endif /* WEBUI_H_ */

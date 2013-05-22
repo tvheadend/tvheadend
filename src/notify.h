@@ -23,4 +23,6 @@
 
 void notify_by_msg(const char *class, htsmsg_t *m);
 
+void notify_reload(const char *class);
+
 #endif /* NOTIFY_H_ */

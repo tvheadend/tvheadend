@@ -67,6 +67,7 @@ sappend(char *buf, size_t l, const char *fmt, ...)
 /**
  *
  */
+#if ENABLE_EXECINFO
 static int
 add2lineresolve(const char *binary, void *addr, char *buf0, size_t buflen)
 {
@@ -126,6 +127,7 @@ add2lineresolve(const char *binary, void *addr, char *buf0, size_t buflen)
   close(fd[0]);
   return 0;
 }
+#endif /* ENABLE_EXECINFO */
 
 
 
@@ -133,8 +135,8 @@ static void
 traphandler(int sig, siginfo_t *si, void *UC)
 {
   ucontext_t *uc = UC;
-  char buf[200];
 #if ENABLE_EXECINFO
+  char buf[200];
   static void *frames[MAXFRAMES];
   int nframes = backtrace(frames, MAXFRAMES);
   Dl_info dli;
@@ -243,9 +245,9 @@ trap_init(const char *ver)
       char *m = malloc(st.st_size);
       if(m != NULL) {
 	if(read(fd, m, st.st_size) == st.st_size) {
-	  SHA_Init(&binsum);
-	  SHA_Update(&binsum, (void *)m, st.st_size);
-	  SHA_Final(digest, &binsum);
+	  SHA1_Init(&binsum);
+	  SHA1_Update(&binsum, (void *)m, st.st_size);
+	  SHA1_Final(digest, &binsum);
 	}
 	free(m);
       }

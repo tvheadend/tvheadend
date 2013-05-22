@@ -23,6 +23,7 @@
 #include "packet.h"
 #include "atomic.h"
 #include "service.h"
+#include "timeshift.h"
 
 void
 streaming_pad_init(streaming_pad_t *sp)
@@ -52,7 +53,16 @@ streaming_queue_deliver(void *opauqe, streaming_message_t *sm)
   streaming_queue_t *sq = opauqe;
 
   pthread_mutex_lock(&sq->sq_mutex);
-  TAILQ_INSERT_TAIL(&sq->sq_queue, sm, sm_link);
+
+  /* queue size protection */
+  // TODO: would be better to update size as we go, but this would
+  //       require updates elsewhere to ensure all removals from the queue
+  //       are covered (new function)
+  if (sq->sq_maxsize && streaming_queue_size(&sq->sq_queue) >= sq->sq_maxsize)
+    streaming_msg_free(sm);
+  else
+    TAILQ_INSERT_TAIL(&sq->sq_queue, sm, sm_link);
+
   pthread_cond_signal(&sq->sq_cond);
   pthread_mutex_unlock(&sq->sq_mutex);
 }
@@ -62,13 +72,24 @@ streaming_queue_deliver(void *opauqe, streaming_message_t *sm)
  *
  */
 void
-streaming_queue_init(streaming_queue_t *sq, int reject_filter)
+streaming_queue_init2(streaming_queue_t *sq, int reject_filter, size_t maxsize)
 {
   streaming_target_init(&sq->sq_st, streaming_queue_deliver, sq, reject_filter);
 
   pthread_mutex_init(&sq->sq_mutex, NULL);
   pthread_cond_init(&sq->sq_cond, NULL);
   TAILQ_INIT(&sq->sq_queue);
+
+  sq->sq_maxsize = maxsize;
+}
+
+/**
+ *
+ */
+void
+streaming_queue_init(streaming_queue_t *sq, int reject_filter)
+{
+  streaming_queue_init2(sq, reject_filter, 0); // 0 = unlimited
 }
 
 
@@ -117,6 +138,9 @@ streaming_msg_create(streaming_message_type_t type)
 {
   streaming_message_t *sm = malloc(sizeof(streaming_message_t));
   sm->sm_type = type;
+#if ENABLE_TIMESHIFT
+  sm->sm_time      = 0;
+#endif
   return sm;
 }
 
@@ -168,7 +192,10 @@ streaming_msg_clone(streaming_message_t *src)
   streaming_message_t *dst = malloc(sizeof(streaming_message_t));
   streaming_start_t *ss;
 
-  dst->sm_type = src->sm_type;
+  dst->sm_type      = src->sm_type;
+#if ENABLE_TIMESHIFT
+  dst->sm_time      = src->sm_time;
+#endif
 
   switch(src->sm_type) {
 
@@ -182,11 +209,22 @@ streaming_msg_clone(streaming_message_t *src)
     atomic_add(&ss->ss_refcount, 1);
     break;
 
+  case SMT_SKIP:
+    dst->sm_data = malloc(sizeof(streaming_skip_t));
+    memcpy(dst->sm_data, src->sm_data, sizeof(streaming_skip_t));
+    break;
+
   case SMT_SIGNAL_STATUS:
     dst->sm_data = malloc(sizeof(signal_status_t));
     memcpy(dst->sm_data, src->sm_data, sizeof(signal_status_t));
     break;
 
+  case SMT_TIMESHIFT_STATUS:
+    dst->sm_data = malloc(sizeof(timeshift_status_t));
+    memcpy(dst->sm_data, src->sm_data, sizeof(timeshift_status_t));
+    break;
+
+  case SMT_SPEED:
   case SMT_STOP:
   case SMT_SERVICE_STATUS:
   case SMT_NOSTART:
@@ -244,18 +282,17 @@ streaming_msg_free(streaming_message_t *sm)
     break;
 
   case SMT_STOP:
-    break;
-
   case SMT_EXIT:
-    break;
-
   case SMT_SERVICE_STATUS:
-    break;
-
   case SMT_NOSTART:
+  case SMT_SPEED:
     break;
 
+  case SMT_SKIP:
   case SMT_SIGNAL_STATUS:
+#if ENABLE_TIMESHIFT
+  case SMT_TIMESHIFT_STATUS:
+#endif
     free(sm->sm_data);
     break;
 
@@ -328,6 +365,36 @@ streaming_queue_clear(struct streaming_message_queue *q)
     TAILQ_REMOVE(q, sm, sm_link);
     streaming_msg_free(sm);
   }
+}
+
+
+/**
+ *
+ */
+size_t streaming_queue_size(struct streaming_message_queue *q)
+{
+  streaming_message_t *sm;
+  int size = 0;
+
+  TAILQ_FOREACH(sm, q, sm_link) {
+    if (sm->sm_type == SMT_PACKET)
+    {
+      th_pkt_t *pkt = sm->sm_data;
+      if (pkt && pkt->pkt_payload)
+      {
+        size += pkt->pkt_payload->pb_size;
+      }
+    }
+    else if (sm->sm_type == SMT_MPEGTS)
+    {
+      pktbuf_t *pkt_payload = sm->sm_data;
+      if (pkt_payload)
+      {
+        size += pkt_payload->pb_size;
+      }
+    }
+  }
+  return size;
 }
 
 

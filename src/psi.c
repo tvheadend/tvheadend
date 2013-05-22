@@ -63,8 +63,8 @@ psi_section_reassemble0(psi_section_t *ps, const uint8_t *data,
   if(crc && tvh_crc32(ps->ps_data, tsize, 0xffffffff))
     return -1;
 
-  cb(ps->ps_data, tsize - (crc ? 4 : 0), opaque);
   ps->ps_offset = 0;
+  cb(ps->ps_data, tsize - (crc ? 4 : 0), opaque);
   return len - excess;
 }
 
@@ -89,15 +89,15 @@ psi_section_reassemble(psi_section_t *ps, const uint8_t *tsb, int crc,
     int len = tsb[off++];
     if(len > 0) {
       if(len > 188 - off) {
-	ps->ps_lock = 0;
-	return;
+	      ps->ps_lock = 0;
+	      return;
       }
       psi_section_reassemble0(ps, tsb + off, len, 0, crc, cb, opaque);
       off += len;
     }
   }
 
-  while(off < 188 && tsb[off] != 0xff) {
+  while(off < 188) {
     r = psi_section_reassemble0(ps, tsb + off, 188 - off, pusi, crc,
 				cb, opaque);
     if(r < 0) {
@@ -107,44 +107,6 @@ psi_section_reassemble(psi_section_t *ps, const uint8_t *tsb, int crc,
     off += r;
     pusi = 0;
   }
-}
-
-
-/** 
- * PAT parser, from ISO 13818-1
- */
-int
-psi_parse_pat(service_t *t, uint8_t *ptr, int len,
-	      pid_section_callback_t *pmt_callback)
-{
-  uint16_t prognum;
-  uint16_t pid;
-  elementary_stream_t *st;
-
-  lock_assert(&t->s_stream_mutex);
-
-  if(len < 5)
-    return -1;
-
-  ptr += 5;
-  len -= 5;
-
-  while(len >= 4) {
-    
-    prognum =  ptr[0]         << 8 | ptr[1];
-    pid     = (ptr[2] & 0x1f) << 8 | ptr[3];
-
-    if(prognum != 0) {
-      if(service_stream_find(t, pid) == NULL) {
-	st = service_stream_create(t, pid, SCT_PMT);
-	st->es_section_docrc = 1;
-	st->es_got_section = pmt_callback;
-      }
-    }
-    ptr += 4;
-    len -= 4;
-  }
-  return 0;
 }
 
 
@@ -210,16 +172,17 @@ psi_build_pat(service_t *t, uint8_t *buf, int maxlen, int pmtpid)
 #define PMT_UPDATE_PCR                0x1
 #define PMT_UPDATE_NEW_STREAM         0x2
 #define PMT_UPDATE_LANGUAGE           0x4
-#define PMT_UPDATE_FRAME_DURATION     0x8
-#define PMT_UPDATE_COMPOSITION_ID     0x10
-#define PMT_UPDATE_ANCILLARY_ID       0x20
-#define PMT_UPDATE_STREAM_DELETED     0x40
-#define PMT_UPDATE_NEW_CA_STREAM      0x80
-#define PMT_UPDATE_NEW_CAID           0x100
-#define PMT_UPDATE_CA_PROVIDER_CHANGE 0x200
-#define PMT_UPDATE_PARENT_PID         0x400
-#define PMT_UPDATE_CAID_DELETED       0x800
-#define PMT_REORDERED                 0x1000
+#define PMT_UPDATE_AUDIO_TYPE         0x8
+#define PMT_UPDATE_FRAME_DURATION     0x10
+#define PMT_UPDATE_COMPOSITION_ID     0x20
+#define PMT_UPDATE_ANCILLARY_ID       0x40
+#define PMT_UPDATE_STREAM_DELETED     0x80
+#define PMT_UPDATE_NEW_CA_STREAM      0x100
+#define PMT_UPDATE_NEW_CAID           0x200
+#define PMT_UPDATE_CA_PROVIDER_CHANGE 0x400
+#define PMT_UPDATE_PARENT_PID         0x800
+#define PMT_UPDATE_CAID_DELETED       0x1000
+#define PMT_REORDERED                 0x2000
 
 /**
  * Add a CA descriptor
@@ -347,9 +310,9 @@ psi_desc_teletext(service_t *t, const uint8_t *ptr, int size,
       if((st = service_stream_find(t, pid)) == NULL) {
 	r |= PMT_UPDATE_NEW_STREAM;
 	st = service_stream_create(t, pid, SCT_TEXTSUB);
+	st->es_delete_me = 1;
       }
 
-      st->es_delete_me = 0;
   
       lang = lang_code_get2((const char*)ptr, 3);
       if(memcmp(st->es_lang,lang,3)) {
@@ -362,10 +325,12 @@ psi_desc_teletext(service_t *t, const uint8_t *ptr, int size,
 	st->es_parent_pid = parent_pid;
       }
 
-      if(st->es_position != *position) {
+      // Check es_delete_me so we only compute position once per PMT update
+      if(st->es_position != *position && st->es_delete_me) {
 	st->es_position = *position;
 	r |= PMT_REORDERED;
       }
+      st->es_delete_me = 0;
       (*position)++;
     }
     ptr += 5;
@@ -433,6 +398,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
   int position = 0;
   int tt_position = 1000;
   const char *lang = NULL;
+  uint8_t audio_type = 0;
 
   caid_t *c, *cn;
 
@@ -468,6 +434,10 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
   /* Mark all streams for deletion */
   if(delete) {
     TAILQ_FOREACH(st, &t->s_components, es_link) {
+
+      if(st->es_type == SCT_PMT)
+        continue;
+
       st->es_delete_me = 1;
 
       LIST_FOREACH(c, &st->es_caids, link)
@@ -561,6 +531,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 
       case DVB_DESC_LANGUAGE:
         lang = lang_code_get2((const char*)ptr, 3);
+        audio_type = ptr[3];
 	      break;
 
       case DVB_DESC_TELETEXT:
@@ -633,6 +604,11 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
         memcpy(st->es_lang, lang, 4);
       }
 
+      if(st->es_audio_type != audio_type) {
+        update |= PMT_UPDATE_AUDIO_TYPE;
+        st->es_audio_type = audio_type;
+      }
+
       if(composition_id != -1 && st->es_composition_id != composition_id) {
 	st->es_composition_id = composition_id;
 	update |= PMT_UPDATE_COMPOSITION_ID;
@@ -690,7 +666,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
     service_request_save(t, 0);
 
     // Only restart if something that our clients worry about did change
-    if(update & !(PMT_UPDATE_NEW_CA_STREAM |
+    if(update & ~(PMT_UPDATE_NEW_CA_STREAM |
 		  PMT_UPDATE_NEW_CAID |
 		  PMT_UPDATE_CA_PROVIDER_CHANGE | 
 		  PMT_UPDATE_CAID_DELETED)) {
@@ -706,7 +682,8 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
  * PMT generator
  */
 int
-psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid)
+psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
+	      int version, int pcrpid)
 {
   int c, tlen, dlen, l, i;
   uint8_t *buf, *buf1;
@@ -722,8 +699,10 @@ psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid
   buf[4] = 0x01;
 
   buf[5] = 0xc1; /* current_next_indicator + version */
-  buf[6] = 0;
-  buf[7] = 0;
+  buf[5] |= (version & 0x1F) << 1;
+
+  buf[6] = 0; /* section number */
+  buf[7] = 0; /* last section number */
 
   buf[8] = 0xe0 | (pcrpid >> 8);
   buf[9] =         pcrpid;
@@ -785,7 +764,7 @@ psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen, int pcrpid
       buf[0] = DVB_DESC_LANGUAGE;
       buf[1] = 4;
       memcpy(&buf[2],ssc->ssc_lang,3);
-      buf[5] = 0; /* Main audio */
+      buf[5] = ssc->ssc_audio_type;
       dlen = 6;
       break;
     case SCT_DVBSUB:
@@ -848,14 +827,27 @@ static struct strtab caidnametab[] = {
   { "Viaccess",         0x0500 }, 
   { "Irdeto",           0x0600 }, 
   { "Irdeto",           0x0602 }, 
-  { "Irdeto",           0x0604 }, 
+  { "Irdeto",           0x0603 },
+  { "Irdeto",           0x0604 },
+  { "Irdeto",		0x0622 },
   { "Irdeto",		0x0624 },
+  { "Irdeto",		0x0648 },
   { "Irdeto",		0x0666 },
   { "Jerroldgi",        0x0700 }, 
   { "Matra",            0x0800 }, 
-  { "NDS",              0x0900 }, 
+  { "NDS",              0x0900 },
+  { "NDS",              0x0919 },
+  { "NDS",              0x091F }, 
+  { "NDS",              0x092B },
+  { "NDS",              0x09AF }, 
+  { "NDS",              0x09C4 },
+  { "NDS",              0x0960 },
+  { "NDS",              0x0963 }, 
   { "Nokia",            0x0A00 }, 
-  { "Conax",            0x0B00 }, 
+  { "Conax",            0x0B00 },
+  { "Conax",            0x0B01 },
+  { "Conax",            0x0B02 }, 
+  { "Conax",            0x0BAA },
   { "NTL",              0x0C00 }, 
   { "CryptoWorks",	0x0D00 },
   { "CryptoWorks",	0x0D01 },
@@ -864,9 +856,11 @@ static struct strtab caidnametab[] = {
   { "CryptoWorks",	0x0D05 },
   { "CryptoWorks",	0x0D0F },
   { "CryptoWorks",	0x0D70 },
+  { "CryptoWorks ICE",	0x0D95 }, 
   { "CryptoWorks ICE",	0x0D96 },
   { "CryptoWorks ICE",	0x0D97 },
   { "PowerVu",          0x0E00 }, 
+  { "PowerVu",          0x0E11 }, 
   { "Sony",             0x0F00 }, 
   { "Tandberg",         0x1000 }, 
   { "Thompson",         0x1100 }, 
@@ -879,7 +873,16 @@ static struct strtab caidnametab[] = {
   { "BetaCrypt",        0x1702 }, 
   { "BetaCrypt",        0x1722 }, 
   { "BetaCrypt",        0x1762 }, 
-  { "NagraVision",      0x1800 }, 
+  { "NagraVision",      0x1800 },
+  { "NagraVision",      0x1803 },
+  { "Nagra Media Access",      0x1813 },
+  { "NagraVision",      0x1810 },
+  { "NagraVision",      0x1815 },
+  { "NagraVision",      0x1830 },
+  { "NagraVision",      0x1833 },
+  { "NagraVision",      0x1834 },
+  { "NagraVision",      0x183D },
+  { "NagraVision",      0x1861 },
   { "Titan",            0x1900 }, 
   { "Telefonica",       0x2000 }, 
   { "Stentor",          0x2100 }, 
@@ -894,6 +897,7 @@ static struct strtab caidnametab[] = {
   { "DRECrypt2",        0x4ae1 },
   { "Bulcrypt",         0x4aee },
   { "Bulcrypt",         0x5581 },
+  { "Verimatrix",       0x5601 },
 };
 
 const char *
@@ -908,10 +912,26 @@ psi_caid2name(uint16_t caid)
   return buf;
 }
 
+const char *
+psi_audio_type2desc(uint8_t audio_type)
+{
+  /* From ISO 13818-1 - ISO 639 language descriptor */
+  switch(audio_type) {
+    case 0: return ""; /* "Undefined" in the standard, but used for normal audio */
+    case 1: return "Clean effects";
+    case 2: return "Hearing impaired";
+    case 3: return "Visually impaired commentary";
+  }
+
+  return "Reserved";
+}
+
 /**
  *
  */
 static struct strtab streamtypetab[] = {
+  { "NONE",       SCT_NONE },
+  { "UNKNOWN",    SCT_UNKNOWN },
   { "MPEG2VIDEO", SCT_MPEG2VIDEO },
   { "MPEG2AUDIO", SCT_MPEG2AUDIO },
   { "H264",       SCT_H264 },
@@ -920,12 +940,11 @@ static struct strtab streamtypetab[] = {
   { "DVBSUB",     SCT_DVBSUB },
   { "CA",         SCT_CA },
   { "PMT",        SCT_PMT },
-  { "PAT",        SCT_PAT },
   { "AAC",        SCT_AAC },
   { "MPEGTS",     SCT_MPEGTS },
   { "TEXTSUB",    SCT_TEXTSUB },
   { "EAC3",       SCT_EAC3 },
-  { "AAC",       SCT_MP4A },
+  { "AAC",        SCT_MP4A },
 };
 
 
@@ -938,6 +957,14 @@ streaming_component_type2txt(streaming_component_type_t s)
   return val2str(s, streamtypetab) ?: "INVALID";
 }
 
+/**
+ *
+ */
+streaming_component_type_t
+streaming_component_txt2type(const char *str)
+{
+  return str ? str2val(str, streamtypetab) : SCT_UNKNOWN;
+}
 
 /**
  * Store service settings into message
@@ -963,6 +990,9 @@ psi_save_service_settings(htsmsg_t *m, service_t *t)
 
     if(st->es_lang[0])
       htsmsg_add_str(sub, "language", st->es_lang);
+
+    if (SCT_ISAUDIO(st->es_type))
+      htsmsg_add_u32(sub, "audio_type", st->es_audio_type);
 
     if(st->es_type == SCT_CA) {
 
@@ -994,6 +1024,8 @@ psi_save_service_settings(htsmsg_t *m, service_t *t)
 	htsmsg_add_u32(sub, "width", st->es_width);
 	htsmsg_add_u32(sub, "height", st->es_height);
       }
+      if(st->es_frame_duration)
+        htsmsg_add_u32(sub, "duration", st->es_frame_duration);
     }
     
     htsmsg_add_msg(m, "stream", sub);
@@ -1112,6 +1144,11 @@ psi_load_service_settings(htsmsg_t *m, service_t *t)
     if((v = htsmsg_get_str(c, "language")) != NULL)
       strncpy(st->es_lang, lang_code_get(v), 3);
 
+    if (SCT_ISAUDIO(type)) {
+      if(!htsmsg_get_u32(c, "audio_type", &u32))
+        st->es_audio_type = u32;
+    }
+
     if(!htsmsg_get_u32(c, "position", &u32))
       st->es_position = u32;
    
@@ -1137,6 +1174,9 @@ psi_load_service_settings(htsmsg_t *m, service_t *t)
 
       if(!htsmsg_get_u32(c, "height", &u32))
 	st->es_height = u32;
+
+      if(!htsmsg_get_u32(c, "duration", &u32))
+        st->es_frame_duration = u32;
     }
 
   }

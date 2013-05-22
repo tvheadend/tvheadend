@@ -184,8 +184,8 @@ static const char *xmltv_ns_get_parse_num
 
 
  out:
-  if(ap) *ap = a + 1;
-  if(bp) *bp = b + 1;
+  if(ap && a >= 0) *ap = a + 1;
+  if(bp && b >= 0) *bp = b;
   return s;
 }
 
@@ -208,7 +208,10 @@ static void parse_xmltv_dd_progid
   snprintf(buf, sizeof(buf)-1, "ddprogid://%s/%s", mod->id, s);
 
   /* SH - series without episode id so ignore */
-  if (strncmp("SH", s, 2)) *uri = strdup(buf);
+  if (strncmp("SH", s, 2))
+    *uri  = strdup(buf);
+  else
+    *suri = strdup(buf);
 
   /* Episode */
   if (!strncmp("EP", s, 2)) {
@@ -351,14 +354,22 @@ static int _xmltv_parse_previously_shown
  * Star rating
  */
 static int _xmltv_parse_star_rating
-  ( epggrab_module_t *mod, epg_episode_t *ee, htsmsg_t *tags )
+  ( epggrab_module_t *mod, epg_episode_t *ee, htsmsg_t *body )
 {
-  int a, b;
-  const char *stars;
-  if (!mod || !ee || !tags) return 0;
-  if (!(stars = htsmsg_xml_get_cdata_str(tags, "star-rating"))) return 0;
-  if (sscanf(stars, "%d/%d", &a, &b) != 2) return 0;
-  return epg_episode_set_star_rating(ee, (5 * a) / b, mod);
+  double a, b;
+  htsmsg_t *stars, *tags;
+  const char *s1, *s2;
+
+  if (!mod || !ee || !body) return 0;
+  if (!(stars = htsmsg_get_map(body, "star-rating"))) return 0;
+  if (!(tags  = htsmsg_get_map(stars, "tags"))) return 0;
+  if (!(s1 = htsmsg_xml_get_cdata_str(tags, "value"))) return 0;
+  if (!(s2 = strstr(s1, "/"))) return 0;
+
+  a = atof(s1);
+  b = atof(s2 + 1);
+
+  return epg_episode_set_star_rating(ee, (100 * a) / b, mod);
 }
 
 /*
@@ -631,7 +642,7 @@ static void _xmltv_load_grabbers ( void )
   size_t i, p, n;
   char *outbuf;
   char name[1000];
-  char *tmp, *path;
+  char *tmp, *tmp2 = NULL, *path;
 
   /* Load data */
   outlen = spawn_and_store_stdout(XMLTV_FIND, NULL, &outbuf);
@@ -665,7 +676,7 @@ static void _xmltv_load_grabbers ( void )
       NULL
     };
     path = strdup(tmp);
-    tmp  = strtok(path, ":");
+    tmp  = strtok_r(path, ":", &tmp2);
     while (tmp) {
       DIR *dir;
       struct dirent *de;
@@ -674,7 +685,8 @@ static void _xmltv_load_grabbers ( void )
         while ((de = readdir(dir))) {
           if (strstr(de->d_name, XMLTV_GRAB) != de->d_name) continue;
           snprintf(bin, sizeof(bin), "%s/%s", tmp, de->d_name);
-          if (lstat(bin, &st)) continue;
+          if (epggrab_module_find_by_id(bin)) continue;
+          if (stat(bin, &st)) continue;
           if (!(st.st_mode & S_IEXEC)) continue;
           if (!S_ISREG(st.st_mode)) continue;
           if ((outlen = spawn_and_store_stdout(bin, argv, &outbuf)) > 0) {
@@ -687,7 +699,7 @@ static void _xmltv_load_grabbers ( void )
         }
         closedir(dir);
       }
-      tmp = strtok(NULL, ":");
+      tmp = strtok_r(NULL, ":", &tmp2);
     }
     free(path);
   }

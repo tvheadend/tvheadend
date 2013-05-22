@@ -1,28 +1,51 @@
 <div class="hts-doc-text">
 
  <p>
- This tab is used to configure EPG grabbing capabilities. TVheadend supports
- a variety of different EPG grabbing mechanisms. These fall into 3 broad
- categories, within which there are a variety of specific grabber 
- implementations.
+ This tab is used to configure the Electronic Program Guide (EPG) grabbing
+ capabilities. Tvheadend supports a variety of different EPG grabbing
+ mechanisms. These fall into 3 broad categories, within which there are a
+ variety of specific grabber implementations.
  </p>
 
  <h2>Grabber Types</h2>
  <ul>
-  <li>Over-the-Air (OTA) - These grabbers receive EPG data directly from the DVB network. This is often the easiest way to get up and running and does provide timely updates should scheduling change. However the information isn't always as rich as some of the other grabbers.
-  <li>Internal - These are grabbers which can be internally initiated from within TVheadend using a very simple scheduler. These are typically Internet based services. This can be a quick way to get richer EPG data where you don't have decent OTA support.
-  <li>External - These provide the option to run grabber scripts externally and to send data into TVheadend via Unix domain sockets. It provides the ability to run more complex configurations using things like cronjob's, script chains, etc.
+  <li>Over-the-Air (OTA) - These grabbers receive EPG data directly from the
+  DVB network. This is often the easiest way to get up and running and does
+  provide timely updates should scheduling change. However, the information
+  isn't always as rich as some of the other grabbers.
+  <li>Internal - These are grabbers which can be internally initiated from
+  within Tvheadend using a very simple scheduler. These are typically
+  Internet-based services. This can be a quick way to get richer EPG data
+  where you don't have decent OTA support.
+  <li>External - These provide the option to run grabber scripts externally and
+  to send data into Tvheadend via Unix domain sockets. It provides the ability
+  to run more complex configurations using things like cronjob's, script
+  chains, etc.
  </ul>
 
  <h2>Grabber Modules</h2>
  <ul>
-  <li>EIT    - This is a DVB standards compatible EIT grabber. Typically it will
-  retrieve now/next information, though on some networks there may be more
+  <li>EIT    - This is a DVB standards compatible EIT grabber. Typically it
+  will retrieve now/next information, though on some networks there may be more
   extensive data published.
-  <li>Freesat/view - This is an extended version of EIT that is used by the Free-to-air DVB providers in the UK. It includes additional information such as series links and episode identifiers.
-  <li>OpenTV - This is a proprietary OTA EPG grabber. Its known to be used on the SKY networks, but others may use it. You need two configuration files to define settings for your particular network, if you don't see yours listed please visit IRC #hts for help.
-  <li>XMLTV  - This is am Internet based suite of scripts, for more information about XMLTV please visit <a href="http://www.xmltv.org">http://www.xmltv.org</a>. To make use of the internal XMLTV grabber you typically require the xmltv-utils package to be installed. If you install new grabbers you will need to restart TVheadend to pick these up as they're loaded at startup. If you see no XMLTV grabbers listed then most probably XMLTV is not properly installed and in the PATH.
-  <li>PyEPG  - This is another Internet based scraper. It currently only supports the Atlas UK system (for which you need a key), but it does provide a very rich EPG data set. For more information see <a href='http://github.com/adamsutton/PyEPG'>http://github.com/adamsutton/PyEPG</a>.</li>
+  <li>Freesat/view - This is an extended version of EIT that is used by the
+  Free-to-air DVB providers in the UK. It includes additional information such
+  as series links and episode identifiers.
+  <li>OpenTV - This is a proprietary OTA EPG grabber. It's known to be used on
+  the SKY networks, but others may use it. You need two configuration files to
+  define settings for your particular network, if you don't see yours listed
+  please visit IRC #hts for help.
+  <li>XMLTV  - This is am Internet-based suite of scripts, for more information
+  about XMLTV please visit <a href="http://www.xmltv.org">http://www.xmltv.org</a>.
+  To make use of the internal XMLTV grabber you typically require the xmltv-utils
+  package to be installed. If you install new grabbers you will need to
+  restart Tvheadend to pick these up as they're loaded at startup. If you see
+  no XMLTV grabbers listed then most probably XMLTV is not properly installed
+  and in the PATH.
+  <li>PyEPG  - This is another Internet-based scraper. It currently only
+  supports the Atlas UK system (for which you need a key), but it does provide
+  a very rich EPG data set. For more information see
+  <a href='http://github.com/adamsutton/PyEPG'>http://github.com/adamsutton/PyEPG</a>.</li>
  </ul>
 
  <h2>Configuration options</h2>
@@ -38,6 +61,12 @@
    <dt>Update channel name
    <dd>Automatically update channel icons using information provided
        by the enabled EPG providers.
+   <dt>Periodic save EPG to disk Interval
+   <dd>Writes the current in-memory EPG database to disk every x Hours
+       (user defined), so should a crash/unexpected shutdown occur EPG
+       data is saved periodically to the database (Re-read on
+       next startup)
+       Set to 0 to disable.
  </dl>
  
  <h3>Internal Grabber</h3>
@@ -46,7 +75,7 @@
   <dd>Select which internal grabber to use.
 
   <dt>Grab interval
-  <dd>Time period between grabs. Value and unit are indepdently set.
+  <dd>Time period between grabs. Value and unit are independently set.
  </dl>
  
  <h3>Over-the-air Grabbers</h3>

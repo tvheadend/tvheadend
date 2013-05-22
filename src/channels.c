@@ -38,7 +38,8 @@
 #include "dtable.h"
 #include "notify.h"
 #include "dvr/dvr.h"
-#include "htsp.h"
+#include "htsp_server.h"
+#include "imagecache.h"
 
 struct channel_tree channel_name_tree;
 static struct channel_tree channel_identifier_tree;
@@ -112,7 +113,6 @@ chidcmp(const channel_t *a, const channel_t *b)
 {
   return a->ch_id - b->ch_id;
 }
-
 
 /**
  *
@@ -199,7 +199,9 @@ channel_create2(const char *name, int number)
 channel_t *
 channel_create ( void )
 {
-  return channel_create2(NULL, 0);
+  channel_t *ch = channel_create2(NULL, 0);
+  channel_save(ch);
+  return ch;
 }
 
 /**
@@ -210,14 +212,14 @@ channel_find_by_name(const char *name, int create, int channel_number)
 {
   channel_t skel, *ch;
 
-  if (!name || !*name) return NULL;
-
   lock_assert(&global_lock);
 
-  skel.ch_name = (char *)name;
-  ch = RB_FIND(&channel_name_tree, &skel, ch_name_link, channelcmp);
-  if(ch != NULL || create == 0)
-    return ch;
+  if (name) {
+    skel.ch_name = (char *)name;
+    ch = RB_FIND(&channel_name_tree, &skel, ch_name_link, channelcmp);
+    if(ch != NULL || create == 0)
+      return ch;
+  }
   return channel_create2(name, channel_number);
 }
 
@@ -268,6 +270,7 @@ channel_load_one(htsmsg_t *c, int id)
   epggrab_channel_add(ch);
 
   tvh_str_update(&ch->ch_icon, htsmsg_get_str(c, "icon"));
+  imagecache_get_id(ch->ch_icon);
 
   htsmsg_get_s32(c, "dvr_extra_time_pre",  &ch->ch_dvr_extra_time_pre);
   htsmsg_get_s32(c, "dvr_extra_time_post", &ch->ch_dvr_extra_time_post);
@@ -343,6 +346,7 @@ channel_save(channel_t *ch)
 int
 channel_rename(channel_t *ch, const char *newname)
 {
+  dvr_entry_t *de;
   service_t *t;
 
   lock_assert(&global_lock);
@@ -361,6 +365,11 @@ channel_rename(channel_t *ch, const char *newname)
 
   LIST_FOREACH(t, &ch->ch_services, s_ch_link)
     t->s_config_save(t);
+  
+  LIST_FOREACH(de, &ch->ch_dvrs, de_channel_link) {
+    dvr_entry_save(de);
+    dvr_entry_notify(de);
+  }
 
   channel_save(ch);
   htsp_channel_update(ch);
@@ -452,6 +461,7 @@ channel_set_icon(channel_t *ch, const char *icon)
 
   free(ch->ch_icon);
   ch->ch_icon = strdup(icon);
+  imagecache_get_id(icon);
   channel_save(ch);
   htsp_channel_update(ch);
 }

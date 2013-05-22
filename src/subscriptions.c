@@ -36,6 +36,10 @@
 #include "streaming.h"
 #include "channels.h"
 #include "service.h"
+#include "htsmsg.h"
+#include "notify.h"
+#include "atomic.h"
+#include "dvb/dvb.h"
 
 struct th_subscription_list subscriptions;
 static gtimer_t subscription_reschedule_timer;
@@ -75,9 +79,14 @@ subscription_link_service(th_subscription_t *s, service_t *t)
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
-  if(TAILQ_FIRST(&t->s_components) != NULL)
+  if(TAILQ_FIRST(&t->s_components) != NULL) {
+
+    if(s->ths_start_message != NULL)
+      streaming_msg_free(s->ths_start_message);
+
     s->ths_start_message =
       streaming_msg_create_data(SMT_START, service_build_stream_start(t));
+  }
 
   // Link to service output
   streaming_target_connect(&t->s_streaming_pad, &s->ths_input);
@@ -129,11 +138,15 @@ subscription_unlink_service(th_subscription_t *s, int reason)
 }
 
 
+/**
+ *
+ */
 static void
 subscription_reschedule_cb(void *aux)
 {
   subscription_reschedule();
 }
+
 
 /**
  *
@@ -208,13 +221,25 @@ subscription_unsubscribe(th_subscription_t *s)
   if(t != NULL)
     service_remove_subscriber(t, s, SM_CODE_OK);
 
+  if(s->ths_tdmi != NULL) {
+    LIST_REMOVE(s, ths_tdmi_link);
+    th_dvb_adapter_t *tda = s->ths_tdmi->tdmi_adapter;
+    pthread_mutex_lock(&tda->tda_delivery_mutex);
+    streaming_target_disconnect(&tda->tda_streaming_pad, &s->ths_input);
+    pthread_mutex_unlock(&tda->tda_delivery_mutex);
+  }
+
   if(s->ths_start_message != NULL) 
     streaming_msg_free(s->ths_start_message);
  
   free(s->ths_title);
+  free(s->ths_hostname);
+  free(s->ths_username);
+  free(s->ths_client);
   free(s);
 
   subscription_reschedule();
+  notify_reload("subscriptions");
 }
 
 
@@ -261,6 +286,17 @@ subscription_input(void *opauqe, streaming_message_t *sm)
     streaming_msg_free(sm);
     return;
   }
+
+  if(sm->sm_type == SMT_PACKET) {
+    th_pkt_t *pkt = sm->sm_data;
+    if(pkt->pkt_err)
+      s->ths_total_err++;
+    s->ths_bytes += pkt->pkt_payload->pb_size;
+  } else if(sm->sm_type == SMT_MPEGTS) {
+    pktbuf_t *pb = sm->sm_data;
+    s->ths_bytes += pb->pb_size;
+  }
+
   streaming_target_deliver(s->ths_output, sm);
 }
 
@@ -272,6 +308,17 @@ static void
 subscription_input_direct(void *opauqe, streaming_message_t *sm)
 {
   th_subscription_t *s = opauqe;
+
+ if(sm->sm_type == SMT_PACKET) {
+    th_pkt_t *pkt = sm->sm_data;
+    if(pkt->pkt_err)
+      s->ths_total_err++;
+    s->ths_bytes += pkt->pkt_payload->pb_size;
+  } else if(sm->sm_type == SMT_MPEGTS) {
+    pktbuf_t *pb = sm->sm_data;
+    s->ths_bytes += pb->pb_size;
+  }
+
   streaming_target_deliver(s->ths_output, sm);
 }
 
@@ -280,29 +327,36 @@ subscription_input_direct(void *opauqe, streaming_message_t *sm)
 /**
  *
  */
-static th_subscription_t *
+th_subscription_t *
 subscription_create(int weight, const char *name, streaming_target_t *st,
-		    int flags, int direct)
+		    int flags, st_callback_t *cb, const char *hostname,
+		    const char *username, const char *client)
 {
   th_subscription_t *s = calloc(1, sizeof(th_subscription_t));
   int reject = 0;
+  static int tally;
 
   if(flags & SUBSCRIPTION_RAW_MPEGTS)
     reject |= SMT_TO_MASK(SMT_PACKET);  // Reject parsed frames
   else
     reject |= SMT_TO_MASK(SMT_MPEGTS);  // Reject raw mpegts
 
-
-  streaming_target_init(&s->ths_input, direct ? subscription_input_direct : 
-			subscription_input, s, reject);
+  streaming_target_init(&s->ths_input, 
+			cb ?: subscription_input_direct, s, reject);
 
   s->ths_weight            = weight;
   s->ths_title             = strdup(name);
+  s->ths_hostname          = hostname ? strdup(hostname) : NULL;
+  s->ths_username          = username ? strdup(username) : NULL;
+  s->ths_client            = client   ? strdup(client)   : NULL;
   s->ths_total_err         = 0;
   s->ths_output            = st;
   s->ths_flags             = flags;
 
   time(&s->ths_start);
+
+  s->ths_id = ++tally;
+
   LIST_INSERT_SORTED(&subscriptions, s, ths_global_link, subscription_sort);
 
   return s;
@@ -315,9 +369,13 @@ subscription_create(int weight, const char *name, streaming_target_t *st,
 th_subscription_t *
 subscription_create_from_channel(channel_t *ch, unsigned int weight, 
 				 const char *name, streaming_target_t *st,
-				 int flags)
+				 int flags, const char *hostname,
+				 const char *username, const char *client)
 {
-  th_subscription_t *s = subscription_create(weight, name, st, flags, 0);
+  th_subscription_t *s;
+
+  s = subscription_create(weight, name, st, flags, subscription_input,
+			  hostname, username, client);
 
   s->ths_channel = ch;
   LIST_INSERT_HEAD(&ch->ch_subscriptions, s, ths_channel_link);
@@ -349,6 +407,7 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
 
     service_source_info_free(&si);
   }
+  notify_reload("subscriptions");
   return s;
 }
 
@@ -358,11 +417,17 @@ subscription_create_from_channel(channel_t *ch, unsigned int weight,
  */
 th_subscription_t *
 subscription_create_from_service(service_t *t, const char *name,
-				   streaming_target_t *st, int flags)
+				 streaming_target_t *st, int flags,
+				 const char *hostname, const char *username, 
+				 const char *client)
 {
-  th_subscription_t *s = subscription_create(INT32_MAX, name, st, flags, 1);
+  th_subscription_t *s;
   source_info_t si;
   int r;
+
+  s = subscription_create(INT32_MAX, name, st, flags, 
+			  subscription_input_direct,
+			  hostname, username, client);
 
   if(t->s_status != SERVICE_RUNNING) {
     if((r = service_start(t, INT32_MAX, 1)) != 0) {
@@ -391,6 +456,7 @@ subscription_create_from_service(service_t *t, const char *name,
   service_source_info_free(&si);
 
   subscription_link_service(s, t);
+  notify_reload("subscriptions");
   return s;
 }
 
@@ -473,8 +539,139 @@ subscription_dummy_join(const char *id, int first)
 
   st = calloc(1, sizeof(streaming_target_t));
   streaming_target_init(st, dummy_callback, NULL, 0);
-  subscription_create_from_service(t, "dummy", st, 0);
+  subscription_create_from_service(t, "dummy", st, 0, NULL, NULL, "dummy");
 
   tvhlog(LOG_NOTICE, "subscription", 
 	 "Dummy join %s ok", id);
+}
+
+/**
+ *
+ */
+htsmsg_t *
+subscription_create_msg(th_subscription_t *s)
+{
+  htsmsg_t *m = htsmsg_create_map();
+
+  htsmsg_add_u32(m, "id", s->ths_id);
+  htsmsg_add_u32(m, "start", s->ths_start);
+  htsmsg_add_u32(m, "errors", s->ths_total_err);
+
+  const char *state;
+  switch(s->ths_state) {
+  default:
+    state = "Idle";
+    break;
+
+  case SUBSCRIPTION_TESTING_SERVICE:
+    state = "Testing";
+    break;
+    
+  case SUBSCRIPTION_GOT_SERVICE:
+    state = "Running";
+    break;
+
+  case SUBSCRIPTION_BAD_SERVICE:
+    state = "Bad";
+    break;
+  }
+
+
+  htsmsg_add_str(m, "state", state);
+
+  if(s->ths_hostname != NULL)
+    htsmsg_add_str(m, "hostname", s->ths_hostname);
+
+  if(s->ths_username != NULL)
+    htsmsg_add_str(m, "username", s->ths_username);
+
+  if(s->ths_client != NULL)
+    htsmsg_add_str(m, "title", s->ths_client);
+  else if(s->ths_title != NULL)
+    htsmsg_add_str(m, "title", s->ths_title);
+  
+  if(s->ths_channel != NULL)
+    htsmsg_add_str(m, "channel", s->ths_channel->ch_name);
+  
+  if(s->ths_service != NULL)
+    htsmsg_add_str(m, "service", s->ths_service->s_nicename);
+
+  return m;
+}
+
+
+static gtimer_t every_sec;
+
+/**
+ *
+ */
+static void
+every_sec_cb(void *aux)
+{
+  th_subscription_t *s;
+  gtimer_arm(&every_sec, every_sec_cb, NULL, 1);
+
+  LIST_FOREACH(s, &subscriptions, ths_global_link) {
+    int errors = s->ths_total_err;
+    int bw = atomic_exchange(&s->ths_bytes, 0);
+    
+    htsmsg_t *m = subscription_create_msg(s);
+    htsmsg_delete_field(m, "errors");
+    htsmsg_add_u32(m, "errors", errors);
+    htsmsg_add_u32(m, "bw", bw);
+    htsmsg_add_u32(m, "updateEntry", 1);
+    notify_by_msg("subscriptions", m);
+  }
+}
+
+
+/**
+ *
+ */
+void
+subscription_init(void)
+{
+  gtimer_arm(&every_sec, every_sec_cb, NULL, 1);
+}
+
+/**
+ * Set speed
+ */
+void
+subscription_set_speed ( th_subscription_t *s, int speed )
+{
+  streaming_message_t *sm;
+  service_t *t = s->ths_service;
+
+  if (!t) return;
+
+  pthread_mutex_lock(&t->s_stream_mutex);
+
+  sm = streaming_msg_create_code(SMT_SPEED, speed);
+
+  streaming_target_deliver(s->ths_output, sm);
+
+  pthread_mutex_unlock(&t->s_stream_mutex);
+}
+
+/**
+ * Set skip
+ */
+void
+subscription_set_skip ( th_subscription_t *s, const streaming_skip_t *skip )
+{
+  streaming_message_t *sm;
+  service_t *t = s->ths_service;
+
+  if (!t) return;
+
+  pthread_mutex_lock(&t->s_stream_mutex);
+
+  sm = streaming_msg_create(SMT_SKIP);
+  sm->sm_data = malloc(sizeof(streaming_skip_t));
+  memcpy(sm->sm_data, skip, sizeof(streaming_skip_t));
+
+  streaming_target_deliver(s->ths_output, sm);
+
+  pthread_mutex_unlock(&t->s_stream_mutex);
 }
