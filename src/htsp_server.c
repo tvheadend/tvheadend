@@ -693,8 +693,6 @@ htsp_build_event
   htsmsg_add_s64(out, "stop", e->stop);
   if ((str = epg_broadcast_get_title(e, lang)))
     htsmsg_add_str(out, "title", str);
-  if ((str = epg_broadcast_get_subtitle(e, lang)))
-    htsmsg_add_str(out, "subtitle", str);
   if ((str = epg_broadcast_get_description(e, lang))) {
     htsmsg_add_str(out, "description", str);
     if ((str = epg_broadcast_get_summary(e, lang)))
