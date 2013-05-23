@@ -699,11 +699,16 @@ htsp_build_event
       htsmsg_add_str(out, "summary", str);
   } else if((str = epg_broadcast_get_summary(e, lang)))
     htsmsg_add_str(out, "description", str);
-  if (e->serieslink)
+  if (e->serieslink) {
     htsmsg_add_u32(out, "serieslinkId", e->serieslink->id);
+    if (e->serieslink->uri)
+      htsmsg_add_str(out, "serieslinkUri", e->serieslink->uri);
+  }
 
   if (ee) {
     htsmsg_add_u32(out, "episodeId", ee->id);
+    if (ee->uri)
+      htsmsg_add_str(out, "episodeUri", ee->uri);
     if (ee->brand)
       htsmsg_add_u32(out, "brandId", ee->brand->id);
     if (ee->season)
