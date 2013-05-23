@@ -707,7 +707,7 @@ htsp_build_event
 
   if (ee) {
     htsmsg_add_u32(out, "episodeId", ee->id);
-    if (ee->uri)
+    if (ee->uri && strncasecmp(ee->uri,"tvh://",6))  /* tvh:// uris are internal */
       htsmsg_add_str(out, "episodeUri", ee->uri);
     if (ee->brand)
       htsmsg_add_u32(out, "brandId", ee->brand->id);
