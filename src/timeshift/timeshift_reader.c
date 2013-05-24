@@ -29,7 +29,7 @@
 #include <string.h>
 #include <assert.h>
 
-#ifdef ENABLE_EPOLL
+#if ENABLE_EPOLL
 #include <sys/epoll.h>
 #elif ENABLE_KQUEUE
 #include <sys/event.h>
@@ -416,7 +416,7 @@ void *timeshift_reader ( void *p )
   timeshift_index_iframe_t *tsi = NULL;
   streaming_skip_t *skip = NULL;
   time_t last_status = 0;
-#ifdef ENABLE_EPOLL
+#if ENABLE_EPOLL
   int efd;
   struct epoll_event ev = { 0 };
 #elif ENABLE_KQUEUE
@@ -424,7 +424,7 @@ void *timeshift_reader ( void *p )
   struct kevent ke;
 #endif
 
-#ifdef ENABLE_EPOLL
+#if ENABLE_EPOLL
   /* Poll */
   efd        = epoll_create(1);
   ev.events  = EPOLLIN;
@@ -447,7 +447,7 @@ void *timeshift_reader ( void *p )
 
     /* Wait for data */
     if(wait)
-#ifdef ENABLE_EPOLL
+#if ENABLE_EPOLL
       nfds = epoll_wait(efd, &ev, 1, wait);
 #elif ENABLE_KQUEUE
       nfds = kevent(kfd, NULL, 0, &ke, 1, NULL);
@@ -826,7 +826,7 @@ void *timeshift_reader ( void *p )
   }
 
   /* Cleanup */
-#ifdef ENABLE_EPOLL
+#if ENABLE_EPOLL
   close(efd);
 #elif ENABLE_KQUEUE
   close(kfd);

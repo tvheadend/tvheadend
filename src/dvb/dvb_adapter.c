@@ -48,7 +48,7 @@
 #include "diseqc.h"
 #include "atomic.h"
 
-#ifdef ENABLE_EPOLL
+#if ENABLE_EPOLL
 #include <sys/epoll.h>
 #elif ENABLE_KQUEUE
 #include <sys/event.h>
@@ -1029,7 +1029,7 @@ dvb_adapter_input_dvr(void *aux)
   int fd = -1, i, r, c, nfds, dmx = -1;
   uint8_t tsb[188 * 10];
   service_t *t;
-#ifdef ENABLE_EPOLL
+#if ENABLE_EPOLL
   int delay = 10;
   int efd;
   struct epoll_event ev;
@@ -1052,7 +1052,7 @@ dvb_adapter_input_dvr(void *aux)
     return NULL;
   }
 
-#ifdef ENABLE_EPOLL
+#if ENABLE_EPOLL
   /* Create poll */
   efd = epoll_create(2);
   memset(&ev, 0, sizeof(ev));
@@ -1074,7 +1074,7 @@ dvb_adapter_input_dvr(void *aux)
   while(1) {
 
     /* Wait for input */
-#ifdef ENABLE_EPOLL
+#if ENABLE_EPOLL
     nfds = epoll_wait(efd, &ev, 1, delay);
 
     /* No data */
@@ -1166,7 +1166,7 @@ dvb_adapter_input_dvr(void *aux)
 
   if(dmx != -1)
     close(dmx);
-#ifdef ENABLE_EPOLL
+#if ENABLE_EPOLL
   close(efd);
 #elif ENABLE_KQUEUE
   close(kfd);
