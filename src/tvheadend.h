@@ -561,7 +561,11 @@ char *regexp_escape ( const char *str );
 #define PRIulongword_t  "lu"
 #define PRIsize_t       PRIuword_t
 #define PRIssize_t      PRIsword_t
+#if __WORDSIZE == 32 && defined(PLATFORM_FREEBSD)
+#define PRItime_t       PRIsword_t
+#else
 #define PRItime_t       PRIslongword_t
+#endif
 #if _FILE_OFFSET_BITS == 64
 #define PRIoff_t        PRId64
 #else
