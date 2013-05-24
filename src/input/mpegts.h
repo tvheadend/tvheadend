@@ -135,8 +135,8 @@ void mpegts_psi_section_reassemble
 /* Network */
 struct mpegts_network
 {
-  idnode_t                mn_id;
-  LIST_ENTRY(dvb_network) mn_global_link;
+  idnode_t                   mn_id;
+  LIST_ENTRY(mpegts_network) mn_global_link;
 
   /*
    * Identification
@@ -242,6 +242,7 @@ struct mpegts_mux
    * Functions
    */
 
+  void (*mm_config_save)   (mpegts_mux_t *mm);
   int  (*mm_start)         (mpegts_mux_t *mm, const char *reason, int weight);
   void (*mm_stop)          (mpegts_mux_t *mm);
   void (*mm_open_table)    (mpegts_mux_t*,mpegts_table_t*);
@@ -443,7 +444,7 @@ mpegts_network_t *mpegts_network_create0
     const char *name );
 
 #define mpegts_network_create(t, u, n)\
-  (struct t*)mpegts_network_create0(calloc(1, sizeof(struct t)), t##_class, u, n)
+  (struct t*)mpegts_network_create0(calloc(1, sizeof(struct t)), &t##_class, u, n)
   
 void mpegts_network_schedule_initial_scan
   ( mpegts_network_t *mm );

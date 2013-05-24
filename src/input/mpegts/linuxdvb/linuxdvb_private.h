@@ -26,6 +26,8 @@ typedef struct linuxdvb_hardware linuxdvb_hardware_t;
 typedef struct linuxdvb_device   linuxdvb_device_t;
 typedef struct linuxdvb_adapter  linuxdvb_adapter_t;
 typedef struct linuxdvb_frontend linuxdvb_frontend_t;
+typedef struct linuxdvb_network  linuxdvb_network_t;
+typedef struct linuxdvb_mux      linuxdvb_mux_t;
 
 typedef LIST_HEAD(,linuxdvb_hardware) linuxdvb_hardware_list_t;
 
@@ -134,5 +136,31 @@ linuxdvb_frontend_added
   ( linuxdvb_adapter_t *la, int fe_num,
     const char *fe_path, const char *dmx_path, const char *dvr_path,
     const struct dvb_frontend_info *fe_info );
+
+struct linuxdvb_network
+{
+  mpegts_network_t;
+
+  /*
+   * Network type
+   */
+  fe_type_t ln_type;
+};
+
+void linuxdvb_network_init ( void );
+linuxdvb_network_t *linuxdvb_network_find_by_uuid(const char *uuid);
+
+struct linuxdvb_mux
+{
+  mpegts_mux_t;
+
+  /*
+   * Tuning information
+   */
+  dvb_mux_conf_t lm_tune_conf;
+};
+
+linuxdvb_mux_t *linuxdvb_mux_create0
+  (linuxdvb_network_t *ln, const char *uuid, htsmsg_t *conf);
 
 #endif /* __TVH_LINUXDVB_PRIVATE_H__ */

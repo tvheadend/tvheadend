@@ -22,13 +22,10 @@
 #include "settings.h"
 #include "linuxdvb_private.h"
 
-#include <sys/types.h>
-#include <dirent.h>
-
 void linuxdvb_init ( int adapter_mask )
 {
   /* Initialise networks */
-  //linuxdvb_network_init();
+  linuxdvb_network_init();
 
   /* Initialsie devices */
   linuxdvb_device_init(adapter_mask);

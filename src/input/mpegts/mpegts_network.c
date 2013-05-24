@@ -77,7 +77,7 @@ mpegts_network_create0
   idnode_insert(&mn->mn_id, uuid, idc);
   mn->mn_create_mux   = mpegts_network_create_mux;
   mn->mn_config_save  = mpegts_network_config_save;
-  mn->mn_network_name = strdup(netname);
+  if (netname) mn->mn_network_name = strdup(netname);
   TAILQ_INIT(&mn->mn_initial_scan_pending_queue);
   TAILQ_INIT(&mn->mn_initial_scan_current_queue);
   return mn;
