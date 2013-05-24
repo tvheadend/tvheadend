@@ -64,6 +64,12 @@ struct linuxdvb_hardware
   char                         *lh_displayname;
 };
 
+extern const idclass_t linuxdvb_hardware_class;
+
+idnode_t **
+linuxdvb_hardware_enumerate ( linuxdvb_hardware_list_t *list );
+
+
 struct linuxdvb_device
 {
   linuxdvb_hardware_t;
@@ -74,8 +80,12 @@ struct linuxdvb_device
   device_info_t               ld_devid;
 };
 
+void linuxdvb_device_init ( int adapter_mask );
+
 linuxdvb_device_t *linuxdvb_device_create0
   (const char *uuid, htsmsg_t *conf);
+
+linuxdvb_device_t * linuxdvb_device_find_by_adapter ( int a );
 
 struct linuxdvb_adapter
 {

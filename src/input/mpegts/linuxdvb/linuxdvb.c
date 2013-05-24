@@ -27,29 +27,9 @@
 
 void linuxdvb_init ( int adapter_mask )
 {
-  int a;
-  DIR *dp;
-  htsmsg_t *s, *e;
-  htsmsg_field_t *f;
+  /* Initialise networks */
+  //linuxdvb_network_init();
 
-  /* Load configuration */
-  if ((s = hts_settings_load_r(1, "input/linuxdvb/devices"))) {
-    HTSMSG_FOREACH(f, s) {
-      if ((e = htsmsg_get_map_by_field(f))) {
-        (void)linuxdvb_device_create0(f->hmf_name, e);
-      }
-    }
-  }
-  
-  /* Scan for hardware */
-  if ((dp = opendir("/dev/dvb"))) {
-    struct dirent *de;
-    while ((de = readdir(dp))) {
-      if (sscanf(de->d_name, "adapter%d", &a) != 1) continue;
-      if ((0x1 << a) & adapter_mask)
-        linuxdvb_adapter_added(a);
-    }
-  }
-
-  // TODO: add udev support for hotplug
+  /* Initialsie devices */
+  linuxdvb_device_init(adapter_mask);
 }
