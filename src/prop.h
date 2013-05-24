@@ -14,6 +14,7 @@ typedef struct property {
   const char *name;
   prop_type_t type;
   size_t off;
+  int rdonly;
 
   const char *(*str_get)(void *ptr);
   void (*str_set)(void *ptr, const char *str);
@@ -40,4 +41,11 @@ int prop_update_all(void *obj, const property_t *p,
   .name    = _n,\
   .type    = _t,\
   .off     = offsetof(_o, _v)
+
+#define PROPDEF2(_i, _n, _t, _o, _v, _r)\
+  .id      = _i,\
+  .name    = _n,\
+  .type    = _t,\
+  .off     = offsetof(_o, _v),\
+  .rdonly  = _r
 

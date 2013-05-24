@@ -27,9 +27,9 @@ tvheadend.dvb_muxes = function(adapterData, satConfStore) {
 		dataIndex : 'id',
 		width : 50,
 		renderer : function(value, metadata, record, row, col, store) {
-			url = 'stream/mux/' + value
-			return '<a href="' + url + '">Play</a>'
-  }, {
+			url = 'stream/mux/' + value;
+			return '<a href="' + url + '">Play</a>';
+  	}}, {
 		header : "Network",
 		dataIndex : 'network',
 		width : 200
@@ -429,8 +429,8 @@ tvheadend.dvb_services = function(adapterData, satConfStore) {
 			dataIndex : 'id',
 			width : 50,
 			renderer : function(value, metadata, record, row, col, store) {
-				url = 'stream/service/' + value
-				return '<a href="' + url + '">Play</a>'
+				url = 'stream/service/' + value;
+				return '<a href="' + url + '">Play</a>';
 			}
 		},
 		{

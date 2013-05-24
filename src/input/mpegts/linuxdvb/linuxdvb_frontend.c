@@ -46,6 +46,13 @@ const idclass_t linuxdvb_frontend_class =
   .ic_caption    = "Linux DVB Frontend",
   .ic_get_title  = linuxdvb_frontend_class_get_title,
   .ic_properties = (const property_t[]) {
+    { PROPDEF2("fe_path", "Frontend Path",
+               PT_STR, linuxdvb_frontend_t, lfe_fe_path, 1) },
+    { PROPDEF2("dvr_path", "Input Path",
+               PT_STR, linuxdvb_frontend_t, lfe_dvr_path, 1) },
+    { PROPDEF2("dmx_path", "Demux Path",
+               PT_STR, linuxdvb_frontend_t, lfe_dmx_path, 1) },
+    {}
   }
 };
 
@@ -55,6 +62,7 @@ const idclass_t linuxdvb_frontend_dvbt_class =
   .ic_class      = "linuxdvb_frontend_dvbt",
   .ic_caption    = "Linux DVB-T Frontend",
   .ic_properties = (const property_t[]){
+    {}
   }
 };
 
@@ -64,6 +72,7 @@ const idclass_t linuxdvb_frontend_dvbs_class =
   .ic_class      = "linuxdvb_frontend_dvbs",
   .ic_caption    = "Linux DVB-S Frontend",
   .ic_properties = (const property_t[]){
+    {}
   }
 };
 
@@ -73,6 +82,7 @@ const idclass_t linuxdvb_frontend_dvbc_class =
   .ic_class      = "linuxdvb_frontend_dvbc",
   .ic_caption    = "Linux DVB-C Frontend",
   .ic_properties = (const property_t[]){
+    {}
   }
 };
 
@@ -82,6 +92,7 @@ const idclass_t linuxdvb_frontend_atsc_class =
   .ic_class      = "linuxdvb_frontend_atsc",
   .ic_caption    = "Linux ATSC Frontend",
   .ic_properties = (const property_t[]){
+    {}
   }
 };
 

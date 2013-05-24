@@ -72,6 +72,7 @@ const idclass_t linuxdvb_hardware_class =
                PT_BOOL, linuxdvb_hardware_t, lh_enabled) },
     { PROPDEF1("displayname", "Name",
                PT_STR, linuxdvb_hardware_t, lh_displayname) },
+    {}
   }
 };
 
@@ -180,12 +181,13 @@ get_device_info ( device_info_t *di, int a )
 
   /* Create ID */
   if (*di->di_path && di->di_dev) {
-    snprintf(di->di_id, sizeof(di->di_id), "%s/%s/%04x:%04x",
+    snprintf(buf, sizeof(buf), "%s/%s/%04x:%04x",
              devinfo_bus2str(di->di_bus), di->di_path,
              di->di_dev >> 16, di->di_dev & 0xFFFF);
   } else {
-    snprintf(di->di_id, sizeof(di->di_id), "/dev/dvb/adapter%d", a);
+    snprintf(buf, sizeof(buf), "/dev/dvb/adapter%d", a);
   }
+  di->di_id = strdup(buf);
 }
 
 const idclass_t linuxdvb_device_class =
@@ -194,6 +196,9 @@ const idclass_t linuxdvb_device_class =
   .ic_class      = "linuxdvb_device",
   .ic_caption    = "LinuxDVB Device",
   .ic_properties = (const property_t[]){
+    { PROPDEF2("devid", "Device ID",
+               PT_STR, linuxdvb_device_t, ld_devid.di_id, 1) },
+    {}
   }
 };
 
@@ -283,6 +288,9 @@ const idclass_t linuxdvb_adapter_class =
   .ic_class      = "linuxdvb_adapter",
   .ic_caption    = "LinuxDVB Adapter",
   .ic_properties = (const property_t[]){
+    { PROPDEF2("rootpath", "Device Path",
+               PT_STR, linuxdvb_adapter_t, la_rootpath, 1) },
+    {}
   }
 };
 

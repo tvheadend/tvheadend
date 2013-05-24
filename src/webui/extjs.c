@@ -2178,7 +2178,6 @@ extjs_get_idnode(http_connection_t *hc, const char *remain, void *opaque,
   out = htsmsg_create_list();
   idnode_t **v;
 
-printf("get(%s)\n", s);
   if(!strcmp(s, "root")) {
     v = rootfn();
   } else {

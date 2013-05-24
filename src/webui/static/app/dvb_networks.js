@@ -5,12 +5,14 @@ tvheadend.item_editor = function(item) {
 
   for (var idx in item.params) {
     var f = item.params[idx];
+    var d = f.rdonly || false;
     switch(f.type) {
     case 'str':
       fields.push({
         fieldLabel: f.caption,
         name: f.id,
-        value: f.value
+        value: f.value,
+        disabled: d
       });
       break;
 
@@ -19,14 +21,15 @@ tvheadend.item_editor = function(item) {
         xtype: 'checkbox',
         fieldLabel: f.caption,
         name: f.id,
-        checked: f.value
+        checked: f.value,
+        disabled: d
       });
       break;
 
     case 'separator':
       fields.push({
         xtype: 'label',
-        fieldLabel: f.caption,
+        fieldLabel: f.caption
       });
       break;
     }

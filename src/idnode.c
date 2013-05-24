@@ -252,6 +252,7 @@ idnode_serialize(struct idnode *self)
     m = c->ic_serialize(self);
   } else {
     m = htsmsg_create_map();
+    htsmsg_add_str(m, "id", idnode_uuid_as_str(self));
     htsmsg_add_str(m, "text", idnode_get_title(self));
 
     htsmsg_t *p  = htsmsg_create_list();
@@ -259,7 +260,6 @@ idnode_serialize(struct idnode *self)
 
     htsmsg_add_msg(m, "params", p);
 
-    htsmsg_add_str(m, "id", idnode_uuid_as_str(self));
   }
   return m;
 }

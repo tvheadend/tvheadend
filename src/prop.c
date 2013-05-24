@@ -56,6 +56,10 @@ prop_write_values(void *obj, const property_t *pl, htsmsg_t *m)
       fprintf(stderr, "Property %s unmappable\n", f->hmf_name);
       continue;
     }
+    if (p->rdonly) {
+      tvhlog(LOG_WARNING, "prop", "field %s is read-only", p->id);
+      continue;
+    }
 
     void *val = obj + p->off;
     switch(TO_FROM(p->type, f->hmf_type)) {
@@ -101,8 +105,9 @@ prop_read_value(void *obj, const property_t *p, htsmsg_t *m, const char *name)
       s = p->str_get(obj);
     else
       s = *(const char **)val;
-    if(s != NULL)
+    if(s != NULL) {
       htsmsg_add_str(m, name, s);
+    }
     break;
   }
 }
@@ -145,6 +150,8 @@ prop_add_params_to_msg(void *obj, const property_t *p, htsmsg_t *msg)
     htsmsg_add_str(m, "id", p[i].id);
     htsmsg_add_str(m, "caption", p[i].name);
     htsmsg_add_str(m, "type", val2str(p[i].type, typetab) ?: "unknown");
+    if (p->rdonly)
+      htsmsg_add_u32(m, "rdonly", 1);
     prop_read_value(obj, p+i, m, "value");
     htsmsg_add_msg(msg, NULL, m);
   }
