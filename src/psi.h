@@ -46,6 +46,7 @@ int psi_build_pmt(const streaming_start_t *ss, uint8_t *buf, int maxlen,
 		  int version, int pcrpid);
 
 const char *psi_caid2name(uint16_t caid);
+const char *psi_audio_type2desc(uint8_t audio_type);
 
 void psi_load_service_settings(htsmsg_t *m, struct service *t);
 void psi_save_service_settings(htsmsg_t *m, struct service *t);

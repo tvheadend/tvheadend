@@ -893,13 +893,13 @@ dvb_nit_callback(th_dvb_mux_instance_t *tdmi, uint8_t *ptr, int len,
   tvhtrace("nit", "tableid 0x%02x", tableid);
   tvhlog_hexdump("nit", ptr, len);
 
-  /* Ignore other network */
-  if(tableid != 0x40) return -1;
-
-  /* Check NID */
-  if(tdmi->tdmi_adapter->tda_nitoid &&
-     tdmi->tdmi_adapter->tda_nitoid != network_id)
-    return -1;
+  /* Specific NID requested */
+  if(tdmi->tdmi_adapter->tda_nitoid) {
+    if (tdmi->tdmi_adapter->tda_nitoid != network_id)
+      return -1;
+  } else if (tableid != 0x40) {
+     return -1;
+  }
 
   /* Ignore non-current */
   if((ptr[2] & 1) == 0)

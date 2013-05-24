@@ -1635,7 +1635,13 @@ extjs_servicedetails(http_connection_t *hc,
     case SCT_MP4A:
     case SCT_AAC:
     case SCT_MPEG2AUDIO:
-      htsmsg_add_str(c, "details", st->es_lang);
+      if (st->es_audio_type) {
+        snprintf(buf, sizeof(buf), "%s (%s)", st->es_lang,
+  	       psi_audio_type2desc(st->es_audio_type));
+        htsmsg_add_str(c, "details", buf);
+      } else {
+        htsmsg_add_str(c, "details", st->es_lang);
+      }
       break;
 
     case SCT_DVBSUB:

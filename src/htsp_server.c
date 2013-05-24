@@ -48,7 +48,9 @@
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
 #endif
-
+#if ENABLE_LIBAV
+#include "plumbing/transcoding.h"
+#endif
 #include <sys/statvfs.h>
 #include "settings.h"
 #include <sys/time.h>
@@ -59,7 +61,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 10
+#define HTSP_PROTO_VERSION 11
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -179,6 +181,10 @@ typedef struct htsp_subscription {
   streaming_target_t *hs_tshift;
 #endif
 
+#if ENABLE_LIBAV
+streaming_target_t *hs_transcoder;
+#endif
+
   htsp_msg_q_t hs_q;
 
   time_t hs_last_report; /* Last queue status report sent */
@@ -188,6 +194,10 @@ typedef struct htsp_subscription {
   int hs_90khz;
 
   int hs_queue_depth;
+
+#define NUM_FILTERED_STREAMS (32*16)
+
+  uint32_t hs_filtered_streams[16]; // one bit per stream
 
 } htsp_subscription_t;
 
@@ -209,6 +219,31 @@ typedef struct htsp_file {
 /* **************************************************************************
  * Support routines
  * *************************************************************************/
+
+static void
+htsp_disable_stream(htsp_subscription_t *hs, unsigned int id)
+{
+  if(id < NUM_FILTERED_STREAMS)
+    hs->hs_filtered_streams[id / 32] |= 1 << (id & 31);
+}
+
+
+static void
+htsp_enable_stream(htsp_subscription_t *hs, unsigned int id)
+{
+  if(id < NUM_FILTERED_STREAMS)
+    hs->hs_filtered_streams[id / 32] &= ~(1 << (id & 31));
+}
+
+
+static inline int
+htsp_is_stream_enabled(htsp_subscription_t *hs, unsigned int id)
+{
+  if(id < NUM_FILTERED_STREAMS)
+    return !(hs->hs_filtered_streams[id / 32] & (1 << (id & 31)));
+  return 1;
+}
+
 
 /**
  *
@@ -284,13 +319,23 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
 {
   LIST_REMOVE(hs, hs_link);
   subscription_unsubscribe(hs->hs_s);
+
   if(hs->hs_tsfix != NULL)
     tsfix_destroy(hs->hs_tsfix);
+
+#if ENABLE_LIBAV
+  if(hs->hs_transcoder != NULL)
+    transcoder_destroy(hs->hs_transcoder);
+#endif
+
   htsp_flush_queue(htsp, &hs->hs_q);
+
 #if ENABLE_TIMESHIFT
   if(hs->hs_tshift)
     timeshift_destroy(hs->hs_tshift);
 #endif
+
+
   free(hs);
 }
 
@@ -656,11 +701,16 @@ htsp_build_event
       htsmsg_add_str(out, "summary", str);
   } else if((str = epg_broadcast_get_summary(e, lang)))
     htsmsg_add_str(out, "description", str);
-  if (e->serieslink)
+  if (e->serieslink) {
     htsmsg_add_u32(out, "serieslinkId", e->serieslink->id);
+    if (e->serieslink->uri)
+      htsmsg_add_str(out, "serieslinkUri", e->serieslink->uri);
+  }
 
   if (ee) {
     htsmsg_add_u32(out, "episodeId", ee->id);
+    if (ee->uri && strncasecmp(ee->uri,"tvh://",6))  /* tvh:// uris are internal */
+      htsmsg_add_str(out, "episodeUri", ee->uri);
     if (ee->brand)
       htsmsg_add_u32(out, "brandId", ee->brand->id);
     if (ee->season)
@@ -1331,6 +1381,32 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
     normts = 1;
   }
 #endif
+
+#if ENABLE_LIBAV
+  if (transcoding_enabled) {
+    transcoder_props_t props;
+
+    props.tp_vcodec = streaming_component_txt2type(htsmsg_get_str(in, "videoCodec"));
+    props.tp_acodec = streaming_component_txt2type(htsmsg_get_str(in, "audioCodec"));
+    props.tp_scodec = streaming_component_txt2type(htsmsg_get_str(in, "subtitleCodec"));
+
+    props.tp_resolution = htsmsg_get_u32_or_default(in, "maxResolution", 0);
+    props.tp_channels   = htsmsg_get_u32_or_default(in, "channels", 0);
+    props.tp_bandwidth  = htsmsg_get_u32_or_default(in, "bandwidth", 0);
+
+    if ((str = htsmsg_get_str(in, "language")))
+      strncpy(props.tp_language, str, 3);
+
+    if(props.tp_vcodec != SCT_UNKNOWN ||
+       props.tp_acodec != SCT_UNKNOWN ||
+       props.tp_scodec != SCT_UNKNOWN) {
+      st = hs->hs_transcoder = transcoder_create(st);
+      transcoder_set_properties(st, &props);
+      normts = 1;
+    }
+  }
+#endif
+
   if(normts)
     st = hs->hs_tsfix = tsfix_create(st);
 
@@ -1494,6 +1570,44 @@ htsp_method_live(htsp_connection_t *htsp, htsmsg_t *in)
 }
 
 /**
+ * Change filters for a subscription
+ */
+static htsmsg_t *
+htsp_method_filter_stream(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsp_subscription_t *hs;
+  uint32_t sid;
+  htsmsg_t *l;
+  if(htsmsg_get_u32(in, "subscriptionId", &sid))
+    return htsp_error("Missing argument 'subscriptionId'");
+
+  LIST_FOREACH(hs, &htsp->htsp_subscriptions, hs_link)
+    if(hs->hs_sid == sid)
+      break;
+
+  if(hs == NULL)
+    return htsp_error("Requested subscription does not exist");
+
+  if((l = htsmsg_get_list(in, "enable")) != NULL) {
+    htsmsg_field_t *f;
+    HTSMSG_FOREACH(f, l) {
+      if(f->hmf_type == HMF_S64)
+        htsp_enable_stream(hs, f->hmf_s64);
+    }
+  }
+
+  if((l = htsmsg_get_list(in, "disable")) != NULL) {
+    htsmsg_field_t *f;
+    HTSMSG_FOREACH(f, l) {
+      if(f->hmf_type == HMF_S64)
+        htsp_disable_stream(hs, f->hmf_s64);
+    }
+  }
+  return htsmsg_create_map();
+}
+
+
+/**
  * Open file
  */
 static htsmsg_t *
@@ -1643,6 +1757,28 @@ htsp_method_file_seek(htsp_connection_t *htsp, htsmsg_t *in)
   return rep;
 }
 
+
+#if ENABLE_LIBAV
+/**
+ *
+ */
+static htsmsg_t *
+htsp_method_getCodecs(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *out, *l;
+
+  l = htsmsg_create_list();
+  transcoder_get_capabilities(l);
+
+  out = htsmsg_create_map();
+
+  htsmsg_add_msg(out, "encoders", l);
+
+  return out;
+}
+#endif
+
+
 /**
  * HTSP methods
  */
@@ -1672,6 +1808,10 @@ struct {
   { "subscriptionSkip",         htsp_method_skip,           ACCESS_STREAMING},
   { "subscriptionSpeed",        htsp_method_speed,          ACCESS_STREAMING},
   { "subscriptionLive",         htsp_method_live,           ACCESS_STREAMING},
+  { "subscriptionFilterStream", htsp_method_filter_stream,  ACCESS_STREAMING},
+#if ENABLE_LIBAV
+  { "getCodecs",                htsp_method_getCodecs,      ACCESS_STREAMING},
+#endif
   { "fileOpen",                 htsp_method_file_open,      ACCESS_RECORDER},
   { "fileRead",                 htsp_method_file_read,      ACCESS_RECORDER},
   { "fileClose",                htsp_method_file_close,     ACCESS_RECORDER},
@@ -2029,13 +2169,13 @@ htsp_async_send(htsmsg_t *m, int mode)
 
 
 /**
- * EPG subsystem calls this function when the current event
+ * EPG subsystem calls this function when the current/next event
  * changes for a channel, e may be NULL if there is no current event.
  *
  * global_lock is held
  */
 void
-htsp_channel_update_current(channel_t *ch)
+htsp_channel_update_nownext(channel_t *ch)
 {
   epg_broadcast_t *now, *next;
   htsmsg_t *m;
@@ -2216,6 +2356,11 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   int64_t ts;
   int qlen = hs->hs_q.hmq_payload;
 
+  if(!htsp_is_stream_enabled(hs, pkt->pkt_componentindex)) {
+    pkt_ref_dec(pkt);
+    return;
+  }
+
   if((qlen > hs->hs_queue_depth     && pkt->pkt_frametype == PKT_B_FRAME) ||
      (qlen > hs->hs_queue_depth * 2 && pkt->pkt_frametype == PKT_P_FRAME) || 
      (qlen > hs->hs_queue_depth * 3)) {
@@ -2357,6 +2502,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
 
     if (SCT_ISAUDIO(ssc->ssc_type))
     {
+      htsmsg_add_u32(c, "audio_type", ssc->ssc_audio_type);
       if (ssc->ssc_channels)
         htsmsg_add_u32(c, "channels", ssc->ssc_channels);
       if (ssc->ssc_sri)

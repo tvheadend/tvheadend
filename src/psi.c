@@ -172,16 +172,17 @@ psi_build_pat(service_t *t, uint8_t *buf, int maxlen, int pmtpid)
 #define PMT_UPDATE_PCR                0x1
 #define PMT_UPDATE_NEW_STREAM         0x2
 #define PMT_UPDATE_LANGUAGE           0x4
-#define PMT_UPDATE_FRAME_DURATION     0x8
-#define PMT_UPDATE_COMPOSITION_ID     0x10
-#define PMT_UPDATE_ANCILLARY_ID       0x20
-#define PMT_UPDATE_STREAM_DELETED     0x40
-#define PMT_UPDATE_NEW_CA_STREAM      0x80
-#define PMT_UPDATE_NEW_CAID           0x100
-#define PMT_UPDATE_CA_PROVIDER_CHANGE 0x200
-#define PMT_UPDATE_PARENT_PID         0x400
-#define PMT_UPDATE_CAID_DELETED       0x800
-#define PMT_REORDERED                 0x1000
+#define PMT_UPDATE_AUDIO_TYPE         0x8
+#define PMT_UPDATE_FRAME_DURATION     0x10
+#define PMT_UPDATE_COMPOSITION_ID     0x20
+#define PMT_UPDATE_ANCILLARY_ID       0x40
+#define PMT_UPDATE_STREAM_DELETED     0x80
+#define PMT_UPDATE_NEW_CA_STREAM      0x100
+#define PMT_UPDATE_NEW_CAID           0x200
+#define PMT_UPDATE_CA_PROVIDER_CHANGE 0x400
+#define PMT_UPDATE_PARENT_PID         0x800
+#define PMT_UPDATE_CAID_DELETED       0x1000
+#define PMT_REORDERED                 0x2000
 
 /**
  * Add a CA descriptor
@@ -397,6 +398,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
   int position = 0;
   int tt_position = 1000;
   const char *lang = NULL;
+  uint8_t audio_type = 0;
 
   caid_t *c, *cn;
 
@@ -529,6 +531,7 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
 
       case DVB_DESC_LANGUAGE:
         lang = lang_code_get2((const char*)ptr, 3);
+        audio_type = ptr[3];
 	      break;
 
       case DVB_DESC_TELETEXT:
@@ -599,6 +602,11 @@ psi_parse_pmt(service_t *t, const uint8_t *ptr, int len, int chksvcid,
       if(lang && memcmp(st->es_lang, lang, 3)) {
         update |= PMT_UPDATE_LANGUAGE;
         memcpy(st->es_lang, lang, 4);
+      }
+
+      if(st->es_audio_type != audio_type) {
+        update |= PMT_UPDATE_AUDIO_TYPE;
+        st->es_audio_type = audio_type;
       }
 
       if(composition_id != -1 && st->es_composition_id != composition_id) {
@@ -756,7 +764,7 @@ psi_build_pmt(const streaming_start_t *ss, uint8_t *buf0, int maxlen,
       buf[0] = DVB_DESC_LANGUAGE;
       buf[1] = 4;
       memcpy(&buf[2],ssc->ssc_lang,3);
-      buf[5] = 0; /* Main audio */
+      buf[5] = ssc->ssc_audio_type;
       dlen = 6;
       break;
     case SCT_DVBSUB:
@@ -904,10 +912,26 @@ psi_caid2name(uint16_t caid)
   return buf;
 }
 
+const char *
+psi_audio_type2desc(uint8_t audio_type)
+{
+  /* From ISO 13818-1 - ISO 639 language descriptor */
+  switch(audio_type) {
+    case 0: return ""; /* "Undefined" in the standard, but used for normal audio */
+    case 1: return "Clean effects";
+    case 2: return "Hearing impaired";
+    case 3: return "Visually impaired commentary";
+  }
+
+  return "Reserved";
+}
+
 /**
  *
  */
 static struct strtab streamtypetab[] = {
+  { "NONE",       SCT_NONE },
+  { "UNKNOWN",    SCT_UNKNOWN },
   { "MPEG2VIDEO", SCT_MPEG2VIDEO },
   { "MPEG2AUDIO", SCT_MPEG2AUDIO },
   { "H264",       SCT_H264 },
@@ -920,7 +944,7 @@ static struct strtab streamtypetab[] = {
   { "MPEGTS",     SCT_MPEGTS },
   { "TEXTSUB",    SCT_TEXTSUB },
   { "EAC3",       SCT_EAC3 },
-  { "AAC",       SCT_MP4A },
+  { "AAC",        SCT_MP4A },
 };
 
 
@@ -933,6 +957,14 @@ streaming_component_type2txt(streaming_component_type_t s)
   return val2str(s, streamtypetab) ?: "INVALID";
 }
 
+/**
+ *
+ */
+streaming_component_type_t
+streaming_component_txt2type(const char *str)
+{
+  return str ? str2val(str, streamtypetab) : SCT_UNKNOWN;
+}
 
 /**
  * Store service settings into message
@@ -958,6 +990,9 @@ psi_save_service_settings(htsmsg_t *m, service_t *t)
 
     if(st->es_lang[0])
       htsmsg_add_str(sub, "language", st->es_lang);
+
+    if (SCT_ISAUDIO(st->es_type))
+      htsmsg_add_u32(sub, "audio_type", st->es_audio_type);
 
     if(st->es_type == SCT_CA) {
 
@@ -1108,6 +1143,11 @@ psi_load_service_settings(htsmsg_t *m, service_t *t)
     
     if((v = htsmsg_get_str(c, "language")) != NULL)
       strncpy(st->es_lang, lang_code_get(v), 3);
+
+    if (SCT_ISAUDIO(type)) {
+      if(!htsmsg_get_u32(c, "audio_type", &u32))
+        st->es_audio_type = u32;
+    }
 
     if(!htsmsg_get_u32(c, "position", &u32))
       st->es_position = u32;
