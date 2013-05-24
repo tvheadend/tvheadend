@@ -865,17 +865,6 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
       dvr_entry_remove(de);
 
     /* Find match */
-    RB_FOREACH(e, &e->channel->ch_epg_schedule, sched_link) {
-      if (dvr_entry_fuzzy_match(de, e)) {
-        tvhtrace("dvr",
-                 "  replacement event %s on %s @ %"PRItime_t
-                 " to %"PRItime_t,
-                 epg_broadcast_get_title(e, NULL), e->channel->ch_name,
-                 e->start, e->stop);
-        e->getref(e);
-        de->de_bcast = e;
-        _dvr_entry_update(de, e, NULL, NULL, NULL, NULL, 0, 0, 0, 0);
-        break;
     } else {
       RB_FOREACH(e, &e->channel->ch_epg_schedule, sched_link) {
         if (dvr_entry_fuzzy_match(de, e)) {
