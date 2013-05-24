@@ -208,6 +208,7 @@ const char *dvb_mode2str    ( int mode );
 const char *dvb_guard2str   ( int guard );
 const char *dvb_hier2str    ( int hier );
 const char *dvb_pol2str     ( int pol );
+const char *dvb_type2str    ( int type );
 
 int dvb_str2rolloff ( const char *str );
 int dvb_str2delsys  ( const char *str );
@@ -218,6 +219,7 @@ int dvb_str2mode    ( const char *str );
 int dvb_str2guard   ( const char *str );
 int dvb_str2hier    ( const char *str );
 int dvb_str2pol     ( const char *str );
+int dvb_str2type    ( const char *str );
 
 #endif /* ENABLE_DVBAPI */
 

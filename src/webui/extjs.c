@@ -48,10 +48,7 @@
 #include "imagecache.h"
 #include "timeshift.h"
 #include "tvhtime.h"
-
-#if 0
-#include "tvadapters.h"
-#endif
+#include "input.h"
 
 /**
  *
@@ -2181,6 +2178,7 @@ extjs_get_idnode(http_connection_t *hc, const char *remain, void *opaque,
   out = htsmsg_create_list();
   idnode_t **v;
 
+printf("get(%s)\n", s);
   if(!strcmp(s, "root")) {
     v = rootfn();
   } else {
@@ -2251,13 +2249,11 @@ extjs_item_update(http_connection_t *hc, const char *remain, void *opaque)
 /**
  *
  */
-#ifdef TODO_FIX_THIS
 static int
 extjs_tvadapters(http_connection_t *hc, const char *remain, void *opaque)
 {
-  return extjs_get_idnode(hc, remain, opaque, &tv_adapters_root);
+  return extjs_get_idnode(hc, remain, opaque, &linuxdvb_root);
 }
-#endif
 
 
 
@@ -2386,10 +2382,8 @@ extjs_start(void)
   http_path_add("/tvhlog",           NULL, extjs_tvhlog,           ACCESS_ADMIN);
   http_path_add("/item/update",    NULL, extjs_item_update,    ACCESS_ADMIN);
 
-#ifdef TODO_FIX_THIS
   http_path_add("/tvadapters",
 		NULL, extjs_tvadapters, ACCESS_ADMIN);
-#endif
 
 #if 0//ENABLE_LINUXDVB
   extjs_start_dvb();

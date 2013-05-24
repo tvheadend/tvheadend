@@ -431,7 +431,7 @@ mpegts_input_t *mpegts_input_create0
   ( mpegts_input_t *mi, const idclass_t *idc, const char *uuid );
 
 #define mpegts_input_create(t, u)\
-  (struct t*)mpegts_input_create0(calloc(1, sizeof(struct t)), t##_class, u)
+  (struct t*)mpegts_input_create0(calloc(1, sizeof(struct t)), &t##_class, u)
 
 #define mpegts_input_create1(u)\
   mpegts_input_create0(calloc(1, sizeof(mpegts_input_t)),\

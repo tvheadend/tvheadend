@@ -113,5 +113,5 @@ tvheadend.showTransportDetails = function(data) {
 */
 
 tvheadend.tvadapters = function() {
-  return tvheadend.item_browser('/tvadapters', 'TV Adapters');
+  return tvheadend.item_browser('tvadapters', 'TV Adapters');
 }

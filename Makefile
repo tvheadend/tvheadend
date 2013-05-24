@@ -168,6 +168,7 @@ SRCS-$(CONFIG_MPEGTS) += \
 SRCS-${CONFIG_LINUXDVB} += \
   src/input/mpegts/linuxdvb/linuxdvb.c \
   src/input/mpegts/linuxdvb/linuxdvb_adapter.c \
+  src/input/mpegts/linuxdvb/linuxdvb_frontend.c \
 
 #  src/input/mpegts/linuxdvb/linuxdvb_input.c \
 #  src/input/mpegts/linuxdvb/linuxdvb_network.c \

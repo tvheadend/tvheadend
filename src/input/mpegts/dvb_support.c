@@ -379,7 +379,7 @@ dvb_convert_date(uint8_t *dvb_buf)
 const char *dvb_##p##2str (int p)         { return val2str(p, p##tab); }\
 int         dvb_str2##p   (const char *p) { return str2val(p, p##tab); }
 
-static struct strtab rollofftab[] = {
+const static struct strtab rollofftab[] = {
 #if DVB_API_VERSION >= 5
   { "ROLLOFF_35",           ROLLOFF_35 },
   { "ROLLOFF_20",           ROLLOFF_20 },
@@ -389,7 +389,7 @@ static struct strtab rollofftab[] = {
 };
 dvb_str2val(rolloff);
 
-static struct strtab delsystab[] = {
+const static struct strtab delsystab[] = {
 #if DVB_API_VERSION >= 5
   { "SYS_UNDEFINED",        SYS_UNDEFINED },
   { "SYS_DVBC_ANNEX_AC",    SYS_DVBC_ANNEX_AC },
@@ -411,7 +411,7 @@ static struct strtab delsystab[] = {
 };
 dvb_str2val(delsys);
 
-static struct strtab fectab[] = {
+const static struct strtab fectab[] = {
   { "NONE",                 FEC_NONE },
   { "1/2",                  FEC_1_2 },
   { "2/3",                  FEC_2_3 },
@@ -429,7 +429,7 @@ static struct strtab fectab[] = {
 };
 dvb_str2val(fec);
 
-static struct strtab qamtab[] = {
+const static struct strtab qamtab[] = {
   { "QPSK",                 QPSK },
   { "QAM16",                QAM_16 },
   { "QAM32",                QAM_32 },
@@ -448,7 +448,7 @@ static struct strtab qamtab[] = {
 };
 dvb_str2val(qam);
 
-static struct strtab bwtab[] = {
+const static struct strtab bwtab[] = {
   { "8MHz",                 BANDWIDTH_8_MHZ },
   { "7MHz",                 BANDWIDTH_7_MHZ },
   { "6MHz",                 BANDWIDTH_6_MHZ },
@@ -461,7 +461,7 @@ static struct strtab bwtab[] = {
 };
 dvb_str2val(bw);
 
-static struct strtab modetab[] = {
+const static struct strtab modetab[] = {
   { "2k",                   TRANSMISSION_MODE_2K },
   { "8k",                   TRANSMISSION_MODE_8K },
   { "AUTO",                 TRANSMISSION_MODE_AUTO },
@@ -473,7 +473,7 @@ static struct strtab modetab[] = {
 };
 dvb_str2val(mode);
 
-static struct strtab guardtab[] = {
+const static struct strtab guardtab[] = {
   { "1/32",                 GUARD_INTERVAL_1_32 },
   { "1/16",                 GUARD_INTERVAL_1_16 },
   { "1/8",                  GUARD_INTERVAL_1_8 },
@@ -487,7 +487,7 @@ static struct strtab guardtab[] = {
 };
 dvb_str2val(guard);
 
-static struct strtab hiertab[] = {
+const static struct strtab hiertab[] = {
   { "NONE",                 HIERARCHY_NONE },
   { "1",                    HIERARCHY_1 },
   { "2",                    HIERARCHY_2 },
@@ -496,13 +496,22 @@ static struct strtab hiertab[] = {
 };
 dvb_str2val(hier);
 
-static struct strtab poltab[] = {
+const static struct strtab poltab[] = {
   { "Vertical",             POLARISATION_VERTICAL },
   { "Horizontal",           POLARISATION_HORIZONTAL },
   { "Left",                 POLARISATION_CIRCULAR_LEFT },
   { "Right",                POLARISATION_CIRCULAR_RIGHT },
 };
 dvb_str2val(pol);
+
+const static struct strtab typetab[] = {
+  {"DVB-T", FE_OFDM},
+  {"DVB-C", FE_QAM},
+  {"DVB-S", FE_QPSK},
+  {"ATSC",  FE_ATSC},
+};
+dvb_str2val(type);
+
 
 #undef dvb_str2val
 
