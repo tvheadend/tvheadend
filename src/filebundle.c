@@ -306,7 +306,22 @@ int fb_scandir ( const char *path, fb_dirent ***list )
       for (i = 0; i < ret; i++) {
         (*list)[i] = calloc(1, sizeof(fb_dirent));
         strcpy((*list)[i]->name, de[i]->d_name);
-        (*list)[i]->type = de[i]->d_type == DT_DIR ? FB_DIR : FB_FILE;
+        switch(de[i]->d_type) {
+          case DT_DIR: 
+            (*list)[i]->type = FB_DIR;
+            break;
+          case DT_REG:
+            (*list)[i]->type = FB_FILE;
+            break;
+          default: {
+            struct stat st;
+            char buf[512];
+            snprintf(buf, sizeof(buf), "%s/%s", dir->d.root, de[i]->d_name);
+            if (!lstat(buf, &st))
+              (*list)[i]->type = S_ISDIR(st.st_mode) ? FB_DIR : FB_FILE;
+            break;
+          }
+        }
         free(de[i]);
       }
       free(de);
