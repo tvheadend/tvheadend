@@ -533,7 +533,7 @@ static int _eit_process_event
 
   /* Find broadcast */
   ebc  = epg_broadcast_find_by_time(svc->s_ch, start, stop, eid, 1, &save2);
-  tvhtrace("eit", "eid=%5d, start=%lu, stop=%lu, ebc=%p",
+  tvhtrace("eit", "eid=%5d, start=%"PRItime_t", stop=%"PRItime_t", ebc=%p",
          eid, start, stop, ebc);
   if (!ebc) return dllen + 12;
 
