@@ -116,13 +116,64 @@ linuxdvb_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
 }
 
+static const char *
+dvb_mux_conf_load ( fe_type_t type, dvb_mux_conf_t *dmc, htsmsg_t *m )
+{
+  //const char *s;
+  dmc->dmc_fe_params.inversion = INVERSION_AUTO;
+  htsmsg_get_u32(m, "frequency", &dmc->dmc_fe_params.frequency);
+
+#if 0
+  switch(tda->tda_type) {
+  case FE_OFDM:
+    s = htsmsg_get_str(m, "bandwidth");
+    if(s == NULL || (r = str2val(s, bwtab)) < 0)
+      return "Invalid bandwidth";
+    dmc->dmc_fe_params.u.ofdm.bandwidth = r;
+
+    s = htsmsg_get_str(m, "constellation");
+    if(s == NULL || (r = str2val(s, qamtab)) < 0)
+      return "Invalid QAM constellation";
+    dmc->dmc_fe_params.u.ofdm.constellation = r;
+
+    s = htsmsg_get_str(m, "transmission_mode");
+    if(s == NULL || (r = str2val(s, modetab)) < 0)
+      return "Invalid transmission mode";
+    dmc->dmc_fe_params.u.ofdm.transmission_mode = r;
+
+    s = htsmsg_get_str(m, "guard_interval");
+    if(s == NULL || (r = str2val(s, guardtab)) < 0)
+      return "Invalid guard interval";
+    dmc->dmc_fe_params.u.ofdm.guard_interval = r;
+
+    s = htsmsg_get_str(m, "hierarchy");
+    if(s == NULL || (r = str2val(s, hiertab)) < 0)
+      return "Invalid heirarchy information";
+    dmc->dmc_fe_params.u.ofdm.hierarchy_information = r;
+
+    s = htsmsg_get_str(m, "fec_hi");
+    if(s == NULL || (r = str2val(s, fectab)) < 0)
+      return "Invalid hi-FEC";
+    dmc->dmc_fe_params.u.ofdm.code_rate_HP = r;
+
+    s = htsmsg_get_str(m, "fec_lo");
+    if(s == NULL || (r = str2val(s, fectab)) < 0)
+      return "Invalid lo-FEC";
+    dmc->dmc_fe_params.u.ofdm.code_rate_LP = r;
+    break;
+  }
+#endif
+  return "Not yet supported";
+}
 
 linuxdvb_mux_t *
 linuxdvb_mux_create0
   ( linuxdvb_network_t *ln, const char *uuid, htsmsg_t *conf )
 {
-  //uint32_t u32;
-  //const char *str;
+  uint32_t u32;
+  const char *str;
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
   mpegts_mux_t *mm;
   linuxdvb_mux_t *lm;
   const idclass_t *idc;
@@ -151,10 +202,6 @@ linuxdvb_mux_create0
   
   /* Callbacks */
   lm->mm_config_save = linuxdvb_mux_config_save;
-#if 0
-  lm->mm_start       = linuxdvb_mux_start;
-  lm->mm_stop        = linuxdvb_mux_stop;
-#endif
   lm->mm_open_table  = linuxdvb_mux_open_table;
   lm->mm_close_table = linuxdvb_mux_close_table;
 
@@ -163,6 +210,30 @@ linuxdvb_mux_create0
     return lm;
 
   /* Config */
+  // TODO: this could go in mpegts_mux
+  if (!htsmsg_get_u32(conf, "enabled", &u32) && u32)
+    lm->mm_enabled = 1;
+  if (!htsmsg_get_u32(conf, "onid", &u32))
+    lm->mm_onid = u32;
+  if (!htsmsg_get_u32(conf, "tsid", &u32))
+    lm->mm_tsid = u32;
+  if ((str = htsmsg_get_str(conf, "default_authority")))
+    lm->mm_dvb_default_authority = strdup(str);
+
+  /* Tuning info */
+  if ((e = htsmsg_get_map(conf, "tuning")))
+    (void)dvb_mux_conf_load(ln->ln_type, &lm->lm_tuning, e);
+
+  /* Services */
+  if ((c = hts_settings_load_r(1, "input/linuxdvb/networks/%s/muxes/%s/services",
+                               "TODO", uuid))) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_get_map_by_field(f))) continue;
+      if (!(e = htsmsg_get_map(e, "config"))) continue;
+      //(void)linuxdvb_service_create0(lm, f->hmf_name, e);
+    }
+    htsmsg_destroy(c);
+  }
 
   return lm;
 }

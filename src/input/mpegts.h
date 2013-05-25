@@ -252,28 +252,7 @@ struct mpegts_mux
    * Fields
    */
   char *mm_dvb_default_authority;
-  
-#if 0
-  dvb_mux_conf_t dm_conf;
-
-  char *dm_default_authority;
-
-  TAILQ_HEAD(, epggrab_ota_mux) dm_epg_grab;
-#endif
-
-#if 0 // TODO: do we need this here? or linuxdvb?
-  struct th_dvb_mux_instance *dm_current_tdmi;
-
-  struct th_dvb_mux_instance_list dm_tdmis;
-#endif
-
-#if 0 // TODO: what about these?
-  // Derived from dm_conf (more or less)
-  char *dm_local_identifier;
-
-  int dm_enabled; // TODO: could be derived?
-#endif
-
+  int   mm_enabled;
 };
  
 /* Service */

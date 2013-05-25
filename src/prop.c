@@ -169,6 +169,8 @@ prop_seti(void *obj, const property_t *p, const char *value)
   int i32;
   const char *s;
 
+  if (p->rdonly) return 0;
+
   void *val = obj + p->off;
   switch(p->type) {
 

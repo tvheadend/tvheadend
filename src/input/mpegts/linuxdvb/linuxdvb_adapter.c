@@ -33,17 +33,49 @@
  * DVB Adapter
  * **************************************************************************/
 
+static void
+linuxdvb_adapter_class_save ( idnode_t *in )
+{
+  linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)in;
+  linuxdvb_device_save((linuxdvb_device_t*)la->lh_parent);
+}
+
 const idclass_t linuxdvb_adapter_class =
 {
   .ic_super      = &linuxdvb_hardware_class,
   .ic_class      = "linuxdvb_adapter",
   .ic_caption    = "LinuxDVB Adapter",
+  .ic_save       = linuxdvb_adapter_class_save,
   .ic_properties = (const property_t[]){
     { PROPDEF2("rootpath", "Device Path",
                PT_STR, linuxdvb_adapter_t, la_rootpath, 1) },
     {}
   }
 };
+
+/*
+ * Save data
+ */
+void
+linuxdvb_adapter_save ( linuxdvb_adapter_t *la, htsmsg_t *m )
+{
+  htsmsg_t *l;
+  linuxdvb_hardware_t *lh;
+
+  linuxdvb_hardware_save((linuxdvb_hardware_t*)la, m);
+  htsmsg_add_u32(m, "number", la->la_number);
+  if (la->la_rootpath)
+    htsmsg_add_str(m, "rootpath", la->la_rootpath);
+
+  /* Frontends */
+  l = htsmsg_create_map();
+  LIST_FOREACH(lh, &la->lh_children, lh_parent_link) {
+    htsmsg_t *e = htsmsg_create_map();
+    linuxdvb_frontend_save((linuxdvb_frontend_t*)lh, e);
+    htsmsg_add_msg(l, idnode_uuid_as_str(&lh->mi_id), e);
+  }
+  htsmsg_add_msg(m, "frontends", l);
+}
 
 /*
  * Check is free
@@ -66,9 +98,14 @@ linuxdvb_adapter_current_weight ( linuxdvb_adapter_t *la )
 /*
  * Create
  */
-static linuxdvb_adapter_t *
-linuxdvb_adapter_create0 ( const char *uuid, linuxdvb_device_t *ld, int n )
+linuxdvb_adapter_t *
+linuxdvb_adapter_create0 
+  ( linuxdvb_device_t *ld, const char *uuid, htsmsg_t *conf )
 {
+  uint32_t u32;
+  const char *str;
+  htsmsg_t *e;
+  htsmsg_field_t *f;
   linuxdvb_adapter_t *la;
 
   la = calloc(1, sizeof(linuxdvb_adapter_t));
@@ -76,10 +113,27 @@ linuxdvb_adapter_create0 ( const char *uuid, linuxdvb_device_t *ld, int n )
     free(la);
     return NULL;
   }
-  la->la_number = n;
 
   LIST_INSERT_HEAD(&ld->lh_children, (linuxdvb_hardware_t*)la, lh_parent_link);
   la->lh_parent = (linuxdvb_hardware_t*)ld;
+
+  /* No conf */
+  if (!conf)
+    return la;
+
+  linuxdvb_hardware_load((linuxdvb_hardware_t*)la, conf);
+  if (!htsmsg_get_u32(conf, "number", &u32))
+    la->la_number = u32;
+  if ((str = htsmsg_get_str(conf, "rootpath")))
+    la->la_rootpath = strdup(str);
+
+  /* Frontends */
+  if ((conf = htsmsg_get_map(conf, "frontends"))) {
+    HTSMSG_FOREACH(f, conf) {
+      if (!(e = htsmsg_get_map_by_field(f))) continue;
+      (void)linuxdvb_frontend_create0(la, f->hmf_name, e, 0);
+    }
+  }
 
   return la;
 }
@@ -110,11 +164,12 @@ linuxdvb_adapter_find_by_number ( int adapter )
 
   /* Create */
   if (!la) {
-    if (!(la = linuxdvb_adapter_create0(NULL, ld, a)))
+    if (!(la = linuxdvb_adapter_create0(ld, NULL, NULL)))
       return NULL;
   }
 
   /* Update */
+  la->la_number = a;
   snprintf(buf, sizeof(buf), "/dev/dvb/adapter%d", adapter);
   tvh_str_update(&la->la_rootpath, buf);
   if (!la->lh_displayname)
@@ -181,7 +236,8 @@ linuxdvb_adapter_added ( int adapter )
     linuxdvb_frontend_added(la, i, fe_path, dmx_path, dvr_path, &dfi);
   }
 
+  if (la)
+    linuxdvb_device_save((linuxdvb_device_t*)la->lh_parent);
+
   return la;
 }
-
-

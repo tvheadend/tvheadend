@@ -45,6 +45,23 @@ linuxdvb_hardware_enumerate ( linuxdvb_hardware_list_t *list )
   return v;
 }
 
+void linuxdvb_hardware_save ( linuxdvb_hardware_t *lh, htsmsg_t *m )
+{
+  htsmsg_add_u32(m, "enabled", lh->lh_enabled);
+  if (lh->lh_displayname)
+    htsmsg_add_str(m, "displayname", lh->lh_displayname);
+}
+
+void linuxdvb_hardware_load ( linuxdvb_hardware_t *lh, htsmsg_t *conf )
+{
+  uint32_t u32;
+  const char *str;
+  if (!htsmsg_get_u32(conf, "enabled", &u32) && u32)
+    lh->lh_enabled     = 1;
+  if ((str = htsmsg_get_str(conf, "displayname")))
+    lh->lh_displayname = strdup(str);
+}
+
 static const char *
 linuxdvb_hardware_class_get_title ( idnode_t *in )
 {

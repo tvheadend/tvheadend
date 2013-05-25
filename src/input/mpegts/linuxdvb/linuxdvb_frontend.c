@@ -39,12 +39,20 @@ linuxdvb_frontend_class_get_title ( idnode_t *in )
   return "unknown";
 }
 
+static void
+linuxdvb_frontend_class_save ( idnode_t *in )
+{
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)in;
+  linuxdvb_device_save((linuxdvb_device_t*)lfe->lh_parent->lh_parent);
+}
+
 const idclass_t linuxdvb_frontend_class =
 {
   .ic_super      = &linuxdvb_hardware_class,
   .ic_class      = "linuxdvb_frontend",
   .ic_caption    = "Linux DVB Frontend",
   .ic_get_title  = linuxdvb_frontend_class_get_title,
+  .ic_save       = linuxdvb_frontend_class_save,
   .ic_properties = (const property_t[]) {
     { PROPDEF2("fe_path", "Frontend Path",
                PT_STR, linuxdvb_frontend_t, lfe_fe_path, 1) },
@@ -99,6 +107,19 @@ const idclass_t linuxdvb_frontend_atsc_class =
 /* **************************************************************************
  * Frontend
  * *************************************************************************/
+
+void
+linuxdvb_frontend_save ( linuxdvb_frontend_t *lfe, htsmsg_t *m )
+{
+  htsmsg_add_u32(m, "number", lfe->lfe_number);
+  htsmsg_add_str(m, "type", dvb_type2str(lfe->lfe_info.type));
+  if (lfe->lfe_fe_path)
+    htsmsg_add_str(m, "fe_path", lfe->lfe_fe_path);
+  if (lfe->lfe_dmx_path)
+    htsmsg_add_str(m, "dmx_path", lfe->lfe_dmx_path);
+  if (lfe->lfe_dvr_path)
+    htsmsg_add_str(m, "dvr_path", lfe->lfe_dvr_path);
+}
 
 static int
 linuxdvb_frontend_is_free ( mpegts_input_t *mi )
@@ -250,11 +271,20 @@ linuxdvb_frontend_close_service
 {
 }
 
-static linuxdvb_frontend_t *
+linuxdvb_frontend_t *
 linuxdvb_frontend_create0
-  ( const char *uuid, linuxdvb_adapter_t *la, int num, fe_type_t type )
+  ( linuxdvb_adapter_t *la, const char *uuid, htsmsg_t *conf, fe_type_t type )
 {
+  uint32_t u32;
+  const char *str;
   const idclass_t *idc;
+
+  /* Get type */
+  if (conf) {
+    if (!(str = htsmsg_get_str(conf, "type")))
+      return NULL;
+    type = dvb_str2type(str);
+  }
 
   /* Class */
   if (type == FE_QPSK)
@@ -273,6 +303,7 @@ linuxdvb_frontend_create0
   linuxdvb_frontend_t *lfe
     = (linuxdvb_frontend_t*)
         mpegts_input_create0(calloc(1, sizeof(linuxdvb_frontend_t)), idc, uuid);
+  lfe->lfe_info.type = type;
 
   /* Input callbacks */
   lfe->mi_start_mux      = linuxdvb_frontend_start_mux;
@@ -285,6 +316,14 @@ linuxdvb_frontend_create0
   /* Adapter link */
   lfe->lh_parent = (linuxdvb_hardware_t*)la;
   LIST_INSERT_HEAD(&la->lh_children, (linuxdvb_hardware_t*)lfe, lh_parent_link);
+
+  /* No conf */
+  if (!conf)
+    return lfe;
+
+  if (!htsmsg_get_u32(conf, "number", &u32))
+    lfe->lfe_number = u32; 
+  // TODO: network
 
   return lfe;
 }
@@ -315,13 +354,14 @@ linuxdvb_frontend_added
 
   /* Create new */
   if (!lfe) {
-    if (!(lfe = linuxdvb_frontend_create0(NULL, la, fe_num, fe_info->type))) {
+    if (!(lfe = linuxdvb_frontend_create0(la, NULL, NULL, fe_info->type))) {
       tvhlog(LOG_ERR, "linuxdvb", "failed to create frontend");
       return NULL;
     }
   }
 
   /* Copy info */
+  lfe->lfe_number = fe_num;
   memcpy(&lfe->lfe_info, fe_info, sizeof(struct dvb_frontend_info));
 
   /* Set paths */

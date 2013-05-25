@@ -48,6 +48,11 @@ devinfo_bus2str ( int p )
 {
   return val2str(p, bustab);
 }
+static int
+devinfo_str2bus ( const char *str )
+{
+  return str2val(str, bustab);
+}
 
 /*
  * Get bus information
@@ -143,12 +148,70 @@ get_device_info ( device_info_t *di, int a )
   }
   di->di_id = strdup(buf);
 }
+static void
+get_min_dvb_adapter ( device_info_t *di )
+{
+  int mina = -1;
+  char path[512];
+  DIR *dp;
+  struct dirent *de;
+
+  snprintf(path, sizeof(path), "/sys/bus/%s/devices/%s/dvb",
+           di->di_bus == BUS_PCI ? "pci" : "usb", di->di_path);
+
+  /* Find minimum adapter number */
+  if ((dp = opendir(path))) {
+    while ((de = readdir(dp))) {
+      int t;
+      if ((sscanf(de->d_name, "dvb%d.frontend0", &t)))
+        if (mina == -1 || t < mina) mina = t;
+    }
+  }
+  di->di_min_adapter = mina;
+}
+
+
+static void
+linuxdvb_device_class_save ( idnode_t *in )
+{
+  linuxdvb_device_save((linuxdvb_device_t*)in);
+}
+void linuxdvb_device_save ( linuxdvb_device_t *ld )
+{
+  htsmsg_t *m, *e, *l;
+  linuxdvb_hardware_t *lh;
+
+  m = htsmsg_create_map();
+
+  linuxdvb_hardware_save((linuxdvb_hardware_t*)ld, m);
+  if (ld->ld_devid.di_id) {
+    htsmsg_add_str(m, "devid",   ld->ld_devid.di_id);
+    htsmsg_add_str(m, "devbus",  devinfo_bus2str(ld->ld_devid.di_bus));
+    htsmsg_add_str(m, "devpath", ld->ld_devid.di_path);
+  } else {
+    printf("OH NO, no device ID\n");
+  }
+  
+  /* Adapters */
+  l = htsmsg_create_map();
+  LIST_FOREACH(lh, &ld->lh_children, lh_parent_link) {
+    e = htsmsg_create_map();
+    linuxdvb_adapter_save((linuxdvb_adapter_t*)lh, e);
+    htsmsg_add_msg(l, idnode_uuid_as_str(&lh->mi_id), e);
+  }
+  htsmsg_add_msg(m, "adapters", l);
+
+  /* Save */
+  hts_settings_save(m, "input/linuxdvb/devices/%s",
+                    idnode_uuid_as_str(&ld->mi_id));
+}
 
 const idclass_t linuxdvb_device_class =
 {
   .ic_super      = &linuxdvb_hardware_class,
   .ic_class      = "linuxdvb_device",
   .ic_caption    = "LinuxDVB Device",
+  .ic_save       = linuxdvb_device_class_save,
   .ic_properties = (const property_t[]){
     { PROPDEF2("devid", "Device ID",
                PT_STR, linuxdvb_device_t, ld_devid.di_id, 1) },
@@ -170,6 +233,8 @@ linuxdvb_device_create0 ( const char *uuid, htsmsg_t *conf )
   uint32_t u32;
   const char *str;
   linuxdvb_device_t *ld;
+  htsmsg_t *e;
+  htsmsg_field_t *f;
 
   /* Create */
   ld = calloc(1, sizeof(linuxdvb_device_t));
@@ -184,15 +249,26 @@ linuxdvb_device_create0 ( const char *uuid, htsmsg_t *conf )
     return ld;
 
   /* Load config */
+  linuxdvb_hardware_load((linuxdvb_hardware_t*)ld, conf);
   if (!htsmsg_get_u32(conf, "enabled", &u32) && u32)
     ld->lh_enabled     = 1;
   if ((str = htsmsg_get_str(conf, "displayname")))
     ld->lh_displayname = strdup(str);
   if ((str = htsmsg_get_str(conf, "devid")))
-    strncpy(ld->ld_devid.di_id, str, sizeof(ld->ld_devid.di_id));
+    ld->ld_devid.di_id = strdup(str);
+  if ((str = htsmsg_get_str(conf, "devbus")))
+    ld->ld_devid.di_bus = devinfo_str2bus(str);
+  if ((str = htsmsg_get_str(conf, "devpath")))
+    strncpy(ld->ld_devid.di_path, str, sizeof(ld->ld_devid.di_path));
+  get_min_dvb_adapter(&ld->ld_devid);
 
-  // TODO: adapters
-  // TODO: frontends
+  /* Adapters */
+  if ((conf = htsmsg_get_map(conf, "adapters"))) {
+    HTSMSG_FOREACH(f, conf) {
+      if (!(e = htsmsg_get_map_by_field(f))) continue;
+      (void)linuxdvb_adapter_create0(ld, f->hmf_name, e);
+    }
+  }
 
   return ld;
 }
@@ -247,7 +323,7 @@ void linuxdvb_device_init ( int adapter_mask )
       }
     }
   }
-  
+
   /* Scan for hardware */
   if ((dp = opendir("/dev/dvb"))) {
     struct dirent *de;

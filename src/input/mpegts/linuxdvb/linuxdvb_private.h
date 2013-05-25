@@ -70,6 +70,8 @@ extern const idclass_t linuxdvb_hardware_class;
 
 idnode_t **
 linuxdvb_hardware_enumerate ( linuxdvb_hardware_list_t *list );
+void linuxdvb_hardware_save ( linuxdvb_hardware_t *lh, htsmsg_t *m );
+void linuxdvb_hardware_load ( linuxdvb_hardware_t *lh, htsmsg_t *m );
 
 
 struct linuxdvb_device
@@ -83,6 +85,7 @@ struct linuxdvb_device
 };
 
 void linuxdvb_device_init ( int adapter_mask );
+void linuxdvb_device_save ( linuxdvb_device_t *ld );
 
 linuxdvb_device_t *linuxdvb_device_create0
   (const char *uuid, htsmsg_t *conf);
@@ -102,6 +105,11 @@ struct linuxdvb_adapter
 
 #define LINUXDVB_SUBSYS_FE  0x01
 #define LINUXDVB_SUBSYS_DVR 0x02
+
+void linuxdvb_adapter_save ( linuxdvb_adapter_t *la, htsmsg_t *m );
+
+linuxdvb_adapter_t *linuxdvb_adapter_create0
+  ( linuxdvb_device_t *ld, const char *uuid, htsmsg_t *conf );
 
 linuxdvb_adapter_t *linuxdvb_adapter_added (int a);
 
@@ -132,10 +140,18 @@ struct linuxdvb_frontend
 };
 
 linuxdvb_frontend_t *
+linuxdvb_frontend_create0 
+  ( linuxdvb_adapter_t *la, const char *uuid, htsmsg_t *conf, fe_type_t type ); 
+
+void linuxdvb_frontend_save ( linuxdvb_frontend_t *lfe, htsmsg_t *m );
+
+linuxdvb_frontend_t *
 linuxdvb_frontend_added
   ( linuxdvb_adapter_t *la, int fe_num,
     const char *fe_path, const char *dmx_path, const char *dvr_path,
     const struct dvb_frontend_info *fe_info );
+void linuxdvb_frontend_add_network
+  ( linuxdvb_frontend_t *lfe, linuxdvb_network_t *net );
 
 struct linuxdvb_network
 {
@@ -157,7 +173,7 @@ struct linuxdvb_mux
   /*
    * Tuning information
    */
-  dvb_mux_conf_t lm_tune_conf;
+  dvb_mux_conf_t lm_tuning;
 };
 
 linuxdvb_mux_t *linuxdvb_mux_create0
