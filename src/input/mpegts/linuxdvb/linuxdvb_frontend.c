@@ -113,6 +113,8 @@ linuxdvb_frontend_save ( linuxdvb_frontend_t *lfe, htsmsg_t *m )
 {
   htsmsg_add_u32(m, "number", lfe->lfe_number);
   htsmsg_add_str(m, "type", dvb_type2str(lfe->lfe_info.type));
+  if (lfe->mi_network)
+    htsmsg_add_str(m, "network", idnode_uuid_as_str(&lfe->mi_network->mn_id));
   if (lfe->lfe_fe_path)
     htsmsg_add_str(m, "fe_path", lfe->lfe_fe_path);
   if (lfe->lfe_dmx_path)
@@ -323,7 +325,24 @@ linuxdvb_frontend_create0
 
   if (!htsmsg_get_u32(conf, "number", &u32))
     lfe->lfe_number = u32; 
-  // TODO: network
+  if ((str = htsmsg_get_str(conf, "network"))) {
+    linuxdvb_network_t *ln = linuxdvb_network_find_by_uuid(str);
+    if (ln) {
+      if (ln->ln_type == lfe->lfe_info.type) {
+        mpegts_mux_t *mm;
+        extern const idclass_t mpegts_mux_instance_class;
+        mpegts_network_add_input((mpegts_network_t*)ln, (mpegts_input_t*)lfe);
+        // TODO: how the hell should I do this properly
+        LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link)
+          (void)mpegts_mux_instance_create(mpegts_mux_instance, NULL,
+                                           (mpegts_input_t*)lfe, mm);
+      } else
+        tvhlog(LOG_WARNING, "linuxdvb",
+               "attempt to add network %s of wrong type %s to %s (%s)",
+               dvb_type2str(ln->ln_type), ln->mn_network_name,
+               lfe->lh_displayname, dvb_type2str(lfe->lfe_info.type));
+    }
+  }
 
   return lfe;
 }
