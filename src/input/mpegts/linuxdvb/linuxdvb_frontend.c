@@ -220,6 +220,8 @@ static int
 linuxdvb_frontend_start_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
+  printf("fe_start(%p, %p)\n", mi, mmi);
+  return SM_CODE_TUNING_FAILED;
 #if 0
   int r;
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
@@ -258,7 +260,6 @@ linuxdvb_frontend_start_mux
   // TODO: should this be moved elsewhere?
 
 #endif
-  return 0;
 }
 
 static void
@@ -329,13 +330,7 @@ linuxdvb_frontend_create0
     linuxdvb_network_t *ln = linuxdvb_network_find_by_uuid(str);
     if (ln) {
       if (ln->ln_type == lfe->lfe_info.type) {
-        mpegts_mux_t *mm;
-        extern const idclass_t mpegts_mux_instance_class;
         mpegts_network_add_input((mpegts_network_t*)ln, (mpegts_input_t*)lfe);
-        // TODO: how the hell should I do this properly
-        LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link)
-          (void)mpegts_mux_instance_create(mpegts_mux_instance, NULL,
-                                           (mpegts_input_t*)lfe, mm);
       } else
         tvhlog(LOG_WARNING, "linuxdvb",
                "attempt to add network %s of wrong type %s to %s (%s)",

@@ -242,11 +242,12 @@ struct mpegts_mux
    * Functions
    */
 
-  void (*mm_config_save)   (mpegts_mux_t *mm);
-  int  (*mm_start)         (mpegts_mux_t *mm, const char *reason, int weight);
-  void (*mm_stop)          (mpegts_mux_t *mm);
-  void (*mm_open_table)    (mpegts_mux_t*,mpegts_table_t*);
-  void (*mm_close_table)   (mpegts_mux_t*,mpegts_table_t*);
+  void (*mm_config_save)      (mpegts_mux_t *mm);
+  int  (*mm_start)            (mpegts_mux_t *mm, const char *r, int w);
+  void (*mm_stop)             (mpegts_mux_t *mm);
+  void (*mm_open_table)       (mpegts_mux_t*,mpegts_table_t*);
+  void (*mm_close_table)      (mpegts_mux_t*,mpegts_table_t*);
+  void (*mm_create_instances) (mpegts_mux_t*);
 
   /*
    * Fields
@@ -346,6 +347,7 @@ struct mpegts_mux_instance
   idnode_t mmi_id;
 
   LIST_ENTRY(mpegts_mux_instance) mmi_mux_link;
+  LIST_ENTRY(mpegts_mux_instance) mmi_input_link;
   LIST_ENTRY(mpegts_mux_instance) mmi_active_link;
 
   streaming_pad_t mmi_streaming_pad;
@@ -370,6 +372,8 @@ struct mpegts_input
   LIST_ENTRY(mpegts_input) mi_network_link;
 
   LIST_HEAD(,mpegts_mux_instance) mi_mux_active;
+
+  LIST_HEAD(,mpegts_mux_instance) mi_mux_instances;
 
   /*
    * Input processing

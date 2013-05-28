@@ -47,6 +47,7 @@ mpegts_network_initial_scan(void *aux)
   mpegts_network_t *mn = aux;
   mpegts_mux_t     *mm;
 
+  tvhtrace("mpegts", "setup initial scan for %p", mn);
   while((mm = TAILQ_FIRST(&mn->mn_initial_scan_pending_queue)) != NULL) {
     assert(mm->mm_initial_scan_status == MM_SCAN_PENDING);
     if (mm->mm_start(mm, "initial scan", 1))

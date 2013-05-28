@@ -143,6 +143,9 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
     tvhtrace("mpegts", "mm %p already active", mm);
     return 0;
   }
+  
+  /* Create mux instances (where needed) */
+  //mm->mm_create_instances(mm);
 
   /* Find */
   // TODO: don't like this is unbounded, if for some reason mi_start_mux()
@@ -174,8 +177,10 @@ mpegts_mux_start ( mpegts_mux_t *mm, const char *reason, int weight )
         tvhtrace("mpegts", "found mmi %p to boot", mmi);
 
       /* No free input */
-      if (!mmi)
+      if (!mmi) {
+        tvhlog(LOG_DEBUG, "mpegts", "no input available");
         return SM_CODE_NO_FREE_ADAPTER;
+      }
     }
     
     /* Tune */
@@ -232,8 +237,11 @@ mpegts_mux_stop ( mpegts_mux_t *mm )
 
   /* Clear */
   mm->mm_active = NULL;
-  
-    
+}
+
+static void
+mpegts_mux_create_instances ( mpegts_mux_t *mm )
+{
 }
 
 static void
@@ -285,9 +293,12 @@ mpegts_mux_create0
   /* Add to network */
   LIST_INSERT_HEAD(&mn->mn_muxes, mm, mm_network_link);
   mm->mm_network             = mn;
+  mpegts_mux_initial_scan_link(mm);
+
+  /* Start/stop */
   mm->mm_start               = mpegts_mux_start;
   mm->mm_stop                = mpegts_mux_stop;
-  mpegts_mux_initial_scan_link(mm);
+  mm->mm_create_instances    = mpegts_mux_create_instances;
 
   /* Table processing */
   mm->mm_open_table          = mpegts_mux_open_table;

@@ -106,6 +106,22 @@ linuxdvb_mux_stop ( mpegts_mux_t *mm )
 }
 #endif
 
+extern const idclass_t mpegts_mux_instance_class;
+
+static void
+linuxdvb_mux_create_instances ( mpegts_mux_t *mm )
+{
+  mpegts_input_t *mi;
+  mpegts_mux_instance_t *mmi;
+  LIST_FOREACH(mi, &mm->mm_network->mn_inputs, mi_network_link) {
+    LIST_FOREACH(mmi, &mi->mi_mux_instances, mmi_input_link)
+      if (mmi->mmi_mux == mm) break;
+    if (!mmi)
+      mmi = mpegts_mux_instance_create(mpegts_mux_instance, NULL, mi, mm);
+    // TODO: we might eventually want to keep history!
+  }
+}
+
 static void
 linuxdvb_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
@@ -201,9 +217,10 @@ linuxdvb_mux_create0
   lm = (linuxdvb_mux_t*)mm;
   
   /* Callbacks */
-  lm->mm_config_save = linuxdvb_mux_config_save;
-  lm->mm_open_table  = linuxdvb_mux_open_table;
-  lm->mm_close_table = linuxdvb_mux_close_table;
+  lm->mm_config_save      = linuxdvb_mux_config_save;
+  lm->mm_open_table       = linuxdvb_mux_open_table;
+  lm->mm_close_table      = linuxdvb_mux_close_table;
+  lm->mm_create_instances = linuxdvb_mux_create_instances;
 
   /* No config */
   if (!conf)
